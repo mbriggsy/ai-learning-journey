@@ -133,25 +133,61 @@ The race ended (lap 3 complete) before the car crossed the start/finish line. Th
 ### Root Cause
 The lap completion logic fired as soon as ALL checkpoints were hit — regardless of which checkpoint was crossed last. The start/finish line was checkpoint index 0, which gets crossed early in the lap. By the time the final track checkpoint (CP20, chicane entry) was hit, all checkpoints were in the set → lap complete triggered at the wrong location.
 
-### Fix
+### Fix (Attempt 1 — partial)
 
-**`configs/default.yaml`**: Moved start/finish line checkpoint to be LAST in the `checkpoint_indices` list (was first):
-```yaml
-# Before
-checkpoint_indices: [0, 5, 10, 15, 20]  # Start/finish first = triggers early
+**`configs/default.yaml`**: Moved start/finish line to be LAST in `checkpoint_indices`.
 
-# After  
-checkpoint_indices: [5, 10, 15, 20, 0]  # Start/finish last = correct trigger point
-```
+**`game/renderer.py`**: Changed lap completion to only fire when the finish line (last checkpoint) was specifically the one being crossed.
 
-**`game/renderer.py`**: Changed lap completion logic to only fire when the LAST checkpoint in the list (start/finish) is specifically the one being crossed AND all others have been hit:
+### Secondary Bug (discovered during fix)
+
+The car **spawns on the start/finish line**. On the first frame it moved, the crossing detection fired → start/finish got pre-added to the set → when the car came back around, it was already in the set and couldn't trigger again → laps never counted.
+
+### Fix (Final — renderer.py)
+
+Split checkpoint detection into two stages:
+
+**Stage A** — Intermediate checkpoints (all except finish line): collected into `checkpoints_hit` set normally.
+
+**Stage B** — Finish line: only becomes "hot" once ALL intermediate checkpoints are in the set. Completely ignored until then — including at spawn.
+
 ```python
-# Before: triggered whenever the set was full (any order)
-if len(checkpoints_hit) == len(checkpoint_segments): ...
+# All intermediates done?
+all_intermediate_hit = len(checkpoints_hit) == finish_line_idx
 
-# After: only triggered when crossing the finish line specifically
-if i == finish_line_idx and len(checkpoints_hit) == len(checkpoint_segments): ...
+if all_intermediate_hit:
+    if check_checkpoint(...finish_seg...):
+        # LAP COMPLETE
 ```
+
+This means the spawn crossing of the finish line is harmlessly ignored every time, because `all_intermediate_hit` is always False until the car has gone all the way around. ✅
+
+---
+
+---
+
+## Issue #004 — Emoji in YAML Broke the Game on Launch
+
+**Date:** 2026-02-22  
+**Found by:** Briggsy ("it doesn't launch")  
+**Status:** ✅ Fixed  
+**Caused by:** Harry 🧙 (wizard moment)
+
+### Problem
+Game refused to launch immediately after disabling damage.
+
+### Root Cause
+Harry put a `⚠️` emoji in a YAML comment. YAML files are read with Windows cp1252 encoding by default, which cannot decode multi-byte unicode characters like emoji.
+
+```
+UnicodeDecodeError: 'charmap' codec can't decode byte 0x8f in position 2080
+```
+
+### Fix
+Removed the emoji. Used plain ASCII instead.
+
+### Lesson
+**No emoji in config files.** Ever. Stick to plain ASCII in YAML comments.
 
 ---
 

@@ -1,0 +1,144 @@
+# =============================================================================
+# Top-Down Racer 01 — Master Configuration
+# =============================================================================
+# All tunable game parameters live here. No magic numbers in code.
+# Every agent reads from this file. Change values here to tweak the game.
+# =============================================================================
+
+# -----------------------------------------------------------------------------
+# Screen / Window
+# -----------------------------------------------------------------------------
+screen:
+  width: 1280          # Window width in pixels
+  height: 720          # Window height in pixels
+  fps: 60              # Target frames per second
+  title: "Top-Down Racer 01"  # Window title bar text
+
+# -----------------------------------------------------------------------------
+# Car Physics
+# -----------------------------------------------------------------------------
+car:
+  max_speed: 400         # Maximum forward speed in pixels/second
+  acceleration: 300      # Forward acceleration in pixels/second^2
+  brake_force: 500       # Braking deceleration in pixels/second^2 (stronger than accel for responsive braking)
+  reverse_max_speed: 150 # Maximum reverse speed in pixels/second (slower than forward to prevent exploit)
+  steering_speed: 2.5    # Steering rate in radians/second (~143 deg/s)
+  drift_grip_multiplier: 0.3  # Grip multiplier when drifting (0.0 = ice, 1.0 = full grip) — 0.3 makes rear end slide out
+  normal_grip: 1.0       # Baseline grip multiplier during normal driving
+  mass: 1.0              # Normalized car mass — used as a multiplier in physics calculations
+  width: 30              # Car body width in pixels (short axis)
+  length: 50             # Car body length in pixels (long axis, front-to-back)
+
+# -----------------------------------------------------------------------------
+# Damage System
+# -----------------------------------------------------------------------------
+damage:
+  wall_damage_multiplier: 0.5  # Damage = impact_speed * this value. At max_speed (400), one hit = 200 damage = instant kill. Walls are punishing.
+  min_damage_speed: 50         # Minimum impact speed (pixels/sec) to take damage. Gentle bumps are free.
+  max_health: 100              # Starting and maximum health points
+
+# -----------------------------------------------------------------------------
+# Track Layout
+# -----------------------------------------------------------------------------
+# The track is defined by centerline points forming a closed loop.
+# The Track class offsets these by +/- track_width/2 to create inner/outer walls.
+#
+# Design: Clockwise circuit spanning ~3000x3000 pixels, centered around (1500, 1500).
+# Features:
+#   - Long bottom straight (start/finish) for top-speed runs
+#   - Sweeping right turn into the east side
+#   - Fast curve at the top-right
+#   - S-curve through the north section
+#   - Sharp hairpin at the top-left (rewards good drift technique)
+#   - Chicane descent along the west side
+#   - Return to start/finish straight
+# -----------------------------------------------------------------------------
+track:
+  track_width: 120  # Road width in pixels — fits ~4 car widths for comfortable drifting
+
+  # Centerline points [x, y] defining the track shape as a closed loop.
+  # Points are ordered clockwise. The last point connects back to the first.
+  # Coordinate space: roughly (200, 200) to (2900, 2800) — spanning ~2700x2600 pixels.
+  centerline_points:
+    # === START/FINISH STRAIGHT (bottom, going right) ===
+    - [400, 400]       # 0  - Start/finish line (spawn near here)
+    - [900, 400]       # 1  - Mid straight
+    - [1400, 400]      # 2  - End of long straight
+
+    # === SWEEPING RIGHT TURN (bottom-right, curving up) ===
+    - [1800, 450]      # 3  - Start of right sweeper
+    - [2100, 600]      # 4  - Mid sweeper
+    - [2300, 850]      # 5  - Exit sweeper, heading north
+
+    # === EAST SIDE STRAIGHT (going north) ===
+    - [2400, 1150]     # 6  - Short straight heading north
+    - [2450, 1500]     # 7  - Checkpoint on east side
+
+    # === FAST TOP-RIGHT CURVE ===
+    - [2400, 1800]     # 8  - Entry to fast right curve
+    - [2250, 2050]     # 9  - Apex of fast curve
+    - [2000, 2200]     # 10 - Exit fast curve, heading west
+
+    # === S-CURVE (north section, technical) ===
+    - [1700, 2350]     # 11 - S-curve entry (turning left)
+    - [1400, 2500]     # 12 - S-curve midpoint (apex 1)
+    - [1150, 2350]     # 13 - S-curve transition (turning right)
+    - [900, 2500]      # 14 - S-curve apex 2
+    - [650, 2400]      # 15 - S-curve exit
+
+    # === SHARP HAIRPIN (top-left) ===
+    - [450, 2200]      # 16 - Hairpin approach (heading south-west)
+    - [300, 2000]      # 17 - Hairpin entry (tight!)
+    - [280, 1750]      # 18 - Hairpin apex — tightest point, ~180 degree turn
+    - [350, 1500]      # 19 - Hairpin exit (now heading south)
+
+    # === WEST SIDE CHICANE (descending south) ===
+    - [500, 1300]      # 20 - Chicane entry — jink right
+    - [350, 1100]      # 21 - Chicane midpoint — jink left
+    - [500, 900]       # 22 - Chicane exit
+    - [400, 650]       # 23 - Approach to start/finish
+
+    # (Loop closes: point 23 connects back to point 0 at [400, 400])
+
+  # Checkpoint indices — indices into centerline_points where lap checkpoints are placed.
+  # Checkpoints are line segments across the track at these points.
+  # The car must cross ALL checkpoints in order to complete a lap.
+  # Spaced roughly evenly around the circuit (~every 5-6 points).
+  checkpoint_indices:
+    - 0    # Start/finish line
+    - 5    # After the sweeping right turn
+    - 10   # After the fast top-right curve
+    - 15   # After the S-curve
+    - 20   # After the hairpin, entering the chicane
+
+  # Total laps to complete a race
+  total_laps: 3
+
+# -----------------------------------------------------------------------------
+# Camera
+# -----------------------------------------------------------------------------
+camera:
+  follow_speed: 0.1      # Lerp factor per frame (0.0 = static, 1.0 = instant). 0.1 = smooth trailing.
+  zoom: 1.0              # Camera zoom level (1.0 = no zoom, <1 = zoomed out, >1 = zoomed in)
+  lookahead_factor: 0.3  # How far ahead of the car the camera looks, as a fraction of velocity. Biases view toward direction of travel.
+
+# -----------------------------------------------------------------------------
+# Colors (RGB tuples, 0-255)
+# -----------------------------------------------------------------------------
+colors:
+  background_color: [30, 30, 30]      # Dark gray — world background outside the track
+  road_color: [60, 60, 60]            # Slightly lighter gray — the drivable road surface
+  wall_color: [200, 200, 200]         # Light gray — track boundary walls (high contrast against road)
+  car_color: [255, 50, 50]            # Bright red — the player car
+  drift_trail_color: [100, 80, 50]    # Brownish — tire marks left during drift (like burnt rubber)
+  hud_text_color: [255, 255, 255]     # White — HUD text (speed, lap, timer)
+  health_high_color: [50, 200, 50]    # Green — health bar when health is high
+  health_low_color: [200, 50, 50]     # Red — health bar when health is critically low
+
+# -----------------------------------------------------------------------------
+# Drift Trails
+# -----------------------------------------------------------------------------
+drift:
+  trail_lifetime: 3.0    # How long drift trail marks last in seconds before disappearing
+  trail_width: 4          # Width of drift trail lines in pixels
+  trail_fade_rate: 0.3    # Opacity decrease per second (1.0 / 0.3 = ~3.3s to fully fade, aligns with lifetime)

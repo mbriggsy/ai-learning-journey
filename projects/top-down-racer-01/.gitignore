@@ -1,6 +1,9 @@
 # Environment variables - NEVER commit this
 .env
 
+# Claude Code local settings (machine-specific)
+.claude/settings.local.json
+
 # Virtual environment
 .venv/
 

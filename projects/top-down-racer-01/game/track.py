@@ -36,6 +36,7 @@ class Track:
 
     centerline: np.ndarray
     track_width: float
+    point_widths: list[float] = field(default_factory=list)  # per-point road widths
     inner_walls: list[tuple[float, float]] = field(default_factory=list)
     outer_walls: list[tuple[float, float]] = field(default_factory=list)
     checkpoint_indices: list[int] = field(default_factory=list)
@@ -63,6 +64,14 @@ class Track:
         checkpoint_indices = list(track_cfg["checkpoint_indices"])
         total_laps = int(track_cfg.get("total_laps", 3))
 
+        # Per-point widths: if provided, use them; otherwise replicate the global track_width.
+        n_points = len(centerline_raw)
+        raw_widths = track_cfg.get("point_widths")
+        if raw_widths and len(raw_widths) == n_points:
+            point_widths = [float(w) for w in raw_widths]
+        else:
+            point_widths = [track_width] * n_points
+
         road_color = tuple(colors_cfg["road_color"])
         wall_color = tuple(colors_cfg["wall_color"])
         background_color = tuple(colors_cfg["background_color"])
@@ -70,6 +79,7 @@ class Track:
         track = cls(
             centerline=centerline,
             track_width=track_width,
+            point_widths=point_widths,
             checkpoint_indices=checkpoint_indices,
             total_laps=total_laps,
             road_color=road_color,
@@ -89,7 +99,6 @@ class Track:
         produces the inner and outer walls.
         """
         n = len(self.centerline)
-        half_width = self.track_width / 2.0
 
         inner = []
         outer = []
@@ -124,6 +133,9 @@ class Track:
             # Normal: rotate tangent 90 degrees CCW → (-ty, tx)
             # For a clockwise track, this points inward
             normal = np.array([-avg_tangent[1], avg_tangent[0]])
+
+            # Use per-point width — tight sections get extra room
+            half_width = self.point_widths[i] / 2.0
 
             inner_pt = curr_pt + normal * half_width
             outer_pt = curr_pt - normal * half_width
@@ -210,14 +222,15 @@ class Track:
             True if the point is within the track boundaries.
         """
         point = np.array([x, y], dtype=np.float64)
-        half_width = self.track_width / 2.0
         n = len(self.centerline)
-        min_dist_sq = float("inf")
-        half_width_sq = half_width * half_width
 
         for i in range(n):
             a = self.centerline[i]
             b = self.centerline[(i + 1) % n]
+
+            # Effective half-width for this segment: average of its two endpoint widths
+            seg_half_width = (self.point_widths[i] + self.point_widths[(i + 1) % n]) / 4.0
+            seg_half_width_sq = seg_half_width * seg_half_width
 
             # Project point onto segment a-b
             ab = b - a
@@ -225,7 +238,6 @@ class Track:
             ab_len_sq = float(np.dot(ab, ab))
 
             if ab_len_sq < 1e-12:
-                # Degenerate segment — just measure distance to point a
                 dist_sq = float(np.dot(ap, ap))
             else:
                 t = float(np.dot(ap, ab)) / ab_len_sq
@@ -234,14 +246,10 @@ class Track:
                 diff = point - closest
                 dist_sq = float(np.dot(diff, diff))
 
-            if dist_sq < min_dist_sq:
-                min_dist_sq = dist_sq
-
-            # Early exit: already inside track, no need to check more
-            if min_dist_sq <= half_width_sq:
+            if dist_sq <= seg_half_width_sq:
                 return True
 
-        return min_dist_sq <= half_width_sq
+        return False
 
     def build_shape_list(self) -> Any:
         """Build an Arcade ShapeElementList for efficient batched track rendering.

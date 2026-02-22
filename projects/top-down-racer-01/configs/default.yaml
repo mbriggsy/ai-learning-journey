@@ -54,7 +54,13 @@ damage:
 #   - Return to start/finish straight
 # -----------------------------------------------------------------------------
 track:
-  track_width: 120  # Road width in pixels — fits ~4 car widths for comfortable drifting
+  track_width: 120  # Default road width in pixels (used as fallback if point_widths not set)
+
+  # Per-point road widths — one value per centerline point (must match centerline_points length).
+  # Tight technical sections are wider to give room for braking and drifting.
+  # Straights stay narrow to feel fast and focused.
+  # Sections:           straight  sweeper  e-str  top-curve    S-curve (x5)    hairpin (x4)   chicane (x4)  approach
+  point_widths: [170, 170, 150,   150, 150, 140,   130, 130,   150, 160, 170,  190, 200, 200, 200, 190,     240, 270, 280, 260,   185, 185, 170, 140]
 
   # Centerline points [x, y] defining the track shape as a closed loop.
   # Points are ordered clockwise. The last point connects back to the first.
@@ -105,11 +111,11 @@ track:
   # The car must cross ALL checkpoints in order to complete a lap.
   # Spaced roughly evenly around the circuit (~every 5-6 points).
   checkpoint_indices:
-    - 0    # Start/finish line
     - 5    # After the sweeping right turn
     - 10   # After the fast top-right curve
     - 15   # After the S-curve
     - 20   # After the hairpin, entering the chicane
+    - 0    # Start/finish line — MUST BE LAST (crossing this completes the lap)
 
   # Total laps to complete a race
   total_laps: 3

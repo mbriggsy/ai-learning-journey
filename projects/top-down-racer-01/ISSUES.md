@@ -119,4 +119,40 @@ At max speed (400 px/s), a full broadside hit does 40 out of 200 health — abou
 
 ---
 
+---
+
+## Issue #003 — Lap 3 Completes Early (Before Start/Finish Line)
+
+**Date:** 2026-02-22  
+**Found by:** Briggsy (first play session)  
+**Status:** ✅ Fixed
+
+### Problem
+The race ended (lap 3 complete) before the car crossed the start/finish line. The win triggered somewhere in the final section of the track.
+
+### Root Cause
+The lap completion logic fired as soon as ALL checkpoints were hit — regardless of which checkpoint was crossed last. The start/finish line was checkpoint index 0, which gets crossed early in the lap. By the time the final track checkpoint (CP20, chicane entry) was hit, all checkpoints were in the set → lap complete triggered at the wrong location.
+
+### Fix
+
+**`configs/default.yaml`**: Moved start/finish line checkpoint to be LAST in the `checkpoint_indices` list (was first):
+```yaml
+# Before
+checkpoint_indices: [0, 5, 10, 15, 20]  # Start/finish first = triggers early
+
+# After  
+checkpoint_indices: [5, 10, 15, 20, 0]  # Start/finish last = correct trigger point
+```
+
+**`game/renderer.py`**: Changed lap completion logic to only fire when the LAST checkpoint in the list (start/finish) is specifically the one being crossed AND all others have been hit:
+```python
+# Before: triggered whenever the set was full (any order)
+if len(checkpoints_hit) == len(checkpoint_segments): ...
+
+# After: only triggered when crossing the finish line specifically
+if i == finish_line_idx and len(checkpoints_hit) == len(checkpoint_segments): ...
+```
+
+---
+
 *Maintained by Harry 🧙 — if it broke and got fixed, it lives here*

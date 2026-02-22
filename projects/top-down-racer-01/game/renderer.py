@@ -137,27 +137,32 @@ class RacerView(arcade.View):
             damage = resolve_collision(self.car, collision, self.config)
             self.car.apply_damage(damage)
 
-        # 3. Checkpoint detection
+        # 3. Checkpoint detection + lap completion
+        # The start/finish line is the LAST checkpoint in the list.
+        # A lap only completes when the start/finish is crossed after all
+        # other checkpoints have already been hit this lap.
+        finish_line_idx = len(self._checkpoint_segments) - 1
         for i, cp_seg in enumerate(self._checkpoint_segments):
             if i not in self.checkpoints_hit:
                 if check_checkpoint(self.car.position, self.car.prev_position, cp_seg):
                     self.checkpoints_hit.add(i)
 
-        # 4. Lap completion — all checkpoints must be hit
-        if len(self.checkpoints_hit) == len(self._checkpoint_segments):
-            # Save best lap time
-            if self.lap_time < self.best_lap_time:
-                self.best_lap_time = self.lap_time
+                    # 4. Lap completion — only when crossing the start/finish line
+                    # and all other checkpoints have been hit this lap
+                    if i == finish_line_idx and len(self.checkpoints_hit) == len(self._checkpoint_segments):
+                        # Save best lap time
+                        if self.lap_time < self.best_lap_time:
+                            self.best_lap_time = self.lap_time
 
-            self.lap += 1
-            self.lap_time = 0.0
-            self.checkpoints_hit = set()
+                        self.lap += 1
+                        self.lap_time = 0.0
+                        self.checkpoints_hit = set()
 
-            # Check race completion
-            if self.lap > self.track.total_laps:
-                self.lap = self.track.total_laps  # Display final lap number
-                self.race_complete = True
-                return
+                        # Check race completion
+                        if self.lap > self.track.total_laps:
+                            self.lap = self.track.total_laps  # Display final lap number
+                            self.race_complete = True
+                            return
 
         # 5. Update lap time
         self.lap_time += delta_time

@@ -89,4 +89,34 @@ This affects HUD rendering performance. Not a crash — game runs — but worth 
 
 ---
 
+---
+
+## Issue #002 — Wall Damage Makes Game Unplayable
+
+**Date:** 2026-02-22  
+**Found by:** Briggsy (first play session)  
+**Status:** ✅ Fixed
+
+### Problem
+Wall contact ended the game almost instantly. Even a glancing blow at speed was fatal.
+
+### Root Cause
+Default damage config was too aggressive for a playable racing game:
+- `wall_damage_multiplier: 0.5` → at max speed (400 px/s), one hit = 200 damage = instant death
+- `min_damage_speed: 50` → any tap over 50 px/s triggered damage
+- `max_health: 100` → no buffer at all
+
+### Fix (`configs/default.yaml`)
+
+| Setting | Before | After | Effect |
+|---|---|---|---|
+| `wall_damage_multiplier` | `0.5` | `0.1` | Max hit = 40 damage (was 200) |
+| `min_damage_speed` | `50` | `100` | Scrapes/grazes are free |
+| `max_health` | `100` | `200` | ~5 full-speed hits to die |
+
+### Result
+At max speed (400 px/s), a full broadside hit does 40 out of 200 health — about 20% per hit. Five heavy impacts to die. Grazes under 100 px/s do nothing. Should feel punishing but survivable.
+
+---
+
 *Maintained by Harry 🧙 — if it broke and got fixed, it lives here*

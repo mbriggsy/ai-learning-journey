@@ -33,9 +33,9 @@ car:
 # Damage System
 # -----------------------------------------------------------------------------
 damage:
-  wall_damage_multiplier: 0.5  # Damage = impact_speed * this value. At max_speed (400), one hit = 200 damage = instant kill. Walls are punishing.
-  min_damage_speed: 50         # Minimum impact speed (pixels/sec) to take damage. Gentle bumps are free.
-  max_health: 100              # Starting and maximum health points
+  wall_damage_multiplier: 0.1  # Damage = impact_speed * this value. At max_speed (400), one hit = 40 damage = 5 hits to die. Punishing but survivable.
+  min_damage_speed: 100        # Minimum impact speed (pixels/sec) to take damage. Scrapes and grazes are free.
+  max_health: 200              # Starting and maximum health points — doubled for more forgiving gameplay
 
 # -----------------------------------------------------------------------------
 # Track Layout

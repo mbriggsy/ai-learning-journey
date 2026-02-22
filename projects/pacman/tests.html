@@ -1,0 +1,234 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Pac-Man Test Suite</title>
+    <style>
+        *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+        body {
+            background: #000;
+            color: #eee;
+            font-family: 'Courier New', Courier, monospace;
+            font-size: 14px;
+            padding: 24px;
+            min-height: 100vh;
+        }
+
+        h1 {
+            color: #FFD700;
+            font-size: 28px;
+            letter-spacing: 3px;
+            text-align: center;
+            margin-bottom: 8px;
+            text-transform: uppercase;
+        }
+
+        .subtitle {
+            text-align: center;
+            color: #888;
+            margin-bottom: 24px;
+            font-size: 12px;
+            letter-spacing: 1px;
+        }
+
+        /* Summary bar */
+        #summary {
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 32px;
+            padding: 14px 24px;
+            border-radius: 6px;
+            margin-bottom: 24px;
+            background: #111;
+            border: 1px solid #333;
+            font-size: 16px;
+            font-weight: bold;
+            letter-spacing: 1px;
+        }
+
+        #summary .passed-count { color: #00cc44; }
+        #summary .failed-count { color: #ff4444; }
+        #summary .total-count  { color: #aaa; }
+
+        #summary.all-pass {
+            border-color: #00cc44;
+            background: #001a0a;
+        }
+        #summary.has-fail {
+            border-color: #ff4444;
+            background: #1a0000;
+        }
+
+        /* Results table */
+        table {
+            width: 100%;
+            border-collapse: collapse;
+            margin-bottom: 32px;
+        }
+
+        thead th {
+            background: #1a1aff;
+            color: #fff;
+            padding: 10px 14px;
+            text-align: left;
+            font-size: 12px;
+            letter-spacing: 1px;
+            text-transform: uppercase;
+            border-bottom: 2px solid #0000cc;
+        }
+
+        thead th:first-child { width: 48px; text-align: center; }
+        thead th:last-child  { width: 40%; }
+
+        tbody tr {
+            border-bottom: 1px solid #1c1c1c;
+            transition: background 0.1s;
+        }
+
+        tbody tr:hover { background: #111; }
+
+        tbody tr.pass td { color: #ccc; }
+        tbody tr.fail td { color: #ff9999; }
+
+        td {
+            padding: 8px 14px;
+            vertical-align: top;
+        }
+
+        td:first-child {
+            text-align: center;
+            font-size: 18px;
+            width: 48px;
+        }
+
+        .icon-pass { color: #00cc44; }
+        .icon-fail { color: #ff4444; }
+
+        .test-name { color: inherit; }
+
+        .fail-message {
+            color: #ff6666;
+            font-size: 12px;
+            margin-top: 3px;
+            padding-left: 4px;
+            border-left: 2px solid #ff4444;
+        }
+
+        .fail-message::before {
+            content: "  ";
+            white-space: pre;
+        }
+
+        /* No-JS fallback */
+        #no-js {
+            text-align: center;
+            color: #ff4444;
+            padding: 48px;
+            display: none;
+        }
+
+        /* Loading state */
+        #loading {
+            text-align: center;
+            color: #888;
+            padding: 48px;
+        }
+
+        footer {
+            text-align: center;
+            color: #444;
+            font-size: 11px;
+            margin-top: 16px;
+        }
+    </style>
+</head>
+<body>
+    <h1>Pac-Man Test Suite</h1>
+    <p class="subtitle">Vanilla JS unit tests — no external dependencies</p>
+
+    <div id="loading">Running tests...</div>
+    <div id="summary" style="display:none"></div>
+    <div id="results-container" style="display:none">
+        <table>
+            <thead>
+                <tr>
+                    <th></th>
+                    <th>Test Name</th>
+                    <th>Details</th>
+                </tr>
+            </thead>
+            <tbody id="results-body"></tbody>
+        </table>
+    </div>
+
+    <footer>Pac-Man Test Suite &mdash; file:// compatible &mdash; no npm required</footer>
+
+    <!-- Load the test logic -->
+    <script src="tests.js"></script>
+
+    <!-- Render results from window.testResults -->
+    <script>
+        (function () {
+            var loading  = document.getElementById("loading");
+            var summary  = document.getElementById("summary");
+            var container = document.getElementById("results-container");
+            var tbody    = document.getElementById("results-body");
+
+            if (!window.testResults) {
+                loading.textContent = "Error: window.testResults not found. Check that tests.js loaded correctly.";
+                loading.style.color = "#ff4444";
+                return;
+            }
+
+            var tr = window.testResults;
+            var passed = tr.passed;
+            var failed = tr.failed;
+            var total  = passed + failed;
+            var results = tr.results;
+
+            // Hide loading
+            loading.style.display = "none";
+
+            // Render summary bar
+            summary.style.display = "flex";
+            summary.className = failed === 0 ? "all-pass" : "has-fail";
+            summary.innerHTML =
+                "<span class='passed-count'>" + passed + " passed</span>" +
+                "<span class='failed-count'>" + failed + " failed</span>" +
+                "<span class='total-count'>" + total + " total</span>";
+
+            // Render result rows
+            container.style.display = "block";
+            results.forEach(function (r) {
+                var row = document.createElement("tr");
+                row.className = r.ok ? "pass" : "fail";
+
+                var iconCell = document.createElement("td");
+                iconCell.innerHTML = r.ok
+                    ? "<span class='icon-pass'>&#x2713;</span>"
+                    : "<span class='icon-fail'>&#x2717;</span>";
+
+                var nameCell = document.createElement("td");
+                nameCell.className = "test-name";
+                nameCell.textContent = r.name;
+
+                var detailCell = document.createElement("td");
+                if (!r.ok && r.message) {
+                    var msg = document.createElement("div");
+                    msg.className = "fail-message";
+                    msg.textContent = r.message;
+                    detailCell.appendChild(msg);
+                }
+
+                row.appendChild(iconCell);
+                row.appendChild(nameCell);
+                row.appendChild(detailCell);
+                tbody.appendChild(row);
+            });
+        })();
+    </script>
+</body>
+</html>

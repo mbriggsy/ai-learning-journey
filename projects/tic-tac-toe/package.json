@@ -1,0 +1,10 @@
+{
+  "name": "hello-world-tictactoe",
+  "version": "1.0.0",
+  "scripts": {
+    "test": "jest --json --outputFile=tests/results/test-results.json"
+  },
+  "devDependencies": {
+    "jest": "^29.0.0"
+  }
+}

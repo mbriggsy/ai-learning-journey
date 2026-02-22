@@ -1,0 +1,106 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Agent Generated TIC-TAC-TOE</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet" />
+  <link rel="stylesheet" href="css/style.css" />
+</head>
+<body>
+
+  <!-- CRT overlays -->
+  <div class="scanlines" aria-hidden="true"></div>
+  <div class="vignette"  aria-hidden="true"></div>
+
+  <div class="arcade-cabinet">
+
+    <!-- ── HEADER ───────────────────────────── -->
+    <header class="arcade-header">
+      <div class="corner tl"></div><div class="corner tr"></div>
+      <h1 class="title">Agent Generated TIC-TAC-TOE</h1>
+      <div class="subtitle">// ARCADE EDITION //</div>
+      <div class="score-board">
+        <div class="score-item">
+          <span class="score-label">YOU</span>
+          <span class="score-value" id="score-player">0</span>
+        </div>
+        <div class="score-item">
+          <span class="score-label">DRAWS</span>
+          <span class="score-value" id="score-draws">0</span>
+        </div>
+        <div class="score-item">
+          <span class="score-label">CPU</span>
+          <span class="score-value" id="score-cpu">0</span>
+        </div>
+      </div>
+    </header>
+
+    <!-- ── GAME AREA ─────────────────────────── -->
+    <main class="game-area">
+
+      <div class="status-bar" role="status" aria-live="polite">
+        <span id="status-text">YOUR TURN &mdash; CHOOSE A SQUARE</span>
+      </div>
+
+      <div class="board-wrap">
+        <div class="board" id="board" role="grid" aria-label="Tic-tac-toe board">
+          <div class="cell" data-index="0" role="gridcell" tabindex="0" aria-label="Cell 1"></div>
+          <div class="cell" data-index="1" role="gridcell" tabindex="0" aria-label="Cell 2"></div>
+          <div class="cell" data-index="2" role="gridcell" tabindex="0" aria-label="Cell 3"></div>
+          <div class="cell" data-index="3" role="gridcell" tabindex="0" aria-label="Cell 4"></div>
+          <div class="cell" data-index="4" role="gridcell" tabindex="0" aria-label="Cell 5"></div>
+          <div class="cell" data-index="5" role="gridcell" tabindex="0" aria-label="Cell 6"></div>
+          <div class="cell" data-index="6" role="gridcell" tabindex="0" aria-label="Cell 7"></div>
+          <div class="cell" data-index="7" role="gridcell" tabindex="0" aria-label="Cell 8"></div>
+          <div class="cell" data-index="8" role="gridcell" tabindex="0" aria-label="Cell 9"></div>
+        </div>
+        <canvas id="win-canvas" aria-hidden="true"></canvas>
+      </div>
+
+      <!-- Controls -->
+      <div class="controls">
+        <div class="diff-row">
+          <span class="ctrl-label">DIFFICULTY:</span>
+          <button class="diff-btn active" data-diff="easy"   aria-pressed="true">EASY</button>
+          <button class="diff-btn"        data-diff="medium" aria-pressed="false">MED</button>
+          <button class="diff-btn"        data-diff="hard"   aria-pressed="false">HARD</button>
+        </div>
+        <button class="btn-new" id="btn-new">
+          <span class="btn-label">NEW GAME</span>
+          <span class="btn-coin">[ INSERT COIN ]</span>
+        </button>
+      </div>
+
+    </main>
+
+    <!-- ── GAME-OVER OVERLAY ─────────────────── -->
+    <div class="go-overlay" id="go-overlay" aria-modal="true" role="dialog" aria-hidden="true">
+      <div class="go-box">
+        <div class="go-title"  id="go-title">GAME OVER</div>
+        <div class="go-result" id="go-result"></div>
+        <div class="go-score"  id="go-score"></div>
+        <div class="go-diff-row">
+          <span class="go-diff-label">DIFFICULTY:</span>
+          <button class="diff-btn go-diff-btn" data-diff="easy">EASY</button>
+          <button class="diff-btn go-diff-btn" data-diff="medium">MED</button>
+          <button class="diff-btn go-diff-btn" data-diff="hard">HARD</button>
+        </div>
+        <button class="btn-play-again" id="btn-play-again">PLAY AGAIN</button>
+        <div class="go-credit">INSERT COIN</div>
+      </div>
+    </div>
+
+    <!-- ── FOOTER ────────────────────────────── -->
+    <footer class="arcade-footer">
+      <span class="footer-copy">&copy; 2025 HELLO WORLD ARCADE</span>
+      <span class="footer-credit">CREDIT 00</span>
+    </footer>
+
+  </div><!-- /.arcade-cabinet -->
+
+  <script src="js/game.js"></script>
+</body>
+</html>

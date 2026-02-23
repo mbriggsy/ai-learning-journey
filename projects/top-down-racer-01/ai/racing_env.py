@@ -16,6 +16,7 @@ Action space: Box(low=[-1, -1, 0], high=[1, 1, 1], shape=(3,), float32)
 
 from __future__ import annotations
 
+import math
 from pathlib import Path
 
 import gymnasium as gym
@@ -115,10 +116,15 @@ class RacingEnv(gym.Env):
         # --- Render mode -------------------------------------------------
         self.render_mode: str | None = render_mode
 
+        # --- Spawn protection config --------------------------------------
+        self._spawn_grace_steps: int = int(self._ai_cfg.get("spawn_grace_steps", 30))
+        self._min_checkpoint_speed: float = float(self._ai_cfg.get("min_checkpoint_speed", 5.0))
+
         # --- Episode tracking (initialized fully in reset()) -------------
         self._next_checkpoint_idx: int = 0
         self._laps_completed: int = 0
         self._step_count: int = 0
+        self._steps_since_reset: int = 0
         self._wall_hits: int = 0
         self._stuck_steps: int = 0
         self._lap_start_step: int = 0
@@ -156,9 +162,12 @@ class RacingEnv(gym.Env):
         self._car.reset(spawn_x, spawn_y, spawn_angle)
 
         # Reset episode tracking
-        self._next_checkpoint_idx = 0
+        self._next_checkpoint_idx = self._find_first_checkpoint_ahead(
+            spawn_x, spawn_y, spawn_angle
+        )
         self._laps_completed = 0
         self._step_count = 0
+        self._steps_since_reset = 0
         self._wall_hits = 0
         self._stuck_steps = 0
         self._lap_start_step = 0
@@ -218,28 +227,36 @@ class RacingEnv(gym.Env):
             self._wall_hits += 1
 
         # --- Training checkpoint (breadcrumb) collection -----------------
-        next_cp = self._training_checkpoints[self._next_checkpoint_idx]
-        cp_radius: float = self._ai_cfg["training_checkpoint_radius"]
-        cp_reached: bool = check_training_checkpoint(
-            self._car.position, next_cp, cp_radius
-        )
-
+        # Guards: skip checkpoint logic during the post-reset grace period
+        # and when the car is moving in reverse (prevents false lap credit).
+        cp_reached: bool = False
         lap_completed: bool = False
-        if cp_reached:
-            was_at_last = (
-                self._next_checkpoint_idx == self._num_checkpoints - 1
+
+        grace_ok = self._steps_since_reset >= self._spawn_grace_steps
+        moving_forward = self._car.speed > self._min_checkpoint_speed
+
+        if grace_ok and moving_forward:
+            next_cp = self._training_checkpoints[self._next_checkpoint_idx]
+            cp_radius: float = self._ai_cfg["training_checkpoint_radius"]
+            cp_reached = check_training_checkpoint(
+                self._car.position, next_cp, cp_radius
             )
-            self._next_checkpoint_idx = (
-                (self._next_checkpoint_idx + 1) % self._num_checkpoints
-            )
-            # Lap completes when wrapping from last checkpoint back to 0
-            if was_at_last and self._next_checkpoint_idx == 0:
-                lap_completed = True
-                self._laps_completed += 1
-                # Record lap time in seconds
-                lap_steps = self._step_count - self._lap_start_step
-                self._lap_times.append(lap_steps * self._dt)
-                self._lap_start_step = self._step_count
+
+            if cp_reached:
+                was_at_last = (
+                    self._next_checkpoint_idx == self._num_checkpoints - 1
+                )
+                self._next_checkpoint_idx = (
+                    (self._next_checkpoint_idx + 1) % self._num_checkpoints
+                )
+                # Lap completes when wrapping from last checkpoint back to 0
+                if was_at_last and self._next_checkpoint_idx == 0:
+                    lap_completed = True
+                    self._laps_completed += 1
+                    # Record lap time in seconds
+                    lap_steps = self._step_count - self._lap_start_step
+                    self._lap_times.append(lap_steps * self._dt)
+                    self._lap_start_step = self._step_count
 
         # --- Stuck detection ---------------------------------------------
         is_stuck = self._is_stuck()
@@ -285,6 +302,7 @@ class RacingEnv(gym.Env):
         self._last_obs = obs
         self._last_action = np.array(action, dtype=np.float32)
         self._step_count += 1
+        self._steps_since_reset += 1
         self._prev_pos = self._car.position.copy()
 
         return obs, float(reward), terminated, truncated, info
@@ -308,6 +326,34 @@ class RacingEnv(gym.Env):
     # ------------------------------------------------------------------
     # Internal helpers
     # ------------------------------------------------------------------
+
+    def _find_first_checkpoint_ahead(
+        self, spawn_x: float, spawn_y: float, spawn_angle: float
+    ) -> int:
+        """Find the first training checkpoint ahead of the spawn position.
+
+        Iterates through all training checkpoints and returns the index of
+        the first one whose position is forward of the spawn point (positive
+        dot product with the spawn facing direction).  Falls back to 0 if
+        none are found ahead.
+
+        Args:
+            spawn_x: Spawn X position.
+            spawn_y: Spawn Y position.
+            spawn_angle: Spawn facing angle in radians.
+
+        Returns:
+            Index into self._training_checkpoints.
+        """
+        forward = np.array([math.cos(spawn_angle), math.sin(spawn_angle)])
+        spawn_pos = np.array([spawn_x, spawn_y])
+
+        for i, cp in enumerate(self._training_checkpoints):
+            vec_to_cp = np.array(cp) - spawn_pos
+            if float(np.dot(vec_to_cp, forward)) > 0:
+                return i
+
+        return 0
 
     def _is_stuck(self) -> bool:
         """Check if the car has been nearly stationary for too long.

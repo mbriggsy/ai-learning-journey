@@ -41,6 +41,7 @@ class Track:
     outer_walls: list[tuple[float, float]] = field(default_factory=list)
     checkpoint_indices: list[int] = field(default_factory=list)
     total_laps: int = 3
+    spawn_forward_offset: float = 0.0
     road_color: tuple[int, int, int] = (60, 60, 60)
     wall_color: tuple[int, int, int] = (200, 200, 200)
     background_color: tuple[int, int, int] = (30, 30, 30)
@@ -63,6 +64,7 @@ class Track:
         track_width = float(track_cfg["track_width"])
         checkpoint_indices = list(track_cfg["checkpoint_indices"])
         total_laps = int(track_cfg.get("total_laps", 3))
+        spawn_forward_offset = float(track_cfg.get("spawn_forward_offset", 0.0))
 
         # Per-point widths: if provided, use them; otherwise replicate the global track_width.
         n_points = len(centerline_raw)
@@ -82,6 +84,7 @@ class Track:
             point_widths=point_widths,
             checkpoint_indices=checkpoint_indices,
             total_laps=total_laps,
+            spawn_forward_offset=spawn_forward_offset,
             road_color=road_color,
             wall_color=wall_color,
             background_color=background_color,
@@ -149,9 +152,10 @@ class Track:
     def get_spawn_position(self) -> tuple[float, float, float]:
         """Get the car's starting position and facing angle.
 
-        The car spawns at the first centerline point, facing toward the second
-        point. This places it at the start/finish line heading in the correct
-        direction of travel.
+        The car spawns ahead of the first centerline point (the start/finish
+        line), offset by ``spawn_forward_offset`` pixels along the track
+        direction.  This prevents the car from sitting on top of the
+        start/finish checkpoint at reset and getting false lap credit.
 
         Returns:
             (x, y, angle) where angle is in radians, 0 = east, CCW positive.
@@ -160,7 +164,16 @@ class Track:
         p1 = self.centerline[1]
         direction = p1 - p0
         angle = float(math.atan2(direction[1], direction[0]))
-        return (float(p0[0]), float(p0[1]), angle)
+
+        # Offset forward along the track direction
+        dir_len = float(np.linalg.norm(direction))
+        if dir_len > 1e-8 and self.spawn_forward_offset > 0.0:
+            dir_unit = direction / dir_len
+            spawn = p0 + dir_unit * self.spawn_forward_offset
+        else:
+            spawn = p0
+
+        return (float(spawn[0]), float(spawn[1]), angle)
 
     def get_wall_segments(self) -> list[tuple[tuple[float, float], tuple[float, float]]]:
         """Get all wall segments as line pairs for collision detection.

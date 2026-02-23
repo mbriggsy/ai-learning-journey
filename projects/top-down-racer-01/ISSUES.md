@@ -254,4 +254,62 @@ The fix is a pure architecture flip:
 
 ---
 
+---
+
+## Issue #006 — AI Car Spawns on Start/Finish Line, Gets False Lap Credit
+
+**Date found:** 2026-02-23
+**Found by:** Briggsy (watch mode observation)
+**Fixed by:** Fix agent (Issue #006)
+**Status:** Fixed
+
+### Problem
+Two related bugs in the AI watch/training environment:
+
+1. **Car spawns straddling the start/finish line.** The spawn point was at `centerline[0]` = `(400, 400)`, which is also the position of training checkpoint 0. The car would immediately collect the first breadcrumb at spawn, getting free reward for doing nothing.
+
+2. **False lap credit at spawn.** With no grace period and no direction check, the car could collect checkpoints while stationary or moving in reverse. This distorted the reward signal during training and made watch mode show spurious lap completions.
+
+### Root Cause
+Three missing safeguards in `ai/racing_env.py`:
+
+- **Spawn position overlapped checkpoint 0.** `track.get_spawn_position()` returned `centerline[0]`, which is exactly where the first training breadcrumb was placed. Distance = 0, well within the 40px collection radius.
+
+- **No grace period after reset.** Checkpoint collection was active from step 1, so any breadcrumb within radius of spawn was instantly collected before the car even moved.
+
+- **No forward-velocity check.** Checkpoints could be collected while in reverse or stationary, allowing the car to game the system by oscillating near checkpoints.
+
+### Fix (3 layers of protection)
+
+**Layer 1 — Move spawn forward (`configs/default.yaml` + `game/track.py`):**
+- Added `spawn_forward_offset: 200` to track config.
+- `get_spawn_position()` now offsets from `centerline[0]` by 200px along the track direction (toward `centerline[1]`).
+- Car now spawns at approximately `(600, 400)` instead of `(400, 400)` — well clear of checkpoint 0.
+
+**Layer 2 — Grace period (`ai/racing_env.py`):**
+- Added `_steps_since_reset` counter, reset to 0 in `reset()`.
+- All checkpoint/lap logic is skipped while `_steps_since_reset < spawn_grace_steps` (default: 30 steps = 0.5 seconds).
+- Config key: `ai.spawn_grace_steps: 30`.
+
+**Layer 3 — Forward-velocity requirement (`ai/racing_env.py`):**
+- Checkpoints are only collected when `car.speed > min_checkpoint_speed` (default: 5.0 px/s).
+- Prevents reverse-crossing credit and stationary checkpoint farming.
+- Config key: `ai.min_checkpoint_speed: 5.0`.
+
+**Bonus — Correct starting checkpoint index:**
+- `reset()` now calls `_find_first_checkpoint_ahead()` which iterates training checkpoints and finds the first one whose position is forward of the spawn point (positive dot product with facing direction).
+- Prevents the car from needing to loop backward to collect checkpoint 0 before making forward progress.
+
+### Files Changed
+| File | Change |
+|------|--------|
+| `configs/default.yaml` | Added `spawn_forward_offset`, `spawn_grace_steps`, `min_checkpoint_speed` |
+| `game/track.py` | Added `spawn_forward_offset` field, modified `get_spawn_position()` |
+| `ai/racing_env.py` | Added grace period, forward-speed check, `_find_first_checkpoint_ahead()` |
+
+### Impact on Human Mode
+None. The renderer.py checkpoint system (line-crossing with two-stage finish-line protection from Issue #003) is completely independent. The spawn offset actually improves human mode too — the car no longer starts right at the corner junction between the approach segment and the straight.
+
+---
+
 *Maintained by Harry 🧙 — if it broke and got fixed, it lives here*

@@ -5,6 +5,65 @@ Each agent logs their work here as they build the game.
 
 ---
 
+### [2026-02-23] Fix Agent -- Issue #006 Resolution: Spawn Position + False Lap Credit
+
+**Files:** `configs/default.yaml`, `game/track.py`, `ai/racing_env.py`, `ISSUES.md`
+
+**Summary:** Fixed two related bugs where the AI car spawned directly on top of the
+start/finish checkpoint and immediately collected it, getting free reward. Also added
+protections against reverse-crossing credit and stationary checkpoint farming.
+
+The root problem was a convergence of three missing safeguards: (1) spawn position was at
+`centerline[0]` = `(400, 400)`, exactly where training checkpoint 0 sits, (2) no grace
+period after reset meant checkpoint collection started from step 1, and (3) no velocity
+check meant the car could collect checkpoints while stationary or in reverse.
+
+The fix uses three layers of defense:
+
+**Layer 1 — Spawn offset:** Added `spawn_forward_offset: 200` to the track config. Modified
+`Track.get_spawn_position()` to offset the spawn 200px forward along the track direction
+(from centerline[0] toward centerline[1]). The car now spawns at ~(600, 400) instead of
+(400, 400), well clear of checkpoint 0 and the corner junction.
+
+**Layer 2 — Grace period:** Added `_steps_since_reset` counter in `RacingEnv`. All checkpoint
+and lap logic is skipped for the first 30 steps (0.5 seconds) after each reset. This catches
+any edge case where the car is still near a checkpoint at spawn even after the offset.
+
+**Layer 3 — Forward-velocity gate:** Checkpoints are only collected when `car.speed > 5.0`
+px/s (`min_checkpoint_speed` in config). This prevents the car from getting lap credit by
+crossing checkpoints in reverse or while stationary.
+
+**Bonus — Correct starting checkpoint:** `reset()` now calls `_find_first_checkpoint_ahead()`
+which finds the first training breadcrumb whose position is forward of the spawn point using
+a dot product with the facing direction. This prevents the car from needing to loop backward
+to reach checkpoint 0 before making any forward progress in the episode.
+
+**Decisions:**
+
+- **200px offset vs smaller offset:** The first straight runs from (400,400) to (900,400) —
+  500px total. A 200px offset puts the car at 40% of the straight, leaving room to accelerate
+  before the first turn while being far enough from checkpoint 0 (200px vs 40px radius = 5x
+  the collection distance). Smaller offsets like 50-100px would work but leave less margin.
+
+- **Speed threshold at 5.0 vs 0:** Using `speed > 0` would technically work but is fragile —
+  floating point noise could cause the speed to hover near zero. A threshold of 5.0 px/s
+  (barely moving) provides a clean buffer while being so low that normal forward driving
+  always qualifies. This value is in the config so it can be tuned.
+
+- **Grace period of 30 steps:** At 60fps, this is 0.5 seconds. The car needs ~0.17 seconds to
+  reach 50 px/s from standstill with 300 px/s^2 acceleration, so 30 steps gives ample time for
+  the car to clear the spawn area. Too short (5-10 steps) might not be enough if the AI's first
+  few actions are noisy. Too long (100+ steps) would delay legitimate checkpoint collection.
+
+- **Human mode unaffected:** The renderer.py checkpoint system uses line-crossing detection with
+  two-stage finish-line protection (Issue #003). It's completely independent of the training
+  breadcrumb system. The spawn offset improves human mode too — the car no longer starts at the
+  tight corner junction between the approach segment and the straight.
+
+**Issues:** None.
+
+---
+
 ### [2026-02-23] Fix Agent -- Issue #005 Resolution: watch.py Event Loop Inversion
 
 **Files:** `ai/watch.py`, `ai/racing_env.py`, `ISSUES.md`

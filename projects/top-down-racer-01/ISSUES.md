@@ -312,4 +312,126 @@ None. The renderer.py checkpoint system (line-crossing with two-stage finish-lin
 
 ---
 
-*Maintained by Harry 🧙 — if it broke and got fixed, it lives here*
+---
+
+## Issue #007 — Reward Tuning (Phase 2 Training)
+
+**Date:** 2026-02-23
+**Requested by:** Briggsy
+**Status:** ✅ Applied
+
+### Problem
+Phase 2 training reward signal needed rebalancing. Breadcrumb reward was too weak relative to penalties, wall hits weren't punished enough, zigzag spacing was too loose in tight corners, and the stuck timer was too generous.
+
+### Changes (`configs/default.yaml`)
+
+| Setting | Before | After | Reasoning |
+|---|---|---|---|
+| `training_checkpoint_reward` | `3.0` | `5.0` | Stronger breadcrumb signal — makes forward progress the dominant reward |
+| `wall_damage_penalty_scale` | `0.5` | `2.0` | 4x harsher wall penalty — teaches the agent to avoid walls earlier |
+| `zigzag_spacing_multiplier` | `0.7` | `0.5` | Denser breadcrumbs in tight curves — better guidance through hairpins and S-curves |
+| `stuck_timeout` | `3.0` | `2.0` | Faster stuck detection — agent gets terminated sooner when stalled |
+
+### Impact
+- Breadcrumb reward per lap: ~150 → ~250 (at ~50 checkpoints)
+- Wall hit penalty for a 300 px/s impact: -10 → -40 (4x increase)
+- More training checkpoints packed into high-curvature sections
+- Stuck episodes end 1 second sooner, reducing wasted training steps
+
+---
+
+---
+
+---
+
+## Issue #008 — Reward Exploitation & Entropy Collapse (v3 Training)
+
+**Date:** 2026-02-23
+**Found by:** Briggsy (TensorBoard analysis + watch mode observation)
+**Status:** Fixed
+
+### Problem
+Three issues discovered after richard_petty_v3 (5M step) training run:
+
+1. **Reward exploit observed:** The AI found a hack — it drives to the first curve, hits the wall, reverses onto a breadcrumb dot, and oscillates back and forth. This appeared to give free reward without forward progress.
+
+2. **Wall damage too lethal:** `wall_damage_penalty_scale: 2.0` (set in Issue #007) caused episodes to end so quickly from wall hits that the agent couldn't learn from mistakes. It died before getting useful gradient signal.
+
+3. **Entropy collapse:** Policy entropy dropped to near-zero by ~50% through training. The agent stopped exploring and got stuck in a local minimum (the oscillation exploit). With no entropy bonus, PPO had no incentive to maintain action diversity.
+
+### Investigation — Breadcrumb System
+
+Audited the breadcrumb collection system in `ai/racing_env.py`. The system uses a sequential `_next_checkpoint_idx` that only advances forward — checkpoint N must be collected before N+1 becomes available. This means:
+
+- The SAME breadcrumb cannot be collected twice in one lap (sequential index prevents it)
+- Reverse collection is blocked (`car.speed > min_checkpoint_speed`, speed is signed negative in reverse)
+- Grace period blocks collection for 30 steps after spawn
+
+**Verdict:** The one-time-per-lap mechanism is correctly implemented. The observed "oscillation" exploit was likely the agent farming speed reward + smooth steering bonus by oscillating near a wall, not actually re-collecting breadcrumbs. The sequential index makes breadcrumb re-collection impossible without a full lap.
+
+### Fixes Applied
+
+| File | Change | Reasoning |
+|------|--------|-----------|
+| `configs/default.yaml` | `wall_damage_penalty_scale`: 2.0 -> 0.8 | Punishing but survivable — gives agent time to learn from wall hits instead of dying instantly |
+| `configs/default.yaml` | Added `ent_coef: 0.01` | Entropy bonus keeps exploration alive longer, prevents premature convergence to exploit strategies |
+| `ai/train.py` | Pass `ent_coef` from config to PPO constructor | Wires the new config value into SB3's PPO |
+
+### Expected Impact for v4 Training
+- **Wall penalty:** A 300 px/s impact: penalty drops from -40 to -16. Agent survives ~3x more wall hits per episode.
+- **Entropy:** 0.01 coefficient adds a small bonus for action randomness throughout training. Standard technique to prevent policy collapse in continuous action spaces.
+- **Breadcrumbs:** Already correct — no change needed. The sequential index system ensures one-time collection per lap.
+
+---
+
+---
+
+## Issue #009 -- Missing Training Observability (ep_rew_mean, episode stats, checkpoints)
+
+**Date:** 2026-02-23
+**Found by:** Briggsy (TensorBoard analysis of v1-v4 runs)
+**Status:** Fixed
+
+### Problem
+Three observability gaps made it hard to understand training progress:
+
+1. **`ep_rew_mean` never appeared in training output.** SB3's built-in episode reward/length stats were missing from both console output and TensorBoard. Without these, the only reward signal was the raw per-step values -- impossible to tell if the agent was actually improving episode-over-episode.
+
+2. **No per-episode diagnostic stats.** When episodes ended, there was no record of how far the agent got (breadcrumbs collected), how much of the track it covered (major checkpoints), or how long it survived (step count). Debugging reward exploits and learning stalls required guessing from raw reward curves.
+
+3. **No mid-training model snapshots.** Training ran for millions of steps before saving a single model. Couldn't run `watch.py` mid-training to visually inspect progress or catch problems early.
+
+### Root Causes
+
+1. **No Monitor wrapper.** SB3 requires each env to be wrapped in `stable_baselines3.common.monitor.Monitor` for episode-level stats (`ep_rew_mean`, `ep_len_mean`) to be tracked. The `make_env()` factory returned a bare `RacingEnv`.
+
+2. **Info dict missing key fields.** `racing_env.py`'s `step()` info dict had reward breakdown and collision data, but no cumulative episode-level counters for breadcrumbs, track progress, or step count.
+
+3. **No `CheckpointCallback`.** `model.learn()` was called with no callbacks at all -- no periodic saves, no custom logging.
+
+### Fixes Applied
+
+| File | Change | Purpose |
+|------|--------|---------|
+| `ai/train.py` | Wrapped `RacingEnv` in `Monitor()` inside `make_env()` | Enables `ep_rew_mean` and `ep_len_mean` in SB3 output |
+| `ai/racing_env.py` | Added `_breadcrumbs_collected` counter, `breadcrumbs_collected`, `checkpoints_hit` (0-4 quarters), `step_count` to info dict | Episode-level diagnostics available to callbacks |
+| `ai/train.py` | Added `EpisodeStatsCallback(BaseCallback)` logging per-episode and rolling-100 means to TensorBoard | `episode/breadcrumbs_collected`, `episode/checkpoints_hit`, `episode/survived_steps` + rolling means |
+| `ai/train.py` | Added `CheckpointCallback(save_freq=500K // num_envs)` saving to `models/checkpoints/` | Mid-training snapshots for `watch.py` inspection |
+| `ai/train.py` | Combined callbacks via `CallbackList`, passed to `model.learn()` | Both callbacks active during training |
+
+### New TensorBoard Metrics
+- `rollout/ep_rew_mean` -- mean episode reward (from Monitor)
+- `rollout/ep_len_mean` -- mean episode length (from Monitor)
+- `episode/breadcrumbs_collected` -- per-episode breadcrumb count
+- `episode/checkpoints_hit` -- per-episode major checkpoint progress (0-4)
+- `episode/survived_steps` -- per-episode step count
+- `episode/mean_breadcrumbs_100` -- rolling 100-episode mean
+- `episode/mean_checkpoints_100` -- rolling 100-episode mean
+- `episode/mean_steps_100` -- rolling 100-episode mean
+
+### Impact
+Training output now shows episode-level stats in real-time. TensorBoard has full diagnostic curves. Model snapshots every 500K steps allow `watch.py` to inspect the agent mid-training without waiting for the full run to complete.
+
+---
+
+*Maintained by Harry -- if it broke and got fixed, it lives here*

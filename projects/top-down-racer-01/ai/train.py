@@ -15,10 +15,13 @@ Usage:
 
 import argparse
 import sys
+from collections import deque
 from pathlib import Path
 
+import numpy as np
 import yaml
 from stable_baselines3 import PPO
+from stable_baselines3.common.callbacks import BaseCallback, CallbackList, CheckpointCallback
 from stable_baselines3.common.vec_env import SubprocVecEnv
 
 
@@ -38,6 +41,67 @@ def load_config(config_path: str) -> dict:
 
     with open(path, "r", encoding="utf-8") as f:
         return yaml.safe_load(f)
+
+
+class EpisodeStatsCallback(BaseCallback):
+    """Custom callback that logs per-episode racing stats to TensorBoard.
+
+    Tracks breadcrumbs collected, major checkpoints hit (0-4), and episode
+    length (survived steps). Logs both per-episode values and rolling means
+    over the last 100 episodes.
+    """
+
+    def __init__(self, verbose: int = 0) -> None:
+        super().__init__(verbose)
+        self._ep_breadcrumbs: deque[int] = deque(maxlen=100)
+        self._ep_checkpoints: deque[int] = deque(maxlen=100)
+        self._ep_steps: deque[int] = deque(maxlen=100)
+
+    def _on_step(self) -> bool:
+        """Called after each vectorized step. Check for completed episodes."""
+        infos = self.locals.get("infos", [])
+        dones = self.locals.get("dones", [])
+
+        if infos is None or dones is None:
+            return True
+
+        for i, done in enumerate(dones):
+            if done and i < len(infos):
+                info = infos[i]
+                breadcrumbs = info.get("breadcrumbs_collected", 0)
+                checkpoints = info.get("checkpoints_hit", 0)
+                steps = info.get("step_count", 0)
+
+                self._ep_breadcrumbs.append(breadcrumbs)
+                self._ep_checkpoints.append(checkpoints)
+                self._ep_steps.append(steps)
+
+                # Log to TensorBoard
+                self.logger.record("episode/breadcrumbs_collected", breadcrumbs)
+                self.logger.record("episode/checkpoints_hit", checkpoints)
+                self.logger.record("episode/survived_steps", steps)
+
+                if len(self._ep_breadcrumbs) > 0:
+                    self.logger.record(
+                        "episode/mean_breadcrumbs_100",
+                        np.mean(self._ep_breadcrumbs),
+                    )
+                    self.logger.record(
+                        "episode/mean_checkpoints_100",
+                        np.mean(self._ep_checkpoints),
+                    )
+                    self.logger.record(
+                        "episode/mean_steps_100",
+                        np.mean(self._ep_steps),
+                    )
+
+                if self.verbose >= 1:
+                    print(
+                        f"  Episode done: breadcrumbs={breadcrumbs}, "
+                        f"checkpoints={checkpoints}/4, steps={steps}"
+                    )
+
+        return True
 
 
 def make_env(config_path: str = "configs/default.yaml"):
@@ -62,7 +126,8 @@ def make_env(config_path: str = "configs/default.yaml"):
         if project_root not in sys.path:
             sys.path.insert(0, project_root)
         from ai.racing_env import RacingEnv
-        return RacingEnv(config_path=config_path)
+        from stable_baselines3.common.monitor import Monitor
+        return Monitor(RacingEnv(config_path=config_path))
     return _init
 
 
@@ -148,6 +213,7 @@ def main() -> None:
         "gamma": ai_cfg.get("gamma", 0.99),
         "gae_lambda": ai_cfg.get("gae_lambda", 0.95),
         "clip_range": ai_cfg.get("clip_range", 0.2),
+        "ent_coef": ai_cfg.get("ent_coef", 0.0),
         "verbose": 1,
         "tensorboard_log": str(log_dir),
     }
@@ -169,12 +235,25 @@ def main() -> None:
         print(f"Creating new PPO model with policy: {policy_type}")
         model = PPO(policy_type, env, **ppo_kwargs)
 
+    # --- Callbacks -----------------------------------------------------------
+    checkpoint_dir = model_dir / "checkpoints"
+    checkpoint_dir.mkdir(parents=True, exist_ok=True)
+
+    checkpoint_cb = CheckpointCallback(
+        save_freq=max(500_000 // num_envs, 1),
+        save_path=str(checkpoint_dir),
+        name_prefix=args.model_name,
+    )
+    episode_stats_cb = EpisodeStatsCallback(verbose=1)
+    callbacks = CallbackList([checkpoint_cb, episode_stats_cb])
+
     # --- Train ---------------------------------------------------------------
     print(f"Training for {args.timesteps:,} timesteps...")
     print(f"TensorBoard logs: {log_dir}")
+    print(f"Checkpoints every 500K steps: {checkpoint_dir}")
     print("  (run `tensorboard --logdir logs` to monitor)")
 
-    model.learn(total_timesteps=args.timesteps, progress_bar=True)
+    model.learn(total_timesteps=args.timesteps, callback=callbacks, progress_bar=True)
 
     # --- Save model ----------------------------------------------------------
     version_name = find_next_version(model_dir, args.model_name)

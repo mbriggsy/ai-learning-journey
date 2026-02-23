@@ -127,6 +127,7 @@ class RacingEnv(gym.Env):
         self._steps_since_reset: int = 0
         self._wall_hits: int = 0
         self._stuck_steps: int = 0
+        self._breadcrumbs_collected: int = 0
         self._lap_start_step: int = 0
         self._lap_times: list[float] = []
         self._prev_action: np.ndarray = np.zeros(3, dtype=np.float32)
@@ -170,6 +171,7 @@ class RacingEnv(gym.Env):
         self._steps_since_reset = 0
         self._wall_hits = 0
         self._stuck_steps = 0
+        self._breadcrumbs_collected = 0
         self._lap_start_step = 0
         self._lap_times = []
         self._prev_action = np.zeros(3, dtype=np.float32)
@@ -243,6 +245,7 @@ class RacingEnv(gym.Env):
             )
 
             if cp_reached:
+                self._breadcrumbs_collected += 1
                 was_at_last = (
                     self._next_checkpoint_idx == self._num_checkpoints - 1
                 )
@@ -286,6 +289,11 @@ class RacingEnv(gym.Env):
         )
 
         # --- Info dict ---------------------------------------------------
+        # Major checkpoints: divide lap into 4 quarters based on breadcrumb progress
+        checkpoints_hit: int = min(
+            self._breadcrumbs_collected * 4 // self._num_checkpoints, 4
+        )
+
         info: dict = {
             "laps_completed": self._laps_completed,
             "wall_hits": self._wall_hits,
@@ -295,6 +303,9 @@ class RacingEnv(gym.Env):
             "wall_damage": wall_damage,
             "dead": not self._car.is_alive,
             "reward_breakdown": breakdown,
+            "breadcrumbs_collected": self._breadcrumbs_collected,
+            "checkpoints_hit": checkpoints_hit,
+            "step_count": self._step_count,
         }
 
         # --- Update tracking state ---------------------------------------

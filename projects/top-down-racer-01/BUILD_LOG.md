@@ -392,3 +392,93 @@ Visual (render_mode="human"): 360 frames, window opened and closed cleanly ✓
 ```
 
 ---
+
+### [2026-02-23] 🏋️ Phase 2 Training — richard_petty v1 through v4
+
+**Files:** `ai/train.py`, `configs/default.yaml`, `models/richard_petty_*.zip`
+
+**Summary:** Four training runs over the course of Phase 2, each one revealing a new problem and teaching a new lesson about RL reward shaping. This is the story of Richard Petty learning to drive — or more accurately, learning to exploit every shortcut we accidentally left open.
+
+---
+
+#### Run 1: richard_petty_v1 — 500K steps (baseline)
+
+**Config:** Default rewards, 8 parallel envs, PPO with SB3 defaults.
+**Result:** Baby model. 0 laps completed per episode. The car barely moved with purpose — random flailing near the start area. This was expected for 500K steps; PPO needs millions of steps to learn continuous control tasks. The model existed mainly to validate the training pipeline end-to-end: env creation, parallel workers, model saving, TensorBoard logging all worked.
+**Verdict:** Pipeline works. Need more steps.
+
+---
+
+#### Run 2: richard_petty_v2 — 2M steps
+
+**Config:** Same as v1. watch.py fixed (Issue #005) so we could actually observe the agent.
+**Result:** Car was visible and driving but stuck near the start line. It would accelerate, hit the first wall, bounce, and repeat without making meaningful forward progress. `ep_rew_mean` never appeared in TensorBoard — meaning episodes were not completing (car dying or getting stuck before any lap finished). The model was too early-stage to draw conclusions about reward shaping, but the lack of episode completions was a red flag.
+**Key learning:** 2M steps still isn't enough for this environment. Also: you can't debug RL without visualization. Fixing watch.py (Issue #005) was essential — without it we'd be flying blind.
+
+---
+
+#### Run 3: richard_petty_v3 — 5M steps (reward tuning)
+
+**Config changes (Issue #007):**
+- `training_checkpoint_reward`: 3 → 5 (stronger breadcrumb signal)
+- `wall_damage_penalty_scale`: 0.5 → 2.0 (harsher wall penalty)
+- `zigzag_spacing_multiplier`: 0.7 → 0.5 (denser breadcrumbs in tight curves)
+- `stuck_timeout`: 3.0 → 2.0 (faster stuck detection)
+
+**Result: WORSE.** The AI found an exploit. Instead of driving the track, it drove to the first curve, hit the wall, reversed onto a breadcrumb dot, and oscillated back and forth. It appeared to be farming reward without forward progress.
+
+**TensorBoard analysis:**
+- `ep_rew_mean` never appeared — episodes still not completing
+- `entropy_loss` collapsed to near-zero by ~2.5M steps (50% through training)
+- `explained_variance` reached 0.9+ — the value function was excellent at predicting returns, but the returns it was predicting were from the exploit strategy
+- Policy locked into a local minimum (the oscillation pattern) with no exploration pressure to escape it
+
+**Post-mortem (Issue #008):** Audited the breadcrumb system. The sequential `_next_checkpoint_idx` mechanism is actually correct — checkpoint N must be collected before N+1, so the same breadcrumb can't be re-collected. The "oscillation" was likely the agent farming speed reward + smooth steering bonus near the wall, not re-collecting breadcrumbs. But the real killer was the entropy collapse: with `ent_coef=0.0` (SB3 default), the agent had zero incentive to maintain action diversity, so once it found any reward-positive strategy it locked in permanently.
+
+**Key learnings:**
+1. **Reward hacking is real.** The AI will find the easiest path to reward, even if it's degenerate. Classic RL problem.
+2. **Entropy collapse = premature convergence.** High explained_variance + zero entropy = the agent is very confident about a bad strategy.
+3. **Wall penalty too aggressive.** At 2.0, episodes ended so fast from wall damage that the agent couldn't learn from mistakes. It died before getting useful gradient signal.
+4. **Good value function ≠ good policy.** explained_variance 0.9+ means the critic is accurate, but accurate predictions of exploit-strategy returns are useless.
+
+---
+
+#### Run 4: richard_petty_v4 — 5M steps (in progress)
+
+**Config changes (Issue #008):**
+- `wall_damage_penalty_scale`: 2.0 → 0.8 (punishing but survivable — 300 px/s impact goes from -40 to -16 penalty)
+- `ent_coef`: 0.0 → 0.01 (entropy bonus keeps exploration alive, standard for continuous action spaces)
+- Breadcrumbs: no change needed (already one-time-per-lap)
+
+**Hypothesis:** The entropy coefficient will prevent premature convergence, and the reduced wall penalty will let the agent survive long enough to discover that forward progress (breadcrumbs) pays better than oscillating. If the agent still can't complete laps at 5M steps, the next lever is curriculum learning or increasing total training steps significantly.
+
+**Status:** Training in progress.
+
+---
+
+**Decisions:**
+- **Why not increase total steps?** We could throw 20M+ steps at the problem, but if the reward signal is broken, more steps just means more time spent exploiting. Fix the incentives first, then scale up.
+- **Why ent_coef=0.01 and not higher?** 0.01 is the standard starting point for continuous PPO. Too high (0.1+) makes the policy too random and learning becomes noisy. Too low (0.001) might not prevent collapse. 0.01 is the textbook value.
+- **Why reduce wall penalty instead of removing it?** Walls still need to hurt — the agent needs to learn to avoid them. But it needs to survive long enough to learn. The 0.8 value means a heavy hit costs ~3 breadcrumbs, which is enough to incentivize avoidance without instant death spirals.
+
+**Issues:** None with the training pipeline itself. All issues were reward design problems, not code bugs.
+
+---
+
+### [2026-02-23] Fix Agent -- Issue #008: Reward Exploitation & Entropy Collapse (v4 Prep)
+
+**Files:** `configs/default.yaml`, `ai/train.py`, `ISSUES.md`
+
+**Summary:** Post-mortem on richard_petty_v3 training revealed three issues: apparent reward exploitation (oscillation near wall/breadcrumbs), episodes dying too fast from wall penalty, and entropy collapsing to zero mid-training. Investigated breadcrumb system, tuned wall penalty, added entropy coefficient.
+
+**Decisions:**
+
+- **Breadcrumb system audit:** Traced the full collection path in `racing_env.py`. The sequential `_next_checkpoint_idx` system is already a correct one-time-per-lap mechanism. Checkpoint N must be collected before N+1 is available, and the index only advances forward. Combined with the forward-speed guard (`car.speed > 5.0`, speed is signed negative in reverse) and spawn grace period, re-collection of the same breadcrumb is impossible without completing a full lap. No code change needed.
+
+- **Wall penalty 2.0 -> 0.8:** The v3 value of 2.0 was too aggressive. A 300 px/s impact produced a -40 penalty (8 breadcrumbs worth), and the agent died so fast it couldn't learn from mistakes. Dropped to 0.8 so a heavy hit is -16 (about 3 breadcrumbs). Still punishing, but the agent survives long enough to get useful gradient signal.
+
+- **ent_coef: 0.01:** SB3's PPO default is 0.0 (no entropy bonus). This let the policy entropy collapse to near-zero by 2.5M steps, locking the agent into whatever local minimum it found first (the oscillation pattern). Setting ent_coef=0.01 adds a small bonus for maintaining action diversity. This is standard practice for continuous action spaces. Wired into `train.py`'s `ppo_kwargs` with fallback to 0.0 for backward compatibility.
+
+**Issues:** None -- all changes are config/wiring, no game logic modified.
+
+---

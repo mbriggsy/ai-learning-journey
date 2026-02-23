@@ -179,9 +179,9 @@ ai:
   # ~50 per lap at 150px spacing on this ~7200px circuit.
   training_checkpoint_spacing: 150  # Pixels between training breadcrumbs along the centerline
   training_checkpoint_radius: 40    # How close car must get to collect a breadcrumb (pixels).
-  zigzag_spacing_multiplier: 0.7    # Tighter spacing in high-curvature sections (< 1.0 = more checkpoints).
+  zigzag_spacing_multiplier: 0.5    # Tighter spacing in high-curvature sections (< 1.0 = more checkpoints).
   curvature_threshold: 0.3          # Radians; centerline segments above this are "tight".
-  training_checkpoint_reward: 3.0   # Reward per breadcrumb collected. 50 * 3.0 = 150 per lap — the backbone of learning.
+  training_checkpoint_reward: 5.0   # Reward per breadcrumb collected. 50 * 5.0 = 250 per lap — the backbone of learning.
 
   # --- Lap completion ---
   lap_completion_bonus: 20.0        # Bonus on top of the final breadcrumb for completing a full lap.
@@ -195,7 +195,7 @@ ai:
   # reward -= wall_damage * wall_damage_penalty_scale per collision step.
   # A 300 px/s impact deals (300-100)*0.1 = 20 damage → penalty = 20 * 0.5 = -10.
   # One heavy hit ≈ losing ~3 breadcrumbs worth of reward.
-  wall_damage_penalty_scale: 0.5    # Proportional to actual damage taken.
+  wall_damage_penalty_scale: 0.8    # Proportional to actual damage taken. Was 2.0 (v3) -- too lethal, episodes ended before learning.
 
   # --- Death penalty ---
   death_penalty: 20.0               # Large negative for dying. Episode-terminal.
@@ -213,7 +213,7 @@ ai:
   # If the car is stuck (very low speed for too long), apply death-level penalty.
   # The environment wrapper handles detecting "stuck" — rewards.py just uses the flag.
   stuck_speed_threshold: 10.0       # Speed below this counts as "stuck" (pixels/sec).
-  stuck_timeout: 3.0                # Seconds at low speed before is_stuck fires.
+  stuck_timeout: 2.0                # Seconds at low speed before is_stuck fires.
 
   # --- Spawn protection ---
   spawn_grace_steps: 30             # Steps after reset where checkpoint collection is disabled.
@@ -232,3 +232,4 @@ ai:
   gamma: 0.99                       # Discount factor.
   gae_lambda: 0.95                  # GAE lambda.
   clip_range: 0.2                   # PPO clipping range.
+  ent_coef: 0.01                    # Entropy bonus coefficient. Default SB3 is 0.0; 0.01 keeps exploration alive longer.

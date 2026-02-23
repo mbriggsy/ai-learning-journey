@@ -236,3 +236,49 @@ Also updated `configs/default.yaml` to add PPO hyperparameters, checkpoint colle
 **Issues:** None. The environment interfaces cleanly with all upstream modules. Key integration points verified: `Car.__init__(config, x, y, angle)` matches spawn data from `Track.get_spawn_position()`, `check_wall_collisions()` accepts `car.get_corners()` and track wall segments, `resolve_collision()` takes the car + CollisionInfo + config, `build_observation()` takes car + wall segments + checkpoint + config. All function signatures align without adapter code.
 
 ---
+
+---
+### [2026-02-22] 🎨 Team Lead — render_mode="human" for Gymnasium Env (Issue #005)
+
+**Files:** `ai/watch_renderer.py` (new), `ai/racing_env.py` (modified)
+
+**Summary:** Implemented the `render_mode="human"` path in `RacingEnv` so `watch.py` can display Richard Petty driving with the full Arcade renderer, ray-cast visualization, and breadcrumb overlay.
+
+Created `ai/watch_renderer.py` with `WatchView(arcade.View)`. Rather than adapting `RacerView` (which creates its own Car/Track and runs via `arcade.run()`), `WatchView` holds a *reference* to the env and reads live state directly each frame — no duplicated game objects. The render loop is driven manually: `racing_env.render()` calls `window.switch_to()` → `dispatch_pending_events()` → `view.on_draw()` → `window.flip()`, giving us per-step control without Arcade's event loop.
+
+Modified `RacingEnv`:
+- `__init__`: lazy `import arcade` + `WatchView` creation inside `if render_mode == "human":` branch — headless training has zero arcade overhead
+- `reset()`: stores `_last_obs` for ray visualization; calls `watch_view.handle_reset()` to snap camera on episode start
+- `step()`: stores `_last_obs` and `_last_action` after each step
+- `render()`: implemented — no-op for None mode, manual Arcade render loop for human mode
+- `close()`: implemented — closes Arcade window cleanly
+
+**Visualizations in WatchView:**
+- **Rays:** 12 lines from car, color-coded red (wall nearby) → green (open road), with a dot at each hit point. Reads from `env._last_obs[:12]`.
+- **Breadcrumbs:** All ~65 training checkpoints shown as faint white dots. Next target checkpoint is bright yellow with a faint ring around it.
+- **HUD:** Reuses the existing Phase 1 `HUD` class for health/speed/lap info. Displays lap count from `_laps_completed` and current lap time from `_step_count * _dt`.
+- **Action bars:** Three mini horizontal bars at bottom-right — steering (blue/red centered), throttle (green/orange), drift (purple). Shows exactly what action the agent is taking this step.
+
+**Decisions:**
+
+- **Separate WatchView, not reusing RacerView:** `RacerView` creates its own Car/Track and runs via `arcade.run()`. Adapting it would require either sharing mutable game objects (fragile) or rebuilding RacerView's init contract. A dedicated thin view that references the env is simpler, cleaner, and lets us add AI-specific visualizations without touching Phase 1 code at all.
+
+- **Manual render loop instead of arcade.run():** Gymnasium's contract is synchronous: step() → render() per tick. We need to control when frames are displayed. Using `window.switch_to()` + `dispatch_pending_events()` + `view.on_draw()` + `window.flip()` gives us exactly that without the event loop taking over. This is the standard headless/manual Arcade pattern (also used in testing).
+
+- **Lazy arcade import:** `import arcade` and `from ai.watch_renderer import WatchView` only happen inside the `if render_mode == "human":` branch of `__init__`. Headless training (8 parallel envs in SubprocVecEnv) never touches arcade. On machines without a display or where arcade is slow to import, training is unaffected.
+
+- **`_last_obs` / `_last_action` cache:** Both are stored on the env so the renderer can read them without the caller passing them into `render()`. Gymnasium's render() signature takes no arguments. The cache is updated at the end of every `step()` and `reset()`, so `on_draw()` always sees the most recent state.
+
+- **HUD total_laps=0 for watch mode:** The Phase 1 HUD displays "Lap N / TOTAL". For the AI watch mode, there's no fixed race length, so we pass `total_laps=0` which the HUD renders as "Lap N / 0". This is a minor cosmetic issue — the meaningful info is the lap counter and times, which display correctly.
+
+**Issues:**
+
+- `PerformanceWarning: draw_text is an extremely slow function` — this comes from Phase 1's HUD.py and was there before. It's a known Arcade 3.x caution about using `arcade.draw_text()` instead of `arcade.Text` objects. Not new, not a blocker for watch mode. Fix would require updating hud.py to use pre-built `Text` objects, which is a Phase 1 concern.
+
+**Tests:**
+```
+Headless (render_mode=None): 20 steps, obs in [0,1], _last_obs set  ✓
+Visual (render_mode="human"): 360 frames, window opened and closed cleanly ✓
+```
+
+---

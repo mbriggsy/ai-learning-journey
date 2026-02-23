@@ -130,22 +130,6 @@ class RacingEnv(gym.Env):
         self._last_obs: np.ndarray | None = None
         self._last_action: np.ndarray = np.zeros(3, dtype=np.float32)
 
-        # --- Human render window (only when render_mode == "human") ------
-        self._window = None
-        self._watch_view = None
-        if render_mode == "human":
-            import arcade  # lazy import — keeps headless training free of arcade
-            from ai.watch_renderer import WatchView
-
-            screen = self._config["screen"]
-            self._window = arcade.Window(
-                screen["width"],
-                screen["height"],
-                screen["title"] + " — AI Watch",
-            )
-            self._watch_view = WatchView(self, self._config, render_options or {})
-            self._window.show_view(self._watch_view)
-
     # ------------------------------------------------------------------
     # Gymnasium API
     # ------------------------------------------------------------------
@@ -189,10 +173,6 @@ class RacingEnv(gym.Env):
         )
         self._last_obs = obs
         self._last_action = np.zeros(3, dtype=np.float32)
-
-        # Snap camera to spawn when rendering
-        if self._watch_view is not None:
-            self._watch_view.handle_reset()
 
         return obs, {}
 
@@ -312,27 +292,18 @@ class RacingEnv(gym.Env):
     def render(self) -> None:
         """Render the current environment state.
 
-        When render_mode is None (headless training), this is a no-op with
-        zero overhead. When render_mode is "human", draws one frame via the
-        WatchView Arcade view: track, car, ray-cast lines, breadcrumb dots,
-        HUD, and action bars.
+        Always a no-op. When watch mode is active, WatchWindow (in ai/watch.py)
+        owns the Arcade event loop and draws the game state in its own on_draw().
+        This method exists to satisfy the Gymnasium API contract.
 
         Returns:
             None.
         """
-        if self.render_mode != "human" or self._window is None:
-            return
-
-        self._window.switch_to()
-        self._window.dispatch_pending_events()
-        self._watch_view.on_draw()
-        self._window.flip()
+        return None
 
     def close(self) -> None:
-        """Clean up environment resources, including the Arcade window."""
-        if getattr(self, "_window", None) is not None:
-            self._window.close()
-            self._window = None
+        """Clean up environment resources."""
+        pass
 
     # ------------------------------------------------------------------
     # Internal helpers

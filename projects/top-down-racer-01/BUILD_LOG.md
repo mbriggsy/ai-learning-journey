@@ -5,6 +5,57 @@ Each agent logs their work here as they build the game.
 
 ---
 
+### [2026-02-23] Fix Agent -- Issue #005 Resolution: watch.py Event Loop Inversion
+
+**Files:** `ai/watch.py`, `ai/racing_env.py`, `ISSUES.md`
+
+**Summary:** Fixed the frozen watch window (Issue #005). The root problem was an
+architecture inversion: watch.py used a `while True: env.step(); env.render()` loop, and
+`env.render()` tried to manually pump Arcade's event queue with `dispatch_pending_events()`
+and `flip()`. Arcade requires IT to own the main loop via `arcade.run()`. A blocking while-loop
+starves the OS event queue, causing immediate "Not Responding".
+
+The fix flips the architecture entirely. Arcade now owns the loop. The agent drives from inside it.
+
+**`ai/watch.py`** was completely rewritten:
+- `WatchWindow(arcade.Window)` is the central class
+- `on_update(delta_time)` calls `model.predict()` and `env.step()` — inside Arcade's frame tick
+- `on_draw()` renders the full game state: track, car, drift trails, rays, breadcrumbs, HUD,
+  action bars, and a new episode info overlay (episode #, step count, last reward, total reward)
+- `arcade.run()` at the bottom starts the event loop — no while-loop anywhere
+- The env is created with `render_mode='rgb_array'` so it stays headless; WatchWindow owns display
+
+**`ai/racing_env.py`** was cleaned up:
+- Removed the `arcade.Window` + `WatchView` creation block from `__init__` (was gated on
+  `render_mode="human"`, which is now unused by watch.py)
+- `render()` is now always a no-op returning `None` — satisfies the Gymnasium API contract,
+  does nothing else
+- `reset()` no longer calls `watch_view.handle_reset()` (view no longer exists in env)
+- `close()` simplified to a no-op (env doesn't own the window anymore)
+
+**Decisions:**
+
+- **`render_mode='rgb_array'` vs `'human'`**: The env is now fully headless in watch mode.
+  WatchWindow builds its own `GameCamera`, `HUD`, and `ShapeElementList` from the same config,
+  and reads live state from `env._car`, `env._track`, `env._last_obs`, etc. This is cleaner than
+  having the env own the window — it keeps the separation: env = game logic, WatchWindow = display.
+
+- **Drawing code location**: Rather than calling `WatchView.on_draw()` (which would require
+  `show_view()` and View event routing complexity), the drawing methods were copied directly into
+  `WatchWindow`. Same logic, cleaner ownership. No arcade.View in the critical path.
+
+- **Speed multiplier as steps-per-frame**: `--speed 2` means 2 `env.step()` calls per
+  `on_update()`. Clean, integer-based, predictable. After each episode reset, we `break` out of
+  the inner loop so we don't step into the new episode in the same frame.
+
+- **Episode info overlay**: Added top-right overlay showing Episode #, Step count, last-step
+  Reward, and cumulative episode Total. Drawn in screen space after the HUD camera is active.
+
+**Issues:**
+- None encountered. The fix was straightforward once the root cause (event loop ownership) was clear.
+
+---
+
 ### [2026-02-22] 🔧 Foundation Agent — Project Setup
 
 **Files:** `configs/default.yaml`, `game/__init__.py`, `BUILD_LOG.md`

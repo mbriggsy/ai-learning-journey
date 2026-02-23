@@ -193,49 +193,64 @@ Removed the emoji. Used plain ASCII instead.
 
 ---
 
-## Issue #005 — watch.py Has No Game Window (render() is a Placeholder)
+## Issue #005 — watch.py Froze Because Step Loop Starved Arcade's Event Queue
 
-**Date:** 2026-02-22  
-**Found by:** Briggsy (first watch session)  
-**Status:** ⏳ Open — needs agent team fix
+**Date found:** 2026-02-22
+**Date fixed:** 2026-02-23
+**Found by:** Briggsy (first watch session)
+**Fixed by:** Fix agent (Issue #005)
+**Status:** Fixed
 
 ### Problem
-Running `python ai/watch.py` loads the model, runs episodes, and prints reward scores — but **no game window appears**. The AI is driving, you just can't see it.
+Running `python ai/watch.py` opened a window that immediately froze (Not Responding).
+The AI was stepping, but the window never updated.
 
-### Root Cause
-`RacingEnv.render()` in `ai/racing_env.py` is a stub with a TODO comment:
-
+### Root Cause — Architecture Inversion
+`watch.py` used a blocking `while True` loop:
 ```python
-def render(self) -> None:
-    """Render the environment.
-
-    Currently a placeholder. For headless training, render_mode is None...
-    handles Arcade window rendering separately.
-    """
-    # TODO: Integrate with Arcade renderer for watch.py visualization.
+while True:
+    action, _ = model.predict(obs)
+    obs, reward, terminated, truncated, info = env.step(action)
+    env.render()
 ```
 
-The agent team built the RL training loop but left the human visualization unfinished.
+`env.render()` tried to pump Arcade's event queue manually via `window.dispatch_pending_events()` and `window.flip()`. This never works — Arcade requires **it** to own the main loop via `arcade.run()`. Calling `dispatch_pending_events()` from inside a blocking while-loop doesn't give the OS event queue enough time to breathe, so the window shows "Not Responding" immediately.
 
-### What Needs to Be Done
+Additionally, `racing_env.__init__` was creating an `arcade.Window` when `render_mode="human"`, which conflicted with the architecture.
 
-Implement `render_mode="human"` in `RacingEnv` so it opens an Arcade window and draws the car/track in real time during watch mode:
+### Fix — Flip the Architecture
 
-1. When `render_mode="human"` and `env.reset()` is called: initialize an Arcade window using the existing `RacerView` renderer from `game/renderer.py`
-2. On each `env.render()` call: update the Arcade window with current car state, track, HUD
-3. Handle window close event gracefully (raise `KeyboardInterrupt` or set `terminated=True`)
+**`ai/watch.py`** — Complete rewrite:
+- Created `WatchWindow(arcade.Window)` with `on_update()` and `on_draw()`
+- `on_update()` calls `model.predict()` and `env.step()` — inside Arcade's event loop
+- `on_draw()` renders track, car, rays, breadcrumbs, HUD, action bars, episode info
+- `arcade.run()` at the bottom hands control to Arcade — no more blocking while-loop
+- Env is now created with `render_mode='rgb_array'` (WatchWindow handles the display)
+- Drawing logic adapted directly from `ai/watch_renderer.py` (WatchView)
 
-### Context
-- `game/renderer.py` already has a working `RacerView` (arcade.View) that renders everything
-- `game/car.py`, `game/track.py`, `game/physics.py` are rendering-agnostic
-- The RL env drives the car via `car.apply_controls()` — the renderer just needs to visualize that state
-- Watch mode: `python ai/watch.py` (auto-detects latest model in `models/`)
+**`ai/racing_env.py`** — Cleaned up:
+- Removed `arcade.Window` creation from `__init__` (was under `render_mode="human"`)
+- Removed `dispatch_pending_events()` / `flip()` from `render()`
+- `render()` is now always a no-op (returns `None`)
+- `reset()` no longer calls `watch_view.handle_reset()`
+- `close()` simplified (no window to close)
 
-### Acceptance Criteria
-- Running `python ai/watch.py` opens a visible game window
-- The AI car drives autonomously on the track (even badly — it's only 500k steps)
-- Ray visualization lines show what the AI "sees"
-- Window can be closed normally
+### Key Insight
+The fix is a pure architecture flip:
+
+| Before | After |
+|--------|-------|
+| `while True: env.step(); env.render()` | `arcade.run()` → calls `on_update()` each frame |
+| `env.render()` manually pumps events | Arcade pumps its own events natively |
+| `RacingEnv` creates the window | `WatchWindow` creates the window |
+| `render_mode="human"` | `render_mode="rgb_array"` (env is headless) |
+
+### Result
+- Window opens immediately, stays fully responsive
+- AI car drives autonomously on the track
+- Episode resets work correctly
+- Ray visualization, breadcrumbs, action bars, episode info all render correctly
+- ESC key closes the window cleanly
 
 ---
 

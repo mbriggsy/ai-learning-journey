@@ -148,3 +148,79 @@ drift:
   trail_lifetime: 3.0    # How long drift trail marks last in seconds before disappearing
   trail_width: 4          # Width of drift trail lines in pixels
   trail_fade_rate: 0.3    # Opacity decrease per second (1.0 / 0.3 = ~3.3s to fully fade, aligns with lifetime)
+
+# -----------------------------------------------------------------------------
+# AI / Reinforcement Learning
+# -----------------------------------------------------------------------------
+# Reward weights and training parameters for the Gymnasium RL environment.
+# All reward components are tuned so that:
+#   - Clean fast lap ≈ +270 total reward
+#   - Sloppy lap with wall hits ≈ +210
+#   - Dying halfway ≈ +40 then -20
+#   - Sitting still ≈ -18 per 30 seconds
+# The ratios matter more than absolute values. Breadcrumb checkpoints are the
+# PRIMARY learning signal — everything else is secondary shaping.
+# -----------------------------------------------------------------------------
+ai:
+  # --- Policy ---
+  policy: MlpPolicy                 # SB3 policy class name.
+
+  # --- Observation space ---
+  num_rays: 12                      # Number of ray-cast distance sensors for AI observations.
+  ray_spread_degrees: 240           # Forward fan arc for ray casting (degrees).
+  max_ray_distance: 400             # Maximum ray length in pixels.
+
+  # --- Training checkpoints (breadcrumbs) ---
+  # Placed every `training_checkpoint_spacing` pixels along the track centerline.
+  # ~50 per lap at 150px spacing on this ~7200px circuit.
+  training_checkpoint_spacing: 150  # Pixels between training breadcrumbs along the centerline
+  training_checkpoint_radius: 40    # How close car must get to collect a breadcrumb (pixels).
+  zigzag_spacing_multiplier: 0.7    # Tighter spacing in high-curvature sections (< 1.0 = more checkpoints).
+  curvature_threshold: 0.3          # Radians; centerline segments above this are "tight".
+  training_checkpoint_reward: 3.0   # Reward per breadcrumb collected. 50 * 3.0 = 150 per lap — the backbone of learning.
+
+  # --- Lap completion ---
+  lap_completion_bonus: 20.0        # Bonus on top of the final breadcrumb for completing a full lap.
+
+  # --- Speed reward (continuous) ---
+  # reward += (speed / max_speed) * speed_reward_scale per step.
+  # At avg 70% speed over 1200 steps: 0.7 * 0.12 * 1200 ≈ 101 per lap.
+  speed_reward_scale: 0.12          # Encourages movement without rewarding recklessness.
+
+  # --- Wall hit penalty ---
+  # reward -= wall_damage * wall_damage_penalty_scale per collision step.
+  # A 300 px/s impact deals (300-100)*0.1 = 20 damage → penalty = 20 * 0.5 = -10.
+  # One heavy hit ≈ losing ~3 breadcrumbs worth of reward.
+  wall_damage_penalty_scale: 0.5    # Proportional to actual damage taken.
+
+  # --- Death penalty ---
+  death_penalty: 20.0               # Large negative for dying. Episode-terminal.
+
+  # --- Time penalty (per step) ---
+  # Prevents the agent from sitting still. At 60fps over 30s: 0.01 * 1800 = -18.
+  time_penalty: 0.01                # Small constant subtracted every step.
+
+  # --- Smooth steering bonus ---
+  # Encourages smooth driving. Fires when steering change between steps < threshold.
+  smooth_steering_bonus: 0.01       # Small reward for not jerking the wheel.
+  smooth_steering_threshold: 0.1    # Max |curr_steering - prev_steering| to qualify.
+
+  # --- Stuck detection ---
+  # If the car is stuck (very low speed for too long), apply death-level penalty.
+  # The environment wrapper handles detecting "stuck" — rewards.py just uses the flag.
+  stuck_speed_threshold: 10.0       # Speed below this counts as "stuck" (pixels/sec).
+  stuck_timeout: 3.0                # Seconds at low speed before is_stuck fires.
+
+  # --- Episode limits ---
+  max_episode_steps: 6000           # Hard cutoff (~100 seconds at 60fps). Prevents infinite episodes.
+
+  # --- Training hyperparameters (PPO via Stable-Baselines3) ---
+  num_parallel_envs: 8              # SubprocVecEnv workers.
+  total_timesteps: 500000           # Default training budget.
+  learning_rate: 0.0003             # Adam optimizer LR.
+  n_steps: 2048                     # Rollout buffer length per env.
+  batch_size: 64                    # Minibatch size for PPO updates.
+  n_epochs: 10                      # PPO epochs per rollout.
+  gamma: 0.99                       # Discount factor.
+  gae_lambda: 0.95                  # GAE lambda.
+  clip_range: 0.2                   # PPO clipping range.

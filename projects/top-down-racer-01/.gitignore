@@ -4,6 +4,14 @@
 # Claude Code local settings (machine-specific)
 .claude/settings.local.json
 
+# TensorBoard training logs (can get large)
+logs/
+
+# Misc output files from debugging
+train_output.txt
+train_errors.txt
+watch_err.txt
+
 # Virtual environment
 .venv/
 

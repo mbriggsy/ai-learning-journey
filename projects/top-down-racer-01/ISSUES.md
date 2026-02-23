@@ -191,4 +191,52 @@ Removed the emoji. Used plain ASCII instead.
 
 ---
 
+---
+
+## Issue #005 — watch.py Has No Game Window (render() is a Placeholder)
+
+**Date:** 2026-02-22  
+**Found by:** Briggsy (first watch session)  
+**Status:** ⏳ Open — needs agent team fix
+
+### Problem
+Running `python ai/watch.py` loads the model, runs episodes, and prints reward scores — but **no game window appears**. The AI is driving, you just can't see it.
+
+### Root Cause
+`RacingEnv.render()` in `ai/racing_env.py` is a stub with a TODO comment:
+
+```python
+def render(self) -> None:
+    """Render the environment.
+
+    Currently a placeholder. For headless training, render_mode is None...
+    handles Arcade window rendering separately.
+    """
+    # TODO: Integrate with Arcade renderer for watch.py visualization.
+```
+
+The agent team built the RL training loop but left the human visualization unfinished.
+
+### What Needs to Be Done
+
+Implement `render_mode="human"` in `RacingEnv` so it opens an Arcade window and draws the car/track in real time during watch mode:
+
+1. When `render_mode="human"` and `env.reset()` is called: initialize an Arcade window using the existing `RacerView` renderer from `game/renderer.py`
+2. On each `env.render()` call: update the Arcade window with current car state, track, HUD
+3. Handle window close event gracefully (raise `KeyboardInterrupt` or set `terminated=True`)
+
+### Context
+- `game/renderer.py` already has a working `RacerView` (arcade.View) that renders everything
+- `game/car.py`, `game/track.py`, `game/physics.py` are rendering-agnostic
+- The RL env drives the car via `car.apply_controls()` — the renderer just needs to visualize that state
+- Watch mode: `python ai/watch.py` (auto-detects latest model in `models/`)
+
+### Acceptance Criteria
+- Running `python ai/watch.py` opens a visible game window
+- The AI car drives autonomously on the track (even badly — it's only 500k steps)
+- Ray visualization lines show what the AI "sees"
+- Window can be closed normally
+
+---
+
 *Maintained by Harry 🧙 — if it broke and got fixed, it lives here*

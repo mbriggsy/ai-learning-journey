@@ -188,8 +188,17 @@ ai:
 
   # --- Speed reward (continuous) ---
   # reward += (speed / max_speed) * speed_reward_scale per step.
-  # At avg 70% speed over 1200 steps: 0.7 * 0.12 * 1200 ≈ 101 per lap.
-  speed_reward_scale: 0.12          # Encourages movement without rewarding recklessness.
+  # Set to 0.0 for v6: replaced by forward progress reward to prevent wall-hugging exploit.
+  speed_reward_scale: 0.0           # Disabled in v6 -- forward progress reward replaces this.
+
+  # --- Forward progress reward (v6) ---
+  # Rewards movement along the track centerline. Positive delta = forward progress,
+  # negative delta = backward movement. Kills wall-hugging exploit because pinned
+  # cars make zero centerline progress regardless of wheel speed.
+  # With 24 centerline points, one full lap = 24.0 progress units.
+  # At ~0.02 progress/step cruising, reward/step ~ 0.04. Over ~1200 steps per lap: ~48.
+  forward_progress_reward_scale: 2.0   # Reward per unit of centerline progress (forward).
+  backward_progress_penalty_scale: 0.5 # Penalty multiplier for backward centerline movement.
 
   # --- Wall hit penalty ---
   # reward -= wall_damage * wall_damage_penalty_scale per collision step.

@@ -220,6 +220,52 @@ class Track:
             segments.append((inner_pt, outer_pt))
         return segments
 
+    def get_track_progress(self, x: float, y: float) -> float:
+        """Return how far along the centerline the given position is.
+
+        Projects the point onto each centerline segment and returns a
+        fractional index in [0, num_centerline_points).  For example, if the
+        point projects halfway between centerline[3] and centerline[4], this
+        returns 3.5.  Used by the RL environment to compute forward progress
+        reward along the track.
+
+        Args:
+            x: World x coordinate.
+            y: World y coordinate.
+
+        Returns:
+            Fractional index along the centerline (0 = start, wraps at N).
+        """
+        point = np.array([x, y], dtype=np.float64)
+        n = len(self.centerline)
+
+        best_progress: float = 0.0
+        best_dist_sq: float = float("inf")
+
+        for i in range(n):
+            a = self.centerline[i]
+            b = self.centerline[(i + 1) % n]
+
+            ab = b - a
+            ap = point - a
+            ab_len_sq = float(np.dot(ab, ab))
+
+            if ab_len_sq < 1e-12:
+                t = 0.0
+                dist_sq = float(np.dot(ap, ap))
+            else:
+                t = float(np.dot(ap, ab)) / ab_len_sq
+                t = max(0.0, min(1.0, t))
+                closest = a + t * ab
+                diff = point - closest
+                dist_sq = float(np.dot(diff, diff))
+
+            if dist_sq < best_dist_sq:
+                best_dist_sq = dist_sq
+                best_progress = float(i) + t
+
+        return best_progress
+
     def is_on_track(self, x: float, y: float) -> bool:
         """Check whether a world position is within the drivable road surface.
 

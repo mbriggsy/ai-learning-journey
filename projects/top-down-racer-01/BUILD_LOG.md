@@ -5,6 +5,36 @@ Each agent logs their work here as they build the game.
 
 ---
 
+### [2026-02-23] Fix Agent -- Issue #010: Replace Speed Reward with Centerline Forward Progress (v6 Prep)
+
+**Files:** `game/track.py`, `ai/rewards.py`, `ai/racing_env.py`, `configs/default.yaml`, `ISSUES.md`, `README.md`
+
+**Summary:** Replaced the raw speed reward with a forward progress reward along the track centerline. The v5 training run (killed at 3.16M steps) showed the AI exploiting the speed reward by pinning itself against a wall and holding the gas pedal -- wheels spinning = speed > 0 = free reward every step, with zero forward progress. ep_len_mean hit 6000 (max timeout) every episode while ep_checkpoints_hit stayed near zero.
+
+The fix has three parts:
+
+**Part 1 -- Track centerline projection (`game/track.py`):** Added `get_track_progress(x, y) -> float` to the Track class. This projects a world position onto the centerline path by testing against all 24 centerline segments, finding the closest point, and returning a fractional index [0, 24). For example, if the car is 40% of the way between centerline[3] and centerline[4], it returns 3.4. The algorithm is identical in structure to the existing `is_on_track()` method -- project point onto segment, compute parameter t, track the closest match -- but returns the fractional index instead of a boolean.
+
+**Part 2 -- Reward function (`ai/rewards.py`):** Added `forward_progress` field to StepInfo (float, positive = forward, negative = backward). Added a new reward component in `compute_reward()`: if forward_progress > 0, reward = delta * forward_progress_reward_scale; if < 0, penalty = delta * backward_progress_penalty_scale. The speed reward still exists but is controlled by `speed_reward_scale` which is now set to 0.0 in config. Updated `get_reward_range()` to include the new component in theoretical bounds.
+
+**Part 3 -- Environment tracking (`ai/racing_env.py`):** Added `_track_progress` (float) and `_num_centerline_points` (int) to the env. In `reset()`, initializes `_track_progress` from the car's spawn position. In `step()`, computes new progress, calculates delta, and handles wraparound: if the absolute delta exceeds half the track length (12 points), it's a start/finish seam crossing and the delta is corrected by adding/subtracting 24 (the full track length). The corrected delta is passed to StepInfo.
+
+**Decisions:**
+
+- **Why disable speed reward entirely (0.0) instead of just reducing it?** Even a small speed reward (e.g., 0.01) creates an incentive to keep wheels spinning when pinned. The forward progress reward already rewards movement naturally -- faster driving covers more centerline distance per step. There's no need for a separate speed signal. Setting it to 0.0 via config means it can be re-enabled for experimentation without code changes.
+
+- **Why use centerline segment projection instead of nearest-checkpoint distance?** The training checkpoints (breadcrumbs) are spaced ~150px apart, which is too coarse for per-step progress measurement. At 400 px/s max speed and 60fps, the car moves ~6.7px per step. Between breadcrumbs, the car would show zero progress for ~22 consecutive steps, then a jump when it crosses a breadcrumb. The centerline segments are much longer (~300px average), so the projection gives smooth, continuous progress every step.
+
+- **Why fractional index units instead of pixels?** The progress is measured in "centerline segment units" (0-24 for a full lap) rather than pixel distance. This means the reward scale doesn't need to change if the track gets bigger or smaller -- 1.0 unit of progress always means "moved forward by one centerline segment." The config value `forward_progress_reward_scale: 2.0` is easy to reason about: each segment gives +2.0 reward, times 24 segments = ~48 reward per clean lap from this component alone. Combined with ~250 from breadcrumbs, the total per-lap reward is ~298.
+
+- **Wraparound with half-track threshold:** The start/finish seam is between centerline[23] and centerline[0]. When the car crosses it going forward, progress jumps from ~23.8 to ~0.3 -- a raw delta of -23.5. Any delta whose absolute value exceeds 12 (half of 24) must be a seam crossing, not the car teleporting to the other side of the track. Correcting by +/-24 gives the true small forward delta (+0.5). This is the standard modular arithmetic approach for circular progress tracking.
+
+- **backward_progress_penalty_scale at 0.5 (not 2.0):** Driving backward is already punished implicitly: the car doesn't collect breadcrumbs (forward speed check), and the time penalty ticks away. A harsh backward penalty could punish the agent for small wobbles during drift (momentary backward projection). 0.5 is enough to discourage sustained backward driving without penalizing normal racing behavior.
+
+**Issues:** None.
+
+---
+
 ### [2026-02-23] Fix Agent -- Issue #006 Resolution: Spawn Position + False Lap Credit
 
 **Files:** `configs/default.yaml`, `game/track.py`, `ai/racing_env.py`, `ISSUES.md`

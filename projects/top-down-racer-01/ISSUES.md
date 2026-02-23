@@ -434,4 +434,66 @@ Training output now shows episode-level stats in real-time. TensorBoard has full
 
 ---
 
+---
+
+## Issue #010 -- Speed Reward Enables Wall-Hugging Exploit (v5 Training)
+
+**Date:** 2026-02-23
+**Found by:** Briggsy (TensorBoard analysis of v5 run at 3.16M steps)
+**Fixed by:** Fix agent (Issue #010)
+**Status:** Fixed
+
+### Problem
+In v5, the speed reward was computed as:
+```
+reward += 0.12 * (speed / max_speed)
+```
+This rewarded the car for going fast regardless of direction. The AI learned to:
+1. Grab a few early breadcrumbs
+2. Crash into a wall
+3. Hold the gas forever (wheels spinning = speed > 0 = free reward every step)
+
+**TensorBoard evidence:**
+- `ep_len_mean` hit 6000 (max episode timeout) every episode -- the car never died, never got stuck
+- `ep_checkpoints_hit` never exceeded ~0.03 -- the car wasn't making forward progress
+- The agent found a stable local minimum: wall-pinned + gas = infinite speed reward with no risk
+
+### Root Cause
+The speed reward is direction-agnostic. `abs(car.speed)` is positive whenever the wheels are spinning, even if the car is pinned against a wall making zero forward progress. The time penalty (-0.01/step) was far too small to offset the speed reward (+0.12 * speed_fraction per step), so the agent was net-positive just by holding the gas.
+
+### Fix -- Replace Speed Reward with Centerline Forward Progress
+
+**Concept:** Instead of rewarding raw speed, reward movement along the track centerline. Project the car's position onto the centerline each step, compute the delta, and reward forward progress while penalizing backward movement.
+
+**Implementation:**
+
+| File | Change |
+|------|--------|
+| `game/track.py` | Added `get_track_progress(x, y) -> float` -- projects a world position onto the centerline and returns a fractional index [0, N) representing how far along the track the car is |
+| `ai/rewards.py` | Added `forward_progress` field to `StepInfo`. Added forward progress reward component: positive delta * `forward_progress_reward_scale`, negative delta * `backward_progress_penalty_scale`. Updated `get_reward_range()` |
+| `ai/racing_env.py` | Added `_track_progress` tracking. Each step computes new progress, delta (with wraparound handling for the start/finish seam), and passes it to `StepInfo` |
+| `configs/default.yaml` | Added `forward_progress_reward_scale: 2.0`, `backward_progress_penalty_scale: 0.5`. Set `speed_reward_scale: 0.0` to disable the exploitable speed reward |
+
+**Why this kills the exploit:**
+- A car pinned against a wall with wheels spinning has speed > 0 but makes zero centerline progress. Forward progress reward = 0.
+- A car driving backward gets negative progress reward.
+- Only actual forward movement along the track generates reward.
+
+**Wraparound handling:** When the car crosses the start/finish seam (progress goes from ~23.8 to ~0.3), the raw delta would be -23.5. The code detects jumps larger than half the track (12 points) and adds/subtracts the full track length to get the correct small forward delta (+0.5).
+
+**Config values:**
+```yaml
+forward_progress_reward_scale: 2.0    # ~48 reward per lap at cruising speed
+backward_progress_penalty_scale: 0.5  # Small penalty for going the wrong way
+speed_reward_scale: 0.0               # Disabled -- was the exploit vector
+```
+
+### Expected Impact
+- Wall-hugging is no longer rewarded (zero centerline progress = zero reward)
+- Forward driving is directly incentivized
+- Breadcrumbs remain the primary learning signal (~250/lap); forward progress provides continuous shaping (~48/lap)
+- Combined with existing entropy coefficient (0.01), the agent should explore forward driving strategies
+
+---
+
 *Maintained by Harry -- if it broke and got fixed, it lives here*

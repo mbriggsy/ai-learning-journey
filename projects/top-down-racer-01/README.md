@@ -46,7 +46,9 @@ The game is wrapped as a Gymnasium environment and trained with PPO via Stable-B
 | richard_petty_v1 | 500K | Baby model, random flailing | Too few steps (pipeline validation only) |
 | richard_petty_v2 | 2M | Drives but stuck near start | Episodes not completing, ep_rew_mean never appeared |
 | richard_petty_v3 | 5M | **Worse** — exploited rewards | Entropy collapsed to ~0, agent oscillated near wall for easy reward |
-| richard_petty_v4 | 5M | **In progress** | Added ent_coef=0.01, reduced wall penalty 2.0→0.8 |
+| richard_petty_v4 | 5M | **In progress** | Added ent_coef=0.01, reduced wall penalty 2.0->0.8 |
+| richard_petty_v5 | 3.16M (killed) | **Wall-hugging exploit** | Speed reward let AI pin against wall + hold gas for free reward |
+| richard_petty_v6 | (planned) | -- | Replaced speed reward with centerline forward progress (Issue #010) |
 
 ### Key Lessons So Far
 1. **Reward hacking is real.** The AI found the easiest path to reward (oscillating near a breadcrumb) rather than actually driving the track.
@@ -54,6 +56,7 @@ The game is wrapped as a Gymnasium environment and trained with PPO via Stable-B
 3. **Penalties must be survivable.** Too-harsh wall damage (2.0x) caused instant death, preventing the agent from learning from mistakes.
 4. **Good value function ≠ good policy.** `explained_variance` 0.9+ just means the critic accurately predicts returns from the exploit strategy.
 5. **You can't debug RL blind.** Fixing watch.py (Issue #005) to visualize the agent was essential for diagnosing problems.
+6. **Direction-agnostic rewards get exploited.** Speed reward (`abs(speed) * scale`) rewards wheels spinning against a wall. Replace with direction-aware progress along the track centerline.
 
 ### AI Files
 ```

@@ -25,6 +25,8 @@ class StepInfo:
         prev_steering: Steering action from the previous step [-1, 1].
         curr_steering: Steering action this step [-1, 1].
         is_stuck: True if car has been below stuck_speed_threshold for too long.
+        forward_progress: Delta track progress this step (positive = forward along
+            centerline, negative = backward). Units are fractional centerline indices.
     """
 
     training_checkpoint_reached: bool
@@ -35,6 +37,7 @@ class StepInfo:
     prev_steering: float
     curr_steering: float
     is_stuck: bool = False
+    forward_progress: float = 0.0
 
 
 def compute_reward(
@@ -109,11 +112,14 @@ def compute_reward(
     death_penalty: float = float(ai.get("death_penalty", 20.0))
     time_penalty: float = float(ai.get("time_penalty", 0.01))
     smooth_bonus: float = float(ai.get("smooth_steering_bonus", 0.01))
+    fwd_progress_scale: float = float(ai.get("forward_progress_reward_scale", 2.0))
+    bwd_progress_scale: float = float(ai.get("backward_progress_penalty_scale", 0.5))
 
     breakdown: dict[str, float] = {
         "checkpoint": 0.0,
         "lap": 0.0,
         "speed": 0.0,
+        "forward_progress": 0.0,
         "wall_penalty": 0.0,
         "death_penalty": 0.0,
         "time_penalty": 0.0,
@@ -129,9 +135,15 @@ def compute_reward(
     if info.lap_completed:
         breakdown["lap"] = lap_bonus
 
-    # 3. Speed reward — encourage driving
+    # 3. Speed reward — encourage driving (set speed_reward_scale=0.0 to disable)
     speed_fraction = min(abs(info.speed) / max_speed, 1.0) if max_speed > 0 else 0.0
     breakdown["speed"] = speed_fraction * speed_scale
+
+    # 3b. Forward progress — reward movement along the track centerline
+    if info.forward_progress > 0:
+        breakdown["forward_progress"] = info.forward_progress * fwd_progress_scale
+    elif info.forward_progress < 0:
+        breakdown["forward_progress"] = info.forward_progress * bwd_progress_scale
 
     # 4. Wall hit penalty — proportional to damage taken
     if info.wall_damage > 0:
@@ -186,8 +198,17 @@ def get_reward_range(config: dict) -> tuple[float, float]:
     smooth_bonus = float(ai.get("smooth_steering_bonus", 0.01))
     max_health = float(config.get("damage", {}).get("max_health", 200.0))
 
+    fwd_progress_scale = float(ai.get("forward_progress_reward_scale", 2.0))
+    bwd_progress_scale = float(ai.get("backward_progress_penalty_scale", 0.5))
+
+    # Worst-case backward progress in a single step is small (< 1.0 index units)
+    max_bwd_progress_penalty = 1.0 * bwd_progress_scale
+    # Best-case forward progress in a single step (at max speed, ~6.7 px/frame on
+    # a ~300px segment gives ~0.02 index units; use 0.1 as generous upper bound)
+    max_fwd_progress_reward = 0.1 * fwd_progress_scale
+
     max_wall_damage = max_health  # worst case: full health in a single hit
-    min_reward = -(death_penalty + death_penalty + max_wall_damage * wall_scale + time_penalty)
-    max_reward = checkpoint_reward + lap_bonus + speed_scale + smooth_bonus
+    min_reward = -(death_penalty + death_penalty + max_wall_damage * wall_scale + time_penalty + max_bwd_progress_penalty)
+    max_reward = checkpoint_reward + lap_bonus + speed_scale + smooth_bonus + max_fwd_progress_reward
 
     return (min_reward, max_reward)

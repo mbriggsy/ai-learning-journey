@@ -120,6 +120,11 @@ class RacingEnv(gym.Env):
         self._spawn_grace_steps: int = int(self._ai_cfg.get("spawn_grace_steps", 30))
         self._min_checkpoint_speed: float = float(self._ai_cfg.get("min_checkpoint_speed", 5.0))
 
+        # --- Track progress tracking (for forward-progress reward) --------
+        self._num_centerline_points: int = len(
+            self._config["track"]["centerline_points"]
+        )
+
         # --- Episode tracking (initialized fully in reset()) -------------
         self._next_checkpoint_idx: int = 0
         self._laps_completed: int = 0
@@ -132,6 +137,7 @@ class RacingEnv(gym.Env):
         self._lap_times: list[float] = []
         self._prev_action: np.ndarray = np.zeros(3, dtype=np.float32)
         self._prev_pos: np.ndarray = np.zeros(2, dtype=np.float64)
+        self._track_progress: float = 0.0
 
         # --- Observation / action cache (used by watch renderer) ---------
         self._last_obs: np.ndarray | None = None
@@ -176,6 +182,9 @@ class RacingEnv(gym.Env):
         self._lap_times = []
         self._prev_action = np.zeros(3, dtype=np.float32)
         self._prev_pos = self._car.position.copy()
+        self._track_progress = self._track.get_track_progress(
+            float(self._car.position[0]), float(self._car.position[1])
+        )
 
         # Build initial observation
         next_cp = self._training_checkpoints[self._next_checkpoint_idx]
@@ -261,6 +270,20 @@ class RacingEnv(gym.Env):
                     self._lap_times.append(lap_steps * self._dt)
                     self._lap_start_step = self._step_count
 
+        # --- Track progress (forward-progress reward) ----------------------
+        new_progress = self._track.get_track_progress(
+            float(self._car.position[0]), float(self._car.position[1])
+        )
+        delta_progress = new_progress - self._track_progress
+        # Handle wraparound: if delta is more than half the track in either
+        # direction, it wrapped around the start/finish seam.
+        half_track = self._num_centerline_points / 2.0
+        if delta_progress > half_track:
+            delta_progress -= self._num_centerline_points
+        elif delta_progress < -half_track:
+            delta_progress += self._num_centerline_points
+        self._track_progress = new_progress
+
         # --- Stuck detection ---------------------------------------------
         is_stuck = self._is_stuck()
 
@@ -279,6 +302,7 @@ class RacingEnv(gym.Env):
             prev_steering=float(self._prev_action[0]),
             curr_steering=float(action[0]),
             is_stuck=is_stuck,
+            forward_progress=delta_progress,
         )
         reward, breakdown = compute_reward(step_info, self._config)
 

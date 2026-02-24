@@ -316,6 +316,10 @@ class RacingEnv(gym.Env):
             delta_progress += self._num_centerline_points
         self._track_progress = new_progress
 
+        # --- Corner curvature (for corner speed penalty) --------------------
+        curvature_1 = self._track.get_curvature_lookahead(self._track_progress, 1)[0]
+        curvature_deviation: float = abs(curvature_1 - 0.5) * 2.0  # 0=straight, 1=sharpest
+
         # --- Lateral displacement (centerline distance) --------------------
         lateral_dist: float = self._track.get_lateral_displacement(
             float(self._car.position[0]), float(self._car.position[1])
@@ -341,6 +345,7 @@ class RacingEnv(gym.Env):
             is_stuck=is_stuck,
             forward_progress=delta_progress,
             lateral_displacement=lateral_dist,
+            curvature_deviation=curvature_deviation,
         )
         reward, breakdown = compute_reward(step_info, self._config)
 

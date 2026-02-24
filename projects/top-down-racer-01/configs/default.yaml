@@ -222,7 +222,7 @@ ai:
   # If the car is stuck (very low speed for too long), apply death-level penalty.
   # The environment wrapper handles detecting "stuck" — rewards.py just uses the flag.
   stuck_speed_threshold: 10.0       # Speed below this counts as "stuck" (pixels/sec).
-  stuck_timeout: 2.0                # Seconds at low speed before is_stuck fires.
+  stuck_timeout: 4.0                # Seconds at low speed before is_stuck fires. Doubled from 2.0 (v10) to give car more time to recover from corners.
 
   # --- Spawn protection ---
   spawn_grace_steps: 30             # Steps after reset where checkpoint collection is disabled.
@@ -233,6 +233,12 @@ ai:
 
   # --- Track curvature lookahead (v9) ---
   curvature_lookahead_steps: 3  # Number of centerline points to look ahead for curvature info (obs indices 18-20).
+
+  # --- Corner speed penalty (v10) ---
+  # Penalizes going fast through sharp turns. Links curvature lookahead obs to braking behavior.
+  # Penalty = corner_speed_penalty_scale * speed_fraction * curvature_deviation
+  # where curvature_deviation = how far from straight (0=straight, 1=sharpest turn).
+  corner_speed_penalty_scale: 0.05   # Scale of penalty for high speed in sharp corners.
 
   # --- Lateral displacement penalty (v7) ---
   lateral_displacement_penalty_scale: 0.001  # Penalty per pixel of lateral distance from centerline. Reduced from 0.005 (v7) which drowned out positive signals.

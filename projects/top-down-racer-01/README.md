@@ -51,7 +51,8 @@ The game is wrapped as a Gymnasium environment and trained with PPO via Stable-B
 | richard_petty_v6 | 1.5M (killed) | **Wall-riding, no progress** | Forward progress reward working but car still hugs walls; breadcrumb chain locks on miss |
 | richard_petty_v7 | 1.34M (killed) | **Lateral penalty too aggressive** | ep_rew_mean stuck at -350, entropy collapsed to -6.0, lateral penalty drowned out positive signals |
 | richard_petty_v8 | 1.77M (killed) | **Blind to corners** | Drives straights well, crashes at first zigzag -- no curvature info in obs space |
-| richard_petty_v9 | (planned) | -- | Curvature lookahead added (obs 18->21), car can now "see" upcoming corners |
+| richard_petty_v9 | 1.45M (killed at 29%) | **Curvature obs unused** | Car has curvature lookahead but never learned to slow down -- no reward signal linking curvature to speed |
+| richard_petty_v10 | (planned) | -- | Corner speed penalty + stuck timeout 4s -- forces association between curvature obs and braking |
 
 ### Key Lessons So Far
 1. **Reward hacking is real.** The AI found the easiest path to reward (oscillating near a breadcrumb) rather than actually driving the track.

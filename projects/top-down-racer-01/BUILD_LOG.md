@@ -5,6 +5,32 @@ Each agent logs their work here as they build the game.
 
 ---
 
+### [2026-02-23] Fix Agent -- v10 Prep: Issue #016 (Corner Speed Penalty + Stuck Timeout)
+
+**Files:** `ai/racing_env.py`, `ai/rewards.py`, `configs/default.yaml`, `ISSUES.md`, `README.md`
+
+**Summary:** v9 was killed at 29% trained (~1.45M of 5M steps). The curvature lookahead obs added in v9 is working correctly -- spawn curvature values match the track geometry. But the car never learned to USE the curvature info to slow down. It still flies into corners at full speed, crashes, reverses, and gets stuck-timeout terminated. Two root causes: (1) no reward signal linking "high curvature + high speed = bad," and (2) the 2.0-second stuck timeout doesn't give the car enough time to recover from corners.
+
+**Fix 1 -- Corner speed penalty (new reward component):** Added a penalty that scales with both the car's speed fraction (abs(speed)/max_speed) and the upcoming track curvature deviation (how far the next centerline point's curvature is from "straight"). The penalty is: `-(corner_speed_penalty_scale * speed_fraction * curvature_deviation)` where curvature_deviation = `abs(curvature_1 - 0.5) * 2.0` (0 = straight, 1 = sharpest turn). This is zero on straights, small on gentle curves at low speed, and peaks at full speed through the sharpest hairpin. The curvature_1 value comes from `track.get_curvature_lookahead()` which is already being called for the observation space -- we just call it once more for the reward step. Scale is 0.05 in config, producing a max penalty of -0.05 per step at full speed through the sharpest turn. Over 60 frames of a full-speed hairpin approach, that's -3.0 cumulative -- noticeable but not overwhelming relative to the breadcrumb signal (5.0 per checkpoint).
+
+Implementation: `racing_env.py` computes `curvature_deviation` from the lookahead and passes it to `StepInfo`. `rewards.py` reads `corner_speed_penalty_scale` from config and applies the penalty in `compute_reward()`. Added to `get_reward_range()` bounds.
+
+**Fix 2 -- Stuck timeout doubled:** `stuck_timeout`: 2.0 -> 4.0 seconds in config. At 60fps, this means the car has 240 frames (was 120) to recover after hitting a wall before the episode terminates. The car's learned reversal behavior (from v8/v9) needs more time to execute: reverse, turn, re-accelerate. At 2.0 seconds, the timeout was firing before the car could complete the maneuver.
+
+**Decisions:**
+
+- **Why a multiplicative penalty (speed * curvature) instead of additive?** A simple curvature penalty (regardless of speed) would penalize the car for BEING on a curved section, even if it's already going slowly. That would teach the car to avoid curves entirely. The multiplicative form only penalizes going FAST through curves -- slow cornering is free. This is exactly what we want: the agent should learn to brake before corners, not avoid them.
+
+- **Why curvature_1 (next point ahead) instead of curvature_2 or curvature_3?** curvature_1 is the most immediately relevant -- it's the turn the car is about to enter. Using curvature_2 or curvature_3 would penalize speed for corners that are still far away, which could cause premature braking. The agent can still use curvature_2/3 from the obs space to plan ahead; the reward signal just focuses on the immediate next corner.
+
+- **Why 0.05 scale?** At full speed (speed_fraction=1.0) through the sharpest turn (curvature_deviation=1.0), the penalty is -0.05 per step. At 60fps, that's -3.0 per second. Approaching a hairpin at full speed for 2 seconds before impact: -6.0 cumulative penalty. This is slightly more than one breadcrumb (5.0), making the tradeoff clear: "you could have collected the next breadcrumb by braking, or lost more than that by not braking." The value is in config for tuning.
+
+- **Why 4.0 seconds stuck timeout instead of longer?** 4.0 seconds is about 2 full reverse-turn-accelerate cycles. If the car can't figure it out in 4 seconds, it's probably truly stuck (wedged in a corner, etc.) and the episode should end to avoid wasting training steps. Going longer (6-8s) would let episodes drag without meaningful learning.
+
+**Issues:** None.
+
+---
+
 ### [2026-02-23] Fix Agent -- v9 Prep: Issue #015 (Track Curvature Lookahead)
 
 **Files:** `game/track.py`, `ai/observations.py`, `ai/racing_env.py`, `configs/default.yaml`, `ISSUES.md`, `README.md`

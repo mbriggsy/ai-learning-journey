@@ -598,6 +598,48 @@ Added `0.0` to `RAY_ANGLES_DEG` in `ai/observations.py`. Observation space chang
 
 ---
 
+## Issue #016 - No Reward Signal Linking Curvature to Speed (v10 Fix)
+
+**Status:** Fixed (v10)
+**Priority:** High (v10 target)
+**Reported:** 2026-02-23
+**Fixed:** 2026-02-23
+
+### Observed Behavior (v9, killed at 29%)
+The car has curvature lookahead in its observation space (v9 fix) but never learned to USE it. It still flies into corners at full speed and crashes. After reversing from the wall, the 2-second stuck timeout terminates the episode before the car can recover.
+
+### Root Cause
+Two problems:
+1. **No reward signal linking curvature to speed.** The curvature obs values are in the observation space, but the reward function never penalizes "high speed + high curvature." The agent has the information but no incentive to act on it. The neural network can't learn an association between obs inputs and optimal behavior without a corresponding reward signal.
+2. **Stuck timeout too short.** At 2.0 seconds, the car reverses from a wall, has about 2 seconds to do something, then the episode terminates. Not enough time to reverse, turn, and re-approach the corner.
+
+### Fix (v10) -- Two changes
+
+**Fix 1 -- Corner speed penalty (new reward component):**
+Added a penalty that scales with both speed and upcoming curvature:
+```
+curvature_1 = track.get_curvature_lookahead(track_progress, 1)[0]
+curvature_deviation = abs(curvature_1 - 0.5) * 2.0   # 0=straight, 1=sharpest
+speed_fraction = abs(car.speed) / max_speed
+penalty = -corner_speed_penalty_scale * speed_fraction * curvature_deviation
+```
+- Zero on straight sections (curvature_deviation = 0)
+- Small on mild curves at low speed
+- Large on sharp corners at high speed
+- Forces the agent to learn "high curvature ahead = slow down"
+
+**Fix 2 -- Stuck timeout doubled:**
+`stuck_timeout`: 2.0 -> 4.0 seconds. Gives the car more time to recover after hitting a wall before the episode terminates.
+
+### Files Changed
+- `ai/racing_env.py` -- computes curvature_deviation from lookahead, passes to StepInfo
+- `ai/rewards.py` -- new `corner_speed_penalty` component in compute_reward(), updated StepInfo and get_reward_range()
+- `configs/default.yaml` -- added `corner_speed_penalty_scale: 0.05`, changed `stuck_timeout: 4.0`
+
+---
+
+---
+
 ## Issue #015 - Car Blind to Upcoming Corners (v9 Candidate)
 
 **Status:** Fixed (v9)

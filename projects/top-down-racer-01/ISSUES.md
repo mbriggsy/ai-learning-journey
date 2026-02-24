@@ -598,4 +598,39 @@ Added `0.0` to `RAY_ANGLES_DEG` in `ai/observations.py`. Observation space chang
 
 ---
 
+## Issue #015 - Car Blind to Upcoming Corners (v9 Candidate)
+
+**Status:** Open
+**Priority:** High (v9 target)
+**Reported:** 2026-02-23
+
+### Observed Behavior (v8, 1.5M step checkpoint)
+Car drives forward well, collecting breadcrumbs, then reaches the first zigzag corner:
+1. Hits corner wall (minor damage)
+2. Reverses briefly (learned escape behavior)
+3. Stops completely
+4. Stuck timeout terminates episode
+
+Car never learned to slow down, steer through, or recover because it has zero advance warning of corners. It flies in at full speed every time.
+
+### Root Cause
+The observation space has no track curvature information. The car cannot "see" how sharp an upcoming turn is. It only sees:
+- 13 wall distance rays (reactive, not predictive)
+- Speed, angular velocity, drift, health (car state)
+- Angle to next breadcrumb (direction, not path shape)
+
+By the time the wall rays show a sharp corner, the car is already too close to react.
+
+### Proposed Fix (v9)
+Add 3 track curvature lookahead values to the observation space:
+- `curvature_1`: turn angle at 1 centerline point ahead (normalized, 0=sharp left, 0.5=straight, 1=sharp right)
+- `curvature_2`: turn angle at 2 centerline points ahead
+- `curvature_3`: turn angle at 3 centerline points ahead
+
+This gives the car a "preview" of upcoming track shape, enabling it to learn "sharp turn ahead -> reduce throttle and steer into it."
+
+**Obs space:** (18,) -> (21,) — backward incompatible with v1-v8 models (fine, v9 is fresh training).
+
+---
+
 *Maintained by Harry -- if it broke and got fixed, it lives here*

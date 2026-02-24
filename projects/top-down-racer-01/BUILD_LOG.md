@@ -5,6 +5,38 @@ Each agent logs their work here as they build the game.
 
 ---
 
+### [2026-02-23] Fix Agent -- v9 Prep: Issue #015 (Track Curvature Lookahead)
+
+**Files:** `game/track.py`, `ai/observations.py`, `ai/racing_env.py`, `configs/default.yaml`, `ISSUES.md`, `README.md`
+
+**Summary:** v8 was killed at 1.77M steps (~35% of 5M budget). The car drives well on straights, collects breadcrumbs, then reaches the first zigzag corner and crashes. It reverses briefly (learned escape behavior), stops, and the stuck timeout terminates the episode. Root cause: the observation space is purely reactive -- wall distance rays only fire when a wall is already close. The car has zero advance warning of upcoming corners and cannot learn to slow down before entering them.
+
+The fix adds 3 track curvature lookahead values to the observation space (indices 18, 19, 20). These tell the agent how sharply the track turns at 1, 2, and 3 centerline points ahead of the car's current position, giving it a "preview" of upcoming track shape.
+
+**Implementation:**
+
+- `game/track.py` -- added two methods: `get_curvature_at_index(idx)` computes signed curvature at a single centerline vertex using the cross product of consecutive tangent vectors (incoming = p1-p0, outgoing = p2-p1). The cross product is normalized by segment lengths for consistent scale, then mapped to [0, 1] where 0.5 = straight. `get_curvature_lookahead(current_progress, num_lookahead=3)` uses the car's fractional track progress to look ahead by 1, 2, 3 centerline points and return their curvatures.
+
+- `ai/observations.py` -- added `NUM_CURVATURE_LOOKAHEAD: int = 3`. Updated `NUM_STATE_VALUES` from 5 to 8 (speed, angular_vel, drift, health, checkpoint_angle + curvature_1/2/3). `OBS_SIZE` goes from 18 to 21. `build_observation()` gets two new optional parameters: `track` (Track instance) and `track_progress` (float). If track is provided, it calls `track.get_curvature_lookahead()` and fills indices 18-20. If not provided (backward compat), defaults to 0.5 (straight). All docstrings updated to reflect shape (21,).
+
+- `ai/racing_env.py` -- both `reset()` and `step()` now pass `track=self._track` and `track_progress=self._track_progress` to `build_observation()`. Module and class docstrings updated from (18,) to (21,).
+
+- `configs/default.yaml` -- added `curvature_lookahead_steps: 3` under the `ai:` section.
+
+**Decisions:**
+
+- **Why cross product of tangent vectors, not angle difference?** The cross product naturally gives signed curvature (positive = one turn direction, negative = the other) without needing to compute atan2 or handle angle wrapping. Normalizing by the product of segment lengths makes the value consistent regardless of how far apart the centerline points are. The result sits in [-1, 1] and maps cleanly to [0, 1] with a simple linear transform.
+
+- **Why look ahead by centerline index, not by distance?** Centerline points are spaced roughly evenly (~300px apart on average), so "1 point ahead" is approximately "300px of track ahead." This is enough preview distance that at max speed (400 px/s) the car has ~0.75 seconds of warning before a corner. Using distance-based lookahead would require walking the centerline by arc length, which is more complex and slower for no meaningful gain.
+
+- **Why 3 lookahead points, not more?** 3 points covers roughly 900px of track -- over 2 seconds of driving at max speed. This is enough to see the entry, apex, and exit of most corners. More points would dilute the signal with information too far ahead to act on, and would increase the obs space (already growing from 18 to 21). The count is configurable via `curvature_lookahead_steps` in the config.
+
+- **Why optional track parameter in build_observation()?** The function is also called from watch.py's visualization code and potentially other contexts. Making track optional with a 0.5 (straight) default means existing callers don't break. In practice, racing_env.py always passes it.
+
+**Issues:** None. Obs space breaks backward compatibility with v1-v8 models (different shape). v9 is a fresh training run.
+
+---
+
 ### [2026-02-23] Fix Agent -- v8 Prep: Issue #014 (Forward Ray) + Lateral Penalty Tuning
 
 **Files:** `ai/observations.py`, `ai/racing_env.py`, `configs/default.yaml`, `ISSUES.md`, `README.md`

@@ -4,9 +4,11 @@ Exposes the game as a standard Gymnasium environment so it can be trained
 with any RL algorithm.  The environment runs the game headlessly (no Arcade
 window) by default; pass render_mode="human" to open the game window.
 
-Observation space: Box(0, 1, (18,), float32)
+Observation space: Box(0, 1, (21,), float32)
   - 13 ray-cast distances (normalized, 240-degree forward fan including 0-degree center)
-  - 5 car state values (speed, angular vel, drift, health, checkpoint angle)
+  - 8 car/track state values:
+      speed, angular vel, drift, health, checkpoint angle,
+      curvature_1, curvature_2, curvature_3
 
 Action space: Box(low=[-1, -1, 0], high=[1, 1, 1], shape=(3,), float32)
   - [0] Steering:  -1 (full left)  to  +1 (full right)
@@ -47,7 +49,7 @@ class RacingEnv(gym.Env):
 
     Attributes:
         metadata: Gym env metadata (render modes, fps).
-        observation_space: Box(0, 1, (18,), float32).
+        observation_space: Box(0, 1, (21,), float32).
         action_space: Box([-1,-1,0], [1,1,1], (3,), float32).
     """
 
@@ -189,7 +191,8 @@ class RacingEnv(gym.Env):
         # Build initial observation
         next_cp = self._training_checkpoints[self._next_checkpoint_idx]
         obs = build_observation(
-            self._car, self._wall_segments, next_cp, self._config
+            self._car, self._wall_segments, next_cp, self._config,
+            track=self._track, track_progress=self._track_progress,
         )
         self._last_obs = obs
         self._last_action = np.zeros(3, dtype=np.float32)
@@ -344,7 +347,8 @@ class RacingEnv(gym.Env):
         # --- Build observation (for next step) ---------------------------
         next_cp_for_obs = self._training_checkpoints[self._next_checkpoint_idx]
         obs = build_observation(
-            self._car, self._wall_segments, next_cp_for_obs, self._config
+            self._car, self._wall_segments, next_cp_for_obs, self._config,
+            track=self._track, track_progress=self._track_progress,
         )
 
         # --- Info dict ---------------------------------------------------

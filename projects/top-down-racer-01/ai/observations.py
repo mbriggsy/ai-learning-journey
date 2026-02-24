@@ -1,19 +1,22 @@
 """Observation space builder for the RL agent.
 
 Gives Richard Petty his "eyes": 13 ray casts in a 240-degree forward fan
-plus 5 car state values, all normalized to [0, 1]. The complete observation
-vector has shape (18,) and is suitable for feeding directly into a neural
-network policy.
+plus 8 car/track state values, all normalized to [0, 1]. The complete
+observation vector has shape (21,) and is suitable for feeding directly
+into a neural network policy.
 
 Ray angles (degrees relative to car facing):
     -120, -100, -75, -50, -30, -10, 0, +10, +30, +50, +75, +100, +120
 
-State values (indices 13-17):
-    13: speed         — abs(speed) / max_speed
-    14: angular_vel   — centered at 0.5 (no turn), 0.0 = max CCW, 1.0 = max CW
-    15: drift         — 1.0 if drifting, 0.0 otherwise
-    16: health        — health / max_health
-    17: checkpoint    — angle to next checkpoint normalized so 0.5 = straight ahead
+State values (indices 13-20):
+    13: speed         -- abs(speed) / max_speed
+    14: angular_vel   -- centered at 0.5 (no turn), 0.0 = max CCW, 1.0 = max CW
+    15: drift         -- 1.0 if drifting, 0.0 otherwise
+    16: health        -- health / max_health
+    17: checkpoint    -- angle to next checkpoint normalized so 0.5 = straight ahead
+    18: curvature_1   -- track curvature 1 centerline point ahead (0=left, 0.5=straight, 1=right)
+    19: curvature_2   -- track curvature 2 centerline points ahead
+    20: curvature_3   -- track curvature 3 centerline points ahead
 
 No arcade imports anywhere in this module. Only numpy, math, and gymnasium.
 """
@@ -28,6 +31,7 @@ import numpy as np
 
 if TYPE_CHECKING:
     from game.car import Car
+    from game.track import Track
 
 # ---------------------------------------------------------------------------
 # Ray configuration
@@ -44,8 +48,9 @@ RAY_ANGLES_RAD: np.ndarray = np.deg2rad(RAY_ANGLES_DEG).astype(np.float32)
 """Pre-computed ray angles in radians for fast casting."""
 
 NUM_RAYS: int = len(RAY_ANGLES_DEG)
-NUM_STATE_VALUES: int = 5
-OBS_SIZE: int = NUM_RAYS + NUM_STATE_VALUES  # 18
+NUM_CURVATURE_LOOKAHEAD: int = 3
+NUM_STATE_VALUES: int = 8  # speed, angular_vel, drift, health, checkpoint_angle, curvature_1/2/3
+OBS_SIZE: int = NUM_RAYS + NUM_STATE_VALUES  # 21
 
 
 # ---------------------------------------------------------------------------
@@ -153,11 +158,14 @@ def build_observation(
     wall_segments: list[tuple[tuple[float, float], tuple[float, float]]],
     next_checkpoint_pos: tuple[float, float],
     config: dict,
+    track: Track | None = None,
+    track_progress: float = 0.0,
 ) -> np.ndarray:
     """Build the complete observation vector for the RL agent.
 
-    Layout: [ray_0, ray_1, ..., ray_12, speed, angular_vel, drift, health, checkpoint_angle]
-    Shape: (18,), all values in [0.0, 1.0], dtype float32.
+    Layout: [ray_0..ray_12, speed, angular_vel, drift, health, checkpoint_angle,
+             curvature_1, curvature_2, curvature_3]
+    Shape: (21,), all values in [0.0, 1.0], dtype float32.
 
     Normalization:
     - Ray distances: distance / max_ray_distance, clamped [0, 1]
@@ -167,15 +175,19 @@ def build_observation(
     - Drift: 1.0 if car.is_drifting else 0.0
     - Health: car.health / max_health
     - Angle to next checkpoint: relative angle normalized so 0.5 = straight ahead
+    - Curvature 1/2/3: track curvature at 1/2/3 centerline points ahead
+      -> 0.0 = sharp left, 0.5 = straight, 1.0 = sharp right
 
     Args:
         car: Car instance (has position, angle, speed, angular_velocity, health, is_drifting).
         wall_segments: Wall segments for ray casting.
         next_checkpoint_pos: (x, y) world position of the next training checkpoint.
         config: Full game config dict.
+        track: Track instance for curvature lookahead (required for curvature obs).
+        track_progress: Car's current fractional track progress index.
 
     Returns:
-        numpy array of shape (18,), dtype float32, all values in [0.0, 1.0].
+        numpy array of shape (21,), dtype float32, all values in [0.0, 1.0].
     """
     max_speed: float = config["car"]["max_speed"]
     max_health: float = config["damage"]["max_health"]
@@ -215,6 +227,17 @@ def build_observation(
     # Map to [0, 1] where 0.5 = pointing straight at checkpoint
     obs[NUM_RAYS + 4] = np.float32((relative_angle + math.pi) / (2.0 * math.pi))
 
+    # --- Track curvature lookahead (indices 18-20) --------------------------
+    num_lookahead: int = int(config.get("ai", {}).get(
+        "curvature_lookahead_steps", NUM_CURVATURE_LOOKAHEAD
+    ))
+    if track is not None:
+        curvatures = track.get_curvature_lookahead(track_progress, num_lookahead)
+    else:
+        curvatures = [0.5] * num_lookahead  # default: straight ahead
+    for i, curv in enumerate(curvatures):
+        obs[NUM_RAYS + 5 + i] = np.float32(curv)
+
     return obs
 
 
@@ -228,15 +251,15 @@ def make_observation_space(
 ) -> gym.spaces.Box:
     """Create the Gymnasium observation space definition.
 
-    Returns a Box space with shape (num_rays + num_state_values,) = (18,),
+    Returns a Box space with shape (num_rays + num_state_values,) = (21,),
     low=0.0, high=1.0, dtype=float32.
 
     Args:
         num_rays: Number of ray cast distance values. Default 13.
-        num_state_values: Number of car state values. Default 5.
+        num_state_values: Number of car/track state values. Default 8.
 
     Returns:
-        gymnasium.spaces.Box with shape (18,) and bounds [0, 1].
+        gymnasium.spaces.Box with shape (21,) and bounds [0, 1].
     """
     size = num_rays + num_state_values
     return gym.spaces.Box(

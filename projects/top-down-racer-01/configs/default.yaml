@@ -231,6 +231,9 @@ ai:
   # --- Breadcrumb auto-advance (Issue #012) ---
   breadcrumb_auto_advance_multiplier: 1.5  # How many breadcrumb-spacings ahead the car must be before auto-advancing a missed breadcrumb.
 
+  # --- Track curvature lookahead (v9) ---
+  curvature_lookahead_steps: 3  # Number of centerline points to look ahead for curvature info (obs indices 18-20).
+
   # --- Lateral displacement penalty (v7) ---
   lateral_displacement_penalty_scale: 0.001  # Penalty per pixel of lateral distance from centerline. Reduced from 0.005 (v7) which drowned out positive signals.
 

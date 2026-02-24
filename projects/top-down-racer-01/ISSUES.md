@@ -600,9 +600,10 @@ Added `0.0` to `RAY_ANGLES_DEG` in `ai/observations.py`. Observation space chang
 
 ## Issue #015 - Car Blind to Upcoming Corners (v9 Candidate)
 
-**Status:** Open
+**Status:** Fixed (v9)
 **Priority:** High (v9 target)
 **Reported:** 2026-02-23
+**Fixed:** 2026-02-23
 
 ### Observed Behavior (v8, 1.5M step checkpoint)
 Car drives forward well, collecting breadcrumbs, then reaches the first zigzag corner:
@@ -621,15 +622,21 @@ The observation space has no track curvature information. The car cannot "see" h
 
 By the time the wall rays show a sharp corner, the car is already too close to react.
 
-### Proposed Fix (v9)
-Add 3 track curvature lookahead values to the observation space:
-- `curvature_1`: turn angle at 1 centerline point ahead (normalized, 0=sharp left, 0.5=straight, 1=sharp right)
-- `curvature_2`: turn angle at 2 centerline points ahead
-- `curvature_3`: turn angle at 3 centerline points ahead
+### Fix (v9)
+Added 3 track curvature lookahead values to the observation space:
+- `curvature_1` (index 18): turn angle at 1 centerline point ahead (normalized, 0=sharp left, 0.5=straight, 1=sharp right)
+- `curvature_2` (index 19): turn angle at 2 centerline points ahead
+- `curvature_3` (index 20): turn angle at 3 centerline points ahead
 
-This gives the car a "preview" of upcoming track shape, enabling it to learn "sharp turn ahead -> reduce throttle and steer into it."
+Uses the car's current `track_progress` (fractional centerline index) to look up upcoming centerline vertices. At each vertex, computes the cross product of incoming and outgoing tangent vectors to get signed curvature, then normalizes to [0, 1].
 
-**Obs space:** (18,) -> (21,) — backward incompatible with v1-v8 models (fine, v9 is fresh training).
+**Obs space:** (18,) -> (21,) -- backward incompatible with v1-v8 models (v9 is a fresh training run).
+
+### Files Changed
+- `game/track.py` -- added `get_curvature_at_index()` and `get_curvature_lookahead()` methods
+- `ai/observations.py` -- added `NUM_CURVATURE_LOOKAHEAD`, updated `NUM_STATE_VALUES` (5->8), `OBS_SIZE` (18->21), updated `build_observation()` signature and body, updated all docstrings
+- `ai/racing_env.py` -- passes `track` and `track_progress` to `build_observation()` in both `reset()` and `step()`, updated docstrings
+- `configs/default.yaml` -- added `curvature_lookahead_steps: 3`
 
 ---
 

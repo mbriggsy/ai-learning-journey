@@ -266,6 +266,61 @@ class Track:
 
         return best_progress
 
+    def get_curvature_at_index(self, idx: int) -> float:
+        """Compute the signed curvature at a centerline vertex.
+
+        Uses the cross product of consecutive tangent vectors to measure
+        how sharply the track turns at this point.
+
+        Args:
+            idx: Centerline vertex index (wraps modularly).
+
+        Returns:
+            Normalized curvature in [0, 1]: 0.0 = sharp left, 0.5 = straight,
+            1.0 = sharp right (in screen coordinates where +y is up).
+        """
+        n = len(self.centerline)
+        p0 = self.centerline[(idx - 1) % n]
+        p1 = self.centerline[idx % n]
+        p2 = self.centerline[(idx + 1) % n]
+
+        v1 = p1 - p0  # incoming tangent
+        v2 = p2 - p1  # outgoing tangent
+
+        # Cross product z-component = signed turn
+        cross = v1[0] * v2[1] - v1[1] * v2[0]
+
+        # Normalize by segment lengths for consistent scale
+        mag = float(np.linalg.norm(v1) * np.linalg.norm(v2)) + 1e-8
+        signed_curvature = cross / mag  # range roughly [-1, 1]
+
+        # Map to [0, 1]: 0.5 = straight, 0 = sharp left, 1 = sharp right
+        return float(np.clip((signed_curvature + 1.0) / 2.0, 0.0, 1.0))
+
+    def get_curvature_lookahead(
+        self, current_progress: float, num_lookahead: int = 3
+    ) -> list[float]:
+        """Get curvature values at upcoming centerline points.
+
+        Given the car's current fractional track progress, looks ahead
+        by 1, 2, ... num_lookahead centerline points and returns the
+        normalized curvature at each.
+
+        Args:
+            current_progress: Fractional index along the centerline
+                (as returned by ``get_track_progress()``).
+            num_lookahead: Number of lookahead points (default 3).
+
+        Returns:
+            List of ``num_lookahead`` floats, each in [0, 1]:
+            0.0 = sharp left, 0.5 = straight, 1.0 = sharp right.
+        """
+        base_idx = int(math.floor(current_progress))
+        return [
+            self.get_curvature_at_index(base_idx + k)
+            for k in range(1, num_lookahead + 1)
+        ]
+
     def get_lateral_displacement(self, x: float, y: float) -> float:
         """Return the perpendicular distance from a point to the nearest centerline segment.
 

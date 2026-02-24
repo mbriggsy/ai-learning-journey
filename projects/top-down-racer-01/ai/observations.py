@@ -1,19 +1,19 @@
 """Observation space builder for the RL agent.
 
-Gives Richard Petty his "eyes": 12 ray casts in a 240-degree forward fan
+Gives Richard Petty his "eyes": 13 ray casts in a 240-degree forward fan
 plus 5 car state values, all normalized to [0, 1]. The complete observation
-vector has shape (17,) and is suitable for feeding directly into a neural
+vector has shape (18,) and is suitable for feeding directly into a neural
 network policy.
 
 Ray angles (degrees relative to car facing):
-    -120, -100, -75, -50, -30, -10, +10, +30, +50, +75, +100, +120
+    -120, -100, -75, -50, -30, -10, 0, +10, +30, +50, +75, +100, +120
 
-State values (indices 12-16):
-    12: speed         — abs(speed) / max_speed
-    13: angular_vel   — centered at 0.5 (no turn), 0.0 = max CCW, 1.0 = max CW
-    14: drift         — 1.0 if drifting, 0.0 otherwise
-    15: health        — health / max_health
-    16: checkpoint    — angle to next checkpoint normalized so 0.5 = straight ahead
+State values (indices 13-17):
+    13: speed         — abs(speed) / max_speed
+    14: angular_vel   — centered at 0.5 (no turn), 0.0 = max CCW, 1.0 = max CW
+    15: drift         — 1.0 if drifting, 0.0 otherwise
+    16: health        — health / max_health
+    17: checkpoint    — angle to next checkpoint normalized so 0.5 = straight ahead
 
 No arcade imports anywhere in this module. Only numpy, math, and gymnasium.
 """
@@ -35,16 +35,17 @@ if TYPE_CHECKING:
 
 RAY_ANGLES_DEG: list[float] = [
     -120, -100, -75, -50, -30, -10,
+      0,
      10,   30,  50,  75, 100, 120,
 ]
-"""Ray angles in degrees, relative to car facing. 240-degree forward fan."""
+"""Ray angles in degrees, relative to car facing. 240-degree forward fan with 0-degree center ray."""
 
 RAY_ANGLES_RAD: np.ndarray = np.deg2rad(RAY_ANGLES_DEG).astype(np.float32)
 """Pre-computed ray angles in radians for fast casting."""
 
 NUM_RAYS: int = len(RAY_ANGLES_DEG)
 NUM_STATE_VALUES: int = 5
-OBS_SIZE: int = NUM_RAYS + NUM_STATE_VALUES  # 17
+OBS_SIZE: int = NUM_RAYS + NUM_STATE_VALUES  # 18
 
 
 # ---------------------------------------------------------------------------
@@ -57,10 +58,10 @@ def cast_observation_rays(
     wall_segments: list[tuple[tuple[float, float], tuple[float, float]]],
     max_distance: float = 400.0,
 ) -> np.ndarray:
-    """Cast 12 rays in a 240-degree forward fan and return normalized distances.
+    """Cast 13 rays in a 240-degree forward fan and return normalized distances.
 
     Ray angles (relative to car facing): -120, -100, -75, -50, -30, -10,
-                                          +10, +30, +50, +75, +100, +120 degrees.
+                                           0, +10, +30, +50, +75, +100, +120 degrees.
 
     Each returned value = distance_to_nearest_wall / max_distance, clamped [0, 1].
     - Value near 0.0 = wall is very close
@@ -77,7 +78,7 @@ def cast_observation_rays(
         max_distance: Maximum ray length in pixels.
 
     Returns:
-        numpy array of shape (12,) with normalized distances, dtype float32.
+        numpy array of shape (13,) with normalized distances, dtype float32.
     """
     ox, oy = float(position[0]), float(position[1])
     num_walls = len(wall_segments)
@@ -155,8 +156,8 @@ def build_observation(
 ) -> np.ndarray:
     """Build the complete observation vector for the RL agent.
 
-    Layout: [ray_0, ray_1, ..., ray_11, speed, angular_vel, drift, health, checkpoint_angle]
-    Shape: (17,), all values in [0.0, 1.0], dtype float32.
+    Layout: [ray_0, ray_1, ..., ray_12, speed, angular_vel, drift, health, checkpoint_angle]
+    Shape: (18,), all values in [0.0, 1.0], dtype float32.
 
     Normalization:
     - Ray distances: distance / max_ray_distance, clamped [0, 1]
@@ -174,7 +175,7 @@ def build_observation(
         config: Full game config dict.
 
     Returns:
-        numpy array of shape (17,), dtype float32, all values in [0.0, 1.0].
+        numpy array of shape (18,), dtype float32, all values in [0.0, 1.0].
     """
     max_speed: float = config["car"]["max_speed"]
     max_health: float = config["damage"]["max_health"]
@@ -182,29 +183,29 @@ def build_observation(
 
     obs = np.empty(OBS_SIZE, dtype=np.float32)
 
-    # --- Rays (indices 0-11) ------------------------------------------------
+    # --- Rays (indices 0-12) ------------------------------------------------
     obs[:NUM_RAYS] = cast_observation_rays(
         car.position, car.angle, wall_segments
     )
 
-    # --- Speed (index 12) ---------------------------------------------------
-    obs[12] = np.float32(np.clip(abs(car.speed) / max_speed, 0.0, 1.0))
+    # --- Speed (index 13) ---------------------------------------------------
+    obs[NUM_RAYS] = np.float32(np.clip(abs(car.speed) / max_speed, 0.0, 1.0))
 
-    # --- Angular velocity (index 13) ----------------------------------------
+    # --- Angular velocity (index 14) ----------------------------------------
     # Map from [-max_angular_vel, +max_angular_vel] to [0, 1].
     # 0.5 = straight, 0.0 = max CCW, 1.0 = max CW.
-    obs[13] = np.float32(np.clip(
+    obs[NUM_RAYS + 1] = np.float32(np.clip(
         (car.angular_velocity + max_angular_vel) / (2.0 * max_angular_vel),
         0.0, 1.0,
     ))
 
-    # --- Drift (index 14) --------------------------------------------------
-    obs[14] = np.float32(1.0 if car.is_drifting else 0.0)
+    # --- Drift (index 15) --------------------------------------------------
+    obs[NUM_RAYS + 2] = np.float32(1.0 if car.is_drifting else 0.0)
 
-    # --- Health (index 15) --------------------------------------------------
-    obs[15] = np.float32(np.clip(car.health / max_health, 0.0, 1.0))
+    # --- Health (index 16) --------------------------------------------------
+    obs[NUM_RAYS + 3] = np.float32(np.clip(car.health / max_health, 0.0, 1.0))
 
-    # --- Angle to next checkpoint (index 16) --------------------------------
+    # --- Angle to next checkpoint (index 17) --------------------------------
     dx = next_checkpoint_pos[0] - car.position[0]
     dy = next_checkpoint_pos[1] - car.position[1]
     absolute_angle = math.atan2(dy, dx)
@@ -212,7 +213,7 @@ def build_observation(
     # Normalize to [-pi, pi]
     relative_angle = (relative_angle + math.pi) % (2.0 * math.pi) - math.pi
     # Map to [0, 1] where 0.5 = pointing straight at checkpoint
-    obs[16] = np.float32((relative_angle + math.pi) / (2.0 * math.pi))
+    obs[NUM_RAYS + 4] = np.float32((relative_angle + math.pi) / (2.0 * math.pi))
 
     return obs
 
@@ -227,15 +228,15 @@ def make_observation_space(
 ) -> gym.spaces.Box:
     """Create the Gymnasium observation space definition.
 
-    Returns a Box space with shape (num_rays + num_state_values,) = (17,),
+    Returns a Box space with shape (num_rays + num_state_values,) = (18,),
     low=0.0, high=1.0, dtype=float32.
 
     Args:
-        num_rays: Number of ray cast distance values. Default 12.
+        num_rays: Number of ray cast distance values. Default 13.
         num_state_values: Number of car state values. Default 5.
 
     Returns:
-        gymnasium.spaces.Box with shape (17,) and bounds [0, 1].
+        gymnasium.spaces.Box with shape (18,) and bounds [0, 1].
     """
     size = num_rays + num_state_values
     return gym.spaces.Box(

@@ -2,7 +2,7 @@
 
 WatchView is an arcade.View that reads live state from a RacingEnv and
 draws the game plus AI-specific visualizations:
-  - 12 ray-cast lines (green = open road, red = wall nearby)
+  - 13 ray-cast lines (green = open road, red = wall nearby)
   - Training checkpoint (breadcrumb) dots on the track centerline
   - Mini action HUD showing current steering / throttle / drift values
 
@@ -168,13 +168,13 @@ class WatchView(arcade.View):
     # ------------------------------------------------------------------
 
     def _draw_rays(self, car) -> None:
-        """Draw the 12 ray-cast lines.
+        """Draw the 13 ray-cast lines.
 
         Each ray is colored on a red-to-green gradient:
         - Red  (norm_dist = 0.0) = wall is right there
         - Green (norm_dist = 1.0) = open road ahead, no wall in range
 
-        Source: env._last_obs[:12] holds the normalized distances from
+        Source: env._last_obs[:13] holds the normalized distances from
         the most recent build_observation() call.
         """
         last_obs = self._env._last_obs

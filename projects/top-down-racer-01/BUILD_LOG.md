@@ -5,6 +5,26 @@ Each agent logs their work here as they build the game.
 
 ---
 
+### [2026-02-23] Fix Agent -- v8 Prep: Issue #014 (Forward Ray) + Lateral Penalty Tuning
+
+**Files:** `ai/observations.py`, `ai/racing_env.py`, `configs/default.yaml`, `ISSUES.md`, `README.md`
+
+**Summary:** Two fixes for richard_petty_v8 training. v7 was killed at 1.34M steps (~27% of 5M budget) because the lateral displacement penalty introduced in v7 was too aggressive and drowned out all positive reward signals. ep_rew_mean stayed around -350 for the entire run, entropy collapsed to -6.0, and the car never learned to hit checkpoints.
+
+**Fix 1 -- Lateral displacement penalty scale (config):** Reduced `lateral_displacement_penalty_scale` from 0.005 to 0.001 (5x reduction). At 0.005, a car 60px from the centerline (track edge) was penalized -0.3 per step, which accumulated to -18 per second of wall-adjacent driving. Over a 6000-step episode, the lateral penalty alone could reach -300, completely overwhelming the breadcrumb signal (~250 per lap). At 0.001, the same scenario produces -0.06 per step / -3.6 per second -- enough to nudge the car toward the centerline without drowning out the learning signal.
+
+**Fix 2 -- Forward ray (Issue #014):** Added a 0-degree (straight ahead) ray to the observation space, closing the 20-degree blind spot between the -10 and +10 degree rays. RAY_ANGLES_DEG now has 13 entries: [-120, -100, -75, -50, -30, -10, 0, 10, 30, 50, 75, 100, 120]. Updated NUM_RAYS (12->13), OBS_SIZE (17->18), all docstrings in observations.py and racing_env.py, and the hardcoded state value indices in build_observation() to use NUM_RAYS-relative offsets instead of magic numbers. Also updated `num_rays: 13` in default.yaml. This breaks backward compatibility with v1-v7 models (different obs shape) -- v8 is a fresh training run.
+
+**Decisions:**
+
+- **Why 0.001 and not lower?** At 0.001, the penalty is still directionally meaningful: over 1000 steps of wall-riding at 60px offset, the accumulated penalty is -60. Combined with wall damage penalty and lack of forward progress, wall-riding is still net-negative. Going lower (0.0005) would make the penalty nearly invisible. 0.001 is the sweet spot between "nudge toward center" and "don't overwhelm breadcrumbs."
+
+- **Why use NUM_RAYS-relative indices instead of hardcoded numbers?** The build_observation() function previously used hardcoded indices (12, 13, 14, 15, 16) for state values. This broke when NUM_RAYS changed from 12 to 13. Switching to NUM_RAYS, NUM_RAYS+1, etc. makes the function resilient to future ray count changes.
+
+**Issues:** None.
+
+---
+
 ### [2026-02-23] Fix Agent -- v7 Prep: Issues #012 #013 + Lateral Displacement Penalty
 
 **Files:** `game/track.py`, `ai/rewards.py`, `ai/racing_env.py`, `configs/default.yaml`, `ISSUES.md`, `README.md`

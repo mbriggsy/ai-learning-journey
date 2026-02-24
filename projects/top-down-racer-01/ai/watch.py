@@ -242,9 +242,9 @@ class WatchWindow(arcade.Window):
             )
 
     def _draw_rays(self, car) -> None:
-        """Draw the 12 ray-cast lines colored green (far) to red (close).
+        """Draw the 13 ray-cast lines colored green (far) to red (close).
 
-        Source: env._last_obs[:12] holds the normalized distances from the
+        Source: env._last_obs[:13] holds the normalized distances from the
         most recent build_observation() call.
         """
         last_obs = self._env._last_obs

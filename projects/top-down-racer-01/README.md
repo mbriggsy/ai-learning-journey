@@ -34,7 +34,7 @@ WASD + Spacebar (drift) | R to restart | ESC to quit
 The game is wrapped as a Gymnasium environment and trained with PPO via Stable-Baselines3.
 
 ### Architecture
-- **Observation space:** 17-dim float32 vector — 12 ray-cast distances (240° forward fan) + 5 car state values (speed, angular velocity, drift flag, health, angle-to-next-checkpoint), all normalized to [0, 1]
+- **Observation space:** 18-dim float32 vector — 13 ray-cast distances (240° forward fan including 0° center ray) + 5 car state values (speed, angular velocity, drift flag, health, angle-to-next-checkpoint), all normalized to [0, 1]
 - **Action space:** 3-dim continuous (steering, throttle, drift) → quantized to binary key inputs for the existing car physics
 - **Reward shaping:** Dense breadcrumb checkpoints (~50 per lap), speed bonus, smooth steering bonus, wall damage penalty, stuck/death penalty
 - **Training:** PPO with 8 parallel SubprocVecEnv workers, all hyperparams in `configs/default.yaml`
@@ -49,7 +49,8 @@ The game is wrapped as a Gymnasium environment and trained with PPO via Stable-B
 | richard_petty_v4 | 5M | **In progress** | Added ent_coef=0.01, reduced wall penalty 2.0->0.8 |
 | richard_petty_v5 | 3.16M (killed) | **Wall-hugging exploit** | Speed reward let AI pin against wall + hold gas for free reward |
 | richard_petty_v6 | 1.5M (killed) | **Wall-riding, no progress** | Forward progress reward working but car still hugs walls; breadcrumb chain locks on miss |
-| richard_petty_v7 | (planned) | -- | Breadcrumb auto-advance (#012), wall damage 1.2 (#013), lateral displacement penalty |
+| richard_petty_v7 | 1.34M (killed) | **Lateral penalty too aggressive** | ep_rew_mean stuck at -350, entropy collapsed to -6.0, lateral penalty drowned out positive signals |
+| richard_petty_v8 | (planned) | -- | Lateral penalty 0.005->0.001, forward ray added (obs 17->18) |
 
 ### Key Lessons So Far
 1. **Reward hacking is real.** The AI found the easiest path to reward (oscillating near a breadcrumb) rather than actually driving the track.
@@ -65,7 +66,7 @@ The game is wrapped as a Gymnasium environment and trained with PPO via Stable-B
 ```
 ai/
 ├── racing_env.py           # Gymnasium environment wrapper
-├── observations.py         # Ray casting + observation space (17-dim)
+├── observations.py         # Ray casting + observation space (18-dim)
 ├── rewards.py              # Reward function (8 components, all configurable)
 ├── train.py                # PPO training script (SB3 + SubprocVecEnv)
 ├── watch.py                # Watch trained AI play (Arcade visualization)

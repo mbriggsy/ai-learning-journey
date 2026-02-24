@@ -170,7 +170,7 @@ ai:
   policy: MlpPolicy                 # SB3 policy class name.
 
   # --- Observation space ---
-  num_rays: 12                      # Number of ray-cast distance sensors for AI observations.
+  num_rays: 13                      # Number of ray-cast distance sensors for AI observations (includes 0-degree forward ray).
   ray_spread_degrees: 240           # Forward fan arc for ray casting (degrees).
   max_ray_distance: 400             # Maximum ray length in pixels.
 
@@ -232,7 +232,7 @@ ai:
   breadcrumb_auto_advance_multiplier: 1.5  # How many breadcrumb-spacings ahead the car must be before auto-advancing a missed breadcrumb.
 
   # --- Lateral displacement penalty (v7) ---
-  lateral_displacement_penalty_scale: 0.005  # Penalty per pixel of lateral distance from centerline. Punishes wall-hugging.
+  lateral_displacement_penalty_scale: 0.001  # Penalty per pixel of lateral distance from centerline. Reduced from 0.005 (v7) which drowned out positive signals.
 
   # --- Episode limits ---
   max_episode_steps: 6000           # Hard cutoff (~100 seconds at 60fps). Prevents infinite episodes.

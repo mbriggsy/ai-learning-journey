@@ -4,8 +4,8 @@ Exposes the game as a standard Gymnasium environment so it can be trained
 with any RL algorithm.  The environment runs the game headlessly (no Arcade
 window) by default; pass render_mode="human" to open the game window.
 
-Observation space: Box(0, 1, (17,), float32)
-  - 12 ray-cast distances (normalized, 240-degree forward fan)
+Observation space: Box(0, 1, (18,), float32)
+  - 13 ray-cast distances (normalized, 240-degree forward fan including 0-degree center)
   - 5 car state values (speed, angular vel, drift, health, checkpoint angle)
 
 Action space: Box(low=[-1, -1, 0], high=[1, 1, 1], shape=(3,), float32)
@@ -47,7 +47,7 @@ class RacingEnv(gym.Env):
 
     Attributes:
         metadata: Gym env metadata (render modes, fps).
-        observation_space: Box(0, 1, (17,), float32).
+        observation_space: Box(0, 1, (18,), float32).
         action_space: Box([-1,-1,0], [1,1,1], (3,), float32).
     """
 

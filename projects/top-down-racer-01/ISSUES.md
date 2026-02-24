@@ -574,9 +574,10 @@ Scale is deliberately small (0.005). At the track edge (~60px from centerline), 
 
 ## Issue #014 - Missing Forward Ray (20-Degree Blind Spot)
 
-**Status:** Open
+**Status:** Fixed (v8)
 **Priority:** Low (v8 candidate)
 **Reported:** 2026-02-23
+**Fixed:** 2026-02-23
 
 ### Description
 The observation ray fan has a 20-degree blind spot directly ahead of the car. Ray angles are:
@@ -587,16 +588,13 @@ There is no 0-degree (straight ahead) ray. The closest rays are at -10 and +10 d
 ### Impact
 Low. The 1.5% distance overestimate is unlikely to cause significant behavior changes. However, a direct forward ray would give the agent cleaner "wall ahead" signal and is trivially easy to add.
 
-### Proposed Fix (v8)
-Add `0.0` to `RAY_ANGLES_DEG` in `ai/observations.py`:
-```python
-RAY_ANGLES_DEG: list[float] = [
-    -120, -100, -75, -50, -30, -10,
-      0,                              # <-- add this
-     10,   30,  50,  75, 100, 120,
-]
-```
-This changes observation space from (17,) to (18,). Update `OBS_SIZE` and `make_observation_space()` accordingly. Note: this breaks backward compatibility with saved v1-v7 models (different obs space shape).
+### Fix (v8)
+Added `0.0` to `RAY_ANGLES_DEG` in `ai/observations.py`. Observation space changed from (17,) to (18,). Updated `NUM_RAYS` (12 -> 13), `OBS_SIZE` (17 -> 18), all docstrings, and hardcoded indices in `build_observation()` to use `NUM_RAYS`-relative offsets. Also updated `racing_env.py` docstrings. Breaks backward compatibility with v1-v7 models (different obs space shape) -- v8 is a fresh training run.
+
+### Files Changed
+- `ai/observations.py` -- added 0-degree ray, updated NUM_RAYS/OBS_SIZE/docstrings/indices
+- `ai/racing_env.py` -- updated obs size in docstrings
+- `configs/default.yaml` -- updated `num_rays: 13`
 
 ---
 

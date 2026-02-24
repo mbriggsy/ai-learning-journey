@@ -496,4 +496,29 @@ speed_reward_scale: 0.0               # Disabled -- was the exploit vector
 
 ---
 
+## Issue #012 - Breadcrumb Chain Locks on Miss (Open)
+
+**Status:** Open
+**Priority:** Low (v7 candidate)
+**Reported:** 2026-02-23
+
+### Description
+Breadcrumbs are collected sequentially via a single `_next_checkpoint_idx` pointer. The car can only earn reward from the currently illuminated (active) breadcrumb. If the car drives past the active breadcrumb without collecting it, the index never advances -- that breadcrumb stays lit and no subsequent ones illuminate for the rest of the episode.
+
+### Observed Behavior
+- `mean_breadcrumbs_100` is stuck around 5/ep -- car collects a few near spawn then gets locked out of the rest of the chain
+- Missed breadcrumb stays visually illuminated; nothing further lights up
+- Car would need to backtrack to collect missed breadcrumb, which it never learns to do
+
+### Root Cause
+In `ai/racing_env.py`, only `self._training_checkpoints[self._next_checkpoint_idx]` is checked each step. A missed breadcrumb permanently blocks the chain until lap reset.
+
+### Proposed Fix (v7)
+Auto-advance `_next_checkpoint_idx` to the nearest breadcrumb ahead of the car's current track position. This way the "next" target always stays in front of the car regardless of misses -- car keeps earning breadcrumb rewards for forward progress without requiring backtracking.
+
+### Impact
+Does NOT affect centerline progress reward (runs independently). Training still works -- breadcrumbs are supplementary signal. Primarily a visual confusion issue for human observers and a minor training inefficiency.
+
+---
+
 *Maintained by Harry -- if it broke and got fixed, it lives here*

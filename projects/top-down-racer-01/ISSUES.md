@@ -572,4 +572,32 @@ Scale is deliberately small (0.005). At the track edge (~60px from centerline), 
 
 ---
 
+## Issue #014 - Missing Forward Ray (20-Degree Blind Spot)
+
+**Status:** Open
+**Priority:** Low (v8 candidate)
+**Reported:** 2026-02-23
+
+### Description
+The observation ray fan has a 20-degree blind spot directly ahead of the car. Ray angles are:
+`-120, -100, -75, -50, -30, -10, +10, +30, +50, +75, +100, +120`
+
+There is no 0-degree (straight ahead) ray. The closest rays are at -10 and +10 degrees. When driving directly toward a wall, neither ray measures the true perpendicular distance -- they measure the slightly-longer diagonal distance at ±10 degrees (`d / cos(10°) ≈ 1.5% overestimate`). This is a minor but real observability gap.
+
+### Impact
+Low. The 1.5% distance overestimate is unlikely to cause significant behavior changes. However, a direct forward ray would give the agent cleaner "wall ahead" signal and is trivially easy to add.
+
+### Proposed Fix (v8)
+Add `0.0` to `RAY_ANGLES_DEG` in `ai/observations.py`:
+```python
+RAY_ANGLES_DEG: list[float] = [
+    -120, -100, -75, -50, -30, -10,
+      0,                              # <-- add this
+     10,   30,  50,  75, 100, 120,
+]
+```
+This changes observation space from (17,) to (18,). Update `OBS_SIZE` and `make_observation_space()` accordingly. Note: this breaks backward compatibility with saved v1-v7 models (different obs space shape).
+
+---
+
 *Maintained by Harry -- if it broke and got fixed, it lives here*

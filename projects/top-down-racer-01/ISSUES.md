@@ -521,4 +521,27 @@ Does NOT affect centerline progress reward (runs independently). Training still 
 
 ---
 
+## Issue #013 - Wall Damage Too Forgiving (v7 Candidate)
+
+**Status:** Open
+**Priority:** Low (v7 candidate)
+**Requested:** 2026-02-23
+
+### Description
+`wall_damage_penalty_scale` is currently 0.8. Car survives full 6,000-step episodes every time, suggesting wall scraping has little consequence. This may allow the car to learn a strategy that tolerates wall contact instead of learning clean track driving.
+
+### Observed Behavior (v6, ~32% trained)
+- `ep_len_mean` is 6,000 every episode -- car never dies
+- `mean_checkpoints_100` = 0 -- car not reaching first checkpoint
+- Wall contact appears unpunished enough to be a viable "strategy"
+
+### History
+- v2/v3: `wall_damage_penalty_scale: 2.0` -- too lethal, episodes ended too fast for learning
+- v4/v5/v6: `wall_damage_penalty_scale: 0.8` -- fixed instant death, but may be too forgiving now
+
+### Proposed Fix (v7)
+Increase `wall_damage_penalty_scale` from 0.8 to ~1.2--1.5. Target: occasional episode termination from sustained wall contact, but not instant death on glancing hits. Combine with Issue #012 fix (breadcrumb auto-advance) for maximum effect.
+
+---
+
 *Maintained by Harry -- if it broke and got fixed, it lives here*

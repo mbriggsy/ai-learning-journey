@@ -38,6 +38,7 @@ class StepInfo:
     curr_steering: float
     is_stuck: bool = False
     forward_progress: float = 0.0
+    lateral_displacement: float = 0.0
 
 
 def compute_reward(
@@ -114,12 +115,14 @@ def compute_reward(
     smooth_bonus: float = float(ai.get("smooth_steering_bonus", 0.01))
     fwd_progress_scale: float = float(ai.get("forward_progress_reward_scale", 2.0))
     bwd_progress_scale: float = float(ai.get("backward_progress_penalty_scale", 0.5))
+    lateral_scale: float = float(ai.get("lateral_displacement_penalty_scale", 0.005))
 
     breakdown: dict[str, float] = {
         "checkpoint": 0.0,
         "lap": 0.0,
         "speed": 0.0,
         "forward_progress": 0.0,
+        "lateral_penalty": 0.0,
         "wall_penalty": 0.0,
         "death_penalty": 0.0,
         "time_penalty": 0.0,
@@ -144,6 +147,10 @@ def compute_reward(
         breakdown["forward_progress"] = info.forward_progress * fwd_progress_scale
     elif info.forward_progress < 0:
         breakdown["forward_progress"] = info.forward_progress * bwd_progress_scale
+
+    # 3c. Lateral displacement penalty — penalize being far from centerline
+    if info.lateral_displacement > 0:
+        breakdown["lateral_penalty"] = -(info.lateral_displacement * lateral_scale)
 
     # 4. Wall hit penalty — proportional to damage taken
     if info.wall_damage > 0:
@@ -200,6 +207,7 @@ def get_reward_range(config: dict) -> tuple[float, float]:
 
     fwd_progress_scale = float(ai.get("forward_progress_reward_scale", 2.0))
     bwd_progress_scale = float(ai.get("backward_progress_penalty_scale", 0.5))
+    lateral_scale = float(ai.get("lateral_displacement_penalty_scale", 0.005))
 
     # Worst-case backward progress in a single step is small (< 1.0 index units)
     max_bwd_progress_penalty = 1.0 * bwd_progress_scale
@@ -207,8 +215,12 @@ def get_reward_range(config: dict) -> tuple[float, float]:
     # a ~300px segment gives ~0.02 index units; use 0.1 as generous upper bound)
     max_fwd_progress_reward = 0.1 * fwd_progress_scale
 
+    # Worst-case lateral displacement: half the track width (car at the wall)
+    track_width = float(config.get("track", {}).get("track_width", 120.0))
+    max_lateral_penalty = (track_width / 2.0) * lateral_scale
+
     max_wall_damage = max_health  # worst case: full health in a single hit
-    min_reward = -(death_penalty + death_penalty + max_wall_damage * wall_scale + time_penalty + max_bwd_progress_penalty)
+    min_reward = -(death_penalty + death_penalty + max_wall_damage * wall_scale + time_penalty + max_bwd_progress_penalty + max_lateral_penalty)
     max_reward = checkpoint_reward + lap_bonus + speed_scale + smooth_bonus + max_fwd_progress_reward
 
     return (min_reward, max_reward)

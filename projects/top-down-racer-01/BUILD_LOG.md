@@ -5,6 +5,32 @@ Each agent logs their work here as they build the game.
 
 ---
 
+### [2026-02-23] Fix Agent -- v7 Prep: Issues #012 #013 + Lateral Displacement Penalty
+
+**Files:** `game/track.py`, `ai/rewards.py`, `ai/racing_env.py`, `configs/default.yaml`, `ISSUES.md`, `README.md`
+
+**Summary:** Three fixes for richard_petty_v7 training, all targeting the wall-riding behavior observed in v6. The car survives full 6000-step episodes but never progresses past the first few breadcrumbs, suggesting wall contact is too cheap and the breadcrumb chain locks up on misses.
+
+**Fix 1 -- Breadcrumb auto-advance (Issue #012):** The sequential `_next_checkpoint_idx` pointer only advances when the car physically collects the active breadcrumb. If the car drives past without collecting, the index never advances and no further breadcrumbs illuminate for the rest of the episode. Added auto-advance logic: after the normal collection check, if the breadcrumb wasn't collected, compute the car's track progress and the breadcrumb's track progress. If the car is more than 1.5 breadcrumb-spacings ahead (configurable via `breadcrumb_auto_advance_multiplier`), the index auto-advances. The car does NOT get reward for auto-advanced breadcrumbs -- this purely prevents chain-locking. Uses the same wraparound-safe modular delta as the forward progress reward.
+
+**Fix 2 -- Wall damage penalty scale (Issue #013):** Increased `wall_damage_penalty_scale` from 0.8 to 1.2. A 300 px/s impact now produces penalty = (300-100)*0.1*1.2 = -24 (was -16). This is a 50% increase. Combined with the other fixes, sustained wall contact should become net-negative enough that the agent learns to avoid it. Still not as lethal as v3's 2.0 scale which caused instant-death spirals.
+
+**Fix 3 -- Lateral displacement penalty (new):** Added a new reward component that penalizes the car for being far from the track centerline laterally. Implementation: `Track.get_lateral_displacement(x, y)` returns perpendicular distance in pixels from the car to the nearest centerline segment (same projection algorithm as `get_track_progress()` but returns the distance). `StepInfo` gets a new `lateral_displacement` field. `compute_reward()` applies: `-(distance * lateral_displacement_penalty_scale)`. Scale is 0.005 -- at the track edge (~60px), penalty = -0.3/step; over 1000 steps of wall-riding = -300 total. At the centerline, penalty = 0. This complements the forward progress reward: progress rewards moving ALONG the centerline, lateral displacement penalizes being FAR FROM it.
+
+**Decisions:**
+
+- **Why 1.5x spacing for auto-advance threshold?** Too low (1.0x) would auto-advance as soon as the car passes the breadcrumb by one spacing -- normal collection behavior that happens when the car is slightly off-center. Too high (3.0x) would still lock the chain for long stretches. 1.5x means the car has to miss a breadcrumb by a significant margin before auto-advance kicks in. It's in the config so it can be tuned.
+
+- **Why the car gets no reward for auto-advanced breadcrumbs?** Giving reward for missed breadcrumbs would be free money. The auto-advance is purely a chain-unlocking mechanism -- it ensures the "next target" stays ahead of the car so the breadcrumb signal doesn't go dark. The agent still has to actually collect breadcrumbs to earn reward.
+
+- **Why lateral penalty scale of 0.005 (not 0.01 or higher)?** The lateral penalty fires EVERY step, unlike breadcrumbs (discrete) or wall damage (event-based). A per-step penalty accumulates fast. At 0.005 * 60px * 60fps = -18 per second of wall-riding. Combined with wall damage penalty (-24 per hit) and zero forward progress, wall-riding becomes strongly net-negative. 0.01 would be -36/second which risks overpowering the breadcrumb signal (~5.0 per breadcrumb, ~50 per lap).
+
+- **Why not use `get_track_progress` for the auto-advance instead of calling it twice?** The step already computes `new_progress` for the forward progress reward. However, the auto-advance needs the breadcrumb's progress too, which isn't computed elsewhere. The extra `get_track_progress` call for the breadcrumb position is O(24) per step -- negligible. Caching could save the call but would add state complexity for no meaningful performance gain.
+
+**Issues:** None.
+
+---
+
 ### [2026-02-23] Fix Agent -- Issue #010: Replace Speed Reward with Centerline Forward Progress (v6 Prep)
 
 **Files:** `game/track.py`, `ai/rewards.py`, `ai/racing_env.py`, `configs/default.yaml`, `ISSUES.md`, `README.md`

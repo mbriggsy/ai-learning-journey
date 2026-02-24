@@ -270,6 +270,35 @@ class RacingEnv(gym.Env):
                     self._lap_times.append(lap_steps * self._dt)
                     self._lap_start_step = self._step_count
 
+            # --- Breadcrumb auto-advance (Issue #012) ---
+            # If the car has moved far enough ahead of the current breadcrumb,
+            # auto-advance the index so the chain doesn't lock on a miss.
+            if not cp_reached:
+                next_cp = self._training_checkpoints[self._next_checkpoint_idx]
+                car_progress = self._track.get_track_progress(
+                    float(self._car.position[0]), float(self._car.position[1])
+                )
+                cp_progress = self._track.get_track_progress(
+                    next_cp[0], next_cp[1]
+                )
+                # Forward delta with wraparound handling
+                fwd_delta = car_progress - cp_progress
+                if fwd_delta < -self._num_centerline_points / 2.0:
+                    fwd_delta += self._num_centerline_points
+                elif fwd_delta > self._num_centerline_points / 2.0:
+                    fwd_delta -= self._num_centerline_points
+                # Auto-advance if car is more than N breadcrumb-spacings ahead
+                auto_advance_mult: float = float(
+                    self._ai_cfg.get("breadcrumb_auto_advance_multiplier", 1.5)
+                )
+                spacing_in_progress = (
+                    self._num_centerline_points / self._num_checkpoints
+                )
+                if fwd_delta > spacing_in_progress * auto_advance_mult:
+                    self._next_checkpoint_idx = (
+                        (self._next_checkpoint_idx + 1) % self._num_checkpoints
+                    )
+
         # --- Track progress (forward-progress reward) ----------------------
         new_progress = self._track.get_track_progress(
             float(self._car.position[0]), float(self._car.position[1])
@@ -283,6 +312,11 @@ class RacingEnv(gym.Env):
         elif delta_progress < -half_track:
             delta_progress += self._num_centerline_points
         self._track_progress = new_progress
+
+        # --- Lateral displacement (centerline distance) --------------------
+        lateral_dist: float = self._track.get_lateral_displacement(
+            float(self._car.position[0]), float(self._car.position[1])
+        )
 
         # --- Stuck detection ---------------------------------------------
         is_stuck = self._is_stuck()
@@ -303,6 +337,7 @@ class RacingEnv(gym.Env):
             curr_steering=float(action[0]),
             is_stuck=is_stuck,
             forward_progress=delta_progress,
+            lateral_displacement=lateral_dist,
         )
         reward, breakdown = compute_reward(step_info, self._config)
 

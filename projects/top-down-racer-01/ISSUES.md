@@ -496,11 +496,12 @@ speed_reward_scale: 0.0               # Disabled -- was the exploit vector
 
 ---
 
-## Issue #012 - Breadcrumb Chain Locks on Miss (Open)
+## Issue #012 - Breadcrumb Chain Locks on Miss
 
-**Status:** Open
+**Status:** Fixed (v7)
 **Priority:** Low (v7 candidate)
 **Reported:** 2026-02-23
+**Fixed:** 2026-02-23
 
 ### Description
 Breadcrumbs are collected sequentially via a single `_next_checkpoint_idx` pointer. The car can only earn reward from the currently illuminated (active) breadcrumb. If the car drives past the active breadcrumb without collecting it, the index never advances -- that breadcrumb stays lit and no subsequent ones illuminate for the rest of the episode.
@@ -513,19 +514,23 @@ Breadcrumbs are collected sequentially via a single `_next_checkpoint_idx` point
 ### Root Cause
 In `ai/racing_env.py`, only `self._training_checkpoints[self._next_checkpoint_idx]` is checked each step. A missed breadcrumb permanently blocks the chain until lap reset.
 
-### Proposed Fix (v7)
-Auto-advance `_next_checkpoint_idx` to the nearest breadcrumb ahead of the car's current track position. This way the "next" target always stays in front of the car regardless of misses -- car keeps earning breadcrumb rewards for forward progress without requiring backtracking.
+### Fix (v7)
+Added breadcrumb auto-advance in `ai/racing_env.py`. After the normal checkpoint collection check, if the breadcrumb was NOT collected, the code computes the car's track progress and the breadcrumb's track progress. If the car is more than 1.5 breadcrumb-spacings ahead of the current target (configurable via `breadcrumb_auto_advance_multiplier`), the index auto-advances. Uses the same wraparound-safe forward-delta logic as the progress reward.
 
-### Impact
-Does NOT affect centerline progress reward (runs independently). Training still works -- breadcrumbs are supplementary signal. Primarily a visual confusion issue for human observers and a minor training inefficiency.
+The car does NOT get reward for auto-advanced breadcrumbs -- only collected ones earn reward. This purely prevents the chain from locking and ensures the "next target" indicator always stays ahead of the car.
+
+### Files Changed
+- `ai/racing_env.py` -- auto-advance logic after checkpoint collection block
+- `configs/default.yaml` -- added `breadcrumb_auto_advance_multiplier: 1.5`
 
 ---
 
-## Issue #013 - Wall Damage Too Forgiving (v7 Candidate)
+## Issue #013 - Wall Damage Too Forgiving
 
-**Status:** Open
+**Status:** Fixed (v7)
 **Priority:** Low (v7 candidate)
 **Requested:** 2026-02-23
+**Fixed:** 2026-02-23
 
 ### Description
 `wall_damage_penalty_scale` is currently 0.8. Car survives full 6,000-step episodes every time, suggesting wall scraping has little consequence. This may allow the car to learn a strategy that tolerates wall contact instead of learning clean track driving.
@@ -539,8 +544,31 @@ Does NOT affect centerline progress reward (runs independently). Training still 
 - v2/v3: `wall_damage_penalty_scale: 2.0` -- too lethal, episodes ended too fast for learning
 - v4/v5/v6: `wall_damage_penalty_scale: 0.8` -- fixed instant death, but may be too forgiving now
 
-### Proposed Fix (v7)
-Increase `wall_damage_penalty_scale` from 0.8 to ~1.2--1.5. Target: occasional episode termination from sustained wall contact, but not instant death on glancing hits. Combine with Issue #012 fix (breadcrumb auto-advance) for maximum effect.
+### Fix (v7)
+Increased `wall_damage_penalty_scale` from 0.8 to 1.2 in `configs/default.yaml`. A 300 px/s impact now produces penalty = (300-100)*0.1*1.2 = -24 (was -16). Combined with breadcrumb auto-advance (Issue #012) and the new lateral displacement penalty, the car should learn to stay away from walls rather than ride them.
+
+### Files Changed
+- `configs/default.yaml` -- `wall_damage_penalty_scale: 0.8` -> `1.2`
+
+---
+
+## Issue #014 - Lateral Displacement Penalty (v7 Feature)
+
+**Status:** Implemented
+**Priority:** Medium
+**Added:** 2026-02-23
+
+### Description
+New reward component for v7. Penalizes the car for being far from the track centerline laterally. Works in conjunction with the forward progress reward -- forward progress rewards moving ALONG the centerline, lateral displacement penalizes being FAR FROM the centerline. Together they push the car toward clean center-track racing lines.
+
+### Implementation
+- `game/track.py` -- added `get_lateral_displacement(x, y) -> float`, returns perpendicular distance in pixels from the car to the nearest centerline segment
+- `ai/rewards.py` -- added `lateral_displacement` field to `StepInfo`, new `lateral_penalty` reward component: `-(distance * lateral_displacement_penalty_scale)`
+- `ai/racing_env.py` -- computes lateral displacement each step, passes to StepInfo
+- `configs/default.yaml` -- added `lateral_displacement_penalty_scale: 0.005`
+
+### Design Notes
+Scale is deliberately small (0.005). At the track edge (~60px from centerline), penalty = -0.3 per step. Over 1000 steps of wall-riding, that's -300 total. Combined with the wall damage penalty and the lack of forward progress reward, wall-riding should become strongly net-negative. At the centerline (0px displacement), penalty = 0 -- clean racing is free.
 
 ---
 

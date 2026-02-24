@@ -48,7 +48,8 @@ The game is wrapped as a Gymnasium environment and trained with PPO via Stable-B
 | richard_petty_v3 | 5M | **Worse** — exploited rewards | Entropy collapsed to ~0, agent oscillated near wall for easy reward |
 | richard_petty_v4 | 5M | **In progress** | Added ent_coef=0.01, reduced wall penalty 2.0->0.8 |
 | richard_petty_v5 | 3.16M (killed) | **Wall-hugging exploit** | Speed reward let AI pin against wall + hold gas for free reward |
-| richard_petty_v6 | (planned) | -- | Replaced speed reward with centerline forward progress (Issue #010) |
+| richard_petty_v6 | 1.5M (killed) | **Wall-riding, no progress** | Forward progress reward working but car still hugs walls; breadcrumb chain locks on miss |
+| richard_petty_v7 | (planned) | -- | Breadcrumb auto-advance (#012), wall damage 1.2 (#013), lateral displacement penalty |
 
 ### Key Lessons So Far
 1. **Reward hacking is real.** The AI found the easiest path to reward (oscillating near a breadcrumb) rather than actually driving the track.
@@ -57,6 +58,8 @@ The game is wrapped as a Gymnasium environment and trained with PPO via Stable-B
 4. **Good value function ≠ good policy.** `explained_variance` 0.9+ just means the critic accurately predicts returns from the exploit strategy.
 5. **You can't debug RL blind.** Fixing watch.py (Issue #005) to visualize the agent was essential for diagnosing problems.
 6. **Direction-agnostic rewards get exploited.** Speed reward (`abs(speed) * scale`) rewards wheels spinning against a wall. Replace with direction-aware progress along the track centerline.
+7. **Forward progress alone doesn't prevent wall-riding.** A car hugging the wall can still make forward progress along the centerline. Need lateral displacement penalty to push the car toward the center of the road.
+8. **Sequential reward chains must handle missed links.** If one breadcrumb in a sequential chain is missed, the entire chain goes dark. Auto-advance prevents this from killing the reward signal for the rest of the episode.
 
 ### AI Files
 ```

@@ -266,6 +266,48 @@ class Track:
 
         return best_progress
 
+    def get_lateral_displacement(self, x: float, y: float) -> float:
+        """Return the perpendicular distance from a point to the nearest centerline segment.
+
+        Projects the point onto each centerline segment and returns the minimum
+        perpendicular distance in pixels.  Used by the RL environment to penalize
+        the car for straying far from the center of the road.
+
+        Args:
+            x: World x coordinate.
+            y: World y coordinate.
+
+        Returns:
+            Perpendicular distance in pixels from the point to the nearest
+            centerline segment.  Always >= 0.
+        """
+        point = np.array([x, y], dtype=np.float64)
+        n = len(self.centerline)
+
+        best_dist_sq: float = float("inf")
+
+        for i in range(n):
+            a = self.centerline[i]
+            b = self.centerline[(i + 1) % n]
+
+            ab = b - a
+            ap = point - a
+            ab_len_sq = float(np.dot(ab, ab))
+
+            if ab_len_sq < 1e-12:
+                dist_sq = float(np.dot(ap, ap))
+            else:
+                t = float(np.dot(ap, ab)) / ab_len_sq
+                t = max(0.0, min(1.0, t))
+                closest = a + t * ab
+                diff = point - closest
+                dist_sq = float(np.dot(diff, diff))
+
+            if dist_sq < best_dist_sq:
+                best_dist_sq = dist_sq
+
+        return math.sqrt(best_dist_sq)
+
     def is_on_track(self, x: float, y: float) -> bool:
         """Check whether a world position is within the drivable road surface.
 

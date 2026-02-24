@@ -204,7 +204,7 @@ ai:
   # reward -= wall_damage * wall_damage_penalty_scale per collision step.
   # A 300 px/s impact deals (300-100)*0.1 = 20 damage → penalty = 20 * 0.5 = -10.
   # One heavy hit ≈ losing ~3 breadcrumbs worth of reward.
-  wall_damage_penalty_scale: 0.8    # Proportional to actual damage taken. Was 2.0 (v3) -- too lethal, episodes ended before learning.
+  wall_damage_penalty_scale: 1.2    # Proportional to actual damage taken. Was 0.8 (v4-v6), raised for v7 to make wall-riding costly.
 
   # --- Death penalty ---
   death_penalty: 20.0               # Large negative for dying. Episode-terminal.
@@ -227,6 +227,12 @@ ai:
   # --- Spawn protection ---
   spawn_grace_steps: 30             # Steps after reset where checkpoint collection is disabled.
   min_checkpoint_speed: 5.0         # Minimum forward speed (px/s) to collect a checkpoint. Prevents reverse-crossing credit.
+
+  # --- Breadcrumb auto-advance (Issue #012) ---
+  breadcrumb_auto_advance_multiplier: 1.5  # How many breadcrumb-spacings ahead the car must be before auto-advancing a missed breadcrumb.
+
+  # --- Lateral displacement penalty (v7) ---
+  lateral_displacement_penalty_scale: 0.005  # Penalty per pixel of lateral distance from centerline. Punishes wall-hugging.
 
   # --- Episode limits ---
   max_episode_steps: 6000           # Hard cutoff (~100 seconds at 60fps). Prevents infinite episodes.

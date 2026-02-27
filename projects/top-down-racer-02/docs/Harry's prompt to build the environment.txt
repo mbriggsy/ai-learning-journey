@@ -1,0 +1,3 @@
+Harry the top-down-racer-v02-setup-guide.docx in the 02 docs folder has everything we need to setup the environment for 02 racer.
+Start at Phase B. Run every command in Git Bash. The doc is sequential — don't skip ahead. If something fails, check the troubleshooting table at the end before texting me. When you get to Phase H and everything's green, stop. We'll kick off /gsd:new-project together.
+Note: had to correct the path in the word doc, but other than that everything worked!

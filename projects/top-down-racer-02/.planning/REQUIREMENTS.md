@@ -174,13 +174,82 @@ Which phases cover which requirements. Updated during roadmap creation.
 
 | Requirement | Phase | Status |
 |-------------|-------|--------|
-| (populated during roadmap creation) | | |
+| MECH-01 | Phase 1: Core Simulation Engine | Pending |
+| MECH-02 | Phase 1: Core Simulation Engine | Pending |
+| MECH-03 | Phase 1: Core Simulation Engine | Pending |
+| MECH-04 | Phase 1: Core Simulation Engine | Pending |
+| MECH-05 | Phase 1: Core Simulation Engine | Pending |
+| MECH-06 | Phase 1: Core Simulation Engine | Pending |
+| MECH-07 | Phase 1: Core Simulation Engine | Pending |
+| MECH-08 | Phase 1: Core Simulation Engine | Pending |
+| MECH-09 | Phase 1: Core Simulation Engine | Pending |
+| MECH-10 | Phase 1: Core Simulation Engine | Pending |
+| MECH-11 | Phase 1: Core Simulation Engine | Pending |
+| MECH-12 | Phase 2: PixiJS Renderer + Playable Game | Pending |
+| MECH-13 | Phase 2: PixiJS Renderer + Playable Game | Pending |
+| MECH-14 | Phase 1: Core Simulation Engine | Pending |
+| MECH-15 | Phase 1: Core Simulation Engine | Pending |
+| HUD-01 | Phase 2: PixiJS Renderer + Playable Game | Pending |
+| HUD-02 | Phase 2: PixiJS Renderer + Playable Game | Pending |
+| HUD-03 | Phase 2: PixiJS Renderer + Playable Game | Pending |
+| HUD-04 | Phase 2: PixiJS Renderer + Playable Game | Pending |
+| HUD-05 | Phase 2: PixiJS Renderer + Playable Game | Pending |
+| VIS-01 | Phase 2: PixiJS Renderer + Playable Game | Pending |
+| VIS-02 | Phase 2: PixiJS Renderer + Playable Game | Pending |
+| VIS-03 | Phase 3: Game Features & Polish | Pending |
+| VIS-04 | Phase 3: Game Features & Polish | Pending |
+| VIS-05 | Phase 2: PixiJS Renderer + Playable Game | Pending |
+| VIS-06 | Phase 6: AI vs Human Mode | Pending |
+| VIS-07 | Phase 3: Game Features & Polish | Pending |
+| VIS-08 | Phase 3: Game Features & Polish | Pending |
+| SND-01 | Phase 3: Game Features & Polish | Pending |
+| SND-02 | Phase 3: Game Features & Polish | Pending |
+| SND-03 | Phase 3: Game Features & Polish | Pending |
+| SND-04 | Phase 3: Game Features & Polish | Pending |
+| SND-05 | Phase 3: Game Features & Polish | Pending |
+| AI-01 | Phase 4: Gymnasium Environment Wrapper | Pending |
+| AI-02 | Phase 4: Gymnasium Environment Wrapper | Pending |
+| AI-03 | Phase 4: Gymnasium Environment Wrapper | Pending |
+| AI-04 | Phase 4: Gymnasium Environment Wrapper | Pending |
+| AI-05 | Phase 4: Gymnasium Environment Wrapper | Pending |
+| AI-06 | Phase 4: Gymnasium Environment Wrapper | Pending |
+| AI-07 | Phase 4: Gymnasium Environment Wrapper | Pending |
+| AI-08 | Phase 5: AI Training Pipeline | Pending |
+| AI-09 | Phase 5: AI Training Pipeline | Pending |
+| AI-10 | Phase 5: AI Training Pipeline | Pending |
+| AI-11 | Phase 5: AI Training Pipeline | Pending |
+| AI-12 | Phase 4: Gymnasium Environment Wrapper | Pending |
+| AI-13 | Phase 4: Gymnasium Environment Wrapper | Pending |
+| AVH-01 | Phase 6: AI vs Human Mode | Pending |
+| AVH-02 | Phase 6: AI vs Human Mode | Pending |
+| AVH-03 | Phase 6: AI vs Human Mode | Pending |
+| AVH-04 | Phase 6: AI vs Human Mode | Pending |
+| AVH-05 | Phase 6: AI vs Human Mode | Pending |
+| TRK-01 | Phase 1: Core Simulation Engine | Pending |
+| TRK-02 | Phase 3: Game Features & Polish | Pending |
+| TRK-03 | Phase 3: Game Features & Polish | Pending |
+| LDB-01 | Phase 6: AI vs Human Mode | Pending |
+| LDB-02 | Phase 6: AI vs Human Mode | Pending |
+| UX-01 | Phase 2: PixiJS Renderer + Playable Game | Pending |
+| UX-02 | Phase 2: PixiJS Renderer + Playable Game | Pending |
+| UX-03 | Phase 3: Game Features & Polish | Pending |
+| UX-04 | Phase 3: Game Features & Polish | Pending |
+| UX-05 | Phase 2: PixiJS Renderer + Playable Game | Pending |
+| UX-06 | Phase 2: PixiJS Renderer + Playable Game | Pending |
 
 **Coverage:**
-- v1 requirements: 53 total
-- Mapped to phases: 0
-- Unmapped: 53
+- v1 requirements: 62 total
+- Mapped to phases: 62
+- Unmapped: 0
+
+**Per-phase breakdown:**
+- Phase 1: 14 requirements
+- Phase 2: 14 requirements
+- Phase 3: 13 requirements
+- Phase 4: 9 requirements
+- Phase 5: 4 requirements
+- Phase 6: 8 requirements
 
 ---
 *Requirements defined: 2026-02-27*
-*Last updated: 2026-02-27 after initial definition*
+*Last updated: 2026-02-27 after roadmap creation (traceability complete)*

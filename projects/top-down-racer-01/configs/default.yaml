@@ -238,10 +238,17 @@ ai:
   # Penalizes going fast through sharp turns. Links curvature lookahead obs to braking behavior.
   # Penalty = corner_speed_penalty_scale * speed_fraction * curvature_deviation
   # where curvature_deviation = how far from straight (0=straight, 1=sharpest turn).
-  corner_speed_penalty_scale: 0.05   # Scale of penalty for high speed in sharp corners.
+  corner_speed_penalty_scale: 0.0    # Disabled in v11 -- was teaching "stop at corners" not "navigate corners."
+
+  # --- Cornering reward (v11) ---
+  # Bonus for carrying meaningful speed through corners. Rewards the behavior
+  # we actually want: maintaining speed while steering through high-curvature sections.
+  cornering_reward_scale: 0.05       # Bonus for maintaining speed through corners (curvature > threshold).
+  cornering_speed_threshold: 0.3     # Minimum speed fraction (speed/max_speed) to qualify for cornering bonus.
+  cornering_curvature_threshold: 0.3 # Minimum curvature deviation (0=straight, 1=sharpest) to trigger cornering bonus.
 
   # --- Lateral displacement penalty (v7) ---
-  lateral_displacement_penalty_scale: 0.001  # Penalty per pixel of lateral distance from centerline. Reduced from 0.005 (v7) which drowned out positive signals.
+  lateral_displacement_penalty_scale: 0.003  # Penalty per pixel of lateral distance from centerline. Was 0.001 (v8-v10, too weak), 0.005 (v7, too strong). 0.003 is a middle ground.
 
   # --- Episode limits ---
   max_episode_steps: 6000           # Hard cutoff (~100 seconds at 60fps). Prevents infinite episodes.
@@ -255,5 +262,5 @@ ai:
   n_epochs: 10                      # PPO epochs per rollout.
   gamma: 0.99                       # Discount factor.
   gae_lambda: 0.95                  # GAE lambda.
-  clip_range: 0.2                   # PPO clipping range.
-  ent_coef: 0.01                    # Entropy bonus coefficient. Default SB3 is 0.0; 0.01 keeps exploration alive longer.
+  clip_range: 0.1                   # PPO clipping range. Halved from 0.2 (v10) to reduce catastrophic forgetting / policy collapse around 3M steps.
+  ent_coef: 0.02                    # Entropy bonus coefficient. Raised from 0.01 (v10) to maintain exploration pressure deeper into training.

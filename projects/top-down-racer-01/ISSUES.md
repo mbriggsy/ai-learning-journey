@@ -682,4 +682,87 @@ Uses the car's current `track_progress` (fractional centerline index) to look up
 
 ---
 
+---
+
+## Issue #016 - Wall-Riding: Lateral Penalty Too Weak
+
+**Status:** Fixed (v11)
+**Priority:** Medium
+**Reported:** 2026-02-26
+**Fixed:** 2026-02-26
+
+### Observed Behavior (v10)
+Car still hugs guard rails. It makes valid centerline forward progress while pinned to the wall, so the forward progress reward is flowing while the lateral penalty (`0.001` per pixel) is too small to compete.
+
+### Root Cause
+`lateral_displacement_penalty_scale: 0.001` is too weak. At the track edge (~60px from centerline), penalty is only -0.06 per step. Over 1000 steps that's -60, but forward progress reward over the same period is ~+48 plus breadcrumbs (~250/lap). The penalty doesn't bite hard enough to discourage wall-riding when the car is still making forward progress.
+
+### Fix
+Increased `lateral_displacement_penalty_scale` from `0.001` to `0.003`. At the track edge, penalty is now -0.18 per step (-180 over 1000 steps). This should compete with the forward progress reward without drowning it out like v7's `0.005` did.
+
+### Files Changed
+- `configs/default.yaml` -- `lateral_displacement_penalty_scale: 0.001` -> `0.003`
+
+---
+
+---
+
+## Issue #017 - Corner Navigation: Car Stops at Zigzag Turns
+
+**Status:** Fixed (v11)
+**Priority:** High
+**Reported:** 2026-02-26
+**Fixed:** 2026-02-26
+
+### Observed Behavior (v10)
+The car sees high curvature ahead (curvature obs 18-20), brakes to near-zero, and then freezes. It learned "slow down near corners" but not "steer through corners." It idles until the stuck timer fires and kills the episode.
+
+### Root Cause
+The `corner_speed_penalty_scale: 0.05` (Issue #016/v10) is backfiring. The penalty fires whenever `speed > 0` AND `curvature_deviation > 0`, which means ANY speed near ANY corner incurs a penalty. The optimal policy under this reward is to stop completely before corners -- exactly what the car learned. The penalty teaches "stop at corners" not "navigate corners."
+
+### Fix (Two parts)
+
+**Part 1 -- Disable corner speed penalty:**
+Set `corner_speed_penalty_scale: 0.0`. The curvature observation is still useful context for the neural network, but penalizing speed in corners incentivizes braking to zero rather than smooth cornering.
+
+**Part 2 -- Add cornering reward:**
+New reward component that gives a bonus when the car maintains meaningful speed through high-curvature sections. The reward fires when:
+- `curvature_deviation > cornering_curvature_threshold` (0.3) -- in a real corner, not a straight
+- `speed_fraction > cornering_speed_threshold` (0.3) -- carrying at least 30% of max speed
+- Reward = `cornering_reward_scale * speed_fraction * curvature_deviation`
+
+This rewards the behavior we actually want: carrying speed through corners. The curvature obs tells the network WHEN corners are coming; the cornering reward tells it HOW to handle them (maintain speed, don't stop).
+
+### Files Changed
+- `configs/default.yaml` -- `corner_speed_penalty_scale: 0.05` -> `0.0`, added `cornering_reward_scale: 0.05`, `cornering_speed_threshold: 0.3`, `cornering_curvature_threshold: 0.3`
+- `ai/rewards.py` -- added `cornering_reward` component to `compute_reward()`, updated `get_reward_range()`
+
+---
+
+---
+
+## Issue #018 - Policy Collapse at ~3M Steps
+
+**Status:** Fixed (v11)
+**Priority:** High
+**Reported:** 2026-02-26
+**Fixed:** 2026-02-26
+
+### Observed Behavior (v10)
+Every v10 training run collapsed around 60% (3M/5M steps). Breadcrumbs dropped from 20/ep to 4/ep, checkpoints went to zero, entropy collapsed to -8. The policy catastrophically forgot what it had learned.
+
+### Root Cause
+Two contributing factors:
+1. **`clip_range: 0.2` allows policy updates that are too large.** PPO's clipping mechanism limits how much the policy can change in a single update. At 0.2, the policy can shift significantly each update, which can cause catastrophic forgetting -- the agent "forgets" good behavior it previously learned.
+2. **`ent_coef: 0.01` entropy bonus wasn't enough to maintain exploration.** Entropy measures how random/exploratory the policy is. When entropy collapses, the agent becomes deterministic and stops exploring. Once it falls into a bad local minimum, it can't escape.
+
+### Fix
+- `clip_range`: `0.2` -> `0.1` -- smaller policy update steps reduce the risk of catastrophic forgetting. The agent learns more slowly but more stably.
+- `ent_coef`: `0.01` -> `0.02` -- stronger entropy bonus maintains exploration pressure deeper into training, preventing premature convergence to bad policies.
+
+### Files Changed
+- `configs/default.yaml` -- `clip_range: 0.2` -> `0.1`, `ent_coef: 0.01` -> `0.02`
+
+---
+
 *Maintained by Harry -- if it broke and got fixed, it lives here*

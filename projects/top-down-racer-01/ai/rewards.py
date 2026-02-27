@@ -117,7 +117,10 @@ def compute_reward(
     fwd_progress_scale: float = float(ai.get("forward_progress_reward_scale", 2.0))
     bwd_progress_scale: float = float(ai.get("backward_progress_penalty_scale", 0.5))
     lateral_scale: float = float(ai.get("lateral_displacement_penalty_scale", 0.005))
-    corner_speed_scale: float = float(ai.get("corner_speed_penalty_scale", 0.05))
+    corner_speed_scale: float = float(ai.get("corner_speed_penalty_scale", 0.0))
+    cornering_reward_scale: float = float(ai.get("cornering_reward_scale", 0.05))
+    cornering_speed_thresh: float = float(ai.get("cornering_speed_threshold", 0.3))
+    cornering_curv_thresh: float = float(ai.get("cornering_curvature_threshold", 0.3))
 
     breakdown: dict[str, float] = {
         "checkpoint": 0.0,
@@ -126,6 +129,7 @@ def compute_reward(
         "forward_progress": 0.0,
         "lateral_penalty": 0.0,
         "corner_speed_penalty": 0.0,
+        "cornering_reward": 0.0,
         "wall_penalty": 0.0,
         "death_penalty": 0.0,
         "time_penalty": 0.0,
@@ -159,6 +163,12 @@ def compute_reward(
     if info.curvature_deviation > 0 and info.speed > 0:
         speed_fraction = min(info.speed / max_speed, 1.0)
         breakdown["corner_speed_penalty"] = -(corner_speed_scale * speed_fraction * info.curvature_deviation)
+
+    # 3e. Cornering reward — bonus for carrying speed through corners
+    if info.curvature_deviation > cornering_curv_thresh and info.speed > 0:
+        speed_fraction = min(info.speed / max_speed, 1.0)
+        if speed_fraction > cornering_speed_thresh:
+            breakdown["cornering_reward"] = cornering_reward_scale * speed_fraction * info.curvature_deviation
 
     # 4. Wall hit penalty — proportional to damage taken
     if info.wall_damage > 0:
@@ -228,11 +238,15 @@ def get_reward_range(config: dict) -> tuple[float, float]:
     max_lateral_penalty = (track_width / 2.0) * lateral_scale
 
     # Worst-case corner speed penalty: full speed through sharpest turn
-    corner_speed_scale = float(ai.get("corner_speed_penalty_scale", 0.05))
+    corner_speed_scale = float(ai.get("corner_speed_penalty_scale", 0.0))
     max_corner_speed_penalty = corner_speed_scale  # speed_fraction=1.0, curvature_deviation=1.0
+
+    # Best-case cornering reward: full speed through sharpest turn
+    cornering_reward_scale = float(ai.get("cornering_reward_scale", 0.05))
+    max_cornering_reward = cornering_reward_scale  # speed_fraction=1.0, curvature_deviation=1.0
 
     max_wall_damage = max_health  # worst case: full health in a single hit
     min_reward = -(death_penalty + death_penalty + max_wall_damage * wall_scale + time_penalty + max_bwd_progress_penalty + max_lateral_penalty + max_corner_speed_penalty)
-    max_reward = checkpoint_reward + lap_bonus + speed_scale + smooth_bonus + max_fwd_progress_reward
+    max_reward = checkpoint_reward + lap_bonus + speed_scale + smooth_bonus + max_fwd_progress_reward + max_cornering_reward
 
     return (min_reward, max_reward)

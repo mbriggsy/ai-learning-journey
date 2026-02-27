@@ -248,7 +248,15 @@ ai:
   cornering_curvature_threshold: 0.3 # Minimum curvature deviation (0=straight, 1=sharpest) to trigger cornering bonus.
 
   # --- Lateral displacement penalty (v7) ---
-  lateral_displacement_penalty_scale: 0.003  # Penalty per pixel of lateral distance from centerline. Was 0.001 (v8-v10, too weak), 0.005 (v7, too strong). 0.003 is a middle ground.
+  lateral_displacement_penalty_scale: 0.001  # Penalty per pixel of lateral distance from centerline. Was 0.003 (v11, too aggressive -- overwhelmed forward progress near walls). Reverted for v12.
+
+  # --- Curriculum spawning (v12) ---
+  # Randomized spawn positions during training. Forces the agent to practice
+  # corner approach regularly instead of always starting on the straight.
+  curriculum_spawn_enabled: true        # Enable randomized spawn positions during training.
+  curriculum_spawn_points: [0, 1, 2, 3, 4]  # Centerline point indices to randomly spawn at.
+  # Points 0-2: start/finish straight. Points 3-4: entry to sweeping right turn.
+  # Randomly spawning here forces the agent to practice corner approach regularly.
 
   # --- Episode limits ---
   max_episode_steps: 6000           # Hard cutoff (~100 seconds at 60fps). Prevents infinite episodes.
@@ -263,4 +271,4 @@ ai:
   gamma: 0.99                       # Discount factor.
   gae_lambda: 0.95                  # GAE lambda.
   clip_range: 0.1                   # PPO clipping range. Halved from 0.2 (v10) to reduce catastrophic forgetting / policy collapse around 3M steps.
-  ent_coef: 0.02                    # Entropy bonus coefficient. Raised from 0.01 (v10) to maintain exploration pressure deeper into training.
+  ent_coef: 0.01                    # Entropy bonus coefficient. Reverted from 0.02 (v11, caused entropy explosion -- policy std grew to 6.0+). 0.01 was stable in v10.

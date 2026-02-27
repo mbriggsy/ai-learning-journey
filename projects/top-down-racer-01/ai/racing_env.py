@@ -60,6 +60,7 @@ class RacingEnv(gym.Env):
         config_path: str = "configs/default.yaml",
         render_mode: str | None = None,
         render_options: dict | None = None,
+        is_training: bool = False,
     ) -> None:
         """Initialize the racing environment.
 
@@ -67,6 +68,8 @@ class RacingEnv(gym.Env):
             config_path: Path to the YAML config file.
             render_mode: One of None, "human", or "rgb_array".
             render_options: Reserved for future render settings.
+            is_training: If True, enables curriculum spawning (random spawn
+                points). Should be True in train.py, False in watch.py.
         """
         super().__init__()
 
@@ -88,6 +91,12 @@ class RacingEnv(gym.Env):
 
         # --- Pre-compute wall segments (static, never changes) -----------
         self._wall_segments = self._track.get_wall_segments()
+
+        # --- Curriculum spawning (v12) -----------------------------------
+        self._is_training: bool = is_training
+        self._centerline = np.array(
+            self._config["track"]["centerline_points"], dtype=np.float64
+        )
 
         # --- Generate training checkpoints (breadcrumbs) -----------------
         centerline = np.array(
@@ -166,8 +175,33 @@ class RacingEnv(gym.Env):
         """
         super().reset(seed=seed)
 
-        # Reset car to spawn
-        spawn_x, spawn_y, spawn_angle = self._track.get_spawn_position()
+        # Reset car to spawn — curriculum spawning picks a random centerline
+        # point during training; watch mode always uses the default spawn.
+        curriculum_enabled = (
+            self._is_training
+            and self._ai_cfg.get("curriculum_spawn_enabled", False)
+        )
+        if curriculum_enabled:
+            spawn_indices = self._ai_cfg.get("curriculum_spawn_points", [0])
+            idx = int(self.np_random.choice(spawn_indices))
+            num_pts = len(self._centerline)
+            next_idx = (idx + 1) % num_pts
+            pt = self._centerline[idx]
+            pt_next = self._centerline[next_idx]
+            direction = pt_next - pt
+            spawn_angle = float(np.arctan2(direction[1], direction[0]))
+            # Offset forward along the direction to avoid sitting on a checkpoint
+            offset = float(self._config["track"].get("spawn_forward_offset", 200))
+            norm = np.linalg.norm(direction)
+            if norm > 0:
+                unit = direction / norm
+            else:
+                unit = np.array([1.0, 0.0])
+            spawn_pos = pt + unit * offset
+            spawn_x, spawn_y = float(spawn_pos[0]), float(spawn_pos[1])
+        else:
+            spawn_x, spawn_y, spawn_angle = self._track.get_spawn_position()
+
         self._car.reset(spawn_x, spawn_y, spawn_angle)
 
         # Reset episode tracking

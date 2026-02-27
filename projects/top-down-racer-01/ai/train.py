@@ -127,7 +127,7 @@ def make_env(config_path: str = "configs/default.yaml"):
             sys.path.insert(0, project_root)
         from ai.racing_env import RacingEnv
         from stable_baselines3.common.monitor import Monitor
-        return Monitor(RacingEnv(config_path=config_path))
+        return Monitor(RacingEnv(config_path=config_path, is_training=True))
     return _init
 
 

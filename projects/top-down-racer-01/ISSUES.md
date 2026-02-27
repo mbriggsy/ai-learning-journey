@@ -765,4 +765,88 @@ Two contributing factors:
 
 ---
 
+---
+
+## Issue #019 - Lateral Displacement Penalty Regression (v11 broke basic navigation)
+
+**Status:** Fixed (v12)
+**Priority:** Critical
+**Reported:** 2026-02-27
+**Fixed:** 2026-02-27
+
+### Observed Behavior (v11)
+Car barely leaves the starting line before turning into the wall and flailing. WORSE than v10, which had ~20 breadcrumbs/ep and first checkpoint hits by 2.5M steps.
+
+### Root Cause
+`lateral_displacement_penalty_scale` was tripled from `0.001` (v8-v10) to `0.003` (v11). At `0.003`, the penalty overwhelms the forward progress reward near walls. The car gets near any wall, receives large penalties, and the random policy can't navigate out of the penalty zone. This creates a trap: the car is punished just for being near a wall, but it can't avoid walls without first learning to drive forward -- which the penalty prevents.
+
+### Fix
+Reverted `lateral_displacement_penalty_scale` from `0.003` to `0.001`.
+
+### Files Changed
+- `configs/default.yaml` -- `lateral_displacement_penalty_scale: 0.003` -> `0.001`
+
+---
+
+---
+
+## Issue #020 - Entropy Explosion: Policy Std Grew from 1.0 to 6.0+ (v11)
+
+**Status:** Fixed (v12)
+**Priority:** High
+**Reported:** 2026-02-27
+**Fixed:** 2026-02-27
+
+### Observed Behavior (v11)
+Policy standard deviation grew from ~1.0 at training start to 6.0+ by end of training. With std=6, the policy outputs near-random actions -- the opposite of convergence. The entropy bonus was encouraging too much randomness instead of maintaining healthy exploration.
+
+### Root Cause
+`ent_coef` was raised from `0.01` (v10) to `0.02` (v11) in Issue #018 as a fix for entropy collapse. But `0.02` overshot -- instead of preventing collapse, it caused an entropy explosion. The policy never converged because the entropy bonus was too large relative to the reward signal.
+
+### Fix
+Reverted `ent_coef` from `0.02` to `0.01`. This value was stable in v10 (entropy stayed in a healthy range until the v10-specific policy collapse at 3M steps, which was a clip_range issue, not an entropy issue).
+
+### Files Changed
+- `configs/default.yaml` -- `ent_coef: 0.02` -> `0.01`
+
+---
+
+---
+
+## Issue #021 - Car Never Learns to Navigate Corners: Curriculum Spawning
+
+**Status:** Fixed (v12)
+**Priority:** High
+**Reported:** 2026-02-27
+**Fixed:** 2026-02-27
+
+### Observed Behavior (v10)
+Car always spawns at track point 0 (start/finish straight). The first corner (track points 3-5, the sweeping right turn) is far enough away that the agent rarely reaches it during early training. Without gradient signal from corner navigation, the policy never develops corner-handling skills. The car drives the straight confidently, then crashes into the first turn every time.
+
+### Root Cause
+Fixed spawn position means the agent only practices corner driving when it successfully drives the entire straight first. Early in training, random policies rarely survive that long. The agent gets thousands of episodes of straight-line experience but almost zero corner experience.
+
+### Fix -- Curriculum Spawning
+Added randomized spawn positions during training. The car randomly spawns at one of several centerline points (indices 0-4), covering both the start/finish straight and the approach to the first corner. This forces the agent to regularly practice corner approach and navigation from the beginning of training.
+
+**Implementation:**
+- Added `is_training` parameter to `RacingEnv.__init__()` (defaults to `False`)
+- `train.py` passes `is_training=True` when creating envs
+- `watch.py` uses the default (`False`) -- always spawns at point 0 for consistent visualization
+- In `reset()`, when `curriculum_spawn_enabled` is `True` and `is_training` is `True`, picks a random index from `curriculum_spawn_points`, spawns at that centerline point facing the direction of the next point, and applies the standard `spawn_forward_offset`
+- When curriculum is disabled or in watch mode, falls back to the existing `track.get_spawn_position()` logic
+
+### Config Added (`configs/default.yaml`)
+```yaml
+curriculum_spawn_enabled: true
+curriculum_spawn_points: [0, 1, 2, 3, 4]
+```
+
+### Files Changed
+- `configs/default.yaml` -- added `curriculum_spawn_enabled`, `curriculum_spawn_points`
+- `ai/racing_env.py` -- added `is_training` param, curriculum spawn logic in `reset()`
+- `ai/train.py` -- passes `is_training=True` to `RacingEnv`
+
+---
+
 *Maintained by Harry -- if it broke and got fixed, it lives here*

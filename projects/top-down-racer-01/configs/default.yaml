@@ -255,7 +255,7 @@ ai:
 
   # --- Training hyperparameters (PPO via Stable-Baselines3) ---
   num_parallel_envs: 8              # SubprocVecEnv workers.
-  total_timesteps: 500000           # Default training budget.
+  total_timesteps: 5000000          # Default training budget.
   learning_rate: 0.0003             # Adam optimizer LR.
   n_steps: 2048                     # Rollout buffer length per env.
   batch_size: 64                    # Minibatch size for PPO updates.

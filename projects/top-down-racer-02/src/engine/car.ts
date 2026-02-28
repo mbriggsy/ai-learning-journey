@@ -32,8 +32,12 @@ const YAW_FRICTION = 0.015;
 /** Arcade velocity alignment — speed-dependent.
  *  At low speed, strong alignment (car goes where it points).
  *  At high speed, gentle alignment (car feels planted, not twitchy). */
-const VELOCITY_ALIGN_LOW  = 0.06; // At speed 0 — responsive but not twitchy
-const VELOCITY_ALIGN_HIGH = 0.02; // At max speed — smooth
+const VELOCITY_ALIGN_LOW  = 0.08; // At speed 0 — snappy
+const VELOCITY_ALIGN_HIGH = 0.015; // At max speed — smooth
+
+/** Max velocity direction change per tick in radians (~1.4° per tick = 86°/s).
+ *  Prevents violent snapping on large heading deviations — turns feel gradual. */
+const MAX_ALIGN_PER_TICK = 0.025;
 
 /** Below this speed, additional yaw damping kicks in (tires scrub harder at low speed). */
 const YAW_DAMP_SPEED_THRESHOLD = 5.0;
@@ -255,12 +259,16 @@ export function stepCar(
   const alignSpeed = Math.sqrt(newVx * newVx + newVy * newVy);
   if (alignSpeed > 1.0) {
     const speedT = Math.min(alignSpeed / CAR.maxSpeed, 1.0);
-    const alignFactor = VELOCITY_ALIGN_LOW + (VELOCITY_ALIGN_HIGH - VELOCITY_ALIGN_LOW) * speedT;
+    // Quadratic dropoff — alignment fades quickly at moderate speed
+    const alignFactor = VELOCITY_ALIGN_LOW + (VELOCITY_ALIGN_HIGH - VELOCITY_ALIGN_LOW) * speedT * speedT;
     const velAngle = Math.atan2(newVy, newVx);
     let angleDiff = newHeading - velAngle;
     while (angleDiff >  Math.PI) angleDiff -= 2 * Math.PI;
     while (angleDiff < -Math.PI) angleDiff += 2 * Math.PI;
-    const alignedAngle = velAngle + angleDiff * alignFactor;
+    // Cap per-tick rotation so turns feel gradual, not snappy
+    const rawAlign = angleDiff * alignFactor;
+    const clampedAlign = Math.max(-MAX_ALIGN_PER_TICK, Math.min(MAX_ALIGN_PER_TICK, rawAlign));
+    const alignedAngle = velAngle + clampedAlign;
     alignedVx = alignSpeed * Math.cos(alignedAngle);
     alignedVy = alignSpeed * Math.sin(alignedAngle);
   }

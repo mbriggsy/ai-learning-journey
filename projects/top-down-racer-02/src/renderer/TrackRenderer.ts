@@ -37,26 +37,24 @@ export function buildTrackGraphics(track: TrackState): Container {
   container.addChild(runoff);
 
   // 2. Road surface — outer polygon filled dark grey, inner polygon cut out
-  //    .cut() punches a hole using the winding rule
   const road = new Graphics();
   road.poly(flatten(track.outerBoundary)).fill(COLOR_ROAD_SURFACE);
   road.poly(flatten(track.innerBoundary)).cut();
   container.addChild(road);
 
-  // 3. Wall boundary strokes — both inner and outer edges, red-brown
+  // 3. Finish line — BEFORE walls so walls render on top of edges
+  if (track.checkpoints.length > 0) {
+    const finishLine = buildFinishLine(track);
+    container.addChild(finishLine);
+  }
+
+  // 4. Wall boundary strokes — both inner and outer edges, red-brown
   const walls = new Graphics();
   walls.poly(flatten(track.outerBoundary)).stroke({ width: WALL_STROKE_WIDTH, color: COLOR_WALL_STROKE });
   walls.poly(flatten(track.innerBoundary)).stroke({ width: WALL_STROKE_WIDTH, color: COLOR_WALL_STROKE });
   container.addChild(walls);
 
-  // Cache road/walls as GPU texture — never redrawn
-  container.cacheAsTexture(true);
-
-  // 4. Finish line — added AFTER cache so it renders independently
-  if (track.checkpoints.length > 0) {
-    const finishLine = buildFinishLine(track);
-    container.addChild(finishLine);
-  }
+  // No cacheAsTexture — simple oval doesn't need it and it was hiding the finish line
 
   return container;
 }

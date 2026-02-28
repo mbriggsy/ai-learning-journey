@@ -6,31 +6,31 @@ import { CAR } from '../engine/constants';
 // ──────────────────────────────────────────────────────────
 // Layout constants (screen coordinates)
 // ──────────────────────────────────────────────────────────
-const MARGIN = 16;         // Padding from screen edge
-const PANEL_ALPHA = 0.65;  // Semi-transparent dark panel opacity
+const MARGIN = 30;         // Padding from screen edge
+const PANEL_ALPHA = 0.75;  // Semi-transparent dark panel opacity
 
 // Speedometer (bottom-left)
-const SPEED_BAR_W    = 18;   // Bar width in pixels
-const SPEED_BAR_H    = 100;  // Bar max height in pixels
+const SPEED_BAR_W    = 64;   // Bar width in pixels
+const SPEED_BAR_H    = 400;  // Bar max height in pixels
 const SPEED_BAR_COLOR = 0x44ffaa;
 
 // Minimap (bottom-right)
-const MINIMAP_SIZE   = 120;  // Width and height of minimap area in pixels
-const MINIMAP_SCALE  = 0.22; // World units -> minimap pixels (track ~400 units wide -> ~88px)
-const MINIMAP_DOT    = 3;    // Car dot radius in pixels
+const MINIMAP_SIZE   = 300;  // Width and height of minimap area in pixels
+const MINIMAP_SCALE  = 0.55; // World units -> minimap pixels
+const MINIMAP_DOT    = 8;    // Car dot radius in pixels
 const MINIMAP_TRACK_COLOR = 0xaaaaaa;
 const MINIMAP_CAR_COLOR   = 0xffff00;
 
 // Text style shared across HUD
 const HUD_TEXT_STYLE = {
   fontFamily: 'monospace',
-  fontSize: 14,
+  fontSize: 72,
   fill: '#ffffff',
 } as const;
 
 const HUD_TEXT_STYLE_SMALL = {
   fontFamily: 'monospace',
-  fontSize: 12,
+  fontSize: 52,
   fill: '#aaaaaa',
 } as const;
 
@@ -102,14 +102,14 @@ export class HudRenderer {
 
   private buildSpeedometer(): void {
     const x = MARGIN;
-    const y = this.screenH - MARGIN - SPEED_BAR_H - 24; // 24px for label
+    const y = this.screenH - MARGIN - SPEED_BAR_H - 70; // room for label
 
     this.speedBarX = x;
     this.speedBarY = y;
 
     // Panel background
     const panel = new Graphics();
-    panel.rect(x - 6, y - 6, SPEED_BAR_W + 12, SPEED_BAR_H + 36).fill({ color: 0x000000, alpha: PANEL_ALPHA });
+    panel.rect(x - 14, y - 14, SPEED_BAR_W + 28, SPEED_BAR_H + 96).fill({ color: 0x000000, alpha: PANEL_ALPHA });
     this.container.addChild(panel);
 
     // Bar background track
@@ -124,7 +124,7 @@ export class HudRenderer {
     // "SPD" label below bar
     const label = new Text({ text: 'SPD', style: HUD_TEXT_STYLE_SMALL });
     label.x = x + SPEED_BAR_W / 2 - label.width / 2;
-    label.y = y + SPEED_BAR_H + 6;
+    label.y = y + SPEED_BAR_H + 12;
     this.container.addChild(label);
   }
 
@@ -152,10 +152,10 @@ export class HudRenderer {
     const y = MARGIN;
 
     const panel = new Graphics();
-    panel.rect(x - 4, y - 4, 90, 30).fill({ color: 0x000000, alpha: PANEL_ALPHA });
+    panel.rect(x - 12, y - 12, 320, 96).fill({ color: 0x000000, alpha: PANEL_ALPHA });
     this.container.addChild(panel);
 
-    this.lapCounterText = new Text({ text: 'LAP 1', style: { ...HUD_TEXT_STYLE, fontSize: 16 } });
+    this.lapCounterText = new Text({ text: 'LAP 1', style: { ...HUD_TEXT_STYLE, fontSize: 72 } });
     this.lapCounterText.x = x;
     this.lapCounterText.y = y;
     this.container.addChild(this.lapCounterText);
@@ -175,18 +175,18 @@ export class HudRenderer {
 
   private buildLapTimes(): void {
     // Position from right edge
-    const x = this.screenW - MARGIN - 160;
+    const x = this.screenW - MARGIN - 620;
     const y = MARGIN;
 
     const panel = new Graphics();
     panel.label = 'time-panel';
-    panel.rect(x - 4, y - 4, 168, 58).fill({ color: 0x000000, alpha: PANEL_ALPHA });
+    panel.rect(x - 12, y - 12, 636, 180).fill({ color: 0x000000, alpha: PANEL_ALPHA });
     this.container.addChild(panel);
 
     // Current lap time (larger)
     this.currentLapText = new Text({
       text: '0:00.000',
-      style: { ...HUD_TEXT_STYLE, fontSize: 18 },
+      style: { ...HUD_TEXT_STYLE, fontSize: 80 },
     });
     this.currentLapText.x = x;
     this.currentLapText.y = y;
@@ -198,7 +198,7 @@ export class HudRenderer {
       style: HUD_TEXT_STYLE_SMALL,
     });
     this.bestLapText.x = x;
-    this.bestLapText.y = y + 26;
+    this.bestLapText.y = y + 96;
     this.container.addChild(this.bestLapText);
   }
 
@@ -240,10 +240,10 @@ export class HudRenderer {
     // Panel background
     const panel = new Graphics();
     panel.rect(
-      this.minimapOffsetX - 6,
-      this.minimapOffsetY - 6,
-      MINIMAP_SIZE + 12,
-      MINIMAP_SIZE + 12,
+      this.minimapOffsetX - 12,
+      this.minimapOffsetY - 12,
+      MINIMAP_SIZE + 24,
+      MINIMAP_SIZE + 24,
     ).fill({ color: 0x000000, alpha: PANEL_ALPHA });
     this.container.addChild(panel);
 
@@ -293,7 +293,7 @@ export class HudRenderer {
     }
 
     this.minimapTrackGraphics.clear();
-    this.minimapTrackGraphics.poly(pts).stroke({ width: 1, color: MINIMAP_TRACK_COLOR });
+    this.minimapTrackGraphics.poly(pts).stroke({ width: 3, color: MINIMAP_TRACK_COLOR });
   }
 
   private updateMinimap(

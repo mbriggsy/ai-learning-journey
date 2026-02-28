@@ -30,7 +30,7 @@ export const CAR = {
   /** Car width in game units */
   width: 2.0,
   /** Maximum engine force in game-Newtons */
-  maxEngineForce: 27500,
+  maxEngineForce: 35000,
   /** Maximum brake force in game-Newtons -- stronger than engine for meaningful braking */
   maxBrakeForce: 40000,
   /** Aerodynamic drag coefficient (drag = coeff * v * |v|) */
@@ -38,7 +38,7 @@ export const CAR = {
   /** Rolling resistance factor */
   rollingResistance: 150,
   /** Maximum speed cap in units/sec */
-  maxSpeed: 110,
+  maxSpeed: 160,
 } as const;
 
 /** Simplified Pacejka tire model parameters (MECH-04).
@@ -64,7 +64,7 @@ export const SURFACE_GRIP: Record<number, number> = {
 /** Input smoothing response rates (MECH-01, MECH-02). */
 export const INPUT_RATES = {
   /** Steering response rate (units/sec toward target) */
-  steer: 30.0,
+  steer: 24.0,
   /** Throttle response rate */
   throttle: 6.0,
   /** Brake response rate (fastest -- brakes respond immediately) */
@@ -76,8 +76,8 @@ export const WALL_FRICTION = 0.3;
 
 /** Steering geometry parameters (MECH-06). */
 export const STEER = {
-  /** Maximum front wheel angle in radians (~23 degrees) */
-  maxAngle: 0.4,
+  /** Maximum front wheel angle in radians (~21 degrees) */
+  maxAngle: 0.37,
   /** Speed reduction coefficient -- reduces steering authority at high speed.
    *  Higher = more reduction. Arcade: 0.025, Sim: 0.008 */
   speedFactor: 0.025,

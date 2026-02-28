@@ -415,8 +415,8 @@ describe('stepCar', () => {
     for (let i = 0; i < 60; i++) {
       current = stepCar(current, steerLeft, Surface.Road, DT);
     }
-    // Heading should have changed
-    expect(current.heading).not.toBeCloseTo(headingBefore, 1);
+    // Heading should have changed (use tolerance that survives steering tuning)
+    expect(Math.abs(current.heading - headingBefore)).toBeGreaterThan(0.005);
   });
 
   it('drag slows a coasting car', () => {

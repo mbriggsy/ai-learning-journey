@@ -69,20 +69,56 @@ export function stepWorld(state: WorldState, input: Input): WorldState {
   // 2. Step car physics with the detected surface
   const steppedCar = stepCar(state.car, input, surface, DT);
 
-  // 3. Detect wall collision with car's new position
-  const collision = detectWallCollision(
-    steppedCar.position,
-    CAR.width / 2,
-    state.track,
-  );
+  // 3. Swept collision detection — sample intermediate positions to prevent
+  //    high-speed tunneling through thin walls.
+  const collisionRadius = CAR.width / 2;
+  const oldPos = state.car.position;
+  const newPos = steppedCar.position;
+  const dx = newPos.x - oldPos.x;
+  const dy = newPos.y - oldPos.y;
+  const displacement = Math.sqrt(dx * dx + dy * dy);
 
-  // 4. Resolve wall collision (if any) — applies sliding response
-  const resolvedCar = resolveWallCollision(steppedCar, collision);
+  let resolvedCar = steppedCar;
 
-  // 5. Update surface after collision resolution (position may have changed)
+  // If movement this tick exceeds the collision radius, check intermediate points
+  const safeStep = collisionRadius * 0.75;
+  if (displacement > safeStep) {
+    const steps = Math.ceil(displacement / safeStep);
+    let hitEarly = false;
+
+    for (let i = 1; i < steps; i++) {
+      const t = i / steps;
+      const checkX = oldPos.x + dx * t;
+      const checkY = oldPos.y + dy * t;
+      const collision = detectWallCollision(
+        { x: checkX, y: checkY },
+        collisionRadius,
+        state.track,
+      );
+      if (collision.collided) {
+        // Collision at intermediate point — resolve from here
+        const tempCar = { ...steppedCar, position: { x: checkX, y: checkY } };
+        resolvedCar = resolveWallCollision(tempCar, collision);
+        hitEarly = true;
+        break;
+      }
+    }
+
+    // If no intermediate hit, check the final position
+    if (!hitEarly) {
+      const collision = detectWallCollision(newPos, collisionRadius, state.track);
+      resolvedCar = resolveWallCollision(steppedCar, collision);
+    }
+  } else {
+    // Low speed — single collision check is sufficient
+    const collision = detectWallCollision(newPos, collisionRadius, state.track);
+    resolvedCar = resolveWallCollision(steppedCar, collision);
+  }
+
+  // 4. Update surface after collision resolution (position may have changed)
   const newSurface = getSurface(resolvedCar.position, state.track);
 
-  // 6. Update checkpoint timing using previous and resolved positions
+  // 5. Update checkpoint timing using previous and resolved positions
   const newTiming = updateTiming(
     state.timing,
     state.car.position,
@@ -90,7 +126,7 @@ export function stepWorld(state: WorldState, input: Input): WorldState {
     state.track.checkpoints,
   );
 
-  // 7. Return new WorldState
+  // 6. Return new WorldState
   return {
     tick: state.tick + 1,
     car: { ...resolvedCar, surface: newSurface },

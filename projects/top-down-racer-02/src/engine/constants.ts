@@ -30,11 +30,11 @@ export const CAR = {
   /** Car width in game units */
   width: 2.0,
   /** Maximum engine force in game-Newtons */
-  maxEngineForce: 35000,
+  maxEngineForce: 55000,
   /** Maximum brake force in game-Newtons -- stronger than engine for meaningful braking */
-  maxBrakeForce: 40000,
+  maxBrakeForce: 50000,
   /** Aerodynamic drag coefficient (drag = coeff * v * |v|) */
-  dragCoefficient: 2.5,
+  dragCoefficient: 2.0,
   /** Rolling resistance factor */
   rollingResistance: 150,
   /** Maximum speed cap in units/sec */

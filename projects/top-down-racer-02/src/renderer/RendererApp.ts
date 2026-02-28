@@ -2,8 +2,10 @@ import { Application, Container, Graphics, Text } from 'pixi.js';
 import { GameLoop } from './GameLoop';
 import { initInputHandler, isKeyDown } from './InputHandler';
 import { GamePhase } from '../engine/RaceController';
+import { EffectsRenderer } from './EffectsRenderer';
 import { HudRenderer } from './HudRenderer';
 import { OverlayRenderer } from './OverlayRenderer';
+import { SoundManager } from './SoundManager';
 import { WorldRenderer } from './WorldRenderer';
 
 export class RendererApp {
@@ -11,8 +13,10 @@ export class RendererApp {
   private worldContainer!: Container;
   private hudContainer!: Container;
   private gameLoop!: GameLoop;
+  private effectsRenderer!: EffectsRenderer;
   private hudRenderer!: HudRenderer;
   private overlayRenderer!: OverlayRenderer;
+  private soundManager!: SoundManager;
   private worldRenderer!: WorldRenderer;
 
   async init(): Promise<void> {
@@ -61,6 +65,12 @@ export class RendererApp {
       this.worldRenderer.render(prev, curr, alpha, race, this.app.screen.width, this.app.screen.height);
     });
 
+    // Step 6b2: Wire Effects renderer (VIS-03, VIS-04, VIS-07, VIS-08)
+    this.effectsRenderer = new EffectsRenderer(this.worldContainer);
+    this.gameLoop.onRender((prev, curr, alpha, race) => {
+      this.effectsRenderer.render(prev, curr, alpha, race);
+    });
+
     // Step 6c: Wire HUD renderer (HUD-01..05)
     this.hudRenderer = new HudRenderer(this.hudContainer);
     this.gameLoop.onRender((prev, curr, alpha, race) => {
@@ -71,6 +81,22 @@ export class RendererApp {
     this.overlayRenderer = new OverlayRenderer(this.hudContainer);
     this.gameLoop.onRender((prev, curr, alpha, race) => {
       this.overlayRenderer.render(prev, curr, alpha, race);
+    });
+
+    // Step 6e: Sound system (SND-01..05)
+    this.soundManager = new SoundManager();
+
+    // Initialize audio on first keydown/click (browser autoplay policy requires user gesture)
+    const initAudio = () => {
+      this.soundManager.init();
+      window.removeEventListener('keydown', initAudio);
+      window.removeEventListener('click', initAudio);
+    };
+    window.addEventListener('keydown', initAudio);
+    window.addEventListener('click', initAudio);
+
+    this.gameLoop.onRender((prev, curr, alpha, race) => {
+      this.soundManager.update(prev, curr, alpha, race);
     });
 
     // Step 7: Brief simulated loading (PixiJS init is instant for this project;
@@ -160,4 +186,5 @@ export class RendererApp {
   get world(): Container { return this.worldContainer; }
   get hud(): Container { return this.hudContainer; }
   get loop(): GameLoop { return this.gameLoop; }
+  get sound(): SoundManager { return this.soundManager; }
 }

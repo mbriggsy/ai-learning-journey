@@ -1,17 +1,17 @@
 # Project State: Top-Down Racer v02
 
 **Last updated:** 2026-02-27
-**Overall progress:** 0%
+**Overall progress:** 4%
 
 ## Current Phase
 
-**Phase 1: Core Simulation Engine** -- Ready to plan
+**Phase 1: Core Simulation Engine** -- Plan 1 of 4 complete, executing Plan 2
 
 ## Phase Status
 
 | Phase | Status | Progress |
 |-------|--------|----------|
-| 1. Core Simulation Engine | Ready to plan | 0% |
+| 1. Core Simulation Engine | In progress (Plan 1/4 complete) | 25% |
 | 2. PixiJS Renderer + Playable Game | Blocked by Phase 1 | 0% |
 | 3. Game Features & Polish | Blocked by Phase 2 | 0% |
 | 4. Gymnasium Environment Wrapper | Blocked by Phase 2 | 0% |
@@ -22,7 +22,8 @@
 
 | Date | Decision | Context |
 |------|----------|---------|
-| (none yet) | | |
+| 2026-02-27 | Vec2 as plain interface with pure functions (not class) | Avoids prototype overhead, enables tree-shaking, matches functional pattern |
+| 2026-02-27 | Centripetal Catmull-Rom (alpha=0.5) to avoid cusps | Research showed uniform (alpha=0) creates cusps at uneven spacing |
 
 ## Blockers
 

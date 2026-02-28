@@ -9,7 +9,7 @@
 
 - [ ] **Phase 1: Core Simulation Engine** -- 14 requirements, 4 plans
   Plans:
-  - [ ] 01-01-PLAN.md -- Foundation: vitest config, engine types, constants, vec2 math, spline geometry
+  - [x] 01-01-PLAN.md -- Foundation: vitest config, engine types, constants, vec2 math, spline geometry
   - [ ] 01-02-PLAN.md -- Track builder, collision detection/response, primary track data
   - [ ] 01-03-PLAN.md -- Car physics TDD: bicycle model, weight transfer, tire forces, input smoothing
   - [ ] 01-04-PLAN.md -- Checkpoint system, world step function, determinism verification

@@ -1,7 +1,7 @@
 import { Application, Container, Graphics, Text } from 'pixi.js';
 import { GameLoop } from './GameLoop';
 import { initInputHandler, isKeyDown } from './InputHandler';
-import { GamePhase } from './GameState';
+import { GamePhase } from '../engine/RaceController';
 import { HudRenderer } from './HudRenderer';
 import { OverlayRenderer } from './OverlayRenderer';
 import { WorldRenderer } from './WorldRenderer';

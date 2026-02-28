@@ -1,18 +1,18 @@
 import { buildTrack } from '../engine/track';
 import { createWorld, stepWorld } from '../engine/world';
+import type { WorldState, TrackControlPoint, Vec2 } from '../engine/types';
+import {
+  GamePhase,
+  RaceAction,
+  RaceController,
+  RESPAWN_FADE_TICKS,
+  type RaceControlSignals,
+  type RaceState,
+} from '../engine/RaceController';
+import { getInput, isKeyDown, ZERO_INPUT } from './InputHandler';
 import { TRACK_01_CONTROL_POINTS } from '../tracks/track01';
-import type { WorldState } from '../engine/types';
-import { GamePhase, createInitialRaceState, type RaceState } from './GameState';
-import { getInput, ZERO_INPUT, isKeyDown } from './InputHandler';
 
-const FIXED_DT_MS = 1000 / 60;       // 16.667ms
-const STUCK_SPEED_THRESHOLD = 2.0;   // units/sec — below this counts as stuck
-const STUCK_TIMEOUT_TICKS   = 300;   // 5 seconds x 60Hz
-const RESPAWN_FADE_TICKS    = 30;    // 0.5s fade-to-black
-const COUNTDOWN_BEAT_TICKS  = 60;    // 1 second per beat (3-2-1-GO)
-const COUNTDOWN_BEATS       = 3;     // How many numbered beats before GO
-
-/** Default checkpoint count for track building. */
+const FIXED_DT_MS = 1000 / 60;
 const DEFAULT_CHECKPOINT_COUNT = 30;
 
 /** Callbacks that other renderers register to receive state updates. */
@@ -27,7 +27,7 @@ export class GameLoop {
   private track = buildTrack(TRACK_01_CONTROL_POINTS, DEFAULT_CHECKPOINT_COUNT);
   private currState: WorldState;
   private prevState: WorldState;
-  private raceState: RaceState = createInitialRaceState();
+  private raceController = new RaceController();
   private accumulator = 0;
   private renderCallbacks: RenderCallback[] = [];
   private escapeWasDown = false;
@@ -45,153 +45,89 @@ export class GameLoop {
 
   /**
    * Main ticker callback. Called every animation frame by PixiJS Ticker.
-   * deltaMS: real elapsed milliseconds since last frame.
+   * Input is sampled ONCE per frame, not per accumulator sub-step (RI-02).
    */
   tick(deltaMS: number): void {
-    // Cap accumulator to prevent spiral of death after tab switch
     this.accumulator = Math.min(this.accumulator + deltaMS, 200);
+
+    // Sample input once per frame — key state won't change between sub-steps
+    const signals = this.buildSignals();
 
     while (this.accumulator >= FIXED_DT_MS) {
       this.prevState = this.currState;
-      this.currState = this.stepGame();
+      this.currState = this.stepGame(signals);
+      // Consume one-shot signals after first sub-step
+      signals.togglePause = false;
+      signals.restart = false;
       this.accumulator -= FIXED_DT_MS;
     }
 
     const alpha = this.accumulator / FIXED_DT_MS;
+    const raceState = this.raceController.state;
     for (const cb of this.renderCallbacks) {
-      cb(this.prevState, this.currState, alpha, this.raceState);
+      cb(this.prevState, this.currState, alpha, raceState);
     }
   }
 
-  /** Advance game state by one tick, respecting GamePhase. */
-  private stepGame(): WorldState {
-    const rs = this.raceState;
+  private buildSignals(): RaceControlSignals {
+    const escapeDown = isKeyDown('Escape');
+    const rDown = isKeyDown('KeyR');
 
-    switch (rs.phase) {
-      case GamePhase.Loading:
-        // Engine runs but nothing happens until transition to Countdown/Racing
+    const signals: RaceControlSignals = {
+      togglePause: escapeDown && !this.escapeWasDown,
+      restart: rDown && !this.rWasDown,
+    };
+
+    this.escapeWasDown = escapeDown;
+    this.rWasDown = rDown;
+    return signals;
+  }
+
+  private stepGame(signals: RaceControlSignals): WorldState {
+    const action = this.raceController.step(signals, this.currState.car.speed);
+    const phase = this.raceController.state.phase;
+
+    // Handle actions from the controller
+    switch (action) {
+      case RaceAction.ResetNoCd:
+        this.resetWorld(false);
         return this.currState;
+      case RaceAction.Respawn:
+        return this.completeRespawn();
+      default:
+        break;
+    }
 
-      case GamePhase.Countdown:
-        this.tickCountdown();
-        // Physics steps with zero input — car stays pinned at start
-        return stepWorld(this.currState, ZERO_INPUT);
-
+    // Physics stepping based on phase
+    switch (phase) {
       case GamePhase.Racing:
-        this.tickRacing();
         return stepWorld(this.currState, getInput());
-
+      case GamePhase.Countdown:
+        return stepWorld(this.currState, ZERO_INPUT);
       case GamePhase.Paused:
-        this.tickPaused();
-        return this.currState; // Frozen
-
       case GamePhase.Respawning:
-        this.tickRespawning();
-        return this.currState; // Frozen during fade
+      case GamePhase.Loading:
+        return this.currState;
     }
   }
 
-  private tickCountdown(): void {
-    const rs = this.raceState;
-    rs.countdownTicksLeft--;
-    if (rs.countdownTicksLeft <= 0) {
-      if (rs.countdownBeat > 0) {
-        // Advance to next beat
-        rs.countdownBeat--;
-        rs.countdownTicksLeft = COUNTDOWN_BEAT_TICKS;
-      } else {
-        // GO — transition to Racing
-        rs.phase = GamePhase.Racing;
-      }
-    }
-  }
-
-  private tickRacing(): void {
-    const rs = this.raceState;
-    const speed = this.currState.car.speed;
-
-    // Stuck detection (MECH-13)
-    if (speed < STUCK_SPEED_THRESHOLD) {
-      rs.stuckTicks++;
-      if (rs.stuckTicks >= STUCK_TIMEOUT_TICKS) {
-        this.beginRespawn();
-        return;
-      }
-    } else {
-      rs.stuckTicks = 0;
-    }
-
-    // Instant restart (UX-01): R key resets world, no countdown (debounced)
-    const rDown = isKeyDown('KeyR');
-    if (rDown && !this.rWasDown) {
-      this.resetWorld(false);
-      this.rWasDown = rDown;
-      return;
-    }
-    this.rWasDown = rDown;
-
-    // Pause (UX-02): Escape key (debounced — fires once per press)
-    const escapeDown = isKeyDown('Escape');
-    if (escapeDown && !this.escapeWasDown) {
-      rs.phase = GamePhase.Paused;
-    }
-    this.escapeWasDown = escapeDown;
-  }
-
-  private tickPaused(): void {
-    const rs = this.raceState;
-
-    // Resume on Escape (debounced — fires once per press)
-    const escapeDown = isKeyDown('Escape');
-    if (escapeDown && !this.escapeWasDown) {
-      rs.phase = GamePhase.Racing;
-    }
-    this.escapeWasDown = escapeDown;
-
-    // R key from pause also instant restarts (debounced)
-    const rDown = isKeyDown('KeyR');
-    if (rDown && !this.rWasDown) {
-      this.resetWorld(false);
-    }
-    this.rWasDown = rDown;
-  }
-
-  private tickRespawning(): void {
-    const rs = this.raceState;
-    rs.respawnTicksLeft--;
-    if (rs.respawnTicksLeft <= 0) {
-      this.completeRespawn();
-    }
-  }
-
-  private beginRespawn(): void {
-    const rs = this.raceState;
-    rs.phase = GamePhase.Respawning;
-    rs.respawnTicksLeft = RESPAWN_FADE_TICKS;
-    rs.stuckTicks = 0;
-  }
-
-  private completeRespawn(): void {
-    const rs = this.raceState;
+  private completeRespawn(): WorldState {
     const { timing, track } = this.currState;
-
-    // Determine respawn position: last crossed checkpoint or track start
     const lastIdx = timing.lastCheckpointIndex;
-    let respawnPos, respawnHeading: number;
+    let respawnPos: Vec2;
+    let respawnHeading: number;
+
     if (lastIdx >= 0 && lastIdx < track.checkpoints.length) {
       const cp = track.checkpoints[lastIdx];
       respawnPos = cp.center;
-      // heading from checkpoint direction (direction is a unit Vec2 in track space)
       respawnHeading = Math.atan2(cp.direction.y, cp.direction.x);
     } else {
       respawnPos = track.startPosition;
       respawnHeading = track.startHeading;
     }
 
-    // Reset car to respawn position using createWorld approach:
-    // Rebuild world but preserve timing/lap state
     const freshWorld = createWorld(track);
-    this.currState = {
+    const respawned: WorldState = {
       ...freshWorld,
       car: {
         ...freshWorld.car,
@@ -201,32 +137,25 @@ export class GameLoop {
         speed: 0,
         yawRate: 0,
       },
-      timing: this.currState.timing, // Preserve lap progress
+      timing: this.currState.timing,
     };
-    this.prevState = this.currState;
-    rs.phase = GamePhase.Racing;
+    this.prevState = respawned;
+    return respawned;
   }
 
   /** Reset the world. countdown=true for initial load, false for R-key. */
   resetWorld(countdown: boolean): void {
     this.currState = createWorld(this.track);
     this.prevState = this.currState;
-    this.raceState = createInitialRaceState();
-    if (countdown) {
-      this.raceState.phase = GamePhase.Countdown;
-    } else {
-      // R-key: skip countdown, go straight to Racing
-      this.raceState.phase = GamePhase.Racing;
-      this.raceState.initialLoad = false;
-    }
+    this.raceController.reset(countdown);
   }
 
   /** Transition from Loading to Countdown (initial page load). */
   startGame(): void {
-    this.resetWorld(true); // Initial load gets countdown
+    this.resetWorld(true);
   }
 
   get currentWorldState(): WorldState { return this.currState; }
-  get currentRaceState(): RaceState { return this.raceState; }
+  get currentRaceState(): RaceState { return this.raceController.state; }
   get trackState() { return this.track; }
 }

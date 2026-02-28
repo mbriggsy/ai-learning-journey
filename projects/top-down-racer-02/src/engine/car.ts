@@ -54,6 +54,7 @@ export function createInitialCarState(position: Vec2, heading: number): CarState
     prevInput: { steer: 0, throttle: 0, brake: 0, steerAngle: 0 },
     surface: Surface.Road,
     accelLongitudinal: 0,
+    slipAngle: 0,
   };
 }
 
@@ -240,6 +241,16 @@ export function stepCar(
     car.position.y + finalVy * dt,
   );
 
+  // Compute slip angle: angle between heading and velocity direction
+  let slipAngle = 0;
+  if (finalSpeed > LOW_SPEED_GUARD) {
+    const velAngle = Math.atan2(finalVy, finalVx);
+    let diff = velAngle - newHeading;
+    while (diff > Math.PI) diff -= 2 * Math.PI;
+    while (diff < -Math.PI) diff += 2 * Math.PI;
+    slipAngle = Math.abs(diff);
+  }
+
   return {
     position: newPosition,
     velocity: vec2(finalVx, finalVy),
@@ -249,5 +260,6 @@ export function stepCar(
     prevInput: smoothed,
     surface,
     accelLongitudinal: accelForward,
+    slipAngle,
   };
 }

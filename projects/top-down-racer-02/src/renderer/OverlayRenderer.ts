@@ -1,6 +1,6 @@
 import { Container, Graphics, Text } from 'pixi.js';
 import type { WorldState } from '../engine/types';
-import { GamePhase, type RaceState } from './GameState';
+import { GamePhase, type RaceState } from '../engine/RaceController';
 
 // ──────────────────────────────────────────────────────────
 // Layout and style constants

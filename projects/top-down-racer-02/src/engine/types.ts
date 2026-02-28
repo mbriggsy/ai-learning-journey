@@ -58,6 +58,8 @@ export interface CarState {
   surface: Surface;
   /** Longitudinal acceleration for weight transfer calculation next tick */
   accelLongitudinal: number;
+  /** Rear axle slip angle in radians (absolute value). 0 = no slide. */
+  slipAngle: number;
 }
 
 /** Track centerline control point with half-width. */

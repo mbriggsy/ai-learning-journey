@@ -1,6 +1,6 @@
 import { Container, Graphics, Text } from 'pixi.js';
 import type { WorldState } from '../engine/types';
-import type { RaceState } from './GameState';
+import type { RaceState } from '../engine/RaceController';
 import { CAR } from '../engine/constants';
 
 // ──────────────────────────────────────────────────────────

@@ -18,14 +18,14 @@ progress:
 
 ## Current Phase
 
-**Phase 2: PixiJS Renderer + Playable Game** -- IN PROGRESS (Plan 1 complete)
+**Phase 2: PixiJS Renderer + Playable Game** -- IN PROGRESS (Plans 1, 3 complete)
 
 ## Phase Status
 
 | Phase | Status | Progress |
 |-------|--------|----------|
 | 1. Core Simulation Engine | Complete (Plan 4/4 done) | 100% |
-| 2. PixiJS Renderer + Playable Game | In Progress (Plan 1 done) | 20% |
+| 2. PixiJS Renderer + Playable Game | In Progress (Plans 1, 3 done) | 40% |
 | 3. Game Features & Polish | Blocked by Phase 2 | 0% |
 | 4. Gymnasium Environment Wrapper | Blocked by Phase 2 | 0% |
 | 5. AI Training Pipeline | Blocked by Phase 4 | 0% |

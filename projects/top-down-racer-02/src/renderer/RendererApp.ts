@@ -52,7 +52,13 @@ export class RendererApp {
     // Step 6: Create game loop
     this.gameLoop = new GameLoop();
 
-    // Step 6b: Wire HUD renderer (HUD-01..05)
+    // Step 6b: Wire World renderer (VIS-01, VIS-02, VIS-05)
+    this.worldRenderer = new WorldRenderer(this.worldContainer);
+    this.gameLoop.onRender((prev, curr, alpha, race) => {
+      this.worldRenderer.render(prev, curr, alpha, race, this.app.screen.width, this.app.screen.height);
+    });
+
+    // Step 6c: Wire HUD renderer (HUD-01..05)
     this.hudRenderer = new HudRenderer(this.hudContainer);
     this.gameLoop.onRender((prev, curr, alpha, race) => {
       this.hudRenderer.render(prev, curr, alpha, race);

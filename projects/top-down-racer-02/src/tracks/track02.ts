@@ -1,47 +1,45 @@
 /**
  * Track 02 — Speedway
  *
- * A fast, flowing circuit built around two large sweeping arcs.
- * Wider than Track 01 for higher-speed driving, with the track
- * narrowing at the two tightest apexes to reward precise lines.
+ * A fast oval superspeedway with two long straights and two banked ends.
+ * The turns are smooth but tightening — rewarding smooth throttle control.
+ * A kink chicane on the back straight adds a braking point to prevent
+ * flat-out laps. Wider than Circuit for high-speed racing.
  *
- * Character: fast / flowing — minimal straights, mostly curves.
+ * Character: fast / flowing — long straights, sweeping turns, one kink.
+ * Difficulty: harder than Circuit (higher speeds = bigger mistakes),
+ *             easier than Gauntlet (no tight hairpins).
  */
 
 import type { TrackControlPoint } from '../engine/types';
 
-const W = 30; // default half-width — wider than Track 01 for speed
+const W = 28; // default half-width — wide for speed
 
 export const TRACK_02_CONTROL_POINTS: TrackControlPoint[] = [
-  // --- Start / Finish straight (heading right) ---
-  { position: { x: -100, y:  150 }, width: W },
-  { position: { x:   20, y:  150 }, width: W },
+  // --- Start / Finish on the front straight (heading right) ---
+  { position: { x: -120, y:  140 }, width: W },
+  { position: { x:    0, y:  140 }, width: W },
+  { position: { x:  100, y:  140 }, width: W },
 
-  // --- Sweeper 1 entry (gentle curve into long right-hander) ---
-  { position: { x:  120, y:  135 }, width: W },
-  { position: { x:  190, y:   90 }, width: 28 },
+  // --- Turn 1: sweeping right-hander into back straight ---
+  { position: { x:  180, y:  120 }, width: 26 },
+  { position: { x:  230, y:   70 }, width: 24 },
+  { position: { x:  240, y:    0 }, width: 24 },
 
-  // --- Sweeper 1 mid / apex (tightest point, narrows) ---
-  { position: { x:  220, y:   20 }, width: 26 },
-  { position: { x:  210, y:  -50 }, width: 24 },
+  // --- Exit Turn 1 ---
+  { position: { x:  220, y:  -60 }, width: 26 },
+  { position: { x:  170, y: -100 }, width: W },
 
-  // --- Sweeper 1 exit into short connecting kink ---
-  { position: { x:  170, y: -110 }, width: 28 },
-  { position: { x:  100, y: -140 }, width: W },
+  // --- Back straight (heading left) with a kink chicane ---
+  { position: { x:   80, y: -120 }, width: W },
+  { position: { x:   20, y: -130 }, width: 24 },  // Kink entry — narrows
+  { position: { x:  -40, y: -110 }, width: 24 },  // Kink apex
+  { position: { x: -100, y: -125 }, width: W },    // Kink exit
 
-  // --- Brief straight / Sweeper 2 entry (long flowing back curve) ---
-  { position: { x:   10, y: -155 }, width: W },
-  { position: { x:  -80, y: -150 }, width: W },
-
-  // --- Sweeper 2 continues (large-radius left-hander) ---
-  { position: { x: -160, y: -120 }, width: 28 },
-  { position: { x: -210, y:  -60 }, width: 26 },
-
-  // --- Sweeper 2 apex (tightest point, narrows) ---
-  { position: { x: -220, y:   10 }, width: 24 },
-
-  // --- Sweeper 2 exit, flowing back toward start ---
-  { position: { x: -195, y:   80 }, width: 26 },
-  { position: { x: -155, y:  125 }, width: 28 },
-  { position: { x: -130, y:  148 }, width: W },
+  // --- Turn 2: sweeping left-hander back to front straight ---
+  { position: { x: -170, y: -110 }, width: W },
+  { position: { x: -230, y:  -60 }, width: 24 },
+  { position: { x: -240, y:   10 }, width: 24 },
+  { position: { x: -220, y:   80 }, width: 26 },
+  { position: { x: -180, y:  120 }, width: W },
 ];

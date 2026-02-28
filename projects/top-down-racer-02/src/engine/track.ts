@@ -45,6 +45,12 @@ const SAMPLES_PER_SEGMENT = 12;
 const SAMPLES_PER_SEGMENT_ARC = 20;
 
 /**
+ * Distance (world units) between the road edge and the wall boundary.
+ * Creates a runoff zone where the car drives on reduced grip before hitting walls.
+ */
+const WALL_OFFSET = 12;
+
+/**
  * Build a complete track from control points and desired checkpoint count.
  *
  * @param controlPoints - Array of centerline control points with half-widths
@@ -89,8 +95,11 @@ export function buildTrack(
 
     // Offset perpendicular to tangent direction
     // perpCCW gives the left-pointing normal, perpCW gives the right-pointing normal
-    const leftOffset = scale(perpCCW(tangentNorm), width);
-    const rightOffset = scale(perpCW(tangentNorm), width);
+    // Wall boundaries are pushed out by WALL_OFFSET beyond the road edge,
+    // creating a runoff zone where the car slides with reduced grip before hitting walls.
+    const wallWidth = width + WALL_OFFSET;
+    const leftOffset = scale(perpCCW(tangentNorm), wallWidth);
+    const rightOffset = scale(perpCW(tangentNorm), wallWidth);
 
     innerBoundary.push(add(center, leftOffset));
     outerBoundary.push(add(center, rightOffset));
@@ -111,8 +120,9 @@ export function buildTrack(
     const tangentNorm = normalize(tangent);
     const width = interpolateWidth(controlPoints, positions, arcLengthTable, arcLen);
 
-    const left = add(center, scale(perpCCW(tangentNorm), width));
-    const right = add(center, scale(perpCW(tangentNorm), width));
+    const gateWidth = width + WALL_OFFSET;
+    const left = add(center, scale(perpCCW(tangentNorm), gateWidth));
+    const right = add(center, scale(perpCW(tangentNorm), gateWidth));
 
     checkpoints.push({
       left,

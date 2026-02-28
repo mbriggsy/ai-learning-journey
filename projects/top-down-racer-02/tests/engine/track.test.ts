@@ -75,14 +75,14 @@ describe('buildTrack', () => {
       const innerPt = track.innerBoundary[i];
       const outerPt = track.outerBoundary[i];
       const trackWidth = distance(innerPt, outerPt);
-      // Expected full width = 2 * half-width = 20
-      totalError += Math.abs(trackWidth - 20);
+      // Expected full width = 2 * (half-width + WALL_OFFSET) = 2 * (10 + 12) = 44
+      totalError += Math.abs(trackWidth - 44);
       samples++;
     }
 
     const avgError = totalError / samples;
     // Average error should be small relative to track width
-    expect(avgError).toBeLessThan(4); // < 20% error on average
+    expect(avgError).toBeLessThan(6); // < ~14% error on average
   });
 
   it('generates the requested number of checkpoints', () => {
@@ -105,9 +105,9 @@ describe('buildTrack', () => {
 
     for (const checkpoint of track.checkpoints) {
       const gateWidth = distance(checkpoint.left, checkpoint.right);
-      // Gate width should be approximately 2 * half-width = 20
-      expect(gateWidth).toBeGreaterThan(14); // at least 70% of expected
-      expect(gateWidth).toBeLessThan(26); // at most 130% of expected
+      // Gate width should be approximately 2 * (half-width + WALL_OFFSET) = 2 * (10 + 12) = 44
+      expect(gateWidth).toBeGreaterThan(34); // at least ~77% of expected
+      expect(gateWidth).toBeLessThan(54); // at most ~123% of expected
     }
   });
 

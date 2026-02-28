@@ -23,8 +23,10 @@ const CARD_NAME_STYLE = {
 
 const CARD_DESC_STYLE = {
   fontFamily: 'monospace',
-  fontSize: 13,
+  fontSize: 12,
   fill: '#999999',
+  wordWrap: true,
+  wordWrapWidth: 210,
 };
 
 const CARD_TIME_STYLE = {

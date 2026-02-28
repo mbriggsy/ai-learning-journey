@@ -157,9 +157,9 @@ describe('stepWorld - wall collision', () => {
       world = stepWorld(world, input);
     }
 
-    // The track extends roughly 48 units from center (40 + 8 width)
+    // The track extends roughly 60 units from center (40 + 8 width + 12 wall offset)
     const distFromOrigin = vecLength(world.car.position);
-    expect(distFromOrigin).toBeLessThan(80);
+    expect(distFromOrigin).toBeLessThan(95);
   });
 
   it('car speed reduces on wall contact', () => {
@@ -176,13 +176,16 @@ describe('stepWorld - wall collision', () => {
     // Car reaches meaningful speed on the straight
     expect(peakSpeed).toBeGreaterThan(45);
 
-    // Now steer hard into the wall with no throttle
-    for (let i = 0; i < 120; i++) {
+    // Now steer hard into the wall with no throttle.
+    // With runoff zone, the car crosses reduced-grip area before wall contact.
+    // Run for 600 ticks (10 seconds) — plenty for wall bounces and speed loss.
+    for (let i = 0; i < 600; i++) {
       world = stepWorld(world, { steer: 1, throttle: 0, brake: 0 });
     }
 
-    // After hitting walls with no throttle, speed should be much less than peak
-    expect(world.car.speed).toBeLessThan(peakSpeed);
+    // After 10 seconds of wall contact with no throttle, speed should drop significantly
+    // Car may still be sliding on runoff surface, but should be well below peak
+    expect(world.car.speed).toBeLessThan(peakSpeed * 0.8);
   });
 });
 

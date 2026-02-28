@@ -202,8 +202,9 @@ export class SettingsScreen {
       if (!dragging) return;
       updateFromX(e.global.x);
     });
-    thumb.on('pointerup', () => { dragging = false; });
-    thumb.on('pointerupoutside', () => { dragging = false; });
+
+    // Release drag on any mouse/touch up anywhere on the page
+    window.addEventListener('pointerup', () => { dragging = false; });
   }
 
   show(): void { this.container.visible = true; }

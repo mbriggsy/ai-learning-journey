@@ -3,10 +3,10 @@ import type { CarState } from '../engine/types';
 import { CAR } from '../engine/constants';
 
 // Zoom constants (pixels per world unit)
-const ZOOM_BASE   = 15.0;
-const ZOOM_MIN    = 12.0;  // Widest — high speed
-const ZOOM_MAX    = 18.0;  // Tightest — low speed / corners
-const ZOOM_SLIDE_BONUS = 1.0;  // Extra zoom-out when sliding
+const ZOOM_BASE   = 10.0;
+const ZOOM_MIN    = 8.0;   // Widest — high speed
+const ZOOM_MAX    = 12.0;  // Tightest — low speed / corners
+const ZOOM_SLIDE_BONUS = 0.5;  // Extra zoom-out when sliding
 const SLIDE_THRESHOLD  = 1.5;  // |yawRate| above this = sliding
 
 // Camera smoothing

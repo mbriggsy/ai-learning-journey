@@ -49,52 +49,59 @@ export function buildTrackGraphics(track: TrackState): Container {
   walls.poly(flatten(track.innerBoundary)).stroke({ width: WALL_STROKE_WIDTH, color: COLOR_WALL_STROKE });
   container.addChild(walls);
 
-  // 4. Finish line — checkered strip at checkpoint[0] (VIS-05)
-  //    The finish gate has .left and .right defining the gate endpoints.
+  // Cache road/walls as GPU texture — never redrawn
+  container.cacheAsTexture(true);
+
+  // 4. Finish line — added AFTER cache so it renders independently
   if (track.checkpoints.length > 0) {
     const finishLine = buildFinishLine(track);
     container.addChild(finishLine);
   }
 
-  // Cache entire track as GPU texture — never redrawn
-  container.cacheAsTexture(true);
-
   return container;
 }
 
-/** Build the checkered finish line strip at checkpoint[0]. */
+/** Build the checkered finish line strip at checkpoint[0]. Two rows for classic look. */
 function buildFinishLine(track: TrackState): Graphics {
   const gate = track.checkpoints[0];
   const g = new Graphics();
 
-  for (let i = 0; i < FINISH_SQUARES; i++) {
-    const t0 = i / FINISH_SQUARES;
-    const t1 = (i + 1) / FINISH_SQUARES;
+  const perpX = -gate.direction.y;
+  const perpY =  gate.direction.x;
+  const rowThick = 4.0; // Thickness of each checker row in world units
 
-    // Interpolate across the gate left → right
-    const x0 = gate.left.x + (gate.right.x - gate.left.x) * t0;
-    const y0 = gate.left.y + (gate.right.y - gate.left.y) * t0;
-    const x1 = gate.left.x + (gate.right.x - gate.left.x) * t1;
-    const y1 = gate.left.y + (gate.right.y - gate.left.y) * t1;
+  // Two rows of checkers (offset pattern)
+  for (let row = 0; row < 2; row++) {
+    const rowOffset = (row - 0.5) * rowThick; // center the two rows on the gate line
 
-    // Gate direction perpendicular (the "thickness" of the strip along the track)
-    // gate.direction is the unit vector along the track centerline at this gate
-    const perpX = -gate.direction.y;
-    const perpY =  gate.direction.x;
-    const halfThick = 5.0; // Half-thickness of the checkered strip in world units
+    for (let i = 0; i < FINISH_SQUARES; i++) {
+      const t0 = i / FINISH_SQUARES;
+      const t1 = (i + 1) / FINISH_SQUARES;
 
-    // Quad corners for this square
-    const qx0 = x0 + perpX * halfThick;
-    const qy0 = y0 + perpY * halfThick;
-    const qx1 = x1 + perpX * halfThick;
-    const qy1 = y1 + perpY * halfThick;
-    const qx2 = x1 - perpX * halfThick;
-    const qy2 = y1 - perpY * halfThick;
-    const qx3 = x0 - perpX * halfThick;
-    const qy3 = y0 - perpY * halfThick;
+      const x0 = gate.left.x + (gate.right.x - gate.left.x) * t0;
+      const y0 = gate.left.y + (gate.right.y - gate.left.y) * t0;
+      const x1 = gate.left.x + (gate.right.x - gate.left.x) * t1;
+      const y1 = gate.left.y + (gate.right.y - gate.left.y) * t1;
 
-    const color = i % 2 === 0 ? COLOR_FINISH_WHITE : COLOR_FINISH_DARK;
-    g.poly([qx0, qy0, qx1, qy1, qx2, qy2, qx3, qy3]).fill(color);
+      // Offset by row
+      const ox0 = x0 + perpX * rowOffset;
+      const oy0 = y0 + perpY * rowOffset;
+      const ox1 = x1 + perpX * rowOffset;
+      const oy1 = y1 + perpY * rowOffset;
+
+      const qx0 = ox0 + perpX * (rowThick / 2);
+      const qy0 = oy0 + perpY * (rowThick / 2);
+      const qx1 = ox1 + perpX * (rowThick / 2);
+      const qy1 = oy1 + perpY * (rowThick / 2);
+      const qx2 = ox1 - perpX * (rowThick / 2);
+      const qy2 = oy1 - perpY * (rowThick / 2);
+      const qx3 = ox0 - perpX * (rowThick / 2);
+      const qy3 = oy0 - perpY * (rowThick / 2);
+
+      // Alternate colors, offset by row for classic checkerboard
+      const color = (i + row) % 2 === 0 ? COLOR_FINISH_WHITE : COLOR_FINISH_DARK;
+      g.poly([qx0, qy0, qx1, qy1, qx2, qy2, qx3, qy3]).fill(color);
+    }
   }
 
   return g;

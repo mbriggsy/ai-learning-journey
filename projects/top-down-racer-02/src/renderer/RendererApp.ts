@@ -22,6 +22,7 @@ export class RendererApp {
       resizeTo: window,
       backgroundColor: 0x1a1a1a,
       antialias: true,
+      autoDensity: true,
       resolution: window.devicePixelRatio ?? 1,
     });
     document.body.appendChild(this.app.canvas);

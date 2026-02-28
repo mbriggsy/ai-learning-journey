@@ -14,15 +14,15 @@ export const DT = 1 / 60;
 /** Car body and drivetrain parameters. */
 export const CAR = {
   /** Car mass in kg */
-  mass: 1000,
+  mass: 800,
   /** Weight in Newtons (mass * gravity) */
-  weight: 1000 * 9.81,
+  weight: 800 * 9.81,
   /** Wheelbase in game units (front axle to rear axle) */
-  wheelbase: 2.0,
+  wheelbase: 1.5,
   /** Distance from CG to front axle */
-  cgToFront: 1.0,
-  /** Distance from CG to rear axle (balanced — neutral handling) */
-  cgToRear: 1.0,
+  cgToFront: 0.85,
+  /** Distance from CG to rear axle (rearward bias — more rear grip, less oversteer) */
+  cgToRear: 0.65,
   /** CG height for weight transfer calculation (MECH-03) */
   cgHeight: 0.5,
   /** Car length in game units */
@@ -34,21 +34,21 @@ export const CAR = {
   /** Maximum brake force in game-Newtons -- stronger than engine for meaningful braking */
   maxBrakeForce: 40000,
   /** Aerodynamic drag coefficient (drag = coeff * v * |v|) */
-  dragCoefficient: 0.6,
+  dragCoefficient: 2.5,
   /** Rolling resistance factor */
-  rollingResistance: 100,
-  /** Maximum speed cap in units/sec (CONTEXT: 150-200 range) */
-  maxSpeed: 200,
+  rollingResistance: 150,
+  /** Maximum speed cap in units/sec */
+  maxSpeed: 110,
 } as const;
 
 /** Simplified Pacejka tire model parameters (MECH-04). */
 export const TIRE = {
   /** Stiffness factor -- how quickly grip builds with slip angle */
-  B: 24.0,
+  B: 10.0,
   /** Shape factor -- controls peak width */
   C: 1.4,
   /** Base friction coefficient */
-  mu: 3.0,
+  mu: 2.5,
 } as const;
 
 /**
@@ -63,7 +63,7 @@ export const SURFACE_GRIP: Record<number, number> = {
 /** Input smoothing response rates (MECH-01, MECH-02). */
 export const INPUT_RATES = {
   /** Steering response rate (units/sec toward target) */
-  steer: 20.0,
+  steer: 30.0,
   /** Throttle response rate */
   throttle: 6.0,
   /** Brake response rate (fastest -- brakes respond immediately) */
@@ -75,8 +75,8 @@ export const WALL_FRICTION = 0.3;
 
 /** Steering geometry parameters (MECH-06). */
 export const STEER = {
-  /** Maximum front wheel angle in radians (~46 degrees) */
-  maxAngle: 0.8,
+  /** Maximum front wheel angle in radians (~34 degrees) */
+  maxAngle: 0.6,
   /** Speed reduction coefficient -- reduces steering authority at high speed */
-  speedFactor: 0.002,
+  speedFactor: 0.008,
 } as const;

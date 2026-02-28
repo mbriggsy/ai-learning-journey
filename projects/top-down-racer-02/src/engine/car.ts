@@ -24,10 +24,16 @@ const LOW_SPEED_GUARD = 0.5;
 const REVERSE_BRAKE_THRESHOLD = 1.0;
 
 /** Maximum yaw rate in rad/s. ~2 rad/s is a hard drift; 3 is an extreme spin. */
-const MAX_YAW_RATE = 3.0;
+const MAX_YAW_RATE = 2.0;
 
 /** Yaw rate always decays by this fraction per tick (tire scrub friction). */
-const YAW_FRICTION = 0.01;
+const YAW_FRICTION = 0.015;
+
+/** Arcade velocity alignment — speed-dependent.
+ *  At low speed, strong alignment (car goes where it points).
+ *  At high speed, gentle alignment (car feels planted, not twitchy). */
+const VELOCITY_ALIGN_LOW  = 0.06; // At speed 0 — responsive but not twitchy
+const VELOCITY_ALIGN_HIGH = 0.02; // At max speed — smooth
 
 /** Below this speed, additional yaw damping kicks in (tires scrub harder at low speed). */
 const YAW_DAMP_SPEED_THRESHOLD = 5.0;
@@ -218,7 +224,7 @@ export function stepCar(
   const yawTorque = FlatF * CAR.cgToFront * Math.cos(steerAngle) - FlatR * CAR.cgToRear;
   //    Moment of inertia approximation: mass * wheelbase^2 / 12
   //    (simplified for a rod-like body)
-  const inertia = CAR.mass * CAR.wheelbase * CAR.wheelbase / 8;
+  const inertia = CAR.mass * CAR.wheelbase * CAR.wheelbase / 6;
   const yawAccel = yawTorque / inertia;
 
   // 9. Euler integration
@@ -242,11 +248,28 @@ export function stepCar(
 
   const newHeading = car.heading + newYawRate * dt;
 
-  // Compute speed and clamp to maxSpeed
-  let newSpeed = Math.sqrt(newVx * newVx + newVy * newVy);
+  // 9b. Arcade velocity alignment — nudge velocity direction toward heading.
+  // Strong at low speed (snappy turns), gentle at high speed (stable straights).
+  let alignedVx = newVx;
+  let alignedVy = newVy;
+  const alignSpeed = Math.sqrt(newVx * newVx + newVy * newVy);
+  if (alignSpeed > 1.0) {
+    const speedT = Math.min(alignSpeed / CAR.maxSpeed, 1.0);
+    const alignFactor = VELOCITY_ALIGN_LOW + (VELOCITY_ALIGN_HIGH - VELOCITY_ALIGN_LOW) * speedT;
+    const velAngle = Math.atan2(newVy, newVx);
+    let angleDiff = newHeading - velAngle;
+    while (angleDiff >  Math.PI) angleDiff -= 2 * Math.PI;
+    while (angleDiff < -Math.PI) angleDiff += 2 * Math.PI;
+    const alignedAngle = velAngle + angleDiff * alignFactor;
+    alignedVx = alignSpeed * Math.cos(alignedAngle);
+    alignedVy = alignSpeed * Math.sin(alignedAngle);
+  }
 
-  let finalVx = newVx;
-  let finalVy = newVy;
+  // Compute speed and clamp to maxSpeed
+  let newSpeed = Math.sqrt(alignedVx * alignedVx + alignedVy * alignedVy);
+
+  let finalVx = alignedVx;
+  let finalVy = alignedVy;
 
   // 10. Clamp speed
   if (newSpeed > CAR.maxSpeed) {

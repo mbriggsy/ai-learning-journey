@@ -28,6 +28,8 @@ const SKID_SLIP_THRESHOLD = 0.08;
 const SKID_MAX_AGE = 720;
 /** Maximum skid mark segments alive at once */
 const SKID_MAX_SEGMENTS = 300;
+/** Skid mark color — visible against dark track */
+const SKID_COLOR = 0x444444;
 /** Skid mark width in world units */
 const SKID_WIDTH = 1.8;
 
@@ -143,7 +145,7 @@ export class EffectsRenderer {
       const gfx = new Graphics();
       gfx.moveTo(this.lastSkidPos.x, this.lastSkidPos.y);
       gfx.lineTo(pos.x, pos.y);
-      gfx.stroke({ width: SKID_WIDTH, color: 0x222222, alpha: 0.6 });
+      gfx.stroke({ width: SKID_WIDTH, color: SKID_COLOR, alpha: 0.7 });
       this.container.addChild(gfx);
       this.skidSegments.push({ gfx, age: 0 });
 

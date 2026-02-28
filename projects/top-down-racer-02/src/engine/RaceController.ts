@@ -11,7 +11,7 @@
 // Game Phase & Race State (moved from src/renderer/GameState.ts)
 // ─────────────────────────────────────────────────────────
 
-export const enum GamePhase {
+export enum GamePhase {
   Loading    = 'loading',
   Countdown  = 'countdown',
   Racing     = 'racing',
@@ -74,7 +74,7 @@ export interface RaceControlSignals {
 // Step result — action the caller should perform
 // ─────────────────────────────────────────────────────────
 
-export const enum RaceAction {
+export enum RaceAction {
   /** No special action — proceed normally */
   None = 'none',
   /** Caller should reset the world without countdown */

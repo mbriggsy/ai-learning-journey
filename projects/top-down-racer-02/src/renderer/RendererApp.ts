@@ -3,6 +3,7 @@ import { GameLoop } from './GameLoop';
 import { initInputHandler, isKeyDown } from './InputHandler';
 import { GamePhase } from './GameState';
 import { HudRenderer } from './HudRenderer';
+import { OverlayRenderer } from './OverlayRenderer';
 import { WorldRenderer } from './WorldRenderer';
 
 export class RendererApp {
@@ -11,6 +12,7 @@ export class RendererApp {
   private hudContainer!: Container;
   private gameLoop!: GameLoop;
   private hudRenderer!: HudRenderer;
+  private overlayRenderer!: OverlayRenderer;
   private worldRenderer!: WorldRenderer;
 
   async init(): Promise<void> {
@@ -62,6 +64,12 @@ export class RendererApp {
     this.hudRenderer = new HudRenderer(this.hudContainer);
     this.gameLoop.onRender((prev, curr, alpha, race) => {
       this.hudRenderer.render(prev, curr, alpha, race);
+    });
+
+    // Step 6d: Wire Overlay renderer (MECH-12, MECH-13, UX-01, UX-02)
+    this.overlayRenderer = new OverlayRenderer(this.hudContainer);
+    this.gameLoop.onRender((prev, curr, alpha, race) => {
+      this.overlayRenderer.render(prev, curr, alpha, race);
     });
 
     // Step 7: Brief simulated loading (PixiJS init is instant for this project;

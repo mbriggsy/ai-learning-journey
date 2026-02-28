@@ -30,6 +30,8 @@ export class GameLoop {
   private raceState: RaceState = createInitialRaceState();
   private accumulator = 0;
   private renderCallbacks: RenderCallback[] = [];
+  private escapeWasDown = false;
+  private rWasDown = false;
 
   constructor() {
     this.currState = createWorld(this.track);
@@ -119,29 +121,39 @@ export class GameLoop {
       rs.stuckTicks = 0;
     }
 
-    // Instant restart (UX-01): R key resets world, no countdown
-    if (isKeyDown('KeyR')) {
+    // Instant restart (UX-01): R key resets world, no countdown (debounced)
+    const rDown = isKeyDown('KeyR');
+    if (rDown && !this.rWasDown) {
       this.resetWorld(false);
+      this.rWasDown = rDown;
       return;
     }
+    this.rWasDown = rDown;
 
-    // Pause (UX-02): Escape key
-    if (isKeyDown('Escape')) {
+    // Pause (UX-02): Escape key (debounced — fires once per press)
+    const escapeDown = isKeyDown('Escape');
+    if (escapeDown && !this.escapeWasDown) {
       rs.phase = GamePhase.Paused;
-      return;
     }
+    this.escapeWasDown = escapeDown;
   }
 
   private tickPaused(): void {
     const rs = this.raceState;
-    // Resume on Escape
-    if (isKeyDown('Escape')) {
+
+    // Resume on Escape (debounced — fires once per press)
+    const escapeDown = isKeyDown('Escape');
+    if (escapeDown && !this.escapeWasDown) {
       rs.phase = GamePhase.Racing;
     }
-    // R key from pause also instant restarts
-    if (isKeyDown('KeyR')) {
+    this.escapeWasDown = escapeDown;
+
+    // R key from pause also instant restarts (debounced)
+    const rDown = isKeyDown('KeyR');
+    if (rDown && !this.rWasDown) {
       this.resetWorld(false);
     }
+    this.rWasDown = rDown;
   }
 
   private tickRespawning(): void {

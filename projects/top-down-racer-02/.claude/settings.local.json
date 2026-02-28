@@ -14,7 +14,19 @@
       "WebFetch(domain:raw.githubusercontent.com)",
       "Bash(pnpm exec:*)",
       "Bash(pnpm dev:*)",
-      "mcp__serena__find_symbol"
+      "mcp__serena__find_symbol",
+      "Bash(curl:*)",
+      "mcp__serena__list_memories",
+      "mcp__serena__check_onboarding_performed",
+      "mcp__serena__list_dir",
+      "mcp__serena__get_symbols_overview",
+      "Bash(npx tsc:*)",
+      "Bash(npx vitest:*)",
+      "WebFetch(domain:kidscancode.org)",
+      "WebFetch(domain:www.iforce2d.net)",
+      "WebFetch(domain:superheroesinracecars.com)",
+      "mcp__serena__replace_symbol_body",
+      "mcp__serena__find_referencing_symbols"
     ]
   }
 }

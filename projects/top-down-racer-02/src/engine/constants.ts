@@ -41,14 +41,15 @@ export const CAR = {
   maxSpeed: 110,
 } as const;
 
-/** Simplified Pacejka tire model parameters (MECH-04). */
+/** Simplified Pacejka tire model parameters (MECH-04).
+ *  Tuned for arcade feel — tire forces add drift flavor, not primary turning. */
 export const TIRE = {
   /** Stiffness factor -- how quickly grip builds with slip angle */
-  B: 10.0,
+  B: 5.0,
   /** Shape factor -- controls peak width */
   C: 1.4,
-  /** Base friction coefficient */
-  mu: 2.5,
+  /** Base friction coefficient (low = arcade, high = sim) */
+  mu: 0.5,
 } as const;
 
 /**
@@ -75,8 +76,9 @@ export const WALL_FRICTION = 0.3;
 
 /** Steering geometry parameters (MECH-06). */
 export const STEER = {
-  /** Maximum front wheel angle in radians (~34 degrees) */
-  maxAngle: 0.6,
-  /** Speed reduction coefficient -- reduces steering authority at high speed */
-  speedFactor: 0.008,
+  /** Maximum front wheel angle in radians (~23 degrees) */
+  maxAngle: 0.4,
+  /** Speed reduction coefficient -- reduces steering authority at high speed.
+   *  Higher = more reduction. Arcade: 0.025, Sim: 0.008 */
+  speedFactor: 0.025,
 } as const;

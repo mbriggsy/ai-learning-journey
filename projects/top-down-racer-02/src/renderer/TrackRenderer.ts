@@ -64,8 +64,10 @@ function buildFinishLine(track: TrackState): Graphics {
   const gate = track.checkpoints[0];
   const g = new Graphics();
 
-  const perpX = -gate.direction.y;
-  const perpY =  gate.direction.x;
+  // Row depth runs ALONG the track direction (not perpendicular to it).
+  // The gate left→right already spans across the track; thickness extends forward/back.
+  const perpX = gate.direction.x;
+  const perpY = gate.direction.y;
   const rowThick = 4.0; // Thickness of each checker row in world units
 
   // Two rows of checkers (offset pattern)

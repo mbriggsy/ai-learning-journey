@@ -1,12 +1,17 @@
 /**
- * Car Physics Module — Dynamic Bicycle Model
+ * Car Physics Module — Arcade Bicycle Model
  *
- * Pure functions implementing the car physics simulation:
+ * Pure functions implementing car physics tuned for arcade gameplay:
  * - Input smoothing with exponential decay
  * - Speed-dependent steering authority
- * - Weight transfer between front and rear axles
- * - Simplified Pacejka tire force model
- * - Full bicycle model physics step with Euler integration
+ * - Bicycle geometry for heading (geometrically stable — no spin-outs)
+ * - Traction-based lateral velocity kill (controls drift feel)
+ * - Longitudinal forces: engine, brake, drag, rolling resistance
+ *
+ * Turning approach inspired by KidsCanCode, iforce2d, and other proven
+ * arcade top-down racer implementations. The bicycle geometry computes
+ * heading from wheel positions; the traction system controls how quickly
+ * velocity aligns to heading. No Pacejka tire forces in the main loop.
  *
  * All functions are pure: they return new objects, never mutate input state.
  * No external physics dependencies, no Math.random — fully deterministic.
@@ -17,33 +22,19 @@ import { Surface } from './types';
 import { vec2, fromAngle } from './vec2';
 import { CAR, TIRE, SURFACE_GRIP, INPUT_RATES, STEER } from './constants';
 
-/** Minimum forward velocity used in slip angle calculation to prevent div-by-zero. */
-const LOW_SPEED_GUARD = 0.5;
+/** Minimum speed for bicycle geometry to work (prevents atan2 noise at rest). */
+const LOW_SPEED_GUARD = 1.0;
 
 /** Below this speed, braking forces that would reverse the car are zeroed out. */
 const REVERSE_BRAKE_THRESHOLD = 1.0;
 
-/** Maximum yaw rate in rad/s. ~2 rad/s is a hard drift; 3 is an extreme spin. */
-const MAX_YAW_RATE = 2.0;
-
-/** Yaw rate always decays by this fraction per tick (tire scrub friction). */
-const YAW_FRICTION = 0.015;
-
-/** Arcade velocity alignment — speed-dependent.
- *  At low speed, strong alignment (car goes where it points).
- *  At high speed, gentle alignment (car feels planted, not twitchy). */
-const VELOCITY_ALIGN_LOW  = 0.08; // At speed 0 — snappy
-const VELOCITY_ALIGN_HIGH = 0.015; // At max speed — smooth
-
-/** Max velocity direction change per tick in radians (~1.4° per tick = 86°/s).
- *  Prevents violent snapping on large heading deviations — turns feel gradual. */
-const MAX_ALIGN_PER_TICK = 0.025;
-
-/** Below this speed, additional yaw damping kicks in (tires scrub harder at low speed). */
-const YAW_DAMP_SPEED_THRESHOLD = 5.0;
-
-/** Extra yaw damping factor per tick at zero speed. */
-const YAW_DAMP_FACTOR = 0.97;
+/**
+ * Traction: fraction of lateral velocity killed per tick.
+ * Higher = grippier (car goes where it points), Lower = driftier.
+ * These are the PRIMARY arcade feel tuning knobs.
+ */
+const TRACTION_SLOW = 0.85; // At low speed — near-instant grip
+const TRACTION_FAST = 0.55; // At max speed — slight drift, still controllable
 
 // ──────────────────────────────────────────────────────────
 // createInitialCarState
@@ -79,7 +70,7 @@ export function createInitialCarState(position: Vec2, heading: number): CarState
  * toward the target. Higher rates = faster response.
  *
  * Also computes the steerAngle with speed-dependent authority:
- *   steerAngle = smoothedSteer * maxAngle / (1 + speed * speedFactor)
+ *   steerAngle = -smoothedSteer * maxAngle / (1 + speed * speedFactor)
  */
 export function smoothInput(
   prev: SmoothedInput,
@@ -104,53 +95,34 @@ export function smoothInput(
 }
 
 // ──────────────────────────────────────────────────────────
-// tireForce
+// tireForce (kept for tests and potential future use)
 // ──────────────────────────────────────────────────────────
 
 /**
  * Simplified Pacejka tire force model.
- *
- * F = mu * gripMul * Fz * sin(C * atan(B * slipAngle))
- *
- * Where:
- * - mu: base friction coefficient (TIRE.mu)
- * - gripMul: surface grip multiplier (1.0 for road, 0.5 for runoff)
- * - Fz: vertical load on the axle (Newtons)
- * - B: stiffness factor (TIRE.B)
- * - C: shape factor (TIRE.C)
- * - slipAngle: angle between tire heading and velocity (radians)
- *
- * The curve builds force with slip angle, peaks, then falls off.
- * This falloff is what causes oversteer and understeer.
+ * Not used in the main arcade physics loop, but kept for tests
+ * and for potential hybrid tuning if we want to add drift flavor.
  */
 export function tireForce(slipAngle: number, load: number, gripMul: number): number {
-  // Negative sign: lateral force OPPOSES slip (restoring force).
-  // Without it, tire forces amplify yaw → instant spin.
   return -TIRE.mu * gripMul * load * Math.sin(TIRE.C * Math.atan(TIRE.B * slipAngle));
 }
 
 // ──────────────────────────────────────────────────────────
-// stepCar
+// stepCar — Arcade Bicycle Model
 // ──────────────────────────────────────────────────────────
 
 /**
- * Full bicycle model physics step.
+ * Arcade physics step using bicycle geometry + traction.
  *
- * Takes the current car state, raw input, surface type, and timestep.
- * Returns a brand new CarState after one tick of simulation.
+ * Approach (proven in KidsCanCode, iforce2d, Micro Machines, etc.):
+ * 1. Smooth input
+ * 2. Bicycle geometry: move front/rear wheels → derive new heading
+ * 3. Longitudinal forces: engine, brake, drag → update speed
+ * 4. Traction: kill lateral velocity → car goes where it points
+ * 5. Clamp speed, prevent reverse, update position
  *
- * Steps:
- * 1. Smooth input from raw
- * 2. Transform velocity to car-local frame (forward/lateral)
- * 3. Compute weight transfer from previous tick's longitudinal acceleration
- * 4. Compute slip angles (front and rear) with low-speed guard
- * 5. Compute lateral tire forces using simplified Pacejka
- * 6. Compute longitudinal forces (engine, brake, drag, rolling resistance)
- * 7. Sum forces in car-local frame, transform to world frame
- * 8. Compute yaw torque from lateral force imbalance
- * 9. Euler integrate: velocity, position, heading, yawRate
- * 10. Clamp speed to maxSpeed
- * 11. Return new CarState
+ * The bicycle geometry makes spin-outs geometrically impossible.
+ * Traction controls the drift feel (higher = grippier).
  */
 export function stepCar(
   car: CarState,
@@ -164,154 +136,118 @@ export function stepCar(
   const smoothed = smoothInput(car.prevInput, input, car.speed, dt);
   const { steerAngle } = smoothed;
 
-  // 2. Transform velocity to car-local frame
-  //    Forward direction is determined by heading
-  //    vLocal.x = forward velocity, vLocal.y = lateral velocity
+  // 2. Bicycle geometry — compute new heading from wheel positions
+  //    Front and rear wheels are on the car centerline, separated by wheelbase.
+  //    Rear wheel moves in heading direction; front wheel moves in steered direction.
   const cosH = Math.cos(car.heading);
   const sinH = Math.sin(car.heading);
-  const vLocalX = car.velocity.x * cosH + car.velocity.y * sinH;
-  const vLocalY = -car.velocity.x * sinH + car.velocity.y * cosH;
 
-  // 3. Weight transfer from previous tick's longitudinal acceleration
-  const Wf = (CAR.cgToRear / CAR.wheelbase) * CAR.weight
-    - (CAR.cgHeight / CAR.wheelbase) * CAR.mass * car.accelLongitudinal;
-  const Wr = (CAR.cgToFront / CAR.wheelbase) * CAR.weight
-    + (CAR.cgHeight / CAR.wheelbase) * CAR.mass * car.accelLongitudinal;
+  let newHeading: number;
+  if (car.speed > LOW_SPEED_GUARD) {
+    const halfWB = CAR.wheelbase / 2;
+    const moveD = car.speed * dt;
 
-  // 4. Slip angles with low-speed guard
-  //    absVx = max(abs(vLocalX), 0.5) to prevent division by near-zero
-  const absVx = Math.max(Math.abs(vLocalX), LOW_SPEED_GUARD);
+    // Rear wheel: moves forward along current heading
+    const rearX = -cosH * halfWB + cosH * moveD;
+    const rearY = -sinH * halfWB + sinH * moveD;
 
-  // Front slip angle: angle between front tire heading and velocity at front axle
-  const slipAngleFront = Math.atan2(
-    vLocalY + car.yawRate * CAR.cgToFront,
-    absVx,
-  ) - steerAngle;
+    // Front wheel: moves forward along (heading + steerAngle)
+    const steerH = car.heading + steerAngle;
+    const frontX = cosH * halfWB + Math.cos(steerH) * moveD;
+    const frontY = sinH * halfWB + Math.sin(steerH) * moveD;
 
-  // Rear slip angle: angle between rear tire heading and velocity at rear axle
-  const slipAngleRear = Math.atan2(
-    vLocalY - car.yawRate * CAR.cgToRear,
-    absVx,
-  );
+    // New heading = direction from rear to front
+    newHeading = Math.atan2(frontY - rearY, frontX - rearX);
+  } else {
+    // At very low speed, apply steer directly (avoids atan2 noise)
+    // Multiplier kept low — car should barely turn until it has real forward speed
+    newHeading = car.heading + steerAngle * (car.speed / LOW_SPEED_GUARD) * dt * 1.0;
+  }
 
-  // 5. Lateral tire forces
-  const FlatF = tireForce(slipAngleFront, Wf, gripMul);
-  const FlatR = tireForce(slipAngleRear, Wr, gripMul);
+  // Compute yaw rate for external systems (collision, HUD, camera)
+  let headingDelta = newHeading - car.heading;
+  while (headingDelta > Math.PI) headingDelta -= 2 * Math.PI;
+  while (headingDelta < -Math.PI) headingDelta += 2 * Math.PI;
+  const newYawRate = headingDelta / dt;
 
-  // 6. Longitudinal forces
-  //    Engine force: throttle * maxEngineForce
+  // 3. Longitudinal forces — forward acceleration along heading
   const engineForce = smoothed.throttle * CAR.maxEngineForce;
-  //    Brake force: brake * maxBrakeForce, opposing velocity direction
   const brakeForce = smoothed.brake * CAR.maxBrakeForce;
-  //    Drag: proportional to speed squared, opposing velocity
-  const dragForce = CAR.dragCoefficient * vLocalX * Math.abs(vLocalX);
-  //    Rolling resistance: constant opposing velocity direction
-  const rollingResistance = CAR.rollingResistance * Math.sign(vLocalX);
+  const dragForce = CAR.dragCoefficient * car.speed * car.speed;
+  const rollingRes = CAR.rollingResistance;
 
-  // Net longitudinal force (in car-local forward direction)
-  const FlongNet = engineForce
-    - brakeForce * Math.sign(vLocalX)
-    - dragForce
-    - rollingResistance;
-
-  // 7. Accelerations in car-local frame
-  //    Lateral force on car body: rear lateral + front lateral component (steer angle)
-  const accelX = FlongNet / CAR.mass;
-  const accelY = (FlatR + FlatF * Math.cos(steerAngle)) / CAR.mass;
-
-  // Transform acceleration to world frame
-  const accelWorldX = accelX * cosH - accelY * sinH;
-  const accelWorldY = accelX * sinH + accelY * cosH;
-
-  // 8. Yaw torque and angular acceleration
-  //    Torque = front lateral force * lever arm - rear lateral force * lever arm
-  const yawTorque = FlatF * CAR.cgToFront * Math.cos(steerAngle) - FlatR * CAR.cgToRear;
-  //    Moment of inertia approximation: mass * wheelbase^2 / 12
-  //    (simplified for a rod-like body)
-  const inertia = CAR.mass * CAR.wheelbase * CAR.wheelbase / 6;
-  const yawAccel = yawTorque / inertia;
-
-  // 9. Euler integration
-  const newVx = car.velocity.x + accelWorldX * dt;
-  const newVy = car.velocity.y + accelWorldY * dt;
-  let newYawRate = car.yawRate + yawAccel * dt;
-
-  // Clamp yaw rate to prevent runaway spin
-  newYawRate = Math.max(-MAX_YAW_RATE, Math.min(MAX_YAW_RATE, newYawRate));
-
-  // Constant yaw friction — always opposes spin (like tire scrub resistance)
-  newYawRate *= (1 - YAW_FRICTION);
-
-  // Extra damping at low speed — tires scrubbing the ground kill spin faster
-  const currentSpeed = Math.sqrt(newVx * newVx + newVy * newVy);
-  if (currentSpeed < YAW_DAMP_SPEED_THRESHOLD) {
-    const dampLerp = 1 - currentSpeed / YAW_DAMP_SPEED_THRESHOLD; // 1 at zero speed, 0 at threshold
-    const dampFactor = 1 - dampLerp * (1 - YAW_DAMP_FACTOR); // blend toward YAW_DAMP_FACTOR at low speed
-    newYawRate *= dampFactor;
+  // Net force in the forward direction
+  let netForwardForce = engineForce;
+  if (car.speed > REVERSE_BRAKE_THRESHOLD) {
+    netForwardForce -= brakeForce + dragForce + rollingRes;
+  } else if (car.speed > 0.01) {
+    // Near zero: only apply forces that don't reverse the car
+    netForwardForce -= Math.min(brakeForce + dragForce + rollingRes, car.speed / dt * CAR.mass);
   }
 
-  const newHeading = car.heading + newYawRate * dt;
+  const accelForward = netForwardForce / CAR.mass;
 
-  // 9b. Arcade velocity alignment — nudge velocity direction toward heading.
-  // Strong at low speed (snappy turns), gentle at high speed (stable straights).
-  let alignedVx = newVx;
-  let alignedVy = newVy;
-  const alignSpeed = Math.sqrt(newVx * newVx + newVy * newVy);
-  if (alignSpeed > 1.0) {
-    const speedT = Math.min(alignSpeed / CAR.maxSpeed, 1.0);
-    // Quadratic dropoff — alignment fades quickly at moderate speed
-    const alignFactor = VELOCITY_ALIGN_LOW + (VELOCITY_ALIGN_HIGH - VELOCITY_ALIGN_LOW) * speedT * speedT;
-    const velAngle = Math.atan2(newVy, newVx);
-    let angleDiff = newHeading - velAngle;
-    while (angleDiff >  Math.PI) angleDiff -= 2 * Math.PI;
-    while (angleDiff < -Math.PI) angleDiff += 2 * Math.PI;
-    // Cap per-tick rotation so turns feel gradual, not snappy
-    const rawAlign = angleDiff * alignFactor;
-    const clampedAlign = Math.max(-MAX_ALIGN_PER_TICK, Math.min(MAX_ALIGN_PER_TICK, rawAlign));
-    const alignedAngle = velAngle + clampedAlign;
-    alignedVx = alignSpeed * Math.cos(alignedAngle);
-    alignedVy = alignSpeed * Math.sin(alignedAngle);
+  // Update speed
+  let newSpeed = car.speed + accelForward * dt;
+  if (newSpeed < 0) newSpeed = 0;
+  if (newSpeed > CAR.maxSpeed) newSpeed = CAR.maxSpeed;
+
+  // 4. Traction — decompose velocity, kill lateral component
+  const newCosH = Math.cos(newHeading);
+  const newSinH = Math.sin(newHeading);
+
+  // Decompose current velocity into forward/lateral relative to NEW heading
+  const forwardVel = car.velocity.x * newCosH + car.velocity.y * newSinH;
+  const lateralVel = -car.velocity.x * newSinH + car.velocity.y * newCosH;
+
+  // Traction interpolation: more grip at low speed, slight drift at high speed
+  const speedT = Math.min(car.speed / CAR.maxSpeed, 1.0);
+  const baseTraction = TRACTION_SLOW + (TRACTION_FAST - TRACTION_SLOW) * speedT;
+  // Surface affects traction: runoff (gripMul=0.5) = more sliding
+  const traction = baseTraction * gripMul;
+
+  // Forward velocity comes from the speed calculation (heading-aligned)
+  // Lateral velocity is killed by traction
+  const newLateralVel = lateralVel * (1 - traction);
+
+  // Reconstruct velocity in world frame
+  let finalVx = newCosH * newSpeed + (-newSinH) * newLateralVel;
+  let finalVy = newSinH * newSpeed + newCosH * newLateralVel;
+
+  // Recompute actual speed from velocity (includes any remaining lateral)
+  let finalSpeed = Math.sqrt(finalVx * finalVx + finalVy * finalVy);
+
+  // 5. Clamp speed
+  if (finalSpeed > CAR.maxSpeed) {
+    const clampRatio = CAR.maxSpeed / finalSpeed;
+    finalVx *= clampRatio;
+    finalVy *= clampRatio;
+    finalSpeed = CAR.maxSpeed;
   }
 
-  // Compute speed and clamp to maxSpeed
-  let newSpeed = Math.sqrt(alignedVx * alignedVx + alignedVy * alignedVy);
-
-  let finalVx = alignedVx;
-  let finalVy = alignedVy;
-
-  // 10. Clamp speed
-  if (newSpeed > CAR.maxSpeed) {
-    const clampRatio = CAR.maxSpeed / newSpeed;
-    finalVx = newVx * clampRatio;
-    finalVy = newVy * clampRatio;
-    newSpeed = CAR.maxSpeed;
-  }
-
-  // Prevent negative speed (car shouldn't reverse from braking alone)
-  // Check if the car is trying to go backward (velocity dot heading < 0)
-  // and speed is very low
+  // Prevent reverse
   const headingVec = fromAngle(newHeading);
   const velDotHeading = finalVx * headingVec.x + finalVy * headingVec.y;
-  if (velDotHeading < 0 && newSpeed < REVERSE_BRAKE_THRESHOLD) {
+  if (velDotHeading < 0 && finalSpeed < REVERSE_BRAKE_THRESHOLD) {
     finalVx = 0;
     finalVy = 0;
-    newSpeed = 0;
+    finalSpeed = 0;
   }
 
+  // 6. Update position
   const newPosition = vec2(
     car.position.x + finalVx * dt,
     car.position.y + finalVy * dt,
   );
 
-  // 11. Return new CarState
   return {
     position: newPosition,
     velocity: vec2(finalVx, finalVy),
     heading: newHeading,
     yawRate: newYawRate,
-    speed: newSpeed,
+    speed: finalSpeed,
     prevInput: smoothed,
     surface,
-    accelLongitudinal: accelX,
+    accelLongitudinal: accelForward,
   };
 }

@@ -7,12 +7,12 @@
 
 ## Phases
 
-- [ ] **Phase 1: Core Simulation Engine** -- 14 requirements, 4 plans
+- [x] **Phase 1: Core Simulation Engine** -- 14 requirements, 4 plans (COMPLETE)
   Plans:
   - [x] 01-01-PLAN.md -- Foundation: vitest config, engine types, constants, vec2 math, spline geometry
   - [x] 01-02-PLAN.md -- Track builder, collision detection/response, primary track data
   - [x] 01-03-PLAN.md -- Car physics TDD: bicycle model, weight transfer, tire forces, input smoothing
-  - [ ] 01-04-PLAN.md -- Checkpoint system, world step function, determinism verification
+  - [x] 01-04-PLAN.md -- Checkpoint system, world step function, determinism verification
 - [ ] **Phase 2: PixiJS Renderer + Playable Game** -- 14 requirements (VIS-01, 02, 05, HUD-01..05, MECH-12, 13, UX-01, 02, 05, 06)
 - [ ] **Phase 3: Game Features & Polish** -- 13 requirements (VIS-03, 04, 07, 08, SND-01..05, TRK-02, 03, UX-03, 04)
 - [ ] **Phase 4: Gymnasium Environment Wrapper** -- 9 requirements (AI-01..07, 12, 13)

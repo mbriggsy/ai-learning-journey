@@ -18,8 +18,8 @@ Requirements for initial release. Each maps to roadmap phases.
 - [x] **MECH-07**: Three surface types: road (full grip), runoff (reduced grip + drag), wall (hard boundary)
 - [x] **MECH-08**: Wall collision slides car along wall with speed penalty proportional to impact angle
 - [x] **MECH-09**: Spline-based track geometry with centerline + width, closed loops only
-- [ ] **MECH-10**: Checkpoint gates along spline (20-50 per track, crossed in order)
-- [ ] **MECH-11**: Lap timing tracks current lap and best lap
+- [x] **MECH-10**: Checkpoint gates along spline (20-50 per track, crossed in order)
+- [x] **MECH-11**: Lap timing tracks current lap and best lap
 - [ ] **MECH-12**: Countdown start sequence (3-2-1-GO)
 - [ ] **MECH-13**: Respawn to last checkpoint after stuck timeout
 - [x] **MECH-14**: Fixed 60Hz physics tick, deterministic, decoupled from rendering
@@ -183,8 +183,8 @@ Which phases cover which requirements. Updated during roadmap creation.
 | MECH-07 | Phase 1: Core Simulation Engine | Complete |
 | MECH-08 | Phase 1: Core Simulation Engine | Complete |
 | MECH-09 | Phase 1: Core Simulation Engine | Complete |
-| MECH-10 | Phase 1: Core Simulation Engine | Pending |
-| MECH-11 | Phase 1: Core Simulation Engine | Pending |
+| MECH-10 | Phase 1: Core Simulation Engine | Complete |
+| MECH-11 | Phase 1: Core Simulation Engine | Complete |
 | MECH-12 | Phase 2: PixiJS Renderer + Playable Game | Pending |
 | MECH-13 | Phase 2: PixiJS Renderer + Playable Game | Pending |
 | MECH-14 | Phase 1: Core Simulation Engine | Complete |

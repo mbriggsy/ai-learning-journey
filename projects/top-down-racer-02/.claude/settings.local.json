@@ -11,7 +11,10 @@
       "WebFetch(domain:engineeringdotnet.blogspot.com)",
       "WebFetch(domain:www.asawicki.info)",
       "WebFetch(domain:github.com)",
-      "WebFetch(domain:raw.githubusercontent.com)"
+      "WebFetch(domain:raw.githubusercontent.com)",
+      "Bash(pnpm exec:*)",
+      "Bash(pnpm dev:*)",
+      "mcp__serena__find_symbol"
     ]
   }
 }

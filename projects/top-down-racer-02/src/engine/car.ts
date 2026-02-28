@@ -14,8 +14,14 @@
 
 import type { Vec2, CarState, Input, SmoothedInput } from './types';
 import { Surface } from './types';
-import { vec2, add, scale, rotate, length as vecLength, fromAngle, dot } from './vec2';
+import { vec2, fromAngle } from './vec2';
 import { CAR, TIRE, SURFACE_GRIP, INPUT_RATES, STEER } from './constants';
+
+/** Minimum forward velocity used in slip angle calculation to prevent div-by-zero. */
+const LOW_SPEED_GUARD = 0.5;
+
+/** Below this speed, braking forces that would reverse the car are zeroed out. */
+const REVERSE_BRAKE_THRESHOLD = 1.0;
 
 // ──────────────────────────────────────────────────────────
 // createInitialCarState
@@ -149,7 +155,7 @@ export function stepCar(
 
   // 4. Slip angles with low-speed guard
   //    absVx = max(abs(vLocalX), 0.5) to prevent division by near-zero
-  const absVx = Math.max(Math.abs(vLocalX), 0.5);
+  const absVx = Math.max(Math.abs(vLocalX), LOW_SPEED_GUARD);
 
   // Front slip angle: angle between front tire heading and velocity at front axle
   const slipAngleFront = Math.atan2(
@@ -225,7 +231,7 @@ export function stepCar(
   // and speed is very low
   const headingVec = fromAngle(newHeading);
   const velDotHeading = finalVx * headingVec.x + finalVy * headingVec.y;
-  if (velDotHeading < 0 && newSpeed < 1.0) {
+  if (velDotHeading < 0 && newSpeed < REVERSE_BRAKE_THRESHOLD) {
     finalVx = 0;
     finalVy = 0;
     newSpeed = 0;

@@ -2,12 +2,16 @@ import { Application, Container, Graphics, Text } from 'pixi.js';
 import { GameLoop } from './GameLoop';
 import { initInputHandler, isKeyDown } from './InputHandler';
 import { GamePhase } from './GameState';
+import { HudRenderer } from './HudRenderer';
+import { WorldRenderer } from './WorldRenderer';
 
 export class RendererApp {
   private app!: Application;
   private worldContainer!: Container;
   private hudContainer!: Container;
   private gameLoop!: GameLoop;
+  private hudRenderer!: HudRenderer;
+  private worldRenderer!: WorldRenderer;
 
   async init(): Promise<void> {
     // Step 1: Init PixiJS Application (async in v8)
@@ -47,6 +51,12 @@ export class RendererApp {
 
     // Step 6: Create game loop
     this.gameLoop = new GameLoop();
+
+    // Step 6b: Wire HUD renderer (HUD-01..05)
+    this.hudRenderer = new HudRenderer(this.hudContainer);
+    this.gameLoop.onRender((prev, curr, alpha, race) => {
+      this.hudRenderer.render(prev, curr, alpha, race);
+    });
 
     // Step 7: Brief simulated loading (PixiJS init is instant for this project;
     //         this gives the browser one frame to paint the loading screen)

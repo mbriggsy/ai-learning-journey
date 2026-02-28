@@ -9,12 +9,12 @@ Requirements for initial release. Each maps to roadmap phases.
 
 ### Core Mechanics
 
-- [ ] **MECH-01**: Car has analog steering (-1.0 to +1.0) with keyboard smoothing
-- [ ] **MECH-02**: Car has analog throttle (0-100%) and brake (0-100%) with keyboard smoothing
-- [ ] **MECH-03**: Weight transfer affects tire load (pitches forward on brake, rear lightens)
-- [ ] **MECH-04**: Tire grip is a function of load, slip angle, and surface type
-- [ ] **MECH-05**: Natural oversteer emerges from physics (no scripted drift)
-- [ ] **MECH-06**: Steering authority reduces at higher speed
+- [x] **MECH-01**: Car has analog steering (-1.0 to +1.0) with keyboard smoothing
+- [x] **MECH-02**: Car has analog throttle (0-100%) and brake (0-100%) with keyboard smoothing
+- [x] **MECH-03**: Weight transfer affects tire load (pitches forward on brake, rear lightens)
+- [x] **MECH-04**: Tire grip is a function of load, slip angle, and surface type
+- [x] **MECH-05**: Natural oversteer emerges from physics (no scripted drift)
+- [x] **MECH-06**: Steering authority reduces at higher speed
 - [x] **MECH-07**: Three surface types: road (full grip), runoff (reduced grip + drag), wall (hard boundary)
 - [x] **MECH-08**: Wall collision slides car along wall with speed penalty proportional to impact angle
 - [x] **MECH-09**: Spline-based track geometry with centerline + width, closed loops only
@@ -174,12 +174,12 @@ Which phases cover which requirements. Updated during roadmap creation.
 
 | Requirement | Phase | Status |
 |-------------|-------|--------|
-| MECH-01 | Phase 1: Core Simulation Engine | Pending |
-| MECH-02 | Phase 1: Core Simulation Engine | Pending |
-| MECH-03 | Phase 1: Core Simulation Engine | Pending |
-| MECH-04 | Phase 1: Core Simulation Engine | Pending |
-| MECH-05 | Phase 1: Core Simulation Engine | Pending |
-| MECH-06 | Phase 1: Core Simulation Engine | Pending |
+| MECH-01 | Phase 1: Core Simulation Engine | Complete |
+| MECH-02 | Phase 1: Core Simulation Engine | Complete |
+| MECH-03 | Phase 1: Core Simulation Engine | Complete |
+| MECH-04 | Phase 1: Core Simulation Engine | Complete |
+| MECH-05 | Phase 1: Core Simulation Engine | Complete |
+| MECH-06 | Phase 1: Core Simulation Engine | Complete |
 | MECH-07 | Phase 1: Core Simulation Engine | Complete |
 | MECH-08 | Phase 1: Core Simulation Engine | Complete |
 | MECH-09 | Phase 1: Core Simulation Engine | Complete |

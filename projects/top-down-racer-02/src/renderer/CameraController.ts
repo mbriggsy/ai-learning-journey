@@ -3,14 +3,13 @@ import type { CarState } from '../engine/types';
 import { CAR } from '../engine/constants';
 
 // Zoom constants (pixels per world unit)
-const ZOOM_BASE   = 3.0;
-const ZOOM_MIN    = 2.5;  // Widest — high speed
-const ZOOM_MAX    = 3.5;  // Tightest — low speed / corners
-const ZOOM_SLIDE_BONUS = 0.4;  // Extra zoom-out when sliding
+const ZOOM_BASE   = 15.0;
+const ZOOM_MIN    = 12.0;  // Widest — high speed
+const ZOOM_MAX    = 18.0;  // Tightest — low speed / corners
+const ZOOM_SLIDE_BONUS = 1.0;  // Extra zoom-out when sliding
 const SLIDE_THRESHOLD  = 1.5;  // |yawRate| above this = sliding
 
-// Camera position lerp (smoothing)
-const CAM_POS_LERP  = 0.12; // ~12% per frame — slight lag for feel
+// Camera smoothing
 const CAM_ZOOM_LERP = 0.05; // ~5% per frame — smooth zoom transitions
 
 export class CameraController {
@@ -18,21 +17,15 @@ export class CameraController {
   private targetZoom  = ZOOM_BASE;
 
   /**
-   * Apply camera transform to the world container.
-   * Called every render frame with an interpolated car state.
-   *
-   * @param worldContainer - The container holding all world objects
-   * @param carX - Interpolated car world X position
-   * @param carY - Interpolated car world Y position
-   * @param carHeading - Interpolated car heading (radians, engine convention)
-   * @param screenW - Canvas width in pixels
-   * @param screenH - Canvas height in pixels
+   * Apply chase-camera transform to the world container.
+   * Top-down chase: camera follows car position, no rotation.
+   * Engine Y-up is flipped to screen Y-down via negative Y scale.
    */
   update(
     worldContainer: Container,
     carX: number,
     carY: number,
-    carHeading: number,
+    _carHeading: number,
     screenW: number,
     screenH: number,
     car: CarState,
@@ -48,23 +41,17 @@ export class CameraController {
     }
     this.targetZoom = Math.max(ZOOM_MIN - ZOOM_SLIDE_BONUS, Math.min(ZOOM_MAX, this.targetZoom));
 
-    // 2. Lerp current zoom toward target (smooth transitions)
+    // 2. Lerp current zoom toward target
     this.currentZoom += (this.targetZoom - this.currentZoom) * CAM_ZOOM_LERP;
 
-    // 3. Set world container transforms
-    //    pivot = car world position (point to rotate/zoom around)
-    //    position = screen center (pivot maps to here)
+    // 3. Center camera on car
     worldContainer.pivot.set(carX, carY);
     worldContainer.position.set(cx, cy);
 
-    // 4. Car-facing-up rotation:
-    //    Engine heading 0 = east (+X), we want car to face screen-up.
-    //    PixiJS rotation is clockwise in screen space (Y-down).
-    //    -(heading + PI/2) maps engine east → screen up.
-    worldContainer.rotation = -(carHeading + Math.PI / 2);
+    // 4. No rotation — track stays fixed on screen
 
-    // 5. Apply zoom
-    worldContainer.scale.set(this.currentZoom);
+    // 5. Apply zoom with Y-flip (engine Y-up → screen Y-down)
+    worldContainer.scale.set(this.currentZoom, -this.currentZoom);
   }
 
   reset(): void {

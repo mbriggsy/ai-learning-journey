@@ -18,7 +18,10 @@ function lerpAngle(a: number, b: number, t: number): number {
   let diff = b - a;
   while (diff >  Math.PI) diff -= 2 * Math.PI;
   while (diff < -Math.PI) diff += 2 * Math.PI;
-  return a + diff * t;
+  // Normalize result to [-PI, PI] — engine heading accumulates unbounded
+  let result = a + diff * t;
+  result = result - Math.round(result / (2 * Math.PI)) * (2 * Math.PI);
+  return result;
 }
 
 export class WorldRenderer {

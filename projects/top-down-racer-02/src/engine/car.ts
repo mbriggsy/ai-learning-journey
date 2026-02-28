@@ -23,6 +23,18 @@ const LOW_SPEED_GUARD = 0.5;
 /** Below this speed, braking forces that would reverse the car are zeroed out. */
 const REVERSE_BRAKE_THRESHOLD = 1.0;
 
+/** Maximum yaw rate in rad/s. ~2 rad/s is a hard drift; 3 is an extreme spin. */
+const MAX_YAW_RATE = 3.0;
+
+/** Yaw rate always decays by this fraction per tick (tire scrub friction). */
+const YAW_FRICTION = 0.01;
+
+/** Below this speed, additional yaw damping kicks in (tires scrub harder at low speed). */
+const YAW_DAMP_SPEED_THRESHOLD = 5.0;
+
+/** Extra yaw damping factor per tick at zero speed. */
+const YAW_DAMP_FACTOR = 0.97;
+
 // ──────────────────────────────────────────────────────────
 // createInitialCarState
 // ──────────────────────────────────────────────────────────
@@ -75,7 +87,8 @@ export function smoothInput(
 
   // Speed-dependent steering authority
   const speedFactor = 1.0 / (1.0 + speed * STEER.speedFactor);
-  const steerAngle = steer * STEER.maxAngle * speedFactor;
+  // Negate: positive steer input (right) → negative angle (CW in Y-up engine)
+  const steerAngle = -steer * STEER.maxAngle * speedFactor;
 
   return { steer, throttle, brake, steerAngle };
 }
@@ -101,7 +114,9 @@ export function smoothInput(
  * This falloff is what causes oversteer and understeer.
  */
 export function tireForce(slipAngle: number, load: number, gripMul: number): number {
-  return TIRE.mu * gripMul * load * Math.sin(TIRE.C * Math.atan(TIRE.B * slipAngle));
+  // Negative sign: lateral force OPPOSES slip (restoring force).
+  // Without it, tire forces amplify yaw → instant spin.
+  return -TIRE.mu * gripMul * load * Math.sin(TIRE.C * Math.atan(TIRE.B * slipAngle));
 }
 
 // ──────────────────────────────────────────────────────────
@@ -203,13 +218,28 @@ export function stepCar(
   const yawTorque = FlatF * CAR.cgToFront * Math.cos(steerAngle) - FlatR * CAR.cgToRear;
   //    Moment of inertia approximation: mass * wheelbase^2 / 12
   //    (simplified for a rod-like body)
-  const inertia = CAR.mass * CAR.wheelbase * CAR.wheelbase / 4;
+  const inertia = CAR.mass * CAR.wheelbase * CAR.wheelbase / 8;
   const yawAccel = yawTorque / inertia;
 
   // 9. Euler integration
   const newVx = car.velocity.x + accelWorldX * dt;
   const newVy = car.velocity.y + accelWorldY * dt;
-  const newYawRate = car.yawRate + yawAccel * dt;
+  let newYawRate = car.yawRate + yawAccel * dt;
+
+  // Clamp yaw rate to prevent runaway spin
+  newYawRate = Math.max(-MAX_YAW_RATE, Math.min(MAX_YAW_RATE, newYawRate));
+
+  // Constant yaw friction — always opposes spin (like tire scrub resistance)
+  newYawRate *= (1 - YAW_FRICTION);
+
+  // Extra damping at low speed — tires scrubbing the ground kill spin faster
+  const currentSpeed = Math.sqrt(newVx * newVx + newVy * newVy);
+  if (currentSpeed < YAW_DAMP_SPEED_THRESHOLD) {
+    const dampLerp = 1 - currentSpeed / YAW_DAMP_SPEED_THRESHOLD; // 1 at zero speed, 0 at threshold
+    const dampFactor = 1 - dampLerp * (1 - YAW_DAMP_FACTOR); // blend toward YAW_DAMP_FACTOR at low speed
+    newYawRate *= dampFactor;
+  }
+
   const newHeading = car.heading + newYawRate * dt;
 
   // Compute speed and clamp to maxSpeed

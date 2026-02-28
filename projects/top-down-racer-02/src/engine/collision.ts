@@ -172,7 +172,7 @@ export function resolveWallCollision(
 
   if (vDotN >= 0) {
     // Car is moving away from wall -- only fix position, don't alter velocity
-    const newPosition = add(car.position, scale(normal, penetration + 0.1));
+    const newPosition = add(car.position, scale(normal, penetration + 0.5));
     return { ...car, position: newPosition };
   }
 
@@ -184,34 +184,40 @@ export function resolveWallCollision(
 
   // Apply wall friction to tangential component
   const frictionMultiplier = 1 - WALL_FRICTION;
-  const newVelocity = scale(tangentialVelocity, frictionMultiplier);
+  const slidingVelocity = scale(tangentialVelocity, frictionMultiplier);
+
+  // Add a small bounce velocity away from the wall so the car separates naturally.
+  // Scaled by speed so it's proportional — gentle nudge at low speed, stronger at high.
+  const bounceSpeed = Math.max(3.0, speed * 0.08);
+  const bounceVelocity = scale(normal, bounceSpeed);
+  const newVelocity = add(slidingVelocity, bounceVelocity);
   const newSpeed = vecLength(newVelocity);
 
-  // Calculate impact angle for heading blend
-  // tangentSpeed / speed gives cos(impactAngle), where 0 = head-on, 1 = glancing
+  // Calculate impact severity: 0 = glancing scrape, 1 = head-on
   const tangentSpeed = vecLength(tangentialVelocity);
   const speedRatio = speed > 1e-6 ? Math.min(1, Math.max(0, tangentSpeed / speed)) : 0;
   const impactAngle = Math.acos(speedRatio);
-  // impactAngle: 0 = glancing (parallel to wall), PI/2 = head-on (perpendicular)
   const normalizedImpact = impactAngle / (Math.PI / 2); // 0 to 1
 
-  // Calculate wall tangent direction for heading rotation
-  // Wall tangent is perpendicular to normal. Choose the direction closest to car's velocity.
-  const wallTangent1 = vec2(-normal.y, normal.x);
-  const wallTangent2 = vec2(normal.y, -normal.x);
-  const wallTangent = dot(tangentialVelocity, wallTangent1) >= 0 ? wallTangent1 : wallTangent2;
-  const wallTangentAngle = Math.atan2(wallTangent.y, wallTangent.x);
+  // Push car out of wall
+  const newPosition = add(car.position, scale(normal, penetration + 0.8));
 
-  // Blend heading toward wall tangent: more rotation for harder impacts
-  // headingBlend: 0 for glancing (no rotation), up to 1 for head-on
-  const headingBlend = Math.min(1, normalizedImpact * 2);
-  const newHeading = lerpAngle(car.heading, wallTangentAngle, headingBlend);
+  // Only rotate heading and dampen yaw on hard impacts (> 45 degree angle)
+  // Scrapes and glancing contact: just remove normal velocity and push out
+  let newHeading = car.heading;
+  let newYawRate = car.yawRate;
 
-  // Push car out of wall: position + normal * (penetration + buffer)
-  const newPosition = add(car.position, scale(normal, penetration + 0.1));
+  if (normalizedImpact > 0.5) {
+    const wallTangent1 = vec2(-normal.y, normal.x);
+    const wallTangent2 = vec2(normal.y, -normal.x);
+    const wallTangent = dot(tangentialVelocity, wallTangent1) >= 0 ? wallTangent1 : wallTangent2;
+    const wallTangentAngle = Math.atan2(wallTangent.y, wallTangent.x);
 
-  // Dampen yaw rate on impact: reduce proportional to impact severity
-  const newYawRate = car.yawRate * (1 - normalizedImpact);
+    // Scale blend by how far above the threshold we are
+    const hardness = (normalizedImpact - 0.5) * 2; // 0 at threshold, 1 at head-on
+    newHeading = lerpAngle(car.heading, wallTangentAngle, hardness * 0.4);
+    newYawRate = car.yawRate * (1 - hardness * 0.5);
+  }
 
   return {
     ...car,

@@ -1,61 +1,53 @@
 import { Graphics, Container } from 'pixi.js';
-import { CAR } from '../engine/constants';
 
-// Car visual dimensions (in world units — same scale as physics)
-const CAR_LENGTH = CAR.length;  // 4.0 world units
-const CAR_WIDTH  = CAR.width;   // 2.0 world units
-const NOSE_LENGTH = 0.8;         // Extra forward protrusion for the "pointed nose"
+// Visual car dimensions (world units) — intentionally larger than physics hitbox for visibility
+const CAR_LENGTH = 8.0;
+const CAR_WIDTH  = 4.0;
+const NOSE_LENGTH = 2.5;
 
-// Car color — white body, distinct from AI car (Phase 6 will use different color)
-const CAR_BODY_COLOR = 0xeeeeee;
-const CAR_NOSE_COLOR = 0xff4444; // Red nose accent for forward direction readability
+// Colors
+const CAR_BODY_COLOR = 0x2288ff; // Blue body — easy to spot on grey track
+const CAR_ROOF_COLOR = 0x1166dd; // Darker center stripe
+const CAR_NOSE_COLOR = 0xff3333; // Red front — unmistakable heading indicator
 
 export class CarRenderer {
   readonly container: Container;
-  private body: Graphics;
-  private nose: Graphics;
 
   constructor() {
     this.container = new Container();
 
-    // Body: rectangle centered at origin, heading is +X axis (engine convention).
-    // PixiJS container transform handles world positioning and rotation.
-    // Half-dimensions:
     const hw = CAR_WIDTH / 2;
     const hl = CAR_LENGTH / 2;
 
-    this.body = new Graphics();
-    // Rectangle from (-hl, -hw) to (+hl, +hw)
-    this.body.rect(-hl, -hw, CAR_LENGTH, CAR_WIDTH).fill(CAR_BODY_COLOR);
-    this.container.addChild(this.body);
+    // Body rectangle
+    const body = new Graphics();
+    body.rect(-hl, -hw, CAR_LENGTH, CAR_WIDTH).fill(CAR_BODY_COLOR);
+    this.container.addChild(body);
 
-    // Nose: small triangle at the front (+X direction) for heading clarity
-    this.nose = new Graphics();
-    this.nose.poly([
-       hl + NOSE_LENGTH, 0,   // tip of nose (forward)
-       hl, -hw * 0.6,          // left of nose base
-       hl,  hw * 0.6,          // right of nose base
+    // Center stripe (roof line) — reinforces forward direction
+    const stripe = new Graphics();
+    stripe.rect(-hl + 1, -hw * 0.25, CAR_LENGTH - 1, CAR_WIDTH * 0.5).fill(CAR_ROOF_COLOR);
+    this.container.addChild(stripe);
+
+    // Big red nose triangle — unmistakable "this is the front"
+    const nose = new Graphics();
+    nose.poly([
+       hl + NOSE_LENGTH, 0,
+       hl, -hw * 0.8,
+       hl,  hw * 0.8,
     ]).fill(CAR_NOSE_COLOR);
-    this.container.addChild(this.nose);
+    this.container.addChild(nose);
+
+    // Rear accent (small dark bar at the back)
+    const rear = new Graphics();
+    rear.rect(-hl - 0.5, -hw * 0.7, 1.0, CAR_WIDTH * 1.4).fill(0x333333);
+    this.container.addChild(rear);
   }
 
-  /**
-   * Update car sprite position and heading each render frame.
-   * Called with interpolated values (not raw tick state).
-   *
-   * @param worldX - Interpolated world X position
-   * @param worldY - Interpolated world Y position
-   * @param heading - Interpolated heading in radians (engine: 0 = +X east)
-   */
   update(worldX: number, worldY: number, heading: number): void {
     this.container.position.set(worldX, worldY);
-    // Engine heading 0 = +X. PixiJS rotation 0 = +X (same x-axis convention).
-    // But PixiJS Y is down (clockwise positive), engine Y is up (CCW positive).
-    // Car shape is drawn with forward = +X, so PixiJS rotation = -heading
-    // to flip from engine CCW convention to PixiJS CW convention.
-    // The camera also applies worldContainer.rotation = -(heading + PI/2),
-    // which already flips world Y. The car container's own rotation corrects for
-    // the Y-flip: rotation = heading (not negated) within the already-flipped world.
+    // WorldContainer has scale.y = -zoom (Y-flip), which mirrors rotation direction.
+    // Use heading directly — the Y-flip already converts engine CCW to screen CW.
     this.container.rotation = heading;
   }
 }

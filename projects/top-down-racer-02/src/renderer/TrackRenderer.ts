@@ -9,7 +9,7 @@ const COLOR_FINISH_WHITE   = 0xffffff;
 const COLOR_FINISH_DARK    = 0x111111;
 
 const WALL_STROKE_WIDTH    = 2.0;
-const FINISH_SQUARES       = 10; // Number of alternating squares across finish line
+const FINISH_SQUARES       = 8; // Number of alternating squares across finish line
 
 /**
  * Build all track graphics and cache them as a single GPU texture.
@@ -81,7 +81,7 @@ function buildFinishLine(track: TrackState): Graphics {
     // gate.direction is the unit vector along the track centerline at this gate
     const perpX = -gate.direction.y;
     const perpY =  gate.direction.x;
-    const halfThick = 2.5; // Half-thickness of the checkered strip in world units
+    const halfThick = 5.0; // Half-thickness of the checkered strip in world units
 
     // Quad corners for this square
     const qx0 = x0 + perpX * halfThick;

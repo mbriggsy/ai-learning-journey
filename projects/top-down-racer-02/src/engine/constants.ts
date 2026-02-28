@@ -14,29 +14,29 @@ export const DT = 1 / 60;
 /** Car body and drivetrain parameters. */
 export const CAR = {
   /** Car mass in kg */
-  mass: 1200,
+  mass: 1000,
   /** Weight in Newtons (mass * gravity) */
-  weight: 1200 * 9.81,
+  weight: 1000 * 9.81,
   /** Wheelbase in game units (front axle to rear axle) */
-  wheelbase: 2.6,
+  wheelbase: 2.0,
   /** Distance from CG to front axle */
-  cgToFront: 1.2,
-  /** Distance from CG to rear axle (slightly rearward for natural oversteer per MECH-05) */
-  cgToRear: 1.4,
+  cgToFront: 1.0,
+  /** Distance from CG to rear axle (balanced — neutral handling) */
+  cgToRear: 1.0,
   /** CG height for weight transfer calculation (MECH-03) */
   cgHeight: 0.5,
   /** Car length in game units */
   length: 4.0,
   /** Car width in game units */
   width: 2.0,
-  /** Maximum engine force in game-Newtons -- tuned for ~4-5s to top speed */
-  maxEngineForce: 60000,
+  /** Maximum engine force in game-Newtons */
+  maxEngineForce: 27500,
   /** Maximum brake force in game-Newtons -- stronger than engine for meaningful braking */
-  maxBrakeForce: 90000,
+  maxBrakeForce: 40000,
   /** Aerodynamic drag coefficient (drag = coeff * v * |v|) */
-  dragCoefficient: 1.5,
+  dragCoefficient: 0.6,
   /** Rolling resistance factor */
-  rollingResistance: 200,
+  rollingResistance: 100,
   /** Maximum speed cap in units/sec (CONTEXT: 150-200 range) */
   maxSpeed: 200,
 } as const;
@@ -44,11 +44,11 @@ export const CAR = {
 /** Simplified Pacejka tire model parameters (MECH-04). */
 export const TIRE = {
   /** Stiffness factor -- how quickly grip builds with slip angle */
-  B: 8.0,
+  B: 24.0,
   /** Shape factor -- controls peak width */
   C: 1.4,
   /** Base friction coefficient */
-  mu: 1.0,
+  mu: 3.0,
 } as const;
 
 /**
@@ -63,7 +63,7 @@ export const SURFACE_GRIP: Record<number, number> = {
 /** Input smoothing response rates (MECH-01, MECH-02). */
 export const INPUT_RATES = {
   /** Steering response rate (units/sec toward target) */
-  steer: 4.0,
+  steer: 20.0,
   /** Throttle response rate */
   throttle: 6.0,
   /** Brake response rate (fastest -- brakes respond immediately) */
@@ -75,8 +75,8 @@ export const WALL_FRICTION = 0.3;
 
 /** Steering geometry parameters (MECH-06). */
 export const STEER = {
-  /** Maximum front wheel angle in radians (~34 degrees) */
-  maxAngle: 0.6,
+  /** Maximum front wheel angle in radians (~46 degrees) */
+  maxAngle: 0.8,
   /** Speed reduction coefficient -- reduces steering authority at high speed */
-  speedFactor: 0.006,
+  speedFactor: 0.002,
 } as const;

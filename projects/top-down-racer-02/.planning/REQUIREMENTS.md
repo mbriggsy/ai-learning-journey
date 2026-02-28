@@ -15,8 +15,8 @@ Requirements for initial release. Each maps to roadmap phases.
 - [ ] **MECH-04**: Tire grip is a function of load, slip angle, and surface type
 - [ ] **MECH-05**: Natural oversteer emerges from physics (no scripted drift)
 - [ ] **MECH-06**: Steering authority reduces at higher speed
-- [ ] **MECH-07**: Three surface types: road (full grip), runoff (reduced grip + drag), wall (hard boundary)
-- [ ] **MECH-08**: Wall collision slides car along wall with speed penalty proportional to impact angle
+- [x] **MECH-07**: Three surface types: road (full grip), runoff (reduced grip + drag), wall (hard boundary)
+- [x] **MECH-08**: Wall collision slides car along wall with speed penalty proportional to impact angle
 - [x] **MECH-09**: Spline-based track geometry with centerline + width, closed loops only
 - [ ] **MECH-10**: Checkpoint gates along spline (20-50 per track, crossed in order)
 - [ ] **MECH-11**: Lap timing tracks current lap and best lap
@@ -78,7 +78,7 @@ Requirements for initial release. Each maps to roadmap phases.
 
 ### Tracks
 
-- [ ] **TRK-01**: 1 primary track with varied corners (hairpins, sweepers, chicanes)
+- [x] **TRK-01**: 1 primary track with varied corners (hairpins, sweepers, chicanes)
 - [ ] **TRK-02**: 2 additional tracks with different character (3 total)
 - [ ] **TRK-03**: Track selection screen with thumbnails and best times
 
@@ -180,8 +180,8 @@ Which phases cover which requirements. Updated during roadmap creation.
 | MECH-04 | Phase 1: Core Simulation Engine | Pending |
 | MECH-05 | Phase 1: Core Simulation Engine | Pending |
 | MECH-06 | Phase 1: Core Simulation Engine | Pending |
-| MECH-07 | Phase 1: Core Simulation Engine | Pending |
-| MECH-08 | Phase 1: Core Simulation Engine | Pending |
+| MECH-07 | Phase 1: Core Simulation Engine | Complete |
+| MECH-08 | Phase 1: Core Simulation Engine | Complete |
 | MECH-09 | Phase 1: Core Simulation Engine | Complete |
 | MECH-10 | Phase 1: Core Simulation Engine | Pending |
 | MECH-11 | Phase 1: Core Simulation Engine | Pending |
@@ -225,7 +225,7 @@ Which phases cover which requirements. Updated during roadmap creation.
 | AVH-03 | Phase 6: AI vs Human Mode | Pending |
 | AVH-04 | Phase 6: AI vs Human Mode | Pending |
 | AVH-05 | Phase 6: AI vs Human Mode | Pending |
-| TRK-01 | Phase 1: Core Simulation Engine | Pending |
+| TRK-01 | Phase 1: Core Simulation Engine | Complete |
 | TRK-02 | Phase 3: Game Features & Polish | Pending |
 | TRK-03 | Phase 3: Game Features & Polish | Pending |
 | LDB-01 | Phase 6: AI vs Human Mode | Pending |

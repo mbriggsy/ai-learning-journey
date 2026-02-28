@@ -155,6 +155,13 @@ export class OverlayRenderer {
     restart.y = this.screenH / 2 + 58;
     this.pauseContainer.addChild(restart);
 
+    // Quit to Track Select
+    const quit = new Text({ text: 'Press Q — Quit to Track Select', style: PAUSE_SUB_FONT });
+    quit.anchor.set(0.5);
+    quit.x = this.screenW / 2;
+    quit.y = this.screenH / 2 + 86;
+    this.pauseContainer.addChild(quit);
+
     this.container.addChild(this.pauseContainer);
   }
 

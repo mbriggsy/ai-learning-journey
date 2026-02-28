@@ -89,7 +89,12 @@ export class WorldRenderer {
     );
   }
 
+  /** Reset for a new track — clears track graphics so initTrack rebuilds on next render. */
   reset(): void {
     this.camera.reset();
+    if (this.trackBuilt) {
+      this.worldContainer.removeChildren();
+      this.trackBuilt = false;
+    }
   }
 }

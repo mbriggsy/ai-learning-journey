@@ -324,6 +324,11 @@ export class EffectsRenderer {
     this.wasColliding = false;
   }
 
+  /** Public reset for track switching — clears all effects. */
+  reset(): void {
+    this.clearAll();
+  }
+
   /** RI-06: Public cleanup for screen transitions / GameLoop teardown. */
   destroy(): void {
     this.clearAll();

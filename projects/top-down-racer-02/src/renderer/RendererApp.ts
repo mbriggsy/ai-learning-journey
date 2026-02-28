@@ -1,12 +1,13 @@
 import { Application, Container, Graphics, Text } from 'pixi.js';
 import { GameLoop } from './GameLoop';
-import { initInputHandler, isKeyDown } from './InputHandler';
-import { GamePhase } from '../engine/RaceController';
+import { initInputHandler } from './InputHandler';
 import { EffectsRenderer } from './EffectsRenderer';
 import { HudRenderer } from './HudRenderer';
 import { OverlayRenderer } from './OverlayRenderer';
 import { SoundManager } from './SoundManager';
 import { WorldRenderer } from './WorldRenderer';
+import { ScreenManager } from './ScreenManager';
+import { TRACKS } from '../tracks/registry';
 
 export class RendererApp {
   private app!: Application;
@@ -18,6 +19,7 @@ export class RendererApp {
   private overlayRenderer!: OverlayRenderer;
   private soundManager!: SoundManager;
   private worldRenderer!: WorldRenderer;
+  private screenManager!: ScreenManager;
 
   async init(): Promise<void> {
     // Step 1: Init PixiJS Application (async in v8)
@@ -50,43 +52,45 @@ export class RendererApp {
       }
     });
 
-    // Step 5: Create two-container scene graph
+    // Step 5: Create two-container scene graph (hidden until gameplay)
     this.worldContainer = new Container();
     this.hudContainer = new Container();
-    // Note: do NOT add to stage yet — loading screen is shown first.
-    // Containers are added when game starts.
+    this.worldContainer.visible = false;
+    this.hudContainer.visible = false;
+    this.app.stage.addChild(this.worldContainer);
+    this.app.stage.addChild(this.hudContainer);
 
-    // Step 6: Create game loop
-    this.gameLoop = new GameLoop();
+    // Step 6: Create GameLoop with default track (renderers wire once)
+    this.gameLoop = new GameLoop(TRACKS[0].controlPoints);
 
-    // Step 6b: Wire World renderer (VIS-01, VIS-02, VIS-05)
+    // Step 6b: Wire World renderer
     this.worldRenderer = new WorldRenderer(this.worldContainer);
     this.gameLoop.onRender((prev, curr, alpha, race) => {
       this.worldRenderer.render(prev, curr, alpha, race, this.app.screen.width, this.app.screen.height);
     });
 
-    // Step 6b2: Wire Effects renderer (VIS-03, VIS-04, VIS-07, VIS-08)
+    // Step 6b2: Wire Effects renderer
     this.effectsRenderer = new EffectsRenderer(this.worldContainer);
     this.gameLoop.onRender((prev, curr, alpha, race) => {
       this.effectsRenderer.render(prev, curr, alpha, race);
     });
 
-    // Step 6c: Wire HUD renderer (HUD-01..05)
+    // Step 6c: Wire HUD renderer
     this.hudRenderer = new HudRenderer(this.hudContainer);
     this.gameLoop.onRender((prev, curr, alpha, race) => {
       this.hudRenderer.render(prev, curr, alpha, race);
     });
 
-    // Step 6d: Wire Overlay renderer (MECH-12, MECH-13, UX-01, UX-02)
+    // Step 6d: Wire Overlay renderer
     this.overlayRenderer = new OverlayRenderer(this.hudContainer);
     this.gameLoop.onRender((prev, curr, alpha, race) => {
       this.overlayRenderer.render(prev, curr, alpha, race);
     });
 
-    // Step 6e: Sound system (SND-01..05)
+    // Step 6e: Sound system
     this.soundManager = new SoundManager();
 
-    // Initialize audio on first keydown/click (browser autoplay policy requires user gesture)
+    // Initialize audio on first keydown/click (browser autoplay policy)
     const initAudio = () => {
       this.soundManager.init();
       window.removeEventListener('keydown', initAudio);
@@ -99,40 +103,39 @@ export class RendererApp {
       this.soundManager.update(prev, curr, alpha, race);
     });
 
-    // Step 7: Brief simulated loading (PixiJS init is instant for this project;
-    //         this gives the browser one frame to paint the loading screen)
+    // Step 7: Brief simulated loading
     await new Promise<void>((resolve) => {
       this.app.ticker.addOnce(() => {
-        // Simulate progress bar completion
         this.updateLoadingProgress(loadingScreen, 1.0);
         resolve();
       });
     });
 
-    // Step 8: Remove loading screen, add game containers
+    // Step 8: Remove loading screen
     this.app.stage.removeChild(loadingScreen);
-    this.app.stage.addChild(this.worldContainer);
-    this.app.stage.addChild(this.hudContainer); // HUD on top of world
 
-    // Step 9: Attach ticker — game loop runs every frame
-    this.app.ticker.add((ticker) => {
-      this.gameLoop.tick(ticker.deltaMS);
+    // Step 9: Create ScreenManager (shows main menu)
+    this.screenManager = new ScreenManager({
+      app: this.app,
+      stage: this.app.stage,
+      worldContainer: this.worldContainer,
+      hudContainer: this.hudContainer,
+      gameLoop: this.gameLoop,
+      soundManager: this.soundManager,
+      worldRenderer: this.worldRenderer,
+      hudRenderer: this.hudRenderer,
+      effectsRenderer: this.effectsRenderer,
     });
-
-    // Step 10: Start the game with countdown
-    this.gameLoop.startGame();
   }
 
   /** Build the loading screen: title centered, progress bar below. */
   private buildLoadingScreen(): Container {
     const container = new Container();
 
-    // Dark background
     const bg = new Graphics();
     bg.rect(0, 0, window.innerWidth, window.innerHeight).fill(0x0a0a0a);
     container.addChild(bg);
 
-    // Game title
     const title = new Text({
       text: 'Top-Down Racer',
       style: {
@@ -148,7 +151,6 @@ export class RendererApp {
     title.y = window.innerHeight / 2 - 40;
     container.addChild(title);
 
-    // Progress bar background
     const barW = 300;
     const barH = 6;
     const barX = window.innerWidth / 2 - barW / 2;
@@ -158,13 +160,11 @@ export class RendererApp {
     barBg.rect(barX, barY, barW, barH).fill(0x333333);
     container.addChild(barBg);
 
-    // Progress bar fill (starts empty — updated via updateLoadingProgress)
     const barFill = new Graphics();
     barFill.label = 'progress-fill';
     barFill.rect(barX, barY, 0, barH).fill(0x44aaff);
     container.addChild(barFill);
 
-    // Store barX/barW for update
     (container as any).__barX = barX;
     (container as any).__barY = barY;
     (container as any).__barW = barW;
@@ -181,10 +181,4 @@ export class RendererApp {
     barFill.clear();
     barFill.rect(x, y, w * progress, h).fill(0x44aaff);
   }
-
-  get pixiApp(): Application { return this.app; }
-  get world(): Container { return this.worldContainer; }
-  get hud(): Container { return this.hudContainer; }
-  get loop(): GameLoop { return this.gameLoop; }
-  get sound(): SoundManager { return this.soundManager; }
 }

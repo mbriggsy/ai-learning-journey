@@ -68,6 +68,8 @@ export interface RaceControlSignals {
   togglePause: boolean;
   /** True on the first tick of a restart request (debounced by caller) */
   restart: boolean;
+  /** True on the first tick of a quit-to-menu request (debounced by caller) */
+  quitToMenu: boolean;
 }
 
 // ─────────────────────────────────────────────────────────
@@ -81,6 +83,8 @@ export enum RaceAction {
   ResetNoCd = 'reset_no_cd',
   /** Car should respawn at last checkpoint (fade complete) */
   Respawn = 'respawn',
+  /** Player wants to quit to track select */
+  QuitToMenu = 'quit_to_menu',
 }
 
 // ─────────────────────────────────────────────────────────
@@ -182,6 +186,11 @@ export class RaceController {
 
   private tickPaused(signals: RaceControlSignals): RaceAction {
     const rs = this._state;
+
+    // Quit to menu (highest priority in pause)
+    if (signals.quitToMenu) {
+      return RaceAction.QuitToMenu;
+    }
 
     // Restart from pause (priority over resume)
     if (signals.restart) {

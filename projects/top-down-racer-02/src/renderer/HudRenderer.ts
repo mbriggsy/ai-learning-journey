@@ -320,6 +320,17 @@ export class HudRenderer {
   // Main render -- called every animation frame
   // ──────────────────────────────────────────────────────
 
+  /** Reset HUD state for a new track (rebuilds minimap on next render). */
+  reset(): void {
+    this.trackOutlineBuilt = false;
+    this.minimapTrackGraphics.clear();
+    this.minimapGraphics.clear();
+    this.lastLapDisplay = '';
+    this.lastCurrentLapDisplay = '';
+    this.lastBestLapDisplay = '';
+    this.lapFlashTimer = 0;
+  }
+
   /**
    * Update all HUD elements from current world state.
    * Uses curr (not interpolated) for game state values -- timing data is tick-accurate.

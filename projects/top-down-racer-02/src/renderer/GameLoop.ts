@@ -10,7 +10,6 @@ import {
   type RaceState,
 } from '../engine/RaceController';
 import { getInput, isKeyDown, ZERO_INPUT } from './InputHandler';
-import { TRACK_01_CONTROL_POINTS } from '../tracks/track01';
 
 const FIXED_DT_MS = 1000 / 60;
 const DEFAULT_CHECKPOINT_COUNT = 30;
@@ -24,7 +23,7 @@ export type RenderCallback = (
 ) => void;
 
 export class GameLoop {
-  private track = buildTrack(TRACK_01_CONTROL_POINTS, DEFAULT_CHECKPOINT_COUNT);
+  private track;
   private currState: WorldState;
   private prevState: WorldState;
   private raceController = new RaceController();
@@ -32,10 +31,26 @@ export class GameLoop {
   private renderCallbacks: RenderCallback[] = [];
   private escapeWasDown = false;
   private rWasDown = false;
+  private qWasDown = false;
+  private abortTick = false;
 
-  constructor() {
+  /** Callback invoked when player presses Q during pause. */
+  onQuitToMenu: (() => void) | null = null;
+
+  constructor(trackPoints: TrackControlPoint[]) {
+    this.track = buildTrack(trackPoints, DEFAULT_CHECKPOINT_COUNT);
     this.currState = createWorld(this.track);
     this.prevState = this.currState;
+  }
+
+  /** Load a new track and reset the game. */
+  loadTrack(points: TrackControlPoint[]): void {
+    this.track = buildTrack(points, DEFAULT_CHECKPOINT_COUNT);
+    this.currState = createWorld(this.track);
+    this.prevState = this.currState;
+    this.raceController.reset(true);
+    this.accumulator = 0;
+    this.abortTick = false;
   }
 
   /** Register a callback called every render frame with interpolation alpha. */
@@ -54,12 +69,21 @@ export class GameLoop {
     const signals = this.buildSignals();
 
     while (this.accumulator >= FIXED_DT_MS) {
+      if (this.abortTick) break;
       this.prevState = this.currState;
       this.currState = this.stepGame(signals);
       // Consume one-shot signals after first sub-step
       signals.togglePause = false;
       signals.restart = false;
+      signals.quitToMenu = false;
       this.accumulator -= FIXED_DT_MS;
+    }
+
+    // RI-01: If quit-to-menu fired, skip render callbacks and reset
+    if (this.abortTick) {
+      this.abortTick = false;
+      this.accumulator = 0;
+      return;
     }
 
     const alpha = this.accumulator / FIXED_DT_MS;
@@ -72,14 +96,17 @@ export class GameLoop {
   private buildSignals(): RaceControlSignals {
     const escapeDown = isKeyDown('Escape');
     const rDown = isKeyDown('KeyR');
+    const qDown = isKeyDown('KeyQ');
 
     const signals: RaceControlSignals = {
       togglePause: escapeDown && !this.escapeWasDown,
       restart: rDown && !this.rWasDown,
+      quitToMenu: qDown && !this.qWasDown,
     };
 
     this.escapeWasDown = escapeDown;
     this.rWasDown = rDown;
+    this.qWasDown = qDown;
     return signals;
   }
 
@@ -94,6 +121,10 @@ export class GameLoop {
         return this.currState;
       case RaceAction.Respawn:
         return this.completeRespawn();
+      case RaceAction.QuitToMenu:
+        this.abortTick = true;
+        this.onQuitToMenu?.();
+        return this.currState;
       default:
         break;
     }

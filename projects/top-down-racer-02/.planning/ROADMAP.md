@@ -13,9 +13,10 @@
   - [x] 01-02-PLAN.md -- Track builder, collision detection/response, primary track data
   - [x] 01-03-PLAN.md -- Car physics TDD: bicycle model, weight transfer, tire forces, input smoothing
   - [x] 01-04-PLAN.md -- Checkpoint system, world step function, determinism verification
-- [ ] **Phase 2: PixiJS Renderer + Playable Game** -- 14 requirements, 5 plans (In Progress: 2/5)
+- [ ] **Phase 2: PixiJS Renderer + Playable Game** -- 14 requirements, 5 plans (In Progress: 3/5)
   Plans:
   - [x] 02-01-PLAN.md -- PixiJS bootstrap, game loop, input handler, game state machine
+  - [x] 02-02-PLAN.md -- Track & car rendering: camera controller, track renderer, car sprite, world renderer
   - [x] 02-03-PLAN.md -- HUD elements: speedometer, lap time, best lap, lap counter, minimap
 - [ ] **Phase 3: Game Features & Polish** -- 13 requirements (VIS-03, 04, 07, 08, SND-01..05, TRK-02, 03, UX-03, 04)
 - [ ] **Phase 4: Gymnasium Environment Wrapper** -- 9 requirements (AI-01..07, 12, 13)

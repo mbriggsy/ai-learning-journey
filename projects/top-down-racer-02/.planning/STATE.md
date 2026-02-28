@@ -18,14 +18,14 @@ progress:
 
 ## Current Phase
 
-**Phase 2: PixiJS Renderer + Playable Game** -- IN PROGRESS (Plans 1, 3 complete)
+**Phase 2: PixiJS Renderer + Playable Game** -- IN PROGRESS (Plans 1, 2, 3 complete)
 
 ## Phase Status
 
 | Phase | Status | Progress |
 |-------|--------|----------|
 | 1. Core Simulation Engine | Complete (Plan 4/4 done) | 100% |
-| 2. PixiJS Renderer + Playable Game | In Progress (Plans 1, 3 done) | 40% |
+| 2. PixiJS Renderer + Playable Game | In Progress (Plans 1, 2, 3 done) | 60% |
 | 3. Game Features & Polish | Blocked by Phase 2 | 0% |
 | 4. Gymnasium Environment Wrapper | Blocked by Phase 2 | 0% |
 | 5. AI Training Pipeline | Blocked by Phase 4 | 0% |
@@ -41,6 +41,7 @@ progress:
 | 2026-02-27 | Low-speed guard at 0.5 units/sec prevents slip angle singularity | Avoids div-by-near-zero in atan2 at standstill |
 | 2026-02-27 | Tuned engine/drag constants for game-feel acceleration | Original constants gave ~30 units/s max; retuned to reach 150-200 in 4-5s |
 | 2026-02-27 | PixiJS v8 label API (not name) for child lookups | v8 replaced name/getChildByName with label/getChildByLabel |
+| 2026-02-27 | PixiJS v8 cacheAsTexture(true) requires boolean arg | v8 changed from no-arg to required boolean/options parameter |
 
 ## Blockers
 

@@ -50,6 +50,7 @@ describe('createInitialTimingState', () => {
     const timing = createInitialTimingState();
     expect(timing.currentLapTicks).toBe(0);
     expect(timing.bestLapTicks).toBe(-1);
+    expect(timing.totalRaceTicks).toBe(0);
     expect(timing.currentLap).toBe(1);
     expect(timing.lastCheckpointIndex).toBe(0);
     expect(timing.lapComplete).toBe(false);
@@ -162,6 +163,7 @@ describe('updateTiming - sequential crossing', () => {
     const timing: TimingState = {
       currentLapTicks: 10,
       bestLapTicks: -1,
+      totalRaceTicks: 0,
       currentLap: 1,
       lastCheckpointIndex: 0,
       lapComplete: false,
@@ -175,6 +177,7 @@ describe('updateTiming - sequential crossing', () => {
     const timing: TimingState = {
       currentLapTicks: 20,
       bestLapTicks: -1,
+      totalRaceTicks: 0,
       currentLap: 1,
       lastCheckpointIndex: 1,
       lapComplete: false,
@@ -189,6 +192,7 @@ describe('updateTiming - sequential crossing', () => {
     let timing: TimingState = {
       currentLapTicks: 20,
       bestLapTicks: -1,
+      totalRaceTicks: 0,
       currentLap: 1,
       lastCheckpointIndex: 1,
       lapComplete: false,
@@ -227,6 +231,7 @@ describe('updateTiming - lap completion', () => {
     const timing: TimingState = {
       currentLapTicks: 99,
       bestLapTicks: -1,
+      totalRaceTicks: 0,
       currentLap: 1,
       lastCheckpointIndex: 3,
       lapComplete: false,
@@ -241,6 +246,7 @@ describe('updateTiming - lap completion', () => {
     const timing: TimingState = {
       currentLapTicks: 200,
       bestLapTicks: -1,
+      totalRaceTicks: 0,
       currentLap: 1,
       lastCheckpointIndex: 3,
       lapComplete: false,
@@ -253,6 +259,7 @@ describe('updateTiming - lap completion', () => {
     const timing: TimingState = {
       currentLapTicks: 149, // This tick brings it to 150
       bestLapTicks: -1,
+      totalRaceTicks: 0,
       currentLap: 1,
       lastCheckpointIndex: 3,
       lapComplete: false,
@@ -265,6 +272,7 @@ describe('updateTiming - lap completion', () => {
     const timing: TimingState = {
       currentLapTicks: 99, // This tick brings it to 100 — faster than 150
       bestLapTicks: 150,
+      totalRaceTicks: 0,
       currentLap: 2,
       lastCheckpointIndex: 3,
       lapComplete: false,
@@ -277,6 +285,7 @@ describe('updateTiming - lap completion', () => {
     const timing: TimingState = {
       currentLapTicks: 199, // This tick brings it to 200 — slower than 100
       bestLapTicks: 100,
+      totalRaceTicks: 0,
       currentLap: 3,
       lastCheckpointIndex: 3,
       lapComplete: false,
@@ -289,6 +298,7 @@ describe('updateTiming - lap completion', () => {
     let timing: TimingState = {
       currentLapTicks: 49,
       bestLapTicks: -1,
+      totalRaceTicks: 0,
       currentLap: 1,
       lastCheckpointIndex: 3,
       lapComplete: false,
@@ -332,6 +342,7 @@ describe('updateTiming - tick counting', () => {
     const timing: TimingState = {
       currentLapTicks: 299,
       bestLapTicks: -1,
+      totalRaceTicks: 0,
       currentLap: 1,
       lastCheckpointIndex: 1, // All gates crossed for 2-gate track
       lapComplete: false,

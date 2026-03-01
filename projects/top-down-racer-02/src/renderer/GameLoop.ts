@@ -133,8 +133,10 @@ export class GameLoop {
     switch (phase) {
       case GamePhase.Racing:
         return stepWorld(this.currState, getInput());
-      case GamePhase.Countdown:
-        return stepWorld(this.currState, ZERO_INPUT);
+      case GamePhase.Countdown: {
+        const next = stepWorld(this.currState, ZERO_INPUT);
+        return { ...next, timing: this.currState.timing }; // Don't advance lap timer during countdown
+      }
       case GamePhase.Paused:
       case GamePhase.Respawning:
       case GamePhase.Loading:

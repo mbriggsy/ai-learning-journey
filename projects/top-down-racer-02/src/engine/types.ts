@@ -143,6 +143,8 @@ export interface TimingState {
   currentLapTicks: number;
   /** Best lap time in ticks (-1 if no completed lap yet) */
   bestLapTicks: number;
+  /** Total race ticks since countdown GO (never resets except on restart) */
+  totalRaceTicks: number;
   /** Current lap number (1-indexed) */
   currentLap: number;
   /** Index of the last checkpoint crossed */

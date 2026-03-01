@@ -30,6 +30,7 @@ export function createInitialTimingState(): TimingState {
   return {
     currentLapTicks: 0,
     bestLapTicks: -1,
+    totalRaceTicks: 0,
     currentLap: 1,
     lastCheckpointIndex: 0,
     lapComplete: false,
@@ -120,8 +121,10 @@ export function updateTiming(
 ): TimingState {
   const numCheckpoints = checkpoints.length;
   if (numCheckpoints === 0) {
-    return { ...timing, currentLapTicks: timing.currentLapTicks + 1, lapComplete: false };
+    return { ...timing, currentLapTicks: timing.currentLapTicks + 1, totalRaceTicks: timing.totalRaceTicks + 1, lapComplete: false };
   }
+
+  const nextTotalRaceTicks = timing.totalRaceTicks + 1;
 
   // The next expected checkpoint index
   const expectedNext = (timing.lastCheckpointIndex + 1) % numCheckpoints;
@@ -134,6 +137,7 @@ export function updateTiming(
     return {
       ...timing,
       currentLapTicks: timing.currentLapTicks + 1,
+      totalRaceTicks: nextTotalRaceTicks,
       lapComplete: false,
     };
   }
@@ -155,6 +159,7 @@ export function updateTiming(
     return {
       currentLapTicks: 0,
       bestLapTicks: newBest,
+      totalRaceTicks: nextTotalRaceTicks,
       currentLap: timing.currentLap + 1,
       lastCheckpointIndex: 0,
       lapComplete: true,
@@ -165,6 +170,7 @@ export function updateTiming(
   return {
     ...timing,
     currentLapTicks: timing.currentLapTicks + 1,
+    totalRaceTicks: nextTotalRaceTicks,
     lastCheckpointIndex: expectedNext,
     lapComplete: false,
   };

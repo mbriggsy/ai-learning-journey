@@ -69,6 +69,7 @@ function hashState(state: WorldState): string {
     timing: {
       ticks: state.timing.currentLapTicks,
       best: state.timing.bestLapTicks,
+      total: state.timing.totalRaceTicks,
       lap: state.timing.currentLap,
       cp: state.timing.lastCheckpointIndex,
     },

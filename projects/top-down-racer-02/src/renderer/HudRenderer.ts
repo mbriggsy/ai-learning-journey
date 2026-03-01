@@ -65,9 +65,11 @@ export class HudRenderer {
   private lapCounterText!: Text;
   private lastLapDisplay = '';
 
-  // Lap times (top-right, HUD-02 + HUD-03)
+  // Timing stack (top-right: total, current lap, best lap)
+  private totalTimeText!: Text;
   private currentLapText!: Text;
   private bestLapText!: Text;
+  private lastTotalTimeDisplay = '';
   private lastCurrentLapDisplay = '';
   private lastBestLapDisplay = '';
   private lapFlashTimer = 0; // Ticks remaining for green flash
@@ -180,31 +182,47 @@ export class HudRenderer {
 
     const panel = new Graphics();
     panel.label = 'time-panel';
-    panel.rect(x - 4, y - 4, 188, 62).fill({ color: 0x000000, alpha: PANEL_ALPHA });
+    panel.rect(x - 4, y - 4, 188, 82).fill({ color: 0x000000, alpha: PANEL_ALPHA });
     this.container.addChild(panel);
 
-    // Current lap time (larger)
-    this.currentLapText = new Text({
+    // Total race time (top, larger — never resets except on restart)
+    this.totalTimeText = new Text({
       text: '0:00.000',
       style: { ...HUD_TEXT_STYLE, fontSize: 24 },
     });
+    this.totalTimeText.x = x;
+    this.totalTimeText.y = y;
+    this.container.addChild(this.totalTimeText);
+
+    // Current lap time (smaller, below total)
+    this.currentLapText = new Text({
+      text: 'Lap: 0:00.000',
+      style: HUD_TEXT_STYLE_SMALL,
+    });
     this.currentLapText.x = x;
-    this.currentLapText.y = y;
+    this.currentLapText.y = y + 30;
     this.container.addChild(this.currentLapText);
 
-    // Best lap time (smaller, below)
+    // Best lap time (smaller, below current)
     this.bestLapText = new Text({
       text: 'Best: --:--.---',
       style: HUD_TEXT_STYLE_SMALL,
     });
     this.bestLapText.x = x;
-    this.bestLapText.y = y + 30;
+    this.bestLapText.y = y + 50;
     this.container.addChild(this.bestLapText);
   }
 
-  private updateLapTimes(currentLapTicks: number, bestLapTicks: number, lapComplete: boolean, isNewBest: boolean): void {
+  private updateLapTimes(totalRaceTicks: number, currentLapTicks: number, bestLapTicks: number, lapComplete: boolean, isNewBest: boolean): void {
+    // Total race time
+    const totalDisplay = formatTime(totalRaceTicks);
+    if (this.lastTotalTimeDisplay !== totalDisplay) {
+      this.lastTotalTimeDisplay = totalDisplay;
+      this.totalTimeText.text = totalDisplay;
+    }
+
     // Current lap time
-    const currentDisplay = formatTime(currentLapTicks);
+    const currentDisplay = `Lap: ${formatTime(currentLapTicks)}`;
     if (this.lastCurrentLapDisplay !== currentDisplay) {
       this.lastCurrentLapDisplay = currentDisplay;
       this.currentLapText.text = currentDisplay;
@@ -225,7 +243,7 @@ export class HudRenderer {
       this.lapFlashTimer--;
       this.currentLapText.style.fill = '#44ff88'; // Green flash
     } else {
-      this.currentLapText.style.fill = '#ffffff'; // Normal white
+      this.currentLapText.style.fill = '#aaaaaa'; // Normal small text color
     }
   }
 
@@ -344,6 +362,7 @@ export class HudRenderer {
     this.minimapTrackGraphics.clear();
     this.minimapGraphics.clear();
     this.lastLapDisplay = '';
+    this.lastTotalTimeDisplay = '';
     this.lastCurrentLapDisplay = '';
     this.lastBestLapDisplay = '';
     this.lapFlashTimer = 0;
@@ -369,7 +388,7 @@ export class HudRenderer {
     const prevBest = _prev.timing.bestLapTicks;
     const currBest = timing.bestLapTicks;
     const isNewBest = timing.lapComplete && currBest !== prevBest && currBest > 0;
-    this.updateLapTimes(timing.currentLapTicks, timing.bestLapTicks, timing.lapComplete, isNewBest);
+    this.updateLapTimes(timing.totalRaceTicks, timing.currentLapTicks, timing.bestLapTicks, timing.lapComplete, isNewBest);
 
     // HUD-04: Lap counter
     this.updateLapCounter(timing.currentLap);

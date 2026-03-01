@@ -1,3 +1,10 @@
+/**
+ * Track Selection Screen
+ *
+ * Tactical briefing aesthetic — chamfered cards, filled track thumbnails,
+ * diamond medal pips, subtle grid background. Two clicks to racing.
+ */
+
 import { Container, Graphics, Text } from 'pixi.js';
 import { buildTrack } from '../../engine/track';
 import type { TrackState } from '../../engine/types';
@@ -6,49 +13,35 @@ import { getBestTime, formatTime } from '../BestTimes';
 
 export type TrackSelectAction = { type: 'select'; index: number } | { type: 'back' };
 
-const TITLE_STYLE = {
-  fontFamily: 'monospace',
-  fontSize: 36,
-  fill: '#ffffff',
-  fontWeight: 'bold' as const,
-  letterSpacing: 3,
-};
+// ── Color Palette ────────────────────────────────────────────────────
+const PAL = {
+  BG:           0x08090f,
+  GRID:         0x151820,
+  CARD_BG:      0x111318,
+  CARD_HOVER:   0x181c24,
+  BORDER:       0x252830,
+  ACCENT:       0x00d4ff,
+  ACCENT_DIM:   0x0a3848,
+  TEXT_PRIMARY:  0xf0f2f5,
+  TEXT_SECONDARY:0x8890a0,
+  TEXT_DIM:      0x484e5c,
+  GOLD:         0xffd700,
+  SILVER:       0xb0b8c8,
+  BRONZE:       0xc87840,
+  BEST:         0x44ff88,
+  TRACK_ROAD:   0x2a3040,
+  TRACK_EDGE:   0x3a9ac0,
+  THUMB_BG:     0x0a0c12,
+} as const;
 
-const CARD_NAME_STYLE = {
-  fontFamily: 'monospace',
-  fontSize: 20,
-  fill: '#ffffff',
-  fontWeight: 'bold' as const,
-};
+const FONT = 'monospace';
 
-const CARD_DESC_STYLE = {
-  fontFamily: 'monospace',
-  fontSize: 12,
-  fill: '#999999',
-  wordWrap: true,
-  wordWrapWidth: 210,
-};
+/** Convert a hex number to a CSS color string for dynamic PixiJS Text.style.fill updates. */
+function hex(n: number): string {
+  return '#' + n.toString(16).padStart(6, '0');
+}
 
-const CARD_TIME_STYLE = {
-  fontFamily: 'monospace',
-  fontSize: 14,
-  fill: '#aaaaaa',
-};
-
-const CARD_BEST_STYLE = {
-  fontFamily: 'monospace',
-  fontSize: 14,
-  fill: '#44ff88',
-  fontWeight: 'bold' as const,
-};
-
-const BACK_STYLE = {
-  fontFamily: 'monospace',
-  fontSize: 16,
-  fill: '#888888',
-};
-
-// Thumbnail cache — buildTrack is expensive
+// ── Thumbnail cache ──────────────────────────────────────────────────
 const thumbnailCache = new Map<string, TrackState>();
 function getTrackThumbnail(trackId: string, points: TrackInfo['controlPoints']): TrackState {
   if (!thumbnailCache.has(trackId)) {
@@ -57,138 +50,269 @@ function getTrackThumbnail(trackId: string, points: TrackInfo['controlPoints']):
   return thumbnailCache.get(trackId)!;
 }
 
+// ── Chamfered rectangle (diagonal-cut corners) ──────────────────────
+function chamferedPoly(x: number, y: number, w: number, h: number, c: number): number[] {
+  return [
+    x + c, y,
+    x + w - c, y,
+    x + w, y + c,
+    x + w, y + h - c,
+    x + w - c, y + h,
+    x + c, y + h,
+    x, y + h - c,
+    x, y + c,
+  ];
+}
+
+// ─────────────────────────────────────────────────────────────────────
 export class TrackSelectScreen {
   readonly container = new Container();
   onAction: ((action: TrackSelectAction) => void) | null = null;
 
-  private bg!: Graphics;
+  constructor() { this.build(); }
 
-  constructor() {
-    this.build();
-  }
-
-  /** Rebuild to refresh best times. */
+  /** Rebuild to refresh best times after a race. */
   refresh(): void {
     this.container.removeChildren();
     this.build();
   }
 
+  // ── Layout ───────────────────────────────────────────────────────
   private build(): void {
-    const w = window.innerWidth;
-    const h = window.innerHeight;
+    const sw = window.innerWidth;
+    const sh = window.innerHeight;
 
-    // Dark background
-    this.bg = new Graphics();
-    this.bg.rect(0, 0, w, h).fill(0x0a0a0a);
-    this.container.addChild(this.bg);
+    // Background
+    const bg = new Graphics();
+    bg.rect(0, 0, sw, sh).fill(PAL.BG);
+    this.container.addChild(bg);
 
-    // Title
-    const title = new Text({ text: 'SELECT TRACK', style: TITLE_STYLE });
-    title.anchor.set(0.5);
-    title.x = w / 2;
-    title.y = 60;
-    this.container.addChild(title);
+    // Subtle grid overlay
+    this.buildGrid(sw, sh);
+
+    // Title bar
+    this.buildTitle(sw);
 
     // Track cards
-    const cardW = 240;
-    const cardH = 340;
-    const gap = 30;
+    const cardW = 300;
+    const cardH = 420;
+    const gap = 36;
     const totalW = TRACKS.length * cardW + (TRACKS.length - 1) * gap;
-    const startX = (w - totalW) / 2;
-    const cardY = (h - cardH) / 2 + 10;
+    const startX = (sw - totalW) / 2;
+    const cardY = (sh - cardH) / 2 + 16;
 
     for (let i = 0; i < TRACKS.length; i++) {
-      const trackInfo = TRACKS[i];
       const x = startX + i * (cardW + gap);
-      this.buildCard(trackInfo, i, x, cardY, cardW, cardH);
+      this.buildCard(TRACKS[i], i, x, cardY, cardW, cardH);
     }
 
-    // Back button
-    const back = new Text({ text: '< BACK', style: BACK_STYLE });
-    back.anchor.set(0.5);
-    back.x = w / 2;
-    back.y = h - 50;
-    back.eventMode = 'static';
-    back.cursor = 'pointer';
-    back.on('pointerover', () => { back.style.fill = '#ffffff'; });
-    back.on('pointerout', () => { back.style.fill = '#888888'; });
-    back.on('pointerdown', () => this.onAction?.({ type: 'back' }));
-    this.container.addChild(back);
+    // Back nav
+    this.buildBackButton(sw, sh);
   }
 
-  private buildCard(info: TrackInfo, index: number, x: number, y: number, w: number, h: number): void {
+  // ── Background grid ─────────────────────────────────────────────
+  private buildGrid(sw: number, sh: number): void {
+    const g = new Graphics();
+    const step = 48;
+    for (let x = 0; x < sw; x += step) {
+      g.moveTo(x, 0).lineTo(x, sh);
+    }
+    for (let y = 0; y < sh; y += step) {
+      g.moveTo(0, y).lineTo(sw, y);
+    }
+    g.stroke({ width: 1, color: PAL.GRID, alpha: 0.4 });
+    this.container.addChild(g);
+  }
+
+  // ── Title ───────────────────────────────────────────────────────
+  private buildTitle(sw: number): void {
+    const title = new Text({
+      text: 'SELECT TRACK',
+      style: {
+        fontFamily: FONT,
+        fontSize: 28,
+        fill: PAL.TEXT_PRIMARY,
+        fontWeight: 'bold' as const,
+        letterSpacing: 6,
+      },
+    });
+    title.anchor.set(0.5);
+    title.x = sw / 2;
+    title.y = 50;
+    this.container.addChild(title);
+
+    // Accent rule with center diamond
+    const ruleW = 180;
+    const ruleY = 70;
+    const g = new Graphics();
+    g.moveTo(sw / 2 - ruleW / 2, ruleY).lineTo(sw / 2 + ruleW / 2, ruleY)
+     .stroke({ width: 1, color: PAL.ACCENT, alpha: 0.5 });
+    const d = 4;
+    g.poly([sw / 2, ruleY - d, sw / 2 + d, ruleY, sw / 2, ruleY + d, sw / 2 - d, ruleY])
+     .fill({ color: PAL.ACCENT, alpha: 0.7 });
+    this.container.addChild(g);
+  }
+
+  // ── Card ────────────────────────────────────────────────────────
+  private buildCard(
+    info: TrackInfo,
+    index: number,
+    x: number, y: number,
+    w: number, h: number,
+  ): void {
     const card = new Container();
     card.x = x;
     card.y = y;
+    const cham = 10;
 
-    // Card background
+    // Background shape
     const bg = new Graphics();
-    bg.roundRect(0, 0, w, h, 6).fill({ color: 0x1a1a1a, alpha: 0.95 });
-    bg.roundRect(0, 0, w, h, 6).stroke({ width: 1, color: 0x333333 });
+    this.paintCard(bg, w, h, cham, false);
     card.addChild(bg);
 
-    // Minimap thumbnail
-    const thumbSize = 140;
-    const thumbX = (w - thumbSize) / 2;
-    const thumbY = 16;
-    const thumbGfx = new Graphics();
-    this.drawThumbnail(thumbGfx, info, thumbX, thumbY, thumbSize);
-    card.addChild(thumbGfx);
+    // ── Track number badge ──
+    const badge = new Text({
+      text: String(index + 1).padStart(2, '0'),
+      style: { fontFamily: FONT, fontSize: 11, fill: PAL.TEXT_DIM, letterSpacing: 2 },
+    });
+    badge.x = 14;
+    badge.y = 10;
+    card.addChild(badge);
 
-    // Track name
-    const name = new Text({ text: info.name, style: CARD_NAME_STYLE });
+    // ── Thumbnail ──
+    const pad = 16;
+    const thumbW = w - pad * 2;
+    const thumbH = 170;
+    const thumbX = pad;
+    const thumbY = 26;
+
+    // Thumb bg
+    const tbg = new Graphics();
+    tbg.rect(thumbX, thumbY, thumbW, thumbH).fill({ color: PAL.THUMB_BG, alpha: 0.8 });
+    tbg.rect(thumbX, thumbY, thumbW, thumbH).stroke({ width: 1, color: PAL.BORDER });
+    card.addChild(tbg);
+
+    // Filled minimap — clipped to thumbnail area
+    const thumbClip = new Graphics();
+    thumbClip.rect(thumbX, thumbY, thumbW, thumbH).fill(0xffffff);
+    card.addChild(thumbClip);
+
+    const thumb = new Graphics();
+    thumb.mask = thumbClip;
+    this.drawFilledThumbnail(thumb, info, thumbX, thumbY, thumbW, thumbH);
+    card.addChild(thumb);
+
+    // Accent bar
+    const barY = thumbY + thumbH + 8;
+    const bar = new Graphics();
+    bar.rect(thumbX, barY, thumbW, 2).fill({ color: PAL.ACCENT, alpha: 0.35 });
+    card.addChild(bar);
+
+    // ── Name ──
+    const nameY = barY + 14;
+    const name = new Text({
+      text: info.name.toUpperCase(),
+      style: {
+        fontFamily: FONT,
+        fontSize: 20,
+        fill: PAL.TEXT_PRIMARY,
+        fontWeight: 'bold' as const,
+        letterSpacing: 3,
+      },
+    });
     name.anchor.set(0.5, 0);
     name.x = w / 2;
-    name.y = thumbY + thumbSize + 12;
+    name.y = nameY;
     card.addChild(name);
 
-    // Description
-    const desc = new Text({ text: info.description, style: CARD_DESC_STYLE });
+    // ── Description ──
+    const desc = new Text({
+      text: info.description,
+      style: { fontFamily: FONT, fontSize: 11, fill: PAL.TEXT_SECONDARY, letterSpacing: 1 },
+    });
     desc.anchor.set(0.5, 0);
     desc.x = w / 2;
-    desc.y = name.y + 28;
+    desc.y = nameY + 26;
     card.addChild(desc);
 
-    // Par times
-    const parY = desc.y + 28;
-    const goldText = new Text({ text: `🥇 ${formatTime(info.parTimes.gold)}`, style: CARD_TIME_STYLE });
-    goldText.x = 16;
-    goldText.y = parY;
-    card.addChild(goldText);
+    // ── Divider ──
+    const divY = nameY + 50;
+    const div = new Graphics();
+    div.moveTo(pad, divY).lineTo(w - pad, divY).stroke({ width: 1, color: PAL.BORDER });
+    card.addChild(div);
 
-    const silverText = new Text({ text: `🥈 ${formatTime(info.parTimes.silver)}`, style: CARD_TIME_STYLE });
-    silverText.x = 16;
-    silverText.y = parY + 20;
-    card.addChild(silverText);
+    // ── Medal times ──
+    const timesY = divY + 14;
+    const medals: { color: number; ticks: number }[] = [
+      { color: PAL.GOLD,   ticks: info.parTimes.gold },
+      { color: PAL.SILVER, ticks: info.parTimes.silver },
+      { color: PAL.BRONZE, ticks: info.parTimes.bronze },
+    ];
 
-    const bronzeText = new Text({ text: `🥉 ${formatTime(info.parTimes.bronze)}`, style: CARD_TIME_STYLE });
-    bronzeText.x = 16;
-    bronzeText.y = parY + 40;
-    card.addChild(bronzeText);
+    for (let m = 0; m < medals.length; m++) {
+      const my = timesY + m * 22;
+      const pipX = pad + 8;
+      const pipCY = my + 8; // vertical center of the text line
+      const ps = 3.5;       // pip half-size
 
-    // Best time
+      // Diamond pip
+      const pip = new Graphics();
+      pip.poly([pipX, pipCY - ps, pipX + ps, pipCY, pipX, pipCY + ps, pipX - ps, pipCY])
+         .fill(medals[m].color);
+      card.addChild(pip);
+
+      // Time
+      const t = new Text({
+        text: formatTime(medals[m].ticks),
+        style: { fontFamily: FONT, fontSize: 13, fill: PAL.TEXT_SECONDARY },
+      });
+      t.x = pipX + 12;
+      t.y = my;
+      card.addChild(t);
+    }
+
+    // ── Best time ──
     const best = getBestTime(info.id);
-    const bestLabel = best !== null ? `Best: ${formatTime(best)}` : 'Best: —';
-    const bestText = new Text({ text: bestLabel, style: best !== null ? CARD_BEST_STYLE : CARD_TIME_STYLE });
-    bestText.anchor.set(0.5, 0);
-    bestText.x = w / 2;
-    bestText.y = parY + 68;
-    card.addChild(bestText);
+    const bestY = timesY + 76;
 
-    // Interactivity
+    if (best !== null) {
+      const bt = new Text({
+        text: `BEST  ${formatTime(best)}`,
+        style: {
+          fontFamily: FONT,
+          fontSize: 14,
+          fill: PAL.BEST,
+          fontWeight: 'bold' as const,
+          letterSpacing: 1,
+        },
+      });
+      bt.anchor.set(0.5, 0);
+      bt.x = w / 2;
+      bt.y = bestY;
+      card.addChild(bt);
+    } else {
+      const bt = new Text({
+        text: 'NO TIME SET',
+        style: { fontFamily: FONT, fontSize: 12, fill: PAL.TEXT_DIM, letterSpacing: 2 },
+      });
+      bt.anchor.set(0.5, 0);
+      bt.x = w / 2;
+      bt.y = bestY + 1;
+      card.addChild(bt);
+    }
+
+    // ── Hover / click ──
     card.eventMode = 'static';
     card.cursor = 'pointer';
 
     card.on('pointerover', () => {
       bg.clear();
-      bg.roundRect(0, 0, w, h, 6).fill({ color: 0x252525, alpha: 0.95 });
-      bg.roundRect(0, 0, w, h, 6).stroke({ width: 2, color: 0x44aaff });
+      this.paintCard(bg, w, h, cham, true);
       card.scale.set(1.02);
     });
     card.on('pointerout', () => {
       bg.clear();
-      bg.roundRect(0, 0, w, h, 6).fill({ color: 0x1a1a1a, alpha: 0.95 });
-      bg.roundRect(0, 0, w, h, 6).stroke({ width: 1, color: 0x333333 });
+      this.paintCard(bg, w, h, cham, false);
       card.scale.set(1.0);
     });
     card.on('pointerdown', () => this.onAction?.({ type: 'select', index }));
@@ -196,52 +320,94 @@ export class TrackSelectScreen {
     this.container.addChild(card);
   }
 
-  private drawThumbnail(gfx: Graphics, info: TrackInfo, offX: number, offY: number, size: number): void {
+  // ── Card background (normal / hovered) ──────────────────────────
+  private paintCard(
+    g: Graphics,
+    w: number, h: number,
+    cham: number,
+    hovered: boolean,
+  ): void {
+    const pts = chamferedPoly(0, 0, w, h, cham);
+    if (hovered) {
+      // Outer glow
+      const glow = chamferedPoly(-2, -2, w + 4, h + 4, cham + 1);
+      g.poly(glow).stroke({ width: 1, color: PAL.ACCENT, alpha: 0.25 });
+      g.poly(pts).fill({ color: PAL.CARD_HOVER, alpha: 0.98 });
+      g.poly(pts).stroke({ width: 1.5, color: PAL.ACCENT, alpha: 0.8 });
+    } else {
+      g.poly(pts).fill({ color: PAL.CARD_BG, alpha: 0.95 });
+      g.poly(pts).stroke({ width: 1, color: PAL.BORDER });
+    }
+  }
+
+  // ── Filled track thumbnail ──────────────────────────────────────
+  private drawFilledThumbnail(
+    gfx: Graphics,
+    info: TrackInfo,
+    offX: number, offY: number,
+    areaW: number, areaH: number,
+  ): void {
     const track = getTrackThumbnail(info.id, info.controlPoints);
 
-    // Find bounding box
+    // Bounding box — must include BOTH boundaries since "inner"/"outer" refer
+    // to left/right of travel direction, not inside/outside the loop
     let minX = Infinity, minY = Infinity, maxX = -Infinity, maxY = -Infinity;
-    for (const p of track.outerBoundary) {
-      if (p.x < minX) minX = p.x;
-      if (p.y < minY) minY = p.y;
-      if (p.x > maxX) maxX = p.x;
-      if (p.y > maxY) maxY = p.y;
+    for (const boundary of [track.outerBoundary, track.innerBoundary]) {
+      for (const p of boundary) {
+        if (p.x < minX) minX = p.x;
+        if (p.y < minY) minY = p.y;
+        if (p.x > maxX) maxX = p.x;
+        if (p.y > maxY) maxY = p.y;
+      }
     }
-    for (const p of track.innerBoundary) {
-      if (p.x < minX) minX = p.x;
-      if (p.y < minY) minY = p.y;
-      if (p.x > maxX) maxX = p.x;
-      if (p.y > maxY) maxY = p.y;
-    }
-
     const cx = (minX + maxX) / 2;
     const cy = (minY + maxY) / 2;
     const tw = maxX - minX;
     const th = maxY - minY;
-    const padding = 10;
-    const fitSize = size - padding * 2;
-    const scale = fitSize / Math.max(tw, th);
+    const padding = 12;
+    const scale = Math.min((areaW - padding * 2) / tw, (areaH - padding * 2) / th);
 
     const toScreen = (px: number, py: number): [number, number] => [
-      offX + size / 2 + (px - cx) * scale,
-      offY + size / 2 - (py - cy) * scale,
+      offX + areaW / 2 + (px - cx) * scale,
+      offY + areaH / 2 - (py - cy) * scale,
     ];
 
-    // Outer boundary
+    // Flatten boundary arrays
     const outerPts: number[] = [];
     for (const p of track.outerBoundary) {
       const [sx, sy] = toScreen(p.x, p.y);
       outerPts.push(sx, sy);
     }
-    gfx.poly(outerPts).stroke({ width: 1.5, color: 0x44aaff, alpha: 0.7 });
-
-    // Inner boundary
     const innerPts: number[] = [];
     for (const p of track.innerBoundary) {
       const [sx, sy] = toScreen(p.x, p.y);
       innerPts.push(sx, sy);
     }
-    gfx.poly(innerPts).stroke({ width: 1.5, color: 0x44aaff, alpha: 0.7 });
+
+    // Filled road surface (outer fill, inner cut)
+    gfx.poly(outerPts).fill({ color: PAL.TRACK_ROAD, alpha: 0.8 });
+    gfx.poly(innerPts).cut();
+
+    // Edge strokes
+    gfx.poly(outerPts).stroke({ width: 1.5, color: PAL.TRACK_EDGE, alpha: 0.7 });
+    gfx.poly(innerPts).stroke({ width: 1.5, color: PAL.TRACK_EDGE, alpha: 0.7 });
+  }
+
+  // ── Back button ─────────────────────────────────────────────────
+  private buildBackButton(sw: number, sh: number): void {
+    const back = new Text({
+      text: '< BACK',
+      style: { fontFamily: FONT, fontSize: 14, fill: PAL.TEXT_DIM, letterSpacing: 2 },
+    });
+    back.anchor.set(0.5);
+    back.x = sw / 2;
+    back.y = sh - 44;
+    back.eventMode = 'static';
+    back.cursor = 'pointer';
+    back.on('pointerover', () => { back.style.fill = hex(PAL.ACCENT); });
+    back.on('pointerout',  () => { back.style.fill = hex(PAL.TEXT_DIM); });
+    back.on('pointerdown',  () => this.onAction?.({ type: 'back' }));
+    this.container.addChild(back);
   }
 
   show(): void { this.container.visible = true; }

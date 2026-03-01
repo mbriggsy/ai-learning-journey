@@ -87,6 +87,10 @@ Requirements for initial release. Each maps to roadmap phases.
 - [ ] **LDB-01**: Local best lap stored per track (localStorage)
 - [ ] **LDB-02**: Human vs AI best comparison display
 
+### Architecture
+
+- [ ] **ARCH-01**: Game state machine (phase transitions, stuck detection, respawn logic) extracted from renderer to engine layer, headless-compatible
+
 ### UX
 
 - [ ] **UX-01**: Instant restart (R key)
@@ -234,18 +238,19 @@ Which phases cover which requirements. Updated during roadmap creation.
 | UX-02 | Phase 2: PixiJS Renderer + Playable Game | Pending |
 | UX-03 | Phase 3: Game Features & Polish | Pending |
 | UX-04 | Phase 3: Game Features & Polish | Pending |
+| ARCH-01 | Phase 3: Game Features & Polish | Pending |
 | UX-05 | Phase 2: PixiJS Renderer + Playable Game | Pending |
 | UX-06 | Phase 2: PixiJS Renderer + Playable Game | Pending |
 
 **Coverage:**
-- v1 requirements: 62 total
-- Mapped to phases: 62
+- v1 requirements: 63 total
+- Mapped to phases: 63
 - Unmapped: 0
 
 **Per-phase breakdown:**
 - Phase 1: 14 requirements
 - Phase 2: 14 requirements
-- Phase 3: 13 requirements
+- Phase 3: 14 requirements
 - Phase 4: 9 requirements
 - Phase 5: 4 requirements
 - Phase 6: 8 requirements

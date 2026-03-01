@@ -16,7 +16,7 @@ export const TRACKS: TrackInfo[] = [
   {
     id: 'track-01',
     name: 'Circuit',
-    description: 'Mixed — hairpins, sweepers, chicanes',
+    description: 'Beginner — smooth oval, wide racing',
     controlPoints: TRACK_01_CONTROL_POINTS,
     parTimes: { gold: 2400, silver: 3000, bronze: 3600 },
   },

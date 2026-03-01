@@ -2,7 +2,7 @@
 
 **Created:** 2026-02-27
 **Phases:** 6
-**Requirements:** 62 v1 (100% mapped)
+**Requirements:** 63 v1 (100% mapped)
 **Depth:** Standard
 
 ## Phases
@@ -19,7 +19,13 @@
   - [x] 02-02-PLAN.md -- Track & car rendering: camera controller, track renderer, car sprite, world renderer
   - [x] 02-03-PLAN.md -- HUD elements: speedometer, lap time, best lap, lap counter, minimap
   - [x] 02-04-PLAN.md -- Game flow overlays: countdown, pause, respawn fade, lap-complete
-- [ ] **Phase 3: Game Features & Polish** -- 13 requirements (VIS-03, 04, 07, 08, SND-01..05, TRK-02, 03, UX-03, 04)
+- [ ] **Phase 3: Game Features & Polish** -- 14 requirements, 5 plans
+  Plans:
+  - [ ] 03-01-PLAN.md -- State machine extraction: RaceController to engine, GameLoop thin shell
+  - [ ] 03-02-PLAN.md -- Visual effects: skid marks, checkpoint flash, dust/spark particles
+  - [ ] 03-03-PLAN.md -- Sound system: Web Audio synth engine, screech, impact, beeps, chime
+  - [ ] 03-04-PLAN.md -- Additional tracks: Speedway (fast/flowing) and Gauntlet (tight/technical)
+  - [ ] 03-05-PLAN.md -- Menu system: main menu, track selection, settings, pause quit
 - [ ] **Phase 4: Gymnasium Environment Wrapper** -- 9 requirements (AI-01..07, 12, 13)
 - [ ] **Phase 5: AI Training Pipeline** -- 4 requirements (AI-08..11)
 - [ ] **Phase 6: AI vs Human Mode** -- 8 requirements (AVH-01..05, VIS-06, LDB-01, 02)
@@ -95,12 +101,13 @@ Wire up the PixiJS v8 renderer as a read-only consumer of engine state. Add came
 
 ### Phase 3: Game Features & Polish
 
-Add visual effects (skid marks, particles, checkpoint flash), all sound design (engine, tires, impacts, countdown, lap chime), two additional tracks, track selection screen, main menu, and settings. The game feels finished.
+Extract the game state machine from the renderer to the engine layer (headless-compatible for AI training), then add visual effects (skid marks, particles, checkpoint flash), all sound design (engine, tires, impacts, countdown, lap chime), two additional tracks, track selection screen, main menu, and settings. The game feels finished.
 
 **Requirements:**
 
 | ID | Requirement |
 |----|-------------|
+| ARCH-01 | Game state machine extracted from renderer to engine layer (headless-compatible) |
 | VIS-03 | Skid marks on road where tires slip, fading over time |
 | VIS-04 | Checkpoint flash on crossing |
 | VIS-07 | Dust/dirt particles on runoff surface contact |

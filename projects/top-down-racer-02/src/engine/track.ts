@@ -283,7 +283,9 @@ export function getSurface(position: Vec2, track: TrackState): Surface {
     arcLength,
   );
 
-  return dist <= width ? Surface.Road : Surface.Runoff;
+  if (dist <= width) return Surface.Road;
+  if (dist <= width + WALL_OFFSET - 6) return Surface.Shoulder;
+  return Surface.Runoff;
 }
 
 /**

@@ -169,12 +169,21 @@ describe('getSurface', () => {
     expect(surface).toBe(Surface.Road);
   });
 
-  it('returns Runoff for a point just outside the boundary', () => {
+  it('returns Shoulder for a point just outside the road edge', () => {
     const cp = makeCircularTrack(80, 10, 12);
     const track = buildTrack(cp, 10);
 
-    // Point at radius 80 + 12 (beyond the half-width of 10)
+    // Point at radius 80 + 12 (beyond half-width of 10, within shoulder zone)
     const surface = getSurface({ x: 92, y: 0 }, track);
+    expect(surface).toBe(Surface.Shoulder);
+  });
+
+  it('returns Runoff for a point near the wall', () => {
+    const cp = makeCircularTrack(80, 10, 12);
+    const track = buildTrack(cp, 10);
+
+    // Point at radius 80 + 39 (beyond shoulder, in the thin runoff strip near the wall)
+    const surface = getSurface({ x: 119, y: 0 }, track);
     expect(surface).toBe(Surface.Runoff);
   });
 

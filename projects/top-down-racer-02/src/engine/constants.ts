@@ -59,6 +59,7 @@ export const TIRE = {
 export const SURFACE_GRIP: Record<number, number> = {
   0: 1.0, // Surface.Road
   1: 0.5, // Surface.Runoff
+  2: 0.95, // Surface.Shoulder
 };
 
 /** Input smoothing response rates (MECH-01, MECH-02). */

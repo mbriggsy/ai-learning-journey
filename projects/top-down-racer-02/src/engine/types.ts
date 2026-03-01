@@ -16,6 +16,7 @@ export interface Vec2 {
 export const enum Surface {
   Road = 0,
   Runoff = 1,
+  Shoulder = 2,
 }
 
 /** Raw input from keyboard or AI agent. Values are normalized. */

@@ -132,8 +132,8 @@ export class EffectsRenderer {
   private updateSkidMarks(curr: WorldState): void {
     const { car } = curr;
 
-    // Only leave skid marks on road when slipping hard enough
-    if (car.slipAngle < SKID_SLIP_THRESHOLD || car.surface !== Surface.Road) {
+    // Only leave skid marks on road/shoulder when slipping hard enough
+    if (car.slipAngle < SKID_SLIP_THRESHOLD || car.surface === Surface.Runoff) {
       this.lastSkidPos = null;
       return;
     }

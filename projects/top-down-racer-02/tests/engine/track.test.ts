@@ -16,6 +16,8 @@ import { Surface } from '../../src/engine/types';
 import type { TrackControlPoint, Vec2 } from '../../src/engine/types';
 import { distance } from '../../src/engine/vec2';
 import { TRACK_01_CONTROL_POINTS } from '../../src/tracks/track01';
+import { TRACK_02_CONTROL_POINTS } from '../../src/tracks/track02';
+import { TRACK_03_CONTROL_POINTS } from '../../src/tracks/track03';
 
 // --- Simple test track: a square-ish loop ---
 const SQUARE_TRACK: TrackControlPoint[] = [
@@ -75,14 +77,14 @@ describe('buildTrack', () => {
       const innerPt = track.innerBoundary[i];
       const outerPt = track.outerBoundary[i];
       const trackWidth = distance(innerPt, outerPt);
-      // Expected full width = 2 * (half-width + WALL_OFFSET) = 2 * (10 + 12) = 44
-      totalError += Math.abs(trackWidth - 44);
+      // Expected full width = 2 * (half-width + WALL_OFFSET) = 2 * (10 + 30) = 80
+      totalError += Math.abs(trackWidth - 80);
       samples++;
     }
 
     const avgError = totalError / samples;
     // Average error should be small relative to track width
-    expect(avgError).toBeLessThan(6); // < ~14% error on average
+    expect(avgError).toBeLessThan(10); // < ~12% error on average
   });
 
   it('generates the requested number of checkpoints', () => {
@@ -105,9 +107,9 @@ describe('buildTrack', () => {
 
     for (const checkpoint of track.checkpoints) {
       const gateWidth = distance(checkpoint.left, checkpoint.right);
-      // Gate width should be approximately 2 * (half-width + WALL_OFFSET) = 2 * (10 + 12) = 44
-      expect(gateWidth).toBeGreaterThan(34); // at least ~77% of expected
-      expect(gateWidth).toBeLessThan(54); // at most ~123% of expected
+      // Gate width should be approximately 2 * (half-width + WALL_OFFSET) = 2 * (10 + 30) = 80
+      expect(gateWidth).toBeGreaterThan(62); // at least ~77% of expected
+      expect(gateWidth).toBeLessThan(98); // at most ~123% of expected
     }
   });
 
@@ -320,5 +322,244 @@ describe('Track 01', () => {
     const track = buildTrack(TRACK_01_CONTROL_POINTS, 30);
     const surface = getSurface({ x: 1000, y: 1000 }, track);
     expect(surface).toBe(Surface.Runoff);
+  });
+});
+
+describe('Track 02', () => {
+  it('builds without errors', () => {
+    const track = buildTrack(TRACK_02_CONTROL_POINTS, 30);
+    expect(track).toBeDefined();
+    expect(track.innerBoundary.length).toBeGreaterThan(100);
+    expect(track.outerBoundary.length).toBeGreaterThan(100);
+  });
+
+  it('is a closed loop', () => {
+    const track = buildTrack(TRACK_02_CONTROL_POINTS, 30);
+    const innerGap = distance(
+      track.innerBoundary[0],
+      track.innerBoundary[track.innerBoundary.length - 1],
+    );
+    const outerGap = distance(
+      track.outerBoundary[0],
+      track.outerBoundary[track.outerBoundary.length - 1],
+    );
+    expect(innerGap).toBeLessThan(1);
+    expect(outerGap).toBeLessThan(1);
+  });
+
+  it('centerline surface detection works', () => {
+    const track = buildTrack(TRACK_02_CONTROL_POINTS, 30);
+    const surface = getSurface(TRACK_02_CONTROL_POINTS[0].position, track);
+    expect(surface).toBe(Surface.Road);
+  });
+});
+
+describe('Track 03', () => {
+  it('builds without errors', () => {
+    const track = buildTrack(TRACK_03_CONTROL_POINTS, 30);
+    expect(track).toBeDefined();
+    expect(track.innerBoundary.length).toBeGreaterThan(100);
+    expect(track.outerBoundary.length).toBeGreaterThan(100);
+  });
+
+  it('is a closed loop', () => {
+    const track = buildTrack(TRACK_03_CONTROL_POINTS, 30);
+    const innerGap = distance(
+      track.innerBoundary[0],
+      track.innerBoundary[track.innerBoundary.length - 1],
+    );
+    const outerGap = distance(
+      track.outerBoundary[0],
+      track.outerBoundary[track.outerBoundary.length - 1],
+    );
+    expect(innerGap).toBeLessThan(1);
+    expect(outerGap).toBeLessThan(1);
+  });
+
+  it('centerline surface detection works', () => {
+    const track = buildTrack(TRACK_03_CONTROL_POINTS, 30);
+    const surface = getSurface(TRACK_03_CONTROL_POINTS[0].position, track);
+    expect(surface).toBe(Surface.Road);
+  });
+});
+
+/**
+ * Boundary integrity checks — segment intersection AND proximity.
+ *
+ * Two tests per boundary:
+ * 1. Segment intersection: do any non-adjacent wall segments actually cross?
+ *    Uses proper line-segment intersection math (cross products).
+ * 2. Minimum gap: do non-adjacent wall points come closer than MIN_GAP?
+ *    Catches near-misses that aren't technically crossing but look terrible.
+ *
+ * Also checks cross-boundary: inner segments should never cross outer segments
+ * in non-adjacent regions (the two walls should stay on their respective sides).
+ */
+describe('Track boundary integrity', () => {
+  // --- Segment intersection via cross products ---
+  function cross(a: Vec2, b: Vec2): number {
+    return a.x * b.y - a.y * b.x;
+  }
+
+  function vsub(a: Vec2, b: Vec2): Vec2 {
+    return { x: a.x - b.x, y: a.y - b.y };
+  }
+
+  /**
+   * Returns true if segments (p1-p2) and (p3-p4) properly intersect
+   * (cross each other, not just touch at endpoints).
+   */
+  function segmentsIntersect(p1: Vec2, p2: Vec2, p3: Vec2, p4: Vec2): boolean {
+    const d1 = vsub(p2, p1);
+    const d2 = vsub(p4, p3);
+    const denom = cross(d1, d2);
+    if (Math.abs(denom) < 1e-10) return false; // parallel
+
+    const d3 = vsub(p3, p1);
+    const t = cross(d3, d2) / denom;
+    const u = cross(d3, d1) / denom;
+
+    // Strict interior intersection (exclude exact endpoint touches)
+    const eps = 1e-6;
+    return t > eps && t < 1 - eps && u > eps && u < 1 - eps;
+  }
+
+  /**
+   * Find ALL segment-segment intersections in a single boundary polyline,
+   * skipping adjacent segments (within `skip` indices including wrap-around).
+   * Returns count of intersections found.
+   */
+  function countSelfIntersections(boundary: readonly Vec2[], skip: number): number {
+    const n = boundary.length - 1; // last == first (closed)
+    let count = 0;
+    for (let i = 0; i < n; i++) {
+      for (let j = i + skip; j < n; j++) {
+        // Also skip wrap-around adjacency
+        if (n - j + i < skip) continue;
+        if (segmentsIntersect(boundary[i], boundary[i + 1], boundary[j], boundary[j + 1])) {
+          count++;
+        }
+      }
+    }
+    return count;
+  }
+
+  /**
+   * Find intersections between segments of two different boundary polylines,
+   * only checking non-corresponding regions (skip segments at similar arc positions).
+   */
+  function countCrossBoundaryIntersections(
+    inner: readonly Vec2[],
+    outer: readonly Vec2[],
+    skip: number,
+  ): number {
+    const nI = inner.length - 1;
+    const nO = outer.length - 1;
+    let count = 0;
+    for (let i = 0; i < nI; i++) {
+      for (let j = 0; j < nO; j++) {
+        // Skip corresponding positions (same arc-length region)
+        const iNorm = i / nI;
+        const jNorm = j / nO;
+        if (Math.abs(iNorm - jNorm) * Math.max(nI, nO) < skip) continue;
+        // Also check wrap-around
+        if ((1 - Math.abs(iNorm - jNorm)) * Math.max(nI, nO) < skip) continue;
+        if (segmentsIntersect(inner[i], inner[i + 1], outer[j], outer[j + 1])) {
+          count++;
+        }
+      }
+    }
+    return count;
+  }
+
+  /**
+   * Minimum distance between non-adjacent boundary points.
+   */
+  function minNonAdjacentDistance(boundary: readonly Vec2[], skip: number): number {
+    let minDist = Infinity;
+    const n = boundary.length - 1;
+    for (let i = 0; i < n; i++) {
+      for (let j = i + skip; j < n; j++) {
+        if (n - j + i < skip) continue;
+        const d = distance(boundary[i], boundary[j]);
+        if (d < minDist) minDist = d;
+      }
+    }
+    return minDist;
+  }
+
+  // Skip only the immediate neighbors that share endpoints for intersection tests.
+  // Previously SKIP=15 masked real crossings that were 4–8 segments apart
+  // (e.g. hairpin outer wall at seg 182×190, S-bend inner wall at seg 278×282).
+  // The strict-interior intersection test (eps=1e-6) already prevents false
+  // positives from shared endpoints, so SKIP=3 is safe and catches local folds.
+  const INTERSECTION_SKIP = 3;
+  // For min-gap checks, use a larger skip — nearby boundary points are naturally
+  // close along the polyline; we only care about distant sections approaching.
+  const GAP_SKIP = 15;
+  // Minimum acceptable gap between non-adjacent wall points
+  const MIN_GAP = 10;
+
+  // ── Track 01 ──────────────────────────────────────────────────
+  describe('Track 01', () => {
+    const track = buildTrack(TRACK_01_CONTROL_POINTS, 30);
+
+    it('inner boundary has no self-intersections', () => {
+      expect(countSelfIntersections(track.innerBoundary, INTERSECTION_SKIP)).toBe(0);
+    });
+    it('outer boundary has no self-intersections', () => {
+      expect(countSelfIntersections(track.outerBoundary, INTERSECTION_SKIP)).toBe(0);
+    });
+    it('inner and outer boundaries do not cross', () => {
+      expect(countCrossBoundaryIntersections(track.innerBoundary, track.outerBoundary, INTERSECTION_SKIP)).toBe(0);
+    });
+    it('inner boundary min gap > MIN_GAP', () => {
+      expect(minNonAdjacentDistance(track.innerBoundary, GAP_SKIP)).toBeGreaterThan(MIN_GAP);
+    });
+    it('outer boundary min gap > MIN_GAP', () => {
+      expect(minNonAdjacentDistance(track.outerBoundary, GAP_SKIP)).toBeGreaterThan(MIN_GAP);
+    });
+  });
+
+  // ── Track 02 ──────────────────────────────────────────────────
+  describe('Track 02', () => {
+    const track = buildTrack(TRACK_02_CONTROL_POINTS, 30);
+
+    it('inner boundary has no self-intersections', () => {
+      expect(countSelfIntersections(track.innerBoundary, INTERSECTION_SKIP)).toBe(0);
+    });
+    it('outer boundary has no self-intersections', () => {
+      expect(countSelfIntersections(track.outerBoundary, INTERSECTION_SKIP)).toBe(0);
+    });
+    it('inner and outer boundaries do not cross', () => {
+      expect(countCrossBoundaryIntersections(track.innerBoundary, track.outerBoundary, INTERSECTION_SKIP)).toBe(0);
+    });
+    it('inner boundary min gap > MIN_GAP', () => {
+      expect(minNonAdjacentDistance(track.innerBoundary, GAP_SKIP)).toBeGreaterThan(MIN_GAP);
+    });
+    it('outer boundary min gap > MIN_GAP', () => {
+      expect(minNonAdjacentDistance(track.outerBoundary, GAP_SKIP)).toBeGreaterThan(MIN_GAP);
+    });
+  });
+
+  // ── Track 03 ──────────────────────────────────────────────────
+  describe('Track 03', () => {
+    const track = buildTrack(TRACK_03_CONTROL_POINTS, 30);
+
+    it('inner boundary has no self-intersections', () => {
+      expect(countSelfIntersections(track.innerBoundary, INTERSECTION_SKIP)).toBe(0);
+    });
+    it('outer boundary has no self-intersections', () => {
+      expect(countSelfIntersections(track.outerBoundary, INTERSECTION_SKIP)).toBe(0);
+    });
+    it('inner and outer boundaries do not cross', () => {
+      expect(countCrossBoundaryIntersections(track.innerBoundary, track.outerBoundary, INTERSECTION_SKIP)).toBe(0);
+    });
+    it('inner boundary min gap > MIN_GAP', () => {
+      expect(minNonAdjacentDistance(track.innerBoundary, GAP_SKIP)).toBeGreaterThan(MIN_GAP);
+    });
+    it('outer boundary min gap > MIN_GAP', () => {
+      expect(minNonAdjacentDistance(track.outerBoundary, GAP_SKIP)).toBeGreaterThan(MIN_GAP);
+    });
   });
 });

@@ -47,8 +47,10 @@ const SAMPLES_PER_SEGMENT_ARC = 20;
 /**
  * Distance (world units) between the road edge and the wall boundary.
  * Creates a runoff zone where the car drives on reduced grip before hitting walls.
+ * Large enough that cars can go off-track (including into the infield) before
+ * hitting a hard wall, mimicking real runoff areas and gravel traps.
  */
-const WALL_OFFSET = 12;
+const WALL_OFFSET = 30;
 
 /**
  * Build a complete track from control points and desired checkpoint count.
@@ -78,32 +80,127 @@ export function buildTrack(
   // which is fine since offsets are smaller than the perimeter.
   const totalSamples = Math.max(200, n * SAMPLES_PER_SEGMENT);
 
-  // Generate boundary polylines by sampling the spline and offsetting by width
+  // Generate boundary polylines by sampling the spline and offsetting by width.
+  // Multi-pass approach to prevent inner-boundary self-intersection at tight curves
+  // while keeping boundaries perfectly smooth:
+  //   Pass 1: Estimate signed curvature at every sample point
+  //   Pass 2: Compute raw left/right offsets with curvature clamping
+  //   Pass 3: Gaussian-approximate smoothing (3× box filter) of offsets so
+  //           transitions between clamped and unclamped regions are gradual
+  //   Pass 4: Generate boundary points from smoothed offsets
   const innerBoundary: Vec2[] = [];
   const outerBoundary: Vec2[] = [];
 
+  // Small arc-length step for curvature estimation (half the sample spacing)
+  const curvatureEps = totalLength / (totalSamples * 2);
+  // Minimum distance from centerline for a clamped inner wall
+  const MIN_INNER_WALL = 4;
+  // Box-filter half-width for offset smoothing: 3 passes of ±SMOOTH_RADIUS
+  // approximates a Gaussian, eliminating all sharp transitions
+  const SMOOTH_RADIUS = 10;
+  const SMOOTH_PASSES = 3;
+
+  // ── Pass 1: Compute signed curvature radius at every sample ──────────
+  // Positive R → curving left (perpCCW is inner), negative R → curving right
+  const signedR: number[] = [];
   for (let i = 0; i < totalSamples; i++) {
     const dist = (i / totalSamples) * totalLength;
+    const dPrev = ((dist - curvatureEps) % totalLength + totalLength) % totalLength;
+    const dNext = ((dist + curvatureEps) % totalLength + totalLength) % totalLength;
+    const tPrev = normalize(tangentAtDistance(positions, arcLengthTable, dPrev));
+    const tNext = normalize(tangentAtDistance(positions, arcLengthTable, dNext));
 
-    // Get centerline point and tangent at this arc-length distance
+    const cross = tPrev.x * tNext.y - tPrev.y * tNext.x;
+    const dotVal = Math.max(-1, Math.min(1, tPrev.x * tNext.x + tPrev.y * tNext.y));
+    const angle = Math.acos(dotVal);
+    const curvature = angle / (2 * curvatureEps);
+    const R = curvature > 1e-8 ? 1 / curvature : Infinity;
+    signedR.push(cross >= 0 ? R : -R);
+  }
+
+  // ── Pass 2: Compute inner-side reduction per sample ─────────────────
+  // We only reduce the *inner* side of curves. Store the reduction as a
+  // positive delta that we later subtract from wallWidth. The outer side
+  // always stays at full wallWidth — no smoothing bleed.
+  const leftReduction: number[] = [];
+  const rightReduction: number[] = [];
+  const wallWidths: number[] = [];
+  for (let i = 0; i < totalSamples; i++) {
+    const dist = (i / totalSamples) * totalLength;
+    const width = interpolateWidth(controlPoints, positions, arcLengthTable, dist);
+    const wallWidth = width + WALL_OFFSET;
+    wallWidths.push(wallWidth);
+
+    const R = Math.abs(signedR[i]);
+    const maxInnerOffset = Math.max(MIN_INNER_WALL, R - MIN_INNER_WALL);
+    let leftRed = 0;
+    let rightRed = 0;
+
+    if (signedR[i] > 0 && R < wallWidth + MIN_INNER_WALL) {
+      // Curving left → left side is inner → reduce left
+      leftRed = wallWidth - Math.min(wallWidth, maxInnerOffset);
+    } else if (signedR[i] < 0 && R < wallWidth + MIN_INNER_WALL) {
+      // Curving right → right side is inner → reduce right
+      rightRed = wallWidth - Math.min(wallWidth, maxInnerOffset);
+    }
+
+    leftReduction.push(leftRed);
+    rightReduction.push(rightRed);
+  }
+
+  // ── Pass 3: Smooth reductions with iterated box filter (≈ Gaussian) ──
+  // Smoothing the *reduction* (not the offset) means the outer side stays
+  // at full wallWidth — only the inner-side taper gets the Gaussian blur.
+  let smoothLeftRed = leftReduction.slice();
+  let smoothRightRed = rightReduction.slice();
+
+  for (let pass = 0; pass < SMOOTH_PASSES; pass++) {
+    smoothLeftRed = boxFilterCircular(smoothLeftRed, SMOOTH_RADIUS);
+    smoothRightRed = boxFilterCircular(smoothRightRed, SMOOTH_RADIUS);
+  }
+
+  // ── Pass 4: Generate boundary points from smoothed offsets ────────────
+  for (let i = 0; i < totalSamples; i++) {
+    const dist = (i / totalSamples) * totalLength;
     const center = pointAtDistance(positions, arcLengthTable, dist);
     const tangent = tangentAtDistance(positions, arcLengthTable, dist);
     const tangentNorm = normalize(tangent);
 
-    // Interpolate width from control points based on arc-length position
-    const width = interpolateWidth(controlPoints, positions, arcLengthTable, dist);
+    // Apply smoothed reduction; clamp so offset never goes below MIN_INNER_WALL
+    const leftW = Math.max(MIN_INNER_WALL, wallWidths[i] - smoothLeftRed[i]);
+    const rightW = Math.max(MIN_INNER_WALL, wallWidths[i] - smoothRightRed[i]);
 
-    // Offset perpendicular to tangent direction
-    // perpCCW gives the left-pointing normal, perpCW gives the right-pointing normal
-    // Wall boundaries are pushed out by WALL_OFFSET beyond the road edge,
-    // creating a runoff zone where the car slides with reduced grip before hitting walls.
-    const wallWidth = width + WALL_OFFSET;
-    const leftOffset = scale(perpCCW(tangentNorm), wallWidth);
-    const rightOffset = scale(perpCW(tangentNorm), wallWidth);
+    const leftOffset = scale(perpCCW(tangentNorm), leftW);
+    const rightOffset = scale(perpCW(tangentNorm), rightW);
 
     innerBoundary.push(add(center, leftOffset));
     outerBoundary.push(add(center, rightOffset));
   }
+
+  // ── Pass 5: Smooth boundary positions to eliminate tangent oscillation ──
+  // Catmull-Rom tangent oscillations near control-point transitions can cause
+  // small local folds in the offset boundary. A light position-space smooth
+  // (iterated box filter on x/y separately) removes these without shifting the
+  // overall track shape significantly.
+  const BOUNDARY_SMOOTH_RADIUS = 4;
+  const BOUNDARY_SMOOTH_PASSES = 2;
+
+  function smoothBoundary(pts: Vec2[]): void {
+    const xs = pts.map((p) => p.x);
+    const ys = pts.map((p) => p.y);
+    let sX = xs;
+    let sY = ys;
+    for (let pass = 0; pass < BOUNDARY_SMOOTH_PASSES; pass++) {
+      sX = boxFilterCircular(sX, BOUNDARY_SMOOTH_RADIUS);
+      sY = boxFilterCircular(sY, BOUNDARY_SMOOTH_RADIUS);
+    }
+    for (let i = 0; i < pts.length; i++) {
+      pts[i] = { x: sX[i], y: sY[i] };
+    }
+  }
+
+  smoothBoundary(innerBoundary);
+  smoothBoundary(outerBoundary);
 
   // Close the boundaries by appending the first point
   innerBoundary.push(innerBoundary[0]);
@@ -398,4 +495,30 @@ function arcLengthAtParam(table: ArcLengthTable, param: number): number {
 
   const frac = (param - params[lo]) / paramRange;
   return lengths[lo] + (lengths[hi] - lengths[lo]) * frac;
+}
+
+/**
+ * Circular (wrap-around) box filter: replaces each value with the average of
+ * its neighbors within ±radius.  O(n) via running sum.
+ */
+function boxFilterCircular(values: number[], radius: number): number[] {
+  const n = values.length;
+  const out = new Array<number>(n);
+  const windowSize = 2 * radius + 1;
+
+  // Seed the running sum with indices [-radius .. +radius]
+  let sum = 0;
+  for (let j = -radius; j <= radius; j++) {
+    sum += values[((j % n) + n) % n];
+  }
+  out[0] = sum / windowSize;
+
+  for (let i = 1; i < n; i++) {
+    // Add the new right element, remove the old left element
+    sum += values[((i + radius) % n + n) % n];
+    sum -= values[((i - radius - 1) % n + n) % n];
+    out[i] = sum / windowSize;
+  }
+
+  return out;
 }

@@ -142,7 +142,7 @@ export class ScreenManager {
     const trackInfo = TRACKS[trackIndex];
 
     // Load the selected track (resets world, restarts with countdown)
-    this.gameLoop.loadTrack(trackInfo.controlPoints);
+    this.gameLoop.loadTrack(trackInfo.controlPoints, this.settings.lapCount);
 
     // Configure shoulder rendering for this track, then reset renderers
     this.worldRenderer.setShoulderSide(trackInfo.shoulderSide ?? 'inner');

@@ -34,6 +34,7 @@ export function createInitialTimingState(): TimingState {
     currentLap: 1,
     lastCheckpointIndex: 0,
     lapComplete: false,
+    lapTimes: [],
   };
 }
 
@@ -150,6 +151,8 @@ export function updateTiming(
 
   if (isLapComplete) {
     // Lap completed!
+    // NOTE: currentLap is incremented here — after lap 3 completes, currentLap becomes 4.
+    // Finish detection in RaceController relies on this already-incremented value.
     const lapTicks = timing.currentLapTicks + 1; // Include this tick
     const newBest =
       timing.bestLapTicks > 0
@@ -163,6 +166,7 @@ export function updateTiming(
       currentLap: timing.currentLap + 1,
       lastCheckpointIndex: 0,
       lapComplete: true,
+      lapTimes: [...timing.lapTimes, lapTicks],
     };
   }
 

@@ -44,12 +44,3 @@ export function setBestTime(trackId: string, ticks: number): boolean {
   return false;
 }
 
-export function formatTime(ticks: number): string {
-  const totalSeconds = ticks / 60;
-  const minutes = Math.floor(totalSeconds / 60);
-  const seconds = totalSeconds % 60;
-  if (minutes > 0) {
-    return `${minutes}:${seconds.toFixed(2).padStart(5, '0')}`;
-  }
-  return seconds.toFixed(2) + 's';
-}

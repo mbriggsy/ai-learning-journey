@@ -33,23 +33,29 @@ const BACK_STYLE = {
 function sliderToVolume(pos: number): number { return pos * pos * pos; }
 function volumeToSlider(vol: number): number { return Math.cbrt(vol); }
 
-interface SavedSettings {
+export interface SavedSettings {
   master: number;
   sfx: number;
+  lapCount: number;
 }
 
-function loadSettings(): SavedSettings {
+const DEFAULT_SETTINGS: SavedSettings = { master: 0.79, sfx: 0.93, lapCount: 3 };
+
+export function loadSettings(): SavedSettings {
   try {
     const raw = localStorage.getItem(SETTINGS_KEY);
-    if (!raw) return { master: 0.79, sfx: 0.93 }; // cbrt defaults for 0.5 and 0.8
+    if (!raw) return { ...DEFAULT_SETTINGS };
     const parsed = JSON.parse(raw);
-    if (typeof parsed !== 'object' || parsed === null) return { master: 0.79, sfx: 0.93 };
+    if (typeof parsed !== 'object' || parsed === null) return { ...DEFAULT_SETTINGS };
     return {
-      master: typeof parsed.master === 'number' ? parsed.master : 0.79,
-      sfx: typeof parsed.sfx === 'number' ? parsed.sfx : 0.93,
+      master: typeof parsed.master === 'number' ? parsed.master : DEFAULT_SETTINGS.master,
+      sfx: typeof parsed.sfx === 'number' ? parsed.sfx : DEFAULT_SETTINGS.sfx,
+      lapCount: typeof parsed.lapCount === 'number' && Number.isInteger(parsed.lapCount)
+        ? Math.max(0, Math.min(99, parsed.lapCount))
+        : DEFAULT_SETTINGS.lapCount,
     };
   } catch {
-    return { master: 0.79, sfx: 0.93 };
+    return { ...DEFAULT_SETTINGS };
   }
 }
 
@@ -68,13 +74,17 @@ export class SettingsScreen {
   private soundManager: SoundManager | null = null;
   private masterSliderPos = 0.79;
   private sfxSliderPos = 0.93;
+  private lapCountValue = 3;
 
   constructor() {
     const saved = loadSettings();
     this.masterSliderPos = saved.master;
     this.sfxSliderPos = saved.sfx;
+    this.lapCountValue = saved.lapCount;
     this.build();
   }
+
+  get lapCount(): number { return this.lapCountValue; }
 
   /** Connect to the SoundManager to apply volume changes. */
   setSoundManager(sm: SoundManager): void {
@@ -109,14 +119,18 @@ export class SettingsScreen {
     this.buildSlider('Master Volume', sliderX, masterY, sliderW, this.masterSliderPos, (pos) => {
       this.masterSliderPos = pos;
       if (this.soundManager) this.soundManager.masterVolume = sliderToVolume(pos);
-      saveSettings({ master: this.masterSliderPos, sfx: this.sfxSliderPos });
+      saveSettings({ master: this.masterSliderPos, sfx: this.sfxSliderPos, lapCount: this.lapCountValue });
     });
 
     this.buildSlider('SFX Volume', sliderX, sfxY, sliderW, this.sfxSliderPos, (pos) => {
       this.sfxSliderPos = pos;
       if (this.soundManager) this.soundManager.sfxVolume = sliderToVolume(pos);
-      saveSettings({ master: this.masterSliderPos, sfx: this.sfxSliderPos });
+      saveSettings({ master: this.masterSliderPos, sfx: this.sfxSliderPos, lapCount: this.lapCountValue });
     });
+
+    // Lap count segmented selector
+    const lapY = h * 0.70;
+    this.buildLapCountSelector(w / 2, lapY);
 
     // Back button
     const back = new Text({ text: '< BACK', style: BACK_STYLE });
@@ -205,6 +219,66 @@ export class SettingsScreen {
 
     // Release drag on any mouse/touch up anywhere on the page
     window.addEventListener('pointerup', () => { dragging = false; });
+  }
+
+  private buildLapCountSelector(cx: number, y: number): void {
+    const options = [1, 3, 5, 10, 0] as const;
+    const labels = ['1', '3', '5', '10', 'FREE'];
+    const btnW = 52;
+    const btnH = 32;
+    const gap = 6;
+    const totalW = options.length * btnW + (options.length - 1) * gap;
+    const startX = cx - totalW / 2;
+
+    // Label
+    const label = new Text({ text: 'Lap Count', style: LABEL_STYLE });
+    label.x = startX;
+    label.y = y - 28;
+    this.container.addChild(label);
+
+    const buttonBgs: Graphics[] = [];
+    const buttonTexts: Text[] = [];
+
+    const updateVisuals = () => {
+      for (let i = 0; i < options.length; i++) {
+        const active = options[i] === this.lapCountValue;
+        buttonBgs[i].clear();
+        buttonBgs[i].roundRect(0, 0, btnW, btnH, 4)
+          .fill(active ? 0x3388ff : 0x222222);
+        buttonTexts[i].style.fill = active ? '#ffffff' : '#888888';
+      }
+    };
+
+    for (let i = 0; i < options.length; i++) {
+      const bx = startX + i * (btnW + gap);
+
+      const bg = new Graphics();
+      bg.roundRect(0, 0, btnW, btnH, 4).fill(0x222222);
+      bg.x = bx;
+      bg.y = y;
+      bg.eventMode = 'static';
+      bg.cursor = 'pointer';
+      this.container.addChild(bg);
+      buttonBgs.push(bg);
+
+      const text = new Text({
+        text: labels[i],
+        style: { fontFamily: 'monospace', fontSize: 14, fill: '#888888', fontWeight: 'bold' as const },
+      });
+      text.anchor.set(0.5);
+      text.x = bx + btnW / 2;
+      text.y = y + btnH / 2;
+      this.container.addChild(text);
+      buttonTexts.push(text);
+
+      bg.on('pointerdown', () => {
+        this.lapCountValue = options[i];
+        updateVisuals();
+        saveSettings({ master: this.masterSliderPos, sfx: this.sfxSliderPos, lapCount: this.lapCountValue });
+      });
+    }
+
+    updateVisuals();
   }
 
   show(): void { this.container.visible = true; }

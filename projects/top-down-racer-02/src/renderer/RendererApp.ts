@@ -87,9 +87,10 @@ export class RendererApp {
       this.overlayRenderer.render(prev, curr, alpha, race);
     });
 
-    // Wire keyboard input for overlay (sound toggle M key, arrow nav in pause)
+    // Wire keyboard input for overlay (sound toggle M key, arrow nav in pause/finished)
     window.addEventListener('keydown', (e: KeyboardEvent) => {
       this.overlayRenderer.handlePauseInput(e.code);
+      this.overlayRenderer.handleFinishedInput(e.code);
     });
 
     // Step 6e: Sound system

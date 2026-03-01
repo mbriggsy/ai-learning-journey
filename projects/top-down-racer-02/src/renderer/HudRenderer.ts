@@ -2,6 +2,7 @@ import { Container, Graphics, Text } from 'pixi.js';
 import type { WorldState } from '../engine/types';
 import type { RaceState } from '../engine/RaceController';
 import { CAR } from '../engine/constants';
+import { formatRaceTime } from '../utils/formatTime';
 
 // ──────────────────────────────────────────────────────────
 // Layout constants (screen coordinates)
@@ -33,20 +34,6 @@ const HUD_TEXT_STYLE_SMALL = {
   fontSize: 15,
   fill: '#aaaaaa',
 } as const;
-
-// ──────────────────────────────────────────────────────────
-// Formatting helpers
-// ──────────────────────────────────────────────────────────
-
-/** Format ticks into M:SS.mmm string. Returns '--:--.---' if ticks <= 0. */
-function formatTime(ticks: number): string {
-  if (ticks <= 0) return '--:--.---';
-  const totalMs = Math.floor((ticks / 60) * 1000);
-  const ms  = totalMs % 1000;
-  const sec = Math.floor(totalMs / 1000) % 60;
-  const min = Math.floor(totalMs / 60000);
-  return `${min}:${String(sec).padStart(2, '0')}.${String(ms).padStart(3, '0')}`;
-}
 
 // ──────────────────────────────────────────────────────────
 // HudRenderer
@@ -154,7 +141,7 @@ export class HudRenderer {
     const y = MARGIN;
 
     const panel = new Graphics();
-    panel.rect(x - 4, y - 4, 100, 34).fill({ color: 0x000000, alpha: PANEL_ALPHA });
+    panel.rect(x - 4, y - 4, 140, 34).fill({ color: 0x000000, alpha: PANEL_ALPHA });
     this.container.addChild(panel);
 
     this.lapCounterText = new Text({ text: 'LAP 1', style: { ...HUD_TEXT_STYLE, fontSize: 22 } });
@@ -163,8 +150,14 @@ export class HudRenderer {
     this.container.addChild(this.lapCounterText);
   }
 
-  private updateLapCounter(currentLap: number): void {
-    const display = `LAP ${currentLap}`;
+  private updateLapCounter(currentLap: number, targetLaps: number): void {
+    let display: string;
+    if (targetLaps > 0) {
+      const clampedLap = Math.min(currentLap, targetLaps);
+      display = `LAP ${clampedLap}/${targetLaps}`;
+    } else {
+      display = `LAP ${currentLap}`;
+    }
     if (this.lastLapDisplay !== display) {
       this.lastLapDisplay = display;
       this.lapCounterText.text = display;
@@ -215,21 +208,21 @@ export class HudRenderer {
 
   private updateLapTimes(totalRaceTicks: number, currentLapTicks: number, bestLapTicks: number, lapComplete: boolean, isNewBest: boolean): void {
     // Total race time
-    const totalDisplay = formatTime(totalRaceTicks);
+    const totalDisplay = formatRaceTime(totalRaceTicks);
     if (this.lastTotalTimeDisplay !== totalDisplay) {
       this.lastTotalTimeDisplay = totalDisplay;
       this.totalTimeText.text = totalDisplay;
     }
 
     // Current lap time
-    const currentDisplay = `Lap: ${formatTime(currentLapTicks)}`;
+    const currentDisplay = `Lap: ${formatRaceTime(currentLapTicks)}`;
     if (this.lastCurrentLapDisplay !== currentDisplay) {
       this.lastCurrentLapDisplay = currentDisplay;
       this.currentLapText.text = currentDisplay;
     }
 
     // Best lap time -- always visible (HUD-03)
-    const bestDisplay = `Best: ${formatTime(bestLapTicks)}`;
+    const bestDisplay = `Best: ${formatRaceTime(bestLapTicks)}`;
     if (this.lastBestLapDisplay !== bestDisplay) {
       this.lastBestLapDisplay = bestDisplay;
       this.bestLapText.text = bestDisplay;
@@ -377,7 +370,7 @@ export class HudRenderer {
     _prev: WorldState,
     curr: WorldState,
     _alpha: number,
-    _race: RaceState,
+    race: RaceState,
   ): void {
     const { car, timing, track } = curr;
 
@@ -391,7 +384,7 @@ export class HudRenderer {
     this.updateLapTimes(timing.totalRaceTicks, timing.currentLapTicks, timing.bestLapTicks, timing.lapComplete, isNewBest);
 
     // HUD-04: Lap counter
-    this.updateLapCounter(timing.currentLap);
+    this.updateLapCounter(timing.currentLap, race.targetLaps);
 
     // HUD-05: Minimap
     this.updateMinimap(track.outerBoundary, track.innerBoundary, car.position.x, car.position.y);

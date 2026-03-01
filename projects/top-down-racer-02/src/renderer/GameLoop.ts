@@ -5,6 +5,7 @@ import {
   GamePhase,
   RaceAction,
   RaceController,
+  FREEPLAY_LAPS,
   RESPAWN_FADE_TICKS,
   type RaceControlSignals,
   type RaceState,
@@ -44,10 +45,11 @@ export class GameLoop {
   }
 
   /** Load a new track and reset the game. */
-  loadTrack(points: TrackControlPoint[]): void {
+  loadTrack(points: TrackControlPoint[], targetLaps = FREEPLAY_LAPS): void {
     this.track = buildTrack(points, DEFAULT_CHECKPOINT_COUNT);
     this.currState = createWorld(this.track);
     this.prevState = this.currState;
+    this.raceController.configure(targetLaps);
     this.raceController.reset(true);
     this.accumulator = 0;
     this.abortTick = false;
@@ -111,7 +113,7 @@ export class GameLoop {
   }
 
   private stepGame(signals: RaceControlSignals): WorldState {
-    const action = this.raceController.step(signals, this.currState.car.speed);
+    const action = this.raceController.step(signals, this.currState.car.speed, this.currState.timing);
     const phase = this.raceController.state.phase;
 
     // Handle actions from the controller
@@ -133,6 +135,9 @@ export class GameLoop {
     switch (phase) {
       case GamePhase.Racing:
         return stepWorld(this.currState, getInput());
+      case GamePhase.Finished:
+        // Car coasts to a stop with no input (natural deceleration)
+        return stepWorld(this.currState, ZERO_INPUT);
       case GamePhase.Countdown: {
         const next = stepWorld(this.currState, ZERO_INPUT);
         return { ...next, timing: this.currState.timing }; // Don't advance lap timer during countdown

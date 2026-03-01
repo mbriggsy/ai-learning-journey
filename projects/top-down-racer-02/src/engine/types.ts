@@ -151,6 +151,8 @@ export interface TimingState {
   lastCheckpointIndex: number;
   /** True on the tick a lap finishes */
   lapComplete: boolean;
+  /** Completed lap times in ticks, in order (one entry per finished lap) */
+  lapTimes: readonly number[];
 }
 
 /** Full simulation world state at a single tick. */

@@ -1,11 +1,13 @@
 /**
  * RaceController — Headless Game State Machine
  *
- * Owns all game-phase logic: countdown, racing, paused, respawning.
+ * Owns all game-phase logic: countdown, racing, paused, respawning, finished.
  * Lives in src/engine/ with zero renderer/browser imports.
  * The renderer's GameLoop calls step() and reads state.
  * The AI bridge (Phase 4) uses RaceController directly.
  */
+
+import type { TimingState } from './types';
 
 // ─────────────────────────────────────────────────────────
 // Game Phase & Race State (moved from src/renderer/GameState.ts)
@@ -17,7 +19,11 @@ export enum GamePhase {
   Racing     = 'racing',
   Paused     = 'paused',
   Respawning = 'respawning',
+  Finished   = 'finished',
 }
+
+/** Value indicating unlimited laps (freeplay mode). */
+export const FREEPLAY_LAPS = 0;
 
 export interface RaceState {
   phase: GamePhase;
@@ -31,6 +37,8 @@ export interface RaceState {
   respawnTicksLeft: number;
   /** Whether this is the very first race start (only first gets countdown). */
   initialLoad: boolean;
+  /** Number of laps to race (0 = freeplay/unlimited). */
+  targetLaps: number;
 }
 
 export function createInitialRaceState(): RaceState {
@@ -41,6 +49,7 @@ export function createInitialRaceState(): RaceState {
     stuckTicks: 0,
     respawnTicksLeft: 0,
     initialLoad: true,
+    targetLaps: FREEPLAY_LAPS,
   };
 }
 
@@ -100,9 +109,10 @@ export class RaceController {
    * Advance the state machine by one tick.
    * @param signals - Abstract control inputs (pause, restart) from the caller
    * @param carSpeed - Current car speed for stuck detection
+   * @param timing - Current timing state for finish detection
    * @returns RaceAction the caller should perform
    */
-  step(signals: RaceControlSignals, carSpeed: number): RaceAction {
+  step(signals: RaceControlSignals, carSpeed: number, timing?: TimingState): RaceAction {
     const rs = this._state;
 
     switch (rs.phase) {
@@ -113,19 +123,34 @@ export class RaceController {
         return this.tickCountdown();
 
       case GamePhase.Racing:
-        return this.tickRacing(signals, carSpeed);
+        return this.tickRacing(signals, carSpeed, timing);
 
       case GamePhase.Paused:
         return this.tickPaused(signals);
 
       case GamePhase.Respawning:
         return this.tickRespawning();
+
+      case GamePhase.Finished:
+        return this.tickFinished(signals);
+
+      default: {
+        const _exhaustive: never = rs.phase;
+        return RaceAction.None;
+      }
     }
+  }
+
+  /** Set the target lap count. Persists across reset(). */
+  configure(targetLaps: number): void {
+    this._state.targetLaps = targetLaps;
   }
 
   /** Reset the state machine. countdown=true for initial load, false for R-key. */
   reset(countdown: boolean): void {
+    const targetLaps = this._state.targetLaps;
     this._state = createInitialRaceState();
+    this._state.targetLaps = targetLaps;
     if (countdown) {
       this._state.phase = GamePhase.Countdown;
     } else {
@@ -155,8 +180,19 @@ export class RaceController {
     return RaceAction.None;
   }
 
-  private tickRacing(signals: RaceControlSignals, carSpeed: number): RaceAction {
+  private tickRacing(signals: RaceControlSignals, carSpeed: number, timing?: TimingState): RaceAction {
     const rs = this._state;
+
+    // Finish detection: race completes when the car crosses the target lap count
+    if (
+      timing &&
+      rs.targetLaps !== FREEPLAY_LAPS &&
+      timing.lapComplete &&
+      timing.currentLap > rs.targetLaps
+    ) {
+      rs.phase = GamePhase.Finished;
+      return RaceAction.None;
+    }
 
     // Stuck detection (MECH-13)
     if (carSpeed < STUCK_SPEED_THRESHOLD) {
@@ -181,6 +217,18 @@ export class RaceController {
       rs.phase = GamePhase.Paused;
     }
 
+    return RaceAction.None;
+  }
+
+  private tickFinished(signals: RaceControlSignals): RaceAction {
+    // Restart (R key)
+    if (signals.restart) {
+      return RaceAction.ResetNoCd;
+    }
+    // Quit to menu (Q or ESC)
+    if (signals.quitToMenu || signals.togglePause) {
+      return RaceAction.QuitToMenu;
+    }
     return RaceAction.None;
   }
 

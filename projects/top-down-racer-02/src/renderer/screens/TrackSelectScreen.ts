@@ -9,7 +9,8 @@ import { Container, Graphics, Text } from 'pixi.js';
 import { buildTrack } from '../../engine/track';
 import type { TrackState } from '../../engine/types';
 import { TRACKS, type TrackInfo } from '../../tracks/registry';
-import { getBestTime, formatTime } from '../BestTimes';
+import { getBestTime } from '../BestTimes';
+import { formatBestTime } from '../../utils/formatTime';
 
 export type TrackSelectAction = { type: 'select'; index: number } | { type: 'back' };
 
@@ -263,7 +264,7 @@ export class TrackSelectScreen {
 
       // Time
       const t = new Text({
-        text: formatTime(medals[m].ticks),
+        text: formatBestTime(medals[m].ticks),
         style: { fontFamily: FONT, fontSize: 13, fill: PAL.TEXT_SECONDARY },
       });
       t.x = pipX + 12;
@@ -277,7 +278,7 @@ export class TrackSelectScreen {
 
     if (best !== null) {
       const bt = new Text({
-        text: `BEST  ${formatTime(best)}`,
+        text: `BEST  ${formatBestTime(best)}`,
         style: {
           fontFamily: FONT,
           fontSize: 14,

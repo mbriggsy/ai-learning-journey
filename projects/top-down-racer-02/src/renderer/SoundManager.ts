@@ -81,6 +81,7 @@ export class SoundManager {
   private lastLap = 1;
   private wasColliding = false;
   private initialized = false;
+  private lastPhase: GamePhase = GamePhase.Loading;
 
   // RI-02: Guard AudioContext.resume() to prevent 60 promises/sec
   private resumeRequested = false;
@@ -215,6 +216,9 @@ export class SoundManager {
 
     // Lap chime
     this.detectLapComplete(prev, curr, race);
+
+    // Victory fanfare on race finish
+    this.detectRaceFinish(race);
   }
 
   // --- Engine Sound --------------------------------------------------
@@ -433,6 +437,66 @@ export class SoundManager {
       osc2.stop(t + CHIME_DURATION + 0.01);
 
       // RI-06: Clean up one-shot nodes after they finish
+      osc2.onended = () => { osc2.disconnect(); gain2.disconnect(); };
+    }
+  }
+
+  // --- Victory Fanfare ------------------------------------------------
+
+  private detectRaceFinish(race: RaceState): void {
+    if (race.phase === GamePhase.Finished && this.lastPhase !== GamePhase.Finished) {
+      this.playVictoryFanfare();
+    }
+    this.lastPhase = race.phase;
+  }
+
+  private playVictoryFanfare(): void {
+    if (!this.ctx || !this.sfxGain) return;
+
+    const t = this.ctx.currentTime;
+
+    // C major arpeggio: C5 → E5 → G5 → C6
+    const notes = [
+      { freq: 523.25, delay: 0.00, sustain: 0.2 },
+      { freq: 659.25, delay: 0.10, sustain: 0.2 },
+      { freq: 783.99, delay: 0.20, sustain: 0.2 },
+      { freq: 1046.5, delay: 0.32, sustain: 0.6 }, // Final note: longer sustain
+    ];
+
+    for (const note of notes) {
+      // Primary: square wave for chiptune character
+      const osc = this.ctx.createOscillator();
+      osc.type = 'square';
+      osc.frequency.value = note.freq;
+
+      const gain = this.ctx.createGain();
+      const start = t + note.delay;
+      gain.gain.setValueAtTime(0, start);
+      gain.gain.linearRampToValueAtTime(0.20, start + 0.01); // Sharp attack
+      gain.gain.setTargetAtTime(0.12, start + 0.01, 0.1); // Sustain
+      gain.gain.exponentialRampToValueAtTime(0.00001, start + note.sustain);
+
+      osc.connect(gain);
+      gain.connect(this.sfxGain);
+      osc.start(start);
+      osc.stop(start + note.sustain + 0.01);
+      osc.onended = () => { osc.disconnect(); gain.disconnect(); };
+
+      // Harmony layer: triangle wave one octave below, quieter
+      const osc2 = this.ctx.createOscillator();
+      osc2.type = 'triangle';
+      osc2.frequency.value = note.freq / 2;
+
+      const gain2 = this.ctx.createGain();
+      gain2.gain.setValueAtTime(0, start);
+      gain2.gain.linearRampToValueAtTime(0.10, start + 0.01);
+      gain2.gain.setTargetAtTime(0.06, start + 0.01, 0.1);
+      gain2.gain.exponentialRampToValueAtTime(0.00001, start + note.sustain);
+
+      osc2.connect(gain2);
+      gain2.connect(this.sfxGain);
+      osc2.start(start);
+      osc2.stop(start + note.sustain + 0.01);
       osc2.onended = () => { osc2.disconnect(); gain2.disconnect(); };
     }
   }

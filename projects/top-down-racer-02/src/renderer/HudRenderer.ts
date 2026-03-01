@@ -16,7 +16,7 @@ const SPEED_BAR_COLOR = 0x44ffaa;
 
 // Minimap (bottom-right)
 const MINIMAP_SIZE   = 160;  // Width and height of minimap area in pixels
-const MINIMAP_SCALE  = 0.30; // World units -> minimap pixels
+const MINIMAP_PADDING = 8;   // Padding inside minimap area
 const MINIMAP_DOT    = 4;    // Car dot radius in pixels
 const MINIMAP_TRACK_COLOR = 0xaaaaaa;
 const MINIMAP_CAR_COLOR   = 0xffff00;
@@ -257,12 +257,11 @@ export class HudRenderer {
   }
 
   /**
-   * Compute the minimap anchor offset so the track is centered in the minimap area.
-   * The track spans roughly -200 to +200 in world space (track01 extents).
-   * We compute the bounding box of outerBoundary to center correctly.
+   * Compute the minimap transform: center offset and scale to fit the track
+   * within the MINIMAP_SIZE area with padding.
    */
-  private computeMinimapTransform(outerBoundary: readonly { x: number; y: number }[]): { cx: number; cy: number } {
-    if (outerBoundary.length === 0) return { cx: 0, cy: 0 };
+  private computeMinimapTransform(outerBoundary: readonly { x: number; y: number }[]): { cx: number; cy: number; scale: number } {
+    if (outerBoundary.length === 0) return { cx: 0, cy: 0, scale: 0.3 };
     let minX = Infinity, minY = Infinity, maxX = -Infinity, maxY = -Infinity;
     for (const p of outerBoundary) {
       if (p.x < minX) minX = p.x;
@@ -270,9 +269,14 @@ export class HudRenderer {
       if (p.x > maxX) maxX = p.x;
       if (p.y > maxY) maxY = p.y;
     }
+    const tw = maxX - minX;
+    const th = maxY - minY;
+    const fitSize = MINIMAP_SIZE - MINIMAP_PADDING * 2;
+    const scale = Math.min(fitSize / tw, fitSize / th);
     return {
       cx: (minX + maxX) / 2,
       cy: (minY + maxY) / 2,
+      scale,
     };
   }
 
@@ -280,15 +284,15 @@ export class HudRenderer {
     if (this.trackOutlineBuilt) return;
     this.trackOutlineBuilt = true;
 
-    const { cx, cy } = this.computeMinimapTransform(outerBoundary);
+    const { cx, cy, scale } = this.computeMinimapTransform(outerBoundary);
     const ox = this.minimapOffsetX + MINIMAP_SIZE / 2;
     const oy = this.minimapOffsetY + MINIMAP_SIZE / 2;
 
     const pts: number[] = [];
     for (const p of outerBoundary) {
       pts.push(
-        ox + (p.x - cx) * MINIMAP_SCALE,
-        oy - (p.y - cy) * MINIMAP_SCALE, // Flip Y (engine Y-up -> screen Y-down)
+        ox + (p.x - cx) * scale,
+        oy - (p.y - cy) * scale, // Flip Y (engine Y-up -> screen Y-down)
       );
     }
 
@@ -304,13 +308,13 @@ export class HudRenderer {
     // Build track outline once
     this.buildMinimapTrack(outerBoundary);
 
-    // Recompute center for car dot positioning
-    const { cx, cy } = this.computeMinimapTransform(outerBoundary);
+    // Recompute center + scale for car dot positioning
+    const { cx, cy, scale } = this.computeMinimapTransform(outerBoundary);
     const ox = this.minimapOffsetX + MINIMAP_SIZE / 2;
     const oy = this.minimapOffsetY + MINIMAP_SIZE / 2;
 
-    const dotX = ox + (carX - cx) * MINIMAP_SCALE;
-    const dotY = oy - (carY - cy) * MINIMAP_SCALE; // Flip Y
+    const dotX = ox + (carX - cx) * scale;
+    const dotY = oy - (carY - cy) * scale; // Flip Y
 
     this.minimapGraphics.clear();
     this.minimapGraphics.circle(dotX, dotY, MINIMAP_DOT).fill(MINIMAP_CAR_COLOR);

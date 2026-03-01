@@ -474,10 +474,14 @@ export class OverlayRenderer {
       g.moveTo(cx + 12, cy - 4).lineTo(cx + 6, cy + 4)
         .stroke({ width: 2, color: STATUS_RED, alpha: 0.9 });
     } else {
-      // Sound wave arcs
-      g.arc(cx + 5, cy, 5, -Math.PI / 4, Math.PI / 4)
+      // Sound wave arcs — use moveTo before each arc to prevent stray connecting line
+      const r1 = 5, r2 = 9;
+      const a1 = -Math.PI / 4, a2 = Math.PI / 4;
+      g.moveTo(cx + 5 + Math.cos(a1) * r1, cy + Math.sin(a1) * r1)
+        .arc(cx + 5, cy, r1, a1, a2)
         .stroke({ width: 1.5, color, alpha: 0.7 });
-      g.arc(cx + 5, cy, 9, -Math.PI / 4, Math.PI / 4)
+      g.moveTo(cx + 5 + Math.cos(a1) * r2, cy + Math.sin(a1) * r2)
+        .arc(cx + 5, cy, r2, a1, a2)
         .stroke({ width: 1.5, color, alpha: 0.35 });
     }
   }

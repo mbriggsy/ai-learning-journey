@@ -32,11 +32,11 @@
   - [x] 04-01-PLAN.md -- AI computation TDD: ray caster, observation vector, reward function, config types
   - [x] 04-02-PLAN.md -- Headless env controller, WebSocket bridge server, default config JSON
   - [x] 04-03-PLAN.md -- Python Gymnasium wrapper, bridge client, env_checker + random agent validation
-- [ ] **Phase 5: AI Training Pipeline** -- 4 requirements, 3 plans
+- [x] **Phase 5: AI Training Pipeline** -- 4 requirements, 3 plans (COMPLETE)
   Plans:
   - [x] 05-01-PLAN.md -- Training infrastructure: dependencies, custom TensorBoard callback, throughput benchmark
   - [x] 05-02-PLAN.md -- PPO + SAC training scripts, model evaluation script, checkpoint save/load pipeline
-  - [ ] 05-03-PLAN.md -- Tests: throughput benchmark, callback unit tests, checkpoint integration tests
+  - [x] 05-03-PLAN.md -- Tests: throughput benchmark, callback unit tests, checkpoint integration tests
 - [ ] **Phase 6: AI vs Human Mode** -- 8 requirements (AVH-01..05, VIS-06, LDB-01, 02)
 
 ---

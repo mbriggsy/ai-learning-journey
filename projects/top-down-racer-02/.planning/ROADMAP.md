@@ -13,24 +13,25 @@
   - [x] 01-02-PLAN.md -- Track builder, collision detection/response, primary track data
   - [x] 01-03-PLAN.md -- Car physics TDD: bicycle model, weight transfer, tire forces, input smoothing
   - [x] 01-04-PLAN.md -- Checkpoint system, world step function, determinism verification
-- [ ] **Phase 2: PixiJS Renderer + Playable Game** -- 14 requirements, 5 plans (In Progress: 4/5)
+- [x] **Phase 2: PixiJS Renderer + Playable Game** -- 14 requirements, 5 plans (COMPLETE)
   Plans:
   - [x] 02-01-PLAN.md -- PixiJS bootstrap, game loop, input handler, game state machine
   - [x] 02-02-PLAN.md -- Track & car rendering: camera controller, track renderer, car sprite, world renderer
   - [x] 02-03-PLAN.md -- HUD elements: speedometer, lap time, best lap, lap counter, minimap
   - [x] 02-04-PLAN.md -- Game flow overlays: countdown, pause, respawn fade, lap-complete
-- [ ] **Phase 3: Game Features & Polish** -- 14 requirements, 5 plans
+  - [x] 02-05-PLAN.md -- Fullscreen toggle
+- [x] **Phase 3: Game Features & Polish** -- 14 requirements, 5 plans (COMPLETE)
   Plans:
-  - [ ] 03-01-PLAN.md -- State machine extraction: RaceController to engine, GameLoop thin shell
-  - [ ] 03-02-PLAN.md -- Visual effects: skid marks, checkpoint flash, dust/spark particles
-  - [ ] 03-03-PLAN.md -- Sound system: Web Audio synth engine, screech, impact, beeps, chime
-  - [ ] 03-04-PLAN.md -- Additional tracks: Speedway (fast/flowing) and Gauntlet (tight/technical)
-  - [ ] 03-05-PLAN.md -- Menu system: main menu, track selection, settings, pause quit
-- [ ] **Phase 4: Gymnasium Environment Wrapper** -- 9 requirements, 3 plans (AI-01..07, 12, 13)
+  - [x] 03-01-PLAN.md -- State machine extraction: RaceController to engine, GameLoop thin shell
+  - [x] 03-02-PLAN.md -- Visual effects: skid marks, checkpoint flash, dust/spark particles
+  - [x] 03-03-PLAN.md -- Sound system: Web Audio synth engine, screech, impact, beeps, chime
+  - [x] 03-04-PLAN.md -- Additional tracks: Speedway (fast/flowing) and Gauntlet (tight/technical)
+  - [x] 03-05-PLAN.md -- Menu system: main menu, track selection, settings, pause quit
+- [x] **Phase 4: Gymnasium Environment Wrapper** -- 9 requirements, 3 plans (COMPLETE)
   Plans:
-  - [ ] 04-01-PLAN.md -- AI computation TDD: ray caster, observation vector, reward function, config types
-  - [ ] 04-02-PLAN.md -- Headless env controller, WebSocket bridge server, default config JSON
-  - [ ] 04-03-PLAN.md -- Python Gymnasium wrapper, bridge client, env_checker + random agent validation
+  - [x] 04-01-PLAN.md -- AI computation TDD: ray caster, observation vector, reward function, config types
+  - [x] 04-02-PLAN.md -- Headless env controller, WebSocket bridge server, default config JSON
+  - [x] 04-03-PLAN.md -- Python Gymnasium wrapper, bridge client, env_checker + random agent validation
 - [ ] **Phase 5: AI Training Pipeline** -- 4 requirements (AI-08..11)
 - [ ] **Phase 6: AI vs Human Mode** -- 8 requirements (AVH-01..05, VIS-06, LDB-01, 02)
 

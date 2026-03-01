@@ -20,7 +20,7 @@
 import type { Vec2, CarState, Input, SmoothedInput } from './types';
 import { Surface } from './types';
 import { vec2, fromAngle } from './vec2';
-import { CAR, TIRE, SURFACE_GRIP, INPUT_RATES, STEER } from './constants';
+import { CAR, TIRE, SURFACE_GRIP, SURFACE_SPEED, INPUT_RATES, STEER } from './constants';
 
 /** Minimum speed for bicycle geometry to work (prevents atan2 noise at rest). */
 const LOW_SPEED_GUARD = 1.0;
@@ -132,6 +132,7 @@ export function stepCar(
   dt: number,
 ): CarState {
   const gripMul = SURFACE_GRIP[surface] ?? 1.0;
+  const speedMul = SURFACE_SPEED[surface] ?? 1.0;
 
   // 1. Smooth input
   const smoothed = smoothInput(car.prevInput, input, car.speed, dt);
@@ -172,9 +173,11 @@ export function stepCar(
   const newYawRate = headingDelta / dt;
 
   // 3. Longitudinal forces — forward acceleration along heading
-  const engineForce = smoothed.throttle * CAR.maxEngineForce;
+  //    Surface affects both engine output AND drag. On gravel/grass the engine
+  //    produces less force and drag increases, so equilibrium speed ≈ maxSpeed * speedMul.
+  const engineForce = smoothed.throttle * CAR.maxEngineForce * speedMul;
   const brakeForce = smoothed.brake * CAR.maxBrakeForce;
-  const dragForce = CAR.dragCoefficient * car.speed * car.speed;
+  const dragForce = CAR.dragCoefficient * car.speed * car.speed / speedMul;
   const rollingRes = CAR.rollingResistance;
 
   // Net force in the forward direction

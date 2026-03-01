@@ -109,6 +109,10 @@ export interface TrackState {
   innerBoundary: readonly Vec2[];
   /** Outer boundary polyline (right side of track) */
   outerBoundary: readonly Vec2[];
+  /** Inner road-edge polyline (road surface boundary, inside of inner wall) */
+  innerRoadEdge: readonly Vec2[];
+  /** Outer road-edge polyline (road surface boundary, inside of outer wall) */
+  outerRoadEdge: readonly Vec2[];
   /** Checkpoint gates along the track */
   checkpoints: readonly Checkpoint[];
   /** Arc-length lookup table for the centerline spline */

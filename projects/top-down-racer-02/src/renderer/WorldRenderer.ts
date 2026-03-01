@@ -30,6 +30,7 @@ export class WorldRenderer {
   private trackBuilt = false;
   /** Own sub-container so reset() doesn't nuke siblings (e.g. EffectsRenderer). */
   private sceneContainer: Container;
+  private shoulderSide: 'inner' | 'both' = 'inner';
 
   constructor(private worldContainer: ContainerType) {
     this.camera = new CameraController();
@@ -44,7 +45,7 @@ export class WorldRenderer {
    */
   initTrack(track: WorldState['track']): void {
     if (this.trackBuilt) return;
-    const trackGraphics = buildTrackGraphics(track);
+    const trackGraphics = buildTrackGraphics(track, this.shoulderSide);
     this.sceneContainer.addChild(trackGraphics);   // Track first (behind car)
     this.sceneContainer.addChild(this.carRenderer.container); // Car on top
     this.trackBuilt = true;
@@ -91,6 +92,11 @@ export class WorldRenderer {
       screenH,
       curr.car,
     );
+  }
+
+  /** Set shoulder rendering config for the next track build. */
+  setShoulderSide(side: 'inner' | 'both'): void {
+    this.shoulderSide = side;
   }
 
   /** Reset for a new track — clears only our own scene children so initTrack rebuilds on next render. */

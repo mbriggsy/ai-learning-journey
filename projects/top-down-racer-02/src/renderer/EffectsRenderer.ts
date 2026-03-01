@@ -216,10 +216,11 @@ export class EffectsRenderer {
 
   private spawnDust(curr: WorldState): void {
     const { car } = curr;
-    if (car.surface !== Surface.Runoff || car.speed < 5) return;
+    if (car.surface === Surface.Road || car.speed < 5) return;
 
-    // Spawn 1-2 particles per tick when on runoff (sparse + punchy)
-    const count = car.speed > 40 ? 2 : 1;
+    // Spawn 1-2 particles per tick on runoff, 1 on shoulder (sand strip)
+    const onShoulder = car.surface === Surface.Shoulder;
+    const count = onShoulder ? 1 : (car.speed > 40 ? 2 : 1);
     for (let i = 0; i < count; i++) {
       if (this.particles.length >= MAX_PARTICLES) break;
 

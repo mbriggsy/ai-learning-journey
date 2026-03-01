@@ -1,9 +1,9 @@
 import { Container, Graphics } from 'pixi.js';
-import type { TrackState } from '../engine/types';
+import type { TrackState, Vec2 } from '../engine/types';
 
 // Track surface colors (locked decisions from CONTEXT.md)
 const COLOR_ROAD_SURFACE   = 0x3a3a3a; // Dark grey — safe
-const COLOR_RUNOFF_BG      = 0xc2a87a; // Light tan — warning zone
+const COLOR_RUNOFF_BG      = 0xc2a87a; // Light tan — sand/gravel runoff
 const COLOR_WALL_STROKE    = 0x7b3b2a; // Red-brown — danger
 const COLOR_FINISH_WHITE   = 0xffffff;
 const COLOR_FINISH_DARK    = 0x111111;
@@ -16,12 +16,15 @@ const FINISH_SQUARES       = 8; // Number of alternating squares across finish l
  * Called once at startup. Returns a Container added to worldContainer.
  *
  * Layer order (back to front):
- *   1. Runoff background (full outer polygon, light tan)
- *   2. Road surface (outer minus inner, dark grey)
- *   3. Wall boundary strokes (red-brown lines)
- *   4. Finish line (checkered strip at checkpoint[0])
+ *   1. Runoff background (wall-to-wall annular region, light tan)
+ *   2. Road surface (road-edge annular region, dark grey)
+ *   3. Finish line (checkered strip at checkpoint[0])
+ *   4. Wall boundary strokes (red-brown lines)
  */
-export function buildTrackGraphics(track: TrackState): Container {
+export function buildTrackGraphics(
+  track: TrackState,
+  shoulderSide: 'inner' | 'both' = 'inner',
+): Container {
   const container = new Container();
 
   // Helper: Vec2[] → flat number array [x0, y0, x1, y1, ...]
@@ -31,15 +34,22 @@ export function buildTrackGraphics(track: TrackState): Container {
     return arr;
   }
 
-  // 1. Runoff background — full outer boundary filled light tan
+  // 1. Runoff/shoulder background — sand-colored annular fill between walls
+  //    Shows as a sand strip (shoulder) between road edge and wall.
   const runoff = new Graphics();
   runoff.poly(flatten(track.outerBoundary)).fill(COLOR_RUNOFF_BG);
+  runoff.poly(flatten(track.innerBoundary)).cut();
   container.addChild(runoff);
 
-  // 2. Road surface — outer polygon filled dark grey, inner polygon cut out
+  // 2. Road surface — dark grey annular fill
+  //    'both' shoulders: road stops at road edges, shoulder on both sides
+  //    'inner' shoulder: road extends to outer wall, shoulder only on inner side
+  const outerRoadPoly = shoulderSide === 'inner'
+    ? flatten(track.outerBoundary)
+    : flatten(track.outerRoadEdge);
   const road = new Graphics();
-  road.poly(flatten(track.outerBoundary)).fill(COLOR_ROAD_SURFACE);
-  road.poly(flatten(track.innerBoundary)).cut();
+  road.poly(outerRoadPoly).fill(COLOR_ROAD_SURFACE);
+  road.poly(flatten(track.innerRoadEdge)).cut();
   container.addChild(road);
 
   // 3. Finish line — BEFORE walls so walls render on top of edges
@@ -54,8 +64,6 @@ export function buildTrackGraphics(track: TrackState): Container {
   walls.poly(flatten(track.innerBoundary)).stroke({ width: WALL_STROKE_WIDTH, color: COLOR_WALL_STROKE });
   container.addChild(walls);
 
-  // No cacheAsTexture — simple oval doesn't need it and it was hiding the finish line
-
   return container;
 }
 
@@ -64,15 +72,12 @@ function buildFinishLine(track: TrackState): Graphics {
   const gate = track.checkpoints[0];
   const g = new Graphics();
 
-  // Row depth runs ALONG the track direction (not perpendicular to it).
-  // The gate left→right already spans across the track; thickness extends forward/back.
   const perpX = gate.direction.x;
   const perpY = gate.direction.y;
-  const rowThick = 4.0; // Thickness of each checker row in world units
+  const rowThick = 4.0;
 
-  // Two rows of checkers (offset pattern)
   for (let row = 0; row < 2; row++) {
-    const rowOffset = (row - 0.5) * rowThick; // center the two rows on the gate line
+    const rowOffset = (row - 0.5) * rowThick;
 
     for (let i = 0; i < FINISH_SQUARES; i++) {
       const t0 = i / FINISH_SQUARES;
@@ -83,7 +88,6 @@ function buildFinishLine(track: TrackState): Graphics {
       const x1 = gate.left.x + (gate.right.x - gate.left.x) * t1;
       const y1 = gate.left.y + (gate.right.y - gate.left.y) * t1;
 
-      // Offset by row
       const ox0 = x0 + perpX * rowOffset;
       const oy0 = y0 + perpY * rowOffset;
       const ox1 = x1 + perpX * rowOffset;
@@ -98,7 +102,6 @@ function buildFinishLine(track: TrackState): Graphics {
       const qx3 = ox0 - perpX * (rowThick / 2);
       const qy3 = oy0 - perpY * (rowThick / 2);
 
-      // Alternate colors, offset by row for classic checkerboard
       const color = (i + row) % 2 === 0 ? COLOR_FINISH_WHITE : COLOR_FINISH_DARK;
       g.poly([qx0, qy0, qx1, qy1, qx2, qy2, qx3, qy3]).fill(color);
     }

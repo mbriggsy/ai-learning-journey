@@ -182,20 +182,50 @@ describe('getSurface', () => {
     const cp = makeCircularTrack(80, 10, 12);
     const track = buildTrack(cp, 10);
 
-    // Point at radius 80 + 39 (beyond shoulder, in the thin runoff strip near the wall)
+    // Point at radius 80 + 39 (in the runoff zone near the wall)
     const surface = getSurface({ x: 119, y: 0 }, track);
     expect(surface).toBe(Surface.Runoff);
   });
 
-  it('returns Road at the center of the track loop', () => {
-    // For a circular track, the center (0,0) is inside the loop
-    // but NOT on the road surface — it's far from the centerline ring
+  it('returns Runoff at the center of the track loop (far from road)', () => {
     const cp = makeCircularTrack(80, 10, 12);
     const track = buildTrack(cp, 10);
 
     const surface = getSurface({ x: 0, y: 0 }, track);
     // Distance from (0,0) to centerline ring is ~80, way beyond width of 10
     expect(surface).toBe(Surface.Runoff);
+  });
+
+  it('returns Shoulder on both inner and outer sides of the road', () => {
+    const cp = makeCircularTrack(80, 10, 12);
+    const track = buildTrack(cp, 10);
+
+    // Outer side: radius 92 (beyond road width 10, in shoulder zone)
+    expect(getSurface({ x: 92, y: 0 }, track)).toBe(Surface.Shoulder);
+    // Inner side: radius 68 (beyond road width 10 toward center, in shoulder zone)
+    expect(getSurface({ x: 68, y: 0 }, track)).toBe(Surface.Shoulder);
+  });
+
+  it('only returns Road, Shoulder, or Runoff', () => {
+    const cp = makeCircularTrack(80, 10, 12);
+    const track = buildTrack(cp, 10);
+
+    const testPoints: Vec2[] = [
+      { x: 80, y: 0 },    // centerline
+      { x: 88, y: 0 },    // near road edge
+      { x: 92, y: 0 },    // just off road (shoulder)
+      { x: 110, y: 0 },   // deep in runoff
+      { x: 68, y: 0 },    // inner off-road (shoulder)
+      { x: 0, y: 0 },     // center of loop
+      { x: 300, y: 300 },  // far away
+    ];
+
+    for (const pt of testPoints) {
+      const s = getSurface(pt, track);
+      expect(
+        s === Surface.Road || s === Surface.Shoulder || s === Surface.Runoff,
+      ).toBe(true);
+    }
   });
 });
 
@@ -389,6 +419,40 @@ describe('Track 03', () => {
     const track = buildTrack(TRACK_03_CONTROL_POINTS, 30);
     const surface = getSurface(TRACK_03_CONTROL_POINTS[0].position, track);
     expect(surface).toBe(Surface.Road);
+  });
+});
+
+/**
+ * Surface detection for all real tracks — off-road is always Runoff, on-road is always Road.
+ * No Shoulder surface exists; everything beyond the road edge is sand/gravel runoff.
+ */
+describe('getSurface — all tracks: off-road = Runoff', () => {
+  it.each([
+    ['Track 01', TRACK_01_CONTROL_POINTS],
+    ['Track 02', TRACK_02_CONTROL_POINTS],
+    ['Track 03', TRACK_03_CONTROL_POINTS],
+  ])('%s — centerline is Road', (_name, points) => {
+    const track = buildTrack(points, 30);
+    // Every control point's position sits on the centerline → must be Road
+    for (const cp of points) {
+      expect(getSurface(cp.position, track)).toBe(Surface.Road);
+    }
+  });
+
+  it.each([
+    ['Track 01', TRACK_01_CONTROL_POINTS],
+    ['Track 02', TRACK_02_CONTROL_POINTS],
+    ['Track 03', TRACK_03_CONTROL_POINTS],
+  ])('%s — far-away points are Runoff', (_name, points) => {
+    const track = buildTrack(points, 30);
+    const farPoints: Vec2[] = [
+      { x: 1000, y: 1000 },
+      { x: -1000, y: -1000 },
+      { x: 0, y: 2000 },
+    ];
+    for (const pt of farPoints) {
+      expect(getSurface(pt, track)).toBe(Surface.Runoff);
+    }
   });
 });
 

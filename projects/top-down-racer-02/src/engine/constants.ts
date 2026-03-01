@@ -54,12 +54,25 @@ export const TIRE = {
 
 /**
  * Surface grip multipliers indexed by Surface enum value (MECH-07).
+ * Affects traction (lateral velocity kill).
  * Road = full grip, Runoff = ~50% grip per CONTEXT.md.
  */
 export const SURFACE_GRIP: Record<number, number> = {
   0: 1.0, // Surface.Road
   1: 0.5, // Surface.Runoff
-  2: 0.95, // Surface.Shoulder
+  2: 0.7, // Surface.Shoulder — sand strip, noticeable grip loss
+};
+
+/**
+ * Surface speed multipliers indexed by Surface enum value.
+ * Reduces engine force AND increases drag. The equilibrium top speed on
+ * a surface is roughly maxSpeed * speedMul, so the car slows noticeably.
+ * Road = full power, Runoff = severe penalty (gravel/sand).
+ */
+export const SURFACE_SPEED: Record<number, number> = {
+  0: 1.0,  // Surface.Road — full engine power, top speed ~160
+  1: 0.4,  // Surface.Runoff — top speed ~64, rapid deceleration
+  2: 0.85, // Surface.Shoulder — mild speed penalty on sand strip
 };
 
 /** Input smoothing response rates (MECH-01, MECH-02). */

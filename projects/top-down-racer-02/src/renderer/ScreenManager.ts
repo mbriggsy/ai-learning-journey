@@ -144,7 +144,8 @@ export class ScreenManager {
     // Load the selected track (resets world, restarts with countdown)
     this.gameLoop.loadTrack(trackInfo.controlPoints);
 
-    // Reset renderers so the new track gets rendered fresh
+    // Configure shoulder rendering for this track, then reset renderers
+    this.worldRenderer.setShoulderSide(trackInfo.shoulderSide ?? 'inner');
     this.worldRenderer.reset();
     this.hudRenderer.reset();
     this.effectsRenderer.reset();

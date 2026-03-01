@@ -50,7 +50,8 @@ const SAMPLES_PER_SEGMENT_ARC = 20;
  * Large enough that cars can go off-track (including into the infield) before
  * hitting a hard wall, mimicking real runoff areas and gravel traps.
  */
-const WALL_OFFSET = 30;
+export const WALL_OFFSET = 30;
+
 
 /**
  * Build a complete track from control points and desired checkpoint count.
@@ -90,6 +91,8 @@ export function buildTrack(
   //   Pass 4: Generate boundary points from smoothed offsets
   const innerBoundary: Vec2[] = [];
   const outerBoundary: Vec2[] = [];
+  const innerRoadEdge: Vec2[] = [];
+  const outerRoadEdge: Vec2[] = [];
 
   // Small arc-length step for curvature estimation (half the sample spacing)
   const curvatureEps = totalLength / (totalSamples * 2);
@@ -125,11 +128,13 @@ export function buildTrack(
   const leftReduction: number[] = [];
   const rightReduction: number[] = [];
   const wallWidths: number[] = [];
+  const roadWidths: number[] = [];
   for (let i = 0; i < totalSamples; i++) {
     const dist = (i / totalSamples) * totalLength;
     const width = interpolateWidth(controlPoints, positions, arcLengthTable, dist);
     const wallWidth = width + WALL_OFFSET;
     wallWidths.push(wallWidth);
+    roadWidths.push(width);
 
     const R = Math.abs(signedR[i]);
     const maxInnerOffset = Math.max(MIN_INNER_WALL, R - MIN_INNER_WALL);
@@ -159,7 +164,7 @@ export function buildTrack(
     smoothRightRed = boxFilterCircular(smoothRightRed, SMOOTH_RADIUS);
   }
 
-  // ── Pass 4: Generate boundary points from smoothed offsets ────────────
+  // ── Pass 4: Generate boundary + road-edge points from smoothed offsets ──
   for (let i = 0; i < totalSamples; i++) {
     const dist = (i / totalSamples) * totalLength;
     const center = pointAtDistance(positions, arcLengthTable, dist);
@@ -175,6 +180,14 @@ export function buildTrack(
 
     innerBoundary.push(add(center, leftOffset));
     outerBoundary.push(add(center, rightOffset));
+
+    // Road-edge: offset by road width (not wall width), clamped to stay
+    // inside the wall boundary (at least 2 units gap)
+    const leftRoadW = Math.min(roadWidths[i], leftW - 2);
+    const rightRoadW = Math.min(roadWidths[i], rightW - 2);
+
+    innerRoadEdge.push(add(center, scale(perpCCW(tangentNorm), leftRoadW)));
+    outerRoadEdge.push(add(center, scale(perpCW(tangentNorm), rightRoadW)));
   }
 
   // ── Pass 5: Smooth boundary positions to eliminate tangent oscillation ──
@@ -201,10 +214,36 @@ export function buildTrack(
 
   smoothBoundary(innerBoundary);
   smoothBoundary(outerBoundary);
+  smoothBoundary(innerRoadEdge);
+  smoothBoundary(outerRoadEdge);
+
+  // ── Normalize topology: outerBoundary must be the LARGER polygon ────
+  // perpCCW/perpCW offsets produce consistent left/right boundaries, but
+  // which side is "outer" (larger polygon enclosing the track) depends on
+  // the circuit's winding direction. CW circuits have innerBoundary as the
+  // larger polygon; CCW circuits have outerBoundary as larger. The renderer
+  // needs outerBoundary to always be the larger polygon for fill/cut to work.
+  // Compute signed area to detect and swap if needed.
+  let outerArea = 0;
+  let innerArea = 0;
+  for (let i = 0; i < totalSamples; i++) {
+    const j = (i + 1) % totalSamples;
+    outerArea += outerBoundary[i].x * outerBoundary[j].y - outerBoundary[j].x * outerBoundary[i].y;
+    innerArea += innerBoundary[i].x * innerBoundary[j].y - innerBoundary[j].x * innerBoundary[i].y;
+  }
+  if (Math.abs(outerArea) < Math.abs(innerArea)) {
+    // outerBoundary is smaller — swap all four boundary arrays in-place
+    for (let i = 0; i < totalSamples; i++) {
+      [innerBoundary[i], outerBoundary[i]] = [outerBoundary[i], innerBoundary[i]];
+      [innerRoadEdge[i], outerRoadEdge[i]] = [outerRoadEdge[i], innerRoadEdge[i]];
+    }
+  }
 
   // Close the boundaries by appending the first point
   innerBoundary.push(innerBoundary[0]);
   outerBoundary.push(outerBoundary[0]);
+  innerRoadEdge.push(innerRoadEdge[0]);
+  outerRoadEdge.push(outerRoadEdge[0]);
 
   // Generate checkpoint gates at uniform arc-length intervals.
   // Gate endpoints are clipped to the actual boundary polylines so they
@@ -254,6 +293,8 @@ export function buildTrack(
     controlPoints,
     innerBoundary,
     outerBoundary,
+    innerRoadEdge,
+    outerRoadEdge,
     checkpoints,
     arcLengthTable,
     totalLength,
@@ -271,7 +312,7 @@ export function buildTrack(
  *
  * @param position - World-space position to test
  * @param track - Built track state
- * @returns Surface.Road if inside track boundaries, Surface.Runoff otherwise
+ * @returns Surface.Road if within road width, Surface.Runoff otherwise
  */
 export function getSurface(position: Vec2, track: TrackState): Surface {
   const { distance: dist, arcLength } = distanceToTrackCenter(position, track);

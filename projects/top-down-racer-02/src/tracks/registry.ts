@@ -10,6 +10,8 @@ export interface TrackInfo {
   controlPoints: TrackControlPoint[];
   /** Par times in ticks (gold/silver/bronze). Tuned after playtesting. */
   parTimes: { gold: number; silver: number; bronze: number };
+  /** Which side gets a visible shoulder (sand strip between road edge and wall). Always inner only. */
+  shoulderSide?: 'inner';
 }
 
 export const TRACKS: TrackInfo[] = [

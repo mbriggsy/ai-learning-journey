@@ -10,7 +10,8 @@
       "mcp__serena__*",
       "mcp__context7__*",
       "mcp__sequential-thinking__*",
-      "mcp__sequentialthinking__*"
+      "mcp__sequentialthinking__*",
+      "mcp__playwright__*"
     ]
   }
 }

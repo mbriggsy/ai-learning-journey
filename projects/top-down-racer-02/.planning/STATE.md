@@ -3,22 +3,22 @@ gsd_state_version: 1.0
 milestone: v1.0
 milestone_name: milestone
 status: in_progress
-last_updated: "2026-03-01T20:00:00.000Z"
+last_updated: "2026-03-01T23:00:00.000Z"
 progress:
   total_phases: 6
   completed_phases: 4
-  total_plans: 17
-  completed_plans: 17
+  total_plans: 20
+  completed_plans: 18
 ---
 
 # Project State: Top-Down Racer v02
 
 **Last updated:** 2026-03-01
-**Overall progress:** 67%
+**Overall progress:** 72%
 
 ## Current Phase
 
-**Phase 5: AI Training Pipeline** -- NOT STARTED (unblocked, plans not yet created)
+**Phase 5: AI Training Pipeline** -- IN PROGRESS (Plan 1/3 complete)
 
 ## Phase Status
 
@@ -28,7 +28,7 @@ progress:
 | 2. PixiJS Renderer + Playable Game | Complete (Plan 5/5 done) | 100% |
 | 3. Game Features & Polish | Complete (Plan 5/5 done) | 100% |
 | 4. Gymnasium Environment Wrapper | Complete (Plan 3/3 done) | 100% |
-| 5. AI Training Pipeline | Not Started (unblocked) | 0% |
+| 5. AI Training Pipeline | In Progress (Plan 1/3 done) | 33% |
 | 6. AI vs Human Mode | Blocked by Phase 5 | 0% |
 
 ## Decisions Log
@@ -44,6 +44,9 @@ progress:
 | 2026-02-27 | PixiJS v8 cacheAsTexture(true) requires boolean arg | v8 changed from no-arg to required boolean/options parameter |
 | 2026-02-27 | PixiJS v8 dropShadow requires object, not boolean | v8 text style dropShadow needs { color, blur, distance } object form |
 | 2026-02-27 | Key debouncing for Escape/R via wasDown flags | Prevents rapid toggle when key held across multiple 60Hz ticks |
+| 2026-03-01 | Python 3.10 venv (not 3.14) for SB3/PyTorch compatibility | PyTorch 2.3 requires 3.10-3.12; pygame (SB3[extra] dep) fails on 3.14 |
+| 2026-03-01 | record_mean() for per-step rewards, record() for episode aggregates | record() overwrites; only last value before dump() survives for per-step metrics |
+| 2026-03-01 | Per-lap time via step count delta, not cumulative stepCount | Cumulative stepCount/60 gives episode time, not individual lap time |
 
 ## Blockers
 

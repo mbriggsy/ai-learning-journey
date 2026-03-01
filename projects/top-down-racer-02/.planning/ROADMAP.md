@@ -26,7 +26,11 @@
   - [ ] 03-03-PLAN.md -- Sound system: Web Audio synth engine, screech, impact, beeps, chime
   - [ ] 03-04-PLAN.md -- Additional tracks: Speedway (fast/flowing) and Gauntlet (tight/technical)
   - [ ] 03-05-PLAN.md -- Menu system: main menu, track selection, settings, pause quit
-- [ ] **Phase 4: Gymnasium Environment Wrapper** -- 9 requirements (AI-01..07, 12, 13)
+- [ ] **Phase 4: Gymnasium Environment Wrapper** -- 9 requirements, 3 plans (AI-01..07, 12, 13)
+  Plans:
+  - [ ] 04-01-PLAN.md -- AI computation TDD: ray caster, observation vector, reward function, config types
+  - [ ] 04-02-PLAN.md -- Headless env controller, WebSocket bridge server, default config JSON
+  - [ ] 04-03-PLAN.md -- Python Gymnasium wrapper, bridge client, env_checker + random agent validation
 - [ ] **Phase 5: AI Training Pipeline** -- 4 requirements (AI-08..11)
 - [ ] **Phase 6: AI vs Human Mode** -- 8 requirements (AVH-01..05, VIS-06, LDB-01, 02)
 

@@ -9,17 +9,21 @@
     "preview": "vite preview",
     "test": "vitest run",
     "test:watch": "vitest",
-    "test:verbose": "vitest run --reporter=verbose"
+    "test:verbose": "vitest run --reporter=verbose",
+    "bridge": "npx tsx src/ai/run-bridge.ts"
   },
   "keywords": [],
   "author": "",
   "license": "ISC",
   "packageManager": "pnpm@10.30.3",
   "dependencies": {
-    "pixi.js": "^8.16.0"
+    "pixi.js": "^8.16.0",
+    "ws": "^8.19.0"
   },
   "devDependencies": {
     "@types/node": "^25.3.2",
+    "@types/ws": "^8.18.1",
+    "tsx": "^4.21.0",
     "typescript": "^5.9.3",
     "vite": "^7.3.1",
     "vitest": "^4.0.18"

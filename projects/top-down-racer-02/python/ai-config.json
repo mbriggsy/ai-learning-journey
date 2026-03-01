@@ -1,0 +1,15 @@
+{
+  "weights": {
+    "progress": 1.0,
+    "speedBonus": 0.0,
+    "wallPenalty": -0.002,
+    "offTrackPenalty": -0.001,
+    "backwardPenalty": 0.0,
+    "stillnessPenalty": -0.001,
+    "stillnessSpeedThreshold": 2.0
+  },
+  "episode": {
+    "maxSteps": 3000,
+    "stillnessTimeoutTicks": 180
+  }
+}

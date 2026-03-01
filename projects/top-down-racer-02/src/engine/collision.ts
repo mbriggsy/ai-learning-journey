@@ -187,8 +187,8 @@ export function resolveWallCollision(
   const slidingVelocity = scale(tangentialVelocity, frictionMultiplier);
 
   // Add a small bounce velocity away from the wall so the car separates naturally.
-  // Scaled by speed so it's proportional — gentle nudge at low speed, stronger at high.
-  const bounceSpeed = Math.max(3.0, speed * 0.08);
+  // Proportional to speed — no minimum floor, so a stopped car stays stopped.
+  const bounceSpeed = speed * 0.08;
   const bounceVelocity = scale(normal, bounceSpeed);
   const newVelocity = add(slidingVelocity, bounceVelocity);
   const newSpeed = vecLength(newVelocity);

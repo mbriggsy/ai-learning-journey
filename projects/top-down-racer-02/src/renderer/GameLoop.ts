@@ -136,8 +136,8 @@ export class GameLoop {
       case GamePhase.Racing:
         return stepWorld(this.currState, getInput());
       case GamePhase.Finished:
-        // Car coasts to a stop with no input (natural deceleration)
-        return stepWorld(this.currState, ZERO_INPUT);
+        // Freeze physics — timer stops, car stops immediately
+        return this.currState;
       case GamePhase.Countdown: {
         const next = stepWorld(this.currState, ZERO_INPUT);
         return { ...next, timing: this.currState.timing }; // Don't advance lap timer during countdown

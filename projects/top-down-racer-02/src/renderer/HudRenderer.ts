@@ -280,7 +280,10 @@ export class HudRenderer {
     };
   }
 
-  private buildMinimapTrack(outerBoundary: readonly { x: number; y: number }[]): void {
+  private buildMinimapTrack(
+    outerBoundary: readonly { x: number; y: number }[],
+    innerBoundary: readonly { x: number; y: number }[],
+  ): void {
     if (this.trackOutlineBuilt) return;
     this.trackOutlineBuilt = true;
 
@@ -288,25 +291,36 @@ export class HudRenderer {
     const ox = this.minimapOffsetX + MINIMAP_SIZE / 2;
     const oy = this.minimapOffsetY + MINIMAP_SIZE / 2;
 
-    const pts: number[] = [];
+    const outerPts: number[] = [];
     for (const p of outerBoundary) {
-      pts.push(
+      outerPts.push(
         ox + (p.x - cx) * scale,
-        oy - (p.y - cy) * scale, // Flip Y (engine Y-up -> screen Y-down)
+        oy - (p.y - cy) * scale,
+      );
+    }
+
+    const innerPts: number[] = [];
+    for (const p of innerBoundary) {
+      innerPts.push(
+        ox + (p.x - cx) * scale,
+        oy - (p.y - cy) * scale,
       );
     }
 
     this.minimapTrackGraphics.clear();
-    this.minimapTrackGraphics.poly(pts).stroke({ width: 1.5, color: MINIMAP_TRACK_COLOR });
+    this.minimapTrackGraphics
+      .poly(outerPts).stroke({ width: 1.5, color: MINIMAP_TRACK_COLOR })
+      .poly(innerPts).stroke({ width: 1.5, color: MINIMAP_TRACK_COLOR });
   }
 
   private updateMinimap(
     outerBoundary: readonly { x: number; y: number }[],
+    innerBoundary: readonly { x: number; y: number }[],
     carX: number,
     carY: number,
   ): void {
     // Build track outline once
-    this.buildMinimapTrack(outerBoundary);
+    this.buildMinimapTrack(outerBoundary, innerBoundary);
 
     // Recompute center + scale for car dot positioning
     const { cx, cy, scale } = this.computeMinimapTransform(outerBoundary);
@@ -361,6 +375,6 @@ export class HudRenderer {
     this.updateLapCounter(timing.currentLap);
 
     // HUD-05: Minimap
-    this.updateMinimap(track.outerBoundary, car.position.x, car.position.y);
+    this.updateMinimap(track.outerBoundary, track.innerBoundary, car.position.x, car.position.y);
   }
 }

@@ -1,3 +1,8 @@
-gymnasium>=1.0.0
-numpy>=1.26.0
-websocket-client>=1.7.0
+# Requires Python 3.10-3.12 (PyTorch 2.3 compatibility)
+# For NVIDIA GPU support, install PyTorch separately first:
+#   pip install torch --index-url https://download.pytorch.org/whl/cu121
+gymnasium>=1.0.0,<2
+numpy>=1.26.0,<3
+websocket-client>=1.7.0,<2
+stable-baselines3[extra]>=2.4.0,<3
+torch>=2.3,<3

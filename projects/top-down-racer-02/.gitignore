@@ -6,4 +6,7 @@ dist/
 __pycache__/
 *.pyc
 python/.venv/
+python/models/*.zip
+python/models/*.pkl
+python/logs/*/
 temp/

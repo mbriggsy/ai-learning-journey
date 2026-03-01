@@ -35,7 +35,7 @@
 - [ ] **Phase 5: AI Training Pipeline** -- 4 requirements, 3 plans
   Plans:
   - [x] 05-01-PLAN.md -- Training infrastructure: dependencies, custom TensorBoard callback, throughput benchmark
-  - [ ] 05-02-PLAN.md -- PPO + SAC training scripts, model evaluation script, checkpoint save/load pipeline
+  - [x] 05-02-PLAN.md -- PPO + SAC training scripts, model evaluation script, checkpoint save/load pipeline
   - [ ] 05-03-PLAN.md -- Tests: throughput benchmark, callback unit tests, checkpoint integration tests
 - [ ] **Phase 6: AI vs Human Mode** -- 8 requirements (AVH-01..05, VIS-06, LDB-01, 02)
 

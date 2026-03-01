@@ -1,4 +1,4 @@
-import type { Container } from 'pixi.js';
+import { Container, type Container as ContainerType } from 'pixi.js';
 import type { WorldState } from '../engine/types';
 import type { RaceState } from '../engine/RaceController';
 import { CameraController } from './CameraController';
@@ -28,21 +28,25 @@ export class WorldRenderer {
   private camera: CameraController;
   private carRenderer: CarRenderer;
   private trackBuilt = false;
+  /** Own sub-container so reset() doesn't nuke siblings (e.g. EffectsRenderer). */
+  private sceneContainer: Container;
 
-  constructor(private worldContainer: Container) {
+  constructor(private worldContainer: ContainerType) {
     this.camera = new CameraController();
     this.carRenderer = new CarRenderer();
+    this.sceneContainer = new Container();
+    this.worldContainer.addChild(this.sceneContainer);
   }
 
   /**
    * Initialize track rendering (called once after game start, track is immutable).
-   * Builds track graphics and adds them to worldContainer before the car.
+   * Builds track graphics and adds them to sceneContainer before the car.
    */
   initTrack(track: WorldState['track']): void {
     if (this.trackBuilt) return;
     const trackGraphics = buildTrackGraphics(track);
-    this.worldContainer.addChild(trackGraphics);   // Track first (behind car)
-    this.worldContainer.addChild(this.carRenderer.container); // Car on top
+    this.sceneContainer.addChild(trackGraphics);   // Track first (behind car)
+    this.sceneContainer.addChild(this.carRenderer.container); // Car on top
     this.trackBuilt = true;
   }
 
@@ -89,11 +93,11 @@ export class WorldRenderer {
     );
   }
 
-  /** Reset for a new track — clears track graphics so initTrack rebuilds on next render. */
+  /** Reset for a new track — clears only our own scene children so initTrack rebuilds on next render. */
   reset(): void {
     this.camera.reset();
     if (this.trackBuilt) {
-      this.worldContainer.removeChildren();
+      this.sceneContainer.removeChildren();
       this.trackBuilt = false;
     }
   }

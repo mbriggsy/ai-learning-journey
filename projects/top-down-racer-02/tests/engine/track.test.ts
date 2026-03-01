@@ -384,6 +384,59 @@ describe('Track 03', () => {
 });
 
 /**
+ * Checkpoint gate containment — gate endpoints must lie within (or very close
+ * to) the actual track boundaries. This catches finish-line overflow bugs where
+ * the checker flag extends beyond the visible track edges.
+ */
+describe('Checkpoint gates within boundaries', () => {
+  /**
+   * For a given point, find the minimum distance to any segment in a boundary polyline.
+   */
+  function distToBoundary(pt: Vec2, boundary: readonly Vec2[]): number {
+    let best = Infinity;
+    for (let i = 0; i < boundary.length - 1; i++) {
+      const a = boundary[i];
+      const b = boundary[i + 1];
+      const ab = { x: b.x - a.x, y: b.y - a.y };
+      const ap = { x: pt.x - a.x, y: pt.y - a.y };
+      const abLenSq = ab.x * ab.x + ab.y * ab.y;
+      if (abLenSq < 1e-10) continue;
+      const t = Math.max(0, Math.min(1, (ap.x * ab.x + ap.y * ab.y) / abLenSq));
+      const nearest = { x: a.x + ab.x * t, y: a.y + ab.y * t };
+      const d = distance(pt, nearest);
+      if (d < best) best = d;
+    }
+    return best;
+  }
+
+  const MAX_OVERSHOOT = 3; // Allow at most 3 world-units of overshoot (floating point tolerance)
+
+  it.each([
+    ['Track 01', TRACK_01_CONTROL_POINTS],
+    ['Track 02', TRACK_02_CONTROL_POINTS],
+    ['Track 03', TRACK_03_CONTROL_POINTS],
+  ])('%s — checkpoint gate endpoints lie within boundaries', (_name, points) => {
+    const track = buildTrack(points, 30);
+
+    for (let i = 0; i < track.checkpoints.length; i++) {
+      const cp = track.checkpoints[i];
+
+      // Gate left should be near the inner boundary
+      const leftDist = distToBoundary(cp.left, track.innerBoundary);
+      expect(leftDist).toBeLessThan(
+        MAX_OVERSHOOT,
+      );
+
+      // Gate right should be near the outer boundary
+      const rightDist = distToBoundary(cp.right, track.outerBoundary);
+      expect(rightDist).toBeLessThan(
+        MAX_OVERSHOOT,
+      );
+    }
+  });
+});
+
+/**
  * Boundary integrity checks — segment intersection AND proximity.
  *
  * Two tests per boundary:

@@ -206,7 +206,9 @@ export function buildTrack(
   innerBoundary.push(innerBoundary[0]);
   outerBoundary.push(outerBoundary[0]);
 
-  // Generate checkpoint gates at uniform arc-length intervals
+  // Generate checkpoint gates at uniform arc-length intervals.
+  // Gate endpoints are clipped to the actual boundary polylines so they
+  // never extend beyond curvature-clamped/smoothed walls (finish-line bug fix).
   const checkpoints: Checkpoint[] = [];
   const checkpointSpacing = totalLength / checkpointCount;
 
@@ -215,15 +217,28 @@ export function buildTrack(
     const center = pointAtDistance(positions, arcLengthTable, arcLen);
     const tangent = tangentAtDistance(positions, arcLengthTable, arcLen);
     const tangentNorm = normalize(tangent);
-    const width = interpolateWidth(controlPoints, positions, arcLengthTable, arcLen);
 
-    const gateWidth = width + WALL_OFFSET;
-    const left = add(center, scale(perpCCW(tangentNorm), gateWidth));
-    const right = add(center, scale(perpCW(tangentNorm), gateWidth));
+    // Find the nearest inner/outer boundary points at this arc-length position.
+    // The boundary sample index roughly corresponds to (arcLen / totalLength) * totalSamples.
+    const approxIdx = Math.round((arcLen / totalLength) * totalSamples) % totalSamples;
+    const searchRadius = Math.max(5, Math.ceil(totalSamples / checkpointCount));
+
+    let bestInner = innerBoundary[approxIdx];
+    let bestInnerDist = Infinity;
+    let bestOuter = outerBoundary[approxIdx];
+    let bestOuterDist = Infinity;
+
+    for (let s = -searchRadius; s <= searchRadius; s++) {
+      const idx = ((approxIdx + s) % totalSamples + totalSamples) % totalSamples;
+      const iDist = distance(center, innerBoundary[idx]);
+      const oDist = distance(center, outerBoundary[idx]);
+      if (iDist < bestInnerDist) { bestInnerDist = iDist; bestInner = innerBoundary[idx]; }
+      if (oDist < bestOuterDist) { bestOuterDist = oDist; bestOuter = outerBoundary[idx]; }
+    }
 
     checkpoints.push({
-      left,
-      right,
+      left: bestInner,
+      right: bestOuter,
       center,
       direction: tangentNorm,
       arcLength: arcLen,

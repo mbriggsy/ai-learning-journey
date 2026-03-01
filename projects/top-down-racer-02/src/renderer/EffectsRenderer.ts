@@ -80,7 +80,7 @@ export class EffectsRenderer {
 
   // Checkpoint flash system
   private flashes: CheckpointFlash[] = [];
-  private lastCheckpointIndex = -1;
+  private lastCheckpointIndex = 0;
 
   // Particle system (shared for dust + sparks)
   private particles: Particle[] = [];
@@ -314,7 +314,7 @@ export class EffectsRenderer {
       flash.gfx.destroy();
     }
     this.flashes = [];
-    this.lastCheckpointIndex = -1;
+    this.lastCheckpointIndex = 0;
 
     for (const p of this.particles) {
       this.container.removeChild(p.gfx);

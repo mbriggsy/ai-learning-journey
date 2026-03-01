@@ -87,8 +87,14 @@ export class RendererApp {
       this.overlayRenderer.render(prev, curr, alpha, race);
     });
 
+    // Wire keyboard input for overlay (sound toggle M key, arrow nav in pause)
+    window.addEventListener('keydown', (e: KeyboardEvent) => {
+      this.overlayRenderer.handlePauseInput(e.code);
+    });
+
     // Step 6e: Sound system
     this.soundManager = new SoundManager();
+    this.overlayRenderer.setSoundManager(this.soundManager);
 
     // Initialize audio on first keydown/click (browser autoplay policy)
     const initAudio = () => {

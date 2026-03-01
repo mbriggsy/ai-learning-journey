@@ -21,15 +21,17 @@ import { sub, cross, dot } from './vec2';
 /**
  * Create initial timing state for a new race.
  *
- * lastCheckpointIndex: -1 means no checkpoints crossed yet.
- * The car needs to cross checkpoint 0 first to begin tracking.
+ * lastCheckpointIndex starts at 0 because the car spawns on top of the
+ * start/finish line (checkpoint 0). Without this, a track where the car
+ * doesn't physically cross checkpoint 0 on its first tick would require
+ * an extra full lap before the first lap registers.
  */
 export function createInitialTimingState(): TimingState {
   return {
     currentLapTicks: 0,
     bestLapTicks: -1,
     currentLap: 1,
-    lastCheckpointIndex: -1,
+    lastCheckpointIndex: 0,
     lapComplete: false,
   };
 }

@@ -72,6 +72,10 @@ export class SoundManager {
   private screechFilter: BiquadFilterNode | null = null;
   private noiseBuffer: AudioBuffer | null = null;
 
+  // Mute state
+  private _muted = false;
+  private _premuteVolume = 0.5;
+
   // State tracking
   private lastCountdownBeat = -1;
   private lastLap = 1;
@@ -140,6 +144,24 @@ export class SoundManager {
   set sfxVolume(v: number) {
     this._sfxVolume = Math.max(0, Math.min(1, v));
     if (this.sfxGain) this.sfxGain.gain.value = this._sfxVolume;
+  }
+
+  // --- Mute toggle (for pause menu) -----------------------------------
+
+  get muted(): boolean { return this._muted; }
+
+  toggleMute(): boolean {
+    if (this._muted) {
+      // Unmute: restore previous volume
+      this._muted = false;
+      this.masterVolume = this._premuteVolume;
+    } else {
+      // Mute: save current volume, set to 0
+      this._premuteVolume = this._masterVolume;
+      this._muted = true;
+      this.masterVolume = 0;
+    }
+    return this._muted;
   }
 
   // --- RI-03: Suspend/resume for screen transitions ------------------

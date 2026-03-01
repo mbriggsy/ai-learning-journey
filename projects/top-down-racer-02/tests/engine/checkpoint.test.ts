@@ -51,7 +51,7 @@ describe('createInitialTimingState', () => {
     expect(timing.currentLapTicks).toBe(0);
     expect(timing.bestLapTicks).toBe(-1);
     expect(timing.currentLap).toBe(1);
-    expect(timing.lastCheckpointIndex).toBe(-1);
+    expect(timing.lastCheckpointIndex).toBe(0);
     expect(timing.lapComplete).toBe(false);
   });
 
@@ -149,11 +149,12 @@ describe('updateTiming - sequential crossing', () => {
     makeGate({ x: -20, y: 0 }, { x: -1, y: 0 }, 5),
   ];
 
-  it('crossing gate 0 first updates lastCheckpointIndex to 0', () => {
+  it('crossing gate 1 first (after start on gate 0) updates lastCheckpointIndex to 1', () => {
     const timing = createInitialTimingState();
-    // Car crosses gate 0 (at y=20, moving up)
-    const result = updateTiming(timing, vec2(0, 15), vec2(0, 25), checkpoints);
-    expect(result.lastCheckpointIndex).toBe(0);
+    // Car starts at gate 0 (lastCheckpointIndex=0), so expectedNext is gate 1
+    // Car crosses gate 1 (at x=20, moving right)
+    const result = updateTiming(timing, vec2(15, 0), vec2(25, 0), checkpoints);
+    expect(result.lastCheckpointIndex).toBe(1);
     expect(result.lapComplete).toBe(false);
   });
 
@@ -205,7 +206,7 @@ describe('updateTiming - sequential crossing', () => {
     const timing = createInitialTimingState();
     // Car moves but doesn't cross any gate
     const result = updateTiming(timing, vec2(5, 5), vec2(6, 6), checkpoints);
-    expect(result.lastCheckpointIndex).toBe(-1);
+    expect(result.lastCheckpointIndex).toBe(0); // Unchanged from initial
     expect(result.currentLapTicks).toBe(1);
   });
 });

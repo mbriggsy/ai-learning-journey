@@ -10,3 +10,5 @@ python/models/*.zip
 python/models/*.pkl
 python/logs/*/
 temp/
+
+*.lnk

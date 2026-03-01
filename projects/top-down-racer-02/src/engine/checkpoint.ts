@@ -120,6 +120,7 @@ export function updateTiming(
   currPos: Vec2,
   checkpoints: readonly Checkpoint[],
 ): TimingState {
+  const lapTimes = timing.lapTimes ?? [];
   const numCheckpoints = checkpoints.length;
   if (numCheckpoints === 0) {
     return { ...timing, currentLapTicks: timing.currentLapTicks + 1, totalRaceTicks: timing.totalRaceTicks + 1, lapComplete: false };
@@ -166,7 +167,7 @@ export function updateTiming(
       currentLap: timing.currentLap + 1,
       lastCheckpointIndex: 0,
       lapComplete: true,
-      lapTimes: [...timing.lapTimes, lapTicks],
+      lapTimes: [...lapTimes, lapTicks],
     };
   }
 

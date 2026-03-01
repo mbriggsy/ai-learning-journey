@@ -28,7 +28,7 @@ progress:
 | 2. PixiJS Renderer + Playable Game | Complete (Plan 5/5 done) | 100% |
 | 3. Game Features & Polish | Complete (Plan 5/5 done) | 100% |
 | 4. Gymnasium Environment Wrapper | Complete (Plan 3/3 done) | 100% |
-| 5. AI Training Pipeline | Complete (Plan 3/3 done) | 100% |
+| 5. AI Training Pipeline | Complete (Plan 3/3 done, 25/25 verified) | 100% |
 | 6. AI vs Human Mode | Blocked by Phase 5 (trained model) | 0% |
 
 ## Decisions Log
@@ -53,6 +53,12 @@ progress:
 | 2026-03-01 | Mock model injection for callback tests | SB3 BaseCallback.logger and training_env are read-only properties; inject via mock model object |
 | 2026-03-01 | 1500 steps/sec throughput threshold (not 3000) | Conservative CI-safe minimum with 2x safety margin; actual raw throughput ~3000-4000 |
 | 2026-03-01 | Callback tests fully offline (no bridge) | Mocks SB3 logger and env; runs in <3s; no infrastructure dependency |
+
+## Quick Tasks Completed
+
+| Date | Task | Details |
+|------|------|---------|
+| 2026-03-01 | Phase 5 human verification | `pytest python/tests/ -v` with bridge server — 12/12 passed. All Phase 4 regression tests green. Verification score updated from 24/25 to 25/25 |
 
 ## Blockers
 

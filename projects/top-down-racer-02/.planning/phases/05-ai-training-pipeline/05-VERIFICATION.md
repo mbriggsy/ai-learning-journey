@@ -45,7 +45,7 @@ verified_date: 2026-03-01
 | 3 | Callback tests call _on_rollout_end() before asserting episode-level metrics (matching the real SB3 lifecycle) | Pass | `test_callbacks.py`: _on_rollout_end() called at line 162 (lap time test), line 193 (completion rate test), line 212 (clear accumulators test), line 253 (episode reset test) — all before assertions on episode-level metrics |
 | 4 | Checkpoint integration test verifies save-load-predict pipeline produces valid actions | Pass | `python/tests/test_checkpoint.py` test_ppo_save_load_predict: trains 128 steps (line 60), saves model+stats (lines 69-70), loads into fresh env (lines 78-94), calls predict (line 99), asserts action.shape == (1,3) and np.isfinite (lines 100-101) |
 | 5 | Checkpoint test verifies VecNormalize running statistics survive the save/load round-trip | Pass | `test_checkpoint.py`: captures obs_rms.mean and obs_rms.var before save (lines 63-64), asserts np.allclose after load (lines 85-89) |
-| 6 | All existing Phase 4 tests continue to pass (no regressions) | Human Needed | No Phase 4 test files were modified (verified by examining Plan 05-03 files_modified list). Actual regression testing requires running `pytest python/tests/ -v` with bridge server active |
+| 6 | All existing Phase 4 tests continue to pass (no regressions) | Pass | Human verified: `pytest python/tests/ -v` with bridge server active — 12/12 tests passed, all Phase 4 regression tests green (2026-03-01) |
 
 ## Artifacts Verification
 
@@ -73,7 +73,7 @@ verified_date: 2026-03-01
 
 ## Summary
 
-**Score: 24/25 must-haves verified (1 requires human runtime verification)**
+**Score: 25/25 must-haves verified (all pass)**
 
 All source code has been verified against the must-have specifications by reading the actual file contents:
 
@@ -81,6 +81,6 @@ All source code has been verified against the must-have specifications by readin
 
 - **Plan 05-02 (13/13)**: Both training scripts (PPO and SAC) implement the full pipeline: DummyVecEnv + VecNormalize + Monitor, CheckpointCallback with `save_vecnormalize=True`, `--resume` with `reset_num_timesteps=False`, try/finally cleanup, KeyboardInterrupt emergency saves, bridge pre-flight checks, pathlib-anchored paths, and argparse CLI. Evaluate script correctly sets `training=False` and `norm_reward=False`, uses step count deltas for lap times, and auto-detects PPO/SAC.
 
-- **Plan 05-03 (5/6)**: All three test files exist and implement the specified test patterns. Callback tests use FakeLogger with separate `record()`/`record_mean()` storage and call `_on_rollout_end()` before asserting episode metrics. Checkpoint tests verify VecNormalize `obs_rms` round-trip and `reset_num_timesteps=False`. The one unverified item (Phase 4 regression) requires actually running the test suite.
+- **Plan 05-03 (6/6)**: All three test files exist and implement the specified test patterns. Callback tests use FakeLogger with separate `record()`/`record_mean()` storage and call `_on_rollout_end()` before asserting episode metrics. Checkpoint tests verify VecNormalize `obs_rms` round-trip and `reset_num_timesteps=False`. Phase 4 regression confirmed: `pytest python/tests/ -v` ran 12/12 tests green with bridge server active.
 
 **Overall assessment**: Phase 05 implementation is complete and correct. All code patterns match the deepened plan specifications (record_mean, step count deltas, try/finally, pathlib, rollout lifecycle). No API mismatches or implementation gaps detected.

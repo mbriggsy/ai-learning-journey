@@ -9,7 +9,7 @@ import type { HudRenderer } from './HudRenderer';
 import type { OverlayRenderer } from './OverlayRenderer';
 import type { EffectsRenderer } from './EffectsRenderer';
 import { TRACKS } from '../tracks/registry';
-import { setBestTime } from './BestTimes';
+import { setHumanBest, setAiBest } from './Leaderboard';
 import type { GameMode } from '../types/game-mode';
 
 type ScreenState = 'main-menu' | 'track-select' | 'settings' | 'playing';
@@ -39,6 +39,8 @@ export class ScreenManager {
 
   private activeTrackIndex = 0;
   private lastBestLapTicks = 0;
+  private lastAiBestLapTicks = 0;
+  private currentMode: GameMode = 'solo';
   private tickerFn: ((ticker: { deltaMS: number }) => void) | null = null;
 
   constructor(deps: {
@@ -175,6 +177,8 @@ export class ScreenManager {
     this.effectsRenderer.reset();
 
     this.lastBestLapTicks = 0;
+    this.lastAiBestLapTicks = 0;
+    this.currentMode = mode;
 
     this.goto('playing');
 
@@ -189,13 +193,24 @@ export class ScreenManager {
     }
   }
 
-  /** Check for new best lap times and persist them. */
+  /** Check for new best lap times (human + AI) and persist them. */
   private checkBestTime(): void {
+    const trackId = TRACKS[this.activeTrackIndex].id;
+
+    // Human best (all modes — in spectator, human never completes a lap so this no-ops)
     const timing = this.gameLoop.currentWorldState.timing;
     if (timing.bestLapTicks > 0 && timing.bestLapTicks !== this.lastBestLapTicks) {
-      const trackId = TRACKS[this.activeTrackIndex].id;
-      setBestTime(trackId, timing.bestLapTicks);
+      setHumanBest(trackId, timing.bestLapTicks);
       this.lastBestLapTicks = timing.bestLapTicks;
+    }
+
+    // AI best (vs-ai and spectator modes — solo has no AI world)
+    if (this.currentMode !== 'solo') {
+      const aiBest = this.gameLoop.currentAiWorldState?.timing.bestLapTicks;
+      if (aiBest != null && aiBest > 0 && aiBest !== this.lastAiBestLapTicks) {
+        setAiBest(trackId, aiBest);
+        this.lastAiBestLapTicks = aiBest;
+      }
     }
   }
 }

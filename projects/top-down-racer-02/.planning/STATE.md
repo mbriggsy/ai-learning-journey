@@ -75,6 +75,7 @@ progress:
 | Date | Task | Details |
 |------|------|---------|
 | 2026-03-01 | Phase 5 human verification | `pytest python/tests/ -v` with bridge server — 12/12 passed. All Phase 4 regression tests green. Verification score updated from 24/25 to 25/25 |
+| 2026-03-02 | Phase 6 human verification fixes | 4 fixes: celebration overlay auto-hide, spectator stuck-detection bypass, spectator HUD shows AI state, BrowserAIRunner loaded guard. 383/383 tests pass. |
 
 ## Blockers
 

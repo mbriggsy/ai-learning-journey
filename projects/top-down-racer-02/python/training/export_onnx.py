@@ -13,10 +13,11 @@ import json
 import sys
 from pathlib import Path
 
+import gymnasium as gym
 import torch as th
 from stable_baselines3 import PPO
 from stable_baselines3.common.policies import BasePolicy
-from stable_baselines3.common.vec_env import VecNormalize
+from stable_baselines3.common.vec_env import DummyVecEnv, VecNormalize
 
 
 class OnnxableSB3Policy(th.nn.Module):
@@ -31,8 +32,8 @@ class OnnxableSB3Policy(th.nn.Module):
         return actions  # Only export actions -- browser only needs [steer, throttle, brake]
 
 
-def export_model(model_path: Path, output_path: Path) -> int:
-    """Export SB3 PPO model to ONNX. Returns obs_size."""
+def export_model(model_path: Path, output_path: Path) -> PPO:
+    """Export SB3 PPO model to ONNX. Returns the loaded model."""
     print(f"Loading model from {model_path} ...")
     model = PPO.load(str(model_path), device="cpu")
 
@@ -59,24 +60,36 @@ def export_model(model_path: Path, output_path: Path) -> int:
 
     size_kb = output_path.stat().st_size / 1024
     print(f"  ONNX model exported: {output_path} ({size_kb:.1f} KB)")
-    return obs_size
+    return model
 
 
-def export_vecnorm(vecnorm_path: Path, output_path: Path) -> None:
+def export_vecnorm(
+    vecnorm_path: Path,
+    output_path: Path,
+    observation_space: gym.spaces.Space,
+    action_space: gym.spaces.Space,
+) -> None:
     """Export VecNormalize stats to JSON.
 
     Uses VecNormalize.load() ONLY -- no pickle.load() fallback.
     pickle.load() on untrusted files enables arbitrary code execution (CWE-502).
+
+    VecNormalize.load() requires a real VecEnv (accesses num_envs, render_mode,
+    observation_space, etc.). We build a DummyVecEnv with a minimal gymnasium
+    env that carries the model's observation/action spaces.
     """
     print(f"Loading VecNormalize stats from {vecnorm_path} ...")
     try:
-        # VecNormalize.load() accesses venv.num_envs internally, so we
-        # provide a minimal stub instead of None to avoid AttributeError.
-        class _DummyVenv:
-            num_envs = 1
-            observation_space = None  # type: ignore[assignment]
+        # Build a lightweight DummyVecEnv that satisfies VecNormalize.load().
+        # The env is never stepped — only its spaces and VecEnv attributes are read.
+        def _make_dummy_env() -> gym.Env:
+            env = gym.Env()
+            env.observation_space = observation_space  # type: ignore[assignment]
+            env.action_space = action_space  # type: ignore[assignment]
+            return env
 
-        vn = VecNormalize.load(str(vecnorm_path), venv=_DummyVenv())  # type: ignore[arg-type]
+        dummy_venv = DummyVecEnv([_make_dummy_env])
+        vn = VecNormalize.load(str(vecnorm_path), venv=dummy_venv)
     except Exception as e:
         print(f"ERROR: Failed to load VecNormalize stats: {e}", file=sys.stderr)
         print("  Ensure the file is a valid VecNormalize .pkl created by SB3.", file=sys.stderr)
@@ -156,10 +169,16 @@ def main() -> None:
     stats_output = output_dir / "vecnorm_stats.json"
 
     # Export model
-    obs_size = export_model(model_path, model_output)
+    model = export_model(model_path, model_output)
+    obs_size: int = model.observation_space.shape[0]  # type: ignore[index]
 
     # Export VecNormalize stats
-    export_vecnorm(vecnorm_path, stats_output)
+    export_vecnorm(
+        vecnorm_path,
+        stats_output,
+        observation_space=model.observation_space,
+        action_space=model.action_space,
+    )
 
     # Check obs_size consistency
     stats = json.loads(stats_output.read_text())

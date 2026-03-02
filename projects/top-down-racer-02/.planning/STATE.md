@@ -3,12 +3,12 @@ gsd_state_version: 1.0
 milestone: v1.0
 milestone_name: milestone
 status: in_progress
-last_updated: "2026-03-02T22:00:00.000Z"
+last_updated: "2026-03-03T00:15:00.000Z"
 progress:
   total_phases: 6
   completed_phases: 5
   total_plans: 21
-  completed_plans: 24
+  completed_plans: 25
 ---
 
 # Project State: Top-Down Racer v02
@@ -18,7 +18,7 @@ progress:
 
 ## Current Phase
 
-**Phase 6: AI vs Human Mode** -- IN PROGRESS (Plans 00-03 complete, Plan 04 pending)
+**Phase 6: AI vs Human Mode** -- IN PROGRESS (Plans 00-04 complete, Plan 04b pending)
 
 ## Phase Status
 
@@ -29,7 +29,7 @@ progress:
 | 3. Game Features & Polish | Complete (Plan 5/5 done) | 100% |
 | 4. Gymnasium Environment Wrapper | Complete (Plan 3/3 done) | 100% |
 | 5. AI Training Pipeline | Complete (Plan 3/3 done, 25/25 verified) | 100% |
-| 6. AI vs Human Mode | In Progress (Plan 3/5 complete — core integration done) | 80% |
+| 6. AI vs Human Mode | In Progress (Plan 5/6 complete — leaderboard done, grace period pending) | 90% |
 
 ## Decisions Log
 
@@ -71,6 +71,9 @@ progress:
 | 2026-03-02 | ScreenManager owns overlayRenderer for celebration/mode wiring | Needed for setMode() and showCelebration() callbacks; previously only in RendererApp |
 | 2026-03-02 | Drop GapTimerHud popup, add AI stats to HUD instead | Checkpoint popup felt disruptive; minimal AI section (total time + best lap) in HUD during vs-ai |
 | 2026-03-02 | Finished screen: total race time (primary) + best lap (secondary) | Race winner = who finished faster overall; best lap is secondary stat. Both shown with deltas |
+| 2026-03-02 | R-key restart always shows countdown (not instant) | User expects 3-2-1-GO on restart for consistent race experience |
+| 2026-03-02 | BestTimes.ts shim deleted in Plan 04 (not deferred) | Both consumers modified in same plan — natural cleanup point |
+| 2026-03-02 | AI best dedup cache (lastAiBestLapTicks) prevents 60/sec localStorage reads | checkBestTime() runs every tick; without cache, setAiBest fires 60x/sec after AI's first lap |
 
 ## Quick Tasks Completed
 

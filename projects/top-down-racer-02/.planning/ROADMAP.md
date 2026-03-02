@@ -43,7 +43,8 @@
   - [x] 06-01-PLAN.md -- TypeScript infrastructure: VecNormalize, Leaderboard, GameMode, BestTimes delegation
   - [x] 06-02-PLAN.md -- AI inference: BrowserAIRunner (ONNX), AiCarRenderer (ghost car), Vite WASM config
   - [x] 06-03-PLAN.md -- Race experience: gap timer, celebration, two-world simulation, core integration
-  - [ ] 06-04-PLAN.md -- Leaderboard: localStorage persistence, human vs AI comparison
+  - [x] 06-04-PLAN.md -- Leaderboard: localStorage persistence, human vs AI comparison
+  - [ ] 06-04b-PLAN-grace-period.md -- Grace period: head-to-head race flow, AI finish detection, DNF handling
 
 ---
 

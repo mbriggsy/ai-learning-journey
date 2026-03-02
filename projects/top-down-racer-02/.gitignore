@@ -16,6 +16,3 @@ temp/
 # Generated AI model assets (created by python/training/export_onnx.py)
 public/assets/model.onnx
 public/assets/vecnorm_stats.json
-
-# ORT WASM runtime files (copied by scripts/copy-ort-wasm.cjs)
-public/assets/ort/

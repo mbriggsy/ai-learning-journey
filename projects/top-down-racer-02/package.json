@@ -11,8 +11,7 @@
     "test:watch": "vitest",
     "test:verbose": "vitest run --reporter=verbose",
     "bridge": "npx tsx src/ai/run-bridge.ts",
-    "setup:ort": "node scripts/copy-ort-wasm.cjs",
-    "postinstall": "node scripts/copy-ort-wasm.cjs"
+    "setup:ort": "node scripts/copy-ort-wasm.cjs"
   },
   "keywords": [],
   "author": "",

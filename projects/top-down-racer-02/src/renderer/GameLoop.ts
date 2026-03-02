@@ -58,9 +58,6 @@ export class GameLoop {
   /** Gap state for HUD (updated when human crosses a checkpoint). */
   onGapUpdated: ((gapSeconds: number) => void) | null = null;
 
-  /** Celebration trigger (updated when lap completes in vs-ai mode). */
-  onCelebration: ((humanBestTicks: number, aiBestTicks: number | null) => void) | null = null;
-
   constructor(trackPoints: TrackControlPoint[]) {
     this.track = buildTrack(trackPoints, DEFAULT_CHECKPOINT_COUNT);
     this.currState = createWorld(this.track);
@@ -160,9 +157,6 @@ export class GameLoop {
 
       // Track human checkpoint crossings for gap timer
       this.trackHumanCheckpoints();
-
-      // Check for celebration trigger (lap complete in vs-ai mode)
-      this.checkCelebration();
 
       // Consume one-shot signals after first sub-step
       signals.togglePause = false;
@@ -287,29 +281,6 @@ export class GameLoop {
     }
   }
 
-  // ── Celebration trigger ──
-
-  private celebrationShownForLap = 0;
-
-  private checkCelebration(): void {
-    if (this.mode !== 'vs-ai') return;
-
-    const curr = this.currState.timing;
-    const prev = this.prevState.timing;
-
-    // Detect lap completion (lapComplete transitions from false to true)
-    if (curr.lapComplete && !prev.lapComplete) {
-      const completedLap = curr.currentLap - 1;
-      // Only show celebration once per lap (prevent double-fire)
-      if (completedLap > this.celebrationShownForLap) {
-        this.celebrationShownForLap = completedLap;
-        const humanBestTicks = curr.bestLapTicks;
-        const aiBestTicks = this.aiWorld?.timing.bestLapTicks ?? null;
-        this.onCelebration?.(humanBestTicks, aiBestTicks);
-      }
-    }
-  }
-
   private completeRespawn(): WorldState {
     const { timing, track } = this.currState;
     const lastIdx = timing.lastCheckpointIndex;
@@ -356,7 +327,6 @@ export class GameLoop {
       this.aiCheckpointTicks.clear();
       this.aiInferSeq++; // invalidate any in-flight inference
       this.aiInferInFlight = false;
-      this.celebrationShownForLap = 0;
     }
   }
 

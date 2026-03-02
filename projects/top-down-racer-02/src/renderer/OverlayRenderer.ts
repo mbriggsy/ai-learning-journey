@@ -3,7 +3,6 @@ import type { WorldState } from '../engine/types';
 import { GamePhase, FREEPLAY_LAPS, type RaceState } from '../engine/RaceController';
 import type { SoundManager } from './SoundManager';
 import { formatRaceTime } from '../utils/formatTime';
-import { CelebrationOverlay } from './CelebrationOverlay';
 import type { GameMode } from '../types/game-mode';
 
 // ──────────────────────────────────────────────────────────
@@ -139,16 +138,16 @@ export class OverlayRenderer {
   private nextFireworkInterval = 55;
   private checkeredContainer!: Container;
   private checkeredOffset = 0;
+  private finishedAiCompareText!: Text;
 
-  // Celebration overlay (vs-ai mode)
-  private celebrationOverlay: CelebrationOverlay;
   private mode: GameMode = 'solo';
+
+  /** AI best lap ticks — set externally so the Finished screen can show comparison. */
+  private aiBestLapTicks: number | null = null;
 
   constructor(private hudContainer: Container) {
     this.container = new Container();
     hudContainer.addChild(this.container);
-    this.celebrationOverlay = new CelebrationOverlay();
-    this.container.addChild(this.celebrationOverlay.container);
     this.buildOverlays();
   }
 
@@ -160,14 +159,11 @@ export class OverlayRenderer {
   /** Set the game mode for this race. */
   setMode(mode: GameMode): void {
     this.mode = mode;
-    this.celebrationOverlay.hide();
   }
 
-  /** Show the celebration overlay (called from ScreenManager when GameLoop fires onCelebration). */
-  showCelebration(humanBestTicks: number, aiBestTicks: number | null): void {
-    if (this.mode === 'vs-ai') {
-      this.celebrationOverlay.show(humanBestTicks, aiBestTicks);
-    }
+  /** Update the AI's best lap ticks (called from ScreenManager per-tick). */
+  setAiBestLapTicks(ticks: number | null): void {
+    this.aiBestLapTicks = ticks;
   }
 
   private get screenW(): number { return window.innerWidth; }
@@ -712,6 +708,19 @@ export class OverlayRenderer {
     this.finishedBestLapText.y = resultY;
     this.finishedPanelContainer.addChild(this.finishedBestLapText);
 
+    resultY += 20;
+
+    // AI comparison line (only visible in vs-ai mode)
+    this.finishedAiCompareText = new Text({
+      text: '',
+      style: { fontFamily: '"Exo 2", sans-serif', fontSize: 14, fill: ACCENT_ORANGE, fontWeight: '700', letterSpacing: 1 },
+    });
+    this.finishedAiCompareText.anchor.set(0.5);
+    this.finishedAiCompareText.x = cx;
+    this.finishedAiCompareText.y = resultY;
+    this.finishedAiCompareText.visible = false;
+    this.finishedPanelContainer.addChild(this.finishedAiCompareText);
+
     resultY += 24;
 
     // Thin divider line
@@ -1038,7 +1047,6 @@ export class OverlayRenderer {
     this.respawnFade.visible = false;
     this.lapCompleteContainer.visible = false;
     this.finishedContainer.visible = false;
-    this.celebrationOverlay.hide();
   }
 
   // ──────────────────────────────────────────────────────
@@ -1147,6 +1155,25 @@ export class OverlayRenderer {
       this.finishedTotalTimeText.text = formatRaceTime(this.finishedTotalTicks);
       this.finishedBestLapText.text = `Best Lap: ${formatRaceTime(curr.timing.bestLapTicks)}`;
 
+      // AI comparison (vs-ai mode only)
+      if (this.mode === 'vs-ai' && this.aiBestLapTicks != null && this.aiBestLapTicks > 0) {
+        const humanBest = curr.timing.bestLapTicks;
+        if (humanBest > 0 && humanBest <= this.aiBestLapTicks) {
+          this.finishedAiCompareText.text = 'You beat the AI!';
+          this.finishedAiCompareText.style.fill = STATUS_GREEN;
+        } else if (humanBest > 0) {
+          const deltaSec = (humanBest - this.aiBestLapTicks) / 60;
+          this.finishedAiCompareText.text = `AI wins by ${deltaSec.toFixed(3)}s`;
+          this.finishedAiCompareText.style.fill = STATUS_RED;
+        } else {
+          this.finishedAiCompareText.text = `AI Best: ${formatRaceTime(this.aiBestLapTicks)}`;
+          this.finishedAiCompareText.style.fill = ACCENT_ORANGE;
+        }
+        this.finishedAiCompareText.visible = true;
+      } else {
+        this.finishedAiCompareText.visible = false;
+      }
+
       // Populate individual lap times
       const lapTimes = curr.timing.lapTimes;
       const bestLapTicks = curr.timing.bestLapTicks;
@@ -1218,7 +1245,6 @@ export class OverlayRenderer {
     this.updateRespawnFade(race);
     this.updateLapComplete(prev, curr, race);
     this.updateFinished(prev, curr, race);
-    this.celebrationOverlay.tick();
   }
 }
 

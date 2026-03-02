@@ -96,11 +96,6 @@ export class ScreenManager {
       this.hudRenderer.showGap(gapSeconds);
     };
 
-    // Wire celebration callback: GameLoop → OverlayRenderer
-    this.gameLoop.onCelebration = (humanBestTicks, aiBestTicks) => {
-      this.overlayRenderer.showCelebration(humanBestTicks, aiBestTicks);
-    };
-
     // Wire AI state source: GameLoop → WorldRenderer (getter/closure pattern)
     this.worldRenderer.setAiStateSource(() => ({
       prev: this.gameLoop.prevAiWorldState,
@@ -211,6 +206,8 @@ export class ScreenManager {
         setAiBest(trackId, aiBest);
         this.lastAiBestLapTicks = aiBest;
       }
+      // Feed AI best to overlay for Finished screen comparison
+      this.overlayRenderer.setAiBestLapTicks(aiBest ?? null);
     }
   }
 }

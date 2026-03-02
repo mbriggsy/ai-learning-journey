@@ -11,8 +11,11 @@ import type { TrackState } from '../../engine/types';
 import { TRACKS, type TrackInfo } from '../../tracks/registry';
 import { getBestTime } from '../BestTimes';
 import { formatBestTime } from '../../utils/formatTime';
+import type { GameMode } from '../../types/game-mode';
 
-export type TrackSelectAction = { type: 'select'; index: number } | { type: 'back' };
+export type TrackSelectAction =
+  | { type: 'select'; index: number; mode: GameMode }
+  | { type: 'back' };
 
 // ── Color Palette ────────────────────────────────────────────────────
 const PAL = {
@@ -69,6 +72,7 @@ function chamferedPoly(x: number, y: number, w: number, h: number, c: number): n
 export class TrackSelectScreen {
   readonly container = new Container();
   onAction: ((action: TrackSelectAction) => void) | null = null;
+  private selectedMode: GameMode = 'solo';
 
   constructor() { this.build(); }
 
@@ -93,6 +97,9 @@ export class TrackSelectScreen {
 
     // Title bar
     this.buildTitle(sw);
+
+    // Mode selector (between title accent rule and track cards)
+    this.buildModeSelector(sw / 2, 100);
 
     // Track cards
     const cardW = 300;
@@ -316,7 +323,7 @@ export class TrackSelectScreen {
       this.paintCard(bg, w, h, cham, false);
       card.scale.set(1.0);
     });
-    card.on('pointerdown', () => this.onAction?.({ type: 'select', index }));
+    card.on('pointerdown', () => this.onAction?.({ type: 'select', index, mode: this.selectedMode }));
 
     this.container.addChild(card);
   }
@@ -392,6 +399,101 @@ export class TrackSelectScreen {
     // Edge strokes
     gfx.poly(outerPts).stroke({ width: 1.5, color: PAL.TRACK_EDGE, alpha: 0.7 });
     gfx.poly(innerPts).stroke({ width: 1.5, color: PAL.TRACK_EDGE, alpha: 0.7 });
+  }
+
+  // ── Mode selector ──────────────────────────────────────────────
+  private buildModeSelector(cx: number, y: number): void {
+    const modes: { id: GameMode; label: string }[] = [
+      { id: 'solo',      label: 'SOLO' },
+      { id: 'vs-ai',     label: 'VS AI' },
+      { id: 'spectator', label: 'SPECTATOR' },
+    ];
+
+    const btnW = 110, btnH = 36, gap = 8, cham = 6;
+    const totalW = modes.length * btnW + (modes.length - 1) * gap;
+    const startX = cx - totalW / 2;
+
+    // "MODE" label above buttons
+    const label = new Text({
+      text: 'MODE',
+      style: {
+        fontFamily: FONT,
+        fontSize: 11,
+        fill: PAL.TEXT_DIM,
+        letterSpacing: 3,
+      },
+    });
+    label.anchor.set(0.5, 0);
+    label.x = cx;
+    label.y = y - 16;
+    this.container.addChild(label);
+
+    const buttonBgs: Graphics[] = [];
+    const buttonTexts: Text[] = [];
+
+    const updateVisuals = () => {
+      for (let i = 0; i < modes.length; i++) {
+        const active = modes[i].id === this.selectedMode;
+        buttonBgs[i].clear();
+        const pts = chamferedPoly(0, 0, btnW, btnH, cham);
+        if (active) {
+          buttonBgs[i].poly(pts).fill({ color: PAL.ACCENT_DIM, alpha: 0.6 });
+          buttonBgs[i].poly(pts).stroke({ width: 1.5, color: PAL.ACCENT, alpha: 0.9 });
+          buttonTexts[i].style.fill = hex(PAL.ACCENT);
+        } else {
+          buttonBgs[i].poly(pts).fill({ color: PAL.CARD_BG, alpha: 0.8 });
+          buttonBgs[i].poly(pts).stroke({ width: 1, color: PAL.BORDER });
+          buttonTexts[i].style.fill = hex(PAL.TEXT_SECONDARY);
+        }
+      }
+    };
+
+    for (let i = 0; i < modes.length; i++) {
+      const bx = startX + i * (btnW + gap);
+
+      const bg = new Graphics();
+      const pts = chamferedPoly(0, 0, btnW, btnH, cham);
+      bg.poly(pts).fill({ color: PAL.CARD_BG, alpha: 0.8 });
+      bg.poly(pts).stroke({ width: 1, color: PAL.BORDER });
+      bg.x = bx;
+      bg.y = y;
+      bg.eventMode = 'static';
+      bg.cursor = 'pointer';
+      this.container.addChild(bg);
+      buttonBgs.push(bg);
+
+      const text = new Text({
+        text: modes[i].label,
+        style: {
+          fontFamily: FONT,
+          fontSize: 12,
+          fill: PAL.TEXT_SECONDARY,
+          fontWeight: 'bold' as const,
+          letterSpacing: 1,
+        },
+      });
+      text.anchor.set(0.5);
+      text.x = bx + btnW / 2;
+      text.y = y + btnH / 2;
+      this.container.addChild(text);
+      buttonTexts.push(text);
+
+      bg.on('pointerover', () => {
+        if (modes[i].id !== this.selectedMode) {
+          bg.clear();
+          const hoverPts = chamferedPoly(0, 0, btnW, btnH, cham);
+          bg.poly(hoverPts).fill({ color: PAL.CARD_HOVER, alpha: 0.9 });
+          bg.poly(hoverPts).stroke({ width: 1, color: PAL.ACCENT, alpha: 0.4 });
+        }
+      });
+      bg.on('pointerout', () => { updateVisuals(); });
+      bg.on('pointerdown', () => {
+        this.selectedMode = modes[i].id;
+        updateVisuals();
+      });
+    }
+
+    updateVisuals();
   }
 
   // ── Back button ─────────────────────────────────────────────────

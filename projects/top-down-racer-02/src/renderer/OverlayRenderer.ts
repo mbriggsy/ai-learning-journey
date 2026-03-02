@@ -153,6 +153,18 @@ export class OverlayRenderer {
   /** Grace period info getter (wired by ScreenManager). */
   private graceInfoSource: (() => VsAiGraceState | null) | null = null;
 
+  // Grace countdown banner
+  private graceContainer!: Container;
+  private graceStatusText!: Text;
+  private graceTimerText!: Text;
+  private graceBarBg!: Graphics;
+  private graceBarFill!: Graphics;
+  private lastGraceTimerDisplay = '';
+  private lastGraceStatusDisplay = '';
+
+  // Finished overlay title (stored for grace-aware text changes)
+  private finishedTitleText!: Text;
+
   constructor(private hudContainer: Container) {
     this.container = new Container();
     hudContainer.addChild(this.container);
@@ -197,6 +209,7 @@ export class OverlayRenderer {
     this.buildRespawnFade();
     this.buildLapComplete();
     this.buildFinished();
+    this.buildGraceBanner();
     this.hideAll();
   }
 
@@ -673,8 +686,8 @@ export class OverlayRenderer {
     topBar.rect(panelX + PANEL_CHAMFER, panelY, FIN_PANEL_W - PANEL_CHAMFER * 2, 2.5).fill({ color: ACCENT_ORANGE, alpha: 0.85 });
     this.finishedPanelContainer.addChild(topBar);
 
-    // "RACE COMPLETE" title
-    const title = new Text({
+    // "RACE COMPLETE" title (saved for grace-aware text changes)
+    this.finishedTitleText = new Text({
       text: 'RACE COMPLETE',
       style: {
         fontFamily: '"Orbitron", sans-serif',
@@ -684,6 +697,7 @@ export class OverlayRenderer {
         letterSpacing: 6,
       },
     });
+    const title = this.finishedTitleText;
     title.anchor.set(0.5);
     title.x = cx;
     title.y = panelY + 56;
@@ -795,6 +809,79 @@ export class OverlayRenderer {
     this.finishedPanelContainer.addChild(hint);
 
     this.container.addChild(this.finishedContainer);
+  }
+
+  private buildGraceBanner(): void {
+    this.graceContainer = new Container();
+    this.graceContainer.visible = false;
+
+    const cx = this.screenW / 2;
+
+    // Banner background (top-center, below countdown area)
+    const bannerW = 440;
+    const bannerH = 80;
+    const bannerX = cx - bannerW / 2;
+    const bannerY = 60;
+
+    const bg = new Graphics();
+    bg.roundRect(bannerX, bannerY, bannerW, bannerH, 8)
+      .fill({ color: BASE_NAVY, alpha: 0.92 });
+    this.graceContainer.addChild(bg);
+
+    const border = new Graphics();
+    border.roundRect(bannerX, bannerY, bannerW, bannerH, 8)
+      .stroke({ width: 1.5, color: ACCENT_ORANGE, alpha: 0.5 });
+    this.graceContainer.addChild(border);
+
+    // Status text: "AI FINISHED — COMPLETE YOUR RACE!" or "YOU FINISHED — AI IS STILL RACING..."
+    this.graceStatusText = new Text({
+      text: '',
+      style: {
+        fontFamily: '"Exo 2", sans-serif',
+        fontSize: 13,
+        fill: TEXT_SECONDARY,
+        fontWeight: '600',
+        letterSpacing: 1,
+      },
+    });
+    this.graceStatusText.anchor.set(0.5, 0);
+    this.graceStatusText.x = cx;
+    this.graceStatusText.y = bannerY + 10;
+    this.graceContainer.addChild(this.graceStatusText);
+
+    // Countdown timer
+    this.graceTimerText = new Text({
+      text: '5.0',
+      style: {
+        fontFamily: '"Orbitron", sans-serif',
+        fontSize: 28,
+        fill: ACCENT_ORANGE,
+        fontWeight: '700',
+        letterSpacing: 2,
+      },
+    });
+    this.graceTimerText.anchor.set(0.5, 0);
+    this.graceTimerText.x = cx;
+    this.graceTimerText.y = bannerY + 28;
+    this.graceContainer.addChild(this.graceTimerText);
+
+    // Progress bar
+    const barW = 200;
+    const barH = 6;
+    const barX = cx - barW / 2;
+    const barY = bannerY + bannerH - 16;
+
+    this.graceBarBg = new Graphics();
+    this.graceBarBg.roundRect(barX, barY, barW, barH, 3).fill({ color: 0x222222, alpha: 0.8 });
+    this.graceContainer.addChild(this.graceBarBg);
+
+    this.graceBarFill = new Graphics();
+    this.graceBarFill.rect(0, 0, barW, barH).fill({ color: 0xffffff });
+    this.graceBarFill.x = barX;
+    this.graceBarFill.y = barY;
+    this.graceContainer.addChild(this.graceBarFill);
+
+    this.container.addChild(this.graceContainer);
   }
 
   private buildCheckeredFlag(panelX: number, panelY: number, panelW: number): void {
@@ -1078,6 +1165,7 @@ export class OverlayRenderer {
     this.respawnFade.visible = false;
     this.lapCompleteContainer.visible = false;
     this.finishedContainer.visible = false;
+    this.graceContainer.visible = false;
   }
 
   // ──────────────────────────────────────────────────────
@@ -1172,10 +1260,65 @@ export class OverlayRenderer {
     }
   }
 
+  /** Color interpolation for grace timer: orange → red as time depletes. */
+  private static lerpColor(r1: number, g1: number, b1: number, r2: number, g2: number, b2: number, t: number): number {
+    const r = Math.round(r1 + (r2 - r1) * t);
+    const g = Math.round(g1 + (g2 - g1) * t);
+    const b = Math.round(b1 + (b2 - b1) * t);
+    return (r << 16) | (g << 8) | b;
+  }
+
+  private updateGraceCountdown(): void {
+    const graceState = this.graceInfoSource?.();
+    if (!graceState || graceState.status !== 'countdown') {
+      this.graceContainer.visible = false;
+      this.lastGraceTimerDisplay = '';
+      this.lastGraceStatusDisplay = '';
+      return;
+    }
+
+    this.graceContainer.visible = true;
+
+    // Status text
+    const statusText = graceState.leader === 'ai'
+      ? 'AI FINISHED \u2014 COMPLETE YOUR RACE!'
+      : 'YOU FINISHED \u2014 AI IS STILL RACING...';
+    if (this.lastGraceStatusDisplay !== statusText) {
+      this.lastGraceStatusDisplay = statusText;
+      this.graceStatusText.text = statusText;
+    }
+
+    // Timer
+    const secondsLeft = Math.max(0, graceState.ticksLeft / 60);
+    const display = secondsLeft.toFixed(1);
+    if (this.lastGraceTimerDisplay !== display) {
+      this.lastGraceTimerDisplay = display;
+      this.graceTimerText.text = display;
+    }
+
+    // Color: orange (0xff8800) → red (0xff0000) as time depletes
+    const fraction = graceState.ticksLeft / graceState.totalTicks;
+    const t = 1 - fraction; // 0 at start, 1 at expiry
+    const color = OverlayRenderer.lerpColor(0xff, 0x88, 0x00, 0xff, 0x00, 0x00, t);
+    this.graceTimerText.style.fill = color;
+
+    // Progress bar (scale.x for cheap per-frame update)
+    this.graceBarFill.scale.x = Math.max(0, fraction);
+    this.graceBarFill.tint = color;
+  }
+
   private updateFinished(prev: WorldState, curr: WorldState, race: RaceState): void {
     const isFinished = race.phase === GamePhase.Finished;
 
-    // Detect Racing → Finished transition
+    // Grace guard: human's RaceController entered Finished but the grace period
+    // is still active (trailing racer still racing). Suppress the overlay.
+    // The one-shot entrance will fire when grace resolves to 'resolved'.
+    const graceState = this.graceInfoSource?.();
+    if (isFinished && graceState?.status === 'countdown') {
+      return;
+    }
+
+    // Detect Racing → Finished transition (or grace-resolved → show)
     if (isFinished && !this.finishedWasVisible) {
       this.finishedFocusIndex = 0;
       this.finishedEntranceElapsed = 0;
@@ -1187,9 +1330,62 @@ export class OverlayRenderer {
       this.finishedBestLapText.text = `Best Lap: ${formatRaceTime(curr.timing.bestLapTicks)}`;
 
       // AI comparison (vs-ai mode only)
-      // Primary: total race time — who finished all laps faster
-      // Secondary: best single lap comparison
-      if (this.mode === 'vs-ai') {
+      if (this.mode === 'vs-ai' && graceState?.status === 'resolved') {
+        // Grace-aware results: read times from graceState (handles DNF correctly)
+        const humanTotal = graceState.humanTotalTicks;
+        const aiTotal = graceState.aiTotalTicks;
+
+        // Title: VICTORY or DEFEAT
+        if (humanTotal === null) {
+          // Human DNF — AI wins
+          this.finishedTitleText.text = 'DEFEAT';
+          this.finishedTitleText.style.fill = STATUS_RED;
+        } else if (aiTotal === null) {
+          // AI DNF — human wins
+          this.finishedTitleText.text = 'VICTORY!';
+          this.finishedTitleText.style.fill = STATUS_GREEN;
+        } else if (humanTotal <= aiTotal) {
+          this.finishedTitleText.text = 'VICTORY!';
+          this.finishedTitleText.style.fill = STATUS_GREEN;
+        } else {
+          this.finishedTitleText.text = 'DEFEAT';
+          this.finishedTitleText.style.fill = STATUS_RED;
+        }
+
+        // Primary comparison text
+        if (humanTotal !== null && aiTotal !== null) {
+          if (humanTotal <= aiTotal) {
+            const deltaSec = (aiTotal - humanTotal) / 60;
+            this.finishedAiCompareText.text = `You beat the AI by ${deltaSec.toFixed(3)}s!`;
+            this.finishedAiCompareText.style.fill = STATUS_GREEN;
+          } else {
+            const deltaSec = (humanTotal - aiTotal) / 60;
+            this.finishedAiCompareText.text = `AI wins by ${deltaSec.toFixed(3)}s`;
+            this.finishedAiCompareText.style.fill = STATUS_RED;
+          }
+        } else if (humanTotal === null) {
+          this.finishedAiCompareText.text = `AI wins! (AI: ${formatRaceTime(aiTotal!)})`;
+          this.finishedAiCompareText.style.fill = STATUS_RED;
+        } else {
+          this.finishedAiCompareText.text = 'AI: DID NOT FINISH';
+          this.finishedAiCompareText.style.fill = TEXT_SECONDARY;
+        }
+        this.finishedAiCompareText.visible = true;
+
+        // Secondary: best lap comparison (shown regardless of DNF)
+        const humanBest = curr.timing.bestLapTicks;
+        const aiBest = this.aiBestLapTicks;
+        if (humanBest > 0 && aiBest != null && aiBest > 0) {
+          const delta = (humanBest - aiBest) / 60;
+          const sign = delta <= 0 ? '+' : '-';
+          this.finishedAiBestCompareText.text = `Best Lap vs AI: ${sign}${Math.abs(delta).toFixed(3)}s`;
+          this.finishedAiBestCompareText.style.fill = delta <= 0 ? STATUS_GREEN : STATUS_RED;
+        } else {
+          this.finishedAiBestCompareText.text = '';
+        }
+        this.finishedAiBestCompareText.visible = true;
+      } else if (this.mode === 'vs-ai') {
+        // vs-ai mode but no grace state (shouldn't happen in normal flow, fallback)
         const humanTotal = curr.timing.totalRaceTicks;
         const aiTotal = this.aiTotalRaceTicks;
         if (aiTotal != null && aiTotal > 0) {
@@ -1203,13 +1399,11 @@ export class OverlayRenderer {
             this.finishedAiCompareText.style.fill = STATUS_RED;
           }
         } else {
-          // AI hasn't finished all laps — human wins by default
           this.finishedAiCompareText.text = 'You beat the AI!';
           this.finishedAiCompareText.style.fill = STATUS_GREEN;
         }
         this.finishedAiCompareText.visible = true;
 
-        // Secondary: best lap comparison
         const humanBest = curr.timing.bestLapTicks;
         const aiBest = this.aiBestLapTicks;
         if (humanBest > 0 && aiBest != null && aiBest > 0) {
@@ -1222,6 +1416,8 @@ export class OverlayRenderer {
         }
         this.finishedAiBestCompareText.visible = true;
       } else {
+        this.finishedTitleText.text = 'RACE COMPLETE';
+        this.finishedTitleText.style.fill = TEXT_PRIMARY;
         this.finishedAiCompareText.visible = false;
         this.finishedAiBestCompareText.visible = false;
       }
@@ -1296,6 +1492,7 @@ export class OverlayRenderer {
     this.updatePause(race);
     this.updateRespawnFade(race);
     this.updateLapComplete(prev, curr, race);
+    this.updateGraceCountdown();
     this.updateFinished(prev, curr, race);
   }
 }

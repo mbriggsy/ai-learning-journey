@@ -9,7 +9,7 @@ import { Container, Graphics, Text } from 'pixi.js';
 import { buildTrack } from '../../engine/track';
 import type { TrackState } from '../../engine/types';
 import { TRACKS, type TrackInfo } from '../../tracks/registry';
-import { getBestTime } from '../BestTimes';
+import { getLeaderboard } from '../Leaderboard';
 import { formatBestTime } from '../../utils/formatTime';
 import type { GameMode } from '../../types/game-mode';
 
@@ -33,6 +33,7 @@ const PAL = {
   SILVER:       0xb0b8c8,
   BRONZE:       0xc87840,
   BEST:         0x44ff88,
+  AI:           0x00eeff,
   TRACK_ROAD:   0x2a3040,
   TRACK_EDGE:   0x3a9ac0,
   THUMB_BG:     0x0a0c12,
@@ -78,7 +79,8 @@ export class TrackSelectScreen {
 
   /** Rebuild to refresh best times after a race. */
   refresh(): void {
-    this.container.removeChildren();
+    // Destroy all children to free GPU textures and buffers (not just detach)
+    this.container.removeChildren().forEach(child => child.destroy({ children: true }));
     this.build();
   }
 
@@ -279,35 +281,35 @@ export class TrackSelectScreen {
       card.addChild(t);
     }
 
-    // ── Best time ──
-    const best = getBestTime(info.id);
+    // ── Leaderboard comparison ──
+    const bests = getLeaderboard(info.id);
     const bestY = timesY + 76;
 
-    if (best !== null) {
-      const bt = new Text({
-        text: `BEST  ${formatBestTime(best)}`,
-        style: {
-          fontFamily: FONT,
-          fontSize: 14,
-          fill: PAL.BEST,
-          fontWeight: 'bold' as const,
-          letterSpacing: 1,
-        },
-      });
-      bt.anchor.set(0.5, 0);
-      bt.x = w / 2;
-      bt.y = bestY;
-      card.addChild(bt);
-    } else {
-      const bt = new Text({
-        text: 'NO TIME SET',
-        style: { fontFamily: FONT, fontSize: 12, fill: PAL.TEXT_DIM, letterSpacing: 2 },
-      });
-      bt.anchor.set(0.5, 0);
-      bt.x = w / 2;
-      bt.y = bestY + 1;
-      card.addChild(bt);
-    }
+    // Human best
+    const humanLabel = bests.human !== null
+      ? `HUMAN  ${formatBestTime(bests.human)}`
+      : 'HUMAN  --:--.---';
+    const ht = new Text({
+      text: humanLabel,
+      style: { fontFamily: FONT, fontSize: 13, fill: PAL.TEXT_SECONDARY, letterSpacing: 1 },
+    });
+    ht.anchor.set(0.5, 0);
+    ht.x = w / 2;
+    ht.y = bestY;
+    card.addChild(ht);
+
+    // AI best
+    const aiLabel = bests.ai !== null
+      ? `AI     ${formatBestTime(bests.ai)}`
+      : 'AI     --:--.---';
+    const at = new Text({
+      text: aiLabel,
+      style: { fontFamily: FONT, fontSize: 13, fill: PAL.AI, letterSpacing: 1 },
+    });
+    at.anchor.set(0.5, 0);
+    at.x = w / 2;
+    at.y = bestY + 20;
+    card.addChild(at);
 
     // ── Hover / click ──
     card.eventMode = 'static';

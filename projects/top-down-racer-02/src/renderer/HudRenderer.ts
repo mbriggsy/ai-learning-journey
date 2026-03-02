@@ -274,7 +274,7 @@ export class HudRenderer {
     this.container.addChild(this.aiPanel);
 
     this.aiTotalTimeText = new Text({
-      text: 'AI: 0:00.000',
+      text: 'AI Lap: 0:00.000',
       style: { fontFamily: 'monospace', fontSize: 15, fill: AI_COLOR },
     });
     this.aiTotalTimeText.x = x;
@@ -302,10 +302,10 @@ export class HudRenderer {
     const aiState = this.aiStateSource!();
     if (!aiState) return;
 
-    const aiTotalDisplay = `AI: ${formatRaceTime(aiState.timing.totalRaceTicks)}`;
-    if (this.lastAiTotalTimeDisplay !== aiTotalDisplay) {
-      this.lastAiTotalTimeDisplay = aiTotalDisplay;
-      this.aiTotalTimeText.text = aiTotalDisplay;
+    const aiLapDisplay = `AI Lap: ${formatRaceTime(aiState.timing.currentLapTicks)}`;
+    if (this.lastAiTotalTimeDisplay !== aiLapDisplay) {
+      this.lastAiTotalTimeDisplay = aiLapDisplay;
+      this.aiTotalTimeText.text = aiLapDisplay;
     }
 
     const aiBestDisplay = `AI Best: ${formatRaceTime(aiState.timing.bestLapTicks)}`;

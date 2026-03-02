@@ -20,6 +20,28 @@ import type { GameMode } from '../types/game-mode';
 const FIXED_DT_MS = 1000 / 60;
 const DEFAULT_CHECKPOINT_COUNT = 30;
 
+// -- Grace period (vs-ai) ────────────────────────────────────────────────
+const GRACE_PERIOD_MS = 5000;
+const GRACE_PERIOD_TICKS = Math.round(GRACE_PERIOD_MS / FIXED_DT_MS);
+
+type Racer = 'human' | 'ai';
+
+interface GraceCountdown {
+  readonly status: 'countdown';
+  readonly leader: Racer;
+  ticksLeft: number;
+  readonly totalTicks: number;
+}
+
+interface GraceResolved {
+  readonly status: 'resolved';
+  readonly leader: Racer;
+  readonly humanTotalTicks: number | null;  // null = DNF
+  readonly aiTotalTicks: number | null;     // null = DNF
+}
+
+export type VsAiGraceState = GraceCountdown | GraceResolved;
+
 /** Callbacks that other renderers register to receive state updates. */
 export type RenderCallback = (
   prev: WorldState,
@@ -49,6 +71,7 @@ export class GameLoop {
   private aiInferInFlight = false;       // backpressure guard (CP-7)
   private aiInferSeq = 0;               // sequence guard (CP-7)
   private aiInferErrorLogged = false;    // log-once guard (CP-10)
+  private vsAiGrace: VsAiGraceState | null = null;
   /** Callback invoked when player presses Q during pause. */
   onQuitToMenu: (() => void) | null = null;
 
@@ -132,19 +155,29 @@ export class GameLoop {
 
     while (this.accumulator >= FIXED_DT_MS) {
       if (this.abortTick) break;
+
+      // 1. Save phase before step
+      const phaseBefore = this.raceController.state.phase;
+
+      // 2. Step human physics + RaceController
       this.prevState = this.currState;
       this.currState = this.stepGame(signals);
 
-      // Step AI world (use cached action from previous inference)
-      // CRITICAL: Only step AI during Racing phase (GAP-A, GAP-C fixes)
-      if (this.aiWorld && this.raceController.state.phase === GamePhase.Racing) {
-        this.prevAiWorld = this.aiWorld;
+      // 3. Save phase after step
+      const phaseAfter = this.raceController.state.phase;
+
+      // 4. Grace period logic (vs-ai only): detect finishes, tick countdown
+      this.updateGrace(phaseBefore, phaseAfter, signals);
+
+      // 5. Step AI world (grace-aware gate)
+      if (this.shouldStepAi()) {
+        this.prevAiWorld = this.aiWorld!;
         const aiInput: Input = {
           steer: this.aiAction[0],
           throttle: this.aiAction[1],
           brake: this.aiAction[2],
         };
-        this.aiWorld = stepWorld(this.aiWorld, aiInput);
+        this.aiWorld = stepWorld(this.aiWorld!, aiInput);
       }
 
       // Consume one-shot signals after first sub-step
@@ -187,6 +220,157 @@ export class GameLoop {
     this.rWasDown = rDown;
     this.qWasDown = qDown;
     return signals;
+  }
+
+  /** Whether the AI world should be stepped this tick (grace-aware). */
+  private shouldStepAi(): boolean {
+    if (!this.aiWorld) return false;
+    const phase = this.raceController.state.phase;
+    if (phase === GamePhase.Racing) return true;
+    if (this.vsAiGrace?.status === 'countdown') {
+      // During grace, step AI only if AI hasn't finished yet
+      return this.vsAiGrace.leader !== 'ai';
+    }
+    return false;
+  }
+
+  /**
+   * Check for racer-finish transitions and manage the grace period countdown.
+   * Called once per sub-step during vs-ai races, inside the accumulator loop.
+   */
+  private updateGrace(
+    phaseBefore: GamePhase,
+    phaseAfter: GamePhase,
+    signals: RaceControlSignals,
+  ): void {
+    // Guard: only in vs-ai mode with a real race (not freeplay)
+    if (this.mode !== 'vs-ai' || !this.aiWorld) return;
+    if (this.raceController.state.targetLaps === FREEPLAY_LAPS) return;
+
+    // Q-to-quit override: during active grace with human still Racing,
+    // Q signal is swallowed by RaceController (tickRacing doesn't handle it).
+    // Intercept here and quit cleanly.
+    if (signals.quitToMenu && this.vsAiGrace?.status === 'countdown') {
+      this.abortTick = true;
+      this.onQuitToMenu?.();
+      return;
+    }
+
+    const targetLaps = this.raceController.state.targetLaps;
+
+    // Detect human just finished (Racing → Finished edge)
+    const humanJustFinished = phaseBefore === GamePhase.Racing && phaseAfter === GamePhase.Finished;
+
+    // Detect AI just finished (lap count reached target, only fire once)
+    const aiLapCount = this.aiWorld.timing.lapTimes.length;
+    const aiJustFinished = this.vsAiGrace === null && aiLapCount >= targetLaps;
+
+    // Both finish on the same tick → skip to resolved immediately
+    if (humanJustFinished && aiJustFinished) {
+      let humanTotal = 0;
+      for (let i = 0; i < targetLaps; i++) humanTotal += this.currState.timing.lapTimes[i];
+      let aiTotal = 0;
+      for (let i = 0; i < targetLaps; i++) aiTotal += this.aiWorld.timing.lapTimes[i];
+      this.vsAiGrace = {
+        status: 'resolved',
+        leader: humanTotal <= aiTotal ? 'human' : 'ai',
+        humanTotalTicks: humanTotal,
+        aiTotalTicks: aiTotal,
+      };
+      return;
+    }
+
+    // Human finishes first → start grace for AI
+    if (humanJustFinished && !this.vsAiGrace) {
+      this.vsAiGrace = {
+        status: 'countdown',
+        leader: 'human',
+        ticksLeft: GRACE_PERIOD_TICKS,
+        totalTicks: GRACE_PERIOD_TICKS,
+      };
+      return;
+    }
+
+    // AI finishes first → start grace for human
+    if (aiJustFinished && !this.vsAiGrace) {
+      let aiTotal = 0;
+      for (let i = 0; i < targetLaps; i++) aiTotal += this.aiWorld.timing.lapTimes[i];
+      this.vsAiGrace = {
+        status: 'countdown',
+        leader: 'ai',
+        ticksLeft: GRACE_PERIOD_TICKS,
+        totalTicks: GRACE_PERIOD_TICKS,
+      };
+      return;
+    }
+
+    // Tick the countdown (if active and not paused)
+    if (this.vsAiGrace?.status === 'countdown') {
+      const isPaused = phaseAfter === GamePhase.Paused;
+      if (!isPaused) {
+        this.vsAiGrace.ticksLeft--;
+      }
+
+      // Check if trailing racer finished during grace
+      if (this.vsAiGrace.leader === 'human') {
+        // Human led, AI is trailing — check if AI finished
+        if (aiLapCount >= targetLaps) {
+          let humanTotal = 0;
+          for (let i = 0; i < targetLaps; i++) humanTotal += this.currState.timing.lapTimes[i];
+          let aiTotal = 0;
+          for (let i = 0; i < targetLaps; i++) aiTotal += this.aiWorld.timing.lapTimes[i];
+          this.vsAiGrace = {
+            status: 'resolved',
+            leader: 'human',
+            humanTotalTicks: humanTotal,
+            aiTotalTicks: aiTotal,
+          };
+          // Human already finished — force AI to Finished state isn't needed (AI has no RaceController)
+          return;
+        }
+      } else {
+        // AI led, human is trailing — check if human just finished
+        if (humanJustFinished) {
+          let humanTotal = 0;
+          for (let i = 0; i < targetLaps; i++) humanTotal += this.currState.timing.lapTimes[i];
+          let aiTotal = 0;
+          for (let i = 0; i < targetLaps; i++) aiTotal += this.aiWorld.timing.lapTimes[i];
+          this.vsAiGrace = {
+            status: 'resolved',
+            leader: 'ai',
+            humanTotalTicks: humanTotal,
+            aiTotalTicks: aiTotal,
+          };
+          return;
+        }
+      }
+
+      // Check timeout AFTER finish check (prevents false DNF on boundary tick)
+      if (this.vsAiGrace.status === 'countdown' && this.vsAiGrace.ticksLeft <= 0) {
+        if (this.vsAiGrace.leader === 'human') {
+          // AI DNF
+          let humanTotal = 0;
+          for (let i = 0; i < targetLaps; i++) humanTotal += this.currState.timing.lapTimes[i];
+          this.vsAiGrace = {
+            status: 'resolved',
+            leader: 'human',
+            humanTotalTicks: humanTotal,
+            aiTotalTicks: null,
+          };
+        } else {
+          // Human DNF — force-finish them
+          this.raceController.forceFinish();
+          let aiTotal = 0;
+          for (let i = 0; i < targetLaps; i++) aiTotal += this.aiWorld.timing.lapTimes[i];
+          this.vsAiGrace = {
+            status: 'resolved',
+            leader: 'ai',
+            humanTotalTicks: null,
+            aiTotalTicks: aiTotal,
+          };
+        }
+      }
+    }
   }
 
   private stepGame(signals: RaceControlSignals): WorldState {
@@ -289,6 +473,8 @@ export class GameLoop {
       this.aiInferSeq++; // invalidate any in-flight inference
       this.aiInferInFlight = false;
     }
+    // Grace period reset
+    this.vsAiGrace = null;
   }
 
   /** Transition from Loading to Countdown (initial page load). */
@@ -308,4 +494,7 @@ export class GameLoop {
 
   /** Expose previous AI world state for interpolation. */
   get prevAiWorldState(): WorldState | null { return this.prevAiWorld; }
+
+  /** Grace period state for overlay rendering (vs-ai mode only). */
+  get vsAiGraceState(): VsAiGraceState | null { return this.vsAiGrace; }
 }

@@ -4,6 +4,7 @@ import { GamePhase, FREEPLAY_LAPS, type RaceState } from '../engine/RaceControll
 import type { SoundManager } from './SoundManager';
 import { formatRaceTime } from '../utils/formatTime';
 import type { GameMode } from '../types/game-mode';
+import type { VsAiGraceState } from './GameLoop';
 
 // ──────────────────────────────────────────────────────────
 // Color palette (matches MainMenuScreen)
@@ -149,6 +150,9 @@ export class OverlayRenderer {
   /** AI total race ticks (sum of AI lap times for targetLaps) — null if AI hasn't finished. */
   private aiTotalRaceTicks: number | null = null;
 
+  /** Grace period info getter (wired by ScreenManager). */
+  private graceInfoSource: (() => VsAiGraceState | null) | null = null;
+
   constructor(private hudContainer: Container) {
     this.container = new Container();
     hudContainer.addChild(this.container);
@@ -173,6 +177,11 @@ export class OverlayRenderer {
   /** Update the AI's total race ticks — sum of lap times for targetLaps (null if AI hasn't finished). */
   setAiTotalRaceTicks(ticks: number | null): void {
     this.aiTotalRaceTicks = ticks;
+  }
+
+  /** Wire the grace period state getter (closure from ScreenManager). */
+  setGraceInfoSource(source: () => VsAiGraceState | null): void {
+    this.graceInfoSource = source;
   }
 
   private get screenW(): number { return window.innerWidth; }

@@ -168,6 +168,7 @@ export class ScreenManager {
     this.hudRenderer.setMode(mode);
     this.hudRenderer.reset();
     this.overlayRenderer.setMode(mode);
+    this.overlayRenderer.setGraceInfoSource(() => this.gameLoop.vsAiGraceState);
     this.effectsRenderer.reset();
 
     this.lastBestLapTicks = 0;

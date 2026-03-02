@@ -180,6 +180,18 @@ export class GameLoop {
         this.aiWorld = stepWorld(this.aiWorld!, aiInput);
       }
 
+      // 6. Spectator finish: AI completing all laps ends the race immediately
+      if (this.mode === 'spectator' && this.aiWorld) {
+        const targetLaps = this.raceController.state.targetLaps;
+        if (
+          targetLaps !== FREEPLAY_LAPS &&
+          this.aiWorld.timing.lapTimes.length >= targetLaps &&
+          this.raceController.state.phase === GamePhase.Racing
+        ) {
+          this.raceController.forceFinish();
+        }
+      }
+
       // Consume one-shot signals after first sub-step
       signals.togglePause = false;
       signals.restart = false;

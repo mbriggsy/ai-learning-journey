@@ -1,46 +1,20 @@
-const STORAGE_KEY = 'tdr-best-times';
+/**
+ * BestTimes — thin delegation shim to Leaderboard.ts.
+ *
+ * Preserves the existing getBestTime/setBestTime API surface so that
+ * ScreenManager.ts and TrackSelectScreen.ts continue to work unchanged.
+ * Delegates to the new Leaderboard module for actual storage.
+ *
+ * NOTE: Old best times stored under 'tdr-best-times' are abandoned.
+ * The new storage key is 'tdr-leaderboard-v1' (managed by Leaderboard.ts).
+ */
 
-interface BestTimesData {
-  [trackId: string]: number;
-}
-
-function load(): BestTimesData {
-  try {
-    const raw = localStorage.getItem(STORAGE_KEY);
-    if (!raw) return {};
-    const parsed = JSON.parse(raw);
-    if (typeof parsed !== 'object' || parsed === null || Array.isArray(parsed)) return {};
-    const result: BestTimesData = {};
-    for (const [k, v] of Object.entries(parsed)) {
-      if (typeof v === 'number' && v > 0) result[k] = v;
-    }
-    return result;
-  } catch {
-    return {};
-  }
-}
-
-function save(data: BestTimesData): void {
-  try {
-    localStorage.setItem(STORAGE_KEY, JSON.stringify(data));
-  } catch {
-    // localStorage full or unavailable — fail silently
-  }
-}
+import { getLeaderboard, setHumanBest } from './Leaderboard';
 
 export function getBestTime(trackId: string): number | null {
-  const data = load();
-  return data[trackId] ?? null;
+  return getLeaderboard(trackId).human;
 }
 
 export function setBestTime(trackId: string, ticks: number): boolean {
-  const data = load();
-  const current = data[trackId];
-  if (current === undefined || ticks < current) {
-    data[trackId] = ticks;
-    save(data);
-    return true;
-  }
-  return false;
+  return setHumanBest(trackId, ticks);
 }
-

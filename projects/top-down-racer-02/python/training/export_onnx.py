@@ -70,7 +70,13 @@ def export_vecnorm(vecnorm_path: Path, output_path: Path) -> None:
     """
     print(f"Loading VecNormalize stats from {vecnorm_path} ...")
     try:
-        vn = VecNormalize.load(str(vecnorm_path), venv=None)
+        # VecNormalize.load() accesses venv.num_envs internally, so we
+        # provide a minimal stub instead of None to avoid AttributeError.
+        class _DummyVenv:
+            num_envs = 1
+            observation_space = None  # type: ignore[assignment]
+
+        vn = VecNormalize.load(str(vecnorm_path), venv=_DummyVenv())  # type: ignore[arg-type]
     except Exception as e:
         print(f"ERROR: Failed to load VecNormalize stats: {e}", file=sys.stderr)
         print("  Ensure the file is a valid VecNormalize .pkl created by SB3.", file=sys.stderr)

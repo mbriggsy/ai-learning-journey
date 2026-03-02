@@ -76,6 +76,7 @@ progress:
 |------|------|---------|
 | 2026-03-01 | Phase 5 human verification | `pytest python/tests/ -v` with bridge server — 12/12 passed. All Phase 4 regression tests green. Verification score updated from 24/25 to 25/25 |
 | 2026-03-02 | Phase 6 human verification fixes | 4 fixes: celebration overlay auto-hide, spectator stuck-detection bypass, spectator HUD shows AI state, BrowserAIRunner loaded guard. 383/383 tests pass. |
+| 2026-03-02 | Replace celebration overlay with Finished screen comparison | Deleted CelebrationOverlay.ts (disruptive mid-race). AVH-03 now shows "You beat the AI!" / "AI wins by X.XXXs" on Race Complete panel. Net -286 lines. 374/374 tests pass. |
 
 ## Blockers
 

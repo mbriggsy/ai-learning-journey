@@ -91,6 +91,7 @@ export class GameLoop {
     this.raceController.reset(true);
     this.accumulator = 0;
     this.abortTick = false;
+    this.vsAiGrace = null;
 
     // Dispose previous AI runner if exists (CP-11 fix — prevents WASM memory leak)
     if (this.aiRunner) {

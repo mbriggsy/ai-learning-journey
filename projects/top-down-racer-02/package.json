@@ -10,7 +10,9 @@
     "test": "vitest run",
     "test:watch": "vitest",
     "test:verbose": "vitest run --reporter=verbose",
-    "bridge": "npx tsx src/ai/run-bridge.ts"
+    "bridge": "npx tsx src/ai/run-bridge.ts",
+    "setup:ort": "node scripts/copy-ort-wasm.cjs",
+    "postinstall": "node scripts/copy-ort-wasm.cjs"
   },
   "keywords": [],
   "author": "",
@@ -28,7 +30,6 @@
     "tsx": "^4.21.0",
     "typescript": "^5.9.3",
     "vite": "^7.3.1",
-    "vite-plugin-static-copy": "^3.2.0",
     "vitest": "^4.0.18"
   }
 }

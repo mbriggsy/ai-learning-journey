@@ -3,7 +3,6 @@ import type { WorldState } from '../engine/types';
 import type { RaceState } from '../engine/RaceController';
 import { CAR } from '../engine/constants';
 import { formatRaceTime } from '../utils/formatTime';
-import { GapTimerHud } from './GapTimerHud';
 import type { GameMode } from '../types/game-mode';
 
 // ──────────────────────────────────────────────────────────
@@ -23,6 +22,9 @@ const MINIMAP_PADDING = 8;   // Padding inside minimap area
 const MINIMAP_DOT    = 4;    // Car dot radius in pixels
 const MINIMAP_TRACK_COLOR = 0xaaaaaa;
 const MINIMAP_CAR_COLOR   = 0xffff00;
+
+// AI car color (matches AiCarRenderer tint)
+const AI_COLOR = '#00eeff';
 
 // Text style shared across HUD
 const HUD_TEXT_STYLE = {
@@ -70,9 +72,15 @@ export class HudRenderer {
   private trackOutlineBuilt = false;
   private minimapTrackGraphics!: Graphics; // Static track outline, rebuilt once
 
-  // Gap timer (vs-ai mode only, AVH-05)
-  private gapTimerHud: GapTimerHud;
   private mode: GameMode = 'solo';
+
+  // AI timing stats (vs-ai mode only)
+  private aiStateSource: (() => WorldState | null) | null = null;
+  private aiPanel!: Graphics;
+  private aiTotalTimeText!: Text;
+  private aiBestLapText!: Text;
+  private lastAiTotalTimeDisplay = '';
+  private lastAiBestLapDisplay = '';
 
   // Screen dimensions (updated on each render for responsiveness)
   private screenW = window.innerWidth;
@@ -80,11 +88,6 @@ export class HudRenderer {
 
   constructor(hudContainer: Container) {
     this.container = hudContainer;
-    this.gapTimerHud = new GapTimerHud();
-    // Position gap timer: center-top, below lap counter
-    this.gapTimerHud.container.x = this.screenW / 2;
-    this.gapTimerHud.container.y = 70;
-    this.container.addChild(this.gapTimerHud.container);
     this.buildHud();
   }
 
@@ -93,7 +96,13 @@ export class HudRenderer {
     this.buildSpeedometer();
     this.buildLapCounter();
     this.buildLapTimes();
+    this.buildAiTiming();
     this.buildMinimap();
+  }
+
+  /** Set AI state source for HUD stats in vs-ai mode. */
+  setAiStateSource(getter: () => WorldState | null): void {
+    this.aiStateSource = getter;
   }
 
   // ──────────────────────────────────────────────────────
@@ -252,6 +261,61 @@ export class HudRenderer {
   }
 
   // ──────────────────────────────────────────────────────
+  // AI Timing Stats (vs-ai mode only) -- top-right, below human times
+  // ──────────────────────────────────────────────────────
+
+  private buildAiTiming(): void {
+    const x = this.screenW - MARGIN - 180;
+    const y = MARGIN + 86; // below the human time panel (82px panel + 4px gap)
+
+    this.aiPanel = new Graphics();
+    this.aiPanel.rect(x - 4, y - 4, 188, 52).fill({ color: 0x000000, alpha: PANEL_ALPHA });
+    this.aiPanel.visible = false;
+    this.container.addChild(this.aiPanel);
+
+    this.aiTotalTimeText = new Text({
+      text: 'AI: 0:00.000',
+      style: { fontFamily: 'monospace', fontSize: 15, fill: AI_COLOR },
+    });
+    this.aiTotalTimeText.x = x;
+    this.aiTotalTimeText.y = y;
+    this.aiTotalTimeText.visible = false;
+    this.container.addChild(this.aiTotalTimeText);
+
+    this.aiBestLapText = new Text({
+      text: 'AI Best: --:--.---',
+      style: { fontFamily: 'monospace', fontSize: 13, fill: AI_COLOR },
+    });
+    this.aiBestLapText.x = x;
+    this.aiBestLapText.y = y + 22;
+    this.aiBestLapText.visible = false;
+    this.container.addChild(this.aiBestLapText);
+  }
+
+  private updateAiTiming(): void {
+    const showAi = this.mode === 'vs-ai' && this.aiStateSource != null;
+    this.aiPanel.visible = showAi;
+    this.aiTotalTimeText.visible = showAi;
+    this.aiBestLapText.visible = showAi;
+    if (!showAi) return;
+
+    const aiState = this.aiStateSource!();
+    if (!aiState) return;
+
+    const aiTotalDisplay = `AI: ${formatRaceTime(aiState.timing.totalRaceTicks)}`;
+    if (this.lastAiTotalTimeDisplay !== aiTotalDisplay) {
+      this.lastAiTotalTimeDisplay = aiTotalDisplay;
+      this.aiTotalTimeText.text = aiTotalDisplay;
+    }
+
+    const aiBestDisplay = `AI Best: ${formatRaceTime(aiState.timing.bestLapTicks)}`;
+    if (this.lastAiBestLapDisplay !== aiBestDisplay) {
+      this.lastAiBestLapDisplay = aiBestDisplay;
+      this.aiBestLapText.text = aiBestDisplay;
+    }
+  }
+
+  // ──────────────────────────────────────────────────────
   // Minimap (HUD-05) -- bottom-right
   // ──────────────────────────────────────────────────────
 
@@ -363,14 +427,6 @@ export class HudRenderer {
   /** Set game mode. Called before each race starts. */
   setMode(mode: GameMode): void {
     this.mode = mode;
-    this.gapTimerHud.reset();
-  }
-
-  /** Show gap timer with a given gap value. Only effective in vs-ai mode. */
-  showGap(gapSeconds: number): void {
-    if (this.mode === 'vs-ai') {
-      this.gapTimerHud.showGap(gapSeconds);
-    }
   }
 
   /** Reset HUD state for a new track (rebuilds minimap on next render). */
@@ -383,7 +439,8 @@ export class HudRenderer {
     this.lastCurrentLapDisplay = '';
     this.lastBestLapDisplay = '';
     this.lapFlashTimer = 0;
-    this.gapTimerHud.reset();
+    this.lastAiTotalTimeDisplay = '';
+    this.lastAiBestLapDisplay = '';
   }
 
   /**
@@ -413,5 +470,8 @@ export class HudRenderer {
 
     // HUD-05: Minimap
     this.updateMinimap(track.outerBoundary, track.innerBoundary, car.position.x, car.position.y);
+
+    // AI timing stats (vs-ai mode only)
+    this.updateAiTiming();
   }
 }

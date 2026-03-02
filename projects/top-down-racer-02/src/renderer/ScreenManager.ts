@@ -41,6 +41,7 @@ export class ScreenManager {
   private lastBestLapTicks = 0;
   private lastAiBestLapTicks = 0;
   private currentMode: GameMode = 'solo';
+  private targetLaps = 0;
   private tickerFn: ((ticker: { deltaMS: number }) => void) | null = null;
 
   constructor(deps: {
@@ -91,16 +92,14 @@ export class ScreenManager {
       this.goto('track-select');
     };
 
-    // Wire gap timer callback: GameLoop → HudRenderer
-    this.gameLoop.onGapUpdated = (gapSeconds) => {
-      this.hudRenderer.showGap(gapSeconds);
-    };
-
     // Wire AI state source: GameLoop → WorldRenderer (getter/closure pattern)
     this.worldRenderer.setAiStateSource(() => ({
       prev: this.gameLoop.prevAiWorldState,
       curr: this.gameLoop.currentAiWorldState,
     }));
+
+    // Wire AI state source: GameLoop → HudRenderer (for AI timing stats)
+    this.hudRenderer.setAiStateSource(() => this.gameLoop.currentAiWorldState);
 
     // Add screens to stage (behind world/hud containers)
     deps.stage.addChildAt(this.mainMenu.container, 0);
@@ -174,6 +173,7 @@ export class ScreenManager {
     this.lastBestLapTicks = 0;
     this.lastAiBestLapTicks = 0;
     this.currentMode = mode;
+    this.targetLaps = this.settings.lapCount;
 
     this.goto('playing');
 
@@ -201,13 +201,22 @@ export class ScreenManager {
 
     // AI best (vs-ai and spectator modes — solo has no AI world)
     if (this.currentMode !== 'solo') {
-      const aiBest = this.gameLoop.currentAiWorldState?.timing.bestLapTicks;
+      const aiTiming = this.gameLoop.currentAiWorldState?.timing;
+      const aiBest = aiTiming?.bestLapTicks;
       if (aiBest != null && aiBest > 0 && aiBest !== this.lastAiBestLapTicks) {
         setAiBest(trackId, aiBest);
         this.lastAiBestLapTicks = aiBest;
       }
-      // Feed AI best to overlay for Finished screen comparison
+      // Feed AI stats to overlay for Finished screen comparison
       this.overlayRenderer.setAiBestLapTicks(aiBest ?? null);
+      // AI total race ticks = sum of first targetLaps lap times (null if AI hasn't finished)
+      if (aiTiming && this.targetLaps > 0 && aiTiming.lapTimes.length >= this.targetLaps) {
+        let aiTotal = 0;
+        for (let i = 0; i < this.targetLaps; i++) aiTotal += aiTiming.lapTimes[i];
+        this.overlayRenderer.setAiTotalRaceTicks(aiTotal);
+      } else {
+        this.overlayRenderer.setAiTotalRaceTicks(null);
+      }
     }
   }
 }

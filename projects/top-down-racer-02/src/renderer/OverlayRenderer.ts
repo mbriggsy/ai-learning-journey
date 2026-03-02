@@ -139,11 +139,15 @@ export class OverlayRenderer {
   private checkeredContainer!: Container;
   private checkeredOffset = 0;
   private finishedAiCompareText!: Text;
+  private finishedAiBestCompareText!: Text;
 
   private mode: GameMode = 'solo';
 
   /** AI best lap ticks — set externally so the Finished screen can show comparison. */
   private aiBestLapTicks: number | null = null;
+
+  /** AI total race ticks (sum of AI lap times for targetLaps) — null if AI hasn't finished. */
+  private aiTotalRaceTicks: number | null = null;
 
   constructor(private hudContainer: Container) {
     this.container = new Container();
@@ -164,6 +168,11 @@ export class OverlayRenderer {
   /** Update the AI's best lap ticks (called from ScreenManager per-tick). */
   setAiBestLapTicks(ticks: number | null): void {
     this.aiBestLapTicks = ticks;
+  }
+
+  /** Update the AI's total race ticks — sum of lap times for targetLaps (null if AI hasn't finished). */
+  setAiTotalRaceTicks(ticks: number | null): void {
+    this.aiTotalRaceTicks = ticks;
   }
 
   private get screenW(): number { return window.innerWidth; }
@@ -710,7 +719,7 @@ export class OverlayRenderer {
 
     resultY += 20;
 
-    // AI comparison line (only visible in vs-ai mode)
+    // AI comparison line — primary: total race time (only visible in vs-ai mode)
     this.finishedAiCompareText = new Text({
       text: '',
       style: { fontFamily: '"Exo 2", sans-serif', fontSize: 14, fill: ACCENT_ORANGE, fontWeight: '700', letterSpacing: 1 },
@@ -721,7 +730,20 @@ export class OverlayRenderer {
     this.finishedAiCompareText.visible = false;
     this.finishedPanelContainer.addChild(this.finishedAiCompareText);
 
-    resultY += 24;
+    resultY += 20;
+
+    // AI comparison line — secondary: best lap delta
+    this.finishedAiBestCompareText = new Text({
+      text: '',
+      style: { fontFamily: '"Exo 2", sans-serif', fontSize: 12, fill: TEXT_SECONDARY, fontWeight: '400', letterSpacing: 1 },
+    });
+    this.finishedAiBestCompareText.anchor.set(0.5);
+    this.finishedAiBestCompareText.x = cx;
+    this.finishedAiBestCompareText.y = resultY;
+    this.finishedAiBestCompareText.visible = false;
+    this.finishedPanelContainer.addChild(this.finishedAiBestCompareText);
+
+    resultY += 20;
 
     // Thin divider line
     const divLine = new Graphics();
@@ -1156,22 +1178,43 @@ export class OverlayRenderer {
       this.finishedBestLapText.text = `Best Lap: ${formatRaceTime(curr.timing.bestLapTicks)}`;
 
       // AI comparison (vs-ai mode only)
-      if (this.mode === 'vs-ai' && this.aiBestLapTicks != null && this.aiBestLapTicks > 0) {
-        const humanBest = curr.timing.bestLapTicks;
-        if (humanBest > 0 && humanBest <= this.aiBestLapTicks) {
+      // Primary: total race time — who finished all laps faster
+      // Secondary: best single lap comparison
+      if (this.mode === 'vs-ai') {
+        const humanTotal = curr.timing.totalRaceTicks;
+        const aiTotal = this.aiTotalRaceTicks;
+        if (aiTotal != null && aiTotal > 0) {
+          if (humanTotal <= aiTotal) {
+            const deltaSec = (aiTotal - humanTotal) / 60;
+            this.finishedAiCompareText.text = `You beat the AI by ${deltaSec.toFixed(3)}s!`;
+            this.finishedAiCompareText.style.fill = STATUS_GREEN;
+          } else {
+            const deltaSec = (humanTotal - aiTotal) / 60;
+            this.finishedAiCompareText.text = `AI wins by ${deltaSec.toFixed(3)}s`;
+            this.finishedAiCompareText.style.fill = STATUS_RED;
+          }
+        } else {
+          // AI hasn't finished all laps — human wins by default
           this.finishedAiCompareText.text = 'You beat the AI!';
           this.finishedAiCompareText.style.fill = STATUS_GREEN;
-        } else if (humanBest > 0) {
-          const deltaSec = (humanBest - this.aiBestLapTicks) / 60;
-          this.finishedAiCompareText.text = `AI wins by ${deltaSec.toFixed(3)}s`;
-          this.finishedAiCompareText.style.fill = STATUS_RED;
-        } else {
-          this.finishedAiCompareText.text = `AI Best: ${formatRaceTime(this.aiBestLapTicks)}`;
-          this.finishedAiCompareText.style.fill = ACCENT_ORANGE;
         }
         this.finishedAiCompareText.visible = true;
+
+        // Secondary: best lap comparison
+        const humanBest = curr.timing.bestLapTicks;
+        const aiBest = this.aiBestLapTicks;
+        if (humanBest > 0 && aiBest != null && aiBest > 0) {
+          const delta = (humanBest - aiBest) / 60;
+          const sign = delta <= 0 ? '+' : '-';
+          this.finishedAiBestCompareText.text = `Best Lap vs AI: ${sign}${Math.abs(delta).toFixed(3)}s`;
+          this.finishedAiBestCompareText.style.fill = delta <= 0 ? STATUS_GREEN : STATUS_RED;
+        } else {
+          this.finishedAiBestCompareText.text = '';
+        }
+        this.finishedAiBestCompareText.visible = true;
       } else {
         this.finishedAiCompareText.visible = false;
+        this.finishedAiBestCompareText.visible = false;
       }
 
       // Populate individual lap times

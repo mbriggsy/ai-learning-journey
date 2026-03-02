@@ -15,7 +15,6 @@ import { getInput, isKeyDown, ZERO_INPUT } from './InputHandler';
 import { castRays } from '../ai/raycaster';
 import { buildObservation } from '../ai/observations';
 import { BrowserAIRunner } from '../ai/browser-ai-runner';
-import { computeGapSeconds } from './GapTimerHud';
 import type { GameMode } from '../types/game-mode';
 
 const FIXED_DT_MS = 1000 / 60;
@@ -50,13 +49,8 @@ export class GameLoop {
   private aiInferInFlight = false;       // backpressure guard (CP-7)
   private aiInferSeq = 0;               // sequence guard (CP-7)
   private aiInferErrorLogged = false;    // log-once guard (CP-10)
-  private aiCheckpointTicks: Map<string, number> = new Map(); // "${lap}-${cp}" key (CP-8 fix)
-
   /** Callback invoked when player presses Q during pause. */
   onQuitToMenu: (() => void) | null = null;
-
-  /** Gap state for HUD (updated when human crosses a checkpoint). */
-  onGapUpdated: ((gapSeconds: number) => void) | null = null;
 
   constructor(trackPoints: TrackControlPoint[]) {
     this.track = buildTrack(trackPoints, DEFAULT_CHECKPOINT_COUNT);
@@ -85,7 +79,6 @@ export class GameLoop {
       this.aiWorld = createWorld(this.track);
       this.prevAiWorld = this.aiWorld;
       this.aiRunner = new BrowserAIRunner();
-      this.aiCheckpointTicks.clear();
       this.aiAction = [0, 0, 0]; // reset to ZERO_INPUT (CP-12)
       this.aiInferInFlight = false;
       this.aiInferSeq = 0;
@@ -152,11 +145,7 @@ export class GameLoop {
           brake: this.aiAction[2],
         };
         this.aiWorld = stepWorld(this.aiWorld, aiInput);
-        this.trackAiCheckpoints();
       }
-
-      // Track human checkpoint crossings for gap timer
-      this.trackHumanCheckpoints();
 
       // Consume one-shot signals after first sub-step
       signals.togglePause = false;
@@ -254,33 +243,6 @@ export class GameLoop {
     return buildObservation(world, rays, trackProgress);
   }
 
-  // ── Checkpoint tracking (CP-8 fix: multi-lap keying) ──
-
-  private trackAiCheckpoints(): void {
-    if (!this.aiWorld || !this.prevAiWorld) return;
-    const curr = this.aiWorld.timing;
-    const prev = this.prevAiWorld.timing;
-    if (curr.lastCheckpointIndex !== prev.lastCheckpointIndex) {
-      // Key by "${lap}-${checkpoint}" for multi-lap correctness (CP-8)
-      const key = `${curr.currentLap}-${curr.lastCheckpointIndex}`;
-      this.aiCheckpointTicks.set(key, curr.totalRaceTicks);
-    }
-  }
-
-  private trackHumanCheckpoints(): void {
-    const curr = this.currState.timing;
-    const prev = this.prevState.timing;
-    if (curr.lastCheckpointIndex !== prev.lastCheckpointIndex) {
-      const key = `${curr.currentLap}-${curr.lastCheckpointIndex}`;
-      const humanTick = curr.totalRaceTicks;
-      const aiTick = this.aiCheckpointTicks.get(key);
-      if (aiTick !== undefined && this.mode === 'vs-ai') { // CP-9: gap only in vs-ai, not spectator
-        const gapSeconds = computeGapSeconds(humanTick, aiTick);
-        this.onGapUpdated?.(gapSeconds);
-      }
-    }
-  }
-
   private completeRespawn(): WorldState {
     const { timing, track } = this.currState;
     const lastIdx = timing.lastCheckpointIndex;
@@ -324,7 +286,6 @@ export class GameLoop {
       this.aiWorld = createWorld(this.track);
       this.prevAiWorld = this.aiWorld;
       this.aiAction = [0, 0, 0];
-      this.aiCheckpointTicks.clear();
       this.aiInferSeq++; // invalidate any in-flight inference
       this.aiInferInFlight = false;
     }

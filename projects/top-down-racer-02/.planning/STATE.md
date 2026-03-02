@@ -3,22 +3,22 @@ gsd_state_version: 1.0
 milestone: v1.0
 milestone_name: milestone
 status: in_progress
-last_updated: "2026-03-03T00:15:00.000Z"
+last_updated: "2026-03-03T01:30:00.000Z"
 progress:
   total_phases: 6
-  completed_phases: 5
-  total_plans: 21
-  completed_plans: 25
+  completed_phases: 6
+  total_plans: 22
+  completed_plans: 26
 ---
 
 # Project State: Top-Down Racer v02
 
 **Last updated:** 2026-03-02
-**Overall progress:** 96%
+**Overall progress:** 100%
 
 ## Current Phase
 
-**Phase 6: AI vs Human Mode** -- IN PROGRESS (Plans 00-04 complete, Plan 04b pending)
+**Phase 6: AI vs Human Mode** -- COMPLETE (Plans 00-04 + 04b all done)
 
 ## Phase Status
 
@@ -29,7 +29,7 @@ progress:
 | 3. Game Features & Polish | Complete (Plan 5/5 done) | 100% |
 | 4. Gymnasium Environment Wrapper | Complete (Plan 3/3 done) | 100% |
 | 5. AI Training Pipeline | Complete (Plan 3/3 done, 25/25 verified) | 100% |
-| 6. AI vs Human Mode | In Progress (Plan 5/6 complete — leaderboard done, grace period pending) | 90% |
+| 6. AI vs Human Mode | Complete (Plan 6/6 done — grace period, spectator finish) | 100% |
 
 ## Decisions Log
 
@@ -74,6 +74,11 @@ progress:
 | 2026-03-02 | R-key restart always shows countdown (not instant) | User expects 3-2-1-GO on restart for consistent race experience |
 | 2026-03-02 | BestTimes.ts shim deleted in Plan 04 (not deferred) | Both consumers modified in same plan — natural cleanup point |
 | 2026-03-02 | AI best dedup cache (lastAiBestLapTicks) prevents 60/sec localStorage reads | checkBestTime() runs every tick; without cache, setAiBest fires 60x/sec after AI's first lap |
+| 2026-03-02 | 5-second grace period after first racer finishes | Industry standard (Forza 15s, TrackMania dynamic, Split/Second 60s); 5s fits 1v1 arcade urgency |
+| 2026-03-02 | VsAiGraceState discriminated union ('countdown' / 'resolved') | Prevents nonsensical states vs flat boolean; TypeScript narrows types at compile time |
+| 2026-03-02 | Grace logic in GameLoop (not engine) via private updateGrace() | RaceController only knows one car; grace is a multi-world concern |
+| 2026-03-02 | Text (not BitmapText) for grace timer with string-diff guard | Only ~50 updates across 5s; consistent with HudRenderer pattern; avoids new font infra |
+| 2026-03-02 | Spectator mode: forceFinish() when AI completes all laps | Human car is frozen (ZERO_INPUT); without explicit check, race never ends |
 
 ## Quick Tasks Completed
 

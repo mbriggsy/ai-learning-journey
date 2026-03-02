@@ -1,5 +1,25 @@
-import { defineConfig } from 'vite';
+import { defineConfig, normalizePath } from 'vite';
+import { viteStaticCopy } from 'vite-plugin-static-copy';
+import path from 'node:path';
+
 export default defineConfig({
-  // No special plugins needed for PixiJS v8
-  // TypeScript handled by Vite's built-in esbuild
+  plugins: [
+    viteStaticCopy({
+      targets: [
+        {
+          src: normalizePath(
+            path.resolve(
+              __dirname,
+              'node_modules/onnxruntime-web/dist/*.wasm',
+            ),
+          ),
+          dest: 'assets/ort',
+        },
+      ],
+    }),
+  ],
+  assetsInclude: ['**/*.onnx'],
+  optimizeDeps: {
+    exclude: ['onnxruntime-web'],
+  },
 });

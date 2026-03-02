@@ -12,7 +12,10 @@
       "mcp__sequential-thinking__*",
       "mcp__sequentialthinking__*",
       "mcp__playwright__*",
-      "mcp__plugin_compound-engineering_context7__*"
+      "mcp__plugin_compound-engineering_context7__*",
+      "Skill(gsd:*)",
+      "gsd:commands:gsd:*",
+      "Skill(gsd:commands:gsd:quick)"
     ]
   }
 }

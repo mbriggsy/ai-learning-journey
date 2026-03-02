@@ -3,22 +3,22 @@ gsd_state_version: 1.0
 milestone: v1.0
 milestone_name: milestone
 status: in_progress
-last_updated: "2026-03-02T12:00:00.000Z"
+last_updated: "2026-03-02T18:00:00.000Z"
 progress:
   total_phases: 6
   completed_phases: 5
   total_plans: 21
-  completed_plans: 22
+  completed_plans: 23
 ---
 
 # Project State: Top-Down Racer v02
 
 **Last updated:** 2026-03-02
-**Overall progress:** 88%
+**Overall progress:** 92%
 
 ## Current Phase
 
-**Phase 6: AI vs Human Mode** -- IN PROGRESS (Plans 00-01 complete, Plans 02-04 pending)
+**Phase 6: AI vs Human Mode** -- IN PROGRESS (Plans 00-02 complete, Plans 03-04 pending)
 
 ## Phase Status
 
@@ -29,7 +29,7 @@ progress:
 | 3. Game Features & Polish | Complete (Plan 5/5 done) | 100% |
 | 4. Gymnasium Environment Wrapper | Complete (Plan 3/3 done) | 100% |
 | 5. AI Training Pipeline | Complete (Plan 3/3 done, 25/25 verified) | 100% |
-| 6. AI vs Human Mode | In Progress (Plan 1/5 complete — infrastructure) | 40% |
+| 6. AI vs Human Mode | In Progress (Plan 2/5 complete — AI inference + ghost car) | 60% |
 
 ## Decisions Log
 
@@ -58,6 +58,11 @@ progress:
 | 2026-03-02 | Leaderboard key 'tdr-leaderboard-v1' (old 'tdr-best-times' abandoned) | Key-based abandonment avoids migration code; leaderboard data trivially re-earned |
 | 2026-03-02 | BestTimes.ts kept as delegation shim to Leaderboard.ts | Minimal blast radius for Plan 01; Plan 03 will update ScreenManager imports directly |
 | 2026-03-02 | GameMode type in src/types/game-mode.ts (cross-cutting types location) | Used across renderer layer; first file in src/types/ establishing the convention |
+| 2026-03-02 | ort.env.wasm.numThreads = 1 for tiny MLP inference | Thread overhead exceeds computation for ~5,500 FLOPs; avoids crossOriginIsolated requirement |
+| 2026-03-02 | Runtime type guard for VecNormStats JSON (not unsafe `as` cast) | Network JSON from Python export could have wrong shape; prevents silent NaN propagation |
+| 2026-03-02 | Per-child tint on AiCarRenderer (not container.tint) | PixiJS v8 Container has no tint property; only Sprite/Graphics support it |
+| 2026-03-02 | AiCarRenderer delegates update() to CarRenderer | Prevents heading offset bug; CarRenderer.update() uses bare heading (no PI/2 offset) |
+| 2026-03-02 | vi.mock() factory must not reference outer-scope variables | Vitest hoists vi.mock() above all declarations; causes ReferenceError at import time |
 
 ## Quick Tasks Completed
 

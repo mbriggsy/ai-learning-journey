@@ -41,7 +41,7 @@
   Plans:
   - [x] 06-00-PLAN.md -- ONNX export script: SB3 PPO to ONNX, VecNormalize stats to JSON
   - [x] 06-01-PLAN.md -- TypeScript infrastructure: VecNormalize, Leaderboard, GameMode, BestTimes delegation
-  - [ ] 06-02-PLAN.md -- AI integration: ghost car, spectator mode, game mode selection
+  - [x] 06-02-PLAN.md -- AI inference: BrowserAIRunner (ONNX), AiCarRenderer (ghost car), Vite WASM config
   - [ ] 06-03-PLAN.md -- Race experience: gap timer, AI demo lap, celebration, AI car visuals
   - [ ] 06-04-PLAN.md -- Leaderboard: localStorage persistence, human vs AI comparison
 

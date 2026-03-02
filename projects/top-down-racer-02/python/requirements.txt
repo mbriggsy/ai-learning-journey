@@ -6,3 +6,5 @@ numpy>=1.26.0,<3
 websocket-client>=1.7.0,<2
 stable-baselines3[extra]>=2.4.0,<3
 torch>=2.3,<3
+onnx>=1.15.0,<2
+onnxruntime>=1.17.0,<2

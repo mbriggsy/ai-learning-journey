@@ -6,9 +6,11 @@ import type { GameLoop } from './GameLoop';
 import type { SoundManager } from './SoundManager';
 import type { WorldRenderer } from './WorldRenderer';
 import type { HudRenderer } from './HudRenderer';
+import type { OverlayRenderer } from './OverlayRenderer';
 import type { EffectsRenderer } from './EffectsRenderer';
 import { TRACKS } from '../tracks/registry';
 import { setBestTime } from './BestTimes';
+import type { GameMode } from '../types/game-mode';
 
 type ScreenState = 'main-menu' | 'track-select' | 'settings' | 'playing';
 
@@ -30,6 +32,7 @@ export class ScreenManager {
   private soundManager: SoundManager;
   private worldRenderer: WorldRenderer;
   private hudRenderer: HudRenderer;
+  private overlayRenderer: OverlayRenderer;
   private effectsRenderer: EffectsRenderer;
   private worldContainer: Container;
   private hudContainer: Container;
@@ -47,6 +50,7 @@ export class ScreenManager {
     soundManager: SoundManager;
     worldRenderer: WorldRenderer;
     hudRenderer: HudRenderer;
+    overlayRenderer: OverlayRenderer;
     effectsRenderer: EffectsRenderer;
   }) {
     this.app = deps.app;
@@ -56,6 +60,7 @@ export class ScreenManager {
     this.soundManager = deps.soundManager;
     this.worldRenderer = deps.worldRenderer;
     this.hudRenderer = deps.hudRenderer;
+    this.overlayRenderer = deps.overlayRenderer;
     this.effectsRenderer = deps.effectsRenderer;
 
     // Create screen instances
@@ -74,7 +79,7 @@ export class ScreenManager {
 
     this.trackSelect.onAction = (action) => {
       if (action.type === 'back') this.goto('main-menu');
-      else if (action.type === 'select') this.startGame(action.index);
+      else if (action.type === 'select') this.startGame(action.index, action.mode);
     };
 
     this.settings.onBack = () => this.goto('main-menu');
@@ -83,6 +88,22 @@ export class ScreenManager {
     this.gameLoop.onQuitToMenu = () => {
       this.goto('track-select');
     };
+
+    // Wire gap timer callback: GameLoop → HudRenderer
+    this.gameLoop.onGapUpdated = (gapSeconds) => {
+      this.hudRenderer.showGap(gapSeconds);
+    };
+
+    // Wire celebration callback: GameLoop → OverlayRenderer
+    this.gameLoop.onCelebration = (humanBestTicks, aiBestTicks) => {
+      this.overlayRenderer.showCelebration(humanBestTicks, aiBestTicks);
+    };
+
+    // Wire AI state source: GameLoop → WorldRenderer (getter/closure pattern)
+    this.worldRenderer.setAiStateSource(() => ({
+      prev: this.gameLoop.prevAiWorldState,
+      curr: this.gameLoop.currentAiWorldState,
+    }));
 
     // Add screens to stage (behind world/hud containers)
     deps.stage.addChildAt(this.mainMenu.container, 0);
@@ -137,17 +158,20 @@ export class ScreenManager {
     }
   }
 
-  private startGame(trackIndex: number): void {
+  private startGame(trackIndex: number, mode: GameMode = 'solo'): void {
     this.activeTrackIndex = trackIndex;
     const trackInfo = TRACKS[trackIndex];
 
-    // Load the selected track (resets world, restarts with countdown)
-    this.gameLoop.loadTrack(trackInfo.controlPoints, this.settings.lapCount);
+    // Load the selected track with mode (resets world, restarts with countdown)
+    this.gameLoop.loadTrack(trackInfo.controlPoints, this.settings.lapCount, mode);
 
-    // Configure shoulder rendering for this track, then reset renderers
+    // Configure renderers for this mode and track
+    this.worldRenderer.setMode(mode);
     this.worldRenderer.setShoulderSide(trackInfo.shoulderSide ?? 'inner');
     this.worldRenderer.reset();
+    this.hudRenderer.setMode(mode);
     this.hudRenderer.reset();
+    this.overlayRenderer.setMode(mode);
     this.effectsRenderer.reset();
 
     this.lastBestLapTicks = 0;

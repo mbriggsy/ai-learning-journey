@@ -3,6 +3,8 @@ import type { WorldState } from '../engine/types';
 import type { RaceState } from '../engine/RaceController';
 import { CAR } from '../engine/constants';
 import { formatRaceTime } from '../utils/formatTime';
+import { GapTimerHud } from './GapTimerHud';
+import type { GameMode } from '../types/game-mode';
 
 // ──────────────────────────────────────────────────────────
 // Layout constants (screen coordinates)
@@ -68,12 +70,21 @@ export class HudRenderer {
   private trackOutlineBuilt = false;
   private minimapTrackGraphics!: Graphics; // Static track outline, rebuilt once
 
+  // Gap timer (vs-ai mode only, AVH-05)
+  private gapTimerHud: GapTimerHud;
+  private mode: GameMode = 'solo';
+
   // Screen dimensions (updated on each render for responsiveness)
   private screenW = window.innerWidth;
   private screenH = window.innerHeight;
 
   constructor(hudContainer: Container) {
     this.container = hudContainer;
+    this.gapTimerHud = new GapTimerHud();
+    // Position gap timer: center-top, below lap counter
+    this.gapTimerHud.container.x = this.screenW / 2;
+    this.gapTimerHud.container.y = 70;
+    this.container.addChild(this.gapTimerHud.container);
     this.buildHud();
   }
 
@@ -349,6 +360,19 @@ export class HudRenderer {
   // Main render -- called every animation frame
   // ──────────────────────────────────────────────────────
 
+  /** Set game mode. Called before each race starts. */
+  setMode(mode: GameMode): void {
+    this.mode = mode;
+    this.gapTimerHud.reset();
+  }
+
+  /** Show gap timer with a given gap value. Only effective in vs-ai mode. */
+  showGap(gapSeconds: number): void {
+    if (this.mode === 'vs-ai') {
+      this.gapTimerHud.showGap(gapSeconds);
+    }
+  }
+
   /** Reset HUD state for a new track (rebuilds minimap on next render). */
   reset(): void {
     this.trackOutlineBuilt = false;
@@ -359,6 +383,7 @@ export class HudRenderer {
     this.lastCurrentLapDisplay = '';
     this.lastBestLapDisplay = '';
     this.lapFlashTimer = 0;
+    this.gapTimerHud.reset();
   }
 
   /**

@@ -3,6 +3,8 @@ import type { WorldState } from '../engine/types';
 import { GamePhase, FREEPLAY_LAPS, type RaceState } from '../engine/RaceController';
 import type { SoundManager } from './SoundManager';
 import { formatRaceTime } from '../utils/formatTime';
+import { CelebrationOverlay } from './CelebrationOverlay';
+import type { GameMode } from '../types/game-mode';
 
 // ──────────────────────────────────────────────────────────
 // Color palette (matches MainMenuScreen)
@@ -138,15 +140,34 @@ export class OverlayRenderer {
   private checkeredContainer!: Container;
   private checkeredOffset = 0;
 
+  // Celebration overlay (vs-ai mode)
+  private celebrationOverlay: CelebrationOverlay;
+  private mode: GameMode = 'solo';
+
   constructor(private hudContainer: Container) {
     this.container = new Container();
     hudContainer.addChild(this.container);
+    this.celebrationOverlay = new CelebrationOverlay();
+    this.container.addChild(this.celebrationOverlay.container);
     this.buildOverlays();
   }
 
   /** Connect the SoundManager for mute toggle. */
   setSoundManager(sm: SoundManager): void {
     this.soundManager = sm;
+  }
+
+  /** Set the game mode for this race. */
+  setMode(mode: GameMode): void {
+    this.mode = mode;
+    this.celebrationOverlay.hide();
+  }
+
+  /** Show the celebration overlay (called from ScreenManager when GameLoop fires onCelebration). */
+  showCelebration(humanBestTicks: number, aiBestTicks: number | null): void {
+    if (this.mode === 'vs-ai') {
+      this.celebrationOverlay.show(humanBestTicks, aiBestTicks);
+    }
   }
 
   private get screenW(): number { return window.innerWidth; }
@@ -1017,6 +1038,7 @@ export class OverlayRenderer {
     this.respawnFade.visible = false;
     this.lapCompleteContainer.visible = false;
     this.finishedContainer.visible = false;
+    this.celebrationOverlay.hide();
   }
 
   // ──────────────────────────────────────────────────────

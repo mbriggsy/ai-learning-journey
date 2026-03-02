@@ -131,6 +131,7 @@ export class RendererApp {
       soundManager: this.soundManager,
       worldRenderer: this.worldRenderer,
       hudRenderer: this.hudRenderer,
+      overlayRenderer: this.overlayRenderer,
       effectsRenderer: this.effectsRenderer,
     });
   }

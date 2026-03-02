@@ -1,6 +1,7 @@
 import { buildTrack } from '../engine/track';
+import { distanceToTrackCenter } from '../engine/track';
 import { createWorld, stepWorld } from '../engine/world';
-import type { WorldState, TrackControlPoint, Vec2 } from '../engine/types';
+import type { WorldState, TrackControlPoint, Vec2, Input } from '../engine/types';
 import {
   GamePhase,
   RaceAction,
@@ -11,6 +12,11 @@ import {
   type RaceState,
 } from '../engine/RaceController';
 import { getInput, isKeyDown, ZERO_INPUT } from './InputHandler';
+import { castRays } from '../ai/raycaster';
+import { buildObservation } from '../ai/observations';
+import { BrowserAIRunner } from '../ai/browser-ai-runner';
+import { computeGapSeconds } from './GapTimerHud';
+import type { GameMode } from '../types/game-mode';
 
 const FIXED_DT_MS = 1000 / 60;
 const DEFAULT_CHECKPOINT_COUNT = 30;
@@ -35,8 +41,25 @@ export class GameLoop {
   private qWasDown = false;
   private abortTick = false;
 
+  // ── AI mode state ──────────────────────────────────────
+  private mode: GameMode = 'solo';
+  private aiWorld: WorldState | null = null;
+  private prevAiWorld: WorldState | null = null;
+  private aiRunner: BrowserAIRunner | null = null;
+  private aiAction: [number, number, number] = [0, 0, 0]; // ZERO_INPUT (CP-12 fix)
+  private aiInferInFlight = false;       // backpressure guard (CP-7)
+  private aiInferSeq = 0;               // sequence guard (CP-7)
+  private aiInferErrorLogged = false;    // log-once guard (CP-10)
+  private aiCheckpointTicks: Map<string, number> = new Map(); // "${lap}-${cp}" key (CP-8 fix)
+
   /** Callback invoked when player presses Q during pause. */
   onQuitToMenu: (() => void) | null = null;
+
+  /** Gap state for HUD (updated when human crosses a checkpoint). */
+  onGapUpdated: ((gapSeconds: number) => void) | null = null;
+
+  /** Celebration trigger (updated when lap completes in vs-ai mode). */
+  onCelebration: ((humanBestTicks: number, aiBestTicks: number | null) => void) | null = null;
 
   constructor(trackPoints: TrackControlPoint[]) {
     this.track = buildTrack(trackPoints, DEFAULT_CHECKPOINT_COUNT);
@@ -45,7 +68,8 @@ export class GameLoop {
   }
 
   /** Load a new track and reset the game. */
-  loadTrack(points: TrackControlPoint[], targetLaps = FREEPLAY_LAPS): void {
+  loadTrack(points: TrackControlPoint[], targetLaps = FREEPLAY_LAPS, mode: GameMode = 'solo'): void {
+    this.mode = mode;
     this.track = buildTrack(points, DEFAULT_CHECKPOINT_COUNT);
     this.currState = createWorld(this.track);
     this.prevState = this.currState;
@@ -53,6 +77,30 @@ export class GameLoop {
     this.raceController.reset(true);
     this.accumulator = 0;
     this.abortTick = false;
+
+    // Dispose previous AI runner if exists (CP-11 fix — prevents WASM memory leak)
+    if (this.aiRunner) {
+      this.aiRunner.dispose().catch(() => {});
+      this.aiRunner = null;
+    }
+
+    if (mode !== 'solo') {
+      this.aiWorld = createWorld(this.track);
+      this.prevAiWorld = this.aiWorld;
+      this.aiRunner = new BrowserAIRunner();
+      this.aiCheckpointTicks.clear();
+      this.aiAction = [0, 0, 0]; // reset to ZERO_INPUT (CP-12)
+      this.aiInferInFlight = false;
+      this.aiInferSeq = 0;
+      this.aiInferErrorLogged = false;
+      // Load model (async — AI sits still using [0,0,0] until loaded)
+      this.aiRunner.load('/assets/model.onnx', '/assets/vecnorm_stats.json')
+        .catch(err => console.warn('AI model load failed (running without ONNX):', err));
+    } else {
+      this.aiWorld = null;
+      this.prevAiWorld = null;
+      this.aiRunner = null;
+    }
   }
 
   /** Register a callback called every render frame with interpolation alpha. */
@@ -65,7 +113,28 @@ export class GameLoop {
    * Input is sampled ONCE per frame, not per accumulator sub-step (RI-02).
    */
   tick(deltaMS: number): void {
-    this.accumulator = Math.min(this.accumulator + deltaMS, 200);
+    // Accumulator cap — lower to 50ms in AI modes to limit sub-steps (Performance P0)
+    const MAX_ACCUMULATOR = this.mode === 'solo' ? 200 : 50;
+    this.accumulator = Math.min(this.accumulator + deltaMS, MAX_ACCUMULATOR);
+
+    // Fire AI inference at start of frame (cached-result pattern with guards)
+    if (this.aiWorld && this.aiRunner && !this.aiInferInFlight) {
+      const aiObs = this.buildAiObservation(this.aiWorld);
+      const seq = ++this.aiInferSeq;
+      this.aiInferInFlight = true;
+      this.aiRunner.infer(aiObs).then(action => {
+        if (seq === this.aiInferSeq) { // sequence guard — discard stale results (CP-7)
+          this.aiAction = action;
+        }
+        this.aiInferInFlight = false;
+      }).catch(err => {
+        if (!this.aiInferErrorLogged) {
+          console.warn('AI inference error:', err);
+          this.aiInferErrorLogged = true; // log once, suppress 60/sec flood (CP-10)
+        }
+        this.aiInferInFlight = false;
+      });
+    }
 
     // Sample input once per frame — key state won't change between sub-steps
     const signals = this.buildSignals();
@@ -74,6 +143,26 @@ export class GameLoop {
       if (this.abortTick) break;
       this.prevState = this.currState;
       this.currState = this.stepGame(signals);
+
+      // Step AI world (use cached action from previous inference)
+      // CRITICAL: Only step AI during Racing phase (GAP-A, GAP-C fixes)
+      if (this.aiWorld && this.raceController.state.phase === GamePhase.Racing) {
+        this.prevAiWorld = this.aiWorld;
+        const aiInput: Input = {
+          steer: this.aiAction[0],
+          throttle: this.aiAction[1],
+          brake: this.aiAction[2],
+        };
+        this.aiWorld = stepWorld(this.aiWorld, aiInput);
+        this.trackAiCheckpoints();
+      }
+
+      // Track human checkpoint crossings for gap timer
+      this.trackHumanCheckpoints();
+
+      // Check for celebration trigger (lap complete in vs-ai mode)
+      this.checkCelebration();
+
       // Consume one-shot signals after first sub-step
       signals.togglePause = false;
       signals.restart = false;
@@ -134,7 +223,8 @@ export class GameLoop {
     // Physics stepping based on phase
     switch (phase) {
       case GamePhase.Racing:
-        return stepWorld(this.currState, getInput());
+        // CP-5: In spectator mode, human world steps with ZERO_INPUT
+        return stepWorld(this.currState, this.mode === 'spectator' ? ZERO_INPUT : getInput());
       case GamePhase.Finished:
         // Freeze physics — timer stops, car stops immediately
         return this.currState;
@@ -146,6 +236,69 @@ export class GameLoop {
       case GamePhase.Respawning:
       case GamePhase.Loading:
         return this.currState;
+    }
+  }
+
+  // ── AI observation builder (CP-3 fix: 4 args to castRays) ──
+
+  private buildAiObservation(world: WorldState): number[] {
+    const rays = castRays(
+      world.car.position,
+      world.car.heading,
+      world.track.innerBoundary,
+      world.track.outerBoundary,
+    );
+    const trackProgress = distanceToTrackCenter(world.car.position, world.track);
+    return buildObservation(world, rays, trackProgress);
+  }
+
+  // ── Checkpoint tracking (CP-8 fix: multi-lap keying) ──
+
+  private trackAiCheckpoints(): void {
+    if (!this.aiWorld || !this.prevAiWorld) return;
+    const curr = this.aiWorld.timing;
+    const prev = this.prevAiWorld.timing;
+    if (curr.lastCheckpointIndex !== prev.lastCheckpointIndex) {
+      // Key by "${lap}-${checkpoint}" for multi-lap correctness (CP-8)
+      const key = `${curr.currentLap}-${curr.lastCheckpointIndex}`;
+      this.aiCheckpointTicks.set(key, curr.totalRaceTicks);
+    }
+  }
+
+  private trackHumanCheckpoints(): void {
+    const curr = this.currState.timing;
+    const prev = this.prevState.timing;
+    if (curr.lastCheckpointIndex !== prev.lastCheckpointIndex) {
+      const key = `${curr.currentLap}-${curr.lastCheckpointIndex}`;
+      const humanTick = curr.totalRaceTicks;
+      const aiTick = this.aiCheckpointTicks.get(key);
+      if (aiTick !== undefined && this.mode === 'vs-ai') { // CP-9: gap only in vs-ai, not spectator
+        const gapSeconds = computeGapSeconds(humanTick, aiTick);
+        this.onGapUpdated?.(gapSeconds);
+      }
+    }
+  }
+
+  // ── Celebration trigger ──
+
+  private celebrationShownForLap = 0;
+
+  private checkCelebration(): void {
+    if (this.mode !== 'vs-ai') return;
+
+    const curr = this.currState.timing;
+    const prev = this.prevState.timing;
+
+    // Detect lap completion (lapComplete transitions from false to true)
+    if (curr.lapComplete && !prev.lapComplete) {
+      const completedLap = curr.currentLap - 1;
+      // Only show celebration once per lap (prevent double-fire)
+      if (completedLap > this.celebrationShownForLap) {
+        this.celebrationShownForLap = completedLap;
+        const humanBestTicks = curr.bestLapTicks;
+        const aiBestTicks = this.aiWorld?.timing.bestLapTicks ?? null;
+        this.onCelebration?.(humanBestTicks, aiBestTicks);
+      }
     }
   }
 
@@ -186,6 +339,17 @@ export class GameLoop {
     this.currState = createWorld(this.track);
     this.prevState = this.currState;
     this.raceController.reset(countdown);
+
+    // CP-6: Reset ALL AI state on restart
+    if (this.aiWorld) {
+      this.aiWorld = createWorld(this.track);
+      this.prevAiWorld = this.aiWorld;
+      this.aiAction = [0, 0, 0];
+      this.aiCheckpointTicks.clear();
+      this.aiInferSeq++; // invalidate any in-flight inference
+      this.aiInferInFlight = false;
+      this.celebrationShownForLap = 0;
+    }
   }
 
   /** Transition from Loading to Countdown (initial page load). */
@@ -193,7 +357,16 @@ export class GameLoop {
     this.resetWorld(true);
   }
 
+  // ── Public accessors ──
+
   get currentWorldState(): WorldState { return this.currState; }
   get currentRaceState(): RaceState { return this.raceController.state; }
   get trackState() { return this.track; }
+  get gameMode(): GameMode { return this.mode; }
+
+  /** Expose AI world for external consumers (WorldRenderer ghost car, celebration comparison). */
+  get currentAiWorldState(): WorldState | null { return this.aiWorld; }
+
+  /** Expose previous AI world state for interpolation. */
+  get prevAiWorldState(): WorldState | null { return this.prevAiWorld; }
 }

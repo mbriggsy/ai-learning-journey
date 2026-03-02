@@ -3,22 +3,22 @@ gsd_state_version: 1.0
 milestone: v1.0
 milestone_name: milestone
 status: in_progress
-last_updated: "2026-03-02T18:00:00.000Z"
+last_updated: "2026-03-02T22:00:00.000Z"
 progress:
   total_phases: 6
   completed_phases: 5
   total_plans: 21
-  completed_plans: 23
+  completed_plans: 24
 ---
 
 # Project State: Top-Down Racer v02
 
 **Last updated:** 2026-03-02
-**Overall progress:** 92%
+**Overall progress:** 96%
 
 ## Current Phase
 
-**Phase 6: AI vs Human Mode** -- IN PROGRESS (Plans 00-02 complete, Plans 03-04 pending)
+**Phase 6: AI vs Human Mode** -- IN PROGRESS (Plans 00-03 complete, Plan 04 pending)
 
 ## Phase Status
 
@@ -29,7 +29,7 @@ progress:
 | 3. Game Features & Polish | Complete (Plan 5/5 done) | 100% |
 | 4. Gymnasium Environment Wrapper | Complete (Plan 3/3 done) | 100% |
 | 5. AI Training Pipeline | Complete (Plan 3/3 done, 25/25 verified) | 100% |
-| 6. AI vs Human Mode | In Progress (Plan 2/5 complete — AI inference + ghost car) | 60% |
+| 6. AI vs Human Mode | In Progress (Plan 3/5 complete — core integration done) | 80% |
 
 ## Decisions Log
 
@@ -63,6 +63,12 @@ progress:
 | 2026-03-02 | Per-child tint on AiCarRenderer (not container.tint) | PixiJS v8 Container has no tint property; only Sprite/Graphics support it |
 | 2026-03-02 | AiCarRenderer delegates update() to CarRenderer | Prevents heading offset bug; CarRenderer.update() uses bare heading (no PI/2 offset) |
 | 2026-03-02 | vi.mock() factory must not reference outer-scope variables | Vitest hoists vi.mock() above all declarations; causes ReferenceError at import time |
+| 2026-03-02 | RenderCallback stays at 4 params, AI state via getter/closure | Only WorldRenderer needs AI state; avoids forcing 4 other callbacks to accept unused params |
+| 2026-03-02 | Accumulator cap 50ms in AI modes (200ms in solo) | Prevents 12 sub-steps after tab-switch; limits to 3 (2x distanceToTrackCenter per step is expensive) |
+| 2026-03-02 | Celebration uses live aiWorld.timing, not persisted Leaderboard (CP-4) | First-ever race has null persisted AI best; live data is always correct |
+| 2026-03-02 | Checkpoint keyed by `${lap}-${checkpoint}` (CP-8) | Flat Map key collides across laps; composite key ensures correct gap on lap 2+ |
+| 2026-03-02 | Default AI action [0,0,0] not [0,0.3,0] (CP-12) | [0,0.3,0] causes AI to drive straight into first wall before model loads |
+| 2026-03-02 | ScreenManager owns overlayRenderer for celebration/mode wiring | Needed for setMode() and showCelebration() callbacks; previously only in RendererApp |
 
 ## Quick Tasks Completed
 

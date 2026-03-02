@@ -1218,6 +1218,7 @@ export class OverlayRenderer {
     this.updateRespawnFade(race);
     this.updateLapComplete(prev, curr, race);
     this.updateFinished(prev, curr, race);
+    this.celebrationOverlay.tick();
   }
 }
 

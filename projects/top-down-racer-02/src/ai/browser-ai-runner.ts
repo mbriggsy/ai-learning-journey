@@ -56,6 +56,9 @@ export class BrowserAIRunner {
   private session: ort.InferenceSession | null = null;
   private stats: VecNormStats | null = null;
 
+  /** True once load() has completed successfully. */
+  get loaded(): boolean { return this.session !== null && this.stats !== null; }
+
   /**
    * Load the ONNX model and VecNormalize stats.
    * Must be called once before infer(). Call during loading screen.

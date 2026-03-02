@@ -118,7 +118,8 @@ export class GameLoop {
     this.accumulator = Math.min(this.accumulator + deltaMS, MAX_ACCUMULATOR);
 
     // Fire AI inference at start of frame (cached-result pattern with guards)
-    if (this.aiWorld && this.aiRunner && !this.aiInferInFlight) {
+    // Skip until model is loaded — AI uses [0,0,0] default until ready (FIX-4)
+    if (this.aiWorld && this.aiRunner?.loaded && !this.aiInferInFlight) {
       const aiObs = this.buildAiObservation(this.aiWorld);
       const seq = ++this.aiInferSeq;
       this.aiInferInFlight = true;
@@ -179,8 +180,12 @@ export class GameLoop {
 
     const alpha = this.accumulator / FIXED_DT_MS;
     const raceState = this.raceController.state;
+
+    // In spectator mode, dispatch AI world state so HUD/effects/sound reflect the AI car
+    const prev = this.mode === 'spectator' && this.prevAiWorld ? this.prevAiWorld : this.prevState;
+    const curr = this.mode === 'spectator' && this.aiWorld ? this.aiWorld : this.currState;
     for (const cb of this.renderCallbacks) {
-      cb(this.prevState, this.currState, alpha, raceState);
+      cb(prev, curr, alpha, raceState);
     }
   }
 
@@ -202,7 +207,10 @@ export class GameLoop {
   }
 
   private stepGame(signals: RaceControlSignals): WorldState {
-    const action = this.raceController.step(signals, this.currState.car.speed, this.currState.timing);
+    // In spectator mode, human car is frozen (ZERO_INPUT) so speed=0 always.
+    // Pass Infinity to bypass stuck detection — the AI car drives, not the human.
+    const carSpeed = this.mode === 'spectator' ? Infinity : this.currState.car.speed;
+    const action = this.raceController.step(signals, carSpeed, this.currState.timing);
     const phase = this.raceController.state.phase;
 
     // Handle actions from the controller

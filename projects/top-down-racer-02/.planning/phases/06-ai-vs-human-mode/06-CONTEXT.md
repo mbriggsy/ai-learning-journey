@@ -9,8 +9,8 @@
 
 Wire the trained AI model into the browser for real-time inference. Add three game modes (Solo, vs AI, Spectator), ghost car rendering, checkpoint gap timer, win/loss celebration, and localStorage leaderboard. This is the complete product — the "moment of truth."
 
-**In scope:** ONNX model loading, browser inference, AI ghost car, mode selection UI, leaderboard, ghost replay recording/playback.
-**Out of scope:** Server infrastructure, online leaderboards, attract mode / AI demo lap (KILLED).
+**In scope:** ONNX model loading, browser inference, AI ghost car, mode selection UI, leaderboard.
+**Out of scope:** Server infrastructure, online leaderboards, attract mode / AI demo lap (KILLED), ghost replay (DEFERRED to v03).
 
 </domain>
 
@@ -41,24 +41,25 @@ Wire the trained AI model into the browser for real-time inference. Add three ga
 - Different color / transparency / glow — Claude's discretion on exact visual treatment
 - Must be clearly distinguishable at a glance during racing
 
-### Gap Timer
-- Real-time checkpoint gap timer during vs AI mode
-- Shows time delta (ahead/behind) at each checkpoint crossing
-- Positive = player ahead, negative = player behind
+### Gap Timer — REPLACED
+- ~~Real-time checkpoint gap timer during vs AI mode~~ — DROPPED (Plan 04)
+- Popup delta at checkpoint crossings felt disruptive; replaced with persistent AI stats in HUD
+- HUD in vs-ai mode shows minimal AI section: AI total time + AI best lap, tucked under human stats
 
-### Win/Loss Celebration
-- "You beat the AI!" celebration feedback when human posts a faster lap
-- Distinct feedback when AI wins (encouraging, not punishing)
+### Win/Loss — Finished Screen Comparison
+- Primary: **Total race time** comparison (who finished all laps faster) — this is the "overall winner"
+- Secondary: **Best lap** comparison (who had the faster single lap)
+- Both shown with deltas on the Finished screen
+- Changed in Plan 04 — originally compared best lap only
 
 ### Leaderboard
 - localStorage-based — best lap per track for human and AI separately
 - Comparison display showing human best vs AI best per track
 - Persists across sessions
 
-### Ghost Replay
-- Record lap data (position, rotation per tick or per sample interval)
-- Replay as transparent car for studying AI lines
-- Used in vs AI mode for the AI car's movement
+### Ghost Replay — DEFERRED to v03
+- ~~Record lap data, replay as transparent car for studying AI lines~~
+- DEFERRED: The AI car uses live ONNX inference instead. Ghost replay deferred to v03 (if ever).
 
 ### KILLED Features
 - ~~AVH-04: Pre-race AI demo lap~~ — Spectator mode covers this use case. DO NOT BUILD.

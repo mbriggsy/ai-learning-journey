@@ -69,6 +69,8 @@ progress:
 | 2026-03-02 | Checkpoint keyed by `${lap}-${checkpoint}` (CP-8) | Flat Map key collides across laps; composite key ensures correct gap on lap 2+ |
 | 2026-03-02 | Default AI action [0,0,0] not [0,0.3,0] (CP-12) | [0,0.3,0] causes AI to drive straight into first wall before model loads |
 | 2026-03-02 | ScreenManager owns overlayRenderer for celebration/mode wiring | Needed for setMode() and showCelebration() callbacks; previously only in RendererApp |
+| 2026-03-02 | Drop GapTimerHud popup, add AI stats to HUD instead | Checkpoint popup felt disruptive; minimal AI section (total time + best lap) in HUD during vs-ai |
+| 2026-03-02 | Finished screen: total race time (primary) + best lap (secondary) | Race winner = who finished faster overall; best lap is secondary stat. Both shown with deltas |
 
 ## Quick Tasks Completed
 

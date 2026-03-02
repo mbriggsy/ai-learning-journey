@@ -3,22 +3,22 @@ gsd_state_version: 1.0
 milestone: v1.0
 milestone_name: milestone
 status: in_progress
-last_updated: "2026-03-02T00:00:00.000Z"
+last_updated: "2026-03-02T12:00:00.000Z"
 progress:
   total_phases: 6
   completed_phases: 5
   total_plans: 21
-  completed_plans: 21
+  completed_plans: 22
 ---
 
 # Project State: Top-Down Racer v02
 
 **Last updated:** 2026-03-02
-**Overall progress:** 84%
+**Overall progress:** 88%
 
 ## Current Phase
 
-**Phase 6: AI vs Human Mode** -- IN PROGRESS (Plan 00 complete, Plans 01-04 pending)
+**Phase 6: AI vs Human Mode** -- IN PROGRESS (Plans 00-01 complete, Plans 02-04 pending)
 
 ## Phase Status
 
@@ -29,7 +29,7 @@ progress:
 | 3. Game Features & Polish | Complete (Plan 5/5 done) | 100% |
 | 4. Gymnasium Environment Wrapper | Complete (Plan 3/3 done) | 100% |
 | 5. AI Training Pipeline | Complete (Plan 3/3 done, 25/25 verified) | 100% |
-| 6. AI vs Human Mode | In Progress (Plan 0/5 complete — ONNX export) | 20% |
+| 6. AI vs Human Mode | In Progress (Plan 1/5 complete — infrastructure) | 40% |
 
 ## Decisions Log
 
@@ -54,6 +54,10 @@ progress:
 | 2026-03-01 | 1500 steps/sec throughput threshold (not 3000) | Conservative CI-safe minimum with 2x safety margin; actual raw throughput ~3000-4000 |
 | 2026-03-01 | Callback tests fully offline (no bridge) | Mocks SB3 logger and env; runs in <3s; no infrastructure dependency |
 | 2026-03-02 | ONNX export: actions-only output, no pickle fallback, dynamo=False | Browser only reads "actions"; pickle.load() is CWE-502; PyTorch 2.9+ changed dynamo default |
+| 2026-03-02 | VecNormStats uses camelCase (obsMean, obsVar, clipObs) with readonly | Matches all existing TypeScript interfaces; Python snake_case remapped at load time in Plan 02 |
+| 2026-03-02 | Leaderboard key 'tdr-leaderboard-v1' (old 'tdr-best-times' abandoned) | Key-based abandonment avoids migration code; leaderboard data trivially re-earned |
+| 2026-03-02 | BestTimes.ts kept as delegation shim to Leaderboard.ts | Minimal blast radius for Plan 01; Plan 03 will update ScreenManager imports directly |
+| 2026-03-02 | GameMode type in src/types/game-mode.ts (cross-cutting types location) | Used across renderer layer; first file in src/types/ establishing the convention |
 
 ## Quick Tasks Completed
 

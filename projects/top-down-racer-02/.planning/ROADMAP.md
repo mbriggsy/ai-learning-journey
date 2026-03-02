@@ -40,7 +40,7 @@
 - [ ] **Phase 6: AI vs Human Mode** -- 8 requirements (AVH-01..05, VIS-06, LDB-01, 02)
   Plans:
   - [x] 06-00-PLAN.md -- ONNX export script: SB3 PPO to ONNX, VecNormalize stats to JSON
-  - [ ] 06-01-PLAN.md -- TypeScript infrastructure: ONNX runtime loader, vecnormalize, AI runner
+  - [x] 06-01-PLAN.md -- TypeScript infrastructure: VecNormalize, Leaderboard, GameMode, BestTimes delegation
   - [ ] 06-02-PLAN.md -- AI integration: ghost car, spectator mode, game mode selection
   - [ ] 06-03-PLAN.md -- Race experience: gap timer, AI demo lap, celebration, AI car visuals
   - [ ] 06-04-PLAN.md -- Leaderboard: localStorage persistence, human vs AI comparison

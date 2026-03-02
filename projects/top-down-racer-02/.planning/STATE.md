@@ -3,22 +3,22 @@ gsd_state_version: 1.0
 milestone: v1.0
 milestone_name: milestone
 status: in_progress
-last_updated: "2026-03-01T23:59:00.000Z"
+last_updated: "2026-03-02T00:00:00.000Z"
 progress:
   total_phases: 6
   completed_phases: 5
-  total_plans: 20
-  completed_plans: 20
+  total_plans: 21
+  completed_plans: 21
 ---
 
 # Project State: Top-Down Racer v02
 
-**Last updated:** 2026-03-01
-**Overall progress:** 83%
+**Last updated:** 2026-03-02
+**Overall progress:** 84%
 
 ## Current Phase
 
-**Phase 6: AI vs Human Mode** -- NOT STARTED (blocked by trained model)
+**Phase 6: AI vs Human Mode** -- IN PROGRESS (Plan 00 complete, Plans 01-04 pending)
 
 ## Phase Status
 
@@ -29,7 +29,7 @@ progress:
 | 3. Game Features & Polish | Complete (Plan 5/5 done) | 100% |
 | 4. Gymnasium Environment Wrapper | Complete (Plan 3/3 done) | 100% |
 | 5. AI Training Pipeline | Complete (Plan 3/3 done, 25/25 verified) | 100% |
-| 6. AI vs Human Mode | Blocked by Phase 5 (trained model) | 0% |
+| 6. AI vs Human Mode | In Progress (Plan 0/5 complete — ONNX export) | 20% |
 
 ## Decisions Log
 
@@ -53,6 +53,7 @@ progress:
 | 2026-03-01 | Mock model injection for callback tests | SB3 BaseCallback.logger and training_env are read-only properties; inject via mock model object |
 | 2026-03-01 | 1500 steps/sec throughput threshold (not 3000) | Conservative CI-safe minimum with 2x safety margin; actual raw throughput ~3000-4000 |
 | 2026-03-01 | Callback tests fully offline (no bridge) | Mocks SB3 logger and env; runs in <3s; no infrastructure dependency |
+| 2026-03-02 | ONNX export: actions-only output, no pickle fallback, dynamo=False | Browser only reads "actions"; pickle.load() is CWE-502; PyTorch 2.9+ changed dynamo default |
 
 ## Quick Tasks Completed
 

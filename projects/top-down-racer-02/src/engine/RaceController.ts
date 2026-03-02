@@ -164,6 +164,14 @@ export class RaceController {
     this.reset(true);
   }
 
+  /** Force-transition to Finished (called by GameLoop when grace period expires). */
+  forceFinish(): void {
+    const rs = this._state;
+    rs.phase = GamePhase.Finished;
+    rs.stuckTicks = 0;
+    rs.respawnTicksLeft = 0;
+  }
+
   // ─── Phase tick handlers ───────────────────────────────
 
   private tickCountdown(): RaceAction {

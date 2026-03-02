@@ -199,7 +199,7 @@ export class GameLoop {
     // Handle actions from the controller
     switch (action) {
       case RaceAction.ResetNoCd:
-        this.resetWorld(false);
+        this.resetWorld(true);
         return this.currState;
       case RaceAction.Respawn:
         return this.completeRespawn();

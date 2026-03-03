@@ -252,7 +252,7 @@ Six phases, ~3 build days (Feb 27–28, Mar 1), 189+ commits. The upfront specif
 
 ## Evidence Package
 
-Comprehensive documentation proving autonomous AI development rigor. Every claim is backed by automated evidence, not assertions.
+Comprehensive documentation proving autonomous AI development rigor. Every claim is backed by automated evidence, not assertions. All documents are located in the `docs/evidence/` directory.
 
 | Doc | Title | Key Metric |
 |-----|-------|------------|

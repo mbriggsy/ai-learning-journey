@@ -23,6 +23,9 @@
     "pixi.js": "^8.16.0",
     "ws": "^8.19.0"
   },
+  "pnpm": {
+    "onlyBuiltDependencies": ["esbuild", "onnxruntime-web"]
+  },
   "devDependencies": {
     "@types/node": "^25.3.2",
     "@types/ws": "^8.18.1",

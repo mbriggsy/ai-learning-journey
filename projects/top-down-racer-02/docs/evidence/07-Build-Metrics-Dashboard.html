@@ -1,0 +1,232 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Top-Down Racer v02 Build Metrics Dashboard</title>
+<style>
+@import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800;900&display=swap');
+:root{--bg:#0f1117;--surface:#1a1d27;--surface2:#232733;--border:#2e3345;--text:#e4e7f0;--text-dim:#8b90a5;--accent:#00d4ff;--accent-dim:rgba(0,212,255,.15);--green:#34d399;--green-dim:rgba(52,211,153,.15);--red:#f87171;--red-dim:rgba(248,113,113,.15);--amber:#fbbf24;--amber-dim:rgba(251,191,36,.15);--purple:#a78bfa;--purple-dim:rgba(167,139,250,.15)}
+*{margin:0;padding:0;box-sizing:border-box}
+body{font-family:Inter,system-ui,sans-serif;background:var(--bg);color:var(--text);min-height:100vh;padding:24px}
+.header{text-align:center;margin-bottom:32px;padding-bottom:24px;border-bottom:1px solid var(--border)}
+.header h1{font-size:28px;font-weight:800;letter-spacing:-.5px;background:linear-gradient(135deg,var(--accent),#a78bfa);-webkit-background-clip:text;-webkit-text-fill-color:transparent;margin-bottom:6px}
+.header .subtitle{color:var(--text-dim);font-size:14px;font-weight:500}
+.header .doc-label{display:inline-block;margin-top:10px;padding:4px 12px;border-radius:20px;background:var(--accent-dim);color:var(--accent);font-size:11px;font-weight:700;letter-spacing:1px;text-transform:uppercase}
+.hero-grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(200px,1fr));gap:16px;margin-bottom:32px}
+.hero-card{background:var(--surface);border:1px solid var(--border);border-radius:12px;padding:20px;text-align:center;transition:border-color .2s,transform .15s}
+.hero-card:hover{border-color:var(--accent);transform:translateY(-2px)}
+.hero-card .number{font-size:40px;font-weight:900;line-height:1;margin-bottom:6px}
+.hero-card .label{font-size:12px;font-weight:600;color:var(--text-dim);text-transform:uppercase;letter-spacing:.5px}
+.hero-card .sublabel{font-size:11px;color:var(--text-dim);margin-top:4px;opacity:.7}
+.hero-card.accent .number{color:var(--accent)}.hero-card.green .number{color:var(--green)}.hero-card.amber .number{color:var(--amber)}.hero-card.purple .number{color:var(--purple)}
+.section{margin-bottom:32px}
+.section-title{font-size:16px;font-weight:700;margin-bottom:16px;padding-left:12px;border-left:3px solid var(--accent)}
+.phase-timeline{display:grid;grid-template-columns:repeat(6,1fr);gap:12px}
+.phase-card{background:var(--surface);border:1px solid var(--border);border-radius:10px;padding:16px;position:relative;overflow:hidden}
+.phase-card::before{content:'';position:absolute;top:0;left:0;right:0;height:3px;background:var(--green)}
+.phase-card .phase-num{font-size:11px;font-weight:700;color:var(--accent);text-transform:uppercase;letter-spacing:1px;margin-bottom:4px}
+.phase-card .phase-name{font-size:13px;font-weight:600;margin-bottom:8px;line-height:1.3}
+.phase-card .phase-stat{font-size:11px;color:var(--text-dim);margin-bottom:2px}
+.phase-card .phase-stat span{color:var(--green);font-weight:600}
+.two-col{display:grid;grid-template-columns:1fr 1fr;gap:16px}
+.data-table{width:100%;border-collapse:collapse;background:var(--surface);border-radius:10px;overflow:hidden;border:1px solid var(--border)}
+.data-table th{background:var(--surface2);padding:10px 14px;text-align:left;font-size:11px;font-weight:700;color:var(--text-dim);text-transform:uppercase;letter-spacing:.5px;border-bottom:1px solid var(--border)}
+.data-table td{padding:10px 14px;font-size:13px;border-bottom:1px solid var(--border)}
+.data-table tr:last-child td{border-bottom:none}
+.data-table .mono{font-family:'SF Mono','Fira Code',monospace;color:var(--accent);font-weight:600;font-size:12px}
+.bar-row{display:flex;align-items:center;margin-bottom:8px}
+.bar-label{width:120px;font-size:12px;font-weight:600;color:var(--text-dim);flex-shrink:0}
+.bar-track{flex:1;height:24px;background:var(--surface2);border-radius:6px;overflow:hidden}
+.bar-fill{height:100%;border-radius:6px;display:flex;align-items:center;padding-left:8px}
+.bar-fill span{font-size:11px;font-weight:700;color:rgba(0,0,0,.7)}
+.bar-value{width:60px;text-align:right;font-size:12px;font-weight:700;flex-shrink:0;margin-left:10px}
+.badge{display:inline-block;padding:2px 8px;border-radius:4px;font-size:10px;font-weight:700;letter-spacing:.5px;text-transform:uppercase}
+.badge.critical{background:var(--red-dim);color:var(--red)}.badge.high{background:var(--amber-dim);color:var(--amber)}.badge.medium{background:var(--purple-dim);color:var(--purple)}
+.stat-panel{background:var(--surface);border:1px solid var(--border);border-radius:10px;padding:20px}
+.stat-panel h3{font-size:13px;font-weight:700;color:var(--text-dim);text-transform:uppercase;letter-spacing:.5px;margin-bottom:14px}
+.stat-row{display:flex;justify-content:space-between;padding:6px 0;border-bottom:1px solid rgba(46,51,69,.5);font-size:13px}
+.stat-row:last-child{border-bottom:none}
+.stat-row .sk{color:var(--text-dim)}.stat-row .sv{font-weight:700}.sv.g{color:var(--green)}.sv.a{color:var(--accent)}.sv.am{color:var(--amber)}
+.divider{margin-top:16px;padding-top:14px;border-top:1px solid var(--border)}
+.footer{text-align:center;padding-top:24px;border-top:1px solid var(--border);margin-top:16px}
+.footer p{font-size:12px;color:var(--text-dim)}
+@media(max-width:900px){.phase-timeline{grid-template-columns:repeat(3,1fr)}.two-col{grid-template-columns:1fr}}
+@media(max-width:600px){.phase-timeline{grid-template-columns:repeat(2,1fr)}.hero-grid{grid-template-columns:repeat(2,1fr)}body{padding:12px}}
+</style>
+</head>
+<body>
+<div class="header"><h1>TOP-DOWN RACER v02</h1><div class="subtitle">Autonomous Development Evidence Package</div><div class="doc-label">Document 7 &mdash; Build Metrics Dashboard</div></div>
+
+<div class="hero-grid">
+<div class="hero-card accent"><div class="number">0</div><div class="label">Hand-Written Lines</div><div class="sublabel">of game code</div></div>
+<div class="hero-card green"><div class="number">389</div><div class="label">Automated Tests</div><div class="sublabel">377 TS + 12 Python</div></div>
+<div class="hero-card amber"><div class="number">15/15</div><div class="label">Defect Prevention</div><div class="sublabel">pre-execution catches</div></div>
+<div class="hero-card purple"><div class="number">189</div><div class="label">Git Commits</div><div class="sublabel">4 build days</div></div>
+<div class="hero-card accent"><div class="number">10,497</div><div class="label">Lines of Code</div><div class="sublabel">9,472 TS + 1,025 Python</div></div>
+<div class="hero-card green"><div class="number">47</div><div class="label">Pre-Code Decisions</div><div class="sublabel">33 + 6 ADR + 8 GSD</div></div>
+<div class="hero-card amber"><div class="number">13K+</div><div class="label">Headless Ticks/sec</div><div class="sublabel">target: 10,000</div></div>
+<div class="hero-card purple"><div class="number">23.7 KB</div><div class="label">AI Model Size</div><div class="sublabel">entire learned policy</div></div>
+</div>
+
+<div class="section"><div class="section-title">Phase Progression</div>
+<div class="phase-timeline">
+<div class="phase-card"><div class="phase-num">Phase 1</div><div class="phase-name">Core Simulation Engine</div><div class="phase-stat">Tests: <span>214</span></div><div class="phase-stat">Perf: <span>13K+ ticks/sec</span></div><div class="phase-stat">Date: <span>Feb 27</span></div></div>
+<div class="phase-card"><div class="phase-num">Phase 2</div><div class="phase-name">PixiJS Renderer + Playable</div><div class="phase-stat">Tests: <span>214</span> (+0 visual)</div><div class="phase-stat">Input: <span>KB + Gamepad</span></div><div class="phase-stat">Date: <span>Feb 27</span></div></div>
+<div class="phase-card"><div class="phase-num">Phase 3</div><div class="phase-name">Features &amp; Polish</div><div class="phase-stat">Tests: <span>315</span> (+101)</div><div class="phase-stat">Tracks: <span>3 playable</span></div><div class="phase-stat">Date: <span>Feb 28</span></div></div>
+<div class="phase-card"><div class="phase-num">Phase 4</div><div class="phase-name">Gymnasium Wrapper</div><div class="phase-stat">Tests: <span>+56</span> (TS+Py)</div><div class="phase-stat">Bridge: <span>3,980 steps/s</span></div><div class="phase-stat">Date: <span>Feb 28</span></div></div>
+<div class="phase-card"><div class="phase-num">Phase 5</div><div class="phase-name">AI Training Pipeline</div><div class="phase-stat">Tests: <span>+12</span> (Python)</div><div class="phase-stat">PPO: <span>2M steps</span></div><div class="phase-stat">Date: <span>Mar 1</span></div></div>
+<div class="phase-card"><div class="phase-num">Phase 6</div><div class="phase-name">AI vs Human Mode</div><div class="phase-stat">Tests: <span>389</span> total</div><div class="phase-stat">ONNX: <span>23.7 KB</span></div><div class="phase-stat">Date: <span>Mar 1</span></div></div>
+</div></div>
+
+<div class="section"><div class="two-col">
+<div><div class="section-title">Build Timeline</div>
+<div class="stat-panel">
+<h3>Execution Speed</h3>
+<div class="stat-row"><span class="sk">Total build days</span><span class="sv a">4</span></div>
+<div class="stat-row"><span class="sk">Feb 27</span><span class="sv">Phases 1&ndash;2 (53 commits)</span></div>
+<div class="stat-row"><span class="sk">Feb 28</span><span class="sv">Phases 3&ndash;4 (20 commits)</span></div>
+<div class="stat-row"><span class="sk">Mar 1</span><span class="sv">Phases 5&ndash;6 (37 commits)</span></div>
+<div class="stat-row"><span class="sk">Mar 2</span><span class="sv">Polish &amp; deployment (44 commits)</span></div>
+<div class="divider"></div>
+<h3>Process Metrics</h3>
+<div class="stat-row"><span class="sk">Git commits</span><span class="sv a">189</span></div>
+<div class="stat-row"><span class="sk">Workflow learnings</span><span class="sv">11</span></div>
+<div class="stat-row"><span class="sk">Process failures</span><span class="sv am">1 (P2-3 sync)</span></div>
+<div class="stat-row"><span class="sk">Process failures fixed</span><span class="sv g">1 (P2-3 sync)</span></div>
+<div class="divider"></div>
+<h3>Shipped AI Artifacts</h3>
+<div class="stat-row"><span class="sk">model.onnx</span><span class="sv a">23.7 KB</span></div>
+<div class="stat-row"><span class="sk">vecnorm_stats.json</span><span class="sv a">816 bytes</span></div>
+<div class="stat-row"><span class="sk">ONNX WASM runtime</span><span class="sv">~1.5 MB</span></div>
+<div class="stat-row"><span class="sk">Server infrastructure</span><span class="sv g">Zero</span></div>
+</div></div>
+<div><div class="section-title">Pre-Code Decision Breakdown</div>
+<div class="stat-panel">
+<div style="display:flex;align-items:center;gap:24px">
+<svg width="140" height="140" viewBox="0 0 140 140">
+<circle cx="70" cy="70" r="54" fill="none" stroke="var(--surface2)" stroke-width="18"/>
+<circle cx="70" cy="70" r="54" fill="none" stroke="var(--accent)" stroke-width="18" stroke-dasharray="238 101" stroke-dashoffset="85" stroke-linecap="round"/>
+<circle cx="70" cy="70" r="54" fill="none" stroke="var(--green)" stroke-width="18" stroke-dasharray="43 296" stroke-dashoffset="-153" stroke-linecap="round"/>
+<circle cx="70" cy="70" r="54" fill="none" stroke="var(--purple)" stroke-width="18" stroke-dasharray="58 282" stroke-dashoffset="-196" stroke-linecap="round"/>
+<text x="70" y="66" text-anchor="middle" fill="var(--text)" font-size="28" font-weight="800" font-family="Inter,sans-serif">47</text>
+<text x="70" y="82" text-anchor="middle" fill="var(--text-dim)" font-size="10" font-weight="600" font-family="Inter,sans-serif">DECISIONS</text>
+</svg>
+<div style="font-size:13px">
+<div style="display:flex;align-items:center;gap:8px;margin-bottom:6px"><span style="width:10px;height:10px;border-radius:50%;background:var(--accent);display:inline-block"></span><span style="color:var(--text-dim)">War-gamed</span> <strong style="color:var(--accent)">33</strong></div>
+<div style="display:flex;align-items:center;gap:8px;margin-bottom:6px"><span style="width:10px;height:10px;border-radius:50%;background:var(--green);display:inline-block"></span><span style="color:var(--text-dim)">Locked ADRs</span> <strong style="color:var(--green)">6</strong></div>
+<div style="display:flex;align-items:center;gap:8px"><span style="width:10px;height:10px;border-radius:50%;background:var(--purple);display:inline-block"></span><span style="color:var(--text-dim)">GSD interview</span> <strong style="color:var(--purple)">8</strong></div>
+</div></div>
+<div class="divider">
+<div class="stat-row"><span class="sk">Decision categories</span><span class="sv">7</span></div>
+<div class="stat-row"><span class="sk">Features killed</span><span class="sv a">1 (attract mode)</span></div>
+<div class="stat-row"><span class="sk">Features deferred</span><span class="sv a">1 (ghost replay)</span></div>
+<div class="stat-row"><span class="sk">Decisions changed during build</span><span class="sv g">0</span></div>
+</div></div></div>
+</div></div>
+
+<div class="section"><div class="two-col">
+<div><div class="section-title">Test Distribution by Module</div>
+<div style="background:var(--surface);border:1px solid var(--border);border-radius:10px;padding:20px">
+<div class="bar-row"><div class="bar-label">Engine</div><div class="bar-track"><div class="bar-fill" style="width:73%;background:linear-gradient(90deg,var(--accent),#6dd5fa)"><span>286</span></div></div><div class="bar-value">286</div></div>
+<div class="bar-row"><div class="bar-label">AI (TS)</div><div class="bar-track"><div class="bar-fill" style="width:23%;background:linear-gradient(90deg,var(--purple),#c4b5fd)"><span>91</span></div></div><div class="bar-value">91</div></div>
+<div class="bar-row"><div class="bar-label">Renderer</div><div class="bar-track"><div class="bar-fill" style="width:6.4%;background:linear-gradient(90deg,var(--green),#6ee7b7)"></div></div><div class="bar-value">25</div></div>
+<div class="bar-row"><div class="bar-label">Python</div><div class="bar-track"><div class="bar-fill" style="width:3%;background:linear-gradient(90deg,var(--amber),#fcd34d)"></div></div><div class="bar-value">12</div></div>
+<div style="margin-top:14px;padding-top:12px;border-top:1px solid var(--border);display:flex;justify-content:space-between;font-size:13px"><span style="color:var(--text-dim)">Total automated tests</span><span style="font-weight:800;color:var(--green);font-size:16px">389</span></div>
+</div></div>
+<div><div class="section-title">Defect Prevention by Severity</div>
+<div class="stat-panel">
+<table class="data-table" style="border:none"><thead><tr><th>Severity</th><th>Count</th><th>Examples</th></tr></thead><tbody>
+<tr><td><span class="badge critical">Critical</span></td><td class="mono">4</td><td>Sparse reward, VecNorm NaN, heading 90&deg;, speed 37&times;</td></tr>
+<tr><td><span class="badge high">High</span></td><td class="mono">8</td><td>WASM leak, record() corruption, casing mismatch</td></tr>
+<tr><td><span class="badge medium">Medium</span></td><td class="mono">3</td><td>Redundant computation, YAGNI, phantom assertion</td></tr>
+</tbody></table>
+<div class="divider">
+<div class="stat-row"><span class="sk">Deepening sessions</span><span class="sv a">12</span></div>
+<div class="stat-row"><span class="sk">Research agent invocations</span><span class="sv a">130+</span></div>
+<div class="stat-row"><span class="sk">Sessions with zero bugs</span><span class="sv g">0 (none came back clean)</span></div>
+</div></div></div>
+</div></div>
+
+<div class="section"><div class="two-col">
+<div><div class="section-title">AI Training Results</div>
+<div class="stat-panel">
+<h3>Track 1 &mdash; Sanity Check</h3>
+<div class="stat-row"><span class="sk">Timesteps</span><span class="sv">~170K (killed early)</span></div>
+<div class="stat-row"><span class="sk">Convergence</span><span class="sv g">~60K steps (~3 min)</span></div>
+<div class="stat-row"><span class="sk">Best lap</span><span class="sv a">7.43s</span></div>
+<div class="stat-row"><span class="sk">Wall contact</span><span class="sv g">Zero</span></div>
+<div class="stat-row"><span class="sk">explained_variance</span><span class="sv a">0.994</span></div>
+<div class="stat-row"><span class="sk">Reward tuning</span><span class="sv g">None required</span></div>
+<div class="divider"></div>
+<h3>Track 3 &mdash; Production Model</h3>
+<div class="stat-row"><span class="sk">Timesteps</span><span class="sv">2,000,000</span></div>
+<div class="stat-row"><span class="sk">Duration</span><span class="sv">~2 hrs @ 225 fps</span></div>
+<div class="stat-row"><span class="sk">Wall contact</span><span class="sv g">Zero at convergence</span></div>
+<div class="stat-row"><span class="sk">Reward tuning</span><span class="sv g">None required</span></div>
+<div class="stat-row"><span class="sk">model.onnx</span><span class="sv a">23.7 KB</span></div>
+<div class="stat-row"><span class="sk">vecnorm_stats.json</span><span class="sv a">816 bytes</span></div>
+</div></div>
+<div><div class="section-title">Architectural Health</div>
+<div class="stat-panel">
+<h3>Dependency Confinement</h3>
+<div class="stat-row"><span class="sk">PixiJS imports in engine</span><span class="sv g">0</span></div>
+<div class="stat-row"><span class="sk">PixiJS imports in AI</span><span class="sv g">0</span></div>
+<div class="stat-row"><span class="sk">ws imports in renderer</span><span class="sv g">0</span></div>
+<div class="stat-row"><span class="sk">Math.random in engine</span><span class="sv g">0</span></div>
+<div class="stat-row"><span class="sk">Renderer imports in engine</span><span class="sv g">0</span></div>
+<div class="stat-row"><span class="sk">Circular dependencies</span><span class="sv g">0</span></div>
+<div class="divider"></div>
+<h3>Type Safety</h3>
+<div class="stat-row"><span class="sk">TypeScript strict mode</span><span class="sv g">Enabled</span></div>
+<div class="stat-row"><span class="sk">tsc --noEmit errors</span><span class="sv g">0</span></div>
+<div class="stat-row"><span class="sk">Determinism verified</span><span class="sv g">100 runs &times; 10K ticks</span></div>
+<div class="divider"></div>
+<h3>Performance</h3>
+<div class="stat-row"><span class="sk">Headless simulation</span><span class="sv a">13,000+ ticks/sec</span></div>
+<div class="stat-row"><span class="sk">Bridge throughput</span><span class="sv a">3,980 steps/sec</span></div>
+<div class="stat-row"><span class="sk">ONNX inference (browser)</span><span class="sv a">~2ms per call</span></div>
+</div></div>
+</div></div>
+
+</div></div>
+
+<div class="section"><div class="section-title">AI Observation &amp; Reward Architecture</div>
+<div class="two-col">
+<div><table class="data-table"><thead><tr><th>Index</th><th>Observation</th><th>Range</th></tr></thead><tbody>
+<tr><td class="mono">0&ndash;8</td><td>Ray distances (9 rays, 180&deg; arc)</td><td class="mono">[0, 1]</td></tr>
+<tr><td class="mono">9</td><td>Speed (normalized)</td><td class="mono">[0, 1]</td></tr>
+<tr><td class="mono">10</td><td>Yaw rate (normalized)</td><td class="mono">[-1, 1]</td></tr>
+<tr><td class="mono">11</td><td>Steering angle</td><td class="mono">[-1, 1]</td></tr>
+<tr><td class="mono">12</td><td>Lap progress</td><td class="mono">[0, 1]</td></tr>
+<tr><td class="mono">13</td><td>Centerline distance</td><td class="mono">[0, 1]</td></tr>
+</tbody></table></div>
+<div><table class="data-table"><thead><tr><th>Reward Component</th><th>Sign</th><th>Density</th></tr></thead><tbody>
+<tr><td>Checkpoint progress</td><td style="color:var(--green);font-weight:700">+ Primary</td><td>Every tick</td></tr>
+<tr><td>Speed bonus</td><td style="color:var(--green);font-weight:700">+ Secondary</td><td>Every tick</td></tr>
+<tr><td>Wall contact</td><td style="color:var(--red);font-weight:700">- Penalty</td><td>On contact</td></tr>
+<tr><td>Off-track surface</td><td style="color:var(--red);font-weight:700">- Penalty</td><td>On surface</td></tr>
+<tr><td>Backward / stillness</td><td style="color:var(--red);font-weight:700">- Kill</td><td>On threshold</td></tr>
+<tr><td>Checkpoint milestone</td><td style="color:var(--accent);font-weight:700">+ Bonus</td><td>At gate</td></tr>
+</tbody></table></div>
+</div></div>
+
+<div class="section"><div class="section-title">Evidence Package Documents</div>
+<table class="data-table"><thead><tr><th>Doc</th><th>Title</th><th>Format</th><th>Status</th><th>Key Metric</th></tr></thead><tbody>
+<tr><td class="mono">0</td><td>Executive Summary</td><td>Word</td><td style="color:var(--green);font-weight:600">&#10003; Complete</td><td>5-8 page overview</td></tr>
+<tr><td class="mono">1</td><td>Architecture Evidence</td><td>Word</td><td style="color:var(--green);font-weight:600">&#10003; Complete</td><td>0 boundary violations</td></tr>
+<tr><td class="mono">&mdash;</td><td>Executive Deck</td><td>PPTX + MD</td><td style="color:var(--green);font-weight:600">&#10003; Complete</td><td>10 slides, dark theme</td></tr>
+<tr><td class="mono">2</td><td>Requirements Traceability</td><td>Word + XLSX</td><td style="color:var(--green);font-weight:600">&#10003; Complete</td><td>78 traced items</td></tr>
+<tr><td class="mono">3</td><td>Testing &amp; Defect Prevention</td><td>Word + XLSX</td><td style="color:var(--green);font-weight:600">&#10003; Complete</td><td>389 tests, 15/15 catches</td></tr>
+<tr><td class="mono">4</td><td>Code Quality Analysis</td><td>Word</td><td style="color:var(--green);font-weight:600">&#10003; Complete</td><td>0 circular deps, strict TS</td></tr>
+<tr><td class="mono">5</td><td>AI Training Evidence</td><td>Word</td><td style="color:var(--green);font-weight:600">&#10003; Complete</td><td>23.7 KB model, 0 tuning</td></tr>
+<tr><td class="mono">6</td><td>Process &amp; Workflow</td><td>Word</td><td style="color:var(--green);font-weight:600">&#10003; Complete</td><td>47 decisions, 11 learnings</td></tr>
+<tr><td class="mono">7</td><td>Build Metrics Dashboard</td><td>HTML</td><td style="color:var(--green);font-weight:600">&#10003; This page</td><td>All metrics visualized</td></tr>
+</tbody></table></div>
+
+<div class="footer">
+<p>TOP-DOWN RACER v02 &mdash; Evidence Package Document 7 &mdash; Prepared by Briggsy &mdash; March 2026</p>
+<p style="margin-top:4px;opacity:.6">Zero hand-written lines of game code. The human makes decisions. The AI writes code.</p>
+</div>
+</body>
+</html>

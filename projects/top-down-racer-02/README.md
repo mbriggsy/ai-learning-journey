@@ -39,15 +39,13 @@ The project exists to prove a thesis: **autonomous AI development is production-
 Two-layer decoupled architecture enforced across all 6 build phases:
 
 ```
-┌─────────────────────┐         ┌─────────────────────┐
-│  SIMULATION ENGINE   │────────▶│   PIXIJS RENDERER    │
-│                      │ reads   │                      │
-│  Pure TypeScript     │ state   │  Visual layer only   │
-│  Zero rendering      │         │  Never touches logic │
-│  Runs headless       │         │  WebGL 2D            │
-│  13K+ ticks/sec      │         │  Browser-only        │
-│  Deterministic       │         │  Read-only state     │
-└─────────────────────┘         └─────────────────────┘
+SIMULATION ENGINE  ──reads state──▶  PIXIJS RENDERER
+─────────────────                    ─────────────────
+Pure TypeScript                      Visual layer only
+Zero rendering                       Never touches logic
+Runs headless                        WebGL 2D
+13K+ ticks/sec                       Browser-only
+Deterministic                        Read-only state
 ```
 
 The simulation engine has **zero rendering imports**. It runs identically in the browser (human play), in headless Node.js (AI training at 13K+ ticks/sec), and with ONNX inference (AI vs Human mode). Same physics, same collisions, same determinism — every time.

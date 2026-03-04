@@ -1,24 +1,8 @@
-# AI SDLC AUTONOMY ISN'T THE FUTURE. IT'S NOW.
+# BEST-IN-CLASS SDLC. BUILT BY AI. DIRECTED BY HUMANS.
 
 **Top-Down Racer v02 — Evidence Package**
 
-*A complete racing game + neural network AI opponent built by autonomous AI development. Zero hand-written game code.*
-
----
-
-## The Claim
-
-# 0
-
-**lines of hand-written game code**
-
-Every line authored by Claude Code under human architectural direction. Not copilot. Not autocomplete. Autonomous development.
-
-| Metric | Value |
-|--------|-------|
-| Phases completed | 6 of 6 |
-| Git commits | 80+ |
-| Automated tests | 366+ |
+*A complete racing game + neural network AI opponent built through autonomous AI SDLC. Specification, architecture, planning, code, testing, review, defect prevention, deployment.*
 
 ---
 
@@ -32,6 +16,28 @@ Every line authored by Claude Code under human architectural direction. Not copi
 
 **AI vs Human** — Race against your own creation. Head-to-head with grace period.
 
+[▶ Play it live](https://top-down-racer-02.vercel.app/)
+
+> *The human never writes code. The human makes decisions.*
+
+---
+
+## The Claim
+
+# 0
+
+**lines of hand-written game code**
+
+Every line authored by Claude Code under human architectural direction. Not copilot. Not autocomplete. Best-in-class autonomous SDLC.
+
+| Metric | Value |
+|--------|-------|
+| Phases completed | 6 of 6 |
+| Git commits | 189+ |
+| Automated tests | 389 |
+| Build days | ~3 |
+| Lines of code | 10,497 |
+
 ---
 
 ## The Numbers
@@ -43,30 +49,31 @@ Every line authored by Claude Code under human architectural direction. Not copi
 | ONNX model size | **23.7 KB** | Runs in any browser |
 | Determinism | **100%** | 100 runs × 10K ticks = identical hash |
 | Pre-execution bug catches | **15 / 15** | Never missed |
-| Server cost | **$0** | Fully static deployment |
 
 ---
 
-## Defect Prevention: 15 for 15
+## The Receipts
 
-Every pre-execution review caught real bugs. Not theoretical risks — concrete defects with specific code-level fixes.
+7-document evidence package proving SDLC rigor across the full lifecycle. Not vibes — verification. Most teams don't produce documentation this thorough.
 
-| Bug Caught Before Execution | Severity | What Would Have Shipped |
-|-----------------------------|----------|------------------------|
-| Sparse reward (not dense) | **CRITICAL** | AI training completely fails |
-| Speed bonus 37× too high | **CRITICAL** | AI spins in circles, never races |
-| VecNorm case mismatch | **CRITICAL** | All inference returns NaN |
-| AI heading 90° wrong | HIGH | Ghost car drives sideways |
-| Grace ticks during pause | HIGH | 5s window consumed while paused |
-| WASM tensors not disposed | MEDIUM | 43 KB/min memory leak |
+| Doc | Title | Key Metric |
+|-----|-------|------------|
+| 0 | Executive Summary | Full project overview |
+| 1 | Architecture Evidence | 0 boundary violations |
+| 2 | Requirements Traceability | 78 traced items, 100% coverage |
+| 3 | Testing & Defect Prevention | 389 tests, 15/15 catches |
+| 4 | Code Quality Analysis | 0 circular deps, strict TypeScript |
+| 5 | AI Training Evidence | 23.7 KB model, 0 tuning iterations |
+| 6 | Process & Workflow | 47 decisions, 11 learnings |
+| 7 | Build Metrics Dashboard | All metrics visualized |
 
-10–12 specialized research agents review every plan before a single line of code is written.
+> *Every claim backed by automated evidence, not assertions. Best-in-class SDLC demands best-in-class proof.*
 
 ---
 
 ## Architecture Held Clean
 
-Two-layer decoupled architecture verified across 80+ commits and 6 phases.
+Two-layer decoupled architecture verified across 189+ commits and 6 phases.
 
 **SIMULATION ENGINE** → *reads state* → **PIXIJS RENDERER**
 
@@ -101,21 +108,21 @@ Two-layer decoupled architecture verified across 80+ commits and 6 phases.
 
 ---
 
-## Not Vibes. Engineering.
+## Best-in-Class SDLC. Run by AI.
 
 **01 SPECIFY** → **02 PLAN** → **03 DEEPEN** → **04 EXECUTE** → **05 VERIFY**
 
 | Step | What Happens |
 |------|-------------|
-| Specify | War-game every decision. Document before building. |
+| Specify | War-game every decision. Document before building. Most teams skip this entirely. |
 | Plan | Break into atomic tasks. 50% context window max. |
-| Deepen | 10-12 research agents review before execution. |
-| Execute | Fresh subagents per task. Clean 200K context. |
-| Verify | Goal-backward testing. Architecture review. |
+| Deepen | 10–12 research agents review before execution. QA before code exists. |
+| Execute | Fresh subagents per task. Clean 200K context. No rot. |
+| Verify | Goal-backward testing. Architecture review at phase boundaries. |
 
-Context rot eliminated. Task 50 runs at the same quality as Task 1.
+Context rot eliminated. Task 189 runs at the same quality as Task 1.
 
-> **The human never writes code. The human makes decisions.**
+> **Not just autonomous development. Best-in-class SDLC — with the evidence to prove it.**
 
 ---
 
@@ -124,7 +131,7 @@ Context rot eliminated. Task 50 runs at the same quality as Task 1.
 | | ASSISTANCE *(yesterday)* | AUTONOMY *(now)* |
 |---|---|---|
 | Who codes | Human writes code | AI builds the entire system |
-| AI role | Suggests completions | Autonomous development |
+| AI role | Suggests completions | Autonomous SDLC |
 | Tool metaphor | Copilot fills in blanks | Fresh agents prevent rot |
 | Quality driver | Depends on the coder | Enforced by process |
 | Context | Degrades over time | Every task gets clean context |
@@ -133,8 +140,10 @@ Context rot eliminated. Task 50 runs at the same quality as Task 1.
 
 ---
 
-## This Isn't a Proof of Concept. It's a Proof of Production.
+## This Isn't Just Autonomous. It's Best-in-Class.
 
-366+ tests. 80+ commits. 15/15 defect catches. 23.7 KB neural network. Zero server infrastructure. Zero lines of hand-written code.
+389 tests. 189+ commits. 15/15 defect catches. 10,497 lines of code. 23.7 KB neural network. Zero lines of hand-written code.
 
-*Full evidence package available.*
+[▶ Play it now](https://top-down-racer-02.vercel.app/)
+
+*7-document evidence package. Every claim verified. The SDLC is the product.*

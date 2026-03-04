@@ -1,8 +1,8 @@
 # TOP-DOWN RACER v02
 
-**AI SDLC Autonomy Isn't the Future. It's Now.**
+**Best-in-Class SDLC. Built by AI. Directed by Humans.**
 
-A complete top-down racing game with a self-taught neural network AI opponent — built entirely through autonomous AI SDLC. Zero hand-written game code. Specification, architecture, planning, code, testing, review, defect prevention, and deployment — all executed by AI under human decision-making.
+A complete top-down racing game with a self-taught neural network AI opponent — built entirely through autonomous AI SDLC that meets or exceeds the rigor of the best human-led teams. Zero hand-written game code. Specification, architecture, planning, code, testing, review, defect prevention, and deployment — all executed by AI under human decision-making. Backed by a 7-document evidence package most teams never produce.
 
 ### [▶ Play It Now](https://top-down-racer-02.vercel.app/)
 
@@ -20,7 +20,7 @@ A complete top-down racing game with a self-taught neural network AI opponent �
 | Build time | **~3 days** |
 | Server infrastructure | **$0** (fully static) |
 
-Every line of code authored by [Claude Code](https://docs.anthropic.com/en/docs/claude-code) under human architectural direction. Every plan reviewed by 10–12 specialized research agents before execution. Every phase verified at architectural boundaries. Not copilot. Not autocomplete. Autonomous SDLC orchestrated by the [GSD framework](https://github.com/get-shit-done-ai/gsd).
+Every line of code authored by [Claude Code](https://docs.anthropic.com/en/docs/claude-code) under human architectural direction. Every plan reviewed by 10–12 specialized research agents before execution. Every phase verified at architectural boundaries. Not copilot. Not autocomplete. Best-in-class autonomous SDLC orchestrated by the [GSD framework](https://github.com/get-shit-done-ai/gsd).
 
 > *The human never writes code. The human makes decisions.*
 
@@ -30,7 +30,7 @@ Every line of code authored by [Claude Code](https://docs.anthropic.com/en/docs/
 
 A top-down racing game with three tracks, full sound, particle effects, menus, HUD, pause, and replays — plus a neural network AI opponent that learned to drive via reinforcement learning with zero human training data. Race against your own creation head-to-head in the browser.
 
-The project exists to prove a thesis: **the entire software development lifecycle can be executed autonomously by AI under human decision-making.** Not just the coding — the specification, architecture, planning, code review, testing, defect prevention, and deployment. The 7-document evidence package below provides the receipts.
+The project exists to prove a thesis: **AI can execute the entire software development lifecycle — not just competently, but at best-in-class quality.** The specification, architecture, planning, code review, testing, defect prevention, and deployment all exceed what most human teams deliver. The 7-document evidence package below provides the receipts.
 
 ---
 
@@ -236,13 +236,13 @@ Three tracks with increasing difficulty. The AI was trained on Track 3 (hardest)
 
 ## How It Was Built
 
-This project was built using the **GSD (Get Shit Done) framework** — a spec-driven autonomous SDLC orchestrator for Claude Code. The AI doesn't just write code — it executes the entire software development lifecycle: specification, planning, review, coding, testing, and verification.
+This project was built using the **GSD (Get Shit Done) framework** — a spec-driven autonomous SDLC orchestrator for Claude Code. The AI doesn't just write code — it executes the entire software development lifecycle at best-in-class quality: specification, planning, review, coding, testing, and verification.
 
 **The SDLC process:**
 
-1. **Specify** — War-game every design decision before writing code. 47 decisions documented with full rationale.
+1. **Specify** — War-game every design decision before writing code. 47 decisions documented with full rationale. Most teams skip this entirely.
 2. **Plan** — Break into atomic tasks. 50% context window max per task. Architecture constraints baked in.
-3. **Deepen** — 10–12 specialized research agents review every plan before execution. 15 for 15 bug catch rate. This is QA *before code exists*.
+3. **Deepen** — 10–12 specialized research agents review every plan before execution. 15 for 15 bug catch rate. This is QA *before code exists* — a level of rigor most teams never achieve.
 4. **Execute** — Fresh subagents per task. Clean 200K context window. No rot. Code, tests, and commits produced autonomously.
 5. **Verify** — Goal-backward testing. Architecture review at phase boundaries. Boundary violations caught by automated agents, not manual inspection.
 
@@ -252,7 +252,7 @@ Six phases, ~3 build days (Feb 27–28, Mar 1), 189+ commits. The upfront specif
 
 ## Evidence Package
 
-Comprehensive documentation proving autonomous AI SDLC rigor across the full lifecycle — not just coding, but specification, architecture, testing, defect prevention, and process. Every claim is backed by automated evidence, not assertions. All documents are located in the `docs/evidence/` directory.
+Comprehensive documentation proving best-in-class SDLC rigor across the full lifecycle — not just coding, but specification, architecture, testing, defect prevention, and process. Most teams don't produce documentation this thorough. Every claim is backed by automated evidence, not assertions. All documents are located in the `docs/evidence/` directory.
 
 | Doc | Title | Key Metric |
 |-----|-------|------------|
@@ -289,4 +289,4 @@ Every architectural claim can be independently verified:
 
 ---
 
-*Built with autonomous AI SDLC. The human makes decisions. The AI executes the lifecycle.*
+*Best-in-class SDLC. Built by AI. Directed by humans. Proven by evidence.*

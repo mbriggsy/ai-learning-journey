@@ -33,7 +33,7 @@ Every line authored by Claude Code under human architectural direction. Not copi
 | Metric | Value |
 |--------|-------|
 | Phases completed | 6 of 6 |
-| Git commits | 189+ |
+| Git commits | 189 |
 | Automated tests | 389 |
 | Build days | ~3 |
 | Lines of code | 10,497 |
@@ -73,7 +73,7 @@ Every line authored by Claude Code under human architectural direction. Not copi
 
 ## Architecture Held Clean
 
-Two-layer decoupled architecture verified across 189+ commits and 6 phases.
+Two-layer decoupled architecture verified across 189 commits and 6 phases.
 
 **SIMULATION ENGINE** → *reads state* → **PIXIJS RENDERER**
 
@@ -142,7 +142,7 @@ Context rot eliminated. Task 189 runs at the same quality as Task 1.
 
 ## This Isn't Just Autonomous. It's Best-in-Class.
 
-389 tests. 189+ commits. 15/15 defect catches. 10,497 lines of code. 23.7 KB neural network. Zero lines of hand-written code.
+389 tests. 189 commits. 15/15 defect catches. 10,497 lines of code. 23.7 KB neural network. Zero lines of hand-written code.
 
 [▶ Play it now](https://top-down-racer-02.vercel.app/)
 

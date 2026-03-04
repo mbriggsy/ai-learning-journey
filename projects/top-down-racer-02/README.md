@@ -12,7 +12,7 @@ A complete top-down racing game with a self-taught neural network AI opponent �
 |--------|-------|
 | Hand-written lines of game code | **0** |
 | Total lines of code | **10,497** |
-| Git commits | **189+** |
+| Git commits | **189** |
 | Automated tests | **389** (377 TypeScript + 12 Python) |
 | Pre-execution defect catches | **15 / 15** |
 | Headless simulation speed | **13,000+ ticks/sec** |
@@ -246,7 +246,7 @@ This project was built using the **GSD (Get Shit Done) framework** — a spec-dr
 4. **Execute** — Fresh subagents per task. Clean 200K context window. No rot. Code, tests, and commits produced autonomously.
 5. **Verify** — Goal-backward testing. Architecture review at phase boundaries. Boundary violations caught by automated agents, not manual inspection.
 
-Six phases, ~3 build days (Feb 27–28, Mar 1), 189+ commits. The upfront specification investment eliminates rework — execution is fast because there are no decisions left to make and no surprises to debug. Assistance scales linearly. Autonomy scales exponentially.
+Six phases, ~3 build days (Feb 27–28, Mar 1), 189 commits. The upfront specification investment eliminates rework — execution is fast because there are no decisions left to make and no surprises to debug. Assistance scales linearly. Autonomy scales exponentially.
 
 ---
 

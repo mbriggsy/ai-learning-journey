@@ -551,3 +551,89 @@ describe('State pause_reason', () => {
     fs.rmSync(tmpDir, { recursive: true, force: true });
   });
 });
+
+// ============================================================
+//  9. Interactive Driver — Slash command structure
+// ============================================================
+
+describe('Interactive Driver', () => {
+  const cmdPath = path.join(PROJECT_ROOT, '.claude', 'commands', 'overdrive.md');
+
+  it('slash command file exists at .claude/commands/overdrive.md', () => {
+    assert.ok(fs.existsSync(cmdPath), 'slash command should exist');
+  });
+
+  it('slash command contains $ARGUMENTS placeholder', () => {
+    const content = fs.readFileSync(cmdPath, 'utf8');
+    assert.ok(content.includes('$ARGUMENTS'), 'should reference $ARGUMENTS for argument passing');
+  });
+
+  it('slash command references Task tool for subagent dispatch', () => {
+    const content = fs.readFileSync(cmdPath, 'utf8');
+    assert.ok(content.includes('Task tool'), 'should reference Task tool for subagent dispatch');
+  });
+
+  it('slash command covers all 9 pipeline stages', () => {
+    const content = fs.readFileSync(cmdPath, 'utf8');
+    const stages = ['plan', 'strengthen', 'gate-check', 'code', 'verify', 'ivv', 'evidence', 'rtm', 'evidence-package'];
+    for (const stage of stages) {
+      assert.ok(content.includes(stage), `should reference stage: ${stage}`);
+    }
+  });
+
+  it('slash command references enriched spec', () => {
+    const content = fs.readFileSync(cmdPath, 'utf8');
+    assert.ok(content.includes('enriched-spec.md'), 'should reference enriched spec file');
+    assert.ok(content.toLowerCase().includes('clarif'), 'should mention clarifying questions');
+  });
+
+  it('slash command includes context self-management', () => {
+    const content = fs.readFileSync(cmdPath, 'utf8');
+    assert.ok(content.includes('Context'), 'should have context management section');
+    assert.ok(content.includes('checkpoint') || content.includes('Checkpoint'), 'should mention checkpointing');
+    assert.ok(content.includes('15'), 'should specify cycle limit for checkpointing');
+  });
+
+  it('slash command references shared prompt templates', () => {
+    const content = fs.readFileSync(cmdPath, 'utf8');
+    assert.ok(content.includes('prompts/plan-phase.md'), 'should reference plan prompt');
+    assert.ok(content.includes('prompts/strengthen-plan.md'), 'should reference strengthen prompt');
+    assert.ok(content.includes('prompts/code-plan.md'), 'should reference code prompt');
+    assert.ok(content.includes('prompts/ivv-verify.md'), 'should reference IV&V prompt');
+  });
+
+  it('slash command supports --resume flag', () => {
+    const content = fs.readFileSync(cmdPath, 'utf8');
+    assert.ok(content.includes('--resume'), 'should support --resume flag');
+    assert.ok(content.includes('BUILD-STATE.md'), 'should reference state file for resume');
+  });
+
+  it('slash command supports --upto flag', () => {
+    const content = fs.readFileSync(cmdPath, 'utf8');
+    assert.ok(content.includes('--upto'), 'should support --upto flag');
+    assert.ok(content.includes('pause_reason'), 'should reference pause_reason in state');
+  });
+
+  it('slash command enforces thin orchestrator pattern', () => {
+    const content = fs.readFileSync(cmdPath, 'utf8');
+    assert.ok(content.includes('THIN ORCHESTRATOR'), 'should emphasize thin orchestrator rule');
+    assert.ok(content.includes('NEVER do planning'), 'should forbid doing heavy work inline');
+  });
+
+  it('slash command uses same state format as CLI mode', () => {
+    const content = fs.readFileSync(cmdPath, 'utf8');
+    assert.ok(content.includes('mode: interactive'), 'should set mode to interactive');
+    assert.ok(content.includes('last_driver: interactive'), 'should set last_driver');
+    // Verify it uses the same status values as CLI
+    assert.ok(content.includes('pending'), 'should use same status values');
+    assert.ok(content.includes('strengthened'), 'should use same status values');
+    assert.ok(content.includes('rtm-complete'), 'should use same status values');
+  });
+
+  it('interactive driver README documents mode mixing', () => {
+    const readmePath = path.join(PROJECT_ROOT, 'src', 'drivers', 'interactive', 'README.md');
+    const content = fs.readFileSync(readmePath, 'utf8');
+    assert.ok(content.includes('Mode Mixing') || content.includes('mode mixing'), 'should document mode mixing');
+    assert.ok(content.includes('last_driver'), 'should explain last_driver field');
+  });
+});

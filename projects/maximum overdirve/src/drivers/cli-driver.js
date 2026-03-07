@@ -164,12 +164,10 @@ class CLIDriver {
       const phase = this.state.getNextActionablePhase();
       if (!phase) { console.log(chalk.gray('\n  No actionable phases. Exiting.\n')); break; }
 
-      // Check --upto: if the current stage matches upto, pause
+      // Check --upto: if the next stage is past the upto target, pause before executing
       const currentStage = Pipeline.STATUS_TO_STAGE[phase.status];
       if (upto && currentStage && this._isPastUpto(currentStage, upto)) {
-        this.state.setProjectStatus('paused');
-        this.state.addLogEntry('upto-pause', `Paused at --upto ${upto}`);
-        console.log(chalk.bold.cyan(`\n⏸  Paused at --upto ${upto}. Run \`overdrive resume\` to continue.\n`));
+        this._pauseAtUpto(upto, currentStage);
         break;
       }
 
@@ -185,7 +183,7 @@ class CLIDriver {
             await this._strengthenPhase(phase.number, specContent);
             break;
           case 'strengthened':
-            await this._gateCheckAndCode(phase.number, specContent);
+            await this._gateCheck(phase.number, specContent);
             break;
           case 'coding':
             await this._codePhase(phase.number, specContent);
@@ -224,14 +222,10 @@ class CLIDriver {
 
       // Check --upto after each step completion
       if (upto) {
-        const completedStage = Pipeline.STATUS_TO_STAGE[phase.status];
-        // Re-read the phase status after the step ran
         const updatedPhase = this.state.get().phases[phase.number];
         const newStage = Pipeline.STATUS_TO_STAGE[updatedPhase?.status];
         if (newStage && this._isPastUpto(newStage, upto)) {
-          this.state.setProjectStatus('paused');
-          this.state.addLogEntry('upto-pause', `Paused at --upto ${upto} after completing ${currentStage}`);
-          console.log(chalk.bold.cyan(`\n⏸  Paused at --upto ${upto}. Run \`overdrive resume\` to continue.\n`));
+          this._pauseAtUpto(upto, currentStage);
           break;
         }
       }
@@ -330,10 +324,10 @@ class CLIDriver {
   }
 
   // ============================================================
-  //  GATE CHECK + CODE
+  //  GATE CHECK — Evaluate gates, transition to 'coding' if clear
   // ============================================================
 
-  async _gateCheckAndCode(phaseNumber, specContent) {
+  async _gateCheck(phaseNumber, specContent) {
     const gateResult = this.gateEvaluator.evaluate(phaseNumber, specContent);
 
     if (gateResult.gates.length > 0) {
@@ -351,7 +345,8 @@ class CLIDriver {
       }
     }
 
-    await this._codePhase(phaseNumber, specContent);
+    // Gates passed — mark ready to code. The phase loop picks up 'coding' next iteration.
+    this.state.setPhaseStatus(phaseNumber, 'coding');
   }
 
   // ============================================================
@@ -878,6 +873,16 @@ class CLIDriver {
     }
 
     return specContent;
+  }
+
+  /**
+   * Pause execution due to --upto flag. Sets project status, records reason in state.
+   */
+  _pauseAtUpto(upto, lastCompletedStage) {
+    this.state.setProjectStatus('paused');
+    this.state.setPauseReason(`upto:${upto}`);
+    this.state.addLogEntry('upto-pause', `Paused at --upto ${upto} (completed: ${lastCompletedStage})`);
+    console.log(chalk.bold.cyan(`\n⏸  Paused at --upto ${upto}. Run \`overdrive resume\` to continue.\n`));
   }
 
   /**

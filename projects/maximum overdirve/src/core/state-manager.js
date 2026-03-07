@@ -88,6 +88,14 @@ class StateManager {
     if (status === 'completed') {
       this.state.project.completed_at = new Date().toISOString();
     }
+    if (status === 'running') {
+      this.state.project.pause_reason = null;
+    }
+    this._writeToDisk();
+  }
+
+  setPauseReason(reason) {
+    this.state.project.pause_reason = reason;
     this._writeToDisk();
   }
 

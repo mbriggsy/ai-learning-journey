@@ -435,3 +435,119 @@ describe('Shared Core', () => {
     assert.ok(fs.existsSync(readmePath), 'interactive driver README should exist');
   });
 });
+
+// ============================================================
+//  7. --upto Edge Cases
+// ============================================================
+
+describe('--upto edge cases', () => {
+  const Pipeline = require(path.join(PROJECT_ROOT, 'src', 'core', 'pipeline.js'));
+  const CLIDriver = require(path.join(PROJECT_ROOT, 'src', 'drivers', 'cli-driver.js'));
+
+  // Direct test of _isPastUpto via prototype (it's a pure function)
+  const driver = Object.create(CLIDriver.prototype);
+
+  it('_isPastUpto returns false when stage equals upto (same stage)', () => {
+    assert.equal(driver._isPastUpto('plan', 'plan'), false);
+    assert.equal(driver._isPastUpto('gate-check', 'gate-check'), false);
+    assert.equal(driver._isPastUpto('evidence-package', 'evidence-package'), false);
+  });
+
+  it('_isPastUpto returns true when stage is after upto', () => {
+    assert.equal(driver._isPastUpto('strengthen', 'plan'), true);
+    assert.equal(driver._isPastUpto('code', 'gate-check'), true);
+    assert.equal(driver._isPastUpto('evidence-package', 'rtm'), true);
+  });
+
+  it('_isPastUpto returns false when stage is before upto', () => {
+    assert.equal(driver._isPastUpto('plan', 'strengthen'), false);
+    assert.equal(driver._isPastUpto('gate-check', 'code'), false);
+    assert.equal(driver._isPastUpto('rtm', 'evidence-package'), false);
+  });
+
+  it('_isPastUpto returns false for unknown stages', () => {
+    assert.equal(driver._isPastUpto('unknown', 'plan'), false);
+    assert.equal(driver._isPastUpto('plan', 'unknown'), false);
+    assert.equal(driver._isPastUpto('blocked', 'plan'), false);
+  });
+
+  it('gate-check and code are separate steps in the run loop', () => {
+    // Verify _gateCheck exists (not _gateCheckAndCode)
+    assert.ok(typeof CLIDriver.prototype._gateCheck === 'function', '_gateCheck method should exist');
+    assert.equal(typeof CLIDriver.prototype._gateCheckAndCode, 'undefined', '_gateCheckAndCode should not exist');
+
+    // Verify the switch case for 'strengthened' calls _gateCheck (not _gateCheckAndCode)
+    const source = fs.readFileSync(path.join(PROJECT_ROOT, 'src', 'drivers', 'cli-driver.js'), 'utf8');
+    assert.ok(source.includes("await this._gateCheck(phase.number, specContent)"), 'run loop should call _gateCheck for strengthened status');
+    assert.ok(!source.includes('_gateCheckAndCode'), 'should not reference _gateCheckAndCode anywhere');
+  });
+
+  it('CLI has --upto flag on resume command', () => {
+    const content = fs.readFileSync(path.join(PROJECT_ROOT, 'bin', 'overdrive.js'), 'utf8');
+    // Find the resume command section and verify it has --upto
+    const resumeSection = content.slice(content.indexOf("command('resume')"));
+    assert.ok(resumeSection.includes('--upto'), 'resume command should have --upto flag');
+  });
+
+  it('_gateCheck sets status to coding when gates pass', () => {
+    const source = fs.readFileSync(path.join(PROJECT_ROOT, 'src', 'drivers', 'cli-driver.js'), 'utf8');
+    // The _gateCheck method should set status to 'coding' after gates pass
+    const gateCheckMethod = source.slice(source.indexOf('async _gateCheck('), source.indexOf('async _codePhase('));
+    assert.ok(gateCheckMethod.includes("'coding'"), '_gateCheck should set status to coding');
+    assert.ok(!gateCheckMethod.includes('_codePhase'), '_gateCheck should NOT call _codePhase directly');
+  });
+});
+
+// ============================================================
+//  8. State — pause_reason tracking
+// ============================================================
+
+describe('State pause_reason', () => {
+  const StateManager = require(path.join(PROJECT_ROOT, 'src', 'core', 'state-manager.js'));
+  const tmpDir = path.join(require('os').tmpdir(), `overdrive-test-pause-${Date.now()}`);
+
+  it('setPauseReason stores reason in project state', () => {
+    fs.mkdirSync(tmpDir, { recursive: true });
+    const sm = new StateManager(tmpDir);
+    sm.initProject('test', 'spec.md', [{ number: 1, name: 'P1', dependencies: [] }]);
+
+    sm.setProjectStatus('paused');
+    sm.setPauseReason('upto:plan');
+
+    const state = sm.get();
+    assert.equal(state.project.status, 'paused');
+    assert.equal(state.project.pause_reason, 'upto:plan');
+
+    fs.rmSync(tmpDir, { recursive: true, force: true });
+  });
+
+  it('pause_reason clears when project resumes', () => {
+    fs.mkdirSync(tmpDir, { recursive: true });
+    const sm = new StateManager(tmpDir);
+    sm.initProject('test', 'spec.md', [{ number: 1, name: 'P1', dependencies: [] }]);
+
+    sm.setProjectStatus('paused');
+    sm.setPauseReason('upto:strengthen');
+    assert.equal(sm.get().project.pause_reason, 'upto:strengthen');
+
+    sm.setProjectStatus('running');
+    assert.equal(sm.get().project.pause_reason, null);
+
+    fs.rmSync(tmpDir, { recursive: true, force: true });
+  });
+
+  it('pause_reason persists to disk and survives reload', () => {
+    fs.mkdirSync(tmpDir, { recursive: true });
+    const sm = new StateManager(tmpDir);
+    sm.initProject('test', 'spec.md', [{ number: 1, name: 'P1', dependencies: [] }]);
+    sm.setProjectStatus('paused');
+    sm.setPauseReason('upto:gate-check');
+
+    // Reload from disk
+    const sm2 = new StateManager(tmpDir);
+    const loaded = sm2.load();
+    assert.equal(loaded.project.pause_reason, 'upto:gate-check');
+
+    fs.rmSync(tmpDir, { recursive: true, force: true });
+  });
+});

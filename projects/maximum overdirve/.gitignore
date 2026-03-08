@@ -1,8 +1,0 @@
-node_modules/
-.planning/logs/
-*.tmp
-
-# Large verification/evidence outputs — reference via state file, not committed directly
-# Uncomment these if your workflow prefers minimal git history:
-# .planning/verification/
-# .planning/evidence/

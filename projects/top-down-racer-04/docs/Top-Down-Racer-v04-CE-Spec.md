@@ -5,6 +5,20 @@
 
 ---
 
+## Mission
+
+v02 was a genuine technical achievement — autonomous SDLC, not a line of code written
+by a human, an AI that taught itself to race. But the simple visuals undersell the
+accomplishment. Someone who doesn't understand what happened looks at it and sees a
+rectangle driving in a circle.
+
+v04's job is to make the presentation match the achievement. When someone sees it for
+the first time, they should think "that looks like a real game" — before they even know
+the story. The technical flex is CE methodology and the Gemini asset pipeline. The human
+flex is: we knew it needed to look better.
+
+---
+
 ## What v04 Is
 
 Top-Down Racer v04 is a **visual upgrade + track evolution** of v02. The simulation

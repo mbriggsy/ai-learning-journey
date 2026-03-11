@@ -35,6 +35,23 @@ By Phase 5, CLAUDE.md is a living encyclopedia of v04-specific knowledge. This i
 
 ---
 
+## Pre-Build Prep (Do This BEFORE Opening Claude Code)
+
+Anything mechanical — file copies, tooling setup, API keys — should happen before CE starts. Don't burn CE tokens planning a file copy.
+
+**Checklist:**
+
+- [ ] **Copy frozen engine from v02** — `xcopy` `src/engine/` from racer-02 into racer-04. It's frozen. There's nothing to plan. Just copy it.
+- [ ] **Set up `.env`** — `GEMINI_API_KEY` and any other API keys in place before Session 0
+- [ ] **Verify Context7 API key** — confirm `CONTEXT7_API_KEY` is in `~/.claude.json` and quota isn't blown
+- [ ] **Open Claude Code in the right directory** — `top-down-racer-04`, not `top-down-racer04`
+- [ ] **Run `/mcp`** — confirm Context7, Serena, and Sequential Thinking are all connected and green before issuing any CE commands
+- [ ] **Pull latest** — `git pull` to make sure you have the latest spec, README, and Playbook
+
+**Why this matters:** CE's planning tokens are expensive and precious. A CE session planning "step 1: copy 40 files from v02" is wasted. Pre-flight this stuff manually in 5 minutes and let CE focus on the decisions that actually require intelligence.
+
+---
+
 ## Phase 0: Asset Generation (Fully Autonomous)
 
 **What ships:** All visual assets generated via Gemini Imagen 3 API and dropped into `assets\raw\`. No human art involvement.

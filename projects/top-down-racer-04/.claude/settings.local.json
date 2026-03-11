@@ -1,5 +1,8 @@
 {
   "permissions": {
+    "deny": [
+      "Skill(gsd:*)"
+    ],
     "allow": [
       "Bash(*)",
       "Read(*)",

@@ -58,13 +58,14 @@ And yes — we're also trying out **Compound Engineering** instead of GSD. Same 
 
 **Compound Engineering** — Plan → **Deepen** → Work → Review → Compound
 
-| Step                    | What Happens |
-|-------------------------|-------------|
-| Plan                    | Define what needs to be built, break into phases |
-| **Deepen Plan** ⭐      | **24-agent Strike Team stress-tests the plan before a line of code is written. Proven to catch hundreds of bugs across previous projects. The step that earns its keep.** |
-| Work                    | Build it with Context7 + Serena + Sequential Thinking |
-| Review                  | Independent review of what was built |
-| Compound                | Capture learnings back into the system |
+<table>
+<tr><th width="180">Step</th><th>What Happens</th></tr>
+<tr><td>Plan</td><td>Define what needs to be built, break into phases</td></tr>
+<tr><td><strong>Deepen Plan ⭐</strong></td><td><strong>24-agent Strike Team stress-tests the plan before a line of code is written. Proven to catch hundreds of bugs across previous projects. The step that earns its keep.</strong></td></tr>
+<tr><td>Work</td><td>Build it with Context7 + Serena + Sequential Thinking</td></tr>
+<tr><td>Review</td><td>Independent review of what was built</td></tr>
+<tr><td>Compound</td><td>Capture learnings back into the system</td></tr>
+</table>
 
 MCP Stack: **Context7** (framework docs) + **Serena** (semantic code nav) + **Sequential Thinking** (architectural reasoning)
 

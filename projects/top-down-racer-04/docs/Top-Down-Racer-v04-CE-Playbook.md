@@ -42,6 +42,7 @@ Anything mechanical — file copies, tooling setup, API keys — should happen b
 **Checklist:**
 
 - [ ] **Copy frozen engine from v02** — `xcopy` `src/engine/` from racer-02 into racer-04. It's frozen. There's nothing to plan. Just copy it.
+- [ ] **Copy engine tests from v02** — `tests/engine/` (or equivalent) comes with the engine. 366+ tests, all passing. Don't make CE plan this either.
 - [ ] **Set up `.env`** — `GEMINI_API_KEY` and any other API keys in place before Session 0
 - [ ] **Verify Context7 API key** — confirm `CONTEXT7_API_KEY` is in `~/.claude.json` and quota isn't blown
 - [ ] **Open Claude Code in the right directory** — `top-down-racer-04`, not `top-down-racer04`

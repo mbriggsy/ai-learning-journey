@@ -1,7 +1,7 @@
 ---
 title: "Phase -1: Foundation — Engine + AI Copy, Build Tooling, 377 Tests Green"
 type: feat
-status: active
+status: completed
 date: 2026-03-11
 origin: docs/brainstorms/2026-03-11-full-build-brainstorm.md
 deepened: 2026-03-11
@@ -102,43 +102,43 @@ This is not engine code — it's a Vite entry point, replaced when the renderer 
 
 Copy these directories/files from v02 to v04:
 
-- [ ] `src/engine/` — 10 files (types, constants, vec2, spline, track, car, collision, checkpoint, world, RaceController)
-- [ ] `src/ai/` — 9 files (ai-config, observations, raycaster, reward, vecnormalize, headless-env, bridge-server, run-bridge, browser-ai-runner)
-- [ ] `src/tracks/` — 4 files (registry, track01, track02, track03)
-- [ ] `src/renderer/Leaderboard.ts` — 1 file (pure localStorage utility, no PixiJS imports)
-- [ ] `tests/` — 17 files preserving subdirectory structure (engine/10, ai/6, renderer/1)
-- [ ] `python/` — entire training infrastructure (racer_env/, training/, tests/, requirements.txt, ai-config.json) **including `training/__init__.py`**
-- [ ] `scripts/copy-ort-wasm.cjs` — ONNX WASM file copier
+- [x] `src/engine/` — 10 files (types, constants, vec2, spline, track, car, collision, checkpoint, world, RaceController)
+- [x] `src/ai/` — 9 files (ai-config, observations, raycaster, reward, vecnormalize, headless-env, bridge-server, run-bridge, browser-ai-runner)
+- [x] `src/tracks/` — 4 files (registry, track01, track02, track03)
+- [x] `src/renderer/Leaderboard.ts` — 1 file (pure localStorage utility, no PixiJS imports)
+- [x] `tests/` — 17 files preserving subdirectory structure (engine/10, ai/6, renderer/1)
+- [x] `python/` — entire training infrastructure (racer_env/, training/, tests/, requirements.txt, ai-config.json) **including `training/__init__.py`**
+- [x] `scripts/copy-ort-wasm.cjs` — ONNX WASM file copier
 
 ### Config Files (copy from v02, apply noted adjustments)
 
-- [ ] `tsconfig.json` — v02 verbatim + add `isolatedModules: true`, `moduleDetection: "force"`
-- [ ] `vite.config.ts` — v02 verbatim + add `..` path traversal guard in ORT middleware
-- [ ] `vitest.config.ts` — v02 verbatim (8 lines, no changes needed)
-- [ ] `index.html` — v02 verbatim, change `<title>` to "Top-Down Racer v04"
-- [ ] `src/main.ts` — new one-line placeholder (Vite entry point)
+- [x] `tsconfig.json` — v02 verbatim + add `isolatedModules: true`, `moduleDetection: "force"`
+- [x] `vite.config.ts` — v02 verbatim + add `..` path traversal guard in ORT middleware
+- [x] `vitest.config.ts` — v02 verbatim (8 lines, no changes needed)
+- [x] `index.html` — v02 verbatim, change `<title>` to "Top-Down Racer v04"
+- [x] `src/main.ts` — new one-line placeholder (Vite entry point)
 
 ### package.json Updates
 
-- [ ] Fix build script: `"build": "tsc --noEmit && vite build"`
-- [ ] Add from v02: `test:verbose`, `bridge`, `setup:ort` scripts
-- [ ] Keep from v04 scaffold: `typecheck`, `"private": true`, `"type": "module"`
-- [ ] Add `packageManager` field (match v02's pnpm version)
-- [ ] Dependencies: align `pixi.js` to `^8.16.0`, add `onnxruntime-web ^1.24.2`, `ws ^8.19.0`
-- [ ] Dev deps: bump `vitest` to `^4.0.0`, `@vitest/coverage-v8` to `^4.0.0`, `typescript` to `^5.9.0`, `@types/node` to `^25.0.0`, `vite` to `^7.3.0`; add `tsx ^4.21.0`, `@types/ws ^8.18.1`
-- [ ] Remove `pnpm.onlyBuiltDependencies` from package.json
-- [ ] Create `pnpm-workspace.yaml` with `allowBuilds: { esbuild: true, onnxruntime-web: true }`
-- [ ] `pnpm install` succeeds cleanly
+- [x] Fix build script: `"build": "tsc --noEmit && vite build"`
+- [x] Add from v02: `test:verbose`, `bridge`, `setup:ort` scripts
+- [x] Keep from v04 scaffold: `typecheck`, `"private": true`, `"type": "module"`
+- [x] Add `packageManager` field (match v02's pnpm version)
+- [x] Dependencies: align `pixi.js` to `^8.16.0`, add `onnxruntime-web ^1.24.2`, `ws ^8.19.0`
+- [x] Dev deps: bump `vitest` to `^4.0.0`, `@vitest/coverage-v8` to `^4.0.0`, `typescript` to `^5.9.0`, `@types/node` to `^25.0.0`, `vite` to `^7.3.0`; add `tsx ^4.21.0`, `@types/ws ^8.18.1`
+- [x] Remove `pnpm.onlyBuiltDependencies` from package.json
+- [x] Create `pnpm-workspace.yaml` with `onlyBuiltDependencies` (pnpm workspace format)
+- [x] `pnpm install` succeeds cleanly
 
 ### Validation Gates
 
-- [ ] `pnpm run typecheck` — zero errors
-- [ ] `pnpm test` — **377/377 tests pass**
-- [ ] `pnpm dev` — Vite dev server starts without errors
-- [ ] `diff -r` between v02 and v04 engine/AI/track source files — zero differences
-- [ ] Python venv deps installed (`pip install -r requirements.txt`)
-- [ ] Python standalone tests pass (`pytest -m "not bridge" python/tests/`)
-- [ ] `.serena/project.yml` updated with `languages: ["typescript"]`
+- [x] `pnpm run typecheck` — zero errors
+- [x] `pnpm test` — **377/377 tests pass**
+- [x] `pnpm dev` — Vite dev server starts without errors
+- [x] `diff -r` between v02 and v04 engine/AI/track source files — zero differences
+- [x] Python venv deps installed (`pip install -r requirements.txt`) — Python 3.12 required
+- [x] Python standalone tests pass (`pytest python/tests/`) — 12/12 pass
+- [x] `.serena/project.yml` updated with `languages: ["typescript"]`
 
 ## Execution Order
 

@@ -3,20 +3,50 @@ import sharp from 'sharp';
 /** Maximum input image size to prevent memory issues. */
 const MAX_INPUT_PIXELS = 4096 * 4096;
 
-// Chroma-key constants (#FF00FF magenta)
-const CHROMA_R = 255;
-const CHROMA_G = 0;
-const CHROMA_B = 255;
-const TOLERANCE_INNER = 10; // Below = fully transparent
-const TOLERANCE_OUTER = 40; // Above = fully opaque; between = gradient alpha
+const TOLERANCE_INNER = 30; // Below = fully transparent
+const TOLERANCE_OUTER = 80; // Above = fully opaque; between = gradient alpha
+
+/**
+ * Auto-detect background color by sampling corner pixels.
+ * Returns median R, G, B from the four corners.
+ */
+function detectBackgroundColor(
+  data: Buffer,
+  width: number,
+): { r: number; g: number; b: number } {
+  const corners = [
+    0, // top-left
+    (width - 1) * 4, // top-right
+    (width * (width - 1)) * 4, // bottom-left (assumes square)
+    (width * width - 1) * 4, // bottom-right
+  ];
+
+  const rs: number[] = [], gs: number[] = [], bs: number[] = [];
+  for (const i of corners) {
+    rs.push(data[i]);
+    gs.push(data[i + 1]);
+    bs.push(data[i + 2]);
+  }
+
+  // Use median to be robust against one corner touching the sprite
+  const median = (arr: number[]) => {
+    const sorted = [...arr].sort((a, b) => a - b);
+    return Math.round((sorted[1] + sorted[2]) / 2);
+  };
+
+  return { r: median(rs), g: median(gs), b: median(bs) };
+}
 
 /**
  * Two-pass chroma-key removal with soft alpha ramp and color decontamination.
  *
- * Pass 1: Compute alpha from color distance to magenta (#FF00FF).
- * Pass 2: Remove magenta spill from semi-transparent edge pixels.
+ * Auto-detects the background color from corner pixels (the API doesn't
+ * produce exact #FF00FF — the actual color varies per generation).
  *
- * MUST be called at full resolution BEFORE resizing to avoid magenta bleed
+ * Pass 1: Compute alpha from color distance to detected background.
+ * Pass 2: Remove color spill from semi-transparent edge pixels.
+ *
+ * MUST be called at full resolution BEFORE resizing to avoid color bleed
  * from interpolation.
  */
 export async function chromaKeyRemove(buffer: Buffer): Promise<Buffer> {
@@ -25,10 +55,13 @@ export async function chromaKeyRemove(buffer: Buffer): Promise<Buffer> {
     .raw()
     .toBuffer({ resolveWithObject: true });
 
+  const bg = detectBackgroundColor(data, info.width);
+  console.log(`    Detected background color: R=${bg.r} G=${bg.g} B=${bg.b}`);
+
   // Pass 1 — Soft alpha from color distance
   for (let i = 0; i < data.length; i += 4) {
     const r = data[i], g = data[i + 1], b = data[i + 2];
-    const dist = Math.sqrt((r - CHROMA_R) ** 2 + (g - CHROMA_G) ** 2 + (b - CHROMA_B) ** 2);
+    const dist = Math.sqrt((r - bg.r) ** 2 + (g - bg.g) ** 2 + (b - bg.b) ** 2);
 
     if (dist <= TOLERANCE_INNER) {
       data[i] = 0;
@@ -43,14 +76,14 @@ export async function chromaKeyRemove(buffer: Buffer): Promise<Buffer> {
     // else: fully opaque, leave unchanged
   }
 
-  // Pass 2 — Color decontamination (remove magenta spill from semi-transparent pixels)
+  // Pass 2 — Color decontamination (remove background spill from semi-transparent pixels)
   for (let i = 0; i < data.length; i += 4) {
     const alpha = data[i + 3];
     if (alpha > 0 && alpha < 255) {
       const a = alpha / 255;
-      data[i] = Math.round(Math.max(0, Math.min(255, (data[i] - CHROMA_R * (1 - a)) / a)));
-      data[i + 1] = Math.round(Math.max(0, Math.min(255, (data[i + 1] - CHROMA_G * (1 - a)) / a)));
-      data[i + 2] = Math.round(Math.max(0, Math.min(255, (data[i + 2] - CHROMA_B * (1 - a)) / a)));
+      data[i] = Math.round(Math.max(0, Math.min(255, (data[i] - bg.r * (1 - a)) / a)));
+      data[i + 1] = Math.round(Math.max(0, Math.min(255, (data[i + 1] - bg.g * (1 - a)) / a)));
+      data[i + 2] = Math.round(Math.max(0, Math.min(255, (data[i + 2] - bg.b * (1 - a)) / a)));
     }
   }
 

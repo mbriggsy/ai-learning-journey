@@ -86,7 +86,7 @@ export const ASSET_PROMPTS = [
   // --- Tileable Textures (3) ---
   {
     name: 'asphalt-tile',
-    promptSuffix: `dark grey asphalt road surface texture, subtle crack patterns, fine aggregate detail, ${TILE_SUFFIX}`,
+    promptSuffix: `extreme close-up of dark grey asphalt pavement surface only, subtle crack patterns, fine aggregate detail, flat overhead view looking straight down at the ground, texture fill, ${TILE_SUFFIX}`,
     targetWidth: 512,
     targetHeight: 512,
     aspectRatio: '1:1',
@@ -95,7 +95,7 @@ export const ASSET_PROMPTS = [
   },
   {
     name: 'grass-tile',
-    promptSuffix: `lush green grass texture, short mowed lawn, natural variation in green shades, ${TILE_SUFFIX}`,
+    promptSuffix: `extreme close-up of lush green grass surface only, short mowed lawn, natural variation in green shades, flat overhead view looking straight down at the ground, texture fill, ${TILE_SUFFIX}`,
     targetWidth: 256,
     targetHeight: 256,
     aspectRatio: '1:1',

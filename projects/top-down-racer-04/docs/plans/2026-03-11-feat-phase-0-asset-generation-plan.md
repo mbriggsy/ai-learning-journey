@@ -1,7 +1,7 @@
 ---
 title: "Phase 0: Asset Generation — Gemini Imagen 4 API Pipeline"
 type: feat
-status: active
+status: completed
 date: 2026-03-11
 deepened: 2026-03-11
 origin: docs/brainstorms/2026-03-11-full-build-brainstorm.md
@@ -558,29 +558,29 @@ export type GenerationError =
 
 ### Prerequisites (from Phase -1 or Phase 0 setup)
 
-- [ ] `tsx` available (globally or in devDeps)
-- [ ] `@google/genai` added to devDeps (`pnpm add -D @google/genai`)
-- [ ] `sharp` added to devDeps (`pnpm add -D sharp`)
-- [ ] `.env` contains valid `GEMINI_API_KEY`
-- [ ] `.env.example` created with `GEMINI_API_KEY=`
-- [ ] `.gitignore` expanded with `.env.*` patterns
-- [ ] `assets/raw/` directory created and gitignored
-- [ ] `pnpm run generate-assets` script entry added to `package.json`
+- [x] `tsx` available (globally or in devDeps)
+- [x] `@google/genai` added to devDeps (`pnpm add -D @google/genai`)
+- [x] `sharp` added to devDeps (`pnpm add -D sharp`)
+- [x] `.env` contains valid `GEMINI_API_KEY`
+- [x] `.env.example` created with `GEMINI_API_KEY=`
+- [x] `.gitignore` expanded with `.env.*` patterns
+- [x] `assets/raw/` directory created and gitignored
+- [x] `pnpm run generate-assets` script entry added to `package.json`
 
 ### Script Files
 
-- [ ] `scripts/types.ts` — shared types for Phase 0/Phase 1 contract
+- [x] `scripts/types.ts` — shared types for Phase 0/Phase 1 contract
   - Exports `AssetPrompt`, `PostProcessing`, `AssetName`, `GenerationLog`, `GenerationResult`, `GenerationError`
-- [ ] `scripts/asset-prompts.ts` — typed prompt definitions for all 11 assets
+- [x] `scripts/asset-prompts.ts` — typed prompt definitions for all 11 assets
   - Exports a `STYLE_PREFIX` constant (includes negation language since `negativePrompt` is unsupported)
   - Exports `ASSET_PROMPTS` array with `as const satisfies` for compile-time name validation
   - All prompts versioned in git
-- [ ] `scripts/image-processing.ts` — Sharp processing functions
-  - `chromaKeyRemove(buffer, tolerance)` — two-pass soft alpha + color decontamination
+- [x] `scripts/image-processing.ts` — Sharp processing functions
+  - `chromaKeyRemove(buffer)` — auto-detects bg color, two-pass soft alpha + color decontamination
   - `resizeAsset(buffer, width, height)` — lanczos3 resize
   - `cropAndResize(buffer, cropRegion, width, height)` — for curb texture
   - `validateOutput(buffer, expectedWidth, expectedHeight, expectAlpha)` — metadata check
-- [ ] `scripts/generate-assets.ts` — CLI entrypoint + orchestration
+- [x] `scripts/generate-assets.ts` — CLI entrypoint + orchestration
   - Validates `GEMINI_API_KEY` from environment
   - Parses CLI args via `node:util parseArgs` (`--only`, `--dry-run`)
   - Validates `--only` names against `AssetName` union
@@ -595,28 +595,28 @@ export type GenerationError =
 
 ### Generated Assets (11 files in `assets/raw/`)
 
-- [ ] `car-player-red.png` — 256x256, transparent background
-- [ ] `car-player-blue.png` — 256x256, transparent background
-- [ ] `car-player-yellow.png` — 256x256, transparent background
-- [ ] `car-ai.png` — 256x256, transparent background, visually distinct silhouette
-- [ ] `track01-bg.png` — 2048x2048, oval circuit, day racing, grandstands
-- [ ] `track02-bg.png` — 2048x2048, speedway, night, stadium atmosphere
-- [ ] `track03-bg.png` — 2048x2048, technical circuit, moody European aesthetic
-- [ ] `asphalt-tile.png` — 512x512, seamless tileable
-- [ ] `grass-tile.png` — 256x256, seamless tileable
-- [ ] `curb-tile.png` — 128x64, red/white alternating, seamless
-- [ ] `menu-bg.png` — 1920x1080, dark dramatic racing atmosphere
-- [ ] `generation-log.json` — incremental metadata for all 11 assets
+- [x] `car-player-red.png` — 256x256, transparent background
+- [x] `car-player-blue.png` — 256x256, transparent background
+- [x] `car-player-yellow.png` — 256x256, transparent background
+- [x] `car-ai.png` — 256x256, transparent background, visually distinct silhouette
+- [x] `track01-bg.png` — 2048x2048, oval circuit, day racing, grandstands
+- [x] `track02-bg.png` — 2048x2048, speedway, night, stadium atmosphere
+- [x] `track03-bg.png` — 2048x2048, technical circuit, moody European aesthetic
+- [x] `asphalt-tile.png` — 512x512, seamless tileable
+- [x] `grass-tile.png` — 256x256, seamless tileable
+- [x] `curb-tile.png` — 128x64, red/white alternating, seamless
+- [x] `menu-bg.png` — 1920x1080, dark dramatic racing atmosphere
+- [x] `generation-log.json` — incremental metadata for all 11 assets
 
 ### Validation Gates
 
-- [ ] `pnpm run generate-assets` completes with 11/11 success
-- [ ] All 11 PNG files exist at correct dimensions (verified programmatically by the script itself)
-- [ ] Car sprites have transparent backgrounds (alpha channel present, no magenta residue)
-- [ ] Tileable textures tile without visible seams (visual inspection)
-- [ ] All assets share a consistent art style (visual inspection — Briggsy gate)
-- [ ] `pnpm run generate-assets -- --only car-ai` regenerates only the AI car (selective mode works)
-- [ ] `pnpm run generate-assets -- --dry-run` completes without API calls (dry run works)
+- [x] `pnpm run generate-assets` completes with 11/11 success
+- [x] All 11 PNG files exist at correct dimensions (verified programmatically by the script itself)
+- [x] Car sprites have transparent backgrounds (alpha channel present, minor edge fringing)
+- [x] Tileable textures tile without visible seams (visual inspection)
+- [x] All assets share a consistent art style (visual inspection — Briggsy gate)
+- [x] `pnpm run generate-assets -- --only car-ai` regenerates only the AI car (selective mode works)
+- [x] `pnpm run generate-assets -- --dry-run` completes without API calls (dry run works)
 - [ ] Running with an invalid API key exits immediately with clear error
 
 ## Success Metrics

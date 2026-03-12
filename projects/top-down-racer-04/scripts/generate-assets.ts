@@ -141,8 +141,7 @@ async function generateOne(
   const config = {
     numberOfImages: 1,
     outputMimeType: 'image/png',
-    safetyFilterLevel: SafetyFilterLevel.BLOCK_ONLY_HIGH,
-    personGeneration: PersonGeneration.DONT_ALLOW,
+    safetyFilterLevel: SafetyFilterLevel.BLOCK_LOW_AND_ABOVE,
     aspectRatio: asset.aspectRatio,
     ...(asset.sizeTier === '2K' ? { imageSize: '2K' } : {}),
   };

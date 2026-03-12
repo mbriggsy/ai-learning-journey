@@ -4,6 +4,14 @@
 
 ---
 
+> The industry is converging on a vision that would have sounded absurd 18 months ago: **a single general-purpose agent runtime that loads different skill libraries on demand.** Instead of building a coding agent, a research agent, a data analysis agent, and a customer service agent as separate products, you build one agent and give it different skills for different jobs.
+>
+> Skills are the mechanism that makes this possible. They're the "apps" in this new "operating system" — modular, installable, shareable, and portable across 30+ platforms. The agent reads a directory, parses a Markdown file, executes bundled scripts, and adapts its behavior based on whatever skills are available.
+>
+> This guide is the complete manual for that new operating system.
+
+---
+
 ## Executive Summary
 
 **What are Skills?** Skills are folders containing instructions, scripts, and resources that teach Claude (and other AI agents) how to perform specialized tasks consistently and reliably. Think of them as "installable expertise" — packaged knowledge that an AI agent can load on-demand. In Claude Code, skills also serve as slash commands: the skill's `name` becomes `/name`.
@@ -1009,11 +1017,11 @@ The sweet spot for most organizations: let Anthropic handle the capability uplif
 
 ### The Endgame
 
-The industry is converging on a vision that would have sounded absurd 18 months ago: **a single general-purpose agent runtime that loads different skill libraries on demand.** Instead of building a coding agent, a research agent, a data analysis agent, and a customer service agent as separate products, you build one agent and give it different skills for different jobs.
+We opened this guide with the vision: one agent runtime, many skill libraries. That's not hype — it's the architectural direction every major platform is building toward. But we're not fully there yet.
 
-Skills are the mechanism that makes this possible. They're the "apps" in this new "operating system" metaphor — modular, installable, shareable, and portable. The agent runtime reads directories, parses Markdown, executes scripts, and adapts its behavior based on whatever skills are available.
+Platform-specific extensions (Claude Code's `context: fork`, Codex's `agents/openai.yaml`) mean not every skill is truly identical across platforms. The core SKILL.md format is universal, but the advanced features — subagent execution, dynamic injection, lifecycle hooks — are still Claude Code advantages that others haven't matched. That gap is narrowing with every release.
 
-We're not fully there yet. Platform-specific extensions (Claude Code's `context: fork`, Codex's `agents/openai.yaml`) mean not every skill is truly identical across platforms. But the core format is universal, the direction is clear, and the ecosystem is growing fast enough that the remaining gaps are narrowing with every release.
+What's clear right now: the foundational infrastructure is in place, the standard is adopted, and the ecosystem is growing faster than anyone predicted. The organizations that start packaging their institutional knowledge into skills today will have a compounding advantage over those that wait.
 
 The tools are here. The standard is here. The question is what you build with them.
 

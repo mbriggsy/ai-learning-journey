@@ -14,4 +14,6 @@ export class SoundManager {
   set masterVolume(_v: number) { /* no-op */ }
   get sfxVolume(): number { return 0.5; }
   set sfxVolume(_v: number) { /* no-op */ }
+  get muted(): boolean { return false; }
+  toggleMute(): void {}
 }

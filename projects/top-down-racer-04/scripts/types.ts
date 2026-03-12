@@ -55,3 +55,17 @@ export interface GenerationLog {
   assets: GenerationLogEntry[];
   summary: { total: number; succeeded: number; failed: number };
 }
+
+// --- Spritesheet Types (Phase 1 — Asset Processing) ---
+
+export interface SpritesheetFrame {
+  frame: { x: number; y: number; w: number; h: number };
+  trimmed: boolean;
+  sourceSize: { w: number; h: number };
+  spriteSourceSize: { x: number; y: number; w: number; h: number };
+}
+
+export interface SpritesheetDescriptor {
+  frames: Record<string, SpritesheetFrame>;
+  meta: { image: string; format: string; size: { w: number; h: number }; scale: string };
+}

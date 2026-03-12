@@ -1,4 +1,5 @@
 import sharp from 'sharp';
+import type { SpritesheetDescriptor, SpritesheetFrame } from './types';
 
 /** Maximum input image size to prevent memory issues. */
 const MAX_INPUT_PIXELS = 4096 * 4096;
@@ -116,6 +117,94 @@ export async function cropAndResize(
     .resize(width, height, { kernel: sharp.kernel.lanczos3 })
     .png({ compressionLevel: 9, adaptiveFiltering: true })
     .toBuffer();
+}
+
+/** Optimize a PNG: max compression, strip metadata (Sharp default). */
+export async function optimizePng(inputPath: string, outputPath: string): Promise<void> {
+  await sharp(inputPath, { limitInputPixels: MAX_INPUT_PIXELS })
+    .png({ compressionLevel: 9, adaptiveFiltering: true })
+    .toFile(outputPath);
+}
+
+/**
+ * Build a sprite atlas from input images arranged in a grid.
+ * Each cell is `cellWidth × cellHeight`. Padding is added per edge (between and around sprites).
+ */
+export async function buildAtlas(
+  inputPaths: string[],
+  outputPath: string,
+  cols: number,
+  rows: number,
+  cellWidth: number,
+  cellHeight: number,
+  padding: number = 2,
+): Promise<{ width: number; height: number }> {
+  // Each sprite gets `padding` px on every edge → gap between sprites is 2*padding
+  const atlasWidth = cols * (cellWidth + 2 * padding);
+  const atlasHeight = rows * (cellHeight + 2 * padding);
+
+  const composites = inputPaths.map((inputPath, i) => {
+    const col = i % cols;
+    const row = Math.floor(i / cols);
+    return {
+      input: inputPath,
+      top: padding + row * (cellHeight + 2 * padding),
+      left: padding + col * (cellWidth + 2 * padding),
+    };
+  });
+
+  await sharp({
+    create: {
+      width: atlasWidth,
+      height: atlasHeight,
+      channels: 4 as const,
+      background: { r: 0, g: 0, b: 0, alpha: 0 },
+    },
+  })
+    .composite(composites)
+    .png({ compressionLevel: 9, adaptiveFiltering: true })
+    .toFile(outputPath);
+
+  return { width: atlasWidth, height: atlasHeight };
+}
+
+/** Generate a PixiJS Spritesheet JSON descriptor for a grid atlas. */
+export function generateSpritesheetJson(
+  frameNames: string[],
+  cols: number,
+  cellWidth: number,
+  cellHeight: number,
+  padding: number,
+  atlasWidth: number,
+  atlasHeight: number,
+  atlasImageFilename: string,
+): SpritesheetDescriptor {
+  const frames: Record<string, SpritesheetFrame> = {};
+  for (let i = 0; i < frameNames.length; i++) {
+    const col = i % cols;
+    const row = Math.floor(i / cols);
+    frames[frameNames[i]] = {
+      frame: {
+        x: padding + col * (cellWidth + 2 * padding),
+        y: padding + row * (cellHeight + 2 * padding),
+        w: cellWidth,
+        h: cellHeight,
+      },
+      trimmed: false,
+      sourceSize: { w: cellWidth, h: cellHeight },
+      spriteSourceSize: { x: 0, y: 0, w: cellWidth, h: cellHeight },
+    };
+  }
+
+  return {
+    frames,
+    meta: {
+      image: atlasImageFilename,
+      format: 'RGBA8888',
+      size: { w: atlasWidth, h: atlasHeight },
+      scale: '1',
+    },
+  };
 }
 
 /** Validate output dimensions and alpha channel against expectations. */

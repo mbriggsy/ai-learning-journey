@@ -14,7 +14,9 @@
     "typecheck": "tsc --noEmit",
     "bridge": "npx tsx src/ai/run-bridge.ts",
     "setup:ort": "node scripts/copy-ort-wasm.cjs",
-    "generate-assets": "tsx --env-file=.env scripts/generate-assets.ts"
+    "generate-assets": "tsx --env-file=.env scripts/generate-assets.ts",
+    "process-assets": "tsx scripts/process-assets.ts",
+    "process-assets:check": "tsx scripts/process-assets.ts --check"
   },
   "pnpm": {
     "onlyBuiltDependencies": ["sharp"]

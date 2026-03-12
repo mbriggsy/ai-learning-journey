@@ -8,6 +8,8 @@ export interface TrackInfo {
   name: string;
   description: string;
   controlPoints: TrackControlPoint[];
+  /** Number of checkpoint gates for this track. Passed to buildTrack(). */
+  checkpointCount: number;
   /** Par times in ticks (gold/silver/bronze). Tuned after playtesting. */
   parTimes: { gold: number; silver: number; bronze: number };
   /** Which side gets a visible shoulder (sand strip between road edge and wall). Always inner only. */
@@ -20,20 +22,23 @@ export const TRACKS: TrackInfo[] = [
     name: 'Circuit',
     description: 'Beginner — smooth oval, wide racing',
     controlPoints: TRACK_01_CONTROL_POINTS,
+    checkpointCount: 30,
     parTimes: { gold: 2400, silver: 3000, bronze: 3600 },
   },
   {
     id: 'track-02',
     name: 'Speedway',
-    description: 'Fast — sweeping curves, high speed',
+    description: 'Fast — high-speed sweepers, genuine braking zones',
     controlPoints: TRACK_02_CONTROL_POINTS,
-    parTimes: { gold: 2100, silver: 2700, bronze: 3300 },
+    checkpointCount: 40,
+    parTimes: { gold: 0, silver: 0, bronze: 0 },
   },
   {
     id: 'track-03',
     name: 'Gauntlet',
-    description: 'Technical — tight hairpins, precision',
+    description: 'Technical — mixed-radius corners, no mercy',
     controlPoints: TRACK_03_CONTROL_POINTS,
-    parTimes: { gold: 2700, silver: 3300, bronze: 4200 },
+    checkpointCount: 45,
+    parTimes: { gold: 0, silver: 0, bronze: 0 },
   },
 ];

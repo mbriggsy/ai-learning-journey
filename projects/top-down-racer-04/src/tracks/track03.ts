@@ -33,10 +33,10 @@ const HAIRPIN_WIDTH = 16;    // hairpin/chicane half-width
 
 export const TRACK_03_CONTROL_POINTS: TrackControlPoint[] = [
   // ═══════════════════════════════════════════════════════════════
-  // 1. START/FINISH STRAIGHT (heading east) — ~500 units
+  // 1. START/FINISH STRAIGHT (heading east) — ~200 units
+  //    Closure point at x=0, far from chicane's x-range
   // ═══════════════════════════════════════════════════════════════
-  { position: { x: -300, y: -100 }, width: STRAIGHT_WIDTH },
-  { position: { x: -100, y: -100 }, width: STRAIGHT_WIDTH },
+  { position: { x:    0, y: -100 }, width: STRAIGHT_WIDTH },
   { position: { x:  100, y: -100 }, width: STRAIGHT_WIDTH },
   { position: { x:  200, y: -100 }, width: STRAIGHT_WIDTH },
 
@@ -101,50 +101,54 @@ export const TRACK_03_CONTROL_POINTS: TrackControlPoint[] = [
   { position: { x: -383, y: -280 }, width: MEDIUM_WIDTH },    // post-chicane
 
   // ═══════════════════════════════════════════════════════════════
-  // 8. CORNER 5 — TIGHT HAIRPIN (left ~130°, south → south-east)
-  //    Radius ~90, heavy braking, narrow. CPs spaced ~60u apart.
-  //    Exits south-east to avoid running parallel to approach path.
+  // 8. CORNER 5 — TIGHT HAIRPIN (approach swings WEST, then SOUTH)
+  //    Wide western swing prevents approach/exit corridor overlap.
+  //    Radius ~90, heavy braking, narrow throughout.
   // ═══════════════════════════════════════════════════════════════
-  { position: { x: -385, y: -360 }, width: HAIRPIN_WIDTH },   // approach
-  { position: { x: -400, y: -430 }, width: HAIRPIN_WIDTH },   // entry
-  { position: { x: -430, y: -500 }, width: HAIRPIN_WIDTH },   // turning left
-  { position: { x: -480, y: -550 }, width: HAIRPIN_WIDTH },   // mid turn
-  { position: { x: -540, y: -570 }, width: HAIRPIN_WIDTH },   // apex
-  { position: { x: -590, y: -555 }, width: HAIRPIN_WIDTH },   // past apex
-  { position: { x: -620, y: -515 }, width: HAIRPIN_WIDTH },   // unwinding
+  { position: { x: -440, y: -330 }, width: HAIRPIN_WIDTH },   // turning west
+  { position: { x: -520, y: -350 }, width: HAIRPIN_WIDTH },   // heading west
+  { position: { x: -600, y: -370 }, width: HAIRPIN_WIDTH },   // continuing west
+  { position: { x: -670, y: -410 }, width: HAIRPIN_WIDTH },   // turning south
+  { position: { x: -710, y: -480 }, width: HAIRPIN_WIDTH },   // heading south
+  { position: { x: -720, y: -560 }, width: HAIRPIN_WIDTH },   // deep south
+  { position: { x: -700, y: -640 }, width: HAIRPIN_WIDTH },   // hairpin — turning east
+  { position: { x: -650, y: -690 }, width: HAIRPIN_WIDTH },   // apex
+  { position: { x: -590, y: -700 }, width: HAIRPIN_WIDTH },   // past apex, heading east
 
   // ═══════════════════════════════════════════════════════════════
-  // 9. CONNECTING STRAIGHT (south-east → east, heading toward off-camber)
-  //    Runs at y≈-500, well below hairpin approach (y≈-360)
+  // 9. CONNECTING STRAIGHT (heading east at y≈-670, well south of approach)
   // ═══════════════════════════════════════════════════════════════
-  { position: { x: -600, y: -470 }, width: STRAIGHT_WIDTH },
-  { position: { x: -540, y: -440 }, width: STRAIGHT_WIDTH },
-  { position: { x: -440, y: -430 }, width: STRAIGHT_WIDTH },
+  { position: { x: -520, y: -690 }, width: STRAIGHT_WIDTH },
+  { position: { x: -430, y: -660 }, width: STRAIGHT_WIDTH },
+  { position: { x: -350, y: -630 }, width: STRAIGHT_WIDTH },
 
   // ═══════════════════════════════════════════════════════════════
-  // 10. CORNER 6 — OFF-CAMBER SWEEPER (left, east → north)
-  //     Long radius (~170) but narrow width — punishes overconfidence
+  // 10. CORNER 6 — OFF-CAMBER SWEEPER (east → north)
+  //     Long radius, narrow — extended sweep from new hairpin exit
   // ═══════════════════════════════════════════════════════════════
-  { position: { x: -330, y: -430 }, width: MEDIUM_WIDTH },
-  { position: { x: -220, y: -435 }, width: HAIRPIN_WIDTH },
-  { position: { x: -120, y: -430 }, width: HAIRPIN_WIDTH },
-  { position: { x:  -30, y: -405 }, width: HAIRPIN_WIDTH },
-  { position: { x:   40, y: -365 }, width: MEDIUM_WIDTH },
+  { position: { x: -260, y: -600 }, width: MEDIUM_WIDTH },
+  { position: { x: -170, y: -560 }, width: HAIRPIN_WIDTH },
+  { position: { x:  -80, y: -510 }, width: HAIRPIN_WIDTH },
+  { position: { x:    0, y: -450 }, width: HAIRPIN_WIDTH },
+  { position: { x:   50, y: -380 }, width: MEDIUM_WIDTH },
 
   // ═══════════════════════════════════════════════════════════════
   // 11. CORNER 7 — FAST ESSES (alternating left-right heading north-west)
   //     Medium width, flowing rhythm section
   // ═══════════════════════════════════════════════════════════════
-  { position: { x:   80, y: -310 }, width: MEDIUM_WIDTH },    // entry
-  { position: { x:   80, y: -260 }, width: MEDIUM_WIDTH },    // ess 1 left
-  { position: { x:   40, y: -220 }, width: MEDIUM_WIDTH },    // transition
-  { position: { x:  -20, y: -200 }, width: MEDIUM_WIDTH },    // ess 1 right
-  { position: { x:  -90, y: -175 }, width: MEDIUM_WIDTH },    // ess 2 left
-  { position: { x: -160, y: -155 }, width: MEDIUM_WIDTH },    // exit
+  { position: { x:   60, y: -355 }, width: MEDIUM_WIDTH },    // transition from off-camber
+  { position: { x:   55, y: -330 }, width: MEDIUM_WIDTH },    // ess 1 left
+  { position: { x:   10, y: -295 }, width: MEDIUM_WIDTH },    // transition
+  { position: { x:  -15, y: -280 }, width: MEDIUM_WIDTH },    // ess 1 right
+  { position: { x:  -30, y: -260 }, width: HAIRPIN_WIDTH },   // exit heading NNW
 
   // ═══════════════════════════════════════════════════════════════
-  // 12. RETURN STRAIGHT to start/finish
+  // 12. RETURN ARC to start/finish
+  //     Continues NNW then curves WNW — smooth arc, narrow width
   // ═══════════════════════════════════════════════════════════════
-  { position: { x: -220, y: -130 }, width: STRAIGHT_WIDTH },
-  { position: { x: -270, y: -115 }, width: STRAIGHT_WIDTH },
+  { position: { x:  -45, y: -235 }, width: HAIRPIN_WIDTH },
+  { position: { x:  -55, y: -210 }, width: HAIRPIN_WIDTH },
+  { position: { x:  -55, y: -185 }, width: HAIRPIN_WIDTH },
+  { position: { x:  -45, y: -160 }, width: MEDIUM_WIDTH },
+  { position: { x:  -25, y: -135 }, width: MEDIUM_WIDTH },
 ];

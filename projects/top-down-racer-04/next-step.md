@@ -1,9 +1,9 @@
 # Next Step
 
 ## Last Completed
-Phase 1 COMPLETE — all tests + final gate passed — 2026-03-12 ~3:35 PM EDT
-Branch: `feat/phase-1-asset-pipeline-track-redesign`
+Phase 2 branch created — 2026-03-12 ~4:00 PM EDT
+Branch: `feat/phase-2-core-visual-upgrade` (from main)
 
 ## Next
-Phase 1 visual inspection gate (Briggsy): track previews + atlas PNG.
-Then merge to main and start Phase 2 planning.
+Execute Phase 2 plan: `docs/plans/2026-03-11-feat-phase-2-core-visual-upgrade-plan.md`
+Start with Step 0 (texture fill spike test), then Steps 1-8 sequentially.

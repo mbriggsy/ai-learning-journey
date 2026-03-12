@@ -1,6 +1,9 @@
 node_modules/
 dist/
 .env
+.env.*
+.env.local
+.env.*.local
 *.log
 .DS_Store
 __pycache__/
@@ -11,3 +14,4 @@ python/models/*.pkl
 python/logs/*/
 temp/
 *.lnk
+assets/raw/

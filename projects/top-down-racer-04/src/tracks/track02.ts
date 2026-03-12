@@ -1,74 +1,93 @@
 /**
- * Track 02 — Speedway
+ * Track 02 — Speedway (v04 Redesign)
  *
- * A fast, flowing circuit inspired by Monza — distinctly NOT an oval.
- * The layout is dramatically asymmetric: a massive main straight across
- * the top, a tight technical section dropping south on the right that
- * stays inboard (creating a concave right side), and a huge Parabolica
- * sweeping back north on the far left.
+ * A high-speed modern circuit — Bahrain meets Silverstone.
+ * Long straights demanding throttle discipline, medium-radius sweepers
+ * at speed, genuine braking zones where the AI must choose between
+ * maintaining speed and crashing.
  *
- * Sections (clockwise):
- *   1. Main straight — 700 units, flat-out, top of layout
- *   2. Turn 1 — hard braking, sharp right dropping south
- *   3. Curva Grande — medium-speed right heading south
- *   4. Lesmos — pair of rights angling south-west, pulling inward
- *   5. Ascari chicane — fast left-right flick
- *   6. Back straight — heading west
- *   7. Parabolica — huge sweeping right back north to start
+ * Layout (clockwise):
+ *   1. Main straight (east, ≥800 units) — flat-out, the defining feature
+ *   2. Turn 1 — hard braking into medium-right
+ *   3. Flowing sweeper — large-radius right heading south-west
+ *   4. Short straight — connecting section
+ *   5. Double-apex S — two distinct turn-in points
+ *   6. Back straight (~500 units heading west)
+ *   7. Braking zone into final corner
+ *   8. Final sweeper — wide arc back north to start/finish
  *
  * Character: HIGH SPEED — long straights, big braking zones, commitment corners.
- * Shape: clearly asymmetric, concave on the right — nothing like an oval.
+ * ADR-12: no two corners share the same geometric radius.
  */
 
 import type { TrackControlPoint } from '../engine/types';
 
+const STRAIGHT_WIDTH = 32;   // straight half-width — wide, high-speed
+const CORNER_WIDTH = 26;     // standard corner half-width
+const WIDE_CORNER = 28;      // wider corners (sweepers)
+
 export const TRACK_02_CONTROL_POINTS: TrackControlPoint[] = [
   // ═══════════════════════════════════════════════════════════════
-  // 1. MAIN STRAIGHT (heading east, top of layout) — ~700 units
-  //    Flat-out, pedal down, the defining feature of the track
+  // 1. MAIN STRAIGHT (heading east, top of layout) — ~850 units
+  //    The defining feature: flat-out, pedal down
   // ═══════════════════════════════════════════════════════════════
-  { position: { x: -500, y:  350 }, width: 30 },   // start/finish
-  { position: { x: -150, y:  350 }, width: 30 },   // mid straight
-  { position: { x:  200, y:  350 }, width: 30 },   // end of straight
+  { position: { x: -380, y:  350 }, width: STRAIGHT_WIDTH },  // start/finish
+  { position: { x:   20, y:  350 }, width: STRAIGHT_WIDTH },  // mid straight
+  { position: { x:  420, y:  350 }, width: STRAIGHT_WIDTH },  // approach Turn 1
 
   // ═══════════════════════════════════════════════════════════════
-  // 2. TURN 1 — hard braking, sharp right dropping south
-  //    Stays inboard — does NOT bulge right of the main straight
+  // 2. TURN 1 — hard braking, medium-tight right (~110 unit radius)
+  //    The big stop after the long straight
   // ═══════════════════════════════════════════════════════════════
-  { position: { x:  280, y:  260 }, width: 24 },   // entry turn-in
-  { position: { x:  300, y:  120 }, width: 22 },   // apex — tight!
+  { position: { x:  500, y:  310 }, width: CORNER_WIDTH },    // turn-in
+  { position: { x:  550, y:  240 }, width: CORNER_WIDTH },    // mid
+  { position: { x:  570, y:  160 }, width: CORNER_WIDTH },    // apex
+  { position: { x:  550, y:   80 }, width: CORNER_WIDTH },    // exit
 
   // ═══════════════════════════════════════════════════════════════
-  // 3. CURVA GRANDE — opens up heading south
+  // 3. FLOWING SWEEPER — large-radius right heading south-west (~200 unit radius)
+  //    Commitment corner: carry speed or lose the lap
   // ═══════════════════════════════════════════════════════════════
-  { position: { x:  260, y:  -40 }, width: 26 },   // exit
+  { position: { x:  480, y:  -10 }, width: WIDE_CORNER },     // entry
+  { position: { x:  380, y:  -70 }, width: WIDE_CORNER },     // mid
+  { position: { x:  250, y: -110 }, width: WIDE_CORNER },     // exit
 
   // ═══════════════════════════════════════════════════════════════
-  // 4. LESMOS — pair of rights angling south-west, pulling inward
-  //    Creates the concave right side that defines the track shape
+  // 4. SHORT STRAIGHT — connecting section heading south-west
   // ═══════════════════════════════════════════════════════════════
-  { position: { x:  160, y: -160 }, width: 24 },   // Lesmo 1
-  { position: { x:   30, y: -250 }, width: 24 },   // Lesmo 2
+  { position: { x:  100, y: -150 }, width: STRAIGHT_WIDTH },  // short straight
 
   // ═══════════════════════════════════════════════════════════════
-  // 5. ASCARI KINK — subtle direction change (no sharp chicane)
-  //    Chicane removed: any jog > ~15 units causes wall self-crossing
-  //    at this track width. Instead, a gentle kink adds character.
+  // 5. DOUBLE-APEX S — two turn-in points (~140 and ~80 unit radii)
+  //    Left then right, tests adaptability
   // ═══════════════════════════════════════════════════════════════
-  { position: { x: -130, y: -305 }, width: 26 },   // approach
-  { position: { x: -300, y: -315 }, width: 26 },   // exit
+  { position: { x:  -50, y: -180 }, width: CORNER_WIDTH },    // approach
+  { position: { x: -140, y: -240 }, width: CORNER_WIDTH },    // first apex (left)
+  { position: { x: -210, y: -320 }, width: CORNER_WIDTH },    // transition
+  { position: { x: -280, y: -400 }, width: CORNER_WIDTH },    // second apex (right)
+  { position: { x: -370, y: -450 }, width: CORNER_WIDTH },    // exit
 
   // ═══════════════════════════════════════════════════════════════
-  // 6. BACK STRAIGHT — heading west
+  // 6. BACK STRAIGHT (~500 units heading west)
   // ═══════════════════════════════════════════════════════════════
-  { position: { x: -430, y: -340 }, width: 28 },   // back straight
+  { position: { x: -500, y: -470 }, width: STRAIGHT_WIDTH },  // entry
+  { position: { x: -660, y: -470 }, width: STRAIGHT_WIDTH },  // end
 
   // ═══════════════════════════════════════════════════════════════
-  // 7. PARABOLICA — huge sweeping right, back north to start
-  //    The money turn: entry speed defines lap time, massive radius
+  // 7. BRAKING ZONE into final corner — medium right (~160 unit radius)
+  //    Different radius from Turn 1 and the sweeper
   // ═══════════════════════════════════════════════════════════════
-  { position: { x: -530, y: -240 }, width: 26 },   // entry
-  { position: { x: -590, y:  -60 }, width: 26 },   // mid — big radius
-  { position: { x: -590, y:  120 }, width: 26 },   // still sweeping
-  { position: { x: -550, y:  280 }, width: 28 },   // exit — opens up
+  { position: { x: -740, y: -440 }, width: CORNER_WIDTH },    // braking
+  { position: { x: -790, y: -380 }, width: WIDE_CORNER },     // turn-in
+  { position: { x: -810, y: -300 }, width: WIDE_CORNER },     // apex
+
+  // ═══════════════════════════════════════════════════════════════
+  // 8. FINAL SWEEPER — wide arc back north to start/finish (~250 unit radius)
+  //    The money corner: get this right and the lap time drops
+  // ═══════════════════════════════════════════════════════════════
+  { position: { x: -790, y: -190 }, width: WIDE_CORNER },     // sweeping north
+  { position: { x: -740, y:  -80 }, width: WIDE_CORNER },     // mid sweep
+  { position: { x: -650, y:   40 }, width: WIDE_CORNER },     // still sweeping
+  { position: { x: -530, y:  160 }, width: STRAIGHT_WIDTH },  // opening up
+  { position: { x: -450, y:  280 }, width: STRAIGHT_WIDTH },  // approach start/finish
 ];

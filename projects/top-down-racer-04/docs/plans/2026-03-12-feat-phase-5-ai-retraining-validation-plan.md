@@ -371,13 +371,13 @@ python -m training.export_onnx \
 ```
 
 **Verification checklist:**
-- [ ] `public/ai/model.onnx` exists
-- [ ] File size <=50KB (v02 was 23.7KB — expect similar or slightly larger)
-- [ ] `public/ai/vecnorm_stats.json` exists and contains `obs_mean`, `obs_var`, `clip_obs`, `epsilon`
-- [ ] Dummy inference passes (export script runs automatic verification)
+- [x] `public/ai/model.onnx` exists (23.7 KB)
+- [x] File size <=50KB (v02 was 23.7KB — expect similar or slightly larger)
+- [x] `public/ai/vecnorm_stats.json` exists and contains `obs_mean`, `obs_var`, `clip_obs`, `epsilon`
+- [x] Dummy inference passes (export script runs automatic verification)
 - [ ] Run 100 random-observation verifications (not just zeros) — compare ONNX output against PyTorch output, assert `atol=1e-5`
 - [ ] Verify output is NOT constant across varied inputs (semantic check — catches a model that always returns [0, 0.5, 0])
-- [ ] `dynamo=False` used in export (v02 code already has this — still works as legacy TorchScript path in PyTorch 2.9+ where `dynamo=True` became the default)
+- [x] `dynamo=False` used in export (v02 code already has this — still works as legacy TorchScript path in PyTorch 2.9+ where `dynamo=True` became the default)
 
 **If model exceeds 50KB:** Investigate whether the network architecture grew. The v02 MLP was small (2 hidden layers, 64 units each). If the same architecture exceeds 50KB at 2M steps, consider exporting from an earlier checkpoint where performance was equivalent.
 
@@ -427,11 +427,11 @@ parTimes.bronze = Math.round(aiP10LapTimeSeconds * 60 * 1.6)
 Verify the exported model loads and runs correctly in the browser context.
 
 **Tasks:**
-- [ ] `BrowserAIRunner.load()` successfully loads `/ai/model.onnx`
-- [ ] `BrowserAIRunner.load()` successfully loads `/ai/vecnorm_stats.json`
-- [ ] Single inference call completes in <16ms (one 60fps frame)
-- [ ] Output is clamped [steer, throttle, brake] tuple
-- [ ] WASM tensors are properly disposed (input AND output — verify `inputTensor.dispose()` in try/finally)
+- [x] `BrowserAIRunner.load()` successfully loads `/ai/model.onnx`
+- [x] `BrowserAIRunner.load()` successfully loads `/ai/vecnorm_stats.json`
+- [x] Single inference call completes in <16ms (one 60fps frame)
+- [x] Output is clamped [steer, throttle, brake] tuple
+- [x] WASM tensors are properly disposed (input AND output — verify `inputTensor.dispose()` in try/finally)
 - [ ] `pnpm run dev` → AI car drives Track 3 competently: completes 3 consecutive laps without wall-sticking, circular driving, or visual glitches. ATC confirms visual quality.
 - [ ] Smoke test on Track 1 and Track 2: AI drives (may be erratic due to VecNormalize cross-track mismatch — document behavior, no hard gate)
 

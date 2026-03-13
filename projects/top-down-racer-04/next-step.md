@@ -1,9 +1,8 @@
 # Next Step
 
 ## Last Completed
-Phase 1 COMPLETE — all tests + final gate passed — 2026-03-12 ~3:35 PM EDT
-Branch: `feat/phase-1-asset-pipeline-track-redesign`
+Phase 2 visual verification + bug fixes — 2026-03-12 ~8:30 PM EDT
+Branch: `feat/phase-2-core-visual-upgrade` pushed, PR ready to merge (390/390 tests)
 
 ## Next
-Phase 1 visual inspection gate (Briggsy): track previews + atlas PNG.
-Then merge to main and start Phase 2 planning.
+Merge Phase 2 PR into main. Then start Phase 3 planning.

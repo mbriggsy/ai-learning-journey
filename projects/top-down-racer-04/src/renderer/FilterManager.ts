@@ -18,7 +18,7 @@ import { BloomFilter } from 'pixi-filters/bloom';
 import { DropShadowFilter } from 'pixi-filters/drop-shadow';
 import { GlowFilter } from 'pixi-filters/glow';
 import { MotionBlurFilter } from 'pixi-filters/motion-blur';
-import type { Container, Application } from 'pixi.js';
+import type { Container } from 'pixi.js';
 
 // ── Filter Configuration ──
 const BLOOM_STRENGTH = 3;
@@ -75,7 +75,6 @@ export class FilterManager {
     worldContainer: Container,
     carLayer: Container,
     aiCarContainer: Container | null,
-    app: Application,
   ): void {
     worldContainer.filters = [this.bloom, this.motionBlur];
     carLayer.filters = [this.shadow];
@@ -86,8 +85,8 @@ export class FilterManager {
       this.glow.enabled = false;
     }
 
-    // Eliminate per-frame bounds traversal across entire worldContainer subtree
-    worldContainer.filterArea = app.screen;
+    // NOTE: filterArea optimization deferred — app.screen interacts badly with
+    // camera Y-flip (negative scale). Let PixiJS compute bounds automatically.
   }
 
   /**
@@ -103,7 +102,7 @@ export class FilterManager {
     if (aiCarContainer) {
       aiCarContainer.filters = [];
     }
-    worldContainer.filterArea = undefined;
+    // filterArea not set — no cleanup needed
   }
 
   /**

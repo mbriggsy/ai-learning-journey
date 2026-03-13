@@ -237,7 +237,6 @@ export class ScreenManager {
         this.worldContainer,
         this.carLayer,
         this.worldRenderer.getAiCarContainer(),
-        this.app,
       );
 
       this.lastBestLapTicks = 0;

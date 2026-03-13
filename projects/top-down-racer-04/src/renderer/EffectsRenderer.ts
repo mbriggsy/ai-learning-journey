@@ -133,14 +133,17 @@ export class EffectsRenderer {
       );
       // D6 pattern: counteract camera Y-flip
       this.skidSprite.scale.y = -1;
-      this.skidSprite.blendMode = 'multiply';
+      // Normal blend — multiply causes artifacts with transparent RenderTextures
       // Add to effectsLayer at bottom (behind particles)
       this.effectsLayer.addChildAt(this.skidSprite, 0);
 
-      // Create fade rect for gradual skid mark fade
+      // Fade rect: semi-transparent background color overlays marks to fade them
+      // Uses the track background color (dark) at low alpha to gradually erase marks
       this.skidFadeRect = new Graphics()
         .rect(0, 0, texW, texH)
-        .fill({ color: 0xffffff, alpha: SKID_FADE_ALPHA });
+        .fill({ color: 0x000000, alpha: 0 });
+      // Fade approach: clear the texture with clearColor to erase gradually
+      // For now, marks persist until race reset (simpler, no fade artifacts)
     }
 
     this.trackInitialized = true;
@@ -205,14 +208,8 @@ export class EffectsRenderer {
   }
 
   private fadeSkidMarks(): void {
-    // Only fade when we have marks — skip wasted RT bind on non-skidding frames
-    if (!this.skidTextureHasMarks || !this.skidTexture || !this.skidFadeRect) return;
-
-    this.renderer.render({
-      container: this.skidFadeRect,
-      target: this.skidTexture,
-      clear: false,
-    });
+    // Fade disabled — marks persist until race reset. Avoids blend mode artifacts
+    // with transparent RenderTextures. Can revisit with alpha-reduction approach later.
   }
 
   private clearSkidTexture(): void {

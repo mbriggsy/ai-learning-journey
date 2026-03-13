@@ -42,9 +42,7 @@ describe('FilterManager', () => {
     it('attaches bloom + motionBlur to worldContainer', () => {
       const world = makeContainer();
       const car = makeContainer();
-      const app = { screen: { width: 1920, height: 1080 } } as any;
-
-      fm.attach(world, car, null, app);
+      fm.attach(world, car, null);
 
       expect(world.filters).toHaveLength(2);
       expect(world.filters[0]).toBe(mockBloomInstance);
@@ -54,9 +52,7 @@ describe('FilterManager', () => {
     it('attaches shadow to carLayer', () => {
       const world = makeContainer();
       const car = makeContainer();
-      const app = { screen: {} } as any;
-
-      fm.attach(world, car, null, app);
+      fm.attach(world, car, null);
       expect(car.filters).toHaveLength(1);
       expect(car.filters[0]).toBe(mockShadowInstance);
     });
@@ -65,9 +61,7 @@ describe('FilterManager', () => {
       const world = makeContainer();
       const car = makeContainer();
       const ai = makeContainer();
-      const app = { screen: {} } as any;
-
-      fm.attach(world, car, ai, app);
+      fm.attach(world, car, ai);
       expect(ai.filters).toHaveLength(1);
       expect(ai.filters[0]).toBe(mockGlowInstance);
     });
@@ -75,20 +69,15 @@ describe('FilterManager', () => {
     it('disables glow when aiCarContainer is null', () => {
       const world = makeContainer();
       const car = makeContainer();
-      const app = { screen: {} } as any;
-
-      fm.attach(world, car, null, app);
+      fm.attach(world, car, null);
       expect(mockGlowInstance.enabled).toBe(false);
     });
 
-    it('sets filterArea to app.screen', () => {
+    it('does not set filterArea (deferred optimization)', () => {
       const world = makeContainer();
       const car = makeContainer();
-      const screen = { width: 1920, height: 1080 };
-      const app = { screen } as any;
-
-      fm.attach(world, car, null, app);
-      expect(world.filterArea).toBe(screen);
+      fm.attach(world, car, null);
+      expect(world.filterArea).toBeUndefined();
     });
   });
 
@@ -97,9 +86,7 @@ describe('FilterManager', () => {
       const world = makeContainer();
       const car = makeContainer();
       const ai = makeContainer();
-      const app = { screen: {} } as any;
-
-      fm.attach(world, car, ai, app);
+      fm.attach(world, car, ai);
       fm.detach(world, car, ai);
 
       expect(world.filters).toHaveLength(0);

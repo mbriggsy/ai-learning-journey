@@ -1,18 +1,19 @@
 /**
- * ScreenManager — screen transitions with asset lifecycle management.
+ * ScreenManager — DOM/PixiJS hybrid screen transitions.
  *
- * Adapted from v02. Key changes:
- *   - Async transition guard prevents concurrent transitions (C2)
- *   - worldContainer.visible = false BEFORE unloadTrack() (C3)
- *   - Screen containers added to menuContainer (not stage)
- *   - AssetManager wired for per-track BG loading/unloading
- *   - GPU texture upload before gameplay start
+ * Phase 4 rewrite: DOM overlay for menus, PixiJS for gameplay.
+ *   - menuContainer removed — DOM overlay show/hide instead
+ *   - DomMainMenu, DomTrackSelect, DomSettings replace PixiJS screens
+ *   - State machine + async transition guard preserved from v02/Phase 2
+ *   - Fix #38: Skip leaderboard human write in spectator mode
+ *   - Fix #40: Escape routing table (menu-only; gameplay handled by GameLoop/RaceController)
+ *   - Fix #42: Finish overlay Continue → track-select via GameLoop.onQuitToMenu
  */
 
 import type { Application, Container } from 'pixi.js';
-import { MainMenuScreen } from './screens/MainMenuScreen';
-import { TrackSelectScreen } from './screens/TrackSelectScreen';
-import { SettingsScreen } from './screens/SettingsScreen';
+import { DomMainMenu } from './dom/DomMainMenu';
+import { DomTrackSelect } from './dom/DomTrackSelect';
+import { DomSettings } from './dom/DomSettings';
 import type { GameLoop } from './GameLoop';
 import type { SoundManager } from './SoundManager';
 import type { WorldRenderer } from './WorldRenderer';
@@ -37,7 +38,7 @@ const VALID_TRANSITIONS: Record<ScreenState, ScreenState[]> = {
 
 interface ScreenManagerDeps {
   app: Application;
-  menuContainer: Container;
+  menuOverlay: HTMLElement;
   worldContainer: Container;
   hudContainer: Container;
   trackLayer: Container;
@@ -56,12 +57,12 @@ interface ScreenManagerDeps {
 export class ScreenManager {
   private state: ScreenState = 'main-menu';
   private transitioning = false;
-  private mainMenu: MainMenuScreen;
-  private trackSelect: TrackSelectScreen;
-  private settings: SettingsScreen;
 
   private app: Application;
-  private menuContainer: Container;
+  private menuOverlay: HTMLElement;
+  private domMainMenu: DomMainMenu;
+  private domTrackSelect: DomTrackSelect;
+  private domSettings: DomSettings;
   private worldContainer: Container;
   private hudContainer: Container;
   private carLayer: Container;
@@ -83,7 +84,7 @@ export class ScreenManager {
 
   constructor(deps: ScreenManagerDeps) {
     this.app = deps.app;
-    this.menuContainer = deps.menuContainer;
+    this.menuOverlay = deps.menuOverlay;
     this.worldContainer = deps.worldContainer;
     this.hudContainer = deps.hudContainer;
     this.carLayer = deps.carLayer;
@@ -96,25 +97,24 @@ export class ScreenManager {
     this.filterManager = deps.filterManager;
     this.assetManager = deps.assetManager;
 
-    // Create screen instances
-    this.mainMenu = new MainMenuScreen();
-    this.trackSelect = new TrackSelectScreen();
-    this.settings = new SettingsScreen();
-    this.settings.setSoundManager(this.soundManager);
+    // Create DOM screen instances with navigation callbacks
+    this.domMainMenu = new DomMainMenu(
+      () => this.goto('track-select'),
+      () => this.goto('settings'),
+    );
 
-    // Wire navigation
-    this.mainMenu.onAction = (action) => {
-      if (action === 'play') this.goto('track-select');
-      else if (action === 'settings') this.goto('settings');
-    };
+    this.domTrackSelect = new DomTrackSelect(
+      (index: number, mode: GameMode) => this.startGame(index, mode),
+      () => this.goto('main-menu'),
+    );
 
-    this.trackSelect.onAction = (action) => {
-      if (action.type === 'back') this.goto('main-menu');
-      else if (action.type === 'select') this.startGame(action.index, action.mode);
-    };
+    this.domSettings = new DomSettings(
+      this.soundManager,
+      this.filterManager,
+      () => this.goto('main-menu'),
+    );
 
-    this.settings.onBack = () => this.goto('main-menu');
-
+    // Wire quit-to-menu from gameplay (pause Q, finish Q/Escape — Fix #42)
     this.gameLoop.onQuitToMenu = () => {
       this.goto('track-select');
     };
@@ -126,12 +126,14 @@ export class ScreenManager {
     }));
     this.hudRenderer.setAiStateSource(() => this.gameLoop.currentAiWorldState);
 
-    // Add screens to menuContainer (not stage — D5)
-    this.menuContainer.addChild(this.mainMenu.container);
-    this.menuContainer.addChild(this.trackSelect.container);
-    this.menuContainer.addChild(this.settings.container);
+    // Append DOM screens to overlay
+    this.menuOverlay.append(
+      this.domMainMenu.element,
+      this.domTrackSelect.element,
+      this.domSettings.element,
+    );
 
-    // Escape-as-back
+    // Escape-as-back for menu screens (Fix #40: only fires in menu states)
     window.addEventListener('keydown', (e: KeyboardEvent) => {
       if (e.code !== 'Escape') return;
       if (this.state === 'track-select') this.goto('main-menu');
@@ -167,33 +169,40 @@ export class ScreenManager {
   }
 
   private showScreen(target: ScreenState): void {
-    this.mainMenu.hide();
-    this.trackSelect.hide();
-    this.settings.hide();
-
-    if (target !== 'playing') {
-      this.worldContainer.visible = false;
-      this.hudContainer.visible = false;
-      this.menuContainer.visible = true;
-    }
+    // Hide all DOM screens
+    this.domMainMenu.hide();
+    this.domTrackSelect.hide();
+    this.domSettings.hide();
 
     this.state = target;
 
     switch (target) {
       case 'main-menu':
         this.soundManager.suspend();
-        this.mainMenu.show();
+        this.menuOverlay.style.display = 'flex';
+        this.menuOverlay.style.pointerEvents = 'auto';
+        this.worldContainer.visible = false;
+        this.hudContainer.visible = false;
+        this.domMainMenu.show();
         break;
       case 'track-select':
         this.soundManager.suspend();
-        this.trackSelect.refresh();
-        this.trackSelect.show();
+        this.menuOverlay.style.display = 'flex';
+        this.menuOverlay.style.pointerEvents = 'auto';
+        this.worldContainer.visible = false;
+        this.hudContainer.visible = false;
+        this.domTrackSelect.show();
         break;
       case 'settings':
-        this.settings.show();
+        this.menuOverlay.style.display = 'flex';
+        this.menuOverlay.style.pointerEvents = 'auto';
+        this.worldContainer.visible = false;
+        this.hudContainer.visible = false;
+        this.domSettings.show();
         break;
       case 'playing':
-        this.menuContainer.visible = false;
+        this.menuOverlay.style.display = 'none';
+        this.menuOverlay.style.pointerEvents = 'none';
         this.worldContainer.visible = true;
         this.hudContainer.visible = true;
         this.soundManager.resume();
@@ -213,8 +222,6 @@ export class ScreenManager {
       // Load track BG (with race guard via AssetManager)
       await this.assetManager.loadTrack(trackId);
 
-      // Textures are uploaded to the GPU on first render — no manual upload needed in PixiJS v8
-
       // Configure renderers (WorldRenderer.reset() handles car layer cleanup)
       this.worldRenderer.setMode(mode);
       this.worldRenderer.setTrackId(trackId);
@@ -226,8 +233,8 @@ export class ScreenManager {
       this.overlayRenderer.setGraceInfoSource(() => this.gameLoop.vsAiGraceState);
       this.effectsRenderer.reset();
 
-      // Load track into game loop
-      this.gameLoop.loadTrack(trackInfo.controlPoints, this.settings.lapCount, mode);
+      // Load track into game loop (Fix #36: lap count from DomSettings)
+      this.gameLoop.loadTrack(trackInfo.controlPoints, this.domSettings.lapCount, mode);
 
       // Eagerly init track (creates car containers) so filters can attach before first render
       this.worldRenderer.initTrack(this.gameLoop.currentWorldState.track);
@@ -242,7 +249,7 @@ export class ScreenManager {
       this.lastBestLapTicks = 0;
       this.lastAiBestLapTicks = 0;
       this.currentMode = mode;
-      this.targetLaps = this.settings.lapCount;
+      this.targetLaps = this.domSettings.lapCount;
 
       this.showScreen('playing');
 
@@ -263,9 +270,13 @@ export class ScreenManager {
   private checkBestTime(): void {
     const trackId = TRACKS[this.activeTrackIndex].id;
     const timing = this.gameLoop.currentWorldState.timing;
-    if (timing.bestLapTicks > 0 && timing.bestLapTicks !== this.lastBestLapTicks) {
-      setHumanBest(trackId, timing.bestLapTicks);
-      this.lastBestLapTicks = timing.bestLapTicks;
+
+    // Fix #38: Skip human leaderboard write in spectator mode
+    if (this.currentMode !== 'spectator') {
+      if (timing.bestLapTicks > 0 && timing.bestLapTicks !== this.lastBestLapTicks) {
+        setHumanBest(trackId, timing.bestLapTicks);
+        this.lastBestLapTicks = timing.bestLapTicks;
+      }
     }
 
     if (this.currentMode !== 'solo') {

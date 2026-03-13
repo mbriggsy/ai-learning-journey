@@ -2,7 +2,7 @@
 
 > *Commercial polish. Genuine AI. Zero hand-written game code.*
 
-A top-down racing game built entirely with Compound Engineering methodology — autonomous asset generation via Gemini Imagen 3 API, post-processing shaders, commercial-grade UI, and an AI opponent that actually *generalizes* instead of memorizing a route.
+A top-down racing game built entirely with Compound Engineering methodology — autonomous asset generation via Gemini Imagen 4 API, post-processing shaders, commercial-grade UI, and an AI opponent that actually *generalizes* instead of memorizing a route.
 
 ## Why This Exists
 
@@ -22,7 +22,7 @@ And yes — we're also trying out **Compound Engineering** instead of GSD. Same 
 
 | Layer | v02 | v04 |
 |-------|-----|-----|
-| Car sprites | Geometric shapes | AI-generated high-res top-down art (Gemini Imagen 3) |
+| Car sprites | Geometric shapes | AI-generated high-res top-down art (Gemini Imagen 4) |
 | Track surfaces | Flat color fills | Tiled textures: asphalt, curbs, grass, rumble strips |
 | Post-processing | Basic particles | Bloom, motion blur, heat shimmer, skid marks |
 | Menu | Functional HTML | Cinematic, commercial feel |
@@ -44,11 +44,11 @@ And yes — we're also trying out **Compound Engineering** instead of GSD. Same 
 - pnpm
 - Python 3.12 + Stable Baselines3 (PPO) for AI training
 - ONNX export for browser inference
-- **Gemini Imagen 3 API** — autonomous asset generation (no human art tools)
+- **Gemini Imagen 4 API** — autonomous asset generation (no human art tools)
 
 ## Architecture Rules (sacred from v02)
 
-- Engine (`src/engine/`) is **FROZEN** — 366+ tests, zero modifications
+- Engine (`src/engine/`) is **FROZEN** — 487+ tests (366 engine + 121 AI/renderer/UI), zero engine modifications
 - Engine/renderer boundary is **SACRED** — zero cross-layer imports
 - Renderer reads engine state, never mutates it
 - AI trains against headless engine
@@ -70,6 +70,19 @@ And yes — we're also trying out **Compound Engineering** instead of GSD. Same 
 MCP Stack: **Context7** (framework docs) + **Serena** (semantic code nav) + **Sequential Thinking** (architectural reasoning)
 
 NO GSD. This is a clean CE build.
+
+## Build Progress
+
+| Phase | Status |
+|-------|--------|
+| Phase -1: Foundation | Done |
+| Phase 0: Asset Generation (Imagen 4) | Done |
+| Phase 1: Asset Pipeline + Track Redesign | Done |
+| Phase 2: Core Visual Upgrade | Done |
+| Phase 3: Post-Processing & Effects | Done |
+| Phase 4: Commercial UI & Audio | Done |
+| Phase 5: AI Retraining & Validation | In progress |
+| Phase 6: Integration & Polish | Pending |
 
 ## Docs
 

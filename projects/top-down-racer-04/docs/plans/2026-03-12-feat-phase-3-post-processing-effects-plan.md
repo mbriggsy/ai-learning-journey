@@ -1,7 +1,7 @@
 ---
 title: "Phase 3: Post-Processing & Effects"
 type: feat
-status: active
+status: visual-verification
 date: 2026-03-12
 deepened: 2026-03-12
 origin: docs/brainstorms/2026-03-11-full-build-brainstorm.md
@@ -384,13 +384,13 @@ All use the same white circle texture, differentiated by tint. This enables a si
 > **Research insight — EffectsRenderer needs Renderer reference:** The refactored EffectsRenderer calls `renderer.render({ container: skidStaging, target: skidTexture })` for RenderTexture operations. The current Phase 2 constructor only accepts `effectsLayer: Container`. **Add `renderer: Renderer` as a second constructor parameter.** This is a required dependency for the core skid mark refactor — without it, the implementation cannot function.
 
 **Acceptance criteria — Step 0:**
-- [ ] Zero `new Graphics()` calls per frame in EffectsRenderer
-- [ ] Skid marks render to RenderTexture with gradual fade
-- [ ] Particles use sprite pool (acquire/release, no create/destroy)
-- [ ] Skid mark texture clears on race restart and track switch
-- [ ] effectsLayer child count is bounded (pool size + skidSprite = constant)
-- [ ] Visual parity with v02 effects (same colors, sizes, lifetimes)
-- [ ] No visual regression on particle spawn surfaces (ISS-002 guard preserved)
+- [x] Zero `new Graphics()` calls per frame in EffectsRenderer
+- [x] Skid marks render to RenderTexture with gradual fade
+- [x] Particles use sprite pool (acquire/release, no create/destroy)
+- [x] Skid mark texture clears on race restart and track switch
+- [x] effectsLayer child count is bounded (pool size + skidSprite = constant)
+- [x] Visual parity with v02 effects (same colors, sizes, lifetimes)
+- [x] No visual regression on particle spawn surfaces (ISS-002 guard preserved)
 
 ---
 
@@ -524,14 +524,14 @@ Filter.defaultOptions.resolution = 1; // Blur-based effects look fine at 1x
 ```
 
 **Acceptance criteria — Step 1+2:**
-- [ ] `pixi-filters@^6.1.5` installed and importable
-- [ ] FilterManager creates all P0+P1 filter instances
-- [ ] Filters attached to correct containers per architecture diagram
-- [ ] `Filter.defaultOptions.resolution = 1` set at startup
-- [ ] `worldContainer.filterArea` set to `app.screen`
-- [ ] Motion blur velocity clamp prevents scene-obscuring blur at max speed
-- [ ] `pause()` zeroes motion blur velocity
-- [ ] No filters on `hudContainer` (stays sharp)
+- [x] `pixi-filters@^6.1.5` installed and importable
+- [x] FilterManager creates all P0+P1 filter instances
+- [x] Filters attached to correct containers per architecture diagram
+- [x] `Filter.defaultOptions.resolution = 1` set at startup
+- [x] `worldContainer.filterArea` set to `app.screen`
+- [x] Motion blur velocity clamp prevents scene-obscuring blur at max speed
+- [x] `pause()` zeroes motion blur velocity
+- [x] No filters on `hudContainer` (stays sharp)
 - [ ] Bloom visible on spark particles and AI car glow
 - [ ] AI car has cyan glow halo (matches v02 visual appearance)
 - [ ] Both cars have soft drop shadow (depth perception)
@@ -580,14 +580,14 @@ The Step 0 refactor already migrates skid marks to RenderTexture. Step 3 upgrade
 - **Under bloom:** Skid marks are dark (low brightness) — bloom has minimal effect. No visual issue.
 
 **Acceptance criteria — Step 3:**
-- [ ] Motion blur visible at high speed (≥ 50% max speed)
-- [ ] Motion blur direction matches car movement direction on screen
-- [ ] Motion blur zeroed during countdown and pause
-- [ ] Motion blur clamped — scene readable at max speed
+- [x] Motion blur visible at high speed (≥ 50% max speed)
+- [x] Motion blur direction matches car movement direction on screen
+- [x] Motion blur zeroed during countdown and pause
+- [x] Motion blur clamped — scene readable at max speed
 - [ ] Spectator mode: motion blur follows AI car velocity
-- [ ] Skid marks persist via RenderTexture (not individual Graphics)
-- [ ] Skid marks gradually fade over time
-- [ ] Skid marks clear on race restart and track switch
+- [x] Skid marks persist via RenderTexture (not individual Graphics)
+- [x] Skid marks gradually fade over time
+- [x] Skid marks clear on race restart and track switch
 - [ ] 60fps maintained with P0+P1 effects active on dev machine
 
 ---
@@ -716,14 +716,14 @@ Filter attachment triggers this chain:
 - [ ] Bloom/glow visible on AI car and spark particles
 - [ ] Drop shadow on all cars in all game modes
 - [ ] No filters affect HUD (hudContainer stays sharp)
-- [ ] EffectsRenderer creates zero `new Graphics()` per frame
+- [x] EffectsRenderer creates zero `new Graphics()` per frame
 
 ### Functional Requirements (P1 — Must Ship)
 
-- [ ] Motion blur scales with car velocity (visible at high speed, absent when stationary)
-- [ ] Motion blur direction correct under camera Y-flip
-- [ ] Skid marks persist via RenderTexture with gradual fade
-- [ ] Skid marks clear on race restart and track switch
+- [x] Motion blur scales with car velocity (visible at high speed, absent when stationary)
+- [x] Motion blur direction correct under camera Y-flip
+- [x] Skid marks persist via RenderTexture with gradual fade
+- [x] Skid marks clear on race restart and track switch
 
 ### Functional Requirements (P2 — Conditional on Performance Gate)
 
@@ -737,9 +737,9 @@ Filter attachment triggers this chain:
 ### Non-Functional Requirements
 
 - [ ] 60fps with P0+P1 effects active (55fps minimum threshold)
-- [ ] Filter resolution capped at 2x DPI
-- [ ] No memory leaks from filter or RenderTexture lifecycle
-- [ ] effectsLayer child count bounded (sprite pool size constant)
+- [x] Filter resolution capped at 2x DPI
+- [x] No memory leaks from filter or RenderTexture lifecycle
+- [x] effectsLayer child count bounded (sprite pool size constant)
 
 ### Quality Gates
 

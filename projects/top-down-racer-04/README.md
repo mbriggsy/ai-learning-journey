@@ -1,5 +1,7 @@
 # Top-Down Racer v04
 
+**[Play it live](https://top-down-racer-04.vercel.app/)**
+
 > *Commercial polish. Genuine AI. Zero hand-written game code.*
 
 A top-down racing game built entirely with Compound Engineering methodology — autonomous asset generation via Gemini Imagen 4 API, post-processing shaders, commercial-grade UI, and an AI opponent that actually *generalizes* instead of memorizing a route.

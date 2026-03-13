@@ -10,7 +10,6 @@
  */
 
 import type { Application, Container } from 'pixi.js';
-import { Assets } from 'pixi.js';
 import { MainMenuScreen } from './screens/MainMenuScreen';
 import { TrackSelectScreen } from './screens/TrackSelectScreen';
 import { SettingsScreen } from './screens/SettingsScreen';
@@ -22,7 +21,7 @@ import type { OverlayRenderer } from './OverlayRenderer';
 import type { EffectsRenderer } from './EffectsRenderer';
 import type { AssetManager } from './AssetManager';
 import { TRACKS } from '../tracks/registry';
-import { ASSETS, type TrackId } from '../assets/manifest';
+import type { TrackId } from '../assets/manifest';
 import { setHumanBest, setAiBest } from './Leaderboard';
 import type { GameMode } from '../types/game-mode';
 
@@ -63,7 +62,6 @@ export class ScreenManager {
   private menuContainer: Container;
   private worldContainer: Container;
   private hudContainer: Container;
-  private carLayer: Container;
   private gameLoop: GameLoop;
   private soundManager: SoundManager;
   private worldRenderer: WorldRenderer;
@@ -84,7 +82,6 @@ export class ScreenManager {
     this.menuContainer = deps.menuContainer;
     this.worldContainer = deps.worldContainer;
     this.hudContainer = deps.hudContainer;
-    this.carLayer = deps.carLayer;
     this.gameLoop = deps.gameLoop;
     this.soundManager = deps.soundManager;
     this.worldRenderer = deps.worldRenderer;
@@ -205,18 +202,9 @@ export class ScreenManager {
       // Load track BG (with race guard via AssetManager)
       await this.assetManager.loadTrack(trackId);
 
-      // Force GPU texture upload before gameplay (D8)
-      const bgTexture = Assets.get(ASSETS.tracks[trackId].bg);
-      if (bgTexture) {
-        this.app.renderer.prepare.upload(bgTexture);
-      }
+      // Textures are uploaded to the GPU on first render — no manual upload needed in PixiJS v8
 
-      // Clean car layer before creating new renderers
-      for (const child of this.carLayer.removeChildren()) {
-        child.destroy({ children: true });
-      }
-
-      // Configure renderers
+      // Configure renderers (WorldRenderer.reset() handles car layer cleanup)
       this.worldRenderer.setMode(mode);
       this.worldRenderer.setTrackId(trackId);
       this.worldRenderer.setShoulderSide(trackInfo.shoulderSide ?? 'inner');

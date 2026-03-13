@@ -27,7 +27,6 @@ describe('Asset processor outputs', () => {
       expect(ASSETS.cars.frames).toBeDefined();
       expect(ASSETS.tracks).toBeDefined();
       expect(ASSETS.textures).toBeDefined();
-      expect(ASSETS.ui).toBeDefined();
     });
 
     it('all manifest paths resolve to existing files', () => {
@@ -35,7 +34,6 @@ describe('Asset processor outputs', () => {
         ASSETS.cars.atlas,
         ...Object.values(ASSETS.tracks).map((t) => t.bg),
         ...Object.values(ASSETS.textures),
-        ASSETS.ui.menuBg,
       ];
 
       for (const relPath of paths) {
@@ -100,10 +98,6 @@ describe('Asset processor outputs', () => {
       {
         raw: join(RAW, 'curb-tile.png'),
         optimized: join(PUBLIC, ASSETS.textures.curb),
-      },
-      {
-        raw: join(RAW, 'menu-bg.png'),
-        optimized: join(PUBLIC, ASSETS.ui.menuBg),
       },
     ];
 

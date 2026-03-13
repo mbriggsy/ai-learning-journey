@@ -1,7 +1,9 @@
 # Next Step
 
 ## Last Completed
-Phase 3 merged to main — 2026-03-12 ~10:15 PM EDT
+Phase 4 complete on branch `feat/phase-4-ui-audio` — 2026-03-13 ~9:36 AM EDT
 
 ## Next
-Phase 4: UI Layer & HUD — `/workflows:work` on the phase 4 plan. New terminal.
+Merge `feat/phase-4-ui-audio` → `main`, then execute Phase 5.
+
+### Test baseline: 477/477 pass (0 failures)

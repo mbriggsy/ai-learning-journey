@@ -49,12 +49,11 @@ describe('FilterManager', () => {
       expect(world.filters[1]).toBe(mockMotionBlurInstance);
     });
 
-    it('attaches shadow to carLayer', () => {
+    it('does not attach filters to carLayer (shadow removed in quality-tier refactor)', () => {
       const world = makeContainer();
       const car = makeContainer();
       fm.attach(world, car, null);
-      expect(car.filters).toHaveLength(1);
-      expect(car.filters[0]).toBe(mockShadowInstance);
+      expect(car.filters).toHaveLength(0);
     });
 
     it('attaches glow to aiCarContainer when provided', () => {
@@ -66,11 +65,12 @@ describe('FilterManager', () => {
       expect(ai.filters[0]).toBe(mockGlowInstance);
     });
 
-    it('disables glow when aiCarContainer is null', () => {
+    it('leaves glow unchanged when aiCarContainer is null', () => {
       const world = makeContainer();
       const car = makeContainer();
       fm.attach(world, car, null);
-      expect(mockGlowInstance.enabled).toBe(false);
+      // glow.enabled stays at constructor default — no aiCarContainer to attach it to
+      expect(mockGlowInstance.enabled).toBe(true);
     });
 
     it('does not set filterArea (deferred optimization)', () => {

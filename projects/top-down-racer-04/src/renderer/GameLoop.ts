@@ -223,8 +223,10 @@ export class GameLoop {
     const rDown = isKeyDown('KeyR');
     const qDown = isKeyDown('KeyQ');
 
+    // Fix #40: Suppress pause during grace countdown (prevents buying time)
+    const inGrace = this.vsAiGrace?.status === 'countdown';
     const signals: RaceControlSignals = {
-      togglePause: escapeDown && !this.escapeWasDown,
+      togglePause: escapeDown && !this.escapeWasDown && !inGrace,
       restart: rDown && !this.rWasDown,
       quitToMenu: qDown && !this.qWasDown,
     };

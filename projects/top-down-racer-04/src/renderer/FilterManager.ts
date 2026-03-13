@@ -19,6 +19,7 @@ import { DropShadowFilter } from 'pixi-filters/drop-shadow';
 import { GlowFilter } from 'pixi-filters/glow';
 import { MotionBlurFilter } from 'pixi-filters/motion-blur';
 import type { Container } from 'pixi.js';
+import type { QualityTier } from './Settings';
 
 // ── Filter Configuration ──
 const BLOOM_STRENGTH = 3;
@@ -39,6 +40,10 @@ export class FilterManager {
   private readonly shadow: DropShadowFilter;
   private readonly glow: GlowFilter;
   private readonly motionBlur: MotionBlurFilter;
+
+  private tier: QualityTier = 'high';
+  private attachedWorld: Container | null = null;
+  private attachedAiCar: Container | null = null;
 
   constructor() {
     this.bloom = new BloomFilter({
@@ -76,18 +81,11 @@ export class FilterManager {
     carLayer: Container,
     aiCarContainer: Container | null,
   ): void {
-    worldContainer.filters = [this.bloom, this.motionBlur];
-    // Shadow disabled — constant offset looks unnatural without a light source
-    // carLayer.filters = [this.shadow];
+    this.attachedWorld = worldContainer;
+    this.attachedAiCar = aiCarContainer;
 
-    if (aiCarContainer) {
-      aiCarContainer.filters = [this.glow];
-    } else {
-      this.glow.enabled = false;
-    }
-
-    // NOTE: filterArea optimization deferred — app.screen interacts badly with
-    // camera Y-flip (negative scale). Let PixiJS compute bounds automatically.
+    // Apply filters based on current quality tier
+    this.applyTier(worldContainer, aiCarContainer);
   }
 
   /**
@@ -103,7 +101,8 @@ export class FilterManager {
     if (aiCarContainer) {
       aiCarContainer.filters = [];
     }
-    // filterArea not set — no cleanup needed
+    this.attachedWorld = null;
+    this.attachedAiCar = null;
   }
 
   /**
@@ -111,6 +110,7 @@ export class FilterManager {
    * Call every render frame during racing.
    */
   updateMotionBlur(vx: number, vy: number, zoom: number): void {
+    if (this.tier !== 'high') return; // motion blur only on high
     const screenVx = vx * zoom;
     const screenVy = -vy * zoom; // Y-flip compensation
 
@@ -131,6 +131,44 @@ export class FilterManager {
   pause(): void {
     this.motionBlur.velocity.x = 0;
     this.motionBlur.velocity.y = 0;
+  }
+
+  /**
+   * Set quality tier. Reconfigures active filters on attached containers.
+   * Low: all filters disabled. Medium: bloom + shadow. High: all filters.
+   */
+  setQualityTier(tier: QualityTier): void {
+    this.tier = tier;
+    if (this.attachedWorld) {
+      this.applyTier(this.attachedWorld, this.attachedAiCar);
+    }
+  }
+
+  getQualityTier(): QualityTier {
+    return this.tier;
+  }
+
+  private applyTier(worldContainer: Container, aiCarContainer: Container | null): void {
+    switch (this.tier) {
+      case 'low':
+        worldContainer.filters = [];
+        if (aiCarContainer) aiCarContainer.filters = [];
+        break;
+      case 'medium':
+        worldContainer.filters = [this.bloom];
+        this.motionBlur.velocity.x = 0;
+        this.motionBlur.velocity.y = 0;
+        if (aiCarContainer) aiCarContainer.filters = [];
+        this.glow.enabled = false;
+        break;
+      case 'high':
+        worldContainer.filters = [this.bloom, this.motionBlur];
+        if (aiCarContainer) {
+          aiCarContainer.filters = [this.glow];
+          this.glow.enabled = true;
+        }
+        break;
+    }
   }
 
   /** Enable/disable glow filter (for modes without AI car). */

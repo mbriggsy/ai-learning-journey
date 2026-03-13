@@ -1,4 +1,4 @@
-import { Container, Graphics, Text } from 'pixi.js';
+import { Container, Graphics, Text, TextStyle } from 'pixi.js';
 import type { WorldState } from '../engine/types';
 import type { RaceState } from '../engine/RaceController';
 import { CAR } from '../engine/constants';
@@ -6,38 +6,40 @@ import { formatRaceTime } from '../utils/formatTime';
 import type { GameMode } from '../types/game-mode';
 
 // ──────────────────────────────────────────────────────────
-// Layout constants (screen coordinates)
+// Layout constants
 // ──────────────────────────────────────────────────────────
-const MARGIN = 16;         // Padding from screen edge
-const PANEL_ALPHA = 0.7;   // Semi-transparent dark panel opacity
+const MARGIN = 16;
+const PANEL_ALPHA = 0.7;
 
-// Speedometer (bottom-left)
-const SPEED_BAR_W    = 24;   // Bar width in pixels
-const SPEED_BAR_H    = 140;  // Bar max height in pixels
-const SPEED_BAR_COLOR = 0x44ffaa;
+// Analog gauge (bottom-center)
+const GAUGE_RADIUS = 55;
+const GAUGE_PADDING = 5;
+const NEEDLE_LENGTH = 48;
+const ARC_START = -5 * Math.PI / 4; // -225° (bottom-left = 0)
+const ARC_END = Math.PI / 4;        // +45°  (bottom-right = MAX)
+const ARC_SWEEP = ARC_END - ARC_START; // 270° = 3π/2
 
 // Minimap (bottom-right)
-const MINIMAP_SIZE   = 160;  // Width and height of minimap area in pixels
-const MINIMAP_PADDING = 8;   // Padding inside minimap area
-const MINIMAP_DOT    = 4;    // Car dot radius in pixels
+const MINIMAP_SIZE = 160;
+const MINIMAP_PADDING = 8;
+const MINIMAP_DOT = 4;
 const MINIMAP_TRACK_COLOR = 0xaaaaaa;
-const MINIMAP_CAR_COLOR   = 0xffff00;
+const MINIMAP_CAR_COLOR = 0xffcc00;   // Player: yellow
+const MINIMAP_AI_COLOR = 0x00d4ff;    // AI: cyan
 
-// AI car color (matches AiCarRenderer tint)
+// AI text color
 const AI_COLOR = '#00eeff';
 
-// Text style shared across HUD
-const HUD_TEXT_STYLE = {
-  fontFamily: 'monospace',
-  fontSize: 20,
-  fill: '#ffffff',
-} as const;
-
-const HUD_TEXT_STYLE_SMALL = {
-  fontFamily: 'monospace',
-  fontSize: 15,
-  fill: '#aaaaaa',
-} as const;
+// ──────────────────────────────────────────────────────────
+// Shared TextStyle instances (Fix #35 — texture sharing)
+// ──────────────────────────────────────────────────────────
+const STYLE_HUD = new TextStyle({ fontFamily: 'monospace', fontSize: 20, fill: '#ffffff' });
+const STYLE_HUD_LARGE = new TextStyle({ fontFamily: 'monospace', fontSize: 24, fill: '#ffffff' });
+const STYLE_HUD_LAP = new TextStyle({ fontFamily: 'monospace', fontSize: 22, fill: '#ffffff' });
+const STYLE_SMALL = new TextStyle({ fontFamily: 'monospace', fontSize: 15, fill: '#aaaaaa' });
+const STYLE_AI = new TextStyle({ fontFamily: 'monospace', fontSize: 15, fill: AI_COLOR });
+const STYLE_AI_SMALL = new TextStyle({ fontFamily: 'monospace', fontSize: 13, fill: AI_COLOR });
+const STYLE_POSITION = new TextStyle({ fontFamily: 'monospace', fontSize: 28, fill: '#44ff88' });
 
 // ──────────────────────────────────────────────────────────
 // HudRenderer
@@ -46,128 +48,149 @@ const HUD_TEXT_STYLE_SMALL = {
 export class HudRenderer {
   private container: Container;
 
-  // Speedometer (bottom-left, HUD-01)
-  private speedBarBg!: Graphics;
-  private speedBarFill!: Graphics;
-  private speedBarX = 0;
-  private speedBarY = 0;
+  // Analog speedometer (bottom-center)
+  private gaugeContainer!: Container;
+  private needleContainer!: Container;
+  private needleGraphics!: Graphics;
 
-  // Lap counter (top-left, HUD-04)
+  // Lap counter (top-left)
+  private lapCounterPanel!: Graphics;
   private lapCounterText!: Text;
   private lastLapDisplay = '';
 
-  // Timing stack (top-right: total, current lap, best lap)
+  // Position indicator (top-left, below lap counter, vs-ai only)
+  private positionText!: Text;
+  private lastPositionDisplay = '';
+
+  // Timing stack (top-right)
+  private timePanel!: Graphics;
   private totalTimeText!: Text;
   private currentLapText!: Text;
   private bestLapText!: Text;
   private lastTotalTimeDisplay = '';
   private lastCurrentLapDisplay = '';
   private lastBestLapDisplay = '';
-  private lapFlashTimer = 0; // Ticks remaining for green flash
+  private lapFlashTimer = 0;
 
-  // Minimap (bottom-right, HUD-05)
-  private minimapGraphics!: Graphics;
-  private minimapOffsetX = 0;
-  private minimapOffsetY = 0;
-  private trackOutlineBuilt = false;
-  private minimapTrackGraphics!: Graphics; // Static track outline, rebuilt once
-
-  private mode: GameMode = 'solo';
-
-  // AI timing stats (vs-ai mode only)
-  private aiStateSource: (() => WorldState | null) | null = null;
+  // AI timing (top-right, below human times)
   private aiPanel!: Graphics;
   private aiTotalTimeText!: Text;
   private aiBestLapText!: Text;
   private lastAiTotalTimeDisplay = '';
   private lastAiBestLapDisplay = '';
 
-  // Screen dimensions (updated on each render for responsiveness)
+  // Minimap (bottom-right)
+  private minimapContainer!: Container;
+  private minimapPanel!: Graphics;
+  private minimapTrackGraphics!: Graphics;
+  private minimapGraphics!: Graphics;
+  private trackOutlineBuilt = false;
+  // Cached minimap transform (Fix #8)
+  private cachedMinimapTransform: { cx: number; cy: number; scale: number } | null = null;
+
+  private mode: GameMode = 'solo';
+  private aiStateSource: (() => WorldState | null) | null = null;
+
+  // Screen dimensions
   private screenW = window.innerWidth;
   private screenH = window.innerHeight;
 
   constructor(hudContainer: Container) {
     this.container = hudContainer;
     this.buildHud();
+    this.layoutHud(this.screenW, this.screenH);
   }
 
-  /** Build all static HUD elements and add to container. */
+  // ──────────────────────────────────────────────────────
+  // Build
+  // ──────────────────────────────────────────────────────
+
   private buildHud(): void {
-    this.buildSpeedometer();
+    this.buildGauge();
     this.buildLapCounter();
+    this.buildPositionIndicator();
     this.buildLapTimes();
     this.buildAiTiming();
     this.buildMinimap();
   }
 
-  /** Set AI state source for HUD stats in vs-ai mode. */
-  setAiStateSource(getter: () => WorldState | null): void {
-    this.aiStateSource = getter;
-  }
-
   // ──────────────────────────────────────────────────────
-  // Speedometer (HUD-01) -- bottom-left, vertical bar fill
+  // Analog Speedometer (Fix #7: container rotation, Fix #33: cacheAsTexture options)
   // ──────────────────────────────────────────────────────
 
-  private buildSpeedometer(): void {
-    const x = MARGIN;
-    const y = this.screenH - MARGIN - SPEED_BAR_H - 26; // room for label
+  private buildGauge(): void {
+    this.gaugeContainer = new Container();
+    this.container.addChild(this.gaugeContainer);
 
-    this.speedBarX = x;
-    this.speedBarY = y;
+    // Static background — drawn once, cached
+    const bg = this.buildGaugeBackground();
+    this.gaugeContainer.addChild(bg);
 
-    // Panel background
-    const panel = new Graphics();
-    panel.rect(x - 6, y - 6, SPEED_BAR_W + 12, SPEED_BAR_H + 38).fill({ color: 0x000000, alpha: PANEL_ALPHA });
-    this.container.addChild(panel);
+    // Needle — drawn once as static line, container rotates (Fix #7)
+    this.needleContainer = new Container();
+    this.gaugeContainer.addChild(this.needleContainer);
 
-    // Bar background track
-    this.speedBarBg = new Graphics();
-    this.speedBarBg.rect(x, y, SPEED_BAR_W, SPEED_BAR_H).fill(0x222222);
-    this.container.addChild(this.speedBarBg);
+    this.needleGraphics = new Graphics();
+    this.needleGraphics.moveTo(0, 0);
+    this.needleGraphics.lineTo(NEEDLE_LENGTH, 0);
+    this.needleGraphics.stroke({ color: 0xff3333, width: 2 });
+    this.needleContainer.addChild(this.needleGraphics);
 
-    // Bar fill (updated each frame)
-    this.speedBarFill = new Graphics();
-    this.container.addChild(this.speedBarFill);
-
-    // "SPD" label below bar
-    const label = new Text({ text: 'SPD', style: HUD_TEXT_STYLE_SMALL });
-    label.x = x + SPEED_BAR_W / 2 - label.width / 2;
-    label.y = y + SPEED_BAR_H + 6;
-    this.container.addChild(label);
+    // Start needle at 0 position
+    this.needleContainer.rotation = ARC_START;
   }
 
-  private updateSpeedometer(speed: number): void {
-    const fill = Math.max(0, Math.min(1, speed / CAR.maxSpeed));
-    const fillH = Math.floor(SPEED_BAR_H * fill);
-    const x = this.speedBarX;
-    const y = this.speedBarY;
+  private buildGaugeBackground(): Graphics {
+    const g = new Graphics();
+    const r = GAUGE_RADIUS;
 
-    this.speedBarFill.clear();
-    if (fillH > 0) {
-      // Bar grows from bottom up
-      this.speedBarFill
-        .rect(x, y + SPEED_BAR_H - fillH, SPEED_BAR_W, fillH)
-        .fill(SPEED_BAR_COLOR);
+    // Dark circle fill
+    g.circle(0, 0, r + GAUGE_PADDING);
+    g.fill({ color: 0x0a0a1a, alpha: 0.85 });
+
+    // Arc border (270° sweep)
+    g.arc(0, 0, r, ARC_START, ARC_END);
+    g.stroke({ color: 0x4a4a6a, width: 3 });
+
+    // Tick marks (10 divisions)
+    for (let i = 0; i <= 10; i++) {
+      const angle = ARC_START + (i / 10) * ARC_SWEEP;
+      const innerR = r - 8;
+      const cos = Math.cos(angle);
+      const sin = Math.sin(angle);
+      g.moveTo(cos * innerR, sin * innerR);
+      g.lineTo(cos * r, sin * r);
+      g.stroke({ color: 0x888888, width: i % 5 === 0 ? 2 : 1 });
     }
+
+    // Center dot
+    g.circle(0, 0, 3);
+    g.fill({ color: 0xff3333 });
+
+    // Cache — never redrawn (Fix #33: options object for HiDPI)
+    g.cacheAsTexture({ resolution: 2, antialias: true });
+    return g;
+  }
+
+  private updateGauge(speed: number): void {
+    const t = Math.min(speed / CAR.maxSpeed, 1);
+    // Rotate needle container (Fix #7 — no clear()+stroke() per frame)
+    this.needleContainer.rotation = ARC_START + t * ARC_SWEEP;
   }
 
   // ──────────────────────────────────────────────────────
-  // Lap Counter (HUD-04) -- top-left
+  // Lap Counter (top-left)
   // ──────────────────────────────────────────────────────
 
   private buildLapCounter(): void {
-    const x = MARGIN;
-    const y = MARGIN;
+    this.lapCounterPanel = new Graphics();
+    this.lapCounterPanel.rect(0, 0, 140, 34).fill({ color: 0x000000, alpha: PANEL_ALPHA });
+    this.container.addChild(this.lapCounterPanel);
 
-    const panel = new Graphics();
-    panel.rect(x - 4, y - 4, 140, 34).fill({ color: 0x000000, alpha: PANEL_ALPHA });
-    this.container.addChild(panel);
-
-    this.lapCounterText = new Text({ text: 'LAP 1', style: { ...HUD_TEXT_STYLE, fontSize: 22 } });
-    this.lapCounterText.x = x;
-    this.lapCounterText.y = y;
-    this.container.addChild(this.lapCounterText);
+    this.lapCounterText = new Text({ text: 'LAP 1', style: STYLE_HUD_LAP });
+    this.lapCounterText.x = 4;
+    this.lapCounterText.y = 4;
+    this.lapCounterPanel.addChild(this.lapCounterText);
   }
 
   private updateLapCounter(currentLap: number, targetLaps: number): void {
@@ -185,118 +208,125 @@ export class HudRenderer {
   }
 
   // ──────────────────────────────────────────────────────
-  // Lap Times (HUD-02 + HUD-03) -- top-right
+  // Position Indicator (top-left, below lap counter, vs-ai only)
+  // ──────────────────────────────────────────────────────
+
+  private buildPositionIndicator(): void {
+    this.positionText = new Text({ text: 'P1', style: STYLE_POSITION });
+    this.positionText.visible = false;
+    this.container.addChild(this.positionText);
+  }
+
+  private updatePosition(
+    playerTiming: { currentLap: number; lastCheckpointIndex: number },
+    aiTiming: { currentLap: number; lastCheckpointIndex: number } | null,
+    checkpointCount: number,
+  ): void {
+    if (!aiTiming || this.mode !== 'vs-ai') {
+      this.positionText.visible = false;
+      return;
+    }
+    this.positionText.visible = true;
+
+    const playerScore = playerTiming.currentLap * checkpointCount + playerTiming.lastCheckpointIndex;
+    const aiScore = aiTiming.currentLap * checkpointCount + aiTiming.lastCheckpointIndex;
+    const pos = playerScore >= aiScore ? 1 : 2;
+    const display = `P${pos}`;
+
+    // Guard text update (Fix #9)
+    if (this.lastPositionDisplay !== display) {
+      this.lastPositionDisplay = display;
+      this.positionText.text = display;
+      this.positionText.style.fill = pos === 1 ? '#44ff88' : '#ff4444';
+    }
+  }
+
+  // ──────────────────────────────────────────────────────
+  // Lap Times (top-right)
   // ──────────────────────────────────────────────────────
 
   private buildLapTimes(): void {
-    // Position from right edge
-    const x = this.screenW - MARGIN - 180;
-    const y = MARGIN;
+    this.timePanel = new Graphics();
+    this.timePanel.rect(0, 0, 188, 82).fill({ color: 0x000000, alpha: PANEL_ALPHA });
+    this.container.addChild(this.timePanel);
 
-    const panel = new Graphics();
-    panel.label = 'time-panel';
-    panel.rect(x - 4, y - 4, 188, 82).fill({ color: 0x000000, alpha: PANEL_ALPHA });
-    this.container.addChild(panel);
+    this.totalTimeText = new Text({ text: '0:00.000', style: STYLE_HUD_LARGE });
+    this.totalTimeText.x = 4;
+    this.totalTimeText.y = 4;
+    this.timePanel.addChild(this.totalTimeText);
 
-    // Total race time (top, larger — never resets except on restart)
-    this.totalTimeText = new Text({
-      text: '0:00.000',
-      style: { ...HUD_TEXT_STYLE, fontSize: 24 },
-    });
-    this.totalTimeText.x = x;
-    this.totalTimeText.y = y;
-    this.container.addChild(this.totalTimeText);
+    this.currentLapText = new Text({ text: 'Lap: 0:00.000', style: STYLE_SMALL });
+    this.currentLapText.x = 4;
+    this.currentLapText.y = 34;
+    this.timePanel.addChild(this.currentLapText);
 
-    // Current lap time (smaller, below total)
-    this.currentLapText = new Text({
-      text: 'Lap: 0:00.000',
-      style: HUD_TEXT_STYLE_SMALL,
-    });
-    this.currentLapText.x = x;
-    this.currentLapText.y = y + 30;
-    this.container.addChild(this.currentLapText);
-
-    // Best lap time (smaller, below current)
-    this.bestLapText = new Text({
-      text: 'Best: --:--.---',
-      style: HUD_TEXT_STYLE_SMALL,
-    });
-    this.bestLapText.x = x;
-    this.bestLapText.y = y + 50;
-    this.container.addChild(this.bestLapText);
+    this.bestLapText = new Text({ text: 'Best: --:--.---', style: STYLE_SMALL });
+    this.bestLapText.x = 4;
+    this.bestLapText.y = 54;
+    this.timePanel.addChild(this.bestLapText);
   }
 
-  private updateLapTimes(totalRaceTicks: number, currentLapTicks: number, bestLapTicks: number, lapComplete: boolean, isNewBest: boolean): void {
-    // Total race time
+  private updateLapTimes(
+    totalRaceTicks: number,
+    currentLapTicks: number,
+    bestLapTicks: number,
+    lapComplete: boolean,
+    isNewBest: boolean,
+  ): void {
     const totalDisplay = formatRaceTime(totalRaceTicks);
     if (this.lastTotalTimeDisplay !== totalDisplay) {
       this.lastTotalTimeDisplay = totalDisplay;
       this.totalTimeText.text = totalDisplay;
     }
 
-    // Current lap time
     const currentDisplay = `Lap: ${formatRaceTime(currentLapTicks)}`;
     if (this.lastCurrentLapDisplay !== currentDisplay) {
       this.lastCurrentLapDisplay = currentDisplay;
       this.currentLapText.text = currentDisplay;
     }
 
-    // Best lap time -- always visible (HUD-03)
     const bestDisplay = `Best: ${formatRaceTime(bestLapTicks)}`;
     if (this.lastBestLapDisplay !== bestDisplay) {
       this.lastBestLapDisplay = bestDisplay;
       this.bestLapText.text = bestDisplay;
     }
 
-    // Green flash on new best lap (CONTEXT.md locked decision)
+    // Green flash on new best lap
     if (lapComplete && isNewBest) {
-      this.lapFlashTimer = 90; // 1.5s flash (90 ticks)
+      this.lapFlashTimer = 90; // 1.5s flash
     }
     if (this.lapFlashTimer > 0) {
       this.lapFlashTimer--;
-      this.currentLapText.style.fill = '#44ff88'; // Green flash
+      this.currentLapText.style.fill = '#44ff88';
     } else {
-      this.currentLapText.style.fill = '#aaaaaa'; // Normal small text color
+      this.currentLapText.style.fill = '#aaaaaa';
     }
   }
 
   // ──────────────────────────────────────────────────────
-  // AI Timing Stats (vs-ai mode only) -- top-right, below human times
+  // AI Timing (top-right, below human times)
   // ──────────────────────────────────────────────────────
 
   private buildAiTiming(): void {
-    const x = this.screenW - MARGIN - 180;
-    const y = MARGIN + 86; // below the human time panel (82px panel + 4px gap)
-
     this.aiPanel = new Graphics();
-    this.aiPanel.rect(x - 4, y - 4, 188, 52).fill({ color: 0x000000, alpha: PANEL_ALPHA });
+    this.aiPanel.rect(0, 0, 188, 52).fill({ color: 0x000000, alpha: PANEL_ALPHA });
     this.aiPanel.visible = false;
     this.container.addChild(this.aiPanel);
 
-    this.aiTotalTimeText = new Text({
-      text: 'AI Lap: 0:00.000',
-      style: { fontFamily: 'monospace', fontSize: 15, fill: AI_COLOR },
-    });
-    this.aiTotalTimeText.x = x;
-    this.aiTotalTimeText.y = y;
-    this.aiTotalTimeText.visible = false;
-    this.container.addChild(this.aiTotalTimeText);
+    this.aiTotalTimeText = new Text({ text: 'AI Lap: 0:00.000', style: STYLE_AI });
+    this.aiTotalTimeText.x = 4;
+    this.aiTotalTimeText.y = 4;
+    this.aiPanel.addChild(this.aiTotalTimeText);
 
-    this.aiBestLapText = new Text({
-      text: 'AI Best: --:--.---',
-      style: { fontFamily: 'monospace', fontSize: 13, fill: AI_COLOR },
-    });
-    this.aiBestLapText.x = x;
-    this.aiBestLapText.y = y + 22;
-    this.aiBestLapText.visible = false;
-    this.container.addChild(this.aiBestLapText);
+    this.aiBestLapText = new Text({ text: 'AI Best: --:--.---', style: STYLE_AI_SMALL });
+    this.aiBestLapText.x = 4;
+    this.aiBestLapText.y = 26;
+    this.aiPanel.addChild(this.aiBestLapText);
   }
 
   private updateAiTiming(): void {
     const showAi = this.mode === 'vs-ai' && this.aiStateSource != null;
     this.aiPanel.visible = showAi;
-    this.aiTotalTimeText.visible = showAi;
-    this.aiBestLapText.visible = showAi;
     if (!showAi) return;
 
     const aiState = this.aiStateSource!();
@@ -316,38 +346,40 @@ export class HudRenderer {
   }
 
   // ──────────────────────────────────────────────────────
-  // Minimap (HUD-05) -- bottom-right
+  // Minimap (bottom-right)
   // ──────────────────────────────────────────────────────
 
   private buildMinimap(): void {
-    this.minimapOffsetX = this.screenW - MARGIN - MINIMAP_SIZE;
-    this.minimapOffsetY = this.screenH - MARGIN - MINIMAP_SIZE;
+    this.minimapContainer = new Container();
+    this.container.addChild(this.minimapContainer);
 
     // Panel background
-    const panel = new Graphics();
-    panel.rect(
-      this.minimapOffsetX - 6,
-      this.minimapOffsetY - 6,
-      MINIMAP_SIZE + 12,
-      MINIMAP_SIZE + 12,
-    ).fill({ color: 0x000000, alpha: PANEL_ALPHA });
-    this.container.addChild(panel);
+    this.minimapPanel = new Graphics();
+    this.minimapPanel.rect(-6, -6, MINIMAP_SIZE + 12, MINIMAP_SIZE + 12)
+      .fill({ color: 0x000000, alpha: PANEL_ALPHA });
+    this.minimapContainer.addChild(this.minimapPanel);
 
     // Static track outline (built once on first render)
     this.minimapTrackGraphics = new Graphics();
-    this.container.addChild(this.minimapTrackGraphics);
+    this.minimapContainer.addChild(this.minimapTrackGraphics);
 
-    // Dynamic car dot (redrawn every frame)
+    // Dynamic car dots (redrawn every frame)
     this.minimapGraphics = new Graphics();
-    this.container.addChild(this.minimapGraphics);
+    this.minimapContainer.addChild(this.minimapGraphics);
   }
 
   /**
-   * Compute the minimap transform: center offset and scale to fit the track
-   * within the MINIMAP_SIZE area with padding.
+   * Compute minimap transform: center offset and scale to fit track
+   * within the MINIMAP_SIZE area. Cached after first computation (Fix #8).
    */
-  private computeMinimapTransform(outerBoundary: readonly { x: number; y: number }[]): { cx: number; cy: number; scale: number } {
-    if (outerBoundary.length === 0) return { cx: 0, cy: 0, scale: 0.3 };
+  private getMinimapTransform(outerBoundary: readonly { x: number; y: number }[]): { cx: number; cy: number; scale: number } {
+    if (this.cachedMinimapTransform) return this.cachedMinimapTransform;
+
+    if (outerBoundary.length === 0) {
+      this.cachedMinimapTransform = { cx: 0, cy: 0, scale: 0.3 };
+      return this.cachedMinimapTransform;
+    }
+
     let minX = Infinity, minY = Infinity, maxX = -Infinity, maxY = -Infinity;
     for (const p of outerBoundary) {
       if (p.x < minX) minX = p.x;
@@ -359,11 +391,13 @@ export class HudRenderer {
     const th = maxY - minY;
     const fitSize = MINIMAP_SIZE - MINIMAP_PADDING * 2;
     const scale = Math.min(fitSize / tw, fitSize / th);
-    return {
+
+    this.cachedMinimapTransform = {
       cx: (minX + maxX) / 2,
       cy: (minY + maxY) / 2,
       scale,
     };
+    return this.cachedMinimapTransform;
   }
 
   private buildMinimapTrack(
@@ -373,24 +407,17 @@ export class HudRenderer {
     if (this.trackOutlineBuilt) return;
     this.trackOutlineBuilt = true;
 
-    const { cx, cy, scale } = this.computeMinimapTransform(outerBoundary);
-    const ox = this.minimapOffsetX + MINIMAP_SIZE / 2;
-    const oy = this.minimapOffsetY + MINIMAP_SIZE / 2;
+    const { cx, cy, scale } = this.getMinimapTransform(outerBoundary);
+    const ox = MINIMAP_SIZE / 2;
+    const oy = MINIMAP_SIZE / 2;
 
     const outerPts: number[] = [];
     for (const p of outerBoundary) {
-      outerPts.push(
-        ox + (p.x - cx) * scale,
-        oy - (p.y - cy) * scale,
-      );
+      outerPts.push(ox + (p.x - cx) * scale, oy - (p.y - cy) * scale);
     }
-
     const innerPts: number[] = [];
     for (const p of innerBoundary) {
-      innerPts.push(
-        ox + (p.x - cx) * scale,
-        oy - (p.y - cy) * scale,
-      );
+      innerPts.push(ox + (p.x - cx) * scale, oy - (p.y - cy) * scale);
     }
 
     this.minimapTrackGraphics.clear();
@@ -405,23 +432,62 @@ export class HudRenderer {
     carX: number,
     carY: number,
   ): void {
-    // Build track outline once
+    // Build track outline once (static)
     this.buildMinimapTrack(outerBoundary, innerBoundary);
 
-    // Recompute center + scale for car dot positioning
-    const { cx, cy, scale } = this.computeMinimapTransform(outerBoundary);
-    const ox = this.minimapOffsetX + MINIMAP_SIZE / 2;
-    const oy = this.minimapOffsetY + MINIMAP_SIZE / 2;
-
-    const dotX = ox + (carX - cx) * scale;
-    const dotY = oy - (carY - cy) * scale; // Flip Y
+    const { cx, cy, scale } = this.getMinimapTransform(outerBoundary);
+    const ox = MINIMAP_SIZE / 2;
+    const oy = MINIMAP_SIZE / 2;
 
     this.minimapGraphics.clear();
-    this.minimapGraphics.circle(dotX, dotY, MINIMAP_DOT).fill(MINIMAP_CAR_COLOR);
+
+    // Player dot — hidden in spectator mode (Fix #43)
+    if (this.mode !== 'spectator') {
+      const dotX = ox + (carX - cx) * scale;
+      const dotY = oy - (carY - cy) * scale;
+      this.minimapGraphics.circle(dotX, dotY, MINIMAP_DOT).fill(MINIMAP_CAR_COLOR);
+    }
+
+    // AI dot (vs-ai and spectator modes)
+    if ((this.mode === 'vs-ai' || this.mode === 'spectator') && this.aiStateSource) {
+      const aiState = this.aiStateSource();
+      if (aiState) {
+        const aiDotX = ox + (aiState.car.position.x - cx) * scale;
+        const aiDotY = oy - (aiState.car.position.y - cy) * scale;
+        this.minimapGraphics.circle(aiDotX, aiDotY, MINIMAP_DOT).fill(MINIMAP_AI_COLOR);
+      }
+    }
   }
 
   // ──────────────────────────────────────────────────────
-  // Main render -- called every animation frame
+  // Layout — repositions all HUD elements (Fix #32)
+  // ──────────────────────────────────────────────────────
+
+  layoutHud(w: number, h: number): void {
+    this.screenW = w;
+    this.screenH = h;
+
+    // Gauge: bottom-center
+    this.gaugeContainer.position.set(w / 2, h - 100);
+
+    // Lap counter: top-left
+    this.lapCounterPanel.position.set(MARGIN, MARGIN);
+
+    // Position indicator: top-left, below lap counter
+    this.positionText.position.set(MARGIN + 4, MARGIN + 42);
+
+    // Time panel: top-right
+    this.timePanel.position.set(w - MARGIN - 192, MARGIN);
+
+    // AI panel: top-right, below time panel
+    this.aiPanel.position.set(w - MARGIN - 192, MARGIN + 86);
+
+    // Minimap: bottom-right
+    this.minimapContainer.position.set(w - MARGIN - MINIMAP_SIZE, h - MARGIN - MINIMAP_SIZE);
+  }
+
+  // ──────────────────────────────────────────────────────
+  // Public API
   // ──────────────────────────────────────────────────────
 
   /** Set game mode. Called before each race starts. */
@@ -429,24 +495,33 @@ export class HudRenderer {
     this.mode = mode;
   }
 
-  /** Reset HUD state for a new track (rebuilds minimap on next render). */
+  /** Set AI state source for HUD stats in vs-ai mode. */
+  setAiStateSource(getter: () => WorldState | null): void {
+    this.aiStateSource = getter;
+  }
+
+  /** Reset HUD state for a new track / race. */
   reset(): void {
     this.trackOutlineBuilt = false;
+    this.cachedMinimapTransform = null;
     this.minimapTrackGraphics.clear();
     this.minimapGraphics.clear();
+    this.needleContainer.rotation = ARC_START;
     this.lastLapDisplay = '';
     this.lastTotalTimeDisplay = '';
     this.lastCurrentLapDisplay = '';
     this.lastBestLapDisplay = '';
+    this.lastPositionDisplay = '';
     this.lapFlashTimer = 0;
     this.lastAiTotalTimeDisplay = '';
     this.lastAiBestLapDisplay = '';
+    this.positionText.visible = false;
+    this.bestLapText.style.fill = '#666666'; // dim until first PB
   }
 
   /**
    * Update all HUD elements from current world state.
-   * Uses curr (not interpolated) for game state values -- timing data is tick-accurate.
-   * Uses curr.car.speed for speedometer (slight jitter acceptable, gameplay accurate).
+   * Uses curr (not interpolated) for game state values — timing data is tick-accurate.
    */
   render(
     _prev: WorldState,
@@ -456,22 +531,30 @@ export class HudRenderer {
   ): void {
     const { car, timing, track } = curr;
 
-    // HUD-01: Speedometer
-    this.updateSpeedometer(car.speed);
+    // Analog gauge
+    this.updateGauge(car.speed);
 
-    // HUD-02 + HUD-03: Lap times
+    // Lap times
     const prevBest = _prev.timing.bestLapTicks;
     const currBest = timing.bestLapTicks;
     const isNewBest = timing.lapComplete && currBest !== prevBest && currBest > 0;
     this.updateLapTimes(timing.totalRaceTicks, timing.currentLapTicks, timing.bestLapTicks, timing.lapComplete, isNewBest);
 
-    // HUD-04: Lap counter
+    // Lap counter
     this.updateLapCounter(timing.currentLap, race.targetLaps);
 
-    // HUD-05: Minimap
+    // Position indicator (vs-ai only)
+    const aiState = this.aiStateSource ? this.aiStateSource() : null;
+    this.updatePosition(
+      timing,
+      aiState ? aiState.timing : null,
+      track.checkpoints.length,
+    );
+
+    // Minimap (with AI dot)
     this.updateMinimap(track.outerBoundary, track.innerBoundary, car.position.x, car.position.y);
 
-    // AI timing stats (vs-ai mode only)
+    // AI timing stats
     this.updateAiTiming();
   }
 }

@@ -1,8 +1,8 @@
 /**
  * RendererApp — bootstrap + container hierarchy (ADR-05).
  *
- * Creates the PixiJS Application, establishes the full container tree,
- * loads boot assets, and hands off to ScreenManager.
+ * Phase 4: menuContainer removed. DOM overlay (#menu-overlay) handles menus.
+ * ScreenManager creates DOM screens, RendererApp wires PixiJS + audio.
  */
 
 import { Application, Container, Filter, Graphics, Text } from 'pixi.js';
@@ -17,6 +17,7 @@ import { WorldRenderer } from './WorldRenderer';
 import { FilterManager } from './FilterManager';
 import { ScreenManager } from './ScreenManager';
 import { AssetManager } from './AssetManager';
+import { injectMenuStyles } from './dom/dom-styles';
 import { TRACKS } from '../tracks/registry';
 
 export class RendererApp {
@@ -60,8 +61,10 @@ export class RendererApp {
     const assetManager = new AssetManager();
     await assetManager.boot();
 
-    // 7. Create ADR-05 container hierarchy
-    const menuContainer = new Container({ label: 'menu' });
+    // 7. Inject DOM menu styles (runtime CSS — base layout in index.html <style>)
+    injectMenuStyles();
+
+    // 8. Create ADR-05 container hierarchy (menuContainer removed — DOM overlay instead)
     const worldContainer = new Container({ label: 'world', isRenderGroup: true });
     const trackLayer = new Container({ label: 'trackLayer' });
     const effectsLayer = new Container({ label: 'effectsLayer' });
@@ -72,15 +75,15 @@ export class RendererApp {
     worldContainer.visible = false;
     hudContainer.visible = false;
 
-    this.app.stage.addChild(menuContainer, worldContainer, hudContainer);
+    this.app.stage.addChild(worldContainer, hudContainer);
 
-    // 8. Create GameLoop with default track
+    // 9. Create GameLoop with default track
     const gameLoop = new GameLoop(TRACKS[0].controlPoints);
 
-    // 9. Create FilterManager (before WorldRenderer so it can be passed to ScreenManager)
+    // 10. Create FilterManager (before WorldRenderer so it can be passed to ScreenManager)
     const filterManager = new FilterManager();
 
-    // 10. Wire WorldRenderer
+    // 11. Wire WorldRenderer
     const worldRenderer = new WorldRenderer(
       worldContainer,
       trackLayer,
@@ -91,7 +94,7 @@ export class RendererApp {
       worldRenderer.render(prev, curr, alpha, race, this.app.screen.width, this.app.screen.height);
     });
 
-    // 11. Wire FilterManager render callback (motion blur updates)
+    // 12. Wire FilterManager render callback (motion blur updates)
     gameLoop.onRender((_prev, curr, _alpha, race) => {
       if (race.phase === GamePhase.Paused) {
         filterManager.pause();
@@ -104,19 +107,19 @@ export class RendererApp {
       }
     });
 
-    // 12. Wire EffectsRenderer (into effectsLayer per C6, with renderer for RenderTexture ops)
+    // 13. Wire EffectsRenderer (into effectsLayer per C6, with renderer for RenderTexture ops)
     const effectsRenderer = new EffectsRenderer(effectsLayer, this.app.renderer);
     gameLoop.onRender((prev, curr, alpha, race) => {
       effectsRenderer.render(prev, curr, alpha, race);
     });
 
-    // 13. Wire HUD renderer
+    // 14. Wire HUD renderer
     const hudRenderer = new HudRenderer(hudContainer);
     gameLoop.onRender((prev, curr, alpha, race) => {
       hudRenderer.render(prev, curr, alpha, race);
     });
 
-    // 14. Wire Overlay renderer
+    // 15. Wire Overlay renderer
     const overlayRenderer = new OverlayRenderer(hudContainer);
     gameLoop.onRender((prev, curr, alpha, race) => {
       overlayRenderer.render(prev, curr, alpha, race);
@@ -127,7 +130,7 @@ export class RendererApp {
       overlayRenderer.handleFinishedInput(e.code);
     });
 
-    // 15. Sound system (no-op stub for Phase 2)
+    // 16. Sound system
     const soundManager = new SoundManager();
     overlayRenderer.setSoundManager(soundManager);
 
@@ -139,17 +142,24 @@ export class RendererApp {
     window.addEventListener('keydown', initAudio);
     window.addEventListener('click', initAudio);
 
-    gameLoop.onRender(() => {
-      soundManager.update();
+    gameLoop.onRender((prev, curr, alpha, race) => {
+      soundManager.update(prev, curr, alpha, race);
     });
 
-    // 16. Remove splash, create ScreenManager
+    // M key mute toggle
+    window.addEventListener('keydown', (e: KeyboardEvent) => {
+      if (e.code === 'KeyM') soundManager.toggleMute();
+    });
+
+    // 17. Remove splash, get DOM overlay, create ScreenManager
     this.app.stage.removeChild(splash);
     splash.destroy({ children: true });
 
+    const menuOverlay = document.getElementById('menu-overlay')!;
+
     new ScreenManager({
       app: this.app,
-      menuContainer,
+      menuOverlay,
       worldContainer,
       hudContainer,
       trackLayer,

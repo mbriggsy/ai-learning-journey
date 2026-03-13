@@ -14,7 +14,7 @@ import {
 import { getInput, isKeyDown, ZERO_INPUT } from './InputHandler';
 import { castRays } from '../ai/raycaster';
 import { buildObservation } from '../ai/observations';
-import { BrowserAIRunner } from '../ai/browser-ai-runner';
+import { BrowserAIRunner, AI_ASSET_PATHS } from '../ai/browser-ai-runner';
 import type { GameMode } from '../types/game-mode';
 
 const FIXED_DT_MS = 1000 / 60;
@@ -108,7 +108,7 @@ export class GameLoop {
       this.aiInferSeq = 0;
       this.aiInferErrorLogged = false;
       // Load model (async — AI sits still using [0,0,0] until loaded)
-      this.aiRunner.load('/assets/model.onnx', '/assets/vecnorm_stats.json')
+      this.aiRunner.load(AI_ASSET_PATHS.model, AI_ASSET_PATHS.vecNormStats)
         .catch(err => console.warn('AI model load failed (running without ONNX):', err));
     } else {
       this.aiWorld = null;

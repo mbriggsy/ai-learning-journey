@@ -14,6 +14,7 @@ vi.mock('onnxruntime-web', () => ({
     this.type = type;
     this.data = data;
     this.dims = shape;
+    this.dispose = vi.fn();
   }),
 }));
 
@@ -33,7 +34,7 @@ const mockSession = {
 // ─── Imports (receive mocked ort) ───
 
 import * as ort from 'onnxruntime-web';
-import { BrowserAIRunner } from '../../src/ai/browser-ai-runner';
+import { BrowserAIRunner, AI_ASSET_PATHS } from '../../src/ai/browser-ai-runner';
 import { OBSERVATION_SIZE } from '../../src/ai/observations';
 
 // ─── Test helpers ───
@@ -182,9 +183,11 @@ describe('BrowserAIRunner', () => {
 
   it('infer() disposes output tensors after extracting values', async () => {
     await runner.load('/model.onnx', '/stats.json');
+    // load() runs 3 warm-up inferences, each disposes output tensors
+    const warmupDisposeCalls = mockDispose.mock.calls.length;
     await runner.infer(makeRawObs());
 
-    expect(mockDispose).toHaveBeenCalledTimes(1);
+    expect(mockDispose).toHaveBeenCalledTimes(warmupDisposeCalls + 1);
   });
 
   it('infer() clamps steer to [-1, 1] — value 2.5 clamped to 1.0', async () => {
@@ -229,6 +232,69 @@ describe('BrowserAIRunner', () => {
     const [, , brake] = await runner.infer(makeRawObs());
 
     expect(brake).toBe(1.0);
+  });
+
+  // ── AI_ASSET_PATHS ──
+
+  it('AI_ASSET_PATHS points to /ai/ directory', () => {
+    expect(AI_ASSET_PATHS.model).toBe('/ai/model.onnx');
+    expect(AI_ASSET_PATHS.vecNormStats).toBe('/ai/vecnorm_stats.json');
+  });
+
+  // ── load() validation ──
+
+  it('load() rejects stats with epsilon=0', async () => {
+    stubFetch({
+      json: () => Promise.resolve({ ...defaultStats, epsilon: 0 }),
+    });
+    await expect(runner.load('/model.onnx', '/stats.json')).rejects.toThrow(/Invalid VecNormStats/);
+  });
+
+  it('load() rejects stats with negative obs_var', async () => {
+    const badVar = new Array(OBSERVATION_SIZE).fill(1);
+    badVar[0] = -0.5;
+    stubFetch({
+      json: () => Promise.resolve({ ...defaultStats, obs_var: badVar }),
+    });
+    await expect(runner.load('/model.onnx', '/stats.json')).rejects.toThrow(/Invalid VecNormStats/);
+  });
+
+  it('load() rejects stats with NaN in obs_mean', async () => {
+    const badMean = new Array(OBSERVATION_SIZE).fill(0);
+    badMean[3] = NaN;
+    stubFetch({
+      json: () => Promise.resolve({ ...defaultStats, obs_mean: badMean }),
+    });
+    await expect(runner.load('/model.onnx', '/stats.json')).rejects.toThrow(/Invalid VecNormStats/);
+  });
+
+  it('load() rejects stats with clip_obs <= 0', async () => {
+    stubFetch({
+      json: () => Promise.resolve({ ...defaultStats, clip_obs: -1 }),
+    });
+    await expect(runner.load('/model.onnx', '/stats.json')).rejects.toThrow(/Invalid VecNormStats/);
+  });
+
+  // ── warm-up ──
+
+  it('load() runs 3 warm-up inferences', async () => {
+    await runner.load('/model.onnx', '/stats.json');
+    // 3 warm-up calls during load()
+    expect(mockRun).toHaveBeenCalledTimes(3);
+  });
+
+  // ── inputTensor disposal ──
+
+  it('infer() disposes inputTensor even when session.run throws', async () => {
+    await runner.load('/model.onnx', '/stats.json');
+    mockRun.mockRejectedValueOnce(new Error('WASM OOM'));
+
+    await expect(runner.infer(makeRawObs())).rejects.toThrow('WASM OOM');
+
+    // inputTensor.dispose() should have been called in finally block
+    const tensorInstances = vi.mocked(ort.Tensor).mock.instances;
+    const lastTensor = tensorInstances[tensorInstances.length - 1];
+    expect(lastTensor.dispose).toHaveBeenCalled();
   });
 
   // ── dispose() ──

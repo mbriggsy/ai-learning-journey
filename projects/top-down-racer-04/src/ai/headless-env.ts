@@ -19,9 +19,6 @@ import { computeReward } from './reward';
 import type { AiConfig } from './ai-config';
 import { DEFAULT_AI_CONFIG } from './ai-config';
 
-/** Checkpoint count for AI training tracks. Matches renderer's DEFAULT_CHECKPOINT_COUNT. */
-const CHECKPOINT_COUNT = 30;
-
 /** Padding added to car radius for wall contact detection (compensates for collision push-out). */
 const WALL_DETECT_PADDING = 1.0;
 
@@ -66,7 +63,7 @@ export class HeadlessEnv {
     if (!trackInfo) {
       throw new Error(`Unknown track "${trackId}". Available: ${TRACKS.map((t) => t.id).join(', ')}`);
     }
-    this.track = buildTrack(trackInfo.controlPoints, CHECKPOINT_COUNT);
+    this.track = buildTrack(trackInfo.controlPoints, trackInfo.checkpointCount);
     this.config = config;
   }
 

@@ -53,7 +53,7 @@ export const DEFAULT_AI_CONFIG = {
     stillnessSpeedThreshold: 2.0,
   },
   episode: {
-    maxSteps: 3000,
+    maxSteps: 5000,
     stillnessTimeoutTicks: 180,
   },
 } as const satisfies AiConfig;

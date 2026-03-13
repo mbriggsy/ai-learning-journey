@@ -215,18 +215,18 @@ The ONLY change from v02 is `maxSteps: 3000 → 5000`. Reward weights are identi
 Config changes, code fixes, and quality improvements. All tests must pass before any training begins.
 
 **Tasks:**
-- [ ] Update `src/ai/headless-env.ts` — replace hardcoded `CHECKPOINT_COUNT = 30` with `trackInfo.checkpointCount` (no fallback — field is required per Phase 1)
-- [ ] Update `python/ai-config.json` — set `maxSteps: 5000`
-- [ ] Update `src/ai/ai-config.ts` — set `maxSteps: 5000` in `DEFAULT_AI_CONFIG`
-- [ ] Update `python/training/export_onnx.py` — change default output dir to `../../public/ai/`
-- [ ] Update `python/training/export_onnx.py` — make `--vecnorm` optional with auto-derive from model path via `vecnorm_path_for()` (matching evaluate.py pattern)
-- [ ] Update `src/ai/browser-ai-runner.ts` — model path to `/ai/model.onnx`, stats path to `/ai/vecnorm_stats.json`
-- [ ] Fix `src/ai/browser-ai-runner.ts` — add `inputTensor.dispose()` in `try/finally` block (memory leak fix)
-- [ ] Add warm-up inference in `BrowserAIRunner.load()` — 3 dummy inference calls after session creation to JIT-compile WASM kernels (prevents 50–200ms first-frame lag)
-- [ ] Strengthen `isValidStatsJson()` in `browser-ai-runner.ts` — add `epsilon > 0`, `clip_obs > 0`, `obs_var` values `>= 0`, all values `Number.isFinite()`
-- [ ] Create `public/ai/` directory (gitkeep)
-- [ ] Add config sync test in `tests/ai/config-sync.test.ts` — assert `python/ai-config.json` maxSteps AND stillnessTimeoutTicks match `src/ai/ai-config.ts`
-- [ ] Run full test suite: `pnpm test` — all 377+ tests must pass (366 engine + 11 AI)
+- [x] Update `src/ai/headless-env.ts` — replace hardcoded `CHECKPOINT_COUNT = 30` with `trackInfo.checkpointCount` (no fallback — field is required per Phase 1)
+- [x] Update `python/ai-config.json` — set `maxSteps: 5000`
+- [x] Update `src/ai/ai-config.ts` — set `maxSteps: 5000` in `DEFAULT_AI_CONFIG`
+- [x] Update `python/training/export_onnx.py` — change default output dir to `../../public/ai/`
+- [x] Update `python/training/export_onnx.py` — make `--vecnorm` optional with auto-derive from model path via `vecnorm_path_for()` (matching evaluate.py pattern)
+- [x] Update `src/ai/browser-ai-runner.ts` — model path to `/ai/model.onnx`, stats path to `/ai/vecnorm_stats.json`
+- [x] Fix `src/ai/browser-ai-runner.ts` — add `inputTensor.dispose()` in `try/finally` block (memory leak fix)
+- [x] Add warm-up inference in `BrowserAIRunner.load()` — 3 dummy inference calls after session creation to JIT-compile WASM kernels (prevents 50–200ms first-frame lag)
+- [x] Strengthen `isValidStatsJson()` in `browser-ai-runner.ts` — add `epsilon > 0`, `clip_obs > 0`, `obs_var` values `>= 0`, all values `Number.isFinite()`
+- [x] Create `public/ai/` directory (gitkeep)
+- [x] Add config sync test in `tests/ai/config-sync.test.ts` — assert `python/ai-config.json` maxSteps AND stillnessTimeoutTicks match `src/ai/ai-config.ts`
+- [x] Run full test suite: `pnpm test` — all 377+ tests must pass (366 engine + 11 AI)
 
 **Success criteria:** All tests green.
 

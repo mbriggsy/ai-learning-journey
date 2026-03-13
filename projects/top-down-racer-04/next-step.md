@@ -4,6 +4,8 @@
 Phase 5 code + training complete on `feat/phase-5-ai-retraining` — 2026-03-13
 
 ## Next
-Phase 5.7: Browser visual verification (ATC confirms AI drives Track 3 in browser), then merge → main. After that, Phase 6.
+1. ATC: `pnpm run dev` → vs AI on Track 3 → confirm AI drives 3 laps competently
+2. Merge `feat/phase-5-ai-retraining` → `main`
+3. Fresh terminal → Phase 6: Integration & Polish via `/workflows:work`
 
 ### Test baseline: 487/487 pass (0 failures)

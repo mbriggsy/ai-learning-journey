@@ -71,7 +71,7 @@ Open http://localhost:4173 in your browser. For development with hot reload: `pn
 
 ## Architecture Rules (sacred from v02)
 
-- Engine (`src/engine/`) is **FROZEN** — 487+ tests (366 engine + 121 AI/renderer/UI), zero engine modifications
+- Engine (`src/engine/`) is **FROZEN** — 487 tests (366 engine + 121 AI/renderer/UI), zero engine modifications
 - Engine/renderer boundary is **SACRED** — zero cross-layer imports
 - Renderer reads engine state, never mutates it
 - AI trains against headless engine
@@ -92,20 +92,16 @@ Open http://localhost:4173 in your browser. For development with hot reload: `pn
 
 MCP Stack: **Context7** (framework docs) + **Serena** (semantic code nav) + **Sequential Thinking** (architectural reasoning)
 
-NO GSD. This is a clean CE build.
+## By the Numbers
 
-## Build Progress
-
-| Phase | Status |
-|-------|--------|
-| Phase -1: Foundation | Done |
-| Phase 0: Asset Generation (Imagen 4) | Done |
-| Phase 1: Asset Pipeline + Track Redesign | Done |
-| Phase 2: Core Visual Upgrade | Done |
-| Phase 3: Post-Processing & Effects | Done |
-| Phase 4: Commercial UI & Audio | Done |
-| Phase 5: AI Retraining & Validation | Done |
-| Phase 6: Integration & Polish | Done |
+| Metric | Value |
+|--------|-------|
+| Human lines of code | **0** |
+| Spec to deployed product | **~24 hours** |
+| Total lines of code | **20,952** |
+| Automated tests | **477** |
+| Commits | **68** across 8 phases |
+| AI-generated art assets | **11** via Gemini Imagen 4 |
 
 ## Tests
 
@@ -117,5 +113,6 @@ pnpm run test:build    # Build verification tests (13 tests)
 ## Docs
 
 - Full spec + ADRs: `docs/Top-Down-Racer-v04-CE-Spec.md`
+- Evidence package: `docs/evidence/` — executive summary, technical architecture, methodology
 - Reference build (GSD): `../top-down-racer-02`
 - GitHub: [mbriggsy/ai-learning-journey](https://github.com/mbriggsy/ai-learning-journey)

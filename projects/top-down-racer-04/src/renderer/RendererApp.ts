@@ -5,7 +5,7 @@
  * ScreenManager creates DOM screens, RendererApp wires PixiJS + audio.
  */
 
-import { Application, Container, Filter, Graphics, Text } from 'pixi.js';
+import { Application, Container, Graphics, Text } from 'pixi.js';
 import { GamePhase } from '../engine/RaceController';
 import { GameLoop } from './GameLoop';
 import { initInputHandler } from './InputHandler';
@@ -54,8 +54,7 @@ export class RendererApp {
       }
     });
 
-    // 5. Set filter resolution before any filter creation (blur-based effects look fine at 1x)
-    Filter.defaultOptions.resolution = 1;
+    // 5. Filter resolution managed per-tier by FilterManager (high = native DPR, medium/low = 1x)
 
     // 6. Boot asset loading
     const assetManager = new AssetManager();

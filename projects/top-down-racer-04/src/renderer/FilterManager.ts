@@ -22,8 +22,8 @@ import type { Container } from 'pixi.js';
 import type { QualityTier } from './Settings';
 
 // ── Filter Configuration ──
-const BLOOM_STRENGTH = 3;
-const BLOOM_QUALITY = 4;
+const BLOOM_STRENGTH = 1;
+const BLOOM_QUALITY = 6;
 const SHADOW_OFFSET = { x: 3, y: -3 }; // Y negated for camera Y-flip
 const SHADOW_ALPHA = 0.4;
 const SHADOW_BLUR = 2;
@@ -159,6 +159,12 @@ export class FilterManager {
   }
 
   private applyTier(worldContainer: Container, aiCarContainer: Container | null): void {
+    // High tier: native device resolution for crisp filters; medium/low: 1x (cheaper)
+    const filterRes = this.tier === 'high' ? (window.devicePixelRatio ?? 1) : 1;
+    this.bloom.resolution = filterRes;
+    this.motionBlur.resolution = filterRes;
+    this.glow.resolution = filterRes;
+
     switch (this.tier) {
       case 'low':
         worldContainer.filters = [];
@@ -172,7 +178,7 @@ export class FilterManager {
         this.glow.enabled = false;
         break;
       case 'high':
-        worldContainer.filters = [this.bloom, this.motionBlur];
+        worldContainer.filters = [this.motionBlur];
         if (aiCarContainer) {
           aiCarContainer.filters = [this.glow];
           this.glow.enabled = true;

@@ -179,6 +179,11 @@ export class WorldRenderer {
     }
   }
 
+  /** Get AI car container for FilterManager attachment. Null if solo mode. */
+  getAiCarContainer(): Container | null {
+    return this.aiCarRenderer?.container ?? null;
+  }
+
   destroy(): void {
     this.reset();
     this.carRenderer.destroy();

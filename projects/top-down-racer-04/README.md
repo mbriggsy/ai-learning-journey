@@ -18,6 +18,27 @@ Two goals, simultaneously:
 
 And yes — we're also trying out **Compound Engineering** instead of GSD. Same game, different methodology. Head-to-head comparison.
 
+## Quick Start
+
+```bash
+pnpm install
+pnpm run build
+pnpm run preview
+```
+
+Open http://localhost:4173 in your browser. For development with hot reload: `pnpm run dev`
+
+## Controls
+
+| Key | Action |
+|-----|--------|
+| Arrow keys / WASD | Steer, accelerate, brake |
+| Escape | Pause |
+| R | Restart race |
+| Q | Quit to menu (from pause) |
+| M | Toggle mute |
+| F / F11 | Toggle fullscreen |
+
 ## What's New vs v02
 
 | Layer | v02 | v04 |
@@ -81,11 +102,18 @@ NO GSD. This is a clean CE build.
 | Phase 2: Core Visual Upgrade | Done |
 | Phase 3: Post-Processing & Effects | Done |
 | Phase 4: Commercial UI & Audio | Done |
-| Phase 5: AI Retraining & Validation | In progress |
-| Phase 6: Integration & Polish | Pending |
+| Phase 5: AI Retraining & Validation | Done |
+| Phase 6: Integration & Polish | Done |
+
+## Tests
+
+```bash
+pnpm test              # Unit + renderer tests (487 tests)
+pnpm run test:build    # Build verification tests (13 tests)
+```
 
 ## Docs
 
 - Full spec + ADRs: `docs/Top-Down-Racer-v04-CE-Spec.md`
-- Reference build (GSD): `C:\Users\brigg\ai-learning-journey\projects\top-down-racer-02`
+- Reference build (GSD): `../top-down-racer-02`
 - GitHub: [mbriggsy/ai-learning-journey](https://github.com/mbriggsy/ai-learning-journey)

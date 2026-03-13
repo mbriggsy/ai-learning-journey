@@ -19,6 +19,7 @@ import type { WorldRenderer } from './WorldRenderer';
 import type { HudRenderer } from './HudRenderer';
 import type { OverlayRenderer } from './OverlayRenderer';
 import type { EffectsRenderer } from './EffectsRenderer';
+import type { FilterManager } from './FilterManager';
 import type { AssetManager } from './AssetManager';
 import { TRACKS } from '../tracks/registry';
 import type { TrackId } from '../assets/manifest';
@@ -48,6 +49,7 @@ interface ScreenManagerDeps {
   hudRenderer: HudRenderer;
   overlayRenderer: OverlayRenderer;
   effectsRenderer: EffectsRenderer;
+  filterManager: FilterManager;
   assetManager: AssetManager;
 }
 
@@ -62,12 +64,14 @@ export class ScreenManager {
   private menuContainer: Container;
   private worldContainer: Container;
   private hudContainer: Container;
+  private carLayer: Container;
   private gameLoop: GameLoop;
   private soundManager: SoundManager;
   private worldRenderer: WorldRenderer;
   private hudRenderer: HudRenderer;
   private overlayRenderer: OverlayRenderer;
   private effectsRenderer: EffectsRenderer;
+  private filterManager: FilterManager;
   private assetManager: AssetManager;
 
   private activeTrackIndex = 0;
@@ -82,12 +86,14 @@ export class ScreenManager {
     this.menuContainer = deps.menuContainer;
     this.worldContainer = deps.worldContainer;
     this.hudContainer = deps.hudContainer;
+    this.carLayer = deps.carLayer;
     this.gameLoop = deps.gameLoop;
     this.soundManager = deps.soundManager;
     this.worldRenderer = deps.worldRenderer;
     this.hudRenderer = deps.hudRenderer;
     this.overlayRenderer = deps.overlayRenderer;
     this.effectsRenderer = deps.effectsRenderer;
+    this.filterManager = deps.filterManager;
     this.assetManager = deps.assetManager;
 
     // Create screen instances
@@ -143,8 +149,13 @@ export class ScreenManager {
 
     this.transitioning = true;
     try {
-      // If leaving gameplay, hide world BEFORE unloading (C3)
+      // If leaving gameplay, detach filters + hide world BEFORE unloading (C3)
       if (this.state === 'playing' && target !== 'playing') {
+        this.filterManager.detach(
+          this.worldContainer,
+          this.carLayer,
+          this.worldRenderer.getAiCarContainer(),
+        );
         this.worldContainer.visible = false;
         this.hudContainer.visible = false;
         this.assetManager.unloadTrack();
@@ -217,6 +228,16 @@ export class ScreenManager {
 
       // Load track into game loop
       this.gameLoop.loadTrack(trackInfo.controlPoints, this.settings.lapCount, mode);
+
+      // Eagerly init track (creates car containers) so filters can attach before first render
+      this.worldRenderer.initTrack(this.gameLoop.currentWorldState.track);
+
+      // Attach post-processing filters to container hierarchy (after initTrack creates car containers)
+      this.filterManager.attach(
+        this.worldContainer,
+        this.carLayer,
+        this.worldRenderer.getAiCarContainer(),
+      );
 
       this.lastBestLapTicks = 0;
       this.lastAiBestLapTicks = 0;

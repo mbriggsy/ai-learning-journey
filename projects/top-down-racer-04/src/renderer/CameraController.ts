@@ -46,6 +46,10 @@ export class CameraController {
     worldContainer.scale.set(this.currentZoom, -this.currentZoom);
   }
 
+  get zoom(): number {
+    return this.currentZoom;
+  }
+
   reset(): void {
     this.currentZoom = ZOOM_BASE;
     this.targetZoom = ZOOM_BASE;

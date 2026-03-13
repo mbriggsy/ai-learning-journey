@@ -1,71 +1,161 @@
 /**
- * EffectsRenderer — visual feedback effects in world space.
+ * EffectsRenderer — visual feedback effects in world space (Phase 3 refactor).
  *
- * Adapted from v02. Only change: constructor accepts effectsLayer (not worldContainer)
- * so effects render at the correct z-order (between track and cars) per ADR-05.
+ * Refactored from v02/Phase 2:
+ *   - Skid marks → RenderTexture accumulation (zero per-frame Graphics creation)
+ *   - Particles → SpritePool (bounded, pre-allocated, no create/destroy per frame)
+ *   - Checkpoint flashes → SpritePool (shared pool)
  *
- * Four systems: skid marks, checkpoint flash, dust particles, spark particles.
- * All effects are read-only consumers of engine state.
+ * External API unchanged: render(), reset(), destroy().
  *
- * Phase 3 debt: per-frame Graphics allocation will bottleneck with filter passes.
+ * Requires Renderer reference for RenderTexture operations.
  */
 
-import { Container, Graphics } from 'pixi.js';
-import type { WorldState, Vec2 } from '../engine/types';
+import { Container, Graphics, Sprite, Texture, RenderTexture, type Renderer } from 'pixi.js';
+import type { WorldState, Vec2, TrackState } from '../engine/types';
 import { Surface } from '../engine/types';
 import { GamePhase, type RaceState } from '../engine/RaceController';
+import { SpritePool } from './SpritePool';
 
+// ── Skid mark constants ──
 const SKID_SLIP_THRESHOLD = 0.08;
-const SKID_MAX_AGE = 720;
-const SKID_MAX_SEGMENTS = 300;
-const SKID_COLOR = 0x444444;
-const SKID_WIDTH = 1.8;
+const SKID_COLOR = 0x333333;
+const SKID_WIDTH = 2.2;
+const SKID_ALPHA = 0.8;
+const SKID_FADE_ALPHA = 0.006; // Per-frame fade (0.005–0.008 range avoids 8-bit quantization ghosts)
+const SKID_TEXTURE_PADDING = 20;
 
+// ── Checkpoint flash constants ──
 const FLASH_DURATION = 18;
-const FLASH_LINE_WIDTH = 3;
 
-const MAX_PARTICLES = 40;
+// ── Particle constants ──
+const POOL_SIZE = 64; // Shared pool: 40 dust + 20 sparks + 4 flashes
 const DUST_LIFETIME = 30;
 const SPARK_LIFETIME = 18;
+const DUST_COLOR = 0xbb9966;
+const SPARK_COLOR = 0xffcc44;
+const FLASH_COLOR = 0x44ff88;
+const PARTICLE_TEXTURE_SIZE = 8; // px for circle texture
 
-interface SkidSegment {
-  gfx: Graphics;
-  age: number;
-}
-
-interface Particle {
-  gfx: Graphics;
+interface ActiveParticle {
+  sprite: Sprite;
   vx: number;
   vy: number;
   age: number;
   maxAge: number;
 }
 
-interface CheckpointFlash {
-  gfx: Graphics;
+interface ActiveFlash {
+  sprite: Sprite;
   age: number;
 }
 
+/** Compute axis-aligned bounding box from boundary points. */
+function computeTrackAABB(outerBoundary: readonly Vec2[]): { x: number; y: number; width: number; height: number } {
+  let minX = Infinity, minY = Infinity, maxX = -Infinity, maxY = -Infinity;
+  for (const p of outerBoundary) {
+    if (p.x < minX) minX = p.x;
+    if (p.y < minY) minY = p.y;
+    if (p.x > maxX) maxX = p.x;
+    if (p.y > maxY) maxY = p.y;
+  }
+  return { x: minX, y: minY, width: maxX - minX, height: maxY - minY };
+}
+
+/** Generate a white circle texture for particles. */
+function createCircleTexture(renderer: Renderer): Texture {
+  const gfx = new Graphics();
+  const r = PARTICLE_TEXTURE_SIZE / 2;
+  gfx.circle(r, r, r).fill({ color: 0xffffff, alpha: 1 });
+  const texture = renderer.generateTexture(gfx);
+  gfx.destroy();
+  return texture;
+}
+
 export class EffectsRenderer {
-  private container: Container;
+  private readonly effectsLayer: Container;
+  private readonly renderer: Renderer;
 
-  private skidSegments: SkidSegment[] = [];
+  // ── Skid marks (RenderTexture) ──
+  private skidTexture: RenderTexture | null = null;
+  private skidSprite: Sprite | null = null;
+  private skidStaging = new Graphics();
+  private skidFadeRect: Graphics | null = null;
+  private skidTextureHasMarks = false;
   private lastSkidPos: Vec2 | null = null;
+  private trackAABB = { x: 0, y: 0, width: 0, height: 0 };
 
-  private flashes: CheckpointFlash[] = [];
+  // ── Particles (SpritePool) ──
+  private pool: SpritePool | null = null;
+  private particles: ActiveParticle[] = [];
+  private flashes: ActiveFlash[] = [];
   private lastCheckpointIndex = 0;
-
-  private particles: Particle[] = [];
   private wasColliding = false;
+  private circleTexture: Texture | null = null;
+  private trackInitialized = false;
 
-  /** v04 change: accepts effectsLayer instead of worldContainer (C6). */
-  constructor(effectsLayer: Container) {
-    this.container = new Container();
-    effectsLayer.addChild(this.container);
+  constructor(effectsLayer: Container, renderer: Renderer) {
+    this.effectsLayer = effectsLayer;
+    this.renderer = renderer;
+  }
+
+  /** Initialize track-specific resources (skid texture, particle pool). */
+  private initForTrack(track: TrackState): void {
+    if (this.trackInitialized) return;
+
+    // Create circle texture for particles
+    this.circleTexture = createCircleTexture(this.renderer);
+
+    // Create particle pool
+    this.pool = new SpritePool(this.circleTexture, this.effectsLayer, POOL_SIZE);
+
+    // Create skid mark RenderTexture sized to track AABB
+    this.trackAABB = computeTrackAABB(track.outerBoundary);
+    const texW = Math.ceil(this.trackAABB.width + SKID_TEXTURE_PADDING * 2);
+    const texH = Math.ceil(this.trackAABB.height + SKID_TEXTURE_PADDING * 2);
+
+    try {
+      this.skidTexture = RenderTexture.create({
+        width: texW,
+        height: texH,
+        resolution: 1,
+      });
+    } catch {
+      // VRAM exhaustion — gracefully degrade to no skid marks
+      this.skidTexture = null;
+    }
+
+    if (this.skidTexture) {
+      this.skidSprite = new Sprite(this.skidTexture);
+      this.skidSprite.position.set(
+        this.trackAABB.x - SKID_TEXTURE_PADDING,
+        this.trackAABB.y - SKID_TEXTURE_PADDING,
+      );
+      // D6 pattern: counteract camera Y-flip
+      this.skidSprite.scale.y = -1;
+      // Normal blend — multiply causes artifacts with transparent RenderTextures
+      // Add to effectsLayer at bottom (behind particles)
+      this.effectsLayer.addChildAt(this.skidSprite, 0);
+
+      // Fade rect: semi-transparent background color overlays marks to fade them
+      // Uses the track background color (dark) at low alpha to gradually erase marks
+      this.skidFadeRect = new Graphics()
+        .rect(0, 0, texW, texH)
+        .fill({ color: 0x000000, alpha: 0 });
+      // Fade approach: clear the texture with clearColor to erase gradually
+      // For now, marks persist until race reset (simpler, no fade artifacts)
+    }
+
+    this.trackInitialized = true;
   }
 
   render(prev: WorldState, curr: WorldState, _alpha: number, race: RaceState): void {
     if (race.phase === GamePhase.Loading) return;
+
+    // Initialize on first render (need track data)
+    if (!this.trackInitialized) {
+      this.initForTrack(curr.track);
+    }
 
     if (curr.tick < prev.tick) {
       this.clearAll();
@@ -79,14 +169,16 @@ export class EffectsRenderer {
       this.spawnSparks(prev, curr);
     }
 
-    this.ageSkidMarks();
+    this.fadeSkidMarks();
     this.ageParticles();
     this.ageFlashes();
   }
 
-  // ── Skid Marks ──
+  // ── Skid Marks (RenderTexture) ──
 
   private updateSkidMarks(curr: WorldState): void {
+    if (!this.skidTexture) return;
+
     const { car } = curr;
     if (car.slipAngle < SKID_SLIP_THRESHOLD || car.surface === Surface.Runoff) {
       this.lastSkidPos = null;
@@ -95,54 +187,66 @@ export class EffectsRenderer {
 
     const pos = car.position;
     if (this.lastSkidPos) {
-      const gfx = new Graphics();
-      gfx.moveTo(this.lastSkidPos.x, this.lastSkidPos.y);
-      gfx.lineTo(pos.x, pos.y);
-      gfx.stroke({ width: SKID_WIDTH, color: SKID_COLOR, alpha: 0.7 });
-      this.container.addChild(gfx);
-      this.skidSegments.push({ gfx, age: 0 });
+      // Convert world coords to texture-local coords
+      const offsetX = this.trackAABB.x - SKID_TEXTURE_PADDING;
+      const offsetY = this.trackAABB.y - SKID_TEXTURE_PADDING;
 
-      while (this.skidSegments.length > SKID_MAX_SEGMENTS) {
-        const old = this.skidSegments.shift()!;
-        this.container.removeChild(old.gfx);
-        old.gfx.destroy();
-      }
+      this.skidStaging.clear();
+      this.skidStaging.moveTo(this.lastSkidPos.x - offsetX, this.lastSkidPos.y - offsetY);
+      this.skidStaging.lineTo(pos.x - offsetX, pos.y - offsetY);
+      this.skidStaging.stroke({ width: SKID_WIDTH, color: SKID_COLOR, alpha: SKID_ALPHA });
+
+      this.renderer.render({
+        container: this.skidStaging,
+        target: this.skidTexture,
+        clear: false,
+      });
+      this.skidTextureHasMarks = true;
     }
 
     this.lastSkidPos = { x: pos.x, y: pos.y };
   }
 
-  private ageSkidMarks(): void {
-    for (let i = this.skidSegments.length - 1; i >= 0; i--) {
-      const seg = this.skidSegments[i];
-      seg.age++;
-
-      const fadeStart = SKID_MAX_AGE * 0.7;
-      if (seg.age > fadeStart) {
-        seg.gfx.alpha = 1 - (seg.age - fadeStart) / (SKID_MAX_AGE - fadeStart);
-      }
-
-      if (seg.age >= SKID_MAX_AGE) {
-        this.container.removeChild(seg.gfx);
-        seg.gfx.destroy();
-        this.skidSegments.splice(i, 1);
-      }
-    }
+  private fadeSkidMarks(): void {
+    // Fade disabled — marks persist until race reset. Avoids blend mode artifacts
+    // with transparent RenderTextures. Can revisit with alpha-reduction approach later.
   }
 
-  // ── Checkpoint Flash ──
+  private clearSkidTexture(): void {
+    if (!this.skidTexture) return;
+    const empty = new Container();
+    this.renderer.render({ container: empty, target: this.skidTexture, clear: true });
+    empty.destroy();
+    this.skidTextureHasMarks = false;
+    this.lastSkidPos = null;
+  }
+
+  // ── Checkpoint Flash (SpritePool) ──
 
   private updateCheckpointFlash(curr: WorldState): void {
+    if (!this.pool) return;
+
     const newIdx = curr.timing.lastCheckpointIndex;
     if (newIdx !== this.lastCheckpointIndex && newIdx >= 0) {
       const cp = curr.track.checkpoints[newIdx];
       if (cp) {
-        const gfx = new Graphics();
-        gfx.moveTo(cp.left.x, cp.left.y);
-        gfx.lineTo(cp.right.x, cp.right.y);
-        gfx.stroke({ width: FLASH_LINE_WIDTH, color: 0x44ff88, alpha: 0.9 });
-        this.container.addChild(gfx);
-        this.flashes.push({ gfx, age: 0 });
+        // Use a pooled sprite placed at checkpoint center
+        const sprite = this.pool.acquire();
+        if (sprite) {
+          sprite.tint = FLASH_COLOR;
+          sprite.position.set(cp.center.x, cp.center.y);
+          // Scale up for flash effect
+          const dx = cp.right.x - cp.left.x;
+          const dy = cp.right.y - cp.left.y;
+          const len = Math.sqrt(dx * dx + dy * dy);
+          const scaleX = len / PARTICLE_TEXTURE_SIZE;
+          sprite.scale.set(scaleX, 1.5);
+          sprite.rotation = Math.atan2(dy, dx);
+          sprite.alpha = 0.9;
+          // D6: counteract Y-flip
+          sprite.scale.y = -sprite.scale.y;
+          this.flashes.push({ sprite, age: 0 });
+        }
       }
       this.lastCheckpointIndex = newIdx;
     }
@@ -152,36 +256,44 @@ export class EffectsRenderer {
     for (let i = this.flashes.length - 1; i >= 0; i--) {
       const flash = this.flashes[i];
       flash.age++;
-      flash.gfx.alpha = 1 - flash.age / FLASH_DURATION;
+      flash.sprite.alpha = 0.9 * (1 - flash.age / FLASH_DURATION);
 
       if (flash.age >= FLASH_DURATION) {
-        this.container.removeChild(flash.gfx);
-        flash.gfx.destroy();
-        this.flashes.splice(i, 1);
+        this.pool!.release(flash.sprite);
+        // Swap-and-pop O(1) removal
+        this.flashes[i] = this.flashes[this.flashes.length - 1];
+        this.flashes.pop();
       }
     }
   }
 
-  // ── Dust Particles ──
+  // ── Dust Particles (SpritePool) ──
 
   private spawnDust(curr: WorldState): void {
+    if (!this.pool) return;
+
     const { car } = curr;
+    // ISS-002 guard: spawn on Shoulder AND Runoff, skip only Road
     if (car.surface === Surface.Road || car.speed < 5) return;
 
     const onShoulder = car.surface === Surface.Shoulder;
     const count = onShoulder ? 1 : (car.speed > 40 ? 2 : 1);
     for (let i = 0; i < count; i++) {
-      if (this.particles.length >= MAX_PARTICLES) break;
+      const sprite = this.pool.acquire();
+      if (!sprite) break; // Pool exhausted
 
-      const gfx = new Graphics();
+      sprite.tint = DUST_COLOR;
       const size = 1.5 + Math.random() * 2.0;
-      gfx.circle(0, 0, size).fill({ color: 0xbb9966, alpha: 0.7 });
-      gfx.x = car.position.x + (Math.random() - 0.5) * 3;
-      gfx.y = car.position.y + (Math.random() - 0.5) * 3;
-      this.container.addChild(gfx);
+      const scale = size / (PARTICLE_TEXTURE_SIZE / 2);
+      sprite.scale.set(scale, -scale); // D6: Y-flip compensation
+      sprite.alpha = 0.7;
+      sprite.position.set(
+        car.position.x + (Math.random() - 0.5) * 3,
+        car.position.y + (Math.random() - 0.5) * 3,
+      );
 
       this.particles.push({
-        gfx,
+        sprite,
         vx: (Math.random() - 0.5) * 1.5,
         vy: (Math.random() - 0.5) * 1.5,
         age: 0,
@@ -190,9 +302,11 @@ export class EffectsRenderer {
     }
   }
 
-  // ── Spark Particles ──
+  // ── Spark Particles (SpritePool) ──
 
   private spawnSparks(prev: WorldState, curr: WorldState): void {
+    if (!this.pool) return;
+
     const { car } = curr;
     const speedDrop = prev.car.speed - car.speed;
     const isColliding = speedDrop > prev.car.speed * 0.1 && prev.car.speed > 10;
@@ -200,19 +314,23 @@ export class EffectsRenderer {
     if (isColliding && !this.wasColliding) {
       const count = Math.min(6, Math.floor(speedDrop / 5));
       for (let i = 0; i < count; i++) {
-        if (this.particles.length >= MAX_PARTICLES) break;
+        const sprite = this.pool.acquire();
+        if (!sprite) break;
 
-        const gfx = new Graphics();
+        sprite.tint = SPARK_COLOR;
         const size = 0.8 + Math.random() * 1.2;
-        gfx.circle(0, 0, size).fill({ color: 0xffcc44, alpha: 0.9 });
-        gfx.x = car.position.x + (Math.random() - 0.5) * 2;
-        gfx.y = car.position.y + (Math.random() - 0.5) * 2;
-        this.container.addChild(gfx);
+        const scale = size / (PARTICLE_TEXTURE_SIZE / 2);
+        sprite.scale.set(scale, -scale); // D6: Y-flip compensation
+        sprite.alpha = 0.9;
+        sprite.position.set(
+          car.position.x + (Math.random() - 0.5) * 2,
+          car.position.y + (Math.random() - 0.5) * 2,
+        );
 
         const angle = car.heading + Math.PI + (Math.random() - 0.5) * 1.5;
         const spd = 2 + Math.random() * 3;
         this.particles.push({
-          gfx,
+          sprite,
           vx: Math.cos(angle) * spd,
           vy: Math.sin(angle) * spd,
           age: 0,
@@ -230,16 +348,17 @@ export class EffectsRenderer {
     for (let i = this.particles.length - 1; i >= 0; i--) {
       const p = this.particles[i];
       p.age++;
-      p.gfx.x += p.vx;
-      p.gfx.y += p.vy;
+      p.sprite.x += p.vx;
+      p.sprite.y += p.vy;
       p.vx *= 0.95;
       p.vy *= 0.95;
-      p.gfx.alpha = 1 - p.age / p.maxAge;
+      p.sprite.alpha = 1 - p.age / p.maxAge;
 
       if (p.age >= p.maxAge) {
-        this.container.removeChild(p.gfx);
-        p.gfx.destroy();
-        this.particles.splice(i, 1);
+        this.pool!.release(p.sprite);
+        // Swap-and-pop O(1) removal
+        this.particles[i] = this.particles[this.particles.length - 1];
+        this.particles.pop();
       }
     }
   }
@@ -247,26 +366,21 @@ export class EffectsRenderer {
   // ── Cleanup ──
 
   private clearAll(): void {
-    for (const seg of this.skidSegments) {
-      this.container.removeChild(seg.gfx);
-      seg.gfx.destroy();
-    }
-    this.skidSegments = [];
-    this.lastSkidPos = null;
-
-    for (const flash of this.flashes) {
-      this.container.removeChild(flash.gfx);
-      flash.gfx.destroy();
-    }
-    this.flashes = [];
-    this.lastCheckpointIndex = 0;
-
+    // Release all active particles and flashes back to pool
     for (const p of this.particles) {
-      this.container.removeChild(p.gfx);
-      p.gfx.destroy();
+      if (this.pool) this.pool.release(p.sprite);
     }
     this.particles = [];
+
+    for (const f of this.flashes) {
+      if (this.pool) this.pool.release(f.sprite);
+    }
+    this.flashes = [];
+
+    this.lastCheckpointIndex = 0;
     this.wasColliding = false;
+
+    this.clearSkidTexture();
   }
 
   reset(): void {
@@ -275,6 +389,14 @@ export class EffectsRenderer {
 
   destroy(): void {
     this.clearAll();
-    this.container.destroy({ children: true });
+    this.skidStaging.destroy();
+    if (this.skidFadeRect) this.skidFadeRect.destroy();
+    if (this.skidSprite) {
+      this.effectsLayer.removeChild(this.skidSprite);
+      this.skidSprite.destroy();
+    }
+    if (this.skidTexture) this.skidTexture.destroy(true);
+    if (this.circleTexture) this.circleTexture.destroy(true);
+    // Pool sprites are children of effectsLayer — destroyed when effectsLayer is destroyed
   }
 }

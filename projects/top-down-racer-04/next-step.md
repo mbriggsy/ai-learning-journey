@@ -1,8 +1,7 @@
 # Next Step
 
 ## Last Completed
-Phase 2 visual verification + bug fixes — 2026-03-12 ~8:30 PM EDT
-Branch: `feat/phase-2-core-visual-upgrade` pushed, PR ready to merge (390/390 tests)
+Phase 3 code complete — 2026-03-12 ~9:50 PM EDT
 
 ## Next
-Merge Phase 2 PR into main. Then start Phase 3 planning.
+Phase 3 visual verification — `pnpm dev`, play all 3 tracks in vs-AI mode. Check: bloom on sparks/glow, drop shadows on cars, motion blur at speed, skid mark RenderTexture, HUD stays sharp. Then merge to main.

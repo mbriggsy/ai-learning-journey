@@ -9,7 +9,7 @@
 import { Container, Sprite, Texture } from 'pixi.js';
 
 /** Visual length in world units — matches v02 visual footprint. */
-const CAR_VISUAL_LENGTH = 10.0;
+const CAR_VISUAL_LENGTH = 12.0;
 /** Atlas frame pixel size. */
 const SPRITE_PX = 256;
 /**

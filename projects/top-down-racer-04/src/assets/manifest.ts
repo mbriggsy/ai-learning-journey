@@ -22,9 +22,6 @@ export const ASSETS = {
     grass: 'assets/textures/grass-tile.png',
     curb: 'assets/textures/curb-tile.png',
   },
-  ui: {
-    menuBg: 'assets/ui/menu-bg.png',
-  },
 } as const;
 
 export type PlayerCarFrame = typeof ASSETS.cars.frames[Exclude<keyof typeof ASSETS.cars.frames, 'ai'>];

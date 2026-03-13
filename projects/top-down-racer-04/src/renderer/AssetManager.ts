@@ -1,7 +1,7 @@
 /**
  * AssetManager — two-tier asset loading with race-condition guards.
  *
- * Boot tier: shared assets loaded once at startup (car atlas, tiles, menu BG).
+ * Boot tier: shared assets loaded once at startup (car atlas, tiles) + font ready gate.
  * Per-track tier: track BG loaded on selection, unloaded on track change.
  *
  * Generation counter prevents stale-load races on rapid track switching (C1).
@@ -14,14 +14,16 @@ export class AssetManager {
   private currentTrackId: TrackId | null = null;
   private loadGeneration = 0;
 
-  /** Load all shared assets in parallel. Called once at boot. */
+  /** Load all shared assets + fonts in parallel. Called once at boot. */
   async boot(): Promise<void> {
-    await Assets.load([
-      ASSETS.cars.atlas,
-      ASSETS.textures.asphalt,
-      ASSETS.textures.grass,
-      ASSETS.textures.curb,
-      ASSETS.ui.menuBg,
+    await Promise.all([
+      Assets.load([
+        ASSETS.cars.atlas,
+        ASSETS.textures.asphalt,
+        ASSETS.textures.grass,
+        ASSETS.textures.curb,
+      ]),
+      document.fonts.ready,
     ]);
   }
 

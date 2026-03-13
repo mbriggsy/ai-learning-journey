@@ -142,8 +142,13 @@ export class RendererApp {
     window.addEventListener('keydown', initAudio);
     window.addEventListener('click', initAudio);
 
-    gameLoop.onRender(() => {
-      soundManager.update();
+    gameLoop.onRender((prev, curr, alpha, race) => {
+      soundManager.update(prev, curr, alpha, race);
+    });
+
+    // M key mute toggle
+    window.addEventListener('keydown', (e: KeyboardEvent) => {
+      if (e.code === 'KeyM') soundManager.toggleMute();
     });
 
     // 17. Remove splash, get DOM overlay, create ScreenManager

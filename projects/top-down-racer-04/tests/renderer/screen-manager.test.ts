@@ -168,6 +168,7 @@ function stubFilterManager() {
     detach: vi.fn(),
     updateMotionBlur: vi.fn(),
     pause: vi.fn(),
+    resetState: vi.fn(),
     setGlowEnabled: vi.fn(),
     destroy: vi.fn(),
   } as any;

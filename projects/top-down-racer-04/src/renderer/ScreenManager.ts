@@ -179,7 +179,7 @@ export class ScreenManager {
           this.carLayer,
           this.worldRenderer.getAiCarContainer(),
         );
-        this.filterManager.pause(); // zero motion blur velocity
+        this.filterManager.resetState(); // zero motion blur velocity for next race
         this.worldContainer.visible = false;
         this.hudContainer.visible = false;
         this.effectsRenderer.reset();

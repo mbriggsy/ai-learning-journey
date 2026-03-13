@@ -24,6 +24,7 @@ const SKID_WIDTH = 2.2;
 const SKID_ALPHA = 0.8;
 const SKID_FADE_ALPHA = 0.006; // Per-frame fade (0.005–0.008 range avoids 8-bit quantization ghosts)
 const SKID_TEXTURE_PADDING = 20;
+const SKID_TEXTURE_RESOLUTION = 0.5; // Half-res saves ~75% VRAM; skid marks are still visible at ~1px
 
 // ── Checkpoint flash constants ──
 const FLASH_DURATION = 18;
@@ -118,7 +119,7 @@ export class EffectsRenderer {
       this.skidTexture = RenderTexture.create({
         width: texW,
         height: texH,
-        resolution: 1,
+        resolution: SKID_TEXTURE_RESOLUTION,
       });
     } catch {
       // VRAM exhaustion — gracefully degrade to no skid marks
@@ -385,6 +386,40 @@ export class EffectsRenderer {
 
   reset(): void {
     this.clearAll();
+  }
+
+  /**
+   * Recreate GPU resources after WebGL context loss.
+   * RenderTextures and generated textures are invalidated — tear down and
+   * let initForTrack() rebuild on next render frame.
+   */
+  recreateAfterContextLoss(): void {
+    if (!this.trackInitialized) return;
+
+    // Clear active particles/flashes (pool is about to be destroyed)
+    this.particles = [];
+    this.flashes = [];
+    this.lastCheckpointIndex = 0;
+    this.wasColliding = false;
+    this.lastSkidPos = null;
+    this.skidTextureHasMarks = false;
+
+    // Destroy old GPU resources
+    if (this.skidSprite) this.skidSprite.destroy();
+    this.skidSprite = null;
+    if (this.skidTexture) this.skidTexture.destroy(true);
+    this.skidTexture = null;
+    if (this.skidFadeRect) this.skidFadeRect.destroy();
+    this.skidFadeRect = null;
+    if (this.circleTexture) this.circleTexture.destroy(true);
+    this.circleTexture = null;
+
+    // Remove all children (old pool sprites + skid sprite)
+    this.effectsLayer.removeChildren();
+    this.pool = null;
+
+    // Next render() call triggers initForTrack() to rebuild everything fresh
+    this.trackInitialized = false;
   }
 
   destroy(): void {

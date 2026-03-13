@@ -123,7 +123,7 @@ export class DomTrackSelect {
     // Description
     const descEl = document.createElement('div');
     descEl.style.cssText = `
-      font-family: 'Rajdhani', sans-serif; font-size: 13px;
+      font-family: 'Rajdhani', 'Segoe UI', system-ui, sans-serif; font-size: 13px;
       color: #666; text-transform: uppercase; letter-spacing: 1px;
     `;
     descEl.textContent = description;

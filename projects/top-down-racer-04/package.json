@@ -6,9 +6,10 @@
   "type": "module",
   "scripts": {
     "dev": "vite",
-    "build": "tsc --noEmit && vite build",
+    "build": "node scripts/copy-ort-wasm.cjs && tsc --noEmit && vite build",
     "preview": "vite preview",
-    "test": "vitest run",
+    "test": "vitest run --exclude tests/integration/**",
+    "test:build": "vitest run tests/integration/",
     "test:watch": "vitest",
     "test:verbose": "vitest run --reporter=verbose",
     "typecheck": "tsc --noEmit",

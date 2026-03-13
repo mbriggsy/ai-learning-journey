@@ -18,7 +18,7 @@ if (!fs.existsSync(src)) {
 
 fs.mkdirSync(dest, { recursive: true });
 
-const files = fs.readdirSync(src).filter(f => f.startsWith('ort-wasm-simd-threaded'));
+const files = fs.readdirSync(src).filter(f => f.startsWith('ort-wasm-simd-threaded.jsep'));
 for (const file of files) {
   fs.cpSync(path.join(src, file), path.join(dest, file));
 }

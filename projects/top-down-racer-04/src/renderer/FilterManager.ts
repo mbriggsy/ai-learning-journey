@@ -77,7 +77,8 @@ export class FilterManager {
     aiCarContainer: Container | null,
   ): void {
     worldContainer.filters = [this.bloom, this.motionBlur];
-    carLayer.filters = [this.shadow];
+    // Shadow disabled — constant offset looks unnatural without a light source
+    // carLayer.filters = [this.shadow];
 
     if (aiCarContainer) {
       aiCarContainer.filters = [this.glow];

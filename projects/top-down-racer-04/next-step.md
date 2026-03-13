@@ -1,7 +1,7 @@
 # Next Step
 
 ## Last Completed
-Phase 3 code complete — 2026-03-12 ~9:50 PM EDT
+Phase 3 merged to main — 2026-03-12 ~10:15 PM EDT
 
 ## Next
-Phase 3 visual verification — `pnpm dev`, play all 3 tracks in vs-AI mode. Check: bloom on sparks/glow, drop shadows on cars, motion blur at speed, skid mark RenderTexture, HUD stays sharp. Then merge to main.
+Phase 4: UI Layer & HUD — `/workflows:work` on the phase 4 plan. New terminal.

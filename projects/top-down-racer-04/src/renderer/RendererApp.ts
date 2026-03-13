@@ -6,6 +6,7 @@
  */
 
 import { Application, Container, Filter, Graphics, Text } from 'pixi.js';
+import { GamePhase } from '../engine/RaceController';
 import { GameLoop } from './GameLoop';
 import { initInputHandler } from './InputHandler';
 import { EffectsRenderer } from './EffectsRenderer';
@@ -90,19 +91,32 @@ export class RendererApp {
       worldRenderer.render(prev, curr, alpha, race, this.app.screen.width, this.app.screen.height);
     });
 
-    // 11. Wire EffectsRenderer (into effectsLayer per C6, with renderer for RenderTexture ops)
+    // 11. Wire FilterManager render callback (motion blur updates)
+    gameLoop.onRender((_prev, curr, _alpha, race) => {
+      if (race.phase === GamePhase.Paused) {
+        filterManager.pause();
+      } else if (race.phase === GamePhase.Racing) {
+        filterManager.updateMotionBlur(
+          curr.car.velocity.x,
+          curr.car.velocity.y,
+          worldRenderer.cameraZoom,
+        );
+      }
+    });
+
+    // 12. Wire EffectsRenderer (into effectsLayer per C6, with renderer for RenderTexture ops)
     const effectsRenderer = new EffectsRenderer(effectsLayer, this.app.renderer);
     gameLoop.onRender((prev, curr, alpha, race) => {
       effectsRenderer.render(prev, curr, alpha, race);
     });
 
-    // 12. Wire HUD renderer
+    // 13. Wire HUD renderer
     const hudRenderer = new HudRenderer(hudContainer);
     gameLoop.onRender((prev, curr, alpha, race) => {
       hudRenderer.render(prev, curr, alpha, race);
     });
 
-    // 13. Wire Overlay renderer
+    // 14. Wire Overlay renderer
     const overlayRenderer = new OverlayRenderer(hudContainer);
     gameLoop.onRender((prev, curr, alpha, race) => {
       overlayRenderer.render(prev, curr, alpha, race);
@@ -113,7 +127,7 @@ export class RendererApp {
       overlayRenderer.handleFinishedInput(e.code);
     });
 
-    // 14. Sound system (no-op stub for Phase 2)
+    // 15. Sound system (no-op stub for Phase 2)
     const soundManager = new SoundManager();
     overlayRenderer.setSoundManager(soundManager);
 
@@ -129,7 +143,7 @@ export class RendererApp {
       soundManager.update();
     });
 
-    // 15. Remove splash, create ScreenManager
+    // 16. Remove splash, create ScreenManager
     this.app.stage.removeChild(splash);
     splash.destroy({ children: true });
 

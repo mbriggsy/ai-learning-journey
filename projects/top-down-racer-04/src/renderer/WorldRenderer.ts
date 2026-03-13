@@ -184,6 +184,11 @@ export class WorldRenderer {
     return this.aiCarRenderer?.container ?? null;
   }
 
+  /** Current camera zoom for filter velocity scaling. */
+  get cameraZoom(): number {
+    return this.camera.zoom;
+  }
+
   destroy(): void {
     this.reset();
     this.carRenderer.destroy();

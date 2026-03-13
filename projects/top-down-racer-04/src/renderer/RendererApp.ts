@@ -83,8 +83,8 @@ export class RendererApp {
       worldRenderer.render(prev, curr, alpha, race, this.app.screen.width, this.app.screen.height);
     });
 
-    // 9. Wire EffectsRenderer (into effectsLayer per C6)
-    const effectsRenderer = new EffectsRenderer(effectsLayer);
+    // 9. Wire EffectsRenderer (into effectsLayer per C6, with renderer for RenderTexture ops)
+    const effectsRenderer = new EffectsRenderer(effectsLayer, this.app.renderer);
     gameLoop.onRender((prev, curr, alpha, race) => {
       effectsRenderer.render(prev, curr, alpha, race);
     });

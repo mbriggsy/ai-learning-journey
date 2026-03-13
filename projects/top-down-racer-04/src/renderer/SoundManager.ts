@@ -275,8 +275,10 @@ export class SoundManager {
     if (!this.audio) return;
     const now = this.audio.ctx.currentTime;
     for (const layer of this.audio.layers) {
+      layer.gain.gain.cancelScheduledValues(now);
       layer.gain.gain.setTargetAtTime(0, now, MUTE_RAMP_TIME);
     }
+    this.audio.screechGain.gain.cancelScheduledValues(now);
     this.audio.screechGain.gain.setTargetAtTime(0, now, MUTE_RAMP_TIME);
   }
 

@@ -74,6 +74,7 @@ export class GameLoop {
   private vsAiGrace: VsAiGraceState | null = null;
   /** Callback invoked when player presses Q during pause. */
   onQuitToMenu: (() => void) | null = null;
+  private _pauseRequested = false;
 
   constructor(trackPoints: TrackControlPoint[]) {
     this.track = buildTrack(trackPoints, DEFAULT_CHECKPOINT_COUNT);
@@ -92,6 +93,10 @@ export class GameLoop {
     this.accumulator = 0;
     this.abortTick = false;
     this.vsAiGrace = null;
+    this.escapeWasDown = false;
+    this.rWasDown = false;
+    this.qWasDown = false;
+    this._pauseRequested = false;
 
     // Dispose previous AI runner if exists (CP-11 fix — prevents WASM memory leak)
     if (this.aiRunner) {
@@ -225,8 +230,10 @@ export class GameLoop {
 
     // Fix #40: Suppress pause during grace countdown (prevents buying time)
     const inGrace = this.vsAiGrace?.status === 'countdown';
+    const pauseRequested = this._pauseRequested;
+    this._pauseRequested = false;
     const signals: RaceControlSignals = {
-      togglePause: escapeDown && !this.escapeWasDown && !inGrace,
+      togglePause: ((escapeDown && !this.escapeWasDown) || pauseRequested) && !inGrace,
       restart: rDown && !this.rWasDown,
       quitToMenu: qDown && !this.qWasDown,
     };
@@ -495,6 +502,11 @@ export class GameLoop {
   /** Transition from Loading to Countdown (initial page load). */
   startGame(): void {
     this.resetWorld(true);
+  }
+
+  /** Request a pause on the next tick (used by tab visibility handler). */
+  requestPause(): void {
+    this._pauseRequested = true;
   }
 
   // ── Public accessors ──

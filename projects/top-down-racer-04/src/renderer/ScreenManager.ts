@@ -26,13 +26,15 @@ import { TRACKS } from '../tracks/registry';
 import type { TrackId } from '../assets/manifest';
 import { setHumanBest, setAiBest } from './Leaderboard';
 import type { GameMode } from '../types/game-mode';
+import { GamePhase } from '../engine/RaceController';
 
-type ScreenState = 'main-menu' | 'track-select' | 'settings' | 'playing';
+type ScreenState = 'main-menu' | 'track-select' | 'settings' | 'loading' | 'playing';
 
 const VALID_TRANSITIONS: Record<ScreenState, ScreenState[]> = {
   'main-menu':    ['track-select', 'settings'],
   'track-select': ['main-menu', 'playing'],
   'settings':     ['main-menu'],
+  'loading':      [],  // startGame handles transitions, not goto
   'playing':      ['track-select'],
 };
 
@@ -81,6 +83,7 @@ export class ScreenManager {
   private currentMode: GameMode = 'solo';
   private targetLaps = 0;
   private tickerFn: ((ticker: { deltaMS: number }) => void) | null = null;
+  private pendingCancel = false;
 
   constructor(deps: ScreenManagerDeps) {
     this.app = deps.app;
@@ -133,11 +136,28 @@ export class ScreenManager {
       this.domSettings.element,
     );
 
-    // Escape-as-back for menu screens (Fix #40: only fires in menu states)
+    // Escape routing table (Fix #40 + Phase 6 deepening)
     window.addEventListener('keydown', (e: KeyboardEvent) => {
       if (e.code !== 'Escape') return;
-      if (this.state === 'track-select') this.goto('main-menu');
-      else if (this.state === 'settings') this.goto('main-menu');
+      if (this.state === 'loading') {
+        this.pendingCancel = true;
+      } else if (this.state === 'track-select') {
+        this.goto('main-menu');
+      } else if (this.state === 'settings') {
+        this.goto('main-menu');
+      }
+      // 'playing': escape handled by GameLoop/RaceController (pause/resume)
+      // 'main-menu': no-op
+    });
+
+    // Tab visibility: auto-pause when user Alt-Tabs during a race (Gap T6)
+    document.addEventListener('visibilitychange', () => {
+      if (document.hidden && this.state === 'playing') {
+        const phase = this.gameLoop.currentRaceState.phase;
+        if (phase === GamePhase.Racing || phase === GamePhase.Countdown) {
+          this.gameLoop.requestPause();
+        }
+      }
     });
 
     // Show main menu
@@ -151,16 +171,22 @@ export class ScreenManager {
 
     this.transitioning = true;
     try {
-      // If leaving gameplay, detach filters + hide world BEFORE unloading (C3)
+      // Full between-race cleanup when leaving gameplay (Phase 6, Sub-Phase 6.2)
       if (this.state === 'playing' && target !== 'playing') {
+        this.soundManager.resetEngine();
         this.filterManager.detach(
           this.worldContainer,
           this.carLayer,
           this.worldRenderer.getAiCarContainer(),
         );
+        this.filterManager.pause(); // zero motion blur velocity
         this.worldContainer.visible = false;
         this.hudContainer.visible = false;
+        this.effectsRenderer.reset();
+        this.worldRenderer.reset();
         this.assetManager.unloadTrack();
+        this.lastBestLapTicks = 0;
+        this.lastAiBestLapTicks = 0;
       }
       this.showScreen(target);
     } finally {
@@ -200,6 +226,9 @@ export class ScreenManager {
         this.hudContainer.visible = false;
         this.domSettings.show();
         break;
+      case 'loading':
+        this.menuOverlay.style.pointerEvents = 'none';
+        break;
       case 'playing':
         this.menuOverlay.style.display = 'none';
         this.menuOverlay.style.pointerEvents = 'none';
@@ -211,18 +240,33 @@ export class ScreenManager {
   }
 
   private async startGame(trackIndex: number, mode: GameMode = 'solo'): Promise<void> {
-    if (this.transitioning) return;
-    this.transitioning = true;
+    if (this.state === 'loading' || this.transitioning) return;
+
+    this.state = 'loading';
+    this.pendingCancel = false;
+    this.menuOverlay.style.pointerEvents = 'none'; // prevent clicks during load
 
     try {
       this.activeTrackIndex = trackIndex;
       const trackInfo = TRACKS[trackIndex];
       const trackId = trackInfo.id as TrackId;
 
-      // Load track BG (with race guard via AssetManager)
+      // --- ASSET PHASE ---
       await this.assetManager.loadTrack(trackId);
 
-      // Configure renderers (WorldRenderer.reset() handles car layer cleanup)
+      // Check for cancel (Escape during load)
+      if (this.pendingCancel) {
+        this.assetManager.unloadTrack();
+        this.state = 'track-select';
+        this.menuOverlay.style.pointerEvents = 'auto';
+        return;
+      }
+
+      // --- AUDIO PHASE ---
+      this.soundManager.resetEngine();
+      this.soundManager.resume();
+
+      // --- SCENE PHASE ---
       this.worldRenderer.setMode(mode);
       this.worldRenderer.setTrackId(trackId);
       this.worldRenderer.setShoulderSide(trackInfo.shoulderSide ?? 'inner');
@@ -233,24 +277,22 @@ export class ScreenManager {
       this.overlayRenderer.setGraceInfoSource(() => this.gameLoop.vsAiGraceState);
       this.effectsRenderer.reset();
 
-      // Load track into game loop (Fix #36: lap count from DomSettings)
       this.gameLoop.loadTrack(trackInfo.controlPoints, this.domSettings.lapCount, mode);
-
-      // Eagerly init track (creates car containers) so filters can attach before first render
       this.worldRenderer.initTrack(this.gameLoop.currentWorldState.track);
 
-      // Attach post-processing filters to container hierarchy (after initTrack creates car containers)
       this.filterManager.attach(
         this.worldContainer,
         this.carLayer,
         this.worldRenderer.getAiCarContainer(),
       );
 
+      // --- STATE BOOKKEEPING ---
       this.lastBestLapTicks = 0;
       this.lastAiBestLapTicks = 0;
       this.currentMode = mode;
       this.targetLaps = this.domSettings.lapCount;
 
+      // --- TRANSITION PHASE ---
       this.showScreen('playing');
 
       // Attach ticker if not already running
@@ -262,8 +304,11 @@ export class ScreenManager {
         };
         this.app.ticker.add(this.tickerFn);
       }
-    } finally {
-      this.transitioning = false;
+    } catch (err) {
+      console.error('Failed to start game:', err);
+      this.state = 'track-select';
+      this.menuOverlay.style.pointerEvents = 'auto';
+      this.showScreen('track-select');
     }
   }
 

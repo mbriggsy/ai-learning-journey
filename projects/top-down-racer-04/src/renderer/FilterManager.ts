@@ -34,6 +34,7 @@ const GLOW_QUALITY = 0.3;
 const MOTION_BLUR_KERNEL = 5;
 const MOTION_BLUR_MAX_VELOCITY = 30;
 const MOTION_BLUR_MAX_VELOCITY_SQ = MOTION_BLUR_MAX_VELOCITY * MOTION_BLUR_MAX_VELOCITY;
+const MOTION_BLUR_ENABLE_THRESHOLD_SQ = 4; // Below ~2px screen velocity: skip filter pass entirely
 
 export class FilterManager {
   private readonly bloom: BloomFilter;
@@ -114,8 +115,16 @@ export class FilterManager {
     const screenVx = vx * zoom;
     const screenVy = -vy * zoom; // Y-flip compensation
 
-    // Fast-path: skip sqrt when below clamp threshold (~70% of frames)
     const magSq = screenVx * screenVx + screenVy * screenVy;
+
+    // Below threshold: disable filter entirely to skip the GPU pass
+    if (magSq < MOTION_BLUR_ENABLE_THRESHOLD_SQ) {
+      this.motionBlur.enabled = false;
+      return;
+    }
+    this.motionBlur.enabled = true;
+
+    // Fast-path: skip sqrt when below clamp threshold (~70% of frames)
     if (magSq <= MOTION_BLUR_MAX_VELOCITY_SQ) {
       this.motionBlur.velocity.x = screenVx;
       this.motionBlur.velocity.y = screenVy;
@@ -129,6 +138,7 @@ export class FilterManager {
 
   /** Zero motion blur during pause. */
   pause(): void {
+    this.motionBlur.enabled = false;
     this.motionBlur.velocity.x = 0;
     this.motionBlur.velocity.y = 0;
   }
@@ -169,6 +179,13 @@ export class FilterManager {
         }
         break;
     }
+  }
+
+  /** Reset motion blur velocity state between races. */
+  resetState(): void {
+    this.motionBlur.enabled = false;
+    this.motionBlur.velocity.x = 0;
+    this.motionBlur.velocity.y = 0;
   }
 
   /** Enable/disable glow filter (for modes without AI car). */

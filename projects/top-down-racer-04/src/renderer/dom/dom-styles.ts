@@ -41,7 +41,7 @@ export function injectMenuStyles(): void {
     }
 
     .menu-subtitle {
-      font-family: 'Rajdhani', sans-serif;
+      font-family: 'Rajdhani', 'Segoe UI', system-ui, sans-serif;
       font-size: 18px;
       font-weight: 400;
       color: #666;
@@ -51,7 +51,7 @@ export function injectMenuStyles(): void {
     }
 
     .menu-section-title {
-      font-family: 'Orbitron', sans-serif;
+      font-family: 'Orbitron', 'Segoe UI', system-ui, sans-serif;
       font-size: 28px;
       font-weight: 700;
       color: #e0e0e0;
@@ -66,7 +66,7 @@ export function injectMenuStyles(): void {
       border-radius: 8px;
       color: #e0e0e0;
       padding: 14px 48px;
-      font-family: 'Rajdhani', sans-serif;
+      font-family: 'Rajdhani', 'Segoe UI', system-ui, sans-serif;
       font-size: 18px;
       font-weight: 600;
       cursor: pointer;
@@ -165,7 +165,7 @@ export function injectMenuStyles(): void {
       border-radius: 4px;
       color: #666;
       padding: 8px 20px;
-      font-family: 'Rajdhani', sans-serif;
+      font-family: 'Rajdhani', 'Segoe UI', system-ui, sans-serif;
       font-size: 14px;
       font-weight: 600;
       cursor: pointer;
@@ -200,7 +200,7 @@ export function injectMenuStyles(): void {
     }
 
     .track-card-name {
-      font-family: 'Orbitron', sans-serif;
+      font-family: 'Orbitron', 'Segoe UI', system-ui, sans-serif;
       font-size: 18px;
       font-weight: 700;
       color: #e0e0e0;
@@ -217,7 +217,7 @@ export function injectMenuStyles(): void {
       max-width: 400px;
     }
     .settings-label {
-      font-family: 'Rajdhani', sans-serif;
+      font-family: 'Rajdhani', 'Segoe UI', system-ui, sans-serif;
       font-size: 16px;
       font-weight: 600;
       color: #aaa;
@@ -240,7 +240,7 @@ export function injectMenuStyles(): void {
       border-radius: 4px;
       color: #666;
       padding: 6px 16px;
-      font-family: 'Rajdhani', sans-serif;
+      font-family: 'Rajdhani', 'Segoe UI', system-ui, sans-serif;
       font-size: 14px;
       font-weight: 600;
       cursor: pointer;
@@ -256,7 +256,7 @@ export function injectMenuStyles(): void {
 
     /* ── Footer ── */
     .menu-footer {
-      font-family: 'Rajdhani', sans-serif;
+      font-family: 'Rajdhani', 'Segoe UI', system-ui, sans-serif;
       font-size: 12px;
       color: #333;
       position: absolute;

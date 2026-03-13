@@ -1,11 +1,9 @@
 # Next Step
 
 ## Last Completed
-Phase 5 code + training complete on `feat/phase-5-ai-retraining` — 2026-03-13
+Phase 6.7 Final Acceptance PASS — all 9 track/mode combinations verified by Briggsy in browser — 2026-03-13 EDT
 
 ## Next
-1. ATC: `pnpm run dev` → vs AI on Track 3 → confirm AI drives 3 laps competently
-2. Merge `feat/phase-5-ai-retraining` → `main`
-3. Fresh terminal → Phase 6: Integration & Polish via `/workflows:work`
+All phases complete (-1 through 6). Merge `feat/phase-6-integration-polish` → `main` and close out the build.
 
-### Test baseline: 487/487 pass (0 failures)
+### Test baseline: 487/487 pass + 13/13 build verification (0 failures)

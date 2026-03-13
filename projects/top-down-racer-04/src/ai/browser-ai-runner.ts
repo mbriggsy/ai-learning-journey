@@ -14,7 +14,7 @@ import { OBSERVATION_SIZE } from './observations';
 // ──────────────────────────────────────────────────────────
 
 if (typeof ort.env !== 'undefined' && ort.env.wasm) {
-  ort.env.wasm.wasmPaths = '/assets/ort/';
+  ort.env.wasm.wasmPaths = import.meta.env.BASE_URL + 'assets/ort/';
   ort.env.wasm.numThreads = 1; // Optimal for tiny MLP; avoids crossOriginIsolated requirement
 }
 
@@ -24,9 +24,9 @@ if (typeof ort.env !== 'undefined' && ort.env.wasm) {
 
 /** Default asset paths for AI model files (outside public/assets/ blast radius). */
 export const AI_ASSET_PATHS = {
-  model: '/ai/model.onnx',
-  vecNormStats: '/ai/vecnorm_stats.json',
-} as const;
+  model: import.meta.env.BASE_URL + 'ai/model.onnx',
+  vecNormStats: import.meta.env.BASE_URL + 'ai/vecnorm_stats.json',
+};
 
 /** Type guard for validating VecNormStats JSON from network. */
 function isValidStatsJson(value: unknown): value is {

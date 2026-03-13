@@ -151,7 +151,15 @@ export class RendererApp {
       if (e.code === 'KeyM') soundManager.toggleMute();
     });
 
-    // 17. Remove splash, get DOM overlay, create ScreenManager
+    // 17. WebGL context loss recovery (PixiJS v8.17.0 bug #11685: Text vanishes)
+    this.app.renderer.runners.contextChange.add({
+      contextChange: () => {
+        hudRenderer.rebuildAfterContextLoss();
+        effectsRenderer.recreateAfterContextLoss();
+      },
+    });
+
+    // 18. Remove splash, get DOM overlay, create ScreenManager
     this.app.stage.removeChild(splash);
     splash.destroy({ children: true });
 

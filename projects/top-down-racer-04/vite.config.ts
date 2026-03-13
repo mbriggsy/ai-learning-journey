@@ -8,9 +8,10 @@ const ORT_PREFIX = '/assets/ort/';
 /**
  * Serve onnxruntime-web WASM + MJS files without Vite module transformation.
  *
- * Dev: custom middleware serves files from node_modules before Vite's
- *      transform pipeline intercepts them (fixes .mjs dynamic import issue).
- * Build: copies files into dist/assets/ort/ via writeBundle hook.
+ * Dev only: custom middleware serves files from node_modules before Vite's
+ * transform pipeline intercepts them (fixes .mjs dynamic import issue).
+ *
+ * Build: handled by scripts/copy-ort-wasm.cjs → public/assets/ort/ → dist/.
  */
 function ortWasmPlugin() {
   return {
@@ -36,26 +37,19 @@ function ortWasmPlugin() {
         },
       );
     },
-
-    // Build: copy ORT files into dist
-    writeBundle(options: { dir?: string }) {
-      const outDir = options.dir || 'dist';
-      const dest = path.join(outDir, 'assets', 'ort');
-      fs.mkdirSync(dest, { recursive: true });
-      const files = fs.readdirSync(ORT_DIST).filter((f: string) =>
-        f.startsWith('ort-wasm-simd-threaded'),
-      );
-      for (const file of files) {
-        fs.cpSync(path.join(ORT_DIST, file), path.join(dest, file));
-      }
-    },
   };
 }
 
 export default defineConfig({
+  base: './',
   plugins: [ortWasmPlugin()],
+  build: {
+    assetsInlineLimit: 0,
+    sourcemap: false,
+  },
   assetsInclude: ['**/*.onnx'],
   optimizeDeps: {
+    include: ['pixi.js'],
     exclude: ['onnxruntime-web'],
   },
 });

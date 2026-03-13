@@ -500,6 +500,18 @@ export class HudRenderer {
     this.aiStateSource = getter;
   }
 
+  /**
+   * Rebuild all Text objects after WebGL context loss.
+   * PixiJS v8.17.0 bug #11685: Text disappears after context restoration.
+   */
+  rebuildAfterContextLoss(): void {
+    this.container.removeChildren();
+    this.trackOutlineBuilt = false;
+    this.cachedMinimapTransform = null;
+    this.buildHud();
+    this.layoutHud(this.screenW, this.screenH);
+  }
+
   /** Reset HUD state for a new track / race. */
   reset(): void {
     this.trackOutlineBuilt = false;

@@ -2,6 +2,7 @@
 
 Usage:
     cd python
+    python -m training.export_onnx --model models/your_model.zip
     python -m training.export_onnx --model models/your_model.zip --vecnorm models/your_vecnorm.pkl
 
 Requires: onnx, onnxruntime (see requirements.txt)
@@ -18,6 +19,13 @@ import torch as th
 from stable_baselines3 import PPO
 from stable_baselines3.common.policies import BasePolicy
 from stable_baselines3.common.vec_env import DummyVecEnv, VecNormalize
+
+
+def vecnorm_path_for(model_path: str) -> Path:
+    """Derive VecNormalize stats path from a model path."""
+    p = Path(model_path)
+    stem = p.with_suffix("") if p.suffix == ".zip" else p
+    return stem.parent / f"{stem.name}_vecnormalize.pkl"
 
 
 class OnnxableSB3Policy(th.nn.Module):
@@ -140,18 +148,18 @@ def main() -> None:
         help="Path to saved PPO model .zip (REQUIRED)"
     )
     parser.add_argument(
-        "--vecnorm", type=str, required=True,
-        help="Path to VecNormalize .pkl stats (REQUIRED)"
+        "--vecnorm", type=str, default=None,
+        help="Path to VecNormalize .pkl stats (auto-derived from --model if omitted)"
     )
     parser.add_argument(
         "--output-dir", type=str,
-        default=str(Path(__file__).resolve().parent.parent.parent / "public" / "assets"),
-        help="Output directory for ONNX model and stats JSON (default: public/assets/)"
+        default=str(Path(__file__).resolve().parent.parent.parent / "public" / "ai"),
+        help="Output directory for ONNX model and stats JSON (default: public/ai/)"
     )
     args = parser.parse_args()
 
     model_path = Path(args.model)
-    vecnorm_path = Path(args.vecnorm)
+    vecnorm_path = Path(args.vecnorm) if args.vecnorm else vecnorm_path_for(args.model)
     output_dir = Path(args.output_dir)
 
     # Validate inputs

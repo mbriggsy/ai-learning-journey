@@ -22,6 +22,12 @@ if (typeof ort.env !== 'undefined' && ort.env.wasm) {
 // Runtime Validation
 // ──────────────────────────────────────────────────────────
 
+/** Default asset paths for AI model files (outside public/assets/ blast radius). */
+export const AI_ASSET_PATHS = {
+  model: '/ai/model.onnx',
+  vecNormStats: '/ai/vecnorm_stats.json',
+} as const;
+
 /** Type guard for validating VecNormStats JSON from network. */
 function isValidStatsJson(value: unknown): value is {
   obs_mean: number[];
@@ -31,14 +37,23 @@ function isValidStatsJson(value: unknown): value is {
 } {
   if (typeof value !== 'object' || value === null) return false;
   const obj = value as Record<string, unknown>;
-  return (
-    Array.isArray(obj.obs_mean) &&
-    Array.isArray(obj.obs_var) &&
-    obj.obs_mean.length === OBSERVATION_SIZE &&
-    obj.obs_var.length === OBSERVATION_SIZE &&
-    typeof obj.clip_obs === 'number' &&
-    typeof obj.epsilon === 'number'
-  );
+  if (
+    !Array.isArray(obj.obs_mean) ||
+    !Array.isArray(obj.obs_var) ||
+    obj.obs_mean.length !== OBSERVATION_SIZE ||
+    obj.obs_var.length !== OBSERVATION_SIZE ||
+    typeof obj.clip_obs !== 'number' ||
+    typeof obj.epsilon !== 'number'
+  ) return false;
+
+  // Validate numeric sanity
+  if (!Number.isFinite(obj.clip_obs) || obj.clip_obs <= 0) return false;
+  if (!Number.isFinite(obj.epsilon) || obj.epsilon <= 0) return false;
+  for (let i = 0; i < OBSERVATION_SIZE; i++) {
+    if (!Number.isFinite(obj.obs_mean[i])) return false;
+    if (!Number.isFinite(obj.obs_var[i]) || obj.obs_var[i] < 0) return false;
+  }
+  return true;
 }
 
 // ──────────────────────────────────────────────────────────
@@ -63,8 +78,8 @@ export class BrowserAIRunner {
    * Load the ONNX model and VecNormalize stats.
    * Must be called once before infer(). Call during loading screen.
    *
-   * @param modelUrl - Path to the .onnx model file (e.g., '/assets/model.onnx')
-   * @param statsUrl - Path to the VecNormalize stats JSON (e.g., '/assets/vecnorm_stats.json')
+   * @param modelUrl - Path to the .onnx model file (default: AI_ASSET_PATHS.model)
+   * @param statsUrl - Path to the VecNormalize stats JSON (default: AI_ASSET_PATHS.vecNormStats)
    */
   async load(modelUrl: string, statsUrl: string): Promise<void> {
     const [session, statsJson] = await Promise.all([
@@ -98,6 +113,12 @@ export class BrowserAIRunner {
       epsilon: statsJson.epsilon,
     };
     this.session = session;
+
+    // Warm-up: JIT-compile WASM kernels to prevent 50–200ms first-frame lag
+    const warmupObs = new Array(OBSERVATION_SIZE).fill(0);
+    for (let i = 0; i < 3; i++) {
+      await this.infer(warmupObs);
+    }
   }
 
   /**
@@ -117,26 +138,30 @@ export class BrowserAIRunner {
       [1, OBSERVATION_SIZE],
     );
 
-    const results = await this.session.run({ obs: inputTensor });
+    try {
+      const results = await this.session.run({ obs: inputTensor });
 
-    const actionsTensor = results['actions'];
-    if (!actionsTensor) {
-      throw new Error('ONNX model missing "actions" output');
+      const actionsTensor = results['actions'];
+      if (!actionsTensor) {
+        throw new Error('ONNX model missing "actions" output');
+      }
+      const actions = actionsTensor.data as Float32Array;
+
+      const output: [number, number, number] = [
+        clamp(actions[0], -1, 1), // steer
+        clamp(actions[1], 0, 1), // throttle
+        clamp(actions[2], 0, 1), // brake
+      ];
+
+      // Free WASM-backed output tensors immediately to prevent memory leak
+      for (const key of Object.keys(results)) {
+        results[key].dispose?.();
+      }
+
+      return output;
+    } finally {
+      inputTensor.dispose();
     }
-    const actions = actionsTensor.data as Float32Array;
-
-    const output: [number, number, number] = [
-      clamp(actions[0], -1, 1), // steer
-      clamp(actions[1], 0, 1), // throttle
-      clamp(actions[2], 0, 1), // brake
-    ];
-
-    // Free WASM-backed output tensors immediately to prevent memory leak
-    for (const key of Object.keys(results)) {
-      results[key].dispose?.();
-    }
-
-    return output;
   }
 
   /**

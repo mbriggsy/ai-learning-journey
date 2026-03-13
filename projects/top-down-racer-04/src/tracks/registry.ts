@@ -31,7 +31,7 @@ export const TRACKS: TrackInfo[] = [
     description: 'Fast — high-speed sweepers, genuine braking zones',
     controlPoints: TRACK_02_CONTROL_POINTS,
     checkpointCount: 40,
-    parTimes: { gold: 0, silver: 0, bronze: 0 },
+    parTimes: { gold: 1515, silver: 1790, bronze: 2203 },
   },
   {
     id: 'track-03',
@@ -39,6 +39,6 @@ export const TRACKS: TrackInfo[] = [
     description: 'Technical — mixed-radius corners, no mercy',
     controlPoints: TRACK_03_CONTROL_POINTS,
     checkpointCount: 45,
-    parTimes: { gold: 0, silver: 0, bronze: 0 },
+    parTimes: { gold: 1675, silver: 1980, bronze: 2436 },
   },
 ];

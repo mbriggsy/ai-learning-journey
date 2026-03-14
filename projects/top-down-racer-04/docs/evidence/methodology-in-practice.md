@@ -18,6 +18,26 @@ The CE loop runs five steps in sequence:
 
 The critical differentiator is step 2: **deepen plan**. In v02, this step was running covertly behind the GSD methodology -- GSD produced plans, and CE's deepen-plan secretly refined them. In v04, deepen-plan runs natively on every phase, no exceptions. It is the single move most responsible for catching implementation bugs before code exists.
 
+### How v04 Deviated from the Designed Loop
+
+The CE Playbook prescribed a per-phase cycle: plan Phase 0 → deepen → execute → review → compound → plan Phase 1 → ... In practice, v04 used a **serial planning** approach: all eight plans were created and deepened upfront, then all phases were executed sequentially.
+
+**What this changed:**
+- The compound step (step 5) was never executed. No `docs/solutions/` directory was created during the build. The `learnings-researcher` agent had nothing to search.
+- Phase plans could not incorporate lessons from prior phases' *execution*, only from their *design*. Cross-phase knowledge came from architectural foresight in the plans, not from runtime experience.
+
+**Why this was a reasonable trade-off for v04:**
+- The spec + 14 ADRs locked the "what" before planning began, making each phase's inputs/outputs predictable.
+- The frozen engine (366 tests, zero modifications) anchored all phases to a stable foundation.
+- Serial planning prevented rework -- no phase needed replanning after a prior phase's execution revealed surprises.
+- The deepen step caught 9 critical bugs independently, without needing compound artifacts from prior phases.
+
+**What was lost:**
+- The compound flywheel (knowledge compounding across phases within the same build) did not operate.
+- Runtime integration surprises (filterArea clipping, ScreenManager DOM rewrite) could not feed back into later plans.
+
+This deviation is documented honestly throughout this evidence package. Where the designed CE loop would have produced different results, it is noted.
+
 ---
 
 ## The Build: Phase by Phase
@@ -94,7 +114,7 @@ The generalization audit was the headline result. The v02 ONNX model failed on v
 
 **Goal:** Wire all phases together. Cross-phase integration, error handling, resilience testing, performance validation, and deployment configuration.
 
-The final phase was the fastest -- 41 minutes from first commit to merge. This was the compound flywheel in action: every previous phase had been integrated cleanly, so Phase 6 was connector code and validation rather than substantial new functionality. Cross-phase wiring (`d77dab6c`), resilience and performance testing (`2b66a65b`), and build verification passed on the first attempt. The build verification suite confirmed 487 tests passing plus 13 build checks green.
+The final phase was the fastest -- 41 minutes from first commit to merge. Every previous phase had been integrated cleanly thanks to thorough upfront planning and deepen-plan corrections, so Phase 6 was connector code and validation rather than substantial new functionality. Cross-phase wiring (`d77dab6c`), resilience and performance testing (`2b66a65b`), and build verification passed on the first attempt. The build verification suite confirmed 487 tests passing plus 13 build checks green.
 
 Post-merge, three production fixes addressed deployment concerns: crisp high-DPI graphics and ONNX path resolution in production builds (`85cff2ac`), COOP/COEP headers for WASM threading (`6ecbc087`), and favicon addition (`c02efb3d`).
 
@@ -193,7 +213,7 @@ v02 and v04 are the same game concept -- a top-down racing game with AI opponent
 
 **Commit discipline reflects methodology differences.** v02's 181 commits include many incremental fixes during active development -- the GSD approach of "build, test, fix, iterate" leaves a trail of correction commits. v04's 56 commits are more atomic: plan tasks map to commits, and the deepen step eliminated many of the bugs that would have produced fix commits.
 
-**The compound flywheel accelerated the later phases.** Phase 6 (integration) took 41 minutes in v04. Every previous phase had cleanly integrated because the compound step captured lessons that informed the next phase's plan. Phase 3's post-mortem directly improved Phase 4's rendering approach. Phase 0's Gemini API lessons informed Phase 1's asset processor design. This is the compound effect in practice.
+**Serial planning with deepen-plan produced clean integration.** Phase 6 (integration) took 41 minutes in v04. Every previous phase integrated cleanly because all eight plans were created and deepened upfront before code execution began, giving architectural consistency across the full build. The deepen step caught 9 critical bugs pre-code. However, this serial approach meant the CE compound step (capturing lessons into `docs/solutions/` after each phase) was never executed -- the per-phase feedback loop described in the Playbook did not run as designed. Knowledge transfer happened organically through the plans themselves, not through formal compound artifacts.
 
 ---
 
@@ -237,13 +257,13 @@ PPO training via Stable Baselines3 with ONNX export for browser inference. The t
 
 **Frozen engine as architectural anchor.** The simulation engine was copied from v02 with zero modifications and 366+ passing tests. Every phase built on this foundation without risk of regression. The engine/renderer boundary -- renderer reads state, never mutates it -- was enforced by convention and verified by review. This architectural constraint simplified every decision: if a change required touching the engine, the answer was "find another way."
 
-**Phased execution with compound carry-forward.** Each phase's compound output informed the next phase's plan. Phase 0's Gemini API lessons (silent parameter ignoring, enhancePrompt behavior) directly improved Phase 1's asset processor design. Phase 2's container hierarchy lessons made Phase 3's filter attachment straightforward. Phase 3's post-mortem (the most detailed compound output) improved Phase 4's rendering approach. By Phase 6, the accumulated knowledge meant integration took 41 minutes.
+**Serial planning created architectural coherence.** All eight phase plans were written and deepened before code execution began. This was a deliberate deviation from CE's designed per-phase cycle (plan → execute → compound → plan next). The trade-off: the compound flywheel never spun (no `docs/solutions/` artifacts were created, and the learnings-researcher had nothing to search), but the upfront planning gave each phase full visibility into what every other phase needed. Phase 0's Gemini API corrections (from deepen-plan, not compound) were already baked into Phase 1's plan. Phase 3's deepen-plan corrections were written with knowledge of Phase 2's container hierarchy design. By Phase 6, the accumulated planning coherence meant integration took 41 minutes.
 
 ### What Was Harder Than Expected
 
 **Post-processing filter attachment.** Phase 3 was the most technically challenging phase despite being one of the shortest in execution time. The interaction between PixiJS v8 filters, the container hierarchy, camera Y-flip, and RenderTexture compositing created a combinatorial space where small changes produced surprising visual results. The deepen step caught the design-level issues (GLSL syntax, missing exports), but the visual tuning (filterArea clipping, drop shadow ineffectiveness) required runtime iteration.
 
-The Phase 3 post-mortem (`docs/Phase-3-Post-Processing-Learnings.md`) documents these issues in detail and is the single most valuable compound artifact of the build. Key lesson from that document: "each filter adds a render pass" is theoretically true but practically misleading -- PixiJS uses ping-pong textures (2 temp RTs max for N filters on the same container), so the actual VRAM cost is lower than naive analysis suggests.
+The Phase 3 learnings document (`docs/Phase-3-Post-Processing-Learnings.md`) documents these issues in detail. Note: this was written as pre-execution research before Phase 3 began, not as a post-execution compound artifact -- the compound step was never run during the v04 build. Key lesson from that document: "each filter adds a render pass" is theoretically true but practically misleading -- PixiJS uses ping-pong textures (2 temp RTs max for N filters on the same container), so the actual VRAM cost is lower than naive analysis suggests.
 
 **ONNX browser paths in production.** The ONNX runtime requires WASM files served with specific headers (COOP/COEP for SharedArrayBuffer). Development mode worked fine; production builds broke because Vite's asset pipeline moved the WASM files and the path resolution failed. This required a custom Vite plugin for development and explicit Vercel header configuration for production. Three post-merge commits (`85cff2ac`, `6ecbc087`) addressed this -- a reminder that deployment configuration is its own engineering domain.
 
@@ -255,7 +275,7 @@ The Phase 3 post-mortem (`docs/Phase-3-Post-Processing-Learnings.md`) documents 
 
 **Deployment configuration as an explicit phase task.** The three post-merge production fixes (ONNX paths, COOP/COEP headers, high-DPI rendering) were all deployment concerns that could have been addressed in Phase 6's plan. Future builds should include "production deployment verification" as a first-class plan step, not a post-merge cleanup.
 
-**Compound earlier on DOM/Canvas bridging.** The ScreenManager rewrite was the most significant unplanned work in the build. If Phase 2's compound step had explicitly documented the DOM/Canvas transition requirements, Phase 4's plan would have accounted for the complexity.
+**DOM/Canvas bridging complexity was underestimated.** The ScreenManager rewrite was the most significant unplanned work in the build. In a per-phase CE cycle, a compound step after Phase 2 could have captured the DOM/Canvas transition complexity for Phase 4's plan. In our serial planning approach, this gap existed because Phase 4 was planned before Phase 2's execution revealed the real complexity.
 
 ---
 

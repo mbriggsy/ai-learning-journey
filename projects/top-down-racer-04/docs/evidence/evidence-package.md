@@ -144,7 +144,7 @@ Prompts are versioned at `scripts/asset-prompts.ts`. Generation script at `scrip
 
 ## Methodology
 
-This build used Compound Engineering (CE): Plan, Work, Review, Compound. Each phase had a written plan, was executed by AI agents, reviewed against acceptance criteria, and compounded learnings into subsequent phases.
+This build used Compound Engineering (CE) with a key adaptation: all eight phase plans were created and deepened serially before code execution began, rather than following CE's designed per-phase cycle (plan → execute → compound → plan next). This gave architectural consistency across phases but meant the compound step (capturing lessons into `docs/solutions/`) was never executed. The deepen-plan step -- which stress-tests plans via 10+ specialized research agents -- was the primary quality driver, catching 9 critical bugs before code was written.
 
 Tools used:
 - **Context7** for live PixiJS v8 and Vite documentation

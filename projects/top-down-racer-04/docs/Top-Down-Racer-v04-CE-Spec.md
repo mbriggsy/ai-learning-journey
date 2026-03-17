@@ -1,4 +1,4 @@
-﻿?# TOP-DOWN RACER v04
+?# TOP-DOWN RACER v04
 ## CE Interview Prep & Architecture Spec
 *Prepared by Briggsy "" March 2026*
 *The pre-baked answers doc. War-game everything before CE asks.*
@@ -566,3 +566,4 @@ v04 answers both.
 *"" End of v04 CE Spec ""*
 *Zero hand-written game code. The human makes decisions. The AI writes code.*
 *The human defines beauty. The AI builds it.*
+

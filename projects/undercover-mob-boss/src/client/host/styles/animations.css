@@ -1,0 +1,252 @@
+/* ── Vote Card Flip ──────────────────────────────────────────────── */
+
+@keyframes vote-flip {
+  0% {
+    transform: rotateY(0deg);
+  }
+  100% {
+    transform: rotateY(180deg);
+  }
+}
+
+.vote-card {
+  perspective: 800px;
+  width: clamp(80px, 10vw, 120px);
+}
+
+.vote-card__inner {
+  position: relative;
+  width: 100%;
+  aspect-ratio: 3 / 4;
+  transform-style: preserve-3d;
+}
+
+.vote-card__face {
+  position: absolute;
+  inset: 0;
+  backface-visibility: hidden;
+  border-radius: 8px;
+  display: grid;
+  place-items: center;
+  overflow: hidden;
+  box-shadow: 0 4px 16px rgba(0, 0, 0, 0.5);
+}
+
+.vote-card__front {
+  background: var(--noir-slate);
+  border: 2px solid var(--noir-smoke);
+}
+
+.vote-card__back {
+  transform: rotateY(180deg);
+}
+
+.vote-card__back--approve {
+  background: rgba(201, 168, 76, 0.15);
+  color: var(--noir-gold);
+  border: 2px solid var(--noir-amber);
+}
+
+.vote-card__back--block {
+  background: rgba(168, 32, 32, 0.15);
+  color: var(--noir-cream);
+  border: 2px solid var(--noir-crimson);
+}
+
+.vote-card__name {
+  font-size: var(--text-xs);
+  font-weight: 600;
+  padding: var(--space-xs);
+  text-align: center;
+  word-break: break-word;
+}
+
+.vote-card__art {
+  width: 100%;
+  height: 100%;
+  object-fit: contain;
+  position: absolute;
+  inset: 0;
+  padding: 4px;
+}
+
+.vote-card__result {
+  font-size: var(--text-sm);
+  font-weight: 900;
+  text-transform: uppercase;
+  letter-spacing: 0.1em;
+  position: absolute;
+  bottom: 4px;
+  left: 0;
+  right: 0;
+  text-align: center;
+  text-shadow: 0 1px 6px rgba(0, 0, 0, 0.9), 0 0 12px rgba(0, 0, 0, 0.6);
+}
+
+.vote-card__label {
+  display: block;
+  text-align: center;
+  font-size: var(--text-sm);
+  font-weight: 700;
+  color: var(--noir-cream);
+  margin-top: var(--space-xs);
+  letter-spacing: 0.05em;
+  text-shadow: 0 1px 4px rgba(0, 0, 0, 0.8);
+}
+
+/* ── Election Results Layout ───────────────────────────────────── */
+
+.election-results__grid {
+  display: grid;
+  gap: 24px 32px;
+  justify-content: center;
+  justify-items: center;
+  max-width: 1100px;
+}
+
+.election-results__grid .vote-card {
+  width: 100%;
+}
+
+.election-results__tally {
+  font-size: var(--text-lg);
+  color: var(--noir-muted);
+  margin-top: var(--space-md);
+  transition: opacity 0.4s;
+}
+
+.election-results__outcome {
+  font-size: var(--text-2xl);
+  font-weight: 900;
+  margin-top: var(--space-sm);
+  transition: opacity 0.4s;
+}
+
+/* ── Policy Card Flip ────────────────────────────────────────────── */
+
+@keyframes policy-flip-in {
+  0% {
+    transform: rotateY(0deg) scale(0.8);
+    opacity: 0.5;
+  }
+  50% {
+    transform: rotateY(90deg) scale(1.1);
+    opacity: 0.8;
+  }
+  100% {
+    transform: rotateY(180deg) scale(1);
+    opacity: 1;
+  }
+}
+
+.policy-reveal {
+  perspective: 1000px;
+  width: clamp(120px, 18vw, 200px);
+}
+
+.policy-reveal__inner {
+  position: relative;
+  width: 100%;
+  aspect-ratio: 3 / 4;
+  transform-style: preserve-3d;
+}
+
+.policy-reveal__inner--flipping {
+  animation: policy-flip-in 800ms ease-in-out forwards;
+}
+
+.policy-reveal__face {
+  position: absolute;
+  inset: 0;
+  backface-visibility: hidden;
+  border-radius: 12px;
+  display: grid;
+  place-items: center;
+  overflow: hidden;
+  box-shadow: 0 8px 32px rgba(0, 0, 0, 0.6);
+}
+
+.policy-reveal__front {
+  background: var(--noir-slate);
+  border: 3px solid var(--noir-smoke);
+}
+
+.policy-reveal__back {
+  transform: rotateY(180deg);
+}
+
+.policy-reveal__back--good {
+  background: var(--noir-gold);
+  border: 3px solid var(--noir-amber);
+  color: var(--noir-black);
+}
+
+.policy-reveal__back--bad {
+  background: var(--noir-blood);
+  border: 3px solid var(--noir-crimson);
+  color: var(--noir-cream);
+}
+
+.policy-reveal__label {
+  font-size: var(--text-xl);
+  font-weight: 900;
+  text-transform: uppercase;
+  letter-spacing: 0.1em;
+}
+
+/* ── Power Overlay Entrance ──────────────────────────────────────── */
+
+@keyframes power-slide-in {
+  0% {
+    transform: translateY(30px);
+    opacity: 0;
+  }
+  100% {
+    transform: translateY(0);
+    opacity: 1;
+  }
+}
+
+.power-entrance {
+  animation: power-slide-in 500ms ease-out forwards;
+}
+
+/* ── Screen Transitions ──────────────────────────────────────────── */
+
+.host-screen-container {
+  position: relative;
+  width: 100%;
+  height: 100%;
+  height: 100dvh;
+  overflow: hidden;
+}
+
+.host-screen-container__layer {
+  position: absolute;
+  inset: 0;
+  transition: opacity 400ms ease-in-out;
+}
+
+.host-screen-container__layer--entering {
+  opacity: 0;
+}
+
+.host-screen-container__layer--active {
+  opacity: 1;
+}
+
+.host-screen-container__layer--exiting {
+  opacity: 0;
+  pointer-events: none;
+}
+
+/* ── General fade-in utility ─────────────────────────────────────── */
+
+@keyframes host-fade-in {
+  from { opacity: 0; }
+  to { opacity: 1; }
+}
+
+.host-fade-in {
+  animation: host-fade-in 400ms ease-out forwards;
+}

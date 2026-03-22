@@ -1,0 +1,1699 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover" />
+  <meta name="theme-color" content="#0a0a0c" />
+  <meta name="description" content="How to Play — Undercover Mob Boss" />
+  <title>How to Play — Undercover Mob Boss</title>
+  <link rel="icon" type="image/png" sizes="32x32" href="/favicon-32.png" />
+  <script src="/vendor/gsap.min.js"></script>
+  <script src="/vendor/ScrollTrigger.min.js"></script>
+  <style>
+    /* ═══════════════════════════════════════════════════════════════ */
+    /* SELF-HOSTED FONTS                                              */
+    /* ═══════════════════════════════════════════════════════════════ */
+    @font-face {
+      font-family: 'Cinzel';
+      font-style: normal;
+      font-weight: 600 900;
+      font-display: swap;
+      src: url('/fonts/cinzel-600.woff2') format('woff2');
+    }
+    @font-face {
+      font-family: 'Cormorant Garamond';
+      font-style: normal;
+      font-weight: 400;
+      font-display: swap;
+      src: url('/fonts/cormorant-400.woff2') format('woff2');
+    }
+    @font-face {
+      font-family: 'Cormorant Garamond';
+      font-style: normal;
+      font-weight: 600;
+      font-display: swap;
+      src: url('/fonts/cormorant-600.woff2') format('woff2');
+    }
+    @font-face {
+      font-family: 'Cormorant Garamond';
+      font-style: italic;
+      font-weight: 400;
+      font-display: swap;
+      src: url('/fonts/cormorant-400i.woff2') format('woff2');
+    }
+
+    /* ═══════════════════════════════════════════════════════════════ */
+    /* RESET & DESIGN TOKENS                                         */
+    /* ═══════════════════════════════════════════════════════════════ */
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+    :root {
+      --noir-black:      #0a0a0c;
+      --noir-charcoal:   #1a1a1e;
+      --noir-slate:      #2a2a30;
+      --noir-smoke:      #3a3a42;
+      --noir-cream:      #e8e0d0;
+      --noir-gold:       #c9a84c;
+      --noir-blood:      #a82020;
+      --noir-muted:      #8a8478;
+      --noir-green:      #3a7c4a;
+      --noir-amber:      #d4a944;
+      --noir-silver:     #9aa5b4;
+      --noir-gold-light: #d4b04e;
+      --noir-gold-dark:  #b89438;
+      --noir-gold-deep:  #8b6914;
+      --noir-blood-light:#e07070;
+      --noir-blood-vivid:#b82222;
+      --noir-parchment:  #d4c8b0;
+
+      --font-display: 'Cinzel', 'Times New Roman', serif;
+      --font-body:    'Cormorant Garamond', 'Georgia', serif;
+
+      --glass-bg:          rgba(10, 10, 12, 0.93);
+      --glass-bg-heavy:    rgba(10, 10, 12, 0.96);
+      --glass-border:      rgba(232, 224, 208, 0.08);
+      --glass-border-gold: rgba(201, 168, 76, 0.15);
+      --glass-blur:        16px;
+
+      --surface-low:       #141416;
+      --surface-mid:       #1a191c;
+      --surface-high:      #222226;
+    }
+
+    html { scroll-behavior: smooth; }
+
+    body {
+      background: var(--noir-black);
+      color: var(--noir-cream);
+      font-family: var(--font-body);
+      font-size: 18px;
+      line-height: 1.7;
+      -webkit-font-smoothing: antialiased;
+      overflow-x: hidden;
+    }
+
+    html, body {
+      scrollbar-width: none;
+      -ms-overflow-style: none;
+    }
+
+    html::-webkit-scrollbar,
+    body::-webkit-scrollbar { display: none; }
+
+    /* ── Background + Grain ────────────────────────────────────────── */
+    body::before {
+      content: '';
+      position: fixed;
+      inset: 0;
+      background:
+        radial-gradient(ellipse at 50% 20%, transparent 30%, rgba(0, 0, 0, 0.5) 100%),
+        url('/assets/background.jpg');
+      background-size: cover, cover;
+      background-position: center, center;
+      z-index: -2;
+    }
+
+    body::after {
+      content: '';
+      position: fixed;
+      inset: 0;
+      background: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='200' height='200'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.65' numOctaves='3' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='200' height='200' filter='url(%23n)' opacity='0.035'/%3E%3C/svg%3E");
+      background-size: 200px 200px;
+      pointer-events: none;
+      z-index: -1;
+    }
+
+    /* ── Layout ────────────────────────────────────────────────────── */
+    .page {
+      max-width: 900px;
+      margin: 0 auto;
+      padding: 0 24px 120px;
+      position: relative;
+    }
+
+    /* Solid backdrop behind all content so text is always readable */
+    .page::before {
+      content: '';
+      position: absolute;
+      top: 100vh;
+      left: -40px;
+      right: -40px;
+      bottom: -40px;
+      background: linear-gradient(180deg,
+        transparent 0%,
+        rgba(10, 10, 12, 0.92) 60px,
+        rgba(10, 10, 12, 0.96) 200px,
+        var(--noir-black) 400px
+      );
+      z-index: -1;
+      pointer-events: none;
+    }
+
+    @media (max-width: 600px) {
+      body { font-size: 16px; }
+      .page { padding: 0 16px 80px; }
+    }
+
+    /* ═══════════════════════════════════════════════════════════════ */
+    /* HERO                                                           */
+    /* ═══════════════════════════════════════════════════════════════ */
+    .hero {
+      min-height: 100vh;
+      min-height: 100dvh;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      text-align: center;
+      padding: 48px 24px;
+      position: relative;
+    }
+
+    /* Dark radial backdrop so hero text is readable over the city artwork */
+    .hero::before {
+      content: '';
+      position: absolute;
+      inset: 0;
+      background: radial-gradient(
+        ellipse at 50% 50%,
+        rgba(10, 10, 12, 0.8) 0%,
+        rgba(10, 10, 12, 0.6) 40%,
+        rgba(10, 10, 12, 0.3) 70%,
+        transparent 100%
+      );
+      z-index: 0;
+      pointer-events: none;
+    }
+
+    .hero > * { position: relative; z-index: 1; }
+
+    .hero__seal {
+      width: 96px;
+      height: 96px;
+      border-radius: 50%;
+      background: radial-gradient(circle at 35% 35%, var(--noir-amber), var(--noir-gold-deep));
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-family: var(--font-display);
+      font-size: 2.2rem;
+      font-weight: 900;
+      color: var(--noir-black);
+      border: 2px solid rgba(201, 168, 76, 0.5);
+      box-shadow:
+        0 6px 24px rgba(0, 0, 0, 0.6),
+        inset 0 2px 4px rgba(255, 255, 255, 0.2),
+        inset 0 -2px 4px rgba(0, 0, 0, 0.3);
+      margin-bottom: 32px;
+    }
+
+    .hero__seal::after {
+      content: '';
+      position: absolute;
+      width: 112px;
+      height: 112px;
+      border-radius: 50%;
+      border: 1px solid rgba(201, 168, 76, 0.15);
+    }
+
+    .hero__title {
+      font-family: var(--font-display);
+      font-size: clamp(2.2rem, 7vw, 4rem);
+      font-weight: 900;
+      color: var(--noir-gold);
+      text-shadow: 0 4px 24px rgba(201, 168, 76, 0.25), 0 2px 8px rgba(0,0,0,0.8);
+      letter-spacing: 0.04em;
+      text-transform: uppercase;
+      line-height: 1.1;
+      margin-bottom: 12px;
+    }
+
+    .hero__flourish {
+      display: flex;
+      align-items: center;
+      gap: 16px;
+      width: 240px;
+      margin: 20px 0 24px;
+    }
+
+    .hero__flourish-line {
+      flex: 1;
+      height: 1px;
+    }
+
+    .hero__flourish-line:first-child {
+      background: linear-gradient(90deg, transparent, rgba(201, 168, 76, 0.4));
+    }
+
+    .hero__flourish-line:last-child {
+      background: linear-gradient(90deg, rgba(201, 168, 76, 0.4), transparent);
+    }
+
+    .hero__flourish-diamond {
+      width: 8px;
+      height: 8px;
+      background: var(--noir-gold);
+      transform: rotate(45deg);
+      opacity: 0.6;
+    }
+
+    .hero__subtitle {
+      font-family: var(--font-display);
+      font-size: clamp(0.85rem, 2vw, 1.1rem);
+      font-weight: 600;
+      color: var(--noir-cream);
+      letter-spacing: 0.15em;
+      text-transform: uppercase;
+      opacity: 0.85;
+      margin-bottom: 16px;
+      text-shadow: 0 2px 12px rgba(0, 0, 0, 0.9), 0 0 24px rgba(0, 0, 0, 0.7);
+    }
+
+    .hero__tagline {
+      font-size: 1.2rem;
+      font-style: italic;
+      color: var(--noir-cream);
+      opacity: 0.8;
+      text-shadow: 0 2px 12px rgba(0, 0, 0, 0.9), 0 0 24px rgba(0, 0, 0, 0.7);
+    }
+
+    .hero__scroll-cue {
+      position: absolute;
+      bottom: 40px;
+      font-family: var(--font-display);
+      font-size: 0.7rem;
+      letter-spacing: 0.15em;
+      text-transform: uppercase;
+      color: var(--noir-gold);
+      opacity: 0.5;
+      text-align: center;
+    }
+
+    .hero__scroll-arrow {
+      display: block;
+      margin: 8px auto 0;
+      width: 18px;
+      height: 18px;
+      border-right: 2px solid var(--noir-gold);
+      border-bottom: 2px solid var(--noir-gold);
+      transform: rotate(45deg);
+      opacity: 0.5;
+    }
+
+    /* ═══════════════════════════════════════════════════════════════ */
+    /* SECTIONS                                                       */
+    /* ═══════════════════════════════════════════════════════════════ */
+    .section {
+      margin-top: 80px;
+      opacity: 0;
+    }
+
+    .section__eyebrow {
+      font-family: var(--font-display);
+      font-size: 0.65rem;
+      font-weight: 700;
+      color: var(--noir-gold);
+      letter-spacing: 0.2em;
+      text-transform: uppercase;
+      margin-bottom: 8px;
+      display: flex;
+      align-items: center;
+      gap: 12px;
+    }
+
+    .section__eyebrow-line {
+      flex: 1;
+      height: 1px;
+      background: linear-gradient(90deg, rgba(201, 168, 76, 0.3), transparent);
+    }
+
+    .section__title {
+      font-family: var(--font-display);
+      font-size: clamp(1.6rem, 4vw, 2.25rem);
+      font-weight: 700;
+      color: var(--noir-cream);
+      letter-spacing: 0.03em;
+      margin-bottom: 24px;
+    }
+
+    .section__title em {
+      color: var(--noir-gold);
+      font-style: normal;
+    }
+
+    /* ═══════════════════════════════════════════════════════════════ */
+    /* GLASS PANELS                                                   */
+    /* ═══════════════════════════════════════════════════════════════ */
+    .glass {
+      background: var(--glass-bg);
+      backdrop-filter: blur(var(--glass-blur));
+      -webkit-backdrop-filter: blur(var(--glass-blur));
+      border: 1px solid var(--glass-border);
+      border-radius: 4px;
+      padding: 32px;
+      margin-bottom: 24px;
+      position: relative;
+    }
+
+    .glass::before {
+      content: '';
+      position: absolute;
+      inset: 0;
+      border-radius: inherit;
+      background: linear-gradient(135deg, rgba(232, 224, 208, 0.03) 0%, transparent 50%);
+      pointer-events: none;
+    }
+
+    /* Art deco corner accents */
+    .glass::after {
+      content: '';
+      position: absolute;
+      inset: 6px;
+      pointer-events: none;
+      background:
+        linear-gradient(rgba(201, 168, 76, 0.25), rgba(201, 168, 76, 0.25)) top left / 18px 1px no-repeat,
+        linear-gradient(rgba(201, 168, 76, 0.25), rgba(201, 168, 76, 0.25)) top left / 1px 18px no-repeat,
+        linear-gradient(rgba(201, 168, 76, 0.25), rgba(201, 168, 76, 0.25)) bottom right / 18px 1px no-repeat,
+        linear-gradient(rgba(201, 168, 76, 0.25), rgba(201, 168, 76, 0.25)) bottom right / 1px 18px no-repeat;
+    }
+
+    .glass--gold { border-color: var(--glass-border-gold); }
+    .glass--blood { border-color: rgba(168, 32, 32, 0.15); }
+
+    .glass--gold::after {
+      background:
+        linear-gradient(rgba(201, 168, 76, 0.4), rgba(201, 168, 76, 0.4)) top left / 22px 1px no-repeat,
+        linear-gradient(rgba(201, 168, 76, 0.4), rgba(201, 168, 76, 0.4)) top left / 1px 22px no-repeat,
+        linear-gradient(rgba(201, 168, 76, 0.4), rgba(201, 168, 76, 0.4)) bottom right / 22px 1px no-repeat,
+        linear-gradient(rgba(201, 168, 76, 0.4), rgba(201, 168, 76, 0.4)) bottom right / 1px 22px no-repeat;
+    }
+
+    .pinstripe {
+      background-image: repeating-linear-gradient(
+        90deg, transparent, transparent 40px,
+        rgba(232, 224, 208, 0.02) 40px, rgba(232, 224, 208, 0.02) 41px
+      );
+    }
+
+    /* Tonal surface shift (no-line rule) */
+    .surface-low  { background: var(--surface-low); }
+    .surface-mid  { background: var(--surface-mid); }
+    .surface-high { background: var(--surface-high); }
+
+    /* ═══════════════════════════════════════════════════════════════ */
+    /* THE STORY                                                      */
+    /* ═══════════════════════════════════════════════════════════════ */
+    .story-grid {
+      display: grid;
+      grid-template-columns: 1fr;
+      gap: 0;
+    }
+
+    @media (min-width: 640px) {
+      .story-grid { grid-template-columns: 7fr 5fr; }
+    }
+
+    .story-quote {
+      border-left: 3px solid var(--noir-gold);
+      padding: 40px;
+      background: rgba(10, 10, 12, 0.95);
+      backdrop-filter: blur(var(--glass-blur));
+    }
+
+    .story-quote__text {
+      font-family: var(--font-body);
+      font-size: 1.35rem;
+      font-style: italic;
+      line-height: 1.8;
+      color: var(--noir-parchment);
+    }
+
+    .story-quote__text strong {
+      color: var(--noir-gold);
+      font-style: normal;
+      font-weight: 600;
+    }
+
+    .story-image {
+      position: relative;
+      min-height: 240px;
+      overflow: hidden;
+    }
+
+    .story-image img {
+      width: 100%;
+      height: 100%;
+      object-fit: cover;
+      filter: grayscale(0.6) brightness(0.5) contrast(1.2);
+    }
+
+    .story-image::after {
+      content: '';
+      position: absolute;
+      inset: 0;
+      background: linear-gradient(to top, var(--noir-black) 0%, transparent 60%);
+    }
+
+    /* ═══════════════════════════════════════════════════════════════ */
+    /* TL;DR                                                          */
+    /* ═══════════════════════════════════════════════════════════════ */
+    .tldr-grid {
+      display: grid;
+      grid-template-columns: 1fr;
+      gap: 20px;
+    }
+
+    @media (min-width: 640px) {
+      .tldr-grid { grid-template-columns: 1fr 1fr; }
+    }
+
+    .tldr-item {
+      display: flex;
+      gap: 16px;
+      align-items: flex-start;
+    }
+
+    .tldr-num {
+      font-family: var(--font-display);
+      font-size: 0.85rem;
+      font-weight: 700;
+      color: var(--noir-gold);
+      flex-shrink: 0;
+      padding-top: 2px;
+    }
+
+    .tldr-text {
+      font-size: 1.05rem;
+      line-height: 1.6;
+    }
+
+    .tldr-text strong { color: var(--noir-gold); }
+    .tldr-text .mob { color: var(--noir-blood-light); }
+
+    /* ═══════════════════════════════════════════════════════════════ */
+    /* ROLE CARDS                                                     */
+    /* ═══════════════════════════════════════════════════════════════ */
+    .role-grid {
+      display: grid;
+      grid-template-columns: 1fr;
+      gap: 0;
+    }
+
+    @media (min-width: 768px) {
+      .role-grid { grid-template-columns: 1fr 1fr 1fr; }
+    }
+
+    .role-card {
+      padding: 0;
+      overflow: hidden;
+      border-radius: 0;
+      transition: transform 0.4s ease;
+    }
+
+    .role-card:hover { transform: translateY(-4px); }
+
+    .role-card__art-wrap {
+      position: relative;
+      overflow: hidden;
+      height: 280px;
+    }
+
+    .role-card__art {
+      width: 100%;
+      height: 100%;
+      object-fit: cover;
+      transition: transform 0.7s ease;
+    }
+
+    .role-card:hover .role-card__art {
+      transform: scale(1.08);
+    }
+
+    .role-card__art-fade {
+      position: absolute;
+      bottom: 0;
+      left: 0;
+      right: 0;
+      height: 50%;
+      background: linear-gradient(to top, var(--surface-low), transparent);
+    }
+
+    .role-card__body {
+      padding: 24px;
+      background: var(--surface-low);
+    }
+
+    .role-card__name {
+      font-family: var(--font-display);
+      font-size: 1.2rem;
+      font-weight: 700;
+      letter-spacing: 0.05em;
+      margin-bottom: 4px;
+    }
+
+    .role-card__name--citizen { color: var(--noir-gold); }
+    .role-card__name--soldier { color: var(--noir-blood-light); }
+    .role-card__name--boss    { color: var(--noir-blood); }
+
+    .role-card__flavor {
+      font-style: italic;
+      font-size: 0.9rem;
+      color: var(--noir-muted);
+      margin-bottom: 10px;
+    }
+
+    .role-card__desc {
+      font-size: 0.9rem;
+      color: var(--noir-cream);
+      opacity: 0.8;
+    }
+
+    /* ═══════════════════════════════════════════════════════════════ */
+    /* TABLES                                                         */
+    /* ═══════════════════════════════════════════════════════════════ */
+    .table-wrap {
+      overflow-x: auto;
+      -webkit-overflow-scrolling: touch;
+    }
+
+    .noir-table {
+      width: 100%;
+      min-width: 480px;
+      border-collapse: collapse;
+      font-size: 0.9rem;
+    }
+
+    .noir-table th {
+      font-family: var(--font-display);
+      font-weight: 700;
+      font-size: 0.7rem;
+      letter-spacing: 0.12em;
+      text-transform: uppercase;
+      color: var(--noir-gold);
+      text-align: left;
+      padding: 14px 20px;
+      border-bottom: 1px solid rgba(201, 168, 76, 0.15);
+    }
+
+    .noir-table td {
+      padding: 12px 20px;
+      color: var(--noir-cream);
+    }
+
+    .noir-table tbody tr {
+      transition: background 0.2s ease;
+      border-bottom: 1px solid rgba(232, 224, 208, 0.04);
+    }
+
+    .noir-table tbody tr:hover { background: rgba(201, 168, 76, 0.03); }
+    .noir-table tbody tr:last-child { border-bottom: none; }
+
+    .td-gold { color: var(--noir-gold) !important; font-weight: 600; }
+    .td-blood { color: var(--noir-blood-light) !important; font-weight: 600; }
+
+    /* ═══════════════════════════════════════════════════════════════ */
+    /* POLICY TRACK VISUALIZATION                                     */
+    /* ═══════════════════════════════════════════════════════════════ */
+    .track-viz {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 32px;
+      margin: 24px 0;
+    }
+
+    @media (max-width: 500px) {
+      .track-viz { grid-template-columns: 1fr; }
+    }
+
+    .track {
+      text-align: center;
+    }
+
+    .track__label {
+      font-family: var(--font-display);
+      font-size: 0.95rem;
+      font-weight: 700;
+      letter-spacing: 0.06em;
+      margin-bottom: 12px;
+    }
+
+    .track__label--good { color: var(--noir-gold); }
+    .track__label--bad  { color: var(--noir-blood-light); }
+
+    .track__slots {
+      display: flex;
+      gap: 6px;
+      justify-content: center;
+    }
+
+    .track__slot {
+      flex: 1;
+      min-width: 36px;
+      max-width: 48px;
+      height: 56px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-family: var(--font-display);
+      font-weight: 700;
+      font-size: 0.85rem;
+      border-radius: 4px;
+    }
+
+    .track__slot--good {
+      background: rgba(201, 168, 76, 0.12);
+      border: 1px solid rgba(201, 168, 76, 0.3);
+      color: var(--noir-gold);
+    }
+
+    .track__slot--bad {
+      background: rgba(168, 32, 32, 0.1);
+      border: 1px solid rgba(168, 32, 32, 0.25);
+      color: var(--noir-blood-light);
+    }
+
+    .track__slot--win {
+      opacity: 0.4;
+      font-size: 0.65rem;
+      letter-spacing: 0.08em;
+    }
+
+    .track__desc {
+      margin-top: 10px;
+      font-size: 0.85rem;
+      color: var(--noir-muted);
+      font-style: italic;
+    }
+
+    .deck-callout {
+      text-align: center;
+      margin-top: 24px;
+      font-size: 1.05rem;
+    }
+
+    .deck-callout strong { color: var(--noir-gold); }
+    .deck-callout .bad { color: var(--noir-blood-light); font-weight: 600; }
+
+    .deck-aside {
+      text-align: center;
+      font-style: italic;
+      color: var(--noir-muted);
+      margin-top: 6px;
+      font-size: 0.95rem;
+    }
+
+    /* ═══════════════════════════════════════════════════════════════ */
+    /* TIMELINE (Round of Play)                                       */
+    /* ═══════════════════════════════════════════════════════════════ */
+    .timeline {
+      position: relative;
+      max-width: 680px;
+      margin: 32px auto;
+    }
+
+    .timeline__line {
+      position: absolute;
+      left: 24px;
+      top: 8px;
+      bottom: 8px;
+      width: 2px;
+      background: linear-gradient(180deg, var(--noir-gold-dark), var(--noir-gold-deep) 70%, transparent);
+    }
+
+    .timeline__step {
+      position: relative;
+      padding-left: 64px;
+      padding-bottom: 40px;
+    }
+
+    .timeline__step:last-child { padding-bottom: 0; }
+
+    .timeline__dot {
+      position: absolute;
+      left: 16px;
+      top: 4px;
+      width: 18px;
+      height: 18px;
+      border-radius: 50%;
+      background: var(--noir-gold);
+      box-shadow: 0 0 16px rgba(201, 168, 76, 0.5);
+      border: 3px solid var(--noir-black);
+      z-index: 1;
+    }
+
+    .timeline__dot--blood {
+      background: var(--noir-blood);
+      box-shadow: 0 0 16px rgba(168, 32, 32, 0.4);
+    }
+
+    .timeline__phase {
+      font-family: var(--font-display);
+      font-size: 1.1rem;
+      font-weight: 700;
+      color: var(--noir-gold);
+      letter-spacing: 0.04em;
+      margin-bottom: 8px;
+    }
+
+    .timeline__desc {
+      font-size: 1rem;
+      color: var(--noir-cream);
+      opacity: 0.85;
+      line-height: 1.7;
+    }
+
+    .timeline__branch {
+      margin-top: 14px;
+      padding: 14px 18px;
+      border-radius: 4px;
+      font-size: 0.9rem;
+    }
+
+    .timeline__branch--pass {
+      background: rgba(58, 124, 74, 0.08);
+      border-left: 3px solid var(--noir-green);
+    }
+
+    .timeline__branch--fail {
+      background: rgba(168, 32, 32, 0.06);
+      border-left: 3px solid var(--noir-blood);
+    }
+
+    .timeline__branch strong {
+      font-family: var(--font-display);
+      font-size: 0.8rem;
+      letter-spacing: 0.04em;
+    }
+
+    .timeline__branch--pass strong { color: var(--noir-green); }
+    .timeline__branch--fail strong { color: var(--noir-blood-light); }
+
+    /* ═══════════════════════════════════════════════════════════════ */
+    /* TWO-COLUMN CALLOUTS                                            */
+    /* ═══════════════════════════════════════════════════════════════ */
+    .dual-callout {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 16px;
+      margin-top: 24px;
+    }
+
+    @media (max-width: 500px) {
+      .dual-callout { grid-template-columns: 1fr; }
+    }
+
+    .callout {
+      padding: 24px;
+      border-radius: 4px;
+    }
+
+    .callout--blood {
+      background: rgba(168, 32, 32, 0.06);
+      border-left: 3px solid var(--noir-blood);
+    }
+
+    .callout--gold {
+      background: rgba(201, 168, 76, 0.04);
+      border-left: 3px solid var(--noir-gold);
+    }
+
+    .callout__title {
+      font-family: var(--font-display);
+      font-size: 0.9rem;
+      font-weight: 700;
+      letter-spacing: 0.05em;
+      margin-bottom: 8px;
+    }
+
+    .callout--blood .callout__title { color: var(--noir-blood-light); }
+    .callout--gold .callout__title  { color: var(--noir-gold); }
+
+    .callout__text {
+      font-size: 0.9rem;
+      color: var(--noir-cream);
+      opacity: 0.8;
+      line-height: 1.6;
+    }
+
+    /* ═══════════════════════════════════════════════════════════════ */
+    /* POWER CARDS                                                    */
+    /* ═══════════════════════════════════════════════════════════════ */
+    .power-grid {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 16px;
+      margin-top: 24px;
+    }
+
+    @media (max-width: 500px) {
+      .power-grid { grid-template-columns: 1fr; }
+    }
+
+    .power-card {
+      padding: 20px;
+      transition: transform 0.3s ease, border-color 0.3s ease;
+    }
+
+    .power-card:hover {
+      transform: translateY(-3px);
+      border-color: var(--glass-border-gold);
+    }
+
+    .power-card__icon {
+      width: 56px;
+      height: 56px;
+      border-radius: 50%;
+      object-fit: cover;
+      margin-bottom: 12px;
+      border: 2px solid rgba(201, 168, 76, 0.2);
+      box-shadow: 0 4px 12px rgba(0,0,0,0.4);
+    }
+
+    .power-card__name {
+      font-family: var(--font-display);
+      font-size: 0.9rem;
+      font-weight: 700;
+      color: var(--noir-gold);
+      letter-spacing: 0.06em;
+      margin-bottom: 6px;
+    }
+
+    .power-card__desc {
+      font-size: 0.85rem;
+      color: var(--noir-cream);
+      opacity: 0.8;
+      line-height: 1.5;
+    }
+
+    /* ═══════════════════════════════════════════════════════════════ */
+    /* WIN CONDITIONS                                                 */
+    /* ═══════════════════════════════════════════════════════════════ */
+    .win-grid {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 2px;
+      background: rgba(232, 224, 208, 0.04);
+    }
+
+    @media (max-width: 500px) {
+      .win-grid { grid-template-columns: 1fr; }
+    }
+
+    .win-card {
+      padding: 40px 32px;
+      text-align: center;
+      background: var(--noir-black);
+    }
+
+    .win-card__title {
+      font-family: var(--font-display);
+      font-weight: 700;
+      font-size: 1.2rem;
+      letter-spacing: 0.06em;
+      margin-bottom: 16px;
+    }
+
+    .win-card--citizen .win-card__title { color: var(--noir-gold); }
+    .win-card--mob .win-card__title     { color: var(--noir-blood-light); }
+
+    .win-card ul {
+      list-style: none;
+      padding: 0;
+    }
+
+    .win-card li {
+      font-size: 0.95rem;
+      margin-bottom: 8px;
+    }
+
+    .win-card__or {
+      font-size: 0.7rem;
+      text-transform: uppercase;
+      letter-spacing: 0.2em;
+      color: var(--noir-muted);
+      margin: 12px 0;
+      font-family: var(--font-display);
+    }
+
+    .win-card__danger {
+      margin-top: 24px;
+      padding: 20px;
+      background: rgba(168, 32, 32, 0.06);
+      border: 1px solid rgba(168, 32, 32, 0.12);
+      border-radius: 4px;
+      font-size: 0.9rem;
+      color: var(--noir-cream);
+      opacity: 0.85;
+      text-align: left;
+      line-height: 1.6;
+    }
+
+    .win-card__danger strong { color: var(--noir-blood-light); }
+
+    /* ═══════════════════════════════════════════════════════════════ */
+    /* EXAMPLE ROUND                                                  */
+    /* ═══════════════════════════════════════════════════════════════ */
+    .example {
+      padding: 40px;
+      position: relative;
+      overflow: hidden;
+    }
+
+    .example__scanlines {
+      position: absolute;
+      inset: 0;
+      pointer-events: none;
+      opacity: 0.04;
+      background: repeating-linear-gradient(
+        0deg, transparent, transparent 2px,
+        rgba(232, 224, 208, 0.5) 2px, rgba(232, 224, 208, 0.5) 4px
+      );
+    }
+
+    .example__label {
+      font-family: var(--font-display);
+      font-size: 0.7rem;
+      font-weight: 700;
+      letter-spacing: 0.15em;
+      text-transform: uppercase;
+      color: var(--noir-gold);
+      margin-bottom: 20px;
+      position: relative;
+    }
+
+    .example__text {
+      font-family: var(--font-body);
+      font-size: 1.1rem;
+      font-style: italic;
+      line-height: 1.8;
+      color: var(--noir-parchment);
+      position: relative;
+    }
+
+    .example__text p { margin-bottom: 16px; }
+    .example__text p:last-child { margin-bottom: 0; }
+    .example__text .char-gold { color: var(--noir-gold); font-style: normal; font-weight: 600; }
+    .example__text .char-blood { color: var(--noir-blood-light); font-style: normal; font-weight: 600; }
+    .example__text .dialogue { color: var(--noir-gold-light); font-style: normal; }
+
+    /* ═══════════════════════════════════════════════════════════════ */
+    /* TIPS                                                           */
+    /* ═══════════════════════════════════════════════════════════════ */
+    .tips-grid {
+      display: grid;
+      grid-template-columns: 1fr 1fr 1fr;
+      gap: 0;
+    }
+
+    @media (max-width: 640px) {
+      .tips-grid { grid-template-columns: 1fr; }
+    }
+
+    .tip-card {
+      padding: 28px;
+      background: var(--surface-high);
+      transition: background 0.3s ease;
+    }
+
+    .tip-card:hover { background: var(--noir-slate); }
+
+    .tip-card__role {
+      font-family: var(--font-display);
+      font-size: 0.65rem;
+      font-weight: 700;
+      letter-spacing: 0.2em;
+      text-transform: uppercase;
+      margin-bottom: 14px;
+    }
+
+    .tip-card--citizen .tip-card__role { color: var(--noir-gold); }
+    .tip-card--soldier .tip-card__role { color: var(--noir-blood-light); }
+    .tip-card--boss .tip-card__role    { color: var(--noir-blood); }
+
+    .tip-card ul {
+      list-style: none;
+      padding: 0;
+    }
+
+    .tip-card li {
+      font-size: 0.85rem;
+      color: var(--noir-cream);
+      opacity: 0.75;
+      margin-bottom: 8px;
+      padding-left: 14px;
+      position: relative;
+    }
+
+    .tip-card li::before {
+      content: '—';
+      position: absolute;
+      left: 0;
+      color: var(--noir-muted);
+      font-size: 0.7rem;
+    }
+
+    /* ═══════════════════════════════════════════════════════════════ */
+    /* SECTION DIVIDER                                                */
+    /* ═══════════════════════════════════════════════════════════════ */
+    .divider {
+      display: flex;
+      align-items: center;
+      gap: 16px;
+      margin: 72px 0 0;
+      opacity: 0.3;
+    }
+
+    .divider__line {
+      flex: 1;
+      height: 1px;
+    }
+
+    .divider__line:first-child {
+      background: linear-gradient(90deg, transparent, rgba(201, 168, 76, 0.4));
+    }
+
+    .divider__line:last-child {
+      background: linear-gradient(90deg, rgba(201, 168, 76, 0.4), transparent);
+    }
+
+    .divider__diamond {
+      width: 6px;
+      height: 6px;
+      background: var(--noir-gold);
+      transform: rotate(45deg);
+    }
+
+    /* ═══════════════════════════════════════════════════════════════ */
+    /* BACK BUTTON                                                    */
+    /* ═══════════════════════════════════════════════════════════════ */
+    .back-btn {
+      position: fixed;
+      top: 16px;
+      left: 16px;
+      z-index: 100;
+      font-family: var(--font-display);
+      font-size: 0.7rem;
+      font-weight: 700;
+      letter-spacing: 0.08em;
+      text-transform: uppercase;
+      color: var(--noir-cream);
+      background: var(--glass-bg-heavy);
+      backdrop-filter: blur(var(--glass-blur));
+      -webkit-backdrop-filter: blur(var(--glass-blur));
+      border: 1px solid var(--glass-border-gold);
+      border-radius: 4px;
+      padding: 10px 20px;
+      cursor: pointer;
+      text-decoration: none;
+      min-height: 44px;
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      transition: background 0.15s, border-color 0.15s;
+    }
+
+    .back-btn:hover {
+      background: rgba(201, 168, 76, 0.08);
+      border-color: var(--noir-gold);
+    }
+
+    /* ═══════════════════════════════════════════════════════════════ */
+    /* FOOTER                                                         */
+    /* ═══════════════════════════════════════════════════════════════ */
+    .footer {
+      margin-top: 80px;
+      padding: 40px 0;
+      text-align: center;
+      border-top: 1px solid rgba(201, 168, 76, 0.08);
+    }
+
+    .footer__city {
+      font-family: var(--font-display);
+      font-size: 0.7rem;
+      letter-spacing: 0.2em;
+      text-transform: uppercase;
+      color: var(--noir-muted);
+      margin-bottom: 8px;
+    }
+
+    .footer__tagline {
+      font-style: italic;
+      color: var(--noir-muted);
+      font-size: 0.9rem;
+    }
+  </style>
+</head>
+<body>
+
+<a href="/" class="back-btn" id="back-btn">
+  <span>←</span> Back to Game
+</a>
+
+<div class="page">
+
+  <!-- ═══ HERO ═══════════════════════════════════════════════════ -->
+  <section class="hero" id="hero">
+    <div class="hero__seal">M</div>
+    <h1 class="hero__title">Undercover<br>Mob Boss</h1>
+    <div class="hero__flourish">
+      <span class="hero__flourish-line"></span>
+      <span class="hero__flourish-diamond"></span>
+      <span class="hero__flourish-line"></span>
+    </div>
+    <p class="hero__subtitle">How to Play</p>
+    <p class="hero__tagline">A social deduction game for 5–10 players.<br>Same room. Phones out.</p>
+    <div class="hero__scroll-cue">
+      Scroll
+      <span class="hero__scroll-arrow"></span>
+    </div>
+  </section>
+
+  <!-- ═══ THE STORY ══════════════════════════════════════════════ -->
+  <div class="divider"><span class="divider__line"></span><span class="divider__diamond"></span><span class="divider__line"></span></div>
+
+  <section class="section" id="story">
+    <div class="story-grid">
+      <div class="story-quote">
+        <p class="story-quote__text">
+          "<strong>Millbrook City</strong> is a powder keg. The mob has planted operatives inside city hall. They sit at the same table as honest citizens. They vote on policy. They run for office. Nobody knows who's who. Somewhere among them is the <strong>Mob Boss</strong> — and the city is running out of time."
+        </p>
+      </div>
+      <div class="story-image">
+        <img src="/assets/background.jpg" alt="The streets of Millbrook City" loading="lazy" />
+      </div>
+    </div>
+  </section>
+
+  <!-- ═══ TL;DR ══════════════════════════════════════════════════ -->
+  <div class="divider"><span class="divider__line"></span><span class="divider__diamond"></span><span class="divider__line"></span></div>
+
+  <section class="section" id="tldr">
+    <div class="section__eyebrow">
+      <span>The 30-Second Briefing</span>
+      <span class="section__eyebrow-line"></span>
+    </div>
+    <div class="glass glass--gold pinstripe">
+      <div class="tldr-grid">
+        <div class="tldr-item">
+          <span class="tldr-num">01.</span>
+          <p class="tldr-text"><strong>Two teams.</strong> Citizens vs. the Mob. Roles are secret. Citizens don't know anyone's identity.</p>
+        </div>
+        <div class="tldr-item">
+          <span class="tldr-num">02.</span>
+          <p class="tldr-text"><strong>Each round:</strong> A Mayor nominates a Police Chief. Everyone votes. If it passes, the pair secretly enacts policy.</p>
+        </div>
+        <div class="tldr-item">
+          <span class="tldr-num">03.</span>
+          <p class="tldr-text"><strong>The deck is rigged.</strong> 11 bad cards, 6 good. Bad policy will happen. The question is <em>who let it happen.</em></p>
+        </div>
+        <div class="tldr-item">
+          <span class="tldr-num">04.</span>
+          <p class="tldr-text"><strong>Citizens win</strong> with 5 Good Policies or by executing the Mob Boss.</p>
+        </div>
+        <div class="tldr-item">
+          <span class="tldr-num">05.</span>
+          <p class="tldr-text"><span class="mob"><strong>Mob wins</strong></span> with 6 Bad Policies or sneaking the Boss into the Police Chief seat.</p>
+        </div>
+        <div class="tldr-item">
+          <span class="tldr-num">06.</span>
+          <p class="tldr-text"><strong>Lying is the game.</strong> Accuse. Defend. Bluff. Trust no one in Millbrook.</p>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- ═══ ROLES ══════════════════════════════════════════════════ -->
+  <div class="divider"><span class="divider__line"></span><span class="divider__diamond"></span><span class="divider__line"></span></div>
+
+  <section class="section" id="roles">
+    <div class="section__eyebrow">
+      <span>I — Personnel Dossiers</span>
+      <span class="section__eyebrow-line"></span>
+    </div>
+    <h2 class="section__title">The <em>Roles</em></h2>
+
+    <div class="role-grid">
+      <div class="role-card">
+        <div class="role-card__art-wrap">
+          <img src="/assets/role-citizen.png" alt="Citizen" class="role-card__art" loading="lazy" />
+          <div class="role-card__art-fade"></div>
+        </div>
+        <div class="role-card__body">
+          <h3 class="role-card__name role-card__name--citizen">Citizen</h3>
+          <p class="role-card__flavor">"Just trying to keep Millbrook clean."</p>
+          <p class="role-card__desc">You don't know anyone's identity. Pass 5 Good Policies or find and execute the Mob Boss.</p>
+        </div>
+      </div>
+      <div class="role-card">
+        <div class="role-card__art-wrap">
+          <img src="/assets/role-mob-soldier.png" alt="Mob Soldier" class="role-card__art" loading="lazy" />
+          <div class="role-card__art-fade"></div>
+        </div>
+        <div class="role-card__body">
+          <h3 class="role-card__name role-card__name--soldier">Mob Soldier</h3>
+          <p class="role-card__flavor">"Loyalty above all else."</p>
+          <p class="role-card__desc">You know your team. Protect the Boss. Sow discord. Pass 6 Bad Policies or get the Boss elected.</p>
+        </div>
+      </div>
+      <div class="role-card">
+        <div class="role-card__art-wrap">
+          <img src="/assets/role-mob-boss.png" alt="Mob Boss" class="role-card__art" loading="lazy" />
+          <div class="role-card__art-fade"></div>
+        </div>
+        <div class="role-card__body">
+          <h3 class="role-card__name role-card__name--boss">Mob Boss</h3>
+          <p class="role-card__flavor">"Millbrook is mine. They just don't know it."</p>
+          <p class="role-card__desc">Stay hidden. In 7+ player games, you don't even know your own crew. Bide your time.</p>
+        </div>
+      </div>
+    </div>
+
+    <div class="glass pinstripe" style="margin-top: 24px;">
+      <div class="table-wrap"><table class="noir-table">
+        <thead>
+          <tr><th>Players</th><th>Citizens</th><th>Mob (Boss + Soldiers)</th></tr>
+        </thead>
+        <tbody>
+          <tr><td>5</td><td class="td-gold">3</td><td class="td-blood">1 Boss + 1 Soldier</td></tr>
+          <tr><td>6</td><td class="td-gold">4</td><td class="td-blood">1 Boss + 1 Soldier</td></tr>
+          <tr><td>7</td><td class="td-gold">4</td><td class="td-blood">1 Boss + 2 Soldiers</td></tr>
+          <tr><td>8</td><td class="td-gold">5</td><td class="td-blood">1 Boss + 2 Soldiers</td></tr>
+          <tr><td>9</td><td class="td-gold">5</td><td class="td-blood">1 Boss + 3 Soldiers</td></tr>
+          <tr><td>10</td><td class="td-gold">6</td><td class="td-blood">1 Boss + 3 Soldiers</td></tr>
+        </tbody>
+      </table></div>
+    </div>
+  </section>
+
+  <!-- ═══ SETUP ══════════════════════════════════════════════════ -->
+  <div class="divider"><span class="divider__line"></span><span class="divider__diamond"></span><span class="divider__line"></span></div>
+
+  <section class="section" id="setup">
+    <div class="section__eyebrow">
+      <span>II — Operations Brief</span>
+      <span class="section__eyebrow-line"></span>
+    </div>
+    <h2 class="section__title"><em>Setup</em></h2>
+    <div class="glass">
+      <ol style="padding-left: 24px; line-height: 2.1;">
+        <li><strong style="color: var(--noir-gold);">One person hosts</strong> on a tablet or laptop — the shared screen everyone sees.</li>
+        <li><strong>Players join on their phones</strong> — scan the QR code or type the URL with the 4-letter room code.</li>
+        <li>Once 5–10 players have joined, the host taps <strong>Start Game</strong>.</li>
+        <li>Roles are secretly assigned. The first <strong>Mayor</strong> is chosen at random.</li>
+        <li><strong>Check your phone privately.</strong> Tap your card to reveal your role. Tap again to seal it.</li>
+        <li>The game begins when everyone has sealed their cards.</li>
+      </ol>
+    </div>
+  </section>
+
+  <!-- ═══ POLICY TRACK ═══════════════════════════════════════════ -->
+  <div class="divider"><span class="divider__line"></span><span class="divider__diamond"></span><span class="divider__line"></span></div>
+
+  <section class="section" id="policy-track">
+    <div class="section__eyebrow">
+      <span>III — The Board</span>
+      <span class="section__eyebrow-line"></span>
+    </div>
+    <h2 class="section__title">The <em>Policy Tracks</em></h2>
+
+    <div class="track-viz">
+      <div class="track">
+        <p class="track__label track__label--good">Good Policies — Citizens</p>
+        <div class="track__slots">
+          <div class="track__slot track__slot--good">1</div>
+          <div class="track__slot track__slot--good">2</div>
+          <div class="track__slot track__slot--good">3</div>
+          <div class="track__slot track__slot--good">4</div>
+          <div class="track__slot track__slot--good track__slot--win">WIN</div>
+        </div>
+        <p class="track__desc">5 enacted = Millbrook is saved</p>
+      </div>
+      <div class="track">
+        <p class="track__label track__label--bad">Bad Policies — The Mob</p>
+        <div class="track__slots">
+          <div class="track__slot track__slot--bad">1</div>
+          <div class="track__slot track__slot--bad">2</div>
+          <div class="track__slot track__slot--bad">3</div>
+          <div class="track__slot track__slot--bad">4</div>
+          <div class="track__slot track__slot--bad">5</div>
+          <div class="track__slot track__slot--bad track__slot--win">WIN</div>
+        </div>
+        <p class="track__desc">6 enacted = the Mob takes Millbrook</p>
+      </div>
+    </div>
+
+    <p class="deck-callout">The deck contains <strong>6 Good</strong> and <span class="bad">11 Bad</span> policies.</p>
+    <p class="deck-aside">Yes — the deck is stacked against the city. That's the point.</p>
+  </section>
+
+  <!-- ═══ ROUND OF PLAY ══════════════════════════════════════════ -->
+  <div class="divider"><span class="divider__line"></span><span class="divider__diamond"></span><span class="divider__line"></span></div>
+
+  <section class="section" id="round">
+    <div class="section__eyebrow">
+      <span>IV — The Cycle of Power</span>
+      <span class="section__eyebrow-line"></span>
+    </div>
+    <h2 class="section__title">A <em>Round</em> of Play</h2>
+
+    <div class="timeline">
+      <div class="timeline__line"></div>
+
+      <div class="timeline__step">
+        <div class="timeline__dot"></div>
+        <h3 class="timeline__phase">1. Nomination</h3>
+        <p class="timeline__desc">The Mayor nominates a Police Chief from the other players. The Mayor cannot nominate themselves or anyone who is <strong>term-limited</strong> (served in the last elected government).</p>
+      </div>
+
+      <div class="timeline__step">
+        <div class="timeline__dot"></div>
+        <h3 class="timeline__phase">2. Election</h3>
+        <p class="timeline__desc">Everyone votes on their phone simultaneously — <strong style="color: var(--noir-gold);">Approve</strong> or <strong style="color: var(--noir-blood-light);">Deny</strong>. More than half must approve. Ties fail.</p>
+        <div class="timeline__branch timeline__branch--pass">
+          <strong>Approved →</strong> The government is formed. Move to Policy Session.
+        </div>
+        <div class="timeline__branch timeline__branch--fail">
+          <strong>Denied →</strong> Election Tracker advances. Next player becomes Mayor. Three consecutive failures force the top card to be auto-enacted — no vote, no choice.
+        </div>
+      </div>
+
+      <div class="timeline__step">
+        <div class="timeline__dot"></div>
+        <h3 class="timeline__phase">3. Policy Session</h3>
+        <p class="timeline__desc">The Mayor and Police Chief work in secret on their phones. <strong>No talking.</strong></p>
+        <p class="timeline__desc" style="margin-top: 8px;">Mayor draws 3 → discards 1 → passes 2 to Chief.<br>Chief discards 1 → enacts the remaining card.</p>
+        <p class="timeline__desc" style="margin-top: 8px; font-style: italic; color: var(--noir-muted);">Both may lie about what they saw. This is where the deduction begins.</p>
+      </div>
+
+      <div class="timeline__step">
+        <div class="timeline__dot timeline__dot--blood"></div>
+        <h3 class="timeline__phase" style="color: var(--noir-blood-light);">4. Executive Power</h3>
+        <p class="timeline__desc">When certain Bad Policies are enacted, the Mayor gains a one-time power — used immediately.</p>
+      </div>
+    </div>
+
+    <!-- Veto + Failed Elections side by side -->
+    <div class="dual-callout">
+      <div class="callout callout--blood">
+        <h4 class="callout__title">Three Failed Elections</h4>
+        <p class="callout__text">If three elections fail in a row, the top policy is enacted automatically. No executive power triggers. The tracker resets and all term limits are cleared.</p>
+      </div>
+      <div class="callout callout--gold">
+        <h4 class="callout__title">Veto Power</h4>
+        <p class="callout__text">After 5 Bad Policies, the Chief may propose to veto — discarding both cards. The Mayor decides. If accepted, no policy is enacted but the tracker advances.</p>
+      </div>
+    </div>
+
+    <!-- Power Cards -->
+    <div class="power-grid">
+      <div class="glass power-card">
+        <img src="/assets/power-peek.png" alt="Policy Peek" class="power-card__icon" />
+        <h4 class="power-card__name">Policy Peek</h4>
+        <p class="power-card__desc">Secretly view the top 3 cards. May share — or lie.</p>
+      </div>
+      <div class="glass power-card">
+        <img src="/assets/power-investigate.png" alt="Investigation" class="power-card__icon" />
+        <h4 class="power-card__name">Investigation</h4>
+        <p class="power-card__desc">Learn if a player is Mob or Citizen. Boss shows as "Mob." No player investigated twice.</p>
+      </div>
+      <div class="glass power-card">
+        <img src="/assets/power-nominate.png" alt="Special Nomination" class="power-card__icon" />
+        <h4 class="power-card__name">Special Nomination</h4>
+        <p class="power-card__desc">Pick the next Mayor. Even term-limited players are eligible.</p>
+      </div>
+      <div class="glass power-card">
+        <img src="/assets/power-execute.png" alt="Execution" class="power-card__icon" />
+        <h4 class="power-card__name">Execution</h4>
+        <p class="power-card__desc">Eliminate a player. Their role stays hidden. If it's the Boss — Citizens win instantly.</p>
+      </div>
+    </div>
+
+    <!-- Executive Power Table -->
+    <div class="glass pinstripe" style="margin-top: 24px;">
+      <div class="table-wrap"><table class="noir-table">
+        <thead>
+          <tr>
+            <th>Bad Policy #</th>
+            <th>5–6 Players</th>
+            <th>7–8 Players</th>
+            <th>9–10 Players</th>
+          </tr>
+        </thead>
+        <tbody>
+          <tr><td>1st</td><td style="opacity:0.3;">—</td><td style="opacity:0.3;">—</td><td>Investigation</td></tr>
+          <tr><td>2nd</td><td style="opacity:0.3;">—</td><td>Investigation</td><td>Investigation</td></tr>
+          <tr><td>3rd</td><td>Policy Peek</td><td>Special Nomination</td><td>Special Nomination</td></tr>
+          <tr><td>4th</td><td>Execution</td><td>Execution</td><td>Execution</td></tr>
+          <tr><td>5th</td><td>Execution</td><td>Execution</td><td>Execution</td></tr>
+        </tbody>
+      </table></div>
+    </div>
+  </section>
+
+  <!-- ═══ HOW THE GAME ENDS ══════════════════════════════════════ -->
+  <div class="divider"><span class="divider__line"></span><span class="divider__diamond"></span><span class="divider__line"></span></div>
+
+  <section class="section" id="winning">
+    <div class="section__eyebrow">
+      <span>V — Endgame</span>
+      <span class="section__eyebrow-line"></span>
+    </div>
+    <h2 class="section__title">How <em>Millbrook</em> Falls — or Survives</h2>
+
+    <div class="win-grid">
+      <div class="win-card win-card--citizen">
+        <h3 class="win-card__title">Citizens Victory</h3>
+        <ul>
+          <li><strong>5 Good Policies</strong> are enacted</li>
+        </ul>
+        <p class="win-card__or">— or —</p>
+        <ul>
+          <li>The <strong>Mob Boss is executed</strong></li>
+        </ul>
+      </div>
+      <div class="win-card win-card--mob">
+        <h3 class="win-card__title">The Mob Wins</h3>
+        <ul>
+          <li><strong>6 Bad Policies</strong> are enacted</li>
+        </ul>
+        <p class="win-card__or">— or —</p>
+        <ul>
+          <li>The <strong>Mob Boss becomes Police Chief</strong> after 3+ bad policies</li>
+        </ul>
+      </div>
+    </div>
+
+    <div class="win-card__danger" style="margin-top: 20px;">
+      <strong>The Mob Boss Election Rule:</strong> Once 3+ Bad Policies are on the board, if the Mob Boss is elected Police Chief — the mob wins instantly. But if someone <em>is</em> elected and the game continues, everyone knows for certain that player is NOT the Boss. Use that.
+    </div>
+  </section>
+
+  <!-- ═══ EXAMPLE ROUND ══════════════════════════════════════════ -->
+  <div class="divider"><span class="divider__line"></span><span class="divider__diamond"></span><span class="divider__line"></span></div>
+
+  <section class="section" id="example">
+    <div class="section__eyebrow">
+      <span>VI — Case File</span>
+      <span class="section__eyebrow-line"></span>
+    </div>
+    <h2 class="section__title">A Night in <em>Millbrook</em></h2>
+
+    <div class="glass example">
+      <div class="example__scanlines"></div>
+      <p class="example__label">Dossier Entry: Round 3</p>
+      <div class="example__text">
+        <p><span class="char-gold">Sal (Mayor)</span> draws three cards on his phone: 2 Bad, 1 Good. He discards a Bad card and passes 1 Bad + 1 Good to <span class="char-blood">Vince (Police Chief)</span>.</p>
+        <p>Vince looks at the two cards. He discards the Bad one and enacts the <strong style="color: var(--noir-gold);">Good Policy</strong>. Millbrook breathes.</p>
+        <p>But then Sal tells the table: <span class="dialogue">"I drew three bad cards. Vince got two bad cards. I don't know how a good policy came out."</span></p>
+        <p>Vince fires back: <span class="dialogue">"He's lying — he gave me one of each and I played the good one."</span></p>
+        <p>Someone is lying. The table erupts. <em>That's the game.</em></p>
+      </div>
+    </div>
+  </section>
+
+  <!-- ═══ TABLE TALK ═════════════════════════════════════════════ -->
+  <div class="divider"><span class="divider__line"></span><span class="divider__diamond"></span><span class="divider__line"></span></div>
+
+  <section class="section" id="table-talk">
+    <div class="section__eyebrow">
+      <span>VII — Rules of Engagement</span>
+      <span class="section__eyebrow-line"></span>
+    </div>
+    <h2 class="section__title"><em>Table Talk</em></h2>
+    <div class="glass">
+      <p style="font-size: 1.15rem; font-weight: 600;"><strong style="color: var(--noir-gold);">Everything is allowed.</strong> Lie, bluff, accuse, make deals, promise things you won't keep.</p>
+      <p style="margin-top: 16px;">The only restrictions:</p>
+      <ul style="padding-left: 24px; margin-top: 8px;">
+        <li>You cannot show your phone screen to another player</li>
+        <li>Once a vote begins, discussion stops until results are revealed</li>
+      </ul>
+    </div>
+  </section>
+
+  <!-- ═══ TIPS ═══════════════════════════════════════════════════ -->
+  <div class="divider"><span class="divider__line"></span><span class="divider__diamond"></span><span class="divider__line"></span></div>
+
+  <section class="section" id="tips">
+    <div class="section__eyebrow">
+      <span>VIII — Expert Intelligence</span>
+      <span class="section__eyebrow-line"></span>
+    </div>
+    <h2 class="section__title"><em>Strategy</em> Tips</h2>
+
+    <div class="tips-grid">
+      <div class="tip-card tip-card--citizen">
+        <h4 class="tip-card__role">For Citizens</h4>
+        <ul>
+          <li>Watch voting patterns. Consistent approval of suspicious candidates is a tell.</li>
+          <li>Pay attention to who defends whom after a bad policy.</li>
+          <li>When the Chief blames the Mayor — one of them is probably lying.</li>
+        </ul>
+      </div>
+      <div class="tip-card tip-card--soldier">
+        <h4 class="tip-card__role">For Soldiers</h4>
+        <ul>
+          <li>Sometimes enacting good policy builds trust. Play the long game.</li>
+          <li>Protect the Boss at all costs. If suspicion lands on them, redirect it.</li>
+        </ul>
+      </div>
+      <div class="tip-card tip-card--boss">
+        <h4 class="tip-card__role">For the Boss</h4>
+        <ul>
+          <li>Play like a Citizen. Vote like a Citizen. Talk like a Citizen.</li>
+          <li>Let your soldiers do the dirty work.</li>
+          <li>The Police Chief seat is your throne — wait for the right moment.</li>
+        </ul>
+      </div>
+    </div>
+  </section>
+
+  <!-- ═══ FOOTER ═════════════════════════════════════════════════ -->
+  <div class="footer">
+    <p class="footer__city">Millbrook City — Est. 1947</p>
+    <p class="footer__tagline">The narrator speaks at key moments. Don't skip it — that's half the experience.</p>
+  </div>
+
+</div>
+
+<!-- ═══════════════════════════════════════════════════════════════ -->
+<!-- GSAP ANIMATIONS                                                 -->
+<!-- ═══════════════════════════════════════════════════════════════ -->
+<script>
+  gsap.registerPlugin(ScrollTrigger);
+
+  // -- Hero entrance --
+  const heroTl = gsap.timeline({ defaults: { ease: 'power3.out' } });
+  heroTl
+    .from('.hero__seal', { scale: 0, opacity: 0, duration: 0.8, ease: 'back.out(1.5)' })
+    .from('.hero__title', { y: 40, opacity: 0, duration: 1.2 }, '-=0.3')
+    .from('.hero__flourish-line', { scaleX: 0, opacity: 0, duration: 0.6, stagger: 0.1 }, '-=0.6')
+    .from('.hero__flourish-diamond', { scale: 0, opacity: 0, duration: 0.3, ease: 'back.out(2)' }, '-=0.3')
+    .from('.hero__subtitle', { y: 20, opacity: 0, duration: 0.8 }, '-=0.3')
+    .from('.hero__tagline', { y: 20, opacity: 0, duration: 0.8 }, '-=0.4')
+    .from('.hero__scroll-cue', { opacity: 0, duration: 1 }, '-=0.2');
+
+  // Seal gentle rotation
+  gsap.to('.hero__seal', { rotation: 3, duration: 4, ease: 'sine.inOut', repeat: -1, yoyo: true });
+
+  // Scroll arrow pulse
+  gsap.to('.hero__scroll-arrow', { y: 6, duration: 1.2, ease: 'sine.inOut', repeat: -1, yoyo: true });
+
+  // -- Back button fade in --
+  gsap.set('#back-btn', { opacity: 0 });
+  ScrollTrigger.create({
+    trigger: '#story',
+    start: 'top 80%',
+    onEnter: () => gsap.to('#back-btn', { opacity: 1, duration: 0.4 }),
+    onLeaveBack: () => gsap.to('#back-btn', { opacity: 0, duration: 0.4 }),
+  });
+
+  // -- Sections fade in --
+  document.querySelectorAll('.section').forEach((section) => {
+    gsap.set(section, { y: 30 });
+    gsap.to(section, {
+      opacity: 1, y: 0, duration: 0.8, ease: 'power2.out',
+      scrollTrigger: { trigger: section, start: 'top 85%', once: true },
+    });
+  });
+
+  // -- Dividers --
+  document.querySelectorAll('.divider').forEach((div) => {
+    gsap.set(div, { opacity: 0 });
+    ScrollTrigger.create({
+      trigger: div, start: 'top 90%', once: true,
+      onEnter: () => {
+        gsap.to(div, { opacity: 0.3, duration: 0.8 });
+        gsap.from(div.querySelector('.divider__diamond'), { scale: 0, duration: 0.4, delay: 0.3, ease: 'back.out(2)' });
+        gsap.from(div.querySelectorAll('.divider__line'), { scaleX: 0, duration: 0.6, delay: 0.2, stagger: 0.1 });
+      },
+    });
+  });
+
+  // -- Role cards stagger --
+  gsap.set('.role-card', { y: 40, opacity: 0, scale: 0.97 });
+  ScrollTrigger.create({
+    trigger: '.role-grid', start: 'top 80%', once: true,
+    onEnter: () => {
+      gsap.to('.role-card', { y: 0, opacity: 1, scale: 1, duration: 0.6, stagger: 0.15, ease: 'power2.out' });
+    },
+  });
+
+  // -- Policy track slots --
+  gsap.set('.track__slot', { scale: 0.8, opacity: 0 });
+  ScrollTrigger.create({
+    trigger: '.track-viz', start: 'top 80%', once: true,
+    onEnter: () => {
+      gsap.to('.track__slot', { scale: 1, opacity: 1, duration: 0.3, stagger: 0.06, ease: 'back.out(1.4)' });
+    },
+  });
+
+  // -- Timeline steps --
+  gsap.set('.timeline__step', { x: -30, opacity: 0 });
+  gsap.set('.timeline__dot', { scale: 0 });
+  ScrollTrigger.create({
+    trigger: '.timeline', start: 'top 80%', once: true,
+    onEnter: () => {
+      gsap.to('.timeline__step', { x: 0, opacity: 1, duration: 0.6, stagger: 0.2, ease: 'power2.out' });
+      gsap.to('.timeline__dot', { scale: 1, duration: 0.4, stagger: 0.2, delay: 0.1, ease: 'back.out(1.5)' });
+    },
+  });
+
+  // -- Power cards --
+  gsap.set('.power-card', { y: 30, opacity: 0, scale: 0.95 });
+  ScrollTrigger.create({
+    trigger: '.power-grid', start: 'top 80%', once: true,
+    onEnter: () => {
+      gsap.to('.power-card', { y: 0, opacity: 1, scale: 1, duration: 0.5, stagger: 0.12, ease: 'back.out(1.2)' });
+    },
+  });
+
+  // -- Win cards --
+  gsap.set('.win-card', { y: 30, opacity: 0 });
+  ScrollTrigger.create({
+    trigger: '.win-grid', start: 'top 80%', once: true,
+    onEnter: () => {
+      gsap.to('.win-card', { y: 0, opacity: 1, duration: 0.6, stagger: 0.2, ease: 'power2.out' });
+    },
+  });
+
+  // -- Example paragraphs --
+  gsap.set('.example__text p', { y: 15, opacity: 0 });
+  ScrollTrigger.create({
+    trigger: '.example', start: 'top 80%', once: true,
+    onEnter: () => {
+      gsap.to('.example__text p', { y: 0, opacity: 1, duration: 0.5, stagger: 0.12, ease: 'power2.out' });
+    },
+  });
+
+  // -- Tips grid --
+  gsap.set('.tip-card', { y: 20, opacity: 0 });
+  ScrollTrigger.create({
+    trigger: '.tips-grid', start: 'top 80%', once: true,
+    onEnter: () => {
+      gsap.to('.tip-card', { y: 0, opacity: 1, duration: 0.5, stagger: 0.15, ease: 'power2.out' });
+    },
+  });
+</script>
+
+</body>
+</html>

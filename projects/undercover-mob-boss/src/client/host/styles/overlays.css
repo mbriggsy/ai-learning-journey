@@ -1,0 +1,285 @@
+/* ── Host Overlay — Base ─────────────────────────────────────────── */
+/* Board ALWAYS visible through overlays — glassmorphism transparency */
+
+.host-overlay {
+  position: fixed;
+  top: 0;
+  left: 0;
+  right: 0;
+  z-index: 500;
+  background: var(--glass-bg);
+  border-bottom: 1px solid var(--glass-border-bright);
+  backdrop-filter: blur(var(--glass-blur));
+  -webkit-backdrop-filter: blur(var(--glass-blur));
+  pointer-events: none;
+}
+
+.host-overlay__content {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: var(--space-xs);
+  padding: var(--space-sm) var(--space-lg);
+  text-align: center;
+  pointer-events: auto;
+  max-width: 900px;
+  margin: 0 auto;
+}
+
+/* Stateful overlays that contain screen modules */
+.host-overlay__content > .host-screen {
+  width: auto;
+  height: auto;
+  background: none;
+  padding: var(--space-xs);
+  gap: var(--space-xs);
+}
+
+/* Game over — heavier glass, full screen */
+.game-over-overlay {
+  top: 0;
+  bottom: 0;
+  display: grid;
+  place-items: center;
+  background: var(--glass-bg-heavy);
+  border-bottom: none;
+  backdrop-filter: blur(var(--glass-blur-heavy));
+  -webkit-backdrop-filter: blur(var(--glass-blur-heavy));
+}
+
+.game-over-overlay .host-overlay__content {
+  padding: var(--space-lg);
+  gap: var(--space-md);
+}
+
+/* ── Responsive overlay sizing ──────────────────────────────────── */
+
+@media (max-width: 600px) {
+  .host-overlay__content {
+    padding: var(--space-xs) var(--space-sm);
+    gap: 2px;
+  }
+}
+
+@media (min-width: 1024px) {
+  .host-overlay__content {
+    padding: var(--space-md) var(--space-xl);
+    gap: var(--space-sm);
+  }
+}
+
+/* ── Nomination Bar ─────────────────────────────────────────────── */
+
+.nomination-bar {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: var(--space-xs);
+  padding: var(--space-sm);
+}
+
+.nomination-bar__row {
+  display: flex;
+  align-items: center;
+  gap: var(--space-xs);
+  flex-wrap: wrap;
+  justify-content: center;
+}
+
+.nomination-bar__label {
+  font-family: var(--font-display);
+  font-size: var(--text-xs);
+  color: var(--noir-muted);
+  text-transform: uppercase;
+  letter-spacing: 0.15em;
+}
+
+.nomination-bar__name {
+  font-family: var(--font-display);
+  font-size: var(--text-xl);
+  font-weight: 900;
+  color: var(--noir-cream);
+  text-shadow: 0 0 15px rgba(232, 224, 208, 0.15);
+}
+
+.nomination-bar__name--mayor {
+  color: var(--noir-gold);
+  text-shadow: 0 0 20px rgba(201, 168, 76, 0.3);
+}
+
+.nomination-bar__arrow {
+  font-size: var(--text-sm);
+  color: var(--noir-gold);
+  opacity: 0.5;
+}
+
+.nomination-bar__status {
+  font-family: var(--font-body);
+  font-size: var(--text-xs);
+  color: var(--noir-muted);
+  font-style: italic;
+}
+
+/* ── Veto Overlay ────────────────────────────────────────────────── */
+
+.veto-overlay {
+  z-index: 510;
+}
+
+.veto-overlay__title {
+  font-family: var(--font-display);
+  font-size: var(--text-2xl);
+  font-weight: 900;
+  color: var(--noir-amber);
+  text-transform: uppercase;
+  letter-spacing: 0.1em;
+  text-shadow: 0 0 20px rgba(212, 169, 68, 0.3);
+}
+
+.veto-overlay__subtitle {
+  font-family: var(--font-body);
+  font-size: var(--text-lg);
+  color: var(--noir-muted);
+  font-style: italic;
+}
+
+.veto-overlay__result {
+  font-family: var(--font-display);
+  font-size: var(--text-xl);
+  font-weight: 700;
+}
+
+.veto-overlay__result--approved {
+  color: var(--noir-gold);
+  text-shadow: 0 0 15px rgba(201, 168, 76, 0.4);
+}
+
+.veto-overlay__result--rejected {
+  color: var(--noir-blood);
+  text-shadow: 0 0 15px rgba(168, 32, 32, 0.4);
+}
+
+/* ── Power Overlay ───────────────────────────────────────────────── */
+
+.host-overlay:has(.power-overlay) {
+  bottom: 0;
+  background: var(--glass-bg-heavy);
+  backdrop-filter: blur(var(--glass-blur-heavy));
+  -webkit-backdrop-filter: blur(var(--glass-blur-heavy));
+  border-bottom: none;
+  display: grid;
+  place-items: center;
+}
+
+.power-overlay {
+  z-index: 520;
+}
+
+.power-overlay__art {
+  width: clamp(120px, 20vw, 240px);
+  height: auto;
+  border-radius: 12px;
+  box-shadow: var(--shadow-elevated);
+  border: 2px solid var(--glass-border-bright);
+}
+
+.power-overlay__icon {
+  font-size: var(--text-3xl);
+  line-height: 1;
+}
+
+.power-overlay__title {
+  font-family: var(--font-display);
+  font-size: var(--text-2xl);
+  font-weight: 900;
+  text-transform: uppercase;
+  letter-spacing: 0.08em;
+  color: var(--noir-cream);
+  text-shadow: 0 0 20px rgba(232, 224, 208, 0.2);
+}
+
+.power-overlay__actor {
+  font-family: var(--font-display);
+  font-size: var(--text-lg);
+  color: var(--noir-gold);
+  text-shadow: 0 0 15px rgba(201, 168, 76, 0.3);
+}
+
+.power-overlay__description {
+  font-family: var(--font-body);
+  font-size: var(--text-lg);
+  color: var(--noir-cream);
+  text-shadow: 0 0 10px rgba(232, 224, 208, 0.2), 0 2px 6px rgba(0, 0, 0, 0.6);
+  max-width: 400px;
+  font-style: italic;
+}
+
+/* ── Session Status Bar ──────────────────────────────────────────── */
+
+.session-status-bar {
+  position: fixed;
+  bottom: 0;
+  left: 0;
+  right: 0;
+  padding: var(--space-xs) var(--space-sm);
+  background: var(--glass-bg-heavy);
+  border-top: 1px solid var(--glass-border);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: var(--space-sm);
+  z-index: 400;
+  font-family: var(--font-body);
+  font-size: var(--text-sm);
+  color: var(--noir-muted);
+  font-style: italic;
+  backdrop-filter: blur(var(--glass-blur));
+  -webkit-backdrop-filter: blur(var(--glass-blur));
+}
+
+.session-status-bar__dot {
+  width: 8px;
+  height: 8px;
+  border-radius: 50%;
+  background: var(--noir-amber);
+  box-shadow: 0 0 8px rgba(212, 169, 68, 0.5);
+  animation: session-pulse 1.5s ease-in-out infinite;
+}
+
+@keyframes session-pulse {
+  0%, 100% { opacity: 1; }
+  50% { opacity: 0.3; }
+}
+
+/* ── Reshuffle Overlay ───────────────────────────────────────────── */
+
+.reshuffle-overlay {
+  z-index: 505;
+}
+
+.reshuffle-overlay__title {
+  font-family: var(--font-display);
+  font-size: var(--text-2xl);
+  font-weight: 900;
+  color: var(--noir-silver);
+  text-transform: uppercase;
+  letter-spacing: 0.1em;
+}
+
+.reshuffle-overlay__subtitle {
+  font-family: var(--font-body);
+  font-size: var(--text-base);
+  color: var(--noir-muted);
+  font-style: italic;
+}
+
+/* ── Game Over Role Art ──────────────────────────────────────────── */
+
+.game-over__role-art {
+  width: 28px;
+  height: 38px;
+  object-fit: cover;
+  border-radius: 4px;
+  border: 1px solid var(--glass-border);
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.4);
+}

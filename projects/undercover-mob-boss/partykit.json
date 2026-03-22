@@ -1,0 +1,8 @@
+{
+  "$schema": "https://www.partykit.io/schema.json",
+  "name": "undercover-mob-boss",
+  "main": "src/server/room.ts",
+  "port": 1999,
+  "compatibilityDate": "2024-09-27",
+  "minify": true
+}

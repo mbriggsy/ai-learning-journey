@@ -1,0 +1,23 @@
+{
+  "generatedAt": "2026-03-22T03:45:32.312Z",
+  "model": "imagen-4.0-generate-001",
+  "sdkVersion": "@google/genai@1.45.0",
+  "assets": [
+    {
+      "name": "lobby-seal",
+      "status": "success",
+      "promptHash": "236dd16b3fe8",
+      "dimensions": {
+        "width": 512,
+        "height": 512
+      },
+      "hasAlpha": false,
+      "generatedAt": "2026-03-22T03:45:39.843Z"
+    }
+  ],
+  "summary": {
+    "total": 1,
+    "succeeded": 1,
+    "failed": 0
+  }
+}

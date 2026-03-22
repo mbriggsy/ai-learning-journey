@@ -1,0 +1,19 @@
+{
+  "generatedAt": "2026-03-22T01:43:18.197Z",
+  "model": "gemini-2.5-flash-preview-tts",
+  "voiceId": "Charon",
+  "lines": [
+    {
+      "id": "blocked",
+      "status": "success",
+      "fileSizeBytes": 198330,
+      "durationMs": 4131,
+      "generatedAt": "2026-03-22T01:43:21.957Z"
+    }
+  ],
+  "summary": {
+    "total": 1,
+    "succeeded": 1,
+    "failed": 0
+  }
+}

@@ -1,0 +1,48 @@
+{
+  "name": "undercover-mob-boss",
+  "version": "1.0.0",
+  "description": "Digital-physical social deduction game — 1940s noir city infiltration",
+  "type": "module",
+  "scripts": {
+    "dev": "vite",
+    "build": "vite build",
+    "test": "vitest run",
+    "test:watch": "vitest",
+    "test:coverage": "vitest run --coverage",
+    "typecheck": "tsc --noEmit",
+    "generate-assets": "tsx --env-file=.env scripts/generate-assets.ts",
+    "generate-narrator": "tsx --env-file=.env scripts/generate-narrator.ts",
+    "partykit:dev": "npx partykit dev",
+    "partykit:deploy": "npx partykit deploy",
+    "preview": "vite preview",
+    "test:e2e": "npx playwright test"
+  },
+  "keywords": [],
+  "author": "",
+  "license": "CC-BY-NC-SA-4.0",
+  "packageManager": "pnpm@10.30.3",
+  "pnpm": {
+    "onlyBuiltDependencies": [
+      "sharp"
+    ]
+  },
+  "dependencies": {
+    "gsap": "^3.14.2",
+    "partykit": "^0.0.115",
+    "partysocket": "^1.1.16",
+    "qrcode": "^1.5.4"
+  },
+  "devDependencies": {
+    "@google/genai": "^1.45.0",
+    "@playwright/test": "^1.58.2",
+    "@types/node": "^25.5.0",
+    "@types/qrcode": "^1.5.6",
+    "@vitest/coverage-v8": "^4.1.0",
+    "sharp": "^0.34.5",
+    "tsx": "^4.21.0",
+    "typescript": "^5.9.3",
+    "vite": "^8.0.0",
+    "vite-plugin-pwa": "^1.2.0",
+    "vitest": "^4.1.0"
+  }
+}

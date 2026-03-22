@@ -1,0 +1,136 @@
+/* ── Top Bar ────────────────────────────────────────────────────── */
+
+.top-bar {
+  position: fixed;
+  top: 0;
+  left: 0;
+  right: 0;
+  z-index: 50;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  height: 48px;
+  padding: 0 16px;
+  padding-top: env(safe-area-inset-top, 0px);
+  background: var(--glass-bg-heavy);
+  backdrop-filter: blur(var(--glass-blur));
+  -webkit-backdrop-filter: blur(var(--glass-blur));
+  border-bottom: 1px solid var(--glass-border);
+}
+
+.top-bar__name {
+  font-family: var(--font-display);
+  font-size: 0.875rem;
+  font-weight: 600;
+  color: var(--noir-cream);
+  letter-spacing: 0.05em;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  max-width: 60%;
+}
+
+.top-bar__instruction {
+  flex: 1;
+  font-family: var(--font-display);
+  font-size: 0.85rem;
+  font-weight: 700;
+  color: var(--noir-cream);
+  text-shadow: 0 0 12px rgba(232, 224, 208, 0.3), 0 1px 4px rgba(0, 0, 0, 0.6);
+  letter-spacing: 0.06em;
+  text-align: center;
+  white-space: nowrap;
+  padding: 4px 16px;
+  border-radius: 4px;
+  background: rgba(201, 168, 76, 0.08);
+  border: 1px solid rgba(201, 168, 76, 0.15);
+}
+
+.top-bar__instruction:empty {
+  display: none;
+}
+
+/* Hide name when instruction is active */
+.top-bar__name:has(~ .top-bar__instruction:not(:empty)) {
+  display: none;
+}
+
+.top-bar__envelope {
+  width: 40px;
+  height: 40px;
+  display: grid;
+  place-items: center;
+  background: transparent;
+  border: 1px solid var(--glass-border-gold);
+  border-radius: 8px;
+  font-size: 1.125rem;
+  cursor: pointer;
+  -webkit-tap-highlight-color: transparent;
+  transition: background 150ms ease-out, border-color 150ms ease-out;
+}
+
+.top-bar__envelope:active {
+  background: rgba(201, 168, 76, 0.1);
+  border-color: var(--noir-gold);
+}
+
+/* ── Role Peek Overlay ─────────────────────────────────────────── */
+
+.role-peek-overlay {
+  position: fixed;
+  inset: 0;
+  z-index: 200;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 24px;
+  padding: 24px;
+}
+
+.role-peek-backdrop {
+  position: absolute;
+  inset: 0;
+  background: var(--glass-bg-heavy);
+  backdrop-filter: blur(24px);
+  -webkit-backdrop-filter: blur(24px);
+}
+
+.role-peek-card {
+  position: relative;
+  width: 100%;
+  max-width: 280px;
+  border-radius: 16px;
+  overflow: hidden;
+  box-shadow: 0 16px 48px rgba(0, 0, 0, 0.6);
+  border: 1px solid var(--glass-border-gold);
+}
+
+.role-peek-card__art {
+  display: block;
+  width: 100%;
+  aspect-ratio: 3 / 4;
+  object-fit: cover;
+}
+
+.role-peek-card__info {
+  padding: 16px;
+  text-align: center;
+  border-radius: 0;
+  border-top: 1px solid var(--glass-border);
+}
+
+.role-peek-card__info h2 {
+  margin-bottom: 4px;
+}
+
+.role-peek-card__allies {
+  font-size: 0.8125rem;
+  font-style: italic;
+  margin-top: 4px;
+}
+
+.role-peek-card__dismiss {
+  position: relative;
+  z-index: 1;
+}

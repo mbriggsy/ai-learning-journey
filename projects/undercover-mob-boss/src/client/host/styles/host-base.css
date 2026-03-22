@@ -1,0 +1,952 @@
+/* ── Host View — Global Resets ────────────────────────────────────── */
+/* Host view has its own entry point (host.html) and doesn't import
+   base.css, so we need the critical resets here. */
+
+*, *::before, *::after {
+  box-sizing: border-box;
+  margin: 0;
+  padding: 0;
+}
+
+html, body {
+  height: 100%;
+  height: 100dvh;
+  overflow: hidden;
+  overscroll-behavior: none;
+  touch-action: manipulation;
+}
+
+/* ── Noir Design Tokens ──────────────────────────────────────────── */
+
+:root {
+  /* Core palette */
+  --noir-black:        #0a0a0c;
+  --noir-charcoal:     #1a1a1e;
+  --noir-slate:        #2a2a30;
+  --noir-smoke:        #3a3a42;
+  --noir-cream:        #e8e0d0;
+  --noir-gold:         #c9a84c;
+  --noir-blood:        #a82020;
+  --noir-muted:        #8a8478;
+
+  /* Extended palette */
+  --noir-ash:          #5a5a64;
+  --noir-parchment:    #d4c8b0;
+  --noir-amber:        #d4a944;
+  --noir-crimson:      #8b1a1a;
+  --noir-steel:        #6e7b8b;
+  --noir-silver:       #9aa5b4;
+  --noir-connected:    #4a7c59;
+  --noir-disconnected: #7c4a4a;
+  --noir-dead:         #4a4a4a;
+
+  /* Extended accent palette */
+  --noir-gold-light:   #d4b04e;
+  --noir-gold-dark:    #b89438;
+  --noir-gold-deep:    #8b6914;
+  --noir-blood-light:  #e07070;
+  --noir-blood-bright: #d04040;
+  --noir-blood-vivid:  #b82222;
+
+  /* Typography */
+  --font-display: 'Cinzel', 'Times New Roman', serif;
+  --font-body:    'Cormorant Garamond', 'Georgia', serif;
+  --font-ui:      -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+
+  /* Glassmorphism */
+  --glass-bg:            rgba(10, 10, 12, 0.55);
+  --glass-bg-heavy:      rgba(10, 10, 12, 0.75);
+  --glass-border:        rgba(201, 168, 76, 0.12);
+  --glass-border-bright: rgba(201, 168, 76, 0.25);
+  --glass-blur:          12px;
+  --glass-blur-heavy:    20px;
+
+  /* Shadows & Glows */
+  --shadow-card:       0 8px 32px rgba(0, 0, 0, 0.6), 0 2px 8px rgba(0, 0, 0, 0.4);
+  --shadow-elevated:   0 16px 48px rgba(0, 0, 0, 0.7), 0 4px 12px rgba(0, 0, 0, 0.5);
+  --glow-gold:         0 0 20px rgba(201, 168, 76, 0.3), 0 0 60px rgba(201, 168, 76, 0.1);
+  --glow-blood:        0 0 20px rgba(168, 32, 32, 0.3), 0 0 60px rgba(168, 32, 32, 0.1);
+  --glow-gold-intense: 0 0 30px rgba(201, 168, 76, 0.5), 0 0 80px rgba(201, 168, 76, 0.2);
+
+  /* Art deco */
+  --deco-corner-size: 20px;
+  --deco-line-width:  1px;
+
+  /* Responsive spacing */
+  --space-xs:  clamp(4px, 0.5vw, 6px);
+  --space-sm:  clamp(8px, 1vw, 12px);
+  --space-md:  clamp(12px, 1.5vw, 20px);
+  --space-lg:  clamp(20px, 2.5vw, 32px);
+  --space-xl:  clamp(32px, 4vw, 48px);
+
+  /* Responsive typography */
+  --text-xs:   clamp(0.75rem, 1vw, 0.875rem);
+  --text-sm:   clamp(0.875rem, 1.2vw, 1rem);
+  --text-base: clamp(1rem, 1.4vw, 1.125rem);
+  --text-lg:   clamp(1.125rem, 1.8vw, 1.375rem);
+  --text-xl:   clamp(1.25rem, 2.2vw, 1.75rem);
+  --text-2xl:  clamp(1.5rem, 3vw, 2.5rem);
+  --text-3xl:  clamp(2rem, 4vw, 3.5rem);
+
+  /* Transitions */
+  --transition-fast: 150ms ease-out;
+  --transition-base: 300ms ease-out;
+  --transition-slow: 500ms ease-out;
+}
+
+/* ── Glassmorphism Utility ───────────────────────────────────────── */
+
+.glass-panel {
+  background: var(--glass-bg);
+  backdrop-filter: blur(var(--glass-blur));
+  -webkit-backdrop-filter: blur(var(--glass-blur));
+  border: var(--deco-line-width) solid var(--glass-border);
+  border-radius: 8px;
+  box-shadow: var(--shadow-card);
+  position: relative;
+}
+
+/* Art deco corner accents */
+.glass-panel::before,
+.glass-panel::after {
+  content: '';
+  position: absolute;
+  width: var(--deco-corner-size);
+  height: var(--deco-corner-size);
+  border-color: var(--noir-gold);
+  border-style: solid;
+  pointer-events: none;
+  opacity: 0.35;
+  z-index: 1;
+}
+
+.glass-panel::before {
+  top: -1px; left: -1px;
+  border-width: var(--deco-line-width) 0 0 var(--deco-line-width);
+}
+
+.glass-panel::after {
+  bottom: -1px; right: -1px;
+  border-width: 0 var(--deco-line-width) var(--deco-line-width) 0;
+}
+
+/* Edge-lit variant */
+.glass-panel--lit {
+  border-top: 1px solid rgba(201, 168, 76, 0.2);
+  box-shadow:
+    var(--shadow-card),
+    inset 0 1px 0 rgba(255, 255, 255, 0.05);
+}
+
+/* Heavy glass (overlays, game over) */
+.glass-panel--heavy {
+  background: var(--glass-bg-heavy);
+  backdrop-filter: blur(var(--glass-blur-heavy));
+  -webkit-backdrop-filter: blur(var(--glass-blur-heavy));
+}
+
+/* ── Landscape layout for host (TV/laptop) ───────────────────────── */
+
+.host-root {
+  width: 100%;
+  height: 100%;
+  height: 100dvh;
+  overflow: hidden;
+  background: var(--noir-black);
+  color: var(--noir-cream);
+  font-family: var(--font-body);
+  -webkit-font-smoothing: antialiased;
+  user-select: none;
+  display: flex;
+  flex-direction: column;
+}
+
+@media (orientation: landscape) {
+  .host-root {
+    flex-direction: column;
+    justify-content: center;
+  }
+}
+
+/* ── Host screen container ───────────────────────────────────────── */
+
+.host-screen {
+  width: 100%;
+  height: 100%;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  padding: var(--space-md);
+  gap: var(--space-md);
+}
+
+.host-screen__title {
+  font-family: var(--font-display);
+  font-size: var(--text-2xl);
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.08em;
+  color: var(--noir-cream);
+  text-shadow: 0 0 30px rgba(232, 224, 208, 0.15);
+}
+
+.host-screen__subtitle {
+  font-family: var(--font-body);
+  font-size: var(--text-lg);
+  color: var(--noir-cream);
+  font-style: italic;
+  text-shadow: 0 1px 4px rgba(0, 0, 0, 0.6);
+}
+
+/* ── Utility classes ─────────────────────────────────────────────── */
+
+.host-text-gold { color: var(--noir-gold); }
+.host-text-blood { color: var(--noir-blood); }
+.host-text-muted { color: var(--noir-muted); }
+.host-text-cream { color: var(--noir-cream); }
+.host-text-center { text-align: center; }
+
+/* ── Host action button ──────────────────────────────────────────── */
+
+.host-btn {
+  font-family: var(--font-display);
+  padding: var(--space-sm) var(--space-lg);
+  border: none;
+  border-radius: 4px;
+  font-size: var(--text-base);
+  font-weight: 700;
+  cursor: pointer;
+  background: linear-gradient(135deg, var(--noir-gold-light), var(--noir-gold-dark));
+  color: var(--noir-black);
+  text-transform: uppercase;
+  letter-spacing: 0.08em;
+  min-height: 44px;
+  min-width: 44px;
+  box-shadow: 0 4px 16px rgba(201, 168, 76, 0.3);
+  transition: transform var(--transition-fast), box-shadow var(--transition-fast);
+  -webkit-tap-highlight-color: transparent;
+}
+
+.host-btn:active {
+  transform: scale(0.95);
+  box-shadow: 0 2px 8px rgba(201, 168, 76, 0.2);
+}
+
+.host-btn:disabled {
+  opacity: 0.4;
+  pointer-events: none;
+}
+
+.host-btn--danger {
+  background: linear-gradient(135deg, var(--noir-blood-vivid), var(--noir-crimson));
+  color: var(--noir-cream);
+  box-shadow: 0 4px 16px rgba(168, 32, 32, 0.3);
+}
+
+.host-btn--secondary {
+  background: var(--noir-slate);
+  color: var(--noir-cream);
+  box-shadow: none;
+}
+
+/* ── Mute Button ──────────────────────────────────────────────────── */
+
+/* Focus styles — WCAG AA compliance */
+:focus-visible {
+  outline: 2px solid var(--noir-gold);
+  outline-offset: 2px;
+}
+
+button:focus-visible,
+[role="button"]:focus-visible {
+  outline: 2px solid var(--noir-gold);
+  outline-offset: 2px;
+  box-shadow: 0 0 0 4px rgba(201, 168, 76, 0.25);
+}
+
+input:focus-visible {
+  outline: 2px solid var(--noir-gold);
+  outline-offset: 0;
+  border-color: var(--noir-gold);
+}
+
+.mute-btn {
+  position: fixed;
+  bottom: 36px;
+  right: 116px;
+  z-index: 500;
+  width: 44px;
+  height: 44px;
+  border-radius: 50%;
+  border: 1px solid var(--glass-border);
+  background: var(--glass-bg);
+  backdrop-filter: blur(var(--glass-blur));
+  -webkit-backdrop-filter: blur(var(--glass-blur));
+  color: var(--noir-gold);
+  font-size: 1.25rem;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  transition: opacity var(--transition-fast), transform var(--transition-fast);
+  -webkit-tap-highlight-color: transparent;
+}
+
+.mute-btn:active {
+  transform: scale(0.9);
+}
+
+.mute-btn--muted {
+  opacity: 0.5;
+  color: var(--noir-muted);
+}
+
+/* ══════════════════════════════════════════════════════════════════
+   LOBBY — Cinematic Noir (Stitch-designed)
+   Movie-poster composition. Atmosphere is the star.
+   ══════════════════════════════════════════════════════════════════ */
+
+.lobby {
+  position: relative;
+  width: 100%;
+  height: 100%;
+  height: 100dvh;
+  overflow: hidden;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  text-align: center;
+}
+
+/* ── Cinematic background layers ─────────────────────────────── */
+
+.lobby__bg {
+  position: fixed;
+  inset: 0;
+  z-index: 0;
+  pointer-events: none;
+}
+
+/* Noir cityscape — our existing background artwork */
+.lobby__bg-city {
+  position: absolute;
+  inset: 0;
+  background: url('/assets/background.jpg') center/cover no-repeat;
+  filter: grayscale(0.6) contrast(1.2);
+  opacity: 0.2;
+}
+
+/* Vertical fade — dark at top and bottom */
+.lobby__bg-fade-v {
+  position: absolute;
+  inset: 0;
+  background: linear-gradient(
+    to bottom,
+    rgba(10, 10, 12, 0.85) 0%,
+    transparent 30%,
+    transparent 70%,
+    rgba(10, 10, 12, 0.9) 100%
+  );
+}
+
+/* Horizontal fade — dark at sides */
+.lobby__bg-fade-h {
+  position: absolute;
+  inset: 0;
+  background: linear-gradient(
+    to right,
+    rgba(10, 10, 12, 0.7) 0%,
+    transparent 25%,
+    transparent 75%,
+    rgba(10, 10, 12, 0.7) 100%
+  );
+}
+
+/* Central golden glow orb — the secret warmth */
+.lobby__bg-glow {
+  position: absolute;
+  top: 40%;
+  left: 50%;
+  transform: translate(-50%, -50%);
+  width: 1000px;
+  height: 1000px;
+  background: radial-gradient(circle, rgba(201, 168, 76, 0.12) 0%, rgba(201, 168, 76, 0.04) 40%, transparent 70%);
+  border-radius: 50%;
+}
+
+/* Vignette */
+.lobby__bg-vignette {
+  position: absolute;
+  inset: 0;
+  background: radial-gradient(circle, transparent 30%, rgba(0, 0, 0, 0.85) 100%);
+}
+
+/* Film grain */
+.lobby__bg-grain {
+  position: absolute;
+  inset: 0;
+  background: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='200' height='200'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.75' numOctaves='4' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='200' height='200' filter='url(%23n)' opacity='0.04'/%3E%3C/svg%3E");
+  background-size: 200px 200px;
+  opacity: 0.5;
+}
+
+/* ── Art deco corners ────────────────────────────────────────── */
+
+.lobby__deco-corner {
+  position: fixed;
+  width: 80px;
+  height: 80px;
+  border-color: rgba(201, 168, 76, 0.2);
+  border-style: solid;
+  z-index: 5;
+  pointer-events: none;
+}
+
+.lobby__deco-corner--tl { top: 24px; left: 24px; border-width: 2px 0 0 2px; }
+.lobby__deco-corner--tr { top: 24px; right: 24px; border-width: 2px 2px 0 0; }
+.lobby__deco-corner--bl { bottom: 24px; left: 24px; border-width: 0 0 2px 2px; }
+.lobby__deco-corner--br { bottom: 24px; right: 24px; border-width: 0 2px 2px 0; }
+
+/* ── Main content ────────────────────────────────────────────── */
+
+.lobby__main {
+  position: relative;
+  z-index: 2;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  flex: 1;
+  padding: var(--space-lg);
+  gap: var(--space-md);
+  max-width: 900px;
+  width: 100%;
+}
+
+/* ── Title treatment ─────────────────────────────────────────── */
+
+.lobby__title-block {
+  text-align: center;
+  margin-bottom: var(--space-sm);
+}
+
+.lobby__tagline {
+  font-family: var(--font-body);
+  font-size: clamp(1rem, 2.2vw, 1.5rem);
+  font-style: italic;
+  color: var(--noir-cream);
+  opacity: 0.6;
+  letter-spacing: 0.15em;
+  margin-bottom: var(--space-sm);
+  text-shadow: 0 2px 8px rgba(0, 0, 0, 0.8);
+}
+
+.lobby__title {
+  font-family: var(--font-display);
+  font-size: clamp(2.5rem, 8vw, 6rem);
+  font-weight: 900;
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+  color: var(--noir-gold);
+  line-height: 0.95;
+  text-shadow:
+    0 0 30px rgba(201, 168, 76, 0.5),
+    0 0 80px rgba(201, 168, 76, 0.2),
+    0 0 120px rgba(201, 168, 76, 0.08),
+    0 4px 12px rgba(0, 0, 0, 0.9);
+}
+
+/* ── Art deco divider ────────────────────────────────────────── */
+
+.lobby__divider {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 16px;
+  margin-top: var(--space-md);
+}
+
+.lobby__divider-line {
+  width: clamp(60px, 12vw, 140px);
+  height: 1px;
+  background: linear-gradient(to right, transparent, rgba(201, 168, 76, 0.5), transparent);
+}
+
+.lobby__divider-text {
+  font-family: var(--font-ui);
+  font-size: 12px;
+  letter-spacing: 0.35em;
+  color: rgba(201, 168, 76, 0.5);
+  text-transform: uppercase;
+}
+
+/* ── Room code pill ──────────────────────────────────────────── */
+
+.lobby__code-pill {
+  display: flex;
+  align-items: center;
+  gap: var(--space-md);
+  background: linear-gradient(135deg, rgba(26, 26, 30, 0.85), rgba(16, 16, 18, 0.9));
+  backdrop-filter: blur(20px);
+  -webkit-backdrop-filter: blur(20px);
+  border: 1px solid rgba(201, 168, 76, 0.3);
+  border-top: 1px solid rgba(201, 168, 76, 0.4);
+  border-radius: 999px;
+  padding: var(--space-md) var(--space-xl);
+  box-shadow:
+    0 0 60px rgba(0, 0, 0, 0.6),
+    0 0 30px rgba(201, 168, 76, 0.06),
+    inset 0 1px 0 rgba(255, 255, 255, 0.04);
+  transition: border-color var(--transition-fast), box-shadow var(--transition-fast);
+}
+
+.lobby__code-pill:hover {
+  border-color: rgba(201, 168, 76, 0.5);
+  box-shadow:
+    0 0 60px rgba(0, 0, 0, 0.6),
+    0 0 40px rgba(201, 168, 76, 0.1),
+    inset 0 1px 0 rgba(255, 255, 255, 0.06);
+}
+
+.lobby__code-group {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  line-height: 1;
+}
+
+.lobby__code-label {
+  font-family: var(--font-ui);
+  font-size: 12px;
+  letter-spacing: 0.25em;
+  color: rgba(201, 168, 76, 0.6);
+  text-transform: uppercase;
+  margin-bottom: 4px;
+}
+
+.lobby__room-code {
+  font-family: var(--font-display);
+  font-size: clamp(2.5rem, 5vw, 3.5rem);
+  font-weight: 700;
+  letter-spacing: 0.3em;
+  color: var(--noir-gold);
+  text-shadow: 0 0 20px rgba(201, 168, 76, 0.3);
+}
+
+.lobby__code-divider {
+  width: 1px;
+  height: 48px;
+  background: rgba(201, 168, 76, 0.2);
+}
+
+.lobby__qr {
+  flex-shrink: 0;
+  position: relative;
+  opacity: 0.8;
+}
+
+.lobby__qr canvas {
+  display: block;
+  width: 64px !important;
+  height: 64px !important;
+}
+
+/* ── Player roster ───────────────────────────────────────────── */
+
+.lobby__roster {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: var(--space-sm);
+  width: 100%;
+}
+
+.lobby__roster-label {
+  font-family: var(--font-ui);
+  font-size: clamp(12px, 1.5vw, 16px);
+  letter-spacing: 0.4em;
+  color: rgba(201, 168, 76, 0.4);
+  text-transform: uppercase;
+}
+
+.lobby__player-grid {
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: center;
+  gap: var(--space-sm);
+}
+
+.lobby__player-chip {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 8px 16px;
+  background: var(--noir-charcoal);
+  border: 1px solid rgba(201, 168, 76, 0.25);
+  border-radius: 999px;
+  font-family: var(--font-display);
+  font-size: var(--text-sm);
+  font-style: italic;
+  letter-spacing: 0.08em;
+  color: var(--noir-cream);
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.3);
+  transition: border-color var(--transition-fast);
+}
+
+.lobby__player-chip:hover {
+  border-color: rgba(201, 168, 76, 0.5);
+}
+
+.lobby__player-dot {
+  width: 8px;
+  height: 8px;
+  border-radius: 50%;
+  background: #10b981;
+  box-shadow: 0 0 8px rgba(16, 185, 129, 0.6);
+  flex-shrink: 0;
+}
+
+.lobby__player-dot--disconnected {
+  background: var(--noir-disconnected);
+  box-shadow: none;
+}
+
+.lobby__player-name {
+  white-space: nowrap;
+}
+
+.lobby__kick-btn {
+  background: none;
+  border: none;
+  color: var(--noir-muted);
+  font-size: var(--text-sm);
+  line-height: 1;
+  cursor: pointer;
+  padding: 0 2px;
+  margin-left: 2px;
+  opacity: 0.4;
+  transition: opacity var(--transition-fast), color var(--transition-fast);
+  min-height: 44px;
+  min-width: 44px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.lobby__kick-btn:hover {
+  opacity: 1;
+  color: var(--noir-blood-bright);
+}
+
+/* ── QR icon on code pill ─────────────────────────────────────── */
+
+.lobby__code-qr-icon {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 3px;
+  padding: 6px;
+  align-self: center;
+  opacity: 0.35;
+  transition: opacity var(--transition-fast);
+}
+
+.lobby__code-pill:hover .lobby__code-qr-icon {
+  opacity: 0.7;
+}
+
+.lobby__code-qr-dot {
+  width: 8px;
+  height: 8px;
+  background: var(--noir-gold);
+  border-radius: 1px;
+}
+
+/* ── Join instructions ───────────────────────────────────────── */
+
+.lobby__join-hint {
+  font-family: var(--font-body);
+  font-size: var(--text-sm);
+  font-style: italic;
+  color: var(--noir-muted);
+  letter-spacing: 0.06em;
+  text-shadow: 0 2px 6px rgba(0, 0, 0, 0.8);
+  opacity: 0.7;
+}
+
+/* ── How to Play link ─────────────────────────────────────────── */
+
+.lobby__htp-link {
+  font-family: var(--font-display);
+  font-size: var(--text-xs);
+  color: var(--noir-gold);
+  opacity: 0.4;
+  text-decoration: none;
+  letter-spacing: 0.15em;
+  text-transform: uppercase;
+  transition: opacity var(--transition-fast), letter-spacing var(--transition-fast);
+  min-height: 44px;
+  display: flex;
+  align-items: center;
+  border-bottom: 1px solid transparent;
+}
+
+.lobby__htp-link:hover {
+  opacity: 0.9;
+  letter-spacing: 0.2em;
+  border-bottom: 1px solid rgba(201, 168, 76, 0.3);
+}
+
+/* ── QR overlay (on-demand) ──────────────────────────────────── */
+
+.lobby__qr-overlay {
+  position: fixed;
+  inset: 0;
+  z-index: 600;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.lobby__qr-backdrop {
+  position: absolute;
+  inset: 0;
+  background: rgba(10, 10, 12, 0.85);
+  backdrop-filter: blur(8px);
+  -webkit-backdrop-filter: blur(8px);
+}
+
+.lobby__qr-card {
+  position: relative;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: var(--space-md);
+  padding: var(--space-lg);
+  background: var(--noir-charcoal);
+  border: 1px solid rgba(201, 168, 76, 0.2);
+  border-radius: 12px;
+  box-shadow: 0 16px 64px rgba(0, 0, 0, 0.6);
+}
+
+.lobby__qr-title {
+  font-family: var(--font-display);
+  font-size: var(--text-lg);
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.15em;
+  color: var(--noir-gold);
+}
+
+.lobby__qr-canvas {
+  background: #ffffff;
+  border-radius: 8px;
+  padding: 16px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.lobby__qr-canvas canvas {
+  display: block;
+}
+
+.lobby__qr-dismiss {
+  font-family: var(--font-display);
+  font-size: var(--text-sm);
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.1em;
+  color: var(--noir-muted);
+  background: none;
+  border: 1px solid var(--noir-smoke);
+  border-radius: 4px;
+  padding: 8px 24px;
+  cursor: pointer;
+  min-height: 44px;
+  transition: color var(--transition-fast), border-color var(--transition-fast);
+}
+
+.lobby__qr-dismiss:hover {
+  color: var(--noir-cream);
+  border-color: var(--noir-gold);
+}
+
+/* ── Start button — brass plate ──────────────────────────────── */
+
+.lobby__footer {
+  position: relative;
+  z-index: 2;
+  width: 100%;
+  display: flex;
+  justify-content: center;
+  padding: 0 var(--space-lg) var(--space-xl);
+}
+
+.lobby__start-btn {
+  position: relative;
+  width: 100%;
+  max-width: 480px;
+  height: 60px;
+  border: 1px solid rgba(201, 168, 76, 0.4);
+  cursor: pointer;
+  background: linear-gradient(
+    180deg,
+    rgba(212, 176, 78, 1) 0%,
+    rgba(201, 168, 76, 1) 45%,
+    rgba(184, 148, 56, 1) 55%,
+    rgba(139, 105, 20, 1) 100%
+  );
+  color: var(--noir-black);
+  font-family: var(--font-display);
+  font-size: clamp(1rem, 1.8vw, 1.3rem);
+  font-weight: 900;
+  letter-spacing: 0.4em;
+  text-transform: uppercase;
+  box-shadow:
+    0 12px 40px rgba(201, 168, 76, 0.25),
+    0 2px 8px rgba(0, 0, 0, 0.5),
+    inset 0 1px 0 rgba(255, 255, 255, 0.25),
+    inset 0 -1px 0 rgba(0, 0, 0, 0.2);
+  transition: transform var(--transition-fast);
+  -webkit-tap-highlight-color: transparent;
+  min-height: 44px;
+  overflow: hidden;
+}
+
+/* Brushed metal sheen */
+.lobby__start-btn::before {
+  content: '';
+  position: absolute;
+  inset: 0;
+  background: linear-gradient(
+    105deg,
+    transparent 40%,
+    rgba(255, 255, 255, 0.12) 45%,
+    rgba(255, 255, 255, 0.05) 55%,
+    transparent 60%
+  );
+  pointer-events: none;
+}
+
+/* Edge bevel */
+.lobby__start-btn::after {
+  content: '';
+  position: absolute;
+  inset: 1px;
+  border-top: 1px solid rgba(255, 255, 255, 0.15);
+  border-bottom: 1px solid rgba(0, 0, 0, 0.15);
+  pointer-events: none;
+}
+
+.lobby__start-btn:active {
+  transform: scale(0.97);
+}
+
+.lobby__start-btn:disabled {
+  opacity: 0.3;
+  pointer-events: none;
+  box-shadow: none;
+}
+
+.lobby__start-btn--ready {
+  box-shadow: 0 10px 40px rgba(201, 168, 76, 0.3);
+}
+
+/* ── Bottom deco line ────────────────────────────────────────── */
+
+.lobby__bottom-line {
+  position: fixed;
+  bottom: 0;
+  left: 0;
+  width: 100%;
+  height: 1px;
+  background: linear-gradient(to right, transparent, rgba(201, 168, 76, 0.3), transparent);
+  z-index: 5;
+  pointer-events: none;
+}
+
+/* ── Dev tools — bottom-left, unobtrusive ────────────────────── */
+
+.lobby__dev-tools {
+  position: fixed;
+  bottom: var(--space-sm);
+  left: var(--space-sm);
+  z-index: 10;
+  display: flex;
+  align-items: center;
+  gap: var(--space-xs);
+  padding: 4px var(--space-xs);
+  border: 1px dashed var(--noir-smoke);
+  border-radius: 6px;
+  background: rgba(10, 10, 12, 0.85);
+}
+
+.lobby__dev-label {
+  font-size: var(--text-xs);
+  color: var(--noir-muted);
+  text-transform: uppercase;
+  letter-spacing: 0.1em;
+  font-family: var(--font-ui);
+}
+
+.lobby__dev-row {
+  display: flex;
+  gap: 4px;
+  align-items: center;
+}
+
+.lobby__dev-select {
+  background: var(--noir-charcoal);
+  color: var(--noir-cream);
+  border: 1px solid var(--noir-smoke);
+  border-radius: 4px;
+  padding: 4px 6px;
+  font-size: var(--text-xs);
+  font-family: var(--font-ui);
+  min-height: 36px;
+}
+
+.lobby__dev-btn {
+  background: var(--noir-slate);
+  color: var(--noir-cream);
+  border: 1px solid var(--noir-smoke);
+  border-radius: 4px;
+  padding: 4px 10px;
+  font-size: var(--text-xs);
+  cursor: pointer;
+  min-height: 36px;
+  font-family: var(--font-ui);
+  transition: background var(--transition-fast);
+}
+
+.lobby__dev-btn:hover {
+  background: var(--noir-smoke);
+}
+
+/* ── Responsive: smaller screens ─────────────────────────────── */
+
+@media (max-width: 600px) {
+  .lobby__title {
+    font-size: clamp(2rem, 10vw, 3rem);
+  }
+
+  .lobby__code-pill {
+    padding: var(--space-xs) var(--space-md);
+  }
+
+  .lobby__room-code {
+    font-size: clamp(2rem, 8vw, 2.5rem);
+  }
+
+  .lobby__deco-corner {
+    width: 40px;
+    height: 40px;
+  }
+
+  .lobby__deco-corner--tl { top: 12px; left: 12px; }
+  .lobby__deco-corner--tr { top: 12px; right: 12px; }
+  .lobby__deco-corner--bl { bottom: 12px; left: 12px; }
+  .lobby__deco-corner--br { bottom: 12px; right: 12px; }
+}

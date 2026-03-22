@@ -1,0 +1,374 @@
+/* ---- Role Card Flip ---- */
+.role-reveal-card {
+  width: 70vw;
+  max-width: 300px;
+  aspect-ratio: 3 / 4;
+  perspective: 1000px;
+  margin: 0 auto;
+}
+
+.role-reveal-card__inner {
+  position: relative;
+  width: 100%;
+  height: 100%;
+  transform-style: preserve-3d;
+  will-change: transform;
+}
+
+.role-reveal-card__face {
+  position: absolute;
+  inset: 0;
+  backface-visibility: hidden;
+  border-radius: 12px;
+  overflow: hidden;
+  box-shadow: 0 8px 24px rgba(0, 0, 0, 0.6);
+}
+
+.role-reveal-card__back {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 16px;
+  /* Noir luxury — pinstripe + gradient */
+  background:
+    repeating-linear-gradient(
+      135deg,
+      rgba(201, 168, 76, 0.03) 0px,
+      rgba(201, 168, 76, 0.03) 1px,
+      transparent 1px,
+      transparent 12px
+    ),
+    linear-gradient(180deg, var(--noir-slate) 0%, var(--noir-charcoal) 60%, var(--noir-black) 100%);
+  /* Art deco border */
+  border: 2px solid rgba(201, 168, 76, 0.25);
+  box-shadow:
+    0 8px 24px rgba(0, 0, 0, 0.6),
+    inset 0 1px 0 rgba(201, 168, 76, 0.15),
+    inset 0 -1px 0 rgba(0, 0, 0, 0.3);
+}
+
+/* Gold art deco corner accents on back face */
+.role-reveal-card__back::before,
+.role-reveal-card__back::after {
+  content: '';
+  position: absolute;
+  width: 32px;
+  height: 32px;
+  border-color: rgba(201, 168, 76, 0.4);
+  border-style: solid;
+  pointer-events: none;
+}
+.role-reveal-card__back::before {
+  top: 10px; left: 10px;
+  border-width: 2px 0 0 2px;
+}
+.role-reveal-card__back::after {
+  bottom: 10px; right: 10px;
+  border-width: 0 2px 2px 0;
+}
+
+/* Wax seal emblem */
+.role-reveal-card__seal {
+  width: 72px;
+  height: 72px;
+  border-radius: 50%;
+  background: radial-gradient(circle at 35% 35%, var(--noir-amber), var(--noir-gold-deep));
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-family: 'Cinzel', serif;
+  font-size: 0.9rem;
+  font-weight: 900;
+  color: var(--noir-black);
+  letter-spacing: 0.15em;
+  box-shadow:
+    0 4px 16px rgba(0, 0, 0, 0.5),
+    inset 0 2px 4px rgba(255, 255, 255, 0.2),
+    inset 0 -2px 4px rgba(0, 0, 0, 0.3);
+  text-shadow: 0 1px 0 rgba(255, 255, 255, 0.15);
+  border: 2px solid rgba(201, 168, 76, 0.5);
+}
+
+/* Classified label */
+.role-reveal-card__classified {
+  font-family: 'Cinzel', serif;
+  font-size: 0.875rem;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.3em;
+  color: rgba(201, 168, 76, 0.6);
+}
+
+/* Tap hint */
+.role-reveal-card__hint {
+  font-family: 'Cormorant Garamond', serif;
+  font-size: 0.8rem;
+  color: rgba(138, 132, 120, 0.6);
+  font-style: italic;
+  animation: hint-pulse 2.5s ease-in-out infinite;
+}
+
+@keyframes hint-pulse {
+  0%, 100% { opacity: 0.4; }
+  50% { opacity: 0.8; }
+}
+
+.role-reveal-card__back img,
+.role-reveal-card__front img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+}
+
+.role-reveal-card__front {
+  transform: rotateY(180deg);
+}
+
+/* ---- iOS Shake Fallback ---- */
+@keyframes shake {
+  0%, 100% { transform: translateX(0); }
+  10%, 30%, 50%, 70%, 90% { transform: translateX(-4px); }
+  20%, 40%, 60%, 80% { transform: translateX(4px); }
+}
+
+.shake {
+  animation: shake 500ms ease-in-out;
+}
+
+/* ---- Vote Button Press ---- */
+.vote-btn {
+  min-width: 120px;
+  min-height: 56px;
+  padding: 16px 32px;
+  border: none;
+  border-radius: 12px;
+  font-size: 1.125rem;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.1em;
+  cursor: pointer;
+  transition: transform 150ms ease-out, opacity 150ms ease-out;
+  -webkit-tap-highlight-color: transparent;
+}
+
+.vote-btn:active {
+  transform: scale(0.95);
+}
+
+.vote-btn--approve {
+  background: var(--noir-gold);
+  color: var(--noir-black);
+}
+
+.vote-btn--block {
+  background: var(--noir-blood);
+  color: var(--noir-cream);
+}
+
+/* ---- Vote Card (image-based) ---- */
+.vote-panel {
+  display: flex;
+  gap: 32px;
+  justify-content: center;
+  align-items: stretch;
+  padding: 28px 24px;
+  flex: 1;
+  max-height: 420px;
+}
+
+.vote-card {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 16px;
+  flex: 1;
+  max-width: 200px;
+}
+
+.vote-card__img {
+  width: 100%;
+  aspect-ratio: 1 / 1;
+  object-fit: cover;
+  display: block;
+  border-radius: 12px;
+  box-shadow: 0 4px 16px rgba(0, 0, 0, 0.5);
+}
+
+.vote-card__btn {
+  width: 100%;
+  padding: 14px 24px;
+  font-size: 1.1rem;
+  letter-spacing: 0.05em;
+  white-space: nowrap;
+}
+
+@media (max-width: 400px) {
+  .vote-panel {
+    gap: 16px;
+    padding: 20px 16px;
+  }
+
+  .vote-card__btn {
+    padding: 12px 16px;
+    font-size: 0.85rem;
+  }
+}
+
+/* ---- Policy Card Select ---- */
+.policy-card {
+  width: 110px;
+  aspect-ratio: 3 / 4;
+  border-radius: 12px;
+  overflow: hidden;
+  cursor: pointer;
+  transition: transform 200ms ease-out, opacity 200ms ease-out, box-shadow 200ms ease-out;
+  box-shadow: 0 4px 16px rgba(0, 0, 0, 0.4);
+}
+
+.policy-card--good {
+  background: var(--noir-green);
+  border: 2px solid rgba(201, 168, 76, 0.3);
+}
+
+.policy-card--bad {
+  background: var(--noir-blood);
+  border: 2px solid rgba(168, 32, 32, 0.5);
+}
+
+.policy-card__img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  display: block;
+}
+
+.policy-card--selected {
+  transform: translateY(-16px) scale(1.08);
+  border-color: var(--noir-gold) !important;
+  box-shadow:
+    0 0 24px rgba(201, 168, 76, 0.5),
+    0 12px 32px rgba(0, 0, 0, 0.5),
+    inset 0 0 12px rgba(201, 168, 76, 0.1);
+}
+
+.policy-card--unselected {
+  opacity: 0.45;
+  transform: scale(0.95);
+  filter: brightness(0.6);
+}
+
+.policy-card--dimmed {
+  opacity: 0.3;
+  pointer-events: none;
+  filter: brightness(0.4);
+}
+
+/* ---- Eliminated Screen ---- */
+.eliminated-screen {
+  position: fixed;
+  inset: 0;
+  display: grid;
+  place-items: center;
+  z-index: 999;
+}
+
+.eliminated-vignette {
+  position: absolute;
+  inset: 0;
+  background:
+    radial-gradient(ellipse at 50% 50%, rgba(139, 26, 26, 0.15) 0%, rgba(139, 26, 26, 0.4) 50%, rgba(10, 10, 12, 0.9) 100%);
+  pointer-events: none;
+}
+
+.eliminated-content {
+  position: relative;
+  z-index: 1;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 16px;
+  text-align: center;
+  padding: 24px;
+}
+
+.eliminated-icon {
+  font-size: 5rem;
+  line-height: 1;
+  filter: drop-shadow(0 0 30px rgba(168, 32, 32, 0.6));
+}
+
+.eliminated-title {
+  font-family: var(--font-display);
+  font-size: 2.5rem;
+  font-weight: 900;
+  text-transform: uppercase;
+  letter-spacing: 0.2em;
+  color: var(--noir-blood);
+  text-shadow:
+    0 0 40px rgba(168, 32, 32, 0.5),
+    0 2px 8px rgba(0, 0, 0, 0.8);
+}
+
+.eliminated-flavor {
+  font-family: var(--font-body);
+  font-size: 1.15rem;
+  font-style: italic;
+  color: var(--noir-cream);
+  text-shadow: 0 2px 6px rgba(0, 0, 0, 0.8);
+  max-width: 280px;
+  line-height: 1.5;
+}
+
+.eliminated-hint {
+  font-family: var(--font-body);
+  font-size: 0.9rem;
+  color: var(--noir-muted);
+  text-shadow: 0 1px 4px rgba(0, 0, 0, 0.6);
+  max-width: 260px;
+  line-height: 1.4;
+}
+
+/* ---- Confirmation Appear ---- */
+@keyframes confirmation-appear {
+  from { opacity: 0; transform: scale(0.8); }
+  to { opacity: 1; transform: scale(1); }
+}
+
+.vote-confirmation {
+  padding: 16px;
+  border-radius: 12px;
+  text-align: center;
+  font-weight: 700;
+  font-size: 1.25rem;
+  animation: confirmation-appear 300ms ease-out forwards;
+}
+
+.vote-confirmation--approve { background: var(--noir-gold); color: var(--noir-black); }
+.vote-confirmation--block { background: var(--noir-blood); color: var(--noir-cream); }
+
+/* ---- Nudge Escalation ---- */
+@keyframes nudge-pulse {
+  0%, 100% { box-shadow: inset 0 0 0 0 transparent; }
+  50% { box-shadow: inset 0 0 20px 4px rgba(212, 175, 55, 0.15); }
+}
+
+@keyframes nudge-urgent-pulse {
+  0%, 100% { box-shadow: inset 0 0 0 0 transparent; }
+  50% { box-shadow: inset 0 0 30px 8px rgba(139, 26, 26, 0.25); }
+}
+
+[data-nudge-level="1"] { animation: nudge-pulse 2s ease-in-out infinite; }
+[data-nudge-level="2"] { animation: nudge-pulse 1.5s ease-in-out infinite; }
+[data-nudge-level="3"] { animation: nudge-urgent-pulse 1s ease-in-out infinite; }
+
+/* ---- Waiting Player Indicator (Host) ---- */
+@keyframes waiting-glow {
+  0%, 100% { box-shadow: 0 0 0 0 rgba(212, 175, 55, 0); }
+  50% { box-shadow: 0 0 8px 3px rgba(212, 175, 55, 0.6); }
+}
+
+.player-strip__item--waiting {
+  animation: waiting-glow 2s ease-in-out infinite;
+  border-radius: 8px;
+}

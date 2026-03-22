@@ -7,7 +7,6 @@ export default defineConfig({
       input: {
         main: 'index.html',
         host: 'host.html',
-        'how-to-play': 'how-to-play.html',
       },
     },
   },

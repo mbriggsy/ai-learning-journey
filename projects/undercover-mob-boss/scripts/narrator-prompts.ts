@@ -98,7 +98,7 @@ export const NARRATOR_PROMPTS = [
   {
     id: 'nomination',
     trigger: 'Mayor nominates Police Chief',
-    script: 'The Mayor has nominated the Police Chief. The city watches. The mob waits.',
+    script: 'The gavel passes. A new Mayor takes the seat. Choose wisely... the wrong partner could cost the city everything.',
   },
   {
     id: 'vote-open',
@@ -113,7 +113,7 @@ export const NARRATOR_PROMPTS = [
   {
     id: 'approved',
     trigger: 'Nomination passes',
-    script: 'The nomination passes. The city has chosen.',
+    script: 'The vote carries. A new government takes power. For better... or for worse.',
   },
   {
     id: 'blocked',

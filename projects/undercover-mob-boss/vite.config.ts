@@ -15,9 +15,17 @@ export default defineConfig({
       registerType: 'autoUpdate',
       manifest: false, // Using manual manifest.webmanifest
       workbox: {
-        navigateFallbackDenylist: [/^\/host/, /^\/how-to-play/],
-        globPatterns: ['**/*.{js,css,html,png,jpg,wav,mp3,webmanifest}'],
+        navigateFallback: null,
+        globPatterns: ['**/*.{js,css,png,jpg,wav,mp3,webmanifest}'],
         runtimeCaching: [
+          {
+            urlPattern: ({ request }) => request.mode === 'navigate',
+            handler: 'NetworkFirst',
+            options: {
+              cacheName: 'pages',
+              expiration: { maxEntries: 10, maxAgeSeconds: 24 * 60 * 60 },
+            },
+          },
           {
             urlPattern: /^https:\/\/fonts\.(?:googleapis|gstatic)\.com\/.*/,
             handler: 'StaleWhileRevalidate',

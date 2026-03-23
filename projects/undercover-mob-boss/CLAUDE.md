@@ -44,25 +44,6 @@ See `.env.example`. Requires:
 - All assets AI-generated via Imagen 4 (ADR-05)
 - Narrator uses Gemini 2.5 Flash TTS with Charon voice + noir style prompting
 
-## Stitch (Design Tool) — READY (restart required)
-- **MCP server:** `stitch-mcp` v1.3.2 via npx — configured in `.mcp.json`
-- **Auth:** Google Cloud ADC (briggsy007@gmail.com), project `gen-lang-client-0231949914`
-- **gcloud path:** `C:\Users\brigg\AppData\Local\Google\Cloud SDK\google-cloud-sdk\bin` (not on system PATH — `.mcp.json` injects it)
-- **Config:** `.mcp.json` in project root (gitignored)
-- **Tools:** `extract_design_context`, `fetch_screen_code`, `generate_screen_from_text`, `edit_screens`
-- **Prompt format:** 3-layer structure — Anatomy (layout) + Vibe (aesthetic) + Content (data)
-- **If auth expires:** Run `gcloud auth application-default login` from the gcloud path above
-
-## Design Workflow (MANDATORY)
-When Stitch is available for a UI task:
-1. Generate in Stitch
-2. Show Briggsy the screenshot (save to `temp/` or use Playwright)
-3. Iterate in Stitch until Briggsy approves the composition
-4. ONLY THEN write code — translate the Stitch output into our design tokens and imperative DOM
-- **Never hand-code a UI layout without an approved Stitch design.**
-- **Never dismiss a Stitch output as "mediocre" and go rogue.** Iterate the prompt instead.
-- **Stitch is for composition, not production code.** It outputs Tailwind CDN — we translate to our system.
-
 ## Screenshots (MANDATORY)
 Briggsy shares screenshots by saving them to the **project's `temp/` folder** (`C:\Users\brigg\ai-learning-journey-private\projects\undercover-mob-boss\temp\`). When he mentions a screenshot, image, or says "look at this" — immediately read the most recent image file from `temp/`. **Never ask him to paste or share a path.** Pasting images into the CLI is not supported. Just check `temp/`.
 
@@ -83,7 +64,7 @@ Treat every decision as if screw-ups have grave consequences. Quality is the job
 
 ## Contradictions Mean STOP (MANDATORY)
 When two sources give conflicting information — that IS the problem. Resolve it before moving on.
-- **Example:** Deferred tools list says "no Stitch tools" but CLI says "Connected" — don't pick the convenient answer. Stop. Figure out why they disagree.
+- **Example:** A tool list says "not available" but another source says "connected" — don't pick the convenient answer. Stop. Figure out why they disagree.
 - **If a prerequisite check fails:** Do NOT proceed to the next priority. Fix the prerequisite.
 - **If a prerequisite check gives ambiguous results:** Do NOT assume success. Confirm with certainty.
 - **The finish line is irrelevant if the foundation is broken.** A session spent fixing tooling is a session well spent. A session spent building on a broken foundation is a session wasted.

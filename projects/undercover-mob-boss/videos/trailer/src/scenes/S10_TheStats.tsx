@@ -8,7 +8,7 @@ import { FONT_DISPLAY } from '../lib/fonts';
 
 const STATS = [
   { label: 'RULES VERIFIED', value: 209, suffix: ' / 209' },
-  { label: 'ARCHITECTURAL DEFECTS', value: 0 },
+  { label: 'FUNCTIONAL DEFECTS', value: 0 },
   { label: 'GAME LOGIC DEFECTS', value: 0 },
   { label: 'BROWSERS TESTED', value: 4 },
   { label: 'TOTAL TESTS', value: 1260 },

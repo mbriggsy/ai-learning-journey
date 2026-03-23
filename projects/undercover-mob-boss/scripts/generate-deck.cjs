@@ -262,7 +262,7 @@ async function buildDeck() {
   const stats = [
     { num: "1,260", label: "Total Tests Passing", sub: "760 unit + 500 cross-browser E2E" },
     { num: "209/209", label: "Rules Verified", sub: "Every rule from source material" },
-    { num: "0", label: "Architectural Defects", sub: "Engine correct from day one" },
+    { num: "0", label: "Functional Defects", sub: "Engine correct from night one" },
     { num: "~10,000", label: "Lines of Planning", sub: "Nearly as much planning as code (~14k)" },
   ];
 
@@ -346,7 +346,7 @@ async function buildDeck() {
   // Punchline callout
   s6.addShape(pres.shapes.RECTANGLE, { x: 0.5, y: 4.6, w: 9.0, h: 0.7, fill: { color: C.bg2 }, shadow: cardShadow() });
   s6.addShape(pres.shapes.RECTANGLE, { x: 0.5, y: 4.6, w: 0.06, h: 0.7, fill: { color: C.goldBright } });
-  s6.addText("Zero architectural defects. Zero game logic defects. The spec was right \u2014 so the code was right.", {
+  s6.addText("Zero functional defects. The spec was right \u2014 so the code was right.", {
     x: 0.8, y: 4.6, w: 8.5, h: 0.7,
     fontSize: 14, fontFace: "Georgia", color: C.cream, italic: true,
     valign: "middle", margin: 0,

@@ -12,7 +12,7 @@ Undercover Mob Boss is a production-quality multiplayer social deduction game �
 
 This project was built using an autonomous, spec-driven software development lifecycle. One human director. One AI engineer. Zero manual coding. The human set direction, reviewed output, and made judgment calls. The AI executed everything: planning, architecture, implementation, asset generation, testing, QA, and deployment.
 
-The result: a game with 760 unit tests, 500 cross-browser E2E tests, 209/209 rules verified against the source material, and a QA defect list that was almost entirely cosmetic. Not a single architectural or game logic defect was found — because the spec was right before a line of code was written.
+The result: a game with 760 unit tests, 500 cross-browser E2E tests, 209/209 rules verified against the source material, and a QA defect list that was almost entirely cosmetic. Not a single functional defect was found — because the spec was right before a line of code was written.
 
 ---
 
@@ -58,10 +58,9 @@ The 3-round QA audit (29 automated agents) found 46 issues across the entire cod
 | Security hardening | 6 | Dev features in prod, investigation data leak, spam-click guards |
 | Audio wiring | 4 | Narrator cue timing, missing audio unlock |
 | Dead code | 4 | Unused exports, stale files |
-| Architectural | **0** | — |
-| Game logic | **0** | — |
+| Functional (architecture + game logic) | **0** | — |
 
-**Zero architectural defects. Zero game logic defects.** The engine was correct from day one because the spec and plans were correct first. The QA round was a polish pass, not a rescue mission.
+**Zero functional defects.** The engine was correct from day one because the spec and plans were correct first. The QA round was a polish pass, not a rescue mission.
 
 ---
 
@@ -129,7 +128,7 @@ The single flaky test (`simultaneous-actions.spec.ts:480` — "Rapid scenario lo
 | **Lines of Code** | ~14,000 |
 | **Lines of Tests** | ~17,000 |
 
-More lines of tests than code. Nearly as much planning as code. The planning-to-code ratio explains why QA found zero architectural defects — the hard problems were solved on paper first.
+More lines of tests than code. Nearly as much planning as code. The planning-to-code ratio explains why QA found zero functional defects — the hard problems were solved on paper first.
 
 ### Codebase
 

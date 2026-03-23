@@ -243,7 +243,7 @@ export const NARRATOR_PROMPTS = [
   {
     id: 'trailer-build-stats',
     trigger: 'Trailer: stats sequence',
-    script: 'Zero lines of human code. Zero architectural defects. Spec-driven. AI-built... Flawless.',
+    script: 'Zero lines of human code. Zero functional defects. Spec-driven. AI-built... Flawless.',
   },
   {
     id: 'trailer-timeline',

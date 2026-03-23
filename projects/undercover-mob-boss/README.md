@@ -6,7 +6,7 @@ Players use their phones as private information devices while a shared screen (t
 
 ## Trailer
 
-**[Watch the trailer](videos/trailer/out/trailer-landscape.mp4)** — 2-minute cinematic trailer covering the game and how it was built.
+**[Watch the trailer on YouTube](https://youtu.be/aePKLeeQm9g)** — 2-minute cinematic trailer covering the game and how it was built.
 
 This game was built in 8 nights by one human director (who has a day job) and one AI engineer (Claude Code). 14,000 lines of code, 17,000 lines of tests, 10,000 lines of planning — all written before the first line of code. 209/209 rules verified. Zero functional defects. ~$2 in API costs. The trailer tells that story.
 

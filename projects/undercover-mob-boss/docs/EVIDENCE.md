@@ -170,7 +170,7 @@ One more detail: the human has a day job. All of this was built at night.
 
 The same AI engineer that built the game also built a 2-minute cinematic trailer using Remotion (programmatic video from React). 14 scenes, 9 new narrator voiceovers, 4 new AI-generated images — all composed in TypeScript.
 
-**[Watch the trailer](../videos/trailer/out/trailer-landscape.mp4)**
+**[Watch the trailer on YouTube](https://youtu.be/aePKLeeQm9g)**
 
 Act 1 showcases the game as pure noir cinema. Act 2 pulls back the curtain — showing the planning documents scrolling past, Claude Code writing the actual game engine, 29 QA agents running simultaneously, and the final stat roll-up ending on the cost: ~$2 in API charges.
 

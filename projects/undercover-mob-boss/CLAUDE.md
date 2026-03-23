@@ -31,6 +31,7 @@ pnpm run generate-narrator # generate narrator audio via Gemini TTS
 - `public/audio/` — pre-generated narrator WAVs (committed to git)
 - `scripts/` — asset generation pipelines (Imagen 4, Gemini TTS)
 - `assets/raw/` — raw Imagen outputs before processing (gitignored)
+- `videos/trailer/` — Remotion video project (cinematic trailer, separate pnpm workspace)
 
 ## Environment Variables
 See `.env.example`. Requires:

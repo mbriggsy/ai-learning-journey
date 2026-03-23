@@ -224,6 +224,52 @@ export const NARRATOR_PROMPTS = [
     trigger: 'Mayor refuses veto',
     script: 'The Mayor refuses the veto. A policy must be enacted.',
   },
+  // --- Trailer-Exclusive Lines (not used in game, only in video trailer) ---
+  {
+    id: 'trailer-stakes',
+    trigger: 'Trailer: after role reveal',
+    script: 'One of you... is the Mob Boss. And by the time you figure out who... it might already be too late.',
+  },
+  {
+    id: 'trailer-tagline',
+    trigger: 'Trailer: table establishing shot',
+    script: 'Everyone has a role. Nobody tells the truth.',
+  },
+  {
+    id: 'trailer-bridge',
+    trigger: 'Trailer: Act 2 reveal',
+    script: 'This game... was built in eight nights.',
+  },
+  {
+    id: 'trailer-build-stats',
+    trigger: 'Trailer: stats sequence',
+    script: 'Zero lines of human code. Zero architectural defects. Spec-driven. AI-built... Flawless.',
+  },
+  {
+    id: 'trailer-timeline',
+    trigger: 'Trailer: timeline sequence',
+    script: 'From an empty page... to a city that never sleeps.',
+  },
+  {
+    id: 'trailer-closing',
+    trigger: 'Trailer: end card',
+    script: 'Millbrook City is waiting. The question is... can you be trusted?',
+  },
+  {
+    id: 'trailer-day-job',
+    trigger: 'Trailer: Act 2 reveal extended',
+    script: 'The human has a day job. The AI... doesn\'t sleep.',
+  },
+  {
+    id: 'trailer-vision',
+    trigger: 'Trailer: blueprint scroll',
+    script: 'Seven phase plans. Ten thousand lines of architecture. Every rule. Every edge case... Written before a single line of code.',
+  },
+  {
+    id: 'trailer-qa',
+    trigger: 'Trailer: QA audit scene',
+    script: 'Three rounds. Twenty-nine agents. Forty-six issues found... not one of them functional. Ankle biters... noise.',
+  },
 ] as const satisfies readonly NarratorPrompt[];
 
 /** Union of all valid narrator IDs — used to validate --only CLI arg. */

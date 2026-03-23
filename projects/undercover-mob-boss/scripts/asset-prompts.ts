@@ -161,6 +161,43 @@ export const ASSET_PROMPTS = [
     needsTransparency: false,
     postProcess: { kind: 'resize' },
   },
+  // --- Trailer-Exclusive Images (not used in game, only in video trailer) ---
+  {
+    name: 'trailer-table-overhead',
+    promptSuffix: 'overhead bird\'s eye view of a dimly lit round table in a 1940s speakeasy, six mobile phones lying face-down on dark wood surface, crystal whiskey glasses, smoldering cigar in ashtray, scattered poker chips, single hanging lamp casting harsh circular pool of light on the table, smoke drifting upward, no people visible only their belongings, moody atmospheric',
+    targetWidth: 1920,
+    targetHeight: 1080,
+    aspectRatio: '16:9',
+    needsTransparency: false,
+    postProcess: { kind: 'resize' },
+  },
+  {
+    name: 'trailer-city-closeup',
+    promptSuffix: 'interior view through a rain-streaked window at night looking out onto a 1940s noir city street, water droplets and condensation on glass, an empty leather chair in the foreground facing the window, blurred neon sign reflections in the rain on glass, warm interior lamp glow on the left edge, half-empty whiskey glass on the windowsill, melancholy atmospheric composition',
+    targetWidth: 1920,
+    targetHeight: 1080,
+    aspectRatio: '16:9',
+    needsTransparency: false,
+    postProcess: { kind: 'resize' },
+  },
+  {
+    name: 'trailer-dossier-spread',
+    promptSuffix: '1940s detective desk from above, manila dossier folders spread open, black and white photographs clipped together with binder clips, red string connecting photographs in a conspiracy pattern, large red CLASSIFIED rubber stamp marks, coffee ring stain on papers, fountain pen, desk lamp casting harsh directional light, investigation in progress',
+    targetWidth: 1920,
+    targetHeight: 1080,
+    aspectRatio: '16:9',
+    needsTransparency: false,
+    postProcess: { kind: 'resize' },
+  },
+  {
+    name: 'trailer-blueprint',
+    promptSuffix: '1940s architect drafting table viewed from above, large city blueprint spread out showing building floor plans and street grids drawn in ink, compass and brass ruler, ink bottle with spilled drops, the blueprint lines subtly form geometric patterns, dim desk lamp illuminating the plans, sense of meticulous planning and precision, sepia and blue-tinted ink',
+    targetWidth: 1920,
+    targetHeight: 1080,
+    aspectRatio: '16:9',
+    needsTransparency: false,
+    postProcess: { kind: 'resize' },
+  },
 ] as const satisfies readonly AssetPrompt[];
 
 /** Union of all valid asset names — used to validate --only CLI arg. */

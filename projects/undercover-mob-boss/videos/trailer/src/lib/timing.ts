@@ -1,0 +1,44 @@
+export const FPS = 30;
+
+// Scene durations in frames (at 30fps)
+export const SCENES = {
+  // ACT 1: THE GAME
+  S01: 120,  //  4s — Cold Open
+  S02: 270,  //  9s — The City
+  S03: 360,  // 12s — The Roles
+  S04: 180,  //  6s — The Table
+  S05: 270,  //  9s — The Vote
+  S06: 390,  // 13s — The Stakes
+  S07: 150,  //  5s — The Question
+
+  // ACT 2: THE BUILD
+  S08: 240,  //  8s — The Reveal ("8 nights, day job")
+  S09: 240,  //  8s — The Concept ("This is the one.")
+  S10: 360,  // 12s — The Blueprint (plan scroll)
+  S11: 300,  // 10s — The Code (split-screen)
+  S12: 270,  //  9s — The Audit (multi-terminal QA)
+  S13: 360,  // 12s — The Stats (full roll-up)
+
+  // TITLE + CTA
+  S14: 270,  //  9s — Title Card
+} as const;
+
+export const TOTAL_DURATION_FRAMES = Object.values(SCENES).reduce(
+  (a, b) => a + b,
+  0,
+);
+// = 3780 frames = 126 seconds = 2:06
+
+// Cumulative scene start frames (for absolute audio positioning)
+const cumulative = Object.values(SCENES).reduce<number[]>(
+  (acc, dur) => [...acc, (acc[acc.length - 1] ?? 0) + dur],
+  [0],
+);
+const keys = Object.keys(SCENES) as (keyof typeof SCENES)[];
+
+export const SCENE_STARTS = Object.fromEntries(
+  keys.map((key, i) => [key, cumulative[i]]),
+) as Record<keyof typeof SCENES, number>;
+
+// Verify: SCENE_STARTS.S01=0, S02=120, S03=390, S04=750, S05=930, S06=1200,
+// S07=1590, S08=1740, S09=1980, S10=2220, S11=2580, S12=2880, S13=3150, S14=3510

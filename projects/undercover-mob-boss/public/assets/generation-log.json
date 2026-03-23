@@ -1,23 +1,34 @@
 {
-  "generatedAt": "2026-03-22T03:45:32.312Z",
+  "generatedAt": "2026-03-23T15:05:06.624Z",
   "model": "imagen-4.0-generate-001",
   "sdkVersion": "@google/genai@1.45.0",
   "assets": [
     {
-      "name": "lobby-seal",
+      "name": "trailer-table-overhead",
       "status": "success",
-      "promptHash": "236dd16b3fe8",
+      "promptHash": "a83ac4585bc7",
       "dimensions": {
-        "width": 512,
-        "height": 512
+        "width": 1920,
+        "height": 1080
       },
       "hasAlpha": false,
-      "generatedAt": "2026-03-22T03:45:39.843Z"
+      "generatedAt": "2026-03-23T15:05:19.823Z"
+    },
+    {
+      "name": "trailer-city-closeup",
+      "status": "success",
+      "promptHash": "f7c665fd7db3",
+      "dimensions": {
+        "width": 1920,
+        "height": 1080
+      },
+      "hasAlpha": false,
+      "generatedAt": "2026-03-23T15:05:34.761Z"
     }
   ],
   "summary": {
-    "total": 1,
-    "succeeded": 1,
+    "total": 2,
+    "succeeded": 2,
     "failed": 0
   }
 }

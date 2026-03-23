@@ -1,110 +1,111 @@
-# Undercover Mob Boss — Video Production Environment Setup
-*Separate from main game env setup. Delete this file if video production is punted.*
+# Undercover Mob Boss — Video Production Environment
 
 ---
 
 ## What This Is
 
-AI-generated trailer production pipeline for UMB using:
-- **Remotion** — programmatic video from React/code (game screens, text, transitions, narrator audio)
-- **Runway Gen-3** (optional, future) — AI-generated people/scenes to mix in
+Cinematic trailer production for UMB using Remotion (programmatic video from React).
+
+**Trailer lives at:** `videos/trailer/` (inside the UMB project)
+
+**Output:** `videos/trailer/out/trailer-landscape.mp4` (2:06, 1920x1080) and `trailer-vertical.mp4` (27s, 1080x1920)
 
 ---
 
 ## Prerequisites
 
-Assumes main game environment (ENVIRONMENT-SETUP.md) is already configured.
+- Main game environment (ENVIRONMENT-SETUP.md) already configured
+- FFmpeg installed (`winget install ffmpeg`)
+- Remotion CLI installed globally (`npm install -g @remotion/cli` — version 4.0.438)
 
 ---
 
-## 1. FFmpeg (video rendering engine)
+## Setup
 
-Remotion requires FFmpeg to render video.
-
-```powershell
-winget install ffmpeg
+```bash
+cd videos/trailer
+pnpm install
 ```
 
-Restart your shell after install. Verify:
-```powershell
-ffmpeg -version
+Remotion's `publicDir` is configured in `remotion.config.ts` to point at `../../public`, so all game assets (images, audio, fonts) are available via `staticFile()`.
+
+---
+
+## Commands
+
+```bash
+pnpm run studio           # Interactive preview — scrub frame-by-frame
+pnpm run render           # Render landscape MP4 (1920x1080, h264, CRF 18)
+pnpm run render:vertical  # Render vertical MP4 (1080x1920)
+pnpm run render:thumbnail # Render thumbnail PNG
+pnpm run typecheck        # TypeScript check
 ```
 
 ---
 
-## 2. Remotion CLI
+## Architecture
 
-```powershell
-npm install -g @remotion/cli
-```
+**14 scenes** across 2 compositions (landscape + vertical):
 
-Verify:
-```powershell
-npx remotion --version
-```
+| Act | Scenes | Duration | Content |
+|-----|--------|----------|---------|
+| Act 1: The Game | S01-S07 | ~58s | Noir cinema — city, role reveals, voting, stakes, glitch transition |
+| Act 2: The Build | S08-S13 | ~59s | Origin story, plan scroll, Claude Code building, QA audit, stats |
+| Title + CTA | S14 | 9s | Game title, URL, fade to black |
 
-**Installed version:** 4.0.438
+**Audio is centralized** in `Trailer.tsx` using absolute `<Sequence from={frame}>` positioning — never inside individual scenes. This prevents clipping at scene boundaries.
 
----
+**Key files:**
+- `src/Trailer.tsx` — Main composition + audio timeline
+- `src/TrailerVertical.tsx` — Vertical composition + audio timeline
+- `src/lib/timing.ts` — Scene durations and cumulative start frames
+- `src/lib/colors.ts` — Noir color palette (mirrored from game CSS)
 
-## 3. Project Setup (when ready to build)
-
-Remotion project will live at:
-```
-projects/undercover-mob-boss-video/
-```
-
-Kept separate from the game project to avoid bloating the main repo.
-
-```powershell
-# Initialize a new Remotion project
-cd C:\Users\brigg\ai-learning-journey\projects
-npx create-video@latest undercover-mob-boss-video
-```
-
-Assets to reference from UMB:
-- `projects/undercover-mob-boss/public/assets/` — images (roles, policies, power cards)
-- `projects/undercover-mob-boss/public/audio/` — narrator WAV files
-- `projects/undercover-mob-boss/public/fonts/` — Cinzel, Cormorant (noir typefaces)
+**Components:**
+- `FilmGrain` — Animated SVG noise overlay
+- `KenBurns` — Slow zoom/pan on static images
+- `TextReveal` — Fade-in text with slide
+- `CardReveal` — Spring-animated card appearance
+- `TerminalSimulation` — Code typing with syntax highlighting, cursor, thinking dots
+- `MultiTerminal` — Multiple Claude Code windows side-by-side
+- `DocumentScroll` — Fast-scrolling document text (plan content)
+- `SplitScreen` — Left/right composition with gold divider
+- `StatsCounter` — Rolling number counters
+- `FadeTransition` — Fade to/from black
 
 ---
 
-## 4. Runway Gen-3 (optional — AI people scenes)
+## Generated Assets
 
-For "people around the table laughing/reacting" clips to mix into the trailer.
+**9 trailer-exclusive narrator lines** (Gemini TTS, Charon voice):
+`trailer-stakes`, `trailer-tagline`, `trailer-bridge`, `trailer-build-stats`, `trailer-timeline`, `trailer-closing`, `trailer-day-job`, `trailer-vision`, `trailer-qa`
 
-**API:** dev.runwayml.com
-**Cost:** ~$0.05/second of video
+**4 trailer-exclusive images** (Gemini Imagen 4):
+`trailer-table-overhead`, `trailer-city-closeup`, `trailer-dossier-spread`, `trailer-blueprint`
 
-When ready:
-1. Create account at runwayml.com
-2. Get API key from dashboard
-3. Add to `.env`: `RUNWAY_API_KEY=...`
-4. Claude Code handles the API calls
-
----
-
-## Trailer Vision
-
-- **Style:** Cinematic noir. Dark. Dramatic. Overkill.
-- **Structure:**
-  - Open on city at night (background.jpg + narrator intro)
-  - "Your fate has been sealed" — role card reveal animation
-  - Gameplay moments — voting, policy flip, execution
-  - "Check your phone. Know your allegiance. Don't let it show."
-  - Game logo hold + URL
-- **Audio:** Narrator lines from `public/audio/` synced to visuals
-- **Length:** ~60-90 seconds
+All stored in the game's `public/` directory with `trailer-` prefix. Generate via the game project's scripts:
+```bash
+cd ../..  # back to game root
+set -a && source .env && set +a
+npx tsx scripts/generate-narrator.ts --only trailer-stakes --force
+npx tsx scripts/generate-assets.ts --only trailer-table-overhead --force
+```
 
 ---
 
-## Cleanup
+## Editing the Trailer
 
-If this project is punted:
-1. Delete this file
-2. `npm uninstall -g @remotion/cli`
-3. FFmpeg can stay (useful generally) or: `winget uninstall ffmpeg`
+1. **Change scene timing:** Edit `src/lib/timing.ts` → scene durations auto-propagate
+2. **Change audio timing:** Edit the `AUDIO_TIMELINE` array in `src/Trailer.tsx`
+3. **Change visuals:** Edit the scene component in `src/scenes/`
+4. **Preview:** `pnpm run studio` → scrub in browser
+5. **Re-render:** `pnpm run render`
 
 ---
 
-*Nothing here is final. Just enough to start.*
+## Runway Gen-3 (future — not used)
+
+For AI-generated people/scene clips to mix in.
+- **API:** dev.runwayml.com
+- **Cost:** ~$0.05/second of video
+- Add `RUNWAY_API_KEY` to `.env` when ready

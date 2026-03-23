@@ -83,7 +83,7 @@ async function buildDeck() {
   s1.addShape(pres.shapes.RECTANGLE, { x: 3.5, y: 3.1, w: 3, h: 0.02, fill: { color: C.darkGold } });
 
   // Key line
-  s1.addText("Concept to Production in 8 Days", {
+  s1.addText("Concept to Production in 8 Nights", {
     x: 0.5, y: 3.4, w: 9, h: 0.5,
     fontSize: 22, fontFace: "Georgia", color: C.cream, bold: true,
     align: "center", margin: 0,
@@ -199,12 +199,12 @@ async function buildDeck() {
 
   // Vertical timeline
   const timeline = [
-    { day: "Day 1", label: "Concept + Brainstorm + Full Spec Locked", accent: true },
-    { day: "Day 2", label: "7 Phase Plans Written \u2192 Coding Begins" },
-    { day: "Day 3", label: "Engine + Multiplayer + Player + Host Views" },
-    { day: "Days 4\u20135", label: "Audio Integration + Narrator + Visual Polish" },
-    { day: "Day 6", label: "3-Round QA Audit (29 Agents, 46 Issues Found)" },
-    { day: "Days 7\u20138", label: "Polish + Security + E2E Across 4 Browsers" },
+    { day: "Night 1", label: "Concept + Brainstorm + Full Spec Locked", accent: true },
+    { day: "Night 2", label: "7 Phase Plans Written \u2192 Coding Begins" },
+    { day: "Night 3", label: "Engine + Multiplayer + Player + Host Views" },
+    { day: "Nights 4\u20135", label: "Audio Integration + Narrator + Visual Polish" },
+    { day: "Night 6", label: "3-Round QA Audit (29 Agents, 46 Issues Found)" },
+    { day: "Nights 7\u20138", label: "Polish + Security + E2E Across 4 Browsers" },
   ];
 
   // Gold vertical line

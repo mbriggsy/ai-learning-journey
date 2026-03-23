@@ -1,0 +1,24 @@
+{
+  "name": "undercover-mob-boss-trailer",
+  "version": "1.0.0",
+  "description": "Cinematic trailer for Undercover Mob Boss — Remotion video project",
+  "type": "module",
+  "scripts": {
+    "studio": "npx remotion studio src/index.ts",
+    "render": "npx remotion render src/index.ts Trailer out/trailer-landscape.mp4 --codec h264 --crf 18",
+    "render:vertical": "npx remotion render src/index.ts TrailerVertical out/trailer-vertical.mp4 --codec h264 --crf 18",
+    "render:thumbnail": "npx remotion still src/index.ts Trailer out/thumbnail.png --frame 450",
+    "typecheck": "tsc --noEmit"
+  },
+  "dependencies": {
+    "remotion": "4.0.438",
+    "@remotion/cli": "4.0.438",
+    "@remotion/fonts": "4.0.438",
+    "react": "^19.1.0",
+    "react-dom": "^19.1.0"
+  },
+  "devDependencies": {
+    "@types/react": "^19.1.0",
+    "typescript": "^5.9.3"
+  }
+}

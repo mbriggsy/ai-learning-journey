@@ -6,7 +6,7 @@
 
 ## Executive Summary
 
-Undercover Mob Boss is a production-quality multiplayer social deduction game — concept to deployment in 8 days. 5-10 players, same room, phones as private devices, shared screen as the game board. 1940s noir theme. Browser-based PWA, no app install.
+Undercover Mob Boss is a production-quality multiplayer social deduction game — concept to deployment in 8 nights. 5-10 players, same room, phones as private devices, shared screen as the game board. 1940s noir theme. Browser-based PWA, no app install.
 
 **What makes this notable isn't the game — it's how it was built.**
 
@@ -161,6 +161,18 @@ The process followed a spec-driven development model:
 7. **Hardening** — Security headers, responsive polish, E2E across all browsers
 
 The spec was the single source of truth. Every architectural decision traced back to it. Every test verified a spec requirement. When QA found issues, they were measured against spec expectations — which is why the defect list was polish, not panic.
+
+One more detail: the human has a day job. All of this was built at night.
+
+---
+
+## The Trailer
+
+The same AI engineer that built the game also built a 2-minute cinematic trailer using Remotion (programmatic video from React). 14 scenes, 9 new narrator voiceovers, 4 new AI-generated images — all composed in TypeScript.
+
+**[Watch the trailer](../videos/trailer/out/trailer-landscape.mp4)**
+
+Act 1 showcases the game as pure noir cinema. Act 2 pulls back the curtain — showing the planning documents scrolling past, Claude Code writing the actual game engine, 29 QA agents running simultaneously, and the final stat roll-up ending on the cost: ~$2 in API charges.
 
 ---
 

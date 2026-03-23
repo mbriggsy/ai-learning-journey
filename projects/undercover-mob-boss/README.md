@@ -4,6 +4,14 @@ A digital-physical social deduction game for 5-10 players in the same room. 1940
 
 Players use their phones as private information devices while a shared screen (tablet, TV, or laptop) displays public game state. Phones eliminate the "close your eyes" trust system — role reveals, voting, and private information are all handled digitally. The social deduction and lying-to-your-face remains purely physical.
 
+## Trailer
+
+**[Watch the trailer](videos/trailer/out/trailer-landscape.mp4)** — 2-minute cinematic trailer covering the game and how it was built.
+
+This game was built in 8 nights by one human director (who has a day job) and one AI engineer (Claude Code). 14,000 lines of code, 17,000 lines of tests, 10,000 lines of planning — all written before the first line of code. 209/209 rules verified. Zero functional defects. ~$2 in API costs. The trailer tells that story.
+
+The trailer itself was built with [Remotion](https://remotion.dev) — programmatic video from React. 14 scenes, 9 AI-generated narrator voiceovers, 4 AI-generated images, all composed in TypeScript. See `videos/trailer/` for the source.
+
 ## Play Now
 
 **[undercover-mob-boss.vercel.app](https://undercover-mob-boss.vercel.app)** — open on a tablet or laptop to host. Players join on their phones via QR code.
@@ -53,9 +61,11 @@ src/
   server/           PartyKit server (room logic, game engine)
   shared/           Types shared between client + server
 public/
-  assets/           AI-generated images (15 PNGs)
-  audio/            Pre-generated narrator WAVs (39 lines)
+  assets/           AI-generated images (15 game + 4 trailer)
+  audio/            Pre-generated narrator WAVs (39 game + 9 trailer)
 scripts/            Asset generation pipelines (Imagen 4, Gemini TTS)
+videos/
+  trailer/          Remotion video project (cinematic trailer)
 tests/
   unit/             Game engine unit tests (19 files)
   integration/      Full-game simulations + stress tests

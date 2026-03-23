@@ -13,3 +13,9 @@ screen_*.png
 .mcp.json
 .claude/
 .serena/
+
+.vercel
+
+# Video project
+videos/trailer/node_modules/
+videos/trailer/out/

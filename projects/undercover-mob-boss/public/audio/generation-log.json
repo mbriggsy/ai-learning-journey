@@ -1,19 +1,33 @@
 {
-  "generatedAt": "2026-03-22T01:43:18.197Z",
+  "generatedAt": "2026-03-23T16:30:23.426Z",
   "model": "gemini-2.5-flash-preview-tts",
   "voiceId": "Charon",
   "lines": [
     {
-      "id": "blocked",
+      "id": "trailer-day-job",
       "status": "success",
-      "fileSizeBytes": 198330,
-      "durationMs": 4131,
-      "generatedAt": "2026-03-22T01:43:21.957Z"
+      "fileSizeBytes": 206010,
+      "durationMs": 4291,
+      "generatedAt": "2026-03-23T16:30:28.047Z"
+    },
+    {
+      "id": "trailer-vision",
+      "status": "success",
+      "fileSizeBytes": 480570,
+      "durationMs": 10011,
+      "generatedAt": "2026-03-23T16:30:38.017Z"
+    },
+    {
+      "id": "trailer-qa",
+      "status": "success",
+      "fileSizeBytes": 417210,
+      "durationMs": 8691,
+      "generatedAt": "2026-03-23T16:30:51.367Z"
     }
   ],
   "summary": {
-    "total": 1,
-    "succeeded": 1,
+    "total": 3,
+    "succeeded": 3,
     "failed": 0
   }
 }

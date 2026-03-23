@@ -41,9 +41,7 @@
       ]
     }
   ],
-  "redirects": [
-    { "source": "/", "destination": "/host" }
-  ],
+  "redirects": [],
   "rewrites": [
     { "source": "/join/:code", "destination": "/index.html" },
     { "source": "/host", "destination": "/host.html" },

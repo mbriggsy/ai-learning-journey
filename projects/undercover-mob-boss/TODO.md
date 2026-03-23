@@ -1,38 +1,42 @@
 # TODO
 
-## Last Session: 2026-03-23 (Cinematic Trailer — Remotion)
+## Last Session: 2026-03-23 (Trailer v2 — Narration Overhaul)
 
 ### What was done
 
-Built a full cinematic trailer for UMB using Remotion (programmatic video from React).
+Overhauled trailer narration, cut a scene, fixed visual issues, uploaded v2 to YouTube.
+
+**Narration changes:**
+- Rewrote $2 line: "Fifteen images. Thirty-nine voice lines. All of it... two dollars."
+- Added sleep deprivation joke: "The human ran on anger and adrenaline. The AI just... ran."
+- Added AI bar tab punchline: "And the AI bar tab... still open."
+- Changed timeline closer: "From an empty page... to a city full of secrets." (was "city that never sleeps" — NYC owns that)
+- Moved narration sequence earlier so it plays over the stat roll-up (was 6.5s of silence)
+- Added 1.2s beat after token bill joke before bar tab lands
+
+**Scene changes:**
+- Cut S09 (The Concept / "This is the one") — 8 seconds freed, tighter pacing
+- S13 narration sequence now: $2 → sleep dep → token bill → (beat) → bar tab → timeline
+
+**Title card fixes (S11_TitleCard.tsx):**
+- Replaced broken `icon-512.png` placeholder with gold wax seal "M" monogram (matches HTP hero__seal)
+- Changed "No app. No install." from NOIR.muted to NOIR.cream at 75% opacity + text shadow (was unreadable)
+
+**Closing fix:**
+- Extended S14 to 330 frames — "can you be trusted" no longer clips at the end
+
+**README updates:**
+- "10,000 lines of planning" → "10,000 lines of specification (planning)"
+- Added context to $2: "~$2 in API costs for all AI-generated images and narrator voiceovers"
+- Updated YouTube link to v2: https://youtu.be/y9irCLLg3Mo
+- Audio count: 39 game + 10 trailer
 
 **Deliverables:**
-- `videos/trailer/out/trailer-landscape.mp4` — 2:06, 1920x1080, 73MB
-- `videos/trailer/out/trailer-vertical.mp4` — 27s, 1080x1920, 6.2MB
-
-**Structure: 14-scene two-act trailer — "The City Never Saw It Coming"**
-- **Act 1: THE GAME (S01-S07, ~58s)** — Pure noir cinema. Cold open, city, role reveals, table, voting, stakes montage, "Which side are you on?" glitch transition.
-- **Act 2: THE BUILD (S08-S13, ~59s)** — "Built in 8 nights. The human has a day job. The AI doesn't sleep." Origin story ("This is the one."), Phase 1 plan scrolling, Claude Code split-screen building, 29-agent QA audit (3 terminals), full stats roll-up with $2 mic drop.
-- **Title + CTA (S14, 9s)** — Game title, URL, fade to black.
-
-**Generated assets (9 narrator WAVs + 4 images):**
-- Narrator: trailer-stakes, trailer-tagline, trailer-bridge, trailer-build-stats, trailer-timeline, trailer-closing, trailer-day-job, trailer-vision, trailer-qa
-- Images: trailer-table-overhead, trailer-city-closeup, trailer-dossier-spread, trailer-blueprint
-
-**Technical:**
-- Remotion 4.0.438 project at `videos/trailer/`
-- 14 scene components, 11 reusable components (FilmGrain, KenBurns, TextReveal, CardReveal, TerminalSimulation, SplitScreen, StatsCounter, FadeTransition, DocumentScroll, MultiTerminal, Placeholder)
-- Centralized audio timeline in Trailer.tsx (absolute Sequence positioning, no clipping)
-- "8 days" → "8 nights" throughout (narrator, text, docs) — Briggsy has a day job
-
-**Iteration log:**
-1. v1: Initial 90s trailer, 11 scenes — audio bleed between scenes
-2. v2: Fixed audio (centralized timeline), fixed "8 nights", extended S06 for audio fit — 93s
-3. v3: Expanded Act 2 with 3 new scenes (Concept, Blueprint, Audit), 3 new narrator lines, expanded stats — 2:06
-4. v4: Added audio to vertical trailer
+- `videos/trailer/out/trailer-landscape.mp4` — 2:10, 1920x1080, 78MB
+- YouTube v2: https://youtu.be/y9irCLLg3Mo (v1 unlisted at https://youtu.be/aePKLeeQm9g)
 
 ### Build status
-- Typecheck: clean (both game + video projects)
+- Typecheck: clean
 - Unit tests: 760/760 passing
 - Production: LIVE at undercover-mob-boss.vercel.app
 
@@ -40,21 +44,15 @@ Built a full cinematic trailer for UMB using Remotion (programmatic video from R
 
 ## NEXT SESSION
 
-### Priority 1: Watch the trailer on a big screen
-- Play `trailer-landscape.mp4` on TV/projector
-- Note timing issues, pacing, audio levels
-- The Remotion Studio (`cd videos/trailer && pnpm run studio`) lets you scrub frame-by-frame
-
-### Priority 2: Trailer polish (if needed)
-- Audio timing fine-tuning — adjust frame offsets in Trailer.tsx AUDIO_TIMELINE
-- Scene duration adjustments — edit timing.ts
-- Visual polish — Ken Burns speeds, text timing, card animation speeds
-- Re-render: `cd videos/trailer && pnpm run render`
-
-### Priority 3: Real-device playtest
+### Priority 1: Real-device playtest
 - Full game on iPad (host) + phones (players) with production URL
 - Verify all narrator lines in context
 - Test PWA install flow on iOS and Android
+
+### Priority 2: Trailer polish (if needed)
+- Listen to the full narration sequence on speakers — check pacing of the joke beats
+- The Remotion Studio (`cd videos/trailer && pnpm run studio`) lets you scrub frame-by-frame
+- Re-render: `cd videos/trailer && pnpm run render`
 
 ### Future
 - **Narrator variant pool** — multiple lines per trigger, randomly selected for replayability
@@ -65,6 +63,7 @@ Built a full cinematic trailer for UMB using Remotion (programmatic video from R
 ## Landmines
 - **Remotion publicDir** points to `../../public` — if the video project moves, update `remotion.config.ts`
 - **Audio durations hardcoded in comments** — if narrator lines are regenerated, recalculate frame positions in Trailer.tsx
+- **S09 scene files still exist** — `S09_TheConcept.tsx` not deleted, just removed from Trailer.tsx and timing.ts. Safe to delete if desired.
 - **CSP allows `'unsafe-inline'`** for HTP GSAP animations
 - **Service worker CacheFirst for audio** — regenerated lines may persist 30 days
 - **E2E flaky test** — `simultaneous-actions.spec.ts:480` WebKit only

@@ -248,7 +248,7 @@ export const NARRATOR_PROMPTS = [
   {
     id: 'trailer-timeline',
     trigger: 'Trailer: timeline sequence',
-    script: 'From an empty page... to a city that never sleeps.',
+    script: 'From an empty page... to a city full of secrets.',
   },
   {
     id: 'trailer-closing',
@@ -273,12 +273,22 @@ export const NARRATOR_PROMPTS = [
   {
     id: 'trailer-two-dollars',
     trigger: 'Trailer: API cost reveal',
-    script: 'Fifteen images. Thirty-nine voice lines. Two dollars.',
+    script: 'Fifteen images. Thirty-nine voice lines. All of it... two dollars.',
+  },
+  {
+    id: 'trailer-sleep-dep',
+    trigger: 'Trailer: human sleep deprivation joke',
+    script: 'The human ran on anger and adrenaline. The AI just... ran.',
   },
   {
     id: 'trailer-token-bill',
     trigger: 'Trailer: token bill joke',
     script: 'The token bill... we don\'t talk about the token bill.',
+  },
+  {
+    id: 'trailer-ai-bar-tab',
+    trigger: 'Trailer: AI bar tab punchline',
+    script: 'And the AI bar tab... still open.',
   },
 ] as const satisfies readonly NarratorPrompt[];
 

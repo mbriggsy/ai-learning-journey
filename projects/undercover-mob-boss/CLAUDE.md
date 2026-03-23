@@ -46,7 +46,7 @@ See `.env.example`. Requires:
 - Narrator uses Gemini 2.5 Flash TTS with Charon voice + noir style prompting
 
 ## Screenshots (MANDATORY)
-Briggsy shares screenshots by saving them to the **project's `temp/` folder** (`C:\Users\brigg\ai-learning-journey-private\projects\undercover-mob-boss\temp\`). When he mentions a screenshot, image, or says "look at this" — immediately read the most recent image file from `temp/`. **Never ask him to paste or share a path.** Pasting images into the CLI is not supported. Just check `temp/`.
+Briggsy shares screenshots by saving them to the **project's `temp/` folder** (`C:\Users\brigg\ai-learning-journey\projects\undercover-mob-boss\temp\`). When he mentions a screenshot, image, or says "look at this" — immediately read the most recent image file from `temp/`. **Never ask him to paste or share a path.** Pasting images into the CLI is not supported. Just check `temp/`.
 
 ## Autonomy (CARDINAL RULE)
 Briggsy is ATC. Claude is the pilot. Briggsy directs and reviews — Claude executes EVERYTHING. Never ask Briggsy to run a command, copy a file, or do any manual step.
@@ -81,6 +81,14 @@ Before saving any code change and before telling Briggsy to test:
 - **Start of session:** Read `TODO.md`, verify state against reality (git status, check files exist), and present the plan. Wait for approval before working.
 - **End of session:** When Briggsy says "write the TODO" or "update the TODO", update `TODO.md` with: what we did, current state, unfinished fixes, next steps in priority order, and landmines.
 - **Unfinished Fixes must be prescriptions, not diagnoses.** Write the exact file, line, and change needed — not "race condition suspected." If you can't write the exact fix, fix it before the session ends.
+- **"Squeaky clean"** — Briggsy's signal for full end-of-session cleanup. Execute all of:
+  1. Update `TODO.md` (if not already done)
+  2. Run typechecks (game + trailer)
+  3. Verify git status — only expected files changed
+  4. Delete contents of `temp/` (keep the folder)
+  5. Delete any other temporary files/folders created during the session
+  6. Commit all changes with a descriptive message
+  7. Push to origin
 
 ## Tool Preferences (MCP Servers)
 - **Code navigation:** prefer Serena (`find_symbol`, `get_symbols_overview`, `find_referencing_symbols`) over Grep for exploring code structure, tracing call chains, and understanding symbol relationships

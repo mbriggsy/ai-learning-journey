@@ -1,26 +1,40 @@
 {
-  "generatedAt": "2026-03-23T18:25:53.581Z",
+  "generatedAt": "2026-03-23T20:11:57.479Z",
   "model": "gemini-2.5-flash-preview-tts",
   "voiceId": "Charon",
   "lines": [
     {
-      "id": "trailer-two-dollars",
+      "id": "trailer-timeline",
       "status": "success",
-      "fileSizeBytes": 196410,
-      "durationMs": 4091,
-      "generatedAt": "2026-03-23T18:25:58.574Z"
+      "fileSizeBytes": 173370,
+      "durationMs": 3611,
+      "generatedAt": "2026-03-23T20:12:00.660Z"
     },
     {
-      "id": "trailer-token-bill",
+      "id": "trailer-two-dollars",
       "status": "success",
-      "fileSizeBytes": 159930,
-      "durationMs": 3331,
-      "generatedAt": "2026-03-23T18:26:04.121Z"
+      "fileSizeBytes": 271290,
+      "durationMs": 5651,
+      "generatedAt": "2026-03-23T20:12:06.689Z"
+    },
+    {
+      "id": "trailer-sleep-dep",
+      "status": "success",
+      "fileSizeBytes": 278970,
+      "durationMs": 5811,
+      "generatedAt": "2026-03-23T20:12:12.948Z"
+    },
+    {
+      "id": "trailer-ai-bar-tab",
+      "status": "success",
+      "fileSizeBytes": 150330,
+      "durationMs": 3131,
+      "generatedAt": "2026-03-23T20:12:18.207Z"
     }
   ],
   "summary": {
-    "total": 2,
-    "succeeded": 2,
+    "total": 4,
+    "succeeded": 4,
     "failed": 0
   }
 }

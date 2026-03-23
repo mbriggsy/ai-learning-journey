@@ -11,7 +11,6 @@ import { S05_TheVote } from './scenes/S05_TheVote';
 import { S06_TheStakes } from './scenes/S06_TheStakes';
 import { S07_TheQuestion } from './scenes/S07_TheQuestion';
 import { S08_TheReveal } from './scenes/S08_TheReveal';
-import { S09_TheConcept } from './scenes/S09_TheConcept';
 import { S10_TheBlueprint } from './scenes/S10_TheBlueprint';
 import { S09_TheCode } from './scenes/S09_TheCode';
 import { S12_TheAudit } from './scenes/S12_TheAudit';
@@ -21,14 +20,9 @@ import { S11_TitleCard } from './scenes/S11_TitleCard';
 /**
  * Audio timeline — absolute frame positions.
  * Scene starts: S01=0, S02=120, S03=390, S04=750, S05=930, S06=1200,
- * S07=1590, S08=1740, S09=1980, S10=2220, S11=2580, S12=2880, S13=3150, S14=3510
+ * S07=1590, S08=1740, S10=1980, S11=2340, S12=2640, S13=2910, S14=3560
  *
- * Audio durations:
- *   intro: 344f           trailer-day-job: 129f     trailer-qa: 261f
- *   trailer-stakes: 235f  trailer-vision: 301f      trailer-timeline: 118f
- *   trailer-tagline: 124f trailer-build-stats: 292f  trailer-closing: 195f
- *   vote-open: 218f       trailer-bridge: 90f
- *   execution: 198f       mob-wins-election: 192f
+ * Audio durations — will be measured after generation, placeholders marked (*)
  */
 const AUDIO_TIMELINE: Array<{ file: string; frame: number }> = [
   // === ACT 1 ===
@@ -56,31 +50,35 @@ const AUDIO_TIMELINE: Array<{ file: string; frame: number }> = [
   // S08(1740): bridge "8 nights" — 90f, ends 1830
   { file: 'audio/trailer-bridge.wav', frame: 1740 },
 
-  // S08+100=1840: day-job — 129f, ends 1969 (S09 at 1980, 11f gap)
+  // S08+100=1840: day-job — 129f, ends 1969 (S10 at 1980, 11f gap)
   { file: 'audio/trailer-day-job.wav', frame: 1840 },
 
-  // S09(1980): silent — "This is the one" is text-only
+  // S10(1980)+10=1990: vision — 301f, ends 2291 (S11 at 2340, 49f gap)
+  { file: 'audio/trailer-vision.wav', frame: 1990 },
 
-  // S10(2220)+10=2230: vision — 301f, ends 2531 (S11 at 2580, 49f gap)
-  { file: 'audio/trailer-vision.wav', frame: 2230 },
+  // S11(2340): build-stats — 292f, ends 2632 (S12 at 2640, 8f gap)
+  { file: 'audio/trailer-build-stats.wav', frame: 2340 },
 
-  // S11(2580): build-stats — 292f, ends 2872 (S12 at 2880, 8f gap)
-  { file: 'audio/trailer-build-stats.wav', frame: 2580 },
+  // S12(2640)+10=2650: qa — 261f, ends 2911 (S13 at 2910, 1f bleed — fine)
+  { file: 'audio/trailer-qa.wav', frame: 2650 },
 
-  // S12(2880)+10=2890: qa — 261f, ends 3151 (S13 at 3150, 1f bleed — fine)
-  { file: 'audio/trailer-qa.wav', frame: 2890 },
+  // S13(2910)+40=2950: two-dollars — 170f, ends 3120 (narrates over stat roll-up)
+  { file: 'audio/trailer-two-dollars.wav', frame: 2950 },
 
-  // S13(3150)+200=3350: two-dollars — 123f, ends 3473
-  { file: 'audio/trailer-two-dollars.wav', frame: 3350 },
+  // 3135: sleep-dep — 174f, ends 3309
+  { file: 'audio/trailer-sleep-dep.wav', frame: 3135 },
 
-  // S13+340=3490: token-bill — 100f, ends 3590
-  { file: 'audio/trailer-token-bill.wav', frame: 3490 },
+  // 3325: token-bill — 100f, ends 3425
+  { file: 'audio/trailer-token-bill.wav', frame: 3325 },
 
-  // S13+450=3600: timeline — 118f, ends 3718 (bleeds into S14, but closing starts later)
-  { file: 'audio/trailer-timeline.wav', frame: 3600 },
+  // 3460: ai-bar-tab — 94f, ends 3554 (1.2s beat after token-bill for joke to land)
+  { file: 'audio/trailer-ai-bar-tab.wav', frame: 3460 },
 
-  // S14(3630)+90=3720: closing — 195f, ends 3915 (total 3900, last 15f clipped — fine)
-  { file: 'audio/trailer-closing.wav', frame: 3720 },
+  // 3569: timeline — 108f, ends 3677
+  { file: 'audio/trailer-timeline.wav', frame: 3569 },
+
+  // S14(3560)+130=3690: closing — 195f, ends 3885 (total 3890, 5f buffer)
+  { file: 'audio/trailer-closing.wav', frame: 3690 },
 ];
 
 export const Trailer: React.FC = () => {
@@ -114,9 +112,6 @@ export const Trailer: React.FC = () => {
         {/* ACT 2: THE BUILD */}
         <Series.Sequence durationInFrames={SCENES.S08}>
           <S08_TheReveal />
-        </Series.Sequence>
-        <Series.Sequence durationInFrames={SCENES.S09}>
-          <S09_TheConcept />
         </Series.Sequence>
         <Series.Sequence durationInFrames={SCENES.S10}>
           <S10_TheBlueprint />

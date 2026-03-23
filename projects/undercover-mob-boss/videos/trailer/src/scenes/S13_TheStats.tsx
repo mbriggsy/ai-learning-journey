@@ -20,8 +20,8 @@ const STATS = [
 ];
 
 /**
- * S13: The Stats (16s / 480 frames)
- * Full stat roll-up. Narrator delivers the $2 + token bill punchline.
+ * S13: The Stats (21.7s / 650 frames)
+ * Full stat roll-up. Narrator delivers the $2 + token bill + AI bar tab punchline.
  * Audio: handled at Trailer level.
  */
 export const S13_TheStats: React.FC = () => {

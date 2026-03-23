@@ -13,21 +13,20 @@ export const SCENES = {
 
   // ACT 2: THE BUILD
   S08: 240,  //  8s — The Reveal ("8 nights, day job")
-  S09: 240,  //  8s — The Concept ("This is the one.")
   S10: 360,  // 12s — The Blueprint (plan scroll)
   S11: 300,  // 10s — The Code (split-screen)
   S12: 270,  //  9s — The Audit (multi-terminal QA)
-  S13: 480,  // 16s — The Stats (roll-up + $2 + token bill)
+  S13: 650,  // 21.7s — The Stats (roll-up + $2 + token bill + bar tab)
 
   // TITLE + CTA
-  S14: 270,  //  9s — Title Card
+  S14: 330,  // 11s — Title Card
 } as const;
 
 export const TOTAL_DURATION_FRAMES = Object.values(SCENES).reduce(
   (a, b) => a + b,
   0,
 );
-// = 3900 frames = 130 seconds = 2:10
+// = 3890 frames ≈ 130s ≈ 2:10
 
 // Cumulative scene start frames (for absolute audio positioning)
 const cumulative = Object.values(SCENES).reduce<number[]>(

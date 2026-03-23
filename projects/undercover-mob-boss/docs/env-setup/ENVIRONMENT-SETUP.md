@@ -114,7 +114,75 @@ Added as npm dep during build:
 pnpm add partykit
 ```
 
-Account at partykit.io — free tier sufficient for dev and small-scale play.
+Account at partykit.io (GitHub login) — free tier sufficient for dev and small-scale play.
+
+**Local dev:**
+```bash
+pnpm run partykit:dev      # starts local server on localhost:1999
+```
+
+**Deploy to production:**
+```bash
+pnpm run partykit:deploy   # deploys to Cloudflare Workers
+```
+
+Production URL: `https://undercover-mob-boss.mbriggsy.partykit.dev`
+
+Config: `partykit.json` — points to `src/server/room.ts` as the server entry.
+
+---
+
+## 9. Vercel (Frontend Hosting)
+
+**Project:** `undercover-mob-boss` on Vercel (connected to `ai-learning-journey` GitHub repo)
+
+**Setup steps (one-time):**
+1. Vercel dashboard → Add New → Project
+2. Import `ai-learning-journey` repo from GitHub
+3. Configure:
+   - **Project Name:** `undercover-mob-boss`
+   - **Framework Preset:** Vite
+   - **Root Directory:** `projects/undercover-mob-boss`
+4. Add environment variable:
+   - **Key:** `VITE_PARTYKIT_HOST`
+   - **Value:** `undercover-mob-boss.mbriggsy.partykit.dev`
+   - **Environment:** Production
+5. Deploy
+
+Production URL: `https://undercover-mob-boss.vercel.app`
+
+**How it works:**
+- Pushes to `main` trigger automatic Vercel builds
+- Vite bakes `VITE_PARTYKIT_HOST` into the client JS at build time
+- `vercel.json` configures security headers, caching, and URL rewrites
+- Files in `public/` are served as-is (including `how-to-play.html`)
+
+**Vercel CLI (optional):**
+```bash
+npx vercel link --yes         # link local project (creates .vercel/)
+npx vercel env ls             # list env vars
+npx vercel env add <KEY> production --value "<VALUE>" --yes
+```
+
+**Key files:**
+- `vercel.json` — headers (CSP, caching), rewrites (`/host` → `host.html`, etc.)
+- `.vercel/` — local CLI link (gitignored)
+
+---
+
+## 10. Deployment Architecture
+
+```
+Browser (player/host)
+  │
+  ├── Static assets ──→ Vercel (undercover-mob-boss.vercel.app)
+  │                      └── Vite build output + public/ files
+  │
+  └── WebSocket ──────→ PartyKit (undercover-mob-boss.mbriggsy.partykit.dev)
+                         └── Cloudflare Workers — src/server/room.ts
+```
+
+The client code (`src/client/connection.ts`) reads `VITE_PARTYKIT_HOST` at build time to know where to open WebSocket connections. Falls back to `localhost:1999` for local dev.
 
 ---
 
@@ -126,6 +194,9 @@ Before starting the build session:
 - [ ] Run `/mcp` — context7, serena, sequential-thinking all connected
 - [ ] Gemini API key in `.env` with billing enabled (used for both Imagen 4 and TTS)
 - [ ] `SPEC.md` reviewed and locked
+- [ ] PartyKit deployed — `pnpm run partykit:deploy` succeeds
+- [ ] Vercel project created with Root Directory `projects/undercover-mob-boss`
+- [ ] `VITE_PARTYKIT_HOST` env var set in Vercel (production)
 
 ---
 

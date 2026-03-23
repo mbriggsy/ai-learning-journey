@@ -70,11 +70,17 @@ const AUDIO_TIMELINE: Array<{ file: string; frame: number }> = [
   // S12(2880)+10=2890: qa — 261f, ends 3151 (S13 at 3150, 1f bleed — fine)
   { file: 'audio/trailer-qa.wav', frame: 2890 },
 
-  // S13(3150)+100=3250: timeline — 118f, ends 3368
-  { file: 'audio/trailer-timeline.wav', frame: 3250 },
+  // S13(3150)+200=3350: two-dollars — 123f, ends 3473
+  { file: 'audio/trailer-two-dollars.wav', frame: 3350 },
 
-  // S14(3510)+30=3540: closing — 195f, ends 3735 (total 3780, 45f fade)
-  { file: 'audio/trailer-closing.wav', frame: 3540 },
+  // S13+340=3490: token-bill — 100f, ends 3590
+  { file: 'audio/trailer-token-bill.wav', frame: 3490 },
+
+  // S13+450=3600: timeline — 118f, ends 3718 (bleeds into S14, but closing starts later)
+  { file: 'audio/trailer-timeline.wav', frame: 3600 },
+
+  // S14(3630)+90=3720: closing — 195f, ends 3915 (total 3900, last 15f clipped — fine)
+  { file: 'audio/trailer-closing.wav', frame: 3720 },
 ];
 
 export const Trailer: React.FC = () => {

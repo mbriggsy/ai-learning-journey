@@ -263,12 +263,22 @@ export const NARRATOR_PROMPTS = [
   {
     id: 'trailer-vision',
     trigger: 'Trailer: blueprint scroll',
-    script: 'Seven phase plans. Ten thousand lines of architecture. Every rule. Every edge case... Written before a single line of code.',
+    script: 'Seven phase plans. Ten thousand lines of specifications. Every rule. Every edge case... Written before a single line of code.',
   },
   {
     id: 'trailer-qa',
     trigger: 'Trailer: QA audit scene',
     script: 'Three rounds. Twenty-nine agents. Forty-six issues found... not one of them functional. Ankle biters... noise.',
+  },
+  {
+    id: 'trailer-two-dollars',
+    trigger: 'Trailer: API cost reveal',
+    script: 'Fifteen images. Thirty-nine voice lines. Two dollars.',
+  },
+  {
+    id: 'trailer-token-bill',
+    trigger: 'Trailer: token bill joke',
+    script: 'The token bill... we don\'t talk about the token bill.',
   },
 ] as const satisfies readonly NarratorPrompt[];
 

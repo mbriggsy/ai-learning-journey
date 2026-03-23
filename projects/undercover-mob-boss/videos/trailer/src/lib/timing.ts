@@ -17,7 +17,7 @@ export const SCENES = {
   S10: 360,  // 12s — The Blueprint (plan scroll)
   S11: 300,  // 10s — The Code (split-screen)
   S12: 270,  //  9s — The Audit (multi-terminal QA)
-  S13: 360,  // 12s — The Stats (full roll-up)
+  S13: 480,  // 16s — The Stats (roll-up + $2 + token bill)
 
   // TITLE + CTA
   S14: 270,  //  9s — Title Card
@@ -27,7 +27,7 @@ export const TOTAL_DURATION_FRAMES = Object.values(SCENES).reduce(
   (a, b) => a + b,
   0,
 );
-// = 3780 frames = 126 seconds = 2:06
+// = 3900 frames = 130 seconds = 2:10
 
 // Cumulative scene start frames (for absolute audio positioning)
 const cumulative = Object.values(SCENES).reduce<number[]>(
@@ -39,6 +39,3 @@ const keys = Object.keys(SCENES) as (keyof typeof SCENES)[];
 export const SCENE_STARTS = Object.fromEntries(
   keys.map((key, i) => [key, cumulative[i]]),
 ) as Record<keyof typeof SCENES, number>;
-
-// Verify: SCENE_STARTS.S01=0, S02=120, S03=390, S04=750, S05=930, S06=1200,
-// S07=1590, S08=1740, S09=1980, S10=2220, S11=2580, S12=2880, S13=3150, S14=3510

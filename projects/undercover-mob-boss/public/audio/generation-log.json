@@ -1,19 +1,26 @@
 {
-  "generatedAt": "2026-03-23T17:39:20.261Z",
+  "generatedAt": "2026-03-23T18:25:53.581Z",
   "model": "gemini-2.5-flash-preview-tts",
   "voiceId": "Charon",
   "lines": [
     {
-      "id": "trailer-build-stats",
+      "id": "trailer-two-dollars",
       "status": "success",
-      "fileSizeBytes": 413370,
-      "durationMs": 8611,
-      "generatedAt": "2026-03-23T17:39:25.885Z"
+      "fileSizeBytes": 196410,
+      "durationMs": 4091,
+      "generatedAt": "2026-03-23T18:25:58.574Z"
+    },
+    {
+      "id": "trailer-token-bill",
+      "status": "success",
+      "fileSizeBytes": 159930,
+      "durationMs": 3331,
+      "generatedAt": "2026-03-23T18:26:04.121Z"
     }
   ],
   "summary": {
-    "total": 1,
-    "succeeded": 1,
+    "total": 2,
+    "succeeded": 2,
     "failed": 0
   }
 }

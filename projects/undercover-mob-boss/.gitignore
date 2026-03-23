@@ -18,3 +18,4 @@ screen_*.png
 
 # Video project
 videos/trailer/node_modules/
+videos/trailer/out/

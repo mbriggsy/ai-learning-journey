@@ -4,7 +4,11 @@ A digital-physical social deduction game for 5-10 players in the same room. 1940
 
 Players use their phones as private information devices while a shared screen (tablet, TV, or laptop) displays public game state. Phones eliminate the "close your eyes" trust system — role reveals, voting, and private information are all handled digitally. The social deduction and lying-to-your-face remains purely physical.
 
-## Quick Start
+## Play Now
+
+**[undercover-mob-boss.vercel.app](https://undercover-mob-boss.vercel.app)** — open on a tablet or laptop to host. Players join on their phones via QR code.
+
+## Local Development
 
 ```bash
 pnpm install
@@ -12,7 +16,7 @@ pnpm run dev              # Vite dev server (player app)
 npx partykit dev          # WebSocket server (game rooms)
 ```
 
-- **Host view:** `http://localhost:5173/host.html`
+- **Host view:** `http://localhost:5173/host`
 - **Player view:** `http://localhost:5173`
 - **Join via room code:** `http://localhost:5173/join/<CODE>`
 

@@ -57,7 +57,7 @@ In all cases, the Citizens don't know who anyone is.
 
 ## Setup
 
-1. **One person hosts the game** on a tablet or laptop. This is the shared screen everyone can see.
+1. **One person hosts the game** on a tablet or laptop. Go to **[undercover-mob-boss.vercel.app](https://undercover-mob-boss.vercel.app)**. This is the shared screen everyone can see.
 2. **Players join on their phones** using one of two methods:
    - **Scan the QR code** shown on the host screen. Enter your name and tap Join.
    - **Type the URL** with the room code. The host screen shows a 4-letter code.

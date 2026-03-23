@@ -103,7 +103,7 @@ export const NARRATOR_PROMPTS = [
   {
     id: 'vote-open',
     trigger: 'Voting begins',
-    script: 'Cast your vote. Approve... or block. No one will know. Until everyone knows.',
+    script: 'Cast your vote. Approve... or deny. No one will know. Until everyone knows.',
   },
   {
     id: 'vote-reveal',

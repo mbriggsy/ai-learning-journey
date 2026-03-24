@@ -56,6 +56,18 @@ export interface InvestigationRecord {
   result: 'citizen' | 'mob';
 }
 
+// ── Vote History (Gazette) ────────────────────────────────────────
+
+/** Record of a single government formation attempt. */
+export interface GovernmentRecord {
+  round: number;
+  mayorId: string;
+  nomineeId: string;
+  passed: boolean;
+  votes: Record<string, 'approve' | 'block'>;
+  electionTracker: number;
+}
+
 // ── Player ─────────────────────────────────────────────────────────
 
 export interface Player {
@@ -111,6 +123,8 @@ export interface GameState {
   lastEnactedPolicy: PolicyCard | null;
   /** Cumulative policy history — every enacted card, in order. Never cleared. */
   policyHistory: PolicyHistoryEntry[];
+  /** Cumulative vote history — every election attempt. For Gazette at game-over. */
+  voteHistory: GovernmentRecord[];
 }
 
 // ── Actions ────────────────────────────────────────────────────────

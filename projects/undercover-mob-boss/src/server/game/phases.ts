@@ -108,6 +108,7 @@ export function createGame(
     rngSeed: seed,
     lastEnactedPolicy: null,
     policyHistory: [],
+    voteHistory: [],
   };
 }
 
@@ -620,10 +621,21 @@ function handleElectionPassed(state: GameState): GameState {
     wasLastCommissioner: p.id === commissionerId,
   }));
 
+  // Record vote for Gazette history
+  const voteRecord: import('../../shared/types').GovernmentRecord = {
+    round: state.round,
+    mayorId: mayor.id,
+    nomineeId: commissionerId,
+    passed: true,
+    votes: { ...state.votes },
+    electionTracker: 0,
+  };
+
   let result: GameState = {
     ...state,
     players,
     electionTracker: 0,
+    voteHistory: [...state.voteHistory, voteRecord],
     events: [
       ...state.events,
       { type: 'election-passed', mayorId: mayor.id, commissionerId },
@@ -673,10 +685,22 @@ function handleElectionPassed(state: GameState): GameState {
 
 function handleElectionFailed(state: GameState): GameState {
   const newTracker = state.electionTracker + 1;
+  const mayor = state.players[state.mayorIndex];
+
+  // Record failed vote for Gazette history
+  const voteRecord: import('../../shared/types').GovernmentRecord = {
+    round: state.round,
+    mayorId: mayor.id,
+    nomineeId: state.nominatedCommissionerId!,
+    passed: false,
+    votes: { ...state.votes },
+    electionTracker: newTracker,
+  };
 
   let result: GameState = {
     ...state,
     electionTracker: newTracker,
+    voteHistory: [...state.voteHistory, voteRecord],
     events: [
       ...state.events,
       { type: 'election-failed', electionTracker: newTracker },

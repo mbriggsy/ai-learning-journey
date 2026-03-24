@@ -87,6 +87,7 @@ function baseState(names: string[], realIds: string[]): GameState {
     rngSeed: 42,
     lastEnactedPolicy: null,
     policyHistory: [],
+    voteHistory: [],
   };
 }
 

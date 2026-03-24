@@ -18,6 +18,10 @@ function makeHostState(overrides: Partial<HostState> = {}): HostState {
     winReason: null,
     events: [],
     waitingOnPlayerIds: [],
+    lastEnactedPolicy: null,
+    policyHistory: [],
+    voteHistory: null,
+    investigationHistory: null,
     ...overrides,
   };
 }

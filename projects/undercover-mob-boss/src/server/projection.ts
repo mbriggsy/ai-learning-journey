@@ -9,7 +9,7 @@
  * rngSeed, acknowledgedPlayerIds.
  */
 
-import type { GameState, GameEvent, Player } from '../shared/types';
+import type { GameState, GameEvent, Player, GovernmentRecord, InvestigationRecord } from '../shared/types';
 import type { HostState, PlayerState, PublicPlayer, RevealedPlayer, PrivateData, SanitizedGameEvent } from '../shared/protocol';
 
 function projectPlayer(player: Player, connected: boolean): PublicPlayer {
@@ -77,14 +77,18 @@ export function projectStateForHost(
     executivePower: state.executivePower,
     winner: state.winner,
     winReason: state.winReason,
-    events: sanitizeEvents(state.events),
+    // At game-over, unsanitize events (all roles revealed anyway)
+    events: isGameOver ? state.events : sanitizeEvents(state.events),
     waitingOnPlayerIds: state.players
       .filter((p) => isPlayersTurn(state, p.id))
       .map((p) => p.id),
     lastEnactedPolicy: state.lastEnactedPolicy,
     policyHistory: state.policyHistory,
+    // Game-over only: full vote + investigation history for Gazette
+    voteHistory: isGameOver ? state.voteHistory : null,
+    investigationHistory: isGameOver ? state.investigationHistory : null,
     // OMITTED: policyDeck, policyDiscard, reshuffleThreshold,
-    //          mayorCards, commissionerCards, vetoProposed, investigationHistory,
+    //          mayorCards, commissionerCards, vetoProposed,
     //          specialNominatedMayorId, rngSeed, acknowledgedPlayerIds
   };
 }

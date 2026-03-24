@@ -38,7 +38,8 @@ See `.env.example`. Requires:
 - `GEMINI_API_KEY` — Gemini API with billing enabled (used for both Imagen 4 assets and TTS narrator)
 
 ## Architectural Decisions
-- See `docs/spec/SPEC.md` for full spec (LOCKED)
+- See `docs/v1/spec/SPEC.md` for V1 spec (LOCKED)
+- See `docs/v2/spec/SPEC.md` for V2 spec (LOCKED)
 - See `docs/user/HOW-TO-PLAY.md` for player-facing rules
 - Host device is authoritative (ADR-04)
 - Pre-generated audio via Gemini TTS, not runtime TTS (ADR-02)

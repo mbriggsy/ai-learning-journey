@@ -30,7 +30,8 @@ async function generate() {
         prompt: v.prompt,
         config: { numberOfImages: 1, aspectRatio: "1:1" }
       });
-      const imageData = response.generatedImages[0].image.imageBytes;
+      const imageData = response.generatedImages?.[0]?.image?.imageBytes;
+      if (!imageData) throw new Error("No image data returned");
       const buffer = Buffer.from(imageData, "base64");
       const outPath = join("public/assets", `${v.name}.png`);
       writeFileSync(outPath, buffer);

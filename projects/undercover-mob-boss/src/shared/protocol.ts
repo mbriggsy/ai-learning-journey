@@ -1,4 +1,4 @@
-import type { ClientGameAction, GameEvent, Phase, SubPhase, PolicyType, ExecutivePower } from './types';
+import type { ClientGameAction, GameEvent, Phase, SubPhase, PolicyType, ExecutivePower, WinReason } from './types';
 
 /**
  * Events broadcast to clients with sensitive fields stripped.
@@ -77,7 +77,7 @@ export interface HostState {
   votes: Record<string, 'approve' | 'block'> | null;
   executivePower: ExecutivePower | null;
   winner: 'citizens' | 'mob' | null;
-  winReason: string | null;
+  winReason: WinReason | null;
   events: SanitizedGameEvent[];
   waitingOnPlayerIds: string[];
 }

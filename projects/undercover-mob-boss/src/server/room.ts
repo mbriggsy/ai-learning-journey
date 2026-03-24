@@ -299,14 +299,19 @@ export default class UMBRoom implements Party.Server {
       return { code: 'INVALID_ACTION', message: 'Server-only action' };
     }
 
-    const mayorOnly = ['nominate', 'mayor-discard', 'veto-response', 'investigate', 'acknowledge-peek', 'special-nominate', 'execute'];
-    const chiefOnly = ['chief-discard', 'propose-veto'];
+    const mayorOnly: ReadonlySet<GameAction['type']> = new Set([
+      'nominate', 'mayor-discard', 'veto-response', 'investigate',
+      'acknowledge-peek', 'special-nominate', 'execute',
+    ] as const);
+    const chiefOnly: ReadonlySet<GameAction['type']> = new Set([
+      'chief-discard', 'propose-veto',
+    ] as const);
 
-    if (mayorOnly.includes(action.type) && mayor?.id !== meta.playerId) {
+    if (mayorOnly.has(action.type) && mayor?.id !== meta.playerId) {
       return { code: 'NOT_YOUR_TURN', message: 'Only the Mayor can do this' };
     }
 
-    if (chiefOnly.includes(action.type) && chief?.id !== meta.playerId) {
+    if (chiefOnly.has(action.type) && chief?.id !== meta.playerId) {
       return { code: 'NOT_YOUR_TURN', message: 'Only the Police Chief can do this' };
     }
 

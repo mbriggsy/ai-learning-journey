@@ -3,6 +3,7 @@
 // Imported by host-app.ts — only the host device plays narrator audio.
 
 import type { HostState, LobbyState } from '../../shared/protocol';
+import type { Phase, SubPhase, ExecutivePower } from '../../shared/types';
 import { isLobbyState } from '../../shared/protocol';
 import { audioEngine } from './audio-engine';
 import { narrator } from './narrator';
@@ -10,13 +11,13 @@ import { ambientMusic } from './ambient';
 
 // ── State Tracking ──────────────────────────────────────────────────
 
-let prevPhase: string | null = null;
-let prevSubPhase: string | null = null;
+let prevPhase: Phase | null = null;
+let prevSubPhase: SubPhase | null = null;
 let prevRound = 0;
 let prevGoodPolicies = 0;
 let prevBadPolicies = 0;
 let prevElectionTracker = 0;
-let prevExecutivePower: string | null = null;
+let prevExecutivePower: ExecutivePower | null = null;
 let prevEventsLength = 0;
 let initialized = false;
 

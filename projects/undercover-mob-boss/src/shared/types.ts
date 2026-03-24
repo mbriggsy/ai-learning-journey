@@ -4,6 +4,13 @@ export type Role = 'citizen' | 'mob-soldier' | 'mob-boss';
 export type PolicyType = 'good' | 'bad';
 export type ExecutivePower = 'investigate' | 'special-nomination' | 'policy-peek' | 'execution';
 
+export type WinReason =
+  | '5 good policies enacted'
+  | '6 bad policies enacted'
+  | 'Mob Boss elected Chief after 3+ bad policies'
+  | 'Mob Boss executed'
+  | 'Game abandoned due to inactivity';
+
 export type Phase =
   | 'lobby'
   | 'role-reveal'
@@ -69,7 +76,7 @@ export interface GameState {
   chiefCards: PolicyType[] | null;
   executivePower: ExecutivePower | null;
   winner: 'citizens' | 'mob' | null;
-  winReason: string | null;
+  winReason: WinReason | null;
   /** Random threshold (3–7) — reshuffle when deck.length < this. Server-only. */
   reshuffleThreshold: number;
   vetoProposed: boolean;
@@ -127,5 +134,5 @@ export type GameEvent =
   | { type: 'veto-enacted' }
   | { type: 'veto-rejected' }
   | { type: 'chief-cleared'; chiefId: string }
-  | { type: 'game-over'; winner: 'citizens' | 'mob'; reason: string }
+  | { type: 'game-over'; winner: 'citizens' | 'mob'; reason: WinReason }
   | { type: 'term-limits-cleared' };

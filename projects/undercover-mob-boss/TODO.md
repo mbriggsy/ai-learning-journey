@@ -19,21 +19,23 @@
 - SFX + haptics — polish tier, ships with core or fast-follow
 - Veto drama UI — polish tier
 
-**Plans (all 4 created, 2 deepened):**
+**Plans (all 4 created, ALL 4 DEEPENED):**
 1. `docs/v2/plans/2026-03-24-001-feat-commissioner-rename-plan.md` — **DEEPENED** (9 agents, pre-rename safety steps added)
 2. `docs/v2/plans/2026-03-24-002-feat-named-policy-cards-plan.md` — **DEEPENED** (6 agents, PolicyCard carries name, 384x512 WebP, policyHistory added)
-3. `docs/v2/plans/2026-03-24-003-feat-narrator-variant-pool-plan.md` — needs deepening
-4. `docs/v2/plans/2026-03-24-004-feat-millbrook-city-gazette-plan.md` — needs deepening
+3. `docs/v2/plans/2026-03-24-003-feat-narrator-variant-pool-plan.md` — **DEEPENED** (9 agents + 3 web searches. Decisions locked: tiered variants, Opus format, intro included)
+4. `docs/v2/plans/2026-03-24-004-feat-millbrook-city-gazette-plan.md` — **DEEPENED** (8 agents + 3 web searches. Decisions locked: server-side history, button trigger, phone Gazette deferred)
 
-**Cross-plan findings (from deepening, apply to Plans 3+4):**
+**Cross-plan findings (from all 4 deepenings):**
 - SW cache limits must increase: assets 50→100, audio 100→500, add dedicated card cache
-- Server-side cumulative `policyHistory` + `voteHistory` needed for Gazette (not client-side)
-- Sanitized events should unsanitize at game-over for Gazette key moments
+- Server-side cumulative `policyHistory` + `voteHistory` needed for Gazette — **DECIDED: yes, ~4 small server changes**
+- Sanitized events should unsanitize at game-over for Gazette key moments — **DECIDED: yes**
 - ART_VERSION should be centralized before adding 30+ card images
+- WAV→Opus audio conversion (46MB→3.9MB) — **DECIDED: adopt Opus**
+- Replace html2canvas with @zumer/snapdom for Gazette screenshots
+- Workbox maxEntries: 100→300+, handler: StaleWhileRevalidate→CacheFirst
 
 **Next steps:**
-1. `/deepen-plan` — Plans 3 and 4 (new terminal)
-2. `/ce:work` — Execute serially starting with Plan 1
+1. `/ce:work` — Execute serially starting with Plan 1 (Commissioner Rename)
 
 ---
 

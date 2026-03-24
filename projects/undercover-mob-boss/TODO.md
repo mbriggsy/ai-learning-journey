@@ -19,10 +19,21 @@
 - SFX + haptics — polish tier, ships with core or fast-follow
 - Veto drama UI — polish tier
 
+**Plans (all 4 created, 2 deepened):**
+1. `docs/v2/plans/2026-03-24-001-feat-commissioner-rename-plan.md` — **DEEPENED** (9 agents, pre-rename safety steps added)
+2. `docs/v2/plans/2026-03-24-002-feat-named-policy-cards-plan.md` — **DEEPENED** (6 agents, PolicyCard carries name, 384x512 WebP, policyHistory added)
+3. `docs/v2/plans/2026-03-24-003-feat-narrator-variant-pool-plan.md` — needs deepening
+4. `docs/v2/plans/2026-03-24-004-feat-millbrook-city-gazette-plan.md` — needs deepening
+
+**Cross-plan findings (from deepening, apply to Plans 3+4):**
+- SW cache limits must increase: assets 50→100, audio 100→500, add dedicated card cache
+- Server-side cumulative `policyHistory` + `voteHistory` needed for Gazette (not client-side)
+- Sanitized events should unsanitize at game-over for Gazette key moments
+- ART_VERSION should be centralized before adding 30+ card images
+
 **Next steps:**
-1. `/ce:plan` — Create phase-by-phase implementation plans
-2. `/deepen-plan` — Enhance with parallel research
-3. `/ce:work` — Execute serially
+1. `/deepen-plan` — Plans 3 and 4 (new terminal)
+2. `/ce:work` — Execute serially starting with Plan 1
 
 ---
 

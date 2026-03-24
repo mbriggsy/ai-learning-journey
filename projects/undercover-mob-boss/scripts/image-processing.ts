@@ -90,11 +90,14 @@ export async function resizeAsset(
   buffer: Buffer,
   width: number,
   height: number,
+  format: 'png' | 'webp' = 'png',
 ): Promise<Buffer> {
-  return sharp(buffer, { limitInputPixels: MAX_INPUT_PIXELS })
-    .resize(width, height, { kernel: sharp.kernel.lanczos3 })
-    .png({ compressionLevel: 9, adaptiveFiltering: true })
-    .toBuffer();
+  const resized = sharp(buffer, { limitInputPixels: MAX_INPUT_PIXELS })
+    .resize(width, height, { kernel: sharp.kernel.lanczos3 });
+  if (format === 'webp') {
+    return resized.webp({ quality: 90, alphaQuality: 95 }).toBuffer();
+  }
+  return resized.png({ compressionLevel: 9, adaptiveFiltering: true }).toBuffer();
 }
 
 /** Validate output dimensions and alpha channel. */

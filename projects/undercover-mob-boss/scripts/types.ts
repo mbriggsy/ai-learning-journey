@@ -12,6 +12,10 @@ export interface AssetPrompt {
   readonly aspectRatio: '3:4' | '1:1' | '16:9';
   readonly needsTransparency: boolean;
   readonly postProcess: PostProcessing;
+  /** Output format — defaults to 'png' if omitted. */
+  readonly format?: 'png' | 'webp';
+  /** Subdirectory under public/assets/ — e.g. 'cards' → public/assets/cards/. */
+  readonly outputSubDir?: string;
 }
 
 // --- Generation Log ---

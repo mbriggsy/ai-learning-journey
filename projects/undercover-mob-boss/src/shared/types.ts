@@ -7,7 +7,7 @@ export type ExecutivePower = 'investigate' | 'special-nomination' | 'policy-peek
 export type WinReason =
   | '5 good policies enacted'
   | '6 bad policies enacted'
-  | 'Mob Boss elected Chief after 3+ bad policies'
+  | 'Mob Boss elected Commissioner after 3+ bad policies'
   | 'Mob Boss executed'
   | 'Game abandoned due to inactivity';
 
@@ -26,7 +26,7 @@ export type SubPhase =
   | 'election-voting'
   | 'election-result'
   | 'policy-mayor-discard'
-  | 'policy-chief-discard'
+  | 'policy-commissioner-discard'
   | 'policy-veto-propose'
   | 'policy-veto-response'
   | 'policy-enact'
@@ -50,9 +50,9 @@ export interface Player {
   role: Role;
   isAlive: boolean;
   isMayor: boolean;
-  isChief: boolean;
+  isCommissioner: boolean;
   wasLastMayor: boolean;
-  wasLastChief: boolean;
+  wasLastCommissioner: boolean;
   /** Player IDs visible at role reveal (mob knowledge). */
   knownAllies: string[];
 }
@@ -65,7 +65,7 @@ export interface GameState {
   round: number;
   players: Player[];
   mayorIndex: number;
-  nominatedChiefId: string | null;
+  nominatedCommissionerId: string | null;
   electionTracker: number;
   goodPoliciesEnacted: number;
   badPoliciesEnacted: number;
@@ -73,7 +73,7 @@ export interface GameState {
   policyDiscard: PolicyType[];
   votes: Record<string, 'approve' | 'block'>;
   mayorCards: PolicyType[] | null;
-  chiefCards: PolicyType[] | null;
+  commissionerCards: PolicyType[] | null;
   executivePower: ExecutivePower | null;
   winner: 'citizens' | 'mob' | null;
   winReason: WinReason | null;
@@ -105,7 +105,7 @@ export type GameAction =
   | { type: 'nominate'; targetId: string }
   | { type: 'vote'; playerId: string; vote: 'approve' | 'block' }
   | { type: 'mayor-discard'; cardIndex: number }
-  | { type: 'chief-discard'; cardIndex: number }
+  | { type: 'commissioner-discard'; cardIndex: number }
   | { type: 'propose-veto' }
   | { type: 'veto-response'; approved: boolean }
   | { type: 'investigate'; targetId: string }
@@ -123,7 +123,7 @@ export type ClientGameAction = OmitPlayerId<GameAction>;
 export type GameEvent =
   | { type: 'deck-reshuffled' }
   | { type: 'policy-enacted'; policy: PolicyType; autoEnacted: boolean }
-  | { type: 'election-passed'; mayorId: string; chiefId: string }
+  | { type: 'election-passed'; mayorId: string; commissionerId: string }
   | { type: 'election-failed'; electionTracker: number }
   | { type: 'auto-enact-triggered' }
   | { type: 'executive-power-activated'; power: ExecutivePower }
@@ -133,6 +133,6 @@ export type GameEvent =
   | { type: 'policy-peek-completed' }
   | { type: 'veto-enacted' }
   | { type: 'veto-rejected' }
-  | { type: 'chief-cleared'; chiefId: string }
+  | { type: 'commissioner-cleared'; commissionerId: string }
   | { type: 'game-over'; winner: 'citizens' | 'mob'; reason: WinReason }
   | { type: 'term-limits-cleared' };

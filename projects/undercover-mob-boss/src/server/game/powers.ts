@@ -80,7 +80,7 @@ export function resolveExecution(state: GameState, targetId: string): GameState 
 
   const wasMobBoss = target.role === 'mob-boss';
   const updatedPlayers = state.players.map((p) =>
-    p.id === targetId ? { ...p, isAlive: false, isMayor: false, isChief: false } : p,
+    p.id === targetId ? { ...p, isAlive: false, isMayor: false, isCommissioner: false } : p,
   );
 
   const events = [

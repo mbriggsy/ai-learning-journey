@@ -56,9 +56,9 @@ describe('populateKnownAllies', () => {
       role,
       isAlive: true,
       isMayor: i === 0,
-      isChief: false,
+      isCommissioner: false,
       wasLastMayor: false,
-      wasLastChief: false,
+      wasLastCommissioner: false,
       knownAllies: [],
     }));
   }

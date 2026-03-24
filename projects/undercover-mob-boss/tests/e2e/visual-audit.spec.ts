@@ -484,7 +484,7 @@ test.describe('Visual Audit: Phone + Tablet', () => {
     });
     player = await playerCtx.newPage();
 
-    // Player 2 context: iPhone 13 (players[1] = chief in scenarios)
+    // Player 2 context: iPhone 13 (players[1] = commissioner in scenarios)
     player2Ctx = await browser.newContext({
       viewport: PHONE_VIEWPORT,
       deviceScaleFactor: 3,
@@ -616,30 +616,30 @@ test.describe('Visual Audit: Phone + Tablet', () => {
       }
     });
 
-    test('08 -- Chief hand (2 policy cards)', async () => {
-      // Player2 = players[1] = chief in policy-session scenario
-      const hand = player2.locator('[data-test-id="chief-hand"]');
+    test('08 -- Commissioner hand (2 policy cards)', async () => {
+      // Player2 = players[1] = commissioner in policy-session scenario
+      const hand = player2.locator('[data-test-id="commissioner-hand"]');
       const vis = await hand.isVisible({ timeout: 5_000 }).catch(() => false);
       if (vis) {
-        await auditScreen(player2, PHONE_DIR, 'phone', 'P08-chief-hand-2-cards');
+        await auditScreen(player2, PHONE_DIR, 'phone', 'P08-commissioner-hand-2-cards');
       } else {
-        await auditScreen(player2, PHONE_DIR, 'phone', 'P08-chief-hand-fallback');
+        await auditScreen(player2, PHONE_DIR, 'phone', 'P08-commissioner-hand-fallback');
       }
     });
 
-    test('09 -- Chief hand with veto button (5+ bad policies)', async () => {
+    test('09 -- Commissioner hand with veto button (5+ bad policies)', async () => {
       await resetToLobby(host, player, player2);
       await host.waitForTimeout(500);
       await loadScenario(host, 'veto');
       await player2.waitForTimeout(2500);
 
-      // Player2 = players[1] = chief, should see veto button
-      const chiefHand = player2.locator('[data-test-id="chief-hand"]');
-      const vis = await chiefHand.isVisible({ timeout: 5_000 }).catch(() => false);
+      // Player2 = players[1] = commissioner, should see veto button
+      const commissionerHand = player2.locator('[data-test-id="commissioner-hand"]');
+      const vis = await commissionerHand.isVisible({ timeout: 5_000 }).catch(() => false);
       if (vis) {
-        await auditScreen(player2, PHONE_DIR, 'phone', 'P09-chief-hand-veto');
+        await auditScreen(player2, PHONE_DIR, 'phone', 'P09-commissioner-hand-veto');
       } else {
-        await auditScreen(player2, PHONE_DIR, 'phone', 'P09-chief-hand-veto-fallback');
+        await auditScreen(player2, PHONE_DIR, 'phone', 'P09-commissioner-hand-veto-fallback');
       }
     });
 
@@ -650,7 +650,7 @@ test.describe('Visual Audit: Phone + Tablet', () => {
       if (vis) {
         await auditScreen(player, PHONE_DIR, 'phone', 'P10-veto-response');
       } else {
-        // Mayor may see waiting while chief proposes veto
+        // Mayor may see waiting while commissioner proposes veto
         await auditScreen(player, PHONE_DIR, 'phone', 'P10-veto-mayor-waiting');
       }
     });

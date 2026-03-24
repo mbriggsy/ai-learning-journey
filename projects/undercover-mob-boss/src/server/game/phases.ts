@@ -69,9 +69,9 @@ export function createGame(
     role: roles[i],
     isAlive: true,
     isMayor: i === firstMayor,
-    isChief: false,
+    isCommissioner: false,
     wasLastMayor: false,
-    wasLastChief: false,
+    wasLastCommissioner: false,
     knownAllies: [],
   }));
 
@@ -85,7 +85,7 @@ export function createGame(
     round: 1,
     players,
     mayorIndex: firstMayor,
-    nominatedChiefId: null,
+    nominatedCommissionerId: null,
     electionTracker: 0,
     goodPoliciesEnacted: 0,
     badPoliciesEnacted: 0,
@@ -93,7 +93,7 @@ export function createGame(
     policyDiscard: [],
     votes: {},
     mayorCards: null,
-    chiefCards: null,
+    commissionerCards: null,
     executivePower: null,
     winner: null,
     winReason: null,
@@ -157,16 +157,16 @@ function validateAction(state: GameState, action: GameAction): string | null {
         return 'Invalid card index';
       return null;
 
-    case 'chief-discard':
-      if (state.phase !== 'policy-session' || state.subPhase !== 'policy-chief-discard')
-        return 'chief-discard only valid during policy-chief-discard';
-      if (!state.chiefCards || !Number.isInteger(action.cardIndex) || action.cardIndex < 0 || action.cardIndex >= state.chiefCards.length)
+    case 'commissioner-discard':
+      if (state.phase !== 'policy-session' || state.subPhase !== 'policy-commissioner-discard')
+        return 'commissioner-discard only valid during policy-commissioner-discard';
+      if (!state.commissionerCards || !Number.isInteger(action.cardIndex) || action.cardIndex < 0 || action.cardIndex >= state.commissionerCards.length)
         return 'Invalid card index';
       return null;
 
     case 'propose-veto':
-      if (state.phase !== 'policy-session' || state.subPhase !== 'policy-chief-discard')
-        return 'propose-veto only valid during policy-chief-discard';
+      if (state.phase !== 'policy-session' || state.subPhase !== 'policy-commissioner-discard')
+        return 'propose-veto only valid during policy-commissioner-discard';
       if (state.badPoliciesEnacted < 5) return 'Veto only available after 5 bad policies';
       if (state.vetoProposed) return 'Veto already proposed this session';
       return null;
@@ -255,8 +255,8 @@ export function dispatch(state: GameState, action: GameAction): GameState {
       return handleVote(base, action);
     case 'mayor-discard':
       return handleMayorDiscard(base, action);
-    case 'chief-discard':
-      return handleChiefDiscard(base, action);
+    case 'commissioner-discard':
+      return handleCommissionerDiscard(base, action);
     case 'propose-veto':
       return handleProposeVeto(base);
     case 'veto-response':
@@ -279,7 +279,7 @@ export function dispatch(state: GameState, action: GameAction): GameState {
 // ── Helpers ────────────────────────────────────────────────────────
 
 /**
- * Returns list of player IDs eligible to be nominated as chief.
+ * Returns list of player IDs eligible to be nominated as commissioner.
  * Enforces term limits with deadlock fallback.
  */
 export function getEligibleNominees(state: GameState): string[] {
@@ -292,8 +292,8 @@ export function getEligibleNominees(state: GameState): string[] {
 
   // Apply term limits
   const withTermLimits = candidates.filter((p) => {
-    // Previous chief is ALWAYS term-limited
-    if (p.wasLastChief) return false;
+    // Previous commissioner is ALWAYS term-limited
+    if (p.wasLastCommissioner) return false;
     // Previous mayor is term-limited only at 6+ alive players
     if (p.wasLastMayor && aliveCount > 5) return false;
     return true;
@@ -362,8 +362,8 @@ export function advanceMayor(state: GameState): GameState {
     players: state.players.map((p, i) => ({
       ...p,
       isMayor: i === nextIndex,
-      isChief: false,
-      // NOTE: wasLastMayor/wasLastChief are NOT updated here.
+      isCommissioner: false,
+      // NOTE: wasLastMayor/wasLastCommissioner are NOT updated here.
       // They are only updated in handleElectionPassed (last ELECTED pair).
     })),
   };
@@ -377,10 +377,10 @@ function transitionToNomination(state: GameState): GameState {
     phase: 'nomination',
     subPhase: 'nomination-pending',
     round: state.round + 1,
-    nominatedChiefId: null,
+    nominatedCommissionerId: null,
     votes: {},
     mayorCards: null,
-    chiefCards: null,
+    commissionerCards: null,
     executivePower: null,
     vetoProposed: false,
     peekCards: null,
@@ -393,10 +393,10 @@ function transitionToFirstNomination(state: GameState): GameState {
     ...state,
     phase: 'nomination',
     subPhase: 'nomination-pending',
-    nominatedChiefId: null,
+    nominatedCommissionerId: null,
     votes: {},
     mayorCards: null,
-    chiefCards: null,
+    commissionerCards: null,
     executivePower: null,
     vetoProposed: false,
     peekCards: null,
@@ -453,7 +453,7 @@ function enactPolicy(
     goodPoliciesEnacted: state.goodPoliciesEnacted + (policy === 'good' ? 1 : 0),
     badPoliciesEnacted: state.badPoliciesEnacted + (policy === 'bad' ? 1 : 0),
     mayorCards: null,
-    chiefCards: null,
+    commissionerCards: null,
     events: [...state.events, { type: 'policy-enacted' as const, policy, autoEnacted }],
   };
 
@@ -530,7 +530,7 @@ function continueAfterAutoEnact(state: GameState): GameState {
     players: state.players.map((p) => ({
       ...p,
       wasLastMayor: false,
-      wasLastChief: false,
+      wasLastCommissioner: false,
     })),
     events: [...state.events, { type: 'term-limits-cleared' }],
   };
@@ -574,7 +574,7 @@ function handleNominate(
     ...state,
     phase: 'election',
     subPhase: 'election-voting',
-    nominatedChiefId: action.targetId,
+    nominatedCommissionerId: action.targetId,
     votes: {},
   };
 }
@@ -603,16 +603,16 @@ function handleVote(
 }
 
 function handleElectionPassed(state: GameState): GameState {
-  const chiefId = state.nominatedChiefId!;
+  const commissionerId = state.nominatedCommissionerId!;
   const mayor = state.players[state.mayorIndex];
 
-  // Set the chief AND record term limits for this elected government.
+  // Set the commissioner AND record term limits for this elected government.
   // Term limits reflect the last ELECTED pair (SH rule), not the last nominated pair.
   const players = state.players.map((p) => ({
     ...p,
-    isChief: p.id === chiefId,
+    isCommissioner: p.id === commissionerId,
     wasLastMayor: p.id === mayor.id,
-    wasLastChief: p.id === chiefId,
+    wasLastCommissioner: p.id === commissionerId,
   }));
 
   let result: GameState = {
@@ -621,34 +621,34 @@ function handleElectionPassed(state: GameState): GameState {
     electionTracker: 0,
     events: [
       ...state.events,
-      { type: 'election-passed', mayorId: mayor.id, chiefId },
+      { type: 'election-passed', mayorId: mayor.id, commissionerId },
     ],
   };
 
   // Check mob boss election win: 3+ bad policies AND nominee is mob boss
   if (result.badPoliciesEnacted >= 3) {
-    const chief = result.players.find((p) => p.id === chiefId)!;
-    if (chief.role === 'mob-boss') {
+    const commissioner = result.players.find((p) => p.id === commissionerId)!;
+    if (commissioner.role === 'mob-boss') {
       return {
         ...result,
         phase: 'game-over',
         subPhase: null,
         winner: 'mob',
-        winReason: 'Mob Boss elected Chief after 3+ bad policies',
+        winReason: 'Mob Boss elected Commissioner after 3+ bad policies',
         events: [
           ...result.events,
           {
             type: 'game-over',
             winner: 'mob',
-            reason: 'Mob Boss elected Chief after 3+ bad policies',
+            reason: 'Mob Boss elected Commissioner after 3+ bad policies',
           },
         ],
       };
     }
-    // Chief survived the check -- everyone now knows they are NOT the Mob Boss
+    // Commissioner survived the check -- everyone now knows they are NOT the Mob Boss
     result = {
       ...result,
-      events: [...result.events, { type: 'chief-cleared', chiefId }],
+      events: [...result.events, { type: 'commissioner-cleared', commissionerId }],
     };
   }
 
@@ -727,24 +727,24 @@ function handleMayorDiscard(
 
   return {
     ...state,
-    subPhase: 'policy-chief-discard',
+    subPhase: 'policy-commissioner-discard',
     mayorCards: null,
-    chiefCards: remaining,
+    commissionerCards: remaining,
     policyDiscard: [...state.policyDiscard, discarded],
   };
 }
 
-function handleChiefDiscard(
+function handleCommissionerDiscard(
   state: GameState,
-  action: { type: 'chief-discard'; cardIndex: number },
+  action: { type: 'commissioner-discard'; cardIndex: number },
 ): GameState {
-  const cards = state.chiefCards!;
+  const cards = state.commissionerCards!;
   const discarded = cards[action.cardIndex];
   const enacted = cards.filter((_, i) => i !== action.cardIndex)[0];
 
   const result: GameState = {
     ...state,
-    chiefCards: null,
+    commissionerCards: null,
     policyDiscard: [...state.policyDiscard, discarded],
   };
 
@@ -772,8 +772,8 @@ function handleVetoResponse(
 
     let result: GameState = {
       ...state,
-      policyDiscard: [...state.policyDiscard, ...state.chiefCards!],
-      chiefCards: null,
+      policyDiscard: [...state.policyDiscard, ...state.commissionerCards!],
+      commissionerCards: null,
       electionTracker: newTracker,
       events: [...state.events, { type: 'veto-enacted' }],
     };
@@ -785,10 +785,10 @@ function handleVetoResponse(
 
     return transitionToNomination(result);
   } else {
-    // Rejected -- chief must enact one of the two cards
+    // Rejected -- commissioner must enact one of the two cards
     return {
       ...state,
-      subPhase: 'policy-chief-discard',
+      subPhase: 'policy-commissioner-discard',
       vetoProposed: true, // keep true so they can't propose again
       events: [...state.events, { type: 'veto-rejected' }],
     };

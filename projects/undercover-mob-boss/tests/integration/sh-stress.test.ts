@@ -171,7 +171,7 @@ describe('Stress: Randomized Games', () => {
           '5 good policies enacted',
           '6 bad policies enacted',
           'Mob Boss executed',
-          'Mob Boss elected Chief after 3+ bad policies',
+          'Mob Boss elected Commissioner after 3+ bad policies',
         ];
         for (const r of results) {
           const matchesAny = validReasons.some((reason) => r.winReason.includes(reason));

@@ -4,8 +4,8 @@
  * Uses the 'veto' dev scenario to test both veto-accepted and veto-rejected
  * paths through the browser UI.
  *
- * Scenario state: 5 bad policies enacted, chief has [bad, good],
- * players[0] = mayor, players[1] = chief.
+ * Scenario state: 5 bad policies enacted, commissioner has [bad, good],
+ * players[0] = mayor, players[1] = commissioner.
  */
 import { test, expect, type BrowserContext, type Page } from '@playwright/test';
 
@@ -13,7 +13,7 @@ const BASE = 'http://localhost:5173';
 
 async function setupVetoScenario(
   browser: any,
-): Promise<{ context: BrowserContext; host: Page; mayor: Page; chief: Page; roomCode: string }> {
+): Promise<{ context: BrowserContext; host: Page; mayor: Page; commissioner: Page; roomCode: string }> {
   const context = await browser.newContext();
   const roomCode = 'VETO' + Date.now().toString(36).slice(-3).toUpperCase();
 
@@ -27,10 +27,10 @@ async function setupVetoScenario(
   await mayor.goto(`${BASE}/?room=${roomCode}&name=Vincenz`);
   await mayor.waitForSelector('[data-test-id="lobby-player-list"]', { timeout: 10_000 });
 
-  // Chief (players[1]) — joins second
-  const chief = await context.newPage();
-  await chief.goto(`${BASE}/?room=${roomCode}&name=Carmine`);
-  await chief.waitForSelector('[data-test-id="lobby-player-list"]', { timeout: 10_000 });
+  // Commissioner (players[1]) — joins second
+  const commissioner = await context.newPage();
+  await commissioner.goto(`${BASE}/?room=${roomCode}&name=Carmine`);
+  await commissioner.waitForSelector('[data-test-id="lobby-player-list"]', { timeout: 10_000 });
 
   // Spawn 3 more bots (need 5 total)
   const botSelect = host.locator('[data-test-id="host-bot-count"]').first();
@@ -38,29 +38,29 @@ async function setupVetoScenario(
   await host.locator('[data-test-id="host-spawn-bots"]').click();
   await host.waitForTimeout(500);
 
-  // Load veto scenario — chief (players[1] = Carmine) has cards
+  // Load veto scenario — commissioner (players[1] = Carmine) has cards
   const scenarioSelect = host.locator('[data-test-id="host-scenario-select"]').last();
   await scenarioSelect.selectOption('veto');
   await host.waitForTimeout(1500);
 
-  return { context, host, mayor, chief, roomCode };
+  return { context, host, mayor, commissioner, roomCode };
 }
 
 test.describe('Veto: Accept Path', () => {
-  test('chief proposes veto, mayor accepts → cards discarded', async ({ browser }) => {
-    const { context, chief, mayor, host } = await setupVetoScenario(browser);
+  test('commissioner proposes veto, mayor accepts → cards discarded', async ({ browser }) => {
+    const { context, commissioner, mayor, host } = await setupVetoScenario(browser);
 
-    // Chief should see 2 policy cards + veto button
-    const chiefHand = chief.locator('[data-test-id="chief-hand"]');
-    await expect(chiefHand).toBeVisible({ timeout: 10_000 });
+    // Commissioner should see 2 policy cards + veto button
+    const commissionerHand = commissioner.locator('[data-test-id="commissioner-hand"]');
+    await expect(commissionerHand).toBeVisible({ timeout: 10_000 });
 
-    const vetoBtn = chief.locator('[data-test-id="chief-veto-btn"]');
+    const vetoBtn = commissioner.locator('[data-test-id="commissioner-veto-btn"]');
     await expect(vetoBtn).toBeVisible();
     await expect(vetoBtn).toContainText('Propose Veto');
 
-    // Chief proposes veto
+    // Commissioner proposes veto
     await vetoBtn.click();
-    await chief.waitForTimeout(1000);
+    await commissioner.waitForTimeout(1000);
 
     // Mayor should see veto response screen (accept/reject)
     const acceptBtn = mayor.locator('[data-test-id="veto-accept"]');
@@ -82,16 +82,16 @@ test.describe('Veto: Accept Path', () => {
 });
 
 test.describe('Veto: Reject Path', () => {
-  test('chief proposes veto, mayor rejects → chief must enact', async ({ browser }) => {
-    const { context, chief, mayor, host } = await setupVetoScenario(browser);
+  test('commissioner proposes veto, mayor rejects → commissioner must enact', async ({ browser }) => {
+    const { context, commissioner, mayor, host } = await setupVetoScenario(browser);
 
-    // Chief sees hand + veto button
-    const chiefHand = chief.locator('[data-test-id="chief-hand"]');
-    await expect(chiefHand).toBeVisible({ timeout: 10_000 });
+    // Commissioner sees hand + veto button
+    const commissionerHand = commissioner.locator('[data-test-id="commissioner-hand"]');
+    await expect(commissionerHand).toBeVisible({ timeout: 10_000 });
 
-    const vetoBtn = chief.locator('[data-test-id="chief-veto-btn"]');
+    const vetoBtn = commissioner.locator('[data-test-id="commissioner-veto-btn"]');
     await vetoBtn.click();
-    await chief.waitForTimeout(1000);
+    await commissioner.waitForTimeout(1000);
 
     // Mayor rejects
     const rejectBtn = mayor.locator('[data-test-id="veto-reject"]');
@@ -99,22 +99,22 @@ test.describe('Veto: Reject Path', () => {
     await rejectBtn.click();
     await mayor.waitForTimeout(1500);
 
-    // Chief should be back to policy hand — must enact
-    const chiefHandAgain = chief.locator('[data-test-id="chief-hand"]');
-    await expect(chiefHandAgain).toBeVisible({ timeout: 10_000 });
+    // Commissioner should be back to policy hand — must enact
+    const commissionerHandAgain = commissioner.locator('[data-test-id="commissioner-hand"]');
+    await expect(commissionerHandAgain).toBeVisible({ timeout: 10_000 });
 
-    // Chief selects and enacts a card
-    const cards = chief.locator('[data-test-id="policy-card"]');
+    // Commissioner selects and enacts a card
+    const cards = commissioner.locator('[data-test-id="policy-card"]');
     await cards.first().click();
-    await chief.waitForTimeout(300);
+    await commissioner.waitForTimeout(300);
 
-    const enactBtn = chief.locator('[data-test-id="chief-enact-btn"]');
+    const enactBtn = commissioner.locator('[data-test-id="commissioner-enact-btn"]');
     await expect(enactBtn).toBeEnabled();
     await enactBtn.click();
 
     // Game should continue
-    await chief.waitForTimeout(2000);
-    await expect(chiefHandAgain).not.toBeVisible({ timeout: 10_000 });
+    await commissioner.waitForTimeout(2000);
+    await expect(commissionerHandAgain).not.toBeVisible({ timeout: 10_000 });
 
     await context.close();
   });

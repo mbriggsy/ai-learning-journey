@@ -8,11 +8,11 @@ function makePlayerState(overrides: Partial<PlayerState> = {}): PlayerState {
     subPhase: 'nomination-pending',
     round: 1,
     players: [
-      { id: 'me', name: 'Me', isAlive: true, isMayor: true, isChief: false, wasLastMayor: false, wasLastChief: false, isConnected: true },
-      { id: 'p2', name: 'P2', isAlive: true, isMayor: false, isChief: false, wasLastMayor: false, wasLastChief: false, isConnected: true },
-      { id: 'p3', name: 'P3', isAlive: true, isMayor: false, isChief: true, wasLastMayor: false, wasLastChief: false, isConnected: true },
+      { id: 'me', name: 'Me', isAlive: true, isMayor: true, isCommissioner: false, wasLastMayor: false, wasLastCommissioner: false, isConnected: true },
+      { id: 'p2', name: 'P2', isAlive: true, isMayor: false, isCommissioner: false, wasLastMayor: false, wasLastCommissioner: false, isConnected: true },
+      { id: 'p3', name: 'P3', isAlive: true, isMayor: false, isCommissioner: true, wasLastMayor: false, wasLastCommissioner: false, isConnected: true },
     ],
-    nominatedChiefId: 'p3',
+    nominatedCommissionerId: 'p3',
     goodPoliciesEnacted: 0,
     badPoliciesEnacted: 0,
     electionTracker: 0,
@@ -42,7 +42,7 @@ describe('getActiveScreen', () => {
       phase: 'election',
       subPhase: 'election-voting',
       players: [
-        { id: 'me', name: 'Me', isAlive: false, isMayor: false, isChief: false, wasLastMayor: false, wasLastChief: false, isConnected: true },
+        { id: 'me', name: 'Me', isAlive: false, isMayor: false, isCommissioner: false, wasLastMayor: false, wasLastCommissioner: false, isConnected: true },
       ],
     });
     expect(getActiveScreen(state, 'me')).toBe('spectator');
@@ -101,12 +101,12 @@ describe('getActiveScreen', () => {
     expect(getActiveScreen(state, 'me')).toBe('mayor-hand');
   });
 
-  it('chief during policy-chief-discard → chief-hand', () => {
+  it('commissioner during policy-commissioner-discard → commissioner-hand', () => {
     const state = makePlayerState({
       phase: 'policy-session',
-      subPhase: 'policy-chief-discard',
+      subPhase: 'policy-commissioner-discard',
     });
-    expect(getActiveScreen(state, 'p3')).toBe('chief-hand');
+    expect(getActiveScreen(state, 'p3')).toBe('commissioner-hand');
   });
 
   it('mayor during policy-veto-response → veto-response', () => {

@@ -22,7 +22,7 @@ import {
   playFullRound,
   enactPolicy,
   mayorDiscard,
-  chiefDiscard,
+  commissionerDiscard,
   checkCardInvariant,
   checkStateInvariants,
   advanceDisplayIfNeeded,
@@ -40,9 +40,9 @@ function stateInPhase(phase: Phase, subPhase: SubPhase | null): GameState {
     ...base,
     phase,
     subPhase,
-    nominatedChiefId: 'player-2',
+    nominatedCommissionerId: 'player-2',
     mayorCards: ['good', 'bad', 'bad'],
-    chiefCards: ['good', 'bad'],
+    commissionerCards: ['good', 'bad'],
     badPoliciesEnacted: 5, // needed for veto tests
     executivePower:
       subPhase === 'executive-power-pending' ? 'investigate' :
@@ -63,7 +63,7 @@ function allActions(state: GameState): GameAction[] {
     { type: 'nominate', targetId: aliveNonMayor.id },
     { type: 'vote', playerId: state.players[0].id, vote: 'approve' },
     { type: 'mayor-discard', cardIndex: 0 },
-    { type: 'chief-discard', cardIndex: 0 },
+    { type: 'commissioner-discard', cardIndex: 0 },
     { type: 'propose-veto' },
     { type: 'veto-response', approved: true },
     { type: 'investigate', targetId: aliveNonMayor.id },
@@ -80,7 +80,7 @@ const ALL_PHASE_SUBPHASE_COMBOS: Array<{ phase: Phase; subPhase: SubPhase | null
   { phase: 'nomination', subPhase: 'nomination-pending' },
   { phase: 'election', subPhase: 'election-voting' },
   { phase: 'policy-session', subPhase: 'policy-mayor-discard' },
-  { phase: 'policy-session', subPhase: 'policy-chief-discard' },
+  { phase: 'policy-session', subPhase: 'policy-commissioner-discard' },
   { phase: 'policy-session', subPhase: 'policy-veto-response' },
   { phase: 'executive-power', subPhase: 'executive-power-pending' },
   { phase: 'executive-power', subPhase: 'policy-peek-viewing' },
@@ -94,8 +94,8 @@ const ACTION_VALID_IN: Record<string, { phase: Phase; subPhase: SubPhase | null 
   'nominate':         { phase: 'nomination', subPhase: 'nomination-pending' },
   'vote':             { phase: 'election', subPhase: 'election-voting' },
   'mayor-discard':    { phase: 'policy-session', subPhase: 'policy-mayor-discard' },
-  'chief-discard':    { phase: 'policy-session', subPhase: 'policy-chief-discard' },
-  'propose-veto':     { phase: 'policy-session', subPhase: 'policy-chief-discard' },
+  'commissioner-discard':    { phase: 'policy-session', subPhase: 'policy-commissioner-discard' },
+  'propose-veto':     { phase: 'policy-session', subPhase: 'policy-commissioner-discard' },
   'veto-response':    { phase: 'policy-session', subPhase: 'policy-veto-response' },
   'investigate':      { phase: 'executive-power', subPhase: 'executive-power-pending' },
   'special-nominate': { phase: 'executive-power', subPhase: 'executive-power-pending' },
@@ -128,12 +128,12 @@ describe('1. Every action in every wrong phase', () => {
 
 describe('2. Rapid identical dispatches', () => {
   it('vote: second identical vote from same player is rejected', () => {
-    // Set up election-voting with a nominated chief
+    // Set up election-voting with a nominated commissioner
     const base = createTestGameState({
       playerCount: 5,
       phase: 'election',
       subPhase: 'election-voting',
-      nominatedChiefId: 'player-2',
+      nominatedCommissionerId: 'player-2',
     });
     const action: GameAction = { type: 'vote', playerId: 'player-0', vote: 'approve' };
     const after1 = dispatch(base, action);
@@ -177,21 +177,21 @@ describe('2. Rapid identical dispatches', () => {
     const action: GameAction = { type: 'mayor-discard', cardIndex: 0 };
     const after1 = dispatch(state, action);
 
-    // Now in policy-chief-discard, not policy-mayor-discard
+    // Now in policy-commissioner-discard, not policy-mayor-discard
     expect(() => dispatch(after1, action)).toThrow(InvalidActionError);
   });
 
-  it('chief-discard: second discard after first is rejected (subPhase changed)', () => {
+  it('commissioner-discard: second discard after first is rejected (subPhase changed)', () => {
     const state = createTestGameState({
       playerCount: 5,
       phase: 'policy-session',
-      subPhase: 'policy-chief-discard',
-      chiefCards: ['good', 'bad'],
+      subPhase: 'policy-commissioner-discard',
+      commissionerCards: ['good', 'bad'],
     });
-    const action: GameAction = { type: 'chief-discard', cardIndex: 0 };
+    const action: GameAction = { type: 'commissioner-discard', cardIndex: 0 };
     const after1 = dispatch(state, action);
 
-    // After chief-discard, we've moved to nomination or executive-power
+    // After commissioner-discard, we've moved to nomination or executive-power
     expect(() => dispatch(after1, action)).toThrow(InvalidActionError);
   });
 
@@ -199,8 +199,8 @@ describe('2. Rapid identical dispatches', () => {
     const state = createTestGameState({
       playerCount: 5,
       phase: 'policy-session',
-      subPhase: 'policy-chief-discard',
-      chiefCards: ['good', 'bad'],
+      subPhase: 'policy-commissioner-discard',
+      commissionerCards: ['good', 'bad'],
       badPoliciesEnacted: 5,
       vetoProposed: false,
     });
@@ -211,21 +211,21 @@ describe('2. Rapid identical dispatches', () => {
     expect(() => dispatch(after1, action)).toThrow(InvalidActionError);
   });
 
-  it('propose-veto: rejected even if mayor sends chief back (vetoProposed stays true)', () => {
+  it('propose-veto: rejected even if mayor sends commissioner back (vetoProposed stays true)', () => {
     const state = createTestGameState({
       playerCount: 5,
       phase: 'policy-session',
-      subPhase: 'policy-chief-discard',
-      chiefCards: ['good', 'bad'],
+      subPhase: 'policy-commissioner-discard',
+      commissionerCards: ['good', 'bad'],
       badPoliciesEnacted: 5,
       vetoProposed: false,
     });
-    // Chief proposes veto
+    // Commissioner proposes veto
     let s = dispatch(state, { type: 'propose-veto' });
     s = advanceDisplayIfNeeded(s); // advance past veto-propose display
-    // Mayor rejects veto -> back to policy-chief-discard with vetoProposed=true
+    // Mayor rejects veto -> back to policy-commissioner-discard with vetoProposed=true
     s = dispatch(s, { type: 'veto-response', approved: false });
-    expect(s.subPhase).toBe('policy-chief-discard');
+    expect(s.subPhase).toBe('policy-commissioner-discard');
     expect(s.vetoProposed).toBe(true);
 
     // Second propose-veto should fail
@@ -341,9 +341,9 @@ describe('4. Minimum alive players (3 alive from 5)', () => {
       ...p,
       isAlive: !deadIds.includes(p.id),
       isMayor: false,
-      isChief: false,
+      isCommissioner: false,
       wasLastMayor: false,
-      wasLastChief: false,
+      wasLastCommissioner: false,
     }));
 
     // Make the first alive player the mayor
@@ -356,7 +356,7 @@ describe('4. Minimum alive players (3 alive from 5)', () => {
       subPhase: 'nomination-pending',
       players,
       mayorIndex: firstAliveIdx,
-      nominatedChiefId: null,
+      nominatedCommissionerId: null,
       votes: {},
       round: 10,
       badPoliciesEnacted: 4,
@@ -420,21 +420,21 @@ describe('4. Minimum alive players (3 alive from 5)', () => {
     const mayor = state.players[state.mayorIndex];
     const nonMayorAlive = alivePlayers.filter((p) => p.id !== mayor.id);
 
-    // Set one player as wasLastMayor and one as wasLastChief
+    // Set one player as wasLastMayor and one as wasLastCommissioner
     const tweaked: GameState = {
       ...state,
       players: state.players.map((p) => {
         if (p.id === nonMayorAlive[0].id) return { ...p, wasLastMayor: true };
-        if (p.id === nonMayorAlive[1].id) return { ...p, wasLastChief: true };
+        if (p.id === nonMayorAlive[1].id) return { ...p, wasLastCommissioner: true };
         return p;
       }),
     };
 
     const eligible = getEligibleNominees(tweaked);
-    // At <=5 alive, wasLastMayor is NOT excluded (only wasLastChief is).
+    // At <=5 alive, wasLastMayor is NOT excluded (only wasLastCommissioner is).
     // So wasLastMayor player should be eligible.
     expect(eligible).toContain(nonMayorAlive[0].id);
-    // wasLastChief is ALWAYS excluded
+    // wasLastCommissioner is ALWAYS excluded
     expect(eligible).not.toContain(nonMayorAlive[1].id);
   });
 
@@ -444,12 +444,12 @@ describe('4. Minimum alive players (3 alive from 5)', () => {
     const mayor = state.players[state.mayorIndex];
     const nonMayorAlive = alivePlayers.filter((p) => p.id !== mayor.id);
 
-    // Both non-mayor alive players are wasLastChief — should trigger fallback
+    // Both non-mayor alive players are wasLastCommissioner — should trigger fallback
     const tweaked: GameState = {
       ...state,
       players: state.players.map((p) => {
         if (nonMayorAlive.some((nm) => nm.id === p.id)) {
-          return { ...p, wasLastChief: true };
+          return { ...p, wasLastCommissioner: true };
         }
         return p;
       }),
@@ -578,22 +578,22 @@ describe('7. Veto -> auto-enact -> reshuffle -> win cascade', () => {
     const state = createTestGameState({
       playerCount: 5,
       phase: 'policy-session',
-      subPhase: 'policy-chief-discard',
+      subPhase: 'policy-commissioner-discard',
       badPoliciesEnacted: 5,
       goodPoliciesEnacted: 0,
       electionTracker: 2,
       // Deck is nearly empty to force reshuffle
       policyDeck: [],
       // Discard has the remaining 6 good + 6 bad (minus 5 enacted bad, minus 2 in hand)
-      // 17 total - 5 enacted bad - 2 in chief hand = 10 in deck+discard
+      // 17 total - 5 enacted bad - 2 in commissioner hand = 10 in deck+discard
       policyDiscard: ['bad', 'bad', 'bad', 'bad', 'bad', 'bad', 'good', 'good', 'good', 'good'],
-      chiefCards: ['good', 'bad'],
+      commissionerCards: ['good', 'bad'],
       mayorCards: null,
       vetoProposed: false,
       reshuffleThreshold: 5,
     });
 
-    // Step 1: Chief proposes veto
+    // Step 1: Commissioner proposes veto
     let s = dispatch(state, { type: 'propose-veto' });
     expect(s.subPhase).toBe('policy-veto-propose');
     s = advanceDisplayIfNeeded(s);
@@ -626,13 +626,13 @@ describe('7. Veto -> auto-enact -> reshuffle -> win cascade', () => {
     const state = createTestGameState({
       playerCount: 5,
       phase: 'policy-session',
-      subPhase: 'policy-chief-discard',
+      subPhase: 'policy-commissioner-discard',
       badPoliciesEnacted: 5,
       goodPoliciesEnacted: 0,
       electionTracker: 2,
       policyDeck: ['bad', 'good', 'bad', 'bad', 'good', 'bad'],
       policyDiscard: ['good', 'good', 'good', 'good'],
-      chiefCards: ['good', 'bad'],
+      commissionerCards: ['good', 'bad'],
       mayorCards: null,
       vetoProposed: false,
     });
@@ -682,7 +682,7 @@ describe('8. Zero cards in deck and discard', () => {
       playerCount: 5,
       phase: 'election',
       subPhase: 'election-voting',
-      nominatedChiefId: 'player-2',
+      nominatedCommissionerId: 'player-2',
       electionTracker: 2,
       policyDeck: [],
       policyDiscard: [],
@@ -745,7 +745,7 @@ describe('9. Negative/invalid card indices', () => {
    * BUG FOUND: NaN passes validation because NaN < 0 === false and NaN >= 3 === false.
    * This means cardIndex=NaN slips through the guard in validateAction.
    * handleMayorDiscard then does cards[NaN] which returns undefined,
-   * pushing undefined into policyDiscard and passing all 3 cards to the chief
+   * pushing undefined into policyDiscard and passing all 3 cards to the commissioner
    * (since i !== NaN is always true in the filter). Silent data corruption.
    */
   it('mayor-discard with cardIndex=NaN is rejected (was a bug, now fixed)', () => {
@@ -772,26 +772,26 @@ describe('9. Negative/invalid card indices', () => {
     );
   });
 
-  it('chief-discard with cardIndex=-1 is rejected', () => {
+  it('commissioner-discard with cardIndex=-1 is rejected', () => {
     const state = createTestGameState({
       playerCount: 5,
       phase: 'policy-session',
-      subPhase: 'policy-chief-discard',
-      chiefCards: ['good', 'bad'],
+      subPhase: 'policy-commissioner-discard',
+      commissionerCards: ['good', 'bad'],
     });
-    expect(() => dispatch(state, { type: 'chief-discard', cardIndex: -1 })).toThrow(
+    expect(() => dispatch(state, { type: 'commissioner-discard', cardIndex: -1 })).toThrow(
       InvalidActionError,
     );
   });
 
-  it('chief-discard with cardIndex=99 is rejected', () => {
+  it('commissioner-discard with cardIndex=99 is rejected', () => {
     const state = createTestGameState({
       playerCount: 5,
       phase: 'policy-session',
-      subPhase: 'policy-chief-discard',
-      chiefCards: ['good', 'bad'],
+      subPhase: 'policy-commissioner-discard',
+      commissionerCards: ['good', 'bad'],
     });
-    expect(() => dispatch(state, { type: 'chief-discard', cardIndex: 99 })).toThrow(
+    expect(() => dispatch(state, { type: 'commissioner-discard', cardIndex: 99 })).toThrow(
       InvalidActionError,
     );
   });
@@ -800,26 +800,26 @@ describe('9. Negative/invalid card indices', () => {
    * BUG FOUND: Same NaN bypass as mayor-discard. cards[NaN] returns undefined,
    * filter keeps both cards, enacted policy is undefined. Silent corruption.
    */
-  it('chief-discard with cardIndex=NaN is rejected (was a bug, now fixed)', () => {
+  it('commissioner-discard with cardIndex=NaN is rejected (was a bug, now fixed)', () => {
     const state = createTestGameState({
       playerCount: 5,
       phase: 'policy-session',
-      subPhase: 'policy-chief-discard',
-      chiefCards: ['good', 'bad'],
+      subPhase: 'policy-commissioner-discard',
+      commissionerCards: ['good', 'bad'],
     });
-    expect(() => dispatch(state, { type: 'chief-discard', cardIndex: NaN })).toThrow(
+    expect(() => dispatch(state, { type: 'commissioner-discard', cardIndex: NaN })).toThrow(
       InvalidActionError,
     );
   });
 
-  it('chief-discard with cardIndex=2 (out of bounds for 2 cards) is rejected', () => {
+  it('commissioner-discard with cardIndex=2 (out of bounds for 2 cards) is rejected', () => {
     const state = createTestGameState({
       playerCount: 5,
       phase: 'policy-session',
-      subPhase: 'policy-chief-discard',
-      chiefCards: ['good', 'bad'],
+      subPhase: 'policy-commissioner-discard',
+      commissionerCards: ['good', 'bad'],
     });
-    expect(() => dispatch(state, { type: 'chief-discard', cardIndex: 2 })).toThrow(
+    expect(() => dispatch(state, { type: 'commissioner-discard', cardIndex: 2 })).toThrow(
       InvalidActionError,
     );
   });
@@ -892,7 +892,7 @@ describe('Bonus: Additional edge cases', () => {
       playerCount: 5,
       phase: 'election',
       subPhase: 'election-voting',
-      nominatedChiefId: 'player-2',
+      nominatedCommissionerId: 'player-2',
       players: createTestGameState({ playerCount: 5 }).players.map((p) =>
         p.id === 'player-3' ? { ...p, isAlive: false } : p,
       ),
@@ -973,7 +973,7 @@ describe('Bonus: Additional edge cases', () => {
       playerCount: 5,
       phase: 'election',
       subPhase: 'election-voting',
-      nominatedChiefId: 'player-2',
+      nominatedCommissionerId: 'player-2',
     });
 
     expect(() =>
@@ -1035,8 +1035,8 @@ describe('Bonus: Additional edge cases', () => {
     const state = createTestGameState({
       playerCount: 5,
       phase: 'policy-session',
-      subPhase: 'policy-chief-discard',
-      chiefCards: ['good', 'bad'],
+      subPhase: 'policy-commissioner-discard',
+      commissionerCards: ['good', 'bad'],
       badPoliciesEnacted: 4, // not yet 5
     });
 

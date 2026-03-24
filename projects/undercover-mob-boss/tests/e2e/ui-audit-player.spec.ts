@@ -329,10 +329,10 @@ test.describe('UI Audit: Player Phone Views', () => {
       // policy-session scenario: subPhase=policy-mayor-discard, Vincenz=mayor
       await doScenario('policy-session', '[data-test-id="mayor-hand"]', '05-mayor-hand', 'mayor-hand');
 
-      // 06. VETO -- chief hand
-      // veto scenario: subPhase=policy-chief-discard, chief=players[1]
-      // Mayor (Vincenz) sees waiting while chief decides.
-      // But we want the chief-hand screenshot. Vincenz isn't the chief.
+      // 06. VETO -- commissioner hand
+      // veto scenario: subPhase=policy-commissioner-discard, commissioner=players[1]
+      // Mayor (Vincenz) sees waiting while commissioner decides.
+      // But we want the commissioner-hand screenshot. Vincenz isn't the commissioner.
       // Screenshot what the mayor sees (waiting).
       await doScenario('veto', '[data-test-id="waiting-message"]', '06-veto-mayor-waiting', 'veto-mayor-waiting');
 
@@ -382,7 +382,7 @@ test.describe('UI Audit: Player Phone Views', () => {
       // 13. GAME OVER -- mob
       await doScenario('game-over-mob', '[data-test-id="game-over-winner"]', '13-game-over-mob', 'game-over-mob');
 
-      // 14. WAITING SCREEN (load veto -- mayor sees waiting while chief decides)
+      // 14. WAITING SCREEN (load veto -- mayor sees waiting while commissioner decides)
       await doScenario('veto', '[data-test-id="waiting-message"]', '14-waiting-screen', 'waiting-screen');
 
     } finally {

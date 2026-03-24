@@ -61,14 +61,14 @@ describe('projectStateForHost — security', () => {
     expect(projected).not.toHaveProperty('mayorCards');
   });
 
-  it('NEVER includes chiefCards', () => {
+  it('NEVER includes commissionerCards', () => {
     const state = createTestGameState({
       phase: 'policy-session',
-      subPhase: 'policy-chief-discard',
-      chiefCards: ['bad', 'good'],
+      subPhase: 'policy-commissioner-discard',
+      commissionerCards: ['bad', 'good'],
     });
     const projected = projectStateForHost(state, allConnected(state));
-    expect(projected).not.toHaveProperty('chiefCards');
+    expect(projected).not.toHaveProperty('commissionerCards');
   });
 
   it('NEVER includes rngSeed', () => {
@@ -135,7 +135,7 @@ describe('projectStateForPlayer — security', () => {
     // Non-mayor player should not see cards
     const projected = projectStateForPlayer(state, 'player-3', allConnected(state));
     expect(projected).not.toHaveProperty('mayorCards');
-    expect(projected).not.toHaveProperty('chiefCards');
+    expect(projected).not.toHaveProperty('commissionerCards');
     expect(projected).not.toHaveProperty('policyDeck');
   });
 });
@@ -205,11 +205,11 @@ describe('projectStateForHost — waitingOnPlayerIds', () => {
     expect(projected.waitingOnPlayerIds).not.toContain('player-0');
   });
 
-  it('identifies chief during chief-discard', () => {
+  it('identifies commissioner during commissioner-discard', () => {
     const state = createTestGameState({
       phase: 'policy-session',
-      subPhase: 'policy-chief-discard',
-      nominatedChiefId: 'player-3',
+      subPhase: 'policy-commissioner-discard',
+      nominatedCommissionerId: 'player-3',
     });
     const projected = projectStateForHost(state, allConnected(state));
     expect(projected.waitingOnPlayerIds).toEqual(['player-3']);
@@ -276,11 +276,11 @@ describe('isPlayersTurn', () => {
     expect(isPlayersTurn(state, 'player-3')).toBe(false);
   });
 
-  it('chief during chief-discard', () => {
+  it('commissioner during commissioner-discard', () => {
     const state = createTestGameState({
       phase: 'policy-session',
-      subPhase: 'policy-chief-discard',
-      nominatedChiefId: 'player-3',
+      subPhase: 'policy-commissioner-discard',
+      nominatedCommissionerId: 'player-3',
     });
     expect(isPlayersTurn(state, 'player-3')).toBe(true);
     expect(isPlayersTurn(state, 'player-0')).toBe(false);
@@ -327,18 +327,18 @@ describe('getPrivateData', () => {
     expect(otherPriv?.mayorCards).toBeUndefined();
   });
 
-  it('returns chiefCards only for chief during chief-discard', () => {
+  it('returns commissionerCards only for commissioner during commissioner-discard', () => {
     const state = createTestGameState({
       phase: 'policy-session',
-      subPhase: 'policy-chief-discard',
-      chiefCards: ['bad', 'good'],
-      nominatedChiefId: 'player-3',
+      subPhase: 'policy-commissioner-discard',
+      commissionerCards: ['bad', 'good'],
+      nominatedCommissionerId: 'player-3',
     });
-    const chiefPriv = getPrivateData(state, 'player-3');
-    expect(chiefPriv?.chiefCards).toEqual(['bad', 'good']);
+    const commissionerPriv = getPrivateData(state, 'player-3');
+    expect(commissionerPriv?.commissionerCards).toEqual(['bad', 'good']);
 
     const otherPriv = getPrivateData(state, 'player-0');
-    expect(otherPriv?.chiefCards).toBeUndefined();
+    expect(otherPriv?.commissionerCards).toBeUndefined();
   });
 
   it('returns investigation result only for investigator', () => {

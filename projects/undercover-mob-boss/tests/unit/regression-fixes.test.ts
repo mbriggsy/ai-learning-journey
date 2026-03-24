@@ -20,9 +20,9 @@ function makePlayers(count: number, deadIndices: number[]): Player[] {
     role: i === 0 ? 'mob-boss' as const : i < Math.floor(count / 2) ? 'mob-soldier' as const : 'citizen' as const,
     isAlive: !deadIndices.includes(i),
     isMayor: false,
-    isChief: false,
+    isCommissioner: false,
     wasLastMayor: false,
-    wasLastChief: false,
+    wasLastCommissioner: false,
     knownAllies: [],
   }));
 }
@@ -233,96 +233,96 @@ describe('Bug 2: NaN and non-integer card indices are rejected', () => {
 
     it('accepts valid index 0', () => {
       const next = dispatch(mayorDiscardState(), { type: 'mayor-discard', cardIndex: 0 });
-      expect(next.subPhase).toBe('policy-chief-discard');
-      expect(next.chiefCards).toHaveLength(2);
+      expect(next.subPhase).toBe('policy-commissioner-discard');
+      expect(next.commissionerCards).toHaveLength(2);
     });
 
     it('accepts valid index 1', () => {
       const next = dispatch(mayorDiscardState(), { type: 'mayor-discard', cardIndex: 1 });
-      expect(next.subPhase).toBe('policy-chief-discard');
-      expect(next.chiefCards).toHaveLength(2);
+      expect(next.subPhase).toBe('policy-commissioner-discard');
+      expect(next.commissionerCards).toHaveLength(2);
     });
 
     it('accepts valid index 2', () => {
       const next = dispatch(mayorDiscardState(), { type: 'mayor-discard', cardIndex: 2 });
-      expect(next.subPhase).toBe('policy-chief-discard');
-      expect(next.chiefCards).toHaveLength(2);
+      expect(next.subPhase).toBe('policy-commissioner-discard');
+      expect(next.commissionerCards).toHaveLength(2);
     });
   });
 
-  // ── chief-discard ──────────────────────────────────────────────
+  // ── commissioner-discard ──────────────────────────────────────────────
 
-  describe('chief-discard validation', () => {
-    function chiefDiscardState(): GameState {
+  describe('commissioner-discard validation', () => {
+    function commissionerDiscardState(): GameState {
       return createTestGameState({
         phase: 'policy-session',
-        subPhase: 'policy-chief-discard',
-        chiefCards: ['good', 'bad'],
+        subPhase: 'policy-commissioner-discard',
+        commissionerCards: ['good', 'bad'],
       });
     }
 
     it('rejects NaN', () => {
       expect(() =>
-        dispatch(chiefDiscardState(), { type: 'chief-discard', cardIndex: NaN }),
+        dispatch(commissionerDiscardState(), { type: 'commissioner-discard', cardIndex: NaN }),
       ).toThrow(InvalidActionError);
     });
 
     it('rejects Infinity', () => {
       expect(() =>
-        dispatch(chiefDiscardState(), { type: 'chief-discard', cardIndex: Infinity }),
+        dispatch(commissionerDiscardState(), { type: 'commissioner-discard', cardIndex: Infinity }),
       ).toThrow(InvalidActionError);
     });
 
     it('rejects -Infinity', () => {
       expect(() =>
-        dispatch(chiefDiscardState(), { type: 'chief-discard', cardIndex: -Infinity }),
+        dispatch(commissionerDiscardState(), { type: 'commissioner-discard', cardIndex: -Infinity }),
       ).toThrow(InvalidActionError);
     });
 
     it('rejects 1.5 (non-integer float)', () => {
       expect(() =>
-        dispatch(chiefDiscardState(), { type: 'chief-discard', cardIndex: 1.5 }),
+        dispatch(commissionerDiscardState(), { type: 'commissioner-discard', cardIndex: 1.5 }),
       ).toThrow(InvalidActionError);
     });
 
     it('rejects -0.5 (negative float)', () => {
       expect(() =>
-        dispatch(chiefDiscardState(), { type: 'chief-discard', cardIndex: -0.5 }),
+        dispatch(commissionerDiscardState(), { type: 'commissioner-discard', cardIndex: -0.5 }),
       ).toThrow(InvalidActionError);
     });
 
     it('rejects undefined coerced to number', () => {
       expect(() =>
-        dispatch(chiefDiscardState(), { type: 'chief-discard', cardIndex: undefined as any }),
+        dispatch(commissionerDiscardState(), { type: 'commissioner-discard', cardIndex: undefined as any }),
       ).toThrow(InvalidActionError);
     });
 
     it('rejects null coerced to number', () => {
       expect(() =>
-        dispatch(chiefDiscardState(), { type: 'chief-discard', cardIndex: null as any }),
+        dispatch(commissionerDiscardState(), { type: 'commissioner-discard', cardIndex: null as any }),
       ).toThrow(InvalidActionError);
     });
 
     it('rejects negative integer', () => {
       expect(() =>
-        dispatch(chiefDiscardState(), { type: 'chief-discard', cardIndex: -1 }),
+        dispatch(commissionerDiscardState(), { type: 'commissioner-discard', cardIndex: -1 }),
       ).toThrow(InvalidActionError);
     });
 
     it('rejects out-of-bounds index (2 for 2-card hand)', () => {
       expect(() =>
-        dispatch(chiefDiscardState(), { type: 'chief-discard', cardIndex: 2 }),
+        dispatch(commissionerDiscardState(), { type: 'commissioner-discard', cardIndex: 2 }),
       ).toThrow(InvalidActionError);
     });
 
     it('accepts valid index 0', () => {
-      const next = dispatch(chiefDiscardState(), { type: 'chief-discard', cardIndex: 0 });
+      const next = dispatch(commissionerDiscardState(), { type: 'commissioner-discard', cardIndex: 0 });
       // Discarded 'good', enacted 'bad'
       expect(next.badPoliciesEnacted).toBe(1);
     });
 
     it('accepts valid index 1', () => {
-      const next = dispatch(chiefDiscardState(), { type: 'chief-discard', cardIndex: 1 });
+      const next = dispatch(commissionerDiscardState(), { type: 'commissioner-discard', cardIndex: 1 });
       // Discarded 'bad', enacted 'good'
       expect(next.goodPoliciesEnacted).toBe(1);
     });

@@ -25,9 +25,9 @@ function makePlayers(
     role: roles[i],
     isAlive: true,
     isMayor: i === mayorIndex,
-    isChief: false,
+    isCommissioner: false,
     wasLastMayor: false,
-    wasLastChief: false,
+    wasLastCommissioner: false,
     knownAllies: [],
   }));
 
@@ -53,7 +53,7 @@ function baseState(names: string[], realIds: string[]): GameState {
     round: 1,
     players: makePlayers(names, realIds, 0),
     mayorIndex: 0,
-    nominatedChiefId: null,
+    nominatedCommissionerId: null,
     electionTracker: 0,
     goodPoliciesEnacted: 0,
     badPoliciesEnacted: 0,
@@ -61,7 +61,7 @@ function baseState(names: string[], realIds: string[]): GameState {
     policyDiscard: [],
     votes: {},
     mayorCards: null,
-    chiefCards: null,
+    commissionerCards: null,
     executivePower: null,
     winner: null,
     winReason: null,
@@ -171,18 +171,18 @@ export function buildScenario(
         goodPoliciesEnacted: 1,
         players: state.players.map((p, i) => ({
           ...p,
-          isChief: i === 1,
-          wasLastChief: i === 1,
+          isCommissioner: i === 1,
+          wasLastCommissioner: i === 1,
           wasLastMayor: i === 0,
         })),
-        nominatedChiefId: realIds[1],
+        nominatedCommissionerId: realIds[1],
         mayorCards: ['bad', 'good', 'bad'],
       };
 
     case 'election': {
       const electionPlayers = state.players.map((p, i) => ({
         ...p,
-        isChief: false,
+        isCommissioner: false,
       }));
       return {
         ...state,
@@ -192,7 +192,7 @@ export function buildScenario(
         badPoliciesEnacted: 2,
         goodPoliciesEnacted: 1,
         players: electionPlayers,
-        nominatedChiefId: realIds[1],
+        nominatedCommissionerId: realIds[1],
         votes: {},
       };
     }
@@ -201,16 +201,16 @@ export function buildScenario(
       return {
         ...state,
         phase: 'policy-session',
-        subPhase: 'policy-chief-discard',
+        subPhase: 'policy-commissioner-discard',
         round: 6,
         badPoliciesEnacted: 5,
         goodPoliciesEnacted: 2,
         players: state.players.map((p, i) => ({
           ...p,
-          isChief: i === 1,
+          isCommissioner: i === 1,
         })),
-        nominatedChiefId: realIds[1],
-        chiefCards: ['bad', 'good'],
+        nominatedCommissionerId: realIds[1],
+        commissionerCards: ['bad', 'good'],
         vetoProposed: false,
       };
 

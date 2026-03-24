@@ -32,7 +32,7 @@ export function mount(container: HTMLElement, state: AppState): void {
     .filter((p) => p.id !== state.playerId);
   for (const p of players) {
     // Term limits: previous chief always ineligible; previous mayor ineligible at 6+
-    const termLimited = p.wasLastChief || (p.wasLastMayor && aliveCount > 5);
+    const termLimited = p.wasLastCommissioner || (p.wasLastMayor && aliveCount > 5);
     const isEligible = p.isAlive && !termLimited;
 
     const li = document.createElement('li');

@@ -53,9 +53,9 @@ export interface PublicPlayer {
   name: string;
   isAlive: boolean;
   isMayor: boolean;
-  isChief: boolean;
+  isCommissioner: boolean;
   wasLastMayor: boolean;
-  wasLastChief: boolean;
+  wasLastCommissioner: boolean;
   isConnected: boolean;
 }
 
@@ -70,7 +70,7 @@ export interface HostState {
   subPhase: SubPhase | null;
   round: number;
   players: (PublicPlayer | RevealedPlayer)[];
-  nominatedChiefId: string | null;
+  nominatedCommissionerId: string | null;
   goodPoliciesEnacted: number;
   badPoliciesEnacted: number;
   electionTracker: number;
@@ -97,7 +97,7 @@ export interface PrivateData {
   /** Which ally is the mob boss (mob soldiers need this to distinguish boss from fellow soldiers). */
   mobBossId?: string;
   mayorCards?: PolicyType[];
-  chiefCards?: PolicyType[];
+  commissionerCards?: PolicyType[];
   peekCards?: PolicyType[];
   investigationResult?: { targetId: string; result: 'citizen' | 'mob' };
   /** Sent to the investigated player so they know they've been exposed. */

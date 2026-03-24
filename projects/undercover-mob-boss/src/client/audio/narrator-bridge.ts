@@ -127,7 +127,7 @@ export function onHostStateUpdate(state: HostState | LobbyState): void {
     // If tracker advanced, veto was approved (policies discarded)
     if (electionTracker > prevElectionTracker || subPhase === 'nomination-pending') {
       narrator.enqueue('veto-approved');
-    } else if (subPhase === 'policy-chief-discard') {
+    } else if (subPhase === 'policy-commissioner-discard') {
       narrator.enqueue('veto-rejected');
     }
   }
@@ -190,7 +190,7 @@ export function onHostStateUpdate(state: HostState | LobbyState): void {
       case '6 bad policies enacted':
         narrator.enqueue('mob-wins-policy');
         break;
-      case 'Mob Boss elected Chief after 3+ bad policies':
+      case 'Mob Boss elected Commissioner after 3+ bad policies':
         narrator.enqueue('mob-wins-election');
         break;
     }

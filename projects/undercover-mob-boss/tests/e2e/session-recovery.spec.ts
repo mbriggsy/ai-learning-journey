@@ -415,9 +415,9 @@ test.describe('Session Recovery (Browser Death Scenarios)', () => {
     }
   });
 
-  // ── 5. Chief closes during policy session (holding 2 cards), rejoins ──
+  // ── 5. Commissioner closes during policy session (holding 2 cards), rejoins ──
 
-  test('5. Chief closes during policy session with 2 cards, rejoins and sees cards again', async ({ browser }) => {
+  test('5. Commissioner closes during policy session with 2 cards, rejoins and sees cards again', async ({ browser }) => {
     const setup = await createRoom(browser, 5);
 
     try {
@@ -425,7 +425,7 @@ test.describe('Session Recovery (Browser Death Scenarios)', () => {
 
       // Load the policy-session scenario:
       //   player 0 = mayor (has 3 cards in policy-mayor-discard)
-      //   player 1 = chief (will get 2 cards after mayor discards)
+      //   player 1 = commissioner (will get 2 cards after mayor discards)
       await loadScenario(setup.hostPage, 'policy-session');
 
       // Mayor (player 0) should see 3 cards
@@ -441,14 +441,14 @@ test.describe('Session Recovery (Browser Death Scenarios)', () => {
       await mayorPage.locator('[data-test-id="mayor-discard-btn"]').click();
       await setup.hostPage.waitForTimeout(2000);
 
-      // Chief (player 1, Carmine) should now see 2 cards
-      const chiefPage = setup.playerPages[1];
-      const chiefHandVisible = await waitForTestId(chiefPage, 'chief-hand', 10_000);
-      expect(chiefHandVisible).toBe(true);
-      const chiefCards = await chiefPage.locator('[data-test-id="policy-card"]').count();
-      expect(chiefCards).toBe(2);
+      // Commissioner (player 1, Carmine) should now see 2 cards
+      const commissionerPage = setup.playerPages[1];
+      const commissionerHandVisible = await waitForTestId(commissionerPage, 'commissioner-hand', 10_000);
+      expect(commissionerHandVisible).toBe(true);
+      const commissionerCards = await commissionerPage.locator('[data-test-id="policy-card"]').count();
+      expect(commissionerCards).toBe(2);
 
-      // NOW close the chief's tab
+      // NOW close the commissioner's tab
       await setup.playerContexts[1].close();
       await setup.hostPage.waitForTimeout(2000);
 
@@ -457,27 +457,27 @@ test.describe('Session Recovery (Browser Death Scenarios)', () => {
       const newPage = await newCtx.newPage();
       await newPage.goto(`${BASE}/?room=${setup.roomCode}&name=Carmine`);
 
-      // Chief should see their 2 cards again after reconnection
-      const chiefHandAfterRejoin = await waitForTestId(newPage, 'chief-hand', 15_000);
+      // Commissioner should see their 2 cards again after reconnection
+      const commissionerHandAfterRejoin = await waitForTestId(newPage, 'commissioner-hand', 15_000);
 
-      if (chiefHandAfterRejoin) {
+      if (commissionerHandAfterRejoin) {
         const cardCount = await newPage.locator('[data-test-id="policy-card"]').count();
         expect(cardCount).toBe(2);
 
         // Prove they can enact: select a card and click enact
         await newPage.locator('[data-test-id="policy-card"]').first().click();
         await newPage.waitForTimeout(300);
-        await newPage.locator('[data-test-id="chief-enact-btn"]').click();
+        await newPage.locator('[data-test-id="commissioner-enact-btn"]').click();
 
         // Game should advance (no crash)
         await setup.hostPage.waitForTimeout(2000);
       } else {
-        // BUG: chief-hand never reappeared. Check what's showing instead.
+        // BUG: commissioner-hand never reappeared. Check what's showing instead.
         const waitingVisible = await newPage.locator('[data-test-id="waiting-message"]')
           .isVisible().catch(() => false);
-        console.warn('[BUG] Chief rejoined but chief-hand not visible.');
+        console.warn('[BUG] Commissioner rejoined but commissioner-hand not visible.');
         console.warn(`  waiting-message visible: ${waitingVisible}`);
-        expect.soft(chiefHandAfterRejoin, 'BUG: Chief should see 2 policy cards after rejoin').toBe(true);
+        expect.soft(commissionerHandAfterRejoin, 'BUG: Commissioner should see 2 policy cards after rejoin').toBe(true);
       }
 
       setup.playerContexts[1] = newCtx;

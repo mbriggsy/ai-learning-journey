@@ -38,12 +38,12 @@ function pickNextAction(state: GameState, rng: () => number): GameAction {
     case 'policy-mayor-discard':
       return { type: 'mayor-discard', cardIndex: 0 };
 
-    case 'policy-chief-discard': {
+    case 'policy-commissioner-discard': {
       // If veto is available and not yet proposed, sometimes propose
       if (state.badPoliciesEnacted >= 5 && !state.vetoProposed && rng() > 0.7) {
         return { type: 'propose-veto' };
       }
-      return { type: 'chief-discard', cardIndex: 0 };
+      return { type: 'commissioner-discard', cardIndex: 0 };
     }
 
     case 'policy-veto-response':

@@ -7,7 +7,7 @@ export type ScreenId =
   | 'vote'
   | 'mayor-nomination'
   | 'mayor-hand'
-  | 'chief-hand'
+  | 'commissioner-hand'
   | 'veto-response'
   | 'power-investigate'
   | 'power-nominate'
@@ -49,7 +49,7 @@ export function getActiveScreen(
   const me = state.players.find((p) => p.id === playerId);
   const isAlive = me?.isAlive ?? false;
   const isMayor = me?.isMayor ?? false;
-  const isChief = me?.isChief ?? false;
+  const isCommissioner = me?.isCommissioner ?? false;
 
   if (!isAlive && state.phase !== 'lobby') return 'spectator';
   if (state.phase === 'lobby') {
@@ -70,8 +70,8 @@ export function getActiveScreen(
   if (isMayor && state.subPhase === 'nomination-pending') return 'mayor-nomination';
   if (isMayor && state.subPhase === 'policy-mayor-discard') return 'mayor-hand';
   if (isMayor && state.subPhase === 'policy-veto-response') return 'veto-response';
-  if (isChief && state.subPhase === 'policy-chief-discard') return 'chief-hand';
-  // Executive powers are used by the Mayor (President), not the Chief (Chancellor)
+  if (isCommissioner && state.subPhase === 'policy-commissioner-discard') return 'commissioner-hand';
+  // Executive powers are used by the Mayor (President), not the Commissioner (Chancellor)
   if (isMayor && state.subPhase === 'policy-peek-viewing') return 'power-peek';
   if (isMayor && state.subPhase === 'executive-power-pending') {
     switch (state.executivePower) {

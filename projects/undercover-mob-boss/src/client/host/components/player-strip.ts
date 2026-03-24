@@ -2,7 +2,7 @@ import type { PublicPlayer } from '../../../shared/protocol';
 
 /**
  * Horizontal player strip showing all players with role icons and status.
- * Hat = Mayor, Badge = Chief, Magnifying glass = Under Investigation.
+ * Hat = Mayor, Badge = Commissioner, Magnifying glass = Under Investigation.
  */
 
 interface StripOptions {
@@ -49,7 +49,7 @@ function renderPlayers(container: HTMLElement, players: PublicPlayer[], opts: St
     if (player.isMayor) {
       item.classList.add('player-strip__item--mayor');
     }
-    if (player.isChief) {
+    if (player.isCommissioner) {
       item.classList.add('player-strip__item--chief');
     }
 
@@ -75,7 +75,7 @@ function renderPlayers(container: HTMLElement, players: PublicPlayer[], opts: St
       badge.className = 'player-strip__badge player-strip__badge--mayor';
       badge.textContent = 'MAYOR';
       item.appendChild(badge);
-    } else if (player.isChief) {
+    } else if (player.isCommissioner) {
       const badge = document.createElement('div');
       badge.className = 'player-strip__badge player-strip__badge--chief';
       badge.textContent = 'CHIEF';

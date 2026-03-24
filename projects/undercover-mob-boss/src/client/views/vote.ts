@@ -17,7 +17,7 @@ export function mount(container: HTMLElement, state: AppState): void {
   const content = document.createElement('div');
   content.className = 'screen-content';
 
-  const nomineeId = state.serverState?.nominatedChiefId;
+  const nomineeId = state.serverState?.nominatedCommissionerId;
   const nominee = state.serverState?.players.find((p) => p.id === nomineeId);
   setTopBarInstruction(nominee ? `${nominee.name} for Police Chief?` : 'Cast your vote');
 

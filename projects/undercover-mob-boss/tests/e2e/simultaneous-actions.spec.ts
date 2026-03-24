@@ -393,7 +393,7 @@ test.describe('Simultaneous Actions (Race Conditions)', () => {
         .isVisible().catch(() => false);
       const lastPlayerMayorHand = await lastPlayer.locator('[data-test-id="mayor-hand"]')
         .isVisible().catch(() => false);
-      const lastPlayerChiefHand = await lastPlayer.locator('[data-test-id="chief-hand"]')
+      const lastPlayerCommissionerHand = await lastPlayer.locator('[data-test-id="commissioner-hand"]')
         .isVisible().catch(() => false);
       const lastPlayerWaiting = await lastPlayer.locator('[data-test-id="waiting-message"]')
         .isVisible().catch(() => false);
@@ -402,7 +402,7 @@ test.describe('Simultaneous Actions (Race Conditions)', () => {
 
       // The player must be in SOME recognizable state, not a blank screen
       const inSomeState = lastPlayerCanVote || lastPlayerConfirm ||
-        lastPlayerMayorHand || lastPlayerChiefHand ||
+        lastPlayerMayorHand || lastPlayerCommissionerHand ||
         lastPlayerWaiting || lastPlayerNomination;
 
       expect.soft(

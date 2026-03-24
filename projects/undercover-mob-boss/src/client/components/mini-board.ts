@@ -81,7 +81,7 @@ function createPlayerRoster(players: PlayerState['players']): HTMLElement {
     pill.className = 'mini-roster__player';
     if (!p.isAlive) pill.classList.add('mini-roster__player--dead');
     if (p.isMayor) pill.classList.add('mini-roster__player--mayor');
-    if (p.isChief) pill.classList.add('mini-roster__player--chief');
+    if (p.isCommissioner) pill.classList.add('mini-roster__player--chief');
 
     if (!p.isAlive) {
       // Dead: coffin icon + struck name as separate elements
@@ -95,7 +95,7 @@ function createPlayerRoster(players: PlayerState['players']): HTMLElement {
       pill.appendChild(deadName);
     } else if (p.isMayor) {
       pill.textContent = `M \u2022 ${p.name}`;
-    } else if (p.isChief) {
+    } else if (p.isCommissioner) {
       pill.textContent = `C \u2022 ${p.name}`;
     } else {
       pill.textContent = p.name;

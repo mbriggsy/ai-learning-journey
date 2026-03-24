@@ -54,7 +54,7 @@ export function getHostView(state: HostState | LobbyState): HostViewState {
   // Concurrent overlays
   if (state.subPhase === 'policy-veto-propose' || state.subPhase === 'policy-veto-response')
     overlays.push('veto-proposed');
-  if (state.subPhase === 'policy-mayor-discard' || state.subPhase === 'policy-chief-discard')
+  if (state.subPhase === 'policy-mayor-discard' || state.subPhase === 'policy-commissioner-discard')
     overlays.push('policy-session-active');
 
   return { screen: 'game-board', overlays };

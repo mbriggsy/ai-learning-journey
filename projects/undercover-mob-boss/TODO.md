@@ -49,6 +49,12 @@
 3. **Narrator variant pool** — PLANNED
 4. **The Millbrook City Gazette** — PLANNED
 
+**Deferred (polish tier):**
+- Ambient music — amazeballs or nothing
+- SFX + haptics
+- Veto drama UI
+- PWA app icon — `public/assets/icon-512.png` is a placeholder black square. Needs real art (lobby seal or custom design)
+
 **Plans:**
 1. `docs/v2/plans/2026-03-24-001-feat-commissioner-rename-plan.md` — **COMPLETE**
 2. `docs/v2/plans/2026-03-24-002-feat-named-policy-cards-plan.md` — **EXECUTING** (code done, art in progress)

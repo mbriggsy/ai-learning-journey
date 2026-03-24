@@ -171,7 +171,7 @@ export const ASSET_PROMPTS = [
   // --- Named Policy Cards: Virtuous (15) ---
   {
     name: 'school-lunch-program',
-    promptSuffix: `1940s school cafeteria scene, children sitting at long tables eating lunch, warm sunlight through windows, a kind lunch lady serving from a pot, wholesome community feeling, ${CARD_BG_SUFFIX}`,
+    promptSuffix: `1940s school cafeteria still life, long wooden tables set with tin trays and milk bottles, warm sunlight through tall windows, chalkboard menu on the wall, steam rising from a serving pot, wholesome community feeling, ${CARD_BG_SUFFIX}`,
     targetWidth: 384, targetHeight: 512, aspectRatio: '3:4',
     needsTransparency: false, postProcess: { kind: 'resize' },
     format: 'webp', outputSubDir: 'cards',
@@ -185,7 +185,7 @@ export const ASSET_PROMPTS = [
   },
   {
     name: 'harbor-cleanup-initiative',
-    promptSuffix: `1940s harbor waterfront at dawn, workers on docks clearing debris, clean water reflecting morning light, fishing boats, cranes and rope coils, community effort scene, ${CARD_BG_SUFFIX}`,
+    promptSuffix: `1940s harbor waterfront at dawn, docks with neatly stacked crates, clean water reflecting morning light, fishing boats moored in a row, cranes and rope coils, a freshly painted harbor sign, ${CARD_BG_SUFFIX}`,
     targetWidth: 384, targetHeight: 512, aspectRatio: '3:4',
     needsTransparency: false, postProcess: { kind: 'resize' },
     format: 'webp', outputSubDir: 'cards',
@@ -199,14 +199,14 @@ export const ASSET_PROMPTS = [
   },
   {
     name: 'free-clinic-act',
-    promptSuffix: `1940s small-town medical clinic, a doctor with a stethoscope at a wooden desk, medicine bottles on shelves, warm lamp light, a sign reading FREE CLINIC, compassionate atmosphere, ${CARD_BG_SUFFIX}`,
+    promptSuffix: `1940s small-town medical clinic interior, a stethoscope draped over a wooden desk, medicine bottles on shelves, warm lamp light, a sign reading FREE CLINIC on the wall, compassionate atmosphere, ${CARD_BG_SUFFIX}`,
     targetWidth: 384, targetHeight: 512, aspectRatio: '3:4',
     needsTransparency: false, postProcess: { kind: 'resize' },
     format: 'webp', outputSubDir: 'cards',
   },
   {
     name: 'streetcar-modernization',
-    promptSuffix: `shiny 1940s electric streetcar on tracks through a city boulevard, overhead wires, passengers boarding, Art Deco storefronts, clean civic infrastructure, ${CARD_BG_SUFFIX}`,
+    promptSuffix: `shiny 1940s electric streetcar on tracks through a city boulevard, overhead wires, Art Deco storefronts, gleaming chrome and brass details, clean civic infrastructure, ${CARD_BG_SUFFIX}`,
     targetWidth: 384, targetHeight: 512, aspectRatio: '3:4',
     needsTransparency: false, postProcess: { kind: 'resize' },
     format: 'webp', outputSubDir: 'cards',
@@ -220,14 +220,14 @@ export const ASSET_PROMPTS = [
   },
   {
     name: 'orphanage-renovation',
-    promptSuffix: `1940s brick orphanage building being renovated, scaffolding, fresh paint, new windows, children playing in front yard, hopeful atmosphere, warm afternoon light, ${CARD_BG_SUFFIX}`,
+    promptSuffix: `1940s brick orphanage building being renovated, scaffolding, fresh paint, new windows, a swing set in the front yard, hopeful atmosphere, warm afternoon light, ${CARD_BG_SUFFIX}`,
     targetWidth: 384, targetHeight: 512, aspectRatio: '3:4',
     needsTransparency: false, postProcess: { kind: 'resize' },
     format: 'webp', outputSubDir: 'cards',
   },
   {
     name: 'waterfront-promenade',
-    promptSuffix: `1940s waterfront boardwalk along a river, wrought-iron lampposts, wooden benches, couples strolling, boats in the distance, golden sunset reflections on water, ${CARD_BG_SUFFIX}`,
+    promptSuffix: `1940s waterfront boardwalk along a river, wrought-iron lampposts, wooden benches, boats in the distance, golden sunset reflections on water, a hat left on a bench, ${CARD_BG_SUFFIX}`,
     targetWidth: 384, targetHeight: 512, aspectRatio: '3:4',
     needsTransparency: false, postProcess: { kind: 'resize' },
     format: 'webp', outputSubDir: 'cards',
@@ -248,7 +248,7 @@ export const ASSET_PROMPTS = [
   },
   {
     name: 'community-garden-act',
-    promptSuffix: `1940s community garden in an urban lot, raised wooden beds with vegetables, picket fence, a woman in an apron tending plants, sunflowers, cheerful neighborhood scene, ${CARD_BG_SUFFIX}`,
+    promptSuffix: `1940s community garden in an urban lot, raised wooden beds with vegetables, picket fence, garden tools leaning against a wheelbarrow, sunflowers, cheerful neighborhood scene, ${CARD_BG_SUFFIX}`,
     targetWidth: 384, targetHeight: 512, aspectRatio: '3:4',
     needsTransparency: false, postProcess: { kind: 'resize' },
     format: 'webp', outputSubDir: 'cards',

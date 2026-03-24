@@ -16,7 +16,7 @@ export default defineConfig({
       manifest: false, // Using manual manifest.webmanifest
       workbox: {
         navigateFallback: null,
-        globPatterns: ['**/*.{js,css,png,jpg,wav,mp3,webmanifest}'],
+        globPatterns: ['**/*.{js,css,webmanifest}'],
         runtimeCaching: [
           {
             urlPattern: ({ request }) => request.mode === 'navigate',

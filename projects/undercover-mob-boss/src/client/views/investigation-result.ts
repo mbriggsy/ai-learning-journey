@@ -50,7 +50,7 @@ export function mount(container: HTMLElement, state: AppState): void {
   front.className = `investigation-card__face investigation-card__front investigation-card__front--${isCitizen ? 'citizen' : 'mob'}`;
   const artImg = document.createElement('img');
   artImg.className = 'investigation-card__art';
-  artImg.src = isCitizen ? '/assets/role-citizen.png' : '/assets/role-mob-soldier.png';
+  artImg.src = isCitizen ? '/assets/role-citizen.png?v=2' : '/assets/role-mob-soldier.png?v=2';
   artImg.alt = isCitizen ? 'Citizen' : 'Mob';
   artImg.draggable = false;
   front.appendChild(artImg);

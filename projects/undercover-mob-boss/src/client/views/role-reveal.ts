@@ -214,12 +214,16 @@ export function unmount(): void {
   acknowledged = false;
 }
 
+// Cache-bust version — bump when role art changes
+const ART_VERSION = 2;
+
 function getRoleArt(role: string): string {
+  const v = `?v=${ART_VERSION}`;
   switch (role) {
-    case 'citizen': return '/assets/role-citizen.png';
-    case 'mob-soldier': return '/assets/role-mob-soldier.png';
-    case 'mob-boss': return '/assets/role-mob-boss.png';
-    default: return '/assets/role-citizen.png';
+    case 'citizen': return `/assets/role-citizen.png${v}`;
+    case 'mob-soldier': return `/assets/role-mob-soldier.png${v}`;
+    case 'mob-boss': return `/assets/role-mob-boss.png${v}`;
+    default: return `/assets/role-citizen.png${v}`;
   }
 }
 

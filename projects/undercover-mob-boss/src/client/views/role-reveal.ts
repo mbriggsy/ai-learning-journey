@@ -103,22 +103,33 @@ export function mount(container: HTMLElement, state: AppState): void {
     }
   }
 
-  // Wrap card + info in a fixed-height group so allies don't shift card position
+  // Wrap card + info — allies/label positioned absolutely so they never shift the card
   const cardGroup = document.createElement('div');
   cardGroup.style.position = 'relative';
   cardGroup.style.display = 'flex';
   cardGroup.style.flexDirection = 'column';
   cardGroup.style.alignItems = 'center';
 
-  // Allies hidden until flip — fixed min-height so mob/citizen cards look identical
+  // Role label + allies sit below card but don't affect card position
+  const infoBelow = document.createElement('div');
+  infoBelow.style.position = 'absolute';
+  infoBelow.style.top = '100%';
+  infoBelow.style.left = '0';
+  infoBelow.style.right = '0';
+  infoBelow.style.display = 'flex';
+  infoBelow.style.flexDirection = 'column';
+  infoBelow.style.alignItems = 'center';
+  infoBelow.style.paddingTop = '12px';
+
+  // Allies hidden until flip
   allies.style.opacity = '0';
   allies.style.visibility = 'hidden';
-  allies.style.minHeight = '60px';
   allies.style.transition = 'opacity 300ms ease-out';
 
   cardGroup.appendChild(card);
-  cardGroup.appendChild(roleLabel);
-  cardGroup.appendChild(allies);
+  infoBelow.appendChild(roleLabel);
+  infoBelow.appendChild(allies);
+  cardGroup.appendChild(infoBelow);
   content.appendChild(cardGroup);
   root.appendChild(content);
   container.appendChild(root);

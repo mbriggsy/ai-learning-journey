@@ -17,6 +17,10 @@ export function mount(container: HTMLElement, state: AppState): void {
 
   const content = document.createElement('div');
   content.className = 'screen-content';
+  // Lock this screen — no scrolling, no iOS rubber-band
+  content.style.overflow = 'hidden';
+  content.style.overscrollBehavior = 'none';
+  content.style.touchAction = 'manipulation';
 
   // Card container
   const card = document.createElement('div');

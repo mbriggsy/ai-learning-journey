@@ -1,7 +1,7 @@
 import { describe, it, expect } from 'vitest';
 import { shuffle, createDeck, drawCards, checkReshuffle, pickReshuffleThreshold } from '../../src/server/game/policies';
 import { mulberry32 } from '../../src/server/game/rng';
-import { createTestGameState } from '../helpers/game-state-factory';
+import { createTestGameState, makeTestCard } from '../helpers/game-state-factory';
 
 describe('shuffle', () => {
   it('returns array of same length', () => {
@@ -28,8 +28,8 @@ describe('createDeck', () => {
   it('has 6 good and 11 bad cards (17 total)', () => {
     const deck = createDeck(mulberry32(42));
     expect(deck).toHaveLength(17);
-    expect(deck.filter((c) => c === 'good')).toHaveLength(6);
-    expect(deck.filter((c) => c === 'bad')).toHaveLength(11);
+    expect(deck.filter((c) => c.type === 'good')).toHaveLength(6);
+    expect(deck.filter((c) => c.type === 'bad')).toHaveLength(11);
   });
 
   it('is deterministic with seeded RNG', () => {
@@ -41,19 +41,19 @@ describe('createDeck', () => {
 
 describe('drawCards', () => {
   it('draws correct number of cards', () => {
-    const deck = ['good', 'bad', 'bad', 'good', 'bad'] as const;
+    const deck = [makeTestCard('good'), makeTestCard('bad'), makeTestCard('bad'), makeTestCard('good'), makeTestCard('bad')];
     const [drawn, remaining] = drawCards(deck, 3);
-    expect(drawn).toEqual(['good', 'bad', 'bad']);
-    expect(remaining).toEqual(['good', 'bad']);
+    expect(drawn.map(c => c.type)).toEqual(['good', 'bad', 'bad']);
+    expect(remaining.map(c => c.type)).toEqual(['good', 'bad']);
   });
 
   it('throws when drawing more cards than available', () => {
-    const deck = ['good', 'bad'] as const;
+    const deck = [makeTestCard('good'), makeTestCard('bad')];
     expect(() => drawCards(deck, 3)).toThrow('Cannot draw 3 cards from deck of 2');
   });
 
   it('does not mutate input', () => {
-    const deck = ['good', 'bad', 'bad'] as const;
+    const deck = [makeTestCard('good'), makeTestCard('bad'), makeTestCard('bad')];
     const copy = [...deck];
     drawCards(deck, 2);
     expect(deck).toEqual(copy);
@@ -85,8 +85,8 @@ describe('checkReshuffle', () => {
 
   it('reshuffles when deck is below threshold', () => {
     const state = createTestGameState({
-      policyDeck: ['good', 'bad'],
-      policyDiscard: ['bad', 'bad', 'good', 'bad', 'bad', 'good', 'bad', 'bad'],
+      policyDeck: [makeTestCard('good'), makeTestCard('bad')],
+      policyDiscard: [makeTestCard('bad'), makeTestCard('bad'), makeTestCard('good'), makeTestCard('bad'), makeTestCard('bad'), makeTestCard('good'), makeTestCard('bad'), makeTestCard('bad')],
       reshuffleThreshold: 5,
     });
 
@@ -101,8 +101,8 @@ describe('checkReshuffle', () => {
 
   it('throws if post-reshuffle deck has < 3 cards', () => {
     const state = createTestGameState({
-      policyDeck: ['good'],
-      policyDiscard: ['bad'],
+      policyDeck: [makeTestCard('good')],
+      policyDiscard: [makeTestCard('bad')],
       reshuffleThreshold: 5,
     });
 

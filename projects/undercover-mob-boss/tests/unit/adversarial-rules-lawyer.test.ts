@@ -21,9 +21,10 @@ import { mulberry32 } from '../../src/server/game/rng';
 import {
   createTestGameState,
   createTestPlayer,
+  makeTestCard,
 } from '../helpers/game-state-factory';
 import { advanceDisplayIfNeeded } from '../helpers/game-driver';
-import type { GameState, Player, PolicyType } from '../../src/shared/types';
+import type { GameState, Player } from '../../src/shared/types';
 
 // ── Helpers ──────────────────────────────────────────────────────────
 
@@ -78,7 +79,7 @@ describe('Adversarial: Mob Boss election check timing', () => {
       nominatedCommissionerId: 'player-0', // mob boss
       mayorIndex: 2,
       players,
-      policyDeck: ['bad', 'bad', 'bad', 'good', 'good', 'good', 'bad', 'bad', 'bad', 'bad', 'bad'],
+      policyDeck: [makeTestCard('bad'), makeTestCard('bad'), makeTestCard('bad'), makeTestCard('good'), makeTestCard('good'), makeTestCard('good'), makeTestCard('bad'), makeTestCard('bad'), makeTestCard('bad'), makeTestCard('bad'), makeTestCard('bad')],
     });
 
     // Election passes — boss becomes commissioner with only 2 bad policies
@@ -93,15 +94,15 @@ describe('Adversarial: Mob Boss election check timing', () => {
 
     // Commissioner enacts a bad policy (the 3rd bad overall)
     // commissionerCards should have 2 cards from the original 3 drawn
-    const badIndex = state.commissionerCards!.indexOf('bad');
-    const goodIndex = state.commissionerCards!.indexOf('good');
+    const badIndex = state.commissionerCards!.findIndex(c => c.type === 'bad');
+    const goodIndex = state.commissionerCards!.findIndex(c => c.type === 'good');
     // If both bad, enact one; if mixed, enact the bad one
     const enactIndex = badIndex >= 0 ? (goodIndex >= 0 ? goodIndex : 1) : 0;
     // We want to enact bad — discard the other
-    if (state.commissionerCards![0] === 'bad' && state.commissionerCards![1] === 'bad') {
+    if (state.commissionerCards![0].type === 'bad' && state.commissionerCards![1].type === 'bad') {
       // Both bad, discard index 0 enacts index 1 (both bad, doesn't matter)
       state = dispatch(state, { type: 'commissioner-discard', cardIndex: 0 });
-    } else if (state.commissionerCards![0] === 'bad') {
+    } else if (state.commissionerCards![0].type === 'bad') {
       // Discard index 1 to enact bad at index 0
       state = dispatch(state, { type: 'commissioner-discard', cardIndex: 1 });
     } else {
@@ -152,7 +153,7 @@ describe('Adversarial: Auto-enact clears term limits', () => {
     players[2].wasLastMayor = true;
 
     // Rig deck so auto-enact draws a good policy (no game-ender)
-    const deck: PolicyType[] = ['good', 'bad', 'bad', 'bad', 'bad', 'bad', 'bad', 'bad', 'bad', 'bad', 'bad'];
+    const deck = [makeTestCard('good'), makeTestCard('bad'), makeTestCard('bad'), makeTestCard('bad'), makeTestCard('bad'), makeTestCard('bad'), makeTestCard('bad'), makeTestCard('bad'), makeTestCard('bad'), makeTestCard('bad'), makeTestCard('bad')];
 
     let state = createTestGameState({
       phase: 'election',
@@ -198,10 +199,10 @@ describe('Adversarial: Auto-enact clears term limits', () => {
     players[0].isMayor = false;
     players[2].isMayor = true;
 
-    const deck: PolicyType[] = [
-      'good', 'good', 'good', // drawn for policy session
-      'good', // auto-enact card
-      'bad', 'bad', 'bad', 'bad', 'bad', 'bad', 'bad', 'bad',
+    const deck = [
+      makeTestCard('good'), makeTestCard('good'), makeTestCard('good'), // drawn for policy session
+      makeTestCard('good'), // auto-enact card
+      makeTestCard('bad'), makeTestCard('bad'), makeTestCard('bad'), makeTestCard('bad'), makeTestCard('bad'), makeTestCard('bad'), makeTestCard('bad'), makeTestCard('bad'),
     ];
 
     let state = createTestGameState({
@@ -311,7 +312,7 @@ describe('Adversarial: Special election term limits', () => {
       mayorIndex: 3,
       players,
       playerCount: 7,
-      policyDeck: ['good', 'good', 'good', 'bad', 'bad', 'bad', 'bad', 'bad', 'bad', 'bad', 'bad'],
+      policyDeck: [makeTestCard('good'), makeTestCard('good'), makeTestCard('good'), makeTestCard('bad'), makeTestCard('bad'), makeTestCard('bad'), makeTestCard('bad'), makeTestCard('bad'), makeTestCard('bad'), makeTestCard('bad'), makeTestCard('bad')],
       resumeMayorIndex: 0, // special election was called by player-0
     });
 
@@ -570,11 +571,11 @@ describe('Adversarial: Veto state across rounds', () => {
     let state = createTestGameState({
       phase: 'policy-session',
       subPhase: 'policy-commissioner-discard',
-      commissionerCards: ['bad', 'bad'],
+      commissionerCards: [makeTestCard('bad'), makeTestCard('bad')],
       badPoliciesEnacted: 5, // veto unlocked
       mayorIndex: 2,
       players,
-      policyDeck: ['good', 'bad', 'good', 'bad', 'good', 'bad'],
+      policyDeck: [makeTestCard('good'), makeTestCard('bad'), makeTestCard('good'), makeTestCard('bad'), makeTestCard('good'), makeTestCard('bad')],
       rngSeed: 42,
     });
 
@@ -599,11 +600,11 @@ describe('Adversarial: Veto state across rounds', () => {
     let state = createTestGameState({
       phase: 'policy-session',
       subPhase: 'policy-commissioner-discard',
-      commissionerCards: ['bad', 'good'],
+      commissionerCards: [makeTestCard('bad'), makeTestCard('good')],
       badPoliciesEnacted: 5,
       mayorIndex: 2,
       players,
-      policyDeck: ['good', 'bad', 'good', 'bad', 'good', 'bad'],
+      policyDeck: [makeTestCard('good'), makeTestCard('bad'), makeTestCard('good'), makeTestCard('bad'), makeTestCard('good'), makeTestCard('bad')],
       rngSeed: 42,
     });
 
@@ -635,7 +636,7 @@ describe('Adversarial: Veto state across rounds', () => {
     let state = createTestGameState({
       phase: 'policy-session',
       subPhase: 'policy-commissioner-discard',
-      commissionerCards: ['bad', 'good'],
+      commissionerCards: [makeTestCard('bad'), makeTestCard('good')],
       badPoliciesEnacted: 5,
       mayorIndex: 2,
       players,
@@ -659,9 +660,9 @@ describe('Adversarial: Veto state across rounds', () => {
 
 describe('Adversarial: Policy peek card order preservation', () => {
   it('After policy peek + acknowledge, next draw gets the SAME cards in same order', () => {
-    const riggedDeck: PolicyType[] = [
-      'bad', 'good', 'bad', // top 3 — these are the peek cards AND next draw
-      'good', 'bad', 'good', 'bad', 'good',
+    const riggedDeck = [
+      makeTestCard('bad'), makeTestCard('good'), makeTestCard('bad'), // top 3 — these are the peek cards AND next draw
+      makeTestCard('good'), makeTestCard('bad'), makeTestCard('good'), makeTestCard('bad'), makeTestCard('good'),
     ];
 
     let state = createTestGameState({
@@ -669,7 +670,7 @@ describe('Adversarial: Policy peek card order preservation', () => {
       subPhase: 'policy-peek-viewing',
       executivePower: 'policy-peek',
       policyDeck: riggedDeck,
-      peekCards: ['bad', 'good', 'bad'], // already peeked
+      peekCards: [makeTestCard('bad'), makeTestCard('good'), makeTestCard('bad')], // already peeked
       mayorIndex: 0,
       rngSeed: 42,
     });
@@ -694,7 +695,7 @@ describe('Adversarial: Policy peek card order preservation', () => {
 
     // Mayor should see the same top 3 cards
     expect(state.phase).toBe('policy-session');
-    expect(state.mayorCards).toEqual(['bad', 'good', 'bad']);
+    expect(state.mayorCards?.map(c => c.type)).toEqual(['bad', 'good', 'bad']);
   });
 });
 
@@ -809,7 +810,7 @@ describe('Adversarial: 5-player endgame (3 alive)', () => {
       nominatedCommissionerId: 'player-4',
       mayorIndex: 3,
       players,
-      policyDeck: ['good', 'good', 'good', 'bad', 'bad', 'bad', 'bad', 'bad', 'bad', 'bad', 'bad'],
+      policyDeck: [makeTestCard('good'), makeTestCard('good'), makeTestCard('good'), makeTestCard('bad'), makeTestCard('bad'), makeTestCard('bad'), makeTestCard('bad'), makeTestCard('bad'), makeTestCard('bad'), makeTestCard('bad'), makeTestCard('bad')],
     });
 
     // 2 approve, 1 block — should pass (2 > 1)
@@ -999,7 +1000,7 @@ describe('Adversarial: Election tracker correctness', () => {
       nominatedCommissionerId: 'player-4',
       mayorIndex: 3,
       players,
-      policyDeck: ['good', 'bad', 'bad', 'bad', 'bad', 'bad', 'bad', 'bad', 'bad', 'bad', 'bad'],
+      policyDeck: [makeTestCard('good'), makeTestCard('bad'), makeTestCard('bad'), makeTestCard('bad'), makeTestCard('bad'), makeTestCard('bad'), makeTestCard('bad'), makeTestCard('bad'), makeTestCard('bad'), makeTestCard('bad'), makeTestCard('bad')],
       rngSeed: 42,
     });
 
@@ -1019,7 +1020,7 @@ describe('Adversarial: Election tracker correctness', () => {
       nominatedCommissionerId: 'player-3',
       mayorIndex: 2,
       players,
-      policyDeck: ['good', 'good', 'good', 'bad', 'bad', 'bad', 'bad', 'bad', 'bad', 'bad', 'bad'],
+      policyDeck: [makeTestCard('good'), makeTestCard('good'), makeTestCard('good'), makeTestCard('bad'), makeTestCard('bad'), makeTestCard('bad'), makeTestCard('bad'), makeTestCard('bad'), makeTestCard('bad'), makeTestCard('bad'), makeTestCard('bad')],
     });
 
     state = unanimousVote(state, 'approve');
@@ -1038,7 +1039,7 @@ describe('Adversarial: Election tracker correctness', () => {
       nominatedCommissionerId: 'player-3',
       mayorIndex: 2,
       players,
-      policyDeck: ['good', 'good', 'good', 'bad', 'bad', 'bad', 'bad', 'bad', 'bad', 'bad', 'bad'],
+      policyDeck: [makeTestCard('good'), makeTestCard('good'), makeTestCard('good'), makeTestCard('bad'), makeTestCard('bad'), makeTestCard('bad'), makeTestCard('bad'), makeTestCard('bad'), makeTestCard('bad'), makeTestCard('bad'), makeTestCard('bad')],
     });
 
     // Fail first election — tracker goes to 1
@@ -1066,7 +1067,7 @@ describe('Adversarial: Election tracker correctness', () => {
       nominatedCommissionerId: 'player-3',
       mayorIndex: 2,
       players,
-      policyDeck: ['good', 'bad', 'bad', 'bad', 'bad', 'bad', 'bad', 'bad', 'bad', 'bad', 'bad'],
+      policyDeck: [makeTestCard('good'), makeTestCard('bad'), makeTestCard('bad'), makeTestCard('bad'), makeTestCard('bad'), makeTestCard('bad'), makeTestCard('bad'), makeTestCard('bad'), makeTestCard('bad'), makeTestCard('bad'), makeTestCard('bad')],
       rngSeed: 42,
     });
 

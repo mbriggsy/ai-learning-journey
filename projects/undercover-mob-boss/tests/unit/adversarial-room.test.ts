@@ -7,8 +7,8 @@
  */
 import { describe, it, expect } from 'vitest';
 import { dispatch, InvalidActionError } from '../../src/server/game/phases';
-import { createTestGameState } from '../helpers/game-state-factory';
-import type { GameState, PolicyType } from '../../src/shared/types';
+import { createTestGameState, makeTestCard } from '../helpers/game-state-factory';
+import type { GameState } from '../../src/shared/types';
 
 // ── Helpers ──────────────────────────────────────────────────────────
 
@@ -33,7 +33,7 @@ function roleRevealState(): GameState {
 
 /** Build a state in policy-mayor-discard with 3 cards. */
 function mayorDiscardState(): GameState {
-  const cards: PolicyType[] = ['bad', 'good', 'bad'];
+  const cards = [makeTestCard('bad'), makeTestCard('good'), makeTestCard('bad')];
   return createTestGameState({
     phase: 'policy-session',
     subPhase: 'policy-mayor-discard',
@@ -43,7 +43,7 @@ function mayorDiscardState(): GameState {
 
 /** Build a state in policy-commissioner-discard with 2 cards. */
 function commissionerDiscardState(): GameState {
-  const cards: PolicyType[] = ['bad', 'good'];
+  const cards = [makeTestCard('bad'), makeTestCard('good')];
   return createTestGameState({
     phase: 'policy-session',
     subPhase: 'policy-commissioner-discard',

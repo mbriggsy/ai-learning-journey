@@ -8,6 +8,7 @@ import { isLobbyState } from '../../shared/protocol';
 import { audioEngine } from './audio-engine';
 import { narrator } from './narrator';
 import { ambientMusic } from './ambient';
+import { preloadAllCardImages } from '../utils/card-assets';
 
 // ── State Tracking ──────────────────────────────────────────────────
 
@@ -61,6 +62,7 @@ export function onHostStateUpdate(state: HostState | LobbyState): void {
     narrator.enqueue('intro');
     void narrator.preloadPhase('role-reveal');
     void ambientMusic.start().catch(() => {});
+    preloadAllCardImages();
   }
 
   // New round — play round-start line (includes round 1 after role-reveal)

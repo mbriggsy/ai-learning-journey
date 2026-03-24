@@ -81,6 +81,8 @@ export function projectStateForHost(
     waitingOnPlayerIds: state.players
       .filter((p) => isPlayersTurn(state, p.id))
       .map((p) => p.id),
+    lastEnactedPolicy: state.lastEnactedPolicy,
+    policyHistory: state.policyHistory,
     // OMITTED: policyDeck, policyDiscard, reshuffleThreshold,
     //          mayorCards, commissionerCards, vetoProposed, investigationHistory,
     //          specialNominatedMayorId, rngSeed, acknowledgedPlayerIds

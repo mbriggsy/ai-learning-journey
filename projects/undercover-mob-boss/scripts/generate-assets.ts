@@ -131,14 +131,15 @@ async function generateOne(
       console.log(`  Raw saved: ${rawPath}`);
 
       // Post-process
+      const fmt = asset.format ?? 'png';
       let processed: Buffer;
       if (asset.postProcess.kind === 'chroma-key-then-resize') {
-        console.log(`  Post-processing: chroma-key → resize`);
+        console.log(`  Post-processing: chroma-key → resize (${fmt})`);
         const keyed = await chromaKeyRemove(rawBuffer);
-        processed = await resizeAsset(keyed, asset.targetWidth, asset.targetHeight);
+        processed = await resizeAsset(keyed, asset.targetWidth, asset.targetHeight, fmt);
       } else {
-        console.log(`  Post-processing: resize only`);
-        processed = await resizeAsset(rawBuffer, asset.targetWidth, asset.targetHeight);
+        console.log(`  Post-processing: resize only (${fmt})`);
+        processed = await resizeAsset(rawBuffer, asset.targetWidth, asset.targetHeight, fmt);
       }
 
       // Validate
@@ -203,7 +204,7 @@ async function main(): Promise<void> {
   console.log(`Output: ${OUTPUT_DIR}`);
 
   for (let i = 0; i < assetsToGenerate.length; i++) {
-    const asset = assetsToGenerate[i];
+    const asset: AssetPrompt = assetsToGenerate[i];
     const { buffer, promptHash, error } = await generateOne(ai, asset, i, assetsToGenerate.length);
 
     if (dryRun) {
@@ -221,11 +222,18 @@ async function main(): Promise<void> {
     };
 
     if (buffer) {
-      // Determine output format
-      const ext = asset.needsTransparency ? 'png' : 'jpg';
-      const outPath = resolve(OUTPUT_DIR, `${asset.name}.${ext}`);
+      // Determine output format and path
+      const fmt = asset.format ?? (asset.needsTransparency ? 'png' : 'jpg');
+      const outDir = asset.outputSubDir
+        ? resolve(OUTPUT_DIR, asset.outputSubDir)
+        : OUTPUT_DIR;
+      await mkdir(outDir, { recursive: true });
+      const outPath = resolve(outDir, `${asset.name}.${fmt}`);
 
-      if (!asset.needsTransparency) {
+      if (fmt === 'webp') {
+        // Already in WebP from resizeAsset
+        await writeFile(outPath, buffer);
+      } else if (!asset.needsTransparency && fmt !== 'png') {
         // Convert to JPEG for opaque assets
         const sharp = (await import('sharp')).default;
         const jpgBuffer = await sharp(buffer).jpeg({ quality: 90 }).toBuffer();

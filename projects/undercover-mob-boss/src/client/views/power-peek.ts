@@ -2,6 +2,7 @@ import { gsap } from 'gsap';
 import type { AppState } from '../state/store';
 import { sendAction } from '../connection';
 import { setTopBarInstruction } from '../components/top-bar';
+import { setupCardImage } from '../utils/card-assets';
 
 let root: HTMLElement | null = null;
 let tl: gsap.core.Timeline | null = null;
@@ -24,18 +25,25 @@ export function mount(container: HTMLElement, state: AppState): void {
 
   const cardEls: HTMLElement[] = [];
   for (let i = 0; i < cards.length; i++) {
+    const policyCard = cards[i];
     const card = document.createElement('div');
-    card.className = cards[i] === 'good' ? 'policy-card policy-card--good' : 'policy-card policy-card--bad';
+    card.className = `policy-card policy-card--${policyCard.type === 'good' ? 'good' : 'bad'}`;
     card.dataset.testId = 'peek-card';
     card.style.cursor = 'default';
 
     const img = document.createElement('img');
-    img.src = cards[i] === 'good' ? '/assets/policy-good.png' : '/assets/policy-bad.png';
-    img.alt = cards[i] === 'good' ? 'Good Policy' : 'Bad Policy';
+    setupCardImage(img, policyCard.cardId, policyCard.type);
+    img.alt = policyCard.name;
     img.draggable = false;
     img.className = 'policy-card__img';
 
     card.appendChild(img);
+
+    const nameLabel = document.createElement('span');
+    nameLabel.className = 'policy-card__name';
+    nameLabel.textContent = policyCard.name;
+    card.appendChild(nameLabel);
+
     cardRow.appendChild(card);
     cardEls.push(card);
   }

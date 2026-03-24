@@ -12,7 +12,7 @@ import { describe, it, expect } from 'vitest';
 import { createGame, dispatch, getEligibleNominees, advanceMayor } from '../../src/server/game/phases';
 import { getExecutivePower, resolveInvestigation, resolvePolicyPeek } from '../../src/server/game/powers';
 import { mulberry32 } from '../../src/server/game/rng';
-import { createTestGameState, createTestPlayer } from '../helpers/game-state-factory';
+import { createTestGameState, createTestPlayer, makeTestCard } from '../helpers/game-state-factory';
 import { advanceDisplayIfNeeded } from '../helpers/game-driver';
 import type { GameState } from '../../src/shared/types';
 
@@ -282,7 +282,7 @@ describe('SH Rules: EXECUTIVE POWERS', () => {
       nominatedCommissionerId: 'player-3',
       playerCount: 7,
       players: createTestGameState({ playerCount: 7 }).players,
-      policyDeck: ['bad', 'good', 'bad', 'good', 'bad', 'good', 'bad', 'good', 'bad', 'good', 'bad'],
+      policyDeck: [makeTestCard('bad'), makeTestCard('good'), makeTestCard('bad'), makeTestCard('good'), makeTestCard('bad'), makeTestCard('good'), makeTestCard('bad'), makeTestCard('good'), makeTestCard('bad'), makeTestCard('good'), makeTestCard('bad')],
       rngSeed: 42,
     });
     // All block → tracker hits 3 → auto-enact
@@ -331,21 +331,21 @@ describe('SH Rules: POWER GRID', () => {
 describe('SH Rules: POLICY PEEK', () => {
   it('[PEEK-01/02] Mayor views top 3 cards without modifying deck', () => {
     const state = createTestGameState({
-      policyDeck: ['bad', 'good', 'bad', 'good', 'bad'],
+      policyDeck: [makeTestCard('bad'), makeTestCard('good'), makeTestCard('bad'), makeTestCard('good'), makeTestCard('bad')],
     });
     const result = resolvePolicyPeek(state);
-    expect(result.peekCards).toEqual(['bad', 'good', 'bad']);
+    expect(result.peekCards?.map(c => c.type)).toEqual(['bad', 'good', 'bad']);
     // Deck unchanged
-    expect(result.policyDeck).toEqual(['bad', 'good', 'bad', 'good', 'bad']);
+    expect(result.policyDeck.map(c => c.type)).toEqual(['bad', 'good', 'bad', 'good', 'bad']);
   });
 
   it('[PEEK-01] Policy peek triggered at 3rd bad in 5-player game', () => {
     const state = createTestGameState({
       phase: 'policy-session',
       subPhase: 'policy-commissioner-discard',
-      commissionerCards: ['bad', 'good'],
+      commissionerCards: [makeTestCard('bad'), makeTestCard('good')],
       badPoliciesEnacted: 2,
-      policyDeck: ['good', 'bad', 'good', 'bad', 'good'],
+      policyDeck: [makeTestCard('good'), makeTestCard('bad'), makeTestCard('good'), makeTestCard('bad'), makeTestCard('good')],
     });
     let next = dispatch(state, { type: 'commissioner-discard', cardIndex: 1 }); // enact bad
     next = advanceDisplayIfNeeded(next);
@@ -485,7 +485,7 @@ describe('SH Rules: LEGISLATIVE SESSION', () => {
     const state = createTestGameState({
       phase: 'policy-session',
       subPhase: 'policy-commissioner-discard',
-      commissionerCards: ['bad', 'good'],
+      commissionerCards: [makeTestCard('bad'), makeTestCard('good')],
       badPoliciesEnacted: 0, // 1st bad in 5-player → no power
     });
     let next = dispatch(state, { type: 'commissioner-discard', cardIndex: 1 }); // enact bad

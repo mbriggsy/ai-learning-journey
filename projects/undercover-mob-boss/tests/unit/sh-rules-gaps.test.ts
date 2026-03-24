@@ -9,7 +9,7 @@ import { describe, it, expect } from 'vitest';
 import { createGame, dispatch, DISPLAY_SUB_PHASES } from '../../src/server/game/phases';
 import { advanceDisplayIfNeeded } from '../helpers/game-driver';
 import { mulberry32 } from '../../src/server/game/rng';
-import { createTestGameState } from '../helpers/game-state-factory';
+import { createTestGameState, makeTestCard } from '../helpers/game-state-factory';
 
 // ── R9: Citizens have empty knownAllies ─────────────────────────────
 
@@ -114,7 +114,7 @@ describe('Rule Gap: Election Tracker Reset', () => {
       subPhase: 'election-voting',
       nominatedCommissionerId: 'player-3',
       electionTracker: 1,
-      policyDeck: ['good', 'bad', 'bad', 'good', 'bad', 'good', 'bad', 'good', 'bad', 'good', 'bad'],
+      policyDeck: [makeTestCard('good'), makeTestCard('bad'), makeTestCard('bad'), makeTestCard('good'), makeTestCard('bad'), makeTestCard('good'), makeTestCard('bad'), makeTestCard('good'), makeTestCard('bad'), makeTestCard('good'), makeTestCard('bad')],
     });
     // Pass the election
     for (const p of state.players.filter((p) => p.isAlive)) {
@@ -141,11 +141,11 @@ describe('Rule Gap: Discard Handling', () => {
     const state = createTestGameState({
       phase: 'policy-session',
       subPhase: 'policy-mayor-discard',
-      mayorCards: ['good', 'bad', 'bad'],
+      mayorCards: [makeTestCard('good'), makeTestCard('bad'), makeTestCard('bad')],
       policyDiscard: [],
     });
     const next = dispatch(state, { type: 'mayor-discard', cardIndex: 0 });
-    expect(next.policyDiscard).toContain('good');
+    expect(next.policyDiscard.map(c => c.type)).toContain('good');
     expect(next.policyDiscard).toHaveLength(1);
   });
 
@@ -153,13 +153,13 @@ describe('Rule Gap: Discard Handling', () => {
     const state = createTestGameState({
       phase: 'policy-session',
       subPhase: 'policy-commissioner-discard',
-      commissionerCards: ['bad', 'good'],
-      policyDiscard: ['bad'], // mayor already discarded one
+      commissionerCards: [makeTestCard('bad'), makeTestCard('good')],
+      policyDiscard: [makeTestCard('bad')], // mayor already discarded one
     });
     const next = dispatch(state, { type: 'commissioner-discard', cardIndex: 0 });
     // Commissioner discarded 'bad' (index 0), enacted 'good'
     expect(next.policyDiscard).toHaveLength(2);
-    expect(next.policyDiscard[1]).toBe('bad');
+    expect(next.policyDiscard[1].type).toBe('bad');
   });
 
   it('[R43] Both discards accumulate across rounds', () => {
@@ -167,9 +167,9 @@ describe('Rule Gap: Discard Handling', () => {
     let state = createTestGameState({
       phase: 'policy-session',
       subPhase: 'policy-mayor-discard',
-      mayorCards: ['good', 'bad', 'bad'],
+      mayorCards: [makeTestCard('good'), makeTestCard('bad'), makeTestCard('bad')],
       policyDiscard: [],
-      policyDeck: ['good', 'bad', 'bad', 'good', 'bad', 'good', 'bad', 'good', 'bad', 'good', 'bad', 'good', 'bad', 'bad'],
+      policyDeck: [makeTestCard('good'), makeTestCard('bad'), makeTestCard('bad'), makeTestCard('good'), makeTestCard('bad'), makeTestCard('good'), makeTestCard('bad'), makeTestCard('good'), makeTestCard('bad'), makeTestCard('good'), makeTestCard('bad'), makeTestCard('good'), makeTestCard('bad'), makeTestCard('bad')],
       reshuffleThreshold: 3,
     });
     state = dispatch(state, { type: 'mayor-discard', cardIndex: 0 }); // discard good
@@ -187,7 +187,7 @@ describe('Rule Gap: Veto Once Per Session', () => {
       phase: 'policy-session',
       subPhase: 'policy-commissioner-discard',
       badPoliciesEnacted: 5,
-      commissionerCards: ['bad', 'bad'],
+      commissionerCards: [makeTestCard('bad'), makeTestCard('bad')],
       vetoProposed: true, // already proposed and rejected
     });
     expect(() => dispatch(state, { type: 'propose-veto' })).toThrow(
@@ -200,7 +200,7 @@ describe('Rule Gap: Veto Once Per Session', () => {
       phase: 'policy-session',
       subPhase: 'policy-veto-response',
       badPoliciesEnacted: 5,
-      commissionerCards: ['bad', 'bad'],
+      commissionerCards: [makeTestCard('bad'), makeTestCard('bad')],
       vetoProposed: true,
     });
     state = dispatch(state, { type: 'veto-response', approved: false });

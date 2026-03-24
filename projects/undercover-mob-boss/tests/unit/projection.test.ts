@@ -5,7 +5,7 @@ import {
   getPrivateData,
   isPlayersTurn,
 } from '../../src/server/projection';
-import { createTestGameState } from '../helpers/game-state-factory';
+import { createTestGameState, makeTestCard } from '../helpers/game-state-factory';
 import type { GameState } from '../../src/shared/types';
 
 const allConnected = (state: GameState) =>
@@ -55,7 +55,7 @@ describe('projectStateForHost — security', () => {
     const state = createTestGameState({
       phase: 'policy-session',
       subPhase: 'policy-mayor-discard',
-      mayorCards: ['good', 'bad', 'bad'],
+      mayorCards: [makeTestCard('good'), makeTestCard('bad'), makeTestCard('bad')],
     });
     const projected = projectStateForHost(state, allConnected(state));
     expect(projected).not.toHaveProperty('mayorCards');
@@ -65,7 +65,7 @@ describe('projectStateForHost — security', () => {
     const state = createTestGameState({
       phase: 'policy-session',
       subPhase: 'policy-commissioner-discard',
-      commissionerCards: ['bad', 'good'],
+      commissionerCards: [makeTestCard('bad'), makeTestCard('good')],
     });
     const projected = projectStateForHost(state, allConnected(state));
     expect(projected).not.toHaveProperty('commissionerCards');
@@ -129,7 +129,7 @@ describe('projectStateForPlayer — security', () => {
     const state = createTestGameState({
       phase: 'policy-session',
       subPhase: 'policy-mayor-discard',
-      mayorCards: ['good', 'bad', 'bad'],
+      mayorCards: [makeTestCard('good'), makeTestCard('bad'), makeTestCard('bad')],
     });
 
     // Non-mayor player should not see cards
@@ -318,10 +318,10 @@ describe('getPrivateData', () => {
     const state = createTestGameState({
       phase: 'policy-session',
       subPhase: 'policy-mayor-discard',
-      mayorCards: ['good', 'bad', 'bad'],
+      mayorCards: [makeTestCard('good'), makeTestCard('bad'), makeTestCard('bad')],
     });
     const mayorPriv = getPrivateData(state, 'player-0'); // mayor
-    expect(mayorPriv?.mayorCards).toEqual(['good', 'bad', 'bad']);
+    expect(mayorPriv?.mayorCards?.map(c => c.type)).toEqual(['good', 'bad', 'bad']);
 
     const otherPriv = getPrivateData(state, 'player-3');
     expect(otherPriv?.mayorCards).toBeUndefined();
@@ -331,11 +331,11 @@ describe('getPrivateData', () => {
     const state = createTestGameState({
       phase: 'policy-session',
       subPhase: 'policy-commissioner-discard',
-      commissionerCards: ['bad', 'good'],
+      commissionerCards: [makeTestCard('bad'), makeTestCard('good')],
       nominatedCommissionerId: 'player-3',
     });
     const commissionerPriv = getPrivateData(state, 'player-3');
-    expect(commissionerPriv?.commissionerCards).toEqual(['bad', 'good']);
+    expect(commissionerPriv?.commissionerCards?.map(c => c.type)).toEqual(['bad', 'good']);
 
     const otherPriv = getPrivateData(state, 'player-0');
     expect(otherPriv?.commissionerCards).toBeUndefined();

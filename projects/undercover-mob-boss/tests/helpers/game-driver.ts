@@ -68,7 +68,7 @@ export function failElection(state: GameState, nomineeId?: string): GameState {
 export function mayorDiscard(state: GameState, preferred: PolicyType): GameState {
   const cards = state.mayorCards!;
   // Find a card that is NOT the preferred type and discard it
-  const discardIndex = cards.findIndex((c) => c !== preferred);
+  const discardIndex = cards.findIndex((c) => c.type !== preferred);
   return dispatch(state, { type: 'mayor-discard', cardIndex: discardIndex >= 0 ? discardIndex : 0 });
 }
 
@@ -79,7 +79,7 @@ export function mayorDiscard(state: GameState, preferred: PolicyType): GameState
 export function commissionerDiscard(state: GameState, preferred: PolicyType): GameState {
   const cards = state.commissionerCards!;
   // Discard the card that is NOT preferred
-  const discardIndex = cards.findIndex((c) => c !== preferred);
+  const discardIndex = cards.findIndex((c) => c.type !== preferred);
   let s = dispatch(state, { type: 'commissioner-discard', cardIndex: discardIndex >= 0 ? discardIndex : 0 });
   // Advance past policy-enact display
   s = advanceDisplayIfNeeded(s);
@@ -244,16 +244,16 @@ export function playRandomGame(
  * Throws descriptive error if violated.
  */
 export function checkCardInvariant(state: GameState): void {
-  const deckGood = state.policyDeck.filter((c) => c === 'good').length;
-  const deckBad = state.policyDeck.filter((c) => c === 'bad').length;
-  const discardGood = state.policyDiscard.filter((c) => c === 'good').length;
-  const discardBad = state.policyDiscard.filter((c) => c === 'bad').length;
+  const deckGood = state.policyDeck.filter((c) => c.type === 'good').length;
+  const deckBad = state.policyDeck.filter((c) => c.type === 'bad').length;
+  const discardGood = state.policyDiscard.filter((c) => c.type === 'good').length;
+  const discardBad = state.policyDiscard.filter((c) => c.type === 'bad').length;
   const handGood =
-    (state.mayorCards?.filter((c) => c === 'good').length ?? 0) +
-    (state.commissionerCards?.filter((c) => c === 'good').length ?? 0);
+    (state.mayorCards?.filter((c) => c.type === 'good').length ?? 0) +
+    (state.commissionerCards?.filter((c) => c.type === 'good').length ?? 0);
   const handBad =
-    (state.mayorCards?.filter((c) => c === 'bad').length ?? 0) +
-    (state.commissionerCards?.filter((c) => c === 'bad').length ?? 0);
+    (state.mayorCards?.filter((c) => c.type === 'bad').length ?? 0) +
+    (state.commissionerCards?.filter((c) => c.type === 'bad').length ?? 0);
 
   const totalGood = deckGood + discardGood + state.goodPoliciesEnacted + handGood;
   const totalBad = deckBad + discardBad + state.badPoliciesEnacted + handBad;

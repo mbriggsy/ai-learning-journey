@@ -4,6 +4,20 @@ export type Role = 'citizen' | 'mob-soldier' | 'mob-boss';
 export type PolicyType = 'good' | 'bad';
 export type ExecutivePower = 'investigate' | 'special-nomination' | 'policy-peek' | 'execution';
 
+/** A named policy card — carries all data needed to render (no external lookups). */
+export interface PolicyCard {
+  readonly type: PolicyType;
+  readonly cardId: string;
+  readonly name: string;
+}
+
+/** Cumulative policy history entry — used by Gazette at game-over. */
+export interface PolicyHistoryEntry {
+  card: PolicyCard;
+  autoEnacted: boolean;
+  round: number;
+}
+
 export type WinReason =
   | '5 good policies enacted'
   | '6 bad policies enacted'
@@ -69,11 +83,11 @@ export interface GameState {
   electionTracker: number;
   goodPoliciesEnacted: number;
   badPoliciesEnacted: number;
-  policyDeck: PolicyType[];
-  policyDiscard: PolicyType[];
+  policyDeck: PolicyCard[];
+  policyDiscard: PolicyCard[];
   votes: Record<string, 'approve' | 'block'>;
-  mayorCards: PolicyType[] | null;
-  commissionerCards: PolicyType[] | null;
+  mayorCards: PolicyCard[] | null;
+  commissionerCards: PolicyCard[] | null;
   executivePower: ExecutivePower | null;
   winner: 'citizens' | 'mob' | null;
   winReason: WinReason | null;
@@ -86,7 +100,7 @@ export interface GameState {
   /** Investigation records — tracks who investigated whom and the result. */
   investigationHistory: InvestigationRecord[];
   /** Top 3 cards shown to Mayor during policy-peek power. Server-only private data. */
-  peekCards: PolicyType[] | null;
+  peekCards: PolicyCard[] | null;
   /** Override for next mayor rotation (from special-nomination power). */
   specialNominatedMayorId: string | null;
   /** After a special election, rotation resumes from this index + 1 (SH rule). */
@@ -94,7 +108,9 @@ export interface GameState {
   /** Seed for reproducible games. Server-only. */
   rngSeed: number;
   /** Policy just enacted — set during policy-enact/auto-enact display, null otherwise. Server-only. */
-  lastEnactedPolicy: PolicyType | null;
+  lastEnactedPolicy: PolicyCard | null;
+  /** Cumulative policy history — every enacted card, in order. Never cleared. */
+  policyHistory: PolicyHistoryEntry[];
 }
 
 // ── Actions ────────────────────────────────────────────────────────
@@ -122,7 +138,7 @@ export type ClientGameAction = OmitPlayerId<GameAction>;
 
 export type GameEvent =
   | { type: 'deck-reshuffled' }
-  | { type: 'policy-enacted'; policy: PolicyType; autoEnacted: boolean }
+  | { type: 'policy-enacted'; policy: PolicyType; card: PolicyCard; autoEnacted: boolean }
   | { type: 'election-passed'; mayorId: string; commissionerId: string }
   | { type: 'election-failed'; electionTracker: number }
   | { type: 'auto-enact-triggered' }

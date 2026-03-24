@@ -1,4 +1,4 @@
-import type { ClientGameAction, GameEvent, Phase, SubPhase, PolicyType, ExecutivePower, WinReason } from './types';
+import type { ClientGameAction, GameEvent, Phase, SubPhase, PolicyType, PolicyCard, PolicyHistoryEntry, ExecutivePower, WinReason } from './types';
 
 /**
  * Events broadcast to clients with sensitive fields stripped.
@@ -80,6 +80,10 @@ export interface HostState {
   winReason: WinReason | null;
   events: SanitizedGameEvent[];
   waitingOnPlayerIds: string[];
+  /** Last enacted policy card — for display during policy-enact/auto-enact subPhases. */
+  lastEnactedPolicy: PolicyCard | null;
+  /** Cumulative policy history — all enacted cards in order. Public info. */
+  policyHistory: PolicyHistoryEntry[];
 }
 
 /** Player View state — extends HostState with personal info */
@@ -96,9 +100,9 @@ export interface PrivateData {
   knownAllies?: string[];
   /** Which ally is the mob boss (mob soldiers need this to distinguish boss from fellow soldiers). */
   mobBossId?: string;
-  mayorCards?: PolicyType[];
-  commissionerCards?: PolicyType[];
-  peekCards?: PolicyType[];
+  mayorCards?: PolicyCard[];
+  commissionerCards?: PolicyCard[];
+  peekCards?: PolicyCard[];
   investigationResult?: { targetId: string; result: 'citizen' | 'mob' };
   /** Sent to the investigated player so they know they've been exposed. */
   wasInvestigated?: { byPlayerName: string };

@@ -3,6 +3,7 @@ import type { AppState } from '../state/store';
 import { sendAction } from '../connection';
 import { hapticTap } from '../haptics';
 import { setTopBarInstruction } from '../components/top-bar';
+import { setupCardImage } from '../utils/card-assets';
 
 let root: HTMLElement | null = null;
 let selectedIndex: number | null = null;
@@ -33,18 +34,23 @@ export function mount(container: HTMLElement, state: AppState): void {
   const cards = state.privateData?.mayorCards ?? [];
   const cardEls: HTMLElement[] = [];
 
-  cards.forEach((cardType, idx) => {
+  cards.forEach((policyCard, idx) => {
     const card = document.createElement('div');
-    card.className = `policy-card policy-card--${cardType === 'good' ? 'good' : 'bad'}`;
+    card.className = `policy-card policy-card--${policyCard.type === 'good' ? 'good' : 'bad'}`;
     card.dataset.testId = 'policy-card';
 
     const img = document.createElement('img');
-    img.src = cardType === 'good' ? '/assets/policy-good.png' : '/assets/policy-bad.png';
-    img.alt = cardType === 'good' ? 'Good Policy' : 'Bad Policy';
+    setupCardImage(img, policyCard.cardId, policyCard.type);
+    img.alt = policyCard.name;
     img.draggable = false;
     img.className = 'policy-card__img';
 
     card.appendChild(img);
+
+    const nameLabel = document.createElement('span');
+    nameLabel.className = 'policy-card__name';
+    nameLabel.textContent = policyCard.name;
+    card.appendChild(nameLabel);
     cardEls.push(card);
 
     card.addEventListener('click', () => {

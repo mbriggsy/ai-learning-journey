@@ -4,7 +4,7 @@ import type {
   Phase,
   SubPhase,
   Player,
-  PolicyType,
+  PolicyCard,
 } from '../../shared/types';
 import { distributeRoles, populateKnownAllies } from './roles';
 import { createDeck, drawCards, checkReshuffle, pickReshuffleThreshold } from './policies';
@@ -107,6 +107,7 @@ export function createGame(
     resumeMayorIndex: null,
     rngSeed: seed,
     lastEnactedPolicy: null,
+    policyHistory: [],
   };
 }
 
@@ -445,16 +446,17 @@ function checkPolicyWin(state: GameState): GameState {
  */
 function enactPolicy(
   state: GameState,
-  policy: PolicyType,
+  card: PolicyCard,
   autoEnacted: boolean,
 ): GameState {
   const updated = {
     ...state,
-    goodPoliciesEnacted: state.goodPoliciesEnacted + (policy === 'good' ? 1 : 0),
-    badPoliciesEnacted: state.badPoliciesEnacted + (policy === 'bad' ? 1 : 0),
+    goodPoliciesEnacted: state.goodPoliciesEnacted + (card.type === 'good' ? 1 : 0),
+    badPoliciesEnacted: state.badPoliciesEnacted + (card.type === 'bad' ? 1 : 0),
     mayorCards: null,
     commissionerCards: null,
-    events: [...state.events, { type: 'policy-enacted' as const, policy, autoEnacted }],
+    events: [...state.events, { type: 'policy-enacted' as const, policy: card.type, card, autoEnacted }],
+    policyHistory: [...state.policyHistory, { card, autoEnacted, round: state.round }],
   };
 
   // Check win conditions -- game-over takes priority over display
@@ -463,20 +465,20 @@ function enactPolicy(
 
   // Pause at display subPhase. advance-display will handle
   // executive power check and transition to next nomination.
-  // Store enacted policy so continueAfterPolicyEnact knows what was enacted
+  // Store enacted card so continueAfterPolicyEnact knows what was enacted
   // (events are cleared between dispatches).
   if (autoEnacted) {
     return {
       ...afterWinCheck,
       subPhase: 'auto-enact',
-      lastEnactedPolicy: policy,
+      lastEnactedPolicy: card,
     };
   }
 
   return {
     ...afterWinCheck,
     subPhase: 'policy-enact',
-    lastEnactedPolicy: policy,
+    lastEnactedPolicy: card,
   };
 }
 
@@ -485,14 +487,17 @@ function enactPolicy(
  * transition to next nomination.
  */
 function continueAfterPolicyEnact(state: GameState): GameState {
-  const policy = state.lastEnactedPolicy ?? 'good';
+  const card = state.lastEnactedPolicy;
+  if (!card) {
+    throw new Error('lastEnactedPolicy is null in continueAfterPolicyEnact — state machine invariant violated');
+  }
 
   // Clear the stored policy — it's been consumed
   const cleanState: GameState = { ...state, lastEnactedPolicy: null };
 
   // policy-enact is only used for NON-auto-enacted policies (auto-enacted use auto-enact subPhase)
   // so we always check executive power here
-  if (policy === 'bad') {
+  if (card.type === 'bad') {
     const playerCount = cleanState.players.length;
     const power = getExecutivePower(playerCount, cleanState.badPoliciesEnacted);
     if (power) {
@@ -700,7 +705,7 @@ function handleAutoEnact(state: GameState): GameState {
 
   // Draw top card
   const [drawn, remaining] = drawCards(result.policyDeck, 1);
-  const policy = drawn[0];
+  const card = drawn[0];
 
   result = {
     ...result,
@@ -708,9 +713,9 @@ function handleAutoEnact(state: GameState): GameState {
     electionTracker: 0,
   };
 
-  // Enact the policy (autoEnacted = true, so no executive power).
+  // Enact the card (autoEnacted = true, so no executive power).
   // enactPolicy will pause at 'auto-enact' display subPhase (or game-over).
-  result = enactPolicy(result, policy, true);
+  result = enactPolicy(result, card, true);
 
   // If game over, term limits don't matter.
   // If paused at auto-enact, term limits will be cleared when advance-display fires.

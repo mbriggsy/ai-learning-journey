@@ -1,4 +1,5 @@
-import type { PolicyType, GameState } from '../../shared/types';
+import type { PolicyCard, GameState } from '../../shared/types';
+import { VIRTUOUS_POOL, CORRUPT_POOL } from './card-pool';
 
 /**
  * Fisher-Yates (Durstenfeld) shuffle — O(n), in-place on a copy.
@@ -29,14 +30,25 @@ export function pickReshuffleThreshold(rng: () => number = Math.random): number 
 }
 
 /**
- * Create the initial policy deck: 6 good + 11 bad, shuffled.
+ * Select 6 Virtuous + 11 Corrupt cards from the pool.
+ * Different combination each game — C(15,6) * C(15,11) = 6,831,825 possible pools.
  */
-export function createDeck(rng: () => number = Math.random): PolicyType[] {
-  const deck: PolicyType[] = [
-    ...Array<PolicyType>(6).fill('good'),
-    ...Array<PolicyType>(11).fill('bad'),
-  ];
-  return shuffle(deck, rng);
+export function selectCardPool(rng: () => number = Math.random): PolicyCard[] {
+  const virtuous = shuffle([...VIRTUOUS_POOL], rng).slice(0, 6);
+  const corrupt = shuffle([...CORRUPT_POOL], rng).slice(0, 11);
+  return [...virtuous, ...corrupt].map((def) => ({
+    type: def.type,
+    cardId: def.cardId,
+    name: def.name,
+  }));
+}
+
+/**
+ * Create the initial policy deck: select from pools and shuffle.
+ */
+export function createDeck(rng: () => number = Math.random): PolicyCard[] {
+  const cards = selectCardPool(rng);
+  return shuffle(cards, rng);
 }
 
 /**
@@ -44,9 +56,9 @@ export function createDeck(rng: () => number = Math.random): PolicyType[] {
  * Returns [drawnCards, remainingDeck] — never mutates input.
  */
 export function drawCards(
-  deck: readonly PolicyType[],
+  deck: readonly PolicyCard[],
   count: number,
-): [PolicyType[], PolicyType[]] {
+): [PolicyCard[], PolicyCard[]] {
   if (deck.length < count) {
     throw new Error(`Cannot draw ${count} cards from deck of ${deck.length}`);
   }

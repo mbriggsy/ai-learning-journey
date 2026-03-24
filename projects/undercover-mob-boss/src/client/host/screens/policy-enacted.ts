@@ -1,29 +1,17 @@
 import { gsap } from 'gsap';
 import type { HostState } from '../../../shared/protocol';
 import { animatePolicyFlip } from '../animations/policy-flip';
+import { setupCardImage } from '../../utils/card-assets';
 
 let root: HTMLElement | null = null;
 let cardEl: HTMLElement | null = null;
 let flipDone = false;
 let flipTimer: ReturnType<typeof setTimeout> | null = null;
 
-/**
- * Determine which policy was just enacted by looking at events.
- */
-function getEnactedPolicy(state: HostState): 'good' | 'bad' {
-  const events = state.events;
-  for (let i = events.length - 1; i >= 0; i--) {
-    if (events[i].type === 'policy-enacted') {
-      return (events[i] as { type: 'policy-enacted'; policy: 'good' | 'bad' }).policy;
-    }
-  }
-  // Fallback: determine from counts
-  return state.badPoliciesEnacted > 0 ? 'bad' : 'good';
-}
-
 export function mount(container: HTMLElement, state: HostState): void {
   flipDone = false;
-  const policy = getEnactedPolicy(state);
+  const card = state.lastEnactedPolicy;
+  const policy = card?.type ?? 'bad';
 
   root = document.createElement('div');
   root.className = 'host-screen';
@@ -54,12 +42,17 @@ export function mount(container: HTMLElement, state: HostState): void {
   back.className = `policy-reveal__face policy-reveal__back policy-reveal__back--${policy}`;
   const artImg = document.createElement('img');
   artImg.className = 'policy-reveal__art';
-  artImg.src = policy === 'good' ? '/assets/policy-good.png' : '/assets/policy-bad.png';
-  artImg.alt = policy === 'good' ? 'Citizen Policy' : 'Mob Policy';
+  if (card) {
+    setupCardImage(artImg, card.cardId, card.type);
+    artImg.alt = card.name;
+  } else {
+    artImg.src = policy === 'good' ? '/assets/policy-good.png' : '/assets/policy-bad.png';
+    artImg.alt = policy === 'good' ? 'Citizen Policy' : 'Mob Policy';
+  }
   back.appendChild(artImg);
   const backLabel = document.createElement('span');
   backLabel.className = 'policy-reveal__label';
-  backLabel.textContent = policy === 'good' ? 'Citizen' : 'Mob';
+  backLabel.textContent = card?.name ?? (policy === 'good' ? 'Citizen' : 'Mob');
   back.appendChild(backLabel);
 
   inner.appendChild(front);

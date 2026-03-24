@@ -10,7 +10,7 @@
 
 **Locked V2 Core Features:**
 1. **Named policy cards** — Virtuous/Corrupt, noir-fictional names, 30+ unique illustrations, randomized pool per game (cosmetic only, deck math unchanged)
-2. **Commissioner rename** — Police Chief → Commissioner, batched with audio regen
+2. **Commissioner rename** — ~~Police Chief → Commissioner~~ DONE (code complete, audio deferred to ADR-V2-03)
 3. **Narrator variant pool** — 8-10 variants per trigger, built incrementally (~100 API calls/day)
 4. **The Millbrook City Gazette** — Level 3 full send: newspaper styling, voting records, key moments, noir-humor superlatives, shareable screenshots. Crown jewel. Polish until water beads off it.
 

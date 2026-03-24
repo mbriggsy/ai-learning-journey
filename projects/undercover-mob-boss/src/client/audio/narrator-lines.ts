@@ -41,7 +41,7 @@ export const NARRATOR_LINES = {
   // ── Round Start (template — resolved at runtime by round number) ──
   'round-start': {
     kind: 'single' as const,
-    file: 'round-start-{N}.wav',
+    file: 'round-start-{N}.ogg',
     hook: 'New round begins',
     durationMs: 4000,
     target: 'host' as const,

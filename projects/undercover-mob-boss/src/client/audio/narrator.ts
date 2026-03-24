@@ -60,7 +60,7 @@ class NarratorPlayer {
       if (line.kind === 'single') {
         // Round-start: preload all 15 round-specific files
         for (let n = 1; n <= 15; n++) {
-          const url = `${AUDIO_BASE_PATH}/round-start-${n}.wav`;
+          const url = `${AUDIO_BASE_PATH}/round-start-${n}.ogg`;
           const cacheKey = `round-start-${n}`;
           if (!this.bufferCache.has(cacheKey)) {
             loadPromises.push(this.loadAndCache(cacheKey, url));
@@ -71,7 +71,7 @@ class NarratorPlayer {
         const variantNum = this.getVariantNum(lineId);
         const cacheKey = `${lineId}-${variantNum}`;
         if (!this.bufferCache.has(cacheKey)) {
-          const url = `${AUDIO_BASE_PATH}/${lineId}-${variantNum}.wav`;
+          const url = `${AUDIO_BASE_PATH}/${lineId}-${variantNum}.ogg`;
           loadPromises.push(this.loadAndCache(cacheKey, url));
         }
       }
@@ -197,7 +197,7 @@ class NarratorPlayer {
       const n = Math.max(1, Math.min(15, round ?? 1));
       return {
         cacheKey: `round-start-${n}`,
-        url: `${AUDIO_BASE_PATH}/round-start-${n}.wav`,
+        url: `${AUDIO_BASE_PATH}/round-start-${n}.ogg`,
       };
     }
 
@@ -205,7 +205,7 @@ class NarratorPlayer {
     const variantNum = this.getVariantNum(lineId);
     return {
       cacheKey: `${lineId}-${variantNum}`,
-      url: `${AUDIO_BASE_PATH}/${lineId}-${variantNum}.wav`,
+      url: `${AUDIO_BASE_PATH}/${lineId}-${variantNum}.ogg`,
     };
   }
 
@@ -246,7 +246,7 @@ class NarratorPlayer {
     if (cached) return cached;
 
     // Try loading variant 1
-    const fallbackUrl = `${AUDIO_BASE_PATH}/${lineId}-1.wav`;
+    const fallbackUrl = `${AUDIO_BASE_PATH}/${lineId}-1.ogg`;
     try {
       console.warn(`[narrator] Falling back to variant 1 for ${lineId}`);
       const buffer = await audioEngine.loadBuffer(fallbackUrl);

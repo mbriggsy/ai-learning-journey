@@ -9,6 +9,7 @@ import { audioEngine } from './audio-engine';
 import { narrator } from './narrator';
 import { ambientMusic } from './ambient';
 import { preloadAllCardImages } from '../utils/card-assets';
+import { selectNarratorPool, mulberry32 } from './narrator-pool';
 
 // ── State Tracking ──────────────────────────────────────────────────
 
@@ -49,6 +50,10 @@ export function initNarratorBridge(): void {
 export function onHostStateUpdate(state: HostState | LobbyState): void {
   // No audio cues during lobby — but track phase so intro triggers on transition
   if (isLobbyState(state)) {
+    // Clean up narrator on game-over → lobby (new game cycle)
+    if (prevPhase === 'game-over') {
+      narrator.dispose(); // Clears buffer cache + selection to prevent memory leak
+    }
     prevPhase = 'lobby';
     return;
   }
@@ -57,8 +62,13 @@ export function onHostStateUpdate(state: HostState | LobbyState): void {
 
   // ── Phase transitions ──────────────────────────────────────────
 
-  // Role reveal — play intro when entering from lobby
+  // Role reveal — select narrator pool and play intro when entering from lobby
   if (phase === 'role-reveal' && prevPhase === 'lobby') {
+    // Select variant pool for this game session (seeded for reproducibility)
+    const seed = Date.now();
+    const selection = selectNarratorPool(mulberry32(seed));
+    narrator.setGameSelection(selection);
+
     narrator.enqueue('intro');
     void narrator.preloadPhase('role-reveal');
     void ambientMusic.start().catch(() => {});

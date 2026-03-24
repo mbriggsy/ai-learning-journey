@@ -5,9 +5,6 @@
   aspect-ratio: 3 / 4;
   perspective: 1000px;
   margin: 0 auto;
-  touch-action: manipulation;
-  user-select: none;
-  -webkit-user-select: none;
 }
 
 .role-reveal-card__inner {

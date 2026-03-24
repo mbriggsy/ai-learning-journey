@@ -52,7 +52,6 @@ Game is live at **undercover-mob-boss.vercel.app**. Trailer v2 live on YouTube. 
 ## Landmines
 - **S09 scene files still exist** — `S09_TheConcept.tsx` not deleted, just removed from Trailer.tsx and timing.ts
 - **Trailer "15 images" voiceover** — baked audio says 15, reality is 13. Leave as V1 time capsule.
-- **Harry's generation scripts** — `generate-mob-boss-alts.ts` and `generate-mob-boss-v2.ts` have pre-existing typecheck errors (loose null handling). One-off scripts, not game code.
 - **Asset cache version** — `ART_VERSION = 2` in `role-reveal.ts` and `role-peek.ts`. Bump when role art changes.
 - **CSP allows `'unsafe-inline'`** for HTP GSAP animations
 - **E2E flaky test** — `simultaneous-actions.spec.ts:480` WebKit only (test harness timing, not game defect)

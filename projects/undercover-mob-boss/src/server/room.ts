@@ -312,7 +312,7 @@ export default class UMBRoom implements Party.Server {
     }
 
     if (commissionerOnly.has(action.type) && commissioner?.id !== meta.playerId) {
-      return { code: 'NOT_YOUR_TURN', message: 'Only the Police Chief can do this' };
+      return { code: 'NOT_YOUR_TURN', message: 'Only the Commissioner can do this' };
     }
 
     return null;

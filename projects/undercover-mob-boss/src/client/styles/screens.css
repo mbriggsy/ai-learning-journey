@@ -901,7 +901,7 @@
   background: rgba(201, 168, 76, 0.08);
 }
 
-.mini-roster__player--chief {
+.mini-roster__player--commissioner {
   border-color: rgba(154, 165, 180, 0.3);
   color: var(--noir-cream);
   background: rgba(154, 165, 180, 0.06);
@@ -1293,7 +1293,7 @@
   background: rgba(201, 168, 76, 0.06);
 }
 
-.spectator-roster__player--chief {
+.spectator-roster__player--commissioner {
   border-color: rgba(154, 165, 180, 0.2);
   background: rgba(154, 165, 180, 0.04);
 }
@@ -1323,7 +1323,7 @@
   color: var(--noir-gold);
 }
 
-.spectator-roster__player--chief .spectator-roster__role {
+.spectator-roster__player--commissioner .spectator-roster__role {
   color: var(--noir-silver);
 }
 

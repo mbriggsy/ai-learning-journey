@@ -50,7 +50,7 @@ function renderPlayers(container: HTMLElement, players: PublicPlayer[], opts: St
       item.classList.add('player-strip__item--mayor');
     }
     if (player.isCommissioner) {
-      item.classList.add('player-strip__item--chief');
+      item.classList.add('player-strip__item--commissioner');
     }
 
     if (waitingSet.has(player.id) && player.isAlive) {
@@ -77,8 +77,8 @@ function renderPlayers(container: HTMLElement, players: PublicPlayer[], opts: St
       item.appendChild(badge);
     } else if (player.isCommissioner) {
       const badge = document.createElement('div');
-      badge.className = 'player-strip__badge player-strip__badge--chief';
-      badge.textContent = 'CHIEF';
+      badge.className = 'player-strip__badge player-strip__badge--commissioner';
+      badge.textContent = 'COMMISSIONER';
       item.appendChild(badge);
     } else if (!player.isAlive) {
       // Coffin icon instead of tiny "DEAD" badge

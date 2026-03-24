@@ -26,7 +26,7 @@ export function mount(container: HTMLElement, state: HostState): void {
 
   const commissionerLabel = document.createElement('span');
   commissionerLabel.className = 'nomination-bar__label';
-  commissionerLabel.textContent = 'Chief';
+  commissionerLabel.textContent = 'Commissioner';
 
   commissionerNameEl = document.createElement('span');
   commissionerNameEl.className = 'nomination-bar__name';
@@ -68,7 +68,7 @@ export function update(state: HostState): void {
 
   if (statusEl) {
     if (state.subPhase === 'nomination-pending') {
-      statusEl.textContent = 'Selecting a Chief...';
+      statusEl.textContent = 'Selecting a Commissioner...';
     } else if (state.subPhase === 'election-voting') {
       statusEl.textContent = 'Voting in progress...';
     } else {

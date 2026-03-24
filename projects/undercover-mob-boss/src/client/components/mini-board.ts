@@ -81,7 +81,7 @@ function createPlayerRoster(players: PlayerState['players']): HTMLElement {
     pill.className = 'mini-roster__player';
     if (!p.isAlive) pill.classList.add('mini-roster__player--dead');
     if (p.isMayor) pill.classList.add('mini-roster__player--mayor');
-    if (p.isCommissioner) pill.classList.add('mini-roster__player--chief');
+    if (p.isCommissioner) pill.classList.add('mini-roster__player--commissioner');
 
     if (!p.isAlive) {
       // Dead: coffin icon + struck name as separate elements
@@ -142,7 +142,7 @@ function renderBoard(board: HTMLElement, state: PlayerState): void {
   if (state.badPoliciesEnacted >= 3) {
     const warning = document.createElement('div');
     warning.className = 'mini-board__warning';
-    warning.textContent = 'Mob Boss as Chief = Game Over';
+    warning.textContent = 'Mob Boss as Commissioner = Game Over';
     board.appendChild(warning);
   }
 

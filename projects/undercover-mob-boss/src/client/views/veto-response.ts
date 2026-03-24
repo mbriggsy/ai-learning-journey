@@ -32,7 +32,7 @@ export function mount(container: HTMLElement, _state: AppState): void {
 
   const flavor = document.createElement('p');
   flavor.className = 'veto-flavor';
-  flavor.textContent = 'The Chief wants to burn both policies.\nYour call, Mayor.';
+  flavor.textContent = 'The Commissioner wants to burn both policies.\nYour call, Mayor.';
 
   const btnRow = document.createElement('div');
   btnRow.className = 'veto-btn-row';

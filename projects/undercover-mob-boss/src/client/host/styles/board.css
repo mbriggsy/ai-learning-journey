@@ -368,8 +368,8 @@
     inset 0 0 12px rgba(201, 168, 76, 0.05);
 }
 
-/* Chief — silver glow */
-.player-strip__item--chief {
+/* Commissioner — silver glow */
+.player-strip__item--commissioner {
   border-color: var(--noir-silver);
   background: rgba(154, 165, 180, 0.05);
   box-shadow: 0 0 12px rgba(154, 165, 180, 0.2);
@@ -390,7 +390,7 @@
   opacity: 0.5;
 }
 
-/* Role badge (MAYOR / CHIEF / DEAD) */
+/* Role badge (MAYOR / COMMISSIONER / DEAD) */
 .player-strip__badge {
   font-family: var(--font-display);
   font-size: clamp(0.65rem, 0.9vw, 0.8rem);
@@ -407,7 +407,7 @@
   color: var(--noir-black);
 }
 
-.player-strip__badge--chief {
+.player-strip__badge--commissioner {
   background: var(--noir-silver);
   color: var(--noir-black);
 }

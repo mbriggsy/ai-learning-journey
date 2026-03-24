@@ -161,7 +161,7 @@ export function getPrivateData(
     data.mayorCards = state.mayorCards ?? undefined;
   }
 
-  // Chief's cards (only during their discard phase or veto)
+  // Commissioner's cards (only during their discard phase or veto)
   if (
     (state.subPhase === 'policy-commissioner-discard' || state.subPhase === 'policy-veto-response') &&
     commissioner?.id === playerId

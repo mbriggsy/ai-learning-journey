@@ -37,7 +37,7 @@ export function updateTopBar(state: AppState): void {
   if (state.serverState && state.playerId) {
     const me = state.serverState.players.find((p) => p.id === state.playerId);
     if (me) {
-      const badge = me.isMayor ? ' \u2014 Mayor' : me.isCommissioner ? ' \u2014 Chief' : '';
+      const badge = me.isMayor ? ' \u2014 Mayor' : me.isCommissioner ? ' \u2014 Commissioner' : '';
       nameEl.textContent = me.name + badge;
     }
   }

@@ -39,7 +39,7 @@ function createVetoProposedOverlay(): HTMLElement {
 
   const subtitle = document.createElement('div');
   subtitle.className = 'veto-overlay__subtitle';
-  subtitle.textContent = 'The Chief has proposed to veto this agenda. Awaiting Mayor response...';
+  subtitle.textContent = 'The Commissioner has proposed to veto this agenda. Awaiting Mayor response...';
 
   content.appendChild(title);
   content.appendChild(subtitle);

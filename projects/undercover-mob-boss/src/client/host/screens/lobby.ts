@@ -300,7 +300,7 @@ export function update(state: HostState | LobbyState): void {
   if (qrOverlay && roomCode !== '----') {
     const qrCanvas = qrOverlay.querySelector('.lobby__qr-canvas');
     if (qrCanvas && !qrCanvas.hasChildNodes()) {
-      const joinUrl = `${window.location.origin}/?room=${roomCode}`;
+      const joinUrl = `${window.location.origin}/join/${roomCode}`;
       const canvas = document.createElement('canvas');
       QRCode.toCanvas(canvas, joinUrl, {
         width: 240,

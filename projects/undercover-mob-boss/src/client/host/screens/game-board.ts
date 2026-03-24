@@ -20,7 +20,7 @@ function getPhaseLabel(state: HostState): string {
   if (state.subPhase === 'nomination-pending') return 'Nomination';
   if (state.subPhase === 'election-voting') return 'Voting';
   if (state.subPhase === 'policy-mayor-discard') return 'Mayor reviewing policies';
-  if (state.subPhase === 'policy-chief-discard') return 'Chief reviewing policies';
+  if (state.subPhase === 'policy-commissioner-discard') return 'Commissioner reviewing policies';
   if (state.subPhase === 'policy-veto-propose') return 'Veto proposed';
   if (state.subPhase === 'policy-veto-response') return 'Awaiting veto response';
   if (state.subPhase === 'executive-power-pending') return 'Executive Power';

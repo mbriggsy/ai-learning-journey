@@ -38,7 +38,7 @@ describe('Rule Gap: Dead Player Restrictions', () => {
     const state = createTestGameState({
       phase: 'election',
       subPhase: 'election-voting',
-      nominatedChiefId: 'player-3',
+      nominatedCommissionerId: 'player-3',
       players: createTestGameState().players.map((p) =>
         p.id === 'player-4' ? { ...p, isAlive: false } : p,
       ),
@@ -90,7 +90,7 @@ describe('Rule Gap: Dead Player Restrictions', () => {
     ).toThrow(/not valid target/);
   });
 
-  it('[R84] Dead player cannot be nominated as chief', () => {
+  it('[R84] Dead player cannot be nominated as commissioner', () => {
     const state = createTestGameState({
       phase: 'nomination',
       subPhase: 'nomination-pending',
@@ -112,7 +112,7 @@ describe('Rule Gap: Election Tracker Reset', () => {
     let state = createTestGameState({
       phase: 'election',
       subPhase: 'election-voting',
-      nominatedChiefId: 'player-3',
+      nominatedCommissionerId: 'player-3',
       electionTracker: 1,
       policyDeck: ['good', 'bad', 'bad', 'good', 'bad', 'good', 'bad', 'good', 'bad', 'good', 'bad'],
     });
@@ -126,7 +126,7 @@ describe('Rule Gap: Election Tracker Reset', () => {
 
     // Enact a policy
     state = dispatch(state, { type: 'mayor-discard', cardIndex: 0 });
-    state = dispatch(state, { type: 'chief-discard', cardIndex: 0 });
+    state = dispatch(state, { type: 'commissioner-discard', cardIndex: 0 });
     state = advanceDisplayIfNeeded(state);
 
     // Tracker still 0 after enactment
@@ -149,21 +149,21 @@ describe('Rule Gap: Discard Handling', () => {
     expect(next.policyDiscard).toHaveLength(1);
   });
 
-  it('[R43] Chief discard goes to policyDiscard pile', () => {
+  it('[R43] Commissioner discard goes to policyDiscard pile', () => {
     const state = createTestGameState({
       phase: 'policy-session',
-      subPhase: 'policy-chief-discard',
-      chiefCards: ['bad', 'good'],
+      subPhase: 'policy-commissioner-discard',
+      commissionerCards: ['bad', 'good'],
       policyDiscard: ['bad'], // mayor already discarded one
     });
-    const next = dispatch(state, { type: 'chief-discard', cardIndex: 0 });
-    // Chief discarded 'bad' (index 0), enacted 'good'
+    const next = dispatch(state, { type: 'commissioner-discard', cardIndex: 0 });
+    // Commissioner discarded 'bad' (index 0), enacted 'good'
     expect(next.policyDiscard).toHaveLength(2);
     expect(next.policyDiscard[1]).toBe('bad');
   });
 
   it('[R43] Both discards accumulate across rounds', () => {
-    // Round 1: mayor discards 1, chief discards 1 = 2 in discard
+    // Round 1: mayor discards 1, commissioner discards 1 = 2 in discard
     let state = createTestGameState({
       phase: 'policy-session',
       subPhase: 'policy-mayor-discard',
@@ -173,7 +173,7 @@ describe('Rule Gap: Discard Handling', () => {
       reshuffleThreshold: 3,
     });
     state = dispatch(state, { type: 'mayor-discard', cardIndex: 0 }); // discard good
-    state = dispatch(state, { type: 'chief-discard', cardIndex: 0 }); // discard bad, enact bad
+    state = dispatch(state, { type: 'commissioner-discard', cardIndex: 0 }); // discard bad, enact bad
     expect(state.policyDiscard).toHaveLength(2);
   });
 });
@@ -185,9 +185,9 @@ describe('Rule Gap: Veto Once Per Session', () => {
     // Veto was proposed and rejected → vetoProposed is true
     const state = createTestGameState({
       phase: 'policy-session',
-      subPhase: 'policy-chief-discard',
+      subPhase: 'policy-commissioner-discard',
       badPoliciesEnacted: 5,
-      chiefCards: ['bad', 'bad'],
+      commissionerCards: ['bad', 'bad'],
       vetoProposed: true, // already proposed and rejected
     });
     expect(() => dispatch(state, { type: 'propose-veto' })).toThrow(
@@ -200,13 +200,13 @@ describe('Rule Gap: Veto Once Per Session', () => {
       phase: 'policy-session',
       subPhase: 'policy-veto-response',
       badPoliciesEnacted: 5,
-      chiefCards: ['bad', 'bad'],
+      commissionerCards: ['bad', 'bad'],
       vetoProposed: true,
     });
     state = dispatch(state, { type: 'veto-response', approved: false });
     expect(state.vetoProposed).toBe(true);
-    // Chief is back to discard phase but cannot propose again
-    expect(state.subPhase).toBe('policy-chief-discard');
+    // Commissioner is back to discard phase but cannot propose again
+    expect(state.subPhase).toBe('policy-commissioner-discard');
     expect(() => dispatch(state, { type: 'propose-veto' })).toThrow(
       /already proposed/,
     );

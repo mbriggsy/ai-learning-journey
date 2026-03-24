@@ -1,4 +1,4 @@
-import type { ClientGameAction, GameEvent, Phase, SubPhase, PolicyType, ExecutivePower } from './types';
+import type { ClientGameAction, GameEvent, Phase, SubPhase, PolicyType, ExecutivePower, WinReason } from './types';
 
 /**
  * Events broadcast to clients with sensitive fields stripped.
@@ -53,9 +53,9 @@ export interface PublicPlayer {
   name: string;
   isAlive: boolean;
   isMayor: boolean;
-  isChief: boolean;
+  isCommissioner: boolean;
   wasLastMayor: boolean;
-  wasLastChief: boolean;
+  wasLastCommissioner: boolean;
   isConnected: boolean;
 }
 
@@ -70,14 +70,14 @@ export interface HostState {
   subPhase: SubPhase | null;
   round: number;
   players: (PublicPlayer | RevealedPlayer)[];
-  nominatedChiefId: string | null;
+  nominatedCommissionerId: string | null;
   goodPoliciesEnacted: number;
   badPoliciesEnacted: number;
   electionTracker: number;
   votes: Record<string, 'approve' | 'block'> | null;
   executivePower: ExecutivePower | null;
   winner: 'citizens' | 'mob' | null;
-  winReason: string | null;
+  winReason: WinReason | null;
   events: SanitizedGameEvent[];
   waitingOnPlayerIds: string[];
 }
@@ -97,7 +97,7 @@ export interface PrivateData {
   /** Which ally is the mob boss (mob soldiers need this to distinguish boss from fellow soldiers). */
   mobBossId?: string;
   mayorCards?: PolicyType[];
-  chiefCards?: PolicyType[];
+  commissionerCards?: PolicyType[];
   peekCards?: PolicyType[];
   investigationResult?: { targetId: string; result: 'citizen' | 'mob' };
   /** Sent to the investigated player so they know they've been exposed. */

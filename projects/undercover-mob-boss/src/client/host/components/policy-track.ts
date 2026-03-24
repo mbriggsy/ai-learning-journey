@@ -57,7 +57,7 @@ export function createPolicyTrack(config: PolicyTrackConfig): HTMLElement {
   if (type === 'bad' && enacted >= 3) {
     const warning = document.createElement('div');
     warning.className = 'policy-track__warning';
-    warning.textContent = 'Mob Boss elected as Chief = Game Over';
+    warning.textContent = 'Mob Boss elected as Commissioner = Game Over';
     track.appendChild(warning);
   }
 
@@ -98,7 +98,7 @@ export function updatePolicyTrack(
     if (enacted >= 3 && !warning) {
       warning = document.createElement('div');
       warning.className = 'policy-track__warning';
-      warning.textContent = 'Mob Boss elected as Chief = Game Over';
+      warning.textContent = 'Mob Boss elected as Commissioner = Game Over';
       trackEl.appendChild(warning);
     } else if (enacted < 3 && warning) {
       warning.remove();

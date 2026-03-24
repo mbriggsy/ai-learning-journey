@@ -270,7 +270,7 @@ describe('H4 — events sanitization in projection', () => {
     const state = createTestGameState({
       events: [
         { type: 'policy-enacted', policy: 'bad', autoEnacted: false },
-        { type: 'election-passed', mayorId: 'player-0', chiefId: 'player-2' },
+        { type: 'election-passed', mayorId: 'player-0', commissionerId: 'player-2' },
         { type: 'election-failed', electionTracker: 2 },
       ],
     });
@@ -278,7 +278,7 @@ describe('H4 — events sanitization in projection', () => {
     const projected = projectStateForHost(state, allConnected(state));
     expect(projected.events).toHaveLength(3);
     expect(projected.events[0]).toEqual({ type: 'policy-enacted', policy: 'bad', autoEnacted: false });
-    expect(projected.events[1]).toEqual({ type: 'election-passed', mayorId: 'player-0', chiefId: 'player-2' });
+    expect(projected.events[1]).toEqual({ type: 'election-passed', mayorId: 'player-0', commissionerId: 'player-2' });
     expect(projected.events[2]).toEqual({ type: 'election-failed', electionTracker: 2 });
   });
 
@@ -318,7 +318,7 @@ describe('M4 — vote value validation', () => {
     return createTestGameState({
       phase: 'election',
       subPhase: 'election-voting',
-      nominatedChiefId: 'player-2',
+      nominatedCommissionerId: 'player-2',
       votes: {},
     });
   }

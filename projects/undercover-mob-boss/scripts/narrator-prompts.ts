@@ -97,7 +97,7 @@ export const NARRATOR_PROMPTS = [
   // --- Election Phase ---
   {
     id: 'nomination',
-    trigger: 'Mayor nominates Police Chief',
+    trigger: 'Mayor nominates Commissioner',
     script: 'The gavel passes. A new Mayor takes the seat. Choose wisely... the wrong partner could cost the city everything.',
   },
   {
@@ -149,12 +149,12 @@ export const NARRATOR_PROMPTS = [
   {
     id: 'investigate',
     trigger: 'Investigate power activated',
-    script: 'The Police Chief has demanded an investigation. Someone\'s cover is about to get a little thinner.',
+    script: 'The Commissioner has called for an investigation. Someone\'s cover is about to get a little thinner.',
   },
   {
     id: 'special-nomination',
     trigger: 'Special nomination power activated',
-    script: 'The Police Chief will choose the next Mayor. Democracy takes a back seat.',
+    script: 'The Commissioner will choose the next Mayor. Democracy takes a back seat.',
   },
   {
     id: 'execution',
@@ -192,7 +192,7 @@ export const NARRATOR_PROMPTS = [
   },
   {
     id: 'mob-wins-election',
-    trigger: 'Mob Boss elected Police Chief after 3+ bad policies',
+    trigger: 'Mob Boss elected Commissioner after 3+ bad policies',
     script: 'The Mob Boss has taken office. The city never saw it coming. Game over.',
   },
 
@@ -200,7 +200,7 @@ export const NARRATOR_PROMPTS = [
   {
     id: 'policy-peek',
     trigger: 'Policy peek power activated',
-    script: 'The Police Chief takes a long look at the top of the deck. Three cards... and the truth of what\'s coming.',
+    script: 'The Commissioner takes a long look at the top of the deck. Three cards... and the truth of what\'s coming.',
   },
 
   // --- Deck & Veto Mechanics ---
@@ -211,8 +211,8 @@ export const NARRATOR_PROMPTS = [
   },
   {
     id: 'veto-proposed',
-    trigger: 'Police Chief proposes veto (after 5 bad policies)',
-    script: 'The Police Chief has proposed a veto. The Mayor must decide.',
+    trigger: 'Commissioner proposes veto (after 5 bad policies)',
+    script: 'The Commissioner has proposed a veto. The Mayor must decide.',
   },
   {
     id: 'veto-approved',

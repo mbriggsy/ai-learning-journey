@@ -18,9 +18,9 @@ function projectPlayer(player: Player, connected: boolean): PublicPlayer {
     name: player.name,
     isAlive: player.isAlive,
     isMayor: player.isMayor,
-    isChief: player.isChief,
+    isCommissioner: player.isCommissioner,
     wasLastMayor: player.wasLastMayor,
-    wasLastChief: player.wasLastChief,
+    wasLastCommissioner: player.wasLastCommissioner,
     isConnected: connected,
     // OMITTED: role, knownAllies
   };
@@ -66,7 +66,7 @@ export function projectStateForHost(
         ? projectPlayerGameOver(p, connectionStatus.get(p.id) ?? false)
         : projectPlayer(p, connectionStatus.get(p.id) ?? false),
     ),
-    nominatedChiefId: state.nominatedChiefId,
+    nominatedCommissionerId: state.nominatedCommissionerId,
     goodPoliciesEnacted: state.goodPoliciesEnacted,
     badPoliciesEnacted: state.badPoliciesEnacted,
     electionTracker: state.electionTracker,
@@ -82,7 +82,7 @@ export function projectStateForHost(
       .filter((p) => isPlayersTurn(state, p.id))
       .map((p) => p.id),
     // OMITTED: policyDeck, policyDiscard, reshuffleThreshold,
-    //          mayorCards, chiefCards, vetoProposed, investigationHistory,
+    //          mayorCards, commissionerCards, vetoProposed, investigationHistory,
     //          specialNominatedMayorId, rngSeed, acknowledgedPlayerIds
   };
 }
@@ -110,7 +110,7 @@ export function isPlayersTurn(state: GameState, playerId: string): boolean {
   if (!player?.isAlive) return false;
 
   const mayor = state.players[state.mayorIndex];
-  const chief = state.players.find((p) => p.id === state.nominatedChiefId);
+  const commissioner = state.players.find((p) => p.id === state.nominatedCommissionerId);
 
   switch (state.subPhase) {
     case 'nomination-pending':
@@ -120,8 +120,8 @@ export function isPlayersTurn(state: GameState, playerId: string): boolean {
     case 'policy-mayor-discard':
     case 'policy-veto-response':
       return mayor?.id === playerId;
-    case 'policy-chief-discard':
-      return chief?.id === playerId;
+    case 'policy-commissioner-discard':
+      return commissioner?.id === playerId;
     case 'policy-peek-viewing':
     case 'executive-power-pending':
       return mayor?.id === playerId;
@@ -142,7 +142,7 @@ export function getPrivateData(
 
   const data: PrivateData = {};
   const mayor = state.players[state.mayorIndex];
-  const chief = state.players.find((p) => p.id === state.nominatedChiefId);
+  const commissioner = state.players.find((p) => p.id === state.nominatedCommissionerId);
 
   // Role and allies (always available after role-reveal)
   if (state.phase !== 'lobby') {
@@ -161,12 +161,12 @@ export function getPrivateData(
     data.mayorCards = state.mayorCards ?? undefined;
   }
 
-  // Chief's cards (only during their discard phase or veto)
+  // Commissioner's cards (only during their discard phase or veto)
   if (
-    (state.subPhase === 'policy-chief-discard' || state.subPhase === 'policy-veto-response') &&
-    chief?.id === playerId
+    (state.subPhase === 'policy-commissioner-discard' || state.subPhase === 'policy-veto-response') &&
+    commissioner?.id === playerId
   ) {
-    data.chiefCards = state.chiefCards ?? undefined;
+    data.commissionerCards = state.commissionerCards ?? undefined;
   }
 
   // Peek cards (only for the Mayor during policy-peek-viewing)

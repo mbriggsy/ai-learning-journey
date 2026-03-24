@@ -615,12 +615,12 @@ test.describe('Host UI Audit — iPad Landscape', () => {
     // Nomination-specific checks
     const nomInfo = await page.evaluate(() => {
       const mayorName = document.querySelector('.nomination-bar__name--mayor');
-      const chiefName = document.querySelectorAll('.nomination-bar__name')[1];
+      const commissionerName = document.querySelectorAll('.nomination-bar__name')[1];
       const status = document.querySelector('.nomination-bar__status');
       return {
         mayorVisible: mayorName ? mayorName.getBoundingClientRect().height > 0 : false,
         mayorFontSize: mayorName ? parseFloat(window.getComputedStyle(mayorName).fontSize) : 0,
-        chiefVisible: chiefName ? chiefName.getBoundingClientRect().height > 0 : false,
+        commissionerVisible: commissionerName ? commissionerName.getBoundingClientRect().height > 0 : false,
         statusText: status?.textContent ?? '',
       };
     });

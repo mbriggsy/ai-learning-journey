@@ -133,48 +133,48 @@ describe('SH Rules: ELECTION', () => {
     expect(state2.players.filter((p) => p.isMayor)).toHaveLength(1);
   });
 
-  it('[ELEC-22] Surviving chief election at 3+ bad policies emits chief-cleared', () => {
+  it('[ELEC-22] Surviving commissioner election at 3+ bad policies emits commissioner-cleared', () => {
     let state = createTestGameState({
       phase: 'election',
       subPhase: 'election-voting',
       badPoliciesEnacted: 3,
-      nominatedChiefId: 'player-3', // citizen, not mob boss
+      nominatedCommissionerId: 'player-3', // citizen, not mob boss
     });
     for (const p of state.players.filter((p) => p.isAlive)) {
       state = dispatch(state, { type: 'vote', playerId: p.id, vote: 'approve' });
     }
     state = advanceDisplayIfNeeded(state);
     expect(state.events).toContainEqual(
-      expect.objectContaining({ type: 'chief-cleared', chiefId: 'player-3' }),
+      expect.objectContaining({ type: 'commissioner-cleared', commissionerId: 'player-3' }),
     );
   });
 
-  it('[ELEC-22] No chief-cleared event when bad policies < 3', () => {
+  it('[ELEC-22] No commissioner-cleared event when bad policies < 3', () => {
     let state = createTestGameState({
       phase: 'election',
       subPhase: 'election-voting',
       badPoliciesEnacted: 2,
-      nominatedChiefId: 'player-3',
+      nominatedCommissionerId: 'player-3',
     });
     for (const p of state.players.filter((p) => p.isAlive)) {
       state = dispatch(state, { type: 'vote', playerId: p.id, vote: 'approve' });
     }
     expect(state.events).not.toContainEqual(
-      expect.objectContaining({ type: 'chief-cleared' }),
+      expect.objectContaining({ type: 'commissioner-cleared' }),
     );
   });
 
-  it('[ELEC-24] Failed election does NOT install anyone as president/chief', () => {
+  it('[ELEC-24] Failed election does NOT install anyone as president/commissioner', () => {
     let state = createTestGameState({
       phase: 'election',
       subPhase: 'election-voting',
-      nominatedChiefId: 'player-3',
+      nominatedCommissionerId: 'player-3',
     });
     for (const p of state.players.filter((p) => p.isAlive)) {
       state = dispatch(state, { type: 'vote', playerId: p.id, vote: 'block' });
     }
-    // player-3 should NOT be chief
-    expect(state.players.find((p) => p.id === 'player-3')!.isChief).toBe(false);
+    // player-3 should NOT be commissioner
+    expect(state.players.find((p) => p.id === 'player-3')!.isCommissioner).toBe(false);
   });
 });
 
@@ -185,10 +185,10 @@ describe('SH Rules: TERM LIMITS', () => {
     let state = createTestGameState({
       phase: 'election',
       subPhase: 'election-voting',
-      nominatedChiefId: 'player-3',
+      nominatedCommissionerId: 'player-3',
       players: createTestGameState().players.map((p) => {
         if (p.id === 'player-2') return { ...p, wasLastMayor: true };
-        if (p.id === 'player-4') return { ...p, wasLastChief: true };
+        if (p.id === 'player-4') return { ...p, wasLastCommissioner: true };
         return p;
       }),
     });
@@ -198,28 +198,28 @@ describe('SH Rules: TERM LIMITS', () => {
     }
     // Old term limits preserved
     expect(state.players.find((p) => p.id === 'player-2')!.wasLastMayor).toBe(true);
-    expect(state.players.find((p) => p.id === 'player-4')!.wasLastChief).toBe(true);
+    expect(state.players.find((p) => p.id === 'player-4')!.wasLastCommissioner).toBe(true);
   });
 
-  it('[TERM-06/07] Term limits only restrict chief nomination, not mayor rotation', () => {
-    // A player who was just chief CAN become mayor via rotation
+  it('[TERM-06/07] Term limits only restrict commissioner nomination, not mayor rotation', () => {
+    // A player who was just commissioner CAN become mayor via rotation
     const state = createTestGameState({
       mayorIndex: 0,
       players: createTestGameState().players.map((p) =>
-        p.id === 'player-1' ? { ...p, wasLastChief: true } : p,
+        p.id === 'player-1' ? { ...p, wasLastCommissioner: true } : p,
       ),
     });
     const next = advanceMayor(state);
-    // player-1 becomes mayor even though they were last chief
+    // player-1 becomes mayor even though they were last commissioner
     expect(next.mayorIndex).toBe(1);
     expect(next.players[1].isMayor).toBe(true);
   });
 
-  it('[TERM-07] Ex-chief can become mayor', () => {
+  it('[TERM-07] Ex-commissioner can become mayor', () => {
     const state = createTestGameState({
       mayorIndex: 0,
       players: createTestGameState().players.map((p) =>
-        p.id === 'player-1' ? { ...p, wasLastChief: true } : p,
+        p.id === 'player-1' ? { ...p, wasLastCommissioner: true } : p,
       ),
     });
     const next = advanceMayor(state);
@@ -230,12 +230,12 @@ describe('SH Rules: TERM LIMITS', () => {
 // ── EXECUTIVE POWERS ───────────────────────────────────────────────
 
 describe('SH Rules: EXECUTIVE POWERS', () => {
-  it('[EXEC-02] Mayor (President) uses executive powers, not Chief', () => {
+  it('[EXEC-02] Mayor (President) uses executive powers, not Commissioner', () => {
     const state = createTestGameState({
       phase: 'executive-power',
       subPhase: 'executive-power-pending',
       executivePower: 'investigate',
-      nominatedChiefId: 'player-2',
+      nominatedCommissionerId: 'player-2',
     });
     // Mayor (player-0) can investigate
     const next = dispatch(state, { type: 'investigate', targetId: 'player-3' });
@@ -279,7 +279,7 @@ describe('SH Rules: EXECUTIVE POWERS', () => {
       subPhase: 'election-voting',
       electionTracker: 2,
       badPoliciesEnacted: 1, // 2nd bad in 7-8 = investigate
-      nominatedChiefId: 'player-3',
+      nominatedCommissionerId: 'player-3',
       playerCount: 7,
       players: createTestGameState({ playerCount: 7 }).players,
       policyDeck: ['bad', 'good', 'bad', 'good', 'bad', 'good', 'bad', 'good', 'bad', 'good', 'bad'],
@@ -342,12 +342,12 @@ describe('SH Rules: POLICY PEEK', () => {
   it('[PEEK-01] Policy peek triggered at 3rd bad in 5-player game', () => {
     const state = createTestGameState({
       phase: 'policy-session',
-      subPhase: 'policy-chief-discard',
-      chiefCards: ['bad', 'good'],
+      subPhase: 'policy-commissioner-discard',
+      commissionerCards: ['bad', 'good'],
       badPoliciesEnacted: 2,
       policyDeck: ['good', 'bad', 'good', 'bad', 'good'],
     });
-    let next = dispatch(state, { type: 'chief-discard', cardIndex: 1 }); // enact bad
+    let next = dispatch(state, { type: 'commissioner-discard', cardIndex: 1 }); // enact bad
     next = advanceDisplayIfNeeded(next);
     expect(next.phase).toBe('executive-power');
     expect(next.subPhase).toBe('policy-peek-viewing');
@@ -376,7 +376,7 @@ describe('SH Rules: SPECIAL ELECTION', () => {
       subPhase: 'executive-power-pending',
       executivePower: 'special-nomination',
       players: createTestGameState().players.map((p) =>
-        p.id === 'player-3' ? { ...p, wasLastChief: true } : p,
+        p.id === 'player-3' ? { ...p, wasLastCommissioner: true } : p,
       ),
     });
     // Should succeed even though player-3 is term-limited
@@ -484,11 +484,11 @@ describe('SH Rules: LEGISLATIVE SESSION', () => {
     // 5-player game, 1st bad policy → no power
     const state = createTestGameState({
       phase: 'policy-session',
-      subPhase: 'policy-chief-discard',
-      chiefCards: ['bad', 'good'],
+      subPhase: 'policy-commissioner-discard',
+      commissionerCards: ['bad', 'good'],
       badPoliciesEnacted: 0, // 1st bad in 5-player → no power
     });
-    let next = dispatch(state, { type: 'chief-discard', cardIndex: 1 }); // enact bad
+    let next = dispatch(state, { type: 'commissioner-discard', cardIndex: 1 }); // enact bad
     next = advanceDisplayIfNeeded(next);
     expect(next.badPoliciesEnacted).toBe(1);
     expect(next.phase).toBe('nomination'); // new round, no executive power
@@ -504,7 +504,7 @@ describe('SH Rules: WIN CONDITIONS', () => {
       phase: 'election',
       subPhase: 'election-voting',
       badPoliciesEnacted: 2,
-      nominatedChiefId: 'player-0', // mob boss
+      nominatedCommissionerId: 'player-0', // mob boss
     });
     for (const p of state.players.filter((p) => p.isAlive)) {
       state = dispatch(state, { type: 'vote', playerId: p.id, vote: 'approve' });

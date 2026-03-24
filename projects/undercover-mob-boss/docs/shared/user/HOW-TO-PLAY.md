@@ -7,10 +7,10 @@
 ## 30-Second Version
 
 - **Two teams.** Citizens (good) vs. the Mob (bad). Roles are secret. Citizens don't know who anyone is.
-- **Each round:** A Mayor nominates a Police Chief. Everyone votes. If it passes, the pair secretly enact a policy — good or bad.
+- **Each round:** A Mayor nominates a Commissioner. Everyone votes. If it passes, the pair secretly enact a policy — good or bad.
 - **The deck is rigged.** 11 bad cards, 6 good. Bad policy will happen. The question is *who let it happen.*
 - **Citizens win** by enacting 5 Good Policies or executing the Mob Boss.
-- **Mob wins** by enacting 6 Bad Policies or sneaking the Mob Boss into the Police Chief seat (after 3+ bad policies).
+- **Mob wins** by enacting 6 Bad Policies or sneaking the Mob Boss into the Commissioner seat (after 3+ bad policies).
 - **Lying is the game.** Accuse. Defend. Bluff. Trust no one.
 
 ---
@@ -33,7 +33,7 @@ Honest people trying to keep Millbrook City clean. They don't know who anyone el
 ### Mob Soldiers (Bad Guys)
 Undercover operatives who know each other's identities. They also know who the Mob Boss is. They work together to get bad policy enacted and protect the Mob Boss. They win by:
 - Getting **6 Bad Policies** enacted, OR
-- Getting the **Mob Boss elected as Police Chief** after 3 Bad Policies have been enacted (see How the Game Ends)
+- Getting the **Mob Boss elected as Commissioner** after 3 Bad Policies have been enacted (see How the Game Ends)
 
 ### Mob Boss
 The most dangerous player in the game. The Mob Boss plays for the mob. However, their knowledge depends on the size of the game:
@@ -94,10 +94,10 @@ Each round follows this flow:
 
 ```mermaid
 flowchart TD
-    NOM["Phase 1: Mayor nominates a Police Chief"]
+    NOM["Phase 1: Mayor nominates a Commissioner"]
     VOTE["Phase 2: Everyone votes — Approve or Deny"]
     PASS{"Did it pass?"}
-    POLICY["Phase 3: Policy Session — Mayor draws 3 cards,\ndiscards 1. Chief gets 2, discards 1.\nRemaining card is enacted."]
+    POLICY["Phase 3: Policy Session — Mayor draws 3 cards,\ndiscards 1. Commissioner gets 2, discards 1.\nRemaining card is enacted."]
     BAD{"Bad Policy\nenacted?"}
     POWER["Phase 4: Mayor uses Executive Power"]
     NEXT["Next round — Mayor rotates to next player"]
@@ -123,12 +123,12 @@ flowchart TD
 
 ### Phase 1: Nomination
 
-The current **Mayor** nominates a **Police Chief** from the other players still in the game. The Mayor cannot nominate themselves.
+The current **Mayor** nominates a **Commissioner** from the other players still in the game. The Mayor cannot nominate themselves.
 
 **Term limits** restrict who can be nominated:
-- The most recently **elected** Police Chief is always term-limited.
+- The most recently **elected** Commissioner is always term-limited.
 - In games with **6+ players still alive**, the most recently **elected** Mayor is also term-limited.
-- In games with **5 players still alive**, only the previous Chief is term-limited.
+- In games with **5 players still alive**, only the previous Commissioner is term-limited.
 - Term limits only change after **successful** elections — failed elections don't update them.
 - If term limits would eliminate every eligible player, they are waived.
 
@@ -138,30 +138,30 @@ The Mayor picks on their phone. The nomination appears on the shared screen. Tab
 
 Every player still in the game votes on their phone — **Approve** or **Deny** — at the same time. Votes are revealed all at once on the shared screen.
 
-- **Majority Approve** (more than half of all votes) — the Police Chief takes office. Move to Phase 3.
+- **Majority Approve** (more than half of all votes) — the Commissioner takes office. Move to Phase 3.
 - **Majority Deny or Tie** — the election fails. The Election Tracker advances one step, and the next player becomes Mayor.
 
 > **Three Failed Elections:** If three elections fail in a row, the top card from the Policy Deck is automatically enacted — no vote, no debate, no player choice. No executive power is triggered. The tracker resets and all term limits are cleared. This prevents the mob from stalling forever.
 
 ### Phase 3: Policy Session
 
-The Mayor and Police Chief work together in secret — on their phones only. **No talking to each other during the session.**
+The Mayor and Commissioner work together in secret — on their phones only. **No talking to each other during the session.**
 
 1. The Mayor draws **3 Policy cards** (shown only on their phone).
-2. The Mayor discards **1 card secretly** and passes the remaining 2 to the Police Chief.
-3. The Police Chief discards **1 card secretly** and enacts the remaining card.
+2. The Mayor discards **1 card secretly** and passes the remaining 2 to the Commissioner.
+3. The Commissioner discards **1 card secretly** and enacts the remaining card.
 
 The enacted policy is revealed on the shared screen. The discards are never shown.
 
-> Nobody else sees what cards were drawn. Both the Mayor and Police Chief are free to lie about what they saw. This is where the social deduction begins.
+> Nobody else sees what cards were drawn. Both the Mayor and Commissioner are free to lie about what they saw. This is where the social deduction begins.
 
 #### Veto Power (unlocked after 5 Bad Policies)
 
-Once 5 Bad Policies have been enacted, the Police Chief gains the option to propose a veto — discarding both cards instead of enacting one. The Mayor then decides:
+Once 5 Bad Policies have been enacted, the Commissioner gains the option to propose a veto — discarding both cards instead of enacting one. The Mayor then decides:
 
 - **Mayor accepts:** Both cards discarded. No policy enacted. Election Tracker advances one step.
-- **Mayor rejects:** The Chief must enact one of the two cards as normal.
-- The Chief may only propose a veto **once per policy session**.
+- **Mayor rejects:** The Commissioner must enact one of the two cards as normal.
+- The Commissioner may only propose a veto **once per policy session**.
 
 > Veto is a double-edged sword. It prevents a bad outcome but wastes a round and moves the tracker closer to an automatic enactment.
 
@@ -212,17 +212,17 @@ When certain Bad Policies are enacted, the **Mayor** gains a special one-time po
 
 ### Mob Wins If:
 - **6 Bad Policies** are enacted, OR
-- The **Mob Boss is elected Police Chief** after 3 or more Bad Policies have been enacted
+- The **Mob Boss is elected Commissioner** after 3 or more Bad Policies have been enacted
 
-Once 3+ Bad Policies are on the board, every election becomes dangerous. If the Mob Boss is nominated as Police Chief and the vote passes — **the mob wins instantly.**
+Once 3+ Bad Policies are on the board, every election becomes dangerous. If the Mob Boss is nominated as Commissioner and the vote passes — **the mob wins instantly.**
 
-But here's the flip side: if someone *is* elected Police Chief and the game continues, everyone at the table now knows **for certain** that player is NOT the Mob Boss. Use that information.
+But here's the flip side: if someone *is* elected Commissioner and the game continues, everyone at the table now knows **for certain** that player is NOT the Mob Boss. Use that information.
 
 ---
 
 ## Example Round
 
-> **Round 3.** Sal is Mayor. He nominates Vince as Police Chief. The table debates — Vince has been quiet, which makes some people nervous. Everyone votes on their phones. Results flash on the big screen: 4 Approve, 2 Deny. Vince is in.
+> **Round 3.** Sal is Mayor. He nominates Vince as Commissioner. The table debates — Vince has been quiet, which makes some people nervous. Everyone votes on their phones. Results flash on the big screen: 4 Approve, 2 Deny. Vince is in.
 >
 > Sal draws 3 cards on his phone: 2 Bad, 1 Good. He discards a Bad card and passes 1 Bad + 1 Good to Vince. Vince looks at his 2 cards, discards the Bad one, and enacts the **Good Policy.** The city breathes.
 >
@@ -247,7 +247,7 @@ But here's the flip side: if someone *is* elected Police Chief and the game cont
 **If you're a Citizen:**
 - Watch voting patterns. Consistent approval of suspicious candidates is a tell.
 - Pay attention to who defends whom after a bad policy is enacted.
-- When a Police Chief blames the Mayor for a bad policy (or vice versa) — one of them is probably lying.
+- When a Commissioner blames the Mayor for a bad policy (or vice versa) — one of them is probably lying.
 
 **If you're a Mob Soldier:**
 - You don't need to enact bad policy every session. Sometimes enacting good policy builds trust.
@@ -265,9 +265,9 @@ But here's the flip side: if someone *is* elected Police Chief and the game cont
 During the game, your phone handles everything:
 - **Lobby:** Join the game, see other players
 - **Role reveal:** Tap to see your secret role, tap again to seal it
-- **Nomination:** If you're Mayor, pick a Police Chief
+- **Nomination:** If you're Mayor, pick a Commissioner
 - **Voting:** Tap Approve or Deny
-- **Policy Session:** If you're Mayor or Police Chief, draw and discard cards
+- **Policy Session:** If you're Mayor or Commissioner, draw and discard cards
 - **Executive Powers:** If you're Mayor, use your power
 
 The host screen shows everything public — nominations, vote results, enacted policies, and the narrator.
@@ -290,12 +290,12 @@ Quick reference for terms used in these rules:
 | --- | --- |
 | **Social deduction** | A game where players have hidden roles and must figure out who's who through conversation and observation |
 | **Role** | Your secret allegiance: Citizen, Mob Soldier, or Mob Boss |
-| **Position** | Your elected office: Mayor or Police Chief. Separate from your role |
-| **Mayor** | Nominates a Police Chief each round. Rotates automatically |
-| **Police Chief** | Nominated by the Mayor, approved by vote. Works with the Mayor to enact policy |
+| **Position** | Your elected office: Mayor or Commissioner. Separate from your role |
+| **Mayor** | Nominates a Commissioner each round. Rotates automatically |
+| **Commissioner** | Nominated by the Mayor, approved by vote. Works with the Mayor to enact policy |
 | **Enacted** | A policy card placed on a track. Permanent |
 | **Sealed** | Your role card is hidden after you've viewed it |
-| **Term-limited** | A player from the last elected government who can't be nominated as Police Chief next round |
+| **Term-limited** | A player from the last elected government who can't be nominated as Commissioner next round |
 | **Election Tracker** | Counts consecutive failed elections. At 3, a policy is auto-enacted |
 
 ---

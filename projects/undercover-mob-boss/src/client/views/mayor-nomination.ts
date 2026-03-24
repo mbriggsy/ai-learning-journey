@@ -11,7 +11,7 @@ export function mount(container: HTMLElement, state: AppState): void {
   root = document.createElement('div');
   root.className = 'screen';
 
-  setTopBarInstruction('\u{1F46E} Nominate a Police Chief');
+  setTopBarInstruction('\u{1F46E} Nominate a Commissioner');
 
   const content = document.createElement('div');
   content.className = 'screen-content';
@@ -31,8 +31,8 @@ export function mount(container: HTMLElement, state: AppState): void {
   const players = (state.serverState?.players ?? [])
     .filter((p) => p.id !== state.playerId);
   for (const p of players) {
-    // Term limits: previous chief always ineligible; previous mayor ineligible at 6+
-    const termLimited = p.wasLastChief || (p.wasLastMayor && aliveCount > 5);
+    // Term limits: previous commissioner always ineligible; previous mayor ineligible at 6+
+    const termLimited = p.wasLastCommissioner || (p.wasLastMayor && aliveCount > 5);
     const isEligible = p.isAlive && !termLimited;
 
     const li = document.createElement('li');

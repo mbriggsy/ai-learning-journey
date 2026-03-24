@@ -290,8 +290,8 @@ export default class UMBRoom implements Party.Server {
     }
 
     const mayor = this.gameState.players[this.gameState.mayorIndex];
-    const chief = this.gameState.players.find(
-      (p) => p.id === this.gameState!.nominatedChiefId,
+    const commissioner = this.gameState.players.find(
+      (p) => p.id === this.gameState!.nominatedCommissionerId,
     );
 
     // Server-only actions — reject if sent by a client
@@ -299,15 +299,20 @@ export default class UMBRoom implements Party.Server {
       return { code: 'INVALID_ACTION', message: 'Server-only action' };
     }
 
-    const mayorOnly = ['nominate', 'mayor-discard', 'veto-response', 'investigate', 'acknowledge-peek', 'special-nominate', 'execute'];
-    const chiefOnly = ['chief-discard', 'propose-veto'];
+    const mayorOnly: ReadonlySet<GameAction['type']> = new Set([
+      'nominate', 'mayor-discard', 'veto-response', 'investigate',
+      'acknowledge-peek', 'special-nominate', 'execute',
+    ] as const);
+    const commissionerOnly: ReadonlySet<GameAction['type']> = new Set([
+      'commissioner-discard', 'propose-veto',
+    ] as const);
 
-    if (mayorOnly.includes(action.type) && mayor?.id !== meta.playerId) {
+    if (mayorOnly.has(action.type) && mayor?.id !== meta.playerId) {
       return { code: 'NOT_YOUR_TURN', message: 'Only the Mayor can do this' };
     }
 
-    if (chiefOnly.includes(action.type) && chief?.id !== meta.playerId) {
-      return { code: 'NOT_YOUR_TURN', message: 'Only the Police Chief can do this' };
+    if (commissionerOnly.has(action.type) && commissioner?.id !== meta.playerId) {
+      return { code: 'NOT_YOUR_TURN', message: 'Only the Commissioner can do this' };
     }
 
     return null;

@@ -40,7 +40,7 @@ export const NARRATOR_LINES: Record<string, NarratorLine> = {
   // ── Election Phase ────────────────────────────────────────────────
   'nomination': {
     file: 'nomination.wav',
-    hook: 'Mayor nominates Police Chief',
+    hook: 'Mayor nominates Commissioner',
     durationMs: 5000,
     target: 'host',
   },
@@ -158,7 +158,7 @@ export const NARRATOR_LINES: Record<string, NarratorLine> = {
   },
   'mob-wins-election': {
     file: 'mob-wins-election.wav',
-    hook: 'Mob Boss elected Police Chief — mob wins',
+    hook: 'Mob Boss elected Commissioner — mob wins',
     durationMs: 5000,
     target: 'host',
   },
@@ -172,7 +172,7 @@ export const NARRATOR_LINES: Record<string, NarratorLine> = {
   },
   'veto-proposed': {
     file: 'veto-proposed.wav',
-    hook: 'Police Chief proposes veto',
+    hook: 'Commissioner proposes veto',
     durationMs: 4000,
     target: 'host',
   },

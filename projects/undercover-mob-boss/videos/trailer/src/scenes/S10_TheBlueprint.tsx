@@ -33,7 +33,7 @@ This is maximally testable.
       case 'nominate':         return handleNominate(base, action);
       case 'vote':             return handleVote(base, action);
       case 'mayor-discard':    return handleMayorDiscard(base, action);
-      case 'chief-discard':    return handleChiefDiscard(base, action);
+      case 'commissioner-discard':    return handleCommissionerDiscard(base, action);
       case 'propose-veto':     return handleProposeVeto(base);
       case 'veto-response':    return handleVetoResponse(base, action);
       case 'investigate':      return handleInvestigate(base, action);
@@ -51,7 +51,7 @@ This is maximally testable.
     | { type: 'nominate'; targetId: string }
     | { type: 'vote'; playerId: string; vote: 'approve' | 'block' }
     | { type: 'mayor-discard'; cardIndex: number }
-    | { type: 'chief-discard'; cardIndex: number }
+    | { type: 'commissioner-discard'; cardIndex: number }
     | { type: 'propose-veto' }
     | { type: 'veto-response'; approved: boolean }
     | { type: 'investigate'; targetId: string }
@@ -68,7 +68,7 @@ This is maximally testable.
 | election        | approved             | policy-session   |
 | election        | blocked, tracker < 3 | nomination       |
 | election        | blocked, tracker = 3 | auto-enact       |
-| policy-session  | chief-discard        | check win/power  |
+| policy-session  | commissioner-discard        | check win/power  |
 | executive-power | power action         | nomination       |
 | any             | win condition        | game-over        |
 
@@ -91,7 +91,7 @@ This is maximally testable.
 
   Mob wins:
     - 6 bad policies enacted
-    - Mob Boss elected Chief after 3+ bad policies
+    - Mob Boss elected Commissioner after 3+ bad policies
 
 ## Executive Powers Board
 
@@ -145,7 +145,7 @@ This is maximally testable.
   - Role distribution matches table for 5-10 players
   - Deck reshuffles at random threshold
   - Executive powers activate at correct bad policy counts
-  - Term limits prevent consecutive Mayor/Chief
+  - Term limits prevent consecutive Mayor/Commissioner
   - Election tracker auto-enacts at 3 failed votes
   - Veto power unlocks after 5 bad policies
   - 80%+ code coverage in Vitest

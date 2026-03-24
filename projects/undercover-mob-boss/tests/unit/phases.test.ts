@@ -142,9 +142,9 @@ describe('dispatch — nomination flow', () => {
 
     expect(next.phase).toBe('election');
     expect(next.subPhase).toBe('election-voting');
-    expect(next.nominatedChiefId).toBe('player-3');
+    expect(next.nominatedCommissionerId).toBe('player-3');
     // Original state is unchanged (immutability)
-    expect(state.nominatedChiefId).toBeNull();
+    expect(state.nominatedCommissionerId).toBeNull();
   });
 
   it('rejects nomination of dead player', () => {
@@ -191,7 +191,7 @@ describe('dispatch — election flow', () => {
     return createTestGameState({
       phase: 'election',
       subPhase: 'election-voting',
-      nominatedChiefId: 'player-3',
+      nominatedCommissionerId: 'player-3',
       ...overrides,
     });
   }
@@ -268,11 +268,11 @@ describe('dispatch — election flow', () => {
   });
 
   it('term limits survive failed elections (SH: last ELECTED pair)', () => {
-    // Set up: player-2 was last elected mayor, player-4 was last elected chief
+    // Set up: player-2 was last elected mayor, player-4 was last elected commissioner
     let state = setupElection({
       players: createTestGameState().players.map((p) => {
         if (p.id === 'player-2') return { ...p, wasLastMayor: true };
-        if (p.id === 'player-4') return { ...p, wasLastChief: true };
+        if (p.id === 'player-4') return { ...p, wasLastCommissioner: true };
         return p;
       }),
     });
@@ -284,17 +284,17 @@ describe('dispatch — election flow', () => {
 
     // Term limits from the PREVIOUS elected government must still hold
     expect(state.players.find((p) => p.id === 'player-2')!.wasLastMayor).toBe(true);
-    expect(state.players.find((p) => p.id === 'player-4')!.wasLastChief).toBe(true);
+    expect(state.players.find((p) => p.id === 'player-4')!.wasLastCommissioner).toBe(true);
   });
 
   it('term limits update to new pair on successful election', () => {
-    // player-0 is mayor, nominate player-3 as chief
+    // player-0 is mayor, nominate player-3 as commissioner
     let state = setupElection({
-      nominatedChiefId: 'player-3',
+      nominatedCommissionerId: 'player-3',
       // Pre-existing term limits from a previous government
       players: createTestGameState().players.map((p) => {
         if (p.id === 'player-2') return { ...p, wasLastMayor: true };
-        if (p.id === 'player-4') return { ...p, wasLastChief: true };
+        if (p.id === 'player-4') return { ...p, wasLastCommissioner: true };
         return p;
       }),
     });
@@ -305,19 +305,19 @@ describe('dispatch — election flow', () => {
     }
     state = advanceDisplay(state); // advance past election-result
 
-    // NEW term limits: player-0 (mayor) and player-3 (chief)
+    // NEW term limits: player-0 (mayor) and player-3 (commissioner)
     expect(state.players.find((p) => p.id === 'player-0')!.wasLastMayor).toBe(true);
-    expect(state.players.find((p) => p.id === 'player-3')!.wasLastChief).toBe(true);
+    expect(state.players.find((p) => p.id === 'player-3')!.wasLastCommissioner).toBe(true);
     // OLD term limits cleared
     expect(state.players.find((p) => p.id === 'player-2')!.wasLastMayor).toBe(false);
-    expect(state.players.find((p) => p.id === 'player-4')!.wasLastChief).toBe(false);
+    expect(state.players.find((p) => p.id === 'player-4')!.wasLastCommissioner).toBe(false);
   });
 
   it('mob boss elected after 3+ bad policies → mob wins', () => {
-    // player-0 is mob-boss, nominate them as chief
+    // player-0 is mob-boss, nominate them as commissioner
     let state = setupElection({
       badPoliciesEnacted: 3,
-      nominatedChiefId: 'player-0',
+      nominatedCommissionerId: 'player-0',
     });
 
     // All approve
@@ -336,7 +336,7 @@ describe('dispatch — election flow', () => {
   it('mob boss elected before 3 bad policies → game continues', () => {
     let state = setupElection({
       badPoliciesEnacted: 2,
-      nominatedChiefId: 'player-0', // mob boss
+      nominatedCommissionerId: 'player-0', // mob boss
     });
 
     for (const p of state.players.filter((p) => p.isAlive)) {
@@ -348,11 +348,11 @@ describe('dispatch — election flow', () => {
     expect(state.winner).toBeNull();
   });
 
-  it('non-mob-boss elected at 3+ bad policies emits chief-cleared event', () => {
+  it('non-mob-boss elected at 3+ bad policies emits commissioner-cleared event', () => {
     // player-3 is a citizen, not the mob boss
     let state = setupElection({
       badPoliciesEnacted: 3,
-      nominatedChiefId: 'player-3',
+      nominatedCommissionerId: 'player-3',
     });
 
     for (const p of state.players.filter((p) => p.isAlive)) {
@@ -362,7 +362,7 @@ describe('dispatch — election flow', () => {
 
     expect(state.phase).toBe('policy-session');
     expect(state.events).toContainEqual(
-      expect.objectContaining({ type: 'chief-cleared', chiefId: 'player-3' }),
+      expect.objectContaining({ type: 'commissioner-cleared', commissionerId: 'player-3' }),
     );
   });
 });
@@ -375,7 +375,7 @@ describe('dispatch — election tracker → auto-enact', () => {
       phase: 'election',
       subPhase: 'election-voting',
       electionTracker: 2,
-      nominatedChiefId: 'player-3',
+      nominatedCommissionerId: 'player-3',
       policyDeck: ['bad', 'good', 'bad', 'good', 'bad'],
       rngSeed: 42,
     });
@@ -401,7 +401,7 @@ describe('dispatch — election tracker → auto-enact', () => {
     next = advanceDisplay(next);
 
     // Term limits cleared
-    expect(next.players.every((p) => !p.wasLastMayor && !p.wasLastChief)).toBe(true);
+    expect(next.players.every((p) => !p.wasLastMayor && !p.wasLastCommissioner)).toBe(true);
     expect(next.events).toContainEqual(
       expect.objectContaining({ type: 'term-limits-cleared' }),
     );
@@ -411,7 +411,7 @@ describe('dispatch — election tracker → auto-enact', () => {
 // ── dispatch — policy session ──────────────────────────────────────
 
 describe('dispatch — policy session', () => {
-  it('mayor discards one card → chief gets 2', () => {
+  it('mayor discards one card → commissioner gets 2', () => {
     const state = createTestGameState({
       phase: 'policy-session',
       subPhase: 'policy-mayor-discard',
@@ -419,20 +419,20 @@ describe('dispatch — policy session', () => {
     });
 
     const next = dispatch(state, { type: 'mayor-discard', cardIndex: 0 });
-    expect(next.subPhase).toBe('policy-chief-discard');
-    expect(next.chiefCards).toEqual(['bad', 'bad']);
+    expect(next.subPhase).toBe('policy-commissioner-discard');
+    expect(next.commissionerCards).toEqual(['bad', 'bad']);
     expect(next.mayorCards).toBeNull();
     expect(next.policyDiscard).toContain('good');
   });
 
-  it('chief discards one card → policy enacted', () => {
+  it('commissioner discards one card → policy enacted', () => {
     const state = createTestGameState({
       phase: 'policy-session',
-      subPhase: 'policy-chief-discard',
-      chiefCards: ['good', 'bad'],
+      subPhase: 'policy-commissioner-discard',
+      commissionerCards: ['good', 'bad'],
     });
 
-    const next = dispatch(state, { type: 'chief-discard', cardIndex: 1 }); // discard bad
+    const next = dispatch(state, { type: 'commissioner-discard', cardIndex: 1 }); // discard bad
     expect(next.goodPoliciesEnacted).toBe(1);
     expect(next.events).toContainEqual(
       expect.objectContaining({ type: 'policy-enacted', policy: 'good' }),
@@ -442,12 +442,12 @@ describe('dispatch — policy session', () => {
   it('5 good policies → citizens win', () => {
     const state = createTestGameState({
       phase: 'policy-session',
-      subPhase: 'policy-chief-discard',
-      chiefCards: ['good', 'bad'],
+      subPhase: 'policy-commissioner-discard',
+      commissionerCards: ['good', 'bad'],
       goodPoliciesEnacted: 4,
     });
 
-    const next = dispatch(state, { type: 'chief-discard', cardIndex: 1 }); // enact good
+    const next = dispatch(state, { type: 'commissioner-discard', cardIndex: 1 }); // enact good
     expect(next.phase).toBe('game-over');
     expect(next.winner).toBe('citizens');
   });
@@ -455,12 +455,12 @@ describe('dispatch — policy session', () => {
   it('6 bad policies → mob wins', () => {
     const state = createTestGameState({
       phase: 'policy-session',
-      subPhase: 'policy-chief-discard',
-      chiefCards: ['bad', 'good'],
+      subPhase: 'policy-commissioner-discard',
+      commissionerCards: ['bad', 'good'],
       badPoliciesEnacted: 5,
     });
 
-    const next = dispatch(state, { type: 'chief-discard', cardIndex: 1 }); // enact bad
+    const next = dispatch(state, { type: 'commissioner-discard', cardIndex: 1 }); // enact bad
     expect(next.phase).toBe('game-over');
     expect(next.winner).toBe('mob');
   });
@@ -468,12 +468,12 @@ describe('dispatch — policy session', () => {
   it('bad policy triggers executive power (5-player, 3rd bad policy → policy-peek)', () => {
     const state = createTestGameState({
       phase: 'policy-session',
-      subPhase: 'policy-chief-discard',
-      chiefCards: ['bad', 'good'],
+      subPhase: 'policy-commissioner-discard',
+      commissionerCards: ['bad', 'good'],
       badPoliciesEnacted: 2,
     });
 
-    let next = dispatch(state, { type: 'chief-discard', cardIndex: 1 }); // enact bad (3rd)
+    let next = dispatch(state, { type: 'commissioner-discard', cardIndex: 1 }); // enact bad (3rd)
 
     // First: pauses at policy-enact display
     expect(next.subPhase).toBe('policy-enact');
@@ -491,12 +491,12 @@ describe('dispatch — policy session', () => {
 // ── dispatch — veto flow ───────────────────────────────────────────
 
 describe('dispatch — veto flow', () => {
-  it('chief proposes veto → veto-propose display then mayor must respond', () => {
+  it('commissioner proposes veto → veto-propose display then mayor must respond', () => {
     const state = createTestGameState({
       phase: 'policy-session',
-      subPhase: 'policy-chief-discard',
+      subPhase: 'policy-commissioner-discard',
       badPoliciesEnacted: 5,
-      chiefCards: ['bad', 'bad'],
+      commissionerCards: ['bad', 'bad'],
     });
 
     let next = dispatch(state, { type: 'propose-veto' });
@@ -510,17 +510,17 @@ describe('dispatch — veto flow', () => {
     expect(next.vetoProposed).toBe(true);
   });
 
-  it('veto rejected → chief must enact', () => {
+  it('veto rejected → commissioner must enact', () => {
     const state = createTestGameState({
       phase: 'policy-session',
       subPhase: 'policy-veto-response',
       badPoliciesEnacted: 5,
-      chiefCards: ['bad', 'bad'],
+      commissionerCards: ['bad', 'bad'],
       vetoProposed: true,
     });
 
     const next = dispatch(state, { type: 'veto-response', approved: false });
-    expect(next.subPhase).toBe('policy-chief-discard');
+    expect(next.subPhase).toBe('policy-commissioner-discard');
     expect(next.events).toContainEqual({ type: 'veto-rejected' });
   });
 
@@ -529,7 +529,7 @@ describe('dispatch — veto flow', () => {
       phase: 'policy-session',
       subPhase: 'policy-veto-response',
       badPoliciesEnacted: 5,
-      chiefCards: ['bad', 'bad'],
+      commissionerCards: ['bad', 'bad'],
       electionTracker: 0,
       vetoProposed: true,
     });
@@ -537,15 +537,15 @@ describe('dispatch — veto flow', () => {
     const next = dispatch(state, { type: 'veto-response', approved: true });
     expect(next.events).toContainEqual({ type: 'veto-enacted' });
     expect(next.electionTracker).toBe(1);
-    expect(next.chiefCards).toBeNull();
+    expect(next.commissionerCards).toBeNull();
   });
 
   it('veto not available before 5 bad policies', () => {
     const state = createTestGameState({
       phase: 'policy-session',
-      subPhase: 'policy-chief-discard',
+      subPhase: 'policy-commissioner-discard',
       badPoliciesEnacted: 4,
-      chiefCards: ['bad', 'bad'],
+      commissionerCards: ['bad', 'bad'],
     });
 
     expect(() => dispatch(state, { type: 'propose-veto' })).toThrow(/only available/);
@@ -556,7 +556,7 @@ describe('dispatch — veto flow', () => {
       phase: 'policy-session',
       subPhase: 'policy-veto-response',
       badPoliciesEnacted: 5,
-      chiefCards: ['bad', 'bad'],
+      commissionerCards: ['bad', 'bad'],
       electionTracker: 2,
       vetoProposed: true,
       policyDeck: ['good', 'bad', 'bad', 'good', 'bad'],
@@ -579,7 +579,7 @@ describe('dispatch — executive powers', () => {
       phase: 'executive-power',
       subPhase: 'executive-power-pending',
       executivePower: 'investigate',
-      nominatedChiefId: 'player-2',
+      nominatedCommissionerId: 'player-2',
     });
 
     const next = dispatch(state, { type: 'investigate', targetId: 'player-3' });
@@ -719,10 +719,10 @@ describe('getEligibleNominees', () => {
     expect(eligible).not.toContain('player-0'); // mayor
   });
 
-  it('excludes previous chief (always term-limited)', () => {
+  it('excludes previous commissioner (always term-limited)', () => {
     const state = createTestGameState({
       players: createTestGameState().players.map((p) =>
-        p.id === 'player-3' ? { ...p, wasLastChief: true } : p,
+        p.id === 'player-3' ? { ...p, wasLastCommissioner: true } : p,
       ),
     });
     const eligible = getEligibleNominees(state);
@@ -755,8 +755,8 @@ describe('getEligibleNominees', () => {
     // Set the other 2 alive as both term-limited.
     const players = createTestGameState().players.map((p) => {
       if (p.id === 'player-3' || p.id === 'player-4') return { ...p, isAlive: false };
-      if (p.id === 'player-1') return { ...p, wasLastChief: true };
-      if (p.id === 'player-2') return { ...p, wasLastChief: true };
+      if (p.id === 'player-1') return { ...p, wasLastCommissioner: true };
+      if (p.id === 'player-2') return { ...p, wasLastCommissioner: true };
       return p;
     });
     const state = createTestGameState({ players });
@@ -846,19 +846,19 @@ describe('advanceMayor', () => {
     expect(afterResume.resumeMayorIndex).toBeNull();
   });
 
-  it('does NOT change wasLastMayor/wasLastChief (term limits only change on election)', () => {
+  it('does NOT change wasLastMayor/wasLastCommissioner (term limits only change on election)', () => {
     const state = createTestGameState({
       mayorIndex: 0,
       players: createTestGameState().players.map((p) => {
         if (p.id === 'player-0') return { ...p, wasLastMayor: true };
-        if (p.id === 'player-2') return { ...p, wasLastChief: true };
+        if (p.id === 'player-2') return { ...p, wasLastCommissioner: true };
         return p;
       }),
     });
     const next = advanceMayor(state);
     // Term limits from the previous elected government must be preserved
     expect(next.players[0].wasLastMayor).toBe(true);
-    expect(next.players[2].wasLastChief).toBe(true);
+    expect(next.players[2].wasLastCommissioner).toBe(true);
     // New mayor should NOT gain wasLastMayor
     expect(next.players[1].wasLastMayor).toBe(false);
   });
@@ -871,7 +871,7 @@ describe('dispatch — display state transitions', () => {
     let state = createTestGameState({
       phase: 'election',
       subPhase: 'election-voting',
-      nominatedChiefId: 'player-3',
+      nominatedCommissionerId: 'player-3',
     });
     for (const p of state.players.filter((p) => p.isAlive)) {
       state = dispatch(state, { type: 'vote', playerId: p.id, vote: 'approve' });
@@ -882,13 +882,13 @@ describe('dispatch — display state transitions', () => {
     expect(Object.keys(state.votes)).toHaveLength(5);
   });
 
-  it('policy-enact is a display state after chief discards', () => {
+  it('policy-enact is a display state after commissioner discards', () => {
     const state = createTestGameState({
       phase: 'policy-session',
-      subPhase: 'policy-chief-discard',
-      chiefCards: ['good', 'bad'],
+      subPhase: 'policy-commissioner-discard',
+      commissionerCards: ['good', 'bad'],
     });
-    const next = dispatch(state, { type: 'chief-discard', cardIndex: 1 }); // enact good
+    const next = dispatch(state, { type: 'commissioner-discard', cardIndex: 1 }); // enact good
     expect(next.subPhase).toBe('policy-enact');
     expect(next.goodPoliciesEnacted).toBe(1);
     expect(next.lastEnactedPolicy).toBe('good');
@@ -899,7 +899,7 @@ describe('dispatch — display state transitions', () => {
       phase: 'election',
       subPhase: 'election-result',
       electionTracker: 2,
-      nominatedChiefId: 'player-3',
+      nominatedCommissionerId: 'player-3',
       votes: { 'player-0': 'block', 'player-1': 'block', 'player-2': 'block', 'player-3': 'block', 'player-4': 'block' },
       policyDeck: ['good', 'bad', 'bad', 'good', 'bad'],
       rngSeed: 42,
@@ -913,9 +913,9 @@ describe('dispatch — display state transitions', () => {
   it('policy-veto-propose is a display state after propose-veto', () => {
     const state = createTestGameState({
       phase: 'policy-session',
-      subPhase: 'policy-chief-discard',
+      subPhase: 'policy-commissioner-discard',
       badPoliciesEnacted: 5,
-      chiefCards: ['bad', 'bad'],
+      commissionerCards: ['bad', 'bad'],
     });
     const next = dispatch(state, { type: 'propose-veto' });
     expect(next.subPhase).toBe('policy-veto-propose');
@@ -926,7 +926,7 @@ describe('dispatch — display state transitions', () => {
     const state = createTestGameState({
       phase: 'election',
       subPhase: 'election-result',
-      nominatedChiefId: 'player-3',
+      nominatedCommissionerId: 'player-3',
       votes: { 'player-0': 'approve', 'player-1': 'approve', 'player-2': 'approve', 'player-3': 'block', 'player-4': 'block' },
     });
     const next = advanceDisplay(state);
@@ -938,7 +938,7 @@ describe('dispatch — display state transitions', () => {
     const state = createTestGameState({
       phase: 'election',
       subPhase: 'election-result',
-      nominatedChiefId: 'player-3',
+      nominatedCommissionerId: 'player-3',
       votes: { 'player-0': 'block', 'player-1': 'block', 'player-2': 'block', 'player-3': 'approve', 'player-4': 'approve' },
     });
     const next = advanceDisplay(state);
@@ -979,7 +979,7 @@ describe('dispatch — display state transitions', () => {
       players: createTestGameState().players.map((p) => ({
         ...p,
         wasLastMayor: p.id === 'player-2',
-        wasLastChief: p.id === 'player-4',
+        wasLastCommissioner: p.id === 'player-4',
       })),
     });
     const next = advanceDisplay(state);
@@ -987,7 +987,7 @@ describe('dispatch — display state transitions', () => {
     // Term limits should be cleared
     for (const p of next.players) {
       expect(p.wasLastMayor).toBe(false);
-      expect(p.wasLastChief).toBe(false);
+      expect(p.wasLastCommissioner).toBe(false);
     }
     expect(next.events).toContainEqual(
       expect.objectContaining({ type: 'term-limits-cleared' }),
@@ -999,7 +999,7 @@ describe('dispatch — display state transitions', () => {
       phase: 'policy-session',
       subPhase: 'policy-veto-propose',
       vetoProposed: true,
-      chiefCards: ['bad', 'bad'],
+      commissionerCards: ['bad', 'bad'],
       badPoliciesEnacted: 5,
     });
     const next = advanceDisplay(state);
@@ -1017,11 +1017,11 @@ describe('dispatch — display state transitions', () => {
   it('game-over from policy-enact skips display state', () => {
     const state = createTestGameState({
       phase: 'policy-session',
-      subPhase: 'policy-chief-discard',
-      chiefCards: ['good', 'bad'],
+      subPhase: 'policy-commissioner-discard',
+      commissionerCards: ['good', 'bad'],
       goodPoliciesEnacted: 4,
     });
-    const next = dispatch(state, { type: 'chief-discard', cardIndex: 1 }); // enact good (5th)
+    const next = dispatch(state, { type: 'commissioner-discard', cardIndex: 1 }); // enact good (5th)
     // Goes directly to game-over, not policy-enact display
     expect(next.phase).toBe('game-over');
     expect(next.winner).toBe('citizens');

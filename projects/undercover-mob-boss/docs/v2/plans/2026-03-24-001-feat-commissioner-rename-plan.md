@@ -1,7 +1,7 @@
 ---
 title: "feat: Commissioner Rename — Police Chief to Commissioner"
 type: feat
-status: active
+status: completed
 date: 2026-03-24
 origin: docs/v2/ideation/BRAINSTORM.md
 spec: docs/v2/spec/SPEC.md (ADR-V2-02)
@@ -194,62 +194,62 @@ After renaming `chief-hand.ts` → `commissioner-hand.ts`:
 ## Acceptance Criteria
 
 ### Pre-Rename Safety
-- [ ] `room.ts` — `chiefOnly`/`mayorOnly` refactored to `ReadonlySet<GameAction['type']>` with `.has()` checks
-- [ ] `WinReason` typed union added to `types.ts`, applied to `GameState.winReason`, `HostState.winReason`, GameEvent `reason`
-- [ ] `narrator-bridge.ts` switch uses exhaustive `WinReason` checking
-- [ ] `narrator-bridge.ts` state tracking types tightened (prevSubPhase → `SubPhase | null`, etc.)
-- [ ] Typecheck passes after safety refactors (before any renaming)
+- [x] `room.ts` — `chiefOnly`/`mayorOnly` refactored to `ReadonlySet<GameAction['type']>` with `.has()` checks
+- [x] `WinReason` typed union added to `types.ts`, applied to `GameState.winReason`, `HostState.winReason`, GameEvent `reason`
+- [x] `narrator-bridge.ts` switch uses exhaustive `WinReason` checking
+- [x] `narrator-bridge.ts` state tracking types tightened (prevSubPhase → `SubPhase | null`, etc.)
+- [x] Typecheck passes after safety refactors (before any renaming)
 
 ### Type System & Game Engine
-- [ ] `src/shared/types.ts` — all 8 identifier groups renamed
-- [ ] `src/shared/protocol.ts` — PublicPlayer, HostState, PrivateData fields renamed
-- [ ] `src/server/game/phases.ts` — all references + `winReason` constant
-- [ ] `src/server/game/powers.ts:83` — `isChief: false` → `isCommissioner: false`
-- [ ] `src/server/room.ts` — authorization arrays, error message, all references
-- [ ] `src/server/projection.ts` — all projection fields
-- [ ] `src/server/test-scenarios.ts` — factory state
+- [x] `src/shared/types.ts` — all 8 identifier groups renamed
+- [x] `src/shared/protocol.ts` — PublicPlayer, HostState, PrivateData fields renamed
+- [x] `src/server/game/phases.ts` — all references + `winReason` constant
+- [x] `src/server/game/powers.ts:83` — `isChief: false` → `isCommissioner: false`
+- [x] `src/server/room.ts` — authorization arrays, error message, all references
+- [x] `src/server/projection.ts` — all projection fields
+- [x] `src/server/test-scenarios.ts` — factory state
 
 ### Client Code
-- [ ] `chief-hand.ts` renamed to `commissioner-hand.ts` + all imports updated
-- [ ] `router.ts` — ScreenId `'chief-hand'` → `'commissioner-hand'`
-- [ ] `app.ts` — import path + registerView string
-- [ ] All display text strings updated (see table in Section 2)
-- [ ] `src/client/components/top-bar.ts:40` — "Chief" badge
-- [ ] `src/client/host/components/overlays.ts:42` — veto overlay text
-- [ ] `src/client/host/components/policy-track.ts:60,101` — warning text
-- [ ] data-testId: `chief-hand`, `chief-enact-btn`, `chief-veto-btn` renamed
+- [x] `chief-hand.ts` renamed to `commissioner-hand.ts` + all imports updated
+- [x] `router.ts` — ScreenId `'chief-hand'` → `'commissioner-hand'`
+- [x] `app.ts` — import path + registerView string
+- [x] All display text strings updated (see table in Section 2)
+- [x] `src/client/components/top-bar.ts:40` — "Chief" badge
+- [x] `src/client/host/components/overlays.ts:42` — veto overlay text
+- [x] `src/client/host/components/policy-track.ts:60,101` — warning text
+- [x] data-testId: `chief-hand`, `chief-enact-btn`, `chief-veto-btn` renamed
 
 ### CSS (2 files, 5 selectors)
-- [ ] `src/client/styles/screens.css` — 3 selectors renamed
-- [ ] `src/client/host/styles/board.css` — 2 selectors + comments renamed
-- [ ] All JS/TS references to `--chief` CSS classes updated
+- [x] `src/client/styles/screens.css` — 3 selectors renamed
+- [x] `src/client/host/styles/board.css` — 2 selectors + comments renamed
+- [x] All JS/TS references to `--chief` CSS classes updated
 
 ### Narrator Text (no audio regen)
-- [ ] `src/client/audio/narrator-bridge.ts` — uses `WIN_REASONS` constant + subphase ref
-- [ ] `src/client/audio/narrator-lines.ts` — 3 hook descriptions updated
-- [ ] `scripts/narrator-prompts.ts` — 7 prompt text references updated (durable prep for ADR-V2-03)
+- [x] `src/client/audio/narrator-bridge.ts` — uses `WIN_REASONS` constant + subphase ref
+- [x] `src/client/audio/narrator-lines.ts` — 3 hook descriptions updated
+- [x] `scripts/narrator-prompts.ts` — 7 prompt text references updated (durable prep for ADR-V2-03)
 
 ### Tests
-- [ ] All test files updated (follow tsc errors + grep for string literals)
-- [ ] E2E tests updated for renamed data-testId attributes
-- [ ] `selector-health.spec.ts` canonical testId list updated
+- [x] All test files updated (follow tsc errors + grep for string literals)
+- [x] E2E tests updated for renamed data-testId attributes
+- [x] `selector-health.spec.ts` canonical testId list updated
 
 ### Documentation (living docs only)
-- [ ] `docs/shared/user/HOW-TO-PLAY.md` — all "Police Chief" → "Commissioner"
-- [ ] `public/how-to-play.html` — 11 occurrences updated
-- [ ] `TODO.md` — update current references
-- [ ] `README.md` — role mapping table
+- [x] `docs/shared/user/HOW-TO-PLAY.md` — all "Police Chief" → "Commissioner"
+- [x] `public/how-to-play.html` — 11 occurrences updated
+- [x] `TODO.md` — update current references
+- [x] `README.md` — role mapping table
 
 ### Optional / Fast-Follow
-- [ ] `videos/trailer/src/scenes/S10_TheBlueprint.tsx` — 5 occurrences (separate Remotion workspace)
+- [x] `videos/trailer/src/scenes/S10_TheBlueprint.tsx` — 5 occurrences (separate Remotion workspace)
 
 ### Verification Gate (MANDATORY)
-- [ ] `pnpm run typecheck` — zero errors
-- [ ] `pnpm run test` — all unit + integration tests pass
-- [ ] `pnpm run build` — production build succeeds
-- [ ] `grep -ri "chief" src/ tests/ scripts/ public/ --include="*.ts" --include="*.tsx" --include="*.css" --include="*.html"` — zero hits
-- [ ] `grep -ri "police.chief" docs/shared/ docs/v2/ README.md TODO.md` — zero hits (except v2 brainstorm/spec which discuss the rename itself)
-- [ ] Clear Vite cache: `rm -rf node_modules/.vite`
+- [x] `pnpm run typecheck` — zero errors
+- [x] `pnpm run test` — all unit + integration tests pass
+- [x] `pnpm run build` — production build succeeds
+- [x] `grep -ri "chief" src/ tests/ scripts/ public/ --include="*.ts" --include="*.tsx" --include="*.css" --include="*.html"` — zero hits
+- [x] `grep -ri "police.chief" docs/shared/ docs/v2/ README.md TODO.md` — zero hits (except v2 brainstorm/spec which discuss the rename itself)
+- [x] Clear Vite cache: `rm -rf node_modules/.vite`
 
 ### Deploy Checklist
 - [ ] Deploy PartyKit FIRST: `pnpm run partykit:deploy` (destroys all active games, brings server to new schema)

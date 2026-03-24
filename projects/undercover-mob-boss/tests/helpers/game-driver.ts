@@ -35,10 +35,10 @@ export function acknowledgeAllRoles(state: GameState): GameState {
   return s;
 }
 
-/** Nominate a chief and have all alive players approve -> policy-session. */
-export function passElection(state: GameState, chiefId?: string): GameState {
+/** Nominate a commissioner and have all alive players approve -> policy-session. */
+export function passElection(state: GameState, commissionerId?: string): GameState {
   const eligible = getEligibleNominees(state);
-  const target = chiefId && eligible.includes(chiefId) ? chiefId : eligible[0];
+  const target = commissionerId && eligible.includes(commissionerId) ? commissionerId : eligible[0];
   let s = dispatch(state, { type: 'nominate', targetId: target });
   for (const p of s.players.filter((p) => p.isAlive)) {
     s = dispatch(s, { type: 'vote', playerId: p.id, vote: 'approve' });
@@ -73,30 +73,30 @@ export function mayorDiscard(state: GameState, preferred: PolicyType): GameState
 }
 
 /**
- * During policy-chief-discard, discard to enact the preferred policy type.
- * Chief has 2 cards. If both match preferred, either works. If split, discard the other.
+ * During policy-commissioner-discard, discard to enact the preferred policy type.
+ * Commissioner has 2 cards. If both match preferred, either works. If split, discard the other.
  */
-export function chiefDiscard(state: GameState, preferred: PolicyType): GameState {
-  const cards = state.chiefCards!;
+export function commissionerDiscard(state: GameState, preferred: PolicyType): GameState {
+  const cards = state.commissionerCards!;
   // Discard the card that is NOT preferred
   const discardIndex = cards.findIndex((c) => c !== preferred);
-  let s = dispatch(state, { type: 'chief-discard', cardIndex: discardIndex >= 0 ? discardIndex : 0 });
+  let s = dispatch(state, { type: 'commissioner-discard', cardIndex: discardIndex >= 0 ? discardIndex : 0 });
   // Advance past policy-enact display
   s = advanceDisplayIfNeeded(s);
   return s;
 }
 
 /**
- * Play a full policy session (mayor-discard + chief-discard) steering toward preferred type.
- * State must be in policy-mayor-discard or policy-chief-discard.
+ * Play a full policy session (mayor-discard + commissioner-discard) steering toward preferred type.
+ * State must be in policy-mayor-discard or policy-commissioner-discard.
  */
 export function enactPolicy(state: GameState, preferred: PolicyType): GameState {
   let s = state;
   if (s.subPhase === 'policy-mayor-discard') {
     s = mayorDiscard(s, preferred);
   }
-  if (s.subPhase === 'policy-chief-discard') {
-    s = chiefDiscard(s, preferred);
+  if (s.subPhase === 'policy-commissioner-discard') {
+    s = commissionerDiscard(s, preferred);
   }
   return s;
 }
@@ -108,9 +108,9 @@ export function enactPolicy(state: GameState, preferred: PolicyType): GameState 
 export function playFullRound(
   state: GameState,
   preferred: PolicyType,
-  chiefId?: string,
+  commissionerId?: string,
 ): GameState {
-  let s = passElection(state, chiefId);
+  let s = passElection(state, commissionerId);
   // Check if game ended on election (mob boss elected at 3+ bad)
   if (s.phase === 'game-over') return s;
   return enactPolicy(s, preferred);
@@ -161,11 +161,11 @@ export function pickNextAction(state: GameState, rng: () => number): GameAction 
     case 'policy-mayor-discard':
       return { type: 'mayor-discard', cardIndex: Math.floor(rng() * 3) };
 
-    case 'policy-chief-discard': {
+    case 'policy-commissioner-discard': {
       if (state.badPoliciesEnacted >= 5 && !state.vetoProposed && rng() > 0.7) {
         return { type: 'propose-veto' };
       }
-      return { type: 'chief-discard', cardIndex: Math.floor(rng() * 2) };
+      return { type: 'commissioner-discard', cardIndex: Math.floor(rng() * 2) };
     }
 
     case 'policy-veto-response':
@@ -250,10 +250,10 @@ export function checkCardInvariant(state: GameState): void {
   const discardBad = state.policyDiscard.filter((c) => c === 'bad').length;
   const handGood =
     (state.mayorCards?.filter((c) => c === 'good').length ?? 0) +
-    (state.chiefCards?.filter((c) => c === 'good').length ?? 0);
+    (state.commissionerCards?.filter((c) => c === 'good').length ?? 0);
   const handBad =
     (state.mayorCards?.filter((c) => c === 'bad').length ?? 0) +
-    (state.chiefCards?.filter((c) => c === 'bad').length ?? 0);
+    (state.commissionerCards?.filter((c) => c === 'bad').length ?? 0);
 
   const totalGood = deckGood + discardGood + state.goodPoliciesEnacted + handGood;
   const totalBad = deckBad + discardBad + state.badPoliciesEnacted + handBad;

@@ -6,10 +6,10 @@ let messageEl: HTMLElement | null = null;
 let miniBoardEl: HTMLElement | null = null;
 
 const MESSAGES: Record<string, string> = {
-  'nomination-pending': 'The Mayor weighs the options. A Police Chief must be chosen. The city watches.',
+  'nomination-pending': 'The Mayor weighs the options. A Commissioner must be chosen. The city watches.',
   'election-voting': 'Ballots are being cast in silence.\nTrust no one.',
   'policy-mayor-discard': 'The Mayor studies the policies behind closed doors...',
-  'policy-chief-discard': 'The Police Chief holds the city\'s fate in their hands...',
+  'policy-commissioner-discard': 'The Commissioner holds the city\'s fate in their hands...',
   'policy-veto-response': 'A veto has been proposed. The Mayor must decide whether to accept.',
   'policy-veto-propose': 'A veto is on the table. The tension builds.',
   'auto-enact': 'The deadlock forces action. A policy is enacted without debate.',

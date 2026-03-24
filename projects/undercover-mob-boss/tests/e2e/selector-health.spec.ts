@@ -35,10 +35,10 @@ const EXPECTED_TESTIDS = [
   'mayor-hand',
   'policy-card',
   'mayor-discard-btn',
-  // Chief hand
-  'chief-hand',
-  'chief-enact-btn',
-  'chief-veto-btn',
+  // Commissioner hand
+  'commissioner-hand',
+  'commissioner-enact-btn',
+  'commissioner-veto-btn',
   // Veto response
   'veto-accept',
   'veto-reject',

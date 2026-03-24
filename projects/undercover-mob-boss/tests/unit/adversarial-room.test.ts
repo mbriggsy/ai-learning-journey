@@ -17,7 +17,7 @@ function electionState(): GameState {
   return createTestGameState({
     phase: 'election',
     subPhase: 'election-voting',
-    nominatedChiefId: 'player-2',
+    nominatedCommissionerId: 'player-2',
     votes: {},
   });
 }
@@ -41,13 +41,13 @@ function mayorDiscardState(): GameState {
   });
 }
 
-/** Build a state in policy-chief-discard with 2 cards. */
-function chiefDiscardState(): GameState {
+/** Build a state in policy-commissioner-discard with 2 cards. */
+function commissionerDiscardState(): GameState {
   const cards: PolicyType[] = ['bad', 'good'];
   return createTestGameState({
     phase: 'policy-session',
-    subPhase: 'policy-chief-discard',
-    chiefCards: cards,
+    subPhase: 'policy-commissioner-discard',
+    commissionerCards: cards,
   });
 }
 
@@ -155,10 +155,10 @@ describe('Adversarial: Floating-point card indices', () => {
     ).toThrow(InvalidActionError);
   });
 
-  it('chief-discard with negative float cardIndex (-0.5) throws InvalidActionError', () => {
-    const state = chiefDiscardState();
+  it('commissioner-discard with negative float cardIndex (-0.5) throws InvalidActionError', () => {
+    const state = commissionerDiscardState();
     expect(() =>
-      dispatch(state, { type: 'chief-discard', cardIndex: -0.5 }),
+      dispatch(state, { type: 'commissioner-discard', cardIndex: -0.5 }),
     ).toThrow(InvalidActionError);
   });
 
@@ -176,17 +176,17 @@ describe('Adversarial: Floating-point card indices', () => {
     ).toThrow(InvalidActionError);
   });
 
-  it('chief-discard with Infinity throws InvalidActionError', () => {
-    const state = chiefDiscardState();
+  it('commissioner-discard with Infinity throws InvalidActionError', () => {
+    const state = commissionerDiscardState();
     expect(() =>
-      dispatch(state, { type: 'chief-discard', cardIndex: Infinity }),
+      dispatch(state, { type: 'commissioner-discard', cardIndex: Infinity }),
     ).toThrow(InvalidActionError);
   });
 
-  it('chief-discard with NaN throws InvalidActionError', () => {
-    const state = chiefDiscardState();
+  it('commissioner-discard with NaN throws InvalidActionError', () => {
+    const state = commissionerDiscardState();
     expect(() =>
-      dispatch(state, { type: 'chief-discard', cardIndex: NaN }),
+      dispatch(state, { type: 'commissioner-discard', cardIndex: NaN }),
     ).toThrow(InvalidActionError);
   });
 });
@@ -207,11 +207,11 @@ describe('Adversarial: Out-of-range card indices', () => {
     ).toThrow(InvalidActionError);
   });
 
-  it('chief-discard with index beyond array length throws InvalidActionError', () => {
-    const state = chiefDiscardState();
-    // chiefCards has 2 cards, index 2 is OOB
+  it('commissioner-discard with index beyond array length throws InvalidActionError', () => {
+    const state = commissionerDiscardState();
+    // commissionerCards has 2 cards, index 2 is OOB
     expect(() =>
-      dispatch(state, { type: 'chief-discard', cardIndex: 2 }),
+      dispatch(state, { type: 'commissioner-discard', cardIndex: 2 }),
     ).toThrow(InvalidActionError);
   });
 
@@ -335,7 +335,7 @@ describe('Adversarial: State immutability', () => {
 
 describe('Adversarial: Veto edge cases', () => {
   it('propose-veto with fewer than 5 bad policies throws InvalidActionError', () => {
-    const state = chiefDiscardState();
+    const state = commissionerDiscardState();
     state.badPoliciesEnacted = 4; // not enough
     expect(() =>
       dispatch(state, { type: 'propose-veto' }),
@@ -343,7 +343,7 @@ describe('Adversarial: Veto edge cases', () => {
   });
 
   it('propose-veto when already proposed throws InvalidActionError', () => {
-    const state = chiefDiscardState();
+    const state = commissionerDiscardState();
     state.badPoliciesEnacted = 5;
     state.vetoProposed = true;
     expect(() =>

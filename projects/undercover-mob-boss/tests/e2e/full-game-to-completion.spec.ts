@@ -248,7 +248,7 @@ test.describe('Full Game to Completion', () => {
 
       await host.waitForTimeout(PROPAGATION_DELAY);
 
-      // Check for game-over (mob boss elected as chief with 3+ bad policies)
+      // Check for game-over (mob boss elected as commissioner with 3+ bad policies)
       if (await isGameOver(players)) {
         log(`Game ended after nomination (round ${round}) — mob boss may have been elected`);
         break;
@@ -324,34 +324,34 @@ test.describe('Full Game to Completion', () => {
         break;
       }
 
-      // Find the Chief who sees the chief-hand (2 cards to enact from)
-      const chiefResult = await findPlayerWith(
+      // Find the Commissioner who sees the commissioner-hand (2 cards to enact from)
+      const commissionerResult = await findPlayerWith(
         players,
         alive,
-        sel('chief-hand'),
+        sel('commissioner-hand'),
         8_000,
       );
 
-      if (!chiefResult) {
-        log(`Round ${round}: No chief-hand found — possible race condition`);
+      if (!commissionerResult) {
+        log(`Round ${round}: No commissioner-hand found — possible race condition`);
         await host.waitForTimeout(PROPAGATION_DELAY);
         if (await isGameOver(players)) {
-          log(`Game ended while waiting for chief (round ${round})`);
+          log(`Game ended while waiting for commissioner (round ${round})`);
           break;
         }
         continue;
       }
 
-      // Chief selects first card and enacts
+      // Commissioner selects first card and enacts
       // Skip veto — if veto button is visible, ignore it and enact normally
-      const chiefCards = chiefResult.page.locator(sel('policy-card'));
-      const chiefCardCount = await chiefCards.count();
-      log(`Round ${round}: Chief (${PLAYER_NAMES[chiefResult.index]}) has ${chiefCardCount} cards`);
+      const commissionerCards = commissionerResult.page.locator(sel('policy-card'));
+      const commissionerCardCount = await commissionerCards.count();
+      log(`Round ${round}: Commissioner (${PLAYER_NAMES[commissionerResult.index]}) has ${commissionerCardCount} cards`);
 
-      await chiefCards.first().click();
-      await chiefResult.page.waitForTimeout(ACTION_DELAY);
-      await chiefResult.page.locator(sel('chief-enact-btn')).click();
-      log(`Round ${round}: Chief enacted a policy`);
+      await commissionerCards.first().click();
+      await commissionerResult.page.waitForTimeout(ACTION_DELAY);
+      await commissionerResult.page.locator(sel('commissioner-enact-btn')).click();
+      log(`Round ${round}: Commissioner enacted a policy`);
 
       await host.waitForTimeout(PROPAGATION_DELAY * 2); // Wait for enact animation
 
@@ -583,7 +583,7 @@ async function doNomination(mayorPage: Page, mayorName: string, round: number): 
       await item.click();
       clicked = true;
       const targetName = await item.textContent();
-      log(`Round ${round}: Mayor ${mayorName} selected "${targetName}" as chief`);
+      log(`Round ${round}: Mayor ${mayorName} selected "${targetName}" as commissioner`);
       break;
     }
   }

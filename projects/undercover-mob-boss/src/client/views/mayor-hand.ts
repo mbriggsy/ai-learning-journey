@@ -97,7 +97,7 @@ export function mount(container: HTMLElement, state: AppState): void {
       ease: 'power2.in',
     });
 
-    // Survivors straighten, pulse, then rise off-screen to the chief
+    // Survivors straighten, pulse, then rise off-screen to the commissioner
     cardEls.forEach((el, i) => {
       if (i !== idx) {
         el.classList.remove('policy-card--unselected');
@@ -113,7 +113,7 @@ export function mount(container: HTMLElement, state: AppState): void {
     // Brief hold — let the player see the survivors
     tl2.to({}, { duration: 0.6 });
 
-    // Survivors ascend off-screen (heading to the chief)
+    // Survivors ascend off-screen (heading to the commissioner)
     cardEls.forEach((el, i) => {
       if (i !== idx) {
         tl2.to(el, {

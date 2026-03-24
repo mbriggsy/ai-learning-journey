@@ -22,9 +22,9 @@ export function mount(container: HTMLElement, state: AppState): void {
 
   const hand = document.createElement('div');
   hand.className = 'policy-hand glass-panel';
-  hand.dataset.testId = 'chief-hand';
+  hand.dataset.testId = 'commissioner-hand';
 
-  const cards = state.privateData?.chiefCards ?? [];
+  const cards = state.privateData?.commissionerCards ?? [];
   const cardEls: HTMLElement[] = [];
 
   const badPolicies = state.serverState?.badPoliciesEnacted ?? 0;
@@ -37,7 +37,7 @@ export function mount(container: HTMLElement, state: AppState): void {
   // Confirm enact button
   const confirmBtn = document.createElement('button');
   confirmBtn.className = 'action-btn';
-  confirmBtn.dataset.testId = 'chief-enact-btn';
+  confirmBtn.dataset.testId = 'commissioner-enact-btn';
   confirmBtn.textContent = 'Enact Selected';
   confirmBtn.disabled = true;
 
@@ -92,7 +92,7 @@ export function mount(container: HTMLElement, state: AppState): void {
 
     enactTl = gsap.timeline({
       onComplete: () => {
-        sendAction({ type: 'chief-discard', cardIndex: discardIdx });
+        sendAction({ type: 'commissioner-discard', cardIndex: discardIdx });
       },
     });
 
@@ -127,7 +127,7 @@ export function mount(container: HTMLElement, state: AppState): void {
   if (canVeto) {
     const vetoBtn = document.createElement('button');
     vetoBtn.className = 'action-btn action-btn--danger';
-    vetoBtn.dataset.testId = 'chief-veto-btn';
+    vetoBtn.dataset.testId = 'commissioner-veto-btn';
     vetoBtn.textContent = 'Propose Veto';
     vetoBtn.style.marginTop = '16px';
     vetoBtn.addEventListener('click', () => {

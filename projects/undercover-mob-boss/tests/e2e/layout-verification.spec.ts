@@ -351,7 +351,7 @@ test.describe('Layout Verification', () => {
           ).toBeGreaterThanOrEqual(nameMinPx);
         }
 
-        // --- Badge (MAYOR / CHIEF) font sizes ---
+        // --- Badge (MAYOR / COMMISSIONER) font sizes ---
         const badges = await measureAll(host, '.player-strip', '.player-strip__badge', 'font-size');
         for (const b of badges) {
           const pass = b.numericValue >= 10;

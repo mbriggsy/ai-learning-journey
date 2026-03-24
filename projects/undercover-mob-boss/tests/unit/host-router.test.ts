@@ -8,7 +8,7 @@ function makeHostState(overrides: Partial<HostState> = {}): HostState {
     subPhase: 'nomination-pending',
     round: 1,
     players: [],
-    nominatedChiefId: null,
+    nominatedCommissionerId: null,
     goodPoliciesEnacted: 0,
     badPoliciesEnacted: 0,
     electionTracker: 0,
@@ -85,7 +85,7 @@ describe('getHostView', () => {
     const phases = [
       'nomination-pending', 'election-voting', 'election-result',
       'policy-enact', 'auto-enact', 'executive-power-pending',
-      'policy-mayor-discard', 'policy-chief-discard',
+      'policy-mayor-discard', 'policy-commissioner-discard',
     ];
     for (const subPhase of phases) {
       const view = getHostView(makeHostState({ subPhase: subPhase as any }));

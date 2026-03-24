@@ -105,7 +105,7 @@ pnpm run generate-narrator # Regenerate narrator audio via Gemini TTS
 | Fascist | Mob Soldier |
 | Hitler | Mob Boss |
 | President | Mayor |
-| Chancellor | Chief |
+| Chancellor | Commissioner |
 | Liberal Policy | Good Policy |
 | Fascist Policy | Bad Policy |
 

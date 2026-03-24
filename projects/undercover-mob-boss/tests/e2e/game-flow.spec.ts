@@ -216,22 +216,22 @@ test.describe('Full Game Flow', () => {
       await policyMayor.locator('[data-test-id="mayor-discard-btn"]').click();
       await host.waitForTimeout(2000);
 
-      // Chief enacts a card — poll for chief-hand
-      let chiefPage: Page | null = null;
-      for (let attempt = 0; attempt < 20 && !chiefPage; attempt++) {
+      // Commissioner enacts a card — poll for commissioner-hand
+      let commissionerPage: Page | null = null;
+      for (let attempt = 0; attempt < 20 && !commissionerPage; attempt++) {
         for (const p of players) {
-          const hasHand = await p.locator('[data-test-id="chief-hand"]').isVisible().catch(() => false);
-          if (hasHand) { chiefPage = p; break; }
+          const hasHand = await p.locator('[data-test-id="commissioner-hand"]').isVisible().catch(() => false);
+          if (hasHand) { commissionerPage = p; break; }
         }
-        if (!chiefPage) await host.waitForTimeout(500);
+        if (!commissionerPage) await host.waitForTimeout(500);
       }
 
-      if (chiefPage) {
-        const chiefCards = chiefPage.locator('[data-test-id="policy-card"]');
-        expect(await chiefCards.count()).toBe(2);
-        await chiefCards.first().click();
-        await chiefPage.waitForTimeout(300);
-        await chiefPage.locator('[data-test-id="chief-enact-btn"]').click();
+      if (commissionerPage) {
+        const commissionerCards = commissionerPage.locator('[data-test-id="policy-card"]');
+        expect(await commissionerCards.count()).toBe(2);
+        await commissionerCards.first().click();
+        await commissionerPage.waitForTimeout(300);
+        await commissionerPage.locator('[data-test-id="commissioner-enact-btn"]').click();
       }
     }
 

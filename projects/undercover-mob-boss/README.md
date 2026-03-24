@@ -10,7 +10,7 @@ Players use their phones as private information devices while a shared screen (t
 
 This game was built in 8 nights by one human director (who has a day job) and one AI engineer (Claude Code). 14,000 lines of code, 17,000 lines of tests, 10,000 lines of specification (planning) — all written before the first line of code. 209/209 rules verified. Zero functional defects. ~$2 in API costs for all AI-generated images and narrator voiceovers. The trailer tells that story.
 
-The trailer itself was built with [Remotion](https://remotion.dev) — programmatic video from React. 14 scenes, 9 AI-generated narrator voiceovers, 4 AI-generated images, all composed in TypeScript. See `videos/trailer/` for the source.
+The trailer itself was built with [Remotion](https://remotion.dev) — programmatic video from React. 13 scenes, 13 AI-generated narrator voiceovers, 4 AI-generated images, all composed in TypeScript. See `videos/trailer/` for the source.
 
 ## Play Now
 
@@ -61,8 +61,8 @@ src/
   server/           PartyKit server (room logic, game engine)
   shared/           Types shared between client + server
 public/
-  assets/           AI-generated images (15 game + 4 trailer)
-  audio/            Pre-generated narrator WAVs (39 game + 10 trailer)
+  assets/           AI-generated images (13 game + 4 trailer)
+  audio/            Pre-generated narrator WAVs (39 game + 13 trailer)
 scripts/            Asset generation pipelines (Imagen 4, Gemini TTS)
 videos/
   trailer/          Remotion video project (cinematic trailer)

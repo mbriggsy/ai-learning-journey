@@ -95,6 +95,9 @@ Before saving any code change and before telling Briggsy to test:
 - **Library APIs:** verify with Context7 before guessing behavior — especially Playwright, GSAP, PartyKit, and Vite APIs
 - **Multi-step debugging:** use Sequential Thinking for chains with more than 2 layers of causation (e.g. element detach → timeout → page closed)
 
+## Git
+- CRLF warnings suppressed (`core.safecrlf=false`) — autocrlf still converts correctly, just no noise
+
 ## Conventions
 - Use Mermaid for technical diagrams
 - All prompts versioned in `scripts/` (never regenerate without prompt changes)

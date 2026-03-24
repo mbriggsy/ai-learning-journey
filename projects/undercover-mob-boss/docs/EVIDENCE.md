@@ -134,10 +134,10 @@ More lines of tests than code. Nearly as much planning as code. The planning-to-
 
 | Metric | Value |
 |--------|-------|
-| Commits | 116 |
+| Commits | 326+ |
 | TypeScript | Strict mode, zero errors |
 | Test files | 34 (19 unit/integration + 15 E2E) |
-| Pre-generated assets | 15 images (Imagen 4) + 39 narrator lines (Gemini TTS) |
+| Pre-generated assets | 13 game images + 4 trailer images (Imagen 4) + 39 game narrator + 13 trailer narrator (Gemini TTS) |
 | External runtime dependencies | 2 (GSAP, PartyKit client) |
 
 ---

@@ -81,11 +81,32 @@ export function mount(container: HTMLElement, state: HostState): void {
   statsEl.style.textAlign = 'center';
   root.appendChild(statsEl);
 
-  // Play Again button
+  // "Read the Gazette" button — opens the full newspaper
+  const gazetteBtn = document.createElement('button');
+  gazetteBtn.className = 'host-btn';
+  gazetteBtn.textContent = 'EXTRA! EXTRA! READ ALL ABOUT IT!';
+  gazetteBtn.style.marginTop = 'var(--space-sm)';
+  gazetteBtn.style.fontFamily = 'var(--font-display)';
+  gazetteBtn.style.letterSpacing = '0.08em';
+
+  // Prefetch gazette chunk immediately (loads during winner reveal animation)
+  const gazettePromise = import('../gazette/index');
+
+  gazetteBtn.addEventListener('click', async () => {
+    gazetteBtn.textContent = 'Loading...';
+    gazetteBtn.disabled = true;
+    const { mountGazette } = await gazettePromise;
+    if (root) mountGazette(root, state);
+  });
+  root.appendChild(gazetteBtn);
+
+  // Play Again button (fallback — gazette has its own)
   const playAgainBtn = document.createElement('button');
   playAgainBtn.className = 'host-btn';
   playAgainBtn.textContent = 'Play Again';
-  playAgainBtn.style.marginTop = 'var(--space-sm)';
+  playAgainBtn.style.marginTop = 'var(--space-xs)';
+  playAgainBtn.style.opacity = '0.7';
+  playAgainBtn.style.fontSize = '0.9rem';
   playAgainBtn.addEventListener('click', () => {
     send({ type: 'reset-to-lobby', payload: {} });
   });
@@ -101,7 +122,8 @@ export function mount(container: HTMLElement, state: HostState): void {
   if (rolesListEl && rolesListEl.children.length > 0) {
     tl.from(Array.from(rolesListEl.children), { x: -30, opacity: 0, stagger: 0.08, duration: 0.3 }, '-=0.1');
   }
-  tl.from(playAgainBtn, { y: 20, opacity: 0, duration: 0.3 }, '-=0.1');
+  tl.from(gazetteBtn, { y: 20, opacity: 0, duration: 0.3 }, '-=0.1')
+    .from(playAgainBtn, { y: 10, opacity: 0, duration: 0.2 }, '-=0.1');
   entranceTl = tl;
 }
 

@@ -27,6 +27,7 @@
     ]
   },
   "dependencies": {
+    "@zumer/snapdom": "^2.6.0",
     "gsap": "^3.14.2",
     "partykit": "^0.0.115",
     "partysocket": "^1.1.16",

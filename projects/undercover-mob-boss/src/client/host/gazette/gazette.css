@@ -1,0 +1,286 @@
+/* ── The Millbrook City Gazette — Newspaper Styling ──────────────── */
+
+.gazette {
+  max-width: 900px;
+  margin: 0 auto;
+  padding: 2rem 2.5rem;
+  background-color: #f4e8d3;
+  background-image:
+    radial-gradient(ellipse at center, transparent 50%, rgba(44, 24, 16, 0.15) 100%),
+    radial-gradient(ellipse at 20% 80%, rgba(160, 130, 90, 0.15) 0%, transparent 50%);
+  color: #1a1a1a;
+  font-family: 'Cormorant Garamond', 'Georgia', serif;
+  font-size: 1rem;
+  line-height: 1.5;
+  position: relative;
+  background-attachment: scroll;
+}
+
+/* ── Masthead ──────────────────────────────────────────────────── */
+
+.gazette__masthead {
+  text-align: center;
+  border-bottom: 4px double #1a1a1a;
+  padding-bottom: 0.75rem;
+  margin-bottom: 1.5rem;
+}
+
+.gazette__title {
+  font-family: 'Cinzel', 'Times New Roman', serif;
+  font-size: 2.8rem;
+  font-weight: 900;
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
+  color: #1a1a1a;
+  margin: 0;
+  line-height: 1.1;
+}
+
+.gazette__subtitle {
+  font-size: 0.85rem;
+  font-style: italic;
+  color: #555;
+  letter-spacing: 0.08em;
+  margin-top: 0.25rem;
+}
+
+/* ── Headline ──────────────────────────────────────────────────── */
+
+.gazette__headline {
+  font-family: 'Cinzel', 'Times New Roman', serif;
+  font-size: 2rem;
+  font-weight: 800;
+  text-align: center;
+  text-transform: uppercase;
+  line-height: 1.2;
+  margin: 1rem 0 0.5rem;
+  color: #1a1a1a;
+}
+
+.gazette__subheadline {
+  text-align: center;
+  font-style: italic;
+  font-size: 1.1rem;
+  color: #333;
+  margin-bottom: 1.5rem;
+}
+
+/* ── Section Headers ───────────────────────────────────────────── */
+
+.gazette__section-header {
+  font-family: 'Cinzel', 'Times New Roman', serif;
+  font-size: 1.2rem;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.1em;
+  border-bottom: 2px solid #1a1a1a;
+  padding-bottom: 0.25rem;
+  margin: 1.5rem 0 0.75rem;
+  color: #1a1a1a;
+}
+
+/* ── Role Reveal (Rogues Gallery) ──────────────────────────────── */
+
+.gazette__roles {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(200px, 1fr));
+  gap: 0.5rem 1.5rem;
+  margin-bottom: 1rem;
+}
+
+.gazette__role-card {
+  padding: 0.5rem 0;
+  border-bottom: 1px solid rgba(26, 26, 26, 0.2);
+}
+
+.gazette__role-name {
+  font-weight: 700;
+  font-size: 1.1rem;
+}
+
+.gazette__role-name--dead {
+  text-decoration: line-through;
+  opacity: 0.6;
+}
+
+.gazette__role-badge {
+  font-size: 0.9rem;
+  font-weight: 600;
+}
+
+.gazette__role-badge--citizen { color: #2d5016; }
+.gazette__role-badge--mob-soldier { color: #8b1a1a; }
+.gazette__role-badge--mob-boss {
+  color: #8b1a1a;
+  font-weight: 900;
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+}
+
+/* ── Policy Timeline ───────────────────────────────────────────── */
+
+.gazette__timeline {
+  font-size: 0.95rem;
+}
+
+.gazette__timeline-entry {
+  padding: 0.3rem 0;
+  border-bottom: 1px dotted rgba(26, 26, 26, 0.15);
+  display: flex;
+  justify-content: space-between;
+  gap: 1rem;
+}
+
+.gazette__timeline-round {
+  font-weight: 600;
+  white-space: nowrap;
+}
+
+.gazette__timeline-name {
+  flex: 1;
+}
+
+.gazette__timeline-type--good { color: #2d5016; font-weight: 600; }
+.gazette__timeline-type--bad { color: #8b1a1a; font-weight: 600; }
+
+/* ── Voting Record ─────────────────────────────────────────────── */
+
+.gazette__vote-record {
+  font-size: 0.9rem;
+  margin-bottom: 0.5rem;
+  padding: 0.5rem;
+  border-left: 3px solid rgba(26, 26, 26, 0.3);
+}
+
+.gazette__vote-header {
+  font-weight: 700;
+  margin-bottom: 0.25rem;
+}
+
+.gazette__vote-result--passed { color: #2d5016; }
+.gazette__vote-result--failed { color: #8b1a1a; }
+
+.gazette__vote-breakdown {
+  font-size: 0.85rem;
+  color: #444;
+}
+
+/* ── Key Moments ───────────────────────────────────────────────── */
+
+.gazette__moment {
+  padding: 0.5rem 0;
+  border-bottom: 1px solid rgba(26, 26, 26, 0.1);
+  font-style: italic;
+}
+
+.gazette__moment:last-child {
+  border-bottom: none;
+}
+
+/* ── Superlatives ──────────────────────────────────────────────── */
+
+.gazette__superlative {
+  padding: 0.75rem 0;
+  border-bottom: 1px solid rgba(26, 26, 26, 0.15);
+}
+
+.gazette__superlative:last-child {
+  border-bottom: none;
+}
+
+.gazette__superlative-name {
+  font-weight: 700;
+  font-size: 1.05rem;
+}
+
+.gazette__superlative-nickname {
+  font-style: italic;
+  color: #8b1a1a;
+}
+
+.gazette__superlative-description {
+  font-size: 0.9rem;
+  color: #333;
+  margin-top: 0.15rem;
+}
+
+/* ── Drop Cap ──────────────────────────────────────────────────── */
+
+.gazette__drop-cap {
+  float: left;
+  font-family: 'Cinzel', 'Times New Roman', serif;
+  font-size: 3.2rem;
+  font-weight: 900;
+  line-height: 0.8;
+  padding-right: 0.1em;
+  padding-top: 0.1em;
+  color: #1a1a1a;
+}
+
+/* ── Footer / Actions ──────────────────────────────────────────── */
+
+.gazette__footer {
+  margin-top: 2rem;
+  padding-top: 1rem;
+  border-top: 4px double #1a1a1a;
+  text-align: center;
+  display: flex;
+  gap: 1rem;
+  justify-content: center;
+  flex-wrap: wrap;
+}
+
+.gazette__btn {
+  padding: 0.75rem 2rem;
+  font-family: 'Cinzel', 'Times New Roman', serif;
+  font-size: 1rem;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.08em;
+  border: 2px solid #1a1a1a;
+  background: transparent;
+  color: #1a1a1a;
+  cursor: pointer;
+  transition: background-color 0.2s, color 0.2s;
+}
+
+.gazette__btn:hover {
+  background: #1a1a1a;
+  color: #f4e8d3;
+}
+
+.gazette__btn--primary {
+  background: #1a1a1a;
+  color: #f4e8d3;
+}
+
+.gazette__btn--primary:hover {
+  background: #333;
+}
+
+/* ── Loading Spinner ───────────────────────────────────────────── */
+
+.gazette__loading {
+  display: inline-block;
+  width: 1.2em;
+  height: 1.2em;
+  border: 2px solid rgba(26, 26, 26, 0.3);
+  border-top-color: #1a1a1a;
+  border-radius: 50%;
+  animation: gazette-spin 0.6s linear infinite;
+  vertical-align: middle;
+  margin-right: 0.5em;
+}
+
+@keyframes gazette-spin {
+  to { transform: rotate(360deg); }
+}
+
+/* ── Sparse Data Fallback ──────────────────────────────────────── */
+
+.gazette__empty-note {
+  font-style: italic;
+  color: #777;
+  text-align: center;
+  padding: 1rem 0;
+}

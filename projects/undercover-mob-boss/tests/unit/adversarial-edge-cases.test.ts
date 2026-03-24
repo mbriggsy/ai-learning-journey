@@ -14,7 +14,7 @@ import {
 } from '../../src/server/game/phases';
 import { mulberry32 } from '../../src/server/game/rng';
 import { drawCards, checkReshuffle } from '../../src/server/game/policies';
-import { createTestGameState, createTestPlayer } from '../helpers/game-state-factory';
+import { createTestGameState, createTestPlayer, makeTestCard } from '../helpers/game-state-factory';
 import {
   acknowledgeAllRoles,
   passElection,
@@ -27,7 +27,7 @@ import {
   checkStateInvariants,
   advanceDisplayIfNeeded,
 } from '../helpers/game-driver';
-import type { GameState, GameAction, Phase, SubPhase, PolicyType } from '../../src/shared/types';
+import type { GameState, GameAction, Phase, SubPhase } from '../../src/shared/types';
 
 // ── Helpers ──────────────────────────────────────────────────────────
 
@@ -41,13 +41,13 @@ function stateInPhase(phase: Phase, subPhase: SubPhase | null): GameState {
     phase,
     subPhase,
     nominatedCommissionerId: 'player-2',
-    mayorCards: ['good', 'bad', 'bad'],
-    commissionerCards: ['good', 'bad'],
+    mayorCards: [makeTestCard('good'), makeTestCard('bad'), makeTestCard('bad')],
+    commissionerCards: [makeTestCard('good'), makeTestCard('bad')],
     badPoliciesEnacted: 5, // needed for veto tests
     executivePower:
       subPhase === 'executive-power-pending' ? 'investigate' :
       subPhase === 'policy-peek-viewing' ? 'policy-peek' : null,
-    peekCards: subPhase === 'policy-peek-viewing' ? ['good', 'bad', 'bad'] : null,
+    peekCards: subPhase === 'policy-peek-viewing' ? [makeTestCard('good'), makeTestCard('bad'), makeTestCard('bad')] : null,
   };
   return state;
 }
@@ -172,7 +172,7 @@ describe('2. Rapid identical dispatches', () => {
       playerCount: 5,
       phase: 'policy-session',
       subPhase: 'policy-mayor-discard',
-      mayorCards: ['good', 'bad', 'bad'],
+      mayorCards: [makeTestCard('good'), makeTestCard('bad'), makeTestCard('bad')],
     });
     const action: GameAction = { type: 'mayor-discard', cardIndex: 0 };
     const after1 = dispatch(state, action);
@@ -186,7 +186,7 @@ describe('2. Rapid identical dispatches', () => {
       playerCount: 5,
       phase: 'policy-session',
       subPhase: 'policy-commissioner-discard',
-      commissionerCards: ['good', 'bad'],
+      commissionerCards: [makeTestCard('good'), makeTestCard('bad')],
     });
     const action: GameAction = { type: 'commissioner-discard', cardIndex: 0 };
     const after1 = dispatch(state, action);
@@ -200,7 +200,7 @@ describe('2. Rapid identical dispatches', () => {
       playerCount: 5,
       phase: 'policy-session',
       subPhase: 'policy-commissioner-discard',
-      commissionerCards: ['good', 'bad'],
+      commissionerCards: [makeTestCard('good'), makeTestCard('bad')],
       badPoliciesEnacted: 5,
       vetoProposed: false,
     });
@@ -216,7 +216,7 @@ describe('2. Rapid identical dispatches', () => {
       playerCount: 5,
       phase: 'policy-session',
       subPhase: 'policy-commissioner-discard',
-      commissionerCards: ['good', 'bad'],
+      commissionerCards: [makeTestCard('good'), makeTestCard('bad')],
       badPoliciesEnacted: 5,
       vetoProposed: false,
     });
@@ -586,8 +586,8 @@ describe('7. Veto -> auto-enact -> reshuffle -> win cascade', () => {
       policyDeck: [],
       // Discard has the remaining 6 good + 6 bad (minus 5 enacted bad, minus 2 in hand)
       // 17 total - 5 enacted bad - 2 in commissioner hand = 10 in deck+discard
-      policyDiscard: ['bad', 'bad', 'bad', 'bad', 'bad', 'bad', 'good', 'good', 'good', 'good'],
-      commissionerCards: ['good', 'bad'],
+      policyDiscard: [makeTestCard('bad'), makeTestCard('bad'), makeTestCard('bad'), makeTestCard('bad'), makeTestCard('bad'), makeTestCard('bad'), makeTestCard('good'), makeTestCard('good'), makeTestCard('good'), makeTestCard('good')],
+      commissionerCards: [makeTestCard('good'), makeTestCard('bad')],
       mayorCards: null,
       vetoProposed: false,
       reshuffleThreshold: 5,
@@ -630,9 +630,9 @@ describe('7. Veto -> auto-enact -> reshuffle -> win cascade', () => {
       badPoliciesEnacted: 5,
       goodPoliciesEnacted: 0,
       electionTracker: 2,
-      policyDeck: ['bad', 'good', 'bad', 'bad', 'good', 'bad'],
-      policyDiscard: ['good', 'good', 'good', 'good'],
-      commissionerCards: ['good', 'bad'],
+      policyDeck: [makeTestCard('bad'), makeTestCard('good'), makeTestCard('bad'), makeTestCard('bad'), makeTestCard('good'), makeTestCard('bad')],
+      policyDiscard: [makeTestCard('good'), makeTestCard('good'), makeTestCard('good'), makeTestCard('good')],
+      commissionerCards: [makeTestCard('good'), makeTestCard('bad')],
       mayorCards: null,
       vetoProposed: false,
     });
@@ -709,8 +709,8 @@ describe('8. Zero cards in deck and discard', () => {
   });
 
   it('drawCards with insufficient cards throws', () => {
-    expect(() => drawCards(['good'], 3)).toThrow('Cannot draw 3 cards from deck of 1');
-    expect(() => drawCards(['good', 'bad'], 3)).toThrow('Cannot draw 3 cards from deck of 2');
+    expect(() => drawCards([makeTestCard('good')], 3)).toThrow('Cannot draw 3 cards from deck of 1');
+    expect(() => drawCards([makeTestCard('good'), makeTestCard('bad')], 3)).toThrow('Cannot draw 3 cards from deck of 2');
   });
 });
 
@@ -722,7 +722,7 @@ describe('9. Negative/invalid card indices', () => {
       playerCount: 5,
       phase: 'policy-session',
       subPhase: 'policy-mayor-discard',
-      mayorCards: ['good', 'bad', 'bad'],
+      mayorCards: [makeTestCard('good'), makeTestCard('bad'), makeTestCard('bad')],
     });
     expect(() => dispatch(state, { type: 'mayor-discard', cardIndex: -1 })).toThrow(
       InvalidActionError,
@@ -734,7 +734,7 @@ describe('9. Negative/invalid card indices', () => {
       playerCount: 5,
       phase: 'policy-session',
       subPhase: 'policy-mayor-discard',
-      mayorCards: ['good', 'bad', 'bad'],
+      mayorCards: [makeTestCard('good'), makeTestCard('bad'), makeTestCard('bad')],
     });
     expect(() => dispatch(state, { type: 'mayor-discard', cardIndex: 99 })).toThrow(
       InvalidActionError,
@@ -753,7 +753,7 @@ describe('9. Negative/invalid card indices', () => {
       playerCount: 5,
       phase: 'policy-session',
       subPhase: 'policy-mayor-discard',
-      mayorCards: ['good', 'bad', 'bad'],
+      mayorCards: [makeTestCard('good'), makeTestCard('bad'), makeTestCard('bad')],
     });
     expect(() => dispatch(state, { type: 'mayor-discard', cardIndex: NaN })).toThrow(
       InvalidActionError,
@@ -765,7 +765,7 @@ describe('9. Negative/invalid card indices', () => {
       playerCount: 5,
       phase: 'policy-session',
       subPhase: 'policy-mayor-discard',
-      mayorCards: ['good', 'bad', 'bad'],
+      mayorCards: [makeTestCard('good'), makeTestCard('bad'), makeTestCard('bad')],
     });
     expect(() => dispatch(state, { type: 'mayor-discard', cardIndex: 3 })).toThrow(
       InvalidActionError,
@@ -777,7 +777,7 @@ describe('9. Negative/invalid card indices', () => {
       playerCount: 5,
       phase: 'policy-session',
       subPhase: 'policy-commissioner-discard',
-      commissionerCards: ['good', 'bad'],
+      commissionerCards: [makeTestCard('good'), makeTestCard('bad')],
     });
     expect(() => dispatch(state, { type: 'commissioner-discard', cardIndex: -1 })).toThrow(
       InvalidActionError,
@@ -789,7 +789,7 @@ describe('9. Negative/invalid card indices', () => {
       playerCount: 5,
       phase: 'policy-session',
       subPhase: 'policy-commissioner-discard',
-      commissionerCards: ['good', 'bad'],
+      commissionerCards: [makeTestCard('good'), makeTestCard('bad')],
     });
     expect(() => dispatch(state, { type: 'commissioner-discard', cardIndex: 99 })).toThrow(
       InvalidActionError,
@@ -805,7 +805,7 @@ describe('9. Negative/invalid card indices', () => {
       playerCount: 5,
       phase: 'policy-session',
       subPhase: 'policy-commissioner-discard',
-      commissionerCards: ['good', 'bad'],
+      commissionerCards: [makeTestCard('good'), makeTestCard('bad')],
     });
     expect(() => dispatch(state, { type: 'commissioner-discard', cardIndex: NaN })).toThrow(
       InvalidActionError,
@@ -817,7 +817,7 @@ describe('9. Negative/invalid card indices', () => {
       playerCount: 5,
       phase: 'policy-session',
       subPhase: 'policy-commissioner-discard',
-      commissionerCards: ['good', 'bad'],
+      commissionerCards: [makeTestCard('good'), makeTestCard('bad')],
     });
     expect(() => dispatch(state, { type: 'commissioner-discard', cardIndex: 2 })).toThrow(
       InvalidActionError,
@@ -829,7 +829,7 @@ describe('9. Negative/invalid card indices', () => {
       playerCount: 5,
       phase: 'policy-session',
       subPhase: 'policy-mayor-discard',
-      mayorCards: ['good', 'bad', 'bad'],
+      mayorCards: [makeTestCard('good'), makeTestCard('bad'), makeTestCard('bad')],
     });
     expect(() => dispatch(state, { type: 'mayor-discard', cardIndex: Infinity })).toThrow(
       InvalidActionError,
@@ -841,7 +841,7 @@ describe('9. Negative/invalid card indices', () => {
       playerCount: 5,
       phase: 'policy-session',
       subPhase: 'policy-mayor-discard',
-      mayorCards: ['good', 'bad', 'bad'],
+      mayorCards: [makeTestCard('good'), makeTestCard('bad'), makeTestCard('bad')],
     });
     expect(() => dispatch(state, { type: 'mayor-discard', cardIndex: -Infinity })).toThrow(
       InvalidActionError,
@@ -1036,7 +1036,7 @@ describe('Bonus: Additional edge cases', () => {
       playerCount: 5,
       phase: 'policy-session',
       subPhase: 'policy-commissioner-discard',
-      commissionerCards: ['good', 'bad'],
+      commissionerCards: [makeTestCard('good'), makeTestCard('bad')],
       badPoliciesEnacted: 4, // not yet 5
     });
 

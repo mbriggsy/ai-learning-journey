@@ -8,7 +8,7 @@
 import { describe, it, expect } from 'vitest';
 import { createGame, dispatch, getEligibleNominees } from '../../src/server/game/phases';
 import { mulberry32 } from '../../src/server/game/rng';
-import { createTestGameState, createTestPlayer } from '../helpers/game-state-factory';
+import { createTestGameState, createTestPlayer, makeTestCard } from '../helpers/game-state-factory';
 import {
   acknowledgeAllRoles,
   passElection,
@@ -19,20 +19,20 @@ import {
   pickNextAction,
   advanceDisplayIfNeeded,
 } from '../helpers/game-driver';
-import type { GameState, PolicyType } from '../../src/shared/types';
+import type { GameState } from '../../src/shared/types';
 
 // ── WIN CONDITION: Citizens Win via 5 Good Policies ─────────────────
 
 describe('Win: Citizens via 5 Good Policies', () => {
   it('5-player game: 5 rounds of good policy → citizens win', () => {
     // Deck stacked: [good,bad,bad] repeated — mayor discards bad, commissioner discards bad
-    const deck: PolicyType[] = [
-      'good', 'bad', 'bad',
-      'good', 'bad', 'bad',
-      'good', 'bad', 'bad',
-      'good', 'bad', 'bad',
-      'good', 'bad', 'bad',
-      'good', 'bad',
+    const deck = [
+      makeTestCard('good'), makeTestCard('bad'), makeTestCard('bad'),
+      makeTestCard('good'), makeTestCard('bad'), makeTestCard('bad'),
+      makeTestCard('good'), makeTestCard('bad'), makeTestCard('bad'),
+      makeTestCard('good'), makeTestCard('bad'), makeTestCard('bad'),
+      makeTestCard('good'), makeTestCard('bad'), makeTestCard('bad'),
+      makeTestCard('good'), makeTestCard('bad'),
     ];
     let state = createTestGameState({
       phase: 'nomination',
@@ -53,13 +53,13 @@ describe('Win: Citizens via 5 Good Policies', () => {
   });
 
   it('7-player game: citizens win via policy', () => {
-    const deck: PolicyType[] = [
-      'good', 'bad', 'bad',
-      'good', 'bad', 'bad',
-      'good', 'bad', 'bad',
-      'good', 'bad', 'bad',
-      'good', 'bad', 'bad',
-      'good', 'bad',
+    const deck = [
+      makeTestCard('good'), makeTestCard('bad'), makeTestCard('bad'),
+      makeTestCard('good'), makeTestCard('bad'), makeTestCard('bad'),
+      makeTestCard('good'), makeTestCard('bad'), makeTestCard('bad'),
+      makeTestCard('good'), makeTestCard('bad'), makeTestCard('bad'),
+      makeTestCard('good'), makeTestCard('bad'), makeTestCard('bad'),
+      makeTestCard('good'), makeTestCard('bad'),
     ];
     let state = createTestGameState({
       phase: 'nomination',
@@ -133,9 +133,9 @@ describe('Win: Mob via 6 Bad Policies', () => {
     const state = createTestGameState({
       phase: 'policy-session',
       subPhase: 'policy-commissioner-discard',
-      commissionerCards: ['bad', 'good'],
+      commissionerCards: [makeTestCard('bad'), makeTestCard('good')],
       badPoliciesEnacted: 5,
-      policyDeck: ['good', 'bad', 'good', 'bad', 'good'],
+      policyDeck: [makeTestCard('good'), makeTestCard('bad'), makeTestCard('good'), makeTestCard('bad'), makeTestCard('good')],
     });
 
     const result = dispatch(state, { type: 'commissioner-discard', cardIndex: 1 }); // enact bad
@@ -151,12 +151,12 @@ describe('Win: Mob via 6 Bad Policies', () => {
       phase: 'nomination',
       subPhase: 'nomination-pending',
       policyDeck: [
-        'bad', 'good', 'bad',  // round 1
-        'bad', 'good', 'bad',  // round 2
-        'bad', 'good', 'bad',  // round 3
-        'bad', 'good', 'bad',  // round 4
-        'bad', 'good', 'bad',  // round 5
-        'good', 'bad',         // leftover
+        makeTestCard('bad'), makeTestCard('good'), makeTestCard('bad'),  // round 1
+        makeTestCard('bad'), makeTestCard('good'), makeTestCard('bad'),  // round 2
+        makeTestCard('bad'), makeTestCard('good'), makeTestCard('bad'),  // round 3
+        makeTestCard('bad'), makeTestCard('good'), makeTestCard('bad'),  // round 4
+        makeTestCard('bad'), makeTestCard('good'), makeTestCard('bad'),  // round 5
+        makeTestCard('good'), makeTestCard('bad'),         // leftover
       ],
       reshuffleThreshold: 1,
     });
@@ -311,11 +311,11 @@ describe('Executive Powers: 7-8 Player Bracket', () => {
     createTestGameState({
       phase: 'policy-session',
       subPhase: 'policy-commissioner-discard',
-      commissionerCards: ['bad', 'good'],
+      commissionerCards: [makeTestCard('bad'), makeTestCard('good')],
       badPoliciesEnacted: badCount - 1, // will become badCount after enacting
       playerCount: 7,
       players: createTestGameState({ playerCount: 7 }).players,
-      policyDeck: ['good', 'bad', 'good', 'bad', 'good', 'bad', 'good', 'bad'],
+      policyDeck: [makeTestCard('good'), makeTestCard('bad'), makeTestCard('good'), makeTestCard('bad'), makeTestCard('good'), makeTestCard('bad'), makeTestCard('good'), makeTestCard('bad')],
       reshuffleThreshold: 1,
     });
 
@@ -365,11 +365,11 @@ describe('Executive Powers: 9-10 Player Bracket', () => {
     createTestGameState({
       phase: 'policy-session',
       subPhase: 'policy-commissioner-discard',
-      commissionerCards: ['bad', 'good'],
+      commissionerCards: [makeTestCard('bad'), makeTestCard('good')],
       badPoliciesEnacted: badCount - 1,
       playerCount: 9,
       players: createTestGameState({ playerCount: 9 }).players,
-      policyDeck: ['good', 'bad', 'good', 'bad', 'good', 'bad', 'good', 'bad'],
+      policyDeck: [makeTestCard('good'), makeTestCard('bad'), makeTestCard('good'), makeTestCard('bad'), makeTestCard('good'), makeTestCard('bad'), makeTestCard('good'), makeTestCard('bad')],
       reshuffleThreshold: 1,
     });
 
@@ -422,7 +422,7 @@ describe('Auto-Enact: 3 Failed Elections', () => {
       phase: 'nomination',
       subPhase: 'nomination-pending',
       electionTracker: 0,
-      policyDeck: ['good', 'bad', 'bad', 'good', 'bad', 'good', 'bad', 'good', 'bad', 'good', 'bad', 'good', 'bad', 'bad', 'good', 'bad', 'bad'],
+      policyDeck: [makeTestCard('good'), makeTestCard('bad'), makeTestCard('bad'), makeTestCard('good'), makeTestCard('bad'), makeTestCard('good'), makeTestCard('bad'), makeTestCard('good'), makeTestCard('bad'), makeTestCard('good'), makeTestCard('bad'), makeTestCard('good'), makeTestCard('bad'), makeTestCard('bad'), makeTestCard('good'), makeTestCard('bad'), makeTestCard('bad')],
       rngSeed: 42,
     });
 
@@ -457,7 +457,7 @@ describe('Auto-Enact: 3 Failed Elections', () => {
       badPoliciesEnacted: 1,
       playerCount: 7,
       players: createTestGameState({ playerCount: 7 }).players,
-      policyDeck: ['bad', 'bad', 'bad', 'bad', 'bad', 'bad', 'bad', 'bad', 'bad', 'bad', 'bad', 'good', 'good', 'good', 'good', 'good', 'good'],
+      policyDeck: [makeTestCard('bad'), makeTestCard('bad'), makeTestCard('bad'), makeTestCard('bad'), makeTestCard('bad'), makeTestCard('bad'), makeTestCard('bad'), makeTestCard('bad'), makeTestCard('bad'), makeTestCard('bad'), makeTestCard('bad'), makeTestCard('good'), makeTestCard('good'), makeTestCard('good'), makeTestCard('good'), makeTestCard('good'), makeTestCard('good')],
       rngSeed: 42,
     });
 
@@ -477,7 +477,7 @@ describe('Auto-Enact: 3 Failed Elections', () => {
       subPhase: 'nomination-pending',
       electionTracker: 0,
       goodPoliciesEnacted: 4,
-      policyDeck: ['good', 'bad', 'bad', 'bad', 'bad', 'bad', 'bad', 'bad', 'bad', 'bad', 'bad', 'bad', 'bad', 'good', 'good', 'good', 'good'],
+      policyDeck: [makeTestCard('good'), makeTestCard('bad'), makeTestCard('bad'), makeTestCard('bad'), makeTestCard('bad'), makeTestCard('bad'), makeTestCard('bad'), makeTestCard('bad'), makeTestCard('bad'), makeTestCard('bad'), makeTestCard('bad'), makeTestCard('bad'), makeTestCard('bad'), makeTestCard('good'), makeTestCard('good'), makeTestCard('good'), makeTestCard('good')],
       rngSeed: 42,
     });
 
@@ -496,7 +496,7 @@ describe('Auto-Enact: 3 Failed Elections', () => {
       subPhase: 'nomination-pending',
       electionTracker: 0,
       badPoliciesEnacted: 5,
-      policyDeck: ['bad', 'good', 'good', 'good', 'good', 'good', 'good'],
+      policyDeck: [makeTestCard('bad'), makeTestCard('good'), makeTestCard('good'), makeTestCard('good'), makeTestCard('good'), makeTestCard('good'), makeTestCard('good')],
       rngSeed: 42,
     });
 
@@ -514,7 +514,7 @@ describe('Auto-Enact: 3 Failed Elections', () => {
       phase: 'nomination',
       subPhase: 'nomination-pending',
       electionTracker: 0,
-      policyDeck: ['bad', 'bad', 'bad', 'good', 'bad', 'good', 'bad', 'good', 'bad', 'good', 'bad', 'good', 'bad', 'bad', 'good', 'bad', 'bad'],
+      policyDeck: [makeTestCard('bad'), makeTestCard('bad'), makeTestCard('bad'), makeTestCard('good'), makeTestCard('bad'), makeTestCard('good'), makeTestCard('bad'), makeTestCard('good'), makeTestCard('bad'), makeTestCard('good'), makeTestCard('bad'), makeTestCard('good'), makeTestCard('bad'), makeTestCard('bad'), makeTestCard('good'), makeTestCard('bad'), makeTestCard('bad')],
       rngSeed: 42,
       players: createTestGameState().players.map((p) => {
         if (p.id === 'player-2') return { ...p, wasLastMayor: true };
@@ -543,9 +543,9 @@ describe('Veto Power: Full Paths', () => {
       phase: 'policy-session',
       subPhase: 'policy-commissioner-discard',
       badPoliciesEnacted: 5,
-      commissionerCards: ['bad', 'bad'],
+      commissionerCards: [makeTestCard('bad'), makeTestCard('bad')],
       electionTracker: 0,
-      policyDeck: ['good', 'bad', 'good', 'bad', 'good', 'bad', 'good'],
+      policyDeck: [makeTestCard('good'), makeTestCard('bad'), makeTestCard('good'), makeTestCard('bad'), makeTestCard('good'), makeTestCard('bad'), makeTestCard('good')],
     });
 
     // Commissioner proposes veto
@@ -568,8 +568,8 @@ describe('Veto Power: Full Paths', () => {
       phase: 'policy-session',
       subPhase: 'policy-commissioner-discard',
       badPoliciesEnacted: 5,
-      commissionerCards: ['bad', 'good'],
-      policyDeck: ['bad', 'good', 'bad', 'good', 'bad'],
+      commissionerCards: [makeTestCard('bad'), makeTestCard('good')],
+      policyDeck: [makeTestCard('bad'), makeTestCard('good'), makeTestCard('bad'), makeTestCard('good'), makeTestCard('bad')],
     });
 
     state = dispatch(state, { type: 'propose-veto' });
@@ -588,9 +588,9 @@ describe('Veto Power: Full Paths', () => {
       phase: 'policy-session',
       subPhase: 'policy-commissioner-discard',
       badPoliciesEnacted: 5,
-      commissionerCards: ['bad', 'bad'],
+      commissionerCards: [makeTestCard('bad'), makeTestCard('bad')],
       electionTracker: 2,
-      policyDeck: ['good', 'bad', 'good', 'bad', 'good', 'bad', 'good'],
+      policyDeck: [makeTestCard('good'), makeTestCard('bad'), makeTestCard('good'), makeTestCard('bad'), makeTestCard('good'), makeTestCard('bad'), makeTestCard('good')],
       rngSeed: 42,
     });
 
@@ -623,7 +623,7 @@ describe('Special Election: Full Path', () => {
       mayorIndex: 0,
       playerCount: 7,
       players: createTestGameState({ playerCount: 7 }).players,
-      policyDeck: ['good', 'bad', 'good', 'bad', 'good', 'bad', 'good', 'bad'],
+      policyDeck: [makeTestCard('good'), makeTestCard('bad'), makeTestCard('good'), makeTestCard('bad'), makeTestCard('good'), makeTestCard('bad'), makeTestCard('good'), makeTestCard('bad')],
       reshuffleThreshold: 1,
     });
 
@@ -650,7 +650,7 @@ describe('Special Election: Full Path', () => {
       subPhase: 'executive-power-pending',
       executivePower: 'special-nomination',
       mayorIndex: 0,
-      policyDeck: ['good', 'bad', 'bad', 'good', 'bad', 'bad', 'good', 'bad', 'bad', 'good', 'bad', 'bad', 'good', 'bad', 'bad', 'good', 'bad'],
+      policyDeck: [makeTestCard('good'), makeTestCard('bad'), makeTestCard('bad'), makeTestCard('good'), makeTestCard('bad'), makeTestCard('bad'), makeTestCard('good'), makeTestCard('bad'), makeTestCard('bad'), makeTestCard('good'), makeTestCard('bad'), makeTestCard('bad'), makeTestCard('good'), makeTestCard('bad'), makeTestCard('bad'), makeTestCard('good'), makeTestCard('bad')],
       reshuffleThreshold: 1,
     });
 
@@ -744,8 +744,8 @@ describe('Deck Reshuffle', () => {
       phase: 'election',
       subPhase: 'election-voting',
       nominatedCommissionerId: 'player-3',
-      policyDeck: ['good', 'bad'], // 1 good + 1 bad
-      policyDiscard: ['bad', 'bad', 'bad', 'good', 'bad', 'good', 'bad', 'good', 'bad', 'good', 'bad', 'good', 'bad', 'bad', 'bad'],
+      policyDeck: [makeTestCard('good'), makeTestCard('bad')], // 1 good + 1 bad
+      policyDiscard: [makeTestCard('bad'), makeTestCard('bad'), makeTestCard('bad'), makeTestCard('good'), makeTestCard('bad'), makeTestCard('good'), makeTestCard('bad'), makeTestCard('good'), makeTestCard('bad'), makeTestCard('good'), makeTestCard('bad'), makeTestCard('good'), makeTestCard('bad'), makeTestCard('bad'), makeTestCard('bad')],
       reshuffleThreshold: 5, // deck.length (2) < threshold (5)
       rngSeed: 42,
     });

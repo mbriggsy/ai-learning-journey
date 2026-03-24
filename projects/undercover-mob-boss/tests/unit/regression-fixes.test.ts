@@ -8,7 +8,7 @@
  */
 import { describe, it, expect } from 'vitest';
 import { advanceMayor, dispatch, InvalidActionError } from '../../src/server/game/phases';
-import { createTestGameState } from '../helpers/game-state-factory';
+import { createTestGameState, makeTestCard } from '../helpers/game-state-factory';
 import type { GameState, Player } from '../../src/shared/types';
 
 // ── Helper: build players array with specific dead patterns ────────
@@ -173,7 +173,7 @@ describe('Bug 2: NaN and non-integer card indices are rejected', () => {
       return createTestGameState({
         phase: 'policy-session',
         subPhase: 'policy-mayor-discard',
-        mayorCards: ['good', 'bad', 'bad'],
+        mayorCards: [makeTestCard('good'), makeTestCard('bad'), makeTestCard('bad')],
       });
     }
 
@@ -257,7 +257,7 @@ describe('Bug 2: NaN and non-integer card indices are rejected', () => {
       return createTestGameState({
         phase: 'policy-session',
         subPhase: 'policy-commissioner-discard',
-        commissionerCards: ['good', 'bad'],
+        commissionerCards: [makeTestCard('good'), makeTestCard('bad')],
       });
     }
 

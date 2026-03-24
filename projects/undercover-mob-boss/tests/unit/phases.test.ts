@@ -1,7 +1,7 @@
 import { describe, it, expect } from 'vitest';
 import { createGame, dispatch, getEligibleNominees, advanceMayor, InvalidActionError, DISPLAY_SUB_PHASES } from '../../src/server/game/phases';
 import { mulberry32 } from '../../src/server/game/rng';
-import { createTestGameState } from '../helpers/game-state-factory';
+import { createTestGameState, makeTestCard } from '../helpers/game-state-factory';
 import type { GameState } from '../../src/shared/types';
 
 /** Helper: dispatch advance-display to skip past display states. */
@@ -376,7 +376,7 @@ describe('dispatch — election tracker → auto-enact', () => {
       subPhase: 'election-voting',
       electionTracker: 2,
       nominatedCommissionerId: 'player-3',
-      policyDeck: ['bad', 'good', 'bad', 'good', 'bad'],
+      policyDeck: [makeTestCard('bad'), makeTestCard('good'), makeTestCard('bad'), makeTestCard('good'), makeTestCard('bad')],
       rngSeed: 42,
     });
 
@@ -415,21 +415,21 @@ describe('dispatch — policy session', () => {
     const state = createTestGameState({
       phase: 'policy-session',
       subPhase: 'policy-mayor-discard',
-      mayorCards: ['good', 'bad', 'bad'],
+      mayorCards: [makeTestCard('good'), makeTestCard('bad'), makeTestCard('bad')],
     });
 
     const next = dispatch(state, { type: 'mayor-discard', cardIndex: 0 });
     expect(next.subPhase).toBe('policy-commissioner-discard');
-    expect(next.commissionerCards).toEqual(['bad', 'bad']);
+    expect(next.commissionerCards?.map(c => c.type)).toEqual(['bad', 'bad']);
     expect(next.mayorCards).toBeNull();
-    expect(next.policyDiscard).toContain('good');
+    expect(next.policyDiscard.map(c => c.type)).toContain('good');
   });
 
   it('commissioner discards one card → policy enacted', () => {
     const state = createTestGameState({
       phase: 'policy-session',
       subPhase: 'policy-commissioner-discard',
-      commissionerCards: ['good', 'bad'],
+      commissionerCards: [makeTestCard('good'), makeTestCard('bad')],
     });
 
     const next = dispatch(state, { type: 'commissioner-discard', cardIndex: 1 }); // discard bad
@@ -443,7 +443,7 @@ describe('dispatch — policy session', () => {
     const state = createTestGameState({
       phase: 'policy-session',
       subPhase: 'policy-commissioner-discard',
-      commissionerCards: ['good', 'bad'],
+      commissionerCards: [makeTestCard('good'), makeTestCard('bad')],
       goodPoliciesEnacted: 4,
     });
 
@@ -456,7 +456,7 @@ describe('dispatch — policy session', () => {
     const state = createTestGameState({
       phase: 'policy-session',
       subPhase: 'policy-commissioner-discard',
-      commissionerCards: ['bad', 'good'],
+      commissionerCards: [makeTestCard('bad'), makeTestCard('good')],
       badPoliciesEnacted: 5,
     });
 
@@ -469,7 +469,7 @@ describe('dispatch — policy session', () => {
     const state = createTestGameState({
       phase: 'policy-session',
       subPhase: 'policy-commissioner-discard',
-      commissionerCards: ['bad', 'good'],
+      commissionerCards: [makeTestCard('bad'), makeTestCard('good')],
       badPoliciesEnacted: 2,
     });
 
@@ -496,7 +496,7 @@ describe('dispatch — veto flow', () => {
       phase: 'policy-session',
       subPhase: 'policy-commissioner-discard',
       badPoliciesEnacted: 5,
-      commissionerCards: ['bad', 'bad'],
+      commissionerCards: [makeTestCard('bad'), makeTestCard('bad')],
     });
 
     let next = dispatch(state, { type: 'propose-veto' });
@@ -515,7 +515,7 @@ describe('dispatch — veto flow', () => {
       phase: 'policy-session',
       subPhase: 'policy-veto-response',
       badPoliciesEnacted: 5,
-      commissionerCards: ['bad', 'bad'],
+      commissionerCards: [makeTestCard('bad'), makeTestCard('bad')],
       vetoProposed: true,
     });
 
@@ -529,7 +529,7 @@ describe('dispatch — veto flow', () => {
       phase: 'policy-session',
       subPhase: 'policy-veto-response',
       badPoliciesEnacted: 5,
-      commissionerCards: ['bad', 'bad'],
+      commissionerCards: [makeTestCard('bad'), makeTestCard('bad')],
       electionTracker: 0,
       vetoProposed: true,
     });
@@ -545,7 +545,7 @@ describe('dispatch — veto flow', () => {
       phase: 'policy-session',
       subPhase: 'policy-commissioner-discard',
       badPoliciesEnacted: 4,
-      commissionerCards: ['bad', 'bad'],
+      commissionerCards: [makeTestCard('bad'), makeTestCard('bad')],
     });
 
     expect(() => dispatch(state, { type: 'propose-veto' })).toThrow(/only available/);
@@ -556,10 +556,10 @@ describe('dispatch — veto flow', () => {
       phase: 'policy-session',
       subPhase: 'policy-veto-response',
       badPoliciesEnacted: 5,
-      commissionerCards: ['bad', 'bad'],
+      commissionerCards: [makeTestCard('bad'), makeTestCard('bad')],
       electionTracker: 2,
       vetoProposed: true,
-      policyDeck: ['good', 'bad', 'bad', 'good', 'bad'],
+      policyDeck: [makeTestCard('good'), makeTestCard('bad'), makeTestCard('bad'), makeTestCard('good'), makeTestCard('bad')],
       rngSeed: 42,
     });
 
@@ -700,7 +700,7 @@ describe('dispatch — executive powers', () => {
       phase: 'executive-power',
       subPhase: 'policy-peek-viewing',
       executivePower: 'policy-peek',
-      peekCards: ['bad', 'good', 'bad'],
+      peekCards: [makeTestCard('bad'), makeTestCard('good'), makeTestCard('bad')],
     });
 
     const next = dispatch(state, { type: 'acknowledge-peek' });
@@ -886,12 +886,12 @@ describe('dispatch — display state transitions', () => {
     const state = createTestGameState({
       phase: 'policy-session',
       subPhase: 'policy-commissioner-discard',
-      commissionerCards: ['good', 'bad'],
+      commissionerCards: [makeTestCard('good'), makeTestCard('bad')],
     });
     const next = dispatch(state, { type: 'commissioner-discard', cardIndex: 1 }); // enact good
     expect(next.subPhase).toBe('policy-enact');
     expect(next.goodPoliciesEnacted).toBe(1);
-    expect(next.lastEnactedPolicy).toBe('good');
+    expect(next.lastEnactedPolicy?.type).toBe('good');
   });
 
   it('auto-enact is a display state during auto-enact', () => {
@@ -901,7 +901,7 @@ describe('dispatch — display state transitions', () => {
       electionTracker: 2,
       nominatedCommissionerId: 'player-3',
       votes: { 'player-0': 'block', 'player-1': 'block', 'player-2': 'block', 'player-3': 'block', 'player-4': 'block' },
-      policyDeck: ['good', 'bad', 'bad', 'good', 'bad'],
+      policyDeck: [makeTestCard('good'), makeTestCard('bad'), makeTestCard('bad'), makeTestCard('good'), makeTestCard('bad')],
       rngSeed: 42,
     });
     // advance-display from election-result triggers failed election → auto-enact
@@ -915,7 +915,7 @@ describe('dispatch — display state transitions', () => {
       phase: 'policy-session',
       subPhase: 'policy-commissioner-discard',
       badPoliciesEnacted: 5,
-      commissionerCards: ['bad', 'bad'],
+      commissionerCards: [makeTestCard('bad'), makeTestCard('bad')],
     });
     const next = dispatch(state, { type: 'propose-veto' });
     expect(next.subPhase).toBe('policy-veto-propose');
@@ -951,8 +951,8 @@ describe('dispatch — display state transitions', () => {
       phase: 'policy-session',
       subPhase: 'policy-enact',
       badPoliciesEnacted: 3,
-      lastEnactedPolicy: 'bad',
-      policyDeck: ['good', 'bad', 'good', 'bad', 'good'],
+      lastEnactedPolicy: makeTestCard('bad'),
+      policyDeck: [makeTestCard('good'), makeTestCard('bad'), makeTestCard('good'), makeTestCard('bad'), makeTestCard('good')],
     });
     const next = advanceDisplay(state);
     expect(next.phase).toBe('executive-power');
@@ -965,7 +965,7 @@ describe('dispatch — display state transitions', () => {
       phase: 'policy-session',
       subPhase: 'policy-enact',
       goodPoliciesEnacted: 1,
-      lastEnactedPolicy: 'good',
+      lastEnactedPolicy: makeTestCard('good'),
     });
     const next = advanceDisplay(state);
     expect(next.phase).toBe('nomination');
@@ -975,7 +975,7 @@ describe('dispatch — display state transitions', () => {
     const state = createTestGameState({
       phase: 'policy-session',
       subPhase: 'auto-enact',
-      lastEnactedPolicy: 'bad',
+      lastEnactedPolicy: makeTestCard('bad'),
       players: createTestGameState().players.map((p) => ({
         ...p,
         wasLastMayor: p.id === 'player-2',
@@ -999,7 +999,7 @@ describe('dispatch — display state transitions', () => {
       phase: 'policy-session',
       subPhase: 'policy-veto-propose',
       vetoProposed: true,
-      commissionerCards: ['bad', 'bad'],
+      commissionerCards: [makeTestCard('bad'), makeTestCard('bad')],
       badPoliciesEnacted: 5,
     });
     const next = advanceDisplay(state);
@@ -1018,7 +1018,7 @@ describe('dispatch — display state transitions', () => {
     const state = createTestGameState({
       phase: 'policy-session',
       subPhase: 'policy-commissioner-discard',
-      commissionerCards: ['good', 'bad'],
+      commissionerCards: [makeTestCard('good'), makeTestCard('bad')],
       goodPoliciesEnacted: 4,
     });
     const next = dispatch(state, { type: 'commissioner-discard', cardIndex: 1 }); // enact good (5th)

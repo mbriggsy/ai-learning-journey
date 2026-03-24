@@ -14,7 +14,7 @@ import {
 } from '../../src/server/game/phases';
 import { drawCards, checkReshuffle } from '../../src/server/game/policies';
 import { resolvePolicyPeek } from '../../src/server/game/powers';
-import { createTestGameState, createTestPlayer } from '../helpers/game-state-factory';
+import { createTestGameState, createTestPlayer, makeTestCard } from '../helpers/game-state-factory';
 import {
   passElection,
   failElection,
@@ -27,7 +27,7 @@ import {
 } from '../helpers/game-driver';
 import { DISPLAY_SUB_PHASES } from '../../src/server/game/phases';
 import { mulberry32 } from '../../src/server/game/rng';
-import type { GameState, Player, PolicyType, GameAction } from '../../src/shared/types';
+import type { GameState, Player, GameAction } from '../../src/shared/types';
 
 // ── Helper: create players with specific configuration ──────────────
 
@@ -259,7 +259,7 @@ describe('Adversarial: Term Limit Edge Cases', () => {
 
 describe('Adversarial: Deck Exhaustion', () => {
   it('drawCards throws when deck has fewer cards than requested', () => {
-    expect(() => drawCards(['good', 'bad'], 3)).toThrow(/Cannot draw 3/);
+    expect(() => drawCards([makeTestCard('good'), makeTestCard('bad')], 3)).toThrow(/Cannot draw 3/);
   });
 
   it('drawCards throws on empty deck', () => {
@@ -268,8 +268,8 @@ describe('Adversarial: Deck Exhaustion', () => {
 
   it('checkReshuffle combines deck + discard when below threshold', () => {
     const state = createTestGameState({
-      policyDeck: ['good', 'bad'],
-      policyDiscard: ['bad', 'bad', 'good', 'bad'],
+      policyDeck: [makeTestCard('good'), makeTestCard('bad')],
+      policyDiscard: [makeTestCard('bad'), makeTestCard('bad'), makeTestCard('good'), makeTestCard('bad')],
       reshuffleThreshold: 5,
     });
     const rng = mulberry32(42);
@@ -280,8 +280,8 @@ describe('Adversarial: Deck Exhaustion', () => {
 
   it('checkReshuffle throws when combined deck + discard < 3', () => {
     const state = createTestGameState({
-      policyDeck: ['good'],
-      policyDiscard: ['bad'],
+      policyDeck: [makeTestCard('good')],
+      policyDiscard: [makeTestCard('bad')],
       reshuffleThreshold: 5,
     });
     const rng = mulberry32(42);
@@ -290,8 +290,8 @@ describe('Adversarial: Deck Exhaustion', () => {
 
   it('deck with exactly 3 cards and threshold 3 does NOT reshuffle', () => {
     const state = createTestGameState({
-      policyDeck: ['good', 'bad', 'bad'],
-      policyDiscard: ['good', 'bad'],
+      policyDeck: [makeTestCard('good'), makeTestCard('bad'), makeTestCard('bad')],
+      policyDiscard: [makeTestCard('good'), makeTestCard('bad')],
       reshuffleThreshold: 3,
     });
     const rng = mulberry32(42);
@@ -303,8 +303,8 @@ describe('Adversarial: Deck Exhaustion', () => {
 
   it('deck with 2 cards and threshold 3 triggers reshuffle', () => {
     const state = createTestGameState({
-      policyDeck: ['good', 'bad'],
-      policyDiscard: ['good', 'bad', 'bad'],
+      policyDeck: [makeTestCard('good'), makeTestCard('bad')],
+      policyDiscard: [makeTestCard('good'), makeTestCard('bad'), makeTestCard('bad')],
       reshuffleThreshold: 3,
     });
     const rng = mulberry32(42);
@@ -320,8 +320,8 @@ describe('Adversarial: Deck Exhaustion', () => {
       phase: 'election',
       subPhase: 'election-voting',
       nominatedCommissionerId: 'player-3',
-      policyDeck: ['good', 'bad'],
-      policyDiscard: ['bad', 'bad', 'good', 'bad', 'good', 'bad', 'bad', 'good'],
+      policyDeck: [makeTestCard('good'), makeTestCard('bad')],
+      policyDiscard: [makeTestCard('bad'), makeTestCard('bad'), makeTestCard('good'), makeTestCard('bad'), makeTestCard('good'), makeTestCard('bad'), makeTestCard('bad'), makeTestCard('good')],
       reshuffleThreshold: 5,
     });
 
@@ -613,10 +613,10 @@ describe('Adversarial: Veto + Auto-Enact Cascade', () => {
       phase: 'policy-session',
       subPhase: 'policy-veto-response',
       badPoliciesEnacted: 5,
-      commissionerCards: ['bad', 'bad'],
+      commissionerCards: [makeTestCard('bad'), makeTestCard('bad')],
       vetoProposed: true,
       electionTracker: 2,
-      policyDeck: ['good', 'bad', 'bad', 'good', 'bad'],
+      policyDeck: [makeTestCard('good'), makeTestCard('bad'), makeTestCard('bad'), makeTestCard('good'), makeTestCard('bad')],
       policyDiscard: [],
       rngSeed: 42,
     });
@@ -638,11 +638,11 @@ describe('Adversarial: Veto + Auto-Enact Cascade', () => {
       phase: 'policy-session',
       subPhase: 'policy-veto-response',
       badPoliciesEnacted: 5,
-      commissionerCards: ['bad', 'good'],
+      commissionerCards: [makeTestCard('bad'), makeTestCard('good')],
       vetoProposed: true,
       electionTracker: 2,
-      policyDeck: ['bad'], // only 1 card in deck!
-      policyDiscard: ['good', 'bad', 'bad'], // 3 in discard
+      policyDeck: [makeTestCard('bad')], // only 1 card in deck!
+      policyDiscard: [makeTestCard('good'), makeTestCard('bad'), makeTestCard('bad')], // 3 in discard
       reshuffleThreshold: 5,
       rngSeed: 42,
     });
@@ -665,14 +665,14 @@ describe('Adversarial: Veto + Auto-Enact Cascade', () => {
       phase: 'policy-session',
       subPhase: 'policy-veto-response',
       badPoliciesEnacted: 5,
-      commissionerCards: ['bad', 'good'],
+      commissionerCards: [makeTestCard('bad'), makeTestCard('good')],
       vetoProposed: true,
       electionTracker: 1,
     });
 
     const result = dispatch(state, { type: 'veto-response', approved: false });
     expect(result.subPhase).toBe('policy-commissioner-discard');
-    expect(result.commissionerCards).toEqual(['bad', 'good']);
+    expect(result.commissionerCards?.map(c => c.type)).toEqual(['bad', 'good']);
 
     // Commissioner can now discard and enact
     const afterDiscard = dispatch(result, { type: 'commissioner-discard', cardIndex: 0 });
@@ -686,7 +686,7 @@ describe('Adversarial: Veto + Auto-Enact Cascade', () => {
       phase: 'policy-session',
       subPhase: 'policy-commissioner-discard',
       badPoliciesEnacted: 4,
-      commissionerCards: ['bad', 'good'],
+      commissionerCards: [makeTestCard('bad'), makeTestCard('good')],
     });
 
     expect(() => dispatch(state, { type: 'propose-veto' })).toThrow(/5 bad policies/);
@@ -812,7 +812,7 @@ describe('Adversarial: Wrong-Phase Actions', () => {
     const state = createTestGameState({
       phase: 'policy-session',
       subPhase: 'policy-mayor-discard',
-      mayorCards: ['good', 'bad', 'bad'],
+      mayorCards: [makeTestCard('good'), makeTestCard('bad'), makeTestCard('bad')],
     });
 
     for (const action of allActions) {
@@ -828,7 +828,7 @@ describe('Adversarial: Wrong-Phase Actions', () => {
     const state = createTestGameState({
       phase: 'policy-session',
       subPhase: 'policy-commissioner-discard',
-      commissionerCards: ['good', 'bad'],
+      commissionerCards: [makeTestCard('good'), makeTestCard('bad')],
       badPoliciesEnacted: 5, // allow veto
     });
 
@@ -845,7 +845,7 @@ describe('Adversarial: Wrong-Phase Actions', () => {
     const state = createTestGameState({
       phase: 'policy-session',
       subPhase: 'policy-veto-response',
-      commissionerCards: ['good', 'bad'],
+      commissionerCards: [makeTestCard('good'), makeTestCard('bad')],
       badPoliciesEnacted: 5,
       vetoProposed: true,
     });
@@ -969,7 +969,7 @@ describe('Adversarial: Auto-Enact Edge Cases', () => {
       phase: 'nomination',
       subPhase: 'nomination-pending',
       electionTracker: 0,
-      policyDeck: ['bad', 'good', 'bad', 'good', 'bad', 'good', 'bad', 'good', 'bad', 'good', 'bad', 'good', 'bad', 'good', 'bad', 'good', 'bad'],
+      policyDeck: [makeTestCard('bad'), makeTestCard('good'), makeTestCard('bad'), makeTestCard('good'), makeTestCard('bad'), makeTestCard('good'), makeTestCard('bad'), makeTestCard('good'), makeTestCard('bad'), makeTestCard('good'), makeTestCard('bad'), makeTestCard('good'), makeTestCard('bad'), makeTestCard('good'), makeTestCard('bad'), makeTestCard('good'), makeTestCard('bad')],
       rngSeed: 42,
     });
 
@@ -1003,7 +1003,7 @@ describe('Adversarial: Auto-Enact Edge Cases', () => {
       electionTracker: 2,
       nominatedCommissionerId: 'player-3',
       players,
-      policyDeck: ['good', 'bad', 'bad', 'good', 'bad', 'good', 'bad', 'good', 'bad', 'good', 'bad', 'good', 'bad', 'good', 'bad', 'good', 'bad'],
+      policyDeck: [makeTestCard('good'), makeTestCard('bad'), makeTestCard('bad'), makeTestCard('good'), makeTestCard('bad'), makeTestCard('good'), makeTestCard('bad'), makeTestCard('good'), makeTestCard('bad'), makeTestCard('good'), makeTestCard('bad'), makeTestCard('good'), makeTestCard('bad'), makeTestCard('good'), makeTestCard('bad'), makeTestCard('good'), makeTestCard('bad')],
       rngSeed: 42,
     });
 
@@ -1031,7 +1031,7 @@ describe('Adversarial: Auto-Enact Edge Cases', () => {
       electionTracker: 2,
       badPoliciesEnacted: 5,
       nominatedCommissionerId: 'player-3',
-      policyDeck: ['bad', 'good', 'bad', 'good'], // top card is bad = 6th bad
+      policyDeck: [makeTestCard('bad'), makeTestCard('good'), makeTestCard('bad'), makeTestCard('good')], // top card is bad = 6th bad
       rngSeed: 42,
       players: makePlayers(5, (p, i) => {
         if (i === 0) return { isMayor: true };
@@ -1105,7 +1105,7 @@ describe('Adversarial: Policy Session Edge Cases', () => {
     const state = createTestGameState({
       phase: 'policy-session',
       subPhase: 'policy-mayor-discard',
-      mayorCards: ['good', 'bad', 'bad'],
+      mayorCards: [makeTestCard('good'), makeTestCard('bad'), makeTestCard('bad')],
     });
 
     expect(() => dispatch(state, { type: 'mayor-discard', cardIndex: 3 })).toThrow(/Invalid card/);
@@ -1116,7 +1116,7 @@ describe('Adversarial: Policy Session Edge Cases', () => {
     const state = createTestGameState({
       phase: 'policy-session',
       subPhase: 'policy-commissioner-discard',
-      commissionerCards: ['good', 'bad'],
+      commissionerCards: [makeTestCard('good'), makeTestCard('bad')],
     });
 
     expect(() => dispatch(state, { type: 'commissioner-discard', cardIndex: 2 })).toThrow(/Invalid card/);
@@ -1127,7 +1127,7 @@ describe('Adversarial: Policy Session Edge Cases', () => {
     const state = createTestGameState({
       phase: 'policy-session',
       subPhase: 'policy-commissioner-discard',
-      commissionerCards: ['good', 'bad'],
+      commissionerCards: [makeTestCard('good'), makeTestCard('bad')],
       goodPoliciesEnacted: 4,
     });
 
@@ -1141,7 +1141,7 @@ describe('Adversarial: Policy Session Edge Cases', () => {
     const state = createTestGameState({
       phase: 'policy-session',
       subPhase: 'policy-commissioner-discard',
-      commissionerCards: ['bad', 'good'],
+      commissionerCards: [makeTestCard('bad'), makeTestCard('good')],
       badPoliciesEnacted: 5,
     });
 
@@ -1222,7 +1222,7 @@ describe('Adversarial: Policy Peek with deck < 3 cards', () => {
   it('policy peek with fewer than 3 cards in deck shows only available cards', () => {
     // resolvePolicyPeek does deck.slice(0, 3) -- if deck has < 3, it just returns fewer
     const state = createTestGameState({
-      policyDeck: ['good', 'bad'], // only 2 cards
+      policyDeck: [makeTestCard('good'), makeTestCard('bad')], // only 2 cards
     });
 
     const result = resolvePolicyPeek(state);

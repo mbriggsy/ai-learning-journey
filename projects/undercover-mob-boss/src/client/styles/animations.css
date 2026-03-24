@@ -217,6 +217,7 @@
 
 /* ---- Policy Card Select ---- */
 .policy-card {
+  position: relative;
   width: 110px;
   aspect-ratio: 3 / 4;
   border-radius: 12px;
@@ -241,6 +242,22 @@
   height: 100%;
   object-fit: cover;
   display: block;
+}
+
+.policy-card__name {
+  position: absolute;
+  bottom: 0;
+  left: 0;
+  right: 0;
+  padding: 4px 6px;
+  font-size: 0.6rem;
+  font-weight: 700;
+  text-align: center;
+  text-transform: uppercase;
+  letter-spacing: 0.04em;
+  color: var(--noir-text);
+  background: linear-gradient(transparent, rgba(0, 0, 0, 0.85));
+  line-height: 1.2;
 }
 
 .policy-card--selected {

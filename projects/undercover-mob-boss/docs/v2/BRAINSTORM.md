@@ -1,127 +1,109 @@
 # Undercover Mob Boss v2 — Brainstorm
-*Started March 23, 2026*
+*Session: March 23, 2026*
 
 ---
 
 ## Philosophy
 
-V1 is solid. V2 is refinement + soul.
-The mechanics are proven. Now we make the *world* feel real.
-Every card, every role, every policy should feel like it's *from* Millbrook City.
+v1 is solid. v2 is the same game, sharper identity. Every element gets a name that earns its place in Millbrook City. No more generic "Good Policy" — every card tells a story.
 
 ---
 
 ## Naming Changes
 
-| V1 | V2 | Reason |
+| v1 | v2 | Rationale |
 | --- | --- | --- |
-| Police Chief | **Commissioner** | More political, more corrupt, more mob-adjacent |
-| Good Policy | **Virtuous Policy** | Moral weight, not just "good" |
-| Bad Policy | **Corrupt Policy** | Tells the story instantly |
-
-Mayor and Mob Boss stay — those are perfect.
-
----
-
-## Policy Cards — The Big Change
-
-V1 had generic good/bad cards. V2 cards are *specific* — each one is a real Millbrook City vote.
-Players will recognize real political battles. They'll laugh, argue, take sides.
-The policies ARE the game flavor.
-
-### Virtuous Policies (Citizens want these)
-
-| Policy | Flavor |
-| --- | --- |
-| New Public Library | "Knowledge is power — unless you're the mob" |
-| Broadband Expansion | "High-speed internet for every neighborhood" |
-| School Lunch Program | "No kid goes hungry in Millbrook City" |
-| Pothole Repair Initiative | "Fix the damn roads" |
-| Community Health Clinic | "Healthcare where it's needed most" |
-| Affordable Housing Fund | "Homes for working families" |
-| Youth Recreation Center | "Keep the kids off the streets — the mob's streets" |
-| Teacher Pay Raise | "Invest in the people who invest in children" |
-| Clean Water Initiative | "No lead pipes. No exceptions." |
-| Public Transit Expansion | "Get people where they need to go" |
-| After-School Programs | "Safe spaces. Real futures." |
-| Street Light Upgrade | "Light up the dark corners of the city" |
-
-### Corrupt Policies (Mob wants these)
-
-| Policy | Flavor |
-| --- | --- |
-| Stadium Deal | "Taxpayer-funded. Mob-owned." |
-| No ID Required — Firearms | "The mob's favorite voter suppression... wait, wrong category" |
-| Voter ID Requirement | "Make it harder to vote. For 'security'." |
-| No Fluoride in Water | "Conspiracy sells. Science doesn't vote." |
-| Police Oversight Removed | "Who watches the watchmen? Nobody. That's the point." |
-| Zoning Variance — Harbor District | "Prime real estate. Suspiciously approved." |
-| Parking Fine Amnesty | "For the connected. Obviously." |
-| Surveillance Camera Network | "Watching everyone. Protecting no one." |
-| Eminent Domain — Factory Row | "Your home is in the way. Of progress. Mob progress." |
-| City Contract — No Bid Required | "Competition is overrated." |
-| Casino License Fast-Track | "Approved in 24 hours. Suspiciously fast." |
-| Pension Fund 'Restructuring' | "Don't worry about your retirement. We'll handle it." |
+| Police Chief | Commissioner | More political, more corruptible, more mob-adjacent |
+| Good Policy | Virtuous Policy | Implies real civic good |
+| Bad Policy | Corrupt Policy | Implies real civic harm |
+| (generic cards) | Named specific cards | Each policy is a real political flashpoint |
 
 ---
 
-## Other V2 Ideas (To Explore)
+## Virtuous Policy Cards (Citizens win these)
 
-### Gameplay
-- **Veto mechanic** — players can call for a veto on a policy (already exists in SH, verify if v1 has it)
-- **Post-game breakdown** — "here's every lie Dave told" replay feature
-- **Spectator improvements** — eliminated players get a richer observer view
+Players feel good passing these. Recognizable civic goods.
 
-### Visual
-- Policy cards show the actual policy name + flavor text
-- Commissioner role card (new art)
-- Distinct Virtuous vs Corrupt card back designs
-- Animated policy card flip on enactment
+- New Public Library
+- Broadband Expansion
+- School Lunch Program
+- Pothole Repair Initiative
+- Community Health Clinic
+- Affordable Housing Fund
+- Youth Recreation Center
+- Teacher Pay Raise
+- Clean Water Initiative
+- Public Transit Expansion
+- After-School Programs
+- Street Light Upgrade
+- Park Renovation
+- Senior Center Funding
+- Recycling Program
 
-### Audio
-- New narrator lines for specific policies: *"The Stadium Deal passes. The mob smiles. The taxpayers don't."*
-- Policy-specific sound effects
-
-### UX
-- Player can see their own past votes in a session history
-- Host can show policy history on the board
-- Timer visible on voting screen
-
----
-
-## Folder Structure (V2 lives here)
-
-```
-undercover-mob-boss/
-  v1/           ← frozen v1 source (reference only)
-  v2/           ← active v2 build
-  shared/       ← assets/audio/fonts used by both
-  docs/
-    v1/         ← v1 documentation (frozen)
-    v2/         ← v2 documentation (this folder)
-    shared/     ← rules, SH reference, user docs
-```
+*(need ~15 total — same deck math as v1: 6 virtuous, 11 corrupt)*
 
 ---
 
-## Build Methodology
+## Corrupt Policy Cards (Mob wins these)
 
-Briggsy Modified Compound Engineering:
-- Plan → Deepen → Work → Review → Compound (per phase, serial)
-- CE deepen-plan runs between Plan and Work — no exceptions
-- Deepen frontmatter flag: `deepened: true`
-- Phases documented in `docs/v2/plans/`
+Players groan or laugh. Recognizable political rot.
+
+- No Fluoride in Water
+- Taxpayer-Funded Stadium
+- Voter ID Suppression Act
+- No Background Checks
+- Police Oversight Removed
+- Zoning Variance (mob property)
+- No-Bid City Contract
+- Casino License Fast-Track
+- Pension Fund "Restructuring"
+- Surveillance Camera Network
+- Parking Fine Amnesty
+- Eminent Domain Abuse
+- Citizens United Endorsement
+- School Privatization Act
+- Gerrymandering Initiative
+
+*(need ~15 total for the pool)*
 
 ---
 
-## Next Steps
+## Visual Direction
 
-1. Keep ideating — more policy ideas, more V2 features
-2. Write SPEC.md for v2
-3. Run CE brainstorm session
-4. Plan Phase 0 (policy card system + naming changes)
-5. Build
+- Each policy card gets its own icon/illustration — not just a color swap
+- Virtuous: clean civic imagery — books, roads, lunch trays, water towers
+- Corrupt: dark imagery — briefcases, back-room handshakes, surveillance cameras, stacks of cash
+- Same noir aesthetic as v1 but cards feel distinct and readable at a glance
 
 ---
 
-*Nothing here is final. Add to it freely.*
+## Other v2 Ideas (parking lot)
+
+- **Post-game breakdown** — "here's every corrupt policy Dave voted for" replay
+- **Veto improvements** — more dramatic UI moment
+- **Mobile haptics** — stronger haptic patterns per event type
+- **Spectator improvements** — better dead player experience
+- **Sound design pass** — tighten narrator timing, add ambient city sounds
+
+---
+
+## Process
+
+Build using Briggsy-modified Compound Engineering:
+1. Brainstorm (this doc)
+2. Spec (locked decisions, ADRs)
+3. Per-phase: Plan → Deepen → Work → Review → Compound
+4. Serial phases — no batch planning
+
+---
+
+## Open Questions
+
+- How many named policy cards do we need? (deck math: 6 virtuous + 11 corrupt = 17 total — need ~20 unique names for variety across games)
+- Do virtuous/corrupt cards get flavor text? (e.g. "Proposed by Councilman Briggs")
+- Same role artwork or refresh for v2?
+- v1 and v2 same Vercel deploy (different routes) or separate deployments?
+
+---
+
+*Nothing here is final. Keep adding.*

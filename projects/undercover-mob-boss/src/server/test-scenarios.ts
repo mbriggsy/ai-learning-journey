@@ -4,6 +4,7 @@
 
 import type { GameState, Player, PolicyCard, PolicyType, Role } from '../shared/types';
 import { populateKnownAllies } from './game/roles';
+import { createDeck } from './game/policies';
 
 // ── Helpers ──────────────────────────────────────────────────────────
 
@@ -34,27 +35,15 @@ function makePlayers(
   return populateKnownAllies(basePlayers);
 }
 
-/** Create a test PolicyCard from a type. Uses sequential IDs for uniqueness. */
-let testCardCounter = 0;
-function makeTestCard(type: PolicyType): PolicyCard {
-  const n = testCardCounter++;
-  return {
-    type,
-    cardId: `test-${type}-${n}`,
-    name: `Test ${type === 'good' ? 'Virtuous' : 'Corrupt'} ${n}`,
-  };
+/** Create a deck using the real card pool. */
+function makeDeck(): PolicyCard[] {
+  return createDeck();
 }
 
-function makeDeck(): PolicyCard[] {
-  const deck: PolicyCard[] = [];
-  for (let i = 0; i < 6; i++) deck.push(makeTestCard('good'));
-  for (let i = 0; i < 11; i++) deck.push(makeTestCard('bad'));
-  // Shuffle deterministically
-  for (let i = deck.length - 1; i > 0; i--) {
-    const j = Math.floor((i * 7 + 3) % (i + 1));
-    [deck[i], deck[j]] = [deck[j], deck[i]];
-  }
-  return deck;
+/** Pick a real card of the given type from the pool. */
+function pickCard(type: PolicyType): PolicyCard {
+  const deck = createDeck();
+  return deck.find(c => c.type === type)!;
 }
 
 function baseState(names: string[], realIds: string[]): GameState {
@@ -170,7 +159,7 @@ export function buildScenario(
         badPoliciesEnacted: 3,
         goodPoliciesEnacted: 1,
         executivePower: 'policy-peek',
-        peekCards: [makeTestCard('bad'), makeTestCard('good'), makeTestCard('bad')],
+        peekCards: [pickCard('bad'), pickCard('good'), pickCard('bad')],
         events: [{ type: 'executive-power-activated', power: 'policy-peek' }],
       };
 
@@ -189,7 +178,7 @@ export function buildScenario(
           wasLastMayor: i === 0,
         })),
         nominatedCommissionerId: realIds[1],
-        mayorCards: [makeTestCard('bad'), makeTestCard('good'), makeTestCard('bad')],
+        mayorCards: [pickCard('bad'), pickCard('good'), pickCard('bad')],
       };
 
     case 'election': {
@@ -223,7 +212,7 @@ export function buildScenario(
           isCommissioner: i === 1,
         })),
         nominatedCommissionerId: realIds[1],
-        commissionerCards: [makeTestCard('bad'), makeTestCard('good')],
+        commissionerCards: [pickCard('bad'), pickCard('good')],
         vetoProposed: false,
       };
 

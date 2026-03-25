@@ -7,7 +7,6 @@ import type { HostState, RevealedPlayer } from '../../../shared/protocol';
 import type { GazetteData, GameOutcome, GameAnalysis, PlayerAnalysis } from './types';
 import { detectKeyMoments, formatMoment } from './moments';
 import { assignSuperlatives } from './awards';
-import { captureGazette, shareGazette } from './screenshot';
 import { send } from '../../connection';
 
 let gazetteEl: HTMLElement | null = null;
@@ -278,22 +277,6 @@ function renderGazette(data: GazetteData): HTMLElement {
   // Footer
   const footer = el('div', 'gazette__footer');
 
-  const shareBtn = el('button', 'gazette__btn', 'Share the Gazette') as HTMLButtonElement;
-  shareBtn.addEventListener('click', async () => {
-    shareBtn.textContent = 'Capturing...';
-    shareBtn.disabled = true;
-    try {
-      const blob = await captureGazette(root);
-      await shareGazette(blob);
-    } catch (err) {
-      console.warn('[gazette] Share failed:', err);
-    } finally {
-      shareBtn.textContent = 'Share the Gazette';
-      shareBtn.disabled = false;
-    }
-  });
-  footer.appendChild(shareBtn);
-
   const playAgainBtn = el('button', 'gazette__btn gazette__btn--primary', 'Play Again') as HTMLButtonElement;
   playAgainBtn.addEventListener('click', () => {
     send({ type: 'reset-to-lobby', payload: {} });
@@ -311,16 +294,52 @@ function sectionHeader(text: string): HTMLElement {
 // ── Public API ────────────────────────────────────────────────────
 
 /** Mount the gazette into the given container. Replaces container content. */
+let gazetteContainer: HTMLElement | null = null;
+
 export function mountGazette(container: HTMLElement, state: HostState): void {
   const data = computeGazetteData(state);
   gazetteEl = renderGazette(data);
   while (container.firstChild) container.removeChild(container.firstChild);
+
+  // Find the .game-over-overlay ancestor and make it a scrollable container.
+  // DOM: .game-over-overlay (fixed, grid, place-items:center)
+  //   → .host-overlay__content (flex column, centering)
+  //     → .host-screen (the container we receive)
+  //       → .gazette
+  const overlayContent = container.parentElement;
+  const overlay = overlayContent?.parentElement;
+
+  if (overlay) {
+    overlay.style.overflowY = 'auto';
+    overlay.style.overflowX = 'hidden';
+    overlay.style.placeItems = 'start center';
+    overlay.style.scrollbarWidth = 'none';
+    (overlay.style as any).msOverflowStyle = 'none';
+    overlay.classList.add('gazette-scroll-host');
+  }
+  container.style.display = 'block';
+  gazetteContainer = container;
+
   container.appendChild(gazetteEl);
-  container.scrollTop = 0;
+  if (overlay) overlay.scrollTop = 0;
 }
 
 /** Cleanup. */
 export function unmountGazette(): void {
+  if (gazetteContainer) {
+    const overlayContent = gazetteContainer.parentElement;
+    const overlay = overlayContent?.parentElement;
+    if (overlay) {
+      overlay.style.overflowY = '';
+      overlay.style.overflowX = '';
+      overlay.style.placeItems = '';
+      overlay.style.scrollbarWidth = '';
+      (overlay.style as any).msOverflowStyle = '';
+      overlay.classList.remove('gazette-scroll-host');
+    }
+    gazetteContainer.style.display = '';
+    gazetteContainer = null;
+  }
   gazetteEl?.remove();
   gazetteEl = null;
 }

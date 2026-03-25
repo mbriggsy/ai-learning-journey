@@ -1,5 +1,10 @@
 /* ── The Millbrook City Gazette — Newspaper Styling ──────────────── */
 
+/* Hide scrollbars on gazette container (Chrome/Safari) */
+.gazette-scroll-host::-webkit-scrollbar {
+  display: none;
+}
+
 .gazette {
   max-width: 900px;
   margin: 0 auto;

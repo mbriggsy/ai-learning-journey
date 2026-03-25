@@ -229,12 +229,40 @@
 
 .policy-card--good {
   background: var(--noir-green);
-  border: 2px solid rgba(201, 168, 76, 0.3);
+  border: 3px solid var(--noir-gold);
 }
 
 .policy-card--bad {
   background: var(--noir-blood);
-  border: 2px solid rgba(168, 32, 32, 0.5);
+  border: 3px solid var(--noir-blood-bright, #c42020);
+}
+
+/* Type badge — colorblind-accessible label at top of card */
+.policy-card::before {
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  z-index: 2;
+  padding: 3px 0;
+  font-size: 0.55rem;
+  font-weight: 900;
+  text-align: center;
+  text-transform: uppercase;
+  letter-spacing: 0.15em;
+  text-shadow: 0 1px 2px rgba(0, 0, 0, 0.9);
+}
+
+.policy-card--good::before {
+  content: 'VIRTUOUS';
+  background: linear-gradient(rgba(0, 0, 0, 0.9) 0%, rgba(0, 0, 0, 0.55) 70%, transparent 100%);
+  color: #f0d060;
+}
+
+.policy-card--bad::before {
+  content: 'CORRUPT';
+  background: linear-gradient(rgba(0, 0, 0, 0.9) 0%, rgba(0, 0, 0, 0.55) 70%, transparent 100%);
+  color: #ff4444;
 }
 
 .policy-card__img {
@@ -249,15 +277,16 @@
   bottom: 0;
   left: 0;
   right: 0;
-  padding: 4px 6px;
-  font-size: 0.6rem;
-  font-weight: 700;
+  padding: 6px 8px;
+  font-size: 0.7rem;
+  font-weight: 900;
   text-align: center;
   text-transform: uppercase;
-  letter-spacing: 0.04em;
-  color: var(--noir-text);
-  background: linear-gradient(transparent, rgba(0, 0, 0, 0.85));
+  letter-spacing: 0.06em;
+  color: #fff;
+  background: linear-gradient(transparent 0%, rgba(0, 0, 0, 0.6) 30%, rgba(0, 0, 0, 0.92) 100%);
   line-height: 1.2;
+  text-shadow: 0 1px 3px rgba(0, 0, 0, 0.9), 0 0 8px rgba(0, 0, 0, 0.7);
 }
 
 .policy-card--selected {

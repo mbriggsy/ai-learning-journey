@@ -6,11 +6,11 @@
 
 ## 30-Second Version
 
-- **Two teams.** Citizens (good) vs. the Mob (bad). Roles are secret. Citizens don't know who anyone is.
-- **Each round:** A Mayor nominates a Commissioner. Everyone votes. If it passes, the pair secretly enact a policy — good or bad.
-- **The deck is rigged.** 11 bad cards, 6 good. Bad policy will happen. The question is *who let it happen.*
-- **Citizens win** by enacting 5 Good Policies or executing the Mob Boss.
-- **Mob wins** by enacting 6 Bad Policies or sneaking the Mob Boss into the Commissioner seat (after 3+ bad policies).
+- **Two teams.** Citizens (virtuous) vs. the Mob (corrupt). Roles are secret. Citizens don't know who anyone is.
+- **Each round:** A Mayor nominates a Commissioner. Everyone votes. If it passes, the pair secretly enact a policy — virtuous or corrupt.
+- **The deck is rigged.** 11 corrupt cards, 6 virtuous. Corrupt policy will happen. The question is *who let it happen.*
+- **Citizens win** by enacting 5 Virtuous Policies or executing the Mob Boss.
+- **Mob wins** by enacting 6 Corrupt Policies or sneaking the Mob Boss into the Commissioner seat (after 3+ corrupt policies).
 - **Lying is the game.** Accuse. Defend. Bluff. Trust no one.
 
 ---
@@ -27,13 +27,13 @@ The citizens must expose the mob before it seizes control. The mob must keep the
 
 ### Citizens (Good Guys)
 Honest people trying to keep Millbrook City clean. They don't know who anyone else is. They win by:
-- Getting **5 Good Policies** enacted, OR
+- Getting **5 Virtuous Policies** enacted, OR
 - Finding and **executing the Mob Boss** (the Mayor can eliminate a player — see Executive Powers)
 
 ### Mob Soldiers (Bad Guys)
-Undercover operatives who know each other's identities. They also know who the Mob Boss is. They work together to get bad policy enacted and protect the Mob Boss. They win by:
-- Getting **6 Bad Policies** enacted, OR
-- Getting the **Mob Boss elected as Commissioner** after 3 Bad Policies have been enacted (see How the Game Ends)
+Undercover operatives who know each other's identities. They also know who the Mob Boss is. They work together to get corrupt policy enacted and protect the Mob Boss. They win by:
+- Getting **6 Corrupt Policies** enacted, OR
+- Getting the **Mob Boss elected as Commissioner** after 3 Corrupt Policies have been enacted (see How the Game Ends)
 
 ### Mob Boss
 The most dangerous player in the game. The Mob Boss plays for the mob. However, their knowledge depends on the size of the game:
@@ -77,10 +77,10 @@ In all cases, the Citizens don't know who anyone is.
 
 The shared screen shows the city. It includes two policy tracks:
 
-- **Good Policy track** — 5 slots. Fill all 5 and Citizens win.
-- **Bad Policy track** — 6 slots. Fill all 6 and the Mob wins.
+- **Virtuous Policy track** — 5 slots. Fill all 5 and Citizens win.
+- **Corrupt Policy track** — 6 slots. Fill all 6 and the Mob wins.
 
-The Policy Deck contains: **6 Good Policies** and **11 Bad Policies**.
+The Policy Deck contains: **6 Virtuous Policies** and **11 Corrupt Policies** — each game draws from a pool of 30 unique named cards.
 
 Yes — the deck is stacked against the city. That's the point.
 
@@ -98,7 +98,7 @@ flowchart TD
     VOTE["Phase 2: Everyone votes — Approve or Deny"]
     PASS{"Did it pass?"}
     POLICY["Phase 3: Policy Session — Mayor draws 3 cards,\ndiscards 1. Commissioner gets 2, discards 1.\nRemaining card is enacted."]
-    BAD{"Bad Policy\nenacted?"}
+    CORRUPT{"Corrupt Policy\nenacted?"}
     POWER["Phase 4: Mayor uses Executive Power"]
     NEXT["Next round — Mayor rotates to next player"]
     FAIL["Election fails — tracker advances"]
@@ -110,9 +110,9 @@ flowchart TD
     VOTE --> PASS
     PASS -- "Majority approves" --> POLICY
     PASS -- "Majority denies or tie" --> FAIL
-    POLICY --> BAD
-    BAD -- "Yes + power on table" --> POWER
-    BAD -- "No / no power" --> NEXT
+    POLICY --> CORRUPT
+    CORRUPT -- "Yes + power on table" --> POWER
+    CORRUPT -- "No / no power" --> NEXT
     POWER --> NEXT
     FAIL --> THREE
     THREE -- "Yes" --> AUTO
@@ -155,21 +155,21 @@ The enacted policy is revealed on the shared screen. The discards are never show
 
 > Nobody else sees what cards were drawn. Both the Mayor and Commissioner are free to lie about what they saw. This is where the social deduction begins.
 
-#### Veto Power (unlocked after 5 Bad Policies)
+#### Veto Power (unlocked after 5 Corrupt Policies)
 
-Once 5 Bad Policies have been enacted, the Commissioner gains the option to propose a veto — discarding both cards instead of enacting one. The Mayor then decides:
+Once 5 Corrupt Policies have been enacted, the Commissioner gains the option to propose a veto — discarding both cards instead of enacting one. The Mayor then decides:
 
 - **Mayor accepts:** Both cards discarded. No policy enacted. Election Tracker advances one step.
 - **Mayor rejects:** The Commissioner must enact one of the two cards as normal.
 - The Commissioner may only propose a veto **once per policy session**.
 
-> Veto is a double-edged sword. It prevents a bad outcome but wastes a round and moves the tracker closer to an automatic enactment.
+> Veto is a double-edged sword. It prevents a corrupt outcome but wastes a round and moves the tracker closer to an automatic enactment.
 
-### Phase 4: Executive Power (Bad Policy only)
+### Phase 4: Executive Power (Corrupt Policy only)
 
-When certain Bad Policies are enacted, the **Mayor** gains a special one-time power that must be used immediately.
+When certain Corrupt Policies are enacted, the **Mayor** gains a special one-time power that must be used immediately.
 
-| Bad Policies Enacted | 5–6 Players | 7–8 Players | 9–10 Players |
+| Corrupt Policies Enacted | 5–6 Players | 7–8 Players | 9–10 Players |
 | --- | --- | --- | --- |
 | 1st | — | — | **Investigation** |
 | 2nd | — | **Investigation** | **Investigation** |
@@ -207,14 +207,14 @@ When certain Bad Policies are enacted, the **Mayor** gains a special one-time po
 ## How the Game Ends
 
 ### Citizens Win If:
-- **5 Good Policies** are enacted, OR
+- **5 Virtuous Policies** are enacted, OR
 - The **Mob Boss is executed** at any point during the game
 
 ### Mob Wins If:
-- **6 Bad Policies** are enacted, OR
-- The **Mob Boss is elected Commissioner** after 3 or more Bad Policies have been enacted
+- **6 Corrupt Policies** are enacted, OR
+- The **Mob Boss is elected Commissioner** after 3 or more Corrupt Policies have been enacted
 
-Once 3+ Bad Policies are on the board, every election becomes dangerous. If the Mob Boss is nominated as Commissioner and the vote passes — **the mob wins instantly.**
+Once 3+ Corrupt Policies are on the board, every election becomes dangerous. If the Mob Boss is nominated as Commissioner and the vote passes — **the mob wins instantly.**
 
 But here's the flip side: if someone *is* elected Commissioner and the game continues, everyone at the table now knows **for certain** that player is NOT the Mob Boss. Use that information.
 
@@ -224,9 +224,9 @@ But here's the flip side: if someone *is* elected Commissioner and the game cont
 
 > **Round 3.** Sal is Mayor. He nominates Vince as Commissioner. The table debates — Vince has been quiet, which makes some people nervous. Everyone votes on their phones. Results flash on the big screen: 4 Approve, 2 Deny. Vince is in.
 >
-> Sal draws 3 cards on his phone: 2 Bad, 1 Good. He discards a Bad card and passes 1 Bad + 1 Good to Vince. Vince looks at his 2 cards, discards the Bad one, and enacts the **Good Policy.** The city breathes.
+> Sal draws 3 cards on his phone: 2 Corrupt, 1 Virtuous. He discards a Corrupt card and passes 1 Corrupt + 1 Virtuous to Vince. Vince looks at his 2 cards, discards the Corrupt one, and enacts the **Virtuous Policy.** The city breathes.
 >
-> But then Sal tells the table: *"I drew three bad cards. Vince got two bad cards. I don't know how a good policy came out."* Vince fires back: *"He's lying — he gave me one of each and I played the good one."*
+> But then Sal tells the table: *"I drew three corrupt cards. Vince got two corrupt cards. I don't know how a virtuous policy came out."* Vince fires back: *"He's lying — he gave me one of each and I played the virtuous one."*
 >
 > Someone is lying. The table erupts. That's the game.
 
@@ -246,11 +246,11 @@ But here's the flip side: if someone *is* elected Commissioner and the game cont
 
 **If you're a Citizen:**
 - Watch voting patterns. Consistent approval of suspicious candidates is a tell.
-- Pay attention to who defends whom after a bad policy is enacted.
-- When a Commissioner blames the Mayor for a bad policy (or vice versa) — one of them is probably lying.
+- Pay attention to who defends whom after a corrupt policy is enacted.
+- When a Commissioner blames the Mayor for a corrupt policy (or vice versa) — one of them is probably lying.
 
 **If you're a Mob Soldier:**
-- You don't need to enact bad policy every session. Sometimes enacting good policy builds trust.
+- You don't need to enact corrupt policy every session. Sometimes enacting virtuous policy builds trust.
 - Protect the Mob Boss at all costs. If suspicion lands on them, redirect it.
 
 **If you're the Mob Boss:**
@@ -300,4 +300,4 @@ Quick reference for terms used in these rules:
 
 ---
 
-*Version 4.0 — TL;DR added, round flow diagram, worked example, forward references fixed, executive powers bullet-ified, "Your Phone" section, key terms moved to reference table*
+*Version 5.0 — V2 terminology: Good/Bad → Virtuous/Corrupt, named policy card pools, deck composition note*

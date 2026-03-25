@@ -199,7 +199,7 @@ async function generateOne(
         model: MODEL,
         contents: [
           {
-            parts: [{ text: VOICE_DIRECTION + script }],
+            parts: [{ text: script }],
           },
         ],
         config: {

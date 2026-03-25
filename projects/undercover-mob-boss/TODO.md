@@ -2,9 +2,16 @@
 
 ## Current Session: 2026-03-24
 
-### V2 — Plans 3 & 4 CODE COMPLETE (on branch, not merged)
+### V2 — Plans 3 & 4 MERGED TO MAIN (audio regen needed)
 
-**Branch:** `feat/narrator-variant-pool` (9 commits off main)
+**PRIORITY 1 NEXT SESSION: Regenerate all narrator audio.**
+All 91 .ogg files on main have VOICE_DIRECTION spoken aloud ("Read this as a 1940s noir..."). The code is fixed (script-only, no prefix). Just need to run:
+```bash
+set -a && source .env && set +a
+npx tsx scripts/generate-narrator.ts --force
+```
+Then convert WAVs to Opus and commit. ~15-20 min.
+
 **Tests:** 822 pass / 18 fail (Plan 2 missing card art — quota-gated, pre-existing)
 
 **What we did this session:**
@@ -14,7 +21,7 @@
 - 76 variant scripts across 24 triggers (52 new noir lines, 24 V1 preserved as variant-1)
 - Tiered counts: 5-6 high-freq, 3-4 medium, 2-3 low, 2 rare
 - Pool selection with Mulberry32 seeded PRNG, variant-1 fallback, lazy selection on reconnection
-- Workbox audio handler → CacheFirst, VOICE_DIRECTION wired into TTS API
+- Workbox audio handler → CacheFirst
 - WAV → Opus conversion via ffmpeg (9.4MB → 776KB, 12x compression)
 - Renamed 24 V1 event WAVs: {id}.wav → {id}-1.ogg (atomic commit)
 - Round-start + trailer explicitly exempt from variant system
@@ -122,11 +129,10 @@ Game is live at **undercover-mob-boss.vercel.app**. Trailer v2 live on YouTube. 
 - **`/host` URL serves player app in Vite dev** — use `/host.html` instead
 - **Grace period:** 0ms dev, 30s prod
 - **Remotion publicDir** points to `../../public` — if the video project moves, update `remotion.config.ts`
-- **Narrator audio still says "Police Chief"** — V1 WAVs now converted to .ogg. New variant generation will use correct Commissioner scripts + VOICE_DIRECTION.
+- **ALL NARRATOR AUDIO CORRUPTED** — current .ogg files on main have VOICE_DIRECTION prefix spoken aloud. Code is fixed. Must regenerate with `--force` next session.
 - **Imagen 4 daily quota:** 70 requests/day on paid tier 1. Plan card generation across sessions.
 - **`.policy-card__name` CSS missing** — name labels added to DOM but no styles yet.
 - **Gazette screenshot on very long games** — 10-player 15-round games produce tall newspapers. Consider compact share mode if screenshots are too tall.
-- **Variant audio not yet generated** — code references variant files (e.g. `nomination-2.ogg`) that don't exist yet. Game will gracefully fall back to variant-1 (V1 original) until generated.
 
 ## Deployment Cheat Sheet
 

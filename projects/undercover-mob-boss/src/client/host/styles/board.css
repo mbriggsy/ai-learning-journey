@@ -215,6 +215,7 @@
   position: absolute;
   inset: 0;
   clip-path: inset(0 round 6px);
+  background: #000;
 }
 
 .policy-slot--filled-good {

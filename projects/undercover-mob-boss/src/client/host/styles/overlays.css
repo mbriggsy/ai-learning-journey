@@ -161,7 +161,7 @@
 
 /* ── Election Reveal Overlay ─────────────────────────────────────── */
 
-.host-overlay:has(.election-reveal) {
+.election-reveal-overlay {
   bottom: 0;
   background: var(--glass-bg-heavy);
   backdrop-filter: blur(var(--glass-blur-heavy));

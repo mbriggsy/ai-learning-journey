@@ -44,9 +44,9 @@ export default defineConfig({
           },
           {
             urlPattern: /\/assets\/cards\/.*/,
-            handler: 'CacheFirst',
+            handler: 'StaleWhileRevalidate',
             options: {
-              cacheName: 'card-cache',
+              cacheName: 'card-cache-v2',
               expiration: { maxEntries: 100, maxAgeSeconds: 30 * 24 * 60 * 60 },
             },
           },

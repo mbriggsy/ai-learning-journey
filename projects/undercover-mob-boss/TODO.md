@@ -74,7 +74,7 @@ Then convert WAVs to Opus and commit. ~15-20 min.
 **What's left:**
 1. Generate remaining 19 card images (Imagen 4 quota)
 2. Review all 30 cards — visual quality check
-3. Add `.policy-card__name` CSS
+3. ~~Add `.policy-card__name` CSS~~ — ALREADY DONE (animations.css:247, verified 2026-03-24)
 4. Verification gate + PR + merge
 
 **Locked V2 Core Features:**
@@ -131,7 +131,7 @@ Game is live at **undercover-mob-boss.vercel.app**. Trailer v2 live on YouTube. 
 - **Remotion publicDir** points to `../../public` — if the video project moves, update `remotion.config.ts`
 - **ALL NARRATOR AUDIO CORRUPTED** — current .ogg files on main have VOICE_DIRECTION prefix spoken aloud. Code is fixed. Must regenerate with `--force` next session.
 - **Imagen 4 daily quota:** 70 requests/day on paid tier 1. Plan card generation across sessions.
-- **`.policy-card__name` CSS missing** — name labels added to DOM but no styles yet.
+- ~~`.policy-card__name` CSS missing~~ — RESOLVED. Styles exist at animations.css:247.
 - **Gazette screenshot on very long games** — 10-player 15-round games produce tall newspapers. Consider compact share mode if screenshots are too tall.
 
 ## Deployment Cheat Sheet

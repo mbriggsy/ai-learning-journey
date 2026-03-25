@@ -79,7 +79,12 @@ Before saving any code change and before telling Briggsy to test:
 4. **Never use Briggsy as QA.** If you're not confident the change works, say so. Don't tell him to test and hope.
 
 ## Session Protocol
-- **Start of session:** Read `TODO.md`, verify state against reality (git status, check files exist), and present the plan. Wait for approval before working.
+- **Start of session:** Read `TODO.md`, then **verify every claim against reality before presenting the plan:**
+  - Every "remaining work" item: grep/read the code to confirm it's actually undone
+  - Every landmine: check if the condition still exists
+  - Every branch reference: `git branch -a` to confirm it exists and isn't already merged
+  - Cross off or update anything that's stale IN the TODO before presenting
+  - Only then: present the verified plan. Wait for approval before working.
 - **End of session:** When Briggsy says "write the TODO" or "update the TODO", update `TODO.md` with: what we did, current state, unfinished fixes, next steps in priority order, and landmines.
 - **Unfinished Fixes must be prescriptions, not diagnoses.** Write the exact file, line, and change needed — not "race condition suspected." If you can't write the exact fix, fix it before the session ends.
 - **"Squeaky clean"** — Briggsy's signal for full end-of-session cleanup. Execute all of:

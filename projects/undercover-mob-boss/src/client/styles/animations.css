@@ -218,7 +218,7 @@
 /* ---- Policy Card Select ---- */
 .policy-card {
   position: relative;
-  width: clamp(120px, 28vw, 150px);
+  width: clamp(130px, 32vw, 170px);
   aspect-ratio: 3 / 4;
   border-radius: 12px;
   overflow: hidden;

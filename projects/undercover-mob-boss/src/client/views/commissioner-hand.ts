@@ -19,7 +19,7 @@ export function mount(container: HTMLElement, state: AppState): void {
   setTopBarInstruction('Enact a policy');
 
   const content = document.createElement('div');
-  content.className = 'screen-content';
+  content.className = 'screen-content screen-content--locked';
 
   const hand = document.createElement('div');
   hand.className = 'policy-hand glass-panel';

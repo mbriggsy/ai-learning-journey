@@ -18,6 +18,12 @@
 
 .screen-content::-webkit-scrollbar { display: none; }
 
+/* Lock scroll on screens where content fits viewport (card hands, peek) */
+.screen-content--locked {
+  overflow: hidden;
+  touch-action: none;
+}
+
 /* Soft radial backdrop — readability pool that dissolves into artwork.
    No hard edges, just an organic dark-to-transparent gradient behind content. */
 .screen-content::before {

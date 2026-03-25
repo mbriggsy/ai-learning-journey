@@ -14,7 +14,7 @@ export function mount(container: HTMLElement, state: AppState): void {
   setTopBarInstruction('\u{1F441} Peek at the top 3 policy cards');
 
   const content = document.createElement('div');
-  content.className = 'screen-content';
+  content.className = 'screen-content screen-content--locked';
 
   // Show the 3 peeked cards using art images
   const cards = state.privateData?.peekCards ?? [];

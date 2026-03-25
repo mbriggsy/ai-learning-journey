@@ -46,6 +46,14 @@ registerView('game-over', gameOver);
 // ── Initialize ─────────────────────────────────────────────────────
 
 function init(): void {
+  // Block viewport-level scrolling on iOS Safari — allow only inside scrollable screen-content
+  document.addEventListener('touchmove', (e) => {
+    const target = e.target as HTMLElement;
+    if (!target.closest('.screen-content:not(.screen-content--locked)')) {
+      e.preventDefault();
+    }
+  }, { passive: false });
+
   // Unlock audio on first user gesture (needed for nudge tones on player phones)
   audioEngine.initUnlock();
 

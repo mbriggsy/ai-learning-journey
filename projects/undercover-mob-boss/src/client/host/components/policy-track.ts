@@ -1,20 +1,24 @@
 import { gsap } from 'gsap';
-import type { ExecutivePower } from '../../../shared/types';
+import type { PolicyCard } from '../../../shared/types';
 import { getPowerSlots, createPowerIcon } from '../../components/power-icons';
+import { setupCardImage } from '../../utils/card-assets';
 
 export interface PolicyTrackConfig {
   type: 'good' | 'bad';
   enacted: number;
   total: number;
   playerCount?: number;
+  /** Ordered list of enacted cards for this track (filtered by type). */
+  cards?: PolicyCard[];
 }
 
 /**
  * Renders a policy track with N slots.
  * Bad track includes power icon watermarks based on player count.
+ * Filled slots show named card art when available, generic fallback otherwise.
  */
 export function createPolicyTrack(config: PolicyTrackConfig): HTMLElement {
-  const { type, enacted, total, playerCount } = config;
+  const { type, enacted, total, playerCount, cards } = config;
 
   const track = document.createElement('div');
   track.className = 'policy-track';
@@ -38,8 +42,14 @@ export function createPolicyTrack(config: PolicyTrackConfig): HTMLElement {
       slot.classList.add(type === 'good' ? 'policy-slot--filled-good' : 'policy-slot--filled-bad');
       const img = document.createElement('img');
       img.className = 'policy-slot__art';
-      img.src = type === 'good' ? '/assets/policy-good.png' : '/assets/policy-bad.png';
-      img.alt = type === 'good' ? 'Citizen Policy' : 'Mob Policy';
+      const card = cards?.[i];
+      if (card) {
+        setupCardImage(img, card.cardId, card.type);
+        img.alt = card.name;
+      } else {
+        img.src = type === 'good' ? '/assets/policy-good.png' : '/assets/policy-bad.png';
+        img.alt = type === 'good' ? 'Citizen Policy' : 'Mob Policy';
+      }
       slot.appendChild(img);
     }
 
@@ -72,20 +82,33 @@ export function updatePolicyTrack(
   config: PolicyTrackConfig,
 ): void {
   const slots = trackEl.querySelectorAll('.policy-slot');
-  const { type, enacted } = config;
+  const { type, enacted, cards } = config;
 
   slots.forEach((slot, i) => {
     slot.classList.remove('policy-slot--filled-good', 'policy-slot--filled-bad');
-    const existingImg = slot.querySelector('.policy-slot__art');
+    const existingImg = slot.querySelector('.policy-slot__art') as HTMLImageElement | null;
     if (i < enacted) {
       slot.classList.add(type === 'good' ? 'policy-slot--filled-good' : 'policy-slot--filled-bad');
+      const card = cards?.[i];
       if (!existingImg) {
         const img = document.createElement('img');
         img.className = 'policy-slot__art';
-        img.src = type === 'good' ? '/assets/policy-good.png' : '/assets/policy-bad.png';
-        img.alt = type === 'good' ? 'Citizen Policy' : 'Mob Policy';
+        if (card) {
+          setupCardImage(img, card.cardId, card.type);
+          img.alt = card.name;
+        } else {
+          img.src = type === 'good' ? '/assets/policy-good.png' : '/assets/policy-bad.png';
+          img.alt = type === 'good' ? 'Citizen Policy' : 'Mob Policy';
+        }
         slot.appendChild(img);
         gsap.fromTo(img, { scale: 0.5, opacity: 0 }, { scale: 1, opacity: 1, duration: 0.6, ease: 'back.out(1.2)' });
+      } else if (card) {
+        // Update existing image if card data now available
+        const expectedSrc = `/assets/cards/${card.cardId}.webp`;
+        if (!existingImg.src.endsWith(expectedSrc)) {
+          setupCardImage(existingImg, card.cardId, card.type);
+          existingImg.alt = card.name;
+        }
       }
     } else if (existingImg) {
       existingImg.remove();

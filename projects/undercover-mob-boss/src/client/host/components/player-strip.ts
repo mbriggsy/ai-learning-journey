@@ -78,7 +78,7 @@ function renderPlayers(container: HTMLElement, players: PublicPlayer[], opts: St
     } else if (player.isCommissioner) {
       const badge = document.createElement('div');
       badge.className = 'player-strip__badge player-strip__badge--commissioner';
-      badge.textContent = 'COMMISSIONER';
+      badge.textContent = 'COMISH';
       item.appendChild(badge);
     } else if (!player.isAlive) {
       // Coffin icon instead of tiny "DEAD" badge

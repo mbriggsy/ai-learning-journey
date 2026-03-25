@@ -100,10 +100,14 @@ export function mount(container: HTMLElement, state: HostState | LobbyState): vo
 
   const playerCount = state.players.length;
 
+  const goodCards = (state.policyHistory ?? []).filter(e => e.card.type === 'good').map(e => e.card);
+  const badCards = (state.policyHistory ?? []).filter(e => e.card.type === 'bad').map(e => e.card);
+
   goodTrackEl = createPolicyTrack({
     type: 'good',
     enacted: state.goodPoliciesEnacted,
     total: 5,
+    cards: goodCards,
   });
 
   badTrackEl = createPolicyTrack({
@@ -111,6 +115,7 @@ export function mount(container: HTMLElement, state: HostState | LobbyState): vo
     enacted: state.badPoliciesEnacted,
     total: 6,
     playerCount,
+    cards: badCards,
   });
 
   trackerEl = createElectionTracker(state.electionTracker);
@@ -157,19 +162,23 @@ export function update(state: HostState | LobbyState): void {
   }
 
   if (goodTrackEl) {
+    const goodCards = (state.policyHistory ?? []).filter(e => e.card.type === 'good').map(e => e.card);
     updatePolicyTrack(goodTrackEl, {
       type: 'good',
       enacted: state.goodPoliciesEnacted,
       total: 5,
+      cards: goodCards,
     });
   }
 
   if (badTrackEl) {
+    const badCards = (state.policyHistory ?? []).filter(e => e.card.type === 'bad').map(e => e.card);
     updatePolicyTrack(badTrackEl, {
       type: 'bad',
       enacted: state.badPoliciesEnacted,
       total: 6,
       playerCount: state.players.length,
+      cards: badCards,
     });
   }
 

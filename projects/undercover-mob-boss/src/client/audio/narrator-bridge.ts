@@ -94,18 +94,17 @@ export function onHostStateUpdate(state: HostState | LobbyState): void {
     }
   }
 
-  // ── Election result (cause narration BEFORE round-start) ──────
+  // ── Election result — narrate immediately on entry (plays during vote reveal overlay)
 
-  // Vote reveal — skipped; the visual card flip + tally speaks for itself
-
-  // Election tracker / approved / blocked — must fire before round-start
-  if (!vetoHandled && electionTracker > prevElectionTracker && electionTracker > 0) {
-    if (prevSubPhase === 'election-result') {
+  if (!vetoHandled && subPhase === 'election-result' && prevSubPhase !== 'election-result' && state.votes) {
+    const approveCount = Object.values(state.votes).filter((v) => v === 'approve').length;
+    const blockCount = Object.values(state.votes).filter((v) => v === 'block').length;
+    if (approveCount > blockCount) {
+      narrator.enqueue('approved');
+    } else {
       narrator.enqueue('blocked');
+      narrator.enqueue('tracker-advance');
     }
-    narrator.enqueue('tracker-advance');
-  } else if (electionTracker === 0 && prevSubPhase === 'election-result') {
-    narrator.enqueue('approved');
   }
 
   // ── Round start ──────────────────────────────────────────────────

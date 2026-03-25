@@ -75,7 +75,7 @@ export function onHostStateUpdate(state: HostState | LobbyState): void {
     preloadAllCardImages();
   }
 
-  // ── Veto (must run BEFORE round-start/tracker to get correct order) ──
+  // ── Veto (cause narration BEFORE consequences) ────────────────
 
   let vetoHandled = false;
 
@@ -85,7 +85,6 @@ export function onHostStateUpdate(state: HostState | LobbyState): void {
 
   // Veto result: if we leave veto-response, check what happened
   if (prevSubPhase === 'policy-veto-response' && subPhase !== 'policy-veto-response') {
-    // If tracker advanced, veto was approved (policies discarded)
     if (electionTracker > prevElectionTracker || subPhase === 'nomination-pending') {
       narrator.enqueue('veto-approved');
       narrator.enqueue('tracker-advance');
@@ -93,6 +92,23 @@ export function onHostStateUpdate(state: HostState | LobbyState): void {
     } else if (subPhase === 'policy-commissioner-discard') {
       narrator.enqueue('veto-rejected');
     }
+  }
+
+  // ── Election result (cause narration BEFORE round-start) ──────
+
+  // Vote reveal
+  if (subPhase === 'election-result' && prevSubPhase !== 'election-result') {
+    narrator.enqueue('vote-reveal');
+  }
+
+  // Election tracker / approved / blocked — must fire before round-start
+  if (!vetoHandled && electionTracker > prevElectionTracker && electionTracker > 0) {
+    if (prevSubPhase === 'election-result') {
+      narrator.enqueue('blocked');
+    }
+    narrator.enqueue('tracker-advance');
+  } else if (electionTracker === 0 && prevSubPhase === 'election-result') {
+    narrator.enqueue('approved');
   }
 
   // ── Round start ──────────────────────────────────────────────────
@@ -116,11 +132,6 @@ export function onHostStateUpdate(state: HostState | LobbyState): void {
     narrator.enqueue('vote-open');
   }
 
-  // Election result
-  if (subPhase === 'election-result' && prevSubPhase !== 'election-result') {
-    narrator.enqueue('vote-reveal');
-  }
-
   // ── Policy enactment ───────────────────────────────────────────
 
   if (subPhase === 'policy-enact' && prevSubPhase !== 'policy-enact') {
@@ -135,19 +146,6 @@ export function onHostStateUpdate(state: HostState | LobbyState): void {
   // Auto-enact
   if (subPhase === 'auto-enact' && prevSubPhase !== 'auto-enact') {
     narrator.enqueue('auto-enact');
-  }
-
-  // ── Election tracker (skip if veto already handled it) ──────────
-
-  if (!vetoHandled && electionTracker > prevElectionTracker && electionTracker > 0) {
-    // Blocked vote advanced the tracker
-    if (prevSubPhase === 'election-result') {
-      narrator.enqueue('blocked');
-    }
-    narrator.enqueue('tracker-advance');
-  } else if (electionTracker === 0 && prevSubPhase === 'election-result') {
-    // Election passed — tracker at 0 (either reset from >0 or first-attempt pass)
-    narrator.enqueue('approved');
   }
 
   // ── Executive powers ───────────────────────────────────────────

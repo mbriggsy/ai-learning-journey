@@ -49,7 +49,7 @@ export function mountRolePeek(state: AppState): void {
   // Allies for mob soldiers
   if (allyIds.length > 0 && state.serverState) {
     const alliesEl = document.createElement('p');
-    alliesEl.className = 'role-peek-card__allies text-muted';
+    alliesEl.className = 'role-peek-card__allies';
     const allyLabels = allyIds.map((id) => {
       const name = state.serverState!.players.find((p) => p.id === id)?.name ?? id;
       if (mobBossId && id === mobBossId) return `${name} (Boss)`;

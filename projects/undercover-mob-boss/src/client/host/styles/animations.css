@@ -94,7 +94,7 @@
   text-shadow: 0 1px 4px rgba(0, 0, 0, 0.8);
 }
 
-/* ── Election Results Layout ───────────────────────────────────── */
+/* ── Election Results Grid ─────────────────────────────────────── */
 
 .election-results__grid {
   display: grid;
@@ -106,20 +106,6 @@
 
 .election-results__grid .vote-card {
   width: 100%;
-}
-
-.election-results__tally {
-  font-size: var(--text-lg);
-  color: var(--noir-muted);
-  margin-top: var(--space-md);
-  transition: opacity 0.4s;
-}
-
-.election-results__outcome {
-  font-size: var(--text-2xl);
-  font-weight: 900;
-  margin-top: var(--space-sm);
-  transition: opacity 0.4s;
 }
 
 /* ── Policy Card Flip ────────────────────────────────────────────── */

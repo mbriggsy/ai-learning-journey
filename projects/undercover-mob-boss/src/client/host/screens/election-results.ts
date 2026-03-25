@@ -21,27 +21,28 @@ export function mount(container: HTMLElement, state: HostState): void {
   revealDone = false;
 
   root = document.createElement('div');
-  root.className = 'host-screen';
+  root.className = 'host-screen election-reveal';
 
-  const title = document.createElement('h1');
-  title.className = 'host-screen__title';
-  title.textContent = 'Election Results';
-  root.appendChild(title);
+  // Title
+  const titleEl = document.createElement('div');
+  titleEl.className = 'election-reveal__title';
+  titleEl.textContent = 'Election Results';
+  root.appendChild(titleEl);
 
-  // Vote cards grid — columns set in update() once we know player count
+  // Vote cards grid
   cardsContainer = document.createElement('div');
   cardsContainer.className = 'election-results__grid';
   root.appendChild(cardsContainer);
 
   // Tally — hidden until reveal completes
   tallyEl = document.createElement('div');
-  tallyEl.className = 'election-results__tally';
+  tallyEl.className = 'election-reveal__tally';
   tallyEl.style.opacity = '0';
   root.appendChild(tallyEl);
 
   // Outcome — hidden until reveal completes
   outcomeEl = document.createElement('div');
-  outcomeEl.className = 'election-results__outcome';
+  outcomeEl.className = 'election-reveal__outcome';
   outcomeEl.style.opacity = '0';
   root.appendChild(outcomeEl);
 
@@ -76,8 +77,8 @@ export function update(state: HostState): void {
     animateVoteReveal(cardElements).then(() => {
       revealDone = true;
       updateTally(state);
-      if (tallyEl) tallyEl.style.opacity = '1';
-      if (outcomeEl) outcomeEl.style.opacity = '1';
+      if (tallyEl) gsap.to(tallyEl, { opacity: 1, y: 0, duration: 0.4, ease: 'power2.out' });
+      if (outcomeEl) gsap.to(outcomeEl, { opacity: 1, y: 0, duration: 0.4, ease: 'power2.out', delay: 0.15 });
     }).catch(() => {
       revealDone = true;
       updateTally(state);
@@ -98,12 +99,12 @@ function updateTally(state: HostState): void {
   const passed = approveCount > blockCount;
 
   if (tallyEl) {
-    tallyEl.textContent = `Approve: ${approveCount} / Deny: ${blockCount}`;
+    tallyEl.textContent = `Approve: ${approveCount}  \u2022  Deny: ${blockCount}`;
   }
 
   if (outcomeEl) {
-    outcomeEl.textContent = passed ? 'Passed' : 'Denied';
-    outcomeEl.style.color = passed ? 'var(--noir-gold)' : 'var(--noir-blood)';
+    outcomeEl.textContent = passed ? 'Approved' : 'Denied';
+    outcomeEl.className = `election-reveal__outcome ${passed ? 'election-reveal__outcome--passed' : 'election-reveal__outcome--denied'}`;
   }
 }
 

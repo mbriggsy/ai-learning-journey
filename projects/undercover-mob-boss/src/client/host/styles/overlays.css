@@ -159,6 +159,59 @@
   text-shadow: 0 0 15px rgba(168, 32, 32, 0.4);
 }
 
+/* ── Election Reveal Overlay ─────────────────────────────────────── */
+
+.host-overlay:has(.election-reveal) {
+  bottom: 0;
+  background: var(--glass-bg-heavy);
+  backdrop-filter: blur(var(--glass-blur-heavy));
+  -webkit-backdrop-filter: blur(var(--glass-blur-heavy));
+  border-bottom: none;
+  display: grid;
+  place-items: center;
+}
+
+.election-reveal {
+  z-index: 520;
+}
+
+.election-reveal__title {
+  font-family: var(--font-display);
+  font-size: var(--text-2xl);
+  font-weight: 900;
+  text-transform: uppercase;
+  letter-spacing: 0.08em;
+  color: var(--noir-cream);
+  text-shadow: 0 0 20px rgba(232, 224, 208, 0.2);
+}
+
+.election-reveal__tally {
+  font-family: var(--font-body);
+  font-size: var(--text-lg);
+  color: var(--noir-muted);
+  letter-spacing: 0.04em;
+  transform: translateY(10px);
+}
+
+.election-reveal__outcome {
+  font-family: var(--font-display);
+  font-size: var(--text-2xl);
+  font-weight: 900;
+  text-transform: uppercase;
+  letter-spacing: 0.12em;
+  transform: translateY(10px);
+}
+
+.election-reveal__outcome--passed {
+  color: var(--noir-gold);
+  text-shadow: 0 0 20px rgba(201, 168, 76, 0.4);
+}
+
+.election-reveal__outcome--denied {
+  color: var(--noir-blood-bright);
+  text-shadow: 0 0 20px rgba(196, 32, 32, 0.4);
+}
+
 /* ── Power Overlay ───────────────────────────────────────────────── */
 
 .host-overlay:has(.power-overlay) {

@@ -14,10 +14,10 @@ export function mount(container: HTMLElement, state: HostState): void {
   const policy = card?.type ?? 'bad';
 
   root = document.createElement('div');
-  root.className = 'host-screen';
+  root.className = 'host-screen policy-enacted-reveal';
 
-  const title = document.createElement('h1');
-  title.className = 'host-screen__title';
+  const title = document.createElement('div');
+  title.className = 'policy-enacted-reveal__title';
   title.textContent = 'Policy Enacted';
   root.appendChild(title);
 
@@ -62,7 +62,7 @@ export function mount(container: HTMLElement, state: HostState): void {
 
   // Track update info
   const trackInfo = document.createElement('div');
-  trackInfo.className = 'host-screen__subtitle';
+  trackInfo.className = 'policy-enacted-reveal__track';
   if (policy === 'good') {
     trackInfo.textContent = `Citizen Policies: ${state.goodPoliciesEnacted} / 5`;
     trackInfo.style.color = 'var(--noir-gold)';

@@ -148,6 +148,9 @@ function syncOverlays(nextOverlays: HostOverlayId[]): void {
         if (id === 'election-results') {
           wrapper.classList.add('election-reveal-overlay');
         }
+        if (id === 'policy-enacted') {
+          wrapper.classList.add('policy-enacted-overlay');
+        }
         const content = document.createElement('div');
         content.className = 'host-overlay__content';
         wrapper.appendChild(content);

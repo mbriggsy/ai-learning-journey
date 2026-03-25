@@ -1,82 +1,19 @@
 {
-  "generatedAt": "2026-03-25T14:45:27.592Z",
+  "generatedAt": "2026-03-25T19:41:20.577Z",
   "model": "gemini-2.5-flash-preview-tts",
   "voiceId": "Charon",
   "lines": [
     {
-      "id": "investigate-1",
+      "id": "nomination-2",
       "status": "success",
-      "fileSizeBytes": 275130,
-      "durationMs": 5731,
-      "generatedAt": "2026-03-25T14:46:38.387Z"
-    },
-    {
-      "id": "investigate-2",
-      "status": "success",
-      "fileSizeBytes": 344250,
-      "durationMs": 7171,
-      "generatedAt": "2026-03-25T14:46:46.199Z"
-    },
-    {
-      "id": "investigate-3",
-      "status": "success",
-      "fileSizeBytes": 261690,
-      "durationMs": 5451,
-      "generatedAt": "2026-03-25T14:46:52.670Z"
-    },
-    {
-      "id": "special-nomination-1",
-      "status": "success",
-      "fileSizeBytes": 252090,
-      "durationMs": 5251,
-      "generatedAt": "2026-03-25T14:47:00.014Z"
-    },
-    {
-      "id": "special-nomination-2",
-      "status": "success",
-      "fileSizeBytes": 294330,
-      "durationMs": 6131,
-      "generatedAt": "2026-03-25T14:47:07.405Z"
-    },
-    {
-      "id": "execution-1",
-      "status": "success",
-      "fileSizeBytes": 305850,
-      "durationMs": 6371,
-      "generatedAt": "2026-03-25T14:47:33.372Z"
-    },
-    {
-      "id": "execution-2",
-      "status": "success",
-      "fileSizeBytes": 238650,
-      "durationMs": 4971,
-      "generatedAt": "2026-03-25T14:47:44.632Z"
-    },
-    {
-      "id": "execution-3",
-      "status": "success",
-      "fileSizeBytes": 296250,
-      "durationMs": 6171,
-      "generatedAt": "2026-03-25T14:49:27.100Z"
-    },
-    {
-      "id": "policy-peek-1",
-      "status": "success",
-      "fileSizeBytes": 290490,
-      "durationMs": 6051,
-      "generatedAt": "2026-03-25T14:49:47.105Z"
-    },
-    {
-      "id": "policy-peek-2",
-      "status": "success",
-      "fileSizeBytes": 378810,
-      "durationMs": 7891,
-      "generatedAt": "2026-03-25T14:50:00.158Z"
+      "fileSizeBytes": 255930,
+      "durationMs": 5331,
+      "generatedAt": "2026-03-25T19:41:24.727Z"
     }
   ],
   "summary": {
-    "total": 10,
-    "succeeded": 10,
+    "total": 1,
+    "succeeded": 1,
     "failed": 0
   }
 }

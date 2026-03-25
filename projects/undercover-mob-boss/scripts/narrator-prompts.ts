@@ -56,7 +56,7 @@ export const NARRATOR_VARIANTS: NarratorVariant[] = [
     variantNum: 2,
     description: 'Mayor nominates Commissioner',
     category: 'game',
-    script: 'Another round, another Mayor. The question is... who gets the badge?',
+    script: 'Another round, another Mayor. Now comes the real question... who do you trust?',
   },
   {
     triggerId: 'nomination',

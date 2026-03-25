@@ -75,9 +75,9 @@ Pre-generate all narrator audio lines before build starts. Uses same `GEMINI_API
 
 **Model:** `gemini-2.5-flash-preview-tts` (free tier eligible)
 **Voice:** Charon (deep, dramatic) + noir style prompting
-**Output:** WAV files (24kHz, 16-bit, mono)
+**Output:** WAV → OGG Vorbis (converted via ffmpeg)
 
-38 narrator lines (15 round-start variants + 23 unique event lines). One-time generation, served as static audio files.
+104 narrator lines (15 round-start + 76 game event variants + 13 trailer). One-time generation, served as static audio files.
 
 ---
 
@@ -122,6 +122,10 @@ pnpm run partykit:dev      # starts local server on localhost:1999
 ```
 
 **Deploy to production:**
+Auto-deploys via GH Actions on push to main when `src/server/`, `src/shared/`, or `partykit.json` changes.
+Workflow: `.github/workflows/deploy-partykit.yml` (monorepo root).
+
+Manual fallback (only if GH Actions is broken):
 ```bash
 pnpm run partykit:deploy   # deploys to Cloudflare Workers
 ```
@@ -194,7 +198,7 @@ Before starting the build session:
 - [ ] Run `/mcp` — context7, serena, sequential-thinking all connected
 - [ ] Gemini API key in `.env` with billing enabled (used for both Imagen 4 and TTS)
 - [ ] `SPEC.md` reviewed and locked
-- [ ] PartyKit deployed — `pnpm run partykit:deploy` succeeds
+- [ ] PartyKit deployed — auto-deploys via GH Actions (manual: `pnpm run partykit:deploy`)
 - [ ] Vercel project created with Root Directory `projects/undercover-mob-boss`
 - [ ] `VITE_PARTYKIT_HOST` env var set in Vercel (production)
 

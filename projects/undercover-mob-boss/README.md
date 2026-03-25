@@ -47,7 +47,7 @@ The host device runs the authoritative game server via PartyKit. Players connect
 | Testing | Vitest 4 (unit/integration) + Playwright (E2E) |
 | Assets | Gemini Imagen 4 (pre-generated) |
 | Narration | Gemini 2.5 Flash TTS, Charon voice (pre-generated) |
-| Hosting | Vercel |
+| Hosting | Vercel (client) + Cloudflare Workers via PartyKit (server) |
 
 ## Project Structure
 
@@ -61,8 +61,8 @@ src/
   server/           PartyKit server (room logic, game engine)
   shared/           Types shared between client + server
 public/
-  assets/           AI-generated images (13 game + 4 trailer)
-  audio/            Pre-generated narrator WAVs (39 game + 13 trailer)
+  assets/           AI-generated images (30 card art + 13 game + 4 trailer)
+  audio/            Pre-generated narrator OGGs (91 game + 13 trailer)
 scripts/            Asset generation pipelines (Imagen 4, Gemini TTS)
 videos/
   trailer/          Remotion video project (cinematic trailer)
@@ -81,7 +81,7 @@ docs/
 ```bash
 pnpm run dev              # Vite dev server
 pnpm run build            # Production build
-pnpm run test             # Unit + integration tests (760 tests)
+pnpm run test             # Unit + integration tests (843 tests)
 pnpm run test:e2e         # Playwright E2E (125 tests x 4 browsers = 500)
 pnpm run typecheck        # tsc --noEmit
 pnpm run generate-assets  # Regenerate images via Imagen 4
@@ -92,9 +92,9 @@ pnpm run generate-narrator # Regenerate narrator audio via Gemini TTS
 
 | Layer | Tests | What it proves |
 |-------|-------|---------------|
-| Unit | 760 | Game engine logic, role distribution, deck mechanics, executive powers, projections, routing |
+| Unit | 843 | Game engine logic, role distribution, deck mechanics, executive powers, projections, routing |
 | Integration | (included above) | Full games to completion, 300+ randomized simulations, state invariants at every dispatch |
-| E2E | 500 | Complete game flows across Chromium, WebKit, Mobile Chrome, Mobile Safari |
+| E2E | 488 | Complete game flows across Chromium, WebKit, Mobile Chrome, Mobile Safari |
 | Rules verification | 209/209 | Every discrete Secret Hitler rule mapped to code + tests |
 
 ## Theme Mapping
@@ -106,8 +106,8 @@ pnpm run generate-narrator # Regenerate narrator audio via Gemini TTS
 | Hitler | Mob Boss |
 | President | Mayor |
 | Chancellor | Commissioner |
-| Liberal Policy | Good Policy |
-| Fascist Policy | Bad Policy |
+| Liberal Policy | Virtuous Policy |
+| Fascist Policy | Corrupt Policy |
 
 ## Environment Variables
 

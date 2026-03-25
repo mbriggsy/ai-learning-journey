@@ -96,10 +96,7 @@ export function onHostStateUpdate(state: HostState | LobbyState): void {
 
   // ── Election result (cause narration BEFORE round-start) ──────
 
-  // Vote reveal
-  if (subPhase === 'election-result' && prevSubPhase !== 'election-result') {
-    narrator.enqueue('vote-reveal');
-  }
+  // Vote reveal — skipped; the visual card flip + tally speaks for itself
 
   // Election tracker / approved / blocked — must fire before round-start
   if (!vetoHandled && electionTracker > prevElectionTracker && electionTracker > 0) {

@@ -1,0 +1,35 @@
+name: Deploy PartyKit
+
+on:
+  push:
+    branches: [main]
+    paths:
+      - 'projects/undercover-mob-boss/src/server/**'
+      - 'projects/undercover-mob-boss/src/shared/**'
+      - 'projects/undercover-mob-boss/partykit.json'
+
+jobs:
+  deploy:
+    runs-on: ubuntu-latest
+    defaults:
+      run:
+        working-directory: projects/undercover-mob-boss
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: pnpm/action-setup@v4
+        with:
+          version: 10
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: pnpm
+          cache-dependency-path: projects/undercover-mob-boss/pnpm-lock.yaml
+
+      - run: pnpm install --frozen-lockfile
+
+      - run: npx partykit deploy
+        env:
+          PARTYKIT_TOKEN: ${{ secrets.PARTYKIT_TOKEN }}

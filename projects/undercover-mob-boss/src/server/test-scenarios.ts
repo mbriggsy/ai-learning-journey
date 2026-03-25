@@ -1,5 +1,5 @@
 // ── Test Scenarios ──────────────────────────────────────────────────
-// Pre-built GameState snapshots for testing specific phases.
+// Pre-built GameState snapshots for testing specific phases via the dev panel.
 // DEV ONLY — triggered by host via 'load-scenario' message.
 
 import type { GameState, Player, PolicyCard, PolicyType, Role } from '../shared/types';

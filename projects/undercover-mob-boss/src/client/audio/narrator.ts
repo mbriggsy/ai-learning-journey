@@ -4,7 +4,6 @@
 
 import { audioEngine } from './audio-engine';
 import { NARRATOR_LINES, PHASE_GROUPS } from './narrator-lines';
-import { selectNarratorPool } from './narrator-pool';
 import type { NarratorSelection } from './narrator-pool';
 
 const AUDIO_BASE_PATH = '/audio';
@@ -67,12 +66,13 @@ class NarratorPlayer {
           }
         }
       } else {
-        // Variant trigger: preload only the selected variant
-        const variantNum = this.getVariantNum(lineId);
-        const cacheKey = `${lineId}-${variantNum}`;
-        if (!this.bufferCache.has(cacheKey)) {
-          const url = `${AUDIO_BASE_PATH}/${lineId}-${variantNum}.ogg`;
-          loadPromises.push(this.loadAndCache(cacheKey, url));
+        // Variant trigger: preload all variants (any could play)
+        for (let n = 1; n <= line.variantCount; n++) {
+          const cacheKey = `${lineId}-${n}`;
+          if (!this.bufferCache.has(cacheKey)) {
+            const url = `${AUDIO_BASE_PATH}/${lineId}-${n}.ogg`;
+            loadPromises.push(this.loadAndCache(cacheKey, url));
+          }
         }
       }
     }
@@ -210,22 +210,13 @@ class NarratorPlayer {
   }
 
   /**
-   * Get the selected variant number for a trigger.
-   * Uses game selection if available, otherwise performs lazy selection.
+   * Pick a random variant number for a trigger.
+   * Fresh random pick every time — no two consecutive plays guaranteed the same.
    */
   private getVariantNum(lineId: string): number {
-    // Use existing game selection
-    if (this.gameSelection && lineId in this.gameSelection) {
-      return this.gameSelection[lineId];
-    }
-
-    // Lazy selection fallback (e.g. host reconnects mid-game without selection)
-    if (!this.gameSelection) {
-      console.warn('[narrator] No game selection — performing lazy selection');
-      this.gameSelection = selectNarratorPool();
-    }
-
-    return this.gameSelection[lineId] ?? 1;
+    const line = NARRATOR_LINES[lineId as keyof typeof NARRATOR_LINES];
+    if (!line || line.kind !== 'variant') return 1;
+    return Math.floor(Math.random() * line.variantCount) + 1;
   }
 
   /**

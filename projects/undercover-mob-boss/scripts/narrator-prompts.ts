@@ -255,7 +255,7 @@ export const NARRATOR_VARIANTS: NarratorVariant[] = [
     variantNum: 1,
     description: 'Good policy enacted',
     category: 'game',
-    script: 'A good policy for Millbrook City. The citizens breathe a little easier.',
+    script: 'A virtuous policy for Millbrook City. The citizens breathe a little easier.',
   },
   {
     triggerId: 'good-policy',
@@ -285,14 +285,14 @@ export const NARRATOR_VARIANTS: NarratorVariant[] = [
     variantNum: 1,
     description: 'Bad policy enacted',
     category: 'game',
-    script: 'Another bad policy. The mob smiles.',
+    script: 'Another corrupt policy. The mob smiles.',
   },
   {
     triggerId: 'bad-policy',
     variantNum: 2,
     description: 'Bad policy enacted',
     category: 'game',
-    script: 'Darkness creeps through City Hall. Another bad policy... and the mob tightens its grip.',
+    script: 'Darkness creeps through City Hall. Another corrupt policy... and the mob tightens its grip.',
   },
   {
     triggerId: 'bad-policy',
@@ -361,7 +361,7 @@ export const NARRATOR_VARIANTS: NarratorVariant[] = [
     variantNum: 1,
     description: 'Investigation power activated',
     category: 'game',
-    script: 'The Commissioner has called for an investigation. Someone\'s cover is about to get a little thinner.',
+    script: 'The Mayor has called for an investigation. Someone\'s cover is about to get a little thinner.',
   },
   {
     triggerId: 'investigate',
@@ -375,7 +375,7 @@ export const NARRATOR_VARIANTS: NarratorVariant[] = [
     variantNum: 3,
     description: 'Investigation power activated',
     category: 'game',
-    script: 'The Commissioner digs into the files. Someone\'s secret... is about to surface.',
+    script: 'The Mayor digs into the files. Someone\'s secret... is about to surface.',
   },
 
   // ── special-nomination (2 variants) ─────────────────────────────
@@ -384,14 +384,14 @@ export const NARRATOR_VARIANTS: NarratorVariant[] = [
     variantNum: 1,
     description: 'Special nomination power activated',
     category: 'game',
-    script: 'The Commissioner will choose the next Mayor. Democracy takes a back seat.',
+    script: 'The Mayor will choose the next Mayor. Democracy takes a back seat.',
   },
   {
     triggerId: 'special-nomination',
     variantNum: 2,
     description: 'Special nomination power activated',
     category: 'game',
-    script: 'A special appointment. The Commissioner bypasses the vote... and handpicks the next Mayor.',
+    script: 'A special appointment. The Mayor bypasses the vote... and handpicks the next Mayor.',
   },
 
   // ── execution (3 variants) ──────────────────────────────────────
@@ -407,7 +407,7 @@ export const NARRATOR_VARIANTS: NarratorVariant[] = [
     variantNum: 2,
     description: 'Execution power activated',
     category: 'game',
-    script: 'The Commissioner draws the line. One player... leaves the table tonight.',
+    script: 'The Mayor draws the line. One player... leaves the table tonight.',
   },
   {
     triggerId: 'execution',
@@ -446,14 +446,14 @@ export const NARRATOR_VARIANTS: NarratorVariant[] = [
     variantNum: 1,
     description: 'Policy peek power activated',
     category: 'game',
-    script: 'The Commissioner takes a long look at the top of the deck. Three cards... and the truth of what\'s coming.',
+    script: 'The Mayor takes a long look at the top of the deck. Three cards... and the truth of what\'s coming.',
   },
   {
     triggerId: 'policy-peek',
     variantNum: 2,
     description: 'Policy peek power activated',
     category: 'game',
-    script: 'A glimpse behind the curtain. The Commissioner sees what the deck has in store... and must decide what to share.',
+    script: 'A glimpse behind the curtain. The Mayor sees what the deck has in store... and must decide what to share.',
   },
 
   // ── mob-boss-executed (2 variants) ──────────────────────────────
@@ -478,7 +478,7 @@ export const NARRATOR_VARIANTS: NarratorVariant[] = [
     variantNum: 1,
     description: '5 good policies enacted — citizens win',
     category: 'game',
-    script: 'Five good policies enacted. Millbrook City is saved. The mob has lost.',
+    script: 'Five virtuous policies enacted. Millbrook City is saved. The mob has lost.',
   },
   {
     triggerId: 'citizens-win-policy',
@@ -510,14 +510,14 @@ export const NARRATOR_VARIANTS: NarratorVariant[] = [
     variantNum: 1,
     description: '6 bad policies enacted — mob wins',
     category: 'game',
-    script: 'Six bad policies enacted. Millbrook City belongs to the mob. Game over.',
+    script: 'Six corrupt policies enacted. Millbrook City belongs to the mob. Game over.',
   },
   {
     triggerId: 'mob-wins-policy',
     variantNum: 2,
     description: '6 bad policies enacted — mob wins',
     category: 'game',
-    script: 'The sixth bad policy drops. Millbrook City goes dark. The mob... owns everything.',
+    script: 'The sixth corrupt policy drops. Millbrook City goes dark. The mob... owns everything.',
   },
 
   // ── mob-wins-election (2 variants) ──────────────────────────────

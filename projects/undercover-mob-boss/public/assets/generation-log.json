@@ -1,29 +1,29 @@
 {
-  "generatedAt": "2026-03-23T15:05:06.624Z",
+  "generatedAt": "2026-03-25T14:19:51.012Z",
   "model": "imagen-4.0-generate-001",
   "sdkVersion": "@google/genai@1.45.0",
   "assets": [
     {
-      "name": "trailer-table-overhead",
+      "name": "bridge-safety-inspection",
       "status": "success",
-      "promptHash": "a83ac4585bc7",
+      "promptHash": "6bab50a3c6f2",
       "dimensions": {
-        "width": 1920,
-        "height": 1080
+        "width": 384,
+        "height": 512
       },
       "hasAlpha": false,
-      "generatedAt": "2026-03-23T15:05:19.823Z"
+      "generatedAt": "2026-03-25T14:20:02.879Z"
     },
     {
-      "name": "trailer-city-closeup",
+      "name": "dockside-kickback-scheme",
       "status": "success",
-      "promptHash": "f7c665fd7db3",
+      "promptHash": "dbcc22633c16",
       "dimensions": {
-        "width": 1920,
-        "height": 1080
+        "width": 384,
+        "height": 512
       },
       "hasAlpha": false,
-      "generatedAt": "2026-03-23T15:05:34.761Z"
+      "generatedAt": "2026-03-25T14:20:27.042Z"
     }
   ],
   "summary": {

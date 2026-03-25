@@ -241,7 +241,7 @@ export const ASSET_PROMPTS = [
   },
   {
     name: 'bridge-safety-inspection',
-    promptSuffix: `1940s steel truss bridge over a river, an engineer with a clipboard inspecting rivets, hard hat, sturdy construction, safe infrastructure, industrial scene, ${CARD_BG_SUFFIX}`,
+    promptSuffix: `majestic 1940s suspension bridge at golden hour seen from the riverbank, iron trusses and cable wires gleaming, engineering blueprints and a clipboard on a wooden drafting table in the foreground, ${CARD_BG_SUFFIX}`,
     targetWidth: 384, targetHeight: 512, aspectRatio: '3:4',
     needsTransparency: false, postProcess: { kind: 'resize' },
     format: 'webp', outputSubDir: 'cards',
@@ -278,7 +278,7 @@ export const ASSET_PROMPTS = [
   // --- Named Policy Cards: Corrupt (15) ---
   {
     name: 'dockside-kickback-scheme',
-    promptSuffix: `dark 1940s dockside at night, shadowy figures exchanging a thick envelope of cash near shipping crates, fog rolling in, a lone dock lamp, illicit deal, ${CARD_BG_SUFFIX}`,
+    promptSuffix: `dark 1940s waterfront dock at night, stacked wooden shipping crates, a leather briefcase left open on a barrel, fog rolling in from the harbor, a single dock lamp, moody film noir lighting, ${CARD_BG_SUFFIX}`,
     targetWidth: 384, targetHeight: 512, aspectRatio: '3:4',
     needsTransparency: false, postProcess: { kind: 'resize' },
     format: 'webp', outputSubDir: 'cards',
@@ -299,14 +299,14 @@ export const ASSET_PROMPTS = [
   },
   {
     name: 'prohibition-expansion',
-    promptSuffix: `1940s speakeasy being raided, barrels of liquor being smashed with axes, agents in trench coats, broken bottles, authoritarian enforcement scene, ${CARD_BG_SUFFIX}`,
+    promptSuffix: `1940s locked speakeasy door with a large CLOSED BY ORDER notice nailed to it, broken bottles in the alley, a padlock and chain on the door handle, dim streetlight, empty street, ${CARD_BG_SUFFIX}`,
     targetWidth: 384, targetHeight: 512, aspectRatio: '3:4',
     needsTransparency: false, postProcess: { kind: 'resize' },
     format: 'webp', outputSubDir: 'cards',
   },
   {
     name: 'union-bust-authorization',
-    promptSuffix: `1940s factory exterior with locked gates, a chain and padlock, discarded picket signs on the ground, factory smokestacks, workers turned away, oppressive atmosphere, ${CARD_BG_SUFFIX}`,
+    promptSuffix: `1940s factory exterior with tall iron gates closed shut, an official notice posted on the fence, discarded picket signs leaning against the wall, factory smokestacks in the background, overcast sky, ${CARD_BG_SUFFIX}`,
     targetWidth: 384, targetHeight: 512, aspectRatio: '3:4',
     needsTransparency: false, postProcess: { kind: 'resize' },
     format: 'webp', outputSubDir: 'cards',
@@ -320,7 +320,7 @@ export const ASSET_PROMPTS = [
   },
   {
     name: 'midnight-rezoning-act',
-    promptSuffix: `1940s city hall at midnight, a single lit window, a shadowy figure signing documents by lamplight, rubber stamp, a city map on the wall with red zone markings, ${CARD_BG_SUFFIX}`,
+    promptSuffix: `1940s city hall building at night, a single lit office window glowing warmly, a desk visible through the window with stacked documents and a rubber stamp, a city zoning map pinned to the wall, moonlight on the stone facade, ${CARD_BG_SUFFIX}`,
     targetWidth: 384, targetHeight: 512, aspectRatio: '3:4',
     needsTransparency: false, postProcess: { kind: 'resize' },
     format: 'webp', outputSubDir: 'cards',

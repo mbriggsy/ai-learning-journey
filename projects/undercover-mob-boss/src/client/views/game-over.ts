@@ -15,7 +15,7 @@ export function mount(container: HTMLElement, state: AppState): void {
   root.className = 'screen';
 
   const content = document.createElement('div');
-  content.className = 'screen-content';
+  content.className = 'screen-content screen-content--scrollable';
 
   const panel = document.createElement('div');
   panel.className = 'game-over__panel';

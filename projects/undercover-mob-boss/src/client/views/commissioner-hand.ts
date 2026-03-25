@@ -9,14 +9,12 @@ let root: HTMLElement | null = null;
 let selectedIndex: number | null = null;
 let tl: gsap.core.Timeline | null = null;
 let enactTl: gsap.core.Timeline | null = null;
-const preventScroll = (e: TouchEvent) => e.preventDefault();
 
 export function mount(container: HTMLElement, state: AppState): void {
   selectedIndex = null;
 
   root = document.createElement('div');
   root.className = 'screen';
-  root.addEventListener('touchmove', preventScroll, { passive: false });
 
   setTopBarInstruction('Enact a policy');
 
@@ -178,7 +176,6 @@ export function unmount(): void {
   enactTl = null;
   tl?.kill();
   tl = null;
-  root?.removeEventListener('touchmove', preventScroll);
   root?.remove();
   root = null;
   selectedIndex = null;

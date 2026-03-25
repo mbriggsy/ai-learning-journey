@@ -212,6 +212,59 @@
   text-shadow: 0 0 20px rgba(196, 32, 32, 0.4);
 }
 
+/* ── Auto-Enact Overlay ─────────────────────────────────────────── */
+
+.auto-enact-overlay {
+  bottom: 0;
+  background: var(--glass-bg-heavy);
+  backdrop-filter: blur(var(--glass-blur-heavy));
+  -webkit-backdrop-filter: blur(var(--glass-blur-heavy));
+  border-bottom: none;
+  display: grid;
+  place-items: center;
+}
+
+.auto-enact-reveal {
+  z-index: 520;
+}
+
+.auto-enact-reveal__title {
+  font-family: var(--font-display);
+  font-size: var(--text-2xl);
+  font-weight: 900;
+  text-transform: uppercase;
+  letter-spacing: 0.08em;
+  color: var(--noir-cream);
+  text-shadow: 0 0 20px rgba(232, 224, 208, 0.2);
+}
+
+.auto-enact-reveal__badge {
+  font-family: var(--font-display);
+  font-size: var(--text-sm);
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.15em;
+  color: var(--noir-blood-bright);
+  padding: var(--space-xs) var(--space-sm);
+  border: 2px solid var(--noir-blood-bright);
+  border-radius: 4px;
+}
+
+.auto-enact-reveal__subtitle {
+  font-family: var(--font-body);
+  font-size: var(--text-base);
+  color: var(--noir-muted);
+  font-style: italic;
+}
+
+.auto-enact-reveal__track {
+  font-family: var(--font-display);
+  font-size: var(--text-lg);
+  font-weight: 700;
+  letter-spacing: 0.06em;
+  text-shadow: 0 0 15px currentColor;
+}
+
 /* ── Policy Enacted Overlay ──────────────────────────────────────── */
 
 .policy-enacted-overlay {

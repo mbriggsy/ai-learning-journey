@@ -26,13 +26,6 @@ const SAMPLE_RATE = 24000;
 const BITS_PER_SAMPLE = 16;
 const NUM_CHANNELS = 1;
 
-/**
- * Voice direction prepended to every line.
- * Gemini TTS uses natural language in the text prompt to control delivery.
- */
-const VOICE_DIRECTION =
-  'Read this as a 1940s noir detective narrator. Deep gravelly voice, deliberate pacing, theatrical delivery with dramatic pauses. Think Raymond Chandler audiobook meets Rod Serling: ';
-
 // --- Build generation list ---
 
 interface GenerationItem {
@@ -199,6 +192,9 @@ async function generateOne(
         model: MODEL,
         contents: [
           {
+            // CRITICAL: Send script text ONLY. Gemini TTS reads ALL text verbatim.
+            // NEVER prepend style/voice direction here — it will be spoken aloud.
+            // Voice character comes from the Charon voice preset, not text instructions.
             parts: [{ text: script }],
           },
         ],

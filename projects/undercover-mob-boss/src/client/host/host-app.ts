@@ -142,15 +142,13 @@ function syncOverlays(nextOverlays: HostOverlayId[]): void {
         wrapper.className = 'host-overlay';
         wrapper.dataset.overlayId = id;
         wrapper.style.animation = 'none';
-        if (id === 'game-over') {
-          wrapper.classList.add('game-over-overlay');
-        }
-        if (id === 'election-results') {
-          wrapper.classList.add('election-reveal-overlay');
-        }
-        if (id === 'policy-enacted') {
-          wrapper.classList.add('policy-enacted-overlay');
-        }
+        const OVERLAY_CLASSES: Record<string, string> = {
+          'game-over': 'game-over-overlay',
+          'election-results': 'election-reveal-overlay',
+          'policy-enacted': 'policy-enacted-overlay',
+          'auto-enact': 'auto-enact-overlay',
+        };
+        if (OVERLAY_CLASSES[id]) wrapper.classList.add(OVERLAY_CLASSES[id]);
         const content = document.createElement('div');
         content.className = 'host-overlay__content';
         wrapper.appendChild(content);

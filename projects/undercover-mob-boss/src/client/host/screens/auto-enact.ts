@@ -12,30 +12,24 @@ export function mount(container: HTMLElement, state: HostState): void {
   const policy = card?.type ?? 'bad';
 
   root = document.createElement('div');
-  root.className = 'host-screen';
+  root.className = 'host-screen auto-enact-reveal';
 
-  // AUTO-ENACTED label
+  // Title
+  const titleEl = document.createElement('div');
+  titleEl.className = 'auto-enact-reveal__title';
+  titleEl.textContent = 'Policy Enacted';
+  root.appendChild(titleEl);
+
+  // Auto-enacted badge
   const badge = document.createElement('div');
-  badge.style.fontSize = 'var(--text-sm)';
-  badge.style.fontWeight = '700';
-  badge.style.textTransform = 'uppercase';
-  badge.style.letterSpacing = '0.15em';
-  badge.style.color = 'var(--noir-blood)';
-  badge.style.padding = 'var(--space-xs) var(--space-sm)';
-  badge.style.border = '2px solid var(--noir-blood)';
-  badge.style.borderRadius = '4px';
+  badge.className = 'auto-enact-reveal__badge';
   badge.textContent = 'AUTO-ENACTED';
   root.appendChild(badge);
 
-  const title = document.createElement('h1');
-  title.className = 'host-screen__title';
-  title.textContent = 'Policy Enacted';
-  root.appendChild(title);
-
   // Subtitle
   const subtitle = document.createElement('div');
-  subtitle.className = 'host-screen__subtitle';
-  subtitle.textContent = 'Election deadlock';
+  subtitle.className = 'auto-enact-reveal__subtitle';
+  subtitle.textContent = 'Election deadlock — top card enacted by default';
   root.appendChild(subtitle);
 
   // Policy card with flip
@@ -77,7 +71,7 @@ export function mount(container: HTMLElement, state: HostState): void {
 
   // Track info
   const trackInfo = document.createElement('div');
-  trackInfo.className = 'host-screen__subtitle';
+  trackInfo.className = 'auto-enact-reveal__track';
   if (policy === 'good') {
     trackInfo.textContent = `Citizen Policies: ${state.goodPoliciesEnacted} / 5`;
     trackInfo.style.color = 'var(--noir-gold)';

@@ -20,7 +20,7 @@
 
 /* Lock scroll on screens where content fits viewport (card hands, peek) */
 .screen-content--locked {
-  overflow: hidden !important;
+  overflow: hidden;
   touch-action: none;
   position: absolute;
   inset: 0;

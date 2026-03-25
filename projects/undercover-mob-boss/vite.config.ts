@@ -36,9 +36,9 @@ export default defineConfig({
           },
           {
             urlPattern: /\/audio\/.*/,
-            handler: 'CacheFirst',
+            handler: 'StaleWhileRevalidate',
             options: {
-              cacheName: 'audio-cache',
+              cacheName: 'audio-cache-v2',
               expiration: { maxEntries: 500, maxAgeSeconds: 30 * 24 * 60 * 60 },
             },
           },

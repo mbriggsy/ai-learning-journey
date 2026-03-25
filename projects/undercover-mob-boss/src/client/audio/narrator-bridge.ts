@@ -110,9 +110,8 @@ export function onHostStateUpdate(state: HostState | LobbyState): void {
 
   // ── Round start ──────────────────────────────────────────────────
 
-  // New round — play round-start line (includes round 1 after role-reveal)
+  // Round start — skipped; round number visible in board header, keeps pace snappy
   if (((round !== prevRound) || prevPhase === 'role-reveal') && round > 0 && phase !== 'lobby' && phase !== 'role-reveal') {
-    narrator.enqueue('round-start', round);
     void narrator.preloadPhase('nomination');
   }
 

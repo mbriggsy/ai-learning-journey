@@ -8,6 +8,9 @@ importers:
 
   .:
     dependencies:
+      '@zumer/snapdom':
+        specifier: ^2.6.0
+        version: 2.6.0
       gsap:
         specifier: ^3.14.2
         version: 3.14.2
@@ -1374,6 +1377,9 @@ packages:
 
   '@vitest/utils@4.1.0':
     resolution: {integrity: sha512-XfPXT6a8TZY3dcGY8EdwsBulFCIw+BeeX0RZn2x/BtiY/75YGh8FeWGG8QISN/WhaqSrE2OrlDgtF8q5uhOTmw==}
+
+  '@zumer/snapdom@2.6.0':
+    resolution: {integrity: sha512-JpPPkuMzozRVX6KArgCiMgLpgVW82kWgyoFk5DWGKE5msWGEshXEUdQHLLEyZRO7qioI1pI+yaBJz81tEP9gPg==}
 
   acorn-walk@8.3.5:
     resolution: {integrity: sha512-HEHNfbars9v4pgpW6SO1KSPkfoS0xVOM/9UzkJltjlsHZmJasxg8aXkuZa7SMf8vKGIBhpUsPluQSqhJFCqebw==}
@@ -4253,6 +4259,8 @@ snapshots:
       '@vitest/pretty-format': 4.1.0
       convert-source-map: 2.0.0
       tinyrainbow: 3.1.0
+
+  '@zumer/snapdom@2.6.0': {}
 
   acorn-walk@8.3.5:
     dependencies:

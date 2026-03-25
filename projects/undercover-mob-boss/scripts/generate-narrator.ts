@@ -3,8 +3,14 @@ import { access, mkdir, writeFile } from 'node:fs/promises';
 import { resolve } from 'node:path';
 import { parseArgs } from 'node:util';
 
-import { NARRATOR_IDS, NARRATOR_PROMPTS } from './narrator-prompts.js';
-import type { NarratorLog, NarratorLogEntry } from './types.js';
+import {
+  NARRATOR_VARIANTS,
+  ROUND_START_PROMPTS,
+  TRAILER_PROMPTS,
+  NARRATOR_IDS,
+} from './narrator-prompts.js';
+import type { NarratorLog, NarratorLogEntry, NarratorVariant } from './types.js';
+import { variantId } from './types.js';
 
 // --- Constants ---
 
@@ -27,6 +33,35 @@ const NUM_CHANNELS = 1;
 const VOICE_DIRECTION =
   'Read this as a 1940s noir detective narrator. Deep gravelly voice, deliberate pacing, theatrical delivery with dramatic pauses. Think Raymond Chandler audiobook meets Rod Serling: ';
 
+// --- Build generation list ---
+
+interface GenerationItem {
+  id: string;
+  script: string;
+}
+
+/** Flatten all prompts into a single generation list with computed IDs. */
+function buildGenerationList(): GenerationItem[] {
+  const items: GenerationItem[] = [];
+
+  // Game event variants: id = 'nomination-1', 'nomination-2', etc.
+  for (const v of NARRATOR_VARIANTS) {
+    items.push({ id: variantId(v), script: v.script });
+  }
+
+  // Round-start: id = 'round-start-1', etc.
+  for (const p of ROUND_START_PROMPTS) {
+    items.push({ id: p.id, script: p.script });
+  }
+
+  // Trailer: id = 'trailer-stakes', etc.
+  for (const p of TRAILER_PROMPTS) {
+    items.push({ id: p.id, script: p.script });
+  }
+
+  return items;
+}
+
 // --- CLI Arg Parsing ---
 
 const rawArgs = process.argv.slice(2).filter((a) => a !== '--');
@@ -34,6 +69,7 @@ const { values } = parseArgs({
   args: rawArgs,
   options: {
     only: { type: 'string', multiple: true },
+    trigger: { type: 'string', multiple: true },
     'dry-run': { type: 'boolean', default: false },
     force: { type: 'boolean', default: false },
   },
@@ -44,21 +80,38 @@ const { values } = parseArgs({
 const dryRun = values['dry-run'] ?? false;
 const force = values.force ?? false;
 const onlyIds = values.only ?? [];
+const onlyTriggers = values.trigger ?? [];
 
 // Validate --only IDs
 for (const id of onlyIds) {
   if (!NARRATOR_IDS.has(id)) {
     console.error(
-      `ERROR: Unknown narrator ID "${id}". Valid IDs: ${[...NARRATOR_IDS].join(', ')}`,
+      `ERROR: Unknown narrator ID "${id}". Valid IDs: ${[...NARRATOR_IDS].slice(0, 10).join(', ')}...`,
     );
     process.exit(1);
   }
 }
 
-const linesToGenerate =
-  onlyIds.length > 0
-    ? NARRATOR_PROMPTS.filter((p) => onlyIds.includes(p.id))
-    : [...NARRATOR_PROMPTS];
+// Build filtered generation list
+const allItems = buildGenerationList();
+
+let linesToGenerate: GenerationItem[];
+if (onlyTriggers.length > 0) {
+  // --trigger nomination → generate all variants for that trigger
+  linesToGenerate = allItems.filter((item) =>
+    onlyTriggers.some((t) => item.id.startsWith(t + '-') || item.id === t),
+  );
+} else if (onlyIds.length > 0) {
+  // --only nomination-2 → generate specific variant
+  linesToGenerate = allItems.filter((item) => onlyIds.includes(item.id));
+} else {
+  linesToGenerate = [...allItems];
+}
+
+if (linesToGenerate.length === 0) {
+  console.error('ERROR: No lines match the given filters.');
+  process.exit(1);
+}
 
 // --- API Key Validation ---
 
@@ -146,7 +199,7 @@ async function generateOne(
         model: MODEL,
         contents: [
           {
-            parts: [{ text: script }],
+            parts: [{ text: VOICE_DIRECTION + script }],
           },
         ],
         config: {
@@ -223,7 +276,7 @@ async function main(): Promise<void> {
   console.log(`\n=== Undercover Mob Boss — Narrator Generation ===`);
   console.log(`Model: ${MODEL}`);
   console.log(`Voice: ${VOICE_NAME}`);
-  console.log(`Lines: ${linesToGenerate.length} of ${NARRATOR_PROMPTS.length}`);
+  console.log(`Lines: ${linesToGenerate.length} of ${allItems.length}`);
   console.log(`Dry run: ${dryRun}`);
   console.log(`Force: ${force}`);
   console.log(`Output: ${OUTPUT_DIR}`);

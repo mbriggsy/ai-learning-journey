@@ -77,10 +77,21 @@ describe('projectStateForHost — security', () => {
     expect(projected).not.toHaveProperty('rngSeed');
   });
 
-  it('NEVER includes investigationHistory', () => {
+  it('hides investigationHistory during play', () => {
     const state = createTestGameState();
     const projected = projectStateForHost(state, allConnected(state));
-    expect(projected).not.toHaveProperty('investigationHistory');
+    expect(projected.investigationHistory).toBeNull();
+  });
+
+  it('reveals investigationHistory at game-over', () => {
+    const state = createTestGameState({
+      phase: 'game-over',
+      subPhase: null,
+      investigationHistory: [{ investigatorId: 'player-0', targetId: 'player-1', result: 'citizen' }],
+    });
+    const projected = projectStateForHost(state, allConnected(state));
+    expect(projected.investigationHistory).toHaveLength(1);
+    expect(projected.investigationHistory![0].result).toBe('citizen');
   });
 
   it('hides votes until election result', () => {

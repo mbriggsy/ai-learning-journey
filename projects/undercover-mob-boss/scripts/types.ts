@@ -40,10 +40,27 @@ export interface GenerationLog {
 
 // --- Narrator Types ---
 
+/** @deprecated Use NarratorVariant for V2 variant-aware prompts. */
 export interface NarratorPrompt {
   readonly id: string;
   readonly trigger: string;
   readonly script: string;
+}
+
+/** V2 variant-aware narrator prompt. Groups multiple scripts per trigger. */
+export interface NarratorVariant {
+  readonly triggerId: string;
+  readonly variantNum: number;
+  readonly script: string;
+  /** Human-readable description of when this line plays. */
+  readonly description: string;
+  /** Category to separate game lines from trailer lines. */
+  readonly category: 'game' | 'trailer';
+}
+
+/** Compute the file ID for a variant (e.g. 'nomination-1'). */
+export function variantId(v: NarratorVariant): string {
+  return `${v.triggerId}-${v.variantNum}`;
 }
 
 export interface NarratorLogEntry {

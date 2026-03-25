@@ -72,6 +72,7 @@ export function createTestGameState(
     rngSeed: DEFAULT_SEED,
     lastEnactedPolicy: null,
     policyHistory: [],
+    voteHistory: [],
   };
 
   return { ...baseState, ...stateOverrides };

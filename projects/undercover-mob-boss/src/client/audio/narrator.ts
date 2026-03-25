@@ -1,9 +1,11 @@
 // ── Narrator Player ────────────────────────────────────────────────
-// Sequential playback of pre-generated narrator WAV files.
-// Connects through the narrator channel gain in the audio engine.
+// Sequential playback of pre-generated narrator audio files.
+// V2: Variant-aware — uses NarratorSelection to resolve trigger → audio file.
 
 import { audioEngine } from './audio-engine';
 import { NARRATOR_LINES, PHASE_GROUPS } from './narrator-lines';
+import { selectNarratorPool } from './narrator-pool';
+import type { NarratorSelection } from './narrator-pool';
 
 const AUDIO_BASE_PATH = '/audio';
 const GAP_BETWEEN_LINES_MS = 200;
@@ -13,6 +15,7 @@ class NarratorPlayer {
   private queue: Array<{ lineId: string; round?: number }> = [];
   private playing = false;
   private currentSource: AudioBufferSourceNode | null = null;
+  private gameSelection: NarratorSelection | null = null;
 
   /** Called when narrator begins speaking (for music ducking, UI, etc.). */
   onNarratorStart: (() => void) | null = null;
@@ -20,11 +23,29 @@ class NarratorPlayer {
   /** Called when narrator finishes speaking (for music un-ducking, etc.). */
   onNarratorEnd: (() => void) | null = null;
 
+  // ── Game Selection API ─────────────────────────────────────────
+
+  /**
+   * Set the variant selection for the current game.
+   * Called by narrator-bridge at role-reveal transition.
+   */
+  setGameSelection(selection: NarratorSelection): void {
+    this.gameSelection = selection;
+  }
+
+  /**
+   * Clear the variant selection (game-over → lobby transition).
+   */
+  clearGameSelection(): void {
+    this.gameSelection = null;
+  }
+
   // ── Preloading ───────────────────────────────────────────────────
 
   /**
    * Preload all narrator files for a given game phase.
-   * Resolves round-start templates by loading rounds 1–15.
+   * For variant triggers, only preloads the selected variant (not all).
+   * For round-start, loads all 15 round files.
    */
   async preloadPhase(phase: string): Promise<void> {
     const lineIds = PHASE_GROUPS[phase];
@@ -33,20 +54,25 @@ class NarratorPlayer {
     const loadPromises: Promise<void>[] = [];
 
     for (const lineId of lineIds) {
-      if (lineId === 'round-start') {
-        // Preload all 15 round-start variants
+      const line = NARRATOR_LINES[lineId];
+      if (!line) continue;
+
+      if (line.kind === 'single') {
+        // Round-start: preload all 15 round-specific files
         for (let n = 1; n <= 15; n++) {
-          const url = `${AUDIO_BASE_PATH}/round-start-${n}.wav`;
+          const url = `${AUDIO_BASE_PATH}/round-start-${n}.ogg`;
           const cacheKey = `round-start-${n}`;
           if (!this.bufferCache.has(cacheKey)) {
             loadPromises.push(this.loadAndCache(cacheKey, url));
           }
         }
       } else {
-        const line = NARRATOR_LINES[lineId];
-        if (line && !this.bufferCache.has(lineId)) {
-          const url = `${AUDIO_BASE_PATH}/${line.file}`;
-          loadPromises.push(this.loadAndCache(lineId, url));
+        // Variant trigger: preload only the selected variant
+        const variantNum = this.getVariantNum(lineId);
+        const cacheKey = `${lineId}-${variantNum}`;
+        if (!this.bufferCache.has(cacheKey)) {
+          const url = `${AUDIO_BASE_PATH}/${lineId}-${variantNum}.ogg`;
+          loadPromises.push(this.loadAndCache(cacheKey, url));
         }
       }
     }
@@ -103,7 +129,7 @@ class NarratorPlayer {
       this.onNarratorStart?.();
     }
 
-    // Load buffer if not cached
+    // Load buffer if not cached — with variant-1 fallback on failure
     let buffer = this.bufferCache.get(cacheKey);
     if (!buffer && url) {
       try {
@@ -111,8 +137,12 @@ class NarratorPlayer {
         this.bufferCache.set(cacheKey, buffer);
       } catch (err) {
         console.warn(`[narrator] Failed to load ${url}:`, err);
-        void this.playNext();
-        return;
+        // Variant-1 fallback: if selected variant fails, try variant 1
+        buffer = await this.tryVariant1Fallback(entry.lineId, cacheKey) ?? undefined;
+        if (!buffer) {
+          void this.playNext();
+          return;
+        }
       }
     }
 
@@ -150,30 +180,82 @@ class NarratorPlayer {
 
   /**
    * Resolve line ID + optional round number to a cache key and URL.
-   * Handles the round-start {N} template pattern.
+   * Handles round-start (deterministic) and variant triggers (pool-selected).
    */
   private resolveLineAudio(
     lineId: string,
     round?: number,
   ): { cacheKey: string | null; url: string | null } {
-    if (lineId === 'round-start') {
-      const n = Math.max(1, Math.min(15, round ?? 1));
-      return {
-        cacheKey: `round-start-${n}`,
-        url: `${AUDIO_BASE_PATH}/round-start-${n}.wav`,
-      };
-    }
-
-    const line = NARRATOR_LINES[lineId];
+    const line = NARRATOR_LINES[lineId as keyof typeof NARRATOR_LINES];
     if (!line) {
       console.warn(`[narrator] Unknown line ID: ${lineId}`);
       return { cacheKey: null, url: null };
     }
 
+    if (line.kind === 'single') {
+      // Round-start: round number determines file (NOT variant pool)
+      const n = Math.max(1, Math.min(15, round ?? 1));
+      return {
+        cacheKey: `round-start-${n}`,
+        url: `${AUDIO_BASE_PATH}/round-start-${n}.ogg`,
+      };
+    }
+
+    // Variant trigger: use pool selection
+    const variantNum = this.getVariantNum(lineId);
     return {
-      cacheKey: lineId,
-      url: `${AUDIO_BASE_PATH}/${line.file}`,
+      cacheKey: `${lineId}-${variantNum}`,
+      url: `${AUDIO_BASE_PATH}/${lineId}-${variantNum}.ogg`,
     };
+  }
+
+  /**
+   * Get the selected variant number for a trigger.
+   * Uses game selection if available, otherwise performs lazy selection.
+   */
+  private getVariantNum(lineId: string): number {
+    // Use existing game selection
+    if (this.gameSelection && lineId in this.gameSelection) {
+      return this.gameSelection[lineId];
+    }
+
+    // Lazy selection fallback (e.g. host reconnects mid-game without selection)
+    if (!this.gameSelection) {
+      console.warn('[narrator] No game selection — performing lazy selection');
+      this.gameSelection = selectNarratorPool();
+    }
+
+    return this.gameSelection[lineId] ?? 1;
+  }
+
+  /**
+   * Fallback: if selected variant fails to load, try variant 1 (guaranteed to exist).
+   */
+  private async tryVariant1Fallback(
+    lineId: string,
+    failedCacheKey: string,
+  ): Promise<AudioBuffer | null> {
+    const line = NARRATOR_LINES[lineId as keyof typeof NARRATOR_LINES];
+    if (!line || line.kind !== 'variant') return null;
+
+    const fallbackKey = `${lineId}-1`;
+    if (fallbackKey === failedCacheKey) return null; // Already tried variant 1
+
+    // Check cache first
+    const cached = this.bufferCache.get(fallbackKey);
+    if (cached) return cached;
+
+    // Try loading variant 1
+    const fallbackUrl = `${AUDIO_BASE_PATH}/${lineId}-1.ogg`;
+    try {
+      console.warn(`[narrator] Falling back to variant 1 for ${lineId}`);
+      const buffer = await audioEngine.loadBuffer(fallbackUrl);
+      this.bufferCache.set(fallbackKey, buffer);
+      return buffer;
+    } catch {
+      console.warn(`[narrator] Variant-1 fallback also failed for ${lineId}`);
+      return null;
+    }
   }
 
   // ── Stop / Dispose ───────────────────────────────────────────────
@@ -197,10 +279,11 @@ class NarratorPlayer {
     }
   }
 
-  /** Clear the buffer cache to free memory. */
+  /** Clear the buffer cache and selection to free memory. */
   dispose(): void {
     this.stop();
     this.bufferCache.clear();
+    this.gameSelection = null;
   }
 }
 

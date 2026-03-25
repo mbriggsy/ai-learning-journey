@@ -1,4 +1,4 @@
-import type { ClientGameAction, GameEvent, Phase, SubPhase, PolicyType, PolicyCard, PolicyHistoryEntry, ExecutivePower, WinReason } from './types';
+import type { ClientGameAction, GameEvent, Phase, SubPhase, PolicyType, PolicyCard, PolicyHistoryEntry, ExecutivePower, WinReason, GovernmentRecord, InvestigationRecord } from './types';
 
 /**
  * Events broadcast to clients with sensitive fields stripped.
@@ -84,6 +84,10 @@ export interface HostState {
   lastEnactedPolicy: PolicyCard | null;
   /** Cumulative policy history — all enacted cards in order. Public info. */
   policyHistory: PolicyHistoryEntry[];
+  /** Vote history — all election attempts. Projected at game-over only (for Gazette). */
+  voteHistory: GovernmentRecord[] | null;
+  /** Investigation history — projected at game-over only (all roles revealed). */
+  investigationHistory: InvestigationRecord[] | null;
 }
 
 /** Player View state — extends HostState with personal info */

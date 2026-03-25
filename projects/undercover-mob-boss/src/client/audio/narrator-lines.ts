@@ -1,10 +1,11 @@
 // ── Narrator Line Definitions ──────────────────────────────────────
-// Maps game events to pre-generated WAV files in /audio/.
-// Durations are approximate — actual playback length comes from the
-// decoded AudioBuffer at runtime.
+// Maps game events to pre-generated audio files in /audio/.
+// V2: Discriminated union — 'single' for round-start, 'variant' for pool triggers.
 
-export interface NarratorLine {
-  /** WAV filename (without path prefix). */
+/** Round-start: deterministic file per round number. */
+interface SingleNarratorLine {
+  kind: 'single';
+  /** WAV filename template with {N} placeholder for round number. */
   file: string;
   /** Human-readable description of when this line plays. */
   hook: string;
@@ -14,188 +15,231 @@ export interface NarratorLine {
   target: 'host' | 'phone' | 'both';
 }
 
+/** Event trigger: pool-selected variant per game session. */
+interface VariantNarratorLine {
+  kind: 'variant';
+  /** Number of available variants (1-based). */
+  variantCount: number;
+  /** Human-readable description of when this line plays. */
+  hook: string;
+  /** Approximate duration in milliseconds (for scheduling). */
+  durationMs: number;
+  /** Which device should play this line. */
+  target: 'host' | 'phone' | 'both';
+}
+
+export type NarratorLine = SingleNarratorLine | VariantNarratorLine;
+
 /**
  * All narrator events mapped to their audio metadata.
  *
- * 26 unique event keys (round-start uses a template with {N} replaced
- * at runtime to select the correct round-specific file).
+ * 25 keys: 1 round-start (template) + 24 variant-pool triggers.
+ * Round-start uses {N} for round number (deterministic, NOT pool-selected).
+ * All other triggers use variantCount for random pool selection per game.
  */
-export const NARRATOR_LINES: Record<string, NarratorLine> = {
-  // ── Game Start ────────────────────────────────────────────────────
-  'intro': {
-    file: 'intro.wav',
-    hook: 'Game start — role reveal begins',
-    durationMs: 8000,
-    target: 'host',
-  },
-
-  // ── Round Start (template — resolved at runtime) ──────────────────
+export const NARRATOR_LINES = {
+  // ── Round Start (template — resolved at runtime by round number) ──
   'round-start': {
-    file: 'round-start-{N}.wav',
+    kind: 'single' as const,
+    file: 'round-start-{N}.ogg',
     hook: 'New round begins',
     durationMs: 4000,
-    target: 'host',
+    target: 'host' as const,
+  },
+
+  // ── Game Start ────────────────────────────────────────────────────
+  'intro': {
+    kind: 'variant' as const,
+    variantCount: 3,
+    hook: 'Game start — role reveal begins',
+    durationMs: 8000,
+    target: 'host' as const,
   },
 
   // ── Election Phase ────────────────────────────────────────────────
   'nomination': {
-    file: 'nomination.wav',
+    kind: 'variant' as const,
+    variantCount: 6,
     hook: 'Mayor nominates Commissioner',
     durationMs: 5000,
-    target: 'host',
+    target: 'host' as const,
   },
   'vote-open': {
-    file: 'vote-open.wav',
+    kind: 'variant' as const,
+    variantCount: 6,
     hook: 'Voting begins',
     durationMs: 5000,
-    target: 'both',
+    target: 'both' as const,
   },
   'vote-reveal': {
-    file: 'vote-reveal.wav',
+    kind: 'variant' as const,
+    variantCount: 6,
     hook: 'Votes are revealed',
     durationMs: 4000,
-    target: 'host',
+    target: 'host' as const,
   },
   'approved': {
-    file: 'approved.wav',
+    kind: 'variant' as const,
+    variantCount: 5,
     hook: 'Nomination passes',
     durationMs: 3000,
-    target: 'host',
+    target: 'host' as const,
   },
   'blocked': {
-    file: 'blocked.wav',
+    kind: 'variant' as const,
+    variantCount: 5,
     hook: 'Nomination fails',
     durationMs: 3000,
-    target: 'host',
+    target: 'host' as const,
   },
 
   // ── Election Tracker ──────────────────────────────────────────────
   'tracker-advance': {
-    file: 'tracker-advance.wav',
+    kind: 'variant' as const,
+    variantCount: 3,
     hook: 'Election tracker moves forward',
     durationMs: 4000,
-    target: 'host',
+    target: 'host' as const,
   },
   'auto-enact': {
-    file: 'auto-enact.wav',
+    kind: 'variant' as const,
+    variantCount: 3,
     hook: 'Tracker hits 3 — policy auto-enacted',
     durationMs: 4000,
-    target: 'host',
+    target: 'host' as const,
   },
 
   // ── Policy Enactment ──────────────────────────────────────────────
   'good-policy': {
-    file: 'good-policy.wav',
+    kind: 'variant' as const,
+    variantCount: 4,
     hook: 'Good policy enacted',
     durationMs: 5000,
-    target: 'host',
+    target: 'host' as const,
   },
   'bad-policy': {
-    file: 'bad-policy.wav',
+    kind: 'variant' as const,
+    variantCount: 4,
     hook: 'Bad policy enacted',
     durationMs: 3000,
-    target: 'host',
+    target: 'host' as const,
   },
 
   // ── Executive Powers ──────────────────────────────────────────────
   'investigate': {
-    file: 'investigate.wav',
+    kind: 'variant' as const,
+    variantCount: 3,
     hook: 'Investigation power activated',
     durationMs: 6000,
-    target: 'host',
+    target: 'host' as const,
   },
   'special-nomination': {
-    file: 'special-nomination.wav',
+    kind: 'variant' as const,
+    variantCount: 2,
     hook: 'Special nomination power activated',
     durationMs: 5000,
-    target: 'host',
+    target: 'host' as const,
   },
   'execution': {
-    file: 'execution.wav',
+    kind: 'variant' as const,
+    variantCount: 3,
     hook: 'Execution power activated',
     durationMs: 6000,
-    target: 'host',
+    target: 'host' as const,
   },
   'executed': {
-    file: 'executed.wav',
+    kind: 'variant' as const,
+    variantCount: 3,
     hook: 'Player has been eliminated',
     durationMs: 5000,
-    target: 'host',
+    target: 'host' as const,
   },
   'policy-peek': {
-    file: 'policy-peek.wav',
+    kind: 'variant' as const,
+    variantCount: 2,
     hook: 'Policy peek power activated',
     durationMs: 5000,
-    target: 'host',
+    target: 'host' as const,
   },
 
   // ── Game End: Citizens Win ────────────────────────────────────────
   'mob-boss-executed': {
-    file: 'mob-boss-executed.wav',
+    kind: 'variant' as const,
+    variantCount: 2,
     hook: 'Mob Boss eliminated by execution',
     durationMs: 4000,
-    target: 'host',
+    target: 'host' as const,
   },
   'citizens-win-policy': {
-    file: 'citizens-win-policy.wav',
+    kind: 'variant' as const,
+    variantCount: 2,
     hook: '5 good policies enacted — citizens win',
     durationMs: 5000,
-    target: 'host',
+    target: 'host' as const,
   },
   'citizens-win-execution': {
-    file: 'citizens-win-execution.wav',
+    kind: 'variant' as const,
+    variantCount: 2,
     hook: 'Mob Boss found and executed — citizens win',
     durationMs: 5000,
-    target: 'host',
+    target: 'host' as const,
   },
 
   // ── Game End: Mob Wins ────────────────────────────────────────────
   'mob-wins-policy': {
-    file: 'mob-wins-policy.wav',
+    kind: 'variant' as const,
+    variantCount: 2,
     hook: '6 bad policies enacted — mob wins',
     durationMs: 5000,
-    target: 'host',
+    target: 'host' as const,
   },
   'mob-wins-election': {
-    file: 'mob-wins-election.wav',
+    kind: 'variant' as const,
+    variantCount: 2,
     hook: 'Mob Boss elected Commissioner — mob wins',
     durationMs: 5000,
-    target: 'host',
+    target: 'host' as const,
   },
 
   // ── Deck & Veto ───────────────────────────────────────────────────
   'deck-reshuffle': {
-    file: 'deck-reshuffle.wav',
+    kind: 'variant' as const,
+    variantCount: 2,
     hook: 'Policy deck reshuffled',
     durationMs: 4000,
-    target: 'host',
+    target: 'host' as const,
   },
   'veto-proposed': {
-    file: 'veto-proposed.wav',
+    kind: 'variant' as const,
+    variantCount: 2,
     hook: 'Commissioner proposes veto',
     durationMs: 4000,
-    target: 'host',
+    target: 'host' as const,
   },
   'veto-approved': {
-    file: 'veto-approved.wav',
+    kind: 'variant' as const,
+    variantCount: 2,
     hook: 'Mayor agrees to veto',
     durationMs: 4000,
-    target: 'host',
+    target: 'host' as const,
   },
   'veto-rejected': {
-    file: 'veto-rejected.wav',
+    kind: 'variant' as const,
+    variantCount: 2,
     hook: 'Mayor refuses veto',
     durationMs: 4000,
-    target: 'host',
+    target: 'host' as const,
   },
-};
+} as const satisfies Record<string, NarratorLine>;
+
+/** Type-safe union of all trigger IDs. */
+export type NarratorTriggerId = keyof typeof NARRATOR_LINES;
 
 /**
  * Phase-based preload groups.
- * Maps game phases to the narrator line IDs likely needed during that phase,
- * enabling lazy preloading of audio buffers per phase.
+ * Maps game phases to the narrator line IDs likely needed during that phase.
  */
-export const PHASE_GROUPS: Record<string, string[]> = {
+export const PHASE_GROUPS: Record<string, NarratorTriggerId[]> = {
   'lobby': [
     'intro',
   ],

@@ -1,7 +1,7 @@
 ---
 title: "feat: The Millbrook City Gazette — Post-Game Newspaper Breakdown"
 type: feat
-status: active
+status: code-complete
 date: 2026-03-24
 origin: docs/v2/ideation/BRAINSTORM.md
 spec: docs/v2/spec/SPEC.md (ADR-V2-04)

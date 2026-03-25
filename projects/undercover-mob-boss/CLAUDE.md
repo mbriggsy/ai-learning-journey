@@ -10,7 +10,7 @@ TypeScript browser game (PWA) with PartyKit multiplayer.
 - **Multiplayer:** PartyKit (added in Phase 2)
 - **Assets:** Gemini Imagen 4 (pre-generated)
 - **Audio:** Gemini 2.5 Flash TTS (pre-generated)
-- **Hosting:** Vercel
+- **Hosting:** Vercel (client) + Cloudflare Workers via PartyKit (server)
 
 ## Commands
 ```bash
@@ -23,12 +23,20 @@ pnpm run generate-assets  # generate visual assets via Imagen 4
 pnpm run generate-narrator # generate narrator audio via Gemini TTS
 ```
 
+## Deployment
+- **Client (Vercel):** Auto-deploys on every push to main. No config needed.
+- **Server (PartyKit):** Auto-deploys via GH Actions when `src/server/`, `src/shared/`, or `partykit.json` changes on main.
+  - Workflow: `.github/workflows/deploy-partykit.yml` (monorepo root, NOT project root)
+  - Secrets: `PARTYKIT_TOKEN`, `PARTYKIT_LOGIN` (configured in GitHub repo settings)
+  - Manual fallback (only if GH Actions is broken): `pnpm run partykit:deploy`
+- **Both are fully automatic. No manual deploy step needed.**
+
 ## Key Directories
 - `src/client/` — browser-side code (views, audio, state)
 - `src/server/` — PartyKit server (room logic, game engine)
 - `src/shared/` — types shared between client + server
 - `public/assets/` — AI-generated images (committed to git)
-- `public/audio/` — pre-generated narrator WAVs (committed to git)
+- `public/audio/` — pre-generated narrator OGGs (committed to git)
 - `scripts/` — asset generation pipelines (Imagen 4, Gemini TTS)
 - `assets/raw/` — raw Imagen outputs before processing (gitignored)
 - `videos/trailer/` — Remotion video project (cinematic trailer, separate pnpm workspace)

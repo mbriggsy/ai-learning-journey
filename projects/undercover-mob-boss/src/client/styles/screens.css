@@ -20,8 +20,11 @@
 
 /* Lock scroll on screens where content fits viewport (card hands, peek) */
 .screen-content--locked {
-  overflow: hidden;
+  overflow: hidden !important;
   touch-action: none;
+  position: fixed;
+  inset: 0;
+  overscroll-behavior: none;
 }
 
 /* Soft radial backdrop — readability pool that dissolves into artwork.

@@ -6,10 +6,12 @@ import { setupCardImage } from '../utils/card-assets';
 
 let root: HTMLElement | null = null;
 let tl: gsap.core.Timeline | null = null;
+const preventScroll = (e: TouchEvent) => e.preventDefault();
 
 export function mount(container: HTMLElement, state: AppState): void {
   root = document.createElement('div');
   root.className = 'screen';
+  root.addEventListener('touchmove', preventScroll, { passive: false });
 
   setTopBarInstruction('\u{1F441} Peek at the top 3 policy cards');
 
@@ -91,6 +93,7 @@ export function unmount(): void {
   setTopBarInstruction('');
   tl?.kill();
   tl = null;
+  root?.removeEventListener('touchmove', preventScroll);
   root?.remove();
   root = null;
 }

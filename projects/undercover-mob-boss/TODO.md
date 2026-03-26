@@ -1,49 +1,41 @@
 # TODO
 
-## Trailer V3 — "The Origin Story" — IN PROGRESS
+## Trailer V3 — "The Origin Story" — COMPLETE
 
-### Session 2026-03-26
+### Session 2026-03-26 (Preview + Iteration)
 
-**Status: FIRST PREVIEW READY — needs Briggsy's eyes + ears**
+**Status: SHIPPED**
 
 **What we did:**
-- Wrote full V3 narrator script (13 lines, Charon voice, noir origin story)
-- Generated 13/13 narrator WAVs via Gemini TTS (all success)
-- Generated 3/3 Imagen 4 images: lone-figure, agent-swarm, asset-gallery
-- Built 10 Remotion scenes (V3S01_ColdOpen → V3S10_TitleCard)
-- Wired TrailerV3 composition in Root.tsx with timing + audio timeline
-- Typecheck passes clean
+- Built full V3 trailer (10 scenes, 14 narrator WAVs, 3 Imagen images)
+- Previewed and iterated with Briggsy — 5 rounds of creative feedback
+- S01: Personalized cold open — "Briggsy didn't write a single line of code"
+- S02: Full origin story rewrite — game night, enterprise dev, the bet
+- S03: Collaborative ideation framing — "Together, they figured out what to build"
+- S03: "architecture" → "low level design"
+- S07: Fixed broken card typo (fire-department → fire-brigade)
+- S07: Removed $2 cost setup from narration
+- S08: Replaced $2 gag with 12-stat two-column cascade (zeros pile up at end)
+- S10: Split CTA — noir "Trust no one" closer + dry "game night" callback
+- Cleaned up Remotion Root — only "Trailer" composition remains (V2/Vertical removed)
+- Regenerated 7 narrator WAVs across iterations
+- Total duration: 3770f / 126s / 2:06
 
-**Next step: PREVIEW**
-1. `cd videos/trailer && pnpm run studio`
-2. Open browser → `http://localhost:3000`
-3. Select **"TrailerV3"** from composition dropdown (top-left)
-4. Hit play — watch with audio
-5. Tell Claude what needs adjusting (timing, visuals, narration, comedy beats)
-
-**Scene breakdown (3180f / 106s):**
+**Scene breakdown (3770f / 126s):**
 | # | Scene | Duration | Content |
 |---|-------|----------|---------|
-| S01 | Cold Open | 4s | Black screen, typewriter text |
-| S02 | The Thesis | 9s | Noir desk image, "One human. One AI." |
-| S03 | The Spec | 15s | Spec scrolling + stat counters (14,638 / 28 / 7) |
-| S04 | The Swarm | 12s | War room image, challenger agents concept |
+| S01 | Cold Open | 4.7s | Black screen, typewriter: "Briggsy didn't write..." |
+| S02 | The Origin | 22.7s | Lone figure, game night → enterprise dev → the bet |
+| S03 | The Spec | 20.7s | Spec scrolling, collaborative ideation → machine wrote it |
+| S04 | The Swarm | 12s | War room image, challenger agents |
 | S05 | The Code | 17s | Split terminals, code generation + ATC label |
 | S06 | The Tests | 11s | Multi-terminal test results → "NOTHING BROKE" |
-| S07 | The Art | 11s | Asset gallery, cards appearing, "including this one" |
-| S08 | The Punchline | 13s | "$2" drop → stats roll-up → "He's fine. Probably." |
+| S07 | The Art | 8.3s | Asset gallery, cards appearing, "including this one" |
+| S08 | The Punchline | 12.3s | Two-column stats cascade → zeros → "He's fine. Probably." |
 | S09 | The Reveal | 7s | Fast-cut game image montage |
-| S10 | Title + CTA | 7s | Title card + URL |
+| S10 | Title + CTA | 10s | Title card + "Trust no one" + "perfect for game night" |
 
-**Files changed (not committed):**
-- `scripts/narrator-prompts.ts` — V3 lines added, V2 lines preserved as TRAILER_V2_PROMPTS
-- `scripts/asset-prompts.ts` — 3 V3 image prompts added
-- `videos/trailer/src/lib/timing-v3.ts` — new
-- `videos/trailer/src/scenes/V3S01-V3S10*.tsx` — 10 new scene files
-- `videos/trailer/src/TrailerV3.tsx` — new composition
-- `videos/trailer/src/Root.tsx` — registered TrailerV3 (listed first)
-- `public/audio/v3-*.wav` — 13 new narrator audio files
-- `public/assets/v3-*.jpg` — 3 new trailer images
+**Next step:** Render final MP4 when ready for YouTube upload.
 
 ---
 
@@ -112,8 +104,6 @@ Game is live at **undercover-mob-boss.vercel.app**. Trailer v2 live on YouTube.
 ---
 
 ## Landmines
-- **S09 scene files still exist** — `S09_TheConcept.tsx` not deleted, just removed from Trailer.tsx and timing.ts
-- **Trailer "15 images" voiceover** — baked audio says 15, reality is 13. Leave as V1 time capsule.
 - **Asset cache version** — `ART_VERSION = 2` in `role-reveal.ts` and `role-peek.ts`. Bump when role art changes.
 - **CSP allows `'unsafe-inline'`** for HTP GSAP animations
 - **E2E flaky tests** — 9 failures all in WebKit/Mobile Safari. Test harness timing, not game defects.
@@ -121,7 +111,7 @@ Game is live at **undercover-mob-boss.vercel.app**. Trailer v2 live on YouTube.
 - **Grace period:** 0ms dev, 30s prod
 - **Remotion publicDir** points to `../../public` — if the video project moves, update `remotion.config.ts`
 - **Imagen 4 daily quota:** 70 requests/day on paid tier 1. Plan card generation across sessions.
-- **TTS daily quota:** 100 requests/day for gemini-2.5-flash-tts. 104 narrator lines total — fits in one session if no retries.
+- **TTS daily quota:** 100 requests/day for gemini-2.5-flash-tts. 117 narrator lines total — fits in one session if no retries.
 - **Gazette screenshot on very long games** — 10-player 15-round games produce tall newspapers. Share feature removed; consider compact mode if reinstated.
 
 ## Deployment
@@ -143,8 +133,6 @@ npx tsx scripts/generate-assets.ts --only <asset-id> --force
 ### Trailer
 ```bash
 cd videos/trailer
-pnpm run studio           # Preview in browser
+pnpm run studio           # Preview in browser ("Trailer" composition)
 pnpm run render           # → out/trailer-landscape.mp4
-pnpm run render:vertical  # → out/trailer-vertical.mp4
-pnpm run render:thumbnail # → out/thumbnail.png
 ```

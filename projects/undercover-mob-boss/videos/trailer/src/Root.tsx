@@ -16,7 +16,7 @@ export const Root: React.FC = () => {
   return (
     <>
       <Composition
-        id="TrailerV3"
+        id="Trailer"
         component={TrailerV3}
         durationInFrames={V3_TOTAL_FRAMES}
         fps={V3_FPS}
@@ -24,7 +24,7 @@ export const Root: React.FC = () => {
         height={1080}
       />
       <Composition
-        id="Trailer"
+        id="TrailerV2"
         component={Trailer}
         durationInFrames={TOTAL_DURATION_FRAMES}
         fps={FPS}

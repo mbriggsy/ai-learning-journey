@@ -125,87 +125,40 @@ The key insight: **the loop is designed for speed, not perfection.** You don't w
 
 ### The development loop — visual map
 
-<svg width="100%" viewBox="0 0 680 620" xmlns="http://www.w3.org/2000/svg">
-<defs>
-<marker id="arrow" viewBox="0 0 10 10" refX="8" refY="5" markerWidth="6" markerHeight="6" orient="auto-start-reverse"><path d="M2 1L8 5L2 9" fill="none" stroke="context-stroke" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/></marker>
-</defs>
+```mermaid
+flowchart TD
+    A[🎯 Capture intent] -->|Interview, research, edge cases| B[📝 Draft SKILL.md]
+    B --> C[🧪 Run test cases]
+    C -->|Subagents spawn both versions| D[📊 Evaluate results]
+    D -->|Browser viewer + benchmark stats| E[🔧 Improve the skill]
+    E -->|Generalize, don't overfit| C
 
-<!-- Title -->
-<text font-family="sans-serif" font-size="14" font-weight="500" fill="currentColor" x="340" y="30" text-anchor="middle">The skill creator development loop</text>
-<text font-family="sans-serif" font-size="12" fill="currentColor" opacity="0.5" x="340" y="48" text-anchor="middle">Draft, test, evaluate, improve, repeat — then optimize and ship</text>
+    E --> F{Converged?}
+    F -->|No| C
+    F -->|Yes| G[🎯 Optimize description]
+    G -->|60/40 train/test split, 5 iterations| H[📦 Package and ship]
 
-<!-- Step 1: Capture intent (gray) -->
-<rect x="240" y="70" width="200" height="44" rx="8" fill="currentColor" fill-opacity="0.07" stroke="currentColor" stroke-opacity="0.25" stroke-width="0.5"/>
-<text font-family="sans-serif" font-size="14" font-weight="500" fill="currentColor" x="340" y="96" text-anchor="middle">Capture intent</text>
+    style A fill:#f1efe8,stroke:#5f5e5a,color:#2c2c2a
+    style B fill:#e1f5ee,stroke:#0f6e56,color:#04342c
+    style C fill:#eeedfe,stroke:#534ab7,color:#26215c
+    style D fill:#e6f1fb,stroke:#185fa5,color:#042c53
+    style E fill:#faece7,stroke:#993c1d,color:#4a1b0c
+    style F fill:#fff,stroke:#888,color:#333
+    style G fill:#faeeda,stroke:#854f0b,color:#412402
+    style H fill:#eaf3de,stroke:#3b6d11,color:#173404
+```
 
-<line x1="340" y1="114" x2="340" y2="140" stroke="currentColor" stroke-opacity="0.3" stroke-width="1.5" marker-end="url(#arrow)"/>
+**What each phase does:**
 
-<!-- Step 2: Draft (teal) -->
-<rect x="240" y="140" width="200" height="44" rx="8" fill="#1D9E75" fill-opacity="0.12" stroke="#1D9E75" stroke-opacity="0.5" stroke-width="0.5"/>
-<text font-family="sans-serif" font-size="14" font-weight="500" fill="currentColor" x="340" y="166" text-anchor="middle">Draft SKILL.md</text>
-
-<line x1="340" y1="184" x2="340" y2="210" stroke="currentColor" stroke-opacity="0.3" stroke-width="1.5" marker-end="url(#arrow)"/>
-
-<!-- Step 3: Run tests (purple) -->
-<rect x="200" y="210" width="280" height="56" rx="8" fill="#7F77DD" fill-opacity="0.12" stroke="#7F77DD" stroke-opacity="0.5" stroke-width="0.5"/>
-<text font-family="sans-serif" font-size="14" font-weight="500" fill="currentColor" x="340" y="232" text-anchor="middle">Run test cases</text>
-<text font-family="sans-serif" font-size="12" fill="#7F77DD" x="340" y="250" text-anchor="middle">With-skill + baseline in parallel</text>
-
-<line x1="340" y1="266" x2="340" y2="292" stroke="currentColor" stroke-opacity="0.3" stroke-width="1.5" marker-end="url(#arrow)"/>
-
-<!-- Step 4: Evaluate (blue) -->
-<rect x="200" y="292" width="280" height="56" rx="8" fill="#378ADD" fill-opacity="0.12" stroke="#378ADD" stroke-opacity="0.5" stroke-width="0.5"/>
-<text font-family="sans-serif" font-size="14" font-weight="500" fill="currentColor" x="340" y="314" text-anchor="middle">Evaluate results</text>
-<text font-family="sans-serif" font-size="12" fill="#378ADD" x="340" y="332" text-anchor="middle">Human review + quantitative grades</text>
-
-<line x1="340" y1="348" x2="340" y2="374" stroke="currentColor" stroke-opacity="0.3" stroke-width="1.5" marker-end="url(#arrow)"/>
-
-<!-- Step 5: Improve (coral) -->
-<rect x="200" y="374" width="280" height="56" rx="8" fill="#D85A30" fill-opacity="0.12" stroke="#D85A30" stroke-opacity="0.5" stroke-width="0.5"/>
-<text font-family="sans-serif" font-size="14" font-weight="500" fill="currentColor" x="340" y="396" text-anchor="middle">Improve the skill</text>
-<text font-family="sans-serif" font-size="12" fill="#D85A30" x="340" y="414" text-anchor="middle">Generalize, don't overfit</text>
-
-<!-- Iteration loop arrow -->
-<path d="M480 400 L530 400 L530 228 L480 228" fill="none" stroke="#D85A30" stroke-width="1" marker-end="url(#arrow)" opacity="0.6"/>
-<text font-family="sans-serif" font-size="12" fill="#D85A30" x="544" y="318" opacity="0.8">Iterate</text>
-
-<line x1="340" y1="430" x2="340" y2="460" stroke="currentColor" stroke-opacity="0.3" stroke-width="1.5" marker-end="url(#arrow)"/>
-
-<!-- Step 6: Optimize description (amber) -->
-<rect x="200" y="460" width="280" height="56" rx="8" fill="#BA7517" fill-opacity="0.12" stroke="#BA7517" stroke-opacity="0.5" stroke-width="0.5"/>
-<text font-family="sans-serif" font-size="14" font-weight="500" fill="currentColor" x="340" y="482" text-anchor="middle">Optimize description</text>
-<text font-family="sans-serif" font-size="12" fill="#BA7517" x="340" y="500" text-anchor="middle">Train/test split, 5 iterations</text>
-
-<line x1="340" y1="516" x2="340" y2="546" stroke="currentColor" stroke-opacity="0.3" stroke-width="1.5" marker-end="url(#arrow)"/>
-
-<!-- Step 7: Package (green) -->
-<rect x="240" y="546" width="200" height="44" rx="8" fill="#639922" fill-opacity="0.12" stroke="#639922" stroke-opacity="0.5" stroke-width="0.5"/>
-<text font-family="sans-serif" font-size="14" font-weight="500" fill="currentColor" x="340" y="572" text-anchor="middle">Package and ship</text>
-
-<!-- Left annotations -->
-<text font-family="sans-serif" font-size="11" fill="currentColor" opacity="0.45" x="130" y="160" text-anchor="end">Interview, research,</text>
-<text font-family="sans-serif" font-size="11" fill="currentColor" opacity="0.45" x="130" y="175" text-anchor="end">edge cases</text>
-<line x1="136" y1="162" x2="238" y2="162" stroke="currentColor" stroke-opacity="0.15" stroke-width="0.5" stroke-dasharray="3 3"/>
-
-<text font-family="sans-serif" font-size="11" fill="currentColor" opacity="0.45" x="130" y="238" text-anchor="end">Subagents spawn</text>
-<text font-family="sans-serif" font-size="11" fill="currentColor" opacity="0.45" x="130" y="253" text-anchor="end">both versions</text>
-<line x1="136" y1="242" x2="198" y2="238" stroke="currentColor" stroke-opacity="0.15" stroke-width="0.5" stroke-dasharray="3 3"/>
-
-<text font-family="sans-serif" font-size="11" fill="currentColor" opacity="0.45" x="130" y="314" text-anchor="end">Browser viewer +</text>
-<text font-family="sans-serif" font-size="11" fill="currentColor" opacity="0.45" x="130" y="329" text-anchor="end">benchmark stats</text>
-<line x1="136" y1="320" x2="198" y2="320" stroke="currentColor" stroke-opacity="0.15" stroke-width="0.5" stroke-dasharray="3 3"/>
-
-<text font-family="sans-serif" font-size="11" fill="currentColor" opacity="0.45" x="130" y="396" text-anchor="end">Read transcripts,</text>
-<text font-family="sans-serif" font-size="11" fill="currentColor" opacity="0.45" x="130" y="411" text-anchor="end">bundle scripts</text>
-<line x1="136" y1="400" x2="198" y2="400" stroke="currentColor" stroke-opacity="0.15" stroke-width="0.5" stroke-dasharray="3 3"/>
-
-<text font-family="sans-serif" font-size="11" fill="currentColor" opacity="0.45" x="130" y="484" text-anchor="end">60/40 train/test,</text>
-<text font-family="sans-serif" font-size="11" fill="currentColor" opacity="0.45" x="130" y="499" text-anchor="end">anti-overfitting</text>
-<line x1="136" y1="488" x2="198" y2="480" stroke="currentColor" stroke-opacity="0.15" stroke-width="0.5" stroke-dasharray="3 3"/>
-
-</svg>
-
-> **Note:** The interactive version of this diagram (with clickable nodes) is available in Claude.ai when viewing this guide in a chat session.
+| Phase | Action | Key Detail |
+|-------|--------|------------|
+| **Capture intent** | Interview about what the skill does, when it triggers, expected outputs | Can extract from existing conversation history |
+| **Draft SKILL.md** | Generate first version with frontmatter + instructions | Descriptions should be "pushy" — Claude under-triggers by default |
+| **Run test cases** | Spawn parallel subagents: with-skill AND baseline (no-skill) | All runs launch simultaneously, not sequentially |
+| **Evaluate results** | Grade assertions + launch browser viewer for human review | Grader agent handles programmatic checks; you handle subjective quality |
+| **Improve the skill** | Revise based on feedback, read transcripts, bundle repeated scripts | Generalize from feedback — don't overfit to test cases |
+| **Optimize description** | Automated train/test loop refines trigger accuracy | Selects best description by test score to prevent overfitting |
+| **Package and ship** | Validate + ZIP into `.skill` file for distribution | Commit evals alongside the skill in version control |
 
 **When to stop iterating:**
 

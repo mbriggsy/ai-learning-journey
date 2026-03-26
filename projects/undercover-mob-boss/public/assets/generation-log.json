@@ -1,34 +1,23 @@
 {
-  "generatedAt": "2026-03-26T20:55:24.806Z",
+  "generatedAt": "2026-03-26T23:04:50.467Z",
   "model": "imagen-4.0-generate-001",
   "sdkVersion": "@google/genai@1.45.0",
   "assets": [
     {
-      "name": "v3-lone-figure",
+      "name": "role-mob-boss",
       "status": "success",
-      "promptHash": "5db350880d5a",
+      "promptHash": "ba091a338915",
       "dimensions": {
-        "width": 1920,
-        "height": 1080
+        "width": 768,
+        "height": 1024
       },
-      "hasAlpha": false,
-      "generatedAt": "2026-03-26T20:57:06.236Z"
-    },
-    {
-      "name": "v3-agent-swarm",
-      "status": "success",
-      "promptHash": "762abf340c4a",
-      "dimensions": {
-        "width": 1920,
-        "height": 1080
-      },
-      "hasAlpha": false,
-      "generatedAt": "2026-03-26T20:57:23.462Z"
+      "hasAlpha": true,
+      "generatedAt": "2026-03-26T23:05:02.749Z"
     }
   ],
   "summary": {
-    "total": 2,
-    "succeeded": 2,
+    "total": 1,
+    "succeeded": 1,
     "failed": 0
   }
 }

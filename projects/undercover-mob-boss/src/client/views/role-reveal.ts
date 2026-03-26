@@ -219,7 +219,7 @@ export function unmount(): void {
 }
 
 // Cache-bust version — bump when role art changes
-const ART_VERSION = 2;
+const ART_VERSION = 3;
 
 function getRoleArt(role: string): string {
   const v = `?v=${ART_VERSION}`;

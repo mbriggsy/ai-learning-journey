@@ -4,10 +4,20 @@ let topBarEl: HTMLElement | null = null;
 let nameEl: HTMLElement | null = null;
 let instructionEl: HTMLElement | null = null;
 let envelopeBtn: HTMLElement | null = null;
+let helpBtn: HTMLElement | null = null;
 
 export function createTopBar(): HTMLElement {
   topBarEl = document.createElement('div');
   topBarEl.className = 'top-bar';
+
+  helpBtn = document.createElement('a');
+  helpBtn.className = 'top-bar__help';
+  (helpBtn as HTMLAnchorElement).href = '/how-to-play.html';
+  (helpBtn as HTMLAnchorElement).target = '_blank';
+  (helpBtn as HTMLAnchorElement).rel = 'noopener';
+  helpBtn.setAttribute('aria-label', 'How to Play');
+  helpBtn.textContent = '?';
+  helpBtn.style.display = 'none';
 
   nameEl = document.createElement('span');
   nameEl.className = 'top-bar__name';
@@ -23,6 +33,7 @@ export function createTopBar(): HTMLElement {
   envelopeBtn.textContent = '\u{1F4E8}';
   envelopeBtn.style.display = 'none';
 
+  topBarEl.appendChild(helpBtn);
   topBarEl.appendChild(nameEl);
   topBarEl.appendChild(instructionEl);
   topBarEl.appendChild(envelopeBtn);
@@ -31,7 +42,7 @@ export function createTopBar(): HTMLElement {
 }
 
 export function updateTopBar(state: AppState): void {
-  if (!topBarEl || !nameEl || !envelopeBtn || !instructionEl) return;
+  if (!topBarEl || !nameEl || !envelopeBtn || !instructionEl || !helpBtn) return;
 
   // Update player name
   if (state.serverState && state.playerId) {
@@ -42,11 +53,12 @@ export function updateTopBar(state: AppState): void {
     }
   }
 
-  // Show/hide envelope button — hidden in lobby, role-reveal, game-over
+  // Show/hide envelope + help buttons — hidden in lobby, role-reveal, game-over
   const phase = state.serverState?.phase ?? state.lobbyState?.phase;
   const hasRole = !!state.privateData?.role || !!state.serverState?.myRole;
-  const hideEnvelope = !phase || phase === 'lobby' || phase === 'role-reveal' || phase === 'game-over' || !hasRole;
-  envelopeBtn.style.display = hideEnvelope ? 'none' : '';
+  const inGame = phase && phase !== 'lobby' && phase !== 'role-reveal' && phase !== 'game-over' && hasRole;
+  envelopeBtn.style.display = inGame ? '' : 'none';
+  helpBtn.style.display = inGame ? '' : 'none';
 }
 
 /** Set contextual instruction text in the top bar center. Pass '' to clear. */

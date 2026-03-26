@@ -55,6 +55,30 @@
   display: none;
 }
 
+.top-bar__help {
+  width: 36px;
+  height: 36px;
+  display: grid;
+  place-items: center;
+  background: transparent;
+  border: 1px solid var(--glass-border);
+  border-radius: 50%;
+  font-family: var(--font-display);
+  font-size: 0.875rem;
+  font-weight: 900;
+  color: var(--noir-muted);
+  cursor: pointer;
+  -webkit-tap-highlight-color: transparent;
+  text-decoration: none;
+  transition: color 150ms ease-out, border-color 150ms ease-out;
+  flex-shrink: 0;
+}
+
+.top-bar__help:active {
+  color: var(--noir-gold);
+  border-color: var(--noir-gold);
+}
+
 .top-bar__envelope {
   width: 40px;
   height: 40px;

@@ -6,7 +6,7 @@ Players use their phones as private information devices while a shared screen (t
 
 ## Trailer
 
-**[Watch the trailer on YouTube](https://youtu.be/y9irCLLg3Mo)** — 2-minute cinematic trailer covering the game and how it was built.
+**[Watch the trailer on YouTube](https://youtu.be/psqg0a3fwvw)** — the origin story of how one enterprise dev and one AI built a game from scratch.
 
 It started at game night. A card game the whole table loved that deserved a screen instead of a table. One human director (enterprise dev, zero game dev experience) and one AI engineer (Claude Code). The trailer tells that story.
 

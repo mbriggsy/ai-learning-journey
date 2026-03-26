@@ -8,9 +8,9 @@ Players use their phones as private information devices while a shared screen (t
 
 **[Watch the trailer on YouTube](https://youtu.be/y9irCLLg3Mo)** — 2-minute cinematic trailer covering the game and how it was built.
 
-This game was built in 8 nights by one human director (who has a day job) and one AI engineer (Claude Code). 14,000 lines of code, 17,000 lines of tests, 10,000 lines of specification (planning) — all written before the first line of code. 209/209 rules verified. Zero functional defects. ~$2 in API costs for all AI-generated images and narrator voiceovers. The trailer tells that story.
+It started at game night. A card game the whole table loved that deserved a screen instead of a table. One human director (enterprise dev, zero game dev experience) and one AI engineer (Claude Code). 15,440 lines of code. 14,638 lines of specification across 28 documents — all written before the first function was born. 843 tests passing. 157 AI-generated assets. 209/209 rules verified. Zero functional defects. The trailer tells that story.
 
-The trailer itself was built with [Remotion](https://remotion.dev) — programmatic video from React. 13 scenes, 13 AI-generated narrator voiceovers, 4 AI-generated images, all composed in TypeScript. See `videos/trailer/` for the source.
+The trailer itself was built with [Remotion](https://remotion.dev) — programmatic video from React. 10 scenes, 13 AI-generated narrator voiceovers, 3 AI-generated images, all composed in TypeScript. See `videos/trailer/` for the source.
 
 ## Play Now
 
@@ -61,8 +61,8 @@ src/
   server/           PartyKit server (room logic, game engine)
   shared/           Types shared between client + server
 public/
-  assets/           AI-generated images (30 card art + 13 game + 4 trailer)
-  audio/            Pre-generated narrator OGGs (91 game + 13 trailer)
+  assets/           AI-generated images (30 card art + 13 game + 3 trailer)
+  audio/            Pre-generated narrator audio (91 game OGGs + 13 trailer WAVs)
 scripts/            Asset generation pipelines (Imagen 4, Gemini TTS)
 videos/
   trailer/          Remotion video project (cinematic trailer)

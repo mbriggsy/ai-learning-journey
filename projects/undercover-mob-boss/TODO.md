@@ -1,5 +1,52 @@
 # TODO
 
+## Trailer V3 — "The Origin Story" — IN PROGRESS
+
+### Session 2026-03-26
+
+**Status: FIRST PREVIEW READY — needs Briggsy's eyes + ears**
+
+**What we did:**
+- Wrote full V3 narrator script (13 lines, Charon voice, noir origin story)
+- Generated 13/13 narrator WAVs via Gemini TTS (all success)
+- Generated 3/3 Imagen 4 images: lone-figure, agent-swarm, asset-gallery
+- Built 10 Remotion scenes (V3S01_ColdOpen → V3S10_TitleCard)
+- Wired TrailerV3 composition in Root.tsx with timing + audio timeline
+- Typecheck passes clean
+
+**Next step: PREVIEW**
+1. `cd videos/trailer && pnpm run studio`
+2. Open browser → `http://localhost:3000`
+3. Select **"TrailerV3"** from composition dropdown (top-left)
+4. Hit play — watch with audio
+5. Tell Claude what needs adjusting (timing, visuals, narration, comedy beats)
+
+**Scene breakdown (3180f / 106s):**
+| # | Scene | Duration | Content |
+|---|-------|----------|---------|
+| S01 | Cold Open | 4s | Black screen, typewriter text |
+| S02 | The Thesis | 9s | Noir desk image, "One human. One AI." |
+| S03 | The Spec | 15s | Spec scrolling + stat counters (14,638 / 28 / 7) |
+| S04 | The Swarm | 12s | War room image, challenger agents concept |
+| S05 | The Code | 17s | Split terminals, code generation + ATC label |
+| S06 | The Tests | 11s | Multi-terminal test results → "NOTHING BROKE" |
+| S07 | The Art | 11s | Asset gallery, cards appearing, "including this one" |
+| S08 | The Punchline | 13s | "$2" drop → stats roll-up → "He's fine. Probably." |
+| S09 | The Reveal | 7s | Fast-cut game image montage |
+| S10 | Title + CTA | 7s | Title card + URL |
+
+**Files changed (not committed):**
+- `scripts/narrator-prompts.ts` — V3 lines added, V2 lines preserved as TRAILER_V2_PROMPTS
+- `scripts/asset-prompts.ts` — 3 V3 image prompts added
+- `videos/trailer/src/lib/timing-v3.ts` — new
+- `videos/trailer/src/scenes/V3S01-V3S10*.tsx` — 10 new scene files
+- `videos/trailer/src/TrailerV3.tsx` — new composition
+- `videos/trailer/src/Root.tsx` — registered TrailerV3 (listed first)
+- `public/audio/v3-*.wav` — 13 new narrator audio files
+- `public/assets/v3-*.jpg` — 3 new trailer images
+
+---
+
 ## V2 — COMPLETE. SHIPPED. PLAYTESTED.
 
 **Tests:** 843 pass / 0 fail

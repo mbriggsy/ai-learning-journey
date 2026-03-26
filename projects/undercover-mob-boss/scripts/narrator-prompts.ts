@@ -622,23 +622,68 @@ export const ROUND_START_PROMPTS: NarratorPrompt[] = [
   { id: 'round-start-15', trigger: 'Round 15', script: 'Round fifteen. If this city survives the night... it\'ll be a miracle.' },
 ];
 
-// ── Trailer Lines ─────────────────────────────────────────────────
-// Not part of game narrator system. Used only in video trailer.
+// ── Trailer V2 Lines (legacy — WAV files preserved in public/audio/) ─
+// Not part of game narrator system. Used only in video trailer V2.
 
+export const TRAILER_V2_PROMPTS: NarratorPrompt[] = [
+  { id: 'trailer-stakes', trigger: 'Trailer V2: after role reveal', script: 'One of you... is the Mob Boss. And by the time you figure out who... it might already be too late.' },
+  { id: 'trailer-tagline', trigger: 'Trailer V2: table establishing shot', script: 'Everyone has a role. Nobody tells the truth.' },
+  { id: 'trailer-bridge', trigger: 'Trailer V2: Act 2 reveal', script: 'This game... was built in eight nights.' },
+  { id: 'trailer-build-stats', trigger: 'Trailer V2: stats sequence', script: 'Zero lines of human code. Zero functional defects. Spec-driven. AI-built... Flawless.' },
+  { id: 'trailer-timeline', trigger: 'Trailer V2: timeline sequence', script: 'From an empty page... to a city full of secrets.' },
+  { id: 'trailer-closing', trigger: 'Trailer V2: end card', script: 'Millbrook City is waiting. The question is... can you be trusted?' },
+  { id: 'trailer-day-job', trigger: 'Trailer V2: Act 2 reveal extended', script: 'The human has a day job. The AI... doesn\'t sleep.' },
+  { id: 'trailer-vision', trigger: 'Trailer V2: blueprint scroll', script: 'Seven phase plans. Ten thousand lines of specifications. Every rule. Every edge case... Written before a single line of code.' },
+  { id: 'trailer-qa', trigger: 'Trailer V2: QA audit scene', script: 'Three rounds. Twenty-nine agents. Forty-six issues found... not one of them functional. Ankle biters... noise.' },
+  { id: 'trailer-two-dollars', trigger: 'Trailer V2: API cost reveal', script: 'Fifteen images. Thirty-nine voice lines. All of it... two dollars.' },
+  { id: 'trailer-sleep-dep', trigger: 'Trailer V2: human sleep deprivation joke', script: 'The human ran on anger and adrenaline. The AI just... ran.' },
+  { id: 'trailer-token-bill', trigger: 'Trailer V2: token bill joke', script: 'The token bill... we don\'t talk about the token bill.' },
+  { id: 'trailer-ai-bar-tab', trigger: 'Trailer V2: AI bar tab punchline', script: 'And the AI bar tab... still open.' },
+];
+
+// ── Trailer V3 Lines — "The Origin Story" ────────────────────────
+// Narrator (Charon) tells the story of the game's creation.
+// Autonomous agentic SDLC showcase. Each line = one WAV file.
+
+export const TRAILER_V3_PROMPTS: NarratorPrompt[] = [
+  // S01 — Cold Open
+  { id: 'v3-cold-open', trigger: 'V3: cold open', script: 'Briggsy didn\'t write a single line of code... Not one.' },
+
+  // S02 — The Thesis
+  { id: 'v3-thesis', trigger: 'V3: thesis', script: 'It started at game night. A card game the whole table loved... that deserved a screen instead of a table. So he picked a stack he\'d never touched. A discipline he knew nothing about. Gaming. The man builds enterprise software after all... And he made a bet... that a machine could build something worth playing.' },
+
+  // S03 — The Spec
+  { id: 'v3-spec', trigger: 'V3: spec scroll', script: 'Together, they figured out what to build. The game. The rules. The feel. Then the machine wrote it all down. Fourteen thousand lines of specification. Twenty-eight documents. Seven phases of low level design... carved in stone... before the first function was born.' },
+
+  // S04 — The Swarm
+  { id: 'v3-swarm', trigger: 'V3: challenger agents', script: 'Then they unleashed the challengers. A swarm of AI agents... each one hired to tear the plan apart. What survived the swarm... was ready to build.' },
+
+  // S05 — The Code
+  { id: 'v3-code', trigger: 'V3: code generation', script: 'Fifteen thousand lines. Written by machines. Reviewed by machines. Deployed by machines. The human? Air traffic control. Monitoring. Directing... Never touching the controls.' },
+
+  // S06 — The Tests (two parts for timing control)
+  { id: 'v3-tests', trigger: 'V3: test results', script: 'Eight hundred forty-three tests. Including agents who played the game drunk... angry... and deliberately wrong. Just to see what would break.' },
+  { id: 'v3-nothing-broke', trigger: 'V3: test punchline', script: 'Nothing broke.' },
+
+  // S07 — The Art
+  { id: 'v3-art', trigger: 'V3: asset reveal', script: 'Every card. Every face. Every voice you\'ll hear... including this one... generated.' },
+
+  // S08 — The Punchline
+  { id: 'v3-human', trigger: 'V3: human contribution', script: 'The human\'s contribution? Direction. Ambition... And a truly inadvisable amount of caffeine.' },
+  { id: 'v3-fine', trigger: 'V3: sleep dep punchline', script: 'He\'s fine. Probably.' },
+
+  // S09 — The Reveal
+  { id: 'v3-reveal', trigger: 'V3: game reveal', script: 'So what came out the other side? A game where no one can be trusted.' },
+
+  // S10 — Title + CTA
+  { id: 'v3-cta', trigger: 'V3: end card', script: 'Undercover Mob Boss. Play free... Trust no one.' },
+  { id: 'v3-cta-tag', trigger: 'V3: game night callback', script: 'But it\'s perfect for your next game night.' },
+];
+
+// Combined for generation pipeline
 export const TRAILER_PROMPTS: NarratorPrompt[] = [
-  { id: 'trailer-stakes', trigger: 'Trailer: after role reveal', script: 'One of you... is the Mob Boss. And by the time you figure out who... it might already be too late.' },
-  { id: 'trailer-tagline', trigger: 'Trailer: table establishing shot', script: 'Everyone has a role. Nobody tells the truth.' },
-  { id: 'trailer-bridge', trigger: 'Trailer: Act 2 reveal', script: 'This game... was built in eight nights.' },
-  { id: 'trailer-build-stats', trigger: 'Trailer: stats sequence', script: 'Zero lines of human code. Zero functional defects. Spec-driven. AI-built... Flawless.' },
-  { id: 'trailer-timeline', trigger: 'Trailer: timeline sequence', script: 'From an empty page... to a city full of secrets.' },
-  { id: 'trailer-closing', trigger: 'Trailer: end card', script: 'Millbrook City is waiting. The question is... can you be trusted?' },
-  { id: 'trailer-day-job', trigger: 'Trailer: Act 2 reveal extended', script: 'The human has a day job. The AI... doesn\'t sleep.' },
-  { id: 'trailer-vision', trigger: 'Trailer: blueprint scroll', script: 'Seven phase plans. Ten thousand lines of specifications. Every rule. Every edge case... Written before a single line of code.' },
-  { id: 'trailer-qa', trigger: 'Trailer: QA audit scene', script: 'Three rounds. Twenty-nine agents. Forty-six issues found... not one of them functional. Ankle biters... noise.' },
-  { id: 'trailer-two-dollars', trigger: 'Trailer: API cost reveal', script: 'Fifteen images. Thirty-nine voice lines. All of it... two dollars.' },
-  { id: 'trailer-sleep-dep', trigger: 'Trailer: human sleep deprivation joke', script: 'The human ran on anger and adrenaline. The AI just... ran.' },
-  { id: 'trailer-token-bill', trigger: 'Trailer: token bill joke', script: 'The token bill... we don\'t talk about the token bill.' },
-  { id: 'trailer-ai-bar-tab', trigger: 'Trailer: AI bar tab punchline', script: 'And the AI bar tab... still open.' },
+  ...TRAILER_V2_PROMPTS,
+  ...TRAILER_V3_PROMPTS,
 ];
 
 // ── Derived Constants ─────────────────────────────────────────────

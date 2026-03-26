@@ -1,29 +1,29 @@
 {
-  "generatedAt": "2026-03-25T14:19:51.012Z",
+  "generatedAt": "2026-03-26T20:55:24.806Z",
   "model": "imagen-4.0-generate-001",
   "sdkVersion": "@google/genai@1.45.0",
   "assets": [
     {
-      "name": "bridge-safety-inspection",
+      "name": "v3-lone-figure",
       "status": "success",
-      "promptHash": "6bab50a3c6f2",
+      "promptHash": "5db350880d5a",
       "dimensions": {
-        "width": 384,
-        "height": 512
+        "width": 1920,
+        "height": 1080
       },
       "hasAlpha": false,
-      "generatedAt": "2026-03-25T14:20:02.879Z"
+      "generatedAt": "2026-03-26T20:57:06.236Z"
     },
     {
-      "name": "dockside-kickback-scheme",
+      "name": "v3-agent-swarm",
       "status": "success",
-      "promptHash": "dbcc22633c16",
+      "promptHash": "762abf340c4a",
       "dimensions": {
-        "width": 384,
-        "height": 512
+        "width": 1920,
+        "height": 1080
       },
       "hasAlpha": false,
-      "generatedAt": "2026-03-25T14:20:27.042Z"
+      "generatedAt": "2026-03-26T20:57:23.462Z"
     }
   ],
   "summary": {

@@ -1,8 +1,10 @@
 import React from 'react';
 import { Composition } from 'remotion';
 import { Trailer } from './Trailer';
+import { TrailerV3 } from './TrailerV3';
 import { TrailerVertical } from './TrailerVertical';
 import { TOTAL_DURATION_FRAMES, FPS } from './lib/timing';
+import { V3_TOTAL_FRAMES, FPS as V3_FPS } from './lib/timing-v3';
 import { useFonts } from './hooks/useFonts';
 
 // Vertical trailer: 60 + 240 + 210 + 120 + 180 = 810 frames = 27s
@@ -13,6 +15,14 @@ export const Root: React.FC = () => {
 
   return (
     <>
+      <Composition
+        id="TrailerV3"
+        component={TrailerV3}
+        durationInFrames={V3_TOTAL_FRAMES}
+        fps={V3_FPS}
+        width={1920}
+        height={1080}
+      />
       <Composition
         id="Trailer"
         component={Trailer}

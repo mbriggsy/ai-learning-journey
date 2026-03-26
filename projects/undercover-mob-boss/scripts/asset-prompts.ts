@@ -419,6 +419,35 @@ export const ASSET_PROMPTS = [
     needsTransparency: false,
     postProcess: { kind: 'resize' },
   },
+
+  // --- Trailer V3 Images — "The Origin Story" ---
+  {
+    name: 'v3-lone-figure',
+    promptSuffix: 'a vintage 1940s writer desk at night seen from above, typewriter in the center with a sheet of paper half-typed, warm desk lamp casting golden pool of light, coffee cup with steam rising, scattered notebooks and pencils, a glowing modern laptop screen reflecting blue light on the typewriter keys creating a contrast of old and new, moody atmospheric workspace',
+    targetWidth: 1920,
+    targetHeight: 1080,
+    aspectRatio: '16:9',
+    needsTransparency: false,
+    postProcess: { kind: 'resize' },
+  },
+  {
+    name: 'v3-agent-swarm',
+    promptSuffix: 'a 1940s noir war room with a large circular table viewed from above, dozens of open dossier folders and documents arranged radially pointing inward, red ink annotations and circled text on every document, magnifying glasses scattered around, golden light illuminating the center where a master blueprint glows, dramatic overhead lamp creating a pool of light, atmosphere of thorough review and meticulous analysis',
+    targetWidth: 1920,
+    targetHeight: 1080,
+    aspectRatio: '16:9',
+    needsTransparency: false,
+    postProcess: { kind: 'resize' },
+  },
+  {
+    name: 'v3-asset-gallery',
+    promptSuffix: '1940s noir art gallery wall displaying framed portraits and cards arranged in a grid pattern, dramatic spotlights illuminating each frame individually, the frames contain silhouettes and playing-card style art, audio waveform visualization glowing in golden light projected on the far wall like a spectrogram, a vintage microphone on a stand in the foreground casting a long shadow, sense of a creative exhibition of AI-generated works, moody museum atmosphere',
+    targetWidth: 1920,
+    targetHeight: 1080,
+    aspectRatio: '16:9',
+    needsTransparency: false,
+    postProcess: { kind: 'resize' },
+  },
 ] as const satisfies readonly AssetPrompt[];
 
 /** Union of all valid asset names — used to validate --only CLI arg. */

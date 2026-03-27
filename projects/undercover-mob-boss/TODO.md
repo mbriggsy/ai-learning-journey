@@ -35,7 +35,20 @@
 | S09 | The Reveal | 7s | Fast-cut game image montage |
 | S10 | Title + CTA | 10s | Title card + "Trust no one" + "perfect for game night" |
 
-**Next step:** Render final MP4 when ready for YouTube upload.
+**Trailer V3 rendered and uploaded to YouTube:** https://youtu.be/psqg0a3fwvw
+
+### Session 2026-03-26 (Mob Boss Art + Polish)
+
+**What we did:**
+- New mob boss portrait: menacing half-body, fedora, face in shadow, cigar, ring, bourbon
+- Consolidated all mob boss prompts into asset-prompts.ts, deleted standalone scripts
+- Solved proportional sizing: 78% scale on transparent canvas + vignette + edge fade (45.6% fill matching citizen/soldier)
+- Asymmetric smoke edit (removed left-side smoke)
+- Fixed chroma key artifacts (aggressive pink pixel cleanup)
+- Bumped ART_VERSION to 4, HTP cache bust to v6
+- Switched asset SW cache from StaleWhileRevalidate → NetworkFirst (fixes stale image serving)
+- Updated README: stats table with silly stats, origin story framing, new YouTube link
+- Updated TODO stats (117 narrator lines)
 
 ---
 
@@ -93,7 +106,7 @@
 
 ## V1 STATUS: COMPLETE
 
-Game is live at **undercover-mob-boss.vercel.app**. Trailer v2 live on YouTube.
+Game is live at **undercover-mob-boss.vercel.app**. Trailer V3 live on YouTube.
 
 ---
 
@@ -104,7 +117,8 @@ Game is live at **undercover-mob-boss.vercel.app**. Trailer v2 live on YouTube.
 ---
 
 ## Landmines
-- **Asset cache version** — `ART_VERSION = 2` in `role-reveal.ts` and `role-peek.ts`. Bump when role art changes.
+- **Asset cache version** — `ART_VERSION = 4` in `role-reveal.ts` and `role-peek.ts`. Bump when role art changes.
+- **Asset SW cache** — now `NetworkFirst` (asset-cache-v3). Always fetches fresh, cache is offline fallback only.
 - **CSP allows `'unsafe-inline'`** for HTP GSAP animations
 - **E2E flaky tests** — 9 failures all in WebKit/Mobile Safari. Test harness timing, not game defects.
 - **`/host` URL serves player app in Vite dev** — use `/host.html` instead

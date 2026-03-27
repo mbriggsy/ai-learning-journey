@@ -11,8 +11,7 @@ import { V3S05_TheCode } from './scenes/V3S05_TheCode';
 import { V3S06_TheTests } from './scenes/V3S06_TheTests';
 import { V3S07_TheArt } from './scenes/V3S07_TheArt';
 import { V3S08_ThePunchline } from './scenes/V3S08_ThePunchline';
-import { V3S09_TheReveal } from './scenes/V3S09_TheReveal';
-import { V3S10_TitleCard } from './scenes/V3S10_TitleCard';
+import { V3S09_Finale } from './scenes/V3S09_Finale';
 
 /**
  * Trailer V3 — "The Origin Story"
@@ -52,10 +51,7 @@ export const TrailerV3: React.FC = () => {
           <V3S08_ThePunchline />
         </Series.Sequence>
         <Series.Sequence durationInFrames={V3_SCENES.S09}>
-          <V3S09_TheReveal />
-        </Series.Sequence>
-        <Series.Sequence durationInFrames={V3_SCENES.S10}>
-          <V3S10_TitleCard />
+          <V3S09_Finale />
         </Series.Sequence>
       </Series>
 

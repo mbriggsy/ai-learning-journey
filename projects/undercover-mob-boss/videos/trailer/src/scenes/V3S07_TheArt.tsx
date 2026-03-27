@@ -87,11 +87,20 @@ const AssetCard: React.FC<AssetCardProps> = ({
 export const V3S07_TheArt: React.FC = () => {
   const frame = useCurrentFrame();
 
-  // "INCLUDING THIS ONE" text highlight — the mic-drop moment
-  const micDropFrame = 200;
+  // "INCLUDING THIS ONE" — first beat
+  const micDropFrame = 150;
   const micDropOpacity = interpolate(
     frame,
-    [micDropFrame, micDropFrame + 20],
+    [micDropFrame, micDropFrame + 15],
+    [0, 1],
+    { extrapolateLeft: 'clamp', extrapolateRight: 'clamp' },
+  );
+
+  // "EVEN THIS VIDEO." — second beat, bigger, gold glow
+  const videoFrame = 195;
+  const videoOpacity = interpolate(
+    frame,
+    [videoFrame, videoFrame + 15],
     [0, 1],
     { extrapolateLeft: 'clamp', extrapolateRight: 'clamp' },
   );
@@ -170,20 +179,36 @@ export const V3S07_TheArt: React.FC = () => {
           />
         </div>
 
-        {/* "INCLUDING THIS ONE" text */}
+        {/* "INCLUDING THIS ONE" — first beat */}
         <div
           style={{
             fontFamily: FONT_DISPLAY,
-            fontSize: 24,
-            color: NOIR.gold,
-            letterSpacing: '0.2em',
-            textShadow: `0 0 30px ${NOIR.gold}80`,
+            fontSize: 22,
+            color: NOIR.cream,
+            letterSpacing: '0.15em',
             opacity: micDropOpacity,
             marginTop: 20,
           }}
         >
           INCLUDING THIS ONE.
         </div>
+
+        {/* "EVEN THIS VIDEO." — second beat, bigger */}
+        {frame >= videoFrame && (
+          <div
+            style={{
+              fontFamily: FONT_DISPLAY,
+              fontSize: 32,
+              color: NOIR.gold,
+              letterSpacing: '0.2em',
+              textShadow: `0 0 40px ${NOIR.gold}80`,
+              opacity: videoOpacity,
+              marginTop: 12,
+            }}
+          >
+            EVEN THIS VIDEO.
+          </div>
+        )}
       </AbsoluteFill>
 
       {/* Counter overlay — asset counts */}

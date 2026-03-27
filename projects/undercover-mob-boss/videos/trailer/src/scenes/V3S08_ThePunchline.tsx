@@ -29,7 +29,8 @@ const LEFT_STATS: StatRow[] = [
   { label: 'LINES OF SPEC', value: 14638 },
   { label: 'DOCUMENTS', value: 28 },
   { label: 'LINES OF CODE', value: 15440 },
-  { label: 'TESTS PASSING', value: 843 },
+  { label: 'LINES OF TEST CODE', value: 17494 },
+  { label: 'TESTS PASSING', value: 1331 },
   { label: 'AI-GENERATED ASSETS', value: 157 },
   { label: 'CUPS OF COFFEE', value: 347 },
 ];
@@ -41,6 +42,7 @@ const RIGHT_STATS: StatRow[] = [
   { label: 'PROJECT MANAGERS', value: 0 },
   { label: 'STACK OVERFLOW VISITS', value: 0 },
   { label: 'GAME DEV EXPERIENCE (YRS)', value: 0 },
+  { label: 'MEETINGS SCHEDULED', value: 0 },
   { label: 'CODE WRITTEN BY BRIGGSY', value: 0 },
 ];
 
@@ -133,11 +135,18 @@ const StatColumn: React.FC<{
 export const V3S08_ThePunchline: React.FC = () => {
   const frame = useCurrentFrame();
 
-  // "He's fine. Probably." — text appears at frame 296 (synced with audio)
-  const fineFrame = 296;
-  const fineOpacity = interpolate(
+  // "He's fine." at frame 296, then "Probably." at frame 376 (45f comedic beat)
+  const hesFineFrame = 296;
+  const hesFineOpacity = interpolate(
     frame,
-    [fineFrame, fineFrame + 15],
+    [hesFineFrame, hesFineFrame + 15],
+    [0, 1],
+    { extrapolateLeft: 'clamp', extrapolateRight: 'clamp' },
+  );
+  const probablyFrame = 371;
+  const probablyOpacity = interpolate(
+    frame,
+    [probablyFrame, probablyFrame + 15],
     [0, 1],
     { extrapolateLeft: 'clamp', extrapolateRight: 'clamp' },
   );
@@ -165,20 +174,19 @@ export const V3S08_ThePunchline: React.FC = () => {
           }}
         >
           <StatColumn stats={LEFT_STATS} globalIndexOffset={0} />
-          <StatColumn stats={RIGHT_STATS} globalIndexOffset={6} />
+          <StatColumn stats={RIGHT_STATS} globalIndexOffset={7} />
         </div>
       </AbsoluteFill>
 
-      {/* "He's fine. Probably." */}
-      {frame >= fineFrame && (
-        <AbsoluteFill
-          style={{
-            justifyContent: 'flex-end',
-            alignItems: 'center',
-            paddingBottom: 40,
-            opacity: fineOpacity,
-          }}
-        >
+      {/* "He's fine." — then long beat — "Probably." */}
+      <AbsoluteFill
+        style={{
+          justifyContent: 'flex-end',
+          alignItems: 'center',
+          paddingBottom: 40,
+        }}
+      >
+        {frame >= hesFineFrame && (
           <div
             style={{
               fontFamily: FONT_DISPLAY,
@@ -186,12 +194,15 @@ export const V3S08_ThePunchline: React.FC = () => {
               color: NOIR.muted,
               fontStyle: 'italic',
               letterSpacing: '0.06em',
+              opacity: hesFineOpacity,
             }}
           >
-            He&apos;s fine. Probably.
+            He&apos;s fine.{frame >= probablyFrame && (
+              <span style={{ opacity: probablyOpacity }}> Probably.</span>
+            )}
           </div>
-        </AbsoluteFill>
-      )}
+        )}
+      </AbsoluteFill>
 
       <FadeTransition type="in" durationFrames={10} />
       <FadeTransition type="out" durationFrames={15} />

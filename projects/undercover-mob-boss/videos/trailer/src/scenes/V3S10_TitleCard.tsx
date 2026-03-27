@@ -99,11 +99,12 @@ export const V3S10_TitleCard: React.FC = () => {
             opacity: taglineOpacity,
           }}
         >
-          PLAY FREE. TRUST NO ONE.
+          PLAY IT FOR FREE.
         </div>
       </div>
 
       <FadeTransition type="in" durationFrames={20} />
+      <FadeTransition type="out" durationFrames={60} />
     </AbsoluteFill>
   );
 };

@@ -459,7 +459,7 @@ export const ASSET_PROMPTS = [
   },
   {
     name: 'v3-agent-swarm',
-    promptSuffix: 'a 1940s noir war room with a large circular table viewed from above, dozens of open dossier folders and documents arranged radially pointing inward, red ink annotations and circled text on every document, magnifying glasses scattered around, golden light illuminating the center where a master blueprint glows, dramatic overhead lamp creating a pool of light, atmosphere of thorough review and meticulous analysis',
+    promptSuffix: 'a 1940s noir operations room with banks of glowing CRT monitors displaying green scrolling code, a young man with wild spiky blonde hair leaning back in his chair wearing a communications headset, relaxed confident pose watching the monitors with hands behind his head, coffee mug on the desk, blue-white monitor glow illuminating his face, cables and wires between terminals, atmospheric haze catching the light, the energy of a late-night command center',
     targetWidth: 1920,
     targetHeight: 1080,
     aspectRatio: '16:9',

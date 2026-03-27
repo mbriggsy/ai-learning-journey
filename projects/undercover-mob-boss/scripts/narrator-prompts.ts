@@ -650,34 +650,36 @@ export const TRAILER_V3_PROMPTS: NarratorPrompt[] = [
   { id: 'v3-cold-open', trigger: 'V3: cold open', script: 'Briggsy didn\'t write a single line of code... Not one.' },
 
   // S02 — The Thesis
-  { id: 'v3-thesis', trigger: 'V3: thesis', script: 'It started at game night. A card game the whole table loved... that deserved a screen instead of a table. So he picked a stack he\'d never touched. A discipline he knew nothing about. Gaming. The man builds enterprise software after all... And he made a bet... that a machine could build something worth playing.' },
+  { id: 'v3-thesis', trigger: 'V3: thesis', script: 'It started at game night. A card game everyone loved... that deserved a screen instead of a table. So he picked a stack he\'d never touched. A discipline he knew nothing about. Gaming. The man builds enterprise software after all... And he made a bet... that a machine could build something worth playing.' },
 
   // S03 — The Spec
-  { id: 'v3-spec', trigger: 'V3: spec scroll', script: 'Together, they figured out what to build. The game. The rules. The feel. Then the machine wrote it all down. Fourteen thousand lines of specification. Twenty-eight documents. Seven phases of low level design... carved in stone... before the first function was born.' },
+  { id: 'v3-spec', trigger: 'V3: spec scroll', script: 'Together, they figured out what to build. The game. The rules. The feel. Then the machine wrote the specification.' },
 
   // S04 — The Swarm
-  { id: 'v3-swarm', trigger: 'V3: challenger agents', script: 'Then they unleashed the challengers. A swarm of AI agents... each one hired to tear the plan apart. What survived the swarm... was ready to build.' },
+  { id: 'v3-swarm', trigger: 'V3: challenger agents', script: 'Then Briggsy unleashed the swarm. Challenger agents... designed to pick apart every assumption, stress-test every transition, harden every phase, hunt every edge case. What survived was ready to build. Fourteen thousand lines of bulletproof specification. Seven phases of implementation.' },
 
   // S05 — The Code
-  { id: 'v3-code', trigger: 'V3: code generation', script: 'Fifteen thousand lines. Written by machines. Reviewed by machines. Deployed by machines. The human? Air traffic control. Monitoring. Directing... Never touching the controls.' },
+  { id: 'v3-code', trigger: 'V3: code generation', script: 'Fifteen thousand lines of code. Written by machines. Reviewed by machines. Tested by machines. Deployed by machines. The human? Air traffic control. Monitoring. Directing... Never touching the controls.' },
 
   // S06 — The Tests (two parts for timing control)
-  { id: 'v3-tests', trigger: 'V3: test results', script: 'Eight hundred forty-three tests. Including agents who played the game drunk... angry... and deliberately wrong. Just to see what would break.' },
+  { id: 'v3-tests', trigger: 'V3: test results', script: 'Game simulation testing. Thirteen hundred and thirty-one tests. Thousands of scenarios... agents playing drunk, doing things no sane player would. Rage-tapping. Disconnecting mid-vote. Every edge case a room full of silly humans could find.' },
   { id: 'v3-nothing-broke', trigger: 'V3: test punchline', script: 'Nothing broke.' },
 
   // S07 — The Art
-  { id: 'v3-art', trigger: 'V3: asset reveal', script: 'Every card. Every face. Every voice you\'ll hear... including this one... generated.' },
+  { id: 'v3-art', trigger: 'V3: asset reveal', script: 'Every card. Every face. Every voice you\'ll hear... including this one... even... this video... created by autonomous AI agents.' },
 
   // S08 — The Punchline
   { id: 'v3-human', trigger: 'V3: human contribution', script: 'The human\'s contribution? Direction. Ambition... And a truly inadvisable amount of caffeine.' },
-  { id: 'v3-fine', trigger: 'V3: sleep dep punchline', script: 'He\'s fine. Probably.' },
+  { id: 'v3-hes-fine', trigger: 'V3: sleep dep — first beat', script: 'He\'s fine.' },
+  { id: 'v3-probably', trigger: 'V3: sleep dep — deadpan punchline', script: 'Probably.' },
 
   // S09 — The Reveal
-  { id: 'v3-reveal', trigger: 'V3: game reveal', script: 'So what came out the other side? A game where no one can be trusted.' },
+  { id: 'v3-reveal', trigger: 'V3: game reveal', script: 'So what came out the other side? A game of deception the humans have fun playing.' },
 
   // S10 — Title + CTA
-  { id: 'v3-cta', trigger: 'V3: end card', script: 'Undercover Mob Boss. Play free... Trust no one.' },
-  { id: 'v3-cta-tag', trigger: 'V3: game night callback', script: 'But it\'s perfect for your next game night.' },
+  { id: 'v3-cta', trigger: 'V3: end card', script: 'Spec-Driven Development. One hundred percent autonomous SDLC... That is the product.' },
+  { id: 'v3-cta-tag', trigger: 'V3: game name + play free', script: 'Undercover Mob Boss. Play it for free.' },
+  { id: 'v3-cta-closer', trigger: 'V3: noir closer over fade to black', script: 'Trust no one.' },
 ];
 
 // Combined for generation pipeline

@@ -52,10 +52,11 @@ export default defineConfig({
           },
           {
             urlPattern: /\/assets\/.*/,
-            handler: 'StaleWhileRevalidate',
+            handler: 'NetworkFirst',
             options: {
-              cacheName: 'asset-cache-v2',
+              cacheName: 'asset-cache-v3',
               expiration: { maxEntries: 50, maxAgeSeconds: 30 * 24 * 60 * 60 },
+              networkTimeoutSeconds: 3,
             },
           },
         ],

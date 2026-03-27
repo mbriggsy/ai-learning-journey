@@ -51,7 +51,7 @@ export const ASSET_PROMPTS = [
   },
   {
     name: 'role-mob-boss',
-    promptSuffix: `portrait of a menacing 1940s crime boss from chest up, face completely lost in deep black shadow with no eyes visible only a cruel jaw and faint smirk, wearing a dark expensive suit, thick fingers with a massive gold signet ring clasped together in front of him, crystal bourbon glass on dark wood below, thick cigar smoke swirling around him filling the empty space, intimidating and dangerous, half-body shot, ${CHROMA_BG_SUFFIX}`,
+    promptSuffix: `portrait of a menacing 1940s crime boss, narrow shoulders visible, face completely lost in deep black shadow with no eyes visible only a cruel jaw and faint smirk, one hand raised near chin holding a lit cigar with a massive gold signet ring visible, crystal bourbon glass held in the other hand near chest, thick cigar smoke swirling around him, arms close to body not spread wide, intimidating and dangerous, half-body shot, ${CHROMA_BG_SUFFIX}`,
     targetWidth: 768,
     targetHeight: 1024,
     aspectRatio: '3:4',

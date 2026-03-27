@@ -6,26 +6,27 @@ Players use their phones as private information devices while a shared screen (t
 
 ## Trailer
 
-**[Watch the trailer on YouTube](https://youtu.be/psqg0a3fwvw)** — the origin story of how one enterprise dev and one AI built a game from scratch.
+**[Watch the trailer on YouTube](https://youtu.be/nqY9kPP4bLU)** — Spec-Driven Development. 100% autonomous SDLC. That is the product.
 
-It started at game night. A card game the whole table loved that deserved a screen instead of a table. One human director (enterprise dev, zero game dev experience) and one AI engineer (Claude Code). The trailer tells that story.
+It started at game night. A card game everyone loved that deserved a screen instead of a table. One human director (enterprise dev, zero game dev experience) and one AI engineer (Claude Code). The trailer tells that story.
 
 | Stat | Count |
 |------|------:|
 | Lines of spec | 14,638 |
-| Documents | 28 |
 | Lines of code | 15,440 |
-| Tests passing | 843 |
+| Lines of test code | 17,494 |
+| Tests passing | 1,331 |
 | AI-generated assets | 157 |
 | Cups of coffee | 347 |
 | Hours of sleep lost | 163 |
 | JIRA tickets | 0 |
 | Project managers | 0 |
 | Stack Overflow visits | 0 |
+| Meetings scheduled | 0 |
 | Game dev experience (years) | 0 |
 | Lines of code written by Briggsy | 0 |
 
-The trailer itself was built with [Remotion](https://remotion.dev) — programmatic video from React. 10 scenes, 13 AI-generated narrator voiceovers, 3 AI-generated images, all composed in TypeScript. See `videos/trailer/` for the source.
+The trailer itself was built with [Remotion](https://remotion.dev) — programmatic video from React. 9 scenes, 15 AI-generated narrator voiceovers, 3 AI-generated images, all composed in TypeScript. See `videos/trailer/` for the source.
 
 ## Play Now
 

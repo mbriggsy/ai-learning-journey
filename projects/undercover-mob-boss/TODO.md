@@ -1,41 +1,43 @@
 # TODO
 
-## Trailer V3 — "The Origin Story" — COMPLETE
+## Trailer V3.1 — "Spec-Driven Development" — COMPLETE
 
-### Session 2026-03-26 (Preview + Iteration)
+### Session 2026-03-27 (V3.1 Narrative Rework + Spectacular S06 + HTP Finale)
 
 **Status: SHIPPED**
 
 **What we did:**
-- Built full V3 trailer (10 scenes, 14 narrator WAVs, 3 Imagen images)
-- Previewed and iterated with Briggsy — 5 rounds of creative feedback
-- S01: Personalized cold open — "Briggsy didn't write a single line of code"
-- S02: Full origin story rewrite — game night, enterprise dev, the bet
-- S03: Collaborative ideation framing — "Together, they figured out what to build"
-- S03: "architecture" → "low level design"
-- S07: Fixed broken card typo (fire-department → fire-brigade)
-- S07: Removed $2 cost setup from narration
-- S08: Replaced $2 gag with 12-stat two-column cascade (zeros pile up at end)
-- S10: Split CTA — noir "Trust no one" closer + dry "game night" callback
-- Cleaned up Remotion Root — only "Trailer" composition remains (V2/Vertical removed)
-- Regenerated 7 narrator WAVs across iterations
-- Total duration: 3770f / 126s / 2:06
+- Major narrative rework across 9 scenes — SDD thesis pivot
+- S02: "everyone loved" (was "the whole table loved")
+- S03: Short punchy spec line, counters moved to S04
+- S04: Challengers absorb spec details — assumptions, transitions, phases, edge cases
+- S04: New war room ops center image (ATC Briggsy, headset, leaned back observing)
+- S05: Added "tested by machines" to the chain
+- S06: SPECTACULAR redesign — SimulationChaos (280 cards, seeded RNG, 13 assets), GamesCounter (0→1,331), CompactTerminalStrip, error flashes, THE FREEZE, "NOTHING BROKE." with gold rule
+- S07: "including this one... even this video... created by autonomous AI agents" — two-beat text reveal
+- S08: Split "He's fine. Probably." with 45f comedic beat, added test LOC + meetings stat (7/7 balanced)
+- S09+S10 collapsed into finale: HTP full-page scroll as background + SDD thesis + "Trust no one" fade to black
+- 9 new/updated narrator WAVs, 3 new components, 1 new Imagen image, HTP capture script
+- Total duration: 4440f / 148s / 2:28
 
-**Scene breakdown (3770f / 126s):**
+**Scene breakdown (4440f / 148s):**
 | # | Scene | Duration | Content |
 |---|-------|----------|---------|
 | S01 | Cold Open | 4.7s | Black screen, typewriter: "Briggsy didn't write..." |
-| S02 | The Origin | 22.7s | Lone figure, game night → enterprise dev → the bet |
-| S03 | The Spec | 20.7s | Spec scrolling, collaborative ideation → machine wrote it |
-| S04 | The Swarm | 12s | War room image, challenger agents |
-| S05 | The Code | 17s | Split terminals, code generation + ATC label |
-| S06 | The Tests | 11s | Multi-terminal test results → "NOTHING BROKE" |
-| S07 | The Art | 8.3s | Asset gallery, cards appearing, "including this one" |
-| S08 | The Punchline | 12.3s | Two-column stats cascade → zeros → "He's fine. Probably." |
-| S09 | The Reveal | 7s | Fast-cut game image montage |
-| S10 | Title + CTA | 10s | Title card + "Trust no one" + "perfect for game night" |
+| S02 | The Origin | 21.0s | Lone figure, game night → enterprise dev → the bet |
+| S03 | The Spec | 10.0s | Spec scrolling, "the machine wrote the specification" |
+| S04 | The Swarm | 23.0s | War room ATC image, challengers + "what survived" counters |
+| S05 | The Code | 18.0s | Split terminals, "tested by machines" + ATC |
+| S06 | The Tests | 19.7s | Card chaos simulation + terminals → THE FREEZE → "NOTHING BROKE." |
+| S07 | The Art | 11.0s | Asset gallery, "even this video... autonomous AI agents" |
+| S08 | The Punchline | 14.7s | 14-stat cascade (7/7) → "He's fine." ... beat ... "Probably." |
+| S09 | The Finale | 26.0s | HTP scroll + SDD thesis + title + "Trust no one" fade to black |
 
-**Trailer V3 rendered and uploaded to YouTube:** https://youtu.be/psqg0a3fwvw
+**Trailer V3.1 rendered and uploaded to YouTube:** https://youtu.be/nqY9kPP4bLU
+
+### Session 2026-03-26 (V3 Original + Mob Boss Art)
+
+Previous V3: https://youtu.be/psqg0a3fwvw (superseded by V3.1)
 
 ### Session 2026-03-26 (Mob Boss Art + Polish)
 

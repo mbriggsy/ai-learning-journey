@@ -26,7 +26,7 @@ async function main() {
 
   // Scroll through the entire page in increments to trigger all ScrollTrigger animations
   console.log('Scrolling through page to trigger GSAP animations...');
-  const scrollHeight = await page.evaluate('document.documentElement.scrollHeight');
+  const scrollHeight = Number(await page.evaluate('document.documentElement.scrollHeight'));
   const step = 200; // pixels per scroll increment
   let scrolled = 0;
 
@@ -56,7 +56,7 @@ async function main() {
   console.log(`Screenshot saved: ${OUTPUT_FILE} (${(stats.size / 1024 / 1024).toFixed(1)}MB)`);
 
   // Get page dimensions for reference
-  const height = await page.evaluate('document.documentElement.scrollHeight');
+  const height = Number(await page.evaluate('document.documentElement.scrollHeight'));
   console.log(`Page height: ${height}px (viewport: ${VIEWPORT.width}x${VIEWPORT.height})`);
   console.log(`Scroll distance in Remotion: ${height - VIEWPORT.height}px`);
 

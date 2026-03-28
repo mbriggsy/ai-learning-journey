@@ -83,37 +83,33 @@ export const V3S02_TheThesis: React.FC = () => {
         />
 
         {/* "Enterprise dev. Wrong world entirely." */}
-        {frame >= 285 && (
-          <div
-            style={{
-              fontFamily: FONT_DISPLAY,
-              fontSize: 26,
-              color: NOIR.cream,
-              letterSpacing: '0.08em',
-              marginTop: 16,
-              opacity: subtitleOpacity * subtitleFade,
-            }}
-          >
-            Enterprise dev. Wrong world entirely.
-          </div>
-        )}
+        <div
+          style={{
+            fontFamily: FONT_DISPLAY,
+            fontSize: 26,
+            color: NOIR.cream,
+            letterSpacing: '0.08em',
+            marginTop: 16,
+            opacity: subtitleOpacity * subtitleFade,
+          }}
+        >
+          Enterprise dev. Wrong world entirely.
+        </div>
 
         {/* "THE BET." — the pivot */}
-        {frame >= 465 && (
-          <div
-            style={{
-              fontFamily: FONT_DISPLAY,
-              fontSize: 44,
-              color: NOIR.gold,
-              letterSpacing: '0.2em',
-              textShadow: `0 0 40px ${NOIR.gold}60`,
-              marginTop: 24,
-              opacity: betOpacity,
-            }}
-          >
-            THE BET.
-          </div>
-        )}
+        <div
+          style={{
+            fontFamily: FONT_DISPLAY,
+            fontSize: 44,
+            color: NOIR.gold,
+            letterSpacing: '0.2em',
+            textShadow: `0 0 40px ${NOIR.gold}60`,
+            marginTop: 24,
+            opacity: betOpacity,
+          }}
+        >
+          THE BET.
+        </div>
       </AbsoluteFill>
 
       <FadeTransition type="in" durationFrames={20} />

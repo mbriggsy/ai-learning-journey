@@ -11,7 +11,7 @@ export function mount(container: HTMLElement, state: AppState): void {
   root = document.createElement('div');
   root.className = 'screen';
 
-  setTopBarInstruction('\u{1F46E} Nominate a Commissioner');
+  setTopBarInstruction('⚖️ Nominate a Commissioner');
 
   const content = document.createElement('div');
   content.className = 'screen-content';
@@ -23,7 +23,7 @@ export function mount(container: HTMLElement, state: AppState): void {
   const confirmBtn = document.createElement('button');
   confirmBtn.className = 'action-btn';
   confirmBtn.dataset.testId = 'nomination-confirm';
-  confirmBtn.textContent = '\u{1F46E} Confirm Nomination';
+  confirmBtn.textContent = '⚖️ Confirm Nomination';
   confirmBtn.disabled = true;
 
   // Build eligible player list — exclude self (mayor) and term-limited players

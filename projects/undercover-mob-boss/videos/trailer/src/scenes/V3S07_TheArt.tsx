@@ -194,21 +194,19 @@ export const V3S07_TheArt: React.FC = () => {
         </div>
 
         {/* "EVEN THIS VIDEO." — second beat, bigger */}
-        {frame >= videoFrame && (
-          <div
-            style={{
-              fontFamily: FONT_DISPLAY,
-              fontSize: 32,
-              color: NOIR.gold,
-              letterSpacing: '0.2em',
-              textShadow: `0 0 40px ${NOIR.gold}80`,
-              opacity: videoOpacity,
-              marginTop: 12,
-            }}
-          >
-            EVEN THIS VIDEO.
-          </div>
-        )}
+        <div
+          style={{
+            fontFamily: FONT_DISPLAY,
+            fontSize: 32,
+            color: NOIR.gold,
+            letterSpacing: '0.2em',
+            textShadow: `0 0 40px ${NOIR.gold}80`,
+            opacity: videoOpacity,
+            marginTop: 12,
+          }}
+        >
+          EVEN THIS VIDEO.
+        </div>
       </AbsoluteFill>
 
       {/* Counter overlay — asset counts */}

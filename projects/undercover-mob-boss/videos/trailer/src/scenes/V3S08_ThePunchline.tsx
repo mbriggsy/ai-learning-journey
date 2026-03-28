@@ -28,7 +28,7 @@ interface StatRow {
 const LEFT_STATS: StatRow[] = [
   { label: 'LINES OF SPEC', value: 14638 },
   { label: 'DOCUMENTS', value: 28 },
-  { label: 'LINES OF CODE', value: 15440 },
+  { label: 'LINES OF SOURCE CODE', value: 15440 },
   { label: 'LINES OF TEST CODE', value: 17494 },
   { label: 'TESTS PASSING', value: 1331 },
   { label: 'AI-GENERATED ASSETS', value: 157 },

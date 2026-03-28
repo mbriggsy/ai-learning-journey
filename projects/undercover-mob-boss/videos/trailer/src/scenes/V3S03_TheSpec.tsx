@@ -125,20 +125,18 @@ export const V3S03_TheSpec: React.FC = () => {
           }}
         />
 
-        {frame >= 180 && (
-          <div
-            style={{
-              fontFamily: FONT_DISPLAY,
-              fontSize: 26,
-              color: NOIR.cream,
-              letterSpacing: '0.08em',
-              marginTop: 20,
-              opacity: subtitleOpacity * subtitleFade,
-            }}
-          >
-            Every phase. Every transition. Every edge case.
-          </div>
-        )}
+        <div
+          style={{
+            fontFamily: FONT_DISPLAY,
+            fontSize: 26,
+            color: NOIR.cream,
+            letterSpacing: '0.08em',
+            marginTop: 20,
+            opacity: subtitleOpacity * subtitleFade,
+          }}
+        >
+          Every phase. Every transition. Every edge case.
+        </div>
       </AbsoluteFill>
 
       <FadeTransition type="in" durationFrames={15} />

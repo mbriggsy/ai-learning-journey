@@ -659,7 +659,7 @@ export const TRAILER_V3_PROMPTS: NarratorPrompt[] = [
   { id: 'v3-swarm', trigger: 'V3: challenger agents', script: 'Then Briggsy unleashed the swarm. Challenger agents... designed to pick apart every assumption, stress-test every transition, harden every phase, hunt every edge case. What survived was ready to build. Fourteen thousand lines of bulletproof specification. Seven phases of implementation.' },
 
   // S05 — The Code
-  { id: 'v3-code', trigger: 'V3: code generation', script: 'Fifteen thousand lines of code. Written by machines. Reviewed by machines. Tested by machines. Deployed by machines. The human? Air traffic control. Monitoring. Directing... Never touching the controls.' },
+  { id: 'v3-code', trigger: 'V3: code generation', script: 'Fifteen thousand lines of source code. Written by machines. Reviewed by machines. Tested by machines. Deployed by machines. The human? Air traffic control. Monitoring. Directing... Never touching the controls.' },
 
   // S06 — The Tests (two parts for timing control)
   { id: 'v3-tests', trigger: 'V3: test results', script: 'Game simulation testing. Thirteen hundred and thirty-one tests. Thousands of scenarios... agents playing drunk, doing things no sane player would. Rage-tapping. Disconnecting mid-vote. Every edge case a room full of silly humans could find.' },
@@ -677,9 +677,9 @@ export const TRAILER_V3_PROMPTS: NarratorPrompt[] = [
   { id: 'v3-reveal', trigger: 'V3: game reveal', script: 'So what came out the other side? A game of deception the humans have fun playing.' },
 
   // S10 — Title + CTA
-  { id: 'v3-cta', trigger: 'V3: end card', script: 'Spec-Driven Development. One hundred percent autonomous SDLC... That is the product.' },
-  { id: 'v3-cta-tag', trigger: 'V3: game name + play free', script: 'Undercover Mob Boss. Play it for free.' },
-  { id: 'v3-cta-closer', trigger: 'V3: noir closer over fade to black', script: 'Trust no one.' },
+  { id: 'v3-cta', trigger: 'V3: end card', script: 'Spec-Driven Development. One hundred percent autonomous SDLC... That... is the product.' },
+  { id: 'v3-cta-tag', trigger: 'V3: casual game night callback', script: 'Try it out on your next game night, it looks pretty fun.' },
+  { id: 'v3-cta-closer', trigger: 'V3: sinister whisper into darkness', script: '(whispering) Trust... no one.' },
 ];
 
 // Combined for generation pipeline

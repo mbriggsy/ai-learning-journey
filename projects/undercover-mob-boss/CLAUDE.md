@@ -48,7 +48,8 @@ See `.env.example`. Requires:
 ## Architectural Decisions
 - See `docs/v1/spec/SPEC.md` for V1 spec (LOCKED)
 - See `docs/v2/spec/SPEC.md` for V2 spec (LOCKED)
-- See `docs/user/HOW-TO-PLAY.md` for player-facing rules
+- See `docs/shared/user/HOW-TO-PLAY.md` for player-facing rules (source)
+- See `public/how-to-play.html` for the rendered player-facing page (GSAP-animated)
 - Host device is authoritative (ADR-04)
 - Pre-generated audio via Gemini TTS, not runtime TTS (ADR-02)
 - All assets AI-generated via Imagen 4 (ADR-05)

@@ -33,7 +33,7 @@
 | S08 | The Punchline | 14.7s | 14-stat cascade (7/7) → "He's fine." ... beat ... "Probably." |
 | S09 | The Finale | 26.0s | HTP scroll + SDD thesis + title + "Trust no one" fade to black |
 
-**Trailer V3.1 rendered and uploaded to YouTube:** https://youtu.be/nqY9kPP4bLU
+**Trailer V3.1 rendered and uploaded to YouTube:** https://youtu.be/RlmoHOemOLM
 
 ### Session 2026-03-26 (V3 Original + Mob Boss Art)
 

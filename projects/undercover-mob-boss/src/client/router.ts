@@ -71,7 +71,7 @@ export function getActiveScreen(
   if (isMayor && state.subPhase === 'policy-mayor-discard') return 'mayor-hand';
   if (isMayor && state.subPhase === 'policy-veto-response') return 'veto-response';
   if (isCommissioner && state.subPhase === 'policy-commissioner-discard') return 'commissioner-hand';
-  // Executive powers are used by the Mayor (President), not the Commissioner (Chancellor)
+  // Executive powers are used by the Mayor, not the Commissioner
   if (isMayor && state.subPhase === 'policy-peek-viewing') return 'power-peek';
   if (isMayor && state.subPhase === 'executive-power-pending') {
     switch (state.executivePower) {

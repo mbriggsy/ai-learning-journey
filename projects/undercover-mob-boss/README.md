@@ -6,17 +6,17 @@ Players use their phones as private information devices while a shared screen (t
 
 ## Trailer
 
-**[Watch the trailer on YouTube](https://youtu.be/nqY9kPP4bLU)** — Spec-Driven Development. 100% autonomous SDLC. That is the product.
+**[Watch the trailer on YouTube](https://youtu.be/RlmoHOemOLM)** — Spec-Driven Development. 100% autonomous SDLC. That is the product.
 
 It started at game night. A card game everyone loved that deserved a screen instead of a table. One human director (enterprise dev, zero game dev experience) and one AI engineer (Claude Code). The trailer tells that story.
 
 | Stat | Count |
 |------|------:|
 | Lines of spec | 14,638 |
-| Lines of code | 15,440 |
+| Lines of source code | 15,440 |
 | Lines of test code | 17,494 |
 | Tests passing | 1,331 |
-| AI-generated assets | 157 |
+| AI-generated assets | 159 |
 | Cups of coffee | 347 |
 | Hours of sleep lost | 163 |
 | JIRA tickets | 0 |
@@ -77,19 +77,21 @@ src/
   server/           PartyKit server (room logic, game engine)
   shared/           Types shared between client + server
 public/
-  assets/           AI-generated images (30 card art + 13 game + 3 trailer)
-  audio/            Pre-generated narrator audio (91 game OGGs + 13 trailer WAVs)
+  assets/           AI-generated images (30 card art + 16 game + 7 trailer)
+  audio/            Pre-generated narrator audio (91 game OGGs + 15 V3 trailer WAVs)
+  how-to-play.html  Player-facing rules (GSAP-animated, standalone)
 scripts/            Asset generation pipelines (Imagen 4, Gemini TTS)
 videos/
   trailer/          Remotion video project (cinematic trailer)
 tests/
-  unit/             Game engine unit tests (19 files)
+  unit/             Game engine unit tests (24 files)
   integration/      Full-game simulations + stress tests
   e2e/              Playwright browser tests (15 specs)
 docs/
-  spec/             Product specification (LOCKED)
-  verification/     Rules checklist, test evidence
-  user/             How-to-play guide
+  shared/user/      How-to-play guide (markdown source)
+  v1/spec/          V1 specification (LOCKED)
+  v1/verification/  Rules checklist, test evidence
+  v2/spec/          V2 specification (LOCKED)
 ```
 
 ## Commands
@@ -98,7 +100,7 @@ docs/
 pnpm run dev              # Vite dev server
 pnpm run build            # Production build
 pnpm run test             # Unit + integration tests (843 tests)
-pnpm run test:e2e         # Playwright E2E (125 tests x 4 browsers = 500)
+pnpm run test:e2e         # Playwright E2E (488 tests across 4 browsers)
 pnpm run typecheck        # tsc --noEmit
 pnpm run generate-assets  # Regenerate images via Imagen 4
 pnpm run generate-narrator # Regenerate narrator audio via Gemini TTS

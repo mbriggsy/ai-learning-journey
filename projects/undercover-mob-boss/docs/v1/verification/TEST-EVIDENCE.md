@@ -1,6 +1,6 @@
 # Test Evidence Package — Undercover Mob Boss
 
-*Updated: 2026-03-22*
+*Updated: 2026-03-28*
 *Game engine: Secret Hitler (CC BY-NC-SA 4.0) digital adaptation*
 
 ---
@@ -9,15 +9,15 @@
 
 | Layer | Tests | Command |
 |-------|-------|---------|
-| Unit + Integration | 760 | `pnpm run test` |
-| Playwright E2E | 125 per project x 4 browsers = 500 | `pnpm run test:e2e` |
-| **Total** | **1,260** | |
+| Unit + Integration | 843 | `pnpm run test` |
+| Playwright E2E | 488 (across 4 browser projects) | `pnpm run test:e2e` |
+| **Total** | **1,331** | |
 
 All tests passing. Typecheck clean (`pnpm run typecheck`).
 
 ---
 
-## Game Engine Tests (760 tests)
+## Game Engine Tests (843 tests, 28 files)
 
 ### Source Files
 
@@ -26,6 +26,15 @@ All tests passing. Typecheck clean (`pnpm run typecheck`).
 | `tests/unit/phases.test.ts` | 44 | Core dispatch: creation, role ack, nomination, election, policy session, veto, exec powers, eligible nominees, mayor advance |
 | `tests/unit/sh-rules-verification.test.ts` | 30 | Rule-pinned tests mapped to SH checklist IDs |
 | `tests/unit/sh-rules-gaps.test.ts` | 14 | Gap fills: dead player restrictions, citizen knowledge, veto-once, discard handling |
+| `tests/unit/adversarial-edge-cases.test.ts` | — | Edge cases from adversarial analysis |
+| `tests/unit/adversarial-room.test.ts` | — | Room-level adversarial scenarios |
+| `tests/unit/adversarial-rules-lawyer.test.ts` | — | Rules lawyer adversarial testing |
+| `tests/unit/adversarial-rules.test.ts` | — | Adversarial rule enforcement |
+| `tests/unit/card-assets.test.ts` | — | Card asset validation |
+| `tests/unit/card-pool.test.ts` | — | Card pool mechanics |
+| `tests/unit/gazette.test.ts` | — | End-game newspaper generation |
+| `tests/unit/narrator-pool.test.ts` | — | Narrator variant pool selection |
+| `tests/unit/narrator-terminology.test.ts` | — | Narrator uses correct game terminology |
 | `tests/unit/roles.test.ts` | — | Role distribution, ally population |
 | `tests/unit/policies.test.ts` | — | Deck creation, shuffle, draw, reshuffle |
 | `tests/unit/powers.test.ts` | — | Executive power grid, investigation, peek, execution, special nomination |
@@ -35,6 +44,9 @@ All tests passing. Typecheck clean (`pnpm run typecheck`).
 | `tests/unit/host-router.test.ts` | — | Host screen/overlay routing |
 | `tests/unit/projection.test.ts` | — | Security: no private data leaks in projections |
 | `tests/unit/nudge.test.ts` | — | Nudge escalation timing |
+| `tests/unit/regression-fixes.test.ts` | — | Targeted regression tests for prior bugs |
+| `tests/unit/room-code.test.ts` | — | Room code generation |
+| `tests/unit/server-bugfixes.test.ts` | — | Server-side bug fix verification |
 | `tests/integration/full-game.test.ts` | 9 | Full games to completion (5p, 10p, multi-seed, immutability) |
 | `tests/integration/sh-scenario-tests.test.ts` | 44 | Forced scenarios: all win conditions, all powers at all brackets, auto-enact, veto, special election, reshuffle, term limits |
 | `tests/integration/sh-invariants.test.ts` | 26 | Card counting + state invariants verified at every dispatch across full games |
@@ -78,10 +90,10 @@ Every discrete rule from the Secret Hitler rulebook is mapped to at least one te
 | Rule | Description | Test |
 |------|-------------|------|
 | R16 | Mayor rotates clockwise | `phases.test.ts` advanceMayor tests |
-| R17 | Mayor nominates Police Chief | `phases.test.ts` nomination flow |
+| R17 | Mayor nominates Commissioner | `phases.test.ts` nomination flow |
 | R18 | Cannot nominate yourself | `phases.test.ts` rejects self-nomination |
 | R19 | Cannot nominate dead players | `phases.test.ts`, `sh-rules-gaps.test.ts` [R84] |
-| R20 | Previous elected Chief always term-limited | `phases.test.ts` getEligibleNominees |
+| R20 | Previous elected Commissioner always term-limited | `phases.test.ts` getEligibleNominees |
 | R21 | Previous elected Mayor term-limited at 6+ alive | `phases.test.ts` getEligibleNominees |
 | R22 | Previous elected Mayor NOT term-limited at 5 alive | `phases.test.ts` getEligibleNominees |
 | R23 | Term limits only apply to last ELECTED pair | `phases.test.ts` term limits survive failed elections |
@@ -117,8 +129,8 @@ Every discrete rule from the Secret Hitler rulebook is mapped to at least one te
 | Rule | Description | Test |
 |------|-------------|------|
 | R40 | Mayor draws 3 cards from top | `phases.test.ts` |
-| R41 | Mayor discards 1, passes 2 to Chief | `phases.test.ts` |
-| R42 | Chief discards 1, enacts remaining 1 | `phases.test.ts` |
+| R41 | Mayor discards 1, passes 2 to Commissioner | `phases.test.ts` |
+| R42 | Commissioner discards 1, enacts remaining 1 | `phases.test.ts` |
 | R43 | Discards go to policyDiscard (never revealed) | `sh-rules-gaps.test.ts` [R43], `projection.test.ts` |
 | R44 | Good policy → goodPoliciesEnacted increments | `phases.test.ts` |
 | R45 | Bad policy → badPoliciesEnacted increments | `phases.test.ts` |
@@ -128,10 +140,10 @@ Every discrete rule from the Secret Hitler rulebook is mapped to at least one te
 | Rule | Description | Test |
 |------|-------------|------|
 | R46 | Veto only available after 5 bad policies | `phases.test.ts` |
-| R47 | Chief proposes veto during chief-discard | `phases.test.ts` |
+| R47 | Commissioner proposes veto during commissioner-discard | `phases.test.ts` |
 | R48 | Mayor responds (approve/reject) | `phases.test.ts` |
 | R49 | Accepted → both cards discarded, tracker advances | `phases.test.ts` |
-| R50 | Rejected → Chief must enact | `phases.test.ts` |
+| R50 | Rejected → Commissioner must enact | `phases.test.ts` |
 | R51 | Veto can only be proposed once per session | `sh-rules-gaps.test.ts` [R51] |
 | R52 | Veto-accepted + tracker at 3 → auto-enact | `phases.test.ts`, `sh-scenario-tests.test.ts` |
 
@@ -142,9 +154,9 @@ Every discrete rule from the Secret Hitler rulebook is mapped to at least one te
 | R53 | 5 good policies → citizens win | `phases.test.ts`, `sh-scenario-tests.test.ts` |
 | R54 | 6 bad policies → mob wins | `phases.test.ts`, `sh-scenario-tests.test.ts` |
 | R55 | Mob Boss executed → citizens win immediately | `phases.test.ts`, `sh-scenario-tests.test.ts` |
-| R56 | Mob Boss elected Chief AFTER 3+ bad → mob wins | `phases.test.ts`, `sh-scenario-tests.test.ts` |
-| R57 | Mob Boss elected Chief BEFORE 3 bad → game continues | `phases.test.ts`, `sh-rules-verification.test.ts` [WIN-07] |
-| R58 | Non-boss elected at 3+ bad → chief-cleared event | `phases.test.ts`, `sh-rules-verification.test.ts` [ELEC-22] |
+| R56 | Mob Boss elected Commissioner AFTER 3+ bad → mob wins | `phases.test.ts`, `sh-scenario-tests.test.ts` |
+| R57 | Mob Boss elected Commissioner BEFORE 3 bad → game continues | `phases.test.ts`, `sh-rules-verification.test.ts` [WIN-07] |
+| R58 | Non-boss elected at 3+ bad → commissioner-cleared event | `phases.test.ts`, `sh-rules-verification.test.ts` [ELEC-22] |
 
 #### Executive Power Grid (R59–R64)
 
@@ -154,7 +166,7 @@ Every discrete rule from the Secret Hitler rulebook is mapped to at least one te
 | R60 | 7-8p: none/investigate/special-nom/exec/exec | `sh-rules-verification.test.ts` [GRID-07/08], `sh-scenario-tests.test.ts` |
 | R61 | 9-10p: investigate/investigate/special-nom/exec/exec | `sh-rules-verification.test.ts` [GRID-11/12], `sh-scenario-tests.test.ts` |
 | R62 | Powers only trigger on enacted (not auto-enacted) bad policies | `sh-rules-verification.test.ts` [EXEC-09] |
-| R63 | Mayor uses the power (not Chief) | `sh-rules-verification.test.ts` [EXEC-02] |
+| R63 | Mayor uses the power (not Commissioner) | `sh-rules-verification.test.ts` [EXEC-02] |
 | R64 | Power used immediately before round ends | Implicit in state transitions |
 
 #### Investigation (R65–R69)
@@ -279,7 +291,7 @@ Verified that no private data leaks to clients:
 | policyDiscard | Hidden | Hidden | Hidden |
 | reshuffleThreshold | Hidden | Hidden | Hidden |
 | mayorCards | Hidden | Own cards (during discard phase only) | Hidden |
-| chiefCards | Hidden | Own cards (during discard phase only) | Hidden |
+| commissionerCards | Hidden | Own cards (during discard phase only) | Hidden |
 | rngSeed | Hidden | Hidden | Hidden |
 | investigationHistory | Hidden | Own investigations only | Hidden |
 | Votes | Hidden during voting | hasVoted flag only | Hidden |
@@ -287,7 +299,7 @@ Verified that no private data leaks to clients:
 
 ---
 
-## Playwright E2E Tests (125 tests x 4 browsers = 500)
+## Playwright E2E Tests (488 across 4 browser projects)
 
 ### Browser Projects
 
@@ -328,13 +340,13 @@ Verified that no private data leaks to clients:
 | Nomination | Yes — picker, select, confirm |
 | Election | Yes — vote buttons, approve/deny |
 | Policy Session (mayor) | Yes — 3 cards, select, discard |
-| Policy Session (chief) | Yes — 2 cards, select, enact |
+| Policy Session (commissioner) | Yes — 2 cards, select, enact |
 | Investigation | Yes — picker, confirm, result card |
 | Policy Peek | Yes — 3 peek cards, acknowledge |
 | Special Nomination | Yes — picker, confirm, transition |
 | Execution | Yes — picker, confirm, transition |
 | Veto Accept | Yes — propose, accept, transition |
-| Veto Reject | Yes — propose, reject, chief enacts |
+| Veto Reject | Yes — propose, reject, commissioner enacts |
 | Game Over (citizens) | Yes — overlay visible |
 | Game Over (mob) | Yes — overlay visible |
 
@@ -365,17 +377,17 @@ Playwright WebKit is not identical to iOS Safari. Real-device testing on physica
 |------|-------------|-------------------|--------|
 | Deck reshuffle threshold | Fixed at 3 remaining cards | Random 3-7 each time | Prevents card counting; adds unpredictability |
 
-This is the only known deviation. All other rules are implemented per the Secret Hitler source rules with thematic renames only (President → Mayor, Chancellor → Police Chief, Liberal → Citizen/Good, Fascist → Mob/Bad, Hitler → Mob Boss).
+This is the only known deviation. All other rules are implemented per the Secret Hitler source rules with thematic renames only (President → Mayor, Chancellor → Commissioner, Liberal → Citizen/Good, Fascist → Mob/Bad, Hitler → Mob Boss).
 
 ---
 
 ## How to Run
 
 ```bash
-# Unit + integration tests (760 tests)
+# Unit + integration tests (843 tests)
 pnpm run test
 
-# Playwright E2E (125 tests x 4 browsers, auto-starts servers)
+# Playwright E2E (488 tests across 4 browsers, auto-starts servers)
 pnpm run test:e2e
 
 # Typecheck

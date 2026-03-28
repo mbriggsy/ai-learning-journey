@@ -12,7 +12,7 @@ Undercover Mob Boss is a production-quality multiplayer social deduction game �
 
 This project was built using an autonomous, spec-driven software development lifecycle. One human director. One AI engineer. Zero manual coding. The human set direction, reviewed output, and made judgment calls. The AI executed everything: planning, architecture, implementation, asset generation, testing, QA, and deployment.
 
-The result: a game with 760 unit tests, 500 cross-browser E2E tests, 209/209 rules verified against the source material, and a QA defect list that was almost entirely cosmetic. Not a single functional defect was found — because the spec was right before a line of code was written.
+The result: a game with 843 unit tests, 488 cross-browser E2E tests, 209/209 rules verified against the source material, and a QA defect list that was almost entirely cosmetic. Not a single functional defect was found — because the spec was right before a line of code was written.
 
 ---
 
@@ -70,10 +70,10 @@ The 3-round QA audit (29 automated agents) found 46 issues across the entire cod
 
 | Layer | Tests | What it proves |
 |-------|-------|---------------|
-| Unit | 760 | Game engine logic, role distribution, deck mechanics, executive powers, projections, routing, protocol encoding |
+| Unit | 843 | Game engine logic, role distribution, deck mechanics, executive powers, projections, routing, protocol encoding |
 | Integration | (included above) | Full games to completion (5p and 10p), 300+ randomized simulations with invariant checking at every dispatch |
-| E2E | 500 | Complete game flows across 4 browser targets: Chromium, WebKit, Mobile Chrome, Mobile Safari |
-| **Total** | **1,260** | |
+| E2E | 488 | Complete game flows across 4 browser targets: Chromium, WebKit, Mobile Chrome, Mobile Safari |
+| **Total** | **1,331** | |
 
 ### Rules Verification
 
@@ -113,10 +113,10 @@ Additional security measures verified across 3 QA rounds:
 
 | Browser Project | Tests | Result |
 |----------------|-------|--------|
-| Chromium (Desktop Chrome) | 125 | 125 passed |
-| WebKit (Desktop Safari) | 125 | 124 passed, 1 flaky (stress test timing) |
-| Mobile Chrome (Pixel 5) | 125 | 125 passed |
-| Mobile Safari (iPhone 13) | 125 | 124 passed, 1 flaky (same stress test) |
+| Chromium (Desktop Chrome) | 122 | 122 passed |
+| WebKit (Desktop Safari) | 122 | 122 passed |
+| Mobile Chrome (Pixel 5) | 122 | 122 passed |
+| Mobile Safari (iPhone 13) | 122 | 113 passed, 9 flaky (WebKit/Mobile Safari timing) |
 
 The single flaky test (`simultaneous-actions.spec.ts:480` — "Rapid scenario loading") is a timing race in the test harness on WebKit engine, not a game defect. It rapidly loads dev scenarios and checks final state — a stress test of the test infrastructure, not the game.
 
@@ -136,8 +136,8 @@ More lines of tests than code. Nearly as much planning as code. The planning-to-
 |--------|-------|
 | Commits | 326+ |
 | TypeScript | Strict mode, zero errors |
-| Test files | 34 (19 unit/integration + 15 E2E) |
-| Pre-generated assets | 13 game images + 4 trailer images (Imagen 4) + 39 game narrator + 13 trailer narrator (Gemini TTS) |
+| Test files | 43 (24 unit + 4 integration + 15 E2E) |
+| Pre-generated assets | 53 images (Imagen 4) + 106 audio files (Gemini TTS) = 159 total |
 | External runtime dependencies | 2 (GSAP, PartyKit client) |
 
 ---
@@ -167,11 +167,11 @@ One more detail: the human has a day job. All of this was built at night.
 
 ## The Trailer
 
-The same AI engineer that built the game also built a 2-minute cinematic trailer using Remotion (programmatic video from React). 14 scenes, 9 new narrator voiceovers, 4 new AI-generated images — all composed in TypeScript.
+The same AI engineer that built the game also built a cinematic trailer using Remotion (programmatic video from React). 9 scenes, 15 narrator voiceovers, 3 AI-generated images — all composed in TypeScript.
 
-**[Watch the trailer on YouTube](https://youtu.be/aePKLeeQm9g)**
+**[Watch the trailer on YouTube](https://youtu.be/RlmoHOemOLM)**
 
-Act 1 showcases the game as pure noir cinema. Act 2 pulls back the curtain — showing the planning documents scrolling past, Claude Code writing the actual game engine, 29 QA agents running simultaneously, and the final stat roll-up ending on the cost: ~$2 in API charges.
+The trailer tells the origin story: game night → spec-driven development → challenger agents → game simulation testing → the finished product. It ends with the thesis: "Spec-Driven Development. 100% autonomous SDLC. That is the product."
 
 ---
 
@@ -180,7 +180,7 @@ Act 1 showcases the game as pure noir cinema. Act 2 pulls back the curtain — s
 | Document | Description |
 |----------|-------------|
 | [SPEC.md](spec/SPEC.md) | Full product specification (locked) |
-| [HOW-TO-PLAY.md](user/HOW-TO-PLAY.md) | Player-facing rules guide |
+| [HOW-TO-PLAY.md](../shared/user/HOW-TO-PLAY.md) | Player-facing rules guide (source) |
 | [QA-ISSUES.md](QA-ISSUES.md) | Complete QA audit results (46 issues, 42 fixed) |
 | [verification-results.md](verification/verification-results.md) | 209/209 rule verification |
 | [sh-rules-checklist.md](verification/sh-rules-checklist.md) | 227-item rules extraction |

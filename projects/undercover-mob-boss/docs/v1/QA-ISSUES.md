@@ -114,4 +114,4 @@ Legend: [x] = fixed, [ ] = open (known, accepted for v1)
 - 30s grace period prevents name-collision hijacking
 - SanitizedGameEvent type — honest types for stripped fields
 - Single `as any` remaining (Vite import.meta — standard pattern)
-- 760 tests passing, 0 typecheck errors
+- 843 tests passing, 0 typecheck errors

@@ -57,7 +57,7 @@ Previous V3: https://youtu.be/psqg0a3fwvw (superseded by V3.1)
 ## V2 — COMPLETE. SHIPPED. PLAYTESTED.
 
 **Tests:** 843 pass / 0 fail
-**E2E:** 488 pass / 9 fail (all known WebKit/Mobile Safari flaky — see Landmines)
+**E2E:** 498 pass / 2 fail (all known WebKit timing — see Landmines)
 
 ### Session 2026-03-25 (Playtest + Polish)
 

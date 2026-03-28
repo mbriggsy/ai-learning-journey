@@ -10,8 +10,8 @@
 | Layer | Tests | Command |
 |-------|-------|---------|
 | Unit + Integration | 843 | `pnpm run test` |
-| Playwright E2E | 488 (across 4 browser projects) | `pnpm run test:e2e` |
-| **Total** | **1,331** | |
+| Playwright E2E | 498 (across 4 browser projects) | `pnpm run test:e2e` |
+| **Total** | **1,341** | |
 
 All tests passing. Typecheck clean (`pnpm run typecheck`).
 
@@ -299,7 +299,7 @@ Verified that no private data leaks to clients:
 
 ---
 
-## Playwright E2E Tests (488 across 4 browser projects)
+## Playwright E2E Tests (498 across 4 browser projects)
 
 ### Browser Projects
 
@@ -387,7 +387,7 @@ This is the only known deviation. All other rules are implemented per the Secret
 # Unit + integration tests (843 tests)
 pnpm run test
 
-# Playwright E2E (488 tests across 4 browsers, auto-starts servers)
+# Playwright E2E (498 tests across 4 browsers, auto-starts servers)
 pnpm run test:e2e
 
 # Typecheck

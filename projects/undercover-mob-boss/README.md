@@ -15,7 +15,7 @@ It started at game night. A card game everyone loved that deserved a screen inst
 | Lines of spec | 14,638 |
 | Lines of source code | 15,440 |
 | Lines of test code | 17,494 |
-| Tests passing | 1,331 |
+| Tests passing | 1,341 |
 | AI-generated assets | 159 |
 | Cups of coffee | 347 |
 | Hours of sleep lost | 163 |
@@ -100,7 +100,7 @@ docs/
 pnpm run dev              # Vite dev server
 pnpm run build            # Production build
 pnpm run test             # Unit + integration tests (843 tests)
-pnpm run test:e2e         # Playwright E2E (488 tests across 4 browsers)
+pnpm run test:e2e         # Playwright E2E (498 tests across 4 browsers)
 pnpm run typecheck        # tsc --noEmit
 pnpm run generate-assets  # Regenerate images via Imagen 4
 pnpm run generate-narrator # Regenerate narrator audio via Gemini TTS
@@ -112,7 +112,7 @@ pnpm run generate-narrator # Regenerate narrator audio via Gemini TTS
 |-------|-------|---------------|
 | Unit | 843 | Game engine logic, role distribution, deck mechanics, executive powers, projections, routing |
 | Integration | (included above) | Full games to completion, 300+ randomized simulations, state invariants at every dispatch |
-| E2E | 488 | Complete game flows across Chromium, WebKit, Mobile Chrome, Mobile Safari |
+| E2E | 498 | Complete game flows across Chromium, WebKit, Mobile Chrome, Mobile Safari |
 | Rules verification | 209/209 | Every discrete Secret Hitler rule mapped to code + tests |
 
 ## Theme Mapping

@@ -12,7 +12,7 @@ Undercover Mob Boss is a production-quality multiplayer social deduction game �
 
 This project was built using an autonomous, spec-driven software development lifecycle. One human director. One AI engineer. Zero manual coding. The human set direction, reviewed output, and made judgment calls. The AI executed everything: planning, architecture, implementation, asset generation, testing, QA, and deployment.
 
-The result: a game with 843 unit tests, 488 cross-browser E2E tests, 209/209 rules verified against the source material, and a QA defect list that was almost entirely cosmetic. Not a single functional defect was found — because the spec was right before a line of code was written.
+The result: a game with 843 unit tests, 498 cross-browser E2E tests, 209/209 rules verified against the source material, and a QA defect list that was almost entirely cosmetic. Not a single functional defect was found — because the spec was right before a line of code was written.
 
 ---
 
@@ -72,8 +72,8 @@ The 3-round QA audit (29 automated agents) found 46 issues across the entire cod
 |-------|-------|---------------|
 | Unit | 843 | Game engine logic, role distribution, deck mechanics, executive powers, projections, routing, protocol encoding |
 | Integration | (included above) | Full games to completion (5p and 10p), 300+ randomized simulations with invariant checking at every dispatch |
-| E2E | 488 | Complete game flows across 4 browser targets: Chromium, WebKit, Mobile Chrome, Mobile Safari |
-| **Total** | **1,331** | |
+| E2E | 498 | Complete game flows across 4 browser targets: Chromium, WebKit, Mobile Chrome, Mobile Safari |
+| **Total** | **1,341** | |
 
 ### Rules Verification
 

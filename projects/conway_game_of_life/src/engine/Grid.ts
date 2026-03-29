@@ -151,6 +151,7 @@ export class Grid {
       ghosts: this.ghost as Readonly<Uint8Array>,
       width: this.width,
       height: this.height,
+      stride: this.stride,
     }
   }
 }

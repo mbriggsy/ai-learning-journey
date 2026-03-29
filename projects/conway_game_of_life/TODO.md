@@ -4,33 +4,35 @@
 - Spec locked (`docs/spec/SPEC.md`)
 - **ALL 6 phases deeply researched and enhanced via multi-agent review (Phases 0-5)**
 - **Phase 0 (Scaffolding) COMPLETE** — merged to main
-- **Phase 1 (Engine) COMPLETE** — 53 tests passing, 8.9ms/step benchmark
+- **Phase 1 (Engine) COMPLETE** — merged to main, 53 tests, 8.9ms/step benchmark
+- **Phase 2 (Renderer) COMPLETE** — 71 tests total, full WebGL2 pipeline
 - 45+ research agents deployed across deepening sessions
-- Cross-phase amendments applied to all affected plans
 
 ## What We Did (2026-03-29)
-- Executed Phase 0 (Scaffolding) — full project infrastructure built
-- Merged Phase 0 to main
-- Executed Phase 1 (Engine):
-  - Core types: BoundaryMode, SimulationState, StepResult, GridBuffers, PatternCells, SimulationSpeed, TimerProvider, TickData, FrameStats
-  - Grid: padded double-buffer (sentinel ring), age/ghost arrays, bounds guards, copyEdges, swap
-  - Rules: pure step function, inlined 8-neighbor sum, branchless stats, merged age/ghost updates
-  - Simulation: orchestrator with lifecycle management, pattern centering, setCell/toggleCell
-  - GameLoop: dependency-injected timer, speed control (1/5/20/max), time-boxed batching, frame stats accumulation
-  - Barrel export + main.ts wiring with browser TimerProvider
-  - 53 tests: Rules (12), Grid (19), Simulation (8), GameLoop (9), integration patterns (4), scaffold (1)
-  - Benchmark: 1000x1000 step ~8.9ms avg (budget: 10ms)
+- Executed Phase 0 (Scaffolding) — merged to main
+- Executed Phase 1 (Engine) — merged to main
+- Executed Phase 2 (Renderer):
+  - GLContext: assert-on-create WebGL2 utilities, typed ShaderProgram<T>, fullscreen quad VAO
+  - Camera: pan/zoom (clamped 0.05-200), screenToGrid/gridToScreen, pre-allocated 3x3 view matrix
+  - CellPass: age-based color gradient (blue→gold→purple), circular SDF, pulse animation, RGBA16F FBO
+  - GhostPass: decay-to-alpha ghost trails, color inheritance from cell age
+  - ParticlePool: pure-math pool (8-12 per death, Float32Array, compact on update)
+  - ParticlePass: GL_POINTS with circular point sprites, alpha fade
+  - BloomPass: quarter-res separable Gaussian blur + composite with gamma correction + grid lines
+  - Renderer orchestrator: 7-step pipeline, death detection, resize with FBO recreation
+  - Padded buffer upload via UNPACK_ROW_LENGTH (zero CPU copies)
+  - 18 new tests (Camera: 9, ParticlePool: 8, scaffold: 1 existing)
 
 ## What We Did (2026-03-28)
 - Deepened all 6 phase plans with 45+ research agents
 
 ## Next Steps (Priority Order)
-1. **Execute Phase 2** (Renderer) — WebGL2 shaders, cell rendering, age colors, particles, bloom
+1. **Execute Phase 3** (Patterns & UI) — pattern library, controls, draw mode, zoom/pan
 
 ## Cross-Phase Amendments (accumulated across ALL deepening sessions)
-- **Phase 0:** ~~vercel.json +3 PWA header blocks~~ DONE, ~~CSP meta tag~~ DONE, ~~hardened Permissions-Policy~~ DONE
-- **Phase 1:** ~~PatternCells~~ DONE, ~~SimulationSpeed~~ DONE, ~~setCell/toggleCell~~ DONE, ~~Grid bounds guards~~ DONE, ~~frame stats accumulation~~ DONE
-- **Phase 2:** Camera.zoom() clamped [0.05, 200], preserveDrawingBuffer: true on WebGL2 context
+- **Phase 0:** DONE
+- **Phase 1:** DONE
+- **Phase 2:** ~~Camera.zoom() clamped [0.05, 200]~~ DONE, ~~preserveDrawingBuffer: true~~ DONE
 - **Phase 4:** AudioSystem.getCaptureStream()/releaseCaptureStream(), audio capture branches after DynamicsCompressorNode (not master gain)
 
 ## Landmines

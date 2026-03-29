@@ -29,6 +29,7 @@ export interface GridBuffers {
   readonly ghosts: Readonly<Uint8Array>
   readonly width: number
   readonly height: number
+  readonly stride: number
 }
 
 /**

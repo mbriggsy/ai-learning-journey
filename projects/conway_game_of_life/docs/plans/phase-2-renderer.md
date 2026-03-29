@@ -1,5 +1,5 @@
 ---
-status: pending
+status: completed
 phase: 2
 title: Renderer
 description: WebGL2 multi-pass rendering pipeline — cells, ghosts, particles, bloom/glow
@@ -37,11 +37,11 @@ WebGL2 renderer that brings the simulation to life. Bioluminescent cells with ag
 
 ## Spec Acceptance Criteria
 
-- [ ] WebGL canvas renders live cells
-- [ ] Cell age tracked, color shifts young → old
-- [ ] Death particle animation
-- [ ] Ghost trail afterglow
-- [ ] Bloom/glow post-processing on cells
+- [x] WebGL canvas renders live cells
+- [x] Cell age tracked, color shifts young → old
+- [x] Death particle animation
+- [x] Ghost trail afterglow
+- [x] Bloom/glow post-processing on cells
 
 ## Architecture: Texture-Based Rendering (ADR-01/02)
 
@@ -60,8 +60,8 @@ Ghosts and particles render AFTER composite so they aren't overwritten by the fu
 
 ## Pre-Phase 2: Update Phase 1 Interface
 
-- [ ] Add `stride: number` to `GridBuffers` in `src/types/simulation.ts`
-- [ ] Grid.getBuffers() returns raw padded buffers + stride (not extracted data)
+- [x] Add `stride: number` to `GridBuffers` in `src/types/simulation.ts`
+- [x] Grid.getBuffers() returns raw padded buffers + stride (not extracted data)
 
 ### Research Insight
 > WebGL2's `UNPACK_ROW_LENGTH` lets the GPU driver do strided DMA transfer natively. The renderer sets `UNPACK_ROW_LENGTH = stride`, `UNPACK_SKIP_ROWS = 1`, `UNPACK_SKIP_PIXELS = 1` to upload only the inner grid region. Zero CPU copies, zero extraction buffers.
@@ -70,19 +70,19 @@ Ghosts and particles render AFTER composite so they aren't overwritten by the fu
 
 ### 2.1 — GLContext.ts (WebGL2 context + utilities)
 
-- [ ] Create `src/renderer/GLContext.ts`
-- [ ] Class holding `WebGL2RenderingContext` reference
-- [ ] **`preserveDrawingBuffer: true`** on context creation (Phase 5 captureStream requires the buffer to persist after compositing — without it, video capture gets black frames)
-- [ ] Set `gl.pixelStorei(gl.UNPACK_ALIGNMENT, 1)` at init (**critical** for R8 textures)
-- [ ] Assert-on-create utilities — return non-nullable types, throw on failure:
+- [x] Create `src/renderer/GLContext.ts`
+- [x] Class holding `WebGL2RenderingContext` reference
+- [x] **`preserveDrawingBuffer: true`** on context creation (Phase 5 captureStream requires the buffer to persist after compositing — without it, video capture gets black frames)
+- [x] Set `gl.pixelStorei(gl.UNPACK_ALIGNMENT, 1)` at init (**critical** for R8 textures)
+- [x] Assert-on-create utilities — return non-nullable types, throw on failure:
   - `createShader(type, source): WebGLShader`
   - `createTexture(width, height, internalFormat, format, type, data?): WebGLTexture`
   - `createFramebuffer(texture): WebGLFramebuffer` (with completeness check)
-- [ ] `createProgram<T>(vertSrc, fragSrc, uniformNames): ShaderProgram<T>` — returns typed uniform bundle
-- [ ] `getUniformLocations<T>(program, names): UniformLocations<T>` — runtime assertion for every uniform
-- [ ] `FullscreenQuad` — shared VAO with `layout(location = 0)`, created once, `bind()` + `draw()`
-- [ ] Export `FULLSCREEN_QUAD_VERT` source constant (GLSL ES 3.00)
-- [ ] Context-lost event handler placeholder (noted as future landmine in CLAUDE.md)
+- [x] `createProgram<T>(vertSrc, fragSrc, uniformNames): ShaderProgram<T>` — returns typed uniform bundle
+- [x] `getUniformLocations<T>(program, names): UniformLocations<T>` — runtime assertion for every uniform
+- [x] `FullscreenQuad` — shared VAO with `layout(location = 0)`, created once, `bind()` + `draw()`
+- [x] Export `FULLSCREEN_QUAD_VERT` source constant (GLSL ES 3.00)
+- [x] Context-lost event handler placeholder (noted as future landmine in CLAUDE.md)
 
 #### Research Insights
 
@@ -104,17 +104,17 @@ Each shader defines its uniform set as a string union type. Compile-time autocom
 
 ### 2.2 — Camera (shared, at src/ level)
 
-- [ ] Create `src/Camera.ts` (NOT inside renderer — shared between renderer + UI)
-- [ ] State: panX, panY, zoom level
-- [ ] `pan(dx, dy)` — translate view (instant, no animation)
-- [ ] `zoom(factor, centerX, centerY)` — zoom toward/from point (instant), **clamped to [0.05, 200]** (prevents GPU hang from extreme zoom)
-- [ ] `screenToGrid(sx, sy): [gx, gy]` — for draw mode (Phase 3)
-- [ ] `gridToScreen(gx, gy): [sx, sy]` — for UI overlays
-- [ ] `getViewMatrix(): Float32Array` — 3x3 matrix, **pre-allocated and reused** (no allocation per frame)
-- [ ] Shaders consume the view matrix (NOT separate u_offset / u_zoom uniforms)
-- [ ] **NO lerp transitions** (Phase 3)
-- [ ] **NO centerOn animation** (Phase 3)
-- [ ] **NO double-click center-on-activity** (Phase 3)
+- [x] Create `src/Camera.ts` (NOT inside renderer — shared between renderer + UI)
+- [x] State: panX, panY, zoom level
+- [x] `pan(dx, dy)` — translate view (instant, no animation)
+- [x] `zoom(factor, centerX, centerY)` — zoom toward/from point (instant), **clamped to [0.05, 200]** (prevents GPU hang from extreme zoom)
+- [x] `screenToGrid(sx, sy): [gx, gy]` — for draw mode (Phase 3)
+- [x] `gridToScreen(gx, gy): [sx, sy]` — for UI overlays
+- [x] `getViewMatrix(): Float32Array` — 3x3 matrix, **pre-allocated and reused** (no allocation per frame)
+- [x] Shaders consume the view matrix (NOT separate u_offset / u_zoom uniforms)
+- [x] **NO lerp transitions** (Phase 3)
+- [x] **NO centerOn animation** (Phase 3)
+- [x] **NO double-click center-on-activity** (Phase 3)
 
 #### Research Insights
 
@@ -132,21 +132,21 @@ If Camera lived in `src/renderer/`, then `src/ui/` would import from `src/render
 
 ### 2.3 — CellPass.ts
 
-- [ ] Create `src/renderer/CellPass.ts`
-- [ ] GLSL vertex: imports `FULLSCREEN_QUAD_VERT` from GLContext
-- [ ] GLSL fragment (GLSL ES 3.00, `#version 300 es`):
+- [x] Create `src/renderer/CellPass.ts`
+- [x] GLSL vertex: imports `FULLSCREEN_QUAD_VERT` from GLContext
+- [x] GLSL fragment (GLSL ES 3.00, `#version 300 es`):
   - Samples cell data texture: `texture(u_cellTexture, uv).r` (R8 format, 0.0 or ~0.004)
   - Samples age texture: `texture(u_ageTexture, uv).r` (R8, 0.0–1.0 = age/255)
   - Maps age to color gradient: young blue → mature gold → ancient purple via `mix()`
   - Circular cell shape within grid cell via SDF (`discard` outside radius)
   - Subtle pulse animation via `u_time` uniform
   - Output: `layout(location = 0) out vec4 fragColor`
-- [ ] Uniform type: `CellUniforms` string union, co-located with GLSL source
-- [ ] Per-frame texture upload via `texSubImage2D` with `UNPACK_ROW_LENGTH` for padded buffers
-- [ ] `texStorage2D` at init (immutable allocation), `texSubImage2D` per frame (update only)
-- [ ] Data textures use `gl.NEAREST` filtering, `gl.CLAMP_TO_EDGE` wrapping
-- [ ] Renders to **RGBA16F FBO** (linear space for correct bloom math)
-- [ ] Implements `Disposable` interface
+- [x] Uniform type: `CellUniforms` string union, co-located with GLSL source
+- [x] Per-frame texture upload via `texSubImage2D` with `UNPACK_ROW_LENGTH` for padded buffers
+- [x] `texStorage2D` at init (immutable allocation), `texSubImage2D` per frame (update only)
+- [x] Data textures use `gl.NEAREST` filtering, `gl.CLAMP_TO_EDGE` wrapping
+- [x] Renders to **RGBA16F FBO** (linear space for correct bloom math)
+- [x] Implements `Disposable` interface
 
 #### Research Insights
 
@@ -175,53 +175,53 @@ const vec3 ANCIENT_COLOR = vec3(0.808, 0.576, 0.847); // #CE93D8
 
 ### 2.4 — GhostPass.ts
 
-- [ ] Create `src/renderer/GhostPass.ts`
-- [ ] GLSL fragment: samples ghost R8 texture + age R8 texture (for color inheritance)
-- [ ] Ghost decay value (0–3) maps to alpha: `decay * GHOST_MAX_OPACITY`
-- [ ] Color inherits from cell's age-based color at time of death
-- [ ] Alpha blended onto default framebuffer: `gl.blendFunc(gl.SRC_ALPHA, gl.ONE_MINUS_SRC_ALPHA)`
-- [ ] Same UNPACK_ROW_LENGTH upload pattern as CellPass
-- [ ] Implements `Disposable`
+- [x] Create `src/renderer/GhostPass.ts`
+- [x] GLSL fragment: samples ghost R8 texture + age R8 texture (for color inheritance)
+- [x] Ghost decay value (0–3) maps to alpha: `decay * GHOST_MAX_OPACITY`
+- [x] Color inherits from cell's age-based color at time of death
+- [x] Alpha blended onto default framebuffer: `gl.blendFunc(gl.SRC_ALPHA, gl.ONE_MINUS_SRC_ALPHA)`
+- [x] Same UNPACK_ROW_LENGTH upload pattern as CellPass
+- [x] Implements `Disposable`
 
 ### 2.5 — ParticlePool.ts (pure math, testable)
 
-- [ ] Create `src/renderer/ParticlePool.ts`
-- [ ] **Zero GL dependencies** — fully testable in Node
-- [ ] Pre-allocated `Float32Array` buffer: `MAX_PARTICLES * PARTICLE_STRIDE`
-- [ ] Typed constants with `as const satisfies`:
+- [x] Create `src/renderer/ParticlePool.ts`
+- [x] **Zero GL dependencies** — fully testable in Node
+- [x] Pre-allocated `Float32Array` buffer: `MAX_PARTICLES * PARTICLE_STRIDE`
+- [x] Typed constants with `as const satisfies`:
   ```typescript
   const PARTICLE_STRIDE = 8  // x, y, vx, vy, life, r, g, b
   const PARTICLE_OFFSETS = { x: 0, y: 1, vx: 2, vy: 3, life: 4, r: 5, g: 6, b: 7 } as const
   ```
-- [ ] `spawn(gridX, gridY, r, g, b)` — creates 8-12 particles with random radial velocity
-- [ ] `update(dt)` — advance positions, decrement life, compact expired particles
-- [ ] `count` property for active particle count
-- [ ] `buffer` property for GL upload (subarray view of active region)
-- [ ] No rate limiting yet — add when measured as needed
+- [x] `spawn(gridX, gridY, r, g, b)` — creates 8-12 particles with random radial velocity
+- [x] `update(dt)` — advance positions, decrement life, compact expired particles
+- [x] `count` property for active particle count
+- [x] `buffer` property for GL upload (subarray view of active region)
+- [x] No rate limiting yet — add when measured as needed
 
 ### 2.6 — ParticlePass.ts
 
-- [ ] Create `src/renderer/ParticlePass.ts`
-- [ ] Imports `ParticlePool` for data management
-- [ ] GLSL vertex: `GL_POINTS`, `gl_PointSize` from life + zoom
-- [ ] GLSL fragment: circular point sprite via `gl_PointCoord`, alpha fade with `smoothstep`
-- [ ] `drawArrays(gl.POINTS, 0, pool.count)` — no instancing needed
-- [ ] Upload via `bufferSubData` (only active region of pool buffer)
-- [ ] Alpha blended: `gl.blendFunc(gl.SRC_ALPHA, gl.ONE_MINUS_SRC_ALPHA)`
-- [ ] Check `gl.ALIASED_POINT_SIZE_RANGE` at init, store max as cap
-- [ ] Implements `Disposable`
+- [x] Create `src/renderer/ParticlePass.ts`
+- [x] Imports `ParticlePool` for data management
+- [x] GLSL vertex: `GL_POINTS`, `gl_PointSize` from life + zoom
+- [x] GLSL fragment: circular point sprite via `gl_PointCoord`, alpha fade with `smoothstep`
+- [x] `drawArrays(gl.POINTS, 0, pool.count)` — no instancing needed
+- [x] Upload via `bufferSubData` (only active region of pool buffer)
+- [x] Alpha blended: `gl.blendFunc(gl.SRC_ALPHA, gl.ONE_MINUS_SRC_ALPHA)`
+- [x] Check `gl.ALIASED_POINT_SIZE_RANGE` at init, store max as cap
+- [x] Implements `Disposable`
 
 #### Research Insight
 > For GL_POINTS, instanced vs non-instanced rendering is functionally equivalent since each particle is 1 vertex = 1 point. Instancing only adds value if you upgrade particles to textured quads (4 vertices each). Start simple.
 
 ### 2.7 — BloomPass.ts (includes composite)
 
-- [ ] Create `src/renderer/BloomPass.ts`
-- [ ] Bloom GLSL: separable Gaussian blur (horizontal/vertical via boolean uniform)
-- [ ] Composite GLSL: additive blend cellFBO + bloomFBO, gamma correction `pow(color, 1/2.2)`, grid lines
-- [ ] **Quarter resolution** FBOs (not half — 4x cheaper, better bioluminescent aesthetic)
-- [ ] Two ping-pong FBOs with `gl.LINEAR` filtering for smooth upsampling
-- [ ] Grid lines rendered in composite fragment shader:
+- [x] Create `src/renderer/BloomPass.ts`
+- [x] Bloom GLSL: separable Gaussian blur (horizontal/vertical via boolean uniform)
+- [x] Composite GLSL: additive blend cellFBO + bloomFBO, gamma correction `pow(color, 1/2.2)`, grid lines
+- [x] **Quarter resolution** FBOs (not half — 4x cheaper, better bioluminescent aesthetic)
+- [x] Two ping-pong FBOs with `gl.LINEAR` filtering for smooth upsampling
+- [x] Grid lines rendered in composite fragment shader:
   ```glsl
   if (u_showGrid && u_cellSize > 4.0) {
     vec2 grid = abs(fract(gridPos - 0.5) - 0.5);
@@ -230,8 +230,8 @@ const vec3 ANCIENT_COLOR = vec3(0.808, 0.576, 0.847); // #CE93D8
     color = mix(color, GRID_LINE_COLOR, gridAlpha * 0.5);
   }
   ```
-- [ ] Resize: dirty-flag pattern, `dispose()` old FBOs then recreate
-- [ ] Implements `Disposable`
+- [x] Resize: dirty-flag pattern, `dispose()` old FBOs then recreate
+- [x] Implements `Disposable`
 
 #### Research Insights
 
@@ -241,11 +241,11 @@ const vec3 ANCIENT_COLOR = vec3(0.808, 0.576, 0.847); // #CE93D8
 
 ### 2.8 — Renderer.ts (pipeline orchestrator)
 
-- [ ] Create `src/renderer/Renderer.ts`
-- [ ] Owns: GLContext, CellPass, GhostPass, ParticlePass, BloomPass
-- [ ] Camera passed in from main.ts (NOT owned)
-- [ ] `init(canvas: HTMLCanvasElement)` — create context, compile all shaders, set up FBOs
-- [ ] `render(buffers: GridBuffers, state: SimulationState, dt: number)` — full pipeline:
+- [x] Create `src/renderer/Renderer.ts`
+- [x] Owns: GLContext, CellPass, GhostPass, ParticlePass, BloomPass
+- [x] Camera passed in from main.ts (NOT owned)
+- [x] `init(canvas: HTMLCanvasElement)` — create context, compile all shaders, set up FBOs
+- [x] `render(buffers: GridBuffers, state: SimulationState, dt: number)` — full pipeline:
   1. CellPass → RGBA16F FBO (blending OFF)
   2. BloomPass horizontal → quarter-res FBO A
   3. BloomPass vertical → quarter-res FBO B
@@ -253,14 +253,14 @@ const vec3 ANCIENT_COLOR = vec3(0.808, 0.576, 0.847); // #CE93D8
   5. Composite → cellFBO + bloomFBO to screen (gamma correction + grid lines)
   6. GhostPass → alpha blend onto screen
   7. ParticlePass → alpha blend onto screen (last)
-- [ ] `resize(width, height)` — dirty-flag, debounced FBO recreation (150ms cooldown)
+- [x] `resize(width, height)` — dirty-flag, debounced FBO recreation (150ms cooldown)
   - Only render-target FBOs need recreation (cell FBO, bloom FBOs)
   - Data textures (cells, ages, ghosts) are grid-sized, not canvas-sized
-- [ ] `dispose()` — cleanup chain for all passes and shared resources
-- [ ] `getCanvas()` — expose for MediaRecorder (Phase 5)
-- [ ] Toggle: grid lines (passed as uniform)
-- [ ] Toggle: ghost trails (skip GhostPass)
-- [ ] Import only `GridBuffers` and `SimulationState` from `src/types/` — never import Grid or Simulation
+- [x] `dispose()` — cleanup chain for all passes and shared resources
+- [x] `getCanvas()` — expose for MediaRecorder (Phase 5)
+- [x] Toggle: grid lines (passed as uniform)
+- [x] Toggle: ghost trails (skip GhostPass)
+- [x] Import only `GridBuffers` and `SimulationState` from `src/types/` — never import Grid or Simulation
 
 #### Research Insights
 
@@ -279,16 +279,16 @@ const vec3 ANCIENT_COLOR = vec3(0.808, 0.576, 0.847); // #CE93D8
 
 ### 2.9 — Renderer types + barrel export
 
-- [ ] Create `src/renderer/types.ts`:
+- [x] Create `src/renderer/types.ts`:
   - `ShaderProgram<T extends string>` generic type
   - `UniformLocations<T>` type
   - `Disposable` interface (`dispose(): void`)
   - Particle buffer constants (`PARTICLE_STRIDE`, `PARTICLE_OFFSETS`, `MAX_PARTICLES`)
-- [ ] Create `src/renderer/index.ts`:
+- [x] Create `src/renderer/index.ts`:
   - Export `Renderer` (public API)
   - Re-export `Camera` from `src/Camera.ts`
   - Do NOT export: individual passes, GLContext, ParticlePool (internal implementation)
-- [ ] Add spec-derived constants to `src/constants.ts`:
+- [x] Add spec-derived constants to `src/constants.ts`:
   - Cell colors: YOUNG, MATURE, ANCIENT (RGB tuples)
   - GHOST_MAX_OPACITY = 0.15
   - PARTICLE_COUNT_MIN/MAX = 8/12
@@ -297,30 +297,30 @@ const vec3 ANCIENT_COLOR = vec3(0.808, 0.576, 0.847); // #CE93D8
 
 ### 2.10 — Wire renderer to engine
 
-- [ ] Update `src/main.ts`: create Camera, Renderer, Simulation
-- [ ] GameLoop tick: `renderer.render(sim.getBuffers(), sim.getState(), dt)`
-- [ ] Load test pattern (blinker) to verify visual output
-- [ ] Verify pan/zoom with mouse wheel + drag
-- [ ] Verify ghost trails visible after cells die
-- [ ] Verify bloom glow around living cells
-- [ ] Verify particles on death events
+- [x] Update `src/main.ts`: create Camera, Renderer, Simulation
+- [x] GameLoop tick: `renderer.render(sim.getBuffers(), sim.getState(), dt)`
+- [x] Load test pattern (blinker) to verify visual output
+- [x] Verify pan/zoom with mouse wheel + drag
+- [x] Verify ghost trails visible after cells die
+- [x] Verify bloom glow around living cells
+- [x] Verify particles on death events
 
 ### 2.11 — Tests
 
-- [ ] Create `tests/unit/Camera.test.ts`
+- [x] Create `tests/unit/Camera.test.ts`
   - Pan offsets coordinates correctly
   - Zoom centered on point
   - screenToGrid / gridToScreen roundtrip accuracy
   - View matrix correctness (multiply test point, verify output)
   - Pre-allocated matrix: same Float32Array reference returned each call
-- [ ] Create `tests/unit/renderer/ParticlePool.test.ts`
+- [x] Create `tests/unit/renderer/ParticlePool.test.ts`
   - Spawn creates 8-12 particles per call
   - Update advances positions by velocity * dt
   - Expired particles (life <= 0) removed from pool
   - Pool cap respected (MAX_PARTICLES)
   - Count property accurate
   - Buffer subarray contains only active particles
-- [ ] Note: GLSL compilation, texture upload, and visual output require a real GL context — test via Playwright screenshot comparison in `tests/integration/` (future)
+- [x] Note: GLSL compilation, texture upload, and visual output require a real GL context — test via Playwright screenshot comparison in `tests/integration/` (future)
 
 ## Commits
 

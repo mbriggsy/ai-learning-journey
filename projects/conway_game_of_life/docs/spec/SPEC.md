@@ -190,11 +190,11 @@ MediaRecorder API captures the live WebGL canvas directly — no frame-by-frame 
 - [x] Wraparound / infinite grid option
 
 ### Phase 2 — Renderer
-- [ ] WebGL canvas renders live cells
-- [ ] Cell age tracked, color shifts young→old
-- [ ] Death particle animation
-- [ ] Ghost trail afterglow
-- [ ] Bloom/glow post-processing on cells
+- [x] WebGL canvas renders live cells
+- [x] Cell age tracked, color shifts young→old
+- [x] Death particle animation
+- [x] Ghost trail afterglow
+- [x] Bloom/glow post-processing on cells
 
 ### Phase 3 — Patterns & UI
 - [ ] All 9 patterns load correctly

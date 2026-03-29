@@ -51,7 +51,8 @@ Fully tested Game of Life simulation engine. Zero DOM/WebGL dependencies. Padded
   - `SimulationState`: interface with `readonly` on every field (generation, width, height, boundaryMode, liveCellCount, birthCount, deathCount)
   - `StepResult`: `{ liveCellCount: number, birthCount: number, deathCount: number }`
   - `GridBuffers`: `{ readonly cells: Readonly<Uint8Array>, readonly ages: Readonly<Uint8Array>, readonly ghosts: Readonly<Uint8Array>, readonly width: number, readonly height: number }`
-  - `PatternDefinition`: `{ readonly name: string, readonly width: number, readonly height: number, readonly cells: ReadonlyArray<readonly [x: number, y: number]> }`
+  - `PatternCells`: `{ readonly width: number, readonly height: number, readonly cells: ReadonlyArray<readonly [x: number, y: number]> }` (engine's minimal contract — Phase 3's full `PatternDefinition` satisfies this structurally)
+  - `SimulationSpeed`: `type SimulationSpeed = 1 | 5 | 20 | 'max'` (shared between UI and GameLoop)
 - [ ] Create `src/engine/types.ts` (engine-internal types)
   - `FrameCallback`: `(timestamp: number) => void` (no DOM types — self-contained)
   - `TimerProvider`: `{ requestFrame(callback: FrameCallback): number, cancelFrame(handle: number): void }`
@@ -82,8 +83,8 @@ Fully tested Game of Life simulation engine. Zero DOM/WebGL dependencies. Padded
 - [ ] `Uint8Array` age buffer — cell age, saturated at `AGE_MAX` (255)
 - [ ] `Uint8Array` ghost buffer — generations since death, decays over `GHOST_DECAY_GENERATIONS`
 - [ ] Row-major indexing with padding: `index = (y + 1) * stride + (x + 1)`
-- [ ] `get(x, y)` / `set(x, y, alive)` — map to padded coordinates
-- [ ] `toggle(x, y)` — for draw mode
+- [ ] `get(x, y)` / `set(x, y, alive)` — map to padded coordinates, **bounds guard: `if (x < 0 || x >= width || y < 0 || y >= height) return`** (DrawMode sends runtime coordinates from mouse/touch)
+- [ ] `toggle(x, y)` — for draw mode, **same bounds guard**
 - [ ] `copyEdges()` — copy real edges to sentinel ring for wrap mode
 - [ ] `swap()` — swap front/back via temp variable (not destructuring — avoids temp array allocation)
 - [ ] `clear()` — zero all buffers, reset generation
@@ -204,7 +205,9 @@ constructor(width: number, height: number, boundaryMode: BoundaryMode = 'wrap') 
 - [ ] `step()` — calls `Rules.step(grid.buffers)`, calls `grid.swap()`, increments generation, caches StepResult
 - [ ] `reset()` — calls `grid.clear()`, generation = 0
 - [ ] `resize(width, height)` — creates new Grid (old one is discarded)
-- [ ] `loadPattern(pattern: PatternDefinition)` — centers pattern on grid, delegates to `grid.loadCells()`
+- [ ] `loadPattern(pattern: PatternCells)` — centers pattern on grid, delegates to `grid.loadCells()`
+- [ ] `setCell(x: number, y: number, alive: boolean): void` — delegates to `grid.set()` (Phase 3 DrawMode needs this)
+- [ ] `toggleCell(x: number, y: number): void` — delegates to `grid.toggle()` (Phase 3 DrawMode needs this)
 - [ ] `getState(): SimulationState` — assembles from grid + generation + cached StepResult
 - [ ] `getBuffers(): GridBuffers` — delegates to Grid
 - [ ] Exposes `boundaryMode` (read/write for future UI toggle)
@@ -234,6 +237,8 @@ Without Rules extraction, Simulation would be a thin wrapper and should be elimi
   - Render only final state
   - Cap at 100 steps/frame for small grids
   - Report steps-per-second to UI
+  - **Accumulate `frameBirthCount` + `frameDeathCount` across ALL steps in batch** (Phase 4 audio needs aggregated stats — last step's counts alone lose 99% of events at max speed)
+  - Expose aggregated stats via `FrameStats` type on `TickData` or alongside `SimulationState`
 
 #### Research Insights
 

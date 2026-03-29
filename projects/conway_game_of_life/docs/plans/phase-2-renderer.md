@@ -72,6 +72,7 @@ Ghosts and particles render AFTER composite so they aren't overwritten by the fu
 
 - [ ] Create `src/renderer/GLContext.ts`
 - [ ] Class holding `WebGL2RenderingContext` reference
+- [ ] **`preserveDrawingBuffer: true`** on context creation (Phase 5 captureStream requires the buffer to persist after compositing — without it, video capture gets black frames)
 - [ ] Set `gl.pixelStorei(gl.UNPACK_ALIGNMENT, 1)` at init (**critical** for R8 textures)
 - [ ] Assert-on-create utilities — return non-nullable types, throw on failure:
   - `createShader(type, source): WebGLShader`
@@ -106,7 +107,7 @@ Each shader defines its uniform set as a string union type. Compile-time autocom
 - [ ] Create `src/Camera.ts` (NOT inside renderer — shared between renderer + UI)
 - [ ] State: panX, panY, zoom level
 - [ ] `pan(dx, dy)` — translate view (instant, no animation)
-- [ ] `zoom(factor, centerX, centerY)` — zoom toward/from point (instant)
+- [ ] `zoom(factor, centerX, centerY)` — zoom toward/from point (instant), **clamped to [0.05, 200]** (prevents GPU hang from extreme zoom)
 - [ ] `screenToGrid(sx, sy): [gx, gy]` — for draw mode (Phase 3)
 - [ ] `gridToScreen(gx, gy): [sx, sy]` — for UI overlays
 - [ ] `getViewMatrix(): Float32Array` — 3x3 matrix, **pre-allocated and reused** (no allocation per frame)

@@ -1,3 +1,7 @@
+import type { TimerProvider } from './engine/types.js'
+import { GameLoop, Simulation } from './engine/index.js'
+import { DEFAULT_RANDOM_DENSITY } from './constants.js'
+
 const canvas = document.getElementById('game-canvas') as HTMLCanvasElement | null
 const errorEl = document.getElementById('webgl-error') as HTMLElement | null
 
@@ -40,7 +44,31 @@ const observer = new ResizeObserver((entries) => {
 })
 observer.observe(canvas)
 
+// --- Engine wiring ---
+const simulation = new Simulation(200, 200, 'wrap')
+simulation.randomize(DEFAULT_RANDOM_DENSITY)
+
+const browserTimer: TimerProvider = {
+  requestFrame: (cb) => requestAnimationFrame(cb),
+  cancelFrame: (handle) => cancelAnimationFrame(handle),
+}
+
+const loop = new GameLoop(browserTimer, simulation)
+
+loop.onTick((_tickData, stats) => {
+  if (stats.stepsThisFrame > 0) {
+    const state = simulation.getState()
+    console.log(
+      `[Conway] Gen ${state.generation} | ${state.liveCellCount} alive | +${stats.frameBirthCount} born -${stats.frameDeathCount} died`,
+    )
+  }
+})
+
+// Auto-play on load
+loop.play()
+
 const debugInfo = gl.getExtension('WEBGL_debug_renderer_info')
 const renderer = debugInfo ? gl.getParameter(debugInfo.UNMASKED_RENDERER_WEBGL) : 'unknown'
 console.log(`[Conway] WebGL2 initialized — ${renderer}`)
 console.log(`[Conway] DPR: ${dpr}, Canvas: ${canvas.width}x${canvas.height}`)
+console.log(`[Conway] Simulation: ${simulation.width}x${simulation.height}, mode: ${simulation.boundaryMode}`)

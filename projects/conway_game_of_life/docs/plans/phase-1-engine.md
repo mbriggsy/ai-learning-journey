@@ -1,5 +1,5 @@
 ---
-status: pending
+status: completed
 phase: 1
 title: Engine
 description: Pure game logic — simulation rules, padded double-buffered grid, age/ghost tracking, game loop
@@ -37,28 +37,28 @@ Fully tested Game of Life simulation engine. Zero DOM/WebGL dependencies. Padded
 
 ## Spec Acceptance Criteria
 
-- [ ] Game of Life rules implemented correctly (tested)
-- [ ] Double-buffer state update (no visual tearing)
-- [ ] 1000x1000 grid at 60fps in Chrome
-- [ ] Wraparound / infinite grid option
+- [x] Game of Life rules implemented correctly (tested)
+- [x] Double-buffer state update (no visual tearing)
+- [x] 1000x1000 grid at 60fps in Chrome (~8.9ms/step, benchmark verified)
+- [x] Wraparound / infinite grid option
 
 ## Tasks
 
 ### 1.1 — Core types
 
-- [ ] Create `src/types/simulation.ts` (shared cross-module types)
+- [x] Create `src/types/simulation.ts` (shared cross-module types)
   - `BoundaryMode`: `type BoundaryMode = 'wrap' | 'fixed'` (string union, not enum)
   - `SimulationState`: interface with `readonly` on every field (generation, width, height, boundaryMode, liveCellCount, birthCount, deathCount)
   - `StepResult`: `{ liveCellCount: number, birthCount: number, deathCount: number }`
   - `GridBuffers`: `{ readonly cells: Readonly<Uint8Array>, readonly ages: Readonly<Uint8Array>, readonly ghosts: Readonly<Uint8Array>, readonly width: number, readonly height: number }`
   - `PatternCells`: `{ readonly width: number, readonly height: number, readonly cells: ReadonlyArray<readonly [x: number, y: number]> }` (engine's minimal contract — Phase 3's full `PatternDefinition` satisfies this structurally)
   - `SimulationSpeed`: `type SimulationSpeed = 1 | 5 | 20 | 'max'` (shared between UI and GameLoop)
-- [ ] Create `src/engine/types.ts` (engine-internal types)
+- [x] Create `src/engine/types.ts` (engine-internal types)
   - `FrameCallback`: `(timestamp: number) => void` (no DOM types — self-contained)
   - `TimerProvider`: `{ requestFrame(callback: FrameCallback): number, cancelFrame(handle: number): void }`
   - `TickData`: `{ readonly deltaTime: number, readonly elapsed: number, readonly fps: number }`
   - `OnTickCallback`: `(data: TickData) => void`
-- [ ] Add engine constants to `src/constants.ts`:
+- [x] Add engine constants to `src/constants.ts`:
   - `GHOST_DECAY_GENERATIONS = 3`
   - `MAX_GRID_DIMENSION = 4096`
   - `DEFAULT_RANDOM_DENSITY = 0.3`
@@ -76,24 +76,24 @@ Fully tested Game of Life simulation engine. Zero DOM/WebGL dependencies. Padded
 
 ### 1.2 — Grid class (padded double-buffered data structure)
 
-- [ ] Create `src/engine/Grid.ts`
-- [ ] **Padded allocation:** buffers sized `(width + 2) * (height + 2)`, stride = `width + 2`
-- [ ] `Uint8Array` front buffer (padded) — cell state (0 or 1)
-- [ ] `Uint8Array` back buffer (padded) — write target during step
-- [ ] `Uint8Array` age buffer — cell age, saturated at `AGE_MAX` (255)
-- [ ] `Uint8Array` ghost buffer — generations since death, decays over `GHOST_DECAY_GENERATIONS`
-- [ ] Row-major indexing with padding: `index = (y + 1) * stride + (x + 1)`
-- [ ] `get(x, y)` / `set(x, y, alive)` — map to padded coordinates, **bounds guard: `if (x < 0 || x >= width || y < 0 || y >= height) return`** (DrawMode sends runtime coordinates from mouse/touch)
-- [ ] `toggle(x, y)` — for draw mode, **same bounds guard**
-- [ ] `copyEdges()` — copy real edges to sentinel ring for wrap mode
-- [ ] `swap()` — swap front/back via temp variable (not destructuring — avoids temp array allocation)
-- [ ] `clear()` — zero all buffers, reset generation
-- [ ] `randomize(density)` — clamp density to `[0, 1]`, fill with `Math.random() < density`
-- [ ] `loadCells(cells, offsetX, offsetY)` — stamp raw coordinates onto grid (name avoids confusion with pattern-level loading)
-- [ ] `getBuffers(): GridBuffers` — typed interface for renderer (not raw internals)
-- [ ] `generation` counter (incremented by Simulation after each step)
-- [ ] Constructor validates: width/height are positive integers, `<= MAX_GRID_DIMENSION`
-- [ ] Read-only buffer accessors via `Readonly<Uint8Array>` return type
+- [x] Create `src/engine/Grid.ts`
+- [x] **Padded allocation:** buffers sized `(width + 2) * (height + 2)`, stride = `width + 2`
+- [x] `Uint8Array` front buffer (padded) — cell state (0 or 1)
+- [x] `Uint8Array` back buffer (padded) — write target during step
+- [x] `Uint8Array` age buffer — cell age, saturated at `AGE_MAX` (255)
+- [x] `Uint8Array` ghost buffer — generations since death, decays over `GHOST_DECAY_GENERATIONS`
+- [x] Row-major indexing with padding: `index = (y + 1) * stride + (x + 1)`
+- [x] `get(x, y)` / `set(x, y, alive)` — map to padded coordinates, **bounds guard: `if (x < 0 || x >= width || y < 0 || y >= height) return`** (DrawMode sends runtime coordinates from mouse/touch)
+- [x] `toggle(x, y)` — for draw mode, **same bounds guard**
+- [x] `copyEdges()` — copy real edges to sentinel ring for wrap mode
+- [x] `swap()` — swap front/back via temp variable (not destructuring — avoids temp array allocation)
+- [x] `clear()` — zero all buffers, reset generation
+- [x] `randomize(density)` — clamp density to `[0, 1]`, fill with `Math.random() < density`
+- [x] `loadCells(cells, offsetX, offsetY)` — stamp raw coordinates onto grid (name avoids confusion with pattern-level loading)
+- [x] `getBuffers(): GridBuffers` — typed interface for renderer (not raw internals)
+- [x] `generation` counter (incremented by Simulation after each step)
+- [x] Constructor validates: width/height are positive integers, `<= MAX_GRID_DIMENSION`
+- [x] Read-only buffer accessors via `Readonly<Uint8Array>` return type
 
 #### Research Insights
 
@@ -144,33 +144,33 @@ constructor(width: number, height: number, boundaryMode: BoundaryMode = 'wrap') 
 
 ### 1.2b — Rules module (pure step function)
 
-- [ ] Create `src/engine/Rules.ts`
-- [ ] Pure function: `step(front, back, age, ghost, width, height, stride): StepResult`
-- [ ] Copies edges to sentinel ring first (calls `grid.copyEdges()` or accepts pre-copied buffers)
-- [ ] Single pass over all real cells (y: 1→height, x: 1→width)
-- [ ] **Inlined 8-neighbor sum** — no function call per cell:
+- [x] Create `src/engine/Rules.ts`
+- [x] Pure function: `step(front, back, age, ghost, width, height, stride): StepResult`
+- [x] Copies edges to sentinel ring first (calls `grid.copyEdges()` or accepts pre-copied buffers)
+- [x] Single pass over all real cells (y: 1→height, x: 1→width)
+- [x] **Inlined 8-neighbor sum** — no function call per cell:
   ```typescript
   const sum =
     front[idx - stride - 1] + front[idx - stride] + front[idx - stride + 1] +
     front[idx - 1]          +                        front[idx + 1]          +
     front[idx + stride - 1] + front[idx + stride] + front[idx + stride + 1]
   ```
-- [ ] Apply Conway rules: `newState = (sum === 3 || (sum === 2 && old)) ? 1 : 0`
-- [ ] **Branchless stats** accumulated in loop:
+- [x] Apply Conway rules: `newState = (sum === 3 || (sum === 2 && old)) ? 1 : 0`
+- [x] **Branchless stats** accumulated in loop:
   ```typescript
   liveCells += newState
   births += newState & ~old
   deaths += old & ~newState
   ```
-- [ ] **Age/ghost merged into main loop** (no separate pass):
+- [x] **Age/ghost merged into main loop** (no separate pass):
   - Alive: `age[idx] = old ? Math.min(age[idx] + 1, AGE_MAX) : 1`
   - Dead + was alive: `ghost[idx] = GHOST_DECAY_GENERATIONS`
   - Dead + has ghost: `ghost[idx]--` (natural Uint8 clamp at 0)
   - Dead + no ghost: `age[idx] = 0` (already 0 from prior step)
-- [ ] Returns `StepResult { liveCellCount, birthCount, deathCount }`
-- [ ] Zero allocations in the hot loop
-- [ ] No `try/catch` (prevents TurboFan optimization)
-- [ ] Non-null assertions (`!`) on array access with safety comment
+- [x] Returns `StepResult { liveCellCount, birthCount, deathCount }`
+- [x] Zero allocations in the hot loop
+- [x] No `try/catch` (prevents TurboFan optimization)
+- [x] Non-null assertions (`!`) on array access with safety comment
 
 #### Research Insights
 
@@ -200,17 +200,17 @@ constructor(width: number, height: number, boundaryMode: BoundaryMode = 'wrap') 
 
 ### 1.3 — Simulation orchestrator
 
-- [ ] Create `src/engine/Simulation.ts`
-- [ ] Owns a Grid instance (stable reference through resize/reset)
-- [ ] `step()` — calls `Rules.step(grid.buffers)`, calls `grid.swap()`, increments generation, caches StepResult
-- [ ] `reset()` — calls `grid.clear()`, generation = 0
-- [ ] `resize(width, height)` — creates new Grid (old one is discarded)
-- [ ] `loadPattern(pattern: PatternCells)` — centers pattern on grid, delegates to `grid.loadCells()`
-- [ ] `setCell(x: number, y: number, alive: boolean): void` — delegates to `grid.set()` (Phase 3 DrawMode needs this)
-- [ ] `toggleCell(x: number, y: number): void` — delegates to `grid.toggle()` (Phase 3 DrawMode needs this)
-- [ ] `getState(): SimulationState` — assembles from grid + generation + cached StepResult
-- [ ] `getBuffers(): GridBuffers` — delegates to Grid
-- [ ] Exposes `boundaryMode` (read/write for future UI toggle)
+- [x] Create `src/engine/Simulation.ts`
+- [x] Owns a Grid instance (stable reference through resize/reset)
+- [x] `step()` — calls `Rules.step(grid.buffers)`, calls `grid.swap()`, increments generation, caches StepResult
+- [x] `reset()` — calls `grid.clear()`, generation = 0
+- [x] `resize(width, height)` — creates new Grid (old one is discarded)
+- [x] `loadPattern(pattern: PatternCells)` — centers pattern on grid, delegates to `grid.loadCells()`
+- [x] `setCell(x: number, y: number, alive: boolean): void` — delegates to `grid.set()` (Phase 3 DrawMode needs this)
+- [x] `toggleCell(x: number, y: number): void` — delegates to `grid.toggle()` (Phase 3 DrawMode needs this)
+- [x] `getState(): SimulationState` — assembles from grid + generation + cached StepResult
+- [x] `getBuffers(): GridBuffers` — delegates to Grid
+- [x] Exposes `boundaryMode` (read/write for future UI toggle)
 
 #### Research Insights
 
@@ -223,15 +223,15 @@ Without Rules extraction, Simulation would be a thin wrapper and should be elimi
 
 ### 1.4 — Game loop (dependency-injected timer)
 
-- [ ] Create `src/engine/GameLoop.ts`
-- [ ] Constructor accepts `TimerProvider` (NO direct `requestAnimationFrame`)
-- [ ] Configurable speed: generations per second (1, 5, 20, max)
-- [ ] `play()` / `pause()` / `step()` (single advance)
-- [ ] `setSpeed(gensPerSec)` — adjusts timing accumulator
-- [ ] `onTick(callback: OnTickCallback): () => void` — returns unsubscribe function
-- [ ] `isPlaying()` state query
-- [ ] FPS tracking: smoothed frame time average (~5 lines)
-- [ ] **Max speed: time-boxed batching**
+- [x] Create `src/engine/GameLoop.ts`
+- [x] Constructor accepts `TimerProvider` (NO direct `requestAnimationFrame`)
+- [x] Configurable speed: generations per second (1, 5, 20, max)
+- [x] `play()` / `pause()` / `step()` (single advance)
+- [x] `setSpeed(gensPerSec)` — adjusts timing accumulator
+- [x] `onTick(callback: OnTickCallback): () => void` — returns unsubscribe function
+- [x] `isPlaying()` state query
+- [x] FPS tracking: smoothed frame time average (~5 lines)
+- [x] **Max speed: time-boxed batching**
   - 12ms budget per frame (leave 4ms for renderer)
   - `while (performance.now() - start < BUDGET_MS) { simulation.step() }`
   - Render only final state
@@ -293,7 +293,7 @@ Do NOT use `Set<OnTickCallback>` — inline arrow functions have unique referenc
 
 ### 1.5 — Engine tests
 
-- [ ] Create `tests/unit/engine/Rules.test.ts` (NEW — pure function tests)
+- [x] Create `tests/unit/engine/Rules.test.ts` (NEW — pure function tests)
   - Birth rule: dead cell + 3 neighbors → alive
   - Survival: live cell + 2 or 3 neighbors → stays alive
   - Underpopulation: live cell + <2 neighbors → dies
@@ -304,7 +304,7 @@ Do NOT use `Set<OnTickCallback>` — inline arrow functions have unique referenc
   - Ghost tracking: newly dead gets GHOST_DECAY_GENERATIONS, decays to 0
   - Age saturation: cell surviving 256+ generations stays at 255
 
-- [ ] Create `tests/unit/engine/Grid.test.ts`
+- [x] Create `tests/unit/engine/Grid.test.ts`
   - Still life: 2x2 block stable across generations (via Simulation.step)
   - Oscillator: blinker returns to initial state after 2 gens
   - Glider: moves diagonally after 4 gens
@@ -317,7 +317,7 @@ Do NOT use `Set<OnTickCallback>` — inline arrow functions have unique referenc
   - Constructor validation: rejects negative, zero, non-integer, >MAX dimensions
   - Density clamp: negative → 0, >1 → 1
 
-- [ ] Create `tests/unit/engine/Simulation.test.ts`
+- [x] Create `tests/unit/engine/Simulation.test.ts`
   - Generation counter increments per step
   - Pattern loading centers correctly (uses PatternDefinition)
   - Reset clears everything + generation = 0
@@ -325,7 +325,7 @@ Do NOT use `Set<OnTickCallback>` — inline arrow functions have unique referenc
   - resize() creates fresh grid, old state lost
   - getBuffers() returns GridBuffers interface
 
-- [ ] Create `tests/unit/engine/GameLoop.test.ts`
+- [x] Create `tests/unit/engine/GameLoop.test.ts`
   - Play/pause toggling (via fake TimerProvider)
   - Step advances exactly one generation
   - Speed setting: 1 gen/sec only steps once per second of elapsed time
@@ -334,7 +334,7 @@ Do NOT use `Set<OnTickCallback>` — inline arrow functions have unique referenc
   - Max speed: multiple steps per frame, respects time budget
   - isPlaying() reflects correct state
 
-- [ ] Create `tests/bench/engine.bench.ts` (SEPARATE file — Vitest 4 requires it)
+- [x] Create `tests/bench/engine.bench.ts` (SEPARATE file — Vitest 4 requires it)
   - 1000x1000 step at 30% density, JIT warmup (10 steps), 100 iterations
   - Target: average <10ms per step (leaves 6ms for renderer)
 
@@ -393,7 +393,7 @@ it('1000x1000 step within budget', () => {
 
 ### 1.6 — Barrel export + wiring
 
-- [ ] Create `src/engine/index.ts` re-exporting public API:
+- [x] Create `src/engine/index.ts` re-exporting public API:
   - `Grid`, `Rules` (step function), `Simulation`, `GameLoop`
   - Re-export engine-internal types needed by composition root (`TimerProvider`, `TickData`, `OnTickCallback`)
 

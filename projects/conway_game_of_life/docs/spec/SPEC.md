@@ -184,10 +184,10 @@ MediaRecorder API captures the live WebGL canvas directly — no frame-by-frame 
 - [x] Security headers and CSP in vercel.json
 
 ### Phase 1 — Engine
-- [ ] Game of Life rules implemented correctly (tested)
-- [ ] Double-buffer state update (no visual tearing)
-- [ ] 1000x1000 grid at 60fps in Chrome
-- [ ] Wraparound / infinite grid option
+- [x] Game of Life rules implemented correctly (tested)
+- [x] Double-buffer state update (no visual tearing)
+- [x] 1000x1000 grid at 60fps in Chrome
+- [x] Wraparound / infinite grid option
 
 ### Phase 2 — Renderer
 - [ ] WebGL canvas renders live cells

@@ -3,36 +3,33 @@
 ## Current State
 - Spec locked (`docs/spec/SPEC.md`)
 - **ALL 6 phases deeply researched and enhanced via multi-agent review (Phases 0-5)**
-- **Phase 0 (Scaffolding) COMPLETE** — all scripts verified, WebGL2 context boots
+- **Phase 0 (Scaffolding) COMPLETE** — merged to main
+- **Phase 1 (Engine) COMPLETE** — 53 tests passing, 8.9ms/step benchmark
 - 45+ research agents deployed across deepening sessions
 - Cross-phase amendments applied to all affected plans
 
 ## What We Did (2026-03-29)
-- Executed Phase 0 (Scaffolding) — full project infrastructure built:
-  - package.json: Vite 7.3.1, TypeScript 5.9.3, Vitest 4.1.2, zero prod deps
-  - tsconfig.json: strict mode, noUncheckedIndexedAccess, checks src + tests
-  - vite.config.ts: merged Vitest config, COOP/COEP headers, es2022 target
-  - index.html: full-viewport canvas, CSP meta tag, PWA meta tags, WebGL error fallback
-  - src/main.ts: WebGL2 context with perf attributes, ResizeObserver, DPR handling
-  - vercel.json: full security headers + CSP + PWA header blocks (sw.js, html, manifest)
-  - CLAUDE.md: architecture rules, conventions, testing strategy
-  - Directory skeleton: all src/ and tests/ subdirs with .gitkeep
-  - Placeholder test passing, all 4 scripts verified (dev, build, test, typecheck)
+- Executed Phase 0 (Scaffolding) — full project infrastructure built
+- Merged Phase 0 to main
+- Executed Phase 1 (Engine):
+  - Core types: BoundaryMode, SimulationState, StepResult, GridBuffers, PatternCells, SimulationSpeed, TimerProvider, TickData, FrameStats
+  - Grid: padded double-buffer (sentinel ring), age/ghost arrays, bounds guards, copyEdges, swap
+  - Rules: pure step function, inlined 8-neighbor sum, branchless stats, merged age/ghost updates
+  - Simulation: orchestrator with lifecycle management, pattern centering, setCell/toggleCell
+  - GameLoop: dependency-injected timer, speed control (1/5/20/max), time-boxed batching, frame stats accumulation
+  - Barrel export + main.ts wiring with browser TimerProvider
+  - 53 tests: Rules (12), Grid (19), Simulation (8), GameLoop (9), integration patterns (4), scaffold (1)
+  - Benchmark: 1000x1000 step ~8.9ms avg (budget: 10ms)
 
 ## What We Did (2026-03-28)
-- Deepened Phase 0 (Scaffolding) — canvas context poisoning, tsconfig rootDir, security headers + CSP
-- Deepened Phase 1 (Engine) — padded grid optimization, Rules.ts extraction, TimerProvider injection
-- Deepened Phase 2 (Renderer) — age texture format fix, pipeline order fix, UNPACK_ROW_LENGTH, quarter-res bloom
-- Deepened Phase 3 (Patterns & UI) — 8 agents: PatternDefinition collision, PointerEvents, setCell/toggleCell, InputMode, Camera zoom bounds, Bresenham, LWSS direction, verified coordinates
-- Deepened Phase 4 (Audio) — 7 agents: OscillatorNode pool fix, frame stats accumulation, AudioParam scheduling, depends_on fix, stability pulse, loudness limiter, ExtinctionSound cleanup
-- Deepened Phase 5 (Polish & Deploy) — 6 agents: preserveDrawingBuffer, VideoCapture signature fix, audio branch point fix, captureStream(30), codec priority, bitrate 3Mbps, vercel.json PWA headers
+- Deepened all 6 phase plans with 45+ research agents
 
 ## Next Steps (Priority Order)
-1. **Execute Phase 1** (Engine) — game rules, double-buffer, grid, game loop
+1. **Execute Phase 2** (Renderer) — WebGL2 shaders, cell rendering, age colors, particles, bloom
 
 ## Cross-Phase Amendments (accumulated across ALL deepening sessions)
-- **Phase 0:** ~~vercel.json +3 PWA header blocks~~ DONE, ~~CSP meta tag in index.html~~ DONE, ~~hardened Permissions-Policy~~ DONE
-- **Phase 1:** PatternDefinition → PatternCells, SimulationSpeed type, Simulation.setCell/toggleCell, Grid bounds guards, GameLoop frame stats accumulation (frameBirthCount/frameDeathCount)
+- **Phase 0:** ~~vercel.json +3 PWA header blocks~~ DONE, ~~CSP meta tag~~ DONE, ~~hardened Permissions-Policy~~ DONE
+- **Phase 1:** ~~PatternCells~~ DONE, ~~SimulationSpeed~~ DONE, ~~setCell/toggleCell~~ DONE, ~~Grid bounds guards~~ DONE, ~~frame stats accumulation~~ DONE
 - **Phase 2:** Camera.zoom() clamped [0.05, 200], preserveDrawingBuffer: true on WebGL2 context
 - **Phase 4:** AudioSystem.getCaptureStream()/releaseCaptureStream(), audio capture branches after DynamicsCompressorNode (not master gain)
 

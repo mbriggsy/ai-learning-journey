@@ -177,32 +177,39 @@ MediaRecorder API captures the live WebGL canvas directly — no frame-by-frame 
 
 ## Acceptance Criteria
 
-### Phase 0 — Engine
+### Phase 0 — Scaffolding
+- [ ] Project builds and dev server runs
+- [ ] WebGL2 canvas renders (context created)
+- [ ] Build tools configured (Vite, Vitest, TypeScript)
+- [ ] Security headers and CSP in vercel.json
+
+### Phase 1 — Engine
 - [ ] Game of Life rules implemented correctly (tested)
 - [ ] Double-buffer state update (no visual tearing)
 - [ ] 1000x1000 grid at 60fps in Chrome
 - [ ] Wraparound / infinite grid option
 
-### Phase 1 — Renderer
+### Phase 2 — Renderer
 - [ ] WebGL canvas renders live cells
 - [ ] Cell age tracked, color shifts young→old
 - [ ] Death particle animation
 - [ ] Ghost trail afterglow
 - [ ] Bloom/glow post-processing on cells
 
-### Phase 2 — Patterns & UI
+### Phase 3 — Patterns & UI
 - [ ] All 9 patterns load correctly
 - [ ] Pattern selector UI with descriptions
 - [ ] Play/pause/step/speed controls
 - [ ] Draw mode works (mouse + touch)
 - [ ] Zoom/pan navigation
 
-### Phase 3 — Audio
+### Phase 4 — Audio
 - [ ] Ambient drone tied to cell density
 - [ ] Birth/death audio events (threshold-gated)
 - [ ] Audio toggle
+- [ ] Stable/oscillator pattern detected = subtle rhythmic pulse
 
-### Phase 4 — Polish & Deploy
+### Phase 5 — Polish & Deploy
 - [ ] PWA installable
 - [ ] Fullscreen mode
 - [ ] Video capture (MediaRecorder)

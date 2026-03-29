@@ -16,11 +16,7 @@
 - Deepened Phase 5 (Polish & Deploy) — 6 agents: preserveDrawingBuffer, VideoCapture signature fix, audio branch point fix, captureStream(30), codec priority, bitrate 3Mbps, vercel.json PWA headers
 
 ## Next Steps (Priority Order)
-1. **Fix SPEC.md phase numbering contradiction** — Phase 0=Scaffolding, not Engine
-2. **Execute Phase 0** (Scaffolding) — ALL plans are deepened and tight. Time to build.
-
-## Pre-Flight Before Phase 0
-- Fix SPEC.md phase numbering (Phase 0=Scaffolding, not Engine) — contradiction flagged by 2 agents
+1. **Execute Phase 0** (Scaffolding) — ALL plans deepened, SPEC numbering fixed. Time to build.
 
 ## Cross-Phase Amendments (accumulated across ALL deepening sessions)
 - **Phase 0:** vercel.json +3 PWA header blocks (sw.js, html, manifest), CSP meta tag in index.html, hardened Permissions-Policy

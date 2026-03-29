@@ -12,14 +12,13 @@
 - Deepened Phase 2 (Renderer) — fixed age texture format contradiction, corrected pipeline order (ghosts after composite), added UNPACK_ROW_LENGTH for zero-copy padded buffer uploads, quarter-res bloom
 
 ## Next Steps (Priority Order)
-1. **Execute Phase 0** — scaffold project (pnpm dev running with WebGL2 dark canvas)
-2. **Execute Phase 1** — engine (padded grid, rules, game loop, tests)
-3. **Execute Phase 2** — renderer (WebGL2 pipeline, bloom, particles)
-4. **Deepen Phase 3** (Patterns & UI) — not yet researched
-5. **Deepen Phase 4** (Audio) — not yet researched
-6. **Deepen Phase 5** (Polish & Deploy) — not yet researched
+1. **Deepen Phase 3** (Patterns & UI) — not yet researched
+2. **Deepen Phase 4** (Audio) — not yet researched
+3. **Deepen Phase 5** (Polish & Deploy) — not yet researched
+4. Fix SPEC.md phase numbering contradiction
+5. **THEN execute Phase 0** — no code until ALL plans are deepened and tight
 
-## Pre-Flight Before Phase 0
+## Pre-Flight Before Phase 0 (after ALL plans deepened)
 - Fix SPEC.md phase numbering (Phase 0=Scaffolding, not Engine) — contradiction flagged by 2 agents
 
 ## Landmines

@@ -197,11 +197,11 @@ MediaRecorder API captures the live WebGL canvas directly — no frame-by-frame 
 - [x] Bloom/glow post-processing on cells
 
 ### Phase 3 — Patterns & UI
-- [ ] All 9 patterns load correctly
-- [ ] Pattern selector UI with descriptions
-- [ ] Play/pause/step/speed controls
-- [ ] Draw mode works (mouse + touch)
-- [ ] Zoom/pan navigation
+- [x] All 9 patterns load correctly
+- [x] Pattern selector UI with descriptions
+- [x] Play/pause/step/speed controls
+- [x] Draw mode works (mouse + touch)
+- [x] Zoom/pan navigation
 
 ### Phase 4 — Audio
 - [ ] Ambient drone tied to cell density

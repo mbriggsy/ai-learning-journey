@@ -2,7 +2,7 @@ import type { TimerProvider } from './engine/types.js'
 import { GameLoop, Simulation } from './engine/index.js'
 import { Camera } from './Camera.js'
 import { Renderer } from './renderer/Renderer.js'
-import { DEFAULT_RANDOM_DENSITY } from './constants.js'
+import { UIManager } from './ui/UIManager.js'
 
 const canvas = document.getElementById('game-canvas') as HTMLCanvasElement | null
 const errorEl = document.getElementById('webgl-error') as HTMLElement | null
@@ -13,8 +13,9 @@ if (!canvas) {
 
 // --- Camera ---
 const camera = new Camera()
+camera.setZoom(4)
 
-// --- Renderer (creates its own WebGL2 context) ---
+// --- Renderer ---
 let renderer: Renderer
 try {
   renderer = new Renderer(canvas, camera)
@@ -25,7 +26,6 @@ try {
 
 // --- Canvas sizing ---
 const dpr = 1
-
 const observer = new ResizeObserver((entries) => {
   const entry = entries[0]
   if (entry) {
@@ -39,12 +39,6 @@ observer.observe(canvas)
 
 // --- Engine ---
 const simulation = new Simulation(200, 200, 'wrap')
-simulation.randomize(DEFAULT_RANDOM_DENSITY)
-
-// Center camera on grid
-camera.panX = 0
-camera.panY = 0
-camera.setZoom(4)
 
 const browserTimer: TimerProvider = {
   requestFrame: (cb) => requestAnimationFrame(cb),
@@ -53,13 +47,10 @@ const browserTimer: TimerProvider = {
 
 const loop = new GameLoop(browserTimer, simulation)
 
-loop.onTick((tickData, stats) => {
-  // Render every frame regardless of simulation steps
-  const buffers = simulation.getBuffers()
-  const state = simulation.getState()
-  renderer.render(buffers, state, tickData.deltaTime)
-})
+// --- UI (creates all controls, wires everything, owns render loop) ---
+const ui = new UIManager(loop, simulation, camera, renderer, canvas, document.body)
 
+// Start the loop (UI's tick handler drives rendering)
 loop.play()
 
-console.log(`[Conway] Renderer initialized — ${simulation.width}x${simulation.height}, zoom: ${camera.zoom}`)
+console.log(`[Conway] Ready — ${simulation.width}x${simulation.height}`)

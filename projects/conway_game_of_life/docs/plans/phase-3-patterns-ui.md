@@ -1,5 +1,5 @@
 ---
-status: pending
+status: completed
 phase: 3
 title: Patterns & UI
 description: Pattern library with verified coordinates, unified PointerEvents input, controls, draw mode, pan/zoom, cinematic title cards
@@ -50,11 +50,11 @@ All 9 famous patterns loadable with cinematic title cards and verified coordinat
 
 ## Spec Acceptance Criteria
 
-- [ ] All 9 patterns load correctly
-- [ ] Pattern selector UI with descriptions
-- [ ] Play/pause/step/speed controls
-- [ ] Draw mode works (mouse + touch)
-- [ ] Zoom/pan navigation
+- [x] All 9 patterns load correctly
+- [x] Pattern selector UI with descriptions
+- [x] Play/pause/step/speed controls
+- [x] Draw mode works (mouse + touch)
+- [x] Zoom/pan navigation
 
 ## Pre-Phase 3: Cross-Phase Amendments
 
@@ -62,16 +62,16 @@ These changes to OTHER phase plans are required before Phase 3 execution:
 
 ### Phase 1 Amendments
 
-- [ ] Rename `PatternDefinition` → `PatternCells` in `src/types/simulation.ts` (engine's minimal contract: `{ readonly width, readonly height, readonly cells }`)
-- [ ] Add `setCell(x: number, y: number, alive: boolean): void` to Simulation (delegates to `grid.set()`)
-- [ ] Add `toggleCell(x: number, y: number): void` to Simulation (delegates to `grid.toggle()`)
-- [ ] Add `type SimulationSpeed = 1 | 5 | 20 | 'max'` to `src/types/simulation.ts`
-- [ ] Update `Simulation.loadPattern()` to accept `PatternCells` (the renamed type)
+- [x] Rename `PatternDefinition` → `PatternCells` in `src/types/simulation.ts` (engine's minimal contract: `{ readonly width, readonly height, readonly cells }`)
+- [x] Add `setCell(x: number, y: number, alive: boolean): void` to Simulation (delegates to `grid.set()`)
+- [x] Add `toggleCell(x: number, y: number): void` to Simulation (delegates to `grid.toggle()`)
+- [x] Add `type SimulationSpeed = 1 | 5 | 20 | 'max'` to `src/types/simulation.ts`
+- [x] Update `Simulation.loadPattern()` to accept `PatternCells` (the renamed type)
 
 ### Phase 2 Amendments
 
-- [ ] Add zoom min/max clamp to `Camera.zoom()` — range `[0.05, 200]`
-- [ ] Add bounds guards to `Grid.set()` and `Grid.toggle()`: `if (x < 0 || x >= this.width || y < 0 || y >= this.height) return`
+- [x] Add zoom min/max clamp to `Camera.zoom()` — range `[0.05, 200]`
+- [x] Add bounds guards to `Grid.set()` and `Grid.toggle()`: `if (x < 0 || x >= this.width || y < 0 || y >= this.height) return`
 
 ---
 
@@ -79,8 +79,8 @@ These changes to OTHER phase plans are required before Phase 3 execution:
 
 ### 3.1 — Pattern types
 
-- [ ] Create `src/patterns/types.ts`
-- [ ] `PatternDefinition` interface:
+- [x] Create `src/patterns/types.ts`
+- [x] `PatternDefinition` interface:
   - `readonly id: string`
   - `readonly cinematicName: string` (e.g., "The Wanderer")
   - `readonly conwayName: string` (e.g., "Glider")
@@ -88,7 +88,7 @@ These changes to OTHER phase plans are required before Phase 3 execution:
   - `readonly cells: ReadonlyArray<readonly [number, number]>` (relative [x, y] coords)
   - `readonly width: number` (bounding box width — flat, not nested object)
   - `readonly height: number` (bounding box height)
-- [ ] Flat `width`/`height` fields (NOT `boundingBox: { width, height }`) — matches Phase 1's `PatternCells` contract structurally via TypeScript structural typing. No adapter, no cast, no `Pick`.
+- [x] Flat `width`/`height` fields (NOT `boundingBox: { width, height }`) — matches Phase 1's `PatternCells` contract structurally via TypeScript structural typing. No adapter, no cast, no `Pick`.
 
 #### Research Insights
 
@@ -98,10 +98,10 @@ These changes to OTHER phase plans are required before Phase 3 execution:
 
 ### 3.2 — Pattern library (ALL patterns in one file)
 
-- [ ] Create `src/patterns/library.ts`
-- [ ] All 9 patterns as named `const` exports using `as const satisfies PatternDefinition`
-- [ ] Export `PATTERNS: readonly PatternDefinition[]` array of all patterns
-- [ ] Coordinates verified against LifeWiki and conwaylife.appspot.com RLE encodings
+- [x] Create `src/patterns/library.ts`
+- [x] All 9 patterns as named `const` exports using `as const satisfies PatternDefinition`
+- [x] Export `PATTERNS: readonly PatternDefinition[]` array of all patterns
+- [x] Coordinates verified against LifeWiki and conwaylife.appspot.com RLE encodings
 
 #### Verified Pattern Coordinates
 
@@ -239,8 +239,8 @@ Compile-time immutability + shape validation + literal type preservation.
 
 ### 3.3 — Pattern barrel export + tests
 
-- [ ] Create `src/patterns/index.ts` — re-exports `PatternDefinition`, individual patterns, `PATTERNS` array
-- [ ] Create `tests/unit/patterns.test.ts`:
+- [x] Create `src/patterns/index.ts` — re-exports `PatternDefinition`, individual patterns, `PATTERNS` array
+- [x] Create `tests/unit/patterns.test.ts`:
   - All patterns have valid (non-negative) bounding box dimensions
   - All non-empty patterns have `cells.length > 0`
   - The Void has `cells.length === 0`
@@ -254,16 +254,16 @@ Compile-time immutability + shape validation + literal type preservation.
 
 ### 3.4 — UI types + styles system
 
-- [ ] Create `src/types/common.ts`:
+- [x] Create `src/types/common.ts`:
   - `Disposable` interface: `{ dispose(): void }` (moved from renderer — shared between renderer + UI)
   - `UIComponent` interface: `{ mount(parent: HTMLElement): void; dispose(): void }`
-- [ ] Update `src/renderer/types.ts` to import `Disposable` from `src/types/common.ts`
-- [ ] Create `src/ui/types.ts`:
+- [x] Update `src/renderer/types.ts` to import `Disposable` from `src/types/common.ts`
+- [x] Create `src/ui/types.ts`:
   - `type BrushSize = 1 | 3 | 5 | 9`
   - `type InputMode = 'draw' | 'navigate'`
   - `ViewToggleState`: `{ readonly gridLines: boolean; readonly ghostTrails: boolean; readonly audio: boolean }`
   - Note: fullscreen is NOT persisted (session-level, browser rejects requestFullscreen on load without gesture)
-- [ ] Create `src/ui/styles.ts`:
+- [x] Create `src/ui/styles.ts`:
   - All styling via JS (`element.style.*`), no external CSS files
   - Color constants from spec: void black `#050508`, electric blue `#4FC3F7`, amber/gold `#FFB300`, purple `#CE93D8`
   - Font: system sans-serif stack
@@ -283,27 +283,27 @@ Compile-time immutability + shape validation + literal type preservation.
 
 ### 3.5 — Controls bar (includes view toggles)
 
-- [ ] Create `src/ui/ControlsBar.ts`
-- [ ] Implements `UIComponent`
-- [ ] Bottom bar (all screen sizes — single layout)
-- [ ] Buttons: Play/Pause, Step, Reset (reload current pattern), Clear
-- [ ] Speed buttons: 1x / 5x / 20x / Max (uses `SimulationSpeed` type)
-- [ ] Stats display: generation counter, population counter, FPS
+- [x] Create `src/ui/ControlsBar.ts`
+- [x] Implements `UIComponent`
+- [x] Bottom bar (all screen sizes — single layout)
+- [x] Buttons: Play/Pause, Step, Reset (reload current pattern), Clear
+- [x] Speed buttons: 1x / 5x / 20x / Max (uses `SimulationSpeed` type)
+- [x] Stats display: generation counter, population counter, FPS
   - **Throttled to 4Hz** (every ~15 frames at 60fps) via frame counter modulo
   - FPS value from GameLoop's smoothed `TickData.fps`
   - Set via `element.textContent` (never innerHTML)
-- [ ] View toggle buttons (merged from ViewToggles):
+- [x] View toggle buttons (merged from ViewToggles):
   - Grid lines on/off
   - Ghost trails on/off
   - Audio on/off (wired in Phase 4)
   - Fullscreen (wired in Phase 5)
-- [ ] **localStorage persistence** for toggle states:
+- [x] **localStorage persistence** for toggle states:
   - Key: `conway_viewToggles_v1`
   - Single JSON object: `{ gridLines: true, ghostTrails: true, audio: true }`
   - Read: `try/catch`, parse with strict `=== true` checks (not truthiness), return defaults on any failure
   - Write: `try/catch`, silently fail (quota exceeded, private browsing)
   - ~10 lines total
-- [ ] Typed callback registration (matches GameLoop.onTick convention):
+- [x] Typed callback registration (matches GameLoop.onTick convention):
   - `onPlay(cb: () => void): () => void`
   - `onPause(cb: () => void): () => void`
   - `onStep(cb: () => void): () => void`
@@ -314,9 +314,9 @@ Compile-time immutability + shape validation + literal type preservation.
   - `onToggleGhosts(cb: (enabled: boolean) => void): () => void`
   - `onToggleAudio(cb: (enabled: boolean) => void): () => void`
   - `onToggleFullscreen(cb: () => void): () => void`
-- [ ] Active state styling on Play button when running
-- [ ] `update(state: { generation: number; population: number; fps: number; isPlaying: boolean; speed: SimulationSpeed })` — called from UIManager's tick handler
-- [ ] AbortController for all event listener cleanup
+- [x] Active state styling on Play button when running
+- [x] `update(state: { generation: number; population: number; fps: number; isPlaying: boolean; speed: SimulationSpeed })` — called from UIManager's tick handler
+- [x] AbortController for all event listener cleanup
 
 #### Research Insights
 
@@ -343,33 +343,33 @@ try {
 
 ### 3.6 — Pattern selector
 
-- [ ] Create `src/ui/PatternSelector.ts`
-- [ ] Implements `UIComponent`
-- [ ] **Single overlay layout** (works on all screen sizes — no dual desktop/mobile panels)
-- [ ] Triggered by "Patterns" button in controls bar
-- [ ] Fullscreen semi-transparent overlay with `pointer-events: auto` (blocks canvas input when open)
-- [ ] Lists all 9 patterns: cinematic name (bold), Conway name (subtitle), description
-- [ ] Hover/active states with accent color glow
-- [ ] On select: closes overlay, emits callback with `PatternDefinition`
-- [ ] Open/close via button in controls bar + Escape key to close
-- [ ] `onPatternSelected(cb: (pattern: PatternDefinition) => void): () => void`
-- [ ] AbortController for cleanup
+- [x] Create `src/ui/PatternSelector.ts`
+- [x] Implements `UIComponent`
+- [x] **Single overlay layout** (works on all screen sizes — no dual desktop/mobile panels)
+- [x] Triggered by "Patterns" button in controls bar
+- [x] Fullscreen semi-transparent overlay with `pointer-events: auto` (blocks canvas input when open)
+- [x] Lists all 9 patterns: cinematic name (bold), Conway name (subtitle), description
+- [x] Hover/active states with accent color glow
+- [x] On select: closes overlay, emits callback with `PatternDefinition`
+- [x] Open/close via button in controls bar + Escape key to close
+- [x] `onPatternSelected(cb: (pattern: PatternDefinition) => void): () => void`
+- [x] AbortController for cleanup
 
 ### 3.7 — Title card overlay
 
-- [ ] Create `src/ui/TitleCard.ts`
-- [ ] Implements `UIComponent`
-- [ ] Fullscreen semi-transparent overlay with `pointer-events: auto` (blocks canvas input while visible)
-- [ ] Cinematic name: large, centered, glowing accent color
-- [ ] Conway name: smaller subtitle
-- [ ] Description: one-line below
-- [ ] **Animation via Web Animations API** (`element.animate()`):
+- [x] Create `src/ui/TitleCard.ts`
+- [x] Implements `UIComponent`
+- [x] Fullscreen semi-transparent overlay with `pointer-events: auto` (blocks canvas input while visible)
+- [x] Cinematic name: large, centered, glowing accent color
+- [x] Conway name: smaller subtitle
+- [x] Description: one-line below
+- [x] **Animation via Web Animations API** (`element.animate()`):
   - Fade in 300ms → hold 1.5s → fade out 300ms
   - Total: 2.1s (down from 3s — tighter, less annoying)
   - GPU-composited properties only (`opacity`, `transform`)
-- [ ] **Click/tap anywhere to dismiss early** — immediately triggers fade out + resolves promise
-- [ ] `show(pattern: PatternDefinition): Promise<void>` — resolves when animation completes or dismissed
-- [ ] AbortController for cleanup
+- [x] **Click/tap anywhere to dismiss early** — immediately triggers fade out + resolves promise
+- [x] `show(pattern: PatternDefinition): Promise<void>` — resolves when animation completes or dismissed
+- [x] AbortController for cleanup
 
 #### Research Insights
 
@@ -380,28 +380,28 @@ CSS transitions via inline JS require a reflow hack to work (`element.offsetHeig
 
 ### 3.8 — Draw mode controller
 
-- [ ] Create `src/ui/DrawMode.ts`
-- [ ] **Pure strategy — receives semantic calls from InputHandler, never touches raw DOM events**
-- [ ] Brush size state: `BrushSize` (1, 3, 5, 9) — default 1
-- [ ] Brush size selector: 4 buttons in a UI panel
-- [ ] `beginStroke(gridX: number, gridY: number, erase: boolean)` — first cell of a drag
-- [ ] `continueStroke(gridX: number, gridY: number)` — called on each pointermove
-- [ ] `endStroke()` — cleanup
-- [ ] **Bresenham line interpolation** between consecutive grid positions (mandatory):
+- [x] Create `src/ui/DrawMode.ts`
+- [x] **Pure strategy — receives semantic calls from InputHandler, never touches raw DOM events**
+- [x] Brush size state: `BrushSize` (1, 3, 5, 9) — default 1
+- [x] Brush size selector: 4 buttons in a UI panel
+- [x] `beginStroke(gridX: number, gridY: number, erase: boolean)` — first cell of a drag
+- [x] `continueStroke(gridX: number, gridY: number)` — called on each pointermove
+- [x] `endStroke()` — cleanup
+- [x] **Bresenham line interpolation** between consecutive grid positions (mandatory):
   - Track `lastGridX, lastGridY`
   - On each continueStroke, interpolate from last to current
   - Apply brush at each interpolated point
   - Cost: negligible (<0.05ms even for brush size 9 spanning 20 cells)
-- [ ] Brush application: for radius R, set all cells within R of center via `Simulation.setCell()`
+- [x] Brush application: for radius R, set all cells within R of center via `Simulation.setCell()`
   - Erase mode: `Simulation.setCell(x, y, false)`
   - Paint mode: `Simulation.setCell(x, y, true)`
-- [ ] **CSS-based brush cursor** (NOT WebGL):
+- [x] **CSS-based brush cursor** (NOT WebGL):
   - `<div>` with `border-radius: 50%`, `pointer-events: none`
   - Positioned via `transform: translate3d(x, y, 0)` (forces GPU compositing)
   - Scales with brush size and zoom level
   - Hidden on pointerleave, shown on pointerenter
-- [ ] `onBrushSizeChange(cb: (size: BrushSize) => void): () => void`
-- [ ] `getCoalescedEvents()` support: when available, iterate all coalesced points for denser input. Fall back to single-point + Bresenham.
+- [x] `onBrushSizeChange(cb: (size: BrushSize) => void): () => void`
+- [x] `getCoalescedEvents()` support: when available, iterate all coalesced points for denser input. Fall back to single-point + Bresenham.
 
 #### Research Insights
 
@@ -411,16 +411,16 @@ CSS transitions via inline JS require a reflow hack to work (`element.offsetHeig
 
 ### 3.9 — Input handler (unified PointerEvents)
 
-- [ ] Create `src/ui/InputHandler.ts`
-- [ ] **Sole owner of ALL canvas event listeners** — DrawMode exposes methods, does NOT attach its own listeners
-- [ ] **Unified PointerEvents API** — NO separate mouse/touch handler sections:
+- [x] Create `src/ui/InputHandler.ts`
+- [x] **Sole owner of ALL canvas event listeners** — DrawMode exposes methods, does NOT attach its own listeners
+- [x] **Unified PointerEvents API** — NO separate mouse/touch handler sections:
   - `pointerdown` / `pointermove` / `pointerup` / `pointercancel`
   - Each event carries `pointerId`, `pointerType` ("mouse"/"touch"/"pen"), and all MouseEvent properties
-- [ ] **Pointer cache** for multi-touch: `Map<number, PointerEvent>`
+- [x] **Pointer cache** for multi-touch: `Map<number, PointerEvent>`
   - `pointerdown` → add to cache
   - `pointermove` → update cache entry
   - `pointerup` / `pointercancel` → remove from cache
-- [ ] **Input routing by pointer count + button:**
+- [x] **Input routing by pointer count + button:**
 
   | Condition | Action |
   |-----------|--------|
@@ -431,24 +431,24 @@ CSS transitions via inline JS require a reflow hack to work (`element.offsetHeig
   | 2 pointers | Pinch-zoom + two-finger pan (always, regardless of mode) |
   | Shift + left button | Erase (delegates to DrawMode with erase=true) |
 
-- [ ] **Mode state:** `mode: InputMode` ('draw' | 'navigate')
+- [x] **Mode state:** `mode: InputMode` ('draw' | 'navigate')
   - Desktop: auto-detected from mouse button (left=draw, middle=pan)
   - Mobile: explicit mode, defaults to 'draw'. Phase 5 adds visible toggle button.
   - 2 fingers always = pan/zoom regardless of mode
-- [ ] **setPointerCapture** on `pointerdown` for single-pointer drags (draw + pan)
+- [x] **setPointerCapture** on `pointerdown` for single-pointer drags (draw + pan)
   - Prevents drag breaking when pointer leaves canvas
   - Release in `pointerup` / `pointercancel`
   - Do NOT capture during multi-touch (pinch) — interferes with 2-pointer tracking
-- [ ] **Pinch-zoom detection:**
+- [x] **Pinch-zoom detection:**
   - Distance between 2 pointers: `Math.hypot(p0.clientX - p1.clientX, p0.clientY - p1.clientY)`
   - Zoom factor = `currentDistance / previousDistance` → `Camera.zoom(factor, midX, midY)`
   - Midpoint delta = pan offset → `Camera.pan(dx, dy)`
   - Reset prevDistance when pointers drop below 2
-- [ ] **Wheel event** (`{ passive: false }`):
+- [x] **Wheel event** (`{ passive: false }`):
   - `event.preventDefault()` to block page scroll
   - Zoom via `Camera.zoom(factor, event.clientX, event.clientY)`
   - Trackpad pinch fires `WheelEvent` with `ctrlKey: true` — same codepath
-- [ ] **Keyboard shortcuts:**
+- [x] **Keyboard shortcuts:**
   - Guard ALL single-key shortcuts with `!event.ctrlKey && !event.metaKey && !event.altKey`
   - Check `event.target` — do NOT intercept when focus is on `<button>`, `<input>`, `<select>`
   - Space = play/pause
@@ -459,12 +459,12 @@ CSS transitions via inline JS require a reflow hack to work (`element.offsetHeig
   - F = fullscreen (placeholder for Phase 5)
   - M = mute audio (placeholder for Phase 4)
   - Escape = close pattern selector if open
-- [ ] **Event listener registration:**
+- [x] **Event listener registration:**
   - All pointer listeners: default passive (touch-action CSS handles gesture prevention)
   - Wheel listener: `{ passive: false }` (must call preventDefault)
   - Context menu: `canvas.addEventListener('contextmenu', e => e.preventDefault())` (suppress right-click menu)
   - All listeners registered with `{ signal: abortController.signal }` for cleanup
-- [ ] AbortController for all listener cleanup via `dispose()`
+- [x] AbortController for all listener cleanup via `dispose()`
 
 #### Research Insights
 
@@ -484,10 +484,10 @@ With `touch-action: none` on the canvas, the compositor knows upfront not to scr
 
 ### 3.10 — UI manager (factory + wiring only)
 
-- [ ] Create `src/ui/UIManager.ts`
-- [ ] Implements `Disposable`
-- [ ] **Factory:** creates ControlsBar, PatternSelector, TitleCard, DrawMode, InputHandler
-- [ ] **Wiring:** connects callbacks between components and engine:
+- [x] Create `src/ui/UIManager.ts`
+- [x] Implements `Disposable`
+- [x] **Factory:** creates ControlsBar, PatternSelector, TitleCard, DrawMode, InputHandler
+- [x] **Wiring:** connects callbacks between components and engine:
   - `controlsBar.onPlay()` → `gameLoop.play()`
   - `controlsBar.onPause()` → `gameLoop.pause()`
   - `controlsBar.onStep()` → `gameLoop.step()`
@@ -498,12 +498,12 @@ With `touch-action: none` on the canvas, the compositor knows upfront not to scr
   - `controlsBar.onToggleGhosts()` → `renderer.setGhostsVisible()`
   - `patternSelector.onPatternSelected()` → pattern load sequence (see 3.11)
   - `inputHandler` routes to `drawMode` / `camera`
-- [ ] **Tick handler:** wired to `gameLoop.onTick()`:
+- [x] **Tick handler:** wired to `gameLoop.onTick()`:
   - Reads `gameLoop.isPlaying()`, current speed, `simulation.getState()`
   - Calls `controlsBar.update(...)` — ControlsBar handles its own throttle
-- [ ] **Auto-pause during drawing:** when InputHandler signals draw-start → save current speed, set 1x. On draw-end → restore previous speed.
-- [ ] **Does NOT manage:** z-index (set once at element creation), show/hide states (owned by individual components)
-- [ ] `dispose()` → calls dispose() on all child components
+- [x] **Auto-pause during drawing:** when InputHandler signals draw-start → save current speed, set 1x. On draw-end → restore previous speed.
+- [x] **Does NOT manage:** z-index (set once at element creation), show/hide states (owned by individual components)
+- [x] `dispose()` → calls dispose() on all child components
 
 #### Research Insights
 
@@ -511,11 +511,11 @@ With `touch-action: none` on the canvas, the compositor knows upfront not to scr
 
 ### 3.11 — Integration: wire UI to app
 
-- [ ] Update `src/main.ts`:
+- [x] Update `src/main.ts`:
   - Create UIManager after Renderer and Simulation
   - Pass dependencies: `new UIManager(gameLoop, simulation, camera, renderer, document.body)`
-- [ ] Create `src/ui/index.ts` barrel export: `UIManager`
-- [ ] **Pattern load sequence** (async via TitleCard promise):
+- [x] Create `src/ui/index.ts` barrel export: `UIManager`
+- [x] **Pattern load sequence** (async via TitleCard promise):
   ```
   1. simulation.reset()                    // clear grid
   2. simulation.loadPattern(pattern)        // stamp cells centered
@@ -523,31 +523,31 @@ With `touch-action: none` on the canvas, the compositor knows upfront not to scr
   4. await titleCard.show(pattern)          // cinematic reveal (click-to-dismiss)
   5. gameLoop.play()                        // auto-play after card fades
   ```
-- [ ] Load default pattern on startup: "The Void" (blank canvas, no title card, no auto-play)
-- [ ] **Overlay z-index layering** (set once, never managed):
+- [x] Load default pattern on startup: "The Void" (blank canvas, no title card, no auto-play)
+- [x] **Overlay z-index layering** (set once, never managed):
   - Canvas: default stacking (z-index 0)
   - UI container: `position: fixed`, `pointer-events: none`, z-index 10
   - Interactive children (buttons, panels): `pointer-events: auto`
   - Pattern selector overlay: z-index 20
   - Title card overlay: z-index 30
-- [ ] **Fullscreen:** `document.documentElement.requestFullscreen()` (NOT `canvas.requestFullscreen()` — must include UI overlays). Check `document.fullscreenEnabled` before showing button. Safari fallback: `webkitRequestFullscreen`. Hide button on iPhone (Fullscreen API only works on iPad).
-- [ ] Verify all controls work end-to-end
-- [ ] Verify mobile touch: 1-finger draw, 2-finger pan/zoom
+- [x] **Fullscreen:** `document.documentElement.requestFullscreen()` (NOT `canvas.requestFullscreen()` — must include UI overlays). Check `document.fullscreenEnabled` before showing button. Safari fallback: `webkitRequestFullscreen`. Hide button on iPhone (Fullscreen API only works on iPad).
+- [x] Verify all controls work end-to-end
+- [x] Verify mobile touch: 1-finger draw, 2-finger pan/zoom
 
 ### 3.12 — Tests
 
-- [ ] Create `tests/unit/ui/DrawMode.test.ts`:
+- [x] Create `tests/unit/ui/DrawMode.test.ts`:
   - Bresenham interpolation: two distant points produce continuous line of cells
   - Brush size 1: exactly 1 cell toggled per point
   - Brush size 3: cells within radius 3 of center affected
   - Erase mode: cells set to false
   - getCoalescedEvents fallback: single point + Bresenham when coalesced unavailable
-- [ ] Create `tests/unit/ui/ControlsBar.test.ts`:
+- [x] Create `tests/unit/ui/ControlsBar.test.ts`:
   - Stats throttle: update() called 60 times, textContent changes only ~4 times
   - localStorage round-trip: save toggles, read back, verify values
   - localStorage failure: returns defaults on corrupted data
   - localStorage strict parsing: string "false" → boolean false (not truthy)
-- [ ] Note: InputHandler and UIManager require DOM + pointer events — test via Playwright integration tests (future, not Phase 3)
+- [x] Note: InputHandler and UIManager require DOM + pointer events — test via Playwright integration tests (future, not Phase 3)
 
 ## Commits
 

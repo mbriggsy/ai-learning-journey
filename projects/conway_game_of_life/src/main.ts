@@ -20,9 +20,10 @@ camera.setZoom(4)
 let renderer: Renderer
 try {
   renderer = new Renderer(canvas, camera)
-} catch {
+} catch (e) {
+  console.error('[Conway] Renderer init failed:', e)
   if (errorEl) errorEl.style.display = 'flex'
-  throw new Error('WebGL2 not available')
+  throw e
 }
 
 // --- Canvas sizing ---

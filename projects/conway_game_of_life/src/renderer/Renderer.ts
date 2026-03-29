@@ -74,7 +74,7 @@ export class Renderer implements Disposable {
     this.particlePool.update(dt / 1000)
 
     // 1. CellPass → RGBA16F FBO (blending OFF)
-    this.cellPass.render(buffers, this.time, viewMatrix)
+    this.cellPass.render(buffers, this.time)
 
     // 2. Bloom blur (horizontal + vertical) → quarter-res FBOs
     this.bloomPass.blur(this.cellPass.fboTexture!)
@@ -88,17 +88,16 @@ export class Renderer implements Disposable {
       cellSize,
       buffers.width,
       buffers.height,
-      viewMatrix,
     )
 
     // 6. Ghost trails (alpha blend onto screen)
     if (this.showGhosts) {
-      this.ghostPass.render(buffers, viewMatrix, this.canvasWidth, this.canvasHeight)
+      this.ghostPass.render(buffers, this.canvasWidth, this.canvasHeight)
     }
 
     // 7. Particles (alpha blend onto screen, last)
     gl.viewport(0, 0, this.canvasWidth, this.canvasHeight)
-    this.particlePass.render(this.particlePool, viewMatrix, this.canvasWidth, this.canvasHeight, this.camera.zoom)
+    this.particlePass.render(this.particlePool, viewMatrix, this.camera.zoom)
   }
 
   /** Compare current cells to previous frame — spawn particles on deaths */

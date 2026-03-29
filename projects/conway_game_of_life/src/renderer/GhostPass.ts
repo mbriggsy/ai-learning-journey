@@ -3,7 +3,7 @@ import type { Disposable, ShaderProgram } from './types.js'
 import { FULLSCREEN_QUAD_VERT, GLContext } from './GLContext.js'
 import { GHOST_DECAY_GENERATIONS, GHOST_MAX_OPACITY } from '../constants.js'
 
-type GhostUniforms = 'u_ghostTexture' | 'u_ageTexture' | 'u_gridSize' | 'u_viewMatrix'
+type GhostUniforms = 'u_ghostTexture' | 'u_ageTexture' | 'u_gridSize'
 
 const GHOST_FRAG = `#version 300 es
 precision highp float;
@@ -14,7 +14,6 @@ layout(location = 0) out vec4 fragColor;
 uniform sampler2D u_ghostTexture;
 uniform sampler2D u_ageTexture;
 uniform vec2 u_gridSize;
-uniform mat3 u_viewMatrix;
 
 const vec3 YOUNG_COLOR  = vec3(0.310, 0.765, 0.969);
 const vec3 MATURE_COLOR = vec3(1.000, 0.702, 0.000);
@@ -56,7 +55,7 @@ export class GhostPass implements Disposable {
   constructor(ctx: GLContext) {
     this.ctx = ctx
     this.shader = ctx.createProgram<GhostUniforms>(FULLSCREEN_QUAD_VERT, GHOST_FRAG, [
-      'u_ghostTexture', 'u_ageTexture', 'u_gridSize', 'u_viewMatrix',
+      'u_ghostTexture', 'u_ageTexture', 'u_gridSize',
     ])
   }
 
@@ -73,7 +72,7 @@ export class GhostPass implements Disposable {
     this.texHeight = height
   }
 
-  render(buffers: GridBuffers, viewMatrix: Float32Array, canvasWidth: number, canvasHeight: number): void {
+  render(buffers: GridBuffers, canvasWidth: number, canvasHeight: number): void {
     const { gl } = this.ctx
     const { width, height, stride } = buffers
 
@@ -107,7 +106,6 @@ export class GhostPass implements Disposable {
     gl.uniform1i(u.u_ghostTexture, 0)
     gl.uniform1i(u.u_ageTexture, 1)
     gl.uniform2f(u.u_gridSize, width, height)
-    gl.uniformMatrix3fv(u.u_viewMatrix, false, viewMatrix)
 
     this.ctx.bindFullscreenQuad()
     this.ctx.drawFullscreenQuad()

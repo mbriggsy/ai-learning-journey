@@ -34,7 +34,7 @@ void main() {
 
 // --- Composite shader (cell FBO + bloom + grid lines) ---
 
-type CompositeUniforms = 'u_cellTexture' | 'u_bloomTexture' | 'u_bloomIntensity' | 'u_showGrid' | 'u_cellSize' | 'u_gridSize' | 'u_viewMatrix'
+type CompositeUniforms = 'u_cellTexture' | 'u_bloomTexture' | 'u_bloomIntensity' | 'u_showGrid' | 'u_cellSize' | 'u_gridSize'
 
 const COMPOSITE_FRAG = `#version 300 es
 precision highp float;
@@ -48,8 +48,6 @@ uniform float u_bloomIntensity;
 uniform bool u_showGrid;
 uniform float u_cellSize;
 uniform vec2 u_gridSize;
-uniform mat3 u_viewMatrix;
-
 const vec3 BG_COLOR = vec3(0.02, 0.02, 0.03);
 const vec3 GRID_LINE_COLOR = vec3(0.051, 0.106, 0.165);
 
@@ -98,7 +96,7 @@ export class BloomPass implements Disposable {
       'u_texture', 'u_direction', 'u_resolution',
     ])
     this.compositeShader = ctx.createProgram<CompositeUniforms>(FULLSCREEN_QUAD_VERT, COMPOSITE_FRAG, [
-      'u_cellTexture', 'u_bloomTexture', 'u_bloomIntensity', 'u_showGrid', 'u_cellSize', 'u_gridSize', 'u_viewMatrix',
+      'u_cellTexture', 'u_bloomTexture', 'u_bloomIntensity', 'u_showGrid', 'u_cellSize', 'u_gridSize',
     ])
   }
 
@@ -174,7 +172,6 @@ export class BloomPass implements Disposable {
     cellSize: number,
     gridWidth: number,
     gridHeight: number,
-    viewMatrix: Float32Array,
   ): void {
     const { gl } = this.ctx
 
@@ -199,7 +196,6 @@ export class BloomPass implements Disposable {
     gl.uniform1i(u.u_showGrid, showGrid ? 1 : 0)
     gl.uniform1f(u.u_cellSize, cellSize)
     gl.uniform2f(u.u_gridSize, gridWidth, gridHeight)
-    gl.uniformMatrix3fv(u.u_viewMatrix, false, viewMatrix)
 
     this.ctx.bindFullscreenQuad()
     this.ctx.drawFullscreenQuad()

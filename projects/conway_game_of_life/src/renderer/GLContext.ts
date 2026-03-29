@@ -27,6 +27,9 @@ export class GLContext {
 
     this.gl = gl
 
+    // Required for rendering to RGBA16F framebuffers
+    gl.getExtension('EXT_color_buffer_float')
+
     // Critical for R8 texture uploads (single-byte alignment)
     gl.pixelStorei(gl.UNPACK_ALIGNMENT, 1)
   }

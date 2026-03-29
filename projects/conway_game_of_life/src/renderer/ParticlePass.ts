@@ -3,7 +3,7 @@ import type { GLContext } from './GLContext.js'
 import type { ParticlePool } from './ParticlePool.js'
 import { PARTICLE_STRIDE } from '../constants.js'
 
-type ParticleUniforms = 'u_viewMatrix' | 'u_canvasSize' | 'u_zoom'
+type ParticleUniforms = 'u_viewMatrix' | 'u_zoom'
 
 const PARTICLE_VERT = `#version 300 es
 layout(location = 0) in vec2 a_position;
@@ -12,7 +12,6 @@ layout(location = 2) in float a_life;
 layout(location = 3) in vec3 a_color;
 
 uniform mat3 u_viewMatrix;
-uniform vec2 u_canvasSize;
 uniform float u_zoom;
 
 out float v_life;
@@ -57,7 +56,7 @@ export class ParticlePass implements Disposable {
   constructor(ctx: GLContext) {
     this.ctx = ctx
     this.shader = ctx.createProgram<ParticleUniforms>(PARTICLE_VERT, PARTICLE_FRAG, [
-      'u_viewMatrix', 'u_canvasSize', 'u_zoom',
+      'u_viewMatrix', 'u_zoom',
     ])
 
     const { gl } = ctx
@@ -94,7 +93,7 @@ export class ParticlePass implements Disposable {
     gl.bindVertexArray(null)
   }
 
-  render(pool: ParticlePool, viewMatrix: Float32Array, canvasWidth: number, canvasHeight: number, zoom: number): void {
+  render(pool: ParticlePool, viewMatrix: Float32Array, zoom: number): void {
     if (pool.count === 0) return
 
     const { gl } = this.ctx
@@ -105,7 +104,6 @@ export class ParticlePass implements Disposable {
     gl.useProgram(this.shader.program)
     const u = this.shader.uniforms
     gl.uniformMatrix3fv(u.u_viewMatrix, false, viewMatrix)
-    gl.uniform2f(u.u_canvasSize, canvasWidth, canvasHeight)
     gl.uniform1f(u.u_zoom, zoom)
 
     gl.bindVertexArray(this.vao)

@@ -2,7 +2,7 @@ import type { GridBuffers } from '../types/simulation.js'
 import type { Disposable, ShaderProgram } from './types.js'
 import { FULLSCREEN_QUAD_VERT, GLContext } from './GLContext.js'
 
-type CellUniforms = 'u_cellTexture' | 'u_ageTexture' | 'u_time' | 'u_gridSize' | 'u_viewMatrix'
+type CellUniforms = 'u_cellTexture' | 'u_ageTexture' | 'u_time' | 'u_gridSize'
 
 const CELL_FRAG = `#version 300 es
 precision highp float;
@@ -14,7 +14,6 @@ uniform sampler2D u_cellTexture;
 uniform sampler2D u_ageTexture;
 uniform float u_time;
 uniform vec2 u_gridSize;
-uniform mat3 u_viewMatrix;
 
 const vec3 YOUNG_COLOR  = vec3(0.310, 0.765, 0.969);
 const vec3 MATURE_COLOR = vec3(1.000, 0.702, 0.000);
@@ -71,7 +70,7 @@ export class CellPass implements Disposable {
   constructor(ctx: GLContext) {
     this.ctx = ctx
     this.shader = ctx.createProgram<CellUniforms>(FULLSCREEN_QUAD_VERT, CELL_FRAG, [
-      'u_cellTexture', 'u_ageTexture', 'u_time', 'u_gridSize', 'u_viewMatrix',
+      'u_cellTexture', 'u_ageTexture', 'u_time', 'u_gridSize',
     ])
   }
 
@@ -111,7 +110,7 @@ export class CellPass implements Disposable {
   }
 
   /** Upload grid data and render cells to FBO */
-  render(buffers: GridBuffers, time: number, viewMatrix: Float32Array): void {
+  render(buffers: GridBuffers, time: number): void {
     const { gl } = this.ctx
     const { width, height, stride } = buffers
 
@@ -148,7 +147,6 @@ export class CellPass implements Disposable {
     gl.uniform1i(u.u_ageTexture, 1)
     gl.uniform1f(u.u_time, time)
     gl.uniform2f(u.u_gridSize, width, height)
-    gl.uniformMatrix3fv(u.u_viewMatrix, false, viewMatrix)
 
     this.ctx.bindFullscreenQuad()
     this.ctx.drawFullscreenQuad()

@@ -25,7 +25,7 @@ export class Renderer implements Disposable {
   private canvasWidth = 0
   private canvasHeight = 0
   private showGrid = false
-  private showGhosts = true
+  private showGhosts = false
   private time = 0
 
   // Previous cell state for death detection
@@ -58,6 +58,19 @@ export class Renderer implements Disposable {
     this.bloomPass.ensureFBOs(width, height)
   }
 
+  /** Compute the visible grid region from camera state */
+  private getViewParams(): { offset: [number, number]; size: [number, number] } {
+    const cam = this.camera
+    const viewW = this.canvasWidth / cam.zoom
+    const viewH = this.canvasHeight / cam.zoom
+    const offsetX = -cam.panX / cam.zoom
+    const offsetY = -cam.panY / cam.zoom
+    return {
+      offset: [offsetX, offsetY],
+      size: [viewW, viewH],
+    }
+  }
+
   render(buffers: GridBuffers, state: SimulationState, dt: number): void {
     this.time += dt / 1000
     const { gl } = this.ctx
@@ -66,15 +79,18 @@ export class Renderer implements Disposable {
 
     const viewMatrix = this.camera.getViewMatrix(this.canvasWidth, this.canvasHeight)
     const cellSize = this.camera.zoom
+    const { offset, size } = this.getViewParams()
 
     // Detect cell deaths for particle spawning
-    this.detectDeaths(buffers)
+    if (this.showGhosts) {
+      this.detectDeaths(buffers)
+    }
 
     // Update particles
     this.particlePool.update(dt / 1000)
 
     // 1. CellPass → RGBA16F FBO (blending OFF)
-    this.cellPass.render(buffers, this.time)
+    this.cellPass.render(buffers, this.time, offset, size)
 
     // 2. Bloom blur (horizontal + vertical) → quarter-res FBOs
     this.bloomPass.blur(this.cellPass.fboTexture!)
@@ -86,18 +102,16 @@ export class Renderer implements Disposable {
       this.canvasHeight,
       this.showGrid,
       cellSize,
-      buffers.width,
-      buffers.height,
+      offset,
+      size,
     )
 
-    // 6. Ghost trails (alpha blend onto screen)
+    // 6. Ghost trails + particles (both gated by ghost toggle)
     if (this.showGhosts) {
-      this.ghostPass.render(buffers, this.canvasWidth, this.canvasHeight)
+      this.ghostPass.render(buffers, this.canvasWidth, this.canvasHeight, offset, size)
+      gl.viewport(0, 0, this.canvasWidth, this.canvasHeight)
+      this.particlePass.render(this.particlePool, viewMatrix, this.camera.zoom)
     }
-
-    // 7. Particles (alpha blend onto screen, last)
-    gl.viewport(0, 0, this.canvasWidth, this.canvasHeight)
-    this.particlePass.render(this.particlePool, viewMatrix, this.camera.zoom)
   }
 
   /** Compare current cells to previous frame — spawn particles on deaths */
@@ -112,7 +126,6 @@ export class Renderer implements Disposable {
       return
     }
 
-    // Only check a sample of deaths per frame to avoid spawn storms
     let deathsThisFrame = 0
     const maxDeathParticles = 50
 
@@ -123,7 +136,6 @@ export class Renderer implements Disposable {
         const isAlive = cells[idx]
 
         if (wasAlive && !isAlive) {
-          // Cell died — spawn particles with age-based color
           const age = buffers.ages[idx]! / 255
           const color = this.ageToColor(age * 255)
           this.particlePool.spawn(x, y, color[0], color[1], color[2])

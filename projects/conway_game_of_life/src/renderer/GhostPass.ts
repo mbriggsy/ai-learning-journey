@@ -3,7 +3,7 @@ import type { Disposable, ShaderProgram } from './types.js'
 import { FULLSCREEN_QUAD_VERT, GLContext } from './GLContext.js'
 import { GHOST_DECAY_GENERATIONS, GHOST_MAX_OPACITY } from '../constants.js'
 
-type GhostUniforms = 'u_ghostTexture' | 'u_ageTexture' | 'u_gridSize'
+type GhostUniforms = 'u_ghostTexture' | 'u_ageTexture' | 'u_gridSize' | 'u_viewOffset' | 'u_viewSize'
 
 const GHOST_FRAG = `#version 300 es
 precision highp float;
@@ -14,6 +14,8 @@ layout(location = 0) out vec4 fragColor;
 uniform sampler2D u_ghostTexture;
 uniform sampler2D u_ageTexture;
 uniform vec2 u_gridSize;
+uniform vec2 u_viewOffset;
+uniform vec2 u_viewSize;
 
 const vec3 YOUNG_COLOR  = vec3(0.310, 0.765, 0.969);
 const vec3 MATURE_COLOR = vec3(1.000, 0.702, 0.000);
@@ -22,7 +24,11 @@ const float GHOST_MAX_OPACITY = ${GHOST_MAX_OPACITY.toFixed(2)};
 const float GHOST_DECAY = ${GHOST_DECAY_GENERATIONS.toFixed(1)};
 
 void main() {
-  vec2 gridPos = v_uv * u_gridSize;
+  vec2 gridPos = u_viewOffset + v_uv * u_viewSize;
+
+  if (gridPos.x < 0.0 || gridPos.x > u_gridSize.x ||
+      gridPos.y < 0.0 || gridPos.y > u_gridSize.y) discard;
+
   vec2 texCoord = (floor(gridPos) + 0.5) / u_gridSize;
 
   float ghostVal = texture(u_ghostTexture, texCoord).r * 255.0;
@@ -31,7 +37,6 @@ void main() {
   float age = texture(u_ageTexture, texCoord).r;
   float ageNorm = age * 255.0;
 
-  // Color inherits from last age before death
   vec3 color;
   if (ageNorm < 30.0) {
     color = mix(YOUNG_COLOR, MATURE_COLOR, ageNorm / 30.0);
@@ -55,7 +60,7 @@ export class GhostPass implements Disposable {
   constructor(ctx: GLContext) {
     this.ctx = ctx
     this.shader = ctx.createProgram<GhostUniforms>(FULLSCREEN_QUAD_VERT, GHOST_FRAG, [
-      'u_ghostTexture', 'u_ageTexture', 'u_gridSize',
+      'u_ghostTexture', 'u_ageTexture', 'u_gridSize', 'u_viewOffset', 'u_viewSize',
     ])
   }
 
@@ -72,13 +77,12 @@ export class GhostPass implements Disposable {
     this.texHeight = height
   }
 
-  render(buffers: GridBuffers, canvasWidth: number, canvasHeight: number): void {
+  render(buffers: GridBuffers, canvasWidth: number, canvasHeight: number, viewOffset: [number, number], viewSize: [number, number]): void {
     const { gl } = this.ctx
     const { width, height, stride } = buffers
 
     this.ensureTextures(width, height)
 
-    // Upload with padded striding
     gl.pixelStorei(gl.UNPACK_ROW_LENGTH, stride)
     gl.pixelStorei(gl.UNPACK_SKIP_ROWS, 1)
     gl.pixelStorei(gl.UNPACK_SKIP_PIXELS, 1)
@@ -95,7 +99,6 @@ export class GhostPass implements Disposable {
     gl.pixelStorei(gl.UNPACK_SKIP_ROWS, 0)
     gl.pixelStorei(gl.UNPACK_SKIP_PIXELS, 0)
 
-    // Alpha blend onto default framebuffer
     gl.bindFramebuffer(gl.FRAMEBUFFER, null)
     gl.viewport(0, 0, canvasWidth, canvasHeight)
     gl.enable(gl.BLEND)
@@ -106,6 +109,8 @@ export class GhostPass implements Disposable {
     gl.uniform1i(u.u_ghostTexture, 0)
     gl.uniform1i(u.u_ageTexture, 1)
     gl.uniform2f(u.u_gridSize, width, height)
+    gl.uniform2f(u.u_viewOffset, viewOffset[0], viewOffset[1])
+    gl.uniform2f(u.u_viewSize, viewSize[0], viewSize[1])
 
     this.ctx.bindFullscreenQuad()
     this.ctx.drawFullscreenQuad()

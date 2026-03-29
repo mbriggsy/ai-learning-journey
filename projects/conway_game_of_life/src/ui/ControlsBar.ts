@@ -5,7 +5,7 @@ import { applyButtonStyle, applyPanelStyle, setButtonActive, ELECTRIC_BLUE, FONT
 
 const SPEEDS: SimulationSpeed[] = [1, 5, 20, 'max']
 const TOGGLES_KEY = 'conway_viewToggles_v1'
-const DEFAULTS: ViewToggleState = { gridLines: false, ghostTrails: true, audio: true }
+const DEFAULTS: ViewToggleState = { gridLines: false, ghostTrails: false, audio: true }
 
 function loadToggles(): ViewToggleState {
   try {

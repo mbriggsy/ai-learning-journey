@@ -50,8 +50,9 @@ export function step(
         // Alive: increment age (saturate at AGE_MAX), newborn starts at 1
         age[idx] = old === 1 ? Math.min(age[idx]! + 1, AGE_MAX) : 1
       } else {
-        if (old === 1) {
-          // Just died: start ghost decay
+        if (old === 1 && age[idx]! >= 3) {
+          // Meaningful death (lived 3+ gens): start ghost decay
+          // Filters out oscillator flicker (age 1-2)
           ghost[idx] = GHOST_DECAY_GENERATIONS
         } else if (ghost[idx]! > 0) {
           // Already dead, ghost decaying

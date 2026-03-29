@@ -160,14 +160,26 @@ describe('Rules.step', () => {
   })
 
   describe('ghost tracking', () => {
-    it('newly dead cell gets GHOST_DECAY_GENERATIONS', () => {
+    it('dead cell with age >= 3 gets GHOST_DECAY_GENERATIONS', () => {
       const { front, back, age, ghost, stride } = makeBuffers(5, 5)
       setCell(front, 2, 2, stride)
+      age[(2 + 1) * stride + (2 + 1)] = 5 // lived long enough to qualify
       setCell(front, 1, 1, stride) // only 1 neighbor → dies
 
       step(front, back, age, ghost, 5, 5, stride)
 
       expect(ghost[(2 + 1) * stride + (2 + 1)]).toBe(GHOST_DECAY_GENERATIONS)
+    })
+
+    it('dead cell with age < 3 does NOT get ghost (oscillation filter)', () => {
+      const { front, back, age, ghost, stride } = makeBuffers(5, 5)
+      setCell(front, 2, 2, stride)
+      age[(2 + 1) * stride + (2 + 1)] = 1 // short-lived — oscillation
+      setCell(front, 1, 1, stride) // only 1 neighbor → dies
+
+      step(front, back, age, ghost, 5, 5, stride)
+
+      expect(ghost[(2 + 1) * stride + (2 + 1)]).toBe(0)
     })
 
     it('ghost decays each generation', () => {

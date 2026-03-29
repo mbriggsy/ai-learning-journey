@@ -1,5 +1,6 @@
 import type { TimerProvider } from './engine/types.js'
 import { GameLoop, Simulation } from './engine/index.js'
+import { gosperGliderGun } from './patterns/library.js'
 import { Camera } from './Camera.js'
 import { Renderer } from './renderer/Renderer.js'
 import { UIManager } from './ui/UIManager.js'
@@ -14,7 +15,6 @@ if (!canvas) {
 
 // --- Camera ---
 const camera = new Camera()
-camera.setZoom(4)
 
 // --- Renderer ---
 let renderer: Renderer
@@ -41,8 +41,15 @@ observer.observe(canvas)
 
 // --- Engine ---
 const isMobile = window.matchMedia('(max-width: 768px)').matches
-const gridSize = isMobile ? 500 : 1000
-const simulation = new Simulation(gridSize, gridSize, 'wrap')
+const gridSize = isMobile ? 200 : 200
+const simulation = new Simulation(gridSize, gridSize, 'fixed')
+simulation.loadPattern(gosperGliderGun)
+
+// Center camera on grid with zoom so ~60 cells fit the viewport width
+// This makes individual cells clearly visible on any monitor
+camera.setZoom(Math.max(window.innerWidth, 800) / 60)
+camera.panX = (window.innerWidth - gridSize * camera.zoom) / 2
+camera.panY = (window.innerHeight - gridSize * camera.zoom) / 2
 
 const browserTimer: TimerProvider = {
   requestFrame: (cb) => requestAnimationFrame(cb),
@@ -65,3 +72,13 @@ const ui = new UIManager(loop, simulation, camera, renderer, canvas, document.bo
 loop.play()
 
 console.log(`[Conway] Ready — ${simulation.width}x${simulation.height}`)
+
+// HMR cleanup — kill stale AudioContexts on hot reload
+if (import.meta.hot) {
+  import.meta.hot.dispose(() => {
+    audio.dispose()
+    loop.pause()
+    renderer.dispose()
+    ui.dispose()
+  })
+}

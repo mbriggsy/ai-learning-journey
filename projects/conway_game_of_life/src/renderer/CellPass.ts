@@ -2,7 +2,7 @@ import type { GridBuffers } from '../types/simulation.js'
 import type { Disposable, ShaderProgram } from './types.js'
 import { FULLSCREEN_QUAD_VERT, GLContext } from './GLContext.js'
 
-type CellUniforms = 'u_cellTexture' | 'u_ageTexture' | 'u_time' | 'u_gridSize'
+type CellUniforms = 'u_cellTexture' | 'u_ageTexture' | 'u_time' | 'u_gridSize' | 'u_viewOffset' | 'u_viewSize'
 
 const CELL_FRAG = `#version 300 es
 precision highp float;
@@ -14,31 +14,38 @@ uniform sampler2D u_cellTexture;
 uniform sampler2D u_ageTexture;
 uniform float u_time;
 uniform vec2 u_gridSize;
+uniform vec2 u_viewOffset;
+uniform vec2 u_viewSize;
 
 const vec3 YOUNG_COLOR  = vec3(0.310, 0.765, 0.969);
 const vec3 MATURE_COLOR = vec3(1.000, 0.702, 0.000);
 const vec3 ANCIENT_COLOR = vec3(0.808, 0.576, 0.847);
 
 void main() {
-  // Map UV to grid cell position
-  vec2 gridPos = v_uv * u_gridSize;
-  vec2 cellCenter = floor(gridPos) + 0.5;
+  // Map UV through camera view to grid cell position
+  vec2 gridPos = u_viewOffset + v_uv * u_viewSize;
+
+  // Discard pixels outside the grid
+  if (gridPos.x < 0.0 || gridPos.x > u_gridSize.x ||
+      gridPos.y < 0.0 || gridPos.y > u_gridSize.y) discard;
+
   vec2 cellUV = fract(gridPos);
   vec2 texCoord = (floor(gridPos) + 0.5) / u_gridSize;
 
+  // R8 normalized: alive=1 maps to 1/255 ≈ 0.004
   float alive = texture(u_cellTexture, texCoord).r;
-  if (alive < 0.5) discard;
+  if (alive < 0.003) discard;
 
   float age = texture(u_ageTexture, texCoord).r;
 
   // Circular cell SDF
   float dist = length(cellUV - 0.5);
-  float radius = 0.38 + 0.02 * sin(u_time * 2.0 + age * 10.0); // subtle pulse
+  float radius = 0.38 + 0.02 * sin(u_time * 2.0 + age * 10.0);
   if (dist > radius) discard;
 
   // Age-based color: young blue → mature gold → ancient purple
   vec3 color;
-  float ageNorm = age * 255.0; // age stored as 0-1 in R8, actual range 0-255
+  float ageNorm = age * 255.0;
   if (ageNorm < 30.0) {
     color = mix(YOUNG_COLOR, MATURE_COLOR, ageNorm / 30.0);
   } else {
@@ -70,7 +77,7 @@ export class CellPass implements Disposable {
   constructor(ctx: GLContext) {
     this.ctx = ctx
     this.shader = ctx.createProgram<CellUniforms>(FULLSCREEN_QUAD_VERT, CELL_FRAG, [
-      'u_cellTexture', 'u_ageTexture', 'u_time', 'u_gridSize',
+      'u_cellTexture', 'u_ageTexture', 'u_time', 'u_gridSize', 'u_viewOffset', 'u_viewSize',
     ])
   }
 
@@ -110,7 +117,7 @@ export class CellPass implements Disposable {
   }
 
   /** Upload grid data and render cells to FBO */
-  render(buffers: GridBuffers, time: number): void {
+  render(buffers: GridBuffers, time: number, viewOffset: [number, number], viewSize: [number, number]): void {
     const { gl } = this.ctx
     const { width, height, stride } = buffers
 
@@ -147,6 +154,8 @@ export class CellPass implements Disposable {
     gl.uniform1i(u.u_ageTexture, 1)
     gl.uniform1f(u.u_time, time)
     gl.uniform2f(u.u_gridSize, width, height)
+    gl.uniform2f(u.u_viewOffset, viewOffset[0], viewOffset[1])
+    gl.uniform2f(u.u_viewSize, viewSize[0], viewSize[1])
 
     this.ctx.bindFullscreenQuad()
     this.ctx.drawFullscreenQuad()

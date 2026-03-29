@@ -34,7 +34,7 @@ void main() {
 
 // --- Composite shader (cell FBO + bloom + grid lines) ---
 
-type CompositeUniforms = 'u_cellTexture' | 'u_bloomTexture' | 'u_bloomIntensity' | 'u_showGrid' | 'u_cellSize' | 'u_gridSize'
+type CompositeUniforms = 'u_cellTexture' | 'u_bloomTexture' | 'u_bloomIntensity' | 'u_showGrid' | 'u_cellSize' | 'u_viewOffset' | 'u_viewSize'
 
 const COMPOSITE_FRAG = `#version 300 es
 precision highp float;
@@ -47,7 +47,8 @@ uniform sampler2D u_bloomTexture;
 uniform float u_bloomIntensity;
 uniform bool u_showGrid;
 uniform float u_cellSize;
-uniform vec2 u_gridSize;
+uniform vec2 u_viewOffset;
+uniform vec2 u_viewSize;
 const vec3 BG_COLOR = vec3(0.02, 0.02, 0.03);
 const vec3 GRID_LINE_COLOR = vec3(0.051, 0.106, 0.165);
 
@@ -61,9 +62,9 @@ void main() {
   float brightness = dot(color, vec3(0.299, 0.587, 0.114));
   color = mix(BG_COLOR, color, step(0.001, brightness));
 
-  // Grid lines
+  // Grid lines (use camera-aware grid position)
   if (u_showGrid && u_cellSize > 4.0) {
-    vec2 gridPos = v_uv * u_gridSize;
+    vec2 gridPos = u_viewOffset + v_uv * u_viewSize;
     vec2 grid = abs(fract(gridPos - 0.5) - 0.5);
     float line = min(grid.x, grid.y);
     float gridAlpha = 1.0 - smoothstep(0.0, 1.5 / u_cellSize, line);
@@ -96,7 +97,7 @@ export class BloomPass implements Disposable {
       'u_texture', 'u_direction', 'u_resolution',
     ])
     this.compositeShader = ctx.createProgram<CompositeUniforms>(FULLSCREEN_QUAD_VERT, COMPOSITE_FRAG, [
-      'u_cellTexture', 'u_bloomTexture', 'u_bloomIntensity', 'u_showGrid', 'u_cellSize', 'u_gridSize',
+      'u_cellTexture', 'u_bloomTexture', 'u_bloomIntensity', 'u_showGrid', 'u_cellSize', 'u_viewOffset', 'u_viewSize',
     ])
   }
 
@@ -170,8 +171,8 @@ export class BloomPass implements Disposable {
     canvasHeight: number,
     showGrid: boolean,
     cellSize: number,
-    gridWidth: number,
-    gridHeight: number,
+    viewOffset: [number, number],
+    viewSize: [number, number],
   ): void {
     const { gl } = this.ctx
 
@@ -192,10 +193,11 @@ export class BloomPass implements Disposable {
     gl.bindTexture(gl.TEXTURE_2D, this.bloomTexB)
     gl.uniform1i(u.u_bloomTexture, 1)
 
-    gl.uniform1f(u.u_bloomIntensity, 0.6)
+    gl.uniform1f(u.u_bloomIntensity, 0.25)
     gl.uniform1i(u.u_showGrid, showGrid ? 1 : 0)
     gl.uniform1f(u.u_cellSize, cellSize)
-    gl.uniform2f(u.u_gridSize, gridWidth, gridHeight)
+    gl.uniform2f(u.u_viewOffset, viewOffset[0], viewOffset[1])
+    gl.uniform2f(u.u_viewSize, viewSize[0], viewSize[1])
 
     this.ctx.bindFullscreenQuad()
     this.ctx.drawFullscreenQuad()

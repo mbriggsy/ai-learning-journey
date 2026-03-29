@@ -3,6 +3,7 @@ import { GameLoop, Simulation } from './engine/index.js'
 import { Camera } from './Camera.js'
 import { Renderer } from './renderer/Renderer.js'
 import { UIManager } from './ui/UIManager.js'
+import { AudioSystem } from './audio/AudioSystem.js'
 
 const canvas = document.getElementById('game-canvas') as HTMLCanvasElement | null
 const errorEl = document.getElementById('webgl-error') as HTMLElement | null
@@ -47,10 +48,17 @@ const browserTimer: TimerProvider = {
 
 const loop = new GameLoop(browserTimer, simulation)
 
-// --- UI (creates all controls, wires everything, owns render loop) ---
-const ui = new UIManager(loop, simulation, camera, renderer, canvas, document.body)
+// --- Audio (lazy init on first user gesture) ---
+const audio = new AudioSystem()
+document.addEventListener('click', function initAudio() {
+  audio.init()
+  document.removeEventListener('click', initAudio)
+}, { once: true })
 
-// Start the loop (UI's tick handler drives rendering)
+// --- UI ---
+const ui = new UIManager(loop, simulation, camera, renderer, canvas, document.body, audio)
+
+// Start
 loop.play()
 
 console.log(`[Conway] Ready — ${simulation.width}x${simulation.height}`)

@@ -1,5 +1,5 @@
 ---
-status: pending
+status: completed
 phase: 4
 title: Audio
 description: Generative soundscape — triangle drone with LFO, Lydian chimes with reverb, pitch-sweeping extinction, stability pulse
@@ -50,18 +50,18 @@ Generative audio that responds to simulation state. Triangle drone with LFO shif
 
 ## Spec Acceptance Criteria
 
-- [ ] Ambient drone tied to cell density
-- [ ] Birth/death audio events (threshold-gated)
-- [ ] Audio toggle
-- [ ] Stable/oscillator pattern detected = subtle rhythmic pulse emerges
+- [x] Ambient drone tied to cell density
+- [x] Birth/death audio events (threshold-gated)
+- [x] Audio toggle
+- [x] Stable/oscillator pattern detected = subtle rhythmic pulse emerges
 
 ## Pre-Phase 4: Cross-Phase Amendment
 
 ### Phase 1 Amendment
 
-- [ ] GameLoop max-speed batch loop accumulates `frameBirthCount` and `frameDeathCount` across ALL steps in the frame (not just the last step)
-- [ ] Expose aggregated stats on `TickData` or a new `FrameStats` type passed alongside `SimulationState`
-- [ ] AudioSystem reads the aggregated values once per frame via `onTick` callback
+- [x] GameLoop max-speed batch loop accumulates `frameBirthCount` and `frameDeathCount` across ALL steps in the frame (not just the last step)
+- [x] Expose aggregated stats on `TickData` or a new `FrameStats` type passed alongside `SimulationState`
+- [x] AudioSystem reads the aggregated values once per frame via `onTick` callback
 
 #### Research Insight
 
@@ -97,44 +97,44 @@ ExtinctionSound (inline on AudioSystem) ───────────┘
 
 ### 4.1 — AudioSystem (merged AudioEngine + AudioCoordinator)
 
-- [ ] Create `src/audio/AudioSystem.ts`
-- [ ] Implements `Disposable`
-- [ ] **Lazy AudioContext creation** on `init()` call (triggered by first user gesture)
+- [x] Create `src/audio/AudioSystem.ts`
+- [x] Implements `Disposable`
+- [x] **Lazy AudioContext creation** on `init()` call (triggered by first user gesture)
   - Wrap `new AudioContext()` in try/catch
   - On failure: set `this.available = false`, return silently
   - `isAvailable(): boolean` — checked before all operations
-- [ ] **Master GainNode** — all subsystems route here
+- [x] **Master GainNode** — all subsystems route here
   - Gain clamped to `[0.0, 1.0]` via validated setter — never expose raw node
   - `mute()` / `unmute()` / `isMuted(): boolean`
   - Works before `init()` — tracks pending mute state, applies when context created
-- [ ] **DynamicsCompressorNode** as safety limiter (between master gain and destination):
+- [x] **DynamicsCompressorNode** as safety limiter (between master gain and destination):
   - threshold: -6 dB, knee: 6 dB, ratio: 12:1, attack: 0.003s, release: 0.25s
   - Transparent in normal operation — only engages on unexpected peaks
-- [ ] **Creates subsystems:** AmbientDrone + BirthChime (passed AudioContext + master gain destination)
-- [ ] **update(state: SimulationState, frameStats: FrameStats)** — called once per frame via onTick:
+- [x] **Creates subsystems:** AmbientDrone + BirthChime (passed AudioContext + master gain destination)
+- [x] **update(state: SimulationState, frameStats: FrameStats)** — called once per frame via onTick:
   - Compute density: `state.liveCellCount / (state.width * state.height)`
   - Route density → `AmbientDrone.update(density)`
   - Route `frameStats.birthCount` → `BirthChime.trigger(count)` (threshold check)
   - Check death ratio: `frameStats.deathCount / previousLiveCellCount` → extinction trigger
   - Track `previousLiveCellCount` for death ratio calculation
-- [ ] **Stability detection** (~20 lines):
+- [x] **Stability detection** (~20 lines):
   - Circular buffer of last 16 `liveCellCount` values
   - Compute standard deviation each frame
   - `stddev === 0 && mean > 0` → still life detected
   - `stddev < 2% of mean && mean > 0` → oscillating pattern detected
   - Route to `AmbientDrone.enablePulse()` / `disablePulse()`
-- [ ] **Extinction sound** (inline method, ~25-30 lines):
+- [x] **Extinction sound** (inline method, ~25-30 lines):
   - Triggers when `frameStats.deathCount > 10% of previousLiveCellCount`
   - **2-second cooldown** — only one extinction sound at a time
   - Sawtooth oscillator: `exponentialRampToValueAtTime` from 150Hz → 40Hz over 2s
   - BiquadFilter lowpass: cutoff sweep 500Hz → 80Hz, Q = 1.0 (explicit, no resonance spikes)
   - Gain envelope: attack 100ms (→ 0.15), sustain 800ms, release 1.1s (→ 0.001, NOT zero — exponentialRamp can't reach 0)
   - Schedule `oscillator.stop(currentTime + 2.1)`, disconnect all nodes in `ended` handler
-- [ ] **Drone pause/resume:** when simulation pauses → fade drone to silence via `setTargetAtTime(0, now, 0.3)`. On resume → `AmbientDrone.update(currentDensity)` ramps back naturally.
-- [ ] **Video capture support (Phase 5):**
+- [x] **Drone pause/resume:** when simulation pauses → fade drone to silence via `setTargetAtTime(0, now, 0.3)`. On resume → `AmbientDrone.update(currentDensity)` ramps back naturally.
+- [x] **Video capture support (Phase 5):**
   - `getCaptureStream(): MediaStream | null` — lazily creates `MediaStreamDestinationNode`, connects AFTER DynamicsCompressorNode, returns `.stream`. Returns `null` if `!isAvailable()`. Idempotent.
   - `releaseCaptureStream(): void` — disconnects MediaStreamDestinationNode from compressor, nulls reference for GC. Called when recording stops.
-- [ ] `dispose()` — stops drone, disconnects all nodes, closes AudioContext only if no other consumers need it (page lifetime)
+- [x] `dispose()` — stops drone, disconnects all nodes, closes AudioContext only if no other consumers need it (page lifetime)
 
 #### Research Insights
 
@@ -146,17 +146,17 @@ ExtinctionSound (inline on AudioSystem) ───────────┘
 
 ### 4.2 — Ambient drone
 
-- [ ] Create `src/audio/AmbientDrone.ts`
-- [ ] **Two triangle oscillators** slightly detuned:
+- [x] Create `src/audio/AmbientDrone.ts`
+- [x] **Two triangle oscillators** slightly detuned:
   - Primary: `baseFreq` Hz
   - Secondary: `baseFreq + 3` Hz (**Hz, NOT cents** — cents are logarithmic, beating rate would change with pitch)
   - Triangle waveform (contains gentle odd harmonics 3rd/5th/7th — warmer than sine, less harsh than sawtooth)
-- [ ] Both route through shared `GainNode` → master destination
-- [ ] **LFO on frequency** — makes drone feel alive:
+- [x] Both route through shared `GainNode` → master destination
+- [x] **LFO on frequency** — makes drone feel alive:
   - Sine oscillator at 0.15Hz (one cycle every ~7 seconds)
   - Route through GainNode set to 3 (meaning +/-3Hz frequency wobble)
   - Connect to primary oscillator's `.frequency` AudioParam
-- [ ] **`update(density: number)`** — called each frame:
+- [x] **`update(density: number)`** — called each frame:
   - **MUST call `cancelScheduledValues(currentTime)` before EVERY `setTargetAtTime()`** (prevents automation timeline accumulation)
   - Density → frequency mapping (A octaves, musically coherent):
     - 0% (empty): gain 0 (silence)
@@ -164,16 +164,16 @@ ExtinctionSound (inline on AudioSystem) ───────────┘
     - 5-30%: 110Hz (A2), gain 0.15
     - >30%: 220Hz (A3), gain 0.20
   - Transitions smoothed via `setTargetAtTime` (time constant 0.5s = 95% in 1.5s)
-- [ ] **Stability pulse** — `enablePulse()` / `disablePulse()`:
+- [x] **Stability pulse** — `enablePulse()` / `disablePulse()`:
   - When stable: connect an LFO (sine, 0.5Hz for still life, or N-gen period for oscillators) to the drone's gain node via a GainNode (depth 0.05)
   - The drone "breathes" in sync with pattern oscillation
   - When chaotic: disconnect LFO, steady gain
-- [ ] **Optional: pink noise layer** (~20 lines, lowest priority):
+- [x] **Optional: pink noise layer** (~20 lines, lowest priority):
   - AudioBuffer (2s, looped) filled with pink noise (Paul Kellet algorithm)
   - Route through BiquadFilter lowpass at 400Hz
   - GainNode at 0.03 (barely perceptible warmth)
-- [ ] `start()` / `stop()` — begin/end oscillators + LFO
-- [ ] Constants co-located at top of file:
+- [x] `start()` / `stop()` — begin/end oscillators + LFO
+- [x] Constants co-located at top of file:
   ```
   FREQ_LOW = 55      // A1
   FREQ_MID = 110     // A2
@@ -198,13 +198,13 @@ ExtinctionSound (inline on AudioSystem) ───────────┘
 
 ### 4.3 — Birth chime system
 
-- [ ] Create `src/audio/BirthChime.ts`
-- [ ] **5 continuously-running sine oscillators** — one per Lydian pentatonic note:
+- [x] Create `src/audio/BirthChime.ts`
+- [x] **5 continuously-running sine oscillators** — one per Lydian pentatonic note:
   - C5 (523Hz), D5 (587Hz), E5 (659Hz), F#5 (740Hz), A5 (880Hz)
   - Each connected to its own GainNode (gain = 0 when silent)
   - All GainNodes → shared reverb chain → master destination
   - Oscillators created at `init()`, run forever, zero CPU when gain = 0 (browser optimization)
-- [ ] **`trigger(birthCount: number)`:**
+- [x] **`trigger(birthCount: number)`:**
   - Threshold gate: only fire when `birthCount > BIRTH_THRESHOLD` (50)
   - Rate limit: `if (now - lastTriggerTime < MIN_INTERVAL) return` (100ms)
   - **No-repeat note selection:** `do { idx = Math.random() * 5 | 0 } while (idx === lastIdx)`
@@ -212,19 +212,19 @@ ExtinctionSound (inline on AudioSystem) ───────────┘
     - Attack: `setTargetAtTime(peakGain, now, 0.003)` (~10ms to peak)
     - Decay: `setTargetAtTime(0.001, now + 0.01, 0.06)` (~200ms decay)
   - Peak gain scales with birth intensity: `0.05 + Math.min(birthCount / 500, 1) * 0.05` (range 0.05-0.10)
-- [ ] **StereoPannerNode per oscillator** — spatial separation:
+- [x] **StereoPannerNode per oscillator** — spatial separation:
   - Alternate panning: [-0.4, -0.2, 0, +0.2, +0.4] (one per note)
-- [ ] **Programmatic reverb** via ConvolverNode (~20 lines):
+- [x] **Programmatic reverb** via ConvolverNode (~20 lines):
   - Generate impulse response buffer at init: 2.5s, stereo
   - Fill with exponentially decaying white noise: `Math.random() * 2 - 1` * `Math.exp(-3 * t / 2.5)`
   - ConvolverNode receives this buffer
   - Dry/wet mix: 70% dry (direct) + 30% wet (convolved) via two GainNodes
   - Makes chimes sound like they echo through vast cosmic void
-- [ ] **Optional: attack partial** for bell-like transient:
+- [x] **Optional: attack partial** for bell-like transient:
   - Brief 3rd harmonic burst (3x frequency, gain 0.3, 30ms decay) on each trigger
   - Adds metallic "ting" of a bell strike
-- [ ] `start()` / `stop()` / `dispose()`
-- [ ] Constants co-located:
+- [x] `start()` / `stop()` / `dispose()`
+- [x] Constants co-located:
   ```
   LYDIAN_PENTATONIC = [523, 587, 659, 740, 880] as const  // C5 D5 E5 F#5 A5
   BIRTH_THRESHOLD = 50
@@ -247,29 +247,29 @@ ExtinctionSound (inline on AudioSystem) ───────────┘
 
 ### 4.4 — Wire audio to app
 
-- [ ] Update `src/main.ts`:
+- [x] Update `src/main.ts`:
   - Create AudioSystem after UIManager
   - Pass AudioContext destination chain
-- [ ] Create `src/audio/index.ts` — barrel export: `AudioSystem`
-- [ ] **First user click → `AudioSystem.init()`:**
+- [x] Create `src/audio/index.ts` — barrel export: `AudioSystem`
+- [x] **First user click → `AudioSystem.init()`:**
   - Register one-time click handler on document (or delegate via UIManager)
   - Handler calls `init()` then removes itself
   - If AudioContext starts suspended, call `audioContext.resume()`
-- [ ] **GameLoop.onTick → `AudioSystem.update(state, frameStats)`:**
+- [x] **GameLoop.onTick → `AudioSystem.update(state, frameStats)`:**
   - Called once per frame with final simulation state + aggregated frame stats
   - NOT inside the step batch loop
-- [ ] **ControlsBar.onToggleAudio → `AudioSystem.mute()` / `AudioSystem.unmute()`:**
+- [x] **ControlsBar.onToggleAudio → `AudioSystem.mute()` / `AudioSystem.unmute()`:**
   - Wired via UIManager
   - If `!AudioSystem.isAvailable()`, hide or disable the audio toggle button
-- [ ] **HMR cleanup:** if AudioSystem exists from previous module load, call `dispose()` before creating new one
-- [ ] **Phase 5 integration note:** AudioSystem's master gain chain must support dual-destination routing for video capture (`audioContext.createMediaStreamDestination()`). The current architecture supports this — Phase 5 connects a second destination to master GainNode.
-- [ ] Verify: run R-pentomino pattern and hear drone shift + chimes + extinction sweep
+- [x] **HMR cleanup:** if AudioSystem exists from previous module load, call `dispose()` before creating new one
+- [x] **Phase 5 integration note:** AudioSystem's master gain chain must support dual-destination routing for video capture (`audioContext.createMediaStreamDestination()`). The current architecture supports this — Phase 5 connects a second destination to master GainNode.
+- [x] Verify: run R-pentomino pattern and hear drone shift + chimes + extinction sweep
 
 ### 4.5 — Tests
 
-- [ ] Create `tests/unit/audio/AudioSystem.test.ts`
-- [ ] **Mock strategy:** Sound modules injected or created internally — tests pass mocks via constructor or vi.mock(). No AudioContext mocking library needed. Test routing logic only.
-- [ ] Test cases:
+- [x] Create `tests/unit/audio/AudioSystem.test.ts`
+- [x] **Mock strategy:** Sound modules injected or created internally — tests pass mocks via constructor or vi.mock(). No AudioContext mocking library needed. Test routing logic only.
+- [x] Test cases:
   - Birth chime triggers when `frameStats.birthCount > 50`
   - Birth chime does NOT trigger below threshold
   - Birth chime respects 100ms rate limit (second trigger within 100ms → skipped)

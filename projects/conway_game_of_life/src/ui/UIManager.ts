@@ -3,6 +3,7 @@ import type { PatternDefinition } from '../patterns/types.js'
 import type { SimulationSpeed } from '../types/simulation.js'
 import type { Camera } from '../Camera.js'
 import type { Renderer } from '../renderer/Renderer.js'
+import type { AudioSystem } from '../audio/AudioSystem.js'
 import { GameLoop } from '../engine/GameLoop.js'
 import { Simulation } from '../engine/Simulation.js'
 import { ControlsBar } from './ControlsBar.js'
@@ -28,6 +29,7 @@ export class UIManager implements Disposable {
     private readonly renderer: Renderer,
     canvas: HTMLCanvasElement,
     parent: HTMLElement,
+    private readonly audio?: AudioSystem,
   ) {
     // Create components
     this.controlsBar = new ControlsBar()
@@ -71,6 +73,12 @@ export class UIManager implements Disposable {
     })
     controlsBar.onToggleGrid((on) => renderer.setShowGrid(on))
     controlsBar.onToggleGhosts((on) => renderer.setShowGhosts(on))
+    controlsBar.onToggleAudio((on) => {
+      if (this.audio) {
+        if (on) this.audio.unmute()
+        else this.audio.mute()
+      }
+    })
     controlsBar.onOpenPatterns(() => this.patternSelector.toggle())
   }
 
@@ -136,6 +144,9 @@ export class UIManager implements Disposable {
         isPlaying: this.gameLoop.isPlaying(),
         speed: this.gameLoop.getSpeed(),
       })
+
+      // Audio
+      this.audio?.update(state, stats)
 
       // Render
       const buffers = this.simulation.getBuffers()

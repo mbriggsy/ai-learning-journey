@@ -39,6 +39,7 @@ export class ControlsBar implements UIComponent {
     toggleAudio: [] as ((on: boolean) => void)[],
     toggleFullscreen: [] as (() => void)[],
     openPatterns: [] as (() => void)[],
+    capture: [] as (() => void)[],
   }
 
   private playBtn!: HTMLButtonElement
@@ -115,6 +116,12 @@ export class ControlsBar implements UIComponent {
 
     this.addSeparator()
 
+    // Actions
+    this.addButton('Capture', () => { for (const cb of this.callbacks.capture) cb() })
+    this.addButton('Fullscreen', () => { for (const cb of this.callbacks.toggleFullscreen) cb() })
+
+    this.addSeparator()
+
     // Stats
     const stats = document.createElement('span')
     stats.style.color = ELECTRIC_BLUE
@@ -169,6 +176,7 @@ export class ControlsBar implements UIComponent {
   onToggleAudio(cb: (on: boolean) => void): () => void { this.callbacks.toggleAudio.push(cb); return () => { this.callbacks.toggleAudio = this.callbacks.toggleAudio.filter(c => c !== cb) } }
   onToggleFullscreen(cb: () => void): () => void { this.callbacks.toggleFullscreen.push(cb); return () => { this.callbacks.toggleFullscreen = this.callbacks.toggleFullscreen.filter(c => c !== cb) } }
   onOpenPatterns(cb: () => void): () => void { this.callbacks.openPatterns.push(cb); return () => { this.callbacks.openPatterns = this.callbacks.openPatterns.filter(c => c !== cb) } }
+  onCapture(cb: () => void): () => void { this.callbacks.capture.push(cb); return () => { this.callbacks.capture = this.callbacks.capture.filter(c => c !== cb) } }
 
   dispose(): void {
     this.ac.abort()

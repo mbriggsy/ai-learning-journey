@@ -1,0 +1,25 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512">
+  <rect width="512" height="512" fill="#050508"/>
+  <g transform="translate(128, 128)">
+    <!-- Glider pattern cells with glow -->
+    <defs>
+      <filter id="glow">
+        <feGaussianBlur stdDeviation="8" result="blur"/>
+        <feMerge>
+          <feMergeNode in="blur"/>
+          <feMergeNode in="SourceGraphic"/>
+        </feMerge>
+      </filter>
+    </defs>
+    <g filter="url(#glow)">
+      <!-- Row 0: .O. -->
+      <circle cx="128" cy="0" r="32" fill="#4FC3F7"/>
+      <!-- Row 1: ..O -->
+      <circle cx="256" cy="128" r="32" fill="#FFB300"/>
+      <!-- Row 2: OOO -->
+      <circle cx="0" cy="256" r="32" fill="#CE93D8"/>
+      <circle cx="128" cy="256" r="32" fill="#CE93D8"/>
+      <circle cx="256" cy="256" r="32" fill="#CE93D8"/>
+    </g>
+  </g>
+</svg>

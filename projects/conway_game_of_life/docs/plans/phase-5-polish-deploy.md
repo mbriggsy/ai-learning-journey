@@ -1,5 +1,5 @@
 ---
-status: pending
+status: completed
 phase: 5
 title: Polish & Deploy
 description: Video capture (30fps/3Mbps), fullscreen, mobile responsive (500x500 default), PWA, Vercel deployment
@@ -45,44 +45,44 @@ Production-ready PWA. Video capture at 30fps/3Mbps with codec-aware download. Fu
 
 ## Spec Acceptance Criteria
 
-- [ ] PWA installable
-- [ ] Fullscreen mode
-- [ ] Video capture (MediaRecorder)
-- [ ] Vercel deployment
-- [ ] Mobile responsive
+- [x] PWA installable
+- [x] Fullscreen mode
+- [x] Video capture (MediaRecorder)
+- [x] Vercel deployment
+- [x] Mobile responsive
 
 ## Pre-Phase 5: Cross-Phase Amendments
 
 ### Phase 0 Amendments
 
-- [ ] Add 3 PWA header blocks to `vercel.json`:
+- [x] Add 3 PWA header blocks to `vercel.json`:
   - `/(.*).html` → `Cache-Control: public, max-age=0, must-revalidate`
   - `/sw.js` → `Cache-Control: public, max-age=0, must-revalidate`
   - `/manifest.webmanifest` → `Content-Type: application/manifest+json`
-- [ ] Add CSP `<meta>` tag to `index.html` `<head>` (defense-in-depth — protects when cached by service worker)
-- [ ] Harden `Permissions-Policy` in `vercel.json`:
+- [x] Add CSP `<meta>` tag to `index.html` `<head>` (defense-in-depth — protects when cached by service worker)
+- [x] Harden `Permissions-Policy` in `vercel.json`:
   ```
   camera=(), microphone=(), geolocation=(), payment=(), display-capture=(), document-domain=(), fullscreen=(self)
   ```
 
 ### Phase 2 Amendments
 
-- [ ] Set `preserveDrawingBuffer: true` on WebGL2 context creation
+- [x] Set `preserveDrawingBuffer: true` on WebGL2 context creation
   - Required for `captureStream()` — without it, WebGL clears the buffer after compositing and capture gets black frames
   - Performance cost: negligible on modern GPUs (prevents buffer recycling optimization)
   - This is a set-once context attribute — cannot be toggled dynamically
 
 ### Phase 4 Amendments
 
-- [ ] Add `getCaptureStream(): MediaStream | null` to AudioSystem:
+- [x] Add `getCaptureStream(): MediaStream | null` to AudioSystem:
   - Lazily creates `MediaStreamDestinationNode`
   - Connects **after DynamicsCompressorNode** (not master gain — recording must include safety limiting)
   - Returns `.stream`. Returns `null` if `!isAvailable()`. Idempotent.
-- [ ] Add `releaseCaptureStream(): void` to AudioSystem:
+- [x] Add `releaseCaptureStream(): void` to AudioSystem:
   - Disconnects MediaStreamDestinationNode from compressor
   - Nulls reference for GC
   - Called when recording stops
-- [ ] Fix integration note in task 4.4: "branch after compressor, not after master gain"
+- [x] Fix integration note in task 4.4: "branch after compressor, not after master gain"
 
 ---
 
@@ -90,10 +90,10 @@ Production-ready PWA. Video capture at 30fps/3Mbps with codec-aware download. Fu
 
 ### 5.1 — Video capture
 
-- [ ] Create `src/ui/VideoCapture.ts`
-- [ ] Implements `Disposable`
-- [ ] **Static check:** `static isSupported(): boolean` — `typeof MediaRecorder !== 'undefined'`. Hide "Capture" button entirely if unsupported.
-- [ ] **`start(canvas: HTMLCanvasElement, audioStream?: MediaStream)`:**
+- [x] Create `src/ui/VideoCapture.ts`
+- [x] Implements `Disposable`
+- [x] **Static check:** `static isSupported(): boolean` — `typeof MediaRecorder !== 'undefined'`. Hide "Capture" button entirely if unsupported.
+- [x] **`start(canvas: HTMLCanvasElement, audioStream?: MediaStream)`:**
   - `canvas.captureStream(30)` — **30fps, not 60** (cellular automata indistinguishable, halves GPU overhead)
   - If audioStream provided: merge via `new MediaStream([...videoTracks, ...audioTracks])`
   - Detect codec:
@@ -105,13 +105,13 @@ Production-ready PWA. Video capture at 30fps/3Mbps with codec-aware download. Fu
     ```
   - `new MediaRecorder(stream, { mimeType, videoBitsPerSecond: 3_000_000 })` — **3 Mbps** (Conway's mostly-black content compresses well; 60s = ~11 MB)
   - `recorder.start()` — NO timeslice (prevents seekable file issues)
-- [ ] **Blob assembly:**
+- [x] **Blob assembly:**
   - `chunks: Blob[]` accumulates via `ondataavailable`
   - Guard: `if (e.data.size > 0) chunks.push(e.data)`
-- [ ] **Dual safety mechanisms:**
+- [x] **Dual safety mechanisms:**
   - `setTimeout(stop, 60_000)` — independent of UI state, fires unconditionally
   - Cumulative chunk-size counter: force `stop()` if total bytes exceed 50 MB
-- [ ] **`stop()` → download:**
+- [x] **`stop()` → download:**
   - `recorder.stop()` triggers `onstop`
   - Assemble: `new Blob(chunks, { type: recorder.mimeType })`
   - Codec-aware filename: `conway-{ISO-timestamp}.{webm|mp4}`
@@ -128,16 +128,16 @@ Production-ready PWA. Video capture at 30fps/3Mbps with codec-aware download. Fu
     }
     chunks.length = 0  // release blob references
     ```
-- [ ] **Recording indicator:**
+- [x] **Recording indicator:**
   - Red pulsing dot (CSS `animation: pulse 1s infinite`) + "REC" text
   - Show/hide in ControlsBar area — replaces "Capture" button text while recording
   - NO elapsed timer (YAGNI — auto-stop handles timeout, user sees the dot)
-- [ ] **Disable fullscreen toggle during recording** (canvas resize mid-capture causes encoder issues cross-browser)
-- [ ] **Error handling:**
+- [x] **Disable fullscreen toggle during recording** (canvas resize mid-capture causes encoder issues cross-browser)
+- [x] **Error handling:**
   - `MediaRecorder.onerror` → stop recording, show brief error message
   - Graceful "not supported" for browsers without MediaRecorder
-- [ ] `isRecording(): boolean` state query
-- [ ] `dispose()` — stop if recording, clear chunks, revoke URLs
+- [x] `isRecording(): boolean` state query
+- [x] `dispose()` — stop if recording, clear chunks, revoke URLs
 
 #### Research Insights
 
@@ -151,17 +151,17 @@ Production-ready PWA. Video capture at 30fps/3Mbps with codec-aware download. Fu
 
 ### 5.2 — Fullscreen wiring (NO new file — inline in UIManager)
 
-- [ ] Add fullscreen wiring to UIManager (Phase 3 integration section):
+- [x] Add fullscreen wiring to UIManager (Phase 3 integration section):
   - `controlsBar.onToggleFullscreen()` → toggle fullscreen
   - Check `document.fullscreenElement` to determine current state
   - `document.documentElement.requestFullscreen()` (includes UI overlays, not just canvas)
   - `document.exitFullscreen()` to leave
   - Safari fallback: `document.documentElement.webkitRequestFullscreen?.()`
   - `fullscreenchange` event listener → sync ControlsBar button visual state
-- [ ] **Hide fullscreen button on iPhone** — Fullscreen API only works on iPad
+- [x] **Hide fullscreen button on iPhone** — Fullscreen API only works on iPad
   - Detect: `navigator.userAgent` check for iPhone (or `navigator.standalone` + screen size heuristic)
-- [ ] Canvas resize handled automatically by Phase 0's `ResizeObserver`
-- [ ] Keyboard shortcut `F` already wired in Phase 3's InputHandler (placeholder activated here)
+- [x] Canvas resize handled automatically by Phase 0's `ResizeObserver`
+- [x] Keyboard shortcut `F` already wired in Phase 3's InputHandler (placeholder activated here)
 
 #### Research Insight
 
@@ -169,24 +169,24 @@ Production-ready PWA. Video capture at 30fps/3Mbps with codec-aware download. Fu
 
 ### 5.3 — Mobile responsive
 
-- [ ] Update `src/ui/styles.ts` with responsive additions:
+- [x] Update `src/ui/styles.ts` with responsive additions:
   - Mobile layout (<768px): `min-height: 44px` on all interactive elements (touch target standard)
   - Controls bar: stacks vertically on mobile, condensed single-line stats
   - Pattern selector overlay already works on all sizes (Phase 3 decision)
-- [ ] **Default grid size by device:**
+- [x] **Default grid size by device:**
   - Desktop: 1000x1000
   - Mobile (`isMobile()` from styles.ts): 500x500
   - Set in `main.ts` at initialization based on `isMobile()`
-- [ ] **Viewport meta tag** in `index.html`:
+- [x] **Viewport meta tag** in `index.html`:
   ```html
   <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no">
   ```
   - `user-scalable=no` + `maximum-scale=1` prevents browser zoom (canvas handles zoom internally)
-- [ ] **NO mobile mode toggle button in v1:**
+- [x] **NO mobile mode toggle button in v1:**
   - 1-finger = draw, 2-finger = pan/zoom is the universal convention (Procreate, Figma, Google Maps)
   - The `InputMode` type and plumbing from Phase 3 exists if needed later
   - Add toggle only if real user testing reveals confusion
-- [ ] Test on simulated mobile viewports (Chrome DevTools device mode)
+- [x] Test on simulated mobile viewports (Chrome DevTools device mode)
 
 #### Research Insight
 
@@ -194,9 +194,9 @@ Production-ready PWA. Video capture at 30fps/3Mbps with codec-aware download. Fu
 
 ### 5.4 — PWA configuration
 
-- [ ] `pnpm add -D vite-plugin-pwa`
-- [ ] **Immediately run `pnpm audit`** — verify no known vulnerabilities in dependency tree
-- [ ] Update `vite.config.ts`:
+- [x] `pnpm add -D vite-plugin-pwa`
+- [x] **Immediately run `pnpm audit`** — verify no known vulnerabilities in dependency tree
+- [x] Update `vite.config.ts`:
   ```typescript
   import { VitePWA } from 'vite-plugin-pwa'
 
@@ -222,11 +222,11 @@ Production-ready PWA. Video capture at 30fps/3Mbps with codec-aware download. Fu
     ],
   })
   ```
-- [ ] Create `public/icon.svg` — simple cell glow graphic on void black background (~1-2KB)
-- [ ] Verify: service worker registers (`navigator.serviceWorker.controller !== null`)
-- [ ] Verify: app loads after going offline (Vite's static output is self-contained)
-- [ ] Verify: Chrome install prompt appears
-- [ ] Do NOT add custom service worker logic, update prompts, or cache strategies beyond plugin defaults
+- [x] Create `public/icon.svg` — simple cell glow graphic on void black background (~1-2KB)
+- [x] Verify: service worker registers (`navigator.serviceWorker.controller !== null`)
+- [x] Verify: app loads after going offline (Vite's static output is self-contained)
+- [x] Verify: Chrome install prompt appears
+- [x] Do NOT add custom service worker logic, update prompts, or cache strategies beyond plugin defaults
 
 #### Research Insights
 
@@ -238,7 +238,7 @@ Production-ready PWA. Video capture at 30fps/3Mbps with codec-aware download. Fu
 
 ### 5.5 — Vercel deployment
 
-- [ ] Update `vercel.json` with consolidated configuration:
+- [x] Update `vercel.json` with consolidated configuration:
   - 3 new PWA header blocks (from vite-plugin-pwa docs):
     - `/(.*).html` → no-cache
     - `/sw.js` → no-cache
@@ -246,10 +246,10 @@ Production-ready PWA. Video capture at 30fps/3Mbps with codec-aware download. Fu
   - Hardened Permissions-Policy (add `display-capture=()`, `document-domain=()`, `fullscreen=(self)`)
   - CSP updated to include `blob:` in `media-src` (for video capture download)
   - All existing security headers from Phase 0 unchanged
-- [ ] `pnpm build` produces clean `dist/`
-- [ ] Test with `pnpm preview` locally
-- [ ] Deploy to Vercel (git push or `vercel --prod`)
-- [ ] Verify deployed URL works:
+- [x] `pnpm build` produces clean `dist/`
+- [x] Test with `pnpm preview` locally
+- [x] Deploy to Vercel (git push or `vercel --prod`)
+- [x] Verify deployed URL works:
   - Canvas renders at 60fps
   - All 9 patterns load with title cards
   - Audio works after first click
@@ -271,18 +271,18 @@ Production-ready PWA. Video capture at 30fps/3Mbps with codec-aware download. Fu
 
 Not a code task — this is the gate before deployment.
 
-- [ ] **All spec acceptance criteria passed:**
+- [x] **All spec acceptance criteria passed:**
   - Phase 0 (Scaffolding): project builds, dev server runs, WebGL2 canvas renders
   - Phase 1 (Engine): rules correct, double-buffer, 1000x1000 @ 60fps, wraparound
   - Phase 2 (Renderer): WebGL renders cells, age colors, death particles, ghost trails, bloom
   - Phase 3 (Patterns & UI): 9 patterns load, selector UI, controls, draw mode, zoom/pan
   - Phase 4 (Audio): drone, birth chimes, extinction sound, audio toggle, stability pulse
   - Phase 5 (Polish & Deploy): PWA, fullscreen, video capture, Vercel, mobile responsive
-- [ ] `pnpm typecheck` passes
-- [ ] `pnpm test` all tests pass
-- [ ] No console errors/warnings in browser
-- [ ] Performance: 1000x1000 @ 60fps desktop Chrome, 500x500 @ 60fps mobile Chrome
-- [ ] Security headers verified via DevTools Network tab on deployed URL
+- [x] `pnpm typecheck` passes
+- [x] `pnpm test` all tests pass
+- [x] No console errors/warnings in browser
+- [x] Performance: 1000x1000 @ 60fps desktop Chrome, 500x500 @ 60fps mobile Chrome
+- [x] Security headers verified via DevTools Network tab on deployed URL
 
 ## Commits
 

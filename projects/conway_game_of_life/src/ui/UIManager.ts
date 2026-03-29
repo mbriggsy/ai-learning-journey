@@ -11,6 +11,7 @@ import { PatternSelector } from './PatternSelector.js'
 import { TitleCard } from './TitleCard.js'
 import { DrawMode } from './DrawMode.js'
 import { InputHandler } from './InputHandler.js'
+import { VideoCapture } from './VideoCapture.js'
 
 export class UIManager implements Disposable {
   private readonly controlsBar: ControlsBar
@@ -18,6 +19,7 @@ export class UIManager implements Disposable {
   private readonly titleCard: TitleCard
   private readonly drawMode: DrawMode
   private readonly inputHandler: InputHandler
+  private readonly videoCapture: VideoCapture | null = null
 
   private currentPattern: PatternDefinition | null = null
   private savedSpeed: SimulationSpeed | null = null
@@ -38,11 +40,19 @@ export class UIManager implements Disposable {
     this.drawMode = new DrawMode(simulation, camera)
     this.inputHandler = new InputHandler(canvas, camera, this.drawMode)
 
+    // Video capture
+    if (VideoCapture.isSupported()) {
+      this.videoCapture = new VideoCapture()
+    }
+
     // Mount
     this.controlsBar.mount(parent)
     this.patternSelector.mount(parent)
     this.titleCard.mount(parent)
     parent.appendChild(this.drawMode.cursorEl)
+    if (this.videoCapture) {
+      parent.appendChild(this.videoCapture.indicatorEl)
+    }
 
     // Apply initial toggle state
     const toggles = this.controlsBar.getToggleState()
@@ -53,6 +63,7 @@ export class UIManager implements Disposable {
     this.wireControls()
     this.wirePatterns()
     this.wireInput()
+    this.wireFullscreen()
     this.wireTick()
   }
 
@@ -80,6 +91,34 @@ export class UIManager implements Disposable {
       }
     })
     controlsBar.onOpenPatterns(() => this.patternSelector.toggle())
+
+    // Video capture
+    if (this.videoCapture) {
+      const vc = this.videoCapture
+      controlsBar.onCapture(() => {
+        if (vc.isRecording()) {
+          vc.stop()
+        } else {
+          const audioStream = this.audio?.getCaptureStream() ?? null
+          vc.start(renderer.getCanvas(), audioStream ?? undefined)
+        }
+      })
+    }
+  }
+
+  private wireFullscreen(): void {
+    this.controlsBar.onToggleFullscreen(() => {
+      if (document.fullscreenElement) {
+        document.exitFullscreen()
+      } else {
+        const el = document.documentElement as HTMLElement & { webkitRequestFullscreen?: () => void }
+        if (el.requestFullscreen) {
+          el.requestFullscreen()
+        } else if (el.webkitRequestFullscreen) {
+          el.webkitRequestFullscreen()
+        }
+      }
+    })
   }
 
   private wirePatterns(): void {

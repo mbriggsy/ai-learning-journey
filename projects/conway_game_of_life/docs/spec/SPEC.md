@@ -210,11 +210,11 @@ MediaRecorder API captures the live WebGL canvas directly — no frame-by-frame 
 - [x] Stable/oscillator pattern detected = subtle rhythmic pulse
 
 ### Phase 5 — Polish & Deploy
-- [ ] PWA installable
-- [ ] Fullscreen mode
-- [ ] Video capture (MediaRecorder)
+- [x] PWA installable
+- [x] Fullscreen mode
+- [x] Video capture (MediaRecorder)
 - [ ] Vercel deployment
-- [ ] Mobile responsive
+- [x] Mobile responsive
 
 ---
 

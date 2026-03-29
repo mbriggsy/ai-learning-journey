@@ -39,7 +39,9 @@ const observer = new ResizeObserver((entries) => {
 observer.observe(canvas)
 
 // --- Engine ---
-const simulation = new Simulation(200, 200, 'wrap')
+const isMobile = window.matchMedia('(max-width: 768px)').matches
+const gridSize = isMobile ? 500 : 1000
+const simulation = new Simulation(gridSize, gridSize, 'wrap')
 
 const browserTimer: TimerProvider = {
   requestFrame: (cb) => requestAnimationFrame(cb),

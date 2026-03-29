@@ -178,10 +178,10 @@ MediaRecorder API captures the live WebGL canvas directly — no frame-by-frame 
 ## Acceptance Criteria
 
 ### Phase 0 — Scaffolding
-- [ ] Project builds and dev server runs
-- [ ] WebGL2 canvas renders (context created)
-- [ ] Build tools configured (Vite, Vitest, TypeScript)
-- [ ] Security headers and CSP in vercel.json
+- [x] Project builds and dev server runs
+- [x] WebGL2 canvas renders (context created)
+- [x] Build tools configured (Vite, Vitest, TypeScript)
+- [x] Security headers and CSP in vercel.json
 
 ### Phase 1 — Engine
 - [ ] Game of Life rules implemented correctly (tested)

@@ -1,0 +1,53 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no" />
+    <meta name="theme-color" content="#050508" />
+    <meta name="description" content="Conway's Game of Life — cinematic WebGL2 simulation" />
+    <meta name="apple-mobile-web-app-capable" content="yes" />
+    <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent" />
+    <meta http-equiv="Content-Security-Policy" content="default-src 'self'; script-src 'self'; style-src 'self' 'unsafe-inline'; img-src 'self' data: blob:; media-src 'self' blob:; connect-src 'self'; worker-src 'self' blob:; object-src 'none'; base-uri 'self'; form-action 'none'; frame-ancestors 'none'" />
+    <title>Conway's Game of Life</title>
+    <style>
+      * { margin: 0; padding: 0; box-sizing: border-box; }
+      html, body { width: 100%; height: 100%; overflow: hidden; background: #050508; }
+      #game-canvas {
+        display: block;
+        width: 100vw;
+        height: 100vh;
+        background: #050508;
+        touch-action: none;
+      }
+      #ui-root { position: fixed; top: 0; left: 0; width: 100%; height: 100%; pointer-events: none; z-index: 10; }
+      #ui-root > * { pointer-events: auto; }
+      #webgl-error {
+        display: none;
+        position: fixed;
+        inset: 0;
+        background: #050508;
+        color: #4FC3F7;
+        font-family: system-ui, sans-serif;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        text-align: center;
+        padding: 2rem;
+        z-index: 100;
+      }
+      #webgl-error h1 { font-size: 1.5rem; margin-bottom: 0.5rem; }
+      #webgl-error p { opacity: 0.7; }
+    </style>
+  </head>
+  <body>
+    <canvas id="game-canvas"></canvas>
+    <div id="ui-root"></div>
+    <div id="webgl-error" style="display: none;">
+      <div>
+        <h1>WebGL2 Not Available</h1>
+        <p>This experience requires a browser with WebGL2 support.</p>
+      </div>
+    </div>
+    <script type="module" src="/src/main.ts"></script>
+  </body>
+</html>

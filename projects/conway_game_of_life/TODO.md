@@ -3,9 +3,21 @@
 ## Current State
 - Spec locked (`docs/spec/SPEC.md`)
 - **ALL 6 phases deeply researched and enhanced via multi-agent review (Phases 0-5)**
-- Zero code written — execution hasn't started
+- **Phase 0 (Scaffolding) COMPLETE** — all scripts verified, WebGL2 context boots
 - 45+ research agents deployed across deepening sessions
 - Cross-phase amendments applied to all affected plans
+
+## What We Did (2026-03-29)
+- Executed Phase 0 (Scaffolding) — full project infrastructure built:
+  - package.json: Vite 7.3.1, TypeScript 5.9.3, Vitest 4.1.2, zero prod deps
+  - tsconfig.json: strict mode, noUncheckedIndexedAccess, checks src + tests
+  - vite.config.ts: merged Vitest config, COOP/COEP headers, es2022 target
+  - index.html: full-viewport canvas, CSP meta tag, PWA meta tags, WebGL error fallback
+  - src/main.ts: WebGL2 context with perf attributes, ResizeObserver, DPR handling
+  - vercel.json: full security headers + CSP + PWA header blocks (sw.js, html, manifest)
+  - CLAUDE.md: architecture rules, conventions, testing strategy
+  - Directory skeleton: all src/ and tests/ subdirs with .gitkeep
+  - Placeholder test passing, all 4 scripts verified (dev, build, test, typecheck)
 
 ## What We Did (2026-03-28)
 - Deepened Phase 0 (Scaffolding) — canvas context poisoning, tsconfig rootDir, security headers + CSP
@@ -16,10 +28,10 @@
 - Deepened Phase 5 (Polish & Deploy) — 6 agents: preserveDrawingBuffer, VideoCapture signature fix, audio branch point fix, captureStream(30), codec priority, bitrate 3Mbps, vercel.json PWA headers
 
 ## Next Steps (Priority Order)
-1. **Execute Phase 0** (Scaffolding) — ALL plans deepened, SPEC numbering fixed. Time to build.
+1. **Execute Phase 1** (Engine) — game rules, double-buffer, grid, game loop
 
 ## Cross-Phase Amendments (accumulated across ALL deepening sessions)
-- **Phase 0:** vercel.json +3 PWA header blocks (sw.js, html, manifest), CSP meta tag in index.html, hardened Permissions-Policy
+- **Phase 0:** ~~vercel.json +3 PWA header blocks~~ DONE, ~~CSP meta tag in index.html~~ DONE, ~~hardened Permissions-Policy~~ DONE
 - **Phase 1:** PatternDefinition → PatternCells, SimulationSpeed type, Simulation.setCell/toggleCell, Grid bounds guards, GameLoop frame stats accumulation (frameBirthCount/frameDeathCount)
 - **Phase 2:** Camera.zoom() clamped [0.05, 200], preserveDrawingBuffer: true on WebGL2 context
 - **Phase 4:** AudioSystem.getCaptureStream()/releaseCaptureStream(), audio capture branches after DynamicsCompressorNode (not master gain)

@@ -1,5 +1,5 @@
 ---
-status: active
+status: completed
 phase: 0
 title: Scaffolding
 description: Project infrastructure — build tools, config, blank canvas running
@@ -38,34 +38,34 @@ Get `pnpm dev` running with a blank dark canvas (#050508) rendered via WebGL2 in
 ## Pre-Flight: Fix Spec Phase Numbering
 
 Before executing any task, reconcile the phase numbering mismatch:
-- [ ] Update SPEC.md acceptance criteria from "Phase 0 — Engine" to "Phase 1 — Engine", etc.
-- [ ] Confirm all 6 phases are listed: 0=Scaffolding, 1=Engine, 2=Renderer, 3=Patterns & UI, 4=Audio, 5=Polish & Deploy
+- [x] Update SPEC.md acceptance criteria from "Phase 0 — Engine" to "Phase 1 — Engine", etc.
+- [x] Confirm all 6 phases are listed: 0=Scaffolding, 1=Engine, 2=Renderer, 3=Patterns & UI, 4=Audio, 5=Polish & Deploy
 
 ### Research Insight
 > Two agents independently flagged this contradiction. Per project rules (CLAUDE.md "Contradictions Mean STOP"), this must be resolved before proceeding.
 
 ## Acceptance Criteria
 
-- [ ] `pnpm dev` serves a page with a full-viewport dark canvas (WebGL2 cleared to #050508)
-- [ ] `pnpm build` produces a production build with no errors (typecheck-gated)
-- [ ] `pnpm test` runs Vitest (passes with zero tests or a placeholder)
-- [ ] `pnpm typecheck` passes with strict mode (checks both `src/` and `tests/`)
-- [ ] Directory structure matches spec's project layout (with `types/`, `utils/`, `tests/integration/`)
-- [ ] CLAUDE.md establishes architecture rules for the project
-- [ ] WebGL2 context acquired successfully with performance-optimized attributes
+- [x] `pnpm dev` serves a page with a full-viewport dark canvas (WebGL2 cleared to #050508)
+- [x] `pnpm build` produces a production build with no errors (typecheck-gated)
+- [x] `pnpm test` runs Vitest (passes with zero tests or a placeholder)
+- [x] `pnpm typecheck` passes with strict mode (checks both `src/` and `tests/`)
+- [x] Directory structure matches spec's project layout (with `types/`, `utils/`, `tests/integration/`)
+- [x] CLAUDE.md establishes architecture rules for the project
+- [x] WebGL2 context acquired successfully with performance-optimized attributes
 
 ## Tasks
 
 ### 0.1 — Initialize package.json
 
-- [ ] Create `package.json` with project metadata
-- [ ] `"type": "module"`, `"private": true`, `"packageManager": "pnpm@10.30.3"`
-- [ ] `"engines": { "node": ">=20.19.0" }` (Vite 7 dropped Node 18)
-- [ ] Zero production dependencies (everything is browser APIs)
-- [ ] DevDependencies: `typescript ^5.9.0`, `vite ^7.3.0`, `vitest ^4.0.0`, `@vitest/coverage-v8 ^4.0.0`
-- [ ] Scripts: `dev`, `build`, `preview`, `test`, `test:run`, `test:watch`, `test:coverage`, `typecheck`
-- [ ] `"build": "tsc --noEmit && vite build"` (typecheck gates the build)
-- [ ] `pnpm install` succeeds
+- [x] Create `package.json` with project metadata
+- [x] `"type": "module"`, `"private": true`, `"packageManager": "pnpm@10.6.2"`
+- [x] `"engines": { "node": ">=20.19.0" }` (Vite 7 dropped Node 18)
+- [x] Zero production dependencies (everything is browser APIs)
+- [x] DevDependencies: `typescript ^5.9.0`, `vite ^7.3.0`, `vitest ^4.0.0`, `@vitest/coverage-v8 ^4.0.0`
+- [x] Scripts: `dev`, `build`, `preview`, `test`, `test:run`, `test:watch`, `test:coverage`, `typecheck`
+- [x] `"build": "tsc --noEmit && vite build"` (typecheck gates the build)
+- [x] `pnpm install` succeeds
 
 #### Research Insights
 
@@ -89,16 +89,16 @@ Before executing any task, reconcile the phase numbering mismatch:
 
 ### 0.2 — TypeScript configuration
 
-- [ ] Create `tsconfig.json`
-- [ ] Target: ES2022, Module: ESNext, moduleResolution: bundler
-- [ ] `lib`: `["ES2022", "DOM", "DOM.Iterable"]` (explicit — WebGL2 types live in DOM)
-- [ ] `strict: true`, `noEmit: true`, `isolatedModules: true`, `moduleDetection: force`
-- [ ] `verbatimModuleSyntax: true` (forces `import type` for type-only imports)
-- [ ] `noUncheckedIndexedAccess: true` (grid[x][y] returns T|undefined — catches OOB)
-- [ ] `resolveJsonModule: true`, `skipLibCheck: true`, `forceConsistentCasingInFileNames: true`
-- [ ] `include`: `["src/**/*", "tests/**/*"]` (tsc checks BOTH source and tests)
-- [ ] `exclude`: `["node_modules", "dist"]`
-- [ ] **NO `rootDir`**, **NO `outDir`** (Vite handles build output; tsc is type-check only)
+- [x] Create `tsconfig.json`
+- [x] Target: ES2022, Module: ESNext, moduleResolution: bundler
+- [x] `lib`: `["ES2022", "DOM", "DOM.Iterable"]` (explicit — WebGL2 types live in DOM)
+- [x] `strict: true`, `noEmit: true`, `isolatedModules: true`, `moduleDetection: force`
+- [x] `verbatimModuleSyntax: true` (forces `import type` for type-only imports)
+- [x] `noUncheckedIndexedAccess: true` (grid[x][y] returns T|undefined — catches OOB)
+- [x] `resolveJsonModule: true`, `skipLibCheck: true`, `forceConsistentCasingInFileNames: true`
+- [x] `include`: `["src/**/*", "tests/**/*"]` (tsc checks BOTH source and tests)
+- [x] `exclude`: `["node_modules", "dist"]`
+- [x] **NO `rootDir`**, **NO `outDir`** (Vite handles build output; tsc is type-check only)
 
 #### Research Insights
 
@@ -136,14 +136,14 @@ Before executing any task, reconcile the phase numbering mismatch:
 
 ### 0.3 — Vite + Vitest configuration (merged)
 
-- [ ] Create `vite.config.ts` (single file — vitest config merged in)
-- [ ] Import `defineConfig` from `vitest/config` (gives both Vite + Vitest types)
-- [ ] `base: './'`
-- [ ] `build: { target: 'es2022', sourcemap: true }`
-- [ ] `esbuild: { target: 'es2022' }` (dev/prod consistency)
-- [ ] `server: { strictPort: true, open: true }` plus COOP/COEP headers
-- [ ] `test: { include: ['tests/**/*.test.ts'], globals: false }`
-- [ ] `test.coverage`: provider v8, include `src/**/*.ts`, reporter text+html
+- [x] Create `vite.config.ts` (single file — vitest config merged in)
+- [x] Import `defineConfig` from `vitest/config` (gives both Vite + Vitest types)
+- [x] `base: './'`
+- [x] `build: { target: 'es2022', sourcemap: true }`
+- [x] `esbuild: { target: 'es2022' }` (dev/prod consistency)
+- [x] `server: { strictPort: true, open: true }` plus COOP/COEP headers
+- [x] `test: { include: ['tests/**/*.test.ts'], globals: false }`
+- [x] `test.coverage`: provider v8, include `src/**/*.ts`, reporter text+html
 
 #### Research Insights
 
@@ -202,13 +202,13 @@ export default defineConfig({
 
 ### 0.5 — HTML entry point
 
-- [ ] Create `index.html`
-- [ ] Full-viewport layout, no scrollbars
-- [ ] Background color: #050508 (spec's void black) via CSS on canvas element
-- [ ] Single `<canvas id="game-canvas">` element filling the viewport
-- [ ] `<div id="ui-root"></div>` for future DOM-based UI overlays
-- [ ] Loads `src/main.ts` as module
-- [ ] PWA-ready meta tags (theme-color, apple-mobile-web-app-capable, viewport)
+- [x] Create `index.html`
+- [x] Full-viewport layout, no scrollbars
+- [x] Background color: #050508 (spec's void black) via CSS on canvas element
+- [x] Single `<canvas id="game-canvas">` element filling the viewport
+- [x] `<div id="ui-root"></div>` for future DOM-based UI overlays
+- [x] Loads `src/main.ts` as module
+- [x] PWA-ready meta tags (theme-color, apple-mobile-web-app-capable, viewport)
 
 #### Research Insights
 
@@ -239,15 +239,15 @@ export default defineConfig({
 
 ### 0.6 — Application entry stub (CRITICAL CHANGES)
 
-- [ ] Create `src/main.ts`
-- [ ] Get canvas element, set CSS size to 100vw/100vh
-- [ ] **Acquire WebGL2 context** (NOT Canvas 2D — 2D permanently blocks WebGL2)
-- [ ] Context attributes: `alpha: false`, `antialias: false`, `depth: false`, `stencil: false`, `powerPreference: 'high-performance'`
-- [ ] Clear to background color: `gl.clearColor(0.02, 0.02, 0.03, 1.0); gl.clear(gl.COLOR_BUFFER_BIT)`
-- [ ] Show user-facing error if WebGL2 unavailable
-- [ ] **Use ResizeObserver** (not window resize event) for canvas sizing
-- [ ] Handle `devicePixelRatio` — default to 1x DPR (bloom creates natural softness)
-- [ ] Console log confirming WebGL2 boot + renderer info
+- [x] Create `src/main.ts`
+- [x] Get canvas element, set CSS size to 100vw/100vh
+- [x] **Acquire WebGL2 context** (NOT Canvas 2D — 2D permanently blocks WebGL2)
+- [x] Context attributes: `alpha: false`, `antialias: false`, `depth: false`, `stencil: false`, `powerPreference: 'high-performance'`
+- [x] Clear to background color: `gl.clearColor(0.02, 0.02, 0.03, 1.0); gl.clear(gl.COLOR_BUFFER_BIT)`
+- [x] Show user-facing error if WebGL2 unavailable
+- [x] **Use ResizeObserver** (not window resize event) for canvas sizing
+- [x] Handle `devicePixelRatio` — default to 1x DPR (bloom creates natural softness)
+- [x] Console log confirming WebGL2 boot + renderer info
 
 #### Research Insights
 
@@ -293,17 +293,17 @@ observer.observe(canvas)
 
 ### 0.7 — Directory skeleton
 
-- [ ] `src/engine/`
-- [ ] `src/renderer/`
-- [ ] `src/audio/`
-- [ ] `src/ui/`
-- [ ] `src/patterns/`
-- [ ] `src/types/` (shared cross-module type definitions)
-- [ ] `src/utils/` (shared math/color utilities)
-- [ ] `tests/unit/`
-- [ ] `tests/integration/`
-- [ ] `public/`
-- [ ] `.gitkeep` files where needed to preserve empty dirs
+- [x] `src/engine/`
+- [x] `src/renderer/`
+- [x] `src/audio/`
+- [x] `src/ui/`
+- [x] `src/patterns/`
+- [x] `src/types/` (shared cross-module type definitions)
+- [x] `src/utils/` (shared math/color utilities)
+- [x] `tests/unit/`
+- [x] `tests/integration/`
+- [x] `public/`
+- [x] `.gitkeep` files where needed to preserve empty dirs
 
 #### Research Insights
 
@@ -319,8 +319,8 @@ observer.observe(canvas)
 
 ### 0.8 — Git infrastructure + security headers
 
-- [ ] Create `.gitignore` (comprehensive — see reference below)
-- [ ] Create `vercel.json` (SPA rewrite + full security header suite)
+- [x] Create `.gitignore` (comprehensive — see reference below)
+- [x] Create `vercel.json` (SPA rewrite + full security header suite + PWA headers)
 
 #### Research Insights
 
@@ -416,19 +416,19 @@ WebGL does NOT require `unsafe-eval` for shader compilation — shaders are comp
 
 ### 0.9 — Project CLAUDE.md (enhanced)
 
-- [ ] Overview: cinematic Conway's Game of Life with WebGL2
-- [ ] Tech stack: TypeScript, Vite 7, WebGL2, Web Audio API, no frameworks
-- [ ] Architecture rule: CPU simulation / GPU rendering separation
-- [ ] Architecture rule: engine has zero DOM/WebGL deps (fully testable)
-- [ ] Architecture rule: DOM dependency inversion — engine defines interfaces (e.g., TimerProvider), app injects browser implementations. GameLoop lives in engine but receives `requestAnimationFrame` via injection.
-- [ ] Architecture rule: all UI is vanilla TS + DOM (no React/Vue)
-- [ ] Architecture rule: main.ts is composition root ONLY — creates instances, wires them together, nothing else. No game logic, no rendering, no event handling.
-- [ ] Architecture rule: inter-module communication via typed callback injection — subsystems expose `onX(callback)` registration methods. No global event bus, no DOM CustomEvents on non-DOM objects.
-- [ ] Architecture rule: WebGL2 context attributes are mandatory — `alpha:false, antialias:false, depth:false, stencil:false, powerPreference:'high-performance'`
-- [ ] Convention: magic numbers (colors, timings, thresholds from spec) live in `src/constants.ts`
-- [ ] Convention: ResizeObserver for canvas sizing, default 1x DPR
-- [ ] Security: do not configure `server.host` or `server.fs.allow` in vite.config.ts without security review
-- [ ] Testing: Vitest, engine-first testing strategy, `globals: false`
+- [x] Overview: cinematic Conway's Game of Life with WebGL2
+- [x] Tech stack: TypeScript, Vite 7, WebGL2, Web Audio API, no frameworks
+- [x] Architecture rule: CPU simulation / GPU rendering separation
+- [x] Architecture rule: engine has zero DOM/WebGL deps (fully testable)
+- [x] Architecture rule: DOM dependency inversion — engine defines interfaces (e.g., TimerProvider), app injects browser implementations. GameLoop lives in engine but receives `requestAnimationFrame` via injection.
+- [x] Architecture rule: all UI is vanilla TS + DOM (no React/Vue)
+- [x] Architecture rule: main.ts is composition root ONLY — creates instances, wires them together, nothing else. No game logic, no rendering, no event handling.
+- [x] Architecture rule: inter-module communication via typed callback injection — subsystems expose `onX(callback)` registration methods. No global event bus, no DOM CustomEvents on non-DOM objects.
+- [x] Architecture rule: WebGL2 context attributes are mandatory — `alpha:false, antialias:false, depth:false, stencil:false, powerPreference:'high-performance'`
+- [x] Convention: magic numbers (colors, timings, thresholds from spec) live in `src/constants.ts`
+- [x] Convention: ResizeObserver for canvas sizing, default 1x DPR
+- [x] Security: do not configure `server.host` or `server.fs.allow` in vite.config.ts without security review
+- [x] Testing: Vitest, engine-first testing strategy, `globals: false`
 
 ## Commit
 

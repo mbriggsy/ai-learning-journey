@@ -55,3 +55,35 @@ See [`docs/ideation/2026-03-29-hide-and-seek-brainstorm.md`](docs/ideation/2026-
 - [ ] Tier 2 — Tactical (doors, minimap + sonar, medium AI)
 - [ ] Tier 3 — Polish (hard AI, sound, scoring, AI-vs-AI spectator)
 - [ ] Tier 4 — Future (movable furniture, fort building, themed maps, Godot port)
+
+## Lessons Learned (SDD)
+
+### WebFetch Timeout Hook
+
+Claude Code's `WebFetch` tool has **no timeout parameter**. When background agents fetch a slow or unresponsive URL, they hang indefinitely — losing all work they've done. We hit this repeatedly during multi-agent research passes (`/deepen-plan`).
+
+**Fix:** A `PreToolUse` hook that blocks `WebFetch` and redirects agents to `curl --max-time 15` via the Bash tool:
+
+```bash
+# ~/.claude/hooks/block-webfetch.sh
+#!/bin/bash
+INPUT=$(cat)
+URL=$(echo "$INPUT" | jq -r '.tool_input.url // empty')
+cat <<EOF
+{"decision": "block", "reason": "WebFetch blocked (no timeout). Use: curl -sL --max-time 15 '${URL}' | head -c 50000 via Bash."}
+EOF
+```
+
+Wire it in `~/.claude/settings.json`:
+```json
+{
+  "hooks": {
+    "PreToolUse": [{
+      "matcher": "WebFetch",
+      "hooks": [{ "type": "command", "command": "bash ~/.claude/hooks/block-webfetch.sh" }]
+    }]
+  }
+}
+```
+
+Agents get the content via `curl` with a 15-second hard timeout. If it times out, they move on instead of hanging forever. The agent is an AI — it can parse raw HTML just fine without WebFetch's built-in summarization.

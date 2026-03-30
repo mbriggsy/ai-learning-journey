@@ -8,6 +8,7 @@
 - **Phase 1 plan DEEPENED (2026-03-29)** — 14 agents (5 research + 7 review + 1 spec flow + 1 repo analyst), 3 Context7 queries, 3 web searches, 11 contradictions resolved
 - **Phase 2 plan DEEPENED (2026-03-30)** — 14 agents (4 research + 6 review + 1 spec flow + 1 repo analyst), 1 Context7 query, 2 web searches, 12 contradictions resolved
 - **Phase 3 plan DEEPENED (2026-03-30)** — 13 agents (4 research + 6 review + 1 spec flow + 1 codebase explorer + 1 general-purpose), 3 Context7 queries, 13 contradictions resolved
+- **Phase 4 plan DEEPENED (2026-03-30)** — 14 agents (9 review + 4 research + 1 web research), 4 Context7 queries, 13 contradictions resolved
 - Phase plans broken out into individual documents — deepening in progress
 - No code yet — project is in design phase
 
@@ -86,7 +87,7 @@
 - [x] `/deepen-plan docs/plans/2026-03-29-003-phase-1-map-movement-plan.md` ← DONE (14 agents, 11 contradictions resolved)
 - [x] `/deepen-plan docs/plans/2026-03-29-004-phase-2-seeker-detection-plan.md` ← DONE (14 agents, 12 contradictions resolved)
 - [x] `/deepen-plan docs/plans/2026-03-29-005-phase-3-fog-game-flow-plan.md` ← DONE (13 agents, 13 contradictions resolved)
-- [ ] `/deepen-plan docs/plans/2026-03-29-006-phase-4-doors-minimap-plan.md`
+- [x] `/deepen-plan docs/plans/2026-03-29-006-phase-4-doors-minimap-plan.md` ← DONE (14 agents, 13 contradictions resolved)
 - [ ] `/deepen-plan docs/plans/2026-03-29-007-phase-5-ai-depth-spectator-plan.md`
 - [ ] `/deepen-plan docs/plans/2026-03-29-008-phase-6-sound-scoring-plan.md`
 - [ ] `/deepen-plan docs/plans/2026-03-29-009-phase-7-art-pipeline-plan.md`
@@ -102,6 +103,20 @@
 - [ ] Execute Phase 5: AI Depth + Spectator
 - [ ] Execute Phase 6: Sound + Scoring
 - [ ] Execute Phase 7: Art Pipeline
+
+## Infrastructure: WebFetch Timeout Hook (UNTESTED)
+
+**Problem:** WebFetch tool has NO timeout parameter. When agents call it on slow/dead URLs, they hang indefinitely — losing all accumulated work. Hit this twice during Phase 4 deepening (2 agents stalled with 0 output).
+
+**Solution:** PreToolUse hook blocks WebFetch and redirects agents to `curl --max-time 15` via Bash.
+
+**Files:**
+- Hook script: `~/.claude/hooks/block-webfetch.sh`
+- Wired in: `~/.claude/settings.json` under `hooks.PreToolUse` → matcher `"WebFetch"`
+
+**Status:** Script tested manually (works). Hook NOT yet tested live — needs session restart to load.
+
+**Next session:** Call WebFetch to verify the hook blocks it and returns the curl alternative. If it doesn't fire, investigate hook loading lifecycle.
 
 ## Landmines
 - **Phaser 3.90.0 is likely the LAST v3 release** — Phaser 4 is RC7, not stable. Fine for our scope, game logic is Phaser-independent.

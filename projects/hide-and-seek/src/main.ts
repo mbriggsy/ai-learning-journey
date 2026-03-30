@@ -1,5 +1,6 @@
 import Phaser from 'phaser';
-import { BootScene } from './renderer/scenes/BootScene.js';
+import { BootScene } from './renderer/scenes/Boot.js';
+import { GameScene } from './renderer/scenes/Game.js';
 import { DISPLAY } from './constants.js';
 
 const config: Phaser.Types.Core.GameConfig = {
@@ -25,7 +26,7 @@ const config: Phaser.Types.Core.GameConfig = {
   input: {
     gamepad: true,
   },
-  scene: [BootScene],
+  scene: [GameScene, BootScene],
 };
 
 new Phaser.Game(config);

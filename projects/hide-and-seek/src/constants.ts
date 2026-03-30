@@ -44,3 +44,31 @@ export const TIMERS = {
 export const INTERACTION = {
   DOOR_RANGE: 1.5,
 } as const satisfies Record<string, number>;
+
+/** Camera settings */
+export const CAMERA = {
+  ZOOM: 2,
+  FOLLOW_LERP: 0.1,
+} as const satisfies Record<string, number>;
+
+/** Input settings */
+export const INPUT = {
+  GAMEPAD_DEADZONE_INNER: 0.15,
+  GAMEPAD_DEADZONE_OUTER: 0.95,
+  GAMEPAD_MENU_THRESHOLD: 0.5,
+} as const satisfies Record<string, number>;
+
+/** Render depth values */
+export const DEPTH = {
+  GROUND: 0,
+  WALLS: 1,
+  PLAYER: 5,
+  ABOVE_PLAYER: 10,
+  UI: 100,
+} as const satisfies Record<string, number>;
+
+/** Collision settings */
+export const COLLISION = {
+  /** Player hitbox width and height in pixels (centered on 32x32 sprite) */
+  PLAYER_HITBOX: 20,
+} as const satisfies Record<string, number>;

@@ -10,9 +10,12 @@ export function tileCoord(x: number, y: number): TileCoord {
   return { x, y } as TileCoord;
 }
 
-export interface TileGrid<T extends number> {
+export interface ReadonlyTileGrid<T extends number> {
   readonly width: number;
   readonly height: number;
   get(coord: TileCoord): T | undefined;
+}
+
+export interface MutableTileGrid<T extends number> extends ReadonlyTileGrid<T> {
   set(coord: TileCoord, value: T): void;
 }

@@ -60,8 +60,14 @@ pnpm audit        # Check for vulnerabilities
 ```
 src/
   game/               # Pure game logic — NO Phaser imports
+    engine.ts         # GameEngine — fixed timestep accumulator
+    map.ts            # Tiled JSON parser, collision/LOS grids
+    movement.ts       # Movement + separate-axis collision
+    state.ts          # State factory (createGameState)
   renderer/
+    entities/         # Visual representations (PlayerSprite)
     scenes/           # Phaser scene classes (PascalCase)
+    systems/          # Input, audio, camera systems
   types/              # Shared type definitions
   constants.ts        # All game design constants
   main.ts             # Composition root — wires Phaser.Game
@@ -69,7 +75,9 @@ tests/
   game/               # Game logic unit tests (node env)
   renderer/           # Renderer tests (jsdom env)
   integration/        # Cross-cutting tests (architecture boundary)
-public/               # Static assets (images, tilemaps, audio)
+public/
+  assets/maps/        # Tiled JSON maps
+  assets/tilesets/    # Tileset PNGs
 ```
 
 ## Landmines
@@ -79,3 +87,6 @@ public/               # Static assets (images, tilemaps, audio)
 - **Phaser uses `export = Phaser`** in its type defs. `esModuleInterop: true` is required in tsconfig — without it, imports fail under `verbatimModuleSyntax`.
 - **`override` does NOT work on Phaser Scene lifecycle methods** (`create`, `preload`, `init`). Phaser's type defs don't declare them on the base Scene class. Only `update()` supports `override`. Don't use `override` on `create()` — it causes TS4113.
 - **CSP deferred.** Phaser internally uses dynamic code evaluation in some code paths. No CSP meta tag until a hardening pass verifies which paths trigger it.
+- **Tiled JSON must use CSV encoding.** Compressed formats (zlib, gzip, zstd) silently fail — Phaser produces empty/broken map with no error. Tilesets must be embedded (not external .tsj).
+- **Tileset name case-sensitive.** `addTilesetImage('placeholder', ...)` must exactly match the `"name"` field in the Tiled JSON. Mismatch returns null.
+- **GameEngine.tick() takes deltaMs.** Phaser's `update(time, delta)` passes delta in milliseconds. The engine converts to seconds internally for fixedUpdate.

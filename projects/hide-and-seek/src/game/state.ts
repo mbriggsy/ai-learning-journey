@@ -8,6 +8,11 @@ export function createGameState(map: GameMap, spawns: readonly SpawnPoint[]): Ga
   const seekerSpawn = spawns.find(s => s.type === 'seeker_spawn');
   if (!seekerSpawn) throw new Error('No seeker_spawn found in map data');
 
+  const tileCount = map.width * map.height;
+  const playerFov = new Uint8Array(tileCount);
+  // COUNTDOWN: all tiles visible — FogRenderer treats uniformly (no phase branching)
+  playerFov.fill(1);
+
   return {
     phase: 'playing',
     player: {
@@ -29,6 +34,8 @@ export function createGameState(map: GameMap, spawns: readonly SpawnPoint[]): Ga
       kind: 'countdown',
       ticksRemaining: createCountdownTicks(),
     },
-    seekerFov: new Uint8Array(map.width * map.height),
+    seekerFov: new Uint8Array(tileCount),
+    playerFov,
+    stats: { distanceTraveled: 0 },
   };
 }

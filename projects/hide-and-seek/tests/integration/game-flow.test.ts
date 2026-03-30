@@ -27,6 +27,8 @@ function makePlayingState(): PlayingState {
     ],
     gameFlow: { kind: 'countdown', ticksRemaining: 600 },
     seekerFov: new Uint8Array(20 * 20),
+    playerFov: new Uint8Array(20 * 20).fill(1),
+    stats: { distanceTraveled: 0 },
   };
 }
 

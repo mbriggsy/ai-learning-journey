@@ -78,6 +78,10 @@ export interface SpawnPoint {
 /** Mutable alias for engine-internal mutation of PlayingState fields */
 export type MutablePlayingState = { -readonly [K in keyof PlayingState]: PlayingState[K] };
 
+export interface GameStats {
+  distanceTraveled: number;  // pixels accumulated during HUNT
+}
+
 export interface PlayingState extends GameStateBase {
   readonly phase: 'playing';
   readonly player: PlayerState;
@@ -86,6 +90,8 @@ export interface PlayingState extends GameStateBase {
   readonly spawns: readonly SpawnPoint[];
   readonly gameFlow: GameFlowState;
   readonly seekerFov: Uint8Array;
+  readonly playerFov: Uint8Array;
+  readonly stats: GameStats;
 }
 
 export type GameState = BootState | PlayingState;

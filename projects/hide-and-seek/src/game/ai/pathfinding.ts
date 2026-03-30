@@ -45,6 +45,14 @@ export class PathfindingSystem {
     this.star.cancelPath(instanceId);
   }
 
+  cancelAll(): void {
+    // Replace the EasyStar instance to discard all queued paths
+    this.star = new EasyStar.js();
+    this.star.enableDiagonals();
+    this.star.disableCornerCutting();
+    this.star.setIterationsPerCalculation(SEEKER.PATHFINDING_ITERATIONS);
+  }
+
   calculate(): void {
     this.star.calculate();
   }

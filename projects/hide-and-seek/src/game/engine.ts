@@ -32,11 +32,14 @@ export class GameEngine {
   private accumulator: number = 0;
   private paused: boolean = false;
   private justResumed: boolean = false;
+  private disposed: boolean = false;
   private readonly emitter: TypedEmitter<GameEventMap>;
   private readonly pathfinding: PathfindingSystem;
   private seekerAI: SeekerAIState | null = null;
   private readonly seekerConfig: SeekerConfig;
   private collisionGrid: Uint8Array | null = null;
+  private lastPlayerFovTileX: number = -1;
+  private lastPlayerFovTileY: number = -1;
 
   constructor(initialState: GameState) {
     this.state = initialState;
@@ -64,7 +67,7 @@ export class GameEngine {
   }
 
   tick(deltaMs: number, input: InputState): void {
-    if (this.paused) return;
+    if (this.disposed || this.paused) return;
     if (this.justResumed) {
       this.justResumed = false;
       this.accumulator = 0;
@@ -109,6 +112,12 @@ export class GameEngine {
     return this.paused;
   }
 
+  dispose(): void {
+    this.disposed = true;
+    this.pathfinding.cancelAll();
+    this.emitter.offAll();
+  }
+
   private fixedUpdate(dt: number, input: InputState): void {
     if (this.state.phase !== 'playing') return;
     const s = this.state as MutablePlayingState;
@@ -127,6 +136,10 @@ export class GameEngine {
       const next = evaluateRules(s.gameFlow, 'none');
       if (next) {
         s.gameFlow = next;
+        // Clear playerFov so HUNT phase recomputes from actual position
+        s.playerFov.fill(0);
+        this.lastPlayerFovTileX = -1;
+        this.lastPlayerFovTileY = -1;
         this.emitter.emit('PHASE_CHANGED', next.kind);
       }
       return;
@@ -134,9 +147,32 @@ export class GameEngine {
 
     // HUNT phase — full dispatch
     // 1. Player movement
+    const prevX = s.player.x;
+    const prevY = s.player.y;
     updateMovement(s.player, s.map, input, dt);
 
-    // 2. Seeker FOV (dirty flag: only recompute on tile change)
+    // 1b. Distance tracking
+    const dx = s.player.x - prevX;
+    const dy = s.player.y - prevY;
+    if (dx !== 0 || dy !== 0) {
+      s.stats.distanceTraveled += Math.hypot(dx, dy);
+    }
+
+    // 2. Player FOV (dirty flag: only recompute on tile change)
+    const playerTile = pixelToTile(s.player.x, s.player.y);
+    if (playerTile.x !== this.lastPlayerFovTileX || playerTile.y !== this.lastPlayerFovTileY) {
+      this.lastPlayerFovTileX = playerTile.x;
+      this.lastPlayerFovTileY = playerTile.y;
+      s.playerFov.fill(0);
+      computeFOV(
+        playerTile.x, playerTile.y,
+        VISION.HIDER_RANGE,
+        (x, y) => s.map.isBlocking(x, y),
+        s.playerFov, s.map.width, s.map.height,
+      );
+    }
+
+    // 4. Seeker FOV (dirty flag: only recompute on tile change)
     const seekerTile = pixelToTile(s.seeker.x, s.seeker.y);
     if (this.seekerAI && (seekerTile.x !== this.seekerAI.lastFovTileX || seekerTile.y !== this.seekerAI.lastFovTileY)) {
       this.seekerAI.lastFovTileX = seekerTile.x;
@@ -150,14 +186,14 @@ export class GameEngine {
       );
     }
 
-    // 3. Detection
+    // 5. Detection
     const detection = checkDetection(
       s.seeker.x, s.seeker.y,
       s.player.x, s.player.y,
       s.seekerFov, s.map.width,
     );
 
-    // 4. Seeker AI + movement
+    // 6. Seeker AI + movement
     if (this.seekerAI) {
       updateSeekerAI(
         s.seeker, this.seekerAI, this.seekerConfig, detection,
@@ -165,11 +201,11 @@ export class GameEngine {
       );
     }
 
-    // 5. Timers
+    // 7. Timers
     (s.gameFlow as HuntPhase).ticksRemaining--;
     (s.gameFlow as HuntPhase).ticksElapsed++;
 
-    // 6. Rules
+    // 8. Rules
     const next = evaluateRules(s.gameFlow, detection);
     if (next) {
       s.gameFlow = next;

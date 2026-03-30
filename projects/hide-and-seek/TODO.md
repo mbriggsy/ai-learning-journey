@@ -5,6 +5,8 @@
 - Master plan complete (2026-03-29) — 8 phases (now 9 with Phase 5 split), all research done
 - **Master plan DEEPENED (2026-03-29)** — 16 research/review agents, 3 Context7 queries, 6 contradictions resolved
 - **Phase 0 plan DEEPENED (2026-03-29)** — 12 agents (4 research + 7 review + 1 repo analyst), 3 Context7 queries, 3 web searches, 5 contradictions resolved
+- **Phase 1 plan DEEPENED (2026-03-29)** — 14 agents (5 research + 7 review + 1 spec flow + 1 repo analyst), 3 Context7 queries, 3 web searches, 11 contradictions resolved
+- **Phase 2 plan DEEPENED (2026-03-30)** — 14 agents (4 research + 6 review + 1 spec flow + 1 repo analyst), 1 Context7 query, 2 web searches, 12 contradictions resolved
 - Phase plans broken out into individual documents — deepening in progress
 - No code yet — project is in design phase
 
@@ -13,7 +15,29 @@
 - Master plan: `docs/plans/2026-03-29-001-feat-hide-and-seek-game-plan.md`
 - Phase plans: `docs/plans/2026-03-29-002` through `009`
 
-## What We Did (2026-03-29)
+## What We Did (2026-03-30, Session 3)
+- **DEEPENED Phase 2 plan with 14 agents:**
+  - 4 research agents: symmetric shadowcasting, EasyStar.js API, stealth game AI FSM, game flow state machine
+  - 6 review agents: architecture strategist, TypeScript reviewer, performance oracle, simplicity, spec flow analyzer, race condition reviewer
+  - 1 Context7 query: EasyStar.js full API (findPath, calculate, avoidAdditionalPoint, cancel)
+  - 2 web searches: Albert Ford shadowcasting, game AI FSM patrol/chase patterns
+  - Resolved 12 contradictions (FOV Uint8Array, findPath callback pattern, two-level GameState, actions layer defer, switch FSM, SeekerState split, 3-way detection, path smoothing defer, TypedEmitter scope, HUD text-only, minimal pause, calculate() placement)
+  - Critical discoveries: EasyStar callbacks fire via setTimeout (not during calculate()), checkDetection must return 3-way result (none/spotted/found), terminal states must halt fixedUpdate, TypedEmitter needs copy-on-iterate
+  - Added: TypedEmitter implementation, minimal pause, end-of-game display, FOV dirty flag, transition delays, SeekerConfig, waypoint consume-remaining pattern
+
+## What We Did (2026-03-29, Session 2)
+- **DEEPENED Phase 1 plan with 14 agents:**
+  - 5 research agents: Tiled+Phaser integration, fixed timestep patterns, dual input handling, tile-based collision, Phaser camera+sprites
+  - 7 review agents: architecture strategist, TypeScript reviewer, performance oracle, security sentinel, pattern recognition, code simplicity, frontend races
+  - 1 spec flow analyzer: found 14 user flows (plan had 8), 8 master plan contradictions, 12 unspecified edge cases
+  - 1 repo research analyst: carried forward patterns from racer-04 and Conway
+  - 3 Context7 doc queries: Phaser tilemap, camera, gamepad APIs
+  - 3 web searches: Tiled collision, fixed timestep, dual input
+  - Resolved 11 contradictions (render interpolation, accumulator ownership, tile layers, GameState, TypedEmitter, tab visibility, tick rate, state.ts naming, ReadonlyDeep, seeker spawn, BootScene naming)
+  - Critical discovery: render interpolation is dead code with roundPixels: true — eliminated InterpolatedSprite from Phase 1
+  - Added: GameEngine class, tab visibility handler, validateMapData(), pixelToTile/tileToPixel utils, blocks_los tile property, scaled radial deadzone, one-shot signal consumption, determinism test, performance benchmark
+
+## What We Did (2026-03-29, Session 1)
 - Full brainstorm session: game design, tech stack, art direction, AI behavior, controls, round flow
 - Reviewed and refined brainstorm — added round flow, controller support, speed balance, door mechanics, AI hider tiers, found moment design, moved fog of war to Tier 1
 - Ran SpecFlow analysis — identified 17 gaps, resolved all critical questions
@@ -43,8 +67,8 @@
 **DEEPEN ALL PHASE PLANS (serial, one at a time):**
 - [x] `/deepen-plan docs/plans/2026-03-29-001-feat-hide-and-seek-game-plan.md` ← MASTER PLAN DONE
 - [x] `/deepen-plan docs/plans/2026-03-29-002-phase-0-project-scaffolding-plan.md` ← DONE (12 agents, 5 contradictions resolved)
-- [ ] `/deepen-plan docs/plans/2026-03-29-003-phase-1-map-movement-plan.md`
-- [ ] `/deepen-plan docs/plans/2026-03-29-004-phase-2-seeker-detection-plan.md`
+- [x] `/deepen-plan docs/plans/2026-03-29-003-phase-1-map-movement-plan.md` ← DONE (14 agents, 11 contradictions resolved)
+- [x] `/deepen-plan docs/plans/2026-03-29-004-phase-2-seeker-detection-plan.md` ← DONE (14 agents, 12 contradictions resolved)
 - [ ] `/deepen-plan docs/plans/2026-03-29-005-phase-3-fog-game-flow-plan.md`
 - [ ] `/deepen-plan docs/plans/2026-03-29-006-phase-4-doors-minimap-plan.md`
 - [ ] `/deepen-plan docs/plans/2026-03-29-007-phase-5-ai-depth-spectator-plan.md`
@@ -91,3 +115,23 @@
 - **Phaser 3.90 breaking change** — ImageCollections tileset defaults changed from null to undefined. (NEW)
 - **strictPropertyInitialization** — keep strict:true in tsconfig, use definite assignment (!) for Phaser-lifecycle renderer properties only. (NEW)
 - **Audio in spectator mode** — no heartbeat (no player perspective). Both agents' footsteps audible. (NEW)
+- **Render interpolation is dead code with roundPixels** — `pixelArt: true` snaps to integers. InterpolatedSprite deferred to Phase 7 (if roundPixels ever disabled). (NEW)
+- **Camera must snap before startFollow** — without `centerOn()` before `startFollow()`, camera slides 400ms from (0,0) to spawn. (NEW)
+- **Gamepad `once('connected')` misses reconnection** — use `on()` not `once()`. Also check `total > 0` on scene create for already-connected pads. (NEW)
+- **Tiled tileset name is case-sensitive** — `addTilesetImage()` first arg must exactly match JSON `"name"` field. Mismatch returns null silently. (NEW)
+- **Tiled external tilesets (.tsj) not resolved** — Phaser loader ignores `"source"` references. Always embed tilesets. (NEW)
+- **Tiled object properties are arrays, not flat maps** — `obj.properties` is `[{name, type, value}]`. Need helper function for access. (NEW)
+- **NaN delta poisons accumulator permanently** — `NaN >= FIXED_STEP` is always false; loop never runs again. Guard with `Number.isFinite()`. (NEW)
+- **Keyboard state stale after tab return** — `keyup` may never fire when tabbing away. Call `resetKeys()` on resume. (NEW)
+- **Document visibilitychange listener leaks on scene restart** — must use named function + removeEventListener in shutdown. Never anonymous lambda. (NEW)
+- **EasyStar callbacks fire via setTimeout** — NOT during calculate(). Path results arrive next event loop tick. Never wrap in Promise without cancel mechanism. (NEW)
+- **EasyStar type definitions lie** — callback type omits `null`. findPath() returns `undefined` when start===end. Grid is `[y][x]` but API is `(x,y)`. (NEW)
+- **EasyStar default iterationsPerCalculation is MAX_VALUE** — MUST set to 200 for real-time. Without it, calculate() blocks until all paths complete. (NEW)
+- **checkDetection must return 3-way result** — 'none'/'spotted'/'found'. Boolean conflates "LOS without proximity" (should trigger CHASE) with "no LOS" (should do nothing). (NEW)
+- **Terminal states (FOUND/SURVIVED) must halt fixedUpdate** — without guard, player keeps moving, AI keeps patrolling, detection re-fires after game over. (NEW)
+- **TypedEmitter needs copy-on-iterate** — if handler calls off() during emit(), array mutates during iteration. Snapshot with [...handlers] before iterating. (NEW)
+- **TypedEmitter handlers must NOT call back into engine** — handlers are notifications. Modifying game state inside emit() bypasses dispatch order. (NEW)
+- **FOV dirty flag** — only recompute when entity changes tile. Seeker at 120px/s changes tile ~2 times/sec. Saves ~58 redundant computations/sec. (NEW)
+- **FSM transition delays prevent flickering** — without reactionDelay (PATROL→CHASE) and chaseTimeout (CHASE→PATROL), seeker rapidly oscillates when hider is at LOS boundary. (NEW)
+- **Seeker must halt on FSM transition** — clear path, zero velocity, cancel pending pathfinding. Otherwise 1-tick wrong-direction movement. (NEW)
+- **FOUND takes priority over SURVIVED** — if both trigger same tick, detection is checked before timers in dispatch order. (NEW)

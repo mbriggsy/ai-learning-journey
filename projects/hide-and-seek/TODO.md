@@ -104,19 +104,28 @@
 - [ ] Execute Phase 6: Sound + Scoring
 - [ ] Execute Phase 7: Art Pipeline
 
-## Infrastructure: WebFetch Timeout Hook (UNTESTED)
+## Infrastructure: WebFetch Hook + Gemini Grounding MCP (UNTESTED)
 
 **Problem:** WebFetch tool has NO timeout parameter. When agents call it on slow/dead URLs, they hang indefinitely — losing all accumulated work. Hit this twice during Phase 4 deepening (2 agents stalled with 0 output).
 
-**Solution:** PreToolUse hook blocks WebFetch and redirects agents to `curl --max-time 15` via Bash.
+**Solution (two-part):**
 
-**Files:**
-- Hook script: `~/.claude/hooks/block-webfetch.sh`
-- Wired in: `~/.claude/settings.json` under `hooks.PreToolUse` → matcher `"WebFetch"`
+1. **PreToolUse hook** blocks WebFetch, redirects agents to alternatives
+   - Hook script: `~/.claude/hooks/block-webfetch.sh`
+   - Wired in: `~/.claude/settings.json` under `hooks.PreToolUse` → matcher `"WebFetch"`
 
-**Status:** Script tested manually (works). Hook NOT yet tested live — needs session restart to load.
+2. **Gemini Grounding MCP server** — searches, reads, summarizes with citations. Replaces WebFetch with something BETTER.
+   - Config: `~/.claude/.mcp.json` → `gemini-grounding` server
+   - Package: `npx -y gemini-grounding` (epilande/gemini-grounding)
+   - Uses existing GEMINI_API_KEY. Free tier: 1,500 queries/day.
+   - Tools: `web_search`, `dev_docs`, `reddit_search`
 
-**Next session:** Call WebFetch to verify the hook blocks it and returns the curl alternative. If it doesn't fire, investigate hook loading lifecycle.
+**Status:** Both installed. Neither tested live — need session restart.
+
+**Next session test plan:**
+1. Call WebFetch → verify hook blocks it with redirect message
+2. Call `mcp__gemini-grounding__web_search` → verify grounded results return
+3. If either fails, troubleshoot config loading
 
 ## Landmines
 - **Phaser 3.90.0 is likely the LAST v3 release** — Phaser 4 is RC7, not stable. Fine for our scope, game logic is Phaser-independent.

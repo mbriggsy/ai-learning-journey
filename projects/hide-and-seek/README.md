@@ -87,3 +87,24 @@ Wire it in `~/.claude/settings.json`:
 ```
 
 Agents get the content via `curl` with a 15-second hard timeout. If it times out, they move on instead of hanging forever. The agent is an AI — it can parse raw HTML just fine without WebFetch's built-in summarization.
+
+### Gemini Grounding MCP (WebFetch Replacement)
+
+Even better than `curl`: the [`epilande/gemini-grounding`](https://github.com/epilande/gemini-grounding) MCP server uses Google's Search Grounding API to search, read, and synthesize web content with citations — all in one call with built-in API timeouts. Free tier: 1,500 queries/day.
+
+Add to `~/.claude/.mcp.json`:
+```json
+{
+  "mcpServers": {
+    "gemini-grounding": {
+      "command": "npx",
+      "args": ["-y", "gemini-grounding"],
+      "env": {
+        "GEMINI_API_KEY": "YOUR_KEY_HERE"
+      }
+    }
+  }
+}
+```
+
+Combined with the hook above, agents get redirected from the hanging `WebFetch` to `gemini-grounding` — which is actually *better* output (searched + summarized + cited vs raw HTML).

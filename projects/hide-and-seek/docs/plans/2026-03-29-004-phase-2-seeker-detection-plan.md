@@ -1,7 +1,7 @@
 ---
 title: "Phase 2: Seeker + Detection"
 type: feat
-status: pending-execute
+status: completed
 date: 2026-03-29
 origin: docs/plans/2026-03-29-001-feat-hide-and-seek-game-plan.md
 deepened: 2026-03-30
@@ -735,23 +735,23 @@ tests/
 
 ## Success Criteria
 
-- [ ] Countdown ticks down (seeker stationary, player moves freely, no detection)
-- [ ] "HUNT!" flash on countdown→hunt transition
-- [ ] Seeker wanders randomly via A* pathfinding (doesn't walk through walls)
-- [ ] Seeker pauses briefly at patrol destinations (0.5-1s)
-- [ ] Seeker spots player at range → transitions to CHASE (after reaction delay)
-- [ ] Seeker chases toward last-known-position when LOS breaks
-- [ ] Seeker returns to PATROL after 3s without reacquiring LOS
-- [ ] Getting within proximity + visible = "FOUND!" (game ends, text displayed)
-- [ ] Hunt timer expiry = "SURVIVED!" (game ends, text displayed)
-- [ ] Game restarts on key press after end screen
-- [ ] Escape pauses game (minimal: freeze + "PAUSED" text)
-- [ ] FOV uses Uint8Array (zero allocation per computation)
-- [ ] FOV has perfect symmetry (A sees B ↔ B sees A)
-- [ ] Terminal states halt all game logic (no movement, no AI, no detection after game over)
-- [ ] Architecture boundary holds (zero Phaser imports in src/game/)
-- [ ] `pnpm typecheck` passes
-- [ ] `pnpm test` passes (all game/ and integration tests)
+- [x] Countdown ticks down (seeker stationary, player moves freely, no detection)
+- [x] "HUNT!" flash on countdown→hunt transition
+- [x] Seeker wanders randomly via A* pathfinding (doesn't walk through walls)
+- [x] Seeker pauses briefly at patrol destinations (0.5-1s)
+- [x] Seeker spots player at range → transitions to CHASE (after reaction delay)
+- [x] Seeker chases toward last-known-position when LOS breaks
+- [x] Seeker returns to PATROL after 3s without reacquiring LOS
+- [x] Getting within proximity + visible = "FOUND!" (game ends, text displayed)
+- [x] Hunt timer expiry = "SURVIVED!" (game ends, text displayed)
+- [x] Game restarts on key press after end screen
+- [x] Escape pauses game (minimal: freeze + "PAUSED" text)
+- [x] FOV uses Uint8Array (zero allocation per computation)
+- [x] FOV has perfect symmetry (A sees B ↔ B sees A)
+- [x] Terminal states halt all game logic (no movement, no AI, no detection after game over)
+- [x] Architecture boundary holds (zero Phaser imports in src/game/)
+- [x] `pnpm typecheck` passes
+- [x] `pnpm test` passes (all game/ and integration tests)
 
 ## Dependencies
 

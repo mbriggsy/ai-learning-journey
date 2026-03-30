@@ -25,7 +25,7 @@ This project is an exercise in **fully autonomous SDLC**. Every line of code, ev
 - **Interactive doors** — open/close to break line of sight (press E / controller button)
 - **AI difficulty tiers** — Easy (random wanderer), Medium (systematic searcher), Hard (evidence-based hunter)
 - **Seeker is faster** — 10-15% speed advantage (configurable). You can't outrun them, you have to outthink them.
-- **Stylized cartoon art** generated with Gemini Imagen 4
+- **Stylized cartoon art** generated with Gemini Nano Banana Pro (`gemini-3-pro-image-preview`)
 - **Sound design** — footsteps, door creaks, heartbeat proximity warning
 - **Stats & scoring** — time survived, close calls, win/loss record
 
@@ -43,18 +43,25 @@ This project is an exercise in **fully autonomous SDLC**. Every line of code, ev
 
 ## Status
 
-**Design phase** — brainstorm complete, planning next.
+**All plans deepened. Ready for Phase 0 execution.**
 
-See [`docs/ideation/2026-03-29-hide-and-seek-brainstorm.md`](docs/ideation/2026-03-29-hide-and-seek-brainstorm.md) for full design decisions.
+10 phase plans (0 through 7, with Phase 5 split into 5a/5b and Phase 6 split into 6a/6b), each deepened with 12-15 parallel research/review agents, Context7 doc queries, and cross-phase contradiction review. See [`TODO.md`](TODO.md) for full session history and next steps.
 
 ## Roadmap
 
 - [x] Brainstorm & design decisions
-- [ ] Implementation plan (`/ce:plan`)
-- [ ] Tier 1 — Core loop (map, movement, basic AI, fog of war, win/lose)
-- [ ] Tier 2 — Tactical (doors, minimap + sonar, medium AI)
-- [ ] Tier 3 — Polish (hard AI, sound, scoring, AI-vs-AI spectator)
-- [ ] Tier 4 — Future (movable furniture, fort building, themed maps, Godot port)
+- [x] Master plan + 10 phase plans (`/ce:plan` + `/deepen-plan`)
+- [x] Cross-phase contradiction review (35 conflicts found, all documented)
+- [ ] Phase 0 — Project scaffolding (Vite, TypeScript, Phaser config, .gitignore)
+- [ ] Phase 1 — Map + movement (Tiled, WASD + controller, camera)
+- [ ] Phase 2 — Seeker + detection (AI, shadowcasting FOV, proximity)
+- [ ] Phase 3 — Fog of war + game flow (scenes, HUD, round lifecycle)
+- [ ] Phase 4 — Doors + minimap (interactive environment, sonar ping)
+- [ ] Phase 5a — Seeker difficulty tiers (Easy/Medium/Hard FSM)
+- [ ] Phase 5b — AI hider + spectator mode (god-view, vision cones)
+- [ ] Phase 6a — Audio atmosphere (SFX, heartbeat, ambient)
+- [ ] Phase 6b — Scoring + stats (persistence, results screen)
+- [ ] Phase 7 — Art pipeline (Gemini generation, atlas packing, visual polish)
 
 ## Lessons Learned (SDD)
 
@@ -92,19 +99,12 @@ Agents get the content via `curl` with a 15-second hard timeout. If it times out
 
 Even better than `curl`: the [`epilande/gemini-grounding`](https://github.com/epilande/gemini-grounding) MCP server uses Google's Search Grounding API to search, read, and synthesize web content with citations — all in one call with built-in API timeouts. Free tier: 1,500 queries/day.
 
-Add to `~/.claude/.mcp.json`:
-```json
-{
-  "mcpServers": {
-    "gemini-grounding": {
-      "command": "npx",
-      "args": ["-y", "gemini-grounding"],
-      "env": {
-        "GEMINI_API_KEY": "YOUR_KEY_HERE"
-      }
-    }
-  }
-}
+Register via `claude mcp add` (**NOT** `~/.claude/.mcp.json` — that file is not read by Claude Code):
+
+```bash
+claude mcp add gemini-grounding -s user -e "GEMINI_API_KEY=YOUR_KEY_HERE" -- cmd //c npx -y gemini-grounding
 ```
+
+**Note:** On Windows Git Bash, use `//c` (double slash) to prevent bash from expanding `/c` to `C:/`. See [`docs/environment-setup.md`](docs/environment-setup.md) for full MCP setup guide.
 
 Combined with the hook above, agents get redirected from the hanging `WebFetch` to `gemini-grounding` — which is actually *better* output (searched + summarized + cited vs raw HTML).

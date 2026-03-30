@@ -7,6 +7,7 @@
 - **Phase 0 plan DEEPENED (2026-03-29)** — 12 agents (4 research + 7 review + 1 repo analyst), 3 Context7 queries, 3 web searches, 5 contradictions resolved
 - **Phase 1 plan DEEPENED (2026-03-29)** — 14 agents (5 research + 7 review + 1 spec flow + 1 repo analyst), 3 Context7 queries, 3 web searches, 11 contradictions resolved
 - **Phase 2 plan DEEPENED (2026-03-30)** — 14 agents (4 research + 6 review + 1 spec flow + 1 repo analyst), 1 Context7 query, 2 web searches, 12 contradictions resolved
+- **Phase 3 plan DEEPENED (2026-03-30)** — 13 agents (4 research + 6 review + 1 spec flow + 1 codebase explorer + 1 general-purpose), 3 Context7 queries, 13 contradictions resolved
 - Phase plans broken out into individual documents — deepening in progress
 - No code yet — project is in design phase
 
@@ -14,6 +15,21 @@
 - Brainstorm: `docs/ideation/2026-03-29-hide-and-seek-brainstorm.md`
 - Master plan: `docs/plans/2026-03-29-001-feat-hide-and-seek-game-plan.md`
 - Phase plans: `docs/plans/2026-03-29-002` through `009`
+
+## What We Did (2026-03-30, Session 4)
+- **DEEPENED Phase 3 plan with 13 agents:**
+  - 4 research agents: Phaser fog of war (per-tile alpha, shadowcasting, overlay layers), scene management (sleep/wake, lifecycle, data passing), camera dramatic effects (Promise chaining, dual-camera, easing), HUD/UI patterns (BitmapText, timer states, menu navigation)
+  - 6 review agents: architecture strategist, TypeScript reviewer, performance oracle, code simplicity, spec flow analyzer, race condition reviewer, pattern recognition
+  - 1 codebase explorer: verified NO CODE EXISTS, confirmed Phase 2 architecture decisions
+  - 1 general-purpose agent: Context7-based scene management research (replaced stuck best-practices-researcher)
+  - 3 Context7 doc queries: Phaser scenes API (start/launch/sleep/wake), camera effects API (fade/zoom/pan/flash events), tilemap API (setTint/setAlpha per-tile)
+  - Resolved 13 contradictions (Boot scope, loaderror, controller nav, fog tween, COUNTDOWN→HUNT fade, fog rendering approach, onboarding defer, reduced-motion toggle, settings-from-pause defer, SceneTransition utility, EndOfRoundSequence utility, FOV boundary violation, zoomTo(1.5) jitter)
+  - 6 simplification proposals evaluated: 3 accepted (merge Boot+Preloader, remove Settings UI, remove AI-vs-AI button), 1 partially accepted (remove renderer-side dirty flag, keep game-layer FOV dirty flag), 2 rejected with evidence (HUD parallel scene KEPT — zoom scaling problem; full camera sequences KEPT — data-driven approach makes them cheap)
+  - 5 new systems designed: PauseAuthority (~20 LOC), EndOfRoundSequence polling state machine (~40 LOC), SceneTransition (type-safe via SceneDataMap), CinematicManager (dual-camera), TestBridge (Playwright integration)
+  - 7 new type definitions: SceneDataMap, ResultsSceneData, HUDSceneData, GameSettings, SequenceStep, FogState, TimerState
+  - 5 critical race conditions caught: HUD deaf on first frame, EndOfRoundSequence softlock, dual pause authority conflict, EasyStar ghost callbacks, Escape during cinematic
+  - 8 Playwright test specifications with TestBridge architecture
+  - WebFetch stuck-agent lesson learned: best-practices-researcher agents hang on Cloudflare-protected blog URLs. Killed and relaunched 3 times before switching to general-purpose agent with Context7-only instructions. Future fix: use Playwright MCP for blog fetches.
 
 ## What We Did (2026-03-30, Session 3)
 - **DEEPENED Phase 2 plan with 14 agents:**
@@ -69,7 +85,7 @@
 - [x] `/deepen-plan docs/plans/2026-03-29-002-phase-0-project-scaffolding-plan.md` ← DONE (12 agents, 5 contradictions resolved)
 - [x] `/deepen-plan docs/plans/2026-03-29-003-phase-1-map-movement-plan.md` ← DONE (14 agents, 11 contradictions resolved)
 - [x] `/deepen-plan docs/plans/2026-03-29-004-phase-2-seeker-detection-plan.md` ← DONE (14 agents, 12 contradictions resolved)
-- [ ] `/deepen-plan docs/plans/2026-03-29-005-phase-3-fog-game-flow-plan.md`
+- [x] `/deepen-plan docs/plans/2026-03-29-005-phase-3-fog-game-flow-plan.md` ← DONE (13 agents, 13 contradictions resolved)
 - [ ] `/deepen-plan docs/plans/2026-03-29-006-phase-4-doors-minimap-plan.md`
 - [ ] `/deepen-plan docs/plans/2026-03-29-007-phase-5-ai-depth-spectator-plan.md`
 - [ ] `/deepen-plan docs/plans/2026-03-29-008-phase-6-sound-scoring-plan.md`
@@ -135,3 +151,22 @@
 - **FSM transition delays prevent flickering** — without reactionDelay (PATROL→CHASE) and chaseTimeout (CHASE→PATROL), seeker rapidly oscillates when hider is at LOS boundary. (NEW)
 - **Seeker must halt on FSM transition** — clear path, zero velocity, cancel pending pathfinding. Otherwise 1-tick wrong-direction movement. (NEW)
 - **FOUND takes priority over SURVIVED** — if both trigger same tick, detection is checked before timers in dispatch order. (NEW)
+- **camera.stopFollow() MUST precede camera.pan()** — follow logic overrides pan scroll every frame. Without stopFollow, pan visually does nothing. (NEW)
+- **setScrollFactor(0) does NOT prevent zoom scaling** — objects fixed to viewport still render at camera's zoom level. Use dual-camera (UI camera at zoom=1) for splash text. (NEW)
+- **Camera effects require force:true in sequences** — without it, calling same effect type while previous is running is silently ignored. (NEW)
+- **scene.wake() does NOT call init()/create()** — data only arrives via 'wake' event listener. Biggest Phaser scene landmine. (NEW)
+- **Use stop() for PauseMenu, not sleep()** — no state worth preserving. stop() triggers clean shutdown, next launch() runs fresh create(). (NEW)
+- **setTint() is WebGL-only** — Canvas renderer ignores it silently. Verify renderer type at boot. (NEW)
+- **scene.sleep() is deferred 1 frame** — GameEngine pause flag is true freeze mechanism (checked in fixedUpdate before accumulator). (NEW)
+- **scene.launch() is deferred** — HUD must PULL initial state on create, not rely on catching first PHASE_CHANGED event (already emitted). (NEW)
+- **scene.bringToTop() after launch** — guarantee PauseMenu z-ordering above HUD and Game. (NEW)
+- **Math.ceil for timer display** — Math.floor shows "00:00" with 0.98s remaining. ceil shows "00:00" only at actual expiry. (NEW)
+- **External emitter listeners survive scene shutdown** — Phaser auto-cleans this.events listeners but NOT listeners on custom TypedEmitter or game.events. Must manually .off() in shutdown handler. (NEW)
+- **camera.resetFX() before cinematic sequences** — clears any in-flight effects that would cause silently-ignored new effects. (NEW)
+- **EndOfRoundSequence needs timeout safety** — if any camera callback fails to fire (WebGL context loss), polling state machine force-advances after duration+500ms. Prevents softlock. (NEW)
+- **PauseAuthority needed for 3-way pause** — tab visibility, PauseMenu, and cinematic all fight each other. Reason-tracked system prevents resume-during-pause bugs. (NEW)
+- **Double-tap Escape spawns multiple PauseMenus** — guard with isActive() check + JustDown() edge detection. (NEW)
+- **COUNTDOWN→HUNT transition needs camera fade** — without 200ms fadeOut, full-map snaps to black for 1 frame before FOV renders. Jarring. (NEW)
+- **EasyStar setTimeout callbacks survive scene destruction** — GameEngine.dispose() must cancel all pending paths AND set disposed flag checked by every callback. (NEW)
+- **Fog overlay = dedicated black-tile TilemapLayer** — NOT terrain tinting. Separate layer at depth 100, per-tile alpha controls visibility. Cleaner, no terrain modification. (NEW)
+- **Manual lerp for fog transitions, NOT Phaser Tweens** — Tweens create ~60 garbage objects/sec. Manual lerp (lerpFactor=0.12) is zero-GC. (NEW)

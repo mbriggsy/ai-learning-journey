@@ -91,11 +91,6 @@ class GameMapImpl implements GameMap {
 
 // --- Helpers ---
 
-function getObjectProp(obj: TiledObject, name: string): unknown {
-  const prop = obj.properties?.find(p => p.name === name);
-  return prop?.value;
-}
-
 function toBool(value: unknown): boolean {
   if (typeof value === 'boolean') return value;
   if (typeof value === 'string') return value.toLowerCase() === 'true';

@@ -2,7 +2,7 @@
 
 ## Current State
 - Brainstorm complete (2026-03-29)
-- Master plan complete (2026-03-29) — 8 phases (now 9 with Phase 5 split), all research done
+- Master plan complete (2026-03-29) — 8 phases (now 10 with Phase 5 + 6 splits), all research done
 - **Master plan DEEPENED (2026-03-29)** — 16 research/review agents, 3 Context7 queries, 6 contradictions resolved
 - **Phase 0 plan DEEPENED (2026-03-29)** — 12 agents (4 research + 7 review + 1 repo analyst), 3 Context7 queries, 3 web searches, 5 contradictions resolved
 - **Phase 1 plan DEEPENED (2026-03-29)** — 14 agents (5 research + 7 review + 1 spec flow + 1 repo analyst), 3 Context7 queries, 3 web searches, 11 contradictions resolved
@@ -10,6 +10,7 @@
 - **Phase 3 plan DEEPENED (2026-03-30)** — 13 agents (4 research + 6 review + 1 spec flow + 1 codebase explorer + 1 general-purpose), 3 Context7 queries, 13 contradictions resolved
 - **Phase 4 plan DEEPENED (2026-03-30)** — 14 agents (9 review + 4 research + 1 web research), 4 Context7 queries, 13 contradictions resolved
 - **Phase 5 plan SPLIT + DEEPENED (2026-03-30)** — 14 agents (5 research + 7 review + 1 spec flow + 1 architecture verification), 3 Context7 queries, 12 Gemini Grounding queries, 14 contradictions resolved, 25 race conditions identified, 33 silent failures caught
+- **Phase 6 plan SPLIT + DEEPENED (2026-03-30)** — 15 agents (3 research + 10 review + 1 GSD plan checker + 1 spec flow), 2 Context7 queries, 8 contradictions resolved, 26 silent failures caught
 - Phase plans broken out into individual documents — deepening in progress
 - No code yet — project is in design phase
 
@@ -19,7 +20,31 @@
 - Phase plans: `docs/plans/2026-03-29-002` through `009`
 - Phase 5a: `docs/plans/2026-03-29-007a-phase-5a-seeker-tiers-plan.md`
 - Phase 5b: `docs/plans/2026-03-29-007b-phase-5b-hider-spectator-plan.md`
+- Phase 6a: `docs/plans/2026-03-29-008a-phase-6a-audio-atmosphere-plan.md`
+- Phase 6b: `docs/plans/2026-03-29-008b-phase-6b-scoring-stats-plan.md`
 - Original Phase 5 (superseded): `docs/plans/2026-03-29-007-phase-5-ai-depth-spectator-plan.md`
+- Original Phase 6 (superseded): `docs/plans/2026-03-29-008-phase-6-sound-scoring-plan.md`
+
+## What We Did (2026-03-30, Session 6)
+- **DEEPENED Phase 6 plan with 15 agents, SPLIT into 6a + 6b:**
+  - 3 research agents: Web Audio API game patterns, Phaser 3.90 Sound Manager (Context7), game scoring systems + stats persistence
+  - 10 review agents: architecture strategist, TypeScript reviewer, performance oracle, security sentinel, pattern recognition, frontend races, type design analyzer, silent failure hunter, code simplicity, data integrity guardian
+  - 1 GSD plan checker: goal-backward verification, 5 blockers found
+  - 1 spec flow analyzer: 23 user flows traced, 12 gaps identified
+  - 2 Context7 doc queries: Phaser Sound Manager API, WebAudioSound API
+  - **Resolved 8 contradictions:**
+    1. Heartbeat: pre-recorded sample wins over OscillatorNode (single-start, synthetic sound)
+    2. Close calls: debounced enter/exit zone wins (per-tick inflates 60x)
+    3. Audio channels: 3 (master + SFX + ambient), not 2
+    4. Creak interval: 8-20s compromise (3-8s too frequent, 10-30s too sparse)
+    5. localStorage key: camelCase (hideAndSeekStats, hideAndSeekSettings)
+    6. CSP: deferred per Phase 0 decision, no Phase 6 changes
+    7. bestTime: renamed bestSurvivalTimeS, -1 sentinel (Infinity breaks JSON)
+    8. Phaser pauseOnBlur: disabled, PauseAuthority + AudioGate own lifecycle
+  - 26 silent failures caught (6 CRITICAL: HTML5 fallback crash, raw Web Audio bypasses mute, NaN in spectator, resume() rejection, schema version missing, OscillatorNode contradiction; 12 HIGH; 8 MEDIUM)
+  - Key new designs: AudioManager coordinator with 3 subsystems (HeartbeatSystem, SoundEffects, AmbientSound), AudioGate class for suspend/resume Promise sequencing, SoundPool with round-robin + oldest-steal, footstep distance accumulator, close call state machine, PersistencePort interface + dependency injection, RoundResult type (replaces ScoreState), score fields on HuntPhase (not separate type), additive-then-multiplicative score formula with difficulty multiplier
+  - Phase 6a: AudioManager, SFX sourcing, sound effects + pools, heartbeat (playbackRate + lerp + hysteresis), ambient (drone + creaks + duck/unduck), spectator audio, tab visibility (AudioGate), settings (3 sliders + mute)
+  - Phase 6b: Score accumulation on HuntPhase (fixedUpdate step 10), scoring.ts pure functions, score formula (base + close calls + proximity + efficiency + doors × difficulty multiplier), GameEventMap additions (CLOSE_CALL, FOOTSTEP), RoundResult + ResultsSceneData extension, stats persistence (PersistencePort, schema v1, migration chain, hand-rolled type guard), StatsSchema (Record<Difficulty>, -1 sentinels, win streak), results screen (count-up animation, PB flash, itemized breakdown)
 
 ## What We Did (2026-03-30, Session 5)
 - **Tested Gemini Grounding MCP** — confirmed working with Phaser 3.90 + fog of war blog queries. Full Cloudflare bypass.
@@ -125,7 +150,7 @@
 - [x] `/deepen-plan docs/plans/2026-03-29-005-phase-3-fog-game-flow-plan.md` ← DONE (13 agents, 13 contradictions resolved)
 - [x] `/deepen-plan docs/plans/2026-03-29-006-phase-4-doors-minimap-plan.md` ← DONE (14 agents, 13 contradictions resolved)
 - [x] `/deepen-plan docs/plans/2026-03-29-007-phase-5-ai-depth-spectator-plan.md` ← DONE — SPLIT into 5a + 5b (14 agents, 14 contradictions resolved, 25 race conditions, 33 silent failures)
-- [ ] `/deepen-plan docs/plans/2026-03-29-008-phase-6-sound-scoring-plan.md`
+- [x] `/deepen-plan docs/plans/2026-03-29-008-phase-6-sound-scoring-plan.md` ← DONE — SPLIT into 6a + 6b (15 agents, 8 contradictions resolved, 26 silent failures)
 - [ ] `/deepen-plan docs/plans/2026-03-29-009-phase-7-art-pipeline-plan.md`
 
 **THEN fix any contradictions across deepened plans.**
@@ -138,7 +163,8 @@
 - [ ] Execute Phase 4: Doors + Minimap
 - [ ] Execute Phase 5a: Seeker Difficulty Tiers
 - [ ] Execute Phase 5b: AI Hider + Spectator
-- [ ] Execute Phase 6: Sound + Scoring
+- [ ] Execute Phase 6a: Audio Atmosphere
+- [ ] Execute Phase 6b: Scoring + Stats
 - [ ] Execute Phase 7: Art Pipeline
 
 ## Infrastructure: WebFetch Hook + Gemini Grounding MCP — VERIFIED ✓
@@ -235,3 +261,18 @@
 - **Director system REMOVED by design** — violates "AI must never act on unperceived info." If Hard AI needs help, add back as tuning lever. (NEW — Phase 5a decision)
 - **Detection miss rate REMOVED by design** — feels like bug. Reaction delays + transition delays are the near-miss mechanism. (NEW — Phase 5a decision)
 - **Tiled Object Layer properties ARE flat maps in Phaser** — despite raw JSON being array format, Phaser parses them into `obj.properties.roomId` (flat key-value). Contradicts Phase 4 landmine about arrays. (NEW — Phase 5a, corrects Phase 4 landmine)
+- **AudioContext suspend/resume Promises can cross** — calling resume() while suspend() is in-flight kills audio permanently. AudioGate class chains through single pendingOp Promise. (NEW — Phase 6a)
+- **Phaser pauseOnBlur conflicts with PauseAuthority** — blur/focus vs visibilitychange are different events, different timing. Disable Phaser's pauseOnBlur, own through PauseAuthority + AudioGate. (NEW — Phase 6a)
+- **HeartbeatSystem crashes on HTML5 Audio fallback** — `this.sound.context` is undefined. Check `instanceof WebAudioSoundManager`, disable if HTML5. (NEW — Phase 6a)
+- **Raw Web Audio nodes bypass Phaser mute** — GainNode connected to AudioContext.destination ignores `this.sound.mute`. Route through Phaser's master gain chain. (NEW — Phase 6a)
+- **60 footsteps/second without distance accumulator** — per-tick triggering = machine gun. Emit FOOTSTEP event every ~24px movement. (NEW — Phase 6a)
+- **Heartbeat boundary stutter** — same FSM flickering pattern. Hysteresis: start 8 tiles, stop 9.5 tiles. Lerp rate (0.08). (NEW — Phase 6a)
+- **GainNode.value direct assignment produces clicks** — use linearRampToValueAtTime(value, now + 0.015) for all volume changes. (NEW — Phase 6a)
+- **setTargetAtTime(0) never reaches zero** — exponential asymptote. Use linearRampToValueAtTime(0) for final silence. (NEW — Phase 6a)
+- **sound.setRate() changes pitch** — playbackRate 2.0 = double speed + one octave higher. Intentional for heartbeat. NEVER use on footsteps. (NEW — Phase 6a)
+- **Phaser Sound Manager is game-global** — sounds survive scene shutdown. Must explicitly stopByKey() in shutdown handler. (NEW — Phase 6a)
+- **cancelScheduledValues(now) before new automation** — without it, AudioParam events queue unpredictably. (NEW — Phase 6a)
+- **Infinity breaks JSON.stringify** — `JSON.stringify({x: Infinity})` → `{"x":null}`. Use -1 sentinel for "never played". (NEW — Phase 6b)
+- **totalGames is derived, not stored** — compute as wins + losses. Storing creates invariant violation risk. (NEW — Phase 6b)
+- **Number.isFinite() required in type guards** — NaN and Infinity both pass typeof === 'number'. (NEW — Phase 6b)
+- **localStorage re-read before write** — narrows concurrent-tab race from entire session to microseconds. (NEW — Phase 6b)

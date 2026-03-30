@@ -11,8 +11,11 @@
 - **Phase 4 plan DEEPENED (2026-03-30)** — 14 agents (9 review + 4 research + 1 web research), 4 Context7 queries, 13 contradictions resolved
 - **Phase 5 plan SPLIT + DEEPENED (2026-03-30)** — 14 agents (5 research + 7 review + 1 spec flow + 1 architecture verification), 3 Context7 queries, 12 Gemini Grounding queries, 14 contradictions resolved, 25 race conditions identified, 33 silent failures caught
 - **Phase 6 plan SPLIT + DEEPENED (2026-03-30)** — 15 agents (3 research + 10 review + 1 GSD plan checker + 1 spec flow), 2 Context7 queries, 8 contradictions resolved, 26 silent failures caught
-- Phase plans broken out into individual documents — deepening in progress
-- No code yet — project is in design phase
+- Phase plans broken out into individual documents — all 10 deepened
+- **Phase 0 EXECUTED (2026-03-30)** — scaffolding complete, 3 tests
+- **Phase 1 EXECUTED (2026-03-30)** — map + movement, 43 tests, arrow keys added
+- **Code review PASSED (2026-03-30)** — 5 agents (TS, arch, perf, security, simplicity), zero blockers
+- **Branch:** `feat/phase-0-scaffolding` pushed to origin (4 commits)
 
 ### Documents
 - Brainstorm: `docs/ideation/2026-03-29-hide-and-seek-brainstorm.md`
@@ -24,6 +27,23 @@
 - Phase 6b: `docs/plans/2026-03-29-008b-phase-6b-scoring-stats-plan.md`
 - Original Phase 5 (superseded): `docs/plans/2026-03-29-007-phase-5-ai-depth-spectator-plan.md`
 - Original Phase 6 (superseded): `docs/plans/2026-03-29-008-phase-6-sound-scoring-plan.md`
+
+## What We Did (2026-03-30, Session 7)
+- **EXECUTED Phase 0 + Phase 1** — first code in the project
+- Phase 0: .gitignore, package.json (pnpm, ESM), tsconfig (strict + 4 flags), Vite (3-way chunk split), Vitest (3 projects), index.html, constants (15 grouped), type system (ReadonlyDeep, TileCoord branded, GameState union, TypedEmitter), BootScene proof of life, architecture boundary test, CLAUDE.md
+- Phase 1: GameEngine (60Hz fixed timestep, delta guards, pause/resume), map.ts (Tiled JSON → Uint8Array collision/LOS grids), movement.ts (separate-axis collision, corner sliding, normalized diagonals), InputManager (WASD + arrows + Xbox gamepad, scaled radial deadzone, edge-triggered buttons), PlayerSprite, Game scene (camera zoom 2 snap-then-follow, tab visibility), 40x30 tile map (8 rooms)
+- Added arrow key support (Briggsy request)
+- **Code review with 5 agents** (TS reviewer, architecture strategist, performance oracle, security sentinel, simplicity reviewer):
+  - Zero critical issues in application code
+  - Architecture: "textbook clean" — boundary pristine, scales to all 10 phases
+  - Performance: 3 allocation hot spots to fix before Phase 2 (tileCoord per call, PlayerState per tick, deadzone object per frame) — fine at 1 entity
+  - Security: GitHub PAT in git remote URL — FIXED (URL stripped, token needs rotation on github.com)
+  - Security: .env with Gemini key properly gitignored, not VITE_ prefixed — safe
+  - Simplicity: one dead function removed (getObjectProp), rest is earned complexity
+  - TypeScript: getState() returns shallow Readonly (upgrade to ReadonlyDeep in Phase 2)
+- Discovered: `override` works on Phaser Scene `update()` but NOT `create()`/`preload()`/`init()` — documented in CLAUDE.md
+- Test baseline: **43 tests passing** (map, movement, engine, state, architecture boundary)
+- Build: Phaser chunk 1.2MB + app chunk 9.2KB, zero vulnerabilities
 
 ## What We Did (2026-03-30, Session 6)
 - **DEEPENED Phase 6 plan with 15 agents, SPLIT into 6a + 6b:**
@@ -185,6 +205,14 @@ Phase 0 fixes (apply during Phase 0 execution):
 Phase 1-2 fixes (apply during Phase 1/2 execution):
 - [ ] Type `getGameObject()` as `Phaser.GameObjects.GameObject` (not `Rectangle`) in PlayerSprite and SeekerSprite — enables Phase 7 swap without type changes
 
+Phase 2 fixes (from code review — apply during Phase 2 execution):
+- [ ] Fix tileCoord() allocation in collision hot path — change isWalkable/isBlocking to accept (x, y) number pairs instead of branded TileCoord objects (~720 allocs/sec, scales with entity count)
+- [ ] Mutate PlayerState in place in updateMovement instead of returning new object (60 allocs/sec per entity)
+- [ ] Pre-allocate deadzone result object in InputManager.applyRadialDeadzone (same pattern as inputResult)
+- [ ] Upgrade getState() return type from Readonly<GameState> to ReadonlyDeep<GameState>
+- [ ] Extract named MutablePlayingState type alias for the inline mapped type in engine.ts fixedUpdate
+- [ ] Add doc comment on InputManager.sample() warning returned object is reused singleton — do not store across frames
+
 Phase 3 fixes (apply during Phase 3 execution):
 - [ ] TEXTURE_KEYS manifest must include fog overlay tile AND BitmapFont entries (not just game art)
 - [ ] Clock API frame-freeze: either implement in TestBridge or defer to Phase 7
@@ -205,8 +233,8 @@ Phase 6b fix (apply during Phase 6b execution):
 - [ ] Results screen UI art not specified in Phase 7 — added during deepening. Verify compatibility with Phase 6b layout spec.
 
 **THEN execute phases sequentially (fresh context window per phase):**
-- [ ] Execute Phase 0: Project Scaffolding
-- [ ] Execute Phase 1: Map + Movement
+- [x] Execute Phase 0: Project Scaffolding ✓ (2026-03-30, Session 7)
+- [x] Execute Phase 1: Map + Movement ✓ (2026-03-30, Session 7)
 - [ ] Execute Phase 2: Seeker + Detection
 - [ ] Execute Phase 3: Fog of War + Game Flow
 - [ ] Execute Phase 4: Doors + Minimap
@@ -238,13 +266,14 @@ Phase 6b fix (apply during Phase 6b execution):
 - **Context rot** — quality degrades at 50% context utilization. New terminal per phase. Phase 5 SPLIT into 5a/5b.
 - **Tiled JSON export** — use CSV or Base64 uncompressed tile layer format. Phaser can't read compressed.
 - **Camera zoom** — integer values only when using roundPixels (non-integer = jitter).
-- **NO .gitignore yet** — MUST create in Phase 0 before any .env file. API key will leak without it. (NEW — CRITICAL)
-- **Vite 7.0.0-7.0.6 have active CVEs** — CVE-2025-31125 (arbitrary file read, exploited in the wild), CVE-2025-58751, CVE-2025-58752 (server.fs bypass). Minimum safe version is ^7.0.7. (NEW — CRITICAL)
-- **esModuleInterop: true required for Phaser** — Phaser's type defs use `export = Phaser`. Without esModuleInterop, `import Phaser from 'phaser'` fails under verbatimModuleSyntax. Conway didn't need it. (NEW)
-- **vitest.config.ts must use mergeConfig** — without it, vitest.config OVERRIDES vite.config entirely. Import mergeConfig from 'vitest/config', not 'vite'. (NEW)
-- **Defer CSP to hardening pass** — Phaser internally uses dynamic code evaluation (try/catch). strict CSP produces console warning but game still works. Defer rather than add unsafe-eval. (NEW)
-- **fps.limit not fps.target** — fps.target is a hint, fps.limit is the hard cap. Without limit, 120Hz monitors waste GPU doubling render frames. (NEW)
-- **Tab backgrounding** — requestAnimationFrame stops when tab hidden. Delta spikes on return. Must auto-pause via visibilitychange + cap accumulator. (NEW)
+- ~~**NO .gitignore yet**~~ — DONE in Phase 0. .env properly excluded.
+- ~~**Vite 7.0.0-7.0.6 have active CVEs**~~ — DONE. Using Vite 7.3.1.
+- ~~**esModuleInterop: true required for Phaser**~~ — DONE in Phase 0 tsconfig.
+- ~~**vitest.config.ts must use mergeConfig**~~ — DONE in Phase 0.
+- ~~**fps.limit not fps.target**~~ — DONE. fps.limit: 60 in Phaser config.
+- ~~**Tab backgrounding**~~ — DONE. visibilitychange handler + pause/resume + keyboard reset in Phase 1.
+- **Defer CSP to hardening pass** — Phaser uses dynamic code eval. No CSP until verified post-Phase 7.
+- **override keyword on Phaser Scene** — works on update() ONLY. create()/preload()/init() NOT declared in Phaser's type defs (TS4113). Documented in CLAUDE.md.
 - **Camera flash seizure risk** — camera.flash() with white is photosensitivity hazard. Need reduced-motion toggle. (NEW)
 - **FOV must use Uint8Array, NOT Set<string>** — 60 Set allocations/sec causes GC micro-stutters. Pre-allocate and reuse. (NEW)
 - **Shallow Readonly<T> is insufficient** — renderer can still mutate nested arrays. Must use ReadonlyDeep<T>. (NEW)

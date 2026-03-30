@@ -25,24 +25,14 @@ export const MOVEMENT = {
 export const VISION = {
   HIDER_RANGE: 6,
   SEEKER_RANGE: 8,
-  /** Seeker cone angle in degrees (rendering only) */
-  SEEKER_ANGLE_DEG: 90,
   /** Proximity detection threshold */
   PROXIMITY_THRESHOLD: 1.5,
-  /** Heartbeat audio starts at this range */
-  HEARTBEAT_START_RANGE: 3.0,
 } as const satisfies Record<string, number>;
 
 /** Timers and intervals (in seconds) */
 export const TIMERS = {
   COUNTDOWN_DURATION_S: 10,
   HUNT_TIME_LIMIT_S: 120,
-  SONAR_PING_INTERVAL_S: 5,
-} as const satisfies Record<string, number>;
-
-/** Interaction ranges (in tiles) */
-export const INTERACTION = {
-  DOOR_RANGE: 1.5,
 } as const satisfies Record<string, number>;
 
 /** Camera settings */
@@ -55,7 +45,6 @@ export const CAMERA = {
 export const INPUT = {
   GAMEPAD_DEADZONE_INNER: 0.15,
   GAMEPAD_DEADZONE_OUTER: 0.95,
-  GAMEPAD_MENU_THRESHOLD: 0.5,
 } as const satisfies Record<string, number>;
 
 /** Render depth values */
@@ -63,7 +52,6 @@ export const DEPTH = {
   GROUND: 0,
   WALLS: 1,
   PLAYER: 5,
-  ABOVE_PLAYER: 10,
   UI: 100,
 } as const satisfies Record<string, number>;
 

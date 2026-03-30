@@ -62,7 +62,8 @@ function moveAlongPath(
   let remaining = speed * dt;
 
   while (remaining > 0 && ai.currentWaypointIndex < ai.currentPath.length) {
-    const wp = ai.currentPath[ai.currentWaypointIndex]!;
+    const wp = ai.currentPath[ai.currentWaypointIndex];
+    if (!wp) break;
     const target = tileToPixelCenter(wp.x, wp.y);
     const dx = target.x - render.x;
     const dy = target.y - render.y;
@@ -85,9 +86,11 @@ function moveAlongPath(
 
   // Update facing based on movement direction toward current/last waypoint
   if (ai.currentWaypointIndex < ai.currentPath.length) {
-    const wp = ai.currentPath[ai.currentWaypointIndex]!;
-    const target = tileToPixelCenter(wp.x, wp.y);
-    updateFacing(render, target.x, target.y);
+    const wp = ai.currentPath[ai.currentWaypointIndex];
+    if (wp) {
+      const target = tileToPixelCenter(wp.x, wp.y);
+      updateFacing(render, target.x, target.y);
+    }
   }
 }
 
@@ -219,7 +222,12 @@ function tickChase(
 ): void {
   // Update last known position when hider is visible
   if (detectionResult === 'spotted' || detectionResult === 'found') {
-    ai.lastKnownHiderPos = { x: hiderPos.x, y: hiderPos.y };
+    if (ai.lastKnownHiderPos) {
+      ai.lastKnownHiderPos.x = hiderPos.x;
+      ai.lastKnownHiderPos.y = hiderPos.y;
+    } else {
+      ai.lastKnownHiderPos = { x: hiderPos.x, y: hiderPos.y };
+    }
     ai.chaseLostTicks = 0;
     ai.chaseRepathCounter++;
 

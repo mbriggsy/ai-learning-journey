@@ -18,7 +18,7 @@ export class PathfindingSystem {
     for (let y = 0; y < height; y++) {
       const row: number[] = [];
       for (let x = 0; x < width; x++) {
-        row.push(collision[y * width + x]!);
+        row.push(collision[y * width + x] ?? 0);
       }
       grid.push(row);
     }

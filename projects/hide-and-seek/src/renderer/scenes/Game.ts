@@ -70,7 +70,6 @@ export class GameScene extends Phaser.Scene {
   // State tracking
   private isGameOver: boolean = false;
   private endScreenTimer: number = 0;
-  private lastFlowKind: GameFlowKind = 'countdown';
 
   constructor() {
     super({ key: 'GameScene' });
@@ -88,7 +87,6 @@ export class GameScene extends Phaser.Scene {
   create(): void {
     this.isGameOver = false;
     this.endScreenTimer = 0;
-    this.lastFlowKind = 'countdown';
 
     // --- Tilemap rendering ---
     const tilemap = this.make.tilemap({ key: 'map' });
@@ -151,6 +149,7 @@ export class GameScene extends Phaser.Scene {
     // --- Cleanup on shutdown ---
     this.events.on('shutdown', () => {
       document.removeEventListener('visibilitychange', this.onVisibilityChange);
+      this.engine.getEmitter().offAll();
       this.inputManager.dispose();
     });
   }

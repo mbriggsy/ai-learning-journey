@@ -1,42 +1,46 @@
 /**
  * Symmetric shadowcasting FOV (Albert Ford).
  * Rational arithmetic — zero floating point in slope comparisons.
+ * All slopes represented as inline (num, den) pairs — zero object allocations.
  * Reference: albertford.com/shadowcasting/
  */
-
-/** Rational slope as numerator/denominator pair (avoids floats). */
-interface Slope {
-  num: number;
-  den: number;
-}
 
 /** Quadrant transform: maps (row, col) → absolute (x, y). */
 type Transform = (originX: number, originY: number, row: number, col: number) => [number, number];
 
 const TRANSFORMS: Transform[] = [
-  // North: row goes up
-  (ox, oy, row, col) => [ox + col, oy - row],
-  // South: row goes down
-  (ox, oy, row, col) => [ox + col, oy + row],
-  // East: row goes right
-  (ox, oy, row, col) => [ox + row, oy + col],
-  // West: row goes left
-  (ox, oy, row, col) => [ox - row, oy + col],
+  (ox, oy, row, col) => [ox + col, oy - row], // North
+  (ox, oy, row, col) => [ox + col, oy + row], // South
+  (ox, oy, row, col) => [ox + row, oy + col], // East
+  (ox, oy, row, col) => [ox - row, oy + col], // West
 ];
 
-/** a/b < c/d via cross-multiplication (integer only). */
-function slopeLess(a: Slope, b: Slope): boolean {
-  return a.num * b.den < b.num * a.den;
+// Slope comparisons via cross-multiplication (integer only, zero floats).
+// a/b < c/d → a*d < c*b
+function slopeLt(aNum: number, aDen: number, bNum: number, bDen: number): boolean {
+  return aNum * bDen < bNum * aDen;
+}
+function slopeGe(aNum: number, aDen: number, bNum: number, bDen: number): boolean {
+  return aNum * bDen >= bNum * aDen;
+}
+function slopeGt(aNum: number, aDen: number, bNum: number, bDen: number): boolean {
+  return aNum * bDen > bNum * aDen;
 }
 
-/** a/b >= c/d */
-function slopeGe(a: Slope, b: Slope): boolean {
-  return a.num * b.den >= b.num * a.den;
-}
+// Stack stored as flat number array: [row, startNum, startDen, endNum, endDen, ...]
+// Stride of 5 per entry. Avoids object allocation entirely.
+const STACK_STRIDE = 5;
+const scanStack = new Float64Array(256 * STACK_STRIDE); // max 256 entries
+let stackTop = 0;
 
-/** a/b > c/d */
-function slopeGt(a: Slope, b: Slope): boolean {
-  return a.num * b.den > b.num * a.den;
+function stackPush(row: number, sNum: number, sDen: number, eNum: number, eDen: number): void {
+  const i = stackTop * STACK_STRIDE;
+  scanStack[i] = row;
+  scanStack[i + 1] = sNum;
+  scanStack[i + 2] = sDen;
+  scanStack[i + 3] = eNum;
+  scanStack[i + 4] = eDen;
+  stackTop++;
 }
 
 function scanQuadrant(
@@ -49,86 +53,63 @@ function scanQuadrant(
   height: number,
   transform: Transform,
   startRow: number,
-  startSlope: Slope,
-  endSlope: Slope,
+  startSlopeNum: number, startSlopeDen: number,
+  endSlopeNum: number, endSlopeDen: number,
 ): void {
-  // Iterative stack to avoid deep recursion
-  const stack: Array<{ row: number; start: Slope; end: Slope }> = [];
-  stack.push({ row: startRow, start: startSlope, end: endSlope });
+  stackTop = 0;
+  stackPush(startRow, startSlopeNum, startSlopeDen, endSlopeNum, endSlopeDen);
 
-  while (stack.length > 0) {
-    const { row, start, end } = stack.pop()!;
+  while (stackTop > 0) {
+    stackTop--;
+    const si = stackTop * STACK_STRIDE;
+    const row = scanStack[si] as number;
+    const startNum = scanStack[si + 1] as number;
+    const startDen = scanStack[si + 2] as number;
+    const endNum = scanStack[si + 3] as number;
+    const endDen = scanStack[si + 4] as number;
+
     if (row > range) continue;
 
-    // The start column for this row
-    // Floor of (row * start.num / start.den + 0.5) — using integer math
-    // col_start = ceil(row * start - 0.5) = floor(row * start - 0.5) + 1 if not exact
-    // Simplified: minCol = floor((2 * row * start.num - start.den) / (2 * start.den)) + 1
-    // But we scan from the theoretical minimum and skip
-    let minCol = Math.round((row * start.num / start.den) - 0.5);
-    // Clamp: column can't be less than -row
+    let minCol = Math.round((row * startNum / startDen) - 0.5);
     if (minCol < -row) minCol = -row;
-
-    let maxCol = row; // theoretical max
+    const maxCol = row;
 
     let prevBlocked = false;
-    let currentStart: Slope = { num: start.num, den: start.den };
+    let curStartNum = startNum;
+    let curStartDen = startDen;
 
     for (let col = minCol; col <= maxCol; col++) {
-      // Slopes for this tile
-      const tileStart: Slope = { num: 2 * col - 1, den: 2 * row };
-      const tileEnd: Slope = { num: 2 * col + 1, den: 2 * row };
+      const tileStartNum = 2 * col - 1;
+      const tileDen = 2 * row; // shared denominator for tileStart and tileEnd
+      const tileEndNum = 2 * col + 1;
 
-      // Skip tiles that are before our start slope
-      if (slopeLess(tileEnd, start)) {
-        continue;
-      }
-      // Stop if we've passed our end slope
-      if (slopeGt(tileStart, end)) {
-        break;
-      }
+      if (slopeLt(tileEndNum, tileDen, startNum, startDen)) continue;
+      if (slopeGt(tileStartNum, tileDen, endNum, endDen)) break;
 
       const [absX, absY] = transform(originX, originY, row, col);
 
-      // Bounds check — skip without modifying shadow state.
-      // Treating OOB as walls would create false shadows blocking valid in-bounds tiles.
-      if (absX < 0 || absX >= width || absY < 0 || absY >= height) {
-        continue;
-      }
+      // Skip out-of-bounds without modifying shadow state
+      if (absX < 0 || absX >= width || absY < 0 || absY >= height) continue;
 
       const blocked = isBlocking(absX, absY);
 
-      // Visibility check:
-      // Floor tiles (not blocking): visible if center is in arc
-      // Wall tiles (blocking): visible if any part of diamond overlaps arc
       if (blocked) {
-        // Wall: visible if tile range overlaps [start, end]
-        // Overlap if tileEnd > start AND tileStart < end
         output[absY * width + absX] = 1;
       } else {
-        // Floor: visible if center point (col/row slope) is within [start, end]
-        const center: Slope = { num: col, den: row };
-        if (slopeGe(center, start) && !slopeGt(center, end)) {
+        // Floor: visible if center (col/row) is within [start, end]
+        if (slopeGe(col, row, startNum, startDen) && !slopeGt(col, row, endNum, endDen)) {
           output[absY * width + absX] = 1;
         }
       }
 
-      if (blocked && !prevBlocked) {
-        // Start of a shadow — push sub-scan for the remaining visible portion
-        // (will be processed in a later iteration)
-      }
-
       if (!blocked && prevBlocked) {
-        // End of a shadow — new start slope for continuing scan
-        currentStart = { num: 2 * col - 1, den: 2 * row };
+        curStartNum = 2 * col - 1;
+        curStartDen = tileDen;
       }
 
       if (blocked) {
-        // Entering or continuing a shadow
         if (!prevBlocked) {
-          // This is the first blocked tile — schedule the scan of what's before it
-          const newEnd: Slope = { num: 2 * col - 1, den: 2 * row };
-          stack.push({ row: row + 1, start: currentStart, end: newEnd });
+          stackPush(row + 1, curStartNum, curStartDen, 2 * col - 1, tileDen);
         }
         prevBlocked = true;
       } else {
@@ -136,9 +117,8 @@ function scanQuadrant(
       }
     }
 
-    // If the last tile in the row wasn't blocked, continue scanning
     if (!prevBlocked) {
-      stack.push({ row: row + 1, start: currentStart, end });
+      stackPush(row + 1, curStartNum, curStartDen, endNum, endDen);
     }
   }
 }
@@ -156,20 +136,15 @@ export function computeFOV(
   width: number,
   height: number,
 ): void {
-  // Origin is always visible
   if (originX >= 0 && originX < width && originY >= 0 && originY < height) {
     output[originY * width + originX] = 1;
   }
-
-  const startSlope: Slope = { num: -1, den: 1 };
-  const endSlope: Slope = { num: 1, den: 1 };
 
   for (const transform of TRANSFORMS) {
     scanQuadrant(
       originX, originY, range,
       isBlocking, output, width, height,
-      transform,
-      1, startSlope, endSlope,
+      transform, 1, -1, 1, 1, 1,
     );
   }
 }

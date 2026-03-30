@@ -90,3 +90,5 @@ public/
 - **Tiled JSON must use CSV encoding.** Compressed formats (zlib, gzip, zstd) silently fail — Phaser produces empty/broken map with no error. Tilesets must be embedded (not external .tsj).
 - **Tileset name case-sensitive.** `addTilesetImage('placeholder', ...)` must exactly match the `"name"` field in the Tiled JSON. Mismatch returns null.
 - **GameEngine.tick() takes deltaMs.** Phaser's `update(time, delta)` passes delta in milliseconds. The engine converts to seconds internally for fixedUpdate.
+- **ReadonlyDeep does NOT protect Uint8Array.** TypedArrays are objects but their mutation methods (`.fill()`, `.set()`, bracket assignment) survive `ReadonlyDeep`. `seekerFov` on PlayingState is protected by convention only. If multiple FOV arrays are added (Phase 5a), consider a `ReadonlyUint8Array` interface.
+- **pixelToTile / tileToPixelCenter return reused singletons.** Do not store references across calls — same pattern as `InputManager.sample()`.

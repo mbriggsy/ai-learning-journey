@@ -181,13 +181,20 @@ export function createGameMap(tiledJson: unknown): { map: GameMap; spawns: Spawn
   return { map: new GameMapImpl(width, height, collisionGrid, losGrid), spawns };
 }
 
+// Pre-allocated result objects — do not store references across calls.
+const _tileResult = { x: 0, y: 0 };
+const _pixelResult = { x: 0, y: 0 };
+
+/** Returned object is reused — do not store references across calls. */
 export function pixelToTile(pixelX: number, pixelY: number): { x: number; y: number } {
-  return { x: Math.floor(pixelX / TILE_SIZE), y: Math.floor(pixelY / TILE_SIZE) };
+  _tileResult.x = Math.floor(pixelX / TILE_SIZE);
+  _tileResult.y = Math.floor(pixelY / TILE_SIZE);
+  return _tileResult;
 }
 
+/** Returned object is reused — do not store references across calls. */
 export function tileToPixelCenter(tileX: number, tileY: number): { x: number; y: number } {
-  return {
-    x: tileX * TILE_SIZE + TILE_SIZE / 2,
-    y: tileY * TILE_SIZE + TILE_SIZE / 2,
-  };
+  _pixelResult.x = tileX * TILE_SIZE + TILE_SIZE / 2;
+  _pixelResult.y = tileY * TILE_SIZE + TILE_SIZE / 2;
+  return _pixelResult;
 }

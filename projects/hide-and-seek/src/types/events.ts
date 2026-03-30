@@ -2,8 +2,6 @@ import type { GameFlowKind } from './state.js';
 
 export type GameEventMap = {
   PHASE_CHANGED: [kind: GameFlowKind];
-  DETECTION_OCCURRED: [point: { readonly x: number; readonly y: number }];
-  TIMER_EXPIRED: [timerType: 'countdown' | 'hunt'];
 };
 
 export interface TypedEmitter<TMap extends Record<string, unknown[]>> {

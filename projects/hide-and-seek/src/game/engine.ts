@@ -128,7 +128,6 @@ export class GameEngine {
       if (next) {
         s.gameFlow = next;
         this.emitter.emit('PHASE_CHANGED', next.kind);
-        this.emitter.emit('TIMER_EXPIRED', 'countdown');
       }
       return;
     }
@@ -162,8 +161,7 @@ export class GameEngine {
     if (this.seekerAI) {
       updateSeekerAI(
         s.seeker, this.seekerAI, this.seekerConfig, detection,
-        { x: s.player.x, y: s.player.y },
-        this.pathfinding, s.map, dt,
+        s.player, this.pathfinding, s.map, dt,
       );
     }
 
@@ -176,12 +174,6 @@ export class GameEngine {
     if (next) {
       s.gameFlow = next;
       this.emitter.emit('PHASE_CHANGED', next.kind);
-      if (next.kind === 'found') {
-        this.emitter.emit('DETECTION_OCCURRED', { x: s.seeker.x, y: s.seeker.y });
-      }
-      if (next.kind === 'survived') {
-        this.emitter.emit('TIMER_EXPIRED', 'hunt');
-      }
     }
   }
 

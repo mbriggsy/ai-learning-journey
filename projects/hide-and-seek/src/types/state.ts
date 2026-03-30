@@ -1,7 +1,5 @@
 import type { FacingDirection } from './input.js';
 
-export type FogState = 0 | 1 | 2;
-export type TileFlag = 0 | 1;  // 0 = passable, 1 = blocked
 export type GamePhase = 'boot' | 'playing';
 
 // --- Game flow (sub-phase within PlayingState) ---
@@ -54,12 +52,6 @@ interface GameStateBase {
 
 export interface BootState extends GameStateBase {
   readonly phase: 'boot';
-}
-
-export interface TileType {
-  readonly collides: boolean;
-  readonly blocksLos: boolean;
-  readonly tileId: number;
 }
 
 export interface GameMap {

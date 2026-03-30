@@ -2,93 +2,143 @@ import Phaser from 'phaser';
 import { GameEngine } from '../../game/engine.js';
 import { createGameMap } from '../../game/map.js';
 import { createGameState } from '../../game/state.js';
-import { ticksToDisplaySeconds } from '../../game/timer.js';
+import { pixelToTile } from '../../game/map.js';
 import { InputManager } from '../systems/InputManager.js';
+import { FogRenderer } from '../systems/FogRenderer.js';
+import { CinematicManager } from '../systems/CinematicManager.js';
+import { PauseAuthority, PAUSE_REASONS } from '../systems/PauseAuthority.js';
+import { EndOfRoundSequence } from '../utils/EndOfRoundSequence.js';
+import { SceneTransition } from '../utils/SceneTransition.js';
 import { PlayerSprite } from '../entities/PlayerSprite.js';
 import { SeekerSprite } from '../entities/SeekerSprite.js';
+import { setPauseAuthority } from './PauseMenu.js';
+import { getGameSettings } from './Boot.js';
+import type { GameSceneData } from '../../types/scenes.js';
 import type { PlayingState, GameFlowKind } from '../../types/state.js';
-import { CAMERA, DEPTH, DISPLAY } from '../../constants.js';
-
-const HUD_STYLE: Phaser.Types.GameObjects.Text.TextStyle = {
-  fontFamily: 'monospace',
-  fontSize: '18px',
-  color: '#ffffff',
-  stroke: '#000000',
-  strokeThickness: 3,
-};
-
-const COUNTDOWN_STYLE: Phaser.Types.GameObjects.Text.TextStyle = {
-  fontFamily: 'monospace',
-  fontSize: '64px',
-  color: '#ffffff',
-  stroke: '#000000',
-  strokeThickness: 6,
-};
-
-const FLASH_STYLE: Phaser.Types.GameObjects.Text.TextStyle = {
-  fontFamily: 'monospace',
-  fontSize: '48px',
-  color: '#ffff00',
-  stroke: '#000000',
-  strokeThickness: 5,
-};
-
-const END_STYLE: Phaser.Types.GameObjects.Text.TextStyle = {
-  fontFamily: 'monospace',
-  fontSize: '56px',
-  color: '#ffffff',
-  stroke: '#000000',
-  strokeThickness: 6,
-};
-
-const PAUSE_STYLE: Phaser.Types.GameObjects.Text.TextStyle = {
-  fontFamily: 'monospace',
-  fontSize: '48px',
-  color: '#ffffff',
-  stroke: '#000000',
-  strokeThickness: 5,
-};
+import type { ReadonlyDeep } from '../../types/utility.js';
+import { CAMERA, DEPTH, DISPLAY, CINEMATIC } from '../../constants.js';
+import { SIMULATION } from '../../constants.js';
 
 export class GameScene extends Phaser.Scene {
   private engine!: GameEngine;
   private inputManager!: InputManager;
   private playerSprite!: PlayerSprite;
   private seekerSprite!: SeekerSprite;
+  private fogRenderer!: FogRenderer;
+  private cinematic!: CinematicManager;
+  private pauseAuthority!: PauseAuthority;
+  private endSequence!: EndOfRoundSequence;
   private onVisibilityChange!: () => void;
 
-  // HUD text objects (camera-independent via setScrollFactor(0))
-  private countdownText!: Phaser.GameObjects.Text;
-  private huntTimerText!: Phaser.GameObjects.Text;
-  private flashText!: Phaser.GameObjects.Text;
-  private endText!: Phaser.GameObjects.Text;
-  private endSubText!: Phaser.GameObjects.Text;
-
-  // Pause overlay
-  private pauseOverlay!: Phaser.GameObjects.Rectangle;
-  private pauseText!: Phaser.GameObjects.Text;
-
-  // State tracking
-  private isGameOver: boolean = false;
-  private endScreenTimer: number = 0;
+  private escapeKey!: Phaser.Input.Keyboard.Key;
+  private endSequenceTriggered: boolean = false;
+  private lastFlowKind: GameFlowKind = 'countdown';
 
   constructor() {
-    super({ key: 'GameScene' });
+    super({ key: 'Game' });
+  }
+
+  init(_data: GameSceneData): void {
+    this.endSequenceTriggered = false;
+    this.lastFlowKind = 'countdown';
   }
 
   preload(): void {
-    this.load.image('tiles', 'assets/tilesets/placeholder.png');
-    this.load.tilemapTiledJSON('map', 'assets/maps/hideandseek.json');
-
-    this.load.on('loaderror', (file: Phaser.Loader.File) => {
-      console.error(`Failed to load asset: ${file.key} (${file.url})`);
-    });
+    // Assets already loaded by Boot scene
   }
 
   create(): void {
-    this.isGameOver = false;
-    this.endScreenTimer = 0;
-
     // --- Tilemap rendering ---
+    const tilemap = this.setupTilemap();
+
+    // --- Game engine ---
+    const tiledData = this.cache.tilemap.get('map')?.data;
+    if (!tiledData) throw new Error('Tilemap data not in cache');
+    const { map: gameMap, spawns } = createGameMap(tiledData);
+    const gameState = createGameState(gameMap, spawns);
+    this.engine = new GameEngine(gameState);
+
+    // --- Systems ---
+    this.inputManager = new InputManager(this);
+    this.pauseAuthority = new PauseAuthority(this.engine);
+    this.cinematic = new CinematicManager(this);
+    this.fogRenderer = new FogRenderer(this, gameMap.width, gameMap.height);
+
+    // Register fog layer with cinematic manager (UI camera ignores it)
+    this.cinematic.ignoreOnUI(this.fogRenderer.getLayer());
+
+    // --- Entities ---
+    const hiderSpawn = spawns.find(s => s.type === 'hider_spawn')!;
+    const seekerSpawn = spawns.find(s => s.type === 'seeker_spawn')!;
+    this.playerSprite = new PlayerSprite(this, hiderSpawn.x, hiderSpawn.y);
+    this.seekerSprite = new SeekerSprite(this, seekerSpawn.x, seekerSpawn.y);
+
+    // Ignore entities on UI camera
+    this.cinematic.ignoreOnUI(this.playerSprite.getGameObject());
+    this.cinematic.ignoreOnUI(this.seekerSprite.getGameObject());
+
+    // Ignore tilemap layers on UI camera
+    tilemap.layers.forEach(layerData => {
+      if (layerData.tilemapLayer) {
+        this.cinematic.ignoreOnUI(layerData.tilemapLayer);
+      }
+    });
+
+    // --- End of round sequence ---
+    const settings = getGameSettings();
+    this.endSequence = new EndOfRoundSequence(
+      this, this.cinematic, this.pauseAuthority, this.fogRenderer, settings.reducedMotion,
+    );
+
+    // --- Camera ---
+    const cam = this.cameras.main;
+    cam.setZoom(CAMERA.ZOOM);
+    cam.centerOn(hiderSpawn.x, hiderSpawn.y);
+    cam.startFollow(this.playerSprite.getGameObject(), false, CAMERA.FOLLOW_LERP, CAMERA.FOLLOW_LERP);
+    cam.setBounds(0, 0, tilemap.widthInPixels, tilemap.heightInPixels);
+
+    // --- HUD parallel scene ---
+    const listener = this.engine.getEmitter();
+    const getState = () => this.engine.getState() as ReadonlyDeep<PlayingState>;
+    this.scene.launch('HUD', { listener, getState });
+
+    // --- Pause authority shared with PauseMenu ---
+    setPauseAuthority(this.pauseAuthority);
+
+    // --- Input ---
+    this.escapeKey = this.input.keyboard!.addKey(Phaser.Input.Keyboard.KeyCodes.ESC);
+
+    // --- Event subscriptions ---
+    this.setupEvents();
+
+    // --- Tab visibility ---
+    this.onVisibilityChange = () => {
+      if (document.hidden) {
+        this.pauseAuthority.request(PAUSE_REASONS.TAB_HIDDEN);
+        this.scene.pause();
+      } else {
+        this.inputManager.resetAllKeys();
+        this.pauseAuthority.release(PAUSE_REASONS.TAB_HIDDEN);
+        this.scene.resume();
+      }
+    };
+    document.addEventListener('visibilitychange', this.onVisibilityChange);
+
+    // --- Shutdown cleanup ---
+    this.events.on('shutdown', () => {
+      this.scene.stop('HUD');
+      this.fogRenderer.destroy();
+      this.cinematic.destroy();
+      this.engine.dispose();
+      this.inputManager.dispose();
+      document.removeEventListener('visibilitychange', this.onVisibilityChange);
+    });
+
+    // Fade in
+    this.cameras.main.fadeIn(CINEMATIC.SCENE_FADE_MS, 0, 0, 0);
+  }
+
+  private setupTilemap(): Phaser.Tilemaps.Tilemap {
     const tilemap = this.make.tilemap({ key: 'map' });
     const tileset = tilemap.addTilesetImage('placeholder', 'tiles', 32, 32, 0, 0);
     if (!tileset) throw new Error('Tileset "placeholder" not found — check name match in Tiled JSON');
@@ -99,209 +149,126 @@ export class GameScene extends Phaser.Scene {
 
     groundLayer.setDepth(DEPTH.GROUND);
     wallsLayer.setDepth(DEPTH.WALLS);
-
     wallsLayer.setCollisionByProperty({ collides: true });
 
-    // --- Parse map data for game layer ---
-    const tiledData = this.cache.tilemap.get('map')?.data;
-    if (!tiledData) throw new Error('Tilemap data not in cache');
-    const { map: gameMap, spawns } = createGameMap(tiledData);
+    return tilemap;
+  }
 
-    // --- Create game state and engine ---
-    const gameState = createGameState(gameMap, spawns);
-    this.engine = new GameEngine(gameState);
-
-    // --- Input ---
-    this.inputManager = new InputManager(this);
-
-    // --- Sprites ---
-    const hiderSpawn = spawns.find(s => s.type === 'hider_spawn')!;
-    const seekerSpawn = spawns.find(s => s.type === 'seeker_spawn')!;
-    this.playerSprite = new PlayerSprite(this, hiderSpawn.x, hiderSpawn.y);
-    this.seekerSprite = new SeekerSprite(this, seekerSpawn.x, seekerSpawn.y);
-
-    // --- Camera: snap then follow ---
-    const cam = this.cameras.main;
-    cam.setZoom(CAMERA.ZOOM);
-    cam.centerOn(hiderSpawn.x, hiderSpawn.y);
-    cam.startFollow(this.playerSprite.getGameObject(), false, CAMERA.FOLLOW_LERP, CAMERA.FOLLOW_LERP);
-    cam.setBounds(0, 0, tilemap.widthInPixels, tilemap.heightInPixels);
-
-    // --- HUD (fixed to camera) ---
-    this.createHUD();
-
-    // --- Event subscriptions ---
-    this.subscribeToEvents();
-
-    // --- Tab visibility handler ---
-    this.onVisibilityChange = () => {
-      if (document.hidden) {
-        this.engine.pause();
-        this.scene.pause();
-      } else {
-        this.inputManager.resetAllKeys();
-        this.engine.resume();
-        this.scene.resume();
+  private setupEvents(): void {
+    const listener = this.engine.getEmitter();
+    const onPhaseChanged = (kind: GameFlowKind) => {
+      if (kind === 'hunt') {
+        this.handleCountdownToHunt();
       }
     };
-    document.addEventListener('visibilitychange', this.onVisibilityChange);
-
-    // --- Cleanup on shutdown ---
-    this.events.on('shutdown', () => {
-      document.removeEventListener('visibilitychange', this.onVisibilityChange);
-      this.engine.getEmitter().offAll();
-      this.inputManager.dispose();
-    });
+    listener.on('PHASE_CHANGED', onPhaseChanged);
   }
 
-  private createHUD(): void {
-    // HUD elements are positioned each frame via positionHUD() relative to the
-    // camera's worldView. This avoids setScrollFactor(0) which misbehaves with zoom.
-    this.countdownText = this.add.text(0, 0, '', COUNTDOWN_STYLE)
-      .setOrigin(0.5)
-      .setDepth(DEPTH.UI);
-
-    this.huntTimerText = this.add.text(0, 0, '', HUD_STYLE)
-      .setOrigin(1, 0)
-      .setDepth(DEPTH.UI)
-      .setVisible(false);
-
-    this.flashText = this.add.text(0, 0, '', FLASH_STYLE)
-      .setOrigin(0.5)
-      .setDepth(DEPTH.UI + 1)
-      .setAlpha(0);
-
-    this.endText = this.add.text(0, 0, '', END_STYLE)
-      .setOrigin(0.5)
-      .setDepth(DEPTH.UI + 2)
-      .setVisible(false);
-
-    this.endSubText = this.add.text(0, 0, 'Press any key to restart', HUD_STYLE)
-      .setOrigin(0.5)
-      .setDepth(DEPTH.UI + 2)
-      .setVisible(false);
-
-    this.pauseOverlay = this.add.rectangle(0, 0, 1, 1, 0x000000, 0.5)
-      .setDepth(DEPTH.UI + 3)
-      .setVisible(false);
-
-    this.pauseText = this.add.text(0, 0, 'PAUSED', PAUSE_STYLE)
-      .setOrigin(0.5)
-      .setDepth(DEPTH.UI + 4)
-      .setVisible(false);
-  }
-
-  private positionHUD(): void {
-    const wv = this.cameras.main.worldView;
-    const cx = wv.centerX;
-    const cy = wv.centerY;
-
-    this.countdownText.setPosition(cx, cy);
-    this.huntTimerText.setPosition(wv.right - 8, wv.top + 8);
-    this.flashText.setPosition(cx, cy);
-    this.endText.setPosition(cx, cy - 15);
-    this.endSubText.setPosition(cx, cy + 30);
-    this.pauseOverlay.setPosition(cx, cy).setSize(wv.width, wv.height);
-    this.pauseText.setPosition(cx, cy);
-  }
-
-  private subscribeToEvents(): void {
-    const listener = this.engine.getEmitter();
-
-    listener.on('PHASE_CHANGED', (kind: GameFlowKind) => {
-      if (kind === 'hunt') {
-        this.showPhaseFlash('HUNT!');
-        this.countdownText.setVisible(false);
-        this.huntTimerText.setVisible(true);
-      }
-      if (kind === 'found') {
-        this.showEndScreen('FOUND!', '#ff4444');
-      }
-      if (kind === 'survived') {
-        this.showEndScreen('SURVIVED!', '#44ff44');
-      }
-    });
-  }
-
-  private showPhaseFlash(text: string): void {
-    this.flashText.setText(text).setAlpha(1);
-    this.tweens.add({
-      targets: this.flashText,
-      alpha: 0,
-      duration: 1000,
-      ease: 'Power2',
-    });
-  }
-
-  private showEndScreen(text: string, color: string): void {
-    this.isGameOver = true;
-    this.endScreenTimer = 0;
-    this.endText.setText(text).setStyle({ ...END_STYLE, color }).setVisible(true);
-    this.huntTimerText.setVisible(false);
-
-    // Show restart prompt after a short delay
-    this.time.delayedCall(1500, () => {
-      this.endSubText.setVisible(true);
+  private handleCountdownToHunt(): void {
+    // Camera fade transition: fadeOut → reset fog → fadeIn
+    const cam = this.cameras.main;
+    cam.fadeOut(CINEMATIC.COUNTDOWN_TO_HUNT_FADE_OUT_MS, 0, 0, 0);
+    cam.once(Phaser.Cameras.Scene2D.Events.FADE_OUT_COMPLETE, () => {
+      this.fogRenderer.transitionToHunt();
+      cam.fadeIn(CINEMATIC.COUNTDOWN_TO_HUNT_FADE_IN_MS, 0, 0, 0);
     });
   }
 
   override update(_time: number, delta: number): void {
-    const input = this.inputManager.sample();
+    // Handle escape key
+    if (Phaser.Input.Keyboard.JustDown(this.escapeKey)) {
+      this.handleEscape();
+    }
 
-    // Keep HUD anchored to camera every frame
-    this.positionHUD();
-
-    // Handle end screen restart
-    if (this.isGameOver) {
-      this.endScreenTimer += delta;
-      if (this.endScreenTimer > 1500 && (input.interact || input.pause || input.moveX !== 0 || input.moveY !== 0)) {
-        this.scene.restart();
-        return;
-      }
+    // End of round sequence polling
+    if (this.endSequence.isRunning) {
+      this.endSequence.update(delta);
       this.syncSprites();
       return;
     }
 
-    // Handle pause toggle
-    if (input.pause) {
-      if (this.engine.isPaused()) {
-        this.engine.resume();
-        this.pauseOverlay.setVisible(false);
-        this.pauseText.setVisible(false);
-      } else {
-        this.engine.pause();
-        this.pauseOverlay.setVisible(true);
-        this.pauseText.setVisible(true);
-      }
-      return;
-    }
+    if (this.pauseAuthority.isPaused) return;
 
-    if (this.engine.isPaused()) return;
-
+    const input = this.inputManager.sample();
     this.engine.tick(delta, input);
+
+    const state = this.engine.getState();
+    if (state.phase !== 'playing') return;
+
     this.syncSprites();
-    this.updateHUD();
+    this.updateFog(state as ReadonlyDeep<PlayingState>);
+    this.checkEndOfRound(state as ReadonlyDeep<PlayingState>);
+  }
+
+  private handleEscape(): void {
+    if (SceneTransition.isTransitioning) return;
+    if (this.pauseAuthority.hasReason(PAUSE_REASONS.CINEMATIC)) return;
+    if (this.endSequenceTriggered) return;
+
+    if (this.scene.isActive('PauseMenu')) return;
+
+    this.pauseAuthority.request(PAUSE_REASONS.MENU);
+    this.scene.sleep('Game');
+    this.scene.sleep('HUD');
+    this.scene.launch('PauseMenu');
+    this.scene.bringToTop('PauseMenu');
   }
 
   private syncSprites(): void {
     const state = this.engine.getState();
-    if (state.phase === 'playing') {
-      this.playerSprite.syncFromGameState(state.player);
-      this.seekerSprite.syncFromGameState(state.seeker);
+    if (state.phase !== 'playing') return;
+
+    this.playerSprite.syncFromGameState(state.player);
+    this.seekerSprite.syncFromGameState(state.seeker);
+
+    // Seeker visibility based on fog
+    const seekerObj = this.seekerSprite.getGameObject() as Phaser.GameObjects.Rectangle;
+    if (state.gameFlow.kind === 'hunt') {
+      const seekerTile = pixelToTile(state.seeker.x, state.seeker.y);
+      seekerObj.setVisible(this.fogRenderer.isTileVisible(seekerTile.x, seekerTile.y));
+    } else {
+      // Countdown: seeker always visible
+      seekerObj.setVisible(true);
     }
   }
 
-  private updateHUD(): void {
-    const state = this.engine.getState();
-    if (state.phase !== 'playing') return;
+  private updateFog(state: ReadonlyDeep<PlayingState>): void {
+    if (state.gameFlow.kind === 'hunt') {
+      this.fogRenderer.update(state);
+    }
+    // Countdown: fog all transparent (playerFov filled with 1s) — FogRenderer handles uniformly
+    if (state.gameFlow.kind === 'countdown') {
+      this.fogRenderer.update(state);
+    }
+  }
+
+  private checkEndOfRound(state: ReadonlyDeep<PlayingState>): void {
+    if (this.endSequenceTriggered) return;
 
     const flow = state.gameFlow;
-    if (flow.kind === 'countdown') {
-      const secs = ticksToDisplaySeconds(flow.ticksRemaining);
-      this.countdownText.setText(`${secs}`).setVisible(true);
-    } else if (flow.kind === 'hunt') {
-      const secs = ticksToDisplaySeconds(flow.ticksRemaining);
-      this.huntTimerText.setText(`${secs}s`);
+    if (flow.kind === 'found') {
+      this.endSequenceTriggered = true;
+      const timeSurvivedMs = flow.ticksSurvived * SIMULATION.FIXED_STEP_S * 1000;
+      this.endSequence.playFound(
+        state.player.x, state.player.y,
+        state.seeker.x, state.seeker.y,
+        {
+          outcome: 'found',
+          timeSurvivedMs,
+          distanceTraveled: state.stats.distanceTraveled,
+        },
+      );
+    } else if (flow.kind === 'survived') {
+      this.endSequenceTriggered = true;
+      const timeSurvivedMs = flow.huntDurationTicks * SIMULATION.FIXED_STEP_S * 1000;
+      this.endSequence.playSurvived(
+        state.player.x, state.player.y,
+        {
+          outcome: 'survived',
+          timeSurvivedMs,
+          distanceTraveled: state.stats.distanceTraveled,
+        },
+      );
     }
   }
 }

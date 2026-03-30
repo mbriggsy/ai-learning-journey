@@ -104,28 +104,16 @@
 - [ ] Execute Phase 6: Sound + Scoring
 - [ ] Execute Phase 7: Art Pipeline
 
-## Infrastructure: WebFetch Hook + Gemini Grounding MCP (UNTESTED)
+## Infrastructure: WebFetch Hook + Gemini Grounding MCP — VERIFIED ✓
 
-**Problem:** WebFetch tool has NO timeout parameter. When agents call it on slow/dead URLs, they hang indefinitely — losing all accumulated work. Hit this twice during Phase 4 deepening (2 agents stalled with 0 output).
+**WebFetch hook:** ✓ Tested 2026-03-30. Blocks WebFetch calls with redirect message.
 
-**Solution (two-part):**
-
-1. **PreToolUse hook** blocks WebFetch, redirects agents to alternatives
-   - Hook script: `~/.claude/hooks/block-webfetch.sh`
-   - Wired in: `~/.claude/settings.json` under `hooks.PreToolUse` → matcher `"WebFetch"`
-
-2. **Gemini Grounding MCP server** — searches, reads, summarizes with citations. Replaces WebFetch with something BETTER.
-   - Config: `~/.claude/.mcp.json` → `gemini-grounding` server
-   - Package: `npx -y gemini-grounding` (epilande/gemini-grounding)
-   - Uses existing GEMINI_API_KEY. Free tier: 1,500 queries/day.
-   - Tools: `web_search`, `dev_docs`, `reddit_search`
-
-**Status:** Both installed. Neither tested live — need session restart.
-
-**Next session test plan:**
-1. Call WebFetch → verify hook blocks it with redirect message
-2. Call `mcp__gemini-grounding__web_search` → verify grounded results return
-3. If either fails, troubleshoot config loading
+**Gemini Grounding MCP:** ✓ Registered and connected 2026-03-30. `claude mcp list` shows `✓ Connected`.
+- **Root cause of prior failures:** Server was manually written into `~/.claude/.mcp.json` — a file Claude Code DOES NOT READ. Servers must be added via `claude mcp add`, which stores them in `.claude.json` (internal config).
+- **Windows gotcha:** Git Bash expands `/c` to `C:/`. Must use `//c` in `claude mcp add` commands.
+- Orphaned `~/.claude/.mcp.json` deleted.
+- Permissions added: `mcp__gemini-grounding__*` in `~/.claude/settings.json`.
+- **Tools available next session restart.** Full docs in `docs/environment-setup.md`.
 
 ## Landmines
 - **Phaser 3.90.0 is likely the LAST v3 release** — Phaser 4 is RC7, not stable. Fine for our scope, game logic is Phaser-independent.

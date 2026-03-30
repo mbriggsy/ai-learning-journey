@@ -7,6 +7,10 @@ interface KeyBindings {
   down: Phaser.Input.Keyboard.Key;
   left: Phaser.Input.Keyboard.Key;
   right: Phaser.Input.Keyboard.Key;
+  arrowUp: Phaser.Input.Keyboard.Key;
+  arrowDown: Phaser.Input.Keyboard.Key;
+  arrowLeft: Phaser.Input.Keyboard.Key;
+  arrowRight: Phaser.Input.Keyboard.Key;
   interact: Phaser.Input.Keyboard.Key;
   pause: Phaser.Input.Keyboard.Key;
 }
@@ -35,6 +39,10 @@ export class InputManager {
         down: 'S',
         left: 'A',
         right: 'D',
+        arrowUp: 'UP',
+        arrowDown: 'DOWN',
+        arrowLeft: 'LEFT',
+        arrowRight: 'RIGHT',
         interact: 'E',
         pause: 'ESC',
       }) as KeyBindings;
@@ -63,10 +71,10 @@ export class InputManager {
     let kbPause = false;
 
     if (this.keys) {
-      if (this.keys.left.isDown) kbX -= 1;
-      if (this.keys.right.isDown) kbX += 1;
-      if (this.keys.up.isDown) kbY -= 1;
-      if (this.keys.down.isDown) kbY += 1;
+      if (this.keys.left.isDown || this.keys.arrowLeft.isDown) kbX -= 1;
+      if (this.keys.right.isDown || this.keys.arrowRight.isDown) kbX += 1;
+      if (this.keys.up.isDown || this.keys.arrowUp.isDown) kbY -= 1;
+      if (this.keys.down.isDown || this.keys.arrowDown.isDown) kbY += 1;
       kbInteract = this.keys.interact.isDown;
       kbPause = this.keys.pause.isDown;
     }

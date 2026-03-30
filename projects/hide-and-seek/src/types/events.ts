@@ -1,11 +1,10 @@
-import type { GamePhase } from './state.js';
-import type { TileCoord } from './grid.js';
+import type { GameFlowKind } from './state.js';
 
-export interface GameEventMap {
-  // Phase 1+ will populate:
-  // PHASE_CHANGED: [phase: GamePhase];
-  // DOOR_TOGGLED: [coord: TileCoord, open: boolean];
-}
+export type GameEventMap = {
+  PHASE_CHANGED: [kind: GameFlowKind];
+  DETECTION_OCCURRED: [point: { readonly x: number; readonly y: number }];
+  TIMER_EXPIRED: [timerType: 'countdown' | 'hunt'];
+};
 
 export interface TypedEmitter<TMap extends Record<string, unknown[]>> {
   emit<K extends keyof TMap & string>(event: K, ...args: TMap[K]): void;
@@ -13,3 +12,6 @@ export interface TypedEmitter<TMap extends Record<string, unknown[]>> {
   off<K extends keyof TMap & string>(event: K, fn: (...args: TMap[K]) => void): void;
   offAll(): void;
 }
+
+export type TypedListener<TMap extends Record<string, unknown[]>> =
+  Pick<TypedEmitter<TMap>, 'on' | 'off' | 'offAll'>;

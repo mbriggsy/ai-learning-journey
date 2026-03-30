@@ -1,6 +1,4 @@
-import type { TileCoord } from '../types/grid.js';
 import type { GameMap, SpawnPoint } from '../types/state.js';
-import { tileCoord } from '../types/grid.js';
 import { DISPLAY } from '../constants.js';
 
 const TILE_SIZE = DISPLAY.TILE_SIZE;
@@ -76,14 +74,12 @@ class GameMapImpl implements GameMap {
     this.losGrid = losGrid;
   }
 
-  isWalkable(coord: TileCoord): boolean {
-    const { x, y } = coord;
+  isWalkable(x: number, y: number): boolean {
     if (x < 0 || x >= this.width || y < 0 || y >= this.height) return false;
     return this.collisionGrid[y * this.width + x] === 0;
   }
 
-  isBlocking(coord: TileCoord): boolean {
-    const { x, y } = coord;
+  isBlocking(x: number, y: number): boolean {
     if (x < 0 || x >= this.width || y < 0 || y >= this.height) return true;
     return this.losGrid[y * this.width + x] === 1;
   }
@@ -185,13 +181,13 @@ export function createGameMap(tiledJson: unknown): { map: GameMap; spawns: Spawn
   return { map: new GameMapImpl(width, height, collisionGrid, losGrid), spawns };
 }
 
-export function pixelToTile(pixelX: number, pixelY: number): TileCoord {
-  return tileCoord(Math.floor(pixelX / TILE_SIZE), Math.floor(pixelY / TILE_SIZE));
+export function pixelToTile(pixelX: number, pixelY: number): { x: number; y: number } {
+  return { x: Math.floor(pixelX / TILE_SIZE), y: Math.floor(pixelY / TILE_SIZE) };
 }
 
-export function tileToPixelCenter(coord: TileCoord): { x: number; y: number } {
+export function tileToPixelCenter(tileX: number, tileY: number): { x: number; y: number } {
   return {
-    x: coord.x * TILE_SIZE + TILE_SIZE / 2,
-    y: coord.y * TILE_SIZE + TILE_SIZE / 2,
+    x: tileX * TILE_SIZE + TILE_SIZE / 2,
+    y: tileY * TILE_SIZE + TILE_SIZE / 2,
   };
 }

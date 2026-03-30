@@ -1,9 +1,52 @@
 import type { FacingDirection } from './input.js';
-import type { TileCoord } from './grid.js';
 
 export type FogState = 0 | 1 | 2;
 export type TileFlag = 0 | 1;  // 0 = passable, 1 = blocked
-export type GamePhase = 'boot' | 'playing' | 'countdown' | 'hunt' | 'found' | 'survived' | 'results';
+export type GamePhase = 'boot' | 'playing';
+
+// --- Game flow (sub-phase within PlayingState) ---
+
+export type GameFlowKind = 'countdown' | 'hunt' | 'found' | 'survived';
+
+export interface CountdownPhase {
+  readonly kind: 'countdown';
+  ticksRemaining: number;
+}
+
+export interface HuntPhase {
+  readonly kind: 'hunt';
+  ticksRemaining: number;
+  ticksElapsed: number;
+}
+
+export interface FoundPhase {
+  readonly kind: 'found';
+  readonly ticksSurvived: number;
+}
+
+export interface SurvivedPhase {
+  readonly kind: 'survived';
+  readonly huntDurationTicks: number;
+}
+
+export type GameFlowState = CountdownPhase | HuntPhase | FoundPhase | SurvivedPhase;
+
+// --- Detection ---
+
+export type DetectionResult = 'none' | 'spotted' | 'found';
+
+// --- Seeker ---
+
+export type SeekerFSMState = 'patrol' | 'chase';
+
+export interface SeekerRenderState {
+  x: number;
+  y: number;
+  facing: FacingDirection;
+  fsmState: SeekerFSMState;
+}
+
+// --- Base + variants ---
 
 interface GameStateBase {
   readonly phase: GamePhase;
@@ -22,8 +65,8 @@ export interface TileType {
 export interface GameMap {
   readonly width: number;   // tiles
   readonly height: number;  // tiles
-  isWalkable(coord: TileCoord): boolean;
-  isBlocking(coord: TileCoord): boolean;
+  isWalkable(x: number, y: number): boolean;
+  isBlocking(x: number, y: number): boolean;
 }
 
 export interface PlayerState {
@@ -40,14 +83,17 @@ export interface SpawnPoint {
   readonly type: 'hider_spawn' | 'seeker_spawn';
 }
 
+/** Mutable alias for engine-internal mutation of PlayingState fields */
+export type MutablePlayingState = { -readonly [K in keyof PlayingState]: PlayingState[K] };
+
 export interface PlayingState extends GameStateBase {
   readonly phase: 'playing';
   readonly player: PlayerState;
+  readonly seeker: SeekerRenderState;
   readonly map: GameMap;
   readonly spawns: readonly SpawnPoint[];
+  readonly gameFlow: GameFlowState;
+  readonly seekerFov: Uint8Array;
 }
-
-// Remaining variants added in Phase 2+:
-// CountdownState, HuntState, FoundState, SurvivedState, ResultsState
 
 export type GameState = BootState | PlayingState;

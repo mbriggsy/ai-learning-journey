@@ -1,6 +1,5 @@
 import { describe, it, expect } from 'vitest';
 import { createGameMap, pixelToTile, tileToPixelCenter } from '../../src/game/map.js';
-import { tileCoord } from '../../src/types/grid.js';
 
 function makeMinimalTiledJson(overrides: Record<string, unknown> = {}) {
   return {
@@ -66,37 +65,36 @@ describe('createGameMap', () => {
 
   it('marks perimeter tiles as not walkable', () => {
     const { map } = createGameMap(makeMinimalTiledJson());
-    // Perimeter wall
-    expect(map.isWalkable(tileCoord(0, 0))).toBe(false);
-    expect(map.isWalkable(tileCoord(5, 0))).toBe(false);
-    expect(map.isWalkable(tileCoord(0, 5))).toBe(false);
-    expect(map.isWalkable(tileCoord(9, 9))).toBe(false);
+    expect(map.isWalkable(0, 0)).toBe(false);
+    expect(map.isWalkable(5, 0)).toBe(false);
+    expect(map.isWalkable(0, 5)).toBe(false);
+    expect(map.isWalkable(9, 9)).toBe(false);
   });
 
   it('marks interior tiles as walkable', () => {
     const { map } = createGameMap(makeMinimalTiledJson());
-    expect(map.isWalkable(tileCoord(5, 5))).toBe(true);
-    expect(map.isWalkable(tileCoord(3, 3))).toBe(true);
+    expect(map.isWalkable(5, 5)).toBe(true);
+    expect(map.isWalkable(3, 3)).toBe(true);
   });
 
   it('reports out-of-bounds as not walkable', () => {
     const { map } = createGameMap(makeMinimalTiledJson());
-    expect(map.isWalkable(tileCoord(-1, 5))).toBe(false);
-    expect(map.isWalkable(tileCoord(5, -1))).toBe(false);
-    expect(map.isWalkable(tileCoord(10, 5))).toBe(false);
-    expect(map.isWalkable(tileCoord(5, 10))).toBe(false);
+    expect(map.isWalkable(-1, 5)).toBe(false);
+    expect(map.isWalkable(5, -1)).toBe(false);
+    expect(map.isWalkable(10, 5)).toBe(false);
+    expect(map.isWalkable(5, 10)).toBe(false);
   });
 
   it('reports wall tiles as blocking LOS', () => {
     const { map } = createGameMap(makeMinimalTiledJson());
-    expect(map.isBlocking(tileCoord(0, 0))).toBe(true);
-    expect(map.isBlocking(tileCoord(5, 5))).toBe(false);
+    expect(map.isBlocking(0, 0)).toBe(true);
+    expect(map.isBlocking(5, 5)).toBe(false);
   });
 
   it('reports out-of-bounds as blocking LOS', () => {
     const { map } = createGameMap(makeMinimalTiledJson());
-    expect(map.isBlocking(tileCoord(-1, 0))).toBe(true);
-    expect(map.isBlocking(tileCoord(100, 100))).toBe(true);
+    expect(map.isBlocking(-1, 0)).toBe(true);
+    expect(map.isBlocking(100, 100)).toBe(true);
   });
 
   it('throws on missing hider_spawn', () => {
@@ -117,13 +115,12 @@ describe('createGameMap', () => {
 
   it('coerces string boolean properties', () => {
     const json = makeMinimalTiledJson();
-    // Simulate Tiled exporting booleans as strings
     json.tilesets[0]!.tiles![1]!.properties = [
       { name: 'collides', type: 'bool', value: 'true' as unknown as boolean },
       { name: 'blocks_los', type: 'bool', value: 'true' as unknown as boolean },
     ];
     const { map } = createGameMap(json);
-    expect(map.isWalkable(tileCoord(0, 0))).toBe(false);
+    expect(map.isWalkable(0, 0)).toBe(false);
   });
 
   it('handles obj.class (Tiled 1.9+ rename)', () => {
@@ -159,7 +156,7 @@ describe('pixelToTile', () => {
 
 describe('tileToPixelCenter', () => {
   it('returns center of tile in pixels', () => {
-    const center = tileToPixelCenter(tileCoord(2, 3));
+    const center = tileToPixelCenter(2, 3);
     expect(center.x).toBe(80);  // 2*32 + 16
     expect(center.y).toBe(112); // 3*32 + 16
   });

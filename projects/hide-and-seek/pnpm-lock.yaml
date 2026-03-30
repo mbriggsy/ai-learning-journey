@@ -8,6 +8,9 @@ importers:
 
   .:
     dependencies:
+      easystarjs:
+        specifier: ^0.4.4
+        version: 0.4.4
       phaser:
         specifier: 3.90.0
         version: 3.90.0
@@ -518,6 +521,9 @@ packages:
   decimal.js@10.6.0:
     resolution: {integrity: sha512-YpgQiITW3JXGntzdUmyUR1V812Hn8T1YVXhCu+wO3OpS4eU9l4YdD3qjyiKdV6mvV29zapkMeD390UVEf2lkUg==}
 
+  easystarjs@0.4.4:
+    resolution: {integrity: sha512-ZSt0TkB8xuIXRIrKsM3jkmk1/cZUtyvf0DqOXf6wuKq9slx9UA5kkLtiaWhtmOQFJFKdabbvXwk6RO0znghArQ==}
+
   entities@6.0.1:
     resolution: {integrity: sha512-aN97NXWF6AWBTahfVOIrB/NShkzi5H7F9r1s9mD3cDj4Ko5f2qhhVoYMibXF7GlLveb/D2ioWay8lxI97Ven3g==}
     engines: {node: '>=0.12'}
@@ -557,6 +563,9 @@ packages:
   has-flag@4.0.0:
     resolution: {integrity: sha512-EykJT/Q1KjTWctppgIAgfSO0tKVuZUjhgMr17kqTumMl6Afv3EISleU7qZUzoXDFTAHTDC4NOoG/ZxU3EvlMPQ==}
     engines: {node: '>=8'}
+
+  heap@0.2.6:
+    resolution: {integrity: sha512-MzzWcnfB1e4EG2vHi3dXHoBupmuXNZzx6pY6HldVS55JKKBoq3xOyzfSaZRkJp37HIhEYC78knabHff3zc4dQQ==}
 
   html-encoding-sniffer@6.0.0:
     resolution: {integrity: sha512-CV9TW3Y3f8/wT0BRFc1/KAVQ3TUHiXmaAb6VW9vtiMFf7SLoMd1PdAc4W3KFOFETBJUb90KatHqlsZMWV+R9Gg==}
@@ -1177,6 +1186,10 @@ snapshots:
 
   decimal.js@10.6.0: {}
 
+  easystarjs@0.4.4:
+    dependencies:
+      heap: 0.2.6
+
   entities@6.0.1: {}
 
   es-module-lexer@2.0.0: {}
@@ -1226,6 +1239,8 @@ snapshots:
     optional: true
 
   has-flag@4.0.0: {}
+
+  heap@0.2.6: {}
 
   html-encoding-sniffer@6.0.0:
     dependencies:

@@ -1,6 +1,5 @@
 import type { InputState, FacingDirection } from '../types/input.js';
 import type { GameMap, PlayerState } from '../types/state.js';
-import { tileCoord } from '../types/grid.js';
 import { MOVEMENT, COLLISION, DISPLAY } from '../constants.js';
 
 const HALF_HITBOX = COLLISION.PLAYER_HITBOX / 2;
@@ -21,7 +20,7 @@ function isBlocked(cx: number, cy: number, map: GameMap): boolean {
 
   for (let ty = top; ty <= bottom; ty++) {
     for (let tx = left; tx <= right; tx++) {
-      if (!map.isWalkable(tileCoord(tx, ty))) {
+      if (!map.isWalkable(tx, ty)) {
         return true;
       }
     }
@@ -77,11 +76,11 @@ function computeFacing(input: Readonly<InputState>, currentFacing: FacingDirecti
 }
 
 export function updateMovement(
-  player: Readonly<PlayerState>,
+  player: PlayerState,
   map: GameMap,
   input: Readonly<InputState>,
   dt: number,
-): PlayerState {
+): void {
   // Normalize input vector
   let moveX = input.moveX;
   let moveY = input.moveY;
@@ -98,25 +97,15 @@ export function updateMovement(
   const candidateY = player.y + vy * dt;
 
   // Separate-axis resolution: try full move, then X only, then Y only
-  let resolvedX: number;
-  let resolvedY: number;
-
   if (!isBlocked(candidateX, candidateY, map)) {
-    // Full move is clear
-    resolvedX = candidateX;
-    resolvedY = candidateY;
+    player.x = candidateX;
+    player.y = candidateY;
   } else {
-    // Try X alone
-    resolvedX = clampAxis(player.x, candidateX, player.y, 'x', map);
-    // Try Y with resolved X
-    resolvedY = clampAxis(player.y, candidateY, resolvedX, 'y', map);
+    player.x = clampAxis(player.x, candidateX, player.y, 'x', map);
+    player.y = clampAxis(player.y, candidateY, player.x, 'y', map);
   }
 
-  return {
-    x: resolvedX,
-    y: resolvedY,
-    velocityX: vx,
-    velocityY: vy,
-    facing: computeFacing(input, player.facing),
-  };
+  player.velocityX = vx;
+  player.velocityY = vy;
+  player.facing = computeFacing(input, player.facing);
 }

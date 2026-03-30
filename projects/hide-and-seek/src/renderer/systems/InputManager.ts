@@ -23,6 +23,8 @@ const inputResult: { moveX: number; moveY: number; interact: boolean; pause: boo
   pause: false,
 };
 
+const deadzoneResult = { x: 0, y: 0 };
+
 export class InputManager {
   private keys: KeyBindings | null = null;
   private pad: Phaser.Input.Gamepad.Gamepad | null = null;
@@ -63,6 +65,7 @@ export class InputManager {
     }
   }
 
+  /** Returned object is a reused singleton — do not store references across frames. */
   sample(): InputState {
     // Keyboard direction
     let kbX = 0;
@@ -143,18 +146,21 @@ export class InputManager {
     this.pad = null;
   }
 
+  /** Returned object is a reused singleton — do not store references across frames. */
   private applyRadialDeadzone(x: number, y: number): { x: number; y: number } {
     const magnitude = Math.sqrt(x * x + y * y);
     if (magnitude < INPUT.GAMEPAD_DEADZONE_INNER) {
-      return { x: 0, y: 0 };
+      deadzoneResult.x = 0;
+      deadzoneResult.y = 0;
+    } else if (magnitude > INPUT.GAMEPAD_DEADZONE_OUTER) {
+      deadzoneResult.x = x / magnitude;
+      deadzoneResult.y = y / magnitude;
+    } else {
+      const scale = (magnitude - INPUT.GAMEPAD_DEADZONE_INNER)
+        / (INPUT.GAMEPAD_DEADZONE_OUTER - INPUT.GAMEPAD_DEADZONE_INNER);
+      deadzoneResult.x = (x / magnitude) * scale;
+      deadzoneResult.y = (y / magnitude) * scale;
     }
-    if (magnitude > INPUT.GAMEPAD_DEADZONE_OUTER) {
-      // Normalize to unit vector
-      return { x: x / magnitude, y: y / magnitude };
-    }
-    // Remap (INNER..OUTER) → (0..1)
-    const scale = (magnitude - INPUT.GAMEPAD_DEADZONE_INNER)
-      / (INPUT.GAMEPAD_DEADZONE_OUTER - INPUT.GAMEPAD_DEADZONE_INNER);
-    return { x: (x / magnitude) * scale, y: (y / magnitude) * scale };
+    return deadzoneResult;
   }
 }

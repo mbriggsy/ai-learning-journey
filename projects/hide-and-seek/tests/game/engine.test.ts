@@ -2,7 +2,6 @@ import { describe, it, expect } from 'vitest';
 import { GameEngine } from '../../src/game/engine.js';
 import type { GameState, PlayingState, GameMap } from '../../src/types/state.js';
 import type { InputState } from '../../src/types/input.js';
-import { tileCoord } from '../../src/types/grid.js';
 
 const ZERO_INPUT: InputState = { moveX: 0, moveY: 0, interact: false, pause: false };
 const STEP_MS = (1 / 60) * 1000; // ~16.67ms
@@ -20,8 +19,14 @@ function makePlayingState(): PlayingState {
   return {
     phase: 'playing',
     player: { x: 160, y: 160, velocityX: 0, velocityY: 0, facing: 'down' },
+    seeker: { x: 320, y: 320, facing: 'down', fsmState: 'patrol' },
     map: makeOpenMap(),
-    spawns: [{ x: 160, y: 160, type: 'hider_spawn' }],
+    spawns: [
+      { x: 160, y: 160, type: 'hider_spawn' },
+      { x: 320, y: 320, type: 'seeker_spawn' },
+    ],
+    gameFlow: { kind: 'countdown', ticksRemaining: 600 },
+    seekerFov: new Uint8Array(20 * 20),
   };
 }
 

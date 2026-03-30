@@ -67,6 +67,22 @@ export const DEPTH = {
   UI: 100,
 } as const satisfies Record<string, number>;
 
+/** Seeker AI tuning (Easy tier) */
+export const SEEKER = {
+  /** Reaction delay before transitioning PATROL→CHASE (seconds) */
+  REACTION_DELAY_S: 1.5,
+  /** Time with no LOS before CHASE→PATROL (seconds) */
+  CHASE_TIMEOUT_S: 3.0,
+  /** Minimum patrol pause at destination (seconds) */
+  PATROL_PAUSE_MIN_S: 0.5,
+  /** Maximum patrol pause at destination (seconds) */
+  PATROL_PAUSE_MAX_S: 1.0,
+  /** Re-request path to hider every N ticks during active chase */
+  CHASE_REPATH_TICKS: 30,
+  /** EasyStar iterations per calculate() call */
+  PATHFINDING_ITERATIONS: 200,
+} as const satisfies Record<string, number>;
+
 /** Collision settings */
 export const COLLISION = {
   /** Player hitbox width and height in pixels (centered on 32x32 sprite) */

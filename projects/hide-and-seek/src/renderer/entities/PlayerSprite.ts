@@ -30,7 +30,7 @@ export class PlayerSprite {
     this.facingIndicator.setPosition(player.x + offset.dx, player.y + offset.dy);
   }
 
-  getGameObject(): Phaser.GameObjects.Rectangle {
+  getGameObject(): Phaser.GameObjects.GameObject {
     return this.body;
   }
 }

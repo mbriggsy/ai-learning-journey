@@ -156,60 +156,54 @@ export class GameScene extends Phaser.Scene {
   }
 
   private createHUD(): void {
-    const cx = DISPLAY.CANVAS_WIDTH / (2 * CAMERA.ZOOM);
-    const cy = DISPLAY.CANVAS_HEIGHT / (2 * CAMERA.ZOOM);
-
-    // Countdown: large centered
-    this.countdownText = this.add.text(cx, cy, '', COUNTDOWN_STYLE)
+    // HUD elements are positioned each frame via positionHUD() relative to the
+    // camera's worldView. This avoids setScrollFactor(0) which misbehaves with zoom.
+    this.countdownText = this.add.text(0, 0, '', COUNTDOWN_STYLE)
       .setOrigin(0.5)
-      .setScrollFactor(0)
       .setDepth(DEPTH.UI);
 
-    // Hunt timer: top-right
-    this.huntTimerText = this.add.text(
-      DISPLAY.CANVAS_WIDTH / CAMERA.ZOOM - 10,
-      10,
-      '', HUD_STYLE,
-    )
+    this.huntTimerText = this.add.text(0, 0, '', HUD_STYLE)
       .setOrigin(1, 0)
-      .setScrollFactor(0)
       .setDepth(DEPTH.UI)
       .setVisible(false);
 
-    // Phase flash: "HUNT!" centered, fades out
-    this.flashText = this.add.text(cx, cy, '', FLASH_STYLE)
+    this.flashText = this.add.text(0, 0, '', FLASH_STYLE)
       .setOrigin(0.5)
-      .setScrollFactor(0)
       .setDepth(DEPTH.UI + 1)
       .setAlpha(0);
 
-    // End screen text
-    this.endText = this.add.text(cx, cy - 20, '', END_STYLE)
+    this.endText = this.add.text(0, 0, '', END_STYLE)
       .setOrigin(0.5)
-      .setScrollFactor(0)
       .setDepth(DEPTH.UI + 2)
       .setVisible(false);
 
-    this.endSubText = this.add.text(cx, cy + 40, 'Press any key to restart', HUD_STYLE)
+    this.endSubText = this.add.text(0, 0, 'Press any key to restart', HUD_STYLE)
       .setOrigin(0.5)
-      .setScrollFactor(0)
       .setDepth(DEPTH.UI + 2)
       .setVisible(false);
 
-    // Pause overlay
-    this.pauseOverlay = this.add.rectangle(cx, cy,
-      DISPLAY.CANVAS_WIDTH / CAMERA.ZOOM,
-      DISPLAY.CANVAS_HEIGHT / CAMERA.ZOOM,
-      0x000000, 0.5)
-      .setScrollFactor(0)
+    this.pauseOverlay = this.add.rectangle(0, 0, 1, 1, 0x000000, 0.5)
       .setDepth(DEPTH.UI + 3)
       .setVisible(false);
 
-    this.pauseText = this.add.text(cx, cy, 'PAUSED', PAUSE_STYLE)
+    this.pauseText = this.add.text(0, 0, 'PAUSED', PAUSE_STYLE)
       .setOrigin(0.5)
-      .setScrollFactor(0)
       .setDepth(DEPTH.UI + 4)
       .setVisible(false);
+  }
+
+  private positionHUD(): void {
+    const wv = this.cameras.main.worldView;
+    const cx = wv.centerX;
+    const cy = wv.centerY;
+
+    this.countdownText.setPosition(cx, cy);
+    this.huntTimerText.setPosition(wv.right - 8, wv.top + 8);
+    this.flashText.setPosition(cx, cy);
+    this.endText.setPosition(cx, cy - 15);
+    this.endSubText.setPosition(cx, cy + 30);
+    this.pauseOverlay.setPosition(cx, cy).setSize(wv.width, wv.height);
+    this.pauseText.setPosition(cx, cy);
   }
 
   private subscribeToEvents(): void {
@@ -255,6 +249,9 @@ export class GameScene extends Phaser.Scene {
   override update(_time: number, delta: number): void {
     const input = this.inputManager.sample();
 
+    // Keep HUD anchored to camera every frame
+    this.positionHUD();
+
     // Handle end screen restart
     if (this.isGameOver) {
       this.endScreenTimer += delta;
@@ -262,7 +259,6 @@ export class GameScene extends Phaser.Scene {
         this.scene.restart();
         return;
       }
-      // Still sync sprites for the final frame
       this.syncSprites();
       return;
     }
@@ -281,7 +277,6 @@ export class GameScene extends Phaser.Scene {
       return;
     }
 
-    // Don't tick engine while paused (engine handles this, but skip HUD updates)
     if (this.engine.isPaused()) return;
 
     this.engine.tick(delta, input);

@@ -45,7 +45,7 @@ This project is an exercise in **fully autonomous SDLC**. Every line of code, ev
 
 **Design phase** — brainstorm complete, planning next.
 
-See [`docs/brainstorms/2026-03-29-hide-and-seek-brainstorm.md`](docs/brainstorms/2026-03-29-hide-and-seek-brainstorm.md) for full design decisions.
+See [`docs/ideation/2026-03-29-hide-and-seek-brainstorm.md`](docs/ideation/2026-03-29-hide-and-seek-brainstorm.md) for full design decisions.
 
 ## Roadmap
 

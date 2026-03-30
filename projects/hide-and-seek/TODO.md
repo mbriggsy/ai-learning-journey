@@ -151,9 +151,58 @@
 - [x] `/deepen-plan docs/plans/2026-03-29-006-phase-4-doors-minimap-plan.md` ← DONE (14 agents, 13 contradictions resolved)
 - [x] `/deepen-plan docs/plans/2026-03-29-007-phase-5-ai-depth-spectator-plan.md` ← DONE — SPLIT into 5a + 5b (14 agents, 14 contradictions resolved, 25 race conditions, 33 silent failures)
 - [x] `/deepen-plan docs/plans/2026-03-29-008-phase-6-sound-scoring-plan.md` ← DONE — SPLIT into 6a + 6b (15 agents, 8 contradictions resolved, 26 silent failures)
-- [ ] `/deepen-plan docs/plans/2026-03-29-009-phase-7-art-pipeline-plan.md`
+- [x] `/deepen-plan docs/plans/2026-03-29-009-phase-7-art-pipeline-plan.md` ← DONE (15 agents, 7 contradictions resolved)
 
-**THEN fix any contradictions across deepened plans.**
+**ALL PLANS DEEPENED. Cross-phase review COMPLETE (2026-03-30).**
+
+**Cross-phase reconciliation (apply during execution of each phase):**
+
+Master plan Phase 7 section (21 fixes needed — apply when updating master plan):
+- [ ] Line 690: "256x256" → "1024x1024, two-stage downscale (LANCZOS 1024→128, NEAREST 128→32)"
+- [ ] Line 693: Model ID wrong (`gemini-3.1-flash-image-preview` → `gemini-3-pro-image-preview`). Change "Consider" to definitive selection.
+- [ ] Line 704: Post-processing spec outdated. Update to: two-stage downscale, magenta chroma-key, palette enforcement, PNG re-encode.
+- [ ] Line 716: "Generate full sprite sheet, then slice" → "Generate individual frames with reference image (AI sheets have alignment issues)"
+- [ ] Lines 713-715: Update frame counts (4-frame walk, 3 dirs + mirror, 52 total frames, palette swap AI hider)
+- [ ] Line 714: Flashlight is definitive separate overlay sprite, not "maybe"
+- [ ] Line 728: Atlas tooling → "free-tex-packer-core (npm, scriptable)"
+- [ ] Lines 697-704: Restructure to reference 5-file script decomposition
+- [ ] Add: tile extrusion requirement (tile-extruder, margin=1, spacing=2)
+- [ ] Add: typed TEXTURE_KEYS / asset manifest pattern
+- [ ] Add: JPEG→PNG re-encode requirement
+- [ ] Add: .gitignore prerequisite blocker
+- [ ] Add: quality gates / validation script
+- [ ] Line 687: Outline weight "2-3px at 256px" → "1px at 32x32, ~32px at 1024x1024"
+- [ ] Line 169, 894, 905: Update model name and risk description
+- [ ] Lines 1002-1003: Update references (drop "I Love Sprites", add sharp/tile-extruder/@google/genai)
+- [ ] Add to Alternative Approaches: sprite sheet rejected, Python rejected, @google/generative-ai deprecated
+
+Phase 0 fixes (apply during Phase 0 execution):
+- [ ] Add `assets/raw/` and `assets/processed/` to .gitignore (AI-generated binaries, large)
+- [ ] Add .env.example creation task with `GEMINI_API_KEY=your_key_here`
+- [ ] Add `scripts/ + scripts/tsconfig.json` to deferred directories list
+- [ ] Make `roundPixels: true` and `antialias: false` explicit in Phaser config (belt and suspenders)
+
+Phase 1-2 fixes (apply during Phase 1/2 execution):
+- [ ] Type `getGameObject()` as `Phaser.GameObjects.GameObject` (not `Rectangle`) in PlayerSprite and SeekerSprite — enables Phase 7 swap without type changes
+
+Phase 3 fixes (apply during Phase 3 execution):
+- [ ] TEXTURE_KEYS manifest must include fog overlay tile AND BitmapFont entries (not just game art)
+- [ ] Clock API frame-freeze: either implement in TestBridge or defer to Phase 7
+- [ ] Clarify that EndOfRoundSequence will be replaced by Phase 7 with richer animation code
+
+Phase 4 fixes (apply during Phase 4 execution):
+- [ ] Minimap position: change from top-right to **bottom-right** (Phase 7 layout is more considered — all HUD on right side)
+- [ ] Minimap size: change from 200x150 to ~160x160 (Phase 7 spec)
+- [ ] Document stable tile indices for door_open/door_closed frames
+
+Phase 5a fix (apply during Phase 5a execution):
+- [ ] Document FSM state → animation mapping (PATROL=walk, SUSPICIOUS=walk/idle, SEARCH=walk, CHASE=chase)
+
+Phase 6a fix (apply during Phase 6a execution):
+- [ ] Consider adding sonar ping audio SFX (currently visual-only — no audio cue in Phase 6a)
+
+Phase 6b fix (apply during Phase 6b execution):
+- [ ] Results screen UI art not specified in Phase 7 — added during deepening. Verify compatibility with Phase 6b layout spec.
 
 **THEN execute phases sequentially (fresh context window per phase):**
 - [ ] Execute Phase 0: Project Scaffolding
@@ -276,3 +325,15 @@
 - **totalGames is derived, not stored** — compute as wins + losses. Storing creates invariant violation risk. (NEW — Phase 6b)
 - **Number.isFinite() required in type guards** — NaN and Infinity both pass typeof === 'number'. (NEW — Phase 6b)
 - **localStorage re-read before write** — narrows concurrent-tab race from entire session to microseconds. (NEW — Phase 6b)
+- **`@google/generative-ai` is DEPRECATED** — use `@google/genai` only. (NEW — Phase 7)
+- **`responseModalities: ['IMAGE']`** (without 'TEXT') avoids MIME type mismatch bug where Gemini declares PNG but returns JPEG. (NEW — Phase 7)
+- **Gemini returns JPEG by default** — JPEG artifacts destroy pixel art. ALWAYS re-encode through Sharp as PNG. (NEW — Phase 7)
+- **No Gemini model supports 32x32 output** — minimum 1K (1024x1024). Two-stage downscale: LANCZOS 1024→128, NEAREST 128→32. (NEW — Phase 7)
+- **Tile extrusion mandatory for WebGL** — without 1px extrusion, sub-pixel camera positions cause tile bleeding. `tile-extruder` npm, margin=1, spacing=2 in Tiled. (NEW — Phase 7)
+- **`pixelArt` and `roundPixels` are TOP-LEVEL** Phaser config, NOT nested under `render`. (NEW — Phase 7)
+- **`addTilesetImage` first arg is case-sensitive** — must match Tiled tileset name exactly. Mismatch returns null silently. (NEW — Phase 7)
+- **Keep two tileset versions** — non-extruded for Tiled editing, extruded for Phaser runtime. (NEW — Phase 7)
+- **Gemini API key must be `GEMINI_API_KEY`** — never `VITE_GEMINI_API_KEY`. Vite exposes `VITE_` prefix to client. (NEW — Phase 7)
+- **free-tex-packer: `allowRotation: false`** — rotation destroys pixel art alignment. (NEW — Phase 7)
+- **BitmapText cannot render gradients** — SURVIVED splash "gradient gold" must be flat fill or pre-rendered sprite. (NEW — Phase 7)
+- **Phase 7 replaces Phase 3's EndOfRoundSequence** — starburst/particles/elastic tweens exceed SequenceStep union. Direct Phaser tween/Graphics code instead. (NEW — Phase 7)

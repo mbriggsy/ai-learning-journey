@@ -9,6 +9,7 @@
 - **Phase 2 plan DEEPENED (2026-03-30)** — 14 agents (4 research + 6 review + 1 spec flow + 1 repo analyst), 1 Context7 query, 2 web searches, 12 contradictions resolved
 - **Phase 3 plan DEEPENED (2026-03-30)** — 13 agents (4 research + 6 review + 1 spec flow + 1 codebase explorer + 1 general-purpose), 3 Context7 queries, 13 contradictions resolved
 - **Phase 4 plan DEEPENED (2026-03-30)** — 14 agents (9 review + 4 research + 1 web research), 4 Context7 queries, 13 contradictions resolved
+- **Phase 5 plan SPLIT + DEEPENED (2026-03-30)** — 14 agents (5 research + 7 review + 1 spec flow + 1 architecture verification), 3 Context7 queries, 12 Gemini Grounding queries, 14 contradictions resolved, 25 race conditions identified, 33 silent failures caught
 - Phase plans broken out into individual documents — deepening in progress
 - No code yet — project is in design phase
 
@@ -16,6 +17,41 @@
 - Brainstorm: `docs/ideation/2026-03-29-hide-and-seek-brainstorm.md`
 - Master plan: `docs/plans/2026-03-29-001-feat-hide-and-seek-game-plan.md`
 - Phase plans: `docs/plans/2026-03-29-002` through `009`
+- Phase 5a: `docs/plans/2026-03-29-007a-phase-5a-seeker-tiers-plan.md`
+- Phase 5b: `docs/plans/2026-03-29-007b-phase-5b-hider-spectator-plan.md`
+- Original Phase 5 (superseded): `docs/plans/2026-03-29-007-phase-5-ai-depth-spectator-plan.md`
+
+## What We Did (2026-03-30, Session 5)
+- **Tested Gemini Grounding MCP** — confirmed working with Phaser 3.90 + fog of war blog queries. Full Cloudflare bypass.
+- **Updated WebFetch guidance** — removed Playwright-for-blogs workaround from TODO and memory. Gemini Grounding handles all web research now.
+- **DEEPENED Phase 5 plan with 14 agents, SPLIT into 5a + 5b:**
+  - 5 research agents: FSM class patterns + utility scoring (Gemini Grounding), Director system / rubber-banding (Gemini Grounding), path smoothing / string-pulling (Gemini Grounding + Context7 EasyStar), room detection + clearing AI (Gemini Grounding + Context7 Phaser), AI hider + spectator camera (Gemini Grounding + Context7 Phaser)
+  - 7 review agents: architecture strategist, TypeScript reviewer, performance oracle, code simplicity, pattern recognition, frontend races, silent failure hunter
+  - 1 spec flow analyzer: found 23 user flows (plan covered 14), 9 contradictions, 20 critical questions
+  - 1 architecture verification: confirmed FSM class refactor, 2 EasyStar instances, INVESTIGATE_STIMULUS is NOT an action
+  - 3 Context7 doc queries: EasyStar.js full API, Phaser 3 camera/graphics, Vitest state machine testing
+  - 12 Gemini Grounding queries: FSM patterns, stealth AI, director systems, path smoothing, room clearing, hiding spots
+  - **Resolved 14 contradictions:**
+    1. SUSPICIOUS state: KEEP (distinct from SEARCH — environmental stimulus vs lost-LOS)
+    2. Director system: REMOVE (violates perception principle, Hard AI strong enough without it)
+    3. Detection miss rate: REMOVE (feels like bug, reaction delays are the difficulty knob)
+    4. Menace gauge: ADD (prevents relentless Hard chase, Easy: none, Medium: 25s, Hard: 20s)
+    5. Vision cone: RESTRICTS DETECTION (core stealth mechanic, not rendering-only)
+    6. INVESTIGATE_STIMULUS: NOT an action (SUSPICIOUS state sequences primitives)
+    7. Strategy pattern files: REMOVE (data-driven SeekerConfig is sufficient)
+    8. SeekerConfig: FLAT (grouped with comments, no nesting)
+    9. CHASE → SEARCH: after chaseTimeout (preserves Phase 2 anti-flicker)
+    10. Easy vision range: 4 tiles (Phase 5 table authoritative, Phase 2's 6 → Medium)
+    11. DOOR_TOGGLED toggledBy: NOT needed (Hard AI tracks doorsIOpened internally)
+    12. Phase 5a/5b split: RETAIN (context window management)
+    13. Path smoothing: INCLUDE in 5a (~80 LOC, deferred from Phase 2)
+    14. Door snapshot: new Map(doors) not structuredClone (shallow clone safe)
+  - 13 simplification proposals evaluated: 4 ACCEPT, 5 REJECT, 2 PARTIALLY ACCEPT, 2 SIMPLIFY
+  - 25 race conditions identified with concrete mitigations (~150 LOC total)
+  - 33 silent failures caught (6 CRITICAL, 13 HIGH)
+  - Key new designs: FSM priority ordering, canonical 9-step fixedUpdate order, separate EasyStar instances per agent, event handlers record-don't-act pattern, compound flee trigger for Hard hider
+  - Phase 5a: seeker FSM refactor (4 states), 3 difficulty tiers, path smoothing, near-miss tuning
+  - Phase 5b: AI hider (Easy+Medium mandatory, Hard optional), SpectatorGame standalone scene, vision cones, MainMenu updates
 
 ## What We Did (2026-03-30, Session 4)
 - **DEEPENED Phase 3 plan with 13 agents:**
@@ -30,7 +66,7 @@
   - 7 new type definitions: SceneDataMap, ResultsSceneData, HUDSceneData, GameSettings, SequenceStep, FogState, TimerState
   - 5 critical race conditions caught: HUD deaf on first frame, EndOfRoundSequence softlock, dual pause authority conflict, EasyStar ghost callbacks, Escape during cinematic
   - 8 Playwright test specifications with TestBridge architecture
-  - WebFetch stuck-agent lesson learned: best-practices-researcher agents hang on Cloudflare-protected blog URLs. Killed and relaunched 3 times before switching to general-purpose agent with Context7-only instructions. Future fix: use Playwright MCP for blog fetches.
+  - WebFetch stuck-agent lesson learned: best-practices-researcher agents hang on Cloudflare-protected blog URLs. Killed and relaunched 3 times before switching to general-purpose agent with Context7-only instructions. Fixed: Gemini Grounding MCP handles all web research (searches + summarizes + cites, no Cloudflare issues).
 
 ## What We Did (2026-03-30, Session 3)
 - **DEEPENED Phase 2 plan with 14 agents:**
@@ -88,7 +124,7 @@
 - [x] `/deepen-plan docs/plans/2026-03-29-004-phase-2-seeker-detection-plan.md` ← DONE (14 agents, 12 contradictions resolved)
 - [x] `/deepen-plan docs/plans/2026-03-29-005-phase-3-fog-game-flow-plan.md` ← DONE (13 agents, 13 contradictions resolved)
 - [x] `/deepen-plan docs/plans/2026-03-29-006-phase-4-doors-minimap-plan.md` ← DONE (14 agents, 13 contradictions resolved)
-- [ ] `/deepen-plan docs/plans/2026-03-29-007-phase-5-ai-depth-spectator-plan.md`
+- [x] `/deepen-plan docs/plans/2026-03-29-007-phase-5-ai-depth-spectator-plan.md` ← DONE — SPLIT into 5a + 5b (14 agents, 14 contradictions resolved, 25 race conditions, 33 silent failures)
 - [ ] `/deepen-plan docs/plans/2026-03-29-008-phase-6-sound-scoring-plan.md`
 - [ ] `/deepen-plan docs/plans/2026-03-29-009-phase-7-art-pipeline-plan.md`
 
@@ -100,7 +136,8 @@
 - [ ] Execute Phase 2: Seeker + Detection
 - [ ] Execute Phase 3: Fog of War + Game Flow
 - [ ] Execute Phase 4: Doors + Minimap
-- [ ] Execute Phase 5: AI Depth + Spectator
+- [ ] Execute Phase 5a: Seeker Difficulty Tiers
+- [ ] Execute Phase 5b: AI Hider + Spectator
 - [ ] Execute Phase 6: Sound + Scoring
 - [ ] Execute Phase 7: Art Pipeline
 
@@ -182,3 +219,19 @@
 - **EasyStar setTimeout callbacks survive scene destruction** — GameEngine.dispose() must cancel all pending paths AND set disposed flag checked by every callback. (NEW)
 - **Fog overlay = dedicated black-tile TilemapLayer** — NOT terrain tinting. Separate layer at depth 100, per-tile alpha controls visibility. Cleaner, no terrain modification. (NEW)
 - **Manual lerp for fog transitions, NOT Phaser Tweens** — Tweens create ~60 garbage objects/sec. Manual lerp (lerpFactor=0.12) is zero-GC. (NEW)
+- **Vision cone RESTRICTS detection** — not rendering-only. checkDetection() filters by cone angle. Easy 60°, Medium 90°, Hard 120°. Without this, seeker detects behind itself (unfair). (NEW — Phase 5a)
+- **STATE_PRIORITY must gate pendingTransition** — without priority check, door sound overwrites in-progress CHASE reaction. CHASE(3) > SEARCH(2) > SUSPICIOUS(1) > PATROL(0). (NEW — Phase 5a)
+- **One FSM transition per tick maximum** — without this, two transitions same tick = 0-frame intermediate state, exit/enter callbacks misfire. (NEW — Phase 5a)
+- **Event handlers RECORD, don't ACT** — DOOR_TOGGLED handler pushes to pendingDoorEvidence queue. No state mutation during emit(). Process queue at fixedUpdate step 1. (NEW — Phase 5a)
+- **INVESTIGATE_STIMULUS is NOT an Action** — it's what SUSPICIOUS state does by sequencing primitives (REQUEST_PATH → MOVE_TO → LOOK_AROUND). Remove from Phase 4 prerequisites. (NEW — Phase 5a)
+- **Separate EasyStar instances for seeker vs hider** — different door costs (seeker: 50, hider: blocked). Can't share one cost model. (NEW — Phase 5b)
+- **Medium AI with no "Rooms" Object Layer = frozen seeker** — must fall back to Easy patrol with log warning. (NEW — Phase 5a)
+- **Room center BFS** — Tiled rectangle geometric center may be a wall tile. BFS outward to nearest walkable. Without this, null path, seeker freezes. (NEW — Phase 5a)
+- **Double-toggled doors fool state-diff evidence** — use lastToggleTick comparison, not just isOpen vs snapshot. Any toggle since hunt start = evidence. (NEW — Phase 5a)
+- **SpectatorGame must NOT process player input** — separate scene, no InputManager for movement. Spectator pressing E would toggle doors near AI hider. (NEW — Phase 5b)
+- **roundPixels: false in SpectatorGame only** — zoom-to-fit produces non-integer zoom. Game.ts keeps roundPixels: true. (NEW — Phase 5b)
+- **Graphics.arc() uses RADIANS** — config has degrees. Convert or vision cones render incorrectly. (NEW — Phase 5b)
+- **BitmapText NOT Text for FSM labels** — Text.setText() costs 0.5-1ms (canvas rerender). BitmapText: ~0.01ms. (NEW — Phase 5b)
+- **Director system REMOVED by design** — violates "AI must never act on unperceived info." If Hard AI needs help, add back as tuning lever. (NEW — Phase 5a decision)
+- **Detection miss rate REMOVED by design** — feels like bug. Reaction delays + transition delays are the near-miss mechanism. (NEW — Phase 5a decision)
+- **Tiled Object Layer properties ARE flat maps in Phaser** — despite raw JSON being array format, Phaser parses them into `obj.properties.roomId` (flat key-value). Contradicts Phase 4 landmine about arrays. (NEW — Phase 5a, corrects Phase 4 landmine)

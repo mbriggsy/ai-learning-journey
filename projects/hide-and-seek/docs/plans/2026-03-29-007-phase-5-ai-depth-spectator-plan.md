@@ -1,12 +1,25 @@
 ---
-title: "Phase 5: AI Depth + Spectator"
+title: "Phase 5: AI Depth + Spectator (SUPERSEDED)"
 type: feat
-status: pending-deepen
+status: superseded
 date: 2026-03-29
 origin: docs/plans/2026-03-29-001-feat-hide-and-seek-game-plan.md
+superseded_by:
+  - docs/plans/2026-03-29-007a-phase-5a-seeker-tiers-plan.md
+  - docs/plans/2026-03-29-007b-phase-5b-hider-spectator-plan.md
 ---
 
-# Phase 5: AI Depth + Spectator
+# Phase 5: AI Depth + Spectator (SUPERSEDED)
+
+**This plan has been split and deepened into two documents:**
+- **Phase 5a:** [Seeker Difficulty Tiers](2026-03-29-007a-phase-5a-seeker-tiers-plan.md) — FSM refactor, 3 tiers, path smoothing, near-miss tuning
+- **Phase 5b:** [AI Hider + Spectator](2026-03-29-007b-phase-5b-hider-spectator-plan.md) — AI hider, SpectatorGame, vision cones, MainMenu
+
+**Deepened on:** 2026-03-30 — 14 agents, 14 contradictions resolved, 25 race conditions identified, 33 silent failures caught.
+
+---
+
+## Original Plan (preserved for reference)
 
 ## Goal
 

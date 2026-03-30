@@ -14,8 +14,10 @@
 - Phase plans broken out into individual documents — all 10 deepened
 - **Phase 0 EXECUTED (2026-03-30)** — scaffolding complete, 3 tests
 - **Phase 1 EXECUTED (2026-03-30)** — map + movement, 43 tests, arrow keys added
-- **Code review PASSED (2026-03-30)** — 5 agents (TS, arch, perf, security, simplicity), zero blockers
-- **Branch:** `feat/phase-0-scaffolding` pushed to origin (4 commits)
+- **Phase 0+1 code review PASSED (2026-03-30)** — 5 agents, zero blockers
+- **Phase 2 EXECUTED (2026-03-30)** — seeker AI + detection, 119 tests
+- **Phase 2 code review PASSED (2026-03-30)** — 5 agents (TS, arch, perf, security, simplicity), zero blockers, all P1+P2 fixed
+- **Branch:** `feat/phase-0-scaffolding` pushed to origin
 
 ### Documents
 - Brainstorm: `docs/ideation/2026-03-29-hide-and-seek-brainstorm.md`
@@ -27,6 +29,31 @@
 - Phase 6b: `docs/plans/2026-03-29-008b-phase-6b-scoring-stats-plan.md`
 - Original Phase 5 (superseded): `docs/plans/2026-03-29-007-phase-5-ai-depth-spectator-plan.md`
 - Original Phase 6 (superseded): `docs/plans/2026-03-29-008-phase-6-sound-scoring-plan.md`
+
+## What We Did (2026-03-30, Session 8)
+- **EXECUTED Phase 2: Seeker + Detection** — first playable hide-and-seek
+- Symmetric shadowcasting FOV (Albert Ford, rational arithmetic, Uint8Array, zero-alloc after review)
+- EasyStar.js pathfinding (callback-based, grid [y][x] conversion, 200 iter/frame)
+- Seeker AI FSM: PATROL (random wander + pause) / CHASE (last-known-position, re-path every 30 ticks)
+- Transition delays: 1.5s reaction (PATROL→CHASE), 3s timeout (CHASE→PATROL)
+- 3-way detection: none/spotted/found (360° for Phase 2, cone deferred to Phase 5)
+- Game flow: countdown → hunt → found|survived (two-level discriminated union)
+- TypedEmitter with copy-on-iterate + offAll()
+- Terminal state guards halt all logic after game over
+- Renderer: SeekerSprite with facing indicator, countdown/hunt timer HUD, "HUNT!" flash, minimal pause (ESC), FOUND!/SURVIVED! end screen with restart
+- Applied ALL cross-phase fixes from Session 7 code review (tileCoord allocs, mutate-in-place, ReadonlyDeep, MutablePlayingState, etc.)
+- **Code review with 5 agents** (TS reviewer, architecture strategist, performance oracle, security sentinel, simplicity reviewer):
+  - Architecture: "PASS — zero blockers, zero boundary violations, pristine"
+  - Security: risk level LOW, zero critical/high issues
+  - Simplicity: "complexity score LOW, minor tweaks only"
+  - Performance: 5 allocation hot spots found and fixed (FOV Slope objects, pixelToTile, tileToPixelCenter, hiderPos literal, lastKnownHiderPos)
+  - TS reviewer: P1 — 4 `!` assertions in src/game/ removed; dead types/constants/events cleaned
+  - Killed ~35 LOC dead code, eliminated ~1500+ allocs/sec across hot paths
+- Fixed seeker eyes (added facing indicator) and HUD positioning (camera worldView instead of setScrollFactor(0))
+- Added `executed:` and `reviewed:` fields to all phase plan frontmatter
+- Test baseline: **119 tests passing** (72 new)
+- Build: app chunk 20.9KB, zero vulnerabilities
+- **Branch:** `feat/phase-0-scaffolding` pushed to origin (10 commits)
 
 ## What We Did (2026-03-30, Session 7)
 - **EXECUTED Phase 0 + Phase 1** — first code in the project
@@ -203,15 +230,26 @@ Phase 0 fixes (apply during Phase 0 execution):
 - [ ] Make `roundPixels: true` and `antialias: false` explicit in Phaser config (belt and suspenders)
 
 Phase 1-2 fixes (apply during Phase 1/2 execution):
-- [ ] Type `getGameObject()` as `Phaser.GameObjects.GameObject` (not `Rectangle`) in PlayerSprite and SeekerSprite — enables Phase 7 swap without type changes
+- [x] Type `getGameObject()` as `Phaser.GameObjects.GameObject` (not `Rectangle`) in PlayerSprite and SeekerSprite ✓
 
-Phase 2 fixes (from code review — apply during Phase 2 execution):
-- [ ] Fix tileCoord() allocation in collision hot path — change isWalkable/isBlocking to accept (x, y) number pairs instead of branded TileCoord objects (~720 allocs/sec, scales with entity count)
-- [ ] Mutate PlayerState in place in updateMovement instead of returning new object (60 allocs/sec per entity)
-- [ ] Pre-allocate deadzone result object in InputManager.applyRadialDeadzone (same pattern as inputResult)
-- [ ] Upgrade getState() return type from Readonly<GameState> to ReadonlyDeep<GameState>
-- [ ] Extract named MutablePlayingState type alias for the inline mapped type in engine.ts fixedUpdate
-- [ ] Add doc comment on InputManager.sample() warning returned object is reused singleton — do not store across frames
+Phase 2 fixes (from Session 7 code review — ALL APPLIED in Session 8):
+- [x] Fix tileCoord() allocation — isWalkable/isBlocking accept (x, y) number pairs ✓
+- [x] Mutate PlayerState in place in updateMovement ✓
+- [x] Pre-allocate deadzone result object in InputManager ✓
+- [x] Upgrade getState() to ReadonlyDeep<GameState> ✓
+- [x] Extract MutablePlayingState type alias ✓
+- [x] Doc comment on InputManager.sample() reused singleton ✓
+
+Phase 2 fixes (from Session 8 code review — ALL APPLIED):
+- [x] Remove all `!` assertions from src/game/ (4 occurrences) ✓
+- [x] Flatten Slope objects in FOV to raw (num, den) numbers — zero-alloc scanQuadrant ✓
+- [x] Pre-allocate pixelToTile + tileToPixelCenter results ✓
+- [x] Pass s.player directly to seeker AI (not object literal) ✓
+- [x] Mutate lastKnownHiderPos in place during chase ✓
+- [x] Add offAll() to shutdown handler (emitter cleanup) ✓
+- [x] Remove dead types (FogState, TileFlag, TileType), constants (6), events (2), fields (1) ✓
+- [x] Fix createCountdownTicks duplication (state.ts now calls the function) ✓
+- [x] Document ReadonlyDeep<Uint8Array> gap + singleton patterns in CLAUDE.md ✓
 
 Phase 3 fixes (apply during Phase 3 execution):
 - [ ] TEXTURE_KEYS manifest must include fog overlay tile AND BitmapFont entries (not just game art)
@@ -235,7 +273,7 @@ Phase 6b fix (apply during Phase 6b execution):
 **THEN execute phases sequentially (fresh context window per phase):**
 - [x] Execute Phase 0: Project Scaffolding ✓ (2026-03-30, Session 7)
 - [x] Execute Phase 1: Map + Movement ✓ (2026-03-30, Session 7)
-- [ ] Execute Phase 2: Seeker + Detection
+- [x] Execute Phase 2: Seeker + Detection ✓ (2026-03-30, Session 8)
 - [ ] Execute Phase 3: Fog of War + Game Flow
 - [ ] Execute Phase 4: Doors + Minimap
 - [ ] Execute Phase 5a: Seeker Difficulty Tiers

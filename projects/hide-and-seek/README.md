@@ -2,6 +2,10 @@
 
 A top-down 2D hide-and-seek game where you hide from an AI seeker in indoor environments. The seeker counts down, then hunts you using line-of-sight and proximity detection. Outsmart it before time runs out — or get found.
 
+## Spec-Driven Development
+
+This project is an exercise in **fully autonomous SDLC**. Every line of code, every asset, every commit is produced by AI agents (Claude Code + supporting tools). Briggsy is ATC (Air Traffic Control) — he directs, reviews, and approves. He doesn't write code, generate art, or run commands. The agents fly the plane.
+
 ## How It Works
 
 1. **Countdown** — you see the full map and pick your hiding spot while the seeker counts down

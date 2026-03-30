@@ -4,7 +4,8 @@
 - Brainstorm complete (2026-03-29)
 - Master plan complete (2026-03-29) — 8 phases (now 9 with Phase 5 split), all research done
 - **Master plan DEEPENED (2026-03-29)** — 16 research/review agents, 3 Context7 queries, 6 contradictions resolved
-- Phase plans broken out into individual documents — ready for deepening
+- **Phase 0 plan DEEPENED (2026-03-29)** — 12 agents (4 research + 7 review + 1 repo analyst), 3 Context7 queries, 3 web searches, 5 contradictions resolved
+- Phase plans broken out into individual documents — deepening in progress
 - No code yet — project is in design phase
 
 ### Documents
@@ -27,12 +28,21 @@
   - Resolved 6 contradictions, identified 15 critical improvements, 10 missing user flows, 6 new risks
   - Split Phase 5 into 5a (seeker tiers) + 5b (hider AI + spectator)
   - Added: GameEngine class, typed event system, discriminated unions, ReadonlyDeep, Uint8Array FOV, tab backgrounding, accessibility, canvas config, controller menus
+- **DEEPENED Phase 0 plan with 12 agents:**
+  - 4 research agents: Phaser+Vite scaffolding, TS strict config, architecture boundary enforcement, Vitest 4 config
+  - 7 review agents: architecture strategist, TypeScript reviewer, performance oracle, security sentinel, pattern recognition, code simplicity, spec flow analyzer
+  - 1 repo research analyst (sibling project conventions)
+  - 3 Context7 doc queries: Phaser 3.90 game config, Vite 7 build config, Vitest 4 projects
+  - 3 web searches: Phaser+Vite template, TS strict 2026, Vitest 4 patterns
+  - Resolved 5 contradictions (noPropertyAccessFromIndexSignature, constants scope, empty dirs, CSP, Playwright)
+  - Critical discoveries: Vite CVE (pin ^7.0.7), esModuleInterop required for Phaser, CSP deferred, fps.limit not fps.target, mergeConfig required for vitest
+  - Expanded: 13 tasks → 15, 4 success criteria → 8, 2 risks → 9, added complete code examples for all config files
 
 ## Next Steps (Priority Order)
 
 **DEEPEN ALL PHASE PLANS (serial, one at a time):**
 - [x] `/deepen-plan docs/plans/2026-03-29-001-feat-hide-and-seek-game-plan.md` ← MASTER PLAN DONE
-- [ ] `/deepen-plan docs/plans/2026-03-29-002-phase-0-project-scaffolding-plan.md`
+- [x] `/deepen-plan docs/plans/2026-03-29-002-phase-0-project-scaffolding-plan.md` ← DONE (12 agents, 5 contradictions resolved)
 - [ ] `/deepen-plan docs/plans/2026-03-29-003-phase-1-map-movement-plan.md`
 - [ ] `/deepen-plan docs/plans/2026-03-29-004-phase-2-seeker-detection-plan.md`
 - [ ] `/deepen-plan docs/plans/2026-03-29-005-phase-3-fog-game-flow-plan.md`
@@ -65,6 +75,11 @@
 - **Tiled JSON export** — use CSV or Base64 uncompressed tile layer format. Phaser can't read compressed.
 - **Camera zoom** — integer values only when using roundPixels (non-integer = jitter).
 - **NO .gitignore yet** — MUST create in Phase 0 before any .env file. API key will leak without it. (NEW — CRITICAL)
+- **Vite 7.0.0-7.0.6 have active CVEs** — CVE-2025-31125 (arbitrary file read, exploited in the wild), CVE-2025-58751, CVE-2025-58752 (server.fs bypass). Minimum safe version is ^7.0.7. (NEW — CRITICAL)
+- **esModuleInterop: true required for Phaser** — Phaser's type defs use `export = Phaser`. Without esModuleInterop, `import Phaser from 'phaser'` fails under verbatimModuleSyntax. Conway didn't need it. (NEW)
+- **vitest.config.ts must use mergeConfig** — without it, vitest.config OVERRIDES vite.config entirely. Import mergeConfig from 'vitest/config', not 'vite'. (NEW)
+- **Defer CSP to hardening pass** — Phaser internally uses dynamic code evaluation (try/catch). strict CSP produces console warning but game still works. Defer rather than add unsafe-eval. (NEW)
+- **fps.limit not fps.target** — fps.target is a hint, fps.limit is the hard cap. Without limit, 120Hz monitors waste GPU doubling render frames. (NEW)
 - **Tab backgrounding** — requestAnimationFrame stops when tab hidden. Delta spikes on return. Must auto-pause via visibilitychange + cap accumulator. (NEW)
 - **Camera flash seizure risk** — camera.flash() with white is photosensitivity hazard. Need reduced-motion toggle. (NEW)
 - **FOV must use Uint8Array, NOT Set<string>** — 60 Set allocations/sec causes GC micro-stutters. Pre-allocate and reuse. (NEW)

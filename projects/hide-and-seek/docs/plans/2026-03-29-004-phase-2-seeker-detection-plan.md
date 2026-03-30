@@ -5,6 +5,8 @@ status: completed
 date: 2026-03-29
 origin: docs/plans/2026-03-29-001-feat-hide-and-seek-game-plan.md
 deepened: 2026-03-30
+executed: 2026-03-30
+reviewed: 2026-03-30
 ---
 
 # Phase 2: Seeker + Detection

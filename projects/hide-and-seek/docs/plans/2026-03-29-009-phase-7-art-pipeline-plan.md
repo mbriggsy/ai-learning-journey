@@ -5,6 +5,8 @@ status: ready
 date: 2026-03-29
 deepened: 2026-03-30
 origin: docs/plans/2026-03-29-001-feat-hide-and-seek-game-plan.md
+executed:
+reviewed:
 ---
 
 # Phase 7: Art Pipeline

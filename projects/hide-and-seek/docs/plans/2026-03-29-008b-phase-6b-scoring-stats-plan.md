@@ -7,6 +7,8 @@ deepened: 2026-03-30
 origin: docs/plans/2026-03-29-008-phase-6-sound-scoring-plan.md
 agents_used: 15
 contradictions_resolved: 8
+executed:
+reviewed:
 ---
 
 # Phase 6b: Scoring + Stats

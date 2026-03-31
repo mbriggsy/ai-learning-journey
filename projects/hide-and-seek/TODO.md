@@ -17,7 +17,8 @@
 - **Phase 0+1 code review PASSED (2026-03-30)** — 5 agents, zero blockers
 - **Phase 2 EXECUTED (2026-03-30)** — seeker AI + detection, 119 tests
 - **Phase 2 code review PASSED (2026-03-30)** — 5 agents (TS, arch, perf, security, simplicity), zero blockers, all P1+P2 fixed
-- **Branch:** `feat/phase-0-scaffolding` pushed to origin
+- **Phase 3 EXECUTED (2026-03-30)** — fog of war + game flow, 125 tests, visually verified
+- **Branch:** `feat/phase-0-scaffolding` pushed to origin (19 commits)
 
 ### Documents
 - Brainstorm: `docs/ideation/2026-03-29-hide-and-seek-brainstorm.md`
@@ -29,6 +30,29 @@
 - Phase 6b: `docs/plans/2026-03-29-008b-phase-6b-scoring-stats-plan.md`
 - Original Phase 5 (superseded): `docs/plans/2026-03-29-007-phase-5-ai-depth-spectator-plan.md`
 - Original Phase 6 (superseded): `docs/plans/2026-03-29-008-phase-6-sound-scoring-plan.md`
+
+## What We Did (2026-03-30, Session 9)
+- **EXECUTED Phase 3: Fog of War + Game Flow** — Tier 1 complete, fully playable with polish
+- 6 scenes: Boot (Click to Start + loading), MainMenu, Game (refactored composition root), HUD (parallel), PauseMenu (overlay), Results
+- FogRenderer: dedicated black-tile overlay layer, 3 states (UNEXPLORED/EXPLORED/VISIBLE), manual lerp transitions, distance-based vignette, camera-culled
+- CinematicManager: dual-camera (UI at zoom=1 for splash text), Promise-wrapped camera effects (zoomTo, panTo, flash, fadeOut, shake, wait)
+- EndOfRoundSequence: polling state machine with SequenceStep discriminated union, timeout safety per step, reduced-motion (filter flash), FOUND/SURVIVED sequences
+- PauseAuthority: reason-tracked (MENU/TAB_HIDDEN/CINEMATIC), request/release, game only resumes when all reasons cleared
+- SceneTransition: type-safe via SceneDataMap, camera fade, static isTransitioning guard
+- Game state additions: playerFov Uint8Array (fill(1) during countdown, computed in hunt), GameStats (distanceTraveled), GameEngine.dispose()
+- Player FOV computation with dirty-flag optimization in fixedUpdate
+- TestBridge: dev-only window.__GAME_TEST__ with typed interface for Playwright
+- 6 Playwright e2e specs + playwright.config.ts
+- Types: GameSettings, SceneDataMap, HUDSceneData, ResultsSceneData, GameSceneData
+- Constants: FOG, CINEMATIC, HUD groups + DEPTH.FOG (100) below DEPTH.UI (200)
+- **Bug fixes found during visual verification:**
+  - JustDown doesn't work with Playwright keyboard events — switched to key.on('down') event listener
+  - UI camera rendered sprite facing indicators as stray dots (looked like broken minimap) — fixed by ignoring all sprite game objects on UI camera
+  - Seeker facing indicator leaked through fog — fixed with SeekerSprite.setVisible() controlling both body + indicator
+- 3 new landmines documented in CLAUDE.md
+- Test baseline: **125 tests passing** (6 new)
+- Build: app chunk 40.8KB, Phaser 1.2MB, zero vulnerabilities
+- **Branch:** `feat/phase-0-scaffolding` pushed to origin (19 commits)
 
 ## What We Did (2026-03-30, Session 8)
 - **EXECUTED Phase 2: Seeker + Detection** — first playable hide-and-seek
@@ -201,6 +225,18 @@
 - [x] `/deepen-plan docs/plans/2026-03-29-009-phase-7-art-pipeline-plan.md` ← DONE (15 agents, 7 contradictions resolved)
 
 **ALL PLANS DEEPENED. Cross-phase review COMPLETE (2026-03-30).**
+
+**EXECUTION (serial, one phase at a time — code review after each):**
+- [x] Phase 0: Scaffolding — EXECUTED + REVIEWED
+- [x] Phase 1: Map + Movement — EXECUTED + REVIEWED
+- [x] Phase 2: Seeker + Detection — EXECUTED + REVIEWED
+- [x] Phase 3: Fog of War + Game Flow — EXECUTED, **NEEDS CODE REVIEW**
+- [ ] Phase 4: Doors + Minimap
+- [ ] Phase 5a: Seeker Tiers
+- [ ] Phase 5b: Hider + Spectator
+- [ ] Phase 6a: Audio + Atmosphere
+- [ ] Phase 6b: Scoring + Stats
+- [ ] Phase 7: Art Pipeline
 
 **Cross-phase reconciliation (apply during execution of each phase):**
 

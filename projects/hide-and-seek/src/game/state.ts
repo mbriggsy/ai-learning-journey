@@ -30,6 +30,7 @@ export function createGameState(
       x: seekerSpawn.x,
       y: seekerSpawn.y,
       facing: 'down',
+      facingAngle: Math.PI / 2,  // facing down = +Y = π/2
       fsmState: 'patrol',
     },
     map,

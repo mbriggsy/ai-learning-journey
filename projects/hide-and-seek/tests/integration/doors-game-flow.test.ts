@@ -45,7 +45,7 @@ function makePlayingStateWithDoor(doorTileX: number, doorTileY: number) {
       y: playerTileY * 32 + 16,
       velocityX: 0, velocityY: 0, facing: 'down',
     },
-    seeker: { x: 15 * 32 + 16, y: 15 * 32 + 16, facing: 'down', fsmState: 'patrol' },
+    seeker: { x: 15 * 32 + 16, y: 15 * 32 + 16, facing: 'down', facingAngle: Math.PI / 2, fsmState: 'patrol' },
     map,
     spawns: [
       { x: playerTileX * 32 + 16, y: playerTileY * 32 + 16, type: 'hider_spawn' },

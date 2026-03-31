@@ -152,6 +152,22 @@ export const SONAR = {
   BLIP_THRESHOLD: 16,
 } as const satisfies Record<string, number>;
 
+/** AI room and search tuning (tier-specific values live in SEEKER_CONFIGS) */
+export const AI = {
+  /** Ticks before a visited room becomes stale again (30s at 60 tick/s) */
+  RE_CLEAR_TICKS: 1800,
+  /** Anti-oscillation cooldown for room scoring (5s at 60 tick/s) */
+  ROOM_SCORING_COOLDOWN_TICKS: 300,
+  /** Normalization ceiling for room staleness (60s at 60 tick/s) */
+  MAX_STALE_TICKS: 3600,
+  /** Doorway pause duration (500ms at 60 tick/s) */
+  DOORWAY_PAUSE_TICKS: 30,
+  /** LOOK_AROUND total duration (2s at 60 tick/s) */
+  LOOK_AROUND_DURATION_TICKS: 120,
+  /** Max distance for room scoring normalization (tiles) */
+  MAX_ROOM_DIST: 20,
+} as const satisfies Record<string, number>;
+
 /** Minimap settings */
 export const MINIMAP = {
   WIDTH: 160,

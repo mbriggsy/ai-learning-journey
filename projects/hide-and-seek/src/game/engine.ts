@@ -16,15 +16,33 @@ import type { SeekerAIState } from './ai/seeker.js';
 import { pixelToTile } from './map.js';
 import type { DoorSystem } from './doors.js';
 
+// Temporary Easy config — replaced by SEEKER_CONFIGS in task 11 (engine integration)
 function createEasySeekerConfig(): SeekerConfig {
   const step = SIMULATION.FIXED_STEP_S;
   return {
-    visionRange: VISION.SEEKER_RANGE,
+    visionRange: 4,
+    visionConeAngle: 60,
+    hearingRange: 5,
     reactionDelayTicks: Math.round(SEEKER.REACTION_DELAY_S / step),
     chaseTimeoutTicks: Math.round(SEEKER.CHASE_TIMEOUT_S / step),
-    speed: MOVEMENT.PLAYER_SPEED * MOVEMENT.SEEKER_SPEED_MULTIPLIER,
+    memoryDurationTicks: Math.round(3 / step),
     patrolPauseMinTicks: Math.round(SEEKER.PATROL_PAUSE_MIN_S / step),
     patrolPauseMaxTicks: Math.round(SEEKER.PATROL_PAUSE_MAX_S / step),
+    suspiciousDurationTicks: Math.round(2 / step),
+    suspiciousCooldownTicks: Math.round(3 / step),
+    searchDurationTicks: Math.round(5 / step),
+    menaceLimitTicks: 0,
+    menaceCooldownTicks: 0,
+    searchRadiusTiles: 3,
+    searchThoroughness: 'spot-check',
+    searchSkipLKPChance: 0.6,
+    patrolSpeed: MOVEMENT.PLAYER_SPEED * 0.7,
+    chaseSpeed: MOVEMENT.PLAYER_SPEED * MOVEMENT.SEEKER_SPEED_MULTIPLIER,
+    doorwayPauseChance: 0,
+    doorwayPauseTicks: 30,
+    patrolStrategy: 'random',
+    cancelChaseOnBriefGlimpse: true,
+    chaseGraceTicks: 12,
   };
 }
 

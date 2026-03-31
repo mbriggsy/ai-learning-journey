@@ -1,4 +1,4 @@
-import type { GameFlowKind, DoorId } from './state.js';
+import type { GameFlowKind, DoorId, SeekerFSMState } from './state.js';
 
 export type GameEventMap = {
   PHASE_CHANGED: [kind: GameFlowKind];
@@ -10,6 +10,10 @@ export type GameEventMap = {
   SONAR_PING_DUE: [payload: {
     readonly seekerX: number;
     readonly seekerY: number;
+  }];
+  SEEKER_STATE_CHANGED: [payload: {
+    readonly oldState: SeekerFSMState;
+    readonly newState: SeekerFSMState;
   }];
 };
 

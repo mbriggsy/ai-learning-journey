@@ -11,17 +11,34 @@ const DT = 1 / 60;
 function makeConfig(): SeekerConfig {
   return {
     visionRange: 8,
+    visionConeAngle: 60,
+    hearingRange: 5,
     reactionDelayTicks: 90,
     chaseTimeoutTicks: 180,
-    speed: 138, // 120 * 1.15
+    memoryDurationTicks: 180,
     patrolPauseMinTicks: 30,
     patrolPauseMaxTicks: 60,
+    suspiciousDurationTicks: 120,
+    suspiciousCooldownTicks: 180,
+    searchDurationTicks: 300,
+    menaceLimitTicks: 0,
+    menaceCooldownTicks: 0,
+    searchRadiusTiles: 3,
+    searchThoroughness: 'spot-check',
+    searchSkipLKPChance: 0.6,
+    patrolSpeed: 84,
+    chaseSpeed: 138,
+    doorwayPauseChance: 0,
+    doorwayPauseTicks: 30,
+    patrolStrategy: 'random',
+    cancelChaseOnBriefGlimpse: true,
+    chaseGraceTicks: 12,
   };
 }
 
 function makeRender(overrides: Partial<SeekerRenderState> = {}): SeekerRenderState {
   return {
-    x: 160, y: 160, facing: 'down', fsmState: 'patrol',
+    x: 160, y: 160, facing: 'down', facingAngle: Math.PI / 2, fsmState: 'patrol',
     ...overrides,
   };
 }

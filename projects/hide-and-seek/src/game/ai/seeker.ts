@@ -229,7 +229,7 @@ function processActionQueue(
       if (dist < 2) {
         ai.actionQueue.shift();
       } else {
-        const speed = config.speed * dt;
+        const speed = config.patrolSpeed * dt;
         const ratio = Math.min(1, speed / dist);
         render.x += ddx * ratio;
         render.y += ddy * ratio;
@@ -314,7 +314,7 @@ function tickPatrol(
   }
 
   // Follow path
-  moveAlongPath(render, ai, config.speed, dt);
+  moveAlongPath(render, ai, config.patrolSpeed, dt);
 
   // Check if path complete
   if (ai.currentWaypointIndex >= ai.currentPath.length) {
@@ -371,7 +371,7 @@ function tickChase(
   }
 
   // Follow path
-  moveAlongPath(render, ai, config.speed, dt);
+  moveAlongPath(render, ai, config.patrolSpeed, dt);
 
   // If we reached the last-known-position and still no LOS, keep waiting for timeout
   if (ai.currentWaypointIndex >= ai.currentPath.length && ai.currentPath.length > 0) {

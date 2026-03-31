@@ -20,7 +20,7 @@ function makeHuntState(): PlayingState {
   return {
     phase: 'playing',
     player: { x: 160, y: 160, velocityX: 0, velocityY: 0, facing: 'down' },
-    seeker: { x: 480, y: 480, facing: 'down', fsmState: 'patrol' },
+    seeker: { x: 480, y: 480, facing: 'down', facingAngle: Math.PI / 2, fsmState: 'patrol' },
     map: makeOpenMap(),
     spawns: [
       { x: 160, y: 160, type: 'hider_spawn' },
@@ -44,7 +44,7 @@ function makeCountdownState(): PlayingState {
   return {
     phase: 'playing',
     player: { x: 160, y: 160, velocityX: 0, velocityY: 0, facing: 'down' },
-    seeker: { x: 480, y: 480, facing: 'down', fsmState: 'patrol' },
+    seeker: { x: 480, y: 480, facing: 'down', facingAngle: Math.PI / 2, fsmState: 'patrol' },
     map: makeOpenMap(),
     spawns: [
       { x: 160, y: 160, type: 'hider_spawn' },

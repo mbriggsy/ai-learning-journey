@@ -48,12 +48,13 @@ export type DetectionResult = 'none' | 'spotted' | 'found';
 
 // --- Seeker ---
 
-export type SeekerFSMState = 'patrol' | 'chase';
+export type SeekerFSMState = 'patrol' | 'suspicious' | 'search' | 'chase';
 
 export interface SeekerRenderState {
   x: number;
   y: number;
   facing: FacingDirection;
+  facingAngle: number;  // continuous radians — used for vision cone detection
   fsmState: SeekerFSMState;
 }
 

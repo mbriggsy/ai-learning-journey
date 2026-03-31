@@ -311,17 +311,12 @@ export function checkDoorOnPath(ctx: SeekerContext): boolean {
   const door = ctx.doorSystem.getDoorAt(wp.x, wp.y);
   if (!door || door.isOpen) return false;
 
-  // Closed door on path — push action sequence
+  // Closed door on path — push action sequence (recordSelfOpen happens at execution in processActionQueue)
   ctx.actionQueue.clear();
   ctx.actionQueue.push(
     { type: 'OPEN_DOOR', doorId: door.id },
     { type: 'WAIT', ticksRemaining: DOOR.OPEN_WAIT_TICKS },
   );
-
-  // Track self-opened doors for Hard AI evidence
-  if (ctx.ai.evidenceTracker) {
-    ctx.ai.evidenceTracker.recordSelfOpen(door.id);
-  }
 
   return true;
 }

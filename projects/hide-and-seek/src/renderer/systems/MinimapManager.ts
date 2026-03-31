@@ -129,17 +129,8 @@ export class MinimapManager {
     this.seekerBlip.setVisible(false);
   }
 
-  /** Set blip alpha (for fade animation) */
-  setSeekerBlipAlpha(alpha: number): void {
-    this.seekerBlip.setAlpha(alpha);
-  }
-
   getSeekerBlip(): Phaser.GameObjects.Arc {
     return this.seekerBlip;
-  }
-
-  getCamera(): Phaser.Cameras.Scene2D.Camera {
-    return this.camera;
   }
 
   setVisible(visible: boolean): void {

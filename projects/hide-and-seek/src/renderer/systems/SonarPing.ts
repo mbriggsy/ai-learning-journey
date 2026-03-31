@@ -1,6 +1,7 @@
 import Phaser from 'phaser';
 import type { TypedListener } from '../../types/events.js';
 import type { GameEventMap } from '../../types/events.js';
+import type { GameFlowKind } from '../../types/state.js';
 import type { MinimapManager } from './MinimapManager.js';
 import { SONAR, DEPTH, DISPLAY } from '../../constants.js';
 
@@ -13,8 +14,8 @@ export class SonarPing {
   private readonly listener: TypedListener<GameEventMap>;
   private readonly getPlayerPos: () => { x: number; y: number };
   private readonly onSonarPing: (payload: { seekerX: number; seekerY: number }) => void;
-  private readonly onPhaseChanged: (kind: string) => void;
-  private isAnimating: boolean = false;
+  private readonly onPhaseChanged: (kind: GameFlowKind) => void;
+  private counterTween: Phaser.Tweens.Tween | null = null;
   private blippedThisPing: boolean = false;
 
   constructor(
@@ -53,7 +54,6 @@ export class SonarPing {
   }
 
   private startPing(seekerX: number, seekerY: number): void {
-    this.isAnimating = true;
     this.blippedThisPing = false;
 
     const player = this.getPlayerPos();
@@ -89,12 +89,10 @@ export class SonarPing {
       onComplete: () => {
         this.ring.clear();
         this.ring.setVisible(false);
-        this.isAnimating = false;
       },
     });
 
-    // Store reference for cleanup
-    (this as { _counterTween?: Phaser.Tweens.Tween })._counterTween = counter;
+    this.counterTween = counter;
   }
 
   private showBlip(seekerX: number, seekerY: number): void {
@@ -114,17 +112,15 @@ export class SonarPing {
   }
 
   private cleanup(): void {
-    // Kill active tweens
-    const counterTween = (this as { _counterTween?: Phaser.Tweens.Tween })._counterTween;
-    if (counterTween) {
-      counterTween.stop();
+    if (this.counterTween) {
+      this.counterTween.stop();
+      this.counterTween = null;
     }
     this.scene.tweens.killTweensOf(this.minimap.getSeekerBlip());
 
     this.ring.clear();
     this.ring.setVisible(false);
     this.minimap.hideSeekerBlip();
-    this.isAnimating = false;
   }
 
   destroy(): void {

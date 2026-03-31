@@ -1,14 +1,10 @@
 import type { DoorId } from '../../types/state.js';
-import type { FacingDirection } from '../../types/input.js';
 
 // --- Action types ---
 
 export type Action =
-  | { readonly type: 'MOVE_TO'; readonly targetX: number; readonly targetY: number }
   | { readonly type: 'OPEN_DOOR'; readonly doorId: DoorId }
-  | { readonly type: 'WAIT'; ticksRemaining: number }
-  | { readonly type: 'REQUEST_PATH'; readonly targetX: number; readonly targetY: number }
-  | { readonly type: 'LOOK_AROUND'; ticksRemaining: number; facingsRemaining: FacingDirection[] };
+  | { readonly type: 'WAIT'; ticksRemaining: number };
 
 // --- Action queue ---
 

@@ -404,7 +404,7 @@ export class GameEngine {
       }
     }
 
-    // Process action queue (door opening, LOOK_AROUND, etc.)
+    // Process action queue (door opening, wait, etc.)
     if (!ctx.actionQueue.isEmpty() && ctx.doorSystem) {
       this.processActionQueue(ctx, dt);
     } else {
@@ -448,57 +448,6 @@ export class GameEngine {
         if (action.ticksRemaining <= 0) ctx.actionQueue.shift();
         break;
 
-      case 'MOVE_TO': {
-        const { x: targetX, y: targetY } = pixelToTile(0, 0); // dummy — use tileToPixelCenter
-        const moveTarget = { x: action.targetX * 32 + 16, y: action.targetY * 32 + 16 };
-        const ddx = moveTarget.x - ctx.render.x;
-        const ddy = moveTarget.y - ctx.render.y;
-        const dist = Math.sqrt(ddx * ddx + ddy * ddy);
-        if (dist < 2) {
-          ctx.actionQueue.shift();
-        } else {
-          const speed = ctx.config.patrolSpeed * dt;
-          const ratio = Math.min(1, speed / dist);
-          ctx.render.x += ddx * ratio;
-          ctx.render.y += ddy * ratio;
-        }
-        break;
-      }
-
-      case 'REQUEST_PATH': {
-        const { x: fromX, y: fromY } = pixelToTile(ctx.render.x, ctx.render.y);
-        const reqId = ++ctx.ai.latestRequestId;
-        ctx.pathfinding.requestPath(
-          fromX, fromY, action.targetX, action.targetY,
-          (path) => {
-            if (reqId !== ctx.ai.latestRequestId) return;
-            if (path && path.length > 1) {
-              ctx.ai.currentPath = path;
-              ctx.ai.waypointIndex = 1;
-            }
-          },
-        );
-        ctx.actionQueue.shift();
-        break;
-      }
-
-      case 'LOOK_AROUND': {
-        action.ticksRemaining--;
-        if (action.facingsRemaining.length > 0) {
-          const dir = action.facingsRemaining[0];
-          if (dir) {
-            ctx.render.facing = dir;
-            const angleMap = { right: 0, down: Math.PI / 2, left: Math.PI, up: -Math.PI / 2 } as const;
-            ctx.render.facingAngle = angleMap[dir];
-          }
-          const ticksPerDir = Math.max(1, Math.floor(action.ticksRemaining / action.facingsRemaining.length));
-          if (action.ticksRemaining % ticksPerDir === 0 && action.facingsRemaining.length > 1) {
-            action.facingsRemaining.shift();
-          }
-        }
-        if (action.ticksRemaining <= 0) ctx.actionQueue.shift();
-        break;
-      }
     }
   }
 
@@ -516,11 +465,6 @@ export class GameEngine {
       const dist = Math.sqrt(dx * dx + dy * dy);
 
       if (dist > config.hearingRange) continue;
-
-      // Skip if self-opened
-      if (ai.evidenceTracker?.hasEvidence === undefined) {
-        // No evidence tracker or check if seeker opened it
-      }
 
       // Skip if in cooldown for this stimulus type
       const lastCooldown = ai.suspiciousCooldowns.get('door-sound');

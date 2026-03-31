@@ -8,7 +8,7 @@ executed: 2026-03-30
 origin: docs/plans/2026-03-29-001-feat-hide-and-seek-game-plan.md
 agents: 14
 contradictions_resolved: 13
-reviewed:
+reviewed: 2026-03-31
 ---
 
 # Phase 4: Doors + Minimap

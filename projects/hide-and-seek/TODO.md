@@ -21,6 +21,7 @@
 - **Phase 4 EXECUTED (2026-03-30)** — doors + minimap + sonar, 163 tests, visually verified
 - **Phase 5a EXECUTED (2026-03-30)** — seeker difficulty tiers + 4-state FSM, 211 tests (dead module removed Session 12)
 - **Phase 5a BLOCKER FIXED (2026-03-31)** — pendingPath guard, seeker moves, code reviewed (4 agents), dead code removed
+- **Phase 4 REVIEWED (2026-03-31)** — dead action handlers purged, SonarPing cleanup, depth collision fix, 8 todos + 5 solutions documented, 210 tests
 - **Vision model LOCKED (2026-03-30)** — 4-tier flashlight tag, spec at `docs/design/vision-model-spec.md`
 - **Branch:** `feat/phase-0-scaffolding` pushed to origin
 
@@ -34,6 +35,19 @@
 - Phase 6b: `docs/plans/2026-03-29-008b-phase-6b-scoring-stats-plan.md`
 - Original Phase 5 (superseded): `docs/plans/2026-03-29-007-phase-5-ai-depth-spectator-plan.md`
 - Original Phase 6 (superseded): `docs/plans/2026-03-29-008-phase-6-sound-scoring-plan.md`
+
+## What We Did (2026-03-31, Session 13)
+- **Phase 4 code review** — dead code purge + cleanup from review findings
+- **Dead action types removed** — `MOVE_TO`, `REQUEST_PATH`, `LOOK_AROUND` from `actions.ts` + engine handler cases + tests
+- **Duplicate `recordSelfOpen` removed** from `seeker-fsm.ts` (already fires at execution in `processActionQueue`)
+- **Dead minimap methods removed** — `setSeekerBlipAlpha()`, `getCamera()` from `MinimapManager.ts`
+- **SonarPing cleanup** — proper typed `counterTween` property (was cast hack), dead `isAnimating` removed, `onPhaseChanged` typed as `GameFlowKind`
+- **Depth collision fix** — `MINIMAP_PLAYER` 200→195 (was colliding with `UI: 200`)
+- **Broken evidence stub removed** — empty `hasEvidence` check in engine.ts that did nothing
+- **8 todo docs** in `docs/todos/` + **5 solution docs** in `docs/solutions/` — institutional knowledge from review
+- Test baseline: **210 tests passing** (24 files) — 1 dropped (dead MOVE_TO test)
+- Build: typecheck clean
+- **Branch:** `feat/phase-0-scaffolding`
 
 ## What We Did (2026-03-31, Session 12)
 - **FIXED Phase 5a blocker: seeker movement** — `pendingPath: boolean` added to `SeekerAIInternalState`, set/cleared in `requestPathTo()`/callback/`clearPath()`, guards in all 4 FSM states
@@ -75,7 +89,6 @@
 
 ## Landmines
 - **Module-level `let` in SearchState/SuspiciousState** — singleton state means multi-seeker will stomp. Must move to `SeekerAIInternalState` before adding second seeker.
-- **`REQUEST_PATH` action in engine.ts bypasses `pendingPath` protocol** — safe because action queue blocks FSM updates, but latent inconsistency if action queue logic changes.
 
 ## What We Did (2026-03-30, Session 10)
 - **EXECUTED Phase 4: Doors + Minimap + Sonar** — full tactical layer
@@ -305,7 +318,7 @@
 - [x] Phase 1: Map + Movement — EXECUTED + REVIEWED
 - [x] Phase 2: Seeker + Detection — EXECUTED + REVIEWED
 - [x] Phase 3: Fog of War + Game Flow — EXECUTED + REVIEWED (5 agents, P1 quit flow fixed, ~42 LOC dead code removed)
-- [x] Phase 4: Doors + Minimap — EXECUTED (163 tests, +38 new) — NOT YET REVIEWED
+- [x] Phase 4: Doors + Minimap — EXECUTED + REVIEWED (4 agents, 5 P2 + 3 P3 findings, 8 todos created)
 - [x] Phase 5a: Seeker Tiers — EXECUTED + REVIEWED (4 agents, zero blockers, blocker fixed Session 12)
 - [ ] Phase 5b: Hider + Spectator
 - [ ] Phase 6a: Audio + Atmosphere

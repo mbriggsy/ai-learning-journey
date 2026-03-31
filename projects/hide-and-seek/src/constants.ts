@@ -62,7 +62,7 @@ export const DEPTH = {
   MINIMAP_DOORS: 150,
   MINIMAP_SONAR_RING: 180,
   MINIMAP_SONAR_BLIP: 190,
-  MINIMAP_PLAYER: 200,
+  MINIMAP_PLAYER: 195,
   UI: 200,
   MINIMAP_BORDER: 1000,
 } as const satisfies Record<string, number>;

@@ -231,13 +231,12 @@ export class GameScene extends Phaser.Scene {
     this.seekerSprite.syncFromGameState(state.seeker);
 
     // Seeker visibility based on fog
-    const seekerObj = this.seekerSprite.getGameObject() as Phaser.GameObjects.Rectangle;
     if (state.gameFlow.kind === 'hunt') {
       const seekerTile = pixelToTile(state.seeker.x, state.seeker.y);
-      seekerObj.setVisible(this.fogRenderer.isTileVisible(seekerTile.x, seekerTile.y));
+      this.seekerSprite.setVisible(this.fogRenderer.isTileVisible(seekerTile.x, seekerTile.y));
     } else {
       // Countdown: seeker always visible
-      seekerObj.setVisible(true);
+      this.seekerSprite.setVisible(true);
     }
   }
 

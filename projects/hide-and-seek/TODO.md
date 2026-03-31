@@ -18,7 +18,9 @@
 - **Phase 2 EXECUTED (2026-03-30)** — seeker AI + detection, 119 tests
 - **Phase 2 code review PASSED (2026-03-30)** — 5 agents (TS, arch, perf, security, simplicity), zero blockers, all P1+P2 fixed
 - **Phase 3 EXECUTED (2026-03-30)** — fog of war + game flow, 125 tests, visually verified
-- **Branch:** `feat/phase-0-scaffolding` pushed to origin (19 commits)
+- **Phase 4 EXECUTED (2026-03-30)** — doors + minimap + sonar, 163 tests, visually verified
+- **Vision model LOCKED (2026-03-30)** — 4-tier flashlight tag, spec at `docs/design/vision-model-spec.md`
+- **Branch:** `feat/phase-0-scaffolding` pushed to origin (25 commits)
 
 ### Documents
 - Brainstorm: `docs/ideation/2026-03-29-hide-and-seek-brainstorm.md`
@@ -30,6 +32,34 @@
 - Phase 6b: `docs/plans/2026-03-29-008b-phase-6b-scoring-stats-plan.md`
 - Original Phase 5 (superseded): `docs/plans/2026-03-29-007-phase-5-ai-depth-spectator-plan.md`
 - Original Phase 6 (superseded): `docs/plans/2026-03-29-008-phase-6-sound-scoring-plan.md`
+
+## What We Did (2026-03-30, Session 10)
+- **EXECUTED Phase 4: Doors + Minimap + Sonar** — full tactical layer
+- DoorSystem: toggle, cooldown (500ms/30 ticks), occupancy check (AABB hitbox), LOS/collision/pathfinding grid integration, doorGeneration counter for FOV dirty flag
+- ActionQueue: MOVE_TO, OPEN_DOOR, WAIT, REQUEST_PATH — seeker door-opening behavior
+- 6 doors placed at corridor chokepoints, corridors narrowed to 1-tile doorways
+- DoorSprite: factory + event-driven frame swap (tileset frames 3/4)
+- MinimapManager: second camera bottom-right 160x160, dynamic zoom, player dot (blue), door indicators (red/green), seeker blip (orange)
+- SonarPing: game-layer tick counter → SONAR_PING_DUE event, renderer expanding ring + distance-based blip reveal
+- Types: DoorId branded, DoorState, DOOR_TOGGLED, SONAR_PING_DUE, sonarTicksUntilPing on HuntPhase, doors+doorGeneration on PlayingState
+- Constants: DOOR, SONAR, MINIMAP, INTERACTION groups + minimap depth values
+- Engine: door interaction in fixedUpdate, FOV doorGeneration dirty flag, sonar timer
+- **Bugfixes during visual testing:**
+  - Phaser flattens Tiled object properties to Record<string, unknown> (not arrays) — fixed property access
+  - Tileset loaded as image (no frames) → spritesheet with 32x32 frames
+  - Tileset metadata stale (columns=3, imagewidth=96 → 5, 160)
+  - canToggleDoor center-point check → AABB hitbox overlap (fixed wall teleport on close)
+  - Corridors 3 tiles wide → narrowed with flanking walls to 1-tile doorways
+- **Vision model design debate → LOCKED:** 4-tier flashlight tag replacing fog-of-war
+  - Easy: omniscient (full map), Medium: lantern (radius), Medium-Hard: flashlight (cone), Hard: darkness (memory only)
+  - Seeker always has visible flashlight cone, unchanged across tiers
+  - Spec: `docs/design/vision-model-spec.md`, implementation target: Phase 5a
+  - Easy mode is default until Phase 5a adds difficulty selector
+- Cross-phase fixes applied: minimap bottom-right 160x160, tile indices documented
+- Debug cleanup: hacks replaced with clean Easy mode code, no commented-out blocks
+- Test baseline: **163 tests passing** (125 → 163, +38 new)
+- Build: typecheck clean, zero console spam
+- **Branch:** `feat/phase-0-scaffolding` pushed to origin (25 commits)
 
 ## What We Did (2026-03-30, Session 9)
 - **EXECUTED Phase 3: Fog of War + Game Flow** — Tier 1 complete, fully playable with polish

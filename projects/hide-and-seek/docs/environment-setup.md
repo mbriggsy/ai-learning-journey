@@ -29,6 +29,7 @@ Semantic code analysis — symbol lookup, find references, rename, insert before
 - **Config:** `.serena/project.yml` in project root
 - **Tools:** `find_symbol`, `get_symbols_overview`, `find_referencing_symbols`, `replace_symbol_body`, `search_for_pattern`, etc.
 - **When to use:** Exploring code architecture, tracing call chains, refactoring
+- **CRITICAL:** The `languages` field in `project.yml` must be set BEFORE Serena starts. Languages are fixed at startup — changing the config mid-session requires a full restart.
 
 ```bash
 claude mcp add serena -s user -- cmd //c uvx --from git+https://github.com/oraios/serena serena start-mcp-server --context ide-assistant --project .
@@ -261,7 +262,39 @@ In `~/.claude/settings.json`, add to `permissions.allow`:
 
 ### 7. Configure Serena Per-Project
 
-Copy `.serena/project.yml` to each project root. See existing projects for examples.
+Each project needs a `.serena/project.yml` in its root. This file **must** be configured before Serena starts — language servers are fixed at startup.
+
+**Create the config:**
+
+```bash
+# From project root — creates .serena/ directory and project.yml
+mkdir -p .serena
+```
+
+Then create `.serena/project.yml` with at minimum:
+
+```yaml
+project_name: "your-project-name"
+languages: [typescript]    # REQUIRED — empty [] means no semantic tools
+encoding: "utf-8"
+ignore_all_files_in_gitignore: true
+```
+
+Available languages: `typescript` (also covers JS), `python`, `rust`, `go`, `java`, `cpp` (also covers C), `ruby`, etc. Full list in the `project.yml` comments or [Serena docs](https://oraios.github.io/serena/01-about/020_programming-languages.html).
+
+**First-session onboarding:**
+
+On the first conversation with Serena active, Claude will:
+
+1. Call `check_onboarding_performed` — confirms no memories exist yet
+2. Call `onboarding` — gets instructions for what to collect
+3. Write 5 memory files via `write_memory`: `project_overview`, `suggested_commands`, `style_conventions`, `task_completion`, `architecture`
+
+These memories persist across sessions so Serena understands the project context from the start. If the project structure changes significantly, delete stale memories and re-onboard.
+
+**Verify it's working:**
+
+After restart, call `get_symbols_overview` on any source file. If you get `Active languages: []`, the `languages` field wasn't set before Serena booted — fix the config and restart again.
 
 ### 8. Set Up CLAUDE.md and Memory
 
@@ -276,3 +309,5 @@ Copy `.serena/project.yml` to each project root. See existing projects for examp
 | Server shows `cmd C:/ npx` instead of `cmd /c npx` | Bash expanded `/c` to `C:/` | Use `//c` (double slash) |
 | Server shows `✓ Connected` but tools missing | Tools load at session startup | Restart Claude Code after adding |
 | `~/.claude/.mcp.json` exists but server not loading | `.mcp.json` is not used by Claude Code | Delete it, use `claude mcp add` instead |
+| Serena `get_symbols_overview` returns `Active languages: []` | `languages` field was empty when Serena started | Set `languages: [typescript]` in `.serena/project.yml` and restart Claude Code |
+| Serena tools work but no semantic results | Language server not installed or project has no `tsconfig.json` | Verify `tsconfig.json` exists at project root and TS is installed |

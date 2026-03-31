@@ -20,8 +20,6 @@ export interface GameTestBridge {
   fogState(): number[];
   gameFlowState(): GameFlowKind | null;
   splashText(): string | null;
-  triggerFound(): void;
-  triggerSurvived(): void;
 }
 
 declare global {
@@ -71,15 +69,6 @@ export function installTestBridge(
 
     splashText(): string | null {
       return getSplashText();
-    },
-
-    triggerFound(): void {
-      // Emit a test-only event to trigger Found sequence
-      scene.events.emit('__TEST_TRIGGER_FOUND__');
-    },
-
-    triggerSurvived(): void {
-      scene.events.emit('__TEST_TRIGGER_SURVIVED__');
     },
   };
 }

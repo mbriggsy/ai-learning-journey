@@ -52,23 +52,9 @@ export class CinematicManager {
     });
   }
 
-  fadeIn(duration: number): Promise<void> {
-    return new Promise((resolve) => {
-      // fadeIn has no force param — use resetFX() before calling if needed
-      this.mainCamera.fadeIn(duration, 0, 0, 0);
-      this.mainCamera.once(CamEvents.FADE_IN_COMPLETE, () => resolve());
-    });
-  }
-
   /** Fire-and-forget — not a sequencing gate */
   shake(duration: number, intensity: number): void {
     this.mainCamera.shake(duration, intensity, true);
-  }
-
-  wait(ms: number): Promise<void> {
-    return new Promise((resolve) => {
-      this.scene.time.delayedCall(ms, resolve);
-    });
   }
 
   /** Show splash text on UI camera only (unaffected by main camera zoom/pan) */

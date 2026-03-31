@@ -9,6 +9,10 @@ export const SceneTransition = {
     return transitioning;
   },
 
+  reset(): void {
+    transitioning = false;
+  },
+
   startScene<K extends keyof SceneDataMap>(
     scene: Phaser.Scene,
     key: K,

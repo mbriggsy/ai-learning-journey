@@ -94,7 +94,9 @@ export class PauseMenuScene extends Phaser.Scene {
   private quitToMenu(): void {
     this.scene.stop('Game');
     this.scene.stop('HUD');
-    this.scene.stop('PauseMenu');
+    // Stop PauseMenu AFTER starting transition — stopping before would
+    // kill the camera, preventing FADE_OUT_COMPLETE from firing and
+    // permanently locking SceneTransition.isTransitioning = true.
     SceneTransition.startScene(this, 'MainMenu');
   }
 }

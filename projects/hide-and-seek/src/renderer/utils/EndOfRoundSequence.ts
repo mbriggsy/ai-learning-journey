@@ -142,13 +142,6 @@ export class EndOfRoundSequence {
     return this.running;
   }
 
-  abort(): void {
-    if (!this.running) return;
-    // Jump to final step (fade out)
-    this.stepIndex = this.steps.length - 1;
-    this.beginCurrentStep();
-  }
-
   private beginCurrentStep(): void {
     if (this.stepIndex >= this.steps.length) {
       this.complete();

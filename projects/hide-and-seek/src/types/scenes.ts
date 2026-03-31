@@ -27,15 +27,3 @@ export interface SceneDataMap {
   PauseMenu: undefined;
   Results: ResultsSceneData;
 }
-
-/**
- * Type-safe scene start. Scenes with no data require no second argument.
- * Usage: startScene(this.scene, 'MainMenu') or startScene(this.scene, 'Results', data)
- */
-export function startScene<K extends keyof SceneDataMap>(
-  plugin: { start(key: string, data?: unknown): void },
-  key: K,
-  ...args: SceneDataMap[K] extends undefined ? [] : [data: SceneDataMap[K]]
-): void {
-  plugin.start(key, args[0]);
-}

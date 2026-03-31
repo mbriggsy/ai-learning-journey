@@ -34,10 +34,6 @@ export class SeekerSprite {
     this.facingIndicator.setPosition(seeker.x + offset.dx, seeker.y + offset.dy);
   }
 
-  getGameObject(): Phaser.GameObjects.GameObject {
-    return this.body;
-  }
-
   setVisible(visible: boolean): void {
     this.body.setVisible(visible);
     this.facingIndicator.setVisible(visible);

@@ -17,8 +17,7 @@ import { installTestBridge, removeTestBridge } from '../utils/TestBridge.js';
 import type { GameSceneData } from '../../types/scenes.js';
 import type { PlayingState, GameFlowKind } from '../../types/state.js';
 import type { ReadonlyDeep } from '../../types/utility.js';
-import { CAMERA, DEPTH, DISPLAY, CINEMATIC } from '../../constants.js';
-import { SIMULATION } from '../../constants.js';
+import { CAMERA, DEPTH, DISPLAY, CINEMATIC, SIMULATION } from '../../constants.js';
 
 export class GameScene extends Phaser.Scene {
   private engine!: GameEngine;
@@ -33,7 +32,7 @@ export class GameScene extends Phaser.Scene {
 
   private escapeKey!: Phaser.Input.Keyboard.Key;
   private endSequenceTriggered: boolean = false;
-  private lastFlowKind: GameFlowKind = 'countdown';
+  private onPhaseChanged!: (kind: GameFlowKind) => void;
 
   constructor() {
     super({ key: 'Game' });
@@ -41,11 +40,6 @@ export class GameScene extends Phaser.Scene {
 
   init(_data: GameSceneData): void {
     this.endSequenceTriggered = false;
-    this.lastFlowKind = 'countdown';
-  }
-
-  preload(): void {
-    // Assets already loaded by Boot scene
   }
 
   create(): void {
@@ -129,6 +123,7 @@ export class GameScene extends Phaser.Scene {
     // --- Shutdown cleanup ---
     this.events.on('shutdown', () => {
       this.scene.stop('HUD');
+      this.engine.getEmitter().off('PHASE_CHANGED', this.onPhaseChanged);
       this.fogRenderer.destroy();
       this.cinematic.destroy();
       this.engine.dispose();
@@ -137,16 +132,18 @@ export class GameScene extends Phaser.Scene {
       document.removeEventListener('visibilitychange', this.onVisibilityChange);
     });
 
-    // --- TestBridge (dev-only) ---
-    installTestBridge(
-      this,
-      () => {
-        const s = this.engine.getState();
-        return s.phase === 'playing' ? s as ReadonlyDeep<PlayingState> : null;
-      },
-      () => this.fogRenderer?.getFogState() ?? null,
-      () => this.cinematic?.getSplashText() ?? null,
-    );
+    // --- TestBridge (dev-only, compile-time eliminated in production) ---
+    if (import.meta.env.DEV) {
+      installTestBridge(
+        this,
+        () => {
+          const s = this.engine.getState();
+          return s.phase === 'playing' ? s as ReadonlyDeep<PlayingState> : null;
+        },
+        () => this.fogRenderer?.getFogState() ?? null,
+        () => this.cinematic?.getSplashText() ?? null,
+      );
+    }
 
     // Fade in
     this.cameras.main.fadeIn(CINEMATIC.SCENE_FADE_MS, 0, 0, 0);
@@ -170,12 +167,12 @@ export class GameScene extends Phaser.Scene {
 
   private setupEvents(): void {
     const listener = this.engine.getEmitter();
-    const onPhaseChanged = (kind: GameFlowKind) => {
+    this.onPhaseChanged = (kind: GameFlowKind) => {
       if (kind === 'hunt') {
         this.handleCountdownToHunt();
       }
     };
-    listener.on('PHASE_CHANGED', onPhaseChanged);
+    listener.on('PHASE_CHANGED', this.onPhaseChanged);
   }
 
   private handleCountdownToHunt(): void {
@@ -240,11 +237,7 @@ export class GameScene extends Phaser.Scene {
   }
 
   private updateFog(state: ReadonlyDeep<PlayingState>): void {
-    if (state.gameFlow.kind === 'hunt') {
-      this.fogRenderer.update(state);
-    }
-    // Countdown: fog all transparent (playerFov filled with 1s) — FogRenderer handles uniformly
-    if (state.gameFlow.kind === 'countdown') {
+    if (state.gameFlow.kind === 'hunt' || state.gameFlow.kind === 'countdown') {
       this.fogRenderer.update(state);
     }
   }

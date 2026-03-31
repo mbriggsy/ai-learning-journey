@@ -48,8 +48,9 @@ export class FogRenderer {
     const fogTileset = this.fogTilemap.addTilesetImage('fog', 'fog-tile', tileSize, tileSize, 0, 0);
     if (!fogTileset) throw new Error('Fog tileset "fog" not found — ensure fog.png is loaded');
 
-    this.fogLayer = this.fogTilemap.createBlankLayer('fog', fogTileset, 0, 0)!;
-    if (!this.fogLayer) throw new Error('Failed to create fog layer');
+    const fogLayer = this.fogTilemap.createBlankLayer('fog', fogTileset, 0, 0);
+    if (!fogLayer) throw new Error('Failed to create fog layer');
+    this.fogLayer = fogLayer;
 
     // Fill with black tiles and set depth above game objects
     this.fogLayer.fill(0); // tile index 0 = the solid black tile
@@ -172,11 +173,6 @@ export class FogRenderer {
         this.alphaTarget[idx] = FOG.ALPHA_VISIBLE;
       }
     }
-  }
-
-  /** Full reset for Play Again */
-  reset(): void {
-    this.transitionToHunt();
   }
 
   /** Get the fog layer for CinematicManager.ignoreOnUI() registration */

@@ -19,7 +19,7 @@ export interface SeekerAIState {
 }
 
 export function createSeekerAIState(seekerX: number, seekerY: number): SeekerAIState {
-  const tile = pixelToTile(seekerX, seekerY);
+  const { x: tileX, y: tileY } = pixelToTile(seekerX, seekerY);
   return {
     currentPath: [],
     currentWaypointIndex: 0,
@@ -28,8 +28,8 @@ export function createSeekerAIState(seekerX: number, seekerY: number): SeekerAIS
     chaseLostTicks: 0,
     patrolPauseTicks: 0,
     pendingTransition: null,
-    lastFovTileX: tile.x,
-    lastFovTileY: tile.y,
+    lastFovTileX: tileX,
+    lastFovTileY: tileY,
     chaseRepathCounter: 0,
   };
 }
@@ -64,15 +64,15 @@ function moveAlongPath(
   while (remaining > 0 && ai.currentWaypointIndex < ai.currentPath.length) {
     const wp = ai.currentPath[ai.currentWaypointIndex];
     if (!wp) break;
-    const target = tileToPixelCenter(wp.x, wp.y);
-    const dx = target.x - render.x;
-    const dy = target.y - render.y;
+    const { x: targetX, y: targetY } = tileToPixelCenter(wp.x, wp.y);
+    const dx = targetX - render.x;
+    const dy = targetY - render.y;
     const dist = Math.sqrt(dx * dx + dy * dy);
 
     if (dist <= remaining) {
       // Snap to waypoint
-      render.x = target.x;
-      render.y = target.y;
+      render.x = targetX;
+      render.y = targetY;
       remaining -= dist;
       ai.currentWaypointIndex++;
     } else {
@@ -88,8 +88,8 @@ function moveAlongPath(
   if (ai.currentWaypointIndex < ai.currentPath.length) {
     const wp = ai.currentPath[ai.currentWaypointIndex];
     if (wp) {
-      const target = tileToPixelCenter(wp.x, wp.y);
-      updateFacing(render, target.x, target.y);
+      const { x: faceX, y: faceY } = tileToPixelCenter(wp.x, wp.y);
+      updateFacing(render, faceX, faceY);
     }
   }
 }
@@ -183,9 +183,9 @@ function tickPatrol(
     if (ai.pendingPathId === undefined) {
       const target = pickRandomWalkableTile(map);
       if (target) {
-        const seekerTile = pixelToTile(render.x, render.y);
+        const { x: fromX, y: fromY } = pixelToTile(render.x, render.y);
         ai.pendingPathId = pathfinding.requestPath(
-          seekerTile.x, seekerTile.y,
+          fromX, fromY,
           target.x, target.y,
           (path) => {
             ai.pendingPathId = undefined;
@@ -265,16 +265,16 @@ function requestChasePath(
   pathfinding: PathfindingSystem,
 ): void {
   if (!ai.lastKnownHiderPos) return;
-  const seekerTile = pixelToTile(render.x, render.y);
-  const targetTile = pixelToTile(ai.lastKnownHiderPos.x, ai.lastKnownHiderPos.y);
+  const { x: fromX, y: fromY } = pixelToTile(render.x, render.y);
+  const { x: toX, y: toY } = pixelToTile(ai.lastKnownHiderPos.x, ai.lastKnownHiderPos.y);
 
   if (ai.pendingPathId !== undefined) {
     pathfinding.cancelPath(ai.pendingPathId);
   }
 
   ai.pendingPathId = pathfinding.requestPath(
-    seekerTile.x, seekerTile.y,
-    targetTile.x, targetTile.y,
+    fromX, fromY,
+    toX, toY,
     (path) => {
       ai.pendingPathId = undefined;
       if (path && path.length > 1) {

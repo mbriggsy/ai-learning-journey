@@ -36,6 +36,22 @@
 - Original Phase 5 (superseded): `docs/plans/2026-03-29-007-phase-5-ai-depth-spectator-plan.md`
 - Original Phase 6 (superseded): `docs/plans/2026-03-29-008-phase-6-sound-scoring-plan.md`
 
+## What We Did (2026-03-31, Session 14)
+- **Distill & Brief knowledge system** — two custom Skills 2.0 skills + two hooks for automatic knowledge capture and injection
+- `/distill` skill — writes solution docs with dynamic injection (shows existing, auto-numbers, provides template)
+- `/brief` skill — reads solution context on demand with dynamic injection
+- `inject-solutions.sh` hook (PreToolUse) — auto-injects solution summaries before `/ce:work`
+- `remind-distill.sh` hook (PostToolUse) — reminds to `/distill` after `/ce:work` and `/ce:review`
+- **Skill Creator A/B eval** — 100% pass rate with-skill vs 33% without (18/18 vs 6/18 assertions), fewer tokens
+- **Windows `select.select()` bug found + fixed** in skill-creator's `run_eval.py` — replaced with threading for pipe compatibility
+- **Showcase doc** — `research/distill-and-brief/distill-and-brief.md` on main, Mermaid diagrams, appendix with eval data
+- **Squeaky clean protocol updated** — completed todos deleted at session end, solutions persist
+- **CLAUDE.md + environment-setup.md** updated with hooks, skills, folder setup
+- Completed todo docs (8) deleted per new protocol
+- Test baseline: **210 tests passing** (unchanged)
+- Build: typecheck clean
+- **Branch:** `feat/phase-0-scaffolding`
+
 ## What We Did (2026-03-31, Session 13)
 - **Phase 4 code review** — dead code purge + cleanup from review findings
 - **Dead action types removed** — `MOVE_TO`, `REQUEST_PATH`, `LOOK_AROUND` from `actions.ts` + engine handler cases + tests
@@ -82,10 +98,11 @@
 - **Branch:** `feat/phase-0-scaffolding` pushed to origin (30 commits)
 
 ## Next Steps
-1. **Visual testing** — play on Easy/Medium/Hard, verify seeker behavior differences (needs difficulty selector — URL param or menu)
-2. **Tiled map: add Rooms object layer** — rectangle objects with roomId properties for Medium/Hard patrol
-3. **Phase 5b** — AI hider, spectator mode, vision cones rendered
-4. **Phase 6a** — audio + atmosphere
+1. **Skill Creator: description optimizer** — run full `run_loop.py` with threading fix applied. Improve `/distill` trigger accuracy (currently 0% auto-trigger). Consider creating a dedicated skills project.
+2. **Visual testing** — play on Easy/Medium/Hard, verify seeker behavior differences (needs difficulty selector — URL param or menu)
+3. **Tiled map: add Rooms object layer** — rectangle objects with roomId properties for Medium/Hard patrol
+4. **Phase 5b** — AI hider, spectator mode, vision cones rendered
+5. **Phase 6a** — audio + atmosphere
 
 ## Landmines
 - **Module-level `let` in SearchState/SuspiciousState** — singleton state means multi-seeker will stomp. Must move to `SeekerAIInternalState` before adding second seeker.

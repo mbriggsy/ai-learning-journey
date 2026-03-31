@@ -108,6 +108,7 @@ export class GameScene extends Phaser.Scene {
 
     // --- Input ---
     this.escapeKey = this.input.keyboard!.addKey(Phaser.Input.Keyboard.KeyCodes.ESC);
+    this.escapeKey.on('down', () => this.handleEscape());
 
     // --- Event subscriptions ---
     this.setupEvents();
@@ -188,11 +189,6 @@ export class GameScene extends Phaser.Scene {
   }
 
   override update(_time: number, delta: number): void {
-    // Handle escape key
-    if (Phaser.Input.Keyboard.JustDown(this.escapeKey)) {
-      this.handleEscape();
-    }
-
     // End of round sequence polling
     if (this.endSequence.isRunning) {
       this.endSequence.update(delta);

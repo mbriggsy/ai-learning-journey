@@ -3,7 +3,7 @@
 
 ---
 
-> **The pitch:** Every debugging session produces hard-won knowledge. By the next session, it's gone. We built a system where AI agents *automatically* capture non-obvious fixes and *automatically* brief themselves before starting new work. Two skills, two hooks, zero human effort.
+> **The pitch:** Every engineering session produces hard-won knowledge. By the next session, it's gone. We built a system where AI agents *automatically* capture non-obvious fixes and *automatically* brief themselves before starting new work. Two skills, two hooks, zero human effort.
 
 ---
 
@@ -18,7 +18,7 @@ Session 1: Debug for 45 min  -->  Find root cause  -->  Fix it  -->  Session end
 Session 2: Debug for 45 min  -->  Find root cause  -->  "...wait, didn't we do this before?"
 ```
 
-Putting "remember to check past fixes" in instructions doesn't work. Agents skip them, forget them, or deprioritize them under task pressure. And humans forget to ask.
+Putting "remember to check past fixes" in instructions doesn't work. Humans forget to ask. Agents skip them, forget them, or deprioritize them under task pressure.
 
 **We needed mechanical enforcement.**
 
@@ -200,8 +200,8 @@ Both execute and review feed the knowledge store — via hooks, not hope. The ne
 
 ---
 
-**Instructions are hopes. Hooks are guarantees. Humans forget too.**
+**Humans forget. Instructions are hopes. Hooks are guarantees.**
 
 ---
 
-*Built with Claude Code, Skills 2.0, and a refusal to accept that AI sessions have to start from zero.*
+*Built by Briggsy & Claude Code, powered by Skills 2.0, and a refusal to accept that AI sessions have to start from zero.*

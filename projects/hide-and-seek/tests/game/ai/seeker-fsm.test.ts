@@ -37,6 +37,7 @@ function makeAI(): SeekerAIInternalState {
     chaseLostTicks: 0,
     chaseRepathCounter: 0,
     patrolPauseTicks: 0,
+    pendingPath: false,
     roomTracker: null,
     evidenceTracker: null,
     suspiciousCooldowns: new Map(),

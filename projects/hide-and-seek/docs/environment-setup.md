@@ -9,7 +9,6 @@ Everything needed to work on this project with Claude Code. This is the single s
 | Node.js | v24.13.1+ | Required for MCP servers and Phaser dev |
 | npm | 11.10.0+ | Comes with Node |
 | pnpm | 10.30.3+ | Package manager for the game project |
-| Python | 3.12.x | For Serena MCP. **NOT 3.14** (breaks pygame in sibling projects) |
 | Git | 2.53+ | CRLF warnings suppressed (`core.safecrlf=false`) |
 | curl | 8.18+ | Comes with Git Bash on Windows. Used by WebFetch hook fallback. |
 | jq | any | Used by hook scripts to parse JSON. Comes with Git Bash. |
@@ -22,18 +21,11 @@ MCP (Model Context Protocol) servers give Claude Code additional tools. They are
 
 Every server uses the pattern: `cmd /c npx -y <package>` (or `cmd /c uvx` for Python-based servers). In Git Bash, `/c` gets expanded to `C:/` which breaks the command. **Always use `//c`** when running `claude mcp add` from Git Bash to prevent this.
 
-### Serena (Code Navigation)
+### ~~Serena (Code Navigation)~~ — REMOVED
 
-Semantic code analysis — symbol lookup, find references, rename, insert before/after. Preferred over Grep for exploring code structure and tracing call chains.
+Removed 2026-03-30 after a shootout test. `find_referencing_symbols` returned empty results for TypeScript types and exported functions (3/3 failures). The one feature worth having didn't work for our stack. Grep + Read + Glob covers everything Serena offered, with less friction.
 
-- **Config:** `.serena/project.yml` in project root
-- **Tools:** `find_symbol`, `get_symbols_overview`, `find_referencing_symbols`, `replace_symbol_body`, `search_for_pattern`, etc.
-- **When to use:** Exploring code architecture, tracing call chains, refactoring
-- **CRITICAL:** The `languages` field in `project.yml` must be set BEFORE Serena starts. Languages are fixed at startup — changing the config mid-session requires a full restart.
-
-```bash
-claude mcp add serena -s user -- cmd //c uvx --from git+https://github.com/oraios/serena serena start-mcp-server --context ide-assistant --project .
-```
+**Don't reinstall** unless the codebase exceeds 500+ files AND uses a language where LSP references work (Python, Java, Go — not TS type aliases).
 
 ### Context7 (Library Documentation)
 
@@ -149,7 +141,7 @@ Project-level instructions live in two places:
 2. **Memory system** — `~/.claude/projects/{project}/memory/MEMORY.md` — persistent cross-session context (user preferences, feedback, project state)
 
 Key rules that affect tooling:
-- **Serena over Grep** for code navigation
+- **Grep + Read + Glob** for code navigation (Serena removed — broken for TS)
 - **Context7** before guessing library behavior
 - **Sequential Thinking** for multi-step debugging and post-research synthesis
 - **Never use WebFetch** — use gemini-grounding or curl instead (once verified)
@@ -163,7 +155,6 @@ Key rules that affect tooling:
 | Hook scripts | `~/.claude/hooks/` |
 | Global CLAUDE.md | `~/.claude/CLAUDE.md` |
 | Memory index | `~/.claude/projects/{project}/memory/MEMORY.md` |
-| Serena project config | `.serena/project.yml` (per project) |
 | Installed plugins manifest | `~/.claude/plugins/installed_plugins.json` |
 | Plugin cache | `~/.claude/plugins/cache/` |
 
@@ -173,11 +164,10 @@ If starting fresh on a new machine. Run all commands in **Git Bash** (not PowerS
 
 ### 1. Install Prerequisites
 
-Install Node.js 24+, Python 3.12, Git, and pnpm. Verify:
+Install Node.js 24+, Git, and pnpm. Verify:
 
 ```bash
 node --version    # v24.13.1+
-python --version  # 3.12.x (NOT 3.14)
 git --version     # 2.53+
 pnpm --version    # 10.30.3+
 ```
@@ -201,9 +191,6 @@ claude mcp add context7 -s user -e "CONTEXT7_API_KEY=YOUR_KEY" -- cmd //c npx -y
 
 # Playwright (browser testing)
 claude mcp add playwright -s user -- cmd //c npx -y @playwright/mcp@latest
-
-# Serena (semantic code navigation)
-claude mcp add serena -s user -- cmd //c uvx --from git+https://github.com/oraios/serena serena start-mcp-server --context ide-assistant --project .
 
 # Gemini Grounding (web search) — get API key from https://aistudio.google.com/apikey
 claude mcp add gemini-grounding -s user -e "GEMINI_API_KEY=YOUR_KEY" -- cmd //c npx -y gemini-grounding
@@ -245,7 +232,6 @@ The hook is wired in `~/.claude/settings.json` under `hooks.PreToolUse` with mat
 In `~/.claude/settings.json`, add to `permissions.allow`:
 
 ```json
-"mcp__serena__*",
 "mcp__context7__*",
 "mcp__sequential-thinking__*",
 "mcp__sequentialthinking__*",
@@ -260,43 +246,7 @@ In `~/.claude/settings.json`, add to `permissions.allow`:
 # See Active Plugins table above for the full list
 ```
 
-### 7. Configure Serena Per-Project
-
-Each project needs a `.serena/project.yml` in its root. This file **must** be configured before Serena starts — language servers are fixed at startup.
-
-**Create the config:**
-
-```bash
-# From project root — creates .serena/ directory and project.yml
-mkdir -p .serena
-```
-
-Then create `.serena/project.yml` with at minimum:
-
-```yaml
-project_name: "your-project-name"
-languages: [typescript]    # REQUIRED — empty [] means no semantic tools
-encoding: "utf-8"
-ignore_all_files_in_gitignore: true
-```
-
-Available languages: `typescript` (also covers JS), `python`, `rust`, `go`, `java`, `cpp` (also covers C), `ruby`, etc. Full list in the `project.yml` comments or [Serena docs](https://oraios.github.io/serena/01-about/020_programming-languages.html).
-
-**First-session onboarding:**
-
-On the first conversation with Serena active, Claude will:
-
-1. Call `check_onboarding_performed` — confirms no memories exist yet
-2. Call `onboarding` — gets instructions for what to collect
-3. Write 5 memory files via `write_memory`: `project_overview`, `suggested_commands`, `style_conventions`, `task_completion`, `architecture`
-
-These memories persist across sessions so Serena understands the project context from the start. If the project structure changes significantly, delete stale memories and re-onboard.
-
-**Verify it's working:**
-
-After restart, call `get_symbols_overview` on any source file. If you get `Active languages: []`, the `languages` field wasn't set before Serena booted — fix the config and restart again.
-
-### 8. Set Up CLAUDE.md and Memory
+### 7. Set Up CLAUDE.md and Memory
 
 - Copy `~/.claude/CLAUDE.md` from backup or write fresh
 - Memory files rebuild naturally over conversations
@@ -309,5 +259,3 @@ After restart, call `get_symbols_overview` on any source file. If you get `Activ
 | Server shows `cmd C:/ npx` instead of `cmd /c npx` | Bash expanded `/c` to `C:/` | Use `//c` (double slash) |
 | Server shows `✓ Connected` but tools missing | Tools load at session startup | Restart Claude Code after adding |
 | `~/.claude/.mcp.json` exists but server not loading | `.mcp.json` is not used by Claude Code | Delete it, use `claude mcp add` instead |
-| Serena `get_symbols_overview` returns `Active languages: []` | `languages` field was empty when Serena started | Set `languages: [typescript]` in `.serena/project.yml` and restart Claude Code |
-| Serena tools work but no semantic results | Language server not installed or project has no `tsconfig.json` | Verify `tsconfig.json` exists at project root and TS is installed |

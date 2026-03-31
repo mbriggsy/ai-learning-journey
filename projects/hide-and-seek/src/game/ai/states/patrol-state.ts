@@ -24,7 +24,7 @@ export class PatrolState implements FSMState<SeekerContext> {
     }
 
     // Need a new destination?
-    if (isPathComplete(ctx.ai)) {
+    if (isPathComplete(ctx.ai) && !ctx.ai.pendingPath) {
       this.pickTarget(ctx);
       return;
     }

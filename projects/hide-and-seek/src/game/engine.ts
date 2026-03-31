@@ -38,6 +38,7 @@ function createSeekerAIInternal(seekerX: number, seekerY: number, config: Seeker
     chaseLostTicks: 0,
     chaseRepathCounter: 0,
     patrolPauseTicks: 0,
+    pendingPath: false,
     roomTracker: (config.patrolStrategy !== 'random') ? new RoomTracker() : null,
     evidenceTracker: null, // set at hunt start for Hard AI
     suspiciousCooldowns: new Map(),

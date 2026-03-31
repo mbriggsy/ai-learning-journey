@@ -1,10 +1,14 @@
 import Phaser from 'phaser';
-import type { SeekerRenderState } from '../../types/state.js';
+import type { SeekerRenderState, SeekerFSMState } from '../../types/state.js';
 import type { FacingDirection } from '../../types/input.js';
 import { DEPTH, DISPLAY } from '../../constants.js';
 
-const CHASE_COLOR = 0xff6666;
-const PATROL_COLOR = 0xff4444;
+const STATE_COLORS: Record<SeekerFSMState, number> = {
+  patrol: 0xff4444,       // red — default
+  suspicious: 0xff8800,   // orange — something caught attention
+  search: 0xffcc00,       // yellow — actively searching area
+  chase: 0xff0000,        // bright red — locked on, pursuing
+};
 const EYE_COLOR = 0xffffff;
 const INDICATOR_SIZE = 8;
 const INDICATOR_OFFSET = 12;
@@ -21,7 +25,7 @@ export class SeekerSprite {
   private facingIndicator: Phaser.GameObjects.Rectangle;
 
   constructor(scene: Phaser.Scene, x: number, y: number) {
-    this.body = scene.add.rectangle(x, y, DISPLAY.TILE_SIZE, DISPLAY.TILE_SIZE, PATROL_COLOR);
+    this.body = scene.add.rectangle(x, y, DISPLAY.TILE_SIZE, DISPLAY.TILE_SIZE, STATE_COLORS.patrol);
     this.body.setDepth(DEPTH.PLAYER);
     this.facingIndicator = scene.add.rectangle(x, y + INDICATOR_OFFSET, INDICATOR_SIZE, INDICATOR_SIZE, EYE_COLOR);
     this.facingIndicator.setDepth(DEPTH.PLAYER + 1);
@@ -29,7 +33,7 @@ export class SeekerSprite {
 
   syncFromGameState(seeker: Readonly<SeekerRenderState>): void {
     this.body.setPosition(seeker.x, seeker.y);
-    this.body.setFillStyle(seeker.fsmState === 'chase' ? CHASE_COLOR : PATROL_COLOR);
+    this.body.setFillStyle(STATE_COLORS[seeker.fsmState]);
     const offset = FACING_OFFSETS[seeker.facing];
     this.facingIndicator.setPosition(seeker.x + offset.dx, seeker.y + offset.dy);
   }

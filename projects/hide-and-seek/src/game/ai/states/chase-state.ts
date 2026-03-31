@@ -43,7 +43,7 @@ export class ChaseState implements FSMState<SeekerContext> {
 
     // Re-path every CHASE_REPATH_TICKS if we have a target
     ai.chaseRepathCounter++;
-    if (ai.chaseRepathCounter >= SEEKER.CHASE_REPATH_TICKS && ai.lastKnownHiderPos) {
+    if (ai.chaseRepathCounter >= SEEKER.CHASE_REPATH_TICKS && ai.lastKnownHiderPos && !ai.pendingPath) {
       ai.chaseRepathCounter = 0;
       requestPathTo(ctx, ai.lastKnownHiderPos.x, ai.lastKnownHiderPos.y);
     }

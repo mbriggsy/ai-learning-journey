@@ -64,6 +64,9 @@ export class SearchState implements FSMState<SeekerContext> {
     // Process action queue (door opening)
     if (!ctx.actionQueue.isEmpty()) return;
 
+    // Waiting for async pathfinding callback
+    if (ctx.ai.pendingPath) return;
+
     // Moving to current target
     if (!isPathComplete(ctx.ai)) {
       if (checkDoorOnPath(ctx)) return;

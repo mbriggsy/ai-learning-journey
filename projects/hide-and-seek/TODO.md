@@ -20,8 +20,9 @@
 - **Phase 3 EXECUTED (2026-03-30)** — fog of war + game flow, 125 tests, visually verified
 - **Phase 4 EXECUTED (2026-03-30)** — doors + minimap + sonar, 163 tests, visually verified
 - **Phase 5a EXECUTED (2026-03-30)** — seeker difficulty tiers + 4-state FSM, 223 tests
+- **Phase 5a BLOCKER FIXED (2026-03-31)** — pendingPath guard, seeker moves, code reviewed (4 agents), dead code removed
 - **Vision model LOCKED (2026-03-30)** — 4-tier flashlight tag, spec at `docs/design/vision-model-spec.md`
-- **Branch:** `feat/phase-0-scaffolding` pushed to origin (30 commits)
+- **Branch:** `feat/phase-0-scaffolding` pushed to origin
 
 ### Documents
 - Brainstorm: `docs/ideation/2026-03-29-hide-and-seek-brainstorm.md`
@@ -33,6 +34,17 @@
 - Phase 6b: `docs/plans/2026-03-29-008b-phase-6b-scoring-stats-plan.md`
 - Original Phase 5 (superseded): `docs/plans/2026-03-29-007-phase-5-ai-depth-spectator-plan.md`
 - Original Phase 6 (superseded): `docs/plans/2026-03-29-008-phase-6-sound-scoring-plan.md`
+
+## What We Did (2026-03-31, Session 12)
+- **FIXED Phase 5a blocker: seeker movement** — `pendingPath: boolean` added to `SeekerAIInternalState`, set/cleared in `requestPathTo()`/callback/`clearPath()`, guards in all 4 FSM states
+- **Seeker state colors** — 4 distinct colors per FSM state (red=patrol, orange=suspicious, yellow=search, bright red=chase) replacing indistinguishable 2-shade ternary
+- **Serena purged from environment-setup.md** — removed from prerequisites, MCP section (replaced with REMOVED tombstone), setup-from-scratch steps, permissions, gotchas, file locations
+- **Code review (4 agents)** — TS reviewer, architecture strategist, performance oracle, simplicity reviewer. Zero blockers, 1 P2 fixed (search-state nesting flattened to early return)
+- **Dead code removed** — `src/game/ai/seeker.ts` + `tests/game/ai/seeker.test.ts` (zero importers, orphaned predecessor to FSM system)
+- **compound-engineering.local.md created** — review agent config for TS game project
+- Test baseline: **211 tests passing** (24 files) — 12 dropped from dead module removal
+- Build: typecheck clean
+- **Branch:** `feat/phase-0-scaffolding`
 
 ## What We Did (2026-03-30, Session 11)
 - **EXECUTED Phase 5a: Seeker Difficulty Tiers** — 4-state FSM + 3 difficulty tiers
@@ -55,28 +67,15 @@
 - Build: typecheck clean, zero console spam
 - **Branch:** `feat/phase-0-scaffolding` pushed to origin (30 commits)
 
-## BLOCKER: Seeker not moving
-**Root cause:** PatrolState has no "waiting for path" guard. Every tick, `isPathComplete()` returns true (no path yet), so `pickTarget()` fires again, calling `requestPathTo()`, which increments `latestRequestId`, which invalidates the previous callback. Seeker never receives a path that sticks.
-
-**Fix (exact):**
-1. `src/game/ai/seeker-fsm.ts` — add `pendingPath: boolean` to `SeekerAIInternalState`, default `false`
-2. `requestPathTo()` — set `ctx.ai.pendingPath = true` before requesting, clear it in the callback (`ctx.ai.pendingPath = false`)
-3. `src/game/ai/states/patrol-state.ts` line ~31 — in `onUpdate`, change the `isPathComplete` check to:
-   ```typescript
-   if (isPathComplete(ctx.ai) && !ctx.ai.pendingPath) {
-     this.pickTarget(ctx);
-     return;
-   }
-   ```
-4. Apply same guard in `search-state.ts` and `chase-state.ts` where paths are requested
-5. Also check: `suspicious-state.ts` calls `requestPathTo` in `onEnter` — needs the same guard in `onUpdate`
-
 ## Next Steps
-1. **Fix seeker movement blocker** (above)
-2. **Visual testing** — run `pnpm dev`, play on Easy/Medium/Hard, verify seeker behavior differences
-3. **Tiled map: add Rooms object layer** — rectangle objects with roomId properties for Medium/Hard patrol
-4. **Phase 5b** — AI hider, spectator mode, vision cones rendered
-5. **Phase 6a** — audio + atmosphere
+1. **Visual testing** — play on Easy/Medium/Hard, verify seeker behavior differences (needs difficulty selector — URL param or menu)
+2. **Tiled map: add Rooms object layer** — rectangle objects with roomId properties for Medium/Hard patrol
+3. **Phase 5b** — AI hider, spectator mode, vision cones rendered
+4. **Phase 6a** — audio + atmosphere
+
+## Landmines
+- **Module-level `let` in SearchState/SuspiciousState** — singleton state means multi-seeker will stomp. Must move to `SeekerAIInternalState` before adding second seeker.
+- **`REQUEST_PATH` action in engine.ts bypasses `pendingPath` protocol** — safe because action queue blocks FSM updates, but latent inconsistency if action queue logic changes.
 
 ## What We Did (2026-03-30, Session 10)
 - **EXECUTED Phase 4: Doors + Minimap + Sonar** — full tactical layer

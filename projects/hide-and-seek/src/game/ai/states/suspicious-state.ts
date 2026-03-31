@@ -81,7 +81,7 @@ export class SuspiciousState implements FSMState<SeekerContext> {
     }
 
     // Arrived at stimulus — start looking around
-    if (isPathComplete(ctx.ai)) {
+    if (isPathComplete(ctx.ai) && !ctx.ai.pendingPath) {
       lookAroundPhase = true;
       lookDirIndex = 0;
       const ticksPerDir = Math.floor(AI.LOOK_AROUND_DURATION_TICKS / LOOK_DIRECTIONS.length);

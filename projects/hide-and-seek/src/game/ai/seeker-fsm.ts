@@ -51,6 +51,7 @@ export interface SeekerAIInternalState {
   patrolPauseTicks: number;
   roomTracker: RoomTracker | null;
   evidenceTracker: EvidenceTracker | null;
+  pendingPath: boolean;
   suspiciousCooldowns: Map<StimulusKind, number>;
 }
 
@@ -201,6 +202,7 @@ export function pickRandomWalkableTile(map: GameMap): { x: number; y: number } |
 export function clearPath(ai: SeekerAIInternalState): void {
   ai.currentPath = [];
   ai.waypointIndex = 0;
+  ai.pendingPath = false;
 }
 
 export function requestPathTo(
@@ -210,12 +212,16 @@ export function requestPathTo(
 ): void {
   const { x: fromX, y: fromY } = pixelToTile(ctx.render.x, ctx.render.y);
   const requestId = ++ctx.ai.latestRequestId;
+  // Assumption: pathfinding callback is guaranteed to fire (even on error).
+  // If it doesn't, pendingPath stays true and the seeker freezes.
+  ctx.ai.pendingPath = true;
 
   ctx.pathfinding.requestPath(
     fromX, fromY, targetX, targetY,
     (path) => {
       // Supersession guard: ignore stale callbacks
       if (requestId !== ctx.ai.latestRequestId) return;
+      ctx.ai.pendingPath = false;
       if (path && path.length > 1) {
         ctx.ai.currentPath = smoothPath(path, (x, y) => ctx.map.isBlocking(x, y));
         ctx.ai.waypointIndex = 1; // skip start tile

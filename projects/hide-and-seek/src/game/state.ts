@@ -1,7 +1,11 @@
-import type { GameMap, GameState, SpawnPoint } from '../types/state.js';
+import type { GameMap, GameState, SpawnPoint, DoorId, DoorState } from '../types/state.js';
 import { createCountdownTicks } from './timer.js';
 
-export function createGameState(map: GameMap, spawns: readonly SpawnPoint[]): GameState {
+export function createGameState(
+  map: GameMap,
+  spawns: readonly SpawnPoint[],
+  doors?: ReadonlyMap<DoorId, DoorState>,
+): GameState {
   const hiderSpawn = spawns.find(s => s.type === 'hider_spawn');
   if (!hiderSpawn) throw new Error('No hider_spawn found in map data');
 
@@ -37,5 +41,7 @@ export function createGameState(map: GameMap, spawns: readonly SpawnPoint[]): Ga
     seekerFov: new Uint8Array(tileCount),
     playerFov,
     stats: { distanceTraveled: 0 },
+    doors: doors ?? new Map(),
+    doorGeneration: 0,
   };
 }

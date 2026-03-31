@@ -38,17 +38,17 @@ describe('evaluateRules', () => {
 
   describe('hunt phase', () => {
     it('returns null when ticks remain and no detection', () => {
-      const flow: HuntPhase = { kind: 'hunt', ticksRemaining: 100, ticksElapsed: 50 };
+      const flow: HuntPhase = { kind: 'hunt', ticksRemaining: 100, ticksElapsed: 50, sonarTicksUntilPing: 300 };
       expect(evaluateRules(flow, 'none')).toBe(null);
     });
 
     it('returns null on spotted (spotted triggers FSM, not game over)', () => {
-      const flow: HuntPhase = { kind: 'hunt', ticksRemaining: 100, ticksElapsed: 50 };
+      const flow: HuntPhase = { kind: 'hunt', ticksRemaining: 100, ticksElapsed: 50, sonarTicksUntilPing: 300 };
       expect(evaluateRules(flow, 'spotted')).toBe(null);
     });
 
     it('transitions to found on detection result found', () => {
-      const flow: HuntPhase = { kind: 'hunt', ticksRemaining: 100, ticksElapsed: 50 };
+      const flow: HuntPhase = { kind: 'hunt', ticksRemaining: 100, ticksElapsed: 50, sonarTicksUntilPing: 300 };
       const next = evaluateRules(flow, 'found');
       expect(next).not.toBe(null);
       if (next === null) return;
@@ -59,7 +59,7 @@ describe('evaluateRules', () => {
     });
 
     it('transitions to survived when timer expires', () => {
-      const flow: HuntPhase = { kind: 'hunt', ticksRemaining: 0, ticksElapsed: 7200 };
+      const flow: HuntPhase = { kind: 'hunt', ticksRemaining: 0, ticksElapsed: 7200, sonarTicksUntilPing: 300 };
       const next = evaluateRules(flow, 'none');
       expect(next).not.toBe(null);
       if (next === null) return;
@@ -70,7 +70,7 @@ describe('evaluateRules', () => {
     });
 
     it('FOUND takes priority over SURVIVED on same tick', () => {
-      const flow: HuntPhase = { kind: 'hunt', ticksRemaining: 0, ticksElapsed: 7200 };
+      const flow: HuntPhase = { kind: 'hunt', ticksRemaining: 0, ticksElapsed: 7200, sonarTicksUntilPing: 300 };
       const next = evaluateRules(flow, 'found');
       expect(next!.kind).toBe('found');
     });

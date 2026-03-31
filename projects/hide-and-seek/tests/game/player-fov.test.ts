@@ -29,6 +29,8 @@ function makePlayingState(): PlayingState {
     seekerFov: new Uint8Array(20 * 20),
     playerFov: new Uint8Array(20 * 20).fill(1),
     stats: { distanceTraveled: 0 },
+    doors: new Map(),
+    doorGeneration: 0,
   };
 }
 
@@ -79,7 +81,7 @@ describe('GameStats', () => {
 
   it('tracks distance during hunt phase', () => {
     const state = makePlayingState();
-    (state as MutablePlayingState).gameFlow = { kind: 'hunt', ticksRemaining: 7200, ticksElapsed: 0 };
+    (state as MutablePlayingState).gameFlow = { kind: 'hunt', ticksRemaining: 7200, ticksElapsed: 0, sonarTicksUntilPing: 300 };
     // Clear playerFov for hunt phase
     state.playerFov.fill(0);
     const engine = new GameEngine(state);

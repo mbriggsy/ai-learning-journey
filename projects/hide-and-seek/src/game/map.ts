@@ -31,7 +31,7 @@ interface TiledTileLayer {
   height: number;
 }
 
-interface TiledObject {
+export interface TiledObject {
   id: number;
   name: string;
   type?: string;
@@ -145,7 +145,15 @@ function buildTileProperties(tilesets: TiledTileset[]): Map<number, { collides: 
 
 // --- Public API ---
 
-export function createGameMap(tiledJson: unknown): { map: GameMap; spawns: SpawnPoint[] } {
+export interface MapData {
+  map: GameMap;
+  spawns: SpawnPoint[];
+  collisionGrid: Uint8Array;
+  losGrid: Uint8Array;
+  doorObjects: TiledObject[];
+}
+
+export function createGameMap(tiledJson: unknown): MapData {
   const data = tiledJson as TiledMapJson;
   validateMapData(data);
 
@@ -178,7 +186,22 @@ export function createGameMap(tiledJson: unknown): { map: GameMap; spawns: Spawn
     }
   }
 
-  return { map: new GameMapImpl(width, height, collisionGrid, losGrid), spawns };
+  // Extract door objects (Doors layer is optional)
+  const doorObjects: TiledObject[] = [];
+  const doorsLayer = data.layers.find(l => l.name === 'Doors' && l.type === 'objectgroup') as TiledObjectGroup | undefined;
+  if (doorsLayer) {
+    for (const obj of doorsLayer.objects) {
+      doorObjects.push(obj);
+    }
+  }
+
+  return {
+    map: new GameMapImpl(width, height, collisionGrid, losGrid),
+    spawns,
+    collisionGrid,
+    losGrid,
+    doorObjects,
+  };
 }
 
 // Pre-allocated result objects — do not store references across calls.

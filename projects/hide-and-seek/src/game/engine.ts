@@ -4,7 +4,7 @@ import type { ReadonlyDeep } from '../types/utility.js';
 import type { GameEventMap } from '../types/events.js';
 import type { TypedEmitter, TypedListener } from '../types/events.js';
 import type { SeekerConfig } from '../types/ai.js';
-import { SIMULATION, MOVEMENT, VISION, SEEKER } from '../constants.js';
+import { SIMULATION, MOVEMENT, VISION, SEEKER, INTERACTION, TIMERS, DOOR } from '../constants.js';
 import { updateMovement } from './movement.js';
 import { computeFOV } from './los.js';
 import { checkDetection } from './detection.js';
@@ -14,6 +14,7 @@ import { PathfindingSystem } from './ai/pathfinding.js';
 import { updateSeekerAI, createSeekerAIState } from './ai/seeker.js';
 import type { SeekerAIState } from './ai/seeker.js';
 import { pixelToTile } from './map.js';
+import type { DoorSystem } from './doors.js';
 
 function createEasySeekerConfig(): SeekerConfig {
   const step = SIMULATION.FIXED_STEP_S;
@@ -40,6 +41,10 @@ export class GameEngine {
   private collisionGrid: Uint8Array | null = null;
   private lastPlayerFovTileX: number = -1;
   private lastPlayerFovTileY: number = -1;
+  private lastPlayerFovDoorGen: number = -1;
+  private lastSeekerFovDoorGen: number = -1;
+  private doorSystem: DoorSystem | null = null;
+  private currentTick: number = 0;
 
   constructor(initialState: GameState) {
     this.state = initialState;
@@ -49,6 +54,24 @@ export class GameEngine {
 
     if (initialState.phase === 'playing') {
       this.initPlayingSystems(initialState);
+    }
+  }
+
+  /** Set door system after construction (engine's emitter must exist first) */
+  setDoorSystem(doorSystem: DoorSystem): void {
+    this.doorSystem = doorSystem;
+
+    // Sync door state into PlayingState
+    if (this.state.phase === 'playing') {
+      const s = this.state as MutablePlayingState;
+      (s as { doors: ReadonlyMap<string, unknown> }).doors = doorSystem.getDoors();
+
+      // Set initial door costs for pathfinding
+      for (const door of doorSystem.getDoors().values()) {
+        if (!door.isOpen) {
+          this.pathfinding.setDoorCost(door.position.x, door.position.y, DOOR.PATHFINDING_COST);
+        }
+      }
     }
   }
 
@@ -64,6 +87,10 @@ export class GameEngine {
       }
     }
     this.pathfinding.initGrid(this.collisionGrid, width, height);
+  }
+
+  getDoorSystem(): DoorSystem | null {
+    return this.doorSystem;
   }
 
   tick(deltaMs: number, input: InputState): void {
@@ -99,6 +126,11 @@ export class GameEngine {
     return this.emitter;
   }
 
+  /** Full emitter (with emit) — for internal systems like DoorSystem */
+  getEmitterInternal(): TypedEmitter<GameEventMap> {
+    return this.emitter;
+  }
+
   pause(): void {
     this.paused = true;
   }
@@ -121,9 +153,15 @@ export class GameEngine {
   private fixedUpdate(dt: number, input: InputState): void {
     if (this.state.phase !== 'playing') return;
     const s = this.state as MutablePlayingState;
+    this.currentTick++;
 
     // Terminal guard — no logic after game over
     if (s.gameFlow.kind === 'found' || s.gameFlow.kind === 'survived') return;
+
+    // Door interaction — allowed during COUNTDOWN and HUNT
+    if (s.gameFlow.kind === 'countdown' || s.gameFlow.kind === 'hunt') {
+      this.handleDoorInteraction(s, input);
+    }
 
     if (s.gameFlow.kind === 'countdown') {
       // 1. Player movement only
@@ -158,11 +196,17 @@ export class GameEngine {
       s.stats.distanceTraveled += Math.hypot(dx, dy);
     }
 
-    // 2. Player FOV (dirty flag: only recompute on tile change)
+    // 2. Player FOV (dirty flag: tile change OR doorGeneration change)
+    const doorGen = this.doorSystem ? this.doorSystem.getDoorGeneration() : 0;
     const playerTile = pixelToTile(s.player.x, s.player.y);
-    if (playerTile.x !== this.lastPlayerFovTileX || playerTile.y !== this.lastPlayerFovTileY) {
+    if (
+      playerTile.x !== this.lastPlayerFovTileX ||
+      playerTile.y !== this.lastPlayerFovTileY ||
+      doorGen !== this.lastPlayerFovDoorGen
+    ) {
       this.lastPlayerFovTileX = playerTile.x;
       this.lastPlayerFovTileY = playerTile.y;
+      this.lastPlayerFovDoorGen = doorGen;
       s.playerFov.fill(0);
       computeFOV(
         playerTile.x, playerTile.y,
@@ -172,11 +216,16 @@ export class GameEngine {
       );
     }
 
-    // 4. Seeker FOV (dirty flag: only recompute on tile change)
+    // 4. Seeker FOV (dirty flag: tile change OR doorGeneration change)
     const seekerTile = pixelToTile(s.seeker.x, s.seeker.y);
-    if (this.seekerAI && (seekerTile.x !== this.seekerAI.lastFovTileX || seekerTile.y !== this.seekerAI.lastFovTileY)) {
+    if (this.seekerAI && (
+      seekerTile.x !== this.seekerAI.lastFovTileX ||
+      seekerTile.y !== this.seekerAI.lastFovTileY ||
+      doorGen !== this.lastSeekerFovDoorGen
+    )) {
       this.seekerAI.lastFovTileX = seekerTile.x;
       this.seekerAI.lastFovTileY = seekerTile.y;
+      this.lastSeekerFovDoorGen = doorGen;
       s.seekerFov.fill(0);
       computeFOV(
         seekerTile.x, seekerTile.y,
@@ -198,6 +247,8 @@ export class GameEngine {
       updateSeekerAI(
         s.seeker, this.seekerAI, this.seekerConfig, detection,
         s.player, this.pathfinding, s.map, dt,
+        this.doorSystem,
+        this.currentTick,
       );
     }
 
@@ -205,11 +256,55 @@ export class GameEngine {
     (s.gameFlow as HuntPhase).ticksRemaining--;
     (s.gameFlow as HuntPhase).ticksElapsed++;
 
+    // 7b. Sonar ping timer
+    const hunt = s.gameFlow as HuntPhase;
+    hunt.sonarTicksUntilPing--;
+    if (hunt.sonarTicksUntilPing <= 0) {
+      this.emitter.emit('SONAR_PING_DUE', {
+        seekerX: s.seeker.x,
+        seekerY: s.seeker.y,
+      });
+      hunt.sonarTicksUntilPing = Math.round(TIMERS.SONAR_PING_INTERVAL_S / SIMULATION.FIXED_STEP_S);
+    }
+
     // 8. Rules
     const next = evaluateRules(s.gameFlow, detection);
     if (next) {
       s.gameFlow = next;
       this.emitter.emit('PHASE_CHANGED', next.kind);
+    }
+  }
+
+  private handleDoorInteraction(s: MutablePlayingState, input: InputState): void {
+    if (!input.interact || !this.doorSystem) return;
+
+    const playerTile = pixelToTile(s.player.x, s.player.y);
+    const door = this.doorSystem.getNearestDoor(playerTile.x, playerTile.y, INTERACTION.DOOR_RANGE);
+    if (!door) return;
+
+    const entities = [s.player, s.seeker];
+    if (!this.doorSystem.canToggleDoor(door, entities, this.currentTick)) return;
+
+    if (this.doorSystem.toggleDoor(door.id, this.currentTick)) {
+      const updated = this.doorSystem.getDoors().get(door.id);
+      // Update pathfinding cost
+      if (updated) {
+        if (updated.isOpen) {
+          this.pathfinding.removeDoorCost(updated.position.x, updated.position.y);
+        } else {
+          this.pathfinding.setDoorCost(updated.position.x, updated.position.y, DOOR.PATHFINDING_COST);
+        }
+      }
+
+      // Cancel seeker's current path — door state changed, path may be stale
+      if (this.seekerAI?.pendingPathId !== undefined) {
+        this.pathfinding.cancelPath(this.seekerAI.pendingPathId);
+        this.seekerAI.pendingPathId = undefined;
+      }
+
+      // Sync door map on PlayingState
+      (s as { doors: ReadonlyMap<typeof door.id, typeof door> }).doors = this.doorSystem.getDoors();
+      (s as { doorGeneration: number }).doorGeneration = this.doorSystem.getDoorGeneration();
     }
   }
 

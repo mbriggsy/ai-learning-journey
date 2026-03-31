@@ -1,5 +1,5 @@
 import type { GameFlowState, DetectionResult } from '../types/state.js';
-import { createHuntTicks } from './timer.js';
+import { createHuntTicks, createSonarPingTicks } from './timer.js';
 
 export function evaluateRules(
   gameFlow: GameFlowState,
@@ -12,6 +12,7 @@ export function evaluateRules(
           kind: 'hunt',
           ticksRemaining: createHuntTicks(),
           ticksElapsed: 0,
+          sonarTicksUntilPing: createSonarPingTicks(),
         };
       }
       return null;

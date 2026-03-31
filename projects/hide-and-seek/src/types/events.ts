@@ -1,7 +1,16 @@
-import type { GameFlowKind } from './state.js';
+import type { GameFlowKind, DoorId } from './state.js';
 
 export type GameEventMap = {
   PHASE_CHANGED: [kind: GameFlowKind];
+  DOOR_TOGGLED: [payload: {
+    readonly id: DoorId;
+    readonly position: { readonly x: number; readonly y: number };
+    readonly isOpen: boolean;
+  }];
+  SONAR_PING_DUE: [payload: {
+    readonly seekerX: number;
+    readonly seekerY: number;
+  }];
 };
 
 export interface TypedEmitter<TMap extends Record<string, unknown[]>> {

@@ -45,6 +45,14 @@ export class PathfindingSystem {
     this.star.cancelPath(instanceId);
   }
 
+  setDoorCost(x: number, y: number, cost: number): void {
+    this.star.setAdditionalPointCost(x, y, cost);
+  }
+
+  removeDoorCost(x: number, y: number): void {
+    this.star.removeAdditionalPointCost(x, y);
+  }
+
   cancelAll(): void {
     // Replace the EasyStar instance to discard all queued paths
     this.star = new EasyStar.js();

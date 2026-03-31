@@ -2464,6 +2464,96 @@
       "visible": true,
       "x": 0,
       "y": 0
+    },
+    {
+      "draworder": "topdown",
+      "id": 4,
+      "name": "Doors",
+      "objects": [
+        {
+          "id": 10,
+          "name": "door_1",
+          "type": "door",
+          "class": "door",
+          "x": 160,
+          "y": 224,
+          "width": 32,
+          "height": 32,
+          "rotation": 0,
+          "visible": true,
+          "properties": {}
+        },
+        {
+          "id": 11,
+          "name": "door_2",
+          "type": "door",
+          "class": "door",
+          "x": 192,
+          "y": 416,
+          "width": 32,
+          "height": 32,
+          "rotation": 0,
+          "visible": true,
+          "properties": {}
+        },
+        {
+          "id": 12,
+          "name": "door_3",
+          "type": "door",
+          "class": "door",
+          "x": 448,
+          "y": 416,
+          "width": 32,
+          "height": 32,
+          "rotation": 0,
+          "visible": true,
+          "properties": {}
+        },
+        {
+          "id": 13,
+          "name": "door_4",
+          "type": "door",
+          "class": "door",
+          "x": 736,
+          "y": 416,
+          "width": 32,
+          "height": 32,
+          "rotation": 0,
+          "visible": true,
+          "properties": {}
+        },
+        {
+          "id": 14,
+          "name": "door_5",
+          "type": "door",
+          "class": "door",
+          "x": 1024,
+          "y": 416,
+          "width": 32,
+          "height": 32,
+          "rotation": 0,
+          "visible": true,
+          "properties": {}
+        },
+        {
+          "id": 15,
+          "name": "door_6",
+          "type": "door",
+          "class": "door",
+          "x": 192,
+          "y": 512,
+          "width": 32,
+          "height": 32,
+          "rotation": 0,
+          "visible": true,
+          "properties": {}
+        }
+      ],
+      "opacity": 1,
+      "type": "objectgroup",
+      "visible": true,
+      "x": 0,
+      "y": 0
     }
   ],
   "nextlayerid": 4,
@@ -2482,7 +2572,7 @@
       "margin": 0,
       "name": "placeholder",
       "spacing": 0,
-      "tilecount": 3,
+      "tilecount": 5,
       "tileheight": 32,
       "tilewidth": 32,
       "tiles": [
@@ -2528,6 +2618,36 @@
               "name": "blocks_los",
               "type": "bool",
               "value": true
+            }
+          ]
+        },
+        {
+          "id": 3,
+          "properties": [
+            {
+              "name": "collides",
+              "type": "bool",
+              "value": true
+            },
+            {
+              "name": "blocks_los",
+              "type": "bool",
+              "value": true
+            }
+          ]
+        },
+        {
+          "id": 4,
+          "properties": [
+            {
+              "name": "collides",
+              "type": "bool",
+              "value": false
+            },
+            {
+              "name": "blocks_los",
+              "type": "bool",
+              "value": false
             }
           ]
         }

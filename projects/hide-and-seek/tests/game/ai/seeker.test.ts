@@ -4,6 +4,7 @@ import type { SeekerAIState } from '../../../src/game/ai/seeker.js';
 import type { SeekerRenderState, GameMap } from '../../../src/types/state.js';
 import type { SeekerConfig, PathPoint } from '../../../src/types/ai.js';
 import type { PathfindingSystem } from '../../../src/game/ai/pathfinding.js';
+import { ActionQueue } from '../../../src/game/ai/actions.js';
 
 const DT = 1 / 60;
 
@@ -37,6 +38,8 @@ function makeAI(overrides: Partial<SeekerAIState> = {}): SeekerAIState {
     lastFovTileX: 5,
     lastFovTileY: 5,
     chaseRepathCounter: 0,
+    actionQueue: new ActionQueue(),
+    doorStuckTicks: 0,
     ...overrides,
   };
 }

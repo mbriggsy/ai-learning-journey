@@ -1,5 +1,17 @@
 import type { FacingDirection } from './input.js';
 
+// --- Door types ---
+
+declare const DoorIdBrand: unique symbol;
+export type DoorId = string & { readonly [DoorIdBrand]: never };
+
+export interface DoorState {
+  readonly id: DoorId;
+  readonly position: { readonly x: number; readonly y: number };
+  readonly isOpen: boolean;
+  readonly lastToggleTick: number;
+}
+
 export type GamePhase = 'boot' | 'playing';
 
 // --- Game flow (sub-phase within PlayingState) ---
@@ -15,6 +27,7 @@ export interface HuntPhase {
   readonly kind: 'hunt';
   ticksRemaining: number;
   ticksElapsed: number;
+  sonarTicksUntilPing: number;
 }
 
 export interface FoundPhase {
@@ -92,6 +105,8 @@ export interface PlayingState extends GameStateBase {
   readonly seekerFov: Uint8Array;
   readonly playerFov: Uint8Array;
   readonly stats: GameStats;
+  readonly doors: ReadonlyMap<DoorId, DoorState>;
+  readonly doorGeneration: number;
 }
 
 export type GameState = BootState | PlayingState;

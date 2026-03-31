@@ -33,6 +33,12 @@ export const VISION = {
 export const TIMERS = {
   COUNTDOWN_DURATION_S: 10,
   HUNT_TIME_LIMIT_S: 120,
+  SONAR_PING_INTERVAL_S: 5,
+} as const satisfies Record<string, number>;
+
+/** Interaction ranges (in tiles) */
+export const INTERACTION = {
+  DOOR_RANGE: 1.5,
 } as const satisfies Record<string, number>;
 
 /** Camera settings */
@@ -53,7 +59,12 @@ export const DEPTH = {
   WALLS: 1,
   PLAYER: 5,
   FOG: 100,
+  MINIMAP_DOORS: 150,
+  MINIMAP_SONAR_RING: 180,
+  MINIMAP_SONAR_BLIP: 190,
+  MINIMAP_PLAYER: 200,
   UI: 200,
+  MINIMAP_BORDER: 1000,
 } as const satisfies Record<string, number>;
 
 /** Fog of war settings */
@@ -117,4 +128,33 @@ export const SEEKER = {
 export const COLLISION = {
   /** Player hitbox width and height in pixels (centered on 32x32 sprite) */
   PLAYER_HITBOX: 20,
+} as const satisfies Record<string, number>;
+
+/** Door settings */
+export const DOOR = {
+  /** Ticks between toggles (500ms at 60 tick/s) */
+  TOGGLE_COOLDOWN_TICKS: 30,
+  /** EasyStar tile cost for closed doors (expensive, not blocked) */
+  PATHFINDING_COST: 50,
+  /** Seeker ticks waiting after opening a door before continuing */
+  OPEN_WAIT_TICKS: 3,
+  /** Ticks before stuck-at-door fallback (5s at 60 tick/s) */
+  STUCK_FALLBACK_TICKS: 300,
+} as const satisfies Record<string, number>;
+
+/** Sonar ping settings */
+export const SONAR = {
+  RING_DURATION_MS: 1500,
+  BLIP_HOLD_DURATION_MS: 2000,
+  BLIP_FADE_DURATION_MS: 1000,
+  RING_MAX_RADIUS_TILES: 15,
+  /** Base threshold for distance-based blip reveal */
+  BLIP_THRESHOLD: 16,
+} as const satisfies Record<string, number>;
+
+/** Minimap settings */
+export const MINIMAP = {
+  WIDTH: 160,
+  HEIGHT: 160,
+  MARGIN: 10,
 } as const satisfies Record<string, number>;

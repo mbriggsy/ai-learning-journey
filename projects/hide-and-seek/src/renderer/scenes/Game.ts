@@ -2,20 +2,25 @@ import Phaser from 'phaser';
 import { GameEngine } from '../../game/engine.js';
 import { createGameMap } from '../../game/map.js';
 import { createGameState } from '../../game/state.js';
+import { createDoorSystem } from '../../game/doors.js';
 import { pixelToTile } from '../../game/map.js';
 import { InputManager } from '../systems/InputManager.js';
 import { FogRenderer } from '../systems/FogRenderer.js';
 import { CinematicManager } from '../systems/CinematicManager.js';
+import { MinimapManager } from '../systems/MinimapManager.js';
+import { SonarPing } from '../systems/SonarPing.js';
 import { PauseAuthority, PAUSE_REASONS } from '../systems/PauseAuthority.js';
 import { EndOfRoundSequence } from '../utils/EndOfRoundSequence.js';
 import { SceneTransition } from '../utils/SceneTransition.js';
 import { PlayerSprite } from '../entities/PlayerSprite.js';
 import { SeekerSprite } from '../entities/SeekerSprite.js';
+import { createDoorSprites, destroyDoorSprites } from '../entities/DoorSprite.js';
+import type { DoorSpriteEntry } from '../entities/DoorSprite.js';
 import { setPauseAuthority } from './PauseMenu.js';
 import { getGameSettings } from './Boot.js';
 import { installTestBridge, removeTestBridge } from '../utils/TestBridge.js';
 import type { GameSceneData } from '../../types/scenes.js';
-import type { PlayingState, GameFlowKind } from '../../types/state.js';
+import type { PlayingState, GameFlowKind, DoorId } from '../../types/state.js';
 import type { ReadonlyDeep } from '../../types/utility.js';
 import { CAMERA, DEPTH, DISPLAY, CINEMATIC, SIMULATION } from '../../constants.js';
 
@@ -29,6 +34,10 @@ export class GameScene extends Phaser.Scene {
   private pauseAuthority!: PauseAuthority;
   private endSequence!: EndOfRoundSequence;
   private onVisibilityChange!: () => void;
+
+  private minimapManager!: MinimapManager;
+  private sonarPing!: SonarPing;
+  private doorSprites!: Map<DoorId, DoorSpriteEntry>;
 
   private escapeKey!: Phaser.Input.Keyboard.Key;
   private endSequenceTriggered: boolean = false;
@@ -46,12 +55,22 @@ export class GameScene extends Phaser.Scene {
     // --- Tilemap rendering ---
     const tilemap = this.setupTilemap();
 
-    // --- Game engine ---
+    // --- Game engine + doors ---
     const tiledData = this.cache.tilemap.get('map')?.data;
     if (!tiledData) throw new Error('Tilemap data not in cache');
-    const { map: gameMap, spawns } = createGameMap(tiledData);
+    const { map: gameMap, spawns, collisionGrid, losGrid, doorObjects } = createGameMap(tiledData);
+
+    // Create engine first (creates its own emitter), then set up door system with that emitter
     const gameState = createGameState(gameMap, spawns);
     this.engine = new GameEngine(gameState);
+
+    // Create door system using engine's emitter for DOOR_TOGGLED events
+    const doorSystem = createDoorSystem(
+      doorObjects, gameMap.width, gameMap.height,
+      losGrid, collisionGrid,
+      this.engine.getEmitterInternal(),
+    );
+    this.engine.setDoorSystem(doorSystem);
 
     // --- Systems ---
     this.inputManager = new InputManager(this);
@@ -71,6 +90,13 @@ export class GameScene extends Phaser.Scene {
     // Ignore ALL entity game objects on UI camera (body + facing indicators)
     for (const obj of this.playerSprite.getGameObjects()) this.cinematic.ignoreOnUI(obj);
     for (const obj of this.seekerSprite.getGameObjects()) this.cinematic.ignoreOnUI(obj);
+
+    // --- Door sprites ---
+    const listener = this.engine.getEmitter();
+    this.doorSprites = createDoorSprites(this, doorSystem.getDoors(), listener);
+    for (const entry of this.doorSprites.values()) {
+      this.cinematic.ignoreOnUI(entry.sprite);
+    }
 
     // Ignore tilemap layers on UI camera
     tilemap.layers.forEach(layerData => {
@@ -92,9 +118,31 @@ export class GameScene extends Phaser.Scene {
     cam.startFollow(this.playerSprite.getGameObject(), false, CAMERA.FOLLOW_LERP, CAMERA.FOLLOW_LERP);
     cam.setBounds(0, 0, tilemap.widthInPixels, tilemap.heightInPixels);
 
-    // --- HUD parallel scene ---
-    const listener = this.engine.getEmitter();
+    // --- Minimap ---
+    this.minimapManager = new MinimapManager(
+      this,
+      this.playerSprite.getGameObject(),
+      tilemap.widthInPixels,
+      tilemap.heightInPixels,
+      doorSystem.getDoors(),
+      listener,
+    );
+
+    // Fog renders automatically on all cameras — minimap shows fog state correctly
+
+    // --- Sonar ping ---
     const getState = () => this.engine.getState() as ReadonlyDeep<PlayingState>;
+    this.sonarPing = new SonarPing(
+      this,
+      this.minimapManager,
+      listener,
+      () => {
+        const s = this.engine.getState();
+        return s.phase === 'playing' ? { x: s.player.x, y: s.player.y } : { x: 0, y: 0 };
+      },
+    );
+
+    // --- HUD parallel scene ---
     this.scene.launch('HUD', { listener, getState });
 
     // --- Pause authority shared with PauseMenu ---
@@ -124,6 +172,9 @@ export class GameScene extends Phaser.Scene {
     this.events.on('shutdown', () => {
       this.scene.stop('HUD');
       this.engine.getEmitter().off('PHASE_CHANGED', this.onPhaseChanged);
+      this.sonarPing.destroy();
+      this.minimapManager.destroy();
+      destroyDoorSprites(this.doorSprites);
       this.fogRenderer.destroy();
       this.cinematic.destroy();
       this.engine.dispose();
@@ -171,6 +222,9 @@ export class GameScene extends Phaser.Scene {
       if (kind === 'hunt') {
         this.handleCountdownToHunt();
       }
+      if (kind === 'found' || kind === 'survived') {
+        this.minimapManager.setVisible(false);
+      }
     };
     listener.on('PHASE_CHANGED', this.onPhaseChanged);
   }
@@ -203,6 +257,7 @@ export class GameScene extends Phaser.Scene {
 
     this.syncSprites();
     this.updateFog(state as ReadonlyDeep<PlayingState>);
+    this.updateMinimap(state as ReadonlyDeep<PlayingState>);
     this.checkEndOfRound(state as ReadonlyDeep<PlayingState>);
   }
 
@@ -239,6 +294,14 @@ export class GameScene extends Phaser.Scene {
   private updateFog(state: ReadonlyDeep<PlayingState>): void {
     if (state.gameFlow.kind === 'hunt' || state.gameFlow.kind === 'countdown') {
       this.fogRenderer.update(state);
+    }
+  }
+
+  private updateMinimap(state: ReadonlyDeep<PlayingState>): void {
+    const visible = state.gameFlow.kind === 'countdown' || state.gameFlow.kind === 'hunt';
+    this.minimapManager.setVisible(visible);
+    if (visible) {
+      this.minimapManager.update(state);
     }
   }
 

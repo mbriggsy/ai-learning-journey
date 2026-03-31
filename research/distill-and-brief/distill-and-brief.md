@@ -3,7 +3,9 @@
 
 ---
 
-> **The pitch:** Every engineering session produces hard-won knowledge. By the next session, it's gone. We built a system where AI agents *automatically* capture non-obvious fixes and *automatically* brief themselves before starting new work. Two skills, two hooks, zero human effort.
+> **The pitch:** Every engineering session produces hard-won knowledge. By the next session, it's gone.
+>
+> We built a system where AI agents *automatically* capture non-obvious fixes and *automatically* brief themselves before starting new work. Two skills, two hooks, zero human effort, minimum token burn.
 
 ---
 

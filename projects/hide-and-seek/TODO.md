@@ -297,8 +297,9 @@ Phase 4 fixes (apply during Phase 4 execution):
 - [x] Minimap size: change from 200x150 to ~160x160 ✓ (MINIMAP.WIDTH=160, MINIMAP.HEIGHT=160)
 - [x] Document stable tile indices for door_open/door_closed frames ✓ (FRAME_DOOR_CLOSED=3, FRAME_DOOR_OPEN=4 in DoorSprite.ts)
 
-Phase 5a fix (apply during Phase 5a execution):
+Phase 5a fixes (apply during Phase 5a execution):
 - [ ] Document FSM state → animation mapping (PATROL=walk, SUSPICIOUS=walk/idle, SEARCH=walk, CHASE=chase)
+- [ ] Apply vision model spec (`docs/design/vision-model-spec.md`) — 4-tier flashlight tag, seeker cone becomes visible beam, player vision per difficulty
 
 Phase 6a fix (apply during Phase 6a execution):
 - [ ] Consider adding sonar ping audio SFX (currently visual-only — no audio cue in Phase 6a)

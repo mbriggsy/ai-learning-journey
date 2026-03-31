@@ -13,6 +13,10 @@ reviewed:
 
 # Phase 5a: Seeker Difficulty Tiers
 
+> **DESIGN UPDATE (2026-03-30):** Vision model redesigned — see `docs/design/vision-model-spec.md`.
+> Player fog-of-war replaced with 4-tier flashlight tag model (Easy=omniscient, Medium=lantern, Medium-Hard=flashlight, Hard=darkness).
+> Seeker vision cones (this plan) become VISIBLE flashlight beams. Implementation mechanics unchanged, presentation inverted.
+
 ## Enhancement Summary
 
 **Deepened on:** 2026-03-30

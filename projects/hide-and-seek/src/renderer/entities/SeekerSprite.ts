@@ -37,4 +37,13 @@ export class SeekerSprite {
   getGameObject(): Phaser.GameObjects.GameObject {
     return this.body;
   }
+
+  setVisible(visible: boolean): void {
+    this.body.setVisible(visible);
+    this.facingIndicator.setVisible(visible);
+  }
+
+  getGameObjects(): Phaser.GameObjects.GameObject[] {
+    return [this.body, this.facingIndicator];
+  }
 }

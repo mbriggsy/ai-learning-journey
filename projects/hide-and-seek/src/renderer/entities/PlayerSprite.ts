@@ -33,4 +33,8 @@ export class PlayerSprite {
   getGameObject(): Phaser.GameObjects.GameObject {
     return this.body;
   }
+
+  getGameObjects(): Phaser.GameObjects.GameObject[] {
+    return [this.body, this.facingIndicator];
+  }
 }

@@ -74,9 +74,9 @@ export class GameScene extends Phaser.Scene {
     this.playerSprite = new PlayerSprite(this, hiderSpawn.x, hiderSpawn.y);
     this.seekerSprite = new SeekerSprite(this, seekerSpawn.x, seekerSpawn.y);
 
-    // Ignore entities on UI camera
-    this.cinematic.ignoreOnUI(this.playerSprite.getGameObject());
-    this.cinematic.ignoreOnUI(this.seekerSprite.getGameObject());
+    // Ignore ALL entity game objects on UI camera (body + facing indicators)
+    for (const obj of this.playerSprite.getGameObjects()) this.cinematic.ignoreOnUI(obj);
+    for (const obj of this.seekerSprite.getGameObjects()) this.cinematic.ignoreOnUI(obj);
 
     // Ignore tilemap layers on UI camera
     tilemap.layers.forEach(layerData => {
@@ -230,14 +230,12 @@ export class GameScene extends Phaser.Scene {
     this.playerSprite.syncFromGameState(state.player);
     this.seekerSprite.syncFromGameState(state.seeker);
 
-    // Seeker visibility based on fog
-    const seekerObj = this.seekerSprite.getGameObject() as Phaser.GameObjects.Rectangle;
+    // Seeker visibility based on fog (body + facing indicator together)
     if (state.gameFlow.kind === 'hunt') {
       const seekerTile = pixelToTile(state.seeker.x, state.seeker.y);
-      seekerObj.setVisible(this.fogRenderer.isTileVisible(seekerTile.x, seekerTile.y));
+      this.seekerSprite.setVisible(this.fogRenderer.isTileVisible(seekerTile.x, seekerTile.y));
     } else {
-      // Countdown: seeker always visible
-      seekerObj.setVisible(true);
+      this.seekerSprite.setVisible(true);
     }
   }
 

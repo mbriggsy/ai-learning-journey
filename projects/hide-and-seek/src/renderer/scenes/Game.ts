@@ -61,8 +61,9 @@ export class GameScene extends Phaser.Scene {
     const { map: gameMap, spawns, collisionGrid, losGrid, doorObjects } = createGameMap(tiledData);
 
     // Create engine first (creates its own emitter), then set up door system with that emitter
+    const settings = getGameSettings();
     const gameState = createGameState(gameMap, spawns);
-    this.engine = new GameEngine(gameState);
+    this.engine = new GameEngine(gameState, settings.seekerDifficulty);
 
     // Create door system using engine's emitter for DOOR_TOGGLED events
     const doorSystem = createDoorSystem(
@@ -108,7 +109,6 @@ export class GameScene extends Phaser.Scene {
     });
 
     // --- End of round sequence ---
-    const settings = getGameSettings();
     this.endSequence = new EndOfRoundSequence(
       this, this.cinematic, this.pauseAuthority, this.fogRenderer, settings.reducedMotion,
     );

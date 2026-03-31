@@ -2,7 +2,7 @@ import type { GameMap } from '../types/state.js';
 import type { RoomId, RoomDefinition } from '../types/ai.js';
 import { DISPLAY } from '../constants.js';
 
-interface TiledRoomObject {
+export interface TiledRoomObject {
   readonly id: number;
   readonly name: string;
   readonly x: number;       // pixels

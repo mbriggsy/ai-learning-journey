@@ -18,15 +18,18 @@ function makeRoomObject(
   id: number, name: string, x: number, y: number, w: number, h: number,
   roomId?: string,
 ) {
-  return {
+  const obj: { id: number; name: string; x: number; y: number; width: number; height: number; properties?: Record<string, unknown> } = {
     id,
     name,
     x: x * TILE,
     y: y * TILE,
     width: w * TILE,
     height: h * TILE,
-    properties: roomId ? { roomId } : undefined,
   };
+  if (roomId) {
+    obj.properties = { roomId };
+  }
+  return obj;
 }
 
 describe('parseRooms', () => {

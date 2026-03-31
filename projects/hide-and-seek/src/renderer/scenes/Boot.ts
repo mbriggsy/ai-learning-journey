@@ -74,7 +74,10 @@ export class BootScene extends Phaser.Scene {
     }).setOrigin(0.5);
 
     // Load all game assets
-    this.load.image('tiles', 'assets/tilesets/placeholder.png');
+    this.load.spritesheet('tiles', 'assets/tilesets/placeholder.png', {
+      frameWidth: 32,
+      frameHeight: 32,
+    });
     this.load.tilemapTiledJSON('map', 'assets/maps/hideandseek.json');
 
     this.load.on('progress', (value: number) => {

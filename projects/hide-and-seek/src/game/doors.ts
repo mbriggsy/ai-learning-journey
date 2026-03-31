@@ -2,9 +2,10 @@ import type { DoorId, DoorState } from '../types/state.js';
 import type { GameEventMap } from '../types/events.js';
 import type { TypedEmitter } from '../types/events.js';
 import type { TiledObject } from './map.js';
-import { DISPLAY, DOOR } from '../constants.js';
+import { DISPLAY, DOOR, COLLISION } from '../constants.js';
 
 const TILE_SIZE = DISPLAY.TILE_SIZE;
+const HALF_HITBOX = COLLISION.PLAYER_HITBOX / 2;
 
 // --- Door system ---
 
@@ -86,11 +87,22 @@ export class DoorSystem {
     // Opening is always allowed
     if (!door.isOpen) return true;
 
-    // Closing: block if any entity occupies door tile
+    // Closing: block if any entity's HITBOX overlaps door tile
+    const doorLeft = door.position.x * TILE_SIZE;
+    const doorRight = doorLeft + TILE_SIZE;
+    const doorTop = door.position.y * TILE_SIZE;
+    const doorBottom = doorTop + TILE_SIZE;
+
     for (const entity of entities) {
-      const ex = Math.floor(entity.x / TILE_SIZE);
-      const ey = Math.floor(entity.y / TILE_SIZE);
-      if (ex === door.position.x && ey === door.position.y) return false;
+      const eLeft = entity.x - HALF_HITBOX;
+      const eRight = entity.x + HALF_HITBOX;
+      const eTop = entity.y - HALF_HITBOX;
+      const eBottom = entity.y + HALF_HITBOX;
+
+      // AABB overlap check
+      if (eRight > doorLeft && eLeft < doorRight && eBottom > doorTop && eTop < doorBottom) {
+        return false;
+      }
     }
     return true;
   }
@@ -174,9 +186,10 @@ export function createDoorSystem(
       continue;
     }
 
-    // Read isOpen from Tiled properties array
-    const isOpenProp = obj.properties?.find(p => p.name === 'isOpen');
-    const isOpen = isOpenProp?.value === true;
+    // Phaser flattens object layer properties into Record<string, unknown>
+    // Raw Tiled JSON has arrays, but we receive Phaser-parsed data
+    const props = obj.properties as Record<string, unknown> | undefined;
+    const isOpen = props?.['isOpen'] === true;
 
     const doorState: DoorState = {
       id,

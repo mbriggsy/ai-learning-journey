@@ -77,6 +77,8 @@ export class GameScene extends Phaser.Scene {
     this.pauseAuthority = new PauseAuthority(this.engine);
     this.cinematic = new CinematicManager(this);
     this.fogRenderer = new FogRenderer(this, gameMap.width, gameMap.height);
+    // Easy mode: no fog — see docs/design/vision-model-spec.md
+    this.fogRenderer.getLayer().setVisible(false);
 
     // Register fog layer with cinematic manager (UI camera ignores it)
     this.cinematic.ignoreOnUI(this.fogRenderer.getLayer());
@@ -282,13 +284,8 @@ export class GameScene extends Phaser.Scene {
     this.playerSprite.syncFromGameState(state.player);
     this.seekerSprite.syncFromGameState(state.seeker);
 
-    // Seeker visibility based on fog (body + facing indicator together)
-    if (state.gameFlow.kind === 'hunt') {
-      const seekerTile = pixelToTile(state.seeker.x, state.seeker.y);
-      this.seekerSprite.setVisible(this.fogRenderer.isTileVisible(seekerTile.x, seekerTile.y));
-    } else {
-      this.seekerSprite.setVisible(true);
-    }
+    // Easy mode: seeker always visible — see docs/design/vision-model-spec.md
+    this.seekerSprite.setVisible(true);
   }
 
   private updateFog(state: ReadonlyDeep<PlayingState>): void {

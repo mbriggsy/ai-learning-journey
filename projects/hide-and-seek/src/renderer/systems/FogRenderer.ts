@@ -137,6 +137,11 @@ export class FogRenderer {
     return this.fogState[tileY * this.mapWidth + tileX] === FOG_STATE.VISIBLE;
   }
 
+  /** Get raw fog state array (for TestBridge) */
+  getFogState(): Uint8Array {
+    return this.fogState;
+  }
+
   /** Transition from COUNTDOWN to HUNT — reset all fog to unexplored */
   transitionToHunt(): void {
     this.fogState.fill(FOG_STATE.UNEXPLORED);

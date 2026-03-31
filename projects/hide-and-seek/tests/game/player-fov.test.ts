@@ -1,6 +1,6 @@
 import { describe, it, expect } from 'vitest';
 import { GameEngine } from '../../src/game/engine.js';
-import type { PlayingState, GameMap } from '../../src/types/state.js';
+import type { PlayingState, GameMap, MutablePlayingState } from '../../src/types/state.js';
 import type { InputState } from '../../src/types/input.js';
 
 const STEP_MS = (1 / 60) * 1000;
@@ -46,7 +46,7 @@ describe('player FOV', () => {
 
   it('playerFov is recomputed after countdown→hunt transition', () => {
     const state = makePlayingState();
-    state.gameFlow = { kind: 'countdown', ticksRemaining: 1 };
+    (state as MutablePlayingState).gameFlow = { kind: 'countdown', ticksRemaining: 1 };
     const engine = new GameEngine(state);
 
     // Tick 1: countdown ends, transition to hunt, playerFov cleared
@@ -79,7 +79,7 @@ describe('GameStats', () => {
 
   it('tracks distance during hunt phase', () => {
     const state = makePlayingState();
-    state.gameFlow = { kind: 'hunt', ticksRemaining: 7200, ticksElapsed: 0 };
+    (state as MutablePlayingState).gameFlow = { kind: 'hunt', ticksRemaining: 7200, ticksElapsed: 0 };
     // Clear playerFov for hunt phase
     state.playerFov.fill(0);
     const engine = new GameEngine(state);

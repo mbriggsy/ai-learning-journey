@@ -13,6 +13,7 @@ import { PlayerSprite } from '../entities/PlayerSprite.js';
 import { SeekerSprite } from '../entities/SeekerSprite.js';
 import { setPauseAuthority } from './PauseMenu.js';
 import { getGameSettings } from './Boot.js';
+import { installTestBridge, removeTestBridge } from '../utils/TestBridge.js';
 import type { GameSceneData } from '../../types/scenes.js';
 import type { PlayingState, GameFlowKind } from '../../types/state.js';
 import type { ReadonlyDeep } from '../../types/utility.js';
@@ -131,8 +132,20 @@ export class GameScene extends Phaser.Scene {
       this.cinematic.destroy();
       this.engine.dispose();
       this.inputManager.dispose();
+      removeTestBridge();
       document.removeEventListener('visibilitychange', this.onVisibilityChange);
     });
+
+    // --- TestBridge (dev-only) ---
+    installTestBridge(
+      this,
+      () => {
+        const s = this.engine.getState();
+        return s.phase === 'playing' ? s as ReadonlyDeep<PlayingState> : null;
+      },
+      () => this.fogRenderer?.getFogState() ?? null,
+      () => this.cinematic?.getSplashText() ?? null,
+    );
 
     // Fade in
     this.cameras.main.fadeIn(CINEMATIC.SCENE_FADE_MS, 0, 0, 0);

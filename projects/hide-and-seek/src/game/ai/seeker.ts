@@ -255,6 +255,26 @@ function processActionQueue(
       }
       ai.actionQueue.shift();
       break;
+
+    case 'LOOK_AROUND': {
+      action.ticksRemaining--;
+      if (action.facingsRemaining.length > 0) {
+        const ticksPerDir = Math.max(1, Math.floor(action.ticksRemaining / action.facingsRemaining.length));
+        if (action.ticksRemaining % ticksPerDir === 0 && action.facingsRemaining.length > 1) {
+          action.facingsRemaining.shift();
+        }
+        const dir = action.facingsRemaining[0];
+        if (dir) {
+          render.facing = dir;
+          const angleMap = { right: 0, down: Math.PI / 2, left: Math.PI, up: -Math.PI / 2 } as const;
+          render.facingAngle = angleMap[dir];
+        }
+      }
+      if (action.ticksRemaining <= 0) {
+        ai.actionQueue.shift();
+      }
+      break;
+    }
   }
 }
 

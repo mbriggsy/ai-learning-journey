@@ -207,3 +207,51 @@ Both execute and review feed the knowledge store — via hooks, not hope. The ne
 ---
 
 *Built by Briggsy & Claude Code, powered by Skills 2.0, and a refusal to accept that AI sessions have to start from zero.*
+
+---
+
+## Appendix: Engineering the Skills
+
+We didn't just write these skills and ship them. We ran `/distill` through Anthropic's [Skill Creator](https://github.com/anthropics/skills) — the meta-skill that turns skill development from vibes into engineering.
+
+### A/B Eval Results
+
+3 test cases, 6 parallel subagents (with-skill + baseline for each):
+
+| Metric | /distill | No Skill | Delta |
+|--------|---------|----------|-------|
+| **Pass Rate** | 100% (18/18) | 33% (6/18) | **+67%** |
+| **Avg Tokens** | 26.6K | 28.4K | -1.8K |
+| **Avg Lines** | 49 | 101 | -52 |
+
+The skill doesn't make Claude smarter — it makes Claude **consistent**. Same quality content, half the length, perfect structure every time.
+
+### What the Baseline Gets Wrong
+
+Without the skill, Claude produces good documentation but with:
+- Inconsistent structure (5-7 sections with varying names vs exactly 5 every time)
+- No YAML frontmatter (2 of 3 baselines skipped it entirely)
+- 2x the line count (88-115 lines vs 47-53)
+- No sequential file numbering
+- Key Insights that restate the fix instead of generalizing
+
+### Windows Bug: `select.select()` on Pipes
+
+While running the Skill Creator's description optimizer, we hit `WinError 10038` — every trigger test returned 0%. Root cause: `run_eval.py` uses Python's `select.select()` to read subprocess pipes. On Windows, `select.select()` only works with sockets, not pipes. Every query silently failed.
+
+**The fix:** Replace `select.select()` with a threading-based reader — a background thread does blocking reads from the pipe and puts lines into a `queue.Queue`. The main loop pulls from the queue with a timeout. Same behavior, cross-platform.
+
+```python
+# Before (Unix-only):
+ready, _, _ = select.select([process.stdout], [], [], 1.0)
+
+# After (cross-platform):
+line_queue: queue.Queue[str | None] = queue.Queue()
+def _reader():
+    for raw_line in process.stdout:
+        line_queue.put(raw_line.decode("utf-8", errors="replace"))
+    line_queue.put(None)  # sentinel
+threading.Thread(target=_reader, daemon=True).start()
+```
+
+Anthropic merged this same fix on March 13, 2026 in `claude-plugins-official` ([`fix(run_eval): replace select.select with threading for Windows pipe compatibility`](https://github.com/anthropics/claude-plugins-official)). The `anthropic-agent-skills` plugin hasn't picked it up yet — we applied it locally.

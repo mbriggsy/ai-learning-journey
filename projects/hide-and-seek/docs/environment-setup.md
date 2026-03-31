@@ -146,15 +146,15 @@ For non-`ce:work` skills or projects without `docs/solutions/`, exits silently (
 
 ### Distill Reminder (`PostToolUse` → matcher `"Skill"`)
 
-**Problem:** After code review, agents don't remember to write solution docs for non-obvious findings.
+**Problem:** After executing work or reviewing code, agents don't remember to write solution docs for non-obvious findings.
 
 **Script:** `~/.claude/hooks/remind-distill.sh`
 
-**Behavior:** Intercepts every Skill tool invocation. If the skill is `ce:review`:
+**Behavior:** Intercepts every Skill tool invocation. If the skill is `ce:review` or `ce:work`:
 1. Checks if the project has a `docs/` directory
 2. Outputs a reminder to evaluate findings and run `/distill` if warranted
 
-For non-`ce:review` skills or projects without `docs/`, exits silently.
+For non-matching skills or projects without `docs/`, exits silently.
 
 **Status:** Installed 2026-03-31.
 

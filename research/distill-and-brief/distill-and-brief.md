@@ -11,14 +11,14 @@
 
 AI coding agents have amnesia. Each session starts from zero.
 
-When you spend 45 minutes discovering that Phaser silently flattens Tiled object properties from arrays to Records, that knowledge lives in the conversation. When the session ends, it evaporates. The next session hits the exact same wall.
+When you spend 45 minutes discovering that an async callback silently drops valid data because of a stale request ID, that knowledge lives in the conversation. When the session ends, it evaporates. The next session hits the exact same wall.
 
 ```
 Session 1: Debug for 45 min  -->  Find root cause  -->  Fix it  -->  Session ends
 Session 2: Debug for 45 min  -->  Find root cause  -->  "...wait, didn't we do this before?"
 ```
 
-Putting "remember to check past fixes" in instructions doesn't work. Instructions are hopes. Agents skip them, forget them, or deprioritize them under task pressure.
+Putting "remember to check past fixes" in instructions doesn't work. Agents skip them, forget them, or deprioritize them under task pressure. And humans forget to ask.
 
 **We needed mechanical enforcement.**
 
@@ -32,7 +32,7 @@ Two directions. Two skills. Two hooks. One feedback loop.
 flowchart LR
     subgraph DISTILL ["  /distill  "]
         direction TB
-        D1["Review finds\nnon-obvious root cause"]
+        D1["Work or review surfaces\nnon-obvious root cause"]
         D2["Hook fires:\n'Run /distill?'"]
         D3["Agent writes\nsolution doc"]
         D1 --> D2 --> D3
@@ -40,9 +40,9 @@ flowchart LR
 
     subgraph KB ["  docs/solutions/  "]
         direction TB
-        S1["001-seeker-frozen.md"]
-        S2["002-justdown-playwright.md"]
-        S3["003-tiled-property-flat.md"]
+        S1["001-async-callback-race.md"]
+        S2["002-keyboard-polling-bug.md"]
+        S3["003-silent-property-flatten.md"]
         S4["..."]
     end
 
@@ -64,8 +64,8 @@ flowchart LR
 
 ### The Flow in Plain English
 
-1. **After a code review**, a hook automatically asks: *"Did anything non-obvious come up? If so, run `/distill`."*
-2. **`/distill`** shows the agent what's already documented, provides a template, and auto-numbers the next file. The agent writes a focused solution doc.
+1. **After executing work or completing a review**, a hook automatically asks: *"Did anything non-obvious come up? If so, run `/distill`."*
+2. **`/distill`** shows the agent what's already documented, provides a template, and auto-numbers the next file. The agent writes a focused solution doc — or says "nothing to capture" and moves on.
 3. **Before the next work session**, a hook automatically injects summaries of every solution doc into the agent's context. No one has to remember. No one has to ask.
 4. **`/brief`** is also available on-demand — any time, any session, just ask.
 
@@ -89,11 +89,12 @@ flowchart TB
         FS["docs/solutions/*.md\n\nYAML frontmatter\n+ Problem\n+ Root Cause\n+ Fix\n+ Key Insight\n+ Also Applies To"]
     end
 
-    CE_REVIEW["/ce:review\n(code review)"] --> H2
+    EXECUTE["Execute\n(build, test, debug)"] --> H2
+    REVIEW["Review\n(code review)"] --> H2
     H2 -->|"reminds agent"| SK1
     SK1 -->|"writes"| FS
 
-    CE_WORK["/ce:work\n(start working)"] --> H1
+    EXECUTE2["Execute\n(start working)"] --> H1
     H1 -->|"injects summaries from"| FS
 
     SK2 -->|"reads on demand"| FS
@@ -101,8 +102,9 @@ flowchart TB
     style HOOKS fill:#1a1a2e,stroke:#e94560,color:#fff
     style SKILLS fill:#1a1a2e,stroke:#4ade80,color:#fff
     style STORE fill:#1a1a2e,stroke:#facc15,color:#fff
-    style CE_REVIEW fill:#0f3460,stroke:#60a5fa,color:#fff
-    style CE_WORK fill:#0f3460,stroke:#60a5fa,color:#fff
+    style EXECUTE fill:#0f3460,stroke:#60a5fa,color:#fff
+    style REVIEW fill:#0f3460,stroke:#60a5fa,color:#fff
+    style EXECUTE2 fill:#0f3460,stroke:#60a5fa,color:#fff
 ```
 
 ---
@@ -113,18 +115,18 @@ We considered several alternatives. Here's why we landed here.
 
 | Approach | Verdict | Why |
 |----------|---------|-----|
-| **CLAUDE.md instructions** ("check solutions before work") | Rejected | Instructions are suggestions. Agents skip them under task pressure. |
-| **ce:compound** (existing plugin skill) | Rejected | Spins up 5 parallel subagents, produces 150+ line docs. Overkill for our 40-line format. |
+| **Agent instructions** ("check solutions before work") | Rejected | Instructions are suggestions. Agents skip them under task pressure. |
+| **Existing plugin skill** (ce:compound) | Rejected | Spins up 5 parallel subagents, produces 150+ line docs. Overkill for our 40-line format. |
 | **Auto-triggering skills** (no hooks) | Rejected | Claude's own docs say it "tends to under-trigger." Unreliable for enforcement. |
 | **Hooks + custom skills** | Selected | Hooks fire deterministically. Skills handle the workflow. Best of both. |
 
 ### Design Principles
 
-**Hooks enforce WHEN.** They fire on every relevant skill invocation. Not optional. Not skippable. The pre-work hook has fired on every `/ce:work` since installation with zero misses.
+**Hooks enforce WHEN.** They fire on every relevant skill invocation. Not optional. Not skippable.
 
 **Skills handle HOW.** The `/distill` skill uses dynamic context injection (`!` backtick syntax) to preprocess existing solutions before the agent sees the prompt. This means the agent automatically sees what's already documented — preventing duplicates without anyone checking.
 
-**CLAUDE.md describes WHAT.** Three lines. What the folders are, what the skills do. No behavioral instructions. The behavior is mechanical.
+**Instructions describe WHAT.** Three lines in our project config. What the folders are, what the skills do. No behavioral instructions. The behavior is mechanical.
 
 ---
 
@@ -147,8 +149,8 @@ Seeker AI stops moving after 2-3 path requests. Visually frozen in place.
 ## Root Cause
 Async pathfinding callback fires after FSM state transition.
 New state's path request overwrites `latestRequestId`, but the old
-callback still references the stale ID. Guard check (`reqId !== latestRequestId`)
-silently drops the valid path.
+callback still references the stale ID. Guard check silently drops
+the valid path.
 
 ## Fix
 Added `pendingPath: boolean` to SeekerAIInternalState. Set on request,
@@ -165,47 +167,40 @@ request-ID-based supersession.
 
 ---
 
-## The Numbers
-
-| Metric | Value |
-|--------|-------|
-| Solution docs captured | 5 (and growing) |
-| Avg doc length | 45 lines |
-| Time to write (via /distill) | ~2 min |
-| Time saved per rediscovery avoided | 20-45 min |
-| Hook scripts | 2 (inject-solutions.sh, remind-distill.sh) |
-| Custom skills | 2 (/distill, /brief) |
-| Lines added to CLAUDE.md | 4 |
-| Human effort per session | Zero |
-
----
-
 ## The Bigger Picture
 
-This is one piece of a larger workflow we're building:
+This is one piece of a larger development workflow:
 
 ```mermaid
 flowchart LR
-    PLAN["/ce:plan\nPlan the work"] --> WORK["/ce:work\nDo the work"]
-    WORK --> REVIEW["/ce:review\nReview the work"]
-    REVIEW --> DISTILL["/distill\nCapture what we learned"]
-    DISTILL --> BRIEF["/brief\nBrief the next session"]
-    BRIEF -.->|"auto-injected\nvia hook"| WORK
+    PLAN["Plan"] --> EXECUTE["Execute"]
+    EXECUTE --> REVIEW["Review"]
+
+    EXECUTE -.->|"hook"| DISTILL["/distill"]
+    REVIEW -.->|"hook"| DISTILL
+
+    DISTILL -->|"writes"| KB["docs/solutions/"]
+    KB -->|"hook: auto-injects"| EXECUTE
+
+    BRIEF["/brief"] -.->|"on demand"| KB
 
     style PLAN fill:#0f3460,stroke:#60a5fa,color:#fff
-    style WORK fill:#0f3460,stroke:#60a5fa,color:#fff
+    style EXECUTE fill:#0f3460,stroke:#60a5fa,color:#fff
     style REVIEW fill:#0f3460,stroke:#60a5fa,color:#fff
     style DISTILL fill:#2d4a3e,stroke:#4ade80,color:#fff
+    style KB fill:#3b3520,stroke:#facc15,color:#fff
     style BRIEF fill:#1e3a5f,stroke:#60a5fa,color:#fff
 ```
 
-Plan. Work. Review. Distill. Brief. Repeat.
+Plan. Execute. Review. Distill. Brief. Repeat.
 
-Each cycle makes the next one better. The agents don't just complete tasks — they *compound their expertise* across sessions. The knowledge base grows. The rediscovery drops to zero. The velocity increases.
+Both execute and review feed the knowledge store — via hooks, not hope. The next session starts with everything the last session learned. Each cycle makes the next one better. The knowledge base grows. Rediscovery drops to zero. Velocity increases.
 
-**Instructions are hopes. Hooks are guarantees.**
+> *Currently implemented with the [compound-engineering](https://github.com/nichochar/compound-engineering) plugin for Claude Code. The pattern is tool-agnostic — any workflow with plan/execute/review steps can plug in.*
 
-That's the whole idea.
+---
+
+**Instructions are hopes. Hooks are guarantees. Humans forget too.**
 
 ---
 

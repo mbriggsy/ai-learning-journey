@@ -19,8 +19,9 @@
 - **Phase 2 code review PASSED (2026-03-30)** — 5 agents (TS, arch, perf, security, simplicity), zero blockers, all P1+P2 fixed
 - **Phase 3 EXECUTED (2026-03-30)** — fog of war + game flow, 125 tests, visually verified
 - **Phase 4 EXECUTED (2026-03-30)** — doors + minimap + sonar, 163 tests, visually verified
+- **Phase 5a EXECUTED (2026-03-30)** — seeker difficulty tiers + 4-state FSM, 223 tests
 - **Vision model LOCKED (2026-03-30)** — 4-tier flashlight tag, spec at `docs/design/vision-model-spec.md`
-- **Branch:** `feat/phase-0-scaffolding` pushed to origin (25 commits)
+- **Branch:** `feat/phase-0-scaffolding` pushed to origin (30 commits)
 
 ### Documents
 - Brainstorm: `docs/ideation/2026-03-29-hide-and-seek-brainstorm.md`
@@ -32,6 +33,33 @@
 - Phase 6b: `docs/plans/2026-03-29-008b-phase-6b-scoring-stats-plan.md`
 - Original Phase 5 (superseded): `docs/plans/2026-03-29-007-phase-5-ai-depth-spectator-plan.md`
 - Original Phase 6 (superseded): `docs/plans/2026-03-29-008-phase-6-sound-scoring-plan.md`
+
+## What We Did (2026-03-30, Session 11)
+- **EXECUTED Phase 5a: Seeker Difficulty Tiers** — 4-state FSM + 3 difficulty tiers
+- FSM refactor: SeekerFSM class with PatrolState, SuspiciousState, SearchState, ChaseState
+- Priority ordering: CHASE(3) > SEARCH(2) > SUSPICIOUS(1) > PATROL(0), pending transitions, error boundary
+- 3 tier configs: Easy (60° cone, random patrol, 1.5s reaction), Medium (90° cone, systematic patrol, 0.75s), Hard (120° cone, strategic patrol, 0.25s)
+- Vision cone detection: checkDetection() filters by facing angle + cone width (backwards compatible)
+- Path smoothing: Bresenham LOS + greedy string-pulling, per-tick validation against door changes
+- Room system: Tiled object layer parsing, BFS center-finding, adjacency detection, overlap warning
+- Room tracking: utility scoring (time 50% + distance 30% + adjacency 15% - recent 5%), completion lock
+- Evidence tracking (Hard AI): door snapshot at hunt start, doorsIOpened self-exclusion, lastToggleTick double-toggle catch
+- Hiding spots: pre-computed corners (L-shape walls), dead ends (1 neighbor), cover tiles (3+ walls)
+- Engine integration: canonical 9-step fixedUpdate, door evidence pipeline, Difficulty parameter, menace gauge
+- GameSettings: `seekerDifficulty: Difficulty` replaces old `difficulty: 'easy'`
+- LOOK_AROUND action: 4-direction rotation over configurable ticks
+- SEEKER_STATE_CHANGED event for renderer/UI hooks
+- facingAngle (continuous radians) on SeekerRenderState for smooth vision cone
+- **Serena MCP server REMOVED** — tested in shootout, find_referencing_symbols broken for TS. Grep/Read/Glob win.
+- Test baseline: **223 tests passing** (163 → 223, +60 new)
+- Build: typecheck clean, zero console spam
+- **Branch:** `feat/phase-0-scaffolding` pushed to origin (30 commits)
+
+## Next Steps
+1. **Visual testing** — run `pnpm dev`, play on Easy/Medium/Hard, verify seeker behavior differences
+2. **Tiled map: add Rooms object layer** — rectangle objects with roomId properties for Medium/Hard patrol
+3. **Phase 5b** — AI hider, spectator mode, vision cones rendered
+4. **Phase 6a** — audio + atmosphere
 
 ## What We Did (2026-03-30, Session 10)
 - **EXECUTED Phase 4: Doors + Minimap + Sonar** — full tactical layer

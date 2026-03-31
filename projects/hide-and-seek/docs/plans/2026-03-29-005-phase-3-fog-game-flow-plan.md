@@ -8,7 +8,7 @@ origin: docs/plans/2026-03-29-001-feat-hide-and-seek-game-plan.md
 agents: 13
 contradictions_resolved: 13
 executed: 2026-03-30
-reviewed:
+reviewed: 2026-03-30
 ---
 
 # Phase 3: Fog of War + Game Flow

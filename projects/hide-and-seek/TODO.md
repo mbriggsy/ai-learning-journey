@@ -230,7 +230,7 @@
 - [x] Phase 0: Scaffolding — EXECUTED + REVIEWED
 - [x] Phase 1: Map + Movement — EXECUTED + REVIEWED
 - [x] Phase 2: Seeker + Detection — EXECUTED + REVIEWED
-- [x] Phase 3: Fog of War + Game Flow — EXECUTED, **NEEDS CODE REVIEW**
+- [x] Phase 3: Fog of War + Game Flow — EXECUTED + REVIEWED (5 agents, P1 quit flow fixed, ~42 LOC dead code removed)
 - [ ] Phase 4: Doors + Minimap
 - [ ] Phase 5a: Seeker Tiers
 - [ ] Phase 5b: Hider + Spectator

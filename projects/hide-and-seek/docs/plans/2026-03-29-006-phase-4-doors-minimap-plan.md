@@ -1,13 +1,13 @@
 ---
 title: "Phase 4: Doors + Minimap"
 type: feat
-status: deepened
+status: executed
 date: 2026-03-29
 deepened: 2026-03-30
+executed: 2026-03-30
 origin: docs/plans/2026-03-29-001-feat-hide-and-seek-game-plan.md
 agents: 14
 contradictions_resolved: 13
-executed:
 reviewed:
 ---
 
@@ -129,8 +129,8 @@ HuntPhase.sonarTicksUntilPing decrements each fixedUpdate tick
 
 ### Types (`src/types/state.ts`, `src/types/events.ts`)
 
-- [ ] `DoorId` branded type: `string & { readonly [DoorIdBrand]: never }`
-- [ ] `DoorState` interface:
+- [x] `DoorId` branded type: `string & { readonly [DoorIdBrand]: never }`
+- [x] `DoorState` interface:
   ```typescript
   interface DoorState {
     readonly id: DoorId;
@@ -139,10 +139,10 @@ HuntPhase.sonarTicksUntilPing decrements each fixedUpdate tick
     readonly lastToggleTick: number; // for cooldown
   }
   ```
-- [ ] Add `doors: ReadonlyMap<DoorId, DoorState>` to `PlayingState`
-- [ ] Add `sonarTicksUntilPing: number` to `HuntPhase` variant
-- [ ] Add `doorGeneration: number` to `PlayingState` (monotonic counter)
-- [ ] Add to `GameEventMap`:
+- [x] Add `doors: ReadonlyMap<DoorId, DoorState>` to `PlayingState`
+- [x] Add `sonarTicksUntilPing: number` to `HuntPhase` variant
+- [x] Add `doorGeneration: number` to `PlayingState` (monotonic counter)
+- [x] Add to `GameEventMap`:
   ```typescript
   DOOR_TOGGLED: [payload: {
     readonly id: DoorId;
@@ -157,50 +157,50 @@ HuntPhase.sonarTicksUntilPing decrements each fixedUpdate tick
 
 ### Door Logic (`src/game/doors.ts` — NEW)
 
-- [ ] `createDoorStates(tiledObjects): Map<DoorId, DoorState>` — factory function
+- [x] `createDoorStates(tiledObjects): Map<DoorId, DoorState>` — factory function
   - Parse Tiled Object Layer objects: pixel-to-tile conversion with `Math.floor(pixelX / TILE_SIZE)`
   - Brand raw string IDs as `DoorId` after validating non-empty and unique
   - Validate tile coordinates within map bounds (reject out-of-bounds, log error)
   - Read `isOpen` property from Tiled (default: `false`)
   - Build tile-keyed lookup `Map<string, DoorId>` keyed on `${tileX},${tileY}` for `getDoorAt` O(1)
-- [ ] `getDoorAt(position: TileCoord): DoorState | undefined` — O(1) via tile-keyed map
-- [ ] `getNearestDoor(position: TileCoord, rangeTiles: number): DoorState | undefined` — returns nearest by euclidean distance, tiebreak by DoorId
-- [ ] `canToggleDoor(door: DoorState, entities: ReadonlyArray<{x: number, y: number}>, currentTick: number): boolean`
+- [x] `getDoorAt(position: TileCoord): DoorState | undefined` — O(1) via tile-keyed map
+- [x] `getNearestDoor(position: TileCoord, rangeTiles: number): DoorState | undefined` — returns nearest by euclidean distance, tiebreak by DoorId
+- [x] `canToggleDoor(door: DoorState, entities: ReadonlyArray<{x: number, y: number}>, currentTick: number): boolean`
   - Opening: always allowed
   - Closing: check no entity occupies door tile (`pixelToTile(entity.x) === door.position`)
   - Cooldown: `currentTick - door.lastToggleTick >= DOOR_TOGGLE_COOLDOWN_TICKS`
-- [ ] `toggleDoor(id: DoorId): boolean` — returns false if unknown id (dev assertion + production safety)
+- [x] `toggleDoor(id: DoorId): boolean` — returns false if unknown id (dev assertion + production safety)
   - Creates NEW DoorState object with flipped boolean (immutable update, not mutation)
   - Increments `doorGeneration`
   - Toggles LOS blocking byte in Uint8Array
   - Updates pathfinding tile cost
   - Emits `DOOR_TOGGLED` event
-- [ ] `setDoorState(id: DoorId, isOpen: boolean): boolean` — idempotent, for seeker AI. No-op if already in desired state.
+- [x] `setDoorState(id: DoorId, isOpen: boolean): boolean` — idempotent, for seeker AI. No-op if already in desired state.
 
 ### Door Affects Existing Systems
 
-- [ ] `los.ts` — `isBlocking(x, y)` already reads Uint8Array. `toggleDoor()` toggles the byte directly. No code change needed in los.ts itself — the blocking array IS the API. **FOV dirty flag**: check `doorGeneration !== lastFovDoorGeneration` alongside tile-change check. Force recompute for BOTH player and seeker on mismatch.
-- [ ] `pathfinding.ts` — on door toggle:
+- [x] `los.ts` — `isBlocking(x, y)` already reads Uint8Array. `toggleDoor()` toggles the byte directly. No code change needed in los.ts itself — the blocking array IS the API. **FOV dirty flag**: check `doorGeneration !== lastFovDoorGeneration` alongside tile-change check. Force recompute for BOTH player and seeker on mismatch.
+- [x] `pathfinding.ts` — on door toggle:
   - Closed: `easystar.setAdditionalPointCost(doorX, doorY, 50)` (high cost, not blocked)
   - Opened: `easystar.removeAdditionalPointCost(doorX, doorY)`
   - Cancel seeker's current path: `cancelPath(pendingPathInstanceId)` — guard against undefined
   - Re-request path with `doorGeneration` stamp. On callback: if `doorGenerationAtRequest !== currentDoorGeneration`, discard stale path and re-request.
-- [ ] `movement.ts` — closed doors block player movement (collision grid Uint8Array toggled by `toggleDoor`)
-- [ ] `engine.ts` — `createGameState()` includes door initialization from map data. "Play Again" gets fresh doors.
+- [x] `movement.ts` — closed doors block player movement (collision grid Uint8Array toggled by `toggleDoor`)
+- [x] `engine.ts` — `createGameState()` includes door initialization from map data. "Play Again" gets fresh doors.
 
 ### Door Interaction (`src/game/engine.ts` fixedUpdate)
 
-- [ ] In fixedUpdate interaction handling:
+- [x] In fixedUpdate interaction handling:
   - Check `input.interactPressed` (consumed-flag, Phase 1 pattern — true on first tick of keydown only)
   - `getNearestDoor(playerTilePos, INTERACTION.DOOR_RANGE)` — use existing constant
   - `canToggleDoor(door, [player, seeker], currentTick)` — occupancy + cooldown check
   - `toggleDoor(door.id)` — cascades to LOS, pathfinding, events
   - If `canToggleDoor` returns false: no action (future: visual/audio feedback)
-- [ ] Gate behind phase check: only during `COUNTDOWN` and `HUNT` (not during FOUND/SURVIVED cinematics)
+- [x] Gate behind phase check: only during `COUNTDOWN` and `HUNT` (not during FOUND/SURVIVED cinematics)
 
 ### Action Layer (`src/game/ai/actions.ts` — NEW, deferred from Phase 2)
 
-- [ ] `Action` discriminated union:
+- [x] `Action` discriminated union:
   ```typescript
   type Action =
     | { readonly type: 'MOVE_TO'; readonly target: TileCoord }
@@ -208,48 +208,48 @@ HuntPhase.sonarTicksUntilPing decrements each fixedUpdate tick
     | { readonly type: 'WAIT'; readonly ticks: number }
     | { readonly type: 'REQUEST_PATH'; readonly target: TileCoord };
   ```
-- [ ] `ActionQueue` — simple array, process head action each tick:
+- [x] `ActionQueue` — simple array, process head action each tick:
   - `MOVE_TO`: walk toward target tile (simple dx/dy + collision). Complete when on tile.
   - `OPEN_DOOR`: call `setDoorState(doorId, true)`. Complete immediately.
   - `WAIT`: decrement ticks counter. Complete when 0.
   - `REQUEST_PATH`: call pathfinding.requestPath(). Complete when path callback fires.
-- [ ] Integrate with seeker FSM: FSM decides strategy, pushes actions to queue. Queue executes tactics.
+- [x] Integrate with seeker FSM: FSM decides strategy, pushes actions to queue. Queue executes tactics.
 
 ### Seeker Door-Opening Behavior
 
-- [ ] In seeker movement (following EasyStar path):
+- [x] In seeker movement (following EasyStar path):
   - When next waypoint is a closed door tile: push action sequence `[MOVE_TO(adjacent tile), OPEN_DOOR(doorId), WAIT(3 ticks), REQUEST_PATH(destination)]`
   - Detection: check `getDoorAt(nextWaypoint)` — if exists and `!isOpen`, trigger door-opening sequence
-- [ ] CHASE behavior: if within 3 tiles of closed door that player went through, prefer opening door over pathing around
-- [ ] PATROL behavior: seeker paths through doors at high cost (setTileCost handles this automatically)
-- [ ] Fallback: if seeker stuck at door for > 5 seconds (300 ticks), log warning, teleport past door (fade out/in)
+- [x] CHASE behavior: if within 3 tiles of closed door that player went through, prefer opening door over pathing around
+- [x] PATROL behavior: seeker paths through doors at high cost (setTileCost handles this automatically)
+- [x] Fallback: if seeker stuck at door for > 5 seconds (300 ticks), log warning, teleport past door (fade out/in)
 
 ### Door Rendering (`src/renderer/entities/DoorSprite.ts`)
 
-- [ ] Factory function `createDoorSprite(scene, door, tileset): Phaser.GameObjects.Sprite`
+- [x] Factory function `createDoorSprite(scene, door, tileset): Phaser.GameObjects.Sprite`
   - Position from door.position (tile-to-pixel conversion)
   - Validate BOTH frame names ("door_open", "door_closed") at construction — if missing, tint magenta + log error
   - Set initial frame based on `door.isOpen`
-- [ ] `updateDoorVisual(sprite, isOpen): void` — swap frame
-- [ ] Subscribe to `DOOR_TOGGLED` event (push-based, not polling):
+- [x] `updateDoorVisual(sprite, isOpen): void` — swap frame
+- [x] Subscribe to `DOOR_TOGGLED` event (push-based, not polling):
   ```typescript
   emitter.on('DOOR_TOGGLED', ({ id, isOpen }) => {
     const sprite = doorSprites.get(id);
     if (sprite) updateDoorVisual(sprite, isOpen);
   });
   ```
-- [ ] Depth: at Walls layer depth (DEPTH.WALLS or equivalent)
+- [x] Depth: at Walls layer depth (DEPTH.WALLS or equivalent)
 
 ### Input (`src/renderer/systems/InputManager.ts`)
 
-- [ ] `interact` already exists in InputState from Phase 1 (E key + Xbox A button mapping)
-- [ ] Phase 4 activates the existing `interact` field — no new mapping needed
-- [ ] Consumed-flag pattern (Phase 1): `interactPressed` is true on first tick of keydown only, consumed after one fixedUpdate read
-- [ ] Gameplay cooldown (500ms) is tracked in DoorState.lastToggleTick, NOT in input layer
+- [x] `interact` already exists in InputState from Phase 1 (E key + Xbox A button mapping)
+- [x] Phase 4 activates the existing `interact` field — no new mapping needed
+- [x] Consumed-flag pattern (Phase 1): `interactPressed` is true on first tick of keydown only, consumed after one fixedUpdate read
+- [x] Gameplay cooldown (500ms) is tracked in DoorState.lastToggleTick, NOT in input layer
 
 ### Minimap (`src/renderer/systems/MinimapManager.ts` — NEW)
 
-- [ ] Create second Phaser Camera:
+- [x] Create second Phaser Camera:
   ```typescript
   const minimap = scene.cameras.add(
     gameWidth - MINIMAP.WIDTH - MINIMAP.MARGIN,
@@ -258,43 +258,43 @@ HuntPhase.sonarTicksUntilPing decrements each fixedUpdate tick
     false, 'minimap'
   );
   ```
-- [ ] Configure camera:
+- [x] Configure camera:
   - `setZoom(MINIMAP.WIDTH / mapWidthPx)` — computed dynamically from map size
   - `setBounds(0, 0, mapWidthPx, mapHeightPx)` — full map
   - `startFollow(playerSprite, true)` — `true` enables rounding for pixelArt
   - `setBackgroundColor(0x000000)`
-- [ ] Minimap-only indicators (ignored by main camera):
+- [x] Minimap-only indicators (ignored by main camera):
   - **Player dot**: `scene.add.circle(0, 0, 48, 0x0088FF)` — blue (colorblind-safe), depth 200
   - **Door indicators**: rectangles, red (0xFF4444) closed / green (0x44FF44) open, depth 150. Subscribe to DOOR_TOGGLED for color updates.
   - **Seeker blip**: orange (0xFF8800) circle, depth 190. Only visible during sonar ping.
-- [ ] `scene.cameras.main.ignore([playerDot, doorIndicators, seekerBlip])` — main camera ignores minimap-only objects
-- [ ] **CRITICAL**: `camera.ignore()` doesn't auto-apply to objects added later. Call after ALL minimap objects are created.
-- [ ] Minimap border: `scene.add.rectangle(...)` with strokeStyle, `setScrollFactor(0)`, depth 1000. Minimap camera ignores border.
-- [ ] Fog overlay (black-tile TilemapLayer) renders automatically on both cameras — no extra work for fog on minimap
-- [ ] Visibility: `minimap.setVisible(true)` during COUNTDOWN/HUNT, `minimap.setVisible(false)` during FOUND/SURVIVED/PAUSED
-- [ ] Exclude from CinematicManager: minimap camera must NOT be affected by zoom/pan/flash/shake effects
-- [ ] Implement `Disposable` interface: `destroy()` removes minimap camera and all indicators
-- [ ] Cleanup in scene shutdown handler
+- [x] `scene.cameras.main.ignore([playerDot, doorIndicators, seekerBlip])` — main camera ignores minimap-only objects
+- [x] **CRITICAL**: `camera.ignore()` doesn't auto-apply to objects added later. Call after ALL minimap objects are created.
+- [x] Minimap border: `scene.add.rectangle(...)` with strokeStyle, `setScrollFactor(0)`, depth 1000. Minimap camera ignores border.
+- [x] Fog overlay (black-tile TilemapLayer) renders automatically on both cameras — no extra work for fog on minimap
+- [x] Visibility: `minimap.setVisible(true)` during COUNTDOWN/HUNT, `minimap.setVisible(false)` during FOUND/SURVIVED/PAUSED
+- [x] Exclude from CinematicManager: minimap camera must NOT be affected by zoom/pan/flash/shake effects
+- [x] Implement `Disposable` interface: `destroy()` removes minimap camera and all indicators
+- [x] Cleanup in scene shutdown handler
 
 ### Constants (`src/constants.ts`)
 
-- [ ] `DOOR_TOGGLE_COOLDOWN_TICKS: 30` (500ms at 60 tick/s)
-- [ ] `DOOR_PATHFINDING_COST: 50` (closed door tile cost for EasyStar)
-- [ ] `SONAR_RING_DURATION_MS: 1500`
-- [ ] `SONAR_BLIP_HOLD_DURATION_MS: 2000`
-- [ ] `SONAR_BLIP_FADE_DURATION_MS: 1000`
-- [ ] `SONAR_RING_MAX_RADIUS_TILES: 15`
-- [ ] `MINIMAP: { WIDTH: 200, HEIGHT: 150, MARGIN: 10 }` (zoom computed dynamically)
-- [ ] Note: `TIMERS.SONAR_PING_INTERVAL_S: 5` and `INTERACTION.DOOR_RANGE: 1.5` already exist in Phase 0
+- [x] `DOOR_TOGGLE_COOLDOWN_TICKS: 30` (500ms at 60 tick/s)
+- [x] `DOOR_PATHFINDING_COST: 50` (closed door tile cost for EasyStar)
+- [x] `SONAR_RING_DURATION_MS: 1500`
+- [x] `SONAR_BLIP_HOLD_DURATION_MS: 2000`
+- [x] `SONAR_BLIP_FADE_DURATION_MS: 1000`
+- [x] `SONAR_RING_MAX_RADIUS_TILES: 15`
+- [x] `MINIMAP: { WIDTH: 200, HEIGHT: 150, MARGIN: 10 }` (zoom computed dynamically)
+- [x] Note: `TIMERS.SONAR_PING_INTERVAL_S: 5` and `INTERACTION.DOOR_RANGE: 1.5` already exist in Phase 0
 
 ### Sonar Ping — Game Layer (`src/game/engine.ts`)
 
-- [ ] In HuntPhase: `sonarTicksUntilPing` initialized to `Math.round(TIMERS.SONAR_PING_INTERVAL_S / FIXED_STEP_S)`
-- [ ] First ping DELAYED by full interval (no immediate ping at hunt start)
-- [ ] In fixedUpdate during HUNT: decrement `sonarTicksUntilPing`. When 0:
+- [x] In HuntPhase: `sonarTicksUntilPing` initialized to `Math.round(TIMERS.SONAR_PING_INTERVAL_S / FIXED_STEP_S)`
+- [x] First ping DELAYED by full interval (no immediate ping at hunt start)
+- [x] In fixedUpdate during HUNT: decrement `sonarTicksUntilPing`. When 0:
   - Emit `SONAR_PING_DUE` event with `{ seekerX, seekerY }` (world pixel coordinates)
   - Reset counter
-- [ ] Exhaustive phase check with `assertNever`:
+- [x] Exhaustive phase check with `assertNever`:
   ```typescript
   switch (state.gameFlow.kind) {
     case 'hunt': /* fire sonar */ break;
@@ -302,31 +302,31 @@ HuntPhase.sonarTicksUntilPing decrements each fixedUpdate tick
     default: assertNever(state.gameFlow);
   }
   ```
-- [ ] Timer frozen when PauseAuthority is active (fixedUpdate doesn't run)
+- [x] Timer frozen when PauseAuthority is active (fixedUpdate doesn't run)
 
 ### Sonar Ping — Renderer (`src/renderer/systems/SonarPing.ts`)
 
-- [ ] Subscribe to `SONAR_PING_DUE` event
-- [ ] Ring: reuse a single `Phaser.GameObjects.Graphics` object (zero-allocation per ping)
+- [x] Subscribe to `SONAR_PING_DUE` event
+- [x] Ring: reuse a single `Phaser.GameObjects.Graphics` object (zero-allocation per ping)
   - `scene.cameras.main.ignore(ring)` — minimap-only
   - Draw `strokeCircle`, animate via `tweens.addCounter` with Sine.easeOut
   - Depth 180 (above fog, below player dot)
-- [ ] Distance-based blip reveal: in tween `onUpdate`:
+- [x] Distance-based blip reveal: in tween `onUpdate`:
   - Compare `currentRadius` to `Phaser.Math.Distance.Between(player, seeker)`
   - When `Math.abs(radius - seekerDist) < dynamicThreshold` → show blip
   - Dynamic threshold: `BLIP_THRESHOLD + (progress * 8)` (ring slows at edges)
   - `blippedThisPing` flag prevents double-blip
-- [ ] Blip: `scene.add.circle(seekerX, seekerY, 40, 0xFF8800)` — orange, depth 190
+- [x] Blip: `scene.add.circle(seekerX, seekerY, 40, 0xFF8800)` — orange, depth 190
   - Main camera ignores blip
   - Hold 2s, fade 1s via tween
-- [ ] `destroy()`: kill all active tweens, hide ring/blip, `isAnimating = false`
-- [ ] On `PHASE_CHANGED` != hunt: call `destroy()` immediately (clean cinematics)
-- [ ] Implement `Disposable` interface
-- [ ] Cleanup in scene shutdown handler (unsubscribe events, kill tweens)
+- [x] `destroy()`: kill all active tweens, hide ring/blip, `isAnimating = false`
+- [x] On `PHASE_CHANGED` != hunt: call `destroy()` immediately (clean cinematics)
+- [x] Implement `Disposable` interface
+- [x] Cleanup in scene shutdown handler (unsubscribe events, kill tweens)
 
 ### Unit Tests
 
-- [ ] `tests/game/doors.test.ts`:
+- [x] `tests/game/doors.test.ts`:
   - toggleDoor flips isOpen, increments doorGeneration
   - toggleDoor returns false for unknown DoorId (dev assertion)
   - canToggleDoor blocks close when entity on tile
@@ -338,54 +338,54 @@ HuntPhase.sonarTicksUntilPing decrements each fixedUpdate tick
   - createDoorStates parses Tiled objects with pixel-to-tile conversion
   - createDoorStates rejects out-of-bounds coordinates
   - createDoorStates validates unique tile positions
-- [ ] `tests/game/doors-los.test.ts`:
+- [x] `tests/game/doors-los.test.ts`:
   - Closed door blocks LOS (isBlocking returns true)
   - Open door does not block LOS
   - Door toggle invalidates FOV dirty flag (doorGeneration check)
   - FOV recomputes for BOTH player and seeker on door toggle
   - FOV is correct through 1-tile-wide doorway at various angles
-- [ ] `tests/game/doors-pathfinding.test.ts`:
+- [x] `tests/game/doors-pathfinding.test.ts`:
   - Closed door has high cost (path prefers open routes)
   - Seeker CAN path through closed door (not fully blocked)
   - Path callback with stale doorGeneration is discarded
   - cancelPath called on every door toggle
   - Path cost comparison: open route vs door route (door only chosen when significantly shorter)
-- [ ] `tests/game/ai/actions.test.ts`:
+- [x] `tests/game/ai/actions.test.ts`:
   - Action queue processes MOVE_TO → arrives at target → completes
   - OPEN_DOOR calls setDoorState(id, true) — idempotent
   - WAIT decrements ticks → completes at 0
   - Full sequence: MOVE_TO → OPEN_DOOR → WAIT → REQUEST_PATH
   - Empty queue: no-op, seeker idle
-- [ ] `tests/game/sonar.test.ts`:
+- [x] `tests/game/sonar.test.ts`:
   - Timer fires at correct tick interval
   - Timer suppressed in non-HUNT phases (assertNever coverage)
   - Timer frozen during pause
   - First ping delayed by full interval (not immediate)
   - SONAR_PING_DUE event includes seeker position
-- [ ] `tests/integration/doors-game-flow.test.ts`:
+- [x] `tests/integration/doors-game-flow.test.ts`:
   - Door interaction during COUNTDOWN phase (allowed)
   - Door interaction during FOUND phase (blocked)
   - Play Again resets all doors to initial Tiled state
   - Seeker opens door and continues path
   - Player closes door → LOS breaks → seeker loses sight
-- [ ] Determinism test: 100 identical runs with doors, hash final GameState, assert all match
-- [ ] Performance benchmark: `isBlocking` with doors < 0.5ms per FOV calc at 50x50
+- [x] Determinism test: 100 identical runs with doors, hash final GameState, assert all match
+- [x] Performance benchmark: `isBlocking` with doors < 0.5ms per FOV calc at 50x50
 
 ### Playwright Tests (with TestBridge)
 
-- [ ] `e2e/doors.spec.ts`:
+- [x] `e2e/doors.spec.ts`:
   - Approach door, press E, verify visual state change via TestBridge (`window.__GAME_TEST__.getDoorState(id)`)
   - Verify door blocks player movement when closed
   - Verify cooldown prevents rapid toggling
-- [ ] `e2e/minimap.spec.ts`:
+- [x] `e2e/minimap.spec.ts`:
   - Minimap camera exists (TestBridge: `window.__GAME_TEST__.getMinimapCamera()`)
   - Player dot visible on minimap (screenshot comparison)
   - Fog states reflected on minimap
-- [ ] `e2e/sonar.spec.ts`:
+- [x] `e2e/sonar.spec.ts`:
   - Sonar ring animation fires during HUNT phase
   - Blip appears at seeker position on minimap
   - No sonar during COUNTDOWN
-- [ ] `e2e/minimap-isolation.spec.ts`:
+- [x] `e2e/minimap-isolation.spec.ts`:
   - CinematicManager zoom does NOT affect minimap camera
   - Minimap hidden during FOUND/SURVIVED sequences
 

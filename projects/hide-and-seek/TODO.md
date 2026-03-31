@@ -231,7 +231,7 @@
 - [x] Phase 1: Map + Movement — EXECUTED + REVIEWED
 - [x] Phase 2: Seeker + Detection — EXECUTED + REVIEWED
 - [x] Phase 3: Fog of War + Game Flow — EXECUTED + REVIEWED (5 agents, P1 quit flow fixed, ~42 LOC dead code removed)
-- [ ] Phase 4: Doors + Minimap
+- [x] Phase 4: Doors + Minimap — EXECUTED (163 tests, +38 new)
 - [ ] Phase 5a: Seeker Tiers
 - [ ] Phase 5b: Hider + Spectator
 - [ ] Phase 6a: Audio + Atmosphere
@@ -293,9 +293,9 @@ Phase 3 fixes (apply during Phase 3 execution):
 - [ ] Clarify that EndOfRoundSequence will be replaced by Phase 7 with richer animation code
 
 Phase 4 fixes (apply during Phase 4 execution):
-- [ ] Minimap position: change from top-right to **bottom-right** (Phase 7 layout is more considered — all HUD on right side)
-- [ ] Minimap size: change from 200x150 to ~160x160 (Phase 7 spec)
-- [ ] Document stable tile indices for door_open/door_closed frames
+- [x] Minimap position: change from top-right to **bottom-right** ✓ (implemented bottom-right)
+- [x] Minimap size: change from 200x150 to ~160x160 ✓ (MINIMAP.WIDTH=160, MINIMAP.HEIGHT=160)
+- [x] Document stable tile indices for door_open/door_closed frames ✓ (FRAME_DOOR_CLOSED=3, FRAME_DOOR_OPEN=4 in DoorSprite.ts)
 
 Phase 5a fix (apply during Phase 5a execution):
 - [ ] Document FSM state → animation mapping (PATROL=walk, SUSPICIOUS=walk/idle, SEARCH=walk, CHASE=chase)
@@ -310,8 +310,8 @@ Phase 6b fix (apply during Phase 6b execution):
 - [x] Execute Phase 0: Project Scaffolding ✓ (2026-03-30, Session 7)
 - [x] Execute Phase 1: Map + Movement ✓ (2026-03-30, Session 7)
 - [x] Execute Phase 2: Seeker + Detection ✓ (2026-03-30, Session 8)
-- [ ] Execute Phase 3: Fog of War + Game Flow
-- [ ] Execute Phase 4: Doors + Minimap
+- [x] Execute Phase 3: Fog of War + Game Flow ✓
+- [x] Execute Phase 4: Doors + Minimap ✓
 - [ ] Execute Phase 5a: Seeker Difficulty Tiers
 - [ ] Execute Phase 5b: AI Hider + Spectator
 - [ ] Execute Phase 6a: Audio Atmosphere

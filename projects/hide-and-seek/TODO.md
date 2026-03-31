@@ -55,11 +55,28 @@
 - Build: typecheck clean, zero console spam
 - **Branch:** `feat/phase-0-scaffolding` pushed to origin (30 commits)
 
+## BLOCKER: Seeker not moving
+**Root cause:** PatrolState has no "waiting for path" guard. Every tick, `isPathComplete()` returns true (no path yet), so `pickTarget()` fires again, calling `requestPathTo()`, which increments `latestRequestId`, which invalidates the previous callback. Seeker never receives a path that sticks.
+
+**Fix (exact):**
+1. `src/game/ai/seeker-fsm.ts` — add `pendingPath: boolean` to `SeekerAIInternalState`, default `false`
+2. `requestPathTo()` — set `ctx.ai.pendingPath = true` before requesting, clear it in the callback (`ctx.ai.pendingPath = false`)
+3. `src/game/ai/states/patrol-state.ts` line ~31 — in `onUpdate`, change the `isPathComplete` check to:
+   ```typescript
+   if (isPathComplete(ctx.ai) && !ctx.ai.pendingPath) {
+     this.pickTarget(ctx);
+     return;
+   }
+   ```
+4. Apply same guard in `search-state.ts` and `chase-state.ts` where paths are requested
+5. Also check: `suspicious-state.ts` calls `requestPathTo` in `onEnter` — needs the same guard in `onUpdate`
+
 ## Next Steps
-1. **Visual testing** — run `pnpm dev`, play on Easy/Medium/Hard, verify seeker behavior differences
-2. **Tiled map: add Rooms object layer** — rectangle objects with roomId properties for Medium/Hard patrol
-3. **Phase 5b** — AI hider, spectator mode, vision cones rendered
-4. **Phase 6a** — audio + atmosphere
+1. **Fix seeker movement blocker** (above)
+2. **Visual testing** — run `pnpm dev`, play on Easy/Medium/Hard, verify seeker behavior differences
+3. **Tiled map: add Rooms object layer** — rectangle objects with roomId properties for Medium/Hard patrol
+4. **Phase 5b** — AI hider, spectator mode, vision cones rendered
+5. **Phase 6a** — audio + atmosphere
 
 ## What We Did (2026-03-30, Session 10)
 - **EXECUTED Phase 4: Doors + Minimap + Sonar** — full tactical layer

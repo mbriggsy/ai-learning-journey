@@ -19,7 +19,7 @@
 - **Phase 2 code review PASSED (2026-03-30)** — 5 agents (TS, arch, perf, security, simplicity), zero blockers, all P1+P2 fixed
 - **Phase 3 EXECUTED (2026-03-30)** — fog of war + game flow, 125 tests, visually verified
 - **Phase 4 EXECUTED (2026-03-30)** — doors + minimap + sonar, 163 tests, visually verified
-- **Phase 5a EXECUTED (2026-03-30)** — seeker difficulty tiers + 4-state FSM, 223 tests
+- **Phase 5a EXECUTED (2026-03-30)** — seeker difficulty tiers + 4-state FSM, 211 tests (dead module removed Session 12)
 - **Phase 5a BLOCKER FIXED (2026-03-31)** — pendingPath guard, seeker moves, code reviewed (4 agents), dead code removed
 - **Vision model LOCKED (2026-03-30)** — 4-tier flashlight tag, spec at `docs/design/vision-model-spec.md`
 - **Branch:** `feat/phase-0-scaffolding` pushed to origin

@@ -129,6 +129,35 @@ Custom shell scripts that run before/after tool calls. Configured in `~/.claude/
 
 **Status:** Installed 2026-03-30, needs session restart to verify.
 
+### Solution Injector (`PreToolUse` → matcher `"Skill"`)
+
+**Problem:** Agents start work without awareness of previously documented root causes, risking repeat debugging.
+
+**Script:** `~/.claude/hooks/inject-solutions.sh`
+
+**Behavior:** Intercepts every Skill tool invocation. If the skill is `ce:work`:
+1. Reads all `.md` files from `docs/solutions/` (if the directory exists)
+2. Extracts title and key insight from each
+3. Injects summaries as context so the agent starts work with full solution awareness
+
+For non-`ce:work` skills or projects without `docs/solutions/`, exits silently (no interference).
+
+**Status:** Installed 2026-03-31.
+
+### Distill Reminder (`PostToolUse` → matcher `"Skill"`)
+
+**Problem:** After code review, agents don't remember to write solution docs for non-obvious findings.
+
+**Script:** `~/.claude/hooks/remind-distill.sh`
+
+**Behavior:** Intercepts every Skill tool invocation. If the skill is `ce:review`:
+1. Checks if the project has a `docs/` directory
+2. Outputs a reminder to evaluate findings and run `/distill` if warranted
+
+For non-`ce:review` skills or projects without `docs/`, exits silently.
+
+**Status:** Installed 2026-03-31.
+
 ### Notification (`Notification` → matcher `""`)
 
 **Behavior:** Pops a Windows MessageBox when Claude Code needs attention (e.g., permission prompt while you're in another window).
@@ -152,7 +181,8 @@ Key rules that affect tooling:
 |------|-------|
 | MCP server config | `~/.claude.json` (internal, managed by `claude mcp add`) |
 | Settings (hooks, plugins, permissions) | `~/.claude/settings.json` |
-| Hook scripts | `~/.claude/hooks/` |
+| Hook scripts | `~/.claude/hooks/` (block-webfetch, inject-solutions, remind-distill) |
+| Personal skills | `~/.claude/skills/` (distill, brief) |
 | Global CLAUDE.md | `~/.claude/CLAUDE.md` |
 | Memory index | `~/.claude/projects/{project}/memory/MEMORY.md` |
 | Installed plugins manifest | `~/.claude/plugins/installed_plugins.json` |
@@ -203,29 +233,19 @@ claude mcp list
 # All should show ✓ Connected
 ```
 
-### 4. Create WebFetch Blocker Hook
+### 4. Create Hook Scripts
 
 ```bash
 mkdir -p ~/.claude/hooks
 ```
 
-Create `~/.claude/hooks/block-webfetch.sh`:
+Create three files in `~/.claude/hooks/`:
 
-```bash
-#!/bin/bash
-cat << 'BLOCK'
-WebFetch is blocked (no timeout — causes agent hangs). Use these alternatives instead:
+- **`block-webfetch.sh`** — Blocks WebFetch (no timeout, causes hangs). Redirects to gemini-grounding or curl.
+- **`inject-solutions.sh`** — PreToolUse on `"Skill"`. Injects `docs/solutions/` summaries before `/ce:work`.
+- **`remind-distill.sh`** — PostToolUse on `"Skill"`. Reminds to run `/distill` after `/ce:review`.
 
-**Option 1 (preferred): Gemini Grounding MCP tools**
-Use mcp__gemini-grounding__web_search with your query.
-
-**Option 2 (fallback): curl with timeout**
-curl -sL --max-time 15 'URL' | head -c 50000
-BLOCK
-exit 2
-```
-
-The hook is wired in `~/.claude/settings.json` under `hooks.PreToolUse` with matcher `"WebFetch"`.
+See the Hooks section above for full behavior descriptions. All hooks are wired in `~/.claude/settings.json` under `hooks.PreToolUse` and `hooks.PostToolUse`.
 
 ### 5. Add Permissions
 
@@ -246,7 +266,29 @@ In `~/.claude/settings.json`, add to `permissions.allow`:
 # See Active Plugins table above for the full list
 ```
 
-### 7. Set Up CLAUDE.md and Memory
+### 7. Create Compound Skill
+
+```bash
+mkdir -p ~/.claude/skills/distill ~/.claude/skills/brief
+```
+
+Create two personal skills:
+- `~/.claude/skills/distill/SKILL.md` — write solution docs (dynamic injection shows existing + auto-numbers)
+- `~/.claude/skills/brief/SKILL.md` — read solution context on demand
+
+See `/distill` and `/brief` in a Claude Code session to verify.
+
+### 8. Create Project Folders
+
+```bash
+mkdir -p docs/solutions docs/todos temp
+```
+
+- `docs/solutions/` — Non-obvious root causes and fixes (persistent across sessions)
+- `docs/todos/` — Review findings work queue (deleted at squeaky clean)
+- `temp/` — Screenshots and debug output (deleted at squeaky clean)
+
+### 9. Set Up CLAUDE.md and Memory
 
 - Copy `~/.claude/CLAUDE.md` from backup or write fresh
 - Memory files rebuild naturally over conversations

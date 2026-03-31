@@ -71,6 +71,9 @@ src/
   types/              # Shared type definitions
   constants.ts        # All game design constants
   main.ts             # Composition root — wires Phaser.Game
+docs/
+  solutions/          # Non-obvious root causes + fixes (persistent)
+  todos/              # Review findings work queue (session-scoped)
 tests/
   game/               # Game logic unit tests (node env)
   renderer/           # Renderer tests (jsdom env)
@@ -79,6 +82,13 @@ public/
   assets/maps/        # Tiled JSON maps
   assets/tilesets/    # Tileset PNGs
 ```
+
+## Solutions & Todos
+
+- **Solutions** (`docs/solutions/`): Non-obvious root causes + fixes. Auto-briefed before `/ce:work` via hook. Post-review hook reminds to run `/distill`.
+- **Todos** (`docs/todos/`): Session working docs for review findings. Deleted at squeaky clean.
+- **`/distill`** — Write a solution doc. Shows existing solutions, provides template, auto-numbers.
+- **`/brief`** — Read solution context on demand. Also auto-fires via hook before `/ce:work`.
 
 ## Landmines
 

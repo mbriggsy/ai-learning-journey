@@ -83,6 +83,16 @@ describe('architecture boundary: src/game/', () => {
   });
 });
 
+describe('architecture boundary: FogRenderer', () => {
+  it('has zero imports from src/game/', () => {
+    const fogPath = path.join(ROOT, 'src', 'renderer', 'systems', 'FogRenderer.ts');
+    if (!fs.existsSync(fogPath)) return; // Skip if not yet created
+    const content = fs.readFileSync(fogPath, 'utf-8');
+    const forbidden = /from\s+['"].*\/game\//;
+    expect(forbidden.test(content)).toBe(false);
+  });
+});
+
 describe('architecture boundary: src/types/', () => {
   const typeFiles = collectTsFiles(TYPES_DIR);
 

@@ -305,8 +305,8 @@
 - [x] Phase 1: Map + Movement — EXECUTED + REVIEWED
 - [x] Phase 2: Seeker + Detection — EXECUTED + REVIEWED
 - [x] Phase 3: Fog of War + Game Flow — EXECUTED + REVIEWED (5 agents, P1 quit flow fixed, ~42 LOC dead code removed)
-- [x] Phase 4: Doors + Minimap — EXECUTED (163 tests, +38 new)
-- [ ] Phase 5a: Seeker Tiers
+- [x] Phase 4: Doors + Minimap — EXECUTED (163 tests, +38 new) — NOT YET REVIEWED
+- [x] Phase 5a: Seeker Tiers — EXECUTED + REVIEWED (4 agents, zero blockers, blocker fixed Session 12)
 - [ ] Phase 5b: Hider + Spectator
 - [ ] Phase 6a: Audio + Atmosphere
 - [ ] Phase 6b: Scoring + Stats

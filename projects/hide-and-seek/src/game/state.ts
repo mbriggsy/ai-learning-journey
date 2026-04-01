@@ -41,7 +41,7 @@ export function createGameState(
     },
     seekerFov: new Uint8Array(tileCount),
     playerFov,
-    stats: { distanceTraveled: 0 },
+    stats: { distanceTraveled: 0, seekerDistanceTiles: Infinity, playerFootstepAccum: 0, seekerFootstepAccum: 0 },
     doors: doors ?? new Map(),
     doorGeneration: 0,
   };
@@ -86,5 +86,6 @@ export function createSpectatingState(
     hiderFov: new Uint8Array(tileCount),
     doors: doors ?? new Map(),
     doorGeneration: 0,
+    stats: { seekerDistanceTiles: Infinity, seekerFootstepAccum: 0, hiderFootstepAccum: 0 },
   };
 }

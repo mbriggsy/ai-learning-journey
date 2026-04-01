@@ -24,6 +24,8 @@
 - **Phase 4 REVIEWED (2026-03-31)** — dead action handlers purged, SonarPing cleanup, depth collision fix, 8 todos + 5 solutions documented, 210 tests
 - **Phase 5b EXECUTED (2026-03-31)** — AI hider (3 tiers) + spectator mode + MainMenu, 243 tests
 - **Vision model LOCKED (2026-03-30)** — 4-tier flashlight tag, spec at `docs/design/vision-model-spec.md`
+- **Phase 6a EXECUTED (2026-04-01)** — audio atmosphere, 297 tests
+- **Phase 6a REVIEWED (2026-04-01)** — 4 agents, P0s fixed (drone activation, listener leak), door bug fixed, vision cone added
 
 ### Documents
 - Brainstorm: `docs/ideation/2026-03-29-hide-and-seek-brainstorm.md`
@@ -151,13 +153,39 @@
 - Test baseline: **243 tests passing** (unchanged)
 - Build: typecheck clean
 
+## What We Did (2026-04-01, Session 18)
+- **Phase 6a EXECUTED** — Audio Atmosphere, full audio layer:
+  - AudioManager coordinator with AudioGate (Promise-chained AudioContext lifecycle)
+  - HeartbeatSystem: looping sample, playbackRate lerp (0.08), hysteresis (8/9.5 tiles), GainNode routing
+  - SoundEffects: SoundPool (round-robin + steal), event-driven footsteps/doors/ticks/stings, spatial audio (distance rolloff + wall attenuation via Bresenham LOS), stereo pan
+  - AmbientSound: drone loop (15s seamless), random creaks (8-20s), duck/unduck (heartbeat > 50% → duck)
+  - Footstep distance accumulator in engine (FOOTSTEP event every 24px), TIMER_TICK for final 3s
+  - seekerDistanceTiles computed per tick on GameStats/SpectatingStats
+  - AudioSettings persistence (localStorage, merge-with-defaults, NaN/clamp guards, debounced save)
+  - PauseMenu settings panel: 3 draggable sliders (master/sfx/ambient) + mute toggle
+  - Tab visibility: AudioGate suspend/resume via PauseAuthority, Phaser pauseOnBlur disabled
+  - Spectator mode: no heartbeat, both agents' footsteps audible
+  - Boot.ts: 19 audio assets loaded (dual format .ogg + .mp3)
+  - Audio generation script: jsfxr for SFX + raw PCM synthesis for ambient/heartbeat, ffmpeg conversion
+  - Cross-phase fix: sonar ping SFX (was visual-only)
+- **Phase 6a REVIEWED** — 4 agents (TS, arch, perf, simplicity):
+  - P0 fixed: ambient drone never started (listened for 'countdown' event that never fires — initial state has no transition), event listener leak in SoundEffects + AmbientSound dispose
+  - P1 fixed: dead `onPauseChanged` field, dead `PLAYER/SEEKER_FOOTSTEP_POOL_SIZE` constants
+  - Architecture: PASS — zero boundary violations, clean coordinator pattern
+- **Bug fix: seeker telekinetic door opening** — `checkDoorOnPath()` had no distance check, seeker opened doors from across the room. Added `INTERACTION.DOOR_RANGE` proximity guard. Pre-existing Phase 4 bug.
+- **Vision cone in player mode** — FOV-based rendering (respects walls/doors), uses actual seeker config cone angle per difficulty
+- **Seeker chase color** — changed from near-identical bright red to magenta for unmistakable visual feedback
+- Insights written: 007 (ReadonlyDeep kills methods), 008 (initial state has no transition event)
+- Test baseline: **297 tests passing** (243 → 297, +54 new)
+- Build: typecheck clean, app chunk 104KB
+
 ## Next Steps
-1. **Phase 6a** — audio + atmosphere
-2. **Phase 6b** — scoring + stats
-3. **Phase 7** — polish + art
+1. **Phase 6b** — scoring + stats
+2. **Phase 7** — polish + art
 
 ## Landmines
 - **Module-level `let` in SearchState/SuspiciousState** — singleton state means multi-seeker will stomp. Must move to `SeekerAIInternalState` before adding second seeker.
+- **Tiled map has no Rooms object layer** — strategic patrol (medium/hard) falls back to random. Room rectangles need authoring in Tiled, then wire `parseRooms` + `computeHidingSpots` + `engine.setRooms()` in Game.ts and SpectatorGame.ts. Console warning fires every tick on medium/hard.
 
 ## What We Did (2026-03-30, Session 10)
 - **EXECUTED Phase 4: Doors + Minimap + Sonar** — full tactical layer
@@ -458,7 +486,7 @@ Phase 5a fixes (apply during Phase 5a execution):
 - [ ] Apply vision model spec (`docs/design/vision-model-spec.md`) — 4-tier flashlight tag, seeker cone becomes visible beam, player vision per difficulty
 
 Phase 6a fix (apply during Phase 6a execution):
-- [ ] Consider adding sonar ping audio SFX (currently visual-only — no audio cue in Phase 6a)
+- [x] Consider adding sonar ping audio SFX (currently visual-only — no audio cue in Phase 6a)
 
 Phase 6b fix (apply during Phase 6b execution):
 - [ ] Results screen UI art not specified in Phase 7 — added during deepening. Verify compatibility with Phase 6b layout spec.
@@ -471,7 +499,7 @@ Phase 6b fix (apply during Phase 6b execution):
 - [x] Execute Phase 4: Doors + Minimap ✓
 - [ ] Execute Phase 5a: Seeker Difficulty Tiers
 - [ ] Execute Phase 5b: AI Hider + Spectator
-- [ ] Execute Phase 6a: Audio Atmosphere
+- [x] Execute Phase 6a: Audio Atmosphere
 - [ ] Execute Phase 6b: Scoring + Stats
 - [ ] Execute Phase 7: Art Pipeline
 

@@ -114,6 +114,11 @@ export type MutablePlayingState = { -readonly [K in keyof PlayingState]: Playing
 
 export interface GameStats {
   distanceTraveled: number;  // pixels accumulated during HUNT
+  /** Distance from player to seeker in tiles — computed each tick, used by audio systems */
+  seekerDistanceTiles: number;
+  /** Footstep distance accumulators — emit FOOTSTEP event when threshold crossed */
+  playerFootstepAccum: number;
+  seekerFootstepAccum: number;
 }
 
 export interface PlayingState extends GameSessionBase {
@@ -126,6 +131,14 @@ export interface PlayingState extends GameSessionBase {
   readonly stats: GameStats;
 }
 
+export interface SpectatingStats {
+  /** Distance from hider to seeker in tiles — computed each tick */
+  seekerDistanceTiles: number;
+  /** Footstep distance accumulators */
+  seekerFootstepAccum: number;
+  hiderFootstepAccum: number;
+}
+
 export interface SpectatingState extends GameSessionBase {
   readonly phase: 'spectating';
   readonly seeker: SeekerRenderState;
@@ -133,6 +146,7 @@ export interface SpectatingState extends GameSessionBase {
   readonly seekerFov: Uint8Array;
   readonly hiderFov: Uint8Array;
   readonly spawns: readonly SpawnPoint[];
+  readonly stats: SpectatingStats;
 }
 
 /** Mutable alias for engine-internal mutation of SpectatingState fields */

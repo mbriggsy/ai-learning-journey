@@ -8,8 +8,9 @@ import { createDoorSprites, destroyDoorSprites } from '../entities/DoorSprite.js
 import type { DoorSpriteEntry } from '../entities/DoorSprite.js';
 import { PauseAuthority, PAUSE_REASONS } from '../systems/PauseAuthority.js';
 import { CinematicManager } from '../systems/CinematicManager.js';
+import { AudioManager } from '../systems/AudioManager.js';
 import { SceneTransition } from '../utils/SceneTransition.js';
-import { setPauseAuthority } from './PauseMenu.js';
+import { setPauseAuthority, setAudioManager } from './PauseMenu.js';
 import { getGameSettings } from './Boot.js';
 import type { SpectatorSceneData, SpectatorResultsSceneData } from '../../types/scenes.js';
 import type { SpectatingState, GameFlowKind, DoorId, SeekerFSMState, HiderFSMState } from '../../types/state.js';
@@ -51,6 +52,7 @@ export class SpectatorGameScene extends Phaser.Scene {
   private hiderIndicator!: Phaser.GameObjects.Rectangle;
   private pauseAuthority!: PauseAuthority;
   private cinematic!: CinematicManager;
+  private audioManager!: AudioManager;
   private doorSprites!: Map<DoorId, DoorSpriteEntry>;
 
   private visionConeGfx!: Phaser.GameObjects.Graphics;
@@ -152,8 +154,12 @@ export class SpectatorGameScene extends Phaser.Scene {
     const getState = () => this.engine.getState() as ReadonlyDeep<SpectatingState>;
     this.scene.launch('HUD', { listener, getState, spectator: true });
 
-    // --- Pause authority ---
+    // --- Audio (spectator mode — no heartbeat, both agents audible) ---
+    this.audioManager = new AudioManager(this, listener, getState as () => ReadonlyDeep<import('../../types/state.js').GameState>, true);
+
+    // --- Pause authority + audio ---
     setPauseAuthority(this.pauseAuthority, 'SpectatorGame');
+    setAudioManager(this.audioManager);
 
     // --- Input ---
     this.escapeKey = this.input.keyboard!.addKey(Phaser.Input.Keyboard.KeyCodes.ESC);
@@ -167,7 +173,11 @@ export class SpectatorGameScene extends Phaser.Scene {
 
     // --- Events ---
     this.onPhaseChanged = (kind: GameFlowKind) => {
-      if (kind === 'found' || kind === 'survived') {
+      if (kind === 'found') {
+        this.audioManager.onFound();
+        this.handleEndOfRound(kind);
+      } else if (kind === 'survived') {
+        this.audioManager.onSurvived();
         this.handleEndOfRound(kind);
       }
     };
@@ -187,8 +197,10 @@ export class SpectatorGameScene extends Phaser.Scene {
     this.onVisibilityChange = () => {
       if (document.hidden) {
         this.pauseAuthority.request(PAUSE_REASONS.TAB_HIDDEN);
+        this.audioManager.onPause();
         this.scene.pause();
       } else {
+        this.audioManager.onResume();
         this.pauseAuthority.release(PAUSE_REASONS.TAB_HIDDEN);
         this.scene.resume();
       }
@@ -201,6 +213,7 @@ export class SpectatorGameScene extends Phaser.Scene {
       listener.off('PHASE_CHANGED', this.onPhaseChanged);
       listener.off('SEEKER_STATE_CHANGED', this.onSeekerStateChanged);
       listener.off('HIDER_STATE_CHANGED', this.onHiderStateChanged);
+      this.audioManager.dispose();
       destroyDoorSprites(this.doorSprites);
       this.visionConeGfx.destroy();
       this.debugPathGfx.destroy();
@@ -242,6 +255,7 @@ export class SpectatorGameScene extends Phaser.Scene {
     this.syncSprites(s);
     this.updateVisionCones(s);
     this.updateLabels(s);
+    this.audioManager.update();
   }
 
   private syncSprites(s: ReadonlyDeep<SpectatingState>): void {

@@ -1,5 +1,7 @@
 import type { GameFlowKind, DoorId, SeekerFSMState, HiderFSMState } from './state.js';
 
+export type FootstepEntity = 'player' | 'seeker' | 'hider';
+
 export type GameEventMap = {
   PHASE_CHANGED: [kind: GameFlowKind];
   DOOR_TOGGLED: [payload: {
@@ -18,6 +20,14 @@ export type GameEventMap = {
   HIDER_STATE_CHANGED: [payload: {
     readonly oldState: HiderFSMState;
     readonly newState: HiderFSMState;
+  }];
+  FOOTSTEP: [payload: {
+    readonly entity: FootstepEntity;
+    readonly x: number;
+    readonly y: number;
+  }];
+  TIMER_TICK: [payload: {
+    readonly secondsRemaining: number;
   }];
 };
 

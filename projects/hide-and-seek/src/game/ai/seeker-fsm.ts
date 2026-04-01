@@ -16,6 +16,7 @@ import { ChaseState } from './states/chase-state.js';
 import { RoomTracker } from './room-tracking.js';
 import { EvidenceTracker } from './evidence.js';
 import { pixelToTile, tileToPixelCenter } from '../map.js';
+import { INTERACTION } from '../../constants.js';
 import { smoothPath } from './path-smoothing.js';
 import { DOOR } from '../../constants.js';
 
@@ -303,7 +304,7 @@ export function isPathComplete(ai: SeekerAIInternalState): boolean {
 
 export function checkDoorOnPath(ctx: SeekerContext): boolean {
   if (!ctx.doorSystem) return false;
-  const { ai } = ctx;
+  const { ai, render } = ctx;
   if (ai.waypointIndex >= ai.currentPath.length) return false;
   const wp = ai.currentPath[ai.waypointIndex];
   if (!wp) return false;
@@ -311,7 +312,13 @@ export function checkDoorOnPath(ctx: SeekerContext): boolean {
   const door = ctx.doorSystem.getDoorAt(wp.x, wp.y);
   if (!door || door.isOpen) return false;
 
-  // Closed door on path — push action sequence (recordSelfOpen happens at execution in processActionQueue)
+  // Only open door when seeker is within interaction range
+  const seekerTile = pixelToTile(render.x, render.y);
+  const dx = door.position.x - seekerTile.x;
+  const dy = door.position.y - seekerTile.y;
+  if (dx * dx + dy * dy > INTERACTION.DOOR_RANGE * INTERACTION.DOOR_RANGE) return false;
+
+  // Closed door on path, seeker is adjacent — push action sequence
   ctx.actionQueue.clear();
   ctx.actionQueue.push(
     { type: 'OPEN_DOOR', doorId: door.id },

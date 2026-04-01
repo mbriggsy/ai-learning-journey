@@ -10,19 +10,21 @@ import { CinematicManager } from '../systems/CinematicManager.js';
 import { MinimapManager } from '../systems/MinimapManager.js';
 import { SonarPing } from '../systems/SonarPing.js';
 import { PauseAuthority, PAUSE_REASONS } from '../systems/PauseAuthority.js';
+import { AudioManager } from '../systems/AudioManager.js';
 import { EndOfRoundSequence } from '../utils/EndOfRoundSequence.js';
 import { SceneTransition } from '../utils/SceneTransition.js';
 import { PlayerSprite } from '../entities/PlayerSprite.js';
 import { SeekerSprite } from '../entities/SeekerSprite.js';
 import { createDoorSprites, destroyDoorSprites } from '../entities/DoorSprite.js';
 import type { DoorSpriteEntry } from '../entities/DoorSprite.js';
-import { setPauseAuthority } from './PauseMenu.js';
+import { setPauseAuthority, setAudioManager } from './PauseMenu.js';
 import { getGameSettings } from './Boot.js';
 import { installTestBridge, removeTestBridge } from '../utils/TestBridge.js';
 import type { GameSceneData } from '../../types/scenes.js';
 import type { PlayingState, GameFlowKind, DoorId } from '../../types/state.js';
 import type { ReadonlyDeep } from '../../types/utility.js';
 import { CAMERA, DEPTH, DISPLAY, CINEMATIC, SIMULATION } from '../../constants.js';
+import { SEEKER_CONFIGS } from '../../game/ai/seeker-configs.js';
 
 export class GameScene extends Phaser.Scene {
   private engine!: GameEngine;
@@ -39,6 +41,10 @@ export class GameScene extends Phaser.Scene {
   private sonarPing!: SonarPing;
   private doorSprites!: Map<DoorId, DoorSpriteEntry>;
 
+  private audioManager!: AudioManager;
+  private visionConeGfx!: Phaser.GameObjects.Graphics;
+  private seekerConeHalfAngle: number = 0;
+  private seekerVisionRange: number = 0;
   private escapeKey!: Phaser.Input.Keyboard.Key;
   private endSequenceTriggered: boolean = false;
   private onPhaseChanged!: (kind: GameFlowKind) => void;
@@ -94,6 +100,14 @@ export class GameScene extends Phaser.Scene {
     for (const obj of this.playerSprite.getGameObjects()) this.cinematic.ignoreOnUI(obj);
     for (const obj of this.seekerSprite.getGameObjects()) this.cinematic.ignoreOnUI(obj);
 
+    // --- Seeker vision cone ---
+    const seekerConfig = SEEKER_CONFIGS[settings.seekerDifficulty];
+    this.seekerConeHalfAngle = (seekerConfig.visionConeAngle * Math.PI / 180) / 2;
+    this.seekerVisionRange = seekerConfig.visionRange * DISPLAY.TILE_SIZE;
+    this.visionConeGfx = this.add.graphics();
+    this.visionConeGfx.setDepth(DEPTH.PLAYER - 1);
+    this.cinematic.ignoreOnUI(this.visionConeGfx);
+
     // --- Door sprites ---
     const listener = this.engine.getEmitter();
     this.doorSprites = createDoorSprites(this, doorSystem.getDoors(), listener);
@@ -144,11 +158,15 @@ export class GameScene extends Phaser.Scene {
       },
     );
 
+    // --- Audio ---
+    this.audioManager = new AudioManager(this, listener, getState, false);
+
     // --- HUD parallel scene ---
     this.scene.launch('HUD', { listener, getState });
 
-    // --- Pause authority shared with PauseMenu ---
+    // --- Pause authority + audio shared with PauseMenu ---
     setPauseAuthority(this.pauseAuthority);
+    setAudioManager(this.audioManager);
 
     // --- Input ---
     this.escapeKey = this.input.keyboard!.addKey(Phaser.Input.Keyboard.KeyCodes.ESC);
@@ -161,9 +179,11 @@ export class GameScene extends Phaser.Scene {
     this.onVisibilityChange = () => {
       if (document.hidden) {
         this.pauseAuthority.request(PAUSE_REASONS.TAB_HIDDEN);
+        this.audioManager.onPause();
         this.scene.pause();
       } else {
         this.inputManager.resetAllKeys();
+        this.audioManager.onResume();
         this.pauseAuthority.release(PAUSE_REASONS.TAB_HIDDEN);
         this.scene.resume();
       }
@@ -174,6 +194,8 @@ export class GameScene extends Phaser.Scene {
     this.events.on('shutdown', () => {
       this.scene.stop('HUD');
       this.engine.getEmitter().off('PHASE_CHANGED', this.onPhaseChanged);
+      this.audioManager.dispose();
+      this.visionConeGfx.destroy();
       this.sonarPing.destroy();
       this.minimapManager.destroy();
       destroyDoorSprites(this.doorSprites);
@@ -224,11 +246,21 @@ export class GameScene extends Phaser.Scene {
       if (kind === 'hunt') {
         this.handleCountdownToHunt();
       }
-      if (kind === 'found' || kind === 'survived') {
+      if (kind === 'found') {
+        this.audioManager.onFound();
+        this.minimapManager.setVisible(false);
+      }
+      if (kind === 'survived') {
+        this.audioManager.onSurvived();
         this.minimapManager.setVisible(false);
       }
     };
     listener.on('PHASE_CHANGED', this.onPhaseChanged);
+
+    // Sonar ping audio (cross-phase fix: was visual-only)
+    listener.on('SONAR_PING_DUE', () => {
+      this.audioManager.playSonarPing();
+    });
   }
 
   private handleCountdownToHunt(): void {
@@ -260,6 +292,7 @@ export class GameScene extends Phaser.Scene {
     this.syncSprites();
     this.updateFog(state as ReadonlyDeep<PlayingState>);
     this.updateMinimap(state as ReadonlyDeep<PlayingState>);
+    this.audioManager.update();
     this.checkEndOfRound(state as ReadonlyDeep<PlayingState>);
   }
 
@@ -286,6 +319,49 @@ export class GameScene extends Phaser.Scene {
 
     // Easy mode: seeker always visible — see docs/design/vision-model-spec.md
     this.seekerSprite.setVisible(true);
+
+    // Vision cone — rendered from actual FOV data so it respects walls/doors
+    this.visionConeGfx.clear();
+    if (state.gameFlow.kind === 'hunt') {
+      this.drawVisionCone(state as ReadonlyDeep<PlayingState>);
+    }
+  }
+
+  private drawVisionCone(state: ReadonlyDeep<PlayingState>): void {
+    const gfx = this.visionConeGfx;
+    const ts = DISPLAY.TILE_SIZE;
+    const sx = state.seeker.x;
+    const sy = state.seeker.y;
+    const facing = state.seeker.facingAngle;
+    const halfCone = this.seekerConeHalfAngle;
+    const fov = state.seekerFov;
+    const mapW = state.map.width;
+    const mapH = state.map.height;
+
+    gfx.fillStyle(0xff4400, 0.12);
+
+    for (let ty = 0; ty < mapH; ty++) {
+      for (let tx = 0; tx < mapW; tx++) {
+        if (fov[ty * mapW + tx] === 0) continue;
+
+        // Tile center relative to seeker
+        const cx = tx * ts + ts / 2 - sx;
+        const cy = ty * ts + ts / 2 - sy;
+
+        // Skip the seeker's own tile
+        if (cx * cx + cy * cy < ts * ts * 0.25) continue;
+
+        // Check if tile is within cone angle
+        const angle = Math.atan2(cy, cx);
+        let diff = angle - facing;
+        if (diff > Math.PI) diff -= 2 * Math.PI;
+        if (diff < -Math.PI) diff += 2 * Math.PI;
+
+        if (Math.abs(diff) <= halfCone) {
+          gfx.fillRect(tx * ts, ty * ts, ts, ts);
+        }
+      }
+    }
   }
 
   private updateFog(state: ReadonlyDeep<PlayingState>): void {

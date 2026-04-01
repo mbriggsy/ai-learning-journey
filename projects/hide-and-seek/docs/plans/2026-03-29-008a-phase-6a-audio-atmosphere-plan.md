@@ -1,13 +1,13 @@
 ---
 title: "Phase 6a: Audio Atmosphere"
 type: feat
-status: ready
+status: active
 date: 2026-03-29
 deepened: 2026-03-30
 origin: docs/plans/2026-03-29-008-phase-6-sound-scoring-plan.md
 agents_used: 15
 contradictions_resolved: 8
-executed:
+executed: 2026-04-01
 reviewed:
 ---
 
@@ -96,7 +96,7 @@ src/game/
 
 ### Task 1: AudioManager Setup
 
-- [ ] `src/renderer/systems/AudioManager.ts` — coordinator class:
+- [x] `src/renderer/systems/AudioManager.ts` — coordinator class:
   - Receives `getState: () => ReadonlyDeep<GameState>`, `TypedListener<GameEventMap>`, Phaser Sound Manager reference
   - Creates and owns HeartbeatSystem, SoundEffects, AmbientSound subsystems
   - **AudioGate class** (nested or separate): chains suspend/resume through single `pendingOp` Promise — prevents Promise crossing race condition
@@ -108,8 +108,8 @@ src/game/
   - **HTML5 Audio fallback detection**: `game.sound instanceof Phaser.Sound.WebAudioSoundManager`. If false: disable HeartbeatSystem, disable spatial footsteps, log warning.
   - `dispose()`: stops all sounds, unsubscribes all event listeners, destroys subsystems
   - Called from Game.ts scene `create()`, disposed in `shutdown()` handler
-- [ ] **Disable Phaser's `pauseOnBlur`** in game config or at runtime. PauseAuthority + AudioGate own the lifecycle.
-- [ ] **AudioContext state check after resume()**: verify `context.state === 'running'`. If still `'suspended'` or `'interrupted'` (Safari): set `audioAvailable = false`, silent retry on next user interaction.
+- [x] **Disable Phaser's `pauseOnBlur`** in game config or at runtime. PauseAuthority + AudioGate own the lifecycle.
+- [x] **AudioContext state check after resume()**: verify `context.state === 'running'`. If still `'suspended'` or `'interrupted'` (Safari): set `audioAvailable = false`, silent retry on next user interaction.
 
 ### Research Insights — AudioManager
 
@@ -149,7 +149,7 @@ class AudioGate {
 
 ### Task 2: SFX Sourcing
 
-- [ ] Generate procedural effects via jsfxr (sfxr.me):
+- [x] Generate procedural effects via jsfxr (sfxr.me):
   - Player footsteps: 3 variants (soft, short, ~100ms)
   - Seeker footsteps: 3 variants (heavier, distinct, ~150ms)
   - Door creak: 2 variants
@@ -157,20 +157,20 @@ class AudioGate {
   - Countdown tick: 1 base (detune variation at runtime)
   - Found sting: 1 (dramatic orchestral hit, ~1.5s)
   - Survived sting: 1 (triumphant chord, ~1.5s)
-- [ ] Source ambient from freesound.org (CC0):
+- [x] Source ambient from freesound.org (CC0):
   - Indoor drone: low-frequency hum, 10-20s seamless loop
   - Creaks: 3-5 variants (wood, metal, pipe)
   - Heartbeat: single clean beat at ~70 BPM, designed for seamless loop
-- [ ] **Dual format**: export .ogg + .mp3 for every asset (Safari compatibility)
-- [ ] **Export at -9 to -12 dB** headroom (prevents clipping when stacking)
-- [ ] Load via Phaser: `this.load.audio('footstep_01', ['audio/footstep_01.ogg', 'audio/footstep_01.mp3'])`
-- [ ] **Per-asset load failure handling**: after Preloader completes, check which keys loaded. Disable dependent subsystems for missing assets. No single missing SFX blocks the game.
+- [x] **Dual format**: export .ogg + .mp3 for every asset (Safari compatibility)
+- [x] **Export at -9 to -12 dB** headroom (prevents clipping when stacking)
+- [x] Load via Phaser: `this.load.audio('footstep_01', ['audio/footstep_01.ogg', 'audio/footstep_01.mp3'])`
+- [x] **Per-asset load failure handling**: after Preloader completes, check which keys loaded. Disable dependent subsystems for missing assets. No single missing SFX blocks the game.
 
 ---
 
 ### Task 3: SoundEffects Subsystem
 
-- [ ] `src/renderer/systems/SoundEffects.ts`:
+- [x] `src/renderer/systems/SoundEffects.ts`:
   - Subscribes to `TypedListener<GameEventMap>` for event-driven sounds
   - Owns sound pools (SoundPool class with round-robin + oldest-steal eviction)
 
@@ -188,14 +188,14 @@ class SoundPool {
 }
 ```
 
-- [ ] **Player footsteps:**
+- [x] **Player footsteps:**
   - Subscribe to FOOTSTEP event (entity: 'player') from game layer
   - Pool of 3 instances, round-robin with steal
   - Random variant selection (footstep_01/02/03)
   - Random detune (-100 to +100 cents) + volume variation (0.8-1.0x) per play
   - Volume = sfxVolume × masterVolume
 
-- [ ] **Seeker footsteps:**
+- [x] **Seeker footsteps:**
   - Subscribe to FOOTSTEP event (entity: 'seeker') from game layer
   - Pool of 3 instances (independent from player pool)
   - **Distance-based volume** (manual calculation, NOT PannerNode):
@@ -207,17 +207,17 @@ class SoundPool {
   - **Stereo pan**: `setPan(clamp(dx / maxDistance, -1, 1))` — gracefully degrades to center on older iOS Safari
   - Read `seekerDistanceTiles` from `ReadonlyDeep<GameState>` (computed once per tick in game layer)
 
-- [ ] **Door sounds:** subscribe to DOOR_TOGGLED event, pool of 2, play creak (open) or thud (close)
+- [x] **Door sounds:** subscribe to DOOR_TOGGLED event, pool of 2, play creak (open) or thud (close)
 
-- [ ] **Countdown ticks:** subscribe to TIMER_TICK event (final 3 seconds), increasing volume + detune per tick
+- [x] **Countdown ticks:** subscribe to TIMER_TICK event (final 3 seconds), increasing volume + detune per tick
 
-- [ ] **Hunt start drone:** on PHASE_CHANGED to 'hunt', play ominous drone. Timing: begins at full black during COUNTDOWN→HUNT camera fade. Fades in over 1-2 seconds overlapping with camera fadeIn.
+- [x] **Hunt start drone:** on PHASE_CHANGED to 'hunt', play ominous drone. Timing: begins at full black during COUNTDOWN→HUNT camera fade. Fades in over 1-2 seconds overlapping with camera fadeIn.
 
-- [ ] **Found sting:** on PHASE_CHANGED to 'found'. Exclusive — triggers audio cleanup protocol first (stop heartbeat, footsteps, ambient). Plays after 200ms silence gap for dramatic effect.
+- [x] **Found sting:** on PHASE_CHANGED to 'found'. Exclusive — triggers audio cleanup protocol first (stop heartbeat, footsteps, ambient). Plays after 200ms silence gap for dramatic effect.
 
-- [ ] **Survived sting:** on PHASE_CHANGED to 'survived'. Same exclusive treatment but heartbeat fades (500ms) rather than cuts.
+- [x] **Survived sting:** on PHASE_CHANGED to 'survived'. Same exclusive treatment but heartbeat fades (500ms) rather than cuts.
 
-- [ ] **Sound priority rules:**
+- [x] **Sound priority rules:**
   1. Stings (found/survived) are exclusive — mute all other SFX
   2. Heartbeat + countdown ticks coexist (different frequency bands)
   3. Footsteps duck when heartbeat is above 50% volume
@@ -243,13 +243,13 @@ class SoundPool {
 
 ### Task 4: HeartbeatSystem
 
-- [ ] `src/renderer/systems/HeartbeatSystem.ts`:
+- [x] `src/renderer/systems/HeartbeatSystem.ts`:
   - Constructor: receives Phaser Sound Manager, `getState()`, `disabled: boolean` flag
   - If `disabled` (spectator mode) or HTML5 Audio fallback: skip all operations
   - Creates looping `WebAudioSound` instance for heartbeat sample at 0 volume
   - Reads `seekerDistanceTiles` from `ReadonlyDeep<GameState>` each render frame
 
-- [ ] **`src/game/audio-curves.ts`** — pure functions (ZERO Phaser imports, testable in Node.js):
+- [x] **`src/game/audio-curves.ts`** — pure functions (ZERO Phaser imports, testable in Node.js):
   ```typescript
   function distanceToTempo(distTiles: number, maxRange: number, threshold: number, minBpm: number, maxBpm: number): number
   function distanceToVolume(distTiles: number, maxRange: number, threshold: number): number
@@ -257,35 +257,35 @@ class SoundPool {
   - Linear interpolation: maxRange → minBpm/0 volume, threshold → maxBpm/full volume
   - Clamped to [minBpm, maxBpm] and [0, 1]
 
-- [ ] **Hysteresis** (prevents boundary stutter):
+- [x] **Hysteresis** (prevents boundary stutter):
   - Activate: `seekerDistanceTiles < HEARTBEAT_START_RANGE` (8 tiles)
   - Deactivate: `seekerDistanceTiles > HEARTBEAT_STOP_RANGE` (9.5 tiles)
   - 1.5-tile buffer prevents start/stop oscillation
 
-- [ ] **Lerp rate changes** (prevents tempo stutter on frame drops):
+- [x] **Lerp rate changes** (prevents tempo stutter on frame drops):
   ```typescript
   const targetRate = distanceToRate(currentDistance);
   this.currentRate += (targetRate - this.currentRate) * HEARTBEAT_LERP_SPEED; // 0.08
   this.heartbeatSound.setRate(this.currentRate);
   ```
 
-- [ ] **Playback rate clamping**: `Math.max(HEARTBEAT_MIN_RATE, Math.min(rate, HEARTBEAT_MAX_RATE))` — 0.5 to 3.0. When outside range, set gain to 0 rather than lowering rate below minimum.
+- [x] **Playback rate clamping**: `Math.max(HEARTBEAT_MIN_RATE, Math.min(rate, HEARTBEAT_MAX_RATE))` — 0.5 to 3.0. When outside range, set gain to 0 rather than lowering rate below minimum.
 
-- [ ] **Volume via GainNode** (not Phaser's `setVolume`):
+- [x] **Volume via GainNode** (not Phaser's `setVolume`):
   - Access `(sound as any).volumeNode as GainNode`
   - Use `linearRampToValueAtTime(volume, now + VOLUME_RAMP_TIME)` for click-free transitions
   - Route through Phaser's master gain chain (NOT directly to `context.destination`)
   - For final silence: `linearRampToValueAtTime(0, ...)` not `setTargetAtTime(0)` (asymptotic)
 
-- [ ] **Phase gating**: HUNT-phase only. Disabled during COUNTDOWN (seeker visible, no danger). Check `gameFlow.kind === 'hunt'`.
+- [x] **Phase gating**: HUNT-phase only. Disabled during COUNTDOWN (seeker visible, no danger). Check `gameFlow.kind === 'hunt'`.
 
-- [ ] **Game end behavior**:
+- [x] **Game end behavior**:
   - FOUND: gain to 0 immediately (cut — sting replaces it)
   - SURVIVED: fade gain to 0 over 500ms (overlaps with survived sting)
 
-- [ ] **AudioGate guard**: check `audioGate.isReady` before any `play()` call. If not ready, skip silently. Heartbeat starts on next frame after audio unlocks (16ms delay — inaudible).
+- [x] **AudioGate guard**: check `audioGate.isReady` before any `play()` call. If not ready, skip silently. Heartbeat starts on next frame after audio unlocks (16ms delay — inaudible).
 
-- [ ] **Pause behavior**: gain to 0 on pause (sample continues silently — no restart gap). Restore gain on resume.
+- [x] **Pause behavior**: gain to 0 on pause (sample continues silently — no restart gap). Restore gain on resume.
 
 ### Research Insights — Heartbeat
 
@@ -303,41 +303,41 @@ Sample at 70 BPM: rate 0.71 = 50 BPM (calm), rate 1.0 = 70 BPM, rate 2.14 = 150 
 
 ### Task 5: AmbientSound Subsystem
 
-- [ ] `src/renderer/systems/AmbientSound.ts`:
+- [x] `src/renderer/systems/AmbientSound.ts`:
   - Background drone: looping `WebAudioSound`, volume = `AMBIENT_DRONE_VOLUME` (0.15)
   - Random one-shot creaks: scheduled via `scene.time.delayedCall()` (respects pause automatically)
   - Interval: random between `AMBIENT_CREAK_MIN_INTERVAL_S` (8s) and `AMBIENT_CREAK_MAX_INTERVAL_S` (20s)
   - Creak variation: random variant + random detune (-100 to +100) + random volume (0.08-0.25) + random pan (-0.6 to +0.6)
   - **Active from COUNTDOWN start** (establishes atmosphere immediately)
 
-- [ ] **Duck/unduck API:**
+- [x] **Duck/unduck API:**
   - `duck()`: fade drone to `AMBIENT_DUCKED_VOLUME` (0.04) over ~1s (`setTargetAtTime` with timeConstant 0.3)
   - `unduck()`: fade drone back to base over ~1.5s (timeConstant 0.5)
   - AudioManager triggers duck when heartbeat volume > 50%, unduck when heartbeat volume drops below 20%
   - **Silence as design tool**: when seeker distance > 600px, consider fading drone to near-zero AND pausing creak scheduler
 
-- [ ] **Cleanup**: drone fades to 0 over 200ms on terminal state (FOUND/SURVIVED). Creak timer cancelled. On scene shutdown: stop and destroy.
+- [x] **Cleanup**: drone fades to 0 over 200ms on terminal state (FOUND/SURVIVED). Creak timer cancelled. On scene shutdown: stop and destroy.
 
 ---
 
 ### Task 6: Spectator Mode Audio
 
-- [ ] AudioManager accepts `spectatorMode: boolean` flag from SpectatorGame scene
-- [ ] HeartbeatSystem: `disabled: true` (no player perspective)
-- [ ] SoundEffects:
+- [x] AudioManager accepts `spectatorMode: boolean` flag from SpectatorGame scene
+- [x] HeartbeatSystem: `disabled: true` (no player perspective)
+- [x] SoundEffects:
   - Both agents' footsteps audible
   - Volume based on distance to **camera center** (not player position — no player exists)
   - Call `this.sound.setListenerPosition(camera.scrollX + 640, camera.scrollY + 360)` each frame
   - Door creaks for both agents (subscribe to DOOR_TOGGLED regardless of source)
-- [ ] Stings: same as player mode (found/survived)
-- [ ] Ambient: same as player mode (drone + creaks)
-- [ ] No countdown ticks (no player tension)
+- [x] Stings: same as player mode (found/survived)
+- [x] Ambient: same as player mode (drone + creaks)
+- [x] No countdown ticks (no player tension)
 
 ---
 
 ### Task 7: Tab Visibility Audio
 
-- [ ] PauseAuthority integration (extends Phase 3's visibilitychange handler):
+- [x] PauseAuthority integration (extends Phase 3's visibilitychange handler):
   - On `TAB_HIDDEN`: `audioGate.suspend()` — chains after any in-flight resume
   - On `TAB_VISIBLE`: `audioGate.ensureReady()` — chains after any in-flight suspend
   - On resume: check `context.state === 'running'`. If not (`'suspended'` or `'interrupted'`): set `audioAvailable = false`, retry on next user interaction
@@ -345,29 +345,29 @@ Sample at 70 BPM: rate 0.71 = 50 BPM (calm), rate 1.0 = 70 BPM, rate 2.14 = 150 
   - Ambient drone: gain to 0 on pause, restore on resume
   - Creak timer: `scene.time.delayedCall` auto-pauses with scene — no action needed
 
-- [ ] **Rapid tab switching protection**: AudioGate `pendingOp` chaining prevents double-suspend or double-resume. Operations are serialized, never concurrent.
+- [x] **Rapid tab switching protection**: AudioGate `pendingOp` chaining prevents double-suspend or double-resume. Operations are serialized, never concurrent.
 
 ---
 
 ### Task 8: Settings Additions (Audio)
 
-- [ ] **Three sliders + one toggle:**
+- [x] **Three sliders + one toggle:**
   - Master volume (0-1, default 0.7)
   - SFX volume (0-1, default 0.8)
   - Ambient volume (0-1, default 0.5)
   - Mute all toggle (boolean, default false)
 
-- [ ] **Apply immediately, persist debounced:**
+- [x] **Apply immediately, persist debounced:**
   - Slider change → `AudioManager.setChannelVolume(channel, value)` — instant audio feedback
   - Debounce localStorage write by 300ms after last change
   - Also persist on Settings scene shutdown
 
-- [ ] **Settings in PauseMenu** (Phase 3 deferred this — now required):
+- [x] **Settings in PauseMenu** (Phase 3 deferred this — now required):
   - PauseMenu gets 3 buttons: Resume, Settings, Quit to Menu
   - Settings opens as sub-scene or replaces PauseMenu content
   - **Controller navigation**: D-pad for slider, A confirm, B back
 
-- [ ] **AudioSettings persistence:**
+- [x] **AudioSettings persistence:**
   - Key: `hideAndSeekSettings`
   - Schema:
     ```typescript
@@ -387,12 +387,12 @@ Sample at 70 BPM: rate 0.71 = 50 BPM (calm), rate 1.0 = 70 BPM, rate 2.14 = 150 
 
 ### Task 9: Audio Unit Tests
 
-- [ ] **AudioGate:** state sequencing (suspend then resume, rapid toggle, reject handling)
-- [ ] **audio-curves.ts:** distanceToTempo, distanceToVolume (boundary values, clamping, zero, negative)
-- [ ] **Heartbeat:** hysteresis (oscillation at boundary does not stutter), lerp convergence, rate clamping [0.5, 3.0]
-- [ ] **SoundPool:** round-robin cycling, oldest-steal when all busy, destroy cleanup
-- [ ] **Footstep distance accumulator:** correct event emission interval, reset between rounds
-- [ ] **AudioSettings:** merge-with-defaults, NaN handling, missing fields, schema version mismatch
+- [x] **AudioGate:** state sequencing (suspend then resume, rapid toggle, reject handling)
+- [x] **audio-curves.ts:** distanceToTempo, distanceToVolume (boundary values, clamping, zero, negative)
+- [x] **Heartbeat:** hysteresis (oscillation at boundary does not stutter), lerp convergence, rate clamping [0.5, 3.0]
+- [x] **SoundPool:** round-robin cycling, oldest-steal when all busy, destroy cleanup
+- [x] **Footstep distance accumulator:** correct event emission interval, reset between rounds
+- [x] **AudioSettings:** merge-with-defaults, NaN handling, missing fields, schema version mismatch
 
 ---
 

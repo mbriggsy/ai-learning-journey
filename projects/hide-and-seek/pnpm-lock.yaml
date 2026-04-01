@@ -27,6 +27,9 @@ importers:
       jsdom:
         specifier: ^28.1.0
         version: 28.1.0
+      jsfxr:
+        specifier: ^1.4.0
+        version: 1.4.0
       typescript:
         specifier: ^5.9.3
         version: 5.9.3
@@ -621,6 +624,10 @@ packages:
     peerDependenciesMeta:
       canvas:
         optional: true
+
+  jsfxr@1.4.0:
+    resolution: {integrity: sha512-izrgCMfJKEcut8f8YXps5gSk1N0Lf3GLcEAxm42+XYZL2JbYjhVrlmRughzQ+Xzeg9sp5blG6jzkwBa6Goy1Vg==}
+    hasBin: true
 
   lru-cache@11.2.7:
     resolution: {integrity: sha512-aY/R+aEsRelme17KGQa/1ZSIpLpNYYrhcrepKTZgE+W3WM16YMCaPwOHLHsmopZHELU0Ojin1lPVxKR0MihncA==}
@@ -1337,6 +1344,8 @@ snapshots:
     transitivePeerDependencies:
       - '@noble/hashes'
       - supports-color
+
+  jsfxr@1.4.0: {}
 
   lru-cache@11.2.7: {}
 

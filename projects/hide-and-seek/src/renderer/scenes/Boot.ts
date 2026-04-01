@@ -84,6 +84,19 @@ export class BootScene extends Phaser.Scene {
     });
     this.load.tilemapTiledJSON('map', 'assets/maps/hideandseek.json');
 
+    // Audio assets (dual format: .ogg + .mp3 for Safari compatibility)
+    const audioKeys = [
+      'footstep_player_01', 'footstep_player_02', 'footstep_player_03',
+      'footstep_seeker_01', 'footstep_seeker_02', 'footstep_seeker_03',
+      'door_creak_01', 'door_creak_02', 'door_thud',
+      'countdown_tick', 'sting_found', 'sting_survived',
+      'sonar_ping', 'hunt_drone', 'ambient_drone',
+      'creak_01', 'creak_02', 'creak_03', 'heartbeat',
+    ];
+    for (const key of audioKeys) {
+      this.load.audio(key, [`assets/audio/${key}.ogg`, `assets/audio/${key}.mp3`]);
+    }
+
     this.load.on('progress', (value: number) => {
       this.progressBar.width = 310 * value;
     });

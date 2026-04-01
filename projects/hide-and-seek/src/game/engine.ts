@@ -5,7 +5,7 @@ import type { GameEventMap } from '../types/events.js';
 import type { TypedEmitter, TypedListener } from '../types/events.js';
 import type { SeekerConfig, HiderConfig, RoomDefinition, HidingSpot } from '../types/ai.js';
 import type { Difficulty, GameMode } from '../types/settings.js';
-import { SIMULATION, VISION, SEEKER, INTERACTION, TIMERS, DOOR } from '../constants.js';
+import { SIMULATION, VISION, SEEKER, INTERACTION, TIMERS, DOOR, DISPLAY, AUDIO } from '../constants.js';
 import { updateMovement } from './movement.js';
 import { computeFOV } from './los.js';
 import { checkDetection } from './detection.js';
@@ -379,12 +379,23 @@ export class GameEngine {
     const prevY = s.player.y;
     updateMovement(s.player, s.map, input, dt);
 
-    // Step 2b: Distance tracking
+    // Step 2b: Distance tracking + footstep accumulation
     const dx = s.player.x - prevX;
     const dy = s.player.y - prevY;
-    if (dx !== 0 || dy !== 0) {
-      s.stats.distanceTraveled += Math.hypot(dx, dy);
+    const playerMoveDist = Math.hypot(dx, dy);
+    if (playerMoveDist > 0) {
+      s.stats.distanceTraveled += playerMoveDist;
+      s.stats.playerFootstepAccum += playerMoveDist;
+      if (s.stats.playerFootstepAccum >= AUDIO.FOOTSTEP_STEP_DISTANCE_PX) {
+        s.stats.playerFootstepAccum -= AUDIO.FOOTSTEP_STEP_DISTANCE_PX;
+        this.emitter.emit('FOOTSTEP', { entity: 'player', x: s.player.x, y: s.player.y });
+      }
     }
+
+    // Step 2c: Seeker distance (used by audio systems)
+    const sdx = s.player.x - s.seeker.x;
+    const sdy = s.player.y - s.seeker.y;
+    s.stats.seekerDistanceTiles = Math.hypot(sdx, sdy) / DISPLAY.TILE_SIZE;
 
     // Step 3: Door interactions (already handled above)
 
@@ -439,8 +450,20 @@ export class GameEngine {
     );
 
     // Step 8: Seeker AI (FSM tick + detection → transition requests)
+    const prevSeekerX = s.seeker.x;
+    const prevSeekerY = s.seeker.y;
     if (this.seekerFSM && this.seekerCtx) {
       this.updateSeekerWithDetection(detection, s.player.x, s.player.y, dt);
+    }
+
+    // Step 8b: Seeker footstep accumulation
+    const seekerMoveDist = Math.hypot(s.seeker.x - prevSeekerX, s.seeker.y - prevSeekerY);
+    if (seekerMoveDist > 0) {
+      s.stats.seekerFootstepAccum += seekerMoveDist;
+      if (s.stats.seekerFootstepAccum >= AUDIO.FOOTSTEP_STEP_DISTANCE_PX) {
+        s.stats.seekerFootstepAccum -= AUDIO.FOOTSTEP_STEP_DISTANCE_PX;
+        this.emitter.emit('FOOTSTEP', { entity: 'seeker', x: s.seeker.x, y: s.seeker.y });
+      }
     }
 
     // Step 9: Rules evaluation (timers, game over)
@@ -456,6 +479,13 @@ export class GameEngine {
         seekerY: s.seeker.y,
       });
       hunt.sonarTicksUntilPing = Math.round(TIMERS.SONAR_PING_INTERVAL_S / SIMULATION.FIXED_STEP_S);
+    }
+
+    // Timer tick for final 3 seconds — emit once per second boundary
+    const ticksPerSec = Math.round(1 / SIMULATION.FIXED_STEP_S);
+    const secondsRemaining = Math.ceil(hunt.ticksRemaining / ticksPerSec);
+    if (secondsRemaining <= 3 && hunt.ticksRemaining % ticksPerSec === 0 && hunt.ticksRemaining > 0) {
+      this.emitter.emit('TIMER_TICK', { secondsRemaining });
     }
 
     const next = evaluateRules(s.gameFlow, detection);
@@ -543,20 +573,56 @@ export class GameEngine {
     );
 
     // Step 7: Hider AI update (prey acts before predator)
+    const prevHiderX = s.hider.x;
+    const prevHiderY = s.hider.y;
     if (this.hiderCtx) {
       updateHiderHunt(this.hiderCtx, dt);
     }
 
+    // Step 7b: Hider footstep accumulation
+    const hiderMoveDist = Math.hypot(s.hider.x - prevHiderX, s.hider.y - prevHiderY);
+    if (hiderMoveDist > 0) {
+      s.stats.hiderFootstepAccum += hiderMoveDist;
+      if (s.stats.hiderFootstepAccum >= AUDIO.FOOTSTEP_STEP_DISTANCE_PX) {
+        s.stats.hiderFootstepAccum -= AUDIO.FOOTSTEP_STEP_DISTANCE_PX;
+        this.emitter.emit('FOOTSTEP', { entity: 'hider', x: s.hider.x, y: s.hider.y });
+      }
+    }
+
     // Step 8: Seeker AI update
+    const prevSpecSeekerX = s.seeker.x;
+    const prevSpecSeekerY = s.seeker.y;
     if (this.seekerFSM && this.seekerCtx) {
       this.updateSeekerWithDetection(detection, s.hider.x, s.hider.y, dt);
     }
+
+    // Step 8b: Seeker footstep accumulation + distance computation
+    const specSeekerMoveDist = Math.hypot(s.seeker.x - prevSpecSeekerX, s.seeker.y - prevSpecSeekerY);
+    if (specSeekerMoveDist > 0) {
+      s.stats.seekerFootstepAccum += specSeekerMoveDist;
+      if (s.stats.seekerFootstepAccum >= AUDIO.FOOTSTEP_STEP_DISTANCE_PX) {
+        s.stats.seekerFootstepAccum -= AUDIO.FOOTSTEP_STEP_DISTANCE_PX;
+        this.emitter.emit('FOOTSTEP', { entity: 'seeker', x: s.seeker.x, y: s.seeker.y });
+      }
+    }
+
+    // Seeker-hider distance for audio
+    const specDx = s.hider.x - s.seeker.x;
+    const specDy = s.hider.y - s.seeker.y;
+    s.stats.seekerDistanceTiles = Math.hypot(specDx, specDy) / DISPLAY.TILE_SIZE;
 
     // Step 9: Rules evaluation (timers, game over)
     (s.gameFlow as HuntPhase).ticksRemaining--;
     (s.gameFlow as HuntPhase).ticksElapsed++;
 
     // No sonar in spectator mode
+
+    // Timer tick for final 3 seconds
+    const specTicksPerSec = Math.round(1 / SIMULATION.FIXED_STEP_S);
+    const specSecondsRemaining = Math.ceil((s.gameFlow as HuntPhase).ticksRemaining / specTicksPerSec);
+    if (specSecondsRemaining <= 3 && (s.gameFlow as HuntPhase).ticksRemaining % specTicksPerSec === 0 && (s.gameFlow as HuntPhase).ticksRemaining > 0) {
+      this.emitter.emit('TIMER_TICK', { secondsRemaining: specSecondsRemaining });
+    }
 
     const next = evaluateRules(s.gameFlow, detection);
     if (next) {

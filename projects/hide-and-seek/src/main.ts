@@ -32,6 +32,9 @@ const config: Phaser.Types.Core.GameConfig = {
   input: {
     gamepad: true,
   },
+  audio: {
+    disableWebAudio: false,
+  },
   scene: [BootScene, MainMenuScene, GameScene, HUDScene, PauseMenuScene, ResultsScene, SpectatorGameScene, SpectatorResultsScene],
 };
 

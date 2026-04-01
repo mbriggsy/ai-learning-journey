@@ -174,3 +174,63 @@ export const MINIMAP = {
   HEIGHT: 160,
   MARGIN: 10,
 } as const satisfies Record<string, number>;
+
+/** Heartbeat audio tuning */
+export const HEARTBEAT = {
+  /** Tiles — activate heartbeat below this distance */
+  START_RANGE: 8,
+  /** Tiles — deactivate heartbeat above this distance (hysteresis buffer) */
+  STOP_RANGE: 9.5,
+  /** Minimum heartbeat BPM at max range */
+  MIN_BPM: 50,
+  /** Maximum heartbeat BPM at closest range */
+  MAX_BPM: 150,
+  /** BPM of the original heartbeat sample */
+  BASE_SAMPLE_BPM: 70,
+  /** Minimum playbackRate (prevents freeze at 0) */
+  MIN_RATE: 0.5,
+  /** Maximum playbackRate */
+  MAX_RATE: 3.0,
+  /** Lerp factor per frame for rate smoothing (~130ms convergence at 60fps) */
+  LERP_SPEED: 0.08,
+  /** Fade-out duration in ms on SURVIVED */
+  FADE_OUT_MS: 500,
+} as const satisfies Record<string, number>;
+
+/** Ambient sound settings */
+export const AMBIENT = {
+  /** Base drone volume */
+  DRONE_VOLUME: 0.15,
+  /** Ducked drone volume when heartbeat active */
+  DUCKED_VOLUME: 0.04,
+  /** Minimum seconds between random creaks */
+  CREAK_MIN_INTERVAL_S: 8,
+  /** Maximum seconds between random creaks */
+  CREAK_MAX_INTERVAL_S: 20,
+  /** Minimum creak volume */
+  CREAK_MIN_VOLUME: 0.08,
+  /** Maximum creak volume */
+  CREAK_MAX_VOLUME: 0.25,
+} as const satisfies Record<string, number>;
+
+/** Audio system settings */
+export const AUDIO = {
+  /** Default master volume */
+  DEFAULT_MASTER_VOLUME: 0.7,
+  /** Default SFX channel volume */
+  DEFAULT_SFX_VOLUME: 0.8,
+  /** Default ambient channel volume */
+  DEFAULT_AMBIENT_VOLUME: 0.5,
+  /** Volume ramp time in seconds (15ms — click-free, below perception) */
+  VOLUME_RAMP_TIME_S: 0.015,
+  /** Pixels of movement between footstep events */
+  FOOTSTEP_STEP_DISTANCE_PX: 24,
+  /** Seeker hearing range in tiles (HIDER_VISION_RANGE + 3 buffer) */
+  SEEKER_HEARING_RANGE_TILES: 11,
+  /** Volume multiplier when wall blocks LOS to seeker */
+  WALL_ATTENUATION_MULTIPLIER: 0.4,
+  /** Exponent for distance-based volume rolloff (1.5 for natural 2D) */
+  ROLLOFF_EXPONENT: 1.5,
+  /** Door sound pool size */
+  DOOR_SOUND_POOL_SIZE: 2,
+} as const satisfies Record<string, number>;

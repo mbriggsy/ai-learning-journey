@@ -54,7 +54,7 @@ function makePlayingStateWithDoor(doorTileX: number, doorTileY: number) {
     gameFlow: { kind: 'countdown', ticksRemaining: 600 },
     seekerFov: new Uint8Array(MAP_W * MAP_H),
     playerFov: new Uint8Array(MAP_W * MAP_H).fill(1),
-    stats: { distanceTraveled: 0 },
+    stats: { distanceTraveled: 0, seekerDistanceTiles: Infinity, playerFootstepAccum: 0, seekerFootstepAccum: 0 },
     doors: new Map(),
     doorGeneration: 0,
   };

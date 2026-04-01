@@ -7,7 +7,7 @@ const STATE_COLORS: Record<SeekerFSMState, number> = {
   patrol: 0xff4444,       // red — default
   suspicious: 0xff8800,   // orange — something caught attention
   search: 0xffcc00,       // yellow — actively searching area
-  chase: 0xff0000,        // bright red — locked on, pursuing
+  chase: 0xff00ff,        // magenta — SPOTTED YOU, unmistakable
 };
 const EYE_COLOR = 0xffffff;
 const INDICATOR_SIZE = 8;

@@ -232,9 +232,17 @@ Both skills were optimized through the Skill Creator's description optimizer —
 | **Avg Tokens** | 26.6K | 28.4K | -1.8K |
 | **Avg Lines** | 49 | 101 | -52 |
 
-**`/brief`** — best description at iteration 4: **81% train accuracy**.
+**`/brief`** — 3 test cases, 6 parallel subagents:
 
-The skills don't make Claude smarter — they make Claude **consistent**. Same quality content, half the length, perfect structure every time.
+| Metric | /brief | No Skill | Delta |
+|--------|--------|----------|-------|
+| **Avg Tokens** | 43.2K | 36.2K | +7K |
+| **Avg Lines** | 83 | 83 | 0 |
+| **Avg Words** | 857 | 792 | +65 |
+
+`/brief` shows minimal quality delta because it's a **read skill** — it surfaces existing insight docs. Without the skill, Claude still finds and reads `docs/insights/`. The value of `/brief` is **convenience** (one command vs manual discovery) and **hook-based auto-injection** before `/ce:work` (currently blocked by the platform bug documented below). `/distill` shows the large delta because it's a **write skill** — the template enforces structure that Claude doesn't produce on its own.
+
+The skills don't make Claude smarter — they make Claude **consistent**. `/distill` proves this with half the length and perfect structure every time. `/brief` proves a different thing: that the real value of a read skill is in the delivery mechanism (hooks), not the formatting.
 
 ### What the Baseline Gets Wrong
 

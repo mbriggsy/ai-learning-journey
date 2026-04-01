@@ -38,13 +38,11 @@ When invoked, the skill dynamically:
 
 The `!` backtick syntax in SKILL.md runs shell commands at skill-load time, injecting live context before the agent sees the prompt.
 
-## Companion Hook: `remind-distill.sh`
+## Enforcement Hook
 
-A PostToolUse hook ([source](../hooks/remind-distill.sh)) that fires after `/ce:work` and `/ce:review`, asking:
+A PreToolUse blocking hook (`enforce-brief-before-work.sh`) gates `/commit` — the agent can't ship without running `/distill` first. The hook blocks the commit, tells Claude to run `/distill`, and allows the commit through on re-run via a marker file (`/tmp/.distill-gate`).
 
-> *"Did anything non-obvious come up? If so, run /distill."*
-
-This is the mechanical enforcement — no one has to remember to capture knowledge.
+If nothing non-obvious surfaced, the agent says so during `/distill` and moves on — the marker is set either way.
 
 ## Installation
 

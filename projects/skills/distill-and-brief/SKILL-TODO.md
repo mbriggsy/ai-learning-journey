@@ -16,33 +16,20 @@
 - `!` backtick dynamic injection in SKILL.md — works every time. This is how /brief gets insight content.
 - `/distill` description trimmed to 246 chars — fits within system prompt visible window
 
-### What doesn't work — hook output delivery
-Non-blocking hook output does NOT reach Claude. Tested exhaustively:
+### What doesn't work — non-blocking hook output (platform bug)
+Non-blocking hook output does NOT reach Claude. Only `{"decision":"block"}` delivers.
+Tested exhaustively (9 format combinations). See README "Platform Note" for details.
 
-| Hook type | Format | Result |
-|-----------|--------|--------|
-| `type: "command"`, exit 0 | plain text stdout | **silently dropped** |
-| `type: "command"`, exit 0 | `{"systemMessage":"..."}` | **silently dropped** |
-| `type: "command"`, exit 0 | `{"decision":"allow","reason":"..."}` | **silently dropped** |
-| `type: "command"`, exit 0 | `{"hookSpecificOutput":{"permissionDecision":"allow"},"systemMessage":"..."}` | **silently dropped** |
-| `type: "command"`, exit 0 | `{"continue":true,"systemMessage":"..."}` | **silently dropped** |
-| `type: "command"`, exit 2 | stderr text | **DELIVERED (blocks tool)** |
-| `type: "command"`, exit 0 | `{"decision":"block","reason":"..."}` | **DELIVERED (blocks tool)** |
-| `type: "prompt"` | allow + context text | **silently dropped** |
-| `type: "prompt"` | deny | **DELIVERED (blocks tool)** |
+**Workaround (implemented 2026-04-01):** Switched from non-blocking inject/remind hooks to a single blocking hook (`enforce-brief-before-work.sh`) with two gates:
+- Gate 1: blocks `/ce:work` until `/brief` runs
+- Gate 2: blocks `/commit` until `/distill` runs
 
-**Conclusion: only blocking output reaches Claude. All non-blocking output is silently discarded.**
-
-This is a confirmed Claude Code platform bug:
-- 7+ GitHub issues: #19432, #18534, #25987, #24788, #20062, plus plugin-side issues
-- PostToolUse `additionalContext` is documented but NOT IMPLEMENTED (#18534)
-- Anthropic's own Hookify plugin has the same bug — warnings don't reach model
-- CE plugin has ZERO hooks — never used this mechanism
+Old hooks (`inject-insights.sh`, `remind-distill.sh`) deleted — no dead weight.
 
 ### Other findings
 - CE's /ce:compound is manual-only (`disable-model-invocation: true` on compound-docs)
 - CE's /ce:work and /ce:review do NOT invoke /ce:compound (read all 1,030 lines)
-- /brief A/B eval: minimal quality delta because it's a read skill — real value is convenience + hooks (broken)
+- /brief A/B eval: minimal quality delta because it's a read skill — real value is convenience + hook enforcement
 - Hooks cannot invoke skills — separate systems, tested with prompt hook
 
 ## Done

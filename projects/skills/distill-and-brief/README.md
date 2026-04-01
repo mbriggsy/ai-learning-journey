@@ -5,7 +5,7 @@
 
 > **The pitch:** Every engineering session produces hard-won knowledge. By the next session, it's gone.
 >
-> We built a system where AI agents *automatically* capture non-obvious fixes and *automatically* brief themselves before starting new work. Two skills, two hooks, zero human effort, minimum token burn.
+> We built a system where AI agents *automatically* brief themselves before starting work and *automatically* distill findings before shipping. Two skills, one hook with two gates, zero human effort, minimum token burn.
 
 ---
 
@@ -28,16 +28,16 @@ Putting "remember to check past fixes" in instructions doesn't work. Humans forg
 
 ## The Solution
 
-Two directions. Two skills. Two hooks. One feedback loop.
+Two directions. Two skills. One hook. One feedback loop.
 
 ```mermaid
 flowchart LR
-    subgraph DISTILL ["  /distill  "]
+    subgraph BRIEF ["  /brief  "]
         direction TB
-        D1["Work or review surfaces\nnon-obvious root cause"]
-        D2["Hook fires:\n'Run /distill?'"]
-        D3["Agent writes\ninsight doc"]
-        D1 --> D2 --> D3
+        B1["Agent starts /ce:work"]
+        B2["Hook blocks:\n'Run /brief first'"]
+        B3["Agent works with\nfull awareness"]
+        B1 --> B2 --> B3
     end
 
     subgraph KB ["  docs/insights/  "]
@@ -48,16 +48,16 @@ flowchart LR
         S4["..."]
     end
 
-    subgraph BRIEF ["  /brief  "]
+    subgraph DISTILL ["  /distill  "]
         direction TB
-        B1["Agent starts\nnew work"]
-        B2["Hook fires:\nauto-injects context"]
-        B3["Agent works with\nfull awareness"]
-        B1 --> B2 --> B3
+        D1["Agent commits"]
+        D2["Hook blocks:\n'Run /distill first'"]
+        D3["Agent captures insight\nor confirms nothing to capture"]
+        D1 --> D2 --> D3
     end
 
+    BRIEF -->|"reads from"| KB
     DISTILL -->|"writes to"| KB
-    KB -->|"reads from"| BRIEF
 
     style DISTILL fill:#2d4a3e,stroke:#4ade80,color:#fff
     style KB fill:#3b3520,stroke:#facc15,color:#fff
@@ -66,10 +66,13 @@ flowchart LR
 
 ### The Flow
 
-1. **After executing work or completing a review**, a PostToolUse hook fires and asks: *"Did anything non-obvious come up? If so, run `/distill`."*
-2. **`/distill`** shows the agent what's already documented, provides a template, and auto-numbers the next file. The agent writes a focused insight doc.
-3. **Before the next work session**, a PreToolUse hook fires and injects summaries of every insight doc into the agent's context. No one has to remember. No one has to ask.
-4. **`/brief`** is also available on-demand — any time, any session, just ask.
+1. **Agent starts a work session** with `/ce:work` — the hook blocks it: *"Run `/brief` first."*
+2. **`/brief`** reads every insight doc in `docs/insights/` and surfaces the full context into the conversation. A marker file is created so the hook knows brief ran.
+3. **Agent re-runs `/ce:work`** — hook sees the marker, consumes it, allows through. The agent works with full awareness of past root causes and gotchas.
+4. **Agent finishes work and commits** — the hook blocks the commit: *"Run `/distill` before shipping."*
+5. **`/distill`** captures any non-obvious findings (or the agent confirms nothing to capture). Marker created.
+6. **Agent re-runs the commit** — hook sees the marker, consumes it, commit proceeds.
+7. **`/brief`** is also available on-demand — any time, any session, just ask.
 
 ---
 
@@ -77,36 +80,40 @@ flowchart LR
 
 ```mermaid
 flowchart TB
-    subgraph HOOKS ["Hooks"]
-        H1["PreToolUse\n<b>inject-insights.sh</b>\nMatcher: Skill\nInjects insight summaries"]
-        H2["PostToolUse\n<b>remind-distill.sh</b>\nMatcher: Skill\nReminds to capture findings"]
+    subgraph HOOK ["enforce-brief-before-work.sh  (PreToolUse · Skill)"]
+        G1["Gate 1: Brief before work\n/ce:work blocked until /brief runs"]
+        G2["Gate 2: Distill before ship\n/commit blocked until /distill runs"]
     end
 
-    subgraph SKILLS ["Skills (guided workflows)"]
-        SK1["<b>/distill</b>\nWrite an insight doc\nDynamic injection: existing insights"]
-        SK2["<b>/brief</b>\nRead insight context\nDynamic injection: full doc content"]
+    subgraph SKILLS ["Skills"]
+        SK1["<b>/distill</b>\nWrite an insight doc"]
+        SK2["<b>/brief</b>\nRead insight context"]
     end
 
     subgraph STORE ["Knowledge Store"]
-        FS["docs/insights/*.md\n\nYAML frontmatter\n+ Problem\n+ Root Cause\n+ Fix\n+ Key Insight\n+ Also Applies To"]
+        FS["docs/insights/*.md"]
     end
 
-    EXECUTE["Execute\n(build, test, debug)"] --> H2
-    REVIEW["Review\n(code review)"] --> H2
-    H2 -->|"reminds agent"| SK1
+    WORK["/ce:work"] --> G1
+    G1 -->|"BLOCK → /brief"| SK2
+    SK2 -->|"reads all"| FS
+    SK2 -->|"marker"| G1
+    G1 -->|"allow"| WORK2["/ce:work ✓"]
+
+    WORK2 -->|"work done"| COMMIT["/commit"]
+    COMMIT --> G2
+    G2 -->|"BLOCK → /distill"| SK1
     SK1 -->|"writes"| FS
+    SK1 -->|"marker"| G2
+    G2 -->|"allow"| COMMIT2["/commit ✓"]
 
-    EXECUTE2["Execute\n(start working)"] --> H1
-    H1 -->|"injects summaries from"| FS
-
-    SK2 -->|"reads on demand"| FS
-
-    style HOOKS fill:#1a1a2e,stroke:#e94560,color:#fff
+    style HOOK fill:#1a1a2e,stroke:#e94560,color:#fff
     style SKILLS fill:#1a1a2e,stroke:#4ade80,color:#fff
     style STORE fill:#1a1a2e,stroke:#facc15,color:#fff
-    style EXECUTE fill:#0f3460,stroke:#60a5fa,color:#fff
-    style REVIEW fill:#0f3460,stroke:#60a5fa,color:#fff
-    style EXECUTE2 fill:#0f3460,stroke:#60a5fa,color:#fff
+    style WORK fill:#0f3460,stroke:#60a5fa,color:#fff
+    style WORK2 fill:#0f3460,stroke:#60a5fa,color:#fff
+    style COMMIT fill:#0f3460,stroke:#60a5fa,color:#fff
+    style COMMIT2 fill:#0f3460,stroke:#60a5fa,color:#fff
 ```
 
 ---
@@ -118,18 +125,24 @@ flowchart TB
 | **Agent instructions** ("check insights before work") | Rejected | Instructions are suggestions. Agents skip them under task pressure. |
 | **Existing plugin skill** (ce:compound) | Rejected | Spins up 5 parallel subagents, produces 150+ line docs. Overkill for our 40-line format. |
 | **Auto-triggering skills** (no hooks) | Rejected | Claude's own docs say it "tends to under-trigger." Unreliable for enforcement. |
-| **Hooks + custom skills** | Selected | Hooks fire deterministically. Skills handle the workflow. Knowledge compounds across sessions. |
+| **Non-blocking hooks** (inject context via systemMessage) | Rejected | Platform bug — non-blocking hook output is silently discarded. Tested, filed issues, waited. Doesn't work. |
+| **Blocking hooks + custom skills** | Selected | Blocking hooks deliver their message to Claude. Block `/ce:work`, redirect to `/brief`, allow on re-run. Deterministic enforcement. |
 
 ### Design Principles
 
-| Hook type | What it does | Role |
-|-----------|-------------|------|
-| **Blocking** | Rejects a tool call — tool literally fails | Enforcement | 
-| **Injecting** | Adds information to context — no action required | Briefing |
-| **Advisory** | Outputs a suggestion — agent chooses to act | Capture reminder |
+Only blocking hooks work reliably on the current platform. Each gate uses the same pattern: block the tool, redirect to a skill, skill creates a marker file (`touch`), tool re-runs and the marker lets it through (`rm`). No timestamps, no TTL — just file existence.
 
-- **inject-insights.sh** fires before `/ce:work` and injects insight summaries into context. Mechanical — no judgment needed.
-- **remind-distill.sh** fires after `/ce:work` and `/ce:review` and reminds the agent to capture findings.
+**One hook, two gates:**
+
+- **Gate 1** (brief before work) — `/ce:work` blocked until `/brief` runs. Marker: `/tmp/.brief-gate`.
+- **Gate 2** (distill before ship) — `/commit` blocked until `/distill` runs. Marker: `/tmp/.distill-gate`.
+
+**Supporting hook:**
+
+- **block-webfetch.sh** blocks `WebFetch` (no timeout parameter) and redirects to `gemini-grounding` or `curl`. Unrelated to the knowledge loop but same blocking pattern.
+
+**Skills:**
+
 - **`/distill`** uses dynamic context injection to show existing insights before the agent writes, preventing duplicates.
 - **`/brief`** reads the full insight docs on demand, for any session, at any time.
 
@@ -176,43 +189,35 @@ request-ID-based supersession.
 
 ```mermaid
 flowchart LR
-    PLAN["Plan"] --> EXECUTE["Execute"]
+    PLAN["Plan"] --> BRIEF["/brief"]
+    BRIEF -->|"context loaded"| EXECUTE["/ce:work"]
     EXECUTE --> REVIEW["Review"]
-
-    EXECUTE -.->|"hook"| DISTILL["/distill"]
-    REVIEW -.->|"hook"| DISTILL
+    REVIEW --> DISTILL["/distill"]
+    DISTILL -->|"captured"| COMMIT["/commit"]
 
     DISTILL -->|"writes"| KB["docs/insights/"]
-    KB -->|"hook: auto-injects"| EXECUTE
-
-    BRIEF["/brief"] -.->|"on demand"| KB
+    KB -->|"reads"| BRIEF
 
     style PLAN fill:#0f3460,stroke:#60a5fa,color:#fff
     style EXECUTE fill:#0f3460,stroke:#60a5fa,color:#fff
     style REVIEW fill:#0f3460,stroke:#60a5fa,color:#fff
+    style COMMIT fill:#0f3460,stroke:#60a5fa,color:#fff
     style DISTILL fill:#2d4a3e,stroke:#4ade80,color:#fff
     style KB fill:#3b3520,stroke:#facc15,color:#fff
     style BRIEF fill:#1e3a5f,stroke:#60a5fa,color:#fff
 ```
 
-Plan. Execute. Review. Distill. Brief. Repeat. The knowledge base grows. Rediscovery drops. Each cycle makes the next one better.
+Plan. Brief. Execute. Review. Distill. Commit. Repeat. Both gates are enforced by blocking hooks — the agent can't skip the briefing or the distill check.
 
 > *Currently implemented with the [compound-engineering](https://github.com/nichochar/compound-engineering) plugin for Claude Code. The pattern is tool-agnostic — any workflow with plan/execute/review steps can plug in.*
 
 ---
 
-## Known Issue: Non-Blocking Hook Output
+## Platform Note: Why Blocking Hooks
 
-**Both hooks fire correctly but their output does not reach the model.** This is a confirmed Claude Code platform bug affecting all non-blocking hook output — not specific to our implementation.
+Non-blocking hooks (`exit 0` + stdout) are silently discarded by Claude Code — the model never sees the output. This is a confirmed platform bug (7+ GitHub issues filed). We originally built `inject-insights.sh` (non-blocking, inject context) and `remind-distill.sh` (non-blocking, advisory). Both fired correctly but their output vanished.
 
-- **What works:** Blocking hooks (`exit 2` + stderr, or `{"decision":"block"}`) deliver output to Claude.
-- **What doesn't:** Non-blocking hooks (`exit 0` + stdout in any JSON format) are silently discarded. The model never sees the output.
-- **Impact:** `inject-insights.sh` fires but its insight summaries don't reach the agent. `remind-distill.sh` fires but its reminder doesn't reach the agent. Both skills (`/distill` and `/brief`) work perfectly when invoked manually.
-- **Scope:** At least 7 GitHub issues filed on `anthropic/claude-code` and `anthropic/claude-plugins-official` (#19432, #18534, #25987, #24788, #20062, plus plugin-side issues). Anthropic's own Hookify plugin has the same bug — its warning rules don't reach the model.
-- **Workaround:** CLAUDE.md instruction serves as a persistent backup: *"After every /ce:review or /ce:work synthesis, evaluate findings for /distill before moving on."*
-- **Status:** Waiting on platform fix. Feature request #19909 exists for proper conversation lifecycle hooks.
-
-When this bug is fixed, the hooks are ready — the scripts produce correct output, fire at the right time, and the JSON format matches documented specs.
+**Blocking hooks** (`{"decision": "block"}`) DO deliver their message. So we switched to the WebFetch pattern: block the tool, tell Claude what to do instead, let it re-run. This turns a platform limitation into a feature — `/brief` runs as a full skill invocation with complete context, not a compressed summary injected via hook output.
 
 ---
 
@@ -240,7 +245,7 @@ Both skills were optimized through the Skill Creator's description optimizer —
 | **Avg Lines** | 83 | 83 | 0 |
 | **Avg Words** | 857 | 792 | +65 |
 
-`/brief` shows minimal quality delta because it's a **read skill** — it surfaces existing insight docs. Without the skill, Claude still finds and reads `docs/insights/`. The value of `/brief` is **convenience** (one command vs manual discovery) and **hook-based auto-injection** before `/ce:work` (currently blocked by the platform bug documented below). `/distill` shows the large delta because it's a **write skill** — the template enforces structure that Claude doesn't produce on its own.
+`/brief` shows minimal quality delta because it's a **read skill** — it surfaces existing insight docs. Without the skill, Claude still finds and reads `docs/insights/`. The value of `/brief` is **convenience** (one command vs manual discovery) and **hook-enforced auto-injection** before `/ce:work` — the blocking hook ensures it always runs. `/distill` shows the large delta because it's a **write skill** — the template enforces structure that Claude doesn't produce on its own.
 
 The skills don't make Claude smarter — they make Claude **consistent**. `/distill` proves this with half the length and perfect structure every time. `/brief` proves a different thing: that the real value of a read skill is in the delivery mechanism (hooks), not the formatting.
 

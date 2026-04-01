@@ -25,11 +25,11 @@ If no solutions exist yet, the skill says so and points to /distill.
 
 When invoked, the skill dynamically reads every `docs/insights/*.md` file using the `!` backtick syntax, injecting their content at skill-load time. The agent sees the full knowledge base before it starts reasoning about the task.
 
-## Companion Hook: `inject-insights.sh`
+## Enforcement Hook
 
-A PreToolUse hook ([source](../hooks/inject-insights.sh)) that fires before `/ce:work`, automatically injecting solution summaries (title + key insight) into the agent's context. This means the agent gets briefed even when nobody asks — zero-effort, every time.
+A PreToolUse blocking hook (`enforce-brief-before-work.sh`) gates `/ce:work` — the agent can't start work without running `/brief` first. The hook blocks `/ce:work`, tells Claude to run `/brief`, and allows `/ce:work` through on re-run via a marker file (`/tmp/.brief-gate`).
 
-The hook reads frontmatter titles and Key Insight sections from each doc, producing a compact summary. /brief gives you the full docs on demand; the hook gives you the headlines automatically.
+This means the agent gets briefed every time, mechanically — no one has to remember, no instructions to skip under task pressure.
 
 ## Installation
 

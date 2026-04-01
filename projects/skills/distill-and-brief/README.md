@@ -222,7 +222,9 @@ We ran `/distill` through Anthropic's [Skill Creator](https://github.com/anthrop
 
 ### A/B Eval Results
 
-3 test cases, 6 parallel subagents (with-skill + baseline for each):
+Both skills were optimized through the Skill Creator's description optimizer — 5 iterations each, 20 queries, 3 runs per query, 0.4 holdout split.
+
+**`/distill`** — 3 test cases, 6 parallel subagents (with-skill + baseline for each):
 
 | Metric | /distill | No Skill | Delta |
 |--------|---------|----------|-------|
@@ -230,7 +232,9 @@ We ran `/distill` through Anthropic's [Skill Creator](https://github.com/anthrop
 | **Avg Tokens** | 26.6K | 28.4K | -1.8K |
 | **Avg Lines** | 49 | 101 | -52 |
 
-The skill doesn't make Claude smarter — it makes Claude **consistent**. Same quality content, half the length, perfect structure every time.
+**`/brief`** — best description at iteration 4: **81% train accuracy**.
+
+The skills don't make Claude smarter — they make Claude **consistent**. Same quality content, half the length, perfect structure every time.
 
 ### What the Baseline Gets Wrong
 

@@ -1,10 +1,10 @@
 import type { InputState } from '../types/input.js';
-import type { GameState, PlayingState, MutablePlayingState, CountdownPhase, HuntPhase, DoorId } from '../types/state.js';
+import type { GameState, PlayingState, SpectatingState, MutablePlayingState, MutableSpectatingState, CountdownPhase, HuntPhase, DoorId } from '../types/state.js';
 import type { ReadonlyDeep } from '../types/utility.js';
 import type { GameEventMap } from '../types/events.js';
 import type { TypedEmitter, TypedListener } from '../types/events.js';
-import type { SeekerConfig, RoomDefinition, HidingSpot } from '../types/ai.js';
-import type { Difficulty } from '../types/settings.js';
+import type { SeekerConfig, HiderConfig, RoomDefinition, HidingSpot } from '../types/ai.js';
+import type { Difficulty, GameMode } from '../types/settings.js';
 import { SIMULATION, VISION, SEEKER, INTERACTION, TIMERS, DOOR } from '../constants.js';
 import { updateMovement } from './movement.js';
 import { computeFOV } from './los.js';
@@ -17,6 +17,9 @@ import { SeekerFSM, clearPath } from './ai/seeker-fsm.js';
 import type { SeekerContext, SeekerAIInternalState } from './ai/seeker-fsm.js';
 import { ActionQueue } from './ai/actions.js';
 import { SEEKER_CONFIGS } from './ai/seeker-configs.js';
+import { HIDER_CONFIGS } from './ai/hider-configs.js';
+import { createHiderAIState, updateHiderCountdown, updateHiderHunt } from './ai/hider.js';
+import type { HiderContext, HiderAIState } from './ai/hider.js';
 import { RoomTracker } from './ai/room-tracking.js';
 import { EvidenceTracker } from './ai/evidence.js';
 import { SuspiciousState } from './ai/states/suspicious-state.js';
@@ -58,7 +61,14 @@ export class GameEngine {
   private seekerFSM: SeekerFSM | null = null;
   private seekerCtx: SeekerContext | null = null;
   private readonly seekerConfig: SeekerConfig;
+  private readonly hiderConfig: HiderConfig | null;
+  private hiderPathfinding: PathfindingInstance | null = null;
+  private hiderCtx: HiderContext | null = null;
+  private readonly mode: GameMode;
   private readonly difficulty: Difficulty;
+  private readonly hiderDifficulty: Difficulty;
+  private seekerSpawnTileX: number = 0;
+  private seekerSpawnTileY: number = 0;
   private collisionGrid: Uint8Array | null = null;
   private lastPlayerFovTileX: number = -1;
   private lastPlayerFovTileY: number = -1;
@@ -69,19 +79,28 @@ export class GameEngine {
   private rooms: RoomDefinition[] = [];
   private hidingSpots: HidingSpot[] = [];
 
-  constructor(initialState: GameState, difficulty: Difficulty = 'easy') {
+  constructor(
+    initialState: GameState,
+    difficulty: Difficulty = 'easy',
+    options?: { mode?: GameMode; hiderDifficulty?: Difficulty },
+  ) {
     this.state = initialState;
     this.emitter = createTypedEmitter<GameEventMap>();
     this.pathfinding = new PathfindingSystem();
     this.difficulty = difficulty;
+    this.hiderDifficulty = options?.hiderDifficulty ?? 'easy';
+    this.mode = options?.mode ?? 'player';
     this.seekerConfig = SEEKER_CONFIGS[difficulty];
+    this.hiderConfig = this.mode === 'spectator' ? HIDER_CONFIGS[this.hiderDifficulty] : null;
 
     if (initialState.phase === 'playing') {
       this.initPlayingSystems(initialState);
+    } else if (initialState.phase === 'spectating') {
+      this.initSpectatingSystems(initialState);
     }
   }
 
-  /** Set rooms and hiding spots (called by Game scene after map load). */
+  /** Set rooms and hiding spots (called by scene after map load). */
   setRooms(rooms: RoomDefinition[], hidingSpots: HidingSpot[]): void {
     this.rooms = rooms;
     this.hidingSpots = hidingSpots;
@@ -91,38 +110,49 @@ export class GameEngine {
     }
   }
 
+  /** Check if engine is in spectating mode */
+  isSpectating(): boolean {
+    return this.state.phase === 'spectating';
+  }
+
   /** Set door system after construction (engine's emitter must exist first) */
   setDoorSystem(doorSystem: DoorSystem): void {
     this.doorSystem = doorSystem;
 
-    // Sync door state into PlayingState
-    if (this.state.phase === 'playing') {
-      const s = this.state as MutablePlayingState;
-      (s as { doors: ReadonlyMap<string, unknown> }).doors = doorSystem.getDoors();
+    const isActive = this.state.phase === 'playing' || this.state.phase === 'spectating';
+    if (!isActive) return;
 
-      // Set initial door costs for ALL pathfinding instances
-      for (const door of doorSystem.getDoors().values()) {
-        if (!door.isOpen) {
-          this.pathfinding.setDoorCostAll(door.position.x, door.position.y, DOOR.PATHFINDING_COST);
-        }
+    // Sync door state
+    const s = this.state as MutablePlayingState | MutableSpectatingState;
+    (s as { doors: ReadonlyMap<string, unknown> }).doors = doorSystem.getDoors();
+
+    // Set initial door costs for ALL pathfinding instances
+    for (const door of doorSystem.getDoors().values()) {
+      if (!door.isOpen) {
+        this.pathfinding.setDoorCostAll(door.position.x, door.position.y, DOOR.PATHFINDING_COST);
       }
-
-      // Wire into seeker context
-      if (this.seekerCtx) {
-        this.seekerCtx.doorSystem = doorSystem;
-      }
-
-      // Subscribe to DOOR_TOGGLED for evidence pipeline (record, don't act)
-      this.emitter.on('DOOR_TOGGLED', (payload) => {
-        if (this.seekerCtx) {
-          this.seekerCtx.ai.pendingDoorEvidence.push({
-            id: payload.id,
-            position: payload.position,
-            isOpen: payload.isOpen,
-          });
-        }
-      });
     }
+
+    // Wire into seeker context
+    if (this.seekerCtx) {
+      this.seekerCtx.doorSystem = doorSystem;
+    }
+
+    // Wire into hider context
+    if (this.hiderCtx) {
+      this.hiderCtx.doorSystem = doorSystem;
+    }
+
+    // Subscribe to DOOR_TOGGLED for evidence pipeline (record, don't act)
+    this.emitter.on('DOOR_TOGGLED', (payload) => {
+      if (this.seekerCtx) {
+        this.seekerCtx.ai.pendingDoorEvidence.push({
+          id: payload.id,
+          position: payload.position,
+          isOpen: payload.isOpen,
+        });
+      }
+    });
   }
 
   private initPlayingSystems(playing: PlayingState): void {
@@ -153,6 +183,66 @@ export class GameEngine {
       doorSystem: this.doorSystem,
       currentTick: 0,
     };
+  }
+
+  private initSpectatingSystems(spec: SpectatingState): void {
+    const { width, height } = spec.map;
+    this.collisionGrid = new Uint8Array(width * height);
+    for (let y = 0; y < height; y++) {
+      for (let x = 0; x < width; x++) {
+        this.collisionGrid[y * width + x] = spec.map.isWalkable(x, y) ? 0 : 1;
+      }
+    }
+
+    // Seeker pathfinding instance
+    this.seekerPathfinding = this.pathfinding.createInstance('seeker', this.collisionGrid, width, height);
+
+    // Hider pathfinding instance (doors treated as blocked for Easy/Medium, cost 50 for Hard)
+    this.hiderPathfinding = this.pathfinding.createInstance('hider', this.collisionGrid, width, height);
+
+    // Seeker FSM + context
+    this.seekerFSM = new SeekerFSM();
+    const aiState = createSeekerAIInternal(spec.seeker.x, spec.seeker.y, this.seekerConfig, this.difficulty);
+    this.seekerCtx = {
+      config: this.seekerConfig,
+      pathfinding: this.seekerPathfinding,
+      map: spec.map,
+      rooms: this.rooms,
+      hidingSpots: this.hidingSpots,
+      emitter: this.emitter,
+      render: spec.seeker,
+      ai: aiState,
+      actionQueue: new ActionQueue(),
+      doorSystem: this.doorSystem,
+      currentTick: 0,
+    };
+
+    // Record seeker spawn for hider scoring
+    const seekerSpawn = spec.spawns.find(s => s.type === 'seeker_spawn');
+    if (seekerSpawn) {
+      const { x: sx, y: sy } = pixelToTile(seekerSpawn.x, seekerSpawn.y);
+      this.seekerSpawnTileX = sx;
+      this.seekerSpawnTileY = sy;
+    }
+
+    // Hider AI context
+    if (this.hiderConfig) {
+      this.hiderCtx = {
+        config: this.hiderConfig,
+        pathfinding: this.hiderPathfinding,
+        map: spec.map,
+        emitter: this.emitter,
+        render: spec.hider,
+        ai: createHiderAIState(),
+        seekerX: spec.seeker.x,
+        seekerY: spec.seeker.y,
+        seekerFov: spec.seekerFov,
+        hiderFov: spec.hiderFov,
+        doorSystem: this.doorSystem,
+        currentTick: 0,
+        doorGeneration: 0,
+      };
+    }
   }
 
   getDoorSystem(): DoorSystem | null {
@@ -217,6 +307,10 @@ export class GameEngine {
 
   /** Canonical fixedUpdate ordering (Phase 5a, 9 steps) */
   private fixedUpdate(dt: number, input: InputState): void {
+    if (this.state.phase === 'spectating') {
+      this.spectatingFixedUpdate(dt);
+      return;
+    }
     if (this.state.phase !== 'playing') return;
     const s = this.state as MutablePlayingState;
     this.currentTick++;
@@ -348,6 +442,165 @@ export class GameEngine {
     if (next) {
       s.gameFlow = next;
       this.emitter.emit('PHASE_CHANGED', next.kind);
+    }
+  }
+
+  /** Spectating fixedUpdate — both seeker and hider are AI-controlled */
+  private spectatingFixedUpdate(dt: number): void {
+    if (this.state.phase !== 'spectating') return;
+    const s = this.state as MutableSpectatingState;
+    this.currentTick++;
+    if (this.seekerCtx) this.seekerCtx.currentTick = this.currentTick;
+    if (this.hiderCtx) {
+      this.hiderCtx.currentTick = this.currentTick;
+      this.hiderCtx.seekerX = s.seeker.x;
+      this.hiderCtx.seekerY = s.seeker.y;
+      this.hiderCtx.doorGeneration = this.doorSystem ? this.doorSystem.getDoorGeneration() : 0;
+    }
+
+    // Terminal guard
+    if (s.gameFlow.kind === 'found' || s.gameFlow.kind === 'survived') return;
+
+    if (s.gameFlow.kind === 'countdown') {
+      // Hider AI picks spot and moves during countdown
+      if (this.hiderCtx) {
+        updateHiderCountdown(this.hiderCtx, this.seekerSpawnTileX, this.seekerSpawnTileY, dt);
+      }
+      (s.gameFlow as CountdownPhase).ticksRemaining--;
+
+      const next = evaluateRules(s.gameFlow, 'none');
+      if (next) {
+        s.gameFlow = next;
+
+        // Hunt started — init Hard seeker evidence
+        if (this.seekerCtx && this.difficulty === 'hard' && this.doorSystem) {
+          this.seekerCtx.ai.evidenceTracker = new EvidenceTracker(
+            this.doorSystem.getDoors(), this.currentTick,
+          );
+        }
+
+        this.emitter.emit('PHASE_CHANGED', next.kind);
+      }
+      return;
+    }
+
+    // === HUNT PHASE — spectating 9-step ordering ===
+
+    // Step 1: Process pending door evidence
+    if (this.seekerCtx) {
+      this.processDoorEvidence();
+    }
+
+    // Step 2: Hider AI door interactions (Hard hider door closing handled inside updateHiderHunt)
+
+    // Step 3: Map state updates (implicit via DoorSystem)
+
+    // Step 4: Seeker FOV (dirty flag)
+    const doorGen = this.doorSystem ? this.doorSystem.getDoorGeneration() : 0;
+    const { x: stx, y: sty } = pixelToTile(s.seeker.x, s.seeker.y);
+    if (this.seekerCtx && (
+      stx !== this.seekerCtx.ai.lastFovTileX ||
+      sty !== this.seekerCtx.ai.lastFovTileY ||
+      doorGen !== this.lastSeekerFovDoorGen
+    )) {
+      this.seekerCtx.ai.lastFovTileX = stx;
+      this.seekerCtx.ai.lastFovTileY = sty;
+      this.lastSeekerFovDoorGen = doorGen;
+      s.seekerFov.fill(0);
+      computeFOV(stx, sty, this.seekerConfig.visionRange,
+        (x, y) => s.map.isBlocking(x, y), s.seekerFov, s.map.width, s.map.height);
+    }
+
+    // Step 5: Hider FOV (dirty flag, Hard only — handled inside updateHiderHunt)
+
+    // Step 6: Detection (seeker → hider)
+    const detection = checkDetection(
+      s.seeker.x, s.seeker.y,
+      s.hider.x, s.hider.y,
+      s.seekerFov, s.map.width,
+      s.seeker.facingAngle,
+      this.seekerConfig.visionConeAngle,
+    );
+
+    // Step 7: Hider AI update (prey acts before predator)
+    if (this.hiderCtx) {
+      updateHiderHunt(this.hiderCtx, dt);
+    }
+
+    // Step 8: Seeker AI update
+    if (this.seekerFSM && this.seekerCtx) {
+      this.updateSeekerWithDetectionSpectating(detection, s, dt);
+    }
+
+    // Step 9: Rules evaluation (timers, game over)
+    (s.gameFlow as HuntPhase).ticksRemaining--;
+    (s.gameFlow as HuntPhase).ticksElapsed++;
+
+    // No sonar in spectator mode
+
+    const next = evaluateRules(s.gameFlow, detection);
+    if (next) {
+      s.gameFlow = next;
+      this.emitter.emit('PHASE_CHANGED', next.kind);
+    }
+  }
+
+  /** Spectating variant of seeker detection — uses hider position instead of player */
+  private updateSeekerWithDetectionSpectating(
+    detection: 'none' | 'spotted' | 'found',
+    s: MutableSpectatingState,
+    dt: number,
+  ): void {
+    const fsm = this.seekerFSM!;
+    const ctx = this.seekerCtx!;
+    const { ai, config } = ctx;
+
+    if (detection === 'spotted' || detection === 'found') {
+      const { x: hx, y: hy } = pixelToTile(s.hider.x, s.hider.y);
+      ai.lastKnownHiderPos = { x: hx, y: hy };
+      ai.chaseLostTicks = 0;
+    }
+
+    const currentState = fsm.getStateName();
+
+    if (detection === 'spotted' || detection === 'found') {
+      if (currentState !== 'chase') {
+        fsm.requestTransition('chase', config.reactionDelayTicks);
+      }
+    } else {
+      if (currentState === 'chase' || fsm.getPendingTransition()?.target === 'chase') {
+        if (config.cancelChaseOnBriefGlimpse && fsm.getPendingTransition()?.target === 'chase') {
+          fsm.cancelPending();
+          if (ai.lastKnownHiderPos) {
+            SuspiciousState.setStimulus(ai.lastKnownHiderPos.x, ai.lastKnownHiderPos.y);
+            fsm.requestTransition('suspicious', 0);
+          }
+        }
+        if (currentState === 'chase') {
+          ai.chaseLostTicks++;
+          if (ai.chaseLostTicks > config.chaseGraceTicks) {
+            if (ai.chaseLostTicks - config.chaseGraceTicks >= config.chaseTimeoutTicks) {
+              if (ai.lastKnownHiderPos) {
+                fsm.requestTransition('search', 0);
+              } else {
+                fsm.requestTransition('patrol', 0);
+              }
+            }
+          }
+        }
+      }
+    }
+
+    if (!ctx.actionQueue.isEmpty() && ctx.doorSystem) {
+      this.processActionQueue(ctx, dt);
+    } else {
+      fsm.update(ctx, dt);
+    }
+
+    if (ctx.render.fsmState !== fsm.getStateName()) {
+      const desired = ctx.render.fsmState;
+      ctx.render.fsmState = fsm.getStateName();
+      fsm.forceTransition(ctx, desired);
     }
   }
 

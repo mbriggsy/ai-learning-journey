@@ -20,11 +20,12 @@
 Non-blocking hook output does NOT reach Claude. Only `{"decision":"block"}` delivers.
 Tested exhaustively (9 format combinations). See README "Platform Note" for details.
 
-**Workaround (implemented 2026-04-01):** Switched from non-blocking inject/remind hooks to a single blocking hook (`enforce-brief-before-work.sh`) with two gates:
-- Gate 1: blocks `/ce:work` until `/brief` runs
-- Gate 2: blocks `/commit` until `/distill` runs
+**Workaround (implemented 2026-04-01):** Switched to blocking hooks — the only format that delivers output to Claude.
 
-Old hooks (`inject-insights.sh`, `remind-distill.sh`) deleted — no dead weight.
+- **PreToolUse** (`enforce-brief-before-work.sh`): blocks `/ce:work` until `/brief` runs. Marker-based gate.
+- **PostToolUse** (`remind-distill-after-work.sh`): fires after `/ce:work` or `/ce:review`, reminds to run `/distill`. No markers — PostToolUse block delivers message without undoing the tool result.
+
+Old non-blocking hooks (`inject-insights.sh`, `remind-distill.sh`) deleted — no dead weight.
 
 ### Other findings
 - CE's /ce:compound is manual-only (`disable-model-invocation: true` on compound-docs)

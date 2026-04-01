@@ -40,9 +40,9 @@ The `!` backtick syntax in SKILL.md runs shell commands at skill-load time, inje
 
 ## Enforcement Hook
 
-A PreToolUse blocking hook (`enforce-brief-before-work.sh`) gates `/commit` — the agent can't ship without running `/distill` first. The hook blocks the commit, tells Claude to run `/distill`, and allows the commit through on re-run via a marker file (`/tmp/.distill-gate`).
+A PostToolUse blocking hook (`remind-distill-after-work.sh`) fires after `/ce:work` or `/ce:review` completes. It delivers a message to Claude: "Run /distill to capture any non-obvious findings." No markers needed — the message is delivered directly after work finishes, with full session context still in the conversation.
 
-If nothing non-obvious surfaced, the agent says so during `/distill` and moves on — the marker is set either way.
+If nothing non-obvious surfaced, the agent says so and moves on.
 
 ## Installation
 

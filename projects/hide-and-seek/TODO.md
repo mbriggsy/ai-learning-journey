@@ -55,11 +55,7 @@
 - Build: typecheck clean
 - **Phase 5b REVIEWED** — 4 agents (TS, arch, perf, simplicity), 2 P0 bugs fixed (door-cost centralization), insight 006 written
 - **Hook investigation** — remind-distill fires correctly but is advisory. Added CLAUDE.md backup instruction. Showcase doc rewritten honestly.
-- **Distill auto-fire fix (UNPROVEN)** — two changes made, neither tested end-to-end:
-  1. `/distill` SKILL.md description expanded: tells Claude to fire itself after reviews with P0/P1 findings
-  2. `inject-insights.sh` now injects "WORKFLOW STEP: run /distill" before every `/ce:work`
-  - **MUST verify next session:** Run a real `/ce:work` or `/ce:review` and confirm agent runs `/distill` on its own
-  - If it doesn't work, the fix failed. Don't trust it until proven.
+- **Distill auto-fire fix — DISPROVEN (Session 17).** See Session 17 notes below.
 
 ## What We Did (2026-03-31, Session 15)
 - **Skill Creator optimizer — FULLY OPERATIONAL on Windows**
@@ -142,12 +138,23 @@
 - Build: typecheck clean, zero console spam
 - **Branch:** `feat/phase-0-scaffolding` pushed to origin (30 commits)
 
+## What We Did (2026-04-01, Session 17)
+- **Distill & Brief definitive audit** — thorough research + empirical testing
+- **Hook output bug discovered:** Non-blocking hook output (exit 0 + stdout) does NOT reach Claude. Tested 9 format combinations across 3 hook types (command, prompt, agent). Only blocking output (exit 2 / decision:block) is delivered. This is a confirmed Claude Code platform bug (7+ GitHub issues). Both inject-insights.sh and remind-distill.sh have NEVER delivered their messages.
+- **CE comparison:** CE plugin has zero hooks. /ce:compound is manual only (disable-model-invocation: true). CE's /ce:work and /ce:review do not auto-capture solutions.
+- **/distill description trimmed** — 730 → 246 chars. Auto-fire paragraph was truncated in system prompt (invisible to Claude). Removed. All trigger phrases now visible.
+- **/brief A/B eval** — 3 test cases, 6 agents. Minimal quality delta vs no-skill (read skill). Real value is convenience + hook-based auto-injection (blocked by platform bug).
+- **Showcase README** — reverted to intended design, added Known Issue section documenting platform bug with GitHub issue numbers.
+- **Environment-setup.md** — updated hook names (inject-solutions → inject-insights) and platform bug status.
+- **Hooks cleaned up** — test matchers removed, source synced to project, STATUS comments added.
+- **All skills artifacts** in `projects/skills/distill-and-brief/` with SKILL-TODO.md tracking findings.
+- Test baseline: **243 tests passing** (unchanged)
+- Build: typecheck clean
+
 ## Next Steps
-1. **Skill Creator: description optimizer** — run full `run_loop.py` with threading fix applied. Improve `/distill` trigger accuracy (currently 0% auto-trigger). Consider creating a dedicated skills project.
-2. **Visual testing** — play on Easy/Medium/Hard, verify seeker behavior differences (needs difficulty selector — URL param or menu)
-3. **Tiled map: add Rooms object layer** — rectangle objects with roomId properties for Medium/Hard patrol
-4. **Phase 5b** — AI hider, spectator mode, vision cones rendered
-5. **Phase 6a** — audio + atmosphere
+1. **Phase 6a** — audio + atmosphere
+2. **Phase 6b** — scoring + stats
+3. **Phase 7** — polish + art
 
 ## Landmines
 - **Module-level `let` in SearchState/SuspiciousState** — singleton state means multi-seeker will stomp. Must move to `SeekerAIInternalState` before adding second seeker.

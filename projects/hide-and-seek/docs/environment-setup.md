@@ -129,34 +129,34 @@ Custom shell scripts that run before/after tool calls. Configured in `~/.claude/
 
 **Status:** Installed 2026-03-30, needs session restart to verify.
 
-### Solution Injector (`PreToolUse` → matcher `"Skill"`)
+### Insight Injector (`PreToolUse` → matcher `"Skill"`)
 
-**Problem:** Agents start work without awareness of previously documented root causes, risking repeat debugging.
+**Intent:** Inject insight summaries before `/ce:work` so agents start with awareness of documented root causes.
 
-**Script:** `~/.claude/hooks/inject-solutions.sh`
+**Script:** `~/.claude/hooks/inject-insights.sh`
 
-**Behavior:** Intercepts every Skill tool invocation. If the skill is `ce:work`:
-1. Reads all `.md` files from `docs/solutions/` (if the directory exists)
+**Behavior:** Intercepts Skill tool invocations. If the skill is `ce:work`:
+1. Reads all `.md` files from `docs/insights/`
 2. Extracts title and key insight from each
-3. Injects summaries as context so the agent starts work with full solution awareness
+3. Outputs JSON with `systemMessage` containing summaries
 
-For non-`ce:work` skills or projects without `docs/solutions/`, exits silently (no interference).
+For non-`ce:work` skills or projects without `docs/insights/`, exits silently.
 
-**Status:** Installed 2026-03-31.
+**Status:** Hook fires correctly but **output does not reach Claude** due to a platform bug — non-blocking hook output is silently discarded. See `projects/skills/distill-and-brief/SKILL-TODO.md` for full details. 7+ GitHub issues filed.
 
 ### Distill Reminder (`PostToolUse` → matcher `"Skill"`)
 
-**Problem:** After executing work or reviewing code, agents don't remember to write solution docs for non-obvious findings.
+**Intent:** Remind agents to run `/distill` after `/ce:work` or `/ce:review` to capture non-obvious findings.
 
 **Script:** `~/.claude/hooks/remind-distill.sh`
 
-**Behavior:** Intercepts every Skill tool invocation. If the skill is `ce:review` or `ce:work`:
+**Behavior:** Intercepts Skill tool invocations. If the skill is `ce:review` or `ce:work`:
 1. Checks if the project has a `docs/` directory
-2. Outputs a reminder to evaluate findings and run `/distill` if warranted
+2. Outputs JSON with `systemMessage` reminder
 
 For non-matching skills or projects without `docs/`, exits silently.
 
-**Status:** Installed 2026-03-31.
+**Status:** Same platform bug — hook fires but output doesn't reach Claude.
 
 ### Notification (`Notification` → matcher `""`)
 
@@ -181,7 +181,7 @@ Key rules that affect tooling:
 |------|-------|
 | MCP server config | `~/.claude.json` (internal, managed by `claude mcp add`) |
 | Settings (hooks, plugins, permissions) | `~/.claude/settings.json` |
-| Hook scripts | `~/.claude/hooks/` (block-webfetch, inject-solutions, remind-distill) |
+| Hook scripts | `~/.claude/hooks/` (block-webfetch, inject-insights, remind-distill) |
 | Personal skills | `~/.claude/skills/` (distill, brief) |
 | Global CLAUDE.md | `~/.claude/CLAUDE.md` |
 | Memory index | `~/.claude/projects/{project}/memory/MEMORY.md` |

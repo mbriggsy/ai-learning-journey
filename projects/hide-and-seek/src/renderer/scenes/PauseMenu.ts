@@ -3,11 +3,13 @@ import type { PauseAuthority } from '../systems/PauseAuthority.js';
 import { PAUSE_REASONS } from '../systems/PauseAuthority.js';
 import { SceneTransition } from '../utils/SceneTransition.js';
 
-/** Set by Game scene before launching PauseMenu */
+/** Set by Game/SpectatorGame scene before launching PauseMenu */
 let sharedPauseAuthority: PauseAuthority | null = null;
+let parentSceneKey: string = 'Game';
 
-export function setPauseAuthority(pa: PauseAuthority): void {
+export function setPauseAuthority(pa: PauseAuthority, sceneKey: string = 'Game'): void {
   sharedPauseAuthority = pa;
+  parentSceneKey = sceneKey;
 }
 
 export class PauseMenuScene extends Phaser.Scene {
@@ -86,13 +88,13 @@ export class PauseMenuScene extends Phaser.Scene {
 
   private resumeGame(): void {
     sharedPauseAuthority?.release(PAUSE_REASONS.MENU);
-    this.scene.wake('Game');
+    this.scene.wake(parentSceneKey);
     this.scene.wake('HUD');
     this.scene.stop('PauseMenu');
   }
 
   private quitToMenu(): void {
-    this.scene.stop('Game');
+    this.scene.stop(parentSceneKey);
     this.scene.stop('HUD');
     // Stop PauseMenu AFTER starting transition — stopping before would
     // kill the camera, preventing FADE_OUT_COMPLETE from firing and

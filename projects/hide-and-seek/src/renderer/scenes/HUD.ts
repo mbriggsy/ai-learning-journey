@@ -3,7 +3,7 @@ import type { HUDSceneData } from '../../types/scenes.js';
 import type { TypedListener } from '../../types/events.js';
 import type { GameEventMap } from '../../types/events.js';
 import type { ReadonlyDeep } from '../../types/utility.js';
-import type { PlayingState, GameFlowKind } from '../../types/state.js';
+import type { PlayingState, SpectatingState, GameFlowKind } from '../../types/state.js';
 import { ticksToDisplaySeconds } from '../../game/timer.js';
 import { HUD } from '../../constants.js';
 
@@ -11,7 +11,7 @@ type TimerWarningState = 'normal' | 'warning' | 'critical';
 
 export class HUDScene extends Phaser.Scene {
   private listener!: TypedListener<GameEventMap>;
-  private getState!: () => ReadonlyDeep<PlayingState>;
+  private getState!: () => ReadonlyDeep<PlayingState | SpectatingState>;
   private timerText!: Phaser.GameObjects.Text;
   private phaseText!: Phaser.GameObjects.Text;
   private warningState: TimerWarningState = 'normal';

@@ -15,6 +15,7 @@ const config: Phaser.Types.Core.GameConfig = {
   width: DISPLAY.CANVAS_WIDTH,
   height: DISPLAY.CANVAS_HEIGHT,
   pixelArt: true,
+  roundPixels: true,
   backgroundColor: '#000000',
   transparent: false,
   banner: false,

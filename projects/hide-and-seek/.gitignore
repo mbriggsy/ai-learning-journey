@@ -40,3 +40,8 @@ pnpm-debug.log*
 
 # Temporary files
 temp/
+
+# Art pipeline — raw/processed AI-generated assets (large, reproducible)
+assets/raw/
+assets/processed/
+assets/generation-log.json

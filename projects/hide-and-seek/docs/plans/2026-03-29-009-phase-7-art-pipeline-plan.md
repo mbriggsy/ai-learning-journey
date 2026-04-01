@@ -99,9 +99,9 @@ With all gameplay systems complete (Phases 0-6), this phase replaces placeholder
 
 These MUST be complete before any Phase 7 work begins:
 
-- [ ] **`.gitignore` exists** with `.env` excluded (Phase 0 task — currently missing, .env has live API key in public repo)
-- [ ] **`.env.example` created** with `GEMINI_API_KEY=your_key_here` (tracked in git, no actual values)
-- [ ] **API key variable is `GEMINI_API_KEY`**, NOT `VITE_GEMINI_API_KEY` (Vite auto-exposes `VITE_` prefix to client bundle)
+- [x] **`.gitignore` exists** with `.env` excluded (Phase 0 task — currently missing, .env has live API key in public repo)
+- [x] **`.env.example` created** with `GEMINI_API_KEY=your_key_here` (tracked in git, no actual values)
+- [x] **API key variable is `GEMINI_API_KEY`**, NOT `VITE_GEMINI_API_KEY` (Vite auto-exposes `VITE_` prefix to client bundle)
 - [ ] **Phases 0-6 complete** (all gameplay systems working with placeholder art)
 - [ ] **Gemini API key in .env** with sufficient quota (budget ~500-750 calls across 2-3 days)
 

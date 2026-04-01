@@ -1,14 +1,14 @@
 ---
 title: "Phase 6a: Audio Atmosphere"
 type: feat
-status: active
+status: completed
 date: 2026-03-29
 deepened: 2026-03-30
 origin: docs/plans/2026-03-29-008-phase-6-sound-scoring-plan.md
 agents_used: 15
 contradictions_resolved: 8
 executed: 2026-04-01
-reviewed:
+reviewed: 2026-04-01
 ---
 
 # Phase 6a: Audio Atmosphere

@@ -22,8 +22,8 @@
 - **Phase 5a EXECUTED (2026-03-30)** — seeker difficulty tiers + 4-state FSM, 211 tests (dead module removed Session 12)
 - **Phase 5a BLOCKER FIXED (2026-03-31)** — pendingPath guard, seeker moves, code reviewed (4 agents), dead code removed
 - **Phase 4 REVIEWED (2026-03-31)** — dead action handlers purged, SonarPing cleanup, depth collision fix, 8 todos + 5 solutions documented, 210 tests
+- **Phase 5b EXECUTED (2026-03-31)** — AI hider (3 tiers) + spectator mode + MainMenu, 243 tests
 - **Vision model LOCKED (2026-03-30)** — 4-tier flashlight tag, spec at `docs/design/vision-model-spec.md`
-- **Branch:** `feat/phase-0-scaffolding` pushed to origin
 
 ### Documents
 - Brainstorm: `docs/ideation/2026-03-29-hide-and-seek-brainstorm.md`
@@ -35,6 +35,25 @@
 - Phase 6b: `docs/plans/2026-03-29-008b-phase-6b-scoring-stats-plan.md`
 - Original Phase 5 (superseded): `docs/plans/2026-03-29-007-phase-5-ai-depth-spectator-plan.md`
 - Original Phase 6 (superseded): `docs/plans/2026-03-29-008-phase-6-sound-scoring-plan.md`
+
+## What We Did (2026-03-31, Session 16)
+- **Verified hooks** — `/brief`, `inject-insights`, `remind-distill`, `block-webfetch` all fire correctly
+- Added debug breadcrumbs to hooks (timestamps in `$TEMP/hook-debug.log`)
+- Consolidated git to single line (merged feature branch to main, deleted branch) — no more branch noise
+- **Phase 5b EXECUTED** — AI Hider + Spectator Mode:
+  - Types: HiderFSMState, HiderRenderState, GameSessionBase, SpectatingState, HiderConfig, GameMode
+  - Hider configs: EASY (random spot), MEDIUM (scored spots), HARD (FOV evasion + door closing)
+  - PathfindingSystem refactored: multi-instance (seeker + hider get separate EasyStar)
+  - Hider AI: compound flee trigger, diminishing returns, ring buffer for previous spots
+  - Fixed pixelToTile singleton reuse in 3 hider functions (would have caused distance=0 bug)
+  - GameEngine spectating mode: dual AI loop, hider acts before seeker, no sonar
+  - SpectatorGame scene: god-view camera, zoom-to-fit, vision cones, FSM labels, debug path overlay
+  - SpectatorResults scene: Watch Again / Main Menu, difficulty display
+  - MainMenu: seeker + hider difficulty cycling, PLAY + AI vs AI buttons
+  - PauseMenu: handles both Game and SpectatorGame (parameterized parent scene)
+  - 6 commits, all pushed
+- Test baseline: **243 tests passing** (33 new)
+- Build: typecheck clean
 
 ## What We Did (2026-03-31, Session 15)
 - **Skill Creator optimizer — FULLY OPERATIONAL on Windows**

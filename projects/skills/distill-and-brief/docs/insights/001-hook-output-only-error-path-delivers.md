@@ -37,7 +37,7 @@ When the USER types `/ce:work`, PreToolUse hooks with matcher "Skill" do NOT fir
 - Use `{"decision":"block"}` for all hook-to-model communication
 - PreToolUse enforcement only works on Claude's programmatic Skill invocations, not user commands
 - PostToolUse is the only hook that reliably fires on user slash commands
-- Filed as anthropics/claude-code#42250
+- Filed as [anthropics/claude-code#42250](https://github.com/anthropics/claude-code/issues/42250)
 
 ## Key Insight
 

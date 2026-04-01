@@ -1,10 +1,12 @@
 ---
 title: "Phase 1: Map + Movement"
 type: feat
-status: pending-execute
+status: completed
 date: 2026-03-29
 origin: docs/plans/2026-03-29-001-feat-hide-and-seek-game-plan.md
 deepened: 2026-03-29
+executed: 2026-03-30
+reviewed: 2026-03-30
 ---
 
 # Phase 1: Map + Movement
@@ -735,22 +737,22 @@ tests/
 
 ## Success Criteria
 
-- [ ] Player walks around the map with WASD and Xbox controller
-- [ ] Walls block movement (separate-axis collision with corner sliding)
-- [ ] Camera follows smoothly at zoom 2, stays within map bounds
-- [ ] Camera snaps to spawn on load (no fly-in from origin)
-- [ ] No diagonal speed exploit (normalized input vector)
-- [ ] Tiled map loads and renders correctly with 2 layers
-- [ ] Fixed timestep produces consistent movement regardless of framerate
-- [ ] Accumulator capped at 5 ticks (no spiral of death)
-- [ ] Tab switch auto-pauses, resume has no input lurch (keyboard reset)
-- [ ] Gamepad disconnect/reconnect handled gracefully (no phantom input, reconnection works)
-- [ ] GameEngine owns the loop — zero game logic in renderer
-- [ ] Architecture boundary test passes (zero Phaser imports in `src/game/`)
-- [ ] `pnpm typecheck` passes
-- [ ] `pnpm test` passes (all game/ and integration tests)
-- [ ] `isBlocking()` exposed on map API for Phase 2 LOS
-- [ ] Console shows no errors or warnings during gameplay
+- [x] Player walks around the map with WASD and Xbox controller
+- [x] Walls block movement (separate-axis collision with corner sliding)
+- [x] Camera follows smoothly at zoom 2, stays within map bounds
+- [x] Camera snaps to spawn on load (no fly-in from origin)
+- [x] No diagonal speed exploit (normalized input vector)
+- [x] Tiled map loads and renders correctly with 2 layers
+- [x] Fixed timestep produces consistent movement regardless of framerate
+- [x] Accumulator capped at 5 ticks (no spiral of death)
+- [x] Tab switch auto-pauses, resume has no input lurch (keyboard reset)
+- [x] Gamepad disconnect/reconnect handled gracefully (no phantom input, reconnection works)
+- [x] GameEngine owns the loop — zero game logic in renderer
+- [x] Architecture boundary test passes (zero Phaser imports in `src/game/`)
+- [x] `pnpm typecheck` passes
+- [x] `pnpm test` passes (all game/ and integration tests)
+- [x] `isBlocking()` exposed on map API for Phase 2 LOS
+- [x] Console shows no errors or warnings during gameplay
 
 ## Dependencies
 

@@ -9,7 +9,6 @@ Everything needed to work on this project with Claude Code. This is the single s
 | Node.js | v24.13.1+ | Required for MCP servers and Phaser dev |
 | npm | 11.10.0+ | Comes with Node |
 | pnpm | 10.30.3+ | Package manager for the game project |
-| Python | 3.12.x | For Serena MCP. **NOT 3.14** (breaks pygame in sibling projects) |
 | Git | 2.53+ | CRLF warnings suppressed (`core.safecrlf=false`) |
 | curl | 8.18+ | Comes with Git Bash on Windows. Used by WebFetch hook fallback. |
 | jq | any | Used by hook scripts to parse JSON. Comes with Git Bash. |
@@ -22,17 +21,11 @@ MCP (Model Context Protocol) servers give Claude Code additional tools. They are
 
 Every server uses the pattern: `cmd /c npx -y <package>` (or `cmd /c uvx` for Python-based servers). In Git Bash, `/c` gets expanded to `C:/` which breaks the command. **Always use `//c`** when running `claude mcp add` from Git Bash to prevent this.
 
-### Serena (Code Navigation)
+### ~~Serena (Code Navigation)~~ — REMOVED
 
-Semantic code analysis — symbol lookup, find references, rename, insert before/after. Preferred over Grep for exploring code structure and tracing call chains.
+Removed 2026-03-30 after a shootout test. `find_referencing_symbols` returned empty results for TypeScript types and exported functions (3/3 failures). The one feature worth having didn't work for our stack. Grep + Read + Glob covers everything Serena offered, with less friction.
 
-- **Config:** `.serena/project.yml` in project root
-- **Tools:** `find_symbol`, `get_symbols_overview`, `find_referencing_symbols`, `replace_symbol_body`, `search_for_pattern`, etc.
-- **When to use:** Exploring code architecture, tracing call chains, refactoring
-
-```bash
-claude mcp add serena -s user -- cmd //c uvx --from git+https://github.com/oraios/serena serena start-mcp-server --context ide-assistant --project .
-```
+**Don't reinstall** unless the codebase exceeds 500+ files AND uses a language where LSP references work (Python, Java, Go — not TS type aliases).
 
 ### Context7 (Library Documentation)
 
@@ -136,6 +129,35 @@ Custom shell scripts that run before/after tool calls. Configured in `~/.claude/
 
 **Status:** Installed 2026-03-30, needs session restart to verify.
 
+### Solution Injector (`PreToolUse` → matcher `"Skill"`)
+
+**Problem:** Agents start work without awareness of previously documented root causes, risking repeat debugging.
+
+**Script:** `~/.claude/hooks/inject-solutions.sh`
+
+**Behavior:** Intercepts every Skill tool invocation. If the skill is `ce:work`:
+1. Reads all `.md` files from `docs/solutions/` (if the directory exists)
+2. Extracts title and key insight from each
+3. Injects summaries as context so the agent starts work with full solution awareness
+
+For non-`ce:work` skills or projects without `docs/solutions/`, exits silently (no interference).
+
+**Status:** Installed 2026-03-31.
+
+### Distill Reminder (`PostToolUse` → matcher `"Skill"`)
+
+**Problem:** After executing work or reviewing code, agents don't remember to write solution docs for non-obvious findings.
+
+**Script:** `~/.claude/hooks/remind-distill.sh`
+
+**Behavior:** Intercepts every Skill tool invocation. If the skill is `ce:review` or `ce:work`:
+1. Checks if the project has a `docs/` directory
+2. Outputs a reminder to evaluate findings and run `/distill` if warranted
+
+For non-matching skills or projects without `docs/`, exits silently.
+
+**Status:** Installed 2026-03-31.
+
 ### Notification (`Notification` → matcher `""`)
 
 **Behavior:** Pops a Windows MessageBox when Claude Code needs attention (e.g., permission prompt while you're in another window).
@@ -148,7 +170,7 @@ Project-level instructions live in two places:
 2. **Memory system** — `~/.claude/projects/{project}/memory/MEMORY.md` — persistent cross-session context (user preferences, feedback, project state)
 
 Key rules that affect tooling:
-- **Serena over Grep** for code navigation
+- **Grep + Read + Glob** for code navigation (Serena removed — broken for TS)
 - **Context7** before guessing library behavior
 - **Sequential Thinking** for multi-step debugging and post-research synthesis
 - **Never use WebFetch** — use gemini-grounding or curl instead (once verified)
@@ -159,10 +181,10 @@ Key rules that affect tooling:
 |------|-------|
 | MCP server config | `~/.claude.json` (internal, managed by `claude mcp add`) |
 | Settings (hooks, plugins, permissions) | `~/.claude/settings.json` |
-| Hook scripts | `~/.claude/hooks/` |
+| Hook scripts | `~/.claude/hooks/` (block-webfetch, inject-solutions, remind-distill) |
+| Personal skills | `~/.claude/skills/` (distill, brief) |
 | Global CLAUDE.md | `~/.claude/CLAUDE.md` |
 | Memory index | `~/.claude/projects/{project}/memory/MEMORY.md` |
-| Serena project config | `.serena/project.yml` (per project) |
 | Installed plugins manifest | `~/.claude/plugins/installed_plugins.json` |
 | Plugin cache | `~/.claude/plugins/cache/` |
 
@@ -172,11 +194,10 @@ If starting fresh on a new machine. Run all commands in **Git Bash** (not PowerS
 
 ### 1. Install Prerequisites
 
-Install Node.js 24+, Python 3.12, Git, and pnpm. Verify:
+Install Node.js 24+, Git, and pnpm. Verify:
 
 ```bash
 node --version    # v24.13.1+
-python --version  # 3.12.x (NOT 3.14)
 git --version     # 2.53+
 pnpm --version    # 10.30.3+
 ```
@@ -201,9 +222,6 @@ claude mcp add context7 -s user -e "CONTEXT7_API_KEY=YOUR_KEY" -- cmd //c npx -y
 # Playwright (browser testing)
 claude mcp add playwright -s user -- cmd //c npx -y @playwright/mcp@latest
 
-# Serena (semantic code navigation)
-claude mcp add serena -s user -- cmd //c uvx --from git+https://github.com/oraios/serena serena start-mcp-server --context ide-assistant --project .
-
 # Gemini Grounding (web search) — get API key from https://aistudio.google.com/apikey
 claude mcp add gemini-grounding -s user -e "GEMINI_API_KEY=YOUR_KEY" -- cmd //c npx -y gemini-grounding
 ```
@@ -215,36 +233,25 @@ claude mcp list
 # All should show ✓ Connected
 ```
 
-### 4. Create WebFetch Blocker Hook
+### 4. Create Hook Scripts
 
 ```bash
 mkdir -p ~/.claude/hooks
 ```
 
-Create `~/.claude/hooks/block-webfetch.sh`:
+Create three files in `~/.claude/hooks/`:
 
-```bash
-#!/bin/bash
-cat << 'BLOCK'
-WebFetch is blocked (no timeout — causes agent hangs). Use these alternatives instead:
+- **`block-webfetch.sh`** — Blocks WebFetch (no timeout, causes hangs). Redirects to gemini-grounding or curl.
+- **`inject-solutions.sh`** — PreToolUse on `"Skill"`. Injects `docs/solutions/` summaries before `/ce:work`.
+- **`remind-distill.sh`** — PostToolUse on `"Skill"`. Reminds to run `/distill` after `/ce:review`.
 
-**Option 1 (preferred): Gemini Grounding MCP tools**
-Use mcp__gemini-grounding__web_search with your query.
-
-**Option 2 (fallback): curl with timeout**
-curl -sL --max-time 15 'URL' | head -c 50000
-BLOCK
-exit 2
-```
-
-The hook is wired in `~/.claude/settings.json` under `hooks.PreToolUse` with matcher `"WebFetch"`.
+See the Hooks section above for full behavior descriptions. All hooks are wired in `~/.claude/settings.json` under `hooks.PreToolUse` and `hooks.PostToolUse`.
 
 ### 5. Add Permissions
 
 In `~/.claude/settings.json`, add to `permissions.allow`:
 
 ```json
-"mcp__serena__*",
 "mcp__context7__*",
 "mcp__sequential-thinking__*",
 "mcp__sequentialthinking__*",
@@ -259,11 +266,29 @@ In `~/.claude/settings.json`, add to `permissions.allow`:
 # See Active Plugins table above for the full list
 ```
 
-### 7. Configure Serena Per-Project
+### 7. Create Compound Skill
 
-Copy `.serena/project.yml` to each project root. See existing projects for examples.
+```bash
+mkdir -p ~/.claude/skills/distill ~/.claude/skills/brief
+```
 
-### 8. Set Up CLAUDE.md and Memory
+Create two personal skills:
+- `~/.claude/skills/distill/SKILL.md` — write solution docs (dynamic injection shows existing + auto-numbers)
+- `~/.claude/skills/brief/SKILL.md` — read solution context on demand
+
+See `/distill` and `/brief` in a Claude Code session to verify.
+
+### 8. Create Project Folders
+
+```bash
+mkdir -p docs/solutions docs/todos temp
+```
+
+- `docs/solutions/` — Non-obvious root causes and fixes (persistent across sessions)
+- `docs/todos/` — Review findings work queue (deleted at squeaky clean)
+- `temp/` — Screenshots and debug output (deleted at squeaky clean)
+
+### 9. Set Up CLAUDE.md and Memory
 
 - Copy `~/.claude/CLAUDE.md` from backup or write fresh
 - Memory files rebuild naturally over conversations

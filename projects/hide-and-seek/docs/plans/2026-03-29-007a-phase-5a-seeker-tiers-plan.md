@@ -1,15 +1,21 @@
 ---
 title: "Phase 5a: Seeker Difficulty Tiers"
 type: feat
-status: deepened
+status: executed
 date: 2026-03-29
 deepened: 2026-03-30
+executed: 2026-03-30
 origin: docs/plans/2026-03-29-001-feat-hide-and-seek-game-plan.md
 agents: 14
 contradictions_resolved: 14
+reviewed: 2026-03-31
 ---
 
 # Phase 5a: Seeker Difficulty Tiers
+
+> **DESIGN UPDATE (2026-03-30):** Vision model redesigned — see `docs/design/vision-model-spec.md`.
+> Player fog-of-war replaced with 4-tier flashlight tag model (Easy=omniscient, Medium=lantern, Medium-Hard=flashlight, Hard=darkness).
+> Seeker vision cones (this plan) become VISIBLE flashlight beams. Implementation mechanics unchanged, presentation inverted.
 
 ## Enhancement Summary
 
@@ -227,7 +233,7 @@ Seeker enters CHASE
 
 ### Types (`src/types/fsm.ts` — NEW)
 
-- [ ] FSM generic interface:
+- [x] FSM generic interface:
   ```typescript
   interface FSMState<TContext> {
     readonly name: string;
@@ -236,7 +242,7 @@ Seeker enters CHASE
     onExit(ctx: TContext): void;
   }
   ```
-- [ ] `STATE_PRIORITY` constant:
+- [x] `STATE_PRIORITY` constant:
   ```typescript
   const STATE_PRIORITY: Record<SeekerFSMState, number> = {
     patrol: 0, suspicious: 1, search: 2, chase: 3,
@@ -245,8 +251,8 @@ Seeker enters CHASE
 
 ### Types (`src/types/ai.ts` — EXPAND)
 
-- [ ] Expand `SeekerFSMState`: `'patrol' | 'suspicious' | 'search' | 'chase'`
-- [ ] Expand `SeekerConfig` (flat, grouped with comments):
+- [x] Expand `SeekerFSMState`: `'patrol' | 'suspicious' | 'search' | 'chase'`
+- [x] Expand `SeekerConfig` (flat, grouped with comments):
   ```typescript
   interface SeekerConfig {
     // Vision
@@ -283,27 +289,27 @@ Seeker enters CHASE
   // Phase 5a: only 'door-sound'. Phase 6 extends with 'footstep', 'movement-sound'.
   type StimulusKind = 'door-sound';
   ```
-- [ ] `RoomId` branded type: `string & { readonly [RoomIdBrand]: never }`
-- [ ] `RoomDefinition`: `{ id: RoomId; bounds: { x, y, width, height }; center: TileCoord; adjacentRooms: readonly RoomId[] }`
-- [ ] Add `LOOK_AROUND` to Action union:
+- [x] `RoomId` branded type: `string & { readonly [RoomIdBrand]: never }`
+- [x] `RoomDefinition`: `{ id: RoomId; bounds: { x, y, width, height }; center: TileCoord; adjacentRooms: readonly RoomId[] }`
+- [x] Add `LOOK_AROUND` to Action union:
   ```typescript
   | { readonly type: 'LOOK_AROUND'; readonly ticksRemaining: number; readonly facingsRemaining: readonly FacingDirection[] }
   ```
-- [ ] Add to `GameEventMap`:
+- [x] Add to `GameEventMap`:
   ```typescript
   SEEKER_STATE_CHANGED: [payload: { readonly oldState: SeekerFSMState; readonly newState: SeekerFSMState }];
   ```
 
 ### Seeker Configs (`src/game/ai/seeker-configs.ts` — NEW)
 
-- [ ] Three `as const satisfies SeekerConfig` objects: `SEEKER_EASY`, `SEEKER_MEDIUM`, `SEEKER_HARD`
-- [ ] Values from the personality parameter table above
-- [ ] `Difficulty` type: `'easy' | 'medium' | 'hard'`
-- [ ] `SEEKER_CONFIGS: Record<Difficulty, SeekerConfig>`
+- [x] Three `as const satisfies SeekerConfig` objects: `SEEKER_EASY`, `SEEKER_MEDIUM`, `SEEKER_HARD`
+- [x] Values from the personality parameter table above
+- [x] `Difficulty` type: `'easy' | 'medium' | 'hard'`
+- [x] `SEEKER_CONFIGS: Record<Difficulty, SeekerConfig>`
 
 ### FSM Refactor (`src/game/ai/seeker.ts` — REWRITE)
 
-- [ ] `SeekerContext` interface (passed to all state classes):
+- [x] `SeekerContext` interface (passed to all state classes):
   ```typescript
   interface SeekerContext {
     readonly config: Readonly<SeekerConfig>;
@@ -315,7 +321,7 @@ Seeker enters CHASE
     actionQueue: Action[];
   }
   ```
-- [ ] `SeekerAIState` (AI-internal, not in GameState):
+- [x] `SeekerAIState` (AI-internal, not in GameState):
   ```typescript
   interface SeekerAIState {
     currentPath: PathPoint[];
@@ -335,7 +341,7 @@ Seeker enters CHASE
     hidingSpots: readonly HidingSpot[] | null;   // Hard: pre-computed
   }
   ```
-- [ ] `SeekerFSM` class (~60-80 LOC):
+- [x] `SeekerFSM` class (~60-80 LOC):
   - Manages `currentState: FSMState<SeekerContext>`
   - `pendingTransition: { target: SeekerFSMState, ticksRemaining: number } | null`
   - `transition(to)`: checks `STATE_PRIORITY` — higher priority overwrites pending
@@ -346,54 +352,54 @@ Seeker enters CHASE
 
 ### PatrolState (`src/game/ai/states/patrol-state.ts` — NEW)
 
-- [ ] `onEnter()`: pick patrol target based on `config.patrolStrategy`:
+- [x] `onEnter()`: pick patrol target based on `config.patrolStrategy`:
   - `'random'`: random walkable tile (Easy)
   - `'systematic'`: nearest stale room via roomScoring (Medium)
   - `'strategic'`: nearest stale room weighted by hiding spot density (Hard)
-- [ ] `onUpdate(dt)`: follow path via action queue. On arrival: pause (patrolPauseMin-Max ticks), mark room visited (if systematic/strategic), pick next target
-- [ ] Doorway pause: on entering doorway tile, `Math.random() < config.doorwayPauseChance` → push WAIT action
-- [ ] Completion lock: don't re-evaluate target until arrival (anti-oscillation)
-- [ ] Fallback: if no rooms defined AND systematic, log warning, degrade to random
+- [x] `onUpdate(dt)`: follow path via action queue. On arrival: pause (patrolPauseMin-Max ticks), mark room visited (if systematic/strategic), pick next target
+- [x] Doorway pause: on entering doorway tile, `Math.random() < config.doorwayPauseChance` → push WAIT action
+- [x] Completion lock: don't re-evaluate target until arrival (anti-oscillation)
+- [x] Fallback: if no rooms defined AND systematic, log warning, degrade to random
 
 ### SuspiciousState (`src/game/ai/states/suspicious-state.ts` — NEW)
 
-- [ ] `onEnter(ctx)`: save `returnState: SeekerFSMState` (previous state name, for returning after investigation), save `stimulusType: StimulusKind` (for per-type cooldown tracking), cancel current path, set facing toward stimulus
-- [ ] Push action sequence: `REQUEST_PATH(stimulus) → MOVE_TO(stimulus) → LOOK_AROUND(duration)`
-- [ ] `onUpdate(dt)`: check detection every tick — if 'spotted', trigger CHASE (reaction delay still applies via pending transition)
-- [ ] Timer: `suspiciousDurationTicks` countdown. On expiry:
+- [x] `onEnter(ctx)`: save `returnState: SeekerFSMState` (previous state name, for returning after investigation), save `stimulusType: StimulusKind` (for per-type cooldown tracking), cancel current path, set facing toward stimulus
+- [x] Push action sequence: `REQUEST_PATH(stimulus) → MOVE_TO(stimulus) → LOOK_AROUND(duration)`
+- [x] `onUpdate(dt)`: check detection every tick — if 'spotted', trigger CHASE (reaction delay still applies via pending transition)
+- [x] Timer: `suspiciousDurationTicks` countdown. On expiry:
   - Evidence found at location (Hard AI door check) → transition SEARCH
   - Nothing found → transition PATROL
-- [ ] Cooldown: `suspiciousCooldownTicks` per stimulus type. Don't re-enter from same type within window.
-- [ ] Duration: per tier (Easy: 2s, Medium: 4s, Hard: 5s)
+- [x] Cooldown: `suspiciousCooldownTicks` per stimulus type. Don't re-enter from same type within window.
+- [x] Duration: per tier (Easy: 2s, Medium: 4s, Hard: 5s)
 
 ### SearchState (`src/game/ai/states/search-state.ts` — NEW)
 
-- [ ] `onEnter(ctx)`: set search center (LKP or evidence location), init search radius, compute search targets
-- [ ] Search targets:
+- [x] `onEnter(ctx)`: set search center (LKP or evidence location), init search radius, compute search targets
+- [x] Search targets:
   - `'spot-check'` (Easy): 1-2 random tiles within radius, then give up
   - `'full-room'` (Medium): all hiding spots within room containing search center
   - `'room-plus-adjacent'` (Hard): hiding spots in room + all adjacent rooms
-- [ ] Skip LKP tile with `config.searchSkipLKPChance` probability (near-miss mechanic)
-- [ ] `onUpdate(dt)`: path to next search target, pause briefly, check next. If detection → CHASE.
-- [ ] SEARCH state inherits door-opening from action layer (SF-11 fix)
-- [ ] Timer: `searchDurationTicks` countdown. On expiry → PATROL.
-- [ ] Search radius expansion (Hard only): +1 tile every 5 seconds from search center
-- [ ] Clamp search targets to map bounds (SF-12 fix)
+- [x] Skip LKP tile with `config.searchSkipLKPChance` probability (near-miss mechanic)
+- [x] `onUpdate(dt)`: path to next search target, pause briefly, check next. If detection → CHASE.
+- [x] SEARCH state inherits door-opening from action layer (SF-11 fix)
+- [x] Timer: `searchDurationTicks` countdown. On expiry → PATROL.
+- [x] Search radius expansion (Hard only): +1 tile every 5 seconds from search center
+- [x] Clamp search targets to map bounds (SF-12 fix)
 
 ### ChaseState (`src/game/ai/states/chase-state.ts` — NEW)
 
-- [ ] `onEnter(ctx)`: cancel current path, request path to hider LKP, set menaceTicks = 0
-- [ ] `onUpdate(dt)`:
+- [x] `onEnter(ctx)`: cancel current path, request path to hider LKP, set menaceTicks = 0
+- [x] `onUpdate(dt)`:
   - If LOS active: update LKP, re-path every 30 ticks
   - If LOS lost: continue to LKP, start chaseTimeout countdown
   - If chaseTimeout expires: transition SEARCH at LKP
   - Menace gauge: menaceTicks++ each tick. If >= menaceLimitTicks → forced PATROL
-- [ ] Chase speed (config.chaseSpeed, faster than patrol)
-- [ ] Grace ticks: 10-15 ticks hysteresis before LOS-lost triggers timeout countdown (prevent 1-frame flicker)
+- [x] Chase speed (config.chaseSpeed, faster than patrol)
+- [x] Grace ticks: 10-15 ticks hysteresis before LOS-lost triggers timeout countdown (prevent 1-frame flicker)
 
 ### Detection Update (`src/game/detection.ts` — MODIFY)
 
-- [ ] `checkDetection()` now filters by vision cone angle:
+- [x] `checkDetection()` now filters by vision cone angle:
   ```typescript
   function checkDetection(
     seekerFov: Uint8Array, seekerPos: TileCoord, seekerFacing: number,
@@ -412,24 +418,24 @@ Seeker enters CHASE
     return 'spotted';
   }
   ```
-- [ ] `seekerFacing` must be a continuous angle (radians), not just FacingDirection enum
-- [ ] Add `facingAngle: number` to `SeekerRenderState` (smooth angle, updated by movement system)
+- [x] `seekerFacing` must be a continuous angle (radians), not just FacingDirection enum
+- [x] Add `facingAngle: number` to `SeekerRenderState` (smooth angle, updated by movement system)
 
 ### Room Definitions (`src/game/rooms.ts` — NEW)
 
-- [ ] `parseRooms(objectLayer: Phaser.Tilemaps.ObjectLayer): RoomDefinition[]`
+- [x] `parseRooms(objectLayer: Phaser.Tilemaps.ObjectLayer): RoomDefinition[]`
   - Convert pixel coordinates to tile coordinates
   - Brand roomId strings as RoomId
   - Validate: non-empty, unique IDs, within map bounds
   - Compute center: BFS from geometric center to nearest walkable tile (SF-07 fix)
   - Detect overlaps: log warning with overlapping IDs (SF-05 fix)
-- [ ] `getRoomAt(pos: TileCoord, rooms: readonly RoomDefinition[]): RoomDefinition | undefined`
+- [x] `getRoomAt(pos: TileCoord, rooms: readonly RoomDefinition[]): RoomDefinition | undefined`
   - Tie-break overlaps: smallest area wins
-- [ ] Fallback: if no "Rooms" object layer, log error with available layer names, return empty array
+- [x] Fallback: if no "Rooms" object layer, log error with available layer names, return empty array
 
 ### Room Tracking (`src/game/ai/room-tracking.ts` — NEW)
 
-- [ ] `RoomTracker` class:
+- [x] `RoomTracker` class:
   - `lastVisitedTick: Map<RoomId, number>` — per-room last visit time
   - `isStale(roomId, currentTick, staleTicks): boolean` — simple comparison
   - `markVisited(roomId, currentTick): void`
@@ -442,12 +448,12 @@ Seeker enters CHASE
     score = timeFactor + distFactor + adjacencyBonus - recentPenalty
     ```
   - `getBestRoom(seekerPos, currentTick): RoomDefinition | undefined` — highest score. Pure utility (deterministic). Completion lock: return current target if not yet arrived.
-- [ ] Fallback: if all rooms fresh (none stale), fall back to random walkable tile (SF-06 fix)
-- [ ] Door-triggered un-stale: subscribe to DOOR_TOGGLED, if door is in/adjacent to a visited room, force that room stale
+- [x] Fallback: if all rooms fresh (none stale), fall back to random walkable tile (SF-06 fix)
+- [x] Door-triggered un-stale: subscribe to DOOR_TOGGLED, if door is in/adjacent to a visited room, force that room stale
 
 ### Evidence Tracking (`src/game/ai/evidence.ts` — NEW, Hard only)
 
-- [ ] `EvidenceTracker` class:
+- [x] `EvidenceTracker` class:
   - `doorSnapshot: Map<DoorId, DoorState>` — set at hunt start via `new Map(doors)`
   - `doorsIOpened: Set<DoorId>` — track seeker's own door interactions
   - `hasEvidence(door: DoorState): boolean`:
@@ -455,23 +461,23 @@ Seeker enters CHASE
     - If door.lastToggleTick > huntStartTick → true (any toggle = evidence, catches double-toggles — SF-10 resolution)
     - If door.isOpen !== snapshot.get(door.id).isOpen → true (state changed)
   - `recordSelfOpen(doorId: DoorId): void` — called when seeker opens a door via action layer
-- [ ] Graceful degradation: if no doors in map, log debug message, evidence system returns false for all checks (SF-09 fix)
+- [x] Graceful degradation: if no doors in map, log debug message, evidence system returns false for all checks (SF-09 fix)
 
 ### Hiding Spot Analysis (`src/game/ai/hiding-spots.ts` — NEW)
 
-- [ ] Pre-compute at map load (static analysis):
+- [x] Pre-compute at map load (static analysis):
   - **Corners:** walkable tile with walls on 2 adjacent cardinal sides forming L-shape
   - **Dead ends:** walkable tile with exactly 1 walkable cardinal neighbor
   - **Cover tiles:** walkable tile adjacent to 3+ wall/obstacle tiles
-- [ ] `HidingSpot`: `{ position: TileCoord, type: 'corner' | 'dead-end' | 'cover', score: number }`
-- [ ] Score: corners with 3 walls > corners with 2 > cover tiles > dead ends (dead ends are traps but still checked)
-- [ ] `getHidingSpotsInRoom(room: RoomDefinition, spots: HidingSpot[]): HidingSpot[]`
-- [ ] `getHidingSpotsNear(center: TileCoord, radius: number, spots: HidingSpot[]): HidingSpot[]`
+- [x] `HidingSpot`: `{ position: TileCoord, type: 'corner' | 'dead-end' | 'cover', score: number }`
+- [x] Score: corners with 3 walls > corners with 2 > cover tiles > dead ends (dead ends are traps but still checked)
+- [x] `getHidingSpotsInRoom(room: RoomDefinition, spots: HidingSpot[]): HidingSpot[]`
+- [x] `getHidingSpotsNear(center: TileCoord, radius: number, spots: HidingSpot[]): HidingSpot[]`
 
 ### Path Smoothing (`src/game/ai/path-smoothing.ts` — NEW)
 
-- [ ] `hasLineOfSight(x0, y0, x1, y1, isBlocking): boolean` — Bresenham's line algorithm (~20 LOC)
-- [ ] `smoothPath(path: PathPoint[], isBlocking): PathPoint[]` — greedy LOS string-pulling (~20 LOC):
+- [x] `hasLineOfSight(x0, y0, x1, y1, isBlocking): boolean` — Bresenham's line algorithm (~20 LOC)
+- [x] `smoothPath(path: PathPoint[], isBlocking): PathPoint[]` — greedy LOS string-pulling (~20 LOC):
   ```
   if path.length < 3: return path
   smoothed = [path[0]]
@@ -485,128 +491,128 @@ Seeker enters CHASE
     current = furthest
   return smoothed
   ```
-- [ ] Guard: if `path.length <= 2`, skip smoothing (SF-14 fix)
-- [ ] Guard: if path is null/empty, return empty array with log (SF-15 fix)
-- [ ] Compute once on path receive, store smoothed result (R1 mandatory optimization)
-- [ ] Per-tick validation in movement: check LOS to next waypoint still clear. If blocked (door change), discard path and re-request (Race 10 fix)
+- [x] Guard: if `path.length <= 2`, skip smoothing (SF-14 fix)
+- [x] Guard: if path is null/empty, return empty array with log (SF-15 fix)
+- [x] Compute once on path receive, store smoothed result (R1 mandatory optimization)
+- [x] Per-tick validation in movement: check LOS to next waypoint still clear. If blocked (door change), discard path and re-request (Race 10 fix)
 
 ### LOOK_AROUND Action (`src/game/ai/actions.ts` — EXTEND)
 
-- [ ] Add `LOOK_AROUND` case to action queue processor:
+- [x] Add `LOOK_AROUND` case to action queue processor:
   - Rotate facing through 4 cardinal directions over ticksRemaining
   - Each direction held for ticksRemaining/4 ticks
   - Complete when ticksRemaining reaches 0
   - Update `render.facingAngle` each direction change
-- [ ] LOOK_AROUND default: 120 ticks (2 seconds) total, 30 ticks per direction
+- [x] LOOK_AROUND default: 120 ticks (2 seconds) total, 30 ticks per direction
 
 ### GameEngine Updates (`src/game/engine.ts` — MODIFY)
 
-- [ ] Accept `Difficulty` parameter in createGameState / GameEngine constructor
-- [ ] Select SeekerConfig from SEEKER_CONFIGS[difficulty]
-- [ ] Instantiate SeekerFSM with selected config
-- [ ] Door snapshot at hunt start: `new Map(state.doors)` for Hard AI
-- [ ] Add facingAngle to SeekerRenderState (continuous radians, not 4-direction enum)
-- [ ] Enforce canonical fixedUpdate ordering (9-step order documented above)
-- [ ] Process pendingDoorEvidence at step 1 (before movement)
-- [ ] Menace gauge logic in rules evaluation (step 9)
+- [x] Accept `Difficulty` parameter in createGameState / GameEngine constructor
+- [x] Select SeekerConfig from SEEKER_CONFIGS[difficulty]
+- [x] Instantiate SeekerFSM with selected config
+- [x] Door snapshot at hunt start: `new Map(state.doors)` for Hard AI
+- [x] Add facingAngle to SeekerRenderState (continuous radians, not 4-direction enum)
+- [x] Enforce canonical fixedUpdate ordering (9-step order documented above)
+- [x] Process pendingDoorEvidence at step 1 (before movement)
+- [x] Menace gauge logic in rules evaluation (step 9)
 
 ### Constants (`src/constants.ts` — EXTEND)
 
-- [ ] `RE_CLEAR_TICKS: 1800` (30 seconds at 60 tick/s)
-- [ ] `ROOM_SCORING_COOLDOWN_TICKS: 300` (5 seconds anti-oscillation)
-- [ ] `MAX_STALE_TICKS: 3600` (60 seconds normalization for room scoring)
-- [ ] `NEAR_MISS_DOORWAY_PAUSE_TICKS: 30` (500ms)
-- [ ] `LOOK_AROUND_DURATION_TICKS: 120` (2 seconds)
-- [ ] `PROXIMITY_THRESHOLD: 1.5` (tiles — already exists from Phase 0)
-- [ ] Note: per-tier values live in SEEKER_CONFIGS, not here
+- [x] `RE_CLEAR_TICKS: 1800` (30 seconds at 60 tick/s)
+- [x] `ROOM_SCORING_COOLDOWN_TICKS: 300` (5 seconds anti-oscillation)
+- [x] `MAX_STALE_TICKS: 3600` (60 seconds normalization for room scoring)
+- [x] `NEAR_MISS_DOORWAY_PAUSE_TICKS: 30` (500ms)
+- [x] `LOOK_AROUND_DURATION_TICKS: 120` (2 seconds)
+- [x] `PROXIMITY_THRESHOLD: 1.5` (tiles — already exists from Phase 0)
+- [x] Note: per-tier values live in SEEKER_CONFIGS, not here
 
 ### GameSettings Update
 
-- [ ] Add `seekerDifficulty: Difficulty` to GameSettings
-- [ ] Pass through scene chain (MainMenu → Game → Results → Game on Play Again)
-- [ ] Default: 'easy'
+- [x] Add `seekerDifficulty: Difficulty` to GameSettings
+- [x] Pass through scene chain (MainMenu → Game → Results → Game on Play Again)
+- [x] Default: 'easy'
 
 ---
 
 ## Unit Tests
 
 ### FSM Tests (`tests/game/ai/seeker-fsm.test.ts`)
-- [ ] Transition PATROL → CHASE: pending transition with reaction delay, assert state unchanged during delay, assert CHASE after delay expires
-- [ ] Transition priority: SUSPICIOUS pending + CHASE trigger same tick → CHASE wins (higher priority)
-- [ ] One transition per tick: two valid transitions → only first executes
-- [ ] Terminal guard: FOUND state → no transitions fire
-- [ ] Invalid transition: SEARCH → SUSPICIOUS → stays in SEARCH, logs error
-- [ ] Error boundary: state.onUpdate() throws → fallback to PATROL
-- [ ] Grace ticks: LOS flickers at boundary → no state change within grace period
-- [ ] Menace gauge: 1200 ticks of continuous CHASE → forced PATROL
-- [ ] Menace cooldown: during cooldown, CHASE transitions suppressed
-- [ ] assertNever exhaustiveness: adding a state without handling → compile error
+- [x] Transition PATROL → CHASE: pending transition with reaction delay, assert state unchanged during delay, assert CHASE after delay expires
+- [x] Transition priority: SUSPICIOUS pending + CHASE trigger same tick → CHASE wins (higher priority)
+- [x] One transition per tick: two valid transitions → only first executes
+- [x] Terminal guard: FOUND state → no transitions fire
+- [x] Invalid transition: SEARCH → SUSPICIOUS → stays in SEARCH, logs error
+- [x] Error boundary: state.onUpdate() throws → fallback to PATROL
+- [x] Grace ticks: LOS flickers at boundary → no state change within grace period
+- [x] Menace gauge: 1200 ticks of continuous CHASE → forced PATROL
+- [x] Menace cooldown: during cooldown, CHASE transitions suppressed
+- [x] assertNever exhaustiveness: adding a state without handling → compile error
 
 ### Detection Tests (`tests/game/detection.test.ts` — EXTEND)
-- [ ] Hider in FOV but outside vision cone → 'none'
-- [ ] Hider in FOV and inside vision cone → 'spotted'
-- [ ] Hider at cone boundary (exactly at halfCone) → 'spotted' (inclusive)
-- [ ] Hider behind seeker (180° from facing) with 120° cone → 'none'
-- [ ] Seeker facing angle wrapping (around 2π boundary)
+- [x] Hider in FOV but outside vision cone → 'none'
+- [x] Hider in FOV and inside vision cone → 'spotted'
+- [x] Hider at cone boundary (exactly at halfCone) → 'spotted' (inclusive)
+- [x] Hider behind seeker (180° from facing) with 120° cone → 'none'
+- [x] Seeker facing angle wrapping (around 2π boundary)
 
 ### PatrolState Tests (`tests/game/ai/states/patrol.test.ts`)
-- [ ] Easy: picks random walkable tile, paths there, pauses, picks next
-- [ ] Medium: picks highest-scoring room, paths to center, marks visited
-- [ ] Medium fallback: no rooms → degrades to random with warning
-- [ ] Medium all rooms fresh: falls back to random until one becomes stale
-- [ ] Hard: picks room with highest hiding spot density
-- [ ] Completion lock: doesn't re-evaluate target mid-path
-- [ ] Doorway pause: triggered with configured probability
+- [x] Easy: picks random walkable tile, paths there, pauses, picks next
+- [x] Medium: picks highest-scoring room, paths to center, marks visited
+- [x] Medium fallback: no rooms → degrades to random with warning
+- [x] Medium all rooms fresh: falls back to random until one becomes stale
+- [x] Hard: picks room with highest hiding spot density
+- [x] Completion lock: doesn't re-evaluate target mid-path
+- [x] Doorway pause: triggered with configured probability
 
 ### SuspiciousState Tests (`tests/game/ai/states/suspicious.test.ts`)
-- [ ] DOOR_TOGGLED within hearingRange → enter SUSPICIOUS
-- [ ] DOOR_TOGGLED outside hearingRange → ignored
-- [ ] Cooldown: same stimulus type within cooldown → ignored
-- [ ] Spotted during investigation → CHASE transition (with reaction delay)
-- [ ] Timer expires, evidence found → SEARCH
-- [ ] Timer expires, no evidence → PATROL
-- [ ] Easy brief glimpse: LOS lost during reaction delay → cancel to SUSPICIOUS
+- [x] DOOR_TOGGLED within hearingRange → enter SUSPICIOUS
+- [x] DOOR_TOGGLED outside hearingRange → ignored
+- [x] Cooldown: same stimulus type within cooldown → ignored
+- [x] Spotted during investigation → CHASE transition (with reaction delay)
+- [x] Timer expires, evidence found → SEARCH
+- [x] Timer expires, no evidence → PATROL
+- [x] Easy brief glimpse: LOS lost during reaction delay → cancel to SUSPICIOUS
 
 ### SearchState Tests (`tests/game/ai/states/search.test.ts`)
-- [ ] spot-check: visits 1-2 targets then PATROL
-- [ ] full-room: visits all hiding spots in room
-- [ ] room-plus-adjacent: visits spots in room + adjacent rooms
-- [ ] Skip LKP tile: mock random, verify skip at configured probability
-- [ ] Search timer expires → PATROL
-- [ ] Spotted during search → CHASE
-- [ ] Search radius expansion (Hard): radius grows over time
-- [ ] Search targets clamped to map bounds
-- [ ] Door encountered during search: opens via action layer
+- [x] spot-check: visits 1-2 targets then PATROL
+- [x] full-room: visits all hiding spots in room
+- [x] room-plus-adjacent: visits spots in room + adjacent rooms
+- [x] Skip LKP tile: mock random, verify skip at configured probability
+- [x] Search timer expires → PATROL
+- [x] Spotted during search → CHASE
+- [x] Search radius expansion (Hard): radius grows over time
+- [x] Search targets clamped to map bounds
+- [x] Door encountered during search: opens via action layer
 
 ### Room Tracking Tests (`tests/game/ai/room-tracking.test.ts`)
-- [ ] Room scoring: nearest stale room scores highest
-- [ ] Completion lock: same room returned while not yet arrived
-- [ ] Re-stale timer: room becomes stale after RE_CLEAR_TICKS
-- [ ] Door-triggered un-stale: DOOR_TOGGLED in room forces stale
-- [ ] Overlapping rooms: smallest area wins
-- [ ] Room center on wall: BFS finds nearest walkable
+- [x] Room scoring: nearest stale room scores highest
+- [x] Completion lock: same room returned while not yet arrived
+- [x] Re-stale timer: room becomes stale after RE_CLEAR_TICKS
+- [x] Door-triggered un-stale: DOOR_TOGGLED in room forces stale
+- [x] Overlapping rooms: smallest area wins
+- [x] Room center on wall: BFS finds nearest walkable
 
 ### Evidence Tests (`tests/game/ai/evidence.test.ts`)
-- [ ] Door changed since snapshot → hasEvidence returns true
-- [ ] Self-opened door → hasEvidence returns false
-- [ ] Double-toggled door (back to original state) → hasEvidence returns true (via lastToggleTick)
-- [ ] No doors in map → evidence system inactive, no errors
+- [x] Door changed since snapshot → hasEvidence returns true
+- [x] Self-opened door → hasEvidence returns false
+- [x] Double-toggled door (back to original state) → hasEvidence returns true (via lastToggleTick)
+- [x] No doors in map → evidence system inactive, no errors
 
 ### Path Smoothing Tests (`tests/game/ai/path-smoothing.test.ts`)
-- [ ] Zigzag path → string-pulled to straight line
-- [ ] Path around wall → intermediate waypoints preserved
-- [ ] Empty path → returns empty, no error
-- [ ] 1-2 waypoint path → returned unchanged
-- [ ] All waypoints removed (start sees end) → 2-point path
-- [ ] Per-tick validation: door blocks next waypoint → path discarded
+- [x] Zigzag path → string-pulled to straight line
+- [x] Path around wall → intermediate waypoints preserved
+- [x] Empty path → returns empty, no error
+- [x] 1-2 waypoint path → returned unchanged
+- [x] All waypoints removed (start sees end) → 2-point path
+- [x] Per-tick validation: door blocks next waypoint → path discarded
 
 ### Determinism Test
-- [ ] 100 identical runs with same seed, same difficulty, hash final GameState — all match
+- [x] 100 identical runs with same seed, same difficulty, hash final GameState — all match
 
 ### Performance Benchmark
-- [ ] FSM tick + utility scoring < 0.1ms per tick at 60 ticks/sec
-- [ ] Path smoothing < 0.15ms per invocation (30-waypoint path)
-- [ ] Hiding spot pre-computation < 5ms at map load (50x50 grid)
+- [x] FSM tick + utility scoring < 0.1ms per tick at 60 ticks/sec
+- [x] Path smoothing < 0.15ms per invocation (30-waypoint path)
+- [x] Hiding spot pre-computation < 5ms at map load (50x50 grid)
 
 ---
 

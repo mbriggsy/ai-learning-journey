@@ -11,8 +11,19 @@
 - **Phase 4 plan DEEPENED (2026-03-30)** — 14 agents (9 review + 4 research + 1 web research), 4 Context7 queries, 13 contradictions resolved
 - **Phase 5 plan SPLIT + DEEPENED (2026-03-30)** — 14 agents (5 research + 7 review + 1 spec flow + 1 architecture verification), 3 Context7 queries, 12 Gemini Grounding queries, 14 contradictions resolved, 25 race conditions identified, 33 silent failures caught
 - **Phase 6 plan SPLIT + DEEPENED (2026-03-30)** — 15 agents (3 research + 10 review + 1 GSD plan checker + 1 spec flow), 2 Context7 queries, 8 contradictions resolved, 26 silent failures caught
-- Phase plans broken out into individual documents — deepening in progress
-- No code yet — project is in design phase
+- Phase plans broken out into individual documents — all 10 deepened
+- **Phase 0 EXECUTED (2026-03-30)** — scaffolding complete, 3 tests
+- **Phase 1 EXECUTED (2026-03-30)** — map + movement, 43 tests, arrow keys added
+- **Phase 0+1 code review PASSED (2026-03-30)** — 5 agents, zero blockers
+- **Phase 2 EXECUTED (2026-03-30)** — seeker AI + detection, 119 tests
+- **Phase 2 code review PASSED (2026-03-30)** — 5 agents (TS, arch, perf, security, simplicity), zero blockers, all P1+P2 fixed
+- **Phase 3 EXECUTED (2026-03-30)** — fog of war + game flow, 125 tests, visually verified
+- **Phase 4 EXECUTED (2026-03-30)** — doors + minimap + sonar, 163 tests, visually verified
+- **Phase 5a EXECUTED (2026-03-30)** — seeker difficulty tiers + 4-state FSM, 211 tests (dead module removed Session 12)
+- **Phase 5a BLOCKER FIXED (2026-03-31)** — pendingPath guard, seeker moves, code reviewed (4 agents), dead code removed
+- **Phase 4 REVIEWED (2026-03-31)** — dead action handlers purged, SonarPing cleanup, depth collision fix, 8 todos + 5 solutions documented, 210 tests
+- **Vision model LOCKED (2026-03-30)** — 4-tier flashlight tag, spec at `docs/design/vision-model-spec.md`
+- **Branch:** `feat/phase-0-scaffolding` pushed to origin
 
 ### Documents
 - Brainstorm: `docs/ideation/2026-03-29-hide-and-seek-brainstorm.md`
@@ -24,6 +35,190 @@
 - Phase 6b: `docs/plans/2026-03-29-008b-phase-6b-scoring-stats-plan.md`
 - Original Phase 5 (superseded): `docs/plans/2026-03-29-007-phase-5-ai-depth-spectator-plan.md`
 - Original Phase 6 (superseded): `docs/plans/2026-03-29-008-phase-6-sound-scoring-plan.md`
+
+## What We Did (2026-03-31, Session 15)
+- **Skill Creator optimizer — FULLY OPERATIONAL on Windows**
+- Fixed 4 bugs in Skill Creator scripts (marketplace plugin files):
+  1. `select.select` on Windows — replaced with threading+queue reader (both marketplace copies)
+  2. YAML multi-line quoted string parsing in `parse_skill_md` — now reads continuation lines
+  3. `import anthropic` SDK dependency — switched to `anthropic-agent-skills` version using `claude -p`
+  4. **Eval detection only matched test command name** — smoking gun for ALL previous 0% recall. Claude triggers real skill, not test duplicate. Fixed to match both.
+- **Ran full optimizer on /distill** — 5 iterations, 20 queries, 3 runs each, 0.4 holdout. Best: iter 3 at 92% test (8/8). Applied.
+- **Ran full optimizer on /brief** — 5 iterations, 20 queries, 3 runs each, 0.4 holdout. Best: iter 4 at 81% train. Applied.
+- **Created `projects/skills/distill-and-brief/` project** — dedicated home for skills, eval sets, optimizer results, hooks
+  - Windows directory junctions from `~/.claude/skills/` → project (single source of truth)
+  - Per-skill READMEs with usage docs, hook descriptions, installation notes
+  - Showcase doc moved from `research/distill-and-brief/` to project README
+- **Renamed `docs/solutions/` → `docs/insights/`** — "solutions" implies finality, "insights" captures ongoing compounding knowledge
+  - Updated: both SKILL.md files, both hooks, all READMEs, CLAUDE.md, eval sets, memory, settings.json
+  - Hook renamed: `inject-solutions.sh` → `inject-insights.sh`
+- ~~**Verify in fresh session:** `/brief` should read from `docs/insights/`~~ — **VERIFIED Session 16.** All 3 hooks tested: block-webfetch, inject-insights, remind-distill. All fire correctly, fast-exit on non-matching skills confirmed.
+- Test baseline: **210 tests passing** (unchanged)
+- **Branch:** `feat/phase-0-scaffolding`
+
+## What We Did (2026-03-31, Session 14)
+- **Distill & Brief knowledge system** — two custom Skills 2.0 skills + two hooks for automatic knowledge capture and injection
+- `/distill` skill — writes insight docs with dynamic injection (shows existing, auto-numbers, provides template)
+- `/brief` skill — reads insight context on demand with dynamic injection
+- `inject-insights.sh` hook (PreToolUse) — auto-injects insight summaries before `/ce:work`
+- `remind-distill.sh` hook (PostToolUse) — reminds to `/distill` after `/ce:work` and `/ce:review`
+- **Skill Creator A/B eval** — 100% pass rate with-skill vs 33% without (18/18 vs 6/18 assertions), fewer tokens
+- **Windows `select.select()` bug found + fixed** in skill-creator's `run_eval.py` — replaced with threading for pipe compatibility
+- **Showcase doc** — now at `projects/skills/distill-and-brief/README.md`, Mermaid diagrams, appendix with eval data
+- **Squeaky clean protocol updated** — completed todos deleted at session end, insights persist
+- **CLAUDE.md + environment-setup.md** updated with hooks, skills, folder setup
+- Completed todo docs (8) deleted per new protocol
+- Test baseline: **210 tests passing** (unchanged)
+- Build: typecheck clean
+- **Branch:** `feat/phase-0-scaffolding`
+
+## What We Did (2026-03-31, Session 13)
+- **Phase 4 code review** — dead code purge + cleanup from review findings
+- **Dead action types removed** — `MOVE_TO`, `REQUEST_PATH`, `LOOK_AROUND` from `actions.ts` + engine handler cases + tests
+- **Duplicate `recordSelfOpen` removed** from `seeker-fsm.ts` (already fires at execution in `processActionQueue`)
+- **Dead minimap methods removed** — `setSeekerBlipAlpha()`, `getCamera()` from `MinimapManager.ts`
+- **SonarPing cleanup** — proper typed `counterTween` property (was cast hack), dead `isAnimating` removed, `onPhaseChanged` typed as `GameFlowKind`
+- **Depth collision fix** — `MINIMAP_PLAYER` 200→195 (was colliding with `UI: 200`)
+- **Broken evidence stub removed** — empty `hasEvidence` check in engine.ts that did nothing
+- **8 todo docs** in `docs/todos/` + **5 insight docs** in `docs/insights/` — institutional knowledge from review
+- Test baseline: **210 tests passing** (24 files) — 1 dropped (dead MOVE_TO test)
+- Build: typecheck clean
+- **Branch:** `feat/phase-0-scaffolding`
+
+## What We Did (2026-03-31, Session 12)
+- **FIXED Phase 5a blocker: seeker movement** — `pendingPath: boolean` added to `SeekerAIInternalState`, set/cleared in `requestPathTo()`/callback/`clearPath()`, guards in all 4 FSM states
+- **Seeker state colors** — 4 distinct colors per FSM state (red=patrol, orange=suspicious, yellow=search, bright red=chase) replacing indistinguishable 2-shade ternary
+- **Serena purged from environment-setup.md** — removed from prerequisites, MCP section (replaced with REMOVED tombstone), setup-from-scratch steps, permissions, gotchas, file locations
+- **Code review (4 agents)** — TS reviewer, architecture strategist, performance oracle, simplicity reviewer. Zero blockers, 1 P2 fixed (search-state nesting flattened to early return)
+- **Dead code removed** — `src/game/ai/seeker.ts` + `tests/game/ai/seeker.test.ts` (zero importers, orphaned predecessor to FSM system)
+- **compound-engineering.local.md created** — review agent config for TS game project
+- Test baseline: **211 tests passing** (24 files) — 12 dropped from dead module removal
+- Build: typecheck clean
+- **Branch:** `feat/phase-0-scaffolding`
+
+## What We Did (2026-03-30, Session 11)
+- **EXECUTED Phase 5a: Seeker Difficulty Tiers** — 4-state FSM + 3 difficulty tiers
+- FSM refactor: SeekerFSM class with PatrolState, SuspiciousState, SearchState, ChaseState
+- Priority ordering: CHASE(3) > SEARCH(2) > SUSPICIOUS(1) > PATROL(0), pending transitions, error boundary
+- 3 tier configs: Easy (60° cone, random patrol, 1.5s reaction), Medium (90° cone, systematic patrol, 0.75s), Hard (120° cone, strategic patrol, 0.25s)
+- Vision cone detection: checkDetection() filters by facing angle + cone width (backwards compatible)
+- Path smoothing: Bresenham LOS + greedy string-pulling, per-tick validation against door changes
+- Room system: Tiled object layer parsing, BFS center-finding, adjacency detection, overlap warning
+- Room tracking: utility scoring (time 50% + distance 30% + adjacency 15% - recent 5%), completion lock
+- Evidence tracking (Hard AI): door snapshot at hunt start, doorsIOpened self-exclusion, lastToggleTick double-toggle catch
+- Hiding spots: pre-computed corners (L-shape walls), dead ends (1 neighbor), cover tiles (3+ walls)
+- Engine integration: canonical 9-step fixedUpdate, door evidence pipeline, Difficulty parameter, menace gauge
+- GameSettings: `seekerDifficulty: Difficulty` replaces old `difficulty: 'easy'`
+- LOOK_AROUND action: 4-direction rotation over configurable ticks
+- SEEKER_STATE_CHANGED event for renderer/UI hooks
+- facingAngle (continuous radians) on SeekerRenderState for smooth vision cone
+- **Serena MCP server REMOVED** — tested in shootout, find_referencing_symbols broken for TS. Grep/Read/Glob win.
+- Test baseline: **223 tests passing** (163 → 223, +60 new)
+- Build: typecheck clean, zero console spam
+- **Branch:** `feat/phase-0-scaffolding` pushed to origin (30 commits)
+
+## Next Steps
+1. **Skill Creator: description optimizer** — run full `run_loop.py` with threading fix applied. Improve `/distill` trigger accuracy (currently 0% auto-trigger). Consider creating a dedicated skills project.
+2. **Visual testing** — play on Easy/Medium/Hard, verify seeker behavior differences (needs difficulty selector — URL param or menu)
+3. **Tiled map: add Rooms object layer** — rectangle objects with roomId properties for Medium/Hard patrol
+4. **Phase 5b** — AI hider, spectator mode, vision cones rendered
+5. **Phase 6a** — audio + atmosphere
+
+## Landmines
+- **Module-level `let` in SearchState/SuspiciousState** — singleton state means multi-seeker will stomp. Must move to `SeekerAIInternalState` before adding second seeker.
+
+## What We Did (2026-03-30, Session 10)
+- **EXECUTED Phase 4: Doors + Minimap + Sonar** — full tactical layer
+- DoorSystem: toggle, cooldown (500ms/30 ticks), occupancy check (AABB hitbox), LOS/collision/pathfinding grid integration, doorGeneration counter for FOV dirty flag
+- ActionQueue: MOVE_TO, OPEN_DOOR, WAIT, REQUEST_PATH — seeker door-opening behavior
+- 6 doors placed at corridor chokepoints, corridors narrowed to 1-tile doorways
+- DoorSprite: factory + event-driven frame swap (tileset frames 3/4)
+- MinimapManager: second camera bottom-right 160x160, dynamic zoom, player dot (blue), door indicators (red/green), seeker blip (orange)
+- SonarPing: game-layer tick counter → SONAR_PING_DUE event, renderer expanding ring + distance-based blip reveal
+- Types: DoorId branded, DoorState, DOOR_TOGGLED, SONAR_PING_DUE, sonarTicksUntilPing on HuntPhase, doors+doorGeneration on PlayingState
+- Constants: DOOR, SONAR, MINIMAP, INTERACTION groups + minimap depth values
+- Engine: door interaction in fixedUpdate, FOV doorGeneration dirty flag, sonar timer
+- **Bugfixes during visual testing:**
+  - Phaser flattens Tiled object properties to Record<string, unknown> (not arrays) — fixed property access
+  - Tileset loaded as image (no frames) → spritesheet with 32x32 frames
+  - Tileset metadata stale (columns=3, imagewidth=96 → 5, 160)
+  - canToggleDoor center-point check → AABB hitbox overlap (fixed wall teleport on close)
+  - Corridors 3 tiles wide → narrowed with flanking walls to 1-tile doorways
+- **Vision model design debate → LOCKED:** 4-tier flashlight tag replacing fog-of-war
+  - Easy: omniscient (full map), Medium: lantern (radius), Medium-Hard: flashlight (cone), Hard: darkness (memory only)
+  - Seeker always has visible flashlight cone, unchanged across tiers
+  - Spec: `docs/design/vision-model-spec.md`, implementation target: Phase 5a
+  - Easy mode is default until Phase 5a adds difficulty selector
+- Cross-phase fixes applied: minimap bottom-right 160x160, tile indices documented
+- Debug cleanup: hacks replaced with clean Easy mode code, no commented-out blocks
+- Test baseline: **163 tests passing** (125 → 163, +38 new)
+- Build: typecheck clean, zero console spam
+- **Branch:** `feat/phase-0-scaffolding` pushed to origin (25 commits)
+
+## What We Did (2026-03-30, Session 9)
+- **EXECUTED Phase 3: Fog of War + Game Flow** — Tier 1 complete, fully playable with polish
+- 6 scenes: Boot (Click to Start + loading), MainMenu, Game (refactored composition root), HUD (parallel), PauseMenu (overlay), Results
+- FogRenderer: dedicated black-tile overlay layer, 3 states (UNEXPLORED/EXPLORED/VISIBLE), manual lerp transitions, distance-based vignette, camera-culled
+- CinematicManager: dual-camera (UI at zoom=1 for splash text), Promise-wrapped camera effects (zoomTo, panTo, flash, fadeOut, shake, wait)
+- EndOfRoundSequence: polling state machine with SequenceStep discriminated union, timeout safety per step, reduced-motion (filter flash), FOUND/SURVIVED sequences
+- PauseAuthority: reason-tracked (MENU/TAB_HIDDEN/CINEMATIC), request/release, game only resumes when all reasons cleared
+- SceneTransition: type-safe via SceneDataMap, camera fade, static isTransitioning guard
+- Game state additions: playerFov Uint8Array (fill(1) during countdown, computed in hunt), GameStats (distanceTraveled), GameEngine.dispose()
+- Player FOV computation with dirty-flag optimization in fixedUpdate
+- TestBridge: dev-only window.__GAME_TEST__ with typed interface for Playwright
+- 6 Playwright e2e specs + playwright.config.ts
+- Types: GameSettings, SceneDataMap, HUDSceneData, ResultsSceneData, GameSceneData
+- Constants: FOG, CINEMATIC, HUD groups + DEPTH.FOG (100) below DEPTH.UI (200)
+- **Bug fixes found during visual verification:**
+  - JustDown doesn't work with Playwright keyboard events — switched to key.on('down') event listener
+  - UI camera rendered sprite facing indicators as stray dots (looked like broken minimap) — fixed by ignoring all sprite game objects on UI camera
+  - Seeker facing indicator leaked through fog — fixed with SeekerSprite.setVisible() controlling both body + indicator
+- 3 new landmines documented in CLAUDE.md
+- Test baseline: **125 tests passing** (6 new)
+- Build: app chunk 40.8KB, Phaser 1.2MB, zero vulnerabilities
+- **Branch:** `feat/phase-0-scaffolding` pushed to origin (19 commits)
+
+## What We Did (2026-03-30, Session 8)
+- **EXECUTED Phase 2: Seeker + Detection** — first playable hide-and-seek
+- Symmetric shadowcasting FOV (Albert Ford, rational arithmetic, Uint8Array, zero-alloc after review)
+- EasyStar.js pathfinding (callback-based, grid [y][x] conversion, 200 iter/frame)
+- Seeker AI FSM: PATROL (random wander + pause) / CHASE (last-known-position, re-path every 30 ticks)
+- Transition delays: 1.5s reaction (PATROL→CHASE), 3s timeout (CHASE→PATROL)
+- 3-way detection: none/spotted/found (360° for Phase 2, cone deferred to Phase 5)
+- Game flow: countdown → hunt → found|survived (two-level discriminated union)
+- TypedEmitter with copy-on-iterate + offAll()
+- Terminal state guards halt all logic after game over
+- Renderer: SeekerSprite with facing indicator, countdown/hunt timer HUD, "HUNT!" flash, minimal pause (ESC), FOUND!/SURVIVED! end screen with restart
+- Applied ALL cross-phase fixes from Session 7 code review (tileCoord allocs, mutate-in-place, ReadonlyDeep, MutablePlayingState, etc.)
+- **Code review with 5 agents** (TS reviewer, architecture strategist, performance oracle, security sentinel, simplicity reviewer):
+  - Architecture: "PASS — zero blockers, zero boundary violations, pristine"
+  - Security: risk level LOW, zero critical/high issues
+  - Simplicity: "complexity score LOW, minor tweaks only"
+  - Performance: 5 allocation hot spots found and fixed (FOV Slope objects, pixelToTile, tileToPixelCenter, hiderPos literal, lastKnownHiderPos)
+  - TS reviewer: P1 — 4 `!` assertions in src/game/ removed; dead types/constants/events cleaned
+  - Killed ~35 LOC dead code, eliminated ~1500+ allocs/sec across hot paths
+- Fixed seeker eyes (added facing indicator) and HUD positioning (camera worldView instead of setScrollFactor(0))
+- Added `executed:` and `reviewed:` fields to all phase plan frontmatter
+- Test baseline: **119 tests passing** (72 new)
+- Build: app chunk 20.9KB, zero vulnerabilities
+- **Branch:** `feat/phase-0-scaffolding` pushed to origin (10 commits)
+
+## What We Did (2026-03-30, Session 7)
+- **EXECUTED Phase 0 + Phase 1** — first code in the project
+- Phase 0: .gitignore, package.json (pnpm, ESM), tsconfig (strict + 4 flags), Vite (3-way chunk split), Vitest (3 projects), index.html, constants (15 grouped), type system (ReadonlyDeep, TileCoord branded, GameState union, TypedEmitter), BootScene proof of life, architecture boundary test, CLAUDE.md
+- Phase 1: GameEngine (60Hz fixed timestep, delta guards, pause/resume), map.ts (Tiled JSON → Uint8Array collision/LOS grids), movement.ts (separate-axis collision, corner sliding, normalized diagonals), InputManager (WASD + arrows + Xbox gamepad, scaled radial deadzone, edge-triggered buttons), PlayerSprite, Game scene (camera zoom 2 snap-then-follow, tab visibility), 40x30 tile map (8 rooms)
+- Added arrow key support (Briggsy request)
+- **Code review with 5 agents** (TS reviewer, architecture strategist, performance oracle, security sentinel, simplicity reviewer):
+  - Zero critical issues in application code
+  - Architecture: "textbook clean" — boundary pristine, scales to all 10 phases
+  - Performance: 3 allocation hot spots to fix before Phase 2 (tileCoord per call, PlayerState per tick, deadzone object per frame) — fine at 1 entity
+  - Security: GitHub PAT in git remote URL — FIXED (URL stripped, token needs rotation on github.com)
+  - Security: .env with Gemini key properly gitignored, not VITE_ prefixed — safe
+  - Simplicity: one dead function removed (getObjectProp), rest is earned complexity
+  - TypeScript: getState() returns shallow Readonly (upgrade to ReadonlyDeep in Phase 2)
+- Discovered: `override` works on Phaser Scene `update()` but NOT `create()`/`preload()`/`init()` — documented in CLAUDE.md
+- Test baseline: **43 tests passing** (map, movement, engine, state, architecture boundary)
+- Build: Phaser chunk 1.2MB + app chunk 9.2KB, zero vulnerabilities
 
 ## What We Did (2026-03-30, Session 6)
 - **DEEPENED Phase 6 plan with 15 agents, SPLIT into 6a + 6b:**
@@ -155,6 +350,18 @@
 
 **ALL PLANS DEEPENED. Cross-phase review COMPLETE (2026-03-30).**
 
+**EXECUTION (serial, one phase at a time — code review after each):**
+- [x] Phase 0: Scaffolding — EXECUTED + REVIEWED
+- [x] Phase 1: Map + Movement — EXECUTED + REVIEWED
+- [x] Phase 2: Seeker + Detection — EXECUTED + REVIEWED
+- [x] Phase 3: Fog of War + Game Flow — EXECUTED + REVIEWED (5 agents, P1 quit flow fixed, ~42 LOC dead code removed)
+- [x] Phase 4: Doors + Minimap — EXECUTED + REVIEWED (4 agents, 5 P2 + 3 P3 findings, 8 todos created)
+- [x] Phase 5a: Seeker Tiers — EXECUTED + REVIEWED (4 agents, zero blockers, blocker fixed Session 12)
+- [ ] Phase 5b: Hider + Spectator
+- [ ] Phase 6a: Audio + Atmosphere
+- [ ] Phase 6b: Scoring + Stats
+- [ ] Phase 7: Art Pipeline
+
 **Cross-phase reconciliation (apply during execution of each phase):**
 
 Master plan Phase 7 section (21 fixes needed — apply when updating master plan):
@@ -183,7 +390,26 @@ Phase 0 fixes (apply during Phase 0 execution):
 - [ ] Make `roundPixels: true` and `antialias: false` explicit in Phaser config (belt and suspenders)
 
 Phase 1-2 fixes (apply during Phase 1/2 execution):
-- [ ] Type `getGameObject()` as `Phaser.GameObjects.GameObject` (not `Rectangle`) in PlayerSprite and SeekerSprite — enables Phase 7 swap without type changes
+- [x] Type `getGameObject()` as `Phaser.GameObjects.GameObject` (not `Rectangle`) in PlayerSprite and SeekerSprite ✓
+
+Phase 2 fixes (from Session 7 code review — ALL APPLIED in Session 8):
+- [x] Fix tileCoord() allocation — isWalkable/isBlocking accept (x, y) number pairs ✓
+- [x] Mutate PlayerState in place in updateMovement ✓
+- [x] Pre-allocate deadzone result object in InputManager ✓
+- [x] Upgrade getState() to ReadonlyDeep<GameState> ✓
+- [x] Extract MutablePlayingState type alias ✓
+- [x] Doc comment on InputManager.sample() reused singleton ✓
+
+Phase 2 fixes (from Session 8 code review — ALL APPLIED):
+- [x] Remove all `!` assertions from src/game/ (4 occurrences) ✓
+- [x] Flatten Slope objects in FOV to raw (num, den) numbers — zero-alloc scanQuadrant ✓
+- [x] Pre-allocate pixelToTile + tileToPixelCenter results ✓
+- [x] Pass s.player directly to seeker AI (not object literal) ✓
+- [x] Mutate lastKnownHiderPos in place during chase ✓
+- [x] Add offAll() to shutdown handler (emitter cleanup) ✓
+- [x] Remove dead types (FogState, TileFlag, TileType), constants (6), events (2), fields (1) ✓
+- [x] Fix createCountdownTicks duplication (state.ts now calls the function) ✓
+- [x] Document ReadonlyDeep<Uint8Array> gap + singleton patterns in CLAUDE.md ✓
 
 Phase 3 fixes (apply during Phase 3 execution):
 - [ ] TEXTURE_KEYS manifest must include fog overlay tile AND BitmapFont entries (not just game art)
@@ -191,12 +417,13 @@ Phase 3 fixes (apply during Phase 3 execution):
 - [ ] Clarify that EndOfRoundSequence will be replaced by Phase 7 with richer animation code
 
 Phase 4 fixes (apply during Phase 4 execution):
-- [ ] Minimap position: change from top-right to **bottom-right** (Phase 7 layout is more considered — all HUD on right side)
-- [ ] Minimap size: change from 200x150 to ~160x160 (Phase 7 spec)
-- [ ] Document stable tile indices for door_open/door_closed frames
+- [x] Minimap position: change from top-right to **bottom-right** ✓ (implemented bottom-right)
+- [x] Minimap size: change from 200x150 to ~160x160 ✓ (MINIMAP.WIDTH=160, MINIMAP.HEIGHT=160)
+- [x] Document stable tile indices for door_open/door_closed frames ✓ (FRAME_DOOR_CLOSED=3, FRAME_DOOR_OPEN=4 in DoorSprite.ts)
 
-Phase 5a fix (apply during Phase 5a execution):
+Phase 5a fixes (apply during Phase 5a execution):
 - [ ] Document FSM state → animation mapping (PATROL=walk, SUSPICIOUS=walk/idle, SEARCH=walk, CHASE=chase)
+- [ ] Apply vision model spec (`docs/design/vision-model-spec.md`) — 4-tier flashlight tag, seeker cone becomes visible beam, player vision per difficulty
 
 Phase 6a fix (apply during Phase 6a execution):
 - [ ] Consider adding sonar ping audio SFX (currently visual-only — no audio cue in Phase 6a)
@@ -205,11 +432,11 @@ Phase 6b fix (apply during Phase 6b execution):
 - [ ] Results screen UI art not specified in Phase 7 — added during deepening. Verify compatibility with Phase 6b layout spec.
 
 **THEN execute phases sequentially (fresh context window per phase):**
-- [ ] Execute Phase 0: Project Scaffolding
-- [ ] Execute Phase 1: Map + Movement
-- [ ] Execute Phase 2: Seeker + Detection
-- [ ] Execute Phase 3: Fog of War + Game Flow
-- [ ] Execute Phase 4: Doors + Minimap
+- [x] Execute Phase 0: Project Scaffolding ✓ (2026-03-30, Session 7)
+- [x] Execute Phase 1: Map + Movement ✓ (2026-03-30, Session 7)
+- [x] Execute Phase 2: Seeker + Detection ✓ (2026-03-30, Session 8)
+- [x] Execute Phase 3: Fog of War + Game Flow ✓
+- [x] Execute Phase 4: Doors + Minimap ✓
 - [ ] Execute Phase 5a: Seeker Difficulty Tiers
 - [ ] Execute Phase 5b: AI Hider + Spectator
 - [ ] Execute Phase 6a: Audio Atmosphere
@@ -238,13 +465,14 @@ Phase 6b fix (apply during Phase 6b execution):
 - **Context rot** — quality degrades at 50% context utilization. New terminal per phase. Phase 5 SPLIT into 5a/5b.
 - **Tiled JSON export** — use CSV or Base64 uncompressed tile layer format. Phaser can't read compressed.
 - **Camera zoom** — integer values only when using roundPixels (non-integer = jitter).
-- **NO .gitignore yet** — MUST create in Phase 0 before any .env file. API key will leak without it. (NEW — CRITICAL)
-- **Vite 7.0.0-7.0.6 have active CVEs** — CVE-2025-31125 (arbitrary file read, exploited in the wild), CVE-2025-58751, CVE-2025-58752 (server.fs bypass). Minimum safe version is ^7.0.7. (NEW — CRITICAL)
-- **esModuleInterop: true required for Phaser** — Phaser's type defs use `export = Phaser`. Without esModuleInterop, `import Phaser from 'phaser'` fails under verbatimModuleSyntax. Conway didn't need it. (NEW)
-- **vitest.config.ts must use mergeConfig** — without it, vitest.config OVERRIDES vite.config entirely. Import mergeConfig from 'vitest/config', not 'vite'. (NEW)
-- **Defer CSP to hardening pass** — Phaser internally uses dynamic code evaluation (try/catch). strict CSP produces console warning but game still works. Defer rather than add unsafe-eval. (NEW)
-- **fps.limit not fps.target** — fps.target is a hint, fps.limit is the hard cap. Without limit, 120Hz monitors waste GPU doubling render frames. (NEW)
-- **Tab backgrounding** — requestAnimationFrame stops when tab hidden. Delta spikes on return. Must auto-pause via visibilitychange + cap accumulator. (NEW)
+- ~~**NO .gitignore yet**~~ — DONE in Phase 0. .env properly excluded.
+- ~~**Vite 7.0.0-7.0.6 have active CVEs**~~ — DONE. Using Vite 7.3.1.
+- ~~**esModuleInterop: true required for Phaser**~~ — DONE in Phase 0 tsconfig.
+- ~~**vitest.config.ts must use mergeConfig**~~ — DONE in Phase 0.
+- ~~**fps.limit not fps.target**~~ — DONE. fps.limit: 60 in Phaser config.
+- ~~**Tab backgrounding**~~ — DONE. visibilitychange handler + pause/resume + keyboard reset in Phase 1.
+- **Defer CSP to hardening pass** — Phaser uses dynamic code eval. No CSP until verified post-Phase 7.
+- **override keyword on Phaser Scene** — works on update() ONLY. create()/preload()/init() NOT declared in Phaser's type defs (TS4113). Documented in CLAUDE.md.
 - **Camera flash seizure risk** — camera.flash() with white is photosensitivity hazard. Need reduced-motion toggle. (NEW)
 - **FOV must use Uint8Array, NOT Set<string>** — 60 Set allocations/sec causes GC micro-stutters. Pre-allocate and reuse. (NEW)
 - **Shallow Readonly<T> is insufficient** — renderer can still mutate nested arrays. Must use ReadonlyDeep<T>. (NEW)

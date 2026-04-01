@@ -1,10 +1,12 @@
 ---
 title: "Phase 0: Project Scaffolding"
 type: feat
-status: pending-execute
+status: completed
 date: 2026-03-29
 origin: docs/plans/2026-03-29-001-feat-hide-and-seek-game-plan.md
 deepened: 2026-03-29
+executed: 2026-03-30
+reviewed: 2026-03-30
 ---
 
 # Phase 0: Project Scaffolding
@@ -757,14 +759,14 @@ Ensure these are set:
 
 ## Success Criteria
 
-- [ ] `pnpm dev` shows a green rectangle centered in 1280x720 canvas
-- [ ] `pnpm test` passes (architecture boundary test)
-- [ ] `pnpm typecheck` passes (all type system stubs compile)
-- [ ] `pnpm build` produces `dist/` with Phaser in a separate chunk
-- [ ] Architecture boundary test passes (zero Phaser/browser imports in `src/game/`)
-- [ ] `.gitignore` excludes `.env` (verified with `git status` after creating a test `.env`)
-- [ ] `pnpm audit` reports zero vulnerabilities
-- [ ] Console shows no Phaser banner, no TypeScript errors, no Vite warnings
+- [x] `pnpm dev` shows a green rectangle centered in 1280x720 canvas
+- [x] `pnpm test` passes (architecture boundary test)
+- [x] `pnpm typecheck` passes (all type system stubs compile)
+- [x] `pnpm build` produces `dist/` with Phaser in a separate chunk
+- [x] Architecture boundary test passes (zero Phaser/browser imports in `src/game/`)
+- [x] `.gitignore` excludes `.env` (verified with `git status` after creating a test `.env`)
+- [x] `pnpm audit` reports zero vulnerabilities
+- [x] Console shows no Phaser banner, no TypeScript errors, no Vite warnings
 
 ## Dependencies
 

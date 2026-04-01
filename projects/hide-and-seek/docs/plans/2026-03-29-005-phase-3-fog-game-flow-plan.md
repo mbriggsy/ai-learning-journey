@@ -1,12 +1,14 @@
 ---
 title: "Phase 3: Fog of War + Game Flow"
 type: feat
-status: deepened
+status: executed
 date: 2026-03-29
 deepened: 2026-03-30
 origin: docs/plans/2026-03-29-001-feat-hide-and-seek-game-plan.md
 agents: 13
 contradictions_resolved: 13
+executed: 2026-03-30
+reviewed: 2026-03-30
 ---
 
 # Phase 3: Fog of War + Game Flow
@@ -99,7 +101,7 @@ With the core game loop working (Phase 2), this phase adds the visual tension la
 
 ### Scene Management
 
-- [ ] `src/renderer/scenes/Boot.ts` — Merged Boot + Preloader:
+- [x] `src/renderer/scenes/Boot.ts` — Merged Boot + Preloader:
   - Set background color (dark)
   - "Click to Start" button (unlocks audio context for Phase 6)
   - On click: `this.load.start()` with all game assets
@@ -110,7 +112,7 @@ With the core game loop working (Phase 2), this phase adds the visual tension la
   - Verify `game.renderer.type === Phaser.WEBGL` — if Canvas, show unsupported browser message (setTint is WebGL-only)
   - Read `prefers-reduced-motion` media query, store in GameSettings.reducedMotion
 
-- [ ] `src/renderer/scenes/MainMenu.ts` — Title screen:
+- [x] `src/renderer/scenes/MainMenu.ts` — Title screen:
   - Game title (BitmapText, large, centered)
   - "Play" button only (no Settings, no AI vs AI for Phase 3)
   - TextButton with keyboard nav (arrow up/down) + gamepad nav (D-pad, A confirm)
@@ -118,7 +120,7 @@ With the core game loop working (Phase 2), this phase adds the visual tension la
   - SceneTransition: camera fadeOut → start Game with default GameSettings → fadeIn
   - Camera fadeIn(500) at end of create() (receiving scene handles its own fadeIn)
 
-- [ ] `src/renderer/scenes/Game.ts` — Main gameplay scene:
+- [x] `src/renderer/scenes/Game.ts` — Main gameplay scene:
   - Composition root for renderer systems — delegate to setup helpers in create() (avoid 500-line method):
     - `setupTilemap()`, `setupEntities()`, `setupFog()`, `setupCinematic()`, `setupInput()`
   - Create FogRenderer, CinematicManager, PauseAuthority
@@ -149,7 +151,7 @@ With the core game loop working (Phase 2), this phase adds the visual tension la
     - GameEngine.dispose() — cancels EasyStar paths, sets disposed flag, emitter.offAll()
     - Remove DOM event listeners (visibilitychange)
 
-- [ ] `src/renderer/scenes/HUD.ts` — Parallel scene overlay:
+- [x] `src/renderer/scenes/HUD.ts` — Parallel scene overlay:
   - Receives HUDSceneData via init(data): `{ listener: TypedListener<GameEventMap>, getState: () => ReadonlyDeep<PlayingState> }`
   - Camera at (0,0), never moves, zoom=1 — screen-space, not world-space
   - BitmapText for timer display (top-right, right-aligned) — NOT Phaser Text (avoids texture re-upload on setText)
@@ -164,7 +166,7 @@ With the core game loop working (Phase 2), this phase adds the visual tension la
   - Sleeps alongside Game on pause, stops when Game stops
   - Shutdown handler: remove TypedEmitter listeners via .off()
 
-- [ ] `src/renderer/scenes/PauseMenu.ts` — Pause overlay:
+- [x] `src/renderer/scenes/PauseMenu.ts` — Pause overlay:
   - Launched (not started) as overlay — `create()` runs fresh each time
   - Use `stop()` when done, not `sleep()` — no state worth preserving
   - Semi-transparent black background rectangle (alpha 0.7)
@@ -175,7 +177,7 @@ With the core game loop working (Phase 2), this phase adds the visual tension la
   - Escape key also triggers Resume (same as Resume button)
   - `bringToTop('PauseMenu')` after launch to guarantee z-ordering
 
-- [ ] `src/renderer/scenes/Results.ts` — End-of-round screen:
+- [x] `src/renderer/scenes/Results.ts` — End-of-round screen:
   - Receives ResultsSceneData via init(data): `{ outcome: 'found' | 'survived', timeSurvivedMs: number, distanceTraveled: number }`
   - Outcome text: "FOUND!" (red) or "SURVIVED!" (gold) — large BitmapText, centered
   - Stats display: time survived (formatted MM:SS), distance traveled (in tiles)
@@ -186,7 +188,7 @@ With the core game loop working (Phase 2), this phase adds the visual tension la
 
 ### Fog of War
 
-- [ ] `src/renderer/systems/FogRenderer.ts` — Fog of war system:
+- [x] `src/renderer/systems/FogRenderer.ts` — Fog of war system:
   - **Overlay layer setup:**
     - Create blank TilemapLayer same dimensions as game map
     - Fill with solid black tile (single 32x32 black tile in tileset)
@@ -222,7 +224,7 @@ With the core game loop working (Phase 2), this phase adds the visual tension la
 
 ### Camera & Cinematics
 
-- [ ] `src/renderer/systems/CinematicManager.ts` — Dual-camera system:
+- [x] `src/renderer/systems/CinematicManager.ts` — Dual-camera system:
   - Create UI camera: `cameras.add(0, 0, width, height, false, 'ui')` at zoom=1, scroll (0,0)
   - `ignoreOnUI(gameObject)`: registers game objects so UI camera ignores them (main camera sees game world, UI camera sees only splash text)
   - Promise wrappers for camera effects:
@@ -238,7 +240,7 @@ With the core game loop working (Phase 2), this phase adds the visual tension la
   - `hideSplash()`: destroys splash text
   - `destroy()`: removes UI camera, cleans up splash text
 
-- [ ] `src/renderer/utils/EndOfRoundSequence.ts` — Polling state machine:
+- [x] `src/renderer/utils/EndOfRoundSequence.ts` — Polling state machine:
   - **SequenceStep discriminated union:**
     ```
     type SequenceStep =
@@ -279,7 +281,7 @@ With the core game loop working (Phase 2), this phase adds the visual tension la
   - **Found-specific:** Before sequence, call `fogRenderer.revealArea(midX, midY, radius)` to clear fog around encounter point. Pan target = midpoint between seeker and hider.
   - **Survived-specific:** Pan target = player position.
 
-- [ ] `src/renderer/utils/SceneTransition.ts` — Type-safe scene transitions:
+- [x] `src/renderer/utils/SceneTransition.ts` — Type-safe scene transitions:
   - `startScene<K extends keyof SceneDataMap>(plugin, key, data?)`:
     - Set `isTransitioning = true` (checked by input handlers)
     - `camera.fadeOut(500, 0, 0, 0)`
@@ -290,7 +292,7 @@ With the core game loop working (Phase 2), this phase adds the visual tension la
 
 ### Pause System
 
-- [ ] `src/renderer/systems/PauseAuthority.ts` — Reason-tracked pause:
+- [x] `src/renderer/systems/PauseAuthority.ts` — Reason-tracked pause:
   - `PAUSE_REASONS = { MENU, TAB_HIDDEN, CINEMATIC } as const` (Symbols)
   - `request(reason)`: add to activeReasons Set. If first reason → call doPause()
   - `release(reason)`: remove from Set. If empty → call doResume()
@@ -303,11 +305,11 @@ With the core game loop working (Phase 2), this phase adds the visual tension la
 
 ### Game State Additions (Game Layer)
 
-- [ ] Add `playerFov: Uint8Array` to PlayingState interface — game layer computes in fixedUpdate(), renderer reads
-- [ ] `playerFov.fill(1)` on entering COUNTDOWN state — all tiles visible, FogRenderer treats uniformly (no phase branching needed in renderer)
-- [ ] Add `GameStats` interface to PlayingState: `{ distanceTraveled: number }`
-- [ ] Accumulate `distanceTraveled` in fixedUpdate during HUNT phase: `stats.distanceTraveled += Math.hypot(dx, dy)`. COUNTDOWN movement excluded.
-- [ ] `GameEngine.dispose()`:
+- [x] Add `playerFov: Uint8Array` to PlayingState interface — game layer computes in fixedUpdate(), renderer reads
+- [x] `playerFov.fill(1)` on entering COUNTDOWN state — all tiles visible, FogRenderer treats uniformly (no phase branching needed in renderer)
+- [x] Add `GameStats` interface to PlayingState: `{ distanceTraveled: number }`
+- [x] Accumulate `distanceTraveled` in fixedUpdate during HUNT phase: `stats.distanceTraveled += Math.hypot(dx, dy)`. COUNTDOWN movement excluded.
+- [x] `GameEngine.dispose()`:
   - Set `this.disposed = true`
   - Cancel all pending EasyStar paths
   - `emitter.offAll()`
@@ -315,7 +317,7 @@ With the core game loop working (Phase 2), this phase adds the visual tension la
 
 ### Types
 
-- [ ] `src/types/scenes.ts`:
+- [x] `src/types/scenes.ts`:
   ```
   interface SceneDataMap {
     Boot: undefined
@@ -343,7 +345,7 @@ With the core game loop working (Phase 2), this phase adds the visual tension la
   ```
   - Typed wrapper: `startScene<K>(plugin, key, ...args)` with conditional rest params (scenes with no data require no second argument)
 
-- [ ] `src/types/settings.ts`:
+- [x] `src/types/settings.ts`:
   ```
   interface GameSettings {
     readonly countdownDuration: number   // seconds
@@ -362,7 +364,7 @@ With the core game loop working (Phase 2), this phase adds the visual tension la
 
 ### Playwright Testing
 
-- [ ] `src/test/TestBridge.ts` — Dev-only game state exposure:
+- [x] `src/renderer/utils/TestBridge.ts` — Dev-only game state exposure:
   - Guard: `if (!import.meta.env.DEV && import.meta.env.MODE !== 'test') return`
   - `window.__GAME_TEST__` with typed GameTestBridge interface:
     - `ready: boolean`
@@ -374,9 +376,9 @@ With the core game loop working (Phase 2), this phase adds the visual tension la
     - `triggerFound()` / `triggerSurvived()`: test commands via scene events
   - Tree-shaken from production builds
 
-- [ ] `e2e/types.d.ts` — TypeScript declaration for `window.__GAME_TEST__`
+- [x] `e2e/types.d.ts` — TypeScript declaration for `window.__GAME_TEST__`
 
-- [ ] `playwright.config.ts`:
+- [x] `playwright.config.ts`:
   - Chromium only (Firefox/WebKit can't render WebGL headless)
   - Viewport: match game resolution (e.g., 800x600 or 1280x720)
   - `maxDiffPixelRatio: 0.01` (1% tolerance)
@@ -384,33 +386,33 @@ With the core game loop working (Phase 2), this phase adds the visual tension la
   - WebServer: `pnpm run dev` on port 5173
   - Two projects: `visual` (screenshot tests) and `functional` (state assertions)
 
-- [ ] `e2e/fog.visual.spec.ts` — Fog state rendering:
+- [x] `e2e/fog.visual.spec.ts` — Fog state rendering:
   - Seed randomness via URL param `?seed=42`
   - Verify fogState() contains all 3 values (UNEXPLORED, EXPLORED, VISIBLE)
   - Screenshot comparison of fog rendering
 
-- [ ] `e2e/found-moment.visual.spec.ts` — Found camera sequence:
+- [x] `e2e/found-moment.visual.spec.ts` — Found camera sequence:
   - Start game → wait for HUNT → triggerFound()
   - Verify: gameFlowState === 'found', zoom === 2, splashText === 'FOUND!', Results active
   - Screenshot during splash
 
-- [ ] `e2e/survived-moment.visual.spec.ts` — Survived camera sequence:
+- [x] `e2e/survived-moment.visual.spec.ts` — Survived camera sequence:
   - Start game → wait for HUNT → triggerSurvived()
   - Verify: gameFlowState === 'survived', zoom === 2, splashText === 'SURVIVED!', Results active
 
-- [ ] `e2e/scene-flow.func.spec.ts` — Full scene flow:
+- [x] `e2e/scene-flow.func.spec.ts` — Full scene flow:
   - MainMenu → Game + HUD (both active) → Escape → PauseMenu (Game sleeping) → Resume → Game → End → Results → Play Again → Game
   - All via keyboard (validates accessibility)
 
-- [ ] `e2e/reduced-motion.func.spec.ts` — Accessibility:
+- [x] `e2e/reduced-motion.func.spec.ts` — Accessibility:
   - `page.emulateMedia({ reducedMotion: 'reduce' })`
   - Trigger Found → verify flash never ran → sequence still completes → Results active
 
-- [ ] `e2e/keyboard-nav.func.spec.ts` — Menu navigation:
+- [x] `e2e/keyboard-nav.func.spec.ts` — Menu navigation:
   - All menus navigable by keyboard (arrow keys + Enter)
   - Escape pauses and resumes
 
-- [ ] **CI considerations:**
+- [x] **CI considerations:**
   - Baselines generated on CI (Linux), NOT local Windows — rendering differs
   - Use Playwright Docker image for consistent GPU/font rendering
   - Upload playwright-report as artifact on failure

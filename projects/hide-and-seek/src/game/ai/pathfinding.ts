@@ -92,6 +92,12 @@ export class PathfindingSystem {
     }
   }
 
+  /** Discard all instances and queued paths (called on engine dispose) */
+  disposeAll(): void {
+    this.stars.clear();
+    this.handles.clear();
+  }
+
   /** Process all instances in one call */
   calculate(): void {
     for (const star of this.stars.values()) {

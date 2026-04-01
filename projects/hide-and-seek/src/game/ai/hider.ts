@@ -143,7 +143,7 @@ function isPathComplete(ai: HiderAIState): boolean {
 
 // --- Spot selection ---
 
-/** Pick a random reachable walkable tile. Retries up to 5 times, falls back to adjacent. */
+/** Pick a random walkable tile. Retries up to 50 attempts, falls back to adjacent tile from spawn. */
 export function pickRandomSpot(map: GameMap, spawnX: number, spawnY: number): { x: number; y: number } | null {
   for (let i = 0; i < 50; i++) {
     const x = Math.floor(Math.random() * map.width);

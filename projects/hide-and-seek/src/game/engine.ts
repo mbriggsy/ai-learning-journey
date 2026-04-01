@@ -1,5 +1,5 @@
 import type { InputState } from '../types/input.js';
-import type { GameState, PlayingState, SpectatingState, MutablePlayingState, MutableSpectatingState, CountdownPhase, HuntPhase, DoorId } from '../types/state.js';
+import type { GameState, PlayingState, SpectatingState, MutablePlayingState, MutableSpectatingState, CountdownPhase, HuntPhase } from '../types/state.js';
 import type { ReadonlyDeep } from '../types/utility.js';
 import type { GameEventMap } from '../types/events.js';
 import type { TypedEmitter, TypedListener } from '../types/events.js';
@@ -19,7 +19,7 @@ import { ActionQueue } from './ai/actions.js';
 import { SEEKER_CONFIGS } from './ai/seeker-configs.js';
 import { HIDER_CONFIGS } from './ai/hider-configs.js';
 import { createHiderAIState, updateHiderCountdown, updateHiderHunt } from './ai/hider.js';
-import type { HiderContext, HiderAIState } from './ai/hider.js';
+import type { HiderContext } from './ai/hider.js';
 import { RoomTracker } from './ai/room-tracking.js';
 import { EvidenceTracker } from './ai/evidence.js';
 import { SuspiciousState } from './ai/states/suspicious-state.js';
@@ -93,6 +93,10 @@ export class GameEngine {
     this.seekerConfig = SEEKER_CONFIGS[difficulty];
     this.hiderConfig = this.mode === 'spectator' ? HIDER_CONFIGS[this.hiderDifficulty] : null;
 
+    if (initialState.phase === 'spectating' && this.mode !== 'spectator') {
+      throw new Error('SpectatingState requires mode: spectator');
+    }
+
     if (initialState.phase === 'playing') {
       this.initPlayingSystems(initialState);
     } else if (initialState.phase === 'spectating') {
@@ -143,8 +147,23 @@ export class GameEngine {
       this.hiderCtx.doorSystem = doorSystem;
     }
 
-    // Subscribe to DOOR_TOGGLED for evidence pipeline (record, don't act)
+    // Centralized door handler: pathfinding costs + seeker evidence pipeline
     this.emitter.on('DOOR_TOGGLED', (payload) => {
+      // Update pathfinding costs for ALL instances (seeker + hider)
+      if (payload.isOpen) {
+        this.pathfinding.removeDoorCostAll(payload.position.x, payload.position.y);
+      } else {
+        this.pathfinding.setDoorCostAll(payload.position.x, payload.position.y, DOOR.PATHFINDING_COST);
+      }
+
+      // Sync door state on game state
+      if (this.doorSystem) {
+        const s = this.state as MutablePlayingState | MutableSpectatingState;
+        (s as { doors: ReadonlyMap<string, unknown> }).doors = this.doorSystem.getDoors();
+        (s as { doorGeneration: number }).doorGeneration = this.doorSystem.getDoorGeneration();
+      }
+
+      // Evidence pipeline for seeker AI
       if (this.seekerCtx) {
         this.seekerCtx.ai.pendingDoorEvidence.push({
           id: payload.id,
@@ -302,6 +321,7 @@ export class GameEngine {
 
   dispose(): void {
     this.disposed = true;
+    this.pathfinding.disposeAll();
     this.emitter.offAll();
   }
 
@@ -420,7 +440,7 @@ export class GameEngine {
 
     // Step 8: Seeker AI (FSM tick + detection → transition requests)
     if (this.seekerFSM && this.seekerCtx) {
-      this.updateSeekerWithDetection(detection, s, dt);
+      this.updateSeekerWithDetection(detection, s.player.x, s.player.y, dt);
     }
 
     // Step 9: Rules evaluation (timers, game over)
@@ -529,7 +549,7 @@ export class GameEngine {
 
     // Step 8: Seeker AI update
     if (this.seekerFSM && this.seekerCtx) {
-      this.updateSeekerWithDetectionSpectating(detection, s, dt);
+      this.updateSeekerWithDetection(detection, s.hider.x, s.hider.y, dt);
     }
 
     // Step 9: Rules evaluation (timers, game over)
@@ -545,79 +565,21 @@ export class GameEngine {
     }
   }
 
-  /** Spectating variant of seeker detection — uses hider position instead of player */
-  private updateSeekerWithDetectionSpectating(
-    detection: 'none' | 'spotted' | 'found',
-    s: MutableSpectatingState,
-    dt: number,
-  ): void {
-    const fsm = this.seekerFSM!;
-    const ctx = this.seekerCtx!;
-    const { ai, config } = ctx;
-
-    if (detection === 'spotted' || detection === 'found') {
-      const { x: hx, y: hy } = pixelToTile(s.hider.x, s.hider.y);
-      ai.lastKnownHiderPos = { x: hx, y: hy };
-      ai.chaseLostTicks = 0;
-    }
-
-    const currentState = fsm.getStateName();
-
-    if (detection === 'spotted' || detection === 'found') {
-      if (currentState !== 'chase') {
-        fsm.requestTransition('chase', config.reactionDelayTicks);
-      }
-    } else {
-      if (currentState === 'chase' || fsm.getPendingTransition()?.target === 'chase') {
-        if (config.cancelChaseOnBriefGlimpse && fsm.getPendingTransition()?.target === 'chase') {
-          fsm.cancelPending();
-          if (ai.lastKnownHiderPos) {
-            SuspiciousState.setStimulus(ai.lastKnownHiderPos.x, ai.lastKnownHiderPos.y);
-            fsm.requestTransition('suspicious', 0);
-          }
-        }
-        if (currentState === 'chase') {
-          ai.chaseLostTicks++;
-          if (ai.chaseLostTicks > config.chaseGraceTicks) {
-            if (ai.chaseLostTicks - config.chaseGraceTicks >= config.chaseTimeoutTicks) {
-              if (ai.lastKnownHiderPos) {
-                fsm.requestTransition('search', 0);
-              } else {
-                fsm.requestTransition('patrol', 0);
-              }
-            }
-          }
-        }
-      }
-    }
-
-    if (!ctx.actionQueue.isEmpty() && ctx.doorSystem) {
-      this.processActionQueue(ctx, dt);
-    } else {
-      fsm.update(ctx, dt);
-    }
-
-    if (ctx.render.fsmState !== fsm.getStateName()) {
-      const desired = ctx.render.fsmState;
-      ctx.render.fsmState = fsm.getStateName();
-      fsm.forceTransition(ctx, desired);
-    }
-  }
-
-  /** Process detection results and drive FSM transitions. */
+  /** Unified seeker detection + FSM update — works for both playing and spectating */
   private updateSeekerWithDetection(
     detection: 'none' | 'spotted' | 'found',
-    s: MutablePlayingState,
+    targetX: number,
+    targetY: number,
     dt: number,
   ): void {
     const fsm = this.seekerFSM!;
     const ctx = this.seekerCtx!;
     const { ai, config } = ctx;
 
-    // Update LKP when hider visible
+    // Update LKP when target visible
     if (detection === 'spotted' || detection === 'found') {
-      const hiderTile = pixelToTile(s.player.x, s.player.y);
-      ai.lastKnownHiderPos = { x: hiderTile.x, y: hiderTile.y };
+      const { x: tx, y: ty } = pixelToTile(targetX, targetY);
+      ai.lastKnownHiderPos = { x: tx, y: ty };
       ai.chaseLostTicks = 0;
     }
 
@@ -631,7 +593,6 @@ export class GameEngine {
     } else {
       // No detection — handle brief glimpse and chase timeout
       if (currentState === 'chase' || fsm.getPendingTransition()?.target === 'chase') {
-        // Brief glimpse: Easy cancels pending CHASE → SUSPICIOUS
         if (config.cancelChaseOnBriefGlimpse && fsm.getPendingTransition()?.target === 'chase') {
           fsm.cancelPending();
           if (ai.lastKnownHiderPos) {
@@ -640,13 +601,10 @@ export class GameEngine {
           }
         }
 
-        // Chase timeout
         if (currentState === 'chase') {
           ai.chaseLostTicks++;
           if (ai.chaseLostTicks > config.chaseGraceTicks) {
-            // Past grace period — start real timeout countdown
             if (ai.chaseLostTicks - config.chaseGraceTicks >= config.chaseTimeoutTicks) {
-              // Transition to SEARCH at LKP
               if (ai.lastKnownHiderPos) {
                 fsm.requestTransition('search', 0);
               } else {
@@ -662,16 +620,13 @@ export class GameEngine {
     if (!ctx.actionQueue.isEmpty() && ctx.doorSystem) {
       this.processActionQueue(ctx, dt);
     } else {
-      // FSM update
       fsm.update(ctx, dt);
     }
 
-    // Sync render state (FSM may have changed fsmState directly via state.onUpdate)
-    // The FSM states set ctx.render.fsmState when they want a transition
-    // We detect this and execute through the FSM properly
+    // Sync render state
     if (ctx.render.fsmState !== fsm.getStateName()) {
       const desired = ctx.render.fsmState;
-      ctx.render.fsmState = fsm.getStateName(); // revert
+      ctx.render.fsmState = fsm.getStateName();
       fsm.forceTransition(ctx, desired);
     }
   }
@@ -685,11 +640,7 @@ export class GameEngine {
       case 'OPEN_DOOR':
         if (ctx.doorSystem) {
           ctx.doorSystem.setDoorState(action.doorId, true, ctx.currentTick);
-          const door = ctx.doorSystem.getDoors().get(action.doorId);
-          if (door) {
-            ctx.pathfinding.removeDoorCost(door.position.x, door.position.y);
-          }
-          // Track self-opened for evidence
+          // Door cost update handled centrally by DOOR_TOGGLED listener
           if (ctx.ai.evidenceTracker) {
             ctx.ai.evidenceTracker.recordSelfOpen(action.doorId);
           }
@@ -752,20 +703,8 @@ export class GameEngine {
     const entities = [s.player, s.seeker];
     if (!this.doorSystem.canToggleDoor(door, entities, this.currentTick)) return;
 
-    if (this.doorSystem.toggleDoor(door.id, this.currentTick)) {
-      const updated = this.doorSystem.getDoors().get(door.id);
-      if (updated) {
-        if (updated.isOpen) {
-          this.pathfinding.removeDoorCostAll(updated.position.x, updated.position.y);
-        } else {
-          this.pathfinding.setDoorCostAll(updated.position.x, updated.position.y, DOOR.PATHFINDING_COST);
-        }
-      }
-
-      // Sync door map on PlayingState
-      (s as { doors: ReadonlyMap<typeof door.id, typeof door> }).doors = this.doorSystem.getDoors();
-      (s as { doorGeneration: number }).doorGeneration = this.doorSystem.getDoorGeneration();
-    }
+    // Door cost + state sync handled centrally by DOOR_TOGGLED listener
+    this.doorSystem.toggleDoor(door.id, this.currentTick);
   }
 
   private guardDelta(delta: number): number {

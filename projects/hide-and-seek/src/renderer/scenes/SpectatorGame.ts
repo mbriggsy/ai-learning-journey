@@ -15,7 +15,7 @@ import type { SpectatorSceneData, SpectatorResultsSceneData } from '../../types/
 import type { SpectatingState, GameFlowKind, DoorId, SeekerFSMState, HiderFSMState } from '../../types/state.js';
 import type { FacingDirection } from '../../types/input.js';
 import type { ReadonlyDeep } from '../../types/utility.js';
-import { DEPTH, DISPLAY, CINEMATIC, SIMULATION } from '../../constants.js';
+import { DEPTH, DISPLAY, CINEMATIC } from '../../constants.js';
 
 const SEEKER_FSM_LABELS: Record<SeekerFSMState, string> = {
   patrol: 'PATROL',
@@ -34,6 +34,15 @@ const HIDER_FSM_LABELS: Record<HiderFSMState, string> = {
 const HIDER_BODY_COLOR = 0x4488ff;
 const HIDER_INDICATOR_SIZE = 8;
 const HIDER_INDICATOR_OFFSET = 12;
+
+const HIDER_FACING_OFFSETS: Record<FacingDirection, { dx: number; dy: number }> = {
+  up: { dx: 0, dy: -HIDER_INDICATOR_OFFSET },
+  down: { dx: 0, dy: HIDER_INDICATOR_OFFSET },
+  left: { dx: -HIDER_INDICATOR_OFFSET, dy: 0 },
+  right: { dx: HIDER_INDICATOR_OFFSET, dy: 0 },
+};
+
+const EMPTY_INPUT = { moveX: 0, moveY: 0, interact: false, pause: false } as const;
 
 export class SpectatorGameScene extends Phaser.Scene {
   private engine!: GameEngine;
@@ -224,8 +233,7 @@ export class SpectatorGameScene extends Phaser.Scene {
     if (this.pauseAuthority.isPaused) return;
 
     // No player input — pass empty input
-    const emptyInput = { moveX: 0, moveY: 0, interact: false, pause: false };
-    this.engine.tick(delta, emptyInput);
+    this.engine.tick(delta, EMPTY_INPUT);
 
     const state = this.engine.getState();
     if (state.phase !== 'spectating') return;
@@ -242,13 +250,7 @@ export class SpectatorGameScene extends Phaser.Scene {
 
     // Hider sprite
     this.hiderBody.setPosition(s.hider.x, s.hider.y);
-    const facingOffsets: Record<FacingDirection, { dx: number; dy: number }> = {
-      up: { dx: 0, dy: -HIDER_INDICATOR_OFFSET },
-      down: { dx: 0, dy: HIDER_INDICATOR_OFFSET },
-      left: { dx: -HIDER_INDICATOR_OFFSET, dy: 0 },
-      right: { dx: HIDER_INDICATOR_OFFSET, dy: 0 },
-    };
-    const off = facingOffsets[s.hider.facing];
+    const off = HIDER_FACING_OFFSETS[s.hider.facing];
     this.hiderIndicator.setPosition(s.hider.x + off.dx, s.hider.y + off.dy);
   }
 
@@ -269,17 +271,11 @@ export class SpectatorGameScene extends Phaser.Scene {
     gfx.closePath();
     gfx.fillPath();
 
-    // Hider vision cone (blue, 15% alpha — Hard hider only, when FOV active)
-    if (s.hider.fsmState !== 'countdown-moving') {
+    // Hider awareness circle (blue, 10% alpha — Hard hider only)
+    if (s.hider.fsmState === 'fleeing' || s.hider.fsmState === 'repositioning') {
       const hiderRange = DISPLAY.TILE_SIZE * 6;
-      const hiderHalfCone = Math.PI; // full 360 for hider awareness
       gfx.fillStyle(0x4488ff, 0.1);
-      gfx.beginPath();
-      gfx.moveTo(s.hider.x, s.hider.y);
-      gfx.arc(s.hider.x, s.hider.y, hiderRange,
-        s.hider.facingAngle - hiderHalfCone, s.hider.facingAngle + hiderHalfCone);
-      gfx.closePath();
-      gfx.fillPath();
+      gfx.fillCircle(s.hider.x, s.hider.y, hiderRange);
     }
   }
 

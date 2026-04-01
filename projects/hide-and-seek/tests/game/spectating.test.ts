@@ -101,10 +101,8 @@ describe('GameEngine spectating mode', () => {
     }
   });
 
-  it('player mode does not create spectating systems', () => {
+  it('throws when spectating state passed without spectator mode', () => {
     const state = createSpectatingState(makeMap(), makeSpawns());
-    // Passing spectating state but player mode — engine won't init spectating
-    const engine = new GameEngine(state, 'easy');
-    expect(engine.isSpectating()).toBe(true); // state is spectating
+    expect(() => new GameEngine(state, 'easy')).toThrow('SpectatingState requires mode: spectator');
   });
 });

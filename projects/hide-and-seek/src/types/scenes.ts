@@ -1,6 +1,6 @@
 import type { TypedListener } from './events.js';
 import type { GameEventMap } from './events.js';
-import type { PlayingState, SpectatingState, GameSessionBase } from './state.js';
+import type { PlayingState, SpectatingState } from './state.js';
 import type { GameSettings, Difficulty } from './settings.js';
 import type { ReadonlyDeep } from './utility.js';
 

@@ -34,7 +34,7 @@ function makeHuntState(): PlayingState {
     },
     seekerFov: new Uint8Array(20 * 20),
     playerFov: new Uint8Array(20 * 20),
-    stats: { distanceTraveled: 0, seekerDistanceTiles: Infinity, playerFootstepAccum: 0, seekerFootstepAccum: 0 },
+    stats: { distanceTraveled: 0, seekerDistanceTiles: Infinity, playerFootstepAccum: 0, seekerFootstepAccum: 0, timeSurvivedS: 0, closeCalls: 0, closestApproachTiles: -1, doorsToggled: 0, isInCloseCallZone: false, closeCallZoneEnteredAtMs: 0, closeCallCooldownRemainingMs: 0 },
     doors: new Map(),
     doorGeneration: 0,
   };
@@ -53,7 +53,7 @@ function makeCountdownState(): PlayingState {
     gameFlow: { kind: 'countdown', ticksRemaining: 600 },
     seekerFov: new Uint8Array(20 * 20),
     playerFov: new Uint8Array(20 * 20).fill(1),
-    stats: { distanceTraveled: 0, seekerDistanceTiles: Infinity, playerFootstepAccum: 0, seekerFootstepAccum: 0 },
+    stats: { distanceTraveled: 0, seekerDistanceTiles: Infinity, playerFootstepAccum: 0, seekerFootstepAccum: 0, timeSurvivedS: 0, closeCalls: 0, closestApproachTiles: -1, doorsToggled: 0, isInCloseCallZone: false, closeCallZoneEnteredAtMs: 0, closeCallCooldownRemainingMs: 0 },
     doors: new Map(),
     doorGeneration: 0,
   };

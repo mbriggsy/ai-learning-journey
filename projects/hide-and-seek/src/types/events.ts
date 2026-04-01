@@ -21,6 +21,13 @@ export type GameEventMap = {
     readonly oldState: HiderFSMState;
     readonly newState: HiderFSMState;
   }];
+  CLOSE_CALL_ENTERED: [payload: {
+    readonly distanceTiles: number;
+  }];
+  CLOSE_CALL_EXITED: [payload: {
+    readonly durationMs: number;
+    readonly counted: boolean;
+  }];
   FOOTSTEP: [payload: {
     readonly entity: FootstepEntity;
     readonly x: number;

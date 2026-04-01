@@ -213,6 +213,39 @@ export const AMBIENT = {
   CREAK_MAX_VOLUME: 0.25,
 } as const satisfies Record<string, number>;
 
+/** Scoring formula */
+export const SCORING = {
+  /** Base survival points (awarded on survived outcome) */
+  BASE_SURVIVAL_POINTS: 1000,
+  /** Points per close call */
+  CLOSE_CALL_BONUS: 150,
+  /** Proximity bonus tiers — checked in order, first match wins */
+  PROXIMITY_TIERS: [
+    { maxTiles: 1, points: 200 },
+    { maxTiles: 2, points: 150 },
+    { maxTiles: 3, points: 100 },
+    { maxTiles: 5, points: 50 },
+  ] as const satisfies readonly { readonly maxTiles: number; readonly points: number }[],
+  /** Maximum tiles traveled to earn efficiency bonus (survived only) */
+  EFFICIENCY_THRESHOLD_TILES: 15,
+  /** Points for efficiency bonus */
+  EFFICIENCY_BONUS: 100,
+  /** Points per door toggled */
+  DOOR_BONUS: 10,
+  /** Difficulty score multipliers */
+  DIFFICULTY_MULTIPLIER_EASY: 1.0,
+  DIFFICULTY_MULTIPLIER_MEDIUM: 1.5,
+  DIFFICULTY_MULTIPLIER_HARD: 2.0,
+  /** Close call detection range in tiles (2x PROXIMITY_THRESHOLD) */
+  CLOSE_CALL_RANGE_TILES: 3.0,
+  /** Minimum ms in zone before a close call counts */
+  CLOSE_CALL_MIN_DURATION_MS: 500,
+  /** Cooldown ms after a counted close call before next can start */
+  CLOSE_CALL_COOLDOWN_MS: 3000,
+  /** Score count-up animation duration (ms) */
+  COUNT_UP_DURATION_MS: 1500,
+} as const;
+
 /** Audio system settings */
 export const AUDIO = {
   /** Default master volume */

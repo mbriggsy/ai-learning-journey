@@ -3,6 +3,7 @@ import type { GameEventMap } from './events.js';
 import type { PlayingState, SpectatingState } from './state.js';
 import type { GameSettings, Difficulty } from './settings.js';
 import type { ReadonlyDeep } from './utility.js';
+import type { RoundResult } from './persistence.js';
 
 export interface GameSceneData {
   readonly settings: GameSettings;
@@ -19,9 +20,9 @@ export interface HUDSceneData {
 }
 
 export interface ResultsSceneData {
+  readonly roundResult?: RoundResult;
   readonly outcome: 'found' | 'survived';
   readonly timeSurvivedMs: number;
-  readonly distanceTraveled: number;
 }
 
 export interface SpectatorResultsSceneData {

@@ -1,7 +1,7 @@
 ---
 title: "Phase 6b: Scoring + Stats"
 type: feat
-status: ready
+status: completed
 date: 2026-03-29
 deepened: 2026-03-30
 origin: docs/plans/2026-03-29-008-phase-6-sound-scoring-plan.md
@@ -87,7 +87,7 @@ src/renderer/scenes/
 
 ### Task 1: Score Accumulation Fields on HuntPhase
 
-- [ ] Add to `HuntPhase` in the discriminated union (`src/game/state.ts` / `src/types/state.ts`):
+- [x] Add to `HuntPhase` in the discriminated union (`src/game/state.ts` / `src/types/state.ts`):
   ```typescript
   // Score accumulation — updated each fixedUpdate during HUNT
   timeSurvivedS: number              // seconds elapsed in HUNT phase
@@ -103,15 +103,15 @@ src/renderer/scenes/
   closeCallCooldownRemainingMs: number
   ```
 
-- [ ] **Initialize** in `createGameState()` factory:
+- [x] **Initialize** in `createGameState()` factory:
   - `timeSurvivedS: 0`, `distanceTraveledPx: 0`, `closeCalls: 0`
   - `closestApproachTiles: -1` (sentinel: seeker never entered range. NOT `Infinity` — breaks JSON.)
   - `doorsToggled: 0`, `seekerDistanceTiles: -1`
   - `isInCloseCallZone: false`, `closeCallZoneEnteredAtMs: 0`, `closeCallCooldownRemainingMs: 0`
 
-- [ ] **`seekerDistanceTiles`** computed ONCE per tick at fixedUpdate step 7 (after positions updated, alongside detection). All systems read from state.
+- [x] **`seekerDistanceTiles`** computed ONCE per tick at fixedUpdate step 7 (after positions updated, alongside detection). All systems read from state.
 
-- [ ] **Canonical fixedUpdate step 10 (NEW):** Score accumulation — runs after rules evaluation (step 9), before terminal state check. Only during `gameFlow.kind === 'hunt'` (except `doorsToggled`: both phases via DOOR_TOGGLED event handler).
+- [x] **Canonical fixedUpdate step 10 (NEW):** Score accumulation — runs after rules evaluation (step 9), before terminal state check. Only during `gameFlow.kind === 'hunt'` (except `doorsToggled`: both phases via DOOR_TOGGLED event handler).
 
 ### Research Insights — Score Tracking
 
@@ -123,13 +123,13 @@ src/renderer/scenes/
 
 ### Task 2: `src/game/scoring.ts` — Pure Functions
 
-- [ ] **`updateScoreAccumulation(state: HuntPhase, dt: number): void`** — called at fixedUpdate step 10:
+- [x] **`updateScoreAccumulation(state: HuntPhase, dt: number): void`** — called at fixedUpdate step 10:
   - `timeSurvivedS += dt`
   - `distanceTraveledPx += movementMagnitudeThisTick`
   - `closestApproachTiles = seekerDistanceTiles < closestApproachTiles || closestApproachTiles === -1 ? Math.min(seekerDistanceTiles, closestApproachTiles === -1 ? seekerDistanceTiles : closestApproachTiles) : closestApproachTiles`
   - Close call state machine update (see below)
 
-- [ ] **Close call state machine** (debounced enter/exit zone):
+- [x] **Close call state machine** (debounced enter/exit zone):
   ```typescript
   function updateCloseCallTracker(state: HuntPhase, nowMs: number): void {
     const dist = state.seekerDistanceTiles;
@@ -160,7 +160,7 @@ src/renderer/scenes/
   }
   ```
 
-- [ ] **Footstep distance accumulator** (emits FOOTSTEP event for audio layer):
+- [x] **Footstep distance accumulator** (emits FOOTSTEP event for audio layer):
   ```typescript
   // In scoring.ts or movement.ts — per entity
   stepAccumulator += movementMagnitudeThisTick;
@@ -170,13 +170,13 @@ src/renderer/scenes/
   }
   ```
 
-- [ ] **`doorsToggled`:** increment via DOOR_TOGGLED event handler (both COUNTDOWN and HUNT phases)
+- [x] **`doorsToggled`:** increment via DOOR_TOGGLED event handler (both COUNTDOWN and HUNT phases)
 
 ---
 
 ### Task 3: Score Formula
 
-- [ ] **`calculateScore(huntPhase: HuntPhase, outcome: GameOutcome, difficulty: Difficulty): ScoreBreakdown`** — pure function:
+- [x] **`calculateScore(huntPhase: HuntPhase, outcome: GameOutcome, difficulty: Difficulty): ScoreBreakdown`** — pure function:
   ```typescript
   interface ScoreBreakdown {
     readonly baseSurvival: number
@@ -190,7 +190,7 @@ src/renderer/scenes/
   }
   ```
 
-- [ ] **Formula:**
+- [x] **Formula:**
   - `baseSurvival = outcome === 'survived' ? 1000 : 0`
   - `closeCallBonus = closeCalls × 150`
   - `proximityBonus` = tiered by `closestApproachTiles`:
@@ -205,7 +205,7 @@ src/renderer/scenes/
   - `difficultyMultiplier = { easy: 1.0, medium: 1.5, hard: 2.0 }[difficulty]`
   - `totalScore = Math.round(subtotal × difficultyMultiplier)`
 
-- [ ] **All formula values** in `src/constants.ts` as `SCORING` config object with `as const satisfies`
+- [x] **All formula values** in `src/constants.ts` as `SCORING` config object with `as const satisfies`
 
 ### Research Insights — Scoring
 
@@ -219,25 +219,25 @@ src/renderer/scenes/
 
 ### Task 4: GameEventMap Additions
 
-- [ ] Add to `src/types/events.ts`:
+- [x] Add to `src/types/events.ts`:
   ```typescript
   CLOSE_CALL_ENTERED: { distanceTiles: number }
   CLOSE_CALL_EXITED: { durationMs: number; counted: boolean }
   FOOTSTEP: { entity: 'player' | 'seeker' }
   ```
-- [ ] SoundEffects (Phase 6a) subscribes to FOOTSTEP for audio playback
-- [ ] SoundEffects subscribes to CLOSE_CALL_ENTERED for optional tension audio cue
+- [x] SoundEffects (Phase 6a) subscribes to FOOTSTEP for audio playback
+- [x] SoundEffects subscribes to CLOSE_CALL_ENTERED for optional tension audio cue
 
 ---
 
 ### Task 5: RoundResult Type + ResultsSceneData Extension
 
-- [ ] **`GameOutcome` type** (`src/types/state.ts`):
+- [x] **`GameOutcome` type** (`src/types/state.ts`):
   ```typescript
   type GameOutcome = Extract<GameFlowKind, 'found' | 'survived'>
   ```
 
-- [ ] **`RoundResult` type** (frozen snapshot, replaces Phase 3's `ResultsSceneData`):
+- [x] **`RoundResult` type** (frozen snapshot, replaces Phase 3's `ResultsSceneData`):
   ```typescript
   interface RoundResult {
     readonly timeSurvivedS: number
@@ -254,21 +254,21 @@ src/renderer/scenes/
   }
   ```
 
-- [ ] **`createRoundResult(huntPhase, outcome, difficulty, persistence)`** — pure function in `src/game/scoring.ts`:
+- [x] **`createRoundResult(huntPhase, outcome, difficulty, persistence)`** — pure function in `src/game/scoring.ts`:
   - Reads accumulation fields from HuntPhase
   - Calls `calculateScore()`
   - Checks current stats via PersistencePort for PB comparison
   - Returns frozen `RoundResult`
 
-- [ ] **Breaking change to Phase 3's `ResultsSceneData`:** Documented. The new `RoundResult` replaces it entirely. `scene.start('Results', { roundResult })`.
+- [x] **Breaking change to Phase 3's `ResultsSceneData`:** Documented. The new `RoundResult` replaces it entirely. `scene.start('Results', { roundResult })`.
 
-- [ ] **Spectator mode:** `RoundResult | undefined` — Results scene handles absence gracefully (shows outcome + duration only, no score).
+- [x] **Spectator mode:** `RoundResult | undefined` — Results scene handles absence gracefully (shows outcome + duration only, no score).
 
 ---
 
 ### Task 6: Stats Persistence
 
-- [ ] **`src/types/persistence.ts`** — PersistencePort interface:
+- [x] **`src/types/persistence.ts`** — PersistencePort interface:
   ```typescript
   interface PersistencePort {
     loadStats(): StatsSchema
@@ -278,7 +278,7 @@ src/renderer/scenes/
   }
   ```
 
-- [ ] **`src/persistence.ts`** — localStorage implementation:
+- [x] **`src/persistence.ts`** — localStorage implementation:
   - Key: `hideAndSeekStats` (camelCase, matches project convention)
   - `loadStats()`: try/catch → JSON.parse → migration chain → isValidStats → return (or defaults)
   - `saveStats()`: validate → JSON.stringify → setItem → catch QuotaExceededError
@@ -287,7 +287,7 @@ src/renderer/scenes/
   - **QuotaExceededError**: catch by name, show non-blocking toast "Stats could not be saved (storage full)"
   - Inject via `main.ts` composition root
 
-- [ ] **`recordGameResult()`** — pure function that enforces invariants:
+- [x] **`recordGameResult()`** — pure function that enforces invariants:
   ```typescript
   function recordGameResult(
     stats: StatsSchema,
@@ -331,7 +331,7 @@ src/renderer/scenes/
 
 ### Task 7: StatsSchema Design
 
-- [ ] **Schema** (`src/types/persistence.ts`):
+- [x] **Schema** (`src/types/persistence.ts`):
   ```typescript
   interface DifficultyStats {
     readonly wins: number
@@ -352,7 +352,7 @@ src/renderer/scenes/
   }
   ```
 
-- [ ] **Defaults:**
+- [x] **Defaults:**
   ```typescript
   const DEFAULT_STATS: StatsSchema = {
     schemaVersion: 1,
@@ -368,7 +368,7 @@ src/renderer/scenes/
   };
   ```
 
-- [ ] **Migration chain:**
+- [x] **Migration chain:**
   ```typescript
   const MIGRATIONS: Record<number, (data: unknown) => unknown> = {
     // Future: 1: (data) => ({ ...data, schemaVersion: 2, newField: default })
@@ -386,7 +386,7 @@ src/renderer/scenes/
   }
   ```
 
-- [ ] **`isValidStats()` type guard** — hand-rolled, no Valibot/Zod:
+- [x] **`isValidStats()` type guard** — hand-rolled, no Valibot/Zod:
   - Check every field exists and correct type
   - `Number.isFinite()` on ALL numeric fields (catches NaN, Infinity)
   - Non-negative: `wins >= 0`, `losses >= 0`, etc.
@@ -398,22 +398,22 @@ src/renderer/scenes/
 
 ### Task 8: AudioSettings Persistence
 
-- [ ] Key: `hideAndSeekSettings`
-- [ ] Defined in Phase 6a (AudioSettings type). Phase 6b implements the PersistencePort methods:
+- [x] Key: `hideAndSeekSettings`
+- [x] Defined in Phase 6a (AudioSettings type). Phase 6b implements the PersistencePort methods:
   - `loadSettings()`: try/catch → JSON.parse → merge-with-defaults → clamp volumes → return
   - `saveSettings()`: JSON.stringify → setItem → catch errors
-- [ ] **Merge-with-defaults**: `{ ...DEFAULT_SETTINGS, ...saved, schemaVersion: DEFAULT_SETTINGS.schemaVersion }` — new fields get defaults automatically. No migration function needed for additive changes.
-- [ ] **Clamp on load**: `Math.max(0, Math.min(1, value))` for each volume. `Number.isFinite()` check — if NaN, use default.
+- [x] **Merge-with-defaults**: `{ ...DEFAULT_SETTINGS, ...saved, schemaVersion: DEFAULT_SETTINGS.schemaVersion }` — new fields get defaults automatically. No migration function needed for additive changes.
+- [x] **Clamp on load**: `Math.max(0, Math.min(1, value))` for each volume. `Number.isFinite()` check — if NaN, use default.
 
 ---
 
 ### Task 9: Results Screen Enhancement
 
-- [ ] **Outcome display**: "SURVIVED!" or "FOUND!" — biggest text, centered
-- [ ] **Score count-up animation**: 0 → final totalScore over 1.5s. Tick sound on each increment step.
+- [x] **Outcome display**: "SURVIVED!" or "FOUND!" — biggest text, centered
+- [x] **Score count-up animation**: 0 → final totalScore over 1.5s. Tick sound on each increment step.
   - If count passes old best mid-animation: flash "NEW BEST!" indicator at that moment
   - Show previous best for comparison: "(Previous: 1,800)"
-- [ ] **Score breakdown** (itemized list):
+- [x] **Score breakdown** (itemized list):
   ```
   Survival (42.0s)         +420
   Close Calls (x3)         +450
@@ -426,16 +426,16 @@ src/renderer/scenes/
                            ======
   TOTAL                   2,440
   ```
-- [ ] **Quick stats row**: Time survived | Closest approach | Win streak (if > 1)
-- [ ] **Personal best indicators**:
+- [x] **Quick stats row**: Time survived | Closest approach | Win streak (if > 1)
+- [x] **Personal best indicators**:
   - New best score (per difficulty): highlight + "NEW BEST!"
   - Show only after 2+ games on that difficulty (first game is always "best")
-- [ ] **Buttons**:
+- [x] **Buttons**:
   - "Play Again" = primary (larger, Enter/Space). Same difficulty. Skip menu.
   - "Back to Menu" = secondary (smaller, Escape). Returns to MainMenu.
   - Controller: A = Play Again, B = Back to Menu
-- [ ] **Spectator mode**: no score breakdown. Show outcome + hunt duration + difficulty levels only.
-- [ ] **Loss screen**: still show breakdown (close calls, proximity, doors earned points). Base survival = 0 is the penalty, but effort is rewarded.
+- [x] **Spectator mode**: no score breakdown. Show outcome + hunt duration + difficulty levels only.
+- [x] **Loss screen**: still show breakdown (close calls, proximity, doors earned points). Base survival = 0 is the penalty, but effort is rewarded.
 
 ### Research Insights — Results UX
 
@@ -449,20 +449,20 @@ src/renderer/scenes/
 
 ### Task 10: Scoring Unit Tests
 
-- [ ] **Score formula:**
+- [x] **Score formula:**
   - Survived on Easy with 0 close calls = 1000 + 0 + 0 + 0 + 0 × 1.0 = 1000
   - Found on Hard with 3 close calls, closest 1.2 tiles, 5 doors = (0 + 450 + 100 + 0 + 50) × 2.0 = 1200
   - Efficiency bonus: survived with < 15 tiles movement = +100
   - Proximity tiers: verify each threshold boundary
 
-- [ ] **Close call state machine:**
+- [x] **Close call state machine:**
   - Enter zone → exit after 600ms → counted (1 close call)
   - Enter zone → exit after 200ms → NOT counted (below 500ms min)
   - Enter → exit → re-enter within 3s → NOT counted (cooldown)
   - Enter → exit → re-enter after 3s → counted (cooldown expired)
   - Boundary oscillation (in/out/in/out at 60fps) → only counts qualifying entries
 
-- [ ] **Stats persistence:**
+- [x] **Stats persistence:**
   - `isValidStats({})` → false
   - `isValidStats({ ...valid, totalGames: "banana" })` → false (wrong type... wait, totalGames removed. Test wins: "banana")
   - `isValidStats({ ...valid, wins: -5 })` → false (negative)
@@ -472,14 +472,14 @@ src/renderer/scenes/
   - Migration: v0 data → v1 (adds missing fields with defaults)
   - QuotaExceededError: saveStats returns false, game continues
 
-- [ ] **recordGameResult:**
+- [x] **recordGameResult:**
   - Win on Easy: wins +1, losses unchanged, streak +1
   - Loss on Easy: wins unchanged, losses +1, streak reset to 0
   - Win then switch difficulty: streak resets to 1
   - Best score updated only when higher
   - All byDifficulty sums match top-level wins/losses
 
-- [ ] **Footstep distance accumulator:**
+- [x] **Footstep distance accumulator:**
   - Move 24px → 1 FOOTSTEP event
   - Move 48px → 2 events
   - Move 12px → 0 events (below threshold)

@@ -85,11 +85,8 @@ public/
 
 ## Insights & Todos
 
-- **Insights** (`docs/insights/`): Non-obvious root causes + fixes. Auto-briefed before `/ce:work` via hook. Post-review hook reminds to run `/distill`.
+- **Insights** (`docs/insights/`): Non-obvious root causes + fixes. Read before starting work on a related area.
 - **Todos** (`docs/todos/`): Session working docs for review findings. Deleted at squeaky clean.
-- **`/distill`** — Write an insight doc. Shows existing insights, provides template, auto-numbers.
-- **`/brief`** — Read solution context on demand. Also auto-fires via hook before `/ce:work`.
-- **After every `/ce:review` or `/ce:work` synthesis** — evaluate findings for `/distill` before moving on. The PostToolUse hook fires too early for long sessions; this instruction is the real safety net.
 
 ## Landmines
 

@@ -18,6 +18,9 @@ export type GamePhase = 'boot' | 'playing' | 'spectating';
 
 export type GameFlowKind = 'countdown' | 'hunt' | 'found' | 'survived';
 
+/** Terminal game outcomes — extracted from GameFlowKind for scoring/persistence */
+export type GameOutcome = Extract<GameFlowKind, 'found' | 'survived'>;
+
 export interface CountdownPhase {
   readonly kind: 'countdown';
   ticksRemaining: number;
@@ -119,6 +122,21 @@ export interface GameStats {
   /** Footstep distance accumulators — emit FOOTSTEP event when threshold crossed */
   playerFootstepAccum: number;
   seekerFootstepAccum: number;
+
+  // Score accumulation — updated each fixedUpdate during HUNT
+  /** Seconds elapsed in HUNT phase */
+  timeSurvivedS: number;
+  /** Debounced zone entry count */
+  closeCalls: number;
+  /** Minimum seeker distance in tiles (-1 = never in range) */
+  closestApproachTiles: number;
+  /** Door toggle count (both COUNTDOWN and HUNT) */
+  doorsToggled: number;
+
+  // Close call state machine
+  isInCloseCallZone: boolean;
+  closeCallZoneEnteredAtMs: number;
+  closeCallCooldownRemainingMs: number;
 }
 
 export interface PlayingState extends GameSessionBase {

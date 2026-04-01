@@ -41,7 +41,12 @@ export function createGameState(
     },
     seekerFov: new Uint8Array(tileCount),
     playerFov,
-    stats: { distanceTraveled: 0, seekerDistanceTiles: Infinity, playerFootstepAccum: 0, seekerFootstepAccum: 0 },
+    stats: {
+      distanceTraveled: 0, seekerDistanceTiles: Infinity,
+      playerFootstepAccum: 0, seekerFootstepAccum: 0,
+      timeSurvivedS: 0, closeCalls: 0, closestApproachTiles: -1, doorsToggled: 0,
+      isInCloseCallZone: false, closeCallZoneEnteredAtMs: 0, closeCallCooldownRemainingMs: 0,
+    },
     doors: doors ?? new Map(),
     doorGeneration: 0,
   };

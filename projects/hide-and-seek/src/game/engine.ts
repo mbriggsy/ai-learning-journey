@@ -6,6 +6,7 @@ import type { TypedEmitter, TypedListener } from '../types/events.js';
 import type { SeekerConfig, HiderConfig, RoomDefinition, HidingSpot } from '../types/ai.js';
 import type { Difficulty, GameMode } from '../types/settings.js';
 import { SIMULATION, VISION, SEEKER, INTERACTION, TIMERS, DOOR, DISPLAY, AUDIO } from '../constants.js';
+import { updateScoreAccumulation } from './scoring.js';
 import { updateMovement } from './movement.js';
 import { computeFOV } from './los.js';
 import { checkDetection } from './detection.js';
@@ -161,6 +162,11 @@ export class GameEngine {
         const s = this.state as MutablePlayingState | MutableSpectatingState;
         (s as { doors: ReadonlyMap<string, unknown> }).doors = this.doorSystem.getDoors();
         (s as { doorGeneration: number }).doorGeneration = this.doorSystem.getDoorGeneration();
+      }
+
+      // Score accumulation: count door toggles (both COUNTDOWN and HUNT)
+      if (this.state.phase === 'playing') {
+        (this.state as MutablePlayingState).stats.doorsToggled++;
       }
 
       // Evidence pipeline for seeker AI
@@ -487,6 +493,9 @@ export class GameEngine {
     if (secondsRemaining <= 3 && hunt.ticksRemaining % ticksPerSec === 0 && hunt.ticksRemaining > 0) {
       this.emitter.emit('TIMER_TICK', { secondsRemaining });
     }
+
+    // Step 10: Score accumulation (after rules, before terminal check)
+    updateScoreAccumulation(s.stats, dt, this.emitter);
 
     const next = evaluateRules(s.gameFlow, detection);
     if (next) {

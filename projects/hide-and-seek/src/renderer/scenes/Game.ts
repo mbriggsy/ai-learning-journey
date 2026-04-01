@@ -25,6 +25,8 @@ import type { PlayingState, GameFlowKind, DoorId } from '../../types/state.js';
 import type { ReadonlyDeep } from '../../types/utility.js';
 import { CAMERA, DEPTH, DISPLAY, CINEMATIC, SIMULATION } from '../../constants.js';
 import { SEEKER_CONFIGS } from '../../game/ai/seeker-configs.js';
+import { createRoundResult } from '../../game/scoring.js';
+import { loadStats, saveStats, recordGameResult } from '../../persistence.js';
 
 export class GameScene extends Phaser.Scene {
   private engine!: GameEngine;
@@ -382,28 +384,49 @@ export class GameScene extends Phaser.Scene {
     if (this.endSequenceTriggered) return;
 
     const flow = state.gameFlow;
-    if (flow.kind === 'found') {
-      this.endSequenceTriggered = true;
-      const timeSurvivedMs = flow.ticksSurvived * SIMULATION.FIXED_STEP_S * 1000;
+    if (flow.kind !== 'found' && flow.kind !== 'survived') return;
+
+    this.endSequenceTriggered = true;
+    const outcome = flow.kind;
+    const settings = getGameSettings();
+    const timeSurvivedMs = outcome === 'found'
+      ? flow.ticksSurvived * SIMULATION.FIXED_STEP_S * 1000
+      : flow.huntDurationTicks * SIMULATION.FIXED_STEP_S * 1000;
+
+    // Build RoundResult + persist stats
+    const currentStats = loadStats();
+    const diffStats = currentStats.byDifficulty[settings.seekerDifficulty];
+    const roundResult = createRoundResult(
+      state.stats as import('../../types/state.js').GameStats,
+      outcome,
+      settings.seekerDifficulty,
+      'human',
+      diffStats.bestScore,
+      diffStats.bestSurvivalTimeS,
+    );
+
+    // Persist updated stats
+    const updatedStats = recordGameResult(
+      currentStats,
+      settings.seekerDifficulty,
+      outcome,
+      roundResult.breakdown.totalScore,
+      roundResult.timeSurvivedS,
+    );
+    saveStats(updatedStats);
+
+    const resultsData = { roundResult, outcome, timeSurvivedMs };
+
+    if (outcome === 'found') {
       this.endSequence.playFound(
         state.player.x, state.player.y,
         state.seeker.x, state.seeker.y,
-        {
-          outcome: 'found',
-          timeSurvivedMs,
-          distanceTraveled: state.stats.distanceTraveled,
-        },
+        resultsData,
       );
-    } else if (flow.kind === 'survived') {
-      this.endSequenceTriggered = true;
-      const timeSurvivedMs = flow.huntDurationTicks * SIMULATION.FIXED_STEP_S * 1000;
+    } else {
       this.endSequence.playSurvived(
         state.player.x, state.player.y,
-        {
-          outcome: 'survived',
-          timeSurvivedMs,
-          distanceTraveled: state.stats.distanceTraveled,
-        },
+        resultsData,
       );
     }
   }

@@ -1,0 +1,23 @@
+[
+  {"query": "brief me on what we know before I start working", "should_trigger": true},
+  {"query": "what solutions do we have documented?", "should_trigger": true},
+  {"query": "check solutions — I think we've hit this bug before", "should_trigger": true},
+  {"query": "what do we know about known issues in this codebase?", "should_trigger": true},
+  {"query": "any known issues with the renderer? brief me before I dig in", "should_trigger": true},
+  {"query": "show me the solution docs, I want to review what root causes we've captured", "should_trigger": true},
+  {"query": "before I start on phase 5, what gotchas should I know about?", "should_trigger": true},
+  {"query": "have we seen this kind of error before? check the docs", "should_trigger": true},
+  {"query": "read me the solutions so I don't repeat a known mistake", "should_trigger": true},
+  {"query": "I'm about to debug the seeker AI — brief me on anything relevant", "should_trigger": true},
+
+  {"query": "distill this — we just found a nasty race condition in the pathfinder", "should_trigger": false},
+  {"query": "fix the bug where the minimap blips flicker on resize", "should_trigger": false},
+  {"query": "write documentation for the GameEngine class with JSDoc", "should_trigger": false},
+  {"query": "update the README with the current test count", "should_trigger": false},
+  {"query": "refactor the movement system to use a velocity component", "should_trigger": false},
+  {"query": "run the tests and tell me if anything is broken", "should_trigger": false},
+  {"query": "add a new seeker behavior for patrol mode", "should_trigger": false},
+  {"query": "write a solution doc for the tween cleanup issue we just fixed", "should_trigger": false},
+  {"query": "create a new Phaser scene for the settings menu", "should_trigger": false},
+  {"query": "review the Phase 4 code for quality issues", "should_trigger": false}
+]

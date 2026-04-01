@@ -1,0 +1,23 @@
+[
+  {"query": "distill this — turns out the minimap blips were rendering behind the border because two depth constants shared the same value. took 20 min to figure out it was a z-index collision not a visibility bug", "should_trigger": true},
+  {"query": "that was non-obvious, we should document it. the Phaser camera.fadeOut signature doesnt have a force param like shake and flash do — you have to call resetFX() first or it silently ignores the new fade", "should_trigger": true},
+  {"query": "write a solution doc for this — JustDown doesnt work with playwright because playwright sends keydown+keyup between frames and JustDown needs key state to persist until update() polls", "should_trigger": true},
+  {"query": "ok document this fix, thats the second time weve hit it. module-level let variables in FSM states mean they're singletons — adding a second seeker will stomp the first one's state", "should_trigger": true},
+  {"query": "run /distill — the review found that processActionQueue had a dead code branch for MOVE_TO that used hardcoded 32+16 magic numbers and a dummy pixelToTile(0,0) call. 3 of 4 review agents flagged it independently", "should_trigger": true},
+  {"query": "lets capture this one before we forget. the Tiled JSON must use CSV encoding — compressed formats like zlib silently fail and Phaser produces an empty map with zero errors", "should_trigger": true},
+  {"query": "that was a weird one, worth writing up. the evidence tracker was calling recordSelfOpen twice — once when queueing the action and again at execution. Set deduplicated but the first call was premature", "should_trigger": true},
+  {"query": "yo we need to distill that pathfinding thing. spent like 30 min on it and the fix was one boolean flag but the root cause was a request flood from the supersession guard pattern", "should_trigger": true},
+  {"query": "document this root cause for next time — esModuleInterop must be true in tsconfig or Phaser imports break under verbatimModuleSyntax because Phaser uses export = Phaser in its type defs", "should_trigger": true},
+  {"query": "that was a nasty one. can you write it up? the sonar ping ring was storing a tween ref via this-as cast hack and cleanup couldnt find it after a rename. invisible runtime state", "should_trigger": true},
+
+  {"query": "fix the bug where seekers are getting stuck on doors", "should_trigger": false},
+  {"query": "what solutions do we have documented? brief me on what we know", "should_trigger": false},
+  {"query": "write documentation for the GameEngine class — add JSDoc comments to all public methods", "should_trigger": false},
+  {"query": "summarize what we did this session for the TODO", "should_trigger": false},
+  {"query": "can you review the Phase 5a code for quality issues", "should_trigger": false},
+  {"query": "the seeker is frozen again, same bug as before. check docs/insights/ and fix it", "should_trigger": false},
+  {"query": "update the README with the current test count and phase status", "should_trigger": false},
+  {"query": "refactor the action types — remove MOVE_TO and REQUEST_PATH since nothing uses them anymore", "should_trigger": false},
+  {"query": "add a difficulty selector to the UI so we can test Easy/Medium/Hard seeker behavior", "should_trigger": false},
+  {"query": "run the tests and make sure everything still passes after the SonarPing cleanup", "should_trigger": false}
+]

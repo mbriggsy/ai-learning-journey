@@ -1,0 +1,1390 @@
+{
+  "exit_reason": "all_passed (iteration 5)",
+  "original_description": "Write a solution doc in docs/solutions/ capturing a non-obvious root cause and fix. USE THIS SKILL whenever the user says 'distill', 'document this', 'write it up', 'capture this', 'that was non-obvious', 'worth documenting', 'write a solution doc', 'lets not forget this', 'for next time', or describes a root cause they just discovered and want preserved. Also use when a hook reminder says 'run /distill'. Use even when the user doesn't say 'distill' explicitly \u00e2\u20ac\u201d if they just described a surprising root cause and want it documented for future sessions, this is the right skill. Do NOT use for: fixing bugs (use normal coding), reading existing solutions (use /brief), writing code documentation or JSDoc comments, updating README/TODO files, or trivial fixes like typos, missing imports, or off-by-one errors.",
+  "best_description": "Trigger when a user wants to preserve a hard-won technical insight so future sessions don't rediscover it. Key signal: they just described something surprising and want it recorded \u00e2\u20ac\u201d even if they don't use documentation verbs. \"Capture this before we forget\", \"lets not lose this\", \"before we move on\", and similar memory-preservation phrases are strong triggers, as are \"distill\", \"write it up\", \"document this\", \"worth noting for next time\". The user's intent is retention across sessions, not explanation or task completion.\n\nSkip for: fixing bugs, adding features, reading existing solutions (/brief), writing inline code comments, updating README or TODO files.",
+  "best_score": "8/8",
+  "best_train_score": "11/12",
+  "best_test_score": "8/8",
+  "final_description": "Use to capture and preserve a technical finding before the session ends. Invoke when someone says \"capture this\", \"distill\", \"before we forget\", \"write it up\", \"document this\", or describes a non-obvious discovery and implies they want it saved for future sessions. The core signal: preservation intent paired with a surprising find \u00e2\u20ac\u201d a silent failure, hidden constraint, or unexpected behavior they don't want to rediscover. If the user is handing you a technical insight and asking you to hold onto it, this is the skill.\n\nSkip for: fixing bugs, writing features, adding inline comments, updating README/TODO files, or reading existing solutions (/brief).",
+  "iterations_run": 5,
+  "holdout": 0.4,
+  "train_size": 12,
+  "test_size": 8,
+  "history": [
+    {
+      "iteration": 1,
+      "description": "Write a solution doc in docs/solutions/ capturing a non-obvious root cause and fix. USE THIS SKILL whenever the user says 'distill', 'document this', 'write it up', 'capture this', 'that was non-obvious', 'worth documenting', 'write a solution doc', 'lets not forget this', 'for next time', or describes a root cause they just discovered and want preserved. Also use when a hook reminder says 'run /distill'. Use even when the user doesn't say 'distill' explicitly \u00e2\u20ac\u201d if they just described a surprising root cause and want it documented for future sessions, this is the right skill. Do NOT use for: fixing bugs (use normal coding), reading existing solutions (use /brief), writing code documentation or JSDoc comments, updating README/TODO files, or trivial fixes like typos, missing imports, or off-by-one errors.",
+      "train_passed": 11,
+      "train_failed": 1,
+      "train_total": 12,
+      "train_results": [
+        {
+          "query": "lets capture this one before we forget. the Tiled JSON must use CSV encoding \u00e2\u20ac\u201d compressed formats like zlib silently fail and Phaser produces an empty map with zero errors",
+          "should_trigger": true,
+          "trigger_rate": 0.0,
+          "triggers": 0,
+          "runs": 3,
+          "pass": false
+        },
+        {
+          "query": "that was a weird one, worth writing up. the evidence tracker was calling recordSelfOpen twice \u00e2\u20ac\u201d once when queueing the action and again at execution. Set deduplicated but the first call was premature",
+          "should_trigger": true,
+          "trigger_rate": 1.0,
+          "triggers": 3,
+          "runs": 3,
+          "pass": true
+        },
+        {
+          "query": "that was a nasty one. can you write it up? the sonar ping ring was storing a tween ref via this-as cast hack and cleanup couldnt find it after a rename. invisible runtime state",
+          "should_trigger": true,
+          "trigger_rate": 0.6666666666666666,
+          "triggers": 2,
+          "runs": 3,
+          "pass": true
+        },
+        {
+          "query": "run /distill \u00e2\u20ac\u201d the review found that processActionQueue had a dead code branch for MOVE_TO that used hardcoded 32+16 magic numbers and a dummy pixelToTile(0,0) call. 3 of 4 review agents flagged it independently",
+          "should_trigger": true,
+          "trigger_rate": 1.0,
+          "triggers": 3,
+          "runs": 3,
+          "pass": true
+        },
+        {
+          "query": "distill this \u00e2\u20ac\u201d turns out the minimap blips were rendering behind the border because two depth constants shared the same value. took 20 min to figure out it was a z-index collision not a visibility bug",
+          "should_trigger": true,
+          "trigger_rate": 1.0,
+          "triggers": 3,
+          "runs": 3,
+          "pass": true
+        },
+        {
+          "query": "that was non-obvious, we should document it. the Phaser camera.fadeOut signature doesnt have a force param like shake and flash do \u00e2\u20ac\u201d you have to call resetFX() first or it silently ignores the new fade",
+          "should_trigger": true,
+          "trigger_rate": 1.0,
+          "triggers": 3,
+          "runs": 3,
+          "pass": true
+        },
+        {
+          "query": "what solutions do we have documented? brief me on what we know",
+          "should_trigger": false,
+          "trigger_rate": 0.0,
+          "triggers": 0,
+          "runs": 3,
+          "pass": true
+        },
+        {
+          "query": "add a difficulty selector to the UI so we can test Easy/Medium/Hard seeker behavior",
+          "should_trigger": false,
+          "trigger_rate": 0.0,
+          "triggers": 0,
+          "runs": 3,
+          "pass": true
+        },
+        {
+          "query": "refactor the action types \u00e2\u20ac\u201d remove MOVE_TO and REQUEST_PATH since nothing uses them anymore",
+          "should_trigger": false,
+          "trigger_rate": 0.0,
+          "triggers": 0,
+          "runs": 3,
+          "pass": true
+        },
+        {
+          "query": "fix the bug where seekers are getting stuck on doors",
+          "should_trigger": false,
+          "trigger_rate": 0.0,
+          "triggers": 0,
+          "runs": 3,
+          "pass": true
+        },
+        {
+          "query": "update the README with the current test count and phase status",
+          "should_trigger": false,
+          "trigger_rate": 0.0,
+          "triggers": 0,
+          "runs": 3,
+          "pass": true
+        },
+        {
+          "query": "run the tests and make sure everything still passes after the SonarPing cleanup",
+          "should_trigger": false,
+          "trigger_rate": 0.0,
+          "triggers": 0,
+          "runs": 3,
+          "pass": true
+        }
+      ],
+      "test_passed": 7,
+      "test_failed": 1,
+      "test_total": 8,
+      "test_results": [
+        {
+          "query": "yo we need to distill that pathfinding thing. spent like 30 min on it and the fix was one boolean flag but the root cause was a request flood from the supersession guard pattern",
+          "should_trigger": true,
+          "trigger_rate": 0.6666666666666666,
+          "triggers": 2,
+          "runs": 3,
+          "pass": true
+        },
+        {
+          "query": "ok document this fix, thats the second time weve hit it. module-level let variables in FSM states mean they're singletons \u00e2\u20ac\u201d adding a second seeker will stomp the first one's state",
+          "should_trigger": true,
+          "trigger_rate": 1.0,
+          "triggers": 3,
+          "runs": 3,
+          "pass": true
+        },
+        {
+          "query": "write a solution doc for this \u00e2\u20ac\u201d JustDown doesnt work with playwright because playwright sends keydown+keyup between frames and JustDown needs key state to persist until update() polls",
+          "should_trigger": true,
+          "trigger_rate": 1.0,
+          "triggers": 3,
+          "runs": 3,
+          "pass": true
+        },
+        {
+          "query": "summarize what we did this session for the TODO",
+          "should_trigger": false,
+          "trigger_rate": 0.0,
+          "triggers": 0,
+          "runs": 3,
+          "pass": true
+        },
+        {
+          "query": "document this root cause for next time \u00e2\u20ac\u201d esModuleInterop must be true in tsconfig or Phaser imports break under verbatimModuleSyntax because Phaser uses export = Phaser in its type defs",
+          "should_trigger": true,
+          "trigger_rate": 0.0,
+          "triggers": 0,
+          "runs": 3,
+          "pass": false
+        },
+        {
+          "query": "the seeker is frozen again, same bug as before. check docs/solutions/ and fix it",
+          "should_trigger": false,
+          "trigger_rate": 0.0,
+          "triggers": 0,
+          "runs": 3,
+          "pass": true
+        },
+        {
+          "query": "write documentation for the GameEngine class \u00e2\u20ac\u201d add JSDoc comments to all public methods",
+          "should_trigger": false,
+          "trigger_rate": 0.0,
+          "triggers": 0,
+          "runs": 3,
+          "pass": true
+        },
+        {
+          "query": "can you review the Phase 5a code for quality issues",
+          "should_trigger": false,
+          "trigger_rate": 0.0,
+          "triggers": 0,
+          "runs": 3,
+          "pass": true
+        }
+      ],
+      "passed": 11,
+      "failed": 1,
+      "total": 12,
+      "results": [
+        {
+          "query": "lets capture this one before we forget. the Tiled JSON must use CSV encoding \u00e2\u20ac\u201d compressed formats like zlib silently fail and Phaser produces an empty map with zero errors",
+          "should_trigger": true,
+          "trigger_rate": 0.0,
+          "triggers": 0,
+          "runs": 3,
+          "pass": false
+        },
+        {
+          "query": "that was a weird one, worth writing up. the evidence tracker was calling recordSelfOpen twice \u00e2\u20ac\u201d once when queueing the action and again at execution. Set deduplicated but the first call was premature",
+          "should_trigger": true,
+          "trigger_rate": 1.0,
+          "triggers": 3,
+          "runs": 3,
+          "pass": true
+        },
+        {
+          "query": "that was a nasty one. can you write it up? the sonar ping ring was storing a tween ref via this-as cast hack and cleanup couldnt find it after a rename. invisible runtime state",
+          "should_trigger": true,
+          "trigger_rate": 0.6666666666666666,
+          "triggers": 2,
+          "runs": 3,
+          "pass": true
+        },
+        {
+          "query": "run /distill \u00e2\u20ac\u201d the review found that processActionQueue had a dead code branch for MOVE_TO that used hardcoded 32+16 magic numbers and a dummy pixelToTile(0,0) call. 3 of 4 review agents flagged it independently",
+          "should_trigger": true,
+          "trigger_rate": 1.0,
+          "triggers": 3,
+          "runs": 3,
+          "pass": true
+        },
+        {
+          "query": "distill this \u00e2\u20ac\u201d turns out the minimap blips were rendering behind the border because two depth constants shared the same value. took 20 min to figure out it was a z-index collision not a visibility bug",
+          "should_trigger": true,
+          "trigger_rate": 1.0,
+          "triggers": 3,
+          "runs": 3,
+          "pass": true
+        },
+        {
+          "query": "that was non-obvious, we should document it. the Phaser camera.fadeOut signature doesnt have a force param like shake and flash do \u00e2\u20ac\u201d you have to call resetFX() first or it silently ignores the new fade",
+          "should_trigger": true,
+          "trigger_rate": 1.0,
+          "triggers": 3,
+          "runs": 3,
+          "pass": true
+        },
+        {
+          "query": "what solutions do we have documented? brief me on what we know",
+          "should_trigger": false,
+          "trigger_rate": 0.0,
+          "triggers": 0,
+          "runs": 3,
+          "pass": true
+        },
+        {
+          "query": "add a difficulty selector to the UI so we can test Easy/Medium/Hard seeker behavior",
+          "should_trigger": false,
+          "trigger_rate": 0.0,
+          "triggers": 0,
+          "runs": 3,
+          "pass": true
+        },
+        {
+          "query": "refactor the action types \u00e2\u20ac\u201d remove MOVE_TO and REQUEST_PATH since nothing uses them anymore",
+          "should_trigger": false,
+          "trigger_rate": 0.0,
+          "triggers": 0,
+          "runs": 3,
+          "pass": true
+        },
+        {
+          "query": "fix the bug where seekers are getting stuck on doors",
+          "should_trigger": false,
+          "trigger_rate": 0.0,
+          "triggers": 0,
+          "runs": 3,
+          "pass": true
+        },
+        {
+          "query": "update the README with the current test count and phase status",
+          "should_trigger": false,
+          "trigger_rate": 0.0,
+          "triggers": 0,
+          "runs": 3,
+          "pass": true
+        },
+        {
+          "query": "run the tests and make sure everything still passes after the SonarPing cleanup",
+          "should_trigger": false,
+          "trigger_rate": 0.0,
+          "triggers": 0,
+          "runs": 3,
+          "pass": true
+        }
+      ]
+    },
+    {
+      "iteration": 2,
+      "description": "Use when the user wants to permanently capture a non-obvious technical finding so future sessions don't rediscover it. Core signal: they just described a surprising root cause or behavior and want it recorded. Trigger on: 'capture this', 'before we forget', 'for next time', 'write it up', 'worth documenting', 'distill', 'that was non-obvious', or any phrase combining preservation intent with a technical discovery. Also trigger on hook reminders to 'run /distill' or explicit requests for a solution doc. The essence: preserving hard-won insight, not writing code.\n\nSkip for: fixing bugs, reading existing solutions (/brief), code comments, README/TODO edits, trivial fixes.",
+      "train_passed": 11,
+      "train_failed": 1,
+      "train_total": 12,
+      "train_results": [
+        {
+          "query": "lets capture this one before we forget. the Tiled JSON must use CSV encoding \u00e2\u20ac\u201d compressed formats like zlib silently fail and Phaser produces an empty map with zero errors",
+          "should_trigger": true,
+          "trigger_rate": 0.0,
+          "triggers": 0,
+          "runs": 3,
+          "pass": false
+        },
+        {
+          "query": "that was a weird one, worth writing up. the evidence tracker was calling recordSelfOpen twice \u00e2\u20ac\u201d once when queueing the action and again at execution. Set deduplicated but the first call was premature",
+          "should_trigger": true,
+          "trigger_rate": 1.0,
+          "triggers": 3,
+          "runs": 3,
+          "pass": true
+        },
+        {
+          "query": "that was a nasty one. can you write it up? the sonar ping ring was storing a tween ref via this-as cast hack and cleanup couldnt find it after a rename. invisible runtime state",
+          "should_trigger": true,
+          "trigger_rate": 1.0,
+          "triggers": 3,
+          "runs": 3,
+          "pass": true
+        },
+        {
+          "query": "run /distill \u00e2\u20ac\u201d the review found that processActionQueue had a dead code branch for MOVE_TO that used hardcoded 32+16 magic numbers and a dummy pixelToTile(0,0) call. 3 of 4 review agents flagged it independently",
+          "should_trigger": true,
+          "trigger_rate": 1.0,
+          "triggers": 3,
+          "runs": 3,
+          "pass": true
+        },
+        {
+          "query": "distill this \u00e2\u20ac\u201d turns out the minimap blips were rendering behind the border because two depth constants shared the same value. took 20 min to figure out it was a z-index collision not a visibility bug",
+          "should_trigger": true,
+          "trigger_rate": 1.0,
+          "triggers": 3,
+          "runs": 3,
+          "pass": true
+        },
+        {
+          "query": "that was non-obvious, we should document it. the Phaser camera.fadeOut signature doesnt have a force param like shake and flash do \u00e2\u20ac\u201d you have to call resetFX() first or it silently ignores the new fade",
+          "should_trigger": true,
+          "trigger_rate": 1.0,
+          "triggers": 3,
+          "runs": 3,
+          "pass": true
+        },
+        {
+          "query": "what solutions do we have documented? brief me on what we know",
+          "should_trigger": false,
+          "trigger_rate": 0.0,
+          "triggers": 0,
+          "runs": 3,
+          "pass": true
+        },
+        {
+          "query": "add a difficulty selector to the UI so we can test Easy/Medium/Hard seeker behavior",
+          "should_trigger": false,
+          "trigger_rate": 0.0,
+          "triggers": 0,
+          "runs": 3,
+          "pass": true
+        },
+        {
+          "query": "refactor the action types \u00e2\u20ac\u201d remove MOVE_TO and REQUEST_PATH since nothing uses them anymore",
+          "should_trigger": false,
+          "trigger_rate": 0.0,
+          "triggers": 0,
+          "runs": 3,
+          "pass": true
+        },
+        {
+          "query": "fix the bug where seekers are getting stuck on doors",
+          "should_trigger": false,
+          "trigger_rate": 0.0,
+          "triggers": 0,
+          "runs": 3,
+          "pass": true
+        },
+        {
+          "query": "update the README with the current test count and phase status",
+          "should_trigger": false,
+          "trigger_rate": 0.0,
+          "triggers": 0,
+          "runs": 3,
+          "pass": true
+        },
+        {
+          "query": "run the tests and make sure everything still passes after the SonarPing cleanup",
+          "should_trigger": false,
+          "trigger_rate": 0.0,
+          "triggers": 0,
+          "runs": 3,
+          "pass": true
+        }
+      ],
+      "test_passed": 7,
+      "test_failed": 1,
+      "test_total": 8,
+      "test_results": [
+        {
+          "query": "yo we need to distill that pathfinding thing. spent like 30 min on it and the fix was one boolean flag but the root cause was a request flood from the supersession guard pattern",
+          "should_trigger": true,
+          "trigger_rate": 1.0,
+          "triggers": 3,
+          "runs": 3,
+          "pass": true
+        },
+        {
+          "query": "ok document this fix, thats the second time weve hit it. module-level let variables in FSM states mean they're singletons \u00e2\u20ac\u201d adding a second seeker will stomp the first one's state",
+          "should_trigger": true,
+          "trigger_rate": 1.0,
+          "triggers": 3,
+          "runs": 3,
+          "pass": true
+        },
+        {
+          "query": "write a solution doc for this \u00e2\u20ac\u201d JustDown doesnt work with playwright because playwright sends keydown+keyup between frames and JustDown needs key state to persist until update() polls",
+          "should_trigger": true,
+          "trigger_rate": 1.0,
+          "triggers": 3,
+          "runs": 3,
+          "pass": true
+        },
+        {
+          "query": "document this root cause for next time \u00e2\u20ac\u201d esModuleInterop must be true in tsconfig or Phaser imports break under verbatimModuleSyntax because Phaser uses export = Phaser in its type defs",
+          "should_trigger": true,
+          "trigger_rate": 0.0,
+          "triggers": 0,
+          "runs": 3,
+          "pass": false
+        },
+        {
+          "query": "summarize what we did this session for the TODO",
+          "should_trigger": false,
+          "trigger_rate": 0.0,
+          "triggers": 0,
+          "runs": 3,
+          "pass": true
+        },
+        {
+          "query": "the seeker is frozen again, same bug as before. check docs/solutions/ and fix it",
+          "should_trigger": false,
+          "trigger_rate": 0.0,
+          "triggers": 0,
+          "runs": 3,
+          "pass": true
+        },
+        {
+          "query": "write documentation for the GameEngine class \u00e2\u20ac\u201d add JSDoc comments to all public methods",
+          "should_trigger": false,
+          "trigger_rate": 0.0,
+          "triggers": 0,
+          "runs": 3,
+          "pass": true
+        },
+        {
+          "query": "can you review the Phase 5a code for quality issues",
+          "should_trigger": false,
+          "trigger_rate": 0.0,
+          "triggers": 0,
+          "runs": 3,
+          "pass": true
+        }
+      ],
+      "passed": 11,
+      "failed": 1,
+      "total": 12,
+      "results": [
+        {
+          "query": "lets capture this one before we forget. the Tiled JSON must use CSV encoding \u00e2\u20ac\u201d compressed formats like zlib silently fail and Phaser produces an empty map with zero errors",
+          "should_trigger": true,
+          "trigger_rate": 0.0,
+          "triggers": 0,
+          "runs": 3,
+          "pass": false
+        },
+        {
+          "query": "that was a weird one, worth writing up. the evidence tracker was calling recordSelfOpen twice \u00e2\u20ac\u201d once when queueing the action and again at execution. Set deduplicated but the first call was premature",
+          "should_trigger": true,
+          "trigger_rate": 1.0,
+          "triggers": 3,
+          "runs": 3,
+          "pass": true
+        },
+        {
+          "query": "that was a nasty one. can you write it up? the sonar ping ring was storing a tween ref via this-as cast hack and cleanup couldnt find it after a rename. invisible runtime state",
+          "should_trigger": true,
+          "trigger_rate": 1.0,
+          "triggers": 3,
+          "runs": 3,
+          "pass": true
+        },
+        {
+          "query": "run /distill \u00e2\u20ac\u201d the review found that processActionQueue had a dead code branch for MOVE_TO that used hardcoded 32+16 magic numbers and a dummy pixelToTile(0,0) call. 3 of 4 review agents flagged it independently",
+          "should_trigger": true,
+          "trigger_rate": 1.0,
+          "triggers": 3,
+          "runs": 3,
+          "pass": true
+        },
+        {
+          "query": "distill this \u00e2\u20ac\u201d turns out the minimap blips were rendering behind the border because two depth constants shared the same value. took 20 min to figure out it was a z-index collision not a visibility bug",
+          "should_trigger": true,
+          "trigger_rate": 1.0,
+          "triggers": 3,
+          "runs": 3,
+          "pass": true
+        },
+        {
+          "query": "that was non-obvious, we should document it. the Phaser camera.fadeOut signature doesnt have a force param like shake and flash do \u00e2\u20ac\u201d you have to call resetFX() first or it silently ignores the new fade",
+          "should_trigger": true,
+          "trigger_rate": 1.0,
+          "triggers": 3,
+          "runs": 3,
+          "pass": true
+        },
+        {
+          "query": "what solutions do we have documented? brief me on what we know",
+          "should_trigger": false,
+          "trigger_rate": 0.0,
+          "triggers": 0,
+          "runs": 3,
+          "pass": true
+        },
+        {
+          "query": "add a difficulty selector to the UI so we can test Easy/Medium/Hard seeker behavior",
+          "should_trigger": false,
+          "trigger_rate": 0.0,
+          "triggers": 0,
+          "runs": 3,
+          "pass": true
+        },
+        {
+          "query": "refactor the action types \u00e2\u20ac\u201d remove MOVE_TO and REQUEST_PATH since nothing uses them anymore",
+          "should_trigger": false,
+          "trigger_rate": 0.0,
+          "triggers": 0,
+          "runs": 3,
+          "pass": true
+        },
+        {
+          "query": "fix the bug where seekers are getting stuck on doors",
+          "should_trigger": false,
+          "trigger_rate": 0.0,
+          "triggers": 0,
+          "runs": 3,
+          "pass": true
+        },
+        {
+          "query": "update the README with the current test count and phase status",
+          "should_trigger": false,
+          "trigger_rate": 0.0,
+          "triggers": 0,
+          "runs": 3,
+          "pass": true
+        },
+        {
+          "query": "run the tests and make sure everything still passes after the SonarPing cleanup",
+          "should_trigger": false,
+          "trigger_rate": 0.0,
+          "triggers": 0,
+          "runs": 3,
+          "pass": true
+        }
+      ]
+    },
+    {
+      "iteration": 3,
+      "description": "Trigger when a user wants to preserve a hard-won technical insight so future sessions don't rediscover it. Key signal: they just described something surprising and want it recorded \u00e2\u20ac\u201d even if they don't use documentation verbs. \"Capture this before we forget\", \"lets not lose this\", \"before we move on\", and similar memory-preservation phrases are strong triggers, as are \"distill\", \"write it up\", \"document this\", \"worth noting for next time\". The user's intent is retention across sessions, not explanation or task completion.\n\nSkip for: fixing bugs, adding features, reading existing solutions (/brief), writing inline code comments, updating README or TODO files.",
+      "train_passed": 11,
+      "train_failed": 1,
+      "train_total": 12,
+      "train_results": [
+        {
+          "query": "lets capture this one before we forget. the Tiled JSON must use CSV encoding \u00e2\u20ac\u201d compressed formats like zlib silently fail and Phaser produces an empty map with zero errors",
+          "should_trigger": true,
+          "trigger_rate": 0.0,
+          "triggers": 0,
+          "runs": 3,
+          "pass": false
+        },
+        {
+          "query": "that was a weird one, worth writing up. the evidence tracker was calling recordSelfOpen twice \u00e2\u20ac\u201d once when queueing the action and again at execution. Set deduplicated but the first call was premature",
+          "should_trigger": true,
+          "trigger_rate": 0.6666666666666666,
+          "triggers": 2,
+          "runs": 3,
+          "pass": true
+        },
+        {
+          "query": "run /distill \u00e2\u20ac\u201d the review found that processActionQueue had a dead code branch for MOVE_TO that used hardcoded 32+16 magic numbers and a dummy pixelToTile(0,0) call. 3 of 4 review agents flagged it independently",
+          "should_trigger": true,
+          "trigger_rate": 1.0,
+          "triggers": 3,
+          "runs": 3,
+          "pass": true
+        },
+        {
+          "query": "that was a nasty one. can you write it up? the sonar ping ring was storing a tween ref via this-as cast hack and cleanup couldnt find it after a rename. invisible runtime state",
+          "should_trigger": true,
+          "trigger_rate": 1.0,
+          "triggers": 3,
+          "runs": 3,
+          "pass": true
+        },
+        {
+          "query": "distill this \u00e2\u20ac\u201d turns out the minimap blips were rendering behind the border because two depth constants shared the same value. took 20 min to figure out it was a z-index collision not a visibility bug",
+          "should_trigger": true,
+          "trigger_rate": 1.0,
+          "triggers": 3,
+          "runs": 3,
+          "pass": true
+        },
+        {
+          "query": "that was non-obvious, we should document it. the Phaser camera.fadeOut signature doesnt have a force param like shake and flash do \u00e2\u20ac\u201d you have to call resetFX() first or it silently ignores the new fade",
+          "should_trigger": true,
+          "trigger_rate": 1.0,
+          "triggers": 3,
+          "runs": 3,
+          "pass": true
+        },
+        {
+          "query": "what solutions do we have documented? brief me on what we know",
+          "should_trigger": false,
+          "trigger_rate": 0.0,
+          "triggers": 0,
+          "runs": 3,
+          "pass": true
+        },
+        {
+          "query": "add a difficulty selector to the UI so we can test Easy/Medium/Hard seeker behavior",
+          "should_trigger": false,
+          "trigger_rate": 0.0,
+          "triggers": 0,
+          "runs": 3,
+          "pass": true
+        },
+        {
+          "query": "refactor the action types \u00e2\u20ac\u201d remove MOVE_TO and REQUEST_PATH since nothing uses them anymore",
+          "should_trigger": false,
+          "trigger_rate": 0.0,
+          "triggers": 0,
+          "runs": 3,
+          "pass": true
+        },
+        {
+          "query": "fix the bug where seekers are getting stuck on doors",
+          "should_trigger": false,
+          "trigger_rate": 0.0,
+          "triggers": 0,
+          "runs": 3,
+          "pass": true
+        },
+        {
+          "query": "update the README with the current test count and phase status",
+          "should_trigger": false,
+          "trigger_rate": 0.0,
+          "triggers": 0,
+          "runs": 3,
+          "pass": true
+        },
+        {
+          "query": "run the tests and make sure everything still passes after the SonarPing cleanup",
+          "should_trigger": false,
+          "trigger_rate": 0.0,
+          "triggers": 0,
+          "runs": 3,
+          "pass": true
+        }
+      ],
+      "test_passed": 8,
+      "test_failed": 0,
+      "test_total": 8,
+      "test_results": [
+        {
+          "query": "yo we need to distill that pathfinding thing. spent like 30 min on it and the fix was one boolean flag but the root cause was a request flood from the supersession guard pattern",
+          "should_trigger": true,
+          "trigger_rate": 1.0,
+          "triggers": 3,
+          "runs": 3,
+          "pass": true
+        },
+        {
+          "query": "ok document this fix, thats the second time weve hit it. module-level let variables in FSM states mean they're singletons \u00e2\u20ac\u201d adding a second seeker will stomp the first one's state",
+          "should_trigger": true,
+          "trigger_rate": 0.6666666666666666,
+          "triggers": 2,
+          "runs": 3,
+          "pass": true
+        },
+        {
+          "query": "write a solution doc for this \u00e2\u20ac\u201d JustDown doesnt work with playwright because playwright sends keydown+keyup between frames and JustDown needs key state to persist until update() polls",
+          "should_trigger": true,
+          "trigger_rate": 1.0,
+          "triggers": 3,
+          "runs": 3,
+          "pass": true
+        },
+        {
+          "query": "document this root cause for next time \u00e2\u20ac\u201d esModuleInterop must be true in tsconfig or Phaser imports break under verbatimModuleSyntax because Phaser uses export = Phaser in its type defs",
+          "should_trigger": true,
+          "trigger_rate": 0.6666666666666666,
+          "triggers": 2,
+          "runs": 3,
+          "pass": true
+        },
+        {
+          "query": "summarize what we did this session for the TODO",
+          "should_trigger": false,
+          "trigger_rate": 0.0,
+          "triggers": 0,
+          "runs": 3,
+          "pass": true
+        },
+        {
+          "query": "the seeker is frozen again, same bug as before. check docs/solutions/ and fix it",
+          "should_trigger": false,
+          "trigger_rate": 0.0,
+          "triggers": 0,
+          "runs": 3,
+          "pass": true
+        },
+        {
+          "query": "write documentation for the GameEngine class \u00e2\u20ac\u201d add JSDoc comments to all public methods",
+          "should_trigger": false,
+          "trigger_rate": 0.0,
+          "triggers": 0,
+          "runs": 3,
+          "pass": true
+        },
+        {
+          "query": "can you review the Phase 5a code for quality issues",
+          "should_trigger": false,
+          "trigger_rate": 0.0,
+          "triggers": 0,
+          "runs": 3,
+          "pass": true
+        }
+      ],
+      "passed": 11,
+      "failed": 1,
+      "total": 12,
+      "results": [
+        {
+          "query": "lets capture this one before we forget. the Tiled JSON must use CSV encoding \u00e2\u20ac\u201d compressed formats like zlib silently fail and Phaser produces an empty map with zero errors",
+          "should_trigger": true,
+          "trigger_rate": 0.0,
+          "triggers": 0,
+          "runs": 3,
+          "pass": false
+        },
+        {
+          "query": "that was a weird one, worth writing up. the evidence tracker was calling recordSelfOpen twice \u00e2\u20ac\u201d once when queueing the action and again at execution. Set deduplicated but the first call was premature",
+          "should_trigger": true,
+          "trigger_rate": 0.6666666666666666,
+          "triggers": 2,
+          "runs": 3,
+          "pass": true
+        },
+        {
+          "query": "run /distill \u00e2\u20ac\u201d the review found that processActionQueue had a dead code branch for MOVE_TO that used hardcoded 32+16 magic numbers and a dummy pixelToTile(0,0) call. 3 of 4 review agents flagged it independently",
+          "should_trigger": true,
+          "trigger_rate": 1.0,
+          "triggers": 3,
+          "runs": 3,
+          "pass": true
+        },
+        {
+          "query": "that was a nasty one. can you write it up? the sonar ping ring was storing a tween ref via this-as cast hack and cleanup couldnt find it after a rename. invisible runtime state",
+          "should_trigger": true,
+          "trigger_rate": 1.0,
+          "triggers": 3,
+          "runs": 3,
+          "pass": true
+        },
+        {
+          "query": "distill this \u00e2\u20ac\u201d turns out the minimap blips were rendering behind the border because two depth constants shared the same value. took 20 min to figure out it was a z-index collision not a visibility bug",
+          "should_trigger": true,
+          "trigger_rate": 1.0,
+          "triggers": 3,
+          "runs": 3,
+          "pass": true
+        },
+        {
+          "query": "that was non-obvious, we should document it. the Phaser camera.fadeOut signature doesnt have a force param like shake and flash do \u00e2\u20ac\u201d you have to call resetFX() first or it silently ignores the new fade",
+          "should_trigger": true,
+          "trigger_rate": 1.0,
+          "triggers": 3,
+          "runs": 3,
+          "pass": true
+        },
+        {
+          "query": "what solutions do we have documented? brief me on what we know",
+          "should_trigger": false,
+          "trigger_rate": 0.0,
+          "triggers": 0,
+          "runs": 3,
+          "pass": true
+        },
+        {
+          "query": "add a difficulty selector to the UI so we can test Easy/Medium/Hard seeker behavior",
+          "should_trigger": false,
+          "trigger_rate": 0.0,
+          "triggers": 0,
+          "runs": 3,
+          "pass": true
+        },
+        {
+          "query": "refactor the action types \u00e2\u20ac\u201d remove MOVE_TO and REQUEST_PATH since nothing uses them anymore",
+          "should_trigger": false,
+          "trigger_rate": 0.0,
+          "triggers": 0,
+          "runs": 3,
+          "pass": true
+        },
+        {
+          "query": "fix the bug where seekers are getting stuck on doors",
+          "should_trigger": false,
+          "trigger_rate": 0.0,
+          "triggers": 0,
+          "runs": 3,
+          "pass": true
+        },
+        {
+          "query": "update the README with the current test count and phase status",
+          "should_trigger": false,
+          "trigger_rate": 0.0,
+          "triggers": 0,
+          "runs": 3,
+          "pass": true
+        },
+        {
+          "query": "run the tests and make sure everything still passes after the SonarPing cleanup",
+          "should_trigger": false,
+          "trigger_rate": 0.0,
+          "triggers": 0,
+          "runs": 3,
+          "pass": true
+        }
+      ]
+    },
+    {
+      "iteration": 4,
+      "description": "Use when the user wants to make a just-discovered technical finding permanent so it survives beyond this session. The defining pattern: they hit something non-obvious and want it locked in \u00e2\u20ac\u201d whether they say \"capture this\", \"before we forget\", \"distill\", \"write it up\", \"document this\", \"worth noting\", or just describe the insight and imply retention. Preservation intent + surprising discovery = this skill, even when no explicit documentation verb appears. Trigger on the spirit: \"we found something tricky and must not lose it.\"\n\nSkip for: fixing bugs, reading existing solutions (/brief), writing code comments, updating README or TODO files.",
+      "train_passed": 11,
+      "train_failed": 1,
+      "train_total": 12,
+      "train_results": [
+        {
+          "query": "lets capture this one before we forget. the Tiled JSON must use CSV encoding \u00e2\u20ac\u201d compressed formats like zlib silently fail and Phaser produces an empty map with zero errors",
+          "should_trigger": true,
+          "trigger_rate": 0.0,
+          "triggers": 0,
+          "runs": 3,
+          "pass": false
+        },
+        {
+          "query": "that was a weird one, worth writing up. the evidence tracker was calling recordSelfOpen twice \u00e2\u20ac\u201d once when queueing the action and again at execution. Set deduplicated but the first call was premature",
+          "should_trigger": true,
+          "trigger_rate": 1.0,
+          "triggers": 3,
+          "runs": 3,
+          "pass": true
+        },
+        {
+          "query": "that was a nasty one. can you write it up? the sonar ping ring was storing a tween ref via this-as cast hack and cleanup couldnt find it after a rename. invisible runtime state",
+          "should_trigger": true,
+          "trigger_rate": 1.0,
+          "triggers": 3,
+          "runs": 3,
+          "pass": true
+        },
+        {
+          "query": "run /distill \u00e2\u20ac\u201d the review found that processActionQueue had a dead code branch for MOVE_TO that used hardcoded 32+16 magic numbers and a dummy pixelToTile(0,0) call. 3 of 4 review agents flagged it independently",
+          "should_trigger": true,
+          "trigger_rate": 1.0,
+          "triggers": 3,
+          "runs": 3,
+          "pass": true
+        },
+        {
+          "query": "distill this \u00e2\u20ac\u201d turns out the minimap blips were rendering behind the border because two depth constants shared the same value. took 20 min to figure out it was a z-index collision not a visibility bug",
+          "should_trigger": true,
+          "trigger_rate": 1.0,
+          "triggers": 3,
+          "runs": 3,
+          "pass": true
+        },
+        {
+          "query": "that was non-obvious, we should document it. the Phaser camera.fadeOut signature doesnt have a force param like shake and flash do \u00e2\u20ac\u201d you have to call resetFX() first or it silently ignores the new fade",
+          "should_trigger": true,
+          "trigger_rate": 0.6666666666666666,
+          "triggers": 2,
+          "runs": 3,
+          "pass": true
+        },
+        {
+          "query": "what solutions do we have documented? brief me on what we know",
+          "should_trigger": false,
+          "trigger_rate": 0.0,
+          "triggers": 0,
+          "runs": 3,
+          "pass": true
+        },
+        {
+          "query": "add a difficulty selector to the UI so we can test Easy/Medium/Hard seeker behavior",
+          "should_trigger": false,
+          "trigger_rate": 0.0,
+          "triggers": 0,
+          "runs": 3,
+          "pass": true
+        },
+        {
+          "query": "refactor the action types \u00e2\u20ac\u201d remove MOVE_TO and REQUEST_PATH since nothing uses them anymore",
+          "should_trigger": false,
+          "trigger_rate": 0.0,
+          "triggers": 0,
+          "runs": 3,
+          "pass": true
+        },
+        {
+          "query": "fix the bug where seekers are getting stuck on doors",
+          "should_trigger": false,
+          "trigger_rate": 0.0,
+          "triggers": 0,
+          "runs": 3,
+          "pass": true
+        },
+        {
+          "query": "update the README with the current test count and phase status",
+          "should_trigger": false,
+          "trigger_rate": 0.0,
+          "triggers": 0,
+          "runs": 3,
+          "pass": true
+        },
+        {
+          "query": "run the tests and make sure everything still passes after the SonarPing cleanup",
+          "should_trigger": false,
+          "trigger_rate": 0.0,
+          "triggers": 0,
+          "runs": 3,
+          "pass": true
+        }
+      ],
+      "test_passed": 8,
+      "test_failed": 0,
+      "test_total": 8,
+      "test_results": [
+        {
+          "query": "yo we need to distill that pathfinding thing. spent like 30 min on it and the fix was one boolean flag but the root cause was a request flood from the supersession guard pattern",
+          "should_trigger": true,
+          "trigger_rate": 1.0,
+          "triggers": 3,
+          "runs": 3,
+          "pass": true
+        },
+        {
+          "query": "ok document this fix, thats the second time weve hit it. module-level let variables in FSM states mean they're singletons \u00e2\u20ac\u201d adding a second seeker will stomp the first one's state",
+          "should_trigger": true,
+          "trigger_rate": 1.0,
+          "triggers": 3,
+          "runs": 3,
+          "pass": true
+        },
+        {
+          "query": "write a solution doc for this \u00e2\u20ac\u201d JustDown doesnt work with playwright because playwright sends keydown+keyup between frames and JustDown needs key state to persist until update() polls",
+          "should_trigger": true,
+          "trigger_rate": 1.0,
+          "triggers": 3,
+          "runs": 3,
+          "pass": true
+        },
+        {
+          "query": "document this root cause for next time \u00e2\u20ac\u201d esModuleInterop must be true in tsconfig or Phaser imports break under verbatimModuleSyntax because Phaser uses export = Phaser in its type defs",
+          "should_trigger": true,
+          "trigger_rate": 0.6666666666666666,
+          "triggers": 2,
+          "runs": 3,
+          "pass": true
+        },
+        {
+          "query": "summarize what we did this session for the TODO",
+          "should_trigger": false,
+          "trigger_rate": 0.0,
+          "triggers": 0,
+          "runs": 3,
+          "pass": true
+        },
+        {
+          "query": "the seeker is frozen again, same bug as before. check docs/solutions/ and fix it",
+          "should_trigger": false,
+          "trigger_rate": 0.0,
+          "triggers": 0,
+          "runs": 3,
+          "pass": true
+        },
+        {
+          "query": "write documentation for the GameEngine class \u00e2\u20ac\u201d add JSDoc comments to all public methods",
+          "should_trigger": false,
+          "trigger_rate": 0.0,
+          "triggers": 0,
+          "runs": 3,
+          "pass": true
+        },
+        {
+          "query": "can you review the Phase 5a code for quality issues",
+          "should_trigger": false,
+          "trigger_rate": 0.0,
+          "triggers": 0,
+          "runs": 3,
+          "pass": true
+        }
+      ],
+      "passed": 11,
+      "failed": 1,
+      "total": 12,
+      "results": [
+        {
+          "query": "lets capture this one before we forget. the Tiled JSON must use CSV encoding \u00e2\u20ac\u201d compressed formats like zlib silently fail and Phaser produces an empty map with zero errors",
+          "should_trigger": true,
+          "trigger_rate": 0.0,
+          "triggers": 0,
+          "runs": 3,
+          "pass": false
+        },
+        {
+          "query": "that was a weird one, worth writing up. the evidence tracker was calling recordSelfOpen twice \u00e2\u20ac\u201d once when queueing the action and again at execution. Set deduplicated but the first call was premature",
+          "should_trigger": true,
+          "trigger_rate": 1.0,
+          "triggers": 3,
+          "runs": 3,
+          "pass": true
+        },
+        {
+          "query": "that was a nasty one. can you write it up? the sonar ping ring was storing a tween ref via this-as cast hack and cleanup couldnt find it after a rename. invisible runtime state",
+          "should_trigger": true,
+          "trigger_rate": 1.0,
+          "triggers": 3,
+          "runs": 3,
+          "pass": true
+        },
+        {
+          "query": "run /distill \u00e2\u20ac\u201d the review found that processActionQueue had a dead code branch for MOVE_TO that used hardcoded 32+16 magic numbers and a dummy pixelToTile(0,0) call. 3 of 4 review agents flagged it independently",
+          "should_trigger": true,
+          "trigger_rate": 1.0,
+          "triggers": 3,
+          "runs": 3,
+          "pass": true
+        },
+        {
+          "query": "distill this \u00e2\u20ac\u201d turns out the minimap blips were rendering behind the border because two depth constants shared the same value. took 20 min to figure out it was a z-index collision not a visibility bug",
+          "should_trigger": true,
+          "trigger_rate": 1.0,
+          "triggers": 3,
+          "runs": 3,
+          "pass": true
+        },
+        {
+          "query": "that was non-obvious, we should document it. the Phaser camera.fadeOut signature doesnt have a force param like shake and flash do \u00e2\u20ac\u201d you have to call resetFX() first or it silently ignores the new fade",
+          "should_trigger": true,
+          "trigger_rate": 0.6666666666666666,
+          "triggers": 2,
+          "runs": 3,
+          "pass": true
+        },
+        {
+          "query": "what solutions do we have documented? brief me on what we know",
+          "should_trigger": false,
+          "trigger_rate": 0.0,
+          "triggers": 0,
+          "runs": 3,
+          "pass": true
+        },
+        {
+          "query": "add a difficulty selector to the UI so we can test Easy/Medium/Hard seeker behavior",
+          "should_trigger": false,
+          "trigger_rate": 0.0,
+          "triggers": 0,
+          "runs": 3,
+          "pass": true
+        },
+        {
+          "query": "refactor the action types \u00e2\u20ac\u201d remove MOVE_TO and REQUEST_PATH since nothing uses them anymore",
+          "should_trigger": false,
+          "trigger_rate": 0.0,
+          "triggers": 0,
+          "runs": 3,
+          "pass": true
+        },
+        {
+          "query": "fix the bug where seekers are getting stuck on doors",
+          "should_trigger": false,
+          "trigger_rate": 0.0,
+          "triggers": 0,
+          "runs": 3,
+          "pass": true
+        },
+        {
+          "query": "update the README with the current test count and phase status",
+          "should_trigger": false,
+          "trigger_rate": 0.0,
+          "triggers": 0,
+          "runs": 3,
+          "pass": true
+        },
+        {
+          "query": "run the tests and make sure everything still passes after the SonarPing cleanup",
+          "should_trigger": false,
+          "trigger_rate": 0.0,
+          "triggers": 0,
+          "runs": 3,
+          "pass": true
+        }
+      ]
+    },
+    {
+      "iteration": 5,
+      "description": "Use to capture and preserve a technical finding before the session ends. Invoke when someone says \"capture this\", \"distill\", \"before we forget\", \"write it up\", \"document this\", or describes a non-obvious discovery and implies they want it saved for future sessions. The core signal: preservation intent paired with a surprising find \u00e2\u20ac\u201d a silent failure, hidden constraint, or unexpected behavior they don't want to rediscover. If the user is handing you a technical insight and asking you to hold onto it, this is the skill.\n\nSkip for: fixing bugs, writing features, adding inline comments, updating README/TODO files, or reading existing solutions (/brief).",
+      "train_passed": 12,
+      "train_failed": 0,
+      "train_total": 12,
+      "train_results": [
+        {
+          "query": "that was a weird one, worth writing up. the evidence tracker was calling recordSelfOpen twice \u00e2\u20ac\u201d once when queueing the action and again at execution. Set deduplicated but the first call was premature",
+          "should_trigger": true,
+          "trigger_rate": 1.0,
+          "triggers": 3,
+          "runs": 3,
+          "pass": true
+        },
+        {
+          "query": "lets capture this one before we forget. the Tiled JSON must use CSV encoding \u00e2\u20ac\u201d compressed formats like zlib silently fail and Phaser produces an empty map with zero errors",
+          "should_trigger": true,
+          "trigger_rate": 0.6666666666666666,
+          "triggers": 2,
+          "runs": 3,
+          "pass": true
+        },
+        {
+          "query": "run /distill \u00e2\u20ac\u201d the review found that processActionQueue had a dead code branch for MOVE_TO that used hardcoded 32+16 magic numbers and a dummy pixelToTile(0,0) call. 3 of 4 review agents flagged it independently",
+          "should_trigger": true,
+          "trigger_rate": 1.0,
+          "triggers": 3,
+          "runs": 3,
+          "pass": true
+        },
+        {
+          "query": "that was a nasty one. can you write it up? the sonar ping ring was storing a tween ref via this-as cast hack and cleanup couldnt find it after a rename. invisible runtime state",
+          "should_trigger": true,
+          "trigger_rate": 1.0,
+          "triggers": 3,
+          "runs": 3,
+          "pass": true
+        },
+        {
+          "query": "distill this \u00e2\u20ac\u201d turns out the minimap blips were rendering behind the border because two depth constants shared the same value. took 20 min to figure out it was a z-index collision not a visibility bug",
+          "should_trigger": true,
+          "trigger_rate": 1.0,
+          "triggers": 3,
+          "runs": 3,
+          "pass": true
+        },
+        {
+          "query": "that was non-obvious, we should document it. the Phaser camera.fadeOut signature doesnt have a force param like shake and flash do \u00e2\u20ac\u201d you have to call resetFX() first or it silently ignores the new fade",
+          "should_trigger": true,
+          "trigger_rate": 1.0,
+          "triggers": 3,
+          "runs": 3,
+          "pass": true
+        },
+        {
+          "query": "what solutions do we have documented? brief me on what we know",
+          "should_trigger": false,
+          "trigger_rate": 0.0,
+          "triggers": 0,
+          "runs": 3,
+          "pass": true
+        },
+        {
+          "query": "add a difficulty selector to the UI so we can test Easy/Medium/Hard seeker behavior",
+          "should_trigger": false,
+          "trigger_rate": 0.0,
+          "triggers": 0,
+          "runs": 3,
+          "pass": true
+        },
+        {
+          "query": "refactor the action types \u00e2\u20ac\u201d remove MOVE_TO and REQUEST_PATH since nothing uses them anymore",
+          "should_trigger": false,
+          "trigger_rate": 0.0,
+          "triggers": 0,
+          "runs": 3,
+          "pass": true
+        },
+        {
+          "query": "fix the bug where seekers are getting stuck on doors",
+          "should_trigger": false,
+          "trigger_rate": 0.0,
+          "triggers": 0,
+          "runs": 3,
+          "pass": true
+        },
+        {
+          "query": "update the README with the current test count and phase status",
+          "should_trigger": false,
+          "trigger_rate": 0.0,
+          "triggers": 0,
+          "runs": 3,
+          "pass": true
+        },
+        {
+          "query": "run the tests and make sure everything still passes after the SonarPing cleanup",
+          "should_trigger": false,
+          "trigger_rate": 0.0,
+          "triggers": 0,
+          "runs": 3,
+          "pass": true
+        }
+      ],
+      "test_passed": 7,
+      "test_failed": 1,
+      "test_total": 8,
+      "test_results": [
+        {
+          "query": "yo we need to distill that pathfinding thing. spent like 30 min on it and the fix was one boolean flag but the root cause was a request flood from the supersession guard pattern",
+          "should_trigger": true,
+          "trigger_rate": 1.0,
+          "triggers": 3,
+          "runs": 3,
+          "pass": true
+        },
+        {
+          "query": "write a solution doc for this \u00e2\u20ac\u201d JustDown doesnt work with playwright because playwright sends keydown+keyup between frames and JustDown needs key state to persist until update() polls",
+          "should_trigger": true,
+          "trigger_rate": 1.0,
+          "triggers": 3,
+          "runs": 3,
+          "pass": true
+        },
+        {
+          "query": "ok document this fix, thats the second time weve hit it. module-level let variables in FSM states mean they're singletons \u00e2\u20ac\u201d adding a second seeker will stomp the first one's state",
+          "should_trigger": true,
+          "trigger_rate": 1.0,
+          "triggers": 3,
+          "runs": 3,
+          "pass": true
+        },
+        {
+          "query": "summarize what we did this session for the TODO",
+          "should_trigger": false,
+          "trigger_rate": 0.0,
+          "triggers": 0,
+          "runs": 3,
+          "pass": true
+        },
+        {
+          "query": "document this root cause for next time \u00e2\u20ac\u201d esModuleInterop must be true in tsconfig or Phaser imports break under verbatimModuleSyntax because Phaser uses export = Phaser in its type defs",
+          "should_trigger": true,
+          "trigger_rate": 0.3333333333333333,
+          "triggers": 1,
+          "runs": 3,
+          "pass": false
+        },
+        {
+          "query": "the seeker is frozen again, same bug as before. check docs/solutions/ and fix it",
+          "should_trigger": false,
+          "trigger_rate": 0.0,
+          "triggers": 0,
+          "runs": 3,
+          "pass": true
+        },
+        {
+          "query": "write documentation for the GameEngine class \u00e2\u20ac\u201d add JSDoc comments to all public methods",
+          "should_trigger": false,
+          "trigger_rate": 0.0,
+          "triggers": 0,
+          "runs": 3,
+          "pass": true
+        },
+        {
+          "query": "can you review the Phase 5a code for quality issues",
+          "should_trigger": false,
+          "trigger_rate": 0.0,
+          "triggers": 0,
+          "runs": 3,
+          "pass": true
+        }
+      ],
+      "passed": 12,
+      "failed": 0,
+      "total": 12,
+      "results": [
+        {
+          "query": "that was a weird one, worth writing up. the evidence tracker was calling recordSelfOpen twice \u00e2\u20ac\u201d once when queueing the action and again at execution. Set deduplicated but the first call was premature",
+          "should_trigger": true,
+          "trigger_rate": 1.0,
+          "triggers": 3,
+          "runs": 3,
+          "pass": true
+        },
+        {
+          "query": "lets capture this one before we forget. the Tiled JSON must use CSV encoding \u00e2\u20ac\u201d compressed formats like zlib silently fail and Phaser produces an empty map with zero errors",
+          "should_trigger": true,
+          "trigger_rate": 0.6666666666666666,
+          "triggers": 2,
+          "runs": 3,
+          "pass": true
+        },
+        {
+          "query": "run /distill \u00e2\u20ac\u201d the review found that processActionQueue had a dead code branch for MOVE_TO that used hardcoded 32+16 magic numbers and a dummy pixelToTile(0,0) call. 3 of 4 review agents flagged it independently",
+          "should_trigger": true,
+          "trigger_rate": 1.0,
+          "triggers": 3,
+          "runs": 3,
+          "pass": true
+        },
+        {
+          "query": "that was a nasty one. can you write it up? the sonar ping ring was storing a tween ref via this-as cast hack and cleanup couldnt find it after a rename. invisible runtime state",
+          "should_trigger": true,
+          "trigger_rate": 1.0,
+          "triggers": 3,
+          "runs": 3,
+          "pass": true
+        },
+        {
+          "query": "distill this \u00e2\u20ac\u201d turns out the minimap blips were rendering behind the border because two depth constants shared the same value. took 20 min to figure out it was a z-index collision not a visibility bug",
+          "should_trigger": true,
+          "trigger_rate": 1.0,
+          "triggers": 3,
+          "runs": 3,
+          "pass": true
+        },
+        {
+          "query": "that was non-obvious, we should document it. the Phaser camera.fadeOut signature doesnt have a force param like shake and flash do \u00e2\u20ac\u201d you have to call resetFX() first or it silently ignores the new fade",
+          "should_trigger": true,
+          "trigger_rate": 1.0,
+          "triggers": 3,
+          "runs": 3,
+          "pass": true
+        },
+        {
+          "query": "what solutions do we have documented? brief me on what we know",
+          "should_trigger": false,
+          "trigger_rate": 0.0,
+          "triggers": 0,
+          "runs": 3,
+          "pass": true
+        },
+        {
+          "query": "add a difficulty selector to the UI so we can test Easy/Medium/Hard seeker behavior",
+          "should_trigger": false,
+          "trigger_rate": 0.0,
+          "triggers": 0,
+          "runs": 3,
+          "pass": true
+        },
+        {
+          "query": "refactor the action types \u00e2\u20ac\u201d remove MOVE_TO and REQUEST_PATH since nothing uses them anymore",
+          "should_trigger": false,
+          "trigger_rate": 0.0,
+          "triggers": 0,
+          "runs": 3,
+          "pass": true
+        },
+        {
+          "query": "fix the bug where seekers are getting stuck on doors",
+          "should_trigger": false,
+          "trigger_rate": 0.0,
+          "triggers": 0,
+          "runs": 3,
+          "pass": true
+        },
+        {
+          "query": "update the README with the current test count and phase status",
+          "should_trigger": false,
+          "trigger_rate": 0.0,
+          "triggers": 0,
+          "runs": 3,
+          "pass": true
+        },
+        {
+          "query": "run the tests and make sure everything still passes after the SonarPing cleanup",
+          "should_trigger": false,
+          "trigger_rate": 0.0,
+          "triggers": 0,
+          "runs": 3,
+          "pass": true
+        }
+      ]
+    }
+  ]
+}

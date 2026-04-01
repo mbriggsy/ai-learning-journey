@@ -1,6 +1,7 @@
 import Phaser from 'phaser';
 import { DEFAULT_SETTINGS } from '../../types/settings.js';
 import type { GameSettings } from '../../types/settings.js';
+import { TEXTURE_KEYS } from '../asset-keys.js';
 
 /** Shared game settings — set once at boot, read everywhere */
 let gameSettings: GameSettings = { ...DEFAULT_SETTINGS };
@@ -78,11 +79,10 @@ export class BootScene extends Phaser.Scene {
     }).setOrigin(0.5);
 
     // Load all game assets
-    this.load.spritesheet('tiles', 'assets/tilesets/placeholder.png', {
-      frameWidth: 32,
-      frameHeight: 32,
-    });
+    this.load.image(TEXTURE_KEYS.TILESET_INTERIOR, 'assets/tilesets/interior-extruded.png');
+    this.load.spritesheet('interior-tiles', 'assets/tilesets/interior.png', { frameWidth: 32, frameHeight: 32 });
     this.load.tilemapTiledJSON('map', 'assets/maps/hideandseek.json');
+    this.load.atlas(TEXTURE_KEYS.CHARACTERS, 'assets/sprites/characters.png', 'assets/sprites/characters.json');
 
     // Audio assets (dual format: .ogg + .mp3 for Safari compatibility)
     const audioKeys = [

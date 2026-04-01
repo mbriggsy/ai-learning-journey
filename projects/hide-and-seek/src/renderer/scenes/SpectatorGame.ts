@@ -17,6 +17,7 @@ import type { SpectatingState, GameFlowKind, DoorId, SeekerFSMState, HiderFSMSta
 import type { FacingDirection } from '../../types/input.js';
 import type { ReadonlyDeep } from '../../types/utility.js';
 import { DEPTH, DISPLAY, CINEMATIC } from '../../constants.js';
+import { TEXTURE_KEYS } from '../asset-keys.js';
 
 const SEEKER_FSM_LABELS: Record<SeekerFSMState, string> = {
   patrol: 'PATROL',
@@ -228,8 +229,8 @@ export class SpectatorGameScene extends Phaser.Scene {
 
   private setupTilemap(): Phaser.Tilemaps.Tilemap {
     const tilemap = this.make.tilemap({ key: 'map' });
-    const tileset = tilemap.addTilesetImage('placeholder', 'tiles', 32, 32, 0, 0);
-    if (!tileset) throw new Error('Tileset "placeholder" not found');
+    const tileset = tilemap.addTilesetImage('interior', TEXTURE_KEYS.TILESET_INTERIOR, 32, 32, 1, 2);
+    if (!tileset) throw new Error('Tileset "interior" not found');
 
     const groundLayer = tilemap.createLayer('Ground', tileset);
     const wallsLayer = tilemap.createLayer('Walls', tileset);

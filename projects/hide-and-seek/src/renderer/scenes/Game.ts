@@ -18,6 +18,7 @@ import { SeekerSprite } from '../entities/SeekerSprite.js';
 import { createDoorSprites, destroyDoorSprites } from '../entities/DoorSprite.js';
 import type { DoorSpriteEntry } from '../entities/DoorSprite.js';
 import { setPauseAuthority, setAudioManager } from './PauseMenu.js';
+import { TEXTURE_KEYS } from '../asset-keys.js';
 import { getGameSettings } from './Boot.js';
 import { installTestBridge, removeTestBridge } from '../utils/TestBridge.js';
 import type { GameSceneData } from '../../types/scenes.js';
@@ -62,6 +63,9 @@ export class GameScene extends Phaser.Scene {
   create(): void {
     // --- Tilemap rendering ---
     const tilemap = this.setupTilemap();
+
+    // --- Character animations ---
+    this.registerCharacterAnimations();
 
     // --- Game engine + doors ---
     const tiledData = this.cache.tilemap.get('map')?.data;
@@ -228,8 +232,8 @@ export class GameScene extends Phaser.Scene {
 
   private setupTilemap(): Phaser.Tilemaps.Tilemap {
     const tilemap = this.make.tilemap({ key: 'map' });
-    const tileset = tilemap.addTilesetImage('placeholder', 'tiles', 32, 32, 0, 0);
-    if (!tileset) throw new Error('Tileset "placeholder" not found — check name match in Tiled JSON');
+    const tileset = tilemap.addTilesetImage('interior', TEXTURE_KEYS.TILESET_INTERIOR, 32, 32, 1, 2);
+    if (!tileset) throw new Error('Tileset "interior" not found — check name match in Tiled JSON');
 
     const groundLayer = tilemap.createLayer('Ground', tileset);
     const wallsLayer = tilemap.createLayer('Walls', tileset);
@@ -240,6 +244,47 @@ export class GameScene extends Phaser.Scene {
     wallsLayer.setCollisionByProperty({ collides: true });
 
     return tilemap;
+  }
+
+  private registerCharacterAnimations(): void {
+    const characters = ['hider', 'seeker'] as const;
+    const directions = ['s', 'n', 'e'] as const;
+
+    for (const char of characters) {
+      for (const dir of directions) {
+        // Idle animation (2 frames, 4 FPS)
+        this.anims.create({
+          key: `${char}-idle-${dir}`,
+          frames: this.anims.generateFrameNames(TEXTURE_KEYS.CHARACTERS, {
+            prefix: `char-${char}-idle-${dir}-`, start: 1, end: 2, zeroPad: 2, suffix: '.png',
+          }),
+          frameRate: 4,
+          repeat: -1,
+        });
+
+        // Walk animation (4 frames, 8 FPS)
+        this.anims.create({
+          key: `${char}-walk-${dir}`,
+          frames: this.anims.generateFrameNames(TEXTURE_KEYS.CHARACTERS, {
+            prefix: `char-${char}-walk-${dir}-`, start: 1, end: 4, zeroPad: 2, suffix: '.png',
+          }),
+          frameRate: 8,
+          repeat: -1,
+        });
+      }
+    }
+
+    // Seeker chase animations (4 frames, 12 FPS)
+    for (const dir of directions) {
+      this.anims.create({
+        key: `seeker-chase-${dir}`,
+        frames: this.anims.generateFrameNames(TEXTURE_KEYS.CHARACTERS, {
+          prefix: `char-seeker-chase-${dir}-`, start: 1, end: 4, zeroPad: 2, suffix: '.png',
+        }),
+        frameRate: 12,
+        repeat: -1,
+      });
+    }
   }
 
   private setupEvents(): void {

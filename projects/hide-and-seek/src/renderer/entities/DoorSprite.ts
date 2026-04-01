@@ -6,9 +6,9 @@ import { DEPTH, DISPLAY } from '../../constants.js';
 
 const TILE_SIZE = DISPLAY.TILE_SIZE;
 
-// Tile indices in the placeholder tileset (firstgid=1 → frame = gid - firstgid)
-const FRAME_DOOR_CLOSED = 3;
-const FRAME_DOOR_OPEN = 4;
+// Tile indices in the interior tileset (sorted alphabetically: door-closed=0, door-open=1)
+const FRAME_DOOR_CLOSED = 0;
+const FRAME_DOOR_OPEN = 1;
 
 export interface DoorSpriteEntry {
   readonly sprite: Phaser.GameObjects.Sprite;
@@ -23,7 +23,7 @@ export function createDoorSprite(
   const pixelY = door.position.y * TILE_SIZE + TILE_SIZE / 2;
 
   const frame = door.isOpen ? FRAME_DOOR_OPEN : FRAME_DOOR_CLOSED;
-  const sprite = scene.add.sprite(pixelX, pixelY, 'tiles', frame);
+  const sprite = scene.add.sprite(pixelX, pixelY, 'interior-tiles', frame);
   sprite.setDepth(DEPTH.WALLS);
 
   return sprite;

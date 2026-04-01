@@ -1,49 +1,83 @@
 import Phaser from 'phaser';
 import type { SeekerRenderState, SeekerFSMState } from '../../types/state.js';
 import type { FacingDirection } from '../../types/input.js';
-import { DEPTH, DISPLAY } from '../../constants.js';
+import { DEPTH } from '../../constants.js';
+import { TEXTURE_KEYS } from '../asset-keys.js';
 
-const STATE_COLORS: Record<SeekerFSMState, number> = {
-  patrol: 0xff4444,       // red — default
-  suspicious: 0xff8800,   // orange — something caught attention
-  search: 0xffcc00,       // yellow — actively searching area
-  chase: 0xff00ff,        // magenta — SPOTTED YOU, unmistakable
+/** Map FacingDirection to animation direction suffix */
+const FACING_TO_DIR: Record<FacingDirection, string> = {
+  up: 'n',
+  down: 's',
+  left: 'e',   // West = flipped East
+  right: 'e',
 };
-const EYE_COLOR = 0xffffff;
-const INDICATOR_SIZE = 8;
-const INDICATOR_OFFSET = 12;
 
-const FACING_OFFSETS: Record<FacingDirection, { dx: number; dy: number }> = {
-  up: { dx: 0, dy: -INDICATOR_OFFSET },
-  down: { dx: 0, dy: INDICATOR_OFFSET },
-  left: { dx: -INDICATOR_OFFSET, dy: 0 },
-  right: { dx: INDICATOR_OFFSET, dy: 0 },
+/** FSM state → animation action mapping */
+const FSM_TO_ACTION: Record<SeekerFSMState, 'idle' | 'walk' | 'chase'> = {
+  patrol: 'walk',
+  suspicious: 'walk',
+  search: 'walk',
+  chase: 'chase',
 };
+
+const MOVE_THRESHOLD = 0.1;
 
 export class SeekerSprite {
-  private body: Phaser.GameObjects.Rectangle;
-  private facingIndicator: Phaser.GameObjects.Rectangle;
+  private sprite: Phaser.GameObjects.Sprite;
+  private lastFacing: FacingDirection = 'down';
+  private lastFsmState: SeekerFSMState = 'patrol';
+  private wasMoving: boolean = false;
+  private prevX: number = 0;
+  private prevY: number = 0;
 
   constructor(scene: Phaser.Scene, x: number, y: number) {
-    this.body = scene.add.rectangle(x, y, DISPLAY.TILE_SIZE, DISPLAY.TILE_SIZE, STATE_COLORS.patrol);
-    this.body.setDepth(DEPTH.PLAYER);
-    this.facingIndicator = scene.add.rectangle(x, y + INDICATOR_OFFSET, INDICATOR_SIZE, INDICATOR_SIZE, EYE_COLOR);
-    this.facingIndicator.setDepth(DEPTH.PLAYER + 1);
+    this.sprite = scene.add.sprite(x, y, TEXTURE_KEYS.CHARACTERS, 'char-seeker-idle-s-01.png');
+    this.sprite.setDepth(DEPTH.PLAYER);
+    this.sprite.play('seeker-idle-s');
+    this.prevX = x;
+    this.prevY = y;
   }
 
   syncFromGameState(seeker: Readonly<SeekerRenderState>): void {
-    this.body.setPosition(seeker.x, seeker.y);
-    this.body.setFillStyle(STATE_COLORS[seeker.fsmState]);
-    const offset = FACING_OFFSETS[seeker.facing];
-    this.facingIndicator.setPosition(seeker.x + offset.dx, seeker.y + offset.dy);
+    this.sprite.setPosition(seeker.x, seeker.y);
+
+    const facing = seeker.facing;
+    const fsmState = seeker.fsmState;
+    // No velocity on SeekerRenderState — detect movement from position delta
+    const dx = seeker.x - this.prevX;
+    const dy = seeker.y - this.prevY;
+    const isMoving = Math.abs(dx) > MOVE_THRESHOLD || Math.abs(dy) > MOVE_THRESHOLD;
+    this.prevX = seeker.x;
+    this.prevY = seeker.y;
+
+    const dir = FACING_TO_DIR[facing];
+
+    // Flip for West (left)
+    this.sprite.setFlipX(facing === 'left');
+
+    // Only change animation if state changed
+    if (facing !== this.lastFacing || fsmState !== this.lastFsmState || isMoving !== this.wasMoving) {
+      let action: string;
+      if (!isMoving) {
+        action = 'idle';
+      } else {
+        action = FSM_TO_ACTION[fsmState];
+      }
+      const animKey = `seeker-${action}-${dir}`;
+      if (this.sprite.anims.currentAnim?.key !== animKey) {
+        this.sprite.play(animKey);
+      }
+      this.lastFacing = facing;
+      this.lastFsmState = fsmState;
+      this.wasMoving = isMoving;
+    }
   }
 
   setVisible(visible: boolean): void {
-    this.body.setVisible(visible);
-    this.facingIndicator.setVisible(visible);
+    this.sprite.setVisible(visible);
   }
 
   getGameObjects(): Phaser.GameObjects.GameObject[] {
-    return [this.body, this.facingIndicator];
+    return [this.sprite];
   }
 }

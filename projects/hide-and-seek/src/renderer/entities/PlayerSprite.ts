@@ -1,40 +1,57 @@
 import Phaser from 'phaser';
 import type { PlayerState } from '../../types/state.js';
 import type { FacingDirection } from '../../types/input.js';
-import { DEPTH, DISPLAY } from '../../constants.js';
+import { DEPTH } from '../../constants.js';
+import { TEXTURE_KEYS } from '../asset-keys.js';
 
-const INDICATOR_SIZE = 8;
-const INDICATOR_OFFSET = 12;
-
-const FACING_OFFSETS: Record<FacingDirection, { dx: number; dy: number }> = {
-  up: { dx: 0, dy: -INDICATOR_OFFSET },
-  down: { dx: 0, dy: INDICATOR_OFFSET },
-  left: { dx: -INDICATOR_OFFSET, dy: 0 },
-  right: { dx: INDICATOR_OFFSET, dy: 0 },
+/** Map FacingDirection to animation direction suffix */
+const FACING_TO_DIR: Record<FacingDirection, string> = {
+  up: 'n',
+  down: 's',
+  left: 'e',   // West = flipped East
+  right: 'e',
 };
 
+const SPEED_THRESHOLD = 0.5;
+
 export class PlayerSprite {
-  private body: Phaser.GameObjects.Rectangle;
-  private facingIndicator: Phaser.GameObjects.Rectangle;
+  private sprite: Phaser.GameObjects.Sprite;
+  private lastFacing: FacingDirection = 'down';
+  private wasMoving: boolean = false;
 
   constructor(scene: Phaser.Scene, x: number, y: number) {
-    this.body = scene.add.rectangle(x, y, DISPLAY.TILE_SIZE, DISPLAY.TILE_SIZE, 0x4488ff);
-    this.body.setDepth(DEPTH.PLAYER);
-    this.facingIndicator = scene.add.rectangle(x, y - INDICATOR_OFFSET, INDICATOR_SIZE, INDICATOR_SIZE, 0xffffff);
-    this.facingIndicator.setDepth(DEPTH.PLAYER + 1);
+    this.sprite = scene.add.sprite(x, y, TEXTURE_KEYS.CHARACTERS, 'char-hider-idle-s-01.png');
+    this.sprite.setDepth(DEPTH.PLAYER);
+    this.sprite.play('hider-idle-s');
   }
 
   syncFromGameState(player: Readonly<PlayerState>): void {
-    this.body.setPosition(player.x, player.y);
-    const offset = FACING_OFFSETS[player.facing];
-    this.facingIndicator.setPosition(player.x + offset.dx, player.y + offset.dy);
+    this.sprite.setPosition(player.x, player.y);
+
+    const facing = player.facing;
+    const isMoving = Math.abs(player.velocityX) > SPEED_THRESHOLD || Math.abs(player.velocityY) > SPEED_THRESHOLD;
+    const dir = FACING_TO_DIR[facing];
+
+    // Flip for West (left) — East sprites mirrored horizontally
+    this.sprite.setFlipX(facing === 'left');
+
+    // Only change animation if state changed
+    if (facing !== this.lastFacing || isMoving !== this.wasMoving) {
+      const action = isMoving ? 'walk' : 'idle';
+      const animKey = `hider-${action}-${dir}`;
+      if (this.sprite.anims.currentAnim?.key !== animKey) {
+        this.sprite.play(animKey);
+      }
+      this.lastFacing = facing;
+      this.wasMoving = isMoving;
+    }
   }
 
   getGameObject(): Phaser.GameObjects.GameObject {
-    return this.body;
+    return this.sprite;
   }
 
   getGameObjects(): Phaser.GameObjects.GameObject[] {
-    return [this.body, this.facingIndicator];
+    return [this.sprite];
   }
 }

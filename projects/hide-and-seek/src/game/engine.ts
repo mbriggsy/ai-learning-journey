@@ -12,6 +12,7 @@ import { checkDetection } from './detection.js';
 import { evaluateRules } from './rules.js';
 import { createTypedEmitter } from './events.js';
 import { PathfindingSystem } from './ai/pathfinding.js';
+import type { PathfindingInstance } from './ai/pathfinding.js';
 import { SeekerFSM, clearPath } from './ai/seeker-fsm.js';
 import type { SeekerContext, SeekerAIInternalState } from './ai/seeker-fsm.js';
 import { ActionQueue } from './ai/actions.js';
@@ -53,6 +54,7 @@ export class GameEngine {
   private disposed: boolean = false;
   private readonly emitter: TypedEmitter<GameEventMap>;
   private readonly pathfinding: PathfindingSystem;
+  private seekerPathfinding: PathfindingInstance | null = null;
   private seekerFSM: SeekerFSM | null = null;
   private seekerCtx: SeekerContext | null = null;
   private readonly seekerConfig: SeekerConfig;
@@ -98,10 +100,10 @@ export class GameEngine {
       const s = this.state as MutablePlayingState;
       (s as { doors: ReadonlyMap<string, unknown> }).doors = doorSystem.getDoors();
 
-      // Set initial door costs for pathfinding
+      // Set initial door costs for ALL pathfinding instances
       for (const door of doorSystem.getDoors().values()) {
         if (!door.isOpen) {
-          this.pathfinding.setDoorCost(door.position.x, door.position.y, DOOR.PATHFINDING_COST);
+          this.pathfinding.setDoorCostAll(door.position.x, door.position.y, DOOR.PATHFINDING_COST);
         }
       }
 
@@ -132,7 +134,7 @@ export class GameEngine {
         this.collisionGrid[y * width + x] = playing.map.isWalkable(x, y) ? 0 : 1;
       }
     }
-    this.pathfinding.initGrid(this.collisionGrid, width, height);
+    this.seekerPathfinding = this.pathfinding.createInstance('seeker', this.collisionGrid, width, height);
 
     // Create FSM + context
     this.seekerFSM = new SeekerFSM();
@@ -140,7 +142,7 @@ export class GameEngine {
 
     this.seekerCtx = {
       config: this.seekerConfig,
-      pathfinding: this.pathfinding,
+      pathfinding: this.seekerPathfinding,
       map: playing.map,
       rooms: this.rooms,
       hidingSpots: this.hidingSpots,
@@ -210,7 +212,6 @@ export class GameEngine {
 
   dispose(): void {
     this.disposed = true;
-    this.pathfinding.cancelAll();
     this.emitter.offAll();
   }
 
@@ -502,9 +503,9 @@ export class GameEngine {
       const updated = this.doorSystem.getDoors().get(door.id);
       if (updated) {
         if (updated.isOpen) {
-          this.pathfinding.removeDoorCost(updated.position.x, updated.position.y);
+          this.pathfinding.removeDoorCostAll(updated.position.x, updated.position.y);
         } else {
-          this.pathfinding.setDoorCost(updated.position.x, updated.position.y, DOOR.PATHFINDING_COST);
+          this.pathfinding.setDoorCostAll(updated.position.x, updated.position.y, DOOR.PATHFINDING_COST);
         }
       }
 

@@ -1,4 +1,4 @@
-import type { SeekerFSMState } from './state.js';
+import type { SeekerFSMState, HiderFSMState } from './state.js';
 
 export interface SeekerConfig {
   // Vision
@@ -66,6 +66,27 @@ export interface RoomDefinition {
   };
   readonly center: { readonly x: number; readonly y: number };
   readonly adjacentRooms: readonly RoomId[];
+}
+
+// --- Hider AI ---
+
+export interface HiderSpotScoreWeights {
+  readonly distance: number;
+  readonly losBlockers: number;
+  readonly escapeRoutes: number;
+  readonly deadEndPenalty: number;
+  readonly pathExposure: number;
+}
+
+export interface HiderConfig {
+  readonly evaluatesSpots: boolean;
+  readonly spotScoreWeights: HiderSpotScoreWeights;
+  readonly usesFov: boolean;
+  readonly repositionTriggerRange: number;     // tiles
+  readonly maxRepositionsPerRound: number;
+  readonly repositionDelayIncrementTicks: number;
+  readonly usesDoors: boolean;
+  readonly speed: number;                       // pixels/sec
 }
 
 // --- Hiding spots ---

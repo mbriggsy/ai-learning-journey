@@ -1,4 +1,4 @@
-import type { GameFlowKind, DoorId, SeekerFSMState } from './state.js';
+import type { GameFlowKind, DoorId, SeekerFSMState, HiderFSMState } from './state.js';
 
 export type GameEventMap = {
   PHASE_CHANGED: [kind: GameFlowKind];
@@ -14,6 +14,10 @@ export type GameEventMap = {
   SEEKER_STATE_CHANGED: [payload: {
     readonly oldState: SeekerFSMState;
     readonly newState: SeekerFSMState;
+  }];
+  HIDER_STATE_CHANGED: [payload: {
+    readonly oldState: HiderFSMState;
+    readonly newState: HiderFSMState;
   }];
 };
 

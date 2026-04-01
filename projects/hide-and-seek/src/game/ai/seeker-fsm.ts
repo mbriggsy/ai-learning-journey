@@ -3,7 +3,7 @@ import type { SeekerConfig, PathPoint, RoomDefinition, HidingSpot } from '../../
 import type { SeekerRenderState, SeekerFSMState, DoorId, DoorState } from '../../types/state.js';
 import type { GameEventMap } from '../../types/events.js';
 import type { TypedEmitter } from '../../types/events.js';
-import type { PathfindingSystem } from './pathfinding.js';
+import type { PathfindingInstance } from './pathfinding.js';
 import type { GameMap } from '../../types/state.js';
 import type { DoorSystem } from '../doors.js';
 import type { StimulusKind } from '../../types/ai.js';
@@ -23,7 +23,7 @@ import { DOOR } from '../../constants.js';
 
 export interface SeekerContext {
   readonly config: SeekerConfig;
-  readonly pathfinding: PathfindingSystem;
+  readonly pathfinding: PathfindingInstance;
   readonly map: GameMap;
   readonly rooms: readonly RoomDefinition[];
   readonly hidingSpots: readonly HidingSpot[];

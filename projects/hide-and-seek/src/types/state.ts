@@ -12,7 +12,7 @@ export interface DoorState {
   readonly lastToggleTick: number;
 }
 
-export type GamePhase = 'boot' | 'playing';
+export type GamePhase = 'boot' | 'playing' | 'spectating';
 
 // --- Game flow (sub-phase within PlayingState) ---
 
@@ -46,6 +46,18 @@ export type GameFlowState = CountdownPhase | HuntPhase | FoundPhase | SurvivedPh
 
 export type DetectionResult = 'none' | 'spotted' | 'found';
 
+// --- Hider ---
+
+export type HiderFSMState = 'countdown-moving' | 'hiding' | 'fleeing' | 'repositioning';
+
+export interface HiderRenderState {
+  x: number;
+  y: number;
+  facing: FacingDirection;
+  facingAngle: number;
+  fsmState: HiderFSMState;
+}
+
 // --- Seeker ---
 
 export type SeekerFSMState = 'patrol' | 'suspicious' | 'search' | 'chase';
@@ -66,6 +78,14 @@ interface GameStateBase {
 
 export interface BootState extends GameStateBase {
   readonly phase: 'boot';
+}
+
+/** Shared fields between PlayingState and SpectatingState */
+export interface GameSessionBase extends GameStateBase {
+  readonly map: GameMap;
+  readonly gameFlow: GameFlowState;
+  readonly doors: ReadonlyMap<DoorId, DoorState>;
+  readonly doorGeneration: number;
 }
 
 export interface GameMap {
@@ -96,18 +116,26 @@ export interface GameStats {
   distanceTraveled: number;  // pixels accumulated during HUNT
 }
 
-export interface PlayingState extends GameStateBase {
+export interface PlayingState extends GameSessionBase {
   readonly phase: 'playing';
   readonly player: PlayerState;
   readonly seeker: SeekerRenderState;
-  readonly map: GameMap;
   readonly spawns: readonly SpawnPoint[];
-  readonly gameFlow: GameFlowState;
   readonly seekerFov: Uint8Array;
   readonly playerFov: Uint8Array;
   readonly stats: GameStats;
-  readonly doors: ReadonlyMap<DoorId, DoorState>;
-  readonly doorGeneration: number;
 }
 
-export type GameState = BootState | PlayingState;
+export interface SpectatingState extends GameSessionBase {
+  readonly phase: 'spectating';
+  readonly seeker: SeekerRenderState;
+  readonly hider: HiderRenderState;
+  readonly seekerFov: Uint8Array;
+  readonly hiderFov: Uint8Array;
+  readonly spawns: readonly SpawnPoint[];
+}
+
+/** Mutable alias for engine-internal mutation of SpectatingState fields */
+export type MutableSpectatingState = { -readonly [K in keyof SpectatingState]: SpectatingState[K] };
+
+export type GameState = BootState | PlayingState | SpectatingState;

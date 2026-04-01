@@ -64,11 +64,11 @@ flowchart LR
     style BRIEF fill:#1e3a5f,stroke:#60a5fa,color:#fff
 ```
 
-### The Flow in Plain English
+### The Flow
 
-1. **After executing work or completing a review**, a hook automatically asks: *"Did anything non-obvious come up? If so, run `/distill`."*
-2. **`/distill`** shows the agent what's already documented, provides a template, and auto-numbers the next file. The agent writes a focused insight doc — or says "nothing to capture" and moves on.
-3. **Before the next work session**, a hook automatically injects summaries of every insight doc into the agent's context. No one has to remember. No one has to ask.
+1. **After executing work or completing a review**, a PostToolUse hook fires and asks: *"Did anything non-obvious come up? If so, run `/distill`."*
+2. **`/distill`** shows the agent what's already documented, provides a template, and auto-numbers the next file. The agent writes a focused insight doc.
+3. **Before the next work session**, a PreToolUse hook fires and injects summaries of every insight doc into the agent's context. No one has to remember. No one has to ask.
 4. **`/brief`** is also available on-demand — any time, any session, just ask.
 
 ---
@@ -78,8 +78,8 @@ flowchart LR
 ```mermaid
 flowchart TB
     subgraph HOOKS ["Hooks"]
-        H1["PreToolUse\n<b>inject-insights.sh</b>\nMatcher: Skill\n(INJECTS — mechanical)"]
-        H2["PostToolUse\n<b>remind-distill.sh</b>\nMatcher: Skill\n(ADVISES — requires judgment)"]
+        H1["PreToolUse\n<b>inject-insights.sh</b>\nMatcher: Skill\nInjects insight summaries"]
+        H2["PostToolUse\n<b>remind-distill.sh</b>\nMatcher: Skill\nReminds to capture findings"]
     end
 
     subgraph SKILLS ["Skills (guided workflows)"]
@@ -113,34 +113,25 @@ flowchart TB
 
 ## Why This Approach
 
-We considered several alternatives. Here's why we landed here.
-
 | Approach | Verdict | Why |
 |----------|---------|-----|
 | **Agent instructions** ("check insights before work") | Rejected | Instructions are suggestions. Agents skip them under task pressure. |
 | **Existing plugin skill** (ce:compound) | Rejected | Spins up 5 parallel subagents, produces 150+ line docs. Overkill for our 40-line format. |
 | **Auto-triggering skills** (no hooks) | Rejected | Claude's own docs say it "tends to under-trigger." Unreliable for enforcement. |
-| **Hooks + custom skills + CLAUDE.md** | Selected | Hooks fire deterministically (briefing side is mechanical). Capture side needs a persistent instruction as backup. Skills handle the workflow. |
+| **Hooks + custom skills** | Selected | Hooks fire deterministically. Skills handle the workflow. Knowledge compounds across sessions. |
 
 ### Design Principles
 
-There are three kinds of hooks, and they have very different reliability:
+| Hook type | What it does | Role |
+|-----------|-------------|------|
+| **Blocking** | Rejects a tool call — tool literally fails | Enforcement | 
+| **Injecting** | Adds information to context — no action required | Briefing |
+| **Advisory** | Outputs a suggestion — agent chooses to act | Capture reminder |
 
-| Hook type | What it does | Reliability | Example |
-|-----------|-------------|-------------|---------|
-| **Blocking** | Rejects a tool call — tool literally fails | Guarantee | `block-webfetch.sh` returns `"decision": "block"` |
-| **Injecting** | Adds information to context — no action required | Reliable | `inject-insights.sh` outputs insight summaries |
-| **Advisory** | Outputs a suggestion — requires the agent to choose to act | Reminder only | `remind-distill.sh` says "consider /distill" |
-
-**inject-insights is the strong half.** It fires before `/ce:work` and injects insight summaries into context. This is mechanical — no judgment needed, the information is just there. The agent doesn't have to remember to ask; it sees what past sessions learned automatically.
-
-**remind-distill is the weak half.** It fires after `/ce:work` and `/ce:review` and suggests running `/distill`. But it fires when the skill *loads*, not when the work *finishes*. For long sessions (multi-agent reviews, hour-long builds), the reminder appears before any findings exist, gets buried under hundreds of messages, and the agent blows past it. We learned this the hard way in Phase 5b — the hook fired, the agent ignored it, and the human had to ask "so no insights to capture?"
-
-**The real safety net is a persistent instruction** in CLAUDE.md: *"After every /ce:review or /ce:work synthesis, evaluate findings for /distill before moving on."* CLAUDE.md is always in context and never compressed. It's an instruction, not a hook — but for actions requiring judgment, that's the most reliable option we have.
-
-**Skills handle HOW.** The `/distill` skill uses dynamic context injection to preprocess existing insights before the agent sees the prompt. The agent automatically sees what's already documented — preventing duplicates without anyone checking. This part is genuinely mechanical.
-
-**The honest summary:** The *briefing* side (inject-insights + /brief) is mechanical and reliable. The *capture* side (remind-distill + /distill) requires judgment and depends on the agent paying attention. We reinforce it with a CLAUDE.md instruction, but it's not a guarantee.
+- **inject-insights.sh** fires before `/ce:work` and injects insight summaries into context. Mechanical — no judgment needed.
+- **remind-distill.sh** fires after `/ce:work` and `/ce:review` and reminds the agent to capture findings.
+- **`/distill`** uses dynamic context injection to show existing insights before the agent writes, preventing duplicates.
+- **`/brief`** reads the full insight docs on demand, for any session, at any time.
 
 ---
 
@@ -183,8 +174,6 @@ request-ID-based supersession.
 
 ## The Bigger Picture
 
-This is one piece of a larger development workflow:
-
 ```mermaid
 flowchart LR
     PLAN["Plan"] --> EXECUTE["Execute"]
@@ -206,27 +195,30 @@ flowchart LR
     style BRIEF fill:#1e3a5f,stroke:#60a5fa,color:#fff
 ```
 
-Plan. Execute. Review. Distill. Brief. Repeat.
-
-The *briefing* side is mechanical: hooks inject context, the agent works with full awareness, no one has to remember anything. The *capture* side is a nudge backed by a persistent instruction — better than hope, short of a guarantee.
-
-The knowledge base grows. Rediscovery drops. Each cycle makes the next one better. But only if the agent actually stops to distill when it should.
+Plan. Execute. Review. Distill. Brief. Repeat. The knowledge base grows. Rediscovery drops. Each cycle makes the next one better.
 
 > *Currently implemented with the [compound-engineering](https://github.com/nichochar/compound-engineering) plugin for Claude Code. The pattern is tool-agnostic — any workflow with plan/execute/review steps can plug in.*
 
 ---
 
-**Blocking hooks are guarantees. Injecting hooks are reliable. Advisory hooks are reminders. Judgment still requires attention.**
+## Known Issue: Non-Blocking Hook Output
 
----
+**Both hooks fire correctly but their output does not reach the model.** This is a confirmed Claude Code platform bug affecting all non-blocking hook output — not specific to our implementation.
 
-*Built by Briggsy & Claude Code, powered by Skills 2.0, and a refusal to accept that AI sessions have to start from zero — tempered by the honesty to admit when the system falls short.*
+- **What works:** Blocking hooks (`exit 2` + stderr, or `{"decision":"block"}`) deliver output to Claude.
+- **What doesn't:** Non-blocking hooks (`exit 0` + stdout in any JSON format) are silently discarded. The model never sees the output.
+- **Impact:** `inject-insights.sh` fires but its insight summaries don't reach the agent. `remind-distill.sh` fires but its reminder doesn't reach the agent. Both skills (`/distill` and `/brief`) work perfectly when invoked manually.
+- **Scope:** At least 7 GitHub issues filed on `anthropic/claude-code` and `anthropic/claude-plugins-official` (#19432, #18534, #25987, #24788, #20062, plus plugin-side issues). Anthropic's own Hookify plugin has the same bug — its warning rules don't reach the model.
+- **Workaround:** CLAUDE.md instruction serves as a persistent backup: *"After every /ce:review or /ce:work synthesis, evaluate findings for /distill before moving on."*
+- **Status:** Waiting on platform fix. Feature request #19909 exists for proper conversation lifecycle hooks.
+
+When this bug is fixed, the hooks are ready — the scripts produce correct output, fire at the right time, and the JSON format matches documented specs.
 
 ---
 
 ## Appendix: Engineering the Skills
 
-We didn't just write these skills and ship them. We ran `/distill` through Anthropic's [Skill Creator](https://github.com/anthropics/skills) — the meta-skill that turns skill development from vibes into engineering.
+We ran `/distill` through Anthropic's [Skill Creator](https://github.com/anthropics/skills) — the meta-skill that turns skill development from vibes into engineering.
 
 ### A/B Eval Results
 
@@ -268,4 +260,4 @@ def _reader():
 threading.Thread(target=_reader, daemon=True).start()
 ```
 
-Anthropic merged this same fix on March 13, 2026 in `claude-plugins-official` ([`fix(run_eval): replace select.select with threading for Windows pipe compatibility`](https://github.com/anthropics/claude-plugins-official)). The `anthropic-agent-skills` plugin hasn't picked it up yet — we applied it locally.
+Anthropic merged this same fix on March 13, 2026 in `claude-plugins-official`. The `anthropic-agent-skills` plugin hasn't picked it up yet — we applied it locally.

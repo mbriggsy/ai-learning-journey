@@ -36,16 +36,36 @@
 - Original Phase 5 (superseded): `docs/plans/2026-03-29-007-phase-5-ai-depth-spectator-plan.md`
 - Original Phase 6 (superseded): `docs/plans/2026-03-29-008-phase-6-sound-scoring-plan.md`
 
+## What We Did (2026-03-31, Session 15)
+- **Skill Creator optimizer — FULLY OPERATIONAL on Windows**
+- Fixed 4 bugs in Skill Creator scripts (marketplace plugin files):
+  1. `select.select` on Windows — replaced with threading+queue reader (both marketplace copies)
+  2. YAML multi-line quoted string parsing in `parse_skill_md` — now reads continuation lines
+  3. `import anthropic` SDK dependency — switched to `anthropic-agent-skills` version using `claude -p`
+  4. **Eval detection only matched test command name** — smoking gun for ALL previous 0% recall. Claude triggers real skill, not test duplicate. Fixed to match both.
+- **Ran full optimizer on /distill** — 5 iterations, 20 queries, 3 runs each, 0.4 holdout. Best: iter 3 at 92% test (8/8). Applied.
+- **Ran full optimizer on /brief** — 5 iterations, 20 queries, 3 runs each, 0.4 holdout. Best: iter 4 at 81% train. Applied.
+- **Created `projects/skills/distill-and-brief/` project** — dedicated home for skills, eval sets, optimizer results, hooks
+  - Windows directory junctions from `~/.claude/skills/` → project (single source of truth)
+  - Per-skill READMEs with usage docs, hook descriptions, installation notes
+  - Showcase doc moved from `research/distill-and-brief/` to project README
+- **Renamed `docs/solutions/` → `docs/insights/`** — "solutions" implies finality, "insights" captures ongoing compounding knowledge
+  - Updated: both SKILL.md files, both hooks, all READMEs, CLAUDE.md, eval sets, memory, settings.json
+  - Hook renamed: `inject-solutions.sh` → `inject-insights.sh`
+- ~~**Verify in fresh session:** `/brief` should read from `docs/insights/`~~ — **VERIFIED Session 16.** All 3 hooks tested: block-webfetch, inject-insights, remind-distill. All fire correctly, fast-exit on non-matching skills confirmed.
+- Test baseline: **210 tests passing** (unchanged)
+- **Branch:** `feat/phase-0-scaffolding`
+
 ## What We Did (2026-03-31, Session 14)
 - **Distill & Brief knowledge system** — two custom Skills 2.0 skills + two hooks for automatic knowledge capture and injection
-- `/distill` skill — writes solution docs with dynamic injection (shows existing, auto-numbers, provides template)
-- `/brief` skill — reads solution context on demand with dynamic injection
-- `inject-solutions.sh` hook (PreToolUse) — auto-injects solution summaries before `/ce:work`
+- `/distill` skill — writes insight docs with dynamic injection (shows existing, auto-numbers, provides template)
+- `/brief` skill — reads insight context on demand with dynamic injection
+- `inject-insights.sh` hook (PreToolUse) — auto-injects insight summaries before `/ce:work`
 - `remind-distill.sh` hook (PostToolUse) — reminds to `/distill` after `/ce:work` and `/ce:review`
 - **Skill Creator A/B eval** — 100% pass rate with-skill vs 33% without (18/18 vs 6/18 assertions), fewer tokens
 - **Windows `select.select()` bug found + fixed** in skill-creator's `run_eval.py` — replaced with threading for pipe compatibility
-- **Showcase doc** — `research/distill-and-brief/distill-and-brief.md` on main, Mermaid diagrams, appendix with eval data
-- **Squeaky clean protocol updated** — completed todos deleted at session end, solutions persist
+- **Showcase doc** — now at `projects/skills/distill-and-brief/README.md`, Mermaid diagrams, appendix with eval data
+- **Squeaky clean protocol updated** — completed todos deleted at session end, insights persist
 - **CLAUDE.md + environment-setup.md** updated with hooks, skills, folder setup
 - Completed todo docs (8) deleted per new protocol
 - Test baseline: **210 tests passing** (unchanged)
@@ -60,7 +80,7 @@
 - **SonarPing cleanup** — proper typed `counterTween` property (was cast hack), dead `isAnimating` removed, `onPhaseChanged` typed as `GameFlowKind`
 - **Depth collision fix** — `MINIMAP_PLAYER` 200→195 (was colliding with `UI: 200`)
 - **Broken evidence stub removed** — empty `hasEvidence` check in engine.ts that did nothing
-- **8 todo docs** in `docs/todos/` + **5 solution docs** in `docs/solutions/` — institutional knowledge from review
+- **8 todo docs** in `docs/todos/` + **5 insight docs** in `docs/insights/` — institutional knowledge from review
 - Test baseline: **210 tests passing** (24 files) — 1 dropped (dead MOVE_TO test)
 - Build: typecheck clean
 - **Branch:** `feat/phase-0-scaffolding`

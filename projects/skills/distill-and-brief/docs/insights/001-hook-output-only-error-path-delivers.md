@@ -1,31 +1,48 @@
 ---
-title: Hook output only delivers via error paths — both Pre and PostToolUse
+title: Hook platform behavior — three findings from empirical testing
 date: 2026-04-01
 modules: [hooks]
-tags: [hooks, platform-bug, blocking, PostToolUse, PreToolUse]
+tags: [hooks, platform-bug, blocking, PostToolUse, PreToolUse, slash-commands]
 ---
 
 ## Problem
 
-Non-blocking hook output never reaches Claude. Tested 7 formats across both PreToolUse and PostToolUse — only 2 deliver.
+Hook behavior is undocumented and inconsistent. Three major findings from exhaustive testing (7 output formats, Pre and Post, user vs Claude invocations).
 
-## Root Cause
+## Finding 1: Only error-path output reaches the model
 
-The Claude Code platform only delivers hook output through error/rejection paths. Any non-error output (`exit 0` + stdout in any JSON format) is silently discarded. The two working paths are:
+Non-blocking hook output is silently discarded. Tested 7 formats on both PreToolUse and PostToolUse:
 
-1. `{"decision":"block","reason":"..."}` with `exit 0`
-2. stderr text with `exit 2`
+- `{"decision":"block","reason":"..."}` (exit 0) — **DELIVERED**
+- stderr text (exit 2) — **DELIVERED**
+- plain text, systemMessage, decision:allow+reason, hookSpecificOutput, continue+systemMessage — **ALL DROPPED**
 
-Both are error signals — one is structured rejection, the other is shell failure. The platform routes them the same way: "something went wrong, tell the model."
+The platform has two output paths: error (delivers) and non-error (broken).
+
+## Finding 2: PostToolUse block delivers without undoing the tool result
+
+`{"decision":"block"}` on PostToolUse delivers the message as a system-reminder AND preserves the tool's output. The "block" is meaningless after the fact, but the delivery path works. This is useful for reminders after skill completion.
+
+## Finding 3: PreToolUse hooks don't fire on user slash commands
+
+When the USER types `/ce:work`, PreToolUse hooks with matcher "Skill" do NOT fire. Proven with side-effect test (`touch` a file) — file never created. When CLAUDE invokes the same skill via the Skill tool, PreToolUse fires and blocks correctly. PostToolUse fires in both cases.
+
+| | User slash command | Claude Skill tool |
+|---|---|---|
+| PreToolUse | does NOT fire | fires |
+| PostToolUse | fires | fires |
 
 ## Fix
 
-Use `{"decision":"block","reason":"..."}` for all hook-to-model communication. On PreToolUse this blocks the tool (expected). On PostToolUse this delivers the message WITHOUT undoing the tool result — the "block" is meaningless after the fact, but the delivery path works.
+- Use `{"decision":"block"}` for all hook-to-model communication
+- PreToolUse enforcement only works on Claude's programmatic Skill invocations, not user commands
+- PostToolUse is the only hook that reliably fires on user slash commands
+- Filed as anthropics/claude-code#42250
 
 ## Key Insight
 
-It's not that "block" has special magic. The platform has two output paths: error (delivers) and non-error (broken). Any hook that needs to talk to Claude must use an error signal. This applies identically to PreToolUse and PostToolUse.
+Don't trust hook behavior based on docs or assumptions. Test with side effects (file creation) to verify hooks actually execute, and test with both user and Claude invocations — they behave differently.
 
 ## Also Applies To
 
-Any future hook that needs to deliver context, reminders, or instructions to the model. Don't waste time trying non-blocking formats — they're all broken. Use the error path.
+Any hook-based enforcement workflow. If the user is the one typing the slash command, PreToolUse cannot gate it. Only PostToolUse fires reliably for user-initiated skills.

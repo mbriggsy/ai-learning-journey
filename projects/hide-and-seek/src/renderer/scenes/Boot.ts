@@ -9,6 +9,10 @@ export function getGameSettings(): Readonly<GameSettings> {
   return gameSettings;
 }
 
+export function updateGameSettings(updates: Partial<GameSettings>): void {
+  gameSettings = { ...gameSettings, ...updates };
+}
+
 export class BootScene extends Phaser.Scene {
   private clickText!: Phaser.GameObjects.Text;
   private progressBar!: Phaser.GameObjects.Rectangle;

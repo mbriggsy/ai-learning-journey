@@ -183,6 +183,11 @@
 1. **Phase 6b** — scoring + stats
 2. **Phase 7** — polish + art
 
+## Verify Next Session
+- **`/brief` auto-fire:** Should trigger automatically before `/ce:work` via PreToolUse hook. Confirm insight summaries appear in the conversation BEFORE execution starts. If not, the hook is still broken (known platform bug — non-blocking hook output doesn't reach Claude).
+- **`/distill` reminder:** Should prompt after `/ce:work` and `/ce:review` synthesis. CLAUDE.md instruction is the safety net (PostToolUse hook was deleted — platform bug). Confirm Claude checks for `/distill` opportunities after review completes.
+- **Report to Briggsy** whether each fired or didn't.
+
 ## Landmines
 - **Module-level `let` in SearchState/SuspiciousState** — singleton state means multi-seeker will stomp. Must move to `SeekerAIInternalState` before adding second seeker.
 - **Tiled map has no Rooms object layer** — strategic patrol (medium/hard) falls back to random. Room rectangles need authoring in Tiled, then wire `parseRooms` + `computeHidingSpots` + `engine.setRooms()` in Game.ts and SpectatorGame.ts. Console warning fires every tick on medium/hard.

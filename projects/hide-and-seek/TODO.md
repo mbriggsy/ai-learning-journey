@@ -55,6 +55,11 @@
 - Build: typecheck clean
 - **Phase 5b REVIEWED** — 4 agents (TS, arch, perf, simplicity), 2 P0 bugs fixed (door-cost centralization), insight 006 written
 - **Hook investigation** — remind-distill fires correctly but is advisory. Added CLAUDE.md backup instruction. Showcase doc rewritten honestly.
+- **Distill auto-fire fix (UNPROVEN)** — two changes made, neither tested end-to-end:
+  1. `/distill` SKILL.md description expanded: tells Claude to fire itself after reviews with P0/P1 findings
+  2. `inject-insights.sh` now injects "WORKFLOW STEP: run /distill" before every `/ce:work`
+  - **MUST verify next session:** Run a real `/ce:work` or `/ce:review` and confirm agent runs `/distill` on its own
+  - If it doesn't work, the fix failed. Don't trust it until proven.
 
 ## What We Did (2026-03-31, Session 15)
 - **Skill Creator optimizer — FULLY OPERATIONAL on Windows**

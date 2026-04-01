@@ -3,7 +3,7 @@ import type { ResultsSceneData } from '../../types/scenes.js';
 import type { RoundResult, ScoreBreakdown } from '../../types/persistence.js';
 import { SceneTransition } from '../utils/SceneTransition.js';
 import { getGameSettings } from './Boot.js';
-import { DISPLAY, SCORING } from '../../constants.js';
+import { SCORING } from '../../constants.js';
 
 export class ResultsScene extends Phaser.Scene {
   private buttons: Phaser.GameObjects.Text[] = [];

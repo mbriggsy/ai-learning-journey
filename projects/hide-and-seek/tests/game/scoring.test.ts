@@ -259,7 +259,7 @@ describe('createRoundResult', () => {
       closestApproachTiles: 1.5,
       doorsToggled: 3,
     });
-    const result = createRoundResult(stats, 'survived', 'easy', 'human', 0, -1);
+    const result = createRoundResult(stats, 'survived', 'easy', 'human', 0);
 
     expect(result.outcome).toBe('survived');
     expect(result.seekerDifficulty).toBe('easy');
@@ -275,26 +275,14 @@ describe('createRoundResult', () => {
       closestApproachTiles: 1.0,
       doorsToggled: 10,
     });
-    const result = createRoundResult(stats, 'survived', 'hard', 'human', 100, -1);
+    const result = createRoundResult(stats, 'survived', 'hard', 'human', 100);
     expect(result.isNewBestScore).toBe(true);
     expect(result.breakdown.totalScore).toBeGreaterThan(100);
   });
 
   it('does not flag PB on first game (previous = 0)', () => {
     const stats = makeStats({ timeSurvivedS: 10 });
-    const result = createRoundResult(stats, 'survived', 'easy', 'human', 0, -1);
+    const result = createRoundResult(stats, 'survived', 'easy', 'human', 0);
     expect(result.isNewBestScore).toBe(false);
-  });
-
-  it('flags new best survival time on loss', () => {
-    const stats = makeStats({ timeSurvivedS: 60 });
-    const result = createRoundResult(stats, 'found', 'easy', 'human', 0, 30);
-    expect(result.isNewBestSurvivalTime).toBe(true);
-  });
-
-  it('does not flag best survival time on win', () => {
-    const stats = makeStats({ timeSurvivedS: 120 });
-    const result = createRoundResult(stats, 'survived', 'easy', 'human', 0, 30);
-    expect(result.isNewBestSurvivalTime).toBe(false);
   });
 });

@@ -18,7 +18,6 @@ export interface ScoreBreakdown {
 
 export interface RoundResult {
   readonly timeSurvivedS: number;
-  readonly distanceTraveledPx: number;
   readonly closeCalls: number;
   readonly closestApproachTiles: number;  // -1 = never in range
   readonly doorsToggled: number;
@@ -27,7 +26,6 @@ export interface RoundResult {
   readonly hiderDifficulty: Difficulty | 'human';
   readonly breakdown: ScoreBreakdown;
   readonly isNewBestScore: boolean;
-  readonly isNewBestSurvivalTime: boolean;
 }
 
 // ─── Stats persistence schema ─────────────────────────────

@@ -7,10 +7,10 @@ import { SCORING, DISPLAY } from '../constants.js';
 
 // ─── Difficulty multiplier lookup ─────────────────────────
 
-const DIFFICULTY_MULTIPLIERS: Record<Difficulty, number> = {
-  easy: SCORING.DIFFICULTY_MULTIPLIER_EASY,
-  medium: SCORING.DIFFICULTY_MULTIPLIER_MEDIUM,
-  hard: SCORING.DIFFICULTY_MULTIPLIER_HARD,
+const DIFFICULTY_MULTIPLIERS: Readonly<Record<Difficulty, number>> = {
+  easy: 1.0,
+  medium: 1.5,
+  hard: 2.0,
 };
 
 // ─── Score accumulation (called at fixedUpdate step 10) ───
@@ -73,7 +73,7 @@ function updateCloseCallTracker(
 // ─── Score formula ────────────────────────────────────────
 
 export function calculateScore(
-  stats: GameStats,
+  stats: Readonly<GameStats>,
   outcome: GameOutcome,
   difficulty: Difficulty,
 ): ScoreBreakdown {
@@ -120,18 +120,16 @@ export function calculateScore(
 // ─── Round result ─────────────────────────────────────────
 
 export function createRoundResult(
-  stats: GameStats,
+  stats: Readonly<GameStats>,
   outcome: GameOutcome,
   seekerDifficulty: Difficulty,
   hiderDifficulty: Difficulty | 'human',
   previousBestScore: number,
-  previousBestSurvivalTimeS: number,
 ): RoundResult {
   const breakdown = calculateScore(stats, outcome, seekerDifficulty);
 
   return {
     timeSurvivedS: stats.timeSurvivedS,
-    distanceTraveledPx: stats.distanceTraveled,
     closeCalls: stats.closeCalls,
     closestApproachTiles: stats.closestApproachTiles,
     doorsToggled: stats.doorsToggled,
@@ -140,8 +138,5 @@ export function createRoundResult(
     hiderDifficulty,
     breakdown,
     isNewBestScore: breakdown.totalScore > previousBestScore && previousBestScore > 0,
-    isNewBestSurvivalTime: outcome === 'found'
-      && stats.timeSurvivedS > previousBestSurvivalTimeS
-      && previousBestSurvivalTimeS > 0,
   };
 }

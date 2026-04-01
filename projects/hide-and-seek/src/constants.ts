@@ -232,10 +232,6 @@ export const SCORING = {
   EFFICIENCY_BONUS: 100,
   /** Points per door toggled */
   DOOR_BONUS: 10,
-  /** Difficulty score multipliers */
-  DIFFICULTY_MULTIPLIER_EASY: 1.0,
-  DIFFICULTY_MULTIPLIER_MEDIUM: 1.5,
-  DIFFICULTY_MULTIPLIER_HARD: 2.0,
   /** Close call detection range in tiles (2x PROXIMITY_THRESHOLD) */
   CLOSE_CALL_RANGE_TILES: 3.0,
   /** Minimum ms in zone before a close call counts */

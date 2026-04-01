@@ -397,12 +397,11 @@ export class GameScene extends Phaser.Scene {
     const currentStats = loadStats();
     const diffStats = currentStats.byDifficulty[settings.seekerDifficulty];
     const roundResult = createRoundResult(
-      state.stats as import('../../types/state.js').GameStats,
+      state.stats,
       outcome,
       settings.seekerDifficulty,
       'human',
       diffStats.bestScore,
-      diffStats.bestSurvivalTimeS,
     );
 
     // Persist updated stats

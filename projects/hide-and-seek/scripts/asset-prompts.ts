@@ -185,7 +185,7 @@ const furniture: readonly AssetDefinition[] = [
     promptSuffix: 'top-down view of a tall bookshelf, 1 tile wide by 2 tiles tall, dark wood #5C3A21 frame with colorful book spines in carpet red #C41E3A and sonar blue #0047AB and gold #FFD700, bold black #000000 outlines, ' + 'on solid magenta #FF00FF background',
     targetWidth: 32, targetHeight: 64,
     aspectRatio: '3:2', imageSize: '1K',
-    postProcess: { kind: 'sprite-multi', sliceWidth: 32, sliceHeight: 32 }, chromaKey: true, opaque: false,
+    postProcess: { kind: 'sprite-multi', sliceWidth: 32, sliceHeight: 32 }, chromaKey: false, opaque: true,
   },
   {
     id: 'furniture-chair',
@@ -311,15 +311,15 @@ function makeCharacterFrames(
 
 const hiderFrames = makeCharacterFrames(
   'hider',
-  'cool blue #2E86C1 body with teal #1ABC9C accents and green #27AE60 highlights, dark shadow #1B5E20 shading',
-  'rounded compact slightly hunched silhouette, hiding posture, small cautious character',
+  'cool blue #2E86C1 pill-shaped body with teal #1ABC9C belly spot, green #27AE60 stubby feet, dark shadow #1B5E20 shading',
+  'cute round critter like Fall Guys, pill-shaped body, big round eyes on top of head visible from above, no visible arms, stubby little feet, looks like a cute toy, harmless and round, slightly hunched forward',
   false,
 );
 
 const seekerFrames = makeCharacterFrames(
   'seeker',
-  'warm red #E74C3C body with orange #E67E22 accents, dark red #922B21 shading',
-  'angular broad upright silhouette, confident intimidating posture, tall authoritative character',
+  'warm red #E74C3C egg-shaped body with orange #E67E22 stripe across middle, dark red #922B21 stubby feet, small angry eyebrows visible from above',
+  'cute angry egg-shaped blob, slightly bigger than hider, round body with small angry eyebrows, stomping forward pose, cute but determined, cartoon villain energy not scary, no visible arms',
   true,
 );
 

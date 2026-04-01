@@ -187,13 +187,24 @@ export function extrudeTileset(
   tileHeight: number,
   outputPath: string,
 ): void {
-  execFileSync('npx', [
-    'tile-extruder',
-    '--tileWidth', String(tileWidth),
-    '--tileHeight', String(tileHeight),
-    '--input', inputPath,
-    '--output', outputPath,
-  ], { stdio: 'pipe' });
+  // On Windows, npx must run through cmd.exe shell
+  const isWindows = process.platform === 'win32';
+  if (isWindows) {
+    execFileSync('cmd', ['/c', 'npx', 'tile-extruder',
+      '--tileWidth', String(tileWidth),
+      '--tileHeight', String(tileHeight),
+      '--input', inputPath,
+      '--output', outputPath,
+    ], { stdio: 'pipe' });
+  } else {
+    execFileSync('npx', [
+      'tile-extruder',
+      '--tileWidth', String(tileWidth),
+      '--tileHeight', String(tileHeight),
+      '--input', inputPath,
+      '--output', outputPath,
+    ], { stdio: 'pipe' });
+  }
 }
 
 // ---------------------------------------------------------------------------

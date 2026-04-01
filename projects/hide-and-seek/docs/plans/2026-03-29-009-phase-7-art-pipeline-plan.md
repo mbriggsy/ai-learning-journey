@@ -252,9 +252,9 @@ not isometric, not 3/4 view, strict top-down perspective"
 
 ### Task 2: Style Reference Generation (Human Checkpoint)
 
-- [ ] **Phase A — Generate 3-5 candidate style reference tiles** using base prompt
-- [ ] **Phase B — Briggsy picks the canonical style reference** (saved as `assets/palette/style-reference.png`)
-- [ ] Pass approved style reference image to ALL subsequent generation calls for consistency
+- [x] **Phase A — Generate 3-5 candidate style reference tiles** using base prompt
+- [x] **Phase B — Briggsy picks the canonical style reference** (saved as `assets/palette/style-reference.png`)
+- [x] Pass approved style reference image to ALL subsequent generation calls for consistency
 - [ ] Optionally evaluate `gemini-3.1-flash-image-preview` at 512x512 (0.5K) — if 16:1 downscale produces cleaner results than 32:1, switch model
 
 #### Research Insights — Style Consistency

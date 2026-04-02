@@ -5,7 +5,7 @@
 
 > **The pitch:** Every engineering session produces hard-won knowledge. By the next session, it's gone.
 >
-> We built a system where AI agents *automatically* brief themselves before starting work and get *automatically* reminded to distill findings when work completes. Two skills, two hooks, zero human effort, minimum token burn.
+> We built a system where AI agents *automatically* brief themselves before starting work and get *automatically* reminded to distill findings when work completes. Two skills, three hooks, zero human effort, minimum token burn.
 
 ---
 
@@ -28,7 +28,7 @@ Putting "remember to check past fixes" in instructions doesn't work. Humans forg
 
 ## The Solution
 
-Two directions. Two skills. Two hooks. One feedback loop.
+Two directions. Two skills. Three hooks. One feedback loop.
 
 ```mermaid
 flowchart LR
@@ -50,8 +50,8 @@ flowchart LR
 
     subgraph DISTILL ["  /distill  "]
         direction TB
-        D1["/ce:work completes"]
-        D2["Hook fires:\n'Run /distill'"]
+        D1["Agent tries to stop"]
+        D2["Stop hook:\n'Run /distill first'"]
         D3["Agent captures insight\nor confirms nothing to capture"]
         D1 --> D2 --> D3
     end
@@ -69,9 +69,11 @@ flowchart LR
 1. **Agent starts a work session** with `/ce:work` — PreToolUse hook blocks it: *"Run `/brief` first."*
 2. **`/brief`** reads every insight doc in `docs/insights/` and surfaces the full context. Marker created.
 3. **Agent re-runs `/ce:work`** — hook sees the marker, consumes it, allows through. The agent works with full awareness of past root causes and gotchas.
-4. **`/ce:work` completes** — PostToolUse hook fires: *"Run `/distill` to capture any non-obvious findings."*
-5. **`/distill`** captures insights (or the agent confirms nothing to capture). Knowledge base grows.
-6. **`/brief`** is also available on-demand — any time, any session, just ask.
+4. **`/ce:work` loads** — PostToolUse silently drops a `.distill-needed` marker. No output, no interruption.
+5. **Work happens.** The agent follows ce:work's instructions.
+6. **Agent tries to stop** — Stop hook sees the marker: *"Run `/distill` to capture any non-obvious findings."*
+7. **`/distill`** captures insights (or the agent confirms nothing to capture). Marker cleared. Agent stops.
+8. **`/brief`** is also available on-demand — any time, any session, just ask.
 
 ---
 
@@ -81,7 +83,8 @@ flowchart LR
 flowchart TB
     subgraph HOOKS ["Hooks"]
         H1["PreToolUse\n<b>enforce-brief-before-work.sh</b>\nBlocks /ce:work until /brief runs"]
-        H2["PostToolUse\n<b>remind-distill-after-work.sh</b>\nReminds to /distill after work completes"]
+        H2["PostToolUse\n<b>remind-distill-after-work.sh</b>\nDrops marker silently"]
+        H3["Stop\n<b>stop-distill-gate.sh</b>\nBlocks stop until /distill runs"]
     end
 
     subgraph SKILLS ["Skills"]
@@ -100,7 +103,9 @@ flowchart TB
     H1 -->|"allow"| WORK2["/ce:work ✓"]
 
     WORK2 --> H2
-    H2 -->|"remind → /distill"| SK1
+    H2 -->|"silent marker"| DONE["Work completes"]
+    DONE --> H3
+    H3 -->|"BLOCK → /distill"| SK1
     SK1 -->|"writes"| FS
 
     style HOOKS fill:#1a1a2e,stroke:#e94560,color:#fff
@@ -108,6 +113,7 @@ flowchart TB
     style STORE fill:#1a1a2e,stroke:#facc15,color:#fff
     style WORK fill:#0f3460,stroke:#60a5fa,color:#fff
     style WORK2 fill:#0f3460,stroke:#60a5fa,color:#fff
+    style DONE fill:#0f3460,stroke:#60a5fa,color:#fff
 ```
 
 ---
@@ -124,16 +130,15 @@ flowchart TB
 
 ### Design Principles
 
-Only blocking hooks work reliably on the current platform — both PreToolUse and PostToolUse.
+Only blocking hooks work reliably on the current platform. Three hooks enforce the knowledge loop:
 
-**Two hooks:**
-
-- **enforce-brief-before-work.sh** (PreToolUse) — blocks `/ce:work` until `/brief` runs. Uses a marker file (`/tmp/.brief-gate`) to let ce:work through on re-run.
-- **remind-distill-after-work.sh** (PostToolUse) — fires after `/ce:work` or `/ce:review` completes and reminds the agent to run `/distill`. No markers needed — the message is delivered directly after work finishes.
+- **enforce-brief-before-work.sh** (PreToolUse) — blocks `/ce:work` until `/brief` runs. Uses a marker file (`/tmp/.brief-gate`). Also clears the distill marker when `/distill` runs.
+- **remind-distill-after-work.sh** (PostToolUse) — silently drops a `.distill-needed` marker after `/ce:work` or `/ce:review` loads. No output (PostToolUse fires at skill load, too early for a reminder).
+- **stop-distill-gate.sh** (Stop) — blocks Claude from stopping if the distill marker exists. This fires at the RIGHT moment — when work is actually done, not when the skill loads.
 
 **Supporting hook:**
 
-- **block-webfetch.sh** (PreToolUse) — blocks `WebFetch` (no timeout parameter) and redirects to `gemini-grounding` or `curl`. Unrelated to the knowledge loop but same blocking pattern.
+- **block-webfetch.sh** (PreToolUse) — blocks `WebFetch` (no timeout parameter) and redirects to `gemini-grounding` or `curl`. Unrelated to the knowledge loop.
 
 **Skills:**
 
@@ -185,7 +190,8 @@ request-ID-based supersession.
 flowchart LR
     PLAN["Plan"] --> BRIEF["/brief"]
     BRIEF -->|"context loaded"| EXECUTE["/ce:work"]
-    EXECUTE -->|"hook reminds"| DISTILL["/distill"]
+    EXECUTE -->|"work done"| STOP{"Stop hook"}
+    STOP -->|"marker exists"| DISTILL["/distill"]
     DISTILL --> COMMIT["Commit"]
 
     DISTILL -->|"writes"| KB["docs/insights/"]
@@ -194,12 +200,13 @@ flowchart LR
     style PLAN fill:#0f3460,stroke:#60a5fa,color:#fff
     style EXECUTE fill:#0f3460,stroke:#60a5fa,color:#fff
     style COMMIT fill:#0f3460,stroke:#60a5fa,color:#fff
+    style STOP fill:#1a1a2e,stroke:#e94560,color:#fff
     style DISTILL fill:#2d4a3e,stroke:#4ade80,color:#fff
     style KB fill:#3b3520,stroke:#facc15,color:#fff
     style BRIEF fill:#1e3a5f,stroke:#60a5fa,color:#fff
 ```
 
-Plan. Brief. Execute. Distill. Commit. Repeat. The briefing is enforced (PreToolUse block), the distill reminder is delivered (PostToolUse block). The knowledge base grows. Rediscovery drops.
+Plan. Brief. Execute. Stop hook catches you. Distill. Commit. Repeat. The briefing is enforced (PreToolUse block), the distill reminder fires at the right moment (Stop hook, not PostToolUse). The knowledge base grows. Rediscovery drops.
 
 > *Currently implemented with the [compound-engineering](https://github.com/nichochar/compound-engineering) plugin for Claude Code. The pattern is tool-agnostic — any workflow with plan/execute/review steps can plug in.*
 
@@ -207,11 +214,15 @@ Plan. Brief. Execute. Distill. Commit. Repeat. The briefing is enforced (PreTool
 
 ## Platform Note: Why Blocking Hooks
 
-Non-blocking hooks (`exit 0` + stdout) are silently discarded by Claude Code — the model never sees the output. This is a confirmed platform bug (7+ GitHub issues filed). We originally built `inject-insights.sh` (non-blocking, inject context) and `remind-distill.sh` (non-blocking, advisory). Both fired correctly but their output vanished.
+Non-blocking hooks (`exit 0` + stdout) are silently discarded by Claude Code — the model never sees the output. This is a confirmed platform bug. Filed as [anthropics/claude-code#42250](https://github.com/anthropics/claude-code/issues/42250).
 
-**Blocking hooks** (`{"decision": "block"}`) DO deliver their message — on both PreToolUse AND PostToolUse. Key discovery: **PostToolUse blocking delivers the message without undoing the tool result.** This lets us remind the agent to run `/distill` after `/ce:work` completes, with the full work context still in the conversation.
+Three key platform findings from empirical testing:
 
-We use PreToolUse blocking to gate `/ce:work` behind `/brief` (same pattern as `block-webfetch.sh`), and PostToolUse blocking to remind about `/distill` after work finishes.
+1. **Only error-path output reaches the model** — `{"decision":"block"}` and stderr (exit 2) deliver. All other formats silently dropped. Applies to PreToolUse, PostToolUse, and Stop.
+2. **PreToolUse hooks don't fire on user slash commands** — only on Claude's programmatic Skill invocations. PostToolUse and Stop hooks fire in both cases.
+3. **PostToolUse block delivers without undoing the tool result** — useful for silent side effects (marker files) paired with delivery at a later hook point.
+
+We use PreToolUse to gate `/ce:work` behind `/brief` (Claude invocations), PostToolUse to silently drop a marker after ce:work loads, and a **Stop hook** to catch the agent when work is done and remind about `/distill`. The Stop hook is the timing breakthrough — it fires when the agent is finished, not when a skill loads.
 
 ---
 

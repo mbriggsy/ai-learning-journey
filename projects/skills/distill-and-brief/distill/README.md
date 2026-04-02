@@ -38,11 +38,14 @@ When invoked, the skill dynamically:
 
 The `!` backtick syntax in SKILL.md runs shell commands at skill-load time, injecting live context before the agent sees the prompt.
 
-## Enforcement Hook
+## Enforcement Hooks
 
-A PostToolUse blocking hook (`remind-distill-after-work.sh`) fires after `/ce:work` or `/ce:review` completes. It delivers a message to Claude: "Run /distill to capture any non-obvious findings." No markers needed — the message is delivered directly after work finishes, with full session context still in the conversation.
+Two hooks work together to enforce /distill at the right moment:
 
-If nothing non-obvious surfaced, the agent says so and moves on.
+1. **`remind-distill-after-work.sh`** (PostToolUse) — silently drops a marker file (`/tmp/.distill-needed`) when `/ce:work` or `/ce:review` loads. No output.
+2. **`stop-distill-gate.sh`** (Stop) — fires when Claude tries to finish responding. If the marker exists, blocks with "run /distill." This fires when work is actually DONE, not when the skill loads.
+
+If nothing non-obvious surfaced, the agent says so during /distill and moves on.
 
 ## Installation
 

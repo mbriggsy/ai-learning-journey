@@ -32,11 +32,15 @@ When the USER types `/ce:work`, PreToolUse hooks with matcher "Skill" do NOT fir
 | PreToolUse | does NOT fire | fires |
 | PostToolUse | fires | fires |
 
+## Finding 4: Stop hooks fire at the right moment for end-of-work reminders
+
+PostToolUse fires when a skill LOADS, not when work finishes. For long-running skills like `/ce:work`, the reminder arrives too early and gets buried. Stop hooks fire when Claude tries to finish responding — the actual end of work. Combining PostToolUse (silent marker) + Stop hook (blocking delivery) gives correct timing.
+
 ## Fix
 
 - Use `{"decision":"block"}` for all hook-to-model communication
 - PreToolUse enforcement only works on Claude's programmatic Skill invocations, not user commands
-- PostToolUse is the only hook that reliably fires on user slash commands
+- PostToolUse for silent side effects (marker files), Stop hooks for end-of-work delivery
 - Filed as [anthropics/claude-code#42250](https://github.com/anthropics/claude-code/issues/42250)
 
 ## Key Insight

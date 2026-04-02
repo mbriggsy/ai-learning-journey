@@ -16,6 +16,11 @@ case "$SKILL" in
     touch "$BRIEF_GATE"
     exit 0
     ;;
+  distill|distill-and-brief:distill)
+    # Clear the distill-needed marker so Stop hook allows through
+    rm -f /tmp/.distill-needed
+    exit 0
+    ;;
   ce:work|ce-work|compound-engineering:ce-work)
     if [ -f "$BRIEF_GATE" ]; then
       rm -f "$BRIEF_GATE"

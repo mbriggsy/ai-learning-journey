@@ -189,7 +189,9 @@ async function generateOne(
       // Build content parts: style reference (if any) + text prompt
       const parts: Array<{ text: string } | { inlineData: { mimeType: string; data: string } }> = [];
 
-      if (styleRefBase64) {
+      // Only pass style reference for tile assets — it's a floor tile, and passing it
+      // for characters causes the AI to render characters ON a floor instead of on magenta
+      if (styleRefBase64 && asset.category === 'tiles') {
         parts.push({ inlineData: { mimeType: 'image/png', data: styleRefBase64 } });
         parts.push({ text: 'Use this image as a style reference. Match its visual style exactly. ' });
       }

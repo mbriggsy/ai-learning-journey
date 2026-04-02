@@ -256,6 +256,12 @@ const decorativeTiles: readonly AssetDefinition[] = [
 // Character frames — Hider
 // ---------------------------------------------------------------------------
 
+/** Strong magenta background instruction — prevents AI from rendering floors/scenes behind characters */
+const CHAR_BG_SUFFIX =
+  'the ENTIRE background must be solid flat magenta #FF00FF with absolutely no floor tiles, ' +
+  'no wood, no scenery, no patterns — ONLY pure solid magenta everywhere except the character itself, ' +
+  'character should fill most of the frame leaving minimal magenta border';
+
 function makeCharacterFrames(
   character: 'hider' | 'seeker',
   colorDesc: string,
@@ -272,7 +278,7 @@ function makeCharacterFrames(
       frames.push({
         id: `char-${character}-idle-${dir}-${String(i + 1).padStart(2, '0')}`,
         category: 'characters',
-        promptSuffix: `single character ${dirLabels[dir]}, ${silhouetteDesc}, ${colorDesc}, ${IDLE_POSES[i]}, chibi proportions head 10-16 pixels tall at 32x32 final size, grounding shadow 1-2 pixel dark ellipse under feet, on solid magenta #FF00FF background`,
+        promptSuffix: `single character ${dirLabels[dir]}, ${silhouetteDesc}, ${colorDesc}, ${IDLE_POSES[i]}, chibi proportions, grounding shadow dark ellipse under feet, ${CHAR_BG_SUFFIX}`,
         targetWidth: 32, targetHeight: 32,
         aspectRatio: '1:1', imageSize: '1K',
         postProcess: { kind: 'sprite' }, chromaKey: true, opaque: false,
@@ -284,7 +290,7 @@ function makeCharacterFrames(
       frames.push({
         id: `char-${character}-walk-${dir}-${String(i + 1).padStart(2, '0')}`,
         category: 'characters',
-        promptSuffix: `single character ${dirLabels[dir]}, ${silhouetteDesc}, ${colorDesc}, walking ${WALK_POSES[i]}, chibi proportions head 10-16 pixels tall at 32x32 final size, grounding shadow 1-2 pixel dark ellipse under feet, on solid magenta #FF00FF background`,
+        promptSuffix: `single character ${dirLabels[dir]}, ${silhouetteDesc}, ${colorDesc}, walking ${WALK_POSES[i]}, chibi proportions, grounding shadow dark ellipse under feet, ${CHAR_BG_SUFFIX}`,
         targetWidth: 32, targetHeight: 32,
         aspectRatio: '1:1', imageSize: '1K',
         postProcess: { kind: 'sprite' }, chromaKey: true, opaque: false,
@@ -297,7 +303,7 @@ function makeCharacterFrames(
         frames.push({
           id: `char-${character}-chase-${dir}-${String(i + 1).padStart(2, '0')}`,
           category: 'characters',
-          promptSuffix: `single character ${dirLabels[dir]}, ${silhouetteDesc}, ${colorDesc}, running aggressively ${WALK_POSES[i]} with wider stride and leaning forward, chibi proportions head 10-16 pixels tall at 32x32 final size, grounding shadow 1-2 pixel dark ellipse under feet, on solid magenta #FF00FF background`,
+          promptSuffix: `single character ${dirLabels[dir]}, ${silhouetteDesc}, ${colorDesc}, running aggressively ${WALK_POSES[i]} with wider stride and leaning forward, chibi proportions, grounding shadow dark ellipse under feet, ${CHAR_BG_SUFFIX}`,
           targetWidth: 32, targetHeight: 32,
           aspectRatio: '1:1', imageSize: '1K',
           postProcess: { kind: 'sprite' }, chromaKey: true, opaque: false,

@@ -1,8 +1,14 @@
-# Top-Down Racer 01 🏎️💨
+# Top-Down Racer 01
 
-A 2D top-down racing game with drift mechanics, built in Python with Arcade + pymunk, designed to eventually be trained by a reinforcement learning AI.
+**Status: COMPLETE** — learning lab that led to Racer 02 and 04. Chaotic, educational, and worth every training run.
 
-**Philosophy:** Over-engineer on purpose. This is a learning lab. Try every approach, build an arsenal of knowledge.
+A 2D top-down racing game with drift mechanics, built in Python with Arcade + pymunk, trained by reinforcement learning AI (PPO via Stable-Baselines3). 12 training iterations, 9 distinct reward-shaping strategies, and a pile of hard-won RL lessons.
+
+## Fully Autonomous SDLC
+
+This project is an exercise in **fully autonomous software development**. Every line of code, every training run, every reward function — produced entirely by AI agents (Claude Code Agent Teams). Briggsy is ATC (Air Traffic Control) — he directs, reviews, and approves. He doesn't write code, tune hyperparameters, or run commands. The agents fly the plane.
+
+**Philosophy:** Over-engineer on purpose. This is a learning lab. Try every approach, build an arsenal of knowledge. The mess is the point — Racers 02 and 04 are the polished results.
 
 ## The Game
 

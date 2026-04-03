@@ -8,3 +8,6 @@ venv/
 
 # Office temp files
 ~$*
+
+# API keys and tool configs
+utils/

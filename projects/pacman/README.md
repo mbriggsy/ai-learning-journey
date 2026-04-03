@@ -1,6 +1,12 @@
 # Pac-Man
 
+**Status: COMPLETE**
+
 A faithful browser-based recreation of the classic Pac-Man arcade game, built entirely with vanilla JavaScript and HTML5 Canvas. No installation, no server, no dependencies — just open `index.html` in any modern browser and play. The game features all four original ghosts with their authentic AI behaviours, five progressively faster levels, power pellets, a consecutive ghost-eat scoring multiplier, and synthesised sound effects via the Web Audio API.
+
+## Fully Autonomous SDLC
+
+This project is an exercise in **fully autonomous software development**. Built by a 4-agent team (Architect, Developer, Tester, Documentation) using the Claude Agent SDK. Briggsy is ATC (Air Traffic Control) — he directs, reviews, and approves. He doesn't write code, draw art, or run commands. The agents fly the plane. 110 tests across 4 bug-fix cycles. See [session-summary.md](session-summary.md) for the full build story.
 
 ---
 
@@ -107,11 +113,12 @@ The game contains five levels (Level 1 through Level 5). Each level uses the sam
 ## File Structure
 
 ```
-PacMan1/
-  index.html    — Open this to play
-  style.css     — Visual styles (centering, background)
-  game.js       — All game logic (~1,500 lines)
-  tests.html    — Open this to run unit tests
-  tests.js      — Unit test suite
-  README.md     — This file
+pacman/
+  index.html          — Open this to play
+  style.css           — Visual styles (centering, background)
+  game.js             — All game logic (~1,550 lines)
+  tests.html          — Open this to run unit tests (110 tests)
+  tests.js            — Unit test suite
+  session-summary.md  — Full build story + debugging deep-dives
+  README.md           — This file
 ```

@@ -1,8 +1,10 @@
 # Top-Down Racer v03
 
+**Status: COMPLETE** — planning and spec phase only. Superseded by Racer 04 which executed the vision.
+
 > *v02 proved the architecture. v03 proves the graphics pipeline and genuine AI generalization.*
 
-A visual and AI upgrade of Top-Down Racer v02 — built entirely by autonomous AI development. Zero lines of hand-written game code.
+A visual and AI upgrade of Top-Down Racer v02 — planned entirely by autonomous AI development. Zero lines of hand-written game code.
 
 **The question is no longer whether AI can write disciplined code.  
 The question is whether it can make something *beautiful*.**
@@ -222,5 +224,31 @@ A human who has never seen v02 should look at v03 and say: *"That looks like a r
 
 ---
 
-*Zero hand-written game code. The human makes decisions. The AI writes code.  
+*Zero hand-written game code. The human makes decisions. The AI writes code.
 The human defines beauty. The AI builds it.*
+
+---
+
+## Asset Pipeline
+
+v03 uses a structured asset pipeline for AI-generated art and audio.
+
+### Directory Layout
+
+| Directory | Purpose | Git Status |
+|-----------|---------|------------|
+| `assets/raw/` | Raw AI-generated assets (from Nano Banana / Ludo.ai) | **Gitignored** |
+| `public/assets/` | Processed, game-ready assets | Tracked |
+| `tools/` | Asset processing scripts (Sharp-based) | Tracked |
+| `src/assets/manifest.ts` | Typed asset path registry | Tracked |
+
+### Workflow
+
+1. Claude Code defines asset specs in `docs/asset-spec.md`
+2. Human generates assets with AI tools and places them in `assets/raw/`
+3. Run the pipeline:
+   ```bash
+   pnpm run process-assets   # Resize, optimize → public/assets/
+   pnpm run build-atlas      # Build PixiJS texture atlas
+   pnpm run manifest         # Regenerate typed manifest
+   ```

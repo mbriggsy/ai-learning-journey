@@ -1,5 +1,7 @@
 # Conway's Game of Life
 
+**Status: PAUSED** — all phases complete, 97 tests passing. Needs deployment + QA.
+
 Cinematic Conway's Game of Life — bioluminescent cells on a deep-space canvas with generative audio, particle effects, and video capture. Pure browser PWA, zero server infrastructure.
 
 ## Tech Stack

@@ -1,5 +1,7 @@
 # TOP-DOWN RACER v02
 
+**Status: COMPLETE** — deployed, playable, documented. One of the jewels.
+
 **Best-in-Class SDLC. Built by AI. Directed by Humans.**
 
 A complete top-down racing game with a self-taught neural network AI opponent — built entirely through autonomous AI SDLC that meets or exceeds the rigor of the best human-led teams. Zero hand-written game code. Specification, architecture, planning, code, testing, review, defect prevention, and deployment — all executed by AI under human decision-making. Backed by a 7-document evidence package most teams never produce.

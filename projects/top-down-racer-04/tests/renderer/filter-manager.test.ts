@@ -1,3 +1,4 @@
+// @vitest-environment jsdom
 import { describe, it, expect, vi, beforeEach } from 'vitest';
 
 // Mock pixi-filters subpath imports — use class constructors (not vi.fn)
@@ -38,18 +39,17 @@ describe('FilterManager', () => {
     fm = new FilterManager();
   });
 
-  describe('attach()', () => {
-    it('attaches bloom + motionBlur to worldContainer', () => {
+  describe('attach() — default high tier', () => {
+    it('attaches motionBlur to worldContainer (high tier)', () => {
       const world = makeContainer();
       const car = makeContainer();
       fm.attach(world, car, null);
 
-      expect(world.filters).toHaveLength(2);
-      expect(world.filters[0]).toBe(mockBloomInstance);
-      expect(world.filters[1]).toBe(mockMotionBlurInstance);
+      expect(world.filters).toHaveLength(1);
+      expect(world.filters[0]).toBe(mockMotionBlurInstance);
     });
 
-    it('does not attach filters to carLayer (shadow removed in quality-tier refactor)', () => {
+    it('does not attach filters to carLayer', () => {
       const world = makeContainer();
       const car = makeContainer();
       fm.attach(world, car, null);
@@ -65,12 +65,12 @@ describe('FilterManager', () => {
       expect(ai.filters[0]).toBe(mockGlowInstance);
     });
 
-    it('leaves glow unchanged when aiCarContainer is null', () => {
+    it('skips glow when aiCarContainer is null', () => {
       const world = makeContainer();
       const car = makeContainer();
       fm.attach(world, car, null);
-      // glow.enabled stays at constructor default — no aiCarContainer to attach it to
-      expect(mockGlowInstance.enabled).toBe(true);
+      // No AI container — glow not attached anywhere
+      expect(world.filters).toHaveLength(1);
     });
 
     it('does not set filterArea (deferred optimization)', () => {

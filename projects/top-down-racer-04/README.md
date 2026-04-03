@@ -73,7 +73,7 @@ Open http://localhost:4173 in your browser. For development with hot reload: `pn
 
 ## Architecture Rules (sacred from v02)
 
-- Engine (`src/engine/`) is **FROZEN** — 487 tests (366 engine + 121 AI/renderer/UI), zero engine modifications
+- Engine (`src/engine/`) is **FROZEN** — 500 tests (366 engine + 121 AI/renderer/UI), zero engine modifications
 - Engine/renderer boundary is **SACRED** — zero cross-layer imports
 - Renderer reads engine state, never mutates it
 - AI trains against headless engine
@@ -101,14 +101,14 @@ MCP Stack: **Context7** (framework docs) + **Serena** (semantic code nav) + **Se
 | Human lines of code | **0** |
 | Spec to deployed product | **~24 hours** |
 | Total lines of code | **20,952** |
-| Automated tests | **477** |
+| Automated tests | **500** |
 | Commits | **68** across 8 phases |
 | AI-generated art assets | **11** via Gemini Imagen 4 |
 
 ## Tests
 
 ```bash
-pnpm test              # Unit + renderer tests (487 tests)
+pnpm test              # Unit + renderer tests (500 tests)
 pnpm run test:build    # Build verification tests (13 tests)
 ```
 

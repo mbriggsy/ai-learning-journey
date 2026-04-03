@@ -13,8 +13,8 @@ A complete top-down racing game with a self-taught neural network AI opponent â€
 | Metric | Value |
 |--------|-------|
 | Hand-written lines of game code | **0** |
-| Total lines of code | **10,497** |
-| Git commits | **189** |
+| Total lines of code | **~11,000** (9,472 TypeScript + 1,609 Python) |
+| Git commits | **174** |
 | Automated tests | **389** (377 TypeScript + 12 Python) |
 | Pre-execution defect catches | **15 / 15** |
 | Headless simulation speed | **13,000+ ticks/sec** |

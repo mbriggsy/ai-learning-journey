@@ -1,3 +1,4 @@
+// @vitest-environment jsdom
 import { describe, it, expect, vi, beforeEach, afterEach } from 'vitest';
 
 // ─── Module mock (hoisted above imports by Vitest) ───
@@ -236,9 +237,9 @@ describe('BrowserAIRunner', () => {
 
   // ── AI_ASSET_PATHS ──
 
-  it('AI_ASSET_PATHS points to /ai/ directory', () => {
-    expect(AI_ASSET_PATHS.model).toBe('/ai/model.onnx');
-    expect(AI_ASSET_PATHS.vecNormStats).toBe('/ai/vecnorm_stats.json');
+  it('AI_ASSET_PATHS points to ai/ directory under base URL', () => {
+    expect(AI_ASSET_PATHS.model).toContain('ai/model.onnx');
+    expect(AI_ASSET_PATHS.vecNormStats).toContain('ai/vecnorm_stats.json');
   });
 
   // ── load() validation ──

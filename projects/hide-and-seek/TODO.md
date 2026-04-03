@@ -1,16 +1,18 @@
 # Hide and Seek — TODO
 
 ## Current State
-- **Phase 6b COMPLETE** — scoring + stats, 338 tests, typecheck clean
-- All phases 0–6b executed and reviewed
+- **Phase 7 IN PROGRESS** — pipeline built, Imagen 4 wired, integration done, visual bugs remain
 
 ## Next Steps
-1. **Phase 7** — polish + art
+1. **Sequential Think through all visual issues BEFORE touching code**
+2. **Fix floor tile** — programmatic via Sharp (free). AI tiles create plaid at 32x32.
+3. **Fix character flash on movement** — diagnose: rendering, chroma-key residue, or animation gap?
+4. **Regen 4 quota-blocked assets** — char-seeker-chase-e-01, prop-flashlight-s/n/w
+5. **Visual polish pass** then commit
 
 ## Landmines
-- **Module-level `let` in SearchState/SuspiciousState** — singleton state means multi-seeker will stomp. Must move to `SeekerAIInternalState` before adding second seeker.
-- **Tiled map has no Rooms object layer** — strategic patrol (medium/hard) falls back to random. Room rectangles need authoring in Tiled, then wire `parseRooms` + `computeHidingSpots` + `engine.setRooms()` in Game.ts and SpectatorGame.ts. Console warning fires every tick on medium/hard.
-- **`seekerDistanceTiles` uses `Infinity` at runtime but `closestApproachTiles` uses `-1` sentinel** — two different contexts. Persistence uses `-1` because `JSON.stringify(Infinity)` → `null`.
-
-## Verify Next Session
-- None
+- Module-level `let` in SearchState/SuspiciousState — singleton, breaks with multi-seeker
+- Tiled map has no Rooms object layer — medium/hard patrol falls back to random, console warns every tick
+- Dual sentinel: `seekerDistanceTiles` = `Infinity` (runtime), `closestApproachTiles` = `-1` (persisted)
+- Imagen 4: 70 RPD free tier, generates hot pink not magenta (auto-detect handles it), renders hex codes as text
+- `taskkill //F //IM node.exe` kills MCP servers — need new terminal to reconnect

@@ -4,9 +4,9 @@
 
 A cinematic Conway's Game of Life — bioluminescent cells on a deep-space canvas with generative audio, particle effects, and video capture. Not a demo, an experience. Pure browser PWA, zero server infrastructure.
 
-## Fully AI-Built
+## Fully Autonomous SDLC
 
-Every line of code, every shader, every audio system — built entirely by AI agents. Briggsy directs and reviews. The agents write the code.
+This project is an exercise in **fully autonomous software development**. Every line of code, every shader, every audio system, every test — produced entirely by AI agents (Claude Code + supporting tools). Briggsy is ATC (Air Traffic Control) — he directs, reviews, and approves. He doesn't write code, draw art, or run commands. The agents fly the plane. Test-driven development throughout — 97 tests written before or alongside every feature.
 
 ## Features
 

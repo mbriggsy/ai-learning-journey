@@ -1,6 +1,6 @@
 # Hide and Seek
 
-**Status: SHELVED** — solid engine + pipeline, needs bigger map design and hiding mechanics to be worth showing. See [TODO.md](TODO.md) for details.
+**Status: SHELVED** — fully built and playable, but the game design needs a bigger vision. See [TODO.md](TODO.md).
 
 A top-down 2D hide-and-seek game where you hide from an AI seeker in a mansion. The seeker counts down, then hunts you using line-of-sight and proximity detection. Outsmart it before time runs out — or get found.
 
@@ -45,7 +45,7 @@ This project is an exercise in **fully autonomous SDLC**. Every line of code, ev
 
 ## Architecture
 
-Game logic (`src/game/`) is fully separated from rendering (`src/renderer/`). Zero Phaser imports in the game layer — all game logic is pure TypeScript with a fixed-timestep accumulator. This separation is enforced by integration tests.
+Game logic (`src/game/`) is fully separated from rendering (`src/renderer/`). Zero Phaser imports in the game layer — all game logic is pure TypeScript with a fixed-timestep accumulator. This separation is enforced by integration tests. The project was built across 10 phases — plans and design docs live in [`docs/plans/`](docs/plans/).
 
 ## Controls
 
@@ -56,20 +56,9 @@ Game logic (`src/game/`) is fully separated from rendering (`src/renderer/`). Ze
 | Pause | Escape |
 | Debug: toggle fog | F1 |
 
-## Roadmap
-
-- [x] Phase 0 — Project scaffolding (Vite, TypeScript, Phaser config)
-- [x] Phase 1 — Map + movement (Tiled, WASD, camera)
-- [x] Phase 2 — Seeker + detection (AI, shadowcasting FOV, proximity)
-- [x] Phase 3 — Fog of war + game flow (scenes, HUD, round lifecycle)
-- [x] Phase 4 — Doors + minimap (interactive environment, sonar ping)
-- [x] Phase 5a — Seeker difficulty tiers (Easy/Medium/Hard FSM)
-- [x] Phase 5b — AI hider + spectator mode (god-view, vision cones)
-- [x] Phase 6a — Audio atmosphere (SFX, heartbeat, ambient)
-- [x] Phase 6b — Scoring + stats (persistence, results screen)
-- [~] Phase 7 — Art pipeline (Imagen 4 generation, atlas packing, visual polish) — partial
-
 ## Why It's Shelved
+
+The engine is solid — 336 tests, clean architecture, real AI pathfinding. But the game isn't fun yet:
 
 - 40x30 static map with 3 rooms — too small to feel like a mansion
 - AI-generated 32x32 sprites look like blobs at game zoom

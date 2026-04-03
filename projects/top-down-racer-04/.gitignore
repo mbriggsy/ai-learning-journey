@@ -16,3 +16,6 @@ temp/
 *.lnk
 assets/raw/
 # ONNX Runtime WASM (25MB, installed via npm)
+
+# ONNX Runtime WASM (25MB, installed via npm)
+public/assets/ort/

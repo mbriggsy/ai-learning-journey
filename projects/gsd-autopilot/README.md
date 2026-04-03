@@ -1,5 +1,7 @@
 # /gsd-autopilot — Autonomous Project Orchestrator
 
+**Status: PAUSED** — design proven, lessons learned. Needs external process architecture (see [LESSONS-LEARNED.md](LESSONS-LEARNED.md)).
+
 **The meta-orchestrator that sits above GSD and Compound Engineering.**
 
 Feed it a spec. Walk away. It runs the full GSD lifecycle — plan every phase, deepen every

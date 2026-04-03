@@ -1,10 +1,10 @@
 /** Asset categories matching directory structure */
 export type AssetCategory = 'characters' | 'tiles' | 'ui' | 'furniture';
 
-/** Aspect ratios supported by Gemini image generation */
-export type AspectRatio = '1:1' | '3:2' | '16:9';
+/** Aspect ratios supported by Imagen 4 */
+export type AspectRatio = '1:1' | '3:4' | '4:3' | '9:16' | '16:9';
 
-/** Image size tiers supported by Gemini */
+/** Image size tiers supported by Imagen 4 (omit for default 1K) */
 export type ImageSize = '1K' | '2K';
 
 /** Post-processing strategy for each asset */

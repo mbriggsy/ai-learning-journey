@@ -1,11 +1,4 @@
-/**
- * Asset generation script — Imagen 4 (imagen-4.0-generate-001)
- *
- * Switched from Nano Banana Pro after $20 of ugly pixel art.
- * Imagen 4: ~$0.02-0.06/image, has seed param, returns PNG directly.
- * See generate-assets-nbp-archived.ts for the old NBP version.
- */
-import { GoogleGenAI, SafetyFilterLevel } from '@google/genai';
+import { GoogleGenAI } from '@google/genai';
 import { createHash } from 'node:crypto';
 import * as fs from 'node:fs';
 import * as path from 'node:path';
@@ -17,6 +10,7 @@ import type {
   GenerationError,
   GenerationLog,
   GenerationLogEntry,
+  GenerationResult,
 } from './types.js';
 
 // ---------------------------------------------------------------------------
@@ -26,19 +20,21 @@ import type {
 const ROOT = path.resolve(import.meta.dirname, '..');
 const RAW_DIR = path.join(ROOT, 'assets', 'raw');
 const LOG_PATH = path.join(ROOT, 'assets', 'generation-log.json');
+const PALETTE_DIR = path.join(ROOT, 'assets', 'palette');
+const STYLE_REF_PATH = path.join(PALETTE_DIR, 'style-reference.png');
 
 // ---------------------------------------------------------------------------
 // Defaults
 // ---------------------------------------------------------------------------
 
-const DEFAULT_MODEL = 'imagen-4.0-generate-001';
-const DEFAULT_BUDGET_CAP = 80;
-const DEFAULT_INTER_CALL_DELAY_MS = 7_000;
-const DEFAULT_MAX_RETRIES = 2;
+const DEFAULT_MODEL = 'gemini-3-pro-image-preview';
+const DEFAULT_BUDGET_CAP = 50;
+const DEFAULT_INTER_CALL_DELAY_MS = 6_000;
+const DEFAULT_MAX_RETRIES = 3;
 const DEFAULT_CIRCUIT_BREAKER = 5;
-const CALL_TIMEOUT_MS = 60_000;
-const RETRY_DELAY_RATE_LIMIT_MS = 10_000;
-const RETRY_DELAY_SERVER_MS = 3_000;
+const CALL_TIMEOUT_MS = 90_000;
+const RETRY_DELAY_RATE_LIMIT_MS = 12_000;
+const RETRY_DELAY_SERVER_MS = 4_000;
 
 // ---------------------------------------------------------------------------
 // CLI
@@ -67,13 +63,15 @@ function parseCli(): GenerationConfig {
     }
   }
 
+  const styleRef = fs.existsSync(STYLE_REF_PATH) ? STYLE_REF_PATH : undefined;
+
   return {
     model: values['model'] ?? DEFAULT_MODEL,
     budgetCap: Number(values['budget'] ?? DEFAULT_BUDGET_CAP),
     interCallDelayMs: DEFAULT_INTER_CALL_DELAY_MS,
     maxRetries: DEFAULT_MAX_RETRIES,
     circuitBreakerThreshold: DEFAULT_CIRCUIT_BREAKER,
-    styleReferencePath: undefined, // Imagen 4 is text-only, no reference images
+    styleReferencePath: styleRef,
     forceAll: values['force-all'] ?? false,
     dryRun: values['dry-run'] ?? false,
     only: only as readonly string[] | undefined,
@@ -103,11 +101,21 @@ function classifyError(e: unknown): GenerationError {
   const status = getErrorStatus(e);
   const msg = e instanceof Error ? e.message : String(e);
 
-  if (status === 401 || status === 403) return { kind: 'auth', message: msg };
-  if (status === 429) return { kind: 'rate-limit', retryAfterMs: RETRY_DELAY_RATE_LIMIT_MS };
-  if (status !== undefined && status >= 500) return { kind: 'server-error', status, message: msg };
-  if (msg.includes('SAFETY') || msg.includes('blocked') || msg.includes('filtered')) return { kind: 'safety-block', reason: msg };
-  if (msg.includes('aborted') || msg.includes('AbortError') || msg.includes('timeout')) return { kind: 'timeout' };
+  if (status === 401 || status === 403) {
+    return { kind: 'auth', message: msg };
+  }
+  if (status === 429) {
+    return { kind: 'rate-limit', retryAfterMs: RETRY_DELAY_RATE_LIMIT_MS };
+  }
+  if (status !== undefined && status >= 500) {
+    return { kind: 'server-error', status, message: msg };
+  }
+  if (msg.includes('SAFETY') || msg.includes('blocked') || msg.includes('filtered')) {
+    return { kind: 'safety-block', reason: msg };
+  }
+  if (msg.includes('aborted') || msg.includes('AbortError') || msg.includes('timeout')) {
+    return { kind: 'timeout' };
+  }
   return { kind: 'unknown', message: msg };
 }
 
@@ -117,6 +125,7 @@ function shouldRetry(err: GenerationError): boolean {
 
 function retryDelay(err: GenerationError): number {
   if (err.kind === 'rate-limit') return err.retryAfterMs;
+  if (err.kind === 'server-error') return RETRY_DELAY_SERVER_MS;
   return RETRY_DELAY_SERVER_MS;
 }
 
@@ -160,7 +169,7 @@ function findLogEntry(log: GenerationLog, assetId: string): GenerationLogEntry |
 }
 
 // ---------------------------------------------------------------------------
-// Core generation — Imagen 4
+// Core generation
 // ---------------------------------------------------------------------------
 
 async function generateOne(
@@ -168,6 +177,7 @@ async function generateOne(
   asset: AssetDefinition,
   fullPrompt: string,
   config: GenerationConfig,
+  styleRefBase64: string | undefined,
 ): Promise<{ buffer: Buffer | null; error: GenerationError | null }> {
   let lastError: GenerationError | null = null;
 
@@ -176,37 +186,58 @@ async function generateOne(
     const timeout = setTimeout(() => controller.abort(), CALL_TIMEOUT_MS);
 
     try {
-      const response = await ai.models.generateImages({
+      // Build content parts: style reference (if any) + text prompt
+      const parts: Array<{ text: string } | { inlineData: { mimeType: string; data: string } }> = [];
+
+      // Only pass style reference for tile assets — it's a floor tile, and passing it
+      // for characters causes the AI to render characters ON a floor instead of on magenta
+      if (styleRefBase64 && asset.category === 'tiles') {
+        parts.push({ inlineData: { mimeType: 'image/png', data: styleRefBase64 } });
+        parts.push({ text: 'Use this image as a style reference. Match its visual style exactly. ' });
+      }
+
+      parts.push({ text: fullPrompt });
+
+      const response = await ai.models.generateContent({
         model: config.model,
-        prompt: fullPrompt,
+        contents: [{ role: 'user', parts }],
         config: {
-          numberOfImages: 1,
-          outputMimeType: 'image/png',
-          safetyFilterLevel: SafetyFilterLevel.BLOCK_LOW_AND_ABOVE,
-          aspectRatio: asset.aspectRatio,
+          responseModalities: ['IMAGE'],
+          imageConfig: {
+            aspectRatio: asset.aspectRatio,
+            imageSize: asset.imageSize,
+          },
           abortSignal: controller.signal,
         },
       });
 
       clearTimeout(timeout);
 
-      // Check for safety filter blocks
-      if (!response.generatedImages || response.generatedImages.length === 0) {
-        const reason = (response as Record<string, unknown>)['raiFilteredReason'] ?? 'unknown';
-        lastError = { kind: 'safety-block', reason: String(reason) };
-        console.warn(`  Safety blocked: ${lastError.reason}`);
+      // Extract image from response
+      const candidates = response.candidates;
+      if (!candidates || candidates.length === 0) {
+        lastError = { kind: 'safety-block', reason: 'No candidates returned' };
+        // Safety blocks don't retry
         return { buffer: null, error: lastError };
       }
 
-      const image = response.generatedImages[0];
-      if (!image?.image?.imageBytes) {
-        lastError = { kind: 'unknown', message: 'API returned empty image bytes' };
+      const parts2 = candidates[0]?.content?.parts;
+      if (!parts2) {
+        lastError = { kind: 'unknown', message: 'No parts in response' };
         if (attempt < config.maxRetries - 1) continue;
         return { buffer: null, error: lastError };
       }
 
-      const buffer = Buffer.from(image.image.imageBytes, 'base64');
-      return { buffer, error: null };
+      for (const part of parts2) {
+        if (part.inlineData?.data) {
+          const buffer = Buffer.from(part.inlineData.data, 'base64');
+          return { buffer, error: null };
+        }
+      }
+
+      lastError = { kind: 'unknown', message: 'Response contained no image data' };
+      if (attempt < config.maxRetries - 1) continue;
+      return { buffer: null, error: lastError };
 
     } catch (e: unknown) {
       clearTimeout(timeout);
@@ -264,6 +295,15 @@ async function main(): Promise<void> {
     }
   }
 
+  // Load style reference
+  let styleRefBase64: string | undefined;
+  if (config.styleReferencePath && fs.existsSync(config.styleReferencePath)) {
+    styleRefBase64 = fs.readFileSync(config.styleReferencePath).toString('base64');
+    console.log(`Style reference: ${config.styleReferencePath}`);
+  } else {
+    console.log('No style reference found — generating without one.');
+  }
+
   // Load existing log for idempotency
   const log = loadLog();
   log.generatedAt = new Date().toISOString();
@@ -296,6 +336,15 @@ async function main(): Promise<void> {
       if (existing && existing.status === 'success' && existing.promptHash === hash && fs.existsSync(outPath)) {
         console.log(`[${i + 1}/${assets.length}] SKIP ${asset.id} (prompt unchanged)`);
         skipped++;
+
+        // Update log entry
+        const idx = log.assets.findIndex((e) => e.assetId === asset.id);
+        if (idx === -1) {
+          (log.assets as GenerationLogEntry[]).push({
+            assetId: asset.id, status: 'skipped', promptHash: hash,
+            timestamp: new Date().toISOString(), model: config.model, attempts: 0,
+          });
+        }
         continue;
       }
     }
@@ -317,22 +366,24 @@ async function main(): Promise<void> {
     if (config.dryRun) {
       console.log(`  DRY RUN — prompt hash: ${hash}`);
       console.log(`  Output: ${outPath}`);
+      console.log(`  Prompt: ${fullPrompt.slice(0, 120)}...`);
       skipped++;
       continue;
     }
 
     // Generate
     apiCallCount++;
-    const { buffer, error } = await generateOne(ai, asset, fullPrompt, config);
+    const { buffer, error } = await generateOne(ai, asset, fullPrompt, config, styleRefBase64);
 
     if (buffer) {
-      // Imagen 4 returns PNG directly — save as-is
+      // Save raw PNG via sharp re-encode (Gemini may return JPEG)
       fs.mkdirSync(categoryDir, { recursive: true });
-      fs.writeFileSync(outPath, buffer);
-
       const sharp = (await import('sharp')).default;
-      const meta = await sharp(buffer).metadata();
-      console.log(`  OK — ${meta.width}x${meta.height}, ${(buffer.length / 1024).toFixed(1)} KB`);
+      const pngBuffer = await sharp(buffer).png().toBuffer();
+      fs.writeFileSync(outPath, pngBuffer);
+
+      const meta = await sharp(pngBuffer).metadata();
+      console.log(`  OK — ${meta.width}x${meta.height}, ${(pngBuffer.length / 1024).toFixed(1)} KB`);
 
       consecutiveFailures = 0;
       succeeded++;
@@ -340,7 +391,7 @@ async function main(): Promise<void> {
       // Update log
       const entry: GenerationLogEntry = {
         assetId: asset.id, status: 'success', promptHash: hash,
-        timestamp: new Date().toISOString(), model: config.model, attempts: 1,
+        timestamp: new Date().toISOString(), model: config.model, attempts: apiCallCount,
         dimensions: { width: meta.width ?? 0, height: meta.height ?? 0 },
       };
       const idx = log.assets.findIndex((e) => e.assetId === asset.id);
@@ -355,7 +406,7 @@ async function main(): Promise<void> {
 
       const entry: GenerationLogEntry = {
         assetId: asset.id, status: 'failed', promptHash: hash,
-        timestamp: new Date().toISOString(), model: config.model, attempts: 1,
+        timestamp: new Date().toISOString(), model: config.model, attempts: apiCallCount,
         error: errMsg,
       };
       const idx = log.assets.findIndex((e) => e.assetId === asset.id);

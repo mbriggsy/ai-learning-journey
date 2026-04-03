@@ -137,8 +137,8 @@ async function validateSingleFile(
   const pct = await opaquePercentage(buffer);
   results.push(check(assetId, 'minimum-opaque-area',
     'CRITICAL',
-    pct > 10,
-    '>10% opaque pixels',
+    pct > 5,
+    '>5% opaque pixels',
     `${pct.toFixed(1)}% opaque`,
   ));
 

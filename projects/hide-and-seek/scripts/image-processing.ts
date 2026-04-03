@@ -41,15 +41,57 @@ export async function downscalePixelArt(
 // ---------------------------------------------------------------------------
 
 /**
- * Remove magenta (#FF00FF) background with tolerance.
+ * Detect background color by sampling the 4 corners and taking the median.
+ * Robust to one corner overlapping the sprite.
+ */
+export async function detectBackgroundColor(buffer: Buffer): Promise<{ r: number; g: number; b: number }> {
+  const { data, info } = await sharp(buffer, { limitInputPixels: MAX_INPUT_PIXELS })
+    .ensureAlpha()
+    .raw()
+    .toBuffer({ resolveWithObject: true });
+
+  const w = info.width;
+  const corners = [
+    0,                              // top-left
+    (w - 1) * 4,                    // top-right
+    (info.height - 1) * w * 4,      // bottom-left
+    ((info.height - 1) * w + w - 1) * 4, // bottom-right
+  ];
+
+  const rs: number[] = [];
+  const gs: number[] = [];
+  const bs: number[] = [];
+
+  for (const idx of corners) {
+    rs.push(data[idx]!);
+    gs.push(data[idx + 1]!);
+    bs.push(data[idx + 2]!);
+  }
+
+  rs.sort((a, b) => a - b);
+  gs.sort((a, b) => a - b);
+  bs.sort((a, b) => a - b);
+
+  // Median of 4 values = average of middle 2
+  return {
+    r: Math.round((rs[1]! + rs[2]!) / 2),
+    g: Math.round((gs[1]! + gs[2]!) / 2),
+    b: Math.round((bs[1]! + bs[2]!) / 2),
+  };
+}
+
+/**
+ * Remove background with auto-detected or specified color.
  * Pixels within tolerance become transparent, fringe pixels get gradient alpha,
  * then binary alpha cleanup snaps everything to opaque or transparent.
  */
 export async function chromaKey(
   buffer: Buffer,
-  bgColor: { r: number; g: number; b: number } = { r: 255, g: 0, b: 255 },
-  tolerance: number = 30,
+  bgColor?: { r: number; g: number; b: number },
+  tolerance: number = 40,
 ): Promise<Buffer> {
+  // Auto-detect background from corners if not specified
+  const bg = bgColor ?? await detectBackgroundColor(buffer);
   const { data, info } = await sharp(buffer, { limitInputPixels: MAX_INPUT_PIXELS })
     .ensureAlpha()
     .raw()
@@ -63,9 +105,9 @@ export async function chromaKey(
     const b = data[i + 2]!;
 
     const dist = Math.sqrt(
-      (r - bgColor.r) ** 2 +
-      (g - bgColor.g) ** 2 +
-      (b - bgColor.b) ** 2,
+      (r - bg.r) ** 2 +
+      (g - bg.g) ** 2 +
+      (b - bg.b) ** 2,
     );
 
     if (dist <= tolerance) {

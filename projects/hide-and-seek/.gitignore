@@ -45,3 +45,9 @@ temp/
 assets/raw/
 assets/processed/
 assets/generation-log.json
+
+# Art exploration
+assets/palette/style-candidates/
+
+# Workspace config (monorepo artifact)
+pnpm-workspace.yaml

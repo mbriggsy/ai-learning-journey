@@ -1,5 +1,7 @@
 # Top-Down Racer v04
 
+**Status: COMPLETE** — deployed, playable, documented. The other jewel.
+
 **[Play it live](https://top-down-racer-04.vercel.app/)**
 
 > *Commercial polish. Genuine AI. Zero hand-written game code.*

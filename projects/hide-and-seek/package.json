@@ -22,8 +22,9 @@
     "assets:process": "tsx scripts/process-assets.ts",
     "assets:validate": "tsx scripts/validate-assets.ts",
     "assets:pack": "tsx scripts/pack-atlases.ts",
-    "assets:pipeline": "pnpm assets:generate && pnpm assets:process && pnpm assets:validate && pnpm assets:pack",
-    "assets:pipeline:force": "pnpm assets:generate -- --force-all && pnpm assets:process && pnpm assets:validate && pnpm assets:pack"
+    "assets:floors": "tsx scripts/generate-floor-tiles.ts",
+    "assets:pipeline": "pnpm assets:generate && pnpm assets:process && pnpm assets:floors && pnpm assets:validate && pnpm assets:pack",
+    "assets:pipeline:force": "pnpm assets:generate -- --force-all && pnpm assets:process && pnpm assets:floors && pnpm assets:validate && pnpm assets:pack"
   },
   "dependencies": {
     "easystarjs": "^0.4.4",

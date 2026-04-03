@@ -24,7 +24,7 @@ import { installTestBridge, removeTestBridge } from '../utils/TestBridge.js';
 import type { GameSceneData } from '../../types/scenes.js';
 import type { PlayingState, GameFlowKind, DoorId } from '../../types/state.js';
 import type { ReadonlyDeep } from '../../types/utility.js';
-import { CAMERA, DEPTH, DISPLAY, CINEMATIC, SIMULATION } from '../../constants.js';
+import { CAMERA, DEPTH, DISPLAY, CINEMATIC, SIMULATION, HEARTBEAT } from '../../constants.js';
 import { SEEKER_CONFIGS } from '../../game/ai/seeker-configs.js';
 import { createRoundResult } from '../../game/scoring.js';
 import { loadStats, saveStats, recordGameResult } from '../../persistence.js';
@@ -51,6 +51,8 @@ export class GameScene extends Phaser.Scene {
   private escapeKey!: Phaser.Input.Keyboard.Key;
   private endSequenceTriggered: boolean = false;
   private onPhaseChanged!: (kind: GameFlowKind) => void;
+  private debugUnrestricted: boolean = false;
+  private dangerOverlay!: Phaser.GameObjects.Graphics;
 
   constructor() {
     super({ key: 'Game' });
@@ -90,8 +92,6 @@ export class GameScene extends Phaser.Scene {
     this.pauseAuthority = new PauseAuthority(this.engine);
     this.cinematic = new CinematicManager(this);
     this.fogRenderer = new FogRenderer(this, gameMap.width, gameMap.height);
-    // Easy mode: no fog — see docs/design/vision-model-spec.md
-    this.fogRenderer.getLayer().setVisible(false);
 
     // Register fog layer with cinematic manager (UI camera ignores it)
     this.cinematic.ignoreOnUI(this.fogRenderer.getLayer());
@@ -174,9 +174,23 @@ export class GameScene extends Phaser.Scene {
     setPauseAuthority(this.pauseAuthority);
     setAudioManager(this.audioManager);
 
+    // --- Danger overlay (red vignette when seeker is near) ---
+    this.dangerOverlay = this.add.graphics();
+    this.dangerOverlay.setDepth(DEPTH.FOG + 10);
+    this.dangerOverlay.setScrollFactor(0);
+    this.dangerOverlay.setAlpha(0);
+    this.cinematic.ignoreOnUI(this.dangerOverlay);
+
     // --- Input ---
     this.escapeKey = this.input.keyboard!.addKey(Phaser.Input.Keyboard.KeyCodes.ESC);
     this.escapeKey.on('down', () => this.handleEscape());
+
+    // F1 = toggle unrestricted view (debug mode)
+    const f1Key = this.input.keyboard!.addKey(Phaser.Input.Keyboard.KeyCodes.F1);
+    f1Key.on('down', () => {
+      this.debugUnrestricted = !this.debugUnrestricted;
+      this.fogRenderer.getLayer().setVisible(!this.debugUnrestricted);
+    });
 
     // --- Event subscriptions ---
     this.setupEvents();
@@ -202,6 +216,7 @@ export class GameScene extends Phaser.Scene {
       this.engine.getEmitter().off('PHASE_CHANGED', this.onPhaseChanged);
       this.audioManager.dispose();
       this.visionConeGfx.destroy();
+      this.dangerOverlay.destroy();
       this.sonarPing.destroy();
       this.minimapManager.destroy();
       destroyDoorSprites(this.doorSprites);
@@ -364,8 +379,14 @@ export class GameScene extends Phaser.Scene {
     this.playerSprite.syncFromGameState(state.player);
     this.seekerSprite.syncFromGameState(state.seeker);
 
-    // Easy mode: seeker always visible — see docs/design/vision-model-spec.md
-    this.seekerSprite.setVisible(true);
+    // Seeker only visible when in player's vision cone (or unrestricted mode)
+    if (this.debugUnrestricted) {
+      this.seekerSprite.setVisible(true);
+    } else {
+      const seekerTileX = Math.floor(state.seeker.x / DISPLAY.TILE_SIZE);
+      const seekerTileY = Math.floor(state.seeker.y / DISPLAY.TILE_SIZE);
+      this.seekerSprite.setVisible(this.fogRenderer.isTileVisible(seekerTileX, seekerTileY));
+    }
 
     // Vision cone — rendered from actual FOV data so it respects walls/doors
     this.visionConeGfx.clear();
@@ -413,8 +434,54 @@ export class GameScene extends Phaser.Scene {
 
   private updateFog(state: ReadonlyDeep<PlayingState>): void {
     if (state.gameFlow.kind === 'hunt' || state.gameFlow.kind === 'countdown') {
-      this.fogRenderer.update(state);
+      if (!this.debugUnrestricted) {
+        this.fogRenderer.update(state);
+      }
     }
+
+    // Danger vignette — red screen edges when seeker is close (hunt phase only)
+    if (state.gameFlow.kind === 'hunt') {
+      this.updateDangerOverlay(state);
+    } else {
+      this.dangerOverlay.setAlpha(0);
+    }
+  }
+
+  private updateDangerOverlay(state: ReadonlyDeep<PlayingState>): void {
+    const dx = state.player.x - state.seeker.x;
+    const dy = state.player.y - state.seeker.y;
+    const distPx = Math.sqrt(dx * dx + dy * dy);
+    const distTiles = distPx / DISPLAY.TILE_SIZE;
+
+    // Danger ramps from 0 at 10 tiles to full at 2 tiles
+    const dangerStart = HEARTBEAT.STOP_RANGE;
+    const dangerMax = 2;
+    if (distTiles >= dangerStart) {
+      this.dangerOverlay.setAlpha(0);
+      return;
+    }
+
+    const t = Math.min(1, (dangerStart - distTiles) / (dangerStart - dangerMax));
+    const alpha = t * 0.35;
+
+    const { width, height } = this.scale;
+    this.dangerOverlay.clear();
+    this.dangerOverlay.setAlpha(1);
+
+    // Red gradient vignette from edges (thicker = more danger)
+    const thickness = 40 + t * 80;
+    // Top edge
+    this.dangerOverlay.fillGradientStyle(0xff0000, 0xff0000, 0xff0000, 0xff0000, alpha, alpha, 0, 0);
+    this.dangerOverlay.fillRect(0, 0, width, thickness);
+    // Bottom edge
+    this.dangerOverlay.fillGradientStyle(0xff0000, 0xff0000, 0xff0000, 0xff0000, 0, 0, alpha, alpha);
+    this.dangerOverlay.fillRect(0, height - thickness, width, thickness);
+    // Left edge
+    this.dangerOverlay.fillGradientStyle(0xff0000, 0xff0000, 0xff0000, 0xff0000, alpha, 0, alpha, 0);
+    this.dangerOverlay.fillRect(0, 0, thickness, height);
+    // Right edge
+    this.dangerOverlay.fillGradientStyle(0xff0000, 0xff0000, 0xff0000, 0xff0000, 0, alpha, 0, alpha);
+    this.dangerOverlay.fillRect(width - thickness, 0, thickness, height);
   }
 
   private updateMinimap(state: ReadonlyDeep<PlayingState>): void {

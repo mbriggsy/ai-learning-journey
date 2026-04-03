@@ -1,6 +1,8 @@
 # Hide and Seek
 
-A top-down 2D hide-and-seek game where you hide from an AI seeker in indoor environments. The seeker counts down, then hunts you using line-of-sight and proximity detection. Outsmart it before time runs out — or get found.
+**Status: SHELVED** — solid engine + pipeline, needs bigger map design and hiding mechanics to be worth showing. See [TODO.md](TODO.md) for details.
+
+A top-down 2D hide-and-seek game where you hide from an AI seeker in a mansion. The seeker counts down, then hunts you using line-of-sight and proximity detection. Outsmart it before time runs out — or get found.
 
 ## Spec-Driven Development
 
@@ -8,103 +10,68 @@ This project is an exercise in **fully autonomous SDLC**. Every line of code, ev
 
 ## How It Works
 
-1. **Countdown** — you see the full map and pick your hiding spot while the seeker counts down
-2. **Hunt** — fog of war drops, the sonar ping minimap is your only intel. The seeker starts searching.
+1. **Countdown** — fog of war is active, explore the mansion and pick your hiding spot while the seeker counts down
+2. **Hunt** — the seeker starts searching. Sonar ping minimap gives periodic snapshots of the seeker's position. Screen edges glow red when the seeker is close.
 3. **Found** — dramatic camera zoom + flash if the seeker catches you. Survive the timer and you win.
 
 ## Game Modes
 
 | Mode | Description |
 |------|-------------|
-| **Player vs AI** | You hide (WASD / Xbox controller), AI seeks |
+| **Player vs AI** | You hide (WASD / arrow keys), AI seeks |
 | **AI vs AI** | Spectate two AI agents in god-view with visible vision cones |
 
 ## Features
 
-- **Fog of war** with sonar ping minimap — periodic snapshots of the seeker's position
-- **Interactive doors** — open/close to break line of sight (press E / controller button)
+- **Fog of war** with distance-based vignette — you can only see ~6 tiles around you
+- **Sonar ping minimap** — periodic snapshots of the seeker's position
+- **Proximity danger overlay** — screen edges glow red when the seeker is near
+- **Interactive doors** — open/close to break line of sight (press E)
 - **AI difficulty tiers** — Easy (random wanderer), Medium (systematic searcher), Hard (evidence-based hunter)
-- **Seeker is faster** — 10-15% speed advantage (configurable). You can't outrun them, you have to outthink them.
-- **Stylized cartoon art** generated with Gemini Nano Banana Pro (`gemini-3-pro-image-preview`)
-- **Sound design** — footsteps, door creaks, heartbeat proximity warning
-- **Stats & scoring** — time survived, close calls, win/loss record
+- **Seeker is faster** — 15% speed advantage. You can't outrun them, you have to outthink them.
+- **Imagen 4 art pipeline** — AI-generated sprites + programmatic floor tiles, chroma-key + palette enforcement
+- **Sound design** — footsteps, door creaks, heartbeat proximity warning, ambient drone
+- **Stats & scoring** — time survived, close calls, win/loss record persisted to localStorage
+- **F1 debug toggle** — unrestricted view for testing (fog off, seeker always visible)
 
 ## Tech Stack
 
-- **Phaser.js** — 2D game framework (sprites, tilemaps, physics, camera, input)
-- **Architecture** — game logic separated from rendering for future upgrade path to Godot/3D
+- **Phaser 3.90.0** — 2D game framework (sprites, tilemaps, camera, input)
+- **TypeScript 5.9** — strict mode + verbatimModuleSyntax
+- **Vite 7.3** — dev server + production build
+- **Vitest 4.1** — 336 tests across 32 files (game logic + renderer + integration)
+- **Imagen 4** — AI art generation (characters, furniture, UI)
+- **Sharp** — image processing pipeline (downscale, chroma-key, palette enforcement)
+
+## Architecture
+
+Game logic (`src/game/`) is fully separated from rendering (`src/renderer/`). Zero Phaser imports in the game layer — all game logic is pure TypeScript with a fixed-timestep accumulator. This separation is enforced by integration tests.
 
 ## Controls
 
-| Action | Keyboard | Xbox Controller |
-|--------|----------|-----------------|
-| Move | WASD | Left stick |
-| Interact (doors) | E | A button |
-
-## Status
-
-**All plans deepened. Ready for Phase 0 execution.**
-
-10 phase plans (0 through 7, with Phase 5 split into 5a/5b and Phase 6 split into 6a/6b), each deepened with 12-15 parallel research/review agents, Context7 doc queries, and cross-phase contradiction review. See [`TODO.md`](TODO.md) for full session history and next steps.
+| Action | Keyboard |
+|--------|----------|
+| Move | WASD / Arrow keys |
+| Interact (doors) | E |
+| Pause | Escape |
+| Debug: toggle fog | F1 |
 
 ## Roadmap
 
-- [x] Brainstorm & design decisions
-- [x] Master plan + 10 phase plans (`/ce:plan` + `/deepen-plan`)
-- [x] Cross-phase contradiction review (35 conflicts found, all documented)
-- [ ] Phase 0 — Project scaffolding (Vite, TypeScript, Phaser config, .gitignore)
-- [ ] Phase 1 — Map + movement (Tiled, WASD + controller, camera)
-- [ ] Phase 2 — Seeker + detection (AI, shadowcasting FOV, proximity)
-- [ ] Phase 3 — Fog of war + game flow (scenes, HUD, round lifecycle)
-- [ ] Phase 4 — Doors + minimap (interactive environment, sonar ping)
-- [ ] Phase 5a — Seeker difficulty tiers (Easy/Medium/Hard FSM)
-- [ ] Phase 5b — AI hider + spectator mode (god-view, vision cones)
-- [ ] Phase 6a — Audio atmosphere (SFX, heartbeat, ambient)
-- [ ] Phase 6b — Scoring + stats (persistence, results screen)
-- [ ] Phase 7 — Art pipeline (Gemini generation, atlas packing, visual polish)
+- [x] Phase 0 — Project scaffolding (Vite, TypeScript, Phaser config)
+- [x] Phase 1 — Map + movement (Tiled, WASD, camera)
+- [x] Phase 2 — Seeker + detection (AI, shadowcasting FOV, proximity)
+- [x] Phase 3 — Fog of war + game flow (scenes, HUD, round lifecycle)
+- [x] Phase 4 — Doors + minimap (interactive environment, sonar ping)
+- [x] Phase 5a — Seeker difficulty tiers (Easy/Medium/Hard FSM)
+- [x] Phase 5b — AI hider + spectator mode (god-view, vision cones)
+- [x] Phase 6a — Audio atmosphere (SFX, heartbeat, ambient)
+- [x] Phase 6b — Scoring + stats (persistence, results screen)
+- [~] Phase 7 — Art pipeline (Imagen 4 generation, atlas packing, visual polish) — partial
 
-## Lessons Learned (SDD)
+## Why It's Shelved
 
-### WebFetch Timeout Hook
-
-Claude Code's `WebFetch` tool has **no timeout parameter**. When background agents fetch a slow or unresponsive URL, they hang indefinitely — losing all work they've done. We hit this repeatedly during multi-agent research passes (`/deepen-plan`).
-
-**Fix:** A `PreToolUse` hook that blocks `WebFetch` and redirects agents to `curl --max-time 15` via the Bash tool:
-
-```bash
-# ~/.claude/hooks/block-webfetch.sh
-#!/bin/bash
-INPUT=$(cat)
-URL=$(echo "$INPUT" | jq -r '.tool_input.url // empty')
-cat <<EOF
-{"decision": "block", "reason": "WebFetch blocked (no timeout). Use: curl -sL --max-time 15 '${URL}' | head -c 50000 via Bash."}
-EOF
-```
-
-Wire it in `~/.claude/settings.json`:
-```json
-{
-  "hooks": {
-    "PreToolUse": [{
-      "matcher": "WebFetch",
-      "hooks": [{ "type": "command", "command": "bash ~/.claude/hooks/block-webfetch.sh" }]
-    }]
-  }
-}
-```
-
-Agents get the content via `curl` with a 15-second hard timeout. If it times out, they move on instead of hanging forever. The agent is an AI — it can parse raw HTML just fine without WebFetch's built-in summarization.
-
-### Gemini Grounding MCP (WebFetch Replacement)
-
-Even better than `curl`: the [`epilande/gemini-grounding`](https://github.com/epilande/gemini-grounding) MCP server uses Google's Search Grounding API to search, read, and synthesize web content with citations — all in one call with built-in API timeouts. Free tier: 1,500 queries/day.
-
-Register via `claude mcp add` (**NOT** `~/.claude/.mcp.json` — that file is not read by Claude Code):
-
-```bash
-claude mcp add gemini-grounding -s user -e "GEMINI_API_KEY=YOUR_KEY_HERE" -- cmd //c npx -y gemini-grounding
-```
-
-**Note:** On Windows Git Bash, use `//c` (double slash) to prevent bash from expanding `/c` to `C:/`. See [`docs/environment-setup.md`](docs/environment-setup.md) for full MCP setup guide.
-
-Combined with the hook above, agents get redirected from the hanging `WebFetch` to `gemini-grounding` — which is actually *better* output (searched + summarized + cited vs raw HTML).
+- 40x30 static map with 3 rooms — too small to feel like a mansion
+- AI-generated 32x32 sprites look like blobs at game zoom
+- No hiding mechanics (the game is CALLED Hide and Seek)
+- Needs procedural map generation, hiding spots, and art direction overhaul

@@ -1,6 +1,8 @@
 # Hide and Seek
 
-Top-down 2D hide-and-seek game: survive as a hider while AI seekers hunt you through procedurally generated mansions.
+**Status: SHELVED** — see TODO.md for why and what it needs.
+
+Top-down 2D hide-and-seek game: survive as a hider while an AI seeker hunts you through a mansion.
 
 ## Tech Stack
 
@@ -60,27 +62,47 @@ pnpm audit        # Check for vulnerabilities
 ```
 src/
   game/               # Pure game logic — NO Phaser imports
+    ai/               # Seeker FSM, hider AI, pathfinding, room tracking
     engine.ts         # GameEngine — fixed timestep accumulator
     map.ts            # Tiled JSON parser, collision/LOS grids
     movement.ts       # Movement + separate-axis collision
     state.ts          # State factory (createGameState)
+    doors.ts          # Door toggle, collision/LOS grid updates
+    los.ts            # Line-of-sight (shadowcasting FOV)
+    detection.ts      # Seeker proximity + vision cone detection
+    scoring.ts        # Round result calculation
   renderer/
-    entities/         # Visual representations (PlayerSprite)
-    scenes/           # Phaser scene classes (PascalCase)
-    systems/          # Input, audio, camera systems
-  types/              # Shared type definitions
+    entities/         # Visual representations (PlayerSprite, SeekerSprite, DoorSprite)
+    scenes/           # Phaser scene classes (Boot, MainMenu, Game, HUD, PauseMenu, Results, Spectator*)
+    systems/          # FogRenderer, AudioManager, HeartbeatSystem, InputManager, MinimapManager, etc.
+    utils/            # CinematicManager, EndOfRoundSequence, SceneTransition, TestBridge
+  types/              # Shared type definitions (state, events, input, settings, FSM, grid, etc.)
   constants.ts        # All game design constants
+  persistence.ts      # localStorage stats read/write
   main.ts             # Composition root — wires Phaser.Game
+scripts/
+  generate-assets.ts  # Imagen 4 art generation (75 assets)
+  process-assets.ts   # Downscale, chroma-key, edge-strip, palette-enforce
+  generate-floor-tiles.ts  # Programmatic floor tiles (7 types — AI tiles create plaid)
+  pack-atlases.ts     # free-tex-packer atlas generation
+  validate-assets.ts  # Asset validation checks
+  image-processing.ts # Sharp-based image processing utilities
+assets/
+  raw/                # AI-generated source images (1024x1024)
+  processed/          # Pipeline output (32x32 sprites + tiles)
+  palette/            # Master palette JSON
 docs/
-  insights/           # Non-obvious root causes + fixes (persistent)
-  todos/              # Review findings work queue (session-scoped)
+  insights/           # Non-obvious root causes + fixes (11 entries, persistent)
+  plans/              # Phase plans (10 phases, all deepened)
+  design/             # Vision model spec
 tests/
   game/               # Game logic unit tests (node env)
   renderer/           # Renderer tests (jsdom env)
   integration/        # Cross-cutting tests (architecture boundary)
 public/
-  assets/maps/        # Tiled JSON maps
-  assets/tilesets/    # Tileset PNGs
+  assets/maps/        # Tiled JSON map (static, 40x30)
+  assets/tilesets/    # Tileset PNGs (interior + fog)
+  assets/sprites/     # Character + furniture atlas (PNG + JSON)
 ```
 
 ## Insights & Todos
@@ -103,3 +125,9 @@ public/
 - **JustDown does NOT work with Playwright.** Playwright sends keydown+keyup between frames — `JustDown` requires key state to persist until `update()` polls. Use `key.on('down', ...)` event listeners for keys that must work with automated testing or fast external input.
 - **fadeOut/fadeIn have no `force` parameter.** Unlike `flash`, `shake`, `pan`, `zoomTo` which accept `force: boolean`, Phaser's `fadeOut`/`fadeIn` signatures are `(duration, r, g, b, callback, context)`. Use `camera.resetFX()` before calling if you need to interrupt an in-flight fade.
 - **PauseMenu uses module-level shared state** (`setPauseAuthority()`). Game scene sets it before launching PauseMenu. This avoids passing data through Phaser's scene data (which requires `init()` on every launch).
+- **F1 toggles unrestricted view.** Fog off + seeker always visible. Debug mode only — not exposed in UI.
+- **Danger overlay uses `setScrollFactor(0)`.** The red vignette is screen-space, not world-space. It's a Graphics object, not a camera effect — so it survives camera fade/shake.
+- **Art pipeline uses Imagen 4** (`imagen-4.0-generate-001`), NOT Gemini/NBP. NBP was killed ($20 for ugly results). Imagen 4 has 70 RPD free tier.
+- **Floor tiles are programmatic, not AI-generated.** AI tiles create plaid at 32x32. `scripts/generate-floor-tiles.ts` draws all 7 floor types pixel-by-pixel. See `docs/insights/010-ai-tiles-plaid-at-32px.md`.
+- **`stripEdgeBorder()` in processing pipeline.** Imagen 4 sometimes renders decorative borders that survive chroma-key. Edge strip clears outermost 1px border on all sprites. See `docs/insights/011-imagen4-decorative-borders.md`.
+- **Map has per-room floor types** assigned by flood-fill room detection in `hideandseek.json`. 3 rooms: upper=wood-horizontal, side=carpet-red, lower=parquet.

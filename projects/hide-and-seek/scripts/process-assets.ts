@@ -5,6 +5,7 @@ import {
   downscalePixelArt,
   chromaKey,
   cleanAlpha,
+  stripEdgeBorder,
   enforcePalette,
   loadPaletteColors,
   extrudeTileset,
@@ -54,14 +55,23 @@ async function processAsset(
     // Step 1: Two-stage downscale
     buffer = await downscalePixelArt(buffer, asset.targetWidth, asset.targetHeight) as Buffer<ArrayBuffer>;
 
-    // Step 2: Chroma-key (sprites/furniture only, NOT floor tiles)
+    // Step 2: Chroma-key — hardcode magenta bg instead of auto-detecting
+    // from corners. Imagen sometimes renders dark borders/frames that confuse
+    // corner-based detection, leaving the magenta background intact.
+    // Tolerance 120 catches hot-pink variants (distance ~110 from pure magenta).
     if (asset.chromaKey) {
-      buffer = await chromaKey(buffer) as Buffer<ArrayBuffer>;
+      buffer = await chromaKey(buffer, { r: 255, g: 0, b: 255 }, 120) as Buffer<ArrayBuffer>;
     }
 
     // Step 3: Binary alpha cleanup (sprites/furniture only)
     if (asset.chromaKey) {
       buffer = await cleanAlpha(buffer) as Buffer<ArrayBuffer>;
+    }
+
+    // Step 3b: Strip edge border artifacts (Imagen 4 decorative frames)
+    // Only for sprites that had chroma-key — tiles should keep edge pixels.
+    if (asset.chromaKey) {
+      buffer = await stripEdgeBorder(buffer, asset.targetWidth, asset.targetHeight) as Buffer<ArrayBuffer>;
     }
 
     // Step 4: Palette enforcement (LAST step before save)

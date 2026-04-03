@@ -147,6 +147,40 @@ export async function cleanAlpha(buffer: Buffer, threshold: number = 128): Promi
 }
 
 // ---------------------------------------------------------------------------
+// Edge border strip (AI frame artifact removal)
+// ---------------------------------------------------------------------------
+
+/**
+ * Remove opaque pixels on the outermost 1px border of the canvas.
+ * Imagen 4 sometimes renders decorative borders/frames around characters.
+ * These survive chroma-key because they use palette colors (dark brown/red/black).
+ * Clean frames have no pixels on the edge, so this is a no-op for them.
+ */
+export async function stripEdgeBorder(buffer: Buffer, width: number, height: number): Promise<Buffer> {
+  const { data, info } = await sharp(buffer, { limitInputPixels: MAX_INPUT_PIXELS })
+    .ensureAlpha()
+    .raw()
+    .toBuffer({ resolveWithObject: true });
+
+  for (let x = 0; x < width; x++) {
+    // Top row
+    data[(0 * width + x) * 4 + 3] = 0;
+    // Bottom row
+    data[((height - 1) * width + x) * 4 + 3] = 0;
+  }
+  for (let y = 0; y < height; y++) {
+    // Left column
+    data[(y * width + 0) * 4 + 3] = 0;
+    // Right column
+    data[(y * width + (width - 1)) * 4 + 3] = 0;
+  }
+
+  return sharp(data, { raw: { width: info.width, height: info.height, channels: 4 } })
+    .png({ compressionLevel: 9, adaptiveFiltering: true })
+    .toBuffer();
+}
+
+// ---------------------------------------------------------------------------
 // Palette enforcement
 // ---------------------------------------------------------------------------
 

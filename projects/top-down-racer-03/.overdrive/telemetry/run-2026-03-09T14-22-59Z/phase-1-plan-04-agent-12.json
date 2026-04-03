@@ -1,0 +1,18 @@
+{
+  "run_id": "2026-03-09T14-22-59Z",
+  "phase": 1,
+  "plan_id": "plan-04",
+  "agent_id": "12",
+  "agent_name": "The Timekeeper",
+  "tier": 2,
+  "started_at": "2026-03-09T14:55:12.654Z",
+  "ended_at": "2026-03-09T14:57:33.712Z",
+  "duration_ms": 141058,
+  "exit_code": 0,
+  "exit_reason": "success",
+  "error_message": null,
+  "concurrent_agents": 5,
+  "prompt_size_chars": 59974,
+  "findings_count": 3,
+  "output_size_chars": 3558
+}

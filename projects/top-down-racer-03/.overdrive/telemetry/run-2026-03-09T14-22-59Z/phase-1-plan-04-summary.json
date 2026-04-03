@@ -1,0 +1,107 @@
+{
+  "run_id": "2026-03-09T14-22-59Z",
+  "phase": 1,
+  "plan_id": "plan-04",
+  "agents_launched": 15,
+  "agents_completed": 14,
+  "agents_timed_out": 1,
+  "agents_errored": 0,
+  "total_findings": 46,
+  "critical": 0,
+  "high": 7,
+  "medium": 26,
+  "low": 13,
+  "wall_time_ms": 669047,
+  "agent_durations": [
+    {
+      "agent": "undefined undefined",
+      "duration_ms": 22773,
+      "status": "success",
+      "findings": 0
+    },
+    {
+      "agent": "undefined undefined",
+      "duration_ms": 39481,
+      "status": "success",
+      "findings": 2
+    },
+    {
+      "agent": "undefined undefined",
+      "duration_ms": 43785,
+      "status": "success",
+      "findings": 4
+    },
+    {
+      "agent": "undefined undefined",
+      "duration_ms": 44141,
+      "status": "success",
+      "findings": 4
+    },
+    {
+      "agent": "undefined undefined",
+      "duration_ms": 45027,
+      "status": "success",
+      "findings": 3
+    },
+    {
+      "agent": "undefined undefined",
+      "duration_ms": 68966,
+      "status": "success",
+      "findings": 0
+    },
+    {
+      "agent": "undefined undefined",
+      "duration_ms": 113602,
+      "status": "success",
+      "findings": 3
+    },
+    {
+      "agent": "undefined undefined",
+      "duration_ms": 119382,
+      "status": "success",
+      "findings": 6
+    },
+    {
+      "agent": "undefined undefined",
+      "duration_ms": 122140,
+      "status": "success",
+      "findings": 7
+    },
+    {
+      "agent": "undefined undefined",
+      "duration_ms": 128119,
+      "status": "success",
+      "findings": 3
+    },
+    {
+      "agent": "undefined undefined",
+      "duration_ms": 141058,
+      "status": "success",
+      "findings": 3
+    },
+    {
+      "agent": "undefined undefined",
+      "duration_ms": 141096,
+      "status": "success",
+      "findings": 3
+    },
+    {
+      "agent": "undefined undefined",
+      "duration_ms": 165838,
+      "status": "success",
+      "findings": 4
+    },
+    {
+      "agent": "undefined undefined",
+      "duration_ms": 178577,
+      "status": "success",
+      "findings": 4
+    },
+    {
+      "agent": "undefined undefined",
+      "duration_ms": 300021,
+      "status": "timeout",
+      "findings": 0
+    }
+  ]
+}

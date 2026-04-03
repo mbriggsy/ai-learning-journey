@@ -1,0 +1,95 @@
+{
+  "run_id": "2026-03-09T14-22-59Z",
+  "phase": 1,
+  "plan_id": "plan-03",
+  "agents_launched": 13,
+  "agents_completed": 13,
+  "agents_timed_out": 0,
+  "agents_errored": 0,
+  "total_findings": 30,
+  "critical": 1,
+  "high": 5,
+  "medium": 19,
+  "low": 5,
+  "wall_time_ms": 467212,
+  "agent_durations": [
+    {
+      "agent": "undefined undefined",
+      "duration_ms": 17451,
+      "status": "success",
+      "findings": 0
+    },
+    {
+      "agent": "undefined undefined",
+      "duration_ms": 23276,
+      "status": "success",
+      "findings": 0
+    },
+    {
+      "agent": "undefined undefined",
+      "duration_ms": 35040,
+      "status": "success",
+      "findings": 0
+    },
+    {
+      "agent": "undefined undefined",
+      "duration_ms": 45338,
+      "status": "success",
+      "findings": 2
+    },
+    {
+      "agent": "undefined undefined",
+      "duration_ms": 56634,
+      "status": "success",
+      "findings": 0
+    },
+    {
+      "agent": "undefined undefined",
+      "duration_ms": 62469,
+      "status": "success",
+      "findings": 0
+    },
+    {
+      "agent": "undefined undefined",
+      "duration_ms": 88262,
+      "status": "success",
+      "findings": 2
+    },
+    {
+      "agent": "undefined undefined",
+      "duration_ms": 99512,
+      "status": "success",
+      "findings": 4
+    },
+    {
+      "agent": "undefined undefined",
+      "duration_ms": 133704,
+      "status": "success",
+      "findings": 3
+    },
+    {
+      "agent": "undefined undefined",
+      "duration_ms": 169709,
+      "status": "success",
+      "findings": 5
+    },
+    {
+      "agent": "undefined undefined",
+      "duration_ms": 178028,
+      "status": "success",
+      "findings": 7
+    },
+    {
+      "agent": "undefined undefined",
+      "duration_ms": 187021,
+      "status": "success",
+      "findings": 6
+    },
+    {
+      "agent": "undefined undefined",
+      "duration_ms": 197706,
+      "status": "success",
+      "findings": 1
+    }
+  ]
+}

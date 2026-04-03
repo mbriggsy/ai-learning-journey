@@ -12,3 +12,4 @@ python/logs/*/
 temp/
 *.lnk
 assets/raw/
+assets/preprocessed/

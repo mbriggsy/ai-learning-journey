@@ -1,0 +1,18 @@
+{
+  "run_id": "2026-03-09T14-22-59Z",
+  "phase": 1,
+  "plan_id": "plan-03",
+  "agent_id": "11",
+  "agent_name": "The Guardian",
+  "tier": 2,
+  "started_at": "2026-03-09T14:45:43.122Z",
+  "ended_at": "2026-03-09T14:46:06.398Z",
+  "duration_ms": 23276,
+  "exit_code": 0,
+  "exit_reason": "success",
+  "error_message": null,
+  "concurrent_agents": 3,
+  "prompt_size_chars": 57893,
+  "findings_count": 0,
+  "output_size_chars": 1830
+}

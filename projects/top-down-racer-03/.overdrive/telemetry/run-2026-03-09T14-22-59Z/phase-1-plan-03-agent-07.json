@@ -1,0 +1,18 @@
+{
+  "run_id": "2026-03-09T14-22-59Z",
+  "phase": 1,
+  "plan_id": "plan-03",
+  "agent_id": "07",
+  "agent_name": "The Accountant",
+  "tier": 1,
+  "started_at": "2026-03-09T14:42:25.404Z",
+  "ended_at": "2026-03-09T14:45:15.113Z",
+  "duration_ms": 169709,
+  "exit_code": 0,
+  "exit_reason": "success",
+  "error_message": null,
+  "concurrent_agents": 10,
+  "prompt_size_chars": 34778,
+  "findings_count": 5,
+  "output_size_chars": 3364
+}

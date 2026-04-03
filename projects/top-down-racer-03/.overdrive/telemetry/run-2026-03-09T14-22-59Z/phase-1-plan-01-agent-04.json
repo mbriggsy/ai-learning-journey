@@ -1,0 +1,18 @@
+{
+  "run_id": "2026-03-09T14-22-59Z",
+  "phase": 1,
+  "plan_id": "plan-01",
+  "agent_id": "04",
+  "agent_name": "The Saboteur",
+  "tier": 1,
+  "started_at": "2026-03-09T14:22:59.847Z",
+  "ended_at": "2026-03-09T14:25:40.350Z",
+  "duration_ms": 160503,
+  "exit_code": 0,
+  "exit_reason": "success",
+  "error_message": null,
+  "concurrent_agents": 10,
+  "prompt_size_chars": 34785,
+  "findings_count": 4,
+  "output_size_chars": 3581
+}

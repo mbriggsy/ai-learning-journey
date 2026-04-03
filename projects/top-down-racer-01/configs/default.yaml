@@ -18,10 +18,10 @@ screen:
 # Car Physics
 # -----------------------------------------------------------------------------
 car:
-  max_speed: 400         # Maximum forward speed in pixels/second
-  acceleration: 300      # Forward acceleration in pixels/second^2
-  brake_force: 500       # Braking deceleration in pixels/second^2 (stronger than accel for responsive braking)
-  reverse_max_speed: 150 # Maximum reverse speed in pixels/second (slower than forward to prevent exploit)
+  max_speed: 800         # Maximum forward speed in pixels/second — FULL SEND
+  acceleration: 600      # Forward acceleration in pixels/second^2 — FULL SEND
+  brake_force: 900       # Braking deceleration in pixels/second^2 (stronger than accel for responsive braking)
+  reverse_max_speed: 250 # Maximum reverse speed in pixels/second (slower than forward to prevent exploit)
   steering_speed: 2.5    # Steering rate in radians/second (~143 deg/s)
   drift_grip_multiplier: 0.3  # Grip multiplier when drifting (0.0 = ice, 1.0 = full grip) — 0.3 makes rear end slide out
   normal_grip: 1.0       # Baseline grip multiplier during normal driving

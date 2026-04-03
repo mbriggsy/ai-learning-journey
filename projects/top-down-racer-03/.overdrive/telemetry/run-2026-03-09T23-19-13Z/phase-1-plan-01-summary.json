@@ -1,0 +1,23 @@
+{
+  "run_id": "2026-03-09T23-19-13Z",
+  "phase": 1,
+  "plan_id": "plan-01",
+  "agents_launched": 1,
+  "agents_completed": 0,
+  "agents_timed_out": 0,
+  "agents_errored": 0,
+  "total_findings": 0,
+  "critical": 0,
+  "high": 0,
+  "medium": 0,
+  "low": 0,
+  "wall_time_ms": 271341,
+  "agent_durations": [
+    {
+      "agent": "04 The Saboteur",
+      "duration_ms": 271341,
+      "status": "coordinator",
+      "findings": 0
+    }
+  ]
+}

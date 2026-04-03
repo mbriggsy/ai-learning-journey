@@ -1,0 +1,18 @@
+{
+  "run_id": "2026-03-09T14-22-59Z",
+  "phase": 1,
+  "plan_id": "plan-04",
+  "agent_id": "08",
+  "agent_name": "The Oracle",
+  "tier": 1,
+  "started_at": "2026-03-09T14:50:12.618Z",
+  "ended_at": "2026-03-09T14:55:12.639Z",
+  "duration_ms": 300021,
+  "exit_code": null,
+  "exit_reason": "timeout",
+  "error_message": "Claude invocation timed out after 300000ms",
+  "concurrent_agents": 10,
+  "prompt_size_chars": 34242,
+  "findings_count": 0,
+  "output_size_chars": 0
+}

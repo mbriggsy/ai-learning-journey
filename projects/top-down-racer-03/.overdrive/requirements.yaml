@@ -1,0 +1,1039 @@
+project: TOP-DOWN RACER v03
+extracted_at: '2026-03-09T00:00:00Z'
+total_requirements: 127
+source: docs/Top-Down-Racer-v03-GSD-Spec.md
+requirements:
+  R-001:
+    text: The simulation engine (src/engine/) must have zero modifications from v02
+    type: constraint
+    source: What Is NOT Changing — Simulation engine
+    priority: must
+    estimated_phase: null
+    verification_method: inspection — diff src/engine/ against v02, expect zero changes
+    notes: Sacred constraint. 366+ tests, deterministic, 13K ticks/sec.
+  R-002:
+    text: The engine/renderer architectural boundary must have zero cross-layer imports
+    type: constraint
+    source: What Is NOT Changing — Engine/renderer boundary
+    priority: must
+    estimated_phase: null
+    verification_method: static analysis — grep for engine imports in renderer code and vice versa
+    notes: Non-negotiable foundation per spec.
+  R-003:
+    text: The renderer must only read engine state and never mutate game logic
+    type: constraint
+    source: ADR-01, CLAUDE.md
+    priority: must
+    estimated_phase: null
+    verification_method: code review — renderer has no write access to engine state objects
+    notes: Enforced by the engine/renderer boundary.
+  R-004:
+    text: Track 1 (oval) geometry must remain unchanged from v02
+    type: constraint
+    source: What Is NOT Changing — Track 1 geometry
+    priority: must
+    estimated_phase: null
+    verification_method: inspection — diff track01.ts geometry data against v02, expect identical
+    notes: Track 1 is the AI training sanity check. Always has been.
+  R-005:
+    text: The project must use TypeScript as the primary implementation language
+    type: constraint
+    source: What Is NOT Changing — TypeScript + PixiJS v8 stack
+    priority: must
+    estimated_phase: null
+    verification_method: inspection — all game source files are .ts
+    notes: TypeScript strict mode per v02 conventions.
+  R-006:
+    text: The project must use PixiJS v8 with WebGL as the rendering engine
+    type: constraint
+    source: ADR-01
+    priority: must
+    estimated_phase: null
+    verification_method: inspection — package.json contains pixi.js v8.x dependency
+    notes: No Three.js, Babylon.js, or WebGPU. PixiJS v8 handles everything needed.
+  R-007:
+    text: The project must use Vitest for TypeScript test infrastructure
+    type: constraint
+    source: What Is NOT Changing — Vitest + pytest
+    priority: must
+    estimated_phase: null
+    verification_method: inspection — package.json contains vitest dependency, test files use vitest
+    notes: Add renderer visual tests, don't replace existing infrastructure.
+  R-008:
+    text: The project must use pytest for Python test infrastructure
+    type: constraint
+    source: What Is NOT Changing — Vitest + pytest
+    priority: must
+    estimated_phase: null
+    verification_method: inspection — Python tests use pytest framework
+    notes: AI training pipeline tests.
+  R-009:
+    text: The application must be statically deployable with no server infrastructure
+    type: constraint
+    source: What Is NOT Changing — Static deployment
+    priority: must
+    estimated_phase: null
+    verification_method: inspection — no server-side code, all assets served as static files
+    notes: Described as a feature, not a limitation.
+  R-010:
+    text: The application must not include any multiplayer functionality
+    type: constraint
+    source: Locked Design Decisions
+    priority: must
+    estimated_phase: null
+    verification_method: inspection — no networking code, no multiplayer features
+    notes: Explicitly locked. 'Absolutely not. Wrong project. Wrong conversation.'
+  R-011:
+    text: The application must have exactly three tracks — no fourth track added
+    type: constraint
+    source: Locked Design Decisions
+    priority: must
+    estimated_phase: null
+    verification_method: inspection — track registry contains exactly 3 tracks
+    notes: Tracks 2 and 3 are redesigned but no new tracks added.
+  R-012:
+    text: The physics engine must not be modified
+    type: constraint
+    source: Locked Design Decisions
+    priority: must
+    estimated_phase: null
+    verification_method: inspection — physics code identical to v02
+    notes: Any physics question is out of scope for v03.
+  R-013:
+    text: Cars must be implemented as static top-down sprites with PixiJS-native continuous rotation (no animation rigs)
+    type: constraint
+    source: ADR-03, Locked Design Decisions
+    priority: must
+    estimated_phase: 2
+    verification_method: inspection — car rendering uses sprite.rotation, no Spine/DragonBones
+    notes: No Spine or DragonBones. PixiJS handles rotation natively.
+  R-014:
+    text: The v02 ONNX model must be retired and not used in v03 production
+    type: constraint
+    source: ADR-13, CLAUDE.md
+    priority: must
+    estimated_phase: 5
+    verification_method: inspection — v02 ONNX file not referenced in v03 codebase
+    notes: v02 model memorized v02 Track 3 geometry. Must be replaced.
+  R-015:
+    text: AI retraining must use full PPO from scratch, not transfer learning from v02
+    type: constraint
+    source: ADR-13
+    priority: must
+    estimated_phase: 5
+    verification_method: inspection — training script initializes fresh model, no v02 weights loaded
+    notes: Transfer learning from a memorized model could produce worse convergence.
+  R-016:
+    text: The reward function must be shipped unchanged from v02
+    type: constraint
+    source: ADR-13
+    priority: must
+    estimated_phase: 5
+    verification_method: inspection — diff reward function against v02, expect identical
+    notes: Worked on first run with zero tuning. Do not touch until specific training failure.
+  R-017:
+    text: Track geometry files in src/tracks/ must be treated as data files, not engine code
+    type: constraint
+    source: ADR-12, CLAUDE.md
+    priority: must
+    estimated_phase: 1
+    verification_method: inspection — track files contain only geometry data, no simulation logic
+    notes: Modifying track02.ts and track03.ts does not violate the engine freeze.
+  R-018:
+    text: v03 must start from a fresh project scaffold, not a wholesale copy of v02 src/
+    type: constraint
+    source: Repository section
+    priority: must
+    estimated_phase: null
+    verification_method: inspection — v03 scaffold is independently created
+    notes: Same stack, same tooling, new target directory.
+  R-019:
+    text: The build must use zero hand-written game code — GSD + asset pipeline only
+    type: constraint
+    source: Success Criteria
+    priority: must
+    estimated_phase: null
+    verification_method: inspection — all game code generated through GSD orchestration
+    notes: Core project constraint. 'The human makes decisions. The AI writes code.'
+  R-020:
+    text: Raw AI-generated assets must be stored in assets/raw/ and gitignored
+    type: data
+    source: ADR-02, CLAUDE.md
+    priority: must
+    estimated_phase: 1
+    verification_method: inspection — assets/raw/ exists in .gitignore, directory structure present
+    notes: Human-provided assets from Nano Banana and Ludo.ai.
+  R-021:
+    text: Processed game-ready assets must be stored in public/assets/ and tracked in git
+    type: data
+    source: ADR-02, CLAUDE.md
+    priority: must
+    estimated_phase: 1
+    verification_method: inspection — public/assets/ is git-tracked, contains processed outputs
+    notes: Output of the asset processor pipeline.
+  R-022:
+    text: An asset processor script must be built using Sharp (Node.js) for resize, optimize, and spritesheet packing
+    type: functional
+    source: ADR-02, CLAUDE.md
+    priority: must
+    estimated_phase: 1
+    verification_method: unit test — processor script runs and produces expected outputs from test inputs
+    notes: Lives in tools/ directory. Sharp is the image processing library.
+  R-023:
+    text: >-
+      A typed asset manifest must be auto-generated at src/assets/manifest.ts with zero string literals for asset
+      references
+    type: functional
+    source: ADR-02
+    priority: must
+    estimated_phase: 1
+    verification_method: unit test — manifest is generated, contains typed paths, no raw string literals in game code reference assets
+    notes: Uses 'as const' TypeScript pattern per ADR-02 example.
+  R-024:
+    text: A texture atlas builder must output PixiJS-compatible JSON + PNG atlas in TexturePacker format
+    type: functional
+    source: ADR-02
+    priority: must
+    estimated_phase: 1
+    verification_method: unit test — atlas builder produces valid JSON atlas + PNG spritesheet readable by PixiJS
+    notes: TexturePacker-compatible JSON format.
+  R-025:
+    text: All referenced files in the asset manifest must exist on disk
+    type: data
+    source: ADR-10
+    priority: must
+    estimated_phase: 1
+    verification_method: unit test — iterate manifest entries, assert each file exists
+    notes: Asset manifest integrity check.
+  R-026:
+    text: All referenced files in the asset manifest must have correct dimensions matching their spec
+    type: data
+    source: ADR-10
+    priority: must
+    estimated_phase: 1
+    verification_method: unit test — read image dimensions, assert match against spec
+    notes: Asset manifest integrity check.
+  R-027:
+    text: All Phase 1 asset pipeline tooling must have automated tests
+    type: non-functional
+    source: Success Criteria
+    priority: must
+    estimated_phase: 1
+    verification_method: inspection — test files exist for processor, manifest generator, atlas builder; tests pass
+    notes: Explicit success criterion.
+  R-028:
+    text: Claude Code must never call Nano Banana or Ludo.ai APIs directly — asset generation is human-in-the-loop
+    type: constraint
+    source: ADR-02
+    priority: must
+    estimated_phase: null
+    verification_method: inspection — no API calls to Nano Banana or Ludo.ai in codebase
+    notes: Claude Code defines specs, processes outputs, and integrates them.
+  R-029:
+    text: All assets must be generated before Phase 2 execution begins
+    type: constraint
+    source: ADR-11
+    priority: must
+    estimated_phase: 1
+    verification_method: inspection — Phase 2 plan does not include asset generation steps
+    notes: Asset spec defined in Phase 1, generation completes before Phase 2.
+  R-030:
+    text: Asset processor scripts must reside in the tools/ directory
+    type: data
+    source: CLAUDE.md
+    priority: must
+    estimated_phase: 1
+    verification_method: inspection — tools/ directory contains Sharp-based processor scripts
+    notes: Sharp-based scripts for asset processing.
+  R-031:
+    text: Player car sprites must be provided in 3 color variants as PNG with transparent background at 256×256px
+    type: data
+    source: ADR-03, ADR-11
+    priority: must
+    estimated_phase: 2
+    verification_method: unit test — 3 player car PNGs exist, 256×256, transparent background
+    notes: Top-down view, front facing up, clean vector-style.
+  R-032:
+    text: >-
+      AI opponent car sprite must be a PNG with transparent background at 256×256px with a different silhouette from
+      player car
+    type: data
+    source: ADR-03, ADR-11
+    priority: must
+    estimated_phase: 2
+    verification_method: unit test — AI car PNG exists, 256×256, transparent background; manual check for different silhouette
+    notes: Visually distinct — different model silhouette, not just recolor.
+  R-033:
+    text: Car sprites must have front clearly distinguishable from rear
+    type: data
+    source: ADR-03
+    priority: must
+    estimated_phase: 2
+    verification_method: manual check — visual inspection confirms front/rear distinguishable
+    notes: Part of Nano Banana prompt spec.
+  R-034:
+    text: Track 01 background must be a pre-rendered PNG at 2048×2048 in top-down view
+    type: data
+    source: ADR-04, ADR-11
+    priority: must
+    estimated_phase: 2
+    verification_method: unit test — file exists, dimensions are 2048×2048
+    notes: Includes asphalt+curbs+environment.
+  R-035:
+    text: Track 02 background must be a pre-rendered PNG at 2048×2048 in top-down view
+    type: data
+    source: ADR-04, ADR-11
+    priority: must
+    estimated_phase: 2
+    verification_method: unit test — file exists, dimensions are 2048×2048
+    notes: Same art style as Track 01.
+  R-036:
+    text: Track 03 background must be a pre-rendered PNG at 2048×2048 in top-down view
+    type: data
+    source: ADR-04, ADR-11
+    priority: must
+    estimated_phase: 2
+    verification_method: unit test — file exists, dimensions are 2048×2048
+    notes: Tight technical circuit aesthetic.
+  R-037:
+    text: Asphalt texture must be a seamless tileable PNG at 512×512 with wet/dry variant
+    type: data
+    source: ADR-11
+    priority: must
+    estimated_phase: 2
+    verification_method: unit test — file exists, 512×512, seamless tile verified
+    notes: 'Two variants: wet and dry.'
+  R-038:
+    text: Grass texture must be a seamless tileable PNG at 256×256
+    type: data
+    source: ADR-11
+    priority: must
+    estimated_phase: 2
+    verification_method: unit test — file exists, 256×256
+    notes: Seamless tile.
+  R-039:
+    text: Curb texture must be a PNG at 128×64 with red/white alternating pattern
+    type: data
+    source: ADR-11
+    priority: must
+    estimated_phase: 2
+    verification_method: unit test — file exists, 128×64
+    notes: Red/white alternating curb.
+  R-040:
+    text: Menu background must be a PNG at 1920×1080 with dark dramatic racing atmosphere
+    type: data
+    source: ADR-11
+    priority: must
+    estimated_phase: 4
+    verification_method: unit test — file exists, 1920×1080; manual check for aesthetic
+    notes: Dark, dramatic racing atmosphere.
+  R-041:
+    text: Engine sound idle loop must be a WAV file ≤200KB as a seamless loop
+    type: data
+    source: ADR-08, ADR-11
+    priority: must
+    estimated_phase: 4
+    verification_method: unit test — file exists, ≤200KB, WAV format
+    notes: Idle RPM engine note.
+  R-042:
+    text: Engine sound mid-RPM loop must be a WAV file ≤200KB as a seamless loop
+    type: data
+    source: ADR-08, ADR-11
+    priority: must
+    estimated_phase: 4
+    verification_method: unit test — file exists, ≤200KB, WAV format
+    notes: Mid RPM engine note.
+  R-043:
+    text: Engine sound high-RPM loop must be a WAV file ≤200KB as a seamless loop
+    type: data
+    source: ADR-08, ADR-11
+    priority: must
+    estimated_phase: 4
+    verification_method: unit test — file exists, ≤200KB, WAV format
+    notes: High RPM engine note.
+  R-044:
+    text: Track surfaces must use tiled textures for asphalt, curbs, grass, and rumble strips
+    type: functional
+    source: What IS Changing — Track surfaces
+    priority: must
+    estimated_phase: 2
+    verification_method: manual check — track surfaces render with visible tiled textures
+    notes: Replaces v02 flat color fills.
+  R-045:
+    text: >-
+      Track environment must include visual details such as barriers, tire walls, and grandstands on the background
+      layer
+    type: functional
+    source: What IS Changing — Track environment
+    priority: must
+    estimated_phase: 2
+    verification_method: manual check — environment details visible around track
+    notes: Part of the pre-rendered track background PNG.
+  R-046:
+    text: Track 1 (oval) must receive a visual-only upgrade with no geometry changes
+    type: functional
+    source: What IS Changing — Track 1
+    priority: must
+    estimated_phase: 2
+    verification_method: inspection — track01.ts geometry unchanged; visual assets updated
+    notes: Geometry frozen, art upgraded.
+  R-047:
+    text: Track 2 must be redesigned as a longer high-speed circuit with genuine braking zones
+    type: functional
+    source: ADR-12, What IS Changing — Track 2
+    priority: must
+    estimated_phase: 1
+    verification_method: inspection — track02.ts geometry is new, longer than v02
+    notes: High-speed, not technical. Stadium atmosphere.
+  R-048:
+    text: Track 2 must have at least one straight long enough that the AI must decide when to lift throttle
+    type: functional
+    source: ADR-12
+    priority: must
+    estimated_phase: 1
+    verification_method: inspection — track02.ts contains a straight segment exceeding threshold for meaningful braking
+    notes: Creates meaningful throttle discipline in reward function.
+  R-049:
+    text: Track 2 must have 2-3 genuine braking zones
+    type: functional
+    source: ADR-12
+    priority: must
+    estimated_phase: 1
+    verification_method: inspection — track geometry analysis shows 2-3 corners requiring braking from top speed
+    notes: Medium-radius sweepers, not hairpins.
+  R-050:
+    text: Track 2 must have no hairpin corners
+    type: constraint
+    source: ADR-12
+    priority: must
+    estimated_phase: 1
+    verification_method: inspection — no corner radius in track02.ts qualifies as a hairpin
+    notes: High-speed track design constraint.
+  R-051:
+    text: Track 2 driveable surface must be approximately 20% wider than v02 tracks
+    type: functional
+    source: ADR-12
+    priority: should
+    estimated_phase: 1
+    verification_method: measurement — compare track width to v02 track widths
+    notes: Less wall-hugging forced.
+  R-052:
+    text: Track 2 circuit length must be 30-40% larger than v02 Track 2
+    type: functional
+    source: ADR-12
+    priority: should
+    estimated_phase: 1
+    verification_method: measurement — compute centerline length, compare to v02 Track 2
+    notes: Approximate target range.
+  R-053:
+    text: Track 3 must be redesigned as a full circuit with mixed-radius corners
+    type: functional
+    source: ADR-12, What IS Changing — Track 3
+    priority: must
+    estimated_phase: 1
+    verification_method: inspection — track03.ts geometry is new, contains varied corner radii
+    notes: No repeated shapes. European circuit aesthetic.
+  R-054:
+    text: Track 3 must have a minimum of 6 distinct corners
+    type: functional
+    source: ADR-12
+    priority: must
+    estimated_phase: 1
+    verification_method: inspection — count distinct corners in track03.ts geometry, assert ≥6
+    notes: Each corner must be geometrically unique.
+  R-055:
+    text: Track 3 must have no two corners with the same geometric radius
+    type: functional
+    source: ADR-12
+    priority: must
+    estimated_phase: 1
+    verification_method: measurement — compute radius of each corner, assert all unique
+    notes: 'Core design principle: the memorization breaker.'
+  R-056:
+    text: Track 3 must include one genuinely decreasing-radius corner that tightens mid-corner
+    type: functional
+    source: ADR-12
+    priority: must
+    estimated_phase: 1
+    verification_method: inspection — track geometry contains a corner with decreasing radius (punishes late apex)
+    notes: Described as 'the bastard' in the spec.
+  R-057:
+    text: Track 3 must include one chicane consisting of two direction changes in quick succession
+    type: functional
+    source: ADR-12
+    priority: must
+    estimated_phase: 1
+    verification_method: inspection — track geometry contains two alternating-direction corners in close proximity
+    notes: 'Chicane definition: two quick direction changes.'
+  R-058:
+    text: Track 3 must be narrower in technical sections and wider on straights
+    type: functional
+    source: ADR-12
+    priority: must
+    estimated_phase: 1
+    verification_method: measurement — compare track width at technical vs straight sections
+    notes: Creates variable challenge.
+  R-059:
+    text: Track 3 circuit length must be 50-60% larger than v02 Track 3
+    type: functional
+    source: ADR-12
+    priority: should
+    estimated_phase: 1
+    verification_method: measurement — compute centerline length, compare to v02 Track 3
+    notes: Approximate target range.
+  R-060:
+    text: The v02 ONNX model must fail on Track 3 (v03) on first inference run
+    type: functional
+    source: ADR-12, Success Criteria
+    priority: must
+    estimated_phase: 5
+    verification_method: integration test — load v02 ONNX, run inference on v03 Track 3, assert failure to complete lap
+    notes: If it doesn't fail, the redesign wasn't different enough.
+  R-061:
+    text: The post-processing filter chain must be applied to a dedicated WorldContainer
+    type: functional
+    source: ADR-05
+    priority: must
+    estimated_phase: 3
+    verification_method: inspection — WorldContainer exists with filter chain attached
+    notes: All post-processing runs on WorldContainer, not individual sprites.
+  R-062:
+    text: The HUD container must live outside the WorldContainer and have no filters applied
+    type: functional
+    source: ADR-05, CLAUDE.md
+    priority: must
+    estimated_phase: 3
+    verification_method: inspection — HUDContainer is a sibling of WorldContainer, not a child; no filters on HUDContainer
+    notes: HUD stays crisp while world has post-processing. Critical constraint.
+  R-063:
+    text: WorldContainer must contain TrackLayer, CarLayer, and EffectsLayer as children
+    type: functional
+    source: ADR-05
+    priority: must
+    estimated_phase: 3
+    verification_method: inspection — WorldContainer has three child layers in correct order
+    notes: 'Layer order: Track, Car, Effects.'
+  R-064:
+    text: HUDContainer must contain Speedometer, LapCounter, and MiniMap components
+    type: functional
+    source: ADR-05
+    priority: must
+    estimated_phase: 4
+    verification_method: inspection — HUDContainer has Speedometer, LapCounter, MiniMap children
+    notes: Additional HUD elements (best lap, position) also in this container.
+  R-065:
+    text: Bloom/glow effect must be visible on car headlights (P0 priority)
+    type: functional
+    source: ADR-05, Success Criteria
+    priority: must
+    estimated_phase: 3
+    verification_method: manual check — bloom glow visible on headlights during gameplay
+    notes: Immediate commercial feel. @pixi/filter-bloom or custom GLSL.
+  R-066:
+    text: Cars must have a soft drop shadow rendered via DropShadowFilter (P0 priority)
+    type: functional
+    source: ADR-05
+    priority: must
+    estimated_phase: 3
+    verification_method: manual check — soft shadow visible beneath cars
+    notes: Provides depth and grounding.
+  R-067:
+    text: Velocity-driven motion blur must be applied to the car at speed via MotionBlurFilter (P1 priority)
+    type: functional
+    source: ADR-05, Success Criteria
+    priority: must
+    estimated_phase: 3
+    verification_method: manual check — motion blur visible on car at high speed, not visible when stationary
+    notes: Speed sensation. Intensity driven by car velocity.
+  R-068:
+    text: Skid marks must persist on the track surface via RenderTexture accumulation (P1 priority)
+    type: functional
+    source: ADR-05
+    priority: must
+    estimated_phase: 3
+    verification_method: manual check — skid marks appear during hard braking/turning and persist on track
+    notes: Upgrade quality from v02 implementation.
+  R-069:
+    text: Heat shimmer effect must appear behind car exhaust using displacement map with animated UV offset (P2 priority)
+    type: functional
+    source: ADR-05
+    priority: should
+    estimated_phase: 3
+    verification_method: manual check — heat shimmer distortion visible behind exhaust
+    notes: Polish effect. Displacement map filter.
+  R-070:
+    text: Speed lines must be rendered as screen-space effect using custom GLSL, gated by car speed (P2 priority)
+    type: functional
+    source: ADR-05
+    priority: should
+    estimated_phase: 3
+    verification_method: manual check — speed lines appear at high velocity, absent at low speed
+    notes: Arcade feel effect.
+  R-071:
+    text: Screen-space bloom (CRT/bloom post-pass) must be applied to the full scene via RenderTexture (P3 priority)
+    type: functional
+    source: ADR-05
+    priority: could
+    estimated_phase: 3
+    verification_method: manual check — cinematic bloom visible across scene
+    notes: Lowest priority post-processing effect.
+  R-072:
+    text: Track background must be rendered as a PixiJS Sprite loaded from a pre-rendered PNG
+    type: functional
+    source: ADR-04
+    priority: must
+    estimated_phase: 2
+    verification_method: inspection — track background loaded as Sprite from PNG asset
+    notes: Full-resolution background.
+  R-073:
+    text: A tiled texture overlay must be applied to the driveable surface using a RenderTexture mask
+    type: functional
+    source: ADR-04
+    priority: must
+    estimated_phase: 2
+    verification_method: inspection — tiled texture uses RenderTexture mask constrained to track surface
+    notes: Adds visual depth without fighting engine boundary data.
+  R-074:
+    text: The camera viewport must crop the large track background so only the visible area is rendered
+    type: functional
+    source: ADR-04
+    priority: must
+    estimated_phase: 2
+    verification_method: inspection — camera culling is active, off-screen areas not drawn
+    notes: Performance optimization for large backgrounds.
+  R-075:
+    text: >-
+      The speedometer must be an analog gauge using PixiJS Graphics arc, positioned at bottom center, reading from
+      carState.speed
+    type: functional
+    source: ADR-07
+    priority: must
+    estimated_phase: 4
+    verification_method: manual check — analog gauge visible at bottom center, needle moves with speed
+    notes: Racing-style analog gauge.
+  R-076:
+    text: Current lap / total laps must be displayed at top center using PixiJS Text
+    type: functional
+    source: ADR-07
+    priority: must
+    estimated_phase: 4
+    verification_method: manual check — lap counter visible at top center, updates on lap completion
+    notes: Reads from timingState.
+  R-077:
+    text: >-
+      Lap timer must be displayed at top right using PixiJS Text with monospace font, reading from
+      timingState.currentLapTime
+    type: functional
+    source: ADR-07
+    priority: must
+    estimated_phase: 4
+    verification_method: manual check — timer visible at top right, monospace, counts up during lap
+    notes: Monospace font for consistent width.
+  R-078:
+    text: >-
+      Best lap time must be displayed at top right below the lap timer, dimmed until first lap is set, reading from
+      timingState.bestLap
+    type: functional
+    source: ADR-07
+    priority: must
+    estimated_phase: 4
+    verification_method: manual check — best lap appears dim initially, highlights after first lap
+    notes: Dim until set.
+  R-079:
+    text: Mini-map must be rendered at bottom right using PixiJS Graphics at 1/20th scale showing track boundary polygon
+    type: functional
+    source: ADR-07
+    priority: must
+    estimated_phase: 4
+    verification_method: manual check — mini-map visible at bottom right, shows track outline at 1/20 scale
+    notes: PixiJS Graphics object, scaled down.
+  R-080:
+    text: Mini-map must show car positions as dots updated each frame from engine state
+    type: functional
+    source: ADR-07
+    priority: must
+    estimated_phase: 4
+    verification_method: manual check — dots on mini-map track car positions in real-time
+    notes: Reads directly from engine state.
+  R-081:
+    text: Mini-map must show checkpoint gates as tick marks
+    type: functional
+    source: ADR-07
+    priority: must
+    estimated_phase: 4
+    verification_method: manual check — checkpoint tick marks visible on mini-map
+    notes: Visual reference for track progress.
+  R-082:
+    text: Position indicator must be displayed at top left showing race position vs AI (e.g. 'P1' or 'P2')
+    type: functional
+    source: ADR-07
+    priority: must
+    estimated_phase: 4
+    verification_method: manual check — position indicator visible at top left, updates based on race position
+    notes: PixiJS Text element.
+  R-083:
+    text: Main menu must be Stitch-designed with animated cinematic feel, implemented as a DOM overlay
+    type: functional
+    source: ADR-06, What IS Changing
+    priority: must
+    estimated_phase: 4
+    verification_method: manual check — main menu renders as DOM overlay, matches Stitch design, has animations
+    notes: Stitch export viable for DOM-based menus.
+  R-084:
+    text: Track selection screen must show full-screen preview with animated car
+    type: functional
+    source: What IS Changing — Track selection screen
+    priority: must
+    estimated_phase: 4
+    verification_method: manual check — track select shows full-screen track preview with car animation
+    notes: Upgrade from v02 thumbnail grid.
+  R-085:
+    text: Results screen must be implemented as a DOM overlay matching Stitch design reference
+    type: functional
+    source: ADR-06
+    priority: must
+    estimated_phase: 4
+    verification_method: manual check — results screen renders as DOM overlay, matches design
+    notes: Post-race results display.
+  R-086:
+    text: Pause menu must be implemented with Stitch-generated design
+    type: functional
+    source: ADR-06
+    priority: must
+    estimated_phase: 4
+    verification_method: manual check — pause menu renders with designed aesthetic
+    notes: Stitch design reference for pause menu.
+  R-087:
+    text: Stitch designs must be generated for main menu, track select, results screen, and pause menu
+    type: data
+    source: ADR-06
+    priority: must
+    estimated_phase: 4
+    verification_method: inspection — Stitch design reference files exist for all four screens
+    notes: Design references saved as screenshots + exported HTML.
+  R-088:
+    text: HUD must be implemented in PixiJS, not DOM, due to tight coupling with game state
+    type: constraint
+    source: ADR-06
+    priority: must
+    estimated_phase: 4
+    verification_method: inspection — HUD components are PixiJS objects, not DOM elements
+    notes: Built from design screenshot spec.
+  R-089:
+    text: Engine sound must use 3 WAV loops (idle, mid, high RPM) with GainNode crossfade based on carState.speed
+    type: functional
+    source: ADR-08
+    priority: must
+    estimated_phase: 4
+    verification_method: manual check — engine sound crossfades smoothly between RPM bands as speed changes
+    notes: Standard racing game audio technique.
+  R-090:
+    text: SFX (skid, collision, checkpoint chime) must continue using Web Audio API synthesis from v02
+    type: functional
+    source: ADR-08
+    priority: must
+    estimated_phase: 4
+    verification_method: inspection — SFX code uses Web Audio API synthesis, not audio files
+    notes: v02 synthesis is good enough for SFX.
+  R-091:
+    text: Optional ambient racing music should be available for the menu screen
+    type: functional
+    source: ADR-08
+    priority: could
+    estimated_phase: 4
+    verification_method: manual check — menu plays ambient music if implemented
+    notes: Ludo.ai generated. Explicitly optional.
+  R-092:
+    text: AI training sanity run on Track 1 (oval) must complete within 100K steps with clean laps
+    type: functional
+    source: ADR-13
+    priority: must
+    estimated_phase: 5
+    verification_method: integration test — training log shows clean laps within 100K steps on Track 1
+    notes: If this fails, reward function is broken. Diagnose before proceeding.
+  R-093:
+    text: If Track 1 sanity run fails, the reward function must be diagnosed before further training
+    type: functional
+    source: ADR-13
+    priority: must
+    estimated_phase: 5
+    verification_method: process check — Phase 5 workflow includes sanity gate before long training runs
+    notes: Gate condition before investing in longer runs.
+  R-094:
+    text: Primary AI training must run on Track 3 (gauntlet) with a budget of 2M steps
+    type: functional
+    source: ADR-13
+    priority: must
+    estimated_phase: 5
+    verification_method: inspection — training script configured for Track 3 with 2M step budget
+    notes: Same PPO config as v02.
+  R-095:
+    text: AI must achieve competent lap completion on Track 3 by 1M training steps
+    type: non-functional
+    source: ADR-13
+    priority: should
+    estimated_phase: 5
+    verification_method: integration test — training log shows competent laps by 1M steps
+    notes: Expected convergence point.
+  R-096:
+    text: ONNX model must be exported at training convergence
+    type: functional
+    source: ADR-13
+    priority: must
+    estimated_phase: 5
+    verification_method: inspection — ONNX file produced by export script after convergence
+    notes: Standard export from PPO training.
+  R-097:
+    text: Cross-track validation must run the Track 3 model on Track 2 in inference-only mode (no training)
+    type: functional
+    source: ADR-13
+    priority: must
+    estimated_phase: 5
+    verification_method: integration test — Track 3 model loaded, inference run on Track 2, results documented
+    notes: Generalization audit. Model should struggle somewhat.
+  R-098:
+    text: The exported ONNX model must be ≤50KB for browser delivery
+    type: non-functional
+    source: ADR-13
+    priority: must
+    estimated_phase: 5
+    verification_method: unit test — ONNX file size ≤50KB
+    notes: v02 was 23.7KB. More steps may produce slightly larger model.
+  R-099:
+    text: AI training must use PPO algorithm with the same configuration as v02
+    type: constraint
+    source: ADR-13
+    priority: must
+    estimated_phase: 5
+    verification_method: inspection — PPO hyperparameters match v02 configuration
+    notes: Same PPO config. Only the track data changes.
+  R-100:
+    text: AI training must run in Phase 5, after all visual upgrade phases are complete
+    type: constraint
+    source: ADR-13
+    priority: must
+    estimated_phase: 5
+    verification_method: inspection — Phase 5 depends on Phases 1-4 completion
+    notes: Training is headless, doesn't care about visuals, but needs new track geometry.
+  R-101:
+    text: New track geometries must be defined and engine-tested before AI training begins
+    type: constraint
+    source: ADR-13, ADR-09
+    priority: must
+    estimated_phase: 1
+    verification_method: integration test — track geometry loads in engine, car can complete laps
+    notes: Phase 1 deliverable. Must be solid before Phase 5.
+  R-102:
+    text: The application must maintain 60fps with all post-processing effects active
+    type: non-functional
+    source: Success Criteria
+    priority: must
+    estimated_phase: 3
+    verification_method: manual check — PixiJS renderer stats show ≥60fps with all effects enabled
+    notes: No performance drop from effects.
+  R-103:
+    text: Performance must be verifiable via PixiJS renderer stats
+    type: non-functional
+    source: Success Criteria
+    priority: must
+    estimated_phase: 3
+    verification_method: inspection — PixiJS renderer stats integration exists and is accessible
+    notes: Built-in PixiJS performance monitoring.
+  R-104:
+    text: Renderer must initialize without error (integration test)
+    type: non-functional
+    source: ADR-10
+    priority: must
+    estimated_phase: 2
+    verification_method: integration test — renderer initializes successfully in test environment
+    notes: Basic smoke test for renderer.
+  R-105:
+    text: All asset keys in the manifest must resolve to loadable assets (integration test)
+    type: non-functional
+    source: ADR-10
+    priority: must
+    estimated_phase: 2
+    verification_method: integration test — iterate asset manifest, assert each key resolves
+    notes: No broken asset references.
+  R-106:
+    text: Visual baseline screenshots must be captured for each screen state at Phase 4 completion
+    type: non-functional
+    source: ADR-10
+    priority: must
+    estimated_phase: 4
+    verification_method: inspection — baseline screenshot files exist for all screen states
+    notes: Stored for future visual regression diffing.
+  R-107:
+    text: Visual baseline images must be stored for future regression comparison
+    type: non-functional
+    source: ADR-10
+    priority: must
+    estimated_phase: 4
+    verification_method: inspection — baseline images stored in designated directory
+    notes: Enables visual regression testing.
+  R-108:
+    text: Manual verification gate must occur at the end of each phase where human approves visual quality
+    type: non-functional
+    source: ADR-10
+    priority: must
+    estimated_phase: null
+    verification_method: process check — each phase plan includes a manual verification gate step
+    notes: Briggsy plays the game and approves. Explicitly in the workflow.
+  R-109:
+    text: Renderer visual tests must be added without replacing existing test infrastructure
+    type: non-functional
+    source: What Is NOT Changing — Vitest + pytest
+    priority: must
+    estimated_phase: 2
+    verification_method: inspection — new renderer tests exist alongside existing tests
+    notes: Additive testing, not replacement.
+  R-110:
+    text: Car sprites must be high-resolution and clearly rendered
+    type: non-functional
+    source: Success Criteria
+    priority: must
+    estimated_phase: 2
+    verification_method: manual check — car sprites appear high-res and crisp at game resolution
+    notes: Subjective quality bar, verified by human.
+  R-111:
+    text: Player car and AI car must be visually distinct from each other
+    type: non-functional
+    source: Success Criteria
+    priority: must
+    estimated_phase: 2
+    verification_method: manual check — player and AI cars clearly distinguishable during gameplay
+    notes: Different silhouette, not just recolor.
+  R-112:
+    text: All 3 circuits must look like actual racing circuits, not geometry tests
+    type: non-functional
+    source: Success Criteria
+    priority: must
+    estimated_phase: 2
+    verification_method: manual check — tracks have realistic racing circuit appearance
+    notes: Key visual quality bar.
+  R-113:
+    text: Track 2 must be visually and geometrically distinct from v02 Track 2
+    type: non-functional
+    source: Success Criteria
+    priority: must
+    estimated_phase: 2
+    verification_method: manual check — Track 2 is clearly different from v02 version
+    notes: Longer, high-speed identity.
+  R-114:
+    text: Track 3 must have mixed-radius corners with no two corners the same
+    type: non-functional
+    source: Success Criteria
+    priority: must
+    estimated_phase: 1
+    verification_method: measurement — geometric analysis of corner radii confirms all unique
+    notes: Duplicate of R-055 from success criteria perspective.
+  R-115:
+    text: The v03 trained AI model must be able to complete laps on Track 3
+    type: functional
+    source: Success Criteria
+    priority: must
+    estimated_phase: 5
+    verification_method: integration test — v03 model completes laps on Track 3
+    notes: Proves the AI learned the new geometry.
+  R-116:
+    text: The main menu must be of sufficient quality to pass for a commercial game's main screen
+    type: non-functional
+    source: Success Criteria
+    priority: must
+    estimated_phase: 4
+    verification_method: manual check — human assessment of commercial quality
+    notes: Subjective but explicit success criterion.
+  R-117:
+    text: HUD speedometer, lap timer, and mini-map must all be functional and readable during gameplay
+    type: non-functional
+    source: Success Criteria
+    priority: must
+    estimated_phase: 4
+    verification_method: manual check — all HUD elements render correctly and are legible
+    notes: Functional AND readable — both criteria.
+  R-118:
+    text: The project must have exactly 5 phases in its roadmap
+    type: constraint
+    source: ADR-09
+    priority: must
+    estimated_phase: null
+    verification_method: inspection — roadmap contains exactly 5 phases
+    notes: 'Phase 1: Assets+Tracks, Phase 2: Visuals, Phase 3: Effects, Phase 4: UI+Audio, Phase 5: AI.'
+  R-119:
+    text: >-
+      Phase 1 must deliver asset processor tooling, typed manifest, texture atlas builder, and new track02/track03
+      geometry
+    type: functional
+    source: ADR-09
+    priority: must
+    estimated_phase: 1
+    verification_method: inspection — all Phase 1 deliverables exist and pass tests
+    notes: Phase 1 scope definition.
+  R-120:
+    text: Phase 2 must deliver high-res car sprites, track art for all 3 circuits, tiled surface textures, and camera polish
+    type: functional
+    source: ADR-09
+    priority: must
+    estimated_phase: 2
+    verification_method: inspection — all Phase 2 deliverables exist and render correctly
+    notes: Phase 2 scope definition.
+  R-121:
+    text: Phase 3 must deliver bloom, motion blur, shadow, heat shimmer, and upgraded particles
+    type: functional
+    source: ADR-09
+    priority: must
+    estimated_phase: 3
+    verification_method: manual check — all Phase 3 effects visible and functional
+    notes: Phase 3 scope definition.
+  R-122:
+    text: Phase 4 must deliver Stitch-based menus, commercial HUD, mini-map, and layered engine audio
+    type: functional
+    source: ADR-09
+    priority: must
+    estimated_phase: 4
+    verification_method: manual check — all Phase 4 deliverables functional and polished
+    notes: Phase 4 scope definition.
+  R-123:
+    text: >-
+      Phase 5 must deliver AI sanity run on Track 1, full training on Track 3, cross-track validation on Track 2, and
+      ONNX export
+    type: functional
+    source: ADR-09
+    priority: must
+    estimated_phase: 5
+    verification_method: inspection — all Phase 5 deliverables completed with documented results
+    notes: Phase 5 scope definition.
+  R-124:
+    text: The number of car color variants must be 4-6 total (3 player colors + AI variant(s))
+    type: functional
+    source: What IS Changing — Car sprites
+    priority: must
+    estimated_phase: 2
+    verification_method: inspection — count car sprite variants, assert 4-6 total
+    notes: >-
+      needs-clarification — 'What IS Changing' says 4-6 variants but ADR-03 specifies 3 player + 1 AI = 4 minimum. The
+      range 4-6 may allow additional AI variants.
+  R-125:
+    text: Track 1 must have a clean oval visual identity with day racing and simple grandstands
+    type: functional
+    source: ADR-12
+    priority: must
+    estimated_phase: 2
+    verification_method: manual check — Track 1 background shows daytime oval with grandstands
+    notes: Visual identity per track design table.
+  R-126:
+    text: Track 2 must have a night lighting stadium atmosphere visual identity
+    type: functional
+    source: ADR-12
+    priority: must
+    estimated_phase: 2
+    verification_method: manual check — Track 2 background shows night racing with stadium atmosphere
+    notes: Banked feel, night lighting, stadium atmosphere.
+  R-127:
+    text: Track 3 must have a technical, moody, European circuit aesthetic visual identity
+    type: functional
+    source: ADR-12
+    priority: must
+    estimated_phase: 2
+    verification_method: manual check — Track 3 background shows moody European technical circuit
+    notes: Technical, moody aesthetic.

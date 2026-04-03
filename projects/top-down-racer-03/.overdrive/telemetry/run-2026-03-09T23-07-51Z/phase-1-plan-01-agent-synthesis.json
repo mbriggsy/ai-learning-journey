@@ -1,0 +1,18 @@
+{
+  "run_id": "2026-03-09T23-07-51Z",
+  "phase": 1,
+  "plan_id": "plan-01",
+  "agent_id": "synthesis",
+  "agent_name": "Synthesis",
+  "tier": "synthesis",
+  "started_at": null,
+  "ended_at": "2026-03-09T23:12:04.345Z",
+  "duration_ms": 252536,
+  "exit_code": 0,
+  "exit_reason": "success",
+  "error_message": null,
+  "concurrent_agents": 0,
+  "prompt_size_chars": 0,
+  "findings_count": 0,
+  "output_size_chars": 3104
+}

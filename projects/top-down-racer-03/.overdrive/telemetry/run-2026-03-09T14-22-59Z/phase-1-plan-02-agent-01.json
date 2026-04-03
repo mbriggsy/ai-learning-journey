@@ -1,0 +1,18 @@
+{
+  "run_id": "2026-03-09T14-22-59Z",
+  "phase": 1,
+  "plan_id": "plan-02",
+  "agent_id": "01",
+  "agent_name": "The Surgeon",
+  "tier": 1,
+  "started_at": "2026-03-09T14:32:39.401Z",
+  "ended_at": "2026-03-09T14:34:38.231Z",
+  "duration_ms": 118830,
+  "exit_code": 0,
+  "exit_reason": "success",
+  "error_message": null,
+  "concurrent_agents": 10,
+  "prompt_size_chars": 33054,
+  "findings_count": 0,
+  "output_size_chars": 2304
+}

@@ -1,0 +1,95 @@
+{
+  "run_id": "2026-03-09T14-22-59Z",
+  "phase": 1,
+  "plan_id": "plan-05",
+  "agents_launched": 13,
+  "agents_completed": 13,
+  "agents_timed_out": 0,
+  "agents_errored": 0,
+  "total_findings": 41,
+  "critical": 2,
+  "high": 4,
+  "medium": 22,
+  "low": 13,
+  "wall_time_ms": 593516,
+  "agent_durations": [
+    {
+      "agent": "undefined undefined",
+      "duration_ms": 20910,
+      "status": "success",
+      "findings": 0
+    },
+    {
+      "agent": "undefined undefined",
+      "duration_ms": 40140,
+      "status": "success",
+      "findings": 4
+    },
+    {
+      "agent": "undefined undefined",
+      "duration_ms": 40278,
+      "status": "success",
+      "findings": 4
+    },
+    {
+      "agent": "undefined undefined",
+      "duration_ms": 48517,
+      "status": "success",
+      "findings": 4
+    },
+    {
+      "agent": "undefined undefined",
+      "duration_ms": 69214,
+      "status": "success",
+      "findings": 0
+    },
+    {
+      "agent": "undefined undefined",
+      "duration_ms": 71105,
+      "status": "success",
+      "findings": 3
+    },
+    {
+      "agent": "undefined undefined",
+      "duration_ms": 72692,
+      "status": "success",
+      "findings": 3
+    },
+    {
+      "agent": "undefined undefined",
+      "duration_ms": 152588,
+      "status": "success",
+      "findings": 6
+    },
+    {
+      "agent": "undefined undefined",
+      "duration_ms": 159584,
+      "status": "success",
+      "findings": 3
+    },
+    {
+      "agent": "undefined undefined",
+      "duration_ms": 169185,
+      "status": "success",
+      "findings": 2
+    },
+    {
+      "agent": "undefined undefined",
+      "duration_ms": 183140,
+      "status": "success",
+      "findings": 8
+    },
+    {
+      "agent": "undefined undefined",
+      "duration_ms": 248566,
+      "status": "success",
+      "findings": 1
+    },
+    {
+      "agent": "undefined undefined",
+      "duration_ms": 284870,
+      "status": "success",
+      "findings": 3
+    }
+  ]
+}

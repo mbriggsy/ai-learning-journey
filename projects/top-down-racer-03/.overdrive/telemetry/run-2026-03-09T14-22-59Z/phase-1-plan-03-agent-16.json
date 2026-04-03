@@ -1,0 +1,18 @@
+{
+  "run_id": "2026-03-09T14-22-59Z",
+  "phase": 1,
+  "plan_id": "plan-03",
+  "agent_id": "16",
+  "agent_name": "The Advocate",
+  "tier": 2,
+  "started_at": "2026-03-09T14:45:43.130Z",
+  "ended_at": "2026-03-09T14:46:00.581Z",
+  "duration_ms": 17451,
+  "exit_code": 0,
+  "exit_reason": "success",
+  "error_message": null,
+  "concurrent_agents": 3,
+  "prompt_size_chars": 57890,
+  "findings_count": 0,
+  "output_size_chars": 1047
+}

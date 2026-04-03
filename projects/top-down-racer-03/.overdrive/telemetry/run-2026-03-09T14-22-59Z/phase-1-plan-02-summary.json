@@ -1,0 +1,89 @@
+{
+  "run_id": "2026-03-09T14-22-59Z",
+  "phase": 1,
+  "plan_id": "plan-02",
+  "agents_launched": 12,
+  "agents_completed": 12,
+  "agents_timed_out": 0,
+  "agents_errored": 0,
+  "total_findings": 17,
+  "critical": 1,
+  "high": 2,
+  "medium": 10,
+  "low": 4,
+  "wall_time_ms": 585950,
+  "agent_durations": [
+    {
+      "agent": "undefined undefined",
+      "duration_ms": 22732,
+      "status": "success",
+      "findings": 0
+    },
+    {
+      "agent": "undefined undefined",
+      "duration_ms": 36337,
+      "status": "success",
+      "findings": 0
+    },
+    {
+      "agent": "undefined undefined",
+      "duration_ms": 43801,
+      "status": "success",
+      "findings": 3
+    },
+    {
+      "agent": "undefined undefined",
+      "duration_ms": 74790,
+      "status": "success",
+      "findings": 0
+    },
+    {
+      "agent": "undefined undefined",
+      "duration_ms": 98973,
+      "status": "success",
+      "findings": 0
+    },
+    {
+      "agent": "undefined undefined",
+      "duration_ms": 118501,
+      "status": "success",
+      "findings": 0
+    },
+    {
+      "agent": "undefined undefined",
+      "duration_ms": 118830,
+      "status": "success",
+      "findings": 0
+    },
+    {
+      "agent": "undefined undefined",
+      "duration_ms": 128187,
+      "status": "success",
+      "findings": 0
+    },
+    {
+      "agent": "undefined undefined",
+      "duration_ms": 153525,
+      "status": "success",
+      "findings": 7
+    },
+    {
+      "agent": "undefined undefined",
+      "duration_ms": 177202,
+      "status": "success",
+      "findings": 2
+    },
+    {
+      "agent": "undefined undefined",
+      "duration_ms": 244433,
+      "status": "success",
+      "findings": 0
+    },
+    {
+      "agent": "undefined undefined",
+      "duration_ms": 260166,
+      "status": "success",
+      "findings": 5
+    }
+  ]
+}

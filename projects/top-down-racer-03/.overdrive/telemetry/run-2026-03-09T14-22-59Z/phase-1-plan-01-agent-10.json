@@ -1,0 +1,18 @@
+{
+  "run_id": "2026-03-09T14-22-59Z",
+  "phase": 1,
+  "plan_id": "plan-01",
+  "agent_id": "10",
+  "agent_name": "The Researcher",
+  "tier": 1,
+  "started_at": "2026-03-09T14:22:59.889Z",
+  "ended_at": "2026-03-09T14:24:33.874Z",
+  "duration_ms": 93985,
+  "exit_code": 0,
+  "exit_reason": "success",
+  "error_message": null,
+  "concurrent_agents": 10,
+  "prompt_size_chars": 35287,
+  "findings_count": 2,
+  "output_size_chars": 1649
+}

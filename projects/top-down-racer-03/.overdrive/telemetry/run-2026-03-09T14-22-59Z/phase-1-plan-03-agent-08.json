@@ -1,0 +1,18 @@
+{
+  "run_id": "2026-03-09T14-22-59Z",
+  "phase": 1,
+  "plan_id": "plan-03",
+  "agent_id": "08",
+  "agent_name": "The Oracle",
+  "tier": 1,
+  "started_at": "2026-03-09T14:42:25.413Z",
+  "ended_at": "2026-03-09T14:45:43.119Z",
+  "duration_ms": 197706,
+  "exit_code": 0,
+  "exit_reason": "success",
+  "error_message": null,
+  "concurrent_agents": 10,
+  "prompt_size_chars": 34548,
+  "findings_count": 1,
+  "output_size_chars": 2408
+}

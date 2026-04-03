@@ -1,4 +1,7 @@
 # Hooks
+
+**Status: COMPLETE** — deployed and enforcing.
+
 ### Claude Code PreToolUse, PostToolUse & Stop Hooks
 
 ---

@@ -1,4 +1,7 @@
 # Distill & Brief
+
+**Status: COMPLETE** — deployed and enforcing.
+
 ### How We Stopped Losing What We Learned
 
 ---

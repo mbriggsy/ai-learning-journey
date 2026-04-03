@@ -1,5 +1,7 @@
 # Undercover Mob Boss
 
+**Status: COMPLETE** — the masterpiece. Deployed, playtested, trailered.
+
 A digital-physical social deduction game for 5-10 players in the same room. 1940s noir city infiltration theme — a fully original adaptation of Secret Hitler (CC BY-NC-SA 4.0).
 
 Players use their phones as private information devices while a shared screen (tablet, TV, or laptop) displays public game state. Phones eliminate the "close your eyes" trust system — role reveals, voting, and private information are all handled digitally. The social deduction and lying-to-your-face remains purely physical.
@@ -10,13 +12,17 @@ Players use their phones as private information devices while a shared screen (t
 
 It started at game night. A card game everyone loved that deserved a screen instead of a table. One human director (enterprise dev, zero game dev experience) and one AI engineer (Claude Code). The trailer tells that story.
 
+## Fully Autonomous SDLC
+
+This project is an exercise in **fully autonomous software development**. Every line of code, every asset, every narrator voiceover, every test — produced entirely by AI agents (Claude Code). Briggsy is ATC (Air Traffic Control) — he directs, reviews, and approves. He doesn't write code, generate art, or run commands. The agents fly the plane. Test-driven development throughout — 1,341 tests across unit, integration, and E2E.
+
 | Stat | Count |
 |------|------:|
-| Lines of spec | 14,638 |
-| Lines of source code | 15,440 |
-| Lines of test code | 17,494 |
-| Tests passing | 1,341 |
-| AI-generated assets | 159 |
+| Lines of spec | ~14,650 |
+| Lines of source code | ~14,000 (TS) + ~6,400 (HTML/CSS) |
+| Lines of test code | ~17,900 |
+| Tests passing | 1,341 (843 unit + 498 E2E) |
+| AI-generated assets | 161 (53 images + 91 narrator OGGs + 17 trailer WAVs) |
 | Cups of coffee | 347 |
 | Hours of sleep lost | 163 |
 | JIRA tickets | 0 |

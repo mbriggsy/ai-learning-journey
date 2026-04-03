@@ -58,15 +58,14 @@ Game logic (`src/game/`) is fully separated from rendering (`src/renderer/`). Ze
 
 ## Documentation
 
-Start here, read in order:
+Start with the overview, then dig deeper:
 
 | Doc | What it covers |
 |-----|---------------|
+| [Project Overview](docs/OVERVIEW.md) | The story — what we built, where it fell short, what it needs |
 | [Brainstorm](docs/ideation/2026-03-29-hide-and-seek-brainstorm.md) | Original vision, key decisions, game design |
-| [Master Plan](docs/plans/2026-03-29-001-feat-hide-and-seek-game-plan.md) | Phase breakdown, architecture, risks |
 | [Phase Plans](docs/plans/) | 10 detailed implementation plans (phases 0–7) |
 | [Vision Model Spec](docs/design/vision-model-spec.md) | 4-tier flashlight tag vision system design |
-| [Art Style Guide](docs/art-style-guide.md) | Palette, sprite conventions, Imagen 4 prompting |
 | [Insights](docs/insights/) | 11 root-cause analyses — hard-won gotchas |
 | [CLAUDE.md](CLAUDE.md) | Architecture rules, coding conventions, landmines |
 | [TODO.md](TODO.md) | What's next if picking this back up |

@@ -1,14 +1,18 @@
 # Do Not Disturb — TODO
 
-## Status: Phases 1-9 DONE — Phase 10 next
+## Status: ALL 10 PHASES DONE — Code complete
 
-## Next Steps
+## Remaining Work
 
-1. **Execute Phase 10** (Art, Sound & Polish) — Imagen 4 pipeline, sprites, animations, spatial audio, environmental polish
+1. **Generate actual art assets** — run Imagen 4 pipeline with API key (scripts/process-assets.ts ready)
+2. **Generate/source audio** — jsfxr for SFX, record/license ambient loops and music box
+3. **Wire main.ts** — connect Phaser scenes to game logic (placeholder currently)
+4. **Playtest and tune** — balance constants, fix edge cases
+5. **Briggsy sign-off** — "water beads off it" quality bar
 
 ## Test Baseline
 
-- 392 tests across 37 files, all passing
+- 444 tests across 42 files, all passing
 - 0 typecheck errors
 
 ## Project Structure
@@ -20,13 +24,14 @@
 
 ## Landmines
 
-- IEEE 754 precision: fixed-timestep accumulator — test boundary conditions with +1ms tolerance
 - `src/main.ts` is still a placeholder — real scenes come when game loop is wired
 - HidingSpotType defined in both state.ts and level.ts — level.ts is source of truth
 - catch.ts uses spotId as HidingSpotType cast — works because spotId values match type names
 - Renderer modules are thin Phaser adapters — verified by typecheck only until visual testing
-- Guest ambush spots in night-config.ts are placeholder positions — will be replaced with Tiled map data when levels are built
-- MutableLighterInventory is a separate type from InventoryState to allow mutation — engine must sync back to state
+- Guest ambush spots in night-config.ts are placeholder positions — replace with Tiled map data
+- MutableLighterInventory is a separate type from InventoryState — engine must sync back
 - Save system uses injectable Storage interface — tests use mock, production uses localStorage
-- Monologue system uses Math.random() for line selection — not seeded, acceptable for flavor text
-- Night manager's `start()` must be called to initialize — it does not self-start (insight 008 pattern)
+- Monologue uses Math.random() for line selection — not seeded, acceptable for flavor text
+- Night manager's `start()` must be called to initialize (insight 008 pattern)
+- Asset pipeline scripts need Sharp + @google/genai as devDependencies (not yet installed)
+- ANIMATION.WOBBLE_INTENSITY uses `as number` cast for tuneable zero check

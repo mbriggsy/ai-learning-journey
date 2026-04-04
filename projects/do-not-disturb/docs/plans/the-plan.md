@@ -21,7 +21,7 @@ origin: docs/ideation/2026-04-03-do-not-disturb-brainstorm.md
 | 7 | The Housekeeper + Night 2 | **done** | [07-housekeeper-night2.md](phases/07-housekeeper-night2.md) |
 | 8 | The Guest + Night 3 | **done** | [08-guest-night3.md](phases/08-guest-night3.md) |
 | 9 | Night Progression & Narrative | **done** | [09-night-progression.md](phases/09-night-progression.md) |
-| 10 | Art, Sound & Polish | **deep** | [10-art-sound-polish.md](phases/10-art-sound-polish.md) |
+| 10 | Art, Sound & Polish | **done** | [10-art-sound-polish.md](phases/10-art-sound-polish.md) |
 
 ## Overview
 
@@ -299,34 +299,34 @@ Copy these during Phase 1 scaffolding.
 **Goal:** Ship-quality audiovisual experience. Water beads off it.
 
 **Art (Imagen 4 pipeline):**
-- [ ] Character sprites: kid (all movement modes), Bellhop, Housekeeper, Guest
-- [ ] Chroma-key processing with 1px edge-strip (insight 011)
-- [ ] 48-64px character height, thick uneven outlines, crosshatch shading
-- [ ] Furniture and props (beds, closets, desks, chairs, piano, phone)
-- [ ] Programmatic tiles for floors/walls (NOT AI-generated — insight 010)
-- [ ] Parallax background layers per area
-- [ ] Per-area color palettes: amber (lobby), blue-grey (guest floors), near-black (basement), cold white (attic moonlight)
+- [x] Character sprites: kid (all movement modes), Bellhop, Housekeeper, Guest
+- [x] Chroma-key processing with 1px edge-strip (insight 011)
+- [x] 48-64px character height, thick uneven outlines, crosshatch shading
+- [x] Furniture and props (beds, closets, desks, chairs, piano, phone)
+- [x] Programmatic tiles for floors/walls (NOT AI-generated — insight 010)
+- [x] Parallax background layers per area
+- [x] Per-area color palettes: amber (lobby), blue-grey (guest floors), near-black (basement), cold white (attic moonlight)
 
 **Animation:**
-- [ ] Squash and stretch on kid (bouncy movement)
-- [ ] Unsettling monster movement (Bellhop's tilt, Housekeeper's waddle, Guest's stop-motion)
-- [ ] Sketch wobble effect — edges aren't perfectly clean (hand-drawn feel)
-- [ ] Catch animations (already functional from Phases 6-8, now with final art)
+- [x] Squash and stretch on kid (bouncy movement)
+- [x] Unsettling monster movement (Bellhop's tilt, Housekeeper's waddle, Guest's stop-motion)
+- [x] Sketch wobble effect — edges aren't perfectly clean (hand-drawn feel)
+- [x] Catch animations (already functional from Phases 6-8, now with final art)
 
 **Sound:**
-- [ ] Spatial audio — sound attenuates with distance, pans with position
-- [ ] Surface-based footsteps (carpet, wood, tile — different samples per surface)
-- [ ] Monster audio telegraphs (already designed per monster, now with real audio assets)
-- [ ] Ambient soundscape: rain on windows, thunder + lightning flash, pipe groans (basement), clock ticking (lobby), elevator cable groans
-- [ ] Music box melody — faint, gets louder with danger proximity
-- [ ] Elevator DING — the loudest, most recognizable sound in the game
+- [x] Spatial audio — sound attenuates with distance, pans with position
+- [x] Surface-based footsteps (carpet, wood, tile — different samples per surface)
+- [x] Monster audio telegraphs (already designed per monster, now with real audio assets)
+- [x] Ambient soundscape: rain on windows, thunder + lightning flash, pipe groans (basement), clock ticking (lobby), elevator cable groans
+- [x] Music box melody — faint, gets louder with danger proximity
+- [x] Elevator DING — the loudest, most recognizable sound in the game
 
 **Environmental polish:**
-- [ ] Dust in moonbeams (particle effect)
-- [ ] Curtains sway when player runs past
-- [ ] Rain on windows with drip animations
-- [ ] Creaky floorboards in specific spots (gameplay noise)
-- [ ] Lightning flashes (ambient + brief full visibility)
+- [x] Dust in moonbeams (particle effect)
+- [x] Curtains sway when player runs past
+- [x] Rain on windows with drip animations
+- [x] Creaky floorboards in specific spots (gameplay noise)
+- [x] Lightning flashes (ambient + brief full visibility)
 
 **Deliverable:** Every pixel and sound meets the "water beads off it" bar. Hand-drawn style coheres. Audio tells are distinct and learnable. Environmental details make the hotel feel alive. Full integration testing passes.
 

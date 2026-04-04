@@ -136,3 +136,25 @@ export const ENDING = {
   LINE_HOLD_S: 3.0,
   CREDITS_DELAY_S: 2.0,
 } as const satisfies Record<string, number>;
+
+export const ANIMATION = {
+  SQUASH_LAND_SCALE_Y: 0.9,
+  SQUASH_LAND_SCALE_X: 1.1,
+  SQUASH_DURATION_S: 0.15,
+  STRETCH_RUN_SCALE_X: 1.05,
+  STRETCH_RUN_FRAMES: 2,
+  WOBBLE_INTENSITY: 1, // 0=off, 1=subtle, 2=noticeable
+  WOBBLE_MAX_OFFSET_PX: 1,
+  GUEST_FRAME_SKIP: 2, // skip every Nth frame for stop-motion feel
+} as const satisfies Record<string, number>;
+
+export const AUDIO = {
+  MAX_DISTANCE: 600,
+  PAN_DISTANCE: 400,
+  MUSIC_BOX_MIN_VOLUME: 0.05,
+  MUSIC_BOX_MAX_VOLUME: 0.6,
+  MUSIC_BOX_DANGER_RANGE: 300,
+  FOOTSTEP_INTERVAL_RUN_S: 0.2,
+  FOOTSTEP_INTERVAL_WALK_S: 0.35,
+  FOOTSTEP_INTERVAL_SNEAK_S: 0.6,
+} as const satisfies Record<string, number>;

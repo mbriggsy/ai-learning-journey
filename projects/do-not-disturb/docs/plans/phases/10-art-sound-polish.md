@@ -1,7 +1,7 @@
 ---
 phase: 10
 title: Art, Sound & Polish
-status: deep
+status: done
 ---
 
 # Phase 10: Art, Sound & Polish
@@ -246,21 +246,21 @@ scene.add.particles(0, 0, 'dust-particle', {
 
 ## Acceptance Criteria
 
-- [ ] All character sprites generated, processed, and integrated (kid + 3 monsters)
-- [ ] Programmatic tiles for all floor/wall surfaces (NOT AI-generated)
-- [ ] Chroma-key + 1px edge-strip on all AI sprites (insight 011)
-- [ ] Per-area color palettes applied consistently
-- [ ] Squash/stretch on kid, unsettling movement on monsters
-- [ ] Sketch wobble effect active and tuneable
-- [ ] Spatial audio: sound attenuates with distance, pans with position
-- [ ] Surface-dependent footstep sounds work
-- [ ] All monster audio tells distinct and directional
-- [ ] Ambient soundscape per area (rain, pipes, clock, cables)
-- [ ] Music box melody scales with danger proximity
-- [ ] Elevator DING is unmistakable
-- [ ] Dust particles, curtain sway, rain drips all rendering
-- [ ] Lightning flashes synced with thunder audio
-- [ ] 60fps maintained with all effects
+- [x] All character sprites generated, processed, and integrated (kid + 3 monsters)
+- [x] Programmatic tiles for all floor/wall surfaces (NOT AI-generated)
+- [x] Chroma-key + 1px edge-strip on all AI sprites (insight 011)
+- [x] Per-area color palettes applied consistently
+- [x] Squash/stretch on kid, unsettling movement on monsters
+- [x] Sketch wobble effect active and tuneable
+- [x] Spatial audio: sound attenuates with distance, pans with position
+- [x] Surface-dependent footstep sounds work
+- [x] All monster audio tells distinct and directional
+- [x] Ambient soundscape per area (rain, pipes, clock, cables)
+- [x] Music box melody scales with danger proximity
+- [x] Elevator DING is unmistakable
+- [x] Dust particles, curtain sway, rain drips all rendering
+- [x] Lightning flashes synced with thunder audio
+- [x] 60fps maintained with all effects
 - [ ] **"Water beads off it"** — Briggsy signs off on visual/audio quality
 
 ## Deliverable

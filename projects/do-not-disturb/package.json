@@ -16,7 +16,10 @@
     "test:renderer": "vitest run --project renderer",
     "test:watch": "vitest",
     "test:coverage": "vitest run --coverage",
-    "typecheck": "tsc --noEmit"
+    "typecheck": "tsc --noEmit",
+    "assets:process": "tsx scripts/process-assets.ts",
+    "assets:validate": "tsx scripts/validate-assets.ts",
+    "assets:tiles": "tsx scripts/generate-floor-tiles.ts"
   },
   "dependencies": {
     "phaser": "3.90.0"

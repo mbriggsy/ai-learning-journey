@@ -181,22 +181,27 @@ export const PHONE_SCRIPTS = {
 Context-sensitive reactions. Not a constant narration — triggered by game events.
 
 ```typescript
+// Triggers are either event-driven (fire on GameEventMap events) or
+// condition-driven (checked every tick). PROXIMITY and FIRST_SEEN are
+// conditions computed by the monologue system, not emitted events.
+// ZONE_ENTER IS a real GameEventMap event (added in Phase 2).
 export type MonologueTrigger = {
-  readonly event: keyof GameEventMap | 'PROXIMITY' | 'ZONE_ENTER' | 'FIRST_SEEN';
-  readonly condition?: (state: GameState) => boolean;
+  readonly type: 'event' | 'condition';
+  readonly event?: keyof GameEventMap; // for type: 'event'
+  readonly check?: (state: GameState) => boolean; // for type: 'condition'
   readonly lines: readonly string[];
   readonly cooldownS: number; // don't repeat too often
   readonly priority: number; // higher priority overrides lower
 };
 
 export const MONOLOGUE_TRIGGERS: readonly MonologueTrigger[] = [
-  // Monster proximity
-  { event: 'PROXIMITY', condition: (s) => bellhopNearby(s), lines: ["Is that... humming?"], cooldownS: 30, priority: 5 },
-  { event: 'PROXIMITY', condition: (s) => housekeeperNearby(s), lines: ["I can hear wheels..."], cooldownS: 30, priority: 5 },
+  // Monster proximity (conditions — checked every tick)
+  { type: 'condition', check: (s) => bellhopNearby(s), lines: ["Is that... humming?"], cooldownS: 30, priority: 5 },
+  { type: 'condition', check: (s) => housekeeperNearby(s), lines: ["I can hear wheels..."], cooldownS: 30, priority: 5 },
 
-  // Area reactions
-  { event: 'ZONE_ENTER', condition: (s) => s.player.currentZone.startsWith('basement'), lines: ["It's so dark down here.", "I can't see anything."], cooldownS: 60, priority: 3 },
-  { event: 'ZONE_ENTER', condition: (s) => s.player.currentZone.startsWith('attic'), lines: ["Oh GREAT, another floor."], cooldownS: 60, priority: 3 },
+  // Area reactions (ZONE_ENTER is a real GameEventMap event)
+  { type: 'event', event: 'ZONE_ENTER', check: (s) => currentZoneStartsWith(s, 'basement'), lines: ["It's so dark down here.", "I can't see anything."], cooldownS: 60, priority: 3 },
+  { type: 'event', event: 'ZONE_ENTER', check: (s) => currentZoneStartsWith(s, 'attic'), lines: ["Oh GREAT, another floor."], cooldownS: 60, priority: 3 },
 
   // Escape window
   { event: 'ESCAPE_WINDOW_WARNING', lines: ["I think I heard the lock clicking..."], cooldownS: 0, priority: 8 },

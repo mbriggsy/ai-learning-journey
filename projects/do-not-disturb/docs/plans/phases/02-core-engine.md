@@ -100,6 +100,11 @@ export function createEmitter<TMap extends Record<string, readonly unknown[]>>()
 
 Copy-on-iterate (`[...set]`) is critical — handlers can safely remove themselves during emission.
 
+**Export the Emitter type** so other modules can reference it:
+```typescript
+export type Emitter = ReturnType<typeof createEmitter<GameEventMap>>;
+```
+
 **Tests:**
 - emit fires registered listeners with correct args
 - on/off register and unregister correctly
@@ -118,6 +123,10 @@ DND-specific event map. Each key maps to a readonly tuple of argument types:
 ```typescript
 import type { NoiseEvent, DoorEvent, MonsterAlertEvent, EscapeWindowPhase, NightPhase, ToolType, ZoneId, Position } from './state';
 
+// Event payload types (referenced by GameEventMap)
+export type DoorEvent = { readonly doorId: string; readonly isOpen: boolean; readonly position: Position };
+export type MonsterAlertEvent = { readonly monsterId: string; readonly position: Position };
+
 export type GameEventMap = {
   // Noise
   readonly NOISE_EMITTED: readonly [event: NoiseEvent];
@@ -128,10 +137,12 @@ export type GameEventMap = {
   readonly ELEVATOR_ARRIVED: readonly [floor: number];
   readonly HIDING_ENTERED: readonly [spotId: string];
   readonly HIDING_EXITED: readonly [spotId: string];
+  readonly ZONE_ENTER: readonly [zoneId: ZoneId, previousZoneId: ZoneId | null];
 
   // Monster
   readonly MONSTER_ALERT: readonly [event: MonsterAlertEvent];
   readonly MONSTER_CATCH: readonly [monsterId: string];
+  readonly MONSTER_SPOTTED: readonly [position: Position, monsterId: string];
 
   // Tools
   readonly TOOL_USED: readonly [toolType: ToolType, position: Position];
@@ -167,7 +178,7 @@ Phase-based union (proven pattern from hide-and-seek):
 import type { ReadonlyDeep } from './utility';
 
 // Top-level state is a discriminated union on phase
-export type GameState = MenuState | PlayingState | CaughtState;
+export type GameState = MenuState | PlayingState | CaughtState | EndingState;
 
 export type MenuState = {
   readonly phase: 'menu';
@@ -189,6 +200,37 @@ export type CaughtState = {
   readonly night: number;
   readonly caughtBy: string; // monster id
 };
+
+export type EndingState = {
+  readonly phase: 'ending';
+  readonly night: 5;
+};
+
+// World state — minimal interface, fleshed out in Phase 4
+export type WorldState = {
+  readonly zones: ReadonlyMap<ZoneId, ZoneInfo>;
+  readonly doors: readonly DoorState[];
+  readonly hidingSpots: readonly HidingSpotState[];
+  readonly navGraph: NavGraph;
+  readonly elevatorFloor: string;
+  readonly elevatorMoving: boolean;
+};
+
+export type ZoneInfo = {
+  readonly id: ZoneId;
+  readonly floor: number;
+  readonly surfaceType: SurfaceType;
+  readonly ambientLight: number; // 0-1
+};
+
+export type DoorState = {
+  readonly id: string;
+  readonly isOpen: boolean;
+  readonly position: Position;
+  readonly connectsZones: readonly [ZoneId, ZoneId];
+};
+
+export type SurfaceType = 'carpet' | 'wood' | 'tile';
 
 // Sub-states
 export type NightState = {
@@ -215,7 +257,8 @@ export type MonsterState = {
 export type InventoryState = {
   readonly throwables: number;
   readonly dndSigns: number;
-  readonly lighterFuel: number; // seconds remaining
+  readonly lighterFuel: number; // seconds remaining on CURRENT charge
+  readonly lighterCharges: number; // unused charges in reserve
 };
 
 export type ClockState = {
@@ -347,6 +390,7 @@ export const MOVEMENT = {
   SNEAK_SPEED: 40,
   JUMP_VELOCITY: -350,
   SLIDE_SPEED: 220,
+  SLIDE_DURATION_S: 0.8,
   GRAVITY: 800,
 } as const satisfies Record<string, number>;
 
@@ -369,6 +413,9 @@ export const NOISE = {
   ELEVATOR_SHAFT: 0.3,
 } as const satisfies Record<string, number>;
 
+// FIRST_WINDOW_AT_S, REPEAT_INTERVAL_S, WARNING_BEFORE_S are GLOBAL (same every night).
+// Window DURATION varies per night — Phase 9's NightConfig is the source of truth for per-night values.
+// These constants are defaults/reference.
 export const ESCAPE = {
   FIRST_WINDOW_AT_S: 90,
   REPEAT_INTERVAL_S: 60,
@@ -381,13 +428,30 @@ export const ESCAPE = {
 } as const satisfies Record<string, number>;
 
 export const MONSTER = {
+  // Bellhop
   BELLHOP_SPEED: 250,
+  BELLHOP_HEARING_THRESHOLD: 0.15,
+  BELLHOP_ALERT_THRESHOLD: 0.3,
+  BELLHOP_INVESTIGATE_S: 5,
+  BELLHOP_CONFUSED_S: 3,
+  CATCH_RADIUS: 24,
+  // Housekeeper
   HOUSEKEEPER_SPEED: 60,
+  HOUSEKEEPER_CHECK_DURATION_S: 4,
+  HOUSEKEEPER_SKIP_PAUSE_S: 1,
+  // Guest
   GUEST_LUNGE_SPEED: 400,
   GUEST_LUNGE_RANGE_TILES: 4,
   GUEST_DETECT_RANGE_TILES: 2,
   GUEST_RESET_COOLDOWN_S: 10,
+  GUEST_GLOW_VISIBLE_LIGHT_THRESHOLD: 0.4,
+  GUEST_GLOW_VISIBLE_RANGE_TILES: 3,
+  // Scaling
   NIGHT_4_SPEED_MULT: 1.25,
+  // Catch animations
+  BELLHOP_CATCH_DURATION_S: 2.5,
+  HOUSEKEEPER_CATCH_DURATION_S: 2.5,
+  GUEST_CATCH_DURATION_S: 2.5,
 } as const satisfies Record<string, number>;
 
 export const BREATH = {
@@ -447,6 +511,10 @@ export type NoiseEvent = {
 - Cross-floor (stairs): 0.05 (barely audible)
 - Elevator shaft: 0.3 (sound carries vertically)
 - Elevator DING: starts at 1.0 with ELEVATOR_SHAFT attenuation (audible on adjacent floors)
+
+**Constructor:** `createNoiseSystem(zoneGraph: NoiseZone[]): NoiseSystem` — takes the zone graph built by Phase 4's level loader.
+
+**Position-to-zone mapping:** `getZoneAtPosition(position: Position, zones: WorldState['zones']): ZoneId` utility function. Phase 4 provides implementation (checks room bounds). Position in NoiseEvent is used for renderer visualization (sound ripples), not for propagation. ZoneId is the atomic unit for propagation.
 
 **Zone graph built from level data** — Phase 4 (Hotel World) provides the room layout, but the propagation engine is generic and testable now with mock zone graphs.
 

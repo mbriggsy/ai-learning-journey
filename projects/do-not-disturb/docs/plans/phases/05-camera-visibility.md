@@ -133,6 +133,8 @@ export function createLightingSystem(scene: Phaser.Scene) {
 | Player's lighter | Player-controlled, limited fuel | Phase 8 |
 | Lightning flashes | Occasional full-screen flash | This phase |
 
+**Light blending rule:** Dynamic lights (lighter, lantern, cart) are ADDITIVE on top of static ambient. Total light at a point = ambient + sum(dynamic sources). Capped at 1.0. This means the lighter in the basement (0.05 ambient) creates a visible pool of light, while the lighter in the lobby (0.5 ambient) has less visual impact.
+
 ### 4. Monster light source visibility
 
 Monster light sources serve a gameplay purpose — you can see light under doors before the monster enters your room.

@@ -197,6 +197,8 @@ export function createElevator(emitter: Emitter, config: ElevatorConfig) {
 }
 ```
 
+**Player interaction:** Elevator call buttons are Interact (E) objects at each floor's elevator stop. Press E near button → calls elevator to that floor. Player can ride it or walk away (decoy).
+
 **Decoy usage:** Player calls elevator to one floor, takes stairs to another. Bellhop investigates the DING. High risk (DING is LOUD), high reward (buys time).
 
 ### 6. Hiding spot system
@@ -215,7 +217,7 @@ export type HidingSpotState = {
 export const HIDING_PROTECTION: Record<HidingSpotType, Record<string, boolean>> = {
   bed:       { bellhop: true,  housekeeper: false, guest: true  }, // Housekeeper checks beds
   closet:    { bellhop: true,  housekeeper: false, guest: true  }, // Housekeeper checks closets
-  furniture: { bellhop: false, housekeeper: false, guest: true  }, // Low protection, any monster spots
+  furniture: { bellhop: 0.5, housekeeper: 0.5, guest: true  }, // Probabilistic — 50% detection per check. Emergency only
   vent:      { bellhop: true,  housekeeper: true,  guest: true  }, // Safe from ALL
   freezer:   { bellhop: true,  housekeeper: true,  guest: true  }, // Safe but time-limited (cold)
 };

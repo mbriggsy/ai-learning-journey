@@ -101,7 +101,7 @@ export type GuestContext = {
 **Visual camouflage:**
 - Paper-thin, folded into impossible positions
 - In darkness (basement, unlit rooms), nearly invisible
-- Only tell: faint eye glow — visible ONLY if you're looking carefully or using the lighter
+- Only tell: faint eye glow — visible with lighter active within 4 tiles, OR in ambient light > 0.4 within 3 tiles. Invisible below these thresholds (constants: `GUEST_GLOW_VISIBLE_LIGHT_THRESHOLD`, `GUEST_GLOW_VISIBLE_RANGE_TILES`)
 
 **Detection range:** ~2 tiles. Player enters this radius → Guest triggers. This is tight enough that you can be RIGHT NEXT to a Guest without knowing. The lighter reveals the eye glow from further away (~4 tiles), giving you time to back off.
 
@@ -127,7 +127,12 @@ export function createLighter(emitter: Emitter) {
 
   return {
     ignite(inventory: MutableInventoryState) {
-      if (inventory.lighterFuel <= 0) return;
+      if (inventory.lighterFuel <= 0 && inventory.lighterCharges <= 0) return;
+      if (inventory.lighterFuel <= 0 && inventory.lighterCharges > 0) {
+        // Auto-refuel from next charge
+        inventory.lighterCharges--;
+        inventory.lighterFuel = INVENTORY.LIGHTER_CHARGE_S;
+      }
       active = true;
     },
     extinguish() {
@@ -154,13 +159,14 @@ export function createLighter(emitter: Emitter) {
 **The lighter tradeoff (critical game design):**
 - Lighter reveals Guest eye glow from ~4 tiles (safety from Guest)
 - Lighter creates a visible light source (Phase 5 lighting system)
-- **Bellhop and Housekeeper can SEE the light** — it makes you visible to them
-- Using the lighter in a room with the Housekeeper nearby = she spots you
-- Using the lighter when the Bellhop is in visual range = it knows where you are
+- **Igniting the lighter makes a FLICK SOUND** — the Bellhop HEARS it (noise event, not visual). The Bellhop remains pure sound-only. No visual detection, ever.
+- **The Housekeeper SEES the light** — she spots the glow if she's in the same or adjacent room
+- Using the lighter in a room with the Housekeeper nearby = she sees you
+- Using the lighter when the Bellhop is nearby = he hears the ignition
 
 This three-way tradeoff is the heart of Night 3+ gameplay:
-- Dark = safe from Bellhop/Housekeeper, vulnerable to Guest
-- Lit = safe from Guest, visible to Bellhop/Housekeeper
+- Dark + silent = safe from Bellhop (sound) and Housekeeper (sight), vulnerable to Guest
+- Lit = safe from Guest, Housekeeper sees the light, Bellhop hears the flick
 
 ### 4. Inventory interface
 
@@ -175,8 +181,8 @@ export type SelectedTool = 'throwable' | 'dndSign' | 'lighter' | null;
 ```
 
 **Action compatibility (SpecFlow Q8):**
-- Tools cannot be used during Run or Slide (speed/safety tradeoff)
-- Tools CAN be used during Walk, Sneak, or Idle
+- Tools cannot be used during Run, Slide, or Jump (speed/safety tradeoff)
+- Tools CAN be used during Walk, Sneak, or Idle (must be grounded)
 - This forces the player to slow down to use tools — a deliberate vulnerability window
 
 **HUD additions:**

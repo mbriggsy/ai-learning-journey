@@ -51,3 +51,4 @@ assets/palette/style-candidates/
 
 # Workspace config (monorepo artifact)
 pnpm-workspace.yaml
+.playwright-mcp/

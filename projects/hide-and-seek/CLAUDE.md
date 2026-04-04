@@ -1,6 +1,6 @@
 # Hide and Seek
 
-**Status: ACTIVE** — Engine gutted, renderer deleted. Rebuilding with a new vision.
+**Status: SHELVED** — Vision pivot to side-scrolling made this a new game. Continued as **Do Not Disturb** in `projects/do-not-disturb/`.
 
 Top-down 2D hide-and-seek survival horror: an AI seeker hunts you through a dark mansion. Tension comes from sound, limited visibility, and hiding mechanics.
 

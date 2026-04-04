@@ -78,3 +78,25 @@ export const INVENTORY = {
   LIGHTER_CHARGE_S: 30,
   LIGHTER_CHARGES_PER_NIGHT: 2,
 } as const satisfies Record<string, number>;
+
+export const CAMERA = {
+  LEAD_DISTANCE: 80,
+  FOLLOW_LERP: 0.08,
+  HIDE_ZOOM: 1.4,
+  ZOOM_DURATION_MS: 300,
+  SHAKE_DURATION_MS: 150,
+  SHAKE_INTENSITY: 0.005,
+  HORROR_HOLD_MS: 800,
+} as const satisfies Record<string, number>;
+
+export const LIGHTING = {
+  SCONCE_FLICKER_MIN: 0.8,
+  SCONCE_FLICKER_MAX: 1.0,
+  SCONCE_FLICKER_SPEED: 2.0,
+  LIGHTNING_MIN_INTERVAL_MS: 15000,
+  LIGHTNING_MAX_INTERVAL_MS: 45000,
+  LIGHTNING_FLASH_MS: 200,
+  LIGHTNING_FADE_MS: 500,
+  LIGHT_UNDER_DOOR_WIDTH: 4,
+  LIGHT_SOURCE_DEFAULT_RADIUS: 80,
+} as const satisfies Record<string, number>;

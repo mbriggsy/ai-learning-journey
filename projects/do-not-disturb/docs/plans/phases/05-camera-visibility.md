@@ -1,7 +1,7 @@
 ---
 phase: 5
 title: Camera & Visibility
-status: deep
+status: done
 ---
 
 # Phase 5: Camera & Visibility
@@ -201,17 +201,17 @@ export const LIGHTING = {
 
 ## Acceptance Criteria
 
-- [ ] Camera leads ahead in movement direction with smooth lerp
-- [ ] Camera zooms in when player hides, zooms out when exiting
-- [ ] Screen shake fires on MONSTER_ALERT event
-- [ ] Horror beat hold pans to monster briefly, then returns to player
-- [ ] Parallax: 3 layers scroll at different rates (0.3, 1.0, 1.3)
-- [ ] Darkness overlay renders with correct ambient light per floor
-- [ ] Light sources cut through darkness (circles with gradients)
-- [ ] Sconces flicker subtly
-- [ ] Lightning flashes at random intervals, briefly reveals full scene
-- [ ] Monster light visible under closed doors (gameplay tell)
-- [ ] Camera bounded to level edges (no scrolling past the world)
+- [x] Camera leads ahead in movement direction with smooth lerp
+- [x] Camera zooms in when player hides, zooms out when exiting
+- [x] Screen shake fires on MONSTER_ALERT event
+- [x] Horror beat hold pans to monster briefly, then returns to player
+- [x] Parallax: 3 layers scroll at different rates (0.3, 1.0, 1.3)
+- [x] Darkness overlay renders with correct ambient light per floor
+- [x] Light sources cut through darkness (circles with gradients)
+- [x] Sconces flicker subtly
+- [x] Lightning flashes at random intervals, briefly reveals full scene
+- [x] Monster light visible under closed doors (gameplay tell)
+- [x] Camera bounded to level edges (no scrolling past the world)
 
 ## Deliverable
 

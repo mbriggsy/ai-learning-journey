@@ -1,15 +1,15 @@
 # Do Not Disturb — TODO
 
-## Status: Phases 1-4 DONE — Phase 5 next
+## Status: Phases 1-5 DONE — Phase 6 next
 
 ## Next Steps
 
-1. **Execute Phase 5** (Camera & Visibility) — lead-ahead, zoom-on-hide, parallax, light zone rendering, monster lights
+1. **Execute Phase 6** (The Bellhop + Night 1) — Bellhop AI FSM, throwable system, escape window, phone call, breath mechanic, HUD, catch/restart
 2. **Execute sequentially** through Phase 10
 
 ## Test Baseline
 
-- 138 tests across 15 files, all passing
+- 167 tests across 17 files, all passing
 - 0 typecheck errors
 
 ## Project Structure
@@ -21,7 +21,8 @@
 
 ## Landmines
 
-- IEEE 754 precision: fixed-timestep accumulator with `1/60 * 1000` dt — test boundary conditions with +1ms tolerance
-- `src/main.ts` is still a placeholder — real scenes come when renderer is built
+- IEEE 754 precision: fixed-timestep accumulator — test boundary conditions with +1ms tolerance
+- `src/main.ts` is still a placeholder — real scenes come when game loop is wired
 - CollisionResult is a type only — Phaser Arcade Physics wiring happens in renderer
-- HidingSpotType is defined in BOTH `src/types/state.ts` and `src/types/level.ts` — level.ts is the source of truth, state.ts should import from there in a future cleanup
+- HidingSpotType defined in both state.ts and level.ts — level.ts is source of truth
+- Renderer modules (camera-controller, parallax, lighting-renderer, lightning) are thin Phaser adapters — verified by typecheck only, visual testing when game runs

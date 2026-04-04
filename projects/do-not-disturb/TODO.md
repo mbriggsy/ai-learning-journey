@@ -12,7 +12,7 @@
 
 ## Test Baseline
 
-- 444 tests across 42 files, all passing
+- 449 tests across 42 files, all passing
 - 0 typecheck errors
 
 ## Project Structure

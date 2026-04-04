@@ -121,4 +121,18 @@ export const PHONE = {
   GRACE_PERIOD_S: 5,
   RHYTHM_INTERVAL_S: 2,
   RHYTHM_WINDOW_MS: 200,
+  LINE_DISPLAY_S: 3,
+} as const satisfies Record<string, number>;
+
+export const NIGHT_TRANSITION = {
+  FADE_OUT_S: 0.5,
+  TEXT_HOLD_S: 1.5,
+  MONSTER_INTRO_S: 2.0,
+  FADE_IN_S: 0.5,
+} as const satisfies Record<string, number>;
+
+export const ENDING = {
+  FADE_S: 1.0,
+  LINE_HOLD_S: 3.0,
+  CREDITS_DELAY_S: 2.0,
 } as const satisfies Record<string, number>;

@@ -1,7 +1,7 @@
 ---
 phase: 9
 title: Night Progression & Narrative
-status: deep
+status: done
 ---
 
 # Phase 9: Night Progression & Narrative
@@ -294,21 +294,21 @@ emitter.on('MONSTER_CATCH', (monsterId: string) => {
 
 ## Acceptance Criteria
 
-- [ ] All 5 night configs load correctly with right monsters/items/timing
-- [ ] Night 4: monsters move 25% faster
-- [ ] Night 5: level layout shuffles rooms within floors, preserves stairs/elevator
-- [ ] Night 5: seeded shuffle = same layout on retry
-- [ ] Phone rings at start of each night with correct script
-- [ ] Phone dialogue skippable on retry
-- [ ] Phone ringing attracts Bellhop (noise event)
-- [ ] Inner monologue triggers contextually (monsters, zones, escape window)
-- [ ] Monologue respects cooldowns and priority
-- [ ] Between-night transitions are clean (fade, night number, fade in)
-- [ ] Save persists highest completed night to localStorage
-- [ ] Save uses numeric sentinel (0 = none), not Infinity (insight 009)
-- [ ] Game completion sequence plays after Night 5 escape
-- [ ] Catch animations play correct animation per monster
-- [ ] **All 5 nights playable end-to-end in sequence**
+- [x] All 5 night configs load correctly with right monsters/items/timing
+- [x] Night 4: monsters move 25% faster
+- [x] Night 5: level layout shuffles rooms within floors, preserves stairs/elevator
+- [x] Night 5: seeded shuffle = same layout on retry
+- [x] Phone rings at start of each night with correct script
+- [x] Phone dialogue skippable on retry
+- [x] Phone ringing attracts Bellhop (noise event)
+- [x] Inner monologue triggers contextually (monsters, zones, escape window)
+- [x] Monologue respects cooldowns and priority
+- [x] Between-night transitions are clean (fade, night number, fade in)
+- [x] Save persists highest completed night to localStorage
+- [x] Save uses numeric sentinel (0 = none), not Infinity (insight 009)
+- [x] Game completion sequence plays after Night 5 escape
+- [x] Catch animations play correct animation per monster
+- [x] **All 5 nights playable end-to-end in sequence**
 
 ## Deliverable
 

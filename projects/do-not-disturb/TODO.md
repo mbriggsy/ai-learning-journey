@@ -1,15 +1,14 @@
 # Do Not Disturb — TODO
 
-## Status: Phases 1-8 DONE — Phase 9 next
+## Status: Phases 1-9 DONE — Phase 10 next
 
 ## Next Steps
 
-1. **Execute Phase 9** (Night Progression & Narrative) — 5-night state machine, night scaling, phone call system, inner monologue, save persistence
-2. **Execute Phase 10** (Art, Sound & Polish)
+1. **Execute Phase 10** (Art, Sound & Polish) — Imagen 4 pipeline, sprites, animations, spatial audio, environmental polish
 
 ## Test Baseline
 
-- 301 tests across 30 files, all passing
+- 392 tests across 37 files, all passing
 - 0 typecheck errors
 
 ## Project Structure
@@ -28,3 +27,6 @@
 - Renderer modules are thin Phaser adapters — verified by typecheck only until visual testing
 - Guest ambush spots in night-config.ts are placeholder positions — will be replaced with Tiled map data when levels are built
 - MutableLighterInventory is a separate type from InventoryState to allow mutation — engine must sync back to state
+- Save system uses injectable Storage interface — tests use mock, production uses localStorage
+- Monologue system uses Math.random() for line selection — not seeded, acceptable for flavor text
+- Night manager's `start()` must be called to initialize — it does not self-start (insight 008 pattern)

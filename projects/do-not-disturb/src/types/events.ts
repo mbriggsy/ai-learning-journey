@@ -59,4 +59,19 @@ export type GameEventMap = {
   // Lighter
   readonly LIGHTER_IGNITED: readonly [position: Position];
   readonly LIGHTER_EXTINGUISHED: readonly [];
+
+  // Phone dialogue
+  readonly PHONE_LINE_SHOWN: readonly [line: string, index: number];
+  readonly PHONE_DIALOGUE_COMPLETE: readonly [];
+
+  // Monologue
+  readonly MONOLOGUE_SHOW: readonly [text: string];
+  readonly MONOLOGUE_HIDE: readonly [];
+
+  // Night lifecycle
+  readonly NIGHT_TRANSITION_START: readonly [fromNight: number, toNight: number];
+  readonly NIGHT_TRANSITION_END: readonly [night: number];
+  readonly CATCH_SEQUENCE_START: readonly [monsterId: string];
+  readonly CATCH_SEQUENCE_END: readonly [];
+  readonly GAME_COMPLETE: readonly [];
 };

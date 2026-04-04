@@ -20,7 +20,7 @@ origin: docs/ideation/2026-04-03-do-not-disturb-brainstorm.md
 | 6 | The Bellhop + Night 1 | **done** | [06-bellhop-night1.md](phases/06-bellhop-night1.md) |
 | 7 | The Housekeeper + Night 2 | **done** | [07-housekeeper-night2.md](phases/07-housekeeper-night2.md) |
 | 8 | The Guest + Night 3 | **done** | [08-guest-night3.md](phases/08-guest-night3.md) |
-| 9 | Night Progression & Narrative | **deep** | [09-night-progression.md](phases/09-night-progression.md) |
+| 9 | Night Progression & Narrative | **done** | [09-night-progression.md](phases/09-night-progression.md) |
 | 10 | Art, Sound & Polish | **deep** | [10-art-sound-polish.md](phases/10-art-sound-polish.md) |
 
 ## Overview
@@ -264,7 +264,7 @@ Copy these during Phase 1 scaffolding.
 
 **Goal:** All 5 nights playable with narrative thread and escalating difficulty.
 
-- [ ] **Night state machine** — 5 nights, clean start each. Progression:
+- [x] **Night state machine** — 5 nights, clean start each. Progression:
   | Night | Monsters | Escape Window | Twist |
   |-------|----------|---------------|-------|
   | 1 | Bellhop | 20s | Tutorial, learn sound |
@@ -272,23 +272,23 @@ Copy these during Phase 1 scaffolding.
   | 3 | + Guest | 15s | Full roster |
   | 4 | All, 25% faster | 12s | Pressure test |
   | 5 | All + layout changes | 10s | Memorization broken |
-- [ ] **Night 4 scaling** — 25% increase to monster movement speed. Detection radii unchanged. Escape window timing tighter
-- [ ] **Night 5 layout variants** — rooms and hiding spots shuffle positions within each floor. Stairs and elevator stay put (macro-navigation preserved, room-level memorization broken). Loaded via data-driven level config (designed for in Phase 4)
-- [ ] **Phone call system** — rings start of each night (lobby). Content per night:
+- [x] **Night 4 scaling** — 25% increase to monster movement speed. Detection radii unchanged. Escape window timing tighter
+- [x] **Night 5 layout variants** — rooms and hiding spots shuffle positions within each floor. Stairs and elevator stay put (macro-navigation preserved, room-level memorization broken). Loaded via data-driven level config (designed for in Phase 4)
+- [x] **Phone call system** — rings start of each night (lobby). Content per night:
   - Night 1: Tutorial — controls, monsters, "don't make noise"
   - Night 2: Hints about patrol patterns + narrative thread
   - Night 3: "Something else is here" + more narrative
   - Night 4: Urgency + narrative
   - Night 5: "I remember now." — the revelation
-- [ ] **Kid's inner monologue** — text overlay system. Context-sensitive reactions:
+- [x] **Kid's inner monologue** — text overlay system. Context-sensitive reactions:
   - Near monsters: "Is that... humming?"
   - New area: "Oh GREAT, another floor."
   - Escape warning: "I think I heard the lock clicking..."
   - Night 5: "Have I been here before?" / "I remember now."
-- [ ] **Between-night transitions** — brief fade-to-black. New monster introduction gets a moment (kid reacts: "What was THAT?")
-- [ ] **Catch animation per monster** — already implemented in Phases 6-8, wired into night restart flow
-- [ ] **Save persistence** — autosave after each completed night. Resume at highest unlocked night
-- [ ] **Game completion** — escape Night 5 → short ending sequence resolving the mystery → credits
+- [x] **Between-night transitions** — brief fade-to-black. New monster introduction gets a moment (kid reacts: "What was THAT?")
+- [x] **Catch animation per monster** — already implemented in Phases 6-8, wired into night restart flow
+- [x] **Save persistence** — autosave after each completed night. Resume at highest unlocked night
+- [x] **Game completion** — escape Night 5 → short ending sequence resolving the mystery → credits
 
 **Deliverable:** All 5 nights playable end-to-end. Narrative arc from confusion to revelation. Night 5 layout changes work. Save/load works. Tested.
 

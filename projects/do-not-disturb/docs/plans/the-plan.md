@@ -19,7 +19,7 @@ origin: docs/ideation/2026-04-03-do-not-disturb-brainstorm.md
 | 5 | Camera & Visibility | **done** | [05-camera-visibility.md](phases/05-camera-visibility.md) |
 | 6 | The Bellhop + Night 1 | **done** | [06-bellhop-night1.md](phases/06-bellhop-night1.md) |
 | 7 | The Housekeeper + Night 2 | **done** | [07-housekeeper-night2.md](phases/07-housekeeper-night2.md) |
-| 8 | The Guest + Night 3 | **deep** | [08-guest-night3.md](phases/08-guest-night3.md) |
+| 8 | The Guest + Night 3 | **done** | [08-guest-night3.md](phases/08-guest-night3.md) |
 | 9 | Night Progression & Narrative | **deep** | [09-night-progression.md](phases/09-night-progression.md) |
 | 10 | Art, Sound & Polish | **deep** | [10-art-sound-polish.md](phases/10-art-sound-polish.md) |
 
@@ -247,14 +247,14 @@ Copy these during Phase 1 scaffolding.
 
 **Goal:** Night 3 playable with all three monsters. Full monster roster complete.
 
-- [ ] **Guest AI** — FSM: Ambush (sit still, disguised as furniture) → Detect (player enters ~2-tile range) → Lunge (fast burst toward player) → Miss (player dodged) → Reset (return to same or new ambush spot after ~10s visible cooldown)
-- [ ] **Ambush mechanic** — Guest sits in chairs, bathtubs, dark corners. Looks like furniture until it unfolds. Only faint eye glow visible. Cannot chase far (~4 tiles max)
-- [ ] **Lighter tool** — illuminate dark areas, reveals Guest's eye glow before trigger range. Limited fuel: ~30s burn time per charge, 2-3 charges per night (found as matches/fuel pickups). Using lighter makes player visible to Bellhop and Housekeeper (light tradeoff)
-- [ ] **Guest visuals** — paper-thin, folded into impossible positions. Jerky stop-motion movement when unfolding. Eyes glow faintly
-- [ ] **Guest audio tells** — silence... then paper rustling when triggered. Fold/unfold sounds on reset
-- [ ] **Catch animation** — wraps around player like origami. Player folds into it. 2-3s
-- [ ] **Three-monster balance** — all independent. Monsters ignore each other. The lighter tradeoff (safety from Guest vs. visibility to others) creates genuine decision-making. Player must manage: noise (Bellhop), position (Housekeeper), darkness (Guest)
-- [ ] **Inventory interface** — number keys to select tool (1: throwable, 2: DND sign, 3: lighter). Tools cannot be used during Run or Slide (speed/safety tradeoff). Contextual use with E (interact)
+- [x] **Guest AI** — FSM: Ambush (sit still, disguised as furniture) → Detect (player enters ~2-tile range) → Lunge (fast burst toward player) → Miss (player dodged) → Reset (return to same or new ambush spot after ~10s visible cooldown)
+- [x] **Ambush mechanic** — Guest sits in chairs, bathtubs, dark corners. Looks like furniture until it unfolds. Only faint eye glow visible. Cannot chase far (~4 tiles max)
+- [x] **Lighter tool** — illuminate dark areas, reveals Guest's eye glow before trigger range. Limited fuel: ~30s burn time per charge, 2-3 charges per night (found as matches/fuel pickups). Using lighter makes player visible to Bellhop and Housekeeper (light tradeoff)
+- [x] **Guest visuals** — paper-thin, folded into impossible positions. Jerky stop-motion movement when unfolding. Eyes glow faintly
+- [x] **Guest audio tells** — silence... then paper rustling when triggered. Fold/unfold sounds on reset
+- [x] **Catch animation** — wraps around player like origami. Player folds into it. 2-3s
+- [x] **Three-monster balance** — all independent. Monsters ignore each other. The lighter tradeoff (safety from Guest vs. visibility to others) creates genuine decision-making. Player must manage: noise (Bellhop), position (Housekeeper), darkness (Guest)
+- [x] **Inventory interface** — number keys to select tool (1: throwable, 2: DND sign, 3: lighter). Tools cannot be used during Run or Slide (speed/safety tradeoff). Contextual use with E (interact)
 
 **Deliverable:** Night 3 playable with all three monsters + all three counter-tools. Three-way threat management works. Tool/monster matrix clean (each tool affects exactly one monster). Tested.
 

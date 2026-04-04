@@ -2,6 +2,15 @@ import type { FSMState } from '../../types/fsm';
 import type { HousekeeperContext } from './housekeeper-context';
 import { MONSTER } from '../../constants';
 
+// Shared lighter detection check — interrupts patrol/check when player has lighter on
+function checkLighterSpot(ctx: HousekeeperContext): boolean {
+  if (ctx.spottedPlayerPos) {
+    ctx.fsm.transition(HousekeeperAlertState);
+    return true;
+  }
+  return false;
+}
+
 export const HousekeeperPatrolState: FSMState<HousekeeperContext> = {
   onEnter(ctx) {
     ctx.reachedTarget = false;
@@ -10,6 +19,7 @@ export const HousekeeperPatrolState: FSMState<HousekeeperContext> = {
     }
   },
   onUpdate(ctx, _dt) {
+    if (checkLighterSpot(ctx)) return;
     if (!ctx.reachedTarget) return;
 
     // Check if door has DND sign
@@ -35,6 +45,7 @@ export const HousekeeperCheckRoomState: FSMState<HousekeeperContext> = {
     ctx.checkSequence = ['bed', 'closet', 'general'];
   },
   onUpdate(ctx, dt) {
+    if (checkLighterSpot(ctx)) return;
     ctx.checkTimer -= dt;
 
     if (ctx.checkTimer <= 0) {
@@ -74,6 +85,31 @@ export const HousekeeperChangeFloorState: FSMState<HousekeeperContext> = {
   },
   onExit(ctx) {
     ctx.reachedStairs = false;
+  },
+};
+
+export const HousekeeperAlertState: FSMState<HousekeeperContext> = {
+  onEnter(ctx) {
+    ctx.alertTimer = MONSTER.HOUSEKEEPER_CHECK_DURATION_S;
+    ctx.reachedTarget = false;
+    ctx.emitter.emit('MONSTER_ALERT', { monsterId: 'housekeeper', position: ctx.position });
+  },
+  onUpdate(ctx, dt) {
+    // Lighter still on — keep pursuing
+    if (ctx.spottedPlayerPos) {
+      ctx.alertTimer = MONSTER.HOUSEKEEPER_CHECK_DURATION_S; // reset timer while tracking
+      return;
+    }
+
+    // Lighter went off — investigate briefly, then return to patrol
+    ctx.alertTimer -= dt;
+    if (ctx.alertTimer <= 0) {
+      ctx.fsm.transition(HousekeeperPatrolState);
+    }
+  },
+  onExit(ctx) {
+    ctx.spottedPlayerPos = null;
+    ctx.alertTimer = 0;
   },
 };
 

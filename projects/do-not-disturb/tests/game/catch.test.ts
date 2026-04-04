@@ -11,6 +11,8 @@ function makePlayer(overrides: Partial<PlayerState> = {}): PlayerState {
     facing: 'right',
     hiding: null,
     noiseLevel: 0,
+    selectedTool: null,
+    lighterActive: false,
     ...overrides,
   };
 }

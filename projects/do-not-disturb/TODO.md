@@ -1,15 +1,15 @@
 # Do Not Disturb — TODO
 
-## Status: Phases 1-7 DONE — Phase 8 next
+## Status: Phases 1-8 DONE — Phase 9 next
 
 ## Next Steps
 
-1. **Execute Phase 8** (The Guest + Night 3) — Guest AI (ambush), lighter tool, 3-monster balance, inventory interface
-2. **Execute sequentially** through Phase 10
+1. **Execute Phase 9** (Night Progression & Narrative) — 5-night state machine, night scaling, phone call system, inner monologue, save persistence
+2. **Execute Phase 10** (Art, Sound & Polish)
 
 ## Test Baseline
 
-- 222 tests across 25 files, all passing
+- 301 tests across 30 files, all passing
 - 0 typecheck errors
 
 ## Project Structure
@@ -26,3 +26,5 @@
 - HidingSpotType defined in both state.ts and level.ts — level.ts is source of truth
 - catch.ts uses spotId as HidingSpotType cast — works because spotId values match type names
 - Renderer modules are thin Phaser adapters — verified by typecheck only until visual testing
+- Guest ambush spots in night-config.ts are placeholder positions — will be replaced with Tiled map data when levels are built
+- MutableLighterInventory is a separate type from InventoryState to allow mutation — engine must sync back to state

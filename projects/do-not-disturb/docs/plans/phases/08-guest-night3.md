@@ -1,7 +1,7 @@
 ---
 phase: 8
 title: The Guest + Night 3 Playable
-status: deep
+status: done
 ---
 
 # Phase 8: The Guest + Night 3 Playable
@@ -229,19 +229,19 @@ const NIGHT_3_CONFIG = {
 
 ## Acceptance Criteria
 
-- [ ] Guest sits camouflaged at ambush spots (disguised = true)
-- [ ] Guest triggers on player proximity (~2 tiles)
-- [ ] Guest lunges fast but limited range (~4 tiles)
-- [ ] Guest resets after failed lunge (10s visible cooldown)
-- [ ] Lighter reveals Guest eye glow from ~4 tiles
-- [ ] Lighter consumes fuel over time
-- [ ] Lighter makes player visible to Bellhop and Housekeeper (tradeoff)
-- [ ] Lighter fuel pickups work (matches/fuel cans)
-- [ ] Tool selection via number keys (1/2/3)
-- [ ] Tools blocked during Run and Slide
-- [ ] All three monsters run simultaneously, independently
-- [ ] Tool/monster matrix: each tool affects exactly one monster
-- [ ] **Night 3 is playable end-to-end with all three monsters**
+- [x] Guest sits camouflaged at ambush spots (disguised = true)
+- [x] Guest triggers on player proximity (~2 tiles)
+- [x] Guest lunges fast but limited range (~4 tiles)
+- [x] Guest resets after failed lunge (10s visible cooldown)
+- [x] Lighter reveals Guest eye glow from ~4 tiles
+- [x] Lighter consumes fuel over time
+- [x] Lighter makes player visible to Bellhop and Housekeeper (tradeoff)
+- [x] Lighter fuel pickups work (matches/fuel cans)
+- [x] Tool selection via number keys (1/2/3)
+- [x] Tools blocked during Run and Slide
+- [x] All three monsters run simultaneously, independently
+- [x] Tool/monster matrix: each tool affects exactly one monster
+- [x] **Night 3 is playable end-to-end with all three monsters**
 
 ## Deliverable
 

@@ -80,6 +80,8 @@ export type PlayerState = {
   readonly facing: 'left' | 'right';
   readonly hiding: HidingState | null;
   readonly noiseLevel: number;
+  readonly selectedTool: ToolType | null;
+  readonly lighterActive: boolean;
 };
 
 export type MonsterState = {

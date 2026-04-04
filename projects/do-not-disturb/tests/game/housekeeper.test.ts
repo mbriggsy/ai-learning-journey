@@ -6,6 +6,7 @@ import {
   HousekeeperCheckRoomState,
   HousekeeperSkipRoomState,
   HousekeeperChangeFloorState,
+  HousekeeperAlertState,
 } from '../../src/game/ai/housekeeper-states';
 import { createDoorSystem } from '../../src/game/doors';
 import { createEmitter } from '../../src/game/events';
@@ -140,5 +141,77 @@ describe('Housekeeper FSM', () => {
     ctx.reachedTarget = true;
     fsm.update(0.016);
     expect(ctx.checkSequence).toEqual(['bed', 'closet', 'general']);
+  });
+});
+
+describe('Housekeeper lighter detection', () => {
+  it('Patrol → Alert when spottedPlayerPos is set', () => {
+    const { ctx, fsm } = makeSetup();
+    ctx.spottedPlayerPos = { x: 200, y: 50 };
+    fsm.update(0.016);
+    expect(fsm.currentState).toBe(HousekeeperAlertState);
+  });
+
+  it('CheckRoom → Alert when lighter spotted mid-check', () => {
+    const { ctx, fsm } = makeSetup();
+    ctx.reachedTarget = true;
+    fsm.update(0.016); // → CheckRoom
+    expect(fsm.currentState).toBe(HousekeeperCheckRoomState);
+    ctx.spottedPlayerPos = { x: 200, y: 50 };
+    fsm.update(0.016);
+    expect(fsm.currentState).toBe(HousekeeperAlertState);
+  });
+
+  it('Alert emits MONSTER_ALERT', () => {
+    const { emitter, ctx, fsm } = makeSetup();
+    const fn = vi.fn();
+    emitter.on('MONSTER_ALERT', fn);
+    ctx.spottedPlayerPos = { x: 200, y: 50 };
+    fsm.update(0.016);
+    expect(fn).toHaveBeenCalledWith({ monsterId: 'housekeeper', position: ctx.position });
+  });
+
+  it('Alert stays while lighter is still active (spottedPlayerPos set)', () => {
+    const { ctx, fsm } = makeSetup();
+    ctx.spottedPlayerPos = { x: 200, y: 50 };
+    fsm.update(0.016); // → Alert
+    expect(fsm.currentState).toBe(HousekeeperAlertState);
+    // Lighter still active — stays in Alert
+    fsm.update(1.0);
+    expect(fsm.currentState).toBe(HousekeeperAlertState);
+  });
+
+  it('Alert → Patrol after lighter goes off and timer expires', () => {
+    const { ctx, fsm } = makeSetup();
+    ctx.spottedPlayerPos = { x: 200, y: 50 };
+    fsm.update(0.016); // → Alert
+    // Lighter goes off
+    ctx.spottedPlayerPos = null;
+    fsm.update(MONSTER.HOUSEKEEPER_CHECK_DURATION_S + 0.1);
+    expect(fsm.currentState).toBe(HousekeeperPatrolState);
+  });
+
+  it('Alert clears spottedPlayerPos on exit', () => {
+    const { ctx, fsm } = makeSetup();
+    ctx.spottedPlayerPos = { x: 200, y: 50 };
+    fsm.update(0.016); // → Alert
+    ctx.spottedPlayerPos = null;
+    fsm.update(MONSTER.HOUSEKEEPER_CHECK_DURATION_S + 0.1); // → Patrol
+    expect(ctx.spottedPlayerPos).toBeNull();
+  });
+
+  it('SkipRoom and ChangeFloor are NOT interrupted by lighter', () => {
+    const { ctx, fsm, doorSystem } = makeSetup();
+    // Get to SkipRoom
+    doorSystem.addSign('door-1');
+    ctx.reachedTarget = true;
+    fsm.update(0.016); // → SkipRoom
+    expect(fsm.currentState).toBe(HousekeeperSkipRoomState);
+
+    // Set lighter — SkipRoom should NOT be interrupted (deliberate: DND sign takes priority)
+    ctx.spottedPlayerPos = { x: 200, y: 50 };
+    fsm.update(0.016);
+    // SkipRoom doesn't check lighter (by design — it's a brief pause)
+    expect(fsm.currentState).toBe(HousekeeperSkipRoomState);
   });
 });

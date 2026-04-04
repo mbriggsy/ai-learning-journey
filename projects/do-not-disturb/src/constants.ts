@@ -1,3 +1,7 @@
+export const WORLD = {
+  TILE_SIZE: 32,
+} as const satisfies Record<string, number>;
+
 export const SIMULATION = {
   FIXED_DT_S: 1 / 60,
   FIXED_DT_MS: (1 / 60) * 1000,
@@ -26,6 +30,7 @@ export const NOISE = {
   THROWABLE_IMPACT_LEVEL: 0.8,
   PHONE_RING_LEVEL: 0.7,
   GASP_LEVEL: 0.4,
+  LIGHTER_FLICK_LEVEL: 0.5,
   CARPET_MULT: 0.4,
   WOOD_MULT: 1.0,
   TILE_MULT: 1.3,
@@ -63,6 +68,7 @@ export const MONSTER = {
   GUEST_RESET_COOLDOWN_S: 10,
   GUEST_GLOW_VISIBLE_LIGHT_THRESHOLD: 0.4,
   GUEST_GLOW_VISIBLE_RANGE_TILES: 3,
+  GUEST_GLOW_LIGHTER_RANGE_TILES: 4,
   NIGHT_4_SPEED_MULT: 1.25,
   BELLHOP_CATCH_DURATION_S: 2.5,
   HOUSEKEEPER_CATCH_DURATION_S: 2.5,
@@ -102,6 +108,7 @@ export const LIGHTING = {
   LIGHTNING_FADE_MS: 500,
   LIGHT_UNDER_DOOR_WIDTH: 4,
   LIGHT_SOURCE_DEFAULT_RADIUS: 80,
+  LIGHTER_RADIUS: 120,
 } as const satisfies Record<string, number>;
 
 export const TOOLS = {

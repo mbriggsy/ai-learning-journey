@@ -17,6 +17,8 @@ export type HousekeeperContext = {
   skipTimer: number;
   reachedTarget: boolean;
   reachedStairs: boolean;
+  spottedPlayerPos: Position | null; // set by engine when lighter active in same/adjacent zone
+  alertTimer: number;
   fsm: FSMRunner<HousekeeperContext>;
   emitter: Emitter;
   doorSystem: DoorSystem;
@@ -44,6 +46,8 @@ export function createHousekeeperContext(
     skipTimer: 0,
     reachedTarget: false,
     reachedStairs: false,
+    spottedPlayerPos: null,
+    alertTimer: 0,
     fsm: null as unknown as FSMRunner<HousekeeperContext>,
     emitter,
     doorSystem,

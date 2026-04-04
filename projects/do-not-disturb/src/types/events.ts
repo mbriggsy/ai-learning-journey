@@ -55,4 +55,8 @@ export type GameEventMap = {
 
   // Breath
   readonly BREATH_GASP: readonly [];
+
+  // Lighter
+  readonly LIGHTER_IGNITED: readonly [position: Position];
+  readonly LIGHTER_EXTINGUISHED: readonly [];
 };

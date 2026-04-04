@@ -14,7 +14,7 @@ origin: docs/ideation/2026-04-03-do-not-disturb-brainstorm.md
 |-------|------|--------|------|
 | 1 | Scaffolding & Tech Stack | **done** | [01-scaffolding.md](phases/01-scaffolding.md) |
 | 2 | Core Engine & Foundation | **done** | [02-core-engine.md](phases/02-core-engine.md) |
-| 3 | Player & Physics | **deep** | [03-player-physics.md](phases/03-player-physics.md) |
+| 3 | Player & Physics | **done** | [03-player-physics.md](phases/03-player-physics.md) |
 | 4 | Hotel World | **deep** | [04-hotel-world.md](phases/04-hotel-world.md) |
 | 5 | Camera & Visibility | **deep** | [05-camera-visibility.md](phases/05-camera-visibility.md) |
 | 6 | The Bellhop + Night 1 | **deep** | [06-bellhop-night1.md](phases/06-bellhop-night1.md) |
@@ -132,8 +132,8 @@ Copy these during Phase 1 scaffolding.
 
 **Goal:** Kid moves through a test level with correct physics and noise output.
 
-- [ ] **Gravity + ground collision** — Arcade Physics, configurable gravity constant
-- [ ] **6 movement modes** with noise levels:
+- [x] **Gravity + ground collision** — Arcade Physics, configurable gravity constant
+- [x] **6 movement modes** with noise levels:
   | Mode | Input | Speed | Noise |
   |------|-------|-------|-------|
   | Run | Shift+dir | Fast | LOUD |
@@ -142,10 +142,10 @@ Copy these during Phase 1 scaffolding.
   | Jump | Space | Varies | Landing thud |
   | Slide | Down while running | Fast | Whoosh |
   | Interact | E | None | Varies (doors creak) |
-- [ ] **Input system** — event-based listeners, NOT polling. Exposes current mode to engine
-- [ ] **Noise emission** — per-tick computation based on movement mode + surface type
-- [ ] **Surface type system** — carpet (quiet), wood (loud), tile (echoes). Affects noise multiplier
-- [ ] **Basic collision** — walls, floors, one-way platforms (for vents/ledges)
+- [x] **Input system** — event-based listeners, NOT polling. Exposes current mode to engine
+- [x] **Noise emission** — per-tick computation based on movement mode + surface type
+- [x] **Surface type system** — carpet (quiet), wood (loud), tile (echoes). Affects noise multiplier
+- [x] **Basic collision** — walls, floors, one-way platforms (for vents/ledges)
 
 **Deliverable:** Kid runs/walks/sneaks/jumps/slides through a test level. Noise values compute correctly per mode per surface. All movement tested without Phaser (pure game logic).
 

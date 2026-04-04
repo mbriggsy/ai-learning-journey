@@ -112,6 +112,12 @@ export type ToolType = 'throwable' | 'dndSign' | 'lighter';
 export type HidingState = { readonly spotId: string; readonly breathRemaining: number };
 export type ZoneId = string;
 
+export type CollisionResult = {
+  readonly onGround: boolean;
+  readonly hitWall: boolean;
+  readonly hitCeiling: boolean;
+};
+
 // --- Navigation graph ---
 
 export type NavNode = {

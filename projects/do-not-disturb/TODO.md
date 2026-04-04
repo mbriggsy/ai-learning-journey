@@ -1,15 +1,15 @@
 # Do Not Disturb — TODO
 
-## Status: Phases 1-2 DONE — Phase 3 next
+## Status: Phases 1-3 DONE — Phase 4 next
 
 ## Next Steps
 
-1. **Execute Phase 3** (Player & Physics) — gravity, 6 movement modes, noise emission, surface types, collision
+1. **Execute Phase 4** (Hotel World) — 5-floor Tiled maps, doors, stairs, elevator, hiding spots, surface types, light zones
 2. **Execute sequentially** through Phase 10
 
 ## Test Baseline
 
-- 53 tests across 7 files, all passing
+- 95 tests across 10 files, all passing
 - 0 typecheck errors
 
 ## Project Structure
@@ -23,3 +23,4 @@
 
 - IEEE 754 precision: fixed-timestep accumulator with `1/60 * 1000` dt — test boundary conditions with +1ms tolerance
 - `src/main.ts` is still a placeholder (Phaser title screen) — real scenes come in later phases
+- CollisionResult is a type only — actual Phaser Arcade Physics collision wiring happens when renderer is built

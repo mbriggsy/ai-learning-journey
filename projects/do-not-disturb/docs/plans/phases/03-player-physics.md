@@ -1,7 +1,7 @@
 ---
 phase: 3
 title: Player & Physics
-status: deep
+status: done
 ---
 
 # Phase 3: Player & Physics
@@ -224,15 +224,15 @@ export const TEST_SURFACES: Record<ZoneId, SurfaceType> = {
 
 ## Acceptance Criteria
 
-- [ ] All 6 movement modes resolve correctly from input
-- [ ] Velocity computes correctly per mode per direction
-- [ ] Noise emission computes correctly per mode per surface type
-- [ ] Slide only activates from run, has fixed duration
-- [ ] Jump sets vertical velocity, landing generates noise event
-- [ ] Input handler is event-based, not polling (insight 002)
-- [ ] Input handler works with injected key state (testable without DOM)
-- [ ] Zero Phaser imports in `src/game/`
-- [ ] `pnpm test:game` passes with all new player tests
+- [x] All 6 movement modes resolve correctly from input
+- [x] Velocity computes correctly per mode per direction
+- [x] Noise emission computes correctly per mode per surface type
+- [x] Slide only activates from run, has fixed duration
+- [x] Jump sets vertical velocity, landing generates noise event
+- [x] Input handler is event-based, not polling (insight 002)
+- [x] Input handler works with injected key state (testable without DOM)
+- [x] Zero Phaser imports in `src/game/`
+- [x] `pnpm test:game` passes with all new player tests
 
 ## Deliverable
 

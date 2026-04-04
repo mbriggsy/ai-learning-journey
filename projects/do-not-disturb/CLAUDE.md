@@ -6,7 +6,9 @@ Side-scrolling 2D playful horror: a kid trapped in an abandoned hotel, hunted by
 
 ## Tech Stack
 
-TBD — evaluated from zero during phase planning. No inherited assumptions.
+- **Runtime:** Phaser 3.90.0, TypeScript 5.9+
+- **Build:** Vite 7, pnpm 10
+- **Test:** Vitest 4 (globals: false, restoreMocks: true), V8 coverage
 
 ## Architecture Rules (Proven Patterns)
 
@@ -49,4 +51,10 @@ TBD — evaluated from zero during phase planning. No inherited assumptions.
 
 ## Commands
 
-TBD — will be defined when project scaffolding is created.
+- `pnpm dev` — start dev server
+- `pnpm build` — typecheck + production build
+- `pnpm test` — run all tests
+- `pnpm test:game` — game logic tests only (node)
+- `pnpm test:renderer` — renderer tests only (jsdom)
+- `pnpm test:watch` — watch mode
+- `pnpm typecheck` — TypeScript check only

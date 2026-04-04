@@ -1,7 +1,7 @@
 ---
 phase: 1
 title: Scaffolding & Tech Stack
-status: deep
+status: done
 ---
 
 # Phase 1: Scaffolding & Tech Stack
@@ -305,15 +305,15 @@ Update the Tech Stack section from "TBD" to the finalized stack, and add the Com
 
 ## Acceptance Criteria
 
-- [ ] `pnpm install` completes without errors
-- [ ] `pnpm typecheck` passes with zero errors
-- [ ] `pnpm build` produces `dist/` with index.html + chunks
-- [ ] `pnpm test` runs and reports 0 tests (no failures)
-- [ ] `pnpm dev` serves Phaser canvas showing "Do Not Disturb" text
-- [ ] `src/game/` exists with no Phaser imports (architecture boundary ready)
-- [ ] All 10 insight docs present in `docs/insights/` (7 original + 3 copied)
-- [ ] CLAUDE.md Tech Stack and Commands sections updated
-- [ ] `.gitignore` covers node_modules, dist, coverage
+- [x] `pnpm install` completes without errors
+- [x] `pnpm typecheck` passes with zero errors
+- [x] `pnpm build` produces `dist/` with index.html + chunks
+- [x] `pnpm test` runs and reports 0 tests (no failures)
+- [x] `pnpm dev` serves Phaser canvas showing "Do Not Disturb" text
+- [x] `src/game/` exists with no Phaser imports (architecture boundary ready)
+- [x] All 10 insight docs present in `docs/insights/` (7 original + 3 copied)
+- [x] CLAUDE.md Tech Stack and Commands sections updated
+- [x] `.gitignore` covers node_modules, dist, coverage
 
 ## Deliverable
 

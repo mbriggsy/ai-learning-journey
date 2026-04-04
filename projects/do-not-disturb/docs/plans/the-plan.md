@@ -12,7 +12,7 @@ origin: docs/ideation/2026-04-03-do-not-disturb-brainstorm.md
 
 | Phase | Name | Status | Plan |
 |-------|------|--------|------|
-| 1 | Scaffolding & Tech Stack | **deep** | [01-scaffolding.md](phases/01-scaffolding.md) |
+| 1 | Scaffolding & Tech Stack | **done** | [01-scaffolding.md](phases/01-scaffolding.md) |
 | 2 | Core Engine & Foundation | **deep** | [02-core-engine.md](phases/02-core-engine.md) |
 | 3 | Player & Physics | **deep** | [03-player-physics.md](phases/03-player-physics.md) |
 | 4 | Hotel World | **deep** | [04-hotel-world.md](phases/04-hotel-world.md) |
@@ -91,9 +91,9 @@ Copy these during Phase 1 scaffolding.
 
 **Goal:** Empty project that builds, lints, and runs tests (even with zero tests).
 
-- [ ] Initialize pnpm project, install Phaser + TypeScript + Vite + Vitest
-- [ ] tsconfig with `verbatimModuleSyntax`, strict mode
-- [ ] Directory structure following proven pattern:
+- [x] Initialize pnpm project, install Phaser + TypeScript + Vite + Vitest
+- [x] tsconfig with `verbatimModuleSyntax`, strict mode
+- [x] Directory structure following proven pattern:
   ```
   src/
     game/          # Pure logic (ZERO framework imports)
@@ -101,10 +101,10 @@ Copy these during Phase 1 scaffolding.
     types/         # Shared type definitions
     constants.ts   # All design constants
   ```
-- [ ] Vitest config: separate test projects (game/node, renderer/jsdom)
-- [ ] Copy insight docs 006, 009, 010 from hide-and-seek
-- [ ] Placeholder `index.html` + Vite dev server
-- [ ] Update CLAUDE.md with finalized tech stack and commands
+- [x] Vitest config: separate test projects (game/node, renderer/jsdom)
+- [x] Copy insight docs 006, 009, 010 from hide-and-seek
+- [x] Placeholder `index.html` + Vite dev server
+- [x] Update CLAUDE.md with finalized tech stack and commands
 
 **Deliverable:** `pnpm build` succeeds, `pnpm test` runs (0 tests), `pnpm dev` serves blank Phaser canvas.
 

@@ -1,31 +1,19 @@
 # Do Not Disturb — TODO
 
-## Status: Plans complete, contradictions fixed — READY TO BUILD
+## Status: Phase 1 DONE — Phase 2 next
 
 ## Next Steps
 
-1. **Execute Phase 1** (Scaffolding) — pnpm init, Phaser, TypeScript, Vite, Vitest, directory structure
+1. **Execute Phase 2** (Core Engine & Foundation) — engine tick, events, FSM, ReadonlyDeep, noise model, platform graph, game clock
 2. **Execute sequentially** through Phase 10
 
-## What Was Done
+## Phase 1 Deliverables (verified)
 
-- Brainstorm locked (13 design decisions)
-- 10 phase plans deepened with code patterns, data structures, acceptance criteria
-- Contradiction check found 24 issues — all critical and medium fixes applied to phase files
-- README written
-
-## Key Fixes Applied
-
-- Bellhop stays pure sound-only. Lighter makes a flick SOUND (Bellhop hears), Housekeeper SEES the light
-- InventoryState now has both `lighterFuel` (seconds) AND `lighterCharges` (reserve count)
-- Missing constants added: Bellhop thresholds, Housekeeper timers, Guest visibility, catch durations, slide duration
-- WorldState, EndingState, Emitter type, DoorEvent, MonsterAlertEvent all defined in Phase 2
-- MONSTER_SPOTTED, ZONE_ENTER events added to GameEventMap
-- Monologue triggers split into event-driven vs condition-driven
-- Furniture hiding is probabilistic (50%), not guaranteed detection
-- Tools blocked during Run, Slide, AND Jump
-- Dynamic light is additive on ambient, capped at 1.0
-- Guest eye glow visibility thresholds defined
+- pnpm install, typecheck, build, test — all pass
+- Phaser canvas renders "Do Not Disturb" via dev server
+- 10 insight docs in `docs/insights/` (7 original + 3 copied from hide-and-seek)
+- CLAUDE.md updated with tech stack + commands
+- Directory structure: `src/game/`, `src/renderer/`, `src/types/`, `tests/game/`, `tests/renderer/`, `tests/integration/`
 
 ## Project Structure
 
@@ -33,9 +21,8 @@
 - **Phase plans:** `docs/plans/phases/01-scaffolding.md` through `10-art-sound-polish.md`
 - **Contradiction report:** `docs/plans/contradiction-report.md` (all fixes applied)
 - **Brainstorm:** `docs/ideation/2026-04-03-do-not-disturb-brainstorm.md`
-- **Insights:** `docs/insights/` (7 present, 3 more to copy from hide-and-seek in Phase 1)
+- **Insights:** `docs/insights/` (10 docs)
 
 ## Landmines
 
-- 3 insight docs (006, 009, 010) still need to be copied from hide-and-seek during Phase 1
-- No code exists yet — Phase 1 is the first code written
+- No code exists beyond `src/main.ts` placeholder — Phase 2 is the first real code

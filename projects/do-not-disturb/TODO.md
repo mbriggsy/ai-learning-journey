@@ -4,10 +4,23 @@
 
 ## Next Steps
 
-1. **Check for contradictions across all 10 phase plans** — scan for conflicting constants, type mismatches, overlapping responsibilities, or gaps between phases
-2. **Fix any contradictions found**
+1. **~~Check for contradictions across all 10 phase plans~~** — DONE (2026-04-04). Report at `docs/plans/contradiction-report.md`
+2. **Fix contradictions** — 5 critical, 12 medium, 7 low. Apply fixes to phase plan files, then re-verify.
 3. **Execute Phase 1** (Scaffolding) — first code written
 4. **Execute sequentially** through Phase 10
+
+## Contradiction Summary
+
+Full report: `docs/plans/contradiction-report.md`
+
+**Critical (must fix before executing):**
+1. Bellhop visibility contradiction (Phase 6 vs 8) — lighter makes NOISE for Bellhop, not visual
+2. Lighter fuel model conflict — add `lighterCharges` to InventoryState
+3. Missing Bellhop constants in Phase 2 — 6 constants referenced but undefined
+4. WorldState type undefined in Phase 2
+5. Emitter type not exported from Phase 2
+
+Each fix has a prescription in the report. No ambiguity — just apply them.
 
 ## Project Structure
 

@@ -7,12 +7,17 @@ type DoorInfo = {
   isOpen: boolean;
   position: Position;
   zones: readonly [ZoneId, ZoneId];
+  hasDndSign: boolean;
 };
 
 export type DoorSystem = {
   init(configs: readonly DoorConfig[], roomId: ZoneId, zoneMapping: ReadonlyMap<string, readonly [ZoneId, ZoneId]>): void;
   toggle(doorId: string): void;
   isOpen(doorId: string): boolean;
+  addSign(doorId: string): void;
+  hasSign(doorId: string): boolean;
+  getPosition(doorId: string): Position | null;
+  clearSigns(): void;
   getDoors(): ReadonlyMap<string, { readonly isOpen: boolean; readonly position: Position }>;
 };
 
@@ -28,6 +33,7 @@ export function createDoorSystem(emitter: Emitter): DoorSystem {
           isOpen: d.initialState === 'open',
           position: d.position,
           zones,
+          hasDndSign: false,
         });
       }
     },
@@ -50,6 +56,25 @@ export function createDoorSystem(emitter: Emitter): DoorSystem {
 
     isOpen(doorId: string) {
       return doors.get(doorId)?.isOpen ?? false;
+    },
+
+    addSign(doorId: string) {
+      const door = doors.get(doorId);
+      if (door) door.hasDndSign = true;
+    },
+
+    hasSign(doorId: string) {
+      return doors.get(doorId)?.hasDndSign ?? false;
+    },
+
+    getPosition(doorId: string) {
+      return doors.get(doorId)?.position ?? null;
+    },
+
+    clearSigns() {
+      for (const door of doors.values()) {
+        door.hasDndSign = false;
+      }
     },
 
     getDoors() {

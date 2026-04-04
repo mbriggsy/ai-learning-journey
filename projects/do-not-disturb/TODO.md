@@ -1,15 +1,15 @@
 # Do Not Disturb — TODO
 
-## Status: Phases 1-6 DONE — Phase 7 next
+## Status: Phases 1-7 DONE — Phase 8 next
 
 ## Next Steps
 
-1. **Execute Phase 7** (The Housekeeper + Night 2) — Housekeeper AI, DND sign system, two-monster balance
+1. **Execute Phase 8** (The Guest + Night 3) — Guest AI (ambush), lighter tool, 3-monster balance, inventory interface
 2. **Execute sequentially** through Phase 10
 
 ## Test Baseline
 
-- 204 tests across 22 files, all passing
+- 222 tests across 25 files, all passing
 - 0 typecheck errors
 
 ## Project Structure

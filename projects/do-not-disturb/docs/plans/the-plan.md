@@ -18,7 +18,7 @@ origin: docs/ideation/2026-04-03-do-not-disturb-brainstorm.md
 | 4 | Hotel World | **done** | [04-hotel-world.md](phases/04-hotel-world.md) |
 | 5 | Camera & Visibility | **done** | [05-camera-visibility.md](phases/05-camera-visibility.md) |
 | 6 | The Bellhop + Night 1 | **done** | [06-bellhop-night1.md](phases/06-bellhop-night1.md) |
-| 7 | The Housekeeper + Night 2 | **deep** | [07-housekeeper-night2.md](phases/07-housekeeper-night2.md) |
+| 7 | The Housekeeper + Night 2 | **done** | [07-housekeeper-night2.md](phases/07-housekeeper-night2.md) |
 | 8 | The Guest + Night 3 | **deep** | [08-guest-night3.md](phases/08-guest-night3.md) |
 | 9 | Night Progression & Narrative | **deep** | [09-night-progression.md](phases/09-night-progression.md) |
 | 10 | Art, Sound & Polish | **deep** | [10-art-sound-polish.md](phases/10-art-sound-polish.md) |
@@ -230,14 +230,14 @@ Copy these during Phase 1 scaffolding.
 
 **Goal:** Night 2 playable with both monsters interacting.
 
-- [ ] **Housekeeper AI** — FSM: Patrol (L-to-R, room by room, floor by floor) → Check Room (open door, check bed, check closet) → Skip Room (DND sign present) → Found Player → Catch
-- [ ] **Methodical patrol** — opens every door, checks every hiding spot. Predictable pattern = counterable. Player must count rooms and stay ahead
-- [ ] **Housekeeper vs hiding spots** — she FINDS you in beds and closets (design tension — intentional). Vents are the only guaranteed-safe hiding from her. Behind furniture is risky
-- [ ] **DND sign system** — limited inventory: 2-3 per night. Found as environmental pickups (hung on wall hooks near supply closets). Place on door → Housekeeper skips that room. Signs are NOT recoverable after placement. Housekeeper does NOT remove them
-- [ ] **Housekeeper visuals** — round, shuffling, apron. Head rotates unnaturally far. Cleaning cart with flickering fluorescent tube
-- [ ] **Housekeeper audio tells** — cart wheels squeaking, muttering about "the mess", mop dragging, tuts at open doors
-- [ ] **Catch animation** — wags finger, tuts, drags kid off-screen by the hoodie. 2-3s
-- [ ] **Two-monster balance** — Bellhop and Housekeeper are independent agents. They ignore each other. Can be in the same room simultaneously. Nearest monster catches if both in range. Player must balance: silence (Bellhop safety) vs. movement (staying ahead of Housekeeper)
+- [x] **Housekeeper AI** — FSM: Patrol (L-to-R, room by room, floor by floor) → Check Room (open door, check bed, check closet) → Skip Room (DND sign present) → Found Player → Catch
+- [x] **Methodical patrol** — opens every door, checks every hiding spot. Predictable pattern = counterable. Player must count rooms and stay ahead
+- [x] **Housekeeper vs hiding spots** — she FINDS you in beds and closets (design tension — intentional). Vents are the only guaranteed-safe hiding from her. Behind furniture is risky
+- [x] **DND sign system** — limited inventory: 2-3 per night. Found as environmental pickups (hung on wall hooks near supply closets). Place on door → Housekeeper skips that room. Signs are NOT recoverable after placement. Housekeeper does NOT remove them
+- [x] **Housekeeper visuals** — round, shuffling, apron. Head rotates unnaturally far. Cleaning cart with flickering fluorescent tube
+- [x] **Housekeeper audio tells** — cart wheels squeaking, muttering about "the mess", mop dragging, tuts at open doors
+- [x] **Catch animation** — wags finger, tuts, drags kid off-screen by the hoodie. 2-3s
+- [x] **Two-monster balance** — Bellhop and Housekeeper are independent agents. They ignore each other. Can be in the same room simultaneously. Nearest monster catches if both in range. Player must balance: silence (Bellhop safety) vs. movement (staying ahead of Housekeeper)
 
 **Deliverable:** Night 2 playable with both monsters. DND signs work. Two-monster interactions emergent but fair. Tested.
 

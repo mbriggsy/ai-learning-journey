@@ -1,7 +1,7 @@
 ---
 phase: 7
 title: The Housekeeper + Night 2 Playable
-status: deep
+status: done
 ---
 
 # Phase 7: The Housekeeper + Night 2 Playable
@@ -218,18 +218,18 @@ const NIGHT_2_CONFIG = {
 
 ## Acceptance Criteria
 
-- [ ] Housekeeper patrols L-to-R, floor-by-floor, room-by-room
-- [ ] Housekeeper opens doors (noise event), checks beds, checks closets
-- [ ] Housekeeper finds player in beds and closets (NOT safe)
-- [ ] DND sign placement reduces inventory count
-- [ ] Housekeeper skips signed rooms (pauses, sighs, moves on)
-- [ ] Signs are not recoverable after placement
-- [ ] Vents are safe from Housekeeper (AND Bellhop)
-- [ ] Cart light visible under closed doors (Phase 5 lighting system)
-- [ ] Audio tells fire at correct moments (cart wheels, muttering, mop)
-- [ ] Both monsters run simultaneously without cross-contamination
-- [ ] Bellhop still hunts by sound while Housekeeper patrols
-- [ ] **Night 2 is playable end-to-end with both monsters**
+- [x] Housekeeper patrols L-to-R, floor-by-floor, room-by-room
+- [x] Housekeeper opens doors (noise event), checks beds, checks closets
+- [x] Housekeeper finds player in beds and closets (NOT safe)
+- [x] DND sign placement reduces inventory count
+- [x] Housekeeper skips signed rooms (pauses, sighs, moves on)
+- [x] Signs are not recoverable after placement
+- [x] Vents are safe from Housekeeper (AND Bellhop)
+- [x] Cart light visible under closed doors (Phase 5 lighting system)
+- [x] Audio tells fire at correct moments (cart wheels, muttering, mop)
+- [x] Both monsters run simultaneously without cross-contamination
+- [x] Bellhop still hunts by sound while Housekeeper patrols
+- [x] **Night 2 is playable end-to-end with both monsters**
 
 ## Deliverable
 

@@ -1,35 +1,25 @@
 # Hide and Seek — TODO
 
-## Status: SHELVED
-Project paused 2026-04-02. Solid engine, needs a bigger vision to be worth showing.
+## Status: ACTIVE — Gutted and Ready to Rebuild
 
-## What's Built (and working)
-- Pure game engine with fixed-timestep accumulator, 336 tests passing
-- AI seeker with FSM (patrol/suspicious/search/chase), A* pathfinding, vision cone
-- Fog of war with distance-based vignette, explored/visible states
-- Proximity danger overlay (red screen edges when seeker is near)
-- F1 debug toggle for unrestricted view
-- Imagen 4 art pipeline: generate, downscale, chroma-key, edge-strip, palette-enforce, atlas-pack
-- Programmatic floor tile generator (7 types — AI tiles create plaid at 32x32)
-- Per-room floor variety (3 zones with distinct floor types)
-- Audio: footsteps, doors, heartbeat system, ambient drone, sonar ping
-- Scoring, persistence, pause menu, minimap, spectator mode
+Project gutted 2026-04-03. Renderer, assets, old plans, and old vision deleted. Engine intact with 336 passing tests.
 
-## Why It's Shelved
-- 40x30 map with 3 rooms — too small to feel like a mansion
-- AI-generated 32x32 sprites look like blobs, not characters
-- No hiding mechanics (game is called Hide and Seek)
-- Needs procedural map generation, bigger maps, hiding spots, more environmental variety
-- After UMB, the bar is higher than "technically correct"
+## What's Here
 
-## To Pick Back Up
-1. Procedural mansion generation (bigger maps, room variety, hiding spots)
-2. Art direction overhaul — either higher-res or hand-crafted pixel art
-3. Hiding mechanic (under beds, in closets, behind furniture)
-4. Sound as primary tension mechanic (footstep volume = detection risk)
+- Pure game engine: fixed-timestep, AI FSM, A* pathfinding, shadowcasting FOV, vision cone detection
+- Door system, scoring, persistence, game flow rules, audio curves
+- 336 tests passing, typecheck clean
+- 11 insight docs in `docs/insights/`
+- Audio assets: footsteps, heartbeat, doors, ambient drone, sonar
+
+## Next Steps
+
+1. Define the new vision — tense survival horror, not cute flashlight tag
+2. Plan new phases for the rebuild
+3. Deepen all plans before writing any code
+4. Execute
 
 ## Landmines
+
 - Module-level `let` in SearchState/SuspiciousState — singleton, breaks with multi-seeker
-- Tiled map has no Rooms object layer — medium/hard patrol falls back to random
-- Seeker chase-e animation has 138% frame size variance between frames
-- Imagen 4: 70 RPD free tier, renders hex codes as text in images
+- Map parser (`map.ts`) expects Tiled JSON — new map approach may need a new parser

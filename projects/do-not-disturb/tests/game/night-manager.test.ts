@@ -113,17 +113,40 @@ describe('createNightManager', () => {
       expect(transFn).toHaveBeenCalledWith(1, 2);
     });
 
-    it('advances to next night after transition timer', () => {
+    it('advances to next night after transition timer (with monster intro)', () => {
       const { emitter, mgr } = makeSetup();
       mgr.start(1);
-      mgr.onEscape();
-      const totalTransition = NIGHT_TRANSITION.FADE_OUT_S + NIGHT_TRANSITION.TEXT_HOLD_S + NIGHT_TRANSITION.FADE_IN_S;
+      mgr.onEscape(); // → night 2 (has monster intro)
+      // Night 2 introduces Housekeeper → extra MONSTER_INTRO_S
+      const totalTransition = NIGHT_TRANSITION.FADE_OUT_S + NIGHT_TRANSITION.TEXT_HOLD_S
+        + NIGHT_TRANSITION.MONSTER_INTRO_S + NIGHT_TRANSITION.FADE_IN_S;
       const endFn = vi.fn();
       emitter.on('NIGHT_TRANSITION_END', endFn);
       mgr.update(totalTransition + 0.1);
       expect(mgr.state.phase).toBe('starting');
       expect(mgr.state.currentNight).toBe(2);
       expect(endFn).toHaveBeenCalledWith(2);
+    });
+
+    it('transition timer shorter when no monster intro (night 3→4)', () => {
+      const { mgr } = makeSetup();
+      mgr.start(3);
+      mgr.onEscape(); // → night 4 (no new monster)
+      const shortTransition = NIGHT_TRANSITION.FADE_OUT_S + NIGHT_TRANSITION.TEXT_HOLD_S + NIGHT_TRANSITION.FADE_IN_S;
+      mgr.update(shortTransition + 0.1);
+      expect(mgr.state.phase).toBe('starting');
+      expect(mgr.state.currentNight).toBe(4);
+    });
+
+    it('emits NIGHT_START after transition completes (not just on restart)', () => {
+      const { emitter, mgr } = makeSetup();
+      mgr.start(3);
+      mgr.onEscape(); // → night 4
+      const startFn = vi.fn();
+      emitter.on('NIGHT_START', startFn);
+      const shortTransition = NIGHT_TRANSITION.FADE_OUT_S + NIGHT_TRANSITION.TEXT_HOLD_S + NIGHT_TRANSITION.FADE_IN_S;
+      mgr.update(shortTransition + 0.1);
+      expect(startFn).toHaveBeenCalledWith(4);
     });
 
     it('resets retryCount on night advance', () => {
@@ -133,7 +156,9 @@ describe('createNightManager', () => {
       mgr.update(MONSTER.BELLHOP_CATCH_DURATION_S + 0.1); // retry
       expect(mgr.state.retryCount).toBe(1);
       mgr.onEscape();
-      const totalTransition = NIGHT_TRANSITION.FADE_OUT_S + NIGHT_TRANSITION.TEXT_HOLD_S + NIGHT_TRANSITION.FADE_IN_S;
+      // Night 2 has monster intro
+      const totalTransition = NIGHT_TRANSITION.FADE_OUT_S + NIGHT_TRANSITION.TEXT_HOLD_S
+        + NIGHT_TRANSITION.MONSTER_INTRO_S + NIGHT_TRANSITION.FADE_IN_S;
       mgr.update(totalTransition + 0.1);
       expect(mgr.state.retryCount).toBe(0);
     });
@@ -198,15 +223,19 @@ describe('createNightManager', () => {
       expect(mgr.state.phase).toBe('caught');
     });
 
-    it('full 5-night progression', () => {
+    it('full 5-night progression (accounts for monster intro nights)', () => {
       const { mgr } = makeSetup();
-      const totalTransition = NIGHT_TRANSITION.FADE_OUT_S + NIGHT_TRANSITION.TEXT_HOLD_S + NIGHT_TRANSITION.FADE_IN_S;
+      const base = NIGHT_TRANSITION.FADE_OUT_S + NIGHT_TRANSITION.TEXT_HOLD_S + NIGHT_TRANSITION.FADE_IN_S;
+      const withIntro = base + NIGHT_TRANSITION.MONSTER_INTRO_S;
 
       mgr.start(1);
       for (let n = 1; n <= 4; n++) {
         expect(mgr.state.currentNight).toBe(n);
         mgr.onEscape();
-        mgr.update(totalTransition + 0.1);
+        // Nights 2 and 3 have monster intros
+        const nextNight = n + 1;
+        const transTime = (nextNight === 2 || nextNight === 3) ? withIntro : base;
+        mgr.update(transTime + 0.1);
       }
       expect(mgr.state.currentNight).toBe(5);
       mgr.onEscape();

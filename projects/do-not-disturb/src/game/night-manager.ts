@@ -66,7 +66,7 @@ export function createNightManager(emitter: Emitter): NightManager {
         timer -= dt;
         if (timer <= 0) {
           emitter.emit('NIGHT_TRANSITION_END', currentNight);
-          phase = 'starting';
+          startNight(currentNight); // emits NIGHT_START consistently (not just on restart)
         }
       }
     },
@@ -93,8 +93,10 @@ export function createNightManager(emitter: Emitter): NightManager {
         emitter.emit('GAME_COMPLETE');
       } else {
         const nextNight = currentNight + 1;
+        const hasMonsterIntro = nextNight === 2 || nextNight === 3;
         const totalTransition = NIGHT_TRANSITION.FADE_OUT_S
           + NIGHT_TRANSITION.TEXT_HOLD_S
+          + (hasMonsterIntro ? NIGHT_TRANSITION.MONSTER_INTRO_S : 0)
           + NIGHT_TRANSITION.FADE_IN_S;
         timer = totalTransition;
         phase = 'transitioning';

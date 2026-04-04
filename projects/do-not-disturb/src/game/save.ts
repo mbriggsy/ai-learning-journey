@@ -43,8 +43,10 @@ export function clearSave(storage: Storage): void {
 }
 
 export function updateHighestNight(storage: Storage, completedNight: number): void {
+  if (!Number.isFinite(completedNight)) return; // insight 009: Infinity kills JSON
+  const clamped = Math.max(0, Math.min(5, completedNight));
   const current = loadFrom(storage);
-  if (completedNight > current.highestNightCompleted) {
-    saveTo(storage, { ...current, highestNightCompleted: completedNight });
+  if (clamped > current.highestNightCompleted) {
+    saveTo(storage, { ...current, highestNightCompleted: clamped });
   }
 }

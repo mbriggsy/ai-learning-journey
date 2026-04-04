@@ -81,4 +81,24 @@ describe('save system', () => {
     updateHighestNight(storage, 1);
     expect(loadFrom(storage).highestNightCompleted).toBe(1);
   });
+
+  it('updateHighestNight rejects Infinity (insight 009)', () => {
+    const storage = createMockStorage();
+    saveTo(storage, { highestNightCompleted: 3, version: 1 });
+    updateHighestNight(storage, Infinity);
+    expect(loadFrom(storage).highestNightCompleted).toBe(3); // unchanged
+  });
+
+  it('updateHighestNight rejects NaN', () => {
+    const storage = createMockStorage();
+    saveTo(storage, { highestNightCompleted: 3, version: 1 });
+    updateHighestNight(storage, NaN);
+    expect(loadFrom(storage).highestNightCompleted).toBe(3); // unchanged
+  });
+
+  it('updateHighestNight clamps out-of-range values', () => {
+    const storage = createMockStorage();
+    updateHighestNight(storage, 99);
+    expect(loadFrom(storage).highestNightCompleted).toBe(5); // clamped to max
+  });
 });

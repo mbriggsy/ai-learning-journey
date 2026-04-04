@@ -1,20 +1,42 @@
 # Do Not Disturb — TODO
 
-## Status: ALL 10 PHASES DONE — Code complete
+## Status: PIVOT — Merging DND design with Hide and Seek top-down engine
 
-## Remaining Work
+Greybox playtest revealed side-scroller format fights the hotel design. Rooms-off-corridors, DND signs, spatial hiding — all designed for top-down. Decision: merge DND game design onto hide-and-seek's top-down engine.
 
-1. **Generate actual art assets** — run Imagen 4 pipeline with API key (scripts/process-assets.ts ready)
-2. **Generate/source audio** — jsfxr for SFX, record/license ambient loops and music box
-3. **Wire main.ts** — connect Phaser scenes to game logic (placeholder currently)
-4. **Playtest and tune** — balance constants, fix edge cases
-5. **Briggsy sign-off** — "water beads off it" quality bar
+## Next Steps
 
-## Completed This Session
+1. **Plan the DND + Hide-and-Seek merge** — DND game logic (monsters, tools, nights) on top-down engine (rooms, corridors, floor plans). Write a merge plan before touching code.
+2. **Design actual hotel floor plans** — top-down rooms off corridors, doors, hiding spots that make spatial sense
+3. **Port monster AI to top-down movement** — bellhop patrol routes, housekeeper room-checking, guest ambush spots
+4. **Art + audio** — after the engine merge is solid
 
-- Greybox renderer + game session wired to Phaser (GameScene.ts, game-session.ts, greybox-level.ts, main.ts)
-- **Bug fix:** hiding enter/exit same-frame bug — `game-session.ts:541` changed `if` to `else if`
-- Playwright playtest confirmed: movement, stairs, escape, tools, monsters, catch/restart, hiding all functional
+## What Works (Keep)
+
+- Monster FSMs: bellhop (sound-hunting), housekeeper (methodical patrol), guest (ambush)
+- Tool system: throwables, DND signs, lighter
+- Night progression: 5 nights, escalating difficulty, phone calls
+- Escape window mechanic
+- Noise propagation, hiding/breath system
+- Xbox controller support
+- 449 tests on game logic layer
+
+## What's Broken (Side-Scroller Issues Found in Playtest)
+
+- Level is just a corridor — no spatial strategy
+- DND signs useless (can't skip a hallway segment)
+- No motivation to move (can camp exit)
+- Rooms don't feel like rooms
+- Hiding spots don't matter if monsters never patrol near you
+
+## Bugs Fixed This Session
+
+- Door state not syncing to renderer (stale `loaded.world` snapshot)
+- Player/monster walking through closed doors (no collision)
+- catch.ts using spotId instead of spotType → crash on night 2
+- Breath rhythm tap not wired (Space while hiding)
+- Attic vent overlapping stairs (4px apart)
+- Typecheck broken by Playwright e2e in main tsconfig
 
 ## Test Baseline
 
@@ -26,19 +48,13 @@
 - **The Plan:** `docs/plans/the-plan.md`
 - **Phase plans:** `docs/plans/phases/01-scaffolding.md` through `10-art-sound-polish.md`
 - **Brainstorm:** `docs/ideation/2026-04-03-do-not-disturb-brainstorm.md`
-- **Insights:** `docs/insights/` (10 docs)
+- **Insights:** `docs/insights/` (13 docs)
+- **Hide and Seek engine:** `../hide-and-seek/` (336 tests, top-down engine)
 
 ## Landmines
 
-- `src/main.ts` is still a placeholder — real scenes come when game loop is wired
-- HidingSpotType defined in both state.ts and level.ts — level.ts is source of truth
-- catch.ts uses spotId as HidingSpotType cast — works because spotId values match type names
-- Renderer modules are thin Phaser adapters — verified by typecheck only until visual testing
-- Guest ambush spots in night-config.ts are placeholder positions — replace with Tiled map data
-- MutableLighterInventory is a separate type from InventoryState — engine must sync back
-- Save system uses injectable Storage interface — tests use mock, production uses localStorage
-- Monologue uses Math.random() for line selection — not seeded, acceptable for flavor text
-- Night manager's `start()` must be called to initialize (insight 008 pattern)
-- Asset pipeline scripts need Sharp + @google/genai as devDependencies (not yet installed)
-- ANIMATION.WOBBLE_INTENSITY uses `as number` cast for tuneable zero check
-- Phone (x=120) and stairs (x=96) overlap interaction range — phone intercepts E. Must answer phone before using stairs each night
+- Side-scroller renderer (GameScene.ts) will be replaced in the merge — don't invest more in it
+- greybox-level.ts layout is throwaway — new top-down floor plans needed
+- HidingState now carries spotType (added this session) — keep this pattern in the merge
+- Escape timing constants changed (45s, was 90s) — tune after merge
+- Bellhop multi-floor patrol + elevator riding added but moot if switching to top-down

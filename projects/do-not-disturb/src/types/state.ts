@@ -111,7 +111,7 @@ export type Velocity = { readonly x: number; readonly y: number };
 export type MovementMode = 'idle' | 'walk' | 'run' | 'sneak' | 'jump' | 'slide';
 export type EscapeWindowPhase = 'waiting' | 'warning' | 'open' | 'closed';
 export type ToolType = 'throwable' | 'dndSign' | 'lighter';
-export type HidingState = { readonly spotId: string; readonly breathRemaining: number };
+export type HidingState = { readonly spotId: string; readonly spotType: string; readonly breathRemaining: number; readonly breathRhythmWindow: boolean };
 export type ZoneId = string;
 
 export type CollisionResult = {

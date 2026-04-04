@@ -6,7 +6,6 @@ import type { Position } from '../types/state';
 const LEVEL_WIDTH = 1920;
 const FLOOR_HEIGHT = 240;
 const ROOM_WIDTH = 480;
-const ROOMS_PER_FLOOR = 4;
 
 // Floor Y positions (top of floor band)
 const FLOOR_Y = {
@@ -22,19 +21,23 @@ function groundY(floorId: keyof typeof FLOOR_Y): number {
   return FLOOR_Y[floorId] + FLOOR_HEIGHT - 48;
 }
 
-// Room center Y (for nav/spawn)
-function roomCenterY(floorId: keyof typeof FLOOR_Y): number {
-  return FLOOR_Y[floorId] + FLOOR_HEIGHT / 2;
-}
+// --- Key X positions ---
+
+const STAIR_X = 96;
+const ELEVATOR_X = 1800;
+
+// Door X positions between room segments
+// Room A: 0–460 | door | Room B: 480–940 | door | Room C: 960–1420 | door | Room D: 1440–1900
+const DOOR_X = [460, 940, 1420] as const;
 
 // --- Exported spawn positions ---
 
 export const PLAYER_SPAWN: Position = { x: 200, y: groundY('lobby') };
 
-export const PHONE_POSITION: Position = { x: 120, y: groundY('lobby') };
+export const PHONE_POSITION: Position = { x: 160, y: groundY('lobby') };
 export const PHONE_ZONE_ID = 'lobby-a';
 
-export const ESCAPE_DOOR_POSITION: Position = { x: 360, y: groundY('lobby') };
+export const ESCAPE_DOOR_POSITION: Position = { x: 500, y: groundY('lobby') };
 
 // --- Room builders ---
 
@@ -57,8 +60,8 @@ function makeRoom(
     },
     surfaceType,
     ambientLight,
-    doors: doors,
-    hidingSpots: hidingSpots,
+    doors,
+    hidingSpots,
     items: [],
   };
 }
@@ -66,11 +69,11 @@ function makeRoom(
 function makeDoor(
   id: string,
   floorId: keyof typeof FLOOR_Y,
-  x: number,
+  doorIndex: number,
   connectsTo: string,
   initialState: 'open' | 'closed' = 'closed',
 ): DoorConfig {
-  return { id, position: { x, y: groundY(floorId) }, connectsTo, initialState };
+  return { id, position: { x: DOOR_X[doorIndex]!, y: groundY(floorId) }, connectsTo, initialState };
 }
 
 function makeSpot(
@@ -83,30 +86,31 @@ function makeSpot(
 }
 
 // --- Floor definitions ---
+// Each floor = 4 room segments (A–D) separated by 3 doors.
+// Hiding spots are centered in rooms, well away from doors.
+// Room centers: A=230, B=710, C=1190, D=1670
 
 function buildAttic(): FloorConfig {
   return {
     id: 'attic',
     number: 5,
     rooms: [
-      makeRoom('attic-a', 'attic', 0, 'wood', 0.3, [
-        makeDoor('attic-ab', 'attic', 460, 'attic-b'),
-      ], [
-        makeSpot('attic-vent-a', 'vent', 'attic', 100),
-      ]),
-      makeRoom('attic-b', 'attic', 1, 'wood', 0.3, [
-        makeDoor('attic-ab', 'attic', 480, 'attic-a'),
-        makeDoor('attic-bc', 'attic', 940, 'attic-c'),
-      ], []),
-      makeRoom('attic-c', 'attic', 2, 'wood', 0.25, [
-        makeDoor('attic-bc', 'attic', 960, 'attic-b'),
-        makeDoor('attic-cd', 'attic', 1420, 'attic-d'),
-      ], [
-        makeSpot('attic-furn-c', 'furniture', 'attic', 1200),
-      ]),
-      makeRoom('attic-d', 'attic', 3, 'wood', 0.3, [
-        makeDoor('attic-cd', 'attic', 1440, 'attic-c'),
-      ], []),
+      makeRoom('attic-a', 'attic', 0, 'wood', 0.3,
+        [makeDoor('attic-ab', 'attic', 0, 'attic-b')],
+        [makeSpot('attic-vent-a', 'vent', 'attic', 250)],
+      ),
+      makeRoom('attic-b', 'attic', 1, 'wood', 0.3,
+        [makeDoor('attic-ab', 'attic', 0, 'attic-a'), makeDoor('attic-bc', 'attic', 1, 'attic-c')],
+        [makeSpot('attic-furn-b', 'furniture', 'attic', 710)],
+      ),
+      makeRoom('attic-c', 'attic', 2, 'wood', 0.25,
+        [makeDoor('attic-bc', 'attic', 1, 'attic-b'), makeDoor('attic-cd', 'attic', 2, 'attic-d')],
+        [makeSpot('attic-vent-c', 'vent', 'attic', 1190)],
+      ),
+      makeRoom('attic-d', 'attic', 3, 'wood', 0.3,
+        [makeDoor('attic-cd', 'attic', 2, 'attic-c')],
+        [makeSpot('attic-furn-d', 'furniture', 'attic', 1670)],
+      ),
     ],
   };
 }
@@ -116,26 +120,22 @@ function buildFloor3(): FloorConfig {
     id: 'floor3',
     number: 4,
     rooms: [
-      makeRoom('floor3-a', 'floor3', 0, 'carpet', 0.25, [
-        makeDoor('f3-ab', 'floor3', 460, 'floor3-b'),
-      ], []),
-      makeRoom('floor3-b', 'floor3', 1, 'carpet', 0.25, [
-        makeDoor('f3-ab', 'floor3', 480, 'floor3-a'),
-        makeDoor('f3-bc', 'floor3', 940, 'floor3-c'),
-      ], [
-        makeSpot('f3-bed-b', 'bed', 'floor3', 600),
-      ]),
-      makeRoom('floor3-c', 'floor3', 2, 'carpet', 0.25, [
-        makeDoor('f3-bc', 'floor3', 960, 'floor3-b'),
-        makeDoor('f3-cd', 'floor3', 1420, 'floor3-d'),
-      ], [
-        makeSpot('f3-closet-c', 'closet', 'floor3', 1100),
-      ]),
-      makeRoom('floor3-d', 'floor3', 3, 'carpet', 0.25, [
-        makeDoor('f3-cd', 'floor3', 1440, 'floor3-c'),
-      ], [
-        makeSpot('f3-vent-d', 'vent', 'floor3', 1700),
-      ]),
+      makeRoom('floor3-a', 'floor3', 0, 'carpet', 0.25,
+        [makeDoor('f3-ab', 'floor3', 0, 'floor3-b')],
+        [makeSpot('f3-bed-a', 'bed', 'floor3', 230)],
+      ),
+      makeRoom('floor3-b', 'floor3', 1, 'carpet', 0.25,
+        [makeDoor('f3-ab', 'floor3', 0, 'floor3-a'), makeDoor('f3-bc', 'floor3', 1, 'floor3-c')],
+        [makeSpot('f3-closet-b', 'closet', 'floor3', 710)],
+      ),
+      makeRoom('floor3-c', 'floor3', 2, 'carpet', 0.25,
+        [makeDoor('f3-bc', 'floor3', 1, 'floor3-b'), makeDoor('f3-cd', 'floor3', 2, 'floor3-d')],
+        [makeSpot('f3-bed-c', 'bed', 'floor3', 1190)],
+      ),
+      makeRoom('floor3-d', 'floor3', 3, 'carpet', 0.25,
+        [makeDoor('f3-cd', 'floor3', 2, 'floor3-c')],
+        [makeSpot('f3-vent-d', 'vent', 'floor3', 1670)],
+      ),
     ],
   };
 }
@@ -145,53 +145,40 @@ function buildFloor2(): FloorConfig {
     id: 'floor2',
     number: 3,
     rooms: [
-      makeRoom('floor2-a', 'floor2', 0, 'carpet', 0.25, [
-        makeDoor('f2-ab', 'floor2', 460, 'floor2-b'),
-      ], [
-        makeSpot('f2-bed-a', 'bed', 'floor2', 200),
-      ]),
-      makeRoom('floor2-b', 'floor2', 1, 'carpet', 0.25, [
-        makeDoor('f2-ab', 'floor2', 480, 'floor2-a'),
-        makeDoor('f2-bc', 'floor2', 940, 'floor2-c'),
-      ], [
-        makeSpot('f2-closet-b', 'closet', 'floor2', 720),
-      ]),
-      makeRoom('floor2-c', 'floor2', 2, 'carpet', 0.25, [
-        makeDoor('f2-bc', 'floor2', 960, 'floor2-b'),
-        makeDoor('f2-cd', 'floor2', 1420, 'floor2-d'),
-      ], []),
-      makeRoom('floor2-d', 'floor2', 3, 'carpet', 0.25, [
-        makeDoor('f2-cd', 'floor2', 1440, 'floor2-c'),
-      ], [
-        makeSpot('f2-furn-d', 'furniture', 'floor2', 1600),
-      ]),
+      makeRoom('floor2-a', 'floor2', 0, 'carpet', 0.25,
+        [makeDoor('f2-ab', 'floor2', 0, 'floor2-b')],
+        [makeSpot('f2-bed-a', 'bed', 'floor2', 230)],
+      ),
+      makeRoom('floor2-b', 'floor2', 1, 'carpet', 0.25,
+        [makeDoor('f2-ab', 'floor2', 0, 'floor2-a'), makeDoor('f2-bc', 'floor2', 1, 'floor2-c')],
+        [makeSpot('f2-closet-b', 'closet', 'floor2', 710)],
+      ),
+      makeRoom('floor2-c', 'floor2', 2, 'carpet', 0.25,
+        [makeDoor('f2-bc', 'floor2', 1, 'floor2-b'), makeDoor('f2-cd', 'floor2', 2, 'floor2-d')],
+        [makeSpot('f2-furn-c', 'furniture', 'floor2', 1190)],
+      ),
+      makeRoom('floor2-d', 'floor2', 3, 'carpet', 0.25,
+        [makeDoor('f2-cd', 'floor2', 2, 'floor2-c')],
+        [makeSpot('f2-vent-d', 'vent', 'floor2', 1670)],
+      ),
     ],
   };
 }
 
 function buildLobby(): FloorConfig {
+  // Lobby: open plan, no internal doors. Furniture hiding only (risky — 50% protection).
   return {
     id: 'lobby',
     number: 2,
     rooms: [
-      makeRoom('lobby-a', 'lobby', 0, 'tile', 0.5, [
-        makeDoor('lobby-ab', 'lobby', 460, 'lobby-b'),
-      ], [
+      makeRoom('lobby-a', 'lobby', 0, 'tile', 0.5, [], [
         makeSpot('lobby-furn-a', 'furniture', 'lobby', 300),
       ]),
-      makeRoom('lobby-b', 'lobby', 1, 'tile', 0.5, [
-        makeDoor('lobby-ab', 'lobby', 480, 'lobby-a'),
-        makeDoor('lobby-bc', 'lobby', 940, 'lobby-c'),
-      ], []),
-      makeRoom('lobby-c', 'lobby', 2, 'tile', 0.5, [
-        makeDoor('lobby-bc', 'lobby', 960, 'lobby-b'),
-        makeDoor('lobby-cd', 'lobby', 1420, 'lobby-d'),
-      ], [
+      makeRoom('lobby-b', 'lobby', 1, 'tile', 0.5, [], []),
+      makeRoom('lobby-c', 'lobby', 2, 'tile', 0.5, [], [
         makeSpot('lobby-furn-c', 'furniture', 'lobby', 1200),
       ]),
-      makeRoom('lobby-d', 'lobby', 3, 'tile', 0.5, [
-        makeDoor('lobby-cd', 'lobby', 1440, 'lobby-c'),
-      ], []),
+      makeRoom('lobby-d', 'lobby', 3, 'tile', 0.5, [], []),
     ],
   };
 }
@@ -201,31 +188,28 @@ function buildBasement(): FloorConfig {
     id: 'basement',
     number: 1,
     rooms: [
-      makeRoom('basement-a', 'basement', 0, 'tile', 0.05, [
-        makeDoor('base-ab', 'basement', 460, 'basement-b'),
-      ], []),
-      makeRoom('basement-b', 'basement', 1, 'tile', 0.05, [
-        makeDoor('base-ab', 'basement', 480, 'basement-a'),
-        makeDoor('base-bc', 'basement', 940, 'basement-c'),
-      ], [
-        makeSpot('base-furn-b', 'furniture', 'basement', 700),
-      ]),
-      makeRoom('basement-c', 'basement', 2, 'tile', 0.05, [
-        makeDoor('base-bc', 'basement', 960, 'basement-b'),
-        makeDoor('base-cd', 'basement', 1420, 'basement-d'),
-      ], []),
-      makeRoom('basement-d', 'basement', 3, 'tile', 0.05, [
-        makeDoor('base-cd', 'basement', 1440, 'basement-c'),
-      ], [
-        makeSpot('base-freezer-d', 'freezer', 'basement', 1700),
-      ]),
+      makeRoom('basement-a', 'basement', 0, 'tile', 0.05,
+        [makeDoor('base-ab', 'basement', 0, 'basement-b')],
+        [makeSpot('base-furn-a', 'furniture', 'basement', 230)],
+      ),
+      makeRoom('basement-b', 'basement', 1, 'tile', 0.05,
+        [makeDoor('base-ab', 'basement', 0, 'basement-a'), makeDoor('base-bc', 'basement', 1, 'basement-c')],
+        [],
+      ),
+      makeRoom('basement-c', 'basement', 2, 'tile', 0.05,
+        [makeDoor('base-bc', 'basement', 1, 'basement-b'), makeDoor('base-cd', 'basement', 2, 'basement-d')],
+        [makeSpot('base-furn-c', 'furniture', 'basement', 1190)],
+      ),
+      makeRoom('basement-d', 'basement', 3, 'tile', 0.05,
+        [makeDoor('base-cd', 'basement', 2, 'basement-c')],
+        [makeSpot('base-freezer-d', 'freezer', 'basement', 1670)],
+      ),
     ],
   };
 }
 
 // --- Connections ---
 
-const STAIR_X = 96;
 const STAIR_CONNECTIONS: readonly FloorConnection[] = [
   {
     type: 'stairs',
@@ -272,7 +256,6 @@ const LAUNDRY_CHUTE: FloorConnection = {
 
 // --- Elevator ---
 
-const ELEVATOR_X = 1800;
 const ELEVATOR_CONFIG: ElevatorConfig = {
   stops: [
     { floor: 'basement', position: { x: ELEVATOR_X, y: groundY('basement') } },

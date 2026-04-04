@@ -13,6 +13,7 @@ import { createEmitter } from './events';
 import { loadLevel } from './level-loader';
 import { createNoiseSystem } from './noise';
 import { createDoorSystem } from './doors';
+import type { DoorSystem } from './doors';
 import { createElevator } from './elevator';
 import { createPhoneSystem } from './phone';
 import { createPhoneDialogue } from './phone-dialogue';
@@ -92,6 +93,31 @@ function distance(a: Position, b: Position): number {
 }
 
 const INTERACTION_RANGE = 48;
+const DOOR_HALF_WIDTH = 12;
+
+/** Clamp an entity's X so it can't cross a closed door on the same floor. Mutates pos and vel. */
+function enforceClosedDoors(
+  prevX: number,
+  pos: { x: number },
+  vel: { x: number },
+  floor: string,
+  doors: readonly { id: string; position: Position }[],
+  doorSystem: DoorSystem,
+): void {
+  for (const door of doors) {
+    if (doorSystem.isOpen(door.id)) continue;
+    if (getPlayerFloor(door.position.y) !== floor) continue;
+    const dx = door.position.x;
+    if (prevX <= dx - DOOR_HALF_WIDTH && pos.x > dx - DOOR_HALF_WIDTH) {
+      pos.x = dx - DOOR_HALF_WIDTH;
+      vel.x = 0;
+    }
+    if (prevX >= dx + DOOR_HALF_WIDTH && pos.x < dx + DOOR_HALF_WIDTH) {
+      pos.x = dx + DOOR_HALF_WIDTH;
+      vel.x = 0;
+    }
+  }
+}
 
 // --- Session factory ---
 
@@ -103,7 +129,7 @@ export function createGameSession(levelConfig: LevelConfig, storage: Storage): G
   let playerVel = { x: 0, y: 0 };
   let playerFacing: 'left' | 'right' = 'right';
   let playerMode: MovementMode = 'idle';
-  let playerHiding: { spotId: string; breathRemaining: number } | null = null;
+  let playerHiding: { spotId: string; spotType: string; breathRemaining: number; breathRhythmWindow: boolean } | null = null;
   let playerNoise = 0;
   let selectedTool: ToolType | null = null;
   let lighterActive = false;
@@ -152,10 +178,13 @@ export function createGameSession(levelConfig: LevelConfig, storage: Storage): G
   let guestCtx: GuestContext | null = null;
   let bellhopHearing: { detach(): void } | null = null;
 
-  // Bellhop patrol state
-  let bellhopPatrolDir = 1;
-  let bellhopPatrolMin = 0;
-  let bellhopPatrolMax = LEVEL_WIDTH;
+  // Bellhop multi-floor patrol state
+  const PATROL_FLOORS = ['attic', 'floor3', 'floor2', 'lobby', 'basement'] as const;
+  let bellhopPatrolFloorIdx = 1; // starts on floor3
+  let bellhopPatrolPhase: 'sweep-right' | 'sweep-left' | 'changing-floor' = 'sweep-right';
+  let bellhopPatrolDescending = true; // going down first
+  let bellhopFloorChangeTimer = 0;
+  let bellhopArrivesFromElevator = false; // true = arrived on right side via elevator
 
   // Night state
   let currentNightConfig: NightConfig = getNightConfig(1);
@@ -206,10 +235,11 @@ export function createGameSession(levelConfig: LevelConfig, storage: Storage): G
         bellhopCtx.fsm = fsm;
         bellhopHearing = createBellhopHearing(bellhopCtx, noiseSystem);
 
-        // Set patrol bounds to floor3
-        bellhopPatrolMin = 0;
-        bellhopPatrolMax = LEVEL_WIDTH;
-        bellhopPatrolDir = -1;
+        // Init multi-floor patrol — start on floor3, sweep right first
+        bellhopPatrolFloorIdx = 1;
+        bellhopPatrolPhase = 'sweep-right';
+        bellhopPatrolDescending = true;
+        bellhopFloorChangeTimer = 0;
 
         managedMonsters.push({ id: 'bellhop', active: true, fsm });
       }
@@ -498,13 +528,30 @@ export function createGameSession(levelConfig: LevelConfig, storage: Storage): G
           playerVel = { x: 0, y: 0 };
           emitter.emit('NOISE_EMITTED', { sourceZoneId: playerZone, level: NOISE.SLIDE_LEVEL, position: playerPos });
         } else if (elevatorFloor) {
-          // Call elevator to this floor
-          elevator.call(elevatorFloor);
+          if (elevator.currentFloor === elevatorFloor && !elevator.isMoving) {
+            // Elevator is here — ride it
+            const direction = input.jump ? 'up' : input.slide ? 'down' : null;
+            if (direction) {
+              const destFloor = elevator.ride(direction);
+              if (destFloor) {
+                const destStop = ELEVATOR_POSITIONS.find(s => s.floor === destFloor);
+                if (destStop) {
+                  playerPos = { ...destStop.position };
+                  playerFloor = destFloor;
+                  playerVel = { x: 0, y: 0 };
+                  playerMode = 'idle';
+                }
+              }
+            }
+          } else {
+            // Elevator not here — call it
+            elevator.call(elevatorFloor);
+          }
         } else {
           // Hiding spot
           const spot = findNearbyHidingSpot();
           if (spot) {
-            playerHiding = { spotId: spot.id, breathRemaining: 8 };
+            playerHiding = { spotId: spot.id, spotType: spot.type, breathRemaining: 8, breathRhythmWindow: false };
             emitter.emit('HIDING_ENTERED', spot.id);
             breath.startHolding(playerZone, playerPos);
           } else {
@@ -544,8 +591,14 @@ export function createGameSession(levelConfig: LevelConfig, storage: Storage): G
       breath.stopHolding();
     }
 
+    // Rhythm tap (Space while hiding)
+    if (playerHiding && input.jump) {
+      breath.rhythmTap();
+    }
+
     // --- Movement ---
     if (!playerHiding) {
+      const prevPlayerX = playerPos.x;
       const prevMode = playerMode;
       playerMode = resolveMovementMode(input, onGround, playerMode, slideTimer);
 
@@ -597,6 +650,9 @@ export function createGameSession(levelConfig: LevelConfig, storage: Storage): G
         }
       }
 
+      // Door collision — closed doors block movement
+      enforceClosedDoors(prevPlayerX, playerPos, playerVel, playerFloor, loaded.world.doors, doorSystem);
+
       // Level bounds
       playerPos.x = Math.max(16, Math.min(LEVEL_WIDTH - 16, playerPos.x));
 
@@ -625,7 +681,7 @@ export function createGameSession(levelConfig: LevelConfig, storage: Storage): G
     // Breath
     breath.update(dt);
     if (playerHiding) {
-      playerHiding = { ...playerHiding, breathRemaining: breath.remaining };
+      playerHiding = { ...playerHiding, breathRemaining: breath.remaining, breathRhythmWindow: breath.isRhythmWindow };
     }
 
     // Phone
@@ -663,21 +719,84 @@ export function createGameSession(levelConfig: LevelConfig, storage: Storage): G
       }
     }
 
-    // Bellhop movement (simplified for greybox)
+    // Bellhop movement — multi-floor patrol
     if (bellhopCtx) {
       const speed = nightManager.getMonsterSpeed(MONSTER.BELLHOP_SPEED);
+      const patrolSpeed = speed * 0.5; // patrol is slower than chase
       const currentState = bellhopCtx.fsm.currentState;
+      const prevBellhopX = bellhopCtx.position.x;
+      const bellhopVel = { x: 0 };
+      const STAIR_X = 96;
 
       if (currentState === BellhopPatrol) {
-        // Patrol: pace back and forth on current floor
-        bellhopCtx.position = {
-          x: bellhopCtx.position.x + bellhopPatrolDir * speed * 0.3 * dt,
-          y: bellhopCtx.position.y,
-        };
-        if (bellhopCtx.position.x <= 50) bellhopPatrolDir = 1;
-        if (bellhopCtx.position.x >= LEVEL_WIDTH - 50) bellhopPatrolDir = -1;
+        // Multi-floor patrol pattern:
+        // Sweep right across floor → take ELEVATOR down → arrive on next floor from right side
+        // Sweep left across floor → take STAIRS down → arrive on next floor from left side
+        // Alternates approach direction every floor. Unpredictable.
+        const ELEV_X = ELEVATOR_POSITIONS[0]?.position.x ?? 1800;
+
+        if (bellhopPatrolPhase === 'sweep-right') {
+          bellhopCtx.position = {
+            x: bellhopCtx.position.x + patrolSpeed * dt,
+            y: bellhopCtx.position.y,
+          };
+          bellhopVel.x = patrolSpeed;
+          if (bellhopCtx.position.x >= ELEV_X - 16) {
+            // Reached elevator — ride it to next floor
+            bellhopCtx.position = { x: ELEV_X, y: bellhopCtx.position.y };
+            bellhopPatrolPhase = 'changing-floor';
+            bellhopFloorChangeTimer = 1.0; // elevator travel time
+            bellhopArrivesFromElevator = true;
+            // Fire the DING — player hears him coming
+            elevator.call(PATROL_FLOORS[bellhopPatrolFloorIdx]!);
+          }
+        } else if (bellhopPatrolPhase === 'sweep-left') {
+          bellhopCtx.position = {
+            x: bellhopCtx.position.x - patrolSpeed * dt,
+            y: bellhopCtx.position.y,
+          };
+          bellhopVel.x = -patrolSpeed;
+          if (bellhopCtx.position.x <= STAIR_X + 16) {
+            // Reached stairs — take them to next floor
+            bellhopCtx.position = { x: STAIR_X, y: bellhopCtx.position.y };
+            bellhopPatrolPhase = 'changing-floor';
+            bellhopFloorChangeTimer = 0.5; // stairs are faster
+            bellhopArrivesFromElevator = false;
+          }
+        } else if (bellhopPatrolPhase === 'changing-floor') {
+          bellhopFloorChangeTimer -= dt;
+          if (bellhopFloorChangeTimer <= 0) {
+            // Advance to next floor
+            if (bellhopPatrolDescending) {
+              bellhopPatrolFloorIdx++;
+              if (bellhopPatrolFloorIdx >= PATROL_FLOORS.length) {
+                bellhopPatrolFloorIdx = PATROL_FLOORS.length - 2;
+                bellhopPatrolDescending = false;
+              }
+            } else {
+              bellhopPatrolFloorIdx--;
+              if (bellhopPatrolFloorIdx < 0) {
+                bellhopPatrolFloorIdx = 1;
+                bellhopPatrolDescending = true;
+              }
+            }
+            const nextFloor = PATROL_FLOORS[bellhopPatrolFloorIdx]!;
+            const nextGroundY = FLOOR_GROUNDS[nextFloor];
+            if (nextGroundY !== undefined) {
+              if (bellhopArrivesFromElevator) {
+                // Arrive from elevator (right side), sweep left
+                bellhopCtx.position = { x: ELEV_X, y: nextGroundY };
+                bellhopPatrolPhase = 'sweep-left';
+              } else {
+                // Arrive from stairs (left side), sweep right
+                bellhopCtx.position = { x: STAIR_X, y: nextGroundY };
+                bellhopPatrolPhase = 'sweep-right';
+              }
+            }
+          }
+        }
       } else if (bellhopCtx.heardNoise) {
-        // Move toward noise source
+        // Chase: move toward noise source at full speed
         const target = bellhopCtx.heardNoise.position;
         const dx = target.x - bellhopCtx.position.x;
         const dir = dx > 0 ? 1 : -1;
@@ -685,18 +804,33 @@ export function createGameSession(levelConfig: LevelConfig, storage: Storage): G
           x: bellhopCtx.position.x + dir * speed * dt,
           y: bellhopCtx.position.y,
         };
+        bellhopVel.x = dir * speed;
         if (Math.abs(dx) < 32) {
           bellhopCtx.reachedTarget = true;
         }
       }
 
+      // Bellhop opens closed doors he walks into (brief pause, makes noise)
+      const bellhopFloor = getPlayerFloor(bellhopCtx.position.y);
+      for (const door of loaded.world.doors) {
+        if (doorSystem.isOpen(door.id)) continue;
+        if (getPlayerFloor(door.position.y) !== bellhopFloor) continue;
+        const crossed = (prevBellhopX <= door.position.x && bellhopCtx.position.x > door.position.x)
+          || (prevBellhopX >= door.position.x && bellhopCtx.position.x < door.position.x);
+        if (crossed) {
+          doorSystem.toggle(door.id); // opens door + emits noise
+        }
+      }
+
       // Update bellhop zone
-      bellhopCtx.currentZone = getPlayerZone(bellhopCtx.position.x, getPlayerFloor(bellhopCtx.position.y));
+      bellhopCtx.currentZone = getPlayerZone(bellhopCtx.position.x, bellhopFloor);
     }
 
     // Housekeeper movement (simplified for greybox)
+    // Housekeeper OPENS doors she encounters (she checks every room)
     if (housekeeperCtx) {
       const speed = nightManager.getMonsterSpeed(MONSTER.HOUSEKEEPER_SPEED);
+      const prevHkX = housekeeperCtx.position.x;
 
       if (housekeeperCtx.targetRoom && !housekeeperCtx.reachedTarget) {
         const targetX = housekeeperCtx.targetRoom.bounds.x + housekeeperCtx.targetRoom.bounds.width / 2;
@@ -734,10 +868,32 @@ export function createGameSession(levelConfig: LevelConfig, storage: Storage): G
           }
         }
       }
+
+      // Housekeeper opens closed doors she walks into (unless DND sign)
+      const hkFloor = getPlayerFloor(housekeeperCtx.position.y);
+      for (const door of loaded.world.doors) {
+        if (doorSystem.isOpen(door.id)) continue;
+        if (getPlayerFloor(door.position.y) !== hkFloor) continue;
+        const crossed = (prevHkX <= door.position.x && housekeeperCtx.position.x > door.position.x)
+          || (prevHkX >= door.position.x && housekeeperCtx.position.x < door.position.x);
+        if (crossed && !doorSystem.hasSign(door.id)) {
+          doorSystem.toggle(door.id);
+        }
+      }
     }
+
+    // Capture pre-FSM positions for guest door collision
+    const prevGuestX = guestCtx?.position.x ?? 0;
 
     // Update all monster FSMs
     updateMonsters(managedMonsters, dt);
+
+    // Guest door collision (lunge blocked by closed doors)
+    if (guestCtx) {
+      const guestVel = { x: guestCtx.velocity.x };
+      const guestFloor = getPlayerFloor(guestCtx.position.y);
+      enforceClosedDoors(prevGuestX, guestCtx.position, guestVel, guestFloor, loaded.world.doors, doorSystem);
+    }
 
     // --- Catch check ---
     const monsterStates = buildMonsterStates();
@@ -840,7 +996,13 @@ export function createGameSession(levelConfig: LevelConfig, storage: Storage): G
         lighterActive,
       },
       monsters: buildMonsterStates(),
-      world: loaded.world,
+      world: {
+        ...loaded.world,
+        doors: loaded.world.doors.map(d => {
+          const live = doorSystem.getDoors().get(d.id);
+          return live ? { ...d, isOpen: live.isOpen } : d;
+        }),
+      },
       inventory: {
         throwables,
         dndSigns,

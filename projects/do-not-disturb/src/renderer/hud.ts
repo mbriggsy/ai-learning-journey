@@ -14,6 +14,7 @@ export type HUDData = {
   readonly breathActive: boolean;
   readonly breathRemaining: number;
   readonly breathTotal: number;
+  readonly breathRhythmWindow: boolean;
 };
 
 const TOOL_LABELS: Record<ToolType, string> = {
@@ -101,6 +102,11 @@ export function createHUD(scene: Phaser.Scene) {
         breathBar.fillRect(x, y, barWidth, barHeight);
         breathBar.fillStyle(pct > 0.3 ? 0x44aa44 : 0xff4444, 1);
         breathBar.fillRect(x, y, barWidth * pct, barHeight);
+        // Rhythm window — flash border to signal "tap Space"
+        if (data.breathRhythmWindow) {
+          breathBar.lineStyle(2, 0xffff44, 1);
+          breathBar.strokeRect(x - 2, y - 2, barWidth + 4, barHeight + 4);
+        }
       }
 
       // Lighter fuel bar

@@ -42,9 +42,9 @@ export const NOISE = {
 } as const satisfies Record<string, number>;
 
 export const ESCAPE = {
-  FIRST_WINDOW_AT_S: 90,
-  REPEAT_INTERVAL_S: 60,
-  WARNING_BEFORE_S: 15,
+  FIRST_WINDOW_AT_S: 45,
+  REPEAT_INTERVAL_S: 45,
+  WARNING_BEFORE_S: 10,
   WINDOW_DURATION_NIGHT_1_S: 20,
   WINDOW_DURATION_NIGHT_2_S: 18,
   WINDOW_DURATION_NIGHT_3_S: 15,

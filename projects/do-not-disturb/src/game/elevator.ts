@@ -4,6 +4,7 @@ import { NOISE } from '../constants';
 
 export type ElevatorSystem = {
   call(floor: string): void;
+  ride(direction: 'up' | 'down'): string | null;
   update(dt: number): void;
   readonly currentFloor: string;
   readonly isMoving: boolean;
@@ -32,6 +33,18 @@ export function createElevator(emitter: Emitter, config: ElevatorConfig): Elevat
       const dist = Math.max(1, floorDistance(currentFloor, floor));
       travelTimer = dist * config.travelTimePerFloorS;
       emitter.emit('ELEVATOR_CALLED', floorNumbers.get(floor) ?? 0);
+    },
+
+    ride(direction: 'up' | 'down'): string | null {
+      if (targetFloor !== null) return null; // already moving
+      const idx = config.stops.findIndex(s => s.floor === currentFloor);
+      if (idx === -1) return null;
+      const nextIdx = direction === 'up' ? idx + 1 : idx - 1;
+      const nextStop = config.stops[nextIdx];
+      if (!nextStop) return null; // already at top/bottom
+      targetFloor = nextStop.floor;
+      travelTimer = config.travelTimePerFloorS;
+      return nextStop.floor;
     },
 
     update(dt: number) {

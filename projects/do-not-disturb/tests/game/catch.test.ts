@@ -47,19 +47,19 @@ describe('checkCatch', () => {
   });
 
   it('hiding in vent protects from bellhop (protection = 1)', () => {
-    const player = makePlayer({ hiding: { spotId: 'vent', breathRemaining: 5 } });
+    const player = makePlayer({ hiding: { spotId: 'vent', spotType: 'vent', breathRemaining: 5, breathRhythmWindow: false } });
     const monster = makeMonster();
     expect(checkCatch(player, [monster], Math.random)).toBeNull();
   });
 
   it('hiding in bed does NOT protect from housekeeper (protection = 0)', () => {
-    const player = makePlayer({ hiding: { spotId: 'bed', breathRemaining: 5 } });
+    const player = makePlayer({ hiding: { spotId: 'bed', spotType: 'bed', breathRemaining: 5, breathRhythmWindow: false } });
     const monster = makeMonster({ id: 'housekeeper' });
     expect(checkCatch(player, [monster], () => 0.99)).toBe('housekeeper');
   });
 
   it('hiding behind furniture is probabilistic (protection = 0.5)', () => {
-    const player = makePlayer({ hiding: { spotId: 'furniture', breathRemaining: 5 } });
+    const player = makePlayer({ hiding: { spotId: 'furniture', spotType: 'furniture', breathRemaining: 5, breathRhythmWindow: false } });
     const monster = makeMonster();
 
     // Random < 0.5 → escape

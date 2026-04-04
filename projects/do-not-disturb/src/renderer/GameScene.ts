@@ -72,7 +72,8 @@ export class GameScene extends Phaser.Scene {
     this.session = createGameSession(levelConfig, localStorage);
     this.engine = createEngine((dt) => {
       const input = this.inputHandler.read();
-      const toolKey = this.toolKeyPressed;
+      const gpToolKey = this.inputHandler.readToolKey();
+      const toolKey = this.toolKeyPressed ?? gpToolKey;
       this.toolKeyPressed = null;
       const interactJustPressed = this.isInteractJustPressed();
       this.session.fixedUpdate(dt, input, toolKey, interactJustPressed);
@@ -211,6 +212,7 @@ export class GameScene extends Phaser.Scene {
       breathActive: state.player.hiding !== null,
       breathRemaining: state.player.hiding?.breathRemaining ?? 0,
       breathTotal: 8,
+      breathRhythmWindow: state.player.hiding?.breathRhythmWindow ?? false,
     };
     this.hud.update(hudData);
 

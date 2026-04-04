@@ -20,7 +20,7 @@ export function checkCatch(
     if (dist >= MONSTER.CATCH_RADIUS) continue;
 
     if (player.hiding) {
-      const protection = isProtectedFrom(player.hiding.spotId as HidingSpotType, monster.id);
+      const protection = isProtectedFrom(player.hiding.spotType as HidingSpotType, monster.id);
       if (protection >= 1) continue; // fully safe
       if (protection > 0 && random() < protection) continue; // probabilistic escape
     }

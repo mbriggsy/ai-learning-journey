@@ -1,18 +1,15 @@
 import Phaser from 'phaser';
+import { GameScene } from './renderer/GameScene';
 
 const config: Phaser.Types.Core.GameConfig = {
   type: Phaser.AUTO,
   width: 960,
   height: 540,
   backgroundColor: '#1a1a2e',
-  scene: {
-    create() {
-      const text = this.add.text(480, 270, 'Do Not Disturb', {
-        fontSize: '32px',
-        color: '#e0e0e0',
-      });
-      text.setOrigin(0.5);
-    },
+  scene: [GameScene],
+  scale: {
+    mode: Phaser.Scale.FIT,
+    autoCenter: Phaser.Scale.CENTER_BOTH,
   },
 };
 

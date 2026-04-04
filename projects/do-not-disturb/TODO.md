@@ -10,6 +10,12 @@
 4. **Playtest and tune** — balance constants, fix edge cases
 5. **Briggsy sign-off** — "water beads off it" quality bar
 
+## Completed This Session
+
+- Greybox renderer + game session wired to Phaser (GameScene.ts, game-session.ts, greybox-level.ts, main.ts)
+- **Bug fix:** hiding enter/exit same-frame bug — `game-session.ts:541` changed `if` to `else if`
+- Playwright playtest confirmed: movement, stairs, escape, tools, monsters, catch/restart, hiding all functional
+
 ## Test Baseline
 
 - 449 tests across 42 files, all passing
@@ -35,3 +41,4 @@
 - Night manager's `start()` must be called to initialize (insight 008 pattern)
 - Asset pipeline scripts need Sharp + @google/genai as devDependencies (not yet installed)
 - ANIMATION.WOBBLE_INTENSITY uses `as number` cast for tuneable zero check
+- Phone (x=120) and stairs (x=96) overlap interaction range — phone intercepts E. Must answer phone before using stairs each night

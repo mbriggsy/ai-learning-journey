@@ -1,7 +1,7 @@
 ---
 phase: 6
 title: The Bellhop + Night 1 Playable
-status: deep
+status: done
 ---
 
 # Phase 6: The Bellhop + Night 1 Playable
@@ -341,23 +341,23 @@ Wire everything together for the first playable loop:
 
 ## Acceptance Criteria
 
-- [ ] Bellhop FSM transitions through all states correctly
-- [ ] Bellhop navigates toward noise sources via platform graph
-- [ ] Bellhop has NO visual detection (pure sound)
-- [ ] 3+ Bellhop instances don't cross-contaminate (stateless states, insight 005)
-- [ ] Throwables create decoy noise at impact position
-- [ ] Throwable carry limit enforced (3 max)
-- [ ] Escape window opens/closes on schedule
-- [ ] Inner monologue warns before escape window
-- [ ] Phone rings at night start, emits noise, attracts Bellhop
-- [ ] Phone dialogue skippable on retry
-- [ ] Breath meter counts down while hiding
-- [ ] Rhythm tap extends breath timer within window
-- [ ] Gasp emits noise when breath runs out
-- [ ] Catch detection respects hiding protection matrix
-- [ ] Death restarts Night 1 with fixed positions
-- [ ] HUD shows only relevant info (no clutter)
-- [ ] **Night 1 is playable end-to-end: spawn → survive → escape or die**
+- [x] Bellhop FSM transitions through all states correctly
+- [x] Bellhop navigates toward noise sources via platform graph
+- [x] Bellhop has NO visual detection (pure sound)
+- [x] 3+ Bellhop instances don't cross-contaminate (stateless states, insight 005)
+- [x] Throwables create decoy noise at impact position
+- [x] Throwable carry limit enforced (3 max)
+- [x] Escape window opens/closes on schedule
+- [x] Inner monologue warns before escape window
+- [x] Phone rings at night start, emits noise, attracts Bellhop
+- [x] Phone dialogue skippable on retry
+- [x] Breath meter counts down while hiding
+- [x] Rhythm tap extends breath timer within window
+- [x] Gasp emits noise when breath runs out
+- [x] Catch detection respects hiding protection matrix
+- [x] Death restarts Night 1 with fixed positions
+- [x] HUD shows only relevant info (no clutter)
+- [x] **Night 1 is playable end-to-end: spawn → survive → escape or die**
 
 ## Deliverable
 

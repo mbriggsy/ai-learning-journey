@@ -23,6 +23,9 @@ export const NOISE = {
   SLIDE_LEVEL: 0.3,
   DOOR_LEVEL: 0.6,
   ELEVATOR_DING_LEVEL: 1.0,
+  THROWABLE_IMPACT_LEVEL: 0.8,
+  PHONE_RING_LEVEL: 0.7,
+  GASP_LEVEL: 0.4,
   CARPET_MULT: 0.4,
   WOOD_MULT: 1.0,
   TILE_MULT: 1.3,
@@ -99,4 +102,16 @@ export const LIGHTING = {
   LIGHTNING_FADE_MS: 500,
   LIGHT_UNDER_DOOR_WIDTH: 4,
   LIGHT_SOURCE_DEFAULT_RADIUS: 80,
+} as const satisfies Record<string, number>;
+
+export const TOOLS = {
+  THROW_DISTANCE: 200,
+  THROW_PICKUP_RANGE: 32,
+} as const satisfies Record<string, number>;
+
+export const PHONE = {
+  RING_DURATION_S: 15,
+  GRACE_PERIOD_S: 5,
+  RHYTHM_INTERVAL_S: 2,
+  RHYTHM_WINDOW_MS: 200,
 } as const satisfies Record<string, number>;

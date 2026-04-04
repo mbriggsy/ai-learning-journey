@@ -17,7 +17,7 @@ origin: docs/ideation/2026-04-03-do-not-disturb-brainstorm.md
 | 3 | Player & Physics | **done** | [03-player-physics.md](phases/03-player-physics.md) |
 | 4 | Hotel World | **done** | [04-hotel-world.md](phases/04-hotel-world.md) |
 | 5 | Camera & Visibility | **done** | [05-camera-visibility.md](phases/05-camera-visibility.md) |
-| 6 | The Bellhop + Night 1 | **deep** | [06-bellhop-night1.md](phases/06-bellhop-night1.md) |
+| 6 | The Bellhop + Night 1 | **done** | [06-bellhop-night1.md](phases/06-bellhop-night1.md) |
 | 7 | The Housekeeper + Night 2 | **deep** | [07-housekeeper-night2.md](phases/07-housekeeper-night2.md) |
 | 8 | The Guest + Night 3 | **deep** | [08-guest-night3.md](phases/08-guest-night3.md) |
 | 9 | Night Progression & Narrative | **deep** | [09-night-progression.md](phases/09-night-progression.md) |
@@ -204,23 +204,23 @@ Copy these during Phase 1 scaffolding.
 
 **Goal:** Night 1 is FULLY PLAYABLE. Start → survive → escape or get caught.
 
-- [ ] **Bellhop AI** — FSM: Patrol → Alert (heard sound) → Rush (toward source) → Investigate (search area) → Confused (lost target) → Return to patrol
-- [ ] **Sound-based hunting** — Bellhop navigates toward loudest recent noise via platform graph. Detection radius per noise type. Pure sound — NO visual detection (stand motionless in plain sight = safe)
-- [ ] **Bellhop visuals** — tall, lanky, skeletal frame in oversized bellhop uniform. Glowing eyes. Swinging lantern (light source)
-- [ ] **Bellhop audio tells** — humming elevator music, bell jingle when alert, lantern creak
-- [ ] **Throwable system** — environmental pickups (shoes, books, bottles). Fixed positions per level (learnable). Carry limit: 3. Throw creates decoy noise at impact point. ~8-10 available per night
-- [ ] **Escape window mechanic**:
+- [x] **Bellhop AI** — FSM: Patrol → Alert (heard sound) → Rush (toward source) → Investigate (search area) → Confused (lost target) → Return to patrol
+- [x] **Sound-based hunting** — Bellhop navigates toward loudest recent noise via platform graph. Detection radius per noise type. Pure sound — NO visual detection (stand motionless in plain sight = safe)
+- [x] **Bellhop visuals** — tall, lanky, skeletal frame in oversized bellhop uniform. Glowing eyes. Swinging lantern (light source)
+- [x] **Bellhop audio tells** — humming elevator music, bell jingle when alert, lantern creak
+- [x] **Throwable system** — environmental pickups (shoes, books, bottles). Fixed positions per level (learnable). Carry limit: 3. Throw creates decoy noise at impact point. ~8-10 available per night
+- [x] **Escape window mechanic**:
   - Night runs indefinitely in hunt/escape cycles
   - First escape window at ~90s. If missed, next at ~150s. Repeat
   - Kid's inner monologue warns 15-20s before ("I think I heard the lock clicking...")
   - Front door unlocks for 20s (Night 1)
   - Miss it → door locks → back to hunt
-- [ ] **Phone call** — rings at night start in the lobby. Attracts Bellhop (risk/reward). Answering delivers tutorial hints. Ignoring = phone rings for ~15s then stops. Skippable on retry
-- [ ] **HUD** — escape timer (when active), throwable count, night counter
-- [ ] **Breath mechanic** — when hiding: breath meter appears. Base duration ~8s. Rhythm tap extends (tap within timing window to "calm breathing"). Run out → gasp → Bellhop hears
-- [ ] **Catch animation** — Bellhop bows, rings bell, "Checking you in." 2-3s, then restart night
-- [ ] **Death/restart** — instant restart to night start. Phone rings again, dialogue fast-skippable. Monster starting positions fixed (player learns from death)
-- [ ] **Player spawn** — always same room (near phone in lobby area). Learnable start
+- [x] **Phone call** — rings at night start in the lobby. Attracts Bellhop (risk/reward). Answering delivers tutorial hints. Ignoring = phone rings for ~15s then stops. Skippable on retry
+- [x] **HUD** — escape timer (when active), throwable count, night counter
+- [x] **Breath mechanic** — when hiding: breath meter appears. Base duration ~8s. Rhythm tap extends (tap within timing window to "calm breathing"). Run out → gasp → Bellhop hears
+- [x] **Catch animation** — Bellhop bows, rings bell, "Checking you in." 2-3s, then restart night
+- [x] **Death/restart** — instant restart to night start. Phone rings again, dialogue fast-skippable. Monster starting positions fixed (player learns from death)
+- [x] **Player spawn** — always same room (near phone in lobby area). Learnable start
 
 **Deliverable:** Night 1 complete loop: wake up → phone rings → Bellhop activates → explore/hide/throw decoys → escape window opens → sprint to lobby → escape or die trying. Fully playable, fully tested.
 

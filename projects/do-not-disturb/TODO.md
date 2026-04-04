@@ -1,28 +1,25 @@
 # Do Not Disturb — TODO
 
-## Status: Phase 1 DONE — Phase 2 next
+## Status: Phases 1-2 DONE — Phase 3 next
 
 ## Next Steps
 
-1. **Execute Phase 2** (Core Engine & Foundation) — engine tick, events, FSM, ReadonlyDeep, noise model, platform graph, game clock
+1. **Execute Phase 3** (Player & Physics) — gravity, 6 movement modes, noise emission, surface types, collision
 2. **Execute sequentially** through Phase 10
 
-## Phase 1 Deliverables (verified)
+## Test Baseline
 
-- pnpm install, typecheck, build, test — all pass
-- Phaser canvas renders "Do Not Disturb" via dev server
-- 10 insight docs in `docs/insights/` (7 original + 3 copied from hide-and-seek)
-- CLAUDE.md updated with tech stack + commands
-- Directory structure: `src/game/`, `src/renderer/`, `src/types/`, `tests/game/`, `tests/renderer/`, `tests/integration/`
+- 53 tests across 7 files, all passing
+- 0 typecheck errors
 
 ## Project Structure
 
 - **The Plan:** `docs/plans/the-plan.md`
 - **Phase plans:** `docs/plans/phases/01-scaffolding.md` through `10-art-sound-polish.md`
-- **Contradiction report:** `docs/plans/contradiction-report.md` (all fixes applied)
 - **Brainstorm:** `docs/ideation/2026-04-03-do-not-disturb-brainstorm.md`
 - **Insights:** `docs/insights/` (10 docs)
 
 ## Landmines
 
-- No code exists beyond `src/main.ts` placeholder — Phase 2 is the first real code
+- IEEE 754 precision: fixed-timestep accumulator with `1/60 * 1000` dt — test boundary conditions with +1ms tolerance
+- `src/main.ts` is still a placeholder (Phaser title screen) — real scenes come in later phases

@@ -1,7 +1,7 @@
 ---
 phase: 2
 title: Core Engine & Foundation
-status: deep
+status: done
 ---
 
 # Phase 2: Core Engine & Foundation
@@ -687,19 +687,19 @@ export function createClock(emitter: Emitter, escapeConfig: EscapeConfig) {
 
 ## Acceptance Criteria
 
-- [ ] `pnpm typecheck` passes with all new files
-- [ ] Engine accumulator runs correct fixed steps per delta (tested)
-- [ ] Event emitter handles emit/on/off/offAll with type safety (tested)
-- [ ] FSM transitions fire lifecycle hooks in correct order (tested)
-- [ ] 3 concurrent FSM instances don't cross-contaminate (tested, insight 005)
-- [ ] Initial FSM state fires onEnter on creation (tested, insight 008)
-- [ ] ReadonlyDeep preserves function call signatures (tested, insight 007)
-- [ ] Noise propagation attenuates correctly through zone graph (tested)
-- [ ] Door toggle event updates noise attenuation (tested, insight 006)
-- [ ] Pathfinding resolves single-floor and cross-floor routes (tested)
-- [ ] Game clock fires escape window events at correct times (tested)
-- [ ] ALL code in `src/game/` has zero imports from Phaser, DOM, or browser APIs
-- [ ] Architecture boundary test: grep `src/game/` for prohibited imports — zero matches
+- [x] `pnpm typecheck` passes with all new files
+- [x] Engine accumulator runs correct fixed steps per delta (tested)
+- [x] Event emitter handles emit/on/off/offAll with type safety (tested)
+- [x] FSM transitions fire lifecycle hooks in correct order (tested)
+- [x] 3 concurrent FSM instances don't cross-contaminate (tested, insight 005)
+- [x] Initial FSM state fires onEnter on creation (tested, insight 008)
+- [x] ReadonlyDeep preserves function call signatures (tested, insight 007)
+- [x] Noise propagation attenuates correctly through zone graph (tested)
+- [x] Door toggle event updates noise attenuation (tested, insight 006)
+- [x] Pathfinding resolves single-floor and cross-floor routes (tested)
+- [x] Game clock fires escape window events at correct times (tested)
+- [x] ALL code in `src/game/` has zero imports from Phaser, DOM, or browser APIs
+- [x] Architecture boundary test: grep `src/game/` for prohibited imports — zero matches
 
 ## Deliverable
 

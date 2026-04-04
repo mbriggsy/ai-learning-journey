@@ -13,7 +13,7 @@ origin: docs/ideation/2026-04-03-do-not-disturb-brainstorm.md
 | Phase | Name | Status | Plan |
 |-------|------|--------|------|
 | 1 | Scaffolding & Tech Stack | **done** | [01-scaffolding.md](phases/01-scaffolding.md) |
-| 2 | Core Engine & Foundation | **deep** | [02-core-engine.md](phases/02-core-engine.md) |
+| 2 | Core Engine & Foundation | **done** | [02-core-engine.md](phases/02-core-engine.md) |
 | 3 | Player & Physics | **deep** | [03-player-physics.md](phases/03-player-physics.md) |
 | 4 | Hotel World | **deep** | [04-hotel-world.md](phases/04-hotel-world.md) |
 | 5 | Camera & Visibility | **deep** | [05-camera-visibility.md](phases/05-camera-visibility.md) |
@@ -114,15 +114,15 @@ Copy these during Phase 1 scaffolding.
 
 **Goal:** Engine ticks, events fire, FSMs transition, noise model computes — all tested.
 
-- [ ] **Fixed-timestep accumulator** — `tick(deltaMs)`, constant dt (1/60s), max catchup guard
-- [ ] **Typed event emitter** — minimal (~26 lines), copy-on-iterate, generic over `GameEventMap`
-- [ ] **GameState type** — initial structure (player, monsters, world, night, inventory)
-- [ ] **ReadonlyDeep** — with function guard (`T extends Function ? T : ...`) to fix insight 007
-- [ ] **FSM framework** — stateless states, generic context, `onEnter/onUpdate/onExit`
-- [ ] **Constants scaffold** — grouped by domain (SIMULATION, MOVEMENT, MONSTER, SOUND, etc.)
-- [ ] **Noise model foundation** — zone-based propagation (each room = zone, attenuation by zone distance, walls reduce, floors heavily reduce, elevator shaft moderate)
-- [ ] **Platform graph pathfinding** — nodes at floor positions, edges for stairs/elevator/drops. NOT grid A*. The Bellhop needs cross-floor navigation; Housekeeper patrols linearly; Guest doesn't move far
-- [ ] **Game clock** — tracks elapsed time within a night, fires events for escape window approach/open/close
+- [x] **Fixed-timestep accumulator** — `tick(deltaMs)`, constant dt (1/60s), max catchup guard
+- [x] **Typed event emitter** — minimal (~26 lines), copy-on-iterate, generic over `GameEventMap`
+- [x] **GameState type** — initial structure (player, monsters, world, night, inventory)
+- [x] **ReadonlyDeep** — with function guard (`T extends Function ? T : ...`) to fix insight 007
+- [x] **FSM framework** — stateless states, generic context, `onEnter/onUpdate/onExit`
+- [x] **Constants scaffold** — grouped by domain (SIMULATION, MOVEMENT, MONSTER, SOUND, etc.)
+- [x] **Noise model foundation** — zone-based propagation (each room = zone, attenuation by zone distance, walls reduce, floors heavily reduce, elevator shaft moderate)
+- [x] **Platform graph pathfinding** — nodes at floor positions, edges for stairs/elevator/drops. NOT grid A*. The Bellhop needs cross-floor navigation; Housekeeper patrols linearly; Guest doesn't move far
+- [x] **Game clock** — tracks elapsed time within a night, fires events for escape window approach/open/close
 
 **Deliverable:** Engine loop runs at fixed timestep, events emit and receive correctly, FSM transitions work with 3+ concurrent instances, noise propagation computes zone distances, pathfinding resolves cross-floor routes. All tested.
 

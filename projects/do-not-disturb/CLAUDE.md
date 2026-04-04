@@ -6,17 +6,9 @@ Side-scrolling 2D playful horror: a kid trapped in an abandoned hotel, hunted by
 
 ## Tech Stack
 
-TBD — will be defined during phase planning. Likely:
+TBD — evaluated from zero during phase planning. No inherited assumptions.
 
-| Component | Notes |
-|-----------|-------|
-| Phaser 3.90.0 | Pinned exact — likely last v3 release |
-| TypeScript ^5.9.0 | strict mode |
-| Vite ^7.0.7 | Minimum for CVE-2025-31125 |
-| Vitest ^4.0.0 | globals: false |
-| pnpm 10.x | Package manager |
-
-## Architecture Rules (Carried Forward)
+## Architecture Rules (Proven Patterns)
 
 - Game logic layer has **ZERO** imports from Phaser, the DOM, or any browser API
 - Renderer reads game state via `ReadonlyDeep<GameState>` — never shallow `Readonly<T>`
@@ -49,11 +41,9 @@ TBD — will be defined during phase planning. Likely:
 
 `docs/insights/` contains hard-won root causes and fixes carried from the prior project. Read before working on related areas.
 
-## Landmines (From Prior Project)
+## Landmines (Universal)
 
 - **ReadonlyDeep does NOT protect Uint8Array.** TypedArrays' mutation methods survive `ReadonlyDeep`. Protected by convention only.
-- **Phaser uses `export = Phaser`** in its type defs. `esModuleInterop: true` is required in tsconfig.
-- **Phaser's EventEmitter is untyped.** Use a typed emitter interface for game events.
 - **Module-level `let` in FSM states** — singleton pattern, breaks with multiple instances.
 - **Imagen 4 renders decorative borders** that survive chroma-key. Account for this in asset pipeline.
 

@@ -1,7 +1,7 @@
 ---
 phase: 4
 title: Hotel World
-status: deep
+status: done
 ---
 
 # Phase 4: Hotel World
@@ -262,18 +262,18 @@ Seeded RNG ensures the same Night 5 layout on retry (player learns from death). 
 
 ## Acceptance Criteria
 
-- [ ] LevelConfig loads and produces valid WorldState
-- [ ] Zone graph correctly built from room adjacency + doors
-- [ ] Nav graph correctly built from rooms + stairs + elevator
-- [ ] Door toggle emits DOOR_TOGGLED, updates noise attenuation + nav cost (insight 006)
-- [ ] Door creak emits NOISE_EMITTED
-- [ ] Elevator DING emits max noise on arrival
-- [ ] Elevator decoy works (call without riding)
-- [ ] All 5 hiding spot types have correct protection matrix
-- [ ] Night 5 shuffle rearranges rooms within floors, preserves connections
-- [ ] Tiled properties accessed via flattened format (insight 003)
-- [ ] Data-driven: same code loads different configs for different nights
-- [ ] Zero Phaser imports in `src/game/`
+- [x] LevelConfig loads and produces valid WorldState
+- [x] Zone graph correctly built from room adjacency + doors
+- [x] Nav graph correctly built from rooms + stairs + elevator
+- [x] Door toggle emits DOOR_TOGGLED, updates noise attenuation + nav cost (insight 006)
+- [x] Door creak emits NOISE_EMITTED
+- [x] Elevator DING emits max noise on arrival
+- [x] Elevator decoy works (call without riding)
+- [x] All 5 hiding spot types have correct protection matrix
+- [x] Night 5 shuffle rearranges rooms within floors, preserves connections
+- [x] Tiled properties accessed via flattened format (insight 003)
+- [x] Data-driven: same code loads different configs for different nights
+- [x] Zero Phaser imports in `src/game/`
 
 ## Deliverable
 

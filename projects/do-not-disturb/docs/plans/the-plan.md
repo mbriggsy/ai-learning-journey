@@ -15,7 +15,7 @@ origin: docs/ideation/2026-04-03-do-not-disturb-brainstorm.md
 | 1 | Scaffolding & Tech Stack | **done** | [01-scaffolding.md](phases/01-scaffolding.md) |
 | 2 | Core Engine & Foundation | **done** | [02-core-engine.md](phases/02-core-engine.md) |
 | 3 | Player & Physics | **done** | [03-player-physics.md](phases/03-player-physics.md) |
-| 4 | Hotel World | **deep** | [04-hotel-world.md](phases/04-hotel-world.md) |
+| 4 | Hotel World | **done** | [04-hotel-world.md](phases/04-hotel-world.md) |
 | 5 | Camera & Visibility | **deep** | [05-camera-visibility.md](phases/05-camera-visibility.md) |
 | 6 | The Bellhop + Night 1 | **deep** | [06-bellhop-night1.md](phases/06-bellhop-night1.md) |
 | 7 | The Housekeeper + Night 2 | **deep** | [07-housekeeper-night2.md](phases/07-housekeeper-night2.md) |
@@ -155,7 +155,7 @@ Copy these during Phase 1 scaffolding.
 
 **Goal:** Navigable 5-floor hotel with all interactive elements.
 
-- [ ] **5-floor structure** (Tiled maps):
+- [x] **5-floor structure** (Tiled maps):
   | Floor | Character | Key Elements |
   |-------|-----------|-------------|
   | Attic | Tight spaces, exposed beams | Vents, cobwebs |
@@ -163,11 +163,11 @@ Copy these during Phase 1 scaffolding.
   | Floor 2 | Guest rooms, laundry chute | Beds, closets, chute to basement |
   | Lobby | Front desk, piano, tall windows | Escape door, phone |
   | Basement | Kitchen, freezer, boiler | Freezer hiding, near pitch black |
-- [ ] **Rooms with doors** — open/close with creak (noise event). Tiled properties accessed via `obj.properties?.propName` (insight 003)
-- [ ] **Stairs** — doorway-style transition between floors. Short transition animation. Monsters CAN follow after a delay
-- [ ] **Elevator** — moves between floors, DING on arrival (loudest sound — attracts Bellhop). Can be called as decoy (press button, walk away)
-- [ ] **Laundry chute** — one-way from Floor 2 to Basement. Makes sliding noise. Monsters cannot use it
-- [ ] **Hiding spots** (5 types):
+- [x] **Rooms with doors** — open/close with creak (noise event). Tiled properties accessed via `obj.properties?.propName` (insight 003)
+- [x] **Stairs** — doorway-style transition between floors. Short transition animation. Monsters CAN follow after a delay
+- [x] **Elevator** — moves between floors, DING on arrival (loudest sound — attracts Bellhop). Can be called as decoy (press button, walk away)
+- [x] **Laundry chute** — one-way from Floor 2 to Basement. Makes sliding noise. Monsters cannot use it
+- [x] **Hiding spots** (5 types):
   | Spot | Protection | View | Notes |
   |------|-----------|------|-------|
   | Under beds | High | See feet | Housekeeper checks — NOT safe from her |
@@ -175,9 +175,9 @@ Copy these during Phase 1 scaffolding.
   | Behind furniture | Low | Quick crouch | Can be spotted by any monster |
   | Vents | Safe | Crawl between rooms | Slow but safe from ALL monsters |
   | Freezer (basement) | Time-limited | Door blocks view | Cold timer |
-- [ ] **Surface types per room** — stored in Tiled tile properties
-- [ ] **Data-driven level loading** — each night loads a level config. Nights 1-4 use same config. Night 5 uses variant. World system doesn't know which night it is — loads what it's told (Night 5 ready from day 1)
-- [ ] **Light zones** — per-area ambient light levels. Attic: moonlight through holes. Floors 2-3: flickering sconces. Lobby: moonlight (best visibility). Basement: near pitch black
+- [x] **Surface types per room** — stored in Tiled tile properties
+- [x] **Data-driven level loading** — each night loads a level config. Nights 1-4 use same config. Night 5 uses variant. World system doesn't know which night it is — loads what it's told (Night 5 ready from day 1)
+- [x] **Light zones** — per-area ambient light levels. Attic: moonlight through holes. Floors 2-3: flickering sconces. Lobby: moonlight (best visibility). Basement: near pitch black
 
 **Deliverable:** Player navigates all 5 floors via stairs and elevator. Doors open/close with noise. Hiding spots enterable. Light zones render. Level configs load from data. All interactive elements tested.
 

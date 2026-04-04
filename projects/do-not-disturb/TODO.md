@@ -1,15 +1,15 @@
 # Do Not Disturb — TODO
 
-## Status: Phases 1-3 DONE — Phase 4 next
+## Status: Phases 1-4 DONE — Phase 5 next
 
 ## Next Steps
 
-1. **Execute Phase 4** (Hotel World) — 5-floor Tiled maps, doors, stairs, elevator, hiding spots, surface types, light zones
+1. **Execute Phase 5** (Camera & Visibility) — lead-ahead, zoom-on-hide, parallax, light zone rendering, monster lights
 2. **Execute sequentially** through Phase 10
 
 ## Test Baseline
 
-- 95 tests across 10 files, all passing
+- 138 tests across 15 files, all passing
 - 0 typecheck errors
 
 ## Project Structure
@@ -22,5 +22,6 @@
 ## Landmines
 
 - IEEE 754 precision: fixed-timestep accumulator with `1/60 * 1000` dt — test boundary conditions with +1ms tolerance
-- `src/main.ts` is still a placeholder (Phaser title screen) — real scenes come in later phases
-- CollisionResult is a type only — actual Phaser Arcade Physics collision wiring happens when renderer is built
+- `src/main.ts` is still a placeholder — real scenes come when renderer is built
+- CollisionResult is a type only — Phaser Arcade Physics wiring happens in renderer
+- HidingSpotType is defined in BOTH `src/types/state.ts` and `src/types/level.ts` — level.ts is the source of truth, state.ts should import from there in a future cleanup

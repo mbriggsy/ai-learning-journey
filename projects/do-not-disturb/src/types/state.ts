@@ -37,7 +37,7 @@ export type WorldState = {
   readonly doors: readonly DoorState[];
   readonly hidingSpots: readonly HidingSpotState[];
   readonly navGraph: NavGraph;
-  readonly elevatorFloor: number;
+  readonly elevatorFloor: string;
   readonly elevatorMoving: boolean;
 };
 

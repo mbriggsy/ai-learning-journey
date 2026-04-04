@@ -3,3 +3,5 @@ dist/
 coverage/
 *.tsbuildinfo
 .playwright-mcp/
+test-results/
+tests/e2e/screenshots/*.png

@@ -1,7 +1,5 @@
-import type { CARD_DEFS } from './card-defs'
-
-/** Derived from card-defs.ts — never define manually */
-export type CardType = typeof CARD_DEFS[number]['type']
+import type { CardType } from './card-defs'
+export type { CardType }
 
 /** Individual card instance — unique ID for tracking in hands/deck/discard */
 export interface CardInstance {

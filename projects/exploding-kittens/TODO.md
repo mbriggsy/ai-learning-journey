@@ -1,10 +1,11 @@
 # Exploding Kittens Digital -- TODO
 
 ## Current State
-- **Phase 1: Foundation — COMPLETE** (2026-04-05)
-  - 10/10 tests passing, typecheck clean, lint clean, build succeeds
-  - Phone initial JS: ~59KB gzipped (under 100KB budget)
+- **Phase 1: Foundation — COMPLETE + REVIEWED** (2026-04-05)
+  - 12/12 tests passing, typecheck clean, lint clean, build succeeds
+  - Phone initial JS: ~71KB gzipped (under 100KB budget)
   - 17 card types, 120 total cards, all counts verified against rules PDF
+  - Code review: 5 agents, 16 findings — all P1/P2 fixes applied
 - All cross-phase contradictions resolved (2026-04-05)
 - Rules audit complete -- canonical reference at `docs/rules/RULES-REFERENCE.md`
 

@@ -44,6 +44,11 @@ export default tseslint.config(
             message: 'src/server/ must not import from src/client/.' },
         ],
       }],
+      'no-restricted-properties': ['error', {
+        object: 'Math',
+        property: 'random',
+        message: 'Math.random() banned in server code. Use crypto.getRandomValues().',
+      }],
     },
   },
 )

@@ -9,7 +9,9 @@ export type ClientMessage =
 // --- Server -> Client Messages ---
 
 export type ServerMessage =
-  | { type: 'state-update'; payload: BoardState | PlayerViewState | LobbyState }
+  | { type: 'lobby-state'; payload: LobbyState }
+  | { type: 'board-state'; payload: BoardState }
+  | { type: 'player-state'; payload: PlayerViewState }
   | { type: 'private-update'; payload: PrivateData }
   | { type: 'joined'; payload: { playerId: string; sessionToken: string } }
   | { type: 'error'; payload: { code: string; message: string } }
@@ -33,9 +35,3 @@ export interface PlayerViewState {
 
 // eslint-disable-next-line @typescript-eslint/no-empty-object-type -- Phase 2-3 flesh out: hand contents, future peek, etc.
 export interface PrivateData {}
-
-// --- Helpers ---
-
-export function encodeMessage(msg: ClientMessage | ServerMessage): string {
-  return JSON.stringify(msg)
-}

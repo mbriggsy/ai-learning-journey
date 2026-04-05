@@ -38,6 +38,35 @@ describe('CARD_DEFS', () => {
     expect(new Set(types).size).toBe(types.length)
   })
 
+  it('assigns correct categories', () => {
+    const ek = CARD_DEFS.find(d => d.type === 'exploding-kitten')
+    expect(ek!.category).toBe('kitten')
+
+    const defuse = CARD_DEFS.find(d => d.type === 'defuse')
+    expect(defuse!.category).toBe('defuse')
+
+    const feral = CARD_DEFS.find(d => d.type === 'feral-cat')
+    expect(feral!.category).toBe('wild')
+
+    const catTypes = ['taco-cat', 'beard-cat', 'rainbow-ralphing-cat', 'hairy-potato-cat', 'cattermelon']
+    for (const catType of catTypes) {
+      const def = CARD_DEFS.find(d => d.type === catType)
+      expect(def!.category, `${catType} should be 'cat'`).toBe('cat')
+    }
+
+    const actionTypes = ['attack', 'targeted-attack', 'skip', 'see-the-future', 'alter-the-future', 'shuffle', 'draw-from-bottom', 'favor', 'nope']
+    for (const actionType of actionTypes) {
+      const def = CARD_DEFS.find(d => d.type === actionType)
+      expect(def!.category, `${actionType} should be 'action'`).toBe('action')
+    }
+  })
+
+  it('has exactly 1 kitten category card (Exploding Kitten exists outside paw system)', () => {
+    const kittens = CARD_DEFS.filter(d => d.category === 'kitten')
+    expect(kittens).toHaveLength(1)
+    expect(kittens[0]!.type).toBe('exploding-kitten')
+  })
+
   it('matches paw/non-paw counts per card type against rules reference', () => {
     const expected: Record<string, { paw: number; nonPaw: number }> = {
       'exploding-kitten': { paw: 0, nonPaw: 9 },

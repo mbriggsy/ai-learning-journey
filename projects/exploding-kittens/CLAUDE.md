@@ -68,6 +68,6 @@
 | board entry | 0.35 KB | 0.25 KB | Initial |
 | MotionProvider (React + LazyMotion) | 185.02 KB | 58.60 KB | Initial (shared) |
 | motion-features (domMax) | 87.83 KB | 29.01 KB | Lazy |
-| VisualElement | 35.38 KB | 12.65 KB | Lazy |
+| VisualElement | 35.38 KB | 12.65 KB | Initial (shared) |
 
-**Phone initial JS: ~59KB gzipped** (under 100KB budget)
+**Phone initial JS: ~71KB gzipped** (under 100KB budget)

@@ -17,18 +17,15 @@ corepack prepare pnpm@latest --activate
 
 ## Quick Start
 
-> **Note:** Project scaffold not yet created. These instructions will work after Phase 1 is complete.
-
 ```bash
 # Install dependencies
 pnpm install
 
 # Start dev server (serves both board + player views)
 pnpm dev
-
-# In a separate terminal, start PartyKit dev server
-pnpm partykit:dev
 ```
+
+> **Note:** PartyKit dev server (`pnpm partykit:dev`) will be available after Phase 3.
 
 Then open:
 - **Board (TV):** `http://localhost:5173/board.html`
@@ -41,12 +38,12 @@ For phone testing during development, use your machine's local IP instead of `lo
 | Command | What it does |
 |---------|-------------|
 | `pnpm dev` | Start Vite dev server (hot reload) |
-| `pnpm partykit:dev` | Start PartyKit local dev server |
+| `pnpm build` | Typecheck + production build |
+| `pnpm typecheck` | TypeScript type checking |
 | `pnpm test` | Run unit tests (Vitest) |
 | `pnpm test:watch` | Run tests in watch mode |
-| `pnpm typecheck` | TypeScript type checking |
-| `pnpm build` | Production build |
-| `pnpm test:e2e` | End-to-end tests (Playwright) |
+| `pnpm lint` | ESLint (import boundary enforcement) |
+| `pnpm preview` | Preview production build |
 
 ## Key Technologies
 

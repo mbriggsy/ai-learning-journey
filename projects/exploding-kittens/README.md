@@ -4,7 +4,7 @@ A digital adaptation of [Exploding Kittens Party Pack](https://www.explodingkitt
 
 ## Status
 
-**Pre-development** — all 6 phase plans deepened, contradictions resolved, rules audited. Ready to execute Phase 1.
+**Phase 1 complete** — project scaffolded, 10/10 tests passing, ~59KB gzipped phone bundle. Executing Phase 2 next.
 
 ## The Game
 
@@ -45,10 +45,13 @@ docs/
   insights/        # Hard-won lessons (populated during development)
   rules/           # Canonical rules reference (audited against official PDF)
   user/            # Official Party Pack rulebook PDF
-src/               # Source code (not yet created)
-  server/          # PartyKit server + game engine
-  client/          # React apps (board + player)
-  shared/          # Shared TypeScript types + Zod schemas
+src/
+  shared/          # Pure TS types, card definitions, protocol, constants (zero runtime deps)
+  server/          # PartyKit room + game engine (Zod validation server-only)
+  client/
+    board/         # TV/shared screen React app
+    player/        # Phone controller React app
+    shared/        # Shared React components (MotionProvider, hooks)
 ```
 
 ## Setup
@@ -75,7 +78,7 @@ Brainstorm → Roadmap → Phase Plans → Deepen Each → Fix Contradictions �
 
 | # | Phase | Plan | Planned | Deepened | Executed | Reviewed |
 |---|-------|------|---------|----------|----------|----------|
-| 1 | Foundation | [phase-1](docs/plans/phase-1-foundation.md) | 04-05 11:41AM | 04-05 1:30PM | | |
+| 1 | Foundation | [phase-1](docs/plans/phase-1-foundation.md) | 04-05 11:41AM | 04-05 1:30PM | 04-05 4:04PM | |
 | 2 | Game Engine | [phase-2](docs/plans/phase-2-game-engine.md) | 04-05 11:41AM | 04-05 2:45PM | | |
 | 3 | Networking + Lobby | [phase-3](docs/plans/phase-3-networking-lobby.md) | 04-05 11:41AM | 04-05 3:45PM | | |
 | 4 | Core Game UI | [phase-4](docs/plans/phase-4-core-game-ui.md) | 04-05 11:41AM | 04-05 6:30PM | | |

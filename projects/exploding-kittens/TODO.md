@@ -14,16 +14,15 @@
 - Rules audit complete -- canonical reference at `docs/rules/RULES-REFERENCE.md`
 
 ## Next Steps (in order)
-1. **Execute Phase 3: Networking + Lobby** -- WebSocket layer, Zod validation, room lifecycle
-2. Execute Phase 4: Core Game UI
+1. **Review Phase 2** (recommended — engine is security-critical)
+2. **Execute Phase 3: Networking + Lobby** -- WebSocket layer, Zod validation, room lifecycle
 3. Execute Phase 4: Core Game UI
 4. Execute Phase 5: Visual & Animation
 5. Execute Phase 6: Hardening & Deploy
-6. Review Phase 2 (recommended before Phase 3 — engine is security-critical)
 
 ## Landmines
 - Phase 2: Nope grace window mechanism must be implemented (Phase 6 cross-plan note #9)
-- Phase 2: `startedAtMs` needed on NopeWindow for reconnection countdown (Phase 6 cross-plan note #8)
+- ~~Phase 2: `startedAtMs` needed on NopeWindow~~ — DONE (added in Phase 2 types)
 - Phase 3: `onStart()` must restore ALL prompt timeout timers, not just Nope (Phase 6 cross-plan note #1)
 - Phase 3: Reconnection state-send MUST be enqueued in serial queue (Phase 6 cross-plan note #4)
 - Phase 5: ImageBitmap.close() required in canvas cleanup (Phase 6 cross-plan note #10)

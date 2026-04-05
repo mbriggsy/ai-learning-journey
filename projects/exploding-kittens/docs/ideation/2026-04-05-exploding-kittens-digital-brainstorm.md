@@ -42,7 +42,7 @@ Briggsy plays Exploding Kittens in real life. Directing from experience, not the
 | 1 | **Format** | Jackbox-style (shared screen + phone controllers) | Hidden hands solved naturally. Big screen = spectacle. |
 | 2 | **Players** | 2-10 (full Party Pack range) | No one gets turned away at game night. |
 | 3 | **Card scope** | Full Party Pack (120 cards, all types) | It's the game we actually play. No half measures. |
-| 4 | **Tech stack** | React + TypeScript + Vite + Socket.IO + Framer Motion | React for UI, Socket.IO for real-time sync, Framer Motion for water-beads animation. |
+| 4 | **Tech stack** | React + TypeScript + Vite + ~~Socket.IO~~ **PartyKit** + Framer Motion | React for UI, ~~Socket.IO~~ PartyKit for real-time sync (proven in UMB, cloud-native), Framer Motion for water-beads animation. *Updated during planning — PartyKit supersedes Socket.IO.* |
 | 5 | **App architecture** | One app, two views (`/board` for TV, `/play` for phones) | Shared types, shared game logic, one codebase. |
 | 6 | **Visual direction** | Dark + premium | Code-driven polish. Glowing edges, particles, dramatic light. No sprite art needed. |
 | 7 | **Drama level** | Full theatrical | Slow reveals, screen shake, particle explosions, relief animations. Every draw is an event. |

@@ -4,7 +4,7 @@ A digital adaptation of [Exploding Kittens Party Pack](https://www.explodingkitt
 
 ## Status
 
-**Pre-development** — brainstorm complete, implementation plan locked, environment not yet scaffolded.
+**Pre-development** — roadmap locked, phase plans written (not yet deepened).
 
 ## The Game
 
@@ -21,8 +21,9 @@ A digital adaptation of [Exploding Kittens Party Pack](https://www.explodingkitt
 | Networking | PartyKit (Cloudflare Workers) |
 | UI | React 19 + TypeScript 5.9 |
 | Animation | Framer Motion |
+| Validation | Zod |
 | Build | Vite 8 + pnpm |
-| Testing | Vitest + Playwright |
+| Testing | Vitest + fast-check + Playwright |
 
 ## Architecture
 
@@ -39,33 +40,50 @@ Patterns adapted from [Undercover Mob Boss](../undercover-mob-boss/), which uses
 ```
 docs/
   ideation/        # Brainstorm documents
-  plans/           # Implementation plans
+  plans/           # Roadmap + individual phase plans
   environment/     # Setup guides
   insights/        # Hard-won lessons (populated during development)
   user/            # Game rules reference (Party Pack PDF)
 src/               # Source code (not yet created)
   server/          # PartyKit server + game engine
   client/          # React apps (board + player)
-  shared/          # Shared TypeScript types
+  shared/          # Shared TypeScript types + Zod schemas
 ```
 
 ## Setup
 
 See [docs/environment/SETUP.md](docs/environment/SETUP.md) for development environment setup.
 
-## Implementation Plan
+## Build Workflow
 
-Six phases — see [docs/plans/2026-04-05-001-feat-exploding-kittens-digital-card-game-plan.md](docs/plans/2026-04-05-001-feat-exploding-kittens-digital-card-game-plan.md) for full details.
+We follow a deliberate plan-then-build process. No code gets written until the plan for that phase has been deepened with focused research agents.
 
-1. **Foundation** — scaffold, types, card definitions
-2. **Game Engine** — pure logic, all card effects, full test suite
-3. **Networking + Lobby** — PartyKit rooms, join flow, first "it works"
-4. **Core Game UI** — playable but ugly, all interactions functional
-5. **Visual Design & Animation** — THE phase. Dark premium, theatrical reveals, 40%+ effort
-6. **Hardening & Deploy** — reconnection, mobile browsers, E2E, deploy
+```
+Brainstorm → Roadmap → Phase Plans → Deepen Each → Fix Contradictions → Execute
+```
+
+### How It Works
+
+1. **[Roadmap](docs/plans/roadmap.md)** — high-level overview: tech stack, architecture, state machine, cross-cutting concerns, phase summary
+2. **Phase plans** — one file per phase with detailed tasks, key files, tests, and done-when criteria
+3. **Deepen each plan** — focused research agents probe each phase individually (framework docs, best practices, edge cases, security, performance)
+4. **Fix contradictions** — resolve conflicts across all 6 plans before writing any code
+5. **Execute sequentially** — one phase at a time, tests pass before moving on
+
+### Phase Status
+
+| # | Phase | Plan | Status |
+|---|-------|------|--------|
+| 1 | Foundation | [phase-1-foundation.md](docs/plans/phase-1-foundation.md) | Not deepened |
+| 2 | Game Engine | [phase-2-game-engine.md](docs/plans/phase-2-game-engine.md) | Not deepened |
+| 3 | Networking + Lobby | [phase-3-networking-lobby.md](docs/plans/phase-3-networking-lobby.md) | Not deepened |
+| 4 | Core Game UI | [phase-4-core-game-ui.md](docs/plans/phase-4-core-game-ui.md) | Not deepened |
+| 5 | Visual Design & Animation | [phase-5-visual-animation.md](docs/plans/phase-5-visual-animation.md) | Not deepened |
+| 6 | Hardening & Deploy | [phase-6-hardening-deploy.md](docs/plans/phase-6-hardening-deploy.md) | Not deepened |
 
 ## Reference
 
 - [Brainstorm](docs/ideation/2026-04-05-exploding-kittens-digital-brainstorm.md) — all design decisions and rationale
+- [Roadmap](docs/plans/roadmap.md) — tech stack, architecture, state machine, cross-cutting concerns
 - [Party Pack Rules](docs/user/ekpp-instructions-english.pdf) — official game rules
 - [UMB Architecture](../undercover-mob-boss/) — reference patterns for multi-device infrastructure

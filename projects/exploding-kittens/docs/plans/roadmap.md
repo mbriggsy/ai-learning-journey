@@ -150,7 +150,7 @@ Each phase has its own plan file. Plans are deepened individually before executi
 | 1 | Foundation | [phase-1](phase-1-foundation.md) | 04-05 11:41AM | 04-05 1:30PM | | |
 | 2 | Game Engine | [phase-2](phase-2-game-engine.md) | 04-05 11:41AM | 04-05 2:45PM | | |
 | 3 | Networking + Lobby | [phase-3](phase-3-networking-lobby.md) | 04-05 11:41AM | 04-05 3:45PM | | |
-| 4 | Core Game UI | [phase-4](phase-4-core-game-ui.md) | 04-05 11:41AM | | | |
+| 4 | Core Game UI | [phase-4](phase-4-core-game-ui.md) | 04-05 11:41AM | 04-05 6:30PM | | |
 | 5 | Visual & Animation | [phase-5](phase-5-visual-animation.md) | 04-05 11:41AM | | | |
 | 6 | Hardening & Deploy | [phase-6](phase-6-hardening-deploy.md) | 04-05 11:41AM | | | |
 

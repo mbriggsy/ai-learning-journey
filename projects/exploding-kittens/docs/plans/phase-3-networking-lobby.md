@@ -450,7 +450,7 @@ class GameStore {
 2. **Phase 2 actions.ts**: Add `windowGeneration: number` to `nope-window-expired` payload. Split into `ClientActionMap` + `ServerOnlyActionMap`.
 3. **Phase 1 protocol.ts**: Rename projected types (`LobbyState` → `LobbyView`, etc.). Add `action` wrapper to ClientMessage.
 4. **Phase 4**: Selector hooks (`useHand`, `useTurnState`, etc.) build on Phase 3's `useGameSelector` generic. Phase 3 provides `useLobbyState()` only.
-5. **Phase 4**: `useOptimistic` for instant card-play feedback requires the store to support optimistic state injection. Design must be Phase 3-compatible.
+5. **Phase 4**: ~~`useOptimistic`~~ **`gameStore.applyOptimistic()`** for instant card-play feedback. `useOptimistic` doesn't fit WebSocket state (see `docs/insights/useOptimistic-vs-store-overlay.md`). Store needs: `optimisticOverlays` Map, `applyOptimistic()` method, overlay clearing in `handleMessage()`. Protocol needs: `action-rejected` server message type with `actionId`.
 6. **Phase 5**: Animation event queue must drain events from state updates before next update overwrites them. Events are ephemeral (cleared each dispatch).
 7. **Phase 6**: Full E2E test suite, edge-case reconnection flows, production security hardening.
 8. **Roadmap Mermaid**: Still needs `favor_pending → nope_window` arrows removed, underscore→hyphen fix (tracked in Phase 2 notes).

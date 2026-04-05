@@ -453,4 +453,4 @@ class GameStore {
 5. **Phase 4**: ~~`useOptimistic`~~ **`gameStore.applyOptimistic()`** for instant card-play feedback. `useOptimistic` doesn't fit WebSocket state (see `docs/insights/useOptimistic-vs-store-overlay.md`). Store needs: `optimisticOverlays` Map, `applyOptimistic()` method, overlay clearing in `handleMessage()`. Protocol needs: `action-rejected` server message type with `actionId`.
 6. **Phase 5**: Animation event queue must drain events from state updates before next update overwrites them. Events are ephemeral (cleared each dispatch).
 7. **Phase 6**: Full E2E test suite, edge-case reconnection flows, production security hardening.
-8. **Roadmap Mermaid**: Still needs `favor_pending → nope_window` arrows removed, underscore→hyphen fix (tracked in Phase 2 notes).
+8. **Roadmap Mermaid**: ~~Still needs arrows removed, underscore→hyphen fix.~~ **RESOLVED** (2026-04-05 contradiction pass).

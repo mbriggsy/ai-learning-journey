@@ -235,7 +235,7 @@ export default defineConfig({
 <html lang="en">
   <head>
     <meta charset="UTF-8" />
-    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover, interactive-widget=resizes-content" />
     <title>Exploding Kittens — Join</title>
   </head>
   <body>
@@ -245,7 +245,7 @@ export default defineConfig({
 </html>
 ```
 
-**Performance Note:** `user-scalable=no` on player.html prevents accidental zoom during card interactions on phones.
+**Note:** `viewport-fit=cover` extends content to notched/rounded screens (use with `env(safe-area-inset-*)`). `interactive-widget=resizes-content` improves keyboard behavior on Chromium. `user-scalable=no` was removed — iOS ignores it since iOS 10 and it's a WCAG AA violation. Zoom prevention is handled by `touch-action: manipulation` in Phase 6's game-mode CSS.
 
 ### Task 7: ESLint Import Boundary Config
 

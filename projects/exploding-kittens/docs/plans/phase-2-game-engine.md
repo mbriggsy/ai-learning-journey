@@ -437,9 +437,9 @@ fc.assert(fc.property(
 
 ## Cross-Plan Notes (for contradiction resolution pass)
 
-1. **Roadmap Mermaid diagram:** Remove `favor_pending → nope_window` and `future_pending → nope_window` arrows. Official rules: once Nope window resolves and action begins its interactive phase, it cannot be Noped again. requestId still serves timeout/disconnect cancellation.
-2. **Roadmap Mermaid diagram:** Fix underscores to hyphens (`turn_active` → `turn-active`, etc.). Add `steal-target-pending`, `name-card-pending`, `eliminated-check` to diagram.
-3. **Phase 6:** Remove "If Noped, prompt-cancelled on reconnect" for Favor/Future — pending states are not Nopeable per official rules.
+1. **Roadmap Mermaid diagram:** ~~Remove `favor_pending → nope_window` and `future_pending → nope_window` arrows.~~ **RESOLVED** — arrows removed, hyphens fixed, missing SubPhases added (2026-04-05 contradiction pass).
+2. **Roadmap Mermaid diagram:** ~~Fix underscores to hyphens, add missing SubPhases.~~ **RESOLVED** — see #1 above.
+3. **Phase 6:** ~~Remove "If Noped, prompt-cancelled on reconnect" for Favor/Future.~~ **RESOLVED** — contradiction removed during Phase 6 deepening (2026-04-05).
 4. **Phase 3 protocol.ts:** Action types now live in `src/shared/actions.ts`. Phase 3's "Full Message Set" task should import from there, not redefine.
 5. **Phase 3 room.ts:** Must dispatch `nope-window-expired` action when timer fires. Timer duration from `NOPE_WINDOW_MS` in constants.ts. Timer resets on each Nope in chain.
 6. **Phase 3 room.ts:** stateVersion validation happens here (before calling dispatch), not in engine.

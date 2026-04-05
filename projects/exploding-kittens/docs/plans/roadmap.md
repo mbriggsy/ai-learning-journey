@@ -102,6 +102,7 @@ partykit.json            # PartyKit config
 | Card fan rotation | Painful to tap. Horizontal scroll wins. |
 | Swappable art direction | YAGNI |
 | Defuse slider | Over-engineered. Numbered buttons. |
+| 5-different special combo | Not in Party Pack rules. Original base game only. Party Pack replaced it with any-card combo expansion. |
 
 ## Game State Machine
 
@@ -109,28 +110,32 @@ partykit.json            # PartyKit config
 stateDiagram-v2
     [*] --> lobby
     lobby --> playing : host starts (2+ players)
-    playing --> game_over : one player remaining
-    playing --> game_over : inactivity timeout (15min)
-    game_over --> lobby : new game
+    playing --> game-over : one player remaining
+    playing --> game-over : inactivity timeout (15min)
+    game-over --> lobby : new game
 
     state playing {
-        [*] --> turn_active
-        turn_active --> nope_window : Nopeable card played
-        turn_active --> defuse_pending : drew EK + holds Defuse
-        turn_active --> eliminated_check : drew EK + no Defuse
-        nope_window --> turn_active : expires (cancelled) or resolves (other)
-        nope_window --> favor_pending : resolves, action = Favor
-        nope_window --> future_pending : resolves, action = Alter the Future
-        favor_pending --> nope_window : Noped
-        favor_pending --> turn_active : target gives card
-        future_pending --> nope_window : Noped
-        future_pending --> turn_active : player confirms order
-        defuse_pending --> turn_active : Kitten reinserted
-        eliminated_check --> turn_active : eliminated, next turn
-        eliminated_check --> [*] : last opponent (game_over)
-        turn_active --> turn_active : Skip / Attack / safe draw
+        [*] --> turn-active
+        turn-active --> nope-window : Nopeable card played
+        turn-active --> defuse-pending : drew EK + holds Defuse
+        turn-active --> eliminated-check : drew EK + no Defuse
+        nope-window --> turn-active : expires (cancelled) or resolves (Skip, Attack, etc.)
+        nope-window --> favor-pending : resolves, action = Favor
+        nope-window --> future-rearrange-pending : resolves, action = Alter the Future
+        nope-window --> steal-target-pending : resolves, action = 2-of-a-kind
+        nope-window --> name-card-pending : resolves, action = 3-of-a-kind
+        favor-pending --> turn-active : target gives card (or 60s timeout)
+        future-rearrange-pending --> turn-active : player confirms order (or 60s timeout)
+        steal-target-pending --> turn-active : target selected + card stolen (or 60s timeout)
+        name-card-pending --> turn-active : card named + resolved (or 60s timeout)
+        defuse-pending --> turn-active : Kitten reinserted (or 60s timeout)
+        eliminated-check --> turn-active : eliminated, next turn
+        eliminated-check --> [*] : last opponent (game-over)
+        turn-active --> turn-active : Skip / Attack / safe draw
     }
 ```
+
+*Note: Once a Nope window resolves and an action enters its interactive pending phase, it CANNOT be Noped again. Nope only applies to the initial card play.*
 
 ### Testing Architecture
 
@@ -152,6 +157,6 @@ Each phase has its own plan file. Plans are deepened individually before executi
 | 3 | Networking + Lobby | [phase-3](phase-3-networking-lobby.md) | 04-05 11:41AM | 04-05 3:45PM | | |
 | 4 | Core Game UI | [phase-4](phase-4-core-game-ui.md) | 04-05 11:41AM | 04-05 6:30PM | | |
 | 5 | Visual & Animation | [phase-5](phase-5-visual-animation.md) | 04-05 11:41AM | 04-05 8:45PM | | |
-| 6 | Hardening & Deploy | [phase-6](phase-6-hardening-deploy.md) | 04-05 11:41AM | | | |
+| 6 | Hardening & Deploy | [phase-6](phase-6-hardening-deploy.md) | 04-05 11:41AM | 04-05 11:30PM | | |
 
 **Workflow:** Deepen ALL phase plans → fix contradictions → THEN execute sequentially.

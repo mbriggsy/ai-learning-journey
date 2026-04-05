@@ -889,5 +889,5 @@ These findings affect other phase plans and must be resolved before execution:
 7. **Phase 3 protocol:** Add `action-rejected` ServerMessage type with `actionId` field. Enables targeted optimistic overlay rollback. (useOptimistic Research)
 8. **Phase 3 gameStore:** Add event accumulation hook point. Forward events to accumulator **before** overwriting the snapshot. Without this, rapid dispatches during Nope chains lose events. (Architecture, Type Analyzer)
 9. **Phase 3 player.html:** Add `<div id="nope-root"></div>` as sibling of `<div id="root">`. Nope button portals here to escape all stacking contexts. (Best Practices)
-10. **Phase 6:** Remove "If Noped, prompt-cancelled on reconnect" for Favor/Future. Phase 2 established that pending states (favor-pending, future-rearrange-pending) are NOT Nopeable per official rules. (Spec Flow — Contradiction 1)
-11. **Roadmap Mermaid:** Remove `favor_pending → nope_window` and `future_pending → nope_window` arrows. Already flagged in Phase 2 cross-plan note #1, still not applied. (Phase 2, Spec Flow)
+10. **Phase 6:** ~~Remove "If Noped, prompt-cancelled on reconnect" for Favor/Future.~~ **RESOLVED** — contradiction removed during Phase 6 deepening (2026-04-05).
+11. **Roadmap Mermaid:** ~~Remove `favor_pending → nope_window` arrows.~~ **RESOLVED** — arrows removed, hyphens fixed, missing SubPhases added (2026-04-05 contradiction pass).

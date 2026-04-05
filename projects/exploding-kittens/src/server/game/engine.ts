@@ -101,20 +101,18 @@ function handleStartGame(
   const playerCount = lobby.players.length
   const deck = buildDeck(playerCount, ctx)
 
-  // Deal 1 Defuse to each player, 7 cards from remaining deck (total 8 per player, including Defuse)
-  // Actually, official rules: deal 1 Defuse + 7 other cards = 8 cards per player
-  // Wait — let me re-read. Official rules: "Deal 1 Defuse card to each player... deal 7 more cards face down"
+  // Separate defuses from other cards (deck has no EKs — buildDeck excludes them)
   const defuses = deck.filter(c => c.type === 'defuse')
-  const nonDefuses = deck.filter(c => c.type !== 'defuse')
+  const others = deck.filter(c => c.type !== 'defuse')
 
   // Each player gets 1 Defuse
   const playerDefuses = defuses.slice(0, playerCount)
   const remainingDefuses = defuses.slice(playerCount)
 
-  // Shuffle non-defuses for dealing
-  const shuffled = fisherYatesShuffle([...nonDefuses], ctx)
+  // Shuffle others for dealing
+  const shuffled = fisherYatesShuffle([...others], ctx)
 
-  // Deal 7 cards to each player from the shuffled non-defuse pile
+  // Deal 7 cards to each player
   const players: Player[] = lobby.players.map((lp, i) => ({
     id: lp.id,
     name: lp.name,
@@ -124,15 +122,15 @@ function handleStartGame(
     deadCards: [],
   }))
 
-  // Remaining deck: undealt cards + remaining defuses + N-1 Exploding Kittens
+  // Remaining deck: undealt cards + remaining defuses
   const dealtCount = playerCount * 7
   let drawPile = [...shuffled.slice(dealtCount), ...remainingDefuses]
 
-  // Insert N-1 Exploding Kittens
+  // Insert N-1 Exploding Kittens (created fresh, not from buildDeck)
+  let ekId = 0
   const eksToInsert = playerCount - 1
-  const allEks = deck.filter(c => c.type === 'exploding-kitten')
-  for (let i = 0; i < eksToInsert && i < allEks.length; i++) {
-    drawPile.push(allEks[i]!)
+  for (let i = 0; i < eksToInsert; i++) {
+    drawPile.push({ id: `ek-${ekId++}`, type: 'exploding-kitten' as CardType })
   }
 
   // Final shuffle of draw pile
@@ -166,29 +164,13 @@ export function buildDeck(playerCount: number, _ctx: DispatchContext): CardInsta
   let id = 0
 
   for (const def of CARD_DEFS) {
-    // EKs handled separately (inserted after dealing)
+    // EKs excluded — startGame creates N-1 directly
     if (def.category === 'kitten') continue
-    // Defuses handled separately (dealt to players, remainder to deck)
-    if (def.category === 'defuse') {
-      // Add ALL defuses — dealing logic separates them
-      const count = getCountForPlayerCount(def, playerCount)
-      for (let i = 0; i < count; i++) {
-        cards.push({ id: `card-${id++}`, type: def.type })
-      }
-      continue
-    }
 
     const count = getCountForPlayerCount(def, playerCount)
     for (let i = 0; i < count; i++) {
       cards.push({ id: `card-${id++}`, type: def.type })
     }
-  }
-
-  // Add Exploding Kittens to the deck (startGame handles insertion post-deal)
-  const ekDef = CARD_DEFS.find(d => d.category === 'kitten')!
-  const ekCount = getCountForPlayerCount(ekDef, playerCount)
-  for (let i = 0; i < ekCount; i++) {
-    cards.push({ id: `card-${id++}`, type: ekDef.type })
   }
 
   return cards
@@ -263,7 +245,7 @@ function handleSingleCard(
   // Open nope window for nopeable actions
   if (NOPEABLE_ACTIONS.has('play-card')) {
     const nopeWindow = createNopeWindow(
-      { type: 'play-card', cardIds: action.cardIds },
+      { type: 'play-card', cardIds: action.cardIds, targetPlayerId: action.targetPlayerId },
       action.playerId,
       state.players.filter(p => p.isAlive).length,
       ctx,

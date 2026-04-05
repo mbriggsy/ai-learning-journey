@@ -1,10 +1,12 @@
 ---
 title: "Phase 1: Foundation"
 type: feat
-status: not-deepened
-date: 2026-04-05
 phase: 1
 parent: roadmap.md
+planned: 2026-04-05T11:41AM EDT
+deepened:
+executed:
+reviewed:
 ---
 
 # Phase 1: Foundation

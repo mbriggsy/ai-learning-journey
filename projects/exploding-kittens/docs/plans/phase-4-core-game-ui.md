@@ -1,10 +1,12 @@
 ---
 title: "Phase 4: Core Game UI"
 type: feat
-status: not-deepened
-date: 2026-04-05
 phase: 4
 parent: roadmap.md
+planned: 2026-04-05T11:41AM EDT
+deepened:
+executed:
+reviewed:
 ---
 
 # Phase 4: Core Game UI

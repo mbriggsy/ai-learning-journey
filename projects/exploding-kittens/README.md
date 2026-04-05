@@ -72,14 +72,14 @@ Brainstorm → Roadmap → Phase Plans → Deepen Each → Fix Contradictions �
 
 ### Phase Status
 
-| # | Phase | Plan | Status |
-|---|-------|------|--------|
-| 1 | Foundation | [phase-1-foundation.md](docs/plans/phase-1-foundation.md) | Not deepened |
-| 2 | Game Engine | [phase-2-game-engine.md](docs/plans/phase-2-game-engine.md) | Not deepened |
-| 3 | Networking + Lobby | [phase-3-networking-lobby.md](docs/plans/phase-3-networking-lobby.md) | Not deepened |
-| 4 | Core Game UI | [phase-4-core-game-ui.md](docs/plans/phase-4-core-game-ui.md) | Not deepened |
-| 5 | Visual Design & Animation | [phase-5-visual-animation.md](docs/plans/phase-5-visual-animation.md) | Not deepened |
-| 6 | Hardening & Deploy | [phase-6-hardening-deploy.md](docs/plans/phase-6-hardening-deploy.md) | Not deepened |
+| # | Phase | Plan | Planned | Deepened | Executed | Reviewed |
+|---|-------|------|---------|----------|----------|----------|
+| 1 | Foundation | [phase-1](docs/plans/phase-1-foundation.md) | 04-05 11:41AM | | | |
+| 2 | Game Engine | [phase-2](docs/plans/phase-2-game-engine.md) | 04-05 11:41AM | | | |
+| 3 | Networking + Lobby | [phase-3](docs/plans/phase-3-networking-lobby.md) | 04-05 11:41AM | | | |
+| 4 | Core Game UI | [phase-4](docs/plans/phase-4-core-game-ui.md) | 04-05 11:41AM | | | |
+| 5 | Visual & Animation | [phase-5](docs/plans/phase-5-visual-animation.md) | 04-05 11:41AM | | | |
+| 6 | Hardening & Deploy | [phase-6](docs/plans/phase-6-hardening-deploy.md) | 04-05 11:41AM | | | |
 
 ## Reference
 

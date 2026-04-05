@@ -1,10 +1,12 @@
 ---
 title: "Phase 5: Visual Design & Animation"
 type: feat
-status: not-deepened
-date: 2026-04-05
 phase: 5
 parent: roadmap.md
+planned: 2026-04-05T11:41AM EDT
+deepened:
+executed:
+reviewed:
 ---
 
 # Phase 5: Visual Design & Animation

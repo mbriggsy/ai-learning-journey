@@ -145,13 +145,13 @@ stateDiagram-v2
 
 Each phase has its own plan file. Plans are deepened individually before execution.
 
-| # | Phase | Goal | Plan | Status |
-|---|-------|------|------|--------|
-| 1 | Foundation | Scaffold, types, card definitions | [phase-1-foundation.md](phase-1-foundation.md) | Not deepened |
-| 2 | Game Engine | Pure logic, all card effects, full tests | [phase-2-game-engine.md](phase-2-game-engine.md) | Not deepened |
-| 3 | Networking + Lobby | PartyKit rooms, join flow, first "it works" | [phase-3-networking-lobby.md](phase-3-networking-lobby.md) | Not deepened |
-| 4 | Core Game UI | Playable but ugly, all interactions | [phase-4-core-game-ui.md](phase-4-core-game-ui.md) | Not deepened |
-| 5 | Visual Design & Animation | Water beads. Dark premium, theatrical. 40%+ effort. | [phase-5-visual-animation.md](phase-5-visual-animation.md) | Not deepened |
-| 6 | Hardening & Deploy | Reconnection, mobile, E2E, deploy | [phase-6-hardening-deploy.md](phase-6-hardening-deploy.md) | Not deepened |
+| # | Phase | Plan | Planned | Deepened | Executed | Reviewed |
+|---|-------|------|---------|----------|----------|----------|
+| 1 | Foundation | [phase-1](phase-1-foundation.md) | 04-05 11:41AM | | | |
+| 2 | Game Engine | [phase-2](phase-2-game-engine.md) | 04-05 11:41AM | | | |
+| 3 | Networking + Lobby | [phase-3](phase-3-networking-lobby.md) | 04-05 11:41AM | | | |
+| 4 | Core Game UI | [phase-4](phase-4-core-game-ui.md) | 04-05 11:41AM | | | |
+| 5 | Visual & Animation | [phase-5](phase-5-visual-animation.md) | 04-05 11:41AM | | | |
+| 6 | Hardening & Deploy | [phase-6](phase-6-hardening-deploy.md) | 04-05 11:41AM | | | |
 
 **Workflow:** Deepen ALL phase plans → fix contradictions → THEN execute sequentially.

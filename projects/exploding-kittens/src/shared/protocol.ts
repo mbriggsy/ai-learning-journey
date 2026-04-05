@@ -1,9 +1,10 @@
-import type { GamePhase } from './types'
+import type { CardInstance, GamePhase, SubPhase, GameEvent } from './types'
 
 // --- Client -> Server Messages ---
 
 export type ClientMessage =
   | { type: 'join'; payload: { name: string; color: string; sessionToken?: string } }
+  | { type: 'action'; payload: import('./actions').ClientAction }
   | { type: 'ping'; payload: Record<string, never> }
 
 // --- Server -> Client Messages ---
@@ -17,7 +18,7 @@ export type ServerMessage =
   | { type: 'error'; payload: { code: string; message: string } }
   | { type: 'pong'; payload: Record<string, never> }
 
-// --- Projected State Stubs (fleshed out Phase 2-3) ---
+// --- Lobby State ---
 
 export interface LobbyState {
   phase: 'lobby'
@@ -25,13 +26,38 @@ export interface LobbyState {
   players: { id: string; name: string; color: string; isConnected: boolean }[]
 }
 
+// --- Board State (public projection) ---
+
+export interface BoardPlayer {
+  id: string
+  name: string
+  color: string
+  cardCount: number
+  isAlive: boolean
+}
+
 export interface BoardState {
   phase: Exclude<GamePhase, 'lobby'>
+  subPhase: SubPhase
+  players: BoardPlayer[]
+  drawPileCount: number
+  discardPile: readonly CardInstance[]
+  currentTurn: { currentPlayerId: string; turnsRemaining: number }
+  nopeWindow: { remainingMs: number; chainDepth: number; startedAtMs: number } | null
+  events: GameEvent[]
+  stateVersion: number
 }
 
-export interface PlayerViewState {
-  phase: Exclude<GamePhase, 'lobby'>
+// --- Player View State (board + own hand) ---
+
+export interface PlayerViewState extends BoardState {
+  myHand: readonly CardInstance[]
+  isMyTurn: boolean
 }
 
-// eslint-disable-next-line @typescript-eslint/no-empty-object-type -- Phase 2-3 flesh out: hand contents, future peek, etc.
-export interface PrivateData {}
+// --- Private Data (See/Alter the Future) ---
+
+export interface PrivateData {
+  futureCards?: readonly CardInstance[]
+  pendingFutureCardIds?: readonly string[]
+}

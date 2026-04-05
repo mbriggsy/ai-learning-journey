@@ -40,9 +40,9 @@ Patterns adapted from [Undercover Mob Boss](../undercover-mob-boss/), which uses
 docs/
   ideation/        # Brainstorm documents
   plans/           # Implementation plans
+  environment/     # Setup guides
+  insights/        # Hard-won lessons (populated during development)
   user/            # Game rules reference (Party Pack PDF)
-environment/       # Setup guides
-insights/          # Hard-won lessons (populated during development)
 src/               # Source code (not yet created)
   server/          # PartyKit server + game engine
   client/          # React apps (board + player)
@@ -51,7 +51,7 @@ src/               # Source code (not yet created)
 
 ## Setup
 
-See [environment/SETUP.md](environment/SETUP.md) for development environment setup.
+See [docs/environment/SETUP.md](docs/environment/SETUP.md) for development environment setup.
 
 ## Implementation Plan
 

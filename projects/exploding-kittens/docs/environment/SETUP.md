@@ -5,7 +5,7 @@
 | Tool | Version | Check |
 |------|---------|-------|
 | Node.js | 22+ (LTS) | `node -v` |
-| pnpm | 9+ | `pnpm -v` |
+| pnpm | 10+ | `pnpm -v` |
 | Git | any | `git -v` |
 
 ### Install pnpm (if needed)
@@ -61,8 +61,10 @@ For phone testing during development, use your machine's local IP instead of `lo
 
 > **Note:** Deployment pipeline not yet configured. Will be set up in Phase 6.
 
-- **Client:** Vercel (or Cloudflare Pages) — auto-deploy on push to main
-- **Server:** PartyKit deploy via GitHub Actions (same pattern as UMB)
+- **Client:** Cloudflare Pages — auto-deploy via GitHub Actions on push to main
+- **Server:** PartyKit deploy via GitHub Actions (server deploys before client)
+- **Cost:** $0 (free tier covers everything for a party game)
+- **Rollback:** CF Pages instant rollback via dashboard, PartyKit via git revert + redeploy
 
 ## Troubleshooting
 

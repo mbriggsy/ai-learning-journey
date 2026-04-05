@@ -4,7 +4,7 @@ A digital adaptation of [Exploding Kittens Party Pack](https://www.explodingkitt
 
 ## Status
 
-**Pre-development** — roadmap locked, phase plans written (not yet deepened).
+**Pre-development** — all 6 phase plans deepened, contradictions resolved, rules audited. Ready to execute Phase 1.
 
 ## The Game
 
@@ -43,7 +43,8 @@ docs/
   plans/           # Roadmap + individual phase plans
   environment/     # Setup guides
   insights/        # Hard-won lessons (populated during development)
-  user/            # Game rules reference (Party Pack PDF)
+  rules/           # Canonical rules reference (audited against official PDF)
+  user/            # Official Party Pack rulebook PDF
 src/               # Source code (not yet created)
   server/          # PartyKit server + game engine
   client/          # React apps (board + player)
@@ -77,13 +78,14 @@ Brainstorm → Roadmap → Phase Plans → Deepen Each → Fix Contradictions �
 | 1 | Foundation | [phase-1](docs/plans/phase-1-foundation.md) | 04-05 11:41AM | 04-05 1:30PM | | |
 | 2 | Game Engine | [phase-2](docs/plans/phase-2-game-engine.md) | 04-05 11:41AM | 04-05 2:45PM | | |
 | 3 | Networking + Lobby | [phase-3](docs/plans/phase-3-networking-lobby.md) | 04-05 11:41AM | 04-05 3:45PM | | |
-| 4 | Core Game UI | [phase-4](docs/plans/phase-4-core-game-ui.md) | 04-05 11:41AM | | | |
-| 5 | Visual & Animation | [phase-5](docs/plans/phase-5-visual-animation.md) | 04-05 11:41AM | | | |
-| 6 | Hardening & Deploy | [phase-6](docs/plans/phase-6-hardening-deploy.md) | 04-05 11:41AM | | | |
+| 4 | Core Game UI | [phase-4](docs/plans/phase-4-core-game-ui.md) | 04-05 11:41AM | 04-05 6:30PM | | |
+| 5 | Visual & Animation | [phase-5](docs/plans/phase-5-visual-animation.md) | 04-05 11:41AM | 04-05 8:45PM | | |
+| 6 | Hardening & Deploy | [phase-6](docs/plans/phase-6-hardening-deploy.md) | 04-05 11:41AM | 04-05 11:30PM | | |
 
 ## Reference
 
 - [Brainstorm](docs/ideation/2026-04-05-exploding-kittens-digital-brainstorm.md) — all design decisions and rationale
 - [Roadmap](docs/plans/roadmap.md) — tech stack, architecture, state machine, cross-cutting concerns
-- [Party Pack Rules](docs/user/ekpp-instructions-english.pdf) — official game rules
+- [Rules Reference](docs/rules/RULES-REFERENCE.md) — canonical rules (audited against official PDF)
+- [Party Pack Rulebook](docs/user/ekpp-instructions-english.pdf) — official PDF (primary source)
 - [UMB Architecture](../undercover-mob-boss/) — reference patterns for multi-device infrastructure

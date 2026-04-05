@@ -1,45 +1,12 @@
 import type { GameEvent } from '@shared/types'
+import type { BoardState, BoardPlayer, PlayerViewState, PrivateData } from '@shared/protocol'
 import type { PlayingState, GameOverState, Player } from './game/types'
 
-// --- Board Projection (public info only) ---
-
-export interface BoardProjection {
-  phase: 'playing' | 'game_over'
-  subPhase: PlayingState['subPhase']
-  players: BoardPlayer[]
-  drawPileCount: number
-  discardPile: PlayingState['discardPile']
-  currentTurn: { currentPlayerId: string; turnsRemaining: number }
-  nopeWindow: { remainingMs: number; chainDepth: number; startedAtMs: number } | null
-  events: GameEvent[]
-  stateVersion: number
-}
-
-export interface BoardPlayer {
-  id: string
-  name: string
-  color: string
-  cardCount: number
-  isAlive: boolean
-}
-
-// --- Player Projection (board + own hand) ---
-
-export interface PlayerProjection extends BoardProjection {
-  myHand: PlayingState['drawPile']
-  isMyTurn: boolean
-}
-
-// --- Private Data (See/Alter the Future) ---
-
-export interface PrivateProjection {
-  futureCards?: PlayingState['drawPile']
-  pendingFutureCardIds?: readonly string[]
-}
+export type { BoardState, BoardPlayer, PlayerViewState, PrivateData }
 
 // --- Projection Functions ---
 
-export function projectForBoard(state: PlayingState | GameOverState, now: number): BoardProjection {
+export function projectForBoard(state: PlayingState | GameOverState, now: number): BoardState {
   const players = state.players.map(projectPlayer)
 
   if (state.phase === 'game_over') {
@@ -82,19 +49,28 @@ export function projectForPlayer(
   state: PlayingState | GameOverState,
   playerId: string,
   now: number,
-): PlayerProjection {
+): PlayerViewState {
   const board = projectForBoard(state, now)
   const player = state.players.find(p => p.id === playerId)
 
+  // Explicit allowlist — no spread from board projection
   return {
-    ...board,
+    phase: board.phase,
+    subPhase: board.subPhase,
+    players: board.players,
+    drawPileCount: board.drawPileCount,
+    discardPile: board.discardPile,
+    currentTurn: board.currentTurn,
+    nopeWindow: board.nopeWindow,
+    events: board.events,
+    stateVersion: board.stateVersion,
     myHand: player?.hand ?? [],
     isMyTurn: state.phase === 'playing' && state.currentTurn.currentPlayerId === playerId,
   }
 }
 
-export function getPrivateData(state: PlayingState, playerId: string): PrivateProjection {
-  const data: PrivateProjection = {}
+export function getPrivateData(state: PlayingState, playerId: string): PrivateData {
+  const data: PrivateData = {}
 
   if (state.pendingFuture && state.pendingFuture.playerId === playerId) {
     const cardIds = state.pendingFuture.cardIds
@@ -118,8 +94,6 @@ function projectPlayer(player: Player): BoardPlayer {
 }
 
 function sanitizeEvents(events: readonly GameEvent[]): GameEvent[] {
-  return events.map(event => {
-    // These event types are safe to broadcast as-is
-    return event
-  })
+  // TODO: Strip sensitive fields when private event types are added (e.g., stolen card identity)
+  return [...events]
 }

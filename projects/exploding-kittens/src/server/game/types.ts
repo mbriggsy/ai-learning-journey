@@ -1,4 +1,4 @@
-import type { CardInstance, SubPhase, GameEvent } from '@shared/types'
+import type { CardInstance, CardType, SubPhase, GameEvent } from '@shared/types'
 import type { GameAction } from '@shared/actions'
 
 // --- Game State (discriminated union on phase) ---
@@ -64,6 +64,7 @@ export interface TurnState {
 export interface NopeWindow {
   readonly pendingAction: GameAction
   readonly originalPlayerId: string
+  readonly originalCardType?: CardType
   readonly chainDepth: number
   readonly deadlineMs: number
   readonly startedAtMs: number

@@ -12,10 +12,9 @@ import type {
 // --- Constants ---
 
 const MAX_NOPE_CHAIN = 10
-const NOPEABLE_ACTIONS = new Set<ActionType>(['play-card'])
 
 const ALLOWED_ACTIONS: Record<SubPhase, readonly ActionType[]> = {
-  'turn-active': ['play-card', 'draw-card', 'draw-from-bottom'],
+  'turn-active': ['play-card', 'draw-card'],
   'defuse-pending': ['defuse-place'],
   'eliminated-check': [],
   'favor-pending': ['favor-give'],
@@ -25,6 +24,14 @@ const ALLOWED_ACTIONS: Record<SubPhase, readonly ActionType[]> = {
 }
 
 const COMBO_EXCLUDED_CATEGORIES = new Set<CardCategory>(['kitten', 'defuse'])
+
+const CLEAR_PENDING = {
+  pendingFavor: undefined,
+  pendingFuture: undefined,
+  pendingSteal: undefined,
+  pendingNameCard: undefined,
+  pendingDefuse: undefined,
+} as const
 
 // --- Public API ---
 
@@ -49,14 +56,27 @@ export function dispatch(
   if (base.phase !== 'playing') return err(base, 'Game is not in playing phase', 'INVALID_PHASE')
   const playing = base as PlayingState
 
+  // Player existence check
+  const actor = playing.players.find(p => p.id === action.playerId)
+  if (!actor && action.type !== 'nope-window-expired') {
+    return err(playing, 'Player not found', 'INVALID_ACTION')
+  }
+
+  // nope-window-expired is server-only — validate timing
+  if (action.type === 'nope-window-expired') {
+    if (!playing.nopeWindow) return err(playing, 'No active Nope window', 'NOPE_NOT_ACTIVE')
+    if (ctx.now < playing.nopeWindow.deadlineMs) {
+      return err(playing, 'Nope window has not expired yet', 'INVALID_ACTION')
+    }
+    return handleNopeWindowExpired(playing, action, ctx)
+  }
+
+  // Dead players cannot act
+  if (actor && !actor.isAlive) return err(playing, 'Dead players cannot act', 'INVALID_ACTION')
+
   // Nope is special — anyone can play it when window is active
   if (action.type === 'nope') {
     return handleNope(playing, action, ctx)
-  }
-
-  // nope-window-expired is server-only, no turn check
-  if (action.type === 'nope-window-expired') {
-    return handleNopeWindowExpired(playing, action, ctx)
   }
 
   // Turn order check (current player only for all other actions)
@@ -78,7 +98,6 @@ export function dispatch(
   switch (action.type) {
     case 'play-card': return handlePlayCard(playing, action, ctx)
     case 'draw-card': return handleDrawCard(playing, action, ctx)
-    case 'draw-from-bottom': return handleDrawFromBottom(playing, action, ctx)
     case 'defuse-place': return handleDefusePlace(playing, action, ctx)
     case 'favor-give': return handleFavorGive(playing, action, ctx)
     case 'future-rearrange': return handleFutureRearrange(playing, action, ctx)
@@ -194,6 +213,9 @@ function handlePlayCard(
   ctx: DispatchContext,
 ): DispatchResult {
   const { cardIds } = action
+  if (cardIds.length === 0 || cardIds.length > 3) {
+    return err(state, 'Must play 1-3 cards', 'INVALID_COMBO')
+  }
   const player = getPlayer(state, action.playerId)
   if (!player) return err(state, 'Player not found', 'INVALID_ACTION')
 
@@ -242,20 +264,16 @@ function handleSingleCard(
     { type: 'card-played', playerId: action.playerId, cardType: card.type },
   ]
 
-  // Open nope window for nopeable actions
-  if (NOPEABLE_ACTIONS.has('play-card')) {
-    const nopeWindow = createNopeWindow(
-      { type: 'play-card', cardIds: action.cardIds, targetPlayerId: action.targetPlayerId },
-      action.playerId,
-      state.players.filter(p => p.isAlive).length,
-      ctx,
-    )
-    const withNope: PlayingState = { ...newState, nopeWindow, events: [...newState.events, ...events] }
-    return ok(withNope, events)
-  }
-
-  // Apply effect immediately if not nopeable
-  return applyCardEffect(newState, card.type, action, events, ctx)
+  // All single-card plays open a nope window
+  const nopeWindow = createNopeWindow(
+    { type: 'play-card', cardIds: action.cardIds, targetPlayerId: action.targetPlayerId },
+    action.playerId,
+    state.players.filter(p => p.isAlive).length,
+    ctx,
+    card.type,
+  )
+  const withNope: PlayingState = { ...newState, nopeWindow, events: [...newState.events, ...events] }
+  return ok(withNope)
 }
 
 function applyCardEffect(
@@ -266,7 +284,7 @@ function applyCardEffect(
   ctx: DispatchContext,
 ): DispatchResult {
   switch (cardType) {
-    case 'attack': return applyAttack(state, action, events, false)
+    case 'attack': return applyAttack(state, action, events)
     case 'targeted-attack': return applyTargetedAttack(state, action, events)
     case 'skip': return applySkip(state, action, events)
     case 'see-the-future': return applySeeTheFuture(state, action, events)
@@ -283,9 +301,8 @@ function applyCardEffect(
 
 function applyAttack(
   state: PlayingState,
-  action: EngineAction,
+  _action: EngineAction,
   events: GameEvent[],
-  _targeted: boolean,
 ): DispatchResult {
   const nextPlayer = getNextAlivePlayer(state, state.currentTurn.currentPlayerId)
   if (!nextPlayer) return err(state, 'No next player', 'INVALID_ACTION')
@@ -293,6 +310,7 @@ function applyAttack(
   const newTurns = state.currentTurn.turnsRemaining + 2
   const newState: PlayingState = {
     ...state,
+    ...CLEAR_PENDING,
     subPhase: 'turn-active',
     currentTurn: { currentPlayerId: nextPlayer.id, turnsRemaining: newTurns },
     nopeWindow: null,
@@ -300,7 +318,7 @@ function applyAttack(
       { type: 'turn-started', playerId: nextPlayer.id, turnsRemaining: newTurns },
     ],
   }
-  return ok(newState, events)
+  return ok(newState)
 }
 
 function applyTargetedAttack(
@@ -318,6 +336,7 @@ function applyTargetedAttack(
   const newTurns = state.currentTurn.turnsRemaining + 2
   const newState: PlayingState = {
     ...state,
+    ...CLEAR_PENDING,
     subPhase: 'turn-active',
     currentTurn: { currentPlayerId: targetPlayerId, turnsRemaining: newTurns },
     nopeWindow: null,
@@ -325,7 +344,7 @@ function applyTargetedAttack(
       { type: 'turn-started', playerId: targetPlayerId, turnsRemaining: newTurns },
     ],
   }
-  return ok(newState, events)
+  return ok(newState)
 }
 
 function applySkip(
@@ -336,18 +355,17 @@ function applySkip(
   const remaining = state.currentTurn.turnsRemaining - 1
 
   if (remaining > 0) {
-    // Still has turns left (was under Attack)
     const newState: PlayingState = {
       ...state,
+      ...CLEAR_PENDING,
       subPhase: 'turn-active',
       currentTurn: { ...state.currentTurn, turnsRemaining: remaining },
       nopeWindow: null,
       events: [...state.events, ...events],
     }
-    return ok(newState, events)
+    return ok(newState)
   }
 
-  // End turn, move to next player
   return advanceTurn(state, events)
 }
 
@@ -365,7 +383,7 @@ function applySeeTheFuture(
       { type: 'future-peeked', playerId: action.playerId },
     ],
   }
-  return ok(newState, events)
+  return ok(newState)
 }
 
 function applyAlterTheFuture(
@@ -381,12 +399,12 @@ function applyAlterTheFuture(
     nopeWindow: null,
     events: [...state.events, ...events],
   }
-  return ok(newState, events)
+  return ok(newState)
 }
 
 function applyShuffle(
   state: PlayingState,
-  _action: EngineAction,
+  action: EngineAction,
   events: GameEvent[],
   ctx: DispatchContext,
 ): DispatchResult {
@@ -396,10 +414,10 @@ function applyShuffle(
     drawPile: shuffled,
     nopeWindow: null,
     events: [...state.events, ...events,
-      { type: 'deck-shuffled', playerId: _action.playerId },
+      { type: 'deck-shuffled', playerId: action.playerId },
     ],
   }
-  return ok(newState, events)
+  return ok(newState)
 }
 
 function applyDrawFromBottom(
@@ -434,7 +452,7 @@ function applyFavor(
         { type: 'favor-given', giverId: targetPlayerId, receiverId: action.playerId },
       ],
     }
-    return ok(newState, events)
+    return ok(newState)
   }
 
   const newState: PlayingState = {
@@ -446,7 +464,7 @@ function applyFavor(
       { type: 'favor-requested', requesterId: action.playerId, targetId: targetPlayerId },
     ],
   }
-  return ok(newState, events)
+  return ok(newState)
 }
 
 // --- Combo Handlers ---
@@ -482,7 +500,7 @@ function handleTwoOfAKind(
     nopeWindow,
     events: [...newState.events, ...events],
   }
-  return ok(withNope, events)
+  return ok(withNope)
 }
 
 function handleThreeOfAKind(
@@ -515,7 +533,7 @@ function handleThreeOfAKind(
     nopeWindow,
     events: [...newState.events, ...events],
   }
-  return ok(withNope, events)
+  return ok(withNope)
 }
 
 function isValidCombo(cards: CardInstance[], size: number): boolean {
@@ -553,29 +571,6 @@ function handleDrawCard(
   ctx: DispatchContext,
 ): DispatchResult {
   return performDraw(state, action.playerId, 'top', [], ctx)
-}
-
-function handleDrawFromBottom(
-  state: PlayingState,
-  action: EngineAction,
-  ctx: DispatchContext,
-): DispatchResult {
-  // Player needs a Draw from Bottom card in hand
-  const player = getPlayer(state, action.playerId)
-  if (!player) return err(state, 'Player not found', 'INVALID_ACTION')
-
-  const dfbCard = player.hand.find(c => c.type === 'draw-from-bottom')
-  if (!dfbCard) return err(state, 'No Draw from Bottom card in hand', 'CARD_NOT_IN_HAND')
-
-  // Remove card from hand, add to discard
-  let newState = removeCardsFromHand(state, action.playerId, [dfbCard.id])
-  newState = addToDiscard(newState, [dfbCard])
-
-  const events: GameEvent[] = [
-    { type: 'card-played', playerId: action.playerId, cardType: 'draw-from-bottom' },
-  ]
-
-  return performDraw(newState, action.playerId, 'bottom', events, ctx)
 }
 
 function performDraw(
@@ -618,7 +613,7 @@ function performDraw(
       }
       // Keep the EK in hand temporarily for placement
       const playerWithEk = addCardsToHand(finalState, playerId, [drawnCard])
-      return ok(playerWithEk, events)
+      return ok(playerWithEk)
     }
 
     // No Defuse — eliminated
@@ -643,7 +638,7 @@ function performDraw(
       nopeWindow: null,
       events: [...newState.events, ...events],
     }
-    return ok(finalState, events)
+    return ok(finalState)
   }
 
   return advanceTurn({ ...newState, events: [...newState.events, ...events] }, events)
@@ -691,7 +686,7 @@ function handleDefusePlace(
       currentTurn: { ...state.currentTurn, turnsRemaining: remaining },
       events: newState.events,
     }
-    return ok(finalState, [])
+    return ok(finalState)
   }
 
   return advanceTurn({ ...newState, subPhase: 'turn-active' }, [])
@@ -729,7 +724,7 @@ function handleFavorGive(
     pendingFavor: undefined,
     events: [...newState.events, ...events],
   }
-  return ok(finalState, events)
+  return ok(finalState)
 }
 
 // --- Future Rearrange Handler ---
@@ -772,7 +767,7 @@ function handleFutureRearrange(
     pendingFuture: undefined,
     events: [...state.events, ...events],
   }
-  return ok(newState, events)
+  return ok(newState)
 }
 
 // --- Select Target (Combo Steal) ---
@@ -804,7 +799,7 @@ function handleSelectTarget(
     pendingNameCard: { stealerId: pending.stealerId, targetId: targetPlayerId },
     events: state.events,
   }
-  return ok(newState, [])
+  return ok(newState)
 }
 
 // --- Name Card (Three of a Kind) ---
@@ -838,7 +833,7 @@ function handleNameCard(
     pendingNameCard: undefined,
     events: [...newState.events, ...events],
   }
-  return ok(finalState, events)
+  return ok(finalState)
 }
 
 // --- Nope Handling ---
@@ -884,7 +879,7 @@ function handleNope(
     nopeWindow: newWindow,
     events: [...newState.events, ...events],
   }
-  return ok(finalState, events)
+  return ok(finalState)
 }
 
 function handleNopeWindowExpired(
@@ -905,33 +900,31 @@ function handleNopeWindowExpired(
     // Action was Noped — cards already in discard, return to turn-active
     const newState: PlayingState = {
       ...state,
+      ...CLEAR_PENDING,
       subPhase: 'turn-active',
       nopeWindow: null,
-      pendingSteal: undefined,
       events: [...state.events, ...events],
     }
-    return ok(newState, events)
+    return ok(newState)
   }
 
   // Action proceeds — apply the effect
   const newState: PlayingState = { ...state, nopeWindow: null, events: [...state.events, ...events] }
 
-  // Determine what the pending action was
   if (pendingAction.type === 'play-card') {
-    // If it was a combo (pendingSteal exists), proceed to steal target selection
+    // Combo path — proceed to steal target selection
     if (state.pendingSteal) {
       const stealState: PlayingState = {
         ...newState,
         subPhase: 'steal-target-pending',
       }
-      return ok(stealState, events)
+      return ok(stealState)
     }
 
-    // Single card effect — determine which card from the discard (most recent)
-    const playedCardType = state.discardPile[state.discardPile.length - 1]?.type
+    // Single card — use originalCardType stored on the NopeWindow (not discard tail, which may be a Nope card)
+    const playedCardType = state.nopeWindow.originalCardType
     if (!playedCardType) return err(newState, 'Cannot determine played card', 'INVALID_ACTION')
 
-    // Build a fake action to pass to applyCardEffect
     const fakeAction = {
       ...pendingAction,
       playerId: originalPlayerId,
@@ -940,7 +933,7 @@ function handleNopeWindowExpired(
     return applyCardEffect(newState, playedCardType, fakeAction, [], ctx)
   }
 
-  return ok(newState, events)
+  return ok(newState)
 }
 
 // --- Elimination ---
@@ -993,20 +986,19 @@ function eliminatePlayer(
   const allEvents = [...events, ...eliminationEvents, ...turnEvents]
   const newState: PlayingState = {
     ...state,
+    ...CLEAR_PENDING,
     subPhase: 'turn-active',
     players: updatedPlayers,
     currentTurn: { currentPlayerId: nextPlayer.id, turnsRemaining: 1 },
     nopeWindow: null,
-    pendingDefuse: undefined,
-    stateVersion: state.stateVersion + 1,
     events: allEvents,
   }
-  return ok(newState, allEvents)
+  return ok(newState)
 }
 
 // --- Helpers ---
 
-function ok(state: PlayingState, _events: readonly GameEvent[]): DispatchResult {
+function ok(state: PlayingState): DispatchResult {
   return { ok: true, state: { ...state, stateVersion: state.stateVersion + 1 }, events: state.events }
 }
 
@@ -1030,7 +1022,7 @@ function getNextAlivePlayer(state: PlayingState, currentPlayerId: string): Playe
   return undefined
 }
 
-function advanceTurn(state: PlayingState, extraEvents: readonly GameEvent[]): DispatchResult {
+function advanceTurn(state: PlayingState, _extraEvents: readonly GameEvent[]): DispatchResult {
   const nextPlayer = getNextAlivePlayer(state, state.currentTurn.currentPlayerId)
   if (!nextPlayer) return err(state, 'No next player', 'INVALID_ACTION')
 
@@ -1040,12 +1032,13 @@ function advanceTurn(state: PlayingState, extraEvents: readonly GameEvent[]): Di
 
   const newState: PlayingState = {
     ...state,
+    ...CLEAR_PENDING,
     subPhase: 'turn-active',
     currentTurn: { currentPlayerId: nextPlayer.id, turnsRemaining: 1 },
     nopeWindow: null,
     events: [...state.events, ...events],
   }
-  return ok(newState, [...extraEvents, ...events])
+  return ok(newState)
 }
 
 function removeCardsFromHand(state: PlayingState, playerId: string, cardIds: string[]): PlayingState {
@@ -1089,7 +1082,7 @@ function performRandomSteal(
       pendingSteal: undefined,
       events: [...state.events, ...events],
     }
-    return ok(newState, events)
+    return ok(newState)
   }
 
   const randomIndex = ctx.randomInt(target.hand.length)
@@ -1108,7 +1101,7 @@ function performRandomSteal(
     pendingSteal: undefined,
     events: [...newState.events, ...events],
   }
-  return ok(finalState, events)
+  return ok(finalState)
 }
 
 function createNopeWindow(
@@ -1116,11 +1109,13 @@ function createNopeWindow(
   originalPlayerId: string,
   alivePlayerCount: number,
   ctx: DispatchContext,
+  originalCardType?: CardType,
 ): NopeWindow {
   const duration = getNopeWindowDuration(alivePlayerCount)
   return {
     pendingAction,
     originalPlayerId,
+    originalCardType,
     chainDepth: 0,
     deadlineMs: ctx.now + duration,
     startedAtMs: ctx.now,

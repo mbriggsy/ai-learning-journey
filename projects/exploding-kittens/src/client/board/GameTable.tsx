@@ -2,11 +2,14 @@ import {
   usePlayerList, useDrawPileCount, useDiscardTop,
   useCurrentTurn,
 } from '@client/shared/hooks/useSharedSelectors'
-import { MinimalCard } from '@client/shared/MinimalCard'
-import { PlayerList } from './PlayerList'
+import { PlayerRing } from './PlayerRing'
+import { Arena } from './Arena'
+import { DrawPile } from './DrawPile'
+import { DiscardFan } from './DiscardFan'
 import { NopeCountdownBar } from './NopeCountdownBar'
 import { AnnouncementFeed } from './AnnouncementFeed'
 import { PendingPromptBanner } from './PendingPromptBanner'
+import { playerName } from './playerName'
 import styles from './GameTable.module.css'
 
 export function GameTable() {
@@ -15,41 +18,47 @@ export function GameTable() {
   const discardTop = useDiscardTop()
   const currentTurn = useCurrentTurn()
 
+  const currentPlayerName = currentTurn
+    ? playerName(players, currentTurn.currentPlayerId)
+    : null
+
   return (
     <div className={styles.table}>
-      <PlayerList
+      {/* Player ring — absolute positioned around the edges */}
+      <PlayerRing
         players={players}
         currentPlayerId={currentTurn?.currentPlayerId ?? null}
+        turnsRemaining={currentTurn?.turnsRemaining ?? 0}
       />
 
+      {/* Center stage — draw pile, arena, discard */}
       <div className={styles.center}>
-        <div className={styles.pile}>
-          <span className={styles.pileLabel}>Draw Pile</span>
-          <span className={styles.pileCount}>{drawPileCount}</span>
+        <div className={styles.pileSection}>
+          <span className={styles.pileLabel}>Draw</span>
+          <DrawPile count={drawPileCount} />
         </div>
 
-        <div className={styles.pile}>
+        <Arena />
+
+        <div className={styles.pileSection}>
           <span className={styles.pileLabel}>Discard</span>
-          <div className={styles.discardCard}>
-            {discardTop ? (
-              <MinimalCard
-                type={discardTop.type}
-                disabled
-              />
-            ) : (
-              <span className={styles.pileCount}>-</span>
-            )}
-          </div>
+          <DiscardFan topCard={discardTop} />
         </div>
       </div>
 
-      {currentTurn && (
+      {/* Turn info */}
+      {currentPlayerName && (
         <div className={styles.turnInfo}>
-          {players.find(p => p.id === currentTurn.currentPlayerId)?.name ?? '...'}'s turn
-          {currentTurn.turnsRemaining > 1 && ` (${currentTurn.turnsRemaining} turns remaining)`}
+          {currentPlayerName}'s turn
+          {currentTurn!.turnsRemaining > 1 && (
+            <span className={styles.turnCount}>
+              {currentTurn!.turnsRemaining} turns
+            </span>
+          )}
         </div>
       )}
 
+      {/* Overlays */}
       <NopeCountdownBar />
       <PendingPromptBanner />
       <AnnouncementFeed />

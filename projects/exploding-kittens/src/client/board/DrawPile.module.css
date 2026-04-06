@@ -1,0 +1,82 @@
+.pile {
+  position: relative;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 8px;
+}
+
+.stack {
+  position: relative;
+  width: 80px;
+  height: 112px; /* 5:7 ratio */
+  animation: breathe 3s ease-in-out infinite;
+}
+
+@keyframes breathe {
+  0%, 100% { transform: scale(1); }
+  50% { transform: scale(1.02); }
+}
+
+.layer {
+  position: absolute;
+  inset: 0;
+  border-radius: var(--radius-card);
+  background-color: var(--bg-card, #12121f);
+  border: 1px solid var(--border-subtle, #2a2a4a);
+}
+
+/* Top card uses the card-back crosshatch pattern */
+.topCard {
+  position: absolute;
+  inset: 0;
+  z-index: 10;
+  border-radius: var(--radius-card);
+  background-color: var(--bg-card, #12121f);
+  background-image:
+    repeating-linear-gradient(
+      45deg,
+      transparent,
+      transparent 10px,
+      color-mix(in srgb, var(--red, #e03535) 6%, transparent) 10px,
+      color-mix(in srgb, var(--red, #e03535) 6%, transparent) 11px
+    ),
+    repeating-linear-gradient(
+      -45deg,
+      transparent,
+      transparent 10px,
+      color-mix(in srgb, var(--red, #e03535) 6%, transparent) 10px,
+      color-mix(in srgb, var(--red, #e03535) 6%, transparent) 11px
+    );
+  border: 1px solid var(--border-subtle, #2a2a4a);
+}
+
+/* Inner border frame */
+.topCard::before {
+  content: '';
+  position: absolute;
+  inset: 6px;
+  border: 1px solid color-mix(in srgb, var(--red, #e03535) 20%, transparent);
+  border-radius: calc(var(--radius-card) - 4px);
+  pointer-events: none;
+}
+
+.countBadge {
+  font-family: var(--font-mono);
+  font-variant-numeric: tabular-nums;
+  font-weight: 700;
+  font-size: 24px;
+  color: var(--text-primary, #e8e8f0);
+}
+
+@media (min-width: 1280px) {
+  .stack {
+    width: 100px;
+    height: 140px;
+  }
+  .countBadge { font-size: 32px; }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .stack { animation: none; }
+}

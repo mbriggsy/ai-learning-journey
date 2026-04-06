@@ -1,0 +1,18 @@
+.arena {
+  position: relative;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  min-height: 140px;
+  min-width: 200px;
+  border-radius: 12px;
+  border: 1px dashed var(--border-subtle, #2a2a4a);
+  z-index: 5;
+}
+
+@media (min-width: 1280px) {
+  .arena {
+    min-height: 200px;
+    min-width: 300px;
+  }
+}

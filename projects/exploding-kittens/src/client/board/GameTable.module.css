@@ -1,49 +1,78 @@
+/* Neo-Noir Casino board — dark + premium, color erupts during drama */
+
 .table {
+  position: relative;
   display: flex;
   flex-direction: column;
+  align-items: center;
+  justify-content: center;
   min-height: 100dvh;
-  background: var(--bg-primary);
-  color: var(--text-primary);
+  padding: 5vh 5vw; /* TV safe zone */
   font-family: var(--font-body);
-  padding: 16px;
+  color: var(--text-primary, #e8e8f0);
+  overflow: hidden;
+
+  /* Background layers (bottom to top):
+     1. Base warm purple-black
+     2. Radial spotlight gradient
+     3. Vignette — cinematic framing */
+  background:
+    radial-gradient(ellipse at center, transparent 50%, rgba(0,0,0,0.4) 100%),
+    radial-gradient(ellipse at center, hsl(250, 12%, 7%) 0%, var(--bg-app, #0c0a12) 60%),
+    var(--bg-app, #0c0a12);
 }
 
+/* Center stage — draw, arena, discard in a row */
 .center {
+  position: relative;
   display: flex;
   align-items: center;
   justify-content: center;
   gap: 32px;
   padding: 24px;
+  z-index: 2;
 }
 
-.pile {
+.pileSection {
   display: flex;
   flex-direction: column;
   align-items: center;
-  gap: 4px;
+  gap: 8px;
 }
 
 .pileLabel {
+  font-family: var(--font-display);
   font-size: 12px;
-  color: var(--text-secondary);
+  font-weight: 600;
   text-transform: uppercase;
-  letter-spacing: 1px;
-}
-
-.pileCount {
-  font-size: 36px;
-  font-weight: 700;
-  color: var(--text-primary);
-}
-
-.discardCard {
-  min-width: 80px;
-  text-align: center;
+  letter-spacing: 0.1em;
+  color: var(--text-disabled, #555570);
 }
 
 .turnInfo {
+  position: relative;
+  z-index: 2;
   text-align: center;
-  padding: 8px;
+  padding: 12px 24px;
+  font-family: var(--font-display);
+  font-size: 18px;
+  font-weight: 600;
+  color: var(--text-primary, #e8e8f0);
+}
+
+.turnCount {
+  font-family: var(--font-mono);
+  font-variant-numeric: tabular-nums;
   font-size: 14px;
-  color: var(--text-secondary);
+  font-weight: 700;
+  color: var(--amber, #e8922a);
+  margin-left: 8px;
+}
+
+/* TV scale — announcements, counts, labels all bigger */
+@media (min-width: 1280px) {
+  .center { gap: 64px; padding: 40px; }
+  .pileLabel { font-size: 16px; }
+  .turnInfo { font-size: 28px; }
+  .turnCount { font-size: 20px; }
 }

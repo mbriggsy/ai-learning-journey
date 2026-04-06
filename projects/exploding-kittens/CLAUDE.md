@@ -60,14 +60,14 @@
 - fast-check for property-based tests via `@fast-check/vitest`.
 - React component tests use `environment: 'jsdom'` per-file override.
 
-## Bundle Sizes (Phase 1 Baseline)
+## Bundle Sizes (Phase 5 Post-Review)
 
 | Chunk | Raw | Gzipped | Load |
 |-------|-----|---------|------|
-| player entry | 0.33 KB | 0.24 KB | Initial |
-| board entry | 0.35 KB | 0.25 KB | Initial |
-| MotionProvider (React + LazyMotion) | 185.02 KB | 58.60 KB | Initial (shared) |
-| motion-features (domMax) | 87.83 KB | 29.01 KB | Lazy |
-| VisualElement | 35.38 KB | 12.65 KB | Initial (shared) |
+| player entry | 19.43 KB | 6.52 KB | Initial |
+| board entry | 26.67 KB | 9.70 KB | Initial |
+| shared (React + Motion core) | 220.76 KB | 70.93 KB | Initial (shared) |
+| VisualElement | 40.37 KB | 14.58 KB | Initial (shared) |
+| motion-features (domMax) | 83.61 KB | 27.42 KB | Lazy |
 
-**Phone initial JS: ~71KB gzipped** (under 100KB budget)
+**Phone initial JS: ~92KB gzipped** (under 100KB budget, 8KB headroom)

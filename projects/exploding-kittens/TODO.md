@@ -62,7 +62,9 @@
 - Combo validation duplicated between engine (isValidCombo) and shared (isValidComboMatch) — drift risk, Phase 6
 - PlayingView is monolithic (~200 lines) — deferred to Phase 6 (animation cost not yet measured)
 - DefusePlacement "Random" uses client-side Math.random() — server validates range, acceptable
-- AnimationSequencer + particle system + screen effects are built but NOT wired into GameTable render tree — Phase 5 review should decide if wiring happens now or Phase 6
+- AnimationSequencer + particle system + screen effects are built but NOT wired into GameTable render tree — deferred to Phase 6
 - Font files in public/fonts/ (~98KB total) downloaded from CDN — consider subsetting further if bandwidth is a concern
 - Phone JS at ~92KB gzipped — only 8KB headroom before 100KB budget
 - `ReducedMotionProvider` context provider added — all Phase 5+ animation code should check `useReducedMotionPreference()` before running motion
+- Phase 5 review P3 deferred to Phase 6: roving tabindex on Hand, BottomSheet aria-labelledby, data-testid attributes, conditional Framer Motion reduced motion, optimistic 5s safety timeout, checkState() contract testing
+- Nope FAB 300ms grace delay: TIMING constant exists but not yet wired to button interaction delay

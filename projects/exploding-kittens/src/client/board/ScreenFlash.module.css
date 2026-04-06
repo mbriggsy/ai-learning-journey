@@ -1,0 +1,31 @@
+.flash {
+  position: fixed;
+  inset: 0;
+  pointer-events: none;
+  /* Vignette: edges glow, center stays clear */
+  background: radial-gradient(
+    ellipse at center,
+    transparent 40%,
+    rgba(229, 53, 53, 0.3) 100%
+  );
+}
+
+.flash[data-color="blue"] {
+  background: radial-gradient(
+    ellipse at center,
+    transparent 40%,
+    rgba(59, 130, 246, 0.3) 100%
+  );
+}
+
+/* Reduced motion: static border glow, no transition */
+@media (prefers-reduced-motion: reduce) {
+  .flash {
+    background: none;
+    box-shadow: inset 0 0 60px rgba(229, 53, 53, 0.4);
+  }
+
+  .flash[data-color="blue"] {
+    box-shadow: inset 0 0 60px rgba(59, 130, 246, 0.4);
+  }
+}

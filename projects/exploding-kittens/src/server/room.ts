@@ -101,6 +101,13 @@ export class GameRoom extends Server {
 
   override async onStart(): Promise<void> {
     try {
+      const storedVersion = await this.ctx.storage.get<number>('schemaVersion') ?? 0
+      if (storedVersion < this.schemaVersion) {
+        // Future: run migration functions here
+        // For now, version 1 is the first schema — no migration needed
+        console.log(`Migrating room state: schema ${storedVersion} → ${this.schemaVersion}`)
+      }
+
       this.gameState = await this.ctx.storage.get('gameState') ?? null
       this.playerSessions = new Map(await this.ctx.storage.get<[string, string][]>('playerSessions') ?? [])
       this.playerNames = new Map(await this.ctx.storage.get<[string, string][]>('playerNames') ?? [])
@@ -528,7 +535,14 @@ export class GameRoom extends Server {
 
     if (!result.ok) {
       if (result.code !== 'NOPE_NOT_ACTIVE') {
-        console.error('Server action failed:', action.type, result.error, result.code)
+        console.error(JSON.stringify({
+          event: 'dispatch_error',
+          room: this.name,
+          action: action.type,
+          error: result.error,
+          code: result.code,
+          timestamp: Date.now(),
+        }))
       }
       return
     }
@@ -794,6 +808,7 @@ export class GameRoom extends Server {
         playerNames: [...this.playerNames],
         playerColors: [...this.playerColors],
         lastActionTime: this.lastActionTime,
+        schemaVersion: this.schemaVersion,
       })
     } catch (err: unknown) {
       console.error('Failed to persist game state:', err)

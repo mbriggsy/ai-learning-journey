@@ -4,3 +4,4 @@ coverage/
 .partykit/
 *.local
 .env*
+!.env.example

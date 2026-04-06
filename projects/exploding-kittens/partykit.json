@@ -1,6 +1,8 @@
 {
   "$schema": "https://www.partykit.io/schema.json",
-  "name": "exploding-kittens-digital",
+  "name": "exploding-kittens",
   "main": "src/server/room.ts",
-  "compatibilityDate": "2026-04-05"
+  "port": 1999,
+  "compatibilityDate": "2026-04-05",
+  "minify": true
 }

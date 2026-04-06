@@ -24,7 +24,7 @@
 - All cross-phase contradictions resolved (2026-04-05)
 - Rules audit complete -- canonical reference at `docs/rules/RULES-REFERENCE.md`
 
-- **Phase 5: Visual & Animation — EXECUTED** (2026-04-05)
+- **Phase 5: Visual & Animation — COMPLETE + REVIEWED** (2026-04-05)
   - 135/135 tests, typecheck clean, build succeeds
   - Phone initial JS: ~92KB gzipped (under 100KB budget)
   - Neo-Noir Casino theme system (3-tier: primitives → semantic → card-type accents)
@@ -40,10 +40,12 @@
   - Haptics (4 presets, Vibration API wrapper), phone UI Neo-Noir styling
   - Accessibility: aria-live regions, ReducedMotionProvider, focus-visible rings
   - Deferred items resolved: See the Future 10s auto-close
+  - Review: 7 agents, 21 findings — all P1/P2 resolved
+  - P1 fixes: MinimalCard keyboard activation, FavorResponse div→button, dead code (PlayerList, exitVariant, generateShakeKeyframes, haptics toggle), protocol readonly, ResizeObserver throttle, ParticlePool O(1) activeCount, clear() rAF race
+  - P2 fixes: NopeButton :focus-visible, announce() wired to aria-live, useEffect deps fixed, CSS_PROPERTY_MAP typed, magic numbers→TIMING, formatEvent exhaustive, SEMANTIC un-exported, fonts split (mono board-only), Clash Display preload removed from phone, ReducedMotionProvider JSDoc
 
 ## Next Steps (in order)
-1. Review Phase 5: Visual & Animation
-2. Execute Phase 6: Hardening & Deploy
+1. Execute Phase 6: Hardening & Deploy
 
 ## Landmines
 - Phase 5: ImageBitmap.close() required in canvas cleanup (Phase 6 cross-plan note #10)

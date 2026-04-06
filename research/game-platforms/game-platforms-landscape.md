@@ -21,6 +21,7 @@ Where we've been, what's out there, and what to think about when picking the nex
 | Project | Platform | What It Proved |
 |---------|----------|----------------|
 | **Tic-Tac-Toe** | Web | First project. Basics. |
+| **Pac-Man** | Web | Classic arcade remake. Movement, ghost AI, collision, scoring. |
 | **Top-Down Racer v02/v04** | Pygame | Game loops, physics, AI opponents, test-driven development, full phase-based build workflow |
 | **Hide & Seek** | Pygame | Top-down engine, pathfinding, AI state machines. Shelved — visuals were the bottleneck. |
 | **Do Not Disturb** | Pygame | Side-scroller attempt. Proved presentation > systems. Shelved. |

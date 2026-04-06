@@ -21,8 +21,8 @@
   - 135/135 tests, typecheck clean, build succeeds
   - Phone initial JS: ~92KB gzipped (under 100KB budget)
   - Review: 7 agents, 21 findings — all P1/P2 resolved
-- **Phase 6: Hardening & Deploy — EXECUTED** (2026-04-05)
-  - 141/141 tests (135 existing + 6 new Phase 6), typecheck clean, build succeeds
+- **Phase 6: Hardening & Deploy — COMPLETE + REVIEWED** (2026-04-06)
+  - 144/144 tests (135 existing + 6 Phase 6 + 3 review), typecheck clean, build succeeds
   - Phone initial JS: ~92KB gzipped (under 100KB budget, 8KB headroom)
   - Mobile hardening: wake lock, landscape detection, 100svh, overscroll, safe-area, PWA suppress
   - Security: origin validation, max connections (12), heartbeat (30s/10s), idle timeout, name regex, protocol version, ESLint react/no-danger
@@ -37,10 +37,9 @@
 - Rules audit complete -- canonical reference at `docs/rules/RULES-REFERENCE.md`
 
 ## Next Steps (in order)
-1. Review Phase 6 (multi-agent code review)
-2. Manual testing: real phones, WiFi toggle, screen lock/unlock, 10-player stress
-3. Set up GitHub secrets (PARTYKIT_TOKEN, PARTYKIT_LOGIN, CLOUDFLARE_API_TOKEN, CLOUDFLARE_ACCOUNT_ID)
-4. First production deploy
+1. Manual testing: real phones, WiFi toggle, screen lock/unlock, 10-player stress
+2. Set up GitHub secrets (PARTYKIT_TOKEN, PARTYKIT_LOGIN, CLOUDFLARE_API_TOKEN, CLOUDFLARE_ACCOUNT_ID)
+3. First production deploy
 
 ## Landmines
 - 5 cat types: Taco Cat, Beard Cat, Rainbow-Ralphing Cat, Hairy Potato Cat, Cattermelon

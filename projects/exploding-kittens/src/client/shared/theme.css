@@ -1,0 +1,11 @@
+:root {
+  --bg-primary: #1a1a2e;
+  --bg-surface: #14141f;
+  --text-primary: #e0e0e0;
+  --text-secondary: #8888aa;
+  --accent-danger: #ff4444;
+  --accent-success: #44ff88;
+  --accent-nope: #ff6b35;
+  --spacing-card: 8px;
+  --radius-card: 8px;
+}

@@ -1,0 +1,28 @@
+.handContainer {
+  display: flex;
+  overflow-x: scroll;
+  scroll-snap-type: x mandatory;
+  scroll-padding-inline: 15vw;
+  scrollbar-width: none;
+  -webkit-overflow-scrolling: touch;
+  overscroll-behavior-x: contain;
+  padding: 16px 0;
+}
+
+.handContainer::-webkit-scrollbar {
+  display: none;
+}
+
+.cardSlot {
+  flex: 0 0 65vw;
+  scroll-snap-align: center;
+  min-width: 48px;
+  padding: 0 var(--spacing-card);
+}
+
+.cardCount {
+  text-align: center;
+  font-size: 13px;
+  color: var(--text-secondary);
+  padding: 4px 0;
+}

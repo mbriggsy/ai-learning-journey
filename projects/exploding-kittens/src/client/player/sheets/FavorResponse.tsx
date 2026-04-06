@@ -1,0 +1,37 @@
+import type { CardInstance } from '@shared/types'
+import { MinimalCard } from '@client/shared/MinimalCard'
+import styles from './sheets.module.css'
+
+interface FavorResponseProps {
+  readonly requesterName: string
+  readonly hand: readonly CardInstance[]
+  readonly onGiveCard: (cardId: string) => void
+}
+
+export function FavorResponse({ requesterName, hand, onGiveCard }: FavorResponseProps) {
+  // Filter out Exploding Kittens — cannot be gifted
+  const eligible = hand.filter(c => c.type !== 'exploding-kitten')
+
+  if (eligible.length === 0) {
+    return (
+      <div>
+        <div className={styles.sheetTitle}>Favor</div>
+        <div className={styles.sheetSubtitle}>No eligible cards to give.</div>
+      </div>
+    )
+  }
+
+  return (
+    <div>
+      <div className={styles.sheetTitle}>{requesterName} demands a card</div>
+      <div className={styles.sheetSubtitle}>Tap a card to give away</div>
+      <div className={styles.optionList}>
+        {eligible.map(card => (
+          <div key={card.id} onClick={() => onGiveCard(card.id)} style={{ cursor: 'pointer' }}>
+            <MinimalCard id={card.id} type={card.type} />
+          </div>
+        ))}
+      </div>
+    </div>
+  )
+}

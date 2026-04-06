@@ -1,0 +1,20 @@
+.drawBtn {
+  display: block;
+  width: 100%;
+  padding: 14px;
+  margin: 8px 0;
+  border-radius: 8px;
+  border: 2px solid var(--text-secondary);
+  background: var(--bg-surface);
+  color: var(--text-primary);
+  font-size: 16px;
+  font-weight: 600;
+  cursor: pointer;
+  text-align: center;
+  touch-action: manipulation;
+}
+
+.drawBtn:disabled {
+  opacity: 0.4;
+  cursor: default;
+}

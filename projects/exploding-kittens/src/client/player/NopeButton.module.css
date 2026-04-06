@@ -1,0 +1,23 @@
+.nopeFab {
+  position: fixed;
+  bottom: 80px;
+  right: 16px;
+  width: 72px;
+  height: 72px;
+  border-radius: 50%;
+  border: 3px solid var(--accent-nope);
+  background: var(--bg-surface);
+  color: var(--accent-nope);
+  font-size: 16px;
+  font-weight: 800;
+  cursor: pointer;
+  z-index: 9999;
+  touch-action: manipulation;
+  box-shadow: 0 4px 16px rgba(255, 107, 53, 0.3);
+}
+
+.nopeFab:disabled {
+  opacity: 0.35;
+  cursor: default;
+  box-shadow: none;
+}

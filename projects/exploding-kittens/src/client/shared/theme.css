@@ -1,11 +1,34 @@
+/* No-JS fallback — applyTheme() overrides at runtime with identical values */
 :root {
-  --bg-primary: #1a1a2e;
-  --bg-surface: #14141f;
-  --text-primary: #e0e0e0;
-  --text-secondary: #8888aa;
-  --accent-danger: #ff4444;
-  --accent-success: #44ff88;
-  --accent-nope: #ff6b35;
+  /* Semantic */
+  --bg-app: #0c0a12;
+  --bg-card: #12121f;
+  --bg-elevated: #1a1a2e;
+  --bg-hover: #222240;
+  --border-subtle: #2a2a4a;
+  --text-primary: #e8e8f0;
+  --text-secondary: #9999bb;
+  --text-disabled: #555570;
+  --focus-ring: #33ffff;
   --spacing-card: 8px;
   --radius-card: 8px;
+
+  /* Backwards-compat aliases for Phase 4 CSS modules */
+  --bg-primary: #0c0a12;
+  --bg-surface: #12121f;
+  --accent-danger: #e03535;
+  --accent-success: #2dd885;
+  --accent-nope: #2dd885;
+
+  /* Raw accent colors */
+  --red: #e03535;
+  --red-glow: #ff0000;
+  --blue: #3b82f6;
+  --blue-glow: #1a6bff;
+  --green: #2dd885;
+  --green-glow: #00e673;
+  --amber: #e8922a;
+  --amber-glow: #ff8c00;
+  --slate: #7788aa;
+  --slate-glow: #556688;
 }

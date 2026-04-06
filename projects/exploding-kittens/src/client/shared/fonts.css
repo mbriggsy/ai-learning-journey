@@ -1,0 +1,49 @@
+/* Self-hosted variable fonts — latin subset */
+
+@font-face {
+  font-family: 'Clash Display';
+  src: url('/fonts/ClashDisplay-Variable.woff2') format('woff2');
+  font-weight: 200 700;
+  font-display: swap;
+  font-style: normal;
+}
+
+@font-face {
+  font-family: 'General Sans';
+  src: url('/fonts/GeneralSans-Variable.woff2') format('woff2');
+  font-weight: 200 700;
+  font-display: swap;
+  font-style: normal;
+}
+
+@font-face {
+  font-family: 'JetBrains Mono';
+  src: url('/fonts/JetBrainsMono-Variable.woff2') format('woff2');
+  font-weight: 400 700;
+  font-display: swap;
+  font-style: normal;
+}
+
+/* Size-adjusted fallbacks for minimal CLS during swap */
+@font-face {
+  font-family: 'Clash Display Fallback';
+  src: local('Arial Black'), local('Arial');
+  size-adjust: 105%;
+  ascent-override: 90%;
+  descent-override: 25%;
+}
+
+@font-face {
+  font-family: 'General Sans Fallback';
+  src: local('system-ui'), local('-apple-system'), local('Segoe UI');
+  size-adjust: 100%;
+  ascent-override: 95%;
+  descent-override: 25%;
+}
+
+/* Font stacks for use in CSS */
+:root {
+  --font-display: 'Clash Display', 'Clash Display Fallback', system-ui, sans-serif;
+  --font-body: 'General Sans', 'General Sans Fallback', system-ui, sans-serif;
+  --font-mono: 'JetBrains Mono', ui-monospace, 'Cascadia Code', 'Fira Code', monospace;
+}

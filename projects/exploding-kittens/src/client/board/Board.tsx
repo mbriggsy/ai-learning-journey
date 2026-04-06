@@ -6,6 +6,7 @@ import { Lobby } from './Lobby'
 import { GameTable } from './GameTable'
 import { GameOver } from '@client/shared/GameOver'
 import { PARTYKIT_HOST } from '@client/shared/config'
+import '@client/shared/fonts.css'
 import '@client/shared/theme.css'
 
 function generateRoomCode(): string {

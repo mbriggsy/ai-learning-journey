@@ -25,6 +25,7 @@ import { FavorResponse } from './sheets/FavorResponse'
 import { NameCard } from './sheets/NameCard'
 import type { CardType } from '@shared/types'
 import { PARTYKIT_HOST } from '@client/shared/config'
+import '@client/shared/fonts.css'
 import '@client/shared/theme.css'
 
 function getRoomCodeFromUrl(): string {

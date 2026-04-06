@@ -4,7 +4,7 @@
   min-height: 100dvh;
   background: var(--bg-primary);
   color: var(--text-primary);
-  font-family: system-ui, -apple-system, sans-serif;
+  font-family: var(--font-body);
   padding: 16px;
 }
 

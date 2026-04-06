@@ -46,12 +46,16 @@ export function AnnouncementFeed() {
   const events = useEventFeed()
   const players = usePlayerList()
 
-  // Screen reader announcements for new events
-  const lastAnnouncedRef = useRef(0)
+  // Screen reader announcements for new events — tracked by ID to survive array pruning
+  const lastAnnouncedIdRef = useRef<string | null>(null)
   useEffect(() => {
-    if (events.length <= lastAnnouncedRef.current) return
-    const newEvents = events.slice(lastAnnouncedRef.current)
-    lastAnnouncedRef.current = events.length
+    if (events.length === 0) return
+    const lastIdx = lastAnnouncedIdRef.current
+      ? events.findIndex(e => e.id === lastAnnouncedIdRef.current)
+      : -1
+    const newEvents = events.slice(lastIdx + 1)
+    if (newEvents.length === 0) return
+    lastAnnouncedIdRef.current = newEvents[newEvents.length - 1]!.id
     for (const entry of newEvents) {
       const text = formatEvent(entry.event, players)
       if (!text) continue

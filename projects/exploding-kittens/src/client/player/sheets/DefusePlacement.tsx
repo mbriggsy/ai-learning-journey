@@ -8,7 +8,14 @@ interface DefusePlacementProps {
 
 export function DefusePlacement({ maxPosition, onPlace }: DefusePlacementProps) {
   const [position, setPosition] = useState(0)
+  const [submitted, setSubmitted] = useState(false)
   const showStepper = maxPosition >= 10
+
+  const handlePlace = (pos: number) => {
+    if (submitted) return
+    setSubmitted(true)
+    onPlace(pos)
+  }
 
   if (!showStepper) {
     // Small deck — show individual buttons
@@ -21,7 +28,7 @@ export function DefusePlacement({ maxPosition, onPlace }: DefusePlacementProps) 
             <button
               key={i}
               className={styles.optionBtn}
-              onClick={() => onPlace(i)}
+              onClick={() => handlePlace(i)}
               style={{ touchAction: 'manipulation' }}
             >
               Position {i + 1} {i === 0 ? '(Top)' : i === maxPosition ? '(Bottom)' : ''}
@@ -39,13 +46,13 @@ export function DefusePlacement({ maxPosition, onPlace }: DefusePlacementProps) 
       <div className={styles.sheetSubtitle}>Tap to place (no take-backs)</div>
 
       <div className={styles.quickActions}>
-        <button className={styles.quickBtn} onClick={() => onPlace(0)} style={{ touchAction: 'manipulation' }}>
+        <button className={styles.quickBtn} onClick={() => handlePlace(0)} style={{ touchAction: 'manipulation' }}>
           Top
         </button>
-        <button className={styles.quickBtn} onClick={() => onPlace(maxPosition)} style={{ touchAction: 'manipulation' }}>
+        <button className={styles.quickBtn} onClick={() => handlePlace(maxPosition)} style={{ touchAction: 'manipulation' }}>
           Bottom
         </button>
-        <button className={styles.quickBtn} onClick={() => onPlace(-1)} style={{ touchAction: 'manipulation' }}>
+        <button className={styles.quickBtn} onClick={() => handlePlace(-1)} style={{ touchAction: 'manipulation' }}>
           Random
         </button>
       </div>
@@ -57,7 +64,8 @@ export function DefusePlacement({ maxPosition, onPlace }: DefusePlacementProps) 
       </div>
       <button
         className={styles.confirmBtn}
-        onClick={() => onPlace(position)}
+        onClick={() => handlePlace(position)}
+        disabled={submitted}
         style={{ touchAction: 'manipulation' }}
       >
         Place Here

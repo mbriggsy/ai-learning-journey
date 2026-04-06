@@ -12,14 +12,12 @@ interface BottomSheetProps {
 export function BottomSheet({ open, onDismiss, children }: PropsWithChildren<BottomSheetProps>) {
   const dialogRef = useRef<HTMLDialogElement>(null)
 
+  // Only open the dialog — closing is deferred to onExitComplete to preserve exit animation
   useEffect(() => {
     const dialog = dialogRef.current
     if (!dialog) return
-
     if (open && !dialog.open) {
       dialog.showModal()
-    } else if (!open && dialog.open) {
-      dialog.close()
     }
   }, [open])
 
@@ -37,7 +35,7 @@ export function BottomSheet({ open, onDismiss, children }: PropsWithChildren<Bot
 
   return (
     <dialog ref={dialogRef} className={styles.dialog}>
-      <AnimatePresence>
+      <AnimatePresence onExitComplete={() => { dialogRef.current?.close() }}>
         {open && (
           <m.div
             className={styles.content}

@@ -109,14 +109,14 @@ export interface GameOverBoardView {
 export type PlayerView = PlayingPlayerView | GameOverPlayerView
 
 export interface PlayingPlayerView extends PlayingBoardView {
-  myPlayerId: string
-  myHand: readonly CardInstance[]
-  isMyTurn: boolean
+  readonly myPlayerId: string
+  readonly myHand: readonly CardInstance[]
+  readonly isMyTurn: boolean
 }
 
 export interface GameOverPlayerView extends GameOverBoardView {
-  myPlayerId: string
-  myHand: readonly CardInstance[]
+  readonly myPlayerId: string
+  readonly myHand: readonly CardInstance[]
 }
 
 // --- Private Data (See/Alter the Future) ---

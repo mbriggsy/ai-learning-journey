@@ -1,3 +1,4 @@
+import { useState } from 'react'
 import type { CardInstance } from '@shared/types'
 import { MinimalCard } from '@client/shared/MinimalCard'
 import styles from './sheets.module.css'
@@ -9,6 +10,7 @@ interface FavorResponseProps {
 }
 
 export function FavorResponse({ requesterName, hand, onGiveCard }: FavorResponseProps) {
+  const [submitted, setSubmitted] = useState(false)
   // Filter out Exploding Kittens — cannot be gifted
   const eligible = hand.filter(c => c.type !== 'exploding-kitten')
 
@@ -27,7 +29,7 @@ export function FavorResponse({ requesterName, hand, onGiveCard }: FavorResponse
       <div className={styles.sheetSubtitle}>Tap a card to give away</div>
       <div className={styles.optionList}>
         {eligible.map(card => (
-          <button key={card.id} onClick={() => onGiveCard(card.id)} className={styles.optionBtn}>
+          <button key={card.id} onClick={() => { if (!submitted) { setSubmitted(true); onGiveCard(card.id) } }} className={styles.optionBtn} disabled={submitted}>
             <MinimalCard type={card.type} />
           </button>
         ))}

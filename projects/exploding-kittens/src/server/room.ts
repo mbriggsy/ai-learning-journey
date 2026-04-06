@@ -85,6 +85,9 @@ export class GameRoom extends Server {
   private heartbeatIntervals = new Map<string, ReturnType<typeof setInterval>>() // connectionId → interval
   private lastPongTimes = new Map<string, number>() // connectionId → last activity
 
+  // --- Persistence Tracking ---
+  private consecutivePersistFailures = 0
+
   // --- Rate Limiting ---
   private messageCounts = new Map<string, { count: number; windowStart: number }>()
 
@@ -106,6 +109,10 @@ export class GameRoom extends Server {
       this.playerColors = new Map()
       this.lastActionTime = Date.now()
     }
+
+    // Clear any stale timers before restoring from persisted state
+    this.clearNopeTimer()
+    this.clearPromptTimer()
 
     // Restore Nope timer if window was active
     if (this.gameState?.phase === 'playing') {
@@ -198,19 +205,19 @@ export class GameRoom extends Server {
     const msg = parsed.message
     switch (msg.type) {
       case 'host-connect':
-        this.enqueue(() => this.handleHostConnect(connection))
+        this.enqueue(() => this.handleHostConnect(connection), connection)
         break
       case 'join':
-        this.enqueue(() => this.handleJoin(connection, msg.payload.name, msg.payload.sessionToken))
+        this.enqueue(() => this.handleJoin(connection, msg.payload.name, msg.payload.sessionToken), connection)
         break
       case 'start-game':
-        this.enqueue(() => this.handleStartGame(connection))
+        this.enqueue(() => this.handleStartGame(connection), connection)
         break
       case 'return-to-lobby':
-        this.enqueue(() => this.handleReturnToLobby(connection))
+        this.enqueue(() => this.handleReturnToLobby(connection), connection)
         break
       case 'action':
-        this.enqueue(() => this.handleAction(connection, msg.payload))
+        this.enqueue(() => this.handleAction(connection, msg.payload), connection)
         break
       case 'ping':
         this.send(connection, { type: 'pong', payload: {} })
@@ -257,7 +264,10 @@ export class GameRoom extends Server {
   override async onAlarm(): Promise<void> {
     if (!this.hasConnections()) {
       this.clearAllTimers()
-      await this.ctx.storage.deleteAll()
+      try { await this.ctx.storage.deleteAll() } catch (err: unknown) {
+        console.error('Failed to delete room storage, rescheduling:', err)
+        await this.ctx.storage.setAlarm(Date.now() + IDLE_ROOM_TIMEOUT_MS).catch(() => {})
+      }
       return
     }
 
@@ -271,7 +281,9 @@ export class GameRoom extends Server {
       for (const conn of this.getConnections()) {
         conn.close(1000, 'Inactivity timeout')
       }
-      await this.ctx.storage.deleteAll()
+      try { await this.ctx.storage.deleteAll() } catch (err: unknown) {
+        console.error('Failed to delete room storage after kick:', err)
+      }
       return
     }
 
@@ -471,9 +483,8 @@ export class GameRoom extends Server {
       return
     }
 
-    // Clear game timers
-    this.clearNopeTimer()
-    this.clearPromptTimer()
+    // Clear all game timers including pending disconnect debounces
+    this.clearAllTimers()
 
     // Reset to lobby state, preserving all registered players
     this.gameState = createLobbyState()
@@ -567,6 +578,16 @@ export class GameRoom extends Server {
           code: result.code,
           timestamp: Date.now(),
         }))
+      }
+      // Force-clear nope window on unexpected timer dispatch failure to prevent permanent freeze
+      if ((action.type === 'nope-window-expired' || action.type === 'nope-grace-expired') && result.code !== 'NOPE_NOT_ACTIVE') {
+        const playing = this.gameState as PlayingState
+        if (playing.nopeWindow) {
+          this.gameState = { ...playing, nopeWindow: null }
+          this.clearNopeTimer()
+          this.broadcastGameState()
+          void this.persistState()
+        }
       }
       return
     }
@@ -662,16 +683,25 @@ export class GameRoom extends Server {
 
   // --- Serial Queue ---
 
-  private enqueue(task: () => void): void {
+  private enqueue(task: () => void, connection?: Connection): void {
     if (this.queueDepth >= MAX_QUEUE_DEPTH) {
       console.error(JSON.stringify({ event: 'queue_overflow', room: this.name, queueDepth: this.queueDepth, timestamp: Date.now() }))
+      if (connection) this.sendError(connection, 'RATE_LIMITED', 'Server busy, try again')
       return
     }
     this.queueDepth++
     this.actionQueue = this.actionQueue
       .then(task)
       .catch((err: unknown) => {
-        console.error('Queue task error:', err)
+        console.error(JSON.stringify({ event: 'queue_task_error', room: this.name, error: String(err), timestamp: Date.now() }))
+        // Broadcast current state to resync all clients after unexpected error
+        try {
+          if (this.gameState?.phase === 'lobby') {
+            this.broadcastLobbyState()
+          } else if (this.gameState) {
+            this.broadcastGameState()
+          }
+        } catch { /* last resort — broadcasting itself failed */ }
       })
       .finally(() => { this.queueDepth-- })
   }
@@ -837,8 +867,16 @@ export class GameRoom extends Server {
         playerColors: [...this.playerColors],
         lastActionTime: this.lastActionTime,
       })
+      this.consecutivePersistFailures = 0
     } catch (err: unknown) {
-      console.error('Failed to persist game state:', err)
+      this.consecutivePersistFailures++
+      console.error(JSON.stringify({
+        event: 'persist_failure',
+        room: this.name,
+        consecutiveFailures: this.consecutivePersistFailures,
+        error: String(err),
+        timestamp: Date.now(),
+      }))
     }
   }
 }

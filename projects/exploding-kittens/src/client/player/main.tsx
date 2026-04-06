@@ -21,7 +21,7 @@ window.addEventListener('unhandledrejection', (e) => console.error('Unhandled:',
 
 createRoot(document.getElementById('root')!).render(
   <StrictMode>
-    <ErrorBoundary>
+    <ErrorBoundary autoRecover autoRecoverMs={2000}>
       <MotionProvider>
         <ReducedMotionProvider>
           <Player />

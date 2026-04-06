@@ -1,7 +1,7 @@
 import { useState, useEffect, useCallback, Fragment } from 'react'
 import { connect, disconnect, send, onMessage, onStatusChange, onReconnect, getStatus, getSessionToken, setSessionToken } from '@client/connection'
 import type { ConnectionStatus } from '@client/connection'
-import { gameStore, useGameState, useProtocolMismatch } from '@client/shared/gameStore'
+import { gameStore, useGameState, useProtocolMismatch, useIsOptimisticPending } from '@client/shared/gameStore'
 import { useSendAction } from '@client/shared/hooks/useSendAction'
 import { useGamePhase, usePlayerList, useDrawPileCount, usePendingPrompt } from '@client/shared/hooks/useSharedSelectors'
 import { useHand, useIsMyTurn, useSubPhase, useMyPlayerId, useMyPlayer, usePrivateData } from './hooks/usePlayerSelectors'
@@ -190,6 +190,7 @@ function PlayingView() {
   const privateData = usePrivateData()
   const phase = useGamePhase()
   const sendAction = useSendAction()
+  const optimisticPending = useIsOptimisticPending()
 
   const isAlive = myPlayer?.isAlive ?? false
 
@@ -307,7 +308,7 @@ function PlayingView() {
       <Hand
         hand={hand}
         selectedIds={selectedIds}
-        disabled={!permission.allowed}
+        disabled={!permission.allowed || optimisticPending}
         onCardClick={toggleCard}
       />
 
@@ -319,7 +320,7 @@ function PlayingView() {
 
       <DrawButton
         visible={isMyTurn && subPhase === 'turn-active'}
-        disabled={!permission.allowed || cardPlayState.status !== 'idle'}
+        disabled={!permission.allowed || cardPlayState.status !== 'idle' || optimisticPending}
       />
 
       {/* Local target select (pre-send: Favor, Targeted Attack) */}

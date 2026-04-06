@@ -73,6 +73,7 @@ class GameStore {
   getAccumulatedEvents = (): readonly AccumulatedEvent[] => this.accumulatedEvents
   getIsReconnecting = (): boolean => this._isReconnecting
   getProtocolMismatch = (): boolean => this._protocolMismatch
+  getIsOptimisticPending = (): boolean => this.optimisticTransform !== null
 
   setPlayerId(id: string): void {
     this.playerId = id
@@ -107,9 +108,10 @@ class GameStore {
   }
 
   handleMessage(msg: ServerMessage): void {
-    // Suppress stale rejections during reconnection
+    // Suppress stale rejections during reconnection — but pass through fatal errors
     if (this._isReconnecting && (msg.type === 'error' || msg.type === 'action-rejected')) {
-      return
+      const isFatal = msg.type === 'error' && ['SESSION_REPLACED', 'KICKED', 'ROOM_FULL'].includes(msg.payload.code)
+      if (!isFatal) return
     }
 
     switch (msg.type) {
@@ -234,4 +236,8 @@ export function useProtocolMismatch(): boolean {
 
 export function useIsReconnecting(): boolean {
   return useSyncExternalStore(gameStore.subscribe, gameStore.getIsReconnecting)
+}
+
+export function useIsOptimisticPending(): boolean {
+  return useSyncExternalStore(gameStore.subscribe, gameStore.getIsOptimisticPending)
 }

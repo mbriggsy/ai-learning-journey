@@ -40,11 +40,8 @@ export type EngineAction = GameAction & { playerId: string }
 /** Action type string union */
 export type ActionType = keyof ActionMap
 
-/** Client action type string union (for Zod validation of action wrapper payloads) */
-export type ClientActionType = keyof ClientActionMap
-
 /** Server-only action type string union */
-export type ServerOnlyActionType = keyof ServerOnlyActionMap
+type ServerOnlyActionType = keyof ServerOnlyActionMap
 
 /** Set of server-only action types for runtime checks */
 export const SERVER_ONLY_ACTIONS = new Set<ServerOnlyActionType>(['nope-window-expired', 'nope-grace-expired', 'prompt-timeout'])

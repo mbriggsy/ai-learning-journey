@@ -176,10 +176,9 @@ function handleStartGame(
   let drawPile = [...shuffled.slice(dealtCount), ...remainingDefuses]
 
   // Insert N-1 Exploding Kittens (created fresh, not from buildDeck)
-  let ekId = 0
   const eksToInsert = playerCount - 1
   for (let i = 0; i < eksToInsert; i++) {
-    drawPile.push({ id: `ek-${ekId++}`, type: 'exploding-kitten' as CardType })
+    drawPile.push({ id: crypto.randomUUID(), type: 'exploding-kitten' as CardType })
   }
 
   // Final shuffle of draw pile
@@ -212,7 +211,6 @@ function handleStartGame(
 
 export function buildDeck(playerCount: number, _ctx: DispatchContext): CardInstance[] {
   const cards: CardInstance[] = []
-  let id = 0
 
   for (const def of CARD_DEFS) {
     // EKs excluded — startGame creates N-1 directly
@@ -220,7 +218,7 @@ export function buildDeck(playerCount: number, _ctx: DispatchContext): CardInsta
 
     const count = getCountForPlayerCount(def, playerCount)
     for (let i = 0; i < count; i++) {
-      cards.push({ id: `card-${id++}`, type: def.type })
+      cards.push({ id: crypto.randomUUID(), type: def.type })
     }
   }
 
@@ -725,6 +723,7 @@ function handleDefusePlace(
     const finalState: PlayingState = {
       ...newState,
       subPhase: 'turn-active',
+      pendingPrompt: null,
       currentTurn: { ...state.currentTurn, turnsRemaining: remaining },
       events: newState.events,
     }
@@ -764,6 +763,7 @@ function handleFavorGive(
     ...newState,
     subPhase: 'turn-active',
     pendingFavor: undefined,
+    pendingPrompt: null,
     events: [...newState.events, ...events],
   }
   return ok(finalState)
@@ -807,6 +807,7 @@ function handleFutureRearrange(
     subPhase: 'turn-active',
     drawPile: newDrawPile,
     pendingFuture: undefined,
+    pendingPrompt: null,
     events: [...state.events, ...events],
   }
   return ok(newState)
@@ -874,6 +875,7 @@ function handleNameCard(
     ...newState,
     subPhase: 'turn-active',
     pendingNameCard: undefined,
+    pendingPrompt: null,
     events: [...newState.events, ...events],
   }
   return ok(finalState)
@@ -1211,6 +1213,7 @@ function performRandomSteal(
       ...state,
       subPhase: 'turn-active',
       pendingSteal: undefined,
+      pendingPrompt: null,
       events: [...state.events, ...events],
     }
     return ok(newState)
@@ -1230,6 +1233,7 @@ function performRandomSteal(
     ...newState,
     subPhase: 'turn-active',
     pendingSteal: undefined,
+    pendingPrompt: null,
     events: [...newState.events, ...events],
   }
   return ok(finalState)

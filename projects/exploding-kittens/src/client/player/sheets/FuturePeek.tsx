@@ -38,16 +38,16 @@ export function FuturePeek({ cards, canRearrange, onDismiss, onRearrange }: Futu
   useEffect(() => {
     if (!isCountingDown) return
     const timer = setInterval(() => {
-      setCountdown(prev => {
-        if (prev <= 1) {
-          onDismiss()
-          return 0
-        }
-        return prev - 1
-      })
+      setCountdown(prev => Math.max(0, prev - 1))
     }, 1000)
     return () => clearInterval(timer)
-  }, [isCountingDown, onDismiss])
+  }, [isCountingDown])
+
+  // Auto-dismiss when countdown reaches 0 (separate from state updater to avoid side effects in setState)
+  useEffect(() => {
+    if (!isCountingDown) return
+    if (countdown === 0) onDismiss()
+  }, [countdown, isCountingDown, onDismiss])
 
   const tappedSet = new Set(tapOrder)
 

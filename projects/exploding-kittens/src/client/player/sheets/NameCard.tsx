@@ -1,3 +1,4 @@
+import { useState } from 'react'
 import { CARD_DEFS } from '@shared/card-defs'
 import type { CardType } from '@shared/types'
 import styles from './sheets.module.css'
@@ -15,6 +16,7 @@ const SPECIAL_CARDS = CARD_DEFS.filter(d => d.category === 'wild' || d.category 
 const ALL_NAMEABLE = [...CAT_CARDS, ...ACTION_CARDS, ...SPECIAL_CARDS]
 
 export function NameCard({ targetName, onNameCard }: NameCardProps) {
+  const [submitted, setSubmitted] = useState(false)
   return (
     <div>
       <div className={styles.sheetTitle}>Name a card to steal from {targetName}</div>
@@ -24,7 +26,8 @@ export function NameCard({ targetName, onNameCard }: NameCardProps) {
           <button
             key={def.type}
             className={styles.optionBtn}
-            onClick={() => onNameCard(def.type as CardType)}
+            onClick={() => { if (!submitted) { setSubmitted(true); onNameCard(def.type as CardType) } }}
+            disabled={submitted}
             style={{ justifyContent: 'center' }}
           >
             {def.name}

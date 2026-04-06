@@ -1,3 +1,4 @@
+import { useState } from 'react'
 import type { BoardPlayer } from '@shared/protocol'
 import styles from './sheets.module.css'
 
@@ -8,6 +9,7 @@ interface TargetSelectProps {
 }
 
 export function TargetSelect({ eligiblePlayers, onSelectTarget, title }: TargetSelectProps) {
+  const [submitted, setSubmitted] = useState(false)
   return (
     <div>
       <div className={styles.sheetTitle}>{title ?? 'Choose a target'}</div>
@@ -16,7 +18,8 @@ export function TargetSelect({ eligiblePlayers, onSelectTarget, title }: TargetS
           <button
             key={p.id}
             className={styles.optionBtn}
-            onClick={() => onSelectTarget(p.id)}
+            onClick={() => { if (!submitted) { setSubmitted(true); onSelectTarget(p.id) } }}
+            disabled={submitted}
           >
             <span className={styles.dot} style={{ backgroundColor: p.color }} />
             <span>{p.name}</span>

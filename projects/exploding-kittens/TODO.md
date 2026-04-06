@@ -24,8 +24,25 @@
 - All cross-phase contradictions resolved (2026-04-05)
 - Rules audit complete -- canonical reference at `docs/rules/RULES-REFERENCE.md`
 
+- **Phase 5: Visual & Animation — EXECUTED** (2026-04-05)
+  - 135/135 tests, typecheck clean, build succeeds
+  - Phone initial JS: ~92KB gzipped (under 100KB budget)
+  - Neo-Noir Casino theme system (3-tier: primitives → semantic → card-type accents)
+  - Premium card component (glow pseudo-element, face/back, SVG icon badges, high-contrast)
+  - 3 self-hosted variable fonts (Clash Display, General Sans, JetBrains Mono)
+  - Animation config (7 motion presets) + shared timing constants
+  - Board layout: elliptical player ring (JS-calculated), arena, draw pile, discard fan
+  - Card animations: AnimatePresence popLayout, staggered deal, layout="position" with guards
+  - AnimationSequencer state machine (EK reveal 7-step + tension hold)
+  - Particle system: TypedArray SoA pool (300 max, zero GC), pre-rendered sprites
+  - Screen flash (seizure-safe WCAG 2.3.1), screen shake (trauma-based decreasing amplitude)
+  - Bottom sheet springs, Nope FAB scale animation, ErrorToast + announcement AnimatePresence
+  - Haptics (4 presets, Vibration API wrapper), phone UI Neo-Noir styling
+  - Accessibility: aria-live regions, ReducedMotionProvider, focus-visible rings
+  - Deferred items resolved: See the Future 10s auto-close
+
 ## Next Steps (in order)
-1. Execute Phase 5: Visual & Animation
+1. Review Phase 5: Visual & Animation
 2. Execute Phase 6: Hardening & Deploy
 
 ## Landmines
@@ -35,11 +52,15 @@
 - `@cloudflare/workers-types` added to tsconfig types array for DurableObject ctx access
 - `nextNopeGeneration` is module-level mutable state — works per-isolate in PartyKit but violates pure-engine ideal. Consider moving to PlayingState in Phase 6.
 - Optimistic overlay is Phase 4 minimal (single transform, clear-on-any-update). Phase 5+ may need targeted rollback with actionId.
-- Nope button 300ms grace window deferred to Phase 5 (P3 from review — UX polish, not correctness)
-- See the Future 10s auto-close deferred to Phase 5 (P3 — UX polish)
-- Announcement feed shows 3 stacked; spec says no stacking + 3s duration — Phase 5 polish
-- PendingPromptBanner missing timeout countdown — Phase 5 polish
-- `isConnected` missing from BoardPlayer in playing phase — Phase 5 wire disconnected indicator
-- Combo validation duplicated between engine (isValidCombo) and shared (isValidComboMatch) — drift risk, consider dedup in Phase 5
-- PlayingView is monolithic (~200 lines) — split into sub-components in Phase 5 when animations make re-render cost matter
+- ~~Nope button 300ms grace window deferred to Phase 5~~ — TIMING constant added, not yet wired to FAB delay
+- ~~See the Future 10s auto-close deferred to Phase 5~~ — DONE (countdown + auto-dismiss)
+- Announcement feed shows 3 stacked; spec says no stacking + 3s duration — still stacked (AnimatePresence added but count logic unchanged)
+- PendingPromptBanner missing timeout countdown — deferred to Phase 6
+- `isConnected` missing from BoardPlayer in playing phase — deferred to Phase 6
+- Combo validation duplicated between engine (isValidCombo) and shared (isValidComboMatch) — drift risk, Phase 6
+- PlayingView is monolithic (~200 lines) — deferred to Phase 6 (animation cost not yet measured)
 - DefusePlacement "Random" uses client-side Math.random() — server validates range, acceptable
+- AnimationSequencer + particle system + screen effects are built but NOT wired into GameTable render tree — Phase 5 review should decide if wiring happens now or Phase 6
+- Font files in public/fonts/ (~98KB total) downloaded from CDN — consider subsetting further if bandwidth is a concern
+- Phone JS at ~92KB gzipped — only 8KB headroom before 100KB budget
+- `ReducedMotionProvider` context provider added — all Phase 5+ animation code should check `useReducedMotionPreference()` before running motion

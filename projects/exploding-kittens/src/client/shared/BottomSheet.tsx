@@ -1,5 +1,7 @@
-import { useRef, useEffect } from 'react'
+import { useRef, useEffect, useCallback } from 'react'
 import type { PropsWithChildren } from 'react'
+import { m, AnimatePresence } from 'motion/react'
+import { MOTION } from './animation-config'
 import styles from './BottomSheet.module.css'
 
 interface BottomSheetProps {
@@ -21,21 +23,33 @@ export function BottomSheet({ open, onDismiss, children }: PropsWithChildren<Bot
     }
   }, [open])
 
+  const handleCancel = useCallback((e: Event) => {
+    e.preventDefault()
+    onDismiss?.()
+  }, [onDismiss])
+
   useEffect(() => {
     const dialog = dialogRef.current
     if (!dialog || !onDismiss) return
-
-    const handleCancel = (e: Event) => {
-      e.preventDefault()
-      onDismiss()
-    }
     dialog.addEventListener('cancel', handleCancel)
     return () => dialog.removeEventListener('cancel', handleCancel)
-  }, [onDismiss])
+  }, [handleCancel, onDismiss])
 
   return (
     <dialog ref={dialogRef} className={styles.dialog}>
-      {children}
+      <AnimatePresence>
+        {open && (
+          <m.div
+            className={styles.content}
+            initial={{ y: '100%' }}
+            animate={{ y: 0 }}
+            exit={{ y: '100%' }}
+            transition={MOTION.SNAPPY}
+          >
+            {children}
+          </m.div>
+        )}
+      </AnimatePresence>
     </dialog>
   )
 }

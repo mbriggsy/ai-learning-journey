@@ -1,4 +1,5 @@
 import { useEffect, useState } from 'react'
+import { m, AnimatePresence } from 'motion/react'
 import { useLastError } from '@client/shared/gameStore'
 import styles from './ErrorToast.module.css'
 
@@ -13,11 +14,19 @@ export function ErrorToast() {
     return () => clearTimeout(timer)
   }, [error])
 
-  if (!visible || !error) return null
-
   return (
-    <div className={styles.toast}>
-      Game state changed — try again
-    </div>
+    <AnimatePresence>
+      {visible && error && (
+        <m.div
+          className={styles.toast}
+          initial={{ y: -60, opacity: 0 }}
+          animate={{ y: 0, opacity: 1 }}
+          exit={{ y: -60, opacity: 0 }}
+          transition={{ duration: 0.2, ease: 'easeOut' }}
+        >
+          Game state changed — try again
+        </m.div>
+      )}
+    </AnimatePresence>
   )
 }

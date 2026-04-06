@@ -1,8 +1,10 @@
 .handContainer {
+  position: relative; /* Required by AnimatePresence popLayout */
   display: flex;
   overflow-x: scroll;
   scroll-snap-type: x mandatory;
   scroll-padding-inline: 15vw;
+  scroll-behavior: smooth; /* For programmatic scroll to new cards */
   scrollbar-width: none;
   -webkit-overflow-scrolling: touch;
   overscroll-behavior-x: contain;
@@ -22,7 +24,8 @@
 
 .cardCount {
   text-align: center;
+  font-family: var(--font-body);
   font-size: 13px;
-  color: var(--text-secondary);
+  color: var(--text-secondary, #9999bb);
   padding: 4px 0;
 }

@@ -1,3 +1,4 @@
+import { m, AnimatePresence } from 'motion/react'
 import { useEventFeed } from '@client/shared/hooks/useEventFeed'
 import { usePlayerList } from '@client/shared/hooks/useSharedSelectors'
 import { playerName } from './playerName'
@@ -15,7 +16,7 @@ function formatEvent(event: GameEvent, players: readonly BoardPlayer[]): string 
     }
     case 'card-drawn': return event.safe ? `${playerName(players, event.playerId)} drew a card` : null
     case 'nope-played': return `${playerName(players, event.playerId)} said NOPE!`
-    case 'nope-window-opened': return null // handled by countdown bar
+    case 'nope-window-opened': return null
     case 'nope-window-resolved': return event.cancelled ? 'Resolved: Cancelled' : 'Resolved: Allowed'
     case 'exploding-kitten-drawn': return `${playerName(players, event.playerId)} drew an Exploding Kitten!`
     case 'defuse-played': return `${playerName(players, event.playerId)} defused!`
@@ -44,15 +45,24 @@ export function AnnouncementFeed() {
 
   return (
     <div className={styles.feed}>
-      {recent.map(entry => {
-        const text = formatEvent(entry.event, players)
-        if (!text) return null
-        return (
-          <div key={entry.id} className={styles.announcement}>
-            {text}
-          </div>
-        )
-      })}
+      <AnimatePresence mode="popLayout">
+        {recent.map(entry => {
+          const text = formatEvent(entry.event, players)
+          if (!text) return null
+          return (
+            <m.div
+              key={entry.id}
+              className={styles.announcement}
+              initial={{ opacity: 0, y: -12 }}
+              animate={{ opacity: 1, y: 0 }}
+              exit={{ opacity: 0, y: 12 }}
+              transition={{ duration: 0.25, ease: 'easeOut' }}
+            >
+              {text}
+            </m.div>
+          )
+        })}
+      </AnimatePresence>
     </div>
   )
 }

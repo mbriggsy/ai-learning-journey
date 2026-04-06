@@ -1,7 +1,9 @@
 import { createPortal } from 'react-dom'
+import { m, AnimatePresence } from 'motion/react'
 import { useNopeWindow } from '@client/shared/hooks/useSharedSelectors'
 import { useHand, useMyPlayer } from './hooks/usePlayerSelectors'
 import { useSendAction } from '@client/shared/hooks/useSendAction'
+import { MOTION } from '@client/shared/animation-config'
 import styles from './NopeButton.module.css'
 
 const nopeRoot = document.getElementById('nope-root')
@@ -14,18 +16,27 @@ export function NopeButton() {
 
   const hasNope = hand.some(c => c.type === 'nope')
   const isAlive = myPlayer?.isAlive ?? false
+  const show = !!nopeWindow && isAlive
 
-  if (!nopeWindow || !isAlive || !nopeRoot) return null
+  if (!nopeRoot) return null
 
   return createPortal(
-    <button
-      className={styles.nopeFab}
-      disabled={!hasNope}
-      onClick={() => sendAction({ type: 'nope' })}
-      aria-label="Play Nope card"
-    >
-      NOPE
-    </button>,
+    <AnimatePresence>
+      {show && (
+        <m.button
+          className={styles.nopeFab}
+          disabled={!hasNope}
+          onClick={() => sendAction({ type: 'nope' })}
+          aria-label="Play Nope card"
+          initial={{ scale: 0, opacity: 0 }}
+          animate={{ scale: 1, opacity: 1 }}
+          exit={{ scale: 0, opacity: 0 }}
+          transition={MOTION.SNAPPY}
+        >
+          NOPE
+        </m.button>
+      )}
+    </AnimatePresence>,
     nopeRoot,
   )
 }

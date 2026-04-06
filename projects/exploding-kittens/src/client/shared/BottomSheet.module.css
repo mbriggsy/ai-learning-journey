@@ -5,23 +5,22 @@
   right: 0;
   max-height: 80dvh;
   margin: 0;
-  padding: 20px 16px;
-  background: var(--bg-surface);
+  padding: 0;
+  background: transparent;
   border: none;
-  border-radius: 16px 16px 0 0;
-  color: var(--text-primary);
-  overflow-y: auto;
+  overflow: visible;
 }
 
 .dialog::backdrop {
-  background: rgba(0, 0, 0, 0.5);
+  background: rgba(0, 0, 0, 0.6);
 }
 
-.dialog[open] {
-  animation: slideUp 0.25s ease;
-}
-
-@keyframes slideUp {
-  from { transform: translateY(100%); }
-  to { transform: translateY(0); }
+.content {
+  padding: 20px 16px;
+  background: var(--bg-elevated, #1a1a2e);
+  border-radius: 16px 16px 0 0;
+  color: var(--text-primary, #e8e8f0);
+  font-family: var(--font-body);
+  overflow-y: auto;
+  max-height: 80dvh;
 }

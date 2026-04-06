@@ -1,5 +1,6 @@
 import js from '@eslint/js'
 import tseslint from 'typescript-eslint'
+import reactPlugin from 'eslint-plugin-react'
 
 export default tseslint.config(
   { ignores: ['dist/', 'coverage/', 'node_modules/'] },
@@ -8,6 +9,14 @@ export default tseslint.config(
   {
     rules: {
       '@typescript-eslint/no-unused-vars': ['error', { argsIgnorePattern: '^_' }],
+    },
+  },
+  // Ban React unsafe HTML injection — defense-in-depth against XSS
+  {
+    files: ['src/client/**/*.tsx'],
+    plugins: { react: reactPlugin },
+    rules: {
+      'react/no-danger': 'error',
     },
   },
   // Import boundary: src/shared/ cannot import from client or server

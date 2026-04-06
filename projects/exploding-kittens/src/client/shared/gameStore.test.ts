@@ -38,7 +38,7 @@ describe('GameStore', () => {
   it('sets playerId on joined message', () => {
     gameStore.handleMessage({
       type: 'joined',
-      payload: { playerId: 'p1', sessionToken: 'tok', color: '#3498db' },
+      payload: { playerId: 'p1', sessionToken: 'tok', color: '#3498db', protocolVersion: 1 },
     })
     expect(gameStore.getPlayerId()).toBe('p1')
   })

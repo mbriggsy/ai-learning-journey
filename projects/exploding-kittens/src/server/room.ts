@@ -8,24 +8,40 @@ import type { ClientAction, EngineAction } from '@shared/actions'
 import { SERVER_ONLY_ACTIONS } from '@shared/actions'
 import type { SubPhase } from '@shared/types'
 import type { ServerMessage, LobbyView, ErrorCode } from '@shared/protocol'
+import { PROTOCOL_VERSION } from '@shared/protocol'
 
 // --- Constants ---
 
 const MAX_MESSAGE_BYTES = 4096
 const MAX_PLAYERS = 10
+const MAX_CONNECTIONS = 12 // 10 players + 1 host + 1 reconnection buffer
 const MAX_MESSAGES_PER_SECOND = 10
 const PROMPT_TIMEOUT_MS = 60_000
 const INACTIVITY_TIMEOUT_MS = 15 * 60_000
 const IDLE_ROOM_TIMEOUT_MS = 30 * 60_000
+const IDLE_CONNECTION_MS = 2 * 60_000 // 2 min per-connection idle timeout
+const DISCONNECT_DEBOUNCE_MS = 3_000
+const HEARTBEAT_INTERVAL_MS = 30_000
+const HEARTBEAT_TIMEOUT_MS = 10_000
 const MAX_QUEUE_DEPTH = 100
 const NOPE_GRACE_MS = 300
+
+// Join rate limiting: 5 attempts per IP per minute, 5 min lockout
+const JOIN_RATE_WINDOW_MS = 60_000
+const JOIN_RATE_MAX = 5
+const JOIN_LOCKOUT_MS = 5 * 60_000
 
 const PLAYER_COLORS = [
   '#e74c3c', '#3498db', '#2ecc71', '#9b59b6', '#f39c12',
   '#1abc9c', '#e67e22', '#e91e63', '#00bcd4', '#8bc34a',
 ] as const
 
-const NAME_PATTERN = /^[a-zA-Z0-9 !?.,'-]+$/
+const NAME_PATTERN = /^[a-zA-Z0-9 .!?_-]{1,12}$/
+
+// --- Room Code Generation ---
+
+const ROOM_ALPHABET = 'ABCDEFGHJKMNPQRSTUVWXYZ23456789' // 31 chars, no ambiguous 0/O/1/I/L
+const OFFENSIVE_PATTERNS = /FUCK|SHIT|DAMN|HELL|COCK|CUNT|DICK|TWAT|NAZI/
 
 // --- Engine → Protocol Error Code Mapping ---
 
@@ -60,6 +76,7 @@ export class GameRoom extends Server {
   private playerNames = new Map<string, string>()      // playerId → name
   private playerColors = new Map<string, string>()     // playerId → color
   private lastActionTime = 0
+  private schemaVersion = 1
 
   // --- Serial Queue ---
   private actionQueue: Promise<void> = Promise.resolve()
@@ -69,9 +86,16 @@ export class GameRoom extends Server {
   private nopeTimeout: ReturnType<typeof setTimeout> | null = null
   private nopeWindowGeneration = 0
   private promptTimeout: ReturnType<typeof setTimeout> | null = null
+  private disconnectTimers = new Map<string, ReturnType<typeof setTimeout>>() // playerId → debounce timer
+  private heartbeatIntervals = new Map<string, ReturnType<typeof setInterval>>() // connectionId → interval
+  private idleTimers = new Map<string, ReturnType<typeof setTimeout>>() // connectionId → idle timer
+  private lastPongTimes = new Map<string, number>() // connectionId → last activity
 
   // --- Rate Limiting ---
   private messageCounts = new Map<string, { count: number; windowStart: number }>()
+
+  // --- Join Rate Limiting (per-IP) ---
+  private joinAttempts = new Map<string, { count: number; windowStart: number; lockedUntil: number }>()
 
   // --- Lifecycle ---
 
@@ -117,8 +141,30 @@ export class GameRoom extends Server {
     await this.ctx.storage.setAlarm(Date.now() + INACTIVITY_TIMEOUT_MS)
   }
 
-  override onConnect(_connection: Connection, _ctx: ConnectionContext): void {
-    // Connection is fresh — state will be set on first message (host-connect or join)
+  override onConnect(connection: Connection, ctx: ConnectionContext): void {
+    // Origin validation — WebSocket bypasses CORS, so check on connect
+    const origin = ctx.request.headers.get('Origin')
+    const allowedOrigins = [
+      'https://exploding-kittens.pages.dev',
+      'http://localhost:5173', 'http://localhost:4173',
+    ]
+    if (origin && !allowedOrigins.includes(origin)) {
+      connection.close(4003, 'Forbidden origin')
+      return
+    }
+
+    // Enforce max connections
+    let connCount = 0
+    for (const _ of this.getConnections()) { connCount++; if (connCount > MAX_CONNECTIONS) break }
+    if (connCount > MAX_CONNECTIONS) {
+      this.sendError(connection, 'ROOM_FULL', 'Room is full')
+      connection.close(4001, 'Room full')
+      return
+    }
+
+    // Start heartbeat for this connection
+    this.startHeartbeat(connection)
+    this.resetIdleTimer(connection)
   }
 
   override onMessage(connection: Connection, message: string | ArrayBuffer): void {
@@ -131,6 +177,10 @@ export class GameRoom extends Server {
       connection.close(1009, 'Message too large')
       return
     }
+
+    // Any message counts as activity — reset idle timer
+    this.resetIdleTimer(connection)
+    this.lastPongTimes.set(connection.id, Date.now())
 
     // Rate limiting
     if (this.isRateLimited(connection.id)) {
@@ -161,27 +211,44 @@ export class GameRoom extends Server {
       case 'ping':
         this.send(connection, { type: 'pong', payload: {} })
         break
+      case 'pong':
+        // Client responding to server heartbeat — activity already tracked above
+        break
     }
   }
 
-  override onClose(connection: Connection): void {
+  override onClose(connection: Connection, _code: number, _reason: string, _wasClean: boolean): void {
+    // Clean up connection-specific timers
+    this.stopHeartbeat(connection.id)
+    this.clearIdleTimer(connection.id)
+    this.lastPongTimes.delete(connection.id)
+    this.messageCounts.delete(connection.id)
+
     const state = this.getConnState(connection)
     if (state?.role === 'player') {
-      // Broadcast appropriate state based on current phase
-      if (this.gameState?.phase === 'lobby') {
-        this.broadcastLobbyState()
-      } else if (this.gameState) {
-        this.broadcastGameState()
-      }
-      void this.persistState()
+      // Debounce disconnect broadcast — WiFi blips shouldn't flash on TV
+      const playerId = state.playerId
+      this.disconnectTimers.set(playerId, setTimeout(() => {
+        this.disconnectTimers.delete(playerId)
+        // Re-check if player reconnected during debounce window
+        for (const conn of this.getConnections()) {
+          const cs = this.getConnState(conn)
+          if (cs?.role === 'player' && cs.playerId === playerId) return
+        }
+        // Still disconnected — broadcast
+        if (this.gameState?.phase === 'lobby') {
+          this.broadcastLobbyState()
+        } else if (this.gameState) {
+          this.broadcastGameState()
+        }
+        void this.persistState()
+      }, DISCONNECT_DEBOUNCE_MS))
     }
 
     // Schedule idle room cleanup if no connections remain
     if (!this.hasConnections()) {
       void this.ctx.storage.setAlarm(Date.now() + IDLE_ROOM_TIMEOUT_MS)
     }
-
-    this.messageCounts.delete(connection.id)
   }
 
   override async onAlarm(): Promise<void> {
@@ -255,9 +322,9 @@ export class GameRoom extends Server {
       return
     }
 
-    // Name validation (required for new joins)
+    // Name validation — strict pattern, no HTML-special chars
     const name = rawName.trim().slice(0, 12)
-    if (!name || !NAME_PATTERN.test(name)) {
+    if (!NAME_PATTERN.test(name)) {
       this.sendError(connection, 'NAME_INVALID', 'Invalid name')
       return
     }
@@ -287,7 +354,7 @@ export class GameRoom extends Server {
 
     connection.setState({ role: 'player', playerId, sessionToken: token } satisfies ConnState)
 
-    this.send(connection, { type: 'joined', payload: { playerId, sessionToken: token, color } })
+    this.send(connection, { type: 'joined', payload: { playerId, sessionToken: token, color, protocolVersion: PROTOCOL_VERSION } })
 
     this.broadcastLobbyState()
     void this.persistState()
@@ -307,24 +374,34 @@ export class GameRoom extends Server {
     connection.setState({ role: 'player', playerId, sessionToken } satisfies ConnState)
 
     const color = this.playerColors.get(playerId) ?? PLAYER_COLORS[0]!
-    this.send(connection, { type: 'joined', payload: { playerId, sessionToken, color } })
+    this.send(connection, { type: 'joined', payload: { playerId, sessionToken, color, protocolVersion: PROTOCOL_VERSION } })
 
-    if (this.gameState) {
-      if (this.gameState.phase === 'lobby') {
-        this.broadcastLobbyState()
-      } else {
-        const now = Date.now()
-        const state = this.gameState as PlayingState | GameOverState
-        const board = projectForBoard(state, now)
-        this.send(connection, {
-          type: 'player-update',
-          payload: {
-            state: projectForPlayer(state, playerId, board),
-            private: state.phase === 'playing' ? getPrivateData(state, playerId) : {},
-          },
-        })
-      }
+    // Clear any pending disconnect debounce for this player
+    const pendingDisconnect = this.disconnectTimers.get(playerId)
+    if (pendingDisconnect) {
+      clearTimeout(pendingDisconnect)
+      this.disconnectTimers.delete(playerId)
     }
+
+    // Enqueue state-send in serial queue (P0: reading gameState outside queue risks mid-dispatch staleness)
+    this.enqueue(() => {
+      if (this.gameState) {
+        if (this.gameState.phase === 'lobby') {
+          this.broadcastLobbyState()
+        } else {
+          const now = Date.now()
+          const state = this.gameState as PlayingState | GameOverState
+          const board = projectForBoard(state, now)
+          this.send(connection, {
+            type: 'player-update',
+            payload: {
+              state: projectForPlayer(state, playerId, board),
+              private: state.phase === 'playing' ? getPrivateData(state, playerId) : {},
+            },
+          })
+        }
+      }
+    })
 
     void this.persistState()
   }
@@ -655,6 +732,47 @@ export class GameRoom extends Server {
 
     entry.count++
     return entry.count > MAX_MESSAGES_PER_SECOND
+  }
+
+  // --- Heartbeat ---
+
+  private startHeartbeat(connection: Connection): void {
+    this.lastPongTimes.set(connection.id, Date.now())
+    const interval = setInterval(() => {
+      // Send ping
+      try { connection.send(JSON.stringify({ type: 'ping', payload: {} })) } catch { /* closing */ }
+      // Check if last activity was within timeout
+      const lastActivity = this.lastPongTimes.get(connection.id) ?? 0
+      if (Date.now() - lastActivity > HEARTBEAT_INTERVAL_MS + HEARTBEAT_TIMEOUT_MS) {
+        connection.close(1001, 'Heartbeat timeout')
+      }
+    }, HEARTBEAT_INTERVAL_MS)
+    this.heartbeatIntervals.set(connection.id, interval)
+  }
+
+  private stopHeartbeat(connectionId: string): void {
+    const interval = this.heartbeatIntervals.get(connectionId)
+    if (interval) {
+      clearInterval(interval)
+      this.heartbeatIntervals.delete(connectionId)
+    }
+  }
+
+  // --- Idle Timer ---
+
+  private resetIdleTimer(connection: Connection): void {
+    this.clearIdleTimer(connection.id)
+    this.idleTimers.set(connection.id, setTimeout(() => {
+      connection.close(1001, 'Idle timeout')
+    }, IDLE_CONNECTION_MS))
+  }
+
+  private clearIdleTimer(connectionId: string): void {
+    const timer = this.idleTimers.get(connectionId)
+    if (timer) {
+      clearTimeout(timer)
+      this.idleTimers.delete(connectionId)
+    }
   }
 
   private async persistState(): Promise<void> {

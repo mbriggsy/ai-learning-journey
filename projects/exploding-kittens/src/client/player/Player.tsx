@@ -8,6 +8,8 @@ import { useHand, useIsMyTurn, useSubPhase, useMyPlayerId, useMyPlayer, usePriva
 import { deriveInteractionPermission } from './hooks/useInteractionPermission'
 import { useCardPlay } from './hooks/useCardPlay'
 import { deriveActiveBottomSheet } from './hooks/useActiveBottomSheet'
+import { useWakeLock } from '@client/shared/hooks/useWakeLock'
+import { useOrientationWarning } from '@client/shared/hooks/useOrientationWarning'
 import { JoinScreen } from './JoinScreen'
 import { Hand } from './Hand'
 import { CardConfirmBar } from './CardConfirmBar'
@@ -34,6 +36,8 @@ function getRoomCodeFromUrl(): string {
 }
 
 export function Player() {
+  useWakeLock()
+  const isLandscape = useOrientationWarning()
   const [connectionStatus, setConnectionStatus] = useState<ConnectionStatus>(getStatus())
   const [assignedColor, setAssignedColor] = useState<string | null>(null)
   const [roomCode] = useState(getRoomCodeFromUrl)
@@ -70,7 +74,7 @@ export function Player() {
   }, [roomCode])
 
   if (!roomCode) {
-    return <div style={{ padding: 24, color: 'var(--text-primary)', background: 'var(--bg-primary)', minHeight: '100dvh' }}>
+    return <div style={{ padding: 24, color: 'var(--text-primary)', background: 'var(--bg-primary)', minHeight: '100svh' }}>
       <p>No room code. Scan the QR code on the TV screen.</p>
     </div>
   }
@@ -82,6 +86,16 @@ export function Player() {
 
   return (
     <>
+      {isLandscape && (
+        <div style={{
+          position: 'fixed', inset: 0, zIndex: 9999,
+          display: 'flex', alignItems: 'center', justifyContent: 'center',
+          background: 'var(--bg-primary, #0c0a12)', color: 'var(--text-primary, #e8e8f0)',
+          fontSize: 18, textAlign: 'center', padding: 32,
+        }}>
+          Rotate your phone to portrait mode
+        </div>
+      )}
       <PhoneRouter
         connectionStatus={connectionStatus}
         assignedColor={assignedColor}
@@ -256,7 +270,7 @@ function PlayingView() {
   const eligibleTargets = players.filter(p => p.isAlive && p.id !== myPlayerId)
 
   return (
-    <div style={{ background: 'var(--bg-primary)', minHeight: '100dvh', paddingBottom: '72px' }}>
+    <div style={{ background: 'var(--bg-primary)', minHeight: '100svh', paddingBottom: '72px' }}>
       <Hand
         hand={hand}
         selectedIds={selectedIds}

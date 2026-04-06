@@ -1,0 +1,29 @@
+/* Game-mode CSS — phone controller only */
+
+html, body {
+  height: 100svh;
+  height: 100vh; /* fallback for older browsers */
+  overflow: hidden;
+  overscroll-behavior: none; /* kills rubber banding, pull-to-refresh, swipe nav */
+  touch-action: manipulation; /* kills 300ms tap delay */
+}
+
+#root {
+  -webkit-user-select: none;
+  user-select: none;
+  -webkit-touch-callout: none;
+  -webkit-tap-highlight-color: transparent;
+  padding: env(safe-area-inset-top) env(safe-area-inset-right)
+           env(safe-area-inset-bottom) env(safe-area-inset-left);
+}
+
+#root img {
+  -webkit-user-drag: none;
+  pointer-events: none;
+}
+
+/* Re-enable text selection for inputs */
+input[type="text"] {
+  -webkit-user-select: text;
+  user-select: text;
+}

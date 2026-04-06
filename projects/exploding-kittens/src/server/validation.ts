@@ -100,12 +100,18 @@ const PingMessage = z.object({
   payload: z.object({}),
 })
 
+const PongMessage = z.object({
+  type: z.literal('pong'),
+  payload: z.object({}),
+})
+
 export const ClientMessageSchema = z.discriminatedUnion('type', [
   HostConnectMessage,
   JoinMessage,
   StartGameMessage,
   ActionMessage,
   PingMessage,
+  PongMessage,
 ])
 
 // --- Bidirectional Type Assertion ---

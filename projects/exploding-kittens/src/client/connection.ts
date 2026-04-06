@@ -58,6 +58,12 @@ export function connect(roomCode: string, host: string): void {
       return
     }
 
+    // Respond to server heartbeat immediately
+    if (msg.type === 'ping') {
+      socket?.send(JSON.stringify({ type: 'pong', payload: {} }))
+      return
+    }
+
     for (const handler of messageHandlers) {
       handler(msg)
     }

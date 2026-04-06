@@ -859,6 +859,12 @@ function handleNope(
   ctx: DispatchContext,
 ): DispatchResult {
   if (!state.nopeWindow) return err(state, 'No active Nope window', 'NOPE_NOT_ACTIVE')
+
+  // Self-Nope disallowed — cannot Nope your own action
+  if (state.nopeWindow.chainDepth === 0 && action.playerId === state.nopeWindow.originalPlayerId) {
+    return err(state, 'Cannot Nope your own action', 'INVALID_ACTION')
+  }
+
   if (state.nopeWindow.chainDepth >= MAX_NOPE_CHAIN) {
     return err(state, 'Maximum Nope chain depth reached', 'MAX_CHAIN_DEPTH')
   }

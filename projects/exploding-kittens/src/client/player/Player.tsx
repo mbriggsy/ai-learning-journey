@@ -24,9 +24,8 @@ import { FuturePeek } from './sheets/FuturePeek'
 import { FavorResponse } from './sheets/FavorResponse'
 import { NameCard } from './sheets/NameCard'
 import type { CardType } from '@shared/types'
+import { PARTYKIT_HOST } from '@client/shared/config'
 import '@client/shared/theme.css'
-
-const PARTYKIT_HOST = import.meta.env.VITE_PARTYKIT_HOST ?? 'localhost:1999'
 
 function getRoomCodeFromUrl(): string {
   const params = new URLSearchParams(window.location.search)

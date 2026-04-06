@@ -347,6 +347,21 @@ describe('Nope', () => {
     if (!result.ok) expect(result.code).toBe('NOPE_NOT_ACTIVE')
   })
 
+  it('rejects self-Nope on own action', () => {
+    let state = startGameWith(2)
+    state = giveCard(state, 'p1', 'skip', 'skip-self')
+    state = giveCard(state, 'p1', 'nope', 'nope-self')
+
+    const skipCard = findCard(state, 'p1', 'skip')!
+    let result = act(state, { type: 'play-card', playerId: 'p1', cardIds: [skipCard.id] })
+    const withWindow = (result as { ok: true; state: GameState }).state as PlayingState
+
+    // p1 tries to Nope own Skip — should fail
+    result = act(withWindow, { type: 'nope', playerId: 'p1' })
+    expect(result.ok).toBe(false)
+    if (!result.ok) expect(result.code).toBe('INVALID_ACTION')
+  })
+
   it('increments chain depth on valid Nope', () => {
     let state = startGameWith(2)
     state = giveCard(state, 'p1', 'skip', 'skip-for-nope')

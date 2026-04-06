@@ -5,9 +5,8 @@ import { gameStore, useGameState } from '@client/shared/gameStore'
 import { Lobby } from './Lobby'
 import { GameTable } from './GameTable'
 import { GameOver } from '@client/shared/GameOver'
+import { PARTYKIT_HOST } from '@client/shared/config'
 import '@client/shared/theme.css'
-
-const PARTYKIT_HOST = import.meta.env.VITE_PARTYKIT_HOST ?? 'localhost:1999'
 
 function generateRoomCode(): string {
   const chars = 'ABCDEFGHJKLMNPQRSTUVWXYZ23456789'

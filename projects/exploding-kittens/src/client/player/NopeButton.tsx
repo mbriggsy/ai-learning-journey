@@ -1,3 +1,4 @@
+import { useState, useEffect } from 'react'
 import { createPortal } from 'react-dom'
 import { m, AnimatePresence } from 'motion/react'
 import { useNopeWindow } from '@client/shared/hooks/useSharedSelectors'
@@ -19,6 +20,19 @@ export function NopeButton() {
   const isAlive = myPlayer?.isAlive ?? false
   const show = !!nopeWindow && isAlive
 
+  // Countdown seconds remaining
+  const [secondsLeft, setSecondsLeft] = useState(0)
+  useEffect(() => {
+    if (!nopeWindow) { setSecondsLeft(0); return }
+    const update = () => {
+      const remaining = Math.max(0, Math.ceil((nopeWindow.deadlineMs - Date.now()) / 1000))
+      setSecondsLeft(remaining)
+    }
+    update()
+    const timer = setInterval(update, 250)
+    return () => clearInterval(timer)
+  }, [nopeWindow?.deadlineMs, nopeWindow?.generation])
+
   if (!nopeRoot) return null
 
   return createPortal(
@@ -37,7 +51,7 @@ export function NopeButton() {
           exit={{ scale: 0, opacity: 0 }}
           transition={MOTION.SNAPPY}
         >
-          NOPE
+          NOPE{secondsLeft > 0 ? ` ${secondsLeft}s` : ''}
         </m.button>
       )}
     </AnimatePresence>,

@@ -41,6 +41,7 @@ export function projectForBoard(state: PlayingState | GameOverState, now: number
           deadlineMs: state.nopeWindow.deadlineMs,
           chainDepth: state.nopeWindow.chainDepth,
           startedAtMs: state.nopeWindow.startedAtMs,
+          generation: state.nopeWindow.generation,
         }
       : null,
     pendingPrompt: stripPrivatePromptFields(state.pendingPrompt),

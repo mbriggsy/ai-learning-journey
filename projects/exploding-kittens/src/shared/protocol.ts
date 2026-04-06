@@ -68,6 +68,7 @@ export interface NopeWindowView {
   readonly deadlineMs: number
   readonly chainDepth: number
   readonly startedAtMs: number
+  readonly generation: number
 }
 
 // --- Pending Prompt View (projected from server's PendingPrompt) ---

@@ -15,6 +15,7 @@ export class ParticlePool {
   readonly active = new Uint8Array(MAX_PARTICLES)    // 0 or 1
 
   private nextFree = 0
+  private _activeCount = 0
 
   get maxParticles(): number {
     return MAX_PARTICLES
@@ -22,11 +23,11 @@ export class ParticlePool {
 
   /** Acquire a particle slot. Returns index or -1 if pool exhausted. */
   acquire(): number {
-    // Start from hint, linear scan
     for (let i = 0; i < MAX_PARTICLES; i++) {
       const idx = (this.nextFree + i) % MAX_PARTICLES
       if (this.active[idx] === 0) {
         this.active[idx] = 1
+        this._activeCount++
         this.nextFree = (idx + 1) % MAX_PARTICLES
         return idx
       }
@@ -36,21 +37,21 @@ export class ParticlePool {
 
   /** Release a particle back to the pool. */
   release(idx: number): void {
-    this.active[idx] = 0
+    if (this.active[idx] === 1) {
+      this.active[idx] = 0
+      this._activeCount--
+    }
   }
 
-  /** Count active particles. */
+  /** Count active particles. O(1). */
   activeCount(): number {
-    let count = 0
-    for (let i = 0; i < MAX_PARTICLES; i++) {
-      if (this.active[i] === 1) count++
-    }
-    return count
+    return this._activeCount
   }
 
   /** Clear all particles. */
   clear(): void {
     this.active.fill(0)
+    this._activeCount = 0
     this.nextFree = 0
   }
 }

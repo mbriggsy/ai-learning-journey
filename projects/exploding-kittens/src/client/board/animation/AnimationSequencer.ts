@@ -107,7 +107,7 @@ export class AnimationSequencer {
         break
       case 'shuffle':
         this.callbacks.onShuffle()
-        await this.delay(700)
+        await this.delay(TIMING.SHUFFLE_MS)
         break
       case 'victory':
         this.callbacks.onVictory(trigger.winnerId)
@@ -122,7 +122,7 @@ export class AnimationSequencer {
         await this.delay(TIMING.CARD_DRAW_MS)
         break
       case 'favor-transfer':
-        await this.delay(600)
+        await this.delay(TIMING.FAVOR_TRANSFER_MS)
         break
     }
   }

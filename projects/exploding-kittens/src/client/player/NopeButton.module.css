@@ -23,3 +23,8 @@
   cursor: default;
   box-shadow: none;
 }
+
+.nopeFab:focus-visible {
+  outline: 2px solid var(--focus-ring, #33ffff);
+  outline-offset: 2px;
+}

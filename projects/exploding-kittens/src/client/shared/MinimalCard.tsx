@@ -16,7 +16,6 @@ export interface CardProps {
 export interface CardVisualProps {
   readonly isFaceDown?: boolean
   readonly layoutId?: string
-  readonly exitVariant?: 'discard' | 'steal' | 'fade'
 }
 
 export type PremiumCardProps = CardProps & CardVisualProps
@@ -52,6 +51,12 @@ export const MinimalCard = memo(function MinimalCard({
       role="button"
       tabIndex={disabled ? -1 : 0}
       onClick={disabled ? undefined : onClick}
+      onKeyDown={disabled ? undefined : (e) => {
+        if (onClick && (e.key === 'Enter' || e.key === ' ')) {
+          e.preventDefault()
+          onClick()
+        }
+      }}
       layoutId={layoutId}
     >
       <CardIcon type={type} />

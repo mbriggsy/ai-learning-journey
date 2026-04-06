@@ -44,8 +44,6 @@ export function useParticles(canvasRef: React.RefObject<HTMLCanvasElement | null
       lastTimeRef.current = now
 
       const dpr = Math.min(devicePixelRatio, 2)
-      const w = canvas.width / dpr
-      const h = canvas.height / dpr
 
       ctx.clearRect(0, 0, canvas.width, canvas.height)
       ctx.save()
@@ -59,6 +57,7 @@ export function useParticles(canvasRef: React.RefObject<HTMLCanvasElement | null
         anyActive = true
 
         // Update velocity — gravity + optional spring attraction
+        // TypedArray access requires ! with noUncheckedIndexedAccess (always defined at runtime)
         pool.vy[i]! += 60 * dt // gravity
 
         if (reverseTargetRef.current) {
@@ -164,12 +163,13 @@ export function useParticles(canvasRef: React.RefObject<HTMLCanvasElement | null
 
   const intensify = useCallback(() => {
     intensifyRef.current = true
-    // Spawn extra particles at current active positions
     const pool = poolRef.current
-    for (let i = 0; i < pool.maxParticles && pool.activeCount() < 280; i++) {
+    let active = pool.activeCount()
+    for (let i = 0; i < pool.maxParticles && active < 280; i++) {
       if (pool.active[i] === 0) continue
       const idx = pool.acquire()
       if (idx === -1) break
+      active++
       pool.x[idx] = pool.x[i]! + (Math.random() - 0.5) * 20
       pool.y[idx] = pool.y[i]! + (Math.random() - 0.5) * 20
       pool.vx[idx] = (Math.random() - 0.5) * 300
@@ -185,6 +185,10 @@ export function useParticles(canvasRef: React.RefObject<HTMLCanvasElement | null
     poolRef.current.clear()
     reverseTargetRef.current = null
     intensifyRef.current = false
+    if (rafRef.current !== 0) {
+      cancelAnimationFrame(rafRef.current)
+      rafRef.current = 0
+    }
   }, [])
 
   return { explode, reverse, intensify, clear }

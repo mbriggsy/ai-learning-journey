@@ -33,9 +33,10 @@ export function FuturePeek({ cards, canRearrange, onDismiss, onRearrange }: Futu
   const [countdown, setCountdown] = useState(
     canRearrange ? 0 : Math.ceil(TIMING.SEE_FUTURE_AUTO_CLOSE_MS / 1000)
   )
+  const isCountingDown = !canRearrange && countdown > 0
 
   useEffect(() => {
-    if (canRearrange || countdown <= 0) return
+    if (!isCountingDown) return
     const timer = setInterval(() => {
       setCountdown(prev => {
         if (prev <= 1) {
@@ -46,7 +47,7 @@ export function FuturePeek({ cards, canRearrange, onDismiss, onRearrange }: Futu
       })
     }, 1000)
     return () => clearInterval(timer)
-  }, [canRearrange, countdown > 0]) // eslint-disable-line react-hooks/exhaustive-deps
+  }, [isCountingDown, onDismiss])
 
   const tappedSet = new Set(tapOrder)
 

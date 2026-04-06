@@ -16,14 +16,6 @@
   font-style: normal;
 }
 
-@font-face {
-  font-family: 'JetBrains Mono';
-  src: url('/fonts/JetBrainsMono-Variable.woff2') format('woff2');
-  font-weight: 400 700;
-  font-display: swap;
-  font-style: normal;
-}
-
 /* Size-adjusted fallbacks for minimal CLS during swap */
 @font-face {
   font-family: 'Clash Display Fallback';

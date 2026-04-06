@@ -37,6 +37,11 @@
   background: rgba(255, 255, 255, 0.1);
 }
 
+.optionBtn:focus-visible {
+  outline: 2px solid var(--focus-ring, #33ffff);
+  outline-offset: 2px;
+}
+
 .dot {
   width: 10px;
   height: 10px;

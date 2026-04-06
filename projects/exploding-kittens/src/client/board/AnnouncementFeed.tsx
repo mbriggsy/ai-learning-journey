@@ -1,6 +1,8 @@
+import { useRef, useEffect } from 'react'
 import { m, AnimatePresence } from 'motion/react'
 import { useEventFeed } from '@client/shared/hooks/useEventFeed'
 import { usePlayerList } from '@client/shared/hooks/useSharedSelectors'
+import { announce } from '@client/shared/announce'
 import { playerName } from './playerName'
 import type { GameEvent } from '@shared/types'
 import type { BoardPlayer } from '@shared/protocol'
@@ -33,12 +35,31 @@ function formatEvent(event: GameEvent, players: readonly BoardPlayer[]): string 
     }
     case 'turn-started': return `${playerName(players, event.playerId)}'s turn (${event.turnsRemaining} remaining)`
     case 'game-over': return `${playerName(players, event.winnerId)} wins!`
+    default: {
+      const _exhaustive: never = event
+      return _exhaustive
+    }
   }
 }
 
 export function AnnouncementFeed() {
   const events = useEventFeed()
   const players = usePlayerList()
+
+  // Screen reader announcements for new events
+  const lastAnnouncedRef = useRef(0)
+  useEffect(() => {
+    if (events.length <= lastAnnouncedRef.current) return
+    const newEvents = events.slice(lastAnnouncedRef.current)
+    lastAnnouncedRef.current = events.length
+    for (const entry of newEvents) {
+      const text = formatEvent(entry.event, players)
+      if (!text) continue
+      const isUrgent = entry.event.type === 'exploding-kitten-drawn' ||
+        entry.event.type === 'player-eliminated' || entry.event.type === 'game-over'
+      announce(text, isUrgent ? 'assertive' : 'polite')
+    }
+  }, [events, players])
 
   // Show latest 3 announcements
   const recent = events.slice(-3)

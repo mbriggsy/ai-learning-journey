@@ -40,28 +40,28 @@ export type ServerMessage =
 // --- Lobby View ---
 
 export interface LobbyView {
-  phase: 'lobby'
-  roomCode: string
-  players: { id: string; name: string; color: string; isConnected: boolean }[]
+  readonly phase: 'lobby'
+  readonly roomCode: string
+  readonly players: readonly { readonly id: string; readonly name: string; readonly color: string; readonly isConnected: boolean }[]
 }
 
 // --- Board Player ---
 
 export interface BoardPlayer {
-  id: string
-  name: string
-  color: string
-  cardCount: number
-  isAlive: boolean
+  readonly id: string
+  readonly name: string
+  readonly color: string
+  readonly cardCount: number
+  readonly isAlive: boolean
 }
 
 // --- Nope Window View ---
 
 export interface NopeWindowView {
-  remainingMs: number
-  deadlineMs: number
-  chainDepth: number
-  startedAtMs: number
+  readonly remainingMs: number
+  readonly deadlineMs: number
+  readonly chainDepth: number
+  readonly startedAtMs: number
 }
 
 // --- Pending Prompt View (projected from server's PendingPrompt) ---
@@ -73,27 +73,27 @@ export type PendingPromptView = PendingPrompt
 export type BoardView = PlayingBoardView | GameOverBoardView
 
 export interface PlayingBoardView {
-  phase: 'playing'
-  subPhase: SubPhase
-  players: BoardPlayer[]
-  drawPileCount: number
-  discardPile: readonly CardInstance[]
-  currentTurn: { currentPlayerId: string; turnsRemaining: number }
-  nopeWindow: NopeWindowView | null
-  pendingPrompt: PendingPromptView | null
-  events: GameEvent[]
-  stateVersion: number
+  readonly phase: 'playing'
+  readonly subPhase: SubPhase
+  readonly players: readonly BoardPlayer[]
+  readonly drawPileCount: number
+  readonly discardPile: readonly CardInstance[]
+  readonly currentTurn: { readonly currentPlayerId: string; readonly turnsRemaining: number }
+  readonly nopeWindow: NopeWindowView | null
+  readonly pendingPrompt: PendingPromptView | null
+  readonly events: readonly GameEvent[]
+  readonly stateVersion: number
 }
 
 export interface GameOverBoardView {
-  phase: 'game_over'
-  players: BoardPlayer[]
-  drawPileCount: number
-  discardPile: readonly CardInstance[]
-  winnerId: string
-  eliminationOrder: readonly string[]
-  events: GameEvent[]
-  stateVersion: number
+  readonly phase: 'game_over'
+  readonly players: readonly BoardPlayer[]
+  readonly drawPileCount: number
+  readonly discardPile: readonly CardInstance[]
+  readonly winnerId: string
+  readonly eliminationOrder: readonly string[]
+  readonly events: readonly GameEvent[]
+  readonly stateVersion: number
 }
 
 // --- Player View (discriminated union) ---

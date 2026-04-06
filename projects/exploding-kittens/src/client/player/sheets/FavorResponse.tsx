@@ -27,9 +27,9 @@ export function FavorResponse({ requesterName, hand, onGiveCard }: FavorResponse
       <div className={styles.sheetSubtitle}>Tap a card to give away</div>
       <div className={styles.optionList}>
         {eligible.map(card => (
-          <div key={card.id} onClick={() => onGiveCard(card.id)} style={{ cursor: 'pointer' }}>
+          <button key={card.id} onClick={() => onGiveCard(card.id)} className={styles.optionBtn}>
             <MinimalCard type={card.type} />
-          </div>
+          </button>
         ))}
       </div>
     </div>

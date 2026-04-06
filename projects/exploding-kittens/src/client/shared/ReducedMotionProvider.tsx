@@ -16,7 +16,7 @@ const STORAGE_KEY = 'ek-reduced-motion'
 
 /**
  * Combines OS prefers-reduced-motion with an in-game toggle (localStorage).
- * Canvas particle system reads this externally via getReducedMotion().
+ * Components consume via useReducedMotionPreference() hook.
  */
 export function ReducedMotionProvider({ children }: PropsWithChildren) {
   const osPrefers = useReducedMotion() ?? false

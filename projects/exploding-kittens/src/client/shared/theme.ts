@@ -29,7 +29,7 @@ const PRIMITIVES = {
 // TIER 2: SEMANTIC — role-based, what components reference
 // ---------------------------------------------------------------------------
 
-export const SEMANTIC = {
+const SEMANTIC = {
   bgApp: PRIMITIVES.black,
   bgCard: PRIMITIVES.surface1,
   bgElevated: PRIMITIVES.surface2,
@@ -76,7 +76,7 @@ export function cardAccent(type: CardType): { fill: string; glow: string } {
 // applyTheme() — called once per entry point, sets CSS custom properties
 // ---------------------------------------------------------------------------
 
-const CSS_PROPERTY_MAP: Record<string, string> = {
+const CSS_PROPERTY_MAP = {
   // New semantic names
   '--bg-app': SEMANTIC.bgApp,
   '--bg-card': SEMANTIC.bgCard,
@@ -108,7 +108,7 @@ const CSS_PROPERTY_MAP: Record<string, string> = {
   '--amber-glow': PRIMITIVES.amberGlow,
   '--slate': PRIMITIVES.slate,
   '--slate-glow': PRIMITIVES.slateGlow,
-}
+} as const satisfies Record<string, string>
 
 export function applyTheme(): void {
   const root = document.documentElement.style

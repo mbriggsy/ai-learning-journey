@@ -14,18 +14,8 @@ const PRESETS = {
 
 type HapticPreset = keyof typeof PRESETS
 
-let enabled = true
-
-export function setHapticsEnabled(value: boolean): void {
-  enabled = value
-}
-
-export function getHapticsEnabled(): boolean {
-  return enabled
-}
-
 export function haptic(preset: HapticPreset): void {
-  if (supported && enabled) {
+  if (supported) {
     navigator.vibrate(PRESETS[preset])
   }
 }

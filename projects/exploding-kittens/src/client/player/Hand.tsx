@@ -16,14 +16,14 @@ export function Hand({ hand, selectedIds, disabled, onCardClick }: HandProps) {
   // Deal guard: disable layout="position" during initial stagger.
   // After deal completes, enable so reorder/removal animates correctly.
   const [dealComplete, setDealComplete] = useState(false)
+  const hasCards = hand.length > 0
 
   useEffect(() => {
-    if (hand.length > 0 && !dealComplete) {
-      // Deal stagger finishes after all cards have entered
+    if (hasCards && !dealComplete) {
       const timer = setTimeout(() => setDealComplete(true), hand.length * 100 + 400)
       return () => clearTimeout(timer)
     }
-  }, [hand.length > 0]) // eslint-disable-line react-hooks/exhaustive-deps
+  }, [hasCards, dealComplete, hand.length])
 
   return (
     <>

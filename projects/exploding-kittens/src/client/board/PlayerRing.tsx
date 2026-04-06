@@ -24,7 +24,10 @@ export const PlayerRing = memo(function PlayerRing({
     const ro = new ResizeObserver(([entry]) => {
       if (!entry) return
       const { width, height } = entry.contentRect
-      setDimensions({ w: width, h: height })
+      setDimensions(prev => {
+        if (Math.abs(prev.w - width) < 2 && Math.abs(prev.h - height) < 2) return prev
+        return { w: width, h: height }
+      })
     })
     ro.observe(el)
     return () => ro.disconnect()

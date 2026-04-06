@@ -58,16 +58,34 @@ export function projectForPlayer(
   const player = state.players.find(p => p.id === playerId)
 
   if (board.phase === 'game_over') {
+    const b = board as GameOverBoardView
     const view: GameOverPlayerView = {
-      ...board,
+      phase: b.phase,
+      players: b.players,
+      drawPileCount: b.drawPileCount,
+      discardPile: b.discardPile,
+      winnerId: b.winnerId,
+      eliminationOrder: b.eliminationOrder,
+      events: b.events,
+      stateVersion: b.stateVersion,
       myPlayerId: playerId,
       myHand: player?.hand ?? [],
     }
     return view
   }
 
+  const b = board as PlayingBoardView
   const view: PlayingPlayerView = {
-    ...board,
+    phase: b.phase,
+    subPhase: b.subPhase,
+    players: b.players,
+    drawPileCount: b.drawPileCount,
+    discardPile: b.discardPile,
+    currentTurn: b.currentTurn,
+    nopeWindow: b.nopeWindow,
+    pendingPrompt: b.pendingPrompt,
+    events: b.events,
+    stateVersion: b.stateVersion,
     myPlayerId: playerId,
     myHand: player?.hand ?? [],
     isMyTurn: state.phase === 'playing' && state.currentTurn.currentPlayerId === playerId,

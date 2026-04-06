@@ -5,9 +5,9 @@
   justify-content: center;
   min-height: 100svh;
   padding: 2rem;
-  background: var(--bg, #1a1a2e);
-  color: var(--text, #eee);
-  font-family: system-ui, -apple-system, sans-serif;
+  background: var(--bg-app, #0c0a12);
+  color: var(--text-primary, #e8e8f0);
+  font-family: var(--font-body, system-ui, sans-serif);
 }
 
 .title {

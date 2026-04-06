@@ -1,5 +1,5 @@
 import { describe, it, expect, beforeEach } from 'vitest'
-import { createLobbyState, dispatch, _resetNopeGeneration } from './engine'
+import { createLobbyState, dispatch } from './engine'
 import type { DispatchContext, PlayingState, GameState } from './types'
 import type { EngineAction } from '@shared/actions'
 
@@ -49,9 +49,7 @@ function giveCard(state: PlayingState, playerId: string, cardType: string, cardI
   } as PlayingState
 }
 
-beforeEach(() => {
-  _resetNopeGeneration()
-})
+// nextNopeGeneration is now on PlayingState — no reset needed
 
 // --- Nope Window Generation ---
 

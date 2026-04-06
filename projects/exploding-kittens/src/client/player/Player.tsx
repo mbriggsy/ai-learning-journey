@@ -118,6 +118,7 @@ export function Player() {
         onJoin={handleJoin}
         roomCode={roomCode}
       />
+      <ErrorToast />
       <ConnectionOverlay status={connectionStatus} />
     </>
   )
@@ -190,9 +191,18 @@ function PlayingView() {
   // Local target select for pre-send actions (Favor, Targeted Attack)
   const [localTargetMode, setLocalTargetMode] = useState<{ cardIds: string[]; reason: 'targeted-attack' | 'favor' } | null>(null)
 
-  // Bottom sheet derivation
+  // Track dismissed See the Future peek (prevents sheet loop)
+  const [futureDismissed, setFutureDismissed] = useState(false)
+
+  // Reset dismissed flag when futureCards changes (new peek)
+  const futureCards = privateData.futureCards
+  useEffect(() => {
+    if (futureCards && futureCards.length > 0) setFutureDismissed(false)
+  }, [futureCards])
+
+  // Bottom sheet derivation — pass undefined if dismissed
   const activeSheet = deriveActiveBottomSheet(
-    pendingPrompt, myPlayerId, players, hand, drawPileCount, privateData.futureCards,
+    pendingPrompt, myPlayerId, players, hand, drawPileCount, futureDismissed ? undefined : futureCards,
   )
 
   // Reset localTargetMode when server state changes underneath
@@ -344,7 +354,7 @@ function PlayingView() {
           <FuturePeek
             cards={activeSheet.cards}
             canRearrange={activeSheet.canRearrange}
-            onDismiss={() => { /* sheet auto-closes when futureCards clears */ }}
+            onDismiss={() => setFutureDismissed(true)}
             onRearrange={handleFutureRearrange}
           />
         )}
@@ -369,7 +379,6 @@ function PlayingView() {
       </BottomSheet>
 
       <NopeButton />
-      <ErrorToast />
     </div>
   )
 }

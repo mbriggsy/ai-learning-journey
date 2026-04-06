@@ -79,7 +79,7 @@ export class GameRoom extends Server {
   // --- Timers ---
   private nopeTimeout: ReturnType<typeof setTimeout> | null = null
   private nopeGraceTimeout: ReturnType<typeof setTimeout> | null = null
-  private nopeWindowGeneration = 0
+  private lastScheduledNopeGeneration = -1
   private promptTimeout: ReturnType<typeof setTimeout> | null = null
   private disconnectTimers = new Map<string, ReturnType<typeof setTimeout>>() // playerId → debounce timer
   private heartbeatIntervals = new Map<string, ReturnType<typeof setInterval>>() // connectionId → interval
@@ -98,7 +98,6 @@ export class GameRoom extends Server {
       this.playerNames = new Map(await this.ctx.storage.get<[string, string][]>('playerNames') ?? [])
       this.playerColors = new Map(await this.ctx.storage.get<[string, string][]>('playerColors') ?? [])
       this.lastActionTime = await this.ctx.storage.get<number>('lastActionTime') ?? Date.now()
-      this.nopeWindowGeneration = await this.ctx.storage.get<number>('nopeWindowGeneration') ?? 0
     } catch (err: unknown) {
       console.error('Failed to restore room state, resetting:', err)
       this.gameState = null
@@ -112,15 +111,25 @@ export class GameRoom extends Server {
     if (this.gameState?.phase === 'playing') {
       const playing = this.gameState as PlayingState
       if (playing.nopeWindow) {
-        const remaining = playing.nopeWindow.deadlineMs - Date.now()
-        if (remaining <= 0) {
+        if (playing.nopeWindow.expired) {
+          // Window was in grace state when hibernated — resolve immediately
           this.enqueue(() => this.dispatchServerAction({
-            type: 'nope-window-expired',
+            type: 'nope-grace-expired',
             windowGeneration: playing.nopeWindow!.generation,
             playerId: '_server',
-          }))
+          } as EngineAction))
         } else {
-          this.scheduleNopeExpiry(playing.nopeWindow.generation, remaining)
+          const remaining = playing.nopeWindow.deadlineMs - Date.now()
+          if (remaining <= 0) {
+            this.enqueue(() => this.dispatchServerAction({
+              type: 'nope-window-expired',
+              windowGeneration: playing.nopeWindow!.generation,
+              playerId: '_server',
+            } as EngineAction))
+          } else {
+            this.lastScheduledNopeGeneration = playing.nopeWindow.generation
+            this.scheduleNopeExpiry(playing.nopeWindow.generation, remaining)
+          }
         }
       }
 
@@ -550,9 +559,9 @@ export class GameRoom extends Server {
     }
 
     const playing = result.state as PlayingState
-    if (playing.nopeWindow && playing.nopeWindow.generation > this.nopeWindowGeneration) {
+    if (playing.nopeWindow && playing.nopeWindow.generation !== this.lastScheduledNopeGeneration) {
       this.clearNopeTimer()
-      this.nopeWindowGeneration = playing.nopeWindow.generation
+      this.lastScheduledNopeGeneration = playing.nopeWindow.generation
       this.scheduleNopeExpiry(playing.nopeWindow.generation, playing.nopeWindow.deadlineMs - Date.now())
     } else if (!playing.nopeWindow) {
       this.clearNopeTimer()
@@ -797,7 +806,6 @@ export class GameRoom extends Server {
         playerNames: [...this.playerNames],
         playerColors: [...this.playerColors],
         lastActionTime: this.lastActionTime,
-        nopeWindowGeneration: this.nopeWindowGeneration,
       })
     } catch (err: unknown) {
       console.error('Failed to persist game state:', err)

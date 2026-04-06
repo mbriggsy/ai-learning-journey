@@ -28,6 +28,7 @@ export interface PlayingState {
   readonly pendingNameCard?: { readonly stealerId: string; readonly targetId: string }
   readonly pendingDefuse?: { readonly playerId: string }
   readonly pendingPrompt: PendingPrompt | null
+  readonly nextNopeGeneration: number
 }
 
 export interface GameOverState {

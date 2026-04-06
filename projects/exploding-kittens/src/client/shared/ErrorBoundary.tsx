@@ -32,6 +32,7 @@ export class ErrorBoundary extends Component<Props, State> {
       this.setState({ crashCount })
 
       if (this.props.autoRecover && crashCount < MAX_AUTO_RECOVER) {
+        if (this.autoRecoverTimer) clearTimeout(this.autoRecoverTimer)
         this.autoRecoverTimer = setTimeout(() => {
           this.autoRecoverTimer = null
           this.setState({ hasError: false })

@@ -202,6 +202,7 @@ function handleStartGame(
     stateVersion: lobby.stateVersion + 1,
     events,
     pendingPrompt: null,
+    nextNopeGeneration: 1,
   }
 
   return { ok: true, state, events }
@@ -296,14 +297,15 @@ function handleSingleCard(
   ]
 
   // All single-card plays open a nope window
-  const nopeWindow = createNopeWindow(
+  const { window: nopeWindow, nextGen } = createNopeWindow(
+    newState,
     { type: 'play-card', cardIds: action.cardIds, targetPlayerId: action.targetPlayerId },
     action.playerId,
     state.players.filter(p => p.isAlive).length,
     ctx,
     card.type,
   )
-  const withNope: PlayingState = { ...newState, nopeWindow, events: [...newState.events, ...events] }
+  const withNope: PlayingState = { ...newState, nopeWindow, nextNopeGeneration: nextGen, events: [...newState.events, ...events] }
   return ok(withNope)
 }
 
@@ -475,8 +477,9 @@ function applyFavor(
   const target = state.players.find(p => p.id === targetPlayerId && p.isAlive)
   if (!target) return err(state, 'Invalid target player', 'INVALID_TARGET')
 
-  // Empty-handed target: resolve with no transfer
-  if (target.hand.length === 0) {
+  // Empty-handed or EK-only target: resolve with no transfer
+  const giveableCards = target.hand.filter(c => c.type !== 'exploding-kitten')
+  if (giveableCards.length === 0) {
     const newState: PlayingState = {
       ...state,
       nopeWindow: null,
@@ -521,7 +524,8 @@ function handleTwoOfAKind(
   ]
 
   // Open nope window
-  const nopeWindow = createNopeWindow(
+  const { window: nopeWindow, nextGen } = createNopeWindow(
+    newState,
     { type: 'play-card', cardIds: action.cardIds },
     action.playerId,
     state.players.filter(p => p.isAlive).length,
@@ -532,6 +536,7 @@ function handleTwoOfAKind(
     ...newState,
     pendingSteal: { stealerId: action.playerId, comboSize: 2 },
     nopeWindow,
+    nextNopeGeneration: nextGen,
     events: [...newState.events, ...events],
   }
   return ok(withNope)
@@ -554,7 +559,8 @@ function handleThreeOfAKind(
     { type: 'card-played', playerId: action.playerId, cardType: cards[0]!.type, comboSize: 3 },
   ]
 
-  const nopeWindow = createNopeWindow(
+  const { window: nopeWindow, nextGen } = createNopeWindow(
+    newState,
     { type: 'play-card', cardIds: action.cardIds },
     action.playerId,
     state.players.filter(p => p.isAlive).length,
@@ -565,6 +571,7 @@ function handleThreeOfAKind(
     ...newState,
     pendingSteal: { stealerId: action.playerId, comboSize: 3 },
     nopeWindow,
+    nextNopeGeneration: nextGen,
     events: [...newState.events, ...events],
   }
   return ok(withNope)
@@ -914,10 +921,11 @@ function handleNope(
   ]
 
   // Reset timer with full duration + new generation (invalidates stale timers, clears grace)
+  const gen = state.nextNopeGeneration
   const newWindow: NopeWindow = {
     ...state.nopeWindow,
     chainDepth: newDepth,
-    generation: nextNopeGeneration++,
+    generation: gen,
     deadlineMs: ctx.now + getNopeWindowDuration(aliveCount),
     startedAtMs: ctx.now,
     expired: undefined,
@@ -927,6 +935,7 @@ function handleNope(
   const finalState: PlayingState = {
     ...newState,
     nopeWindow: newWindow,
+    nextNopeGeneration: gen + 1,
     events: [...newState.events, ...events],
   }
   return ok(finalState)
@@ -1226,27 +1235,27 @@ function performRandomSteal(
   return ok(finalState)
 }
 
-let nextNopeGeneration = 1
-
-/** Reset generation counter — test use only */
-export function _resetNopeGeneration(): void { nextNopeGeneration = 1 }
-
 function createNopeWindow(
+  state: PlayingState,
   pendingAction: GameAction,
   originalPlayerId: string,
   alivePlayerCount: number,
   ctx: DispatchContext,
   originalCardType?: CardType,
-): NopeWindow {
+): { window: NopeWindow; nextGen: number } {
+  const gen = state.nextNopeGeneration
   const duration = getNopeWindowDuration(alivePlayerCount)
   return {
-    pendingAction,
-    originalPlayerId,
-    originalCardType,
-    chainDepth: 0,
-    generation: nextNopeGeneration++,
-    deadlineMs: ctx.now + duration,
-    startedAtMs: ctx.now,
+    window: {
+      pendingAction,
+      originalPlayerId,
+      originalCardType,
+      chainDepth: 0,
+      generation: gen,
+      deadlineMs: ctx.now + duration,
+      startedAtMs: ctx.now,
+    },
+    nextGen: gen + 1,
   }
 }
 

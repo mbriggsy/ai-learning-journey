@@ -80,7 +80,24 @@ Three review plugins are installed. We use two — one daily, one for milestones
 Works with `git diff` — no PR needed. Six agents: code-reviewer, code-simplifier, comment-analyzer, pr-test-analyzer, silent-failure-hunter, type-design-analyzer. Aspect selection lets you run just what matters (`errors types`, `tests`, `all`, etc.).
 
 ### CE Review (milestone gates)
-Up to 15 agents + ultra-thinking phases (stakeholder analysis, scenario exploration, simplification). Configured via `compound-engineering.local.md` in project root — trimmed to TypeScript-relevant agents only:
+Up to 15 agents + ultra-thinking phases (stakeholder analysis, scenario exploration, simplification). Requires `compound-engineering.local.md` in the project root — without it, CE loads default agents (many Rails/DB-specific, irrelevant for us).
+
+The file already exists in the EK project root. If it's missing or needs recreating:
+
+```markdown
+---
+review_agents:
+  - compound-engineering:review:kieran-typescript-reviewer
+  - compound-engineering:review:security-sentinel
+  - compound-engineering:review:performance-oracle
+  - compound-engineering:review:architecture-strategist
+  - compound-engineering:review:code-simplicity-reviewer
+---
+
+Exploding Kittens Digital — TypeScript + React 19 + PartyKit (partyserver) + Vite 8. Jackbox-style: shared screen (TV board) + phone controllers via WebSocket. Card game engine is pure/synchronous. All server randomness uses crypto. Budget: <100KB gzipped phone JS.
+```
+
+What each agent does:
 - `kieran-typescript-reviewer` — TS-specific: no `any`, named imports, immutable patterns
 - `security-sentinel` — OWASP, input validation, auth
 - `performance-oracle` — Big O, N+1, memory, caching

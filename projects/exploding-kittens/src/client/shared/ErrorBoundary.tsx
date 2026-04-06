@@ -10,16 +10,17 @@ interface Props {
 interface State {
   hasError: boolean
   crashCount: number
+  errorMessage: string
 }
 
 const MAX_AUTO_RECOVER = 3
 
 export class ErrorBoundary extends Component<Props, State> {
-  override state: State = { hasError: false, crashCount: 0 }
+  override state: State = { hasError: false, crashCount: 0, errorMessage: '' }
   private autoRecoverTimer: ReturnType<typeof setTimeout> | null = null
 
-  static getDerivedStateFromError(_error: Error): Partial<State> {
-    return { hasError: true }
+  static getDerivedStateFromError(error: Error): Partial<State> {
+    return { hasError: true, errorMessage: `${error.name}: ${error.message}` }
   }
 
   override componentDidCatch(error: Error, info: ErrorInfo): void {
@@ -73,6 +74,13 @@ export class ErrorBoundary extends Component<Props, State> {
           textAlign: 'center',
         }}>
           <p style={{ fontSize: 18, marginBottom: 16 }}>Something went wrong</p>
+          {import.meta.env.DEV && this.state.errorMessage && (
+            <pre style={{
+              fontSize: 12, marginBottom: 16, padding: 12, borderRadius: 8,
+              background: 'rgba(255,0,0,0.1)', color: '#ff6b6b', textAlign: 'left',
+              maxWidth: '90vw', overflow: 'auto', whiteSpace: 'pre-wrap', wordBreak: 'break-word',
+            }}>{this.state.errorMessage}</pre>
+          )}
           <button
             onClick={this.handleReset}
             style={{

@@ -125,9 +125,26 @@ const CSS_PROPERTY_MAP = {
   '--slate-glow': PRIMITIVES.slateGlow,
 } as const satisfies Record<string, string>
 
-export function applyTheme(): void {
+// Phone surfaces: lighter than board so they're visible in a lit room.
+// Board stays noir (TV in dim room). Phone needs to pop in ambient light.
+const PHONE_OVERRIDES: Record<string, string> = {
+  '--bg-app': '#1a1d30',       // warm navy, not void-black
+  '--bg-card': '#222540',
+  '--bg-elevated': '#2a2d4a',
+  '--bg-hover': '#333658',
+  '--border-subtle': '#3a3d5a',
+  '--bg-primary': '#1a1d30',
+  '--bg-surface': '#222540',
+}
+
+export function applyTheme(variant: 'board' | 'player' = 'board'): void {
   const root = document.documentElement.style
   for (const [prop, value] of Object.entries(CSS_PROPERTY_MAP)) {
     root.setProperty(prop, value)
+  }
+  if (variant === 'player') {
+    for (const [prop, value] of Object.entries(PHONE_OVERRIDES)) {
+      root.setProperty(prop, value)
+    }
   }
 }

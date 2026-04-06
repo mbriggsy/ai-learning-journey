@@ -34,7 +34,8 @@
 - **Dead exports, .gitkeep, readonly, CLAUDE.md** — all cleaned up.
 
 ## Next Steps (in order)
-1. Manual testing: real phones, WiFi toggle, screen lock/unlock (`pnpm dev:server` + `pnpm dev`)
+1. **BUG: Player crashes after playing a card** — "Maximum update depth exceeded" (infinite React re-render loop). Board processes the action correctly. Player client crashes in ErrorBoundary. Reproduce with Playwright + console capture to get the component stack trace. Pre-existing bug, not caused by wrangler migration.
+2. Manual testing: real phones, WiFi toggle, screen lock/unlock (`pnpm dev:server` + `pnpm dev`)
 2. Set up GitHub secrets (CLOUDFLARE_API_TOKEN, CLOUDFLARE_ACCOUNT_ID)
 3. First production deploy (wrangler deploy + Cloudflare Pages)
 4. Add `_headers` file for Cloudflare Pages (CSP, X-Frame-Options, X-Content-Type-Options)
@@ -63,3 +64,7 @@
 - Theme CSS vars renamed: `--green`→`--teal`, `--accent-nope`/`--accent-success` now point to teal (#2dd8c8). Any new CSS using old green vars will silently fall back.
 - Player colors changed from generic web colors to IBM CVD-safe palette — any hardcoded references to old colors (#e74c3c, #3498db, etc.) in Lobby/JoinScreen/ErrorBoundary are now mismatched. Cleanup needed.
 - Imagen 4 available via Gemini API for card art generation (Phase 5)
+- Player view uses lighter surfaces than board (`PHONE_OVERRIDES` in theme.ts) — phone needs visibility in ambient light
+- Origin check in onConnect allows any private network IP (192.168.x.x, 10.x.x.x, etc.) for local dev
+- `wrangler dev --ip 0.0.0.0 --port 8787` binds to all interfaces so phones on LAN can reach the server
+- Client derives PartyKit host from `window.location.hostname` in dev (no hardcoded localhost)

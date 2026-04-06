@@ -1,4 +1,4 @@
-import { LazyMotion } from 'framer-motion'
+import { LazyMotion } from 'motion/react'
 import type { PropsWithChildren } from 'react'
 
 const loadFeatures = () =>

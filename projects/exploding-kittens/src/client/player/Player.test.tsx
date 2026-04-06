@@ -5,7 +5,7 @@ import { createRoot } from 'react-dom/client'
 import { Player } from './Player'
 
 describe('Player', () => {
-  it('renders "Join"', () => {
+  it('shows no-room-code message without URL param', () => {
     const container = document.createElement('div')
     document.body.appendChild(container)
 
@@ -14,7 +14,8 @@ describe('Player', () => {
       root.render(<Player />)
     })
 
-    expect(container.textContent).toContain('Join')
+    // No ?room= in URL → shows instructions
+    expect(container.textContent).toContain('No room code')
 
     act(() => {
       root.unmount()

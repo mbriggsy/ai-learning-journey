@@ -1,0 +1,104 @@
+.container {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  min-height: 100dvh;
+  padding: 2rem;
+  background: var(--bg, #1a1a2e);
+  color: var(--text, #eee);
+  font-family: system-ui, -apple-system, sans-serif;
+}
+
+.title {
+  font-size: 2.5rem;
+  margin-bottom: 2rem;
+  letter-spacing: -0.02em;
+}
+
+.status {
+  font-size: 1.2rem;
+  opacity: 0.7;
+}
+
+.qrSection {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 0.5rem;
+  margin-bottom: 2rem;
+}
+
+.roomCode {
+  font-size: 2rem;
+  font-weight: 700;
+  letter-spacing: 0.2em;
+  font-variant-numeric: tabular-nums;
+}
+
+.hint {
+  font-size: 0.9rem;
+  opacity: 0.5;
+}
+
+.playerList {
+  width: 100%;
+  max-width: 400px;
+  display: flex;
+  flex-direction: column;
+  gap: 0.5rem;
+  margin-bottom: 2rem;
+}
+
+.player {
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
+  padding: 0.5rem 1rem;
+  background: rgba(255, 255, 255, 0.05);
+  border-radius: 0.5rem;
+}
+
+.dot {
+  width: 12px;
+  height: 12px;
+  border-radius: 50%;
+  flex-shrink: 0;
+}
+
+.playerName {
+  font-size: 1.1rem;
+  font-weight: 500;
+}
+
+.disconnected {
+  font-size: 0.8rem;
+  opacity: 0.4;
+  margin-left: auto;
+}
+
+.waiting {
+  text-align: center;
+  opacity: 0.5;
+}
+
+.startButton {
+  padding: 0.75rem 2.5rem;
+  font-size: 1.1rem;
+  font-weight: 600;
+  border: none;
+  border-radius: 0.5rem;
+  background: #e74c3c;
+  color: #fff;
+  cursor: pointer;
+  transition: opacity 0.15s;
+}
+
+.startButton:hover:not(:disabled) {
+  opacity: 0.9;
+}
+
+.startButton:disabled {
+  opacity: 0.4;
+  cursor: not-allowed;
+}

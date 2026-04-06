@@ -1,4 +1,4 @@
-import type { CardInstance, SubPhase, GameEvent, CardType } from '@shared/types'
+import type { CardInstance, SubPhase, GameEvent, CardType, PendingPrompt } from '@shared/types'
 import type { ActionType, EngineAction, GameAction } from '@shared/actions'
 import { CARD_DEFS, CARD_DEF_BY_TYPE } from '@shared/card-defs'
 import type { CardCategory } from '@shared/card-defs'
@@ -31,6 +31,7 @@ const CLEAR_PENDING = {
   pendingSteal: undefined,
   pendingNameCard: undefined,
   pendingDefuse: undefined,
+  pendingPrompt: null as PendingPrompt | null,
 } as const
 
 // --- Public API ---
@@ -56,19 +57,27 @@ export function dispatch(
   if (base.phase !== 'playing') return err(base, 'Game is not in playing phase', 'INVALID_PHASE')
   const playing = base as PlayingState
 
-  // Player existence check
+  // Player existence check (server-only actions exempt)
   const actor = playing.players.find(p => p.id === action.playerId)
-  if (!actor && action.type !== 'nope-window-expired') {
+  if (!actor && action.type !== 'nope-window-expired' && action.type !== 'prompt-timeout') {
     return err(playing, 'Player not found', 'INVALID_ACTION')
   }
 
-  // nope-window-expired is server-only — validate timing
+  // nope-window-expired is server-only — validate timing + generation
   if (action.type === 'nope-window-expired') {
     if (!playing.nopeWindow) return err(playing, 'No active Nope window', 'NOPE_NOT_ACTIVE')
+    if (action.windowGeneration !== playing.nopeWindow.generation) {
+      return err(playing, 'Stale Nope window generation', 'NOPE_NOT_ACTIVE')
+    }
     if (ctx.now < playing.nopeWindow.deadlineMs) {
       return err(playing, 'Nope window has not expired yet', 'INVALID_ACTION')
     }
     return handleNopeWindowExpired(playing, action, ctx)
+  }
+
+  // prompt-timeout is server-only — auto-resolve pending sub-phases
+  if (action.type === 'prompt-timeout') {
+    return handlePromptTimeout(playing, action, ctx)
   }
 
   // Dead players cannot act
@@ -171,6 +180,7 @@ function handleStartGame(
     nopeWindow: null,
     stateVersion: lobby.stateVersion + 1,
     events,
+    pendingPrompt: null,
   }
 
   return { ok: true, state, events }
@@ -392,10 +402,12 @@ function applyAlterTheFuture(
   events: GameEvent[],
 ): DispatchResult {
   const topCards = state.drawPile.slice(0, 3)
+  const cardIds = topCards.map(c => c.id)
   const newState: PlayingState = {
     ...state,
     subPhase: 'future-rearrange-pending',
-    pendingFuture: { playerId: action.playerId, cardIds: topCards.map(c => c.id) },
+    pendingFuture: { playerId: action.playerId, cardIds },
+    pendingPrompt: { type: 'future-rearrange', playerId: action.playerId, cardIds },
     nopeWindow: null,
     events: [...state.events, ...events],
   }
@@ -459,6 +471,7 @@ function applyFavor(
     ...state,
     subPhase: 'favor-pending',
     pendingFavor: { requesterId: action.playerId, targetId: targetPlayerId },
+    pendingPrompt: { type: 'favor-response', playerId: targetPlayerId, requesterId: action.playerId },
     nopeWindow: null,
     events: [...state.events, ...events,
       { type: 'favor-requested', requesterId: action.playerId, targetId: targetPlayerId },
@@ -608,6 +621,7 @@ function performDraw(
         ...newState,
         subPhase: 'defuse-pending',
         pendingDefuse: { playerId },
+        pendingPrompt: { type: 'defuse', playerId },
         nopeWindow: null,
         events: [...newState.events, ...events, { type: 'defuse-played', playerId }],
       }
@@ -797,6 +811,7 @@ function handleSelectTarget(
     subPhase: 'name-card-pending',
     pendingSteal: undefined,
     pendingNameCard: { stealerId: pending.stealerId, targetId: targetPlayerId },
+    pendingPrompt: { type: 'name-card', playerId: pending.stealerId, targetId: targetPlayerId },
     events: state.events,
   }
   return ok(newState)
@@ -866,10 +881,11 @@ function handleNope(
     { type: 'nope-played', playerId: action.playerId, chainDepth: newDepth },
   ]
 
-  // Reset timer with full duration
+  // Reset timer with full duration + new generation (invalidates stale timers)
   const newWindow: NopeWindow = {
     ...state.nopeWindow,
     chainDepth: newDepth,
+    generation: nextNopeGeneration++,
     deadlineMs: ctx.now + getNopeWindowDuration(aliveCount),
     startedAtMs: ctx.now,
   }
@@ -917,6 +933,7 @@ function handleNopeWindowExpired(
       const stealState: PlayingState = {
         ...newState,
         subPhase: 'steal-target-pending',
+        pendingPrompt: { type: 'steal-target', playerId: state.pendingSteal.stealerId },
       }
       return ok(stealState)
     }
@@ -934,6 +951,77 @@ function handleNopeWindowExpired(
   }
 
   return ok(newState)
+}
+
+function handlePromptTimeout(
+  state: PlayingState,
+  action: EngineAction & { type: 'prompt-timeout' },
+  ctx: DispatchContext,
+): DispatchResult {
+  // Verify subPhase matches what timed out
+  if (state.subPhase !== action.subPhase) {
+    return err(state, 'SubPhase mismatch — timeout is stale', 'INVALID_ACTION')
+  }
+
+  switch (action.subPhase) {
+    case 'favor-pending': {
+      // Resolve with no transfer — target didn't respond
+      const newState: PlayingState = {
+        ...state,
+        ...CLEAR_PENDING,
+        subPhase: 'turn-active',
+        events: [...state.events],
+      }
+      return ok(newState)
+    }
+
+    case 'future-rearrange-pending': {
+      // Keep original order — player didn't rearrange
+      const newState: PlayingState = {
+        ...state,
+        ...CLEAR_PENDING,
+        subPhase: 'turn-active',
+        events: [...state.events],
+      }
+      return ok(newState)
+    }
+
+    case 'defuse-pending': {
+      // Insert the player's EK at random position (CSPRNG)
+      if (!state.pendingDefuse) return err(state, 'No pending defuse', 'INVALID_ACTION')
+      const player = getPlayer(state, state.pendingDefuse.playerId)
+      if (!player) return err(state, 'Player not found', 'INVALID_ACTION')
+      const ek = player.hand.find(c => c.type === 'exploding-kitten')
+      if (!ek) return err(state, 'No EK in hand', 'INVALID_ACTION')
+      const defuseState = removeCardsFromHand(state, state.pendingDefuse.playerId, [ek.id])
+      const pile = [...defuseState.drawPile]
+      const pos = ctx.randomInt(pile.length + 1)
+      pile.splice(pos, 0, ek)
+      const newState: PlayingState = {
+        ...defuseState,
+        ...CLEAR_PENDING,
+        drawPile: pile,
+        subPhase: 'turn-active',
+        events: [...defuseState.events],
+      }
+      return ok(newState)
+    }
+
+    case 'steal-target-pending':
+    case 'name-card-pending': {
+      // Cancel steal — player didn't pick target/name
+      const newState: PlayingState = {
+        ...state,
+        ...CLEAR_PENDING,
+        subPhase: 'turn-active',
+        events: [...state.events],
+      }
+      return ok(newState)
+    }
+
+    default:
+      return err(state, `Cannot timeout subPhase: ${action.subPhase}`, 'INVALID_ACTION')
+  }
 }
 
 // --- Elimination ---
@@ -1104,6 +1192,11 @@ function performRandomSteal(
   return ok(finalState)
 }
 
+let nextNopeGeneration = 1
+
+/** Reset generation counter — test use only */
+export function _resetNopeGeneration(): void { nextNopeGeneration = 1 }
+
 function createNopeWindow(
   pendingAction: GameAction,
   originalPlayerId: string,
@@ -1117,6 +1210,7 @@ function createNopeWindow(
     originalPlayerId,
     originalCardType,
     chainDepth: 0,
+    generation: nextNopeGeneration++,
     deadlineMs: ctx.now + duration,
     startedAtMs: ctx.now,
   }

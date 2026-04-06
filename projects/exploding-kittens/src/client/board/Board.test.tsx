@@ -5,7 +5,7 @@ import { createRoot } from 'react-dom/client'
 import { Board } from './Board'
 
 describe('Board', () => {
-  it('renders "Exploding Kittens Digital"', () => {
+  it('renders connecting state initially', () => {
     const container = document.createElement('div')
     document.body.appendChild(container)
 
@@ -14,7 +14,8 @@ describe('Board', () => {
       root.render(<Board />)
     })
 
-    expect(container.textContent).toContain('Exploding Kittens Digital')
+    // Before WebSocket connects, shows loading state
+    expect(container.textContent).toContain('Creating room...')
 
     act(() => {
       root.unmount()

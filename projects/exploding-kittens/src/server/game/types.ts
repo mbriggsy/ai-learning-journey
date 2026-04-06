@@ -1,4 +1,4 @@
-import type { CardInstance, CardType, SubPhase, GameEvent } from '@shared/types'
+import type { CardInstance, CardType, SubPhase, GameEvent, PendingPrompt } from '@shared/types'
 import type { GameAction } from '@shared/actions'
 
 // --- Game State (discriminated union on phase) ---
@@ -27,6 +27,7 @@ export interface PlayingState {
   readonly pendingSteal?: { readonly stealerId: string; readonly comboSize: 2 | 3 }
   readonly pendingNameCard?: { readonly stealerId: string; readonly targetId: string }
   readonly pendingDefuse?: { readonly playerId: string }
+  readonly pendingPrompt: PendingPrompt | null
 }
 
 export interface GameOverState {
@@ -66,6 +67,7 @@ export interface NopeWindow {
   readonly originalPlayerId: string
   readonly originalCardType?: CardType
   readonly chainDepth: number
+  readonly generation: number
   readonly deadlineMs: number
   readonly startedAtMs: number
 }

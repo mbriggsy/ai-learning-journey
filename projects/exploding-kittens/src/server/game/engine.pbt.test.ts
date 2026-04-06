@@ -118,8 +118,9 @@ describe('PBT: Projection Privacy', () => {
 
   test.prop([fc.integer({ min: 1, max: 100 })])('player projection only shows own hand, not others', (seed) => {
     const state = startGame(4, seed)
-    const p1Projection = projectForPlayer(state, 'p1', 1000)
-    const p2Projection = projectForPlayer(state, 'p2', 1000)
+    const board = projectForBoard(state, 1000)
+    const p1Projection = projectForPlayer(state, 'p1', board)
+    const p2Projection = projectForPlayer(state, 'p2', board)
 
     // p1 sees own hand
     const p1 = state.players.find(p => p.id === 'p1')!

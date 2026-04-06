@@ -5,9 +5,6 @@ export const NOPE_WINDOW_MS = {
   headsUp: 7_000,
 } as const
 
-/** Inactivity nudge: phone vibrates + board shows "waiting on..." */
-export const INACTIVITY_NUDGE_MS = 30_000
-
 /** Paw-print composition: which card subsets for each player count range */
 export const DECK_COMPOSITION = {
   small: { min: 2, max: 3, usePaw: true, useNonPaw: false },

@@ -231,7 +231,7 @@ We use PreToolUse to gate `/ce:work` behind `/brief` (Claude invocations), PostT
 
 ## Appendix: Engineering the Skills
 
-We ran `/distill` through Anthropic's [Skill Creator](https://github.com/anthropics/skills) — the meta-skill that turns skill development from vibes into engineering.
+We ran both `/distill` and `/brief` through Anthropic's [Skill Creator](https://github.com/anthropics/skills) — the meta-skill that turns skill development from vibes into engineering.
 
 ### A/B Eval Results
 

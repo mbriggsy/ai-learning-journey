@@ -1,4 +1,4 @@
-import { describe, it, expect, beforeEach } from 'vitest'
+import { describe, it, expect } from 'vitest'
 import { createLobbyState, dispatch, buildDeck } from './engine'
 import type { DispatchContext, DispatchResult, PlayingState, GameState } from './types'
 import type { EngineAction } from '@shared/actions'

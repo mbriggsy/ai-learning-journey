@@ -116,6 +116,7 @@ class GameStore {
       case 'state-update':
         this.lastError = null
         this._isReconnecting = false
+        this._protocolMismatch = msg.protocolVersion !== PROTOCOL_VERSION
         this.accumulateEvents(msg.payload)
         this.optimisticTransform = null
         this.updateState(msg.payload)
@@ -123,6 +124,7 @@ class GameStore {
       case 'player-update':
         this.lastError = null
         this._isReconnecting = false
+        this._protocolMismatch = msg.protocolVersion !== PROTOCOL_VERSION
         this.accumulateEvents(msg.payload.state)
         this.optimisticTransform = null
         this.updateState(msg.payload.state)

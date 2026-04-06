@@ -1,6 +1,6 @@
 import { useGameSelector } from '../gameStore'
 import type { BoardPlayer, NopeWindowView, PendingPromptView } from '@shared/protocol'
-import type { CardInstance, CardType, GamePhase } from '@shared/types'
+import type { CardInstance, GamePhase } from '@shared/types'
 
 const EMPTY_PLAYERS: readonly BoardPlayer[] = []
 

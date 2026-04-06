@@ -206,6 +206,9 @@ export class GameRoom extends Server {
       case 'start-game':
         this.enqueue(() => this.handleStartGame(connection))
         break
+      case 'return-to-lobby':
+        this.enqueue(() => this.handleReturnToLobby(connection))
+        break
       case 'action':
         this.enqueue(() => this.handleAction(connection, msg.payload))
         break
@@ -400,6 +403,7 @@ export class GameRoom extends Server {
               state: projectForPlayer(state, playerId, board),
               private: state.phase === 'playing' ? getPrivateData(state, playerId) : {},
             },
+            protocolVersion: PROTOCOL_VERSION,
           })
         }
       }
@@ -450,6 +454,31 @@ export class GameRoom extends Server {
     this.gameState = result.state
     this.lastActionTime = Date.now()
     this.broadcastGameState()
+    void this.persistState()
+  }
+
+  // --- Return to Lobby ---
+
+  private handleReturnToLobby(connection: Connection): void {
+    const connState = this.getConnState(connection)
+    if (connState?.role !== 'host') {
+      this.sendError(connection, 'NOT_HOST', 'Only the host can return to lobby')
+      return
+    }
+
+    if (!this.gameState || this.gameState.phase === 'lobby') {
+      this.sendError(connection, 'INVALID_ACTION', 'Already in lobby')
+      return
+    }
+
+    // Clear game timers
+    this.clearNopeTimer()
+    this.clearPromptTimer()
+
+    // Reset to lobby state, preserving all registered players
+    this.gameState = createLobbyState()
+    this.lastActionTime = Date.now()
+    this.broadcastLobbyState()
     void this.persistState()
   }
 
@@ -651,7 +680,7 @@ export class GameRoom extends Server {
 
   private broadcastLobbyState(): void {
     const view = this.buildLobbyView()
-    const msg: ServerMessage = { type: 'state-update', payload: view }
+    const msg: ServerMessage = { type: 'state-update', payload: view, protocolVersion: PROTOCOL_VERSION }
     const raw = JSON.stringify(msg)
     for (const conn of this.getConnections()) {
       try { conn.send(raw) } catch { /* connection closing */ }
@@ -666,7 +695,7 @@ export class GameRoom extends Server {
 
     // Compute board view once (P2 optimization — not N+1 times)
     const boardView = projectForBoard(state, now)
-    const boardMsg: ServerMessage = { type: 'state-update', payload: boardView }
+    const boardMsg: ServerMessage = { type: 'state-update', payload: boardView, protocolVersion: PROTOCOL_VERSION }
     const boardRaw = JSON.stringify(boardMsg)
 
     for (const conn of this.getConnections()) {
@@ -681,6 +710,7 @@ export class GameRoom extends Server {
               state: projectForPlayer(state, connState.playerId, boardView),
               private: state.phase === 'playing' ? getPrivateData(state, connState.playerId) : {},
             },
+            protocolVersion: PROTOCOL_VERSION,
           }
           conn.send(JSON.stringify(playerMsg))
         }

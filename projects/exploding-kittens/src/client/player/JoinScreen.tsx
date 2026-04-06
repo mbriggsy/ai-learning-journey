@@ -7,9 +7,10 @@ interface Props {
   assignedColor: string | null
   onJoin: (name: string) => void
   roomCode: string
+  playerName?: string
 }
 
-export function JoinScreen({ connectionStatus, assignedColor, onJoin, roomCode }: Props) {
+export function JoinScreen({ connectionStatus, assignedColor, onJoin, roomCode, playerName }: Props) {
   const [name, setName] = useState('')
   const [error, setError] = useState<string | null>(null)
   const joined = assignedColor !== null
@@ -42,7 +43,7 @@ export function JoinScreen({ connectionStatus, assignedColor, onJoin, roomCode }
       <div className={styles.container}>
         <div className={styles.joinedCard}>
           <span className={styles.dot} style={{ backgroundColor: assignedColor }} />
-          <p className={styles.joinedName}>{name || 'You'}</p>
+          <p className={styles.joinedName}>{name || playerName || 'You'}</p>
           <p className={styles.waiting}>Waiting for host to start...</p>
         </div>
       </div>

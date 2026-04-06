@@ -153,7 +153,12 @@ function notifyStatus(): void {
 }
 
 function handleVisibilityChange(): void {
-  if (document.visibilityState === 'visible' && socket && socket.readyState === WebSocket.CLOSED) {
-    socket.reconnect()
+  if (document.visibilityState === 'visible' && socket) {
+    // iOS Safari kills WebSocket on background without firing close event.
+    // Reconnect if socket is anything other than OPEN (CLOSED, CLOSING, or stale CONNECTING).
+    if (socket.readyState !== WebSocket.OPEN) {
+      hasConnectedOnce = true // ensure next open is treated as reconnect
+      socket.reconnect()
+    }
   }
 }

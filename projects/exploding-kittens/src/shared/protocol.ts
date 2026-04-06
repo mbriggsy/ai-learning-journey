@@ -28,6 +28,7 @@ export type ClientMessage =
   | { type: 'host-connect'; payload: Record<string, never> }
   | { type: 'join'; payload: { name: string; sessionToken?: string } }
   | { type: 'start-game'; payload: Record<string, never> }
+  | { type: 'return-to-lobby'; payload: Record<string, never> }
   | { type: 'action'; payload: ClientAction }
   | { type: 'ping'; payload: Record<string, never> }
   | { type: 'pong'; payload: Record<string, never> }
@@ -35,8 +36,8 @@ export type ClientMessage =
 // --- Server -> Client Messages ---
 
 export type ServerMessage =
-  | { type: 'state-update'; payload: LobbyView | BoardView }
-  | { type: 'player-update'; payload: { state: PlayerView; private: PrivateData } }
+  | { type: 'state-update'; payload: LobbyView | BoardView; protocolVersion: number }
+  | { type: 'player-update'; payload: { state: PlayerView; private: PrivateData }; protocolVersion: number }
   | { type: 'joined'; payload: { playerId: string; sessionToken: string; color: string; protocolVersion: number } }
   | { type: 'error'; payload: { code: ErrorCode; message: string } }
   | { type: 'action-rejected'; payload: { message: string } }

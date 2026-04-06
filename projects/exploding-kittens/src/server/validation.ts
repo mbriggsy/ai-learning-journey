@@ -90,6 +90,11 @@ const StartGameMessage = z.object({
   payload: z.object({}),
 })
 
+const ReturnToLobbyMessage = z.object({
+  type: z.literal('return-to-lobby'),
+  payload: z.object({}),
+})
+
 const ActionMessage = z.object({
   type: z.literal('action'),
   payload: ClientGameActionSchema,
@@ -109,6 +114,7 @@ export const ClientMessageSchema = z.discriminatedUnion('type', [
   HostConnectMessage,
   JoinMessage,
   StartGameMessage,
+  ReturnToLobbyMessage,
   ActionMessage,
   PingMessage,
   PongMessage,

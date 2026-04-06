@@ -64,6 +64,10 @@ export function Board() {
     send({ type: 'start-game', payload: {} })
   }
 
+  const handlePlayAgain = () => {
+    send({ type: 'return-to-lobby', payload: {} })
+  }
+
   if (protocolMismatch) {
     return (
       <div style={{
@@ -96,6 +100,7 @@ export function Board() {
           players={state.players}
           winnerId={state.winnerId}
           eliminationOrder={state.eliminationOrder}
+          onPlayAgain={handlePlayAgain}
         />
         <BoardErrorBanner error={lastError} />
       </Fragment>

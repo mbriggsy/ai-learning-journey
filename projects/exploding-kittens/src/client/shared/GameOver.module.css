@@ -62,3 +62,30 @@
   height: 8px;
   border-radius: 50%;
 }
+
+.playAgain {
+  margin-top: 32px;
+  padding: 14px 48px;
+  font-size: 18px;
+  font-weight: 700;
+  border: none;
+  border-radius: 12px;
+  background: var(--accent-success);
+  color: var(--bg-primary);
+  cursor: pointer;
+  transition: opacity 0.15s;
+}
+
+.playAgain:hover {
+  opacity: 0.85;
+}
+
+.playAgain:active {
+  opacity: 0.7;
+}
+
+.waiting {
+  margin-top: 32px;
+  font-size: 14px;
+  color: var(--text-secondary);
+}

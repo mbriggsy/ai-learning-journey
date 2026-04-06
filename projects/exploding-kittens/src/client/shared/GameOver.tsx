@@ -6,9 +6,10 @@ interface GameOverProps {
   readonly winnerId: string
   readonly eliminationOrder: readonly string[]
   readonly myPlayerId?: string
+  readonly onPlayAgain?: () => void
 }
 
-export function GameOver({ players, winnerId, eliminationOrder, myPlayerId }: GameOverProps) {
+export function GameOver({ players, winnerId, eliminationOrder, myPlayerId, onPlayAgain }: GameOverProps) {
   const winner = players.find(p => p.id === winnerId)
 
   // Build ranking: winner first, then eliminated in reverse order (last eliminated = 2nd place)
@@ -49,6 +50,14 @@ export function GameOver({ players, winnerId, eliminationOrder, myPlayerId }: Ga
           </div>
         ))}
       </div>
+
+      {onPlayAgain ? (
+        <button className={styles.playAgain} onClick={onPlayAgain}>
+          Play Again
+        </button>
+      ) : myPlayerId ? (
+        <div className={styles.waiting}>Waiting for host...</div>
+      ) : null}
     </div>
   )
 }

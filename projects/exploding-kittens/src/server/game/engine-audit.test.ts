@@ -65,7 +65,6 @@ describe('Two of a Kind — steal flow', () => {
     // Steal should have transferred a card
     const final = result.state as PlayingState
     expect(final.subPhase).toBe('turn-active')
-    const p1Hand = final.players.find(p => p.id === 'p1')!.hand.length
     const p2Hand = final.players.find(p => p.id === 'p2')!.hand.length
     // p2 should have lost a card (or same if steal failed on empty)
     expect(p2Hand).toBeLessThanOrEqual(p2CardCount)

@@ -13,7 +13,7 @@ describe('GameStore', () => {
       roomCode: 'ABCD',
       players: [{ id: '1', name: 'Alice', color: '#e74c3c', isConnected: true }],
     }
-    const msg: ServerMessage = { type: 'state-update', payload: lobby }
+    const msg: ServerMessage = { type: 'state-update', payload: lobby, protocolVersion: 1 }
     gameStore.handleMessage(msg)
     expect(gameStore.getSnapshot()).toBe(lobby)
   })
@@ -27,11 +27,11 @@ describe('GameStore', () => {
       roomCode: 'EFGH',
       players: [],
     }
-    gameStore.handleMessage({ type: 'state-update', payload: lobby })
+    gameStore.handleMessage({ type: 'state-update', payload: lobby, protocolVersion: 1 })
     expect(called).toBe(1)
 
     unsub()
-    gameStore.handleMessage({ type: 'state-update', payload: lobby })
+    gameStore.handleMessage({ type: 'state-update', payload: lobby, protocolVersion: 1 })
     expect(called).toBe(1) // no longer subscribed
   })
 
@@ -53,7 +53,7 @@ describe('GameStore', () => {
 
     // state-update clears reconnecting
     const lobby: LobbyView = { phase: 'lobby', roomCode: 'TEST', players: [] }
-    gameStore.handleMessage({ type: 'state-update', payload: lobby })
+    gameStore.handleMessage({ type: 'state-update', payload: lobby, protocolVersion: 1 })
     expect(gameStore.getIsReconnecting()).toBe(false)
   })
 
@@ -103,6 +103,7 @@ describe('GameStore', () => {
         },
         private: { futureCards },
       },
+      protocolVersion: 1,
     })
     expect(gameStore.getPrivateData().futureCards).toEqual(futureCards)
   })

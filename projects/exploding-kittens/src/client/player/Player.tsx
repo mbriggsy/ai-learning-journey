@@ -135,14 +135,21 @@ interface PhoneRouterProps {
 
 function PhoneRouter({ connectionStatus, assignedColor, onJoin, roomCode }: PhoneRouterProps) {
   const state = useGameState()
+  const playerId = gameStore.getPlayerId()
 
   if (!state || state.phase === 'lobby') {
+    // After Play Again, look up the player's name from the lobby state
+    const lobbyName = state?.phase === 'lobby' && playerId
+      ? state.players.find(p => p.id === playerId)?.name
+      : undefined
+
     return (
       <JoinScreen
         connectionStatus={connectionStatus}
         assignedColor={assignedColor}
         onJoin={onJoin}
         roomCode={roomCode}
+        playerName={lobbyName}
       />
     )
   }

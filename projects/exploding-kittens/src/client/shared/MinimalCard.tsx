@@ -13,12 +13,12 @@ export interface CardProps {
   readonly onClick?: () => void
 }
 
-export interface CardVisualProps {
+interface CardVisualProps {
   readonly isFaceDown?: boolean
   readonly layoutId?: string
 }
 
-export type PremiumCardProps = CardProps & CardVisualProps
+type PremiumCardProps = CardProps & CardVisualProps
 
 export const MinimalCard = memo(function MinimalCard({
   type, isSelected, disabled, onClick, isFaceDown, layoutId,

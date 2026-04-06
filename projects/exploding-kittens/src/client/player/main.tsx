@@ -7,6 +7,9 @@ import { applyTheme } from '@client/shared/theme'
 import { Player } from './Player'
 import './player-hardening.css'
 
+// Prefetch motion features chunk — prevents 27KB lazy load on first Nope tap over slow WiFi
+void import('@client/shared/motion-features')
+
 applyTheme()
 
 // Suppress PWA install prompt — this is a web game, not an app

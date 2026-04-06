@@ -1,7 +1,7 @@
 import { useState, useEffect, useCallback, Fragment } from 'react'
-import { connect, disconnect, send, onMessage, onStatusChange, getStatus, getSessionToken, setSessionToken } from '@client/connection'
+import { connect, disconnect, send, onMessage, onStatusChange, onReconnect, getStatus, getSessionToken, setSessionToken } from '@client/connection'
 import type { ConnectionStatus } from '@client/connection'
-import { gameStore, useGameState } from '@client/shared/gameStore'
+import { gameStore, useGameState, useProtocolMismatch } from '@client/shared/gameStore'
 import { useSendAction } from '@client/shared/hooks/useSendAction'
 import { useGamePhase, usePlayerList, useDrawPileCount, usePendingPrompt } from '@client/shared/hooks/useSharedSelectors'
 import { useHand, useIsMyTurn, useSubPhase, useMyPlayerId, useMyPlayer, usePrivateData } from './hooks/usePlayerSelectors'
@@ -38,6 +38,7 @@ function getRoomCodeFromUrl(): string {
 export function Player() {
   useWakeLock()
   const isLandscape = useOrientationWarning()
+  const protocolMismatch = useProtocolMismatch()
   const [connectionStatus, setConnectionStatus] = useState<ConnectionStatus>(getStatus())
   const [assignedColor, setAssignedColor] = useState<string | null>(null)
   const [roomCode] = useState(getRoomCodeFromUrl)
@@ -63,12 +64,17 @@ export function Player() {
       }
     })
 
+    const unsubReconnect = onReconnect(() => {
+      gameStore.setReconnecting(true)
+    })
+
     connect(roomCode, PARTYKIT_HOST)
 
     return () => {
       unsubMsg()
       unsubStatus()
       unsubAutoJoin()
+      unsubReconnect()
       disconnect()
     }
   }, [roomCode])
@@ -86,6 +92,15 @@ export function Player() {
 
   return (
     <>
+      {protocolMismatch && (
+        <div style={{
+          position: 'fixed', top: 0, left: 0, right: 0, zIndex: 9998,
+          padding: '12px 16px', textAlign: 'center',
+          background: '#e67e22', color: '#fff', fontSize: 14, fontWeight: 600,
+        }}>
+          Game updated — please refresh
+        </div>
+      )}
       {isLandscape && (
         <div style={{
           position: 'fixed', inset: 0, zIndex: 9999,

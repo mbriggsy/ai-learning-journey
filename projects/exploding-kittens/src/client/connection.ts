@@ -11,8 +11,10 @@ type StatusHandler = (status: ConnectionStatus) => void
 
 let socket: PartySocket | null = null
 let status: ConnectionStatus = 'disconnected'
+let hasConnectedOnce = false
 const messageHandlers = new Set<MessageHandler>()
 const statusHandlers = new Set<StatusHandler>()
+const reconnectHandlers = new Set<() => void>()
 
 // --- Public API ---
 
@@ -29,8 +31,14 @@ export function connect(roomCode: string, host: string): void {
   })
 
   socket.addEventListener('open', () => {
+    const isReconnect = hasConnectedOnce
+    hasConnectedOnce = true
     status = 'connected'
     notifyStatus()
+    // Notify reconnection listeners (gameStore sets isReconnecting)
+    if (isReconnect) {
+      for (const handler of reconnectHandlers) handler()
+    }
   })
 
   socket.addEventListener('close', () => {
@@ -79,6 +87,7 @@ export function disconnect(): void {
     socket.close()
     socket = null
   }
+  hasConnectedOnce = false
   status = 'disconnected'
   notifyStatus()
 }
@@ -100,6 +109,11 @@ export function onMessage(handler: MessageHandler): () => void {
 export function onStatusChange(handler: StatusHandler): () => void {
   statusHandlers.add(handler)
   return () => statusHandlers.delete(handler)
+}
+
+export function onReconnect(handler: () => void): () => void {
+  reconnectHandlers.add(handler)
+  return () => reconnectHandlers.delete(handler)
 }
 
 // --- Session Token ---

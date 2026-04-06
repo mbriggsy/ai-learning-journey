@@ -146,12 +146,19 @@ describe('Prompt Timeout', () => {
     let result = act(state, { type: 'play-card', playerId: 'p1', cardIds: ['favor-1'], targetPlayerId: 'p2' })
     expect(result.ok).toBe(true)
 
-    // Expire nope window
+    // Expire nope window (two-step: expire → grace → resolve)
     const s1 = result.state as PlayingState
     result = act(s1, {
       type: 'nope-window-expired',
       playerId: 'server',
       windowGeneration: s1.nopeWindow!.generation,
+    }, makeCtx(99999))
+    expect(result.ok).toBe(true)
+    const graceState = result.state as PlayingState
+    result = act(graceState, {
+      type: 'nope-grace-expired',
+      playerId: 'server',
+      windowGeneration: graceState.nopeWindow!.generation,
     }, makeCtx(99999))
     expect(result.ok).toBe(true)
 

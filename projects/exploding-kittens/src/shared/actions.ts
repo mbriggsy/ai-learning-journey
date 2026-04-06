@@ -18,6 +18,7 @@ export type ClientActionMap = {
 /** Server-only actions — cannot be constructed by clients */
 export type ServerOnlyActionMap = {
   'nope-window-expired': { windowGeneration: number }
+  'nope-grace-expired': { windowGeneration: number }
   'prompt-timeout': { subPhase: SubPhase }
 }
 
@@ -46,4 +47,4 @@ export type ClientActionType = keyof ClientActionMap
 export type ServerOnlyActionType = keyof ServerOnlyActionMap
 
 /** Set of server-only action types for runtime checks */
-export const SERVER_ONLY_ACTIONS = new Set<ServerOnlyActionType>(['nope-window-expired', 'prompt-timeout'])
+export const SERVER_ONLY_ACTIONS = new Set<ServerOnlyActionType>(['nope-window-expired', 'nope-grace-expired', 'prompt-timeout'])

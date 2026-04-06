@@ -73,6 +73,20 @@ function expireNope(state: PlayingState): Partial<EngineAction> & { type: string
   }
 }
 
+/** Fully resolve a Nope window: expire → grace → resolve. Returns the final state. */
+function resolveNopeWindow(state: PlayingState, ctx: DispatchContext): DispatchResult {
+  // Step 1: nope-window-expired → transitions to grace
+  const graceResult = act(state, expireNope(state), ctx)
+  if (!graceResult.ok) return graceResult
+  const graceState = graceResult.state as PlayingState
+  // Step 2: nope-grace-expired → actually resolves
+  return act(graceState, {
+    type: 'nope-grace-expired',
+    playerId: 'server',
+    windowGeneration: graceState.nopeWindow!.generation,
+  }, ctx)
+}
+
 beforeEach(() => {
   _resetNopeGeneration()
 })
@@ -213,7 +227,7 @@ describe('Skip', () => {
 
     // Expire nope window
     const afterNope = result.ok ? result.state as PlayingState : state
-    result = act(afterNope, expireNope(afterNope), makeCtx(99999))
+    result = resolveNopeWindow(afterNope, makeCtx(99999))
     expect(result.ok).toBe(true)
 
     if (result.ok) {
@@ -238,7 +252,7 @@ describe('Attack', () => {
 
     // Expire nope window
     const afterNope = (result as { ok: true; state: GameState }).state as PlayingState
-    result = act(afterNope, expireNope(afterNope), makeCtx(99999))
+    result = resolveNopeWindow(afterNope, makeCtx(99999))
     expect(result.ok).toBe(true)
 
     if (result.ok) {
@@ -266,7 +280,7 @@ describe('Targeted Attack', () => {
 
     // Expire nope window
     const afterNope = (result as { ok: true; state: GameState }).state as PlayingState
-    result = act(afterNope, expireNope(afterNope), makeCtx(99999))
+    result = resolveNopeWindow(afterNope, makeCtx(99999))
     expect(result.ok).toBe(true)
 
     if (result.ok) {
@@ -299,7 +313,7 @@ describe('Targeted Attack', () => {
     expect(result.ok).toBe(true)
 
     const afterNope = (result as { ok: true; state: GameState }).state as PlayingState
-    result = act(afterNope, expireNope(afterNope), makeCtx(99999))
+    result = resolveNopeWindow(afterNope, makeCtx(99999))
     // Now the effect applies — should fail because no target
     expect(result.ok).toBe(false)
   })
@@ -402,7 +416,7 @@ describe('Nope', () => {
     s = (result as { ok: true; state: GameState }).state as PlayingState
 
     // Expire at depth 1 (odd = cancelled)
-    result = act(s, expireNope(s), makeCtx(99999))
+    result = resolveNopeWindow(s, makeCtx(99999))
     expect(result.ok).toBe(true)
     if (result.ok) {
       const resolved = result.state as PlayingState
@@ -529,7 +543,7 @@ describe('Favor', () => {
 
     // Expire nope window
     const afterNope = (result as { ok: true; state: GameState }).state as PlayingState
-    result = act(afterNope, expireNope(afterNope), makeCtx(99999))
+    result = resolveNopeWindow(afterNope, makeCtx(99999))
     expect(result.ok).toBe(true)
 
     if (result.ok) {
@@ -551,7 +565,7 @@ describe('Favor', () => {
     let s = (result as { ok: true; state: GameState }).state as PlayingState
 
     // Expire nope window
-    result = act(s, expireNope(s), makeCtx(99999))
+    result = resolveNopeWindow(s, makeCtx(99999))
     s = (result as { ok: true; state: GameState }).state as PlayingState
 
     // p2 gives a card
@@ -578,7 +592,7 @@ describe('Favor', () => {
     })
     // Opens nope window first, self-target check is in applyFavor after resolution
     const afterNope = (result as { ok: true; state: GameState }).state as PlayingState
-    result = act(afterNope, expireNope(afterNope), makeCtx(99999))
+    result = resolveNopeWindow(afterNope, makeCtx(99999))
     expect(result.ok).toBe(false)
   })
 
@@ -591,7 +605,7 @@ describe('Favor', () => {
       type: 'play-card', playerId: 'p1', cardIds: [card.id], targetPlayerId: 'p2',
     })
     let s = (result as { ok: true; state: GameState }).state as PlayingState
-    result = act(s, expireNope(s), makeCtx(99999))
+    result = resolveNopeWindow(s, makeCtx(99999))
     s = (result as { ok: true; state: GameState }).state as PlayingState
 
     // Give p2 an EK
@@ -721,7 +735,7 @@ describe('See the Future', () => {
     let result = act(state, { type: 'play-card', playerId: 'p1', cardIds: [card.id] })
     const afterNope = (result as { ok: true; state: GameState }).state as PlayingState
 
-    result = act(afterNope, expireNope(afterNope), makeCtx(99999))
+    result = resolveNopeWindow(afterNope, makeCtx(99999))
     expect(result.ok).toBe(true)
 
     if (result.ok) {
@@ -741,7 +755,7 @@ describe('Alter the Future', () => {
     let result = act(state, { type: 'play-card', playerId: 'p1', cardIds: [card.id] })
     const afterNope = (result as { ok: true; state: GameState }).state as PlayingState
 
-    result = act(afterNope, expireNope(afterNope), makeCtx(99999))
+    result = resolveNopeWindow(afterNope, makeCtx(99999))
     expect(result.ok).toBe(true)
 
     if (result.ok) {
@@ -758,7 +772,7 @@ describe('Alter the Future', () => {
     let result = act(state, { type: 'play-card', playerId: 'p1', cardIds: [card.id] })
     let s = (result as { ok: true; state: GameState }).state as PlayingState
 
-    result = act(s, expireNope(s), makeCtx(99999))
+    result = resolveNopeWindow(s, makeCtx(99999))
     s = (result as { ok: true; state: GameState }).state as PlayingState
 
     // Rearrange in reverse order
@@ -780,7 +794,7 @@ describe('Alter the Future', () => {
     const card = findCard(state, 'p1', 'alter-the-future')!
     let result = act(state, { type: 'play-card', playerId: 'p1', cardIds: [card.id] })
     let s = (result as { ok: true; state: GameState }).state as PlayingState
-    result = act(s, expireNope(s), makeCtx(99999))
+    result = resolveNopeWindow(s, makeCtx(99999))
     s = (result as { ok: true; state: GameState }).state as PlayingState
 
     result = act(s, { type: 'future-rearrange', playerId: 'p1', order: ['fake-id-1', 'fake-id-2'] })
@@ -800,7 +814,7 @@ describe('Shuffle', () => {
     let result = act(state, { type: 'play-card', playerId: 'p1', cardIds: [card.id] })
     const afterNope = (result as { ok: true; state: GameState }).state as PlayingState
 
-    result = act(afterNope, expireNope(afterNope), makeCtx(99999))
+    result = resolveNopeWindow(afterNope, makeCtx(99999))
     expect(result.ok).toBe(true)
 
     if (result.ok) {

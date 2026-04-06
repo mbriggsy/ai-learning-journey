@@ -70,6 +70,8 @@ export interface NopeWindow {
   readonly generation: number
   readonly deadlineMs: number
   readonly startedAtMs: number
+  readonly expired?: boolean
+  readonly graceDeadlineMs?: number
 }
 
 // --- Dispatch ---

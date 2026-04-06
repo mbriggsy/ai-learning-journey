@@ -59,18 +59,39 @@ export function dispatch(
 
   // Player existence check (server-only actions exempt)
   const actor = playing.players.find(p => p.id === action.playerId)
-  if (!actor && action.type !== 'nope-window-expired' && action.type !== 'prompt-timeout') {
+  if (!actor && action.type !== 'nope-window-expired' && action.type !== 'nope-grace-expired' && action.type !== 'prompt-timeout') {
     return err(playing, 'Player not found', 'INVALID_ACTION')
   }
 
-  // nope-window-expired is server-only — validate timing + generation
+  // nope-window-expired is server-only — transition to grace state (don't resolve yet)
   if (action.type === 'nope-window-expired') {
     if (!playing.nopeWindow) return err(playing, 'No active Nope window', 'NOPE_NOT_ACTIVE')
     if (action.windowGeneration !== playing.nopeWindow.generation) {
       return err(playing, 'Stale Nope window generation', 'NOPE_NOT_ACTIVE')
     }
-    if (ctx.now < playing.nopeWindow.deadlineMs) {
-      return err(playing, 'Nope window has not expired yet', 'INVALID_ACTION')
+    if (playing.nopeWindow.expired) {
+      return err(playing, 'Nope window already in grace', 'NOPE_NOT_ACTIVE')
+    }
+    // Transition to grace state — window remains active for 300ms more
+    const graceState: PlayingState = {
+      ...playing,
+      nopeWindow: {
+        ...playing.nopeWindow,
+        expired: true,
+        graceDeadlineMs: ctx.now + 300,
+      },
+    }
+    return ok(graceState)
+  }
+
+  // nope-grace-expired is server-only — NOW resolve the window
+  if (action.type === 'nope-grace-expired') {
+    if (!playing.nopeWindow) return err(playing, 'No active Nope window', 'NOPE_NOT_ACTIVE')
+    if (action.windowGeneration !== playing.nopeWindow.generation) {
+      return err(playing, 'Stale Nope window generation', 'NOPE_NOT_ACTIVE')
+    }
+    if (!playing.nopeWindow.expired) {
+      return err(playing, 'Nope window not in grace state', 'INVALID_ACTION')
     }
     return handleNopeWindowExpired(playing, action, ctx)
   }
@@ -860,6 +881,11 @@ function handleNope(
 ): DispatchResult {
   if (!state.nopeWindow) return err(state, 'No active Nope window', 'NOPE_NOT_ACTIVE')
 
+  // Accept Nopes during grace period (window.expired === true but grace not yet expired)
+  if (state.nopeWindow.expired && state.nopeWindow.graceDeadlineMs && ctx.now > state.nopeWindow.graceDeadlineMs) {
+    return err(state, 'Nope grace period expired', 'NOPE_NOT_ACTIVE')
+  }
+
   // Self-Nope disallowed — cannot Nope your own action
   if (state.nopeWindow.chainDepth === 0 && action.playerId === state.nopeWindow.originalPlayerId) {
     return err(state, 'Cannot Nope your own action', 'INVALID_ACTION')
@@ -887,13 +913,15 @@ function handleNope(
     { type: 'nope-played', playerId: action.playerId, chainDepth: newDepth },
   ]
 
-  // Reset timer with full duration + new generation (invalidates stale timers)
+  // Reset timer with full duration + new generation (invalidates stale timers, clears grace)
   const newWindow: NopeWindow = {
     ...state.nopeWindow,
     chainDepth: newDepth,
     generation: nextNopeGeneration++,
     deadlineMs: ctx.now + getNopeWindowDuration(aliveCount),
     startedAtMs: ctx.now,
+    expired: undefined,
+    graceDeadlineMs: undefined,
   }
 
   const finalState: PlayingState = {

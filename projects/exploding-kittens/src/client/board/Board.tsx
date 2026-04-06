@@ -1,7 +1,7 @@
 import { useState, useEffect, Fragment } from 'react'
 import { connect, disconnect, send, onMessage, onStatusChange, getStatus } from '@client/connection'
 import type { ConnectionStatus } from '@client/connection'
-import { gameStore, useGameState } from '@client/shared/gameStore'
+import { gameStore, useGameState, useProtocolMismatch } from '@client/shared/gameStore'
 import { Lobby } from './Lobby'
 import { GameTable } from './GameTable'
 import { GameOver } from '@client/shared/GameOver'
@@ -21,6 +21,7 @@ export function Board() {
   const [connectionStatus, setConnectionStatus] = useState<ConnectionStatus>(getStatus())
   const [roomCode] = useState(() => generateRoomCode())
   const state = useGameState()
+  const protocolMismatch = useProtocolMismatch()
 
   useEffect(() => {
     const unsubMsg = onMessage(msg => gameStore.handleMessage(msg))
@@ -44,6 +45,18 @@ export function Board() {
 
   const handleStartGame = () => {
     send({ type: 'start-game', payload: {} })
+  }
+
+  if (protocolMismatch) {
+    return (
+      <div style={{
+        display: 'flex', alignItems: 'center', justifyContent: 'center',
+        minHeight: '100svh', background: 'var(--bg-primary, #0c0a12)',
+        color: '#e67e22', fontSize: 24, fontWeight: 700, textAlign: 'center',
+      }}>
+        Game updated — please refresh
+      </div>
+    )
   }
 
   // Route by phase

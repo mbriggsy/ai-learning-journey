@@ -1,7 +1,8 @@
 import { useSyncExternalStore, useRef, useCallback } from 'react'
-import type {
-  ServerMessage, LobbyView, BoardView, PlayerView, PrivateData, ErrorCode,
-  PlayingBoardView, PlayingPlayerView,
+import {
+  PROTOCOL_VERSION,
+  type ServerMessage, type LobbyView, type BoardView, type PlayerView, type PrivateData, type ErrorCode,
+  type PlayingBoardView, type PlayingPlayerView,
 } from '@shared/protocol'
 import type { GameEvent } from '@shared/types'
 
@@ -49,6 +50,8 @@ class GameStore {
   private lastError: GameError | null = null
   private listeners = new Set<Listener>()
   private accumulatedEvents: AccumulatedEvent[] = []
+  private _isReconnecting = false
+  private _protocolMismatch = false
 
   subscribe = (cb: Listener): (() => void) => {
     this.listeners.add(cb)
@@ -67,9 +70,16 @@ class GameStore {
   getPlayerId = (): string | null => this.playerId
   getLastError = (): GameError | null => this.lastError
   getAccumulatedEvents = (): readonly AccumulatedEvent[] => this.accumulatedEvents
+  getIsReconnecting = (): boolean => this._isReconnecting
+  getProtocolMismatch = (): boolean => this._protocolMismatch
 
   setPlayerId(id: string): void {
     this.playerId = id
+  }
+
+  setReconnecting(value: boolean): void {
+    this._isReconnecting = value
+    this.notify()
   }
 
   applyOptimistic(transform: (s: ViewState) => ViewState): void {
@@ -84,15 +94,22 @@ class GameStore {
   }
 
   handleMessage(msg: ServerMessage): void {
+    // Suppress stale rejections during reconnection
+    if (this._isReconnecting && (msg.type === 'error' || msg.type === 'action-rejected')) {
+      return
+    }
+
     switch (msg.type) {
       case 'state-update':
         this.lastError = null
+        this._isReconnecting = false
         this.accumulateEvents(msg.payload)
         this.optimisticTransform = null
         this.updateState(msg.payload)
         break
       case 'player-update':
         this.lastError = null
+        this._isReconnecting = false
         this.accumulateEvents(msg.payload.state)
         this.optimisticTransform = null
         this.updateState(msg.payload.state)
@@ -100,6 +117,10 @@ class GameStore {
         break
       case 'joined':
         this.playerId = msg.payload.playerId
+        // Protocol version check
+        if (msg.payload.protocolVersion !== PROTOCOL_VERSION) {
+          this._protocolMismatch = true
+        }
         this.notify()
         break
       case 'error':
@@ -111,6 +132,7 @@ class GameStore {
         this.optimisticTransform = null
         this.notify()
         break
+      case 'ping':
       case 'pong':
         break
     }
@@ -185,4 +207,8 @@ export function useLobbyState(): LobbyView | null {
 
 export function useLastError(): GameError | null {
   return useSyncExternalStore(gameStore.subscribe, gameStore.getLastError)
+}
+
+export function useProtocolMismatch(): boolean {
+  return useSyncExternalStore(gameStore.subscribe, gameStore.getProtocolMismatch)
 }

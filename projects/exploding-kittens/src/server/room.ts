@@ -561,12 +561,23 @@ export class GameRoom extends Server {
 
   private scheduleNopeExpiry(generation: number, remainingMs: number): void {
     this.nopeTimeout = setTimeout(() => {
-      this.enqueue(() => this.dispatchServerAction({
-        type: 'nope-window-expired',
-        windowGeneration: generation,
-        playerId: '_server',
-      } as EngineAction))
-    }, Math.max(0, remainingMs + NOPE_GRACE_MS))
+      this.enqueue(() => {
+        this.dispatchServerAction({
+          type: 'nope-window-expired',
+          windowGeneration: generation,
+          playerId: '_server',
+        } as EngineAction)
+
+        // Schedule grace expiry after the window transitions to grace state
+        setTimeout(() => {
+          this.enqueue(() => this.dispatchServerAction({
+            type: 'nope-grace-expired',
+            windowGeneration: generation,
+            playerId: '_server',
+          } as EngineAction))
+        }, NOPE_GRACE_MS)
+      })
+    }, Math.max(0, remainingMs))
   }
 
   private clearNopeTimer(): void {

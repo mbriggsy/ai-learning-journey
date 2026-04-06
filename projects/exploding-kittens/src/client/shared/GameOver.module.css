@@ -1,0 +1,64 @@
+.container {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  min-height: 100dvh;
+  background: var(--bg-primary);
+  color: var(--text-primary);
+  padding: 24px;
+  text-align: center;
+}
+
+.winner {
+  font-size: 32px;
+  font-weight: 800;
+  margin-bottom: 8px;
+}
+
+.subtitle {
+  font-size: 16px;
+  color: var(--text-secondary);
+  margin-bottom: 32px;
+}
+
+.rankings {
+  width: 100%;
+  max-width: 320px;
+}
+
+.rank {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding: 10px 14px;
+  border-radius: 8px;
+  margin-bottom: 4px;
+}
+
+.rank[data-winner] {
+  background: rgba(68, 255, 136, 0.1);
+  border: 1px solid var(--accent-success);
+}
+
+.rank[data-me] {
+  border: 1px solid var(--text-secondary);
+}
+
+.rankNum {
+  font-size: 14px;
+  font-weight: 700;
+  color: var(--text-secondary);
+  min-width: 24px;
+}
+
+.rankName {
+  font-size: 15px;
+  flex: 1;
+}
+
+.dot {
+  width: 8px;
+  height: 8px;
+  border-radius: 50%;
+}

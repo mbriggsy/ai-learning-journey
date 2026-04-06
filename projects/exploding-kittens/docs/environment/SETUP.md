@@ -21,15 +21,16 @@ corepack prepare pnpm@latest --activate
 # Install dependencies
 pnpm install
 
-# Start dev server (serves both board + player views)
+# Start game server (wrangler dev — Durable Object on port 8787)
+pnpm dev:server
+
+# Start client dev server (Vite — serves both board + player views on port 5173)
 pnpm dev
 ```
 
-> **Note:** PartyKit dev server (`pnpm partykit:dev`) will be available after Phase 3.
-
 Then open:
 - **Board (TV):** `http://localhost:5173/board.html`
-- **Player (Phone):** `http://localhost:5173/player.html`
+- **Player (Phone):** `http://localhost:5173/player.html?room=ROOMCODE`
 
 For phone testing during development, use your machine's local IP instead of `localhost` so phones on the same WiFi can connect.
 
@@ -37,7 +38,8 @@ For phone testing during development, use your machine's local IP instead of `lo
 
 | Command | What it does |
 |---------|-------------|
-| `pnpm dev` | Start Vite dev server (hot reload) |
+| `pnpm dev:server` | Start wrangler dev server (game server, port 8787) |
+| `pnpm dev` | Start Vite dev server (hot reload, port 5173) |
 | `pnpm build` | Typecheck + production build |
 | `pnpm typecheck` | TypeScript type checking |
 | `pnpm test` | Run unit tests (Vitest) |
@@ -59,14 +61,14 @@ For phone testing during development, use your machine's local IP instead of `lo
 > **Note:** Deployment pipeline not yet configured. Will be set up in Phase 6.
 
 - **Client:** Cloudflare Pages — auto-deploy via GitHub Actions on push to main
-- **Server:** PartyKit deploy via GitHub Actions (server deploys before client)
+- **Server:** Wrangler deploy via GitHub Actions (server deploys before client)
 - **Cost:** $0 (free tier covers everything for a party game)
 - **Rollback:** CF Pages instant rollback via dashboard, PartyKit via git revert + redeploy
 
 ## Troubleshooting
 
 ### Phone can't connect to dev server
-Make sure your phone and dev machine are on the same WiFi. Use the machine's local IP (e.g., `http://192.168.1.x:5173/player.html`), not `localhost`.
+Make sure your phone and dev machine are on the same WiFi. Use the machine's local IP (e.g., `http://192.168.1.x:5173/player.html?room=ROOMCODE`), not `localhost`.
 
-### PartyKit dev server won't start
-Check that port 1999 (PartyKit default) isn't in use. Kill any orphaned processes: `npx kill-port 1999`.
+### Wrangler dev server won't start
+Check that port 8787 isn't in use. Kill any orphaned processes: `npx kill-port 8787`.

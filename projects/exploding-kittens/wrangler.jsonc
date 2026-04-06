@@ -1,0 +1,13 @@
+{
+  "name": "exploding-kittens",
+  "main": "src/server/room.ts",
+  "compatibility_date": "2026-04-05",
+  "durable_objects": {
+    "bindings": [
+      { "name": "GameRoom", "class_name": "GameRoom" }
+    ]
+  },
+  "migrations": [
+    { "tag": "v1", "new_sqlite_classes": ["GameRoom"] }
+  ]
+}

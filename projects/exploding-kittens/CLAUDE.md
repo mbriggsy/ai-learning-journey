@@ -4,7 +4,7 @@
 
 - `src/shared/` — types, constants, pure functions ONLY. No DOM, no side effects, no runtime libraries.
 - `src/client/shared/` — React hooks, components. Client only.
-- `src/server/` — PartyKit room, game engine, Zod validation. Server only.
+- `src/server/` — Cloudflare Workers Durable Object room (partyserver), game engine, Zod validation. Server only.
 - `src/server/` MAY import from `src/shared/`. `src/shared/` MUST NOT import from `src/server/` or `src/client/`.
 - `src/client/` MAY import from `src/shared/`. `src/client/` MUST NOT import from `src/server/`.
 
@@ -20,7 +20,7 @@
 - State projection uses **allowlist pattern** — every field explicitly picked. Object spread from GameState banned in projection functions. New fields excluded by default.
 - All server randomness uses `crypto.getRandomValues()` / CSPRNG. `Math.random()` banned in `src/server/`.
 - `dispatch(state, action)` is pure and synchronous. No timers, no I/O, no async. Serial action queue in room.ts is the only concurrency control.
-- Production WebSocket connections MUST use WSS. PartyKit handles this via Cloudflare.
+- Production WebSocket connections MUST use WSS. Cloudflare handles this automatically.
 - Reject WebSocket messages exceeding 4KB before `JSON.parse`.
 - Board projection includes player card COUNT only. Card identities never sent to board view.
 

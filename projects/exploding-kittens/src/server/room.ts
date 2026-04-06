@@ -1,4 +1,4 @@
-import { Server } from 'partyserver'
+import { routePartykitRequest, Server } from 'partyserver'
 import type { Connection, ConnectionContext } from 'partyserver'
 import { parseClientMessage } from './validation'
 import { createLobbyState, dispatch } from './game/engine'
@@ -881,3 +881,18 @@ export class GameRoom extends Server {
     }
   }
 }
+
+// --- Worker Entry Point (wrangler dev / wrangler deploy) ---
+
+interface Env {
+  GameRoom: DurableObjectNamespace
+}
+
+export default {
+  async fetch(request: Request, env: Env): Promise<Response> {
+    return (
+      (await routePartykitRequest(request, env)) ||
+      new Response('Not Found', { status: 404 })
+    )
+  },
+} satisfies ExportedHandler<Env>

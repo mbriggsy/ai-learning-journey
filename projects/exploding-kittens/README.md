@@ -18,7 +18,7 @@ A digital adaptation of [Exploding Kittens Party Pack](https://www.explodingkitt
 
 | Layer | Choice |
 |-------|--------|
-| Networking | PartyKit (Cloudflare Workers) |
+| Networking | partyserver + wrangler (Cloudflare Workers Durable Objects) |
 | UI | React 19 + TypeScript 5.9 |
 | Animation | Framer Motion |
 | Validation | Zod |

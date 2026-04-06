@@ -2,6 +2,8 @@ node_modules/
 dist/
 coverage/
 .partykit/
+.wrangler/
+.playwright-mcp/
 *.local
 .env*
 !.env.example

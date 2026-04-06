@@ -8,6 +8,10 @@
   - 7 hostile agents: Security, Silent Failures, Architecture, Frontend Races, Test Coverage, Performance, Pattern Recognition
   - All findings remediated across 3 tiers (5 game-killers, 4 resilience, 7 polish)
   - Methodology documented in `docs/insights/008-adversarial-swarm-review-maximum-overdrive.md`
+- **Wrangler migration COMPLETE** (2026-04-06)
+  - Switched from `partykit dev` to `wrangler dev` — partykit CLI didn't support `partyserver` package
+  - Added `wrangler.jsonc`, `routePartykitRequest` fetch handler, updated client port/party name
+  - Smoke tested: board lobby loads, player join screen connects, zero console errors
 - **Theme pivot COMPLETE** (2026-04-06)
   - Noir surfaces kept, each cat card type gets unique accent color, Nope shifted green→teal (CVD safety), player colors→IBM CVD-safe palette, warm slate for utility cards
 - **149/149 tests, 0 lint errors, typecheck clean, build succeeds**
@@ -30,9 +34,9 @@
 - **Dead exports, .gitkeep, readonly, CLAUDE.md** — all cleaned up.
 
 ## Next Steps (in order)
-1. Manual testing: real phones, WiFi toggle, screen lock/unlock
-2. Set up GitHub secrets (PARTYKIT_TOKEN, PARTYKIT_LOGIN, CLOUDFLARE_API_TOKEN, CLOUDFLARE_ACCOUNT_ID)
-3. First production deploy
+1. Manual testing: real phones, WiFi toggle, screen lock/unlock (`pnpm dev:server` + `pnpm dev`)
+2. Set up GitHub secrets (CLOUDFLARE_API_TOKEN, CLOUDFLARE_ACCOUNT_ID)
+3. First production deploy (wrangler deploy + Cloudflare Pages)
 4. Add `_headers` file for Cloudflare Pages (CSP, X-Frame-Options, X-Content-Type-Options)
 5. Storage migration strategy — version field on persisted state, migration function in onStart()
 6. Room.ts test coverage (844 lines, zero tests — the single biggest risk factor)

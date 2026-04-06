@@ -1,8 +1,8 @@
 /* Game-mode CSS — phone controller only */
 
 html, body {
-  height: 100svh;
   height: 100vh; /* fallback for older browsers */
+  height: 100svh;
   overflow: hidden;
   overscroll-behavior: none; /* kills rubber banding, pull-to-refresh, swipe nav */
   touch-action: manipulation; /* kills 300ms tap delay */

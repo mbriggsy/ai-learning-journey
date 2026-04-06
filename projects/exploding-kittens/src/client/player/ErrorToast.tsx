@@ -24,7 +24,7 @@ export function ErrorToast() {
           exit={{ y: -60, opacity: 0 }}
           transition={{ duration: 0.2, ease: 'easeOut' }}
         >
-          Game state changed — try again
+          {error.code === 'STALE_STATE' ? 'Game state changed — try again' : error.message}
         </m.div>
       )}
     </AnimatePresence>

@@ -34,11 +34,11 @@ export function connect(roomCode: string, host: string): void {
     const isReconnect = hasConnectedOnce
     hasConnectedOnce = true
     status = 'connected'
-    notifyStatus()
-    // Notify reconnection listeners (gameStore sets isReconnecting)
+    // Notify reconnection BEFORE status (status triggers auto-join send)
     if (isReconnect) {
       for (const handler of reconnectHandlers) handler()
     }
+    notifyStatus()
   })
 
   socket.addEventListener('close', () => {
@@ -59,8 +59,10 @@ export function connect(roomCode: string, host: string): void {
     // SESSION_REPLACED — halt auto-reconnect
     if (msg.type === 'error' && msg.payload.code === 'SESSION_REPLACED') {
       clearSessionToken(roomCode)
+      document.removeEventListener('visibilitychange', handleVisibilityChange)
       socket?.close()
       socket = null
+      hasConnectedOnce = false
       status = 'disconnected'
       notifyStatus()
       return

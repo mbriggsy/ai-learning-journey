@@ -94,9 +94,10 @@ export function Player() {
     <>
       {protocolMismatch && (
         <div style={{
-          position: 'fixed', top: 0, left: 0, right: 0, zIndex: 9998,
-          padding: '12px 16px', textAlign: 'center',
-          background: '#e67e22', color: '#fff', fontSize: 14, fontWeight: 600,
+          position: 'fixed', inset: 0, zIndex: 9998,
+          display: 'flex', alignItems: 'center', justifyContent: 'center',
+          background: 'var(--bg-primary, #0c0a12)',
+          color: '#e67e22', fontSize: 18, fontWeight: 700, textAlign: 'center',
         }}>
           Game updated — please refresh
         </div>

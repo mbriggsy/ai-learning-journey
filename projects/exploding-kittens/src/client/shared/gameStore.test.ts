@@ -1,4 +1,4 @@
-import { describe, it, expect } from 'vitest'
+import { describe, it, expect, vi } from 'vitest'
 import { gameStore } from './gameStore'
 import type { ServerMessage, LobbyView } from '@shared/protocol'
 
@@ -41,6 +41,44 @@ describe('GameStore', () => {
       payload: { playerId: 'p1', sessionToken: 'tok', color: '#3498db', protocolVersion: 1 },
     })
     expect(gameStore.getPlayerId()).toBe('p1')
+  })
+
+  it('suppresses errors during reconnection, clears after state-update', () => {
+    gameStore.setReconnecting(true)
+    expect(gameStore.getIsReconnecting()).toBe(true)
+
+    // Errors suppressed during reconnection
+    gameStore.handleMessage({ type: 'error', payload: { code: 'STALE_STATE', message: 'stale' } })
+    expect(gameStore.getLastError()).toBeNull()
+
+    // state-update clears reconnecting
+    const lobby: LobbyView = { phase: 'lobby', roomCode: 'TEST', players: [] }
+    gameStore.handleMessage({ type: 'state-update', payload: lobby })
+    expect(gameStore.getIsReconnecting()).toBe(false)
+  })
+
+  it('isReconnecting auto-clears after 5s safety timeout', () => {
+    vi.useFakeTimers()
+    gameStore.setReconnecting(true)
+    expect(gameStore.getIsReconnecting()).toBe(true)
+
+    vi.advanceTimersByTime(5_000)
+    expect(gameStore.getIsReconnecting()).toBe(false)
+    vi.useRealTimers()
+  })
+
+  it('detects protocol mismatch and clears on match', () => {
+    gameStore.handleMessage({
+      type: 'joined',
+      payload: { playerId: 'p1', sessionToken: 'tok', color: '#fff', protocolVersion: 999 },
+    })
+    expect(gameStore.getProtocolMismatch()).toBe(true)
+
+    gameStore.handleMessage({
+      type: 'joined',
+      payload: { playerId: 'p1', sessionToken: 'tok', color: '#fff', protocolVersion: 1 },
+    })
+    expect(gameStore.getProtocolMismatch()).toBe(false)
   })
 
   it('updates private data on player-update', () => {

@@ -9,6 +9,7 @@ import { SERVER_ONLY_ACTIONS } from '@shared/actions'
 import type { SubPhase } from '@shared/types'
 import type { ServerMessage, LobbyView, ErrorCode } from '@shared/protocol'
 import { PROTOCOL_VERSION } from '@shared/protocol'
+import { TIMING } from '@shared/constants'
 
 // --- Constants ---
 
@@ -19,12 +20,11 @@ const MAX_MESSAGES_PER_SECOND = 10
 const PROMPT_TIMEOUT_MS = 60_000
 const INACTIVITY_TIMEOUT_MS = 15 * 60_000
 const IDLE_ROOM_TIMEOUT_MS = 30 * 60_000
-const IDLE_CONNECTION_MS = 2 * 60_000 // 2 min per-connection idle timeout
 const DISCONNECT_DEBOUNCE_MS = 3_000
 const HEARTBEAT_INTERVAL_MS = 30_000
 const HEARTBEAT_TIMEOUT_MS = 10_000
 const MAX_QUEUE_DEPTH = 100
-const NOPE_GRACE_MS = 300
+const NOPE_GRACE_MS = TIMING.NOPE_GRACE_MS
 
 
 const PLAYER_COLORS = [
@@ -71,7 +71,6 @@ export class GameRoom extends Server {
   private playerNames = new Map<string, string>()      // playerId → name
   private playerColors = new Map<string, string>()     // playerId → color
   private lastActionTime = 0
-  private schemaVersion = 1
 
   // --- Serial Queue ---
   private actionQueue: Promise<void> = Promise.resolve()
@@ -79,11 +78,11 @@ export class GameRoom extends Server {
 
   // --- Timers ---
   private nopeTimeout: ReturnType<typeof setTimeout> | null = null
+  private nopeGraceTimeout: ReturnType<typeof setTimeout> | null = null
   private nopeWindowGeneration = 0
   private promptTimeout: ReturnType<typeof setTimeout> | null = null
   private disconnectTimers = new Map<string, ReturnType<typeof setTimeout>>() // playerId → debounce timer
   private heartbeatIntervals = new Map<string, ReturnType<typeof setInterval>>() // connectionId → interval
-  private idleTimers = new Map<string, ReturnType<typeof setTimeout>>() // connectionId → idle timer
   private lastPongTimes = new Map<string, number>() // connectionId → last activity
 
   // --- Rate Limiting ---
@@ -94,18 +93,12 @@ export class GameRoom extends Server {
 
   override async onStart(): Promise<void> {
     try {
-      const storedVersion = await this.ctx.storage.get<number>('schemaVersion') ?? 0
-      if (storedVersion < this.schemaVersion) {
-        // Future: run migration functions here
-        // For now, version 1 is the first schema — no migration needed
-        console.log(`Migrating room state: schema ${storedVersion} → ${this.schemaVersion}`)
-      }
-
       this.gameState = await this.ctx.storage.get('gameState') ?? null
       this.playerSessions = new Map(await this.ctx.storage.get<[string, string][]>('playerSessions') ?? [])
       this.playerNames = new Map(await this.ctx.storage.get<[string, string][]>('playerNames') ?? [])
       this.playerColors = new Map(await this.ctx.storage.get<[string, string][]>('playerColors') ?? [])
       this.lastActionTime = await this.ctx.storage.get<number>('lastActionTime') ?? Date.now()
+      this.nopeWindowGeneration = await this.ctx.storage.get<number>('nopeWindowGeneration') ?? 0
     } catch (err: unknown) {
       console.error('Failed to restore room state, resetting:', err)
       this.gameState = null
@@ -148,7 +141,7 @@ export class GameRoom extends Server {
       'https://exploding-kittens.pages.dev',
       'http://localhost:5173', 'http://localhost:4173',
     ]
-    if (origin && !allowedOrigins.includes(origin)) {
+    if (!origin || !allowedOrigins.includes(origin)) {
       connection.close(4003, 'Forbidden origin')
       return
     }
@@ -165,7 +158,6 @@ export class GameRoom extends Server {
 
     // Start heartbeat for this connection
     this.startHeartbeat(connection)
-    this.resetIdleTimer(connection)
   }
 
   override onMessage(connection: Connection, message: string | ArrayBuffer): void {
@@ -179,8 +171,7 @@ export class GameRoom extends Server {
       return
     }
 
-    // Any message counts as activity — reset idle timer
-    this.resetIdleTimer(connection)
+    // Any message counts as heartbeat activity
     this.lastPongTimes.set(connection.id, Date.now())
 
     // Rate limiting
@@ -221,7 +212,6 @@ export class GameRoom extends Server {
   override onClose(connection: Connection, _code: number, _reason: string, _wasClean: boolean): void {
     // Clean up connection-specific timers
     this.stopHeartbeat(connection.id)
-    this.clearIdleTimer(connection.id)
     this.lastPongTimes.delete(connection.id)
     this.messageCounts.delete(connection.id)
 
@@ -254,12 +244,14 @@ export class GameRoom extends Server {
 
   override async onAlarm(): Promise<void> {
     if (!this.hasConnections()) {
+      this.clearAllTimers()
       await this.ctx.storage.deleteAll()
       return
     }
 
     const elapsed = Date.now() - this.lastActionTime
     if (elapsed >= INACTIVITY_TIMEOUT_MS) {
+      this.clearAllTimers()
       this.broadcast(JSON.stringify({
         type: 'error',
         payload: { code: 'KICKED', message: 'Game ended due to inactivity' },
@@ -576,8 +568,9 @@ export class GameRoom extends Server {
           playerId: '_server',
         } as EngineAction)
 
-        // Schedule grace expiry after the window transitions to grace state
-        setTimeout(() => {
+        // Schedule grace expiry — tracked so clearNopeTimer can cancel it
+        this.nopeGraceTimeout = setTimeout(() => {
+          this.nopeGraceTimeout = null
           this.enqueue(() => this.dispatchServerAction({
             type: 'nope-grace-expired',
             windowGeneration: generation,
@@ -592,6 +585,10 @@ export class GameRoom extends Server {
     if (this.nopeTimeout) {
       clearTimeout(this.nopeTimeout)
       this.nopeTimeout = null
+    }
+    if (this.nopeGraceTimeout) {
+      clearTimeout(this.nopeGraceTimeout)
+      this.nopeGraceTimeout = null
     }
   }
 
@@ -628,7 +625,10 @@ export class GameRoom extends Server {
   // --- Serial Queue ---
 
   private enqueue(task: () => void): void {
-    if (this.queueDepth >= MAX_QUEUE_DEPTH) return
+    if (this.queueDepth >= MAX_QUEUE_DEPTH) {
+      console.error(JSON.stringify({ event: 'queue_overflow', room: this.name, queueDepth: this.queueDepth, timestamp: Date.now() }))
+      return
+    }
     this.queueDepth++
     this.actionQueue = this.actionQueue
       .then(task)
@@ -777,21 +777,16 @@ export class GameRoom extends Server {
     }
   }
 
-  // --- Idle Timer ---
+  // --- Bulk Timer Cleanup ---
 
-  private resetIdleTimer(connection: Connection): void {
-    this.clearIdleTimer(connection.id)
-    this.idleTimers.set(connection.id, setTimeout(() => {
-      connection.close(1001, 'Idle timeout')
-    }, IDLE_CONNECTION_MS))
-  }
-
-  private clearIdleTimer(connectionId: string): void {
-    const timer = this.idleTimers.get(connectionId)
-    if (timer) {
-      clearTimeout(timer)
-      this.idleTimers.delete(connectionId)
-    }
+  private clearAllTimers(): void {
+    this.clearNopeTimer()
+    this.clearPromptTimer()
+    for (const timer of this.disconnectTimers.values()) clearTimeout(timer)
+    this.disconnectTimers.clear()
+    for (const interval of this.heartbeatIntervals.values()) clearInterval(interval)
+    this.heartbeatIntervals.clear()
+    this.lastPongTimes.clear()
   }
 
   private async persistState(): Promise<void> {
@@ -802,7 +797,7 @@ export class GameRoom extends Server {
         playerNames: [...this.playerNames],
         playerColors: [...this.playerColors],
         lastActionTime: this.lastActionTime,
-        schemaVersion: this.schemaVersion,
+        nopeWindowGeneration: this.nopeWindowGeneration,
       })
     } catch (err: unknown) {
       console.error('Failed to persist game state:', err)

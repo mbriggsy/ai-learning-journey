@@ -2,7 +2,7 @@ import type { CardInstance, SubPhase, GameEvent, CardType, PendingPrompt } from 
 import type { ActionType, EngineAction, GameAction } from '@shared/actions'
 import { CARD_DEFS, CARD_DEF_BY_TYPE } from '@shared/card-defs'
 import type { CardCategory } from '@shared/card-defs'
-import { NOPE_WINDOW_MS, DECK_COMPOSITION } from '@shared/constants'
+import { NOPE_WINDOW_MS, DECK_COMPOSITION, TIMING } from '@shared/constants'
 import type {
   GameState, LobbyState, PlayingState, GameOverState,
   Player, NopeWindow,
@@ -78,7 +78,7 @@ export function dispatch(
       nopeWindow: {
         ...playing.nopeWindow,
         expired: true,
-        graceDeadlineMs: ctx.now + 300,
+        graceDeadlineMs: ctx.now + TIMING.NOPE_GRACE_MS,
       },
     }
     return ok(graceState)

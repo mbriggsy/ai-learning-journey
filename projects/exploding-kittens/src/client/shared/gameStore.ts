@@ -51,6 +51,7 @@ class GameStore {
   private listeners = new Set<Listener>()
   private accumulatedEvents: AccumulatedEvent[] = []
   private _isReconnecting = false
+  private _reconnectTimeout: ReturnType<typeof setTimeout> | null = null
   private _protocolMismatch = false
 
   subscribe = (cb: Listener): (() => void) => {
@@ -78,7 +79,19 @@ class GameStore {
   }
 
   setReconnecting(value: boolean): void {
+    if (this._reconnectTimeout) {
+      clearTimeout(this._reconnectTimeout)
+      this._reconnectTimeout = null
+    }
     this._isReconnecting = value
+    if (value) {
+      // Safety timeout — clear after 5s even if no state-update arrives
+      this._reconnectTimeout = setTimeout(() => {
+        this._reconnectTimeout = null
+        this._isReconnecting = false
+        this.notify()
+      }, 5_000)
+    }
     this.notify()
   }
 
@@ -117,10 +130,8 @@ class GameStore {
         break
       case 'joined':
         this.playerId = msg.payload.playerId
-        // Protocol version check
-        if (msg.payload.protocolVersion !== PROTOCOL_VERSION) {
-          this._protocolMismatch = true
-        }
+        // Protocol version check — set or clear on every join
+        this._protocolMismatch = msg.payload.protocolVersion !== PROTOCOL_VERSION
         this.notify()
         break
       case 'error':
@@ -217,4 +228,8 @@ export function useLastError(): GameError | null {
 
 export function useProtocolMismatch(): boolean {
   return useSyncExternalStore(gameStore.subscribe, gameStore.getProtocolMismatch)
+}
+
+export function useIsReconnecting(): boolean {
+  return useSyncExternalStore(gameStore.subscribe, gameStore.getIsReconnecting)
 }

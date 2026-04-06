@@ -16,39 +16,50 @@ export function deriveActiveBottomSheet(
   drawPileCount: number,
   futureCards: readonly CardInstance[] | undefined,
 ): ActiveBottomSheet | null {
-  if (!pendingPrompt || !myPlayerId) return null
+  if (!myPlayerId) return null
 
-  // Only show sheet if I'm the one who must respond
-  if (pendingPrompt.playerId !== myPlayerId) return null
+  // Server-prompted sheets (pendingPrompt targeting me)
+  if (pendingPrompt && pendingPrompt.playerId === myPlayerId) {
+    switch (pendingPrompt.type) {
+      case 'defuse':
+        return { sheet: 'defuse-placement', maxPosition: drawPileCount }
 
-  switch (pendingPrompt.type) {
-    case 'defuse':
-      return { sheet: 'defuse-placement', maxPosition: drawPileCount }
-
-    case 'favor-response': {
-      const requester = players.find(p => p.id === pendingPrompt.requesterId)
-      return {
-        sheet: 'favor-response',
-        requesterName: requester?.name ?? 'Someone',
-        hand,
-      }
-    }
-
-    case 'future-rearrange':
-      return {
-        sheet: 'future-peek',
-        cards: futureCards ?? [],
-        canRearrange: true,
+      case 'favor-response': {
+        const requester = players.find(p => p.id === pendingPrompt.requesterId)
+        return {
+          sheet: 'favor-response',
+          requesterName: requester?.name ?? 'Unknown',
+          hand,
+        }
       }
 
-    case 'steal-target': {
-      const eligible = players.filter(p => p.isAlive && p.id !== myPlayerId)
-      return { sheet: 'target-select-prompted', eligiblePlayers: eligible }
-    }
+      case 'future-rearrange':
+        return {
+          sheet: 'future-peek',
+          cards: futureCards ?? [],
+          canRearrange: true,
+        }
 
-    case 'name-card': {
-      const target = players.find(p => p.id === pendingPrompt.targetId)
-      return { sheet: 'name-card', targetName: target?.name ?? 'Someone' }
+      case 'steal-target': {
+        const eligible = players.filter(p => p.isAlive && p.id !== myPlayerId)
+        return { sheet: 'target-select-prompted', eligiblePlayers: eligible }
+      }
+
+      case 'name-card': {
+        const target = players.find(p => p.id === pendingPrompt.targetId)
+        return { sheet: 'name-card', targetName: target?.name ?? 'Unknown' }
+      }
     }
   }
+
+  // See the Future (read-only) — no pendingPrompt, but privateData has futureCards
+  if (futureCards && futureCards.length > 0) {
+    return {
+      sheet: 'future-peek',
+      cards: futureCards,
+      canRearrange: false,
+    }
+  }
+
+  return null
 }

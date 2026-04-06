@@ -5,7 +5,6 @@ import type { CardType } from '@shared/types'
 import styles from './MinimalCard.module.css'
 
 export interface CardProps {
-  readonly id: string
   readonly type: CardType
   readonly isSelected?: boolean
   readonly disabled?: boolean

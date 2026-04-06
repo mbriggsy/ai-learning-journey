@@ -139,6 +139,7 @@ function PhoneRouter({ connectionStatus, assignedColor, onJoin, roomCode }: Phon
 // --- Playing View ---
 
 function PlayingView() {
+  // ALL hooks must be called before any conditional returns (Rules of Hooks)
   const hand = useHand()
   const isMyTurn = useIsMyTurn()
   const subPhase = useSubPhase()
@@ -153,38 +154,39 @@ function PlayingView() {
 
   const isAlive = myPlayer?.isAlive ?? false
 
-  if (!isAlive) return <EliminatedView />
-
-  const permission = deriveInteractionPermission(
-    isMyTurn, subPhase, isAlive, phase, pendingPrompt, myPlayerId,
-  )
-
   const { state: cardPlayState, selectedIds, toggleCard, reset: resetCardPlay } = useCardPlay(hand, isMyTurn, subPhase)
+
+  // Local target select for pre-send actions (Favor, Targeted Attack)
+  const [localTargetMode, setLocalTargetMode] = useState<{ cardIds: string[]; reason: 'targeted-attack' | 'favor' } | null>(null)
 
   // Bottom sheet derivation
   const activeSheet = deriveActiveBottomSheet(
     pendingPrompt, myPlayerId, players, hand, drawPileCount, privateData.futureCards,
   )
 
+  // Reset localTargetMode when server state changes underneath
+  useEffect(() => {
+    setLocalTargetMode(null)
+  }, [subPhase, isMyTurn, pendingPrompt])
+
+  // Mutual exclusion: server-prompted sheets take priority over local target
+  useEffect(() => {
+    if (activeSheet) setLocalTargetMode(null)
+  }, [activeSheet])
+
+  const permission = deriveInteractionPermission(
+    isMyTurn, subPhase, isAlive, phase, pendingPrompt, myPlayerId,
+  )
+
   // --- Card Play confirm ---
   const handleConfirm = useCallback(() => {
     if (cardPlayState.status !== 'selecting' || !cardPlayState.validation.valid) return
-    const pt = cardPlayState.validation.playType
 
-    if (pt.kind === 'single' && pt.requiresTarget) {
-      // Need target — handled by local target select (not shown via prompt)
-      // For now, just show the sheet — in the real flow this would open a local target picker
-      // We'll handle this with a local state
-      return
-    }
-
-    // Direct play
     sendAction({
       type: 'play-card',
       cardIds: [...cardPlayState.selectedCardIds],
     })
     gameStore.applyOptimistic(s => {
-      // Remove cards from hand optimistically
       if (s.phase !== 'playing' || !('myHand' in s)) return s
       const removedIds = new Set(cardPlayState.selectedCardIds)
       return { ...s, myHand: s.myHand.filter(c => !removedIds.has(c.id)) }
@@ -192,10 +194,21 @@ function PlayingView() {
     resetCardPlay()
   }, [cardPlayState, sendAction, resetCardPlay])
 
+  const handleConfirmWithTarget = useCallback(() => {
+    if (cardPlayState.status !== 'selecting' || !cardPlayState.validation.valid) return
+    const pt = cardPlayState.validation.playType
+    if (pt.kind === 'single' && pt.requiresTarget) {
+      setLocalTargetMode({
+        cardIds: [...cardPlayState.selectedCardIds],
+        reason: pt.cardType === 'favor' ? 'favor' : 'targeted-attack',
+      })
+    }
+  }, [cardPlayState])
+
   // --- Prompted sheet actions ---
   const handleDefusePlace = useCallback((position: number) => {
     if (position === -1) {
-      // Random — server chooses. Send max + 1 as sentinel? No — use a random client-side position
+      // "Random" — client picks a position, server validates range
       const randomPos = Math.floor(Math.random() * (drawPileCount + 1))
       sendAction({ type: 'defuse-place', position: randomPos })
     } else {
@@ -219,20 +232,6 @@ function PlayingView() {
     sendAction({ type: 'name-card', cardType })
   }, [sendAction])
 
-  // Local target select for pre-send actions (Favor, Targeted Attack)
-  const [localTargetMode, setLocalTargetMode] = useState<{ cardIds: string[]; reason: 'targeted-attack' | 'favor' } | null>(null)
-
-  const handleConfirmWithTarget = useCallback(() => {
-    if (cardPlayState.status !== 'selecting' || !cardPlayState.validation.valid) return
-    const pt = cardPlayState.validation.playType
-    if (pt.kind === 'single' && pt.requiresTarget) {
-      setLocalTargetMode({
-        cardIds: [...cardPlayState.selectedCardIds],
-        reason: pt.cardType === 'favor' ? 'favor' : 'targeted-attack',
-      })
-    }
-  }, [cardPlayState])
-
   const handleLocalTargetSelect = useCallback((targetPlayerId: string) => {
     if (!localTargetMode) return
     sendAction({
@@ -244,7 +243,10 @@ function PlayingView() {
     resetCardPlay()
   }, [localTargetMode, sendAction, resetCardPlay])
 
-  // Determine if confirm should go to target select
+  // --- Conditional render AFTER all hooks ---
+
+  if (!isAlive) return <EliminatedView />
+
   const needsTarget = cardPlayState.status === 'selecting' &&
     cardPlayState.validation.valid &&
     cardPlayState.validation.playType.kind === 'single' &&
@@ -263,7 +265,6 @@ function PlayingView() {
 
       <CardConfirmBar
         state={cardPlayState}
-        hand={hand}
         onConfirm={needsTarget ? handleConfirmWithTarget : handleConfirm}
         onCancel={resetCardPlay}
       />
@@ -275,7 +276,7 @@ function PlayingView() {
 
       {/* Local target select (pre-send: Favor, Targeted Attack) */}
       <BottomSheet
-        open={localTargetMode !== null}
+        open={localTargetMode !== null && !activeSheet}
         onDismiss={() => { setLocalTargetMode(null); resetCardPlay() }}
       >
         {localTargetMode && (
@@ -312,7 +313,7 @@ function PlayingView() {
           <FuturePeek
             cards={activeSheet.cards}
             canRearrange={activeSheet.canRearrange}
-            onDismiss={() => { /* sheet auto-closes on subPhase change */ }}
+            onDismiss={() => { /* sheet auto-closes when futureCards clears */ }}
             onRearrange={handleFutureRearrange}
           />
         )}

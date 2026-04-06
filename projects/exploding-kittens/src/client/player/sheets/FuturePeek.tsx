@@ -12,19 +12,21 @@ interface FuturePeekProps {
 
 export function FuturePeek({ cards, canRearrange, onDismiss, onRearrange }: FuturePeekProps) {
   const [tapOrder, setTapOrder] = useState<string[]>([])
+  const [submitted, setSubmitted] = useState(false)
 
   const handleTap = useCallback((cardId: string) => {
-    if (!canRearrange) return
+    if (!canRearrange || submitted) return
     setTapOrder(prev => {
       if (prev.includes(cardId)) return prev
-      const next = [...prev, cardId]
-      if (next.length === cards.length && onRearrange) {
-        // Schedule to avoid state-during-render
-        setTimeout(() => onRearrange(next), 0)
-      }
-      return next
+      return [...prev, cardId]
     })
-  }, [canRearrange, cards.length, onRearrange])
+  }, [canRearrange, submitted])
+
+  const handleConfirmOrder = useCallback(() => {
+    if (submitted || tapOrder.length !== cards.length) return
+    setSubmitted(true)
+    onRearrange?.(tapOrder)
+  }, [submitted, tapOrder, cards.length, onRearrange])
 
   const tappedSet = new Set(tapOrder)
 
@@ -48,15 +50,17 @@ export function FuturePeek({ cards, canRearrange, onDismiss, onRearrange }: Futu
               className={styles.tapCard}
               data-tapped={tappedSet.has(card.id) || undefined}
               onClick={() => handleTap(card.id)}
-              disabled={tappedSet.has(card.id) && canRearrange}
+              disabled={(tappedSet.has(card.id) && canRearrange) || submitted}
             >
               {orderIndex >= 0 && (
                 <span className={styles.orderBadge}>#{orderIndex + 1}</span>
               )}
               <span>{CARD_DEF_BY_TYPE[card.type].name}</span>
-              <span style={{ fontSize: '11px', color: 'var(--text-secondary)' }}>
-                {canRearrange ? '' : `#${i + 1}`}
-              </span>
+              {!canRearrange && (
+                <span style={{ fontSize: '11px', color: 'var(--text-secondary)' }}>
+                  #{i + 1}
+                </span>
+              )}
             </button>
           )
         })}
@@ -71,7 +75,8 @@ export function FuturePeek({ cards, canRearrange, onDismiss, onRearrange }: Futu
       {canRearrange && tapOrder.length === cards.length && (
         <button
           className={styles.confirmBtn}
-          onClick={() => onRearrange?.(tapOrder)}
+          disabled={submitted}
+          onClick={handleConfirmOrder}
         >
           Confirm Order
         </button>

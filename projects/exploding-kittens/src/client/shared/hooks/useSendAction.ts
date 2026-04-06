@@ -6,7 +6,8 @@ import type { ClientGameAction } from '@shared/actions'
 export function useSendAction(): (action: ClientGameAction) => void {
   return useCallback((action: ClientGameAction) => {
     // Read stateVersion at SEND-TIME, not at render-time
-    const snapshot = gameStore.getSnapshot()
+    // Read SERVER snapshot, not optimistic — stateVersion must match server
+    const snapshot = gameStore.getServerSnapshot()
     const stateVersion = (snapshot && snapshot.phase !== 'lobby')
       ? snapshot.stateVersion
       : 0

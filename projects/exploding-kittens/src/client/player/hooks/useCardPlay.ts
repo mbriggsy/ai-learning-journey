@@ -8,7 +8,6 @@ import type { ComboValidation } from '@shared/combo-validation'
 export type CardPlayState =
   | { status: 'idle' }
   | { status: 'selecting'; selectedCardIds: readonly string[]; validation: ComboValidation }
-  | { status: 'awaiting-target'; selectedCardIds: readonly string[]; targetReason: 'targeted-attack' | 'favor' }
 
 // --- Actions ---
 

@@ -4,6 +4,8 @@ import { useHand, useMyPlayer } from './hooks/usePlayerSelectors'
 import { useSendAction } from '@client/shared/hooks/useSendAction'
 import styles from './NopeButton.module.css'
 
+const nopeRoot = document.getElementById('nope-root')
+
 export function NopeButton() {
   const nopeWindow = useNopeWindow()
   const hand = useHand()
@@ -13,10 +15,7 @@ export function NopeButton() {
   const hasNope = hand.some(c => c.type === 'nope')
   const isAlive = myPlayer?.isAlive ?? false
 
-  if (!nopeWindow || !isAlive) return null
-
-  const root = document.getElementById('nope-root')
-  if (!root) return null
+  if (!nopeWindow || !isAlive || !nopeRoot) return null
 
   return createPortal(
     <button
@@ -27,6 +26,6 @@ export function NopeButton() {
     >
       NOPE
     </button>,
-    root,
+    nopeRoot,
   )
 }

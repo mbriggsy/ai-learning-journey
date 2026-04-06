@@ -1,16 +1,14 @@
 import type { CardPlayState } from './hooks/useCardPlay'
-import type { CardInstance } from '@shared/types'
 import { CARD_DEF_BY_TYPE } from '@shared/card-defs'
 import styles from './CardConfirmBar.module.css'
 
 interface CardConfirmBarProps {
   readonly state: CardPlayState
-  readonly hand: readonly CardInstance[]
   readonly onConfirm: () => void
   readonly onCancel: () => void
 }
 
-function getConfirmLabel(state: CardPlayState, hand: readonly CardInstance[]): string {
+function getConfirmLabel(state: CardPlayState): string {
   if (state.status !== 'selecting' || !state.validation.valid) return 'Select cards'
   const pt = state.validation.playType
   switch (pt.kind) {
@@ -20,7 +18,7 @@ function getConfirmLabel(state: CardPlayState, hand: readonly CardInstance[]): s
   }
 }
 
-export function CardConfirmBar({ state, hand, onConfirm, onCancel }: CardConfirmBarProps) {
+export function CardConfirmBar({ state, onConfirm, onCancel }: CardConfirmBarProps) {
   if (state.status === 'idle') return null
 
   const isValid = state.status === 'selecting' && state.validation.valid
@@ -34,7 +32,7 @@ export function CardConfirmBar({ state, hand, onConfirm, onCancel }: CardConfirm
         disabled={!isValid}
         onClick={onConfirm}
       >
-        {needsTarget ? `${getConfirmLabel(state, hand)} →` : getConfirmLabel(state, hand)}
+        {needsTarget ? `${getConfirmLabel(state)} →` : getConfirmLabel(state)}
       </button>
       <button className={styles.cancelBtn} onClick={onCancel}>
         Cancel

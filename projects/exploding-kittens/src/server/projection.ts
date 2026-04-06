@@ -43,7 +43,7 @@ export function projectForBoard(state: PlayingState | GameOverState, now: number
           startedAtMs: state.nopeWindow.startedAtMs,
         }
       : null,
-    pendingPrompt: state.pendingPrompt as PendingPromptView | null,
+    pendingPrompt: stripPrivatePromptFields(state.pendingPrompt),
     events: [...state.events] as GameEvent[],
     stateVersion: state.stateVersion,
   }
@@ -85,6 +85,15 @@ export function getPrivateData(state: PlayingState, playerId: string): PrivateDa
   }
 
   return data
+}
+
+function stripPrivatePromptFields(prompt: import('@shared/types').PendingPrompt | null): PendingPromptView | null {
+  if (!prompt) return null
+  // Strip cardIds from future-rearrange — board must not see draw pile card UUIDs
+  if (prompt.type === 'future-rearrange') {
+    return { type: prompt.type, playerId: prompt.playerId, cardIds: [] }
+  }
+  return prompt
 }
 
 // --- Helpers ---

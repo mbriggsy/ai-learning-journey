@@ -3,7 +3,6 @@ import {
   useCurrentTurn,
 } from '@client/shared/hooks/useSharedSelectors'
 import { MinimalCard } from '@client/shared/MinimalCard'
-import type { CardType } from '@shared/types'
 import { PlayerList } from './PlayerList'
 import { NopeCountdownBar } from './NopeCountdownBar'
 import { AnnouncementFeed } from './AnnouncementFeed'
@@ -34,8 +33,7 @@ export function GameTable() {
           <div className={styles.discardCard}>
             {discardTop ? (
               <MinimalCard
-                id={discardTop.id}
-                type={discardTop.type as CardType}
+                type={discardTop.type}
                 disabled
               />
             ) : (

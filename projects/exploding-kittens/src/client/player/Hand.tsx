@@ -17,7 +17,6 @@ export function Hand({ hand, selectedIds, disabled, onCardClick }: HandProps) {
         {hand.map(card => (
           <div key={card.id} className={styles.cardSlot}>
             <MinimalCard
-              id={card.id}
               type={card.type}
               isSelected={selectedIds.has(card.id)}
               disabled={disabled}

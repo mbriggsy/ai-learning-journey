@@ -183,10 +183,6 @@ export function useLobbyState(): LobbyView | null {
   })
 }
 
-export function useConnectionPlayerId(): string | null {
-  return useSyncExternalStore(gameStore.subscribe, gameStore.getPlayerId)
-}
-
 export function useLastError(): GameError | null {
   return useSyncExternalStore(gameStore.subscribe, gameStore.getLastError)
 }

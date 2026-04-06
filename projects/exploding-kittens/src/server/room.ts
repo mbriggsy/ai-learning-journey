@@ -26,10 +26,6 @@ const HEARTBEAT_TIMEOUT_MS = 10_000
 const MAX_QUEUE_DEPTH = 100
 const NOPE_GRACE_MS = 300
 
-// Join rate limiting: 5 attempts per IP per minute, 5 min lockout
-const JOIN_RATE_WINDOW_MS = 60_000
-const JOIN_RATE_MAX = 5
-const JOIN_LOCKOUT_MS = 5 * 60_000
 
 const PLAYER_COLORS = [
   '#e74c3c', '#3498db', '#2ecc71', '#9b59b6', '#f39c12',
@@ -40,8 +36,7 @@ const NAME_PATTERN = /^[a-zA-Z0-9 .!?_-]{1,12}$/
 
 // --- Room Code Generation ---
 
-const ROOM_ALPHABET = 'ABCDEFGHJKMNPQRSTUVWXYZ23456789' // 31 chars, no ambiguous 0/O/1/I/L
-const OFFENSIVE_PATTERNS = /FUCK|SHIT|DAMN|HELL|COCK|CUNT|DICK|TWAT|NAZI/
+// Room code: generated client-side (Board.tsx), validated server-side via room name
 
 // --- Engine → Protocol Error Code Mapping ---
 
@@ -94,8 +89,6 @@ export class GameRoom extends Server {
   // --- Rate Limiting ---
   private messageCounts = new Map<string, { count: number; windowStart: number }>()
 
-  // --- Join Rate Limiting (per-IP) ---
-  private joinAttempts = new Map<string, { count: number; windowStart: number; lockedUntil: number }>()
 
   // --- Lifecycle ---
 
@@ -162,6 +155,7 @@ export class GameRoom extends Server {
 
     // Enforce max connections
     let connCount = 0
+    // eslint-disable-next-line @typescript-eslint/no-unused-vars
     for (const _ of this.getConnections()) { connCount++; if (connCount > MAX_CONNECTIONS) break }
     if (connCount > MAX_CONNECTIONS) {
       this.sendError(connection, 'ROOM_FULL', 'Room is full')

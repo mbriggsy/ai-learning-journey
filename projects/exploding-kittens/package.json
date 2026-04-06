@@ -9,6 +9,7 @@
     "typecheck": "tsc --noEmit",
     "test": "vitest run",
     "test:watch": "vitest",
+    "test:e2e": "playwright test",
     "lint": "eslint src/",
     "preview": "vite preview"
   },
@@ -32,6 +33,7 @@
     "@cloudflare/workers-types": "^4.20260405.1",
     "@eslint/js": "^10.0.1",
     "@fast-check/vitest": "^0.4.0",
+    "@playwright/test": "^1.59.1",
     "@types/react": "^19.2.14",
     "@types/react-dom": "^19.2.3",
     "@vitejs/plugin-react": "^6.0.1",

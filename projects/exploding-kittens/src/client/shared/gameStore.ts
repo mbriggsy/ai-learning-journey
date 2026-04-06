@@ -175,6 +175,12 @@ class GameStore {
 
 export const gameStore = new GameStore()
 
+// Expose store snapshot for E2E tests (zero production cost — only in test/development mode)
+if (typeof window !== 'undefined' && (import.meta.env.DEV || import.meta.env.MODE === 'test')) {
+  (window as unknown as Record<string, unknown>).__gameStoreSnapshot = () =>
+    JSON.parse(JSON.stringify(gameStore.getSnapshot()))
+}
+
 // --- Hooks ---
 
 export function useGameState(): ViewState | null {

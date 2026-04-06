@@ -1,59 +1,43 @@
 # Exploding Kittens Digital -- TODO
 
 ## Current State
-- **Phase 1: Foundation — COMPLETE + REVIEWED** (2026-04-05)
-  - 12/12 tests, typecheck clean, lint clean, build succeeds
-  - Phone initial JS: ~71KB gzipped (under 100KB budget)
-  - Code review: 5 agents, 16 findings — all P1/P2 fixes applied
-- **Phase 2: Game Engine — COMPLETE + REVIEWED** (2026-04-05)
-  - 67/67 tests (49 scenario + 6 PBT + 12 foundation)
-  - dispatch + all 12 card effects + Nope chains + combo validation
-  - Review: 5 agents, 22 findings — all P1/P2 resolved
-- **Phase 3: Networking + Lobby — COMPLETE + REVIEWED** (2026-04-05)
-  - 105/105 tests, typecheck clean, lint clean
-  - Review: 10 agents, 24 findings — all P1/P2 resolved
-- **Phase 4: Core Game UI — COMPLETE + REVIEWED** (2026-04-05)
-  - 135/135 tests, typecheck clean, build succeeds
-  - Phone initial JS: ~88KB gzipped (under 100KB budget)
-  - 30+ new components across board + phone
-  - Review: 8 agents, 24 findings — all P1/P2 resolved
-- **Phase 5: Visual & Animation — COMPLETE + REVIEWED** (2026-04-05)
-  - 135/135 tests, typecheck clean, build succeeds
-  - Phone initial JS: ~92KB gzipped (under 100KB budget)
-  - Review: 7 agents, 21 findings — all P1/P2 resolved
-- **Phase 6: Hardening & Deploy — COMPLETE + REVIEWED** (2026-04-06)
-  - 144/144 tests (135 existing + 6 Phase 6 + 3 review), typecheck clean, build succeeds
+- **All 6 phases COMPLETE + REVIEWED**
+- **Comprehensive codebase audit COMPLETE** (2026-04-06)
+  - 10 agents: Architecture, Security, Performance, Silent Failures, Test Coverage, Type Design, Frontend Races, User Flows, Pattern Recognition, Code Simplicity
+  - 149/149 tests, typecheck clean, build succeeds
   - Phone initial JS: ~92KB gzipped (under 100KB budget, 8KB headroom)
-  - Mobile hardening: wake lock, landscape detection, 100svh, overscroll, safe-area, PWA suppress
-  - Security: origin validation, max connections (12), heartbeat (30s/10s), idle timeout, name regex, protocol version, ESLint react/no-danger
-  - Client resilience: ErrorBoundary (phone + board), protocol mismatch banner, global error handlers
-  - Reconnection: isReconnecting flag, Nope grace window (300ms two-step), serial queue state-send (P0), disconnect debounce (3s)
-  - Performance: bundle size CI script, preconnect hints, font-display: swap verified
-  - Deploy config: CF Pages _headers/_redirects, partykit.json, env vars, schema versioning
-  - CI/CD: GitHub Actions pipeline (verify → deploy-server → deploy-client)
-  - E2E: Playwright config, fixtures, helpers, tier1 test scaffold
-  - Monitoring: structured JSON logging, client error reporting
-- All cross-phase contradictions resolved (2026-04-05)
-- Rules audit complete -- canonical reference at `docs/rules/RULES-REFERENCE.md`
+  - Game-freezers fixed: nextNopeGeneration moved to PlayingState (survives hibernate), grace period restored on wake
+  - UX dead ends fixed: JoinScreen errors visible, See the Future dismissal, FavorResponse EK-only auto-resolve
+  - Room codes: 6 chars (887M combos), rejection sampling, no modulo bias
+  - Board: error banner, room code persisted in URL hash (survives refresh)
+  - Nope countdown displayed on phone FAB
+  - Projection allowlist: projectForPlayer no longer uses ...board spread
+  - Combo steal + Draw from Bottom tests added (zero coverage → full end-to-end)
+  - Test helpers extracted to shared test-helpers.ts
 
 ## Next Steps (in order)
-1. Manual testing: real phones, WiFi toggle, screen lock/unlock, 10-player stress
-2. Set up GitHub secrets (PARTYKIT_TOKEN, PARTYKIT_LOGIN, CLOUDFLARE_API_TOKEN, CLOUDFLARE_ACCOUNT_ID)
-3. First production deploy
+1. **"Play Again" button** — engine `return-to-lobby` action, GameOver button on Board + Player. Everyone stays connected, no rescan. THE #1 UX gap.
+2. **Wire animation code OR delete it** — AnimationSequencer + particle system + ScreenFlash (607 LOC built Phase 5, never connected to GameTable render tree). Decision: wire for EK drama or delete (git has history).
+3. **Board protocol version check** — board never gets `joined` message, protocolMismatch always false. Add PROTOCOL_VERSION to state-update payload or send a version message to host on connect.
+4. **iOS Safari reconnect handler gap** — `handleVisibilityChange` calls `socket.reconnect()` but doesn't set `hasConnectedOnce = true`, so the next open event is not treated as a reconnect. `isReconnecting` never set, stale errors not suppressed.
+5. **discardPile trim for player messages** — phones never render discardPile but receive the full array. Project `discardPile: []` or `discardTop` only in player views. Saves 30-40% message size late-game.
+6. **Unused exports cleanup** — MOTION presets (IMPACT, TENSION, RELIEF, ANTICIPATION, INSTANT), haptic presets (heavy, success), useReducedMotionPreference hook, CardVisualProps/PremiumCardProps types. Delete or wire.
+7. **motion-features preload** — 27KB lazy chunk may not load before first Nope on slow party WiFi. Add `<link rel="modulepreload">` in player.html.
+8. Manual testing: real phones, WiFi toggle, screen lock/unlock
+9. Set up GitHub secrets (PARTYKIT_TOKEN, PARTYKIT_LOGIN, CLOUDFLARE_API_TOKEN, CLOUDFLARE_ACCOUNT_ID)
+10. First production deploy
 
 ## Landmines
 - 5 cat types: Taco Cat, Beard Cat, Rainbow-Ralphing Cat, Hairy Potato Cat, Cattermelon
 - qrcode.react added as production dependency (small, SVG-only, board bundle only)
 - `@cloudflare/workers-types` added to tsconfig types array for DurableObject ctx access
-- `nextNopeGeneration` is module-level mutable state — works per-isolate in PartyKit but violates pure-engine ideal
-- Room code generation is client-side (Board.tsx) — server-side generation deferred (join rate limiting constants removed)
-- AnimationSequencer + particle system + screen effects are built but NOT wired into GameTable render tree
-- Font files in public/fonts/ (~98KB total) downloaded from CDN — consider subsetting further if bandwidth is a concern
+- Combo validation duplicated between engine (isValidCombo) and shared (isValidComboMatch) — drift risk
 - Phone JS at ~92KB gzipped — only 8KB headroom before 100KB budget
 - 2 pre-existing lint errors (ReducedMotionProvider empty block, unused CardType import in useSharedSelectors)
 - E2E tests require `npx playwright install` before first run
 - Remaining E2E Tier 2 scenarios (11-20) not yet written — scaffold only
-- PendingPromptBanner missing timeout countdown — deferred
-- `isConnected` missing from BoardPlayer in playing phase — deferred
-- Combo validation duplicated between engine (isValidCombo) and shared (isValidComboMatch) — drift risk
-- Phase 5 review P3 items deferred: roving tabindex on Hand, BottomSheet aria-labelledby, data-testid attributes, conditional Framer Motion reduced motion, optimistic 5s safety timeout, checkState() contract testing
+- PendingPromptBanner missing timeout countdown
+- `isConnected` missing from BoardPlayer in playing phase
+- Lobby.module.css and JoinScreen.module.css use `rem` units (Phase 1) while Phase 4+ uses `px`
+- `game_over` phase uses snake_case while all other phases use kebab-case (legacy, breaking to change)
+- Phase 5 review P3 deferred: roving tabindex on Hand, BottomSheet aria-labelledby, data-testid attributes, conditional Framer Motion reduced motion, optimistic 5s safety timeout, checkState() contract testing

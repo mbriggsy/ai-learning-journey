@@ -3,6 +3,7 @@ import { m, AnimatePresence } from 'motion/react'
 import { useNopeWindow } from '@client/shared/hooks/useSharedSelectors'
 import { useHand, useMyPlayer } from './hooks/usePlayerSelectors'
 import { useSendAction } from '@client/shared/hooks/useSendAction'
+import { haptic } from '@client/shared/haptics'
 import { MOTION } from '@client/shared/animation-config'
 import styles from './NopeButton.module.css'
 
@@ -26,7 +27,10 @@ export function NopeButton() {
         <m.button
           className={styles.nopeFab}
           disabled={!hasNope}
-          onClick={() => sendAction({ type: 'nope' })}
+          onClick={() => {
+            haptic('medium')
+            sendAction({ type: 'nope' })
+          }}
           aria-label="Play Nope card"
           initial={{ scale: 0, opacity: 0 }}
           animate={{ scale: 1, opacity: 1 }}

@@ -1,6 +1,7 @@
-import { useState, useCallback } from 'react'
+import { useState, useCallback, useEffect } from 'react'
 import type { CardInstance } from '@shared/types'
 import { CARD_DEF_BY_TYPE } from '@shared/card-defs'
+import { TIMING } from '@shared/constants'
 import styles from './sheets.module.css'
 
 interface FuturePeekProps {
@@ -27,6 +28,25 @@ export function FuturePeek({ cards, canRearrange, onDismiss, onRearrange }: Futu
     setSubmitted(true)
     onRearrange?.(tapOrder)
   }, [submitted, tapOrder, cards.length, onRearrange])
+
+  // Auto-close See the Future (read-only) after 10s
+  const [countdown, setCountdown] = useState(
+    canRearrange ? 0 : Math.ceil(TIMING.SEE_FUTURE_AUTO_CLOSE_MS / 1000)
+  )
+
+  useEffect(() => {
+    if (canRearrange || countdown <= 0) return
+    const timer = setInterval(() => {
+      setCountdown(prev => {
+        if (prev <= 1) {
+          onDismiss()
+          return 0
+        }
+        return prev - 1
+      })
+    }, 1000)
+    return () => clearInterval(timer)
+  }, [canRearrange, countdown > 0]) // eslint-disable-line react-hooks/exhaustive-deps
 
   const tappedSet = new Set(tapOrder)
 
@@ -68,7 +88,7 @@ export function FuturePeek({ cards, canRearrange, onDismiss, onRearrange }: Futu
 
       {!canRearrange && (
         <button className={styles.confirmBtn} onClick={onDismiss}>
-          Got it
+          Got it{countdown > 0 ? ` (${countdown}s)` : ''}
         </button>
       )}
 

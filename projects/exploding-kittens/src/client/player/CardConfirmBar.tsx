@@ -1,5 +1,6 @@
 import type { CardPlayState } from './hooks/useCardPlay'
 import { CARD_DEF_BY_TYPE } from '@shared/card-defs'
+import { haptic } from '@client/shared/haptics'
 import styles from './CardConfirmBar.module.css'
 
 interface CardConfirmBarProps {
@@ -30,7 +31,10 @@ export function CardConfirmBar({ state, onConfirm, onCancel }: CardConfirmBarPro
       <button
         className={styles.confirmBtn}
         disabled={!isValid}
-        onClick={onConfirm}
+        onClick={() => {
+          haptic('light')
+          onConfirm()
+        }}
       >
         {needsTarget ? `${getConfirmLabel(state)} →` : getConfirmLabel(state)}
       </button>

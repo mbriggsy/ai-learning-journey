@@ -1,6 +1,7 @@
 import { StrictMode } from 'react'
 import { createRoot } from 'react-dom/client'
 import { MotionProvider } from '@client/shared/MotionProvider'
+import { ReducedMotionProvider } from '@client/shared/ReducedMotionProvider'
 import { applyTheme } from '@client/shared/theme'
 import { Board } from './Board'
 
@@ -9,7 +10,9 @@ applyTheme()
 createRoot(document.getElementById('root')!).render(
   <StrictMode>
     <MotionProvider>
-      <Board />
+      <ReducedMotionProvider>
+        <Board />
+      </ReducedMotionProvider>
     </MotionProvider>
   </StrictMode>
 )

@@ -4,14 +4,14 @@ A digital adaptation of [Exploding Kittens Party Pack](https://www.explodingkitt
 
 ## Status
 
-**Phase 2 complete** — game engine with all card effects, 67/67 tests (49 scenario + 6 PBT + 12 foundation). Executing Phase 3 next.
+**All 6 phases complete + adversarial swarm review** — 149/149 tests, typecheck clean, ~93KB phone JS (under 100KB budget). Next: manual testing, deploy, Phase 5 visual polish.
 
 ## The Game
 
 - **2-10 players**, full Party Pack (120 cards, all card types)
 - **Shared screen** shows draw pile, discard pile, player ring, and all the drama
 - **Phone controllers** show your hand, let you play cards, and keep your moves secret
-- **Dark + premium** visual direction — glowing card edges, neon accents, theatrical explosions
+- **Dark noir + colorful cards** — each cat type has its own accent color, CVD-safe palette, theatrical explosions
 - **Smart Nope timing** — tension scales as players are eliminated (3s/5s/7s windows)
 
 ## Tech Stack
@@ -80,10 +80,10 @@ Brainstorm → Roadmap → Phase Plans → Deepen Each → Fix Contradictions �
 |---|-------|------|---------|----------|----------|----------|
 | 1 | Foundation | [phase-1](docs/plans/phase-1-foundation.md) | 04-05 11:41AM | 04-05 1:30PM | 04-05 4:04PM | 04-05 6:12PM |
 | 2 | Game Engine | [phase-2](docs/plans/phase-2-game-engine.md) | 04-05 11:41AM | 04-05 2:45PM | 04-05 6:39PM | 04-05 7:43PM |
-| 3 | Networking + Lobby | [phase-3](docs/plans/phase-3-networking-lobby.md) | 04-05 11:41AM | 04-05 3:45PM | | |
-| 4 | Core Game UI | [phase-4](docs/plans/phase-4-core-game-ui.md) | 04-05 11:41AM | 04-05 6:30PM | | |
-| 5 | Visual & Animation | [phase-5](docs/plans/phase-5-visual-animation.md) | 04-05 11:41AM | 04-05 8:45PM | | |
-| 6 | Hardening & Deploy | [phase-6](docs/plans/phase-6-hardening-deploy.md) | 04-05 11:41AM | 04-05 11:30PM | | |
+| 3 | Networking + Lobby | [phase-3](docs/plans/phase-3-networking-lobby.md) | 04-05 11:41AM | 04-05 3:45PM | 04-05 | 04-06 |
+| 4 | Core Game UI | [phase-4](docs/plans/phase-4-core-game-ui.md) | 04-05 11:41AM | 04-05 6:30PM | 04-06 | 04-06 |
+| 5 | Visual & Animation | [phase-5](docs/plans/phase-5-visual-animation.md) | 04-05 11:41AM | 04-05 8:45PM | 04-06 | 04-06 |
+| 6 | Hardening & Deploy | [phase-6](docs/plans/phase-6-hardening-deploy.md) | 04-05 11:41AM | 04-05 11:30PM | 04-06 | 04-06 |
 
 ## Reference
 

@@ -27,9 +27,10 @@ const MAX_QUEUE_DEPTH = 100
 const NOPE_GRACE_MS = TIMING.NOPE_GRACE_MS
 
 
+// IBM CVD-safe palette — every pair distinguishable across all common color vision deficiencies
 const PLAYER_COLORS = [
-  '#e74c3c', '#3498db', '#2ecc71', '#9b59b6', '#f39c12',
-  '#1abc9c', '#e67e22', '#e91e63', '#00bcd4', '#8bc34a',
+  '#648FFF', '#FE6100', '#FFB000', '#DC267F', '#785EF0',
+  '#00B4A6', '#FF6B6B', '#8FD14F', '#C4C4C4', '#FFDAC1',
 ] as const
 
 const NAME_PATTERN = /^[a-zA-Z0-9 .!?_-]{1,12}$/

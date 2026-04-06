@@ -24,7 +24,7 @@
   letter-spacing: 0.03em;
   cursor: pointer;
   color: var(--bg-app, #0c0a12);
-  background: var(--green, #2dd885);
+  background: var(--teal, #2dd8c8);
   touch-action: manipulation;
 }
 

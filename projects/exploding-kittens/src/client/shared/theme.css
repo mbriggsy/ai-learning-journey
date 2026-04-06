@@ -17,18 +17,18 @@
   --bg-primary: #0c0a12;
   --bg-surface: #12121f;
   --accent-danger: #e03535;
-  --accent-success: #2dd885;
-  --accent-nope: #2dd885;
+  --accent-success: #2dd8c8;
+  --accent-nope: #2dd8c8;
 
   /* Raw accent colors */
   --red: #e03535;
   --red-glow: #ff0000;
   --blue: #3b82f6;
   --blue-glow: #1a6bff;
-  --green: #2dd885;
-  --green-glow: #00e673;
+  --teal: #2dd8c8;
+  --teal-glow: #00e6cc;
   --amber: #e8922a;
   --amber-glow: #ff8c00;
-  --slate: #7788aa;
-  --slate-glow: #556688;
+  --slate: #7080a3;
+  --slate-glow: #566480;
 }

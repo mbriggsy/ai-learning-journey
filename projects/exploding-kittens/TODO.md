@@ -8,6 +8,8 @@
   - 7 hostile agents: Security, Silent Failures, Architecture, Frontend Races, Test Coverage, Performance, Pattern Recognition
   - All findings remediated across 3 tiers (5 game-killers, 4 resilience, 7 polish)
   - Methodology documented in `docs/insights/008-adversarial-swarm-review-maximum-overdrive.md`
+- **Theme pivot COMPLETE** (2026-04-06)
+  - Noir surfaces kept, each cat card type gets unique accent color, Nope shifted green→teal (CVD safety), player colors→IBM CVD-safe palette, warm slate for utility cards
 - **149/149 tests, 0 lint errors, typecheck clean, build succeeds**
 - **Phone initial JS: ~93KB gzipped (under 100KB budget, 7KB headroom)**
 
@@ -35,6 +37,7 @@
 5. Storage migration strategy — version field on persisted state, migration function in onStart()
 6. Room.ts test coverage (844 lines, zero tests — the single biggest risk factor)
 7. Projection regression guard (exhaustive key assertion to prevent accidental field leakage)
+8. Phase 5 visual polish: player icons per avatar, glassmorphism sheets, multi-layered card shadows, grain texture, card art via Imagen 4
 
 ## Landmines
 - 5 cat types: Taco Cat, Beard Cat, Rainbow-Ralphing Cat, Hairy Potato Cat, Cattermelon
@@ -53,3 +56,6 @@
 - Inline styles in ~15 components bypass CSS modules convention (Board.tsx, Player.tsx, ErrorBoundary.tsx, sheets)
 - NopeWindow stores full GameAction in persisted state — no versioning for hibernated action payloads
 - playerSessions map not pruned on return-to-lobby (stale tokens from disconnected players linger)
+- Theme CSS vars renamed: `--green`→`--teal`, `--accent-nope`/`--accent-success` now point to teal (#2dd8c8). Any new CSS using old green vars will silently fall back.
+- Player colors changed from generic web colors to IBM CVD-safe palette — any hardcoded references to old colors (#e74c3c, #3498db, etc.) in Lobby/JoinScreen/ErrorBoundary are now mismatched. Cleanup needed.
+- Imagen 4 available via Gemini API for card art generation (Phase 5)

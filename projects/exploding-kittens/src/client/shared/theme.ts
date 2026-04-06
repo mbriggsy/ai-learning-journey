@@ -17,12 +17,22 @@ const PRIMITIVES = {
   textMuted: '#9999bb',    // ~6.5:1 on black — AA (bumped from #8888aa)
   textDim: '#555570',
 
-  // Accents (only 4 neon categories)
+  // Game-critical accents (4 neon categories — reserved for dramatic moments)
   red: '#e03535',           redGlow: '#ff0000',
   blue: '#3b82f6',          blueGlow: '#1a6bff',
-  green: '#2dd885',         greenGlow: '#00e673',
+  teal: '#2dd8c8',          tealGlow: '#00e6cc',    // was green — shifted cyan for CVD safety
   amber: '#e8922a',         amberGlow: '#ff8c00',
-  slate: '#7788aa',         slateGlow: '#556688',
+
+  // Utility card accent (warm slate, not cold)
+  slate: '#7080a3',         slateGlow: '#566480',   // warmed from #7788aa/#556688
+
+  // Cat card accents — each cat earns its own color
+  taco: '#d98842',          tacoGlow: '#ff9f43',
+  beard: '#34a89a',         beardGlow: '#2ee6cc',
+  rainbow: '#9548c4',       rainbowGlow: '#b060f0',
+  potato: '#c9a035',        potatoGlow: '#f0c040',
+  melon: '#c94070',         melonGlow: '#ff4080',
+  feral: '#bfbfbf',         feralGlow: '#e0e0e0',
 } as const
 
 // ---------------------------------------------------------------------------
@@ -49,23 +59,28 @@ const SEMANTIC = {
 // ---------------------------------------------------------------------------
 
 const CARD_TYPE_ACCENTS = {
+  // Game-critical: each gets a unique neon accent
   'exploding-kitten': { fill: PRIMITIVES.red, glow: PRIMITIVES.redGlow },
   'defuse':           { fill: PRIMITIVES.blue, glow: PRIMITIVES.blueGlow },
-  'nope':             { fill: PRIMITIVES.green, glow: PRIMITIVES.greenGlow },
+  'nope':             { fill: PRIMITIVES.teal, glow: PRIMITIVES.tealGlow },
   'attack':           { fill: PRIMITIVES.amber, glow: PRIMITIVES.amberGlow },
   'targeted-attack':  { fill: PRIMITIVES.amber, glow: PRIMITIVES.amberGlow },
+
+  // Utility: warm slate (calm, not attention-grabbing)
   'skip':             { fill: PRIMITIVES.slate, glow: PRIMITIVES.slateGlow },
   'see-the-future':   { fill: PRIMITIVES.slate, glow: PRIMITIVES.slateGlow },
   'alter-the-future': { fill: PRIMITIVES.slate, glow: PRIMITIVES.slateGlow },
   'shuffle':          { fill: PRIMITIVES.slate, glow: PRIMITIVES.slateGlow },
   'draw-from-bottom': { fill: PRIMITIVES.slate, glow: PRIMITIVES.slateGlow },
   'favor':            { fill: PRIMITIVES.slate, glow: PRIMITIVES.slateGlow },
-  'feral-cat':        { fill: PRIMITIVES.slate, glow: PRIMITIVES.slateGlow },
-  'taco-cat':         { fill: PRIMITIVES.slate, glow: PRIMITIVES.slateGlow },
-  'beard-cat':        { fill: PRIMITIVES.slate, glow: PRIMITIVES.slateGlow },
-  'rainbow-ralphing-cat': { fill: PRIMITIVES.slate, glow: PRIMITIVES.slateGlow },
-  'hairy-potato-cat': { fill: PRIMITIVES.slate, glow: PRIMITIVES.slateGlow },
-  'cattermelon':      { fill: PRIMITIVES.slate, glow: PRIMITIVES.slateGlow },
+
+  // Cats: each type has personality
+  'feral-cat':            { fill: PRIMITIVES.feral, glow: PRIMITIVES.feralGlow },
+  'taco-cat':             { fill: PRIMITIVES.taco, glow: PRIMITIVES.tacoGlow },
+  'beard-cat':            { fill: PRIMITIVES.beard, glow: PRIMITIVES.beardGlow },
+  'rainbow-ralphing-cat': { fill: PRIMITIVES.rainbow, glow: PRIMITIVES.rainbowGlow },
+  'hairy-potato-cat':     { fill: PRIMITIVES.potato, glow: PRIMITIVES.potatoGlow },
+  'cattermelon':          { fill: PRIMITIVES.melon, glow: PRIMITIVES.melonGlow },
 } as const satisfies Record<CardType, { fill: string; glow: string }>
 
 export function cardAccent(type: CardType): { fill: string; glow: string } {
@@ -94,16 +109,16 @@ const CSS_PROPERTY_MAP = {
   '--bg-primary': SEMANTIC.bgApp,
   '--bg-surface': SEMANTIC.bgCard,
   '--accent-danger': PRIMITIVES.red,
-  '--accent-success': PRIMITIVES.green,
-  '--accent-nope': PRIMITIVES.green,
+  '--accent-success': PRIMITIVES.teal,
+  '--accent-nope': PRIMITIVES.teal,
 
   // Raw accent colors for CSS access where inline styles aren't practical
   '--red': PRIMITIVES.red,
   '--red-glow': PRIMITIVES.redGlow,
   '--blue': PRIMITIVES.blue,
   '--blue-glow': PRIMITIVES.blueGlow,
-  '--green': PRIMITIVES.green,
-  '--green-glow': PRIMITIVES.greenGlow,
+  '--teal': PRIMITIVES.teal,
+  '--teal-glow': PRIMITIVES.tealGlow,
   '--amber': PRIMITIVES.amber,
   '--amber-glow': PRIMITIVES.amberGlow,
   '--slate': PRIMITIVES.slate,

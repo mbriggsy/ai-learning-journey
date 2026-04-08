@@ -1,5 +1,23 @@
 # Exploding Kittens Digital — Project Conventions
 
+## Commands
+
+| Command | What it does |
+|---------|-------------|
+| `pnpm dev` | Vite dev server (board + player views, port 5173) |
+| `pnpm dev:server` | Wrangler dev server (Durable Object, port 8787) |
+| `pnpm build` | Typecheck + production build |
+| `pnpm typecheck` | TypeScript type checking |
+| `pnpm test` | Run unit tests (Vitest) |
+| `pnpm lint` | ESLint (import boundary enforcement) |
+
+## Entry Points
+
+- `src/client/board/` — TV/shared screen view (landscape)
+- `src/client/player/` — Phone controller view (portrait)
+- `src/server/room.ts` — Cloudflare Durable Object game server
+- `src/shared/protocol.ts` — Shared types (zero runtime deps)
+
 ## Import Boundaries (ESLint-enforced)
 
 - `src/shared/` — types, constants, pure functions ONLY. No DOM, no side effects, no runtime libraries.
@@ -60,7 +78,7 @@
 - fast-check for property-based tests via `@fast-check/vitest`.
 - React component tests use `environment: 'jsdom'` per-file override.
 
-## Bundle Sizes (Post-Swarm Review)
+## Bundle Sizes
 
 | Chunk | Raw | Gzipped | Load |
 |-------|-----|---------|------|

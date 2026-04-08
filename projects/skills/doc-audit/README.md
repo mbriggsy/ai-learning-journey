@@ -11,7 +11,7 @@ The skill runs in 5 phases:
    - **Link Validator** — verifies every internal link target exists (files + heading anchors)
    - **Stale Content Hunter** — checks doc claims against source files (package.json, pyproject.toml, etc.) and cross-references code examples across docs for consistency
    - **Content Placement Auditor** — classifies each file, flags misplaced content, identifies gaps and orphans, checks formatting quality
-   - **Duplication & Contradiction Detector** — finds duplicated content AND conflicting information across files (e.g., different API usage patterns, disagreeing parameter tables)
+   - **Duplication & Contradiction Detector** — finds duplicated content, conflicting information, and presentation inconsistencies across files
 3. **Aggregate** — deduplicates findings, assigns severity, groups by file
 4. **Report** — presents unified findings: Critical > Medium > Low
 5. **Fix** — waits for user approval, then applies changes

@@ -1,4 +1,4 @@
-/* Board — black void, dramatic lighting, typography IS the design */
+/* Board — game table felt with dramatic overhead spotlight */
 
 .table {
   position: relative;
@@ -8,10 +8,130 @@
   color: var(--text-primary, #e8e8f0);
   overflow: hidden;
 
-  /* The void: warm black with overhead spotlight */
+  /* Layered game-table surface:
+     1. Bright warm spotlight on the center (where the action is)
+     2. Visible felt grain texture
+     3. Vignette — dark edges pull focus inward
+     4. Rich dark green base — like a real casino/poker felt */
   background:
-    radial-gradient(ellipse at 50% 40%, rgba(40, 30, 60, 0.15) 0%, transparent 60%),
-    var(--bg-app, #0c0a12);
+    /* Overhead spotlight — warm bright pool of light on center play area */
+    radial-gradient(ellipse 55% 45% at 50% 45%,
+      rgba(220, 180, 100, 0.18) 0%,
+      rgba(180, 140, 80, 0.10) 35%,
+      transparent 65%),
+    /* Secondary warm fill — wider ambient warmth across the table */
+    radial-gradient(ellipse 85% 75% at 50% 50%,
+      rgba(80, 65, 40, 0.20) 0%,
+      rgba(50, 42, 28, 0.10) 50%,
+      transparent 70%),
+    /* Vignette — darkened edges, but still green-tinted, not black */
+    radial-gradient(ellipse 85% 85% at 50% 50%,
+      transparent 40%,
+      rgba(5, 12, 5, 0.55) 80%,
+      rgba(2, 8, 2, 0.75) 100%),
+    /* Felt grain — visible micro-texture */
+    repeating-conic-gradient(
+      rgba(40, 55, 35, 0.06) 0%,
+      rgba(30, 45, 28, 0.04) 0.5%,
+      rgba(35, 50, 32, 0.07) 1%
+    ),
+    /* Base felt color — visible dark green, clearly a game table */
+    linear-gradient(175deg, #1e3a24 0%, #193220 50%, #142a1a 100%);
+}
+
+/* Felt texture overlay — visible fabric weave via pseudo-element */
+.table::before {
+  content: '';
+  position: absolute;
+  inset: 0;
+  background-image:
+    repeating-linear-gradient(
+      0deg,
+      transparent,
+      transparent 2px,
+      rgba(255, 255, 255, 0.025) 2px,
+      rgba(255, 255, 255, 0.025) 3px
+    ),
+    repeating-linear-gradient(
+      90deg,
+      transparent,
+      transparent 2px,
+      rgba(255, 255, 255, 0.025) 2px,
+      rgba(255, 255, 255, 0.025) 3px
+    );
+  pointer-events: none;
+  z-index: 0;
+}
+
+/* Table edge — gold-trimmed oval boundary defining the play area,
+   matching the gold-stamped brand elements for a cohesive casino feel */
+.table::after {
+  content: '';
+  position: absolute;
+  top: 6%;
+  left: 5%;
+  right: 5%;
+  bottom: 6%;
+  border: 1.5px solid rgba(200, 169, 96, 0.18);
+  border-radius: 50%;
+  box-shadow:
+    inset 0 0 60px rgba(0, 0, 0, 0.15),
+    0 0 40px rgba(0, 0, 0, 0.10),
+    0 0 1px rgba(200, 169, 96, 0.12);
+  pointer-events: none;
+  z-index: 1;
+}
+
+/* ─── Branded felt decoration — Exploding Kittens identity on the table ─── */
+
+.feltBranding {
+  position: absolute;
+  inset: 0;
+  pointer-events: none;
+  z-index: 1;
+
+  /* Center watermark — cat skull with crossed bones, gold-stamped into felt
+     Uses warm gold (#c8a960) instead of green for contrast against felt */
+  background-image:
+    /* Cat skull — simplified EK mascot, warm gold "stamped into felt" look */
+    url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 200 220'%3E%3C!-- Cat ears --%3E%3Cpath d='M50 80 L30 20 Q28 15 33 18 L70 55 Z' fill='%23c8a960'/%3E%3Cpath d='M150 80 L170 20 Q172 15 167 18 L130 55 Z' fill='%23c8a960'/%3E%3C!-- Head --%3E%3Cellipse cx='100' cy='95' rx='58' ry='52' fill='%23c8a960'/%3E%3C!-- Eyes — X marks (dead cat!) --%3E%3Cpath d='M70 82 L82 94 M82 82 L70 94' stroke='%23142a1a' stroke-width='5' stroke-linecap='round'/%3E%3Cpath d='M118 82 L130 94 M130 82 L118 94' stroke='%23142a1a' stroke-width='5' stroke-linecap='round'/%3E%3C!-- Nose --%3E%3Cpath d='M96 104 L100 98 L104 104 Z' fill='%23142a1a'/%3E%3C!-- Mouth --%3E%3Cpath d='M90 110 Q100 120 110 110' stroke='%23142a1a' stroke-width='3' fill='none' stroke-linecap='round'/%3E%3C!-- Crossed bones --%3E%3Cpath d='M40 170 L160 200 M40 200 L160 170' stroke='%23c8a960' stroke-width='8' stroke-linecap='round'/%3E%3C!-- Bone knobs --%3E%3Ccircle cx='38' cy='168' r='6' fill='%23c8a960'/%3E%3Ccircle cx='162' cy='198' r='6' fill='%23c8a960'/%3E%3Ccircle cx='38' cy='202' r='6' fill='%23c8a960'/%3E%3Ccircle cx='162' cy='172' r='6' fill='%23c8a960'/%3E%3C/svg%3E"),
+    /* Top-left paw print — warm gold */
+    url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 60 60'%3E%3Cellipse cx='30' cy='38' rx='12' ry='10' fill='%23c8a960'/%3E%3Ccircle cx='18' cy='24' r='6' fill='%23c8a960'/%3E%3Ccircle cx='30' cy='20' r='6' fill='%23c8a960'/%3E%3Ccircle cx='42' cy='24' r='6' fill='%23c8a960'/%3E%3C/svg%3E"),
+    /* Top-right paw print */
+    url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 60 60'%3E%3Cellipse cx='30' cy='38' rx='12' ry='10' fill='%23c8a960'/%3E%3Ccircle cx='18' cy='24' r='6' fill='%23c8a960'/%3E%3Ccircle cx='30' cy='20' r='6' fill='%23c8a960'/%3E%3Ccircle cx='42' cy='24' r='6' fill='%23c8a960'/%3E%3C/svg%3E"),
+    /* Bottom-left paw */
+    url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 60 60'%3E%3Cellipse cx='30' cy='38' rx='12' ry='10' fill='%23c8a960'/%3E%3Ccircle cx='18' cy='24' r='6' fill='%23c8a960'/%3E%3Ccircle cx='30' cy='20' r='6' fill='%23c8a960'/%3E%3Ccircle cx='42' cy='24' r='6' fill='%23c8a960'/%3E%3C/svg%3E"),
+    /* Bottom-right paw */
+    url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 60 60'%3E%3Cellipse cx='30' cy='38' rx='12' ry='10' fill='%23c8a960'/%3E%3Ccircle cx='18' cy='24' r='6' fill='%23c8a960'/%3E%3Ccircle cx='30' cy='20' r='6' fill='%23c8a960'/%3E%3Ccircle cx='42' cy='24' r='6' fill='%23c8a960'/%3E%3C/svg%3E");
+
+  background-size:
+    260px 286px,   /* center skull — bigger to dominate the table center */
+    55px 55px,     /* TL paw */
+    55px 55px,     /* TR paw */
+    55px 55px,     /* BL paw */
+    55px 55px;     /* BR paw */
+
+  background-position:
+    center center,         /* skull centered */
+    8% 10%,                /* TL paw */
+    92% 12%,               /* TR paw */
+    10% 88%,               /* BL paw */
+    90% 86%;               /* BR paw */
+
+  background-repeat: no-repeat;
+  opacity: 0.12;
+}
+
+@media (min-width: 1280px) {
+  .feltBranding {
+    background-size:
+      400px 440px,   /* center skull — large and unmissable on TV */
+      80px 80px,     /* TL paw */
+      80px 80px,     /* TR paw */
+      80px 80px,     /* BL paw */
+      80px 80px;     /* BR paw */
+    opacity: 0.14;
+  }
 }
 
 /* ─── Center stage — draw pile + arena + discard, dead center ─── */
@@ -41,7 +161,7 @@
   font-weight: 600;
   text-transform: uppercase;
   letter-spacing: 0.15em;
-  color: var(--text-disabled, #555570);
+  color: rgba(200, 169, 96, 0.55);
 }
 
 /* ─── Full-screen event flash (GSAP target) ─── */
@@ -57,6 +177,6 @@
 /* ─── TV scale ─── */
 
 @media (min-width: 1280px) {
-  .center { gap: 80px; }
-  .pileLabel { font-size: 15px; }
+  .center { gap: 120px; }
+  .pileLabel { font-size: 18px; }
 }

@@ -1,0 +1,21 @@
+.container {
+  background: var(--bg-primary);
+  display: flex;
+  flex-direction: column;
+  height: 100svh;
+  overflow: hidden; /* Prevent outer scroll — hand scrolls horizontally */
+}
+
+/* Hand section fills available space between banner and draw button */
+.handSection {
+  flex: 1 1 0;
+  min-height: 0; /* Flex shrink safety */
+  display: flex;
+  flex-direction: column;
+}
+
+/* Draw button area anchored at bottom */
+.bottomArea {
+  flex: 0 0 auto;
+  padding-bottom: max(12px, env(safe-area-inset-bottom));
+}

@@ -8,8 +8,8 @@
 
 .stack {
   position: relative;
-  width: 80px;
-  height: 112px; /* 5:7 ratio */
+  width: 100px;
+  height: 140px; /* 5:7 ratio */
   animation: breathe 3s ease-in-out infinite;
 }
 
@@ -22,41 +22,46 @@
   position: absolute;
   inset: 0;
   border-radius: var(--radius-card);
-  background-color: var(--bg-card, #12121f);
-  border: 1px solid var(--border-subtle, #2a2a4a);
+  background-color: #1a1828;
+  border: 1px solid rgba(120, 80, 50, 0.25);
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.4);
 }
 
-/* Top card uses the card-back crosshatch pattern */
+/* Top card uses the card-back crosshatch pattern — bold for TV visibility */
 .topCard {
   position: absolute;
   inset: 0;
   z-index: 10;
   border-radius: var(--radius-card);
-  background-color: var(--bg-card, #12121f);
+  background-color: #1a1828;
   background-image:
     repeating-linear-gradient(
       45deg,
       transparent,
       transparent 10px,
-      color-mix(in srgb, var(--red, #e03535) 6%, transparent) 10px,
-      color-mix(in srgb, var(--red, #e03535) 6%, transparent) 11px
+      rgba(224, 53, 53, 0.18) 10px,
+      rgba(224, 53, 53, 0.18) 11.5px
     ),
     repeating-linear-gradient(
       -45deg,
       transparent,
       transparent 10px,
-      color-mix(in srgb, var(--red, #e03535) 6%, transparent) 10px,
-      color-mix(in srgb, var(--red, #e03535) 6%, transparent) 11px
+      rgba(224, 53, 53, 0.18) 10px,
+      rgba(224, 53, 53, 0.18) 11.5px
     );
-  border: 1px solid var(--border-subtle, #2a2a4a);
+  border: 1.5px solid rgba(224, 53, 53, 0.2);
+  box-shadow:
+    0 4px 16px rgba(0, 0, 0, 0.5),
+    0 0 20px rgba(224, 53, 53, 0.10),
+    0 0 40px rgba(224, 53, 53, 0.05);
 }
 
 /* Inner border frame */
 .topCard::before {
   content: '';
   position: absolute;
-  inset: 6px;
-  border: 1px solid color-mix(in srgb, var(--red, #e03535) 20%, transparent);
+  inset: 8px;
+  border: 1.5px solid rgba(224, 53, 53, 0.30);
   border-radius: calc(var(--radius-card) - 4px);
   pointer-events: none;
 }
@@ -65,16 +70,25 @@
   font-family: var(--font-mono);
   font-variant-numeric: tabular-nums;
   font-weight: 700;
-  font-size: 24px;
-  color: var(--text-primary, #e8e8f0);
+  font-size: 28px;
+  color: rgba(232, 232, 240, 0.9);
+  text-shadow: 0 2px 8px rgba(0, 0, 0, 0.5);
 }
 
 @media (min-width: 1280px) {
   .stack {
-    width: 100px;
-    height: 140px;
+    width: 160px;
+    height: 224px;
   }
-  .countBadge { font-size: 32px; }
+  .countBadge { font-size: 42px; }
+}
+
+@media (min-width: 1600px) {
+  .stack {
+    width: 180px;
+    height: 252px;
+  }
+  .countBadge { font-size: 48px; }
 }
 
 @media (prefers-reduced-motion: reduce) {

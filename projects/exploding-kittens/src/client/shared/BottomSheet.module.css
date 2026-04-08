@@ -22,5 +22,10 @@
   color: var(--text-primary, #e8e8f0);
   font-family: var(--font-body);
   overflow-y: auto;
+  scrollbar-width: none;
   max-height: 80dvh;
+}
+
+.content::-webkit-scrollbar {
+  display: none;
 }

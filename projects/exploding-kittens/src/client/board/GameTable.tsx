@@ -21,6 +21,9 @@ export function GameTable() {
 
   return (
     <div className={styles.table}>
+      {/* Branded felt decoration — EK identity baked into the table */}
+      <div className={styles.feltBranding} aria-hidden="true" />
+
       {/* Player ring */}
       <PlayerRing
         players={players}

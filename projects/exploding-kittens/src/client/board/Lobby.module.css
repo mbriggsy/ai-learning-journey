@@ -11,10 +11,20 @@
   font-family: var(--font-body, system-ui, sans-serif);
   overflow: hidden;
 
-  /* Noir void with warm spotlight — same as GameTable for visual continuity */
+  /* Game-table felt — same as GameTable for visual continuity */
   background:
-    radial-gradient(ellipse at 50% 30%, rgba(40, 30, 60, 0.18) 0%, transparent 55%),
-    var(--bg-app, #0c0a12);
+    radial-gradient(ellipse 55% 45% at 50% 35%,
+      rgba(220, 180, 100, 0.14) 0%,
+      rgba(180, 140, 80, 0.06) 40%,
+      transparent 65%),
+    radial-gradient(ellipse 85% 75% at 50% 50%,
+      rgba(80, 65, 40, 0.15) 0%,
+      transparent 60%),
+    radial-gradient(ellipse 85% 85% at 50% 50%,
+      transparent 40%,
+      rgba(5, 12, 5, 0.55) 80%,
+      rgba(2, 8, 2, 0.75) 100%),
+    linear-gradient(175deg, #1e3a24 0%, #193220 50%, #142a1a 100%);
 }
 
 /* ─── Title ─── */
@@ -98,8 +108,11 @@
   flex: 1;
   min-height: 0;
   overflow-y: auto;
-  scrollbar-width: thin;
-  scrollbar-color: var(--border-subtle, #2a2a4a) transparent;
+  scrollbar-width: none;
+}
+
+.roster::-webkit-scrollbar {
+  display: none;
 }
 
 .rosterHeader {
@@ -135,12 +148,13 @@
   padding: 10px 16px;
   background: linear-gradient(
     165deg,
-    rgba(30, 30, 50, 0.9) 0%,
-    rgba(18, 18, 32, 0.95) 100%
+    rgba(30, 28, 24, 0.92) 0%,
+    rgba(18, 18, 16, 0.96) 100%
   );
-  border: 1px solid rgba(255, 255, 255, 0.06);
+  border: 1px solid rgba(180, 160, 120, 0.1);
   border-radius: 10px;
   overflow: hidden;
+  box-shadow: 0 2px 12px rgba(0, 0, 0, 0.3);
 }
 
 .playerName {
@@ -265,6 +279,32 @@
   .startButton { font-size: 22px; padding: 16px 60px; }
   .rosterLabel { font-size: 15px; }
   .rosterCount { font-size: 15px; }
+}
+
+/* ─── Dev Toolbar (localhost only) ─── */
+
+.devToolbar {
+  display: flex;
+  gap: 8px;
+  margin-top: 16px;
+  flex-shrink: 0;
+}
+
+.devBtn {
+  padding: 8px 16px;
+  border-radius: 6px;
+  border: 1px dashed rgba(200, 169, 96, 0.3);
+  background: rgba(200, 169, 96, 0.08);
+  color: rgba(200, 169, 96, 0.6);
+  font-family: var(--font-mono);
+  font-size: 12px;
+  cursor: pointer;
+  transition: background 0.15s, color 0.15s;
+}
+
+.devBtn:hover {
+  background: rgba(200, 169, 96, 0.15);
+  color: rgba(200, 169, 96, 0.9);
 }
 
 /* ─── Reduced motion ─── */

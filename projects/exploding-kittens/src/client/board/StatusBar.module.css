@@ -12,8 +12,8 @@
   padding: 14px 24px;
   background: linear-gradient(
     to top,
-    rgba(0, 0, 0, 0.7) 0%,
-    rgba(0, 0, 0, 0.3) 60%,
+    rgba(8, 12, 8, 0.8) 0%,
+    rgba(8, 12, 8, 0.3) 60%,
     transparent 100%
   );
   z-index: 20;
@@ -23,11 +23,11 @@
   font-family: var(--font-display);
   font-size: 16px;
   font-weight: 600;
-  color: var(--text-secondary, #9999bb);
+  color: rgba(200, 190, 160, 0.7);
   letter-spacing: 0.02em;
 }
 
 @media (min-width: 1280px) {
-  .bar { padding: 18px 32px; }
-  .text { font-size: 22px; }
+  .bar { padding: 20px 40px; }
+  .text { font-size: 26px; }
 }

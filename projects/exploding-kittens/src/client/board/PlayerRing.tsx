@@ -63,9 +63,10 @@ export const PlayerRing = memo(function PlayerRing({
     : { rx: 0, ry: 0 }
   const positions = calculateRingPositions(alivePlayers.length, rx, ry)
 
-  // Panel dimensions for centering
-  const panelW = 200
-  const panelH = 90
+  // Panel dimensions for centering — matches CSS (280px at TV width via media query)
+  const isTV = dimensions.w >= 1280
+  const panelW = isTV ? 280 : 200
+  const panelH = isTV ? 100 : 90
 
   return (
     <div ref={containerRef} className={styles.ring}>

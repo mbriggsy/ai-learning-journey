@@ -10,7 +10,10 @@ export function ConnectionOverlay({ status }: ConnectionOverlayProps) {
 
   return (
     <div className={styles.overlay}>
-      {status === 'connecting' ? 'Connecting...' : 'Reconnecting...'}
+      <div className={styles.spinner} />
+      <div className={styles.label}>
+        {status === 'connecting' ? 'Connecting...' : 'Reconnecting...'}
+      </div>
     </div>
   )
 }

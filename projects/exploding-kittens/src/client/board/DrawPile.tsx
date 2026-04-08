@@ -22,7 +22,7 @@ export const DrawPile = memo(function DrawPile({ count }: DrawPileProps) {
             key={i}
             className={styles.layer}
             style={{
-              transform: `translate(${i * 2}px, ${-i * 2}px)`,
+              transform: `translate(${i * 3}px, ${-i * 3}px)`,
               zIndex: layers - i,
             }}
           />

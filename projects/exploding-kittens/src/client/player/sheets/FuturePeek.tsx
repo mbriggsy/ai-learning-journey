@@ -2,6 +2,8 @@ import { useState, useCallback, useEffect } from 'react'
 import type { CardInstance } from '@shared/types'
 import { CARD_DEF_BY_TYPE } from '@shared/card-defs'
 import { TIMING } from '@shared/constants'
+import { cardAccent } from '@client/shared/theme'
+import { CardIcon } from '@client/shared/card-icons'
 import styles from './sheets.module.css'
 
 interface FuturePeekProps {
@@ -65,10 +67,14 @@ export function FuturePeek({ cards, canRearrange, onDismiss, onRearrange }: Futu
       <div className={styles.tapOrder}>
         {cards.map((card, i) => {
           const orderIndex = tapOrder.indexOf(card.id)
+          const accent = cardAccent(card.type)
           return (
             <button
               key={card.id}
               className={styles.tapCard}
+              style={{
+                '--peek-accent': accent.fill,
+              } as React.CSSProperties}
               data-tapped={tappedSet.has(card.id) || undefined}
               onClick={() => handleTap(card.id)}
               disabled={(tappedSet.has(card.id) && canRearrange) || submitted}
@@ -76,9 +82,12 @@ export function FuturePeek({ cards, canRearrange, onDismiss, onRearrange }: Futu
               {orderIndex >= 0 && (
                 <span className={styles.orderBadge}>#{orderIndex + 1}</span>
               )}
-              <span>{CARD_DEF_BY_TYPE[card.type].name}</span>
+              <span className={styles.tapCardIcon}>
+                <CardIcon type={card.type} />
+              </span>
+              <span className={styles.tapCardName}>{CARD_DEF_BY_TYPE[card.type].name}</span>
               {!canRearrange && (
-                <span style={{ fontSize: '11px', color: 'var(--text-secondary)' }}>
+                <span className={styles.tapCardPosition}>
                   #{i + 1}
                 </span>
               )}

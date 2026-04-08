@@ -4,6 +4,7 @@ import { CARD_DEF_BY_TYPE } from '@shared/card-defs'
 import type { CardType } from '@shared/types'
 import { cardAccent } from './theme'
 import { CardIcon } from './card-icons'
+import { CardIllustration } from './CardIllustration'
 import styles from './MinimalCard.module.css'
 
 export interface CardProps {
@@ -61,6 +62,7 @@ export const MinimalCard = memo(function MinimalCard({
     >
       <CardIcon type={type} />
       <span className={styles.cardName}>{def.name}</span>
+      <CardIllustration type={type} />
       <span className={styles.cardDesc}>{def.description}</span>
     </m.div>
   )

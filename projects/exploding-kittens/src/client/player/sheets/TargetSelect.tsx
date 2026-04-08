@@ -1,5 +1,6 @@
 import { useState } from 'react'
 import type { BoardPlayer } from '@shared/protocol'
+import { PlayerIcon } from '@client/shared/PlayerIcon'
 import styles from './sheets.module.css'
 
 interface TargetSelectProps {
@@ -21,7 +22,7 @@ export function TargetSelect({ eligiblePlayers, onSelectTarget, title }: TargetS
             onClick={() => { if (!submitted) { setSubmitted(true); onSelectTarget(p.id) } }}
             disabled={submitted}
           >
-            <span className={styles.dot} style={{ backgroundColor: p.color }} />
+            <PlayerIcon color={p.color} size={16} />
             <span>{p.name}</span>
             <span style={{ marginLeft: 'auto', color: 'var(--text-secondary)', fontSize: '13px' }}>
               {p.cardCount} cards

@@ -4,20 +4,79 @@
   align-items: center;
   justify-content: center;
   min-height: 100svh;
-  background: var(--bg-primary);
+  background: var(--bg-app);
   color: var(--text-primary);
-  padding: 24px;
+  padding: 32px 24px;
   text-align: center;
+  gap: 12px;
+}
+
+.explosionWrap {
+  margin-bottom: 4px;
+}
+
+.skull {
+  font-size: 64px;
+  line-height: 1;
+  filter: drop-shadow(0 0 20px var(--red, #e03535));
 }
 
 .title {
-  font-size: 28px;
-  font-weight: 800;
-  color: var(--accent-danger);
-  margin-bottom: 8px;
+  font-family: var(--font-display);
+  font-size: 32px;
+  font-weight: 700;
+  color: var(--red, #e03535);
 }
 
-.subtitle {
+.flavor {
   font-size: 16px;
+  font-style: italic;
   color: var(--text-secondary);
+}
+
+/* --- Remaining players --- */
+
+.remaining {
+  margin-top: 20px;
+  padding: 16px;
+  border-radius: 12px;
+  background: var(--bg-card);
+  border: 1px solid var(--border-subtle);
+  width: 100%;
+  max-width: 300px;
+}
+
+.remainingLabel {
+  font-family: var(--font-display);
+  font-size: 13px;
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: 0.08em;
+  color: var(--text-secondary);
+  margin-bottom: 12px;
+}
+
+.playerList {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+}
+
+.playerChip {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  font-size: 15px;
+}
+
+.watchPrompt {
+  margin-top: 16px;
+  font-size: 14px;
+  color: var(--text-disabled);
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .skull {
+    filter: none;
+  }
 }

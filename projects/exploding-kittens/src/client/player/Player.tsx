@@ -5,6 +5,7 @@ import { gameStore, useGameState, useProtocolMismatch, useIsOptimisticPending } 
 import { useSendAction } from '@client/shared/hooks/useSendAction'
 import { useGamePhase, usePlayerList, useDrawPileCount, usePendingPrompt } from '@client/shared/hooks/useSharedSelectors'
 import { useHand, useIsMyTurn, useSubPhase, useMyPlayerId, useMyPlayer, usePrivateData } from './hooks/usePlayerSelectors'
+import { useCurrentTurn } from '@client/shared/hooks/useSharedSelectors'
 import { deriveInteractionPermission } from './hooks/useInteractionPermission'
 import { useCardPlay } from './hooks/useCardPlay'
 import { deriveActiveBottomSheet } from './hooks/useActiveBottomSheet'
@@ -17,6 +18,7 @@ import { NopeButton } from './NopeButton'
 import { ErrorToast } from './ErrorToast'
 import { ConnectionOverlay } from './ConnectionOverlay'
 import { EliminatedView } from './EliminatedView'
+import { TurnBanner } from './TurnBanner'
 import { GameOver } from '@client/shared/GameOver'
 import { BottomSheet } from '@client/shared/BottomSheet'
 import { TargetSelect } from './sheets/TargetSelect'
@@ -24,9 +26,11 @@ import { DefusePlacement } from './sheets/DefusePlacement'
 import { FuturePeek } from './sheets/FuturePeek'
 import { FavorResponse } from './sheets/FavorResponse'
 import { NameCard } from './sheets/NameCard'
+import { CardDetailSheet } from './CardDetailSheet'
 import type { CardType } from '@shared/types'
 import { PARTYKIT_HOST } from '@client/shared/config'
 import { useColorScheme } from '@client/shared/theme'
+import playingStyles from './PlayingView.module.css'
 import '@client/shared/fonts.css'
 import '@client/shared/theme.css'
 
@@ -144,6 +148,8 @@ function PhoneRouter({ connectionStatus, assignedColor, onJoin, roomCode }: Phon
       ? state.players.find(p => p.id === playerId)?.name
       : undefined
 
+    const lobbyPlayers = state?.phase === 'lobby' ? state.players : undefined
+
     return (
       <JoinScreen
         connectionStatus={connectionStatus}
@@ -151,6 +157,7 @@ function PhoneRouter({ connectionStatus, assignedColor, onJoin, roomCode }: Phon
         onJoin={onJoin}
         roomCode={roomCode}
         playerName={lobbyName}
+        lobbyPlayers={lobbyPlayers}
       />
     )
   }
@@ -190,12 +197,25 @@ function PlayingView() {
   const pendingPrompt = usePendingPrompt()
   const privateData = usePrivateData()
   const phase = useGamePhase()
+  const currentTurn = useCurrentTurn()
   const sendAction = useSendAction()
   const optimisticPending = useIsOptimisticPending()
+
+  const currentPlayerName = currentTurn
+    ? players.find(p => p.id === currentTurn.currentPlayerId)?.name ?? null
+    : null
 
   const isAlive = myPlayer?.isAlive ?? false
 
   const { state: cardPlayState, selectedIds, toggleCard, reset: resetCardPlay } = useCardPlay(hand, isMyTurn, subPhase)
+
+  // Card detail sheet (long-press)
+  const [detailCardType, setDetailCardType] = useState<CardType | null>(null)
+
+  const handleCardLongPress = useCallback((cardId: string) => {
+    const card = hand.find(c => c.id === cardId)
+    if (card) setDetailCardType(card.type)
+  }, [hand])
 
   // Local target select for pre-send actions (Favor, Targeted Attack)
   const [localTargetMode, setLocalTargetMode] = useState<{ cardIds: string[]; reason: 'targeted-attack' | 'favor' } | null>(null)
@@ -308,23 +328,31 @@ function PlayingView() {
   const eligibleTargets = players.filter(p => p.isAlive && p.id !== myPlayerId)
 
   return (
-    <div style={{ background: 'var(--bg-primary)', minHeight: '100svh', paddingBottom: '72px' }}>
-      <Hand
-        hand={hand}
-        selectedIds={selectedIds}
-        disabled={!permission.allowed || optimisticPending}
-        onCardClick={toggleCard}
-      />
+    <div className={playingStyles.container}>
+      <TurnBanner isMyTurn={isMyTurn} currentPlayerName={currentPlayerName} />
+
+      <div className={playingStyles.handSection}>
+        <Hand
+          hand={hand}
+          selectedIds={selectedIds}
+          disabled={!permission.allowed || optimisticPending}
+          onCardClick={toggleCard}
+          onCardLongPress={handleCardLongPress}
+        />
+      </div>
+
+      <div className={playingStyles.bottomArea}>
+        <DrawButton
+          visible={isMyTurn && subPhase === 'turn-active'}
+          disabled={!permission.allowed || cardPlayState.status !== 'idle' || optimisticPending}
+          drawPileCount={drawPileCount}
+        />
+      </div>
 
       <CardConfirmBar
         state={cardPlayState}
         onConfirm={needsTarget ? handleConfirmWithTarget : handleConfirm}
         onCancel={resetCardPlay}
-      />
-
-      <DrawButton
-        visible={isMyTurn && subPhase === 'turn-active'}
-        disabled={!permission.allowed || cardPlayState.status !== 'idle' || optimisticPending}
       />
 
       {/* Local target select (pre-send: Favor, Targeted Attack) */}
@@ -388,6 +416,11 @@ function PlayingView() {
             onNameCard={handleNameCard}
           />
         )}
+      </BottomSheet>
+
+      {/* Card detail sheet (long-press) */}
+      <BottomSheet open={detailCardType !== null} onDismiss={() => setDetailCardType(null)}>
+        {detailCardType && <CardDetailSheet cardType={detailCardType} />}
       </BottomSheet>
 
       <NopeButton />

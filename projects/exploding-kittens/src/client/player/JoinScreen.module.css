@@ -5,27 +5,60 @@
   justify-content: center;
   min-height: 100svh;
   padding: 32px;
-  background: var(--bg-app, #0c0a12);
+  background: var(--bg-app, #1a1d30);
   color: var(--text-primary, #e8e8f0);
   font-family: var(--font-body, system-ui, sans-serif);
 }
 
 .title {
   font-family: var(--font-display);
-  font-size: 28px;
+  font-size: 32px;
   font-weight: 700;
-  margin-bottom: 8px;
+  letter-spacing: 0.02em;
+  margin-bottom: 16px;
 }
 
-.room {
-  font-size: 16px;
+/* Room code badge — pill with personality */
+.roomBadge {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding: 8px 20px;
+  border-radius: 999px;
+  background: var(--bg-card, #222540);
+  border: 1px solid var(--border-subtle, #3a3d5a);
+  margin-bottom: 36px;
+}
+
+.roomLabel {
+  font-size: 13px;
   color: var(--text-secondary, #9999bb);
-  margin-bottom: 32px;
+  text-transform: uppercase;
+  letter-spacing: 0.08em;
+  font-weight: 600;
+}
+
+.roomCode {
+  font-family: var(--font-display);
+  font-size: 22px;
+  font-weight: 700;
+  letter-spacing: 0.15em;
+  color: var(--amber, #e8922a);
 }
 
 .status {
-  font-size: 18px;
+  font-size: 16px;
   color: var(--text-secondary, #9999bb);
+  margin-top: 12px;
+}
+
+.spinner {
+  width: 32px;
+  height: 32px;
+  border: 3px solid var(--border-subtle, #3a3d5a);
+  border-top-color: var(--text-secondary, #9999bb);
+  border-radius: 50%;
+  animation: spin 0.8s linear infinite;
 }
 
 .form {
@@ -37,18 +70,18 @@
 }
 
 .input {
-  padding: 12px 16px;
+  padding: 14px 16px;
   font-size: 18px;
-  border: 2px solid var(--border-subtle, rgba(255, 255, 255, 0.15));
-  border-radius: 8px;
-  background: var(--bg-card, rgba(255, 255, 255, 0.05));
+  border: 2px solid var(--border-subtle, #3a3d5a);
+  border-radius: 12px;
+  background: var(--bg-card, #222540);
   color: var(--text-primary, #e8e8f0);
   outline: none;
   transition: border-color 0.15s;
 }
 
 .input:focus {
-  border-color: var(--blue, #3b82f6);
+  border-color: var(--amber, #e8922a);
 }
 
 .error {
@@ -58,52 +91,115 @@
 }
 
 .joinButton {
-  padding: 12px;
+  padding: 14px;
+  font-family: var(--font-display);
   font-size: 18px;
-  font-weight: 600;
+  font-weight: 700;
+  letter-spacing: 0.03em;
+  text-transform: uppercase;
   border: none;
-  border-radius: 8px;
-  background: var(--blue, #3b82f6);
-  color: var(--text-primary, #e8e8f0);
+  border-radius: 12px;
+  background: var(--amber, #e8922a);
+  color: var(--bg-app, #1a1d30);
   cursor: pointer;
   transition: opacity 0.15s;
+  touch-action: manipulation;
 }
 
 .joinButton:hover {
   opacity: 0.9;
 }
 
+/* --- Joined State --- */
+
 .joinedCard {
   display: flex;
   flex-direction: column;
   align-items: center;
-  gap: 12px;
+  gap: 8px;
 }
 
-.dot {
-  width: 24px;
-  height: 24px;
-  border-radius: 50%;
+.iconWrap {
+  animation: popIn 0.4s cubic-bezier(0.34, 1.56, 0.64, 1) both;
 }
 
 .joinedName {
-  font-size: 24px;
-  font-weight: 600;
+  font-family: var(--font-display);
+  font-size: 26px;
+  font-weight: 700;
+  margin: 0;
 }
 
 .waiting {
-  font-size: 16px;
-  color: var(--text-disabled, #555570);
+  font-size: 15px;
+  color: var(--text-secondary, #9999bb);
+  margin: 0;
+}
+
+.waitingDots::after {
+  content: '';
+  animation: dots 1.5s steps(4, end) infinite;
+}
+
+/* --- Lobby player list --- */
+
+.lobbyList {
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: center;
+  gap: 12px;
+  margin-top: 32px;
+  padding: 16px;
+  border-radius: 12px;
+  background: var(--bg-card, #222540);
+  border: 1px solid var(--border-subtle, #3a3d5a);
+  max-width: 320px;
+  width: 100%;
+}
+
+.lobbyPlayer {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+}
+
+.lobbyPlayerName {
+  font-size: 14px;
+  color: var(--text-primary, #e8e8f0);
+}
+
+/* --- Keyframes --- */
+
+@keyframes spin {
+  to { transform: rotate(360deg); }
+}
+
+@keyframes popIn {
+  from { transform: scale(0); opacity: 0; }
+  to { transform: scale(1); opacity: 1; }
+}
+
+@keyframes dots {
+  0% { content: ''; }
+  25% { content: '.'; }
+  50% { content: '..'; }
+  75% { content: '...'; }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .spinner { animation-duration: 1.5s; }
+  .iconWrap { animation: none; }
+  .waitingDots::after { animation: none; content: '...'; }
 }
 
 /* --- Light Mode --- */
 
 [data-theme="light"] .input {
-  border-color: rgba(0, 0, 0, 0.12);
-  background: rgba(0, 0, 0, 0.03);
+  border-color: var(--border-subtle);
+  background: var(--bg-card);
   color: var(--text-primary);
 }
 
 [data-theme="light"] .input:focus {
-  border-color: rgba(0, 0, 0, 0.25);
+  border-color: var(--amber);
 }

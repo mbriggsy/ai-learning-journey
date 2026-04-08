@@ -1,14 +1,17 @@
 .handContainer {
   position: relative; /* Required by AnimatePresence popLayout */
   display: flex;
+  align-items: stretch; /* Cards fill available height */
   overflow-x: scroll;
   scroll-snap-type: x mandatory;
-  scroll-padding-inline: 15vw;
+  scroll-padding-inline: 6vw;
   scroll-behavior: smooth; /* For programmatic scroll to new cards */
   scrollbar-width: none;
   -webkit-overflow-scrolling: touch;
   overscroll-behavior-x: contain;
-  padding: 16px 0;
+  padding: 8px 0;
+  flex: 1 1 0;
+  min-height: 0; /* Flex shrink safety */
 }
 
 .handContainer::-webkit-scrollbar {
@@ -16,16 +19,19 @@
 }
 
 .cardSlot {
-  flex: 0 0 65vw;
+  flex: 0 0 40vw;
   scroll-snap-align: center;
   min-width: 48px;
-  padding: 0 var(--spacing-card);
+  padding: 0 4px;
+  display: flex;
+  flex-direction: column;
 }
 
 .cardCount {
   text-align: center;
   font-family: var(--font-body);
-  font-size: 13px;
+  font-size: 15px;
   color: var(--text-secondary, #9999bb);
-  padding: 4px 0;
+  padding: 6px 0;
+  flex: 0 0 auto;
 }

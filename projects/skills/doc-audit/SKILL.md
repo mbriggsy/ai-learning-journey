@@ -151,6 +151,11 @@ Read EVERY file completely. Then cross-reference for both duplication AND contra
 8. Configuration options documented in one file but absent or different in another
 9. Type references (e.g., SomeType[]) that are never defined anywhere in the docs
 
+**Presentation inconsistency** — same type of content presented differently:
+10. Metrics/results shown as a table in one place but narrative paragraphs or bullet points in another
+11. Lists that use different formats for the same kind of data (e.g., numbered steps in one file, bullets in another for the same workflow)
+12. Status or progress tracked as a table in one doc but inline text in another
+
 For each finding, determine:
 - Which doc is the source of truth? (The more detailed/specific one usually wins)
 - Is the duplication intentional? (e.g., plan doc repeats rules as implementation checklist — acceptable)
@@ -159,7 +164,7 @@ For each finding, determine:
 
 Report format — one entry per finding:
 - Content: <what's duplicated or contradicted — brief description>
-- Type: DUPLICATION | CONTRADICTION
+- Type: DUPLICATION | CONTRADICTION | INCONSISTENT_PRESENTATION
 - Location A: <file, lines> (source of truth)
 - Location B: <file, lines> (duplicate or conflicting version)
 - Intentional: YES (implementation checklist, summary vs detail) | NO

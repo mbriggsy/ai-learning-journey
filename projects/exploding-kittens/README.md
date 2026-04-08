@@ -4,7 +4,7 @@ A digital adaptation of [Exploding Kittens Party Pack](https://www.explodingkitt
 
 ## Status
 
-**All 6 phases complete + adversarial swarm review** — 152/152 tests, typecheck clean, ~95KB phone JS (under 100KB budget). Next: manual testing, deploy, Phase 5 visual polish.
+**All 6 phases complete + adversarial swarm review** — 152/152 tests, typecheck clean, ~95KB phone JS (under 100KB budget). Next: player phone design overhaul, manual testing on real devices, first production deploy.
 
 ## The Game
 
@@ -42,6 +42,7 @@ docs/
   ideation/        # Brainstorm documents
   plans/           # Roadmap + individual phase plans
   environment/     # Setup guides
+  workflow/        # Code review strategy, design skills
   insights/        # Hard-won lessons (populated during development)
   rules/           # Canonical rules reference (audited against official PDF)
   user/            # Official Party Pack rulebook PDF
@@ -76,14 +77,7 @@ Brainstorm → Roadmap → Phase Plans → Deepen Each → Fix Contradictions �
 
 ### Phase Status
 
-| # | Phase | Plan | Planned | Deepened | Executed | Reviewed |
-|---|-------|------|---------|----------|----------|----------|
-| 1 | Foundation | [phase-1](docs/plans/phase-1-foundation.md) | 04-05 11:41AM | 04-05 1:30PM | 04-05 4:04PM | 04-05 6:12PM |
-| 2 | Game Engine | [phase-2](docs/plans/phase-2-game-engine.md) | 04-05 11:41AM | 04-05 2:45PM | 04-05 6:39PM | 04-05 7:43PM |
-| 3 | Networking + Lobby | [phase-3](docs/plans/phase-3-networking-lobby.md) | 04-05 11:41AM | 04-05 3:45PM | 04-05 | 04-06 |
-| 4 | Core Game UI | [phase-4](docs/plans/phase-4-core-game-ui.md) | 04-05 11:41AM | 04-05 6:30PM | 04-06 | 04-06 |
-| 5 | Visual & Animation | [phase-5](docs/plans/phase-5-visual-animation.md) | 04-05 11:41AM | 04-05 8:45PM | 04-06 | 04-06 |
-| 6 | Hardening & Deploy | [phase-6](docs/plans/phase-6-hardening-deploy.md) | 04-05 11:41AM | 04-05 11:30PM | 04-06 | 04-06 |
+All 6 phases planned, deepened, executed, and reviewed. See [roadmap.md](docs/plans/roadmap.md) for full timeline and phase links.
 
 ## Reference
 
@@ -91,4 +85,6 @@ Brainstorm → Roadmap → Phase Plans → Deepen Each → Fix Contradictions �
 - [Roadmap](docs/plans/roadmap.md) — tech stack, architecture, state machine, cross-cutting concerns
 - [Rules Reference](docs/rules/RULES-REFERENCE.md) — canonical rules (audited against official PDF)
 - [Party Pack Rulebook](docs/user/ekpp-instructions-english.pdf) — official PDF (primary source)
+- [Code Review Strategy](docs/workflow/CODE-REVIEW.md) — which review tools, when to use each
+- [Design Skills](docs/workflow/DESIGN-SKILLS.md) — 21 Impeccable Design skills for UI polish
 - [UMB Architecture](../undercover-mob-boss/) — reference patterns for multi-device infrastructure

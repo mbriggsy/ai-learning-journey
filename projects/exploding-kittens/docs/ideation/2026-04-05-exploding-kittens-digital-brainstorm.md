@@ -88,8 +88,8 @@ Briggsy plays Exploding Kittens in real life. Directing from experience, not the
 
 ## Assumptions for Planning
 
-- **Local network required.** All devices (board + phones) must be on the same WiFi. No internet needed, but WiFi is non-negotiable.
-- **Phone reconnection.** Phones will disconnect (screen lock, battery, WiFi hiccup). Socket.IO handles reconnection, but the game state must survive — player rejoins where they left off, no lost turns.
+- **Same WiFi for dev, cloud for production.** Dev: all devices on same WiFi, connect via local IP. Production: PartyKit on Cloudflare — works over internet.
+- **Phone reconnection.** Phones will disconnect (screen lock, battery, WiFi hiccup). PartyKit handles reconnection, game state survives — player rejoins where they left off, no lost turns.
 - **Game start flow.** Board screen controls the lobby. Host sees players joining, hits "Start Game" when ready. No ready-up mechanic — the host decides when to go.
 - **Screen orientation.** Board = landscape (TV/monitor). Phones = portrait (natural phone hold). Both views designed for their orientation.
 
@@ -101,3 +101,15 @@ Briggsy plays Exploding Kittens in real life. Directing from experience, not the
 - **Not an AI showcase.** AI opponents are a future maybe, not the point.
 - **Not a clone of the official app.** This is OUR version with OUR art direction and OUR level of polish.
 - **Not a systems-heavy engine.** Simple rules, deep polish. The complexity is in the feel, not the architecture.
+
+---
+
+## Superseded Decisions
+
+Decisions that changed during planning/execution. Originals preserved above for context.
+
+| # | Original Decision | Updated To | When | Why |
+|---|-------------------|------------|------|-----|
+| 4 | Socket.IO for networking | PartyKit (partyserver on Cloudflare Workers) | Roadmap phase | Cloud-native, proven in UMB, no self-hosting needed |
+| 11 | Audio deferred to polish phase | Not in v1 scope | Phase 5 | Visual polish consumed full budget. Audio is a future addition. |
+| 19 | Hosting deferred to plan phase | Cloudflare Pages (client) + wrangler deploy (server) | Phase 6 | $0 free tier, instant rollback, server deploys before client |

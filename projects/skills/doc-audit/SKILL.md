@@ -1,8 +1,10 @@
 ---
 name: doc-audit
-description: Thorough documentation audit for any project. Finds all markdown docs, classifies them, checks for stale content, duplicated information, misplaced content, broken links, and formatting issues. Produces a severity-rated report and waits for approval before making changes. Use when the user says "audit docs", "check docs", "doc audit", "documentation review", "are the docs current", "clean up docs", or after completing a major phase of work. Also use when docs feel messy or out of sync.
+description: Thorough documentation audit for any project. Finds all markdown docs, classifies them, checks for stale content, duplicated information, misplaced content, broken links, and formatting issues. Produces a severity-rated report and waits for approval before making changes.
 user-invocable: true
 argument-hint: "[path (defaults to project root)]"
+context: fork
+disable-model-invocation: true
 ---
 
 Audit all markdown documentation in a project. Read everything, cross-reference everything, report what's wrong, fix what's approved.

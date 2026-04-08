@@ -1,7 +1,9 @@
 ---
 name: squeaky-clean
-description: End-of-session cleanup automation. Runs the full shutdown checklist — TODO update, typechecks, git verification, temp cleanup, commit, push. Use when the user says "squeaky clean", "clean up", "end of session", "wrap up", "shut it down", or signals they're done working. Also use proactively when a session is clearly ending.
+description: End-of-session cleanup automation. Runs the full shutdown checklist — TODO update, typechecks, git verification, temp cleanup, commit, push.
 user-invocable: true
+context: fork
+disable-model-invocation: true
 ---
 
 End-of-session cleanup. Every step runs in order — don't skip, don't reorder. If a step fails, stop and fix it before continuing. Never declare "clean" until every step is verified.

@@ -1,3 +1,4 @@
+import { useRef } from 'react'
 import {
   usePlayerList, useDrawPileCount, useDiscardTop,
   useCurrentTurn,
@@ -8,8 +9,7 @@ import { DrawPile } from './DrawPile'
 import { DiscardFan } from './DiscardFan'
 import { NopeCountdownBar } from './NopeCountdownBar'
 import { AnnouncementFeed } from './AnnouncementFeed'
-import { PendingPromptBanner } from './PendingPromptBanner'
-import { playerName } from './playerName'
+import { StatusBar } from './StatusBar'
 import styles from './GameTable.module.css'
 
 export function GameTable() {
@@ -17,51 +17,42 @@ export function GameTable() {
   const drawPileCount = useDrawPileCount()
   const discardTop = useDiscardTop()
   const currentTurn = useCurrentTurn()
-
-  const currentPlayerName = currentTurn
-    ? playerName(players, currentTurn.currentPlayerId)
-    : null
+  const flashRef = useRef<HTMLDivElement>(null)
 
   return (
     <div className={styles.table}>
-      {/* Player ring — absolute positioned around the edges */}
+      {/* Player ring */}
       <PlayerRing
         players={players}
         currentPlayerId={currentTurn?.currentPlayerId ?? null}
         turnsRemaining={currentTurn?.turnsRemaining ?? 0}
       />
 
-      {/* Center stage — draw pile, arena, discard */}
+      {/* Center stage — draw pile + discard, tight together */}
       <div className={styles.center}>
         <div className={styles.pileSection}>
-          <span className={styles.pileLabel}>Draw</span>
           <DrawPile count={drawPileCount} />
+          <span className={styles.pileLabel}>Draw</span>
         </div>
 
-        <Arena />
-
         <div className={styles.pileSection}>
-          <span className={styles.pileLabel}>Discard</span>
           <DiscardFan topCard={discardTop} />
+          <span className={styles.pileLabel}>Discard</span>
         </div>
       </div>
 
-      {/* Turn info */}
-      {currentPlayerName && (
-        <div className={styles.turnInfo}>
-          {currentPlayerName}'s turn
-          {currentTurn!.turnsRemaining > 1 && (
-            <span className={styles.turnCount}>
-              {currentTurn!.turnsRemaining} turns
-            </span>
-          )}
-        </div>
-      )}
+      {/* Arena overlaid on center — cards land here during play */}
+      <Arena />
+
+      {/* Full-screen event flash — GSAP target */}
+      <div ref={flashRef} className={styles.eventFlash} />
 
       {/* Overlays */}
       <NopeCountdownBar />
-      <PendingPromptBanner />
       <AnnouncementFeed />
+
+      {/* Comms bar — bottom strip */}
+      <StatusBar />
     </div>
   )
 }

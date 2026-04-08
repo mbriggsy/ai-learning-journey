@@ -151,3 +151,21 @@
   font-weight: 700;
   color: var(--accent-success);
 }
+
+/* --- Light Mode --- */
+
+[data-theme="light"] .optionBtn {
+  border-color: rgba(0, 0, 0, 0.08);
+}
+
+[data-theme="light"] .optionBtn:active {
+  background: rgba(0, 0, 0, 0.06);
+}
+
+[data-theme="light"] .quickBtn {
+  border-color: rgba(0, 0, 0, 0.08);
+}
+
+[data-theme="light"] .tapCard {
+  border-color: rgba(0, 0, 0, 0.08);
+}

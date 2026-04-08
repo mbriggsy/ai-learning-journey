@@ -1,4 +1,4 @@
-import { useState, useEffect, useCallback, Fragment } from 'react'
+import { useState, useEffect, useCallback, useMemo, Fragment } from 'react'
 import { connect, disconnect, send, onMessage, onStatusChange, onReconnect, getStatus, getSessionToken, setSessionToken } from '@client/connection'
 import type { ConnectionStatus } from '@client/connection'
 import { gameStore, useGameState, useProtocolMismatch, useIsOptimisticPending } from '@client/shared/gameStore'
@@ -9,7 +9,6 @@ import { deriveInteractionPermission } from './hooks/useInteractionPermission'
 import { useCardPlay } from './hooks/useCardPlay'
 import { deriveActiveBottomSheet } from './hooks/useActiveBottomSheet'
 import { useWakeLock } from '@client/shared/hooks/useWakeLock'
-import { useOrientationWarning } from '@client/shared/hooks/useOrientationWarning'
 import { JoinScreen } from './JoinScreen'
 import { Hand } from './Hand'
 import { CardConfirmBar } from './CardConfirmBar'
@@ -27,6 +26,7 @@ import { FavorResponse } from './sheets/FavorResponse'
 import { NameCard } from './sheets/NameCard'
 import type { CardType } from '@shared/types'
 import { PARTYKIT_HOST } from '@client/shared/config'
+import { useColorScheme } from '@client/shared/theme'
 import '@client/shared/fonts.css'
 import '@client/shared/theme.css'
 
@@ -35,13 +35,19 @@ function getRoomCodeFromUrl(): string {
   return params.get('room') ?? ''
 }
 
+function getNameFromUrl(): string {
+  const params = new URLSearchParams(window.location.search)
+  return params.get('name') ?? ''
+}
+
 export function Player() {
   useWakeLock()
-  const isLandscape = useOrientationWarning()
+  useColorScheme() // Force re-render on OS light/dark switch so cardAccent() picks up new values
   const protocolMismatch = useProtocolMismatch()
   const [connectionStatus, setConnectionStatus] = useState<ConnectionStatus>(getStatus())
   const [assignedColor, setAssignedColor] = useState<string | null>(null)
   const [roomCode] = useState(getRoomCodeFromUrl)
+  const [urlName] = useState(getNameFromUrl)
 
   useEffect(() => {
     if (!roomCode) return
@@ -57,9 +63,14 @@ export function Player() {
 
     const unsubAutoJoin = onStatusChange(s => {
       if (s === 'connected') {
-        const token = getSessionToken(roomCode)
-        if (token) {
-          send({ type: 'join', payload: { name: '', sessionToken: token } })
+        if (urlName) {
+          // Dev mode: name in URL always joins fresh, skip session token
+          send({ type: 'join', payload: { name: urlName } })
+        } else {
+          const token = getSessionToken(roomCode)
+          if (token) {
+            send({ type: 'join', payload: { name: '', sessionToken: token } })
+          }
         }
       }
     })
@@ -97,19 +108,9 @@ export function Player() {
           position: 'fixed', inset: 0, zIndex: 9998,
           display: 'flex', alignItems: 'center', justifyContent: 'center',
           background: 'var(--bg-primary, #0c0a12)',
-          color: '#e67e22', fontSize: 18, fontWeight: 700, textAlign: 'center',
+          color: 'var(--amber, #e8922a)', fontSize: 18, fontWeight: 700, textAlign: 'center',
         }}>
           Game updated — please refresh
-        </div>
-      )}
-      {isLandscape && (
-        <div style={{
-          position: 'fixed', inset: 0, zIndex: 9999,
-          display: 'flex', alignItems: 'center', justifyContent: 'center',
-          background: 'var(--bg-primary, #0c0a12)', color: 'var(--text-primary, #e8e8f0)',
-          fontSize: 18, textAlign: 'center', padding: 32,
-        }}>
-          Rotate your phone to portrait mode
         </div>
       )}
       <PhoneRouter
@@ -209,8 +210,11 @@ function PlayingView() {
   }, [futureCards])
 
   // Bottom sheet derivation — pass undefined if dismissed
-  const activeSheet = deriveActiveBottomSheet(
-    pendingPrompt, myPlayerId, players, hand, drawPileCount, futureDismissed ? undefined : futureCards,
+  const activeSheet = useMemo(
+    () => deriveActiveBottomSheet(
+      pendingPrompt, myPlayerId, players, hand, drawPileCount, futureDismissed ? undefined : futureCards,
+    ),
+    [pendingPrompt, myPlayerId, players, hand, drawPileCount, futureDismissed, futureCards],
   )
 
   // Reset localTargetMode when server state changes underneath

@@ -184,3 +184,41 @@
     color: ButtonText;
   }
 }
+
+/* --- Light Mode — neon glow becomes material shadow --- */
+
+[data-theme="light"] .card {
+  border-top: 1px solid color-mix(in srgb, var(--card-accent) 12%, white);
+  box-shadow:
+    0 1px 3px color-mix(in srgb, var(--card-glow-color) 15%, rgba(0,0,0,0.12)),
+    0 4px 12px color-mix(in srgb, var(--card-glow-color) 10%, rgba(0,0,0,0.08));
+}
+
+[data-theme="light"] .card::after {
+  box-shadow:
+    0 2px 8px color-mix(in srgb, var(--card-glow-color) 25%, rgba(0,0,0,0.15)),
+    0 8px 24px color-mix(in srgb, var(--card-glow-color) 18%, rgba(0,0,0,0.12)),
+    0 0 0 2px color-mix(in srgb, var(--card-glow-color) 40%, transparent);
+}
+
+[data-theme="light"] .card:focus-visible {
+  box-shadow: 0 0 0 5px rgba(255, 255, 255, 0.9);
+}
+
+[data-theme="light"] .cardBack {
+  background-image:
+    repeating-linear-gradient(
+      45deg,
+      transparent,
+      transparent 10px,
+      color-mix(in srgb, var(--red, #c52b2b) 10%, transparent) 10px,
+      color-mix(in srgb, var(--red, #c52b2b) 10%, transparent) 11px
+    ),
+    repeating-linear-gradient(
+      -45deg,
+      transparent,
+      transparent 10px,
+      color-mix(in srgb, var(--red, #c52b2b) 10%, transparent) 10px,
+      color-mix(in srgb, var(--red, #c52b2b) 10%, transparent) 11px
+    );
+}

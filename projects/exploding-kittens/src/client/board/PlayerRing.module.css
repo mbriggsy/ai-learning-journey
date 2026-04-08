@@ -1,101 +1,166 @@
-/* Player ring — elliptical layout, absolute-positioned slots */
+/* Player ring — PANELS with visual weight, not dots */
 
 .ring {
-  position: relative;
-  width: 100%;
-  height: 100%;
+  position: absolute;
+  inset: 0;
   pointer-events: none;
+  z-index: 3;
 }
 
-.slot {
+/* ─── Player panel — the card that represents each player ─── */
+
+.panel {
   position: absolute;
+  width: 200px;
+  pointer-events: auto;
+  will-change: transform, filter;
+  border-radius: 12px;
+  background: linear-gradient(
+    165deg,
+    rgba(30, 30, 50, 0.9) 0%,
+    rgba(18, 18, 32, 0.95) 100%
+  );
+  border: 1px solid rgba(255, 255, 255, 0.06);
+  overflow: hidden;
+  transition: border-color 0.3s ease, box-shadow 0.4s ease;
+}
+
+/* ─── Active player — dramatic emphasis ─── */
+
+.panel[data-active] {
+  border-color: color-mix(in srgb, var(--player-color) 60%, transparent);
+  box-shadow:
+    0 0 24px color-mix(in srgb, var(--player-color) 30%, transparent),
+    0 0 60px color-mix(in srgb, var(--player-color) 12%, transparent),
+    0 4px 20px rgba(0, 0, 0, 0.4);
+}
+
+.panel:not([data-active]) {
+  opacity: 0.55;
+}
+
+/* ─── Color accent bar — top edge, player identity ─── */
+
+.accentBar {
+  height: 4px;
+  width: 100%;
+  transition: height 0.3s ease;
+}
+
+.panel[data-active] .accentBar {
+  height: 5px;
+  box-shadow: 0 2px 12px color-mix(in srgb, var(--player-color) 50%, transparent);
+}
+
+/* ─── Panel body — name + meta ─── */
+
+.panelBody {
+  padding: 10px 14px 12px;
   display: flex;
   flex-direction: column;
+  gap: 6px;
+}
+
+.nameRow {
+  display: flex;
   align-items: center;
-  gap: 4px;
-  pointer-events: auto;
-  will-change: transform, opacity;
-}
-
-/* Active player glow pulse — CSS @keyframes, compositor thread */
-.slot[data-active] .avatar {
-  animation: activePulse 1.5s ease-in-out infinite;
-  box-shadow: 0 0 24px var(--player-color);
-}
-
-@keyframes activePulse {
-  0%, 100% { opacity: 0.85; transform: scale(1); }
-  50% { opacity: 1; transform: scale(1.06); }
-}
-
-.avatar {
-  border-radius: 50%;
-  border: 3px solid var(--player-color);
-  transition: filter 0.3s ease;
+  justify-content: space-between;
+  gap: 6px;
 }
 
 .name {
-  font-family: var(--font-body);
-  font-weight: 600;
-  font-size: 14px;
+  font-family: var(--font-display);
+  font-weight: 700;
+  font-size: 16px;
+  letter-spacing: 0.01em;
   color: var(--text-primary, #e8e8f0);
-  text-align: center;
   white-space: nowrap;
-  max-width: 100%;
   overflow: hidden;
   text-overflow: ellipsis;
+  flex: 1;
+}
+
+.panel[data-active] .name {
+  color: #fff;
+}
+
+.turnBadge {
+  font-family: var(--font-mono);
+  font-variant-numeric: tabular-nums;
+  font-size: 11px;
+  font-weight: 800;
+  color: var(--bg-app, #0c0a12);
+  background: var(--amber, #e8922a);
+  padding: 2px 7px;
+  border-radius: 6px;
+  flex-shrink: 0;
+  box-shadow: 0 0 8px color-mix(in srgb, var(--amber, #e8922a) 40%, transparent);
+}
+
+/* ─── Meta row — color dot + card count ─── */
+
+.metaRow {
+  display: flex;
+  align-items: center;
+  gap: 6px;
 }
 
 .count {
   font-family: var(--font-mono);
   font-variant-numeric: tabular-nums;
-  font-size: 13px;
-  font-weight: 700;
+  font-size: 12px;
+  font-weight: 600;
   color: var(--text-secondary, #9999bb);
 }
 
-.turnBadge {
-  position: absolute;
-  top: -4px;
-  right: -4px;
-  font-family: var(--font-mono);
-  font-variant-numeric: tabular-nums;
-  font-size: 11px;
-  font-weight: 700;
-  color: var(--bg-app, #0c0a12);
-  background: var(--amber, #e8922a);
-  padding: 1px 5px;
-  border-radius: 8px;
+.panel[data-active] .count {
+  color: var(--text-primary, #e8e8f0);
 }
 
-/* Eliminated players — static, no animation */
-.eliminated {
+/* ─── Eliminated ─── */
+
+.eliminatedRow {
   position: absolute;
-  bottom: 8px;
+  bottom: 12px;
+  left: 20px;
+  right: 20px;
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px 16px;
+  pointer-events: none;
+}
+
+.eliminated {
   display: flex;
   align-items: center;
   gap: 6px;
-  opacity: 0.35;
-  padding: 4px 10px;
+  opacity: 0.3;
 }
 
-.eliminated .name {
-  text-decoration: line-through;
+.eliminatedName {
+  font-family: var(--font-body);
   font-size: 12px;
+  font-weight: 500;
   color: var(--text-disabled, #555570);
+  text-decoration: line-through;
 }
 
-/* TV typography: 28px player names at board scale */
+/* ─── TV scale ─── */
+
 @media (min-width: 1280px) {
+  .panel { width: 240px; border-radius: 14px; }
+  .accentBar { height: 5px; }
+  .panel[data-active] .accentBar { height: 6px; }
+  .panelBody { padding: 12px 16px 14px; gap: 8px; }
   .name { font-size: 22px; }
-  .count { font-size: 18px; }
-  .turnBadge { font-size: 14px; }
+  .count { font-size: 15px; }
+  .turnBadge { font-size: 13px; }
 }
 
-/* Reduced motion */
+/* ─── Reduced motion ─── */
+
 @media (prefers-reduced-motion: reduce) {
-  .slot[data-active] .avatar {
-    animation: none;
-    border-width: 4px;
+  .panel[data-active] {
+    transition: none;
   }
 }

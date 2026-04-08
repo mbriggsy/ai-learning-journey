@@ -1,0 +1,276 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>EK Dev Launcher</title>
+  <style>
+    :root {
+      --bg: #0c0a12;
+      --surface: #1a1a2e;
+      --border: #2a2a4a;
+      --text: #e8e8f0;
+      --text-dim: #9999bb;
+      --teal: #2dd8c8;
+      --red: #e03535;
+    }
+
+    * { margin: 0; padding: 0; box-sizing: border-box; }
+
+    body {
+      font-family: system-ui, -apple-system, sans-serif;
+      background: var(--bg);
+      color: var(--text);
+      min-height: 100vh;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      padding: 40px 20px;
+    }
+
+    h1 {
+      font-size: 28px;
+      font-weight: 800;
+      letter-spacing: -0.02em;
+      margin-bottom: 8px;
+    }
+
+    .subtitle {
+      color: var(--text-dim);
+      font-size: 14px;
+      margin-bottom: 32px;
+    }
+
+    .controls {
+      display: flex;
+      align-items: center;
+      gap: 16px;
+      margin-bottom: 24px;
+    }
+
+    label {
+      font-size: 14px;
+      color: var(--text-dim);
+    }
+
+    .stepper {
+      display: flex;
+      align-items: center;
+      gap: 0;
+    }
+
+    .stepper button {
+      width: 36px;
+      height: 36px;
+      border: 1px solid var(--border);
+      background: var(--surface);
+      color: var(--text);
+      font-size: 18px;
+      cursor: pointer;
+    }
+
+    .stepper button:first-child { border-radius: 6px 0 0 6px; }
+    .stepper button:last-child { border-radius: 0 6px 6px 0; }
+    .stepper button:hover { background: #333658; }
+
+    .stepper span {
+      width: 48px;
+      height: 36px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      border-top: 1px solid var(--border);
+      border-bottom: 1px solid var(--border);
+      background: var(--surface);
+      font-size: 16px;
+      font-weight: 700;
+    }
+
+    .launch-btn {
+      padding: 14px 48px;
+      font-size: 18px;
+      font-weight: 700;
+      border: none;
+      border-radius: 10px;
+      background: var(--teal);
+      color: var(--bg);
+      cursor: pointer;
+      transition: opacity 0.15s;
+      margin-bottom: 32px;
+    }
+
+    .launch-btn:hover { opacity: 0.85; }
+    .launch-btn:active { opacity: 0.7; }
+
+    .names {
+      display: grid;
+      grid-template-columns: repeat(auto-fill, minmax(160px, 1fr));
+      gap: 8px;
+      width: 100%;
+      max-width: 720px;
+      margin-bottom: 32px;
+    }
+
+    .name-tag {
+      padding: 8px 12px;
+      border-radius: 6px;
+      background: var(--surface);
+      border: 1px solid var(--border);
+      font-size: 13px;
+      font-family: monospace;
+      color: var(--text-dim);
+      text-align: center;
+    }
+
+    .name-tag.active {
+      border-color: var(--teal);
+      color: var(--teal);
+    }
+
+    .log {
+      width: 100%;
+      max-width: 720px;
+      padding: 16px;
+      border-radius: 8px;
+      background: var(--surface);
+      border: 1px solid var(--border);
+      font-family: monospace;
+      font-size: 12px;
+      color: var(--text-dim);
+      min-height: 60px;
+    }
+
+    .log a {
+      color: var(--teal);
+      text-decoration: none;
+    }
+
+    .log a:hover { text-decoration: underline; }
+
+    .log-line {
+      display: block;
+      margin-bottom: 2px;
+      word-break: break-all;
+    }
+  </style>
+</head>
+<body>
+  <h1>EK Dev Launcher</h1>
+  <p class="subtitle">Open board + player tabs with pre-loaded names. Not included in prod build.</p>
+
+  <div class="controls">
+    <label>Players:</label>
+    <div class="stepper">
+      <button id="dec">-</button>
+      <span id="count">4</span>
+      <button id="inc">+</button>
+    </div>
+  </div>
+
+  <button class="launch-btn" id="launch">Launch Game</button>
+
+  <div class="names" id="names"></div>
+  <div class="log" id="log"><span class="log-line">Ready. Click Launch Game to open tabs.</span></div>
+
+  <script>
+    const NAMES = [
+      'ThunderPaws!',  // 12 chars each — max length stress test
+      'Dr Pawstein!',
+      'CaptainFlufy',
+      'Lord Meowth!',
+      'MeowZedong!!',
+      'FuzzyWuzzy!!',
+      'Sir Whiskers',
+      'CatExplosion',
+      'KittyDestroy',
+      'MittensOfWar',
+    ];
+
+    let playerCount = 4;
+    const countEl = document.getElementById('count');
+    const namesEl = document.getElementById('names');
+    const logEl = document.getElementById('log');
+
+    function renderNames() {
+      while (namesEl.firstChild) namesEl.removeChild(namesEl.firstChild);
+      NAMES.forEach((name, i) => {
+        const tag = document.createElement('div');
+        tag.className = 'name-tag' + (i < playerCount ? ' active' : '');
+        tag.textContent = (i + 1) + '. ' + name;
+        namesEl.appendChild(tag);
+      });
+    }
+
+    function updateCount(n) {
+      playerCount = Math.max(2, Math.min(10, n));
+      countEl.textContent = String(playerCount);
+      renderNames();
+    }
+
+    document.getElementById('dec').addEventListener('click', function() { updateCount(playerCount - 1); });
+    document.getElementById('inc').addEventListener('click', function() { updateCount(playerCount + 1); });
+
+    function generateRoomCode() {
+      var chars = 'ABCDEFGHJKMNPQRSTUVWXYZ23456789';
+      var limit = 256 - (256 % chars.length);
+      var buf = new Uint8Array(1);
+      var code = '';
+      for (var i = 0; i < 6; i++) {
+        var val;
+        do { crypto.getRandomValues(buf); val = buf[0]; } while (val >= limit);
+        code += chars[val % chars.length];
+      }
+      return code;
+    }
+
+    function addLogLine(text, url) {
+      var span = document.createElement('span');
+      span.className = 'log-line';
+      if (url) {
+        var label = document.createTextNode(text.split(': ')[0] + ': ');
+        var link = document.createElement('a');
+        link.href = url;
+        link.target = '_blank';
+        link.rel = 'noopener';
+        link.textContent = url;
+        span.appendChild(label);
+        span.appendChild(link);
+      } else {
+        span.textContent = text;
+      }
+      logEl.appendChild(span);
+    }
+
+    document.getElementById('launch').addEventListener('click', function() {
+      var room = generateRoomCode();
+      var origin = window.location.protocol === 'file:'
+        ? 'http://localhost:5173'
+        : window.location.origin;
+
+      // Clear log
+      while (logEl.firstChild) logEl.removeChild(logEl.firstChild);
+      addLogLine('Room: ' + room);
+      addLogLine('');
+
+      // Open board
+      var boardUrl = origin + '/board.html#' + room;
+      window.open(boardUrl, 'ek-board-' + room);
+      addLogLine('Board: ' + boardUrl, boardUrl);
+
+      // Open player tabs with staggered timing to avoid popup blockers
+      for (var i = 0; i < playerCount; i++) {
+        (function(idx) {
+          var name = NAMES[idx];
+          var playerUrl = origin + '/player.html?room=' + room + '&name=' + encodeURIComponent(name);
+          setTimeout(function() {
+            window.open(playerUrl, 'ek-player-' + room + '-' + idx);
+          }, (idx + 1) * 150);
+          addLogLine('Player ' + (idx + 1) + ': ' + playerUrl, playerUrl);
+        })(i);
+      }
+    });
+
+    renderNames();
+  </script>
+</body>
+</html>

@@ -1,104 +1,275 @@
+/* Lobby — first impression. Sets the tone for the entire session. */
+
 .container {
+  position: relative;
   display: flex;
   flex-direction: column;
   align-items: center;
-  justify-content: center;
-  min-height: 100svh;
-  padding: 2rem;
-  background: var(--bg-app, #0c0a12);
+  height: 100svh;
+  padding: 48px 32px 32px;
   color: var(--text-primary, #e8e8f0);
   font-family: var(--font-body, system-ui, sans-serif);
+  overflow: hidden;
+
+  /* Noir void with warm spotlight — same as GameTable for visual continuity */
+  background:
+    radial-gradient(ellipse at 50% 30%, rgba(40, 30, 60, 0.18) 0%, transparent 55%),
+    var(--bg-app, #0c0a12);
 }
+
+/* ─── Title ─── */
 
 .title {
-  font-size: 2.5rem;
-  margin-bottom: 2rem;
-  letter-spacing: -0.02em;
+  font-family: var(--font-display);
+  font-size: 48px;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.08em;
+  text-align: center;
+  margin-bottom: 6px;
+  flex-shrink: 0;
+  /* Warm red ambient glow behind text */
+  text-shadow:
+    0 0 40px color-mix(in srgb, var(--red, #e03535) 25%, transparent),
+    0 0 80px color-mix(in srgb, var(--red, #e03535) 10%, transparent);
 }
 
-.status {
-  font-size: 1.2rem;
-  opacity: 0.7;
+.titleAccent {
+  display: block;
+  width: 80px;
+  height: 2px;
+  margin: 0 auto 32px;
+  background: linear-gradient(
+    90deg,
+    transparent 0%,
+    var(--red, #e03535) 30%,
+    var(--red, #e03535) 70%,
+    transparent 100%
+  );
+  border-radius: 1px;
 }
+
+/* ─── QR Section ─── */
 
 .qrSection {
   display: flex;
   flex-direction: column;
   align-items: center;
-  gap: 0.5rem;
-  margin-bottom: 2rem;
-}
-
-.roomCode {
-  font-size: 2rem;
-  font-weight: 700;
-  letter-spacing: 0.2em;
-  font-variant-numeric: tabular-nums;
-}
-
-.hint {
-  font-size: 0.9rem;
-  opacity: 0.5;
-}
-
-.playerList {
-  width: 100%;
-  max-width: 400px;
-  display: flex;
-  flex-direction: column;
-  gap: 0.5rem;
-  margin-bottom: 2rem;
-}
-
-.player {
-  display: flex;
-  align-items: center;
-  gap: 0.75rem;
-  padding: 0.5rem 1rem;
-  background: rgba(255, 255, 255, 0.05);
-  border-radius: 0.5rem;
-}
-
-.dot {
-  width: 12px;
-  height: 12px;
-  border-radius: 50%;
+  gap: 12px;
+  margin-bottom: 32px;
   flex-shrink: 0;
 }
 
-.playerName {
-  font-size: 1.1rem;
-  font-weight: 500;
+.qrFrame {
+  padding: 16px;
+  background: var(--bg-card, #12121f);
+  border: 1px solid var(--border-subtle, #2a2a4a);
+  border-radius: 12px;
+  /* Subtle lift */
+  box-shadow:
+    0 4px 20px rgba(0, 0, 0, 0.4),
+    0 0 40px color-mix(in srgb, var(--red, #e03535) 5%, transparent);
 }
 
-.disconnected {
-  font-size: 0.8rem;
-  opacity: 0.4;
-  margin-left: auto;
+.roomCode {
+  font-family: var(--font-mono);
+  font-size: 36px;
+  font-weight: 700;
+  letter-spacing: 0.25em;
+  font-variant-numeric: tabular-nums;
+  color: var(--text-primary, #e8e8f0);
 }
+
+.hint {
+  font-size: 14px;
+  color: var(--text-disabled, #555570);
+  letter-spacing: 0.05em;
+}
+
+/* ─── Player Roster ─── */
+
+.roster {
+  width: 100%;
+  max-width: 440px;
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  margin-bottom: 24px;
+  flex: 1;
+  min-height: 0;
+  overflow-y: auto;
+  scrollbar-width: thin;
+  scrollbar-color: var(--border-subtle, #2a2a4a) transparent;
+}
+
+.rosterHeader {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 0 4px 8px;
+}
+
+.rosterLabel {
+  font-family: var(--font-display);
+  font-size: 13px;
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: 0.12em;
+  color: var(--text-disabled, #555570);
+}
+
+.rosterCount {
+  font-family: var(--font-mono);
+  font-size: 13px;
+  font-weight: 600;
+  font-variant-numeric: tabular-nums;
+  color: var(--text-secondary, #9999bb);
+}
+
+/* ─── Player Card ─── */
+
+.playerCard {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  padding: 10px 16px;
+  background: linear-gradient(
+    165deg,
+    rgba(30, 30, 50, 0.9) 0%,
+    rgba(18, 18, 32, 0.95) 100%
+  );
+  border: 1px solid rgba(255, 255, 255, 0.06);
+  border-radius: 10px;
+  overflow: hidden;
+}
+
+.playerName {
+  font-size: 18px;
+  font-weight: 500;
+  flex: 1;
+}
+
+.disconnectedBadge {
+  font-size: 12px;
+  font-weight: 600;
+  color: var(--text-disabled, #555570);
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+}
+
+/* ─── Waiting State ─── */
 
 .waiting {
   text-align: center;
-  opacity: 0.5;
+  color: var(--text-disabled, #555570);
+  padding: 24px 0;
 }
+
+.waitingDots {
+  display: inline-flex;
+  gap: 4px;
+  margin-left: 4px;
+}
+
+.waitingDot {
+  width: 4px;
+  height: 4px;
+  border-radius: 50%;
+  background: var(--text-disabled, #555570);
+  animation: dotPulse 1.4s ease-in-out infinite;
+}
+
+.waitingDot:nth-child(2) { animation-delay: 0.2s; }
+.waitingDot:nth-child(3) { animation-delay: 0.4s; }
+
+@keyframes dotPulse {
+  0%, 80%, 100% { opacity: 0.3; transform: scale(0.8); }
+  40% { opacity: 1; transform: scale(1); }
+}
+
+/* ─── Start Button ─── */
 
 .startButton {
-  padding: 0.75rem 2.5rem;
-  font-size: 1.1rem;
-  font-weight: 600;
+  position: relative;
+  padding: 14px 48px;
+  font-family: var(--font-display);
+  font-size: 18px;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.1em;
   border: none;
-  border-radius: 0.5rem;
-  background: #e74c3c;
-  color: #fff;
+  border-radius: 10px;
+  background: var(--red, #e03535);
+  color: var(--text-primary, #e8e8f0);
   cursor: pointer;
-  transition: opacity 0.15s;
+  flex-shrink: 0;
+  z-index: 1;
+  transition: transform 0.15s ease;
 }
 
-.startButton:hover:not(:disabled) {
-  opacity: 0.9;
+/* Glow pseudo — animates opacity only (GPU composited) */
+.startButton::after {
+  content: '';
+  position: absolute;
+  inset: -3px;
+  border-radius: 13px;
+  box-shadow:
+    0 0 12px color-mix(in srgb, var(--red, #e03535) 60%, transparent),
+    0 0 32px color-mix(in srgb, var(--red, #e03535) 30%, transparent),
+    0 0 64px color-mix(in srgb, var(--red, #e03535) 15%, transparent);
+  animation: buttonPulse 2s ease-in-out infinite;
+  z-index: -1;
+  pointer-events: none;
+}
+
+@keyframes buttonPulse {
+  0%, 100% { opacity: 0.4; }
+  50% { opacity: 1; }
+}
+
+.startButton:hover {
+  transform: scale(1.03);
+}
+
+.startButton:active {
+  transform: scale(0.98);
+}
+
+.startButton:focus-visible {
+  outline: 2px solid var(--focus-ring, #33ffff);
+  outline-offset: 3px;
 }
 
 .startButton:disabled {
-  opacity: 0.4;
+  background: var(--bg-hover, #222240);
+  color: var(--text-disabled, #555570);
   cursor: not-allowed;
+  transform: none;
+}
+
+.startButton:disabled::after {
+  display: none;
+}
+
+/* ─── TV scale ─── */
+
+@media (min-width: 1280px) {
+  .container { padding: 64px 48px 48px; }
+  .title { font-size: 72px; }
+  .titleAccent { width: 120px; margin-bottom: 40px; }
+  .roomCode { font-size: 44px; }
+  .qrFrame { padding: 20px; }
+  .roster { max-width: 520px; }
+  .playerCard { padding: 14px 20px; }
+  .playerName { font-size: 22px; }
+  .startButton { font-size: 22px; padding: 16px 60px; }
+  .rosterLabel { font-size: 15px; }
+  .rosterCount { font-size: 15px; }
+}
+
+/* ─── Reduced motion ─── */
+
+@media (prefers-reduced-motion: reduce) {
+  .startButton::after { animation: none; opacity: 0.6; }
+  .waitingDot { animation: none; opacity: 0.5; }
 }

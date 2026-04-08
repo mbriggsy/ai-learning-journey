@@ -1,35 +1,30 @@
-/* Neo-Noir Casino board — dark + premium, color erupts during drama */
+/* Board — black void, dramatic lighting, typography IS the design */
 
 .table {
   position: relative;
-  display: flex;
-  flex-direction: column;
-  align-items: center;
-  justify-content: center;
-  min-height: 100svh;
-  padding: 5vh 5vw; /* TV safe zone */
+  height: 100svh;
+  padding: 3vh 4vw;
   font-family: var(--font-body);
   color: var(--text-primary, #e8e8f0);
   overflow: hidden;
 
-  /* Background layers (bottom to top):
-     1. Base warm purple-black
-     2. Radial spotlight gradient
-     3. Vignette — cinematic framing */
+  /* The void: warm black with overhead spotlight */
   background:
-    radial-gradient(ellipse at center, transparent 50%, rgba(0,0,0,0.4) 100%),
-    radial-gradient(ellipse at center, hsl(250, 12%, 7%) 0%, var(--bg-app, #0c0a12) 60%),
+    radial-gradient(ellipse at 50% 40%, rgba(40, 30, 60, 0.15) 0%, transparent 60%),
     var(--bg-app, #0c0a12);
 }
 
-/* Center stage — draw, arena, discard in a row */
+/* ─── Center stage — draw pile + arena + discard, dead center ─── */
+
 .center {
-  position: relative;
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  transform: translate(-50%, -50%);
   display: flex;
   align-items: center;
   justify-content: center;
-  gap: 32px;
-  padding: 24px;
+  gap: 40px;
   z-index: 2;
 }
 
@@ -42,37 +37,26 @@
 
 .pileLabel {
   font-family: var(--font-display);
-  font-size: 12px;
+  font-size: 11px;
   font-weight: 600;
   text-transform: uppercase;
-  letter-spacing: 0.1em;
+  letter-spacing: 0.15em;
   color: var(--text-disabled, #555570);
 }
 
-.turnInfo {
-  position: relative;
-  z-index: 2;
-  text-align: center;
-  padding: 12px 24px;
-  font-family: var(--font-display);
-  font-size: 18px;
-  font-weight: 600;
-  color: var(--text-primary, #e8e8f0);
+/* ─── Full-screen event flash (GSAP target) ─── */
+
+.eventFlash {
+  position: fixed;
+  inset: 0;
+  z-index: 50;
+  pointer-events: none;
+  opacity: 0;
 }
 
-.turnCount {
-  font-family: var(--font-mono);
-  font-variant-numeric: tabular-nums;
-  font-size: 14px;
-  font-weight: 700;
-  color: var(--amber, #e8922a);
-  margin-left: 8px;
-}
+/* ─── TV scale ─── */
 
-/* TV scale — announcements, counts, labels all bigger */
 @media (min-width: 1280px) {
-  .center { gap: 64px; padding: 40px; }
-  .pileLabel { font-size: 16px; }
-  .turnInfo { font-size: 28px; }
-  .turnCount { font-size: 20px; }
+  .center { gap: 80px; }
+  .pileLabel { font-size: 15px; }
 }

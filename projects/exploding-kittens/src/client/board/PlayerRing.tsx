@@ -1,8 +1,10 @@
-import { useRef, useLayoutEffect, useState, memo } from 'react'
+import { useRef, useLayoutEffect, useState, useEffect, memo } from 'react'
 import { m, AnimatePresence } from 'motion/react'
+import gsap from 'gsap'
 import type { BoardPlayer } from '@shared/protocol'
 import { MOTION } from '@client/shared/animation-config'
-import { calculateRingPositions, getAvatarSize, getRingRadii } from './layout/ringLayout'
+import { calculateRingPositions, getRingRadii } from './layout/ringLayout'
+import { PlayerIcon } from '@client/shared/PlayerIcon'
 import styles from './PlayerRing.module.css'
 
 interface PlayerRingProps {
@@ -16,6 +18,8 @@ export const PlayerRing = memo(function PlayerRing({
 }: PlayerRingProps) {
   const containerRef = useRef<HTMLDivElement>(null)
   const [dimensions, setDimensions] = useState({ w: 0, h: 0 })
+  const prevActiveRef = useRef<string | null>(null)
+  const slotRefs = useRef<Map<string, HTMLDivElement>>(new Map())
 
   useLayoutEffect(() => {
     const el = containerRef.current
@@ -33,12 +37,35 @@ export const PlayerRing = memo(function PlayerRing({
     return () => ro.disconnect()
   }, [])
 
+  // GSAP turn transition
+  useEffect(() => {
+    if (!currentPlayerId || currentPlayerId === prevActiveRef.current) return
+    prevActiveRef.current = currentPlayerId
+
+    const activeEl = slotRefs.current.get(currentPlayerId)
+    if (!activeEl) return
+
+    const tl = gsap.timeline()
+    tl.fromTo(activeEl, {
+      scale: 1.12,
+      filter: 'brightness(1.6)',
+    }, {
+      scale: 1,
+      filter: 'brightness(1)',
+      duration: 0.5,
+      ease: 'power2.out',
+    })
+  }, [currentPlayerId])
+
   const alivePlayers = players.filter(p => p.isAlive)
-  const avatarSize = getAvatarSize(alivePlayers.length)
   const { rx, ry } = dimensions.w > 0
     ? getRingRadii(alivePlayers.length, dimensions.w, dimensions.h)
     : { rx: 0, ry: 0 }
   const positions = calculateRingPositions(alivePlayers.length, rx, ry)
+
+  // Panel dimensions for centering
+  const panelW = 200
+  const panelH = 90
 
   return (
     <div ref={containerRef} className={styles.ring}>
@@ -51,18 +78,19 @@ export const PlayerRing = memo(function PlayerRing({
           return (
             <m.div
               key={player.id}
-              className={styles.slot}
+              ref={(el: HTMLDivElement | null) => {
+                if (el) slotRefs.current.set(player.id, el)
+                else slotRefs.current.delete(player.id)
+              }}
+              className={styles.panel}
               data-active={isActive || undefined}
               style={{
-                width: avatarSize,
                 '--player-color': player.color,
               } as React.CSSProperties}
               initial={false}
               animate={{
-                x: dimensions.w / 2 + pos.x - avatarSize / 2,
-                y: dimensions.h / 2 + pos.y - avatarSize / 2,
-                opacity: isActive ? 1 : 0.6,
-                scale: isActive ? 1 : 0.92,
+                x: dimensions.w / 2 + pos.x - panelW / 2,
+                y: dimensions.h / 2 + pos.y - panelH / 2,
               }}
               exit={{
                 scale: 0,
@@ -71,30 +99,38 @@ export const PlayerRing = memo(function PlayerRing({
               }}
               transition={MOTION.DELIBERATE}
             >
-              <div
-                className={styles.avatar}
-                style={{ backgroundColor: player.color, width: avatarSize, height: avatarSize }}
-              />
-              <span className={styles.name}>{player.name}</span>
-              <span className={styles.count}>{player.cardCount}</span>
-              {isActive && turnsRemaining > 1 && (
-                <span className={styles.turnBadge}>{turnsRemaining}x</span>
-              )}
+              {/* Color accent bar */}
+              <div className={styles.accentBar} style={{ backgroundColor: player.color }} />
+
+              {/* Content */}
+              <div className={styles.panelBody}>
+                <div className={styles.nameRow}>
+                  <span className={styles.name}>{player.name}</span>
+                  {isActive && turnsRemaining > 1 && (
+                    <span className={styles.turnBadge}>{turnsRemaining}x</span>
+                  )}
+                </div>
+                <div className={styles.metaRow}>
+                  <PlayerIcon color={player.color} size={14} />
+                  <span className={styles.count}>{player.cardCount} cards</span>
+                </div>
+              </div>
             </m.div>
           )
         })}
       </AnimatePresence>
 
-      {/* Eliminated players rendered inline as static ghosts */}
-      {players.filter(p => !p.isAlive).map(player => (
-        <div
-          key={player.id}
-          className={styles.eliminated}
-          style={{ '--player-color': player.color } as React.CSSProperties}
-        >
-          <span className={styles.name}>{player.name}</span>
+      {/* Eliminated players */}
+      {players.some(p => !p.isAlive) && (
+        <div className={styles.eliminatedRow}>
+          {players.filter(p => !p.isAlive).map(player => (
+            <div key={player.id} className={styles.eliminated}>
+              <PlayerIcon color={player.color} size={10} />
+              <span className={styles.eliminatedName}>{player.name}</span>
+            </div>
+          ))}
         </div>
-      ))}
+      )}
     </div>
   )
 })

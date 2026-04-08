@@ -1,3 +1,4 @@
+import { useSyncExternalStore } from 'react'
 import type { CardType } from '@shared/types'
 
 // ---------------------------------------------------------------------------
@@ -83,8 +84,33 @@ const CARD_TYPE_ACCENTS = {
   'cattermelon':          { fill: PRIMITIVES.melon, glow: PRIMITIVES.melonGlow },
 } as const satisfies Record<CardType, { fill: string; glow: string }>
 
+// Light-mode accents: darkened fills for contrast on parchment, muted glows for shadow tinting
+const LIGHT_CARD_TYPE_ACCENTS = {
+  'exploding-kitten': { fill: '#c52b2b', glow: '#b02020' },
+  'defuse':           { fill: '#2563c4', glow: '#1a4fc0' },
+  'nope':             { fill: '#0e8a7e', glow: '#0a7a6e' },
+  'attack':           { fill: '#b06b10', glow: '#a06000' },
+  'targeted-attack':  { fill: '#b06b10', glow: '#a06000' },
+
+  'skip':             { fill: '#536180', glow: '#3a4a60' },
+  'see-the-future':   { fill: '#536180', glow: '#3a4a60' },
+  'alter-the-future': { fill: '#536180', glow: '#3a4a60' },
+  'shuffle':          { fill: '#536180', glow: '#3a4a60' },
+  'draw-from-bottom': { fill: '#536180', glow: '#3a4a60' },
+  'favor':            { fill: '#536180', glow: '#3a4a60' },
+
+  'feral-cat':            { fill: '#686868', glow: '#505050' },
+  'taco-cat':             { fill: '#9a5e20', glow: '#805018' },
+  'beard-cat':            { fill: '#1a7568', glow: '#146058' },
+  'rainbow-ralphing-cat': { fill: '#7a35a8', glow: '#602890' },
+  'hairy-potato-cat':     { fill: '#8a6c10', glow: '#705808' },
+  'cattermelon':          { fill: '#a83060', glow: '#902050' },
+} as const satisfies Record<CardType, { fill: string; glow: string }>
+
 export function cardAccent(type: CardType): { fill: string; glow: string } {
-  return CARD_TYPE_ACCENTS[type]
+  return activeScheme === 'light'
+    ? LIGHT_CARD_TYPE_ACCENTS[type]
+    : CARD_TYPE_ACCENTS[type]
 }
 
 // ---------------------------------------------------------------------------
@@ -137,14 +163,87 @@ const PHONE_OVERRIDES: Record<string, string> = {
   '--bg-surface': '#222540',
 }
 
-export function applyTheme(variant: 'board' | 'player' = 'board'): void {
+// Light mode: warm parchment "game table in daylight" — not sterile white
+const LIGHT_PHONE_OVERRIDES: Record<string, string> = {
+  '--bg-app':        '#f5f0e8',   // warm parchment, 93% lightness, no glare
+  '--bg-card':       '#fffdf8',   // near-white cream, cards float above parchment
+  '--bg-elevated':   '#ffffff',   // true white = "lift" for sheets/dialogs
+  '--bg-hover':      '#ede8de',   // touch feedback
+  '--border-subtle': '#d4cfc5',   // warm sand, not cold grey
+  '--bg-primary':    '#f5f0e8',
+  '--bg-surface':    '#fffdf8',
+  '--text-primary':  '#1c1a15',   // warm near-black, 16.2:1 on parchment (AAA)
+  '--text-secondary':'#5c574d',   // 6.2:1 on parchment (AA)
+  '--text-disabled': '#9e998f',   // decorative only
+  '--focus-ring':    '#0066cc',   // blue (CVD-safe), 6.8:1 on parchment
+  // Darkened accents for text readability on light
+  '--red':           '#c52b2b',
+  '--red-glow':      '#b02020',
+  '--blue':          '#2563c4',
+  '--blue-glow':     '#1a4fc0',
+  '--teal':          '#0e8a7e',
+  '--teal-glow':     '#0a7a6e',
+  '--amber':         '#b06b10',
+  '--amber-glow':    '#a06000',
+  '--slate':         '#536180',
+  '--slate-glow':    '#3a4a60',
+  '--accent-danger': '#c52b2b',
+  '--accent-success':'#0e8a7e',
+  '--accent-nope':   '#0e8a7e',
+}
+
+// ---------------------------------------------------------------------------
+// Color scheme state — tracks active light/dark for cardAccent() and React
+// ---------------------------------------------------------------------------
+
+let activeScheme: 'dark' | 'light' = 'dark'
+const schemeListeners = new Set<() => void>()
+
+function setScheme(scheme: 'dark' | 'light'): void {
+  if (activeScheme === scheme) return
+  activeScheme = scheme
+  for (const listener of schemeListeners) listener()
+}
+
+export function getColorScheme(): 'dark' | 'light' {
+  return activeScheme
+}
+
+function subscribeScheme(listener: () => void): () => void {
+  schemeListeners.add(listener)
+  return () => schemeListeners.delete(listener)
+}
+
+/** React hook — forces re-render on OS light/dark switch */
+export function useColorScheme(): 'dark' | 'light' {
+  return useSyncExternalStore(subscribeScheme, getColorScheme)
+}
+
+// ---------------------------------------------------------------------------
+// applyTheme() — sets CSS custom properties + detects color scheme
+// ---------------------------------------------------------------------------
+
+function applyOverrides(overrides: Record<string, string>): void {
   const root = document.documentElement.style
-  for (const [prop, value] of Object.entries(CSS_PROPERTY_MAP)) {
+  for (const [prop, value] of Object.entries(overrides)) {
     root.setProperty(prop, value)
   }
+}
+
+export function applyTheme(variant: 'board' | 'player' = 'board'): void {
+  applyOverrides(CSS_PROPERTY_MAP)
+
   if (variant === 'player') {
-    for (const [prop, value] of Object.entries(PHONE_OVERRIDES)) {
-      root.setProperty(prop, value)
+    const mql = window.matchMedia('(prefers-color-scheme: light)')
+
+    const apply = (prefersLight: boolean) => {
+      const overrides = prefersLight ? LIGHT_PHONE_OVERRIDES : PHONE_OVERRIDES
+      applyOverrides(overrides)
+      document.documentElement.dataset.theme = prefersLight ? 'light' : 'dark'
+      setScheme(prefersLight ? 'light' : 'dark')
     }
+
+    apply(mql.matches)
+    mql.addEventListener('change', (e) => apply(e.matches))
   }
 }

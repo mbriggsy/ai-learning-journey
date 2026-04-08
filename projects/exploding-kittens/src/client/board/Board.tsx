@@ -73,7 +73,7 @@ export function Board() {
       <div style={{
         display: 'flex', alignItems: 'center', justifyContent: 'center',
         minHeight: '100svh', background: 'var(--bg-primary, #0c0a12)',
-        color: '#e67e22', fontSize: 24, fontWeight: 700, textAlign: 'center',
+        color: 'var(--amber, #e8922a)', fontSize: 24, fontWeight: 700, textAlign: 'center',
       }}>
         Game updated — please refresh
       </div>
@@ -128,7 +128,7 @@ function BoardErrorBanner({ error }: { error: GameError | null }) {
     <div style={{
       position: 'fixed', top: 16, left: '50%', transform: 'translateX(-50%)',
       padding: '10px 24px', borderRadius: 8, fontSize: 16, fontWeight: 600,
-      background: 'rgba(231, 76, 60, 0.9)', color: '#fff', zIndex: 100,
+      background: 'color-mix(in srgb, var(--red, #e03535) 90%, transparent)', color: 'var(--text-primary, #e8e8f0)', zIndex: 100,
     }}>
       {error.message}
     </div>

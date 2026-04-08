@@ -1,4 +1,4 @@
-import { useReducer, useEffect, useMemo } from 'react'
+import { useReducer, useEffect, useMemo, useCallback } from 'react'
 import type { CardInstance } from '@shared/types'
 import { validateCombo } from '@shared/combo-validation'
 import type { ComboValidation } from '@shared/combo-validation'
@@ -69,13 +69,13 @@ export function useCardPlay(
     return state
   }, [state, hand])
 
-  const toggleCard = (cardId: string) => {
+  const toggleCard = useCallback((cardId: string) => {
     dispatch({ type: 'toggle-card', cardId, hand })
-  }
+  }, [hand])
 
-  const reset = () => {
+  const reset = useCallback(() => {
     dispatch({ type: 'reset' })
-  }
+  }, [])
 
   const selectedIds = useMemo(() => {
     if (validatedState.status !== 'selecting') return new Set<string>()

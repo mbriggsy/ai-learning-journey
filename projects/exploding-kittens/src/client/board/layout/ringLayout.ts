@@ -1,7 +1,7 @@
 export interface RingPosition {
-  readonly x: number   // center X in px
-  readonly y: number   // center Y in px
-  readonly angle: number // radians
+  readonly x: number
+  readonly y: number
+  readonly angle: number
 }
 
 /**
@@ -12,11 +12,10 @@ export function calculateRingPositions(
   playerCount: number,
   radiusX: number,
   radiusY: number,
-  startAngle = -Math.PI / 2, // 12 o'clock
+  startAngle = -Math.PI / 2,
 ): readonly RingPosition[] {
   if (playerCount === 0) return []
 
-  // 2-player: side by side at 9 and 3 o'clock
   if (playerCount === 2) {
     return [
       { x: -radiusX, y: 0, angle: Math.PI },
@@ -39,30 +38,27 @@ export function calculateRingPositions(
   return positions
 }
 
-/**
- * Avatar size scales down as more players join.
- * 64px absolute floor — readable from 3m on TV.
- */
+/** No longer used by PlayerRing (panels are fixed width), but kept for API compat */
 export function getAvatarSize(playerCount: number): number {
-  if (playerCount <= 2) return 120
-  if (playerCount <= 4) return 100
-  if (playerCount <= 6) return 80
-  return 64
+  if (playerCount <= 2) return 100
+  if (playerCount <= 4) return 80
+  if (playerCount <= 6) return 68
+  return 56
 }
 
 /**
- * Ring radii scale to container dimensions.
- * Elliptical for 16:9 TVs — wider than tall.
+ * Ring radii — sized so panels orbit in the safe zone,
+ * not clipping off screen edges.
  */
 export function getRingRadii(
   playerCount: number,
   containerWidth: number,
   containerHeight: number,
 ): { rx: number; ry: number } {
-  const avatarSize = getAvatarSize(playerCount)
-  const padding = avatarSize / 2 + 16 // half avatar + gap
+  // Tighter for fewer players, wider for more
+  const scale = playerCount <= 4 ? 0.30 : playerCount <= 6 ? 0.33 : 0.36
   return {
-    rx: containerWidth / 2 - padding,
-    ry: containerHeight / 2 - padding,
+    rx: containerWidth * scale,
+    ry: containerHeight * (scale - 0.02),
   }
 }

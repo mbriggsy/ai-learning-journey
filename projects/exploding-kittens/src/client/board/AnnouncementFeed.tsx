@@ -8,33 +8,148 @@ import type { GameEvent } from '@shared/types'
 import type { BoardPlayer } from '@shared/protocol'
 import styles from './AnnouncementFeed.module.css'
 
-function formatEvent(event: GameEvent, players: readonly BoardPlayer[]): string | null {
+// Pick a random variant. Seeded per-event-id for consistency across re-renders.
+function pick(variants: readonly string[], seed: string): string {
+  let hash = 0
+  for (let i = 0; i < seed.length; i++) {
+    hash = ((hash << 5) - hash + seed.charCodeAt(i)) | 0
+  }
+  return variants[Math.abs(hash) % variants.length]!
+}
+
+function formatEvent(event: GameEvent, players: readonly BoardPlayer[], eventId: string): string | null {
+  const n = (id: string) => playerName(players, id)
+
   switch (event.type) {
-    case 'game-started': return `Game on! ${event.playerCount} players`
+    case 'game-started':
+      return pick([
+        `${event.playerCount} players. No mercy.`,
+        `${event.playerCount} enter. 1 survives.`,
+        `Game on — ${event.playerCount} brave souls.`,
+        `Let the chaos begin.`,
+      ], eventId)
+
     case 'card-played': {
-      const name = playerName(players, event.playerId)
-      const combo = event.comboSize && event.comboSize > 1 ? ` (${event.comboSize}x combo)` : ''
-      return `${name} played ${event.cardType}${combo}`
+      const name = n(event.playerId)
+      const combo = event.comboSize && event.comboSize > 1 ? ` (${event.comboSize}x combo!)` : ''
+      return pick([
+        `${name} plays ${event.cardType}${combo}`,
+        `${name} drops ${event.cardType}${combo}`,
+        `${name} slams down ${event.cardType}${combo}`,
+      ], eventId)
     }
-    case 'card-drawn': return event.safe ? `${playerName(players, event.playerId)} drew a card` : null
-    case 'nope-played': return `${playerName(players, event.playerId)} said NOPE!`
-    case 'nope-window-opened': return null
-    case 'nope-window-resolved': return event.cancelled ? 'Resolved: Cancelled' : 'Resolved: Allowed'
-    case 'exploding-kitten-drawn': return `${playerName(players, event.playerId)} drew an Exploding Kitten!`
-    case 'defuse-played': return `${playerName(players, event.playerId)} defused!`
-    case 'player-eliminated': return `${playerName(players, event.playerId)} eliminated! Rank #${event.rank}`
-    case 'favor-requested': return `${playerName(players, event.requesterId)} demands a favor from ${playerName(players, event.targetId)}`
-    case 'favor-given': return `${playerName(players, event.giverId)} gave ${playerName(players, event.receiverId)} a card`
-    case 'future-peeked': return `${playerName(players, event.playerId)} peeked at the deck`
-    case 'future-rearranged': return `${playerName(players, event.playerId)} rearranged the future`
-    case 'deck-shuffled': return `${playerName(players, event.playerId)} shuffled the deck`
+
+    case 'card-drawn':
+      return event.safe
+        ? pick([
+          `${n(event.playerId)} draws... and lives.`,
+          `${n(event.playerId)} survives the draw.`,
+          `Safe. For now.`,
+          `${n(event.playerId)} got lucky.`,
+        ], eventId)
+        : null
+
+    case 'nope-played':
+      return pick([
+        `${n(event.playerId)} says NOPE!`,
+        `NOPE! — ${n(event.playerId)}`,
+        `${n(event.playerId)} shuts it down.`,
+        `Denied by ${n(event.playerId)}.`,
+      ], eventId)
+
+    case 'nope-window-opened':
+      return null
+
+    case 'nope-window-resolved':
+      return event.cancelled
+        ? pick(['Cancelled!', 'Shot down.', 'Nope wins.'], eventId)
+        : null // allowed actions don't need commentary
+
+    case 'exploding-kitten-drawn':
+      return pick([
+        `${n(event.playerId)} DREW AN EXPLODING KITTEN`,
+        `OH NO. ${n(event.playerId)} found the kitten.`,
+        `RIP ${n(event.playerId)}'s winning streak`,
+        `BOOM — ${n(event.playerId)} is in trouble`,
+      ], eventId)
+
+    case 'defuse-played':
+      return pick([
+        `${n(event.playerId)} defused it!`,
+        `${n(event.playerId)} lives to play another turn.`,
+        `Crisis averted by ${n(event.playerId)}.`,
+        `${n(event.playerId)} keeps their cool.`,
+      ], eventId)
+
+    case 'player-eliminated':
+      return pick([
+        `${n(event.playerId)} exploded. #${event.rank}`,
+        `${n(event.playerId)} is toast. Rank #${event.rank}`,
+        `Goodbye, ${n(event.playerId)}. #${event.rank}`,
+        `${n(event.playerId)} has left the building. #${event.rank}`,
+      ], eventId)
+
+    case 'favor-requested':
+      return pick([
+        `${n(event.requesterId)} demands tribute from ${n(event.targetId)}`,
+        `${n(event.requesterId)} wants a card from ${n(event.targetId)}`,
+        `Pay up, ${n(event.targetId)}.`,
+      ], eventId)
+
+    case 'favor-given':
+      return pick([
+        `${n(event.giverId)} reluctantly hands one over`,
+        `${n(event.receiverId)} got what they wanted`,
+      ], eventId)
+
+    case 'future-peeked':
+      return pick([
+        `${n(event.playerId)} peeks at the future...`,
+        `${n(event.playerId)} knows what's coming.`,
+        `${n(event.playerId)} has inside information.`,
+      ], eventId)
+
+    case 'future-rearranged':
+      return pick([
+        `${n(event.playerId)} rearranged the future.`,
+        `${n(event.playerId)} is playing god with the deck.`,
+        `The future just changed.`,
+      ], eventId)
+
+    case 'deck-shuffled':
+      return pick([
+        `${n(event.playerId)} shuffled the deck. All bets off.`,
+        `Deck shuffled. Nobody knows anything.`,
+        `${n(event.playerId)} hits the reset button.`,
+      ], eventId)
+
     case 'combo-steal': {
-      const s = playerName(players, event.stealerId)
-      const t = playerName(players, event.targetId)
-      return event.found ? `${s} stole from ${t}` : `${s} tried to steal — nothing found`
+      const s = n(event.stealerId)
+      const t = n(event.targetId)
+      return event.found
+        ? pick([
+          `${s} steals from ${t}!`,
+          `${s} pickpockets ${t}.`,
+          `${t} just got robbed by ${s}.`,
+        ], eventId)
+        : pick([
+          `${s} tried to steal — nothing there!`,
+          `Empty-handed. Nice try, ${s}.`,
+          `${t}'s pockets were empty.`,
+        ], eventId)
     }
-    case 'turn-started': return `${playerName(players, event.playerId)}'s turn (${event.turnsRemaining} remaining)`
-    case 'game-over': return `${playerName(players, event.winnerId)} wins!`
+
+    case 'turn-started':
+      return null // PlayerRing glow is the turn indicator
+
+    case 'game-over':
+      return pick([
+        `${n(event.winnerId)} WINS!`,
+        `${n(event.winnerId)} is the last one standing!`,
+        `${n(event.winnerId)} survived the kittens!`,
+        `All hail ${n(event.winnerId)}!`,
+      ], eventId)
+
     default: {
       const _exhaustive: never = event
       return _exhaustive
@@ -57,7 +172,7 @@ export function AnnouncementFeed() {
     if (newEvents.length === 0) return
     lastAnnouncedIdRef.current = newEvents[newEvents.length - 1]!.id
     for (const entry of newEvents) {
-      const text = formatEvent(entry.event, players)
+      const text = formatEvent(entry.event, players, entry.id)
       if (!text) continue
       const isUrgent = entry.event.type === 'exploding-kitten-drawn' ||
         entry.event.type === 'player-eliminated' || entry.event.type === 'game-over'
@@ -72,7 +187,7 @@ export function AnnouncementFeed() {
     <div className={styles.feed}>
       <AnimatePresence mode="popLayout">
         {recent.map(entry => {
-          const text = formatEvent(entry.event, players)
+          const text = formatEvent(entry.event, players, entry.id)
           if (!text) return null
           return (
             <m.div

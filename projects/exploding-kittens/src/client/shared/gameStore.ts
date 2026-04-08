@@ -44,7 +44,7 @@ const EVENT_TTL_MS = 30_000
 
 class GameStore {
   private serverSnapshot: ViewState | null = null
-  private optimisticTransform: ((s: ViewState) => ViewState) | null = null
+  private optimisticSnapshot: ViewState | null = null
   private privateData: PrivateData = {}
   private playerId: string | null = null
   private lastError: GameError | null = null
@@ -60,10 +60,7 @@ class GameStore {
   }
 
   getSnapshot = (): ViewState | null => {
-    if (this.optimisticTransform && this.serverSnapshot) {
-      return this.optimisticTransform(this.serverSnapshot)
-    }
-    return this.serverSnapshot
+    return this.optimisticSnapshot ?? this.serverSnapshot
   }
 
   getServerSnapshot = (): ViewState | null => this.serverSnapshot
@@ -73,7 +70,7 @@ class GameStore {
   getAccumulatedEvents = (): readonly AccumulatedEvent[] => this.accumulatedEvents
   getIsReconnecting = (): boolean => this._isReconnecting
   getProtocolMismatch = (): boolean => this._protocolMismatch
-  getIsOptimisticPending = (): boolean => this.optimisticTransform !== null
+  getIsOptimisticPending = (): boolean => this.optimisticSnapshot !== null
 
   setPlayerId(id: string): void {
     this.playerId = id
@@ -97,13 +94,13 @@ class GameStore {
   }
 
   applyOptimistic(transform: (s: ViewState) => ViewState): void {
-    this.optimisticTransform = transform
+    this.optimisticSnapshot = this.serverSnapshot ? transform(this.serverSnapshot) : null
     this.notify()
   }
 
   clearOptimistic(): void {
-    if (this.optimisticTransform === null) return
-    this.optimisticTransform = null
+    if (this.optimisticSnapshot === null) return
+    this.optimisticSnapshot = null
     this.notify()
   }
 
@@ -120,7 +117,7 @@ class GameStore {
         this._isReconnecting = false
         this._protocolMismatch = msg.protocolVersion !== PROTOCOL_VERSION
         this.accumulateEvents(msg.payload)
-        this.optimisticTransform = null
+        this.optimisticSnapshot = null
         this.updateState(msg.payload)
         break
       case 'player-update':
@@ -128,7 +125,7 @@ class GameStore {
         this._isReconnecting = false
         this._protocolMismatch = msg.protocolVersion !== PROTOCOL_VERSION
         this.accumulateEvents(msg.payload.state)
-        this.optimisticTransform = null
+        this.optimisticSnapshot = null
         this.updateState(msg.payload.state)
         this.privateData = msg.payload.private
         break
@@ -140,11 +137,11 @@ class GameStore {
         break
       case 'error':
         this.lastError = msg.payload
-        this.optimisticTransform = null
+        this.optimisticSnapshot = null
         this.notify()
         break
       case 'action-rejected':
-        this.optimisticTransform = null
+        this.optimisticSnapshot = null
         this.notify()
         break
       case 'ping':

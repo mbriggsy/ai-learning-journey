@@ -81,6 +81,54 @@ describe('GameStore', () => {
     expect(gameStore.getProtocolMismatch()).toBe(false)
   })
 
+  // --- Optimistic snapshot stability (regression: infinite re-render loop) ---
+  // useSyncExternalStore requires getSnapshot() to return the SAME reference
+  // on consecutive calls when the store hasn't changed. The old code stored a
+  // transform function and called it on every getSnapshot(), creating a new
+  // object each time. React detected "tearing" and forced infinite re-renders.
+
+  it('getSnapshot returns stable reference with optimistic state active', () => {
+    const lobby: LobbyView = { phase: 'lobby', roomCode: 'STAB', players: [] }
+    gameStore.handleMessage({ type: 'state-update', payload: lobby, protocolVersion: 1 })
+
+    gameStore.applyOptimistic(s => ({ ...s, roomCode: 'OPTI' } as LobbyView))
+
+    const snap1 = gameStore.getSnapshot()
+    const snap2 = gameStore.getSnapshot()
+    const snap3 = gameStore.getSnapshot()
+
+    // Object.is — the exact check useSyncExternalStore uses
+    expect(snap1).toBe(snap2)
+    expect(snap2).toBe(snap3)
+    expect((snap1 as LobbyView).roomCode).toBe('OPTI')
+  })
+
+  it('getSnapshot returns server state after optimistic is cleared', () => {
+    const lobby: LobbyView = { phase: 'lobby', roomCode: 'SERV', players: [] }
+    gameStore.handleMessage({ type: 'state-update', payload: lobby, protocolVersion: 1 })
+
+    gameStore.applyOptimistic(s => ({ ...s, roomCode: 'OPT' } as LobbyView))
+    expect((gameStore.getSnapshot() as LobbyView).roomCode).toBe('OPT')
+
+    gameStore.clearOptimistic()
+    expect((gameStore.getSnapshot() as LobbyView).roomCode).toBe('SERV')
+    expect(gameStore.getSnapshot()).toBe(lobby) // same reference as original
+  })
+
+  it('handleMessage clears optimistic on state-update', () => {
+    const lobby1: LobbyView = { phase: 'lobby', roomCode: 'OLD', players: [] }
+    gameStore.handleMessage({ type: 'state-update', payload: lobby1, protocolVersion: 1 })
+
+    gameStore.applyOptimistic(s => ({ ...s, roomCode: 'OPT' } as LobbyView))
+    expect(gameStore.getIsOptimisticPending()).toBe(true)
+
+    const lobby2: LobbyView = { phase: 'lobby', roomCode: 'NEW', players: [] }
+    gameStore.handleMessage({ type: 'state-update', payload: lobby2, protocolVersion: 1 })
+
+    expect(gameStore.getIsOptimisticPending()).toBe(false)
+    expect(gameStore.getSnapshot()).toBe(lobby2)
+  })
+
   it('updates private data on player-update', () => {
     const futureCards = [{ id: 'c1', type: 'skip' as const }]
     gameStore.handleMessage({

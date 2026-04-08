@@ -4,7 +4,7 @@ A digital adaptation of [Exploding Kittens Party Pack](https://www.explodingkitt
 
 ## Status
 
-**All 6 phases complete + adversarial swarm review** — 149/149 tests, typecheck clean, ~93KB phone JS (under 100KB budget). Next: manual testing, deploy, Phase 5 visual polish.
+**All 6 phases complete + adversarial swarm review** — 152/152 tests, typecheck clean, ~95KB phone JS (under 100KB budget). Next: manual testing, deploy, Phase 5 visual polish.
 
 ## The Game
 

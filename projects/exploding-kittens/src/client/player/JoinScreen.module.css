@@ -4,65 +4,67 @@
   align-items: center;
   justify-content: center;
   min-height: 100svh;
-  padding: 2rem;
+  padding: 32px;
   background: var(--bg-app, #0c0a12);
   color: var(--text-primary, #e8e8f0);
   font-family: var(--font-body, system-ui, sans-serif);
 }
 
 .title {
-  font-size: 1.8rem;
-  margin-bottom: 0.5rem;
+  font-family: var(--font-display);
+  font-size: 28px;
+  font-weight: 700;
+  margin-bottom: 8px;
 }
 
 .room {
-  font-size: 1rem;
-  opacity: 0.6;
-  margin-bottom: 2rem;
+  font-size: 16px;
+  color: var(--text-secondary, #9999bb);
+  margin-bottom: 32px;
 }
 
 .status {
-  font-size: 1.1rem;
-  opacity: 0.7;
+  font-size: 18px;
+  color: var(--text-secondary, #9999bb);
 }
 
 .form {
   display: flex;
   flex-direction: column;
-  gap: 1rem;
+  gap: 16px;
   width: 100%;
   max-width: 300px;
 }
 
 .input {
-  padding: 0.75rem 1rem;
-  font-size: 1.1rem;
-  border: 2px solid rgba(255, 255, 255, 0.15);
-  border-radius: 0.5rem;
-  background: rgba(255, 255, 255, 0.05);
-  color: #eee;
+  padding: 12px 16px;
+  font-size: 18px;
+  border: 2px solid var(--border-subtle, rgba(255, 255, 255, 0.15));
+  border-radius: 8px;
+  background: var(--bg-card, rgba(255, 255, 255, 0.05));
+  color: var(--text-primary, #e8e8f0);
   outline: none;
   transition: border-color 0.15s;
 }
 
 .input:focus {
-  border-color: rgba(255, 255, 255, 0.4);
+  border-color: var(--blue, #3b82f6);
 }
 
 .error {
-  color: #e74c3c;
-  font-size: 0.85rem;
+  color: var(--red, #e03535);
+  font-size: 14px;
   margin: 0;
 }
 
 .joinButton {
-  padding: 0.75rem;
-  font-size: 1.1rem;
+  padding: 12px;
+  font-size: 18px;
   font-weight: 600;
   border: none;
-  border-radius: 0.5rem;
-  background: #3498db;
-  color: #fff;
+  border-radius: 8px;
+  background: var(--blue, #3b82f6);
+  color: var(--text-primary, #e8e8f0);
   cursor: pointer;
   transition: opacity 0.15s;
 }
@@ -75,7 +77,7 @@
   display: flex;
   flex-direction: column;
   align-items: center;
-  gap: 0.75rem;
+  gap: 12px;
 }
 
 .dot {
@@ -85,11 +87,23 @@
 }
 
 .joinedName {
-  font-size: 1.5rem;
+  font-size: 24px;
   font-weight: 600;
 }
 
 .waiting {
-  font-size: 1rem;
-  opacity: 0.5;
+  font-size: 16px;
+  color: var(--text-disabled, #555570);
+}
+
+/* --- Light Mode --- */
+
+[data-theme="light"] .input {
+  border-color: rgba(0, 0, 0, 0.12);
+  background: rgba(0, 0, 0, 0.03);
+  color: var(--text-primary);
+}
+
+[data-theme="light"] .input:focus {
+  border-color: rgba(0, 0, 0, 0.25);
 }

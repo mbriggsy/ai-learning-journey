@@ -82,10 +82,10 @@
 
 | Chunk | Raw | Gzipped | Load |
 |-------|-----|---------|------|
-| player entry | 22.05 KB | 7.44 KB | Initial |
-| board entry | 27.97 KB | 10.23 KB | Initial |
-| shared (React + Motion core) | 223.17 KB | 71.57 KB | Initial (shared) |
+| player entry | 21.74 KB | 7.36 KB | Initial |
+| board entry | 101.20 KB | 38.55 KB | Initial |
+| shared (React + Motion core) | 228.29 KB | 73.28 KB | Initial (shared) |
 | VisualElement | 40.34 KB | 14.57 KB | Initial (shared) |
 | motion-features (domMax) | 83.61 KB | 27.45 KB | Lazy (prefetched) |
 
-**Phone initial JS: ~93KB gzipped** (under 100KB budget, 7KB headroom)
+**Phone initial JS: ~95KB gzipped** (under 100KB budget, 5KB headroom)

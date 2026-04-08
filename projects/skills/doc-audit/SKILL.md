@@ -3,7 +3,6 @@ name: doc-audit
 description: Thorough documentation audit for any project. Finds all markdown docs, classifies them, checks for stale content, duplicated information, misplaced content, broken links, and formatting issues. Produces a severity-rated report and waits for approval before making changes.
 user-invocable: true
 argument-hint: "[path (defaults to project root)]"
-context: fork
 disable-model-invocation: true
 ---
 

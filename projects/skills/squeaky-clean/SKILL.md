@@ -2,7 +2,6 @@
 name: squeaky-clean
 description: End-of-session cleanup automation. Runs the full shutdown checklist — TODO update, typechecks, git verification, temp cleanup, commit, push.
 user-invocable: true
-context: fork
 disable-model-invocation: true
 ---
 

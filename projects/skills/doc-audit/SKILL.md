@@ -1,6 +1,6 @@
 ---
 name: doc-audit
-description: Thorough documentation audit for any project. Finds all markdown docs, classifies them, checks for stale content, duplicated information, misplaced content, broken links, and formatting issues. Produces a severity-rated report and waits for approval before making changes.
+description: Thorough documentation audit for any project. Finds all markdown docs, classifies them, checks for stale content, duplicated information, contradictions, misplaced content, broken links, and formatting issues. Produces a severity-rated report and waits for approval before making changes.
 user-invocable: true
 argument-hint: "[path (defaults to project root)]"
 disable-model-invocation: true
@@ -74,8 +74,9 @@ For every markdown file:
    - Status claims — "not yet configured", "will be done in Phase X", "TODO" items that may be done
    - Dates and timestamps — are they plausible?
    - Tech decisions — do they match what the codebase actually uses?
-3. For each stale item, determine severity:
-   - CRITICAL: actively misleading (wrong commands, wrong status)
+3. Cross-reference code examples — if the same function, method, or API appears in multiple docs, do the usage patterns match? For example, one doc showing a function as a Jest matcher and another documenting it as a regular method returning a value is a contradiction even if neither doc is "stale" on its own.
+4. For each stale item, determine severity:
+   - CRITICAL: actively misleading (wrong commands, wrong status, contradicting API usage across docs)
    - MEDIUM: outdated but not harmful (old dates, resolved TODOs)
    - LOW: minor drift (version bump, cosmetic)
 
@@ -111,16 +112,23 @@ For every markdown file:
 4. Check for missing docs — based on what exists, are there gaps?
 5. Check for orphaned docs — files nothing references and no obvious directory homes them
 6. Assess overall structure — is the hierarchy clear? Are categories sensible?
+7. Check formatting quality:
+   - Heading hierarchy — no skipped levels (e.g., h1 → h3 with no h2)
+   - Code blocks — all fenced blocks have a language tag
+   - Tables — well-formed (consistent columns, alignment)
+   - Empty sections — headings with no content beneath them
+   - Inconsistent patterns — e.g., some lists use `-`, others use `*` in the same file
 
 Report format:
 - Classification table: file | category | line count | assessment (clean/issues)
 - Misplaced content: file, lines, what's misplaced, where it should go, why
 - Missing docs: what should exist, why it would help
 - Orphaned docs: file, why it appears orphaned
+- Formatting issues: file, line, what's wrong, fix
 - Structure assessment: 2-3 sentences on overall doc organization quality
 ```
 
-### Agent 4: Duplication Detector
+### Agent 4: Duplication & Contradiction Detector
 
 ```
 You are auditing documentation for duplicated content across files.
@@ -128,25 +136,35 @@ You are auditing documentation for duplicated content across files.
 Files to audit: <file list>
 Project root: <path>
 
-Read EVERY file completely. Then cross-reference:
+Read EVERY file completely. Then cross-reference for both duplication AND contradiction:
+
+**Duplication** — same content in multiple places:
 1. Same data in multiple tables (e.g., phase status in README AND roadmap)
 2. Same instructions repeated (e.g., install steps in README and SETUP)
 3. Same rules stated differently (e.g., conventions in CLAUDE.md and a plan doc)
 4. Same tech stack / version info in multiple places
 5. Same commands documented in multiple files
 
-For each duplicate, determine:
+**Contradiction** — conflicting content across files:
+6. Code examples showing different usage patterns for the same API (e.g., one doc uses a function as a Jest matcher, another documents it returning a plain object)
+7. Parameter tables or return types that disagree across docs
+8. Configuration options documented in one file but absent or different in another
+9. Type references (e.g., SomeType[]) that are never defined anywhere in the docs
+
+For each finding, determine:
 - Which doc is the source of truth? (The more detailed/specific one usually wins)
 - Is the duplication intentional? (e.g., plan doc repeats rules as implementation checklist — acceptable)
 - What's the drift risk? (Will these get out of sync? How often does this data change?)
+- For contradictions: which version is correct, or are both wrong?
 
-Report format — one entry per duplication:
-- Content: <what's duplicated — brief description>
+Report format — one entry per finding:
+- Content: <what's duplicated or contradicted — brief description>
+- Type: DUPLICATION | CONTRADICTION
 - Location A: <file, lines> (source of truth)
-- Location B: <file, lines> (duplicate)
+- Location B: <file, lines> (duplicate or conflicting version)
 - Intentional: YES (implementation checklist, summary vs detail) | NO
 - Drift risk: HIGH (data changes often) | LOW (stable content)
-- Fix: <specific recommendation — link, delete, or accept>
+- Fix: <specific recommendation — link, delete, reconcile, or accept>
 ```
 
 ## Phase 3: Aggregate (inline)

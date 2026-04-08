@@ -1,0 +1,13 @@
+{
+  "eval_id": 2,
+  "eval_name": "clean-project-false-positives",
+  "configuration": "without_skill",
+  "expectations": [
+    {"text": "no-false-broken-links", "passed": true, "evidence": "Report: 'All internal links resolve correctly.' 0 broken links."},
+    {"text": "no-false-stale-content", "passed": true, "evidence": "Report: 'No stale content.' 5 findings are all low/informational gaps."},
+    {"text": "low-issue-count", "passed": true, "evidence": "5 findings (4 low, 1 informational). 5 <= 5."},
+    {"text": "no-false-critical", "passed": true, "evidence": "0 critical, 0 high. All findings are low/informational."},
+    {"text": "finds-toMatchBaseline-contradiction", "passed": false, "evidence": "Report explicitly says 'Contradictions: 0' and 'CLEAN — no contradictions.' Missed the toMatchBaseline jest-matcher vs method inconsistency."}
+  ],
+  "pass_rate": 0.8, "passed": 4, "failed": 1, "total": 5
+}

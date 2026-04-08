@@ -1,0 +1,16 @@
+{
+  "eval_id": 0,
+  "eval_name": "node-app-obvious-issues",
+  "configuration": "without_skill",
+  "expectations": [
+    {"text": "finds-broken-link-api-reference", "passed": true, "evidence": "Broken links table: docs/api-reference.md — Missing"},
+    {"text": "finds-broken-link-contributing", "passed": true, "evidence": "Broken links table: CONTRIBUTING.md — Missing"},
+    {"text": "finds-broken-link-auth", "passed": true, "evidence": "Broken links table: docs/auth.md — Missing"},
+    {"text": "finds-broken-link-schema", "passed": true, "evidence": "Broken links table: schema.md — Missing"},
+    {"text": "finds-broken-link-websocket", "passed": true, "evidence": "Broken links table: websocket.md — Missing"},
+    {"text": "finds-stale-node-version", "passed": true, "evidence": "Factual Contradictions: Node.js version mismatch, 16.x vs >=18.0.0"},
+    {"text": "finds-readme-setup-duplication", "passed": true, "evidence": "Content Duplication section: 4 areas duplicated between README and setup.md"},
+    {"text": "no-false-critical", "passed": true, "evidence": "Only 1 critical (Node version) — real issue"}
+  ],
+  "pass_rate": 1.0, "passed": 8, "failed": 0, "total": 8
+}

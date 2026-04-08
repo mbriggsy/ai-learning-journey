@@ -1,0 +1,51 @@
+{
+  "eval_id": 0,
+  "eval_name": "node-app-obvious-issues",
+  "configuration": "without_skill",
+  "expectations": [
+    {
+      "text": "finds-broken-link-api-reference",
+      "passed": true,
+      "evidence": "Broken links table: 'README.md:47 | docs/api-reference.md | BROKEN -- file missing'"
+    },
+    {
+      "text": "finds-broken-link-contributing",
+      "passed": true,
+      "evidence": "Broken links table: 'README.md:78 | CONTRIBUTING.md | BROKEN -- file missing'"
+    },
+    {
+      "text": "finds-broken-link-auth",
+      "passed": true,
+      "evidence": "Broken links table: 'README.md:70 | docs/auth.md | BROKEN -- file missing'"
+    },
+    {
+      "text": "finds-broken-link-schema",
+      "passed": true,
+      "evidence": "Broken links table: 'docs/architecture.md:38 | schema.md | BROKEN -- file missing'"
+    },
+    {
+      "text": "finds-broken-link-websocket",
+      "passed": true,
+      "evidence": "Broken links table: 'docs/architecture.md:51 | websocket.md | BROKEN -- file missing'"
+    },
+    {
+      "text": "finds-stale-node-version",
+      "passed": true,
+      "evidence": "Dedicated section: 'CRITICAL: Node.js Version Contradiction -- architecture.md says 16.x, package.json says >=18.0.0'"
+    },
+    {
+      "text": "finds-readme-setup-duplication",
+      "passed": true,
+      "evidence": "Dedicated section: 'HIGH: Content Duplication Between README.md and docs/setup.md' with 4 specific duplication areas listed"
+    },
+    {
+      "text": "no-false-critical",
+      "passed": true,
+      "evidence": "Critical items are broken links and Node version contradiction -- all real issues."
+    }
+  ],
+  "pass_rate": 1.0,
+  "passed": 8,
+  "failed": 0,
+  "total": 8
+}

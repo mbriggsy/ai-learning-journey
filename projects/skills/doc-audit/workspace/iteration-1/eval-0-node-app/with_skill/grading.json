@@ -1,0 +1,51 @@
+{
+  "eval_id": 0,
+  "eval_name": "node-app-obvious-issues",
+  "configuration": "with_skill",
+  "expectations": [
+    {
+      "text": "finds-broken-link-api-reference",
+      "passed": true,
+      "evidence": "Item #1: 'README.md, Line 47 -- Broken link to docs/api-reference.md'"
+    },
+    {
+      "text": "finds-broken-link-contributing",
+      "passed": true,
+      "evidence": "Item #3: 'README.md, Line 76 -- Broken link to CONTRIBUTING.md'"
+    },
+    {
+      "text": "finds-broken-link-auth",
+      "passed": true,
+      "evidence": "Item #2: 'README.md, Line 70 -- Broken link to docs/auth.md'"
+    },
+    {
+      "text": "finds-broken-link-schema",
+      "passed": true,
+      "evidence": "Item #5: 'docs/architecture.md, Line 38 -- Broken link to schema.md'"
+    },
+    {
+      "text": "finds-broken-link-websocket",
+      "passed": true,
+      "evidence": "Item #6: 'docs/architecture.md, Line 51 -- Broken link to websocket.md'"
+    },
+    {
+      "text": "finds-stale-node-version",
+      "passed": true,
+      "evidence": "Item #7: 'docs/architecture.md, Line 19 -- Node.js version mismatch. Claim: Node.js 16.x (LTS). Reality: package.json requires >=18.0.0'"
+    },
+    {
+      "text": "finds-readme-setup-duplication",
+      "passed": true,
+      "evidence": "Item #8: 'README.md, Lines 20-65 -- Setup instructions duplicated in README...duplicated nearly verbatim in docs/setup.md'"
+    },
+    {
+      "text": "no-false-critical",
+      "passed": true,
+      "evidence": "All 8 critical items are real issues: 6 broken links (including .env.example), 1 stale version, 1 duplication creating two sources of truth."
+    }
+  ],
+  "pass_rate": 1.0,
+  "passed": 8,
+  "failed": 0,
+  "total": 8
+}

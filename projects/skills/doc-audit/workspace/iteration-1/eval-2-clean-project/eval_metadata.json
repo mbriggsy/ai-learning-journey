@@ -1,0 +1,27 @@
+{
+  "eval_id": 2,
+  "eval_name": "clean-project-false-positives",
+  "prompt": "Run a doc audit on this project",
+  "assertions": [
+    {
+      "id": "no-false-broken-links",
+      "description": "Does not report valid links as broken (all links in clean-project are valid)",
+      "check": "report does not claim any links are broken"
+    },
+    {
+      "id": "no-false-stale-content",
+      "description": "Does not invent stale content claims for content that is accurate",
+      "check": "report does not claim content is stale/outdated when it is actually correct"
+    },
+    {
+      "id": "low-issue-count",
+      "description": "Total issues reported is 3 or fewer (clean project should not generate many findings)",
+      "check": "count total distinct issues in report, should be <= 3"
+    },
+    {
+      "id": "no-false-critical",
+      "description": "Zero critical issues reported (nothing in clean-project warrants critical severity)",
+      "check": "report contains zero critical-severity findings"
+    }
+  ]
+}

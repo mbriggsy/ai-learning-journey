@@ -1,0 +1,16 @@
+{
+  "eval_id": 0,
+  "eval_name": "node-app-obvious-issues",
+  "configuration": "with_skill",
+  "expectations": [
+    {"text": "finds-broken-link-api-reference", "passed": true, "evidence": "Item #2: broken link to docs/api-reference.md"},
+    {"text": "finds-broken-link-contributing", "passed": true, "evidence": "Item #7: broken link to CONTRIBUTING.md"},
+    {"text": "finds-broken-link-auth", "passed": true, "evidence": "Item #3: broken link to docs/auth.md"},
+    {"text": "finds-broken-link-schema", "passed": true, "evidence": "Item #5: broken link to schema.md"},
+    {"text": "finds-broken-link-websocket", "passed": true, "evidence": "Item #6: broken link to websocket.md"},
+    {"text": "finds-stale-node-version", "passed": true, "evidence": "Item #1: Node.js 16.x vs >=18.0.0 contradiction"},
+    {"text": "finds-readme-setup-duplication", "passed": true, "evidence": "Items #11-14: four duplication instances between README and setup.md"},
+    {"text": "no-false-critical", "passed": true, "evidence": "All 4 critical items are real: Node version, api-reference, auth, .env.example"}
+  ],
+  "pass_rate": 1.0, "passed": 8, "failed": 0, "total": 8
+}

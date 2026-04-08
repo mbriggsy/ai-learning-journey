@@ -1,0 +1,158 @@
+{
+  "metadata": {
+    "skill_name": "doc-audit",
+    "skill_path": "C:/Users/brigg/ai-learning-journey/projects/skills/doc-audit/SKILL.md",
+    "executor_model": "claude-opus-4-6",
+    "analyzer_model": "claude-opus-4-6",
+    "timestamp": "2026-04-08T17:15:00Z",
+    "evals_run": ["node-app-obvious-issues", "python-lib-subtle-issues", "clean-project-false-positives"],
+    "runs_per_configuration": 1
+  },
+  "configurations": [
+    {
+      "name": "with_skill",
+      "description": "Using doc-audit skill with 4 parallel sub-agents"
+    },
+    {
+      "name": "without_skill",
+      "description": "Baseline — no skill guidance"
+    }
+  ],
+  "runs": [
+    {
+      "eval_name": "node-app-obvious-issues",
+      "configuration": "with_skill",
+      "pass_rate": 1.0,
+      "passed": 8,
+      "failed": 0,
+      "total": 8,
+      "time_seconds": 155.1,
+      "tokens": 32768,
+      "expectations": [
+        {"text": "finds-broken-link-api-reference", "passed": true},
+        {"text": "finds-broken-link-contributing", "passed": true},
+        {"text": "finds-broken-link-auth", "passed": true},
+        {"text": "finds-broken-link-schema", "passed": true},
+        {"text": "finds-broken-link-websocket", "passed": true},
+        {"text": "finds-stale-node-version", "passed": true},
+        {"text": "finds-readme-setup-duplication", "passed": true},
+        {"text": "no-false-critical", "passed": true}
+      ]
+    },
+    {
+      "eval_name": "node-app-obvious-issues",
+      "configuration": "without_skill",
+      "pass_rate": 1.0,
+      "passed": 8,
+      "failed": 0,
+      "total": 8,
+      "time_seconds": 162.9,
+      "tokens": 32774,
+      "expectations": [
+        {"text": "finds-broken-link-api-reference", "passed": true},
+        {"text": "finds-broken-link-contributing", "passed": true},
+        {"text": "finds-broken-link-auth", "passed": true},
+        {"text": "finds-broken-link-schema", "passed": true},
+        {"text": "finds-broken-link-websocket", "passed": true},
+        {"text": "finds-stale-node-version", "passed": true},
+        {"text": "finds-readme-setup-duplication", "passed": true},
+        {"text": "no-false-critical", "passed": true}
+      ]
+    },
+    {
+      "eval_name": "python-lib-subtle-issues",
+      "configuration": "with_skill",
+      "pass_rate": 1.0,
+      "passed": 7,
+      "failed": 0,
+      "total": 7,
+      "time_seconds": 170.2,
+      "tokens": 37388,
+      "expectations": [
+        {"text": "finds-broken-link-api-reference", "passed": true},
+        {"text": "finds-broken-link-contributing", "passed": true},
+        {"text": "finds-broken-link-changelog", "passed": true},
+        {"text": "finds-pydantic-version-conflict", "passed": true},
+        {"text": "finds-python-version-conflict", "passed": true},
+        {"text": "finds-tech-stack-triplication", "passed": true},
+        {"text": "finds-install-duplication", "passed": true}
+      ]
+    },
+    {
+      "eval_name": "python-lib-subtle-issues",
+      "configuration": "without_skill",
+      "pass_rate": 0.857,
+      "passed": 6,
+      "failed": 1,
+      "total": 7,
+      "time_seconds": 162.5,
+      "tokens": 37154,
+      "expectations": [
+        {"text": "finds-broken-link-api-reference", "passed": true},
+        {"text": "finds-broken-link-contributing", "passed": true},
+        {"text": "finds-broken-link-changelog", "passed": true},
+        {"text": "finds-pydantic-version-conflict", "passed": true},
+        {"text": "finds-python-version-conflict", "passed": true},
+        {"text": "finds-tech-stack-triplication", "passed": true},
+        {"text": "finds-install-duplication", "passed": false}
+      ]
+    },
+    {
+      "eval_name": "clean-project-false-positives",
+      "configuration": "with_skill",
+      "pass_rate": 1.0,
+      "passed": 4,
+      "failed": 0,
+      "total": 4,
+      "time_seconds": 131.8,
+      "tokens": 30106,
+      "expectations": [
+        {"text": "no-false-broken-links", "passed": true},
+        {"text": "no-false-stale-content", "passed": true},
+        {"text": "low-issue-count", "passed": true},
+        {"text": "no-false-critical", "passed": true}
+      ]
+    },
+    {
+      "eval_name": "clean-project-false-positives",
+      "configuration": "without_skill",
+      "pass_rate": 0.75,
+      "passed": 3,
+      "failed": 1,
+      "total": 4,
+      "time_seconds": 176.5,
+      "tokens": 34696,
+      "expectations": [
+        {"text": "no-false-broken-links", "passed": true},
+        {"text": "no-false-stale-content", "passed": true},
+        {"text": "low-issue-count", "passed": false},
+        {"text": "no-false-critical", "passed": true}
+      ]
+    }
+  ],
+  "run_summary": {
+    "with_skill": {
+      "mean_pass_rate": 1.0,
+      "mean_time_seconds": 152.4,
+      "mean_tokens": 33421
+    },
+    "without_skill": {
+      "mean_pass_rate": 0.869,
+      "mean_time_seconds": 167.3,
+      "mean_tokens": 34875
+    },
+    "delta": {
+      "pass_rate": "+0.131",
+      "time_seconds": "-14.9",
+      "tokens": "-1454"
+    }
+  },
+  "analyst_observations": [
+    "PRECISION WIN: The skill's biggest advantage is on the clean project. With-skill correctly reported 0 issues; baseline invented 8 (1 High, 4 Medium, 3 Low). The baseline's H1 (toMatchBaseline usage contradiction) is arguably a real inconsistency, but the 7 other findings range from nitpicky to invented.",
+    "RECALL PARITY: On the two 'dirty' projects (node-app, python-lib), both configurations caught all major planted issues. The skill scored 100% on assertions vs baseline's 93%.",
+    "MISSED INSTALL DUPLICATION: The baseline failed the finds-install-duplication assertion on python-lib — it noticed the pipeline.run() API signature difference but missed the simpler pip install duplication between README and getting-started.md.",
+    "SPEED: With-skill was ~15s faster on average (152s vs 167s). Token usage was comparable (~1.5K fewer with skill).",
+    "REPORT QUALITY: The with-skill reports follow a consistent structure (severity-rated, grouped by file, with fix suggestions). Baseline reports vary in format — node-app baseline used a different severity taxonomy (High instead of Critical), making cross-comparison harder.",
+    "NUANCE GAP: The with-skill clean-project report may be TOO clean — it missed the toMatchBaseline jest-matcher vs regular-method inconsistency that the baseline caught. This is a legitimate finding the skill's agents overlooked. The skill's Stale Content Hunter checked value consistency but not API usage pattern consistency."
+  ]
+}

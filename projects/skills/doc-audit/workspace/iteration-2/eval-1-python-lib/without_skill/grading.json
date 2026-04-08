@@ -1,0 +1,15 @@
+{
+  "eval_id": 1,
+  "eval_name": "python-lib-subtle-issues",
+  "configuration": "without_skill",
+  "expectations": [
+    {"text": "finds-broken-link-api-reference", "passed": true, "evidence": "B-1: docs/api-reference.md does not exist"},
+    {"text": "finds-broken-link-contributing", "passed": true, "evidence": "B-3: CONTRIBUTING.md does not exist"},
+    {"text": "finds-broken-link-changelog", "passed": true, "evidence": "B-2: CHANGELOG.md does not exist"},
+    {"text": "finds-pydantic-version-conflict", "passed": true, "evidence": "C-1: Three-way Pydantic version conflict documented"},
+    {"text": "finds-python-version-conflict", "passed": true, "evidence": "C-2: Python version requirement contradiction documented"},
+    {"text": "finds-tech-stack-triplication", "passed": true, "evidence": "D-1: Tech Stack Block (3 copies)"},
+    {"text": "finds-install-duplication", "passed": true, "evidence": "D-2: Installation Instructions (2 copies)"}
+  ],
+  "pass_rate": 1.0, "passed": 7, "failed": 0, "total": 7
+}

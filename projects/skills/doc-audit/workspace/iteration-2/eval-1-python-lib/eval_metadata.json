@@ -1,0 +1,14 @@
+{
+  "eval_id": 1,
+  "eval_name": "python-lib-subtle-issues",
+  "prompt": "Run a doc audit on this project",
+  "assertions": [
+    {"id": "finds-broken-link-api-reference", "description": "Reports docs/api-reference.md as broken"},
+    {"id": "finds-broken-link-contributing", "description": "Reports CONTRIBUTING.md as broken"},
+    {"id": "finds-broken-link-changelog", "description": "Reports CHANGELOG.md as broken"},
+    {"id": "finds-pydantic-version-conflict", "description": "Flags Pydantic v1 vs v2 contradiction"},
+    {"id": "finds-python-version-conflict", "description": "Flags Python 3.10+ vs >=3.11 contradiction"},
+    {"id": "finds-tech-stack-triplication", "description": "Notes tech stack in 3 files"},
+    {"id": "finds-install-duplication", "description": "Notes install duplication between README and getting-started.md"}
+  ]
+}

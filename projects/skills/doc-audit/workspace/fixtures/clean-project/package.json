@@ -1,0 +1,23 @@
+{
+  "name": "snapgrid",
+  "version": "1.2.0",
+  "description": "CSS grid snapshot testing for visual regression detection",
+  "main": "src/index.js",
+  "types": "src/index.d.ts",
+  "scripts": {
+    "test": "jest",
+    "lint": "eslint src/",
+    "build": "tsc"
+  },
+  "dependencies": {
+    "puppeteer": "^21.0.0"
+  },
+  "devDependencies": {
+    "jest": "^29.7.0",
+    "typescript": "^5.3.0",
+    "eslint": "^8.54.0"
+  },
+  "engines": {
+    "node": ">=18.0.0"
+  }
+}

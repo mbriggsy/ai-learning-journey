@@ -1,0 +1,46 @@
+{
+  "eval_id": 1,
+  "eval_name": "python-lib-subtle-issues",
+  "configuration": "with_skill",
+  "expectations": [
+    {
+      "text": "finds-broken-link-api-reference",
+      "passed": true,
+      "evidence": "Item #1: 'README.md, line 46 -- Broken link: API Reference. Target docs/api-reference.md does not exist.'"
+    },
+    {
+      "text": "finds-broken-link-contributing",
+      "passed": true,
+      "evidence": "Item #3: 'README.md, line 68 -- Broken link: Contributing. Target CONTRIBUTING.md does not exist.'"
+    },
+    {
+      "text": "finds-broken-link-changelog",
+      "passed": true,
+      "evidence": "Item #2: 'README.md, line 47 -- Broken link: Changelog. Target CHANGELOG.md does not exist.'"
+    },
+    {
+      "text": "finds-pydantic-version-conflict",
+      "passed": true,
+      "evidence": "Item #5: 'README.md, line 61 -- Wrong Pydantic version. Claim: Pydantic v1. Reality: pyproject.toml specifies pydantic>=2.0'"
+    },
+    {
+      "text": "finds-python-version-conflict",
+      "passed": true,
+      "evidence": "Items #4, #6, #7: Python 3.10+ flagged in README (line 60), getting-started.md (line 11), overview.md (line 53) vs pyproject.toml >=3.11"
+    },
+    {
+      "text": "finds-tech-stack-triplication",
+      "passed": true,
+      "evidence": "Item #10: 'Tech Stack duplicated across 3 files with conflicting data -- Location A: README.md, Location B: overview.md, Location C: roadmap.md'"
+    },
+    {
+      "text": "finds-install-duplication",
+      "passed": true,
+      "evidence": "Item #14: 'Installation instructions duplicated -- README.md (lines 17-27) and getting-started.md (lines 3-11) both have pip install datapipe'"
+    }
+  ],
+  "pass_rate": 1.0,
+  "passed": 7,
+  "failed": 0,
+  "total": 7
+}

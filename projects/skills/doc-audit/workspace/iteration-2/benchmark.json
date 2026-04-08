@@ -1,0 +1,86 @@
+{
+  "metadata": {
+    "skill_name": "doc-audit",
+    "skill_path": "C:/Users/brigg/ai-learning-journey/projects/skills/doc-audit/SKILL.md",
+    "executor_model": "claude-opus-4-6",
+    "timestamp": "2026-04-08T17:45:00Z",
+    "iteration": 2,
+    "evals_run": ["node-app-obvious-issues", "python-lib-subtle-issues", "clean-project-false-positives"],
+    "runs_per_configuration": 1
+  },
+  "runs": [
+    {
+      "eval_name": "node-app-obvious-issues",
+      "configuration": "with_skill",
+      "pass_rate": 1.0, "passed": 8, "failed": 0, "total": 8,
+      "time_seconds": 150.9, "tokens": 33335
+    },
+    {
+      "eval_name": "node-app-obvious-issues",
+      "configuration": "without_skill",
+      "pass_rate": 1.0, "passed": 8, "failed": 0, "total": 8,
+      "time_seconds": 184.6, "tokens": 31382
+    },
+    {
+      "eval_name": "python-lib-subtle-issues",
+      "configuration": "with_skill",
+      "pass_rate": 1.0, "passed": 7, "failed": 0, "total": 7,
+      "time_seconds": 516.4, "tokens": 68515
+    },
+    {
+      "eval_name": "python-lib-subtle-issues",
+      "configuration": "without_skill",
+      "pass_rate": 1.0, "passed": 7, "failed": 0, "total": 7,
+      "time_seconds": 600.1, "tokens": 62082
+    },
+    {
+      "eval_name": "clean-project-false-positives",
+      "configuration": "with_skill",
+      "pass_rate": 1.0, "passed": 5, "failed": 0, "total": 5,
+      "time_seconds": 118.6, "tokens": 29914
+    },
+    {
+      "eval_name": "clean-project-false-positives",
+      "configuration": "without_skill",
+      "pass_rate": 0.8, "passed": 4, "failed": 1, "total": 5,
+      "time_seconds": 132.7, "tokens": 31064
+    }
+  ],
+  "run_summary": {
+    "with_skill": {
+      "mean_pass_rate": 1.0,
+      "mean_time_seconds": 262.0,
+      "mean_tokens": 43921
+    },
+    "without_skill": {
+      "mean_pass_rate": 0.933,
+      "mean_time_seconds": 305.8,
+      "mean_tokens": 41509
+    },
+    "delta": {
+      "pass_rate": "+0.067",
+      "time_seconds": "-43.8",
+      "tokens": "+2412"
+    }
+  },
+  "comparison_with_iteration_1": {
+    "with_skill": {
+      "iter1_pass_rate": 1.0,
+      "iter2_pass_rate": 1.0,
+      "note": "Perfect score maintained. Now catches toMatchBaseline contradiction that iter1 missed (new assertion added). Also caught Transform/BaseTransform class name contradiction on python-lib — a bonus find."
+    },
+    "without_skill": {
+      "iter1_pass_rate": 0.869,
+      "iter2_pass_rate": 0.933,
+      "note": "Baseline improved on python-lib (now catches install duplication) but still misses toMatchBaseline contradiction on clean project."
+    }
+  },
+  "analyst_observations": [
+    "TARGETED FIX WORKED: The skill now catches the toMatchBaseline contradiction (Jest matcher vs regular method) while keeping noise at exactly 1 issue on the clean project. Iteration 1 reported 0; now it reports the 1 real issue. Surgical improvement.",
+    "BONUS FIND: The expanded contradiction detection also caught Transform vs BaseTransform class name conflict on python-lib. This wasn't in our assertions but is a legitimate issue — the skill is finding more real problems without generating more noise.",
+    "BASELINE IMPROVED TOO: The without-skill baseline now catches install duplication on python-lib (missed in iter1). This is natural variance — each run has some randomness. But it still misses toMatchBaseline on clean-project, confirming the skill's contradiction detection is a real advantage.",
+    "SPEED: With-skill is ~44s faster on average (262s vs 306s). Token usage is slightly higher (+2.4K) — the expanded Agent 4 prompt costs a bit more in tokens but saves wall-clock time.",
+    "REPORT QUALITY: The with-skill clean-project report is exemplary — 1 real issue, well-explained, with a concrete fix suggestion showing both resolution options. The baseline's clean-project report missed the real issue entirely and instead listed 5 low-severity nice-to-haves.",
+    "100% ASSERTION PASS RATE for with-skill across all 20 assertions (8+7+5). Baseline at 19/20 (93.3%). The skill's edge is precision and contradiction detection."
+  ]
+}

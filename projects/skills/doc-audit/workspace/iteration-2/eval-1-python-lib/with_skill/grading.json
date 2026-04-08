@@ -1,0 +1,15 @@
+{
+  "eval_id": 1,
+  "eval_name": "python-lib-subtle-issues",
+  "configuration": "with_skill",
+  "expectations": [
+    {"text": "finds-broken-link-api-reference", "passed": true, "evidence": "C3: broken link to docs/api-reference.md"},
+    {"text": "finds-broken-link-contributing", "passed": true, "evidence": "C5: broken link to CONTRIBUTING.md"},
+    {"text": "finds-broken-link-changelog", "passed": true, "evidence": "C4: broken link to CHANGELOG.md"},
+    {"text": "finds-pydantic-version-conflict", "passed": true, "evidence": "C1 and C7: Pydantic v1 vs v2 contradiction flagged with detailed file-by-file table"},
+    {"text": "finds-python-version-conflict", "passed": true, "evidence": "C2: Python 3.10+ vs >=3.11 flagged in all 4 docs"},
+    {"text": "finds-tech-stack-triplication", "passed": true, "evidence": "M1: Tech stack duplicated in 3 files with variations"},
+    {"text": "finds-install-duplication", "passed": true, "evidence": "M2: Installation instructions duplicated in README and getting-started.md"}
+  ],
+  "pass_rate": 1.0, "passed": 7, "failed": 0, "total": 7
+}

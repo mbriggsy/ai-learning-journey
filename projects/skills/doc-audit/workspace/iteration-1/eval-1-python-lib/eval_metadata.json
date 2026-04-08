@@ -1,0 +1,42 @@
+{
+  "eval_id": 1,
+  "eval_name": "python-lib-subtle-issues",
+  "prompt": "Run a doc audit on this project",
+  "assertions": [
+    {
+      "id": "finds-broken-link-api-reference",
+      "description": "Reports docs/api-reference.md as a broken link from README.md",
+      "check": "report mentions api-reference.md as broken or missing"
+    },
+    {
+      "id": "finds-broken-link-contributing",
+      "description": "Reports CONTRIBUTING.md as a broken link from README.md",
+      "check": "report mentions CONTRIBUTING.md as broken or missing"
+    },
+    {
+      "id": "finds-broken-link-changelog",
+      "description": "Reports CHANGELOG.md as a broken link from README.md",
+      "check": "report mentions CHANGELOG.md as broken or missing"
+    },
+    {
+      "id": "finds-pydantic-version-conflict",
+      "description": "Flags Pydantic v1 (in README/roadmap/design-decisions) vs pydantic>=2.0 (in pyproject.toml)",
+      "check": "report mentions Pydantic version conflict or discrepancy"
+    },
+    {
+      "id": "finds-python-version-conflict",
+      "description": "Flags Python 3.10+ (in README) vs >=3.11 (in pyproject.toml)",
+      "check": "report mentions Python version conflict or discrepancy"
+    },
+    {
+      "id": "finds-tech-stack-triplication",
+      "description": "Notes tech stack info duplicated across README.md, roadmap.md, and architecture/overview.md",
+      "check": "report mentions tech stack being duplicated in multiple files"
+    },
+    {
+      "id": "finds-install-duplication",
+      "description": "Notes installation instructions duplicated between README.md and getting-started.md",
+      "check": "report mentions installation duplication between README and getting-started"
+    }
+  ]
+}

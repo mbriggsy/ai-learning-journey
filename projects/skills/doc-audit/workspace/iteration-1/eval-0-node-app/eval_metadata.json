@@ -1,0 +1,47 @@
+{
+  "eval_id": 0,
+  "eval_name": "node-app-obvious-issues",
+  "prompt": "Run a doc audit on this project",
+  "assertions": [
+    {
+      "id": "finds-broken-link-api-reference",
+      "description": "Reports docs/api-reference.md as a broken link from README.md",
+      "check": "report mentions api-reference.md as broken or missing"
+    },
+    {
+      "id": "finds-broken-link-contributing",
+      "description": "Reports CONTRIBUTING.md as a broken link from README.md",
+      "check": "report mentions CONTRIBUTING.md as broken or missing"
+    },
+    {
+      "id": "finds-broken-link-auth",
+      "description": "Reports docs/auth.md as a broken link from README.md",
+      "check": "report mentions auth.md as broken or missing"
+    },
+    {
+      "id": "finds-broken-link-schema",
+      "description": "Reports schema.md as a broken link from architecture.md",
+      "check": "report mentions schema.md as broken or missing"
+    },
+    {
+      "id": "finds-broken-link-websocket",
+      "description": "Reports websocket.md as a broken link from architecture.md",
+      "check": "report mentions websocket.md as broken or missing"
+    },
+    {
+      "id": "finds-stale-node-version",
+      "description": "Flags Node.js version contradiction (16.x in docs vs >=18 in package.json)",
+      "check": "report mentions Node version discrepancy between architecture.md and package.json"
+    },
+    {
+      "id": "finds-readme-setup-duplication",
+      "description": "Notes installation/setup steps duplicated between README.md and docs/setup.md",
+      "check": "report mentions duplication between README and setup.md"
+    },
+    {
+      "id": "no-false-critical",
+      "description": "Does not report false critical issues (issues marked critical that aren't real problems)",
+      "check": "all critical-severity items in the report correspond to real issues"
+    }
+  ]
+}

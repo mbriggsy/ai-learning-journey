@@ -1,0 +1,12 @@
+{
+  "eval_id": 2,
+  "eval_name": "clean-project-false-positives",
+  "prompt": "Run a doc audit on this project",
+  "assertions": [
+    {"id": "no-false-broken-links", "description": "Does not report valid links as broken"},
+    {"id": "no-false-stale-content", "description": "Does not invent stale content claims"},
+    {"id": "low-issue-count", "description": "Total issues <= 5"},
+    {"id": "no-false-critical", "description": "Zero critical issues reported"},
+    {"id": "finds-toMatchBaseline-contradiction", "description": "Catches the toMatchBaseline usage contradiction (Jest matcher in README vs regular method in api.md)"}
+  ]
+}

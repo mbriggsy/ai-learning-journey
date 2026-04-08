@@ -10,7 +10,7 @@ The skill runs in 5 phases:
 2. **Parallel Audit** — spawns 4 agents simultaneously:
    - **Link Validator** — verifies every internal link target exists (files + heading anchors)
    - **Stale Content Hunter** — checks doc claims against source files (package.json, pyproject.toml, etc.) and cross-references code examples across docs for consistency
-   - **Content Placement Auditor** — classifies each file, flags misplaced content, identifies gaps and orphans
+   - **Content Placement Auditor** — classifies each file, flags misplaced content, identifies gaps and orphans, checks formatting quality
    - **Duplication & Contradiction Detector** — finds duplicated content AND conflicting information across files (e.g., different API usage patterns, disagreeing parameter tables)
 3. **Aggregate** — deduplicates findings, assigns severity, groups by file
 4. **Report** — presents unified findings: Critical > Medium > Low
@@ -18,7 +18,7 @@ The skill runs in 5 phases:
 
 ## Usage
 
-```
+```text
 /doc-audit [path]
 ```
 
@@ -26,4 +26,4 @@ Path defaults to the project root. The skill is slash-command only (`disable-mod
 
 ## Eval Results
 
-Evaluated at 100% pass rate across 3 test fixtures (20 assertions). See `workspace/` for full eval data, benchmark comparisons, and iteration history.
+Evaluated at 100% pass rate across 3 test fixtures (20 assertions). See `workspace/RESULTS.md` for eval results and iteration history.

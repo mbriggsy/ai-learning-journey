@@ -33,7 +33,7 @@ Wait for ALL agents to complete before proceeding. If an agent was worth spawnin
 
 ### Agent 1: Link Validator
 
-```
+```text
 You are auditing documentation for broken links.
 
 Files to audit: <file list>
@@ -59,7 +59,7 @@ If all links are valid, report "All N links verified across M files."
 
 ### Agent 2: Stale Content Hunter
 
-```
+```text
 You are auditing documentation for stale or outdated content.
 
 Files to audit: <file list>
@@ -91,7 +91,7 @@ Report format — one entry per stale finding:
 
 ### Agent 3: Content Placement Auditor
 
-```
+```text
 You are auditing documentation for misplaced content and structural issues.
 
 Files to audit: <file list>
@@ -130,7 +130,7 @@ Report format:
 
 ### Agent 4: Duplication & Contradiction Detector
 
-```
+```text
 You are auditing documentation for duplicated content across files.
 
 Files to audit: <file list>
@@ -185,7 +185,7 @@ Once all 4 agents report back, aggregate their findings:
 
 Present the unified report:
 
-```
+```text
 ## Doc Audit Report
 
 ### Summary

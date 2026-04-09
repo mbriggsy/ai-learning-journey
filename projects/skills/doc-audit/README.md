@@ -17,6 +17,12 @@ The skill runs in 5 phases:
 4. **Report** — presents unified findings: Critical > Medium > Low
 5. **Fix** — waits for user approval, then applies changes
 
+## Install
+
+1. Create a folder called `doc-audit` inside `~/.claude/skills/` (create `skills/` too if it doesn't exist)
+2. Download [SKILL.md](https://github.com/mbriggsy/ai-learning-journey/blob/main/projects/skills/doc-audit/SKILL.md) and save it into that folder
+3. Restart Claude Code — `/doc-audit` is now available in any project
+
 ## Usage
 
 ```text

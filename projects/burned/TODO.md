@@ -2,75 +2,28 @@
 
 ## Current State
 - **167/167 tests, 0 lint errors, typecheck clean**
-- **Phone redesign in progress:** Split-screen workbench (staging + hand) is wired up and functional but layout sizing is NOT right
-- **Board improvements committed-ready:** viewport-relative scaling, felt branding, drama overlays
-- **Card assets generated:** 17 Imagen 4 WebPs in `public/assets/cards/`
-- **Light-mode haze fixed:** color-mix percentages increased, illustrations at full opacity
-- **NOTHING IS COMMITTED** — all changes are unstaged
-
-## Critical: Phone Hand/Staging Layout Is Broken
-The staging area and hand area sizing has been through too many iterations and is currently in a bad state. The hand cards went from "too small to read" through many size changes to "doesn't fit on screen." The LAST working state before it went off the rails had:
-- Hand cards at **55% viewport width** (max 240px, min 160px) — see ~1.5 cards, swipe for more. Briggsy liked the card size.
-- Staging area and hand in a **flex ratio split** — exact ratio needs tuning
-
-### What needs to happen (in `PlayingView.module.css` + `Hand.module.css`):
-1. Hand cards: width-driven at 55% viewport (NOT height-driven — that made them overflow the screen)
-2. Staging/hand flex split: needs visual tuning with Playwright screenshots BEFORE presenting to Briggsy
-3. Staged cards: height-driven within staging area (aspect-ratio 5/7, max-width 140px)
-4. **TAKE A SCREENSHOT AND LOOK AT IT** before saying anything is done
-5. Zero dead white space — both areas must use their space
-
-### Files involved:
-- `src/client/player/PlayingView.module.css` — the flex split
-- `src/client/player/Hand.module.css` — card slot sizing
-- `src/client/player/StagingArea.module.css` — staged card sizing
-
-## What Works (don't break these)
-- **Double-tap to stage/unstage** — 400ms threshold, 600ms long-press. No conflicts.
-- **Single-tap to enlarge** — full-screen overlay, 75vw card, spring entrance, spring exit. Dismiss on tap, double-tap from enlarged stages the card.
-- **Card sorting** — operatives grouped by type → Agent X → extraction → actions alphabetical
-- **Staging area component** — shows staged cards, PLAY/DRAW buttons, waiting state. No validation text (cards speak for themselves). Descriptions always hidden on staged cards.
-- **Hand component** — horizontal scroll, scroll-snap, large cards. layoutId for staging animation.
-- **Board** — viewport-relative scaling, felt branding at 18-22% opacity, GSAP drama overlays, player ring with panels
-- **167 tests pass** including useSortedHand (7 tests) and useDoubleTap (7 tests)
-- **Hover lift killed on touch** — `@media (hover: hover)` gate prevents sticky translateY on mobile
-- **Light-mode haze fixed** — color-mix 50/30/15%, illustration opacity 1.0
-- **Large card text scaling** — container query at >200px bumps name to 24px, desc to 16px
+- **Game is functional** — staging, hand, board, all card types, nope chains, elimination all working
+- Phone bundle: ~95KB gzipped (5KB headroom)
 
 ## Next Steps (in order)
 
-### 1. Fix the phone layout sizing
-See "Critical" section above. This is THE blocker. Needs a calm, methodical approach:
-- Set hand cards to 55% width (the size Briggsy approved)
-- Try a 35:65 staging:hand flex split
-- Screenshot at 412x915 with Playwright
-- LOOK at it. Does anything overflow? Dead space? Button clipped?
-- Adjust and screenshot again BEFORE presenting
+### 1. Phone layout — kill dead space
+The hand area has dead space below cards. Fix the staging/hand flex split so both zones fill their space. Small CSS tweak — screenshot on phone before and after.
 
-### 2. Commit everything as checkpoint
-Once layout is right, commit all the work from this session + prior uncommitted work:
-- Asset pipeline (generate-cards.ts, process-assets.ts)
-- 17 card WebPs
-- CardIllustration → external assets
-- DramaOverlay (GSAP)
-- Board scaling + branding
-- Phone workbench redesign (staging + hand)
-- Light-mode haze fix
-- Dev page (public/dev.html)
-- New hooks (useSortedHand, useDoubleTap + tests)
-- Deleted: CardConfirmBar, DrawButton
+### 2. Deploy to Cloudflare
+- Client: Cloudflare Pages
+- Server: Cloudflare Workers (Durable Objects)
+- $0 free tier
 
-### 3. After layout is solid
-- Run the Gauntlet on both views
-- Test with real phones (not just DevTools)
-- Overlapping multiples in hand (same-of-kind visual grouping)
-- Sound design consideration
+### 3. Real device testing
+- Test on actual phones (not just DevTools)
+- Test on multiple screen sizes
+- Party WiFi conditions
 
 ## Landmines
 - Hand cards at height:100% + aspect-ratio OVERFLOWS the screen — don't do this again
 - `overflow: hidden` on staging section clips the PLAY button if content exceeds bounds — always verify clearance
 - CSS hover on touch devices fires sticky — all hover effects gated behind `@media (hover: hover)`
 - Framer Motion `layoutId` between hand and staging causes z-index fight if used on the enlarge overlay — enlarge uses spring scale instead
-- `pnpm-workspace.yaml` auto-generated by pnpm for sharp — harmless, should be committed
 - `game_over` phase still uses snake_case while all other phases use kebab-case
 - NopeWindow stores full GameAction in persisted state — no versioning for hibernated payloads

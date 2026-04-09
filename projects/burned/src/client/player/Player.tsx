@@ -1,10 +1,11 @@
-import { useState, useEffect, useCallback, useMemo, Fragment } from 'react'
+import { useState, useEffect, useCallback, useMemo, Fragment, lazy, Suspense } from 'react'
 import { connect, disconnect, send, onMessage, onStatusChange, onReconnect, getStatus, getSessionToken, setSessionToken } from '@client/connection'
 import type { ConnectionStatus } from '@client/connection'
 import { gameStore, useGameState, useProtocolMismatch, useIsOptimisticPending } from '@client/shared/gameStore'
 import { useSendAction } from '@client/shared/hooks/useSendAction'
 import { useGamePhase, usePlayerList, useDrawPileCount, usePendingPrompt } from '@client/shared/hooks/useSharedSelectors'
 import { useHand, useIsMyTurn, useSubPhase, useMyPlayerId, useMyPlayer, usePrivateData } from './hooks/usePlayerSelectors'
+import { useSortedHand } from './hooks/useSortedHand'
 import { useCurrentTurn } from '@client/shared/hooks/useSharedSelectors'
 import { deriveInteractionPermission } from './hooks/useInteractionPermission'
 import { useCardPlay } from './hooks/useCardPlay'
@@ -12,14 +13,14 @@ import { deriveActiveBottomSheet } from './hooks/useActiveBottomSheet'
 import { useWakeLock } from '@client/shared/hooks/useWakeLock'
 import { JoinScreen } from './JoinScreen'
 import { Hand } from './Hand'
-import { CardConfirmBar } from './CardConfirmBar'
-import { DrawButton } from './DrawButton'
+import { StagingArea } from './StagingArea'
 import { NopeButton } from './NopeButton'
 import { ErrorToast } from './ErrorToast'
 import { ConnectionOverlay } from './ConnectionOverlay'
 import { EliminatedView } from './EliminatedView'
 import { TurnBanner } from './TurnBanner'
 import { GameOver } from '@client/shared/GameOver'
+const DramaOverlay = lazy(() => import('@client/shared/DramaOverlay').then(m => ({ default: m.DramaOverlay })))
 import { BottomSheet } from '@client/shared/BottomSheet'
 import { TargetSelect } from './sheets/TargetSelect'
 import { DefusePlacement } from './sheets/DefusePlacement'
@@ -320,40 +321,43 @@ function PlayingView() {
 
   if (!isAlive) return <EliminatedView />
 
-  const needsTarget = cardPlayState.status === 'selecting' &&
-    cardPlayState.validation.valid &&
-    cardPlayState.validation.playType.kind === 'single' &&
-    cardPlayState.validation.playType.requiresTarget
-
   const eligibleTargets = players.filter(p => p.isAlive && p.id !== myPlayerId)
+
+  // Sorted hand with staged cards filtered out
+  const sortedHand = useSortedHand(hand)
+  const displayHand = sortedHand.filter(c => !selectedIds.has(c.id))
 
   return (
     <div className={playingStyles.container}>
       <TurnBanner isMyTurn={isMyTurn} currentPlayerName={currentPlayerName} />
 
-      <div className={playingStyles.handSection}>
-        <Hand
+      {/* Staging area — compose your play */}
+      <div className={playingStyles.stagingSection}>
+        <StagingArea
           hand={hand}
-          selectedIds={selectedIds}
-          disabled={!permission.allowed || optimisticPending}
-          onCardClick={toggleCard}
+          cardPlayState={cardPlayState}
+          isMyTurn={isMyTurn}
+          subPhase={subPhase}
+          drawPileCount={drawPileCount}
+          currentPlayerName={currentPlayerName}
+          disabled={!permission.allowed}
+          optimisticPending={optimisticPending}
+          onUnstageCard={toggleCard}
+          onConfirm={handleConfirm}
+          onConfirmWithTarget={handleConfirmWithTarget}
           onCardLongPress={handleCardLongPress}
         />
       </div>
 
-      <div className={playingStyles.bottomArea}>
-        <DrawButton
-          visible={isMyTurn && subPhase === 'turn-active'}
-          disabled={!permission.allowed || cardPlayState.status !== 'idle' || optimisticPending}
-          drawPileCount={drawPileCount}
+      {/* Hand — large scrollable cards */}
+      <div className={playingStyles.handSection}>
+        <Hand
+          hand={displayHand}
+          disabled={!permission.allowed || optimisticPending}
+          onStageCard={toggleCard}
+          onCardLongPress={handleCardLongPress}
         />
       </div>
-
-      <CardConfirmBar
-        state={cardPlayState}
-        onConfirm={needsTarget ? handleConfirmWithTarget : handleConfirm}
-        onCancel={resetCardPlay}
-      />
 
       {/* Local target select (pre-send: Favor, Targeted Attack) */}
       <BottomSheet
@@ -424,6 +428,7 @@ function PlayingView() {
       </BottomSheet>
 
       <NopeButton />
+      <Suspense><DramaOverlay /></Suspense>
     </div>
   )
 }

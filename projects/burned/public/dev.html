@@ -1,0 +1,106 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>BURNED — Dev Links</title>
+  <style>
+    * { margin: 0; box-sizing: border-box; }
+    body { font-family: system-ui, sans-serif; background: #1a2e30; color: #f5f0e0; padding: 40px 24px; min-height: 100vh; }
+    h1 { font-size: 32px; font-weight: 800; margin-bottom: 8px; letter-spacing: 0.04em; }
+    .subtitle { color: #b8a070; font-size: 14px; margin-bottom: 32px; }
+    h2 { font-size: 18px; font-weight: 700; color: #d48820; margin: 24px 0 12px; text-transform: uppercase; letter-spacing: 0.1em; }
+    a { color: #4db8a4; text-decoration: none; }
+    a:hover { text-decoration: underline; }
+    .links { display: flex; flex-direction: column; gap: 8px; }
+    .link-row { display: flex; align-items: center; gap: 12px; padding: 10px 16px; background: rgba(255,255,255,0.05); border-radius: 8px; }
+    .link-row:hover { background: rgba(255,255,255,0.08); }
+    .label { color: #b8a070; font-size: 12px; min-width: 80px; text-transform: uppercase; letter-spacing: 0.08em; }
+    .url { font-family: monospace; font-size: 14px; }
+    .note { color: #888; font-size: 12px; margin-top: 4px; }
+    hr { border: none; border-top: 1px solid rgba(255,255,255,0.08); margin: 24px 0; }
+    .room-input { display: flex; align-items: center; gap: 8px; margin: 12px 0; }
+    input { background: rgba(255,255,255,0.1); border: 1px solid rgba(255,255,255,0.15); border-radius: 6px; padding: 8px 12px; color: #f5f0e0; font-family: monospace; font-size: 14px; width: 120px; }
+    input::placeholder { color: #666; }
+    button { background: #d48820; color: #1a2e30; border: none; border-radius: 6px; padding: 8px 16px; font-weight: 700; font-size: 13px; cursor: pointer; }
+    button:hover { background: #e09930; }
+    #player-links { display: none; }
+    #player-links.visible { display: block; }
+  </style>
+</head>
+<body>
+  <h1>BURNED</h1>
+  <p class="subtitle">Dev Links &mdash; bookmark this page</p>
+
+  <h2>Board (TV)</h2>
+  <div class="links">
+    <div class="link-row">
+      <span class="label">Board</span>
+      <a class="url" href="/board.html">/board.html</a>
+    </div>
+    <p class="note">Opens with a random room code in the URL hash. Share the code with players.</p>
+  </div>
+
+  <hr>
+
+  <h2>Player (Phone)</h2>
+  <div class="room-input">
+    <input type="text" id="room" placeholder="ROOMCODE" maxlength="10" autofocus>
+    <button onclick="showPlayerLinks()">Go</button>
+  </div>
+  <p class="note">Enter the room code from the board screen, then use the links below.</p>
+
+  <div id="player-links">
+    <div class="links" style="margin-top: 12px;">
+      <div class="link-row">
+        <span class="label">Join</span>
+        <a class="url" id="link-join" href="#">/player.html?room=...</a>
+      </div>
+      <div class="link-row">
+        <span class="label">Quick P1</span>
+        <a class="url" id="link-p1" href="#">/player.html?room=...&name=Dash</a>
+      </div>
+      <div class="link-row">
+        <span class="label">Quick P2</span>
+        <a class="url" id="link-p2" href="#">/player.html?room=...&name=Vera</a>
+      </div>
+      <div class="link-row">
+        <span class="label">Quick P3</span>
+        <a class="url" id="link-p3" href="#">/player.html?room=...&name=Otto</a>
+      </div>
+    </div>
+    <p class="note" style="margin-top: 8px;">Quick links auto-join with a test name (dev mode only).</p>
+  </div>
+
+  <hr>
+
+  <h2>Servers</h2>
+  <div class="links">
+    <div class="link-row">
+      <span class="label">Vite</span>
+      <span class="url">pnpm dev &mdash; port 5173</span>
+    </div>
+    <div class="link-row">
+      <span class="label">Wrangler</span>
+      <span class="url">pnpm dev:server &mdash; port 8787</span>
+    </div>
+  </div>
+
+  <script>
+    function showPlayerLinks() {
+      const code = document.getElementById('room').value.trim().toUpperCase();
+      if (!code) return;
+      document.getElementById('link-join').href = `/player.html?room=${code}`;
+      document.getElementById('link-join').textContent = `/player.html?room=${code}`;
+      document.getElementById('link-p1').href = `/player.html?room=${code}&name=Dash`;
+      document.getElementById('link-p1').textContent = `/player.html?room=${code}&name=Dash`;
+      document.getElementById('link-p2').href = `/player.html?room=${code}&name=Vera`;
+      document.getElementById('link-p2').textContent = `/player.html?room=${code}&name=Vera`;
+      document.getElementById('link-p3').href = `/player.html?room=${code}&name=Otto`;
+      document.getElementById('link-p3').textContent = `/player.html?room=${code}&name=Otto`;
+      document.getElementById('player-links').classList.add('visible');
+    }
+    document.getElementById('room').addEventListener('keydown', e => { if (e.key === 'Enter') showPlayerLinks(); });
+  </script>
+</body>
+</html>

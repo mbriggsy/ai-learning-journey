@@ -1,32 +1,57 @@
-# Gauntlet Calibration — Baseline Scores (2026-04-08)
+# Gauntlet Calibration — Post Art-Direction Baseline (2026-04-09)
 
-These are reference scores from the initial calibration session. The evaluator should use these to anchor its scoring — don't be more generous than these examples.
+These are the expected baseline scores after the art direction overhaul:
+- Warm teal-charcoal palette (was noir purple-black)
+- Imagen 4 illustrations on all 17 card types (was monochrome SVG sketches)
+- Mid-century modern visual identity (Saul Bass, spy title sequences)
 
-## Board View (TV, 1920x1080, dark mode)
+The evaluator should use these to anchor scoring. Be honest — new art doesn't fix layout problems.
 
-| Criterion | Score | Key Issues |
-|-----------|-------|------------|
-| Game Feel | 5/10 | 70% void space, no table texture, draw pile is "one card + number" not a stack, no tension arc |
-| Distinctiveness | 4/10 | Remove the title and it could be any card game. No cats, no explosions, generic card backs |
-| Craft | 8/10 | Typography hierarchy solid, active-player glow works, contrast passes AAA |
-| Clarity | 7/10 | Turn state clear, but TV-distance readability fails for secondary info |
-| **Composite** | **5.7/10** | |
+## What Changed (Art Direction Overhaul)
 
-## Player View (Phone, 390x844, light mode)
+1. **Card illustrations:** Every card now has a unique Imagen 4 WebP illustration. Action cards show thematic scenes (burning ID badge, helicopter extraction, venetian blinds). Operative cards show character portraits. No more monochrome SVG sketches.
+2. **Color palette:** Warm teal-charcoal surfaces, burnt orange/amber/cream accents. Per-card-type accent colors. Light mode has warm parchment feel.
+3. **Typography:** Clash Display (display) + General Sans (body) — already in place pre-overhaul.
 
-| Criterion | Score | Key Issues |
-|-----------|-------|------------|
-| Game Feel | 6/10 | Parchment warmth is good, but cards are 60% empty white, hand shows 1.5 cards (can't see your hand) |
-| Distinctiveness | 5/10 | Card icons add personality but cards are white rectangles on cream, no color fills |
-| Craft | 7/10 | Confirm bar layout works, but card name truncation (Cattermelon..., Hairy Pota...) |
-| Clarity | 8/10 | Turn state unmistakable, confirm bar shows card description, draw only appears on your turn |
-| **Composite** | **6.3/10** | |
+## What Hasn't Changed (Potential Remaining Issues)
+
+- Board layout structure (draw pile, player ring, discard fan)
+- Phone hand layout and card sizing
+- Animation system (Framer Motion, no GSAP drama overlays yet)
+- Card name display (truncation may still occur on long names)
+- Board void space — art on cards doesn't fix empty space between them
+- No drama overlays (BURNED/EXTRACTED/ELIMINATED title cards)
+- No micro-interactions beyond basic hover/select
 
 ## Calibration Rules
 
-- If the board still has 70%+ void: Game Feel cannot exceed 6
-- If cards are still white/monochrome rectangles: Distinctiveness cannot exceed 5
-- If card names truncate: Craft cannot exceed 7
-- If you can't see your whole hand: Game Feel cannot exceed 6
-- Visible scrollbars anywhere: Craft -2 points
-- Generic AI aesthetic (purple gradients, white cards): Distinctiveness floor is 2
+### Distinctiveness
+- Cards now have unique illustrated art: floor rises from 4 to 6
+- If art style is consistent and thematic (mid-century spy): can score 7-8
+- To score 9+: needs drama overlays, custom transitions, the "what is that?" factor
+
+### Game Feel  
+- Art on cards adds personality but doesn't fix layout/tension issues
+- If board still has 60%+ void: Game Feel cannot exceed 6
+- If phone still shows 1.5 cards: Game Feel cannot exceed 6
+- No drama overlays = tension arc still flat = ceiling of 7
+
+### Craft
+- WebP images should render crisply (256px, retina-friendly)
+- If card names still truncate: Craft cannot exceed 7
+- If illustrations look pixelated or blurry: Craft -2 points
+- Check img loading behavior (lazy load, no layout shift)
+
+### Clarity
+- Art should reinforce card identity (burned = fire, extraction = rescue)
+- If illustrations make cards HARDER to identify: Clarity -2
+- Turn state, draw pile count, player info: check all still visible
+
+## Expected Score Range (Before Evaluating)
+
+| View | Expected Composite | Reasoning |
+|------|-------------------|-----------|
+| Board | 6.0-7.5 | Art lifts Distinctiveness significantly. Layout/void may still drag Game Feel. |
+| Player | 6.5-8.0 | Art + warm palette on phone should feel premium. Hand layout still the bottleneck. |
+
+**Important:** These are predictions. Score what you actually see, not what you expect. If the art made things worse somehow, score accordingly.

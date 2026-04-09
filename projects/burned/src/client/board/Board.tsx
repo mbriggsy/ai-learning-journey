@@ -6,6 +6,7 @@ import type { GameError } from '@client/shared/gameStore'
 import { Lobby } from './Lobby'
 import { GameTable } from './GameTable'
 import { GameOver } from '@client/shared/GameOver'
+import { DramaOverlay } from '@client/shared/DramaOverlay'
 import { PARTYKIT_HOST } from '@client/shared/config'
 import '@client/shared/fonts.css'
 import '@client/shared/fonts-mono.css'
@@ -110,6 +111,7 @@ export function Board() {
   return (
     <Fragment key="playing">
       <GameTable />
+      <DramaOverlay />
       <BoardErrorBanner error={lastError} />
     </Fragment>
   )

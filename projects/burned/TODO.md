@@ -1,35 +1,76 @@
 # BURNED — TODO
 
 ## Current State
-- **152/152 tests, 0 lint errors, typecheck clean, build succeeds**
-- **Retheme complete:** Source code + docs. All EK references removed or mapped.
-- **Art direction brief locked:** `docs/brainstorms/2026-04-08-art-direction-brainstorm.md`
-- **Palette overhauled:** theme.ts + theme.css — warm teal-charcoal mid-century modern (was noir purple-black)
-- **Character roster generated:** 6 Imagen 4 portraits in `public/assets/roster/`
-- **Otto Prang → Sable Ashworth:** Cheryl Tunt archetype (pyromaniac heiress). Code, tests, memory all updated.
-- Gauntlet skill lives at `.claude/skills/gauntlet/`
+- **167/167 tests, 0 lint errors, typecheck clean**
+- **Phone redesign in progress:** Split-screen workbench (staging + hand) is wired up and functional but layout sizing is NOT right
+- **Board improvements committed-ready:** viewport-relative scaling, felt branding, drama overlays
+- **Card assets generated:** 17 Imagen 4 WebPs in `public/assets/cards/`
+- **Light-mode haze fixed:** color-mix percentages increased, illustrations at full opacity
+- **NOTHING IS COMMITTED** — all changes are unstaged
+
+## Critical: Phone Hand/Staging Layout Is Broken
+The staging area and hand area sizing has been through too many iterations and is currently in a bad state. The hand cards went from "too small to read" through many size changes to "doesn't fit on screen." The LAST working state before it went off the rails had:
+- Hand cards at **55% viewport width** (max 240px, min 160px) — see ~1.5 cards, swipe for more. Briggsy liked the card size.
+- Staging area and hand in a **flex ratio split** — exact ratio needs tuning
+
+### What needs to happen (in `PlayingView.module.css` + `Hand.module.css`):
+1. Hand cards: width-driven at 55% viewport (NOT height-driven — that made them overflow the screen)
+2. Staging/hand flex split: needs visual tuning with Playwright screenshots BEFORE presenting to Briggsy
+3. Staged cards: height-driven within staging area (aspect-ratio 5/7, max-width 140px)
+4. **TAKE A SCREENSHOT AND LOOK AT IT** before saying anything is done
+5. Zero dead white space — both areas must use their space
+
+### Files involved:
+- `src/client/player/PlayingView.module.css` — the flex split
+- `src/client/player/Hand.module.css` — card slot sizing
+- `src/client/player/StagingArea.module.css` — staged card sizing
+
+## What Works (don't break these)
+- **Double-tap to stage/unstage** — 400ms threshold, 600ms long-press. No conflicts.
+- **Single-tap to enlarge** — full-screen overlay, 75vw card, spring entrance, spring exit. Dismiss on tap, double-tap from enlarged stages the card.
+- **Card sorting** — operatives grouped by type → Agent X → extraction → actions alphabetical
+- **Staging area component** — shows staged cards, PLAY/DRAW buttons, waiting state. No validation text (cards speak for themselves). Descriptions always hidden on staged cards.
+- **Hand component** — horizontal scroll, scroll-snap, large cards. layoutId for staging animation.
+- **Board** — viewport-relative scaling, felt branding at 18-22% opacity, GSAP drama overlays, player ring with panels
+- **167 tests pass** including useSortedHand (7 tests) and useDoubleTap (7 tests)
+- **Hover lift killed on touch** — `@media (hover: hover)` gate prevents sticky translateY on mobile
+- **Light-mode haze fixed** — color-mix 50/30/15%, illustration opacity 1.0
+- **Large card text scaling** — container query at >200px bumps name to 24px, desc to 16px
 
 ## Next Steps (in order)
 
-### Wire Art Into UI
+### 1. Fix the phone layout sizing
+See "Critical" section above. This is THE blocker. Needs a calm, methodical approach:
+- Set hand cards to 55% width (the size Briggsy approved)
+- Try a 35:65 staging:hand flex split
+- Screenshot at 412x915 with Playwright
+- LOOK at it. Does anything overflow? Dead space? Button clipped?
+- Adjust and screenshot again BEFORE presenting
 
-1. **Build `scripts/generate-assets.ts`** — proper Imagen 4 pipeline (like UMB): all 18 card types, sharp resize/WebP, generation log, `--only` flag. Operative portraits already generated, need 12 action/utility card illustrations.
-2. **CardIllustration.tsx → external assets** — Replace inline SVGs with Imagen 4 WebPs. Fixes bundle budget (~8-10KB savings).
-3. **Recalibrate the Gauntlet evaluator** — Score against art direction brief, not old noir direction.
-4. **Run Gauntlet round 2** — Target 8.5+ on both views.
+### 2. Commit everything as checkpoint
+Once layout is right, commit all the work from this session + prior uncommitted work:
+- Asset pipeline (generate-cards.ts, process-assets.ts)
+- 17 card WebPs
+- CardIllustration → external assets
+- DramaOverlay (GSAP)
+- Board scaling + branding
+- Phone workbench redesign (staging + hand)
+- Light-mode haze fix
+- Dev page (public/dev.html)
+- New hooks (useSortedHand, useDoubleTap + tests)
+- Deleted: CardConfirmBar, DrawButton
 
-### After Design
-
-5. Manual testing: real phones, WiFi toggle, screen lock/unlock
-6. First production deploy via PartyKit (secrets already exist, proven pipeline)
-7. Room.ts test coverage (844 lines, zero tests — biggest risk factor)
+### 3. After layout is solid
+- Run the Gauntlet on both views
+- Test with real phones (not just DevTools)
+- Overlapping multiples in hand (same-of-kind visual grouping)
+- Sound design consideration
 
 ## Landmines
-- Phone JS at ~99KB gzipped — SVG→WebP migration (step 2) should drop to ~90KB
-- Roster images are raw Imagen output (~1MB each) — need sharp resize + WebP for production
+- Hand cards at height:100% + aspect-ratio OVERFLOWS the screen — don't do this again
+- `overflow: hidden` on staging section clips the PLAY button if content exceeds bounds — always verify clearance
+- CSS hover on touch devices fires sticky — all hover effects gated behind `@media (hover: hover)`
+- Framer Motion `layoutId` between hand and staging causes z-index fight if used on the enlarge overlay — enlarge uses spring scale instead
+- `pnpm-workspace.yaml` auto-generated by pnpm for sharp — harmless, should be committed
 - `game_over` phase still uses snake_case while all other phases use kebab-case
 - NopeWindow stores full GameAction in persisted state — no versioning for hibernated payloads
-- playerSessions map not pruned on return-to-lobby
-- Gauntlet only tested 2-player games — need 4-5 player testing for layout scaling
-- `pnpm-workspace.yaml` auto-generated by pnpm for sharp build approval — harmless, should be committed
-- Quick generation scripts in `scripts/` (test-imagen, regen-fixes*) are throwaway — clean up when proper pipeline lands

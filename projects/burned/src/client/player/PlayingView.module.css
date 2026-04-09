@@ -1,21 +1,23 @@
+/* Split-screen workbench.
+   Staging: 35%. Hand: 65%. Both FILL their space — no dead zones. */
+
 .container {
   background: var(--bg-primary);
   display: flex;
   flex-direction: column;
   height: 100svh;
-  overflow: hidden; /* Prevent outer scroll — hand scrolls horizontally */
+  overflow: hidden;
 }
 
-/* Hand section fills available space between banner and draw button */
+/* Staging area — 35% of space below banner */
+.stagingSection {
+  flex: 35 1 0;
+  min-height: 0;
+  overflow: hidden;
+}
+
+/* Hand — 65% of space below banner. Cards fill height. */
 .handSection {
-  flex: 1 1 0;
-  min-height: 0; /* Flex shrink safety */
-  display: flex;
-  flex-direction: column;
-}
-
-/* Draw button area anchored at bottom */
-.bottomArea {
-  flex: 0 0 auto;
-  padding-bottom: max(12px, env(safe-area-inset-bottom));
+  flex: 65 1 0;
+  min-height: 0;
 }

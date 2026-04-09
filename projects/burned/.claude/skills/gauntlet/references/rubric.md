@@ -11,7 +11,7 @@ Does this feel like you're at a game table with friends? Warm, playful, high-sta
 **4:** Functional but sterile. Clinical spacing, no personality, no tension arc.
 **1:** Confusing. You can't tell whose turn it is or what just happened.
 
-Red flags: void/empty space with no purpose, static screens during high-tension moments, no visual difference between "safe" and "about to explode."
+Red flags: void/empty space with no purpose, static screens during high-tension moments, no visual difference between "safe" and "about to explode," no drama overlays for key moments (burned, extracted, eliminated).
 
 ## 2. Distinctiveness (30%)
 
@@ -22,7 +22,7 @@ Would you know this is BURNED from a screenshot? Custom decisions vs. template d
 **4:** Could be any card game. White rectangles, default spacing, no thematic art.
 **1:** AI slop. Purple gradients, white cards, stock patterns.
 
-Red flags: cards with no color/art, generic crosshatch patterns, no illustration or mascot, "any card game" aesthetic.
+Red flags: cards with no color/art, generic patterns, no thematic illustrations, "any card game" aesthetic, art that doesn't match the spy-comedy identity.
 
 ## 3. Craft (20%)
 

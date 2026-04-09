@@ -1,0 +1,154 @@
+/* Staging area — fills its section. Cards + button, no dead space. */
+
+.staging {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  height: 100%;
+  padding: 8px 16px;
+}
+
+/* ─── Staged cards row — height-driven ─── */
+
+.stagedCards {
+  display: flex;
+  gap: 8px;
+  justify-content: center;
+  align-items: stretch;
+  flex: 1 1 0;
+  min-height: 0;
+}
+
+.stagedSlot {
+  height: 100%;
+  aspect-ratio: 5 / 7;
+  max-width: 140px;
+  flex-shrink: 1;
+}
+
+/* Force descriptions OFF on staged cards regardless of size */
+.stagedSlot :global(.cardDesc) {
+  display: none !important;
+}
+
+.hint {
+  font-family: var(--font-body);
+  font-size: 13px;
+  font-weight: 500;
+  color: var(--text-disabled, #777);
+  text-align: center;
+  letter-spacing: 0.02em;
+  padding: 8px 0;
+}
+
+/* ─── Action button — directly under cards ─── */
+
+.playBtn {
+  display: block;
+  width: 100%;
+  max-width: 240px;
+  min-height: 44px;
+  padding: 10px 24px;
+  border-radius: var(--radius-card, 8px);
+  border: 2px solid var(--teal, #2aaa98);
+  background: color-mix(in srgb, var(--teal, #2aaa98) 15%, var(--bg-card, #1f3338));
+  color: var(--teal, #2aaa98);
+  font-family: var(--font-display);
+  font-size: 16px;
+  font-weight: 700;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  cursor: pointer;
+  touch-action: manipulation;
+  box-shadow: 0 0 12px color-mix(in srgb, var(--teal, #2aaa98) 25%, transparent);
+}
+
+.playBtn:disabled {
+  opacity: 0.35;
+  cursor: default;
+  box-shadow: none;
+}
+
+.drawBtn {
+  display: block;
+  width: 100%;
+  max-width: 240px;
+  min-height: 44px;
+  padding: 10px 24px;
+  border-radius: var(--radius-card, 8px);
+  border: 2px solid var(--red, #d44030);
+  background: color-mix(in srgb, var(--red, #d44030) 10%, var(--bg-card, #1f3338));
+  color: var(--red, #d44030);
+  font-family: var(--font-display);
+  font-size: 16px;
+  font-weight: 700;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  cursor: pointer;
+  touch-action: manipulation;
+  animation: breathe 3s ease-in-out infinite;
+  box-shadow: 0 0 12px color-mix(in srgb, var(--red, #d44030) 20%, transparent);
+}
+
+.drawBtn:disabled {
+  opacity: 0.35;
+  cursor: default;
+  animation: none;
+  box-shadow: none;
+}
+
+.intense {
+  border-color: var(--red-glow, #ff0000);
+  color: var(--red-glow, #ff0000);
+  animation: breatheIntense 1.5s ease-in-out infinite;
+}
+
+@keyframes breathe {
+  0%, 100% { box-shadow: 0 0 12px color-mix(in srgb, var(--red, #d44030) 20%, transparent); }
+  50% { box-shadow: 0 0 20px color-mix(in srgb, var(--red, #d44030) 35%, transparent); }
+}
+
+@keyframes breatheIntense {
+  0%, 100% { box-shadow: 0 0 24px color-mix(in srgb, var(--red-glow, #ff0000) 40%, transparent); }
+  50% { box-shadow: 0 0 36px color-mix(in srgb, var(--red-glow, #ff0000) 60%, transparent); }
+}
+
+/* ─── Waiting state ─── */
+
+.waiting {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 2px;
+  font-family: var(--font-display);
+  font-size: 14px;
+  font-weight: 600;
+  color: var(--text-secondary, #b8a890);
+  padding: 8px 0;
+}
+
+.pileCount {
+  font-family: var(--font-mono);
+  font-variant-numeric: tabular-nums;
+  font-size: 11px;
+  font-weight: 500;
+  color: var(--text-disabled, #777);
+}
+
+/* ─── Light mode ─── */
+
+[data-theme="light"] .playBtn {
+  background: color-mix(in srgb, var(--teal, #1a8a78) 10%, var(--bg-card, #faf8f0));
+  box-shadow: 0 2px 8px color-mix(in srgb, var(--teal, #1a8a78) 15%, rgba(0,0,0,0.1));
+}
+
+[data-theme="light"] .drawBtn {
+  background: color-mix(in srgb, var(--red, #c52b2b) 8%, var(--bg-card, #faf8f0));
+  box-shadow: 0 2px 8px color-mix(in srgb, var(--red, #c52b2b) 12%, rgba(0,0,0,0.1));
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .drawBtn, .intense { animation: none; }
+}

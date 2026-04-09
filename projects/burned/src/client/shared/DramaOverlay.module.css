@@ -1,0 +1,113 @@
+/* Full-screen drama overlay — GSAP-driven title cards.
+   Think spy movie title sequences: bold type, color washes, dramatic timing. */
+
+.overlay {
+  position: fixed;
+  inset: 0;
+  z-index: 100;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  pointer-events: none;
+  opacity: 0;
+}
+
+.text {
+  font-family: var(--font-display);
+  font-weight: 800;
+  text-transform: uppercase;
+  letter-spacing: 0.06em;
+  text-align: center;
+  line-height: 1;
+  padding: 0 24px;
+  /* Size adapts to viewport — massive on TV, readable on phone */
+  font-size: clamp(48px, 12vw, 160px);
+  text-shadow:
+    0 4px 20px rgba(0, 0, 0, 0.5),
+    0 0 60px currentColor;
+}
+
+/* ─── BURNED — alarm red, the big one ─── */
+
+.burned {
+  background: radial-gradient(
+    ellipse 80% 60% at 50% 50%,
+    rgba(212, 64, 48, 0.92) 0%,
+    rgba(140, 30, 20, 0.88) 50%,
+    rgba(60, 12, 8, 0.95) 100%
+  );
+}
+
+.burned .text {
+  color: #ffeedd;
+}
+
+/* ─── EXTRACTED — cool blue relief ─── */
+
+.extracted {
+  background: radial-gradient(
+    ellipse 80% 60% at 50% 50%,
+    rgba(48, 128, 192, 0.88) 0%,
+    rgba(24, 72, 120, 0.85) 50%,
+    rgba(10, 30, 50, 0.92) 100%
+  );
+}
+
+.extracted .text {
+  color: #e0f0ff;
+}
+
+/* ─── ELIMINATED — desaturated, grim ─── */
+
+.eliminated {
+  background: radial-gradient(
+    ellipse 80% 60% at 50% 50%,
+    rgba(60, 55, 50, 0.92) 0%,
+    rgba(30, 28, 25, 0.90) 60%,
+    rgba(10, 10, 8, 0.95) 100%
+  );
+}
+
+.eliminated .text {
+  color: #a09890;
+  font-size: clamp(32px, 8vw, 100px);
+}
+
+/* ─── INTERCEPTED — sharp teal flash ─── */
+
+.intercepted {
+  background: radial-gradient(
+    ellipse 80% 60% at 50% 50%,
+    rgba(42, 170, 152, 0.88) 0%,
+    rgba(20, 90, 80, 0.85) 50%,
+    rgba(8, 30, 28, 0.92) 100%
+  );
+}
+
+.intercepted .text {
+  color: #ccffe8;
+}
+
+/* ─── VICTORY — gold everything ─── */
+
+.victory {
+  background: radial-gradient(
+    ellipse 80% 60% at 50% 50%,
+    rgba(212, 136, 32, 0.92) 0%,
+    rgba(160, 100, 20, 0.88) 50%,
+    rgba(60, 40, 10, 0.95) 100%
+  );
+}
+
+.victory .text {
+  color: #fff8e0;
+  font-size: clamp(40px, 10vw, 140px);
+}
+
+/* ─── Reduced motion — skip the slam, just fade ─── */
+
+@media (prefers-reduced-motion: reduce) {
+  .text {
+    text-shadow: none;
+  }
+}

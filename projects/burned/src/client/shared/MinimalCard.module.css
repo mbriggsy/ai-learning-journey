@@ -7,8 +7,8 @@
   align-items: flex-start;
   gap: 4px;
   aspect-ratio: 5 / 7;
-  flex: 1 1 0; /* Fill available height in flex parent */
-  min-height: 0; /* Allow shrink below aspect-ratio intrinsic size */
+  width: 100%; /* Fill slot width — height derived from aspect-ratio */
+  min-height: 0;
   padding: 24px 10px 10px;
   border-radius: var(--radius-card);
   container-type: inline-size;
@@ -42,17 +42,16 @@
   justify-content: center;
   flex: 1 1 0;
   width: 100%;
-  color: var(--card-accent);
-  opacity: 0.75;
   pointer-events: none;
   min-height: 0; /* flex shrink safety */
+  overflow: hidden;
+  border-radius: 4px;
 }
 
-.card :global(.cardIllustration) svg {
-  width: 80%;
-  height: 80%;
-  max-height: 100%;
-  object-fit: contain;
+.card :global(.cardIllustration) img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
 }
 
 /* Intense glow layer — only opacity transitions (GPU composited) */
@@ -72,12 +71,15 @@
   z-index: -1;
 }
 
-.card:hover {
-  transform: translateY(-4px);
-}
+/* Hover lift — desktop only. Touch devices fire sticky hover on tap. */
+@media (hover: hover) {
+  .card:hover {
+    transform: translateY(-4px);
+  }
 
-.card:hover::after {
-  opacity: 1;
+  .card:hover::after {
+    opacity: 1;
+  }
 }
 
 .card[data-selected]::after {
@@ -111,6 +113,7 @@
   letter-spacing: 0.04em;
   color: var(--card-accent);
   line-height: 1.15;
+  margin-top: 2px; /* Breathe from icon badge / top border */
 }
 
 .cardDesc {
@@ -120,6 +123,43 @@
   color: color-mix(in srgb, var(--card-accent) 25%, var(--text-secondary, #9999bb));
   line-height: 1.3;
   margin-top: auto; /* Push description to bottom of card */
+}
+
+/* Compact cards (staging area + small hands): hide description, tighten padding */
+@container (max-width: 140px) {
+  .cardDesc {
+    display: none;
+  }
+
+  .card {
+    padding-top: 20px;
+    padding-bottom: 6px;
+  }
+}
+
+/* Large cards (enlarge preview): text scales up to be readable */
+@container (min-width: 200px) {
+  .cardName {
+    font-size: clamp(16px, 7cqi, 24px);
+    letter-spacing: 0.06em;
+  }
+
+  .cardDesc {
+    font-size: clamp(12px, 5cqi, 16px);
+    line-height: 1.4;
+  }
+
+  .card {
+    padding: 28px 16px 16px;
+    gap: 6px;
+  }
+
+  .card :global(.cardBadge) {
+    width: clamp(20px, 8cqi, 32px);
+    height: clamp(20px, 8cqi, 32px);
+    top: 8px;
+    left: 8px;
+  }
 }
 
 /* --- Icon Badge (top-left, visible on peeking edges) --- */
@@ -141,7 +181,7 @@
   height: 100%;
 }
 
-/* --- Card Back (draw pile, hidden cards) --- */
+/* --- Card Back — BURNED agency dossier pattern --- */
 
 .cardBack {
   position: relative;
@@ -149,32 +189,23 @@
   min-height: 48px;
   min-width: 48px;
   border-radius: var(--radius-card);
-  background-color: var(--bg-card, #12121f);
+  background-color: #18252a;
+  /* Geometric diamond pattern — agency identity */
   background-image:
-    repeating-linear-gradient(
-      45deg,
-      transparent,
-      transparent 10px,
-      color-mix(in srgb, var(--red, #e03535) 12%, transparent) 10px,
-      color-mix(in srgb, var(--red, #e03535) 12%, transparent) 11px
-    ),
-    repeating-linear-gradient(
-      -45deg,
-      transparent,
-      transparent 10px,
-      color-mix(in srgb, var(--red, #e03535) 12%, transparent) 10px,
-      color-mix(in srgb, var(--red, #e03535) 12%, transparent) 11px
-    );
-  border: 1px solid color-mix(in srgb, var(--red, #e03535) 18%, var(--border-subtle, #2a2a4a));
+    url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 140'%3E%3Cpath d='M50 20 L80 70 L50 120 L20 70 Z' fill='none' stroke='%23d44030' stroke-width='1.5' opacity='0.3'/%3E%3Cpath d='M50 35 L70 70 L50 105 L30 70 Z' fill='none' stroke='%23d48820' stroke-width='1' opacity='0.2'/%3E%3Ccircle cx='50' cy='70' r='8' fill='none' stroke='%23d44030' stroke-width='1' opacity='0.25'/%3E%3Ccircle cx='50' cy='70' r='3' fill='%23d44030' opacity='0.2'/%3E%3C/svg%3E");
+  background-size: 100% 100%;
+  background-repeat: no-repeat;
+  border: 1px solid color-mix(in srgb, var(--red, #d44030) 20%, var(--border-subtle, #3a5860));
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.3);
 }
 
-/* Inner border frame on card back */
+/* Inner border frame — double-line dossier feel */
 .cardBack::before {
   content: '';
   position: absolute;
-  inset: 6px;
-  border: 1px solid color-mix(in srgb, var(--red, #e03535) 20%, transparent);
-  border-radius: calc(var(--radius-card) - 4px);
+  inset: 5px;
+  border: 1px solid color-mix(in srgb, var(--amber, #d48820) 15%, transparent);
+  border-radius: calc(var(--radius-card) - 3px);
   pointer-events: none;
 }
 
@@ -215,13 +246,13 @@
 /* --- Light Mode — neon glow becomes material shadow --- */
 
 [data-theme="light"] .card {
-  /* Bold colored card bodies — each card type gets a saturated wash */
+  /* Vibrant colored card bodies — accent punches through, no washed-out pastels */
   background:
     linear-gradient(
       180deg,
-      color-mix(in srgb, var(--card-accent) 30%, #fffdf8) 0%,
-      color-mix(in srgb, var(--card-accent) 15%, #fffdf8) 60%,
-      color-mix(in srgb, var(--card-accent) 8%, #fffdf8) 100%
+      color-mix(in srgb, var(--card-accent) 50%, #fffdf8) 0%,
+      color-mix(in srgb, var(--card-accent) 30%, #fffdf8) 60%,
+      color-mix(in srgb, var(--card-accent) 15%, #fffdf8) 100%
     );
   border: 1.5px solid color-mix(in srgb, var(--card-accent) 40%, #d4cfc5);
   border-top: 1.5px solid color-mix(in srgb, var(--card-accent) 20%, white);
@@ -239,10 +270,9 @@
   color: #3d3a33;
 }
 
-/* Bolder illustrations against colored card bodies */
+/* Full vibrancy — no dimming the art */
 [data-theme="light"] .card :global(.cardIllustration) {
-  color: color-mix(in srgb, var(--card-accent) 90%, #1c1a15);
-  opacity: 0.85;
+  opacity: 1;
 }
 
 [data-theme="light"] .card::after {
@@ -257,9 +287,9 @@
   background:
     linear-gradient(
       180deg,
-      color-mix(in srgb, var(--card-accent) 38%, #fffdf8) 0%,
-      color-mix(in srgb, var(--card-accent) 22%, #fffdf8) 60%,
-      color-mix(in srgb, var(--card-accent) 12%, #fffdf8) 100%
+      color-mix(in srgb, var(--card-accent) 58%, #fffdf8) 0%,
+      color-mix(in srgb, var(--card-accent) 38%, #fffdf8) 60%,
+      color-mix(in srgb, var(--card-accent) 20%, #fffdf8) 100%
     );
 }
 
@@ -268,19 +298,9 @@
 }
 
 [data-theme="light"] .cardBack {
+  background-color: #2a3a3e;
   background-image:
-    repeating-linear-gradient(
-      45deg,
-      transparent,
-      transparent 10px,
-      color-mix(in srgb, var(--red, #c52b2b) 10%, transparent) 10px,
-      color-mix(in srgb, var(--red, #c52b2b) 10%, transparent) 11px
-    ),
-    repeating-linear-gradient(
-      -45deg,
-      transparent,
-      transparent 10px,
-      color-mix(in srgb, var(--red, #c52b2b) 10%, transparent) 10px,
-      color-mix(in srgb, var(--red, #c52b2b) 10%, transparent) 11px
-    );
+    url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 140'%3E%3Cpath d='M50 20 L80 70 L50 120 L20 70 Z' fill='none' stroke='%23b83020' stroke-width='1.5' opacity='0.35'/%3E%3Cpath d='M50 35 L70 70 L50 105 L30 70 Z' fill='none' stroke='%23a07010' stroke-width='1' opacity='0.25'/%3E%3Ccircle cx='50' cy='70' r='8' fill='none' stroke='%23b83020' stroke-width='1' opacity='0.3'/%3E%3Ccircle cx='50' cy='70' r='3' fill='%23b83020' opacity='0.25'/%3E%3C/svg%3E");
+  background-size: 100% 100%;
+  background-repeat: no-repeat;
 }

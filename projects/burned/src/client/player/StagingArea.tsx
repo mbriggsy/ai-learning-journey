@@ -1,4 +1,4 @@
-import { useCallback, useRef } from 'react'
+import { useState, useCallback, useRef, useEffect } from 'react'
 import { m, AnimatePresence } from 'motion/react'
 import type { CardInstance } from '@shared/types'
 import type { CardPlayState } from './hooks/useCardPlay'
@@ -7,7 +7,18 @@ import { MOTION } from '@client/shared/animation-config'
 import { haptic } from '@client/shared/haptics'
 import { useDoubleTap } from './hooks/useDoubleTap'
 import { useSendAction } from '@client/shared/hooks/useSendAction'
+import { useScrollBounce } from './hooks/useScrollBounce'
 import styles from './StagingArea.module.css'
+import handStyles from './Hand.module.css'
+
+const INVALID_LABELS: Record<string, string> = {
+  'mismatched-types': 'Invalid combo',
+  'invalid-count': 'Invalid selection',
+  'contains-extraction': "Can't play Extraction",
+  'contains-burned': "Can't play Burned",
+  'wild-with-non-operative': 'Wild only pairs with operatives',
+  'single-operative': 'Needs a pair or triple',
+}
 
 interface StagingAreaProps {
   readonly hand: readonly CardInstance[]
@@ -30,13 +41,20 @@ export function StagingArea({
   onUnstageCard, onConfirm, onConfirmWithTarget, onCardLongPress,
 }: StagingAreaProps) {
   const sendAction = useSendAction()
+  const stagedCardsRef = useRef<HTMLDivElement>(null)
+  useScrollBounce(stagedCardsRef)
   const longPressTimer = useRef<ReturnType<typeof setTimeout> | null>(null)
   const longPressFired = useRef(false)
+  const [enlargedId, setEnlargedId] = useState<string | null>(null)
+
+  const handleSingleTap = useCallback((id: string) => {
+    setEnlargedId(prev => prev === id ? null : id)
+  }, [])
 
   const handleDoubleTap = useDoubleTap(useCallback((id: string) => {
     haptic('light')
     onUnstageCard(id)
-  }, [onUnstageCard]))
+  }, [onUnstageCard]), handleSingleTap)
 
   const startLongPress = useCallback((cardId: string) => {
     longPressFired.current = false
@@ -64,10 +82,29 @@ export function StagingArea({
         .filter((c): c is CardInstance => c !== undefined)
     : []
 
+  // Clear enlargement when card leaves staging (unstaged or played)
+  useEffect(() => {
+    if (enlargedId && !stagedCards.some(c => c.id === enlargedId)) {
+      setEnlargedId(null)
+    }
+  }, [stagedCards, enlargedId])
+
   const isValid = cardPlayState.status === 'selecting' && cardPlayState.validation.valid
   const needsTarget = isValid && cardPlayState.validation.valid &&
     cardPlayState.validation.playType.kind === 'single' &&
     cardPlayState.validation.playType.requiresTarget
+
+  const invalidReason = cardPlayState.status === 'selecting' && !cardPlayState.validation.valid
+    ? cardPlayState.validation.reason
+    : null
+
+  // Center scroll when cards overflow
+  useEffect(() => {
+    const el = stagedCardsRef.current
+    if (el && el.scrollWidth > el.clientWidth) {
+      el.scrollLeft = (el.scrollWidth - el.clientWidth) / 2
+    }
+  }, [stagedCards.length])
 
   const showDraw = stagedCards.length === 0 && isMyTurn && subPhase === 'turn-active'
   const showWaiting = stagedCards.length === 0 && !isMyTurn
@@ -78,7 +115,7 @@ export function StagingArea({
       {/* Staged cards + play button */}
       {stagedCards.length > 0 && (
         <>
-          <div className={styles.stagedCards}>
+          <div className={styles.stagedCards} ref={stagedCardsRef}>
             <AnimatePresence mode="popLayout">
               {stagedCards.map(card => (
                 <m.div
@@ -97,7 +134,6 @@ export function StagingArea({
                   <MinimalCard
                     type={card.type}
                     isSelected
-                    layoutId={card.id}
                   />
                 </m.div>
               ))}
@@ -114,6 +150,9 @@ export function StagingArea({
             >
               {needsTarget ? 'Play \u2192' : 'Play'}
             </button>
+          )}
+          {invalidReason && (
+            <div className={styles.invalidMsg}>{INVALID_LABELS[invalidReason]}</div>
           )}
         </>
       )}
@@ -141,6 +180,31 @@ export function StagingArea({
       {stagedCards.length === 0 && !showDraw && !showWaiting && (
         <div className={styles.hint}>Double-tap a card to stage it</div>
       )}
+
+      {/* Full-screen enlarge overlay — same as hand */}
+      <AnimatePresence>
+        {enlargedId && stagedCards.find(c => c.id === enlargedId) && (
+          <m.div
+            key="enlarge-backdrop"
+            className={handStyles.enlargeBackdrop}
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 1 }}
+            exit={{ opacity: 0 }}
+            transition={{ duration: 0.3 }}
+            onPointerUp={() => setEnlargedId(null)}
+          >
+            <m.div
+              className={handStyles.enlargeCard}
+              initial={{ scale: 0.35, y: -80 }}
+              animate={{ scale: 1, y: 0 }}
+              exit={{ scale: 0.35, y: -80 }}
+              transition={MOTION.SNAPPY}
+            >
+              <MinimalCard type={stagedCards.find(c => c.id === enlargedId)!.type} />
+            </m.div>
+          </m.div>
+        )}
+      </AnimatePresence>
     </div>
   )
 }

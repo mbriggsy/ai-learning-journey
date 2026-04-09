@@ -1,5 +1,6 @@
 /* Split-screen workbench.
-   Staging: 35%. Hand: 65%. Both FILL their space — no dead zones. */
+   Staging: 50%. Hand: 50%. Labeled sections.
+   Cards are height-driven — slot aspect-ratio derives width from stretched height. */
 
 .container {
   background: var(--bg-primary);
@@ -9,15 +10,44 @@
   overflow: hidden;
 }
 
-/* Staging area — 35% of space below banner */
-.stagingSection {
-  flex: 35 1 0;
-  min-height: 0;
-  overflow: hidden;
+/* ─── Section label — thin bar at top of each zone ─── */
+
+.sectionLabel {
+  flex: 0 0 auto;
+  padding: 1px 12px;
+  font-family: var(--font-display);
+  font-size: 10px;
+  font-weight: 700;
+  letter-spacing: 0.14em;
+  text-transform: uppercase;
+  color: var(--text-secondary, #b8a890);
+  border-bottom: 1px solid var(--border-subtle, #3a5860);
+  background: color-mix(in srgb, var(--bg-elevated, #243c42) 50%, var(--bg-primary, #1a2a2e));
 }
 
-/* Hand — 65% of space below banner. Cards fill height. */
-.handSection {
-  flex: 65 1 0;
+/* ─── Staging area — 50% ─── */
+
+.stagingSection {
+  flex: 50 1 0;
   min-height: 0;
+  overflow: hidden;
+  display: flex;
+  flex-direction: column;
+}
+
+/* ─── Hand — 50% ─── */
+
+.handSection {
+  flex: 50 1 0;
+  min-height: 0;
+  display: flex;
+  flex-direction: column;
+}
+
+/* ─── Light mode ─── */
+
+[data-theme="light"] .sectionLabel {
+  color: var(--text-disabled, #8a8070);
+  background: color-mix(in srgb, var(--bg-elevated, #e8e0d0) 50%, var(--bg-primary, #f5f0e8));
+  border-bottom-color: color-mix(in srgb, var(--border-subtle, #d4cfc5) 60%, transparent);
 }

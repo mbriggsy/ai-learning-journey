@@ -5,6 +5,7 @@ import { MinimalCard } from '@client/shared/MinimalCard'
 import { MOTION } from '@client/shared/animation-config'
 import { haptic } from '@client/shared/haptics'
 import { useDoubleTap } from './hooks/useDoubleTap'
+import { useScrollBounce } from './hooks/useScrollBounce'
 import styles from './Hand.module.css'
 
 const LONG_PRESS_MS = 600
@@ -17,9 +18,12 @@ interface HandProps {
 }
 
 export function Hand({ hand, disabled, onStageCard, onCardLongPress }: HandProps) {
+  const handRef = useRef<HTMLDivElement>(null)
   const [dealComplete, setDealComplete] = useState(false)
   const [enlargedId, setEnlargedId] = useState<string | null>(null)
   const hasCards = hand.length > 0
+
+  useScrollBounce(handRef)
 
   useEffect(() => {
     if (hasCards && !dealComplete) {
@@ -85,7 +89,7 @@ export function Hand({ hand, disabled, onStageCard, onCardLongPress }: HandProps
 
   return (
     <>
-      <div className={styles.hand}>
+      <div className={styles.hand} ref={handRef}>
         <AnimatePresence mode="popLayout">
           {hand.map((card, i) => (
             <m.div

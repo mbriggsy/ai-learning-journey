@@ -333,6 +333,7 @@ function PlayingView() {
 
       {/* Staging area — compose your play */}
       <div className={playingStyles.stagingSection}>
+        <div className={playingStyles.sectionLabel}>Staging</div>
         <StagingArea
           hand={hand}
           cardPlayState={cardPlayState}
@@ -351,6 +352,7 @@ function PlayingView() {
 
       {/* Hand — large scrollable cards */}
       <div className={playingStyles.handSection}>
+        <div className={playingStyles.sectionLabel}>Hand</div>
         <Hand
           hand={displayHand}
           disabled={!permission.allowed || optimisticPending}

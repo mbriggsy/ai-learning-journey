@@ -4,33 +4,59 @@
   display: flex;
   flex-direction: column;
   align-items: center;
-  justify-content: center;
+  justify-content: flex-start;
   gap: 8px;
   height: 100%;
-  padding: 8px 16px;
+  padding: 8px 0;
 }
 
-/* ─── Staged cards row — height-driven ─── */
+/* ─── Staged cards row — scrollable, height-driven ─── */
 
 .stagedCards {
   display: flex;
-  gap: 8px;
-  justify-content: center;
-  align-items: stretch;
-  flex: 1 1 0;
+  gap: 10px;
+  align-items: flex-start;
+  align-self: stretch;
+  flex: 0 1 auto;
   min-height: 0;
+  overflow-x: auto;
+  overflow-y: hidden;
+  -webkit-overflow-scrolling: touch;
+  scroll-snap-type: x mandatory;
+  scrollbar-width: none;
+  padding: 0;
+  overscroll-behavior-x: contain;
+}
+
+/* Spacers center cards when they fit, collapse when they overflow */
+.stagedCards::before,
+.stagedCards::after {
+  content: '';
+  flex: 1 0 0;
+}
+
+.stagedCards::-webkit-scrollbar {
+  display: none;
 }
 
 .stagedSlot {
-  height: 100%;
+  flex: 0 0 clamp(130px, 42vw, 200px);
   aspect-ratio: 5 / 7;
-  max-width: 140px;
-  flex-shrink: 1;
+  scroll-snap-align: center;
+  will-change: transform; /* GPU layer — prevents border repaint flash */
 }
 
-/* Force descriptions OFF on staged cards regardless of size */
-.stagedSlot :global(.cardDesc) {
-  display: none !important;
+/* ─── Validation feedback ─── */
+
+.invalidMsg {
+  font-family: var(--font-display);
+  font-size: 12px;
+  font-weight: 600;
+  color: var(--red, #d44030);
+  text-transform: uppercase;
+  letter-spacing: 0.06em;
+  text-align: center;
+  padding: 4px 0;
 }
 
 .hint {

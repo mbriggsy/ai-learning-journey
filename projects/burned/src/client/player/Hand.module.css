@@ -1,6 +1,9 @@
-/* Hand — cards fill the height. Width from aspect ratio. Scroll horizontally. */
+/* Hand — cards fill the height. Width derived from aspect-ratio. Scroll horizontally.
+   Slots stretch to full hand height (align-items: stretch), aspect-ratio derives width.
+   Cards inside use width:100% — no height:100% on cards (landmine: causes overflow). */
 
 .hand {
+  box-sizing: border-box;
   display: flex;
   gap: 12px;
   align-items: stretch;
@@ -12,17 +15,18 @@
   scroll-snap-type: x mandatory;
   scroll-padding-left: 16px;
   scrollbar-width: none;
+  overscroll-behavior-x: contain;
 }
 
 .hand::-webkit-scrollbar {
   display: none;
 }
 
-/* Cards at 55% viewport width — see ~1.5 cards, swipe for more */
+/* Height-driven cards — slot stretches to fill hand, width from aspect-ratio */
 .cardSlot {
-  flex: 0 0 55%;
-  max-width: 240px;
-  min-width: 160px;
+  flex: 0 0 auto;
+  aspect-ratio: 5 / 7;
+  min-width: 120px;
   scroll-snap-align: start;
   touch-action: pan-x;
 }
@@ -36,10 +40,10 @@
   display: flex;
   align-items: center;
   justify-content: center;
-  padding: 32px;
+  padding: 12px;
 }
 
 .enlargeCard {
-  width: 75vw;
-  max-width: 320px;
+  width: 100vw;
+  max-width: 460px;
 }

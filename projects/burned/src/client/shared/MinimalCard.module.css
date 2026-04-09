@@ -1,6 +1,7 @@
 /* --- Premium Card Face --- */
 
 .card {
+  box-sizing: border-box;
   position: relative;
   display: flex;
   flex-direction: column;
@@ -84,10 +85,12 @@
 
 .card[data-selected]::after {
   opacity: 1;
+  transition: none; /* Instant — prevents flash during layout re-projection */
 }
 
 .card[data-selected] {
   border-color: var(--card-accent);
+  transition: none; /* Instant — prevents border flash during layout animation */
 }
 
 .card[aria-disabled='true'] {
@@ -125,8 +128,9 @@
   margin-top: auto; /* Push description to bottom of card */
 }
 
-/* Compact cards (staging area + small hands): hide description, tighten padding */
-@container (max-width: 140px) {
+/* Compact cards (staging area + small hands): hide description, tighten padding.
+   Threshold is content-box (border-box minus 23px padding+border). */
+@container (max-width: 115px) {
   .cardDesc {
     display: none;
   }
@@ -137,8 +141,9 @@
   }
 }
 
-/* Large cards (enlarge preview): text scales up to be readable */
-@container (min-width: 200px) {
+/* Large cards (enlarge preview): text scales up to be readable.
+   Threshold adjusted for border-box (200px - 23px padding+border = 177px content). */
+@container (min-width: 177px) {
   .cardName {
     font-size: clamp(16px, 7cqi, 24px);
     letter-spacing: 0.06em;

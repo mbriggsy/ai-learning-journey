@@ -61,50 +61,50 @@ const SEMANTIC = {
 
 const CARD_TYPE_ACCENTS = {
   // Game-critical: each gets a unique neon accent
-  'exploding-kitten': { fill: PRIMITIVES.red, glow: PRIMITIVES.redGlow },
-  'defuse':           { fill: PRIMITIVES.blue, glow: PRIMITIVES.blueGlow },
-  'nope':             { fill: PRIMITIVES.teal, glow: PRIMITIVES.tealGlow },
-  'attack':           { fill: PRIMITIVES.amber, glow: PRIMITIVES.amberGlow },
-  'targeted-attack':  { fill: PRIMITIVES.amber, glow: PRIMITIVES.amberGlow },
+  'burned':           { fill: PRIMITIVES.red, glow: PRIMITIVES.redGlow },
+  'extraction':       { fill: PRIMITIVES.blue, glow: PRIMITIVES.blueGlow },
+  'intercepted':      { fill: PRIMITIVES.teal, glow: PRIMITIVES.tealGlow },
+  'reassign':         { fill: PRIMITIVES.amber, glow: PRIMITIVES.amberGlow },
+  'direct-order':     { fill: PRIMITIVES.amber, glow: PRIMITIVES.amberGlow },
 
   // Utility: warm slate (calm, not attention-grabbing)
-  'skip':             { fill: PRIMITIVES.slate, glow: PRIMITIVES.slateGlow },
-  'see-the-future':   { fill: PRIMITIVES.slate, glow: PRIMITIVES.slateGlow },
-  'alter-the-future': { fill: PRIMITIVES.slate, glow: PRIMITIVES.slateGlow },
-  'shuffle':          { fill: PRIMITIVES.slate, glow: PRIMITIVES.slateGlow },
-  'draw-from-bottom': { fill: PRIMITIVES.slate, glow: PRIMITIVES.slateGlow },
-  'favor':            { fill: PRIMITIVES.slate, glow: PRIMITIVES.slateGlow },
+  'go-dark':          { fill: PRIMITIVES.slate, glow: PRIMITIVES.slateGlow },
+  'intel-briefing':   { fill: PRIMITIVES.slate, glow: PRIMITIVES.slateGlow },
+  'falsify-intel':    { fill: PRIMITIVES.slate, glow: PRIMITIVES.slateGlow },
+  'burn-the-files':   { fill: PRIMITIVES.slate, glow: PRIMITIVES.slateGlow },
+  'back-channel':     { fill: PRIMITIVES.slate, glow: PRIMITIVES.slateGlow },
+  'call-in-a-favor':  { fill: PRIMITIVES.slate, glow: PRIMITIVES.slateGlow },
 
-  // Cats: each type has personality
-  'feral-cat':            { fill: PRIMITIVES.feral, glow: PRIMITIVES.feralGlow },
-  'taco-cat':             { fill: PRIMITIVES.taco, glow: PRIMITIVES.tacoGlow },
-  'beard-cat':            { fill: PRIMITIVES.beard, glow: PRIMITIVES.beardGlow },
-  'rainbow-ralphing-cat': { fill: PRIMITIVES.rainbow, glow: PRIMITIVES.rainbowGlow },
-  'hairy-potato-cat':     { fill: PRIMITIVES.potato, glow: PRIMITIVES.potatoGlow },
-  'cattermelon':          { fill: PRIMITIVES.melon, glow: PRIMITIVES.melonGlow },
+  // Operatives: each agent has personality
+  'agent-x':          { fill: PRIMITIVES.feral, glow: PRIMITIVES.feralGlow },
+  'dash-barlowe':     { fill: PRIMITIVES.taco, glow: PRIMITIVES.tacoGlow },
+  'vera-khan':        { fill: PRIMITIVES.beard, glow: PRIMITIVES.beardGlow },
+  'otto-prang':       { fill: PRIMITIVES.rainbow, glow: PRIMITIVES.rainbowGlow },
+  'janet-broadside':  { fill: PRIMITIVES.potato, glow: PRIMITIVES.potatoGlow },
+  'neal-proctor':     { fill: PRIMITIVES.melon, glow: PRIMITIVES.melonGlow },
 } as const satisfies Record<CardType, { fill: string; glow: string }>
 
 // Light-mode accents: darkened fills for contrast on parchment, muted glows for shadow tinting
 const LIGHT_CARD_TYPE_ACCENTS = {
-  'exploding-kitten': { fill: '#c52b2b', glow: '#b02020' },
-  'defuse':           { fill: '#2563c4', glow: '#1a4fc0' },
-  'nope':             { fill: '#0e8a7e', glow: '#0a7a6e' },
-  'attack':           { fill: '#b06b10', glow: '#a06000' },
-  'targeted-attack':  { fill: '#b06b10', glow: '#a06000' },
+  'burned':           { fill: '#c52b2b', glow: '#b02020' },
+  'extraction':       { fill: '#2563c4', glow: '#1a4fc0' },
+  'intercepted':      { fill: '#0e8a7e', glow: '#0a7a6e' },
+  'reassign':         { fill: '#b06b10', glow: '#a06000' },
+  'direct-order':     { fill: '#b06b10', glow: '#a06000' },
 
-  'skip':             { fill: '#536180', glow: '#3a4a60' },
-  'see-the-future':   { fill: '#536180', glow: '#3a4a60' },
-  'alter-the-future': { fill: '#536180', glow: '#3a4a60' },
-  'shuffle':          { fill: '#536180', glow: '#3a4a60' },
-  'draw-from-bottom': { fill: '#536180', glow: '#3a4a60' },
-  'favor':            { fill: '#536180', glow: '#3a4a60' },
+  'go-dark':          { fill: '#536180', glow: '#3a4a60' },
+  'intel-briefing':   { fill: '#536180', glow: '#3a4a60' },
+  'falsify-intel':    { fill: '#536180', glow: '#3a4a60' },
+  'burn-the-files':   { fill: '#536180', glow: '#3a4a60' },
+  'back-channel':     { fill: '#536180', glow: '#3a4a60' },
+  'call-in-a-favor':  { fill: '#536180', glow: '#3a4a60' },
 
-  'feral-cat':            { fill: '#686868', glow: '#505050' },
-  'taco-cat':             { fill: '#9a5e20', glow: '#805018' },
-  'beard-cat':            { fill: '#1a7568', glow: '#146058' },
-  'rainbow-ralphing-cat': { fill: '#7a35a8', glow: '#602890' },
-  'hairy-potato-cat':     { fill: '#8a6c10', glow: '#705808' },
-  'cattermelon':          { fill: '#a83060', glow: '#902050' },
+  'agent-x':          { fill: '#686868', glow: '#505050' },
+  'dash-barlowe':     { fill: '#9a5e20', glow: '#805018' },
+  'vera-khan':        { fill: '#1a7568', glow: '#146058' },
+  'otto-prang':       { fill: '#7a35a8', glow: '#602890' },
+  'janet-broadside':  { fill: '#8a6c10', glow: '#705808' },
+  'neal-proctor':     { fill: '#a83060', glow: '#902050' },
 } as const satisfies Record<CardType, { fill: string; glow: string }>
 
 export function cardAccent(type: CardType): { fill: string; glow: string } {

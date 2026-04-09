@@ -5,11 +5,13 @@
 import { describe, it, expect } from 'vitest'
 import { makeCtx, act, startGameWith, giveCard, removeCardType, resolveNopeWindow } from './test-helpers'
 import type { PlayingState } from './types'
+import { CARD_DEF_BY_TYPE } from '@shared/card-defs'
+import type { CardType } from '@shared/card-defs'
 
 describe('Draw from Bottom', () => {
   it('draws from the bottom of the draw pile', () => {
     let state = startGameWith(3)
-    state = giveCard(state, 'p1', 'draw-from-bottom', 'dfb-1')
+    state = giveCard(state, 'p1', 'back-channel', 'dfb-1')
 
     const bottomCard = state.drawPile[state.drawPile.length - 1]!
     const pileSize = state.drawPile.length
@@ -34,9 +36,9 @@ describe('Two of a Kind — steal flow', () => {
   it('plays pair → nope resolves → select target → random steal', () => {
     let state = startGameWith(3)
 
-    // Give p1 two matching cat cards
-    const catType = state.players[0]!.hand.find(c => c.type.includes('cat'))?.type
-    if (!catType) return // skip if no cats dealt
+    // Give p1 two matching operative cards
+    const catType = state.players[0]!.hand.find(c => CARD_DEF_BY_TYPE[c.type as CardType]?.category === 'operative')?.type
+    if (!catType) return // skip if no operatives dealt
 
     state = giveCard(state, 'p1', catType, 'cat-a')
     state = giveCard(state, 'p1', catType, 'cat-b')
@@ -75,8 +77,8 @@ describe('Three of a Kind — name card steal flow', () => {
   it('plays triple → nope resolves → select target → name card → steal', () => {
     let state = startGameWith(3)
 
-    // Give p1 three matching cat cards
-    const catType = state.players[0]!.hand.find(c => c.type.includes('cat'))?.type
+    // Give p1 three matching operative cards
+    const catType = state.players[0]!.hand.find(c => CARD_DEF_BY_TYPE[c.type as CardType]?.category === 'operative')?.type
     if (!catType) return
 
     state = giveCard(state, 'p1', catType, 'cat-a')
@@ -84,7 +86,7 @@ describe('Three of a Kind — name card steal flow', () => {
     state = giveCard(state, 'p1', catType, 'cat-c')
 
     // Give p2 a known card type to steal
-    state = giveCard(state, 'p2', 'skip', 'steal-target-skip')
+    state = giveCard(state, 'p2', 'go-dark', 'steal-target-skip')
 
     // Play the triple
     let result = act(state, { type: 'play-card', playerId: 'p1', cardIds: ['cat-a', 'cat-b', 'cat-c'] })
@@ -105,8 +107,8 @@ describe('Three of a Kind — name card steal flow', () => {
     const nameState = result.state as PlayingState
     expect(nameState.subPhase).toBe('name-card-pending')
 
-    // Name "skip" — p2 has one
-    result = act(nameState, { type: 'name-card', playerId: 'p1', cardType: 'skip' })
+    // Name "go-dark" — p2 has one
+    result = act(nameState, { type: 'name-card', playerId: 'p1', cardType: 'go-dark' })
     expect(result.ok).toBe(true)
 
     const final = result.state as PlayingState
@@ -119,14 +121,14 @@ describe('Three of a Kind — name card steal flow', () => {
 
   it('name card miss — target does not have the named type', () => {
     let state = startGameWith(3)
-    const catType = state.players[0]!.hand.find(c => c.type.includes('cat'))?.type
+    const catType = state.players[0]!.hand.find(c => CARD_DEF_BY_TYPE[c.type as CardType]?.category === 'operative')?.type
     if (!catType) return
 
     state = giveCard(state, 'p1', catType, 'cat-a')
     state = giveCard(state, 'p1', catType, 'cat-b')
     state = giveCard(state, 'p1', catType, 'cat-c')
-    // Remove all shuffles from p2's hand so naming "shuffle" misses
-    state = removeCardType(state, 'p2', 'shuffle')
+    // Remove all burn-the-files from p2's hand so naming "burn-the-files" misses
+    state = removeCardType(state, 'p2', 'burn-the-files')
 
     let result = act(state, { type: 'play-card', playerId: 'p1', cardIds: ['cat-a', 'cat-b', 'cat-c'] })
     result = resolveNopeWindow(result.state as PlayingState, makeCtx(99999))
@@ -134,7 +136,7 @@ describe('Three of a Kind — name card steal flow', () => {
 
     const nameState = result.state as PlayingState
     // Name a card type p2 doesn't have
-    result = act(nameState, { type: 'name-card', playerId: 'p1', cardType: 'shuffle' })
+    result = act(nameState, { type: 'name-card', playerId: 'p1', cardType: 'burn-the-files' })
     expect(result.ok).toBe(true)
 
     const final = result.state as PlayingState
@@ -145,23 +147,23 @@ describe('Three of a Kind — name card steal flow', () => {
   })
 })
 
-describe('Favor — EK-only hand auto-resolve', () => {
-  it('auto-resolves when target only has Exploding Kitten cards', () => {
+describe('Call in a Favor — Burned-only hand auto-resolve', () => {
+  it('auto-resolves when target only has Burned cards', () => {
     let state = startGameWith(3)
-    state = giveCard(state, 'p1', 'favor', 'fav-1')
+    state = giveCard(state, 'p1', 'call-in-a-favor', 'fav-1')
 
-    // Strip p2's hand and give them only an EK
+    // Strip p2's hand and give them only a Burned card
     state = {
       ...state,
       players: state.players.map(p =>
-        p.id === 'p2' ? { ...p, hand: [{ id: 'ek-test', type: 'exploding-kitten' as const }] } : p
+        p.id === 'p2' ? { ...p, hand: [{ id: 'ek-test', type: 'burned' as const }] } : p
       ),
     }
 
     let result = act(state, { type: 'play-card', playerId: 'p1', cardIds: ['fav-1'], targetPlayerId: 'p2' })
     expect(result.ok).toBe(true)
 
-    // Resolve nope → should auto-resolve (no favor-pending because target has only EK)
+    // Resolve nope → should auto-resolve (no favor-pending because target has only Burned)
     result = resolveNopeWindow(result.state as PlayingState, makeCtx(99999))
     expect(result.ok).toBe(true)
 

@@ -218,7 +218,7 @@ function PlayingView() {
   }, [hand])
 
   // Local target select for pre-send actions (Favor, Targeted Attack)
-  const [localTargetMode, setLocalTargetMode] = useState<{ cardIds: string[]; reason: 'targeted-attack' | 'favor' } | null>(null)
+  const [localTargetMode, setLocalTargetMode] = useState<{ cardIds: string[]; reason: 'direct-order' | 'call-in-a-favor' } | null>(null)
 
   // Track dismissed See the Future peek (prevents sheet loop)
   const [futureDismissed, setFutureDismissed] = useState(false)
@@ -273,7 +273,7 @@ function PlayingView() {
     if (pt.kind === 'single' && pt.requiresTarget) {
       setLocalTargetMode({
         cardIds: [...cardPlayState.selectedCardIds],
-        reason: pt.cardType === 'favor' ? 'favor' : 'targeted-attack',
+        reason: pt.cardType === 'call-in-a-favor' ? 'call-in-a-favor' : 'direct-order',
       })
     }
   }, [cardPlayState])
@@ -364,7 +364,7 @@ function PlayingView() {
           <TargetSelect
             eligiblePlayers={eligibleTargets}
             onSelectTarget={handleLocalTargetSelect}
-            title={localTargetMode.reason === 'favor' ? 'Choose who gives you a card' : 'Choose who to attack'}
+            title={localTargetMode.reason === 'call-in-a-favor' ? 'Choose who gives you a card' : 'Choose who to reassign to'}
           />
         )}
       </BottomSheet>

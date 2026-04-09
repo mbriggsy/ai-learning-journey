@@ -2,10 +2,10 @@ import type { CardInstance, CardType } from './types'
 import { CARD_DEF_BY_TYPE } from './card-defs'
 import type { CardCategory } from './card-defs'
 
-const COMBO_EXCLUDED: Set<CardCategory> = new Set(['kitten', 'defuse'])
+const COMBO_EXCLUDED: Set<CardCategory> = new Set(['burned', 'extraction'])
 
 export type ComboValidation =
-  | { valid: false; reason: 'mismatched-types' | 'invalid-count' | 'contains-defuse' | 'contains-ek' | 'feral-with-non-cat' | 'single-cat' }
+  | { valid: false; reason: 'mismatched-types' | 'invalid-count' | 'contains-extraction' | 'contains-burned' | 'wild-with-non-operative' | 'single-operative' }
   | { valid: true; playType: PlayType }
 
 export type PlayType =
@@ -13,7 +13,7 @@ export type PlayType =
   | { kind: 'pair'; matchType: CardType }
   | { kind: 'triple'; matchType: CardType }
 
-const TARGET_CARDS: Set<string> = new Set(['targeted-attack', 'favor'])
+const TARGET_CARDS: Set<string> = new Set(['direct-order', 'call-in-a-favor'])
 
 export function validateCombo(
   selectedCards: readonly CardInstance[],
@@ -32,17 +32,17 @@ export function validateCombo(
   // Check for excluded categories
   for (const card of selectedCards) {
     const def = CARD_DEF_BY_TYPE[card.type]
-    if (def.category === 'kitten') return { valid: false, reason: 'contains-ek' }
-    if (def.category === 'defuse') return { valid: false, reason: 'contains-defuse' }
+    if (def.category === 'burned') return { valid: false, reason: 'contains-burned' }
+    if (def.category === 'extraction') return { valid: false, reason: 'contains-extraction' }
   }
 
   if (selectedCards.length === 1) {
     const card = selectedCards[0]!
     const def = CARD_DEF_BY_TYPE[card.type]
 
-    // Cat/wild cards can't be played alone
-    if (def.category === 'cat' || def.category === 'wild') {
-      return { valid: false, reason: 'single-cat' }
+    // Operative/wild cards can't be played alone
+    if (def.category === 'operative' || def.category === 'wild') {
+      return { valid: false, reason: 'single-operative' }
     }
 
     return {
@@ -60,9 +60,9 @@ export function validateCombo(
     return { valid: false, reason: 'mismatched-types' }
   }
 
-  // Determine the match type (first non-feral, or feral-cat if all ferals)
-  const nonFerals = selectedCards.filter(c => c.type !== 'feral-cat')
-  const matchType: CardType = nonFerals.length > 0 ? nonFerals[0]!.type : 'feral-cat'
+  // Determine the match type (first non-wild, or agent-x if all wilds)
+  const nonWilds = selectedCards.filter(c => c.type !== 'agent-x')
+  const matchType: CardType = nonWilds.length > 0 ? nonWilds[0]!.type : 'agent-x'
 
   if (selectedCards.length === 2) {
     return { valid: true, playType: { kind: 'pair', matchType } }
@@ -75,20 +75,20 @@ function isValidComboMatch(cards: readonly CardInstance[]): boolean {
   if (cards.some(c => COMBO_EXCLUDED.has(CARD_DEF_BY_TYPE[c.type].category))) return false
 
   const types = cards.map(c => c.type)
-  const nonFeralTypes = types.filter(t => t !== 'feral-cat')
+  const nonWildTypes = types.filter(t => t !== 'agent-x')
 
-  // All ferals = valid
-  if (nonFeralTypes.length === 0) return true
+  // All wilds = valid
+  if (nonWildTypes.length === 0) return true
 
-  // All non-ferals must be same type
-  const baseType = nonFeralTypes[0]!
-  if (!nonFeralTypes.every(t => t === baseType)) return false
+  // All non-wilds must be same type
+  const baseType = nonWildTypes[0]!
+  if (!nonWildTypes.every(t => t === baseType)) return false
 
-  // Feral can only sub for cat/wild categories
-  const hasFeralSub = types.some(t => t === 'feral-cat')
-  if (hasFeralSub) {
+  // Wild can only sub for operative/wild categories
+  const hasWildSub = types.some(t => t === 'agent-x')
+  if (hasWildSub) {
     const baseDef = CARD_DEF_BY_TYPE[baseType]
-    if (baseDef.category !== 'cat' && baseDef.category !== 'wild') return false
+    if (baseDef.category !== 'operative' && baseDef.category !== 'wild') return false
   }
 
   return true

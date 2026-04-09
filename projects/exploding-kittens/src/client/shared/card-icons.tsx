@@ -39,30 +39,30 @@ const CancelX = () => (
   </svg>
 )
 
-const CatFace = () => (
+const Silhouette = () => (
   <svg viewBox="0 0 20 20" aria-hidden="true">
-    <path d="M3 3l2 5h10l2-5v8a7 7 0 01-14 0V3zm4.5 7a1 1 0 100 2 1 1 0 000-2zm5 0a1 1 0 100 2 1 1 0 000-2zM10 13c-1 0-1.5.5-1.5.5s.5.5 1.5.5 1.5-.5 1.5-.5S11 13 10 13z" fill="currentColor"/>
+    <path d="M10 2a4 4 0 100 8 4 4 0 000-8zM4 16c0-3 2.5-5 6-5s6 2 6 5v2H4v-2z" fill="currentColor"/>
   </svg>
 )
 
 const ICON_MAP: Record<CardType, () => React.JSX.Element> = {
-  'exploding-kitten': Skull,
-  'defuse': Shield,
-  'attack': Lightning,
-  'targeted-attack': Lightning,
-  'skip': Lightning,
-  'see-the-future': Eye,
-  'alter-the-future': Eye,
-  'shuffle': Eye,
-  'draw-from-bottom': Hand,
-  'favor': Hand,
-  'feral-cat': Hand,
-  'nope': CancelX,
-  'taco-cat': CatFace,
-  'beard-cat': CatFace,
-  'rainbow-ralphing-cat': CatFace,
-  'hairy-potato-cat': CatFace,
-  'cattermelon': CatFace,
+  'burned': Skull,
+  'extraction': Shield,
+  'reassign': Lightning,
+  'direct-order': Lightning,
+  'go-dark': Lightning,
+  'intel-briefing': Eye,
+  'falsify-intel': Eye,
+  'burn-the-files': Eye,
+  'back-channel': Hand,
+  'call-in-a-favor': Hand,
+  'agent-x': Hand,
+  'intercepted': CancelX,
+  'dash-barlowe': Silhouette,
+  'vera-khan': Silhouette,
+  'otto-prang': Silhouette,
+  'janet-broadside': Silhouette,
+  'neal-proctor': Silhouette,
 }
 
 export function CardIcon({ type }: { type: CardType }) {

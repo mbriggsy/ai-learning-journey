@@ -155,7 +155,7 @@ export class GameRoom extends Server {
     // Origin validation — WebSocket bypasses CORS, so check on connect
     const origin = ctx.request.headers.get('Origin')
     const allowedOrigins = [
-      'https://exploding-kittens.pages.dev',
+      'https://burned.pages.dev',
       'http://localhost:5173', 'http://localhost:4173',
     ]
     // In dev, allow any local network origin (192.168.x.x, 10.x.x.x, etc.)

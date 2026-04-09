@@ -13,7 +13,7 @@ function getStatusText(
   if (prompt) {
     const name = playerName(players, prompt.playerId)
     switch (prompt.type) {
-      case 'defuse': return `${name} is hiding the kitten...`
+      case 'defuse': return `${name} is placing the Burned card...`
       case 'favor-response': return `Waiting on ${name} to give a card`
       case 'future-rearrange': return `${name} is rearranging the future`
       case 'steal-target': return `${name} is choosing a target`

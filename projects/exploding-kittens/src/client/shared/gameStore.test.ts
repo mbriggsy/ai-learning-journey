@@ -130,7 +130,7 @@ describe('GameStore', () => {
   })
 
   it('updates private data on player-update', () => {
-    const futureCards = [{ id: 'c1', type: 'skip' as const }]
+    const futureCards = [{ id: 'c1', type: 'go-dark' as const }]
     gameStore.handleMessage({
       type: 'player-update',
       payload: {

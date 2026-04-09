@@ -23,7 +23,7 @@ const ALLOWED_ACTIONS: Record<SubPhase, readonly ActionType[]> = {
   'name-card-pending': ['name-card'],
 }
 
-const COMBO_EXCLUDED_CATEGORIES = new Set<CardCategory>(['kitten', 'defuse'])
+const COMBO_EXCLUDED_CATEGORIES = new Set<CardCategory>(['burned', 'extraction'])
 
 const CLEAR_PENDING = {
   pendingFavor: undefined,
@@ -151,8 +151,8 @@ function handleStartGame(
   const deck = buildDeck(playerCount, ctx)
 
   // Separate defuses from other cards (deck has no EKs — buildDeck excludes them)
-  const defuses = deck.filter(c => c.type === 'defuse')
-  const others = deck.filter(c => c.type !== 'defuse')
+  const defuses = deck.filter(c => c.type === 'extraction')
+  const others = deck.filter(c => c.type !== 'extraction')
 
   // Each player gets 1 Defuse
   const playerDefuses = defuses.slice(0, playerCount)
@@ -175,10 +175,10 @@ function handleStartGame(
   const dealtCount = playerCount * 7
   let drawPile = [...shuffled.slice(dealtCount), ...remainingDefuses]
 
-  // Insert N-1 Exploding Kittens (created fresh, not from buildDeck)
+  // Insert N-1 Burned cards (created fresh, not from buildDeck)
   const eksToInsert = playerCount - 1
   for (let i = 0; i < eksToInsert; i++) {
-    drawPile.push({ id: crypto.randomUUID(), type: 'exploding-kitten' as CardType })
+    drawPile.push({ id: crypto.randomUUID(), type: 'burned' as CardType })
   }
 
   // Final shuffle of draw pile
@@ -214,7 +214,7 @@ export function buildDeck(playerCount: number, _ctx: DispatchContext): CardInsta
 
   for (const def of CARD_DEFS) {
     // EKs excluded — startGame creates N-1 directly
-    if (def.category === 'kitten') continue
+    if (def.category === 'burned') continue
 
     const count = getCountForPlayerCount(def, playerCount)
     for (let i = 0; i < count; i++) {
@@ -259,7 +259,7 @@ function handlePlayCard(
 
   // Cannot use EK or Defuse in combos
   if (validCards.some(c => COMBO_EXCLUDED_CATEGORIES.has(CARD_DEF_BY_TYPE[c.type].category))) {
-    return err(state, 'Cannot use Exploding Kitten or Defuse in combos', 'INVALID_COMBO')
+    return err(state, 'Cannot use Burned or Extraction in combos', 'INVALID_COMBO')
   }
 
   if (validCards.length === 1) {
@@ -281,9 +281,9 @@ function handleSingleCard(
 ): DispatchResult {
   const cardDef = CARD_DEF_BY_TYPE[card.type]
 
-  // Cat cards and Feral cats cannot be played alone
-  if (cardDef.category === 'cat' || cardDef.category === 'wild') {
-    return err(state, 'Cat cards can only be played in combos', 'INVALID_ACTION')
+  // Operative cards and Agent X cannot be played alone
+  if (cardDef.category === 'operative' || cardDef.category === 'wild') {
+    return err(state, 'Operative cards can only be played in combos', 'INVALID_ACTION')
   }
 
   // Remove card from hand, add to discard
@@ -315,15 +315,15 @@ function applyCardEffect(
   ctx: DispatchContext,
 ): DispatchResult {
   switch (cardType) {
-    case 'attack': return applyAttack(state, action, events)
-    case 'targeted-attack': return applyTargetedAttack(state, action, events)
-    case 'skip': return applySkip(state, action, events)
-    case 'see-the-future': return applySeeTheFuture(state, action, events)
-    case 'alter-the-future': return applyAlterTheFuture(state, action, events)
-    case 'shuffle': return applyShuffle(state, action, events, ctx)
-    case 'draw-from-bottom': return applyDrawFromBottom(state, action, events, ctx)
-    case 'favor': return applyFavor(state, action, events)
-    case 'nope': return err(state, 'Nope handled separately', 'INVALID_ACTION')
+    case 'reassign': return applyAttack(state, action, events)
+    case 'direct-order': return applyTargetedAttack(state, action, events)
+    case 'go-dark': return applySkip(state, action, events)
+    case 'intel-briefing': return applySeeTheFuture(state, action, events)
+    case 'falsify-intel': return applyAlterTheFuture(state, action, events)
+    case 'burn-the-files': return applyShuffle(state, action, events, ctx)
+    case 'back-channel': return applyDrawFromBottom(state, action, events, ctx)
+    case 'call-in-a-favor': return applyFavor(state, action, events)
+    case 'intercepted': return err(state, 'Intercepted handled separately', 'INVALID_ACTION')
     default: return err(state, `No effect for card type '${cardType}'`, 'INVALID_ACTION')
   }
 }
@@ -476,7 +476,7 @@ function applyFavor(
   if (!target) return err(state, 'Invalid target player', 'INVALID_TARGET')
 
   // Empty-handed or EK-only target: resolve with no transfer
-  const giveableCards = target.hand.filter(c => c.type !== 'exploding-kitten')
+  const giveableCards = target.hand.filter(c => c.type !== 'burned')
   if (giveableCards.length === 0) {
     const newState: PlayingState = {
       ...state,
@@ -581,22 +581,22 @@ function isValidCombo(cards: CardInstance[], size: number): boolean {
   // All cards must be combo-eligible (not EK, not Defuse)
   if (cards.some(c => COMBO_EXCLUDED_CATEGORIES.has(CARD_DEF_BY_TYPE[c.type].category))) return false
 
-  // Check matching: all same type, or feral cat substitution
+  // Check matching: all same type, or Agent X substitution
   const types = cards.map(c => c.type)
-  const nonFeralTypes = types.filter(t => t !== 'feral-cat')
+  const nonWildTypes = types.filter(t => t !== 'agent-x')
 
-  // All ferals: valid combo
-  if (nonFeralTypes.length === 0) return true
+  // All Agent X: valid combo
+  if (nonWildTypes.length === 0) return true
 
-  // All non-ferals must be same type
-  const baseType = nonFeralTypes[0]!
-  if (!nonFeralTypes.every(t => t === baseType)) return false
+  // All non-wilds must be same type
+  const baseType = nonWildTypes[0]!
+  if (!nonWildTypes.every(t => t === baseType)) return false
 
-  // Feral Cat can only substitute for cat types (cat + wild categories)
-  const hasFeralSubstitution = types.some(t => t === 'feral-cat')
-  if (hasFeralSubstitution) {
+  // Agent X can only substitute for operative types (operative + wild categories)
+  const hasWildSubstitution = types.some(t => t === 'agent-x')
+  if (hasWildSubstitution) {
     const baseDef = CARD_DEF_BY_TYPE[baseType]
-    if (baseDef.category !== 'cat' && baseDef.category !== 'wild') return false
+    if (baseDef.category !== 'operative' && baseDef.category !== 'wild') return false
   }
 
   return true
@@ -626,19 +626,19 @@ function performDraw(
   const drawPile = [...state.drawPile]
   const drawnCard = from === 'top' ? drawPile.shift()! : drawPile.pop()!
 
-  // Check for Exploding Kitten
-  if (drawnCard.type === 'exploding-kitten') {
+  // Check for Burned card
+  if (drawnCard.type === 'burned') {
     const player = getPlayer(state, playerId)!
-    const hasDefuse = player.hand.some(c => c.type === 'defuse')
+    const hasDefuse = player.hand.some(c => c.type === 'extraction')
 
     const events: GameEvent[] = [
       ...extraEvents,
-      { type: 'exploding-kitten-drawn', playerId },
+      { type: 'burned-drawn', playerId },
     ]
 
     if (hasDefuse) {
       // Auto-play Defuse, enter defuse-pending for placement
-      const defuseCard = player.hand.find(c => c.type === 'defuse')!
+      const defuseCard = player.hand.find(c => c.type === 'extraction')!
       let newState: PlayingState = { ...state, drawPile }
       newState = removeCardsFromHand(newState, playerId, [defuseCard.id])
       newState = addToDiscard(newState, [defuseCard])
@@ -649,7 +649,7 @@ function performDraw(
         pendingDefuse: { playerId },
         pendingPrompt: { type: 'defuse', playerId },
         nopeWindow: null,
-        events: [...newState.events, ...events, { type: 'defuse-played', playerId }],
+        events: [...newState.events, ...events, { type: 'extraction-played', playerId }],
       }
       // Keep the EK in hand temporarily for placement
       const playerWithEk = addCardsToHand(finalState, playerId, [drawnCard])
@@ -702,8 +702,8 @@ function handleDefusePlace(
 
   // Find EK in player's hand (was temporarily placed there)
   const player = getPlayer(state, action.playerId)!
-  const ek = player.hand.find(c => c.type === 'exploding-kitten')
-  if (!ek) return err(state, 'No Exploding Kitten in hand', 'INVALID_ACTION')
+  const ek = player.hand.find(c => c.type === 'burned')
+  if (!ek) return err(state, 'No Burned card in hand', 'INVALID_ACTION')
 
   // Remove EK from hand
   let newState = removeCardsFromHand(state, action.playerId, [ek.id])
@@ -747,9 +747,9 @@ function handleFavorGive(
   const card = giver.hand.find(c => c.id === action.cardId)
   if (!card) return err(state, 'Card not in your hand', 'CARD_NOT_IN_HAND')
 
-  // Cannot gift Exploding Kitten
-  if (card.type === 'exploding-kitten') {
-    return err(state, 'Cannot give away an Exploding Kitten', 'INVALID_ACTION')
+  // Cannot gift Burned card
+  if (card.type === 'burned') {
+    return err(state, 'Cannot give away a Burned card', 'INVALID_ACTION')
   }
 
   let newState = removeCardsFromHand(state, pending.targetId, [card.id])
@@ -908,7 +908,7 @@ function handleNope(
   const player = getPlayer(state, action.playerId)
   if (!player) return err(state, 'Player not found', 'INVALID_ACTION')
 
-  const nopeCard = player.hand.find(c => c.type === 'nope')
+  const nopeCard = player.hand.find(c => c.type === 'intercepted')
   if (!nopeCard) return err(state, 'No Nope card in hand', 'CARD_NOT_IN_HAND')
 
   // Remove Nope from hand, add to discard
@@ -1036,7 +1036,7 @@ function handlePromptTimeout(
       if (!state.pendingDefuse) return err(state, 'No pending defuse', 'INVALID_ACTION')
       const player = getPlayer(state, state.pendingDefuse.playerId)
       if (!player) return err(state, 'Player not found', 'INVALID_ACTION')
-      const ek = player.hand.find(c => c.type === 'exploding-kitten')
+      const ek = player.hand.find(c => c.type === 'burned')
       if (!ek) return err(state, 'No EK in hand', 'INVALID_ACTION')
       const defuseState = removeCardsFromHand(state, state.pendingDefuse.playerId, [ek.id])
       const pile = [...defuseState.drawPile]

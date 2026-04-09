@@ -4,7 +4,7 @@ A digital adaptation of [Exploding Kittens Party Pack](https://www.explodingkitt
 
 ## Status
 
-**All 6 phases complete + adversarial swarm review** — 152/152 tests, typecheck clean, ~95KB phone JS (under 100KB budget). Next: player phone design overhaul, manual testing on real devices, first production deploy.
+**All 6 phases complete + adversarial swarm review** — 152/152 tests, typecheck clean, ~95KB phone JS (under 100KB budget). Next: art direction brief, Gauntlet recalibration, manual testing on real devices, first production deploy.
 
 ## The Game
 
@@ -86,5 +86,4 @@ All 6 phases planned, deepened, executed, and reviewed. See [roadmap.md](docs/pl
 - [Rules Reference](docs/rules/RULES-REFERENCE.md) — canonical rules (audited against official PDF)
 - [Party Pack Rulebook](docs/user/ekpp-instructions-english.pdf) — official PDF (primary source)
 - [Code Review Strategy](docs/workflow/CODE-REVIEW.md) — which review tools, when to use each
-- [Design Skills](docs/workflow/DESIGN-SKILLS.md) — 21 Impeccable Design skills for UI polish
 - [UMB Architecture](../undercover-mob-boss/) — reference patterns for multi-device infrastructure

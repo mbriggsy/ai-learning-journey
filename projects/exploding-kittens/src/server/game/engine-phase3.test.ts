@@ -56,7 +56,7 @@ function giveCard(state: PlayingState, playerId: string, cardType: string, cardI
 describe('Nope Window Generation', () => {
   it('NopeWindow has generation field after card play', () => {
     let state = startGameWith(2)
-    state = giveCard(state, 'p1', 'skip', 'skip-1')
+    state = giveCard(state, 'p1', 'go-dark', 'skip-1')
 
     const result = act(state, { type: 'play-card', playerId: 'p1', cardIds: ['skip-1'] })
     expect(result.ok).toBe(true)
@@ -69,9 +69,9 @@ describe('Nope Window Generation', () => {
 
   it('generation increments on Nope chain', () => {
     let state = startGameWith(3)
-    state = giveCard(state, 'p1', 'skip', 'skip-1')
-    state = giveCard(state, 'p2', 'nope', 'nope-1')
-    state = giveCard(state, 'p3', 'nope', 'nope-2')
+    state = giveCard(state, 'p1', 'go-dark', 'skip-1')
+    state = giveCard(state, 'p2', 'intercepted', 'nope-1')
+    state = giveCard(state, 'p3', 'intercepted', 'nope-2')
 
     // Play skip → nope window opens
     let result = act(state, { type: 'play-card', playerId: 'p1', cardIds: ['skip-1'] })
@@ -93,10 +93,10 @@ describe('Nope Window Generation', () => {
 
   it('rejects stale windowGeneration on expiry', () => {
     let state = startGameWith(3)
-    state = giveCard(state, 'p1', 'skip', 'skip-1')
-    state = giveCard(state, 'p2', 'nope', 'nope-1')
+    state = giveCard(state, 'p1', 'go-dark', 'skip-1')
+    state = giveCard(state, 'p2', 'intercepted', 'nope-1')
 
-    // Play skip → window opens (gen X)
+    // Play go-dark → window opens (gen X)
     let result = act(state, { type: 'play-card', playerId: 'p1', cardIds: ['skip-1'] })
     expect(result.ok).toBe(true)
     const staleGen = (result.state as PlayingState).nopeWindow!.generation
@@ -117,7 +117,7 @@ describe('Nope Window Generation', () => {
 
   it('accepts matching windowGeneration on expiry', () => {
     let state = startGameWith(2)
-    state = giveCard(state, 'p1', 'skip', 'skip-1')
+    state = giveCard(state, 'p1', 'go-dark', 'skip-1')
 
     let result = act(state, { type: 'play-card', playerId: 'p1', cardIds: ['skip-1'] })
     expect(result.ok).toBe(true)
@@ -138,7 +138,7 @@ describe('Nope Window Generation', () => {
 describe('Prompt Timeout', () => {
   it('favor-pending resolves with no transfer on timeout', () => {
     let state = startGameWith(3)
-    state = giveCard(state, 'p1', 'favor', 'favor-1')
+    state = giveCard(state, 'p1', 'call-in-a-favor', 'favor-1')
 
     // Play favor → opens nope window
     let result = act(state, { type: 'play-card', playerId: 'p1', cardIds: ['favor-1'], targetPlayerId: 'p2' })
@@ -204,10 +204,10 @@ describe('Prompt Timeout', () => {
     expect(after.pendingSteal).toBeUndefined()
   })
 
-  it('defuse-pending inserts EK at random position on timeout', () => {
+  it('defuse-pending inserts Burned at random position on timeout', () => {
     let state = startGameWith(2)
-    // Give p1 an EK in hand (as if they drew one and played Defuse)
-    state = giveCard(state, 'p1', 'exploding-kitten', 'ek-timeout-test')
+    // Give p1 a Burned card in hand (as if they drew one and played Extraction)
+    state = giveCard(state, 'p1', 'burned', 'ek-timeout-test')
     const pileSize = state.drawPile.length
     state = {
       ...state,
@@ -225,9 +225,9 @@ describe('Prompt Timeout', () => {
     expect(after.subPhase).toBe('turn-active')
     // EK moved from hand to draw pile
     expect(after.drawPile.length).toBe(pileSize + 1)
-    expect(after.drawPile.some(c => c.type === 'exploding-kitten')).toBe(true)
-    // EK no longer in hand
+    expect(after.drawPile.some(c => c.type === 'burned')).toBe(true)
+    // Burned no longer in hand
     const p1 = after.players.find(p => p.id === 'p1')!
-    expect(p1.hand.some(c => c.type === 'exploding-kitten')).toBe(false)
+    expect(p1.hand.some(c => c.type === 'burned')).toBe(false)
   })
 })

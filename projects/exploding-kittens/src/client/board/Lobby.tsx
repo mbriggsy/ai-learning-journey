@@ -1,4 +1,3 @@
-import { useRef, useCallback } from 'react'
 import { QRCodeSVG } from 'qrcode.react'
 import { m, AnimatePresence } from 'motion/react'
 import { useLobbyState } from '@client/shared/gameStore'
@@ -9,10 +8,7 @@ import styles from './Lobby.module.css'
 
 const isDev = window.location.hostname === 'localhost' || window.location.hostname === '127.0.0.1'
 
-const BOT_NAMES = [
-  'Whiskers', 'Mittens', 'Tuna', 'Pickles', 'Nugget',
-  'Waffles', 'Beans', 'Mochi', 'Churro', 'Biscuit',
-] as const
+const DEV_PLAYERS = ['Whiskers', 'Mittens', 'Tuna', 'Pickles'] as const
 
 interface Props {
   connectionStatus: ConnectionStatus
@@ -21,21 +17,9 @@ interface Props {
 
 export function Lobby({ connectionStatus, onStartGame }: Props) {
   const lobby = useLobbyState()
-  const botCountRef = useRef(0)
 
   const roomCode = lobby?.roomCode
   const playerUrl = roomCode ? `${window.location.origin}/player.html?room=${roomCode}` : ''
-
-  const addBot = useCallback(() => {
-    if (!playerUrl) return
-    const name = BOT_NAMES[botCountRef.current % BOT_NAMES.length]!
-    botCountRef.current++
-    window.open(
-      `${playerUrl}&name=${name}`,
-      `bot-${botCountRef.current}-${name}`,
-      'width=390,height=844',
-    )
-  }, [playerUrl])
 
   if (connectionStatus !== 'connected' || !lobby) {
     return (
@@ -56,7 +40,7 @@ export function Lobby({ connectionStatus, onStartGame }: Props) {
 
   return (
     <div className={styles.container}>
-      <h1 className={styles.title}>Exploding Kittens</h1>
+      <h1 className={styles.title}>BURNED</h1>
       <div className={styles.titleAccent} />
 
       <div className={styles.qrSection}>
@@ -114,9 +98,17 @@ export function Lobby({ connectionStatus, onStartGame }: Props) {
 
       {isDev && (
         <div className={styles.devToolbar}>
-          <button className={styles.devBtn} onClick={addBot}>+ Add Player</button>
-          <button className={styles.devBtn} onClick={() => { addBot(); addBot() }}>+ Add 2</button>
-          <button className={styles.devBtn} onClick={() => { for (let i = 0; i < 4; i++) addBot() }}>+ Add 4</button>
+          {DEV_PLAYERS.map(name => (
+            <a
+              key={name}
+              href={`${playerUrl}&name=${name}`}
+              target="_blank"
+              rel="noopener"
+              className={styles.devLink}
+            >
+              {name}
+            </a>
+          ))}
         </div>
       )}
     </div>

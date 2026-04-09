@@ -1,4 +1,4 @@
-export type CardCategory = 'kitten' | 'defuse' | 'action' | 'cat' | 'wild'
+export type CardCategory = 'burned' | 'extraction' | 'action' | 'operative' | 'wild'
 
 interface CardDef {
   readonly type: string
@@ -10,23 +10,23 @@ interface CardDef {
 }
 
 export const CARD_DEFS = [
-  { type: 'exploding-kitten', name: 'Exploding Kitten', description: 'You must show this card immediately.', category: 'kitten', pawCount: 0, nonPawCount: 9 },
-  { type: 'defuse', name: 'Defuse', description: 'Save yourself. Reinsert the Kitten secretly.', category: 'defuse', pawCount: 3, nonPawCount: 7 },
-  { type: 'attack', name: 'Attack', description: 'End your turn. Next player takes 2 turns. Stacks.', category: 'action', pawCount: 2, nonPawCount: 3 },
-  { type: 'targeted-attack', name: 'Targeted Attack', description: 'End your turn. Choose ANY player to take 2 turns. Stacks.', category: 'action', pawCount: 2, nonPawCount: 3 },
-  { type: 'skip', name: 'Skip', description: 'End your turn without drawing.', category: 'action', pawCount: 4, nonPawCount: 6 },
-  { type: 'see-the-future', name: 'See the Future', description: 'Peek at the top 3 cards (private).', category: 'action', pawCount: 3, nonPawCount: 3 },
-  { type: 'alter-the-future', name: 'Alter the Future', description: 'View top 3 cards, rearrange in any order (private).', category: 'action', pawCount: 2, nonPawCount: 4 },
-  { type: 'shuffle', name: 'Shuffle', description: 'Randomize the draw pile.', category: 'action', pawCount: 2, nonPawCount: 4 },
-  { type: 'draw-from-bottom', name: 'Draw from the Bottom', description: 'Draw from bottom instead of top.', category: 'action', pawCount: 3, nonPawCount: 4 },
-  { type: 'favor', name: 'Favor', description: 'Force a player to give you 1 card (their choice).', category: 'action', pawCount: 2, nonPawCount: 4 },
-  { type: 'nope', name: 'Nope', description: 'Cancel any action. Playable any time, by anyone.', category: 'action', pawCount: 4, nonPawCount: 5 },
-  { type: 'feral-cat', name: 'Feral Cat', description: 'Wild — counts as any Cat Card type.', category: 'wild', pawCount: 2, nonPawCount: 4 },
-  { type: 'taco-cat', name: 'Taco Cat', description: 'Powerless alone. Pairs steal random. Triples name + steal.', category: 'cat', pawCount: 3, nonPawCount: 4 },
-  { type: 'beard-cat', name: 'Beard Cat', description: 'Powerless alone. Pairs steal random. Triples name + steal.', category: 'cat', pawCount: 3, nonPawCount: 4 },
-  { type: 'rainbow-ralphing-cat', name: 'Rainbow-Ralphing Cat', description: 'Powerless alone. Pairs steal random. Triples name + steal.', category: 'cat', pawCount: 3, nonPawCount: 4 },
-  { type: 'hairy-potato-cat', name: 'Hairy Potato Cat', description: 'Powerless alone. Pairs steal random. Triples name + steal.', category: 'cat', pawCount: 3, nonPawCount: 4 },
-  { type: 'cattermelon', name: 'Cattermelon', description: 'Powerless alone. Pairs steal random. Triples name + steal.', category: 'cat', pawCount: 3, nonPawCount: 4 },
+  { type: 'burned', name: 'Burned', description: 'Your cover\'s blown. Show this card immediately.', category: 'burned', pawCount: 0, nonPawCount: 9 },
+  { type: 'extraction', name: 'Extraction', description: 'Contingency plan activated. Reinsert the Burned card secretly.', category: 'extraction', pawCount: 3, nonPawCount: 7 },
+  { type: 'reassign', name: 'Reassign', description: 'End your turn. Next operative takes 2 turns. Stacks.', category: 'action', pawCount: 2, nonPawCount: 3 },
+  { type: 'direct-order', name: 'Direct Order', description: 'End your turn. Choose ANY operative for 2 turns. Stacks.', category: 'action', pawCount: 2, nonPawCount: 3 },
+  { type: 'go-dark', name: 'Go Dark', description: 'Ghost your handler. End your turn without drawing.', category: 'action', pawCount: 4, nonPawCount: 6 },
+  { type: 'intel-briefing', name: 'Intel Briefing', description: 'Peek at the top 3 cards (private).', category: 'action', pawCount: 3, nonPawCount: 3 },
+  { type: 'falsify-intel', name: 'Falsify Intel', description: 'View top 3 cards, rearrange in any order (private).', category: 'action', pawCount: 2, nonPawCount: 4 },
+  { type: 'burn-the-files', name: 'Burn the Files', description: 'Scramble the mission stack.', category: 'action', pawCount: 2, nonPawCount: 4 },
+  { type: 'back-channel', name: 'Back Channel', description: 'Draw from the bottom instead of the top.', category: 'action', pawCount: 3, nonPawCount: 4 },
+  { type: 'call-in-a-favor', name: 'Call in a Favor', description: 'Force an operative to give you 1 card (their choice).', category: 'action', pawCount: 2, nonPawCount: 4 },
+  { type: 'intercepted', name: 'Intercepted', description: 'Counter-intel. Cancel any action. Playable any time.', category: 'action', pawCount: 4, nonPawCount: 5 },
+  { type: 'agent-x', name: 'Agent X', description: 'Wild — counts as any operative type.', category: 'wild', pawCount: 2, nonPawCount: 4 },
+  { type: 'dash-barlowe', name: 'Dash Barlowe', description: 'Powerless alone. Pairs steal random. Triples name + steal.', category: 'operative', pawCount: 3, nonPawCount: 4 },
+  { type: 'vera-khan', name: 'Vera Khan', description: 'Powerless alone. Pairs steal random. Triples name + steal.', category: 'operative', pawCount: 3, nonPawCount: 4 },
+  { type: 'otto-prang', name: 'Otto Prang', description: 'Powerless alone. Pairs steal random. Triples name + steal.', category: 'operative', pawCount: 3, nonPawCount: 4 },
+  { type: 'janet-broadside', name: 'Janet Broadside', description: 'Powerless alone. Pairs steal random. Triples name + steal.', category: 'operative', pawCount: 3, nonPawCount: 4 },
+  { type: 'neal-proctor', name: 'Neal Proctor', description: 'Powerless alone. Pairs steal random. Triples name + steal.', category: 'operative', pawCount: 3, nonPawCount: 4 },
 ] as const satisfies readonly CardDef[]
 
 export type CardType = typeof CARD_DEFS[number]['type']

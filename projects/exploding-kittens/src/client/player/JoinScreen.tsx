@@ -77,7 +77,7 @@ export function JoinScreen({ connectionStatus, assignedColor, onJoin, roomCode, 
 
   return (
     <div className={styles.container}>
-      <h1 className={styles.title}>Exploding Kittens</h1>
+      <h1 className={styles.title}>BURNED</h1>
       <div className={styles.roomBadge}>
         <span className={styles.roomLabel}>Room</span>
         <span className={styles.roomCode}>{roomCode}</span>

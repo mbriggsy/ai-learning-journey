@@ -36,8 +36,8 @@ export type GameEvent =
   | { type: 'nope-played'; playerId: string; chainDepth: number }
   | { type: 'nope-window-opened'; targetAction: string; deadlineMs: number }
   | { type: 'nope-window-resolved'; cancelled: boolean; chainDepth: number }
-  | { type: 'exploding-kitten-drawn'; playerId: string }
-  | { type: 'defuse-played'; playerId: string }
+  | { type: 'burned-drawn'; playerId: string }
+  | { type: 'extraction-played'; playerId: string }
   | { type: 'player-eliminated'; playerId: string; rank: number }
   | { type: 'favor-requested'; requesterId: string; targetId: string }
   | { type: 'favor-given'; giverId: string; receiverId: string }

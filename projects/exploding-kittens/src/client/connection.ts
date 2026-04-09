@@ -122,7 +122,7 @@ export function onReconnect(handler: () => void): () => void {
 
 export function getSessionToken(roomCode: string): string | null {
   try {
-    return localStorage.getItem(`ek-session-${roomCode}`)
+    return localStorage.getItem(`burned-session-${roomCode}`)
   } catch {
     return null
   }
@@ -130,7 +130,7 @@ export function getSessionToken(roomCode: string): string | null {
 
 export function setSessionToken(roomCode: string, token: string): void {
   try {
-    localStorage.setItem(`ek-session-${roomCode}`, token)
+    localStorage.setItem(`burned-session-${roomCode}`, token)
   } catch {
     // localStorage unavailable — tolerate
   }
@@ -138,7 +138,7 @@ export function setSessionToken(roomCode: string, token: string): void {
 
 export function clearSessionToken(roomCode: string): void {
   try {
-    localStorage.removeItem(`ek-session-${roomCode}`)
+    localStorage.removeItem(`burned-session-${roomCode}`)
   } catch {
     // localStorage unavailable — tolerate
   }

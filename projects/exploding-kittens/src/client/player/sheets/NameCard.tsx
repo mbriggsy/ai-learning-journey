@@ -9,11 +9,11 @@ interface NameCardProps {
 }
 
 // Group cards by category for easier selection
-const CAT_CARDS = CARD_DEFS.filter(d => d.category === 'cat')
+const OPERATIVE_CARDS = CARD_DEFS.filter(d => d.category === 'operative')
 const ACTION_CARDS = CARD_DEFS.filter(d => d.category === 'action')
-const SPECIAL_CARDS = CARD_DEFS.filter(d => d.category === 'wild' || d.category === 'defuse')
-// Exclude Exploding Kittens — can't be in a player's hand
-const ALL_NAMEABLE = [...CAT_CARDS, ...ACTION_CARDS, ...SPECIAL_CARDS]
+const SPECIAL_CARDS = CARD_DEFS.filter(d => d.category === 'wild' || d.category === 'extraction')
+// Exclude Burned cards — can't be in a player's hand
+const ALL_NAMEABLE = [...OPERATIVE_CARDS, ...ACTION_CARDS, ...SPECIAL_CARDS]
 
 export function NameCard({ targetName, onNameCard }: NameCardProps) {
   const [submitted, setSubmitted] = useState(false)

@@ -12,9 +12,9 @@ interface GameOverProps {
 }
 
 const WINNER_MESSAGES = [
-  'survived the kittens!',
+  'survived the agency!',
   'is the last one standing!',
-  'dodged every explosion!',
+  'never got burned!',
   'outlasted them all!',
 ]
 

@@ -12,24 +12,24 @@ describe('CARD_DEFS', () => {
     expect(total).toBe(120)
   })
 
-  it('has 9 Exploding Kittens', () => {
-    const ek = CARD_DEFS.find(d => d.type === 'exploding-kitten')
-    expect(ek).toBeDefined()
-    expect(ek!.pawCount + ek!.nonPawCount).toBe(9)
+  it('has 9 Burned cards', () => {
+    const burned = CARD_DEFS.find(d => d.type === 'burned')
+    expect(burned).toBeDefined()
+    expect(burned!.pawCount + burned!.nonPawCount).toBe(9)
   })
 
-  it('has 10 Defuse cards (3 paw + 7 non-paw)', () => {
-    const defuse = CARD_DEFS.find(d => d.type === 'defuse')
-    expect(defuse).toBeDefined()
-    expect(defuse!.pawCount).toBe(3)
-    expect(defuse!.nonPawCount).toBe(7)
+  it('has 10 Extraction cards (3 paw + 7 non-paw)', () => {
+    const extraction = CARD_DEFS.find(d => d.type === 'extraction')
+    expect(extraction).toBeDefined()
+    expect(extraction!.pawCount).toBe(3)
+    expect(extraction!.nonPawCount).toBe(7)
   })
 
-  it('has all 5 cat variants', () => {
-    const catTypes = ['taco-cat', 'beard-cat', 'rainbow-ralphing-cat', 'hairy-potato-cat', 'cattermelon']
-    for (const catType of catTypes) {
-      const found = CARD_DEFS.find(d => d.type === catType)
-      expect(found, `missing cat type: ${catType}`).toBeDefined()
+  it('has all 5 operative variants', () => {
+    const operativeTypes = ['dash-barlowe', 'vera-khan', 'otto-prang', 'janet-broadside', 'neal-proctor']
+    for (const opType of operativeTypes) {
+      const found = CARD_DEFS.find(d => d.type === opType)
+      expect(found, `missing operative type: ${opType}`).toBeDefined()
     }
   })
 
@@ -39,53 +39,53 @@ describe('CARD_DEFS', () => {
   })
 
   it('assigns correct categories', () => {
-    const ek = CARD_DEFS.find(d => d.type === 'exploding-kitten')
-    expect(ek!.category).toBe('kitten')
+    const burned = CARD_DEFS.find(d => d.type === 'burned')
+    expect(burned!.category).toBe('burned')
 
-    const defuse = CARD_DEFS.find(d => d.type === 'defuse')
-    expect(defuse!.category).toBe('defuse')
+    const extraction = CARD_DEFS.find(d => d.type === 'extraction')
+    expect(extraction!.category).toBe('extraction')
 
-    const feral = CARD_DEFS.find(d => d.type === 'feral-cat')
-    expect(feral!.category).toBe('wild')
+    const agentX = CARD_DEFS.find(d => d.type === 'agent-x')
+    expect(agentX!.category).toBe('wild')
 
-    const catTypes = ['taco-cat', 'beard-cat', 'rainbow-ralphing-cat', 'hairy-potato-cat', 'cattermelon']
-    for (const catType of catTypes) {
-      const def = CARD_DEFS.find(d => d.type === catType)
-      expect(def!.category, `${catType} should be 'cat'`).toBe('cat')
+    const operativeTypes = ['dash-barlowe', 'vera-khan', 'otto-prang', 'janet-broadside', 'neal-proctor']
+    for (const opType of operativeTypes) {
+      const def = CARD_DEFS.find(d => d.type === opType)
+      expect(def!.category, `${opType} should be 'operative'`).toBe('operative')
     }
 
-    const actionTypes = ['attack', 'targeted-attack', 'skip', 'see-the-future', 'alter-the-future', 'shuffle', 'draw-from-bottom', 'favor', 'nope']
+    const actionTypes = ['reassign', 'direct-order', 'go-dark', 'intel-briefing', 'falsify-intel', 'burn-the-files', 'back-channel', 'call-in-a-favor', 'intercepted']
     for (const actionType of actionTypes) {
       const def = CARD_DEFS.find(d => d.type === actionType)
       expect(def!.category, `${actionType} should be 'action'`).toBe('action')
     }
   })
 
-  it('has exactly 1 kitten category card (Exploding Kitten exists outside paw system)', () => {
-    const kittens = CARD_DEFS.filter(d => d.category === 'kitten')
-    expect(kittens).toHaveLength(1)
-    expect(kittens[0]!.type).toBe('exploding-kitten')
+  it('has exactly 1 burned category card', () => {
+    const burnedCards = CARD_DEFS.filter(d => d.category === 'burned')
+    expect(burnedCards).toHaveLength(1)
+    expect(burnedCards[0]!.type).toBe('burned')
   })
 
   it('matches paw/non-paw counts per card type against rules reference', () => {
     const expected: Record<string, { paw: number; nonPaw: number }> = {
-      'exploding-kitten': { paw: 0, nonPaw: 9 },
-      'defuse': { paw: 3, nonPaw: 7 },
-      'attack': { paw: 2, nonPaw: 3 },
-      'targeted-attack': { paw: 2, nonPaw: 3 },
-      'skip': { paw: 4, nonPaw: 6 },
-      'see-the-future': { paw: 3, nonPaw: 3 },
-      'alter-the-future': { paw: 2, nonPaw: 4 },
-      'shuffle': { paw: 2, nonPaw: 4 },
-      'draw-from-bottom': { paw: 3, nonPaw: 4 },
-      'favor': { paw: 2, nonPaw: 4 },
-      'nope': { paw: 4, nonPaw: 5 },
-      'feral-cat': { paw: 2, nonPaw: 4 },
-      'taco-cat': { paw: 3, nonPaw: 4 },
-      'beard-cat': { paw: 3, nonPaw: 4 },
-      'rainbow-ralphing-cat': { paw: 3, nonPaw: 4 },
-      'hairy-potato-cat': { paw: 3, nonPaw: 4 },
-      'cattermelon': { paw: 3, nonPaw: 4 },
+      'burned': { paw: 0, nonPaw: 9 },
+      'extraction': { paw: 3, nonPaw: 7 },
+      'reassign': { paw: 2, nonPaw: 3 },
+      'direct-order': { paw: 2, nonPaw: 3 },
+      'go-dark': { paw: 4, nonPaw: 6 },
+      'intel-briefing': { paw: 3, nonPaw: 3 },
+      'falsify-intel': { paw: 2, nonPaw: 4 },
+      'burn-the-files': { paw: 2, nonPaw: 4 },
+      'back-channel': { paw: 3, nonPaw: 4 },
+      'call-in-a-favor': { paw: 2, nonPaw: 4 },
+      'intercepted': { paw: 4, nonPaw: 5 },
+      'agent-x': { paw: 2, nonPaw: 4 },
+      'dash-barlowe': { paw: 3, nonPaw: 4 },
+      'vera-khan': { paw: 3, nonPaw: 4 },
+      'otto-prang': { paw: 3, nonPaw: 4 },
+      'janet-broadside': { paw: 3, nonPaw: 4 },
+      'neal-proctor': { paw: 3, nonPaw: 4 },
     }
 
     for (const def of CARD_DEFS) {

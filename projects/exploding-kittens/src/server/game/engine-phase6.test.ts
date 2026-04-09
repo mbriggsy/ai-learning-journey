@@ -45,7 +45,7 @@ function giveCard(state: PlayingState, playerId: string, cardType: string, cardI
 describe('Nope Grace Window', () => {
   it('nope-window-expired transitions to grace state instead of resolving', () => {
     let state = startGameWith(3)
-    state = giveCard(state, 'p1', 'skip', 'skip-1')
+    state = giveCard(state, 'p1', 'go-dark', 'skip-1')
 
     // Play skip → opens nope window
     let result = act(state, { type: 'play-card', playerId: 'p1', cardIds: ['skip-1'] })
@@ -69,7 +69,7 @@ describe('Nope Grace Window', () => {
 
   it('nope-grace-expired actually resolves the window', () => {
     let state = startGameWith(3)
-    state = giveCard(state, 'p1', 'skip', 'skip-1')
+    state = giveCard(state, 'p1', 'go-dark', 'skip-1')
 
     let result = act(state, { type: 'play-card', playerId: 'p1', cardIds: ['skip-1'] })
     const withNope = result.state as PlayingState
@@ -96,8 +96,8 @@ describe('Nope Grace Window', () => {
 
   it('Nope during grace period is accepted and resets window', () => {
     let state = startGameWith(3)
-    state = giveCard(state, 'p1', 'skip', 'skip-1')
-    state = giveCard(state, 'p2', 'nope', 'nope-1')
+    state = giveCard(state, 'p1', 'go-dark', 'skip-1')
+    state = giveCard(state, 'p2', 'intercepted', 'nope-1')
 
     let result = act(state, { type: 'play-card', playerId: 'p1', cardIds: ['skip-1'] })
     const withNope = result.state as PlayingState
@@ -123,7 +123,7 @@ describe('Nope Grace Window', () => {
 
   it('rejects duplicate nope-window-expired on already-grace window', () => {
     let state = startGameWith(3)
-    state = giveCard(state, 'p1', 'skip', 'skip-1')
+    state = giveCard(state, 'p1', 'go-dark', 'skip-1')
 
     let result = act(state, { type: 'play-card', playerId: 'p1', cardIds: ['skip-1'] })
     const withNope = result.state as PlayingState

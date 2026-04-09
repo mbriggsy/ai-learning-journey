@@ -21,7 +21,7 @@ export function DefusePlacement({ maxPosition, onPlace }: DefusePlacementProps) 
     // Small deck — show individual buttons
     return (
       <div>
-        <div className={styles.sheetTitle}>Hide the Kitten</div>
+        <div className={styles.sheetTitle}>Hide the Burned Card</div>
         <div className={styles.sheetSubtitle}>Tap to place (no take-backs)</div>
         <div className={styles.optionList}>
           {Array.from({ length: maxPosition + 1 }, (_, i) => (
@@ -42,7 +42,7 @@ export function DefusePlacement({ maxPosition, onPlace }: DefusePlacementProps) 
   // Large deck — quick actions + numeric stepper
   return (
     <div>
-      <div className={styles.sheetTitle}>Hide the Kitten</div>
+      <div className={styles.sheetTitle}>Hide the Burned Card</div>
       <div className={styles.sheetSubtitle}>Tap to place (no take-backs)</div>
 
       <div className={styles.quickActions}>

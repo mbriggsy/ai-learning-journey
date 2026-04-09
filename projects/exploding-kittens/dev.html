@@ -3,7 +3,7 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>EK Dev Launcher</title>
+  <title>BURNED Dev Launcher</title>
   <style>
     :root {
       --bg: #0c0a12;
@@ -155,7 +155,7 @@
   </style>
 </head>
 <body>
-  <h1>EK Dev Launcher</h1>
+  <h1>BURNED Dev Launcher</h1>
   <p class="subtitle">Open board + player tabs with pre-loaded names. Not included in prod build.</p>
 
   <div class="controls">
@@ -254,7 +254,7 @@
 
       // Open board
       var boardUrl = origin + '/board.html#' + room;
-      window.open(boardUrl, 'ek-board-' + room);
+      window.open(boardUrl, 'burned-board-' + room);
       addLogLine('Board: ' + boardUrl, boardUrl);
 
       // Open player tabs with staggered timing to avoid popup blockers
@@ -263,7 +263,7 @@
           var name = NAMES[idx];
           var playerUrl = origin + '/player.html?room=' + room + '&name=' + encodeURIComponent(name);
           setTimeout(function() {
-            window.open(playerUrl, 'ek-player-' + room + '-' + idx);
+            window.open(playerUrl, 'burned-player-' + room + '-' + idx);
           }, (idx + 1) * 150);
           addLogLine('Player ' + (idx + 1) + ': ' + playerUrl, playerUrl);
         })(i);

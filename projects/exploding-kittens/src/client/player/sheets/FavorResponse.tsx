@@ -11,8 +11,8 @@ interface FavorResponseProps {
 
 export function FavorResponse({ requesterName, hand, onGiveCard }: FavorResponseProps) {
   const [submitted, setSubmitted] = useState(false)
-  // Filter out Exploding Kittens — cannot be gifted
-  const eligible = hand.filter(c => c.type !== 'exploding-kitten')
+  // Filter out Burned cards — cannot be gifted
+  const eligible = hand.filter(c => c.type !== 'burned')
 
   if (eligible.length === 0) {
     return (

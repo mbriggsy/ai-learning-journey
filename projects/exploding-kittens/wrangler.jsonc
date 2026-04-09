@@ -1,5 +1,5 @@
 {
-  "name": "exploding-kittens",
+  "name": "burned",
   "main": "src/server/room.ts",
   "compatibility_date": "2026-04-05",
   "durable_objects": {

@@ -10,8 +10,8 @@ const players: BoardPlayer[] = [
 ]
 
 const hand: CardInstance[] = [
-  { id: 'c1', type: 'skip' },
-  { id: 'c2', type: 'nope' },
+  { id: 'c1', type: 'go-dark' },
+  { id: 'c2', type: 'intercepted' },
 ]
 
 describe('deriveActiveBottomSheet', () => {
@@ -42,7 +42,7 @@ describe('deriveActiveBottomSheet', () => {
   it('returns future-peek for rearrange prompt', () => {
     const prompt: PendingPromptView = { type: 'future-rearrange', playerId: 'p1', cardIds: ['x', 'y', 'z'] }
     const futureCards: CardInstance[] = [
-      { id: 'x', type: 'skip' }, { id: 'y', type: 'attack' }, { id: 'z', type: 'nope' },
+      { id: 'x', type: 'go-dark' }, { id: 'y', type: 'reassign' }, { id: 'z', type: 'intercepted' },
     ]
     const result = deriveActiveBottomSheet(prompt, 'p1', players, hand, 10, futureCards)
     expect(result?.sheet).toBe('future-peek')

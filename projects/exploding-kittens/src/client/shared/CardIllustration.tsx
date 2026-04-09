@@ -6,8 +6,8 @@ import type { CardType } from '@shared/types'
  * Uses currentColor so the card accent tints the illustration.
  */
 
-// --- Exploding Kitten: dramatic cat skull with explosion lines ---
-const ExplodingKittenArt = () => (
+// --- Burned: dramatic skull with explosion lines ---
+const BurnedArt = () => (
   <svg viewBox="0 0 100 100" aria-hidden="true">
     {/* Explosion rays */}
     <path d="M50 8l3 14-3-2-3 2 3-14zM26 18l8 12-3-1-4 2 8-13zM74 18l-8 13-4-2-3 1 8-12zM14 38l13 7-2 3-1 4 12-8-1-1zM86 38l-13 7 2 3 1 4-12-8 1-1z" fill="currentColor" opacity="0.35"/>
@@ -279,23 +279,23 @@ const CattermelonArt = () => (
 
 // --- Type to illustration map ---
 const ILLUSTRATION_MAP: Record<CardType, () => React.JSX.Element> = {
-  'exploding-kitten': ExplodingKittenArt,
-  'defuse': DefuseArt,
-  'attack': AttackArt,
-  'targeted-attack': TargetedAttackArt,
-  'skip': SkipArt,
-  'see-the-future': SeeTheFutureArt,
-  'alter-the-future': AlterTheFutureArt,
-  'shuffle': ShuffleArt,
-  'draw-from-bottom': DrawFromBottomArt,
-  'favor': FavorArt,
-  'nope': NopeArt,
-  'feral-cat': FeralCatArt,
-  'taco-cat': TacoCatArt,
-  'beard-cat': BeardCatArt,
-  'rainbow-ralphing-cat': RainbowCatArt,
-  'hairy-potato-cat': HairyPotatoCatArt,
-  'cattermelon': CattermelonArt,
+  'burned': BurnedArt,
+  'extraction': DefuseArt,
+  'reassign': AttackArt,
+  'direct-order': TargetedAttackArt,
+  'go-dark': SkipArt,
+  'intel-briefing': SeeTheFutureArt,
+  'falsify-intel': AlterTheFutureArt,
+  'burn-the-files': ShuffleArt,
+  'back-channel': DrawFromBottomArt,
+  'call-in-a-favor': FavorArt,
+  'intercepted': NopeArt,
+  'agent-x': FeralCatArt,
+  'dash-barlowe': TacoCatArt,
+  'vera-khan': BeardCatArt,
+  'otto-prang': RainbowCatArt,
+  'janet-broadside': HairyPotatoCatArt,
+  'neal-proctor': CattermelonArt,
 }
 
 export function CardIllustration({ type }: { type: CardType }) {

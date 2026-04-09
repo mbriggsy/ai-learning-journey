@@ -114,7 +114,7 @@ describe('Validation', () => {
   it('parses name-card action with valid card type', () => {
     const result = parseClientMessage(JSON.stringify({
       type: 'action',
-      payload: { type: 'name-card', cardType: 'taco-cat', stateVersion: 8 },
+      payload: { type: 'name-card', cardType: 'dash-barlowe', stateVersion: 8 },
     }))
     expect(result.ok).toBe(true)
   })

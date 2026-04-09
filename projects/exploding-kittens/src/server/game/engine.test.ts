@@ -131,11 +131,11 @@ describe('startGame', () => {
     expect(state.subPhase).toBe('turn-active')
   })
 
-  it('deals 8 cards per player (1 Defuse + 7)', () => {
+  it('deals 8 cards per player (1 Extraction + 7)', () => {
     const state = startGameWith(4)
     for (const player of state.players) {
       expect(player.hand).toHaveLength(8)
-      expect(player.hand.some(c => c.type === 'defuse')).toBe(true)
+      expect(player.hand.some(c => c.type === 'extraction')).toBe(true)
     }
   })
 
@@ -145,16 +145,16 @@ describe('startGame', () => {
     expect(state.currentTurn.turnsRemaining).toBe(1)
   })
 
-  it('inserts N-1 Exploding Kittens into draw pile', () => {
+  it('inserts N-1 Burned cards into draw pile', () => {
     const state = startGameWith(4)
-    const eksInDeck = state.drawPile.filter(c => c.type === 'exploding-kitten')
+    const eksInDeck = state.drawPile.filter(c => c.type === 'burned')
     expect(eksInDeck).toHaveLength(3) // 4 players - 1
   })
 
-  it('has no Exploding Kittens in any hand', () => {
+  it('has no Burned cards in any hand', () => {
     const state = startGameWith(4)
     for (const player of state.players) {
-      expect(player.hand.some(c => c.type === 'exploding-kitten')).toBe(false)
+      expect(player.hand.some(c => c.type === 'burned')).toBe(false)
     }
   })
 
@@ -167,26 +167,26 @@ describe('startGame', () => {
 // --- Deck Composition Tests ---
 
 describe('buildDeck', () => {
-  it('builds correct deck for 2 players (paw counts, no EKs)', () => {
+  it('builds correct deck for 2 players (paw counts, no Burned)', () => {
     const deck = buildDeck(2, makeCtx())
-    // buildDeck excludes EKs (startGame creates N-1 directly)
-    // 2 players use paw tier: sum of all non-kitten pawCounts = 44
+    // buildDeck excludes Burned (startGame creates N-1 directly)
+    // 2 players use paw tier: sum of all non-burned pawCounts = 44
     expect(deck.length).toBe(44)
-    expect(deck.some(c => c.type === 'exploding-kitten')).toBe(false)
+    expect(deck.some(c => c.type === 'burned')).toBe(false)
   })
 
-  it('builds correct deck for 5 players (non-paw counts, no EKs)', () => {
+  it('builds correct deck for 5 players (non-paw counts, no Burned)', () => {
     const deck = buildDeck(5, makeCtx())
-    // 5 players use non-paw tier: sum of all non-kitten nonPawCounts = 67
+    // 5 players use non-paw tier: sum of all non-burned nonPawCounts = 67
     expect(deck.length).toBe(67)
-    expect(deck.some(c => c.type === 'exploding-kitten')).toBe(false)
+    expect(deck.some(c => c.type === 'burned')).toBe(false)
   })
 
-  it('builds correct deck for 10 players (both, no EKs)', () => {
+  it('builds correct deck for 10 players (both, no Burned)', () => {
     const deck = buildDeck(10, makeCtx())
-    // 10 players use both: sum of all non-kitten (paw+nonPaw) = 111
+    // 10 players use both: sum of all non-burned (paw+nonPaw) = 111
     expect(deck.length).toBe(111)
-    expect(deck.some(c => c.type === 'exploding-kitten')).toBe(false)
+    expect(deck.some(c => c.type === 'burned')).toBe(false)
   })
 
   it('has unique card IDs', () => {
@@ -198,26 +198,26 @@ describe('buildDeck', () => {
 
 // --- Skip Tests ---
 
-describe('Skip', () => {
+describe('Go Dark', () => {
   it('ends turn without drawing', () => {
     let state = startGameWith(2)
-    const skipCard = findCard(state, 'p1', 'skip')
+    const skipCard = findCard(state, 'p1', 'go-dark')
     if (!skipCard) {
-      state = giveCard(state, 'p1', 'skip', 'skip-1')
+      state = giveCard(state, 'p1', 'go-dark', 'skip-1')
     }
-    const card = findCard(state, 'p1', 'skip')!
+    const card = findCard(state, 'p1', 'go-dark')!
     const result = act(state, { type: 'play-card', playerId: 'p1', cardIds: [card.id] })
     expect(result.ok).toBe(true)
     // Skip opens nope window — action resolves after nope-window-expired
   })
 
-  it('consumes 1 turn when under Attack', () => {
+  it('consumes 1 turn when under Reassign', () => {
     let state = startGameWith(2)
-    // Give p1 a skip, set turnsRemaining to 2 (as if attacked)
-    state = giveCard(state, 'p1', 'skip', 'skip-test')
+    // Give p1 a go-dark, set turnsRemaining to 2 (as if reassigned)
+    state = giveCard(state, 'p1', 'go-dark', 'skip-test')
     state = { ...state, currentTurn: { currentPlayerId: 'p1', turnsRemaining: 2 } }
 
-    const card = findCard(state, 'p1', 'skip')!
+    const card = findCard(state, 'p1', 'go-dark')!
 
     // Play skip — opens nope window
     let result = act(state, { type: 'play-card', playerId: 'p1', cardIds: [card.id] })
@@ -239,12 +239,12 @@ describe('Skip', () => {
 
 // --- Attack Tests ---
 
-describe('Attack', () => {
+describe('Reassign', () => {
   it('transfers turn to next player with 2 extra turns', () => {
     let state = startGameWith(3)
-    state = giveCard(state, 'p1', 'attack', 'attack-1')
+    state = giveCard(state, 'p1', 'reassign', 'attack-1')
 
-    const card = findCard(state, 'p1', 'attack')!
+    const card = findCard(state, 'p1', 'reassign')!
     let result = act(state, { type: 'play-card', playerId: 'p1', cardIds: [card.id] })
     expect(result.ok).toBe(true)
 
@@ -265,12 +265,12 @@ describe('Attack', () => {
 
 // --- Targeted Attack Tests ---
 
-describe('Targeted Attack', () => {
-  it('attacks a specific player', () => {
+describe('Direct Order', () => {
+  it('targets a specific player', () => {
     let state = startGameWith(3)
-    state = giveCard(state, 'p1', 'targeted-attack', 'ta-1')
+    state = giveCard(state, 'p1', 'direct-order', 'ta-1')
 
-    const card = findCard(state, 'p1', 'targeted-attack')!
+    const card = findCard(state, 'p1', 'direct-order')!
     let result = act(state, {
       type: 'play-card', playerId: 'p1', cardIds: [card.id], targetPlayerId: 'p3',
     })
@@ -289,23 +289,23 @@ describe('Targeted Attack', () => {
 
   it('rejects self-targeting', () => {
     let state = startGameWith(3)
-    state = giveCard(state, 'p1', 'targeted-attack', 'ta-self')
+    state = giveCard(state, 'p1', 'direct-order', 'ta-self')
 
-    const card = findCard(state, 'p1', 'targeted-attack')!
+    const card = findCard(state, 'p1', 'direct-order')!
     const result = act(state, {
       type: 'play-card', playerId: 'p1', cardIds: [card.id], targetPlayerId: 'p1',
     })
     // Opens nope window, then self-target check happens on resolution
-    // Actually, the targeted-attack effect is applied after nope window
-    // Self-targeting is checked in applyTargetedAttack
+    // Actually, the direct-order effect is applied after nope window
+    // Self-targeting is checked in applyDirectOrder
     expect(result.ok).toBe(true) // nope window opens first
   })
 
   it('requires a target', () => {
     let state = startGameWith(3)
-    state = giveCard(state, 'p1', 'targeted-attack', 'ta-notarget')
+    state = giveCard(state, 'p1', 'direct-order', 'ta-notarget')
 
-    const card = findCard(state, 'p1', 'targeted-attack')!
+    const card = findCard(state, 'p1', 'direct-order')!
     let result = act(state, { type: 'play-card', playerId: 'p1', cardIds: [card.id] })
     // This opens nope window, target check is deferred to resolution
     expect(result.ok).toBe(true)
@@ -331,8 +331,8 @@ describe('Draw', () => {
     if (result.ok) {
       const s = result.state as PlayingState
       const p1 = s.players.find(p => p.id === 'p1')!
-      // If not an EK, hand size increases by 1
-      if (topCard.type !== 'exploding-kitten') {
+      // If not a Burned card, hand size increases by 1
+      if (topCard.type !== 'burned') {
         expect(p1.hand).toHaveLength(handSize + 1)
       }
     }
@@ -352,7 +352,7 @@ describe('Nope', () => {
   it('requires an active nope window', () => {
     const state = startGameWith(2)
     state.players.find(p => p.id === 'p2')
-    const nopeState = giveCard(state, 'p2', 'nope', 'nope-1')
+    const nopeState = giveCard(state, 'p2', 'intercepted', 'nope-1')
 
     const result = act(nopeState, { type: 'nope', playerId: 'p2' })
     expect(result.ok).toBe(false)
@@ -361,14 +361,14 @@ describe('Nope', () => {
 
   it('rejects self-Nope on own action', () => {
     let state = startGameWith(2)
-    state = giveCard(state, 'p1', 'skip', 'skip-self')
-    state = giveCard(state, 'p1', 'nope', 'nope-self')
+    state = giveCard(state, 'p1', 'go-dark', 'skip-self')
+    state = giveCard(state, 'p1', 'intercepted', 'nope-self')
 
-    const skipCard = findCard(state, 'p1', 'skip')!
+    const skipCard = findCard(state, 'p1', 'go-dark')!
     let result = act(state, { type: 'play-card', playerId: 'p1', cardIds: [skipCard.id] })
     const withWindow = (result as { ok: true; state: GameState }).state as PlayingState
 
-    // p1 tries to Nope own Skip — should fail
+    // p1 tries to Nope own Go Dark — should fail
     result = act(withWindow, { type: 'nope', playerId: 'p1' })
     expect(result.ok).toBe(false)
     if (!result.ok) expect(result.code).toBe('INVALID_ACTION')
@@ -376,11 +376,11 @@ describe('Nope', () => {
 
   it('increments chain depth on valid Nope', () => {
     let state = startGameWith(2)
-    state = giveCard(state, 'p1', 'skip', 'skip-for-nope')
-    state = giveCard(state, 'p2', 'nope', 'nope-test')
+    state = giveCard(state, 'p1', 'go-dark', 'skip-for-nope')
+    state = giveCard(state, 'p2', 'intercepted', 'nope-test')
 
-    // Play skip to open nope window
-    const skipCard = findCard(state, 'p1', 'skip')!
+    // Play go-dark to open nope window
+    const skipCard = findCard(state, 'p1', 'go-dark')!
     let result = act(state, { type: 'play-card', playerId: 'p1', cardIds: [skipCard.id] })
     expect(result.ok).toBe(true)
 
@@ -400,12 +400,12 @@ describe('Nope', () => {
 
   it('odd chain depth cancels, even allows', () => {
     let state = startGameWith(2)
-    state = giveCard(state, 'p1', 'skip', 'skip-nope-chain')
-    state = giveCard(state, 'p2', 'nope', 'nope-1')
-    state = giveCard(state, 'p1', 'nope', 'nope-2')
+    state = giveCard(state, 'p1', 'go-dark', 'skip-nope-chain')
+    state = giveCard(state, 'p2', 'intercepted', 'nope-1')
+    state = giveCard(state, 'p1', 'intercepted', 'nope-2')
 
-    // Play skip → nope window
-    const skipCard = findCard(state, 'p1', 'skip')!
+    // Play go-dark → nope window
+    const skipCard = findCard(state, 'p1', 'go-dark')!
     let result = act(state, { type: 'play-card', playerId: 'p1', cardIds: [skipCard.id] })
     let s = (result as { ok: true; state: GameState }).state as PlayingState
 
@@ -427,13 +427,13 @@ describe('Nope', () => {
 
 // --- Defuse Tests ---
 
-describe('Defuse', () => {
-  it('enters defuse-pending when drawing EK with Defuse in hand', () => {
+describe('Extraction', () => {
+  it('enters defuse-pending when drawing Burned with Extraction in hand', () => {
     let state = startGameWith(2)
-    // Ensure top card is EK and player has Defuse
-    const ekCard: CardInstance = { id: 'ek-test', type: 'exploding-kitten' }
+    // Ensure top card is Burned and player has Extraction
+    const ekCard: CardInstance = { id: 'ek-test', type: 'burned' }
     state = { ...state, drawPile: [ekCard, ...state.drawPile] }
-    state = giveCard(state, 'p1', 'defuse', 'defuse-test')
+    state = giveCard(state, 'p1', 'extraction', 'defuse-test')
 
     const result = act(state, { type: 'draw-card', playerId: 'p1' })
     expect(result.ok).toBe(true)
@@ -445,11 +445,11 @@ describe('Defuse', () => {
     }
   })
 
-  it('allows placing EK back at valid position', () => {
+  it('allows placing Burned card back at valid position', () => {
     let state = startGameWith(2)
-    const ekCard: CardInstance = { id: 'ek-place', type: 'exploding-kitten' }
+    const ekCard: CardInstance = { id: 'ek-place', type: 'burned' }
     state = { ...state, drawPile: [ekCard, ...state.drawPile] }
-    state = giveCard(state, 'p1', 'defuse', 'defuse-place')
+    state = giveCard(state, 'p1', 'extraction', 'defuse-place')
 
     // Draw EK → defuse-pending
     let result = act(state, { type: 'draw-card', playerId: 'p1' })
@@ -462,19 +462,19 @@ describe('Defuse', () => {
     if (result.ok) {
       const s = result.state as PlayingState
       expect(s.subPhase).toBe('turn-active') // or advanced turn
-      // EK should be in draw pile
-      expect(s.drawPile.some(c => c.type === 'exploding-kitten')).toBe(true)
-      // EK should NOT be in player's hand
+      // Burned card should be in draw pile
+      expect(s.drawPile.some(c => c.type === 'burned')).toBe(true)
+      // Burned card should NOT be in player's hand
       const p1 = s.players.find(p => p.id === 'p1')!
-      expect(p1.hand.some(c => c.type === 'exploding-kitten')).toBe(false)
+      expect(p1.hand.some(c => c.type === 'burned')).toBe(false)
     }
   })
 
   it('rejects invalid position', () => {
     let state = startGameWith(2)
-    const ekCard: CardInstance = { id: 'ek-invalid', type: 'exploding-kitten' }
+    const ekCard: CardInstance = { id: 'ek-invalid', type: 'burned' }
     state = { ...state, drawPile: [ekCard, ...state.drawPile] }
-    state = giveCard(state, 'p1', 'defuse', 'defuse-invalid')
+    state = giveCard(state, 'p1', 'extraction', 'defuse-invalid')
 
     let result = act(state, { type: 'draw-card', playerId: 'p1' })
     const defuseState = (result as { ok: true; state: GameState }).state as PlayingState
@@ -489,12 +489,12 @@ describe('Defuse', () => {
 // --- Elimination Tests ---
 
 describe('Elimination', () => {
-  it('eliminates player who draws EK without Defuse', () => {
+  it('eliminates player who draws Burned without Extraction', () => {
     let state = startGameWith(3)
-    const ekCard: CardInstance = { id: 'ek-elim', type: 'exploding-kitten' }
+    const ekCard: CardInstance = { id: 'ek-elim', type: 'burned' }
     state = { ...state, drawPile: [ekCard, ...state.drawPile] }
-    // Remove all defuses from p1
-    state = removeCardType(state, 'p1', 'defuse')
+    // Remove all extractions from p1
+    state = removeCardType(state, 'p1', 'extraction')
 
     const result = act(state, { type: 'draw-card', playerId: 'p1' })
     expect(result.ok).toBe(true)
@@ -510,9 +510,9 @@ describe('Elimination', () => {
 
   it('ends game when only 1 player remains', () => {
     let state = startGameWith(2)
-    const ekCard: CardInstance = { id: 'ek-final', type: 'exploding-kitten' }
+    const ekCard: CardInstance = { id: 'ek-final', type: 'burned' }
     state = { ...state, drawPile: [ekCard, ...state.drawPile] }
-    state = removeCardType(state, 'p1', 'defuse')
+    state = removeCardType(state, 'p1', 'extraction')
 
     const result = act(state, { type: 'draw-card', playerId: 'p1' })
     expect(result.ok).toBe(true)
@@ -528,12 +528,12 @@ describe('Elimination', () => {
 
 // --- Favor Tests ---
 
-describe('Favor', () => {
+describe('Call in a Favor', () => {
   it('enters favor-pending with valid target', () => {
     let state = startGameWith(2)
-    state = giveCard(state, 'p1', 'favor', 'favor-1')
+    state = giveCard(state, 'p1', 'call-in-a-favor', 'favor-1')
 
-    const card = findCard(state, 'p1', 'favor')!
+    const card = findCard(state, 'p1', 'call-in-a-favor')!
     let result = act(state, {
       type: 'play-card', playerId: 'p1', cardIds: [card.id], targetPlayerId: 'p2',
     })
@@ -554,9 +554,9 @@ describe('Favor', () => {
 
   it('target gives card via favor-give', () => {
     let state = startGameWith(2)
-    state = giveCard(state, 'p1', 'favor', 'favor-give-test')
+    state = giveCard(state, 'p1', 'call-in-a-favor', 'favor-give-test')
 
-    const card = findCard(state, 'p1', 'favor')!
+    const card = findCard(state, 'p1', 'call-in-a-favor')!
     let result = act(state, {
       type: 'play-card', playerId: 'p1', cardIds: [card.id], targetPlayerId: 'p2',
     })
@@ -582,9 +582,9 @@ describe('Favor', () => {
 
   it('rejects self-targeting', () => {
     let state = startGameWith(2)
-    state = giveCard(state, 'p1', 'favor', 'favor-self')
+    state = giveCard(state, 'p1', 'call-in-a-favor', 'favor-self')
 
-    const card = findCard(state, 'p1', 'favor')!
+    const card = findCard(state, 'p1', 'call-in-a-favor')!
     let result = act(state, {
       type: 'play-card', playerId: 'p1', cardIds: [card.id], targetPlayerId: 'p1',
     })
@@ -594,11 +594,11 @@ describe('Favor', () => {
     expect(result.ok).toBe(false)
   })
 
-  it('cannot gift Exploding Kitten', () => {
+  it('cannot gift Burned card', () => {
     let state = startGameWith(2)
-    state = giveCard(state, 'p1', 'favor', 'favor-ek')
+    state = giveCard(state, 'p1', 'call-in-a-favor', 'favor-ek')
 
-    const card = findCard(state, 'p1', 'favor')!
+    const card = findCard(state, 'p1', 'call-in-a-favor')!
     let result = act(state, {
       type: 'play-card', playerId: 'p1', cardIds: [card.id], targetPlayerId: 'p2',
     })
@@ -606,9 +606,9 @@ describe('Favor', () => {
     result = resolveNopeWindow(s, makeCtx(99999))
     s = (result as { ok: true; state: GameState }).state as PlayingState
 
-    // Give p2 an EK
-    s = giveCard(s, 'p2', 'exploding-kitten', 'ek-gift')
-    const ekCard = findCard(s, 'p2', 'exploding-kitten')!
+    // Give p2 a Burned card
+    s = giveCard(s, 'p2', 'burned', 'ek-gift')
+    const ekCard = findCard(s, 'p2', 'burned')!
 
     result = act(s, { type: 'favor-give', playerId: 'p2', cardId: ekCard.id })
     expect(result.ok).toBe(false)
@@ -620,8 +620,8 @@ describe('Favor', () => {
 describe('Two of a Kind', () => {
   it('validates matching pair', () => {
     let state = startGameWith(2)
-    state = giveCard(state, 'p1', 'taco-cat', 'tc-1')
-    state = giveCard(state, 'p1', 'taco-cat', 'tc-2')
+    state = giveCard(state, 'p1', 'dash-barlowe', 'tc-1')
+    state = giveCard(state, 'p1', 'dash-barlowe', 'tc-2')
 
     const result = act(state, {
       type: 'play-card', playerId: 'p1', cardIds: ['tc-1', 'tc-2'],
@@ -631,8 +631,8 @@ describe('Two of a Kind', () => {
 
   it('rejects mismatched pair', () => {
     let state = startGameWith(2)
-    state = giveCard(state, 'p1', 'taco-cat', 'tc-1')
-    state = giveCard(state, 'p1', 'beard-cat', 'bc-1')
+    state = giveCard(state, 'p1', 'dash-barlowe', 'tc-1')
+    state = giveCard(state, 'p1', 'vera-khan', 'bc-1')
 
     const result = act(state, {
       type: 'play-card', playerId: 'p1', cardIds: ['tc-1', 'bc-1'],
@@ -641,10 +641,10 @@ describe('Two of a Kind', () => {
     if (!result.ok) expect(result.code).toBe('INVALID_COMBO')
   })
 
-  it('allows Feral Cat + Cat as valid pair', () => {
+  it('allows Agent X + Operative as valid pair', () => {
     let state = startGameWith(2)
-    state = giveCard(state, 'p1', 'feral-cat', 'fc-1')
-    state = giveCard(state, 'p1', 'taco-cat', 'tc-1')
+    state = giveCard(state, 'p1', 'agent-x', 'fc-1')
+    state = giveCard(state, 'p1', 'dash-barlowe', 'tc-1')
 
     const result = act(state, {
       type: 'play-card', playerId: 'p1', cardIds: ['fc-1', 'tc-1'],
@@ -652,10 +652,10 @@ describe('Two of a Kind', () => {
     expect(result.ok).toBe(true)
   })
 
-  it('allows two Feral Cats as valid pair', () => {
+  it('allows two Agent X as valid pair', () => {
     let state = startGameWith(2)
-    state = giveCard(state, 'p1', 'feral-cat', 'fc-1')
-    state = giveCard(state, 'p1', 'feral-cat', 'fc-2')
+    state = giveCard(state, 'p1', 'agent-x', 'fc-1')
+    state = giveCard(state, 'p1', 'agent-x', 'fc-2')
 
     const result = act(state, {
       type: 'play-card', playerId: 'p1', cardIds: ['fc-1', 'fc-2'],
@@ -663,10 +663,10 @@ describe('Two of a Kind', () => {
     expect(result.ok).toBe(true)
   })
 
-  it('rejects Feral Cat + non-cat card', () => {
+  it('rejects Agent X + non-operative card', () => {
     let state = startGameWith(2)
-    state = giveCard(state, 'p1', 'feral-cat', 'fc-1')
-    state = giveCard(state, 'p1', 'skip', 'skip-1')
+    state = giveCard(state, 'p1', 'agent-x', 'fc-1')
+    state = giveCard(state, 'p1', 'go-dark', 'skip-1')
 
     const result = act(state, {
       type: 'play-card', playerId: 'p1', cardIds: ['fc-1', 'skip-1'],
@@ -677,7 +677,7 @@ describe('Two of a Kind', () => {
 
   it('rejects duplicate card IDs', () => {
     let state = startGameWith(2)
-    state = giveCard(state, 'p1', 'taco-cat', 'tc-dup')
+    state = giveCard(state, 'p1', 'dash-barlowe', 'tc-dup')
 
     const result = act(state, {
       type: 'play-card', playerId: 'p1', cardIds: ['tc-dup', 'tc-dup'],
@@ -686,10 +686,10 @@ describe('Two of a Kind', () => {
     if (!result.ok) expect(result.code).toBe('INVALID_COMBO')
   })
 
-  it('rejects EK in combo', () => {
+  it('rejects Burned in combo', () => {
     let state = startGameWith(2)
-    state = giveCard(state, 'p1', 'exploding-kitten', 'ek-combo')
-    state = giveCard(state, 'p1', 'exploding-kitten', 'ek-combo-2')
+    state = giveCard(state, 'p1', 'burned', 'ek-combo')
+    state = giveCard(state, 'p1', 'burned', 'ek-combo-2')
 
     const result = act(state, {
       type: 'play-card', playerId: 'p1', cardIds: ['ek-combo', 'ek-combo-2'],
@@ -698,10 +698,10 @@ describe('Two of a Kind', () => {
     if (!result.ok) expect(result.code).toBe('INVALID_COMBO')
   })
 
-  it('rejects Defuse in combo', () => {
+  it('rejects Extraction in combo', () => {
     let state = startGameWith(2)
-    state = giveCard(state, 'p1', 'defuse', 'def-combo-1')
-    state = giveCard(state, 'p1', 'defuse', 'def-combo-2')
+    state = giveCard(state, 'p1', 'extraction', 'def-combo-1')
+    state = giveCard(state, 'p1', 'extraction', 'def-combo-2')
 
     const result = act(state, {
       type: 'play-card', playerId: 'p1', cardIds: ['def-combo-1', 'def-combo-2'],
@@ -712,8 +712,8 @@ describe('Two of a Kind', () => {
 
   it('allows two matching action cards as valid pair', () => {
     let state = startGameWith(2)
-    state = giveCard(state, 'p1', 'attack', 'atk-1')
-    state = giveCard(state, 'p1', 'attack', 'atk-2')
+    state = giveCard(state, 'p1', 'reassign', 'atk-1')
+    state = giveCard(state, 'p1', 'reassign', 'atk-2')
 
     const result = act(state, {
       type: 'play-card', playerId: 'p1', cardIds: ['atk-1', 'atk-2'],
@@ -724,12 +724,12 @@ describe('Two of a Kind', () => {
 
 // --- See the Future / Alter the Future ---
 
-describe('See the Future', () => {
+describe('Intel Briefing', () => {
   it('stores future card IDs in pendingFuture', () => {
     let state = startGameWith(2)
-    state = giveCard(state, 'p1', 'see-the-future', 'stf-1')
+    state = giveCard(state, 'p1', 'intel-briefing', 'stf-1')
 
-    const card = findCard(state, 'p1', 'see-the-future')!
+    const card = findCard(state, 'p1', 'intel-briefing')!
     let result = act(state, { type: 'play-card', playerId: 'p1', cardIds: [card.id] })
     const afterNope = (result as { ok: true; state: GameState }).state as PlayingState
 
@@ -744,12 +744,12 @@ describe('See the Future', () => {
   })
 })
 
-describe('Alter the Future', () => {
+describe('Falsify Intel', () => {
   it('enters future-rearrange-pending', () => {
     let state = startGameWith(2)
-    state = giveCard(state, 'p1', 'alter-the-future', 'atf-1')
+    state = giveCard(state, 'p1', 'falsify-intel', 'atf-1')
 
-    const card = findCard(state, 'p1', 'alter-the-future')!
+    const card = findCard(state, 'p1', 'falsify-intel')!
     let result = act(state, { type: 'play-card', playerId: 'p1', cardIds: [card.id] })
     const afterNope = (result as { ok: true; state: GameState }).state as PlayingState
 
@@ -764,9 +764,9 @@ describe('Alter the Future', () => {
 
   it('accepts valid permutation', () => {
     let state = startGameWith(2)
-    state = giveCard(state, 'p1', 'alter-the-future', 'atf-perm')
+    state = giveCard(state, 'p1', 'falsify-intel', 'atf-perm')
 
-    const card = findCard(state, 'p1', 'alter-the-future')!
+    const card = findCard(state, 'p1', 'falsify-intel')!
     let result = act(state, { type: 'play-card', playerId: 'p1', cardIds: [card.id] })
     let s = (result as { ok: true; state: GameState }).state as PlayingState
 
@@ -787,9 +787,9 @@ describe('Alter the Future', () => {
 
   it('rejects non-permutation', () => {
     let state = startGameWith(2)
-    state = giveCard(state, 'p1', 'alter-the-future', 'atf-bad')
+    state = giveCard(state, 'p1', 'falsify-intel', 'atf-bad')
 
-    const card = findCard(state, 'p1', 'alter-the-future')!
+    const card = findCard(state, 'p1', 'falsify-intel')!
     let result = act(state, { type: 'play-card', playerId: 'p1', cardIds: [card.id] })
     let s = (result as { ok: true; state: GameState }).state as PlayingState
     result = resolveNopeWindow(s, makeCtx(99999))
@@ -802,13 +802,13 @@ describe('Alter the Future', () => {
 
 // --- Shuffle ---
 
-describe('Shuffle', () => {
+describe('Burn the Files', () => {
   it('randomizes draw pile', () => {
     let state = startGameWith(2)
-    state = giveCard(state, 'p1', 'shuffle', 'shuf-1')
+    state = giveCard(state, 'p1', 'burn-the-files', 'shuf-1')
 
     const originalOrder = state.drawPile.map(c => c.id)
-    const card = findCard(state, 'p1', 'shuffle')!
+    const card = findCard(state, 'p1', 'burn-the-files')!
     let result = act(state, { type: 'play-card', playerId: 'p1', cardIds: [card.id] })
     const afterNope = (result as { ok: true; state: GameState }).state as PlayingState
 

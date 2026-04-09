@@ -7,7 +7,7 @@ import styles from './EliminatedView.module.css'
 
 const FLAVOR_LINES = [
   'BOOM. You\'re cooked.',
-  'The kitten got you.',
+  'Your cover\'s blown.',
   'Blown to smithereens.',
   'Rest in pieces.',
   'Catastrophic failure.',

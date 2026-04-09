@@ -16,7 +16,7 @@ export function NopeButton() {
   const myPlayer = useMyPlayer()
   const sendAction = useSendAction()
 
-  const hasNope = hand.some(c => c.type === 'nope')
+  const hasNope = hand.some(c => c.type === 'intercepted')
   const isAlive = myPlayer?.isAlive ?? false
   const show = !!nopeWindow && isAlive
 

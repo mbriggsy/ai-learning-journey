@@ -78,10 +78,10 @@ describe('PBT: Card Conservation', () => {
     const currentPlayer = state.currentTurn.currentPlayerId
     const player = state.players.find(p => p.id === currentPlayer)!
 
-    // Find a playable action card (not cat, not EK, not Defuse)
+    // Find a playable action card (not operative, not Burned, not Extraction)
     const playable = player.hand.find(c =>
-      c.type !== 'exploding-kitten' && c.type !== 'defuse' &&
-      !['taco-cat', 'beard-cat', 'rainbow-ralphing-cat', 'hairy-potato-cat', 'cattermelon', 'feral-cat'].includes(c.type)
+      c.type !== 'burned' && c.type !== 'extraction' &&
+      !['dash-barlowe', 'vera-khan', 'otto-prang', 'janet-broadside', 'neal-proctor', 'agent-x'].includes(c.type)
     )
     if (!playable) return // No playable card — skip this run
 
@@ -89,7 +89,7 @@ describe('PBT: Card Conservation', () => {
       type: 'play-card',
       playerId: currentPlayer,
       cardIds: [playable.id],
-      ...(playable.type === 'targeted-attack' || playable.type === 'favor'
+      ...(playable.type === 'direct-order' || playable.type === 'call-in-a-favor'
         ? { targetPlayerId: state.players.find(p => p.id !== currentPlayer && p.isAlive)?.id }
         : {}),
     } as EngineAction

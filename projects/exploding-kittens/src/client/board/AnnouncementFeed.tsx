@@ -51,10 +51,10 @@ function formatEvent(event: GameEvent, players: readonly BoardPlayer[], eventId:
 
     case 'nope-played':
       return pick([
-        `${n(event.playerId)} says NOPE!`,
-        `NOPE! — ${n(event.playerId)}`,
+        `${n(event.playerId)} says INTERCEPTED!`,
+        `INTERCEPTED — ${n(event.playerId)}`,
         `${n(event.playerId)} shuts it down.`,
-        `Denied by ${n(event.playerId)}.`,
+        `Blocked by ${n(event.playerId)}.`,
       ], eventId)
 
     case 'nope-window-opened':
@@ -62,31 +62,31 @@ function formatEvent(event: GameEvent, players: readonly BoardPlayer[], eventId:
 
     case 'nope-window-resolved':
       return event.cancelled
-        ? pick(['Cancelled!', 'Shot down.', 'Nope wins.'], eventId)
+        ? pick(['Cancelled!', 'Shot down.', 'Counter-intel wins.'], eventId)
         : null // allowed actions don't need commentary
 
-    case 'exploding-kitten-drawn':
+    case 'burned-drawn':
       return pick([
-        `${n(event.playerId)} DREW AN EXPLODING KITTEN`,
-        `OH NO. ${n(event.playerId)} found the kitten.`,
-        `RIP ${n(event.playerId)}'s winning streak`,
-        `BOOM — ${n(event.playerId)} is in trouble`,
+        `${n(event.playerId)} GOT BURNED`,
+        `COVER BLOWN. ${n(event.playerId)} is compromised.`,
+        `RIP ${n(event.playerId)}'s cover story`,
+        `${n(event.playerId)} is in deep trouble`,
       ], eventId)
 
-    case 'defuse-played':
+    case 'extraction-played':
       return pick([
-        `${n(event.playerId)} defused it!`,
-        `${n(event.playerId)} lives to play another turn.`,
+        `${n(event.playerId)} called in an extraction!`,
+        `${n(event.playerId)} lives to run another op.`,
         `Crisis averted by ${n(event.playerId)}.`,
-        `${n(event.playerId)} keeps their cool.`,
+        `${n(event.playerId)} activated their contingency.`,
       ], eventId)
 
     case 'player-eliminated':
       return pick([
-        `${n(event.playerId)} exploded. #${event.rank}`,
+        `${n(event.playerId)} is burned. #${event.rank}`,
         `${n(event.playerId)} is toast. Rank #${event.rank}`,
         `Goodbye, ${n(event.playerId)}. #${event.rank}`,
-        `${n(event.playerId)} has left the building. #${event.rank}`,
+        `${n(event.playerId)} has been disavowed. #${event.rank}`,
       ], eventId)
 
     case 'favor-requested':
@@ -146,7 +146,7 @@ function formatEvent(event: GameEvent, players: readonly BoardPlayer[], eventId:
       return pick([
         `${n(event.winnerId)} WINS!`,
         `${n(event.winnerId)} is the last one standing!`,
-        `${n(event.winnerId)} survived the kittens!`,
+        `${n(event.winnerId)} survived the agency!`,
         `All hail ${n(event.winnerId)}!`,
       ], eventId)
 
@@ -174,7 +174,7 @@ export function AnnouncementFeed() {
     for (const entry of newEvents) {
       const text = formatEvent(entry.event, players, entry.id)
       if (!text) continue
-      const isUrgent = entry.event.type === 'exploding-kitten-drawn' ||
+      const isUrgent = entry.event.type === 'burned-drawn' ||
         entry.event.type === 'player-eliminated' || entry.event.type === 'game-over'
       announce(text, isUrgent ? 'assertive' : 'polite')
     }

@@ -6,7 +6,7 @@ argument-hint: "[path (defaults to project root)]"
 disable-model-invocation: true
 ---
 
-Audit all markdown documentation in a project using parallel sub-agents. Each agent specializes in one audit dimension, works independently, and returns findings. The orchestrator aggregates, deduplicates, and presents a unified report.
+Audit all markdown documentation in a project using 5 parallel sub-agents. Each agent specializes in one audit dimension, works independently, and returns findings. The orchestrator aggregates, deduplicates, and presents a unified report.
 
 ## Phase 1: Discovery (inline — fast)
 
@@ -27,7 +27,7 @@ Count them and list them. This is the audit scope — pass the full file list to
 
 ## Phase 2: Spawn Parallel Audit Agents
 
-Launch ALL FOUR agents in a SINGLE message (parallel tool calls). Each agent gets the file list from Phase 1 and works independently. Do NOT launch them sequentially.
+Launch ALL FIVE agents in a SINGLE message (parallel tool calls). Each agent gets the file list from Phase 1 and works independently. Do NOT launch them sequentially.
 
 Wait for ALL agents to complete before proceeding. If an agent was worth spawning, it's worth waiting for.
 
@@ -128,7 +128,7 @@ Report format:
 - Structure assessment: 2-3 sentences on overall doc organization quality
 ```
 
-### Agent 4: Duplication & Contradiction Detector
+### Agent 4: Duplication Detector
 
 ```text
 You are auditing documentation for duplicated content across files.
@@ -136,45 +136,67 @@ You are auditing documentation for duplicated content across files.
 Files to audit: <file list>
 Project root: <path>
 
-Read EVERY file completely. Then cross-reference for both duplication AND contradiction:
+Read EVERY file completely. Then cross-reference for duplication — the same content appearing in multiple places:
 
-**Duplication** — same content in multiple places:
 1. Same data in multiple tables (e.g., phase status in README AND roadmap)
 2. Same instructions repeated (e.g., install steps in README and SETUP)
 3. Same rules stated differently (e.g., conventions in CLAUDE.md and a plan doc)
 4. Same tech stack / version info in multiple places
 5. Same commands documented in multiple files
 
-**Contradiction** — conflicting content across files:
-6. Code examples showing different usage patterns for the same API (e.g., one doc uses a function as a Jest matcher, another documents it returning a plain object)
-7. Parameter tables or return types that disagree across docs
-8. Configuration options documented in one file but absent or different in another
-9. Type references (e.g., SomeType[]) that are never defined anywhere in the docs
-
-**Presentation inconsistency** — same type of content presented differently:
-10. Metrics/results shown as a table in one place but narrative paragraphs or bullet points in another
-11. Lists that use different formats for the same kind of data (e.g., numbered steps in one file, bullets in another for the same workflow)
-12. Status or progress tracked as a table in one doc but inline text in another
-
 For each finding, determine:
 - Which doc is the source of truth? (The more detailed/specific one usually wins)
 - Is the duplication intentional? (e.g., plan doc repeats rules as implementation checklist — acceptable)
 - What's the drift risk? (Will these get out of sync? How often does this data change?)
-- For contradictions: which version is correct, or are both wrong?
 
 Report format — one entry per finding:
-- Content: <what's duplicated or contradicted — brief description>
-- Type: DUPLICATION | CONTRADICTION | INCONSISTENT_PRESENTATION
+- Content: <what's duplicated — brief description>
+- Type: DUPLICATION
 - Location A: <file, lines> (source of truth)
-- Location B: <file, lines> (duplicate or conflicting version)
+- Location B: <file, lines> (duplicate)
 - Intentional: YES (implementation checklist, summary vs detail) | NO
 - Drift risk: HIGH (data changes often) | LOW (stable content)
-- Fix: <specific recommendation — link, delete, reconcile, or accept>
+- Fix: <specific recommendation — link, delete, or accept>
+```
+
+### Agent 5: Consistency Checker
+
+```text
+You are auditing documentation for contradictions and presentation inconsistencies across files.
+
+Files to audit: <file list>
+Project root: <path>
+
+Read EVERY file completely. Then cross-reference for conflicts and mismatches:
+
+**Contradiction** — conflicting content across files:
+1. Code examples showing different usage patterns for the same API (e.g., one doc uses a function as a Jest matcher, another documents it returning a plain object)
+2. Parameter tables or return types that disagree across docs
+3. Configuration options documented in one file but absent or different in another
+4. Type references (e.g., SomeType[]) that are never defined anywhere in the docs
+
+**Presentation inconsistency** — same type of content presented differently:
+5. Metrics/results shown as a table in one place but narrative paragraphs or bullet points in another
+6. Lists that use different formats for the same kind of data (e.g., numbered steps in one file, bullets in another for the same workflow)
+7. Status or progress tracked as a table in one doc but inline text in another
+
+For each finding, determine:
+- For contradictions: which version is correct, or are both wrong?
+- For inconsistencies: which presentation is clearer for the reader?
+- What's the confusion risk? (Will someone act on the wrong version?)
+
+Report format — one entry per finding:
+- Content: <what conflicts or mismatches — brief description>
+- Type: CONTRADICTION | INCONSISTENT_PRESENTATION
+- Location A: <file, lines> (preferred version)
+- Location B: <file, lines> (conflicting or inconsistent version)
+- Confusion risk: HIGH (someone will act on wrong info) | LOW (cosmetic mismatch)
+- Fix: <specific recommendation — reconcile, standardize, or accept>
 ```
 
 ## Phase 3: Aggregate (inline)
 
-Once all 4 agents report back, aggregate their findings:
+Once all 5 agents report back, aggregate their findings:
 
 1. **Deduplicate** — if two agents flag the same issue (e.g., stale content hunter finds a broken path that link validator also caught), merge into one finding
 2. **Assign severity** — Critical > Medium > Low, using the highest severity any agent assigned

@@ -1,4 +1,4 @@
-# Exploding Kittens Digital — Project Conventions
+# BURNED — Project Conventions
 
 ## Commands
 

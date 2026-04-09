@@ -2,7 +2,7 @@
 
 ## Current State
 - **152/152 tests, 0 lint errors, typecheck clean, build succeeds**
-- **Retheme complete (source code):** All card types, categories, event types, UI text, config files, HTML titles renamed from Exploding Kittens → BURNED
+- **Retheme complete:** Source code + docs. All EK references removed or mapped. Rules reference retains original terminology with mapping table.
 - Dev experience: popup buttons replaced with clickable links (Whiskers, Mittens, Tuna, Pickles)
 - Impeccable Design skills stripped (never installed, doc + .impeccable.md deleted)
 - Gauntlet skill lives at `.claude/skills/gauntlet/`
@@ -11,8 +11,8 @@
 
 ### Finish Retheme Housekeeping
 
-1. **Rename project folder** — `projects/exploding-kittens/` → `projects/burned/`. Update git, memory paths, CLAUDE.md project mapping.
-2. **Update docs** — README.md (full rewrite), CLAUDE.md, docs/rules/RULES-REFERENCE.md (add mapping note), rename brainstorm doc, update plan docs.
+1. ~~**Rename project folder**~~ — DONE.
+2. ~~**Update docs**~~ — DONE. README, CLAUDE.md, brainstorm, roadmap, gauntlet skill, play guide, rubric, insights, plan docs (retheme context headers), rules reference (mapping table).
 
 ### Art Direction + Visual Identity
 
@@ -37,4 +37,4 @@
 - NopeWindow stores full GameAction in persisted state — no versioning for hibernated payloads
 - playerSessions map not pruned on return-to-lobby
 - Gauntlet only tested 2-player games — need 4-5 player testing for layout scaling
-- Folder is still `exploding-kittens/` until step 1 is done
+- Git history: old `exploding-kittens/` shows as delete+add (folder moved outside git, not `git mv`)

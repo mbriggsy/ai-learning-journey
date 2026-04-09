@@ -9,6 +9,8 @@ executed: 2026-04-05T08:52PM EDT
 reviewed: 2026-04-05T09:08PM EDT
 ---
 
+> **Note:** This plan was written pre-retheme. "Exploding Kitten" → Burned, "Defuse" → Extraction, etc. See `docs/rules/RULES-REFERENCE.md` for full terminology mapping. Code already uses BURNED names.
+
 # Phase 4: Core Game UI
 
 **Goal:** Fully playable game — all card types work, all interactions functional. Ugly but correct.

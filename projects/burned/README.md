@@ -1,6 +1,6 @@
-# Exploding Kittens Digital
+# BURNED
 
-A digital adaptation of [Exploding Kittens Party Pack](https://www.explodingkittens.com/) — Jackbox-style, played in the same room. One shared screen (TV/laptop) shows the game table. Each player uses their phone as a private controller.
+A spy-comedy card game — rethemed from [Exploding Kittens Party Pack](https://www.explodingkittens.com/), set in the world of The Pendleton Agency. Jackbox-style: one shared screen (TV/laptop) shows the game table, each player uses their phone as a private controller.
 
 ## Status
 
@@ -8,11 +8,11 @@ A digital adaptation of [Exploding Kittens Party Pack](https://www.explodingkitt
 
 ## The Game
 
-- **2-10 players**, full Party Pack (120 cards, all card types)
+- **2-10 players**, full deck (120 cards, all card types)
 - **Shared screen** shows draw pile, discard pile, player ring, and all the drama
 - **Phone controllers** show your hand, let you play cards, and keep your moves secret
-- **Dark noir + colorful cards** — each cat type has its own accent color, CVD-safe palette, theatrical explosions
-- **Smart Nope timing** — tension scales as players are eliminated (3s/5s/7s windows)
+- **Mid-century modern visual direction** — Saul Bass meets spy title sequences, bold/saturated/geometric, CVD-safe palette
+- **Smart Intercept timing** — tension scales as players are eliminated (3s/5s/7s windows)
 
 ## Tech Stack
 
@@ -81,7 +81,7 @@ All 6 phases planned, deepened, executed, and reviewed. See [roadmap.md](docs/pl
 
 ## Reference
 
-- [Brainstorm](docs/ideation/2026-04-05-exploding-kittens-digital-brainstorm.md) — all design decisions and rationale
+- [Brainstorm](docs/ideation/2026-04-05-burned-brainstorm.md) — all design decisions and rationale
 - [Roadmap](docs/plans/roadmap.md) — tech stack, architecture, state machine, cross-cutting concerns
 - [Rules Reference](docs/rules/RULES-REFERENCE.md) — canonical rules (audited against official PDF)
 - [Party Pack Rulebook](docs/user/ekpp-instructions-english.pdf) — official PDF (primary source)

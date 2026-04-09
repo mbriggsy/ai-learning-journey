@@ -1,21 +1,22 @@
-# Exploding Kittens Digital — Brainstorm
+# BURNED — Brainstorm
 
 **Date:** 2026-04-05
 **Status:** Complete
+**Note:** Originally brainstormed as "Exploding Kittens Digital" — rethemed to BURNED (Archer-tone spy comedy, The Pendleton Agency) after all 6 phases were complete. Game mechanics unchanged, all names/theme updated.
 
 ---
 
 ## What We're Building
 
-A digital adaptation of the **Exploding Kittens Party Pack** — Jackbox-style, played in the same room. One shared screen (TV/laptop) shows the game table: draw pile, discard pile, player status, and all the drama. Each player uses their phone as a private controller to see their hand and play cards.
+A spy-comedy card game inspired by the **Exploding Kittens Party Pack** — Jackbox-style, played in the same room. One shared screen (TV/laptop) shows the game table: draw pile, discard pile, player status, and all the drama. Each player uses their phone as a private controller to see their hand and play cards.
 
 This is not online multiplayer. It's the card game you already play, but the table is a screen and your hand is your phone.
 
 ### Core Identity
 
-- **Dark + premium visual direction.** Dark backgrounds, glowing card edges, neon accents. Cards feel expensive. Explosions are dramatic light shows. Think poker app meets cyberpunk.
-- **Full theatrical drama.** Every Exploding Kitten draw is a mini-movie — slow card flip, screen goes red, particle effects, screen shake. Defuse saves get the relief moment. The shared screen is the spectacle.
-- **Full Party Pack.** All 120 cards, all card types, 2-10 players. No artificial limits, no "we'll add this later."
+- **Mid-century modern visual direction.** Saul Bass meets spy title sequences. Bold, saturated, geometric. Cards feel like classified dossiers.
+- **Full theatrical drama.** Every Burned card draw is a mini-movie — slow card flip, screen goes red, particle effects, screen shake. Extraction saves get the relief moment. The shared screen is the spectacle.
+- **Full deck.** All 120 cards, all card types, 2-10 players. No artificial limits, no "we'll add this later."
 
 ---
 

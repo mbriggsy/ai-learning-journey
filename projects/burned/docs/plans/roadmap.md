@@ -1,18 +1,18 @@
 ---
-title: "feat: Exploding Kittens Digital Card Game"
+title: "feat: BURNED — Spy-Comedy Card Game"
 type: feat
 status: active
 date: 2026-04-05
-origin: docs/ideation/2026-04-05-exploding-kittens-digital-brainstorm.md
+origin: docs/ideation/2026-04-05-burned-brainstorm.md
 ---
 
-# Exploding Kittens Digital — Roadmap
+# BURNED — Roadmap
 
 ## Context
 
-Digital adaptation of Exploding Kittens Party Pack. Jackbox-style: shared screen (TV) shows the game table, phones are private controllers. 2-10 players, full 120-card Party Pack, dark + premium visual direction, full theatrical animations.
+Spy-comedy card game inspired by Exploding Kittens Party Pack, rethemed as The Pendleton Agency. Jackbox-style: shared screen (TV) shows the game table, phones are private controllers. 2-10 players, full 120-card deck, mid-century modern visual direction, full theatrical animations.
 
-**Origin:** [docs/ideation/2026-04-05-exploding-kittens-digital-brainstorm.md](../ideation/2026-04-05-exploding-kittens-digital-brainstorm.md)
+**Origin:** [docs/ideation/2026-04-05-burned-brainstorm.md](../ideation/2026-04-05-burned-brainstorm.md)
 *Note: Brainstorm decision #4 lists Socket.IO — superseded by PartyKit.*
 
 **Reference architecture:** UMB (`projects/undercover-mob-boss/`) — same multi-device Jackbox-style with PartyKit, typed protocol, dispatch engine, state projection, session reconnection, QR codes, Vite multi-page.

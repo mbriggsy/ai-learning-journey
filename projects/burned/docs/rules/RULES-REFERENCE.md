@@ -1,6 +1,6 @@
-# Exploding Kittens Party Pack -- Canonical Rules Reference
+# Exploding Kittens Party Pack — Canonical Rules Reference
 
-> **Purpose:** Single source of truth for our digital implementation.
+> **Purpose:** Single source of truth for BURNED's game mechanics. This doc uses original EK terminology since it references the official rulebook. See mapping below.
 > **Edition:** Exploding Kittens Party Pack (current 120-card version, 2-10 players).
 > **Research date:** 2026-04-05
 > **Primary source:** `docs/user/ekpp-instructions-english.pdf` (official Party Pack rulebook, 2025 print)
@@ -8,6 +8,24 @@
 > Board & Card Games StackExchange, Exploding Kittens Wiki (Fandom), Reddit r/ExplodingKittens.
 > **Audit (2026-04-05):** Where web sources conflict with the PDF, the PDF wins. Three corrections
 > applied: 5-Different combo cut (not in Party Pack), dead player cards corrected, self-Nope disallowed.
+
+### BURNED Terminology Mapping
+
+| Original (EK) | BURNED | Code identifier |
+|----------------|--------|-----------------|
+| Exploding Kitten | Burned | `burned` |
+| Defuse | Extraction | `extraction` |
+| Attack | Ambush | `ambush` |
+| Targeted Attack | Double Cross | `double-cross` |
+| Skip | Ghost | `ghost` |
+| See the Future | Surveillance | `surveillance` |
+| Alter the Future | Deep Cover | `deep-cover` |
+| Shuffle | Shakedown | `shakedown` |
+| Draw from the Bottom | Back Channel | `back-channel` |
+| Favor | Intel | `intel` |
+| Nope | Intercepted | `intercepted` |
+| Cat cards | Operatives | `dash`, `vera`, `otto`, `janet`, `neal` |
+| — | Agent X (wild) | `agent-x` |
 
 ---
 

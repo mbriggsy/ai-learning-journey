@@ -9,6 +9,8 @@ executed: 2026-04-05T04:04PM EDT
 reviewed: 2026-04-05T06:12PM EDT
 ---
 
+> **Note:** This plan was written pre-retheme. "Exploding Kitten" → Burned, "Defuse" → Extraction, etc. See `docs/rules/RULES-REFERENCE.md` for full terminology mapping. Code already uses BURNED names.
+
 # Phase 1: Foundation
 
 **Goal:** Scaffold the project with all shared types, card definitions, and infrastructure so every subsequent phase builds on solid ground.

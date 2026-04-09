@@ -9,6 +9,8 @@ executed: 2026-04-05T10:27PM EDT
 reviewed: 2026-04-06T12:22AM EDT
 ---
 
+> **Note:** This plan was written pre-retheme. "Exploding Kitten" → Burned, "Defuse" → Extraction, etc. See `docs/rules/RULES-REFERENCE.md` for full terminology mapping. Code already uses BURNED names. Deploy URLs and project names updated post-retheme.
+
 # Phase 6: Hardening & Deploy
 
 **Goal:** Bulletproof game night experience. No crashes, no weirdness, deploys cleanly.

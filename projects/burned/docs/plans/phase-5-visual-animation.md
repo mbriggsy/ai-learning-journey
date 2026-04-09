@@ -9,6 +9,8 @@ executed: 2026-04-05T09:40PM EDT
 reviewed: 2026-04-05T09:55PM EDT
 ---
 
+> **Note:** This plan was written pre-retheme. "Exploding Kitten" → Burned, "Defuse" → Extraction, etc. See `docs/rules/RULES-REFERENCE.md` for full terminology mapping. Code already uses BURNED names.
+
 # Phase 5: Visual Design & Animation
 
 **THE Phase.** 40%+ of total effort. Water beads off it.

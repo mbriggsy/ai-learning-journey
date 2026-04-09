@@ -24,7 +24,7 @@ export const CARD_DEFS = [
   { type: 'agent-x', name: 'Agent X', description: 'Wild — counts as any operative type.', category: 'wild', pawCount: 2, nonPawCount: 4 },
   { type: 'dash-barlowe', name: 'Dash Barlowe', description: 'Powerless alone. Pairs steal random. Triples name + steal.', category: 'operative', pawCount: 3, nonPawCount: 4 },
   { type: 'vera-khan', name: 'Vera Khan', description: 'Powerless alone. Pairs steal random. Triples name + steal.', category: 'operative', pawCount: 3, nonPawCount: 4 },
-  { type: 'otto-prang', name: 'Otto Prang', description: 'Powerless alone. Pairs steal random. Triples name + steal.', category: 'operative', pawCount: 3, nonPawCount: 4 },
+  { type: 'sable-ashworth', name: 'Sable Ashworth', description: 'Powerless alone. Pairs steal random. Triples name + steal.', category: 'operative', pawCount: 3, nonPawCount: 4 },
   { type: 'janet-broadside', name: 'Janet Broadside', description: 'Powerless alone. Pairs steal random. Triples name + steal.', category: 'operative', pawCount: 3, nonPawCount: 4 },
   { type: 'neal-proctor', name: 'Neal Proctor', description: 'Powerless alone. Pairs steal random. Triples name + steal.', category: 'operative', pawCount: 3, nonPawCount: 4 },
 ] as const satisfies readonly CardDef[]

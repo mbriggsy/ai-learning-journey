@@ -6,34 +6,34 @@ import type { CardType } from '@shared/types'
 // ---------------------------------------------------------------------------
 
 const PRIMITIVES = {
-  // Surfaces (3-4% lightness steps to avoid "dark grey blob")
-  black: '#0c0a12',        // hsl(250, 20%, 4%) — warm purple-black, NOT pure #000
-  surface1: '#12121f',     // card face
-  surface2: '#1a1a2e',     // dialog/sheet
-  surface3: '#222240',     // hover surface
-  border: '#2a2a4a',
+  // Surfaces — warm mid-century modern (cocktail lounge, not noir)
+  black: '#1a2a2e',        // deep teal-charcoal, warm NOT cold
+  surface1: '#1f3338',     // card face — dark teal
+  surface2: '#243c42',     // dialog/sheet
+  surface3: '#2d4850',     // hover surface
+  border: '#3a5860',
 
-  // Text (off-white, NOT pure #fff — avoids halation)
-  textBright: '#e8e8f0',   // ~16.8:1 on black — AAA
-  textMuted: '#9999bb',    // ~6.5:1 on black — AA (bumped from #8888aa)
-  textDim: '#555570',
+  // Text (warm cream, NOT cold white)
+  textBright: '#f5f0e0',   // warm cream — AAA on teal-charcoal
+  textMuted: '#b8a890',    // warm sand — AA on teal-charcoal
+  textDim: '#6a6050',
 
-  // Game-critical accents (4 neon categories — reserved for dramatic moments)
-  red: '#e03535',           redGlow: '#ff0000',
-  blue: '#3b82f6',          blueGlow: '#1a6bff',
-  teal: '#2dd8c8',          tealGlow: '#00e6cc',    // was green — shifted cyan for CVD safety
-  amber: '#e8922a',         amberGlow: '#ff8c00',
+  // Game-critical accents (saturated, warm, CVD-safe — reserved for drama)
+  red: '#d44030',           redGlow: '#ff3020',     // alarm red — BURNED card
+  blue: '#3080c0',          blueGlow: '#2070b0',    // cool relief — Extraction
+  teal: '#2aaa98',          tealGlow: '#20c0a8',    // intercepted
+  amber: '#d48820',         amberGlow: '#f0a020',   // action cards
 
-  // Utility card accent (warm slate, not cold)
-  slate: '#7080a3',         slateGlow: '#566480',   // warmed from #7788aa/#556688
+  // Utility card accent (warm bronze, blends with mid-century palette)
+  slate: '#907860',         slateGlow: '#786850',
 
-  // Cat card accents — each cat earns its own color
-  taco: '#d98842',          tacoGlow: '#ff9f43',
-  beard: '#34a89a',         beardGlow: '#2ee6cc',
-  rainbow: '#9548c4',       rainbowGlow: '#b060f0',
-  potato: '#c9a035',        potatoGlow: '#f0c040',
-  melon: '#c94070',         melonGlow: '#ff4080',
-  feral: '#bfbfbf',         feralGlow: '#e0e0e0',
+  // Operative accents — each agent's signature color, warm & saturated
+  taco: '#c87830',          tacoGlow: '#e09040',    // Dash — warm tan/orange
+  beard: '#2a8878',         beardGlow: '#30a890',   // Vera — sharp teal
+  rainbow: '#8848a8',       rainbowGlow: '#a060c8', // Sable — heiress purple
+  potato: '#b89028',        potatoGlow: '#d0a838',  // Janet — authoritative gold
+  melon: '#b84060',         melonGlow: '#d05070',   // Neal — anxious rose
+  feral: '#a0a0a0',         feralGlow: '#c0c0c0',   // Agent X — mysterious grey
 } as const
 
 // ---------------------------------------------------------------------------
@@ -49,7 +49,7 @@ const SEMANTIC = {
   textPrimary: PRIMITIVES.textBright,
   textSecondary: PRIMITIVES.textMuted,
   textDisabled: PRIMITIVES.textDim,
-  focusRing: '#33ffff',
+  focusRing: '#f0a020',   // warm amber — visible on teal backgrounds
 
   spacingCard: '8px',
   radiusCard: '8px',
@@ -79,32 +79,32 @@ const CARD_TYPE_ACCENTS = {
   'agent-x':          { fill: PRIMITIVES.feral, glow: PRIMITIVES.feralGlow },
   'dash-barlowe':     { fill: PRIMITIVES.taco, glow: PRIMITIVES.tacoGlow },
   'vera-khan':        { fill: PRIMITIVES.beard, glow: PRIMITIVES.beardGlow },
-  'otto-prang':       { fill: PRIMITIVES.rainbow, glow: PRIMITIVES.rainbowGlow },
+  'sable-ashworth':       { fill: PRIMITIVES.rainbow, glow: PRIMITIVES.rainbowGlow },
   'janet-broadside':  { fill: PRIMITIVES.potato, glow: PRIMITIVES.potatoGlow },
   'neal-proctor':     { fill: PRIMITIVES.melon, glow: PRIMITIVES.melonGlow },
 } as const satisfies Record<CardType, { fill: string; glow: string }>
 
-// Light-mode accents: darkened fills for contrast on parchment, muted glows for shadow tinting
+// Light-mode accents: darkened for contrast on warm parchment, muted glows for shadow tinting
 const LIGHT_CARD_TYPE_ACCENTS = {
-  'burned':           { fill: '#c52b2b', glow: '#b02020' },
-  'extraction':       { fill: '#2563c4', glow: '#1a4fc0' },
-  'intercepted':      { fill: '#0e8a7e', glow: '#0a7a6e' },
-  'reassign':         { fill: '#b06b10', glow: '#a06000' },
-  'direct-order':     { fill: '#b06b10', glow: '#a06000' },
+  'burned':           { fill: '#b83020', glow: '#a02818' },
+  'extraction':       { fill: '#2060a0', glow: '#185090' },
+  'intercepted':      { fill: '#1a7868', glow: '#106858' },
+  'reassign':         { fill: '#a07010', glow: '#886008' },
+  'direct-order':     { fill: '#a07010', glow: '#886008' },
 
-  'go-dark':          { fill: '#536180', glow: '#3a4a60' },
-  'intel-briefing':   { fill: '#536180', glow: '#3a4a60' },
-  'falsify-intel':    { fill: '#536180', glow: '#3a4a60' },
-  'burn-the-files':   { fill: '#536180', glow: '#3a4a60' },
-  'back-channel':     { fill: '#536180', glow: '#3a4a60' },
-  'call-in-a-favor':  { fill: '#536180', glow: '#3a4a60' },
+  'go-dark':          { fill: '#6a5840', glow: '#584830' },
+  'intel-briefing':   { fill: '#6a5840', glow: '#584830' },
+  'falsify-intel':    { fill: '#6a5840', glow: '#584830' },
+  'burn-the-files':   { fill: '#6a5840', glow: '#584830' },
+  'back-channel':     { fill: '#6a5840', glow: '#584830' },
+  'call-in-a-favor':  { fill: '#6a5840', glow: '#584830' },
 
-  'agent-x':          { fill: '#686868', glow: '#505050' },
-  'dash-barlowe':     { fill: '#9a5e20', glow: '#805018' },
-  'vera-khan':        { fill: '#1a7568', glow: '#146058' },
-  'otto-prang':       { fill: '#7a35a8', glow: '#602890' },
-  'janet-broadside':  { fill: '#8a6c10', glow: '#705808' },
-  'neal-proctor':     { fill: '#a83060', glow: '#902050' },
+  'agent-x':          { fill: '#606060', glow: '#484848' },
+  'dash-barlowe':     { fill: '#986020', glow: '#805018' },
+  'vera-khan':        { fill: '#186858', glow: '#105848' },
+  'sable-ashworth':       { fill: '#683890', glow: '#582880' },
+  'janet-broadside':  { fill: '#907020', glow: '#786010' },
+  'neal-proctor':     { fill: '#983050', glow: '#802840' },
 } as const satisfies Record<CardType, { fill: string; glow: string }>
 
 export function cardAccent(type: CardType): { fill: string; glow: string } {
@@ -151,45 +151,45 @@ const CSS_PROPERTY_MAP = {
   '--slate-glow': PRIMITIVES.slateGlow,
 } as const satisfies Record<string, string>
 
-// Phone surfaces: lighter than board so they're visible in a lit room.
-// Board stays noir (TV in dim room). Phone needs to pop in ambient light.
+// Phone surfaces: lighter than board, same warm teal family.
+// Board = rich/saturated showpiece. Phone = slightly muted for readability.
 const PHONE_OVERRIDES: Record<string, string> = {
-  '--bg-app': '#1a1d30',       // warm navy, not void-black
-  '--bg-card': '#222540',
-  '--bg-elevated': '#2a2d4a',
-  '--bg-hover': '#333658',
-  '--border-subtle': '#3a3d5a',
-  '--bg-primary': '#1a1d30',
-  '--bg-surface': '#222540',
+  '--bg-app': '#223840',       // lighter warm teal
+  '--bg-card': '#2a4248',
+  '--bg-elevated': '#304a52',
+  '--bg-hover': '#38545e',
+  '--border-subtle': '#486068',
+  '--bg-primary': '#223840',
+  '--bg-surface': '#2a4248',
 }
 
-// Light mode: warm parchment "game table in daylight" — not sterile white
+// Light mode: warm parchment — classified document on a desk in warm light
 const LIGHT_PHONE_OVERRIDES: Record<string, string> = {
-  '--bg-app':        '#f5f0e8',   // warm parchment, 93% lightness, no glare
-  '--bg-card':       '#fffdf8',   // near-white cream, cards float above parchment
+  '--bg-app':        '#f5efe0',   // warm parchment, aged paper feel
+  '--bg-card':       '#faf8f0',   // cream card face
   '--bg-elevated':   '#ffffff',   // true white = "lift" for sheets/dialogs
-  '--bg-hover':      '#ede8de',   // touch feedback
-  '--border-subtle': '#d4cfc5',   // warm sand, not cold grey
-  '--bg-primary':    '#f5f0e8',
-  '--bg-surface':    '#fffdf8',
-  '--text-primary':  '#1c1a15',   // warm near-black, 16.2:1 on parchment (AAA)
-  '--text-secondary':'#5c574d',   // 6.2:1 on parchment (AA)
+  '--bg-hover':      '#ece6d8',   // touch feedback
+  '--border-subtle': '#d0c8b8',   // warm sand
+  '--bg-primary':    '#f5efe0',
+  '--bg-surface':    '#faf8f0',
+  '--text-primary':  '#1c1a15',   // warm near-black, AAA on parchment
+  '--text-secondary':'#5c574d',   // AA on parchment
   '--text-disabled': '#9e998f',   // decorative only
-  '--focus-ring':    '#0066cc',   // blue (CVD-safe), 6.8:1 on parchment
-  // Darkened accents for text readability on light
-  '--red':           '#c52b2b',
-  '--red-glow':      '#b02020',
-  '--blue':          '#2563c4',
-  '--blue-glow':     '#1a4fc0',
-  '--teal':          '#0e8a7e',
-  '--teal-glow':     '#0a7a6e',
-  '--amber':         '#b06b10',
-  '--amber-glow':    '#a06000',
-  '--slate':         '#536180',
-  '--slate-glow':    '#3a4a60',
-  '--accent-danger': '#c52b2b',
-  '--accent-success':'#0e8a7e',
-  '--accent-nope':   '#0e8a7e',
+  '--focus-ring':    '#b07010',   // warm amber on light backgrounds
+  // Darkened accents for readability on light
+  '--red':           '#b83020',
+  '--red-glow':      '#a02818',
+  '--blue':          '#2060a0',
+  '--blue-glow':     '#185090',
+  '--teal':          '#1a7868',
+  '--teal-glow':     '#106858',
+  '--amber':         '#a07010',
+  '--amber-glow':    '#886008',
+  '--slate':         '#6a5840',
+  '--slate-glow':    '#584830',
+  '--accent-danger': '#b83020',
+  '--accent-success':'#1a7868',
+  '--accent-nope':   '#1a7868',
 }
 
 // ---------------------------------------------------------------------------

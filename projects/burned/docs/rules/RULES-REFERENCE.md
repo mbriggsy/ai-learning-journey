@@ -24,7 +24,7 @@
 | Draw from the Bottom | Back Channel | `back-channel` |
 | Favor | Intel | `intel` |
 | Nope | Intercepted | `intercepted` |
-| Cat cards | Operatives | `dash`, `vera`, `otto`, `janet`, `neal` |
+| Cat cards | Operatives | `dash-barlowe`, `vera-khan`, `sable-ashworth`, `janet-broadside`, `neal-proctor` |
 | — | Agent X (wild) | `agent-x` |
 
 ---

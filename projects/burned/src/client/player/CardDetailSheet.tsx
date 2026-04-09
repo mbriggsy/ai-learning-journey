@@ -21,7 +21,7 @@ const PLAY_HINTS: Partial<Record<CardType, string>> = {
   'agent-x': 'Wild card. Counts as any operative type for pairs and triples.',
   'dash-barlowe': 'Powerless alone. Play 2 matching operatives to steal a random card. Play 3 to name and steal.',
   'vera-khan': 'Powerless alone. Play 2 matching operatives to steal a random card. Play 3 to name and steal.',
-  'otto-prang': 'Powerless alone. Play 2 matching operatives to steal a random card. Play 3 to name and steal.',
+  'sable-ashworth': 'Powerless alone. Play 2 matching operatives to steal a random card. Play 3 to name and steal.',
   'janet-broadside': 'Powerless alone. Play 2 matching operatives to steal a random card. Play 3 to name and steal.',
   'neal-proctor': 'Powerless alone. Play 2 matching operatives to steal a random card. Play 3 to name and steal.',
   'burned': 'If you draw this, your cover is blown and you\'re out — unless you have an Extraction.',

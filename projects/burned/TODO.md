@@ -26,9 +26,8 @@
 ### After Design
 
 9. Manual testing: real phones, WiFi toggle, screen lock/unlock
-10. Set up GitHub secrets (CLOUDFLARE_API_TOKEN, CLOUDFLARE_ACCOUNT_ID)
-11. First production deploy (wrangler deploy + Cloudflare Pages)
-12. Room.ts test coverage (844 lines, zero tests — biggest risk factor)
+10. First production deploy via PartyKit (same as UMB — secrets already exist, proven pipeline)
+11. Room.ts test coverage (844 lines, zero tests — biggest risk factor)
 
 ## Landmines
 - Phone JS at ~99KB gzipped — but CardIllustration SVG→PNG migration (step 6) will drop to ~90KB

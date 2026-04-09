@@ -293,7 +293,7 @@ const ILLUSTRATION_MAP: Record<CardType, () => React.JSX.Element> = {
   'agent-x': FeralCatArt,
   'dash-barlowe': TacoCatArt,
   'vera-khan': BeardCatArt,
-  'otto-prang': RainbowCatArt,
+  'sable-ashworth': RainbowCatArt,
   'janet-broadside': HairyPotatoCatArt,
   'neal-proctor': CattermelonArt,
 }

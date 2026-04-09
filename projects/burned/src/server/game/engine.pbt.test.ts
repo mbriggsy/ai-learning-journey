@@ -81,7 +81,7 @@ describe('PBT: Card Conservation', () => {
     // Find a playable action card (not operative, not Burned, not Extraction)
     const playable = player.hand.find(c =>
       c.type !== 'burned' && c.type !== 'extraction' &&
-      !['dash-barlowe', 'vera-khan', 'otto-prang', 'janet-broadside', 'neal-proctor', 'agent-x'].includes(c.type)
+      !['dash-barlowe', 'vera-khan', 'sable-ashworth', 'janet-broadside', 'neal-proctor', 'agent-x'].includes(c.type)
     )
     if (!playable) return // No playable card — skip this run
 

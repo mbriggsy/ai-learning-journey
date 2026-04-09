@@ -60,7 +60,7 @@ const ICON_MAP: Record<CardType, () => React.JSX.Element> = {
   'intercepted': CancelX,
   'dash-barlowe': Silhouette,
   'vera-khan': Silhouette,
-  'otto-prang': Silhouette,
+  'sable-ashworth': Silhouette,
   'janet-broadside': Silhouette,
   'neal-proctor': Silhouette,
 }

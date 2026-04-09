@@ -26,7 +26,7 @@ describe('CARD_DEFS', () => {
   })
 
   it('has all 5 operative variants', () => {
-    const operativeTypes = ['dash-barlowe', 'vera-khan', 'otto-prang', 'janet-broadside', 'neal-proctor']
+    const operativeTypes = ['dash-barlowe', 'vera-khan', 'sable-ashworth', 'janet-broadside', 'neal-proctor']
     for (const opType of operativeTypes) {
       const found = CARD_DEFS.find(d => d.type === opType)
       expect(found, `missing operative type: ${opType}`).toBeDefined()
@@ -48,7 +48,7 @@ describe('CARD_DEFS', () => {
     const agentX = CARD_DEFS.find(d => d.type === 'agent-x')
     expect(agentX!.category).toBe('wild')
 
-    const operativeTypes = ['dash-barlowe', 'vera-khan', 'otto-prang', 'janet-broadside', 'neal-proctor']
+    const operativeTypes = ['dash-barlowe', 'vera-khan', 'sable-ashworth', 'janet-broadside', 'neal-proctor']
     for (const opType of operativeTypes) {
       const def = CARD_DEFS.find(d => d.type === opType)
       expect(def!.category, `${opType} should be 'operative'`).toBe('operative')
@@ -83,7 +83,7 @@ describe('CARD_DEFS', () => {
       'agent-x': { paw: 2, nonPaw: 4 },
       'dash-barlowe': { paw: 3, nonPaw: 4 },
       'vera-khan': { paw: 3, nonPaw: 4 },
-      'otto-prang': { paw: 3, nonPaw: 4 },
+      'sable-ashworth': { paw: 3, nonPaw: 4 },
       'janet-broadside': { paw: 3, nonPaw: 4 },
       'neal-proctor': { paw: 3, nonPaw: 4 },
     }

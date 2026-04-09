@@ -27,4 +27,4 @@ Path defaults to the project root. The skill is slash-command only (`disable-mod
 
 ## Eval Results
 
-Evaluated at 100% pass rate across 3 test fixtures (20 assertions, 4 iterations). See `workspace/RESULTS.md` for eval results and iteration history.
+See [workspace/RESULTS.md](workspace/RESULTS.md) for eval results and iteration history.

@@ -1,0 +1,153 @@
+/* Smart action box — single contextual element at bottom of staging.
+   States: draw (red), ready (teal), target (amber), invalid (dashed red), hint (muted). */
+
+.box {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: calc(100% - 16px);
+  min-height: 40px;
+  padding: 8px 16px;
+  margin: 0 auto;
+  border-radius: var(--radius-card, 8px);
+  font-family: var(--font-display);
+  font-size: 14px;
+  font-weight: 600;
+  letter-spacing: 0.03em;
+  text-align: center;
+  cursor: default;
+  touch-action: manipulation;
+  flex: 0 0 auto;
+  margin-top: auto;
+}
+
+/* ─── Invalid / Info state — dashed, muted ─── */
+
+.invalid {
+  border: 2px dashed color-mix(in srgb, var(--red, #d44030) 50%, transparent);
+  background: color-mix(in srgb, var(--red, #d44030) 5%, var(--bg-card, #1f3338));
+  color: color-mix(in srgb, var(--red, #d44030) 70%, var(--text-secondary, #b8a890));
+}
+
+/* ─── Ready state — teal, solid, glow ─── */
+
+.ready {
+  border: 2px solid var(--teal, #2aaa98);
+  background: color-mix(in srgb, var(--teal, #2aaa98) 12%, var(--bg-card, #1f3338));
+  color: var(--teal, #2aaa98);
+  cursor: pointer;
+  box-shadow: 0 0 12px color-mix(in srgb, var(--teal, #2aaa98) 25%, transparent);
+}
+
+.ready:active:not(:disabled) {
+  background: color-mix(in srgb, var(--teal, #2aaa98) 22%, var(--bg-card, #1f3338));
+  box-shadow: 0 0 18px color-mix(in srgb, var(--teal, #2aaa98) 40%, transparent);
+}
+
+.ready:disabled {
+  opacity: 0.35;
+  cursor: default;
+  box-shadow: none;
+}
+
+/* ─── Target state — amber, solid, arrow ─── */
+
+.target {
+  border: 2px solid var(--amber, #d48820);
+  background: color-mix(in srgb, var(--amber, #d48820) 12%, var(--bg-card, #1f3338));
+  color: var(--amber, #d48820);
+  cursor: pointer;
+  box-shadow: 0 0 10px color-mix(in srgb, var(--amber, #d48820) 20%, transparent);
+}
+
+.target:active:not(:disabled) {
+  background: color-mix(in srgb, var(--amber, #d48820) 22%, var(--bg-card, #1f3338));
+  box-shadow: 0 0 16px color-mix(in srgb, var(--amber, #d48820) 35%, transparent);
+}
+
+.target:disabled {
+  opacity: 0.35;
+  cursor: default;
+  box-shadow: none;
+}
+
+/* ─── Draw state — red, breathing glow ─── */
+
+.draw {
+  border: 2px solid var(--red, #d44030);
+  background: color-mix(in srgb, var(--red, #d44030) 10%, var(--bg-card, #1f3338));
+  color: var(--red, #d44030);
+  cursor: pointer;
+  font-weight: 700;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  animation: breathe 3s ease-in-out infinite;
+  box-shadow: 0 0 12px color-mix(in srgb, var(--red, #d44030) 20%, transparent);
+}
+
+.draw:active:not(:disabled) {
+  background: color-mix(in srgb, var(--red, #d44030) 20%, var(--bg-card, #1f3338));
+  box-shadow: 0 0 20px color-mix(in srgb, var(--red, #d44030) 40%, transparent);
+}
+
+.draw:disabled {
+  opacity: 0.35;
+  cursor: default;
+  animation: none;
+  box-shadow: none;
+}
+
+.drawIntense {
+  border-color: var(--red-glow, #ff0000);
+  color: var(--red-glow, #ff0000);
+  animation: breatheIntense 1.5s ease-in-out infinite;
+}
+
+@keyframes breathe {
+  0%, 100% { box-shadow: 0 0 12px color-mix(in srgb, var(--red, #d44030) 20%, transparent); }
+  50% { box-shadow: 0 0 20px color-mix(in srgb, var(--red, #d44030) 35%, transparent); }
+}
+
+@keyframes breatheIntense {
+  0%, 100% { box-shadow: 0 0 24px color-mix(in srgb, var(--red-glow, #ff0000) 40%, transparent); }
+  50% { box-shadow: 0 0 36px color-mix(in srgb, var(--red-glow, #ff0000) 60%, transparent); }
+}
+
+/* ─── Hint state — passive, muted ─── */
+
+.hint {
+  border: 2px dashed color-mix(in srgb, var(--border-subtle, #3a5860) 60%, transparent);
+  background: transparent;
+  color: var(--text-disabled, #6a6050);
+  font-family: var(--font-body);
+  font-size: 13px;
+  font-weight: 500;
+  letter-spacing: 0.02em;
+}
+
+/* ─── Light mode ─── */
+
+[data-theme="light"] .invalid {
+  background: color-mix(in srgb, var(--red, #c52b2b) 5%, var(--bg-card, #faf8f0));
+}
+
+[data-theme="light"] .ready {
+  background: color-mix(in srgb, var(--teal, #1a8a78) 8%, var(--bg-card, #faf8f0));
+  box-shadow: 0 2px 8px color-mix(in srgb, var(--teal, #1a8a78) 15%, rgba(0,0,0,0.1));
+}
+
+[data-theme="light"] .target {
+  background: color-mix(in srgb, var(--amber, #b06b10) 8%, var(--bg-card, #faf8f0));
+  box-shadow: 0 2px 8px color-mix(in srgb, var(--amber, #b06b10) 12%, rgba(0,0,0,0.1));
+}
+
+[data-theme="light"] .draw {
+  background: color-mix(in srgb, var(--red, #c52b2b) 8%, var(--bg-card, #faf8f0));
+  box-shadow: 0 2px 8px color-mix(in srgb, var(--red, #c52b2b) 12%, rgba(0,0,0,0.1));
+}
+
+/* ─── Reduced motion ─── */
+
+@media (prefers-reduced-motion: reduce) {
+  .draw, .drawIntense { animation: none; }
+}

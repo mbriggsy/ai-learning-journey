@@ -14,11 +14,12 @@ import { useWakeLock } from '@client/shared/hooks/useWakeLock'
 import { JoinScreen } from './JoinScreen'
 import { Hand } from './Hand'
 import { StagingArea } from './StagingArea'
-import { NopeButton } from './NopeButton'
+import { InterceptButton } from './InterceptButton'
 import { ErrorToast } from './ErrorToast'
 import { ConnectionOverlay } from './ConnectionOverlay'
 import { EliminatedView } from './EliminatedView'
-import { TurnBanner } from './TurnBanner'
+import { TitleBar } from './TitleBar'
+import { StatusBar } from './StatusBar'
 import { GameOver } from '@client/shared/GameOver'
 const DramaOverlay = lazy(() => import('@client/shared/DramaOverlay').then(m => ({ default: m.DramaOverlay })))
 import { BottomSheet } from '@client/shared/BottomSheet'
@@ -179,14 +180,14 @@ function PhoneRouter({ connectionStatus, assignedColor, onJoin, roomCode }: Phon
 
   return (
     <Fragment key="playing">
-      <PlayingView />
+      <PlayingView roomCode={roomCode} />
     </Fragment>
   )
 }
 
 // --- Playing View ---
 
-function PlayingView() {
+function PlayingView({ roomCode }: { roomCode: string }) {
   // ALL hooks must be called before any conditional returns (Rules of Hooks)
   const hand = useHand()
   const isMyTurn = useIsMyTurn()
@@ -329,36 +330,38 @@ function PlayingView() {
 
   return (
     <div className={playingStyles.container}>
-      <TurnBanner isMyTurn={isMyTurn} currentPlayerName={currentPlayerName} />
+      <TitleBar roomCode={roomCode} />
+      <StatusBar isMyTurn={isMyTurn} currentPlayerName={currentPlayerName} drawPileCount={drawPileCount} />
 
-      {/* Staging area — compose your play */}
-      <div className={playingStyles.stagingSection}>
-        <div className={playingStyles.sectionLabel}>Staging</div>
-        <StagingArea
-          hand={hand}
-          cardPlayState={cardPlayState}
-          isMyTurn={isMyTurn}
-          subPhase={subPhase}
-          drawPileCount={drawPileCount}
-          currentPlayerName={currentPlayerName}
-          disabled={!permission.allowed}
-          optimisticPending={optimisticPending}
-          onUnstageCard={toggleCard}
-          onConfirm={handleConfirm}
-          onConfirmWithTarget={handleConfirmWithTarget}
-          onCardLongPress={handleCardLongPress}
-        />
-      </div>
+      <div className={playingStyles.workbench}>
+        {/* Staging area — compose your play */}
+        <div className={playingStyles.stagingSection}>
+          <div className={playingStyles.sectionLabel}>Staging</div>
+          <StagingArea
+            hand={hand}
+            cardPlayState={cardPlayState}
+            isMyTurn={isMyTurn}
+            subPhase={subPhase}
+            drawPileCount={drawPileCount}
+            disabled={!permission.allowed}
+            optimisticPending={optimisticPending}
+            onUnstageCard={toggleCard}
+            onConfirm={handleConfirm}
+            onConfirmWithTarget={handleConfirmWithTarget}
+            onCardLongPress={handleCardLongPress}
+          />
+        </div>
 
-      {/* Hand — large scrollable cards */}
-      <div className={playingStyles.handSection}>
-        <div className={playingStyles.sectionLabel}>Hand</div>
-        <Hand
-          hand={displayHand}
-          disabled={!permission.allowed || optimisticPending}
-          onStageCard={toggleCard}
-          onCardLongPress={handleCardLongPress}
-        />
+        {/* Hand — large scrollable cards */}
+        <div className={playingStyles.handSection} data-disabled={(!permission.allowed || optimisticPending) || undefined}>
+          <div className={playingStyles.sectionLabel}>Hand ({hand.length})</div>
+          <Hand
+            hand={displayHand}
+            disabled={!permission.allowed || optimisticPending}
+            onStageCard={toggleCard}
+            onCardLongPress={handleCardLongPress}
+          />
+        </div>
       </div>
 
       {/* Local target select (pre-send: Favor, Targeted Attack) */}
@@ -429,7 +432,7 @@ function PlayingView() {
         {detailCardType && <CardDetailSheet cardType={detailCardType} />}
       </BottomSheet>
 
-      <NopeButton />
+      <InterceptButton />
       <Suspense><DramaOverlay /></Suspense>
     </div>
   )

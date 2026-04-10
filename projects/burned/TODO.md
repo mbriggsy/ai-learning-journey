@@ -3,45 +3,34 @@
 ## Current State
 - **167/167 tests, 0 lint errors, typecheck clean**
 - **Game is functional** — staging, hand, board, all card types, nope chains, elimination all working
-- Phone bundle: ~99KB gzipped (1KB headroom)
+- **Visual layer is FRAGILE** — see `docs/VISUAL-LAYER-AUTOPSY.md` for full analysis
+
+## New components from 2026-04-09 (functionally correct, CSS needs token rebuild)
+- TitleBar — connection dot + player name + room code
+- StatusBar — replaces TurnBanner, "YOUR TURN" / "Waiting for X — N in pile"
+- SmartActionBox — single contextual element: draw, hint, ready, target, invalid states
+- InterceptButton — replaces NopeButton, "INTERCEPT" not "NOPE"
+- Combo validation: single Intercepted blocked, mismatch message prioritized over per-card exclusions
+- Action text: all turn-enders prefixed with "End turn —" consistently
 
 ## Next Steps (in order)
 
-### 1. Phone layout redesign — title bar, status bar, smart action box
-Sketch approved (see `temp/phone-sketch-v4.png` for reference). Four-zone layout:
+### 1. CSS Token Foundation Rebuild
+The visual layer has no design system. See `docs/VISUAL-LAYER-AUTOPSY.md` for the full autopsy. Fix:
 
-**Title bar** (fixed ~28px): Player name + room code + connection dot.
-**Status bar** (fixed ~32px): Replaces TurnBanner. Shows "YOUR TURN", "Waiting for X — N in pile", drama events ("Extraction!").
-**Staging box** (flex ~42%): Bordered section with header. Cards + smart action box.
-**Hand box** (flex ~58%): Bordered section with header. Height-driven cards.
+1. **Add spacing + typography token scales to `theme.css`** using `clamp()` with `svh` (height is the constraining axis for a portrait controller)
+2. **Unify card sizing** — ONE system (height-driven everywhere), kill the width-driven staging approach
+3. **Replace rigid flex ratios** (42/58) with content-aware sizing (`auto` + `max-height: svh`)
+4. **Migrate all component CSS** to use tokens instead of hardcoded px
+5. **Remove all layout hacks** — no `max-width` on container, no `min(100svh, 900px)` height clamp
+6. **Test on phone, iPad landscape, desktop** — must work at all three without breakpoint patches
 
-**Smart action box** replaces Play button + invalid combo message. Single contextual element:
-- **Info state** (dashed, muted): "Needs a pair or triple", "Cards must match"
-- **Ready state** (teal, solid, glow): "End your turn without drawing", "Peek at the top 3 cards"
-- **Target state** (amber, solid, arrow): "Steal a random card →", "Force someone to draw →"
-
-Action descriptions needed per card type:
-- `go-dark` → "End your turn without drawing"
-- `intel-briefing` → "Peek at the top 3 cards"
-- `reassign` → "Choose ANY card from discard"
-- `scramble` → "Shuffle the draw pile"
-- `direct-order` → "Force someone to draw →" (target)
-- `call-in-a-favor` → "Take a card from someone →" (target)
-- `intercept` → "Block the current action"
-- Pair → "Steal a random card →" (target)
-- Triple → "Name & steal a specific card →" (target)
-
-Box edges 2px from device edge. 6px gap between staging and hand boxes.
-
-### 2. Scroll bounce — hand not working on laptop
-Staging bounce works, hand bounce doesn't. `useScrollBounce` hook is wired to both. Needs real device testing to determine if it's a DevTools emulation issue or a real bug. Tolerance already set to 2px.
-
-### 3. Deploy to Cloudflare
+### 2. Deploy to Cloudflare
 - Client: Cloudflare Pages
 - Server: Cloudflare Workers (Durable Objects)
 - $0 free tier
 
-### 4. Real device testing
+### 3. Real device testing
 - Test on actual phones (not just DevTools)
 - Test on multiple screen sizes
 - Party WiFi conditions
@@ -54,3 +43,4 @@ Staging bounce works, hand bounce doesn't. `useScrollBounce` hook is wired to bo
 - Framer Motion `layoutId` on staged cards causes border flash when siblings exit — removed. `transition: none` on `[data-selected]` prevents remaining flicker.
 - `game_over` phase still uses snake_case while all other phases use kebab-case
 - NopeWindow stores full GameAction in persisted state — no versioning for hibernated payloads
+- **CSS Modules without tokens = organized chaos.** Each module makes independent sizing decisions. UMB worked because every dimension flows from shared clamp() tokens. See `docs/VISUAL-LAYER-AUTOPSY.md`.

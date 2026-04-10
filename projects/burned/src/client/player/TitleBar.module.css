@@ -1,0 +1,85 @@
+/* Title bar — fixed height, player name + room code */
+
+.titleBar {
+  flex: 0 0 auto;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 4px 10px;
+  background: var(--bg-elevated, #243c42);
+  border-bottom: 1px solid var(--border-subtle, #3a5860);
+  min-height: 28px;
+}
+
+.left {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  min-width: 0;
+}
+
+/* ─── Connection dot ─── */
+
+.dot {
+  flex: 0 0 auto;
+  width: 7px;
+  height: 7px;
+  border-radius: 50%;
+}
+
+.dotConnected {
+  background: #30c060;
+  box-shadow: 0 0 4px #30c06080;
+}
+
+.dotConnecting {
+  background: var(--amber, #d48820);
+  animation: blink 1.2s ease-in-out infinite;
+}
+
+.dotDisconnected {
+  background: var(--red, #d44030);
+}
+
+@keyframes blink {
+  0%, 100% { opacity: 1; }
+  50% { opacity: 0.3; }
+}
+
+/* ─── Name ─── */
+
+.name {
+  font-family: var(--font-display);
+  font-size: 12px;
+  font-weight: 700;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+  color: var(--text-primary, #f5f0e0);
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+/* ─── Room code ─── */
+
+.code {
+  flex: 0 0 auto;
+  font-family: var(--font-mono);
+  font-size: 11px;
+  font-weight: 600;
+  color: var(--text-secondary, #b8a890);
+  letter-spacing: 0.04em;
+}
+
+/* ─── Light mode ─── */
+
+[data-theme="light"] .titleBar {
+  background: color-mix(in srgb, var(--bg-elevated, #e8e0d0) 70%, var(--bg-primary, #f5f0e8));
+  border-bottom-color: color-mix(in srgb, var(--border-subtle, #d4cfc5) 60%, transparent);
+}
+
+/* ─── Reduced motion ─── */
+
+@media (prefers-reduced-motion: reduce) {
+  .dotConnecting { animation: none; }
+}

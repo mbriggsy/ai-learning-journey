@@ -1,20 +1,65 @@
-/* Split-screen workbench.
-   Staging: 50%. Hand: 50%. Labeled sections.
-   Cards are height-driven — slot aspect-ratio derives width from stretched height. */
+/* Responsive player layout.
+   Phone: vertical stack — title → status → staging (42%) → hand (58%).
+   Wide: title + status span top, staging + hand side-by-side. */
 
 .container {
   background: var(--bg-primary);
   display: flex;
   flex-direction: column;
-  height: 100svh;
+  height: min(100svh, 900px);
+  overflow: hidden;
+  max-width: 600px;
+  margin-inline: auto;
+}
+
+/* ─── Workbench — holds staging + hand, flips direction at breakpoint ─── */
+
+.workbench {
+  display: flex;
+  flex-direction: column;
+  flex: 1 1 0;
+  min-height: 0;
+  gap: 6px;
+  padding: 6px 2px 2px;
+}
+
+/* ─── Bordered section boxes ─── */
+
+.stagingSection,
+.handSection {
+  min-height: 0;
+  display: flex;
+  flex-direction: column;
+  border: 1px solid var(--border-subtle, #3a5860);
+  border-radius: 6px;
   overflow: hidden;
 }
 
-/* ─── Section label — thin bar at top of each zone ─── */
+.stagingSection {
+  flex: 42 1 0;
+}
+
+.handSection {
+  flex: 58 1 0;
+  position: relative;
+}
+
+/* Disabled haze — covers entire hand section including scrolled-off cards */
+.handSection[data-disabled]::after {
+  content: '';
+  position: absolute;
+  inset: 0;
+  background: color-mix(in srgb, var(--bg-primary, #1a2a2e) 50%, transparent);
+  pointer-events: none;
+  z-index: 1;
+  border-radius: 6px;
+}
+
+/* ─── Section label — inset header on bordered box ─── */
 
 .sectionLabel {
   flex: 0 0 auto;
-  padding: 1px 12px;
+  padding: 2px 10px;
   font-family: var(--font-display);
   font-size: 10px;
   font-weight: 700;
@@ -23,28 +68,23 @@
   color: var(--text-secondary, #b8a890);
   border-bottom: 1px solid var(--border-subtle, #3a5860);
   background: color-mix(in srgb, var(--bg-elevated, #243c42) 50%, var(--bg-primary, #1a2a2e));
+  position: relative;
+  z-index: 2;
 }
 
-/* ─── Staging area — 50% ─── */
+/* ═══════════════════════════════════════════════
+   Wide viewport — side-by-side layout
+   ═══════════════════════════════════════════════ */
 
-.stagingSection {
-  flex: 50 1 0;
-  min-height: 0;
-  overflow: hidden;
-  display: flex;
-  flex-direction: column;
+
+/* ═══════════════════════════════════════════════
+   Light mode
+   ═══════════════════════════════════════════════ */
+
+[data-theme="light"] .stagingSection,
+[data-theme="light"] .handSection {
+  border-color: color-mix(in srgb, var(--border-subtle, #d4cfc5) 60%, transparent);
 }
-
-/* ─── Hand — 50% ─── */
-
-.handSection {
-  flex: 50 1 0;
-  min-height: 0;
-  display: flex;
-  flex-direction: column;
-}
-
-/* ─── Light mode ─── */
 
 [data-theme="light"] .sectionLabel {
   color: var(--text-disabled, #8a8070);

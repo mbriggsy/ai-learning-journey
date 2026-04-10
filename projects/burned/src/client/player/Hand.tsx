@@ -113,7 +113,6 @@ export function Hand({ hand, disabled, onStageCard, onCardLongPress }: HandProps
             >
               <MinimalCard
                 type={card.type}
-                disabled={disabled}
                 layoutId={card.id}
               />
             </m.div>

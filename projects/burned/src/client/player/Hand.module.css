@@ -22,6 +22,7 @@
   display: none;
 }
 
+
 /* Height-driven cards — slot stretches to fill hand, width from aspect-ratio */
 .cardSlot {
   flex: 0 0 auto;
@@ -30,6 +31,7 @@
   scroll-snap-align: start;
   touch-action: pan-x;
 }
+
 
 /* Enlarge overlay — full-screen card preview */
 .enlargeBackdrop {

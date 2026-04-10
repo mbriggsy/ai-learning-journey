@@ -5,7 +5,7 @@ import type { CardCategory } from './card-defs'
 const COMBO_EXCLUDED: Set<CardCategory> = new Set(['burned', 'extraction'])
 
 export type ComboValidation =
-  | { valid: false; reason: 'mismatched-types' | 'invalid-count' | 'contains-extraction' | 'contains-burned' | 'wild-with-non-operative' | 'single-operative' }
+  | { valid: false; reason: 'mismatched-types' | 'invalid-count' | 'contains-extraction' | 'contains-burned' | 'wild-with-non-operative' | 'single-operative' | 'single-intercepted' }
   | { valid: true; playType: PlayType }
 
 export type PlayType =
@@ -29,20 +29,22 @@ export function validateCombo(
     return { valid: false, reason: 'invalid-count' }
   }
 
-  // Check for excluded categories
-  for (const card of selectedCards) {
-    const def = CARD_DEF_BY_TYPE[card.type]
-    if (def.category === 'burned') return { valid: false, reason: 'contains-burned' }
-    if (def.category === 'extraction') return { valid: false, reason: 'contains-extraction' }
-  }
-
   if (selectedCards.length === 1) {
     const card = selectedCards[0]!
     const def = CARD_DEF_BY_TYPE[card.type]
 
+    // Excluded categories can't be played
+    if (def.category === 'burned') return { valid: false, reason: 'contains-burned' }
+    if (def.category === 'extraction') return { valid: false, reason: 'contains-extraction' }
+
     // Operative/wild cards can't be played alone
     if (def.category === 'operative' || def.category === 'wild') {
       return { valid: false, reason: 'single-operative' }
+    }
+
+    // Intercepted is instant/interrupt only — played reactively via Intercept button
+    if (card.type === 'intercepted') {
+      return { valid: false, reason: 'single-intercepted' }
     }
 
     return {
@@ -55,7 +57,7 @@ export function validateCombo(
     }
   }
 
-  // 2 or 3 card combos
+  // 2 or 3 card combos — check match first so "Cards must match" wins over per-card exclusions
   if (!isValidComboMatch(selectedCards)) {
     return { valid: false, reason: 'mismatched-types' }
   }

@@ -1,0 +1,49 @@
+/* Status bar — compact turn indicator, replaces TurnBanner */
+
+.base {
+  flex: 0 0 auto;
+  min-height: 32px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 4px 12px;
+  font-family: var(--font-display);
+  font-size: 13px;
+  font-weight: 700;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  text-align: center;
+}
+
+.yourTurn {
+  composes: base;
+  background: color-mix(in srgb, var(--amber, #d48820) 18%, var(--bg-primary, #1a2a2e));
+  color: var(--amber, #d48820);
+  border-bottom: 1px solid color-mix(in srgb, var(--amber, #d48820) 30%, transparent);
+}
+
+.waiting {
+  composes: base;
+  background: var(--bg-primary, #1a2a2e);
+  color: var(--text-secondary, #b8a890);
+  font-weight: 600;
+  font-size: 12px;
+  letter-spacing: 0.04em;
+  text-transform: none;
+  border-bottom: 1px solid var(--border-subtle, #3a5860);
+}
+
+.pileInfo {
+  font-family: var(--font-mono);
+  font-variant-numeric: tabular-nums;
+  font-size: 11px;
+  font-weight: 500;
+  color: var(--text-disabled, #6a6050);
+}
+
+/* ─── Light mode ─── */
+
+[data-theme="light"] .yourTurn {
+  background: color-mix(in srgb, var(--amber, #b06b10) 12%, var(--bg-primary, #f5f0e8));
+  border-bottom-color: color-mix(in srgb, var(--amber, #b06b10) 25%, transparent);
+}

@@ -11,7 +11,7 @@ A spy-comedy card game — rethemed from [Exploding Kittens Party Pack](https://
 - **2-10 players**, full deck (120 cards, all card types)
 - **Shared screen** shows draw pile, discard pile, player ring, and all the drama
 - **Phone controllers** show your hand, let you play cards, and keep your moves secret
-- **Mid-century modern visual direction** — Saul Bass meets spy title sequences, bold/saturated/geometric, CVD-safe palette
+- **Archer visual language** — literal show vocabulary: bold line illustration, flat color fills, warm teal/orange/cream palette, CVD-safe. Every screen answers "could this be a frame from an Archer episode?"
 - **Smart Intercept timing** — tension scales as players are eliminated (3s/5s/7s windows)
 
 ## Tech Stack

@@ -3,7 +3,7 @@
 These are the expected baseline scores after the art direction overhaul:
 - Warm teal-charcoal palette (was noir purple-black)
 - Imagen 4 illustrations on all 17 card types (was monochrome SVG sketches)
-- Mid-century modern visual identity (Saul Bass, spy title sequences)
+- Archer visual language — literal show vocabulary (bold line illustration, flat color fills, warm teal/orange/cream)
 
 The evaluator should use these to anchor scoring. Be honest — new art doesn't fix layout problems.
 

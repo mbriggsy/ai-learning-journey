@@ -22,7 +22,7 @@ UMB's Phase 4 plan contained this explicit quality mandate:
 
 This wasn't aspirational. It was a **design requirement** embedded in the plan before a line of CSS was written. Every subsequent decision — the noir palette, glassmorphism tokens, responsive clamp() scales, animation timing hooks — traced back to this statement.
 
-BURNED has creative direction ("mid-century modern, Saul Bass meets spy title sequences") but never had an equivalent **visual architecture requirement**. The theme was defined. The CSS strategy was not.
+BURNED has creative direction ("Archer visual language — literal show vocabulary") but never had an equivalent **visual architecture requirement**. The theme was defined. The CSS strategy was not.
 
 ### The Design System Was in the Plan
 
@@ -179,7 +179,7 @@ That contract survived every context window reset. Every new session loaded the 
 
 ### What Happened in BURNED (and H&S, and DND)
 
-The same vibes happened. Briggsy said "water beads." Briggsy said "wow over simplicity." Briggsy said "mid-century modern, Saul Bass meets spy title sequences." These are exactly the kind of statements that became UMB's spec. But in BURNED, they went into:
+The same vibes happened. Briggsy said "water beads." Briggsy said "wow over simplicity." Briggsy said "Archer-tone spy comedy." These are exactly the kind of statements that became UMB's spec. But in BURNED, they went into:
 
 - **Memory files** — `feedback-water-beads-polish.md`, `feedback-wow-over-simplicity.md`
 - **CLAUDE.md rules** — "The goal is PERFECT"

@@ -9,7 +9,7 @@
 >
 > **Primary audience: Claude.** Humans read the README. Every future Claude session loads this file into context as the contract. That changes how it's written — no fluff, acceptance tests instead of aspirations, direct imperatives instead of suggestions. Humans can still read it; good technical writing is good regardless of audience, but we optimize for the primary reader.
 >
-> **Authoring history:** written in the session `burned-product-specification-convo` on 2026-04-10, one section at a time, after a visual-layer autopsy revealed BURNED never had a product specification and three visual failures in a row traced back to that missing artifact. See `docs/VISUAL-LAYER-AUTOPSY.md` for the post-mortem.
+> **Authoring history:** written in the session `burned-product-specification-convo` on 2026-04-10, one section at a time, after a visual-layer autopsy revealed BURNED never had a product specification and three visual failures in a row traced back to that missing artifact. See `docs/post-mortems/VISUAL-LAYER-AUTOPSY.md` for the post-mortem.
 
 ---
 
@@ -104,7 +104,7 @@ BURNED has two distinct form factors. Each has its own scaling constraints. Thes
 
 Every `clamp()` formula, token scale, spacing step, and typography size derives from the constraining axis. UMB's Phase 4 (host/table view) plan used formulas like `clamp(0.5rem, 0.3rem + 0.5vw, 1rem)` because the host is landscape and scales with width. **BURNED's player view must use `svh` instead**: `clamp(0.5rem, 0.3rem + 0.5svh, 1rem)` — same structure, correct axis.
 
-This is the #1 lesson from `docs/VISUAL-LAYER-AUTOPSY.md`: the current player view uses `42vw` for card sizing, which tracks the wrong axis and is the root cause of the visual fragility. The CSS Foundation Rebuild Plan fixes this by deriving everything from `svh`.
+This is the #1 lesson from `docs/post-mortems/VISUAL-LAYER-AUTOPSY.md`: the current player view uses `42vw` for card sizing, which tracks the wrong axis and is the root cause of the visual fragility. The CSS Foundation Rebuild Plan fixes this by deriving everything from `svh`.
 
 **Do not mix axes.** Player view tokens scale against height. Board view tokens scale against width. Any cross-view shared token (colors, card aspect ratio, font family) must be axis-independent.
 
@@ -398,7 +398,7 @@ These are code-level leftovers that don't appear in the UI but create cognitive 
 
 **Decision (user-facing):** Every dimension, color, spacing step, typography choice, and animation timing in BURNED traces to a shared, documented token. A card in the hand view and a card in a bottom sheet are the same size *because they consume the same token value,* not because two CSS files happened to independently arrive at the same pixel number. A button's corner radius is the same across every surface. A heading's font size is the same wherever that heading role appears.
 
-**Why this is a product decision:** Visual inconsistency is the #1 tell that a product was built by one person in spare time rather than by a team with a design system. A user can't tell you *why* a hobbyist app looks "off" — they just feel it. It's the rogue 14px next to the 16px, the extra 2px of padding on one button, the slightly-different card corner radius on one screen. **This inconsistency is what the §2.2 Archer test fails against.** An Archer episode has production-level discipline — every frame's typography, color, and spacing is coordinated. BURNED's current state (per `docs/VISUAL-LAYER-AUTOPSY.md`) is "organized chaos" — each CSS Module makes independent sizing decisions, and the cumulative effect reads as amateur.
+**Why this is a product decision:** Visual inconsistency is the #1 tell that a product was built by one person in spare time rather than by a team with a design system. A user can't tell you *why* a hobbyist app looks "off" — they just feel it. It's the rogue 14px next to the 16px, the extra 2px of padding on one button, the slightly-different card corner radius on one screen. **This inconsistency is what the §2.2 Archer test fails against.** An Archer episode has production-level discipline — every frame's typography, color, and spacing is coordinated. BURNED's current state (per `docs/post-mortems/VISUAL-LAYER-AUTOPSY.md`) is "organized chaos" — each CSS Module makes independent sizing decisions, and the cumulative effect reads as amateur.
 
 **User-facing acceptance condition:** When the first-time player test (§8.7) is run, consistency must be *invisible* — the player should never notice a visual discontinuity between screens, cards, or buttons. If they can't articulate what's wrong but the experience feels "off," consistency has failed.
 
@@ -554,16 +554,3 @@ These are code-level leftovers that don't appear in the UI but create cognitive 
 **Fail condition:** They say *"cool, you built this?"* with polite "hobbyist project" energy.
 
 **If we fail this test, we fix the visuals and retest. No exceptions. This is the final quality gate.**
-
----
-
-## §9 — What comes after this spec locks
-
-The spec does not generate code. It generates the *next artifact*, which is where code generation begins. When this document is locked (now), three things happen next:
-
-1. **CSS Foundation Rebuild Plan** — a new phase plan generated in a fresh session, against this spec. It will derive token shapes, `clamp()` formulas, scaling strategy, animation language, and migration steps from §2 (Quality Bar), §3 (Visual Reference), §3.4 (Form Factors), §6 (Screens), ADR-04 (animation), and ADR-05 (visual consistency). Plan-generation agents read the spec and pick up the quality bar phrase the same way UMB's Phase 4/5 plans picked up *"indistinguishable from a polished commercial party game."* This is the transitive enforcement pattern.
-2. **Retheme execution** — Tier 1 and Tier 2 gaps from §6.4 get fixed in a single coordinated pass. No ad-hoc patches.
-3. **CLAUDE.md update** — add a reference to this document as the canonical contract, and generalize the "types derived from data" convention (previously draft ADR-10, moved here because it has no user-facing outcome).
-
-These are tracked as work items, not as spec-owned acceptance criteria — the spec describes the product, not the process of building it. Progress against §8 Acceptance Criteria is the measure of whether the spec has been honored.
-

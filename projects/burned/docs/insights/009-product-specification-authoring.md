@@ -2,7 +2,7 @@
 title: Authoring BURNED's product specification — lessons from a 1M-token session
 date: 2026-04-10
 phase: spec-authoring
-modules: [docs/specifications/PRODUCT-SPECIFICATION.md, docs/VISUAL-LAYER-AUTOPSY.md, src/client/]
+modules: [docs/specifications/PRODUCT-SPECIFICATION.md, docs/post-mortems/VISUAL-LAYER-AUTOPSY.md, src/client/]
 tags: [process, spec, debate, architecture, retheme, authoring, pattern-learning]
 ---
 
@@ -64,7 +64,7 @@ Second hallucination caught in the same session: the footer line *"Built with Ma
 - **Phone controller = portrait = constraining axis is HEIGHT = primary unit is `svh`**
 - **Board view = landscape = constraining axis is WIDTH = primary unit is `vw`**
 
-The current player view uses `42vw` for card sizing — wrong axis. This is the root cause of the visual fragility documented in `docs/VISUAL-LAYER-AUTOPSY.md`. The CSS Foundation Rebuild Plan must derive every phone dimension from `svh`.
+The current player view uses `42vw` for card sizing — wrong axis. This is the root cause of the visual fragility documented in `docs/post-mortems/VISUAL-LAYER-AUTOPSY.md`. The CSS Foundation Rebuild Plan must derive every phone dimension from `svh`.
 
 ### 6. Debate produces better designs than fast agreement
 
@@ -94,7 +94,7 @@ The spec describes the product. Next steps in order:
 ## References
 
 - `docs/specifications/PRODUCT-SPECIFICATION.md` — the v1.0 contract
-- `docs/VISUAL-LAYER-AUTOPSY.md` — the post-mortem that triggered this session
+- `docs/post-mortems/VISUAL-LAYER-AUTOPSY.md` — the post-mortem that triggered this session
 - `feedback-vibes-are-not-specs.md` in memory — universal lesson: specs are the contract
 - `feedback-transitive-contract-pattern.md` in memory — universal lesson: spec → plan → code → self-documenting
 - `feedback-hallucinated-references.md` in memory — universal lesson: never copy specific claims from templates

@@ -13,7 +13,7 @@ See **`docs/specifications/PRODUCT-SPECIFICATION.md`**. That document is the non
 
 **When any memory file, brainstorm doc, ideation doc, or other historical source contradicts `docs/specifications/PRODUCT-SPECIFICATION.md`, the product specification wins.**
 
-The spec does not generate code. It generates the *next artifact* — the CSS Foundation Rebuild Plan — which is where code generation begins. See §9 of the spec for what comes next.
+The spec does not generate code. It generates the *next artifact* — the CSS Foundation Rebuild Plan — which is where code generation begins. See `TODO.md` for the prioritized work queue.
 
 ## Commands
 

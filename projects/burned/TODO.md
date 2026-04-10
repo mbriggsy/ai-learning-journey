@@ -4,7 +4,7 @@
 - **PRODUCT-SPECIFICATION.md v1.0 LOCKED** — `docs/specifications/PRODUCT-SPECIFICATION.md` (2026-04-10). Spec itself is frozen; only §8 Acceptance Criteria checkboxes get updated as work lands.
 - **167/167 tests, typecheck clean** (as of 2026-04-09; re-verify with `pnpm test` + `pnpm typecheck`).
 - **Game is functional** — staging, hand, board, all card types, nope chains, elimination all working.
-- **Visual layer is FRAGILE** — see `docs/VISUAL-LAYER-AUTOPSY.md`. Rebuild is gated on the **CSS Foundation Rebuild Plan** (not yet generated).
+- **Visual layer is FRAGILE** — see `docs/post-mortems/VISUAL-LAYER-AUTOPSY.md`. Rebuild is gated on the **CSS Foundation Rebuild Plan** (not yet generated).
 - **CLAUDE.md has "The Contract" section** pointing at the spec. Key sections Claude should know by heart: §2 Quality Bar, §3 Visual Reference, §3.4 Form Factors, §7 ADRs, §8 Acceptance Criteria.
 
 ## Next Steps (in priority order)
@@ -64,7 +64,7 @@ A friend who has never seen BURNED plays a full game. **Pass condition:** they s
 - **Framer Motion `layoutId` on staged cards causes border flash** when siblings exit — removed. `transition: none` on `[data-selected]` prevents remaining flicker.
 - **`game_over` phase still uses snake_case** while all other phases use kebab-case.
 - **NopeWindow stores full GameAction in persisted state** — no versioning for hibernated payloads.
-- **CSS Modules without tokens = organized chaos.** Each module makes independent sizing decisions. UMB worked because every dimension flows from shared clamp() tokens. See `docs/VISUAL-LAYER-AUTOPSY.md`.
+- **CSS Modules without tokens = organized chaos.** Each module makes independent sizing decisions. UMB worked because every dimension flows from shared clamp() tokens. See `docs/post-mortems/VISUAL-LAYER-AUTOPSY.md`.
 - **Internal state machine uses "defuse" terminology (NOT a gap)** — see §6.4 Tier 3 in spec. Intentionally left alone. Do NOT rename.
 - **Cloudflare `wrangler` not yet authenticated** — will block step 5 deploy until resolved.
 - **PRODUCT-SPECIFICATION.md v1.0 is LOCKED** — spec is frozen. Only §8 acceptance criteria checkboxes get updated. Don't edit §1-§7 without a product-level reason.

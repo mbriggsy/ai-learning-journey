@@ -7,3 +7,11 @@ coverage/
 *.local
 .env*
 !.env.example
+
+# Dreamland S8 reference frames — fair-use internal research only.
+# Fan-uploaded FX/FXX captures sourced from Archer Wiki (Fandom). Allowed:
+# internal palette extraction + art-direction reference. NOT allowed: public
+# distribution (which includes this public GitHub repo). The README.md at
+# the directory root stays in git (URLs + attribution + fair-use posture);
+# only the image files are excluded.
+docs/plans/css-foundation-rebuild/dreamland-reference/images/

@@ -2,7 +2,7 @@
 
 ## Current State
 - **PRODUCT-SPECIFICATION.md v1.0 LOCKED** — `docs/specifications/PRODUCT-SPECIFICATION.md` (2026-04-10). Spec itself is frozen; only §8 Acceptance Criteria checkboxes get updated as work lands.
-- **167/167 tests, typecheck clean** (as of 2026-04-09; re-verify with `pnpm test` + `pnpm typecheck`).
+- **167/167 tests, typecheck clean** (tests as of 2026-04-09; typecheck re-verified 2026-04-11).
 - **Game is functional** — staging, hand, board, all card types, nope chains, elimination all working.
 - **Visual layer is FRAGILE** — see `docs/post-mortems/VISUAL-LAYER-AUTOPSY.md`. Rebuild is gated on the **CSS Foundation Rebuild Plan** (not yet generated).
 - **CLAUDE.md has "The Contract" section** pointing at the spec. Key sections Claude should know by heart: §2 Quality Bar, §3 Visual Reference, §3.4 Form Factors, §7 ADRs, §8 Acceptance Criteria.
@@ -19,6 +19,10 @@ The plan must be derived from `docs/specifications/PRODUCT-SPECIFICATION.md`:
 - ADR-05 (visual consistency via shared token system)
 
 **How:** Fresh Claude Code session. Load the spec. Run `/ce:ce-plan` or equivalent planner. Output should be `docs/plans/2026-04-XX-css-foundation-rebuild-plan.md` with token scales, clamp formulas, animation language, migration steps.
+
+**Pre-invocation override for `/ce:plan`:** At invocation time, explicitly tell the skill: *"origin document is `docs/specifications/PRODUCT-SPECIFICATION.md` (locked v1.0) — skip brainstorm ingestion, all brainstorms are superseded."* SUPERSEDED banners were added to `docs/brainstorms/*.md` and `docs/ideation/*.md` on 2026-04-10, so the skill will hit the notice before ingesting. The explicit override is belt-and-suspenders.
+
+**Decision framework for whether to use `/ce:plan` on this specific task:** See `docs/workflow/ce-plan-skill-analysis.md` — this task hits 5/6 reach-for criteria (foundational, non-obvious blast radius, handoff-to-fresh-session, gap-finder valuable, NEVER CODE gate desired) and 0/4 skip criteria. Framework verdict: unambiguous yes.
 
 **The plan generator should pick up the Archer quality bar the same way UMB's phase 4/5 plans picked up "indistinguishable from a polished commercial party game"** — transitive enforcement. Evidence in `feedback-transitive-contract-pattern.md` in Claude's memory.
 

@@ -2,6 +2,31 @@
 
 Patterns proven to produce great results. Each entry: what it is, when to use it, how to run it, and why it matters.
 
+## Expert-Pilot Partnership
+
+**What:** In every project I do with Claude, I'm the pilot-in-command for vision and quality but Claude is the technical expert for execution. I deliberately pick stacks I don't know how to execute in — which means I can't audit Claude's technical decisions on merit. Pushback from Claude isn't optional politeness; it's the only technical error-correction mechanism in the system.
+
+**When:** Always. Every Claude collaboration runs under this model. I pick the project specifically BECAUSE I don't know the stack — that's the point of the collab.
+
+**How:**
+
+- **I own WHAT and WHY.** Vision, quality bar, tone, product direction, acceptance tests, when something feels off. I set the destination and I call whether we got there.
+- **Claude owns HOW.** Architecture, libraries, state management, type design, build config, migration order, performance tradeoffs, API shape. Claude is the senior engineer I'm hiring for this project.
+- **Vibes get translated into discipline, out loud.** When I say *"water beads"* or *"smooth,"* Claude translates it into concrete technical discipline (60fps on mid-tier Android, clamp formulas, bundle budget) and explains the tradeoffs. I catch vibe misses. Claude catches discipline misses. Neither of us can do the other's job.
+- **If I suggest a technical approach and Claude knows a better one, Claude says so — without hedging.** "Pushback — one concern" framing. I want genuine opinions with reasoning, not polite alignment. Fast agreement from Claude is the failure mode, not the success mode.
+- **Claude flips positions on evidence, never pressure.** If Claude agrees after I push once with no new evidence, that's fast-agreement in disguise. Push back again.
+- **Honest uncertainty is the rule.** When Claude genuinely doesn't know, Claude says so plainly. No bluffing. My confidence signals only work if Claude's are calibrated — one bluffed answer poisons the well for every real *"I'm sure"* after.
+
+**Why it matters:** This is the structural reality of all my Claude projects, not a preference. In a normal AI/user setup, the user is the domain expert and catches hallucinations on the way through. Here that dynamic is **inverted** — Claude is the only one in the system who knows the plane. If Claude defers to me on technical calls out of habit or politeness, nothing catches the mistakes until production bites us. The whole arrangement only works if Claude actually wields the technical authority I'm delegating.
+
+**ATC/pilot metaphor, refined:** In aviation, ATC knows the airspace better than the pilot knows aviation. In my Claude projects, I (ATC) direct vision and destination, but Claude (pilot) is the only one who knows the plane. Same metaphor, inverted expertise distribution.
+
+**Origin:** Crystallized 2026-04-10 during the BURNED CSS Foundation Rebuild Plan discussion, after Claude pushed back on an ambiguous *"sure"* signal for protocol-gated actions (squeaky-clean / push / TODO update). I told Claude *"I like your pushback, like a lot! This isn't command and control, this is a partnership to achieve greatness!"* — and then explained that I only pick projects I have no clue how to execute, so Claude is the expert and I'm along for the ride. That conversation is what this workflow is.
+
+**Related:** `feedback-debate-pushback.md` and `user_unfamiliar_stacks.md` in Claude's memory carry the mirror versions of this rule on Claude's side.
+
+---
+
 ## Quality Bar First
 
 **What:** Before any project work, establish the quality bar as a concrete, testable line.

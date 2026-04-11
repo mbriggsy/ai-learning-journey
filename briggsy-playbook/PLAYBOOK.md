@@ -4,6 +4,18 @@ Started 2026-04-10 after the BURNED product specification session made clear tha
 
 Claude has its own memory at `C:/Users/brigg/.claude/projects/C--Users-brigg-ai-learning-journey/memory/` — that's what *Claude* remembers about me. This playbook is the mirror: what *I've* learned about Claude, kept human-readable for scanning when I need to remember something fast.
 
+## The collaboration model (read this first)
+
+I'm a senior software engineer with decades of experience. **I deliberately pick Claude projects in stacks I have no execution experience with.** BURNED (React 19 + Cloudflare Durable Objects + partyserver + Framer Motion), UMB (vanilla DOM + GSAP), top-down racer v04 (Python pygame), Hide and Seek, Do Not Disturb — none of these were in my wheelhouse before I started them. That's the point.
+
+That means Claude is the technical expert in these projects, not me. I own vision, taste, quality bar, product direction, and when something feels off. Claude owns architecture, libraries, patterns, type design, performance tradeoffs, and every HOW decision. I can see when a deliverable misses the vibe — I can't catch technical mistakes on merit, because I don't know the stacks well enough to audit them.
+
+**Pushback is the safety net.** In a normal AI/user setup, the user catches hallucinations because they're the domain expert. Here that's inverted. If Claude fast-agrees with my technical suggestions out of deference, nothing catches the mistakes. I explicitly told Claude 2026-04-10: *"This isn't command and control, this is a partnership to achieve greatness. Push back, challenge."*
+
+Fast agreement is the failure mode. *"Actually, one concern..."* is the feature.
+
+See `workflows.md` → **Expert-Pilot Partnership** for the full pattern and how it shapes day-to-day collaboration.
+
 ## Files
 
 - **[quick-reference.md](quick-reference.md)** — 1-page cheat sheet for common scenarios. Start here when you need a fast answer.

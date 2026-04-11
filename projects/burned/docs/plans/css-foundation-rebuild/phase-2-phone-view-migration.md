@@ -451,7 +451,7 @@ Each subsection below gives: current LOC, current problems, target token consump
 - `breathe 3s ease-in-out infinite` and `breatheIntense 1.5s ease-in-out infinite` animations with hardcoded durations.
 - Many unique padding / radius / border values.
 
-**Rewritten file content (partial — key `.box` and state variants)**:
+**Rewritten file content**:
 
 ```css
 /* SmartActionBox.module.css
@@ -489,6 +489,16 @@ Each subsection below gives: current LOC, current problems, target token consump
   cursor: not-allowed;
   color: var(--color-fg-disabled);
   background: var(--color-bg-surface);
+}
+
+/* Keyboard focus indicator — visible only on keyboard nav, never on mouse click.
+   Outline (not box-shadow) so the focus ring never fights variant glow effects:
+   .action / .drawIntense / .comboPair already paint shadow-glows, and stacking a
+   focus shadow on top would either get clobbered or muddy the glow. Outline is a
+   separate paint layer; it always wins. WCAG 2.4.7 (focus visible). */
+.box:focus-visible {
+  outline: 2px solid var(--color-border-focus);
+  outline-offset: var(--space-1);
 }
 
 /* State: not my turn — "Stand by, operative" */
@@ -586,12 +596,14 @@ Each subsection below gives: current LOC, current problems, target token consump
 - 8 box-shadow values → consolidated into `--shadow-md` + `--shadow-glow-accent` + `--shadow-glow-danger` + `--shadow-glow-success`. Inline keyframes use `color-mix()` for the breathe animation intensity shift.
 - `breathe 3s` and `breatheIntense 1.5s` → `var(--motion-duration-dramatic)` and `var(--motion-duration-base)`. These are CSS keyframes that consume CSS custom property durations — no TS involvement, because this is pure CSS presentation.
 - 7 state variants: `standby`, `draw`, `drawIntense`, `comboPair`, `comboTriple`, `action`, `invalid` — each is a CSS class combined with the base `.box` class via `clsx` / `classnames` in `SmartActionBox.tsx`.
+- **Keyboard focus indicator added.** Pre-rebuild SmartActionBox had no focus ring at all — a WCAG 2.4.7 violation that the audit missed. The rewrite adds a single `.box:focus-visible` rule that paints an `outline: 2px solid var(--color-border-focus)` with `outline-offset: var(--space-1)`. Outline (not `box-shadow`) is the right tool because every interactive variant already paints a `--shadow-glow-*`, and stacking a focus shadow on top would either get clobbered by the glow or muddy it. Outline is a separate paint layer — it always wins. `--color-border-focus` is `--color-ochre-8` per Phase 1 §2.2 — amber accent ring, high-contrast on every variant background, CVD-friendly.
 
 **Acceptance for this file**:
 - [ ] Zero hardcoded hex.
 - [ ] Zero hardcoded motion timing.
 - [ ] 7 state variants each have a clear role mapping.
 - [ ] `breathe` and `breatheIntense` keyframes use `color-mix()` for intensity shifts, not hardcoded rgba values.
+- [ ] `.box:focus-visible` paints an outline ring — keyboard accessibility (WCAG 2.4.7). Verified by tabbing to the box in dev mode and confirming a visible amber outline appears with no glow conflict on `.action` / `.drawIntense` / `.comboPair`.
 
 #### §2.3.5 `TitleBar.module.css` — REWRITE (85 LOC → ~70 LOC)
 
@@ -832,25 +844,305 @@ interface FloatingActionButtonProps {
 
 **Acceptance**: both old components deleted, no broken imports, variant prop works.
 
-#### §2.3.8 `JoinScreen.module.css` — REWRITE (205 LOC → ~160 LOC)
+#### §2.3.8 `JoinScreen.module.css` — REWRITE (206 LOC → ~190 LOC)
 
 **Current problems** (biggest stale contamination in the audit):
-- **Every single `var()` fallback is from the UMB noir palette:** `#1a1d30`, `#222540`, `#3a3d5a`, `#9999bb`, `#e8922a`, `#e8e8f0`, `#e03535`. None match the current runtime. This file was authored against UMB and never ported.
-- 7 distinct font sizes (`32px/22px/18px/16px/15px/14px/13px`).
-- 6 distinct gaps.
-- Multiple radius patterns (`999px/12px/50%`).
+- **Every single `var()` fallback is from the UMB noir palette.** 22 fallback sites across the file, all from the dead noir palette: `var(--bg-app, #1a1d30)` (×2), `var(--text-primary, #e8e8f0)` (×3), `var(--font-body, system-ui, sans-serif)` (×1), `var(--bg-card, #222540)` (×3), `var(--border-subtle, #3a3d5a)` (×4), `var(--text-secondary, #9999bb)` (×4), `var(--amber, #e8922a)` (×4), `var(--red, #e03535)` (×1). None match the current runtime. This file was authored against UMB and never ported.
+- 7 distinct font sizes hardcoded: `32px/26px/22px/18px/16px/15px/14px/13px`. No shared scale.
+- 6 distinct gap values: `6px/8px/10px/12px/16px`.
+- 5 distinct padding values: `8px 20px / 14px 16px / 14px / 16px / 32px`.
+- Multiple radius patterns: `999px / 12px / 50%`. Three different mechanisms for the same job.
 - Hardcoded animations: `spin 0.8s linear infinite`, `popIn 0.4s cubic-bezier(0.34, 1.56, 0.64, 1) both`, `dots 1.5s steps(4, end) infinite`.
-- One correct thing: `min-height: 100svh` at line 6 (right axis).
+- Hardcoded transitions: `border-color 0.15s`, `opacity 0.15s` — both 150ms (= `--motion-duration-fast`) but with no easing specified.
+- **`prefers-reduced-motion` is the same half-measure as ConnectionOverlay** — slows the spin from 0.8s to 1.5s instead of replacing rotation. WCAG 2.3.3 spirit violation.
+- **Dead `[data-theme="light"]` override block at lines 195-205.** Light mode is deferred per §6 Out of Scope; these rules reference legacy token names and never fire in the current build. Dead code.
+- **No `:focus-visible` on `.joinButton`.** Same WCAG 2.4.7 gap as pre-rebuild SmartActionBox (§2.3.4) — keyboard users get no focus indicator on the primary CTA.
+- One thing the file gets right: `min-height: 100svh` at line 6 (correct phone axis).
+
+**Rewritten file content**:
+
+```css
+/* JoinScreen.module.css
+   Three-state phone screen: connecting → enter name → joined+lobby.
+   Renders before the player has any cards. Branding moment + form + waiting state.
+
+   The "BURNED" title is the player's first impression of the visual identity —
+   display font, biggest type token (--text-display 32-48px fluid), bold.
+
+   Drama-channel consistency: the room code, the input focus border, the join
+   button background, and the spinner accent ALL consume --color-accent-drama.
+   Across the system, ochre = "we are working on it / pay attention to it" —
+   matches TitleBar .dotConnecting and ConnectionOverlay spinner.
+*/
+
+.container {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  min-height: 100svh;
+  padding: var(--space-8);
+  background: var(--color-bg-app);
+  color: var(--color-fg-primary);
+  font-family: var(--font-body);
+}
+
+/* --- Enter Name State --- */
+
+.title {
+  font-family: var(--font-display);
+  font-size: var(--text-display);
+  font-weight: 700;
+  letter-spacing: 0.02em;
+  margin-bottom: var(--space-4);
+}
+
+/* Room code badge — pill with display-font + ochre accent on the code itself. */
+.roomBadge {
+  display: flex;
+  align-items: center;
+  gap: var(--space-3);
+  padding: var(--space-2) var(--space-5);
+  border-radius: var(--radius-pill);
+  background: var(--color-bg-surface);
+  border: 1px solid var(--color-border-subtle);
+  margin-bottom: var(--space-10);
+}
+
+.roomLabel {
+  font-family: var(--font-display);
+  font-size: var(--text-caption);
+  font-weight: 600;
+  color: var(--color-fg-secondary);
+  text-transform: uppercase;
+  letter-spacing: 0.08em;
+}
+
+.roomCode {
+  font-family: var(--font-display);
+  font-size: var(--text-title);
+  font-weight: 700;
+  letter-spacing: 0.15em;
+  color: var(--color-accent-drama);
+}
+
+.form {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-4);
+  width: 100%;
+  /* Form column max-width — keeps the input from stretching across full phone width.
+     Structural floor, not a design decision. See cross-phase note below — Phase 1
+     deepening may unify form/lobby/hint/eliminated max-widths under one token. */
+  max-width: 300px;
+}
+
+.input {
+  padding: var(--space-4);
+  font-family: var(--font-body);
+  font-size: var(--text-callout);
+  border: 2px solid var(--color-border-subtle);
+  border-radius: var(--radius-input);
+  background: var(--color-bg-surface);
+  color: var(--color-fg-primary);
+  outline: none;
+  transition: border-color var(--motion-duration-fast) var(--motion-ease-standard);
+}
+
+.input:focus {
+  border-color: var(--color-accent-drama);
+}
+
+.error {
+  font-family: var(--font-body);
+  font-size: var(--text-body);
+  color: var(--color-fg-danger);
+  margin: 0;
+}
+
+.joinButton {
+  padding: var(--space-4);
+  font-family: var(--font-display);
+  font-size: var(--text-callout);
+  font-weight: 700;
+  letter-spacing: 0.03em;
+  text-transform: uppercase;
+  border: none;
+  border-radius: var(--radius-button);
+  background: var(--color-accent-drama);
+  color: var(--color-bg-app);
+  cursor: pointer;
+  touch-action: manipulation;
+  transition: opacity var(--motion-duration-fast) var(--motion-ease-standard);
+}
+
+.joinButton:hover {
+  opacity: 0.9;
+}
+
+/* Keyboard focus indicator — outline (not box-shadow), same pattern as SmartActionBox.
+   --color-border-focus = ochre-8, which is one step lighter than the .joinButton bg
+   (accent-drama = ochre-9) for clear contrast against the button itself. */
+.joinButton:focus-visible {
+  outline: 2px solid var(--color-border-focus);
+  outline-offset: var(--space-1);
+}
+
+/* --- Connecting State --- */
+
+.spinner {
+  width: var(--space-8);
+  height: var(--space-8);
+  border: 3px solid var(--color-border-subtle);
+  border-top-color: var(--color-accent-drama);
+  border-radius: var(--radius-full);
+  animation: joinScreenSpin var(--motion-duration-dramatic) linear infinite;
+}
+
+.status {
+  font-family: var(--font-body);
+  font-size: var(--text-callout);
+  color: var(--color-fg-secondary);
+  margin-top: var(--space-3);
+}
+
+/* --- Joined State --- */
+
+.joinedCard {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: var(--space-2);
+}
+
+.iconWrap {
+  /* Spring back-out overshoot — anticipate easing scaled from 0 to 1 over slow duration. */
+  animation: joinScreenPopIn var(--motion-duration-slow) var(--motion-ease-anticipate) both;
+}
+
+.joinedName {
+  font-family: var(--font-display);
+  font-size: var(--text-title);
+  font-weight: 700;
+  margin: 0;
+}
+
+.waiting {
+  font-family: var(--font-body);
+  font-size: var(--text-body);
+  color: var(--color-fg-secondary);
+  margin: 0;
+}
+
+.waitingDots::after {
+  content: '';
+  /* One-off step animation — 4-step, 1.5s total = 375ms per step, tuned for
+     readability of a 3-dot loading indicator. Allowed exception per §5 landmine 6
+     (doesn't fit the general motion scale, kept hardcoded). */
+  animation: joinScreenDots 1.5s steps(4, end) infinite;
+}
+
+/* --- Lobby Player List (joined state, multi-player) --- */
+
+.lobbyList {
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: center;
+  gap: var(--space-3);
+  margin-top: var(--space-8);
+  padding: var(--space-4);
+  border-radius: var(--radius-surface);
+  background: var(--color-bg-surface);
+  border: 1px solid var(--color-border-subtle);
+  width: 100%;
+  /* Lobby list cap — structural floor, mirrors form max-width pattern above. */
+  max-width: 320px;
+}
+
+.lobbyPlayer {
+  display: flex;
+  align-items: center;
+  gap: var(--space-2);
+}
+
+.lobbyPlayerName {
+  font-family: var(--font-body);
+  font-size: var(--text-body);
+  color: var(--color-fg-primary);
+}
+
+/* --- Keyframes --- */
+
+@keyframes joinScreenSpin {
+  to { transform: rotate(360deg); }
+}
+
+@keyframes joinScreenPopIn {
+  from { transform: scale(0); opacity: 0; }
+  to { transform: scale(1); opacity: 1; }
+}
+
+@keyframes joinScreenDots {
+  0% { content: ''; }
+  25% { content: '.'; }
+  50% { content: '..'; }
+  75% { content: '...'; }
+}
+
+@keyframes joinScreenSpinnerPulse {
+  from { opacity: 0.4; }
+  to { opacity: 1; }
+}
+
+/* Reduced motion: spin → opacity pulse (vestibular safety, WCAG 2.3.3),
+   popIn → instant, dots → frozen at "..." (the final state). */
+@media (prefers-reduced-motion: reduce) {
+  .spinner {
+    animation: joinScreenSpinnerPulse var(--motion-duration-dramatic) var(--motion-ease-standard) infinite alternate;
+  }
+  .iconWrap {
+    animation: none;
+  }
+  .waitingDots::after {
+    animation: none;
+    content: '...';
+  }
+}
+```
 
 **Key transformations**:
-- Every `var(--bg-app, #1a1d30)` → `var(--color-bg-app)` (fallback removed — if the token doesn't exist, that's a Phase 1 bug, not something to paper over).
-- All font sizes → `--text-micro` through `--text-display` per the phone type scale.
-- `spin` animation keeps structure, consumes `--motion-duration-dramatic` for its 0.8s duration.
-- `popIn` cubic-bezier → `--motion-ease-anticipate` (spring-like back-out for the overshoot effect).
-- `dots` step animation stays structurally (3-dot loading indicator), consumes `--motion-duration-slow * 4` for its 1.5s cycle — or we leave it hardcoded with a comment. **Decision: leave hardcoded with an inline comment `/* 4-step, 1.5s total = 375ms per step, tuned per-animation for readability */` since it's a one-off step-animation timing that doesn't fit the general scale.** This is an allowed exception documented in §5 Landmines.
-- State sub-components: `.connecting`, `.enterName`, `.joined`, `.lobbyPlayerList`, `.playerRow`, etc. — each consumes tokens.
+- **All 22 stale UMB fallback hexes purged.** Every `var()` call points at a Phase 1 token; zero fallbacks. If a token doesn't exist, the answer is "add to Phase 1," not "paper over with a hex."
+- **7 hardcoded font sizes → fluid type scale.** `.title` → `--text-display` (32-48px), `.roomCode` + `.joinedName` → `--text-title` (20-28px), `.input` + `.joinButton` + `.status` → `--text-callout` (16-20px), `.error` + `.waiting` + `.lobbyPlayerName` → `--text-body` (14-18px), `.roomLabel` → `--text-caption` (11-13px). Every size lands on the scale; iPad portrait gets a meaningfully larger render than the smallest phone.
+- **All 6 hardcoded gaps → spacing scale.** `6px → --space-2` (snap up to 8 to land on scale), `8px → --space-2`, `10px → --space-3` (12), `12px → --space-3`, `16px → --space-4`.
+- **All 5 hardcoded paddings → spacing scale.** `.container 32px → --space-8`, `.input 14px → --space-4` (snap up to 16 — ensures the input clears the 44px touch-target floor at the smallest font size: 16+16+16 = 48px), `.joinButton 14px → --space-4` (same reason), `.lobbyList 16px → --space-4`, `.roomBadge 8px 20px → --space-2 var(--space-5)`.
+- **3 different radius mechanisms → 4 semantic aliases.** `.roomBadge 999px → --radius-pill`. `.spinner 50% → --radius-full`. `.lobbyList 12px → --radius-surface` (preserves current 12px). **`.input` and `.joinButton` 12px → `--radius-input` and `--radius-button` (both 4px)**. This is a **deliberate visual change** — Phase 1's semantic aliases establish a hierarchy: cards 8px, surfaces 12px, modals 16px, inputs/buttons 4px. The current 12px on inputs/buttons are wrong by Phase 1's reckoning. Documented here so it's not a surprise during visual review; if Phase 1's call is wrong, the fix is to amend Phase 1's `--radius-input` / `--radius-button` aliases, not to override them in this file.
+- **`spin` keyframe** stays structurally, consumes `var(--motion-duration-dramatic)` for the 0.8s duration. Keyframe renamed `joinScreenSpin` for compiled-output clarity (CSS Modules scopes keyframe names regardless).
+- **`popIn` cubic-bezier → `var(--motion-ease-anticipate)`** — verified Phase 1 has `cubic-bezier(0.68, -0.55, 0.265, 1.55)` at this name. Spring back-out overshoot, the exact effect the original wanted. Duration `0.4s → var(--motion-duration-slow)`.
+- **`dots` step animation kept hardcoded with explicit landmine comment** — the 4-step, 1.5s total / 375ms per step timing doesn't fit the general motion scale (the scale's smallest step is `--motion-duration-instant: 100ms`, the largest is `--motion-duration-dramatic: 800ms`; a 4-step cycle of 375ms each doesn't compose from these). Allowed exception per §5 landmine 6.
+- **2 hardcoded transitions** (`border-color 0.15s`, `opacity 0.15s`) → `var(--motion-duration-fast) var(--motion-ease-standard)` (150ms, with explicit easing curve). Pre-rebuild had no easing specified — browser default is `ease`, which is close to but not identical to standard. Tightening the contract.
+- **Reduced-motion upgrade**: spin → opacity pulse (same WCAG 2.3.3 fix as ConnectionOverlay §2.3.11). `iconWrap` popIn → instant (preserved). `waitingDots::after` → frozen at "..." (preserved).
+- **Dead `[data-theme="light"]` rules deleted.** Light mode is out of scope per §6; these rules referenced legacy token names and never fired in the current build. Removing dead code aligns with the rebuild philosophy. If light mode comes back post-Phase-5, it gets re-implemented from scratch on top of the new token system, not patched onto the old override pattern.
+- **`:focus-visible` on `.joinButton`** — outline (not box-shadow), same pattern as §2.3.4 SmartActionBox. WCAG 2.4.7. `--color-border-focus` = ochre-8, one step lighter than `--color-accent-drama` (ochre-9) used for the button background — clear contrast against the button itself.
+- **Drama-channel consistency:** `.roomCode`, `.input:focus` border, `.joinButton` background, `.spinner` accent all consume `--color-accent-drama`. Same token TitleBar `.dotConnecting` and ConnectionOverlay spinner reach for. The whole "we are working on it / pay attention to it" semantic lives on one token, system-wide.
+- **`.input:focus` stays as `:focus`** (not `:focus-visible`) — text inputs need to communicate the active field whether reached by tap or keyboard. `:focus` is the right pseudo-class for inputs; `:focus-visible` is for buttons.
+- **Font-family explicitly set on every text element** — pre-rebuild relied on inheritance from `.container { font-family: ... }`. Explicit per-rule declarations make refactors safer.
 
-**Acceptance**: zero stale fallbacks, every var() points at a real Phase 1 token, the one exception (dots animation step timing) is documented.
+**Cross-phase concern flagged** (carries forward to Phase 1 deepening):
+- `.form { max-width: 300px }`, `.lobbyList { max-width: 320px }`, `.error` text width, `CardDetailSheet .hint { max-width: 280px }`, and `EliminatedView` content max-widths all live in the **280-320px "narrow content column"** range. Five consumers, no token. **Suggested Phase 1 deepening**: introduce a single `--size-content-narrow` token (fluid clamp, default range 280-320 svh-based) and migrate all five consumers. This is bigger than the existing `--size-card-detail-max` flag for §2.3.12 — consider unifying both.
+- **`--radius-input` and `--radius-button` semantic aliases**: Phase 1 currently maps both to `--radius-sm` (4px). If visual review against Dreamland reference stills shows the rewritten input/button feel too sharp, the fix is to change the alias in Phase 1's `semantic.css`, NOT to override in this file. Flag for Phase 1 visual-review pass.
+
+**Acceptance for this file**:
+- [ ] Zero hardcoded hex (22 stale fallbacks purged).
+- [ ] Zero hardcoded spacing / font-size / radius / motion timing values (one documented exception: the dots step animation, per landmine 6).
+- [ ] Zero `var(...)` fallback expressions.
+- [ ] Dead `[data-theme="light"]` override block deleted.
+- [ ] `:focus-visible` outline on `.joinButton` — keyboard accessibility verified by tabbing through the form in dev mode and confirming the amber outline appears around the button.
+- [ ] `.input:focus` border-color animation runs cleanly at the new `--motion-duration-fast` + `--motion-ease-standard` timing.
+- [ ] `prefers-reduced-motion: reduce` replaces the spinner animation with `joinScreenSpinnerPulse` (opacity oscillation), not a slowed spin.
+- [ ] All three states render correctly: connecting (spinner + status), enter-name (title + roomBadge + form), joined (joinedCard + iconWrap pop-in + waiting + lobby list when multiplayer).
+- [ ] BURNED title at `--text-display` (32px on iPhone SE, 48px on iPad portrait) reads as a branding moment, not as body text.
+- [ ] Visual review against Dreamland reference: the room code in `--color-accent-drama` (ochre) feels period-correct against the warm-charcoal background, not jarring.
+- [ ] `--size-content-narrow` exists in Phase 1's `semantic.phone.css` before this file is executed in `/ce:work` (Phase 1 deepening adds it; until then, the raw `300px` / `320px` max-widths are intentional placeholders).
 
 #### §2.3.9 `EliminatedView.module.css` — REWRITE (82 LOC → ~80 LOC)
 
@@ -1068,45 +1360,534 @@ const FLAVOR_LINES = [
 
 **Acceptance**: full token consumption, `--z-toast` layer, motion token timing.
 
-#### §2.3.11 `ConnectionOverlay.module.css` — REWRITE (42 LOC → ~38 LOC)
-
-**Current problems**: stale fallbacks `#3a3d5a`, `#e8922a`, `#9999bb`; `rgba(0, 0, 0, 0.6/0.85)` hardcoded; `animation: spin 0.8s linear infinite`.
-
-**Key transformations**:
-- Stale fallbacks → tokens.
-- `rgba(0, 0, 0, 0.6)` → `var(--color-bg-overlay)`.
-- `rgba(0, 0, 0, 0.85)` → a semantic `--color-bg-overlay-heavy` token (needs adding to Phase 1 § semantic.css, flag for cross-phase resolution).
-- `animation: spin 0.8s ...` → `animation: spin var(--motion-duration-dramatic) linear infinite` (0.8s maps to `--motion-duration-dramatic`).
-
-**Cross-phase concern flagged**: Phase 1 semantic.css only defines `--color-bg-overlay` at 85% opacity. This file needs both 60% and 85% variants. **Resolution**: add `--color-bg-overlay-light` and `--color-bg-overlay-heavy` semantic tokens to Phase 1 during deepening. `--color-bg-overlay` stays as the default (85%), alias to `--color-bg-overlay-heavy`.
-
-#### §2.3.12 `CardDetailSheet.module.css` — REWRITE (43 LOC → ~40 LOC)
-
-**Good news**: one of only two genuinely clean files in the audit (no literal hex, minimal drift). Mostly a straight spacing/font-size token migration.
-
-**Key transformations**: `gap/padding → --space-*`, `font-size → --text-*-phone`, `letter-spacing: 0.1em` stays (design decision), `max-width: 280px` → `max-width: var(--size-card-detail-max)` (add to Phase 1 semantic.phone.css).
-
-**Cross-phase concern flagged**: Phase 1 needs `--size-card-detail-max`. Resolution: add during deepening, default to 280px svh-clamp.
-
-#### §2.3.13 `sheets/sheets.module.css` — REWRITE (228 LOC → ~190 LOC)
-
-**The biggest phone-view CSS file.** Styles all bottom-sheet prompts: TargetSelect, PeekResult, FavorPick, ComboNameStealer, FuturePeek, DefusePlacement.
+#### §2.3.11 `ConnectionOverlay.module.css` — REWRITE (42 LOC → ~50 LOC)
 
 **Current problems**:
-- 35+ unique values across font-size, padding, gap.
-- Component-specific `--peek-accent` custom property pattern cascaded via inline style — this is actually a GOOD pattern and should be preserved.
-- Some literal hex: `#1c1a15`, `#d4cfc5`, `#fffdf8` (light-mode only values).
+- Stale UMB noir fallbacks: `var(--border-subtle, #3a3d5a)`, `var(--amber, #e8922a)`, `var(--text-secondary, #9999bb)`. None of the fallback hexes match current runtime values.
+- `var(--text-primary)` consumes a token that no longer exists at the new semantic layer (renamed to `--color-fg-primary` in Phase 1).
+- Radial gradient uses `rgba(0, 0, 0, 0.6)` → `rgba(0, 0, 0, 0.85)` — pure black, not the warm charcoal that the rest of the BURNED palette uses for dimming. Visually drifts from the rest of the system.
+- Hardcoded `gap: 16px`, `width/height: 36px`, `border: 3px solid` (border width is fine raw, but the value `3px` should be intentional).
+- Hardcoded `font-size: 16px`.
+- Hardcoded `border-radius: 50%` instead of `--radius-full`.
+- Hardcoded `z-index: 10000` — collides with the unscaled z-index space; should consume `--z-overlay`.
+- Hardcoded animation duration `0.8s` and easing `linear`.
+- **`prefers-reduced-motion` is a half-measure.** Current code slows the spin from 0.8s to 1.5s. Per WCAG 2.3.3 + Agent C's 2025-2026 research, rotation is the textbook bad case for vestibular sensitivity — slowing it doesn't meet the spirit of the rule. The rewrite replaces the spin entirely with an opacity pulse under reduced-motion.
 
-**Migration approach**: Since this file has ~40 classes, the migration is purely mechanical — every value → token — with one architectural preservation: the `--peek-accent` inline-style cascade stays, but the primitive color it's set to in the TSX consumer should come from the `cardAccent()` function (which lives in `theme.ts` today, moves to `palette.ts` in Phase 1).
+**Rewritten file content**:
 
-**Key transformations per section**:
-- `.sheet` container — uses `--color-bg-surface`, `--radius-modal`, `--shadow-lg`, `var(--space-*)`.
-- `.sheetHeader`, `.sheetTitle`, `.sheetBody` — typography from `--text-*-phone`.
-- `.optionButton`, `.optionGrid` — `var(--size-touch-target)` minimum, `--space-*` gaps.
-- `.cardPreview` container — uses `var(--peek-accent, var(--color-border-subtle))` pattern preserved.
-- Animations: `slideUp`, `fadeIn` keyframes consume `--motion-duration-base`, `--motion-ease-decelerate`.
+```css
+/* ConnectionOverlay.module.css
+   Full-screen overlay shown when the WebSocket is connecting or reconnecting.
+   Radial gradient backdrop (lighter center, darker edges) draws focus to the
+   center spinner. Sits at --z-overlay — above sticky chrome (TitleBar/StatusBar),
+   below modals (BottomSheet) and toasts (ErrorToast).
 
-**Acceptance**: every value tokenized, `--peek-accent` pattern preserved, bottom-sheet slide animation uses motion tokens.
+   Semantic consistency: the spinner accent color is --color-accent-drama, which
+   matches TitleBar's .dotConnecting. The whole system uses the drama (ochre)
+   channel for "we are trying to connect" — never invent a new amber.
+*/
+
+.overlay {
+  position: fixed;
+  inset: 0;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: var(--space-4);
+  background: radial-gradient(
+    ellipse at center,
+    var(--color-bg-overlay-light) 0%,
+    var(--color-bg-overlay-heavy) 100%
+  );
+  color: var(--color-fg-primary);
+  z-index: var(--z-overlay);
+}
+
+.spinner {
+  width: var(--space-10);
+  height: var(--space-10);
+  border: 3px solid var(--color-border-subtle);
+  /* Top-border accent matches TitleBar .dotConnecting — same drama channel,
+     same "trying to connect" semantic across the system. */
+  border-top-color: var(--color-accent-drama);
+  border-radius: var(--radius-full);
+  animation: connectionSpin var(--motion-duration-dramatic) linear infinite;
+}
+
+.label {
+  font-family: var(--font-body);
+  font-size: var(--text-body);
+  font-weight: 600;
+  color: var(--color-fg-secondary);
+}
+
+@keyframes connectionSpin {
+  to { transform: rotate(360deg); }
+}
+
+@keyframes connectionPulse {
+  from { opacity: 0.4; }
+  to { opacity: 1; }
+}
+
+/* Reduced motion: replace spin with opacity pulse. Rotation is the textbook
+   bad case for vestibular sensitivity (WCAG 2.3.3); slowing the spin (the
+   pre-rebuild approach) doesn't meet the spirit of the rule. */
+@media (prefers-reduced-motion: reduce) {
+  .spinner {
+    animation: connectionPulse var(--motion-duration-dramatic) var(--motion-ease-standard) infinite alternate;
+  }
+}
+```
+
+**Key transformations**:
+- All 3 stale fallbacks (`#3a3d5a`, `#e8922a`, `#9999bb`) → removed entirely. Every `var()` call points at a real Phase 1 token; no fallbacks.
+- `var(--text-primary)` → `var(--color-fg-primary)` (Phase 1 renaming).
+- `rgba(0, 0, 0, 0.6)` and `rgba(0, 0, 0, 0.85)` → `var(--color-bg-overlay-light)` and `var(--color-bg-overlay-heavy)`. **Both tokens flagged as Phase 1 cross-phase additions** (see §7) — they replace pure black with warm-charcoal-at-alpha so the dimming reads consistent with the rest of the BURNED palette.
+- `gap: 16px` → `var(--space-4)`.
+- `width: 36px; height: 36px` → `var(--space-10)` (40px). Lands on the spacing scale and stays under the 44px touch-target floor — slight upsize from 36px is acceptable; if visual review later finds 40px chunky, that's a Phase 1 fluid token decision, not a Phase 2 patch.
+- `border-radius: 50%` → `var(--radius-full)`.
+- `font-size: 16px` → `var(--text-body)`.
+- `z-index: 10000` → `var(--z-overlay)`. Eliminates the worst z-index collision in the codebase (10000 was the unscaled "max" alongside another file's 9000).
+- `animation: spin 0.8s linear infinite` → `animation: connectionSpin var(--motion-duration-dramatic) linear infinite`. Renamed `spin` → `connectionSpin` for explicit clarity in compiled output (CSS Modules scopes keyframe names anyway, so the rename is for human readers, not the compiler).
+- **Reduced-motion upgrade**: spin replaced with opacity pulse instead of slowed-spin. Rotation is the WCAG 2.3.3 trigger; an opacity pulse delivers the same "still loading" affordance without the rotation. ~5 LOC cost, real accessibility win.
+- **Spinner accent matches TitleBar `.dotConnecting`** — both consume `--color-accent-drama`. System-wide consistency: the drama (ochre) channel always means "trying to connect" across BURNED.
+
+**Cross-phase concern flagged** (carries forward to Phase 1 deepening):
+- Phase 1 semantic.css currently defines only `--color-bg-overlay` at 85% opacity. This file needs **both** 60% and 85% variants for the radial gradient. **Resolution during Phase 1 deepening**: add `--color-bg-overlay-light` (60% alpha, charcoal-1 mixed with transparent) and `--color-bg-overlay-heavy` (85% alpha — aliases the existing `--color-bg-overlay`). The existing `--color-bg-overlay` stays valid as the default (= heavy).
+- BottomSheet (§2.6) also consumes `--color-bg-overlay-light`. Two consumers confirms the token is real, not a one-off.
+
+**Acceptance for this file**:
+- [ ] Zero hardcoded hex.
+- [ ] Zero hardcoded spacing / font-size / radius / z-index.
+- [ ] Zero stale UMB fallbacks in any `var()` call.
+- [ ] Spinner accent uses `--color-accent-drama` — verified by inspecting TitleBar `.dotConnecting` consumption and confirming both files reach for the same token.
+- [ ] `prefers-reduced-motion: reduce` replaces the spin with `connectionPulse` (opacity oscillation), not a slowed spin.
+- [ ] Tested at the Vite dev server by killing `pnpm dev:server` mid-session — overlay appears, spinner spins, label reads "Reconnecting…" — and again with the OS-level reduced-motion preference enabled, confirming the pulse fallback fires.
+- [ ] `--color-bg-overlay-light` and `--color-bg-overlay-heavy` exist in Phase 1's semantic.css before this file is executed in `/ce:work` (Phase 1 deepening adds them).
+
+#### §2.3.12 `CardDetailSheet.module.css` — REWRITE (44 LOC → ~52 LOC)
+
+**Good news**: one of only two genuinely clean files in the audit. Zero literal hex values pre-rewrite. The only "drift" is the legacy `var(--text-secondary)` token name (renamed to `var(--color-fg-secondary)` in Phase 1). Otherwise this is a straight spacing / font-size migration.
+
+**Current problems**:
+- `var(--text-secondary)` consumes the legacy token name (Phase 1 renames to `--color-fg-secondary`).
+- Hardcoded `gap: 8px`, `padding: 8px 0`, `margin-top: 4px`.
+- Hardcoded icon sizing: `width/height: 64px` on `.iconWrap` and `width/height: 56px` on the inner svg. The 56px is a magic number — it's "container minus 4px of breathing room on each side." Should be derived from the container, not declared independently.
+- Hardcoded `font-size: 22px` (name), `12px` (category), `15px` (hint).
+- Hardcoded `max-width: 280px` on the hint.
+
+**Rewritten file content**:
+
+```css
+/* CardDetailSheet.module.css
+   The "what does this card do" detail view, rendered inside BottomSheet when a player
+   long-presses a card in their hand. Pure presentation: icon, name, category, play hint.
+
+   This file is consumed exclusively inside BottomSheet — the sheet provides the
+   modal chrome, padding, dismiss gesture, and z-index layering. CardDetailSheet
+   only owns the inner content layout.
+*/
+
+.sheet {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: var(--space-2);
+  padding: var(--space-2) 0;
+  text-align: center;
+}
+
+.iconWrap {
+  /* Icon container is one unit on the spacing scale (64px). The inner svg fills
+     the container with --space-1 of breathing room on each side, derived from
+     the container — no magic 56px. */
+  width: var(--space-16);
+  height: var(--space-16);
+  padding: var(--space-1);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.iconWrap svg {
+  width: 100%;
+  height: 100%;
+}
+
+.name {
+  font-family: var(--font-display);
+  font-size: var(--text-title);
+  font-weight: 700;
+}
+
+.category {
+  font-family: var(--font-display);
+  font-size: var(--text-caption);
+  font-weight: 600;
+  color: var(--color-fg-secondary);
+  text-transform: uppercase;
+  letter-spacing: 0.1em;
+}
+
+.hint {
+  font-family: var(--font-body);
+  font-size: var(--text-body);
+  line-height: 1.5;
+  color: var(--color-fg-secondary);
+  max-width: var(--size-card-detail-max);
+  margin-top: var(--space-1);
+}
+```
+
+**Key transformations**:
+- `var(--text-secondary)` → `var(--color-fg-secondary)` (Phase 1 rename — both `.category` and `.hint` consumers).
+- `gap: 8px`, `padding: 8px 0` → `var(--space-2)`. `margin-top: 4px` → `var(--space-1)`.
+- `width/height: 64px` (iconWrap) → `var(--space-16)`. Lands on the spacing scale (64px is one of the standard step values).
+- `width/height: 56px` (svg) → **eliminated**. The inner svg fills its container (`width/height: 100%`) and the container has `padding: var(--space-1)`, giving 4px of breathing room on each side. Result: same effective 56px svg, but the value is derived from the container instead of declared as a magic number.
+- `font-size: 22px` (name) → `var(--text-title)` (20px → 28px fluid). Slightly smaller on the smallest phone, much larger on iPad portrait — the fluid scale is better UX than the static 22px.
+- `font-size: 12px` (category) → `var(--text-caption)` (11px → 13px fluid).
+- `font-size: 15px` (hint) → `var(--text-body)` (14px → 18px fluid). Hint text growing on larger screens is correct UX (more reading distance, more characters per line).
+- `max-width: 280px` (hint) → `var(--size-card-detail-max)`. **Flagged for Phase 1 deepening** (see cross-phase concern below).
+- `font-family: var(--font-display)` added to `.category`. Pre-rebuild the category inherited the body font, but the visual hierarchy is cleaner when the name + category share the display font and the hint uses body font — separates "what is this card" (display) from "what does it do" (body).
+- `letter-spacing: 0.1em` on `.category` preserved as a raw value (design decision; matches the StatusBar §2.3.6 pattern of letter-spacing as a per-rule choice, not tokenized).
+- `line-height: 1.5` on `.hint` preserved as a raw value (no line-height tokens in Phase 1).
+- Font weights `700` (name) and `600` (category) preserved as raw values (no font-weight tokens in Phase 1).
+
+**Cross-phase concern flagged** (carries forward to Phase 1 deepening):
+- Phase 1 does not currently define `--size-card-detail-max`. **Resolution during Phase 1 deepening**: add to `semantic.phone.css` as a fluid svh-based clamp. Default value 280px (matches pre-rebuild) but expressed as a clamp so it scales gently with phone height. Suggested formula: `clamp(240px, calc(240px + (100svh - 667px) * (40 / 699)), 320px)` — gives 240px on iPhone SE and 320px on iPad portrait.
+
+**Acceptance for this file**:
+- [ ] Zero hardcoded hex (this was already true pre-rewrite — preserve).
+- [ ] Zero hardcoded spacing / font-size / sizing values.
+- [ ] No magic-number svg sizing — inner svg derives its size from the iconWrap container.
+- [ ] `var(--color-fg-secondary)` consumed at both `.category` and `.hint` (legacy `--text-secondary` removed).
+- [ ] `--size-card-detail-max` exists in Phase 1's `semantic.phone.css` before this file is executed in `/ce:work` (Phase 1 deepening adds it).
+- [ ] Renders correctly inside `BottomSheet` — the sheet provides the modal chrome; this file only owns the inner content layout. Visual review at 375×667, 393×852, and 1024×1366 portrait.
+- [ ] Long-press a card in the hand → CardDetailSheet appears → name, category, hint, and icon all read at appropriate sizes for the device.
+
+#### §2.3.13 `sheets/sheets.module.css` — REWRITE (229 LOC → ~210 LOC)
+
+**Audit correction (2026-04-11)**: the original audit said "228 LOC, ~40 classes, 6 sheet consumers (TargetSelect, PeekResult, FavorPick, ComboNameStealer, FuturePeek, DefusePlacement)." Reality on disk: **229 LOC, 15 surface classes + ~9 pseudo/state selectors = ~24 rules total, 5 sheet consumers** (TargetSelect, FavorResponse, NameCard, DefusePlacement, FuturePeek). The audit conflated possibly-renamed components with current ones. This rewrite is sized against the real file.
+
+**The five sheet consumers and which classes they use:**
+- **TargetSelect.tsx** — `.sheetTitle` + `.sheetSubtitle` + `.optionList` + `.optionBtn` (pick a player to target).
+- **FavorResponse.tsx** — `.sheetTitle` + `.sheetSubtitle` + `.optionList` + `.optionBtn` (pick a card to give away to the requester).
+- **NameCard.tsx** — `.sheetTitle` + `.sheetSubtitle` + `.cardGrid` + (button children styled inline by consumer or unstyled — `cardGrid` is just a 2-column layout container).
+- **DefusePlacement.tsx** — `.sheetTitle` + `.sheetSubtitle` + `.quickActions` + `.quickBtn` + `.positionInput` + `.confirmBtn` (top/middle/bottom shortcuts + manual position input + confirm).
+- **FuturePeek.tsx** — `.sheetTitle` + `.sheetSubtitle` + `.tapOrder` + `.tapCard` + `.tapCardIcon` + `.tapCardName` + `.tapCardPosition` + `.orderBadge` + `.confirmBtn` (rearrange the top 3 cards via tap-order).
+
+**Current problems**:
+- **Stale legacy token names everywhere.** `var(--text-secondary)` (×4), `var(--text-primary)` (×5), `var(--border-subtle)` (×4), `var(--bg-primary)` (×6 including inside `color-mix()` calls), `var(--accent-success)` (×3). Plus the cyan UMB-era focus ring `var(--focus-ring, #33ffff)` (×1). All renamed in Phase 1.
+- **35+ unique hardcoded values** across font-size (8 distinct: 11/13/14/15/16/18/20px), padding (6 distinct: 8/10/12 14 / 12 16 / 14 12), gap (4 distinct: 6/8/10/12), margin (3 distinct: 12/16), border-radius (3 distinct: 8/10/50%).
+- **Touch-target failures.** `.optionBtn` is `padding: 12px 16px` + `font-size: 15px` = 39px tall, **below the 44px WCAG 2.5.5 minimum**. `.quickBtn` is `padding: 10px` + `font-size: 14px` = 34px tall, also below. Pre-rebuild bug.
+- **Hardcoded transitions** on `.tapCard`: `border-color 0.15s ease, opacity 0.15s ease`. 150ms = `--motion-duration-fast`, but the easing is unspecified (`ease`, browser default).
+- **Missing `:focus-visible`** on 4 of 5 interactive elements. `.optionBtn` has it (with stale cyan token); `.confirmBtn`, `.quickBtn`, `.tapCard`, and `.positionInput button` have nothing — keyboard users get no focus indicator on most of the bottom-sheet buttons.
+- **Dead `[data-theme="light"]` override block** at lines 197-228. ~32 LOC. Light mode is deferred per §6 Out of Scope; these rules contain the only literal hex in the file (`#d4cfc5`, `#fffdf8`, `#1c1a15`) and never fire in the current build. Dead code.
+- **One thing the file gets right**: the `--peek-accent` inline-style cascade pattern on `.tapCard`. FuturePeek.tsx sets `style={{ '--peek-accent': cardAccent(card.type) }}` per card, and the CSS uses `var(--peek-accent, var(--border-subtle))` with `color-mix()` to blend the accent into the card background and border. **This pattern is preserved** — it's the right way to thread per-instance theming through CSS without inflating the className list.
+
+**Rewritten file content**:
+
+```css
+/* sheets.module.css
+   Shared styles for all bottom-sheet prompts under src/client/player/sheets/.
+   Five consumers: TargetSelect, FavorResponse, NameCard, DefusePlacement, FuturePeek.
+   The BottomSheet wrapper (src/client/shared/BottomSheet.module.css, see §2.6)
+   provides the modal chrome, padding, dismiss gesture, and z-index. This file
+   only owns the inner content layout for each sheet's specific prompt.
+
+   Architectural note: the .tapCard family uses a `--peek-accent` inline-style
+   cascade. FuturePeek.tsx sets `style={{ '--peek-accent': cardAccent(type) }}`
+   per card; the CSS reads it via `var(--peek-accent, var(--color-border-subtle))`
+   with color-mix() blending. This is the right pattern for per-instance theming —
+   threads through without inflating the className list. PRESERVE.
+*/
+
+/* --- Sheet meta (used by every consumer) --- */
+
+.sheetTitle {
+  font-family: var(--font-display);
+  font-size: var(--text-callout);
+  font-weight: 700;
+  text-align: center;
+  margin-bottom: var(--space-4);
+}
+
+.sheetSubtitle {
+  font-family: var(--font-body);
+  font-size: var(--text-body);
+  color: var(--color-fg-secondary);
+  text-align: center;
+  margin-bottom: var(--space-3);
+}
+
+/* --- Option list (TargetSelect, FavorResponse) --- */
+
+.optionList {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-2);
+}
+
+.optionBtn {
+  display: flex;
+  align-items: center;
+  gap: var(--space-3);
+  width: 100%;
+  /* --space-4 vertical padding ensures the button clears the 44px touch-target floor:
+     16 + var(--text-callout floor 16) + 16 = 48px. Pre-rebuild was 12+15+12=39px (bug). */
+  padding: var(--space-4);
+  border: 1px solid var(--color-border-subtle);
+  border-radius: var(--radius-button);
+  background: var(--color-bg-app);
+  color: var(--color-fg-primary);
+  font-family: var(--font-body);
+  font-size: var(--text-callout);
+  text-align: left;
+  cursor: pointer;
+  touch-action: manipulation;
+}
+
+.optionBtn:active {
+  background: var(--color-border-subtle);
+}
+
+.optionBtn:disabled {
+  opacity: 0.4;
+  cursor: not-allowed;
+}
+
+/* --- Confirm button (DefusePlacement, FuturePeek) --- */
+
+.confirmBtn {
+  display: block;
+  width: 100%;
+  padding: var(--space-4);
+  margin-top: var(--space-4);
+  border: none;
+  border-radius: var(--radius-button);
+  background: var(--color-accent-intercept);
+  color: var(--color-fg-on-accent);
+  font-family: var(--font-display);
+  font-size: var(--text-callout);
+  font-weight: 600;
+  cursor: pointer;
+  touch-action: manipulation;
+}
+
+.confirmBtn:disabled {
+  opacity: 0.4;
+  cursor: default;
+}
+
+/* --- Quick actions row (DefusePlacement: top/middle/bottom shortcuts) --- */
+
+.quickActions {
+  display: flex;
+  gap: var(--space-2);
+  margin-bottom: var(--space-3);
+}
+
+.quickBtn {
+  flex: 1;
+  /* --space-4 padding for touch-target compliance: 16+14+16=46px. */
+  padding: var(--space-4);
+  border: 1px solid var(--color-border-subtle);
+  border-radius: var(--radius-button);
+  background: var(--color-bg-app);
+  color: var(--color-fg-primary);
+  font-family: var(--font-body);
+  font-size: var(--text-body);
+  text-align: center;
+  cursor: pointer;
+  touch-action: manipulation;
+}
+
+/* --- Position input (DefusePlacement: manual +/- counter) --- */
+
+.positionInput {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: var(--space-3);
+  padding: var(--space-3) 0;
+}
+
+.positionInput button {
+  width: var(--space-10);
+  height: var(--space-10);
+  border: 1px solid var(--color-fg-secondary);
+  border-radius: var(--radius-full);
+  background: var(--color-bg-app);
+  color: var(--color-fg-primary);
+  font-family: var(--font-display);
+  font-size: var(--text-callout);
+  cursor: pointer;
+}
+
+.positionInput span {
+  font-family: var(--font-display);
+  font-size: var(--text-callout);
+  font-weight: 600;
+  /* Number display floor — keeps multi-digit positions from causing layout shift.
+     Structural value, not a design token. */
+  min-width: 60px;
+  text-align: center;
+}
+
+/* --- Card grid (NameCard: pick a card type to name) --- */
+
+.cardGrid {
+  display: grid;
+  grid-template-columns: repeat(2, 1fr);
+  gap: var(--space-2);
+}
+
+/* --- Tap order with peek-accent cascade (FuturePeek: rearrange top 3) --- */
+
+.tapOrder {
+  display: flex;
+  gap: var(--space-2);
+  justify-content: center;
+  padding: var(--space-2) 0;
+}
+
+.tapCard {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: var(--space-2);
+  padding: var(--space-4) var(--space-3);
+  border-radius: var(--radius-card);
+  /* Per-instance theming via --peek-accent inline cascade. Border + background
+     blend the accent at low opacity into the surface color so each card carries
+     its card-type's signature color without dominating. PRESERVE THIS PATTERN. */
+  border: 2px solid color-mix(in srgb, var(--peek-accent, var(--color-border-subtle)) 40%, var(--color-border-subtle));
+  border-left: 3px solid var(--peek-accent, var(--color-border-subtle));
+  background:
+    linear-gradient(
+      180deg,
+      color-mix(in srgb, var(--peek-accent, transparent) 12%, var(--color-bg-app)) 0%,
+      color-mix(in srgb, var(--peek-accent, transparent) 4%, var(--color-bg-app)) 100%
+    );
+  color: var(--color-fg-primary);
+  font-family: var(--font-body);
+  font-size: var(--text-caption);
+  text-align: center;
+  cursor: pointer;
+  touch-action: manipulation;
+  /* Floor — prevents the card from collapsing too narrow inside the flex tap-order row. */
+  min-width: 90px;
+  transition:
+    border-color var(--motion-duration-fast) var(--motion-ease-standard),
+    opacity var(--motion-duration-fast) var(--motion-ease-standard);
+}
+
+.tapCard:active {
+  background:
+    linear-gradient(
+      180deg,
+      color-mix(in srgb, var(--peek-accent, transparent) 20%, var(--color-bg-app)) 0%,
+      color-mix(in srgb, var(--peek-accent, transparent) 8%, var(--color-bg-app)) 100%
+    );
+}
+
+.tapCard[data-tapped] {
+  border-color: var(--color-accent-intercept);
+  opacity: 0.5;
+}
+
+.tapCardIcon {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  /* Sized to match the CardBadge child component below (28px) — structural value
+     keyed to the consumer component, not a design decision. */
+  width: 28px;
+  height: 28px;
+  color: var(--peek-accent, var(--color-fg-secondary));
+}
+
+.tapCardIcon :global(.cardBadge) {
+  position: static;
+  width: 100%;
+  height: 100%;
+}
+
+.tapCardIcon :global(.cardBadge) svg {
+  width: 100%;
+  height: 100%;
+}
+
+.tapCardName {
+  font-family: var(--font-body);
+  font-weight: 600;
+  font-size: var(--text-caption);
+  /* Per-instance accent at 70% strength blended over the primary text color —
+     subtle tinting that hints at the card's category without losing legibility. */
+  color: color-mix(in srgb, var(--peek-accent, var(--color-fg-primary)) 70%, var(--color-fg-primary));
+  line-height: 1.2;
+}
+
+.tapCardPosition {
+  font-family: var(--font-body);
+  font-size: var(--text-caption);
+  font-weight: 500;
+  color: var(--color-fg-secondary);
+}
+
+.orderBadge {
+  font-family: var(--font-display);
+  font-size: var(--text-caption);
+  font-weight: 700;
+  color: var(--color-accent-intercept);
+}
+
+/* --- Keyboard focus indicator (combined selector for all interactive elements) ---
+   Same pattern as SmartActionBox / JoinScreen / FloatingActionButton: outline (not
+   box-shadow) so the focus ring never fights variant colors or per-instance accents.
+   --color-border-focus = ochre-8 — clear contrast on every background in this file.
+   WCAG 2.4.7. */
+.optionBtn:focus-visible,
+.confirmBtn:focus-visible,
+.quickBtn:focus-visible,
+.tapCard:focus-visible,
+.positionInput button:focus-visible {
+  outline: 2px solid var(--color-border-focus);
+  outline-offset: var(--space-1);
+}
+```
+
+**Key transformations**:
+- **All ~22 stale legacy token references renamed**: `--text-secondary`/`--text-primary`/`--border-subtle`/`--bg-primary`/`--accent-success` → `--color-fg-secondary`/`--color-fg-primary`/`--color-border-subtle`/`--color-bg-app`/`--color-accent-intercept`. The cyan `var(--focus-ring, #33ffff)` UMB-era stale value → `var(--color-border-focus)`.
+- **All 8 hardcoded font sizes** mapped to the fluid type scale: 11/13px → `--text-caption`, 14/15/16/18/20px → `--text-body` or `--text-callout` based on emphasis role.
+- **All hardcoded paddings → spacing scale.** `.optionBtn` and `.quickBtn` padding bumped to `var(--space-4)` to **fix pre-rebuild touch-target failures** (39px and 34px button heights). New heights: optionBtn 48px, quickBtn 46px — both clear the WCAG 2.5.5 floor.
+- **All gaps → spacing scale.** `gap: 6px` and `gap: 10px` snapped to `var(--space-2)` (8) and `var(--space-3)` (12) respectively to land on the 4-base scale.
+- **All margins → spacing scale.** `margin-bottom/top: 12px/16px` → `var(--space-3)/--space-4)`.
+- **3 different border-radius mechanisms → semantic aliases.** `8px → --radius-button` (= 4px, deliberate visual change per Phase 1 hierarchy — same call as JoinScreen §2.3.8 input/button). `50% → --radius-full`. `10px (.tapCard) → --radius-card` (= 8px, slight 2px reduction lands on the scale).
+- **Hardcoded transitions** on `.tapCard` (`0.15s ease`) → `var(--motion-duration-fast) var(--motion-ease-standard)`. Pre-rebuild had no easing specified (browser default `ease`). Tightening the contract.
+- **`:focus-visible` added** to all 5 interactive elements via one combined selector. Pre-rebuild only had it on `.optionBtn` (with stale cyan token); keyboard users got no focus indicator on `.confirmBtn`, `.quickBtn`, `.tapCard`, or `.positionInput button`. WCAG 2.4.7 gap closed across the whole file in 6 lines of CSS.
+- **`--peek-accent` inline cascade preserved** — same pattern, same color-mix percentages, same fallback chain. Only the fallback target is updated from `var(--border-subtle)` to `var(--color-border-subtle)`. The TSX consumer (FuturePeek.tsx) reads `cardAccent()` from `palette.ts` per §2.7 — coordinated.
+- **`.tapCardIcon :global(.cardBadge)` simplified.** Pre-rebuild explicitly set the inner cardBadge to `28px × 28px` matching the wrapper's 28×28. Rewrite makes the inner element fill its container (`width/height: 100%`) — same effective size, no magic-number duplication. Same pattern as CardDetailSheet §2.3.12's iconWrap fix.
+- **Dead `[data-theme="light"]` override block deleted** (32 LOC). Contains the only literal hex values in the file (`#d4cfc5`, `#fffdf8`, `#1c1a15`) — all light-mode-only, all referencing the deferred theme. Per §6 Out of Scope, light mode comes back post-Phase-5 (if at all) on top of the new token system, not patched onto the legacy override pattern.
+- **Confirm button text color** uses `--color-fg-on-accent` (= cream-12) instead of `--bg-primary` (legacy "use the dark bg color as text on a green button"). Phase 1 has the dedicated `fg-on-accent` semantic for exactly this case — cleaner mapping, no need to invert a background color into a foreground role.
+- **Touch-action: manipulation** added to every interactive element that didn't have it (`.optionBtn`, `.quickBtn`, `.tapCard`, `.confirmBtn`). Eliminates the iOS 300ms tap delay. Pre-rebuild had it on the position input buttons but not the others — closing the gap.
+
+**Cross-phase concern flagged** (carries forward to Phase 1 deepening):
+- **`.positionInput span { min-width: 60px }`** — same "narrow content column" family as the `--size-content-narrow` flag from §2.3.8 JoinScreen. Different value (60px vs 280-320px), but same category: structural floor for variable-length content. Phase 1 deepening should consider whether to introduce a `--size-numeric-floor` or similar token for this micro-case, OR document that small structural floors stay raw with comments while only large content-column caps tokenize.
+- **`.tapCardIcon { width/height: 28px }`** — keyed to the CardBadge child component's intrinsic size. If CardBadge gets resized in a future phase, this needs updating. Could be tokenized as `--size-card-badge` to centralize the contract, but only one consumer means it's premature now. Flag for Phase 5 audit.
+
+**Acceptance for this file**:
+- [ ] Zero stale legacy token references (`--text-*`, `--bg-*`, `--border-*`, `--accent-*`, `--focus-ring` all replaced).
+- [ ] Zero hardcoded hex (the only literal hexes in pre-rebuild were in the dead light-mode block, now deleted).
+- [ ] Zero hardcoded font-size, padding, margin, gap, or radius values (one structural exception: `min-width: 60px` on the position number display, documented).
+- [ ] Touch-target compliance: `.optionBtn` ≥ 48px, `.quickBtn` ≥ 46px, `.confirmBtn` ≥ 48px, `.tapCard` (intrinsic stacked content) ≥ 60px tall, `.positionInput button` exactly 40px (round +/- buttons — slightly under floor but compensated by the larger overall row touch zone).
+- [ ] `:focus-visible` outline on all 5 interactive elements via combined selector — keyboard accessibility verified by tabbing through every sheet variant in dev mode.
+- [ ] `--peek-accent` inline cascade pattern preserved exactly. Visual review: render FuturePeek with three distinct card types and verify each card's border/background tinting reads as a different signature color.
+- [ ] Dead `[data-theme="light"]` block deleted.
+- [ ] All five sheet consumers (TargetSelect, FavorResponse, NameCard, DefusePlacement, FuturePeek) render correctly at 375×667 and 1024×1366 portrait.
+- [ ] BottomSheet wrapper (§2.6) provides the modal chrome — this file only contributes inner content layout. Visual review: the sheet inner content fits cleanly inside the BottomSheet's elevated surface with appropriate breathing room.
 
 #### §2.3.14 `player-hardening.css` — REWRITE (29 LOC → ~38 LOC)
 

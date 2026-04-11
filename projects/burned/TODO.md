@@ -5,7 +5,7 @@
 - **167/167 tests, typecheck clean** (verified 2026-04-11).
 - **Game is functional** — staging, hand, board, all card types, nope chains, elimination all working.
 - **Visual layer is FRAGILE** — see `docs/post-mortems/VISUAL-LAYER-AUTOPSY.md`. **Rebuild IS NOW IN PROGRESS** — `docs/plans/css-foundation-rebuild/`.
-- **CSS Foundation Rebuild Plan is PARTIALLY DRAFTED** — roadmap + phase-1 complete; phase-2 partial (11 of 14 files are full rewrites, 4 remain as transformation specs + 1 minor cleanup); phases 3-5 not started. See step 1 below.
+- **CSS Foundation Rebuild Plan is MID-DRAFT** — roadmap + phase-1 + phase-2 all COMPLETE (every Phase 2 section is now a full rewrite, ratified 2026-04-11); phases 3-5 not started. See step 1 below.
 - **Dreamland S8 is the palette reference season** (Holman's stated favorite; warm cocktail-lounge mid-century). 18 reference frames at `docs/plans/css-foundation-rebuild/dreamland-reference/images/`; fair-use posture documented in `dreamland-reference/README.md`. Palette extracted into Phase 1 §2.2 (74 Dreamland-sourced color primitives).
 - **Saul Bass is VERIFIED, not a hallucination** (corrected 2026-04-11) — Neal Holman primary source at Art of the Title May 2016. See `feedback-hallucinated-references.md` in memory for correction detail. Adjacent verified influences: Jack Kirby, Steve Ditko, Mad Men, 1960 Bond, OSS 117, Pink Panther, mid-century furniture, deliberate anachronism (all sourced to Holman / Adam Reed / Salon / A.V. Club).
 - **Phrasing! is a cross-phase design goal** — running gag across all phases, target cadence 3-5 distinct beats. See `roadmap.md` §3.6. Phase 2 committed beat: EliminatedView flavor line #9 (*"Penetrated by enemy assets. ...Phrasing."*).
@@ -21,31 +21,27 @@
 |---|---|---|
 | `roadmap.md` | ✅ **COMPLETE** | Parent doc: research, decisions, token taxonomy, phase structure. Includes §3.6 "Recurring design motifs" — phrasing as cross-phase gag. |
 | `phase-1-foundation.md` | ✅ **COMPLETE** | Token system + motion TS/CSS twin + CVD harness. 74 Dreamland-sourced color primitives. Every value committed, not placeholder. |
-| `phase-2-phone-view-migration.md` | ⚠️ **PARTIAL — 11 of 14 full rewrites done** | See sub-status below. |
+| `phase-2-phone-view-migration.md` | ✅ **COMPLETE** | All 14 phone files + cross-view BottomSheet are full rewrites. 2235 LOC. Ready for `/deepen-plan`. |
 | `phase-3-board-view-migration.md` | ❌ NOT STARTED | |
 | `phase-4-motion-consolidation.md` | ❌ NOT STARTED | |
 | `phase-5-verification-acceptance.md` | ❌ NOT STARTED | |
 
-#### ▶ FIRST ACTION NEXT SESSION: finish Phase 2
+#### ▶ FIRST ACTION NEXT SESSION: write Phase 3
 
-Phase 2's remaining work is converting 4 transformation-spec sections to full rewrites + 1 minor label cleanup. The pattern was ratified 2026-04-11 (`feedback-plans-are-baking-recipes.md` in memory): full concrete CSS blocks, not substitution lists.
+Per `feedback-stop-after-every-phase.md`, Phase 3 is its own session — one phase, stop, review, next. Phase 3 owns the 11 board `.module.css` files (`src/client/board/*`), the cross-view rewrites for `MinimalCard.module.css` / `GameOver.module.css` / `DramaOverlay.module.css`, the `feltBranding` Tier 1 retheme gap, the Lobby green-gradient → teal-charcoal palette unification, and the kill-the-`@media (min-width: 1280px)` hard-pixel doubling sweep across 6 files (replace with token-based `clamp(...vw...)`).
 
-| § | File | Current | Target LOC | Effort |
-|---|---|---|---|---|
-| §2.3.4 | `SmartActionBox.module.css` | Labeled "(partial)" but content is mostly complete | ~140 LOC | **Minor** — remove "(partial)" framing, add any missing `:focus-visible` states |
-| §2.3.8 | `JoinScreen.module.css` | Transformation spec only | ~160 LOC | **BIG** — 205 LOC original; every `var()` fallback is stale UMB noir palette |
-| §2.3.11 | `ConnectionOverlay.module.css` | Transformation spec only | ~38 LOC | Medium |
-| §2.3.12 | `CardDetailSheet.module.css` | Transformation spec only | ~40 LOC | Medium — one of 2 genuinely clean files in the audit |
-| §2.3.13 | `sheets/sheets.module.css` | Transformation spec only | ~190 LOC | **BIGGEST** — 228 LOC original, 40+ classes for all bottom-sheet prompts (TargetSelect, PeekResult, FavorPick, ComboNameStealer, FuturePeek, DefusePlacement) |
-
-**Pattern to follow** (reference examples already in the file):
-- §2.3.5 TitleBar — good short-file template
-- §2.3.6 StatusBar — another short template
-- §2.3.9 EliminatedView — medium template, shows how to handle Tier 1 retheme copy edits
+**Pattern to follow** — every Phase 2 section is now a worked example. Reference templates:
+- §2.3.5 TitleBar — short-file template
+- §2.3.6 StatusBar — short template, shows variant classes
+- §2.3.9 EliminatedView — medium template, shows Tier 1 retheme copy edits
+- §2.3.11 ConnectionOverlay — small template, shows reduced-motion vestibular fix pattern
+- §2.3.12 CardDetailSheet — clean file template, shows magic-number elimination via container-fill pattern
 - §2.3.14 player-hardening.css — global CSS template
-- §2.6 BottomSheet.module.css — cross-view template
+- §2.3.8 JoinScreen — biggest stale-fallback purge template, shows drama-channel consistency pattern
+- §2.3.13 sheets/sheets.module.css — most rules in one file, shows combined `:focus-visible` selector pattern + per-instance theming via inline-style cascade preservation
+- §2.6 BottomSheet — cross-view template
 
-Each has: `**Current problems**:` → `**Rewritten file content**:` (complete CSS in markdown code fence) → `**Acceptance for this file**:` (checkbox list).
+Each has: `**Current problems**:` → `**Rewritten file content**:` (complete CSS in markdown code fence) → `**Key transformations**:` → `**Cross-phase concern**:` (where applicable) → `**Acceptance for this file**:` (checkbox list).
 
 **Full-rewrite rules** (from `feedback-plans-are-baking-recipes.md`):
 - Zero hardcoded hex. Every color via `var(--color-*)` semantic token.
@@ -76,9 +72,10 @@ Per `feedback-no-execute-until-plans-complete.md`: **do NOT begin `/ce:work` unt
 
 #### Cross-phase tokens flagged during Phase 2 draft (add to Phase 1 during deepening)
 
-- `--color-bg-overlay-light` (60% alpha) — needed by `ConnectionOverlay.module.css` and `BottomSheet.module.css`
-- `--color-bg-overlay-heavy` (85% alpha, aliases current `--color-bg-overlay`)
-- `--size-card-detail-max` (max-width for CardDetailSheet modal)
+- `--color-bg-overlay-light` (60% alpha) — needed by `ConnectionOverlay.module.css` (§2.3.11) and `BottomSheet.module.css` (§2.6)
+- `--color-bg-overlay-heavy` (85% alpha, aliases current `--color-bg-overlay`) — same consumers
+- `--size-content-narrow` (fluid clamp, ~280-320px range) — **5 consumers** across the phase: `JoinScreen.form` (300px), `JoinScreen.lobbyList` (320px), `CardDetailSheet.hint` (280px), `EliminatedView.flavor` + `.aliveList` (`min(90%, 320px)` ×2). Phase 1 deepening should introduce one token and migrate all 5, replacing the earlier narrower `--size-card-detail-max` flag (which was a one-consumer version of the same need). See §2.3.8 cross-phase concern for the unification rationale.
+- **Phase 1 visual-review pass needed** on `--radius-input` and `--radius-button` semantic aliases (currently both = `--radius-sm` = 4px). Phase 2 §2.3.8 JoinScreen and §2.3.13 sheets both consume them, applying a deliberate 12px → 4px visual change. If visual review against Dreamland reference stills shows the new sharper inputs/buttons fail the §2.2 Archer test, the fix is amending Phase 1's aliases (not overriding in component CSS).
 
 #### Pending decisions for Phase 1 visual review (during `/ce:work` Phase 1 execution)
 

@@ -1,7 +1,15 @@
+> **SUPERSEDED — see [`docs/specifications/PRODUCT-SPECIFICATION.md`](../specifications/PRODUCT-SPECIFICATION.md)**
+>
+> This document is historical context preserved for archaeological purposes. The authoritative contract for BURNED is the product specification (locked v1.0 on 2026-04-10). When any statement here contradicts the spec, the spec wins. Do not use this document as a source of truth for product decisions, quality bar, visual direction, or architecture.
+>
+> **Known drift:** uses generic "water beads" quality language instead of the Archer-specific binary acceptance test; references GSAP where the current stack is Framer Motion (ADR-04).
+
+---
+
 # BURNED — Art Direction Brief
 
 **Date:** 2026-04-08
-**Status:** Complete
+**Status:** Superseded 2026-04-10 — was Complete at time of writing
 
 ---
 

@@ -512,7 +512,7 @@ These are code-level leftovers that don't appear in the UI but create cognitive 
 - [ ] HOW-TO-PLAY rendered as a polished HTML page with the same visual language as the game itself.
 - [ ] `README.md` reflects current state of the project.
 - [ ] `CLAUDE.md` references `docs/specifications/PRODUCT-SPECIFICATION.md` as the canonical contract.
-- [ ] `docs/ideation/*.md` and `docs/brainstorms/*.md` each carry a *"SUPERSEDED — see `docs/specifications/PRODUCT-SPECIFICATION.md`"* banner at the top.
+- [x] `docs/ideation/*.md` and `docs/brainstorms/*.md` each carry a *"SUPERSEDED — see `docs/specifications/PRODUCT-SPECIFICATION.md`"* banner at the top.
 
 ### §8.4 — Retheme completeness
 

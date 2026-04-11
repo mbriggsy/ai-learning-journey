@@ -1,7 +1,15 @@
+> **SUPERSEDED — see [`docs/specifications/PRODUCT-SPECIFICATION.md`](../specifications/PRODUCT-SPECIFICATION.md)**
+>
+> This document is historical context preserved for archaeological purposes. The authoritative contract for BURNED is the product specification (locked v1.0 on 2026-04-10). When any statement here contradicts the spec, the spec wins. Do not use this document as a source of truth for product decisions, quality bar, visual direction, or architecture.
+>
+> **Known drift:** uses "Saul Bass meets spy title sequences" as the visual reference — this is a calcified hallucinated reference (documented in `feedback-hallucinated-references.md` in Claude's memory). The correct visual reference is **Archer the TV show, literally** — see §3 of the spec.
+
+---
+
 # BURNED — Brainstorm
 
 **Date:** 2026-04-05
-**Status:** Complete
+**Status:** Superseded 2026-04-10 — was Complete at time of writing
 **Note:** Originally brainstormed as "Exploding Kittens Digital" — rethemed to BURNED (Archer-tone spy comedy, The Pendleton Agency) after all 6 phases were complete. Game mechanics unchanged, all names/theme updated.
 
 ---

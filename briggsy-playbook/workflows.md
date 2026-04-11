@@ -148,6 +148,47 @@ From the answers, Claude synthesizes:
 
 ---
 
+## Planning: Codified vs. Native
+
+**What:** Choose between `/ce:plan` (or similar heavy planning skills) and letting Claude plan natively, based on whether the forcing functions pay rent on *this* task.
+
+**When:** Any non-trivial planning moment. Especially foundational work where getting it wrong costs a lot to undo.
+
+**How:**
+
+**Reach for `/ce:plan` when:**
+- Work is **foundational** — tokens, schemas, architecture rewrites, migrations
+- Blast radius is **non-obvious** — migrations with hibernated state, protocol changes, shared infrastructure
+- Plan will be **handed off** to a separate execution session (fresh context)
+- Project has > 10 plans already and cross-plan **findability** matters
+- A gap-finder pass (SpecFlow) would catch things self-review would miss
+- You want the "NEVER CODE" hard gate keeping the planning session honest
+
+**Skip `/ce:plan` and let Claude plan natively when:**
+- Work is a bounded bug fix or isolated feature
+- A locked spec or ADRs already answer the architectural questions
+- Same session will execute the plan (no handoff artifact needed)
+- Planning ceremony would outweigh execution effort
+- 3-line bug fix = `/ce:plan` is comedy
+
+**Why it matters:** `/ce:plan` isn't magic — it's **codified discipline**. It's the set of things a senior engineer does consistently for important plans that Claude, unprompted, does inconsistently. The mechanical value:
+
+- **Agent orchestration** — 4-5 parallel research agents Claude wouldn't spawn solo (repo-research, learnings-researcher, best-practices, framework-docs, SpecFlow gap-finder)
+- **Forcing functions** — mandatory System-Wide Impact section (interaction graph 2+ levels deep, state lifecycle risks, API surface parity) that Claude would hand-wave native
+- **Filename discipline** — sequence numbers, type prefixes, frontmatter `origin:` field — compounds across 20+ plans into findability
+- **Downstream handoff** — plan is a node in a graph (brainstorm → plan → deepen → work), not a standalone doc
+- **"NEVER CODE" gate** — structurally enforces research-only mode; no "while I'm here I'll just draft theme.css" drift
+
+**Highest-leverage single forcing function for spec-derived plans:** System-Wide Impact → interaction graph + state lifecycle risks. That's exactly where native planning gets lazy — "it's just CSS, the blast radius is bounded" assumptions that miss second-order effects. The template doesn't let Claude assume.
+
+**The trade:** Ceremony on tasks where forcing functions don't pay rent vs. skipped discipline on tasks where they would. Pick the right tool for the blast radius.
+
+**Full academic breakdown:** `projects/burned/docs/workflow/ce-plan-skill-analysis.md` — 6-step pipeline dissection, native-vs-codified delta, when each is overkill. Not BURNED-specific, just captured there first.
+
+**Origin:** Academic exercise during BURNED session 2026-04-10. Two parallel fresh sessions got prompted identically; the only meaningful difference was one mentioned `/ce:plan`. That divergence is what triggered the deep dive.
+
+---
+
 ## Sequential Thinking After Multi-Agent Research
 
 **What:** After multiple agents return findings, invoke the `sequential-thinking` MCP tool to synthesize before acting.

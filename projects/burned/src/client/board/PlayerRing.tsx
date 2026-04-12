@@ -2,7 +2,7 @@ import { useRef, useLayoutEffect, useState, useEffect, memo } from 'react'
 import { m, AnimatePresence } from 'motion/react'
 import gsap from 'gsap'
 import type { BoardPlayer } from '@shared/protocol'
-import { MOTION } from '@client/shared/animation-config'
+import { MOTION, MOTION_DURATIONS } from '@client/shared/tokens/motion'
 import { calculateRingPositions, getRingRadii } from './layout/ringLayout'
 import { PlayerIcon } from '@client/shared/PlayerIcon'
 import styles from './PlayerRing.module.css'
@@ -17,13 +17,25 @@ export const PlayerRing = memo(function PlayerRing({
   players, currentPlayerId, turnsRemaining,
 }: PlayerRingProps) {
   const containerRef = useRef<HTMLDivElement>(null)
+  const measureRef = useRef<HTMLDivElement>(null)
   const [dimensions, setDimensions] = useState({ w: 0, h: 0 })
+  const [panelSize, setPanelSize] = useState({ w: 0, h: 0 })
   const prevActiveRef = useRef<string | null>(null)
   const slotRefs = useRef<Map<string, HTMLDivElement>>(new Map())
 
   useLayoutEffect(() => {
     const el = containerRef.current
-    if (!el) return
+    const measureEl = measureRef.current
+    if (!el || !measureEl) return
+
+    // Synchronous first read — before any observer callback, before paint.
+    // useLayoutEffect fires after DOM insertion but before paint, so the
+    // browser has already computed layout for the measurement div. This
+    // eliminates the first-frame {w:0,h:0} jitter.
+    const initialRect = measureEl.getBoundingClientRect()
+    if (initialRect.width > 0) {
+      setPanelSize({ w: initialRect.width, h: initialRect.height })
+    }
 
     const ro = new ResizeObserver(([entry]) => {
       if (!entry) return
@@ -31,6 +43,12 @@ export const PlayerRing = memo(function PlayerRing({
       setDimensions(prev => {
         if (Math.abs(prev.w - width) < 2 && Math.abs(prev.h - height) < 2) return prev
         return { w: width, h: height }
+      })
+      // Read CSS-computed panel dimensions from the hidden measurement div.
+      const panelRect = measureEl.getBoundingClientRect()
+      setPanelSize(prev => {
+        if (Math.abs(prev.w - panelRect.width) < 2 && Math.abs(prev.h - panelRect.height) < 2) return prev
+        return { w: panelRect.width, h: panelRect.height }
       })
     })
     ro.observe(el)
@@ -52,7 +70,9 @@ export const PlayerRing = memo(function PlayerRing({
     }, {
       scale: 1,
       filter: 'brightness(1)',
-      duration: 0.5,
+      // GSAP ease strings are parsed by GSAP's own registry and have no
+      // cubic-bezier equivalent; left as a literal. Duration consolidated.
+      duration: MOTION_DURATIONS.slow,
       ease: 'power2.out',
     })
   }, [currentPlayerId])
@@ -63,15 +83,18 @@ export const PlayerRing = memo(function PlayerRing({
     : { rx: 0, ry: 0 }
   const positions = calculateRingPositions(alivePlayers.length, rx, ry)
 
-  // Panel dimensions for centering — matches CSS vw-based media queries
-  const isLargeTV = dimensions.w >= 1600
-  const isTV = dimensions.w >= 1280
-  const vwPanel = dimensions.w * 0.22
-  const panelW = isLargeTV ? Math.min(420, vwPanel) : isTV ? Math.min(320, vwPanel) : 200
-  const panelH = isLargeTV ? panelW * 0.33 : isTV ? panelW * 0.35 : 90
+  // Panel dimensions are read from CSS via a hidden measurement div.
+  // The measurement div consumes --size-player-panel-width / --size-player-panel-height,
+  // so CSS is the single source of truth.
+  const panelW = panelSize.w
+  const panelH = panelSize.h
 
   return (
     <div ref={containerRef} className={styles.ring}>
+      {/* Hidden measurement element — consumes --size-player-panel-width /
+          --size-player-panel-height so layout math can read the CSS truth. */}
+      <div ref={measureRef} className={styles.measurePanel} aria-hidden="true" />
+
       <AnimatePresence mode="sync">
         {alivePlayers.map((player, i) => {
           const pos = positions[i]
@@ -100,7 +123,7 @@ export const PlayerRing = memo(function PlayerRing({
                 opacity: 0,
                 filter: 'grayscale(1)',
               }}
-              transition={MOTION.DELIBERATE}
+              transition={MOTION.deliberate}
             >
               {/* Color accent bar */}
               <div className={styles.accentBar} style={{ backgroundColor: player.color }} />

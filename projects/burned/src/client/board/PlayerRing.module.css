@@ -21,6 +21,23 @@
   z-index: var(--z-raised);
 }
 
+/*
+ * Hidden measurement element consumed by PlayerRing.tsx via a ref.
+ * Exists solely so TSX layout math can read the CSS panel dimensions
+ * without duplicating the clamp formula in TypeScript.
+ * Not visible, not interactive, not part of the visual ring.
+ */
+.measurePanel {
+  position: absolute;
+  top: 0;
+  left: 0;
+  width: var(--size-player-panel-width);
+  height: var(--size-player-panel-height);
+  visibility: hidden;
+  pointer-events: none;
+  z-index: var(--z-base);
+}
+
 /* ─── Player panel ─── */
 
 .panel {

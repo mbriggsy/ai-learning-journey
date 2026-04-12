@@ -1,70 +1,103 @@
+/* DrawPile.module.css
+   Board — the stack of face-down cards in the middle of the table. Slow
+   ambient breathing animation draws the eye. The top card shows the
+   Pendleton Agency dossier pattern (geometric diamonds + crosshair).
+*/
+
+@layer components {
+
 .pile {
   position: relative;
   display: flex;
   flex-direction: column;
   align-items: center;
-  gap: 12px;
+  gap: var(--space-3);
 }
 
 .stack {
   position: relative;
-  width: 140px;
-  height: 196px; /* 5:7 ratio */
-  animation: breathe 4s ease-in-out infinite;
-  /* Dramatic ambient glow beneath the pile */
-  filter: drop-shadow(0 0 30px rgba(212, 64, 48, 0.15));
+  width: var(--size-draw-pile-width);
+  height: calc(var(--size-draw-pile-width) * 7 / 5);  /* 5:7 aspect ratio */
+  animation: drawPileBreathe var(--motion-duration-ambient) var(--motion-ease-base) infinite;
+  /* Static ambient glow — NOT in keyframes (drop-shadow forces per-frame
+     rasterization on the main thread, not GPU-composited). */
+  filter: drop-shadow(0 0 30px color-mix(in oklab, var(--color-accent-burned) 18%, transparent));
 }
 
-@keyframes breathe {
-  0%, 100% { transform: scale(1); filter: drop-shadow(0 0 30px rgba(212, 64, 48, 0.15)); }
-  50% { transform: scale(1.025); filter: drop-shadow(0 0 40px rgba(212, 64, 48, 0.25)); }
+/* Deepening fix: keyframe animates ONLY transform (GPU-composited).
+   The animated glow intensification lives on ::after via opacity. */
+@keyframes drawPileBreathe {
+  0%, 100% { transform: scale(1); }
+  50% { transform: scale(1.025); }
+}
+
+/* Animated glow intensification — opacity-only (GPU-composited) */
+.stack::after {
+  content: '';
+  position: absolute;
+  inset: -10px;
+  border-radius: calc(var(--radius-card) + 10px);
+  box-shadow: 0 0 40px color-mix(in oklab, var(--color-accent-burned) 28%, transparent);
+  opacity: 0;
+  animation: drawPileGlow var(--motion-duration-ambient) var(--motion-ease-base) infinite;
+  pointer-events: none;
+}
+
+@keyframes drawPileGlow {
+  0%, 100% { opacity: 0; }
+  50% { opacity: 1; }
 }
 
 .layer {
   position: absolute;
   inset: 0;
   border-radius: var(--radius-card);
-  background-color: #18252a;
-  border: 1px solid rgba(212, 136, 32, 0.15);
-  box-shadow: 0 2px 12px rgba(0, 0, 0, 0.5);
+  background-color: var(--color-teal-2);
+  border: 1px solid color-mix(in oklab, var(--color-accent-drama) 18%, transparent);
+  box-shadow: var(--shadow-md);
 }
 
-/* Top card — BURNED agency card back: geometric diamonds + warm accents */
+/* ─── Top card — Pendleton Agency dossier pattern ───
+   Data-URI hex tracks semantic tokens (manual sync required):
+     %23a33340 ≡ var(--color-accent-burned) ≡ var(--color-cordovan-9)
+     %23b0754c ≡ var(--color-accent-drama)  ≡ var(--color-ochre-9)
+   If Phase 1 primitives.css ochre-9 or cordovan-9 change, update the hex below.
+*/
+
 .topCard {
   position: absolute;
   inset: 0;
-  z-index: 10;
+  z-index: var(--z-raised);
   border-radius: var(--radius-card);
-  background-color: #18252a;
+  background-color: var(--color-teal-2);
   background-image:
-    /* Center diamond — agency logo feel */
-    url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 140'%3E%3Cpath d='M50 20 L80 70 L50 120 L20 70 Z' fill='none' stroke='%23d44030' stroke-width='1.5' opacity='0.35'/%3E%3Cpath d='M50 35 L70 70 L50 105 L30 70 Z' fill='none' stroke='%23d48820' stroke-width='1' opacity='0.25'/%3E%3Ccircle cx='50' cy='70' r='8' fill='none' stroke='%23d44030' stroke-width='1' opacity='0.3'/%3E%3Ccircle cx='50' cy='70' r='3' fill='%23d44030' opacity='0.25'/%3E%3Cline x1='50' y1='8' x2='50' y2='30' stroke='%23d48820' stroke-width='0.8' opacity='0.2'/%3E%3Cline x1='50' y1='110' x2='50' y2='132' stroke='%23d48820' stroke-width='0.8' opacity='0.2'/%3E%3Cline x1='10' y1='70' x2='28' y2='70' stroke='%23d48820' stroke-width='0.8' opacity='0.2'/%3E%3Cline x1='72' y1='70' x2='90' y2='70' stroke='%23d48820' stroke-width='0.8' opacity='0.2'/%3E%3C/svg%3E");
+    url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 140'%3E%3Cpath d='M50 20 L80 70 L50 120 L20 70 Z' fill='none' stroke='%23a33340' stroke-width='1.5' opacity='0.35'/%3E%3Cpath d='M50 35 L70 70 L50 105 L30 70 Z' fill='none' stroke='%23b0754c' stroke-width='1' opacity='0.25'/%3E%3Ccircle cx='50' cy='70' r='8' fill='none' stroke='%23a33340' stroke-width='1' opacity='0.3'/%3E%3Ccircle cx='50' cy='70' r='3' fill='%23a33340' opacity='0.25'/%3E%3Cline x1='50' y1='8' x2='50' y2='30' stroke='%23b0754c' stroke-width='0.8' opacity='0.2'/%3E%3Cline x1='50' y1='110' x2='50' y2='132' stroke='%23b0754c' stroke-width='0.8' opacity='0.2'/%3E%3Cline x1='10' y1='70' x2='28' y2='70' stroke='%23b0754c' stroke-width='0.8' opacity='0.2'/%3E%3Cline x1='72' y1='70' x2='90' y2='70' stroke='%23b0754c' stroke-width='0.8' opacity='0.2'/%3E%3C/svg%3E");
   background-size: 100% 100%;
   background-repeat: no-repeat;
-  border: 1.5px solid rgba(212, 64, 48, 0.25);
+  border: 1.5px solid color-mix(in oklab, var(--color-accent-burned) 30%, transparent);
   box-shadow:
-    0 6px 24px rgba(0, 0, 0, 0.6),
-    0 0 30px rgba(212, 64, 48, 0.12),
-    0 0 60px rgba(212, 64, 48, 0.06);
+    var(--shadow-lg),
+    0 0 30px color-mix(in oklab, var(--color-accent-burned) 14%, transparent),
+    0 0 60px color-mix(in oklab, var(--color-accent-burned) 7%, transparent);
 }
 
 /* Inner border frame — double-line agency dossier feel */
 .topCard::before {
   content: '';
   position: absolute;
-  inset: 6px;
-  border: 1px solid rgba(212, 136, 32, 0.18);
-  border-radius: calc(var(--radius-card) - 3px);
+  inset: var(--space-2);
+  border: 1px solid color-mix(in oklab, var(--color-accent-drama) 20%, transparent);
+  border-radius: calc(var(--radius-card) - var(--space-1));
   pointer-events: none;
 }
 
-/* Second inner frame */
+/* Second inner frame — subtle cordovan stroke */
 .topCard::after {
   content: '';
   position: absolute;
-  inset: 10px;
-  border: 0.5px solid rgba(212, 64, 48, 0.12);
-  border-radius: calc(var(--radius-card) - 6px);
+  inset: calc(var(--space-2) + 2px);
+  border: 0.5px solid color-mix(in oklab, var(--color-accent-burned) 14%, transparent);
+  border-radius: calc(var(--radius-card) - var(--space-2));
   pointer-events: none;
 }
 
@@ -72,28 +105,15 @@
   font-family: var(--font-display);
   font-variant-numeric: tabular-nums;
   font-weight: 700;
-  font-size: 32px;
-  color: rgba(245, 240, 224, 0.9);
-  text-shadow: 0 2px 12px rgba(0, 0, 0, 0.6);
+  font-size: var(--text-display);
+  color: color-mix(in oklab, var(--color-cream-12) 90%, transparent);
+  text-shadow: 0 2px 12px color-mix(in oklab, var(--color-charcoal-1) 60%, transparent);
   letter-spacing: 0.05em;
-}
-
-@media (min-width: 1280px) {
-  .stack {
-    width: min(320px, 26vw);
-    height: min(448px, 36.4vw);
-  }
-  .countBadge { font-size: clamp(64px, 4.5vw, 96px); }
-}
-
-@media (min-width: 1600px) {
-  .stack {
-    width: min(480px, 26vw);
-    height: min(672px, 36.4vw);
-  }
-  .countBadge { font-size: clamp(72px, 5vw, 108px); }
 }
 
 @media (prefers-reduced-motion: reduce) {
   .stack { animation: none; }
+  .stack::after { animation: none; }
 }
+
+} /* @layer components */

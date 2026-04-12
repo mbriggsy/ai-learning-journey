@@ -1,4 +1,11 @@
-/* Arena / staging zone — overlaid on center, not in flow */
+/* Arena.module.css
+   Board — overlay zone where cards "land" during play animations. Absolute-
+   positioned over the center of the table, not in flow. Min dimensions define
+   the smallest landing zone; Framer Motion layout animations in PlayCard.tsx
+   fill this region during the play/discard transition.
+*/
+
+@layer components {
 
 .arena {
   position: absolute;
@@ -8,16 +15,11 @@
   display: flex;
   align-items: center;
   justify-content: center;
-  min-height: 140px;
-  min-width: 200px;
-  border-radius: 12px;
-  z-index: 6;
+  min-width: var(--size-arena-min-width);
+  min-height: var(--size-arena-min-height);
+  border-radius: var(--radius-lg);
+  z-index: var(--z-sticky);
   pointer-events: none;
 }
 
-@media (min-width: 1280px) {
-  .arena {
-    min-height: 200px;
-    min-width: 300px;
-  }
-}
+} /* @layer components */

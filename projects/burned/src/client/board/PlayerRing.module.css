@@ -1,39 +1,55 @@
-/* Player ring — PANELS with visual weight, not dots */
+/* PlayerRing.module.css
+   Board — player panels orbiting the center. Each panel is a player's identity
+   card (color bar + name + turn state + card count).
+
+   Layout math: panel position is computed in PlayerRing.tsx via ringLayout.ts
+   against the container's ResizeObserver dimensions. The panel WIDTH is computed
+   by reading --size-player-panel-width from CSS at runtime (not hardcoded in TSX),
+   so TSX and CSS agree through a single source. Legacy landmine resolved: the
+   previous code had panelW = isTV ? 320 : 200 in TSX:70 — a duplicate of the
+   CSS value. After Phase 3, TSX reads the computed style of a hidden measurement
+   div to get the token-driven value. The TSX edit is Phase 4 territory; this
+   file makes the CSS side consume the token so the TSX-side read works.
+*/
+
+@layer components {
 
 .ring {
   position: absolute;
   inset: 0;
   pointer-events: none;
-  z-index: 3;
+  z-index: var(--z-raised);
 }
 
-/* ─── Player panel — the card that represents each player ─── */
+/* ─── Player panel ─── */
 
 .panel {
   position: absolute;
-  width: 200px;
+  width: var(--size-player-panel-width);
   pointer-events: auto;
   will-change: transform, filter;
-  border-radius: 12px;
+  border-radius: var(--radius-card);
   background: linear-gradient(
     165deg,
-    rgba(30, 28, 24, 0.92) 0%,
-    rgba(18, 18, 16, 0.96) 100%
+    color-mix(in oklab, var(--color-bg-elevated) 92%, transparent) 0%,
+    color-mix(in oklab, var(--color-bg-surface) 96%, transparent) 100%
   );
-  border: 1px solid rgba(180, 160, 120, 0.1);
+  border: 1px solid var(--color-border-subtle);
   overflow: hidden;
-  transition: border-color 0.3s ease, box-shadow 0.4s ease;
-  box-shadow: 0 4px 20px rgba(0, 0, 0, 0.4);
+  transition:
+    border-color var(--motion-duration-base) var(--motion-ease-base),
+    box-shadow var(--motion-duration-slow) var(--motion-ease-base);
+  box-shadow: var(--shadow-md);
 }
 
-/* ─── Active player — dramatic emphasis ─── */
+/* ─── Active player — dramatic emphasis driven by inline --player-color ─── */
 
 .panel[data-active] {
-  border-color: color-mix(in srgb, var(--player-color) 60%, transparent);
+  border-color: color-mix(in oklab, var(--player-color) 60%, transparent);
   box-shadow:
-    0 0 24px color-mix(in srgb, var(--player-color) 30%, transparent),
-    0 0 60px color-mix(in srgb, var(--player-color) 12%, transparent),
-    0 4px 20px rgba(0, 0, 0, 0.4);
+    0 0 24px color-mix(in oklab, var(--player-color) 30%, transparent),
+    0 0 60px color-mix(in oklab, var(--player-color) 12%, transparent),
+    var(--shadow-md);
 }
 
 .panel:not([data-active]) {
@@ -43,38 +59,38 @@
 /* ─── Color accent bar — top edge, player identity ─── */
 
 .accentBar {
-  height: 4px;
+  height: var(--space-1);
   width: 100%;
-  transition: height 0.3s ease;
+  transition: height var(--motion-duration-base) var(--motion-ease-base);
 }
 
 .panel[data-active] .accentBar {
-  height: 5px;
-  box-shadow: 0 2px 12px color-mix(in srgb, var(--player-color) 50%, transparent);
+  height: calc(var(--space-1) + 1px);
+  box-shadow: 0 2px 12px color-mix(in oklab, var(--player-color) 50%, transparent);
 }
 
 /* ─── Panel body — name + meta ─── */
 
 .panelBody {
-  padding: 10px 14px 12px;
+  padding: var(--space-3) var(--space-4) var(--space-4);
   display: flex;
   flex-direction: column;
-  gap: 6px;
+  gap: var(--space-2);
 }
 
 .nameRow {
   display: flex;
   align-items: center;
   justify-content: space-between;
-  gap: 6px;
+  gap: var(--space-2);
 }
 
 .name {
   font-family: var(--font-display);
   font-weight: 700;
-  font-size: 16px;
+  font-size: var(--text-title);
   letter-spacing: 0.01em;
-  color: var(--text-primary, #e8e8f0);
+  color: var(--color-fg-primary);
   white-space: nowrap;
   overflow: hidden;
   text-overflow: ellipsis;
@@ -82,20 +98,20 @@
 }
 
 .panel[data-active] .name {
-  color: #fff;
+  color: var(--color-cream-12);
 }
 
 .turnBadge {
   font-family: var(--font-mono);
   font-variant-numeric: tabular-nums;
-  font-size: 11px;
+  font-size: var(--text-caption-board);
   font-weight: 800;
-  color: var(--bg-app, #0c0a12);
-  background: var(--amber, #e8922a);
-  padding: 2px 7px;
-  border-radius: 6px;
+  color: var(--color-fg-on-drama);
+  background: var(--color-accent-drama);
+  padding: var(--space-0) var(--space-2);
+  border-radius: var(--radius-sm);
   flex-shrink: 0;
-  box-shadow: 0 0 8px color-mix(in srgb, var(--amber, #e8922a) 40%, transparent);
+  box-shadow: 0 0 8px color-mix(in oklab, var(--color-accent-drama) 40%, transparent);
 }
 
 /* ─── Meta row — color dot + card count ─── */
@@ -103,67 +119,47 @@
 .metaRow {
   display: flex;
   align-items: center;
-  gap: 6px;
+  gap: var(--space-2);
 }
 
 .count {
   font-family: var(--font-mono);
   font-variant-numeric: tabular-nums;
-  font-size: 12px;
+  font-size: var(--text-body);
   font-weight: 600;
-  color: var(--text-secondary, #9999bb);
+  color: var(--color-fg-secondary);
 }
 
 .panel[data-active] .count {
-  color: var(--text-primary, #e8e8f0);
+  color: var(--color-fg-primary);
 }
 
-/* ─── Eliminated ─── */
+/* ─── Eliminated players ─── */
 
 .eliminatedRow {
   position: absolute;
-  bottom: 12px;
-  left: 20px;
-  right: 20px;
+  bottom: var(--space-3);
+  left: var(--space-5);
+  right: var(--space-5);
   display: flex;
   flex-wrap: wrap;
-  gap: 6px 16px;
+  gap: var(--space-2) var(--space-4);
   pointer-events: none;
 }
 
 .eliminated {
   display: flex;
   align-items: center;
-  gap: 6px;
+  gap: var(--space-2);
   opacity: 0.3;
 }
 
 .eliminatedName {
   font-family: var(--font-body);
-  font-size: 12px;
+  font-size: var(--text-caption-board);
   font-weight: 500;
-  color: var(--text-disabled, #555570);
+  color: var(--color-fg-disabled);
   text-decoration: line-through;
-}
-
-/* ─── TV scale ─── */
-
-@media (min-width: 1280px) {
-  .panel { width: min(320px, 22vw); border-radius: 14px; }
-  .accentBar { height: 5px; }
-  .panel[data-active] .accentBar { height: 6px; }
-  .panelBody { padding: 16px 20px 18px; gap: 10px; }
-  .name { font-size: clamp(22px, 2vw, 32px); }
-  .count { font-size: clamp(16px, 1.2vw, 22px); }
-  .turnBadge { font-size: 14px; padding: 3px 9px; }
-}
-
-@media (min-width: 1600px) {
-  .panel { width: min(420px, 22vw); }
-  .panelBody { padding: 20px 24px 22px; gap: 12px; }
-  .name { font-size: clamp(28px, 2vw, 38px); }
-  .count { font-size: clamp(18px, 1.3vw, 24px); }
-  .turnBadge { font-size: 16px; padding: 4px 10px; }
 }
 
 /* ─── Reduced motion ─── */
@@ -172,4 +168,9 @@
   .panel[data-active] {
     transition: none;
   }
+  .accentBar {
+    transition: none;
+  }
 }
+
+} /* @layer components */

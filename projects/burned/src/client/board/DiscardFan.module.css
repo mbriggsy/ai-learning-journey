@@ -1,42 +1,42 @@
+/* DiscardFan.module.css
+   Board — discard pile showing the most-recent card on top with a peek of the
+   previous card fanned behind it at a slight rotation. Sizing tracks the
+   DrawPile so the two piles read as a matched pair on either side of the arena.
+*/
+
+@layer components {
+
 .fan {
   position: relative;
   display: flex;
   align-items: center;
   justify-content: center;
-  width: 130px;
-  height: 182px; /* 5:7 ratio */
+  width: var(--size-draw-pile-width);
+  height: calc(var(--size-draw-pile-width) * 7 / 5);
 }
 
 .topCard {
   position: relative;
-  z-index: 2;
-  width: 120px;
+  z-index: var(--z-raised);
+  width: var(--size-discard-card-width);
   transform-origin: bottom center;
 }
 
 .peekCard {
   position: absolute;
-  z-index: 1;
-  width: 120px;
-  transform: rotate(-5deg) translate(-6px, 0);
+  z-index: var(--z-base);
+  width: var(--size-discard-card-width);
+  transform: rotate(-5deg) translate(calc(var(--space-1) * -1.5), 0);
   transform-origin: bottom center;
   opacity: 0.7;
 }
 
 .empty {
   font-family: var(--font-mono);
-  font-size: 42px;
-  color: rgba(180, 160, 120, 0.3);
+  font-size: var(--text-display);
+  color: var(--color-fg-disabled);
+  /* Deepening: was color-mix(... 35%, transparent) on ochre-9 — failed WCAG 4.5:1
+     (~1.8:1). Opaque semantic token passes. */
 }
 
-@media (min-width: 1280px) {
-  .fan { width: min(300px, 24vw); height: min(420px, 33.6vw); }
-  .topCard { width: min(280px, 22vw); }
-  .peekCard { width: min(280px, 22vw); transform: rotate(-5deg) translate(-10px, 0); }
-}
-
-@media (min-width: 1600px) {
-  .fan { width: min(440px, 24vw); height: min(616px, 33.6vw); }
-  .topCard { width: min(420px, 22vw); }
-  .peekCard { width: min(420px, 22vw); transform: rotate(-5deg) translate(-12px, 0); }
-}
+} /* @layer components */

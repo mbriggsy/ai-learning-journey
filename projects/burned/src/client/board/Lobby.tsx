@@ -1,7 +1,7 @@
 import { QRCodeSVG } from 'qrcode.react'
 import { m, AnimatePresence } from 'motion/react'
 import { useLobbyState } from '@client/shared/gameStore'
-import { MOTION } from '@client/shared/animation-config'
+import { MOTION } from '@client/shared/tokens/motion'
 import type { ConnectionStatus } from '@client/connection'
 import { PlayerIcon } from '@client/shared/PlayerIcon'
 import styles from './Lobby.module.css'
@@ -65,7 +65,7 @@ export function Lobby({ connectionStatus, onStartGame }: Props) {
               initial={{ opacity: 0, x: 40, scale: 0.95 }}
               animate={{ opacity: 1, x: 0, scale: 1 }}
               exit={{ opacity: 0, x: -40, scale: 0.95 }}
-              transition={{ ...MOTION.SNAPPY, delay: i * 0.06 }}
+              transition={{ ...MOTION.snappy, delay: i * 0.06 }}
             >
               <PlayerIcon color={player.color} size={18} />
               <span className={styles.playerName}>{player.name}</span>

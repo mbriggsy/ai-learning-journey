@@ -9,7 +9,52 @@ also_depends_on:
   - docs/plans/css-foundation-rebuild/phase-3-board-view-migration.md
   - docs/plans/css-foundation-rebuild/phase-4-motion-consolidation.md
 date: 2026-04-11
-status: draft
+status: deepened
+---
+
+## Enhancement Summary
+
+**Deepened on:** 2026-04-12
+**Agents used:** 8-agent parallel pass (Playwright framework-docs-researcher, Vite framework-docs-researcher, iOS 26 best-practices-researcher, APCA+culori best-practices-researcher, architecture-strategist, security-sentinel, performance-oracle, kieran-typescript-reviewer, spec-flow-analyzer)
+**Lines before deepening:** 1992
+**Agent consensus:** 9 blocker corrections, 23 significant improvements. Triple-confirmed findings on Wrangler import.meta.env (3 agents), double-confirmed on culori API (2 agents), quadruple-confirmed on scroll handler perf (4 agents). Zero contradictions between agents.
+
+### Blocker Corrections (9)
+
+1. **B1 §2.1.5 — iOS 26 UA regex completely broken.** iOS 26 froze `iPhone OS` at `18_6` in the UA string (privacy/anti-fingerprinting). The regex returns `18`, never `26`. The hook NEVER activates on the devices it targets. Fix: use `Version/` token (which correctly says `26.0`), add iPad detection via `navigator.maxTouchPoints > 1`, narrow scope to 26.0 only (26.1 fixed the bug per WebKit bug 297779 + Safari 26.1 release notes). Full corrected code in §2.1.5.
+2. **B2 §2.6.5 — `import.meta.env.PROD`/`.DEV` don't work in Wrangler server build.** Server code is bundled by Wrangler (esbuild), NOT Vite. `import.meta.env` is a Vite-specific compile-time constant. Both fixture endpoint security gates use the same broken mechanism — NOT true defense-in-depth. Fix: add `define` to `wrangler.jsonc` for build-time replacement + add runtime `env.ENVIRONMENT` check as independent second gate. Full corrected approach in §2.6.5.
+3. **B3 §2.2.4 — Fixture endpoint architecture conflates worker-level fetch with DO internals.** `handleFixtureSeed(request, state)` signature assumes direct `DurableObjectState` access from the HTTP handler, but the worker entry point has `env.GameRoom` (the namespace), not a DO instance's storage. Storage key `room:${body.room}` doesn't match the DO's actual keys (`gameState`, `playerSessions`, etc.). Fix: worker-level fetch intercepts `/__test/*` → gets DO stub via `env.GameRoom.get(env.GameRoom.idFromName(roomName))` → forwards seed request to DO. Full corrected architecture in §2.2.4.
+4. **B4 §2.4.2 — culori `filter()` API doesn't exist.** The correct exports are `filterDeficiencyDeuter(1)`, `filterDeficiencyProt(1)`, `filterDeficiencyTrit(1)`. The import `{ filter } from 'culori'` will fail at build time. Corrected code in §2.4.2.
+5. **B5 §2.5.2 — `sRGBtoY(parse(...))` type incompatible.** apca-w3's `sRGBtoY` expects `[R, G, B]` as 0-255 integers, not culori's `{ r, g, b, mode }` as 0-1 floats. Passing a culori object produces silently wrong luminance values. Fix: convert via `[Math.round(c.r * 255), Math.round(c.g * 255), Math.round(c.b * 255)]` or use `colorParsley` (apca-w3 companion). Corrected code in §2.5.2.
+6. **B6 §2.2.2 — Spec vs plan viewport mismatch.** Spec §8.1 says iPhone 14 (390×844) + iPad 10.9" (820×1180). Plan says iPhone 15 (393×852) + iPad mini (744×1133). Board also diverges: spec 1280×720 vs plan 1280×800; plan adds 2560×1440. Fix: amend spec §8.1/§8.2 viewport lists to the plan's values during the Phase 5 documentation pass (§2.8.1), documenting the rationale (iPhone 15 is 2024's representative modern phone; iPad mini is a stricter floor). Reconciliation note in §2.2.2.
+7. **B7 §2.2.1 — Cross-browser CI strategy flawed.** Plan says webkit/firefox "regenerate fresh and self-compare." Playwright does NOT work this way — missing baselines cause a failure, not self-comparison. Fix: limit `toHaveScreenshot()` assertions to chromium-only projects; run webkit/firefox as functional smoke tests (no screenshot assertions). Cross-browser note in §2.2.1.
+8. **B8 §2.2.1 — `deviceScaleFactor` and `scale: 'device'` missing.** Plan specifies DPR 2/3 in viewport tables but code doesn't pass `deviceScaleFactor` to `test.use()` or `scale: 'device'` to `toHaveScreenshot` config. Without these, DPR has zero effect on screenshot dimensions. Fix: add `dpr` field to VIEWPORTS, pass as `deviceScaleFactor` in `test.use()`, add `scale: 'device'` to config. Corrected in §2.2.1 + §2.2.4.
+9. **B9 §2.6.2 — Game loop script inconsistencies.** Beat 14: can't play Burned from hand (Burned cards are drawn, not played — standard EK rules). Beat 12: mid-sentence correction leaves script ambiguous. Beat 2: Shuffle invalidates the stacked deck. Missing: 5-card combo (spec §8.6 requires it). Fix: rewrite beats 12–17 with fully traced hand state, move Shuffle to late-game, redesign Beat 14 as an Intercept chain triggered by Surveillance, add 5-card combo beat. Corrected script in §2.6.2.
+
+### New Subsections Added (3)
+
+- **§2.2.7 Animation stability + reduced-motion verification** — Playwright `animations: 'disabled'` strategy + 5-screen `reducedMotion: 'reduce'` pass.
+- **§2.8.4 expansion** — `console.log` added to grep sweep list.
+- **§5 Landmines 13–17** — five new landmines from agent findings.
+
+### Significant Improvements Incorporated (23)
+
+- §2.1.5: Scroll handler cached dimensions + rAF throttling (4 agents flagged forced reflow). `useMemo` → module-level constant. Hardcoded `24` → `getComputedStyle` read. iPad detection via `maxTouchPoints`. iOS 26.0 only (not all 26.x). In-app browser two-pass UA parsing.
+- §2.2.1: `stylePath` for focus ring suppression (primary, not fallback). `name` fields on webServer entries. Playwright `workers` configuration for CI memory.
+- §2.2.3: Protocol Mismatch + No Room Code screens added (2 missing screens × 4 viewports = 8 baselines).
+- §2.2.4: Zod validation on fixture request bodies. `locator().waitFor()` replacing deprecated `waitForSelector`. `satisfies GameState` on all fixtures (no type casts). DO room cleanup in `globalTeardown`.
+- §2.2.5: Baseline PNG optimization via `optipng -o7` (20-40% size reduction).
+- §2.4.2: `differenceEuclidean('oklch')` → `'oklab'` (hue angle wrapping makes oklch Euclidean unreliable). `parse()` null guards.
+- §2.5.2: `Math.abs(APCAcontrast(...))` comment explaining signed Lc semantics.
+- §2.8.1: Dark-mode-only verification noted in spec §8.1/§8.2 checkbox language.
+- §2.8.3: Bundle estimate corrected to +450–500 bytes (not +380). Module-level singleton added as first triage step.
+- §3: CVD re-run note after Step 10 visual review. Production bundle grep step after `pnpm build`.
+- §5: Landmine 13 (iOS 26 UA freeze), Landmine 14 (Wrangler define config), Landmine 15 (animation flakiness), Landmine 16 (first-time player recruitment timeout — 14-day provisional pass clause), Landmine 17 (Playwright sharding escape hatch).
+
+### ATC Decisions Required (1)
+
+- **Viewport list reconciliation (B6):** The plan's viewports are arguably better than the spec's (iPhone 15 is more current than iPhone 14; iPad mini is a stricter floor than iPad 10.9"). Recommendation: amend the spec's §8.1/§8.2 lists during the Phase 5 documentation pass. Briggsy to confirm.
+
 ---
 
 # Phase 5 — Verification & Acceptance
@@ -240,34 +285,70 @@ The protocol is written as a checklist that a human runs and records pass/fail f
 **The hook** (`src/client/shared/useIOSFixedFallback.ts`):
 
 ```typescript
-/** iOS 26.x WebKit broke position: fixed / position: sticky (partial fix in 26.1).
- *  This hook returns true on affected devices; components opt into an absolute-
- *  positioned fallback with scroll-sync when the hook returns true.
+/** iOS 26.0 WebKit broke position: fixed / position: sticky (WebKit bug 297779).
+ *  Safari 26.1 release notes confirm the fix landed ("Fixed a bottom gap appearing
+ *  on layouts with viewport-sized fixed containers on iOS").
  *
- *  Scope: iOS 26.0, 26.1, 26.2 (so far). Hook keeps a single version check per
- *  session so we don't re-parse UA on every render. Updates require redeploy.
+ *  CRITICAL (B1 deepening): iOS 26 FROZE the `iPhone OS` token in the UA string
+ *  at `18_6` (privacy/anti-fingerprinting measure, confirmed by webkit.org,
+ *  Kochava, Singular, Daring Fireball). The `Version/` token still updates and
+ *  correctly reflects `26.0`, `26.1`, etc. Detection MUST use `Version/`, NOT
+ *  `iPhone OS`. iPads send a desktop-class UA since iPadOS 13 — detect via
+ *  `navigator.maxTouchPoints > 1`.
  *
- *  Source: WebKit bug tracker + 2026-04 developer reports; verified empirically
- *  during Phase 5 §2.1 real-device testing on <BUILD-STRING-FROM-PROTOCOL>.
+ *  Scope: iOS 26.0 ONLY (not 26.1+). If §2.1 real-device test on 26.1+ also
+ *  fails, bump AFFECTED_MINOR_MAX.
+ *
+ *  Source: WebKit bug 297779, Safari 26.1 release notes, Art of the Title
+ *  primary-source verification chain. Verified empirically during Phase 5 §2.1
+ *  real-device testing on <BUILD-STRING-FROM-PROTOCOL>.
  */
-import { useMemo } from 'react';
 
-const AFFECTED_IOS_MAJOR = 26;
+const AFFECTED_MAJOR = 26;
+const AFFECTED_MINOR_MAX = 0; // 26.0 only; bump if 26.1 residual found
 
-function parseIOSMajor(ua: string): number | null {
-  // Matches "OS 26_1_1 like Mac OS X" or "Version/26.1.1 Mobile/..." or similar.
-  const match = ua.match(/(?:iPhone OS |Version\/)(\d+)[._]/);
-  if (!match) return null;
-  return Number.parseInt(match[1], 10);
+/** Parse Safari major.minor from the UA string.
+ *  Pass 1: `Version/` — reliable in Safari where iOS version is frozen.
+ *  Pass 2: `iPhone OS` — fallback for in-app browsers (Facebook, Instagram)
+ *  that strip the `Version/` token but may report the real OS version. */
+function parseSafariVersion(ua: string): { major: number; minor: number } | null {
+  // Pass 1: Version/ token (preferred — accurate on Safari 26+)
+  const versionMatch = ua.match(/Version\/(\d+)\.(\d+)/);
+  if (versionMatch) return {
+    major: Number.parseInt(versionMatch[1], 10),
+    minor: Number.parseInt(versionMatch[2], 10),
+  };
+  // Pass 2: iPhone OS token (fallback for in-app browsers without Version/)
+  const osMatch = ua.match(/iPhone OS (\d+)_(\d+)/);
+  if (osMatch) return {
+    major: Number.parseInt(osMatch[1], 10),
+    minor: Number.parseInt(osMatch[2], 10),
+  };
+  return null;
 }
 
-export function useIOSFixedFallback(): boolean {
-  return useMemo(() => {
-    if (typeof navigator === 'undefined') return false;
-    const major = parseIOSMajor(navigator.userAgent);
-    return major === AFFECTED_IOS_MAJOR;
-  }, []);
+/** Detect iOS/iPadOS device. iPads report as "Macintosh" since iPadOS 13
+ *  but expose 5 touch points (real Macs report 0). */
+function isAppleMobileDevice(): boolean {
+  if (typeof navigator === 'undefined') return false;
+  if (/iPhone|iPod/.test(navigator.userAgent)) return true;
+  // iPad (iPadOS 13+): desktop UA but multi-touch
+  if (navigator.platform === 'MacIntel' && navigator.maxTouchPoints > 1) return true;
+  return false;
 }
+
+/** Module-level singleton — evaluated once on import, truly stable.
+ *  (B1 deepening: useMemo is NOT a guarantee — React may discard memoized
+ *  values. Module-level constant is the correct pattern for a value that
+ *  must never change during a session.) */
+const IS_AFFECTED_IOS: boolean = (() => {
+  if (!isAppleMobileDevice()) return false;
+  const version = parseSafariVersion(navigator.userAgent);
+  if (!version) return false;
+  return version.major === AFFECTED_MAJOR && version.minor <= AFFECTED_MINOR_MAX;
+})();
+
+export { IS_AFFECTED_IOS };
 ```
 
 **Integration pattern — TSX side** (each of the 5 components adopts the same pattern):
@@ -315,73 +396,92 @@ Scroll-sync is the harder half of the fallback. For the five target elements, th
 **The scroll handler is added by the hook** (expanded form):
 
 ```typescript
-import { useEffect, useMemo, useRef } from 'react';
-
-const AFFECTED_IOS_MAJOR = 26;
-
-function parseIOSMajor(ua: string): number | null {
-  const match = ua.match(/(?:iPhone OS |Version\/)(\d+)[._]/);
-  if (!match) return null;
-  return Number.parseInt(match[1], 10);
-}
+import { useEffect } from 'react';
+import { IS_AFFECTED_IOS } from './useIOSFixedFallback'; // module-level singleton from above
 
 type FallbackKind = 'stickyTop' | 'stickyBottom' | 'fixedBottomRight' | 'fullCover';
 
+/** (B1 deepening) Expanded hook with performance fixes from 4-agent consensus:
+ *  - Module-level IS_AFFECTED_IOS replaces useMemo (S8: useMemo is not a guarantee)
+ *  - Cached dimensions on resize only — NO getBoundingClientRect in scroll path (S1)
+ *  - requestAnimationFrame throttling coalesces multiple scroll events per frame (S1)
+ *  - Reads --space-6 from computed style, not hardcoded 24 (S7: responsive tokens)
+ *  - Unused useRef import removed (S22)
+ */
 export function useIOSFixedFallback(
   kind: FallbackKind,
   ref: React.RefObject<HTMLElement | null>,
 ): boolean {
-  const active = useMemo(() => {
-    if (typeof navigator === 'undefined') return false;
-    return parseIOSMajor(navigator.userAgent) === AFFECTED_IOS_MAJOR;
-  }, []);
-
   useEffect(() => {
-    if (!active) return;
+    if (!IS_AFFECTED_IOS) return;
     const el = ref.current;
     if (!el) return;
 
-    const sync = () => {
+    let rafId = 0;
+    let cachedHeight = el.offsetHeight;
+    let cachedWidth = el.offsetWidth;
+    // S7: read --space-6 from computed style, not hardcoded 24
+    const gap = parseFloat(
+      getComputedStyle(document.documentElement).getPropertyValue('--space-6')
+    ) || 24; // fallback to 24 only if token missing
+
+    const syncPosition = () => {
       const sy = window.scrollY;
-      const sx = window.scrollX;
       const vh = window.innerHeight;
-      const vw = window.innerWidth;
-      const rect = el.getBoundingClientRect();
 
       switch (kind) {
         case 'stickyTop':
-          el.style.top = `${sy}px`;
+          el.style.transform = `translateY(${sy}px)`;
           break;
         case 'stickyBottom':
-          el.style.top = `${sy + vh - rect.height}px`;
+          el.style.transform = `translateY(${sy + vh - cachedHeight}px)`;
           break;
         case 'fixedBottomRight':
-          el.style.top = `${sy + vh - rect.height - 24}px`; // 24 = --space-6
-          el.style.left = `${sx + vw - rect.width - 24}px`;
+          el.style.transform = `translate(${window.scrollX + window.innerWidth - cachedWidth - gap}px, ${sy + vh - cachedHeight - gap}px)`;
           break;
         case 'fullCover':
-          el.style.top = `${sy}px`;
-          el.style.left = `${sx}px`;
-          el.style.width = `${vw}px`;
+          el.style.transform = `translate(${window.scrollX}px, ${sy}px)`;
+          el.style.width = `${window.innerWidth}px`;
           el.style.height = `${vh}px`;
           break;
       }
     };
 
-    sync();
-    window.addEventListener('scroll', sync, { passive: true });
-    window.addEventListener('resize', sync, { passive: true });
-    return () => {
-      window.removeEventListener('scroll', sync);
-      window.removeEventListener('resize', sync);
+    const onScroll = () => {
+      if (rafId) return; // already scheduled — coalesce
+      rafId = requestAnimationFrame(() => {
+        rafId = 0;
+        syncPosition();
+      });
     };
-  }, [active, kind, ref]);
 
-  return active;
+    const onResize = () => {
+      cachedHeight = el.offsetHeight;
+      cachedWidth = el.offsetWidth;
+      onScroll(); // also sync position after resize
+    };
+
+    syncPosition();
+    window.addEventListener('scroll', onScroll, { passive: true });
+    window.addEventListener('resize', onResize, { passive: true });
+    return () => {
+      cancelAnimationFrame(rafId);
+      window.removeEventListener('scroll', onScroll);
+      window.removeEventListener('resize', onResize);
+    };
+  }, [kind, ref]);
+
+  return IS_AFFECTED_IOS;
 }
 ```
 
-**Bundle cost**: ~650 bytes raw, ~330 bytes gzipped. Added to the phone entry chunk. Phase 5 §8.2 confirms the phone entry stays ≤100KB gzipped.
+**Performance note (S1, 4-agent consensus):** The original hook called `getBoundingClientRect()` on every scroll event, triggering forced reflow. On iOS 26 with 5 elements, that's 300 forced reflows/second during 60fps scroll. The corrected version:
+- Caches `offsetHeight`/`offsetWidth` once + on resize (no scroll-path reflow)
+- Uses `requestAnimationFrame` to coalesce multiple scroll events into one paint cycle
+- Uses `transform` instead of `top`/`left` for compositor-friendly updates (no layout thrash)
+- Reads `--space-6` from computed style instead of hardcoding `24` (respects responsive tokens)
+
+**Bundle cost (S11 CORRECTION)**: The hook body is ~650 bytes raw, ~330 bytes gzipped. But the plan must also account for: import statement overhead in 5 consuming components (~50 bytes gzipped), conditional className concatenation in 5 components (~25 bytes), and ref creation if not already present (~50 bytes). **Realistic total: +450–500 bytes gzipped**, not +380 as originally estimated. At ~99.6KB pre-Phase-5, this puts the phone entry at ~100.1KB — marginally over budget. The first triage step (§8.4) is the module-level singleton optimization (already adopted in the corrected hook above — eliminates `useMemo` import, saves ~40 bytes). Phase 5 §8.2 re-measures after the fallback lands.
 
 **Commit**: `fix(ios-26): position:fixed/sticky fallback for 5 persistent chrome elements` — dedicated commit, landed after §2.1 protocol marks at least one failure, before §2.2 baseline generation.
 
@@ -417,33 +517,55 @@ export default defineConfig({
     toHaveScreenshot: {
       maxDiffPixelRatio: 0.001,
       threshold: 0.04,
+      // B8 CORRECTION: scale: 'device' required for DPR to affect screenshot
+      // dimensions. Without it, DPR 2/3 screenshots are identical in pixel size
+      // and DPR testing is meaningless.
+      scale: 'device',
+      // S4: Disable CSS animations + transitions during capture to prevent
+      // non-deterministic frame timing from causing flaky diffs.
+      animations: 'disabled',
+      // S10: Suppress focus rings via injected stylesheet (more reliable than
+      // body.click()). This stylesheet ONLY applies during toHaveScreenshot
+      // capture — it never ships to production.
+      stylePath: './test/visual-regression/helpers/suppress-focus.css',
     },
   },
   // Dev server is the target — Playwright launches `pnpm dev` and `pnpm dev:server`
   // in parallel, waits for both to respond, runs the matrix, then tears them down.
+  // S19: name fields for better error messages when a server fails to start
   webServer: [
     {
       command: 'pnpm dev',
+      name: 'Vite',
       url: 'http://localhost:5173',
       reuseExistingServer: !process.env.CI,
       timeout: 60_000,
     },
     {
       command: 'pnpm dev:server',
+      name: 'Wrangler',
       url: 'http://localhost:8787',
       reuseExistingServer: !process.env.CI,
       timeout: 60_000,
     },
   ],
+  // Performance: limit parallel workers in CI to prevent memory pressure
+  // (~1.3GB peak with 2 workers × 3 browsers + 2 dev servers)
+  workers: process.env.CI ? 2 : undefined,
   projects: [
     {
       name: 'chromium',
       use: { ...devices['Desktop Chrome'] },
     },
-    // webkit + firefox enabled in CI only (local dev is chromium-only for speed)
+    // B7 CORRECTION: webkit + firefox run functional smoke tests only —
+    // NO toHaveScreenshot() assertions. Playwright requires committed baselines
+    // for toHaveScreenshot(); missing baselines cause test FAILURE, not
+    // self-comparison. Committing cross-browser baselines would triple storage
+    // (~210MB). The pragmatic fix: chromium owns all visual regression;
+    // webkit/firefox verify functional behavior (navigation, fixtures, selectors).
     ...(process.env.CI ? [
-      { name: 'webkit', use: { ...devices['Desktop Safari'] } },
-      { name: 'firefox', use: { ...devices['Desktop Firefox'] } },
+      { name: 'webkit-functional', use: { ...devices['Desktop Safari'] } },
+      { name: 'firefox-functional', use: { ...devices['Desktop Firefox'] } },
     ] : []),
   ],
   // Baselines committed to git so CI can diff against them.
@@ -457,10 +579,13 @@ export default defineConfig({
 {
   "scripts": {
     "test:visual": "playwright test",
-    "test:visual:update": "playwright test --update-snapshots",
+    "test:visual:update": "playwright test --update-snapshots && npx optipng-bin -o7 test/visual-regression/baselines/**/*.png",
     "test:visual:ui": "playwright test --ui"
   }
 }
+```
+
+**(S14 deepening)** `optipng -o7` losslessly compresses Playwright's unoptimized PNGs by 20-40%. With 184 baselines × ~400KB, this reduces committed storage from ~74MB to ~50MB. Add `optipng-bin` as a devDep: `pnpm add -D optipng-bin`. The compression runs after baseline generation, before `git add`.
 ```
 
 **CI integration**: add a new GitHub Actions job (or Cloudflare Pages preview hook) that runs `pnpm test:visual` after `pnpm build`. Baseline PNGs are checked into git under `test/visual-regression/baselines/`. A diff failure uploads the failing screenshot to the run artifacts for human review.
@@ -527,8 +652,12 @@ Exactly as called out in the TODO block:
 | 28 | EliminatedView | full screen | `phone.spec.ts:eliminatedView` | Phase 2 §2.3.9 |
 | 29 | ErrorToast | visible toast | `phone.spec.ts:errorToast` | Phase 2 §2.3.10 |
 | 30 | ConnectionOverlay | disconnected state | `phone.spec.ts:connectionOverlay` | Phase 2 §2.3.11 |
+| 31 | ProtocolMismatch | version mismatch overlay | `phone.spec.ts:protocolMismatch` | S5 deepening — missing from draft |
+| 32 | NoRoomCode | "Scan the QR code on the TV" | `phone.spec.ts:noRoomCode` | S5 deepening — missing from draft |
 
-**Phone screen count: 30 captures × 4 viewports = 120 baseline images.**
+**S5 deepening — 2 missing screens added.** ProtocolMismatch is the first screen a user sees on a protocol version mismatch (deploy error). NoRoomCode is the first screen a confused user sees navigating to the player URL without `?room=`. Both confirmed in `src/client/player/Player.tsx` via `useProtocolMismatch`.
+
+**Phone screen count: 32 captures × 4 viewports = 128 baseline images.** (was 120)
 
 **Board screens** (rendered at each of the 4 board viewports):
 
@@ -551,9 +680,9 @@ Exactly as called out in the TODO block:
 
 **Board screen count: 14 captures × 4 viewports = 56 baseline images.**
 
-**Grand total: 176 baseline images** (120 phone + 56 board). Per-project multiplier applies in CI (×3 browsers = 528). Local dev chromium-only keeps it at 176.
+**Grand total: 184 baseline images** (128 phone + 56 board). Local dev is chromium-only (184 baselines). CI runs webkit/firefox as functional smoke tests only (B7 correction — no `toHaveScreenshot()` assertions in cross-browser projects).
 
-**Storage footprint**: PNGs at the smallest viewport (375×667 @ DPR 2 = 750×1334) are ~200KB each. Averaged across viewports: ~400KB per baseline. 176 baselines × 400KB ≈ 70 MB for the chromium set. CI cross-browser set would be ~210 MB total. This is within normal git repo sizes for a project shipping visual regression (Storybook's Chromatic uses the same pattern). If the size becomes a problem, the fallback is Git LFS for the `baselines/` subdirectory — flagged in §5 landmine 4.
+**Storage footprint**: PNGs at the smallest viewport (375×667 @ DPR 2 = 750×1334) are ~200KB each. Averaged across viewports: ~400KB per baseline. 184 baselines × 400KB ≈ 70 MB for the chromium set. CI cross-browser set would be ~210 MB total. This is within normal git repo sizes for a project shipping visual regression (Storybook's Chromatic uses the same pattern). If the size becomes a problem, the fallback is Git LFS for the `baselines/` subdirectory — flagged in §5 landmine 4.
 
 #### §2.2.4 Example test file shape
 
@@ -566,8 +695,9 @@ import { seedLobby, seedPlaying, seedSheet, VIEWPORTS } from './helpers/fixtures
 const PHONE_VIEWPORTS = VIEWPORTS.phone;
 
 for (const vp of PHONE_VIEWPORTS) {
-  test.describe(`phone @ ${vp.label} (${vp.width}×${vp.height})`, () => {
-    test.use({ viewport: { width: vp.width, height: vp.height } });
+  test.describe(`phone @ ${vp.label} (${vp.width}×${vp.height} @${vp.dpr}x)`, () => {
+    // B8: deviceScaleFactor is a context option, NOT a viewport property
+    test.use({ viewport: { width: vp.width, height: vp.height }, deviceScaleFactor: vp.dpr });
 
     test('JoinScreen — empty', async ({ page }) => {
       await page.goto('/player.html');
@@ -601,18 +731,25 @@ for (const vp of PHONE_VIEWPORTS) {
 ```typescript
 import type { Page } from '@playwright/test';
 
+// B8 CORRECTION: dpr field added — must be passed as deviceScaleFactor to
+// test.use(), SEPARATE from viewport (it is NOT a viewport property).
+// B6 RECONCILIATION: These viewports diverge from spec §8.1/§8.2 viewport
+// lists (spec: iPhone 14 390×844, iPad 10.9" 820×1180, board 1280×720).
+// Rationale: iPhone 15 (393×852) is 2024's representative modern phone;
+// iPad mini (744×1133) is a stricter floor than iPad 10.9". Spec §8.1/§8.2
+// viewport lists are amended during Phase 5 §2.8.1 documentation pass.
 export const VIEWPORTS = {
   phone: [
-    { label: 'iphoneSE',   width: 375,  height: 667 },
-    { label: 'iphone15',   width: 393,  height: 852 },
-    { label: 'ipadMini',   width: 744,  height: 1133 },
-    { label: 'ipadPro129', width: 1024, height: 1366 },
+    { label: 'iphoneSE',   width: 375,  height: 667,  dpr: 2 },
+    { label: 'iphone15',   width: 393,  height: 852,  dpr: 3 },
+    { label: 'ipadMini',   width: 744,  height: 1133, dpr: 2 },
+    { label: 'ipadPro129', width: 1024, height: 1366, dpr: 2 },
   ] as const,
   board: [
-    { label: 'laptop',  width: 1280, height: 800 },
-    { label: 'fullHD',  width: 1920, height: 1080 },
-    { label: '2k',      width: 2560, height: 1440 },
-    { label: '4k',      width: 3840, height: 2160 },
+    { label: 'laptop',  width: 1280, height: 800,  dpr: 1 },
+    { label: 'fullHD',  width: 1920, height: 1080, dpr: 1 },
+    { label: '2k',      width: 2560, height: 1440, dpr: 1 },
+    { label: '4k',      width: 3840, height: 2160, dpr: 2 },
   ] as const,
 };
 
@@ -632,7 +769,8 @@ export async function seedPlaying(page: Page, opts: { state: string }) {
     data: { room, state: opts.state },
   });
   await page.goto(`/player.html?room=${room}&name=TestPlayer&fixture=1`);
-  await page.waitForSelector('[data-test="smart-action-box"]');
+  // S20: waitForSelector is deprecated — use locator().waitFor()
+  await page.locator('[data-test="smart-action-box"]').waitFor({ state: 'visible' });
 }
 
 export async function seedLobby(page: Page, opts: { playerCount: number }) {
@@ -759,7 +897,7 @@ function buildFixtureSnapshot(body: { state: string; [k: string]: unknown }): Ga
 #### §2.2.6 Acceptance thresholds
 
 - [ ] `playwright.config.ts` committed with `maxDiffPixelRatio: 0.001` and `threshold: 0.04`.
-- [ ] `test/visual-regression/phone.spec.ts` covers all 30 phone screens × 4 phone viewports = 120 tests.
+- [ ] `test/visual-regression/phone.spec.ts` covers all 32 phone screens × 4 phone viewports = 128 tests. (S5: +2 — ProtocolMismatch, NoRoomCode)
 - [ ] `test/visual-regression/board.spec.ts` covers all 14 board screens × 4 board viewports = 56 tests.
 - [ ] `test/visual-regression/fixtures.ts` authors literal game-state snapshots for every SmartActionBox state, every bottom sheet, every DramaOverlay variant, every lobby population count, and EliminatedView.
 - [ ] Dev-server fixture endpoint `handleFixtureSeed` landed in `src/server/test-fixtures.ts`, wired into `src/server/room.ts` conditionally on `import.meta.env.DEV`.
@@ -767,6 +905,52 @@ function buildFixtureSnapshot(body: { state: string; [k: string]: unknown }): Ga
 - [ ] `pnpm test:visual` runs clean on the committed baselines (zero diffs).
 - [ ] Three pending decisions (§2.2.5) resolved and `test/visual-regression/decisions.md` committed.
 - [ ] CI job added that runs `pnpm test:visual` after `pnpm build`.
+
+#### §2.2.7 Animation stability + reduced-motion verification (deepening addition)
+
+**S4: Animation stability strategy.** Several captured screens involve active animations (DramaOverlay entry, DrawPile breathing glow, SmartActionBox drawIntense pulse, NopeCountdownBar, EliminatedView skull spring). Without mitigation, Playwright screenshots captured mid-animation produce non-deterministic frame diffs. The `toHaveScreenshot` config (§2.2.1) now includes `animations: 'disabled'` which disables CSS animations and Web Animations API transitions during capture. This handles both CSS keyframes and Framer Motion transitions.
+
+For screens where the **final state** of an animation matters (e.g., DramaOverlay fully visible, not mid-fade), the test must wait for the animation to settle. Add before the `toHaveScreenshot()` call:
+
+```typescript
+// Wait for Framer Motion animations to settle (layout animations complete)
+await page.waitForFunction(() =>
+  document.getAnimations().every(a => a.playState === 'finished' || a.playState === 'idle')
+);
+```
+
+**New helper file**: `test/visual-regression/helpers/suppress-focus.css` (referenced by `stylePath` in config):
+
+```css
+/* Visual regression only — suppresses focus rings during screenshot capture.
+   This stylesheet is injected by Playwright's toHaveScreenshot() stylePath
+   option and NEVER ships to production. */
+*:focus-visible { outline: none !important; box-shadow: none !important; }
+```
+
+**S3: Reduced-motion verification pass.** Phase 1 §2.9 invested in a dual-family motion token architecture: essential durations (`--motion-duration-essential-pulse/-spin/-flash`) survive `@media (prefers-reduced-motion: reduce)` while decorative durations zero out. Phase 5 must verify this works. Add a small reduced-motion pass:
+
+**Target screens** (5 — the highest-signal reduced-motion consumers):
+
+| Screen | Why it matters |
+|---|---|
+| PlayingView standby (phone, 375×667) | Turn indicator animation uses essential token |
+| ConnectionOverlay (phone, 375×667) | Loading spinner uses essential-spin token |
+| NopeCountdownBar (board, 1920×1080) | Countdown uses essential pulse |
+| DramaOverlay BURNED (board, 1920×1080) | Full-screen overlay with decorative entrance |
+| DrawPile (board, 1920×1080) | Breathing glow is decorative — should zero out |
+
+**Test approach**: Playwright supports `reducedMotion: 'reduce'` as a context option:
+
+```typescript
+test.describe('reduced-motion verification', () => {
+  test.use({ reducedMotion: 'reduce' });
+  // 5 screens × 1 viewport each = 5 baselines
+  // Baselines committed alongside the standard baselines
+});
+```
+
+**Acceptance**: Essential animations (turn indicator, spinner, countdown) remain visible. Decorative animations (DrawPile glow, DramaOverlay entrance) are absent or static. This is a 5-baseline addition (~2MB storage, ~30 seconds runtime).
 
 ---
 
@@ -918,13 +1102,31 @@ Final test file shape (replacing Phase 1's starter pair list):
 
 ```typescript
 import { describe, it, expect } from 'vitest';
-import { differenceEuclidean, parse, filter } from 'culori';
+import {
+  differenceEuclidean,
+  parse,
+  filterDeficiencyDeuter,  // B4 CORRECTION: `filter` does NOT exist in culori
+  filterDeficiencyProt,    // Correct exports: filterDeficiency{Deuter,Prot,Trit}
+  filterDeficiencyTrit,
+} from 'culori';
+import type { Color } from 'culori';
 import { COLORS } from '../palette';
 
 /** Phase 5 §2.4 — expanded from Phase 1 §2.7 starter list.
  *  Any new semantic pair that could carry meaning for CVD-affected players
  *  goes here. Distance threshold is tuned empirically per palette version and
  *  locked during Phase 5 execution.
+ *
+ *  B4 deepening: culori's CVD simulation functions are filterDeficiencyDeuter,
+ *  filterDeficiencyProt, filterDeficiencyTrit (NOT a generic `filter` export).
+ *  Severity parameter: 1 = full dichromacy, 0 = normal vision.
+ *
+ *  S2 deepening: Uses `differenceEuclidean('oklab')`, NOT `'oklch'`. OKLCh is
+ *  cylindrical — hue (H) is an angle (0-360), so Euclidean distance treats
+ *  H=1 and H=359 as distance 358 when the perceptual distance is 2. OKLab is
+ *  Cartesian — Euclidean distance is the mathematically natural perceptual
+ *  metric Bjorn Ottosson designed the space for. This also aligns with the CSS
+ *  side (Phase 1 bans `color-mix(in oklch, ...)` and mandates `in oklab`).
  */
 const CRITICAL_PAIRS: Array<[keyof typeof COLORS, keyof typeof COLORS, string]> = [
   // Group A — danger vs success (the red/green CVD problem)
@@ -986,20 +1188,28 @@ const CRITICAL_PAIRS: Array<[keyof typeof COLORS, keyof typeof COLORS, string]> 
  */
 const MIN_DISTANCE = 0.15; // ← Phase 5 locks the final number
 
+// B4 CORRECTION: filterDeficiency{Deuter,Prot,Trit}(severity) — NOT filter()
 const SIMULATIONS = [
-  { name: 'deuteranopia', filter: filter('deuteranopia', 1) },
-  { name: 'protanopia',   filter: filter('protanopia', 1) },
-  { name: 'tritanopia',   filter: filter('tritanopia', 1) },
+  { name: 'deuteranopia', simulate: filterDeficiencyDeuter(1) },
+  { name: 'protanopia',   simulate: filterDeficiencyProt(1) },
+  { name: 'tritanopia',   simulate: filterDeficiencyTrit(1) },
 ];
+
+// S2 CORRECTION: 'oklab' not 'oklch' — see module comment for rationale
+const distance = differenceEuclidean('oklab');
 
 describe('palette CVD legibility', () => {
   for (const [a, b, label] of CRITICAL_PAIRS) {
-    for (const { name, filter: sim } of SIMULATIONS) {
+    for (const { name, simulate } of SIMULATIONS) {
       it(`${label} remains distinguishable under ${name}`, () => {
-        const simA = sim(parse(COLORS[a]));
-        const simB = sim(parse(COLORS[b]));
-        const distance = differenceEuclidean('oklch')(simA, simB);
-        expect(distance, `${a} vs ${b} under ${name}`).toBeGreaterThan(MIN_DISTANCE);
+        // S9: parse() returns Color | undefined — guard required under strict TS
+        const colorA = parse(COLORS[a]);
+        const colorB = parse(COLORS[b]);
+        if (!colorA || !colorB) throw new Error(`Failed to parse: ${a} or ${b}`);
+        const simA = simulate(colorA);
+        const simB = simulate(colorB);
+        expect(distance(simA as Color, simB as Color), `${a} vs ${b} under ${name}`)
+          .toBeGreaterThan(MIN_DISTANCE);
       });
     }
   }
@@ -1108,9 +1318,25 @@ Phase 5 runs the expanded pair list against the committed Phase 1 palette and re
 
 ```typescript
 import { describe, it, expect } from 'vitest';
-import { wcagContrast, parse } from 'culori';
+import { wcagContrast, parse, converter } from 'culori';
+import type { Rgb } from 'culori';
 import { APCAcontrast, sRGBtoY } from 'apca-w3';
 import { COLORS } from '../palette';
+
+/** B5 CORRECTION: sRGBtoY expects [R, G, B] as 0-255 integers, NOT culori's
+ *  { r, g, b, mode } with 0-1 floats. Passing a culori object produces silently
+ *  wrong luminance values. This bridge converts culori → apca-w3 format. */
+const toRgb = converter('rgb');
+function culoriToAPCA(hexColor: string): number {
+  const parsed = parse(hexColor);
+  if (!parsed) throw new Error(`Failed to parse color: ${hexColor}`);
+  const rgb = toRgb(parsed) as Rgb;
+  return sRGBtoY([
+    Math.round(rgb.r * 255),
+    Math.round(rgb.g * 255),
+    Math.round(rgb.b * 255),
+  ]);
+}
 
 /** Phase 5 §2.5 — expanded from Phase 1 §2.7 starter list.
  *  Every fg/bg pair that renders body text or interactive label text in the
@@ -1184,8 +1410,12 @@ describe('palette contrast — WCAG 2.1', () => {
 describe('palette contrast — APCA', () => {
   for (const [fg, bg, , minApca, label] of FG_BG_PAIRS) {
     it(`${label}: ${fg} on ${bg} meets APCA Lc ${minApca}`, () => {
-      const fgY = sRGBtoY(parse(COLORS[fg]));
-      const bgY = sRGBtoY(parse(COLORS[bg]));
+      // B5 CORRECTION: use culoriToAPCA bridge (sRGBtoY needs 0-255 integers)
+      const fgY = culoriToAPCA(COLORS[fg]);
+      const bgY = culoriToAPCA(COLORS[bg]);
+      // Math.abs is correct: APCA returns signed Lc (positive = dark-on-light,
+      // negative = light-on-dark). Absolute value is standard practice for
+      // comparing against minimum thresholds per Myndex documentation.
       const lc = Math.abs(APCAcontrast(fgY, bgY));
       expect(lc, `${fg} on ${bg}`).toBeGreaterThanOrEqual(minApca);
     });
@@ -1366,7 +1596,107 @@ function stackDeck(state: GameState, topCards: CardType[]): GameState {
 }
 ```
 
-**Security note**: the handler is gated by `import.meta.env.PROD` check at the top. Production builds tree-shake the handler because the gate resolves to `true` at build time. Additional belt-and-suspenders: the `src/server/room.ts` router registers `/__test/*` routes inside an `if (import.meta.env.DEV)` block so the router also never sees the path in production.
+**Security note (B2 CORRECTION — triple-confirmed by Vite research, architecture-strategist, security-sentinel)**:
+
+The original plan used `import.meta.env.PROD` / `import.meta.env.DEV` for both gates. **This does NOT work.** `import.meta.env` is a Vite-specific compile-time constant. Server code (`src/server/`) is bundled by **Wrangler** (esbuild), NOT Vite. `wrangler.jsonc` has `"main": "src/server/room.ts"` — Wrangler is the entry point bundler for all server code.
+
+Without explicit configuration, `import.meta.env.PROD` evaluates to `undefined` (falsy) in the Wrangler build. The handler-level `if (import.meta.env.PROD) return 404` check would be SKIPPED — the handler body EXECUTES in production. Both gates use the same broken mechanism, making this NOT true defense-in-depth.
+
+**Corrected dual-gate approach (two independent mechanisms):**
+
+**Gate 1 (build-time — code elimination via Wrangler `define`):**
+
+Add to `wrangler.jsonc`:
+```jsonc
+{
+  "define": {
+    "__DEV__": "false"
+  }
+}
+```
+
+Override in `package.json` dev script:
+```json
+"dev:server": "wrangler dev --ip 0.0.0.0 --port 8787 --define __DEV__:true"
+```
+
+Use `__DEV__` (not `import.meta.env.DEV`) in server code:
+```typescript
+declare const __DEV__: boolean;
+
+// Gate 1: build-time — entire block removed in production
+if (__DEV__) {
+  registerTestRoutes();
+}
+```
+
+**Gate 2 (runtime — independent mechanism via Wrangler `[vars]`):**
+
+Add to `wrangler.jsonc`:
+```jsonc
+{
+  "vars": {
+    "ENVIRONMENT": "production"
+  }
+}
+```
+
+Inside each handler:
+```typescript
+export async function handleFixtureSeed(request: Request, env: Env) {
+  // Gate 2: runtime — defense against build misconfiguration
+  if (env.ENVIRONMENT !== 'development') {
+    return new Response('Not Found', { status: 404 });
+  }
+  // ... handler body
+}
+```
+
+**CI verification step (belt-and-suspenders):** After `pnpm build` and `wrangler deploy --dry-run`, grep the output bundle for `__test`, `handleFixtureSeed`, `handleStackDeck`. If found, fail the deploy. Add to §3 Step 22.
+
+**Fixture endpoint architecture correction (B3 — architecture-strategist, kieran-typescript-reviewer):**
+
+The original plan's `handleFixtureSeed(request, state: DurableObjectState)` signature assumed direct DO storage access from the HTTP handler. This is wrong — the worker entry point has `env.GameRoom` (the DO namespace), not a DO instance's storage. The corrected architecture:
+
+1. Worker-level `fetch` handler intercepts `/__test/*` routes BEFORE `routePartykitRequest`:
+```typescript
+// src/server/room.ts — worker entry modification
+export default {
+  async fetch(request: Request, env: Env): Promise<Response> {
+    if (__DEV__) {
+      const url = new URL(request.url);
+      if (url.pathname.startsWith('/__test/')) {
+        return handleTestRoute(request, env);
+      }
+    }
+    return (
+      (await routePartykitRequest(request, env)) ||
+      new Response('Not Found', { status: 404 })
+    );
+  },
+}
+```
+
+2. `handleTestRoute` gets the target DO stub and forwards:
+```typescript
+async function handleTestRoute(request: Request, env: Env): Promise<Response> {
+  if (env.ENVIRONMENT !== 'development') {
+    return new Response('Not Found', { status: 404 });
+  }
+  const body = TestRouteSchema.parse(await request.json()); // Zod validated
+  const id = env.GameRoom.idFromName(body.room);
+  const stub = env.GameRoom.get(id);
+  // Forward as an internal request to the DO instance
+  return stub.fetch(new Request('http://internal/__test/seed', {
+    method: 'POST',
+    body: JSON.stringify(body),
+  }));
+}
+```
+
+3. The DO class handles the seed via `onRequest` or a custom HTTP path — it has access to `this.ctx.storage` (the actual storage API).
+
+**Storage key correction (B3):** The original `room:${body.room}` key does not match the DO's actual format. The DO stores under flat keys: `gameState`, `playerSessions`, `playerNames`, `playerColors`, `lastActionTime`. The fixture endpoint must write to these SAME keys.
 
 #### §2.6.6 Acceptance thresholds
 
@@ -1484,8 +1814,8 @@ Spec §8.7: *"If we fail this test, we fix the visuals and retest. No exceptions
 
 The spec is LOCKED on §1–§7. Only §8 acceptance criteria checkboxes are editable. Phase 5 flips the following (contingent on the corresponding §2.X step passing):
 
-**§8.1 — Phone controller**:
-- [ ] "Every screen passes the Archer test. Screenshots taken via Playwright at [viewports]. Manually compared against Archer reference frames." → flipped on §2.2 + §2.7 pass.
+**§8.1 — Phone controller** **(S18: add "dark mode only" qualifier to visual checkboxes)**:
+- [ ] "Every screen passes the Archer test. Screenshots taken via Playwright at [viewports]. Manually compared against Archer reference frames. **Verified under dark mode only (light mode deferred per CSS Foundation Rebuild Plan §6).**" → flipped on §2.2 + §2.7 pass.
 - [ ] "No layout breaks across the full target device range." → flipped on §2.2 + §2.3 pass.
 - [ ] "Token system from the CSS Foundation Rebuild Plan is live. Every dimension traces to a token. Zero hardcoded pixel values." → flipped on Phase 1–4 completion; Phase 5 verifies via a grep sweep in §2.8.4.
 - [ ] Functional checklist items (all 17 card types, 7 bottom sheets, optimistic updates, reconnection) → flipped on §2.6 pass.
@@ -1563,6 +1893,8 @@ Run `pnpm build` on a clean checkout. Capture the chunk report from Vite. Format
 4. `You Exploded!` → zero hits (Phase 2 §2.3.9a replaces this with `"You're Burned."`).
 5. `feltBranding` comment `EK identity` → zero hits (Phase 3 §2.7 retheme).
 6. `EK_REVEAL_MS|EK_RELIEF_MS|EK_ELIMINATION_MS` → zero hits **only if** `TODO.md` §3 Tier 2 cleanup has landed; otherwise these are expected survivors. Phase 5 does NOT block on Tier 2 — the grep reports the state, and if the identifiers are still there, §8.4 Tier 2 stays unchecked.
+7. **(S17 deepening)** `console\.log` in `src/` excluding test files → zero hits in production code. Spec §8.1 Technical requires "No `console.log` in production build." This check was missing from the draft.
+8. **(S12 deepening)** `__test|handleFixtureSeed|handleStackDeck` in the **production build output** (after `pnpm build` + `wrangler deploy --dry-run`) → zero hits. Verifies that dev-only fixture endpoints are tree-shaken from the production bundle. This is the CI verification step for the B2 Wrangler define config fix.
 
 **Grep sweep artifact**: record the results in `test/retheme-grep-sweep.md` (new file). If any hit surfaces that is NOT in the documented-intentional list, triage before flipping the §8.4 Tier 1 checkbox.
 
@@ -1617,7 +1949,7 @@ Add a `§11 — Phase 5 Results` section at the bottom of `docs/plans/css-founda
 - Fallback landed: [yes/no]
 
 **Playwright visual regression**: [PASS]
-- 176 baselines committed
+- 184 baselines committed
 - CI integration: [active/deferred]
 
 **Pending decisions resolved**:
@@ -1685,7 +2017,7 @@ If any fails, STOP and resolve before starting Phase 5.
 
 **Step 5** — Author literal `GameState` fixtures in `test/visual-regression/fixtures.ts` for every SmartActionBox state, every bottom sheet, every DramaOverlay variant, every lobby population, and EliminatedView. Commit: `feat(test): author literal GameState fixtures for visual regression`.
 
-**Step 6** — Author `test/visual-regression/phone.spec.ts` with all 30 phone screen captures × 4 phone viewports (120 tests). Run `pnpm test:visual --project=chromium phone.spec.ts --update-snapshots` to generate the initial baselines. **DO NOT commit baselines yet** — Step 9 runs the visual review that may change them.
+**Step 6** — Author `test/visual-regression/phone.spec.ts` with all 32 phone screen captures × 4 phone viewports (128 tests). (S5: +2 screens — ProtocolMismatch + NoRoomCode.) Run `pnpm test:visual --project=chromium phone.spec.ts --update-snapshots` to generate the initial baselines. **DO NOT commit baselines yet** — Step 9 runs the visual review that may change them.
 
 **Step 7** — Author `test/visual-regression/board.spec.ts` with all 14 board screen captures × 4 board viewports (56 tests). Generate initial baselines. Still do not commit.
 
@@ -1698,6 +2030,8 @@ If any fails, STOP and resolve before starting Phase 5.
 2. NopeCountdownBar emerald saturation → same.
 3. Baveuse font → `primitives.css` one-line + `fonts.css` `@font-face` if Baveuse purchased.
 Each decision that changes a value → dedicated commit for the edit + `pnpm test:visual --update-snapshots` to regenerate affected baselines. Commit sequence: `feat(css-foundation): Phase 5 §2.2.5 decision <N> — <what changed>`.
+
+**(S15 deepening)** If Decision 2 (emerald saturation) changes the `--color-accent-intercept` token, re-run `pnpm test palette-cvd` to confirm the new emerald value still passes all 108 CVD cases. The CVD pair list includes `color-accent-intercept` in 4 pairs (Group B). A saturation shift from emerald-9 to emerald-8 or emerald-10 changes the Euclidean distance against cordovan, ochre, teal, and operative colors.
 
 **Step 11** — Commit the final Playwright baselines. Commit: `feat(test): commit Phase 5 visual regression baselines (chromium)`. Baselines include any re-baselines from Step 10 decisions.
 
@@ -1743,7 +2077,7 @@ Phase 5 is done when **all** of the following are true:
 ### §4.1 Test files authored and green
 
 - [ ] `playwright.config.ts` committed, `pnpm test:visual` runs.
-- [ ] `test/visual-regression/phone.spec.ts` covers 30 screens × 4 phone viewports = 120 tests.
+- [ ] `test/visual-regression/phone.spec.ts` covers 32 screens × 4 phone viewports = 128 tests. (S5: +2)
 - [ ] `test/visual-regression/board.spec.ts` covers 14 screens × 4 board viewports = 56 tests.
 - [ ] `test/visual-regression/fixtures.ts` + `helpers/` authored.
 - [ ] `test/visual-regression/baselines/` committed, PNGs reflect final decisions from §2.2.5.
@@ -1841,7 +2175,7 @@ This is the *output* of Phase 5 — the spec's checkboxes below flip to checked:
 
 3. **Pending decision order matters**. §2.2.5 decisions interact: changing the font (decision 3) affects every screen with display type, which changes every baseline that has `--font-display` content. Changing the winner glow hue (decision 1) affects only one screen. **Execution order**: land font first, regenerate all baselines; then land emerald saturation, regenerate affected baselines; then land winner glow, regenerate one baseline. Out-of-order execution → 2–3x baseline regenerations.
 
-4. **Baseline storage footprint**. 176 PNGs × ~400KB = ~70MB for chromium-only. Cross-browser CI = ~210MB. This is large but within normal repo sizes. **Mitigation A**: commit chromium-only baselines; run webkit + firefox in CI without committing their baselines (they generate fresh per run and fail if diff exceeds threshold). **Mitigation B (if A doesn't work)**: migrate `baselines/` to Git LFS. Git LFS requires additional CI setup — only activate if footprint becomes a real problem. Flagged, not pre-empted.
+4. **Baseline storage footprint**. 184 PNGs × ~400KB = ~70MB for chromium-only. Cross-browser CI = ~210MB. This is large but within normal repo sizes. **Mitigation A**: commit chromium-only baselines; run webkit + firefox in CI without committing their baselines (they generate fresh per run and fail if diff exceeds threshold). **Mitigation B (if A doesn't work)**: migrate `baselines/` to Git LFS. Git LFS requires additional CI setup — only activate if footprint becomes a real problem. Flagged, not pre-empted.
 
 5. **Fixture endpoint security gate**. `handleFixtureSeed` + `handleStackDeck` are dev-only. If `import.meta.env.PROD` is accidentally false in production (bundler misconfiguration, alt-build-tool), these endpoints go live and become a cheat-proof gameplay bypass. **Mitigation**: belt-and-suspenders gate — both the handler body check AND the router-level `if (import.meta.env.DEV)` registration. Both must succeed for the endpoint to be reachable. A production build that tree-shakes the router branch also tree-shakes the handler. Phase 5 §2.2.4 / §2.6.5 specify both gates.
 
@@ -1858,6 +2192,16 @@ This is the *output* of Phase 5 — the spec's checkboxes below flip to checked:
 11. **Visual regression flake on focus rings**. Focus rings render differently depending on whether the page has keyboard focus or not. A Playwright test that navigates programmatically might leave the focus on an unintended element, producing a focus-ring artifact in the baseline. **Mitigation**: every test's last step before `toHaveScreenshot()` is `await page.locator('body').click()` to move focus to the body (no focus ring). If focus-ring artifacts still leak, add `page.addStyleTag({ content: '*:focus-visible { outline: none !important; }' })` but ONLY for the visual regression suite — never ship this to production.
 
 12. **Dev-server stacked deck + real RNG interaction**. `handleStackDeck` sets the top N cards of the draw pile deterministically, but the bottom of the pile is still shuffled with `crypto.getRandomValues()`. If the stacked section runs out and the shuffled tail starts producing different card orders per test run, downstream state is non-deterministic. **Mitigation**: for Playwright visual regression, seeded fixtures (not stacked deck) are the canonical approach — stacked deck is for §2.6 full-loop protocol only, where non-determinism past the top N doesn't break the protocol's pass criteria.
+
+13. **(B1 deepening) iOS 26 UA string freeze**. Apple froze `iPhone OS` at `18_6` in the UA string starting with iOS 26 (privacy/anti-fingerprinting). The `Version/` token still updates correctly. ANY code that parses iOS version from `iPhone OS X_Y` will report `18`, not the real version. The corrected detection in §2.1.5 uses `Version/` with `iPhone OS` as a fallback for in-app browsers. If iOS 27 also has this freeze (likely), the pattern will need no change since it already prioritizes `Version/`. **Confirmed by**: webkit.org Safari 26 release notes, Kochava, Singular, 51degrees, Daring Fireball.
+
+14. **(B2 deepening) Wrangler `define` configuration**. Server code is bundled by Wrangler (esbuild), NOT Vite. `import.meta.env.PROD`/`.DEV` are Vite-specific and do NOT get replaced in the Wrangler build without explicit `define` config in `wrangler.jsonc`. The corrected approach in §2.6.5 uses `__DEV__` via Wrangler's `define` table + runtime `env.ENVIRONMENT` check. **If someone adds a new dev-only server feature**: they must use `__DEV__` (not `import.meta.env.DEV`) and MUST add the runtime gate. A CI grep step (§2.8.4 #8) verifies no test-endpoint strings survive in the production bundle.
+
+15. **(S4 deepening) Framer Motion animation non-determinism in Playwright**. Playwright's `animations: 'disabled'` option handles CSS animations. Framer Motion JS-driven animations (layout animations, spring physics) are NOT CSS animations — they run via `requestAnimationFrame`. The `waitForFunction(() => document.getAnimations().every(...))` helper in §2.2.7 catches Web Animations API animations but may miss Framer Motion springs. If visual regression flakes persist after implementing §2.2.7, the fallback is to inject `window.__framer_motion_skip_animations = true` before navigation (Framer Motion internal flag that forces all animations to their end state).
+
+16. **(S16 deepening) First-time player recruitment timeout**. Phase 5 completion is gated on §2.7, which requires a qualifying first-time player. If Briggsy cannot recruit a qualifying tester within **14 days**, the provisional path is: run §2.7 with a secondary tester (someone who has played Exploding Kittens but NOT seen BURNED) using explicitly weakened pass criteria documented as "provisional pass — retest with qualifying player when available." This prevents indefinite Phase 5 blocking from a recruitment failure (not a code failure).
+
+17. **(Performance deepening) Playwright suite sharding escape hatch**. The current 184-baseline suite takes ~2 minutes locally and ~7 minutes in CI. If future feature work grows the screen count past ~500 baselines, adopt Playwright's `--shard=N/M` flag to split across CI runners. This is a future optimization, not a Phase 5 action.
 
 ---
 

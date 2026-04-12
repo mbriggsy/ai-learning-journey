@@ -1,82 +1,102 @@
-.container {
-  display: flex;
-  flex-direction: column;
-  align-items: center;
-  justify-content: center;
-  min-height: 100svh;
-  background: var(--bg-app);
-  color: var(--text-primary);
-  padding: 32px 24px;
-  text-align: center;
-  gap: 12px;
-}
+/* EliminatedView.module.css
+   Full-screen eliminated state. Replaces PlayingView when the player is no longer alive.
+   No interaction beyond dismissing — by design, the §5.6 "vocal participation" experience.
+   Player watches the TV with the group.
+*/
 
-.explosionWrap {
-  margin-bottom: 4px;
-}
+@layer components {
+  .view {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    gap: var(--space-4);
+    min-height: var(--size-viewport-safe);
+    padding-top: max(var(--space-8), var(--inset-top));
+    padding-right: max(var(--space-6), var(--inset-right));
+    padding-bottom: max(var(--space-8), var(--inset-bottom));
+    padding-left: max(var(--space-6), var(--inset-left));
+    background: var(--color-bg-app);
+    color: var(--color-fg-primary);
+    font-family: var(--font-body);
+    text-align: center;
+    box-sizing: border-box;
+  }
 
-.skull {
-  font-size: 64px;
-  line-height: 1;
-  filter: drop-shadow(0 0 20px var(--red, #e03535));
-}
+  /* Animated skull icon — spring entry, scale 0 → 1, rotate -15° → 0°.
+     Framer Motion controls the entry animation; CSS controls the resting state.
+     Wrapper class .skullWrap is consumed by the m.div in EliminatedView.tsx
+     (renamed from .explosionWrap per §2.3.9b). */
+  .skullWrap {
+    flex: 0 0 auto;
+  }
 
-.title {
-  font-family: var(--font-display);
-  font-size: 32px;
-  font-weight: 700;
-  color: var(--red, #e03535);
-}
-
-.flavor {
-  font-size: 16px;
-  font-style: italic;
-  color: var(--text-secondary);
-}
-
-/* --- Remaining players --- */
-
-.remaining {
-  margin-top: 20px;
-  padding: 16px;
-  border-radius: 12px;
-  background: var(--bg-card);
-  border: 1px solid var(--border-subtle);
-  width: 100%;
-  max-width: 300px;
-}
-
-.remainingLabel {
-  font-family: var(--font-display);
-  font-size: 13px;
-  font-weight: 600;
-  text-transform: uppercase;
-  letter-spacing: 0.08em;
-  color: var(--text-secondary);
-  margin-bottom: 12px;
-}
-
-.playerList {
-  display: flex;
-  flex-direction: column;
-  gap: 10px;
-}
-
-.playerChip {
-  display: flex;
-  align-items: center;
-  gap: 8px;
-  font-size: 15px;
-}
-
-.watchPrompt {
-  margin-top: 16px;
-  font-size: 14px;
-  color: var(--text-disabled);
-}
-
-@media (prefers-reduced-motion: reduce) {
   .skull {
-    filter: none;
+    font-size: var(--text-display);
+    filter: drop-shadow(0 0 var(--space-5) color-mix(in oklab, var(--color-accent-burned) 60%, transparent));
+  }
+
+  .title {
+    font-family: var(--font-display);
+    font-size: var(--text-title);
+    font-weight: 700;
+    color: var(--color-accent-burned);
+    letter-spacing: 0.08em;
+    text-transform: uppercase;
+    margin: 0;
+  }
+
+  .flavor {
+    font-family: var(--font-body);
+    font-size: var(--text-body);
+    color: var(--color-fg-secondary);
+    font-style: italic;
+    margin: 0;
+    max-width: min(90%, var(--size-content-narrow));
+    line-height: 1.4;
+  }
+
+  .aliveList {
+    display: flex;
+    flex-wrap: wrap;
+    justify-content: center;
+    gap: var(--space-2);
+    padding: var(--space-4);
+    background: var(--color-bg-surface);
+    border: 1px solid var(--color-border-subtle);
+    border-radius: var(--radius-lg);
+    max-width: min(90%, var(--size-content-narrow));
+    margin-top: var(--space-5);
+  }
+
+  .aliveListLabel {
+    width: 100%;
+    font-family: var(--font-display);
+    font-size: var(--text-caption);
+    font-weight: 600;
+    color: var(--color-fg-muted);
+    letter-spacing: 0.14em;
+    text-transform: uppercase;
+    margin-bottom: var(--space-2);
+  }
+
+  .alivePlayer {
+    display: inline-flex;
+    align-items: center;
+    gap: var(--space-1);
+    padding: var(--space-1) var(--space-3);
+    background: var(--color-bg-elevated);
+    border: 1px solid var(--color-border-subtle);
+    border-radius: var(--radius-full);
+    font-size: var(--text-caption);
+    color: var(--color-fg-primary);
+  }
+
+  .prompt {
+    font-family: var(--font-body);
+    font-size: var(--text-caption);
+    color: var(--color-fg-muted);
+    margin-top: var(--space-6);
+    letter-spacing: 0.04em;
   }
 }

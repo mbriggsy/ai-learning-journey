@@ -6,14 +6,15 @@ import { MOTION } from '@client/shared/animation-config'
 import styles from './EliminatedView.module.css'
 
 const FLAVOR_LINES = [
-  'BOOM. You\'re cooked.',
-  'Your cover\'s blown.',
-  'Blown to smithereens.',
-  'Rest in pieces.',
-  'Catastrophic failure.',
-  'You had a blast.',
-  'Game over, hotshot.',
-  'Ka-boom, baby.',
+  "Your cover's blown.",
+  "Game over, hotshot.",
+  "Catastrophic failure.",
+  "And just like that, you're cooked.",
+  "HR has been notified.",
+  "Somebody get the cleanup crew.",
+  "Well, that's one way to resign.",
+  "The Pendleton Agency thanks you for your service.",
+  "Penetrated by enemy assets. ...Phrasing.",
 ] as const
 
 function pickFlavor(): string {
@@ -26,9 +27,9 @@ export function EliminatedView() {
   const flavor = useMemo(pickFlavor, [])
 
   return (
-    <div className={styles.container}>
+    <div className={styles.view}>
       <m.div
-        className={styles.explosionWrap}
+        className={styles.skullWrap}
         initial={{ scale: 0, rotate: -15 }}
         animate={{ scale: 1, rotate: 0 }}
         transition={{ type: 'spring', stiffness: 400, damping: 15 }}
@@ -42,7 +43,7 @@ export function EliminatedView() {
         animate={{ opacity: 1, y: 0 }}
         transition={{ ...MOTION.SNAPPY, delay: 0.2 }}
       >
-        You Exploded!
+        You&apos;re Burned.
       </m.div>
 
       <m.div
@@ -55,24 +56,22 @@ export function EliminatedView() {
       </m.div>
 
       <m.div
-        className={styles.remaining}
+        className={styles.aliveList}
         initial={{ opacity: 0, y: 10 }}
         animate={{ opacity: 1, y: 0 }}
         transition={{ ...MOTION.SNAPPY, delay: 0.7 }}
       >
-        <div className={styles.remainingLabel}>Still alive</div>
-        <div className={styles.playerList}>
-          {alivePlayers.map(p => (
-            <div key={p.id} className={styles.playerChip}>
-              <PlayerIcon color={p.color} size={18} />
-              <span>{p.name}</span>
-            </div>
-          ))}
-        </div>
+        <div className={styles.aliveListLabel}>Still alive</div>
+        {alivePlayers.map(p => (
+          <div key={p.id} className={styles.alivePlayer}>
+            <PlayerIcon color={p.color} size={18} />
+            <span>{p.name}</span>
+          </div>
+        ))}
       </m.div>
 
       <m.div
-        className={styles.watchPrompt}
+        className={styles.prompt}
         initial={{ opacity: 0 }}
         animate={{ opacity: 1 }}
         transition={{ duration: 0.4, delay: 1.0 }}

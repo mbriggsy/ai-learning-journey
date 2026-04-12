@@ -14,7 +14,7 @@ import { useWakeLock } from '@client/shared/hooks/useWakeLock'
 import { JoinScreen } from './JoinScreen'
 import { Hand } from './Hand'
 import { StagingArea } from './StagingArea'
-import { InterceptButton } from './InterceptButton'
+import { FloatingActionButton } from './FloatingActionButton'
 import { ErrorToast } from './ErrorToast'
 import { ConnectionOverlay } from './ConnectionOverlay'
 import { EliminatedView } from './EliminatedView'
@@ -123,6 +123,7 @@ export function Player() {
       />
       <ErrorToast />
       <ConnectionOverlay status={connectionStatus} />
+      <FloatingActionButton />
     </>
   )
 }
@@ -428,7 +429,6 @@ function PlayingView({ roomCode }: { roomCode: string }) {
         {detailCardType && <CardDetailSheet cardType={detailCardType} />}
       </BottomSheet>
 
-      <InterceptButton />
       <Suspense><DramaOverlay /></Suspense>
     </div>
   )

@@ -1,0 +1,95 @@
+/* FloatingActionButton.module.css
+   Replaces InterceptButton (NopeButton was already orphaned dead code).
+   Variant prop drives label and accent color.
+
+   Positioning: position: absolute against the phone-root contract (Phase 1 §2.12
+   follow-up: html, body, #root all position: relative + sized to viewport-safe).
+   NO position: fixed — Phase 1 lint Rule 3 + landmine 7 (WebKit bug 297779).
+   Renders as a direct child of <Player> Fragment, sibling of <PhoneRouter>,
+   so it positions against #root (not inside the workbench).
+
+   z-index: var(--z-sticky) — must remain on top of normal page content during
+   the intercept window. Note: native <dialog> overlays (BottomSheet,
+   ConnectionOverlay) cover the FAB via the top layer — intentional, since
+   modal dialogs should outrank floating buttons.
+
+   .urgent fabPulse is GAMEPLAY-ESSENTIAL — fires during intercept window.
+   Without the pulse, the player has no affordance that the window is open.
+   Consumes --motion-duration-essential-pulse, survives reduced-motion.
+*/
+
+@layer components {
+  .fab {
+    position: absolute;
+    bottom: var(--space-10);
+    right: var(--space-4);
+    width: var(--size-fab);
+    height: var(--size-fab);
+    border: 3px solid;
+    border-radius: var(--radius-full);
+    font-family: var(--font-display);
+    font-weight: 700;
+    text-transform: uppercase;
+    cursor: pointer;
+    touch-action: manipulation;
+    z-index: var(--z-sticky);
+    transition:
+      transform var(--motion-duration-base) var(--motion-ease-base),
+      box-shadow var(--motion-duration-base) var(--motion-ease-base);
+  }
+
+  .fab:active {
+    transform: scale(0.95);
+  }
+
+  .fab:focus-visible {
+    outline: 2px solid var(--color-border-focus);
+    outline-offset: 2px;
+  }
+
+  /* Disabled state — preserved from InterceptButton (Phase 2 first draft
+     dropped this rule). Fires when player has no Intercepted card in hand
+     during the intercept window — button still renders but is non-interactive. */
+  .fab:disabled {
+    opacity: 0.35;
+    cursor: default;
+    box-shadow: none;
+  }
+
+  /* Variant: intercept (the hostile "block their play" action) */
+  .intercept {
+    background: var(--color-bg-danger);
+    color: var(--color-fg-on-burned);
+    border-color: var(--color-accent-burned);
+    box-shadow: var(--shadow-glow-danger);
+    font-size: var(--text-caption);
+  }
+
+  /* Variant: nope (forward-compat for protocol naming — no live consumer 2026) */
+  .nope {
+    background: var(--color-bg-danger);
+    color: var(--color-fg-on-burned);
+    border-color: var(--color-accent-burned);
+    box-shadow: var(--shadow-glow-danger);
+    font-size: var(--text-body);
+  }
+
+  /* Urgency animation — active during the last 2 seconds of the intercept window.
+     Gameplay-essential signal: survives prefers-reduced-motion via essential-pulse. */
+  .urgent {
+    animation: fabPulse var(--motion-duration-essential-pulse) ease-in-out infinite alternate;
+  }
+
+  @keyframes fabPulse {
+    0%, 100% {
+      box-shadow: var(--shadow-glow-danger);
+      transform: scale(1);
+    }
+    50% {
+      box-shadow:
+        0 0 40px var(--color-accent-burned),
+        0 0 80px color-mix(in oklab, var(--color-accent-burned) 50%, transparent);
+      transform: scale(1.05);
+    }
+  }
+}

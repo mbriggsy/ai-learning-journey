@@ -90,7 +90,7 @@
       160px
     );
 
-    /* FAB (InterceptButton / NopeButton unified) */
+    /* FAB (FloatingActionButton) */
     --size-fab: clamp(
       64px,
       calc(64px + (100svh - 667px) * (16 / 699)),

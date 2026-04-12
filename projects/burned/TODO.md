@@ -36,13 +36,12 @@
 4. ✅ **Phase 4** — DEEPENED 2026-04-12, 8-agent pass, 3 blockers fixed, 1920→1966 lines
 5. ✅ **Phase 5** — DEEPENED 2026-04-12, 8-agent pass, 9 blockers fixed, 1992→2336 lines
 
-**Next steps (in order):**
+**Completed steps:**
 
-6. **Phase 1 follow-up sweep** — re-edit `phase-1-foundation.md` to fold in every remaining cross-phase token request the original deepening didn't catch. (See "STILL OPEN" lists below — 17 new + 3 amendments from Phase 3 deepening.)
-7. **Cross-phase contradiction sweep** — final reconciliation across all 5 deepened phases. Key items from Phase 5 deepening: viewport list reconciliation (B6 — plan's viewports differ from spec §8.1/§8.2; spec must be amended during Phase 5 execution), Wrangler `define` config (B2 — new `wrangler.jsonc` section affects Phase 5 §2.6.5 but also any future dev-only server code).
-8. **THEN** — `/ce:work docs/plans/css-foundation-rebuild/phase-1-foundation.md` (execution begins).
+6. ✅ **Phase 1 follow-up sweep** — DONE 2026-04-12. 17 new tokens + 4 amendments folded into `phase-1-foundation.md` from Phase 3 §7. Commit `a2a37e39`.
+7. ✅ **Cross-phase contradiction sweep** — DONE 2026-04-12. One contradiction found and fixed: 3 stale `import.meta.env.DEV` references in Phase 5 acceptance checklists → corrected to `__DEV__`. All other cross-phase checks verified clean. Commit `b1b9d6e1`.
 
-**Do NOT begin `/ce:work` until cross-phase contradictions resolved (steps 6-7).**
+**▶ NEXT ACTION: `/ce:work docs/plans/css-foundation-rebuild/phase-1-foundation.md`** — execution begins. All 5 phases deepened, all cross-phase tokens resolved, all contradictions fixed. The plan is a paint-by-numbers baking recipe — execution is mechanical.
 
 **Workflow rules that MUST be honored (from memory)**:
 - `feedback-stop-after-every-phase.md` — deepen ONE phase per session, stop for Briggsy's review, then next. Do NOT batch phases in one turn.

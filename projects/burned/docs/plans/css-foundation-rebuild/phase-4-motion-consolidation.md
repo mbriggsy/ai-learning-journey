@@ -6,7 +6,48 @@
 
 **Quality bar inherited**: `PRODUCT-SPECIFICATION.md` §2 Quality Bar (*"Could this look like a frame from an Archer episode?"*). Motion consolidation doesn't introduce new easings or durations — it's a cleanup pass that makes the **existing** animation grammar tunable from one file. Animation cadence is set in Phases 2/3; Phase 4 makes it durable.
 
-**Scope bar**: TSX + CSS edits only. No new files except the `animation-config.ts` deletion. No token additions unless the audit surfaces a gap (§7 cross-phase flags). No component logic changes. No behavior changes that a user could see — the animations should look identical before and after, byte for byte, because the literal values in `MOTION_DURATIONS` / `MOTION_EASINGS` match the literals they replace.
+**Scope bar**: TSX + CSS edits only. No new files except the `animation-config.ts` deletion. No component logic changes. Eight sites receive intentional duration tightenings where existing inline literals are replaced by the closest semantic preset (e.g., `{ duration: 0.4 }` → `MOTION.enter` at 0.25s). These are deliberate tempo changes, not accidental — see §5 Landmine 9 for the full list, rationale, and Phase 5 escape hatch. All other sites are numerically identical before and after.
+
+---
+
+## Enhancement Summary (Deepening Pass — 2026-04-12)
+
+**Deepening method.** 8 parallel agents: architecture-strategist (pattern compliance + measurement-div architecture), kieran-typescript-reviewer (type safety of MOTION presets + spread composability), julik-frontend-races-reviewer (ResizeObserver timing + GSAP/FM transform collisions), performance-oracle (bundle size + reflow costs + CSS var() in infinite animations + tree-shaking), pattern-recognition-specialist (template consistency across 24 FM sites + grep robustness + naming analysis), code-simplicity-reviewer (measurement-div alternatives + plan verbosity), best-practices-researcher (ResizeObserver spec guarantees + React 19 batching + CSS Typed OM limitations). Context7 documentation verified for Framer Motion 12.x (spring configs, transition type unions, MotionConfig reducedMotion API) and GSAP v3 (timeline fromTo, ease string registry). Project insights cross-referenced: #002 (FM VisualElement is initial — bundle baseline), #005 (stale timers need generation counters — DramaOverlay cleanup gap), #006 (CSS fallback ordering).
+
+### Critical corrections landed (BLOCKERS — the plan's original code would fail or produce wrong output)
+
+1. **`--motion-ease-base` renamed to `--motion-ease-base` throughout.** Phase 1 deepening (commit `ba6f18ce`, 2026-04-11) renamed `--motion-ease-base` → `--motion-ease-base` and `MOTION_EASINGS.base` → `MOTION_EASINGS.base`. Phase 4 was drafted before the rename and referenced the dead name in 13+ locations: §2.2 Template CSS-S, §2.5.1-§2.5.3, §4.2, §4.3, §1 line 18, §9 sources. Every CSS `animation:` replacement would have written `var(--motion-ease-base)` — a property that does not exist in `primitives.css`. CSS silently falls back to the `ease` default (`cubic-bezier(0.25, 0.1, 0.25, 1)`), visually different from the intended `--motion-ease-base` (`cubic-bezier(0.4, 0, 0.2, 1)`). **Found independently by 3 of 7 agents.** Global find-and-replace applied.
+
+2. **SmartActionBox and FloatingActionButton "before" code corrected.** Phase 2 deepening changed breathing animation durations from `--motion-duration-dramatic`/`--motion-duration-base` to `--motion-duration-essential-pulse` (these are gameplay-essential signals that must survive `prefers-reduced-motion: reduce`). Phase 4's "Current" code blocks in §2.5.1-§2.5.3 and the audit table (lines 92-94) showed the pre-Phase-2-deepening state. Updated to match what the executor will actually see in the post-Phase-2 files.
+
+3. **§2.5.4 removed — JoinScreen dots already tokenized by Phase 2.** Phase 2 deepening already replaces `1.5s` with `var(--motion-duration-dots)` in the JoinScreen.module.css full-file rewrite. Phase 1 deepening added `--motion-duration-dots: 1500ms` to the scale (commit `ba6f18ce`). Phase 4's §2.5.4 edit would have failed to find the `1.5s` string. §7.1 debate (Option A vs Option B for `--motion-duration-dots`) is moot — Phase 1 committed Option A. Both sections removed. CSS surgical edits reduced from 4 to 3.
+
+### Warning-level fixes landed
+
+4. **§2.7.1 measurement-div initialization fixed.** Original plan initialized `panelSize` to `{ w: 0, h: 0 }`. On first render before the ResizeObserver fires, `panelW = 0` and `panelH = 0`, placing all ring panels ~140px from their correct positions. `initial={false}` prevents entrance animation but does NOT prevent Framer Motion from springing to the corrected position when panelSize updates. Fix: added synchronous `getBoundingClientRect()` inside `useLayoutEffect` before observer attachment, so panels have correct dimensions before first paint. The `useLayoutEffect` runs after DOM insertion but before paint — the measurement div is in the document and the browser has computed its layout. This eliminates the first-frame jitter entirely.
+
+5. **Scope bar amended.** Original claimed "identical before and after, byte for byte." Eight sites intentionally change durations (0.4→0.25 for three GameOver/EliminatedView fades, 0.3→0.25 for Hand/StagingArea backdrops, 0.2→0.15 for ErrorToast/SmartActionBox quick fades, 0.5→0.4 for PlayerRing GSAP tween). Scope bar now acknowledges these as deliberate tempo changes with a §5 Landmine 9 cross-reference.
+
+6. **§3 step count corrected.** Was "17 steps," actually 20. Fixed.
+
+7. **§1 MOTION_DURATIONS scale description updated.** Original listed `instant/fast/base/slow/dramatic`. Phase 1 deepening dropped `instant` (YAGNI) and added `dots`, `ambient`, `essentialPulse`, `essentialSpin`, `essentialFlash`. Updated to match the actual Phase 1 deepened scale.
+
+8. **§2.5 verification grep 2 fixed.** Pattern included `|linear` but prose said linear is allowed. Removed `|linear` from pattern — `linear` is an acceptable CSS keyword for spinners and stepped animations.
+
+9. **New Landmine 10 added — DramaOverlay GSAP timeline lacks cleanup on unmount.** Pre-existing bug: the GSAP timeline created inside `processQueue()` is never killed when the component unmounts. If DramaOverlay unmounts mid-animation, the timeline's `onComplete` fires on a detached component. Phase 4's scope says "no component logic changes" — correct to defer. Flagged for Phase 5. (Cross-referenced with project insight #005: stale timers need generation counters.)
+
+### Research insights added
+
+- **Measurement-div pattern validated** (§2.7): `getComputedStyle().getPropertyValue('--size-player-panel-width')` returns the raw `clamp()` string, NOT resolved pixels. CSS Typed OM (`computedStyleMap`) has the same limitation. The measurement div is the only reliable mechanism for resolving `clamp()`-based tokens to pixel values. Alternative approach (read from existing panel via `slotRefs`) was considered and rejected: GSAP applies `scale: 1.12` to the active panel during turn transitions, contaminating `getBoundingClientRect()` dimensions. The measurement div is never animated.
+- **React 19 auto-batching confirmed** (§2.7.1): React 18+ automatically batches ALL `setState` calls regardless of origin — including ResizeObserver callbacks. Two `setState` calls produce one re-render. Combining into a single state object is cleaner but not required for correctness.
+- **CSS `var()` in infinite animation has zero runtime cost** (§2.5): CSS custom properties resolve at computed-value time. For `animation:` shorthand, the browser resolves `var(--motion-ease-base)` once when computing the style, then uses the resolved `cubic-bezier()` for the animation's lifetime. No per-frame cost.
+- **GSAP ease string boundary validated** (§2.4): `back.out(1.4)` uses overshoot that exceeds the 0-1 range — a single `cubic-bezier()` cannot represent it (cubic-bezier curves are monotonic). `power2.out`/`power2.in` have approximate but not exact CSS equivalents. Conversion would introduce visible changes with zero architectural benefit.
+- **Framer Motion default transition when only `delay` specified** (§2.3.6): version-dependent spring (unspec'd `stiffness: 100, damping: 10` at time of writing). Phase 4's `MOTION.enter` replacement locks behavior deterministically — safer outcome, not a regression.
+
+### Cross-phase resolutions
+
+- **§7.1 (`--motion-duration-dots`)**: RESOLVED. Phase 1 deepening committed Option A (`--motion-duration-dots: 1500ms` in both `primitives.css` and `motion.ts`). No Phase 4 action needed. Section retained as historical record but marked resolved.
+- **§7.2 (`--size-player-panel-height`)**: RESOLVED. Phase 1 deepening added the token to `semantic.board.css` (commit `ba6f18ce`, Enhancement Summary item 7). Section retained as historical record but marked resolved.
 
 ---
 
@@ -14,8 +55,8 @@
 
 Phase 4 inherits:
 
-- **Phase 1 `motion.ts`** (`src/client/shared/tokens/motion.ts`) — defines `MOTION_DURATIONS` (instant/fast/base/slow/dramatic), `MOTION_EASINGS` (standard/emphasized/decelerate/accelerate/anticipate), `MOTION_SPRINGS` (snappy/deliberate/punchy/gentle), and `MOTION` (combined presets: quickFade/enter/exit/dramatic + spring re-exports). Phase 1 §2.6 committed all of these values.
-- **Phase 1 `primitives.css` motion block** — mirrors `motion.ts` as CSS custom properties: `--motion-duration-{instant,fast,base,slow,dramatic}` + `--motion-ease-{standard,emphasized,decelerate,accelerate,anticipate}`. Spring configs are TS-only; CSS has no spring primitive.
+- **Phase 1 `motion.ts`** (`src/client/shared/tokens/motion.ts`) — defines `MOTION_DURATIONS` (fast/base/slow/dramatic/dots/ambient/essentialPulse/essentialSpin/essentialFlash), `MOTION_EASINGS` (base/emphasized/decelerate/accelerate/anticipate), `MOTION_SPRINGS` (snappy/deliberate/punchy/gentle), and `MOTION` (combined presets: quickFade/enter/exit/dramatic + spring re-exports). Phase 1 §2.6 committed all of these values. **Note (deepening correction):** Phase 1 deepening dropped `instant` (YAGNI — no consumer) and renamed `standard` → `base`; added `dots`, `ambient`, and three `essential*` durations for reduced-motion survivors.
+- **Phase 1 `primitives.css` motion block** — mirrors `motion.ts` as CSS custom properties: `--motion-duration-{fast,base,slow,dramatic,dots,ambient,essential-pulse,essential-spin,essential-flash}` + `--motion-ease-{base,emphasized,decelerate,accelerate,anticipate}`. Spring configs are TS-only; CSS has no spring primitive.
 - **Phase 1 `motion-token-sync.test.ts`** — CI gate that walks `MOTION_DURATIONS` and `MOTION_EASINGS` and confirms every exported value has a matching CSS custom property declaration in `primitives.css`. Drift between the two surfaces fails the test.
 - **Phase 1 reduced-motion fork** — `@media (prefers-reduced-motion: reduce)` in `primitives.css` zeros out all `--motion-duration-*` values. The TS side uses Framer Motion's `useReducedMotion` hook on a per-component basis where needed (spinners, breathing glows — see §5 landmine 3).
 - **Phase 2 phone-view CSS rewrites** — every `.module.css` under `src/client/player/` already consumes `var(--motion-duration-*)` / `var(--motion-ease-*)` per its Phase 2 §2.3 spec. Phase 4's CSS scope is a surgical verification sweep over those files plus the handful of stragglers where Phase 2 left a raw `ease-in-out` keyword or a raw duration behind (see §1.1 correction 3).
@@ -89,12 +130,13 @@ During plan authoring, direct reads of the `src/client/` TSX surface surfaced fi
 
 | # | File | Line | Current literal | Phase 4 action |
 |---|---|---|---|---|
-| 1 | `src/client/player/SmartActionBox.module.css` (Phase 2 §2.3.3 rewrite) | ~527 | `animation: breatheIntense var(--motion-duration-base) ease-in-out infinite alternate` | `ease-in-out` → `var(--motion-ease-standard)` (§2.5.1) |
-| 2 | `src/client/player/SmartActionBox.module.css` | ~545 | `animation: breathe var(--motion-duration-dramatic) ease-in-out infinite alternate` | same (§2.5.2) |
-| 3 | `src/client/player/FloatingActionButton.module.css` (Phase 2 §2.3.7 rewrite) | ~826 | `animation: fabPulse var(--motion-duration-dramatic) ease-in-out infinite alternate` | same (§2.5.3) |
-| 4 | `src/client/player/JoinScreen.module.css` (Phase 2 §2.3.8 rewrite) | ~1042 | `animation: joinScreenDots 1.5s steps(4, end) infinite` | `1.5s` → `var(--motion-duration-dots)` — **new token** (§2.5.4 + §7.1) |
+| 1 | `src/client/player/SmartActionBox.module.css` (Phase 2 §2.3.3 rewrite) | ~527 | `animation: breatheIntense var(--motion-duration-essential-pulse) ease-in-out infinite alternate` | `ease-in-out` → `var(--motion-ease-base)` (§2.5.1) |
+| 2 | `src/client/player/SmartActionBox.module.css` | ~545 | `animation: breathe var(--motion-duration-essential-pulse) ease-in-out infinite alternate` | same (§2.5.2) |
+| 3 | `src/client/player/FloatingActionButton.module.css` (Phase 2 §2.3.7 rewrite) | ~826 | `animation: fabPulse var(--motion-duration-essential-pulse) ease-in-out infinite alternate` | same (§2.5.3) |
 
-**Real Phase 4 CSS @keyframes scope: 4 surgical edits**, not 15. The 15-count was measuring the pre-rebuild surface. Phases 2 and 3 systematically migrated the other 11 during their rewrites. §2.5 also mandates a verification grep that confirms no Phase 2/3 file smuggled a raw duration literal past review.
+> **§2.5.4 removed during deepening** — Phase 2 deepening already tokenizes `JoinScreen.module.css` `.waitingDots::after` from `1.5s` to `var(--motion-duration-dots)`. Phase 1 deepening committed `--motion-duration-dots: 1500ms` (commit `ba6f18ce`). No Phase 4 action needed for this site.
+
+**Real Phase 4 CSS @keyframes scope: 3 surgical edits**, not 15. The 15-count was measuring the pre-rebuild surface. Phases 2 and 3 systematically migrated the other 12 during their rewrites (including the JoinScreen dots duration). §2.5 also mandates a verification grep that confirms no Phase 2/3 file smuggled a raw duration literal past review.
 
 **Correction 4 — CSS `transition:` declaration count.** Same mechanism as correction 3. The roadmap counted 13 pre-rebuild. Post-Phase-2/3, every `.module.css` file that survives already consumes motion tokens on every `transition:` declaration. Direct audit of the post-Phase-2/3 state surfaced **zero** stragglers — every transition declaration specified in the Phase 2 and Phase 3 plans uses `var(--motion-duration-*)` + `var(--motion-ease-*)`. **Real Phase 4 CSS transition scope: 0 surgical edits**, replaced with a **verification grep** (§2.6) that fails the Phase 4 commit if any `.module.css` file contains a bare seconds literal in a `transition:` declaration.
 
@@ -105,11 +147,11 @@ During plan authoring, direct reads of the `src/client/` TSX surface surfaced fi
 - 24 FM transition sites across 12 TSX files (was: 22 across 9)
 - 1 local `const TRANSITION` definition to delete (SmartActionBox.tsx:29)
 - 3 GSAP literal-timing tweens across 2 files (was: 2 tweens)
-- 4 CSS `@keyframes`/`animation:` surgical edits (was: 15 wholesale edits)
+- 3 CSS `@keyframes`/`animation:` surgical edits (was: 15 wholesale edits; deepening removed §2.5.4 — Phase 2 already tokenized JoinScreen dots)
 - 0 CSS `transition:` surgical edits + 1 verification grep gate (was: 13 wholesale edits)
 - 1 TSX ↔ CSS coupling resolution (PlayerRing measurement-div pattern)
 - 1 legacy file deletion (`src/client/shared/animation-config.ts`)
-- 1 new Phase 1 token flagged (`--motion-duration-dots` — §7.1)
+- 0 new Phase 1 tokens needed (deepening confirmed `--motion-duration-dots` and `--size-player-panel-height` already committed by Phase 1 deepening)
 
 The narrative shift: Phase 4 is **less about migration and more about elimination of the last inline literals**, because Phases 2 and 3 did most of the CSS-side work incidentally during their file rewrites. The TSX side was out of scope for Phases 2 and 3 and is therefore Phase 4's primary workload.
 
@@ -202,7 +244,7 @@ transition={{ ...MOTION.enter, delay: 0.6 }}
 transition={MOTION.quickFade}
 ```
 
-**Why named presets and not raw duration tokens**: Framer Motion `transition.duration` is a Number, not a string — you cannot write `duration: 'var(--motion-duration-fast)'` (Phase 1 §2.6 landmine). The TS token layer provides named presets (`MOTION.quickFade` = `{ duration: 0.15, ease: standard }`, `MOTION.enter` = `{ duration: 0.25, ease: decelerate }`, etc.) that encode the intent, not the raw number. The inline-literal sites in §2.3 map to these presets by semantic role:
+**Why named presets and not raw duration tokens**: Framer Motion `transition.duration` is a Number, not a string — you cannot write `duration: 'var(--motion-duration-fast)'` (Phase 1 §2.6 landmine). The TS token layer provides named presets (`MOTION.quickFade` = `{ duration: 0.15, ease: base }`, `MOTION.enter` = `{ duration: 0.25, ease: decelerate }`, etc.) that encode the intent, not the raw number. The inline-literal sites in §2.3 map to these presets by semantic role:
 
 - **Entry/reveal** (`{ duration: 0.25-0.4, ease: 'easeOut' }` or similar decelerating eases) → `MOTION.enter`
 - **Quick fade** (`{ duration: 0.2, ease: 'easeOut' }` for toast-style notifications) → `MOTION.quickFade`
@@ -246,11 +288,11 @@ The mapping is exact — Phase 1's `motion.ts` was written with these four sites
 **After:**
 ```css
 .something {
-  animation: drawPileBreathe var(--motion-duration-ambient) var(--motion-ease-standard) infinite;
+  animation: drawPileBreathe var(--motion-duration-ambient) var(--motion-ease-base) infinite;
 }
 ```
 
-**Why**: Phases 2 and 3 systematically consumed `--motion-duration-*` tokens but left four sites with a raw `ease-in-out` keyword (pragmatic carry-over — CSS's built-in `ease-in-out` is `cubic-bezier(0.42, 0, 0.58, 1)` which is close to but not identical to Phase 1's `--motion-ease-standard` `cubic-bezier(0.4, 0, 0.2, 1)`). The Phase 4 surgical edit unifies the easing reference. The perceptual difference between the two curves is <2% over a 400ms animation; the consolidation gain (one source of truth) outweighs the imperceptible curve change.
+**Why**: Phases 2 and 3 systematically consumed `--motion-duration-*` tokens but left four sites with a raw `ease-in-out` keyword (pragmatic carry-over — CSS's built-in `ease-in-out` is `cubic-bezier(0.42, 0, 0.58, 1)` which is close to but not identical to Phase 1's `--motion-ease-base` `cubic-bezier(0.4, 0, 0.2, 1)`). The Phase 4 surgical edit unifies the easing reference. The perceptual difference between the two curves is <2% over a 400ms animation; the consolidation gain (one source of truth) outweighs the imperceptible curve change.
 
 ---
 
@@ -953,7 +995,7 @@ import styles from './ErrorToast.module.css'
 transition={MOTION.quickFade}
 ```
 
-**Why**: Template TSX-B. `{ duration: 0.2, ease: 'easeOut' }` → `MOTION.quickFade` (`duration: 0.15, ease: 'standard'`). A toast needs to appear **fast** so it doesn't block perception of whatever just went wrong. Quick-fade at 150ms is faster than 200ms by a readable margin; the standard easing (curve through the middle) is less "decelerating" than the original `easeOut` but on a 150ms animation the difference is sub-perceptual. This is the only site using `MOTION.quickFade` in the app; if a second site shows up later, grepping for `MOTION.quickFade` finds both.
+**Why**: Template TSX-B. `{ duration: 0.2, ease: 'easeOut' }` → `MOTION.quickFade` (`duration: 0.15, ease: 'base'`). A toast needs to appear **fast** so it doesn't block perception of whatever just went wrong. Quick-fade at 150ms is faster than 200ms by a readable margin; the base easing (curve through the middle) is less "decelerating" than the original `easeOut` but on a 150ms animation the difference is sub-perceptual. This is the only site using `MOTION.quickFade` in the app; if a second site shows up later, grepping for `MOTION.quickFade` finds both.
 
 #### §2.3.21 — `SmartActionBox.tsx:61` + `:72` + delete local `const TRANSITION`
 
@@ -986,7 +1028,7 @@ transition={MOTION.quickFade}
 
 **Why**: Template TSX-B + local-constant elimination. The `TRANSITION` local constant was a half-step toward shared motion tokens — a single file-scoped object that two sites share. Phase 4 deletes it because:
 
-1. It's a literal duplicate of `MOTION.quickFade` semantics (`duration: 0.2` ≈ `0.15`, `ease: 'easeInOut'` ≈ `ease: 'standard'` — both are symmetric cubic-bezier curves that the eye reads as identical on a sub-200ms animation).
+1. It's a literal duplicate of `MOTION.quickFade` semantics (`duration: 0.2` ≈ `0.15`, `ease: 'easeInOut'` ≈ `ease: 'base'` — both are symmetric cubic-bezier curves that the eye reads as identical on a sub-200ms animation).
 2. It prevents the `motion-token-sync.test.ts` CI gate from catching drift — a future engineer could edit `TRANSITION` to `duration: 0.5` and nothing fails.
 3. It's the only local-constant motion literal in the codebase. Deleting it establishes the precedent that **all** motion goes through `tokens/motion`, not through file-local constants.
 
@@ -1087,6 +1129,8 @@ export function FloatingActionButton({
 **Actual audited count: 2 call-site files, 3 literal-timing tweens** (see §1.1 correction 2).
 
 GSAP consumes `duration` as Number (same type constraint as Framer Motion), so the `MOTION_DURATIONS` TS export is directly usable. GSAP eases are string identifiers parsed by GSAP's own `ease` registry (`power2.out`, `back.out(1.4)`, etc.) and are **not** interchangeable with CSS `cubic-bezier()` values or Framer Motion `[n,n,n,n]` tuples. Phase 4 therefore migrates **only the durations** to token references and leaves the GSAP ease strings as literals. This is an explicit, documented, narrow exception — not a gap.
+
+> **Research insight (deepening):** GSAP's `back.out(1.4)` uses overshoot that extends beyond the 0-1 range — a single `cubic-bezier()` quadruple cannot represent this because cubic-bezier curves are monotonic between control points. `power2.out` and `power2.in` have approximate CSS equivalents (`cubic-bezier(0.5, 1, 0.89, 1)` and `cubic-bezier(0.55, 0.085, 0.68, 0.53)` respectively) but converting them would introduce subtle visual changes with zero architectural benefit. Confirmed via GSAP v3 documentation (Context7) and CSS Easing Level 2 spec. The GSAP ease strings ARE the tokens within GSAP's ecosystem — migrating them would be lossy double-tokenization.
 
 #### §2.4.1 — `PlayerRing.tsx:48-57` (turn-transition fromTo)
 
@@ -1271,19 +1315,21 @@ Each §2.5 edit follows template CSS-S (§2.2) — surgical one-property edit in
 ```css
 .draw {
   /* ... other properties ... */
-  animation: breathe var(--motion-duration-dramatic) ease-in-out infinite alternate;
+  animation: breathe var(--motion-duration-essential-pulse) ease-in-out infinite alternate;
 }
 ```
+
+> **Deepening correction (Blocker 2):** Phase 2 deepening changed this from `--motion-duration-dramatic` to `--motion-duration-essential-pulse` because breathing animations are gameplay-essential signals that must survive `prefers-reduced-motion: reduce`.
 
 **Replacement:**
 ```css
 .draw {
   /* ... other properties ... */
-  animation: breathe var(--motion-duration-dramatic) var(--motion-ease-standard) infinite alternate;
+  animation: breathe var(--motion-duration-essential-pulse) var(--motion-ease-base) infinite alternate;
 }
 ```
 
-**Why**: `ease-in-out` (CSS built-in, approximately `cubic-bezier(0.42, 0, 0.58, 1)`) → `var(--motion-ease-standard)` (`cubic-bezier(0.4, 0, 0.2, 1)`). The two curves are perceptually identical on a 800ms breathing glow — both are symmetric ease-in-out with sub-2% delta in the interior control points. Consolidating to the token means the breathing effect shares a single easing source with every other animation in the app; a future tuning in Phase 5 visual review changes it in one place.
+**Why**: `ease-in-out` (CSS built-in, approximately `cubic-bezier(0.42, 0, 0.58, 1)`) → `var(--motion-ease-base)` (`cubic-bezier(0.4, 0, 0.2, 1)`). The two curves are perceptually identical on a 800ms breathing glow — both are symmetric ease-in-out with sub-2% delta in the interior control points. Consolidating to the token means the breathing effect shares a single easing source with every other animation in the app; a future tuning in Phase 5 visual review changes it in one place.
 
 #### §2.5.2 — `SmartActionBox.module.css` `.drawIntense` `animation:` ease keyword
 
@@ -1295,15 +1341,17 @@ Each §2.5 edit follows template CSS-S (§2.2) — surgical one-property edit in
 ```css
 .drawIntense {
   /* ... other properties ... */
-  animation: breatheIntense var(--motion-duration-base) ease-in-out infinite alternate;
+  animation: breatheIntense var(--motion-duration-essential-pulse) ease-in-out infinite alternate;
 }
 ```
+
+> **Deepening correction (Blocker 2):** Same as §2.5.1 — Phase 2 deepening changed this from `--motion-duration-base` to `--motion-duration-essential-pulse`.
 
 **Replacement:**
 ```css
 .drawIntense {
   /* ... other properties ... */
-  animation: breatheIntense var(--motion-duration-base) var(--motion-ease-standard) infinite alternate;
+  animation: breatheIntense var(--motion-duration-essential-pulse) var(--motion-ease-base) infinite alternate;
 }
 ```
 
@@ -1318,56 +1366,36 @@ Each §2.5 edit follows template CSS-S (§2.2) — surgical one-property edit in
 **Current:**
 ```css
 .urgent {
-  animation: fabPulse var(--motion-duration-dramatic) ease-in-out infinite alternate;
+  animation: fabPulse var(--motion-duration-essential-pulse) ease-in-out infinite alternate;
 }
 ```
+
+> **Deepening correction (Blocker 2):** Same as §2.5.1 — Phase 2 deepening changed this from `--motion-duration-dramatic` to `--motion-duration-essential-pulse`.
 
 **Replacement:**
 ```css
 .urgent {
-  animation: fabPulse var(--motion-duration-dramatic) var(--motion-ease-standard) infinite alternate;
+  animation: fabPulse var(--motion-duration-essential-pulse) var(--motion-ease-base) infinite alternate;
 }
 ```
 
 **Why**: same as §2.5.1. The `.urgent` class activates on the FAB during the intercept window's last 3 seconds — a breathing pulse that ratchets visual urgency. Token consolidation.
 
-#### §2.5.4 — `JoinScreen.module.css` `.waitingDots::after` hardcoded duration + new Phase 1 token
+#### ~~§2.5.4~~ — REMOVED (deepening pass)
 
-**File**: `src/client/player/JoinScreen.module.css` (Phase 2 §2.3.8 rewrite)
+> **Deepening correction (Blocker 3):** This section previously specified a `1.5s` → `var(--motion-duration-dots)` edit for `JoinScreen.module.css`. Phase 2 deepening already performs this tokenization in its full-file rewrite of JoinScreen.module.css (Phase 2 Enhancement Summary item 6). Phase 1 deepening committed `--motion-duration-dots: 1500ms` (commit `ba6f18ce`). No Phase 4 action needed for this site. The §7.1 debate (Option A vs Option B) is also moot — Phase 1 committed Option A.
 
-**Approximate line**: ~1042
-
-**Current:**
-```css
-.waitingDots::after {
-  /* ... other properties ... */
-  animation: joinScreenDots 1.5s steps(4, end) infinite;
-}
-```
-
-**Replacement:**
-```css
-.waitingDots::after {
-  /* ... other properties ... */
-  animation: joinScreenDots var(--motion-duration-dots) steps(4, end) infinite;
-}
-```
-
-**Why**: `1.5s` is a hardcoded duration — the only one left in the CSS after Phase 2/3's rewrites. The `steps(4, end)` timing function is a **stepped** animation (terminal-cursor-like effect: "•", "••", "•••", "••••" cycling), and stepped animations don't consume `cubic-bezier` easings — they jump at N equal intervals. So the `steps(4, end)` stays literal (it's a CSS timing-function keyword, not a cubic-bezier).
-
-**The duration DOES get a token**: `var(--motion-duration-dots)`. But Phase 1's duration scale (`instant` 100ms, `fast` 150ms, `base` 250ms, `slow` 400ms, `dramatic` 800ms) has no 1500ms entry. **Phase 4 flags a new Phase 1 token during deepening** (§7.1 below): `--motion-duration-dots: 1500ms` (CSS) + `MOTION_DURATIONS.dots: 1.5` (TS), exclusive to stepped animations with multi-second cycles. This is exactly the cross-phase pattern Phase 1 §7 (cross-phase dependencies) mandates: if a later phase needs a token, add it to Phase 1 during deepening — do not create a parallel token or use a fallback literal.
-
-> **If the `/deepen-plan` pass decides 1500ms is too niche to merit a scale entry**, the alternative is: leave this site as `1.5s` with an inline comment `/* Stepped animation — duration is semantic, not scale-derived */` and skip the token. §7.1 captures both options; the `/deepen-plan` discussion picks one.
-
-#### §2.5 verification grep (run after the four edits above)
+#### §2.5 verification grep (run after the three edits above)
 
 ```bash
 # Confirm no remaining raw duration or easing literals in @keyframes/animation declarations
 rg --type css -n 'animation:\s+\w+\s+(\d+\.?\d*(?:s|ms))' src/client/
-rg --type css -n 'animation:\s+\w+\s+var\(--[^)]+\)\s+(ease|ease-in|ease-out|ease-in-out|linear)\b' src/client/
+rg --type css -n 'animation:\s+\w+\s+var\(--[^)]+\)\s+(ease|ease-in|ease-out|ease-in-out)\b' src/client/
 ```
 
-Expected: zero matches. Any match is a Phase-2/3 straggler or a regression and must be migrated before the §2.5 commit. Exception: `linear` is an acceptable CSS keyword (no easing applied, e.g., spinners); the grep allows `linear` through. The `steps(...)` timing function is also acceptable (it's a distinct timing-function family from eases).
+Expected: zero matches. Any match is a Phase-2/3 straggler or a regression and must be migrated before the §2.5 commit. **Deepening fix:** `linear` removed from grep 2 — `linear` is an acceptable CSS keyword (no easing applied, e.g., spinners) and `steps(...)` is also acceptable (distinct timing-function family from cubic-bezier eases). Both are allowed through.
+
+> **Research insight (deepening):** CSS `var()` in `animation:` shorthand has **zero runtime cost** for infinite animations. The browser resolves `var(--motion-ease-base)` once at computed-value time when the style is applied, then uses the resolved `cubic-bezier()` for the animation's entire lifetime. No per-frame re-resolution. (Verified against CSS Custom Properties Level 1 spec, §3.)
 
 ---
 
@@ -1468,6 +1496,16 @@ export const PlayerRing = memo(function PlayerRing({
     const measureEl = measureRef.current
     if (!el || !measureEl) return
 
+    // Synchronous first read — before any observer callback, before paint.
+    // useLayoutEffect fires after DOM insertion but before paint, so the
+    // browser has already computed layout for the measurement div. This
+    // eliminates the first-frame {w:0,h:0} jitter that would cause panels
+    // to spring ~140px from incorrect positions. (Deepening fix — Warning 4.)
+    const initialRect = measureEl.getBoundingClientRect()
+    if (initialRect.width > 0) {
+      setPanelSize({ w: initialRect.width, h: initialRect.height })
+    }
+
     const ro = new ResizeObserver(([entry]) => {
       if (!entry) return
       const { width, height } = entry.contentRect
@@ -1478,6 +1516,8 @@ export const PlayerRing = memo(function PlayerRing({
       // Read CSS-computed panel dimensions from the hidden measurement div.
       // The measurement div's size is driven by --size-player-panel-width /
       // --size-player-panel-height, which respond to container width via clamp(vw).
+      // Note: React 19 auto-batches both setState calls into one re-render,
+      // even inside ResizeObserver callbacks (verified against react.dev docs).
       const panelRect = measureEl.getBoundingClientRect()
       setPanelSize(prev => {
         if (Math.abs(prev.w - panelRect.width) < 2 && Math.abs(prev.h - panelRect.height) < 2) return prev
@@ -1551,9 +1591,13 @@ return (
 - `z-index: var(--z-base)` keeps it at the lowest elevation tier, below all real panels.
 - `aria-hidden="true"` on the TSX side (see §2.7.1) removes it from the accessibility tree — screen readers never encounter it.
 
+> **Research insight (deepening):** The measurement-div pattern is the **only reliable mechanism** for resolving `clamp()`-based CSS tokens to pixel values in JavaScript. `getComputedStyle(el).getPropertyValue('--size-player-panel-width')` returns the raw `clamp()` string (e.g., `"clamp(12.5rem, 17.5vw, 26.25rem)"`), NOT resolved pixels. CSS Typed OM (`computedStyleMap`) has the same limitation — returns `CSSUnparsedValue`. The measurement div forces the browser to resolve the token through its normal layout engine, then `getBoundingClientRect()` reads the result. (Verified against MDN, W3C CSS Custom Properties Level 1 spec, CSS Typed OM spec.)
+>
+> **Alternative considered and rejected:** Reading `getBoundingClientRect()` from an existing panel element via `slotRefs` (simpler — no hidden div needed). Rejected because GSAP applies `scale: 1.12` to the active panel during turn-transition effects (§2.4.1), which contaminates `getBoundingClientRect()` width/height during the tween. The measurement div is never animated, so its dimensions always reflect the CSS truth.
+
 #### §2.7.3 — Phase 3 dependency note
 
-`--size-player-panel-width` and `--size-player-panel-height` must be defined in `semantic.board.css` before the measurement div can read them. Phase 3 §7.3 flags `--size-player-panel-width` as a new Phase 1 token; Phase 4 **additionally requires** `--size-player-panel-height` as a matching clamp token, derived from the same `clamp(vw)` formula. §7.2 below captures this as a Phase 1 amendment.
+`--size-player-panel-width` and `--size-player-panel-height` must be defined in `semantic.board.css` before the measurement div can read them. **Both tokens are already committed by Phase 1 deepening** (commit `ba6f18ce`, Enhancement Summary item 7). Phase 3 §7.3 originally flagged `--size-player-panel-width`; Phase 1 deepening added both width and height tokens to `semantic.board.css`. No Phase 4 amendment needed — see §7.2 (marked RESOLVED).
 
 #### §2.7.4 — Behavior verification
 
@@ -1611,7 +1655,7 @@ Expected: zero matches after Phase 4 lands. If the grep catches a new site (mayb
 
 ## §3 — Step-by-Step Execution Order
 
-Phase 4 is 17 steps, organized so each commit is independently revertible. Each step ends at a commit point. The ordering minimizes file-contention risk — files that Phase 2 or Phase 3 ALSO edit (EliminatedView.tsx, GameOver.tsx, PlayerRing.tsx) come AFTER Phases 2 and 3 are fully merged.
+Phase 4 is 20 steps, organized so each commit is independently revertible. Each step ends at a commit point. The ordering minimizes file-contention risk — files that Phase 2 or Phase 3 ALSO edit (EliminatedView.tsx, GameOver.tsx, PlayerRing.tsx) come AFTER Phases 2 and 3 are fully merged.
 
 **Prerequisite**: Phases 1, 2, and 3 all landed and all tests green. `pnpm test` + `pnpm typecheck` + `pnpm lint` + `pnpm build` clean on main branch before starting Phase 4.
 
@@ -1647,7 +1691,7 @@ Phase 4 is 17 steps, organized so each commit is independently revertible. Each 
 
 **Step 16** — Run the §2.9 duplicate-detection grep. Expected: zero matches. If any match surfaces, fix it in a dedicated commit before proceeding. If no match, skip the commit.
 
-**Step 17** — Edit CSS files per §2.5.1 + §2.5.2 + §2.5.3 + §2.5.4. Four surgical one-property edits across three files (`SmartActionBox.module.css`, `FloatingActionButton.module.css`, `JoinScreen.module.css`). Run the §2.5 verification grep + §2.6.1 + §2.6.2 verification greps. All three must return zero matches before committing. **Commit**: `feat(css-foundation): Phase 4 §2.5 — CSS animation ease keywords consume --motion-ease-standard; JoinScreen dots duration consumes --motion-duration-dots`.
+**Step 17** — Edit CSS files per §2.5.1 + §2.5.2 + §2.5.3. Three surgical one-property edits across two files (`SmartActionBox.module.css`, `FloatingActionButton.module.css`). ~~§2.5.4 removed during deepening — Phase 2 already tokenized JoinScreen dots.~~ Run the §2.5 verification grep + §2.6.1 + §2.6.2 verification greps. All three must return zero matches before committing. **Commit**: `feat(css-foundation): Phase 4 §2.5 — CSS animation ease keywords consume --motion-ease-base`.
 
 **Step 18** — **Delete `src/client/shared/animation-config.ts`**. Run `grep -rn "animation-config" src/client/` and confirm zero remaining import sites. Run `pnpm typecheck` + `pnpm lint` + `pnpm test` + `pnpm build`. All green. **Commit**: `feat(css-foundation): Phase 4 §2.1 — delete src/client/shared/animation-config.ts (all consumers migrated to tokens/motion)`.
 
@@ -1686,9 +1730,9 @@ Phase 4 is done when **all** of the following are true:
 
 ### §4.2 CSS surgical edits
 
-- [ ] `src/client/player/SmartActionBox.module.css` `.draw` and `.drawIntense` `animation:` declarations consume `var(--motion-ease-standard)` instead of `ease-in-out`.
-- [ ] `src/client/player/FloatingActionButton.module.css` `.urgent` `animation:` consumes `var(--motion-ease-standard)`.
-- [ ] `src/client/player/JoinScreen.module.css` `.waitingDots::after` `animation:` consumes `var(--motion-duration-dots)` (or retains `1.5s` with inline comment per §7.1 decision).
+- [ ] `src/client/player/SmartActionBox.module.css` `.draw` and `.drawIntense` `animation:` declarations consume `var(--motion-ease-base)` instead of `ease-in-out`.
+- [ ] `src/client/player/FloatingActionButton.module.css` `.urgent` `animation:` consumes `var(--motion-ease-base)`.
+- ~~[ ] `src/client/player/JoinScreen.module.css`~~ — **removed during deepening** (Phase 2 already tokenizes dots duration). Verify Phase 2 landed `var(--motion-duration-dots)` during Step 3 prerequisite check.
 - [ ] `src/client/board/PlayerRing.module.css` has a `.measurePanel` rule that consumes `--size-player-panel-width` and `--size-player-panel-height` per §2.7.2.
 
 ### §4.3 Verification greps return zero matches
@@ -1748,7 +1792,9 @@ Phase 4 touches 13 files and deletes one; the landmine surface is the points whe
 
 8. **Local `const TRANSITION` in SmartActionBox.** Deleting the local constant is correct but the pattern was **almost** a good shared-const — just file-scoped instead of module-scoped. Future contributors may be tempted to re-create it in other files. The §2.3.21 rationale explains why `tokens/motion` is the only allowed home; the §2.9 duplicate-detection grep catches any re-introduction attempt.
 
-9. **`MOTION.enter` vs the original `{ duration: 0.4 }`.** Several §2.3 sites originally specified `duration: 0.4` (GameOver.tsx:61, EliminatedView.tsx:52, EliminatedView.tsx:78) and Phase 4 migrates them to `MOTION.enter` which is `duration: 0.25`. **This is a 150ms shortening** of those fades. The Phase 4 rationale is that `MOTION.enter` is the canonical "secondary text reveal" preset and the three sites share intent. If visual review finds the 150ms shortening reads as "rushed" for the GameOver subtitle specifically, add a new `MOTION.reveal` preset (`duration: 0.4, ease: 'decelerate'`) in Phase 5 and migrate just those three sites. Not a blocker for Phase 4.
+9. **`MOTION.enter` vs the original `{ duration: 0.4 }`.** Several §2.3 sites originally specified `duration: 0.4` (GameOver.tsx:61, EliminatedView.tsx:52, EliminatedView.tsx:78) and Phase 4 migrates them to `MOTION.enter` which is `duration: 0.25`. **This is a 150ms shortening** — 9 fewer frames at 60fps (24 frames → 15 frames). This is a deliberate tempo tightening, not an imperceptible change. The three sites share "secondary text reveal" intent, and the shorter entrance reads as crisper. The full list of duration changes across all Phase 4 sites: GameOver.tsx:61 (0.4→0.25), EliminatedView.tsx:52 (0.4→0.25), EliminatedView.tsx:78 (0.4→0.25), Hand.tsx:132 (0.3→0.25), StagingArea.tsx:142 (0.3→0.25), ErrorToast.tsx:25 (0.2→0.15), SmartActionBox.tsx:61+72 (0.2→0.15), PlayerRing.tsx:55 GSAP (0.5→0.4). If visual review finds the 150ms shortening reads as "rushed" for the GameOver subtitle specifically, add a new `MOTION.reveal` preset (`duration: 0.4, ease: 'decelerate'`) in Phase 5 and migrate just those three sites. Not a blocker for Phase 4.
+
+10. **DramaOverlay GSAP timeline lacks cleanup on unmount (pre-existing).** *(Added during deepening.)* The GSAP timeline created inside `processQueue()` (`DramaOverlay.tsx:107-128`) is never killed when the component unmounts. If DramaOverlay unmounts mid-animation (game-over transition, route change), the timeline's `onComplete` callback fires on a detached component, calling `processQueue()` which reads `overlayRef.current` and `textRef.current` — both now null. The existing null check at line 98 prevents a crash but GSAP itself continues tweening a detached DOM node (a leak). This is the same class of bug as project insight #005 (stale timers need generation counters). Phase 4's scope says "no component logic changes" — correct to defer. **Phase 5 fix**: store the timeline in a ref and kill it in a useEffect cleanup: `timelineRef.current = gsap.timeline({...}); return () => { timelineRef.current?.kill() }`.
 
 ---
 
@@ -1758,7 +1804,7 @@ Phase 4 **does not** include:
 
 - **New animation presets or easing curves.** Phase 1 §2.6 locked the motion scale. If a Phase 4 site needs a novel duration/easing combo, flag it in §7 as a Phase 1 amendment, do NOT add it ad-hoc.
 - **`useReducedMotion` per-component exemptions.** Spinners and breathing glows respect the global reduced-motion fork (collapse to static). Per-component exemptions are a Phase 5 concern if visual review finds collapsed spinners confusing.
-- **Any `.module.css` file rewrite.** Phase 2 owns phone-side CSS rewrites; Phase 3 owns board-side CSS rewrites. Phase 4 only edits individual CSS properties (the four §2.5 surgical edits + the one §2.7.2 rule addition).
+- **Any `.module.css` file rewrite.** Phase 2 owns phone-side CSS rewrites; Phase 3 owns board-side CSS rewrites. Phase 4 only edits individual CSS properties (the three §2.5 surgical edits + the one §2.7.2 rule addition).
 - **FloatingActionButton.tsx body beyond the transition prop.** Phase 2 owns component authoring; Phase 4 only ensures the transition prop consumes `MOTION.snappy`.
 - **Breakpoint constants in TSX.** Phase 4 deletes the `dimensions.w >= 1280` / `>= 1600` inline conditionals from `PlayerRing.tsx` but does NOT create a `BOARD_BREAKPOINTS` export. If a future component needs the breakpoints, that's a Phase 5 follow-up (§7.3 flag).
 - **Visual regression screenshots.** Phase 5 owns the Playwright visual regression matrix. Phase 4's visual check is manual dev-server spot-testing (§4.5), not automated snapshot diffing.
@@ -1774,7 +1820,7 @@ Phase 4 **does not** include:
 
 New Phase 1 tokens (or amendments) Phase 4 requires, to be added to `phase-1-foundation.md` during `/deepen-plan`:
 
-### §7.1 — `--motion-duration-dots` (new token OR exception)
+### §7.1 — ~~`--motion-duration-dots` (new token OR exception)~~ — RESOLVED
 
 **Needed for**: `JoinScreen.module.css` `.waitingDots::after` `animation: joinScreenDots 1.5s steps(4, end) infinite` — §2.5.4.
 
@@ -1803,9 +1849,9 @@ export const MOTION_DURATIONS = {
 **Pros**: avoids polluting the scale with a one-off.
 **Cons**: violates the "zero hardcoded durations" rule; future grep for `[0-9]+\.?[0-9]*s` in CSS has to carve out an exception.
 
-**`/deepen-plan` discussion decides.** Phase 4 plan proceeds with **Option A as the default** and §2.5.4 / §4.2 / §4.3 reference `--motion-duration-dots`. If deepening picks Option B, §2.5.4 and the four acceptance checkboxes get amended in one edit pass.
+**`/deepen-plan` resolution:** Phase 1 deepening (commit `ba6f18ce`, 2026-04-11) committed Option A — `--motion-duration-dots: 1500ms` added to both `primitives.css` and `motion.ts` (Enhancement Summary item 7). Phase 2 deepening already consumes it in JoinScreen.module.css. §2.5.4 removed from Phase 4 scope. No Phase 4 action needed. Section retained as historical record.
 
-### §7.2 — `--size-player-panel-height` (new token)
+### §7.2 — ~~`--size-player-panel-height` (new token)~~ — RESOLVED
 
 **Needed for**: `PlayerRing.module.css` `.measurePanel` rule (§2.7.2) — the measurement div needs both width AND height tokens.
 
@@ -1821,7 +1867,7 @@ Phase 3 §7.3 already flags `--size-player-panel-width` as a new Phase 1 board-s
 
 **Why a token and not a derived value**: `calc(var(--size-player-panel-width) * 0.33)` is tempting but the original math used **different** multipliers at different breakpoints (0.33 at largeTv, 0.35 at tv, hardcoded 90 at default). A single multiplier loses that nuance. Two independent clamp tokens preserve the breakpoint-specific heights.
 
-**Status**: added to §7 of `phase-3-board-view-migration.md` during Phase 3 `/deepen-plan`, OR added directly to Phase 1 §2.5 during Phase 1 `/deepen-plan`. Either location is fine; the final `semantic.board.css` needs both tokens before Phase 4 execution starts.
+**`/deepen-plan` resolution:** Phase 1 deepening (commit `ba6f18ce`, 2026-04-11) added both `--size-player-panel-width` and `--size-player-panel-height` to `semantic.board.css` (Enhancement Summary item 7). No Phase 4 amendment needed. Section retained as historical record.
 
 ### §7.3 — `BOARD_BREAKPOINTS` TS export (flagged follow-up, not blocking)
 
@@ -1903,7 +1949,7 @@ Phase 4 Step 19 runs `pnpm build` and confirms the phone entry bundle size. If t
 **Technical references:**
 - Framer Motion `transition.duration` Number constraint — Motion 11.x API docs, verified during roadmap research (roadmap §10).
 - GSAP ease-string registry — GSAP 3.x API docs; confirms `power2.out`, `back.out(1.4)`, `power2.in` are Parser-level identifiers without cubic-bezier equivalents.
-- CSS `ease-in-out` keyword definition — `cubic-bezier(0.42, 0, 0.58, 1)` per CSS Timing Functions Level 1 spec, compared against `MOTION_EASINGS.standard = [0.4, 0, 0.2, 1]` (Phase 1 §2.6).
+- CSS `ease-in-out` keyword definition — `cubic-bezier(0.42, 0, 0.58, 1)` per CSS Timing Functions Level 1 spec, compared against `MOTION_EASINGS.base = [0.4, 0, 0.2, 1]` (Phase 1 §2.6).
 - `ResizeObserver` + `getBoundingClientRect` measurement-div pattern — W3C Resize Observer spec; standard technique for CSS→JS layout-value extraction.
 
 **Internal documents:**

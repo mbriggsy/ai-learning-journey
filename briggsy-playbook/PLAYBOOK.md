@@ -26,6 +26,7 @@ See `workflows.md` → **Expert-Pilot Partnership** for the full pattern and how
 - **[commands-and-skills.md](commands-and-skills.md)** — inventory of slash commands and skills available in Claude Code.
 - **[tools-and-integrations.md](tools-and-integrations.md)** — MCP servers, hooks, external tools (Context7, gemini-grounding, sequential-thinking, Playwright).
 - **[lessons-learned.md](lessons-learned.md)** — dated incidents with specific lessons. Don't repeat these.
+- **[status-line.md](status-line.md)** — setup guide for the custom Claude Code status bar (model, context %, cost, duration, git branch, effort).
 
 ## How to use this playbook
 

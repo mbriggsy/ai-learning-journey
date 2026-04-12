@@ -1,46 +1,63 @@
-/* Board — war room briefing table with dramatic lighting */
+/* GameTable.module.css
+   Board — war-room briefing table with dramatic overhead lighting.
+   Grid-based full-bleed layout; children are absolute-positioned against the grid.
+
+   Axis discipline: board view is WIDTH-constrained. The outermost .table uses
+   `height: 100vh` (allowed exactly once, for the board's dedicated-viewport
+   root) and every child sizes against `vw` through the Phase 1 board tokens.
+*/
+
+@layer components {
 
 .table {
   position: relative;
-  height: 100svh;
-  padding: 3vh 4vw;
+  display: grid;
+  grid-template-rows: auto 1fr auto;  /* announcement feed | play area | status bar */
+  height: 100vh;
+  padding: var(--space-fluid-base-board) var(--space-fluid-loose-board);
   font-family: var(--font-body);
-  color: var(--text-primary, #f5f0e0);
+  color: var(--color-fg-primary);
   overflow: hidden;
+  contain: layout style;  /* Deepening: 8 paint layers on a full-bleed 4K element.
+     Prevents child animation repaints from propagating up. */
 
-  /* Layered war room surface:
-     1. Hot amber spotlight dead center (where the action is)
-     2. Warm ambient fill — teal-charcoal cocktail lounge
-     3. HARD vignette — dark edges demand center attention
-     4. Subtle felt grain
-     5. Deep teal-charcoal base — mid-century modern, not poker green */
+  /* Layered war-room surface (5 gradients stacked):
+     1. Overhead spotlight — hot amber pool dead-center (draws the eye to the action)
+     2. Wide warm ambient fill — teal cocktail-lounge undertone
+     3. Heavy vignette — dark edges force center attention
+     4. Fabric weave grain — subtle felt texture
+     5. Base deep teal-charcoal — Dreamland mid-century warmth, NOT poker-green
+  */
   background:
-    /* Overhead spotlight — hot amber pool, saturated */
+    /* 1: overhead spotlight */
     radial-gradient(ellipse 50% 40% at 50% 48%,
-      rgba(212, 136, 32, 0.22) 0%,
-      rgba(200, 120, 40, 0.12) 30%,
+      color-mix(in oklab, var(--color-accent-drama) 35%, transparent) 0%,
+      color-mix(in oklab, var(--color-accent-drama) 18%, transparent) 30%,
       transparent 60%),
-    /* Wide warm ambient — teal undertone */
+    /* 2: wide warm ambient */
     radial-gradient(ellipse 80% 70% at 50% 50%,
-      rgba(42, 80, 72, 0.25) 0%,
-      rgba(30, 58, 52, 0.15) 40%,
+      color-mix(in oklab, var(--color-teal-5) 40%, transparent) 0%,
+      color-mix(in oklab, var(--color-teal-4) 25%, transparent) 40%,
       transparent 65%),
-    /* Heavy vignette — war room drama */
+    /* 3: heavy vignette */
     radial-gradient(ellipse 75% 75% at 50% 50%,
       transparent 30%,
-      rgba(8, 18, 16, 0.65) 70%,
-      rgba(4, 12, 10, 0.88) 100%),
-    /* Felt grain — micro-texture */
+      color-mix(in oklab, var(--color-charcoal-1) 65%, transparent) 70%,
+      color-mix(in oklab, var(--color-charcoal-1) 90%, transparent) 100%),
+    /* 4: fabric weave micro-grain */
     repeating-conic-gradient(
-      rgba(26, 42, 46, 0.06) 0%,
-      rgba(22, 38, 40, 0.04) 0.5%,
-      rgba(24, 40, 44, 0.07) 1%
+      color-mix(in oklab, var(--color-teal-3) 8%, transparent) 0%,
+      color-mix(in oklab, var(--color-teal-2) 6%, transparent) 0.5%,
+      color-mix(in oklab, var(--color-teal-4) 9%, transparent) 1%
     ),
-    /* Base — deep teal-charcoal, mid-century modern */
-    linear-gradient(170deg, #1a2e30 0%, #162828 50%, #121e20 100%);
+    /* 5: base teal-charcoal gradient */
+    linear-gradient(170deg,
+      var(--color-teal-3) 0%,
+      var(--color-teal-2) 50%,
+      var(--color-teal-1) 100%);
 }
 
-/* Fabric weave texture — subtle felt grain */
+/* Fabric weave cross-hatching — subtle cream grain over the base gradient */
 .table::before {
   content: '';
   position: absolute;
@@ -50,18 +67,18 @@
       0deg,
       transparent,
       transparent 2px,
-      rgba(245, 240, 224, 0.015) 2px,
-      rgba(245, 240, 224, 0.015) 3px
+      color-mix(in oklab, var(--color-cream-12) 2%, transparent) 2px,
+      color-mix(in oklab, var(--color-cream-12) 2%, transparent) 3px
     ),
     repeating-linear-gradient(
       90deg,
       transparent,
       transparent 2px,
-      rgba(245, 240, 224, 0.015) 2px,
-      rgba(245, 240, 224, 0.015) 3px
+      color-mix(in oklab, var(--color-cream-12) 2%, transparent) 2px,
+      color-mix(in oklab, var(--color-cream-12) 2%, transparent) 3px
     );
   pointer-events: none;
-  z-index: 0;
+  z-index: var(--z-base);
 }
 
 /* Table edge — geometric rectangular frame, mid-century modern */
@@ -72,40 +89,49 @@
   left: 2.5%;
   right: 2.5%;
   bottom: 3%;
-  border: 1px solid rgba(212, 136, 32, 0.12);
-  border-radius: 16px;
+  border: 1px solid color-mix(in oklab, var(--color-accent-drama) 18%, transparent);
+  border-radius: var(--radius-xl);
   box-shadow:
-    inset 0 0 80px rgba(0, 0, 0, 0.2),
-    0 0 1px rgba(212, 136, 32, 0.08);
+    inset 0 0 80px color-mix(in oklab, var(--color-charcoal-1) 25%, transparent),
+    0 0 1px color-mix(in oklab, var(--color-accent-drama) 12%, transparent);
   pointer-events: none;
-  z-index: 1;
+  z-index: var(--z-raised);
 }
 
-/* ─── Branded felt decoration — BURNED agency identity ─── */
+/* ─── The Pendleton Agency — war-room felt decoration ───
+   Central targeting reticle + four corner diamond markers.
+   Archer spy-agency vocabulary: geometric reticles are Era-4 Archer-correct
+   (Kirby/Ditko linework + mid-century geometric emphasis). This is the
+   Tier 1 retheme satisfying PRODUCT-SPECIFICATION.md §6.4 Gap #3.
+
+   Data-URI hex values track these semantic tokens
+   (CSS cannot var() inside url("…") — manual sync required):
+     %23b0754c ≡ var(--color-accent-drama) ≡ var(--color-ochre-9)
+     If Phase 1 primitives.css ochre-9 changes, update every %23b0754c below.
+*/
 
 .feltBranding {
   position: absolute;
   inset: 0;
   pointer-events: none;
-  z-index: 1;
+  z-index: var(--z-raised);
 
-  /* Center: crosshair reticle — spy agency war room stamp.
-     Corner accents: geometric diamond markers. */
   background-image:
-    /* Center crosshair — agency targeting reticle */
-    url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 200 200'%3E%3Ccircle cx='100' cy='100' r='80' fill='none' stroke='%23d48820' stroke-width='1' opacity='0.6'/%3E%3Ccircle cx='100' cy='100' r='50' fill='none' stroke='%23d48820' stroke-width='0.8' opacity='0.4'/%3E%3Ccircle cx='100' cy='100' r='20' fill='none' stroke='%23d48820' stroke-width='0.6' opacity='0.3'/%3E%3Cline x1='100' y1='5' x2='100' y2='42' stroke='%23d48820' stroke-width='1.2' opacity='0.5'/%3E%3Cline x1='100' y1='158' x2='100' y2='195' stroke='%23d48820' stroke-width='1.2' opacity='0.5'/%3E%3Cline x1='5' y1='100' x2='42' y2='100' stroke='%23d48820' stroke-width='1.2' opacity='0.5'/%3E%3Cline x1='158' y1='100' x2='195' y2='100' stroke='%23d48820' stroke-width='1.2' opacity='0.5'/%3E%3C/svg%3E"),
-    /* Corner diamonds — geometric mid-century markers */
-    url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 40 40'%3E%3Cpath d='M20 4 L36 20 L20 36 L4 20 Z' fill='none' stroke='%23d48820' stroke-width='1'/%3E%3Cpath d='M20 12 L28 20 L20 28 L12 20 Z' fill='%23d48820' opacity='0.3'/%3E%3C/svg%3E"),
-    url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 40 40'%3E%3Cpath d='M20 4 L36 20 L20 36 L4 20 Z' fill='none' stroke='%23d48820' stroke-width='1'/%3E%3Cpath d='M20 12 L28 20 L20 28 L12 20 Z' fill='%23d48820' opacity='0.3'/%3E%3C/svg%3E"),
-    url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 40 40'%3E%3Cpath d='M20 4 L36 20 L20 36 L4 20 Z' fill='none' stroke='%23d48820' stroke-width='1'/%3E%3Cpath d='M20 12 L28 20 L20 28 L12 20 Z' fill='%23d48820' opacity='0.3'/%3E%3C/svg%3E"),
-    url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 40 40'%3E%3Cpath d='M20 4 L36 20 L20 36 L4 20 Z' fill='none' stroke='%23d48820' stroke-width='1'/%3E%3Cpath d='M20 12 L28 20 L20 28 L12 20 Z' fill='%23d48820' opacity='0.3'/%3E%3C/svg%3E");
+    /* Center: agency targeting reticle — the Pendleton stamp */
+    url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 200 200'%3E%3Ccircle cx='100' cy='100' r='80' fill='none' stroke='%23b0754c' stroke-width='1' opacity='0.6'/%3E%3Ccircle cx='100' cy='100' r='50' fill='none' stroke='%23b0754c' stroke-width='0.8' opacity='0.4'/%3E%3Ccircle cx='100' cy='100' r='20' fill='none' stroke='%23b0754c' stroke-width='0.6' opacity='0.3'/%3E%3Cline x1='100' y1='5' x2='100' y2='42' stroke='%23b0754c' stroke-width='1.2' opacity='0.5'/%3E%3Cline x1='100' y1='158' x2='100' y2='195' stroke='%23b0754c' stroke-width='1.2' opacity='0.5'/%3E%3Cline x1='5' y1='100' x2='42' y2='100' stroke='%23b0754c' stroke-width='1.2' opacity='0.5'/%3E%3Cline x1='158' y1='100' x2='195' y2='100' stroke='%23b0754c' stroke-width='1.2' opacity='0.5'/%3E%3C/svg%3E"),
+    /* Corner diamonds — geometric mid-century markers (4 copies, same SVG, different position) */
+    url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 40 40'%3E%3Cpath d='M20 4 L36 20 L20 36 L4 20 Z' fill='none' stroke='%23b0754c' stroke-width='1'/%3E%3Cpath d='M20 12 L28 20 L20 28 L12 20 Z' fill='%23b0754c' opacity='0.3'/%3E%3C/svg%3E"),
+    url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 40 40'%3E%3Cpath d='M20 4 L36 20 L20 36 L4 20 Z' fill='none' stroke='%23b0754c' stroke-width='1'/%3E%3Cpath d='M20 12 L28 20 L20 28 L12 20 Z' fill='%23b0754c' opacity='0.3'/%3E%3C/svg%3E"),
+    url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 40 40'%3E%3Cpath d='M20 4 L36 20 L20 36 L4 20 Z' fill='none' stroke='%23b0754c' stroke-width='1'/%3E%3Cpath d='M20 12 L28 20 L20 28 L12 20 Z' fill='%23b0754c' opacity='0.3'/%3E%3C/svg%3E"),
+    url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 40 40'%3E%3Cpath d='M20 4 L36 20 L20 36 L4 20 Z' fill='none' stroke='%23b0754c' stroke-width='1'/%3E%3Cpath d='M20 12 L28 20 L20 28 L12 20 Z' fill='%23b0754c' opacity='0.3'/%3E%3C/svg%3E");
 
+  /* Sizes scale with viewport width via clamp() tokens — no media queries */
   background-size:
-    320px 320px,
-    36px 36px,
-    36px 36px,
-    36px 36px,
-    36px 36px;
+    var(--size-felt-reticle) var(--size-felt-reticle),
+    var(--size-felt-diamond) var(--size-felt-diamond),
+    var(--size-felt-diamond) var(--size-felt-diamond),
+    var(--size-felt-diamond) var(--size-felt-diamond),
+    var(--size-felt-diamond) var(--size-felt-diamond);
 
   background-position:
     center center,
@@ -115,19 +141,7 @@
     94% 93%;
 
   background-repeat: no-repeat;
-  opacity: 0.18;
-}
-
-@media (min-width: 1280px) {
-  .feltBranding {
-    background-size:
-      480px 480px,
-      52px 52px,
-      52px 52px,
-      52px 52px,
-      52px 52px;
-    opacity: 0.22;
-  }
+  opacity: 0.2;
 }
 
 /* ─── Center stage — draw pile + arena + discard, dead center ─── */
@@ -140,44 +154,36 @@
   display: flex;
   align-items: center;
   justify-content: center;
-  gap: 40px;
-  z-index: 2;
+  gap: var(--space-fluid-loose-board);
+  z-index: var(--z-sticky);
 }
 
 .pileSection {
   display: flex;
   flex-direction: column;
   align-items: center;
-  gap: 8px;
+  gap: var(--space-2);
 }
 
 .pileLabel {
   font-family: var(--font-display);
-  font-size: 11px;
+  font-size: var(--text-caption-board);
   font-weight: 600;
   text-transform: uppercase;
-  letter-spacing: 0.15em;
-  color: rgba(200, 169, 96, 0.55);
+  letter-spacing: 0.2em;
+  color: var(--color-fg-muted);
+  /* Deepening: was color-mix(... 55%, transparent) on ochre-9 — failed WCAG 4.5:1
+     (~2.8:1). Opaque semantic token passes. */
 }
 
-/* ─── Full-screen event flash (GSAP target) ─── */
+/* ─── Full-screen event flash (GSAP target in Phase 4) ─── */
 
 .eventFlash {
   position: fixed;
   inset: 0;
-  z-index: 50;
+  z-index: var(--z-overlay);
   pointer-events: none;
   opacity: 0;
 }
 
-/* ─── TV scale ─── */
-
-@media (min-width: 1280px) {
-  .center { gap: min(100px, 7vw); }
-  .pileLabel { font-size: clamp(18px, 1.5vw, 26px); letter-spacing: 0.2em; }
-}
-
-@media (min-width: 1600px) {
-  .center { gap: min(140px, 7vw); }
-  .pileLabel { font-size: clamp(20px, 1.5vw, 28px); }
-}
+} /* @layer components */

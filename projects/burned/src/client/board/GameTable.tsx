@@ -21,7 +21,7 @@ export function GameTable() {
 
   return (
     <div className={styles.table}>
-      {/* Branded felt decoration — EK identity baked into the table */}
+      {/* The Pendleton Agency — war-room felt decoration */}
       <div className={styles.feltBranding} aria-hidden="true" />
 
       {/* Player ring */}

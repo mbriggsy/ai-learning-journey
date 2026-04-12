@@ -62,7 +62,7 @@ export const MOTION_EASINGS = {
   anticipate:  [0.68, -0.55, 0.265, 1.55],
 } as const satisfies Record<EasingName, Easing>
 
-// Springs — outer-object `satisfies` pattern matches animation-config.ts.
+// Springs — type: 'spring' + stiffness + damping.
 export const MOTION_SPRINGS = {
   /** Snappy — button presses, small UI state changes */
   snappy:     { type: 'spring', stiffness: 300, damping: 24 },

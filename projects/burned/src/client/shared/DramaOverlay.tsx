@@ -1,5 +1,6 @@
 import { useRef, useEffect } from 'react'
 import gsap from 'gsap'
+import { MOTION_DURATIONS } from '@client/shared/tokens/motion'
 import { useEventFeed } from './hooks/useEventFeed'
 import { usePlayerList } from './hooks/useSharedSelectors'
 import type { GameEvent } from '@shared/types'
@@ -120,12 +121,25 @@ export function DramaOverlay() {
     tl.fromTo(
       text,
       { scale: 2.5, opacity: 0, y: 20 },
-      { scale: 1, opacity: 1, y: 0, duration: 0.25, ease: 'back.out(1.4)' },
+      {
+        scale: 1,
+        opacity: 1,
+        y: 0,
+        // GSAP ease: 'back.out(1.4)' is overshoot-and-settle; no cubic-bezier
+        // equivalent. Duration consolidated; ease string stays as literal.
+        duration: MOTION_DURATIONS.base,
+        ease: 'back.out(1.4)',
+      },
     )
-    // HOLD: dramatic beat
+    // HOLD: dynamic — config.holdMs is runtime-derived, not a literal
     tl.to({}, { duration: config.holdMs / 1000 })
     // FADE OUT: graceful exit
-    tl.to(overlay, { opacity: 0, duration: 0.4, ease: 'power2.in' })
+    tl.to(overlay, {
+      opacity: 0,
+      // GSAP ease: 'power2.in' is an accelerate curve; no cubic-bezier equivalent
+      duration: MOTION_DURATIONS.slow,
+      ease: 'power2.in',
+    })
   }
 
   return (

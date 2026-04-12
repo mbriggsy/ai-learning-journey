@@ -3,7 +3,7 @@ import { createPortal } from 'react-dom'
 import { m, AnimatePresence } from 'motion/react'
 import type { CardInstance } from '@shared/types'
 import { MinimalCard } from '@client/shared/MinimalCard'
-import { MOTION } from '@client/shared/animation-config'
+import { MOTION } from '@client/shared/tokens/motion'
 import { haptic } from '@client/shared/haptics'
 import { useDoubleTap } from './hooks/useDoubleTap'
 import { useScrollBounce } from './hooks/useScrollBounce'
@@ -101,7 +101,7 @@ export function Hand({ hand, disabled, onStageCard, onCardLongPress }: HandProps
               animate={{ opacity: 1, x: 0, scale: 1 }}
               exit={{ opacity: 0, scale: 0.7 }}
               transition={{
-                ...MOTION.SNAPPY,
+                ...MOTION.snappy,
                 delay: dealComplete ? 0 : i * 0.08 + 0.15,
               }}
               onPointerDown={() => startLongPress(card.id)}
@@ -131,7 +131,7 @@ export function Hand({ hand, disabled, onStageCard, onCardLongPress }: HandProps
               initial={{ opacity: 0 }}
               animate={{ opacity: 1 }}
               exit={{ opacity: 0 }}
-              transition={{ duration: 0.3 }}
+              transition={MOTION.enter}
               onPointerUp={(e: React.PointerEvent) => {
                 handleEnlargedTap(enlargedCard.id, e)
               }}
@@ -142,7 +142,7 @@ export function Hand({ hand, disabled, onStageCard, onCardLongPress }: HandProps
                 initial={{ scale: 0.35, y: 120 }}
                 animate={{ scale: 1, y: 0 }}
                 exit={{ scale: 0.35, y: 120 }}
-                transition={MOTION.SNAPPY}
+                transition={MOTION.snappy}
               >
                 <MinimalCard type={enlargedCard.type} />
               </m.div>

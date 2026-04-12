@@ -1,7 +1,7 @@
 import { useRef, useEffect, useCallback } from 'react'
 import type { PropsWithChildren } from 'react'
 import { m, AnimatePresence } from 'motion/react'
-import { MOTION } from './animation-config'
+import { MOTION } from '@client/shared/tokens/motion'
 import styles from './BottomSheet.module.css'
 
 interface BottomSheetProps {
@@ -42,7 +42,7 @@ export function BottomSheet({ open, onDismiss, children }: PropsWithChildren<Bot
             initial={{ y: '100%' }}
             animate={{ y: 0 }}
             exit={{ y: '100%' }}
-            transition={MOTION.SNAPPY}
+            transition={MOTION.snappy}
           >
             {children}
           </m.div>

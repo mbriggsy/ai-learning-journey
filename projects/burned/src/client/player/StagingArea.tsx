@@ -3,7 +3,7 @@ import { m, AnimatePresence } from 'motion/react'
 import type { CardInstance, SubPhase } from '@shared/types'
 import type { CardPlayState } from './hooks/useCardPlay'
 import { MinimalCard } from '@client/shared/MinimalCard'
-import { MOTION } from '@client/shared/animation-config'
+import { MOTION } from '@client/shared/tokens/motion'
 import { haptic } from '@client/shared/haptics'
 import { useDoubleTap } from './hooks/useDoubleTap'
 import { useSendAction } from '@client/shared/hooks/useSendAction'
@@ -99,7 +99,7 @@ export function StagingArea({
                 key={card.id}
                 className={styles.stagedSlot}
                 layout="position"
-                transition={MOTION.SNAPPY}
+                transition={MOTION.snappy}
                 onPointerDown={() => startLongPress(card.id)}
                 onPointerUp={(e: React.PointerEvent) => {
                   cancelLongPress()
@@ -139,7 +139,7 @@ export function StagingArea({
             initial={{ opacity: 0 }}
             animate={{ opacity: 1 }}
             exit={{ opacity: 0 }}
-            transition={{ duration: 0.3 }}
+            transition={MOTION.enter}
             onPointerUp={() => setEnlargedId(null)}
           >
             <m.div
@@ -147,7 +147,7 @@ export function StagingArea({
               initial={{ scale: 0.35, y: -80 }}
               animate={{ scale: 1, y: 0 }}
               exit={{ scale: 0.35, y: -80 }}
-              transition={MOTION.SNAPPY}
+              transition={MOTION.snappy}
             >
               <MinimalCard type={stagedCards.find(c => c.id === enlargedId)!.type} />
             </m.div>

@@ -5,7 +5,7 @@
 - **167/167 tests, typecheck clean** (verified 2026-04-11).
 - **Game is functional** — staging, hand, board, all card types, nope chains, elimination all working.
 - **Visual layer is FRAGILE** — see `docs/post-mortems/VISUAL-LAYER-AUTOPSY.md`. **Rebuild IS NOW IN PROGRESS** — `docs/plans/css-foundation-rebuild/`.
-- **CSS Foundation Rebuild Plan is FULLY DRAFTED + PHASES 1-4 DEEPENED** — roadmap + all 5 phase files COMPLETE (2026-04-11). **Phase 1 deepened 2026-04-11 via 12-agent pass** (commit `ba6f18ce`). **Phase 2 deepened 2026-04-11 via 8-agent pass** (~80 prescriptive fixes, 2235→3200 lines). **Phase 3 deepened 2026-04-12 via 8-agent pass** (5 blocker fixes, 114 color-mix srgb→oklab corrections, 13 ease-token renames, @layer wrapping rule, WCAG contrast fixes, DrawPile drop-shadow perf fix, 22 new Phase 1 tokens + 3 amendments; 2753→2895 lines). **Phase 4 deepened 2026-04-12 via 8-agent pass** (3 blocker fixes: 13× ease-standard→base rename, essential-pulse duration correction, §2.5.4 removed; measurement-div initialization fix; scope bar amended; new Landmine 10; §7.1+§7.2 resolved; 1920→1966 lines). Phase 5 still needs deepening. See step 1 below.
+- **CSS Foundation Rebuild Plan is FULLY DRAFTED + ALL 5 PHASES DEEPENED** — roadmap + all 5 phase files COMPLETE and DEEPENED (2026-04-12). **Phase 1 deepened 2026-04-11 via 12-agent pass** (commit `ba6f18ce`). **Phase 2 deepened 2026-04-11 via 8-agent pass** (~80 prescriptive fixes, 2235→3200 lines). **Phase 3 deepened 2026-04-12 via 8-agent pass** (5 blocker fixes, 114 color-mix srgb→oklab corrections, 13 ease-token renames, @layer wrapping rule, WCAG contrast fixes, DrawPile drop-shadow perf fix, 22 new Phase 1 tokens + 3 amendments; 2753→2895 lines). **Phase 4 deepened 2026-04-12 via 8-agent pass** (3 blocker fixes: 13× ease-standard→base rename, essential-pulse duration correction, §2.5.4 removed; measurement-div initialization fix; scope bar amended; new Landmine 10; §7.1+§7.2 resolved; 1920→1966 lines). **Phase 5 deepened 2026-04-12 via 8-agent pass** (9 blocker fixes: iOS 26 UA regex broken, import.meta.env Wrangler gates, fixture endpoint architecture, culori API, sRGBtoY type, viewport mismatch, cross-browser CI, deviceScaleFactor, game loop script; 23 significant improvements; 1992→2336 lines). **Next: Phase 1 follow-up sweep + cross-phase contradiction sweep, THEN execution.** See step 6 below.
 - **Dreamland S8 is the palette reference season** (Holman's stated favorite; warm cocktail-lounge mid-century). 18 reference frames at `docs/plans/css-foundation-rebuild/dreamland-reference/images/`; fair-use posture documented in `dreamland-reference/README.md`. Palette extracted into Phase 1 §2.2 (74 Dreamland-sourced color primitives).
 - **Saul Bass is VERIFIED, not a hallucination** (corrected 2026-04-11) — Neal Holman primary source at Art of the Title May 2016. See `feedback-hallucinated-references.md` in memory for correction detail. Adjacent verified influences: Jack Kirby, Steve Ditko, Mad Men, 1960 Bond, OSS 117, Pink Panther, mid-century furniture, deliberate anachronism (all sourced to Holman / Adam Reed / Salon / A.V. Club).
 - **Phrasing! is a cross-phase design goal** — running gag across all phases, target cadence 3-5 distinct beats. See `roadmap.md` §3.6. Phase 2 committed beat: EliminatedView flavor line #9 (*"Penetrated by enemy assets. ...Phrasing."*).
@@ -24,28 +24,25 @@
 | `phase-2-phone-view-migration.md` | ✅ **DEEPENED 2026-04-11** | 3200 lines. 8-agent parallel deepening pass: 5 position:fixed→absolute migrations, 14 `@layer components` wrappers (empirically verified), 6 essential-motion token swaps, 6 safe-area migrations, 4 new TSX class-rename cascade sections (§§2.3.4b, 2.3.5b, 2.3.6b, 2.3.9b), BottomSheet§2.6 corrected (no structural rewrite needed, CSS-only fix), §2.7 expanded to 6 consumer-site `theme.ts` boundary edits, WCAG touch-target fix, NopeButton confirmed orphaned. 7 Phase 1 follow-up items locked. See §Enhancement Summary at top of file. |
 | `phase-3-board-view-migration.md` | ✅ **DEEPENED 2026-04-12** | 2895 lines. 8-agent parallel deepening pass: 5 blocker corrections (114× color-mix srgb→oklab, 13× --motion-ease-standard→base, @layer wrapping rule added, 3 WCAG contrast fixes, DrawPile drop-shadow perf split), container-type strategy corrected (phone=inline-size, board=size), forced-colors blocks added to 2 CTAs, +0rem WCAG trick on 7 cqi clamps, per-role --color-fg-on-* tokens, 3 dead token proposals pruned (27→22 new + 3 amendments). See §Enhancement Summary at top of file. |
 | `phase-4-motion-consolidation.md` | ✅ **DEEPENED 2026-04-12** | 1966 lines. 8-agent parallel deepening pass: 3 blocker corrections (13× `--motion-ease-standard`→`base` rename, 3× SmartActionBox/FAB duration token `--motion-duration-essential-pulse` correction, §2.5.4 removed — Phase 2 already tokenized JoinScreen dots), §2.7.1 measurement-div initialization fix (synchronous initial `getBoundingClientRect()` before observer), scope bar amended for intentional duration tightenings, new Landmine 10 (DramaOverlay GSAP cleanup), §7.1+§7.2 marked RESOLVED (Phase 1 already committed both tokens), GSAP ease boundary validated, CSS var() perf confirmed zero-cost, React 19 auto-batching confirmed. See §Enhancement Summary at top of file. |
-| `phase-5-verification-acceptance.md` | ✅ **COMPLETE** | ~1990 LOC. 8 verification-type subsections (§2.1–§2.8) organized around the TODO block: iOS 26 real-device protocol + conditional `useIOSFixedFallback` hook, 176-baseline Playwright visual regression matrix (30 phone × 4 vp + 14 board × 4 vp), WCAG 1.4.4 200% zoom protocol, 36-pair CVD expansion, 31-pair WCAG+APCA contrast expansion, §8.6 full-loop protocol w/ dev-only `handleStackDeck` endpoint, §8.7 first-time-player protocol, documentation pass. §2.2.5 visual review lands the 3 pending decisions (winner glow, emerald saturation, Baveuse). Ready for `/deepen-plan`. |
+| `phase-5-verification-acceptance.md` | ✅ **DEEPENED 2026-04-12** | 2336 lines. 8-agent parallel deepening pass: 9 blocker corrections (iOS 26 UA regex broken — frozen at `iPhone OS 18_6`; `import.meta.env` gates don't work in Wrangler server build; fixture endpoint conflates worker/DO levels + wrong storage keys; culori `filter()` API doesn't exist; `sRGBtoY` type incompatible with culori parse; spec vs plan viewport mismatch; cross-browser CI strategy flawed; `deviceScaleFactor` + `scale:'device'` missing; game loop script impossibilities). 23 significant improvements: scroll handler perf (4-agent consensus), reduced-motion testing, animation stability, 2 missing screens, Zod validation, optipng, 5 new landmines. See §Enhancement Summary at top of file. |
 
-#### ▶ FIRST ACTION NEXT SESSION
+#### ▶ FIRST ACTION NEXT SESSION — ALL 5 PHASES DEEPENED
 
-```
-/deepen-plan phase 5
-```
+**All 5 phases are now DEEPENED.** Deepening history:
 
-Phases 1-4 are DEEPENED. Phase 5 is next (~1990 lines). Phase 4 deepening confirmed §7.1 and §7.2 already resolved by Phase 1 — no new cross-phase tokens outstanding from Phase 4. Phase 3 deepening surfaced 22 new Phase 1 tokens + 3 amendments (see §7 in Phase 3 plan) — these accumulate until the cross-phase sweep step 6 below.
+1. ✅ **Phase 1** — DEEPENED 2026-04-11, commit `ba6f18ce`, 12-agent pass
+2. ✅ **Phase 2** — DEEPENED 2026-04-11, 8-agent pass, ~80 fixes
+3. ✅ **Phase 3** — DEEPENED 2026-04-12, 8-agent pass, 5 blockers fixed, 2753→2895 lines
+4. ✅ **Phase 4** — DEEPENED 2026-04-12, 8-agent pass, 3 blockers fixed, 1920→1966 lines
+5. ✅ **Phase 5** — DEEPENED 2026-04-12, 8-agent pass, 9 blockers fixed, 1992→2336 lines
 
-**Deepen one phase per session, in order, with review pauses between each** (per `feedback-stop-after-every-phase.md` — the rule applies to deepening the same way it applied to drafting):
+**Next steps (in order):**
 
-1. ✅ **`/deepen-plan docs/plans/css-foundation-rebuild/phase-1-foundation.md`** — DONE 2026-04-11, commit `ba6f18ce`
-2. ✅ **`/deepen-plan docs/plans/css-foundation-rebuild/phase-2-phone-view-migration.md`** — DONE 2026-04-11, 8-agent pass, ~80 fixes
-3. ✅ **`/deepen-plan docs/plans/css-foundation-rebuild/phase-3-board-view-migration.md`** — DONE 2026-04-12, 8-agent pass, 5 blockers fixed, 2753→2895 lines
-4. ✅ **`/deepen-plan docs/plans/css-foundation-rebuild/phase-4-motion-consolidation.md`** — DONE 2026-04-12, 8-agent pass, 3 blockers fixed (ease-standard→base rename, essential-pulse duration correction, §2.5.4 removed), 1920→1966 lines
-5. `/deepen-plan docs/plans/css-foundation-rebuild/phase-5-verification-acceptance.md` ← **next session starts here**
-6. **Phase 1 follow-up sweep** — after Phases 2-5 are deepened, re-edit `phase-1-foundation.md` to fold in every remaining cross-phase token request the original deepening didn't catch. (See "STILL OPEN" lists below — many tokens from the Phase 3 27-token flag list were not resolved in the Phase 1 deepening and will surface again.)
-7. **Cross-phase contradiction sweep** — final reconciliation across all 5 deepened phases. Any place Phase N's deepening introduces a token or constraint that contradicts what Phase M assumed → fix in one place, not both.
+6. **Phase 1 follow-up sweep** — re-edit `phase-1-foundation.md` to fold in every remaining cross-phase token request the original deepening didn't catch. (See "STILL OPEN" lists below — 17 new + 3 amendments from Phase 3 deepening.)
+7. **Cross-phase contradiction sweep** — final reconciliation across all 5 deepened phases. Key items from Phase 5 deepening: viewport list reconciliation (B6 — plan's viewports differ from spec §8.1/§8.2; spec must be amended during Phase 5 execution), Wrangler `define` config (B2 — new `wrangler.jsonc` section affects Phase 5 §2.6.5 but also any future dev-only server code).
 8. **THEN** — `/ce:work docs/plans/css-foundation-rebuild/phase-1-foundation.md` (execution begins).
 
-**Do NOT begin `/ce:work` until all 5 phases are deepened and cross-phase contradictions resolved.**
+**Do NOT begin `/ce:work` until cross-phase contradictions resolved (steps 6-7).**
 
 **Workflow rules that MUST be honored (from memory)**:
 - `feedback-stop-after-every-phase.md` — deepen ONE phase per session, stop for Briggsy's review, then next. Do NOT batch phases in one turn.
@@ -97,11 +94,13 @@ Phases 1-4 are DEEPENED. Phase 5 is next (~1990 lines). Phase 4 deepening confir
 
 - **Cross-phase tokens the Phase 1 deepening DID NOT RESOLVE** (STILL OPEN below). The cross-phase scan agent I ran during Phase 1 deepening flagged the 8 above but missed the Phase 3 draft's larger 27-token flag list. Phase 2-5 deepening will surface them; follow-up sweep step 6 folds them in.
 
-**Phase 5 draft notes for the /deepen-plan agents** (areas flagged by the drafter for extra attention):
-- **Baseline storage footprint** (Phase 5 §5 landmine 4) — 176 PNGs × ~400KB ≈ 70MB committed to git. Phase 5 hedges with Git LFS as a fallback. Deepening should decide: bake LFS in proactively, or keep the hedge and pay the cost. If repo goes public (`TODO.md` Landmines), LFS is cleaner.
-- **Dev-only fixture endpoints** (Phase 5 §2.2.4 + §2.6.5) — `src/server/test-fixtures.ts` adds `handleFixtureSeed` + `handleStackDeck`, double-gated by `import.meta.env.PROD` check AND router-level `import.meta.env.DEV` registration. Deepening should verify Vite 8 tree-shakes the router branch correctly in production — context7 check on Vite's `import.meta.env` tree-shaking guarantees.
-- **iOS 26 fallback is conditional** (Phase 5 §2.1.5) — `useIOSFixedFallback` hook authored but only lands if §2.1 real-device test surfaces regression. Deepening may want to cross-reference the `parseIOSMajor` regex against actual iOS 26.x UA strings gathered from WebKit bug tracker, and decide whether to elevate the fallback to unconditional.
-- **APCA Lc floor semantics** (Phase 5 §5 landmine 10) — "APCA Lc ≥60 on body text" applies per-row, not globally. Muted text intentionally gets Lc 45. Future re-readers can misread this. Deepening should verify the per-row minimums in the test file match the TODO's intent.
+**Phase 5 deepening outcomes (2026-04-12, 8-agent pass):**
+
+All 4 drafter-flagged concerns were addressed by the deepening:
+- **Baseline storage**: Kept git-committed PNGs + added `optipng -o7` optimization (70→50MB). Git LFS deferred. Cross-browser strategy corrected (B7: chromium-only baselines; webkit/firefox functional tests only).
+- **Dev-only fixture endpoints**: **CRITICAL B2 found** — `import.meta.env` is Vite-specific, NOT replaced in Wrangler's esbuild. Corrected to Wrangler `define` config + runtime `env.ENVIRONMENT` gate. Fixture architecture also corrected (B3: DO stub forwarding, correct storage keys).
+- **iOS 26 fallback**: **CRITICAL B1 found** — iOS 26 froze `iPhone OS` at `18_6`. Regex returned `18`, not `26`. Fully rewritten with `Version/` token, iPad detection via `maxTouchPoints`, in-app browser two-pass parsing, scope narrowed to 26.0 only (26.1 fixed per Safari release notes).
+- **APCA Lc floor**: Confirmed correct — per-row minimums (Lc 60 body, Lc 45 muted). `sRGBtoY` type incompatibility fixed (B5). `Math.abs` semantics documented.
 
 #### Cross-phase tokens flagged during Phase 2 draft — ALL RESOLVED in Phase 2 deepening
 

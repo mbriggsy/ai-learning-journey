@@ -1,20 +1,46 @@
-.toast {
-  position: fixed;
-  top: 16px;
-  left: 16px;
-  right: 16px;
-  padding: 12px 16px;
-  background: var(--accent-danger);
-  color: var(--text-primary, #e8e8f0);
-  font-size: 14px;
-  font-weight: 600;
-  border-radius: 8px;
-  text-align: center;
-  z-index: 9000;
-  animation: slideDown 0.2s ease;
-}
+/* ErrorToast.module.css
+   Transient error message shown when server rejects an action.
+   Auto-dismisses after 2s; no user interaction required.
 
-@keyframes slideDown {
-  from { transform: translateY(-100%); opacity: 0; }
-  to { transform: translateY(0); opacity: 1; }
+   Positioning: position: absolute against the phone-root contract (Phase 1 §2.12
+   follow-up: html, body, #root all position: relative + sized to viewport-safe).
+   NO position: fixed — Phase 1 lint Rule 3 + landmine 7.
+
+   Renders as a direct child of <Player> Fragment (sibling of <PhoneRouter>),
+   which positions it against #root. z-index: var(--z-toast) — above all page
+   content, below native <dialog> top-layer overlays.
+
+   The slideDown animation is DECORATIVE — the toast's visibility is controlled
+   by React mount/unmount, not by the CSS animation. Under prefers-reduced-motion
+   the toast appears instantly (correct behavior). Decorative tier.
+*/
+
+@layer components {
+  .toast {
+    position: absolute;
+    top: max(var(--space-4), var(--inset-top));
+    left: max(var(--space-4), var(--inset-left));
+    right: max(var(--space-4), var(--inset-right));
+    padding: var(--space-3) var(--space-4);
+    background: var(--color-bg-danger);
+    color: var(--color-fg-primary);
+    font-family: var(--font-body);
+    font-size: var(--text-body);
+    border: 1px solid var(--color-border-danger);
+    border-radius: var(--radius-md);
+    box-shadow: var(--shadow-lg);
+    z-index: var(--z-toast);
+    animation: slideDown var(--motion-duration-fast) var(--motion-ease-decelerate) both;
+  }
+
+  @keyframes slideDown {
+    from {
+      opacity: 0;
+      transform: translateY(-100%);
+    }
+    to {
+      opacity: 1;
+      transform: translateY(0);
+    }
+  }
 }

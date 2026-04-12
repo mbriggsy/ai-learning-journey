@@ -1,59 +1,102 @@
+/* sheets.module.css
+   Shared styles for all bottom-sheet prompts under src/client/player/sheets/.
+   Five consumers: TargetSelect, FavorResponse, NameCard, DefusePlacement, FuturePeek.
+   The BottomSheet wrapper (src/client/shared/BottomSheet.module.css, see §2.6)
+   provides the modal chrome, padding, dismiss gesture, and z-index. This file
+   only owns the inner content layout for each sheet's specific prompt.
+
+   Consumer mapping (CORRECTED in deepening — Phase 2's first draft had errors):
+   - TargetSelect: .sheetTitle + .optionList + .optionBtn
+   - FavorResponse: .sheetTitle + .sheetSubtitle + .optionList + .optionBtn
+   - NameCard: .sheetTitle + .sheetSubtitle + .cardGrid + .optionBtn (children
+     are .optionBtn, NOT unstyled — Phase 2 first draft was wrong)
+   - DefusePlacement (TWO branches):
+     * small-deck: .sheetTitle + .sheetSubtitle + .optionList + .optionBtn
+     * large-deck: .sheetTitle + .sheetSubtitle + .quickActions + .quickBtn +
+                   .positionInput + .confirmBtn
+   - FuturePeek: .sheetTitle + .sheetSubtitle + .tapOrder + .tapCard + .tapCardIcon +
+                 .tapCardName + .tapCardPosition + .orderBadge + .confirmBtn
+   .optionBtn is consumed by 4 of 5 sheets (not 2 as Phase 2 first draft claimed).
+
+   Architectural note: the .tapCard family uses a `--peek-accent` inline-style
+   cascade. FuturePeek.tsx sets `style={{ '--peek-accent': cardAccent(type) }}`
+   per card; the CSS reads it via `var(--peek-accent, var(--color-border-subtle))`
+   with color-mix() blending. This is the right pattern for per-instance theming —
+   threads through without inflating the className list. PRESERVE.
+*/
+
+@layer components {
+
+/* --- Sheet meta (used by every consumer) --- */
+
 .sheetTitle {
-  font-size: 18px;
+  font-family: var(--font-display);
+  font-size: var(--text-callout);
   font-weight: 700;
-  margin-bottom: 16px;
   text-align: center;
+  margin-bottom: var(--space-4);
 }
 
 .sheetSubtitle {
-  font-size: 14px;
-  color: var(--text-secondary);
+  font-family: var(--font-body);
+  font-size: var(--text-body);
+  color: var(--color-fg-secondary);
   text-align: center;
-  margin-bottom: 12px;
+  margin-bottom: var(--space-3);
 }
+
+/* --- Option list (TargetSelect, FavorResponse) --- */
 
 .optionList {
   display: flex;
   flex-direction: column;
-  gap: 8px;
+  gap: var(--space-2);
 }
 
 .optionBtn {
   display: flex;
   align-items: center;
-  gap: 10px;
+  gap: var(--space-3);
   width: 100%;
-  padding: 12px 16px;
-  border-radius: 8px;
-  border: 1px solid var(--border-subtle);
-  background: var(--bg-primary);
-  color: var(--text-primary);
-  font-size: 15px;
-  cursor: pointer;
+  /* --space-4 vertical padding ensures the button clears the 44px touch-target floor:
+     16 + var(--text-callout floor 16) + 16 = 48px. Pre-rebuild was 12+15+12=39px (bug). */
+  padding: var(--space-4);
+  border: 1px solid var(--color-border-subtle);
+  border-radius: var(--radius-button);
+  background: var(--color-bg-app);
+  color: var(--color-fg-primary);
+  font-family: var(--font-body);
+  font-size: var(--text-callout);
   text-align: left;
+  cursor: pointer;
+  touch-action: manipulation;
 }
 
 .optionBtn:active {
-  background: var(--border-subtle);
+  background: var(--color-border-subtle);
 }
 
-.optionBtn:focus-visible {
-  outline: 2px solid var(--focus-ring, #33ffff);
-  outline-offset: 2px;
+.optionBtn:disabled {
+  opacity: 0.4;
+  cursor: not-allowed;
 }
+
+/* --- Confirm button (DefusePlacement, FuturePeek) --- */
 
 .confirmBtn {
   display: block;
   width: 100%;
-  padding: 14px;
-  margin-top: 16px;
-  border-radius: 8px;
+  padding: var(--space-4);
+  margin-top: var(--space-4);
   border: none;
-  background: var(--accent-success);
-  color: var(--bg-primary);
-  font-size: 16px;
+  border-radius: var(--radius-button);
+  background: var(--color-accent-intercept);
+  color: var(--color-fg-on-intercept);
+  font-family: var(--font-display);
+  font-size: var(--text-callout);
   font-weight: 600;
   cursor: pointer;
+  touch-action: manipulation;
 }
 
 .confirmBtn:disabled {
@@ -61,97 +104,125 @@
   cursor: default;
 }
 
+/* --- Quick actions row (DefusePlacement: top/middle/bottom shortcuts) --- */
+
 .quickActions {
   display: flex;
-  gap: 8px;
-  margin-bottom: 12px;
+  gap: var(--space-2);
+  margin-bottom: var(--space-3);
 }
 
 .quickBtn {
   flex: 1;
-  padding: 10px;
-  border-radius: 8px;
-  border: 1px solid var(--border-subtle);
-  background: var(--bg-primary);
-  color: var(--text-primary);
-  font-size: 14px;
-  cursor: pointer;
+  /* --space-4 padding for touch-target compliance: 16+15+16=47px. */
+  padding: var(--space-4);
+  border: 1px solid var(--color-border-subtle);
+  border-radius: var(--radius-button);
+  background: var(--color-bg-app);
+  color: var(--color-fg-primary);
+  font-family: var(--font-body);
+  font-size: var(--text-body);
   text-align: center;
+  cursor: pointer;
+  touch-action: manipulation;
 }
+
+/* --- Position input (DefusePlacement: manual +/- counter) --- */
 
 .positionInput {
   display: flex;
   align-items: center;
   justify-content: center;
-  gap: 12px;
-  padding: 12px 0;
+  gap: var(--space-3);
+  padding: var(--space-3) 0;
 }
 
 .positionInput button {
-  width: 40px;
-  height: 40px;
-  border-radius: 50%;
-  border: 1px solid var(--text-secondary);
-  background: var(--bg-primary);
-  color: var(--text-primary);
-  font-size: 18px;
+  /* WCAG 2.5.5 — round ± buttons must hit the 44px touch target floor.
+     Phase 2 first draft used var(--space-10) = 40px which fails AAA + Apple HIG.
+     No row-level exception applies (adjacent controls, independent handlers).
+     Use --size-touch-target directly. */
+  width: var(--size-touch-target);
+  height: var(--size-touch-target);
+  border: 1px solid var(--color-fg-secondary);
+  border-radius: var(--radius-full);
+  background: var(--color-bg-app);
+  color: var(--color-fg-primary);
+  font-family: var(--font-display);
+  font-size: var(--text-callout);
   cursor: pointer;
+  touch-action: manipulation;
 }
 
 .positionInput span {
-  font-size: 20px;
+  font-family: var(--font-display);
+  font-size: var(--text-callout);
   font-weight: 600;
+  /* Number display floor — keeps multi-digit positions from causing layout shift.
+     Structural value, not a design token. */
   min-width: 60px;
   text-align: center;
 }
 
+/* --- Card grid (NameCard: pick a card type to name) --- */
+
 .cardGrid {
   display: grid;
   grid-template-columns: repeat(2, 1fr);
-  gap: 8px;
+  gap: var(--space-2);
 }
+
+/* --- Tap order with peek-accent cascade (FuturePeek: rearrange top 3) --- */
 
 .tapOrder {
   display: flex;
-  gap: 8px;
+  gap: var(--space-2);
   justify-content: center;
-  padding: 8px 0;
+  padding: var(--space-2) 0;
 }
 
 .tapCard {
   display: flex;
   flex-direction: column;
   align-items: center;
-  gap: 6px;
-  padding: 14px 12px;
-  border-radius: 10px;
-  border: 2px solid color-mix(in srgb, var(--peek-accent, var(--border-subtle)) 40%, var(--border-subtle));
-  border-left: 3px solid var(--peek-accent, var(--border-subtle));
+  gap: var(--space-2);
+  padding: var(--space-4) var(--space-3);
+  border-radius: var(--radius-card);
+  /* Per-instance theming via --peek-accent inline cascade. Border + background
+     blend the accent at low opacity into the surface color so each card carries
+     its card-type's signature color without dominating. PRESERVE THIS PATTERN. */
+  border: 2px solid color-mix(in srgb, var(--peek-accent, var(--color-border-subtle)) 40%, var(--color-border-subtle));
+  border-left: 3px solid var(--peek-accent, var(--color-border-subtle));
   background:
     linear-gradient(
       180deg,
-      color-mix(in srgb, var(--peek-accent, transparent) 12%, var(--bg-primary)) 0%,
-      color-mix(in srgb, var(--peek-accent, transparent) 4%, var(--bg-primary)) 100%
+      color-mix(in srgb, var(--peek-accent, transparent) 12%, var(--color-bg-app)) 0%,
+      color-mix(in srgb, var(--peek-accent, transparent) 4%, var(--color-bg-app)) 100%
     );
-  color: var(--text-primary);
-  font-size: 13px;
-  cursor: pointer;
-  min-width: 90px;
+  color: var(--color-fg-primary);
+  font-family: var(--font-body);
+  font-size: var(--text-caption);
   text-align: center;
-  transition: border-color 0.15s ease, opacity 0.15s ease;
+  cursor: pointer;
+  touch-action: manipulation;
+  /* Floor — prevents the card from collapsing too narrow inside the flex tap-order row. */
+  min-width: 90px;
+  transition:
+    border-color var(--motion-duration-fast) var(--motion-ease-base),
+    opacity var(--motion-duration-fast) var(--motion-ease-base);
 }
 
 .tapCard:active {
   background:
     linear-gradient(
       180deg,
-      color-mix(in srgb, var(--peek-accent, transparent) 20%, var(--bg-primary)) 0%,
-      color-mix(in srgb, var(--peek-accent, transparent) 8%, var(--bg-primary)) 100%
+      color-mix(in srgb, var(--peek-accent, transparent) 20%, var(--color-bg-app)) 0%,
+      color-mix(in srgb, var(--peek-accent, transparent) 8%, var(--color-bg-app)) 100%
     );
 }
 
 .tapCard[data-tapped] {
-  border-color: var(--accent-success);
+  border-color: var(--color-accent-intercept);
   opacity: 0.5;
 }
 
@@ -159,15 +230,17 @@
   display: flex;
   align-items: center;
   justify-content: center;
+  /* Sized to match the CardBadge child component below (28px) — structural value
+     keyed to the consumer component, not a design decision. */
   width: 28px;
   height: 28px;
-  color: var(--peek-accent, var(--text-secondary));
+  color: var(--peek-accent, var(--color-fg-secondary));
 }
 
 .tapCardIcon :global(.cardBadge) {
   position: static;
-  width: 28px;
-  height: 28px;
+  width: 100%;
+  height: 100%;
 }
 
 .tapCardIcon :global(.cardBadge) svg {
@@ -176,21 +249,41 @@
 }
 
 .tapCardName {
+  font-family: var(--font-body);
   font-weight: 600;
-  font-size: 13px;
-  color: color-mix(in srgb, var(--peek-accent, var(--text-primary)) 70%, var(--text-primary));
+  font-size: var(--text-caption);
+  /* Per-instance accent at 70% strength blended over the primary text color —
+     subtle tinting that hints at the card's category without losing legibility. */
+  color: color-mix(in srgb, var(--peek-accent, var(--color-fg-primary)) 70%, var(--color-fg-primary));
   line-height: 1.2;
 }
 
 .tapCardPosition {
-  font-size: 11px;
+  font-family: var(--font-body);
+  font-size: var(--text-caption);
   font-weight: 500;
-  color: var(--text-secondary);
+  color: var(--color-fg-secondary);
 }
 
 .orderBadge {
-  font-size: 11px;
+  font-family: var(--font-display);
+  font-size: var(--text-caption);
   font-weight: 700;
-  color: var(--accent-success);
+  color: var(--color-accent-intercept);
 }
 
+/* --- Keyboard focus indicator (combined selector for all interactive elements) ---
+   Same pattern as SmartActionBox / JoinScreen / FloatingActionButton: outline (not
+   box-shadow) so the focus ring never fights variant colors or per-instance accents.
+   --color-border-focus = ochre-8 — clear contrast on every background in this file.
+   WCAG 2.4.7. */
+.optionBtn:focus-visible,
+.confirmBtn:focus-visible,
+.quickBtn:focus-visible,
+.tapCard:focus-visible,
+.positionInput button:focus-visible {
+  outline: 2px solid var(--color-border-focus);
+  outline-offset: var(--space-1);
+}
+
+} /* end @layer components */

@@ -5,7 +5,7 @@ phase: 2
 parent: docs/plans/css-foundation-rebuild/roadmap.md
 depends_on: docs/plans/css-foundation-rebuild/phase-1-foundation.md
 date: 2026-04-11
-status: deepened
+status: completed
 deepened: 2026-04-11
 ---
 

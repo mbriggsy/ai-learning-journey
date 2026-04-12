@@ -16,6 +16,20 @@ deepened_on: 2026-04-11
 
 ---
 
+## Follow-Up Sweep (2026-04-12)
+
+**17 new tokens + 4 amendments** folded in from Phase 3 §7 (the cross-phase token list that Phase 1's original deepening didn't catch). All values sourced from Phase 3 §7.1–§7.6, verified against Phase 3 deepening corrections. No new research needed — purely mechanical token insertion.
+
+**Amendments (4):** `--space-fluid-base-board` max 32→40px, `--space-fluid-loose-board` max 64→80px, `--size-player-panel-width` min 160→180px, `--size-draw-pile-width` 80→160 → 120→240.
+
+**New in `semantic.board.css` (8):** `--text-caption-board`, `--size-lobby-roster-max-width`, `--size-title-accent-width`, `--size-rankings-max-width`, `--size-felt-reticle`, `--size-felt-diamond`, `--size-discard-card-width`.
+
+**New in `semantic.css` (14):** 8 MinimalCard text-clamp tokens (`--text-card-name-{min,max,large-min,large-max}`, `--text-card-desc-{min,max,large-min,large-max}`), 6 DramaOverlay text-clamp tokens (`--text-drama-{hero,subdued,victory}-{min,max}`).
+
+**New in `primitives.css` + `motion.ts` (2+2):** `--motion-duration-pulse` (1400ms, decorative) + `--motion-duration-pulse-slow` (2500ms, decorative) + matching `MOTION_DURATIONS.pulse` / `.pulseSlow`. Note: `--motion-duration-pulse` ≠ `--motion-duration-essential-pulse` — same value, different reduced-motion behavior.
+
+---
+
 ## Enhancement Summary (Deepening Pass — 2026-04-11)
 
 **Deepening method.** 12 parallel agents: 6 domain-research sub-agents (Motion 12.x API, culori + apca-w3 API, iOS Safari 26 viewport landmines, Radix Colors + design-system consensus, `color-mix()` + `@property`, Utopia vertical-axis + WCAG 1.4.4), 5 code-review agents (kieran-typescript, architecture-strategist, performance-oracle, pattern-recognition-specialist, code-simplicity-reviewer), 1 cross-phase scan (reads Phases 2-5 and surfaces contradictions), 1 codebase verification (actual state of `theme.ts`, entry points, Framer Motion usage). Primary sources verified: Motion 12.38 type defs from `node_modules`, culori v4.0.2 source, apca-w3 v0.1.9 source, WebKit bug 297779, W3C WCAG 2.1/2.2 + F94, Radix Colors docs, CSS CM4 spec, iOS HIG 2026, Machado et al. 2009 (CVD simulation), Myndex APCA-W3 Bronze thresholds.
@@ -314,8 +328,12 @@ The `theme.ts` → pure-CSS migration is a Phase 1 deliverable, not a Phase 2+ d
 --motion-duration-dramatic: 800ms;
 
 /* Named durations for specific Phase 3-4 consumers (resolved in deepening) */
---motion-duration-dots:     1500ms;  /* JoinScreen loading dots — Phase 4 §2.5.4 */
---motion-duration-ambient:  4000ms;  /* DrawPile breathing / ambient pulse — Phase 3 §2.3.10 */
+--motion-duration-dots:       1500ms;  /* JoinScreen loading dots — Phase 4 §2.5.4 */
+--motion-duration-ambient:    4000ms;  /* DrawPile breathing / ambient pulse — Phase 3 §2.3.10 */
+--motion-duration-pulse:      1400ms;  /* Lobby waiting dots, subtle attention — DECORATIVE (follow-up sweep, Phase 3 §7.6) */
+--motion-duration-pulse-slow: 2500ms;  /* Lobby start button + GameOver play-again — DECORATIVE (follow-up sweep, Phase 3 §7.6) */
+/* NOTE: --motion-duration-pulse (1400ms, DECORATIVE) ≠ --motion-duration-essential-pulse (1400ms, ESSENTIAL).
+   Same value, different reduced-motion behavior. pulse zeros; essential-pulse slows to 2400ms. */
 
 /* Essential — survives prefers-reduced-motion (see §2.9). Gameplay-signal animations. */
 --motion-duration-essential-pulse:  1400ms;  /* turn-indicator breathing glow */
@@ -529,6 +547,45 @@ The `theme.ts` → pure-CSS migration is a Phase 1 deliverable, not a Phase 2+ d
   2. **`srgb` muddy-midpoint problem:** srgb interpolation with `transparent` routes through transparent BLACK (rgba(0,0,0,0)), which desaturates and darkens the halo of any colored glow. `oklab` holds hue and chroma cleanly all the way to 0% alpha — exactly what you want for an Archer-grade teal or burned-orange glow.
 - **Never use `color-mix(in oklch, ...)` in Phase 1** — hard rule, enforced by a §2.14 lint check.
 - All shadow tokens reach `--color-shadow-base` (a semantic pointer) instead of `--color-charcoal-1` (the primitive) directly, so light-mode retheme changes one token, not seven formulas.
+
+**Phase 1 follow-up sweep additions to `semantic.css` (Phase 3 §7.4 + §7.5):**
+
+MinimalCard text clamp floors/ceilings (8 tokens) — `px` values because they are clamp boundaries for `cqi`-based font-sizes inside `MinimalCard.module.css`, representing minimum-readable and maximum-aesthetic pixel boundaries:
+
+```css
+/* semantic.css additions — axis-independent (follow-up sweep, Phase 3 §7.4) */
+@layer semantics {
+  :root {
+    --text-card-name-min:        10px;
+    --text-card-name-max:        14px;
+    --text-card-name-large-min:  16px;
+    --text-card-name-large-max:  24px;
+    --text-card-desc-min:        8px;
+    --text-card-desc-max:        11px;
+    --text-card-desc-large-min:  12px;
+    --text-card-desc-large-max:  16px;
+  }
+}
+```
+
+DramaOverlay text scale tokens (6 tokens) — `cqi`-based min/max pairs, architecturally different from `--text-hero-subdued` (which is `vw`-based and board-only):
+
+```css
+/* semantic.css additions — axis-independent (follow-up sweep, Phase 3 §7.5) */
+@layer semantics {
+  :root {
+    /* Hero — default drama variants (BURNED, EXTRACTED, INTERCEPTED) */
+    --text-drama-hero-min:     48px;
+    --text-drama-hero-max:     160px;
+    /* Subdued — ELIMINATED variant, quieter */
+    --text-drama-subdued-min:  32px;
+    --text-drama-subdued-max:  100px;
+    /* Victory — the loudest reveal */
+    --text-drama-victory-min:  56px;
+    --text-drama-victory-max:  180px;
+  }
+}
+```
 
 ### §2.4 `semantic.phone.css` — phone-view dimensional tokens (svh-based)
 
@@ -770,9 +827,11 @@ Where `A` and `B` are derived per-token from the small → large bracket (1280 �
   /* Player panel — individual player card in the ring. Width/height pair,
      added in deepening to resolve Phase 3 §2.3.3 (PlayerRing CSS) and
      Phase 4 §2.7 (measurement-div TSX readback for motion layout coupling). */
+  /* AMENDED (Phase 1 follow-up sweep): min 160→180px per Phase 3 §7.3 —
+     matches old 200px visual weight minus continuous-scale compression */
   --size-player-panel-width: clamp(
-    160px,
-    calc(160px + (100vw - 1280px) * (260 / 2560)),
+    180px,
+    calc(180px + (100vw - 1280px) * (240 / 2560)),
     420px
   );
   --size-player-panel-height: clamp(
@@ -781,11 +840,13 @@ Where `A` and `B` are derived per-token from the small → large bracket (1280 �
     147px
   );
 
-  /* Draw pile — board-side card stack */
+  /* Draw pile — board-side card stack
+     AMENDED (Phase 1 follow-up sweep): 80→160 expanded to 120→240 per Phase 3 §7.3 —
+     preserves old visual weight (140→320→480) in the continuous-scale form */
   --size-draw-pile-width: clamp(
-    80px,
-    calc(80px + (100vw - 1280px) * (80 / 2560)),
-    160px
+    120px,
+    calc(120px + (100vw - 1280px) * (120 / 2560)),
+    240px
   );
 
   /* Arena — where cards "land" during play animations */
@@ -800,6 +861,32 @@ Where `A` and `B` are derived per-token from the small → large bracket (1280 �
     280px
   );
 
+  /* --- Phase 1 follow-up sweep additions (Phase 3 §7.2 + §7.3) --- */
+
+  /* Caption text scale — 8 consumers across 5 board files (pileLabel, rosterLabel,
+     rosterCount, turnBadge, eliminatedName, disconnectedBadge, countdown, devLink) */
+  --text-caption-board: clamp(
+    0.8125rem,
+    calc(0.8125rem + (100vw - 1280px) * (4 / 2560)),
+    1.0625rem
+  );
+
+  /* Lobby roster — vertical player list during lobby state */
+  --size-lobby-roster-max-width: clamp(440px, calc(440px + (100vw - 1280px) * (160 / 2560)), 600px);
+
+  /* Lobby title accent bar — thin horizontal accent below the title */
+  --size-title-accent-width: clamp(80px, calc(80px + (100vw - 1280px) * (80 / 2560)), 160px);
+
+  /* GameOver rankings container width */
+  --size-rankings-max-width: clamp(360px, calc(360px + (100vw - 1280px) * (160 / 2560)), 520px);
+
+  /* GameTable felt branding SVG sizes (reticle center + 4 corner diamonds) */
+  --size-felt-reticle: clamp(320px, calc(320px + (100vw - 1280px) * (280 / 2560)), 600px);
+  --size-felt-diamond: clamp(36px, calc(36px + (100vw - 1280px) * (32 / 2560)), 68px);
+
+  /* Discard card width — slightly narrower than pile container */
+  --size-discard-card-width: calc(var(--size-draw-pile-width) * 0.92);
+
   /* NO --size-touch-target — board is TV-rendered, pointer is a remote cursor,
      WCAG 2.5.5 target-size criterion does not apply. */
 }
@@ -809,18 +896,20 @@ Where `A` and `B` are derived per-token from the small → large bracket (1280 �
 
 ```css
 :root {
-  /* Board-view spacing base — for GameTable outer padding, Lobby container gutters */
+  /* Board-view spacing base — for GameTable outer padding, Lobby container gutters
+     AMENDED (Phase 1 follow-up sweep): max 32→40px, growth 16→24 per Phase 3 §7.1 */
   --space-fluid-base-board: clamp(
     16px,
-    calc(16px + (100vw - 1280px) * (16 / 2560)),
-    32px
+    calc(16px + (100vw - 1280px) * (24 / 2560)),
+    40px
   );
 
-  /* Board-view spacing loose — for DramaOverlay margins, GameOver card spacing */
+  /* Board-view spacing loose — for DramaOverlay margins, GameOver card spacing
+     AMENDED (Phase 1 follow-up sweep): max 64→80px, growth 32→48 per Phase 3 §7.1 */
   --space-fluid-loose-board: clamp(
     32px,
-    calc(32px + (100vw - 1280px) * (32 / 2560)),
-    64px
+    calc(32px + (100vw - 1280px) * (48 / 2560)),
+    80px
   );
 }
 ```
@@ -895,6 +984,8 @@ export const MOTION_DURATIONS = {
   // Named durations for specific Phase 3-4 consumers.
   dots:           1.5,   // JoinScreen dots — Phase 4 §2.5.4
   ambient:        4.0,   // DrawPile breathing — Phase 3 §2.3.10
+  pulse:          1.4,   // Lobby waiting dots — DECORATIVE (follow-up sweep, Phase 3 §7.6)
+  pulseSlow:      2.5,   // Lobby start + GameOver play-again — DECORATIVE (follow-up sweep, Phase 3 §7.6)
 
   // Essential — survives prefers-reduced-motion. See §2.9.
   essentialPulse: 1.4,   // turn-indicator breathing glow
@@ -1431,9 +1522,11 @@ src/client/shared/tokens/palette.generated.ts
   --motion-duration-slow:     400ms;
   --motion-duration-dramatic: 800ms;
 
-  /* Named, non-decorative */
-  --motion-duration-dots:     1500ms;
-  --motion-duration-ambient:  4000ms;
+  /* Named durations (decorative) */
+  --motion-duration-dots:       1500ms;
+  --motion-duration-ambient:    4000ms;
+  --motion-duration-pulse:      1400ms;  /* follow-up sweep, Phase 3 §7.6 */
+  --motion-duration-pulse-slow: 2500ms;  /* follow-up sweep, Phase 3 §7.6 */
 
   /* Essential — gameplay-signal animations */
   --motion-duration-essential-pulse:  1400ms;
@@ -1449,9 +1542,11 @@ src/client/shared/tokens/palette.generated.ts
     --motion-duration-slow:     0ms;
     --motion-duration-dramatic: 0ms;
 
-    /* Named — zero (ambient background loops are decorative, not essential) */
-    --motion-duration-dots:     0ms;
-    --motion-duration-ambient:  0ms;
+    /* Named — zero (ambient/decorative loops are not gameplay-critical) */
+    --motion-duration-dots:       0ms;
+    --motion-duration-ambient:    0ms;
+    --motion-duration-pulse:      0ms;   /* follow-up sweep */
+    --motion-duration-pulse-slow: 0ms;   /* follow-up sweep */
 
     /* Essential — PRESERVED (and optionally slowed for comfort) */
     --motion-duration-essential-pulse:  2400ms;  /* slower breath, still readable */
@@ -1532,8 +1627,10 @@ Full Playwright coverage lands in Phase 5's visual regression matrix (plan §5 o
 @property --motion-duration-base     { syntax: '<time>'; inherits: true; initial-value: 250ms; }
 @property --motion-duration-slow     { syntax: '<time>'; inherits: true; initial-value: 400ms; }
 @property --motion-duration-dramatic { syntax: '<time>'; inherits: true; initial-value: 800ms; }
-@property --motion-duration-dots     { syntax: '<time>'; inherits: true; initial-value: 1500ms; }
-@property --motion-duration-ambient  { syntax: '<time>'; inherits: true; initial-value: 4000ms; }
+@property --motion-duration-dots       { syntax: '<time>'; inherits: true; initial-value: 1500ms; }
+@property --motion-duration-ambient    { syntax: '<time>'; inherits: true; initial-value: 4000ms; }
+@property --motion-duration-pulse      { syntax: '<time>'; inherits: true; initial-value: 1400ms; }  /* follow-up sweep */
+@property --motion-duration-pulse-slow { syntax: '<time>'; inherits: true; initial-value: 2500ms; }  /* follow-up sweep */
 @property --motion-duration-essential-pulse { syntax: '<time>'; inherits: true; initial-value: 1400ms; }
 @property --motion-duration-essential-spin  { syntax: '<time>'; inherits: true; initial-value: 1000ms; }
 @property --motion-duration-essential-flash { syntax: '<time>'; inherits: true; initial-value: 200ms; }
@@ -1827,7 +1924,7 @@ Phase 1 tasks, in dependency order. Each step has a commit point. **Deepening pa
 5a. **Author `fonts.css`** per §2.13 (`@font-face` block with `font-display: optional` for Clash Display, Fontshare `@import` for General Sans). Wrap in `@layer components`.
 6. **Author `semantic.phone.css`** with svh-based dimensional tokens per §2.4 — including the WCAG 1.4.4 load-bearing comment, safe-area tokens per §2.12, and the renamed `--size-phone-card-*` tokens. Wrap in `@layer semantics-phone`. Five text tokens (not six — `--text-micro` merged into `--text-caption`).
 6a. **Update HTML shells** — add `<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover, interactive-widget=resizes-content">` to both `src/client/player.html` and `src/client/board.html`. Add `<link rel="preload" href="/fonts/ClashDisplay-Semibold.woff2" as="font" type="font/woff2" crossorigin>` to both.
-7. **Author `semantic.board.css`** with vw-based dimensional tokens per §2.5 — including renamed `--size-board-card-*`, new `--size-player-panel-width/-height`, `--text-hero-subdued`, `--space-fluid-base-board`, `--space-fluid-loose-board`. Wrap in `@layer semantics-board`.
+7. **Author `semantic.board.css`** with vw-based dimensional tokens per §2.5 — including renamed `--size-board-card-*`, new `--size-player-panel-width/-height`, `--text-hero-subdued`, `--space-fluid-base-board`, `--space-fluid-loose-board`, **plus follow-up sweep tokens**: `--text-caption-board`, 6 sizing tokens (`--size-lobby-roster-max-width`, `--size-title-accent-width`, `--size-rankings-max-width`, `--size-felt-reticle`, `--size-felt-diamond`, `--size-discard-card-width`). Wrap in `@layer semantics-board`.
 7a. **Place Clash Display font files** at `public/fonts/ClashDisplay-Semibold.woff2` and `ClashDisplay-Bold.woff2` (download from Fontshare, place in `public/fonts/`). Verify the preload URL resolves via `curl -I http://localhost:5173/fonts/ClashDisplay-Semibold.woff2` once the dev server starts at step 19.
 8. **Author `scripts/generate-palette.ts`** (codegen decision — see Enhancement Summary Decision 1). The script is ~30-50 LOC: parse `primitives.css` with PostCSS, walk `:root` rules, extract every `--color-*` custom property, emit `src/client/shared/tokens/palette.generated.ts` as a flat `as const` object keyed by kebab-case name without `--` prefix. Include a file-level header comment: *"⚠ GENERATED FILE — DO NOT EDIT. Source: `src/client/shared/tokens/primitives.css`. Regenerate: `pnpm generate:palette`."*
 8b. **Wire the generator into package.json.** Add `"generate:palette": "tsx scripts/generate-palette.ts"`, `"prebuild": "pnpm generate:palette"`, `"predev": "pnpm generate:palette"`. Add `src/client/shared/tokens/palette.generated.ts` to `.gitignore`. Run `pnpm generate:palette` once to confirm the output compiles and is importable.
@@ -1914,6 +2011,8 @@ Phase 1 is done when **all** of the following are true:
 - [ ] `--z-max` does NOT exist in `primitives.css`.
 - [ ] `--text-micro` does NOT exist in `semantic.phone.css`.
 - [ ] The 7 cross-phase tokens added in deepening all exist: `--size-card-detail-max`, `--space-fluid-base-board`, `--space-fluid-loose-board`, `--text-hero-subdued`, `--size-player-panel-width`, `--size-player-panel-height`, `--motion-duration-ambient`, `--motion-duration-dots`.
+- [ ] The 17 follow-up sweep tokens all exist: `--text-caption-board`, `--size-lobby-roster-max-width`, `--size-title-accent-width`, `--size-rankings-max-width`, `--size-felt-reticle`, `--size-felt-diamond`, `--size-discard-card-width`, `--text-card-name-{min,max,large-min,large-max}`, `--text-card-desc-{min,max,large-min,large-max}`, `--text-drama-{hero,subdued,victory}-{min,max}`, `--motion-duration-pulse`, `--motion-duration-pulse-slow`.
+- [ ] The 4 follow-up sweep amendments are applied: `--space-fluid-base-board` max=40px, `--space-fluid-loose-board` max=80px, `--size-player-panel-width` min=180px, `--size-draw-pile-width` min=120px max=240px.
 - [ ] `apca-w3` imports work at runtime: `node -e "const {sRGBtoY,APCAcontrast}=require('apca-w3'); console.log(APCAcontrast(sRGBtoY([255,255,255,1]), sRGBtoY([0,0,0,1])))"` prints a positive BoW Lc number (verifies the library is installed and runnable).
 - [ ] `culori.filterDeficiencyDeuter` is importable: `node -e "const {filterDeficiencyDeuter}=require('culori'); console.log(typeof filterDeficiencyDeuter)"` prints `function`.
 

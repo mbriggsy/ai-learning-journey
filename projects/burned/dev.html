@@ -257,14 +257,15 @@
       window.open(boardUrl, 'burned-board-' + room);
       addLogLine('Board: ' + boardUrl, boardUrl);
 
-      // Open player tabs with staggered timing to avoid popup blockers
+      // Open player tabs — delay enough for the board to mount + connect + host-connect.
+      // Board React app needs ~500ms to hydrate and send host-connect to Wrangler.
       for (var i = 0; i < playerCount; i++) {
         (function(idx) {
           var name = NAMES[idx];
           var playerUrl = origin + '/player.html?room=' + room + '&name=' + encodeURIComponent(name);
           setTimeout(function() {
             window.open(playerUrl, 'burned-player-' + room + '-' + idx);
-          }, (idx + 1) * 150);
+          }, 1000 + idx * 150);
           addLogLine('Player ' + (idx + 1) + ': ' + playerUrl, playerUrl);
         })(i);
       }

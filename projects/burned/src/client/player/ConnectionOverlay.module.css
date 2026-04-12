@@ -13,7 +13,9 @@
   /* The <dialog> element. NO `position` declaration — UA stylesheet applies
      position: fixed + top-layer when showModal() is called. Override the
      UA's default centering via inset + margin. */
-  .overlay {
+  /* Only style when open — the UA stylesheet hides closed dialogs via
+     display:none, but an unconditional display:flex would override it. */
+  .overlay[open] {
     inset: 0;
     width: 100%;
     height: 100%;

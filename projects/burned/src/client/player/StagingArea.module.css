@@ -49,8 +49,6 @@
 
   .stagedSlot {
     flex: 0 0 auto;
-    /* Card height drives card width via aspect-ratio on MinimalCard.
-       stagedSlot just gives the card its vertical lane. */
     height: 100%;
     aspect-ratio: 5 / 7;
     /* GPU layer — prevents border repaint flash during Framer Motion layout transitions. */

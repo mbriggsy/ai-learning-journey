@@ -12,6 +12,8 @@ type StatusHandler = (status: ConnectionStatus) => void
 let socket: PartySocket | null = null
 let status: ConnectionStatus = 'disconnected'
 let hasConnectedOnce = false
+let currentRoom: string | null = null
+let pendingDisconnect: ReturnType<typeof setTimeout> | null = null
 const messageHandlers = new Set<MessageHandler>()
 const statusHandlers = new Set<StatusHandler>()
 const reconnectHandlers = new Set<() => void>()
@@ -19,8 +21,18 @@ const reconnectHandlers = new Set<() => void>()
 // --- Public API ---
 
 export function connect(roomCode: string, host: string): void {
-  if (socket) disconnect()
+  // Cancel any pending disconnect — this is a StrictMode re-mount
+  if (pendingDisconnect) {
+    clearTimeout(pendingDisconnect)
+    pendingDisconnect = null
+  }
 
+  // Already connected/connecting to this room — keep the existing socket
+  if (socket && currentRoom === roomCode && status !== 'disconnected') return
+
+  if (socket) disconnectImmediate()
+
+  currentRoom = roomCode
   status = 'connecting'
   notifyStatus()
 
@@ -30,11 +42,13 @@ export function connect(roomCode: string, host: string): void {
     party: 'game-room',
   })
 
+  const thisSocket = socket
+
   socket.addEventListener('open', () => {
+    if (socket !== thisSocket) return
     const isReconnect = hasConnectedOnce
     hasConnectedOnce = true
     status = 'connected'
-    // Notify reconnection BEFORE status (status triggers auto-join send)
     if (isReconnect) {
       for (const handler of reconnectHandlers) handler()
     }
@@ -42,6 +56,7 @@ export function connect(roomCode: string, host: string): void {
   })
 
   socket.addEventListener('close', () => {
+    if (socket !== thisSocket) return
     status = 'disconnected'
     notifyStatus()
   })
@@ -62,6 +77,7 @@ export function connect(roomCode: string, host: string): void {
       document.removeEventListener('visibilitychange', handleVisibilityChange)
       socket?.close()
       socket = null
+      currentRoom = null
       hasConnectedOnce = false
       status = 'disconnected'
       notifyStatus()
@@ -84,11 +100,23 @@ export function connect(roomCode: string, host: string): void {
 }
 
 export function disconnect(): void {
+  // Delay disconnect to survive React StrictMode's rapid unmount→remount cycle.
+  // If connect() is called within 50ms (StrictMode re-mount), the disconnect is
+  // cancelled and the existing socket continues undisturbed.
+  if (pendingDisconnect) clearTimeout(pendingDisconnect)
+  pendingDisconnect = setTimeout(() => {
+    pendingDisconnect = null
+    disconnectImmediate()
+  }, 50)
+}
+
+function disconnectImmediate(): void {
   document.removeEventListener('visibilitychange', handleVisibilityChange)
   if (socket) {
     socket.close()
     socket = null
   }
+  currentRoom = null
   hasConnectedOnce = false
   status = 'disconnected'
   notifyStatus()

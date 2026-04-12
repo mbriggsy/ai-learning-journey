@@ -17,15 +17,21 @@
 
 **Root cause: UNDIAGNOSED.** The 2026-04-12 session tried 6+ theories (safe-area double-subtraction, percentage height resolution, overflow:hidden vs overflow:clip focus-scrolling, CSS custom property recalculation, container-type containment, viewport unit stale caching) — none fixed it. The Playwright diagnostic at 412×915 showed correct layout (TitleBar rectTop=0, scrollTop=0 everywhere), meaning the bug does NOT reproduce in Playwright headless. It only appears in Chrome DevTools device emulation.
 
-**What the next session MUST do differently:**
-- Do NOT guess. Inject a diagnostic script into the ACTUAL Chrome DevTools session (via console or a dev-only component) that logs computed heights, scrollTop, and getBoundingClientRect() on html/body/#root/.view/TitleBar BEFORE and AFTER the card interaction.
-- Compare the "before" and "after" values to identify exactly which element moves and why.
-- Only then write a fix. ONE fix. Test it. Move on.
+**Step 1 — Build diagnostic overlay (BEFORE any fix attempt):**
+Build a dev-only React component that renders a small fixed overlay showing live computed values: `scrollTop`, `clientHeight`, `getBoundingClientRect().top` for html, body, #root, .view, TitleBar. Updates on every `focusin`, `resize`, and `pointerup` event. Visible in Briggsy's Chrome DevTools — not Playwright, which doesn't reproduce this bug.
+
+**Step 2 — Read the numbers:**
+Stage a card. Watch which values change. The element that moves tells you the cause.
+
+**Step 3 — ONE fix, test it, done.**
 
 **Files involved:**
 - `src/client/player/PlayingView.module.css` — `.view` sizing and overflow
 - `src/client/player/player-hardening.css` — html/body/#root sizing and overflow
 - `player.html` — `#root` has `container-type:inline-size` inline style (investigate if this contributes)
+
+**Process consideration — PreToolUse hook for CSS edits:**
+A hook that blocks `Edit`/`Write` on CSS and layout files unless `temp/diagnosis.md` exists. Forces written diagnosis before any fix attempt. Not built yet — evaluate whether this is worth the overhead vs. discipline alone (discipline alone failed 2026-04-12).
 
 ### 2. SmartActionBox not anchored to bottom of staging area
 

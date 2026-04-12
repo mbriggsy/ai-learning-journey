@@ -100,6 +100,14 @@
     /* Root max-width — "iPad in portrait = huge phone" cap */
     --size-root-max-width: 640px;
 
+    /* Narrow content column — unifies 5 consumers (JoinScreen .form/.lobbyList,
+       CardDetailSheet .hint, EliminatedView .flavor/.aliveList). */
+    --size-content-narrow: clamp(
+      280px,
+      calc(280px + (100svh - 667px) * (40 / 699)),
+      320px
+    );
+
     /* --- Fluid spacing (svh-based, phone-only) --- */
 
     --space-fluid-tight: clamp(

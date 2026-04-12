@@ -9,7 +9,8 @@
     --color-bg-app:                var(--color-charcoal-1);
     --color-bg-surface:            var(--color-charcoal-3);
     --color-bg-elevated:           var(--color-charcoal-4);
-    --color-bg-overlay:            color-mix(in oklab, var(--color-charcoal-1) 85%, transparent);
+    --color-bg-overlay-light:      color-mix(in oklab, var(--color-shadow-base) 60%, transparent);
+    --color-bg-overlay-heavy:      color-mix(in oklab, var(--color-shadow-base) 85%, transparent);
     --color-bg-interactive:        var(--color-teal-5);
     --color-bg-interactive-hover:  var(--color-teal-6);
     --color-bg-interactive-active: var(--color-teal-7);

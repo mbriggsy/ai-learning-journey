@@ -4,8 +4,9 @@ type: feat
 phase: 1
 parent: docs/plans/css-foundation-rebuild/roadmap.md
 date: 2026-04-11
-status: deepened
+status: completed
 deepened_on: 2026-04-11
+completed_on: 2026-04-12
 ---
 
 # Phase 1 — Foundation

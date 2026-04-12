@@ -5,40 +5,37 @@
 - **234/234 tests, typecheck clean** (verified 2026-04-12).
 - **Phone bundle: ~97.6 KB gzipped** (under 100KB budget, ~2.4KB headroom).
 - **Phase 4 — Motion Consolidation COMPLETE.** All 24 FM sites + 3 GSAP tweens + 3 CSS edits migrated to token system. `animation-config.ts` deleted. PlayerRing measurement-div coupling resolved. All 8 verification greps pass.
-
-## CSS Foundation Rebuild Progress
-
-| Phase | Status | Commit |
-|---|---|---|
-| Phase 1 — Token System Foundation | ✅ COMPLETE | `6f52c02d` |
-| Phase 2 — Phone View Migration | ✅ COMPLETE | `421cb10c` (8 commits total) |
-| Phase 3 — Board View Migration | ✅ COMPLETE | `dd1280c0` (6 commits total) |
-| Phase 4 — Motion Consolidation | ✅ COMPLETE | `35dd5c2c` (15 commits total) |
-| Phase 5 — Verification & Acceptance | DEEPENED | Awaiting execution after Phase 4 |
+- **Code reverted to pre-session state.** 2026-04-12 session attempted phone layout fixes, failed — all changes reverted.
 
 ## Next Steps (in priority order)
 
-### 1. CRITICAL — Visual audit of phone layout (Phase 2 regressions)
+### 1. CRITICAL — Phone PlayingView layout: TitleBar/StatusBar disappear after card interaction
 
-Phase 2's CSS rewrites broke the phone playing view. These must be fixed BEFORE Phase 5:
+**Symptom:** TitleBar ("player name + room code") and StatusBar ("YOUR TURN") are visible on initial load, then disappear after double-tapping a card to stage it. The staging area shifts to the top of the viewport, hiding the chrome above it.
 
-- **Staging area height** — Phase 2 replaced the working `flex: 42 1 0` / `flex: 58 1 0` proportional split with fixed-height tokens (`--size-staging-height: max 160px`, `--size-hand-height: max 220px`). Not enough room for cards. Partially reverted this session but needs proper visual verification with `/frontend-design`.
-  - `src/client/player/PlayingView.module.css:37` — staging flex
-  - `src/client/player/PlayingView.module.css:49` — hand flex
-  - `src/client/player/StagingArea.module.css:50-58` — stagedSlot sizing
-- **ConnectionOverlay dialog CSS** — `.overlay { display: flex }` overrode UA `dialog:not([open]) { display: none }`. Fixed this session: changed to `.overlay[open]`.
-  - `src/client/player/ConnectionOverlay.module.css:16`
+**Reproduction:** Chrome DevTools → Pixel 7 (412×915) → join a game → double-tap a card to stage it → TitleBar and StatusBar gone.
 
-### 2. CRITICAL — Connection module StrictMode fix
+**Root cause: UNDIAGNOSED.** The 2026-04-12 session tried 6+ theories (safe-area double-subtraction, percentage height resolution, overflow:hidden vs overflow:clip focus-scrolling, CSS custom property recalculation, container-type containment, viewport unit stale caching) — none fixed it. The Playwright diagnostic at 412×915 showed correct layout (TitleBar rectTop=0, scrollTop=0 everywhere), meaning the bug does NOT reproduce in Playwright headless. It only appears in Chrome DevTools device emulation.
 
-React StrictMode double-mount caused WebSocket connect→disconnect→connect race condition. Fixed this session with delayed disconnect (50ms) + room-aware idempotency + stale event guards. Needs testing on actual phone.
-- `src/client/connection.ts` — full rewrite this session
+**What the next session MUST do differently:**
+- Do NOT guess. Inject a diagnostic script into the ACTUAL Chrome DevTools session (via console or a dev-only component) that logs computed heights, scrollTop, and getBoundingClientRect() on html/body/#root/.view/TitleBar BEFORE and AFTER the card interaction.
+- Compare the "before" and "after" values to identify exactly which element moves and why.
+- Only then write a fix. ONE fix. Test it. Move on.
+
+**Files involved:**
+- `src/client/player/PlayingView.module.css` — `.view` sizing and overflow
+- `src/client/player/player-hardening.css` — html/body/#root sizing and overflow
+- `player.html` — `#root` has `container-type:inline-size` inline style (investigate if this contributes)
+
+### 2. SmartActionBox not anchored to bottom of staging area
+
+The `.smartActionBox` CSS class in `StagingArea.module.css` defines `margin-top: auto` but the `<SmartActionBox>` component in `StagingArea.tsx` is rendered as a direct child without a wrapper div, so the class is never applied. Fix: wrap `<SmartActionBox>` in `<div className={styles.smartActionBox}>`.
 
 ### 3. Execute Phase 5 — Verification & Acceptance
 
 **`/ce:work docs/plans/css-foundation-rebuild/phase-5-verification-acceptance.md`**
 
-Must use `/frontend-design` skill for visual verification. Paper-only CSS plans produced regressions.
+Blocked by #1 and #2.
 
 ### 4. Tier 2 Retheme Cleanup (non-blocking)
 - `src/server/game/engine.ts` — 11 "EK" → "Burned" comment renames
@@ -56,3 +53,4 @@ Must use `/frontend-design` skill for visual verification. Paper-only CSS plans 
 - **Wrangler local SQLite corruption** — `.wrangler/state` can corrupt after hard kills. Fix: `taskkill //F //IM workerd.exe && rm -rf .wrangler/state`. This is a dev-only issue.
 - **Dev launcher race condition** — player tabs open 1s after board (was 150ms). If players join before board sends `host-connect`, server rejects with GAME_ALREADY_STARTED. `dev.html` timing was increased this session.
 - **DramaOverlay GSAP cleanup** — pre-existing: timeline created in `processQueue()` never killed on unmount. Phase 5 fix.
+- **StagingArea.module.css has uncommitted pre-session changes** — `.stagedRow` was changed from `flex: 1 1 0` to `flex: 0 0 auto; height: var(--size-phone-card-height)`, and `.smartActionBox` got `margin-top: auto`. These were in the working tree before the 2026-04-12 session and were NOT reverted (they're separate from the failed layout fixes). Review before committing.

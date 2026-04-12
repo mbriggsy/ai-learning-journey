@@ -6,6 +6,7 @@ import { announce } from '@client/shared/announce'
 import { playerName } from './playerName'
 import type { GameEvent } from '@shared/types'
 import type { BoardPlayer } from '@shared/protocol'
+import { MOTION } from '@client/shared/tokens/motion'
 import styles from './AnnouncementFeed.module.css'
 
 // Pick a random variant. Seeded per-event-id for consistency across re-renders.
@@ -196,7 +197,7 @@ export function AnnouncementFeed() {
               initial={{ opacity: 0, y: -12 }}
               animate={{ opacity: 1, y: 0 }}
               exit={{ opacity: 0, y: 12 }}
-              transition={{ duration: 0.25, ease: 'easeOut' }}
+              transition={MOTION.enter}
             >
               {text}
             </m.div>

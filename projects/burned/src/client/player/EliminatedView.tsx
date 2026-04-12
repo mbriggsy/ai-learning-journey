@@ -2,7 +2,7 @@ import { useMemo } from 'react'
 import { m } from 'motion/react'
 import { usePlayerList } from '@client/shared/hooks/useSharedSelectors'
 import { PlayerIcon } from '@client/shared/PlayerIcon'
-import { MOTION } from '@client/shared/animation-config'
+import { MOTION } from '@client/shared/tokens/motion'
 import styles from './EliminatedView.module.css'
 
 const FLAVOR_LINES = [
@@ -32,7 +32,7 @@ export function EliminatedView() {
         className={styles.skullWrap}
         initial={{ scale: 0, rotate: -15 }}
         animate={{ scale: 1, rotate: 0 }}
-        transition={{ type: 'spring', stiffness: 400, damping: 15 }}
+        transition={MOTION.punchy}
       >
         <div className={styles.skull}>💀</div>
       </m.div>
@@ -41,7 +41,7 @@ export function EliminatedView() {
         className={styles.title}
         initial={{ opacity: 0, y: 20 }}
         animate={{ opacity: 1, y: 0 }}
-        transition={{ ...MOTION.SNAPPY, delay: 0.2 }}
+        transition={{ ...MOTION.snappy, delay: 0.2 }}
       >
         You&apos;re Burned.
       </m.div>
@@ -50,7 +50,7 @@ export function EliminatedView() {
         className={styles.flavor}
         initial={{ opacity: 0 }}
         animate={{ opacity: 1 }}
-        transition={{ duration: 0.4, delay: 0.5 }}
+        transition={{ ...MOTION.enter, delay: 0.5 }}
       >
         {flavor}
       </m.div>
@@ -59,7 +59,7 @@ export function EliminatedView() {
         className={styles.aliveList}
         initial={{ opacity: 0, y: 10 }}
         animate={{ opacity: 1, y: 0 }}
-        transition={{ ...MOTION.SNAPPY, delay: 0.7 }}
+        transition={{ ...MOTION.snappy, delay: 0.7 }}
       >
         <div className={styles.aliveListLabel}>Still alive</div>
         {alivePlayers.map(p => (
@@ -74,7 +74,7 @@ export function EliminatedView() {
         className={styles.prompt}
         initial={{ opacity: 0 }}
         animate={{ opacity: 1 }}
-        transition={{ duration: 0.4, delay: 1.0 }}
+        transition={{ ...MOTION.enter, delay: 1.0 }}
       >
         Watch the TV for the action
       </m.div>

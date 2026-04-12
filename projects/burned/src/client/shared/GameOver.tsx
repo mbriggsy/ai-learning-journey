@@ -1,4 +1,5 @@
 import { m } from 'motion/react'
+import { MOTION } from '@client/shared/tokens/motion'
 import type { BoardPlayer } from '@shared/protocol'
 import { PlayerIcon } from '@client/shared/PlayerIcon'
 import styles from './GameOver.module.css'
@@ -49,7 +50,7 @@ export function GameOver({ players, winnerId, eliminationOrder, myPlayerId, onPl
         className={styles.winner}
         initial={{ opacity: 0, scale: 1.4, y: -20 }}
         animate={{ opacity: 1, scale: 1, y: 0 }}
-        transition={{ type: 'spring', stiffness: 200, damping: 20, delay: 0.2 }}
+        transition={{ ...MOTION.gentle, delay: 0.2 }}
       >
         {winner?.name ?? 'Unknown'}
       </m.div>
@@ -58,7 +59,7 @@ export function GameOver({ players, winnerId, eliminationOrder, myPlayerId, onPl
         className={styles.subtitle}
         initial={{ opacity: 0 }}
         animate={{ opacity: 1 }}
-        transition={{ duration: 0.4, delay: 0.6 }}
+        transition={{ ...MOTION.enter, delay: 0.6 }}
       >
         {myResult?.rank === 1
           ? 'You won!'
@@ -77,12 +78,7 @@ export function GameOver({ players, winnerId, eliminationOrder, myPlayerId, onPl
             data-me={player.id === myPlayerId || undefined}
             initial={{ opacity: 0, x: -30 }}
             animate={{ opacity: 1, x: 0 }}
-            transition={{
-              type: 'spring',
-              stiffness: 300,
-              damping: 24,
-              delay: 0.8 + i * 0.12,
-            }}
+            transition={{ ...MOTION.snappy, delay: 0.8 + i * 0.12 }}
           >
             <span className={styles.rankNum}>#{rank}</span>
             <PlayerIcon color={player.color} size={14} />
@@ -99,9 +95,7 @@ export function GameOver({ players, winnerId, eliminationOrder, myPlayerId, onPl
           initial={{ opacity: 0, y: 20 }}
           animate={{ opacity: 1, y: 0 }}
           transition={{
-            type: 'spring',
-            stiffness: 250,
-            damping: 25,
+            ...MOTION.deliberate,
             delay: 0.8 + rankings.length * 0.12 + 0.3,
           }}
         >
@@ -112,7 +106,7 @@ export function GameOver({ players, winnerId, eliminationOrder, myPlayerId, onPl
           className={styles.waiting}
           initial={{ opacity: 0 }}
           animate={{ opacity: 1 }}
-          transition={{ delay: 1.5 }}
+          transition={{ ...MOTION.enter, delay: 1.5 }}
         >
           Waiting for host...
         </m.div>

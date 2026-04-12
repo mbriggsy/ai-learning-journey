@@ -2,6 +2,7 @@ import { m, AnimatePresence } from 'motion/react'
 import type { CardPlayState } from './hooks/useCardPlay'
 import type { CardType, SubPhase } from '@shared/types'
 import { haptic } from '@client/shared/haptics'
+import { MOTION } from '@client/shared/tokens/motion'
 import styles from './SmartActionBox.module.css'
 
 /** Human-readable action text for the smart action box */
@@ -26,7 +27,6 @@ const INVALID_LABELS: Record<string, string> = {
   'single-intercepted': "Can't play Intercepted",
 }
 
-const TRANSITION = { duration: 0.2, ease: 'easeInOut' as const }
 
 interface SmartActionBoxProps {
   readonly cardPlayState: CardPlayState
@@ -58,7 +58,7 @@ export function SmartActionBox({
           initial={{ opacity: 0, scale: 0.96 }}
           animate={{ opacity: 1, scale: 1 }}
           exit={{ opacity: 0, scale: 0.96 }}
-          transition={TRANSITION}
+          transition={MOTION.quickFade}
         >
           {state.text}
         </m.button>
@@ -69,7 +69,7 @@ export function SmartActionBox({
           initial={{ opacity: 0, scale: 0.96 }}
           animate={{ opacity: 1, scale: 1 }}
           exit={{ opacity: 0, scale: 0.96 }}
-          transition={TRANSITION}
+          transition={MOTION.quickFade}
         >
           {state.text}
         </m.div>

@@ -1,31 +1,69 @@
-.dialog {
-  position: fixed;
-  bottom: 0;
-  left: 0;
-  right: 0;
-  max-height: 80dvh;
-  margin: 0;
-  padding: 0;
-  background: transparent;
-  border: none;
-  overflow: visible;
-}
+/* BottomSheet.module.css
+   Phone bottom-sheet container. Native <dialog> + showModal() — browser places
+   the element in the top layer, UA stylesheet applies position: fixed
+   internally. The author's CSS never declares position: fixed, so lint Rule 3
+   does not trip. iOS 26.1+ has specific fixes for top-layer drift; the
+   residual edge cases on top-layer dialogs are minor cosmetic gaps in extreme
+   accessibility-setting combinations.
 
-.dialog::backdrop {
-  background: rgba(0, 0, 0, 0.6);
-}
+   Slide-up animation is driven by Framer Motion in BottomSheet.tsx via
+   AnimatePresence on the inner .content element — deliberately NOT a CSS
+   transition. The dialog itself is imperatively opened/closed via showModal()
+   and close().
 
-.content {
-  padding: 20px 16px;
-  background: var(--bg-elevated, #1a1a2e);
-  border-radius: 16px 16px 0 0;
-  color: var(--text-primary, #e8e8f0);
-  font-family: var(--font-body);
-  overflow-y: auto;
-  scrollbar-width: none;
-  max-height: 80dvh;
-}
+   Note: "shared" directory but phone-only consumer. Board view does not use
+   bottom sheets. The current BottomSheet.tsx architecture (native <dialog> +
+   showModal + AnimatePresence on .content) is correct as written; this CSS
+   rewrite is token-only — no TSX edits required.
+*/
 
-.content::-webkit-scrollbar {
-  display: none;
+@layer components {
+  .dialog {
+    /* UA stylesheet applies position: fixed + top-layer when showModal() is
+       called. Do NOT re-declare position — the author declaration is
+       redundant AND would trip a phone-spirit version of lint Rule 3.
+       Override the UA's default centering via inset + margin. */
+    inset: auto 0 0 0; /* top: auto, right: 0, bottom: 0, left: 0 */
+    width: 100%;
+    max-width: min(100%, var(--size-root-max-width));
+    max-height: calc(var(--size-viewport-safe) * 0.8);
+    margin: 0;
+    padding: 0;
+    background: transparent;
+    border: none;
+    overflow: visible;
+  }
+
+  /* Backdrop pseudo — the scrim rendered by the browser behind the dialog.
+     Replaces a separate .backdrop DOM element (which the Phase 2 first draft
+     mistakenly proposed introducing). */
+  .dialog::backdrop {
+    background: var(--color-bg-overlay-light);
+  }
+
+  /* Inner sheet content — the visible surface that slides up. Framer Motion's
+     m.div in BottomSheet.tsx animates this element's y-translate from 100%
+     to 0 on mount and back on exit. */
+  .content {
+    width: 100%;
+    max-height: calc(var(--size-viewport-safe) * 0.8);
+    padding: var(--space-5) var(--space-4);
+    padding-bottom: max(var(--space-5), var(--inset-bottom));
+    background: var(--color-bg-elevated);
+    color: var(--color-fg-primary);
+    font-family: var(--font-body);
+    border-top: 1px solid var(--color-border-subtle);
+    border-top-left-radius: var(--radius-xl);
+    border-top-right-radius: var(--radius-xl);
+    box-shadow: var(--shadow-xl);
+    overflow-y: auto;
+    overscroll-behavior: contain;
+    /* Preserve iOS momentum scrolling */
+    -webkit-overflow-scrolling: touch;
+  }
+
+  /* Short variant — smaller prompts (CardDetailSheet, NameCard). */
+  .contentShort {
+    max-height: calc(var(--size-viewport-safe) * 0.6);
+  }
 }

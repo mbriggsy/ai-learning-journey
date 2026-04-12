@@ -93,7 +93,7 @@ export function Player() {
   }, [roomCode])
 
   if (!roomCode) {
-    return <div style={{ padding: 24, color: 'var(--text-primary)', background: 'var(--bg-primary)', minHeight: '100svh' }}>
+    return <div style={{ padding: 24, color: 'var(--color-fg-primary)', background: 'var(--color-bg-app)', minHeight: '100svh' }}>
       <p>No room code. Scan the QR code on the TV screen.</p>
     </div>
   }
@@ -109,8 +109,8 @@ export function Player() {
         <div style={{
           position: 'fixed', inset: 0, zIndex: 9998,
           display: 'flex', alignItems: 'center', justifyContent: 'center',
-          background: 'var(--bg-primary, #0c0a12)',
-          color: 'var(--amber, #e8922a)', fontSize: 18, fontWeight: 700, textAlign: 'center',
+          background: 'var(--color-bg-app)',
+          color: 'var(--color-accent-drama)', fontSize: 18, fontWeight: 700, textAlign: 'center',
         }}>
           Game updated — please refresh
         </div>

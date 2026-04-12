@@ -24,7 +24,7 @@ export function TargetSelect({ eligiblePlayers, onSelectTarget, title }: TargetS
           >
             <PlayerIcon color={p.color} size={16} />
             <span>{p.name}</span>
-            <span style={{ marginLeft: 'auto', color: 'var(--text-secondary)', fontSize: '13px' }}>
+            <span style={{ marginLeft: 'auto', color: 'var(--color-fg-secondary)', fontSize: 'var(--text-caption)' }}>
               {p.cardCount} cards
             </span>
           </button>

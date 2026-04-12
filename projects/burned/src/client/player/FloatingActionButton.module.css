@@ -77,7 +77,7 @@
   /* Urgency animation — active during the last 2 seconds of the intercept window.
      Gameplay-essential signal: survives prefers-reduced-motion via essential-pulse. */
   .urgent {
-    animation: fabPulse var(--motion-duration-essential-pulse) ease-in-out infinite alternate;
+    animation: fabPulse var(--motion-duration-essential-pulse) var(--motion-ease-base) infinite alternate;
   }
 
   @keyframes fabPulse {

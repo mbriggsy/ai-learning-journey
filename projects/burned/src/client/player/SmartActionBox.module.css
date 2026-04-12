@@ -72,7 +72,7 @@
     background: var(--color-bg-danger);
     border-color: var(--color-accent-burned);
     box-shadow: var(--shadow-glow-danger);
-    animation: breatheIntense var(--motion-duration-essential-pulse) ease-in-out infinite alternate;
+    animation: breatheIntense var(--motion-duration-essential-pulse) var(--motion-ease-base) infinite alternate;
   }
 
   /* State: valid pair / triple (renamed from .target in TSX) */
@@ -91,7 +91,7 @@
     background: var(--color-bg-interactive);
     border-color: var(--color-border-focus);
     box-shadow: var(--shadow-glow-accent);
-    animation: breathe var(--motion-duration-essential-pulse) ease-in-out infinite alternate;
+    animation: breathe var(--motion-duration-essential-pulse) var(--motion-ease-base) infinite alternate;
   }
 
   /* State: invalid selection — non-interactive error state */

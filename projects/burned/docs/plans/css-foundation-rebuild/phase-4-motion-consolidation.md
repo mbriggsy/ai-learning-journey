@@ -1714,44 +1714,44 @@ Phase 4 is done when **all** of the following are true:
 
 ### §4.1 Files edited and deleted
 
-- [ ] `src/client/shared/animation-config.ts` is deleted. `grep -rn "animation-config" src/client/` returns zero matches.
-- [ ] `src/client/shared/BottomSheet.tsx` imports from `@client/shared/tokens/motion` (not `./animation-config`) and uses `MOTION.snappy`.
-- [ ] `src/client/shared/GameOver.tsx` imports from `@client/shared/tokens/motion` and consumes `MOTION.gentle`, `MOTION.enter`, `MOTION.snappy`, `MOTION.deliberate`.
-- [ ] `src/client/shared/DramaOverlay.tsx` imports `MOTION_DURATIONS` from `@client/shared/tokens/motion` and uses it for both GSAP tweens. GSAP ease strings preserved as literals with inline comments.
-- [ ] `src/client/player/Hand.tsx` imports from `@client/shared/tokens/motion` and consumes `MOTION.snappy`, `MOTION.enter`.
-- [ ] `src/client/player/StagingArea.tsx` imports from `@client/shared/tokens/motion` and consumes `MOTION.snappy`, `MOTION.enter`.
-- [ ] `src/client/player/EliminatedView.tsx` imports from `@client/shared/tokens/motion` and consumes `MOTION.punchy`, `MOTION.snappy`, `MOTION.enter`. Phase 2 §2.3.9a retheme edits also present.
-- [ ] `src/client/player/SmartActionBox.tsx` imports from `@client/shared/tokens/motion` and consumes `MOTION.quickFade`. Local `const TRANSITION` deleted.
-- [ ] `src/client/player/ErrorToast.tsx` imports from `@client/shared/tokens/motion` and uses `MOTION.quickFade`.
-- [ ] `src/client/player/FloatingActionButton.tsx` imports from `@client/shared/tokens/motion` and uses `MOTION.snappy`.
-- [ ] `src/client/board/PlayerRing.tsx` imports from `@client/shared/tokens/motion` (both `MOTION` and `MOTION_DURATIONS`), consumes `MOTION.deliberate` and `MOTION_DURATIONS.slow`, AND uses the `measureRef` pattern to read panel dimensions from CSS.
-- [ ] `src/client/board/Lobby.tsx` imports from `@client/shared/tokens/motion` and consumes `MOTION.snappy`.
-- [ ] `src/client/board/AnnouncementFeed.tsx` imports from `@client/shared/tokens/motion` and uses `MOTION.enter`.
+- [x] `src/client/shared/animation-config.ts` is deleted. `grep -rn "animation-config" src/client/` returns zero matches.
+- [x] `src/client/shared/BottomSheet.tsx` imports from `@client/shared/tokens/motion` (not `./animation-config`) and uses `MOTION.snappy`.
+- [x] `src/client/shared/GameOver.tsx` imports from `@client/shared/tokens/motion` and consumes `MOTION.gentle`, `MOTION.enter`, `MOTION.snappy`, `MOTION.deliberate`.
+- [x] `src/client/shared/DramaOverlay.tsx` imports `MOTION_DURATIONS` from `@client/shared/tokens/motion` and uses it for both GSAP tweens. GSAP ease strings preserved as literals with inline comments.
+- [x] `src/client/player/Hand.tsx` imports from `@client/shared/tokens/motion` and consumes `MOTION.snappy`, `MOTION.enter`.
+- [x] `src/client/player/StagingArea.tsx` imports from `@client/shared/tokens/motion` and consumes `MOTION.snappy`, `MOTION.enter`.
+- [x] `src/client/player/EliminatedView.tsx` imports from `@client/shared/tokens/motion` and consumes `MOTION.punchy`, `MOTION.snappy`, `MOTION.enter`. Phase 2 §2.3.9a retheme edits also present.
+- [x] `src/client/player/SmartActionBox.tsx` imports from `@client/shared/tokens/motion` and consumes `MOTION.quickFade`. Local `const TRANSITION` deleted.
+- [x] `src/client/player/ErrorToast.tsx` imports from `@client/shared/tokens/motion` and uses `MOTION.quickFade`.
+- [x] `src/client/player/FloatingActionButton.tsx` imports from `@client/shared/tokens/motion` and uses `MOTION.snappy`.
+- [x] `src/client/board/PlayerRing.tsx` imports from `@client/shared/tokens/motion` (both `MOTION` and `MOTION_DURATIONS`), consumes `MOTION.deliberate` and `MOTION_DURATIONS.slow`, AND uses the `measureRef` pattern to read panel dimensions from CSS.
+- [x] `src/client/board/Lobby.tsx` imports from `@client/shared/tokens/motion` and consumes `MOTION.snappy`.
+- [x] `src/client/board/AnnouncementFeed.tsx` imports from `@client/shared/tokens/motion` and uses `MOTION.enter`.
 
 ### §4.2 CSS surgical edits
 
-- [ ] `src/client/player/SmartActionBox.module.css` `.draw` and `.drawIntense` `animation:` declarations consume `var(--motion-ease-base)` instead of `ease-in-out`.
-- [ ] `src/client/player/FloatingActionButton.module.css` `.urgent` `animation:` consumes `var(--motion-ease-base)`.
+- [x] `src/client/player/SmartActionBox.module.css` `.draw` and `.drawIntense` `animation:` declarations consume `var(--motion-ease-base)` instead of `ease-in-out`.
+- [x] `src/client/player/FloatingActionButton.module.css` `.urgent` `animation:` consumes `var(--motion-ease-base)`.
 - ~~[ ] `src/client/player/JoinScreen.module.css`~~ — **removed during deepening** (Phase 2 already tokenizes dots duration). Verify Phase 2 landed `var(--motion-duration-dots)` during Step 3 prerequisite check.
-- [ ] `src/client/board/PlayerRing.module.css` has a `.measurePanel` rule that consumes `--size-player-panel-width` and `--size-player-panel-height` per §2.7.2.
+- [x] `src/client/board/PlayerRing.module.css` has a `.measurePanel` rule that consumes `--size-player-panel-width` and `--size-player-panel-height` per §2.7.2.
 
 ### §4.3 Verification greps return zero matches
 
-- [ ] §2.5 grep 1 (raw `Xs` duration literal in `animation:` shorthand): zero matches.
-- [ ] §2.5 grep 2 (raw `ease/ease-in/ease-out/ease-in-out` keyword in `animation:` shorthand): zero matches.
-- [ ] §2.6.1 grep (raw `Xs` duration literal in `transition:` declaration): zero matches.
-- [ ] §2.6.2 grep (`transition:` with duration token but no easing token, not `linear`): zero matches.
-- [ ] §2.9 grep (inline spring literal matching a named preset): zero matches.
-- [ ] `rg 'transition\s*=\s*\{\{\s*duration:\s*[\d.]' src/client/**/*.tsx` (any remaining inline FM duration literal): zero matches.
-- [ ] `rg 'MOTION\.(SNAPPY|DELIBERATE)' src/client/` (uppercase legacy preset): zero matches.
-- [ ] `rg "from '.*animation-config'" src/client/` (legacy import path): zero matches.
+- [x] §2.5 grep 1 (raw `Xs` duration literal in `animation:` shorthand): zero matches.
+- [x] §2.5 grep 2 (raw `ease/ease-in/ease-out/ease-in-out` keyword in `animation:` shorthand): zero matches.
+- [x] §2.6.1 grep (raw `Xs` duration literal in `transition:` declaration): zero matches.
+- [x] §2.6.2 grep (`transition:` with duration token but no easing token, not `linear`): zero matches.
+- [x] §2.9 grep (inline spring literal matching a named preset): zero matches.
+- [x] `rg 'transition\s*=\s*\{\{\s*duration:\s*[\d.]' src/client/**/*.tsx` (any remaining inline FM duration literal): zero matches.
+- [x] `rg 'MOTION\.(SNAPPY|DELIBERATE)' src/client/` (uppercase legacy preset): zero matches.
+- [x] `rg "from '.*animation-config'" src/client/` (legacy import path): zero matches.
 
 ### §4.4 Tests pass
 
-- [ ] `pnpm test` — all 167+ tests still pass. `motion-token-sync.test.ts` still green.
-- [ ] `pnpm typecheck` — clean.
-- [ ] `pnpm lint` — clean.
-- [ ] `pnpm build` — succeeds.
+- [x] `pnpm test` — all 167+ tests still pass. `motion-token-sync.test.ts` still green.
+- [x] `pnpm typecheck` — clean.
+- [x] `pnpm lint` — clean.
+- [x] `pnpm build` — succeeds.
 
 ### §4.5 Visual behavior verification
 

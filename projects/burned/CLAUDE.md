@@ -97,10 +97,10 @@ The spec does not generate code. It generates the *next artifact* — the CSS Fo
 
 | Chunk | Raw | Gzipped | Load |
 |-------|-----|---------|------|
-| player entry | 21.74 KB | 7.36 KB | Initial |
-| board entry | 101.20 KB | 38.55 KB | Initial |
-| shared (React + Motion core) | 228.29 KB | 73.28 KB | Initial (shared) |
-| VisualElement | 40.34 KB | 14.57 KB | Initial (shared) |
-| motion-features (domMax) | 83.61 KB | 27.45 KB | Lazy (prefetched) |
+| player entry | 35.77 KB | 11.56 KB | Initial |
+| board entry | 32.38 KB | 11.62 KB | Initial |
+| shared (React + Motion core) | 221.25 KB | 71.12 KB | Initial (shared) |
+| VisualElement | 31.76 KB | 11.52 KB | Initial (shared) |
+| motion-features (domMax) | 83.57 KB | 27.39 KB | Lazy (prefetched) |
 
-**Phone initial JS: ~95KB gzipped** (under 100KB budget, 5KB headroom)
+**Phone initial JS: ~97.5KB gzipped** (under 100KB budget, ~2.5KB headroom)

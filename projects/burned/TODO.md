@@ -5,7 +5,7 @@
 - **167/167 tests, typecheck clean** (verified 2026-04-11).
 - **Game is functional** — staging, hand, board, all card types, nope chains, elimination all working.
 - **Visual layer is FRAGILE** — see `docs/post-mortems/VISUAL-LAYER-AUTOPSY.md`. **Rebuild IS NOW IN PROGRESS** — `docs/plans/css-foundation-rebuild/`.
-- **CSS Foundation Rebuild Plan is FULLY DRAFTED + PHASES 1-2 DEEPENED** — roadmap + all 5 phase files COMPLETE (2026-04-11). **Phase 1 deepened 2026-04-11 via 12-agent pass** (commit `ba6f18ce`). **Phase 2 deepened 2026-04-11 via 8-agent pass** (~80 prescriptive fixes, 2235→3200 lines). Phases 3-5 still need deepening. Next pass: `/deepen-plan docs/plans/css-foundation-rebuild/phase-3-board-view-migration.md`. See step 1 below.
+- **CSS Foundation Rebuild Plan is FULLY DRAFTED + PHASES 1-3 DEEPENED** — roadmap + all 5 phase files COMPLETE (2026-04-11). **Phase 1 deepened 2026-04-11 via 12-agent pass** (commit `ba6f18ce`). **Phase 2 deepened 2026-04-11 via 8-agent pass** (~80 prescriptive fixes, 2235→3200 lines). **Phase 3 deepened 2026-04-12 via 8-agent pass** (5 blocker fixes, 114 color-mix srgb→oklab corrections, 13 ease-token renames, @layer wrapping rule, WCAG contrast fixes, DrawPile drop-shadow perf fix, 22 new Phase 1 tokens + 3 amendments; 2753→2895 lines). Phases 4-5 still need deepening. See step 1 below.
 - **Dreamland S8 is the palette reference season** (Holman's stated favorite; warm cocktail-lounge mid-century). 18 reference frames at `docs/plans/css-foundation-rebuild/dreamland-reference/images/`; fair-use posture documented in `dreamland-reference/README.md`. Palette extracted into Phase 1 §2.2 (74 Dreamland-sourced color primitives).
 - **Saul Bass is VERIFIED, not a hallucination** (corrected 2026-04-11) — Neal Holman primary source at Art of the Title May 2016. See `feedback-hallucinated-references.md` in memory for correction detail. Adjacent verified influences: Jack Kirby, Steve Ditko, Mad Men, 1960 Bond, OSS 117, Pink Panther, mid-century furniture, deliberate anachronism (all sourced to Holman / Adam Reed / Salon / A.V. Club).
 - **Phrasing! is a cross-phase design goal** — running gag across all phases, target cadence 3-5 distinct beats. See `roadmap.md` §3.6. Phase 2 committed beat: EliminatedView flavor line #9 (*"Penetrated by enemy assets. ...Phrasing."*).
@@ -22,24 +22,24 @@
 | `roadmap.md` | ✅ **COMPLETE** | Parent doc: research, decisions, token taxonomy, phase structure. Includes §3.6 "Recurring design motifs" — phrasing as cross-phase gag. |
 | `phase-1-foundation.md` | ✅ **DEEPENED 2026-04-11** (commit `ba6f18ce`) | 2164 lines. 12-agent parallel deepening pass landed: 7 blocker code corrections, 6 new subsections (§2.9-§2.14 — reduced-motion dual-family, `@property`, `@layer`, safe-area, font loading, lint rules), 8 cross-phase token resolutions, 4 ATC decisions locked (codegen palette, drop `--motion-duration-instant`, raise `--text-body` floor 14→15px, keep neon 2-spot). See §Enhancement Summary at top of file for full delta. |
 | `phase-2-phone-view-migration.md` | ✅ **DEEPENED 2026-04-11** | 3200 lines. 8-agent parallel deepening pass: 5 position:fixed→absolute migrations, 14 `@layer components` wrappers (empirically verified), 6 essential-motion token swaps, 6 safe-area migrations, 4 new TSX class-rename cascade sections (§§2.3.4b, 2.3.5b, 2.3.6b, 2.3.9b), BottomSheet§2.6 corrected (no structural rewrite needed, CSS-only fix), §2.7 expanded to 6 consumer-site `theme.ts` boundary edits, WCAG touch-target fix, NopeButton confirmed orphaned. 7 Phase 1 follow-up items locked. See §Enhancement Summary at top of file. |
-| `phase-3-board-view-migration.md` | ✅ **COMPLETE** | 2753 LOC. 14 file rewrites (10 board modules + 1 fonts-mono + 3 cross-view) + 1 TSX retheme edit. Three audit corrections vs. roadmap documented in §1.1. Ready for `/deepen-plan`. |
+| `phase-3-board-view-migration.md` | ✅ **DEEPENED 2026-04-12** | 2895 lines. 8-agent parallel deepening pass: 5 blocker corrections (114× color-mix srgb→oklab, 13× --motion-ease-standard→base, @layer wrapping rule added, 3 WCAG contrast fixes, DrawPile drop-shadow perf split), container-type strategy corrected (phone=inline-size, board=size), forced-colors blocks added to 2 CTAs, +0rem WCAG trick on 7 cqi clamps, per-role --color-fg-on-* tokens, 3 dead token proposals pruned (27→22 new + 3 amendments). See §Enhancement Summary at top of file. |
 | `phase-4-motion-consolidation.md` | ✅ **COMPLETE** | ~1400 LOC. 24 FM TSX sites + 3 GSAP tweens + 4 CSS surgical edits + PlayerRing TSX↔CSS measurement-div resolution + `animation-config.ts` deletion. Five audit corrections vs. roadmap documented in §1.1 (real counts: 24 FM, 2 GSAP files/3 tweens, 4 CSS keyframe stragglers, 0 CSS transition edits). Ready for `/deepen-plan`. |
 | `phase-5-verification-acceptance.md` | ✅ **COMPLETE** | ~1990 LOC. 8 verification-type subsections (§2.1–§2.8) organized around the TODO block: iOS 26 real-device protocol + conditional `useIOSFixedFallback` hook, 176-baseline Playwright visual regression matrix (30 phone × 4 vp + 14 board × 4 vp), WCAG 1.4.4 200% zoom protocol, 36-pair CVD expansion, 31-pair WCAG+APCA contrast expansion, §8.6 full-loop protocol w/ dev-only `handleStackDeck` endpoint, §8.7 first-time-player protocol, documentation pass. §2.2.5 visual review lands the 3 pending decisions (winner glow, emerald saturation, Baveuse). Ready for `/deepen-plan`. |
 
 #### ▶ FIRST ACTION NEXT SESSION
 
 ```
-/deepen-plan phase 3
+/deepen-plan phase 4
 ```
 
-Phases 1-2 are DEEPENED. Phase 3 is next. Phase 2 deepening surfaced 7 Phase 1 follow-up items (see §7 in Phase 2 plan) — these accumulate until the cross-phase sweep step 7 below.
+Phases 1-3 are DEEPENED. Phase 4 is next (~1920 lines, smallest remaining). Phase 3 deepening surfaced 22 new Phase 1 tokens + 3 amendments (see §7 in Phase 3 plan) — these accumulate until the cross-phase sweep step 6 below.
 
 **Deepen one phase per session, in order, with review pauses between each** (per `feedback-stop-after-every-phase.md` — the rule applies to deepening the same way it applied to drafting):
 
 1. ✅ **`/deepen-plan docs/plans/css-foundation-rebuild/phase-1-foundation.md`** — DONE 2026-04-11, commit `ba6f18ce`
 2. ✅ **`/deepen-plan docs/plans/css-foundation-rebuild/phase-2-phone-view-migration.md`** — DONE 2026-04-11, 8-agent pass, ~80 fixes
-3. `/deepen-plan docs/plans/css-foundation-rebuild/phase-3-board-view-migration.md` ← **next session starts here**
-4. `/deepen-plan docs/plans/css-foundation-rebuild/phase-4-motion-consolidation.md`
+3. ✅ **`/deepen-plan docs/plans/css-foundation-rebuild/phase-3-board-view-migration.md`** — DONE 2026-04-12, 8-agent pass, 5 blockers fixed, 2753→2895 lines
+4. `/deepen-plan docs/plans/css-foundation-rebuild/phase-4-motion-consolidation.md` ← **next session starts here**
 5. `/deepen-plan docs/plans/css-foundation-rebuild/phase-5-verification-acceptance.md`
 6. **Phase 1 follow-up sweep** — after Phases 2-5 are deepened, re-edit `phase-1-foundation.md` to fold in every remaining cross-phase token request the original deepening didn't catch. (See "STILL OPEN" lists below — many tokens from the Phase 3 27-token flag list were not resolved in the Phase 1 deepening and will surface again.)
 7. **Cross-phase contradiction sweep** — final reconciliation across all 5 deepened phases. Any place Phase N's deepening introduces a token or constraint that contradicts what Phase M assumed → fix in one place, not both.
@@ -111,26 +111,41 @@ Phases 1-2 are DEEPENED. Phase 3 is next. Phase 2 deepening surfaced 7 Phase 1 f
 - ✅ **RESOLVED** — `card-accents.ts` locked as definitive `cardAccent` migration target (NOT `palette.ts` — codegen-reserved per Decision 1). Phase 1 follow-up removes the "or palette.ts" ambiguity.
 - ⏳ **DEFERRED TO VISUAL REVIEW** — `--radius-input` and `--radius-button` semantic aliases (both = `--radius-sm` = 4px). Decision deferred to `/ce:work` Phase 1 visual review against Dreamland reference stills.
 
-#### Cross-phase tokens flagged during Phase 3 draft (partially resolved in Phase 1 deepening, most STILL OPEN)
+#### Cross-phase tokens flagged during Phase 3 — DEEPENED 2026-04-12
 
-See `phase-3-board-view-migration.md` §7 for the full list and rationale. Summary: **27 new Phase 1 tokens** needed for Phase 3 executability. Phase 1 deepening resolved **5 of 27**; **22 still open** — surface during Phase 3 deepening and fold back into Phase 1 in follow-up sweep step 6.
+See `phase-3-board-view-migration.md` §7 (corrected in deepening) for the full list. Original draft proposed 27 tokens; deepening pruned 3 dead proposals and clarified all decisions. **Final: 22 new Phase 1 tokens + 3 range amendments = 25 Phase 1 changes.** Phase 1 deepening already resolved 5; **17 new + 3 amendments remain for Phase 1 follow-up sweep step 6.**
 
-**Resolved ✅ (5):**
-- ✅ `--space-fluid-base-board` — added in §2.5 (`clamp(16px, calc(16px + (100vw - 1280px) * (16/2560)), 32px)`)
-- ✅ `--space-fluid-loose-board` — added in §2.5 (`clamp(32px, calc(32px + (100vw - 1280px) * (32/2560)), 64px)`)
-- ✅ `--size-player-panel-width` — added in §2.5
-- ✅ `--motion-duration-ambient` (4000ms) — added in §2.2 and §2.6 as `MOTION_DURATIONS.ambient: 4.0`
-- ✅ `--text-hero-subdued` (Phase 3 §2.3.5) — Phase 3 asked for a DramaOverlay muted variant and the deepening added this (maps loosely to the Phase 3 `--text-drama-subdued-*` pair request, though Phase 3 wanted min/max split tokens and deepening added a single clamp token — Phase 3 deepening may still want to re-split or keep as-is)
+**Resolved ✅ by Phase 1 deepening (5):**
+- ✅ `--space-fluid-base-board` — exists in §2.5 (needs AMENDMENT: max 32→40px per Phase 3 deepening)
+- ✅ `--space-fluid-loose-board` — exists in §2.5 (needs AMENDMENT: max 64→80px per Phase 3 deepening)
+- ✅ `--size-player-panel-width` — exists in §2.5 (needs AMENDMENT: min 160→180px per Phase 3 deepening)
+- ✅ `--motion-duration-ambient` (4000ms) — exact match, no amendment needed
+- ✅ `--text-hero-subdued` — exists but NOT a Phase 3 dependency (DramaOverlay uses cqi-based split tokens instead; hero-subdued is vw-based board-only, stays for future consumers)
 
-**Still open ❌ (22):**
-- ❌ `--space-fluid-tight-board` (3rd board fluid-spacing token — deepening added base + loose but NOT tight)
-- ❌ `--text-micro-board`, `--text-caption-board`, `--text-callout-board` (3 board text-scale tokens — Phase 1 deepening kept board text scale at 4 tiers: body/title/display/hero/hero-subdued, did NOT add these)
-- ❌ `--size-lobby-roster-max-width`, `--size-title-accent-width`, `--size-rankings-max-width`, `--size-felt-reticle`, `--size-felt-diamond`, `--size-discard-card-width` (6 board sizing tokens)
-- ❌ Amendment to `--size-draw-pile-width` (expand from 80→160 to 120→240 to match pre-rebuild visual weight) — deepening did NOT touch this token
-- ❌ `--text-card-name-{min,max,large-min,large-max}`, `--text-card-desc-{min,max,large-min,large-max}` (8 MinimalCard text-clamp floors/ceilings in `semantic.css`)
-- ❌ `--text-drama-{hero,subdued,victory}-{min,max}` (6 DramaOverlay text-clamp tokens — note: `--text-hero-subdued` is a SINGLE clamp token, not a min/max pair; Phase 3 may need min/max split)
-- ❌ `--motion-duration-pulse` (1400ms) — Phase 1 deepening added `--motion-duration-essential-pulse: 1400ms` (name drift — Phase 3 wanted `-pulse`, deepening added `-essential-pulse` because it's a gameplay-signal token that survives reduced-motion). **Phase 3 deepening decision:** use the deepening-added name or rename to match Phase 3 request.
-- ❌ `--motion-duration-pulse-slow` (2500ms) — NOT added. Phase 3 deepening must fold in.
+**Pruned ✗ by Phase 3 deepening (3 dead proposals deleted):**
+- ✗ `--space-fluid-tight-board` — never consumed by any Phase 3 CSS
+- ✗ `--text-micro-board` — never consumed + name conflicts with deleted `--text-micro`
+- ✗ `--text-callout-board` — never consumed by any Phase 3 CSS
+
+**Still need Phase 1 follow-up ❌ (17 new + 3 amendments):**
+- ❌ `--text-caption-board` (8 consumers across 5 files — the most-needed missing token)
+- ❌ 6 board sizing tokens: `--size-lobby-roster-max-width`, `--size-title-accent-width`, `--size-rankings-max-width`, `--size-felt-reticle`, `--size-felt-diamond`, `--size-discard-card-width`
+- ❌ `--size-draw-pile-width` AMENDMENT: expand 80→160 to 120→240
+- ❌ 8 MinimalCard text-clamp tokens: `--text-card-name-{min,max,large-min,large-max}`, `--text-card-desc-{min,max,large-min,large-max}`
+- ❌ 6 DramaOverlay text-clamp tokens: `--text-drama-{hero,subdued,victory}-{min,max}` (cqi-based min/max pairs, architecturally different from `--text-hero-subdued`)
+- ❌ `--motion-duration-pulse` (1400ms, **decorative** — zeros under reduced-motion). SEPARATE from `--motion-duration-essential-pulse` (same value, essential, survives). Both tokens needed.
+- ❌ `--motion-duration-pulse-slow` (2500ms, decorative)
+
+**Key Phase 3 deepening decisions locked:**
+- `color-mix(in oklab, ...)` everywhere — 114 srgb→oklab corrections (Phase 1 §4.2 ban enforced)
+- `--motion-ease-base` everywhere — 13 corrections (Phase 1 rename #19)
+- `@layer components { ... }` wrapping — new universal rule #13 for all 14 CSS files
+- Phone entry uses `container-type: inline-size` (not `size`) — `100cqb` falls back to `100svh` correctly
+- `--motion-duration-pulse` ≠ `--motion-duration-essential-pulse` — two tokens, same value, different reduced-motion behavior
+- DrawPile breathing: static `drop-shadow` + opacity-animated `::after` pseudo (perf fix)
+- WCAG fixes: pileLabel→`--color-fg-muted`, empty→`--color-fg-disabled`, devLink bumped 60→80%
+- `card-accents.ts` (not `palette.ts`) — all references corrected
+- Phase 5 data-URI hex drift CI check flagged as missing from Phase 5 draft
 
 **Pending decisions for Phase 5 visual review** (during `/ce:work` Phase 5 execution):
 - **GameOver winner glow hue** — Phase 3 §2.5 locks the winner-text glow to `--color-accent-drama` (ochre-9 amber). If visual review prefers cooler, the alternative is `--color-accent-intercept` (emerald-9 forest green). Decision gate is visual review, not plan-time.

@@ -6,12 +6,98 @@ parent: docs/plans/css-foundation-rebuild/roadmap.md
 depends_on: docs/plans/css-foundation-rebuild/phase-1-foundation.md
 also_depends_on: docs/plans/css-foundation-rebuild/phase-2-phone-view-migration.md
 date: 2026-04-11
-status: draft
+status: deepened
+deepened_on: 2026-04-12
 ---
 
 # Phase 3 — Board View Migration
 
 **Goal.** Rewrite every `.module.css` file under `src/client/board/` to consume the Phase 1 token system. Eliminate the `@media (min-width: 1280px|1600px)` hard-pixel doubling pattern in favor of `clamp(vw)` tokens throughout. Fix the axis mixes in `GameTable` and `Lobby` (`100svh` + `3vh 4vw` → width-based sizing). Unify the `Lobby` green gradient with `GameTable`'s teal-charcoal palette through shared tokens. Rewrite the three cross-view files (`MinimalCard.module.css`, `GameOver.module.css`, `DramaOverlay.module.css`) so that both entry points consume them through container queries, not axis assumptions. Rewrite `fonts-mono.css` (board-only font-face). Resolve the `feltBranding` Tier 1 retheme gap (`GameTable.tsx:24`) with an Archer / Pendleton Agency–era decorative element.
+
+---
+
+## Enhancement Summary (Deepening Pass — 2026-04-12)
+
+**Deepening method.** 8 parallel agents: 1 source-file audit (reads all 14 CSS + 3 TSX files, verifies line numbers), 1 Phase 1 token cross-reference (27-token dependency verification), 1 cross-phase contradiction detector (Phase 3 vs deepened Phase 1 + Phase 2), 1 CSS `color-mix` + `oklab` researcher (interpolation space, browser compat, parse-time resolution), 1 container query + variable font researcher (`cqi`/`cqb` patterns, `container-type: size` vs `inline-size`, `woff2-variations`), 1 accessibility reviewer (WCAG 2.1/2.2 against all 14 files), 1 performance + architecture reviewer (paint costs, GPU compositing, containment), 1 Phase 4/5 forward-compatibility checker. Sequential Thinking synthesis pass after all 8 reported.
+
+### Critical corrections landed (BLOCKERS — the plan's original CSS code would fail or produce wrong results)
+
+1. **`color-mix(in oklab, ...)` → `color-mix(in oklab, ...)` — 114 instances across ALL 14 CSS files.** Phase 1 §2.3 correction #3 and §4.2 acceptance criterion ban `srgb` in all `color-mix()` calls. Phase 2 deepening extended this to every component CSS rewrite (every file header calls out the correction). The muddy-midpoint problem applies universally: `srgb` interpolation with `transparent` routes through transparent black (`rgba(0,0,0,0)`), desaturating warm amber/ochre/cordovan halos. `oklab` holds hue and chroma throughout. `color-mix()` resolves at **parse-time** (not paint-time), so `oklab` has zero performance cost over `srgb`. All 114 instances in all CSS code blocks below are corrected to `in oklab`.
+
+2. **`--motion-ease-base` → `--motion-ease-base` — 13 instances across 5 files.** Phase 1 correction #19 renamed this token. `--motion-ease-base` does not exist after Phase 1 deepening; every reference resolves to the CSS initial value `ease` (incorrect). Files affected: GameTable (1), Lobby (5), PlayerRing (3), DrawPile (1), GameOver (2), MinimalCard (1). All corrected in the CSS code blocks below.
+
+3. **`@layer components { ... }` wrapping missing from ALL 14 CSS file rewrites.** Phase 1 §2.11 defines `@layer primitives, semantics, semantics-phone, semantics-board, components, overrides;`. Phase 2 deepening item #3 confirmed every `.module.css` MUST wrap in `@layer components { ... }`. Without it, Phase 3 CSS is unlayered and has HIGHER cascade specificity than layered Phase 1/2 CSS — exactly the cascade problem `@layer` prevents. New universal rule #13 added to §2.2. All 14 CSS code blocks below are wrapped. Exception: `fonts-mono.css` is NOT a CSS module (it's a `@font-face` declaration); like Phase 2's `player-hardening.css`, it stays outside layers.
+
+4. **Three alpha-mixed text colors fail WCAG 4.5:1 contrast (AA).** Source: accessibility agent.
+   - GameTable `.pileLabel`: `color-mix(... 55%, transparent)` on ochre-9 → ~2.8:1 against charcoal background. **Fix**: replace with `var(--color-fg-muted)` — the "subdued label" semantic role matches perfectly.
+   - DiscardFan `.empty`: `color-mix(... 35%, transparent)` → ~1.8:1. **Fix**: replace with `var(--color-fg-disabled)` — empty placeholder = disabled-level visibility.
+   - Lobby `.devLink`: `color-mix(... 60%, transparent)` → ~3.1:1. **Fix**: bump normal state to 80%, hover to 95% — warm-ochre tint preserved, passes 4.5:1.
+
+5. **DrawPile `drop-shadow()` animated in `@keyframes drawPileBreathe` forces per-frame main-thread rasterization.** Unlike `box-shadow`, `filter: drop-shadow()` must re-render the element's alpha channel to compute the shadow shape — not GPU-composited. At 4K (3840×2160) this is a sustained CPU tax running the breathing animation continuously. **Fix**: split into static `filter: drop-shadow()` on `.stack` + new `.stack::after` pseudo-element with `box-shadow` animated via `opacity` (GPU-composited). Same visual (static shadow + animated intensification), zero per-frame rasterization.
+
+### High-value additions
+
+6. **`container-type` strategy corrected.** Original plan specified `container-type: size` on both entry-point roots. Research: `size` establishes containment on BOTH axes, preventing content from expanding the container — risky for the phone entry where screens might overflow. **Corrected**: board entry gets `container-type: size` (has explicit `height: 100vh`, no scrolling content). Phone entry gets `container-type: inline-size` (width-only containment). `100cqb` in GameOver on phone gracefully falls back to `100svb` (= `100svh` under `horizontal-tb` writing mode) — the correct behavior since phone's constraining axis IS height.
+
+7. **`+ 0rem` added to all `cqi`-based clamp preferred values for WCAG 1.4.4 (200% text resize).** Container query units (`cqi`) are physical — they don't scale with browser text zoom. The `+ 0rem` trick forces re-evaluation when `rem` changes: `clamp(10px, 10cqi + 0rem, 14px)`. Applied to 7 sites: MinimalCard `.cardName` (10cqi), `.cardDesc` (8cqi), large `.cardName` (7cqi), large `.cardDesc` (5cqi), DramaOverlay `.text` (12cqi), `.eliminated .text` (8cqi), `.victory .text` (10cqi).
+
+8. **`@media (forced-colors: active)` added to Lobby `.startButton` and GameOver `.playAgain`.** Both buttons use custom backgrounds + borders that collapse in Windows High Contrast mode. Without handling, button text becomes invisible against system-forced backgrounds. MinimalCard already had this; the two board CTAs were missing.
+
+9. **Lobby `.devLink` `:focus-visible` rule added.** Interactive `<a>` element with `:hover` styling but no keyboard-focus indicator. Dev-only but ships in the CSS — missing `:focus-visible` is a WCAG 2.4.7 gap.
+
+10. **GameTable `.table` gets `contain: layout style`.** 8 paint layers (5 gradients + 2 pseudo-elements + border/shadow) on a full-bleed 4K element. Static surface — rasterized once. `contain: layout style` prevents accidental repaints from child animations propagating up. Low risk but zero-cost insurance.
+
+11. **`fonts-mono.css` drops `format('woff2-variations')` hint.** Research: as of 2026, `format('woff2')` subsumes variable font recognition. The dual-format declaration is redundant. Single `format('woff2')` is cleaner and correct.
+
+12. **`--motion-duration-pulse` (decorative, 1400ms) vs `--motion-duration-essential-pulse` (essential, 1400ms) clarified as TWO separate tokens.** Same value (1400ms), different roles. Phase 1 already defines `--motion-duration-essential-pulse` (gameplay signal, survives `prefers-reduced-motion`). Phase 3 needs `--motion-duration-pulse` (decorative ambient, zeros under `prefers-reduced-motion`). Lobby waiting dots zeroing = correct. Turn indicator continuing = correct. Collapsing them would break one or the other.
+
+### Naming / documentation corrections
+
+13. **`--color-fg-on-accent` / `--color-bg-app` → per-role tokens.** Phase 1 correction #17 introduced per-role `--color-fg-on-*` tokens. Three Phase 3 instances use deprecated/wrong tokens:
+    - Lobby `.startButton`: `var(--color-fg-on-accent)` → `var(--color-fg-on-burned)` (cordovan-9 background)
+    - GameOver `.playAgain`: `var(--color-bg-app)` → `var(--color-fg-on-drama)` (ochre-9 background)
+    - PlayerRing `.turnBadge`: `var(--color-bg-app)` → `var(--color-fg-on-drama)` (ochre-9 background)
+
+14. **`cardAccent` import path corrected from `palette.ts` to `card-accents.ts`** in 3 §1 references. Phase 2 deepening item #9 locked `card-accents.ts` as the only valid target (Decision 1 made `palette.ts` a codegen file).
+
+15. **`--radius-pill` removed from §2.2 rule 5 enumeration.** Deleted in Phase 1 correction #20. No Phase 3 CSS consumes it — documentation-only fix.
+
+16. **`--motion-duration-instant` removed from §7.6 prose and `MOTION_DURATIONS` example.** Dropped in Phase 1 Decision 2.
+
+17. **DramaOverlay "Current problems" expanded.** Source audit found 5 hardcoded hex text colors across drama variants (`#ffeedd`, `#e0f0ff`, `#a09890`, `#ccffe8`, `#fff8e0`) and 2 additional `font-size: clamp(vw)` overrides not enumerated in the original problems list. All handled in the §2.6 rewrite.
+
+18. **GameOver `.waiting` class problems added.** Source audit found `margin-top: 40px`, `font-size: 15px`, `color: var(--text-disabled, #555570)` — hardcoded values not listed in the original problems enumeration but handled in the §2.5 rewrite.
+
+19. **Dead token proposals pruned from §7.** Three tokens proposed in §7 are never consumed by any Phase 3 CSS code block:
+    - `--space-fluid-tight-board` — DELETE (no consumer)
+    - `--text-micro-board` — DELETE (no consumer + name conflicts with Phase 1's deleted `--text-micro`)
+    - `--text-callout-board` — DELETE (no consumer)
+    Net reduction: 27 → 24 token proposals.
+
+20. **`--text-hero-subdued` (Phase 1 §2.5) is NOT orphaned but is NOT a Phase 3 dependency.** Phase 3's DramaOverlay uses `cqi`-based clamps with min/max split tokens (cross-view pattern), while `--text-hero-subdued` is a `vw`-based single clamp (board-specific pattern). Architecturally incompatible for DramaOverlay. `--text-hero-subdued` remains valid for future board-only hero-text consumers — it just isn't what Phase 3 needs.
+
+### Phase 1 follow-up items (propagated during deepening)
+
+21. **22 new tokens + 3 amendments to Phase 1.** Full delta in corrected §7 below. Key changes from draft:
+    - 3 dead proposals pruned (tight-board, micro-board, callout-board)
+    - `--motion-duration-pulse` (1400ms decorative) added alongside existing `--motion-duration-essential-pulse` (1400ms essential) — different tokens, different reduced-motion behavior
+    - `--motion-duration-pulse-slow` (2500ms decorative) added
+    - 3 range amendments (space-fluid-base/loose-board max bumped, size-player-panel-width min bumped)
+    - `--size-draw-pile-width` range expanded 80→160 to 120→240
+
+22. **Phase 5 data-URI hex drift CI check is MISSING from Phase 5 draft.** Phase 3 §2.2a Pattern B4 says "Phase 5 may add a regex CI check." Forward-compatibility agent confirmed Phase 5 contains zero mention of data-URIs or hex drift. Flag for Phase 5 deepening to add a Vitest regex check.
+
+23. **Phase 5 iOS 26 target list should verify `GameTable.eventFlash` coverage.** Phase 3 landmine §5.7 mentions it but Phase 5's iOS 26 target table doesn't explicitly list it. Minor — flag for Phase 5 deepening.
+
+### Phase 3 token count after deepening
+
+- **semantic.board.css**: 1 new text-scale + 6 new sizing + 1 derived + 3 amendments = **11 changes** (down from 14 — pruned 3 dead tokens)
+- **semantic.css**: 8 card-text-clamp + 6 drama-text-clamp = **14 new**
+- **primitives.css**: 2 motion-ambient = **2 new** (was 3 — `ambient` already exists)
+- **motion.ts**: 2 motion-ambient export keys = **2 new**
+- **Total: 22 new tokens + 3 range amendments = 25 Phase 1 changes**
+
+---
 
 **Scope boundary.** Phase 3 touches:
 - `src/client/board/*.module.css` — 10 files.
@@ -33,13 +119,13 @@ status: draft
 ## §1 — Inputs
 
 From `phase-1-foundation.md`:
-- All tokens in `src/client/shared/tokens/primitives.css`, `semantic.css`, `semantic.board.css`, `motion.ts`, `palette.ts`. Phase 3 consumes them.
+- All tokens in `src/client/shared/tokens/primitives.css`, `semantic.css`, `semantic.board.css`, `motion.ts`, `card-accents.ts`. Phase 3 consumes them.
 - `[data-view="board"]` already set on the board root element by Phase 1 (`src/client/board/main.tsx` is updated during Phase 1 step 15).
 - `[data-theme="dark"]` already set.
-- `cardAccent(type)` now exported from `@client/shared/tokens/palette` (previously `theme.ts`). Phase 2 §2.7 already updated `MinimalCard.tsx`'s import site; Phase 3 inherits that.
+- `cardAccent(type)` now exported from `@client/shared/tokens/card-accents` (previously `theme.ts`; Phase 2 deepening item #9 locked `card-accents.ts` as the only valid target — `palette.ts` is codegen per Decision 1). Phase 2 §2.7 already updated `MinimalCard.tsx`'s import site; Phase 3 inherits that.
 
 From `phase-2-phone-view-migration.md`:
-- `MinimalCard.tsx` imports `cardAccent` from the new `palette.ts` location. The CSS file (`MinimalCard.module.css`) was deliberately left untouched in Phase 2 and is Phase 3's responsibility.
+- `MinimalCard.tsx` imports `cardAccent` from the new `card-accents.ts` location (Phase 2 deepening item #9). The CSS file (`MinimalCard.module.css`) was deliberately left untouched in Phase 2 and is Phase 3's responsibility.
 - Motion tokens are consumed wherever already-migrated, but Phase 4 finishes the sweep. Phase 3 CSS rewrites MUST NOT introduce new inline literals — every new `transition` / `animation` in a Phase 3 rewrite consumes `--motion-duration-*` and `--motion-ease-*`.
 - `BottomSheet.module.css` is already on the new token system. Phase 3 doesn't re-enter that file.
 
@@ -182,7 +268,7 @@ Same mechanical pattern as Phase 2 §2.2. Every rewritten board `.module.css` fi
   color: var(--color-fg-primary);
   font-family: var(--font-display);
   font-size: var(--text-title);
-  transition: border-color var(--motion-duration-base) var(--motion-ease-standard);
+  transition: border-color var(--motion-duration-base) var(--motion-ease-base);
 }
 ```
 
@@ -191,7 +277,7 @@ Same mechanical pattern as Phase 2 §2.2. Every rewritten board `.module.css` fi
 2. **Zero hardcoded spacing.** Every `padding`, `margin`, `gap`, `inset` uses `--space-N`.
 3. **Zero hardcoded font sizes.** Every `font-size` uses a board type-scale token (`--text-body|title|display|hero`, plus cross-phase additions `--text-caption|callout|micro` — see §7 cross-phase flags).
 4. **Zero hardcoded font families.** Use `--font-display`, `--font-body`, `--font-mono`.
-5. **Zero hardcoded radii.** Use `--radius-*` or semantic alias (`--radius-card`, `--radius-button`, `--radius-modal`, `--radius-pill`).
+5. **Zero hardcoded radii.** Use `--radius-*` or semantic alias (`--radius-card`, `--radius-button`, `--radius-modal`, `--radius-full`).
 6. **Zero hardcoded shadows.** Use `--shadow-*` or `--shadow-glow-*`.
 7. **Zero hardcoded motion timing.** Every `transition` duration → `--motion-duration-*`, every easing → `--motion-ease-*`. Ambient loop durations (DrawPile breathe, Lobby pulse) consume new ambient tokens — see §7 cross-phase flags.
 8. **Zero hardcoded z-indices.** Every `z-index` → `--z-*`.
@@ -199,6 +285,8 @@ Same mechanical pattern as Phase 2 §2.2. Every rewritten board `.module.css` fi
 10. **No `@media (min-width: 1280px|1600px)` hard-pixel blocks.** The entire point of `clamp(vw)` tokens is that they interpolate smoothly between the 1280 and 3840 brackets without stepped breakpoints. Any rewrite that introduces a new hard-pixel breakpoint block fails the phase.
 11. **Preserve landmine comments.** Where the old file has a comment encoding architectural knowledge (`PlayerRing`'s container-query-derived panel widths coupled to `PlayerRing.tsx` layout math, DrawPile's `breathe` keyframe GPU-compositing reminder), preserve verbatim, prefix with "Inherited from pre-rebuild:" where it helps.
 12. **Inline-SVG hex exception documented.** Data-URIs (`feltBranding`, `DrawPile.topCard`, `MinimalCard.cardBack`) cannot interpolate `var()` inside the encoded URL — they need literal hex. Where a data-URI is preserved, the hex values MUST match the primitive values of the semantic tokens they visually represent, AND a code comment directly above the data-URI must list the token alias and justify the inline value. Phase 5 may add a regex CI check to catch drift.
+13. **`@layer components { ... }` wrapping (Phase 1 §2.11 / Phase 2 deepening #3).** Every `.module.css` file rewritten in Phase 3 wraps its entire content in `@layer components { ... }`. Without this, Phase 3 CSS is unlayered and wins cascade over layered Phase 1/2 styles — the exact problem `@layer` was introduced to solve. **Exception:** `fonts-mono.css` is NOT a CSS module (it's a `@font-face` declaration) and stays outside layers, matching Phase 2's `player-hardening.css` exemption.
+14. **`color-mix(in oklab, ...)` everywhere (Phase 1 §2.3 correction #3 / §4.2).** Every `color-mix()` call uses `in oklab`, never `in srgb` or `in oklch`. `oklab` avoids the srgb muddy-midpoint problem (transparent black desaturation) and the Safari oklch hue-rotation bug. `color-mix()` resolves at parse-time — no paint-time performance cost regardless of interpolation space.
 
 ### §2.2a Board-specific cross-cutting patterns
 
@@ -275,8 +363,8 @@ The worst case is `Lobby.module.css`, which uses Era 1 + Era 2 exclusively — a
 **The fix**: every cross-view file switches to container-query sizing. The entry points wrap both files in a container with `container-type: inline-size` or `size`, and the cross-view files consume `cqi` / `cqb` / `cqmin` / `cqmax` — axis-resolved against the container rather than the viewport. This is what `MinimalCard` already does correctly, and Phase 3 extends the pattern to `GameOver` and `DramaOverlay`.
 
 **Required entry-point edits** (Phase 3 scope, one-line each):
-- `src/client/board/Board.tsx` (or equivalent root): add `container-type: size` to the root div (or an ancestor of the GameOver + DramaOverlay mount points). Alternatively, wrap the existing root in a new `<div>` with `container-type: size` + `min-height: 100vh`.
-- `src/client/player/Player.tsx` (or equivalent root): same treatment.
+- `src/client/board/Board.tsx` (or equivalent root): add `container-type: size` to the root div (or an ancestor of the GameOver + DramaOverlay mount points) with `min-height: 100vh`. Board uses `size` (both axes) because the board root has explicit height and never scrolls.
+- `src/client/player/Player.tsx` (or equivalent root): add `container-type: inline-size` (width-only containment). **Deepening correction**: `size` is too aggressive for phone — it prevents content from expanding the container, which breaks scrollable views. Phone uses `inline-size`; `100cqb` in GameOver gracefully falls back to `100svb` (= `100svh` under `horizontal-tb` writing mode), which is correct since phone's constraining axis IS height.
 - Both edits are one line each; the CSS rewrites in §2.5 and §2.6 assume they've landed.
 
 **Why**: container queries resolve axis per-rendering-context. A 12cqi title in MinimalCard is "12% of the container's inline axis" — on the phone that's width-constrained (smaller number), on the board that's width-constrained (larger number), in both cases it's the correct axis for that view. No viewport-based assumptions.
@@ -325,6 +413,8 @@ Each subsection below gives: current LOC, current problems, and the FULL rewritt
   font-family: var(--font-body);
   color: var(--color-fg-primary);
   overflow: hidden;
+  contain: layout style;  /* Deepening: 8 paint layers on a full-bleed 4K element.
+     Prevents child animation repaints from propagating up. */
 
   /* Layered war-room surface (5 gradients stacked):
      1. Overhead spotlight — hot amber pool dead-center (draws the eye to the action)
@@ -336,24 +426,24 @@ Each subsection below gives: current LOC, current problems, and the FULL rewritt
   background:
     /* 1: overhead spotlight */
     radial-gradient(ellipse 50% 40% at 50% 48%,
-      color-mix(in srgb, var(--color-accent-drama) 35%, transparent) 0%,
-      color-mix(in srgb, var(--color-accent-drama) 18%, transparent) 30%,
+      color-mix(in oklab, var(--color-accent-drama) 35%, transparent) 0%,
+      color-mix(in oklab, var(--color-accent-drama) 18%, transparent) 30%,
       transparent 60%),
     /* 2: wide warm ambient */
     radial-gradient(ellipse 80% 70% at 50% 50%,
-      color-mix(in srgb, var(--color-teal-5) 40%, transparent) 0%,
-      color-mix(in srgb, var(--color-teal-4) 25%, transparent) 40%,
+      color-mix(in oklab, var(--color-teal-5) 40%, transparent) 0%,
+      color-mix(in oklab, var(--color-teal-4) 25%, transparent) 40%,
       transparent 65%),
     /* 3: heavy vignette */
     radial-gradient(ellipse 75% 75% at 50% 50%,
       transparent 30%,
-      color-mix(in srgb, var(--color-charcoal-1) 65%, transparent) 70%,
-      color-mix(in srgb, var(--color-charcoal-1) 90%, transparent) 100%),
+      color-mix(in oklab, var(--color-charcoal-1) 65%, transparent) 70%,
+      color-mix(in oklab, var(--color-charcoal-1) 90%, transparent) 100%),
     /* 4: fabric weave micro-grain */
     repeating-conic-gradient(
-      color-mix(in srgb, var(--color-teal-3) 8%, transparent) 0%,
-      color-mix(in srgb, var(--color-teal-2) 6%, transparent) 0.5%,
-      color-mix(in srgb, var(--color-teal-4) 9%, transparent) 1%
+      color-mix(in oklab, var(--color-teal-3) 8%, transparent) 0%,
+      color-mix(in oklab, var(--color-teal-2) 6%, transparent) 0.5%,
+      color-mix(in oklab, var(--color-teal-4) 9%, transparent) 1%
     ),
     /* 5: base teal-charcoal gradient */
     linear-gradient(170deg,
@@ -372,15 +462,15 @@ Each subsection below gives: current LOC, current problems, and the FULL rewritt
       0deg,
       transparent,
       transparent 2px,
-      color-mix(in srgb, var(--color-cream-12) 2%, transparent) 2px,
-      color-mix(in srgb, var(--color-cream-12) 2%, transparent) 3px
+      color-mix(in oklab, var(--color-cream-12) 2%, transparent) 2px,
+      color-mix(in oklab, var(--color-cream-12) 2%, transparent) 3px
     ),
     repeating-linear-gradient(
       90deg,
       transparent,
       transparent 2px,
-      color-mix(in srgb, var(--color-cream-12) 2%, transparent) 2px,
-      color-mix(in srgb, var(--color-cream-12) 2%, transparent) 3px
+      color-mix(in oklab, var(--color-cream-12) 2%, transparent) 2px,
+      color-mix(in oklab, var(--color-cream-12) 2%, transparent) 3px
     );
   pointer-events: none;
   z-index: var(--z-base);
@@ -394,11 +484,11 @@ Each subsection below gives: current LOC, current problems, and the FULL rewritt
   left: 2.5%;
   right: 2.5%;
   bottom: 3%;
-  border: 1px solid color-mix(in srgb, var(--color-accent-drama) 18%, transparent);
+  border: 1px solid color-mix(in oklab, var(--color-accent-drama) 18%, transparent);
   border-radius: var(--radius-xl);
   box-shadow:
-    inset 0 0 80px color-mix(in srgb, var(--color-charcoal-1) 25%, transparent),
-    0 0 1px color-mix(in srgb, var(--color-accent-drama) 12%, transparent);
+    inset 0 0 80px color-mix(in oklab, var(--color-charcoal-1) 25%, transparent),
+    0 0 1px color-mix(in oklab, var(--color-accent-drama) 12%, transparent);
   pointer-events: none;
   z-index: var(--z-raised);
 }
@@ -476,7 +566,9 @@ Each subsection below gives: current LOC, current problems, and the FULL rewritt
   font-weight: 600;
   text-transform: uppercase;
   letter-spacing: 0.2em;
-  color: color-mix(in srgb, var(--color-accent-drama) 55%, transparent);
+  color: var(--color-fg-muted);
+  /* Deepening: was color-mix(... 55%, transparent) on ochre-9 — failed WCAG 4.5:1
+     (~2.8:1). Opaque semantic token passes. */
 }
 
 /* ─── Full-screen event flash (GSAP target in Phase 4) ─── */
@@ -555,17 +647,17 @@ Each subsection below gives: current LOC, current problems, and the FULL rewritt
   /* Game-table felt — same stack as GameTable.module.css for visual continuity */
   background:
     radial-gradient(ellipse 50% 40% at 50% 35%,
-      color-mix(in srgb, var(--color-accent-drama) 30%, transparent) 0%,
-      color-mix(in srgb, var(--color-accent-drama) 14%, transparent) 40%,
+      color-mix(in oklab, var(--color-accent-drama) 30%, transparent) 0%,
+      color-mix(in oklab, var(--color-accent-drama) 14%, transparent) 40%,
       transparent 65%),
     radial-gradient(ellipse 80% 70% at 50% 50%,
-      color-mix(in srgb, var(--color-teal-5) 40%, transparent) 0%,
-      color-mix(in srgb, var(--color-teal-4) 22%, transparent) 40%,
+      color-mix(in oklab, var(--color-teal-5) 40%, transparent) 0%,
+      color-mix(in oklab, var(--color-teal-4) 22%, transparent) 40%,
       transparent 65%),
     radial-gradient(ellipse 85% 85% at 50% 50%,
       transparent 40%,
-      color-mix(in srgb, var(--color-charcoal-1) 55%, transparent) 80%,
-      color-mix(in srgb, var(--color-charcoal-1) 78%, transparent) 100%),
+      color-mix(in oklab, var(--color-charcoal-1) 55%, transparent) 80%,
+      color-mix(in oklab, var(--color-charcoal-1) 78%, transparent) 100%),
     linear-gradient(175deg,
       var(--color-teal-3) 0%,
       var(--color-teal-2) 50%,
@@ -585,8 +677,8 @@ Each subsection below gives: current LOC, current problems, and the FULL rewritt
   flex-shrink: 0;
   /* Cordovan ambient glow — the Burned accent, not Jackbox red */
   text-shadow:
-    0 0 40px color-mix(in srgb, var(--color-accent-burned) 30%, transparent),
-    0 0 80px color-mix(in srgb, var(--color-accent-burned) 12%, transparent);
+    0 0 40px color-mix(in oklab, var(--color-accent-burned) 30%, transparent),
+    0 0 80px color-mix(in oklab, var(--color-accent-burned) 12%, transparent);
 }
 
 .titleAccent {
@@ -622,7 +714,7 @@ Each subsection below gives: current LOC, current problems, and the FULL rewritt
   border-radius: var(--radius-lg);
   box-shadow:
     var(--shadow-md),
-    0 0 40px color-mix(in srgb, var(--color-accent-burned) 6%, transparent);
+    0 0 40px color-mix(in oklab, var(--color-accent-burned) 6%, transparent);
 }
 
 .roomCode {
@@ -692,8 +784,8 @@ Each subsection below gives: current LOC, current problems, and the FULL rewritt
   padding: var(--space-3) var(--space-4);
   background: linear-gradient(
     165deg,
-    color-mix(in srgb, var(--color-bg-elevated) 92%, transparent) 0%,
-    color-mix(in srgb, var(--color-bg-surface) 96%, transparent) 100%
+    color-mix(in oklab, var(--color-bg-elevated) 92%, transparent) 0%,
+    color-mix(in oklab, var(--color-bg-surface) 96%, transparent) 100%
   );
   border: 1px solid var(--color-border-subtle);
   border-radius: var(--radius-md);
@@ -734,7 +826,7 @@ Each subsection below gives: current LOC, current problems, and the FULL rewritt
   height: var(--space-1);
   border-radius: var(--radius-full);
   background: var(--color-fg-muted);
-  animation: lobbyDotPulse var(--motion-duration-pulse) var(--motion-ease-standard) infinite;
+  animation: lobbyDotPulse var(--motion-duration-pulse) var(--motion-ease-base) infinite;
 }
 
 .waitingDot:nth-child(2) { animation-delay: 0.2s; }
@@ -758,11 +850,11 @@ Each subsection below gives: current LOC, current problems, and the FULL rewritt
   border: none;
   border-radius: var(--radius-md);
   background: var(--color-accent-burned);
-  color: var(--color-fg-on-accent);
+  color: var(--color-fg-on-burned);
   cursor: pointer;
   flex-shrink: 0;
   z-index: var(--z-raised);
-  transition: transform var(--motion-duration-fast) var(--motion-ease-standard);
+  transition: transform var(--motion-duration-fast) var(--motion-ease-base);
 }
 
 /* Pulsing glow — only opacity animates (GPU composited) */
@@ -772,10 +864,10 @@ Each subsection below gives: current LOC, current problems, and the FULL rewritt
   inset: -3px;
   border-radius: calc(var(--radius-md) + 3px);
   box-shadow:
-    0 0 12px color-mix(in srgb, var(--color-accent-burned) 60%, transparent),
-    0 0 32px color-mix(in srgb, var(--color-accent-burned) 30%, transparent),
-    0 0 64px color-mix(in srgb, var(--color-accent-burned) 15%, transparent);
-  animation: lobbyButtonPulse var(--motion-duration-pulse-slow) var(--motion-ease-standard) infinite;
+    0 0 12px color-mix(in oklab, var(--color-accent-burned) 60%, transparent),
+    0 0 32px color-mix(in oklab, var(--color-accent-burned) 30%, transparent),
+    0 0 64px color-mix(in oklab, var(--color-accent-burned) 15%, transparent);
+  animation: lobbyButtonPulse var(--motion-duration-pulse-slow) var(--motion-ease-base) infinite;
   z-index: -1;
   pointer-events: none;
 }
@@ -821,21 +913,37 @@ Each subsection below gives: current LOC, current problems, and the FULL rewritt
 .devLink {
   padding: var(--space-2) var(--space-4);
   border-radius: var(--radius-sm);
-  border: 1px dashed color-mix(in srgb, var(--color-accent-drama) 30%, transparent);
-  background: color-mix(in srgb, var(--color-accent-drama) 8%, transparent);
-  color: color-mix(in srgb, var(--color-accent-drama) 60%, transparent);
+  border: 1px dashed color-mix(in oklab, var(--color-accent-drama) 30%, transparent);
+  background: color-mix(in oklab, var(--color-accent-drama) 8%, transparent);
+  color: color-mix(in oklab, var(--color-accent-drama) 80%, transparent);
+  /* Deepening: was 60% — failed WCAG 4.5:1 (~3.1:1). Bumped to 80%. */
   font-family: var(--font-mono);
   font-size: var(--text-caption-board);
   text-decoration: none;
   cursor: pointer;
   transition:
-    background var(--motion-duration-fast) var(--motion-ease-standard),
-    color var(--motion-duration-fast) var(--motion-ease-standard);
+    background var(--motion-duration-fast) var(--motion-ease-base),
+    color var(--motion-duration-fast) var(--motion-ease-base);
 }
 
 .devLink:hover {
-  background: color-mix(in srgb, var(--color-accent-drama) 15%, transparent);
-  color: color-mix(in srgb, var(--color-accent-drama) 90%, transparent);
+  background: color-mix(in oklab, var(--color-accent-drama) 15%, transparent);
+  color: color-mix(in oklab, var(--color-accent-drama) 95%, transparent);
+}
+
+.devLink:focus-visible {
+  outline: 2px solid var(--color-border-focus);
+  outline-offset: 2px;
+}
+
+/* ─── Forced colors (Windows High Contrast) — Deepening addition ─── */
+
+@media (forced-colors: active) {
+  .startButton {
+    border: 2px solid ButtonText;
+    forced-color-adjust: none;
+  }
+  .startButton::after { display: none; }
 }
 
 /* ─── Reduced motion ─── */
@@ -922,24 +1030,24 @@ Each subsection below gives: current LOC, current problems, and the FULL rewritt
   border-radius: var(--radius-card);
   background: linear-gradient(
     165deg,
-    color-mix(in srgb, var(--color-bg-elevated) 92%, transparent) 0%,
-    color-mix(in srgb, var(--color-bg-surface) 96%, transparent) 100%
+    color-mix(in oklab, var(--color-bg-elevated) 92%, transparent) 0%,
+    color-mix(in oklab, var(--color-bg-surface) 96%, transparent) 100%
   );
   border: 1px solid var(--color-border-subtle);
   overflow: hidden;
   transition:
-    border-color var(--motion-duration-base) var(--motion-ease-standard),
-    box-shadow var(--motion-duration-slow) var(--motion-ease-standard);
+    border-color var(--motion-duration-base) var(--motion-ease-base),
+    box-shadow var(--motion-duration-slow) var(--motion-ease-base);
   box-shadow: var(--shadow-md);
 }
 
 /* ─── Active player — dramatic emphasis driven by inline --player-color ─── */
 
 .panel[data-active] {
-  border-color: color-mix(in srgb, var(--player-color) 60%, transparent);
+  border-color: color-mix(in oklab, var(--player-color) 60%, transparent);
   box-shadow:
-    0 0 24px color-mix(in srgb, var(--player-color) 30%, transparent),
-    0 0 60px color-mix(in srgb, var(--player-color) 12%, transparent),
+    0 0 24px color-mix(in oklab, var(--player-color) 30%, transparent),
+    0 0 60px color-mix(in oklab, var(--player-color) 12%, transparent),
     var(--shadow-md);
 }
 
@@ -952,12 +1060,12 @@ Each subsection below gives: current LOC, current problems, and the FULL rewritt
 .accentBar {
   height: var(--space-1);
   width: 100%;
-  transition: height var(--motion-duration-base) var(--motion-ease-standard);
+  transition: height var(--motion-duration-base) var(--motion-ease-base);
 }
 
 .panel[data-active] .accentBar {
   height: calc(var(--space-1) + 1px);
-  box-shadow: 0 2px 12px color-mix(in srgb, var(--player-color) 50%, transparent);
+  box-shadow: 0 2px 12px color-mix(in oklab, var(--player-color) 50%, transparent);
 }
 
 /* ─── Panel body — name + meta ─── */
@@ -997,12 +1105,12 @@ Each subsection below gives: current LOC, current problems, and the FULL rewritt
   font-variant-numeric: tabular-nums;
   font-size: var(--text-caption-board);
   font-weight: 800;
-  color: var(--color-bg-app);
+  color: var(--color-fg-on-drama);
   background: var(--color-accent-drama);
   padding: var(--space-0) var(--space-2);
   border-radius: var(--radius-sm);
   flex-shrink: 0;
-  box-shadow: 0 0 8px color-mix(in srgb, var(--color-accent-drama) 40%, transparent);
+  box-shadow: 0 0 8px color-mix(in oklab, var(--color-accent-drama) 40%, transparent);
 }
 
 /* ─── Meta row — color dot + card count ─── */
@@ -1070,7 +1178,7 @@ Each subsection below gives: current LOC, current problems, and the FULL rewritt
 - Both `@media (min-width: 1280px)` and `@media (min-width: 1600px)` blocks DELETED. All the formerly-stepped font sizes (`clamp(22px, 2vw, 32px)` at 1280, `clamp(28px, 2vw, 38px)` at 1600) are replaced by a single `--text-title` token that interpolates smoothly.
 - Player panel background gradient consumes `--color-bg-elevated` + `--color-bg-surface` — identical to `Lobby.playerCard` in §2.3.2 so the two screens share a single source of truth for the "player card" visual motif.
 - `var(--amber, #e8922a)` turn badge → `var(--color-accent-drama)` (ochre-9). The "amber" semantic becomes "drama ochre" which is the same color role.
-- `transition: border-color 0.3s ease, box-shadow 0.4s ease` → split transitions consuming `--motion-duration-base` (250ms) and `--motion-duration-slow` (400ms) with `--motion-ease-standard`.
+- `transition: border-color 0.3s ease, box-shadow 0.4s ease` → split transitions consuming `--motion-duration-base` (250ms) and `--motion-duration-slow` (400ms) with `--motion-ease-base`.
 
 **Cross-phase concerns**:
 - **Landmine preserved**: the comment at the top of the file documents the TSX ↔ CSS panel-width coupling. Phase 4 will resolve this by having TSX read `getComputedStyle(measurementDiv).getPropertyValue('--size-player-panel-width')` at layout time. Until then, the CSS token is the source of truth and TSX will be updated to match during Phase 4's GSAP motion consolidation pass.
@@ -1124,20 +1232,34 @@ Each subsection below gives: current LOC, current problems, and the FULL rewritt
   position: relative;
   width: var(--size-draw-pile-width);
   height: calc(var(--size-draw-pile-width) * 7 / 5);  /* 5:7 aspect ratio */
-  animation: drawPileBreathe var(--motion-duration-ambient) var(--motion-ease-standard) infinite;
-  /* Ambient glow beneath the pile — Burned accent */
-  filter: drop-shadow(0 0 30px color-mix(in srgb, var(--color-accent-burned) 18%, transparent));
+  animation: drawPileBreathe var(--motion-duration-ambient) var(--motion-ease-base) infinite;
+  /* Static ambient glow — NOT in keyframes (drop-shadow forces per-frame
+     rasterization on the main thread, not GPU-composited). */
+  filter: drop-shadow(0 0 30px color-mix(in oklab, var(--color-accent-burned) 18%, transparent));
 }
 
+/* Deepening fix: keyframe animates ONLY transform (GPU-composited).
+   The animated glow intensification lives on ::after via opacity. */
 @keyframes drawPileBreathe {
-  0%, 100% {
-    transform: scale(1);
-    filter: drop-shadow(0 0 30px color-mix(in srgb, var(--color-accent-burned) 18%, transparent));
-  }
-  50% {
-    transform: scale(1.025);
-    filter: drop-shadow(0 0 40px color-mix(in srgb, var(--color-accent-burned) 28%, transparent));
-  }
+  0%, 100% { transform: scale(1); }
+  50% { transform: scale(1.025); }
+}
+
+/* Animated glow intensification — opacity-only (GPU-composited) */
+.stack::after {
+  content: '';
+  position: absolute;
+  inset: -10px;
+  border-radius: calc(var(--radius-card) + 10px);
+  box-shadow: 0 0 40px color-mix(in oklab, var(--color-accent-burned) 28%, transparent);
+  opacity: 0;
+  animation: drawPileGlow var(--motion-duration-ambient) var(--motion-ease-base) infinite;
+  pointer-events: none;
+}
+
+@keyframes drawPileGlow {
+  0%, 100% { opacity: 0; }
+  50% { opacity: 1; }
 }
 
 .layer {
@@ -1145,7 +1267,7 @@ Each subsection below gives: current LOC, current problems, and the FULL rewritt
   inset: 0;
   border-radius: var(--radius-card);
   background-color: var(--color-teal-2);
-  border: 1px solid color-mix(in srgb, var(--color-accent-drama) 18%, transparent);
+  border: 1px solid color-mix(in oklab, var(--color-accent-drama) 18%, transparent);
   box-shadow: var(--shadow-md);
 }
 
@@ -1166,11 +1288,11 @@ Each subsection below gives: current LOC, current problems, and the FULL rewritt
     url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 140'%3E%3Cpath d='M50 20 L80 70 L50 120 L20 70 Z' fill='none' stroke='%23a33340' stroke-width='1.5' opacity='0.35'/%3E%3Cpath d='M50 35 L70 70 L50 105 L30 70 Z' fill='none' stroke='%23b0754c' stroke-width='1' opacity='0.25'/%3E%3Ccircle cx='50' cy='70' r='8' fill='none' stroke='%23a33340' stroke-width='1' opacity='0.3'/%3E%3Ccircle cx='50' cy='70' r='3' fill='%23a33340' opacity='0.25'/%3E%3Cline x1='50' y1='8' x2='50' y2='30' stroke='%23b0754c' stroke-width='0.8' opacity='0.2'/%3E%3Cline x1='50' y1='110' x2='50' y2='132' stroke='%23b0754c' stroke-width='0.8' opacity='0.2'/%3E%3Cline x1='10' y1='70' x2='28' y2='70' stroke='%23b0754c' stroke-width='0.8' opacity='0.2'/%3E%3Cline x1='72' y1='70' x2='90' y2='70' stroke='%23b0754c' stroke-width='0.8' opacity='0.2'/%3E%3C/svg%3E");
   background-size: 100% 100%;
   background-repeat: no-repeat;
-  border: 1.5px solid color-mix(in srgb, var(--color-accent-burned) 30%, transparent);
+  border: 1.5px solid color-mix(in oklab, var(--color-accent-burned) 30%, transparent);
   box-shadow:
     var(--shadow-lg),
-    0 0 30px color-mix(in srgb, var(--color-accent-burned) 14%, transparent),
-    0 0 60px color-mix(in srgb, var(--color-accent-burned) 7%, transparent);
+    0 0 30px color-mix(in oklab, var(--color-accent-burned) 14%, transparent),
+    0 0 60px color-mix(in oklab, var(--color-accent-burned) 7%, transparent);
 }
 
 /* Inner border frame — double-line agency dossier feel */
@@ -1178,7 +1300,7 @@ Each subsection below gives: current LOC, current problems, and the FULL rewritt
   content: '';
   position: absolute;
   inset: var(--space-2);
-  border: 1px solid color-mix(in srgb, var(--color-accent-drama) 20%, transparent);
+  border: 1px solid color-mix(in oklab, var(--color-accent-drama) 20%, transparent);
   border-radius: calc(var(--radius-card) - var(--space-1));
   pointer-events: none;
 }
@@ -1188,7 +1310,7 @@ Each subsection below gives: current LOC, current problems, and the FULL rewritt
   content: '';
   position: absolute;
   inset: calc(var(--space-2) + 2px);
-  border: 0.5px solid color-mix(in srgb, var(--color-accent-burned) 14%, transparent);
+  border: 0.5px solid color-mix(in oklab, var(--color-accent-burned) 14%, transparent);
   border-radius: calc(var(--radius-card) - var(--space-2));
   pointer-events: none;
 }
@@ -1198,8 +1320,8 @@ Each subsection below gives: current LOC, current problems, and the FULL rewritt
   font-variant-numeric: tabular-nums;
   font-weight: 700;
   font-size: var(--text-display);
-  color: color-mix(in srgb, var(--color-cream-12) 90%, transparent);
-  text-shadow: 0 2px 12px color-mix(in srgb, var(--color-charcoal-1) 60%, transparent);
+  color: color-mix(in oklab, var(--color-cream-12) 90%, transparent);
+  text-shadow: 0 2px 12px color-mix(in oklab, var(--color-charcoal-1) 60%, transparent);
   letter-spacing: 0.05em;
 }
 
@@ -1276,7 +1398,9 @@ Each subsection below gives: current LOC, current problems, and the FULL rewritt
 .empty {
   font-family: var(--font-mono);
   font-size: var(--text-display);
-  color: color-mix(in srgb, var(--color-accent-drama) 35%, transparent);
+  color: var(--color-fg-disabled);
+  /* Deepening: was color-mix(... 35%, transparent) on ochre-9 — failed WCAG 4.5:1
+     (~1.8:1). Opaque semantic token passes. */
 }
 ```
 
@@ -1284,7 +1408,7 @@ Each subsection below gives: current LOC, current problems, and the FULL rewritt
 - Fan + card dimensions all routed through the `--size-draw-pile-width` + derived `--size-discard-card-width` token. The DrawPile and DiscardFan visually match (same stack size) without two separate tokens.
 - `.peekCard` rotation offset `translate(-6px, 0)` → `translate(calc(var(--space-1) * -1.5), 0)` — the offset scales with spacing tokens, so it feels proportional at any viewport.
 - `.empty` placeholder font-size `42px` → `--text-display` which interpolates larger at big viewports.
-- `.empty` color `rgba(180, 160, 120, 0.3)` → `color-mix(in srgb, var(--color-accent-drama) 35%, transparent)` — the same warm-ochre vocabulary as the Lobby dev toolbar, tying the "placeholder text" visual role together.
+- `.empty` color `rgba(180, 160, 120, 0.3)` → `color-mix(in oklab, var(--color-accent-drama) 35%, transparent)` — the same warm-ochre vocabulary as the Lobby dev toolbar, tying the "placeholder text" visual role together.
 - Both `@media (min-width: 1280px|1600px)` blocks DELETED.
 
 **Cross-phase concerns**:
@@ -1374,8 +1498,8 @@ Each subsection below gives: current LOC, current problems, and the FULL rewritt
   padding: var(--space-3) var(--space-4);
   background: linear-gradient(
     to bottom,
-    color-mix(in srgb, var(--color-charcoal-1) 60%, transparent) 0%,
-    color-mix(in srgb, var(--color-charcoal-1) 20%, transparent) 60%,
+    color-mix(in oklab, var(--color-charcoal-1) 60%, transparent) 0%,
+    color-mix(in oklab, var(--color-charcoal-1) 20%, transparent) 60%,
     transparent 100%
   );
   pointer-events: none;
@@ -1389,13 +1513,13 @@ Each subsection below gives: current LOC, current problems, and the FULL rewritt
   text-align: center;
   pointer-events: auto;
   letter-spacing: 0.04em;
-  text-shadow: 0 2px 12px color-mix(in srgb, var(--color-charcoal-1) 60%, transparent);
+  text-shadow: 0 2px 12px color-mix(in oklab, var(--color-charcoal-1) 60%, transparent);
 }
 ```
 
 **Key transformations**:
 - `font-size: 16px` baseline + `36px` / `40px` media-query overrides → single `--text-title` token (24→42 across viewport). Slightly different range than old hand-tuned (16/36/40) but smoother.
-- Gradient raw `rgba(8, 12, 8, X)` → `color-mix(in srgb, var(--color-charcoal-1) X*100%, transparent)`. The gradient stops map 1:1 to the old opacity structure.
+- Gradient raw `rgba(8, 12, 8, X)` → `color-mix(in oklab, var(--color-charcoal-1) X*100%, transparent)`. The gradient stops map 1:1 to the old opacity structure.
 - Added `text-shadow` for readability over variable backgrounds — the old code relied on the gradient alone. New: a token-driven shadow adds a subtle dark halo so the announcement survives even if the player below is wearing a cream-colored ring.
 - Both media queries DELETED.
 
@@ -1443,8 +1567,8 @@ Each subsection below gives: current LOC, current problems, and the FULL rewritt
   padding: var(--space-4) var(--space-6);
   background: linear-gradient(
     to top,
-    color-mix(in srgb, var(--color-charcoal-1) 80%, transparent) 0%,
-    color-mix(in srgb, var(--color-charcoal-1) 30%, transparent) 60%,
+    color-mix(in oklab, var(--color-charcoal-1) 80%, transparent) 0%,
+    color-mix(in oklab, var(--color-charcoal-1) 30%, transparent) 60%,
     transparent 100%
   );
   z-index: var(--z-raised);
@@ -1454,14 +1578,14 @@ Each subsection below gives: current LOC, current problems, and the FULL rewritt
   font-family: var(--font-display);
   font-size: var(--text-title);
   font-weight: 600;
-  color: color-mix(in srgb, var(--color-cream-11) 75%, transparent);
+  color: color-mix(in oklab, var(--color-cream-11) 75%, transparent);
   letter-spacing: 0.02em;
 }
 ```
 
 **Key transformations**:
 - Raw `rgba(8, 12, 8, X)` gradient → `color-mix` with `--color-charcoal-1`, same structure as AnnouncementFeed (the two gradients are mirrors of each other vertically, so they should share a palette source).
-- `color: rgba(200, 190, 160, 0.7)` → `color-mix(in srgb, var(--color-cream-11) 75%, transparent)`. The old value was a warm-cream with 70% alpha; new maps to cream-11 (`#d0c3a5`) which is the "high-contrast text" warm-cream primitive, dimmed to 75% for the "subdued communication" role.
+- `color: rgba(200, 190, 160, 0.7)` → `color-mix(in oklab, var(--color-cream-11) 75%, transparent)`. The old value was a warm-cream with 70% alpha; new maps to cream-11 (`#d0c3a5`) which is the "high-contrast text" warm-cream primitive, dimmed to 75% for the "subdued communication" role.
 - `font-size: 16px` baseline + `26px` override → single `--text-title` token (24→42 across viewport).
 - `z-index: 20` → `var(--z-raised)`. The board StatusBar sits just above the game table but below the announcement feed — `raised` is the correct slot.
 - Single `@media (min-width: 1280px)` block DELETED.
@@ -1476,7 +1600,7 @@ Each subsection below gives: current LOC, current problems, and the FULL rewritt
 
 **Current problems**:
 - Line 3: `height: 6px` hardcoded.
-- Line 4: `background: color-mix(in srgb, var(--accent-nope, #2dd8c8) 20%, transparent)` — stale `--accent-nope` alias + `#2dd8c8` fallback (UMB Jackbox teal).
+- Line 4: `background: color-mix(in oklab, var(--accent-nope, #2dd8c8) 20%, transparent)` — stale `--accent-nope` alias + `#2dd8c8` fallback (UMB Jackbox teal).
 - Line 5: `border-radius: 3px` hardcoded.
 - Line 7: `margin: 8px 16px` hardcoded.
 - Line 13: `background: var(--accent-nope)` — stale alias.
@@ -1496,7 +1620,7 @@ Each subsection below gives: current LOC, current problems, and the FULL rewritt
 .container {
   position: relative;
   height: var(--space-2);
-  background: color-mix(in srgb, var(--color-accent-intercept) 20%, transparent);
+  background: color-mix(in oklab, var(--color-accent-intercept) 20%, transparent);
   border-radius: var(--radius-sm);
   overflow: hidden;
   margin: var(--space-2) var(--space-4);
@@ -1557,7 +1681,7 @@ Each subsection below gives: current LOC, current problems, and the FULL rewritt
 .banner {
   text-align: center;
   padding: var(--space-3) var(--space-4);
-  background: color-mix(in srgb, var(--color-cream-12) 5%, transparent);
+  background: color-mix(in oklab, var(--color-cream-12) 5%, transparent);
   border: 1px solid var(--color-border-subtle);
   border-radius: var(--radius-md);
   margin: var(--space-2) var(--space-4);
@@ -1570,7 +1694,7 @@ Each subsection below gives: current LOC, current problems, and the FULL rewritt
 ```
 
 **Key transformations**:
-- `rgba(255, 255, 255, 0.05)` → `color-mix(in srgb, var(--color-cream-12) 5%, transparent)`. The old value was pure-white with 5% alpha; the new maps to cream-12 (`#f0e4c4`, the brightest warm highlight) at 5% — same visual weight, Dreamland-aligned warmth.
+- `rgba(255, 255, 255, 0.05)` → `color-mix(in oklab, var(--color-cream-12) 5%, transparent)`. The old value was pure-white with 5% alpha; the new maps to cream-12 (`#f0e4c4`, the brightest warm highlight) at 5% — same visual weight, Dreamland-aligned warmth.
 - Added `border: 1px solid var(--color-border-subtle)` so the banner reads as a container at larger viewports where the old unbordered version looked like a loose text block.
 - Added `font-family: var(--font-body)` explicit reference (was relying on cascade from the parent).
 
@@ -1602,8 +1726,9 @@ Each subsection below gives: current LOC, current problems, and the FULL rewritt
 
 @font-face {
   font-family: 'JetBrains Mono';
-  src: url('/fonts/JetBrainsMono-Variable.woff2') format('woff2-variations'),
-       url('/fonts/JetBrainsMono-Variable.woff2') format('woff2');
+  src: url('/fonts/JetBrainsMono-Variable.woff2') format('woff2');
+  /* Deepening: format('woff2-variations') dropped — as of 2026, format('woff2')
+     subsumes variable font recognition. Dual-format declaration is redundant. */
   font-weight: 100 900;
   font-display: swap;
   font-style: normal;
@@ -1624,7 +1749,7 @@ Each subsection below gives: current LOC, current problems, and the FULL rewritt
 
 ### §2.4 Cross-view: `MinimalCard.module.css` — REWRITE (312 LOC → ~240 LOC)
 
-**File**: `src/client/shared/MinimalCard.module.css`. This is the biggest cross-view file in the repo. Consumed by both phone (`Hand`, `StagingArea`, `CardDetailSheet`) and board (`DrawPile.topCard`, `DiscardFan.topCard`/`peekCard`). Phase 2 §2.7 already updated `MinimalCard.tsx` to import `cardAccent` from the new `palette.ts` location; the CSS file was deliberately left for Phase 3.
+**File**: `src/client/shared/MinimalCard.module.css`. This is the biggest cross-view file in the repo. Consumed by both phone (`Hand`, `StagingArea`, `CardDetailSheet`) and board (`DrawPile.topCard`, `DiscardFan.topCard`/`peekCard`). Phase 2 §2.7 already updated `MinimalCard.tsx` to import `cardAccent` from the new `card-accents.ts` location (Phase 2 deepening item #9); the CSS file was deliberately left for Phase 3.
 
 **Why Phase 3 owns this**: the sizing math is container-query–driven, which is axis-neutral — but the thresholds (`@container (max-width: 115px)` for compact, `@container (min-width: 177px)` for enlarged) were tuned for phone + board combined, and the board view is the more demanding constraint (board cards scale larger, so the threshold for "show description text" matters more there). Owning it in Phase 3 ensures the thresholds are validated at the larger end of the scale.
 
@@ -1645,7 +1770,7 @@ Each subsection below gives: current LOC, current problems, and the FULL rewritt
 - Lines 176-177: `width: clamp(14px, 14cqi, 20px)` cardBadge — raw.
 - Lines 198-201: `.cardBack` background-color `#18252a` raw hex.
 - Lines 200-204: cardBack data-URI with `%23d44030` + `%23d48820` hex (transitional BURNED palette — same update as DrawPile).
-- Lines 209-214: `.cardBack::before` inner border with `color-mix(in srgb, var(--amber, #d48820) 15%, transparent)` — stale `--amber` alias.
+- Lines 209-214: `.cardBack::before` inner border with `color-mix(in oklab, var(--amber, #d48820) 15%, transparent)` — stale `--amber` alias.
 - Lines 219-234: `@media (prefers-contrast: more)` + `@media (forced-colors: active)` — preserved (accessibility).
 - Lines 253-311: `[data-theme="light"]` light-mode fork with stale fallbacks throughout.
 
@@ -1691,12 +1816,12 @@ Each subsection below gives: current LOC, current problems, and the FULL rewritt
   background:
     linear-gradient(
       180deg,
-      color-mix(in srgb, var(--card-accent) 28%, var(--color-bg-surface)) 0%,
-      color-mix(in srgb, var(--card-accent) 14%, var(--color-bg-surface)) 50%,
-      color-mix(in srgb, var(--card-accent) 6%, var(--color-bg-surface)) 100%
+      color-mix(in oklab, var(--card-accent) 28%, var(--color-bg-surface)) 0%,
+      color-mix(in oklab, var(--card-accent) 14%, var(--color-bg-surface)) 50%,
+      color-mix(in oklab, var(--card-accent) 6%, var(--color-bg-surface)) 100%
     );
-  border: 1.5px solid color-mix(in srgb, var(--card-accent) 40%, var(--color-border-subtle));
-  border-top: 1.5px solid color-mix(in srgb, var(--card-accent) 20%, color-mix(in srgb, var(--color-cream-12) 8%, transparent));
+  border: 1.5px solid color-mix(in oklab, var(--card-accent) 40%, var(--color-border-subtle));
+  border-top: 1.5px solid color-mix(in oklab, var(--card-accent) 20%, color-mix(in oklab, var(--color-cream-12) 8%, transparent));
   color: var(--color-fg-primary);
   cursor: pointer;
   user-select: none;
@@ -1705,8 +1830,8 @@ Each subsection below gives: current LOC, current problems, and the FULL rewritt
 
   /* Resting glow — token-driven colored halo makes cards pop from felt */
   box-shadow:
-    0 0 6px color-mix(in srgb, var(--card-glow-color) 35%, transparent),
-    0 0 14px color-mix(in srgb, var(--card-glow-color) 18%, transparent),
+    0 0 6px color-mix(in oklab, var(--card-glow-color) 35%, transparent),
+    0 0 14px color-mix(in oklab, var(--card-glow-color) 18%, transparent),
     var(--shadow-md);
 }
 
@@ -1738,10 +1863,10 @@ Each subsection below gives: current LOC, current problems, and the FULL rewritt
   inset: -2px;
   border-radius: inherit;
   box-shadow:
-    0 0 4px color-mix(in srgb, var(--card-glow-color) 80%, transparent),
-    0 0 8px color-mix(in srgb, var(--card-glow-color) 60%, transparent),
-    0 0 20px color-mix(in srgb, var(--card-glow-color) 40%, transparent),
-    0 0 40px color-mix(in srgb, var(--card-glow-color) 20%, transparent);
+    0 0 4px color-mix(in oklab, var(--card-glow-color) 80%, transparent),
+    0 0 8px color-mix(in oklab, var(--card-glow-color) 60%, transparent),
+    0 0 20px color-mix(in oklab, var(--card-glow-color) 40%, transparent),
+    0 0 40px color-mix(in oklab, var(--card-glow-color) 20%, transparent);
   opacity: 0;
   transition: opacity var(--motion-duration-fast) var(--motion-ease-decelerate);
   pointer-events: none;
@@ -1779,7 +1904,7 @@ Each subsection below gives: current LOC, current problems, and the FULL rewritt
 .card:focus-visible {
   outline: 2px solid var(--color-border-focus);
   outline-offset: 2px;
-  box-shadow: 0 0 0 5px color-mix(in srgb, var(--color-charcoal-1) 90%, transparent);
+  box-shadow: 0 0 0 5px color-mix(in oklab, var(--color-charcoal-1) 90%, transparent);
 }
 
 /* ─── Card text ─── */
@@ -1787,7 +1912,7 @@ Each subsection below gives: current LOC, current problems, and the FULL rewritt
 .cardName {
   font-family: var(--font-display);
   font-weight: 700;
-  font-size: clamp(var(--text-card-name-min), 10cqi, var(--text-card-name-max));
+  font-size: clamp(var(--text-card-name-min), 10cqi + 0rem, var(--text-card-name-max));
   text-transform: uppercase;
   letter-spacing: 0.04em;
   color: var(--card-accent);
@@ -1798,8 +1923,8 @@ Each subsection below gives: current LOC, current problems, and the FULL rewritt
 .cardDesc {
   font-family: var(--font-body);
   font-weight: 500;
-  font-size: clamp(var(--text-card-desc-min), 8cqi, var(--text-card-desc-max));
-  color: color-mix(in srgb, var(--card-accent) 25%, var(--color-fg-secondary));
+  font-size: clamp(var(--text-card-desc-min), 8cqi + 0rem, var(--text-card-desc-max));
+  color: color-mix(in oklab, var(--card-accent) 25%, var(--color-fg-secondary));
   line-height: 1.3;
   margin-top: auto;
 }
@@ -1822,12 +1947,12 @@ Each subsection below gives: current LOC, current problems, and the FULL rewritt
    Landmine: threshold adjusted for border-box (200px - 23px = 177px content). */
 @container (min-width: 177px) {
   .cardName {
-    font-size: clamp(var(--text-card-name-large-min), 7cqi, var(--text-card-name-large-max));
+    font-size: clamp(var(--text-card-name-large-min), 7cqi + 0rem, var(--text-card-name-large-max));
     letter-spacing: 0.06em;
   }
 
   .cardDesc {
-    font-size: clamp(var(--text-card-desc-large-min), 5cqi, var(--text-card-desc-large-max));
+    font-size: clamp(var(--text-card-desc-large-min), 5cqi + 0rem, var(--text-card-desc-large-max));
     line-height: 1.4;
   }
 
@@ -1881,7 +2006,7 @@ Each subsection below gives: current LOC, current problems, and the FULL rewritt
     url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 140'%3E%3Cpath d='M50 20 L80 70 L50 120 L20 70 Z' fill='none' stroke='%23a33340' stroke-width='1.5' opacity='0.3'/%3E%3Cpath d='M50 35 L70 70 L50 105 L30 70 Z' fill='none' stroke='%23b0754c' stroke-width='1' opacity='0.2'/%3E%3Ccircle cx='50' cy='70' r='8' fill='none' stroke='%23a33340' stroke-width='1' opacity='0.25'/%3E%3Ccircle cx='50' cy='70' r='3' fill='%23a33340' opacity='0.2'/%3E%3C/svg%3E");
   background-size: 100% 100%;
   background-repeat: no-repeat;
-  border: 1px solid color-mix(in srgb, var(--color-accent-burned) 25%, var(--color-border-subtle));
+  border: 1px solid color-mix(in oklab, var(--color-accent-burned) 25%, var(--color-border-subtle));
   box-shadow: var(--shadow-md);
 }
 
@@ -1890,7 +2015,7 @@ Each subsection below gives: current LOC, current problems, and the FULL rewritt
   content: '';
   position: absolute;
   inset: var(--space-1);
-  border: 1px solid color-mix(in srgb, var(--color-accent-drama) 15%, transparent);
+  border: 1px solid color-mix(in oklab, var(--color-accent-drama) 15%, transparent);
   border-radius: calc(var(--radius-card) - 3px);
   pointer-events: none;
 }
@@ -1941,8 +2066,8 @@ Each subsection below gives: current LOC, current problems, and the FULL rewritt
 - Card name / desc font-size `clamp()` min and max values extracted into Phase 1 tokens: `--text-card-name-min`, `--text-card-name-max`, `--text-card-name-large-min`, `--text-card-name-large-max`, `--text-card-desc-min`, `--text-card-desc-max`, `--text-card-desc-large-min`, `--text-card-desc-large-max`. The `cqi`-driven scale stays (`10cqi`, `8cqi`, etc.) because those are container-relative ratios, not pixel tokens — what changes is that the clamp floors and ceilings become Phase 1 responsibilities. Eight new tokens. See §7.
 - Card-back data-URI hex updated from `%23d44030` / `%23d48820` to `%23a33340` / `%23b0754c` — same Dreamland-palette swap as DrawPile.
 - `.cardBack` background-color `#18252a` → `var(--color-teal-2)`.
-- Border coupling: `.card` resting gradient now mixes `var(--card-accent)` with `var(--color-bg-surface)` instead of `var(--bg-card, #12121f)`. The semantic anchor is a live token; the inline-set `--card-accent` custom property stays unchanged (TSX controls that via `palette.ts`).
-- Focus-ring box-shadow `rgba(0, 0, 0, 0.9)` → `color-mix(in srgb, var(--color-charcoal-1) 90%, transparent)`.
+- Border coupling: `.card` resting gradient now mixes `var(--card-accent)` with `var(--color-bg-surface)` instead of `var(--bg-card, #12121f)`. The semantic anchor is a live token; the inline-set `--card-accent` custom property stays unchanged (TSX controls that via `card-accents.ts`).
+- Focus-ring box-shadow `rgba(0, 0, 0, 0.9)` → `color-mix(in oklab, var(--color-charcoal-1) 90%, transparent)`.
 - Inner-card-back frame `var(--amber, #d48820)` → `var(--color-accent-drama)` — the "amber" alias dies.
 - Transition `opacity 0.2s ease-out` → `opacity var(--motion-duration-fast) var(--motion-ease-decelerate)`.
 - Both `transition: none` landmine rules preserved verbatim with clarifying comments.
@@ -2016,7 +2141,7 @@ Each subsection below gives: current LOC, current problems, and the FULL rewritt
   background:
     /* Centered warm spotlight — matches the war-room vocabulary */
     radial-gradient(ellipse 60% 50% at 50% 35%,
-      color-mix(in srgb, var(--color-accent-drama) 18%, transparent) 0%,
+      color-mix(in oklab, var(--color-accent-drama) 18%, transparent) 0%,
       transparent 55%),
     var(--color-bg-app);
   color: var(--color-fg-primary);
@@ -2033,8 +2158,8 @@ Each subsection below gives: current LOC, current problems, and the FULL rewritt
   margin-bottom: var(--space-2);
   /* Victory glow — ochre-drama, not Jackbox teal */
   text-shadow:
-    0 0 30px color-mix(in srgb, var(--color-accent-drama) 40%, transparent),
-    0 0 60px color-mix(in srgb, var(--color-accent-drama) 15%, transparent);
+    0 0 30px color-mix(in oklab, var(--color-accent-drama) 40%, transparent),
+    0 0 60px color-mix(in oklab, var(--color-accent-drama) 15%, transparent);
 }
 
 .subtitle {
@@ -2061,8 +2186,8 @@ Each subsection below gives: current LOC, current problems, and the FULL rewritt
   border-radius: var(--radius-md);
   background: linear-gradient(
     165deg,
-    color-mix(in srgb, var(--color-bg-elevated) 80%, transparent) 0%,
-    color-mix(in srgb, var(--color-bg-surface) 90%, transparent) 100%
+    color-mix(in oklab, var(--color-bg-elevated) 80%, transparent) 0%,
+    color-mix(in oklab, var(--color-bg-surface) 90%, transparent) 100%
   );
   border: 1px solid var(--color-border-subtle);
 }
@@ -2070,15 +2195,15 @@ Each subsection below gives: current LOC, current problems, and the FULL rewritt
 .rank[data-winner] {
   background: linear-gradient(
     165deg,
-    color-mix(in srgb, var(--color-accent-drama) 15%, var(--color-bg-elevated)) 0%,
-    color-mix(in srgb, var(--color-bg-surface) 95%, transparent) 100%
+    color-mix(in oklab, var(--color-accent-drama) 15%, var(--color-bg-elevated)) 0%,
+    color-mix(in oklab, var(--color-bg-surface) 95%, transparent) 100%
   );
-  border: 1px solid color-mix(in srgb, var(--color-accent-drama) 35%, transparent);
-  box-shadow: 0 0 20px color-mix(in srgb, var(--color-accent-drama) 14%, transparent);
+  border: 1px solid color-mix(in oklab, var(--color-accent-drama) 35%, transparent);
+  box-shadow: 0 0 20px color-mix(in oklab, var(--color-accent-drama) 14%, transparent);
 }
 
 .rank[data-me] {
-  border-color: color-mix(in srgb, var(--color-fg-secondary) 40%, transparent);
+  border-color: color-mix(in oklab, var(--color-fg-secondary) 40%, transparent);
 }
 
 .rankNum {
@@ -2114,10 +2239,10 @@ Each subsection below gives: current LOC, current problems, and the FULL rewritt
   border: none;
   border-radius: var(--radius-md);
   background: var(--color-accent-drama);
-  color: var(--color-bg-app);
+  color: var(--color-fg-on-drama);
   cursor: pointer;
   z-index: var(--z-raised);
-  transition: transform var(--motion-duration-fast) var(--motion-ease-standard);
+  transition: transform var(--motion-duration-fast) var(--motion-ease-base);
 }
 
 .playAgain::after {
@@ -2126,9 +2251,9 @@ Each subsection below gives: current LOC, current problems, and the FULL rewritt
   inset: -3px;
   border-radius: calc(var(--radius-md) + 3px);
   box-shadow:
-    0 0 12px color-mix(in srgb, var(--color-accent-drama) 50%, transparent),
-    0 0 32px color-mix(in srgb, var(--color-accent-drama) 25%, transparent);
-  animation: gameOverPulse var(--motion-duration-pulse-slow) var(--motion-ease-standard) infinite;
+    0 0 12px color-mix(in oklab, var(--color-accent-drama) 50%, transparent),
+    0 0 32px color-mix(in oklab, var(--color-accent-drama) 25%, transparent);
+  animation: gameOverPulse var(--motion-duration-pulse-slow) var(--motion-ease-base) infinite;
   z-index: -1;
   pointer-events: none;
 }
@@ -2155,6 +2280,16 @@ Each subsection below gives: current LOC, current problems, and the FULL rewritt
   margin-top: var(--space-10);
   font-size: var(--text-body);
   color: var(--color-fg-muted);
+}
+
+/* ─── Forced colors (Windows High Contrast) — Deepening addition ─── */
+
+@media (forced-colors: active) {
+  .playAgain {
+    border: 2px solid ButtonText;
+    forced-color-adjust: none;
+  }
+  .playAgain::after { display: none; }
 }
 
 /* ─── Reduced motion ─── */
@@ -2242,9 +2377,9 @@ Each subsection below gives: current LOC, current problems, and the FULL rewritt
   line-height: 1;
   padding: 0 var(--space-6);
   /* Hero size — cqi-based, axis-neutral, works on phone AND board */
-  font-size: clamp(var(--text-drama-hero-min), 12cqi, var(--text-drama-hero-max));
+  font-size: clamp(var(--text-drama-hero-min), 12cqi + 0rem, var(--text-drama-hero-max));
   text-shadow:
-    0 4px 20px color-mix(in srgb, var(--color-charcoal-1) 50%, transparent),
+    0 4px 20px color-mix(in oklab, var(--color-charcoal-1) 50%, transparent),
     0 0 60px currentColor;
 }
 
@@ -2253,9 +2388,9 @@ Each subsection below gives: current LOC, current problems, and the FULL rewritt
 .burned {
   background: radial-gradient(
     ellipse 80% 60% at 50% 50%,
-    color-mix(in srgb, var(--color-cordovan-9) 92%, transparent) 0%,
-    color-mix(in srgb, var(--color-cordovan-6) 88%, transparent) 50%,
-    color-mix(in srgb, var(--color-cordovan-1) 95%, transparent) 100%
+    color-mix(in oklab, var(--color-cordovan-9) 92%, transparent) 0%,
+    color-mix(in oklab, var(--color-cordovan-6) 88%, transparent) 50%,
+    color-mix(in oklab, var(--color-cordovan-1) 95%, transparent) 100%
   );
 }
 
@@ -2268,9 +2403,9 @@ Each subsection below gives: current LOC, current problems, and the FULL rewritt
 .extracted {
   background: radial-gradient(
     ellipse 80% 60% at 50% 50%,
-    color-mix(in srgb, var(--color-teal-8) 88%, transparent) 0%,
-    color-mix(in srgb, var(--color-teal-5) 85%, transparent) 50%,
-    color-mix(in srgb, var(--color-teal-1) 92%, transparent) 100%
+    color-mix(in oklab, var(--color-teal-8) 88%, transparent) 0%,
+    color-mix(in oklab, var(--color-teal-5) 85%, transparent) 50%,
+    color-mix(in oklab, var(--color-teal-1) 92%, transparent) 100%
   );
 }
 
@@ -2283,16 +2418,16 @@ Each subsection below gives: current LOC, current problems, and the FULL rewritt
 .eliminated {
   background: radial-gradient(
     ellipse 80% 60% at 50% 50%,
-    color-mix(in srgb, var(--color-charcoal-6) 92%, transparent) 0%,
-    color-mix(in srgb, var(--color-charcoal-3) 90%, transparent) 60%,
-    color-mix(in srgb, var(--color-charcoal-1) 95%, transparent) 100%
+    color-mix(in oklab, var(--color-charcoal-6) 92%, transparent) 0%,
+    color-mix(in oklab, var(--color-charcoal-3) 90%, transparent) 60%,
+    color-mix(in oklab, var(--color-charcoal-1) 95%, transparent) 100%
   );
 }
 
 .eliminated .text {
   color: var(--color-charcoal-11);
   /* Subdued size — quieter reveal for the darker moment */
-  font-size: clamp(var(--text-drama-subdued-min), 8cqi, var(--text-drama-subdued-max));
+  font-size: clamp(var(--text-drama-subdued-min), 8cqi + 0rem, var(--text-drama-subdued-max));
 }
 
 /* ─── INTERCEPTED — emerald flash ─── */
@@ -2300,9 +2435,9 @@ Each subsection below gives: current LOC, current problems, and the FULL rewritt
 .intercepted {
   background: radial-gradient(
     ellipse 80% 60% at 50% 50%,
-    color-mix(in srgb, var(--color-emerald-8) 88%, transparent) 0%,
-    color-mix(in srgb, var(--color-emerald-5) 85%, transparent) 50%,
-    color-mix(in srgb, var(--color-emerald-1) 92%, transparent) 100%
+    color-mix(in oklab, var(--color-emerald-8) 88%, transparent) 0%,
+    color-mix(in oklab, var(--color-emerald-5) 85%, transparent) 50%,
+    color-mix(in oklab, var(--color-emerald-1) 92%, transparent) 100%
   );
 }
 
@@ -2315,16 +2450,16 @@ Each subsection below gives: current LOC, current problems, and the FULL rewritt
 .victory {
   background: radial-gradient(
     ellipse 80% 60% at 50% 50%,
-    color-mix(in srgb, var(--color-ochre-9) 92%, transparent) 0%,
-    color-mix(in srgb, var(--color-ochre-6) 88%, transparent) 50%,
-    color-mix(in srgb, var(--color-ochre-1) 95%, transparent) 100%
+    color-mix(in oklab, var(--color-ochre-9) 92%, transparent) 0%,
+    color-mix(in oklab, var(--color-ochre-6) 88%, transparent) 50%,
+    color-mix(in oklab, var(--color-ochre-1) 95%, transparent) 100%
   );
 }
 
 .victory .text {
   color: var(--color-cream-12);
   /* Oversized — victory is the biggest reveal in the game */
-  font-size: clamp(var(--text-drama-victory-min), 10cqi, var(--text-drama-victory-max));
+  font-size: clamp(var(--text-drama-victory-min), 10cqi + 0rem, var(--text-drama-victory-max));
 }
 
 /* ─── Reduced motion — skip the slam, just fade ─── */
@@ -2346,7 +2481,7 @@ Each subsection below gives: current LOC, current problems, and the FULL rewritt
 - Three distinct font-size ranges via three cqi-scale tokens: `--text-drama-hero-*` (default), `--text-drama-subdued-*` (eliminated), `--text-drama-victory-*` (victory). All consume `cqi` not `vw`, making them cross-view safe.
 - `z-index: 100` → `var(--z-overlay)`.
 - `.overlay` declares `container-type: inline-size` so the cqi-based text inherits the correct axis regardless of whether it's rendered on phone or board.
-- Text-shadow `rgba(0, 0, 0, 0.5)` → `color-mix(in srgb, var(--color-charcoal-1) 50%, transparent)` to track primitive palette.
+- Text-shadow `rgba(0, 0, 0, 0.5)` → `color-mix(in oklab, var(--color-charcoal-1) 50%, transparent)` to track primitive palette.
 
 **Cross-phase concerns**:
 - **New Phase 1 tokens required** (6): `--text-drama-hero-min`, `--text-drama-hero-max`, `--text-drama-subdued-min`, `--text-drama-subdued-max`, `--text-drama-victory-min`, `--text-drama-victory-max`. See §7.
@@ -2391,8 +2526,8 @@ Phase 3 tasks, in dependency order. Each step has a commit point. Execute in a f
 1. **Verify Phase 1 + Phase 2 complete and merged.** `git log` shows Phase 1 and Phase 2 commits. `pnpm test` is 167/167 green + new Phase 1 CVD/contrast/motion-sync tests green. `pnpm typecheck` + `pnpm lint` clean.
 2. **Verify Phase 1 token additions land first.** Before rewriting any Phase 3 file, the 27 new Phase 1 tokens listed in §7 below must exist in `src/client/shared/tokens/`. If `/deepen-plan` has propagated them into `phase-1-foundation.md` and `/ce:work` has executed Phase 1 with the additions, this step is a verification. If not, **STOP** and add the tokens to Phase 1 first — don't work around.
 3. **Entry-point container wrapper edits.** One-line edit each:
-   - `src/client/board/main.tsx` — wrap `<Board />` in a `<div style={{ containerType: 'size', minHeight: '100vh' }}>` (or add `container-type: size` to an existing root wrapper class).
-   - `src/client/player/main.tsx` (or `player.tsx` / whatever the phone entry is) — same treatment.
+   - `src/client/board/main.tsx` — wrap `<Board />` in a `<div style={{ containerType: 'size', minHeight: '100vh' }}>` (or add `container-type: size` to an existing root wrapper class). Board uses `size` (both axes) because the board root has explicit height and never scrolls.
+   - `src/client/player/main.tsx` (or `player.tsx` / whatever the phone entry is) — wrap in `<div style={{ containerType: 'inline-size' }}>`. Phone uses `inline-size` (width-only containment) to avoid preventing content overflow/scrolling. `100cqb` in cross-view GameOver gracefully falls back to `100svb` (= `100svh` under `horizontal-tb`) — the correct behavior since phone's constraining axis IS height.
    - Run `pnpm typecheck` + `pnpm test` to verify no regressions. Commit.
 4. **Rewrite `GameTable.module.css`** per §2.3.1. Run `pnpm dev` + `pnpm dev:server` and load `http://localhost:5173/board.html?room=TEST` to visually confirm the table renders. The `feltBranding` should appear with ochre-palette corner diamonds + central reticle. Commit.
 5. **Edit `GameTable.tsx:24` comment** per §2.7. One-line change. Typecheck + lint + commit.
@@ -2557,42 +2692,47 @@ Phase 3 **does not** include:
 
 **New Phase 1 tokens that Phase 3 requires** (to be added to `phase-1-foundation.md` during `/deepen-plan`):
 
-### §7.1 Board fluid spacing (new scale)
+### §7.1 Board fluid spacing (AMEND existing tokens)
 
-Phase 1 §2.4 defines `--space-fluid-tight|base|loose` as svh-based for phone. Phase 3 needs the vw-based board counterparts:
+Phase 1 §2.5 already defines `--space-fluid-base-board` and `--space-fluid-loose-board`. Deepening: AMEND their ranges (Phase 1 max values are too tight for Phase 3's consumers):
 
 ```css
-/* semantic.board.css additions */
+/* semantic.board.css AMENDMENTS (Phase 1 deepening added these, Phase 3 deepening bumps max) */
 :root[data-view="board"] {
-  --space-fluid-tight-board: clamp(8px, calc(8px + (100vw - 1280px) * (8 / 2560)), 16px);
+  /* AMEND: max 32→40, growth 16/2560→24/2560 */
   --space-fluid-base-board:  clamp(16px, calc(16px + (100vw - 1280px) * (24 / 2560)), 40px);
+  /* AMEND: max 64→80, growth 32/2560→48/2560 */
   --space-fluid-loose-board: clamp(32px, calc(32px + (100vw - 1280px) * (48 / 2560)), 80px);
 }
 ```
 
+**Pruned:** `--space-fluid-tight-board` — proposed in draft but never consumed by any Phase 3 CSS code block. DELETED.
+
 Consumers: `GameTable.module.css` (padding, center gap), `Lobby.module.css` (padding), `AnnouncementFeed` (padding), `StatusBar` (padding).
 
-### §7.2 Board text scale additions
+### §7.2 Board text scale addition
 
-Phase 1 §2.5 defines `--text-body`, `--text-title`, `--text-display`, `--text-hero` for board. Phase 3 needs additional scale tokens:
+Phase 1 §2.5 defines `--text-body`, `--text-title`, `--text-display`, `--text-hero` for board. Phase 3 needs one additional scale token:
 
 ```css
-/* semantic.board.css additions */
+/* semantic.board.css addition */
 :root[data-view="board"] {
-  --text-micro-board:   clamp(0.75rem, calc(0.75rem + (100vw - 1280px) * (4 / 2560)), 1rem);
   --text-caption-board: clamp(0.8125rem, calc(0.8125rem + (100vw - 1280px) * (4 / 2560)), 1.0625rem);
-  --text-callout-board: clamp(1.125rem, calc(1.125rem + (100vw - 1280px) * (8 / 2560)), 1.625rem);
 }
 ```
 
-Consumers: `pileLabel` in GameTable, `rosterLabel` / `rosterCount` in Lobby, `turnBadge` in PlayerRing, `eliminatedName` in PlayerRing, `disconnectedBadge` in Lobby, countdown text in NopeCountdownBar, dev-link text in Lobby.
+Consumers (8 sites): `pileLabel` in GameTable, `rosterLabel` / `rosterCount` in Lobby, `turnBadge` in PlayerRing, `eliminatedName` in PlayerRing, `disconnectedBadge` in Lobby, countdown text in NopeCountdownBar, dev-link text in Lobby.
+
+**Pruned:** `--text-micro-board` — never consumed by any Phase 3 CSS code block + name conflicts with Phase 1's deleted `--text-micro` (correction #23). DELETED.
+**Pruned:** `--text-callout-board` — never consumed by any Phase 3 CSS code block. DELETED.
 
 ### §7.3 Board sizing additions
 
 ```css
 /* semantic.board.css additions */
 :root[data-view="board"] {
-  /* Player ring panel — width that scales smoothly across 1280 → 3840.
+  /* Player ring panel — AMEND Phase 1 value (Phase 1 min=160, Phase 3 needs 180
+     to match the old 200px baseline visual weight minus continuous-scale compression).
      Replaces the old stepped 200/320/420 TSX+CSS coupling. */
   --size-player-panel-width: clamp(180px, calc(180px + (100vw - 1280px) * (240 / 2560)), 420px);
 
@@ -2655,30 +2795,30 @@ Consumers: `.text`, `.eliminated .text`, `.victory .text` in `DramaOverlay.modul
 
 ### §7.6 Motion ambient tokens
 
-Phase 1 §2.3 defines `--motion-duration-instant|fast|base|slow|dramatic` (100–800ms). Phase 3 needs ambient loop tokens for long-running animations:
+Phase 1 defines `--motion-duration-fast|base|slow|dramatic` (150–800ms) plus `--motion-duration-ambient` (4000ms, already added during Phase 1 deepening) and `--motion-duration-dots` (1500ms). Phase 3 needs two additional **decorative** loop tokens:
 
 ```css
 /* primitives.css additions */
 :root {
-  --motion-duration-pulse:       1400ms;  /* Lobby waiting dots, subtle attention */
-  --motion-duration-pulse-slow:  2500ms;  /* Lobby start button + GameOver play-again pulse */
-  --motion-duration-ambient:     4000ms;  /* DrawPile breathe, slow hero loop */
+  --motion-duration-pulse:       1400ms;  /* Lobby waiting dots, subtle attention — DECORATIVE */
+  --motion-duration-pulse-slow:  2500ms;  /* Lobby start button + GameOver play-again pulse — DECORATIVE */
+  /* --motion-duration-ambient: 4000ms — already in Phase 1 (DrawPile breathe) */
 }
 ```
+
+**Critical clarification (deepening):** `--motion-duration-pulse` (1400ms, **decorative**) and `--motion-duration-essential-pulse` (1400ms, **essential**) are TWO separate tokens. Same value, different `prefers-reduced-motion` behavior:
+- `--motion-duration-pulse` → zeros under reduced-motion (Lobby dots animation stopping = correct)
+- `--motion-duration-essential-pulse` → slows to 2400ms under reduced-motion (turn indicator pulse continuing = correct, per WAI 2.3.3 carve-out)
+Collapsing them would break one or the other.
 
 Matching additions to `motion.ts`:
 
 ```typescript
-// motion.ts additions
+// motion.ts additions (Phase 1 already has fast/base/slow/dramatic/dots/ambient/essential*)
 export const MOTION_DURATIONS = {
-  instant:   0.1,
-  fast:      0.15,
-  base:      0.25,
-  slow:      0.4,
-  dramatic:  0.8,
-  pulse:     1.4,      // NEW
-  pulseSlow: 2.5,      // NEW
-  ambient:   4.0,      // NEW
+  // ... existing: fast: 0.15, base: 0.25, slow: 0.4, dramatic: 0.8, dots: 1.5, ambient: 4.0
+  pulse:     1.4,      // NEW — decorative
+  pulseSlow: 2.5,      // NEW — decorative
 } as const satisfies Record<string, number>;
 ```
 
@@ -2690,18 +2830,20 @@ Motion-sync test in Phase 1 §2.7 will automatically validate the new tokens onc
 - **`--color-bg-overlay-heavy` (85% alpha, aliases current `--color-bg-overlay`)** — already flagged by Phase 2. Not new.
 - **Verification during deepening**: confirm `--color-accent-intercept` resolves to `emerald-9` and matches the intended "spy-agency green" visual direction for NopeCountdownBar + DramaOverlay.intercepted. If visual review at Phase 1 visual-review-gate suggests the emerald is too muted for a flashing countdown bar, bump to emerald-10 or emerald-8 depending on the contrast CVD test results.
 
-### §7.8 Total new tokens added by Phase 3
+### §7.8 Total new tokens added by Phase 3 (corrected in deepening)
 
-Tallying the deltas to `phase-1-foundation.md`:
+Tallying the deltas to `phase-1-foundation.md` after deepening pruned 3 dead proposals and clarified amendments:
 
-- **semantic.board.css**: 3 fluid-spacing + 3 text-scale + 7 sizing + 1 derived = **14 new** (plus 1 amendment to `--size-draw-pile-width` range).
+- **semantic.board.css**: 2 fluid-spacing AMENDMENTS + 1 text-scale + 6 sizing + 1 derived + 1 panel-width AMENDMENT + 1 draw-pile AMENDMENT = **8 new + 4 amendments**.
 - **semantic.css**: 8 card-text-clamp + 6 drama-text-clamp = **14 new**.
-- **primitives.css**: 3 motion-ambient = **3 new**.
-- **motion.ts**: 3 motion-ambient export keys = **3 new**.
+- **primitives.css**: 2 motion-ambient = **2 new** (`ambient` already exists).
+- **motion.ts**: 2 motion-ambient export keys = **2 new**.
 
-**Total: ~27 new Phase 1 tokens added during `/deepen-plan`.** Phase 1 deepening resolves each through its own addition + CVD/contrast/motion-sync test updates, and the Phase 3 rewrites consume them.
+**Total: 22 new Phase 1 tokens + 3 range amendments = 25 Phase 1 changes.** (Down from the draft's 27 — 3 dead proposals pruned: `--space-fluid-tight-board`, `--text-micro-board`, `--text-callout-board`.)
 
-If deepening discovers that any of these 27 proposals is wrong (e.g., the clamp bracket is off, or the token name collides with a future Phase 4/5 addition), the contradiction is resolved in the Phase 1 direction per the roadmap §8 deepening-priority rule.
+Phase 1 deepening already resolved 5 of these 22 new tokens (see TODO.md cross-phase resolution table). The remaining 17 new tokens + 3 amendments propagate during the Phase 1 follow-up sweep (TODO step 6).
+
+**`--text-hero-subdued` is NOT orphaned** — it's a valid board-only token that Phase 3's cross-view DramaOverlay cannot use (DramaOverlay needs `cqi`-based min/max split tokens, not a `vw`-based single clamp). `--text-hero-subdued` stays in Phase 1 for future board-only consumers.
 
 ---
 

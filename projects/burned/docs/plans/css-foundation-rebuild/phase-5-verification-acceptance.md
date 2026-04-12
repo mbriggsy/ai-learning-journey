@@ -900,7 +900,7 @@ function buildFixtureSnapshot(body: { state: string; [k: string]: unknown }): Ga
 - [ ] `test/visual-regression/phone.spec.ts` covers all 32 phone screens × 4 phone viewports = 128 tests. (S5: +2 — ProtocolMismatch, NoRoomCode)
 - [ ] `test/visual-regression/board.spec.ts` covers all 14 board screens × 4 board viewports = 56 tests.
 - [ ] `test/visual-regression/fixtures.ts` authors literal game-state snapshots for every SmartActionBox state, every bottom sheet, every DramaOverlay variant, every lobby population count, and EliminatedView.
-- [ ] Dev-server fixture endpoint `handleFixtureSeed` landed in `src/server/test-fixtures.ts`, wired into `src/server/room.ts` conditionally on `import.meta.env.DEV`.
+- [ ] Dev-server fixture endpoint `handleFixtureSeed` landed in `src/server/test-fixtures.ts`, wired into `src/server/room.ts` conditionally on `__DEV__` (Wrangler `define`, NOT `import.meta.env.DEV` — see B2 correction).
 - [ ] Baselines generated via `pnpm test:visual --update-snapshots`, visually reviewed per §2.2.5, and committed to git under `test/visual-regression/baselines/`.
 - [ ] `pnpm test:visual` runs clean on the committed baselines (zero diffs).
 - [ ] Three pending decisions (§2.2.5) resolved and `test/visual-regression/decisions.md` committed.
@@ -1702,7 +1702,7 @@ async function handleTestRoute(request: Request, env: Env): Promise<Response> {
 
 - [ ] `test/game-loop/full-loop-protocol.md` authored with the full script + checklist.
 - [ ] `src/server/test-fixtures.ts` `handleStackDeck` handler landed (dev-only).
-- [ ] `src/server/room.ts` test-route registration behind `import.meta.env.DEV` gate.
+- [ ] `src/server/room.ts` test-route registration behind `__DEV__` gate (B2 correction — Wrangler `define`).
 - [ ] Briggsy runs the protocol end-to-end. Checklist §2.6.2 #6 fully passes.
 - [ ] Results appended to `full-loop-protocol.md` with timestamp + any bugs filed.
 - [ ] Any bugs triaged per §2.6.4 and fixed before Phase 5 proceeds to §2.7.
@@ -2013,7 +2013,7 @@ If any fails, STOP and resolve before starting Phase 5.
 
 **Step 3** — Author `playwright.config.ts` per §2.2.1. Author `test/visual-regression/helpers/viewport-profiles.ts` + `fixtures.ts` skeletons (empty fixture bodies — filled in by Step 5). Commit: `feat(test): scaffold Playwright visual regression harness`.
 
-**Step 4** — Author the dev-server fixture endpoint `src/server/test-fixtures.ts` with `handleFixtureSeed` + `handleStackDeck` handlers per §2.2.4 + §2.6.5. Wire into `src/server/room.ts` behind `import.meta.env.DEV` gate. Run `pnpm test` + `pnpm typecheck` — test-fixtures module should NOT be in production build. Commit: `feat(server): dev-only test fixture endpoints for Phase 5 visual regression + game loop`.
+**Step 4** — Author the dev-server fixture endpoint `src/server/test-fixtures.ts` with `handleFixtureSeed` + `handleStackDeck` handlers per §2.2.4 + §2.6.5. Wire into `src/server/room.ts` behind `__DEV__` gate (B2 correction). Run `pnpm test` + `pnpm typecheck` — test-fixtures module should NOT be in production build. Commit: `feat(server): dev-only test fixture endpoints for Phase 5 visual regression + game loop`.
 
 **Step 5** — Author literal `GameState` fixtures in `test/visual-regression/fixtures.ts` for every SmartActionBox state, every bottom sheet, every DramaOverlay variant, every lobby population, and EliminatedView. Commit: `feat(test): author literal GameState fixtures for visual regression`.
 
@@ -2083,7 +2083,7 @@ Phase 5 is done when **all** of the following are true:
 - [ ] `test/visual-regression/baselines/` committed, PNGs reflect final decisions from §2.2.5.
 - [ ] `src/client/shared/tokens/__tests__/palette-cvd.test.ts` expanded to 36 pairs, `MIN_DISTANCE` locked per §2.4.3.
 - [ ] `src/client/shared/tokens/__tests__/palette-contrast.test.ts` expanded to 31 pairs × WCAG + APCA.
-- [ ] `src/server/test-fixtures.ts` committed with `handleFixtureSeed` + `handleStackDeck`, both gated by `import.meta.env.DEV`.
+- [ ] `src/server/test-fixtures.ts` committed with `handleFixtureSeed` + `handleStackDeck`, both gated by `__DEV__` (B2 correction) + runtime `env.ENVIRONMENT` check.
 - [ ] `pnpm test` — all Vitest tests green (167 baseline + Phase 1 seeded tests + Phase 5 expanded tests).
 - [ ] `pnpm test:visual` — all 176 Playwright tests green.
 - [ ] `pnpm typecheck` — clean.

@@ -4,7 +4,7 @@ import { useNopeWindow } from '@client/shared/hooks/useSharedSelectors'
 import { useHand, useMyPlayer } from './hooks/usePlayerSelectors'
 import { useSendAction } from '@client/shared/hooks/useSendAction'
 import { haptic } from '@client/shared/haptics'
-import { MOTION } from '@client/shared/animation-config'
+import { MOTION } from '@client/shared/tokens/motion'
 import styles from './FloatingActionButton.module.css'
 
 export function FloatingActionButton() {
@@ -44,7 +44,7 @@ export function FloatingActionButton() {
           initial={{ scale: 0, opacity: 0 }}
           animate={{ scale: 1, opacity: 1 }}
           exit={{ scale: 0, opacity: 0 }}
-          transition={MOTION.SNAPPY}
+          transition={MOTION.snappy}
         >
           INTERCEPT{secondsLeft > 0 ? ` ${secondsLeft}s` : ''}
         </m.button>

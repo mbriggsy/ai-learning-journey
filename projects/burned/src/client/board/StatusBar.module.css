@@ -1,4 +1,14 @@
-/* Status bar — comms strip at the bottom of the board */
+/* StatusBar.module.css (board)
+   Board — bottom-anchored comms strip. Shows session state text like
+   "Room: FOXTROT · 5 players · Press ESC to cancel". Pure communication,
+   not interactive. Gradient fades from dark-at-bottom so text reads over
+   any table background.
+
+   Note: distinct from src/client/player/StatusBar.module.css which is the
+   phone-side turn banner. Same filename, different file, different role.
+*/
+
+@layer components {
 
 .bar {
   position: fixed;
@@ -8,26 +18,23 @@
   display: flex;
   align-items: center;
   justify-content: center;
-  gap: 10px;
-  padding: 14px 24px;
+  gap: var(--space-3);
+  padding: var(--space-4) var(--space-6);
   background: linear-gradient(
     to top,
-    rgba(8, 12, 8, 0.8) 0%,
-    rgba(8, 12, 8, 0.3) 60%,
+    color-mix(in oklab, var(--color-charcoal-1) 80%, transparent) 0%,
+    color-mix(in oklab, var(--color-charcoal-1) 30%, transparent) 60%,
     transparent 100%
   );
-  z-index: 20;
+  z-index: var(--z-raised);
 }
 
 .text {
   font-family: var(--font-display);
-  font-size: 16px;
+  font-size: var(--text-title);
   font-weight: 600;
-  color: rgba(200, 190, 160, 0.7);
+  color: color-mix(in oklab, var(--color-cream-11) 75%, transparent);
   letter-spacing: 0.02em;
 }
 
-@media (min-width: 1280px) {
-  .bar { padding: 20px 40px; }
-  .text { font-size: 26px; }
-}
+} /* @layer components */

@@ -1,21 +1,26 @@
-/* Announcement feed — anchored top-center of the game table */
+/* AnnouncementFeed.module.css
+   Board — top-anchored feed for gameplay announcements ("Dash played Burned",
+   "Vera played Intercept"). Fades from dark-at-top so announcement text reads
+   cleanly against any game-table background behind it.
+*/
+
+@layer components {
 
 .feed {
   position: fixed;
   top: 0;
   left: 0;
   right: 0;
-  z-index: 30;
+  z-index: var(--z-sticky);
   display: flex;
   flex-direction: column;
   align-items: center;
-  gap: 4px;
-  padding: 12px 16px;
-  /* Fade from dark so announcements read cleanly */
+  gap: var(--space-1);
+  padding: var(--space-3) var(--space-4);
   background: linear-gradient(
     to bottom,
-    rgba(8, 12, 8, 0.6) 0%,
-    rgba(8, 12, 8, 0.2) 60%,
+    color-mix(in oklab, var(--color-charcoal-1) 60%, transparent) 0%,
+    color-mix(in oklab, var(--color-charcoal-1) 20%, transparent) 60%,
     transparent 100%
   );
   pointer-events: none;
@@ -23,19 +28,13 @@
 
 .announcement {
   font-family: var(--font-display);
-  font-size: 16px;
+  font-size: var(--text-title);
   font-weight: 600;
-  color: var(--text-primary, #e8e8f0);
+  color: var(--color-fg-primary);
   text-align: center;
   pointer-events: auto;
+  letter-spacing: 0.04em;
+  text-shadow: 0 2px 12px color-mix(in oklab, var(--color-charcoal-1) 60%, transparent);
 }
 
-@media (min-width: 1280px) {
-  .feed { padding: 24px 32px; gap: 6px; }
-  .announcement { font-size: 36px; }
-}
-
-@media (min-width: 1600px) {
-  .feed { padding: 28px 40px; }
-  .announcement { font-size: 40px; }
-}
+} /* @layer components */

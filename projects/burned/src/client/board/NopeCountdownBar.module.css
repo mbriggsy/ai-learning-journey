@@ -1,24 +1,35 @@
+/* NopeCountdownBar.module.css
+   Board — countdown bar that appears during the Intercept window after
+   a card is played. The fill contracts from right to left as the window
+   closes (transform: scaleX driven by the component, not CSS).
+*/
+
+@layer components {
+
 .container {
   position: relative;
-  height: 6px;
-  background: color-mix(in srgb, var(--accent-nope, #2dd8c8) 20%, transparent);
-  border-radius: 3px;
+  height: var(--space-2);
+  background: color-mix(in oklab, var(--color-accent-intercept) 20%, transparent);
+  border-radius: var(--radius-sm);
   overflow: hidden;
-  margin: 8px 16px;
+  margin: var(--space-2) var(--space-4);
 }
 
 .fill {
   position: absolute;
   inset: 0;
-  background: var(--accent-nope);
+  background: var(--color-accent-intercept);
   transform-origin: left center;
   will-change: transform;
 }
 
 .text {
   text-align: center;
-  font-size: 13px;
-  color: var(--accent-nope);
+  font-family: var(--font-mono);
+  font-size: var(--text-caption-board);
+  color: var(--color-accent-intercept);
   font-weight: 600;
-  padding: 2px 0;
+  padding: var(--space-0) 0;
 }
+
+} /* @layer components */

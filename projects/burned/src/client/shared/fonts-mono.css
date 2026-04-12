@@ -1,9 +1,18 @@
-/* JetBrains Mono — board-only, used for countdown numbers and card counts */
+/* fonts-mono.css
+   Board-only font-face declaration for JetBrains Mono.
+   Consumed by --font-mono semantic token in semantic.css.
+
+   Import site: src/client/board/Board.tsx:12 (board entry only).
+   The phone view does not load this file — phone typography avoids mono
+   since countdown numbers live on the board not the phone.
+*/
 
 @font-face {
   font-family: 'JetBrains Mono';
   src: url('/fonts/JetBrainsMono-Variable.woff2') format('woff2');
-  font-weight: 400 700;
+  /* Deepening: format('woff2-variations') dropped — as of 2026, format('woff2')
+     subsumes variable font recognition. Dual-format declaration is redundant. */
+  font-weight: 100 900;
   font-display: swap;
   font-style: normal;
 }

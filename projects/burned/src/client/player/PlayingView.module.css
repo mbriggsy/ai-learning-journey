@@ -1,79 +1,95 @@
-/* Responsive player layout.
-   Phone: vertical stack — title → status → staging (42%) → hand (58%).
-   Wide: title + status span top, staging + hand side-by-side. */
+/* PlayingView.module.css
+   Phone workbench: title + status + staging + hand + floating intercept button.
+   Height-driven layout on viewport-safe svh. Content-aware sizing replaces rigid flex ratios.
 
-.container {
-  background: var(--bg-primary);
-  display: flex;
-  flex-direction: column;
-  height: min(100svh, 900px);
-  overflow: hidden;
-  max-width: 600px;
-  margin-inline: auto;
+   Inherited architectural notes:
+   - Cards at height:100% + aspect-ratio overflow — slot wrapper handles aspect-ratio.
+   - Phone root uses max-width: var(--size-root-max-width) to cap iPad portrait.
+   - .sectionLabel stays as a flex child (NOT position:absolute) — landmine 3 from
+     the autopsy: `overflow: hidden` on the section container clips absolutely-positioned
+     children. Keep labels as inline flex elements ordered before the scroll content.
+*/
+
+@layer components {
+  .view {
+    display: flex;
+    flex-direction: column;
+    min-height: var(--size-viewport-safe);
+    max-width: var(--size-root-max-width);
+    margin: 0 auto;
+    background: var(--color-bg-app);
+    color: var(--color-fg-primary);
+    font-family: var(--font-body);
+    overflow: hidden;
+    box-sizing: border-box;
+  }
+
+  .workbench {
+    flex: 1 1 0;
+    display: flex;
+    flex-direction: column;
+    gap: var(--space-fluid-tight);
+    padding: var(--space-fluid-tight) var(--space-1) var(--space-1);
+    min-height: 0; /* prevent flex child from expanding beyond parent */
+  }
+
+  .staging {
+    flex: 0 0 var(--size-staging-height);
+    display: flex;
+    flex-direction: column;
+    gap: var(--space-1);
+    padding: var(--space-2);
+    background: var(--color-bg-surface);
+    border: 1px solid var(--color-border-subtle);
+    border-radius: var(--radius-surface);
+    position: relative;
+  }
+
+  .handSection {
+    flex: 0 0 var(--size-hand-height);
+    display: flex;
+    flex-direction: column;
+    gap: var(--space-1);
+    padding: var(--space-2) 0;
+    background: var(--color-bg-surface);
+    border: 1px solid var(--color-border-subtle);
+    border-radius: var(--radius-surface);
+    position: relative;
+  }
+
+  /* Disabled-haze overlay — fired via [data-disabled] attribute by Player.tsx
+     when permission.allowed is false or optimisticPending is true. Visual
+     feedback that the hand is non-interactive. PRESERVE — Player.tsx:356
+     relies on this selector existing for the haze to render. */
+  .handSection[data-disabled]::after {
+    content: '';
+    position: absolute;
+    inset: 0;
+    background: color-mix(in oklab, var(--color-bg-app) 60%, transparent);
+    border-radius: var(--radius-surface);
+    pointer-events: none;
+    z-index: var(--z-raised);
+  }
+
+  /* Section label — flex child, NOT absolutely positioned. Lives at the top
+     of its parent .staging or .handSection as the first ordered child.
+     Landmine 3: `overflow: hidden` on the parent clips absolutely-positioned
+     children, so labels CANNOT be position: absolute. Inline flex order is the
+     correct architecture. */
+  .sectionLabel {
+    flex: 0 0 auto;
+    align-self: flex-start;
+    padding: var(--space-0) var(--space-2);
+    margin: var(--space-1) 0 0 var(--space-2);
+    background: var(--color-bg-elevated);
+    color: var(--color-fg-muted);
+    font-family: var(--font-display);
+    font-size: var(--text-caption);
+    letter-spacing: 0.14em;
+    text-transform: uppercase;
+    border-radius: var(--radius-sm);
+    pointer-events: none;
+    position: relative;
+    z-index: var(--z-raised);
+  }
 }
-
-/* ─── Workbench — holds staging + hand, flips direction at breakpoint ─── */
-
-.workbench {
-  display: flex;
-  flex-direction: column;
-  flex: 1 1 0;
-  min-height: 0;
-  gap: 6px;
-  padding: 6px 2px 2px;
-}
-
-/* ─── Bordered section boxes ─── */
-
-.stagingSection,
-.handSection {
-  min-height: 0;
-  display: flex;
-  flex-direction: column;
-  border: 1px solid var(--border-subtle, #3a5860);
-  border-radius: 6px;
-  overflow: hidden;
-}
-
-.stagingSection {
-  flex: 42 1 0;
-}
-
-.handSection {
-  flex: 58 1 0;
-  position: relative;
-}
-
-/* Disabled haze — covers entire hand section including scrolled-off cards */
-.handSection[data-disabled]::after {
-  content: '';
-  position: absolute;
-  inset: 0;
-  background: color-mix(in srgb, var(--bg-primary, #1a2a2e) 50%, transparent);
-  pointer-events: none;
-  z-index: 1;
-  border-radius: 6px;
-}
-
-/* ─── Section label — inset header on bordered box ─── */
-
-.sectionLabel {
-  flex: 0 0 auto;
-  padding: 2px 10px;
-  font-family: var(--font-display);
-  font-size: 10px;
-  font-weight: 700;
-  letter-spacing: 0.14em;
-  text-transform: uppercase;
-  color: var(--text-secondary, #b8a890);
-  border-bottom: 1px solid var(--border-subtle, #3a5860);
-  background: color-mix(in srgb, var(--bg-elevated, #243c42) 50%, var(--bg-primary, #1a2a2e));
-  position: relative;
-  z-index: 2;
-}
-
-/* ═══════════════════════════════════════════════
-   Wide viewport — side-by-side layout
-   ═══════════════════════════════════════════════ */
-
-

@@ -326,13 +326,13 @@ function PlayingView({ roomCode }: { roomCode: string }) {
   const displayHand = sortedHand.filter(c => !selectedIds.has(c.id))
 
   return (
-    <div className={playingStyles.container}>
+    <div className={playingStyles.view}>
       <TitleBar roomCode={roomCode} />
       <StatusBar isMyTurn={isMyTurn} currentPlayerName={currentPlayerName} drawPileCount={drawPileCount} />
 
       <div className={playingStyles.workbench}>
         {/* Staging area — compose your play */}
-        <div className={playingStyles.stagingSection}>
+        <div className={playingStyles.staging}>
           <div className={playingStyles.sectionLabel}>Staging</div>
           <StagingArea
             hand={hand}

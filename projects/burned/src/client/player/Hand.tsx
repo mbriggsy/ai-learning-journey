@@ -1,4 +1,5 @@
 import { useState, useEffect, useRef, useCallback } from 'react'
+import { createPortal } from 'react-dom'
 import { m, AnimatePresence } from 'motion/react'
 import type { CardInstance } from '@shared/types'
 import { MinimalCard } from '@client/shared/MinimalCard'
@@ -94,7 +95,7 @@ export function Hand({ hand, disabled, onStageCard, onCardLongPress }: HandProps
           {hand.map((card, i) => (
             <m.div
               key={card.id}
-              className={styles.cardSlot}
+              className={styles.slot}
               layout={dealComplete ? 'position' : false}
               initial={{ opacity: 0, x: 40, scale: 0.85 }}
               animate={{ opacity: 1, x: 0, scale: 1 }}
@@ -120,33 +121,36 @@ export function Hand({ hand, disabled, onStageCard, onCardLongPress }: HandProps
         </AnimatePresence>
       </div>
 
-      {/* Full-screen enlarge — spring scale, no layoutId z-index fight */}
-      <AnimatePresence>
-        {enlargedCard && (
-          <m.div
-            key="enlarge-backdrop"
-            className={styles.enlargeBackdrop}
-            initial={{ opacity: 0 }}
-            animate={{ opacity: 1 }}
-            exit={{ opacity: 0 }}
-            transition={{ duration: 0.3 }}
-            onPointerUp={(e: React.PointerEvent) => {
-              handleEnlargedTap(enlargedCard.id, e)
-            }}
-          >
+      {/* Full-screen enlarge — portalled to body, position:absolute against root */}
+      {createPortal(
+        <AnimatePresence>
+          {enlargedCard && (
             <m.div
-              key={enlargedCard.id}
-              className={styles.enlargeCard}
-              initial={{ scale: 0.35, y: 120 }}
-              animate={{ scale: 1, y: 0 }}
-              exit={{ scale: 0.35, y: 120 }}
-              transition={MOTION.SNAPPY}
+              key="enlarge-backdrop"
+              className={styles.enlargeBackdrop}
+              initial={{ opacity: 0 }}
+              animate={{ opacity: 1 }}
+              exit={{ opacity: 0 }}
+              transition={{ duration: 0.3 }}
+              onPointerUp={(e: React.PointerEvent) => {
+                handleEnlargedTap(enlargedCard.id, e)
+              }}
             >
-              <MinimalCard type={enlargedCard.type} />
+              <m.div
+                key={enlargedCard.id}
+                className={styles.enlargeCard}
+                initial={{ scale: 0.35, y: 120 }}
+                animate={{ scale: 1, y: 0 }}
+                exit={{ scale: 0.35, y: 120 }}
+                transition={MOTION.SNAPPY}
+              >
+                <MinimalCard type={enlargedCard.type} />
+              </m.div>
             </m.div>
-          </m.div>
-        )}
-      </AnimatePresence>
+          )}
+        </AnimatePresence>,
+        document.body,
+      )}
     </>
   )
 }

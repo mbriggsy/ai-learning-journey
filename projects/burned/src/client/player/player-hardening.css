@@ -1,29 +1,73 @@
-/* Game-mode CSS — phone controller only */
+/* player-hardening.css
+   Global mobile-browser hardening for the phone entry point.
+   Applied via <link rel="stylesheet"> in player.html, before any component CSS.
 
-html, body {
-  height: 100vh; /* fallback for older browsers */
-  height: 100svh;
+   POSITIONING CONTRACT (Phase 1 §2.12 follow-up): html, body, #root are
+   position: relative + sized to var(--size-viewport-safe) + overflow: hidden.
+   This lets descendants (FloatingActionButton, ErrorToast, Hand.enlargeBackdrop)
+   use position: absolute against this root for viewport-anchored placement
+   WITHOUT declaring position: fixed — dodging WebKit bug 297779 on iOS 26.
+   See Phase 1 §5 landmine 7.
+
+   NOT WRAPPED IN @layer — these are RESET-tier rules. Unlayered CSS wins
+   cascade against all layers by default, which is the right behavior for
+   global resets. Component .module.css files wrap in @layer components.
+*/
+
+*,
+*::before,
+*::after {
+  box-sizing: border-box;
+}
+
+:root {
+  /* Tell browser UI (scrollbars, form controls, status bar) that this is a dark app. */
+  color-scheme: dark;
+}
+
+html,
+body {
+  margin: 0;
+  padding: 0;
+  width: 100%;
+  height: var(--size-viewport-safe);
+  min-height: var(--size-viewport-safe);
   overflow: hidden;
-  overscroll-behavior: none; /* kills rubber banding, pull-to-refresh, swipe nav */
-  touch-action: manipulation; /* kills 300ms tap delay */
+  position: relative;
+  background: var(--color-bg-app);
+  color: var(--color-fg-primary);
+  font-family: var(--font-body);
+  font-size: var(--text-body);
+  line-height: 1.4;
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+  /* Prevent bounce-scroll and pull-to-refresh on iOS / Android */
+  overscroll-behavior: none;
+  /* Prevent accidental text selection during gameplay */
+  -webkit-user-select: none;
+  user-select: none;
+  /* Disable iOS tap highlight — we handle feedback explicitly */
+  -webkit-tap-highlight-color: transparent;
 }
 
 #root {
-  -webkit-user-select: none;
-  user-select: none;
-  -webkit-touch-callout: none;
-  -webkit-tap-highlight-color: transparent;
-  padding: env(safe-area-inset-top) env(safe-area-inset-right)
-           env(safe-area-inset-bottom) env(safe-area-inset-left);
+  width: 100%;
+  height: 100%;
+  overflow: hidden;
+  position: relative;
+  /* Safe-area padding lives at the #root level so descendants (PlayingView,
+     JoinScreen, EliminatedView) inherit it. Their per-component padding
+     uses max(--space-N, --inset-*) for additional design padding. */
+  padding-top: var(--inset-top);
+  padding-right: var(--inset-right);
+  padding-bottom: var(--inset-bottom);
+  padding-left: var(--inset-left);
 }
 
-#root img {
-  -webkit-user-drag: none;
-  pointer-events: none;
-}
-
-/* Re-enable text selection for inputs */
-input[type="text"] {
+/* Restore text selection where it makes sense — room code, player name input */
+input,
+textarea,
+[data-selectable] {
   -webkit-user-select: text;
   user-select: text;
 }

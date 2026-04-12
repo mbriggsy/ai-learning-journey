@@ -1,47 +1,64 @@
-/* Staging area — fills its section. Cards + smart action box. */
+/* StagingArea.module.css
+   Composition zone for selecting cards to play. Scrolls horizontally when > 4 cards staged.
 
-.staging {
-  display: flex;
-  flex-direction: column;
-  align-items: center;
-  justify-content: flex-start;
-  gap: 8px;
-  height: 100%;
-  padding: 8px 0;
-}
+   Inherited architectural notes:
+   - stagedSlot uses transform: translateZ(0) as a GPU layer hint to prevent
+     border repaint flash during layout transitions.
+   - .stagedRow uses ::before / ::after flex spacers to implement
+     "center when cards fit, collapse when they overflow" — landmine 4: CSS
+     `justify-content: center` on a scroll container clips the leftmost
+     overflow on iOS Safari. Spacers + flex-start does NOT clip. PRESERVE.
+*/
 
-/* ─── Staged cards row — scrollable, height-driven ─── */
+@layer components {
+  .staging {
+    display: flex;
+    flex-direction: column;
+    gap: var(--space-2);
+    height: 100%;
+    box-sizing: border-box;
+  }
 
-.stagedCards {
-  display: flex;
-  gap: 10px;
-  align-items: flex-start;
-  align-self: stretch;
-  flex: 0 1 auto;
-  min-height: 0;
-  overflow-x: auto;
-  overflow-y: hidden;
-  -webkit-overflow-scrolling: touch;
-  scroll-snap-type: x mandatory;
-  scrollbar-width: none;
-  padding: 0;
-  overscroll-behavior-x: contain;
-}
+  .stagedRow {
+    flex: 1 1 0;
+    display: flex;
+    align-items: center;
+    justify-content: flex-start;
+    gap: var(--space-3);
+    padding: var(--space-2) 0;
+    overflow-x: auto;
+    overflow-y: visible;
+    min-height: 0;
+    scrollbar-width: none;
+  }
 
-/* Spacers center cards when they fit, collapse when they overflow */
-.stagedCards::before,
-.stagedCards::after {
-  content: '';
-  flex: 1 0 0;
-}
+  /* Centering spacers — flex 1 0 0 on each end pushes content to center
+     when there's slack, collapses to zero when content overflows. Landmine 4
+     protection: justify-content: center on a scroll container clips left
+     overflow on iOS Safari, this pattern doesn't. PRESERVE — pre-rebuild
+     code uses this; Phase 2's first draft dropped it (regression). */
+  .stagedRow::before,
+  .stagedRow::after {
+    content: '';
+    flex: 1 0 0;
+  }
 
-.stagedCards::-webkit-scrollbar {
-  display: none;
-}
+  .stagedRow::-webkit-scrollbar {
+    display: none;
+  }
 
-.stagedSlot {
-  flex: 0 0 clamp(130px, 42vw, 200px);
-  aspect-ratio: 5 / 7;
-  scroll-snap-align: center;
-  will-change: transform; /* GPU layer — prevents border repaint flash */
+  .stagedSlot {
+    flex: 0 0 auto;
+    /* Card height drives card width via aspect-ratio on MinimalCard.
+       stagedSlot just gives the card its vertical lane. */
+    height: 100%;
+    aspect-ratio: 5 / 7;
+    /* GPU layer — prevents border repaint flash during Framer Motion layout transitions. */
+    transform: translateZ(0);
+  }
+
+  .smartActionBox {
+    flex: 0 0 auto;
+    /* SmartActionBox.module.css controls its own dimensions. */
+  }
 }

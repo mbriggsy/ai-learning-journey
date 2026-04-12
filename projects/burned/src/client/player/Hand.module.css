@@ -1,51 +1,66 @@
-/* Hand — cards fill the height. Width derived from aspect-ratio. Scroll horizontally.
-   Slots stretch to full hand height (align-items: stretch), aspect-ratio derives width.
-   Cards inside use width:100% — no height:100% on cards (landmine: causes overflow). */
+/* Hand.module.css
+   Horizontal scrolling card strip. Cards inside use width:100% — no height:100%
+   on cards (landmine: causes overflow when combined with aspect-ratio).
 
-.hand {
-  box-sizing: border-box;
-  display: flex;
-  gap: 12px;
-  align-items: stretch;
-  height: 100%;
-  padding: 8px 16px;
-  overflow-x: auto;
-  overflow-y: hidden;
-  -webkit-overflow-scrolling: touch;
-  scroll-snap-type: x mandatory;
-  scroll-padding-left: 16px;
-  scrollbar-width: none;
-  overscroll-behavior-x: contain;
-}
+   .enlargeBackdrop is rendered via React portal to document.body — see
+   Hand.tsx wrapping. position: absolute against the body positioning contract
+   (Phase 1 §2.12 follow-up establishes html, body { position: relative;
+   height: var(--size-viewport-safe); overflow: hidden }), NOT position: fixed.
+   Phase 1 lint Rule 3 + landmine 7 (WebKit bug 297779).
+*/
 
-.hand::-webkit-scrollbar {
-  display: none;
-}
+@layer components {
+  .hand {
+    display: flex;
+    align-items: stretch;
+    gap: var(--space-3);
+    padding: var(--space-2) var(--space-4);
+    overflow-x: auto;
+    overflow-y: visible;
+    scroll-snap-type: x mandatory;
+    scroll-padding-left: var(--space-4);
+    scrollbar-width: none;
+    height: 100%;
+    box-sizing: border-box;
+    /* iOS momentum scroll + horizontal-scroll containment — preserved from
+       pre-rebuild (silently dropped in Phase 2's first draft, restored in
+       deepening). */
+    -webkit-overflow-scrolling: touch;
+    overscroll-behavior-x: contain;
+  }
 
+  .hand::-webkit-scrollbar {
+    display: none;
+  }
 
-/* Height-driven cards — slot stretches to fill hand, width from aspect-ratio */
-.cardSlot {
-  flex: 0 0 auto;
-  aspect-ratio: 5 / 7;
-  min-width: 120px;
-  scroll-snap-align: start;
-  touch-action: pan-x;
-}
+  .slot {
+    flex: 0 0 auto;
+    min-width: 120px; /* slot floor — prevents collapse, card sizing handled by MinimalCard */
+    aspect-ratio: 5 / 7;
+    scroll-snap-align: start;
+  }
 
+  /* Enlarge backdrop — portalled to document.body via createPortal in Hand.tsx.
+     position: absolute against <body> (Phase 1 §2.12 contract: body is
+     position: relative + sized to var(--size-viewport-safe) + overflow: hidden).
+     Achieves viewport-sized full-screen coverage WITHOUT position: fixed,
+     dodging WebKit bug 297779 on iOS 26. */
+  .enlargeBackdrop {
+    position: absolute;
+    inset: 0;
+    background: var(--color-bg-overlay-heavy);
+    z-index: var(--z-modal);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    padding: var(--space-3);
+  }
 
-/* Enlarge overlay — full-screen card preview */
-.enlargeBackdrop {
-  position: fixed;
-  inset: 0;
-  z-index: 50;
-  background: rgba(0, 0, 0, 0.6);
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  padding: 12px;
-}
-
-.enlargeCard {
-  width: 100vw;
-  max-width: 460px;
+  .enlargeCard {
+    /* Full-bleed card detail — width:100% of the backdrop container.
+       NO vw/svh here — backdrop constrains the size. */
+    width: 100%;
+    max-width: min(90%, 460px);
+    aspect-ratio: 5 / 7;
+  }
 }

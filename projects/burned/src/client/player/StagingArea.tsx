@@ -92,7 +92,7 @@ export function StagingArea({
     <div className={styles.staging}>
       {/* Staged cards */}
       {stagedCards.length > 0 && (
-        <div className={styles.stagedCards} ref={stagedCardsRef}>
+        <div className={styles.stagedRow} ref={stagedCardsRef}>
           <AnimatePresence mode="popLayout">
             {stagedCards.map(card => (
               <m.div

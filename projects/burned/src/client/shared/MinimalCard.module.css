@@ -1,4 +1,27 @@
-/* --- Premium Card Face --- */
+/* MinimalCard.module.css
+   Cross-view card component. Consumed by:
+     - Phone: Hand, StagingArea, CardDetailSheet (via container queries on
+       the slot wrapper, which is what drives per-instance sizing)
+     - Board: DrawPile.topCard, DiscardFan.topCard + peekCard
+
+   Axis discipline: ENTIRELY container-query driven. The slot wrapper sets
+   inline-size via its own sizing token (--size-card-* per view), and this
+   file consumes cqi/cqb against that container. No viewport units. No
+   axis assumptions.
+
+   Landmines (preserved from pre-rebuild):
+     - `aspect-ratio: 5/7` belongs on the SLOT wrapper, NOT the card itself.
+       Card uses `width: 100%` + lets the wrapper control aspect.
+     - `min-height/min-width: 48px` is the WCAG 2.5.5 touch-target floor.
+       Do not remove. Cards smaller than this become unreachable on touch.
+     - `@container` threshold values (115px / 177px) are content-box (NOT
+       border-box) — they account for 23px of padding+border subtracted from
+       the border-box width. Changing padding changes the threshold math.
+     - `transition: none` on `[data-selected]` prevents Framer Motion
+       `layoutId` flash when siblings exit. Do not re-enable.
+*/
+
+@layer components {
 
 .card {
   box-sizing: border-box;
@@ -6,36 +29,36 @@
   display: flex;
   flex-direction: column;
   align-items: flex-start;
-  gap: 4px;
+  gap: var(--space-1);
   aspect-ratio: 5 / 7;
-  width: 100%; /* Fill slot width — height derived from aspect-ratio */
+  width: 100%;
   min-height: 0;
-  padding: 24px 10px 10px;
+  padding: var(--space-6) var(--space-3) var(--space-3);
   border-radius: var(--radius-card);
   container-type: inline-size;
   background:
     linear-gradient(
       180deg,
-      color-mix(in srgb, var(--card-accent) 28%, var(--bg-card, #12121f)) 0%,
-      color-mix(in srgb, var(--card-accent) 14%, var(--bg-card, #12121f)) 50%,
-      color-mix(in srgb, var(--card-accent) 6%, var(--bg-card, #12121f)) 100%
+      color-mix(in oklab, var(--card-accent) 28%, var(--color-bg-surface)) 0%,
+      color-mix(in oklab, var(--card-accent) 14%, var(--color-bg-surface)) 50%,
+      color-mix(in oklab, var(--card-accent) 6%, var(--color-bg-surface)) 100%
     );
-  border: 1.5px solid color-mix(in srgb, var(--card-accent) 40%, var(--border-subtle, #2a2a4a));
-  border-top: 1.5px solid color-mix(in srgb, var(--card-accent) 20%, rgba(255, 255, 255, 0.08));
-  color: var(--text-primary, #e8e8f0);
+  border: 1.5px solid color-mix(in oklab, var(--card-accent) 40%, var(--color-border-subtle));
+  border-top: 1.5px solid color-mix(in oklab, var(--card-accent) 20%, color-mix(in oklab, var(--color-cream-12) 8%, transparent));
+  color: var(--color-fg-primary);
   cursor: pointer;
   user-select: none;
-  min-height: 48px;
-  min-width: 48px;
+  min-height: 48px;  /* WCAG 2.5.5 — do not remove */
+  min-width: 48px;   /* WCAG 2.5.5 — do not remove */
 
-  /* Static resting glow — colored halo makes cards pop from felt */
+  /* Resting glow — token-driven colored halo makes cards pop from felt */
   box-shadow:
-    0 0 6px color-mix(in srgb, var(--card-glow-color) 35%, transparent),
-    0 0 14px color-mix(in srgb, var(--card-glow-color) 18%, transparent),
-    0 4px 12px rgba(0, 0, 0, 0.35);
+    0 0 6px color-mix(in oklab, var(--card-glow-color) 35%, transparent),
+    0 0 14px color-mix(in oklab, var(--card-glow-color) 18%, transparent),
+    var(--shadow-md);
 }
 
-/* --- Card Illustration (large centered art) --- */
+/* ─── Card illustration (large centered art) ─── */
 
 .card :global(.cardIllustration) {
   display: flex;
@@ -44,9 +67,9 @@
   flex: 1 1 0;
   width: 100%;
   pointer-events: none;
-  min-height: 0; /* flex shrink safety */
+  min-height: 0;
   overflow: hidden;
-  border-radius: 4px;
+  border-radius: var(--radius-sm);
 }
 
 .card :global(.cardIllustration) img {
@@ -55,19 +78,20 @@
   object-fit: cover;
 }
 
-/* Intense glow layer — only opacity transitions (GPU composited) */
+/* ─── Intense glow layer — opacity-only transition (GPU composited) ─── */
+
 .card::after {
   content: '';
   position: absolute;
   inset: -2px;
   border-radius: inherit;
   box-shadow:
-    0 0 4px color-mix(in srgb, var(--card-glow-color) 80%, transparent),
-    0 0 8px color-mix(in srgb, var(--card-glow-color) 60%, transparent),
-    0 0 20px color-mix(in srgb, var(--card-glow-color) 40%, transparent),
-    0 0 40px color-mix(in srgb, var(--card-glow-color) 20%, transparent);
+    0 0 4px color-mix(in oklab, var(--card-glow-color) 80%, transparent),
+    0 0 8px color-mix(in oklab, var(--card-glow-color) 60%, transparent),
+    0 0 20px color-mix(in oklab, var(--card-glow-color) 40%, transparent),
+    0 0 40px color-mix(in oklab, var(--card-glow-color) 20%, transparent);
   opacity: 0;
-  transition: opacity 0.2s ease-out;
+  transition: opacity var(--motion-duration-fast) var(--motion-ease-decelerate);
   pointer-events: none;
   z-index: -1;
 }
@@ -85,12 +109,12 @@
 
 .card[data-selected]::after {
   opacity: 1;
-  transition: none; /* Instant — prevents flash during layout re-projection */
+  transition: none;  /* Landmine: instant — prevents flash during layout re-projection */
 }
 
 .card[data-selected] {
   border-color: var(--card-accent);
-  transition: none; /* Instant — prevents border flash during layout animation */
+  transition: none;  /* Landmine: instant — prevents border flash during layoutId animation */
 }
 
 .card[aria-disabled='true'] {
@@ -101,73 +125,74 @@
 
 /* Focus ring — two-ring for dark background visibility */
 .card:focus-visible {
-  outline: 2px solid var(--focus-ring, #33ffff);
+  outline: 2px solid var(--color-border-focus);
   outline-offset: 2px;
-  box-shadow: 0 0 0 5px rgba(0, 0, 0, 0.9);
+  box-shadow: 0 0 0 5px color-mix(in oklab, var(--color-charcoal-1) 90%, transparent);
 }
 
-/* --- Card Text --- */
+/* ─── Card text ─── */
 
 .cardName {
   font-family: var(--font-display);
   font-weight: 700;
-  font-size: clamp(10px, 10cqi, 14px);
+  font-size: clamp(var(--text-card-name-min), 10cqi + 0rem, var(--text-card-name-max));
   text-transform: uppercase;
   letter-spacing: 0.04em;
   color: var(--card-accent);
   line-height: 1.15;
-  margin-top: 2px; /* Breathe from icon badge / top border */
+  margin-top: 2px;
 }
 
 .cardDesc {
   font-family: var(--font-body);
   font-weight: 500;
-  font-size: clamp(8px, 8cqi, 11px);
-  color: color-mix(in srgb, var(--card-accent) 25%, var(--text-secondary, #9999bb));
+  font-size: clamp(var(--text-card-desc-min), 8cqi + 0rem, var(--text-card-desc-max));
+  color: color-mix(in oklab, var(--card-accent) 25%, var(--color-fg-secondary));
   line-height: 1.3;
-  margin-top: auto; /* Push description to bottom of card */
+  margin-top: auto;
 }
 
 /* Compact cards (staging area + small hands): hide description, tighten padding.
-   Threshold is content-box (border-box minus 23px padding+border). */
+   Landmine: threshold is content-box (border-box minus 23px padding+border).
+   Changing padding changes this threshold. */
 @container (max-width: 115px) {
   .cardDesc {
     display: none;
   }
 
   .card {
-    padding-top: 20px;
-    padding-bottom: 6px;
+    padding-top: var(--space-5);
+    padding-bottom: var(--space-2);
   }
 }
 
 /* Large cards (enlarge preview): text scales up to be readable.
-   Threshold adjusted for border-box (200px - 23px padding+border = 177px content). */
+   Landmine: threshold adjusted for border-box (200px - 23px = 177px content). */
 @container (min-width: 177px) {
   .cardName {
-    font-size: clamp(16px, 7cqi, 24px);
+    font-size: clamp(var(--text-card-name-large-min), 7cqi + 0rem, var(--text-card-name-large-max));
     letter-spacing: 0.06em;
   }
 
   .cardDesc {
-    font-size: clamp(12px, 5cqi, 16px);
+    font-size: clamp(var(--text-card-desc-large-min), 5cqi + 0rem, var(--text-card-desc-large-max));
     line-height: 1.4;
   }
 
   .card {
-    padding: 28px 16px 16px;
-    gap: 6px;
+    padding: var(--space-6) var(--space-4) var(--space-4);
+    gap: var(--space-2);
   }
 
   .card :global(.cardBadge) {
     width: clamp(20px, 8cqi, 32px);
     height: clamp(20px, 8cqi, 32px);
-    top: 8px;
-    left: 8px;
+    top: var(--space-2);
+    left: var(--space-2);
   }
 }
 
-/* --- Icon Badge (top-left, visible on peeking edges) --- */
+/* ─── Icon badge (top-left, visible on peeking edges) ─── */
 
 .card :global(.cardBadge) {
   position: absolute;
@@ -186,7 +211,12 @@
   height: 100%;
 }
 
-/* --- Card Back — BURNED agency dossier pattern --- */
+/* ─── Card back — Pendleton Agency dossier pattern ─���─
+   Data-URI hex tracks semantic tokens (manual sync required):
+     %23a33340 ≡ var(--color-accent-burned) ≡ var(--color-cordovan-9)
+     %23b0754c ≡ var(--color-accent-drama)  ≡ var(--color-ochre-9)
+   Same pattern as DrawPile.module.css; if one changes, update both.
+*/
 
 .cardBack {
   position: relative;
@@ -194,27 +224,26 @@
   min-height: 48px;
   min-width: 48px;
   border-radius: var(--radius-card);
-  background-color: #18252a;
-  /* Geometric diamond pattern — agency identity */
+  background-color: var(--color-teal-2);
   background-image:
-    url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 140'%3E%3Cpath d='M50 20 L80 70 L50 120 L20 70 Z' fill='none' stroke='%23d44030' stroke-width='1.5' opacity='0.3'/%3E%3Cpath d='M50 35 L70 70 L50 105 L30 70 Z' fill='none' stroke='%23d48820' stroke-width='1' opacity='0.2'/%3E%3Ccircle cx='50' cy='70' r='8' fill='none' stroke='%23d44030' stroke-width='1' opacity='0.25'/%3E%3Ccircle cx='50' cy='70' r='3' fill='%23d44030' opacity='0.2'/%3E%3C/svg%3E");
+    url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 140'%3E%3Cpath d='M50 20 L80 70 L50 120 L20 70 Z' fill='none' stroke='%23a33340' stroke-width='1.5' opacity='0.3'/%3E%3Cpath d='M50 35 L70 70 L50 105 L30 70 Z' fill='none' stroke='%23b0754c' stroke-width='1' opacity='0.2'/%3E%3Ccircle cx='50' cy='70' r='8' fill='none' stroke='%23a33340' stroke-width='1' opacity='0.25'/%3E%3Ccircle cx='50' cy='70' r='3' fill='%23a33340' opacity='0.2'/%3E%3C/svg%3E");
   background-size: 100% 100%;
   background-repeat: no-repeat;
-  border: 1px solid color-mix(in srgb, var(--red, #d44030) 20%, var(--border-subtle, #3a5860));
-  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.3);
+  border: 1px solid color-mix(in oklab, var(--color-accent-burned) 25%, var(--color-border-subtle));
+  box-shadow: var(--shadow-md);
 }
 
 /* Inner border frame — double-line dossier feel */
 .cardBack::before {
   content: '';
   position: absolute;
-  inset: 5px;
-  border: 1px solid color-mix(in srgb, var(--amber, #d48820) 15%, transparent);
+  inset: var(--space-1);
+  border: 1px solid color-mix(in oklab, var(--color-accent-drama) 15%, transparent);
   border-radius: calc(var(--radius-card) - 3px);
   pointer-events: none;
 }
 
-/* --- High Contrast Mode --- */
+/* ─── High contrast mode ─── */
 
 @media (prefers-contrast: more) {
   .card::after {
@@ -225,7 +254,7 @@
   .card {
     box-shadow: none;
     border: 2px solid var(--card-accent);
-    background: var(--bg-card, #12121f);
+    background: var(--color-bg-surface);
   }
 
   .card:focus-visible {
@@ -248,3 +277,10 @@
   }
 }
 
+/* ─── Light mode — deferred to Phase 1.5 per Phase 1 §2.3 ─── */
+/* Phase 1 ships dark-mode complete; [data-theme="light"] is stubbed.
+   When Phase 1.5 lands, replicate the dark-mode rules with light-mode
+   token values (swap bg-surface → cream variants, fg-primary → charcoal variants).
+   Out of scope for Phase 3. */
+
+} /* @layer components */

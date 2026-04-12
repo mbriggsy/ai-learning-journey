@@ -1,15 +1,29 @@
-/* Full-screen drama overlay — GSAP-driven title cards.
-   Think spy movie title sequences: bold type, color washes, dramatic timing. */
+/* DramaOverlay.module.css
+   Cross-view — full-screen GSAP-driven title cards for dramatic beats.
+   Five variants: BURNED / EXTRACTED / ELIMINATED / INTERCEPTED / VICTORY.
+
+   Axis discipline: cross-view, so NO vw/vh for font sizing. Uses container
+   query inline-size (cqi) via the entry-point container wrapper. Three
+   variants use different type-scale tokens: the default hero, a subdued
+   variant for "eliminated" (quieter, grimmer), and the oversized victory
+   variant (loudest reveal).
+
+   Motion timing: Phase 4 consolidates the GSAP timelines in DramaOverlay.tsx.
+   This file owns the CSS-side static appearance only.
+*/
+
+@layer components {
 
 .overlay {
   position: fixed;
   inset: 0;
-  z-index: 100;
+  z-index: var(--z-overlay);
   display: flex;
   align-items: center;
   justify-content: center;
   pointer-events: none;
   opacity: 0;
+  container-type: inline-size;  /* own container for the text cqi sizing */
 }
 
 .text {
@@ -19,89 +33,91 @@
   letter-spacing: 0.06em;
   text-align: center;
   line-height: 1;
-  padding: 0 24px;
-  /* Size adapts to viewport — massive on TV, readable on phone */
-  font-size: clamp(48px, 12vw, 160px);
+  padding: 0 var(--space-6);
+  /* Hero size — cqi-based, axis-neutral, works on phone AND board */
+  font-size: clamp(var(--text-drama-hero-min), 12cqi + 0rem, var(--text-drama-hero-max));
   text-shadow:
-    0 4px 20px rgba(0, 0, 0, 0.5),
+    0 4px 20px color-mix(in oklab, var(--color-charcoal-1) 50%, transparent),
     0 0 60px currentColor;
 }
 
-/* ─── BURNED — alarm red, the big one ─── */
+/* ─── BURNED — cordovan alarm, the big one ─── */
 
 .burned {
   background: radial-gradient(
     ellipse 80% 60% at 50% 50%,
-    rgba(212, 64, 48, 0.92) 0%,
-    rgba(140, 30, 20, 0.88) 50%,
-    rgba(60, 12, 8, 0.95) 100%
+    color-mix(in oklab, var(--color-cordovan-9) 92%, transparent) 0%,
+    color-mix(in oklab, var(--color-cordovan-6) 88%, transparent) 50%,
+    color-mix(in oklab, var(--color-cordovan-1) 95%, transparent) 100%
   );
 }
 
 .burned .text {
-  color: #ffeedd;
+  color: var(--color-cream-12);
 }
 
-/* ─── EXTRACTED — cool blue relief ─── */
+/* ─── EXTRACTED — teal relief ─── */
 
 .extracted {
   background: radial-gradient(
     ellipse 80% 60% at 50% 50%,
-    rgba(48, 128, 192, 0.88) 0%,
-    rgba(24, 72, 120, 0.85) 50%,
-    rgba(10, 30, 50, 0.92) 100%
+    color-mix(in oklab, var(--color-teal-8) 88%, transparent) 0%,
+    color-mix(in oklab, var(--color-teal-5) 85%, transparent) 50%,
+    color-mix(in oklab, var(--color-teal-1) 92%, transparent) 100%
   );
 }
 
 .extracted .text {
-  color: #e0f0ff;
+  color: var(--color-teal-12);
 }
 
-/* ─── ELIMINATED — desaturated, grim ─── */
+/* ─── ELIMINATED — desaturated charcoal, grim ─── */
 
 .eliminated {
   background: radial-gradient(
     ellipse 80% 60% at 50% 50%,
-    rgba(60, 55, 50, 0.92) 0%,
-    rgba(30, 28, 25, 0.90) 60%,
-    rgba(10, 10, 8, 0.95) 100%
+    color-mix(in oklab, var(--color-charcoal-6) 92%, transparent) 0%,
+    color-mix(in oklab, var(--color-charcoal-3) 90%, transparent) 60%,
+    color-mix(in oklab, var(--color-charcoal-1) 95%, transparent) 100%
   );
 }
 
 .eliminated .text {
-  color: #a09890;
-  font-size: clamp(32px, 8vw, 100px);
+  color: var(--color-charcoal-11);
+  /* Subdued size — quieter reveal for the darker moment */
+  font-size: clamp(var(--text-drama-subdued-min), 8cqi + 0rem, var(--text-drama-subdued-max));
 }
 
-/* ─── INTERCEPTED — sharp teal flash ─── */
+/* ─── INTERCEPTED — emerald flash ─── */
 
 .intercepted {
   background: radial-gradient(
     ellipse 80% 60% at 50% 50%,
-    rgba(42, 170, 152, 0.88) 0%,
-    rgba(20, 90, 80, 0.85) 50%,
-    rgba(8, 30, 28, 0.92) 100%
+    color-mix(in oklab, var(--color-emerald-8) 88%, transparent) 0%,
+    color-mix(in oklab, var(--color-emerald-5) 85%, transparent) 50%,
+    color-mix(in oklab, var(--color-emerald-1) 92%, transparent) 100%
   );
 }
 
 .intercepted .text {
-  color: #ccffe8;
+  color: var(--color-emerald-12);
 }
 
-/* ─── VICTORY — gold everything ─── */
+/* ─── VICTORY — ochre gold, the loudest reveal ─── */
 
 .victory {
   background: radial-gradient(
     ellipse 80% 60% at 50% 50%,
-    rgba(212, 136, 32, 0.92) 0%,
-    rgba(160, 100, 20, 0.88) 50%,
-    rgba(60, 40, 10, 0.95) 100%
+    color-mix(in oklab, var(--color-ochre-9) 92%, transparent) 0%,
+    color-mix(in oklab, var(--color-ochre-6) 88%, transparent) 50%,
+    color-mix(in oklab, var(--color-ochre-1) 95%, transparent) 100%
   );
 }
 
 .victory .text {
-  color: #fff8e0;
-  font-size: clamp(40px, 10vw, 140px);
+  color: var(--color-cream-12);
+  /* Oversized — victory is the biggest reveal in the game */
+  font-size: clamp(var(--text-drama-victory-min), 10cqi + 0rem, var(--text-drama-victory-max));
 }
 
 /* ─── Reduced motion — skip the slam, just fade ─── */
@@ -111,3 +127,5 @@
     text-shadow: none;
   }
 }
+
+} /* @layer components */

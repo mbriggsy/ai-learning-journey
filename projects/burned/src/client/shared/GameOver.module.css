@@ -1,4 +1,17 @@
-/* Game Over — the ceremony. Peak-end rule: this is what people remember. */
+/* GameOver.module.css
+   Cross-view — end-of-game ceremony. Shown on both phone and board when
+   `phase: 'game-over'` arrives.
+
+   Peak-end rule: this is what players remember. The file should feel like
+   the final frame of the Archer episode — winner announcement front-and-
+   center with the same cocktail-lounge warmth as the rest of the app.
+
+   Axis discipline: cross-view, so NO svh/vh/vw for sizing. Uses container
+   queries against the entry-point root, which is wrapped in
+   `container-type: size` by the phone and board entry points.
+*/
+
+@layer components {
 
 .container {
   position: relative;
@@ -6,131 +19,132 @@
   flex-direction: column;
   align-items: center;
   justify-content: center;
-  min-height: 100svh;
-  padding: 32px 24px;
+  min-height: 100cqb;  /* container block-axis — phone=height, board=height */
+  padding: var(--space-8) var(--space-6);
   text-align: center;
   overflow: hidden;
 
-  /* Same noir spotlight as game table */
   background:
-    radial-gradient(ellipse at 50% 35%, rgba(40, 30, 60, 0.18) 0%, transparent 55%),
-    var(--bg-app, #0c0a12);
-  color: var(--text-primary, #e8e8f0);
+    /* Centered warm spotlight — matches the war-room vocabulary */
+    radial-gradient(ellipse 60% 50% at 50% 35%,
+      color-mix(in oklab, var(--color-accent-drama) 18%, transparent) 0%,
+      transparent 55%),
+    var(--color-bg-app);
+  color: var(--color-fg-primary);
 }
 
-/* ─── Winner Announcement ─── */
+/* ─── Winner announcement ─── */
 
 .winner {
   font-family: var(--font-display);
-  font-size: 36px;
+  font-size: var(--text-display);
   font-weight: 700;
   text-transform: uppercase;
   letter-spacing: 0.06em;
-  margin-bottom: 6px;
-  /* Victory glow — teal to match the "survival" accent */
+  margin-bottom: var(--space-2);
+  /* Victory glow — ochre-drama, not Jackbox teal */
   text-shadow:
-    0 0 30px color-mix(in srgb, var(--teal, #2dd8c8) 40%, transparent),
-    0 0 60px color-mix(in srgb, var(--teal, #2dd8c8) 15%, transparent);
+    0 0 30px color-mix(in oklab, var(--color-accent-drama) 40%, transparent),
+    0 0 60px color-mix(in oklab, var(--color-accent-drama) 15%, transparent);
 }
 
 .subtitle {
-  font-size: 16px;
-  color: var(--text-secondary, #9999bb);
-  margin-bottom: 36px;
+  font-size: var(--text-body);
+  color: var(--color-fg-secondary);
+  margin-bottom: var(--space-10);
 }
 
 /* ─── Rankings ─── */
 
 .rankings {
   width: 100%;
-  max-width: 360px;
+  max-width: var(--size-rankings-max-width);
   display: flex;
   flex-direction: column;
-  gap: 6px;
+  gap: var(--space-2);
 }
 
 .rank {
   display: flex;
   align-items: center;
-  gap: 12px;
-  padding: 12px 16px;
-  border-radius: 10px;
+  gap: var(--space-3);
+  padding: var(--space-3) var(--space-4);
+  border-radius: var(--radius-md);
   background: linear-gradient(
     165deg,
-    rgba(30, 30, 50, 0.8) 0%,
-    rgba(18, 18, 32, 0.9) 100%
+    color-mix(in oklab, var(--color-bg-elevated) 80%, transparent) 0%,
+    color-mix(in oklab, var(--color-bg-surface) 90%, transparent) 100%
   );
-  border: 1px solid rgba(255, 255, 255, 0.04);
+  border: 1px solid var(--color-border-subtle);
 }
 
 .rank[data-winner] {
   background: linear-gradient(
     165deg,
-    color-mix(in srgb, var(--teal, #2dd8c8) 12%, rgba(30, 30, 50, 0.9)) 0%,
-    rgba(18, 18, 32, 0.95) 100%
+    color-mix(in oklab, var(--color-accent-drama) 15%, var(--color-bg-elevated)) 0%,
+    color-mix(in oklab, var(--color-bg-surface) 95%, transparent) 100%
   );
-  border: 1px solid color-mix(in srgb, var(--teal, #2dd8c8) 30%, transparent);
-  box-shadow:
-    0 0 20px color-mix(in srgb, var(--teal, #2dd8c8) 12%, transparent);
+  border: 1px solid color-mix(in oklab, var(--color-accent-drama) 35%, transparent);
+  box-shadow: 0 0 20px color-mix(in oklab, var(--color-accent-drama) 14%, transparent);
 }
 
 .rank[data-me] {
-  border-color: color-mix(in srgb, var(--text-secondary, #9999bb) 40%, transparent);
+  border-color: color-mix(in oklab, var(--color-fg-secondary) 40%, transparent);
 }
 
 .rankNum {
   font-family: var(--font-mono);
-  font-size: 14px;
+  font-size: var(--text-body);
   font-weight: 700;
   font-variant-numeric: tabular-nums;
-  color: var(--text-disabled, #555570);
-  min-width: 28px;
+  color: var(--color-fg-muted);
+  min-width: var(--space-8);
 }
 
 .rank[data-winner] .rankNum {
-  color: var(--teal, #2dd8c8);
+  color: var(--color-accent-drama);
 }
 
 .rankName {
-  font-size: 16px;
+  font-size: var(--text-body);
   font-weight: 500;
   flex: 1;
 }
 
-/* ─── Play Again ─── */
+/* ─── Play again button ─── */
 
 .playAgain {
   position: relative;
-  margin-top: 40px;
-  padding: 14px 48px;
+  margin-top: var(--space-10);
+  padding: var(--space-4) var(--space-12);
   font-family: var(--font-display);
-  font-size: 18px;
+  font-size: var(--text-title);
   font-weight: 700;
   text-transform: uppercase;
   letter-spacing: 0.08em;
   border: none;
-  border-radius: 10px;
-  background: var(--teal, #2dd8c8);
-  color: var(--bg-app, #0c0a12);
+  border-radius: var(--radius-md);
+  background: var(--color-accent-drama);
+  color: var(--color-fg-on-drama);
   cursor: pointer;
-  z-index: 1;
-  transition: transform 0.15s ease;
+  z-index: var(--z-raised);
+  transition: transform var(--motion-duration-fast) var(--motion-ease-base);
 }
 
 .playAgain::after {
   content: '';
   position: absolute;
   inset: -3px;
-  border-radius: 13px;
+  border-radius: calc(var(--radius-md) + 3px);
   box-shadow:
-    0 0 12px color-mix(in srgb, var(--teal, #2dd8c8) 50%, transparent),
-    0 0 32px color-mix(in srgb, var(--teal, #2dd8c8) 25%, transparent);
-  animation: playAgainPulse 2.5s ease-in-out infinite;
+    0 0 12px color-mix(in oklab, var(--color-accent-drama) 50%, transparent),
+    0 0 32px color-mix(in oklab, var(--color-accent-drama) 25%, transparent);
+  animation: gameOverPulse var(--motion-duration-pulse-slow) var(--motion-ease-base) infinite;
   z-index: -1;
   pointer-events: none;
 }
 
-@keyframes playAgainPulse {
+@keyframes gameOverPulse {
   0%, 100% { opacity: 0.3; }
   50% { opacity: 0.8; }
 }
@@ -144,26 +158,24 @@
 }
 
 .playAgain:focus-visible {
-  outline: 2px solid var(--focus-ring, #33ffff);
+  outline: 2px solid var(--color-border-focus);
   outline-offset: 3px;
 }
 
 .waiting {
-  margin-top: 40px;
-  font-size: 15px;
-  color: var(--text-disabled, #555570);
+  margin-top: var(--space-10);
+  font-size: var(--text-body);
+  color: var(--color-fg-muted);
 }
 
-/* ─── TV scale ─── */
+/* ─── Forced colors (Windows High Contrast) — Deepening addition ─── */
 
-@media (min-width: 1280px) {
-  .winner { font-size: 56px; }
-  .subtitle { font-size: 20px; }
-  .rankings { max-width: 440px; }
-  .rank { padding: 14px 20px; }
-  .rankNum { font-size: 16px; }
-  .rankName { font-size: 20px; }
-  .playAgain { font-size: 22px; padding: 16px 60px; }
+@media (forced-colors: active) {
+  .playAgain {
+    border: 2px solid ButtonText;
+    forced-color-adjust: none;
+  }
+  .playAgain::after { display: none; }
 }
 
 /* ─── Reduced motion ─── */
@@ -171,3 +183,5 @@
 @media (prefers-reduced-motion: reduce) {
   .playAgain::after { animation: none; opacity: 0.5; }
 }
+
+} /* @layer components */

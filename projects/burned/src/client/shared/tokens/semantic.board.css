@@ -1,0 +1,133 @@
+/*
+ * BURNED — Board-View Semantic Tokens (vw-based)
+ * Constraining axis = WIDTH. Primary unit = vw/cqw.
+ * Bracket: 1280px → 3840px.
+ */
+
+@layer semantics-board {
+  :root {
+    /* --- Typography (4 display tiers — no caption for TV-rendered board) --- */
+
+    /* Body — 16px → 24px across 1280 → 3840 */
+    --text-body: clamp(
+      1rem,
+      calc(1rem + (100vw - 1280px) * (8 / 2560)),
+      1.5rem
+    );
+
+    /* Title — 24px → 42px */
+    --text-title: clamp(
+      1.5rem,
+      calc(1.5rem + (100vw - 1280px) * (18 / 2560)),
+      2.625rem
+    );
+
+    /* Display — 40px → 96px */
+    --text-display: clamp(
+      2.5rem,
+      calc(2.5rem + (100vw - 1280px) * (56 / 2560)),
+      6rem
+    );
+
+    /* Hero — 56px → 160px (DramaOverlay) */
+    --text-hero: clamp(
+      3.5rem,
+      calc(3.5rem + (100vw - 1280px) * (104 / 2560)),
+      10rem
+    );
+
+    /* Hero muted — subdued drama moments, 32px → 100px */
+    --text-hero-subdued: clamp(
+      2rem,
+      calc(2rem + (100vw - 1280px) * (68 / 2560)),
+      6.25rem
+    );
+
+    /* Caption — 13px → 17px (follow-up sweep: 8 consumers across 5 board files) */
+    --text-caption-board: clamp(
+      0.8125rem,
+      calc(0.8125rem + (100vw - 1280px) * (4 / 2560)),
+      1.0625rem
+    );
+
+    /* --- Sizing --- */
+
+    /* Card — width-driven with 5:7 aspect ratio */
+    --size-board-card-width: clamp(
+      96px,
+      calc(96px + (100vw - 1280px) * (112 / 2560)),
+      208px
+    );
+    --size-board-card-height: calc(var(--size-board-card-width) * 7 / 5);
+
+    /* Player ring radius */
+    --size-player-ring-width: clamp(
+      200px,
+      calc(200px + (100vw - 1280px) * (200 / 2560)),
+      400px
+    );
+
+    /* Player panel — individual player card in the ring */
+    --size-player-panel-width: clamp(
+      180px,
+      calc(180px + (100vw - 1280px) * (240 / 2560)),
+      420px
+    );
+    --size-player-panel-height: clamp(
+      90px,
+      calc(90px + (100vw - 1280px) * (57 / 2560)),
+      147px
+    );
+
+    /* Draw pile */
+    --size-draw-pile-width: clamp(
+      120px,
+      calc(120px + (100vw - 1280px) * (120 / 2560)),
+      240px
+    );
+
+    /* Arena — where cards "land" during play animations */
+    --size-arena-min-width: clamp(
+      200px,
+      calc(200px + (100vw - 1280px) * (200 / 2560)),
+      400px
+    );
+    --size-arena-min-height: clamp(
+      140px,
+      calc(140px + (100vw - 1280px) * (140 / 2560)),
+      280px
+    );
+
+    /* --- Follow-up sweep sizing tokens (Phase 3 §7.2 + §7.3) --- */
+
+    /* Lobby roster — vertical player list */
+    --size-lobby-roster-max-width: clamp(440px, calc(440px + (100vw - 1280px) * (160 / 2560)), 600px);
+
+    /* Lobby title accent bar */
+    --size-title-accent-width: clamp(80px, calc(80px + (100vw - 1280px) * (80 / 2560)), 160px);
+
+    /* GameOver rankings container */
+    --size-rankings-max-width: clamp(360px, calc(360px + (100vw - 1280px) * (160 / 2560)), 520px);
+
+    /* GameTable felt branding SVG sizes */
+    --size-felt-reticle: clamp(320px, calc(320px + (100vw - 1280px) * (280 / 2560)), 600px);
+    --size-felt-diamond: clamp(36px, calc(36px + (100vw - 1280px) * (32 / 2560)), 68px);
+
+    /* Discard card width — slightly narrower than pile container */
+    --size-discard-card-width: calc(var(--size-draw-pile-width) * 0.92);
+
+    /* --- Board-view fluid spacing (vw-based) --- */
+
+    --space-fluid-base-board: clamp(
+      16px,
+      calc(16px + (100vw - 1280px) * (24 / 2560)),
+      40px
+    );
+
+    --space-fluid-loose-board: clamp(
+      32px,
+      calc(32px + (100vw - 1280px) * (48 / 2560)),
+      80px
+    );
+  }
+}

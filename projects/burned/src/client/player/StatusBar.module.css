@@ -41,9 +41,3 @@
   color: var(--text-disabled, #6a6050);
 }
 
-/* ─── Light mode ─── */
-
-[data-theme="light"] .yourTurn {
-  background: color-mix(in srgb, var(--amber, #b06b10) 12%, var(--bg-primary, #f5f0e8));
-  border-bottom-color: color-mix(in srgb, var(--amber, #b06b10) 25%, transparent);
-}

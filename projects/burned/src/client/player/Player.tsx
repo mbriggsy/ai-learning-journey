@@ -31,10 +31,7 @@ import { NameCard } from './sheets/NameCard'
 import { CardDetailSheet } from './CardDetailSheet'
 import type { CardType } from '@shared/types'
 import { PARTYKIT_HOST } from '@client/shared/config'
-import { useColorScheme } from '@client/shared/theme'
 import playingStyles from './PlayingView.module.css'
-import '@client/shared/fonts.css'
-import '@client/shared/theme.css'
 
 function getRoomCodeFromUrl(): string {
   const params = new URLSearchParams(window.location.search)
@@ -48,7 +45,6 @@ function getNameFromUrl(): string {
 
 export function Player() {
   useWakeLock()
-  useColorScheme() // Force re-render on OS light/dark switch so cardAccent() picks up new values
   const protocolMismatch = useProtocolMismatch()
   const [connectionStatus, setConnectionStatus] = useState<ConnectionStatus>(getStatus())
   const [assignedColor, setAssignedColor] = useState<string | null>(null)

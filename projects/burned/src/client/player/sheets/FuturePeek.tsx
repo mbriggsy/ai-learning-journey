@@ -2,7 +2,7 @@ import { useState, useCallback, useEffect } from 'react'
 import type { CardInstance } from '@shared/types'
 import { CARD_DEF_BY_TYPE } from '@shared/card-defs'
 import { TIMING } from '@shared/constants'
-import { cardAccent } from '@client/shared/theme'
+import { cardAccent } from '@client/shared/card-accents'
 import { CardIcon } from '@client/shared/card-icons'
 import styles from './sheets.module.css'
 

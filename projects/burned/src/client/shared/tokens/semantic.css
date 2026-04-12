@@ -1,0 +1,130 @@
+/*
+ * BURNED — Semantic Design Tokens (axis-independent)
+ * Role-based tokens referencing primitives. Zero hardcoded hex values.
+ */
+
+@layer semantics {
+  :root {
+    /* --- Surfaces --- */
+    --color-bg-app:                var(--color-charcoal-1);
+    --color-bg-surface:            var(--color-charcoal-3);
+    --color-bg-elevated:           var(--color-charcoal-4);
+    --color-bg-overlay:            color-mix(in oklab, var(--color-charcoal-1) 85%, transparent);
+    --color-bg-interactive:        var(--color-teal-5);
+    --color-bg-interactive-hover:  var(--color-teal-6);
+    --color-bg-interactive-active: var(--color-teal-7);
+
+    /* --- Borders --- step 6 = non-interactive, step 7 = interactive/focus */
+    --color-border-subtle:         var(--color-charcoal-6);
+    --color-border-subtle-strong:  var(--color-charcoal-7);
+    --color-border-strong:         var(--color-charcoal-7);
+    --color-border-focus:          var(--color-ochre-8);
+    --color-border-interactive:    var(--color-teal-7);
+    --color-border-danger:         var(--color-cordovan-7);
+    --color-border-success:        var(--color-emerald-7);
+    --color-border-warning:        var(--color-ochre-7);
+    --color-border-info:           var(--color-teal-7);
+
+    /* Shadow base — semantic indirection so shadows don't reach into primitives directly.
+       Future light-mode retheme changes ONE token instead of seven shadow formulas. */
+    --color-shadow-base:           var(--color-charcoal-1);
+
+    /* --- Text --- */
+    --color-fg-primary:            var(--color-cream-12);
+    --color-fg-secondary:          var(--color-cream-11);
+    --color-fg-muted:              var(--color-cream-9);
+    --color-fg-disabled:           var(--color-charcoal-8);
+
+    /* Text-on-solid pairs — each tuned to pass APCA Lc 60 on its paired step-9 solid. */
+    --color-fg-on-danger:          var(--color-cream-12);
+    --color-fg-on-success:         var(--color-cream-12);
+    --color-fg-on-warning:         var(--color-cream-12);   /* APCA-tuned: cream on warm ochre > charcoal */
+    --color-fg-on-info:            var(--color-cream-12);
+    --color-fg-on-burned:          var(--color-cream-12);
+    --color-fg-on-intercept:       var(--color-charcoal-1); /* APCA-tuned: dark on lighter emerald */
+    --color-fg-on-operative:       var(--color-cream-12);
+    --color-fg-on-drama:           var(--color-cream-12);   /* APCA-tuned: cream on warm ochre > charcoal */
+    --color-fg-on-neon:            var(--color-cream-12);   /* APCA-tuned: cream on neon magenta */
+
+    /* Legacy alias — DEPRECATED, prefer a specific fg-on-* token. */
+    --color-fg-on-accent:          var(--color-cream-12);
+
+    /* Interactive text */
+    --color-fg-interactive:        var(--color-teal-12);
+
+    /* --- Feedback — full fg/bg/border triples --- */
+    --color-fg-danger:             var(--color-cordovan-11);
+    --color-bg-danger:             var(--color-cordovan-3);
+
+    --color-fg-success:            var(--color-emerald-11);
+    --color-bg-success:            var(--color-emerald-3);
+
+    --color-fg-warning:            var(--color-ochre-11);
+    --color-bg-warning:            var(--color-ochre-3);
+
+    --color-fg-info:               var(--color-teal-11);
+    --color-bg-info:               var(--color-teal-3);
+
+    /* --- Game-specific accents --- */
+    --color-accent-burned:         var(--color-cordovan-9);
+    --color-accent-intercept:      var(--color-emerald-9);
+    --color-accent-operative:      var(--color-teal-9);
+    --color-accent-drama:          var(--color-ochre-9);
+
+    /* Brand / neon accent — use sparingly, highest chroma in the palette.
+       Lint Rule 6 (§2.14): MUST NOT appear with :hover/:focus/:active/:disabled. */
+    --color-accent-neon:           var(--color-neon-magenta);
+    --color-accent-neon-glow:      var(--color-neon-magenta-glow);
+
+    /* --- Typography families --- */
+    --font-display: 'Clash Display', 'Clash Display Fallback', system-ui, sans-serif;
+    --font-body:    'General Sans', 'General Sans Fallback', system-ui, sans-serif;
+    --font-mono:    'JetBrains Mono', ui-monospace, 'Cascadia Code', 'Fira Code', monospace;
+
+    /* --- Radius semantic --- */
+    --radius-card:     var(--radius-md);
+    --radius-button:   var(--radius-sm);
+    --radius-input:    var(--radius-sm);
+    --radius-surface:  var(--radius-lg);
+    --radius-modal:    var(--radius-xl);
+
+    /* --- Elevation (shadows) ---
+       All use color-mix(in oklab) — never srgb (muddy midpoints) or oklch (Safari bug). */
+    --shadow-none: none;
+
+    --shadow-sm: 0 1px 2px 0 color-mix(in oklab, var(--color-shadow-base) 60%, transparent);
+
+    --shadow-md: 0 4px 8px -2px color-mix(in oklab, var(--color-shadow-base) 50%, transparent),
+                 0 2px 4px -1px color-mix(in oklab, var(--color-shadow-base) 40%, transparent);
+
+    --shadow-lg: 0 10px 20px -4px color-mix(in oklab, var(--color-shadow-base) 60%, transparent),
+                 0 4px 8px -2px color-mix(in oklab, var(--color-shadow-base) 40%, transparent);
+
+    --shadow-xl: 0 20px 40px -8px color-mix(in oklab, var(--color-shadow-base) 70%, transparent),
+                 0 8px 16px -4px color-mix(in oklab, var(--color-shadow-base) 50%, transparent);
+
+    /* Accent glows */
+    --shadow-glow-accent:  0 0 20px color-mix(in oklab, var(--color-accent-operative) 40%, transparent);
+    --shadow-glow-danger:  0 0 24px color-mix(in oklab, var(--color-accent-burned) 50%, transparent);
+    --shadow-glow-success: 0 0 20px color-mix(in oklab, var(--color-accent-intercept) 40%, transparent);
+    --shadow-glow-drama:   0 0 40px color-mix(in oklab, var(--color-accent-drama) 60%, transparent);
+
+    /* --- MinimalCard text clamp boundaries (follow-up sweep, Phase 3 §7.4) --- */
+    --text-card-name-min:        10px;
+    --text-card-name-max:        14px;
+    --text-card-name-large-min:  16px;
+    --text-card-name-large-max:  24px;
+    --text-card-desc-min:        8px;
+    --text-card-desc-max:        11px;
+    --text-card-desc-large-min:  12px;
+    --text-card-desc-large-max:  16px;
+
+    /* --- DramaOverlay text scale tokens (follow-up sweep, Phase 3 §7.5) --- */
+    --text-drama-hero-min:       48px;
+    --text-drama-hero-max:       160px;
+    --text-drama-subdued-min:    32px;
+    --text-drama-subdued-max:    100px;
+    --text-drama-victory-min:    56px;
+    --text-drama-victory-max:    180px;
+  }
+}

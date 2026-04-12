@@ -1,0 +1,133 @@
+/*
+ * BURNED — Phone-View Semantic Tokens (svh-based)
+ * Constraining axis = HEIGHT. Primary unit = svh.
+ * Bracket: 667px (iPhone SE2) → 1366px (iPad Pro 12.9" portrait).
+ *
+ * LOAD-BEARING RULE (WCAG 1.4.4 compliance — do not "clean up" the formula):
+ * The leading rem term in the preferred arm is NOT cosmetic. W3C failure
+ * technique F94 states viewport units do not scale with browser text zoom:
+ * a user at 200% zoom sees the same 100svh = 667px as at 100%. The pattern
+ * clamp(rem, calc(rem + svh*k), rem) passes WCAG 1.4.4 ONLY BECAUSE the
+ * additive rem base scales with zoom. clamp(rem, svh*k, rem) FAILS F94
+ * silently. Never remove the rem additive base.
+ *
+ * Unit-mismatch landmine: the scalar must be unitless (e.g., 4 / 699).
+ * Do NOT refactor to (100svh - 667px) / 699 * 4px — CSS calc() cannot
+ * multiply length × length.
+ */
+
+@layer semantics-phone {
+  :root {
+    /* --- Typography (5 tiers — micro merged into caption) --- */
+
+    /* Body — 15px → 18px (floor raised from 14px per WCAG research, Decision 3) */
+    --text-body: clamp(
+      0.9375rem,
+      calc(0.9375rem + (100svh - 667px) * (3 / 699)),
+      1.125rem
+    );
+
+    /* Caption / small — 11px → 13px (absorbs former --text-micro) */
+    --text-caption: clamp(
+      0.6875rem,
+      calc(0.6875rem + (100svh - 667px) * (2 / 699)),
+      0.8125rem
+    );
+
+    /* Callout — 16px → 20px */
+    --text-callout: clamp(
+      1rem,
+      calc(1rem + (100svh - 667px) * (4 / 699)),
+      1.25rem
+    );
+
+    /* Title — 20px → 28px */
+    --text-title: clamp(
+      1.25rem,
+      calc(1.25rem + (100svh - 667px) * (8 / 699)),
+      1.75rem
+    );
+
+    /* Display — 32px → 48px */
+    --text-display: clamp(
+      2rem,
+      calc(2rem + (100svh - 667px) * (16 / 699)),
+      3rem
+    );
+
+    /* --- Sizing --- */
+
+    /* Touch target — WCAG 2.5.5 AAA = 44px (game == fat-finger context) */
+    --size-touch-target:             44px;
+    --size-touch-target-comfortable: 48px;
+
+    /* Card — height-driven with 5:7 aspect ratio */
+    --size-phone-card-height: clamp(
+      120px,
+      calc(120px + (100svh - 667px) * (60 / 699)),
+      180px
+    );
+    --size-phone-card-width: calc(var(--size-phone-card-height) * 5 / 7);
+
+    /* Card detail max — full-bleed detail sheet */
+    --size-card-detail-max: clamp(
+      280px,
+      calc(280px + (100svh - 667px) * (120 / 699)),
+      400px
+    );
+
+    /* Hand height */
+    --size-hand-height: clamp(
+      140px,
+      calc(140px + (100svh - 667px) * (80 / 699)),
+      220px
+    );
+
+    /* Staging height */
+    --size-staging-height: clamp(
+      100px,
+      calc(100px + (100svh - 667px) * (60 / 699)),
+      160px
+    );
+
+    /* FAB (InterceptButton / NopeButton unified) */
+    --size-fab: clamp(
+      64px,
+      calc(64px + (100svh - 667px) * (16 / 699)),
+      80px
+    );
+
+    /* Root max-width — "iPad in portrait = huge phone" cap */
+    --size-root-max-width: 640px;
+
+    /* --- Fluid spacing (svh-based, phone-only) --- */
+
+    --space-fluid-tight: clamp(
+      4px,
+      calc(4px + (100svh - 667px) * (4 / 699)),
+      8px
+    );
+
+    --space-fluid-base: clamp(
+      8px,
+      calc(8px + (100svh - 667px) * (8 / 699)),
+      16px
+    );
+
+    --space-fluid-loose: clamp(
+      16px,
+      calc(16px + (100svh - 667px) * (16 / 699)),
+      32px
+    );
+
+    /* --- Safe-area tokens (§2.12) ---
+       Requires viewport-fit=cover in player.html meta tag (already present). */
+    --inset-top:    env(safe-area-inset-top, 0px);
+    --inset-right:  env(safe-area-inset-right, 0px);
+    --inset-bottom: env(safe-area-inset-bottom, 0px);
+    --inset-left:   env(safe-area-inset-left, 0px);
+
+    /* Safe viewport height — use as phone root's min-height, NOT raw 100svh */
+    --size-viewport-safe: calc(100svh - var(--inset-top) - var(--inset-bottom));
+  }
+}

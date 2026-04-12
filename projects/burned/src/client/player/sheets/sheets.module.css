@@ -194,35 +194,3 @@
   color: var(--accent-success);
 }
 
-/* --- Light Mode --- */
-
-[data-theme="light"] .optionBtn {
-  border-color: rgba(0, 0, 0, 0.08);
-}
-
-[data-theme="light"] .optionBtn:active {
-  background: rgba(0, 0, 0, 0.06);
-}
-
-[data-theme="light"] .quickBtn {
-  border-color: rgba(0, 0, 0, 0.08);
-}
-
-[data-theme="light"] .tapCard {
-  border: 2px solid color-mix(in srgb, var(--peek-accent, transparent) 35%, #d4cfc5);
-  border-left: 3px solid color-mix(in srgb, var(--peek-accent, transparent) 70%, #d4cfc5);
-  background:
-    linear-gradient(
-      180deg,
-      color-mix(in srgb, var(--peek-accent, transparent) 18%, #fffdf8) 0%,
-      color-mix(in srgb, var(--peek-accent, transparent) 6%, #fffdf8) 100%
-    );
-}
-
-[data-theme="light"] .tapCardName {
-  color: color-mix(in srgb, var(--peek-accent, #1c1a15) 80%, #1c1a15);
-}
-
-[data-theme="light"] .tapCardIcon {
-  color: color-mix(in srgb, var(--peek-accent, #5c574d) 90%, #1c1a15);
-}

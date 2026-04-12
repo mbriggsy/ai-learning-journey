@@ -1,4 +1,4 @@
-import { LazyMotion } from 'motion/react'
+import { LazyMotion, MotionConfig } from 'motion/react'
 import type { PropsWithChildren } from 'react'
 
 const loadFeatures = () =>
@@ -7,7 +7,9 @@ const loadFeatures = () =>
 export function MotionProvider({ children }: PropsWithChildren) {
   return (
     <LazyMotion features={loadFeatures} strict>
-      {children}
+      <MotionConfig reducedMotion="user">
+        {children}
+      </MotionConfig>
     </LazyMotion>
   )
 }

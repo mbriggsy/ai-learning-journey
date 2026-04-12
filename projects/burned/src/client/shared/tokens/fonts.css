@@ -1,0 +1,45 @@
+/*
+ * BURNED — Font Loading Strategy
+ * Self-hosted variable fonts with font-display: optional.
+ *
+ * Strategy: browser waits up to 100ms for the font; if it arrives, uses it.
+ * If not, renders fallback and does NOT swap on this page load. Cached on
+ * second load — zero FOUT/FOIT from session 2 onward.
+ */
+
+@layer components {
+  /* Display face — Clash Display variable (all weights in one file) */
+  @font-face {
+    font-family: 'Clash Display';
+    src: url('/fonts/ClashDisplay-Variable.woff2') format('woff2');
+    font-weight: 200 700;
+    font-display: optional;
+    font-style: normal;
+  }
+
+  /* Body face — General Sans variable */
+  @font-face {
+    font-family: 'General Sans';
+    src: url('/fonts/GeneralSans-Variable.woff2') format('woff2');
+    font-weight: 200 700;
+    font-display: optional;
+    font-style: normal;
+  }
+
+  /* Size-adjusted fallbacks for minimal CLS */
+  @font-face {
+    font-family: 'Clash Display Fallback';
+    src: local('Arial Black'), local('Arial');
+    size-adjust: 105%;
+    ascent-override: 90%;
+    descent-override: 25%;
+  }
+
+  @font-face {
+    font-family: 'General Sans Fallback';
+    src: local('system-ui'), local('-apple-system'), local('Segoe UI');
+    size-adjust: 100%;
+    ascent-override: 95%;
+    descent-override: 25%;
+  }
+}

@@ -1,6 +1,9 @@
 node_modules/
 dist/
 coverage/
+
+# Generated palette token artifact — source of truth is primitives.css
+src/client/shared/tokens/palette.generated.ts
 .partykit/
 .wrangler/
 .playwright-mcp/

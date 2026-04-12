@@ -29,10 +29,3 @@
   outline-offset: 2px;
 }
 
-/* --- Light Mode --- */
-
-[data-theme="light"] .nopeFab {
-  box-shadow:
-    0 2px 8px color-mix(in srgb, var(--teal, #0e8a7e) 20%, rgba(0,0,0,0.15)),
-    0 6px 20px rgba(0,0,0,0.10);
-}

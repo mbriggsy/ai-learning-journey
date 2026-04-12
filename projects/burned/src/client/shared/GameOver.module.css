@@ -166,19 +166,6 @@
   .playAgain { font-size: 22px; padding: 16px 60px; }
 }
 
-/* ─── Light Mode ─── */
-
-[data-theme="light"] .rank {
-  background: rgba(0, 0, 0, 0.03);
-  border-color: rgba(0, 0, 0, 0.06);
-}
-
-[data-theme="light"] .rank[data-winner] {
-  background: color-mix(in srgb, var(--teal, #0e8a7e) 8%, rgba(255, 255, 255, 0.9));
-  border-color: color-mix(in srgb, var(--teal, #0e8a7e) 30%, transparent);
-  box-shadow: none;
-}
-
 /* ─── Reduced motion ─── */
 
 @media (prefers-reduced-motion: reduce) {

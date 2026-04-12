@@ -77,17 +77,3 @@
    ═══════════════════════════════════════════════ */
 
 
-/* ═══════════════════════════════════════════════
-   Light mode
-   ═══════════════════════════════════════════════ */
-
-[data-theme="light"] .stagingSection,
-[data-theme="light"] .handSection {
-  border-color: color-mix(in srgb, var(--border-subtle, #d4cfc5) 60%, transparent);
-}
-
-[data-theme="light"] .sectionLabel {
-  color: var(--text-disabled, #8a8070);
-  background: color-mix(in srgb, var(--bg-elevated, #e8e0d0) 50%, var(--bg-primary, #f5f0e8));
-  border-bottom-color: color-mix(in srgb, var(--border-subtle, #d4cfc5) 60%, transparent);
-}

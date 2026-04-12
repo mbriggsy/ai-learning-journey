@@ -192,14 +192,3 @@
   .waitingDots::after { animation: none; content: '...'; }
 }
 
-/* --- Light Mode --- */
-
-[data-theme="light"] .input {
-  border-color: var(--border-subtle);
-  background: var(--bg-card);
-  color: var(--text-primary);
-}
-
-[data-theme="light"] .input:focus {
-  border-color: var(--amber);
-}

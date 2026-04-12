@@ -1,0 +1,305 @@
+/*
+ * BURNED — Design Token Primitives
+ * Source of truth for all raw values: color scales, spacing, radius, motion, z-index.
+ *
+ * Generated palette: scripts/generate-palette.ts reads --color-* declarations from
+ * this file and emits palette.generated.ts. Editing hex values here automatically
+ * updates the TS artifact on next pnpm dev/build/test.
+ *
+ * Colors extracted from Archer Dreamland S8 reference frames on 2026-04-11.
+ * See docs/plans/css-foundation-rebuild/dreamland-reference/README.md for source
+ * attribution, frame manifest, and fair-use posture.
+ */
+
+/* Cascade order — declarative, build-tool-independent.
+   Every subsequent rule in this project's CSS must live in one of these layers. */
+@layer primitives, semantics, semantics-phone, semantics-board, components, overrides;
+
+/* ========================================================================
+ * @property declarations — type-safe CSS custom properties.
+ * Baseline Widely Available since July 2024. Zero bundle cost at runtime.
+ *
+ * RULE: every initial-value MUST byte-match the :root value below. If they
+ * diverge, the :root wins at computed time but initial-value becomes the
+ * fallback inside shadow-DOM boundaries.
+ * ======================================================================== */
+
+/* Motion durations */
+@property --motion-duration-fast              { syntax: '<time>'; inherits: true; initial-value: 150ms; }
+@property --motion-duration-base              { syntax: '<time>'; inherits: true; initial-value: 250ms; }
+@property --motion-duration-slow              { syntax: '<time>'; inherits: true; initial-value: 400ms; }
+@property --motion-duration-dramatic          { syntax: '<time>'; inherits: true; initial-value: 800ms; }
+@property --motion-duration-dots              { syntax: '<time>'; inherits: true; initial-value: 1500ms; }
+@property --motion-duration-ambient           { syntax: '<time>'; inherits: true; initial-value: 4000ms; }
+@property --motion-duration-pulse             { syntax: '<time>'; inherits: true; initial-value: 1400ms; }
+@property --motion-duration-pulse-slow        { syntax: '<time>'; inherits: true; initial-value: 2500ms; }
+@property --motion-duration-essential-pulse   { syntax: '<time>'; inherits: true; initial-value: 1400ms; }
+@property --motion-duration-essential-spin    { syntax: '<time>'; inherits: true; initial-value: 1000ms; }
+@property --motion-duration-essential-flash   { syntax: '<time>'; inherits: true; initial-value: 200ms; }
+
+/* Color primitives — teal scale */
+@property --color-teal-1   { syntax: '<color>'; inherits: true; initial-value: #08181a; }
+@property --color-teal-2   { syntax: '<color>'; inherits: true; initial-value: #0c2024; }
+@property --color-teal-3   { syntax: '<color>'; inherits: true; initial-value: #11292d; }
+@property --color-teal-4   { syntax: '<color>'; inherits: true; initial-value: #163338; }
+@property --color-teal-5   { syntax: '<color>'; inherits: true; initial-value: #1e3f45; }
+@property --color-teal-6   { syntax: '<color>'; inherits: true; initial-value: #284c53; }
+@property --color-teal-7   { syntax: '<color>'; inherits: true; initial-value: #335a62; }
+@property --color-teal-8   { syntax: '<color>'; inherits: true; initial-value: #406972; }
+@property --color-teal-9   { syntax: '<color>'; inherits: true; initial-value: #4a7880; }
+@property --color-teal-10  { syntax: '<color>'; inherits: true; initial-value: #5a8a90; }
+@property --color-teal-11  { syntax: '<color>'; inherits: true; initial-value: #a0c5ca; }
+@property --color-teal-12  { syntax: '<color>'; inherits: true; initial-value: #d7f1f5; }
+
+/* Color primitives — ochre scale */
+@property --color-ochre-1   { syntax: '<color>'; inherits: true; initial-value: #1a0d05; }
+@property --color-ochre-2   { syntax: '<color>'; inherits: true; initial-value: #25160b; }
+@property --color-ochre-3   { syntax: '<color>'; inherits: true; initial-value: #321e10; }
+@property --color-ochre-4   { syntax: '<color>'; inherits: true; initial-value: #422818; }
+@property --color-ochre-5   { syntax: '<color>'; inherits: true; initial-value: #553520; }
+@property --color-ochre-6   { syntax: '<color>'; inherits: true; initial-value: #6a4228; }
+@property --color-ochre-7   { syntax: '<color>'; inherits: true; initial-value: #805032; }
+@property --color-ochre-8   { syntax: '<color>'; inherits: true; initial-value: #98603e; }
+@property --color-ochre-9   { syntax: '<color>'; inherits: true; initial-value: #b0754c; }
+@property --color-ochre-10  { syntax: '<color>'; inherits: true; initial-value: #c98a5c; }
+@property --color-ochre-11  { syntax: '<color>'; inherits: true; initial-value: #edb182; }
+@property --color-ochre-12  { syntax: '<color>'; inherits: true; initial-value: #ffe9b9; }
+
+/* Color primitives — cream scale */
+@property --color-cream-1   { syntax: '<color>'; inherits: true; initial-value: #0e0c08; }
+@property --color-cream-2   { syntax: '<color>'; inherits: true; initial-value: #19160f; }
+@property --color-cream-3   { syntax: '<color>'; inherits: true; initial-value: #252016; }
+@property --color-cream-4   { syntax: '<color>'; inherits: true; initial-value: #332c20; }
+@property --color-cream-5   { syntax: '<color>'; inherits: true; initial-value: #433a2c; }
+@property --color-cream-6   { syntax: '<color>'; inherits: true; initial-value: #52483a; }
+@property --color-cream-7   { syntax: '<color>'; inherits: true; initial-value: #655a4a; }
+@property --color-cream-8   { syntax: '<color>'; inherits: true; initial-value: #7b6f5d; }
+@property --color-cream-9   { syntax: '<color>'; inherits: true; initial-value: #a69984; }
+@property --color-cream-10  { syntax: '<color>'; inherits: true; initial-value: #b0a38a; }
+@property --color-cream-11  { syntax: '<color>'; inherits: true; initial-value: #d0c3a5; }
+@property --color-cream-12  { syntax: '<color>'; inherits: true; initial-value: #f6ebce; }
+
+/* Color primitives — charcoal scale */
+@property --color-charcoal-1   { syntax: '<color>'; inherits: true; initial-value: #0a0906; }
+@property --color-charcoal-2   { syntax: '<color>'; inherits: true; initial-value: #12100b; }
+@property --color-charcoal-3   { syntax: '<color>'; inherits: true; initial-value: #1a1812; }
+@property --color-charcoal-4   { syntax: '<color>'; inherits: true; initial-value: #23211a; }
+@property --color-charcoal-5   { syntax: '<color>'; inherits: true; initial-value: #2d2a22; }
+@property --color-charcoal-6   { syntax: '<color>'; inherits: true; initial-value: #38342b; }
+@property --color-charcoal-7   { syntax: '<color>'; inherits: true; initial-value: #454138; }
+@property --color-charcoal-8   { syntax: '<color>'; inherits: true; initial-value: #534e45; }
+@property --color-charcoal-9   { syntax: '<color>'; inherits: true; initial-value: #665f55; }
+@property --color-charcoal-10  { syntax: '<color>'; inherits: true; initial-value: #7b7467; }
+@property --color-charcoal-11  { syntax: '<color>'; inherits: true; initial-value: #c3baae; }
+@property --color-charcoal-12  { syntax: '<color>'; inherits: true; initial-value: #f1ebdc; }
+
+/* Color primitives — cordovan scale */
+@property --color-cordovan-1   { syntax: '<color>'; inherits: true; initial-value: #15070a; }
+@property --color-cordovan-2   { syntax: '<color>'; inherits: true; initial-value: #210b10; }
+@property --color-cordovan-3   { syntax: '<color>'; inherits: true; initial-value: #2f1015; }
+@property --color-cordovan-4   { syntax: '<color>'; inherits: true; initial-value: #40141b; }
+@property --color-cordovan-5   { syntax: '<color>'; inherits: true; initial-value: #521820; }
+@property --color-cordovan-6   { syntax: '<color>'; inherits: true; initial-value: #641c26; }
+@property --color-cordovan-7   { syntax: '<color>'; inherits: true; initial-value: #78222d; }
+@property --color-cordovan-8   { syntax: '<color>'; inherits: true; initial-value: #8d2936; }
+@property --color-cordovan-9   { syntax: '<color>'; inherits: true; initial-value: #a33340; }
+@property --color-cordovan-10  { syntax: '<color>'; inherits: true; initial-value: #b9404c; }
+@property --color-cordovan-11  { syntax: '<color>'; inherits: true; initial-value: #ffa3a1; }
+@property --color-cordovan-12  { syntax: '<color>'; inherits: true; initial-value: #ffe5d5; }
+
+/* Color primitives — emerald scale */
+@property --color-emerald-1   { syntax: '<color>'; inherits: true; initial-value: #081410; }
+@property --color-emerald-2   { syntax: '<color>'; inherits: true; initial-value: #0d1e18; }
+@property --color-emerald-3   { syntax: '<color>'; inherits: true; initial-value: #122a21; }
+@property --color-emerald-4   { syntax: '<color>'; inherits: true; initial-value: #18362c; }
+@property --color-emerald-5   { syntax: '<color>'; inherits: true; initial-value: #1f4336; }
+@property --color-emerald-6   { syntax: '<color>'; inherits: true; initial-value: #275043; }
+@property --color-emerald-7   { syntax: '<color>'; inherits: true; initial-value: #2f5e4f; }
+@property --color-emerald-8   { syntax: '<color>'; inherits: true; initial-value: #396d5a; }
+@property --color-emerald-9   { syntax: '<color>'; inherits: true; initial-value: #649e88; }
+@property --color-emerald-10  { syntax: '<color>'; inherits: true; initial-value: #7ab49c; }
+@property --color-emerald-11  { syntax: '<color>'; inherits: true; initial-value: #91c9af; }
+@property --color-emerald-12  { syntax: '<color>'; inherits: true; initial-value: #d0f5dc; }
+
+/* Color primitives — neon-magenta spot colors (NOT a scale) */
+@property --color-neon-magenta       { syntax: '<color>'; inherits: true; initial-value: #e84a9c; }
+@property --color-neon-magenta-glow  { syntax: '<color>'; inherits: true; initial-value: #ff6fb8; }
+
+
+/* ========================================================================
+ * Primitive token values
+ * ======================================================================== */
+
+@layer primitives {
+  :root {
+    /* --- Teal scale — Dreamland cool hue --- */
+    --color-teal-1:  #08181a;
+    --color-teal-2:  #0c2024;
+    --color-teal-3:  #11292d;
+    --color-teal-4:  #163338;
+    --color-teal-5:  #1e3f45;
+    --color-teal-6:  #284c53;
+    --color-teal-7:  #335a62;
+    --color-teal-8:  #406972;
+    --color-teal-9:  #4a7880;
+    --color-teal-10: #5a8a90;
+    --color-teal-11: #a0c5ca;
+    --color-teal-12: #d7f1f5;
+
+    /* --- Ochre scale — Dreamland warm hue (mahogany → amber → honey) --- */
+    --color-ochre-1:  #1a0d05;
+    --color-ochre-2:  #25160b;
+    --color-ochre-3:  #321e10;
+    --color-ochre-4:  #422818;
+    --color-ochre-5:  #553520;
+    --color-ochre-6:  #6a4228;
+    --color-ochre-7:  #805032;
+    --color-ochre-8:  #98603e;
+    --color-ochre-9:  #b0754c;
+    --color-ochre-10: #c98a5c;
+    --color-ochre-11: #edb182;
+    --color-ochre-12: #ffe9b9;
+
+    /* --- Cream scale — warm neutral for text, highlights, paper surfaces --- */
+    --color-cream-1:  #0e0c08;
+    --color-cream-2:  #19160f;
+    --color-cream-3:  #252016;
+    --color-cream-4:  #332c20;
+    --color-cream-5:  #433a2c;
+    --color-cream-6:  #52483a;
+    --color-cream-7:  #655a4a;
+    --color-cream-8:  #7b6f5d;
+    --color-cream-9:  #a69984;
+    --color-cream-10: #b0a38a;
+    --color-cream-11: #d0c3a5;
+    --color-cream-12: #f6ebce;
+
+    /* --- Charcoal scale — warm-neutral chrome for borders, linework --- */
+    --color-charcoal-1:  #0a0906;
+    --color-charcoal-2:  #12100b;
+    --color-charcoal-3:  #1a1812;
+    --color-charcoal-4:  #23211a;
+    --color-charcoal-5:  #2d2a22;
+    --color-charcoal-6:  #38342b;
+    --color-charcoal-7:  #454138;
+    --color-charcoal-8:  #534e45;
+    --color-charcoal-9:  #665f55;
+    --color-charcoal-10: #7b7467;
+    --color-charcoal-11: #c3baae;
+    --color-charcoal-12: #f1ebdc;
+
+    /* --- Cordovan scale — Dreamland crimson (lipstick, danger, wine) --- */
+    --color-cordovan-1:  #15070a;
+    --color-cordovan-2:  #210b10;
+    --color-cordovan-3:  #2f1015;
+    --color-cordovan-4:  #40141b;
+    --color-cordovan-5:  #521820;
+    --color-cordovan-6:  #641c26;
+    --color-cordovan-7:  #78222d;
+    --color-cordovan-8:  #8d2936;
+    --color-cordovan-9:  #a33340;
+    --color-cordovan-10: #b9404c;
+    --color-cordovan-11: #ffa3a1;
+    --color-cordovan-12: #ffe5d5;
+
+    /* --- Emerald scale — muted forest green for success, Intercept --- */
+    --color-emerald-1:  #081410;
+    --color-emerald-2:  #0d1e18;
+    --color-emerald-3:  #122a21;
+    --color-emerald-4:  #18362c;
+    --color-emerald-5:  #1f4336;
+    --color-emerald-6:  #275043;
+    --color-emerald-7:  #2f5e4f;
+    --color-emerald-8:  #396d5a;
+    --color-emerald-9:  #649e88;
+    --color-emerald-10: #7ab49c;
+    --color-emerald-11: #91c9af;
+    --color-emerald-12: #d0f5dc;
+
+    /* --- Neon-magenta spot colors (NOT a scale — 2 values only) --- */
+    --color-neon-magenta:      #e84a9c;
+    --color-neon-magenta-glow: #ff6fb8;
+
+    /* --- Spacing (4px base, axis-independent) --- */
+    --space-0:  0;
+    --space-1:  0.25rem;
+    --space-2:  0.5rem;
+    --space-3:  0.75rem;
+    --space-4:  1rem;
+    --space-5:  1.25rem;
+    --space-6:  1.5rem;
+    --space-8:  2rem;
+    --space-10: 2.5rem;
+    --space-12: 3rem;
+    --space-16: 4rem;
+    --space-20: 5rem;
+
+    /* --- Radius (axis-independent) --- */
+    --radius-none: 0;
+    --radius-xs:   2px;
+    --radius-sm:   4px;
+    --radius-md:   8px;
+    --radius-lg:   12px;
+    --radius-xl:   16px;
+    --radius-2xl:  24px;
+    --radius-full: 9999px;
+
+    /* --- Motion durations (mirror of motion.ts — sync test enforces parity) ---
+       Decorative — zeroed under prefers-reduced-motion (see §2.9 reduced-motion block below). */
+    --motion-duration-fast:     150ms;
+    --motion-duration-base:     250ms;
+    --motion-duration-slow:     400ms;
+    --motion-duration-dramatic: 800ms;
+
+    /* Named durations for specific Phase 3-4 consumers */
+    --motion-duration-dots:       1500ms;
+    --motion-duration-ambient:    4000ms;
+    --motion-duration-pulse:      1400ms;
+    --motion-duration-pulse-slow: 2500ms;
+
+    /* Essential — survives prefers-reduced-motion. Gameplay-signal animations. */
+    --motion-duration-essential-pulse:  1400ms;
+    --motion-duration-essential-spin:   1000ms;
+    --motion-duration-essential-flash:  200ms;
+
+    /* --- Motion easings (mirror of motion.ts) --- */
+    --motion-ease-base:        cubic-bezier(0.4, 0, 0.2, 1);
+    --motion-ease-emphasized:  cubic-bezier(0.2, 0, 0, 1);
+    --motion-ease-decelerate:  cubic-bezier(0, 0, 0.2, 1);
+    --motion-ease-accelerate:  cubic-bezier(0.4, 0, 1, 1);
+    --motion-ease-anticipate:  cubic-bezier(0.68, -0.55, 0.265, 1.55);
+
+    /* --- Z-index scale --- */
+    --z-base:    0;
+    --z-raised:  10;
+    --z-sticky:  100;
+    --z-overlay: 1000;
+    --z-modal:   2000;
+    --z-toast:   3000;
+  }
+
+  /* ========================================================================
+   * Reduced-motion fork — dual-family pattern (§2.9)
+   * Decorative tokens zero; essential tokens survive for gameplay signals.
+   * ======================================================================== */
+  @media (prefers-reduced-motion: reduce) {
+    :root {
+      /* Decorative — zero */
+      --motion-duration-fast:     0ms;
+      --motion-duration-base:     0ms;
+      --motion-duration-slow:     0ms;
+      --motion-duration-dramatic: 0ms;
+
+      /* Named decorative — zero */
+      --motion-duration-dots:       0ms;
+      --motion-duration-ambient:    0ms;
+      --motion-duration-pulse:      0ms;
+      --motion-duration-pulse-slow: 0ms;
+
+      /* Essential — PRESERVED (slowed for comfort, not zeroed) */
+      --motion-duration-essential-pulse:  2400ms;
+      --motion-duration-essential-spin:   1500ms;
+      --motion-duration-essential-flash:  200ms;
+    }
+  }
+}

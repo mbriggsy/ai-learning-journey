@@ -8,9 +8,7 @@ import { GameTable } from './GameTable'
 import { GameOver } from '@client/shared/GameOver'
 import { DramaOverlay } from '@client/shared/DramaOverlay'
 import { PARTYKIT_HOST } from '@client/shared/config'
-import '@client/shared/fonts.css'
 import '@client/shared/fonts-mono.css'
-import '@client/shared/theme.css'
 
 function generateRoomCode(): string {
   const chars = 'ABCDEFGHJKMNPQRSTUVWXYZ23456789' // 31 chars, no ambiguous 0/O/1/I/L

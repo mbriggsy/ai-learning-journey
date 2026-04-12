@@ -125,27 +125,6 @@
   letter-spacing: 0.02em;
 }
 
-/* ─── Light mode ─── */
-
-[data-theme="light"] .invalid {
-  background: color-mix(in srgb, var(--red, #c52b2b) 5%, var(--bg-card, #faf8f0));
-}
-
-[data-theme="light"] .ready {
-  background: color-mix(in srgb, var(--teal, #1a8a78) 8%, var(--bg-card, #faf8f0));
-  box-shadow: 0 2px 8px color-mix(in srgb, var(--teal, #1a8a78) 15%, rgba(0,0,0,0.1));
-}
-
-[data-theme="light"] .target {
-  background: color-mix(in srgb, var(--amber, #b06b10) 8%, var(--bg-card, #faf8f0));
-  box-shadow: 0 2px 8px color-mix(in srgb, var(--amber, #b06b10) 12%, rgba(0,0,0,0.1));
-}
-
-[data-theme="light"] .draw {
-  background: color-mix(in srgb, var(--red, #c52b2b) 8%, var(--bg-card, #faf8f0));
-  box-shadow: 0 2px 8px color-mix(in srgb, var(--red, #c52b2b) 12%, rgba(0,0,0,0.1));
-}
-
 /* ─── Reduced motion ─── */
 
 @media (prefers-reduced-motion: reduce) {

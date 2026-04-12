@@ -5,7 +5,7 @@
 - **167/167 tests, typecheck clean** (verified 2026-04-11).
 - **Game is functional** — staging, hand, board, all card types, nope chains, elimination all working.
 - **Visual layer is FRAGILE** — see `docs/post-mortems/VISUAL-LAYER-AUTOPSY.md`. **Rebuild IS NOW IN PROGRESS** — `docs/plans/css-foundation-rebuild/`.
-- **CSS Foundation Rebuild Plan is FULLY DRAFTED + PHASE 1 DEEPENED** — roadmap + all 5 phase files COMPLETE (2026-04-11). **Phase 1 deepened 2026-04-11 via 12-agent parallel pass** (commit `ba6f18ce`). Phases 2-5 still need deepening. Next pass: `/deepen-plan docs/plans/css-foundation-rebuild/phase-2-phone-view-migration.md`. See step 1 below.
+- **CSS Foundation Rebuild Plan is FULLY DRAFTED + PHASES 1-2 DEEPENED** — roadmap + all 5 phase files COMPLETE (2026-04-11). **Phase 1 deepened 2026-04-11 via 12-agent pass** (commit `ba6f18ce`). **Phase 2 deepened 2026-04-11 via 8-agent pass** (~80 prescriptive fixes, 2235→3200 lines). Phases 3-5 still need deepening. Next pass: `/deepen-plan docs/plans/css-foundation-rebuild/phase-3-board-view-migration.md`. See step 1 below.
 - **Dreamland S8 is the palette reference season** (Holman's stated favorite; warm cocktail-lounge mid-century). 18 reference frames at `docs/plans/css-foundation-rebuild/dreamland-reference/images/`; fair-use posture documented in `dreamland-reference/README.md`. Palette extracted into Phase 1 §2.2 (74 Dreamland-sourced color primitives).
 - **Saul Bass is VERIFIED, not a hallucination** (corrected 2026-04-11) — Neal Holman primary source at Art of the Title May 2016. See `feedback-hallucinated-references.md` in memory for correction detail. Adjacent verified influences: Jack Kirby, Steve Ditko, Mad Men, 1960 Bond, OSS 117, Pink Panther, mid-century furniture, deliberate anachronism (all sourced to Holman / Adam Reed / Salon / A.V. Club).
 - **Phrasing! is a cross-phase design goal** — running gag across all phases, target cadence 3-5 distinct beats. See `roadmap.md` §3.6. Phase 2 committed beat: EliminatedView flavor line #9 (*"Penetrated by enemy assets. ...Phrasing."*).
@@ -21,7 +21,7 @@
 |---|---|---|
 | `roadmap.md` | ✅ **COMPLETE** | Parent doc: research, decisions, token taxonomy, phase structure. Includes §3.6 "Recurring design motifs" — phrasing as cross-phase gag. |
 | `phase-1-foundation.md` | ✅ **DEEPENED 2026-04-11** (commit `ba6f18ce`) | 2164 lines. 12-agent parallel deepening pass landed: 7 blocker code corrections, 6 new subsections (§2.9-§2.14 — reduced-motion dual-family, `@property`, `@layer`, safe-area, font loading, lint rules), 8 cross-phase token resolutions, 4 ATC decisions locked (codegen palette, drop `--motion-duration-instant`, raise `--text-body` floor 14→15px, keep neon 2-spot). See §Enhancement Summary at top of file for full delta. |
-| `phase-2-phone-view-migration.md` | ✅ **COMPLETE — awaiting deepening** | All 14 phone files + cross-view BottomSheet are full rewrites. 2235 LOC. **NEXT SESSION TARGET.** |
+| `phase-2-phone-view-migration.md` | ✅ **DEEPENED 2026-04-11** | 3200 lines. 8-agent parallel deepening pass: 5 position:fixed→absolute migrations, 14 `@layer components` wrappers (empirically verified), 6 essential-motion token swaps, 6 safe-area migrations, 4 new TSX class-rename cascade sections (§§2.3.4b, 2.3.5b, 2.3.6b, 2.3.9b), BottomSheet§2.6 corrected (no structural rewrite needed, CSS-only fix), §2.7 expanded to 6 consumer-site `theme.ts` boundary edits, WCAG touch-target fix, NopeButton confirmed orphaned. 7 Phase 1 follow-up items locked. See §Enhancement Summary at top of file. |
 | `phase-3-board-view-migration.md` | ✅ **COMPLETE** | 2753 LOC. 14 file rewrites (10 board modules + 1 fonts-mono + 3 cross-view) + 1 TSX retheme edit. Three audit corrections vs. roadmap documented in §1.1. Ready for `/deepen-plan`. |
 | `phase-4-motion-consolidation.md` | ✅ **COMPLETE** | ~1400 LOC. 24 FM TSX sites + 3 GSAP tweens + 4 CSS surgical edits + PlayerRing TSX↔CSS measurement-div resolution + `animation-config.ts` deletion. Five audit corrections vs. roadmap documented in §1.1 (real counts: 24 FM, 2 GSAP files/3 tweens, 4 CSS keyframe stragglers, 0 CSS transition edits). Ready for `/deepen-plan`. |
 | `phase-5-verification-acceptance.md` | ✅ **COMPLETE** | ~1990 LOC. 8 verification-type subsections (§2.1–§2.8) organized around the TODO block: iOS 26 real-device protocol + conditional `useIOSFixedFallback` hook, 176-baseline Playwright visual regression matrix (30 phone × 4 vp + 14 board × 4 vp), WCAG 1.4.4 200% zoom protocol, 36-pair CVD expansion, 31-pair WCAG+APCA contrast expansion, §8.6 full-loop protocol w/ dev-only `handleStackDeck` endpoint, §8.7 first-time-player protocol, documentation pass. §2.2.5 visual review lands the 3 pending decisions (winner glow, emerald saturation, Baveuse). Ready for `/deepen-plan`. |
@@ -29,16 +29,16 @@
 #### ▶ FIRST ACTION NEXT SESSION
 
 ```
-/deepen-plan docs/plans/css-foundation-rebuild/phase-2-phone-view-migration.md
+/deepen-plan phase 3
 ```
 
-Phase 1 is DEEPENED (commit `ba6f18ce`, 2026-04-11). Phase 2 is next. Phase 2 deepening will surface additional cross-phase tokens that need to go back into Phase 1 in a follow-up edit — see "Phase 1 deepening outcomes" section below for which tokens are already resolved vs. still-open from the original Phase 2/3/4 flag lists.
+Phases 1-2 are DEEPENED. Phase 3 is next. Phase 2 deepening surfaced 7 Phase 1 follow-up items (see §7 in Phase 2 plan) — these accumulate until the cross-phase sweep step 7 below.
 
 **Deepen one phase per session, in order, with review pauses between each** (per `feedback-stop-after-every-phase.md` — the rule applies to deepening the same way it applied to drafting):
 
 1. ✅ **`/deepen-plan docs/plans/css-foundation-rebuild/phase-1-foundation.md`** — DONE 2026-04-11, commit `ba6f18ce`
-2. `/deepen-plan docs/plans/css-foundation-rebuild/phase-2-phone-view-migration.md` ← **next session starts here**
-3. `/deepen-plan docs/plans/css-foundation-rebuild/phase-3-board-view-migration.md`
+2. ✅ **`/deepen-plan docs/plans/css-foundation-rebuild/phase-2-phone-view-migration.md`** — DONE 2026-04-11, 8-agent pass, ~80 fixes
+3. `/deepen-plan docs/plans/css-foundation-rebuild/phase-3-board-view-migration.md` ← **next session starts here**
 4. `/deepen-plan docs/plans/css-foundation-rebuild/phase-4-motion-consolidation.md`
 5. `/deepen-plan docs/plans/css-foundation-rebuild/phase-5-verification-acceptance.md`
 6. **Phase 1 follow-up sweep** — after Phases 2-5 are deepened, re-edit `phase-1-foundation.md` to fold in every remaining cross-phase token request the original deepening didn't catch. (See "STILL OPEN" lists below — many tokens from the Phase 3 27-token flag list were not resolved in the Phase 1 deepening and will surface again.)
@@ -103,12 +103,13 @@ Phase 1 is DEEPENED (commit `ba6f18ce`, 2026-04-11). Phase 2 is next. Phase 2 de
 - **iOS 26 fallback is conditional** (Phase 5 §2.1.5) — `useIOSFixedFallback` hook authored but only lands if §2.1 real-device test surfaces regression. Deepening may want to cross-reference the `parseIOSMajor` regex against actual iOS 26.x UA strings gathered from WebKit bug tracker, and decide whether to elevate the fallback to unconditional.
 - **APCA Lc floor semantics** (Phase 5 §5 landmine 10) — "APCA Lc ≥60 on body text" applies per-row, not globally. Muted text intentionally gets Lc 45. Future re-readers can misread this. Deepening should verify the per-row minimums in the test file match the TODO's intent.
 
-#### Cross-phase tokens flagged during Phase 2 draft (some resolved in Phase 1 deepening, some STILL OPEN)
+#### Cross-phase tokens flagged during Phase 2 draft — ALL RESOLVED in Phase 2 deepening
 
-- ❌ **STILL OPEN** — `--color-bg-overlay-light` (60% alpha) — needed by `ConnectionOverlay.module.css` (§2.3.11) and `BottomSheet.module.css` (§2.6). NOT added to Phase 1 during deepening. Phase 2 deepening must fold back into Phase 1.
-- ❌ **STILL OPEN** — `--color-bg-overlay-heavy` (85% alpha, aliases current `--color-bg-overlay`) — same consumers. Phase 1 currently has `--color-bg-overlay` at 85% via `color-mix(in oklab, var(--color-shadow-base) 85%, transparent)`; the "heavy" naming is a semantic rename, not a new value.
-- ⚠️ **PARTIALLY RESOLVED** — `--size-content-narrow` (fluid clamp, ~280-320px range) — **5 consumers** across the phase: `JoinScreen.form` (300px), `JoinScreen.lobbyList` (320px), `CardDetailSheet.hint` (280px), `EliminatedView.flavor` + `.aliveList` (`min(90%, 320px)` ×2). **Phase 1 deepening added `--size-card-detail-max` (280-400px range) to §2.4 as the one-consumer version but did NOT unify all 5 consumers into `--size-content-narrow`.** Phase 2 deepening decision: either (a) rename `--size-card-detail-max` to `--size-content-narrow` and widen it to cover all 5 consumers, or (b) keep `--size-card-detail-max` specific to CardDetailSheet and add a separate `--size-content-narrow` for the other 4. Recommendation: unify — one token is simpler.
-- ❌ **STILL OPEN** — **Phase 1 visual-review pass needed** on `--radius-input` and `--radius-button` semantic aliases (currently both = `--radius-sm` = 4px). Phase 2 §2.3.8 JoinScreen and §2.3.13 sheets both consume them, applying a deliberate 12px → 4px visual change. If visual review against Dreamland reference stills shows the new sharper inputs/buttons fail the §2.2 Archer test, the fix is amending Phase 1's aliases (not overriding in component CSS). Decision deferred to `/ce:work` Phase 1 visual review.
+- ✅ **RESOLVED** — `--color-bg-overlay-light` (60% alpha) + `--color-bg-overlay-heavy` (85% alpha) — formulas locked in Phase 2 §7. Phase 1 follow-up sweep adds both to `semantic.css`, replacing the single `--color-bg-overlay`. Both reach `--color-shadow-base` for future light-mode retheme.
+- ✅ **RESOLVED** — `--size-content-narrow` — formula `clamp(280px, calc(280px + (100svh - 667px) * (40 / 699)), 320px)`. SUPERSEDES `--size-card-detail-max` (Phase 1's first deepening had a 280→400 single-consumer version; Phase 2 deepening unified 5 consumers and narrowed the ceiling to 320). Phase 1 follow-up sweep replaces the old token.
+- ✅ **RESOLVED** — Phase 1 follow-up sweep adds `html, body { position: relative; height: var(--size-viewport-safe); overflow: hidden }` + `#root { position: relative; height: 100% }` positioning contract to `semantic.phone.css` §2.12 — enables the 5-site `position: absolute`-against-root migration.
+- ✅ **RESOLVED** — `card-accents.ts` locked as definitive `cardAccent` migration target (NOT `palette.ts` — codegen-reserved per Decision 1). Phase 1 follow-up removes the "or palette.ts" ambiguity.
+- ⏳ **DEFERRED TO VISUAL REVIEW** — `--radius-input` and `--radius-button` semantic aliases (both = `--radius-sm` = 4px). Decision deferred to `/ce:work` Phase 1 visual review against Dreamland reference stills.
 
 #### Cross-phase tokens flagged during Phase 3 draft (partially resolved in Phase 1 deepening, most STILL OPEN)
 

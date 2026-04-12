@@ -1,78 +1,85 @@
-/* Title bar — fixed height, player name + room code */
+/* TitleBar.module.css
+   Top chrome strip: connection dot + player name + room code.
+   Sticky to the top of the phone viewport.
 
-.titleBar {
-  flex: 0 0 auto;
-  display: flex;
-  align-items: center;
-  justify-content: space-between;
-  padding: 4px 10px;
-  background: var(--bg-elevated, #243c42);
-  border-bottom: 1px solid var(--border-subtle, #3a5860);
-  min-height: 28px;
-}
+   .dotConnecting blink is GAMEPLAY-ESSENTIAL — the only signal that the app is
+   trying to reconnect. Frozen dot reads as frozen app. Consumes
+   --motion-duration-essential-spin (1000ms baseline / 1500ms reduce per Phase 1
+   §2.9), syncing cadence with ConnectionOverlay .spinner so both fire in sync
+   during a reconnect.
+*/
 
-.left {
-  display: flex;
-  align-items: center;
-  gap: 6px;
-  min-width: 0;
-}
+@layer components {
+  .titleBar {
+    display: flex;
+    align-items: center;
+    gap: var(--space-2);
+    padding: var(--space-1) var(--space-3);
+    min-height: var(--size-touch-target);
+    background: var(--color-bg-elevated);
+    border-bottom: 1px solid var(--color-border-subtle);
+    color: var(--color-fg-primary);
+    font-family: var(--font-display);
+    font-size: var(--text-caption);
+    flex: 0 0 auto;
+  }
 
-/* ─── Connection dot ─── */
+  /* Left flex group — connection dot + player name. PRESERVE this class:
+     TitleBar.tsx wraps the dot+name pair in <span className={styles.left}>.
+     Phase 2's first draft removed .left without the corresponding TSX edit. */
+  .left {
+    display: flex;
+    align-items: center;
+    gap: var(--space-2);
+    flex: 1 1 auto;
+    min-width: 0;
+  }
 
-.dot {
-  flex: 0 0 auto;
-  width: 7px;
-  height: 7px;
-  border-radius: 50%;
-}
+  .dot {
+    width: var(--space-2);
+    height: var(--space-2);
+    border-radius: var(--radius-full);
+    flex: 0 0 auto;
+  }
 
-.dotConnected {
-  background: #30c060;
-  box-shadow: 0 0 4px #30c06080;
-}
+  /* Connection state: connected */
+  .dotConnected {
+    background: var(--color-fg-success);
+    box-shadow: 0 0 var(--space-1) color-mix(in oklab, var(--color-fg-success) 50%, transparent);
+  }
 
-.dotConnecting {
-  background: var(--amber, #d48820);
-  animation: blink 1.2s ease-in-out infinite;
-}
+  /* Connection state: connecting — gameplay-essential blink, survives reduce */
+  .dotConnecting {
+    background: var(--color-accent-drama);
+    animation: titleBarBlink var(--motion-duration-essential-spin) var(--motion-ease-base) infinite;
+  }
 
-.dotDisconnected {
-  background: var(--red, #d44030);
-}
+  /* Connection state: disconnected */
+  .dotDisconnected {
+    background: var(--color-fg-danger);
+    box-shadow: 0 0 var(--space-1) color-mix(in oklab, var(--color-fg-danger) 50%, transparent);
+  }
 
-@keyframes blink {
-  0%, 100% { opacity: 1; }
-  50% { opacity: 0.3; }
-}
+  .playerName {
+    flex: 1 1 auto;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+    font-weight: 600;
+    letter-spacing: 0.04em;
+  }
 
-/* ─── Name ─── */
+  .roomCode {
+    flex: 0 0 auto;
+    font-family: var(--font-mono);
+    font-size: var(--text-caption);
+    color: var(--color-fg-muted);
+    letter-spacing: 0.08em;
+    text-transform: uppercase;
+  }
 
-.name {
-  font-family: var(--font-display);
-  font-size: 12px;
-  font-weight: 700;
-  letter-spacing: 0.06em;
-  text-transform: uppercase;
-  color: var(--text-primary, #f5f0e0);
-  overflow: hidden;
-  text-overflow: ellipsis;
-  white-space: nowrap;
-}
-
-/* ─── Room code ─── */
-
-.code {
-  flex: 0 0 auto;
-  font-family: var(--font-mono);
-  font-size: 11px;
-  font-weight: 600;
-  color: var(--text-secondary, #b8a890);
-  letter-spacing: 0.04em;
-}
-
-/* ─── Reduced motion ─── */
-
-@media (prefers-reduced-motion: reduce) {
-  .dotConnecting { animation: none; }
+  @keyframes titleBarBlink {
+    0%, 100% { opacity: 1; }
+    50% { opacity: 0.3; }
+  }
 }

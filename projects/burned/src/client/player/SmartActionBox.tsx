@@ -96,7 +96,7 @@ export function SmartActionBox({
       }
       return {
         key: myTurn ? 'hint' : 'standby',
-        className: `${styles.box} ${styles.hint}`,
+        className: `${styles.box} ${styles.standby}`,
         text: myTurn ? 'Double-tap a card to stage it' : 'Stand by, operative',
         interactive: false,
       }
@@ -120,7 +120,7 @@ export function SmartActionBox({
     if (playType.kind === 'pair') {
       return {
         key: 'pair',
-        className: `${styles.box} ${styles.target}`,
+        className: `${styles.box} ${styles.comboPair}`,
         text: 'Steal a random card \u2192',
         interactive: true,
         action: onConfirm,
@@ -130,7 +130,7 @@ export function SmartActionBox({
     if (playType.kind === 'triple') {
       return {
         key: 'triple',
-        className: `${styles.box} ${styles.target}`,
+        className: `${styles.box} ${styles.comboTriple}`,
         text: 'Name & steal a specific card \u2192',
         interactive: true,
         action: onConfirm,
@@ -143,7 +143,7 @@ export function SmartActionBox({
     if (playType.requiresTarget) {
       return {
         key: `target-${playType.cardType}`,
-        className: `${styles.box} ${styles.target}`,
+        className: `${styles.box} ${styles.action}`,
         text: actionText,
         interactive: true,
         action: onConfirmWithTarget,
@@ -152,7 +152,7 @@ export function SmartActionBox({
 
     return {
       key: `ready-${playType.cardType}`,
-      className: `${styles.box} ${styles.ready}`,
+      className: `${styles.box} ${styles.action}`,
       text: actionText,
       interactive: true,
       action: onConfirm,

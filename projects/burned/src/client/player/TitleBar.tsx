@@ -23,9 +23,9 @@ export function TitleBar({ roomCode }: TitleBarProps) {
     <div className={styles.titleBar}>
       <span className={styles.left}>
         <span className={`${styles.dot} ${dotClass}`} />
-        <span className={styles.name}>{myPlayer?.name ?? '...'}</span>
+        <span className={styles.playerName}>{myPlayer?.name ?? '...'}</span>
       </span>
-      <span className={styles.code}>#{roomCode}</span>
+      <span className={styles.roomCode}>#{roomCode}</span>
     </div>
   )
 }

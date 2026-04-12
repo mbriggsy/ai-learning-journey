@@ -1,132 +1,158 @@
-/* Smart action box — single contextual element at bottom of staging.
-   States: draw (red), ready (teal), target (amber), invalid (dashed red), hint (muted). */
+/* SmartActionBox.module.css
+   Single-indicator contextual action button. Shows current player turn state,
+   validation status, or the action to perform when cards are staged.
+   Seven distinct states drive typography, color, border, and glow variants.
 
-.box {
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  width: calc(100% - 16px);
-  min-height: 40px;
-  padding: 8px 16px;
-  margin: 0 auto;
-  border-radius: var(--radius-card, 8px);
-  font-family: var(--font-display);
-  font-size: 14px;
-  font-weight: 600;
-  letter-spacing: 0.03em;
-  text-align: center;
-  cursor: default;
-  touch-action: manipulation;
-  flex: 0 0 auto;
-  margin-top: auto;
-}
+   Animation tier: .action and .drawIntense breathe pulses are GAMEPLAY-ESSENTIAL
+   (turn-active CTA "act now" + near-empty-deck Burned warning). They consume
+   --motion-duration-essential-pulse, which survives prefers-reduced-motion: reduce
+   per Phase 1 §2.9. Decorative state-swap transitions use the regular --fast tier.
+*/
 
-/* ─── Invalid / Info state — dashed, muted ─── */
+@layer components {
+  .box {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    width: calc(100% - var(--space-4));
+    min-height: var(--size-touch-target);
+    padding: var(--space-2) var(--space-4);
+    margin: 0 auto;
+    background: var(--color-bg-elevated);
+    color: var(--color-fg-primary);
+    border: 2px solid var(--color-border-subtle);
+    border-radius: var(--radius-card);
+    font-family: var(--font-display);
+    font-size: var(--text-callout);
+    font-weight: 600;
+    letter-spacing: 0.02em;
+    text-align: center;
+    cursor: pointer;
+    transition:
+      background var(--motion-duration-fast) var(--motion-ease-base),
+      border-color var(--motion-duration-fast) var(--motion-ease-base),
+      box-shadow var(--motion-duration-fast) var(--motion-ease-base);
+  }
 
-.invalid {
-  border: 2px dashed color-mix(in srgb, var(--red, #d44030) 50%, transparent);
-  background: color-mix(in srgb, var(--red, #d44030) 5%, var(--bg-card, #1f3338));
-  color: color-mix(in srgb, var(--red, #d44030) 70%, var(--text-secondary, #b8a890));
-}
+  .box:disabled,
+  .box[aria-disabled="true"] {
+    cursor: not-allowed;
+    color: var(--color-fg-disabled);
+    background: var(--color-bg-surface);
+  }
 
-/* ─── Ready state — teal, solid, glow ─── */
+  /* Keyboard focus indicator — outline (not box-shadow) so the focus ring
+     never fights variant glow effects. WCAG 2.4.7. */
+  .box:focus-visible {
+    outline: 2px solid var(--color-border-focus);
+    outline-offset: var(--space-1);
+  }
 
-.ready {
-  border: 2px solid var(--teal, #2aaa98);
-  background: color-mix(in srgb, var(--teal, #2aaa98) 12%, var(--bg-card, #1f3338));
-  color: var(--teal, #2aaa98);
-  cursor: pointer;
-  box-shadow: 0 0 12px color-mix(in srgb, var(--teal, #2aaa98) 25%, transparent);
-}
+  /* State: not my turn — "Stand by, operative" (renamed from .hint in TSX) */
+  .standby {
+    color: var(--color-fg-muted);
+    background: var(--color-bg-surface);
+    border-color: var(--color-border-subtle);
+  }
 
-.ready:active:not(:disabled) {
-  background: color-mix(in srgb, var(--teal, #2aaa98) 22%, var(--bg-card, #1f3338));
-  box-shadow: 0 0 18px color-mix(in srgb, var(--teal, #2aaa98) 40%, transparent);
-}
+  /* State: my turn, nothing staged — "End turn — draw (N)" */
+  .draw {
+    color: var(--color-fg-primary);
+    background: var(--color-bg-interactive);
+    border-color: var(--color-border-interactive);
+  }
+  .draw:hover {
+    background: var(--color-bg-interactive-hover);
+  }
 
-.ready:disabled {
-  opacity: 0.35;
-  cursor: default;
-  box-shadow: none;
-}
+  /* State: draw when deck is almost empty — gameplay-essential warning pulse.
+     Consumes --motion-duration-essential-pulse: survives prefers-reduced-motion. */
+  .drawIntense {
+    color: var(--color-fg-primary);
+    background: var(--color-bg-danger);
+    border-color: var(--color-accent-burned);
+    box-shadow: var(--shadow-glow-danger);
+    animation: breatheIntense var(--motion-duration-essential-pulse) ease-in-out infinite alternate;
+  }
 
-/* ─── Target state — amber, solid, arrow ─── */
+  /* State: valid pair / triple (renamed from .target in TSX) */
+  .comboPair,
+  .comboTriple {
+    color: var(--color-fg-primary);
+    background: var(--color-bg-success);
+    border-color: var(--color-border-success);
+    box-shadow: var(--shadow-glow-success);
+  }
 
-.target {
-  border: 2px solid var(--amber, #d48820);
-  background: color-mix(in srgb, var(--amber, #d48820) 12%, var(--bg-card, #1f3338));
-  color: var(--amber, #d48820);
-  cursor: pointer;
-  box-shadow: 0 0 10px color-mix(in srgb, var(--amber, #d48820) 20%, transparent);
-}
+  /* State: valid single with action (renamed from .ready/.target in TSX).
+     Gameplay-essential CTA pulse — survives prefers-reduced-motion. */
+  .action {
+    color: var(--color-fg-primary);
+    background: var(--color-bg-interactive);
+    border-color: var(--color-border-focus);
+    box-shadow: var(--shadow-glow-accent);
+    animation: breathe var(--motion-duration-essential-pulse) ease-in-out infinite alternate;
+  }
 
-.target:active:not(:disabled) {
-  background: color-mix(in srgb, var(--amber, #d48820) 22%, var(--bg-card, #1f3338));
-  box-shadow: 0 0 16px color-mix(in srgb, var(--amber, #d48820) 35%, transparent);
-}
+  /* State: invalid selection — non-interactive error state */
+  .invalid {
+    color: var(--color-fg-danger);
+    background: var(--color-bg-danger);
+    border-color: var(--color-border-danger);
+    cursor: not-allowed;
+  }
 
-.target:disabled {
-  opacity: 0.35;
-  cursor: default;
-  box-shadow: none;
-}
+  /* Hint text (secondary line beneath primary) — distinct from .standby state class */
+  .hintText {
+    display: block;
+    margin-top: var(--space-1);
+    font-family: var(--font-body);
+    font-size: var(--text-caption);
+    font-weight: 400;
+    color: var(--color-fg-secondary);
+    letter-spacing: 0;
+  }
 
-/* ─── Draw state — red, breathing glow ─── */
+  /* Breathe animations — both consume --motion-duration-essential-pulse via
+     the .action and .drawIntense rules above. The visual differentiation
+     between "gentle ready" and "urgent warning" comes from the keyframe
+     content (scale amplitude + glow intensity), NOT from duration.
+     Phase 1 follow-up may add --motion-duration-essential-pulse-urgent (900ms)
+     for a sharper visual differential — flagged as Phase 1 amendment item. */
+  @keyframes breathe {
+    0%, 100% {
+      box-shadow: var(--shadow-glow-accent);
+      transform: scale(1);
+    }
+    50% {
+      box-shadow:
+        0 0 20px color-mix(in oklab, var(--color-accent-operative) 60%, transparent),
+        0 0 40px color-mix(in oklab, var(--color-accent-operative) 30%, transparent);
+      transform: scale(1.01);
+    }
+  }
 
-.draw {
-  border: 2px solid var(--red, #d44030);
-  background: color-mix(in srgb, var(--red, #d44030) 10%, var(--bg-card, #1f3338));
-  color: var(--red, #d44030);
-  cursor: pointer;
-  font-weight: 700;
-  letter-spacing: 0.08em;
-  text-transform: uppercase;
-  animation: breathe 3s ease-in-out infinite;
-  box-shadow: 0 0 12px color-mix(in srgb, var(--red, #d44030) 20%, transparent);
-}
+  @keyframes breatheIntense {
+    0%, 100% {
+      box-shadow: var(--shadow-glow-danger);
+      transform: scale(1);
+    }
+    50% {
+      box-shadow:
+        0 0 30px color-mix(in oklab, var(--color-accent-burned) 80%, transparent),
+        0 0 60px color-mix(in oklab, var(--color-accent-burned) 40%, transparent);
+      transform: scale(1.03);
+    }
+  }
 
-.draw:active:not(:disabled) {
-  background: color-mix(in srgb, var(--red, #d44030) 20%, var(--bg-card, #1f3338));
-  box-shadow: 0 0 20px color-mix(in srgb, var(--red, #d44030) 40%, transparent);
-}
-
-.draw:disabled {
-  opacity: 0.35;
-  cursor: default;
-  animation: none;
-  box-shadow: none;
-}
-
-.drawIntense {
-  border-color: var(--red-glow, #ff0000);
-  color: var(--red-glow, #ff0000);
-  animation: breatheIntense 1.5s ease-in-out infinite;
-}
-
-@keyframes breathe {
-  0%, 100% { box-shadow: 0 0 12px color-mix(in srgb, var(--red, #d44030) 20%, transparent); }
-  50% { box-shadow: 0 0 20px color-mix(in srgb, var(--red, #d44030) 35%, transparent); }
-}
-
-@keyframes breatheIntense {
-  0%, 100% { box-shadow: 0 0 24px color-mix(in srgb, var(--red-glow, #ff0000) 40%, transparent); }
-  50% { box-shadow: 0 0 36px color-mix(in srgb, var(--red-glow, #ff0000) 60%, transparent); }
-}
-
-/* ─── Hint state — passive, muted ─── */
-
-.hint {
-  border: 2px dashed color-mix(in srgb, var(--border-subtle, #3a5860) 60%, transparent);
-  background: transparent;
-  color: var(--text-disabled, #6a6050);
-  font-family: var(--font-body);
-  font-size: 13px;
-  font-weight: 500;
-  letter-spacing: 0.02em;
-}
-
-/* ─── Reduced motion ─── */
-
-@media (prefers-reduced-motion: reduce) {
-  .draw, .drawIntense { animation: none; }
+  /* Reduced-motion: essential-pulse already survives via Phase 1 §2.9 token
+     dual-family (1400ms baseline → 2400ms reduce). The breathe and
+     breatheIntense animations keep running, slowed for vestibular comfort.
+     This block is intentionally EMPTY for documentation: the rewrite does
+     NOT zero out the breathe animations, because they carry gameplay
+     information (turn-state CTA + near-empty-deck warning) per WCAG 2.3.3
+     essential-motion carve-out. PRESERVE the absence of an override here. */
+  @media (prefers-reduced-motion: reduce) {
+    /* Intentionally empty — see comment above. */
+  }
 }

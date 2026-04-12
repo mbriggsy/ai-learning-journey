@@ -1,43 +1,57 @@
-/* Status bar — compact turn indicator, replaces TurnBanner */
+/* StatusBar.module.css
+   Below the TitleBar. Shows turn state message: "YOUR TURN" / "Waiting for X — N in pile".
+   Above the workbench; not interactive — pure communication.
 
-.base {
-  flex: 0 0 auto;
-  min-height: 32px;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  padding: 4px 12px;
-  font-family: var(--font-display);
-  font-size: 13px;
-  font-weight: 700;
-  letter-spacing: 0.08em;
-  text-transform: uppercase;
-  text-align: center;
+   Composition pattern: TSX applies `${styles.statusBar} ${styles.yourTurn}`
+   or `${styles.statusBar} ${styles.waiting}`. The .statusBar class carries
+   shared layout/spacing; the variant classes carry color/weight overrides.
+   Replaces the pre-rebuild `composes: base` pattern (CSS Modules composition
+   was harder to reason about for one shared base + two variants).
+*/
+
+@layer components {
+  .statusBar {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: var(--space-2);
+    padding: var(--space-1) var(--space-3);
+    min-height: var(--size-touch-target);
+    background: var(--color-bg-app);
+    border-bottom: 1px solid var(--color-border-subtle);
+    color: var(--color-fg-secondary);
+    font-family: var(--font-display);
+    font-size: var(--text-body);
+    font-weight: 500;
+    letter-spacing: 0.04em;
+    text-align: center;
+    flex: 0 0 auto;
+  }
+
+  /* Variant: it's the player's turn — prominent, high-contrast */
+  .yourTurn {
+    background: var(--color-bg-interactive);
+    color: var(--color-fg-primary);
+    font-weight: 700;
+    letter-spacing: 0.08em;
+    text-transform: uppercase;
+  }
+
+  /* Variant: waiting on another player */
+  .waiting {
+    color: var(--color-fg-muted);
+    font-weight: 400;
+  }
+
+  /* Pile count — visually subordinate to the main message.
+     Renamed from .pileInfo (current StatusBar.tsx uses .pileInfo).
+     §2.3.6b enumerates the TSX rename. */
+  .pileCount {
+    font-family: var(--font-mono);
+    font-size: var(--text-caption);
+    color: var(--color-fg-muted);
+    padding: 0 var(--space-2);
+    border-left: 1px solid var(--color-border-subtle);
+    margin-left: var(--space-2);
+  }
 }
-
-.yourTurn {
-  composes: base;
-  background: color-mix(in srgb, var(--amber, #d48820) 18%, var(--bg-primary, #1a2a2e));
-  color: var(--amber, #d48820);
-  border-bottom: 1px solid color-mix(in srgb, var(--amber, #d48820) 30%, transparent);
-}
-
-.waiting {
-  composes: base;
-  background: var(--bg-primary, #1a2a2e);
-  color: var(--text-secondary, #b8a890);
-  font-weight: 600;
-  font-size: 12px;
-  letter-spacing: 0.04em;
-  text-transform: none;
-  border-bottom: 1px solid var(--border-subtle, #3a5860);
-}
-
-.pileInfo {
-  font-family: var(--font-mono);
-  font-variant-numeric: tabular-nums;
-  font-size: 11px;
-  font-weight: 500;
-  color: var(--text-disabled, #6a6050);
-}
-

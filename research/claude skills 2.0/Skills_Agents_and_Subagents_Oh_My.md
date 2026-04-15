@@ -1,4 +1,5 @@
-# Skills, Agents, and Subagents, Oh My: A Terminology & Architecture Clarification
+# Skills, Agents, and Subagents, Oh My!
+## A Terminology & Architecture Clarification
 
 **Version:** 1.0 | **Last Updated:** April 15, 2026 | **Author:** Claude (with Briggsy)
 **Companion to:** [Claude Skills 2.0: The Definitive User Guide](Claude_Skills_2.0_User_Guide.md) and [The Skill Creator: A Practitioner's Guide](Skill_Creator_Practitioners_Guide.md)

@@ -109,6 +109,14 @@ export function dispatch(
     return handleNope(playing, action, ctx)
   }
 
+  // While a Nope window is open, only Nope (handled above) and server-only timeout
+  // actions (handled earlier) may resolve. Without this guard, the current player
+  // could play a second card or draw, overwriting the pending window and silently
+  // dropping the first card's effect.
+  if (playing.nopeWindow !== null) {
+    return err(playing, 'Cannot act while Nope window is open', 'INVALID_ACTION')
+  }
+
   // Turn order check (current player only for all other actions)
   // Exception: favor-give is sent by the target, not the current player
   if (action.type === 'favor-give') {
@@ -362,7 +370,7 @@ function applyTargetedAttack(
 
   const target = state.players.find(p => p.id === targetPlayerId && p.isAlive)
   if (!target) return err(state, 'Invalid target player', 'INVALID_TARGET')
-  if (targetPlayerId === action.playerId) return err(state, 'Cannot target yourself', 'INVALID_TARGET')
+  // Self-target allowed per rules §13.8 — pointless, but legal and funny.
 
   const newTurns = state.currentTurn.turnsRemaining + 2
   const newState: PlayingState = {
@@ -672,8 +680,11 @@ function performDraw(
   // Consume one turn
   const remaining = state.currentTurn.turnsRemaining - 1
   if (remaining > 0) {
+    // Clear pending state (e.g. pendingFuture from a prior Intel Briefing peek)
+    // so the peek doesn't leak into the next Attack turn of the same player.
     const finalState: PlayingState = {
       ...newState,
+      ...CLEAR_PENDING,
       currentTurn: { ...state.currentTurn, turnsRemaining: remaining },
       nopeWindow: null,
       events: [...newState.events, ...events],

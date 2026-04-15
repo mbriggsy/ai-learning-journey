@@ -12,6 +12,8 @@
   display: flex;
   flex-direction: column;
   align-items: center;
+  box-sizing: border-box;  /* min-height: 100vh is total box, not content box, so
+     vertical padding doesn't inflate outer height past viewport. */
   min-height: 100vh;
   padding: var(--space-fluid-loose-board) var(--space-fluid-base-board) var(--space-fluid-base-board);
   color: var(--color-fg-primary);
@@ -38,36 +40,46 @@
       var(--color-teal-1) 100%);
 }
 
-/* ─── Title ─── */
+/* ─── Title — classified agency wordmark ─── */
+
+.classified {
+  font-family: var(--font-mono);
+  font-size: var(--text-caption-board);
+  font-weight: 500;
+  letter-spacing: 0.45em;
+  text-transform: uppercase;
+  color: color-mix(in oklab, var(--color-cream-11) 50%, transparent);
+  text-align: center;
+  margin: 0 0 var(--space-2);
+  flex-shrink: 0;
+}
 
 .title {
   font-family: var(--font-display);
   font-size: var(--text-display);
-  font-weight: 700;
+  font-weight: 900;
   text-transform: uppercase;
-  letter-spacing: 0.08em;
+  letter-spacing: -0.015em;  /* tight geometric stamp, not airy */
   text-align: center;
-  margin-bottom: var(--space-2);
+  margin-bottom: var(--space-3);
   flex-shrink: 0;
-  /* Cordovan ambient glow — the Burned accent, not Jackbox red */
+  color: var(--color-accent-burned);
+  /* Stamped ink feel — inner cream highlight + deep ambient glow */
   text-shadow:
-    0 0 40px color-mix(in oklab, var(--color-accent-burned) 30%, transparent),
-    0 0 80px color-mix(in oklab, var(--color-accent-burned) 12%, transparent);
+    0 1px 0 color-mix(in oklab, var(--color-cream-12) 18%, transparent),
+    0 0 50px color-mix(in oklab, var(--color-accent-burned) 50%, transparent),
+    0 0 110px color-mix(in oklab, var(--color-accent-burned) 22%, transparent);
 }
 
+/* Thick orange classified bar — notched left end for stamp vocabulary */
 .titleAccent {
   display: block;
-  width: var(--size-title-accent-width);
-  height: 2px;
+  width: calc(var(--size-title-accent-width) * 1.15);
+  height: 5px;
   margin: 0 auto var(--space-8);
-  background: linear-gradient(
-    90deg,
-    transparent 0%,
-    var(--color-accent-burned) 30%,
-    var(--color-accent-burned) 70%,
-    transparent 100%
-  );
-  border-radius: var(--radius-xs);
+  background: var(--color-accent-burned);
+  clip-path: polygon(10px 0, 100% 0, calc(100% - 10px) 100%, 0 100%);
+  box-shadow: 0 0 20px color-mix(in oklab, var(--color-accent-burned) 40%, transparent);
 }
 
 /* ─── QR section ─── */
@@ -76,34 +88,91 @@
   display: flex;
   flex-direction: column;
   align-items: center;
-  gap: var(--space-3);
-  margin-bottom: var(--space-8);
+  gap: var(--space-2);
+  margin-bottom: var(--space-6);
   flex-shrink: 0;
 }
 
-.qrFrame {
-  padding: var(--space-4);
-  background: var(--color-bg-surface);
-  border: 1px solid var(--color-border-subtle);
-  border-radius: var(--radius-lg);
-  box-shadow:
-    var(--shadow-md),
-    0 0 40px color-mix(in oklab, var(--color-accent-burned) 6%, transparent);
+.deployLabel {
+  font-family: var(--font-mono);
+  font-size: var(--text-caption-board);
+  font-weight: 600;
+  letter-spacing: 0.35em;
+  text-transform: uppercase;
+  color: color-mix(in oklab, var(--color-accent-drama) 75%, transparent);
+  margin-bottom: var(--space-2);
 }
 
+/* QR frame — cream ground with four L-shaped classified corner brackets.
+   Brackets sit OUTSIDE the cream pad; layered linear-gradients give precise 2px
+   strokes with no pseudo-element overhead. */
+.qrFrame {
+  position: relative;
+  padding: var(--space-3);
+  border: none;
+  border-radius: 2px;
+  background-color: color-mix(in oklab, var(--color-cream-12) 94%, transparent);
+  background-image:
+    linear-gradient(var(--color-accent-burned), var(--color-accent-burned)),
+    linear-gradient(var(--color-accent-burned), var(--color-accent-burned)),
+    linear-gradient(var(--color-accent-burned), var(--color-accent-burned)),
+    linear-gradient(var(--color-accent-burned), var(--color-accent-burned)),
+    linear-gradient(var(--color-accent-burned), var(--color-accent-burned)),
+    linear-gradient(var(--color-accent-burned), var(--color-accent-burned)),
+    linear-gradient(var(--color-accent-burned), var(--color-accent-burned)),
+    linear-gradient(var(--color-accent-burned), var(--color-accent-burned));
+  background-size:
+    14px 2px, 2px 14px,   /* TL horiz + vert */
+    14px 2px, 2px 14px,   /* TR horiz + vert */
+    14px 2px, 2px 14px,   /* BL horiz + vert */
+    14px 2px, 2px 14px;   /* BR horiz + vert */
+  background-position:
+    -6px -6px,                           2px -6px,             /* TL */
+    calc(100% + 6px) -6px,               calc(100% - 2px) -6px,/* TR */
+    -6px calc(100% + 6px),               2px calc(100% - 6px), /* BL */
+    calc(100% + 6px) calc(100% + 6px),   calc(100% - 2px) calc(100% - 6px); /* BR */
+  background-repeat: no-repeat;
+  background-origin: border-box;
+  background-clip: border-box;
+  box-shadow:
+    var(--shadow-md),
+    0 0 50px color-mix(in oklab, var(--color-accent-burned) 8%, transparent);
+}
+
+/* Room code — monospace agent identifier with bracket framing */
 .roomCode {
+  display: inline-flex;
+  align-items: baseline;
+  gap: var(--space-3);
   font-family: var(--font-mono);
   font-size: var(--text-title);
   font-weight: 700;
-  letter-spacing: 0.25em;
+  letter-spacing: 0.28em;
   font-variant-numeric: tabular-nums;
   color: var(--color-fg-primary);
+  padding: var(--space-2) var(--space-4);
+  margin-top: var(--space-3);
 }
 
+.roomCode::before,
+.roomCode::after {
+  font-family: var(--font-mono);
+  font-size: 0.7em;
+  font-weight: 400;
+  color: var(--color-accent-burned);
+  letter-spacing: 0;
+  opacity: 0.8;
+}
+
+.roomCode::before { content: '[ '; }
+.roomCode::after { content: ' ]'; }
+
 .hint {
-  font-size: var(--text-body);
-  color: var(--color-fg-muted);
-  letter-spacing: 0.05em;
+  font-family: var(--font-mono);
+  font-size: var(--text-caption-board);
+  color: color-mix(in oklab, var(--color-cream-11) 55%, transparent);
+  letter-spacing: 0.22em;
+  text-transform: uppercase;
 }
 
 /* ─── Player roster ─── */
@@ -129,16 +198,18 @@
   display: flex;
   align-items: center;
   justify-content: space-between;
-  padding: 0 var(--space-1) var(--space-2);
+  padding: var(--space-2) var(--space-2) var(--space-3);
+  border-bottom: 1px solid color-mix(in oklab, var(--color-accent-burned) 25%, transparent);
+  margin-bottom: var(--space-2);
 }
 
 .rosterLabel {
-  font-family: var(--font-display);
+  font-family: var(--font-mono);
   font-size: var(--text-caption-board);
   font-weight: 600;
   text-transform: uppercase;
-  letter-spacing: 0.12em;
-  color: var(--color-fg-muted);
+  letter-spacing: 0.25em;
+  color: color-mix(in oklab, var(--color-accent-drama) 80%, transparent);
 }
 
 .rosterCount {
@@ -146,7 +217,8 @@
   font-size: var(--text-caption-board);
   font-weight: 600;
   font-variant-numeric: tabular-nums;
-  color: var(--color-fg-secondary);
+  color: color-mix(in oklab, var(--color-cream-11) 75%, transparent);
+  letter-spacing: 0.1em;
 }
 
 /* ─── Player card ─── */
@@ -211,69 +283,104 @@
   40% { opacity: 1; transform: scale(1); }
 }
 
-/* ─── Start button ─── */
+/* ─── Start button — Pendleton Agency "DEPLOY" title card ─── */
 
 .startButton {
   position: relative;
-  padding: var(--space-4) var(--space-12);
+  padding: calc(var(--space-4) + 2px) var(--space-12);
   font-family: var(--font-display);
   font-size: var(--text-title);
-  font-weight: 700;
+  font-weight: 800;
   text-transform: uppercase;
-  letter-spacing: 0.1em;
+  letter-spacing: 0.18em;  /* stamped, spaced */
   border: none;
-  border-radius: var(--radius-md);
+  border-radius: 2px;  /* sharp classified corners */
   background: var(--color-accent-burned);
-  color: var(--color-fg-on-burned);
+  color: var(--color-cream-12);
   cursor: pointer;
   flex-shrink: 0;
   z-index: var(--z-raised);
-  transition: transform var(--motion-duration-fast) var(--motion-ease-base);
+  transition:
+    transform var(--motion-duration-fast) var(--motion-ease-base),
+    letter-spacing var(--motion-duration-slow) var(--motion-ease-base);
+  /* Double-line stamp border + subtle inner highlight */
+  box-shadow:
+    inset 0 0 0 1px color-mix(in oklab, var(--color-cream-12) 42%, transparent),
+    inset 0 0 0 5px transparent,
+    inset 0 0 0 6px color-mix(in oklab, var(--color-cream-12) 14%, transparent),
+    inset 0 2px 0 color-mix(in oklab, var(--color-cream-12) 10%, transparent),
+    0 3px 0 color-mix(in oklab, var(--color-charcoal-1) 40%, transparent),
+    0 6px 24px color-mix(in oklab, var(--color-accent-burned) 40%, transparent);
 }
 
-/* Pulsing glow — only opacity animates (GPU composited) */
+/* Breathing orange halo — only opacity animates (GPU composited) */
 .startButton::after {
   content: '';
   position: absolute;
-  inset: -3px;
-  border-radius: calc(var(--radius-md) + 3px);
+  inset: -5px;
+  border-radius: 3px;
   box-shadow:
-    0 0 12px color-mix(in oklab, var(--color-accent-burned) 60%, transparent),
-    0 0 32px color-mix(in oklab, var(--color-accent-burned) 30%, transparent),
-    0 0 64px color-mix(in oklab, var(--color-accent-burned) 15%, transparent);
+    0 0 18px color-mix(in oklab, var(--color-accent-burned) 70%, transparent),
+    0 0 40px color-mix(in oklab, var(--color-accent-burned) 35%, transparent),
+    0 0 80px color-mix(in oklab, var(--color-accent-burned) 18%, transparent);
   animation: lobbyButtonPulse var(--motion-duration-pulse-slow) var(--motion-ease-base) infinite;
   z-index: -1;
   pointer-events: none;
 }
 
+/* Classified bracket decorations flanking the label */
+.startButton::before {
+  content: '// ';
+  font-family: var(--font-mono);
+  font-weight: 400;
+  letter-spacing: 0;
+  opacity: 0.55;
+  margin-right: 0.3em;
+}
+
 @keyframes lobbyButtonPulse {
-  0%, 100% { opacity: 0.4; }
+  0%, 100% { opacity: 0.45; }
   50% { opacity: 1; }
 }
 
 .startButton:hover {
-  transform: scale(1.03);
+  transform: translateY(-2px);
+  letter-spacing: 0.22em;
+  box-shadow:
+    inset 0 0 0 1px color-mix(in oklab, var(--color-cream-12) 55%, transparent),
+    inset 0 0 0 5px transparent,
+    inset 0 0 0 6px color-mix(in oklab, var(--color-cream-12) 18%, transparent),
+    0 5px 0 color-mix(in oklab, var(--color-charcoal-1) 40%, transparent),
+    0 10px 32px color-mix(in oklab, var(--color-accent-burned) 50%, transparent);
 }
 
 .startButton:active {
-  transform: scale(0.98);
+  transform: translateY(1px);
+  box-shadow:
+    inset 0 0 0 1px color-mix(in oklab, var(--color-cream-12) 42%, transparent),
+    inset 0 0 0 5px transparent,
+    inset 0 0 0 6px color-mix(in oklab, var(--color-cream-12) 14%, transparent),
+    0 1px 0 color-mix(in oklab, var(--color-charcoal-1) 40%, transparent),
+    0 3px 12px color-mix(in oklab, var(--color-accent-burned) 30%, transparent);
 }
 
 .startButton:focus-visible {
   outline: 2px solid var(--color-border-focus);
-  outline-offset: 3px;
+  outline-offset: 5px;
 }
 
 .startButton:disabled {
-  background: var(--color-bg-interactive);
-  color: var(--color-fg-disabled);
+  background: color-mix(in oklab, var(--color-teal-6) 60%, var(--color-charcoal-1));
+  color: color-mix(in oklab, var(--color-cream-11) 38%, transparent);
   cursor: not-allowed;
   transform: none;
+  box-shadow:
+    inset 0 0 0 1px color-mix(in oklab, var(--color-cream-11) 14%, transparent),
+    0 2px 0 color-mix(in oklab, var(--color-charcoal-1) 30%, transparent);
 }
 
-.startButton:disabled::after {
-  display: none;
-}
+.startButton:disabled::after { display: none; }
+.startButton:disabled::before { opacity: 0.3; }
 
 /* ─── Dev toolbar (localhost only) ─── */
 

@@ -16,7 +16,7 @@ export default defineConfig({
     { name: 'Mobile Safari', use: { ...devices['iPhone 13'] }, timeout: 120_000 },
   ],
   webServer: [
-    { command: 'npx partykit dev', port: 1999, reuseExistingServer: true, timeout: 15_000 },
+    { command: 'pnpm run dev:server', port: 8787, reuseExistingServer: true, timeout: 30_000 },
     { command: 'pnpm run dev', port: 5173, reuseExistingServer: true, timeout: 15_000 },
   ],
 })

@@ -35,7 +35,7 @@ export function ConnectionOverlay({ status }: ConnectionOverlayProps) {
     <dialog ref={dialogRef} className={styles.overlay} aria-label="Connection status">
       <div className={styles.spinner} aria-hidden="true" />
       <div className={styles.label}>
-        {status === 'connecting' ? 'Connecting...' : 'Reconnecting...'}
+        {status === 'connecting' ? 'Opening channel...' : 'Re-establishing channel...'}
       </div>
     </dialog>
   )

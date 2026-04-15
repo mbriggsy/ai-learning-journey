@@ -13,6 +13,9 @@
   position: relative;
   display: grid;
   grid-template-rows: auto 1fr auto;  /* announcement feed | play area | status bar */
+  box-sizing: border-box;  /* keep outer height == 100vh so contain:layout's
+     fixed-position descendants (StatusBar) anchor to the visible viewport edge,
+     not 44px below fold once 22px vertical padding is added. */
   height: 100vh;
   padding: var(--space-fluid-base-board) var(--space-fluid-loose-board);
   font-family: var(--font-body);

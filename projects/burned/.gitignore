@@ -7,6 +7,9 @@ src/client/shared/tokens/palette.generated.ts
 .partykit/
 .wrangler/
 .playwright-mcp/
+temp/
+test-results/
+playwright-report/
 *.local
 .env*
 !.env.example

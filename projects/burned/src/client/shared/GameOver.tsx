@@ -108,7 +108,7 @@ export function GameOver({ players, winnerId, eliminationOrder, myPlayerId, onPl
           animate={{ opacity: 1 }}
           transition={{ ...MOTION.enter, delay: 1.5 }}
         >
-          Waiting for host...
+          Stand by for next briefing&hellip;
         </m.div>
       ) : null}
     </div>

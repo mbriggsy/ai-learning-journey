@@ -16,7 +16,7 @@ test.describe('Tier 1: Ship Blockers', () => {
     await waitForPlayerCount(board, 3)
 
     // Start game
-    await board.locator('button:has-text("Start")').click()
+    await board.locator('button:has-text("Cleared Hot")').click()
     await waitForPhase(board, 'playing', 10_000)
 
     // Verify all phones see playing phase
@@ -30,7 +30,7 @@ test.describe('Tier 1: Ship Blockers', () => {
       await joinPhone(phones[i]!, roomCode, `P${i + 1}`)
     }
     await waitForPlayerCount(board, 2)
-    await board.locator('button:has-text("Start")').click()
+    await board.locator('button:has-text("Cleared Hot")').click()
     await waitForPhase(board, 'playing', 10_000)
     // Game started — if a Nopeable card is played, the window should resolve automatically
   })
@@ -56,7 +56,7 @@ test.describe('Tier 1: Ship Blockers', () => {
     await joinPhone(phones[0]!, roomCode, 'Spy')
     await joinPhone(phones[1]!, roomCode, 'Agent')
     await waitForPlayerCount(board, 2)
-    await board.locator('button:has-text("Start")').click()
+    await board.locator('button:has-text("Cleared Hot")').click()
     await waitForPhase(board, 'playing', 10_000)
 
     // Check no frame contains drawPile card IDs or hand contents

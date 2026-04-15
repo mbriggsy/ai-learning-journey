@@ -13,20 +13,20 @@ function getStatusText(
   if (prompt) {
     const name = playerName(players, prompt.playerId)
     switch (prompt.type) {
-      case 'defuse': return `${name} is placing the Burned card...`
-      case 'favor-response': return `Waiting on ${name} to give a card`
-      case 'future-rearrange': return `${name} is rearranging the future`
-      case 'steal-target': return `${name} is choosing a target`
-      case 'name-card': return `${name} is naming a card`
+      case 'defuse': return `${name} is reinserting the Burned file\u2026`
+      case 'favor-response': return `${name} is handing over a card`
+      case 'future-rearrange': return `${name} is rearranging the intel`
+      case 'steal-target': return `${name} is picking a mark`
+      case 'name-card': return `${name} is calling the shot`
     }
   }
 
   if (currentTurn) {
     const name = playerName(players, currentTurn.currentPlayerId)
     const extra = currentTurn.turnsRemaining > 1
-      ? ` (${currentTurn.turnsRemaining} turns)`
+      ? ` \u00b7 ${currentTurn.turnsRemaining} turns`
       : ''
-    return `Waiting on ${name}${extra}`
+    return `${name} is on deck${extra}`
   }
 
   return ''

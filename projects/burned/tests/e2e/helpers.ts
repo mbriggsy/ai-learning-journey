@@ -35,5 +35,5 @@ export async function waitForPlayerCount(page: Page, count: number, timeout = 50
 export async function joinPhone(page: Page, roomCode: string, name: string): Promise<void> {
   await page.goto(`/player.html?room=${roomCode}`)
   await page.locator('input[type="text"]').fill(name)
-  await page.locator('button:has-text("Join")').click()
+  await page.locator('button:has-text("Check In")').click()
 }

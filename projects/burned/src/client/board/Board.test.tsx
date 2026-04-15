@@ -15,7 +15,7 @@ describe('Board', () => {
     })
 
     // Before WebSocket connects, shows loading state
-    expect(container.textContent).toContain('Creating room')
+    expect(container.textContent).toContain('Opening secure channel')
 
     act(() => {
       root.unmount()

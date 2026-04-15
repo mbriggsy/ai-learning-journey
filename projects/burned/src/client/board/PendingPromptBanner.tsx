@@ -4,12 +4,13 @@ import type { BoardPlayer, PendingPromptView } from '@shared/protocol'
 import styles from './PendingPromptBanner.module.css'
 
 function getBannerText(prompt: PendingPromptView, players: readonly BoardPlayer[]): string {
+  const name = playerName(players, prompt.playerId)
   switch (prompt.type) {
-    case 'defuse': return `${playerName(players, prompt.playerId)} is hiding the Burned card...`
-    case 'favor-response': return `Waiting for ${playerName(players, prompt.playerId)} to give a card...`
-    case 'future-rearrange': return `${playerName(players, prompt.playerId)} is rearranging the future...`
-    case 'steal-target': return `${playerName(players, prompt.playerId)} is choosing a target...`
-    case 'name-card': return `${playerName(players, prompt.playerId)} is naming a card...`
+    case 'defuse': return `${name} is reinserting the Burned file\u2026`
+    case 'favor-response': return `${name} is handing over a card\u2026`
+    case 'future-rearrange': return `${name} is rearranging the intel\u2026`
+    case 'steal-target': return `${name} is picking a mark\u2026`
+    case 'name-card': return `${name} is calling the shot\u2026`
   }
 }
 

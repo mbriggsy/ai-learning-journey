@@ -287,18 +287,26 @@ describe('Direct Order', () => {
     }
   })
 
-  it('rejects self-targeting', () => {
+  it('allows self-targeting per rules §13.8 (adds 2 turns to self)', () => {
     let state = startGameWith(3)
     state = giveCard(state, 'p1', 'direct-order', 'ta-self')
 
     const card = findCard(state, 'p1', 'direct-order')!
-    const result = act(state, {
+    let result = act(state, {
       type: 'play-card', playerId: 'p1', cardIds: [card.id], targetPlayerId: 'p1',
     })
-    // Opens nope window, then self-target check happens on resolution
-    // Actually, the direct-order effect is applied after nope window
-    // Self-targeting is checked in applyDirectOrder
-    expect(result.ok).toBe(true) // nope window opens first
+    expect(result.ok).toBe(true)
+
+    // Resolve nope window — self-targeted Direct Order applies
+    const afterNope = (result as { ok: true; state: GameState }).state as PlayingState
+    result = resolveNopeWindow(afterNope, makeCtx(99999))
+    expect(result.ok).toBe(true)
+    if (result.ok) {
+      const s = result.state as PlayingState
+      expect(s.currentTurn.currentPlayerId).toBe('p1')
+      // Started with 1 turn remaining; self-attack adds 2 → 3 turns total
+      expect(s.currentTurn.turnsRemaining).toBe(3)
+    }
   })
 
   it('requires a target', () => {
@@ -420,6 +428,43 @@ describe('Nope', () => {
       const resolved = result.state as PlayingState
       // Action was cancelled, should be back to turn-active
       expect(resolved.subPhase).toBe('turn-active')
+      expect(resolved.nopeWindow).toBeNull()
+    }
+  })
+
+  it('blocks current player from playing a second card while Nope window is open', () => {
+    let state = startGameWith(2)
+    state = giveCard(state, 'p1', 'go-dark', 'skip-1')
+    state = giveCard(state, 'p1', 'go-dark', 'skip-2')
+
+    // First Skip opens nope window
+    const firstSkip = state.players.find(p => p.id === 'p1')!.hand.find(c => c.id === 'skip-1')!
+    let result = act(state, { type: 'play-card', playerId: 'p1', cardIds: [firstSkip.id] })
+    expect(result.ok).toBe(true)
+    const withWindow = (result as { ok: true; state: GameState }).state as PlayingState
+    expect(withWindow.nopeWindow).not.toBeNull()
+    expect(withWindow.players.find(p => p.id === 'p1')!.hand.some(c => c.id === 'skip-1')).toBe(false)
+
+    // Second play-card must be rejected — would overwrite nope window and drop first effect
+    const secondSkip = withWindow.players.find(p => p.id === 'p1')!.hand.find(c => c.id === 'skip-2')!
+    result = act(withWindow, { type: 'play-card', playerId: 'p1', cardIds: [secondSkip.id] })
+    expect(result.ok).toBe(false)
+    if (!result.ok) expect(result.code).toBe('INVALID_ACTION')
+
+    // Second card still in hand (nothing consumed)
+    expect(withWindow.players.find(p => p.id === 'p1')!.hand.some(c => c.id === 'skip-2')).toBe(true)
+
+    // draw-card is also blocked
+    result = act(withWindow, { type: 'draw-card', playerId: 'p1' })
+    expect(result.ok).toBe(false)
+    if (!result.ok) expect(result.code).toBe('INVALID_ACTION')
+
+    // After window resolves, first Skip's effect applies (turn advances to p2)
+    result = resolveNopeWindow(withWindow, makeCtx(99999))
+    expect(result.ok).toBe(true)
+    if (result.ok) {
+      const resolved = result.state as PlayingState
+      expect(resolved.currentTurn.currentPlayerId).toBe('p2')
       expect(resolved.nopeWindow).toBeNull()
     }
   })
@@ -740,6 +785,36 @@ describe('Intel Briefing', () => {
       const s = result.state as PlayingState
       expect(s.pendingFuture).toBeDefined()
       expect(s.pendingFuture!.cardIds.length).toBeLessThanOrEqual(3)
+    }
+  })
+
+  it('clears pendingFuture on safe draw so peek does not leak into next Attack turn', () => {
+    let state = startGameWith(2)
+    state = giveCard(state, 'p1', 'intel-briefing', 'stf-leak')
+
+    // Simulate p1 being mid-Attack (2 turns remaining)
+    state = { ...state, currentTurn: { ...state.currentTurn, turnsRemaining: 2 } }
+
+    const stfCard = findCard(state, 'p1', 'intel-briefing')!
+    let result = act(state, { type: 'play-card', playerId: 'p1', cardIds: [stfCard.id] })
+    let s = (result as { ok: true; state: GameState }).state as PlayingState
+
+    // Resolve Intel Briefing → pendingFuture set
+    result = resolveNopeWindow(s, makeCtx(99999))
+    s = (result as { ok: true; state: GameState }).state as PlayingState
+    expect(s.pendingFuture).toBeDefined()
+    expect(s.currentTurn.currentPlayerId).toBe('p1')
+    expect(s.currentTurn.turnsRemaining).toBe(2)
+
+    // p1 draws safely — still p1's turn (turnsRemaining → 1)
+    result = act(s, { type: 'draw-card', playerId: 'p1' })
+    expect(result.ok).toBe(true)
+    if (result.ok) {
+      const drawn = result.state as PlayingState
+      expect(drawn.currentTurn.currentPlayerId).toBe('p1')
+      expect(drawn.currentTurn.turnsRemaining).toBe(1)
+      // pendingFuture must NOT persist — peek was of a pile that no longer has its top card
+      expect(drawn.pendingFuture).toBeUndefined()
     }
   })
 })

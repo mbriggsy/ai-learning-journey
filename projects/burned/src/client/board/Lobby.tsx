@@ -25,7 +25,7 @@ export function Lobby({ connectionStatus, onStartGame }: Props) {
     return (
       <div className={styles.container}>
         <p className={styles.waiting}>
-          Creating room
+          Opening secure channel
           <span className={styles.waitingDots}>
             <span className={styles.waitingDot} />
             <span className={styles.waitingDot} />
@@ -37,24 +37,27 @@ export function Lobby({ connectionStatus, onStartGame }: Props) {
   }
 
   const canStart = lobby.players.length >= 2
+  const shortBy = 2 - lobby.players.length
 
   return (
     <div className={styles.container}>
+      <p className={styles.classified}>The Pendleton Agency // Eyes Only</p>
       <h1 className={styles.title}>BURNED</h1>
       <div className={styles.titleAccent} />
 
       <div className={styles.qrSection}>
+        <span className={styles.deployLabel}>// Deploy Operative</span>
         <div className={styles.qrFrame}>
-          <QRCodeSVG value={playerUrl} size={180} bgColor="transparent" fgColor="#e8e8f0" />
+          <QRCodeSVG value={playerUrl} size={140} bgColor="transparent" fgColor="#1a2e30" />
         </div>
         <span className={styles.roomCode}>{lobby.roomCode}</span>
-        <span className={styles.hint}>Scan to join</span>
+        <span className={styles.hint}>Scan &amp; check in</span>
       </div>
 
       <div className={styles.roster}>
         <div className={styles.rosterHeader}>
-          <span className={styles.rosterLabel}>Players</span>
-          <span className={styles.rosterCount}>{lobby.players.length}/10</span>
+          <span className={styles.rosterLabel}>Active Operatives</span>
+          <span className={styles.rosterCount}>{lobby.players.length} / 10</span>
         </div>
 
         <AnimatePresence mode="popLayout">
@@ -70,7 +73,7 @@ export function Lobby({ connectionStatus, onStartGame }: Props) {
               <PlayerIcon color={player.color} size={18} />
               <span className={styles.playerName}>{player.name}</span>
               {!player.isConnected && (
-                <span className={styles.disconnectedBadge}>disconnected</span>
+                <span className={styles.disconnectedBadge}>off-grid</span>
               )}
             </m.div>
           ))}
@@ -78,7 +81,7 @@ export function Lobby({ connectionStatus, onStartGame }: Props) {
 
         {lobby.players.length === 0 && (
           <p className={styles.waiting}>
-            Waiting for players
+            Awaiting check-in
             <span className={styles.waitingDots}>
               <span className={styles.waitingDot} />
               <span className={styles.waitingDot} />
@@ -93,7 +96,7 @@ export function Lobby({ connectionStatus, onStartGame }: Props) {
         onClick={onStartGame}
         disabled={!canStart}
       >
-        {canStart ? 'Start Game' : `Need ${2 - lobby.players.length} more`}
+        {canStart ? 'Cleared Hot' : shortBy === 1 ? 'One short' : `${shortBy} operatives short`}
       </button>
 
       {isDev && (

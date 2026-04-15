@@ -24,10 +24,10 @@ function formatEvent(event: GameEvent, players: readonly BoardPlayer[], eventId:
   switch (event.type) {
     case 'game-started':
       return pick([
-        `${event.playerCount} players. No mercy.`,
-        `${event.playerCount} enter. 1 survives.`,
-        `Game on — ${event.playerCount} brave souls.`,
-        `Let the chaos begin.`,
+        `${event.playerCount} operatives. Cleared hot.`,
+        `${event.playerCount} deploy. 1 makes it home.`,
+        `Briefing over. ${event.playerCount} in the field.`,
+        `The Pendleton Agency is live.`,
       ], eventId)
 
     case 'card-played': {

@@ -8,11 +8,11 @@ interface StatusBarProps {
 
 export function StatusBar({ isMyTurn, currentPlayerName, drawPileCount }: StatusBarProps) {
   if (isMyTurn) {
-    return <div className={`${styles.statusBar} ${styles.yourTurn}`}>Your Turn</div>
+    return <div className={`${styles.statusBar} ${styles.yourTurn}`} data-diag="statusbar">Your Turn</div>
   }
 
   return (
-    <div className={`${styles.statusBar} ${styles.waiting}`}>
+    <div className={`${styles.statusBar} ${styles.waiting}`} data-diag="statusbar">
       {currentPlayerName
         ? `Waiting for ${currentPlayerName}`
         : 'Waiting...'}

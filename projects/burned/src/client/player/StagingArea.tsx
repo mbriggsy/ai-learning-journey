@@ -118,17 +118,19 @@ export function StagingArea({
       )}
 
       {/* Smart action box — always present, adapts to context */}
-      <SmartActionBox
-        cardPlayState={cardPlayState}
-        isMyTurn={isMyTurn}
-        subPhase={subPhase}
-        drawPileCount={drawPileCount}
-        disabled={disabled}
-        optimisticPending={optimisticPending}
-        onConfirm={onConfirm}
-        onConfirmWithTarget={onConfirmWithTarget}
-        onDraw={handleDraw}
-      />
+      <div className={styles.smartActionBox}>
+        <SmartActionBox
+          cardPlayState={cardPlayState}
+          isMyTurn={isMyTurn}
+          subPhase={subPhase}
+          drawPileCount={drawPileCount}
+          disabled={disabled}
+          optimisticPending={optimisticPending}
+          onConfirm={onConfirm}
+          onConfirmWithTarget={onConfirmWithTarget}
+          onDraw={handleDraw}
+        />
+      </div>
 
       {/* Full-screen enlarge overlay — same as hand */}
       <AnimatePresence>

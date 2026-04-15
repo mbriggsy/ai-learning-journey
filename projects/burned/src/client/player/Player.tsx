@@ -1,4 +1,4 @@
-import { useState, useEffect, useCallback, useMemo, Fragment, lazy, Suspense } from 'react'
+import { useState, useEffect, useCallback, useMemo, Fragment, lazy, Suspense, type ComponentType } from 'react'
 import { connect, disconnect, send, onMessage, onStatusChange, onReconnect, getStatus, getSessionToken, setSessionToken } from '@client/connection'
 import type { ConnectionStatus } from '@client/connection'
 import { gameStore, useGameState, useProtocolMismatch, useIsOptimisticPending } from '@client/shared/gameStore'
@@ -32,6 +32,11 @@ import { CardDetailSheet } from './CardDetailSheet'
 import type { CardType } from '@shared/types'
 import { PARTYKIT_HOST } from '@client/shared/config'
 import playingStyles from './PlayingView.module.css'
+
+// Dev-only diagnostic overlay — tree-shaken in production
+const DiagOverlay: ComponentType = import.meta.env.DEV
+  ? lazy(() => import('./DiagOverlay'))
+  : () => null
 
 function getRoomCodeFromUrl(): string {
   const params = new URLSearchParams(window.location.search)
@@ -124,6 +129,7 @@ export function Player() {
       <ErrorToast />
       <ConnectionOverlay status={connectionStatus} />
       <FloatingActionButton />
+      <Suspense><DiagOverlay /></Suspense>
     </>
   )
 }
@@ -326,7 +332,7 @@ function PlayingView({ roomCode }: { roomCode: string }) {
   const displayHand = sortedHand.filter(c => !selectedIds.has(c.id))
 
   return (
-    <div className={playingStyles.view}>
+    <div className={playingStyles.view} data-diag="view">
       <TitleBar roomCode={roomCode} />
       <StatusBar isMyTurn={isMyTurn} currentPlayerName={currentPlayerName} drawPileCount={drawPileCount} />
 

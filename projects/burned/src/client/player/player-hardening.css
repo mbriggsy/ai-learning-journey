@@ -48,6 +48,12 @@ body {
   user-select: none;
   /* Disable iOS tap highlight — we handle feedback explicitly */
   -webkit-tap-highlight-color: transparent;
+  /* Disable double-tap-to-zoom — the app uses double-tap for card staging
+     via pointerup events (useDoubleTap hook), not browser gestures.
+     Without this, Chrome interprets double-taps as zoom, shifting the
+     visual viewport and hiding TitleBar/StatusBar. Preserves pinch-zoom
+     and panning (WCAG 1.4.4 compliant). */
+  touch-action: manipulation;
 }
 
 #root {

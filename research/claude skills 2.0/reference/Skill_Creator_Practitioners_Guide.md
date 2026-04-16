@@ -1,7 +1,7 @@
 # The Skill Creator: A Practitioner's Guide to Engineering Agent Skills
 
 **Version:** 1.1 | **Last Updated:** 2026-04-16 | **Author:** Claude (with Briggsy)
-**Part of:** [Skills 2.0 — Reference Collection](README.md). Companions: [Claude Skills 2.0 — User Guide](Claude_Skills_2.0_User_Guide.md), [Skills, Agents, and Subagents — Oh My!](Skills_Agents_and_Subagents_Oh_My.md).
+**Part of:** [Skills 2.0 — Reference Collection](../README.md). Companions: [Claude Skills 2.0 — User Guide](Claude_Skills_2.0_User_Guide.md), [Skills, Agents, and Subagents — Oh My!](Skills_Agents_and_Subagents_Oh_My.md).
 
 ---
 
@@ -13,7 +13,7 @@
 
 **How long it'll take.** ~30 minutes for the first read. The worked example (§4–§11) threads a single PR review skill through every phase, so you can read it linearly or jump to a specific phase as reference.
 
-**What to read next.** [Skills, Agents, and Subagents — Oh My!](Skills_Agents_and_Subagents_Oh_My.md) for the architectural framing of where skills sit relative to agents and subagents, or the [Claude Skills 2.0 User Guide](Claude_Skills_2.0_User_Guide.md) for the full anatomy / runtime / distribution treatment. The [hub README](README.md) frames the whole collection.
+**What to read next.** [Skills, Agents, and Subagents — Oh My!](Skills_Agents_and_Subagents_Oh_My.md) for the architectural framing of where skills sit relative to agents and subagents, or the [Claude Skills 2.0 User Guide](Claude_Skills_2.0_User_Guide.md) for the full anatomy / runtime / distribution treatment. The [hub README](../README.md) frames the whole collection.
 
 ---
 

@@ -1,7 +1,7 @@
 # Claude Skills 2.0: The Definitive User Guide
 
 **Version:** 2.2 | **Last Updated:** 2026-04-16 | **Author:** Claude (with Briggsy)
-**Part of:** [Skills 2.0 — Reference Collection](README.md). Companions: [Skills, Agents, and Subagents — Oh My!](Skills_Agents_and_Subagents_Oh_My.md), [Skill Creator Practitioner's Guide](Skill_Creator_Practitioners_Guide.md).
+**Part of:** [Skills 2.0 — Reference Collection](../README.md). Companions: [Skills, Agents, and Subagents — Oh My!](Skills_Agents_and_Subagents_Oh_My.md), [Skill Creator Practitioner's Guide](Skill_Creator_Practitioners_Guide.md).
 
 ---
 
@@ -13,7 +13,7 @@
 
 **How long it'll take.** ~45 minutes for the first read; the doc is structured so you can read it linearly or treat it as reference. Reference-heavy sections (frontmatter table, cross-platform matrix, cheat sheet) are wrapped in collapsibles so casual readers aren't buried in tables.
 
-**What to read next.** [Skills, Agents, and Subagents — Oh My!](Skills_Agents_and_Subagents_Oh_My.md) for the architecture and decision framework, or the [Skill Creator Practitioner's Guide](Skill_Creator_Practitioners_Guide.md) for engineering rigor. The [hub README](README.md) frames the whole collection.
+**What to read next.** [Skills, Agents, and Subagents — Oh My!](Skills_Agents_and_Subagents_Oh_My.md) for the architecture and decision framework, or the [Skill Creator Practitioner's Guide](Skill_Creator_Practitioners_Guide.md) for engineering rigor. The [hub README](../README.md) frames the whole collection.
 
 ---
 
@@ -54,7 +54,7 @@
 19. [Quick Reference & Cheat Sheet](#19-quick-reference--cheat-sheet)
 20. [Appendix A: Further Resources](#appendix-a-further-resources)
 
-> **Glossary:** the canonical glossary for this collection lives in the [hub README](README.md#glossary).
+> **Glossary:** the canonical glossary for this collection lives in the [hub README](../README.md#glossary).
 
 ---
 
@@ -1294,7 +1294,7 @@ description: "What it does. When to trigger. When NOT to trigger."
 
 ## Appendix A: Further Resources
 
-> **Glossary:** the canonical glossary for this collection lives in the [hub README](README.md#glossary).
+> **Glossary:** the canonical glossary for this collection lives in the [hub README](../README.md#glossary).
 
 
 
@@ -1310,4 +1310,4 @@ description: "What it does. When to trigger. When NOT to trigger."
 
 ---
 
-*Built from primary source analysis of actual skill files on the Claude.ai system, official Claude Code documentation at code.claude.com, the agentskills.io specification, the microsoft/skills marketplace (verified via direct GitHub API enumeration of plugins and skills), and cross-referenced against documentation from all major platforms. Reflects ecosystem state as of 2026-04-16. v2.2 normalized the intro pattern, added four Mermaid diagrams (progressive disclosure flow in §2, runtime sequence in §4, storage precedence in §7, skills+subagents two-directions in §10), wrapped reference-heavy content (full frontmatter table in §9, platform compatibility matrix and feature comparison in §13, cheat sheet in §19) in collapsibles, added gap-fill subsections for skill scanning (§7), hooks/skills interaction (§10), skills/MCP composition (§10), subagent memory and skills (§10), and plugin packaging (§14), shrunk §11 to a stub pointing to SCG, trimmed §12 to keep only unique examples (deploy and PR-summary now live in their canonical homes in §5 and §10), corrected the CLAUDE.md-loads-into-forked-context claim in §10 (issue [#29423](https://github.com/anthropics/claude-code/issues/29423) verified that subagents do not auto-load CLAUDE.md), softened the `disable-model-invocation` claim in §9 with a note about the v2.1.71 implementation bug, updated Microsoft skill count to verified 200+ figure with primary-source link, anchored the "30+ platforms" claim to the agentskills.io Client Showcase, and consolidated the glossary into the [hub README](README.md#glossary).*
+*Built from primary source analysis of actual skill files on the Claude.ai system, official Claude Code documentation at code.claude.com, the agentskills.io specification, the microsoft/skills marketplace (verified via direct GitHub API enumeration of plugins and skills), and cross-referenced against documentation from all major platforms. Reflects ecosystem state as of 2026-04-16. v2.2 normalized the intro pattern, added four Mermaid diagrams (progressive disclosure flow in §2, runtime sequence in §4, storage precedence in §7, skills+subagents two-directions in §10), wrapped reference-heavy content (full frontmatter table in §9, platform compatibility matrix and feature comparison in §13, cheat sheet in §19) in collapsibles, added gap-fill subsections for skill scanning (§7), hooks/skills interaction (§10), skills/MCP composition (§10), subagent memory and skills (§10), and plugin packaging (§14), shrunk §11 to a stub pointing to SCG, trimmed §12 to keep only unique examples (deploy and PR-summary now live in their canonical homes in §5 and §10), corrected the CLAUDE.md-loads-into-forked-context claim in §10 (issue [#29423](https://github.com/anthropics/claude-code/issues/29423) verified that subagents do not auto-load CLAUDE.md), softened the `disable-model-invocation` claim in §9 with a note about the v2.1.71 implementation bug, updated Microsoft skill count to verified 200+ figure with primary-source link, anchored the "30+ platforms" claim to the agentskills.io Client Showcase, and consolidated the glossary into the [hub README](../README.md#glossary).*

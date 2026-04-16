@@ -1,73 +1,57 @@
-# Skills 2.0 — Reference Collection
+# Skills 2.0 — Team Playbook
 
-A consolidated, system-of-record treatment of Anthropic's Agent Skills standard for engineers, operators, and collaborators who need a working understanding of skills without reading Anthropic's official documentation cover-to-cover.
+An engineer's on-ramp to building agentic systems with Claude Code, following Anthropic's skills-first approach. Four short docs get you from zero to shipping. Three deep reference docs are here when you need precision.
 
 **Last updated:** 2026-04-16
 
 ---
 
-## What this collection is
+## Start here
 
-Three reference docs, each written for a different reader moment, plus this hub for orientation. Every load-bearing claim is backed by a primary source. Depth is one click away when you need it but never forced on a casual reader.
+Read in this order. Each doc builds on the one before it.
 
-| Doc | Best for | Approx. read time |
-|-----|----------|-------------------|
-| [Skills, Agents, and Subagents — Oh My!](Skills_Agents_and_Subagents_Oh_My.md) | Sorting out what skills, agents, and subagents actually are. The architecture and decision framework. | ~20 min |
-| [Claude Skills 2.0 — User Guide](Claude_Skills_2.0_User_Guide.md) | Full ecosystem treatment. Anatomy, runtime, distribution, security, cross-platform. | ~45 min |
-| [Skill Creator Practitioner's Guide](Skill_Creator_Practitioners_Guide.md) | Engineering discipline for shipping reliable skills. Evals, A/B tests, governance. | ~30 min |
+| # | Doc | Read time | What it gives you |
+|---|-----|-----------|-------------------|
+| 1 | **[00_START.md](00_START.md)** | 5 min | The mental model. What a skill is, how it differs from an agent, when to reach for what. |
+| 2 | **[01_BUILD.md](01_BUILD.md)** | 15 min (plus 30 min hands-on) | Your first skill, end-to-end. Release-notes generator built with the Skill Creator. |
+| 3 | **[02_SHARPEN.md](02_SHARPEN.md)** | 12 min | Composition. `context: fork`, subagents, MCP, hooks, parallel fan-out. |
+| 4 | **[03_SHIP.md](03_SHIP.md)** | 10 min | Shipping discipline. Evals, pass-rate thresholds, ADRs, the PR checklist. |
 
-## What this collection isn't
-
-A replacement for Anthropic's official documentation — those remain authoritative for the canonical spec. This collection sits one layer above: practical, navigable, and biased toward how teammates actually use skills in real work. Where official docs go deeper than we do, we link out.
-
----
-
-## Where to start
-
-If this is your first time, **start with [Skills, Agents, and Subagents — Oh My!](Skills_Agents_and_Subagents_Oh_My.md)**. Twenty minutes, and the rest of the collection makes more sense.
-
-A few exceptions where you'd skip ahead:
-
-- **You know skills cold and want to build one** → [User Guide §8 — Building Your Own Skills](Claude_Skills_2.0_User_Guide.md#8-building-your-own-skills)
-- **You're shipping skills reliably and need engineering rigor** → [Skill Creator Practitioner's Guide](Skill_Creator_Practitioners_Guide.md)
-- **You're distributing to a team or org** → [UG §6](Claude_Skills_2.0_User_Guide.md#6-using-skills-in-claudeai) + [§7](Claude_Skills_2.0_User_Guide.md#7-using-skills-in-claude-code), then [SCG §12 — Governance](Skill_Creator_Practitioners_Guide.md#12-the-governance-angle-show-me-your-tests)
-- **You're confused about agent vs subagent vs skill** → that's literally what SAS is for; you're already in the right place
+If you read only one: **[00_START.md](00_START.md)**. It kills the skills-vs-agents confusion and gives you the decision framework in five minutes.
 
 ---
 
-## Glossary
+## When to go deep
 
-The canonical glossary for this collection. Each entry links to the section that gives the concept its fullest treatment.
+The four docs above cover 90% of what you need. The three deep docs below are reference material — where you go when you hit a weird case and need the authoritative answer. They're dense; they're thorough; they're not meant for first reads.
 
-| Term | Definition | Canonical home |
-|------|------------|----------------|
-| **Agent (concept)** | A system where an LLM dynamically directs its own processes and tool usage. The abstract category — distinct from any specific tool, library, or artifact. | [SAS §2.1](Skills_Agents_and_Subagents_Oh_My.md#21-agent-the-concept) |
-| **Agent SDK** | `claude-agent-sdk` (Python) / `@anthropic-ai/claude-agent-sdk` (TypeScript). Library for building custom agent runtimes. Renamed from Claude Code SDK in September 2025. | [SAS §2.4](Skills_Agents_and_Subagents_Oh_My.md#24-agent-sdk-the-library) |
-| **Agent Skills Spec** | The open standard published by Anthropic at [agentskills.io](https://agentskills.io). Defines the SKILL.md format and runtime expectations cross-platform. | [UG §13](Claude_Skills_2.0_User_Guide.md#13-cross-platform-compatibility) |
-| **Agent Teams** | Experimental Claude Code feature (v2.1.32+) enabling peer-to-peer subagent messaging. Toggle via `CLAUDE_CODE_EXPERIMENTAL_AGENT_TEAMS=1`. | [SAS §2 adjacent confusions](Skills_Agents_and_Subagents_Oh_My.md#the-adjacent-confusions) |
-| **Agent tool** | The tool main Claude uses to spawn subagent instances. Renamed from Task in Claude Code v2.1.63. Both names work as aliases. | [SAS §2.3](Skills_Agents_and_Subagents_Oh_My.md#23-subagent-instance-the-runtime-spawn) |
-| **Bundled Skill** | Skill that ships with Claude Code (e.g. `/simplify`, `/batch`, `/debug`). The current set evolves with Anthropic releases. | [UG §7](Claude_Skills_2.0_User_Guide.md#7-using-skills-in-claude-code) |
-| **Capability Uplift Skill** | Skill that extends what the model can do (e.g. document generation, image manipulation). May become obsolete as base models improve. | [UG §5](Claude_Skills_2.0_User_Guide.md#5-types-of-skills) |
-| **`context: fork`** | Skill frontmatter flag that runs the skill's body inside a single spawned subagent. Single-subagent isolation, not parallelism. Claude Code-specific. | [SAS §6 mechanics](Skills_Agents_and_Subagents_Oh_My.md#context-fork-mechanics) |
-| **Frontmatter** | YAML block between `---` delimiters at the top of a SKILL.md file. Carries `name`, `description`, and optional fields. | [UG §9](Claude_Skills_2.0_User_Guide.md#9-complete-frontmatter-reference) |
-| **Hook** | Claude Code mechanism for event-driven automation (PreToolUse, PostToolUse, Stop, SessionStart, etc.). Configured in settings.json or scoped per-skill via the `hooks:` frontmatter field. Distinct from skills and agents. | [SAS §2 adjacent confusions](Skills_Agents_and_Subagents_Oh_My.md#the-adjacent-confusions) |
-| **MCP** | Model Context Protocol. Open standard for how agents communicate with tool providers. Distinct from skills — MCP exposes tools; skills package instructions. | [SAS §2 adjacent confusions](Skills_Agents_and_Subagents_Oh_My.md#the-adjacent-confusions) |
-| **Plugin** | Distribution bundle that packages skills, subagent definitions, hooks, commands, and/or MCP servers as one installable unit. A packaging primitive, not an architectural one. | [SAS §2 adjacent confusions](Skills_Agents_and_Subagents_Oh_My.md#the-adjacent-confusions) |
-| **Progressive Disclosure** | Three-tier loading: descriptions always in context; SKILL.md body loads on trigger; supporting resources load only when the body references them. | [UG §2](Claude_Skills_2.0_User_Guide.md#2-core-concepts) |
-| **Skill** | A folder containing SKILL.md plus optional resources. Packaged instructions that agents load on demand. Portable across 30+ platforms via the [Agent Skills Spec](https://agentskills.io). | [SAS §3](Skills_Agents_and_Subagents_Oh_My.md#3-what-a-skill-actually-is-and-isnt) |
-| **`skills:` field** | Frontmatter field on subagent definitions that preloads named skills into the instance's context at spawn time. The bridge between subagent definitions and skills. | [SAS §2.2](Skills_Agents_and_Subagents_Oh_My.md#22-subagent-definition-the-static-artifact) |
-| **SKILL.md** | Required Markdown file that defines a skill. Frontmatter at top, instructions in the body, references to supporting resources as needed. | [UG §3](Claude_Skills_2.0_User_Guide.md#3-anatomy-of-a-skill) |
-| **`.skill` file** | ZIP archive of a skill directory packaged for distribution. | [UG §14](Claude_Skills_2.0_User_Guide.md#14-skill-distribution--package-management) |
-| **Subagent definition** | Static config file at `.claude/agents/<name>.md`. Describes a reusable persona/role. Inert until instantiated. | [SAS §2.2](Skills_Agents_and_Subagents_Oh_My.md#22-subagent-definition-the-static-artifact) |
-| **Subagent instance** | Runtime child Claude process spawned by the Agent tool. Isolated context; returns one summary to parent. Ephemeral — discarded when done. | [SAS §2.3](Skills_Agents_and_Subagents_Oh_My.md#23-subagent-instance-the-runtime-spawn) |
-| **Triggering** | The agent deciding to load a skill based on its description matching the current task context. Description quality determines reliability. | [UG §2](Claude_Skills_2.0_User_Guide.md#2-core-concepts) |
-| **Workflow/Preference Skill** | Skill that encodes organizational knowledge or stylistic preferences (e.g. PR review checklist, deployment runbook). Long-lived; survives model upgrades. | [UG §5](Claude_Skills_2.0_User_Guide.md#5-types-of-skills) |
+| Doc | What it's for |
+|-----|---------------|
+| **[reference/Skills_Agents_and_Subagents_Oh_My.md](reference/Skills_Agents_and_Subagents_Oh_My.md)** | Every meaning of "agent" untangled. The full decision framework. Runtime mechanics. Misconceptions and their corrections. |
+| **[reference/Claude_Skills_2.0_User_Guide.md](reference/Claude_Skills_2.0_User_Guide.md)** | The comprehensive user guide. Anatomy, frontmatter, runtime, distribution, security, cross-platform, troubleshooting. |
+| **[reference/Skill_Creator_Practitioners_Guide.md](reference/Skill_Creator_Practitioners_Guide.md)** | Full engineering-discipline treatment of the Skill Creator. Phase-by-phase mechanics, eval framework, governance model. |
 
 ---
 
-## Going deeper — official Anthropic docs
+## The five terms that matter
 
-For canonical specifications, latest releases, and topics this collection intentionally defers:
+"Agent" is overloaded. These five disambiguations kill 90% of the confusion. Full vocabulary lives in the reference docs.
+
+| Term | What it is |
+|------|------------|
+| **Skill** | A folder with a `SKILL.md` file that teaches Claude how to do something. Passive — Claude loads it and follows the instructions. Portable across any platform implementing the [Agent Skills Spec](https://agentskills.io). |
+| **Subagent definition** | Static config file at `.claude/agents/<name>.md`. Describes a specialist role (tools it can use, skills it should preload). Inert on disk until something spawns an instance from it. |
+| **Subagent instance** | Runtime child Claude process, spawned by the Agent tool, with its own context window. Does its work, returns one summary to the parent, then discarded. |
+| **Agent tool** | The tool the main Claude uses to spawn a subagent instance. Renamed from Task in Claude Code v2.1.63; both names still work. |
+| **Agent SDK** | `claude-agent-sdk` — the library for building your own agent runtime *outside* Claude Code. If you're inside Claude Code, you don't need it. |
+
+For everything else (Progressive Disclosure, `context: fork`, `skills:` field, hooks, MCP, plugins, `.skill` files, bundled vs. capability-uplift skills): see the [reference docs](reference/README.md).
+
+---
+
+## Official Anthropic sources
+
+For canonical specs and anything beyond what these docs cover:
 
 - **Agent Skills spec (open standard):** [agentskills.io](https://agentskills.io)
 - **Anthropic Skills documentation:** [code.claude.com/docs/en/skills](https://code.claude.com/docs/en/skills)
@@ -75,7 +59,7 @@ For canonical specifications, latest releases, and topics this collection intent
 - **Claude Agent SDK overview:** [docs.anthropic.com/claude/docs/agent-sdk-overview](https://docs.anthropic.com/claude/docs/agent-sdk-overview)
 - **Anthropic Skills GitHub repo:** [github.com/anthropics/skills](https://github.com/anthropics/skills)
 - **"Equipping agents for the real world with Agent Skills" (Oct 2025):** [anthropic.com/news/claude-skills](https://www.anthropic.com/news/claude-skills)
-- **Microsoft Skills (real-world example, 200+ skills):** [microsoft/skills](https://github.com/microsoft/skills) and [microsoft/skills-for-fabric](https://github.com/microsoft/skills-for-fabric)
+- **"Don't Build Agents, Build Skills Instead" — Barry Zhang & Mahesh Murag, AI Engineering Code Summit, Nov 2025**
 
 ---
 
@@ -92,10 +76,23 @@ For canonical specifications, latest releases, and topics this collection intent
 | 2026-02-06 | Claude Code v2.1.32 introduces experimental Agent Teams (`CLAUDE_CODE_EXPERIMENTAL_AGENT_TEAMS=1`) |
 | 2026-02-28 | Claude Code v2.1.63 renames the Task tool to the Agent tool (both names work as aliases) |
 
-Sources: Anthropic blog posts, Claude Code release notes, [agentskills.io](https://agentskills.io), AI Engineering Code Summit recordings.
-
 </details>
 
 ---
 
-*This README is the entry point for the Skills 2.0 reference collection. The three source docs preserve their individual voices and serve different reader moments — this hub orients readers to the right one and consolidates the shared glossary, official-doc links, and timeline. For background on how this collection was assembled, see commit history.*
+## Navigation cheat sheet
+
+Lost? Use this to jump to the right doc.
+
+- *"What is a skill?"* → [00_START.md](00_START.md)
+- *"How do I build one?"* → [01_BUILD.md](01_BUILD.md)
+- *"When do I use `context: fork`?"* → [02_SHARPEN.md](02_SHARPEN.md)
+- *"What's the pass-rate threshold for shipping?"* → [03_SHIP.md](03_SHIP.md)
+- *"What does frontmatter field X do?"* → [reference/UG §9](reference/Claude_Skills_2.0_User_Guide.md#9-complete-frontmatter-reference)
+- *"Why didn't my skill trigger?"* → [reference/UG §17](reference/Claude_Skills_2.0_User_Guide.md#17-troubleshooting)
+- *"What's the difference between a subagent definition and a subagent instance?"* → [reference/SAS §2](reference/Skills_Agents_and_Subagents_Oh_My.md#2-the-four-meanings-of-agent)
+- *"How does the Skill Creator description optimizer work?"* → [reference/SCG §10](reference/Skill_Creator_Practitioners_Guide.md#10-phase-6-optimize-the-description)
+
+---
+
+*Skills first. Evals before ship. Write the decision down.*

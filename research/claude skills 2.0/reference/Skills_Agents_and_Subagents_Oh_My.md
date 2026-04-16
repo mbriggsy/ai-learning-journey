@@ -2,7 +2,7 @@
 ## A Terminology & Architecture Clarification
 
 **Version:** 1.2 | **Last Updated:** 2026-04-16 | **Author:** Claude (with Briggsy)
-**Part of:** [Skills 2.0 — Reference Collection](README.md). Companions: [Claude Skills 2.0 — User Guide](Claude_Skills_2.0_User_Guide.md), [Skill Creator Practitioner's Guide](Skill_Creator_Practitioners_Guide.md).
+**Part of:** [Skills 2.0 — Reference Collection](../README.md). Companions: [Claude Skills 2.0 — User Guide](Claude_Skills_2.0_User_Guide.md), [Skill Creator Practitioner's Guide](Skill_Creator_Practitioners_Guide.md).
 
 ---
 
@@ -14,7 +14,7 @@
 
 **How long it'll take.** ~20 minutes for the first read. After that, the doc functions as reference — §2, §5, and §7 are the bookmark candidates.
 
-**What to read next.** The [Skills 2.0 User Guide](Claude_Skills_2.0_User_Guide.md) for the full ecosystem treatment, or the [Skill Creator Practitioner's Guide](Skill_Creator_Practitioners_Guide.md) for engineering discipline. The [hub README](README.md) frames the whole collection.
+**What to read next.** The [Skills 2.0 User Guide](Claude_Skills_2.0_User_Guide.md) for the full ecosystem treatment, or the [Skill Creator Practitioner's Guide](Skill_Creator_Practitioners_Guide.md) for engineering discipline. The [hub README](../README.md) frames the whole collection.
 
 ---
 
@@ -44,7 +44,7 @@
 8. [Survival Guide: Reading Anthropic's Docs](#8-survival-guide-reading-anthropics-docs)
 9. [Appendix A: Sources](#appendix-a-sources)
 
-> **Glossary:** the canonical glossary for this collection lives in the [hub README](README.md#glossary).
+> **Glossary:** the canonical glossary for this collection lives in the [hub README](../README.md#glossary).
 
 ---
 
@@ -613,4 +613,4 @@ Anthropic's own documentation uses these terms inconsistently. "Subagent" means 
 
 ---
 
-*Built from primary source analysis of Anthropic's subagent and skills documentation, the agentskills.io specification, the Claude Agent SDK documentation, Microsoft's skills ecosystem (verified by direct enumeration of the `microsoft/skills` and `microsoft/skills-for-fabric` repos via the GitHub API), the Zhang/Murag AI Engineering Code Summit talk, and cross-verification against the companion Skills 2.0 User Guide and Skill Creator Practitioner's Guide. Reflects the ecosystem as of 2026-04-16. Corrections to common misconceptions verified against Anthropic's official docs and specific GitHub issues (`anthropics/claude-code#14882`, `#17283`, `#32910`, `#45091`) rather than community folklore. v1.1 applied an adversarial review pass with the reviewer's own citations independently re-verified before merge. v1.2 normalized the intro pattern, added Mermaid diagrams for the four-meanings layered architecture (§2), the decision tree (§5), and parallel fan-out (§6), updated the Microsoft skill count from "~130" to the verified 200+ figure, added the agentskills.io Client Showcase as primary source for the "30+ platforms" claim, and consolidated the glossary into the [hub README](README.md#glossary).*
+*Built from primary source analysis of Anthropic's subagent and skills documentation, the agentskills.io specification, the Claude Agent SDK documentation, Microsoft's skills ecosystem (verified by direct enumeration of the `microsoft/skills` and `microsoft/skills-for-fabric` repos via the GitHub API), the Zhang/Murag AI Engineering Code Summit talk, and cross-verification against the companion Skills 2.0 User Guide and Skill Creator Practitioner's Guide. Reflects the ecosystem as of 2026-04-16. Corrections to common misconceptions verified against Anthropic's official docs and specific GitHub issues (`anthropics/claude-code#14882`, `#17283`, `#32910`, `#45091`) rather than community folklore. v1.1 applied an adversarial review pass with the reviewer's own citations independently re-verified before merge. v1.2 normalized the intro pattern, added Mermaid diagrams for the four-meanings layered architecture (§2), the decision tree (§5), and parallel fan-out (§6), updated the Microsoft skill count from "~130" to the verified 200+ figure, added the agentskills.io Client Showcase as primary source for the "30+ platforms" claim, and consolidated the glossary into the [hub README](../README.md#glossary).*

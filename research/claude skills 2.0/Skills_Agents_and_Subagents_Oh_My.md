@@ -1,14 +1,20 @@
 # Skills, Agents, and Subagents, Oh My!
 ## A Terminology & Architecture Clarification
 
-**Version:** 1.1 | **Last Updated:** April 16, 2026 | **Author:** Claude (with Briggsy)
-**Companion to:** [Claude Skills 2.0: The Definitive User Guide](Claude_Skills_2.0_User_Guide.md) and [The Skill Creator: A Practitioner's Guide](Skill_Creator_Practitioners_Guide.md)
+**Version:** 1.2 | **Last Updated:** 2026-04-16 | **Author:** Claude (with Briggsy)
+**Part of:** [Skills 2.0 — Reference Collection](README.md). Companions: [Claude Skills 2.0 — User Guide](Claude_Skills_2.0_User_Guide.md), [Skill Creator Practitioner's Guide](Skill_Creator_Practitioners_Guide.md).
 
 ---
 
-> "Agent" is the most overloaded word in AI right now. Inside a single Anthropic product — Claude Code — it can mean at least four distinct things: an LLM running in a loop with tools, a Markdown file defining a reusable persona, a child Claude process spawned at runtime with its own context window, or a Python/TypeScript SDK for building agent harnesses. These four meanings aren't synonyms. They're different layers of the stack, and collapsing them leads to architectural choices that don't survive contact with reality.
->
-> This doc is the untangling. It defines each meaning precisely, clarifies how skills fit alongside them, and gives you a framework for reaching for the right primitive at the right time. It also corrects a handful of intuitive-but-wrong assumptions about how these pieces compose at runtime — the kind of assumptions that waste a weekend of architecture work before you discover they don't match the actual mechanics.
+> "Agent" is the most overloaded word in AI right now. Collapsing the four distinct meanings leads to architectural choices that don't survive contact with reality.
+
+**What's in this doc.** The four meanings of "agent" pulled apart. What skills actually are (and aren't). The unification thesis ("don't build agents, build skills instead"). A decision framework for picking the right primitive. Runtime mechanics of invocation. Corrections for the misconceptions that cost teams the most time.
+
+**Who it's for.** Anyone who has ever squinted at "create an agent" instructions, written `.claude/agents/foo.md` while meaning to write a skill, or tried to reason about how an orchestrator skill fans out work and found the mechanics murky.
+
+**How long it'll take.** ~20 minutes for the first read. After that, the doc functions as reference — §2, §5, and §7 are the bookmark candidates.
+
+**What to read next.** The [Skills 2.0 User Guide](Claude_Skills_2.0_User_Guide.md) for the full ecosystem treatment, or the [Skill Creator Practitioner's Guide](Skill_Creator_Practitioners_Guide.md) for engineering discipline. The [hub README](README.md) frames the whole collection.
 
 ---
 
@@ -24,8 +30,6 @@
 
 **The three most expensive misconceptions:** (1) subagents do NOT inherit skills from the parent session — they need an explicit `skills:` field in their definition, (2) skills do NOT spawn subagents directly — the skill's body is instructions *to main Claude*, which then uses the Agent tool, (3) `context: fork` creates ONE isolated subagent, not parallel execution.
 
-**This doc is for anyone** who has ever squinted at "create an agent" instructions, written `.claude/agents/foo.md` while meaning to write a skill, or tried to reason about how an orchestrator skill fans out work and found the mechanics murky. If you've read the Skills 2.0 User Guide and still aren't sure where subagents end and the Agent SDK begins, this is the doc.
-
 ---
 
 ## Table of Contents
@@ -38,8 +42,9 @@
 6. [How Invocation Actually Works](#6-how-invocation-actually-works)
 7. [Common Misconceptions & Corrections](#7-common-misconceptions--corrections)
 8. [Survival Guide: Reading Anthropic's Docs](#8-survival-guide-reading-anthropics-docs)
-9. [Glossary](#9-glossary)
-10. [Appendix A: Sources](#appendix-a-sources)
+9. [Appendix A: Sources](#appendix-a-sources)
+
+> **Glossary:** the canonical glossary for this collection lives in the [hub README](README.md#glossary).
 
 ---
 
@@ -168,6 +173,26 @@ Custom subagent definitions in `.claude/agents/` extend this set. Reference any 
 | **Subagent instance** | Runtime | Ephemeral child process | What the Agent tool spawns |
 | **Agent SDK** | Library | Installable package | `pip install claude-agent-sdk` |
 
+### How the Four Layers Stack
+
+The table above is ordinal. The diagram below shows the *layering* — these aren't four flavors of the same thing; they're different layers in a stack, with each upper layer plugging into the one beneath it.
+
+```mermaid
+flowchart TB
+    L1["Layer 1: Concept<br/>An agent — LLM in a loop with tools"]
+    L2["Layer 2: Library<br/>Agent SDK<br/>(claude-agent-sdk / @anthropic-ai/claude-agent-sdk)"]
+    L3["Layer 3: Runtime<br/>Claude Code<br/>(itself built on the Agent SDK)"]
+    L4a["Layer 4a: Static artifact<br/>Subagent definition<br/>.claude/agents/&lt;name&gt;.md"]
+    L4b["Layer 4b: Runtime artifact<br/>Subagent instance<br/>spawned by the Agent tool"]
+
+    L1 --> L2
+    L2 --> L3
+    L3 --> L4a
+    L4a -->|instantiated as| L4b
+```
+
+When someone says "build an agent," ask which layer they mean. The answer determines the next ten architectural decisions.
+
 ### The Adjacent Confusions
 
 Five more terms you'll encounter that are NOT agents but often get lumped in:
@@ -184,7 +209,7 @@ Five more terms you'll encounter that are NOT agents but often get lumped in:
 
 A skill is a **folder** containing a `SKILL.md` file plus optional supporting resources (scripts, references, assets). It's a packaged, loadable set of instructions that *an agent* can pull into context on demand.
 
-The Skills 2.0 User Guide covers the full anatomy. The point worth hammering here is what a skill *is not*.
+The Skills 2.0 User Guide covers the [full anatomy](Claude_Skills_2.0_User_Guide.md#3-anatomy-of-a-skill), [runtime mechanics](Claude_Skills_2.0_User_Guide.md#4-how-skills-work-at-runtime), and [complete frontmatter reference](Claude_Skills_2.0_User_Guide.md#9-complete-frontmatter-reference). The point worth hammering here is what a skill *is not*.
 
 ### A Skill Is Not An Agent
 
@@ -225,11 +250,7 @@ Collapsing skills and agents into one mental category causes bad decisions. Two 
 
 ### Slash Commands Are Skills Too
 
-As of Claude Code 2.1.3 (January 2026), custom slash commands and skills are the same primitive. A file at `.claude/commands/deploy.md` and a skill at `.claude/skills/deploy/SKILL.md` both create `/deploy` and behave identically. Existing `.claude/commands/` files keep working without migration.
-
-Skills are the recommended forward path because they support frontmatter control (`disable-model-invocation`, `context: fork`, tool restrictions, and so on), supporting files (`references/`, `scripts/`, `assets/`), and automatic loading when their description matches a user request. If a skill and a command share the same name, **the skill takes precedence.**
-
-Mentally, stop treating "slash commands" and "skills" as different things. They're the same primitive with different directory conventions.
+As of Claude Code 2.1.3 (2026-01-24), custom slash commands and skills are the same primitive — see [UG §2 — Skills = Slash Commands](Claude_Skills_2.0_User_Guide.md#2-core-concepts) for the full unification treatment, including precedence rules and frontmatter feature parity. The architectural point worth carrying into this doc: skills and commands are interchangeable at the file-system level, so everything said here about skills applies equally to anything created via either convention.
 
 ---
 
@@ -244,7 +265,7 @@ Instead of building many specialized agents (a coding agent, a research agent, a
 Reasons this works in practice:
 
 - **Skills compose.** Two skills can coexist in the same agent without fighting for control. Two specialized agents can't — they each assume they're in charge.
-- **Skills are portable.** The Skills 2.0 spec is filesystem-based. A SKILL.md written for Claude Code works unchanged in Codex, Cursor, Copilot, Gemini CLI, and 30+ other platforms. Agent definitions don't travel like that.
+- **Skills are portable.** The Skills 2.0 spec is filesystem-based. A SKILL.md written for Claude Code works unchanged in Codex, Cursor, Copilot, Gemini CLI, and 30+ other platforms (see the [agentskills.io Client Showcase](https://agentskills.io/clients) for the current adopter list). Agent definitions don't travel like that.
 - **Skills are testable.** The Skill Creator (see the Practitioner's Guide) makes skill development a proper engineering discipline with evals, A/B comparison, and description optimization. Agent definitions don't have equivalent tooling.
 - **The agent runtime is getting better fast.** Betting on "one great runtime + many skills" lets you ride improvements to the runtime. Betting on many specialized agents means maintaining many specialized runtimes.
 
@@ -252,7 +273,7 @@ Anthropic's own [October 2025 announcement of Agent Skills](https://www.anthropi
 
 ### The Microsoft Echo
 
-Microsoft's public skills ecosystem spans multiple repositories — `microsoft/skills` (~130 Azure skills), `microsoft/skills-for-fabric`, `MicrosoftDocs/Agent-Skills`, and `dotnet/skills` — all built on the Agent Skills open standard. The `skills-for-fabric` README makes the thesis explicit:
+Microsoft's public skills ecosystem spans multiple repositories — over 200 skills across [microsoft/skills](https://github.com/microsoft/skills) (Azure SDKs for Python, Java, .NET, TypeScript, and Rust, plus Azure services and Microsoft Foundry — 201 skills as of 2026-04), [microsoft/skills-for-fabric](https://github.com/microsoft/skills-for-fabric) (10 skills covering Microsoft Fabric workloads), [MicrosoftDocs/Agent-Skills](https://github.com/MicrosoftDocs/Agent-Skills), and [dotnet/skills](https://github.com/dotnet/skills) — all built on the [Agent Skills open standard](https://agentskills.io). The `skills-for-fabric` README makes the thesis explicit:
 
 > "Agents are built *on top of* skills."
 
@@ -268,6 +289,15 @@ The thesis isn't just a slogan. It translates into concrete defaults:
 4. **Reach for the Agent SDK only when you leave the runtime.** If you're inside Claude Code, Claude.ai, or any other skills-compatible platform, you almost never need the SDK. Reach for it when you need to build your own deployment.
 
 The thesis is architecturally load-bearing. It's the reason to care about the skill-vs-agent distinction in the first place.
+
+<details>
+<summary><strong>▶ Further reading: the unification thesis from two more angles</strong></summary>
+
+- [UG §18 — The Bigger Picture](Claude_Skills_2.0_User_Guide.md#18-the-bigger-picture) — same thesis from a strategic, "where the industry is converging" framing.
+- [SCG §16 — The Bigger Picture: Skills, Not Agents](Skill_Creator_Practitioners_Guide.md#16-the-bigger-picture-skills-not-agents) — same thesis from an engineering-discipline framing, explaining why "vibes-based skill development" doesn't compose into reliable agent behavior.
+- [Anthropic's October 2025 announcement](https://www.anthropic.com/news/claude-skills) — the Zhang/Lazuka/Murag essay that previewed the talk.
+
+</details>
 
 ---
 
@@ -330,7 +360,22 @@ If you're already inside Claude Code, you almost certainly don't need the SDK. C
 | N independent analyses in parallel | **Orchestrator skill instructing main Claude to spawn N subagents** | Parallelism requires the Agent tool |
 | Tool restrictions on a specialist | **Subagent definition with explicit `tools:`** | Limits blast radius |
 | Custom runtime outside Claude Code | **Agent SDK** | You need your own harness |
-| Autonomous behavior without explicit invocation | **Hooks** (not covered here) | Skills/agents don't fire on events; hooks do |
+| Autonomous behavior without explicit invocation | **Hooks** (see [Anthropic's hooks docs](https://code.claude.com/docs/en/hooks)) | Skills/agents don't fire on events; hooks do |
+
+### The Decision Tree
+
+The table is two-dimensional. The diagram below captures the *precedence* of questions — what to ask first when you're choosing a primitive.
+
+```mermaid
+flowchart TD
+    Start{What are you building?}
+    Start -->|"Knowledge / workflow / rubric / persona"| Skill["Skill<br/>The default. Portable across<br/>30+ platforms."]
+    Start -->|"N parallel workers"| Orch["Orchestrator skill<br/>+ multiple Agent tool calls<br/>in a single turn"]
+    Start -->|"Heavy-context task<br/>(portability matters)"| Fork["Skill with context: fork<br/>Single isolated subagent.<br/>Claude Code-specific."]
+    Start -->|"Heavy-context task<br/>+ tool restrictions"| Sub["Subagent definition<br/>+ skills: field preloads<br/>the portable leaf logic"]
+    Start -->|"Custom runtime<br/>outside Claude Code"| SDK["Agent SDK<br/>Build your own harness"]
+    Start -->|"Event-driven<br/>autonomous behavior"| Hook["Hook<br/>Not a skill or agent"]
+```
 
 ### Anti-Patterns
 
@@ -343,7 +388,7 @@ If you're already inside Claude Code, you almost certainly don't need the SDK. C
 
 ## 6. How Invocation Actually Works
 
-Mental model clarity requires understanding the actual runtime mechanics. Here's what happens when each primitive is invoked.
+Mental model clarity requires understanding the actual runtime mechanics. Here's what happens when each primitive is invoked. The [User Guide §4 — How Skills Work at Runtime](Claude_Skills_2.0_User_Guide.md#4-how-skills-work-at-runtime) covers the seven-step main-Claude sequence in detail; this section focuses on the dispatch mechanics — *what gets invoked how* — rather than the per-step sequence.
 
 ### Skill Invocation Paths
 
@@ -392,6 +437,32 @@ Agent({ subagent_type: "maintainability-reviewer", ... })
 ```
 
 An orchestrator skill's body instructs main Claude to emit multiple Agent calls in a single turn. The skill is not spawning anything — it's telling the agent what tool calls to make. This is how `/simplify` and `/batch` achieve their fan-out.
+
+```mermaid
+flowchart LR
+    Skill["Orchestrator skill body<br/>('fan out to 3 reviewers')"]
+    Main["Main Claude<br/>(single assistant turn,<br/>three Agent tool calls)"]
+    A1["Agent call #1<br/>security-reviewer"]
+    A2["Agent call #2<br/>performance-reviewer"]
+    A3["Agent call #3<br/>maintainability-reviewer"]
+    SA1["Subagent 1<br/>(parallel)"]
+    SA2["Subagent 2<br/>(parallel)"]
+    SA3["Subagent 3<br/>(parallel)"]
+    Result["3 summaries return<br/>to Main Claude"]
+
+    Skill -->|loaded into| Main
+    Main --> A1
+    Main --> A2
+    Main --> A3
+    A1 --> SA1
+    A2 --> SA2
+    A3 --> SA3
+    SA1 --> Result
+    SA2 --> Result
+    SA3 --> Result
+```
+
+Note who's doing the spawning. The skill is a passive playbook. Main Claude is the dispatcher. The runtime is what actually executes the tool calls in parallel. If you've internalized that distinction, [Misconception 3](#misconception-3-context-fork-enables-parallel-execution) reads as obvious — and most parallelism design errors disappear.
 
 ### `context: fork` Mechanics
 
@@ -484,7 +555,7 @@ These are the misconceptions that cost the most time when they're wrong.
 3. **Manual `/clear`** — wipes the session.
 4. **Session end** — everything is discarded.
 
-**Why this matters:** "Progressive disclosure" means *deferred loading* (frontmatter always in context; body loads when triggered; supporting files load when referenced). It does not mean *post-task unloading*. Treating skills as if they free context when they finish produces session-degradation patterns that are hard to diagnose after the fact — because the bloat isn't any single skill, it's the accumulated weight of everything invoked across the session. For evidence and workarounds, see GitHub issues `anthropics/claude-code#14882` and `anthropics/claude-code#45091` (an open feature request for a `clear: true` skill frontmatter field, the very existence of which proves no such mechanism ships today).
+**Why this matters:** "Progressive disclosure" means *deferred loading* — see [UG §2 — Core Concepts](Claude_Skills_2.0_User_Guide.md#2-core-concepts) for the full three-tier mechanic (frontmatter always in context; body loads when triggered; supporting files load when referenced). It does not mean *post-task unloading*. Treating skills as if they free context when they finish produces session-degradation patterns that are hard to diagnose after the fact — because the bloat isn't any single skill, it's the accumulated weight of everything invoked across the session. For evidence and workarounds, see GitHub issues `anthropics/claude-code#14882` and `anthropics/claude-code#45091` (an open feature request for a `clear: true` skill frontmatter field, the very existence of which proves no such mechanism ships today).
 
 ---
 
@@ -505,26 +576,6 @@ Anthropic's own documentation uses these terms inconsistently. "Subagent" means 
 - **"Task tool"** in older docs and examples = **"Agent tool"** today. Renamed in Claude Code 2.1.63. Both names still work as aliases, but new material should use "Agent tool."
 
 **Default assumption:** When in doubt, assume the doc author knew which meaning they intended — your job is to figure out which of the four layers (concept, definition, instance, SDK) the sentence is actually talking about. The four-meanings taxonomy in Section 2 is the decoder ring; keep it open in another tab while reading anything agent-related.
-
----
-
-## 9. Glossary
-
-| Term | Precise Definition |
-|------|--------------------|
-| **Agent (concept)** | A system where an LLM dynamically directs its own processes and tool usage. The abstract category. |
-| **Agent SDK** | `claude-agent-sdk` (Python) / `@anthropic-ai/claude-agent-sdk` (TypeScript). Library for building custom agent runtimes. Renamed from Claude Code SDK in September 2025. |
-| **Agent tool** | The tool main Claude uses to spawn subagent instances. Renamed from Task in Claude Code 2.1.63. |
-| **Agent Teams** | Experimental Claude Code feature (2.1.32+) enabling peer-to-peer subagent messaging. Toggle via `CLAUDE_CODE_EXPERIMENTAL_AGENT_TEAMS`. |
-| **`context: fork`** | Skill frontmatter flag that runs the skill's body inside a single spawned subagent. Single-subagent isolation, not parallelism. Claude Code-specific. |
-| **Hook** | Claude Code mechanism for event-driven automation. Fires on tool use, session events, etc. Not the same as skills or agents. |
-| **MCP** | Model Context Protocol. Open standard for how agents communicate with tool providers. Distinct from skills. |
-| **Plugin** | Distribution bundle packaging skills, subagent definitions, hooks, commands, and/or MCP servers as one installable unit. A packaging primitive, not an architectural one. |
-| **Skill** | A folder containing SKILL.md plus optional resources. Packaged instructions that agents load on demand. Portable across 30+ platforms. |
-| **`skills:` field** | Frontmatter field on subagent definitions that preloads named skills into the instance's context at spawn time. |
-| **Subagent definition** | Static config file at `.claude/agents/<name>.md`. Describes a reusable persona/role. Inert until instantiated. |
-| **Subagent instance** | Runtime child Claude process spawned by the Agent tool. Isolated context; returns one summary to parent. Ephemeral. |
-| **Task tool** | Older name for the Agent tool. Still works as an alias. |
 
 ---
 
@@ -550,7 +601,7 @@ Anthropic's own documentation uses these terms inconsistently. "Subagent" means 
 **Ecosystem validation:**
 
 - [microsoft/skills-for-fabric](https://github.com/microsoft/skills-for-fabric) — README contains the "Agents are built *on top of* skills" thesis.
-- [microsoft/skills](https://github.com/microsoft/skills) — ~130 Azure skills following the Agent Skills spec.
+- [microsoft/skills](https://github.com/microsoft/skills) — 200+ skills across Azure SDKs (Python, Java, .NET, TypeScript, Rust), Azure services, and Microsoft Foundry, following the Agent Skills spec. (201 skills as of 2026-04, verified via direct enumeration of the eight plugins under `.github/plugins/`.)
 - [MicrosoftDocs/Agent-Skills](https://github.com/MicrosoftDocs/Agent-Skills) — curated Azure Agent Skills collection.
 - [dotnet/skills](https://github.com/dotnet/skills) — .NET Agent Skills.
 - [Agent Skills Specification](https://agentskills.io/specification) — open standard, Apache 2.0 (code) / CC-BY-4.0 (docs).
@@ -562,4 +613,4 @@ Anthropic's own documentation uses these terms inconsistently. "Subagent" means 
 
 ---
 
-*Built from primary source analysis of Anthropic's subagent and skills documentation, the agentskills.io specification, the Claude Agent SDK documentation, Microsoft's skills ecosystem, the Zhang/Murag AI Engineering Code Summit talk, and cross-verification against the companion Skills 2.0 User Guide and Skill Creator Practitioner's Guide. Reflects the ecosystem as of April 16, 2026. Corrections to common misconceptions verified against Anthropic's official docs and specific GitHub issues (`anthropics/claude-code#14882`, `#17283`, `#32910`, `#45091`) rather than community folklore. v1.1 applied an adversarial review pass with the reviewer's own citations independently re-verified before merge.*
+*Built from primary source analysis of Anthropic's subagent and skills documentation, the agentskills.io specification, the Claude Agent SDK documentation, Microsoft's skills ecosystem (verified by direct enumeration of the `microsoft/skills` and `microsoft/skills-for-fabric` repos via the GitHub API), the Zhang/Murag AI Engineering Code Summit talk, and cross-verification against the companion Skills 2.0 User Guide and Skill Creator Practitioner's Guide. Reflects the ecosystem as of 2026-04-16. Corrections to common misconceptions verified against Anthropic's official docs and specific GitHub issues (`anthropics/claude-code#14882`, `#17283`, `#32910`, `#45091`) rather than community folklore. v1.1 applied an adversarial review pass with the reviewer's own citations independently re-verified before merge. v1.2 normalized the intro pattern, added Mermaid diagrams for the four-meanings layered architecture (§2), the decision tree (§5), and parallel fan-out (§6), updated the Microsoft skill count from "~130" to the verified 200+ figure, added the agentskills.io Client Showcase as primary source for the "30+ platforms" claim, and consolidated the glossary into the [hub README](README.md#glossary).*

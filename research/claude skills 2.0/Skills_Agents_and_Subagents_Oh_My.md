@@ -1,7 +1,7 @@
 # Skills, Agents, and Subagents, Oh My!
 ## A Terminology & Architecture Clarification
 
-**Version:** 1.0 | **Last Updated:** April 15, 2026 | **Author:** Claude (with Briggsy)
+**Version:** 1.1 | **Last Updated:** April 16, 2026 | **Author:** Claude (with Briggsy)
 **Companion to:** [Claude Skills 2.0: The Definitive User Guide](Claude_Skills_2.0_User_Guide.md) and [The Skill Creator: A Practitioner's Guide](Skill_Creator_Practitioners_Guide.md)
 
 ---
@@ -37,8 +37,9 @@
 5. [Decision Framework: When to Reach for Each Primitive](#5-decision-framework-when-to-reach-for-each-primitive)
 6. [How Invocation Actually Works](#6-how-invocation-actually-works)
 7. [Common Misconceptions & Corrections](#7-common-misconceptions--corrections)
-8. [Glossary](#8-glossary)
-9. [Appendix A: Sources](#appendix-a-sources)
+8. [Survival Guide: Reading Anthropic's Docs](#8-survival-guide-reading-anthropics-docs)
+9. [Glossary](#9-glossary)
+10. [Appendix A: Sources](#appendix-a-sources)
 
 ---
 
@@ -88,8 +89,21 @@ Here are the four things the word "agent" refers to, in the order you're most li
 | `name` | Identifier. Referenced by the Agent tool's `subagent_type` parameter. |
 | `description` | Routing text. Main Claude reads this to decide when to delegate automatically. Phrases like "use proactively" or "use PROACTIVELY" encourage auto-invocation. |
 | `tools` | Comma-separated list of tools available to the instance. If omitted, inherits all tools from the parent. **Subagents cannot spawn other subagents** — do not list `Agent` or `Task` here. |
+| `disallowedTools` | Removes specific tools from the inherited or explicit tool set. Evaluated *after* `tools`. Use `Skill(skill-name)` syntax to block a specific skill from being invoked by this subagent — relevant because `skills:` only controls injection, not access (see Section 7, Misconception 1). |
 | `model` | `sonnet`, `opus`, `haiku`, or a full model ID. Defaults to parent's model. |
 | `skills` | List of skills to preload into the instance's context when it spawns. **Critical field** — see misconceptions section. |
+| `permissionMode` | One of `acceptEdits`, `bypassPermissions`, `plan`, `default`, `auto`. Controls how permission prompts are handled during the subagent's execution. |
+| `hooks` | Lifecycle hooks scoped to this subagent (`PreToolUse`, `PostToolUse`, `Stop`, etc.). Fire when the subagent is spawned via the Agent tool; do *not* fire when the subagent is run as the main session via `--agent`. |
+| `mcpServers` | MCP server configurations scoped to this subagent. Allows a specialist to reach an external tool its parent cannot. |
+| `memory` | Enables a persistent `MEMORY.md` file for this subagent. First 200 lines injected at startup; the subagent can read/write/curate it across sessions. |
+| `effort` | Override effort level: `low`, `medium`, `high`, `max`. Opus 4.6 only. |
+| `color` | UI label color for this subagent in the Claude Code interface. |
+| `background` | Whether the subagent runs in the background by default. |
+| `isolation` | Process isolation control. Valid value includes `worktree`, which runs the subagent in a temporary git worktree. |
+| `initialPrompt` | Text auto-submitted as the first user turn when this subagent runs as the main session via `--agent`. |
+| `maxTurns` | Caps the subagent's autonomous turn count. |
+
+For the complete, current reference — including fields added in future Claude Code releases — see [the official Claude Code subagents docs](https://code.claude.com/docs/en/sub-agents).
 
 **System prompt:** The markdown body after the frontmatter becomes the subagent's system prompt. This is where you write the persona, the review rubric, the style guide, the output contract.
 
@@ -118,6 +132,18 @@ Agent({
 
 **What to remember:** This is the thing that actually *runs*. It's ephemeral — it exists for the duration of one task and is discarded. Think of the definition as a blueprint and the instance as a building constructed from that blueprint, which gets demolished as soon as the occupants move out.
 
+**Built-in subagent types.** Claude Code ships with five built-in types. When you call the Agent tool without pointing at a custom definition, you're reaching for one of these:
+
+| Built-in | Model | Tools | Purpose |
+|----------|-------|-------|---------|
+| `Explore` | Haiku | Read-only (Read, Glob, Grep) | Fast read-only codebase search and analysis. The default target for `context: fork` skills doing exploration. |
+| `Plan` | Inherits parent | Read-only | Codebase research during plan mode. Read-only by design — prevents infinite nesting since subagents can't spawn. |
+| `general-purpose` | Inherits parent | All tools | Multi-step exploration plus action. The default fallback when you need write access. |
+| `statusline-setup` | Sonnet | Limited | Used by the `/statusline` configuration flow. |
+| `Claude Code Guide` | Haiku | Limited | Answers questions about Claude Code itself — features, hooks, settings, IDE integrations. |
+
+Custom subagent definitions in `.claude/agents/` extend this set. Reference any of them — built-in or custom — by name via the `subagent_type` parameter.
+
 ### 2.4 Agent SDK (The Library)
 
 **Definition:** `claude-agent-sdk` (Python) and `@anthropic-ai/claude-agent-sdk` (TypeScript). A software library for building your own agent harnesses — outside of Claude Code, outside of Claude.ai.
@@ -144,11 +170,13 @@ Agent({
 
 ### The Adjacent Confusions
 
-Three more terms you'll encounter that are NOT agents but often get lumped in:
+Five more terms you'll encounter that are NOT agents but often get lumped in:
 
 - **MCP servers** (Model Context Protocol). These are *tool providers*, not agents. An MCP server exposes tools over a standard protocol so agents can call them. MCP is to agents what HTTP is to browsers — the connective layer.
 - **"ChatGPT Agent" / "Claude Agents" (product names).** Sometimes Anthropic or OpenAI brands a consumer-facing feature as "Agent." These are products, not primitives.
 - **Agent Teams** (Claude Code 2.1.32+, experimental). A peer-to-peer messaging layer where multiple subagents can communicate with each other directly, rather than fanning out hub-and-spoke from main Claude. This is a separate feature toggled via `CLAUDE_CODE_EXPERIMENTAL_AGENT_TEAMS` and shouldn't be confused with the default subagent model.
+- **Hooks.** Event-driven automations (`PreToolUse`, `PostToolUse`, `Stop`, `SessionStart`, and others) that fire on Claude Code lifecycle events. Hooks are not agents, not skills, and not subagents — they're a separate mechanism for *deterministic* side effects at predefined moments. Use a hook when you need guaranteed execution on an event rather than letting an agent decide whether to act.
+- **Plugins.** Distribution bundles that can contain skills, subagent definitions, hooks, commands, and MCP servers packaged as a single installable unit. A plugin is a *packaging* primitive, not an *architectural* one. "Should this be a plugin?" is a distribution question, not a design question.
 
 ---
 
@@ -167,7 +195,7 @@ When you "invoke" a skill, what actually happens is:
 1. Some agent (main Claude, a subagent instance, another compatible platform's runtime) matches the skill's `description` against a user request — or the user types `/skill-name` explicitly.
 2. That agent reads the skill's `SKILL.md` into its own context window.
 3. That agent follows the skill's instructions *using its own tools*.
-4. When the task is done, the skill content is dropped from context.
+4. The skill content stays in context for the rest of the session. Skills do not auto-unload when their task completes — context is append-only. (See Section 7, Misconception 9 for the full mechanics, including how auto-compaction interacts with invoked skills.)
 
 At no point does the skill itself *do* anything. It's a playbook. The agent is what works from the playbook.
 
@@ -195,6 +223,14 @@ Collapsing skills and agents into one mental category causes bad decisions. Two 
 
 **Failure mode 2: Treating an agent like a skill.** You write a `.claude/agents/foo.md` file when the content is really a rubric. Now you've put your portable IP (the rubric itself) inside a Claude-Code-specific artifact that can't travel to Codex, Cursor, or any other platform that speaks the Skills spec. The skill-vs-agent choice has *portability consequences*, and those flow from the fundamental difference between a playbook (skill) and a worker (agent).
 
+### Slash Commands Are Skills Too
+
+As of Claude Code 2.1.3 (January 2026), custom slash commands and skills are the same primitive. A file at `.claude/commands/deploy.md` and a skill at `.claude/skills/deploy/SKILL.md` both create `/deploy` and behave identically. Existing `.claude/commands/` files keep working without migration.
+
+Skills are the recommended forward path because they support frontmatter control (`disable-model-invocation`, `context: fork`, tool restrictions, and so on), supporting files (`references/`, `scripts/`, `assets/`), and automatic loading when their description matches a user request. If a skill and a command share the same name, **the skill takes precedence.**
+
+Mentally, stop treating "slash commands" and "skills" as different things. They're the same primitive with different directory conventions.
+
 ---
 
 ## 4. The Unification Thesis: "Don't Build Agents, Build Skills Instead"
@@ -216,9 +252,9 @@ Anthropic's own [October 2025 announcement of Agent Skills](https://www.anthropi
 
 ### The Microsoft Echo
 
-Microsoft's public skills ecosystem — `microsoft/skills` (134 skills for Azure, Fabric, and M365) — includes explicit documentation that reads:
+Microsoft's public skills ecosystem spans multiple repositories — `microsoft/skills` (~130 Azure skills), `microsoft/skills-for-fabric`, `MicrosoftDocs/Agent-Skills`, and `dotnet/skills` — all built on the Agent Skills open standard. The `skills-for-fabric` README makes the thesis explicit:
 
-> "Agents are built on top of skills."
+> "Agents are built *on top of* skills."
 
 This isn't a random observation. It's the same thesis, validated by a second large organization that had every incentive to invent their own competing abstraction and chose not to.
 
@@ -367,6 +403,8 @@ An orchestrator skill's body instructs main Claude to emit multiple Agent calls 
 
 This is effectively a shorthand for "skill + subagent wrapper" — one frontmatter block instead of two files. It's single-subagent isolation, not parallelism. Parallelism still requires an orchestrator with multiple Agent tool calls.
 
+**Version note.** `context: fork` shipped in Claude Code 2.1. Skills running on older Claude Code versions don't have access to it and will silently run inline. One known limitation: when a skill is invoked via the Skill tool directly (rather than triggered by description matching), `context: fork` and `agent:` frontmatter fields are currently ignored and the skill runs in main Claude's context instead of a spawned subagent. Track `anthropics/claude-code#17283` for the open feature request to have the Skill tool honor these fields.
+
 ### Dynamic Context Injection
 
 The backtick-bang syntax (`` !`command` ``) in a skill body runs the shell command **before** the skill content is sent to the agent. The command output replaces the placeholder. This is preprocessing at skill-load time, not at agent-execution time — the agent only ever sees the rendered output, not the template.
@@ -389,11 +427,13 @@ These are the misconceptions that cost the most time when they're wrong.
 
 ### Misconception 1: "Subagents inherit skills from their parent."
 
-**FALSE.** A spawned subagent instance starts with a clean context. It does not see the skills the parent had loaded, and it cannot auto-discover skills in the same way the main agent can.
+**FALSE.** A spawned subagent instance starts with a clean context. It does not inherit the skills the parent had loaded into its working context.
 
-**What's actually true:** Subagent definitions have a `skills:` field in their frontmatter. Skills listed there are preloaded into the instance's context when it spawns. If you need a subagent to have access to a skill, you must declare it in the definition.
+**What's actually true:** Subagent definitions have a `skills:` field in their frontmatter. Skills listed there are preloaded into the instance's context when it spawns. For reliable access, declare skills in the definition.
 
-**Why this matters:** If you design an orchestration where main Claude spawns generic `general-purpose` subagents and tells them to "invoke `/leaf-skill`," the subagents won't find the skill. You need either (a) a custom subagent definition that preloads the skill, or (b) to inline the skill's content into the prompt you pass to the subagent.
+**Important nuance:** The `skills:` field is a *startup injection mechanism*, not an *access restriction*. Subagents with filesystem access (notably the built-in `general-purpose` subagent) can still discover and invoke project skills at runtime by scanning `.claude/skills/` directories using their normal Read/Glob/Grep tools. If you need to actually *prevent* a subagent from invoking a particular skill, use `disallowedTools: Skill(skill-name)` rather than relying on its absence from `skills:`. See `anthropics/claude-code#32910` for the reproduction and discussion.
+
+**Why this matters:** If you design an orchestration where main Claude spawns generic `general-purpose` subagents and tells them to "invoke `/leaf-skill`," the runtime-discovery path means the subagent may actually find the skill via filesystem scan — but relying on that behavior is fragile, and subagents with restricted tool sets won't have it. For reliable preloading, declare the skill via `skills:`. For security boundaries, use `disallowedTools:`. Don't conflate the two.
 
 ### Misconception 2: "Skills can spawn subagents directly."
 
@@ -433,9 +473,42 @@ These are the misconceptions that cost the most time when they're wrong.
 
 **FALSE — but this one isn't your fault.** Anthropic's own documentation uses "subagent" to mean both the definition file and the running instance, often in the same paragraph. There's no canonical glossary that pins the terms down. This is why your doc (this one) can actually improve on the official sources.
 
+### Misconception 9: "Skills are unloaded from context when their task completes."
+
+**FALSE — and this one is expensive when it's wrong.** LLM context windows are append-only within a session. Once a skill's body loads into an agent's context, it stays there alongside everything else in the conversation history. There is no mechanism that selectively removes a skill when a "task" ends — because there's no runtime boundary that marks a task as ended.
+
+**What's actually true:** Skills persist in context for the remainder of the session, contributing to token count growth. Four things affect skill presence in context:
+
+1. **`context: fork`** — the skill ran inside a spawned subagent whose context was discarded when the subagent returned its summary. Only the summary reaches main Claude. This is the one case that approximates "unloading" — and it's opt-in per skill.
+2. **Auto-compaction** — when the context window fills, Claude Code's auto-compaction kicks in. Per Anthropic's skills documentation, invoked skills are carried forward within a shared **25,000-token budget**. If you've invoked many skills in one session, older ones can be dropped entirely from the re-attached set after compaction.
+3. **Manual `/clear`** — wipes the session.
+4. **Session end** — everything is discarded.
+
+**Why this matters:** "Progressive disclosure" means *deferred loading* (frontmatter always in context; body loads when triggered; supporting files load when referenced). It does not mean *post-task unloading*. Treating skills as if they free context when they finish produces session-degradation patterns that are hard to diagnose after the fact — because the bloat isn't any single skill, it's the accumulated weight of everything invoked across the session. For evidence and workarounds, see GitHub issues `anthropics/claude-code#14882` and `anthropics/claude-code#45091` (an open feature request for a `clear: true` skill frontmatter field, the very existence of which proves no such mechanism ships today).
+
 ---
 
-## 8. Glossary
+## 8. Survival Guide: Reading Anthropic's Docs
+
+Anthropic's own documentation uses these terms inconsistently. "Subagent" means both the definition file and the running instance — sometimes in the same paragraph. "Agent" appears across all four meanings without always flagging which one is in play. Older docs still reference renamed concepts. This is the survival metadata for navigating those docs without getting lost.
+
+**Term patterns to watch for:**
+
+- **"Subagent" appearing in the same paragraph as both "file" and "spawn"** almost certainly means both the definition AND the instance simultaneously. Read both meanings into the sentence; don't force a single interpretation.
+- **"Agent" standing alone** almost always means the concept (LLM-in-a-loop). When docs mean the tool or a specific artifact, they usually say so explicitly — "the Agent tool," "an agent definition," "the Agent SDK."
+- **"Agent definition"** means the `.claude/agents/<name>.md` file. A static config artifact.
+- **"Agent instance" or "spawned subagent"** means the runtime child process. Ephemeral.
+
+**Renames to be aware of:**
+
+- **"Claude Code SDK"** in older docs = **"Claude Agent SDK"** today. Renamed September 2025 to reflect that the library is for building any agent, not just Claude Code extensions.
+- **"Task tool"** in older docs and examples = **"Agent tool"** today. Renamed in Claude Code 2.1.63. Both names still work as aliases, but new material should use "Agent tool."
+
+**Default assumption:** When in doubt, assume the doc author knew which meaning they intended — your job is to figure out which of the four layers (concept, definition, instance, SDK) the sentence is actually talking about. The four-meanings taxonomy in Section 2 is the decoder ring; keep it open in another tab while reading anything agent-related.
+
+---
+
+## 9. Glossary
 
 | Term | Precise Definition |
 |------|--------------------|
@@ -446,6 +519,7 @@ These are the misconceptions that cost the most time when they're wrong.
 | **`context: fork`** | Skill frontmatter flag that runs the skill's body inside a single spawned subagent. Single-subagent isolation, not parallelism. Claude Code-specific. |
 | **Hook** | Claude Code mechanism for event-driven automation. Fires on tool use, session events, etc. Not the same as skills or agents. |
 | **MCP** | Model Context Protocol. Open standard for how agents communicate with tool providers. Distinct from skills. |
+| **Plugin** | Distribution bundle packaging skills, subagent definitions, hooks, commands, and/or MCP servers as one installable unit. A packaging primitive, not an architectural one. |
 | **Skill** | A folder containing SKILL.md plus optional resources. Packaged instructions that agents load on demand. Portable across 30+ platforms. |
 | **`skills:` field** | Frontmatter field on subagent definitions that preloads named skills into the instance's context at spawn time. |
 | **Subagent definition** | Static config file at `.claude/agents/<name>.md`. Describes a reusable persona/role. Inert until instantiated. |
@@ -475,7 +549,10 @@ These are the misconceptions that cost the most time when they're wrong.
 
 **Ecosystem validation:**
 
-- [Microsoft Skills repository](https://github.com/microsoft/skills) — 134 skills following the Agent Skills spec; documents "Agents are built on top of skills."
+- [microsoft/skills-for-fabric](https://github.com/microsoft/skills-for-fabric) — README contains the "Agents are built *on top of* skills" thesis.
+- [microsoft/skills](https://github.com/microsoft/skills) — ~130 Azure skills following the Agent Skills spec.
+- [MicrosoftDocs/Agent-Skills](https://github.com/MicrosoftDocs/Agent-Skills) — curated Azure Agent Skills collection.
+- [dotnet/skills](https://github.com/dotnet/skills) — .NET Agent Skills.
 - [Agent Skills Specification](https://agentskills.io/specification) — open standard, Apache 2.0 (code) / CC-BY-4.0 (docs).
 
 **Companion documents in this research collection:**
@@ -485,4 +562,4 @@ These are the misconceptions that cost the most time when they're wrong.
 
 ---
 
-*Built from primary source analysis of Anthropic's subagent and skills documentation, the agentskills.io specification, the Claude Agent SDK documentation, Microsoft's skills ecosystem, the Zhang/Murag AI Engineering Code Summit talk, and cross-verification against the companion Skills 2.0 User Guide and Skill Creator Practitioner's Guide. Reflects the ecosystem as of April 2026. Corrections to common misconceptions verified against Anthropic's official docs rather than community folklore.*
+*Built from primary source analysis of Anthropic's subagent and skills documentation, the agentskills.io specification, the Claude Agent SDK documentation, Microsoft's skills ecosystem, the Zhang/Murag AI Engineering Code Summit talk, and cross-verification against the companion Skills 2.0 User Guide and Skill Creator Practitioner's Guide. Reflects the ecosystem as of April 16, 2026. Corrections to common misconceptions verified against Anthropic's official docs and specific GitHub issues (`anthropics/claude-code#14882`, `#17283`, `#32910`, `#45091`) rather than community folklore. v1.1 applied an adversarial review pass with the reviewer's own citations independently re-verified before merge.*

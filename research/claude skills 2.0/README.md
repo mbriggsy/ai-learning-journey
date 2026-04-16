@@ -26,31 +26,14 @@ A replacement for Anthropic's official documentation — those remain authoritat
 
 Pick the entry that matches your current moment.
 
-### "I want to understand what skills are and how they fit in the ecosystem"
-
-Start with [**Skills, Agents, and Subagents — Oh My!**](Skills_Agents_and_Subagents_Oh_My.md). It clears up the four meanings of "agent" and lays out the architectural picture in ~20 minutes. Then read [**Claude Skills 2.0 — User Guide**](Claude_Skills_2.0_User_Guide.md) for the full ecosystem framing.
-
-### "I want to build my first skill"
-
-Jump to [**User Guide §8 — Building Your Own Skills**](Claude_Skills_2.0_User_Guide.md#8-building-your-own-skills) for the worked example. When you're ready to ship something reliable, move to [**Skill Creator Practitioner's Guide**](Skill_Creator_Practitioners_Guide.md) for the engineering discipline that keeps skills working past the first happy path.
-
-### "I'm distributing skills to a team or org"
-
-Read [**User Guide §6 — Using Skills in Claude.ai**](Claude_Skills_2.0_User_Guide.md#6-using-skills-in-claudeai) and [**§7 — Using Skills in Claude Code**](Claude_Skills_2.0_User_Guide.md#7-using-skills-in-claude-code) for distribution surfaces, then [**Practitioner's Guide §12 — The Governance Angle**](Skill_Creator_Practitioners_Guide.md#12-the-governance-angle-show-me-your-tests) for review gates and the maturity model.
-
-### "I keep mixing up agent vs subagent vs skill — terminology is killing me"
-
-[**Skills, Agents, and Subagents — Oh My!**](Skills_Agents_and_Subagents_Oh_My.md), full stop. Especially [§2 — The Four Meanings of "Agent"](Skills_Agents_and_Subagents_Oh_My.md#2-the-four-meanings-of-agent) and [§5 — Decision Framework](Skills_Agents_and_Subagents_Oh_My.md#5-decision-framework-when-to-reach-for-each-primitive).
-
-### "I want the engineering discipline — evals, A/B tests, governance"
-
-[**Skill Creator Practitioner's Guide**](Skill_Creator_Practitioners_Guide.md) is the entire treatment. Especially [§10 — Optimize the Description](Skill_Creator_Practitioners_Guide.md#10-phase-6-optimize-the-description) (the description-tuning methodology) and [§12 — The Governance Angle](Skill_Creator_Practitioners_Guide.md#12-the-governance-angle-show-me-your-tests).
-
-### Not sure? Read in this order
-
-1. [**Skills, Agents, and Subagents — Oh My!**](Skills_Agents_and_Subagents_Oh_My.md) — get terminology and architecture sorted first.
-2. [**Claude Skills 2.0 — User Guide**](Claude_Skills_2.0_User_Guide.md) — full ecosystem treatment.
-3. [**Skill Creator Practitioner's Guide**](Skill_Creator_Practitioners_Guide.md) — engineering discipline for shipping reliable skills.
+| Your moment | Start here | Why this path |
+|---|---|---|
+| **"I want to understand what skills are and how they fit in the ecosystem"** | [SAS](Skills_Agents_and_Subagents_Oh_My.md) → [UG](Claude_Skills_2.0_User_Guide.md) | SAS clears up the four meanings of "agent" and the architecture (~20 min); UG adds the full ecosystem framing |
+| **"I want to build my first skill"** | [UG §8 — Building Your Own Skills](Claude_Skills_2.0_User_Guide.md#8-building-your-own-skills) → [SCG](Skill_Creator_Practitioners_Guide.md) | §8 is the worked example; SCG kicks in when you need engineering rigor past the first happy path |
+| **"I'm distributing skills to a team or org"** | [UG §6](Claude_Skills_2.0_User_Guide.md#6-using-skills-in-claudeai) + [§7](Claude_Skills_2.0_User_Guide.md#7-using-skills-in-claude-code) → [SCG §12](Skill_Creator_Practitioners_Guide.md#12-the-governance-angle-show-me-your-tests) | Distribution surfaces first; governance and review gates second |
+| **"I keep mixing up agent vs subagent vs skill — terminology is killing me"** | [SAS §2](Skills_Agents_and_Subagents_Oh_My.md#2-the-four-meanings-of-agent) + [§5](Skills_Agents_and_Subagents_Oh_My.md#5-decision-framework-when-to-reach-for-each-primitive) | The four meanings of "agent" + the decision framework. That's the whole fix. |
+| **"I want the engineering discipline — evals, A/B tests, governance"** | [SCG](Skill_Creator_Practitioners_Guide.md), especially [§10](Skill_Creator_Practitioners_Guide.md#10-phase-6-optimize-the-description) and [§12](Skill_Creator_Practitioners_Guide.md#12-the-governance-angle-show-me-your-tests) | The entire SCG is built for this; §10 is the description-tuning method, §12 is the review gate |
+| **Not sure** | Read in this order: [SAS](Skills_Agents_and_Subagents_Oh_My.md) → [UG](Claude_Skills_2.0_User_Guide.md) → [SCG](Skill_Creator_Practitioners_Guide.md) | Terminology first, ecosystem second, engineering rigor third |
 
 ---
 

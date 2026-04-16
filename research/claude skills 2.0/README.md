@@ -24,16 +24,14 @@ A replacement for Anthropic's official documentation — those remain authoritat
 
 ## Where to start
 
-Pick the entry that matches your current moment.
+If this is your first time, **start with [Skills, Agents, and Subagents — Oh My!](Skills_Agents_and_Subagents_Oh_My.md)**. Twenty minutes, and the rest of the collection makes more sense.
 
-| Your moment | Start here | Why this path |
-|---|---|---|
-| **"I want to understand what skills are and how they fit in the ecosystem"** | [SAS](Skills_Agents_and_Subagents_Oh_My.md) → [UG](Claude_Skills_2.0_User_Guide.md) | SAS clears up the four meanings of "agent" and the architecture (~20 min); UG adds the full ecosystem framing |
-| **"I want to build my first skill"** | [UG §8 — Building Your Own Skills](Claude_Skills_2.0_User_Guide.md#8-building-your-own-skills) → [SCG](Skill_Creator_Practitioners_Guide.md) | §8 is the worked example; SCG kicks in when you need engineering rigor past the first happy path |
-| **"I'm distributing skills to a team or org"** | [UG §6](Claude_Skills_2.0_User_Guide.md#6-using-skills-in-claudeai) + [§7](Claude_Skills_2.0_User_Guide.md#7-using-skills-in-claude-code) → [SCG §12](Skill_Creator_Practitioners_Guide.md#12-the-governance-angle-show-me-your-tests) | Distribution surfaces first; governance and review gates second |
-| **"I keep mixing up agent vs subagent vs skill — terminology is killing me"** | [SAS §2](Skills_Agents_and_Subagents_Oh_My.md#2-the-four-meanings-of-agent) + [§5](Skills_Agents_and_Subagents_Oh_My.md#5-decision-framework-when-to-reach-for-each-primitive) | The four meanings of "agent" + the decision framework. That's the whole fix. |
-| **"I want the engineering discipline — evals, A/B tests, governance"** | [SCG](Skill_Creator_Practitioners_Guide.md), especially [§10](Skill_Creator_Practitioners_Guide.md#10-phase-6-optimize-the-description) and [§12](Skill_Creator_Practitioners_Guide.md#12-the-governance-angle-show-me-your-tests) | The entire SCG is built for this; §10 is the description-tuning method, §12 is the review gate |
-| **Not sure** | Read in this order: [SAS](Skills_Agents_and_Subagents_Oh_My.md) → [UG](Claude_Skills_2.0_User_Guide.md) → [SCG](Skill_Creator_Practitioners_Guide.md) | Terminology first, ecosystem second, engineering rigor third |
+A few exceptions where you'd skip ahead:
+
+- **You know skills cold and want to build one** → [User Guide §8 — Building Your Own Skills](Claude_Skills_2.0_User_Guide.md#8-building-your-own-skills)
+- **You're shipping skills reliably and need engineering rigor** → [Skill Creator Practitioner's Guide](Skill_Creator_Practitioners_Guide.md)
+- **You're distributing to a team or org** → [UG §6](Claude_Skills_2.0_User_Guide.md#6-using-skills-in-claudeai) + [§7](Claude_Skills_2.0_User_Guide.md#7-using-skills-in-claude-code), then [SCG §12 — Governance](Skill_Creator_Practitioners_Guide.md#12-the-governance-angle-show-me-your-tests)
+- **You're confused about agent vs subagent vs skill** → that's literally what SAS is for; you're already in the right place
 
 ---
 

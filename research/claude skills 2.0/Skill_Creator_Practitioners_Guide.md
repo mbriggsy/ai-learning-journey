@@ -1,21 +1,25 @@
 # The Skill Creator: A Practitioner's Guide to Engineering Agent Skills
 
-**Version:** 1.0 | **Last Updated:** March 2026 | **Author:** Claude (with Briggsy)
-**Companion to:** [Claude Skills 2.0: The Definitive User Guide](Claude_Skills_2.0_User_Guide.md)
+**Version:** 1.1 | **Last Updated:** 2026-04-16 | **Author:** Claude (with Briggsy)
+**Part of:** [Skills 2.0 — Reference Collection](README.md). Companions: [Claude Skills 2.0 — User Guide](Claude_Skills_2.0_User_Guide.md), [Skills, Agents, and Subagents — Oh My!](Skills_Agents_and_Subagents_Oh_My.md).
 
 ---
 
-> Anyone can write a SKILL.md file. That's the easy part. The hard part — the part that separates a prompt file from a production-grade agent capability — is knowing whether it actually works, how much better it makes Claude's output, and whether it'll keep working when the prompt changes slightly or the model updates.
->
-> Anthropic's Skill Creator is the tool that turns skill development from guesswork into engineering. It drafts, tests, evaluates, iterates, and optimizes — with A/B testing, blind comparison, quantitative benchmarks, and a formal iteration loop.
->
-> **This is not a guide about writing better prompts. This is a guide about building reliable, testable, improvable agent capabilities.** The difference matters.
+> Anyone can write a SKILL.md file. That's the easy part. The hard part — the part that separates a prompt file from a production-grade agent capability — is knowing whether it actually works.
+
+**What's in this doc.** The engineering discipline for shipping skills that survive realistic use. The Skill Creator meta-skill (what it is, what's in the box). The 7-phase development loop, walked through end-to-end on a worked PR review example. Phase-by-phase mechanics: capture intent, draft, test, evaluate, improve, optimize description, package. The governance angle — how to gate skill deployment behind evals, the same way you gate code behind tests. Environment compatibility matrix. Best practices and pitfalls. The strategic framing: why "build skills, not agents" is more than a slogan once you can engineer them.
+
+**Who it's for.** Anyone shipping skills that need to work reliably — solo developers building a PR reviewer, team leads standardizing deployment workflows, enterprise architects packaging institutional knowledge. If the skill matters enough to exist, it matters enough to test.
+
+**How long it'll take.** ~30 minutes for the first read. The worked example (§4–§11) threads a single PR review skill through every phase, so you can read it linearly or jump to a specific phase as reference.
+
+**What to read next.** [Skills, Agents, and Subagents — Oh My!](Skills_Agents_and_Subagents_Oh_My.md) for the architectural framing of where skills sit relative to agents and subagents, or the [Claude Skills 2.0 User Guide](Claude_Skills_2.0_User_Guide.md) for the full anatomy / runtime / distribution treatment. The [hub README](README.md) frames the whole collection.
 
 ---
 
 ## Executive Summary
 
-**What is the Skill Creator?** A meta-skill — a skill that creates, tests, and iterates on other skills. It ships as a Claude Code plugin (`/skill-creator`) and is also available in Claude.ai and Cowork with reduced capabilities. With 77,000+ installs, it's the most-used skill development tool in the ecosystem.
+**What is the Skill Creator?** A meta-skill — a skill that creates, tests, and iterates on other skills. It ships as a Claude Code plugin (`/skill-creator`) and is also available in Claude.ai and Cowork with reduced capabilities. It's among the most-used skill development tools in the ecosystem (Anthropic doesn't publish per-plugin install counts, so absolute rankings aren't verifiable, but it's first-party, ships in the official `anthropics/skills` marketplace, and is the canonical reference for skill engineering discipline).
 
 **Why does it matter?** Before the Skill Creator, skill development was vibes-based: write a SKILL.md, try it a few times, ship it, hope for the best. There was no way to systematically measure whether a skill improved Claude's output, no A/B baseline to compare against, and no framework for iterating based on evidence. The Skill Creator makes skill development a proper engineering discipline — with test cases, assertions, grading agents, blind comparisons, benchmarks, and a description optimizer that uses train/test splits to prevent overfitting.
 
@@ -122,6 +126,8 @@ Capture Intent → Draft → Test → Evaluate → Improve → [Repeat] → Opti
 ```
 
 The key insight: **the loop is designed for speed, not perfection.** You don't write a perfect skill on the first try. You write a draft, test it, see what's wrong, fix it, test again. Each iteration takes minutes, not hours. The Skill Creator handles the mechanical work (spawning subagents, grading assertions, launching the viewer) so you can focus on the creative work (understanding what went wrong and how to fix it).
+
+Why iteration-based development works for skills (rather than try-once-and-ship): skills load progressively into Claude's context, and what the skill body actually says materially shapes Claude's behavior on the matched task. See [UG §2 — Progressive Disclosure](Claude_Skills_2.0_User_Guide.md#2-core-concepts) for the loading mechanic. The "iterate fast" loop below is what lets you tune that loaded body until it consistently produces what you want, rather than what you hoped it would.
 
 ### The development loop — visual map
 
@@ -556,16 +562,16 @@ The Skill Creator isn't the only game in town. A vibrant community ecosystem has
 
 | Tool | Strength | Gap |
 |------|----------|-----|
-| **Anthropic Skill Creator** | Full lifecycle: create + test + iterate + optimize. First-party, 77K+ installs. | No CI/CD integration, no cross-model testing |
+| **Anthropic Skill Creator** | Full lifecycle: create + test + iterate + optimize. First-party. | No CI/CD integration, no cross-model testing |
 | **Claude Code Skill Factory** (alirezarezvani) | Factory templates with 10 commands and 5 agents. Great for rapid generation. | No eval framework, no A/B testing |
 | **Agent Skill Creator** (FrancyJGLisboa) | Converts workflows to skills for 14+ platforms. Auto-format conversion. | Focus on creation, not iteration |
-| **skills.sh** (Vercel) | The "npm for skills" — discovery and installation. 47K+ installs. | Distribution only, not development |
+| **skills.sh** (Vercel) | The "npm for skills" — discovery and installation. Widely adopted in the community. | Distribution only, not development |
 | **Skilz CLI** (Hightower) | Python-native, commit pinning, YAML registries. | Package management, not skill engineering |
 | **Tessl** | Cloud-scale: cross-model eval, version pinning, public quality scores. | Enterprise pricing, external dependency |
 
 **The sweet spot:** Use the Skill Creator for development and iteration, skills.sh or Skilz for distribution, and Tessl if you need cross-model testing or enterprise governance.
 
-Microsoft's adoption validates the entire ecosystem — their `microsoft/skills` repo (134 skills for Azure, Fabric, M365) and `microsoft/skills-for-fabric` repo both follow the same SKILL.md spec, explicitly stating: "Agents are built *on top of* skills."
+Microsoft's adoption validates the entire ecosystem — their [microsoft/skills](https://github.com/microsoft/skills) and [microsoft/skills-for-fabric](https://github.com/microsoft/skills-for-fabric) repos collectively ship 200+ skills following the Agent Skills spec. The full architectural treatment of why Microsoft's pattern reinforces "build skills, not agents" lives in [SAS §4 — The Microsoft Echo](Skills_Agents_and_Subagents_Oh_My.md#the-microsoft-echo).
 
 ---
 
@@ -596,9 +602,9 @@ Microsoft's adoption validates the entire ecosystem — their `microsoft/skills`
 
 At the AI Engineering Code Summit in November 2025, Anthropic's Barry Zhang and Mahesh Murag delivered a talk titled **"Don't Build Agents, Build Skills Instead."** Their argument: the future of AI isn't more agents — it's one universal agent powered by a library of domain-specific skills.
 
-The Skill Creator is the practical expression of that thesis. It doesn't help you build agents. It helps you build **the things agents are made of.**
+The Skill Creator is the practical expression of that thesis. It doesn't help you build agents. It helps you build **the things agents are made of.** For the full architectural treatment of why this thesis is load-bearing — including the Microsoft validation, the four architectural implications, and what it means for primitive selection (skill vs. subagent definition vs. Agent SDK) — see [SAS §4 — The Unification Thesis](Skills_Agents_and_Subagents_Oh_My.md#4-the-unification-thesis-dont-build-agents-build-skills-instead).
 
-The industry is paying attention. Microsoft published 134 skills following the Agent Skills spec, explicitly documenting that agents are orchestrators built *on top of* skills. Gartner predicts 40% of enterprise apps will feature task-specific AI agents by end of 2026. 80% of Fortune 500 companies already have active AI agents in production.
+The industry is paying attention. Gartner predicts 40% of enterprise apps will feature task-specific AI agents by end of 2026. 80% of Fortune 500 companies already have active AI agents in production. The skills standard isn't a niche developer tool — it's becoming the substrate.
 
 But here's the gap: most organizations are still at Level 0 on the maturity model — vibes-based skill development with no testing, no baselines, no governance. The Skill Creator is the bridge from Level 0 to Level 2-3, where skills are tested, compared, and gated before deployment.
 
@@ -687,10 +693,10 @@ my-skill-workspace/
 - **Source Code:** [github.com/anthropics/skills/tree/main/skills/skill-creator](https://github.com/anthropics/skills/tree/main/skills/skill-creator)
 - **Agent Skills Spec:** [agentskills.io/specification](https://agentskills.io/specification)
 - **Skills 2.0 User Guide:** See companion doc `Claude_Skills_2.0_User_Guide.md`
-- **Microsoft Skills:** [github.com/microsoft/skills](https://microsoft.github.io/skills/)
+- **Microsoft Skills:** [github.com/microsoft/skills](https://github.com/microsoft/skills) (200+ skills across Azure SDKs, Azure services, and Microsoft Foundry, verified 2026-04 via direct enumeration of the marketplace's 8 plugins)
 - **"Don't Build Agents, Build Skills Instead":** Barry Zhang & Mahesh Murag, AI Engineering Code Summit, Nov 2025
 - **Tessl (Cloud-Scale Eval):** [tessl.io](https://tessl.io)
 
 ---
 
-*Built from primary source analysis of Anthropic's skill-creator SKILL.md (486 lines), the complete agents/, scripts/, and references/ directories, the agentskills.io specification, Microsoft's skills-for-fabric repository, community tooling repositories, and cross-referenced against industry analysis from Gartner, Forrester, and practitioner coverage. Reflects the ecosystem as of March 2026.*
+*Built from primary source analysis of Anthropic's skill-creator SKILL.md (486 lines), the complete agents/, scripts/, and references/ directories, the agentskills.io specification, Microsoft's skills and skills-for-fabric repositories (verified by direct enumeration via the GitHub API), community tooling repositories, and cross-referenced against industry analysis from Gartner, Forrester, and practitioner coverage. Reflects the ecosystem as of 2026-04-16. v1.1 normalized the intro pattern, softened the Skill Creator install-count claim from "77,000+" to "among the most-used skill development tools" (Anthropic doesn't publish per-plugin install counts, so the specific number couldn't be primary-source verified), softened the skills.sh install-count claim for the same reason, updated the Microsoft skill count from 134 to verified 200+ figure with primary-source links, deduplicated the Microsoft "agents on top of skills" mention (the canonical thesis treatment lives in [SAS §4](Skills_Agents_and_Subagents_Oh_My.md#4-the-unification-thesis-dont-build-agents-build-skills-instead)), and added cross-links to UG §2 (progressive disclosure as the prerequisite for understanding why iteration-based skill development works) and SAS §4 (the architectural thesis the engineering discipline serves).*

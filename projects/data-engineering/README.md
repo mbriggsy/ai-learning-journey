@@ -14,4 +14,8 @@ Focus area declared 2026-04-17. Home for all projects targeting the Azure data-e
 |---|---|---|
 | [etl-reverse-engineering](./etl-reverse-engineering/) | Pre-plan | Claude Code skill that reverse-engineers shit-show ETL jobs into rebuild-ready PRDs. |
 
+## Reference
+
+- [`reference/de-capability-skills.md`](./reference/de-capability-skills.md) — inventory of wow-grade Agent Skills 2.0 capability skills available for the post-RE rebuild loop (Databricks-solutions, Microsoft, dbt Labs). Tiered ADOPT / FORK / INSPIRE / SKIP with rebuild-phase roles.
+
 > Placeholder README. Expands as projects land.

@@ -10,13 +10,13 @@
 
 A Claude Code **skill** that ingests a shit-show ETL job and emits a **world-class, rebuild-ready PRD**.
 
-The PRD is the sole contract for a future rebuild. A downstream Compound Engineering (CE) workflow picks up the PRD and builds the world-class version:
+The PRD is the sole contract for a future rebuild. A downstream **skills-based rebuild workflow** — similar in spirit to Compound Engineering (CE), though we have not committed to CE specifically and may build our own equivalent — picks up the PRD and builds the world-class version:
 
 - Same framework (required constraint)
 - Same business logic (modulo flagged bugs)
 - New implementation — clean, tested, maintainable, a "wow" from the best ETL engineers on the team
 
-The skill's job is **reverse engineering → specification**, not implementation. Implementation is a later phase owned by CE.
+The skill's job is **reverse engineering → specification**, not implementation. Implementation is a later phase owned by the rebuild workflow (CE-inspired, whatever form it ends up taking).
 
 ---
 
@@ -30,7 +30,7 @@ The skill's job is **reverse engineering → specification**, not implementation
 | 4 | **Framework is a hard requirement.** | The patented Databricks-job-cluster queuing framework is in-scope. PRD references framework primitives. Rebuild still runs on this framework. No framework-agnostic PRD. |
 | 5 | **No existing PRD template.** | Template is ours to design. Bar: "best ETL guys say wow." |
 | 6 | **All artifacts are readable.** | Source code, framework, config, sample data, runtime logs, git history — all in scope. Only existing docs are excluded. |
-| 7 | **Correctness flags are flagged, not fixed.** | If the original is wrong, the PRD notes it. The rebuild team (or CE) decides what to do. The skill never silently "corrects" behavior. |
+| 7 | **Correctness flags are flagged, not fixed.** | If the original is wrong, the PRD notes it. The rebuild team (or the rebuild workflow) decides what to do. The skill never silently "corrects" behavior. |
 
 ---
 
@@ -67,7 +67,7 @@ An RTM rots when humans maintain it. **Agents don't get bored.** Claude can keep
 What it gives us:
 
 - **Backward coverage proof.** Every meaningful line of the shit show must trace to ≥1 RTM row. If legacy code doesn't map to a row, it's one of three things: (a) a missed requirement (gap), (b) dead code (flag it), (c) a bug (correctness flag). This is how we prove the PRD is complete.
-- **Forward enforcement.** When CE kicks in, every rebuild commit lands against a row. Test passes → row goes green. A finished rebuild = 100% green RTM. Intentional divergence = row with a justification column.
+- **Forward enforcement.** When the rebuild workflow kicks in, every rebuild commit lands against a row. Test passes → row goes green. A finished rebuild = 100% green RTM. Intentional divergence = row with a justification column.
 
 **RTM row shape (first draft):**
 
@@ -77,7 +77,7 @@ What it gives us:
 | `type` | `ingestion` \| `transformation` \| `business_rule` \| `side_effect` \| `framework_coupling` \| `failure_handling` \| `non_functional` |
 | `description` | Plain-language statement of the requirement |
 | `legacy_anchor` | `file:line` range(s) in the original shit show |
-| `rebuild_anchor` | `file:line` in the rebuild (populated by CE) |
+| `rebuild_anchor` | `file:line` in the rebuild (populated during rebuild) |
 | `test_case` | Pointer to the test in the test spec |
 | `status` | `discovered` → `specified` → `implemented` → `tested` → `verified` |
 | `correctness_flag` | Empty, or a note + severity if the legacy behavior is suspect |
@@ -166,5 +166,5 @@ When that's done, we have:
 - **PRD** — product requirements document (here: spec for an ETL job)
 - **RTM** — requirements traceability matrix
 - **UOW** — unit of work (a notebook, module, or framework-registered job unit)
-- **CE** — Compound Engineering (the downstream build workflow)
+- **CE** — Compound Engineering. The inspiration and value-prop reference for the downstream rebuild workflow. Not a commitment — we may use CE directly or build our own skills-based equivalent.
 - **Shit show** — the existing ETL code. It works. It is also shit.

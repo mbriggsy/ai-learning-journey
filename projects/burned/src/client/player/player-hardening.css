@@ -4,8 +4,8 @@
 
    POSITIONING CONTRACT (Phase 1 §2.12 follow-up): html, body, #root are
    position: relative + sized to var(--size-viewport-safe) + overflow: hidden.
-   This lets descendants (FloatingActionButton, ErrorToast, Hand.enlargeBackdrop)
-   use position: absolute against this root for viewport-anchored placement
+   This lets descendants (ErrorToast, Hand.enlargeBackdrop) use
+   position: absolute against this root for viewport-anchored placement
    WITHOUT declaring position: fixed — dodging WebKit bug 297779 on iOS 26.
    See Phase 1 §5 landmine 7.
 

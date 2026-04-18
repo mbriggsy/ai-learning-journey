@@ -1,0 +1,128 @@
+/* BlotterTicker.module.css
+   Horizontal teletype chyron pinned to the bottom inside edge of the briefing
+   blotter. Prototype for moving the COMMS ticker off the side panel so that
+   wall becomes available for dossiers at 8-10 player counts.
+
+   Layout contract: the ticker anchors to the blotter, not the viewport. It
+   inherits the blotter's cream paper feel at the edges but lays a dark
+   teletype bar over the bottom 48-64px so the events read against the
+   darker strip rather than fighting the paper background.
+*/
+
+@layer components {
+
+.ticker {
+  position: absolute;
+  /* Sit just beneath the blotter, in the wood/felt margin above the bottom
+     StatusBar. The blotter is center-anchored at 50% with var(--size-blotter-height);
+     the ticker offsets its top to (50% + half blotter + gap). */
+  left: 50%;
+  top: calc(50% + var(--size-blotter-height) / 2 + clamp(8px, 0.8vw, 18px));
+  transform: translateX(-50%);
+  width: calc(var(--size-blotter-width) - 48px);
+  height: clamp(44px, 3.2vw, 72px);
+  z-index: var(--z-raised);
+  display: flex;
+  align-items: center;
+  gap: clamp(10px, 0.9vw, 20px);
+  padding: 0 clamp(12px, 1vw, 24px);
+  border-radius: 2px;
+  background:
+    linear-gradient(
+      180deg,
+      color-mix(in oklab, var(--color-charcoal-2) 92%, transparent) 0%,
+      color-mix(in oklab, var(--color-charcoal-1) 95%, transparent) 100%
+    );
+  border-top: 1px solid color-mix(in oklab, var(--color-accent-drama) 35%, transparent);
+  box-shadow:
+    inset 0 1px 0 color-mix(in oklab, var(--color-cream-12) 6%, transparent),
+    0 2px 6px color-mix(in oklab, var(--color-charcoal-1) 55%, transparent);
+  overflow: hidden;
+  pointer-events: none;
+}
+
+.header {
+  flex: 0 0 auto;
+  font-family: var(--font-mono);
+  font-size: clamp(9px, 0.62vw, 13px);
+  font-weight: 700;
+  letter-spacing: 0.28em;
+  color: color-mix(in oklab, var(--color-accent-drama) 85%, transparent);
+  text-transform: uppercase;
+  padding-right: clamp(8px, 0.7vw, 14px);
+  border-right: 1px solid color-mix(in oklab, var(--color-accent-drama) 35%, transparent);
+  white-space: nowrap;
+}
+
+/* Horizontal stream — newest hugs the right edge, older events slide left
+   into the mask fade. Right-aligned so a single entry sits at the right
+   (not dangling against the left mask). */
+.list {
+  flex: 1 1 auto;
+  min-width: 0;
+  display: flex;
+  align-items: center;
+  justify-content: flex-end;
+  gap: clamp(8px, 0.7vw, 16px);
+  overflow-x: hidden;
+  scrollbar-width: none;
+  white-space: nowrap;
+  mask-image: linear-gradient(
+    90deg,
+    transparent 0%,
+    black 10%,
+    black 100%
+  );
+}
+
+.list::-webkit-scrollbar { display: none; }
+
+.entry {
+  flex: 0 0 auto;
+  display: inline-flex;
+  align-items: center;
+  gap: clamp(6px, 0.5vw, 10px);
+  font-family: var(--font-mono);
+  font-size: clamp(11px, 0.78vw, 15px);
+  letter-spacing: 0.05em;
+  line-height: 1;
+  color: color-mix(in oklab, var(--color-cream-11) 55%, transparent);
+}
+
+.sep {
+  color: color-mix(in oklab, var(--color-accent-drama) 40%, transparent);
+  font-weight: 400;
+  opacity: 0.7;
+}
+
+.text {
+  white-space: nowrap;
+}
+
+/* Newest entry — bright cream, burned-accent kick, CRT flicker. */
+.entryNew {
+  color: var(--color-cream-12);
+  font-weight: 600;
+}
+.entryNew .sep {
+  color: var(--color-accent-burned);
+  opacity: 1;
+}
+.entryNew .text {
+  text-shadow: 0 0 12px color-mix(in oklab, var(--color-accent-burned) 40%, transparent);
+  animation: tickerFlicker var(--motion-duration-dramatic) var(--motion-ease-base) 1;
+}
+
+@keyframes tickerFlicker {
+  0%   { filter: brightness(1.5) contrast(1.2); }
+  20%  { filter: brightness(0.85); }
+  40%  { filter: brightness(1.25); }
+  60%  { filter: brightness(0.95); }
+  100% { filter: brightness(1); }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .entryNew .text { animation: none; }
+}
+
+} /* @layer components */

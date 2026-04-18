@@ -120,12 +120,18 @@
     --text-card-desc-large-min:  12px;
     --text-card-desc-large-max:  16px;
 
-    /* --- DramaOverlay text scale tokens (follow-up sweep, Phase 3 §7.5) --- */
-    --text-drama-hero-min:       48px;
+    /* --- DramaOverlay text scale tokens (follow-up sweep, Phase 3 §7.5) ---
+       Min values tuned so the longest drama texts ("INTERCEPTED.",
+       "{NAME} ELIMINATED.", "{NAME} WINS.") fit within a 393px phone
+       viewport with the 0.06em letter-spacing + padding-x. cqi factors
+       in DramaOverlay.module.css are paired with these mins: at 393px
+       cqi fall below min, so min sets the phone render; at 1920px board
+       cqi scales up past max and clamps there. */
+    --text-drama-hero-min:       32px;
     --text-drama-hero-max:       160px;
-    --text-drama-subdued-min:    32px;
+    --text-drama-subdued-min:    24px;
     --text-drama-subdued-max:    100px;
-    --text-drama-victory-min:    56px;
+    --text-drama-victory-min:    40px;
     --text-drama-victory-max:    180px;
   }
 }

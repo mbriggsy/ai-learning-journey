@@ -102,6 +102,55 @@
     cursor: not-allowed;
   }
 
+  /* State: intercept window open (non-actor with Intercepted in hand).
+     Gameplay-essential state — this is the ONLY way to counter an action
+     before it resolves. Danger-toned so the urgency reads at a glance. */
+  .intercept {
+    color: var(--color-fg-on-burned);
+    background: var(--color-bg-danger);
+    border-color: var(--color-accent-burned);
+    box-shadow: var(--shadow-glow-danger);
+    text-transform: uppercase;
+    letter-spacing: 0.06em;
+    font-weight: 700;
+  }
+  .intercept:hover {
+    background: color-mix(in oklab, var(--color-accent-burned) 85%, var(--color-bg-danger));
+  }
+
+  /* Final 2 seconds — amplified pulse to telegraph the closing window.
+     Consumes --motion-duration-essential-pulse: survives reduced-motion. */
+  .urgent {
+    animation: interceptPulse var(--motion-duration-essential-pulse) var(--motion-ease-base) infinite alternate;
+  }
+
+  /* State: intercept window open but you don't have an Intercepted card —
+     non-interactive status. Uses alert colors, not disabled colors, so the
+     countdown reads as "live event in progress" rather than "button turned
+     off". Cursor stays default since there's nothing to click. */
+  .interceptWaiting {
+    color: var(--color-accent-burned);
+    background: color-mix(in oklab, var(--color-accent-burned) 12%, var(--color-bg-elevated));
+    border-color: var(--color-accent-burned);
+    text-transform: uppercase;
+    letter-spacing: 0.05em;
+    font-weight: 700;
+    cursor: default;
+  }
+
+  @keyframes interceptPulse {
+    0%, 100% {
+      box-shadow: var(--shadow-glow-danger);
+      transform: scale(1);
+    }
+    50% {
+      box-shadow:
+        0 0 30px color-mix(in oklab, var(--color-accent-burned) 80%, transparent),
+        0 0 60px color-mix(in oklab, var(--color-accent-burned) 40%, transparent);
+      transform: scale(1.02);
+    }
+  }
+
   /* Hint text (secondary line beneath primary) — distinct from .standby state class */
   .hintText {
     display: block;

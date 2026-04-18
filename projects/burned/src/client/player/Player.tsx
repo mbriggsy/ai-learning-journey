@@ -3,7 +3,7 @@ import { connect, disconnect, send, onMessage, onStatusChange, onReconnect, getS
 import type { ConnectionStatus } from '@client/connection'
 import { gameStore, useGameState, useProtocolMismatch, useIsOptimisticPending } from '@client/shared/gameStore'
 import { useSendAction } from '@client/shared/hooks/useSendAction'
-import { useGamePhase, usePlayerList, useDrawPileCount, usePendingPrompt } from '@client/shared/hooks/useSharedSelectors'
+import { useGamePhase, usePlayerList, useDrawPileCount, usePendingPrompt, useNopeWindow } from '@client/shared/hooks/useSharedSelectors'
 import { useHand, useIsMyTurn, useSubPhase, useMyPlayerId, useMyPlayer, usePrivateData } from './hooks/usePlayerSelectors'
 import { useSortedHand } from './hooks/useSortedHand'
 import { useCurrentTurn } from '@client/shared/hooks/useSharedSelectors'
@@ -11,10 +11,10 @@ import { deriveInteractionPermission } from './hooks/useInteractionPermission'
 import { useCardPlay } from './hooks/useCardPlay'
 import { deriveActiveBottomSheet } from './hooks/useActiveBottomSheet'
 import { useWakeLock } from '@client/shared/hooks/useWakeLock'
+import { haptic } from '@client/shared/haptics'
 import { JoinScreen } from './JoinScreen'
 import { Hand } from './Hand'
 import { StagingArea } from './StagingArea'
-import { FloatingActionButton } from './FloatingActionButton'
 import { ErrorToast } from './ErrorToast'
 import { ConnectionOverlay } from './ConnectionOverlay'
 import { EliminatedView } from './EliminatedView'
@@ -128,7 +128,6 @@ export function Player() {
       />
       <ErrorToast />
       <ConnectionOverlay status={connectionStatus} />
-      <FloatingActionButton />
       <Suspense><DiagOverlay /></Suspense>
     </>
   )
@@ -203,6 +202,7 @@ function PlayingView({ roomCode }: { roomCode: string }) {
   const privateData = usePrivateData()
   const phase = useGamePhase()
   const currentTurn = useCurrentTurn()
+  const nopeWindow = useNopeWindow()
   const sendAction = useSendAction()
   const optimisticPending = useIsOptimisticPending()
 
@@ -221,6 +221,12 @@ function PlayingView({ roomCode }: { roomCode: string }) {
     const card = hand.find(c => c.id === cardId)
     if (card) setDetailCardType(card.type)
   }, [hand])
+
+  const hasIntercept = hand.some(c => c.type === 'intercepted')
+  const handleIntercept = useCallback(() => {
+    haptic('medium')
+    sendAction({ type: 'nope' })
+  }, [sendAction])
 
   // Local target select for pre-send actions (Favor, Targeted Attack)
   const [localTargetMode, setLocalTargetMode] = useState<{ cardIds: string[]; reason: 'direct-order' | 'call-in-a-favor' } | null>(null)
@@ -348,10 +354,14 @@ function PlayingView({ roomCode }: { roomCode: string }) {
             drawPileCount={drawPileCount}
             disabled={!permission.allowed}
             optimisticPending={optimisticPending}
+            nopeWindow={nopeWindow}
+            hasIntercept={hasIntercept}
+            isAlive={isAlive}
             onUnstageCard={toggleCard}
             onConfirm={handleConfirm}
             onConfirmWithTarget={handleConfirmWithTarget}
             onCardLongPress={handleCardLongPress}
+            onIntercept={handleIntercept}
           />
         </div>
 

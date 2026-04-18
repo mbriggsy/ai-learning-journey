@@ -9,6 +9,7 @@ import { DrawPile } from './DrawPile'
 import { DiscardFan } from './DiscardFan'
 import { NopeCountdownBar } from './NopeCountdownBar'
 import { AnnouncementFeed } from './AnnouncementFeed'
+import { BlotterTicker } from './BlotterTicker'
 import { StatusBar } from './StatusBar'
 import styles from './GameTable.module.css'
 
@@ -94,6 +95,7 @@ export function GameTable() {
       {/* Overlays */}
       <NopeCountdownBar />
       <AnnouncementFeed />
+      <BlotterTicker />
 
       {/* Comms bar — bottom strip */}
       <StatusBar />

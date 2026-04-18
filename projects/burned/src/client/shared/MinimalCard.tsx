@@ -60,8 +60,10 @@ export const MinimalCard = memo(function MinimalCard({
       }}
       layoutId={layoutId}
     >
-      <CardIcon type={type} />
-      <span className={styles.cardName}>{def.name}</span>
+      <div className={styles.cardHeader}>
+        <CardIcon type={type} />
+        <span className={styles.cardName}>{def.name}</span>
+      </div>
       <CardIllustration type={type} />
       <span className={styles.cardDesc}>{def.description}</span>
     </m.div>

@@ -18,7 +18,7 @@ function pick(variants: readonly string[], seed: string): string {
   return variants[Math.abs(hash) % variants.length]!
 }
 
-function formatEvent(event: GameEvent, players: readonly BoardPlayer[], eventId: string): string | null {
+export function formatEvent(event: GameEvent, players: readonly BoardPlayer[], eventId: string): string | null {
   const n = (id: string) => playerName(players, id)
 
   switch (event.type) {

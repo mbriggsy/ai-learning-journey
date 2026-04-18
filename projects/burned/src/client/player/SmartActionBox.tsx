@@ -1,6 +1,8 @@
+import { useState, useEffect } from 'react'
 import { m, AnimatePresence } from 'motion/react'
 import type { CardPlayState } from './hooks/useCardPlay'
 import type { CardType, SubPhase } from '@shared/types'
+import type { NopeWindowView } from '@shared/protocol'
 import { haptic } from '@client/shared/haptics'
 import { MOTION } from '@client/shared/tokens/motion'
 import styles from './SmartActionBox.module.css'
@@ -35,17 +37,43 @@ interface SmartActionBoxProps {
   readonly drawPileCount: number
   readonly disabled: boolean
   readonly optimisticPending: boolean
+  readonly nopeWindow: NopeWindowView | null
+  readonly hasIntercept: boolean
+  readonly isAlive: boolean
   readonly onConfirm: () => void
   readonly onConfirmWithTarget: () => void
   readonly onDraw: () => void
+  readonly onIntercept: () => void
 }
 
 export function SmartActionBox({
   cardPlayState, isMyTurn, subPhase, drawPileCount,
   disabled, optimisticPending,
-  onConfirm, onConfirmWithTarget, onDraw,
+  nopeWindow, hasIntercept, isAlive,
+  onConfirm, onConfirmWithTarget, onDraw, onIntercept,
 }: SmartActionBoxProps) {
+  // Intercept window countdown — ticks fast enough to catch the "0s" frame
+  // before the server's 300ms grace period resolves the window. At 3s windows
+  // a coarser tick can skip "0s" entirely, which reads as "timer disappeared".
+  const [secondsLeft, setSecondsLeft] = useState(0)
+  useEffect(() => {
+    if (!nopeWindow) { setSecondsLeft(0); return }
+    const update = () => {
+      setSecondsLeft(Math.max(0, Math.ceil((nopeWindow.deadlineMs - Date.now()) / 1000)))
+    }
+    update()
+    const timer = setInterval(update, 100)
+    return () => clearInterval(timer)
+  }, [nopeWindow?.deadlineMs, nopeWindow?.generation])
+
   const state = deriveState(cardPlayState, isMyTurn, subPhase, drawPileCount)
+
+  // Intercept is always interactive during the nope window — the outer
+  // `disabled` prop (driven by permission.allowed) correctly blocks normal
+  // card actions when it's not your turn, but nope-ing IS the legal action
+  // for non-actors, so intercept must bypass it.
+  const isIntercept = state.key === 'intercept'
+  const buttonDisabled = isIntercept ? optimisticPending : (disabled || optimisticPending)
 
   return (
     <AnimatePresence mode="wait">
@@ -53,7 +81,7 @@ export function SmartActionBox({
         <m.button
           key={state.key}
           className={state.className}
-          disabled={disabled || optimisticPending}
+          disabled={buttonDisabled}
           onClick={() => { haptic('medium'); state.action!() }}
           initial={{ opacity: 0, scale: 0.96 }}
           animate={{ opacity: 1, scale: 1 }}
@@ -80,6 +108,28 @@ export function SmartActionBox({
   function deriveState(
     cps: CardPlayState, myTurn: boolean, sub: SubPhase | null, pileCount: number,
   ): { key: string; className: string; text: string; interactive: boolean; action?: () => void } {
+    // Intercept window takes priority — someone played an action card and a
+    // counter-intel window is open. Only render CTA to eligible non-actors.
+    // The acting player (myTurn) can't nope their own play.
+    if (nopeWindow && !myTurn && isAlive) {
+      const urgent = secondsLeft <= 2
+      if (hasIntercept) {
+        return {
+          key: 'intercept',
+          className: `${styles.box} ${styles.intercept} ${urgent ? styles.urgent : ''}`,
+          text: `Intercept \u00b7 ${secondsLeft}s`,
+          interactive: true,
+          action: onIntercept,
+        }
+      }
+      return {
+        key: 'intercept-waiting',
+        className: `${styles.box} ${styles.interceptWaiting}`,
+        text: `Intercept window \u00b7 ${secondsLeft}s`,
+        interactive: false,
+      }
+    }
+
     const hasStaged = cps.status === 'selecting' && cps.selectedCardIds.length > 0
 
     // No cards staged

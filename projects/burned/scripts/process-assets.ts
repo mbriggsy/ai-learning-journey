@@ -19,7 +19,7 @@ import { resolve, basename, extname } from 'node:path';
 const CARD_DIR = resolve('temp/cards');
 const ROSTER_DIR = resolve('public/assets/roster');
 const OUTPUT_DIR = resolve('public/assets/cards');
-const SIZE = 256;
+const MAX_DIM = 384;
 const WEBP_QUALITY = 80;
 
 // Map roster filenames to card type slugs
@@ -47,24 +47,11 @@ async function processImage(
 ): Promise<ProcessResult> {
   const outputPath = resolve(OUTPUT_DIR, `${outputName}.webp`);
 
-  let pipeline = sharp(inputPath);
-
-  if (isPortrait) {
-    // 3:4 portrait → center-crop to square before resize
-    const meta = await sharp(inputPath).metadata();
-    const w = meta.width!;
-    const h = meta.height!;
-    const cropSize = Math.min(w, h);
-    pipeline = pipeline.extract({
-      left: Math.floor((w - cropSize) / 2),
-      top: Math.floor((h - cropSize) / 4), // bias toward face (upper quarter)
-      width: cropSize,
-      height: cropSize,
-    });
-  }
-
-  const buffer = await pipeline
-    .resize(SIZE, SIZE, { fit: 'cover', kernel: 'lanczos3' })
+  // Preserve native aspect ratio — fit within MAX_DIM box, no crop.
+  // Roster stays 3:4, action/utility cards stay 1:1. CSS `object-fit: contain`
+  // handles fitting within the card illustration slot.
+  const buffer = await sharp(inputPath)
+    .resize(MAX_DIM, MAX_DIM, { fit: 'inside', kernel: 'lanczos3' })
     .webp({ quality: WEBP_QUALITY })
     .toBuffer();
 
@@ -88,7 +75,7 @@ async function main(): Promise<void> {
 
   console.log(`\n=== BURNED — Asset Processing ===`);
   console.log(`Output: ${OUTPUT_DIR}`);
-  console.log(`Size: ${SIZE}x${SIZE} WebP @ q${WEBP_QUALITY}\n`);
+  console.log(`Max dim: ${MAX_DIM}px, WebP @ q${WEBP_QUALITY}, native aspect preserved\n`);
 
   const results: ProcessResult[] = [];
 

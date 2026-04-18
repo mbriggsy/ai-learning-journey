@@ -1,6 +1,7 @@
 import { useState, useCallback, useRef, useEffect } from 'react'
 import { m, AnimatePresence } from 'motion/react'
 import type { CardInstance, SubPhase } from '@shared/types'
+import type { NopeWindowView } from '@shared/protocol'
 import type { CardPlayState } from './hooks/useCardPlay'
 import { MinimalCard } from '@client/shared/MinimalCard'
 import { MOTION } from '@client/shared/tokens/motion'
@@ -20,16 +21,21 @@ interface StagingAreaProps {
   readonly drawPileCount: number
   readonly disabled: boolean
   readonly optimisticPending: boolean
+  readonly nopeWindow: NopeWindowView | null
+  readonly hasIntercept: boolean
+  readonly isAlive: boolean
   readonly onUnstageCard: (cardId: string) => void
   readonly onConfirm: () => void
   readonly onConfirmWithTarget: () => void
   readonly onCardLongPress: (cardId: string) => void
+  readonly onIntercept: () => void
 }
 
 export function StagingArea({
   hand, cardPlayState, isMyTurn, subPhase, drawPileCount,
   disabled, optimisticPending,
-  onUnstageCard, onConfirm, onConfirmWithTarget, onCardLongPress,
+  nopeWindow, hasIntercept, isAlive,
+  onUnstageCard, onConfirm, onConfirmWithTarget, onCardLongPress, onIntercept,
 }: StagingAreaProps) {
   const sendAction = useSendAction()
   const stagedCardsRef = useRef<HTMLDivElement>(null)
@@ -126,9 +132,13 @@ export function StagingArea({
           drawPileCount={drawPileCount}
           disabled={disabled}
           optimisticPending={optimisticPending}
+          nopeWindow={nopeWindow}
+          hasIntercept={hasIntercept}
+          isAlive={isAlive}
           onConfirm={onConfirm}
           onConfirmWithTarget={onConfirmWithTarget}
           onDraw={handleDraw}
+          onIntercept={onIntercept}
         />
       </div>
 

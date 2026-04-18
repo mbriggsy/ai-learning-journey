@@ -34,8 +34,10 @@
   text-align: center;
   line-height: 1;
   padding: 0 var(--space-6);
-  /* Hero size — cqi-based, axis-neutral, works on phone AND board */
-  font-size: clamp(var(--text-drama-hero-min), 12cqi + 0rem, var(--text-drama-hero-max));
+  /* Hero size — cqi-based, axis-neutral, works on phone AND board.
+     Factor paired with --text-drama-hero-min so "INTERCEPTED." (12 chars)
+     fits on a 393px phone viewport with letter-spacing + padding. */
+  font-size: clamp(var(--text-drama-hero-min), 9cqi + 0rem, var(--text-drama-hero-max));
   text-shadow:
     0 4px 20px color-mix(in oklab, var(--color-charcoal-1) 50%, transparent),
     0 0 60px currentColor;
@@ -85,7 +87,7 @@
 .eliminated .text {
   color: var(--color-charcoal-11);
   /* Subdued size — quieter reveal for the darker moment */
-  font-size: clamp(var(--text-drama-subdued-min), 8cqi + 0rem, var(--text-drama-subdued-max));
+  font-size: clamp(var(--text-drama-subdued-min), 6cqi + 0rem, var(--text-drama-subdued-max));
 }
 
 /* ─── INTERCEPTED — emerald flash ─── */
@@ -117,7 +119,7 @@
 .victory .text {
   color: var(--color-cream-12);
   /* Oversized — victory is the biggest reveal in the game */
-  font-size: clamp(var(--text-drama-victory-min), 10cqi + 0rem, var(--text-drama-victory-max));
+  font-size: clamp(var(--text-drama-victory-min), 8cqi + 0rem, var(--text-drama-victory-max));
 }
 
 /* ─── Reduced motion — skip the slam, just fade ─── */

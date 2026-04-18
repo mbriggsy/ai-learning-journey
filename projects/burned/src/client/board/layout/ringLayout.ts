@@ -47,18 +47,21 @@ export function getAvatarSize(playerCount: number): number {
 }
 
 /**
- * Ring radii — sized so panels orbit in the safe zone,
- * not clipping off screen edges.
+ * Ring radii — sized so dossier panels orbit the cream briefing blotter
+ * without sitting *on top* of it. The blotter takes ~45% of viewport width,
+ * so the ring must push past that boundary.
  */
 export function getRingRadii(
   playerCount: number,
   containerWidth: number,
   containerHeight: number,
 ): { rx: number; ry: number } {
-  // Tighter for fewer players, wider for more
-  const scale = playerCount <= 4 ? 0.30 : playerCount <= 6 ? 0.33 : 0.36
+  // Bigger rx keeps dossiers outside the briefing blotter at every viewport.
+  // Ry is smaller than rx so the top/bottom seats sit close to the horizontal
+  // axis but still clear the blotter vertically.
+  const scale = playerCount <= 4 ? 0.36 : playerCount <= 6 ? 0.38 : 0.40
   return {
     rx: containerWidth * scale,
-    ry: containerHeight * (scale - 0.02),
+    ry: containerHeight * (scale - 0.04),
   }
 }

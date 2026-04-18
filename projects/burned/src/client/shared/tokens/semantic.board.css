@@ -133,52 +133,55 @@
     /* ─── Briefing Room tokens — Phase A arena redesign ─── */
 
     /* Cream-paper briefing blotter that sits under the draw + discard piles.
-       Sized ~60% of viewport width, ~60% of viewport height. Creates physical
-       grounding for the center action. */
+       Scales from 1280 → 3840 so the blotter stays ~40-47% of the viewport
+       width at every TV size. Creates physical grounding for the center
+       action. */
     --size-blotter-width: clamp(
       620px,
-      calc(620px + (100vw - 1280px) * (580 / 2560)),
-      1200px
+      calc(620px + (100vw - 1280px) * (1180 / 2560)),
+      1800px
     );
     --size-blotter-height: clamp(
       320px,
-      calc(320px + (100vw - 1280px) * (240 / 2560)),
-      560px
+      calc(320px + (100vw - 1280px) * (400 / 2560)),
+      720px
     );
 
-    /* Mahogany wood frame thickness — scales from 1280 → 3840 as 28 → 56px */
+    /* Mahogany wood frame thickness — scales from 1280 → 3840 as 28 → 80px */
     --size-wood-frame-thickness: clamp(
       28px,
-      calc(28px + (100vw - 1280px) * (28 / 2560)),
-      56px
+      calc(28px + (100vw - 1280px) * (52 / 2560)),
+      80px
     );
 
     /* Venetian-blind side-rake width — lateral band filled with horizontal
-       amber/charcoal shadow stripes (Archer Mother's-office vocabulary). */
+       amber/charcoal shadow stripes (Archer Mother's-office vocabulary).
+       Wider at 4K so the rake pattern stays legible on large TVs. */
     --size-blind-rake-width: clamp(
       280px,
-      calc(280px + (100vw - 1280px) * (360 / 2560)),
-      640px
+      calc(280px + (100vw - 1280px) * (620 / 2560)),
+      900px
     );
 
     /* Dossier operative-file sizing — replaces the old panel size. Slightly
        taller than wide to read as a 8.5×11 file with a tab. */
     --size-dossier-width: clamp(
       220px,
-      calc(220px + (100vw - 1280px) * (240 / 2560)),
-      460px
+      calc(220px + (100vw - 1280px) * (360 / 2560)),
+      580px
     );
     --size-dossier-height: clamp(
       140px,
-      calc(140px + (100vw - 1280px) * (120 / 2560)),
-      260px
+      calc(140px + (100vw - 1280px) * (180 / 2560)),
+      320px
     );
 
-    /* Side-panel widths (Phase C evidence board / ticker). Reserved. */
+    /* Side-panel widths — left CASE banner + right COMMS ticker.
+       Capped at 400 so the dossier ring has breathing room at 4K. */
     --size-side-panel-width: clamp(
       220px,
-      calc(220px + (100vw - 1280px) * (160 / 2560)),
-      380px
+      calc(220px + (100vw - 1280px) * (180 / 2560)),
+      400px
     );
 
     /* ─── Briefing Room semantic colors ─── */

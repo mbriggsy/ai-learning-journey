@@ -6,35 +6,113 @@
 
 @layer components {
 
+/* Right-side briefing ticker — replaces the old top strip.
+   Reads as a teletype CRT or dossier comms log pinned to the agency wall. */
 .feed {
-  position: fixed;
-  top: 0;
-  left: 0;
+  position: absolute;
   right: 0;
+  top: 0;
+  bottom: 0;
+  width: var(--size-side-panel-width);
   z-index: var(--z-sticky);
   display: flex;
   flex-direction: column;
-  align-items: center;
-  gap: var(--space-1);
-  padding: var(--space-3) var(--space-4);
-  background: linear-gradient(
-    to bottom,
-    color-mix(in oklab, var(--color-charcoal-1) 60%, transparent) 0%,
-    color-mix(in oklab, var(--color-charcoal-1) 20%, transparent) 60%,
-    transparent 100%
-  );
+  justify-content: center;
+  align-items: stretch;
+  padding:
+    calc(var(--size-wood-frame-thickness) + 24px)
+    calc(var(--size-wood-frame-thickness) + 16px)
+    calc(var(--size-wood-frame-thickness) + 24px)
+    8px;
+  gap: 10px;
   pointer-events: none;
 }
 
+/* Ticker header — classified banner at the top of the panel */
+.feedHeader {
+  font-family: var(--font-mono);
+  font-size: var(--text-caption-board);
+  font-weight: 700;
+  letter-spacing: 0.32em;
+  text-transform: uppercase;
+  color: color-mix(in oklab, var(--color-accent-drama) 80%, transparent);
+  padding: 6px 10px;
+  margin-bottom: 4px;
+  border-top: 1px solid color-mix(in oklab, var(--color-accent-drama) 50%, transparent);
+  border-bottom: 1px solid color-mix(in oklab, var(--color-accent-drama) 30%, transparent);
+  position: relative;
+  flex-shrink: 0;
+}
+
+.feedHeader::before {
+  content: '// ';
+  opacity: 0.6;
+  font-weight: 400;
+}
+
+/* Scroll region — newest at top (first child), oldest fades to bottom */
+.feedStream {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  flex: 1 1 auto;
+  min-height: 0;
+  overflow: hidden;
+}
+
 .announcement {
-  font-family: var(--font-display);
-  font-size: var(--text-title);
-  font-weight: 600;
-  color: var(--color-fg-primary);
-  text-align: center;
+  font-family: var(--font-mono);
+  font-size: var(--text-caption-board);
+  font-weight: 500;
+  letter-spacing: 0.08em;
+  line-height: 1.35;
+  color: color-mix(in oklab, var(--color-cream-11) 85%, transparent);
   pointer-events: auto;
-  letter-spacing: 0.04em;
-  text-shadow: 0 2px 12px color-mix(in oklab, var(--color-charcoal-1) 60%, transparent);
+  /* Teletype card — thin left-edge rule in accent-drama */
+  padding: 8px 10px 8px 14px;
+  border-left: 2px solid color-mix(in oklab, var(--color-accent-drama) 45%, transparent);
+  background: linear-gradient(
+    90deg,
+    color-mix(in oklab, var(--color-charcoal-1) 55%, transparent) 0%,
+    color-mix(in oklab, var(--color-charcoal-1) 35%, transparent) 70%,
+    transparent 100%
+  );
+  text-shadow: 0 1px 0 color-mix(in oklab, var(--color-charcoal-1) 80%, transparent);
+}
+
+/* Newest announcement — brighter, burned-red edge, stamped feel */
+.feedStream .announcement:first-child {
+  color: var(--color-cream-12);
+  border-left-color: var(--color-accent-burned);
+  background: linear-gradient(
+    90deg,
+    color-mix(in oklab, var(--color-cordovan-4) 60%, transparent) 0%,
+    color-mix(in oklab, var(--color-charcoal-1) 40%, transparent) 70%,
+    transparent 100%
+  );
+}
+
+/* Fade oldest entries to nothing — gradient mask on the stream */
+.feedStream {
+  mask-image: linear-gradient(
+    180deg,
+    black 0%,
+    black 35%,
+    color-mix(in srgb, black 40%, transparent) 85%,
+    transparent 100%
+  );
+}
+
+/* Small timestamp/tag in the upper-right of each entry */
+.tag {
+  display: inline-block;
+  font-family: var(--font-mono);
+  font-size: 9px;
+  font-weight: 600;
+  letter-spacing: 0.18em;
+  color: color-mix(in oklab, var(--color-accent-drama) 60%, transparent);
+  margin-right: 6px;
+  text-transform: uppercase;
 }
 
 } /* @layer components */

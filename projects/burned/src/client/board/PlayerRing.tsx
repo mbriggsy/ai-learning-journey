@@ -1,8 +1,7 @@
-import { useRef, useLayoutEffect, useState, useEffect, memo } from 'react'
+import { useRef, useLayoutEffect, useState, memo } from 'react'
 import { m, AnimatePresence } from 'motion/react'
-import gsap from 'gsap'
 import type { BoardPlayer } from '@shared/protocol'
-import { MOTION, MOTION_DURATIONS } from '@client/shared/tokens/motion'
+import { MOTION } from '@client/shared/tokens/motion'
 import { calculateRingPositions, getRingRadii } from './layout/ringLayout'
 import { PlayerIcon } from '@client/shared/PlayerIcon'
 import styles from './PlayerRing.module.css'
@@ -30,8 +29,6 @@ export const PlayerRing = memo(function PlayerRing({
   const measureRef = useRef<HTMLDivElement>(null)
   const [dimensions, setDimensions] = useState({ w: 0, h: 0 })
   const [panelSize, setPanelSize] = useState({ w: 0, h: 0 })
-  const prevActiveRef = useRef<string | null>(null)
-  const slotRefs = useRef<Map<string, HTMLDivElement>>(new Map())
 
   useLayoutEffect(() => {
     const el = containerRef.current
@@ -40,11 +37,16 @@ export const PlayerRing = memo(function PlayerRing({
 
     // Synchronous first read — before any observer callback, before paint.
     // useLayoutEffect fires after DOM insertion but before paint, so the
-    // browser has already computed layout for the measurement div. This
-    // eliminates the first-frame {w:0,h:0} jitter.
-    const initialRect = measureEl.getBoundingClientRect()
-    if (initialRect.width > 0) {
-      setPanelSize({ w: initialRect.width, h: initialRect.height })
+    // browser has already computed layout. Reading BOTH the container and
+    // the measurement div here eliminates the first-frame jitter where
+    // dimensions={0,0} would send dossiers to pos.x - panelW/2 (off-screen).
+    const initialPanelRect = measureEl.getBoundingClientRect()
+    if (initialPanelRect.width > 0) {
+      setPanelSize({ w: initialPanelRect.width, h: initialPanelRect.height })
+    }
+    const initialContainerRect = el.getBoundingClientRect()
+    if (initialContainerRect.width > 0) {
+      setDimensions({ w: initialContainerRect.width, h: initialContainerRect.height })
     }
 
     const ro = new ResizeObserver(([entry]) => {
@@ -65,27 +67,13 @@ export const PlayerRing = memo(function PlayerRing({
     return () => ro.disconnect()
   }, [])
 
-  // GSAP turn transition
-  useEffect(() => {
-    if (!currentPlayerId || currentPlayerId === prevActiveRef.current) return
-    prevActiveRef.current = currentPlayerId
-
-    const activeEl = slotRefs.current.get(currentPlayerId)
-    if (!activeEl) return
-
-    const tl = gsap.timeline()
-    tl.fromTo(activeEl, {
-      scale: 1.12,
-      filter: 'brightness(1.6)',
-    }, {
-      scale: 1,
-      filter: 'brightness(1)',
-      // GSAP ease strings are parsed by GSAP's own registry and have no
-      // cubic-bezier equivalent; left as a literal. Duration consolidated.
-      duration: MOTION_DURATIONS.slow,
-      ease: 'power2.out',
-    })
-  }, [currentPlayerId])
+  // Turn-transition emphasis is delivered via CSS [data-active] styling
+  // (box-shadow, brightness filter, ACTIVE rubber stamp). Previously a GSAP
+  // fromTo() drove a scale pulse on the active dossier, but GSAP writes to
+  // the same inline `transform` property that Framer Motion uses for x/y
+  // positioning — on player-count ≤ 4 (3-player case, Dash at seat 0)
+  // GSAP's transform reset wiped FM's translate, dropping Dash to (0,0).
+  // Motion polish for the active transition lives in Phase E via pure CSS.
 
   const alivePlayers = players.filter(p => p.isAlive)
   const { rx, ry } = dimensions.w > 0
@@ -106,7 +94,7 @@ export const PlayerRing = memo(function PlayerRing({
       <div ref={measureRef} className={styles.measurePanel} aria-hidden="true" />
 
       <AnimatePresence mode="sync">
-        {alivePlayers.map((player, i) => {
+        {dimensions.w > 0 && panelSize.w > 0 && alivePlayers.map((player, i) => {
           const pos = positions[i]
           if (!pos) return null
           const isActive = player.id === currentPlayerId
@@ -119,10 +107,6 @@ export const PlayerRing = memo(function PlayerRing({
           return (
             <m.div
               key={player.id}
-              ref={(el: HTMLDivElement | null) => {
-                if (el) slotRefs.current.set(player.id, el)
-                else slotRefs.current.delete(player.id)
-              }}
               className={styles.panel}
               data-active={isActive || undefined}
               style={{

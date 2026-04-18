@@ -181,29 +181,35 @@ export function AnnouncementFeed() {
     }
   }, [events, players])
 
-  // Show latest 3 announcements
-  const recent = events.slice(-3)
+  // Show the latest 6 renderable announcements — teletype comms strip.
+  // Filter here so entries that formatEvent rejects (nope-window-opened, etc.)
+  // don't leave gaps in the 6-slot window.
+  const rendered = events
+    .map(entry => ({ entry, text: formatEvent(entry.event, players, entry.id) }))
+    .filter((r): r is { entry: typeof events[number]; text: string } => r.text != null)
+    .slice(-6)
+    .reverse() // newest first, since .feedStream uses column-reverse for animation-natural insertion order
 
   return (
     <div className={styles.feed}>
-      <AnimatePresence mode="popLayout">
-        {recent.map(entry => {
-          const text = formatEvent(entry.event, players, entry.id)
-          if (!text) return null
-          return (
+      <div className={styles.feedHeader} aria-hidden="true">Comms · Intercepted</div>
+      <div className={styles.feedStream}>
+        <AnimatePresence mode="popLayout">
+          {rendered.map(({ entry, text }, i) => (
             <m.div
               key={entry.id}
               className={styles.announcement}
-              initial={{ opacity: 0, y: -12 }}
-              animate={{ opacity: 1, y: 0 }}
-              exit={{ opacity: 0, y: 12 }}
+              initial={{ opacity: 0, x: 20 }}
+              animate={{ opacity: 1, x: 0 }}
+              exit={{ opacity: 0, x: 20 }}
               transition={MOTION.enter}
             >
+              <span className={styles.tag}>// {String(i + 1).padStart(2, '0')}</span>
               {text}
             </m.div>
-          )
-        })}
-      </AnimatePresence>
+          ))}
+        </AnimatePresence>
+      </div>
     </div>
   )
 }

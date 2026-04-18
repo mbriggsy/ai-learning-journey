@@ -39,6 +39,18 @@ export function GameTable() {
       {/* Mahogany wood edge inlay — briefing-table border */}
       <div className={styles.woodFrame} aria-hidden="true" />
 
+      {/* Left ambient case banner — Pendleton Agency mission chrome */}
+      <aside className={styles.caseBanner} aria-hidden="true">
+        <span className={styles.caseBannerLabel}>Operation</span>
+        <span className={styles.caseBannerOperation}>BURNED</span>
+        <span className={styles.caseBannerSub}>Case File 47-B · Mayfair</span>
+        <div className={styles.caseBannerDivider} />
+        <span className={styles.caseBannerFooter}>
+          Briefed by <strong>M.</strong>
+        </span>
+        <div className={styles.caseBannerStamp} />
+      </aside>
+
       {/* Player ring */}
       <PlayerRing
         players={players}

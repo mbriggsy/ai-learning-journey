@@ -384,6 +384,132 @@
   color: color-mix(in oklab, var(--color-ochre-3) 85%, var(--color-charcoal-1));
 }
 
+/* ─── Left-side ambient CASE BANNER ─────────────────────────────────
+   Fills the LEFT dead band with Pendleton Agency set dressing. Sits
+   inside the wood frame, vertically centered between the top of the
+   table and the dossier row.
+─────────────────────────────────────────────────────────────────────── */
+
+.caseBanner {
+  position: absolute;
+  left: 0;
+  top: 0;
+  bottom: 0;
+  width: var(--size-side-panel-width);
+  z-index: var(--z-raised);
+  pointer-events: none;
+  padding:
+    calc(var(--size-wood-frame-thickness) + 24px)
+    8px
+    calc(var(--size-wood-frame-thickness) + 24px)
+    calc(var(--size-wood-frame-thickness) + 20px);
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  gap: 14px;
+}
+
+.caseBanner::before {
+  /* Left-margin classified mark — vertical ribbon */
+  content: '';
+  position: absolute;
+  left: calc(var(--size-wood-frame-thickness) + 4px);
+  top: 18%;
+  bottom: 18%;
+  width: 3px;
+  background: linear-gradient(
+    180deg,
+    transparent 0%,
+    var(--color-accent-drama) 20%,
+    var(--color-accent-drama) 80%,
+    transparent 100%
+  );
+  opacity: 0.55;
+}
+
+.caseBannerLabel {
+  font-family: var(--font-mono);
+  font-size: var(--text-caption-board);
+  font-weight: 600;
+  letter-spacing: 0.38em;
+  text-transform: uppercase;
+  color: color-mix(in oklab, var(--color-accent-drama) 72%, transparent);
+}
+
+.caseBannerLabel::before {
+  content: '// ';
+  opacity: 0.55;
+  font-weight: 400;
+}
+
+.caseBannerOperation {
+  font-family: var(--font-display);
+  font-weight: 900;
+  font-size: clamp(32px, calc(32px + (100vw - 1280px) * (28 / 2560)), 60px);
+  line-height: 0.9;
+  letter-spacing: -0.01em;
+  text-transform: uppercase;
+  color: var(--color-accent-burned);
+  text-shadow:
+    0 1px 0 color-mix(in oklab, var(--color-cream-12) 14%, transparent),
+    0 0 30px color-mix(in oklab, var(--color-accent-burned) 42%, transparent),
+    0 0 60px color-mix(in oklab, var(--color-accent-burned) 20%, transparent);
+}
+
+.caseBannerSub {
+  font-family: var(--font-mono);
+  font-size: var(--text-caption-board);
+  font-weight: 600;
+  letter-spacing: 0.22em;
+  text-transform: uppercase;
+  color: color-mix(in oklab, var(--color-cream-11) 72%, transparent);
+}
+
+.caseBannerDivider {
+  height: 1px;
+  background: linear-gradient(
+    90deg,
+    color-mix(in oklab, var(--color-accent-drama) 55%, transparent) 0%,
+    transparent 100%
+  );
+}
+
+.caseBannerFooter {
+  margin-top: 6px;
+  font-family: var(--font-mono);
+  font-size: var(--text-caption-board);
+  font-weight: 500;
+  letter-spacing: 0.22em;
+  text-transform: uppercase;
+  color: color-mix(in oklab, var(--color-cream-11) 55%, transparent);
+}
+
+.caseBannerFooter strong {
+  color: color-mix(in oklab, var(--color-accent-drama) 85%, transparent);
+  font-weight: 700;
+  letter-spacing: 0.28em;
+  padding-left: 6px;
+}
+
+/* Classified-stamp overlay — uses the Imagen-generated stamp png, masked to
+   red + rotated just off-axis. Sits low on the left banner as set dressing. */
+.caseBannerStamp {
+  margin-top: 10px;
+  width: 82%;
+  aspect-ratio: 5 / 2;
+  background-image: url('/assets/arena/stamp-classified.png');
+  background-size: contain;
+  background-repeat: no-repeat;
+  background-position: left center;
+  opacity: 0.35;
+  transform: rotate(-6deg);
+  filter:
+    grayscale(0.1)
+    saturate(1.15)
+    drop-shadow(0 1px 1px color-mix(in oklab, var(--color-charcoal-1) 40%, transparent));
+  mix-blend-mode: multiply;
+}
+
 /* ─── Full-screen event flash (GSAP target in Phase 4) ─── */
 
 .eventFlash {

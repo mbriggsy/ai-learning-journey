@@ -30,6 +30,39 @@
   z-index: var(--z-base);
 }
 
+/*
+ * Hidden measurement element for the blotter dimensions — PlayerRing reads
+ * this at the same time it reads panel size so ring radii can guarantee
+ * blotter-clearance without importing CSS vars into TS.
+ */
+.measureBlotter {
+  position: absolute;
+  top: 0;
+  left: 0;
+  width: var(--size-blotter-width);
+  height: var(--size-blotter-height);
+  visibility: hidden;
+  pointer-events: none;
+  z-index: var(--z-base);
+}
+
+/*
+ * Hidden gap measurement — width resolves the fluid --space-ring-gap token
+ * to an exact pixel count via getBoundingClientRect. CSS custom properties
+ * themselves return their declared (unresolved) value, so we need an element
+ * that actually APPLIES the value to a real CSS size property.
+ */
+.measureGap {
+  position: absolute;
+  top: 0;
+  left: 0;
+  width: var(--space-ring-gap);
+  height: 1px;
+  visibility: hidden;
+  pointer-events: none;
+  z-index: var(--z-base);
+}
+
 /* ─── Dossier card ──────────────────────────────────────────────────
    Cream-paper file card laid on the briefing table. Paper-face color,
    inner rule lines, subtle fiber, drop shadow = weight on felt.
@@ -55,30 +88,107 @@
   /* No overflow:hidden — ACTIVE stamp bleeds off the right edge by design.
      The paper fiber stays clipped by the border-box default. */
   transition:
-    transform var(--motion-duration-base) var(--motion-ease-base),
     filter var(--motion-duration-slow) var(--motion-ease-base);
+  /* Warm, ochre-tinted drop shadow reads correctly against both the teal felt
+     and the cream blotter. Softer & offset DOWN + RIGHT a hair so the pin
+     at top-right feels like the physical anchor. */
   box-shadow:
     inset 0 0 0 1px color-mix(in oklab, var(--color-ochre-6) 45%, transparent),
     inset 0 0 20px color-mix(in oklab, var(--color-ochre-5) 12%, transparent),
-    0 6px 18px color-mix(in oklab, var(--color-charcoal-1) 55%, transparent),
-    0 2px 5px color-mix(in oklab, var(--color-charcoal-1) 45%, transparent);
+    2px 7px 16px color-mix(in oklab, var(--color-charcoal-1) 55%, var(--color-ochre-4) 15%),
+    0 2px 4px color-mix(in oklab, var(--color-charcoal-1) 40%, transparent);
 }
 
-/* Active player — dossier lifts off the desk, warm spotlight, stronger shadow.
-   Glow uses the player's assigned accent color for identity reinforcement. */
+/* ─── Brass pushpin ──────────────────────────────────────────────────
+   Single physical anchor — reads as "pinned to the briefing table."
+   Positioned top-right so it sits clear of the manila tab (which lives
+   top-left). Tilted slightly so it doesn't feel mechanical. */
+.pushpin {
+  position: absolute;
+  top: -6px;
+  right: 14px;
+  width: 14px;
+  height: 14px;
+  border-radius: 50%;
+  /* Brass + agency-red blend — reads as a vintage steel tack with a red head. */
+  background:
+    radial-gradient(circle at 32% 28%,
+      color-mix(in oklab, var(--color-cream-12) 80%, var(--color-accent-burned)) 0%,
+      color-mix(in oklab, var(--color-accent-burned) 85%, var(--color-charcoal-1)) 55%,
+      color-mix(in oklab, var(--color-accent-burned) 40%, var(--color-charcoal-1)) 100%);
+  box-shadow:
+    /* Subtle cast onto the dossier, downward */
+    1px 2px 3px color-mix(in oklab, var(--color-charcoal-1) 65%, transparent),
+    /* Inner bevel for the glossy head */
+    inset -1px -1px 2px color-mix(in oklab, var(--color-charcoal-1) 55%, transparent),
+    inset 1px 1px 1px color-mix(in oklab, var(--color-cream-12) 40%, transparent);
+  z-index: calc(var(--z-raised) + 3);
+  pointer-events: none;
+}
+
+/* Tiny shaft/shadow line from the pin into the dossier — sells depth. */
+.pushpin::after {
+  content: '';
+  position: absolute;
+  top: 100%;
+  left: 50%;
+  width: 2px;
+  height: 5px;
+  background: color-mix(in oklab, var(--color-charcoal-1) 50%, transparent);
+  transform: translateX(-50%);
+  border-radius: 0 0 1px 1px;
+  filter: blur(0.4px);
+}
+
+/* Active dossier pin — slightly brighter head, stronger shadow. */
+.panel[data-active] .pushpin {
+  background:
+    radial-gradient(circle at 32% 28%,
+      color-mix(in oklab, var(--color-cream-12) 92%, var(--color-accent-burned)) 0%,
+      var(--color-accent-burned) 50%,
+      color-mix(in oklab, var(--color-accent-burned) 60%, var(--color-charcoal-1)) 100%);
+  box-shadow:
+    2px 3px 5px color-mix(in oklab, var(--color-charcoal-1) 70%, transparent),
+    inset -1px -1px 2px color-mix(in oklab, var(--color-charcoal-1) 55%, transparent),
+    inset 1px 1px 1.5px color-mix(in oklab, var(--color-cream-12) 55%, transparent),
+    0 0 8px color-mix(in oklab, var(--color-accent-burned) 55%, transparent);
+}
+
+/* Active player — dossier lifts off the desk, warm overhead spotlight, deep
+   shadow. Non-active dossiers dim and desaturate so the eye lands instantly
+   on whose turn it is from TV viewing distance. Glow uses the player's
+   assigned accent color for identity reinforcement. */
 .panel[data-active] {
-  filter: brightness(1.08) saturate(1.05);
+  filter: brightness(1.14) saturate(1.12);
   box-shadow:
     inset 0 0 0 1.5px color-mix(in oklab, var(--player-color) 65%, transparent),
-    inset 0 0 28px color-mix(in oklab, var(--color-accent-drama) 18%, transparent),
-    0 12px 32px color-mix(in oklab, var(--player-color) 22%, transparent),
-    0 18px 48px color-mix(in oklab, var(--color-charcoal-1) 55%, transparent),
+    inset 0 0 28px color-mix(in oklab, var(--color-accent-drama) 22%, transparent),
+    /* Lift — longer Y offset reads as "picked up" off the table */
+    4px 14px 24px color-mix(in oklab, var(--player-color) 28%, transparent),
+    0 22px 56px color-mix(in oklab, var(--color-charcoal-1) 60%, transparent),
     0 4px 8px color-mix(in oklab, var(--color-charcoal-1) 50%, transparent);
 }
 
+/* Overhead spotlight bloom — warm amber pool that appears only under the
+   active dossier, sitting behind everything else on the panel. Makes the
+   active operative visually pop without touching the panel's own surface. */
+.panel[data-active]::before {
+  content: '';
+  position: absolute;
+  inset: -22%;
+  border-radius: 50%;
+  background: radial-gradient(ellipse at center,
+    color-mix(in oklab, var(--color-accent-drama) 38%, transparent) 0%,
+    color-mix(in oklab, var(--color-accent-drama) 18%, transparent) 30%,
+    transparent 65%);
+  z-index: -1;
+  pointer-events: none;
+  filter: blur(3px);
+}
+
 .panel:not([data-active]) {
-  opacity: 0.78;
-  filter: saturate(0.85);
+  opacity: 0.72;
+  filter: saturate(0.75) brightness(0.92);
 }
 
 /* ─── Manila folder tab — top edge, player-color ──────────────────── */

@@ -136,15 +136,42 @@
        Scales from 1280 → 3840 so the blotter stays ~40-47% of the viewport
        width at every TV size. Creates physical grounding for the center
        action. */
-    --size-blotter-width: clamp(
-      620px,
-      calc(620px + (100vw - 1280px) * (1180 / 2560)),
-      1800px
+    /* Breathing gap between blotter perimeter and orbiting dossiers. Scales
+       with viewport — 32px at 1280 TV, 80px at 4K. This is THE negative space
+       that sells "case file on a planning desk, photos clipped at arm's
+       length." */
+    --space-ring-gap: clamp(
+      32px,
+      calc(32px + (100vw - 1280px) * (48 / 2560)),
+      80px
     );
+
+    /* Blotter width — grows with viewport BUT capped so ring dossiers always
+       clear it by --space-ring-gap at the worst slot angle.
+
+       Derivation: at any slot angle θ, panel center x = cos(θ)·rx. Horizontal
+       clearance from blotter edge requires rx·cos(θ) ≥ bw/2 + pw/2 + gap.
+       The edge-margin constraint gives rx·cos(θ) ≤ viewport/2 - pw/2 -
+       edge_margin. The cos(θ) cancels in the chain, so:
+         bw ≤ viewport - 2·pw - 2·gap - 2·edge_margin
+       Independent of player count — works for N=3 through N=10. */
+    --size-blotter-width-desired: clamp(
+      620px,
+      calc(620px + (100vw - 1280px) * (1480 / 2560)),
+      2200px
+    );
+    --size-blotter-width-max-by-ring: calc(
+      100vw - 2 * var(--size-dossier-width) - 2 * var(--space-ring-gap) - 48px
+    );
+    --size-blotter-width: min(
+      var(--size-blotter-width-desired),
+      var(--size-blotter-width-max-by-ring)
+    );
+
     --size-blotter-height: clamp(
-      320px,
-      calc(320px + (100vw - 1280px) * (400 / 2560)),
-      720px
+      360px,
+      calc(360px + (100vw - 1280px) * (460 / 2560)),
+      820px
     );
 
     /* Mahogany wood frame thickness — scales from 1280 → 3840 as 28 → 80px */

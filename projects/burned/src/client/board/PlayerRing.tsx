@@ -16,6 +16,17 @@ function fileNumberFor(id: string): string {
   return `${num}-${letter}`
 }
 
+/** Deterministic small rotation (−3.5°..+3.5°) so dossiers read as
+ *  human-placed photos, not grid-aligned cards. Top-slot dossiers get
+ *  half rotation — a dossier skewed hard against the case folder tab
+ *  reads as sloppy instead of styled. */
+function rotationFor(id: string, slotIndex: number): number {
+  let hash = 0
+  for (let i = 0; i < id.length; i++) hash = (hash * 31 + id.charCodeAt(i)) >>> 0
+  const base = ((hash & 0xff) / 255) * 7 - 3.5   // −3.5..+3.5
+  return slotIndex === 0 ? base * 0.45 : base
+}
+
 /** Every player dossier shows a generic redacted-operative silhouette
  *  (censor bar over the eyes, Archer-informant style). The image is tinted
  *  per-player-color via CSS background-blend-mode, so each dossier reads
@@ -35,23 +46,32 @@ export const PlayerRing = memo(function PlayerRing({
 }: PlayerRingProps) {
   const containerRef = useRef<HTMLDivElement>(null)
   const measureRef = useRef<HTMLDivElement>(null)
+  const measureBlotterRef = useRef<HTMLDivElement>(null)
+  const measureGapRef = useRef<HTMLDivElement>(null)
   const [dimensions, setDimensions] = useState({ w: 0, h: 0 })
   const [panelSize, setPanelSize] = useState({ w: 0, h: 0 })
+  const [blotterSize, setBlotterSize] = useState({ w: 0, h: 0 })
+  const [ringGap, setRingGap] = useState(32)
 
   useLayoutEffect(() => {
     const el = containerRef.current
     const measureEl = measureRef.current
-    if (!el || !measureEl) return
+    const measureBlotterEl = measureBlotterRef.current
+    const measureGapEl = measureGapRef.current
+    if (!el || !measureEl || !measureBlotterEl || !measureGapEl) return
 
     // Synchronous first read — before any observer callback, before paint.
-    // useLayoutEffect fires after DOM insertion but before paint, so the
-    // browser has already computed layout. Reading BOTH the container and
-    // the measurement div here eliminates the first-frame jitter where
-    // dimensions={0,0} would send dossiers to pos.x - panelW/2 (off-screen).
     const initialPanelRect = measureEl.getBoundingClientRect()
     if (initialPanelRect.width > 0) {
       setPanelSize({ w: initialPanelRect.width, h: initialPanelRect.height })
     }
+    const initialBlotterRect = measureBlotterEl.getBoundingClientRect()
+    if (initialBlotterRect.width > 0) {
+      setBlotterSize({ w: initialBlotterRect.width, h: initialBlotterRect.height })
+    }
+    const initialGapRect = measureGapEl.getBoundingClientRect()
+    if (initialGapRect.width > 0) setRingGap(initialGapRect.width)
+
     const initialContainerRect = el.getBoundingClientRect()
     if (initialContainerRect.width > 0) {
       setDimensions({ w: initialContainerRect.width, h: initialContainerRect.height })
@@ -64,12 +84,20 @@ export const PlayerRing = memo(function PlayerRing({
         if (Math.abs(prev.w - width) < 2 && Math.abs(prev.h - height) < 2) return prev
         return { w: width, h: height }
       })
-      // Read CSS-computed panel dimensions from the hidden measurement div.
+      // Re-read the CSS-computed measurement divs on every resize. They
+      // re-resolve because their widths are clamp() against 100vw.
       const panelRect = measureEl.getBoundingClientRect()
       setPanelSize(prev => {
         if (Math.abs(prev.w - panelRect.width) < 2 && Math.abs(prev.h - panelRect.height) < 2) return prev
         return { w: panelRect.width, h: panelRect.height }
       })
+      const blotterRect = measureBlotterEl.getBoundingClientRect()
+      setBlotterSize(prev => {
+        if (Math.abs(prev.w - blotterRect.width) < 2 && Math.abs(prev.h - blotterRect.height) < 2) return prev
+        return { w: blotterRect.width, h: blotterRect.height }
+      })
+      const gapRect = measureGapEl.getBoundingClientRect()
+      setRingGap(prev => Math.abs(prev - gapRect.width) < 1 ? prev : gapRect.width)
     })
     ro.observe(el)
     return () => ro.disconnect()
@@ -84,8 +112,14 @@ export const PlayerRing = memo(function PlayerRing({
   // Motion polish for the active transition lives in Phase E via pure CSS.
 
   const alivePlayers = players.filter(p => p.isAlive)
-  const { rx, ry } = dimensions.w > 0
-    ? getRingRadii(alivePlayers.length, dimensions.w, dimensions.h)
+  const { rx, ry } = dimensions.w > 0 && panelSize.w > 0 && blotterSize.w > 0
+    ? getRingRadii(
+        alivePlayers.length,
+        dimensions.w, dimensions.h,
+        blotterSize.w, blotterSize.h,
+        panelSize.w, panelSize.h,
+        ringGap,
+      )
     : { rx: 0, ry: 0 }
   const positions = calculateRingPositions(alivePlayers.length, rx, ry)
 
@@ -97,9 +131,12 @@ export const PlayerRing = memo(function PlayerRing({
 
   return (
     <div ref={containerRef} className={styles.ring}>
-      {/* Hidden measurement element — consumes --size-player-panel-width /
-          --size-player-panel-height so layout math can read the CSS truth. */}
+      {/* Hidden measurement elements — consume --size-dossier-*,
+          --size-blotter-*, and --space-ring-gap so layout math can read
+          the CSS truth. */}
       <div ref={measureRef} className={styles.measurePanel} aria-hidden="true" />
+      <div ref={measureBlotterRef} className={styles.measureBlotter} aria-hidden="true" />
+      <div ref={measureGapRef} className={styles.measureGap} aria-hidden="true" />
 
       <AnimatePresence mode="sync">
         {dimensions.w > 0 && panelSize.w > 0 && alivePlayers.map((player, i) => {
@@ -111,6 +148,7 @@ export const PlayerRing = memo(function PlayerRing({
           // as a classified case number.
           const fileNum = fileNumberFor(player.id)
           const slotLabel = `OP-${String(i + 1).padStart(2, '0')}`
+          const baseRotation = rotationFor(player.id, i)
 
           return (
             <m.div
@@ -124,6 +162,9 @@ export const PlayerRing = memo(function PlayerRing({
               animate={{
                 x: dimensions.w / 2 + pos.x - panelW / 2,
                 y: dimensions.h / 2 + pos.y - panelH / 2,
+                // Active player squares up by half — reads as "briefing officer
+                // picks up the photo and sets it straight to read it."
+                rotate: isActive ? baseRotation * 0.3 : baseRotation,
               }}
               exit={{
                 scale: 0,
@@ -132,6 +173,10 @@ export const PlayerRing = memo(function PlayerRing({
               }}
               transition={MOTION.deliberate}
             >
+              {/* Brass pushpin — anchors the dossier to the briefing table.
+                  Positioned via CSS at the top-right away from the manila tab. */}
+              <div className={styles.pushpin} aria-hidden="true" />
+
               {/* Manila folder tab */}
               <div className={styles.accentBar} />
 

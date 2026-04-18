@@ -167,6 +167,7 @@
     black 62%,
     transparent 100%
   );
+  animation: sunDriftLeft 14s var(--motion-ease-base) infinite;
 }
 
 .blindRakeRight {
@@ -178,6 +179,22 @@
     black 62%,
     transparent 100%
   );
+  animation: sunDriftRight 14s var(--motion-ease-base) infinite;
+}
+
+/* Afternoon sun crawl — horizontal drift of 3-4px across the slats +
+   modest opacity swell. Very slow so it's subliminal, not distracting. */
+@keyframes sunDriftLeft {
+  0%, 100% { background-position: 0 0; opacity: 0.7; }
+  50%      { background-position: 5px 0; opacity: 0.85; }
+}
+@keyframes sunDriftRight {
+  0%, 100% { background-position: 0 0; opacity: 0.7; }
+  50%      { background-position: -5px 0; opacity: 0.85; }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .blindRakeLeft, .blindRakeRight { animation: none; }
 }
 
 /* ─── Cream-paper briefing blotter ───

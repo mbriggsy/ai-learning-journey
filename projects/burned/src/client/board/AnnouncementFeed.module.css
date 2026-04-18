@@ -80,7 +80,7 @@
   text-shadow: 0 1px 0 color-mix(in oklab, var(--color-charcoal-1) 80%, transparent);
 }
 
-/* Newest announcement — brighter, burned-red edge, stamped feel */
+/* Newest announcement — brighter, burned-red edge, CRT-teletype stamp feel. */
 .feedStream .announcement:first-child {
   color: var(--color-cream-12);
   border-left-color: var(--color-accent-burned);
@@ -90,6 +90,21 @@
     color-mix(in oklab, var(--color-charcoal-1) 40%, transparent) 70%,
     transparent 100%
   );
+  animation: crtFlicker var(--motion-duration-dramatic) var(--motion-ease-base) 1;
+}
+
+/* Subtle single-run flicker on the newest entry — reads as a CRT phosphor
+   warm-up kick when the teletype clicks through a new line. */
+@keyframes crtFlicker {
+  0%   { filter: brightness(1.5) contrast(1.2); }
+  20%  { filter: brightness(0.85); }
+  40%  { filter: brightness(1.25); }
+  60%  { filter: brightness(0.95); }
+  100% { filter: brightness(1); }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .feedStream .announcement:first-child { animation: none; }
 }
 
 /* Fade oldest entries to nothing — gradient mask on the stream */

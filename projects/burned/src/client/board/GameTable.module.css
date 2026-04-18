@@ -420,57 +420,6 @@
   opacity: 0.12;
 }
 
-/* ─── Center stage — draw pile + arena + discard, dead center ─── */
-
-.center {
-  position: absolute;
-  top: 50%;
-  left: 50%;
-  transform: translate(-50%, -50%);
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  gap: var(--space-fluid-loose-board);
-  z-index: var(--z-sticky);
-}
-
-.pileSection {
-  display: flex;
-  flex-direction: column;
-  align-items: center;
-  gap: var(--space-2);
-}
-
-.pileLabelGroup {
-  display: flex;
-  flex-direction: column;
-  align-items: center;
-  gap: 2px;
-}
-
-.pileLabel {
-  font-family: var(--font-mono);
-  font-size: var(--text-caption-board);
-  font-weight: 700;
-  text-transform: uppercase;
-  letter-spacing: 0.32em;
-  /* Dark mahogany on cream paper — was cream-9 which was invisible on the
-     new blotter. Now tracks --color-ochre-4 mahogany for classified-dossier
-     readability. */
-  color: color-mix(in oklab, var(--color-ochre-3) 85%, var(--color-charcoal-1));
-}
-
-/* Second-line caption — REMAINING · IN FIELD / LAST PLAYED. Sits below the
-   primary pile label as classified-form filing metadata. */
-.pileCaption {
-  font-family: var(--font-mono);
-  font-size: clamp(9px, 0.52vw, 11px);
-  font-weight: 600;
-  text-transform: uppercase;
-  letter-spacing: 0.28em;
-  color: color-mix(in oklab, var(--color-ochre-4) 60%, transparent);
-}
-
 /* ─── Left-side ambient CASE BANNER ─────────────────────────────────
    Fills the LEFT dead band with Pendleton Agency set dressing. Sits
    inside the wood frame, vertically centered between the top of the

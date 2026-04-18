@@ -1,15 +1,7 @@
-import { useRef, useEffect } from 'react'
-import { m, AnimatePresence } from 'motion/react'
-import { useEventFeed } from '@client/shared/hooks/useEventFeed'
-import { usePlayerList } from '@client/shared/hooks/useSharedSelectors'
-import { announce } from '@client/shared/announce'
-import { playerName } from './playerName'
 import type { GameEvent } from '@shared/types'
 import type { BoardPlayer } from '@shared/protocol'
-import { MOTION } from '@client/shared/tokens/motion'
-import styles from './AnnouncementFeed.module.css'
+import { playerName } from './playerName'
 
-// Pick a random variant. Seeded per-event-id for consistency across re-renders.
 function pick(variants: readonly string[], seed: string): string {
   let hash = 0
   for (let i = 0; i < seed.length; i++) {
@@ -64,7 +56,7 @@ export function formatEvent(event: GameEvent, players: readonly BoardPlayer[], e
     case 'nope-window-resolved':
       return event.cancelled
         ? pick(['Cancelled!', 'Shot down.', 'Counter-intel wins.'], eventId)
-        : null // allowed actions don't need commentary
+        : null
 
     case 'burned-drawn':
       return pick([
@@ -141,7 +133,7 @@ export function formatEvent(event: GameEvent, players: readonly BoardPlayer[], e
     }
 
     case 'turn-started':
-      return null // PlayerRing glow is the turn indicator
+      return null
 
     case 'game-over':
       return pick([
@@ -156,60 +148,4 @@ export function formatEvent(event: GameEvent, players: readonly BoardPlayer[], e
       return _exhaustive
     }
   }
-}
-
-export function AnnouncementFeed() {
-  const events = useEventFeed()
-  const players = usePlayerList()
-
-  // Screen reader announcements for new events — tracked by ID to survive array pruning
-  const lastAnnouncedIdRef = useRef<string | null>(null)
-  useEffect(() => {
-    if (events.length === 0) return
-    const lastIdx = lastAnnouncedIdRef.current
-      ? events.findIndex(e => e.id === lastAnnouncedIdRef.current)
-      : -1
-    const newEvents = events.slice(lastIdx + 1)
-    if (newEvents.length === 0) return
-    lastAnnouncedIdRef.current = newEvents[newEvents.length - 1]!.id
-    for (const entry of newEvents) {
-      const text = formatEvent(entry.event, players, entry.id)
-      if (!text) continue
-      const isUrgent = entry.event.type === 'burned-drawn' ||
-        entry.event.type === 'player-eliminated' || entry.event.type === 'game-over'
-      announce(text, isUrgent ? 'assertive' : 'polite')
-    }
-  }, [events, players])
-
-  // Show the latest 6 renderable announcements — teletype comms strip.
-  // Filter here so entries that formatEvent rejects (nope-window-opened, etc.)
-  // don't leave gaps in the 6-slot window.
-  const rendered = events
-    .map(entry => ({ entry, text: formatEvent(entry.event, players, entry.id) }))
-    .filter((r): r is { entry: typeof events[number]; text: string } => r.text != null)
-    .slice(-6)
-    .reverse() // newest first, since .feedStream uses column-reverse for animation-natural insertion order
-
-  return (
-    <div className={styles.feed}>
-      <div className={styles.feedHeader} aria-hidden="true">Comms · Intercepted</div>
-      <div className={styles.feedStream}>
-        <AnimatePresence mode="popLayout">
-          {rendered.map(({ entry, text }, i) => (
-            <m.div
-              key={entry.id}
-              className={styles.announcement}
-              initial={{ opacity: 0, x: 20 }}
-              animate={{ opacity: 1, x: 0 }}
-              exit={{ opacity: 0, x: 20 }}
-              transition={MOTION.enter}
-            >
-              <span className={styles.tag}>// {String(i + 1).padStart(2, '0')}</span>
-              {text}
-            </m.div>
-          ))}
-        </AnimatePresence>
-      </div>
-    </div>
-  )
 }

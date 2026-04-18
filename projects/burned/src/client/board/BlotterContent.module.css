@@ -1,0 +1,244 @@
+/* BlotterContent.module.css
+   The interior of the briefing blotter: piles (left), COMMS (right),
+   status strip (bottom). Positioning mirrors the decorative .blotter so
+   content lives inside the paper edges at every viewport.
+
+   Paper skin — everything reads on cream. No dark teletype cards.
+*/
+
+@layer components {
+
+.content {
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  transform: translate(-50%, -50%);
+  width: var(--size-blotter-width);
+  height: var(--size-blotter-height);
+  box-sizing: border-box;
+
+  /* Keep clear of the blotter L-bracket corners (inset 18px) and dog-ear
+     (bottom-right 44×44). */
+  padding: 26px 30px 0;
+
+  display: grid;
+  /* Piles get the left 52% (two piles side-by-side with breathing room);
+     comms takes the right 48% — narrower but still readable. */
+  grid-template-columns: 52% 48%;
+  grid-template-rows: minmax(0, 1fr) auto;
+  grid-template-areas:
+    "piles comms"
+    "status status";
+  column-gap: 18px;
+  row-gap: 6px;
+  overflow: hidden;
+
+  z-index: var(--z-sticky);
+
+  /* Pile sizing inside the blotter — with piles side-by-side the vertical
+     budget is one lockup tall (stack + count badge + label), so we can let
+     the pile stay generous and keep the big DrawPile count numeral. */
+  --size-draw-pile-width: clamp(
+    104px,
+    calc(104px + (100vw - 1280px) * (76 / 2560)),
+    180px
+  );
+  --size-discard-card-width: calc(var(--size-draw-pile-width) * 0.92);
+
+  /* Content itself is non-interactive decoration container; the piles opt in. */
+  pointer-events: none;
+}
+
+/* ─── Piles column (left half) ─── */
+
+.piles {
+  grid-area: piles;
+  display: flex;
+  flex-direction: row;
+  align-items: center;
+  justify-content: space-evenly;
+  gap: 24px;
+  min-width: 0;
+  min-height: 0;
+  overflow: hidden;
+  padding-right: 12px;
+  /* Subtle vertical rule separating the piles from the comms feed —
+     reads as the fold line on a field-ops form. */
+  border-right: 1px solid color-mix(in oklab, var(--color-ochre-6) 45%, transparent);
+  pointer-events: auto;
+}
+
+.pileSection {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 10px;
+  min-height: 0;
+}
+
+.pileLabelGroup {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 1px;
+}
+
+.pileLabel {
+  font-family: var(--font-mono);
+  font-size: var(--text-caption-board);
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.32em;
+  color: color-mix(in oklab, var(--color-ochre-3) 85%, var(--color-charcoal-1));
+}
+
+.pileCaption {
+  font-family: var(--font-mono);
+  font-size: clamp(9px, 0.52vw, 11px);
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: 0.28em;
+  color: color-mix(in oklab, var(--color-ochre-4) 60%, transparent);
+}
+
+/* ─── COMMS feed (right half) ─── */
+
+.comms {
+  grid-area: comms;
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  min-height: 0;
+  min-width: 0;
+  padding-left: 8px;
+  pointer-events: none;
+}
+
+.commsHeader {
+  font-family: var(--font-mono);
+  font-size: var(--text-caption-board);
+  font-weight: 700;
+  letter-spacing: 0.32em;
+  text-transform: uppercase;
+  color: color-mix(in oklab, var(--color-ochre-3) 85%, var(--color-charcoal-1));
+  padding: 2px 0 6px;
+  border-bottom: 1px solid color-mix(in oklab, var(--color-ochre-6) 55%, transparent);
+  flex-shrink: 0;
+}
+
+.commsHeader::before {
+  content: '// ';
+  opacity: 0.55;
+  font-weight: 400;
+}
+
+.commsStream {
+  display: flex;
+  flex-direction: column;
+  justify-content: flex-end; /* entries stack UP from the bottom */
+  gap: 6px;
+  flex: 1 1 auto;
+  min-height: 0;
+  /* Scrollable history — newest at the bottom, auto-pinned by JS. Scrollbars
+     hidden (scrollbar-width: none + ::-webkit-scrollbar{display:none}) so the
+     paper stays clean. */
+  overflow-y: auto;
+  overflow-x: hidden;
+  scrollbar-width: none;
+  -ms-overflow-style: none;
+  /* Fade oldest entries out toward the top — older intel fades as it scrolls
+     off the top edge of the dossier page. Only kicks in once content overflows
+     (flex-end anchoring keeps the first few entries pinned at the bottom and
+     clear of the fade band). */
+  mask-image: linear-gradient(
+    180deg,
+    transparent 0%,
+    color-mix(in srgb, black 50%, transparent) 8%,
+    black 24%,
+    black 100%
+  );
+}
+
+.commsStream::-webkit-scrollbar { display: none; }
+
+.announcement {
+  font-family: var(--font-mono);
+  font-size: var(--text-caption-board);
+  font-weight: 500;
+  letter-spacing: 0.06em;
+  line-height: 1.35;
+  color: color-mix(in oklab, var(--color-ochre-3) 90%, var(--color-charcoal-1));
+  /* Paper-toned chip: faint ochre fill + accent-drama rule on the left edge.
+     No CRT dark gradient — this has to read as ink on the briefing paper. */
+  padding: 6px 10px 6px 10px;
+  border-left: 2px solid color-mix(in oklab, var(--color-accent-drama) 55%, transparent);
+  background: color-mix(in oklab, var(--color-ochre-8) 18%, transparent);
+  border-radius: 0 2px 2px 0;
+  /* One-line entries — long copy clips with an ellipsis rather than wrapping.
+     Keeps the feed scanable and avoids ragged multi-line chips in the narrow
+     COMMS column. */
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  flex-shrink: 0;
+}
+
+/* Newest announcement — highest-contrast chip, burned-red rule, CRT kick
+   retained because it's a signature detail. Feed runs chronologically (oldest
+   → newest) so the freshest intel is the last DOM child. */
+.commsStream .announcement:last-child {
+  color: var(--color-charcoal-1);
+  border-left-color: var(--color-accent-burned);
+  background: color-mix(in oklab, var(--color-accent-drama) 26%, var(--color-paper-face));
+  animation: crtFlickerPaper var(--motion-duration-dramatic) var(--motion-ease-base) 1;
+}
+
+@keyframes crtFlickerPaper {
+  0%   { filter: brightness(1.3) contrast(1.08); }
+  20%  { filter: brightness(0.92); }
+  40%  { filter: brightness(1.15); }
+  60%  { filter: brightness(0.98); }
+  100% { filter: brightness(1); }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .commsStream .announcement:last-child { animation: none; }
+}
+
+
+/* ─── Status strip (bottom, full width) ─── */
+
+.statusStrip {
+  grid-area: status;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: var(--space-2);
+  min-height: 44px;
+  padding: 6px 20px 10px;
+  border-top: 1px solid color-mix(in oklab, var(--color-ochre-6) 55%, transparent);
+  /* Leave room for the dog-ear at bottom-right — 44×44 inside. */
+  margin-right: 48px;
+  margin-left: 0;
+}
+
+.statusText {
+  font-family: var(--font-mono);
+  font-size: var(--text-body);
+  font-weight: 600;
+  letter-spacing: 0.08em;
+  text-transform: none;
+  color: color-mix(in oklab, var(--color-ochre-3) 85%, var(--color-charcoal-1));
+  /* Typewriter feel — single-line baseline, no brass-plate gradient. */
+}
+
+.statusPlaceholder {
+  font-family: var(--font-mono);
+  font-size: var(--text-caption-board);
+  font-weight: 600;
+  letter-spacing: 0.32em;
+  text-transform: uppercase;
+  color: color-mix(in oklab, var(--color-ochre-5) 55%, transparent);
+}
+
+} /* @layer components */

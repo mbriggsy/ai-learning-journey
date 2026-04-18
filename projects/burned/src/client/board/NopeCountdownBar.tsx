@@ -14,7 +14,7 @@ export function NopeCountdownBar() {
       <div className={styles.container}>
         <div ref={barRef} className={styles.fill} />
       </div>
-      <div className={styles.text}>NOPE? {secondsLeft}s</div>
+      <div className={styles.text}>INTERCEPT? {secondsLeft}s</div>
     </div>
   )
 }

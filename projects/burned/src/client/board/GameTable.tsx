@@ -1,22 +1,15 @@
 import { useRef } from 'react'
 import {
-  usePlayerList, useDrawPileCount, useDiscardTop,
-  useCurrentTurn,
+  usePlayerList, useCurrentTurn,
 } from '@client/shared/hooks/useSharedSelectors'
 import { PlayerRing } from './PlayerRing'
 import { Arena } from './Arena'
-import { DrawPile } from './DrawPile'
-import { DiscardFan } from './DiscardFan'
+import { BlotterContent } from './BlotterContent'
 import { NopeCountdownBar } from './NopeCountdownBar'
-import { AnnouncementFeed } from './AnnouncementFeed'
-import { BlotterTicker } from './BlotterTicker'
-import { StatusBar } from './StatusBar'
 import styles from './GameTable.module.css'
 
 export function GameTable() {
   const players = usePlayerList()
-  const drawPileCount = useDrawPileCount()
-  const discardTop = useDiscardTop()
   const currentTurn = useCurrentTurn()
   const flashRef = useRef<HTMLDivElement>(null)
 
@@ -30,12 +23,13 @@ export function GameTable() {
       {/* The Pendleton Agency — war-room felt decoration */}
       <div className={styles.feltBranding} aria-hidden="true" />
 
-      {/* Cream-paper briefing blotter — the play surface. Draw + discard sit
-          on this plate, not on teal felt. */}
+      {/* Cream-paper briefing blotter — the play surface. Draw + discard,
+          COMMS, and the turn status strip all live on this plate. */}
       <div className={styles.blotter} aria-hidden="true" />
       <div className={styles.blotterTab} aria-hidden="true">
         Case #47-B
       </div>
+      <BlotterContent />
 
       {/* Mahogany wood edge inlay — briefing-table border. Four sub-divs so
           each edge gets grain in the correct direction (horizontal on top/
@@ -67,26 +61,8 @@ export function GameTable() {
         turnsRemaining={currentTurn?.turnsRemaining ?? 0}
       />
 
-      {/* Center stage — draw pile + discard, tight together */}
-      <div className={styles.center}>
-        <div className={styles.pileSection}>
-          <DrawPile count={drawPileCount} />
-          <div className={styles.pileLabelGroup}>
-            <span className={styles.pileLabel}>Draw</span>
-            <span className={styles.pileCaption}>Remaining · In Field</span>
-          </div>
-        </div>
-
-        <div className={styles.pileSection}>
-          <DiscardFan topCard={discardTop} />
-          <div className={styles.pileLabelGroup}>
-            <span className={styles.pileLabel}>Discard</span>
-            <span className={styles.pileCaption}>Last Played</span>
-          </div>
-        </div>
-      </div>
-
-      {/* Arena overlaid on center — cards land here during play */}
+      {/* Arena — cards land here during play (full-screen drama overlay
+          still lives above). */}
       <Arena />
 
       {/* Full-screen event flash — GSAP target */}
@@ -94,11 +70,6 @@ export function GameTable() {
 
       {/* Overlays */}
       <NopeCountdownBar />
-      <AnnouncementFeed />
-      <BlotterTicker />
-
-      {/* Comms bar — bottom strip */}
-      <StatusBar />
     </div>
   )
 }

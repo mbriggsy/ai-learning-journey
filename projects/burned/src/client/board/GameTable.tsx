@@ -21,8 +21,23 @@ export function GameTable() {
 
   return (
     <div className={styles.table}>
+      {/* Venetian-blind shadow rake — Archer "Mother's office" vocabulary.
+          Lives behind everything, low-opacity, masked toward the center. */}
+      <div className={styles.blindRakeLeft} aria-hidden="true" />
+      <div className={styles.blindRakeRight} aria-hidden="true" />
+
       {/* The Pendleton Agency — war-room felt decoration */}
       <div className={styles.feltBranding} aria-hidden="true" />
+
+      {/* Cream-paper briefing blotter — the play surface. Draw + discard sit
+          on this plate, not on teal felt. */}
+      <div className={styles.blotter} aria-hidden="true" />
+      <div className={styles.blotterTab} aria-hidden="true">
+        Case #47-B
+      </div>
+
+      {/* Mahogany wood edge inlay — briefing-table border */}
+      <div className={styles.woodFrame} aria-hidden="true" />
 
       {/* Player ring */}
       <PlayerRing

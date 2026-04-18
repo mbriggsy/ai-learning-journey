@@ -1,15 +1,8 @@
 /* PlayerRing.module.css
-   Board — player panels orbiting the center. Each panel is a player's identity
-   card (color bar + name + turn state + card count).
-
-   Layout math: panel position is computed in PlayerRing.tsx via ringLayout.ts
-   against the container's ResizeObserver dimensions. The panel WIDTH is computed
-   by reading --size-player-panel-width from CSS at runtime (not hardcoded in TSX),
-   so TSX and CSS agree through a single source. Legacy landmine resolved: the
-   previous code had panelW = isTV ? 320 : 200 in TSX:70 — a duplicate of the
-   CSS value. After Phase 3, TSX reads the computed style of a hidden measurement
-   div to get the token-driven value. The TSX edit is Phase 4 territory; this
-   file makes the CSS side consume the token so the TSX-side read works.
+   Board — operative dossier cards orbiting the briefing table.
+   Each dossier is a paper file with a colored manila tab, portrait placeholder
+   showing the player's clearance-shape silhouette, file number, stamped name,
+   and status. Active player gets a diagonal red "ACTIVE" rubber stamp.
 */
 
 @layer components {
@@ -23,99 +16,202 @@
 
 /*
  * Hidden measurement element consumed by PlayerRing.tsx via a ref.
- * Exists solely so TSX layout math can read the CSS panel dimensions
- * without duplicating the clamp formula in TypeScript.
- * Not visible, not interactive, not part of the visual ring.
+ * Size tracks the new --size-dossier-* tokens so TSX math reads the
+ * dossier dimensions instead of the legacy panel ones.
  */
 .measurePanel {
   position: absolute;
   top: 0;
   left: 0;
-  width: var(--size-player-panel-width);
-  height: var(--size-player-panel-height);
+  width: var(--size-dossier-width);
+  height: var(--size-dossier-height);
   visibility: hidden;
   pointer-events: none;
   z-index: var(--z-base);
 }
 
-/* ─── Player panel ─── */
+/* ─── Dossier card ──────────────────────────────────────────────────
+   Cream-paper file card laid on the briefing table. Paper-face color,
+   inner rule lines, subtle fiber, drop shadow = weight on felt.
+────────────────────────────────────────────────────────────────────── */
 
 .panel {
   position: absolute;
-  width: var(--size-player-panel-width);
+  width: var(--size-dossier-width);
+  height: var(--size-dossier-height);
   pointer-events: auto;
   will-change: transform, filter;
-  border-radius: var(--radius-card);
-  background: linear-gradient(
-    165deg,
-    color-mix(in oklab, var(--color-bg-elevated) 92%, transparent) 0%,
-    color-mix(in oklab, var(--color-bg-surface) 96%, transparent) 100%
-  );
-  border: 1px solid var(--color-border-subtle);
-  overflow: hidden;
+  border-radius: 2px;  /* classified-folder sharp corners */
+  background-color: var(--color-paper-face);
+  background-image:
+    /* Paper fiber */
+    repeating-linear-gradient(
+      90deg,
+      transparent 0,
+      transparent 2px,
+      color-mix(in oklab, var(--color-ochre-8) 5%, transparent) 2px,
+      color-mix(in oklab, var(--color-ochre-8) 5%, transparent) 3px
+    );
+  /* No overflow:hidden — ACTIVE stamp bleeds off the right edge by design.
+     The paper fiber stays clipped by the border-box default. */
   transition:
-    border-color var(--motion-duration-base) var(--motion-ease-base),
-    box-shadow var(--motion-duration-slow) var(--motion-ease-base);
-  box-shadow: var(--shadow-md);
+    transform var(--motion-duration-base) var(--motion-ease-base),
+    filter var(--motion-duration-slow) var(--motion-ease-base);
+  box-shadow:
+    inset 0 0 0 1px color-mix(in oklab, var(--color-ochre-6) 45%, transparent),
+    inset 0 0 20px color-mix(in oklab, var(--color-ochre-5) 12%, transparent),
+    0 6px 18px color-mix(in oklab, var(--color-charcoal-1) 55%, transparent),
+    0 2px 5px color-mix(in oklab, var(--color-charcoal-1) 45%, transparent);
 }
 
-/* ─── Active player — dramatic emphasis driven by inline --player-color ─── */
-
+/* Active player — dossier lifts off the desk, warm spotlight, stronger shadow.
+   Glow uses the player's assigned accent color for identity reinforcement. */
 .panel[data-active] {
-  border-color: color-mix(in oklab, var(--player-color) 60%, transparent);
+  filter: brightness(1.08) saturate(1.05);
   box-shadow:
-    0 0 24px color-mix(in oklab, var(--player-color) 30%, transparent),
-    0 0 60px color-mix(in oklab, var(--player-color) 12%, transparent),
-    var(--shadow-md);
+    inset 0 0 0 1.5px color-mix(in oklab, var(--player-color) 65%, transparent),
+    inset 0 0 28px color-mix(in oklab, var(--color-accent-drama) 18%, transparent),
+    0 12px 32px color-mix(in oklab, var(--player-color) 22%, transparent),
+    0 18px 48px color-mix(in oklab, var(--color-charcoal-1) 55%, transparent),
+    0 4px 8px color-mix(in oklab, var(--color-charcoal-1) 50%, transparent);
 }
 
 .panel:not([data-active]) {
-  opacity: 0.85;
+  opacity: 0.78;
+  filter: saturate(0.85);
 }
 
-/* ─── Color accent bar — top edge, player identity ─── */
+/* ─── Manila folder tab — top edge, player-color ──────────────────── */
 
 .accentBar {
-  height: var(--space-1);
-  width: 100%;
+  position: absolute;
+  top: 0;
+  left: 10%;
+  width: 42%;
+  height: 10px;
+  background-color: var(--player-color);
+  clip-path: polygon(6px 0, calc(100% - 10px) 0, 100% 100%, 0 100%);
+  box-shadow:
+    inset 0 1px 0 color-mix(in oklab, var(--color-cream-12) 25%, transparent),
+    inset 0 -1px 0 color-mix(in oklab, var(--color-charcoal-1) 40%, transparent);
   transition: height var(--motion-duration-base) var(--motion-ease-base);
+  z-index: var(--z-raised);
 }
 
 .panel[data-active] .accentBar {
-  height: calc(var(--space-1) + 1px);
-  box-shadow: 0 2px 12px color-mix(in oklab, var(--player-color) 50%, transparent);
+  height: 14px;
+  box-shadow:
+    inset 0 1px 0 color-mix(in oklab, var(--color-cream-12) 32%, transparent),
+    inset 0 -1px 0 color-mix(in oklab, var(--color-charcoal-1) 40%, transparent),
+    0 2px 10px color-mix(in oklab, var(--player-color) 55%, transparent);
 }
 
-/* ─── Panel body — name + meta ─── */
+/* ─── Dossier body — flex row: portrait | info ───────────────────── */
 
 .panelBody {
-  padding: var(--space-3) var(--space-4) var(--space-4);
+  position: absolute;
+  inset: 14px 10px 10px 10px;  /* top padding clears manila tab */
+  display: grid;
+  /* Fixed portrait column so the info column gets consistent room.
+     Scales modestly with viewport to match dossier growth. */
+  grid-template-columns: clamp(60px, calc(60px + (100vw - 1280px) * (42 / 2560)), 102px) 1fr;
+  gap: clamp(8px, 0.7vw, 16px);
+  align-items: stretch;
+}
+
+/* Portrait placeholder — teal ground with the player's CVD-safe clearance
+   shape centered. Reads as a redacted agency photo. */
+.portrait {
+  position: relative;
+  background: linear-gradient(
+    165deg,
+    color-mix(in oklab, var(--color-teal-5) 95%, var(--color-teal-7)) 0%,
+    var(--color-teal-3) 100%
+  );
+  border: 1px solid color-mix(in oklab, var(--color-ochre-5) 50%, transparent);
+  border-radius: 2px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  overflow: hidden;
+  box-shadow:
+    inset 0 1px 0 color-mix(in oklab, var(--color-cream-12) 10%, transparent),
+    inset 0 -1px 0 color-mix(in oklab, var(--color-charcoal-1) 40%, transparent);
+}
+
+/* Redacted bar across the bottom of the portrait — classified-photo vibe. */
+.portrait::after {
+  content: '';
+  position: absolute;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  height: 30%;
+  background-color: var(--color-charcoal-1);
+  opacity: 0.9;
+}
+
+.clearanceIcon {
+  position: relative;
+  z-index: var(--z-raised);
+  /* Scale the SVG icon bigger inside the portrait. */
+  transform: translateY(-12%) scale(1.2);
+  filter: drop-shadow(0 1px 2px rgba(0, 0, 0, 0.6));
+}
+
+/* "OP" + slot label over the redacted bar */
+.portraitLabel {
+  position: absolute;
+  left: 0;
+  right: 0;
+  bottom: 4%;
+  text-align: center;
+  font-family: var(--font-mono);
+  font-size: 10px;
+  font-weight: 700;
+  letter-spacing: 0.22em;
+  color: color-mix(in oklab, var(--color-cream-11) 78%, transparent);
+  z-index: calc(var(--z-raised) + 1);
+}
+
+/* ─── Right column — file info ──────────────────────────────────── */
+
+.info {
   display: flex;
   flex-direction: column;
-  gap: var(--space-2);
+  justify-content: space-between;
+  min-width: 0;
+}
+
+.fileRow {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 8px;
 }
 
 .nameRow {
   display: flex;
-  align-items: center;
+  align-items: baseline;
   justify-content: space-between;
-  gap: var(--space-2);
+  gap: 8px;
+  margin: 2px 0 4px;
 }
 
 .name {
   font-family: var(--font-display);
-  font-weight: 700;
-  font-size: var(--text-title);
-  letter-spacing: 0.01em;
-  color: var(--color-fg-primary);
+  font-weight: 800;
+  /* Purpose-built smaller than --text-title so the 140-220px tall dossier
+     doesn't blow its vertical budget on just the name. */
+  font-size: clamp(18px, calc(18px + (100vw - 1280px) * (14 / 2560)), 32px);
+  letter-spacing: 0.02em;
+  line-height: 1;
+  color: var(--color-charcoal-1);
   white-space: nowrap;
   overflow: hidden;
   text-overflow: ellipsis;
   flex: 1;
-}
-
-.panel[data-active] .name {
-  color: var(--color-cream-12);
+  text-transform: uppercase;
 }
 
 .turnBadge {
@@ -123,35 +219,94 @@
   font-variant-numeric: tabular-nums;
   font-size: var(--text-caption-board);
   font-weight: 800;
-  color: var(--color-fg-on-drama);
-  background: var(--color-accent-drama);
-  padding: var(--space-0) var(--space-2);
-  border-radius: var(--radius-sm);
+  color: var(--color-cream-12);
+  background: var(--color-accent-burned);
+  padding: 2px 8px;
+  border-radius: 2px;
   flex-shrink: 0;
-  box-shadow: 0 0 8px color-mix(in oklab, var(--color-accent-drama) 40%, transparent);
+  letter-spacing: 0.05em;
+  box-shadow:
+    inset 0 1px 0 color-mix(in oklab, var(--color-cream-12) 20%, transparent),
+    0 2px 8px color-mix(in oklab, var(--color-accent-burned) 45%, transparent);
 }
 
-/* ─── Meta row — color dot + card count ─── */
+/* Separator rule — classic file-card horizontal line */
+.separator {
+  height: 1px;
+  background: color-mix(in oklab, var(--color-ochre-5) 50%, transparent);
+  margin: 2px 0 4px;
+}
+
+/* ─── Meta row — card count + operative status ──────────────────── */
 
 .metaRow {
   display: flex;
   align-items: center;
-  gap: var(--space-2);
+  gap: 6px;
+  font-family: var(--font-mono);
+  /* Slightly smaller than caption so a 220px-wide card doesn't wrap
+     "8 · CARDS" and "STANDBY" onto separate lines. */
+  font-size: clamp(10px, calc(10px + (100vw - 1280px) * (3 / 2560)), 13px);
+  font-weight: 600;
+  letter-spacing: 0.12em;
+  color: color-mix(in oklab, var(--color-ochre-3) 85%, var(--color-charcoal-1));
+  text-transform: uppercase;
+  white-space: nowrap;
+}
+
+.fileNumber {
+  font-family: var(--font-mono);
+  /* Mirrors metaRow — mono, tight, no wrap */
+  font-size: clamp(10px, calc(10px + (100vw - 1280px) * (3 / 2560)), 13px);
+  font-weight: 600;
+  letter-spacing: 0.22em;
+  color: color-mix(in oklab, var(--color-ochre-4) 85%, var(--color-charcoal-1));
+  text-transform: uppercase;
+  white-space: nowrap;
 }
 
 .count {
-  font-family: var(--font-mono);
   font-variant-numeric: tabular-nums;
-  font-size: var(--text-body);
-  font-weight: 600;
-  color: var(--color-fg-secondary);
 }
 
-.panel[data-active] .count {
-  color: var(--color-fg-primary);
+.statusLabel {
+  font-size: 10px;
+  letter-spacing: 0.22em;
+  color: color-mix(in oklab, var(--color-ochre-4) 65%, transparent);
+  margin-left: auto;
 }
 
-/* ─── Eliminated players ─── */
+.panel[data-active] .statusLabel {
+  color: var(--color-accent-burned);
+  font-weight: 700;
+}
+
+/* ─── ACTIVE rubber stamp — slammed across the top-right of active dossier ── */
+
+.stampActive {
+  position: absolute;
+  top: 18%;
+  right: -6%;
+  padding: 3px 12px;
+  font-family: var(--font-display);
+  font-weight: 900;
+  font-size: calc(var(--text-caption-board) * 1.2);
+  letter-spacing: 0.1em;
+  color: var(--color-accent-burned);
+  border: 2px solid var(--color-accent-burned);
+  border-radius: 2px;
+  text-transform: uppercase;
+  transform: rotate(-8deg);
+  opacity: 0.88;
+  pointer-events: none;
+  z-index: var(--z-sticky);
+  /* Rubber-stamp ink uneven edge */
+  box-shadow:
+    inset 0 0 0 2px transparent,
+    0 0 0 0.5px color-mix(in oklab, var(--color-accent-burned) 35%, transparent);
+}
+
+/* ─── Eliminated players (keep old row) ──────────────────────────── */
 
 .eliminatedRow {
   position: absolute;
@@ -182,10 +337,7 @@
 /* ─── Reduced motion ─── */
 
 @media (prefers-reduced-motion: reduce) {
-  .panel[data-active] {
-    transition: none;
-  }
-  .accentBar {
+  .panel, .accentBar {
     transition: none;
   }
 }

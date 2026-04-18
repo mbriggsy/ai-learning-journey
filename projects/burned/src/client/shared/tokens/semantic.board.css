@@ -129,5 +129,74 @@
       calc(32px + (100vw - 1280px) * (48 / 2560)),
       80px
     );
+
+    /* ─── Briefing Room tokens — Phase A arena redesign ─── */
+
+    /* Cream-paper briefing blotter that sits under the draw + discard piles.
+       Sized ~60% of viewport width, ~60% of viewport height. Creates physical
+       grounding for the center action. */
+    --size-blotter-width: clamp(
+      620px,
+      calc(620px + (100vw - 1280px) * (580 / 2560)),
+      1200px
+    );
+    --size-blotter-height: clamp(
+      320px,
+      calc(320px + (100vw - 1280px) * (240 / 2560)),
+      560px
+    );
+
+    /* Mahogany wood frame thickness — scales from 1280 → 3840 as 28 → 56px */
+    --size-wood-frame-thickness: clamp(
+      28px,
+      calc(28px + (100vw - 1280px) * (28 / 2560)),
+      56px
+    );
+
+    /* Venetian-blind side-rake width — lateral band filled with horizontal
+       amber/charcoal shadow stripes (Archer Mother's-office vocabulary). */
+    --size-blind-rake-width: clamp(
+      280px,
+      calc(280px + (100vw - 1280px) * (360 / 2560)),
+      640px
+    );
+
+    /* Dossier operative-file sizing — replaces the old panel size. Slightly
+       taller than wide to read as a 8.5×11 file with a tab. */
+    --size-dossier-width: clamp(
+      220px,
+      calc(220px + (100vw - 1280px) * (240 / 2560)),
+      460px
+    );
+    --size-dossier-height: clamp(
+      140px,
+      calc(140px + (100vw - 1280px) * (120 / 2560)),
+      260px
+    );
+
+    /* Side-panel widths (Phase C evidence board / ticker). Reserved. */
+    --size-side-panel-width: clamp(
+      220px,
+      calc(220px + (100vw - 1280px) * (160 / 2560)),
+      380px
+    );
+
+    /* ─── Briefing Room semantic colors ─── */
+
+    /* Cream-paper blotter face (warmer than pure cream-11 so it reads as paper
+       against the surrounding teal, not as a highlight). */
+    --color-paper-face:       color-mix(in oklab, var(--color-cream-11) 92%, var(--color-ochre-5));
+    --color-paper-shadow:     color-mix(in oklab, var(--color-cream-7)  80%, var(--color-ochre-6));
+    --color-paper-rule:       color-mix(in oklab, var(--color-ochre-6)  35%, transparent);
+
+    /* Mahogany wood frame — near-black warm wood; uses the ochre scale's
+       darkest warms so it ties to the drama-accent family already on board. */
+    --color-wood-mahogany:    var(--color-ochre-4);
+    --color-wood-grain:       color-mix(in oklab, var(--color-ochre-3) 85%, var(--color-charcoal-1));
+    --color-wood-highlight:   color-mix(in oklab, var(--color-ochre-8) 35%, transparent);
+
+    /* Classified-stamp red for overlays (ACTIVE, BURNED, CLASSIFIED rubber stamps) */
+    --color-stamp-classified: var(--color-accent-burned);
+    --color-stamp-active:     var(--color-cordovan-10);
   }
 }

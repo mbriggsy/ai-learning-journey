@@ -7,6 +7,16 @@ import { calculateRingPositions, getRingRadii } from './layout/ringLayout'
 import { PlayerIcon } from '@client/shared/PlayerIcon'
 import styles from './PlayerRing.module.css'
 
+/** Deterministic classified-file number from a player id.
+ *  Reads as "47-B". Never changes within a room. */
+function fileNumberFor(id: string): string {
+  let hash = 0
+  for (let i = 0; i < id.length; i++) hash = (hash * 31 + id.charCodeAt(i)) >>> 0
+  const num = (hash % 89) + 11                // 11-99
+  const letter = String.fromCharCode(65 + (hash >> 7) % 26)
+  return `${num}-${letter}`
+}
+
 interface PlayerRingProps {
   readonly players: readonly BoardPlayer[]
   readonly currentPlayerId: string | null
@@ -101,6 +111,11 @@ export const PlayerRing = memo(function PlayerRing({
           if (!pos) return null
           const isActive = player.id === currentPlayerId
 
+          // File number derived from player id — stable within a game, reads
+          // as a classified case number.
+          const fileNum = fileNumberFor(player.id)
+          const slotLabel = `OP-${String(i + 1).padStart(2, '0')}`
+
           return (
             <m.div
               key={player.id}
@@ -125,22 +140,47 @@ export const PlayerRing = memo(function PlayerRing({
               }}
               transition={MOTION.deliberate}
             >
-              {/* Color accent bar */}
-              <div className={styles.accentBar} style={{ backgroundColor: player.color }} />
+              {/* Manila folder tab */}
+              <div className={styles.accentBar} />
 
-              {/* Content */}
+              {/* Dossier body: [portrait | info] */}
               <div className={styles.panelBody}>
-                <div className={styles.nameRow}>
-                  <span className={styles.name}>{player.name}</span>
-                  {isActive && turnsRemaining > 1 && (
-                    <span className={styles.turnBadge}>{turnsRemaining}x</span>
-                  )}
+                <div className={styles.portrait} aria-hidden="true">
+                  <div className={styles.clearanceIcon}>
+                    <PlayerIcon color={player.color} size={42} />
+                  </div>
+                  <span className={styles.portraitLabel}>{slotLabel}</span>
                 </div>
-                <div className={styles.metaRow}>
-                  <PlayerIcon color={player.color} size={14} />
-                  <span className={styles.count}>{player.cardCount} cards</span>
+
+                <div className={styles.info}>
+                  <div className={styles.fileRow}>
+                    <span className={styles.fileNumber}>FILE · {fileNum}</span>
+                  </div>
+
+                  <div className={styles.nameRow}>
+                    <span className={styles.name}>{player.name}</span>
+                    {isActive && turnsRemaining > 1 && (
+                      <span className={styles.turnBadge}>+{turnsRemaining - 1}</span>
+                    )}
+                  </div>
+
+                  <div className={styles.separator} aria-hidden="true" />
+
+                  <div className={styles.metaRow}>
+                    <span className={styles.count}>{player.cardCount} · CARDS</span>
+                    <span className={styles.statusLabel}>
+                      {isActive ? 'ON DECK' : 'STANDBY'}
+                    </span>
+                  </div>
                 </div>
               </div>
+
+              {/* Active-player red rubber stamp */}
+              {isActive && (
+                <div className={styles.stampActive} aria-hidden="true">
+                  ACTIVE
+                </div>
+              )}
             </m.div>
           )
         })}

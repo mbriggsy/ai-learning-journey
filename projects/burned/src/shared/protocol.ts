@@ -3,7 +3,7 @@ import type { ClientAction } from './actions'
 
 // --- Protocol Version ---
 
-export const PROTOCOL_VERSION = 1
+export const PROTOCOL_VERSION = 2
 
 // --- Error Codes ---
 
@@ -60,6 +60,7 @@ export interface BoardPlayer {
   readonly color: string
   readonly cardCount: number
   readonly isAlive: boolean
+  readonly isConnected: boolean
 }
 
 // --- Nope Window View ---

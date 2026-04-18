@@ -1,4 +1,4 @@
-import { useState, useEffect, useCallback, useMemo, Fragment, lazy, Suspense, type ComponentType } from 'react'
+import { useState, useEffect, useCallback, useMemo, useRef, Fragment, lazy, Suspense, type ComponentType } from 'react'
 import { connect, disconnect, send, onMessage, onStatusChange, onReconnect, getStatus, getSessionToken, setSessionToken } from '@client/connection'
 import type { ConnectionStatus } from '@client/connection'
 import { gameStore, useGameState, useProtocolMismatch, useIsOptimisticPending } from '@client/shared/gameStore'
@@ -17,12 +17,14 @@ import { Hand } from './Hand'
 import { StagingArea } from './StagingArea'
 import { ErrorToast } from './ErrorToast'
 import { PlayerAlert } from './PlayerAlert'
+import { StealReport } from './StealReport'
 import { ConnectionOverlay } from './ConnectionOverlay'
 import { EliminatedView } from './EliminatedView'
 import { TitleBar } from './TitleBar'
 import { StatusBar } from './StatusBar'
 import { GameOver } from '@client/shared/GameOver'
 const DramaOverlay = lazy(() => import('@client/shared/DramaOverlay').then(m => ({ default: m.DramaOverlay })))
+import { useDramaActive } from '@client/shared/dramaState'
 import { BottomSheet } from '@client/shared/BottomSheet'
 import { TargetSelect } from './sheets/TargetSelect'
 import { DefusePlacement } from './sheets/DefusePlacement'
@@ -57,6 +59,15 @@ export function Player() {
   const [roomCode] = useState(getRoomCodeFromUrl)
   const [urlName] = useState(getNameFromUrl)
 
+  // Per-tab flag: have we already completed our initial 'join' handshake?
+  // Localstorage is shared across tabs on the same origin, so a blind
+  // "prefer the stored token" strategy would make every dev-launcher tab
+  // try to reconnect as whichever player claimed that room first and evict
+  // each other via SESSION_REPLACED. We use this ref to ensure the FIRST
+  // join in a tab's lifetime always uses ?name= (fresh-join), and only
+  // later RECONNECTS within the same tab use the stored token.
+  const initialJoinDoneRef = useRef(false)
+
   useEffect(() => {
     if (!roomCode) return
 
@@ -65,20 +76,33 @@ export function Player() {
       if (msg.type === 'joined') {
         setSessionToken(roomCode, msg.payload.sessionToken)
         setAssignedColor(msg.payload.color)
+        initialJoinDoneRef.current = true
       }
     })
     const unsubStatus = onStatusChange(setConnectionStatus)
 
     const attemptAutoJoin = () => {
-      if (urlName) {
-        // Dev mode: name in URL always joins fresh, skip session token
-        send({ type: 'join', payload: { name: urlName } })
-      } else {
+      // Reconnect within this tab: server has a live session for us, use the
+      // token we received on first join. Required for mid-game WS reconnects
+      // — without it the server rejects by name (game already started), the
+      // connection never gets role: 'player', and every subsequent action
+      // fails with "Not connected as player".
+      if (initialJoinDoneRef.current) {
         const token = getSessionToken(roomCode)
-        if (token) {
-          send({ type: 'join', payload: { name: '', sessionToken: token } })
-        }
+        if (token) send({ type: 'join', payload: { name: '', sessionToken: token } })
+        return
       }
+      // First join: dev-launcher tabs carry ?name=X and must fresh-join so
+      // 10 tabs on the same room code each get their own player identity
+      // (localStorage is shared across tabs). Normal player tabs (no urlName,
+      // e.g. QR-scanned join) fall back to a stored token if one exists
+      // — that's the refresh-recovery path for the same tab reopening.
+      if (urlName) {
+        send({ type: 'join', payload: { name: urlName } })
+        return
+      }
+      const token = getSessionToken(roomCode)
+      if (token) send({ type: 'join', payload: { name: '', sessionToken: token } })
     }
 
     const unsubAutoJoin = onStatusChange(s => {
@@ -240,8 +264,13 @@ function PlayingView({ roomCode }: { roomCode: string }) {
     sendAction({ type: 'nope' })
   }, [sendAction])
 
-  // Local target select for pre-send actions (Favor, Targeted Attack)
-  const [localTargetMode, setLocalTargetMode] = useState<{ cardIds: string[]; reason: 'direct-order' | 'call-in-a-favor' } | null>(null)
+  // Local target select for pre-send actions — targetPlayerId is bundled
+  // INTO the play-card action so the nope window opens with full info
+  // (target visible to opponents). Reasons: Targeted Attack, Favor,
+  // and both Two-of-a-Kind / Three-of-a-Kind combos.
+  const [localTargetMode, setLocalTargetMode] = useState<
+    { cardIds: string[]; reason: 'direct-order' | 'call-in-a-favor' | 'combo-pair' | 'combo-triple' } | null
+  >(null)
 
   // Track dismissed See the Future peek (prevents sheet loop)
   const [futureDismissed, setFutureDismissed] = useState(false)
@@ -259,6 +288,12 @@ function PlayingView({ roomCode }: { roomCode: string }) {
     ),
     [pendingPrompt, myPlayerId, players, hand, drawPileCount, futureDismissed, futureCards],
   )
+
+  // Gate server-prompted sheets behind the drama overlay queue so prompts
+  // (e.g. Defuse placement after a Burned draw) don't obscure the BURNED →
+  // EXTRACTED animation on the phone.
+  const dramaActive = useDramaActive()
+  const showServerSheet = !dramaActive
 
   // Reset localTargetMode when server state changes underneath
   useEffect(() => {
@@ -298,6 +333,20 @@ function PlayingView({ roomCode }: { roomCode: string }) {
         cardIds: [...cardPlayState.selectedCardIds],
         reason: pt.cardType === 'call-in-a-favor' ? 'call-in-a-favor' : 'direct-order',
       })
+      return
+    }
+    if (pt.kind === 'pair') {
+      setLocalTargetMode({
+        cardIds: [...cardPlayState.selectedCardIds],
+        reason: 'combo-pair',
+      })
+      return
+    }
+    if (pt.kind === 'triple') {
+      setLocalTargetMode({
+        cardIds: [...cardPlayState.selectedCardIds],
+        reason: 'combo-triple',
+      })
     }
   }, [cardPlayState])
 
@@ -318,10 +367,6 @@ function PlayingView({ roomCode }: { roomCode: string }) {
 
   const handleFutureRearrange = useCallback((order: string[]) => {
     sendAction({ type: 'future-rearrange', order })
-  }, [sendAction])
-
-  const handleSelectTarget = useCallback((targetPlayerId: string) => {
-    sendAction({ type: 'select-target', targetPlayerId })
   }, [sendAction])
 
   const handleNameCard = useCallback((cardType: CardType) => {
@@ -389,7 +434,8 @@ function PlayingView({ roomCode }: { roomCode: string }) {
         </div>
       </div>
 
-      {/* Local target select (pre-send: Favor, Targeted Attack) */}
+      {/* Local target select — every target pick is pre-send. Cancel
+          restores the hand and unstages. */}
       <BottomSheet
         open={localTargetMode !== null && !activeSheet}
         onDismiss={() => { setLocalTargetMode(null); resetCardPlay() }}
@@ -398,13 +444,21 @@ function PlayingView({ roomCode }: { roomCode: string }) {
           <TargetSelect
             eligiblePlayers={eligibleTargets}
             onSelectTarget={handleLocalTargetSelect}
-            title={localTargetMode.reason === 'call-in-a-favor' ? 'Choose who gives you a card' : 'Choose who to reassign to'}
+            onCancel={() => { setLocalTargetMode(null); resetCardPlay() }}
+            title={
+              localTargetMode.reason === 'call-in-a-favor' ? 'Choose who gives you a card'
+              : localTargetMode.reason === 'direct-order' ? 'Choose who to reassign to'
+              : localTargetMode.reason === 'combo-pair' ? 'Choose who to steal from'
+              : 'Choose who to steal from'
+            }
           />
         )}
       </BottomSheet>
 
-      {/* Server-prompted bottom sheets */}
-      <BottomSheet open={activeSheet?.sheet === 'defuse-placement'}>
+      {/* Server-prompted bottom sheets — gated on drama queue so the BURNED
+          → EXTRACTED overlay sequence finishes before a Defuse (or any other)
+          prompt slides up. */}
+      <BottomSheet open={showServerSheet && activeSheet?.sheet === 'defuse-placement'}>
         {activeSheet?.sheet === 'defuse-placement' && (
           <DefusePlacement
             maxPosition={activeSheet.maxPosition}
@@ -413,7 +467,7 @@ function PlayingView({ roomCode }: { roomCode: string }) {
         )}
       </BottomSheet>
 
-      <BottomSheet open={activeSheet?.sheet === 'favor-response'}>
+      <BottomSheet open={showServerSheet && activeSheet?.sheet === 'favor-response'}>
         {activeSheet?.sheet === 'favor-response' && (
           <FavorResponse
             requesterName={activeSheet.requesterName}
@@ -423,7 +477,7 @@ function PlayingView({ roomCode }: { roomCode: string }) {
         )}
       </BottomSheet>
 
-      <BottomSheet open={activeSheet?.sheet === 'future-peek'}>
+      <BottomSheet open={showServerSheet && activeSheet?.sheet === 'future-peek'}>
         {activeSheet?.sheet === 'future-peek' && (
           <FuturePeek
             cards={activeSheet.cards}
@@ -434,16 +488,7 @@ function PlayingView({ roomCode }: { roomCode: string }) {
         )}
       </BottomSheet>
 
-      <BottomSheet open={activeSheet?.sheet === 'target-select-prompted'}>
-        {activeSheet?.sheet === 'target-select-prompted' && (
-          <TargetSelect
-            eligiblePlayers={activeSheet.eligiblePlayers}
-            onSelectTarget={handleSelectTarget}
-          />
-        )}
-      </BottomSheet>
-
-      <BottomSheet open={activeSheet?.sheet === 'name-card'}>
+      <BottomSheet open={showServerSheet && activeSheet?.sheet === 'name-card'}>
         {activeSheet?.sheet === 'name-card' && (
           <NameCard
             targetName={activeSheet.targetName}
@@ -458,6 +503,10 @@ function PlayingView({ roomCode }: { roomCode: string }) {
       </BottomSheet>
 
       <Suspense><DramaOverlay /></Suspense>
+
+      {/* Persistent classified-dispatch for combo-steal victims. Gated by
+          dramaActive so BURNED → EXTRACTED plays first. */}
+      <StealReport />
     </div>
   )
 }

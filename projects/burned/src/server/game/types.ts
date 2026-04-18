@@ -24,7 +24,7 @@ export interface PlayingState {
   readonly events: readonly GameEvent[]
   readonly pendingFavor?: { readonly requesterId: string; readonly targetId: string }
   readonly pendingFuture?: { readonly playerId: string; readonly cardIds: readonly string[] }
-  readonly pendingSteal?: { readonly stealerId: string; readonly comboSize: 2 | 3 }
+  readonly pendingSteal?: { readonly stealerId: string; readonly targetPlayerId: string; readonly comboSize: 2 | 3 }
   readonly pendingNameCard?: { readonly stealerId: string; readonly targetId: string }
   readonly pendingDefuse?: { readonly playerId: string }
   readonly pendingPrompt: PendingPrompt | null

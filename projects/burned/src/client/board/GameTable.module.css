@@ -255,9 +255,8 @@
    Sharp 2px radius == classified-folder vocabulary. */
 .blotter {
   position: absolute;
-  top: 50%;
-  left: 50%;
-  transform: translate(-50%, -50%);
+  top: var(--pos-blotter-top);
+  left: var(--pos-blotter-left);
   width: var(--size-blotter-width);
   height: var(--size-blotter-height);
   border-radius: 2px;
@@ -337,14 +336,9 @@
    it clear of the top nameplate (which centers horizontally). */
 .blotterTab {
   position: absolute;
-  top: 50%;
-  left: 50%;
-  /* Anchor: center of the blotter top edge, shifted LEFT by (blotter/2 - tab-margin)
-     and UP by (blotter/2 + tab-height). */
-  transform: translate(
-    calc(var(--size-blotter-width) * -0.5 + 40px),
-    calc(var(--size-blotter-height) * -0.5 - 100%)
-  );
+  top: var(--pos-blotter-top);
+  left: calc(var(--pos-blotter-left) + 40px);
+  transform: translateY(-100%);
   z-index: var(--z-base);
   background: var(--color-accent-burned);
   color: var(--color-cream-12);

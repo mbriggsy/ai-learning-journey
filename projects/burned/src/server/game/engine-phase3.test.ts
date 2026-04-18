@@ -184,26 +184,6 @@ describe('Prompt Timeout', () => {
     expect(result.ok).toBe(false)
   })
 
-  it('steal-target-pending cancels on timeout', () => {
-    let state = startGameWith(3)
-    // Manually set up steal-target-pending state
-    state = {
-      ...state,
-      subPhase: 'steal-target-pending',
-      pendingSteal: { stealerId: 'p1', comboSize: 2 },
-    }
-
-    const result = act(state, {
-      type: 'prompt-timeout',
-      playerId: '_server',
-      subPhase: 'steal-target-pending',
-    })
-    expect(result.ok).toBe(true)
-    const after = result.state as PlayingState
-    expect(after.subPhase).toBe('turn-active')
-    expect(after.pendingSteal).toBeUndefined()
-  })
-
   it('defuse-pending inserts Burned at random position on timeout', () => {
     let state = startGameWith(2)
     // Give p1 a Burned card in hand (as if they drew one and played Extraction)

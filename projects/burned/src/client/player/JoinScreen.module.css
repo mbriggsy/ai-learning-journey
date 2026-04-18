@@ -307,8 +307,12 @@
   color: color-mix(in oklab, var(--color-cream-11) 75%, transparent);
   margin: 0;
   display: flex;
-  align-items: baseline;
+  /* center-align so the empty ↔ "..." rotation on .waitingDots::after doesn't
+     shift the row's baseline (the pseudo-element has no baseline when content
+     is empty). */
+  align-items: center;
   gap: var(--space-2);
+  line-height: 1.2;
 }
 
 .waitingLabel {
@@ -318,11 +322,20 @@
   letter-spacing: 0.1em;
   text-transform: uppercase;
   color: color-mix(in oklab, var(--color-cream-11) 70%, transparent);
+  line-height: 1.2;
 }
 
 .waitingDots {
+  /* Reserve both horizontal AND vertical space so the row height is locked
+     even when the ::after content rotates through ''. Without min-height,
+     the inline-block collapses vertically when content is empty and the
+     whole label jumps a few px. */
   display: inline-block;
   min-width: 1.4em;
+  min-height: 1em;
+  line-height: 1.2;
+  font-family: var(--font-mono);
+  font-size: var(--text-caption);
 }
 
 .waitingDots::after {

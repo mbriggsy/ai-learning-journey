@@ -17,7 +17,6 @@ export type SubPhase =
   | 'eliminated-check'
   | 'favor-pending'
   | 'future-rearrange-pending'
-  | 'steal-target-pending'
   | 'name-card-pending'
 
 /** Pending prompt — tells clients WHO must respond and to WHAT */
@@ -25,7 +24,6 @@ export type PendingPrompt =
   | { type: 'defuse'; playerId: string }
   | { type: 'favor-response'; playerId: string; requesterId: string }
   | { type: 'future-rearrange'; playerId: string; cardIds: readonly string[] }
-  | { type: 'steal-target'; playerId: string }
   | { type: 'name-card'; playerId: string; targetId: string }
 
 /** Events emitted by the engine — drive UI text and animation triggers */

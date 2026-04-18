@@ -2,7 +2,7 @@ import { useRef } from 'react'
 import {
   usePlayerList, useCurrentTurn,
 } from '@client/shared/hooks/useSharedSelectors'
-import { PlayerRing } from './PlayerRing'
+import { PlayerStrip } from './PlayerStrip'
 import { Arena } from './Arena'
 import { BlotterContent } from './BlotterContent'
 import { NopeCountdownBar } from './NopeCountdownBar'
@@ -54,8 +54,8 @@ export function GameTable() {
         <div className={styles.caseBannerStamp} />
       </aside>
 
-      {/* Player ring */}
-      <PlayerRing
+      {/* Player strip — UMB-style nameplate row along the bottom */}
+      <PlayerStrip
         players={players}
         currentPlayerId={currentTurn?.currentPlayerId ?? null}
         turnsRemaining={currentTurn?.turnsRemaining ?? 0}

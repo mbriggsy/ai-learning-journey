@@ -256,9 +256,9 @@ describe('Reassign', () => {
     if (result.ok) {
       const s = result.state as PlayingState
       expect(s.currentTurn.currentPlayerId).toBe('p2')
-      // Attack: next player gets current.turnsRemaining + 2
-      // Before attack, p1 had 1 turn. So p2 gets 1 + 2 = 3
-      expect(s.currentTurn.turnsRemaining).toBe(3)
+      // Rules §10.2: target gets (attacker's remaining turns AFTER the current
+      // one) + 2. Fresh turn → 0 + 2 = 2.
+      expect(s.currentTurn.turnsRemaining).toBe(2)
     }
   })
 })
@@ -304,8 +304,9 @@ describe('Direct Order', () => {
     if (result.ok) {
       const s = result.state as PlayingState
       expect(s.currentTurn.currentPlayerId).toBe('p1')
-      // Started with 1 turn remaining; self-attack adds 2 → 3 turns total
-      expect(s.currentTurn.turnsRemaining).toBe(3)
+      // Fresh turn (turnsRemaining=1). Self-DO consumes it, leaves 0, base +2.
+      // Target (self) takes 2 turns.
+      expect(s.currentTurn.turnsRemaining).toBe(2)
     }
   })
 
@@ -322,6 +323,54 @@ describe('Direct Order', () => {
     result = resolveNopeWindow(afterNope, makeCtx(99999))
     // Now the effect applies — should fail because no target
     expect(result.ok).toBe(false)
+  })
+
+  it('stacks correctly when attacker is under a prior Attack (rules §10.2)', () => {
+    // Scenario from the rules doc: attacker is on turn 1 of 2 (turnsRemaining=2).
+    // Playing Direct Order consumes the current turn; the 1 leftover turn + base
+    // +2 transfers to the target = 3.
+    let state = startGameWith(3)
+    state = giveCard(state, 'p1', 'direct-order', 'ta-stack')
+    // Simulate p1 being mid-way through 2 attacked turns
+    state = { ...state, currentTurn: { currentPlayerId: 'p1', turnsRemaining: 2 } }
+
+    const card = findCard(state, 'p1', 'direct-order')!
+    let result = act(state, {
+      type: 'play-card', playerId: 'p1', cardIds: [card.id], targetPlayerId: 'p3',
+    })
+    expect(result.ok).toBe(true)
+
+    const afterNope = (result as { ok: true; state: GameState }).state as PlayingState
+    result = resolveNopeWindow(afterNope, makeCtx(99999))
+    expect(result.ok).toBe(true)
+    if (result.ok) {
+      const s = result.state as PlayingState
+      expect(s.currentTurn.currentPlayerId).toBe('p3')
+      expect(s.currentTurn.turnsRemaining).toBe(3) // 1 leftover + 2 base
+    }
+  })
+
+  it('stacks correctly on the attacker\'s last attacked turn (rules §10.2)', () => {
+    // Scenario: attacker on turn 2 of 2 (turnsRemaining=1). No leftover,
+    // target just gets the base 2.
+    let state = startGameWith(3)
+    state = giveCard(state, 'p1', 'direct-order', 'ta-last')
+    state = { ...state, currentTurn: { currentPlayerId: 'p1', turnsRemaining: 1 } }
+
+    const card = findCard(state, 'p1', 'direct-order')!
+    let result = act(state, {
+      type: 'play-card', playerId: 'p1', cardIds: [card.id], targetPlayerId: 'p2',
+    })
+    expect(result.ok).toBe(true)
+
+    const afterNope = (result as { ok: true; state: GameState }).state as PlayingState
+    result = resolveNopeWindow(afterNope, makeCtx(99999))
+    expect(result.ok).toBe(true)
+    if (result.ok) {
+      const s = result.state as PlayingState
+      expect(s.currentTurn.currentPlayerId).toBe('p2')
+      expect(s.currentTurn.turnsRemaining).toBe(2) // 0 leftover + 2 base
+    }
   })
 })
 
@@ -669,7 +718,7 @@ describe('Two of a Kind', () => {
     state = giveCard(state, 'p1', 'dash-barlowe', 'tc-2')
 
     const result = act(state, {
-      type: 'play-card', playerId: 'p1', cardIds: ['tc-1', 'tc-2'],
+      type: 'play-card', playerId: 'p1', cardIds: ['tc-1', 'tc-2'], targetPlayerId: 'p2',
     })
     expect(result.ok).toBe(true) // Opens nope window
   })
@@ -692,7 +741,7 @@ describe('Two of a Kind', () => {
     state = giveCard(state, 'p1', 'dash-barlowe', 'tc-1')
 
     const result = act(state, {
-      type: 'play-card', playerId: 'p1', cardIds: ['fc-1', 'tc-1'],
+      type: 'play-card', playerId: 'p1', cardIds: ['fc-1', 'tc-1'], targetPlayerId: 'p2',
     })
     expect(result.ok).toBe(true)
   })
@@ -703,7 +752,7 @@ describe('Two of a Kind', () => {
     state = giveCard(state, 'p1', 'agent-x', 'fc-2')
 
     const result = act(state, {
-      type: 'play-card', playerId: 'p1', cardIds: ['fc-1', 'fc-2'],
+      type: 'play-card', playerId: 'p1', cardIds: ['fc-1', 'fc-2'], targetPlayerId: 'p2',
     })
     expect(result.ok).toBe(true)
   })
@@ -761,7 +810,7 @@ describe('Two of a Kind', () => {
     state = giveCard(state, 'p1', 'reassign', 'atk-2')
 
     const result = act(state, {
-      type: 'play-card', playerId: 'p1', cardIds: ['atk-1', 'atk-2'],
+      type: 'play-card', playerId: 'p1', cardIds: ['atk-1', 'atk-2'], targetPlayerId: 'p2',
     })
     expect(result.ok).toBe(true)
   })

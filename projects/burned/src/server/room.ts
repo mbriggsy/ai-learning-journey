@@ -418,7 +418,7 @@ export class GameRoom extends Server {
         } else {
           const now = Date.now()
           const state = this.gameState as PlayingState | GameOverState
-          const board = projectForBoard(state, now)
+          const board = projectForBoard(state, now, this.getConnectedPlayerIds())
           this.send(connection, {
             type: 'player-update',
             payload: {
@@ -734,7 +734,7 @@ export class GameRoom extends Server {
     const state = this.gameState as PlayingState | GameOverState
 
     // Compute board view once (P2 optimization — not N+1 times)
-    const boardView = projectForBoard(state, now)
+    const boardView = projectForBoard(state, now, this.getConnectedPlayerIds())
     const boardMsg: ServerMessage = { type: 'state-update', payload: boardView, protocolVersion: PROTOCOL_VERSION }
     const boardRaw = JSON.stringify(boardMsg)
 
@@ -770,13 +770,7 @@ export class GameRoom extends Server {
   }
 
   private buildLobbyView(): LobbyView {
-    const connectedPlayerIds = new Set<string>()
-    for (const conn of this.getConnections()) {
-      const state = this.getConnState(conn)
-      if (state?.role === 'player') {
-        connectedPlayerIds.add(state.playerId)
-      }
-    }
+    const connectedPlayerIds = this.getConnectedPlayerIds()
 
     return {
       phase: 'lobby',
@@ -788,6 +782,15 @@ export class GameRoom extends Server {
         isConnected: connectedPlayerIds.has(id),
       })),
     }
+  }
+
+  private getConnectedPlayerIds(): Set<string> {
+    const ids = new Set<string>()
+    for (const conn of this.getConnections()) {
+      const state = this.getConnState(conn)
+      if (state?.role === 'player') ids.add(state.playerId)
+    }
+    return ids
   }
 
   // --- Helpers ---

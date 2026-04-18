@@ -18,7 +18,7 @@ export const CARD_DEFS = [
   { type: 'intel-briefing', name: 'Intel Briefing', description: 'Peek at the top 3 cards (private).', category: 'action', pawCount: 3, nonPawCount: 3 },
   { type: 'falsify-intel', name: 'Falsify Intel', description: 'View top 3 cards, rearrange in any order (private).', category: 'action', pawCount: 2, nonPawCount: 4 },
   { type: 'burn-the-files', name: 'Burn the Files', description: 'Scramble the mission stack.', category: 'action', pawCount: 2, nonPawCount: 4 },
-  { type: 'back-channel', name: 'Back Channel', description: 'Draw from the bottom instead of the top.', category: 'action', pawCount: 3, nonPawCount: 4 },
+  { type: 'back-channel', name: 'Back Channel', description: 'End your turn — draw from the bottom instead of the top.', category: 'action', pawCount: 3, nonPawCount: 4 },
   { type: 'call-in-a-favor', name: 'Call in a Favor', description: 'Force an operative to give you 1 card (their choice).', category: 'action', pawCount: 2, nonPawCount: 4 },
   { type: 'intercepted', name: 'Intercepted', description: 'Counter-intel. Cancel any action. Playable any time.', category: 'action', pawCount: 4, nonPawCount: 5 },
   { type: 'agent-x', name: 'Agent X', description: 'Wild — counts as any operative type.', category: 'wild', pawCount: 2, nonPawCount: 4 },

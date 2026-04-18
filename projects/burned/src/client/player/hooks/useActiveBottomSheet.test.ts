@@ -4,9 +4,9 @@ import type { BoardPlayer, PendingPromptView } from '@shared/protocol'
 import type { CardInstance } from '@shared/types'
 
 const players: BoardPlayer[] = [
-  { id: 'p1', name: 'Alice', color: '#e74c3c', cardCount: 5, isAlive: true },
-  { id: 'p2', name: 'Bob', color: '#3498db', cardCount: 3, isAlive: true },
-  { id: 'p3', name: 'Charlie', color: '#2ecc71', cardCount: 0, isAlive: false },
+  { id: 'p1', name: 'Alice', color: '#e74c3c', cardCount: 5, isAlive: true, isConnected: true },
+  { id: 'p2', name: 'Bob', color: '#3498db', cardCount: 3, isAlive: true, isConnected: true },
+  { id: 'p3', name: 'Charlie', color: '#2ecc71', cardCount: 0, isAlive: false, isConnected: false },
 ]
 
 const hand: CardInstance[] = [
@@ -49,17 +49,6 @@ describe('deriveActiveBottomSheet', () => {
     if (result?.sheet === 'future-peek') {
       expect(result.canRearrange).toBe(true)
       expect(result.cards).toEqual(futureCards)
-    }
-  })
-
-  it('returns target-select for steal prompt', () => {
-    const prompt: PendingPromptView = { type: 'steal-target', playerId: 'p1' }
-    const result = deriveActiveBottomSheet(prompt, 'p1', players, hand, 10, undefined)
-    expect(result?.sheet).toBe('target-select-prompted')
-    if (result?.sheet === 'target-select-prompted') {
-      // Only alive players excluding self
-      expect(result.eligiblePlayers).toHaveLength(1)
-      expect(result.eligiblePlayers[0]!.id).toBe('p2')
     }
   })
 

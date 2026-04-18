@@ -31,33 +31,13 @@ function alertFor(
 
   switch (event.type) {
     case 'combo-steal': {
-      // Server includes cardType in the event for the stealer and target
-      // only; public board + other players get it stripped at projection
-      // time. Four possible alerts — two for the target, two for the
-      // stealer. Non-parties see nothing.
+      // Target-side notification is handled by StealReport (persistent
+      // classified-dispatch overlay) — the "Johnny left for beers" case
+      // can't be served by a disappearing toast. This branch only surfaces
+      // stealer-side alerts: you just played a combo, you're at the phone.
       const cardName = event.cardType
         ? CARD_DEF_BY_TYPE[event.cardType]?.name ?? 'a card'
         : null
-
-      if (event.targetId === myId) {
-        if (event.found) {
-          return {
-            id: eventId,
-            text: `${nameOf(event.stealerId)} took ${cardName ?? 'a card'} from you.`,
-            tone: 'urgent',
-          }
-        }
-        // Named whiff — triples guess missed. Target learns what was guessed.
-        // Random-pair whiff (empty hand, no cardType) → no alert, you already
-        // know your hand was empty.
-        if (cardName) {
-          return {
-            id: eventId,
-            text: `${nameOf(event.stealerId)}'s infiltration failed — no ${cardName}.`,
-            tone: 'info',
-          }
-        }
-      }
 
       if (event.stealerId === myId) {
         if (event.found) {
@@ -67,8 +47,6 @@ function alertFor(
             tone: 'urgent',
           }
         }
-        // Stealer's whiff. Random-pair whiff without a cardType means target
-        // had no cards — say so generically.
         if (cardName) {
           return {
             id: eventId,

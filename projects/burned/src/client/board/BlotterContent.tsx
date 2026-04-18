@@ -26,7 +26,6 @@ function getStatusText(
       case 'defuse': return `${name} is reinserting the Burned file\u2026`
       case 'favor-response': return `${name} is handing over a card`
       case 'future-rearrange': return `${name} is rearranging the intel`
-      case 'steal-target': return `${name} is picking a mark`
       case 'name-card': return `${name} is calling the shot`
     }
   }

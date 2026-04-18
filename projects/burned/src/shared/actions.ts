@@ -11,7 +11,6 @@ export type ClientActionMap = {
   'defuse-place': { position: number }
   'favor-give': { cardId: string }
   'future-rearrange': { order: string[] }
-  'select-target': { targetPlayerId: string }
   'name-card': { cardType: CardType }
 }
 

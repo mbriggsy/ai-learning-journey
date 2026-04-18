@@ -33,7 +33,7 @@ describe('Draw from Bottom', () => {
 })
 
 describe('Two of a Kind — steal flow', () => {
-  it('plays pair → nope resolves → select target → random steal', () => {
+  it('plays pair with target → nope resolves → random steal', () => {
     let state = startGameWith(3)
 
     // Give p1 two matching operative cards
@@ -47,24 +47,20 @@ describe('Two of a Kind — steal flow', () => {
     expect(state.players.find(p => p.id === 'p2')!.hand.length).toBeGreaterThan(0)
     const p2CardCount = state.players.find(p => p.id === 'p2')!.hand.length
 
-    // Play the pair
-    let result = act(state, { type: 'play-card', playerId: 'p1', cardIds: ['cat-a', 'cat-b'] })
+    // Play the pair WITH target bundled — nope window opens with full info
+    let result = act(state, {
+      type: 'play-card', playerId: 'p1', cardIds: ['cat-a', 'cat-b'], targetPlayerId: 'p2',
+    })
     expect(result.ok).toBe(true)
 
-    // Resolve nope window → should enter steal-target-pending
-    const afterNope = result.state as PlayingState
-    result = resolveNopeWindow(afterNope, makeCtx(99999))
+    const pending = result.state as PlayingState
+    expect(pending.pendingSteal?.comboSize).toBe(2)
+    expect(pending.pendingSteal?.targetPlayerId).toBe('p2')
+
+    // Resolve nope window → steal resolves immediately, no target-select step
+    result = resolveNopeWindow(pending, makeCtx(99999))
     expect(result.ok).toBe(true)
 
-    const stealState = result.state as PlayingState
-    expect(stealState.subPhase).toBe('steal-target-pending')
-    expect(stealState.pendingSteal?.comboSize).toBe(2)
-
-    // Select target p2
-    result = act(stealState, { type: 'select-target', playerId: 'p1', targetPlayerId: 'p2' })
-    expect(result.ok).toBe(true)
-
-    // Steal should have transferred a card
     const final = result.state as PlayingState
     expect(final.subPhase).toBe('turn-active')
     const p2Hand = final.players.find(p => p.id === 'p2')!.hand.length
@@ -74,7 +70,7 @@ describe('Two of a Kind — steal flow', () => {
 })
 
 describe('Three of a Kind — name card steal flow', () => {
-  it('plays triple → nope resolves → select target → name card → steal', () => {
+  it('plays triple with target → nope resolves → name card → steal', () => {
     let state = startGameWith(3)
 
     // Give p1 three matching operative cards
@@ -88,20 +84,18 @@ describe('Three of a Kind — name card steal flow', () => {
     // Give p2 a known card type to steal
     state = giveCard(state, 'p2', 'go-dark', 'steal-target-skip')
 
-    // Play the triple
-    let result = act(state, { type: 'play-card', playerId: 'p1', cardIds: ['cat-a', 'cat-b', 'cat-c'] })
+    // Play the triple WITH target bundled
+    let result = act(state, {
+      type: 'play-card', playerId: 'p1', cardIds: ['cat-a', 'cat-b', 'cat-c'], targetPlayerId: 'p2',
+    })
     expect(result.ok).toBe(true)
 
-    // Resolve nope window → steal-target-pending
-    result = resolveNopeWindow(result.state as PlayingState, makeCtx(99999))
-    expect(result.ok).toBe(true)
+    const pending = result.state as PlayingState
+    expect(pending.pendingSteal?.comboSize).toBe(3)
+    expect(pending.pendingSteal?.targetPlayerId).toBe('p2')
 
-    const stealState = result.state as PlayingState
-    expect(stealState.subPhase).toBe('steal-target-pending')
-    expect(stealState.pendingSteal?.comboSize).toBe(3)
-
-    // Select target p2 → name-card-pending
-    result = act(stealState, { type: 'select-target', playerId: 'p1', targetPlayerId: 'p2' })
+    // Resolve nope window → name-card-pending (target already locked in)
+    result = resolveNopeWindow(pending, makeCtx(99999))
     expect(result.ok).toBe(true)
 
     const nameState = result.state as PlayingState
@@ -130,9 +124,10 @@ describe('Three of a Kind — name card steal flow', () => {
     // Remove all burn-the-files from p2's hand so naming "burn-the-files" misses
     state = removeCardType(state, 'p2', 'burn-the-files')
 
-    let result = act(state, { type: 'play-card', playerId: 'p1', cardIds: ['cat-a', 'cat-b', 'cat-c'] })
+    let result = act(state, {
+      type: 'play-card', playerId: 'p1', cardIds: ['cat-a', 'cat-b', 'cat-c'], targetPlayerId: 'p2',
+    })
     result = resolveNopeWindow(result.state as PlayingState, makeCtx(99999))
-    result = act(result.state as PlayingState, { type: 'select-target', playerId: 'p1', targetPlayerId: 'p2' })
 
     const nameState = result.state as PlayingState
     // Name a card type p2 doesn't have

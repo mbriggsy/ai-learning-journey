@@ -37,7 +37,7 @@ export function formatEvent(event: GameEvent, players: readonly BoardPlayer[], e
         ? pick([
           `${n(event.playerId)} draws... and lives.`,
           `${n(event.playerId)} survives the draw.`,
-          `Safe. For now.`,
+          `${n(event.playerId)} is safe. For now.`,
           `${n(event.playerId)} got lucky.`,
         ], eventId)
         : null
@@ -112,7 +112,7 @@ export function formatEvent(event: GameEvent, players: readonly BoardPlayer[], e
     case 'deck-shuffled':
       return pick([
         `${n(event.playerId)} shuffled the deck. All bets off.`,
-        `Deck shuffled. Nobody knows anything.`,
+        `${n(event.playerId)} shuffles — nobody knows anything.`,
         `${n(event.playerId)} hits the reset button.`,
       ], eventId)
 

@@ -60,24 +60,15 @@
     );
     --size-board-card-height: calc(var(--size-board-card-width) * 7 / 5);
 
-    /* Player ring radius */
-    --size-player-ring-width: clamp(
-      200px,
-      calc(200px + (100vw - 1280px) * (200 / 2560)),
-      400px
+    /* Player strip — horizontal nameplate row along the board's bottom edge.
+       Height scales from 1280 → 3840 as 46 → 88px. */
+    --size-player-strip-height: clamp(
+      46px,
+      calc(46px + (100vw - 1280px) * (42 / 2560)),
+      88px
     );
-
-    /* Player panel — individual player card in the ring */
-    --size-player-panel-width: clamp(
-      180px,
-      calc(180px + (100vw - 1280px) * (240 / 2560)),
-      420px
-    );
-    --size-player-panel-height: clamp(
-      90px,
-      calc(90px + (100vw - 1280px) * (57 / 2560)),
-      147px
-    );
+    /* Bottom offset — clears the mahogany frame + a small air gap */
+    --space-player-strip-bottom: calc(var(--size-wood-frame-thickness) + 18px);
 
     /* Draw pile */
     --size-draw-pile-width: clamp(
@@ -132,46 +123,29 @@
 
     /* ─── Briefing Room tokens — Phase A arena redesign ─── */
 
-    /* Cream-paper briefing blotter that sits under the draw + discard piles.
-       Scales from 1280 → 3840 so the blotter stays ~40-47% of the viewport
-       width at every TV size. Creates physical grounding for the center
-       action. */
-    /* Breathing gap between blotter perimeter and orbiting dossiers. Scales
-       with viewport — 32px at 1280 TV, 80px at 4K. This is THE negative space
-       that sells "case file on a planning desk, photos clipped at arm's
-       length." */
-    --space-ring-gap: clamp(
-      32px,
-      calc(32px + (100vw - 1280px) * (48 / 2560)),
-      80px
+    /* Cream-paper briefing blotter — the central play surface. Fills the
+       available band between the left CASE banner and the right wood frame
+       edge, and between the top wood frame (clearing the case tab) and the
+       top of the bottom player strip. Width/height computed so the blotter
+       ALWAYS maximizes the reclaimed real estate the dossier ring freed up. */
+    --pos-blotter-left: calc(
+      var(--size-side-panel-width) + var(--size-wood-frame-thickness) + 12px
     );
+    --pos-blotter-top: calc(var(--size-wood-frame-thickness) + 38px);
 
-    /* Blotter width — grows with viewport BUT capped so ring dossiers always
-       clear it by --space-ring-gap at the worst slot angle.
-
-       Derivation: at any slot angle θ, panel center x = cos(θ)·rx. Horizontal
-       clearance from blotter edge requires rx·cos(θ) ≥ bw/2 + pw/2 + gap.
-       The edge-margin constraint gives rx·cos(θ) ≤ viewport/2 - pw/2 -
-       edge_margin. The cos(θ) cancels in the chain, so:
-         bw ≤ viewport - 2·pw - 2·gap - 2·edge_margin
-       Independent of player count — works for N=3 through N=10. */
-    --size-blotter-width-desired: clamp(
-      620px,
-      calc(620px + (100vw - 1280px) * (1480 / 2560)),
-      2200px
+    --size-blotter-width: calc(
+      100vw
+      - var(--size-side-panel-width)
+      - 2 * var(--size-wood-frame-thickness)
+      - 24px
     );
-    --size-blotter-width-max-by-ring: calc(
-      100vw - 2 * var(--size-dossier-width) - 2 * var(--space-ring-gap) - 48px
-    );
-    --size-blotter-width: min(
-      var(--size-blotter-width-desired),
-      var(--size-blotter-width-max-by-ring)
-    );
-
-    --size-blotter-height: clamp(
-      360px,
-      calc(360px + (100vw - 1280px) * (460 / 2560)),
-      820px
+    --size-blotter-height: calc(
+      100vh
+      - var(--size-wood-frame-thickness)
+      - 38px
+      - var(--space-player-strip-bottom)
+      - var(--size-player-strip-height)
+      - 14px
     );
 
     /* Mahogany wood frame thickness — scales from 1280 → 3840 as 28 → 80px */
@@ -190,21 +164,7 @@
       900px
     );
 
-    /* Dossier operative-file sizing — replaces the old panel size. Slightly
-       taller than wide to read as a 8.5×11 file with a tab. */
-    --size-dossier-width: clamp(
-      220px,
-      calc(220px + (100vw - 1280px) * (360 / 2560)),
-      580px
-    );
-    --size-dossier-height: clamp(
-      140px,
-      calc(140px + (100vw - 1280px) * (180 / 2560)),
-      320px
-    );
-
-    /* Side-panel widths — left CASE banner + right COMMS ticker.
-       Capped at 400 so the dossier ring has breathing room at 4K. */
+    /* Side-panel widths — left CASE banner + right COMMS ticker. */
     --size-side-panel-width: clamp(
       220px,
       calc(220px + (100vw - 1280px) * (180 / 2560)),

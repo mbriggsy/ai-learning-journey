@@ -1,0 +1,197 @@
+/* PlayerStrip.module.css
+   Horizontal nameplate row along the bottom of the board — UMB-style.
+   Minimal chrome: color-shape + name + card count. Active player raises
+   slightly and gets an ochre-ribbon top edge + ACTIVE chip.
+*/
+
+@layer components {
+
+.strip {
+  position: absolute;
+  left: 50%;
+  bottom: var(--space-player-strip-bottom);
+  transform: translateX(-50%);
+  z-index: var(--z-raised);
+
+  display: flex;
+  align-items: stretch;
+  justify-content: center;
+  gap: 6px;
+
+  /* Full viewport width (minus wood frame) — strip passes below the CASE
+     banner's content region at the bottom, so the side panels do not
+     constrain it. 10-player case still fits on one row without ellipsis. */
+  max-width: calc(100vw - 2 * var(--size-wood-frame-thickness) - 16px);
+  padding: 0;
+}
+
+/* One nameplate tile. Flat charcoal plate, ochre top hairline, mono caption.
+   Tile auto-sizes to content; flex distributes remaining space. No min-width
+   so the 10-player case shrinks gracefully without truncating names. */
+.tile {
+  position: relative;
+  display: flex;
+  align-items: center;
+  gap: 7px;
+  padding: 8px 10px 8px 9px;
+  height: var(--size-player-strip-height);
+  box-sizing: border-box;
+
+  background:
+    linear-gradient(
+      180deg,
+      color-mix(in oklab, var(--color-charcoal-1) 82%, transparent) 0%,
+      color-mix(in oklab, var(--color-charcoal-2) 88%, transparent) 100%
+    );
+  border-radius: 2px;
+  box-shadow:
+    inset 0 1px 0 color-mix(in oklab, var(--color-cream-12) 6%, transparent),
+    inset 0 -1px 0 color-mix(in oklab, var(--color-charcoal-1) 60%, transparent),
+    0 6px 14px color-mix(in oklab, var(--color-charcoal-1) 50%, transparent),
+    0 2px 4px color-mix(in oklab, var(--color-charcoal-1) 55%, transparent);
+  color: color-mix(in oklab, var(--color-cream-11) 92%, transparent);
+}
+
+/* Top hairline — ochre, 2px; brightens to accent-drama when active */
+.tile::before {
+  content: '';
+  position: absolute;
+  top: 0;
+  left: 6px;
+  right: 6px;
+  height: 2px;
+  background: color-mix(in oklab, var(--color-accent-drama) 28%, transparent);
+  pointer-events: none;
+}
+
+/* Presence dot — signals WebSocket connection status. Green when connected,
+   muted red when off-grid, slow pulse while live. UMB vocabulary. */
+.presence {
+  width: 8px;
+  height: 8px;
+  border-radius: 50%;
+  flex: 0 0 auto;
+  background: var(--color-signal-ok, #5ecc7b);
+  box-shadow:
+    0 0 0 1px color-mix(in oklab, var(--color-charcoal-1) 55%, transparent),
+    0 0 8px color-mix(in oklab, var(--color-signal-ok, #5ecc7b) 60%, transparent);
+  animation: presencePulse 2.4s ease-in-out infinite;
+}
+
+.tile[data-offline] .presence {
+  background: color-mix(in oklab, var(--color-accent-burned) 55%, var(--color-charcoal-2));
+  box-shadow:
+    0 0 0 1px color-mix(in oklab, var(--color-charcoal-1) 55%, transparent);
+  animation: none;
+}
+
+@keyframes presencePulse {
+  0%, 100% { opacity: 0.85; }
+  50%      { opacity: 1; }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .presence { animation: none; }
+}
+
+.name {
+  font-family: var(--font-display);
+  font-weight: 700;
+  /* Explicit smaller scale — --text-body renders ~20px at 1366 which is too
+     big for 10-player strip fit. This clamp gives 12→18px across 1280→3840,
+     so 10 tiles at the 7-char cap always fit one row without overflow. */
+  font-size: clamp(12px, calc(12px + (100vw - 1280px) * (6 / 2560)), 18px);
+  line-height: 1;
+  letter-spacing: 0.04em;
+  text-transform: uppercase;
+  color: color-mix(in oklab, var(--color-cream-12) 94%, transparent);
+  white-space: nowrap;
+  /* No overflow clipping — truncation in the TSX caps name to 7 chars, and
+     tile auto-sizing honors the name's natural width at every player count. */
+  flex: 0 0 auto;
+}
+
+.cards {
+  font-family: var(--font-mono);
+  font-size: var(--text-caption-board);
+  font-weight: 700;
+  letter-spacing: 0.1em;
+  color: color-mix(in oklab, var(--color-accent-drama) 85%, transparent);
+  padding: 2px 5px;
+  border-radius: 2px;
+  background: color-mix(in oklab, var(--color-charcoal-1) 70%, transparent);
+  box-shadow: inset 0 0 0 1px color-mix(in oklab, var(--color-accent-drama) 28%, transparent);
+  flex: 0 0 auto;
+}
+
+.turns {
+  font-family: var(--font-mono);
+  font-size: var(--text-caption-board);
+  font-weight: 700;
+  letter-spacing: 0.14em;
+  color: var(--color-cream-12);
+  padding: 3px 7px;
+  border-radius: 2px;
+  background: var(--color-accent-burned);
+  flex: 0 0 auto;
+}
+
+.activeTag {
+  position: absolute;
+  top: -10px;
+  right: 8px;
+  font-family: var(--font-mono);
+  font-size: calc(var(--text-caption-board) * 0.82);
+  font-weight: 800;
+  letter-spacing: 0.32em;
+  text-transform: uppercase;
+  color: var(--color-cream-12);
+  background: var(--color-accent-burned);
+  padding: 3px 7px 4px;
+  border-radius: 2px;
+  transform: rotate(-3deg);
+  box-shadow:
+    0 2px 6px color-mix(in oklab, var(--color-charcoal-1) 55%, transparent),
+    inset 0 1px 0 color-mix(in oklab, var(--color-cream-12) 22%, transparent);
+}
+
+/* ── Active state ── */
+.tile[data-active] {
+  background:
+    linear-gradient(
+      180deg,
+      color-mix(in oklab, var(--color-paper-face) 88%, transparent) 0%,
+      color-mix(in oklab, var(--color-paper-shadow) 92%, transparent) 100%
+    );
+  color: var(--color-charcoal-1);
+  box-shadow:
+    inset 0 1px 0 color-mix(in oklab, var(--color-cream-12) 50%, transparent),
+    inset 0 -1px 0 color-mix(in oklab, var(--color-ochre-6) 55%, transparent),
+    0 10px 22px color-mix(in oklab, var(--color-charcoal-1) 55%, transparent),
+    0 3px 6px color-mix(in oklab, var(--color-charcoal-1) 45%, transparent);
+}
+.tile[data-active]::before {
+  background: var(--color-accent-drama);
+  height: 3px;
+}
+.tile[data-active] .name {
+  color: var(--color-charcoal-1);
+}
+.tile[data-active] .cards {
+  color: var(--color-accent-burned);
+  background: color-mix(in oklab, var(--color-cream-12) 70%, transparent);
+  box-shadow: inset 0 0 0 1px color-mix(in oklab, var(--color-accent-burned) 45%, transparent);
+}
+
+/* ── Dead state — strikethrough, desaturated ── */
+.tile[data-dead] {
+  filter: grayscale(1) brightness(0.55);
+  opacity: 0.5;
+}
+.tile[data-dead] .name {
+  text-decoration: line-through;
+  text-decoration-thickness: 2px;
+  text-decoration-color: color-mix(in oklab, var(--color-accent-burned) 75%, transparent);
+}
+
+} /* @layer components */

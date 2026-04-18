@@ -3,6 +3,7 @@ import gsap from 'gsap'
 import { MOTION_DURATIONS } from '@client/shared/tokens/motion'
 import { useEventFeed } from './hooks/useEventFeed'
 import { usePlayerList } from './hooks/useSharedSelectors'
+import { setDramaActive } from './dramaState'
 import type { GameEvent } from '@shared/types'
 import type { BoardPlayer } from '@shared/protocol'
 import styles from './DramaOverlay.module.css'
@@ -89,10 +90,16 @@ export function DramaOverlay() {
   }, [events, players])
 
   function processQueue() {
-    if (animatingRef.current || queueRef.current.length === 0) return
+    if (animatingRef.current || queueRef.current.length === 0) {
+      if (!animatingRef.current && queueRef.current.length === 0) {
+        setDramaActive(false)
+      }
+      return
+    }
 
     const { config } = queueRef.current.shift()!
     animatingRef.current = true
+    setDramaActive(true)
 
     const overlay = overlayRef.current
     const text = textRef.current

@@ -8,7 +8,7 @@ import styles from './Lobby.module.css'
 
 const isDev = window.location.hostname === 'localhost' || window.location.hostname === '127.0.0.1'
 
-const DEV_PLAYERS = ['Whiskers', 'Mittens', 'Tuna', 'Pickles'] as const
+const DEV_PLAYERS = ['Whiskrs', 'Mittens', 'Tuna', 'Pickles'] as const
 
 interface Props {
   connectionStatus: ConnectionStatus

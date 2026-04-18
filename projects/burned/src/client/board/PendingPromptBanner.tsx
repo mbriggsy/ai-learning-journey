@@ -9,7 +9,6 @@ function getBannerText(prompt: PendingPromptView, players: readonly BoardPlayer[
     case 'defuse': return `${name} is reinserting the Burned file\u2026`
     case 'favor-response': return `${name} is handing over a card\u2026`
     case 'future-rearrange': return `${name} is rearranging the intel\u2026`
-    case 'steal-target': return `${name} is picking a mark\u2026`
     case 'name-card': return `${name} is calling the shot\u2026`
   }
 }

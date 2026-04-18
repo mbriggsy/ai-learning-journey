@@ -103,14 +103,6 @@ describe('Validation', () => {
     expect(result.ok).toBe(true)
   })
 
-  it('parses select-target action', () => {
-    const result = parseClientMessage(JSON.stringify({
-      type: 'action',
-      payload: { type: 'select-target', targetPlayerId: '550e8400-e29b-41d4-a716-446655440000', stateVersion: 6 },
-    }))
-    expect(result.ok).toBe(true)
-  })
-
   it('parses name-card action with valid card type', () => {
     const result = parseClientMessage(JSON.stringify({
       type: 'action',

@@ -40,7 +40,6 @@ function shallowEqual(a: unknown, b: unknown): boolean {
 
 let eventIdCounter = 0
 const MAX_ACCUMULATED_EVENTS = 20
-const EVENT_TTL_MS = 30_000
 
 class GameStore {
   private serverSnapshot: ViewState | null = null
@@ -168,7 +167,7 @@ class GameStore {
     }))
 
     this.accumulatedEvents = [
-      ...this.accumulatedEvents.filter(e => now - e.receivedAt < EVENT_TTL_MS),
+      ...this.accumulatedEvents,
       ...newEntries,
     ].slice(-MAX_ACCUMULATED_EVENTS)
   }
@@ -189,8 +188,11 @@ export const gameStore = new GameStore()
 
 // Expose store snapshot for E2E tests (zero production cost — only in test/development mode)
 if (typeof window !== 'undefined' && (import.meta.env.DEV || import.meta.env.MODE === 'test')) {
-  (window as unknown as Record<string, unknown>).__gameStoreSnapshot = () =>
-    JSON.parse(JSON.stringify(gameStore.getSnapshot()))
+  const w = window as unknown as Record<string, unknown>
+  w.__gameStoreSnapshot = () => JSON.parse(JSON.stringify(gameStore.getSnapshot()))
+  // Full store for dev-time injection (visual overlay tests, event replay).
+  // Guarded by DEV/test mode — tree-shaken from prod bundle.
+  w.__gameStore = gameStore
 }
 
 // --- Hooks ---

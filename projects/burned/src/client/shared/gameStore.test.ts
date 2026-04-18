@@ -76,7 +76,7 @@ describe('GameStore', () => {
 
     gameStore.handleMessage({
       type: 'joined',
-      payload: { playerId: 'p1', sessionToken: 'tok', color: '#fff', protocolVersion: 1 },
+      payload: { playerId: 'p1', sessionToken: 'tok', color: '#fff', protocolVersion: 2 },
     })
     expect(gameStore.getProtocolMismatch()).toBe(false)
   })

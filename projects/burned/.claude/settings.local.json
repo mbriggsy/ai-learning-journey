@@ -3,7 +3,9 @@
     "allow": [
       "mcp__plugin_compound-engineering_context7__resolve-library-id",
       "mcp__plugin_compound-engineering_context7__query-docs",
-      "Skill(commit-commands:commit)"
+      "Skill(commit-commands:commit)",
+      "Bash(mv \"/c/Users/brigg/.claude/projects/C--Users-brigg-ai-learning-journey-projects-burned/memory/project-burned-howto-turn-definition.md\" \"/c/Users/brigg/.claude/projects/C--Users-brigg-ai-learning-journey/memory/\")",
+      "Read(//c/Users/brigg/.claude/projects/C--Users-brigg-ai-learning-journey/memory/**)"
     ]
   }
 }

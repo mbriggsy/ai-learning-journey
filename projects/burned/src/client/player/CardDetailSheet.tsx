@@ -14,7 +14,7 @@ const PLAY_HINTS: Partial<Record<CardType, string>> = {
   'intel-briefing': 'Privately peek at the top 3 cards of the mission stack.',
   'falsify-intel': 'Peek at top 3 cards, then rearrange them however you want.',
   'burn-the-files': 'Randomly scrambles the entire mission stack.',
-  'back-channel': 'Draw from the bottom of the pile instead of the top. Triggers immediately.',
+  'back-channel': 'Ends your turn — draws from the bottom of the pile instead of the top.',
   'call-in-a-favor': 'Pick an operative — they must give you one card of their choice.',
   'intercepted': 'Counter-intel. Cancels any action card. Can be played on anyone\'s turn, any time.',
   'extraction': 'When you draw a Burned card, play this to survive. Reinsert the card secretly.',

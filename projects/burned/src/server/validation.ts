@@ -46,11 +46,6 @@ const FutureRearrangeAction = BaseAction.extend({
   order: z.array(z.string().uuid()).min(1).max(3),
 })
 
-const SelectTargetAction = BaseAction.extend({
-  type: z.literal('select-target'),
-  targetPlayerId: z.string().uuid(),
-})
-
 const NameCardAction = BaseAction.extend({
   type: z.literal('name-card'),
   cardType: CardTypeSchema,
@@ -63,7 +58,6 @@ const ClientGameActionSchema = z.discriminatedUnion('type', [
   DefusePlaceAction,
   FavorGiveAction,
   FutureRearrangeAction,
-  SelectTargetAction,
   NameCardAction,
 ])
 

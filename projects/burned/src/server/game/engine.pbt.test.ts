@@ -107,7 +107,7 @@ describe('PBT: Card Conservation', () => {
 describe('PBT: Projection Privacy', () => {
   test.prop([fc.integer({ min: 1, max: 100 })])('board projection never contains draw pile contents', (seed) => {
     const state = startGame(4, seed)
-    const projection = projectForBoard(state, 1000)
+    const projection = projectForBoard(state, 1000, new Set())
 
     // Board projection should NOT have drawPile array
     expect(projection).not.toHaveProperty('drawPile')
@@ -118,7 +118,7 @@ describe('PBT: Projection Privacy', () => {
 
   test.prop([fc.integer({ min: 1, max: 100 })])('player projection only shows own hand, not others', (seed) => {
     const state = startGame(4, seed)
-    const board = projectForBoard(state, 1000)
+    const board = projectForBoard(state, 1000, new Set())
     const p1Projection = projectForPlayer(state, 'p1', board)
     const p2Projection = projectForPlayer(state, 'p2', board)
 

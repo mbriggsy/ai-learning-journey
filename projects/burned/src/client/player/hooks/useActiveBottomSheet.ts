@@ -2,7 +2,6 @@ import type { BoardPlayer, PendingPromptView } from '@shared/protocol'
 import type { CardInstance } from '@shared/types'
 
 export type ActiveBottomSheet =
-  | { sheet: 'target-select-prompted'; eligiblePlayers: readonly BoardPlayer[] }
   | { sheet: 'defuse-placement'; maxPosition: number }
   | { sheet: 'future-peek'; cards: readonly CardInstance[]; canRearrange: boolean }
   | { sheet: 'favor-response'; requesterName: string; hand: readonly CardInstance[] }
@@ -39,11 +38,6 @@ export function deriveActiveBottomSheet(
           cards: futureCards ?? [],
           canRearrange: true,
         }
-
-      case 'steal-target': {
-        const eligible = players.filter(p => p.isAlive && p.id !== myPlayerId)
-        return { sheet: 'target-select-prompted', eligiblePlayers: eligible }
-      }
 
       case 'name-card': {
         const target = players.find(p => p.id === pendingPrompt.targetId)

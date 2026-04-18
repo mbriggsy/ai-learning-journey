@@ -173,7 +173,7 @@ export function SmartActionBox({
         className: `${styles.box} ${styles.comboPair}`,
         text: 'Steal a random card \u2192',
         interactive: true,
-        action: onConfirm,
+        action: onConfirmWithTarget,
       }
     }
 
@@ -183,7 +183,7 @@ export function SmartActionBox({
         className: `${styles.box} ${styles.comboTriple}`,
         text: 'Name & steal a specific card \u2192',
         interactive: true,
-        action: onConfirm,
+        action: onConfirmWithTarget,
       }
     }
 

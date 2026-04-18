@@ -8,8 +8,12 @@ import type { PlayingState, GameOverState, Player } from './game/types'
 
 // --- Projection Functions ---
 
-export function projectForBoard(state: PlayingState | GameOverState, now: number): BoardView {
-  const players = state.players.map(projectPlayer)
+export function projectForBoard(
+  state: PlayingState | GameOverState,
+  now: number,
+  connectedPlayerIds: ReadonlySet<string>,
+): BoardView {
+  const players = state.players.map(p => projectPlayer(p, connectedPlayerIds.has(p.id)))
 
   // Board view is PUBLIC — strip any card-identity fields from events that
   // would leak hand composition to unrelated viewers.
@@ -159,12 +163,13 @@ function stripPrivateEventFields(
 
 // --- Helpers ---
 
-function projectPlayer(player: Player): BoardPlayer {
+function projectPlayer(player: Player, isConnected: boolean): BoardPlayer {
   return {
     id: player.id,
     name: player.name,
     color: player.color,
     cardCount: player.hand.length,
     isAlive: player.isAlive,
+    isConnected,
   }
 }

@@ -19,7 +19,6 @@ const ALLOWED_ACTIONS: Record<SubPhase, readonly ActionType[]> = {
   'eliminated-check': [],
   'favor-pending': ['favor-give'],
   'future-rearrange-pending': ['future-rearrange'],
-  'steal-target-pending': ['select-target'],
   'name-card-pending': ['name-card'],
 }
 
@@ -139,7 +138,6 @@ export function dispatch(
     case 'defuse-place': return handleDefusePlace(playing, action, ctx)
     case 'favor-give': return handleFavorGive(playing, action, ctx)
     case 'future-rearrange': return handleFutureRearrange(playing, action, ctx)
-    case 'select-target': return handleSelectTarget(playing, action, ctx)
     case 'name-card': return handleNameCard(playing, action, ctx)
     default: return err(playing, `Unknown action type`, 'INVALID_ACTION')
   }
@@ -273,9 +271,9 @@ function handlePlayCard(
   if (validCards.length === 1) {
     return handleSingleCard(state, action, validCards[0]!, ctx)
   } else if (validCards.length === 2) {
-    return handleTwoOfAKind(state, action, validCards, ctx)
+    return handleCombo(state, action, validCards, 2, ctx)
   } else if (validCards.length === 3) {
-    return handleThreeOfAKind(state, action, validCards, ctx)
+    return handleCombo(state, action, validCards, 3, ctx)
   }
 
   return err(state, 'Invalid number of cards played', 'INVALID_COMBO')
@@ -346,7 +344,14 @@ function applyAttack(
   const nextPlayer = getNextAlivePlayer(state, state.currentTurn.currentPlayerId)
   if (!nextPlayer) return err(state, 'No next player', 'INVALID_ACTION')
 
-  const newTurns = state.currentTurn.turnsRemaining + 2
+  // Per rules §10.2: new_target_turns = victim's remaining turns AFTER the
+   // current one + 2. The current turn is consumed by the attack play itself
+   // (turn-ending without draw), so only the turns the attacker had not yet
+   // started travel to the target, then +2 for the base Attack effect.
+   //   Normal turn (turnsRemaining=1) → target gets 0 + 2 = 2
+   //   Turn 1 of 2 attacked (turnsRemaining=2) → target gets 1 + 2 = 3
+   //   Turn 2 of 2 attacked (turnsRemaining=1) → target gets 0 + 2 = 2
+  const newTurns = (state.currentTurn.turnsRemaining - 1) + 2
   const newState: PlayingState = {
     ...state,
     ...CLEAR_PENDING,
@@ -372,7 +377,14 @@ function applyTargetedAttack(
   if (!target) return err(state, 'Invalid target player', 'INVALID_TARGET')
   // Self-target allowed per rules §13.8 — pointless, but legal and funny.
 
-  const newTurns = state.currentTurn.turnsRemaining + 2
+  // Per rules §10.2: new_target_turns = victim's remaining turns AFTER the
+   // current one + 2. The current turn is consumed by the attack play itself
+   // (turn-ending without draw), so only the turns the attacker had not yet
+   // started travel to the target, then +2 for the base Attack effect.
+   //   Normal turn (turnsRemaining=1) → target gets 0 + 2 = 2
+   //   Turn 1 of 2 attacked (turnsRemaining=2) → target gets 1 + 2 = 3
+   //   Turn 2 of 2 attacked (turnsRemaining=1) → target gets 0 + 2 = 2
+  const newTurns = (state.currentTurn.turnsRemaining - 1) + 2
   const newState: PlayingState = {
     ...state,
     ...CLEAR_PENDING,
@@ -512,27 +524,36 @@ function applyFavor(
 
 // --- Combo Handlers ---
 
-function handleTwoOfAKind(
+function handleCombo(
   state: PlayingState,
   action: EngineAction & { type: 'play-card' },
   cards: CardInstance[],
+  comboSize: 2 | 3,
   _ctx: DispatchContext,
 ): DispatchResult {
-  if (!isValidCombo(cards, 2)) {
-    return err(state, 'Cards must match for Two of a Kind (Feral Cat substitutes for cat types only)', 'INVALID_COMBO')
+  if (!isValidCombo(cards, comboSize)) {
+    const label = comboSize === 2 ? 'Two of a Kind' : 'Three of a Kind'
+    return err(state, `Cards must match for ${label} (Feral Cat substitutes for cat types only)`, 'INVALID_COMBO')
   }
+
+  // Target must be picked BEFORE the combo is committed, so opponents who
+  // might Nope have full information (target name) during the nope window.
+  const { targetPlayerId } = action
+  if (!targetPlayerId) return err(state, 'Combo requires a target', 'INVALID_TARGET')
+  if (targetPlayerId === action.playerId) return err(state, 'Cannot target yourself', 'INVALID_TARGET')
+  const target = state.players.find(p => p.id === targetPlayerId && p.isAlive)
+  if (!target) return err(state, 'Invalid target player', 'INVALID_TARGET')
 
   let newState = removeCardsFromHand(state, action.playerId, cards.map(c => c.id))
   newState = addToDiscard(newState, cards)
 
   const events: GameEvent[] = [
-    { type: 'card-played', playerId: action.playerId, cardType: cards[0]!.type, comboSize: 2 },
+    { type: 'card-played', playerId: action.playerId, cardType: cards[0]!.type, comboSize },
   ]
 
-  // Open nope window
   const { window: nopeWindow, nextGen } = createNopeWindow(
     newState,
-    { type: 'play-card', cardIds: action.cardIds },
+    { type: 'play-card', cardIds: action.cardIds, targetPlayerId },
     action.playerId,
     state.players.filter(p => p.isAlive).length,
     _ctx,
@@ -540,42 +561,7 @@ function handleTwoOfAKind(
 
   const withNope: PlayingState = {
     ...newState,
-    pendingSteal: { stealerId: action.playerId, comboSize: 2 },
-    nopeWindow,
-    nextNopeGeneration: nextGen,
-    events: [...newState.events, ...events],
-  }
-  return ok(withNope)
-}
-
-function handleThreeOfAKind(
-  state: PlayingState,
-  action: EngineAction & { type: 'play-card' },
-  cards: CardInstance[],
-  _ctx: DispatchContext,
-): DispatchResult {
-  if (!isValidCombo(cards, 3)) {
-    return err(state, 'Cards must match for Three of a Kind (Feral Cat substitutes for cat types only)', 'INVALID_COMBO')
-  }
-
-  let newState = removeCardsFromHand(state, action.playerId, cards.map(c => c.id))
-  newState = addToDiscard(newState, cards)
-
-  const events: GameEvent[] = [
-    { type: 'card-played', playerId: action.playerId, cardType: cards[0]!.type, comboSize: 3 },
-  ]
-
-  const { window: nopeWindow, nextGen } = createNopeWindow(
-    newState,
-    { type: 'play-card', cardIds: action.cardIds },
-    action.playerId,
-    state.players.filter(p => p.isAlive).length,
-    _ctx,
-  )
-
-  const withNope: PlayingState = {
-    ...newState,
-    pendingSteal: { stealerId: action.playerId, comboSize: 3 },
+    pendingSteal: { stealerId: action.playerId, targetPlayerId, comboSize },
     nopeWindow,
     nextNopeGeneration: nextGen,
     events: [...newState.events, ...events],
@@ -824,39 +810,6 @@ function handleFutureRearrange(
   return ok(newState)
 }
 
-// --- Select Target (Combo Steal) ---
-
-function handleSelectTarget(
-  state: PlayingState,
-  action: EngineAction & { type: 'select-target' },
-  ctx: DispatchContext,
-): DispatchResult {
-  const pending = state.pendingSteal
-  if (!pending) return err(state, 'No pending steal', 'INVALID_ACTION')
-
-  const { targetPlayerId } = action
-  if (targetPlayerId === pending.stealerId) return err(state, 'Cannot target yourself', 'INVALID_TARGET')
-
-  const target = state.players.find(p => p.id === targetPlayerId && p.isAlive)
-  if (!target) return err(state, 'Invalid target player', 'INVALID_TARGET')
-
-  if (pending.comboSize === 2) {
-    // Two of a Kind: steal random card from target
-    return performRandomSteal(state, pending.stealerId, targetPlayerId, ctx)
-  }
-
-  // Three of a Kind: enter name-card-pending
-  const newState: PlayingState = {
-    ...state,
-    subPhase: 'name-card-pending',
-    pendingSteal: undefined,
-    pendingNameCard: { stealerId: pending.stealerId, targetId: targetPlayerId },
-    pendingPrompt: { type: 'name-card', playerId: pending.stealerId, targetId: targetPlayerId },
-    events: state.events,
-  }
-  return ok(newState)
-}
-
 // --- Name Card (Three of a Kind) ---
 
 function handleNameCard(
@@ -994,14 +947,22 @@ function handleNopeWindowExpired(
   const newState: PlayingState = { ...state, nopeWindow: null, events: [...state.events, ...events] }
 
   if (pendingAction.type === 'play-card') {
-    // Combo path — proceed to steal target selection
+    // Combo path — target was bundled with the play-card action, so we can
+    // resolve the steal (2-card) or open the name-card prompt (3-card)
+    // immediately without a separate target-select step.
     if (state.pendingSteal) {
-      const stealState: PlayingState = {
-        ...newState,
-        subPhase: 'steal-target-pending',
-        pendingPrompt: { type: 'steal-target', playerId: state.pendingSteal.stealerId },
+      const { stealerId, targetPlayerId, comboSize } = state.pendingSteal
+      if (comboSize === 2) {
+        return performRandomSteal(newState, stealerId, targetPlayerId, ctx)
       }
-      return ok(stealState)
+      const nameCardState: PlayingState = {
+        ...newState,
+        subPhase: 'name-card-pending',
+        pendingSteal: undefined,
+        pendingNameCard: { stealerId, targetId: targetPlayerId },
+        pendingPrompt: { type: 'name-card', playerId: stealerId, targetId: targetPlayerId },
+      }
+      return ok(nameCardState)
     }
 
     // Single card — use originalCardType stored on the NopeWindow (not discard tail, which may be a Nope card)
@@ -1073,9 +1034,8 @@ function handlePromptTimeout(
       return ok(newState)
     }
 
-    case 'steal-target-pending':
     case 'name-card-pending': {
-      // Cancel steal — player didn't pick target/name
+      // Cancel steal — player didn't name a card before the prompt timed out.
       const newState: PlayingState = {
         ...state,
         ...CLEAR_PENDING,

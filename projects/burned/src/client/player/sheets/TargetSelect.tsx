@@ -6,10 +6,11 @@ import styles from './sheets.module.css'
 interface TargetSelectProps {
   readonly eligiblePlayers: readonly BoardPlayer[]
   readonly onSelectTarget: (playerId: string) => void
+  readonly onCancel?: () => void
   readonly title?: string
 }
 
-export function TargetSelect({ eligiblePlayers, onSelectTarget, title }: TargetSelectProps) {
+export function TargetSelect({ eligiblePlayers, onSelectTarget, onCancel, title }: TargetSelectProps) {
   const [submitted, setSubmitted] = useState(false)
   return (
     <div>
@@ -30,6 +31,15 @@ export function TargetSelect({ eligiblePlayers, onSelectTarget, title }: TargetS
           </button>
         ))}
       </div>
+      {onCancel && (
+        <button
+          className={styles.cancelBtn}
+          onClick={() => { if (!submitted) onCancel() }}
+          disabled={submitted}
+        >
+          Cancel
+        </button>
+      )}
     </div>
   )
 }

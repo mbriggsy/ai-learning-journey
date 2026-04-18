@@ -16,11 +16,12 @@ describe('sortHand', () => {
     expect(sortHand(hand)).toEqual(hand)
   })
 
-  it('puts operatives before extraction', () => {
+  it('pins extraction rightmost, operatives leftmost', () => {
     const hand = [card('go-dark', 'a'), card('extraction', 'b'), card('dash-barlowe', 'c')]
     const sorted = sortHand(hand)
     expect(sorted[0]!.type).toBe('dash-barlowe')
-    expect(sorted[1]!.type).toBe('extraction')
+    // Extraction is the panic-reach rightmost pin; Go Dark slots between.
+    expect(sorted[sorted.length - 1]!.type).toBe('extraction')
   })
 
   it('groups operatives by type', () => {
@@ -64,7 +65,7 @@ describe('sortHand', () => {
     expect(sorted.map(c => c.id)).toEqual(['a', 'm', 'z'])
   })
 
-  it('full hand sorts correctly: operatives → wild → extraction → actions', () => {
+  it('full hand sorts: operatives → wild → actions → intercepted → extraction', () => {
     const hand = [
       card('intercepted', 'i1'),
       card('dash-barlowe', 'd1'),
@@ -75,12 +76,16 @@ describe('sortHand', () => {
       card('dash-barlowe', 'd2'),
     ]
     const sorted = sortHand(hand)
+    // Extraction pins rightmost (panic lifeline), Intercepted pins second-
+    // rightmost (reactive counter), both ahead of generic action cards for
+    // thumb reach.
     expect(sorted.map(c => c.type)).toEqual([
       'dash-barlowe', 'dash-barlowe',
       'vera-khan',
       'agent-x',
+      'go-dark',
+      'intercepted',
       'extraction',
-      'go-dark', 'intercepted',
     ])
   })
 })

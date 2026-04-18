@@ -878,8 +878,18 @@ function handleNameCard(
     newState = addCardsToHand(newState, pending.stealerId, [namedCard])
   }
 
+  // cardType here is what the stealer NAMED — always populated on the
+  // triples path (found or whiff). Stealer and target both know: the
+  // stealer obviously named it, and the target learns what was guessed.
+  // Public/other-player views strip the field at projection time.
   const events: GameEvent[] = [
-    { type: 'combo-steal', stealerId: pending.stealerId, targetId: pending.targetId, found },
+    {
+      type: 'combo-steal',
+      stealerId: pending.stealerId,
+      targetId: pending.targetId,
+      found,
+      cardType: action.cardType,
+    },
   ]
 
   const finalState: PlayingState = {
@@ -1237,7 +1247,7 @@ function performRandomSteal(
   newState = addCardsToHand(newState, stealerId, [stolenCard])
 
   const events: GameEvent[] = [
-    { type: 'combo-steal', stealerId, targetId, found: true },
+    { type: 'combo-steal', stealerId, targetId, found: true, cardType: stolenCard.type },
   ]
 
   const finalState: PlayingState = {

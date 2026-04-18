@@ -44,6 +44,6 @@ export type GameEvent =
   | { type: 'future-peeked'; playerId: string }
   | { type: 'future-rearranged'; playerId: string }
   | { type: 'deck-shuffled'; playerId: string }
-  | { type: 'combo-steal'; stealerId: string; targetId: string; found: boolean }
+  | { type: 'combo-steal'; stealerId: string; targetId: string; found: boolean; cardType?: CardType }
   | { type: 'turn-started'; playerId: string; turnsRemaining: number }
   | { type: 'game-over'; winnerId: string }

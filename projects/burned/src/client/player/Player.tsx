@@ -16,6 +16,7 @@ import { JoinScreen } from './JoinScreen'
 import { Hand } from './Hand'
 import { StagingArea } from './StagingArea'
 import { ErrorToast } from './ErrorToast'
+import { PlayerAlert } from './PlayerAlert'
 import { ConnectionOverlay } from './ConnectionOverlay'
 import { EliminatedView } from './EliminatedView'
 import { TitleBar } from './TitleBar'
@@ -135,6 +136,7 @@ export function Player() {
         urlName={urlName}
       />
       <ErrorToast />
+      <PlayerAlert />
       <ConnectionOverlay status={connectionStatus} />
       <Suspense><DiagOverlay /></Suspense>
     </>

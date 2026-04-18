@@ -11,6 +11,10 @@ import type { PlayingState, GameOverState, Player } from './game/types'
 export function projectForBoard(state: PlayingState | GameOverState, now: number): BoardView {
   const players = state.players.map(projectPlayer)
 
+  // Board view is PUBLIC — strip any card-identity fields from events that
+  // would leak hand composition to unrelated viewers.
+  const boardEvents = stripPrivateEventFields(state.events, null)
+
   if (state.phase === 'game_over') {
     const view: GameOverBoardView = {
       phase: 'game_over',
@@ -19,7 +23,7 @@ export function projectForBoard(state: PlayingState | GameOverState, now: number
       discardPile: state.discardPile,
       winnerId: state.winnerId,
       eliminationOrder: state.eliminationOrder,
-      events: [...state.events] as GameEvent[],
+      events: boardEvents,
       stateVersion: state.stateVersion,
     }
     return view
@@ -45,7 +49,7 @@ export function projectForBoard(state: PlayingState | GameOverState, now: number
         }
       : null,
     pendingPrompt: stripPrivatePromptFields(state.pendingPrompt),
-    events: [...state.events] as GameEvent[],
+    events: boardEvents,
     stateVersion: state.stateVersion,
   }
   return view
@@ -58,6 +62,11 @@ export function projectForPlayer(
 ): PlayerView {
   const player = state.players.find(p => p.id === playerId)
 
+  // Player projection re-derives events from raw state so this viewer gets
+  // the card-identity fields reserved for combo-steal principals (stealer /
+  // target). The board view already stripped those fields publicly.
+  const events = stripPrivateEventFields(state.events, playerId)
+
   if (board.phase === 'game_over') {
     const b = board as GameOverBoardView
     const view: GameOverPlayerView = {
@@ -67,7 +76,7 @@ export function projectForPlayer(
       discardPile: [],
       winnerId: b.winnerId,
       eliminationOrder: b.eliminationOrder,
-      events: b.events,
+      events,
       stateVersion: b.stateVersion,
       myPlayerId: playerId,
       myHand: player?.hand ?? [],
@@ -85,7 +94,7 @@ export function projectForPlayer(
     currentTurn: b.currentTurn,
     nopeWindow: b.nopeWindow,
     pendingPrompt: b.pendingPrompt,
-    events: b.events,
+    events,
     stateVersion: b.stateVersion,
     myPlayerId: playerId,
     myHand: player?.hand ?? [],
@@ -113,6 +122,39 @@ function stripPrivatePromptFields(prompt: import('@shared/types').PendingPrompt 
     return { type: prompt.type, playerId: prompt.playerId, cardIds: [] }
   }
   return prompt
+}
+
+/**
+ * Remove card-identity fields from events that would leak hand composition
+ * to a viewer who wasn't a party to the action. `viewerId === null` means
+ * the public board view, which never sees these fields.
+ *
+ * For now this only filters `combo-steal.cardType` — stealer and target
+ * legitimately know which card moved (or which card was named on a whiff),
+ * everyone else must not. Pattern scales to future event-level private
+ * fields without changing callers.
+ *
+ * NOTE: This is an INTENTIONAL divergence from canonical Exploding Kittens
+ * rules, where the triple-steal card-naming is public. BURNED keeps it
+ * private to preserve the spy-agency fiction — intercepted transmissions
+ * stay intercepted. Do not "fix" this to leak cardType publicly without
+ * a product decision first. See docs/rules/RULES-REFERENCE.md.
+ */
+function stripPrivateEventFields(
+  events: readonly GameEvent[],
+  viewerId: string | null,
+): GameEvent[] {
+  return events.map(event => {
+    if (event.type === 'combo-steal' && event.cardType !== undefined) {
+      const allowed = viewerId !== null &&
+        (viewerId === event.stealerId || viewerId === event.targetId)
+      if (!allowed) {
+        const { cardType: _strip, ...rest } = event
+        return rest
+      }
+    }
+    return event
+  })
 }
 
 // --- Helpers ---

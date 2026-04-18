@@ -1,0 +1,46 @@
+/* PlayerAlert.module.css
+   Phone-side alert toast — fires when something happens TO the player
+   (combo-steal, favor-given, etc.). Matches ErrorToast's positioning
+   contract (absolute, top, respects safe-area insets) so both can share
+   the top of the phone without overlapping — ErrorToast auto-dismisses
+   faster (2s vs 2.8s) and real game-event alerts are rare enough that
+   simultaneous firing isn't a practical concern.
+
+   Urgent tone (card stolen): burned-red edge, stronger CRT-style
+   treatment. Info tone (card given / tribute paid): ochre edge, softer.
+*/
+
+@layer components {
+
+.alert {
+  position: absolute;
+  top: max(var(--space-4), var(--inset-top));
+  left: max(var(--space-4), var(--inset-left));
+  right: max(var(--space-4), var(--inset-right));
+  padding: var(--space-3) var(--space-4);
+  background: color-mix(in oklab, var(--color-charcoal-1) 92%, var(--color-cordovan-4) 20%);
+  color: var(--color-cream-12);
+  font-family: var(--font-mono);
+  font-size: var(--text-body);
+  font-weight: 600;
+  letter-spacing: 0.04em;
+  border: 1px solid color-mix(in oklab, var(--color-accent-burned) 55%, transparent);
+  border-left-width: 4px;
+  border-left-color: var(--color-accent-burned);
+  border-radius: var(--radius-md);
+  box-shadow:
+    0 8px 24px color-mix(in oklab, var(--color-charcoal-1) 65%, transparent),
+    inset 0 1px 0 color-mix(in oklab, var(--color-cream-12) 18%, transparent);
+  z-index: var(--z-toast);
+  text-align: left;
+  line-height: 1.3;
+}
+
+/* Info tone — ochre / less aggressive */
+.alert[data-tone='info'] {
+  background: color-mix(in oklab, var(--color-charcoal-1) 90%, var(--color-ochre-7) 12%);
+  border-color: color-mix(in oklab, var(--color-accent-drama) 55%, transparent);
+  border-left-color: var(--color-accent-drama);
+}
+
+} /* @layer components */

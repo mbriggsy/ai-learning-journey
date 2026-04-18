@@ -802,6 +802,35 @@ Exploding Kitten on top, rest in random order).
 > In digital, the entire discard pile is browsable, so order within it doesn't
 > matter for gameplay -- just for display.
 
+### 13.8 Triple-Steal Card Naming Visibility (BURNED House Rule)
+
+**Canonical EK:** When a player plays three matching cards to steal a named card
+(rules §7, triple combo), the naming is **public theater** — the stealer says
+the card type aloud, everyone at the table hears it, strategic information
+propagates whether the steal hits or misses.
+
+**BURNED:** The naming is **private** to the stealer and the target only. The
+public board COMMS feed shows only:
+- Hit: `Johnny pickpockets Vera.` (no card type)
+- Miss: `Johnny tried — nothing there!` (no card type)
+
+The two parties see the specific card on their phones via `PlayerAlert`:
+- Stealer hit: `You lifted Dash Barlowe from Vera.`
+- Stealer miss: `Whiffed — Vera had no Dash Barlowe.`
+- Target hit: `Johnny took Dash Barlowe from you.`
+- Target named-miss: `Johnny's infiltration failed — no Dash Barlowe.`
+
+**Rationale:** Preserves the spy-agency fiction. Intercepted transmissions stay
+intercepted; strategic card-tracking from bluff attempts belongs in the two
+parties' private intel, not the room's shared awareness.
+
+**Implementation anchor:** `src/server/projection.ts` → `stripPrivateEventFields`
+filters `combo-steal.cardType` from non-party viewers. Load-bearing comment
+above that function tags this as intentional.
+
+**Revisit trigger:** If playtest data shows the game feels flat without the
+public guessing drama, reconsider. Until then, locked.
+
 ---
 
 ## Appendix A: Quick Reference Card Table

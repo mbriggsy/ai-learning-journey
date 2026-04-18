@@ -28,7 +28,10 @@ export const DrawPile = memo(function DrawPile({ count }: DrawPileProps) {
           />
         ))}
         {count > 0 && (
-          <div className={styles.topCard} />
+          <div className={styles.topCard}>
+            <span className={styles.topSecretLabel}>TOP SECRET</span>
+            <span className={styles.fileNumber}>FILE-47B</span>
+          </div>
         )}
       </div>
       <span className={styles.countBadge}>{count}</span>

@@ -15,7 +15,10 @@ export const DiscardFan = memo(function DiscardFan({ topCard }: DiscardFanProps)
   if (!topCard) {
     return (
       <div className={styles.fan}>
-        <div className={styles.empty}>-</div>
+        <div className={styles.empty}>
+          <span className={styles.emptyStamp}>EMPTY</span>
+          <span className={styles.emptyLabel}>NO PLAY YET</span>
+        </div>
       </div>
     )
   }

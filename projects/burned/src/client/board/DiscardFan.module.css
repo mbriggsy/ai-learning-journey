@@ -31,12 +31,47 @@
   opacity: 0.7;
 }
 
+/* Empty discard slot — dashed manila-folder silhouette with faint EMPTY stamp.
+   Signals "nothing played yet" in the briefing-room vocabulary instead of a
+   bare em-dash. */
 .empty {
+  position: relative;
+  width: var(--size-discard-card-width);
+  height: calc(var(--size-discard-card-width) * 7 / 5);
+  border: 2px dashed color-mix(in oklab, var(--color-ochre-6) 35%, transparent);
+  border-radius: var(--radius-card);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.emptyLabel {
+  position: relative;
+  z-index: var(--z-raised);
   font-family: var(--font-mono);
-  font-size: var(--text-display);
-  color: var(--color-fg-disabled);
-  /* Deepening: was color-mix(... 35%, transparent) on ochre-9 — failed WCAG 4.5:1
-     (~1.8:1). Opaque semantic token passes. */
+  font-size: clamp(8px, 0.55vw, 11px);
+  font-weight: 700;
+  letter-spacing: 0.3em;
+  color: var(--color-ochre-5);
+  text-transform: uppercase;
+  pointer-events: none;
+  user-select: none;
+}
+
+.emptyStamp {
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  transform: translate(-50%, -50%) rotate(-8deg);
+  font-family: var(--font-display);
+  font-size: clamp(18px, 1.4vw, 32px);
+  font-weight: 800;
+  letter-spacing: 0.14em;
+  color: var(--color-accent-burned);
+  opacity: 0.15;
+  pointer-events: none;
+  user-select: none;
+  text-transform: uppercase;
 }
 
 } /* @layer components */

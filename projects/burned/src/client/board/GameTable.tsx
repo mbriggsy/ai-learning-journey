@@ -36,8 +36,16 @@ export function GameTable() {
         Case #47-B
       </div>
 
-      {/* Mahogany wood edge inlay — briefing-table border */}
-      <div className={styles.woodFrame} aria-hidden="true" />
+      {/* Mahogany wood edge inlay — briefing-table border. Four sub-divs so
+          each edge gets grain in the correct direction (horizontal on top/
+          bottom, vertical on left/right). The overlaid bevel shadow sells
+          the raised-frame illusion. */}
+      <div className={styles.woodFrame} aria-hidden="true">
+        <div className={styles.woodTop} />
+        <div className={styles.woodBottom} />
+        <div className={styles.woodLeft} />
+        <div className={styles.woodRight} />
+      </div>
 
       {/* Left ambient case banner — Pendleton Agency mission chrome */}
       <aside className={styles.caseBanner} aria-hidden="true">
@@ -62,12 +70,18 @@ export function GameTable() {
       <div className={styles.center}>
         <div className={styles.pileSection}>
           <DrawPile count={drawPileCount} />
-          <span className={styles.pileLabel}>Draw</span>
+          <div className={styles.pileLabelGroup}>
+            <span className={styles.pileLabel}>Draw</span>
+            <span className={styles.pileCaption}>Remaining · In Field</span>
+          </div>
         </div>
 
         <div className={styles.pileSection}>
           <DiscardFan topCard={discardTop} />
-          <span className={styles.pileLabel}>Discard</span>
+          <div className={styles.pileLabelGroup}>
+            <span className={styles.pileLabel}>Discard</span>
+            <span className={styles.pileCaption}>Last Played</span>
+          </div>
         </div>
       </div>
 

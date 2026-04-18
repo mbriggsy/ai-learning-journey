@@ -103,26 +103,78 @@
 }
 
 /* ─── Mahogany wood frame — briefing-table edge inlay ───
-   Real wood grain tile as border-image, wrapped around the full table. This is
-   the Archer "Mother's office" vocabulary — everything happens on a piece of
-   1947 furniture, not a felt plain. */
+   Four edge strips so grain flows correctly per side: horizontal on top and
+   bottom, vertical on left and right. This is the Archer "Mother's office"
+   vocabulary — everything happens on a piece of 1947 furniture. */
 .woodFrame {
   position: absolute;
   inset: 0;
   pointer-events: none;
   z-index: var(--z-base);
-  border-style: solid;
-  border-width: var(--size-wood-frame-thickness);
-  border-image-source: url('/assets/arena/mahogany.png');
-  border-image-slice: 128;  /* no fill — interior of the box stays transparent */
-  border-image-repeat: repeat;
-  border-image-width: var(--size-wood-frame-thickness);
-  /* Inner bevel + outer depth — a second ring of dark shadow inside the wood
-     edge sells the raised-frame illusion. */
+  /* Inner bevel + outer depth — sells the raised-frame illusion. The shadow
+     rides on the container so it reads continuously across the four edges. */
   box-shadow:
-    inset 0 0 0 calc(var(--size-wood-frame-thickness) + 1px) transparent, /* spacer */
+    inset 0 0 0 calc(var(--size-wood-frame-thickness) + 1px) transparent,
     inset 0 0 24px color-mix(in oklab, var(--color-charcoal-1) 55%, transparent),
     inset 0 2px 0 color-mix(in oklab, var(--color-ochre-10) 22%, transparent);
+}
+
+.woodTop,
+.woodBottom,
+.woodLeft,
+.woodRight {
+  position: absolute;
+  background-size: auto 100%;
+  background-repeat: repeat-x;
+}
+
+.woodTop,
+.woodBottom {
+  /* Imagen's horizontal tile came back noticeably brighter/oranger than the
+     vertical plate. Dark-down + slightly desaturate to unify the two so the
+     frame reads as one continuous piece of mahogany, not two woods joined. */
+  filter: brightness(0.78) saturate(0.88) hue-rotate(-4deg);
+}
+
+.woodTop {
+  top: 0;
+  left: 0;
+  right: 0;
+  height: var(--size-wood-frame-thickness);
+  background-image: url('/assets/arena/mahogany-horizontal.png');
+}
+
+.woodBottom {
+  bottom: 0;
+  left: 0;
+  right: 0;
+  height: var(--size-wood-frame-thickness);
+  background-image: url('/assets/arena/mahogany-horizontal.png');
+  /* Mirror vertically so the light from the tile's highlight lands on the
+     inner edge (toward the table center) on both top and bottom. */
+  transform: scaleY(-1);
+}
+
+.woodLeft {
+  top: 0;
+  bottom: 0;
+  left: 0;
+  width: var(--size-wood-frame-thickness);
+  background-image: url('/assets/arena/mahogany-vertical.png');
+  background-size: 100% auto;
+  background-repeat: repeat-y;
+}
+
+.woodRight {
+  top: 0;
+  bottom: 0;
+  right: 0;
+  width: var(--size-wood-frame-thickness);
+  background-image: url('/assets/arena/mahogany-vertical.png');
+  background-size: 100% auto;
+  background-repeat: repeat-y;
+  /* Mirror horizontally so highlight is on the inner edge on both sides. */
+  transform: scaleX(-1);
 }
 
 /* ─── Venetian-blind shadow rake — left side ───
@@ -145,12 +197,12 @@
       4deg, /* near-horizontal with a tiny downward tilt — afternoon sun angle */
       transparent 0,
       transparent 28px,
-      color-mix(in oklab, var(--color-ochre-11) 22%, transparent) 28px,
-      color-mix(in oklab, var(--color-ochre-11) 22%, transparent) 32px,
+      color-mix(in oklab, var(--color-ochre-11) 38%, transparent) 28px,
+      color-mix(in oklab, var(--color-ochre-11) 38%, transparent) 32px,
       transparent 32px,
       transparent 48px,
-      color-mix(in oklab, var(--color-charcoal-1) 48%, transparent) 48px,
-      color-mix(in oklab, var(--color-charcoal-1) 48%, transparent) 60px,
+      color-mix(in oklab, var(--color-charcoal-1) 62%, transparent) 48px,
+      color-mix(in oklab, var(--color-charcoal-1) 62%, transparent) 60px,
       transparent 60px,
       transparent 72px
     );
@@ -389,6 +441,13 @@
   gap: var(--space-2);
 }
 
+.pileLabelGroup {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 2px;
+}
+
 .pileLabel {
   font-family: var(--font-mono);
   font-size: var(--text-caption-board);
@@ -399,6 +458,17 @@
      new blotter. Now tracks --color-ochre-4 mahogany for classified-dossier
      readability. */
   color: color-mix(in oklab, var(--color-ochre-3) 85%, var(--color-charcoal-1));
+}
+
+/* Second-line caption — REMAINING · IN FIELD / LAST PLAYED. Sits below the
+   primary pile label as classified-form filing metadata. */
+.pileCaption {
+  font-family: var(--font-mono);
+  font-size: clamp(9px, 0.52vw, 11px);
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: 0.28em;
+  color: color-mix(in oklab, var(--color-ochre-4) 60%, transparent);
 }
 
 /* ─── Left-side ambient CASE BANNER ─────────────────────────────────

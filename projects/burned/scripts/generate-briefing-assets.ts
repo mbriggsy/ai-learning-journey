@@ -1,6 +1,7 @@
 /**
  * Briefing-Room asset generation (Phase D).
- * Run: set -a && source .env && set +a && npx tsx scripts/generate-briefing-assets.ts
+ * Run all:   set -a && source .env && set +a && npx tsx scripts/generate-briefing-assets.ts
+ * Run some:  ... scripts/generate-briefing-assets.ts <substring>   (matches target name)
  */
 import { GoogleGenAI, PersonGeneration } from '@google/genai'
 import { writeFile, mkdir } from 'node:fs/promises'
@@ -85,6 +86,78 @@ const TARGETS: readonly Target[] = [
       'no borders no text no seams, edge-to-edge tile, photorealistic',
   },
   {
+    name: 'dossier-janet-portrait-v1',
+    aspectRatio: '1:1',
+    personGeneration: PersonGeneration.ALLOW_ADULT,
+    prompt:
+      STYLE_BASE +
+      'operative personnel file portrait of an ice-cold female agency director in her early 50s, ' +
+      'chest-up shoulders and head composition tightly cropped like a passport photo, ' +
+      'silver-grey hair swept up in an elegant 1947 chignon, piercing ice-blue eyes, ' +
+      'thin ruby-red lipstick tight close-mouthed expression, arched brows, strand of pearls around the neck, ' +
+      'wearing a tailored charcoal designer blazer over cream silk blouse, holding a crystal bourbon glass, ' +
+      'terrifyingly composed Mallory-Archer energy, imperious posture, ' +
+      'plain teal-green flat background no texture no shadow no border, ' +
+      'bold black outline around entire figure, character isolated cleanly against solid background, ' +
+      'no text no letters no numbers no typography no watermark no logo',
+  },
+  {
+    name: 'dossier-neal-portrait-v1',
+    aspectRatio: '1:1',
+    personGeneration: PersonGeneration.ALLOW_ADULT,
+    prompt:
+      STYLE_BASE +
+      'operative personnel file portrait of an anxious male compliance auditor in his early 40s, ' +
+      'chest-up shoulders and head composition tightly cropped like a passport photo, ' +
+      'sandy-brown thinning hair neatly parted, tortoiseshell square spectacles, nervous apologetic expression, ' +
+      'slightly flushed cheeks faint sweat sheen, tight worried mouth, ' +
+      'wearing a beige cardigan over a white shirt and narrow olive tie, clutching a black three-ring binder to his chest, ' +
+      '1947 mid-century-bureaucrat styling, ' +
+      'plain teal-green flat background no texture no shadow no border, ' +
+      'bold black outline around entire figure, character isolated cleanly against solid background, ' +
+      'no text no letters no numbers no typography no watermark no logo',
+  },
+  {
+    name: 'dossier-agent-x-portrait-v1',
+    aspectRatio: '1:1',
+    personGeneration: PersonGeneration.ALLOW_ADULT,
+    prompt:
+      STYLE_BASE +
+      'operative personnel file portrait of a mysterious rival-agency operative in disguise, ' +
+      'chest-up shoulders and head composition tightly cropped like a passport photo, ' +
+      'obviously-fake black beard and moustache, oversized dark horn-rim glasses, fedora tilted low, ' +
+      'smirking knowing expression, raised eyebrow visible over the glasses, ' +
+      'wearing a trench coat collar turned up over a grey pinstripe suit and wide tie, ' +
+      '1947 noir rival-spy styling, cartoonishly over-the-top disguise energy, ' +
+      'plain teal-green flat background no texture no shadow no border, ' +
+      'bold black outline around entire figure, character isolated cleanly against solid background, ' +
+      'no text no letters no numbers no typography no watermark no logo',
+  },
+  {
+    name: 'mahogany-horizontal-v1',
+    aspectRatio: '16:9',
+    prompt:
+      'photorealistic horizontal mahogany wood plank surface, warm reddish-brown color, ' +
+      'visible horizontal wood grain pattern running the entire length left to right, ' +
+      'fine dark grain lines and tiny knot details, aged polished mid-century furniture finish, ' +
+      'warm tungsten light catches the semi-gloss surface, flat top-down view, ' +
+      'seamless tileable wood texture filling the entire frame edge to edge, ' +
+      'no borders no text, horizontal grain orientation',
+  },
+  {
+    name: 'mahogany-vertical-v1',
+    aspectRatio: '9:16',
+    prompt:
+      'seamlessly tileable mahogany wood plank for a vertical frame edge, ' +
+      'rich deep reddish-brown mahogany color, ' +
+      'strictly VERTICAL wood grain flowing top to bottom across the entire frame, ' +
+      'ALL grain lines parallel and aligned with the long vertical axis, fine dark grain and subtle knots, ' +
+      'warm tungsten office lighting, aged polished mid-century office paneling standing upright, ' +
+      'semi-gloss finish catches warm light, ' +
+      'edge-to-edge wood texture fills 100 percent of frame, no borders no text no seams, ' +
+      'photorealistic flat view, grain axis is vertical only',
+  },
+  {
     name: 'blotter-cream-paper-v1',
     aspectRatio: '4:3',
     prompt:
@@ -104,6 +177,21 @@ const TARGETS: readonly Target[] = [
       'faint ink-smudge highlights, warm tungsten ambient lighting, ' +
       'clean blank surface no text no printing no handwriting no logo, ' +
       'photorealistic stationery shot, the cream paper fills 100 percent of the image',
+  },
+  {
+    name: 'operative-silhouette-redacted-v1',
+    aspectRatio: '1:1',
+    personGeneration: PersonGeneration.ALLOW_ADULT,
+    prompt:
+      STYLE_BASE +
+      'anonymous classified operative dossier photo, head and shoulders silhouette composition tightly cropped like a passport photo, ' +
+      'generic androgynous figure in a mid-century suit and narrow tie, ' +
+      'THICK BLACK HORIZONTAL CENSOR BAR completely covering the entire eye region from temple to temple (signature Archer redacted informant look), ' +
+      'rest of face visible but nondescript no identifying features, ' +
+      'charcoal-grey suit jacket, neutral skin tones, dark hair, ' +
+      'plain warm cream background no texture no gradient no shadow no border, ' +
+      'bold thick black outline around entire figure, character isolated cleanly against solid cream background, ' +
+      'no text no letters no numbers no typography no watermark no logo',
   },
   {
     name: 'classified-stamp-red-v1',
@@ -148,9 +236,19 @@ async function main(): Promise<void> {
   await mkdir(OUTPUT_DIR, { recursive: true })
   const ai = new GoogleGenAI({ apiKey })
 
+  const filter = process.argv[2]
+  const selected = filter
+    ? TARGETS.filter((t) => t.name.includes(filter))
+    : TARGETS
+  if (filter && selected.length === 0) {
+    console.error(`No targets match "${filter}". Available: ${TARGETS.map(t => t.name).join(', ')}`)
+    process.exit(1)
+  }
+  if (filter) console.log(`Filter "${filter}" → ${selected.length} target(s)`)
+
   // Parallel generation — Imagen API is fine with concurrent calls.
-  await Promise.all(TARGETS.map((t) => generate(ai, t)))
-  console.log(`\nDone. ${TARGETS.length} images in ${OUTPUT_DIR}`)
+  await Promise.all(selected.map((t) => generate(ai, t)))
+  console.log(`\nDone. ${selected.length} image(s) in ${OUTPUT_DIR}`)
 }
 
 main().catch((err) => {

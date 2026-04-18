@@ -16,6 +16,14 @@ function fileNumberFor(id: string): string {
   return `${num}-${letter}`
 }
 
+/** Every player dossier shows a generic redacted-operative silhouette
+ *  (censor bar over the eyes, Archer-informant style). The image is tinted
+ *  per-player-color via CSS background-blend-mode, so each dossier reads
+ *  as the SAME classified asset rendered through each player's color/shape
+ *  identity. Named-character portraits (Dash/Vera/Otto) are reserved for
+ *  in-world card art and narrative cutaways — never player faces. */
+const OPERATIVE_SILHOUETTE = '/assets/arena/operative-silhouette.png'
+
 interface PlayerRingProps {
   readonly players: readonly BoardPlayer[]
   readonly currentPlayerId: string | null
@@ -129,9 +137,15 @@ export const PlayerRing = memo(function PlayerRing({
 
               {/* Dossier body: [portrait | info] */}
               <div className={styles.panelBody}>
-                <div className={styles.portrait} aria-hidden="true">
-                  <div className={styles.clearanceIcon}>
-                    <PlayerIcon color={player.color} size={42} />
+                <div
+                  className={styles.portrait}
+                  aria-hidden="true"
+                  style={{ backgroundImage: `url('${OPERATIVE_SILHOUETTE}')` }}
+                >
+                  <span className={styles.paperClipLeft} aria-hidden="true" />
+                  <span className={styles.paperClipRight} aria-hidden="true" />
+                  <div className={styles.clearanceBadge}>
+                    <PlayerIcon color={player.color} size={14} />
                   </div>
                   <span className={styles.portraitLabel}>{slotLabel}</span>
                 </div>

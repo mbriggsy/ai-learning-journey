@@ -322,6 +322,13 @@ export class GameRoom extends Server {
   // --- Join ---
 
   private handleJoin(connection: Connection, rawName: string, sessionToken?: string): void {
+    // Initialize lobby on first arrival (host or player — whoever wins the race).
+    // Previously only handleHostConnect did this, which forced a strict host-first
+    // ordering that the dev launcher's sync popup opens can't guarantee.
+    if (!this.gameState) {
+      this.gameState = createLobbyState()
+    }
+
     // Reconnection with session token (name can be empty for reconnects)
     if (sessionToken) {
       const existingPlayerId = this.playerSessions.get(sessionToken)
@@ -330,14 +337,14 @@ export class GameRoom extends Server {
         return
       }
       // Invalid token — fall through to new join (if still in lobby)
-      if (this.gameState?.phase !== 'lobby') {
+      if (this.gameState.phase !== 'lobby') {
         this.sendError(connection, 'INVALID_ACTION', 'Invalid session token')
         return
       }
     }
 
     // New join requires lobby phase
-    if (this.gameState?.phase !== 'lobby') {
+    if (this.gameState.phase !== 'lobby') {
       this.sendError(connection, 'GAME_ALREADY_STARTED', 'Game has already started')
       return
     }
@@ -731,12 +738,19 @@ export class GameRoom extends Server {
     const boardMsg: ServerMessage = { type: 'state-update', payload: boardView, protocolVersion: PROTOCOL_VERSION }
     const boardRaw = JSON.stringify(boardMsg)
 
+    let hostCount = 0
+    let playerCount = 0
+    let untypedCount = 0
+    let sendFailures = 0
+
     for (const conn of this.getConnections()) {
       const connState = this.getConnState(conn)
       try {
         if (connState?.role === 'host') {
+          hostCount++
           conn.send(boardRaw)
         } else if (connState?.role === 'player') {
+          playerCount++
           const playerMsg: ServerMessage = {
             type: 'player-update',
             payload: {
@@ -746,9 +760,13 @@ export class GameRoom extends Server {
             protocolVersion: PROTOCOL_VERSION,
           }
           conn.send(JSON.stringify(playerMsg))
+        } else {
+          untypedCount++
         }
-      } catch { /* connection closing */ }
+      } catch { sendFailures++ }
     }
+
+    console.log(`[broadcastGameState] phase=${state.phase} host=${hostCount} players=${playerCount} untyped=${untypedCount} failures=${sendFailures}`)
   }
 
   private buildLobbyView(): LobbyView {

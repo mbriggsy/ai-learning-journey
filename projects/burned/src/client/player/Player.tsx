@@ -68,18 +68,20 @@ export function Player() {
     })
     const unsubStatus = onStatusChange(setConnectionStatus)
 
-    const unsubAutoJoin = onStatusChange(s => {
-      if (s === 'connected') {
-        if (urlName) {
-          // Dev mode: name in URL always joins fresh, skip session token
-          send({ type: 'join', payload: { name: urlName } })
-        } else {
-          const token = getSessionToken(roomCode)
-          if (token) {
-            send({ type: 'join', payload: { name: '', sessionToken: token } })
-          }
+    const attemptAutoJoin = () => {
+      if (urlName) {
+        // Dev mode: name in URL always joins fresh, skip session token
+        send({ type: 'join', payload: { name: urlName } })
+      } else {
+        const token = getSessionToken(roomCode)
+        if (token) {
+          send({ type: 'join', payload: { name: '', sessionToken: token } })
         }
       }
+    }
+
+    const unsubAutoJoin = onStatusChange(s => {
+      if (s === 'connected') attemptAutoJoin()
     })
 
     const unsubReconnect = onReconnect(() => {
@@ -87,6 +89,11 @@ export function Player() {
     })
 
     connect(roomCode, PARTYKIT_HOST)
+
+    // If the socket was already 'connected' before this effect subscribed
+    // (StrictMode re-mount, fast WS handshake), the status-change listener
+    // never fires 'connected'. Trigger the join explicitly in that case.
+    if (getStatus() === 'connected') attemptAutoJoin()
 
     return () => {
       unsubMsg()
@@ -125,6 +132,7 @@ export function Player() {
         assignedColor={assignedColor}
         onJoin={handleJoin}
         roomCode={roomCode}
+        urlName={urlName}
       />
       <ErrorToast />
       <ConnectionOverlay status={connectionStatus} />
@@ -140,9 +148,10 @@ interface PhoneRouterProps {
   assignedColor: string | null
   onJoin: (name: string) => void
   roomCode: string
+  urlName: string
 }
 
-function PhoneRouter({ connectionStatus, assignedColor, onJoin, roomCode }: PhoneRouterProps) {
+function PhoneRouter({ connectionStatus, assignedColor, onJoin, roomCode, urlName }: PhoneRouterProps) {
   const state = useGameState()
   const playerId = gameStore.getPlayerId()
 
@@ -161,6 +170,7 @@ function PhoneRouter({ connectionStatus, assignedColor, onJoin, roomCode }: Phon
         onJoin={onJoin}
         roomCode={roomCode}
         playerName={lobbyName}
+        defaultName={urlName || undefined}
         lobbyPlayers={lobbyPlayers}
       />
     )

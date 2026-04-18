@@ -16,11 +16,12 @@ interface Props {
   onJoin: (name: string) => void
   roomCode: string
   playerName?: string
+  defaultName?: string
   lobbyPlayers?: readonly LobbyPlayer[]
 }
 
-export function JoinScreen({ connectionStatus, assignedColor, onJoin, roomCode, playerName, lobbyPlayers }: Props) {
-  const [name, setName] = useState('')
+export function JoinScreen({ connectionStatus, assignedColor, onJoin, roomCode, playerName, defaultName, lobbyPlayers }: Props) {
+  const [name, setName] = useState(defaultName ?? '')
   const [error, setError] = useState<string | null>(null)
   const joined = assignedColor !== null
 

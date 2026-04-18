@@ -252,23 +252,22 @@
       addLogLine('Room: ' + room);
       addLogLine('');
 
-      // Open board
+      // Open all player tabs synchronously in the same user gesture.
+      // Async opens (setTimeout) get blocked. We keep popup count == playerCount
+      // by navigating this launcher tab to the board at the end (instead of
+      // opening the board as an 11th popup, which hits the per-gesture cap).
       var boardUrl = origin + '/board.html#' + room;
-      window.open(boardUrl, 'burned-board-' + room);
       addLogLine('Board: ' + boardUrl, boardUrl);
 
-      // Open player tabs — delay enough for the board to mount + connect + host-connect.
-      // Board React app needs ~500ms to hydrate and send host-connect to Wrangler.
       for (var i = 0; i < playerCount; i++) {
-        (function(idx) {
-          var name = NAMES[idx];
-          var playerUrl = origin + '/player.html?room=' + room + '&name=' + encodeURIComponent(name);
-          setTimeout(function() {
-            window.open(playerUrl, 'burned-player-' + room + '-' + idx);
-          }, 1000 + idx * 150);
-          addLogLine('Player ' + (idx + 1) + ': ' + playerUrl, playerUrl);
-        })(i);
+        var name = NAMES[i];
+        var playerUrl = origin + '/player.html?room=' + room + '&name=' + encodeURIComponent(name);
+        window.open(playerUrl, 'burned-player-' + room + '-' + i);
+        addLogLine('Player ' + (i + 1) + ': ' + playerUrl, playerUrl);
       }
+
+      // This tab becomes the board. Must be last — navigation tears down JS.
+      window.location.href = boardUrl;
     });
 
     renderNames();

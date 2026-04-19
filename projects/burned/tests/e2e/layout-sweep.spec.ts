@@ -45,8 +45,16 @@ async function captureOverflow(page: Page, viewport: string, surface: string): P
             : '')
         const text = (el.textContent ?? '').trim().slice(0, 60)
 
-        // 1. Horizontal overflow: content wider than container (and not scrollable)
-        if (el.scrollWidth > el.clientWidth + 1 && cs.overflowX !== 'scroll' && cs.overflowX !== 'auto') {
+        // Only flag overflow when the element would actually clip or scroll.
+        // `overflow: visible` (the default) renders children outside the box
+        // by design — pseudo-element glow halos, focus rings, tooltips, etc.
+        // scrollWidth > clientWidth there is expected, not a bug.
+        const clipsX = cs.overflowX === 'hidden' || cs.overflowX === 'clip'
+        const clipsY = cs.overflowY === 'hidden' || cs.overflowY === 'clip'
+
+        // 1. Horizontal overflow: content wider than container AND the element
+        // actually clips (hidden/clip). Scroll/auto containers self-handle.
+        if (el.scrollWidth > el.clientWidth + 1 && clipsX) {
           findings.push({
             viewport, surface, selector, text,
             kind: 'horizontal-overflow',
@@ -55,8 +63,8 @@ async function captureOverflow(page: Page, viewport: string, surface: string): P
           })
         }
 
-        // 2. Vertical overflow on non-scrollable containers
-        if (el.scrollHeight > el.clientHeight + 1 && cs.overflowY !== 'scroll' && cs.overflowY !== 'auto') {
+        // 2. Vertical overflow on clipping containers.
+        if (el.scrollHeight > el.clientHeight + 1 && clipsY) {
           findings.push({
             viewport, surface, selector, text,
             kind: 'vertical-overflow',

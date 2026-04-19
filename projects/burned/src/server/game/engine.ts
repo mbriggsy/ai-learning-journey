@@ -461,6 +461,10 @@ function applyShuffle(
   const newState: PlayingState = {
     ...state,
     drawPile: shuffled,
+    // Shuffling invalidates any prior Intel Briefing peek — the IDs in
+    // pendingFuture no longer point at the current top 3. Clear it so
+    // Falsify Intel can't rearrange against stale IDs.
+    pendingFuture: undefined,
     nopeWindow: null,
     events: [...state.events, ...events,
       { type: 'deck-shuffled', playerId: action.playerId },
@@ -675,7 +679,7 @@ function performDraw(
 
   const events: GameEvent[] = [
     ...extraEvents,
-    { type: 'card-drawn', playerId, safe: true },
+    { type: 'card-drawn', playerId, safe: true, cardType: drawnCard.type },
   ]
 
   // Consume one turn

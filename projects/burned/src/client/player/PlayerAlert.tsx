@@ -63,6 +63,21 @@ function alertFor(
       break
     }
 
+    case 'card-drawn':
+      // Confirmation toast for end-of-turn draw — player tapped "End turn ·
+      // draw" and needs to see what landed in their hand without squinting
+      // at the discard fan. Burned draws intentionally skip this: the drama
+      // overlay (BURNED → EXTRACTED / ELIMINATED) already owns that moment.
+      if (event.playerId === myId && event.safe) {
+        const name = CARD_DEF_BY_TYPE[event.cardType]?.name ?? 'a card'
+        return {
+          id: eventId,
+          text: `You drew ${name}.`,
+          tone: 'info',
+        }
+      }
+      break
+
     case 'favor-given':
       // I just handed over a card (after choosing it on the FavorResponse sheet).
       // Soft acknowledgement so the player has visible feedback that their

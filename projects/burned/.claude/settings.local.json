@@ -5,7 +5,9 @@
       "mcp__plugin_compound-engineering_context7__query-docs",
       "Skill(commit-commands:commit)",
       "Bash(mv \"/c/Users/brigg/.claude/projects/C--Users-brigg-ai-learning-journey-projects-burned/memory/project-burned-howto-turn-definition.md\" \"/c/Users/brigg/.claude/projects/C--Users-brigg-ai-learning-journey/memory/\")",
-      "Read(//c/Users/brigg/.claude/projects/C--Users-brigg-ai-learning-journey/memory/**)"
+      "Read(//c/Users/brigg/.claude/projects/C--Users-brigg-ai-learning-journey/memory/**)",
+      "Bash(rm -f ~/.claude/statusline-debug.json)",
+      "Read(//c/Users/brigg/.claude/**)"
     ]
   }
 }

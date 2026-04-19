@@ -382,41 +382,6 @@
 .startButton:disabled::after { display: none; }
 .startButton:disabled::before { opacity: 0.3; }
 
-/* ─── Dev toolbar (localhost only) ─── */
-
-.devToolbar {
-  display: flex;
-  gap: var(--space-2);
-  margin-top: var(--space-4);
-  flex-shrink: 0;
-}
-
-.devLink {
-  padding: var(--space-2) var(--space-4);
-  border-radius: var(--radius-sm);
-  border: 1px dashed color-mix(in oklab, var(--color-accent-drama) 30%, transparent);
-  background: color-mix(in oklab, var(--color-accent-drama) 8%, transparent);
-  color: color-mix(in oklab, var(--color-accent-drama) 80%, transparent);
-  /* Deepening: was 60% — failed WCAG 4.5:1 (~3.1:1). Bumped to 80%. */
-  font-family: var(--font-mono);
-  font-size: var(--text-caption-board);
-  text-decoration: none;
-  cursor: pointer;
-  transition:
-    background var(--motion-duration-fast) var(--motion-ease-base),
-    color var(--motion-duration-fast) var(--motion-ease-base);
-}
-
-.devLink:hover {
-  background: color-mix(in oklab, var(--color-accent-drama) 15%, transparent);
-  color: color-mix(in oklab, var(--color-accent-drama) 95%, transparent);
-}
-
-.devLink:focus-visible {
-  outline: 2px solid var(--color-border-focus);
-  outline-offset: 2px;
-}
-
 /* ─── Forced colors (Windows High Contrast) — Deepening addition ─── */
 
 @media (forced-colors: active) {

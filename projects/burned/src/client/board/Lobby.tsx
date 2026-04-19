@@ -6,10 +6,6 @@ import type { ConnectionStatus } from '@client/connection'
 import { PlayerIcon } from '@client/shared/PlayerIcon'
 import styles from './Lobby.module.css'
 
-const isDev = window.location.hostname === 'localhost' || window.location.hostname === '127.0.0.1'
-
-const DEV_PLAYERS = ['Whiskrs', 'Mittens', 'Tuna', 'Pickles'] as const
-
 interface Props {
   connectionStatus: ConnectionStatus
   onStartGame: () => void
@@ -98,22 +94,6 @@ export function Lobby({ connectionStatus, onStartGame }: Props) {
       >
         {canStart ? 'Cleared Hot' : shortBy === 1 ? 'One short' : `${shortBy} operatives short`}
       </button>
-
-      {isDev && (
-        <div className={styles.devToolbar}>
-          {DEV_PLAYERS.map(name => (
-            <a
-              key={name}
-              href={`${playerUrl}&name=${name}`}
-              target="_blank"
-              rel="noopener"
-              className={styles.devLink}
-            >
-              {name}
-            </a>
-          ))}
-        </div>
-      )}
     </div>
   )
 }

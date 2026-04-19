@@ -3,7 +3,7 @@
 ## Current State
 
 - **PRODUCT-SPECIFICATION.md v1.0 LOCKED** — `docs/specifications/PRODUCT-SPECIFICATION.md` (2026-04-10).
-- **238/238 Vitest, typecheck clean** (verified 2026-04-19, end of session).
+- **358/358 Vitest, typecheck clean** (verified 2026-04-19, end of session). Coverage expanded with `deck-composition-exhaustive.test.ts` (parameterized 2-10 players against `docs/rules/RULES-REFERENCE.md` §3) and `rules-gaps-exhaustive.test.ts` (plugs §11 Attack+Defuse continuation, §6 Intel Briefing mid-turn, §9 triple-Nope, §7 combo overrides, §10.3 Back Channel under Attack, §6 empty-hand Favor, §9 Burned/Extraction not Nopeable, §5 multi-play per turn, §12 dead-card disposal).
 - **Protocol version 2** — unchanged this session.
 - **Triple-steal flow is deferred-commit.** 3-of-a-kind play stages cards in the stealer's hand; cancel returns them untouched. Name-commit discards the cards AND opens the nope window (carrying stealer+target+namedCardType), so defenders Nope with full context. Matches tabletop semantics where the named card is public before Nope. Engine: `handleCombo` skips discard/nope for comboSize===3; `handleNameCard` commits and opens the window; `handleNopeWindowExpired` has a named-steal resolution branch that runs BEFORE the legacy `pendingSteal` branch.
 - **Cancel button on NameCard sheet.** "Call off the raid" — pre-commit only (rejected post-name because the play is already public and the nope window is live).
@@ -16,29 +16,25 @@
 - **Drama overlay adds a two-beat burned sequence.** Non-drawers (and the board) see `{NAME} IS…` → `BURNED`; the drawer still sees the single-beat `BURNED`. All five drama beats (`BURNED`, `EXTRACTED`, `{NAME} ELIMINATED`, `INTERCEPTED`, `{NAME} WINS`) render without terminal periods.
 - **FuturePeek (See / Alter the Future) rewrite.** Full `MinimalCard` art in a horizontal scroll-snap container (70vw per card, next peeks past the edge). Badge: `Draw 1 · next` / `Draw 2` / `Draw 3` read-only; tap-order `#1` / `#2` / `#3` in rearrange. Auto-close countdown removed.
 - **Sable Ashworth portrait regen.** Direct camera gaze, deep V-neck, Zippo at hip. Old portrait archived at `public/assets/roster/_archive/sable-ashworth-2026-04-19-flame-gaze.png`.
-- **`pnpm dev:launch`.** Spawns Chrome with `--auto-open-devtools-for-tabs` + an isolated `.chrome-dev-profile/`, lands on `/dev.html`. Every tab the launcher spawns inherits auto-DevTools.
+- **`pnpm dev:launch` rewrite.** Generates the room code in Node and spawns Chrome with `board.html#ROOM` + N player URLs as positional args — no popup-blocker dependency (the isolated `.chrome-dev-profile/` had default Chrome settings, blocking the old `window.open` loop in `dev.html` after the first tab). Flags: `--players=N` for 2-10 (default 4), `--dev-html` falls back to the old in-browser launcher.
+- **Card-drawn toast on safe end-of-turn draw.** `card-drawn` event now carries `cardType` (server `performDraw` sets `drawnCard.type`). `PlayerAlert` renders an `info` toast `You drew {name}.` when `event.playerId === myId && event.safe === true`. Burned draws skip this — drama overlay owns that beat.
+- **`applyShuffle` clears `pendingFuture`.** Previously, Intel Briefing peek + Burn the Files left stale peek IDs pointing at cards that had moved off the top, so Falsify Intel would validate a permutation against IDs that no longer matched the top 3. Regression locked by `rules-gaps-exhaustive.test.ts` → "pendingFuture is cleared (or still valid) when Burn the Files follows Intel Briefing".
+- **Lobby dev toolbar removed.** The Whiskrs/Mittens/Tuna/Pickles quick-join links under the `Cleared Hot` button are gone (`Lobby.tsx` + `Lobby.module.css`). `pnpm dev:launch` owns dev-time player spawning — don't restore.
+- **Layout-sweep detector tightened.** `tests/e2e/layout-sweep.spec.ts` only flags overflow on `overflow: hidden|clip` containers — `overflow: visible` (glow halos, focus rings, pseudo-elements with negative `inset`) no longer registers as a clipping bug. 253 raw findings → 198 after the fix, of which 2 are real clip issues.
 
 ## Next Steps (in priority order)
 
-### 1. Toast the drawn card on end-of-turn draw
-**Goal:** when a player ends their turn by tapping `End turn · draw`, surface what they just drew so they can confirm the outcome without squinting at the discard fan.
-**Prescription:**
-- `PlayerAlert.tsx` — add a `card-drawn` case when `event.playerId === myId` and `event.safe === true`. Label the alert with the card name via `CARD_DEF_BY_TYPE[event.cardType]?.name`.
-- Problem: `card-drawn` event doesn't currently carry `cardType` — check `src/shared/types.ts` and `performDraw` in `engine.ts:640`. If `cardType` is absent, add it (server-side, non-private — the card is going into the drawer's own hand and will be visible via `myHand` on the next state-update anyway, so no leak).
-- Burned draw is already covered by the drama overlay; `safe === false` path is the EXTRACTED / ELIMINATED drama, don't double-notify.
-- Tone: `info`, ~2s. Copy: `You drew {cardName}.` or `{cardName} — added to your hand.`
-- Validate: play back a turn from the requester side, confirm the toast appears, confirm Burned draws are NOT double-notified.
-
-### 2. Real-device playtest
-Live 4-8 player test on iPad Pro 1366 + phones. Verify this session's flows on real hardware:
+### 1. Real-device playtest
+Live 4-8 player test on iPad Pro 1366 + phones. Verify recent flows on real hardware:
 - Triple-steal deferred commit — cards return on cancel, nope window opens AFTER the name.
 - Favor-target banner + staging (no more sheet modal).
 - Discard hero sizing reads from couch distance.
 - Burned two-beat drama sequence on non-drawer phones.
 - Sable's new portrait reads at card size.
+- Card-drawn toast fires for the drawer (and ONLY the drawer) on a safe draw.
 - `pnpm dev:launch` actually makes debugging easier.
 
-### 3. Host kick-and-advance affordance
+### 2. Host kick-and-advance affordance
 **Goal:** when a seat is truly abandoned (not a beer break), host can force the game forward. Backstop for the "timeouts removed" policy.
 **Prescription:**
 - Board-side button in the dossier footer or alongside the blotter — `Skip {name}` or similar.
@@ -46,42 +42,48 @@ Live 4-8 player test on iPad Pro 1366 + phones. Verify this session's flows on r
 - Server action: `host-force-resolve` that auto-resolves the current pendingPrompt the same way the removed prompt-timeout used to (random Defuse position, cancel the steal, no transfer, etc).
 - Connection detection: `BoardPlayer.isConnected` already exists in the projection. Gate the button on `!isConnected`.
 
-### 4. 8-player stress test
+### 3. 8-player stress test
 Verify PlayerStrip layout at max count on real TV, COMMS scroll under event volume, nameplate legibility from couch distance.
 **Landing gate:** at 1366×1024, strip math leaves ~34px headroom with all 10 tiles; verify at 1920 and 4K that tiles grow proportionally.
 
-### 5. Blotter content layout polish
+### 4. Blotter content layout polish
 Options for the piles column: (a) vertically center the pile lockup, (b) scale the pile visual further, (c) decorative classified chrome (memo pad, paperclip). Briggsy's call at kickoff which direction feels right.
 
-### 6. Live mid-play state verification
-Playwright script at `tests/e2e/arena-states.spec.ts`: 3-player game, play a card that triggers Nope window, screenshot mid-countdown; play a card that triggers DramaOverlay, screenshot the drama.
+### 5. Live mid-play state verification — `tests/e2e/arena-states.spec.ts`
+Playwright script: 3-player game, drive the `window.__gameStore` dev hook to force each state, screenshot each. Target states: Nope window mid-countdown, DramaOverlay (BURNED → EXTRACTED, ELIMINATED, INTERCEPTED, WINS), Favor banner + staging, Triple-steal name-card sheet pre-commit and post-name, FuturePeek (read-only and rearrange). Output to `temp/arena-states/` for eyeball review. Each state is ~30 min to script; ~3-4 hours for the full set.
 
-### 7. Physical hardware verification
+### 6. Physical hardware verification
 Push commits, deploy to Cloudflare Pages (wrangler), open on actual TV with phone controllers.
 
-### 8. Extend PlayerAlert coverage (optional)
+### 7. Extend PlayerAlert coverage (optional)
 - **Reassign / Direct Order target** — no direct event type; victim only learns via `turn-started` with `turnsRemaining > 1`. Probably fine as-is because the target's phone sits dormant — when they come back, staging is lit and status reads "Your turn · 3 turns".
 - **Your card was intercepted** — optimistic snapback + board DramaOverlay already communicate this, but explicit phone toast would remove ambiguity. Skip until playtest reveals confusion.
 
-### 9. Tier 2 retheme cleanup (non-blocking)
+### 8. Tier 2 retheme cleanup (non-blocking)
 - `src/server/game/engine.ts` — any remaining `// EKs` / `'No EK in hand'` strings → Burned vocabulary.
 - `src/shared/constants.ts` — `EK_REVEAL_MS` → `BURNED_REVEAL_MS` (rename across all call sites).
 
-### 10. Execute Phase 5 — Verification & Acceptance
+### 9. Execute Phase 5 — Verification & Acceptance
 **`/ce:work docs/plans/css-foundation-rebuild/phase-5-verification-acceptance.md`**
 
-### 11. Engine coverage gaps
-- **G1:** No regression test that `pendingFuture` survives mid-turn if Intel Briefing is played during a non-attack turn.
-- **G3:** No explicit test of Attack+Defuse multi-turn continuation (rules §11 worked example).
-
-### 12. Optional polish follow-ups
+### 10. Optional polish follow-ups
 - **Brass studs on wood frame.** CSS pseudo-elements (small radial-gradient dots at regular intervals on `.woodTop/.woodBottom`).
 - **Remove unused `public/assets/arena/mahogany.png`.** Superseded by the 4-edge split.
+
+### 11. Optional test coverage expansion (deferred until visual layer stabilizes)
+- **Card-drawn toast E2E** (~30 min). Extend Tier 1 spec: active phone taps `End turn · draw`, assert `PlayerAlert` renders `You drew {name}.`. Locks today's feature end-to-end.
+- **Agent-X combo matrix** (~15 min). Add explicit tests to `combo-validation.test.ts` for `3× Agent X`, `2× Agent X + operative`, `Agent X + 2 matching operatives`. Belt-and-suspenders over the existing generic rule.
+- **Pixel-diff regression** (~2h setup + ongoing baseline maintenance). Playwright `toHaveScreenshot()` with committed baselines. Requires `MotionConfig reducedMotion="always"` in test mode + fixed server RNG seed so baselines are deterministic. Defer until after Phase 5 lands — mid-rebuild baselines churn too fast.
 
 ## Landmines
 
 ### New this session
 
+- **`applyShuffle` clears `pendingFuture`.** Burn the Files now wipes the peek (`engine.ts:454`). Previously, Intel Briefing + Burn the Files left stale IDs pointing at cards that had moved off the top, and Falsify Intel would then validate a permutation against IDs no longer on the top 3. Any future card that mutates draw-pile order (beyond-the-grave resurrection cards, deck-swap abilities, etc.) should clear `pendingFuture` the same way.
+- **`dev:launch` uses Chrome's positional-URL multi-tab mode.** `chrome.exe [flags] url1 url2 url3…` opens each URL as a tab in the profile's window. `--auto-open-devtools-for-tabs` applies per-tab. Works even when a profile window is already running — the second invocation appends tabs. Popup blocker is irrelevant (URLs come from the CLI, not `window.open`). If you ever re-introduce browser-side tab spawning, the isolated `.chrome-dev-profile/` will re-block popups (it's a fresh profile with defaults, separate from your main Chrome's popup-allow).
+- **Lobby debug toolbar was removed.** Don't restore the Whiskrs/Mittens/Tuna/Pickles quick-join `<a>` strip — `pnpm dev:launch` owns dev-time player spawning now. The `.devToolbar` / `.devLink` CSS is gone from `Lobby.module.css`.
+- **Layout-sweep detector only flags `overflow: hidden|clip`.** Elements with `overflow: visible` (the default) don't clip — pseudo-elements with negative `inset` (like `.card::after { inset: -2px }` glow halos), focus rings, and tooltips extend outside their box by design. If you tighten the detector to also flag `visible`, you will re-surface ~57 false positives per sweep.
+- **`card-drawn` event carries `cardType`.** Server `performDraw` sets `cardType: drawnCard.type` on the safe-draw branch only — Burned draws never emit `card-drawn` (they emit `burned-drawn` + drama overlay). The `cardType` field is non-private: the card is going into the drawer's own hand and will appear in `myHand` on the next state update anyway.
 - **Triple-steal cards DO NOT leave hand until name commits.** `handleCombo` for comboSize === 3 only sets `pendingNameCard.cardIds` and transitions to `name-card-pending` — no `removeCardsFromHand`, no `addToDiscard`, no nope window, no `card-played` event. All of that fires in `handleNameCard`. Cancel is free (pre-commit). If you "simplify" by moving discard back into `handleCombo`, cancel silently destroys 3 cards.
 - **`name-card-pending` can hold an open nope window.** After name commit, subPhase stays `name-card-pending` and a nope window is active. `handleCancelNameCard` explicitly rejects when `pendingNameCard.namedCardType` is set or `nopeWindow` is non-null — don't drop those guards.
 - **`handleNopeWindowExpired` checks the named-steal branch FIRST.** Before the legacy `pendingSteal` branch. If you flip the order, a 3-of-a-kind steal will never resolve.

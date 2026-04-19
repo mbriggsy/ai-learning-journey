@@ -4,7 +4,7 @@ A spy-comedy card game — rethemed from [Exploding Kittens Party Pack](https://
 
 ## Status
 
-**All 6 phases complete + adversarial swarm review** — 152/152 tests, typecheck clean, ~95KB phone JS (under 100KB budget). Next: art direction brief, Gauntlet recalibration, manual testing on real devices, first production deploy.
+**All 6 phases complete + adversarial swarm review** — 358/358 tests, typecheck clean, ~97.5KB phone JS (under 100KB budget). Next: art direction brief, Gauntlet recalibration, manual testing on real devices, first production deploy.
 
 ## The Game
 

@@ -12,7 +12,7 @@ export type CardPlayState =
 // --- Actions ---
 
 type CardPlayAction =
-  | { type: 'toggle-card'; cardId: string; hand: readonly CardInstance[] }
+  | { type: 'toggle-card'; cardId: string; hand: readonly CardInstance[]; maxStaged: number }
   | { type: 'reset' }
 
 function reducer(state: CardPlayState, action: CardPlayAction): CardPlayState {
@@ -23,8 +23,19 @@ function reducer(state: CardPlayState, action: CardPlayAction): CardPlayState {
       if (idx >= 0) {
         current.splice(idx, 1)
       } else {
-        if (current.length >= 3) return state
-        current.push(action.cardId)
+        // Favor-surrender caps at 1: new tap replaces the previous slot
+        // rather than no-op'ing, so players can swap their mind without
+        // a double-tap to unstage first.
+        if (current.length >= action.maxStaged) {
+          if (action.maxStaged === 1) {
+            current.length = 0
+            current.push(action.cardId)
+          } else {
+            return state
+          }
+        } else {
+          current.push(action.cardId)
+        }
       }
 
       if (current.length === 0) return { status: 'idle' }
@@ -51,6 +62,7 @@ export function useCardPlay(
   hand: readonly CardInstance[],
   isMyTurn: boolean,
   subPhase: string | null,
+  maxStaged: number = 3,
 ) {
   const [state, dispatch] = useReducer(reducer, { status: 'idle' })
 
@@ -58,6 +70,13 @@ export function useCardPlay(
   useEffect(() => {
     dispatch({ type: 'reset' })
   }, [isMyTurn, subPhase])
+
+  // If the cap tightens underneath us (e.g. favor-pending arrives while the
+  // player has 2+ cards staged from a prior selection), clear so we don't
+  // carry an illegal selection into the new mode.
+  useEffect(() => {
+    dispatch({ type: 'reset' })
+  }, [maxStaged])
 
   // Validate selected cards still exist in hand
   const validatedState = useMemo((): CardPlayState => {
@@ -70,8 +89,8 @@ export function useCardPlay(
   }, [state, hand])
 
   const toggleCard = useCallback((cardId: string) => {
-    dispatch({ type: 'toggle-card', cardId, hand })
-  }, [hand])
+    dispatch({ type: 'toggle-card', cardId, hand, maxStaged })
+  }, [hand, maxStaged])
 
   const reset = useCallback(() => {
     dispatch({ type: 'reset' })

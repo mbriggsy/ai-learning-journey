@@ -1,7 +1,8 @@
 /* DiscardFan.module.css
-   Board — discard pile showing the most-recent card on top with a peek of the
-   previous card fanned behind it at a slight rotation. Sizing tracks the
-   DrawPile so the two piles read as a matched pair on either side of the arena.
+   Board — hero discard pile showing the last three plays face-up, fanned.
+   Discard is the HERO of the blotter piles zone; the draw pile is decorative
+   count-only support. Sizing comes from --size-discard-card-width which is
+   tuned bigger than --size-draw-pile-width in BlotterContent.module.css.
 */
 
 @layer components {
@@ -11,24 +12,40 @@
   display: flex;
   align-items: center;
   justify-content: center;
-  width: var(--size-draw-pile-width);
-  height: calc(var(--size-draw-pile-width) * 7 / 5);
+  /* Width wider than a single card so the fanned left/right peeks have room
+     to breathe without colliding with the blotter gutter. */
+  width: calc(var(--size-discard-card-width) * 1.35);
+  height: calc(var(--size-discard-card-width) * 7 / 5);
 }
 
-.topCard {
-  position: relative;
-  z-index: var(--z-raised);
-  width: var(--size-discard-card-width);
-  transform-origin: bottom center;
-}
-
-.peekCard {
+.layer {
   position: absolute;
-  z-index: var(--z-base);
   width: var(--size-discard-card-width);
-  transform: rotate(-5deg) translate(calc(var(--space-1) * -1.5), 0);
   transform-origin: bottom center;
-  opacity: 0.7;
+  transition:
+    transform var(--motion-duration-base) var(--motion-ease-base),
+    opacity var(--motion-duration-base) var(--motion-ease-base);
+}
+
+/* Top card — newest play, centered, full opacity, slight forward lean. */
+.top {
+  z-index: var(--z-raised);
+  opacity: 1;
+  transform: translate(0, 0) rotate(0deg);
+}
+
+/* One card back — tilted left, peeking out behind the top card. */
+.behind1 {
+  z-index: var(--z-base);
+  opacity: 0.72;
+  transform: translate(calc(var(--size-discard-card-width) * -0.16), 4px) rotate(-7deg);
+}
+
+/* Two cards back — tilted right at a steeper angle, deepest into the fan. */
+.behind2 {
+  z-index: calc(var(--z-base) - 1);
+  opacity: 0.52;
+  transform: translate(calc(var(--size-discard-card-width) * 0.16), 6px) rotate(7deg);
 }
 
 /* Empty discard slot — dashed manila-folder silhouette with faint EMPTY stamp.

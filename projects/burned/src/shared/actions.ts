@@ -1,4 +1,4 @@
-import type { CardType, SubPhase } from './types'
+import type { CardType } from './types'
 
 // eslint-disable-next-line @typescript-eslint/no-empty-object-type -- Empty payloads are intentional for actions with no parameters
 type Empty = {}
@@ -12,13 +12,13 @@ export type ClientActionMap = {
   'favor-give': { cardId: string }
   'future-rearrange': { order: string[] }
   'name-card': { cardType: CardType }
+  'cancel-name-card': Empty
 }
 
 /** Server-only actions — cannot be constructed by clients */
 export type ServerOnlyActionMap = {
   'nope-window-expired': { windowGeneration: number }
   'nope-grace-expired': { windowGeneration: number }
-  'prompt-timeout': { subPhase: SubPhase }
 }
 
 /** Full engine action map — includes start-game (routed as direct ClientMessage, not via action wrapper) */
@@ -43,4 +43,4 @@ export type ActionType = keyof ActionMap
 type ServerOnlyActionType = keyof ServerOnlyActionMap
 
 /** Set of server-only action types for runtime checks */
-export const SERVER_ONLY_ACTIONS = new Set<ServerOnlyActionType>(['nope-window-expired', 'nope-grace-expired', 'prompt-timeout'])
+export const SERVER_ONLY_ACTIONS = new Set<ServerOnlyActionType>(['nope-window-expired', 'nope-grace-expired'])

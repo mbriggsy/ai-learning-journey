@@ -4,15 +4,17 @@ import type { CardInstance } from '@shared/types'
 import styles from './DiscardFan.module.css'
 
 interface DiscardFanProps {
-  readonly topCard: CardInstance | null
+  readonly recentCards: readonly CardInstance[]
 }
 
 /**
- * Discard fan — top card face-up + 1 peek card behind at slight rotation.
- * Under-card shows card BACK (information leak prevention).
+ * Discard fan — hero pile on the blotter. Shows up to 3 recent discards
+ * face-up, newest on top, older cards tilted left/right behind at reduced
+ * opacity to read as an accumulating history. Discard contents are public in
+ * canonical EK, so face-up older cards are legal information (not a leak).
  */
-export const DiscardFan = memo(function DiscardFan({ topCard }: DiscardFanProps) {
-  if (!topCard) {
+export const DiscardFan = memo(function DiscardFan({ recentCards }: DiscardFanProps) {
+  if (recentCards.length === 0) {
     return (
       <div className={styles.fan}>
         <div className={styles.empty}>
@@ -23,16 +25,28 @@ export const DiscardFan = memo(function DiscardFan({ topCard }: DiscardFanProps)
     )
   }
 
+  // Stack painted back-to-front (oldest at the bottom of the fan, newest on
+  // top). Positional offsets telegraph recency without needing timestamps.
+  const ordered = [...recentCards].reverse()
+  const topIdx = ordered.length - 1
+
   return (
     <div className={styles.fan}>
-      {/* Peek card behind — face down, slight rotation */}
-      <div className={styles.peekCard}>
-        <MinimalCard type={topCard.type} isFaceDown disabled />
-      </div>
-      {/* Top card — face up */}
-      <div className={styles.topCard}>
-        <MinimalCard type={topCard.type} disabled />
-      </div>
+      {ordered.map((card, i) => {
+        const depth = topIdx - i
+        const isTop = depth === 0
+        const cls = [
+          styles.layer,
+          isTop ? styles.top : '',
+          depth === 1 ? styles.behind1 : '',
+          depth === 2 ? styles.behind2 : '',
+        ].filter(Boolean).join(' ')
+        return (
+          <div key={`${card.id}-${i}`} className={cls}>
+            <MinimalCard type={card.type} disabled />
+          </div>
+        )
+      })}
     </div>
   )
 })

@@ -28,7 +28,6 @@ export const TIMING = {
   TURN_PULSE_MS: 800,           // turn change animation
   NOPE_SHAKE_MS: 350,           // per-Nope impact
   SCREEN_FLASH_MS: 300,         // semi-transparent overlay
-  SEE_FUTURE_AUTO_CLOSE_MS: 10_000, // auto-close See the Future sheet
   NOPE_GRACE_MS: 300,           // FAB grace window before tappable
   SHUFFLE_MS: 700,              // deck shuffle visual
   FAVOR_TRANSFER_MS: 600,       // card-back flies between players

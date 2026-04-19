@@ -27,6 +27,14 @@ export function deriveInteractionPermission(
     return { allowed: false, reason: 'sub-phase-active' }
   }
 
+  // Favor-response is the one prompt where the target interacts with their
+  // real hand + staging area (not a sheet), so we keep interaction OPEN even
+  // though it's not their turn and subPhase is favor-pending. SmartActionBox
+  // enforces the favor-specific constraints (1 card, no Burned).
+  if (pendingPrompt?.type === 'favor-response' && pendingPrompt.playerId === myPlayerId) {
+    return { allowed: true }
+  }
+
   // Pending prompt for ME — block normal card play (sheets handle the interaction)
   if (subPhase && subPhase !== 'turn-active' && pendingPrompt?.playerId === myPlayerId) {
     return { allowed: false, reason: 'sub-phase-active' }

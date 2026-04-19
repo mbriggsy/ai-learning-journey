@@ -193,6 +193,31 @@
   text-align: center;
 }
 
+.positionValue {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: var(--space-1);
+  /* Wider floor than the bare number — accommodates "N cards above" captions
+     without the ± buttons jumping around. */
+  min-width: 160px;
+}
+
+.positionNumber {
+  font-family: var(--font-display);
+  font-size: var(--text-callout);
+  font-weight: 600;
+  line-height: 1;
+}
+
+.positionCaption {
+  font-family: var(--font-body);
+  font-size: var(--text-caption);
+  font-weight: 400;
+  color: var(--color-fg-secondary);
+  letter-spacing: 0.04em;
+}
+
 /* --- Card grid (NameCard: pick a card type to name) --- */
 
 .cardGrid {
@@ -201,104 +226,62 @@
   gap: var(--space-2);
 }
 
-/* --- Tap order with peek-accent cascade (FuturePeek: rearrange top 3) --- */
+/* --- Full-card peek scroller (FuturePeek: See the Future + Alter the Future) ---
+   Replaces the earlier micro-tile layout. Each card renders as a full
+   MinimalCard (illustration + name + description) sized to dominate the
+   viewport, with the neighboring card peeking past the right edge so the
+   swipe affordance reads without instructions. Scroll-snap centers each card.
+*/
 
-.tapOrder {
+.peekScroll {
   display: flex;
-  gap: var(--space-2);
-  justify-content: center;
-  padding: var(--space-2) 0;
+  gap: var(--space-3);
+  padding: var(--space-2) var(--space-3) var(--space-3);
+  margin: 0 calc(var(--space-3) * -1);
+  overflow-x: auto;
+  overflow-y: hidden;
+  scroll-snap-type: x mandatory;
+  scrollbar-width: none;
+  -webkit-overflow-scrolling: touch;
 }
 
-.tapCard {
+.peekScroll::-webkit-scrollbar { display: none; }
+
+.peekSlot {
+  position: relative;
+  flex: 0 0 auto;
+  /* Each card hogs the visible width so the illustration reads clearly, with
+     the next card peeking ~15% beyond the right edge to telegraph swipe. */
+  width: 70vw;
+  max-width: 280px;
+  scroll-snap-align: center;
   display: flex;
   flex-direction: column;
-  align-items: center;
+  align-items: stretch;
   gap: var(--space-2);
-  padding: var(--space-4) var(--space-3);
-  border-radius: var(--radius-card);
-  /* Per-instance theming via --peek-accent inline cascade. Border + background
-     blend the accent at low opacity into the surface color so each card carries
-     its card-type's signature color without dominating. PRESERVE THIS PATTERN. */
-  border: 2px solid color-mix(in srgb, var(--peek-accent, var(--color-border-subtle)) 40%, var(--color-border-subtle));
-  border-left: 3px solid var(--peek-accent, var(--color-border-subtle));
-  background:
-    linear-gradient(
-      180deg,
-      color-mix(in srgb, var(--peek-accent, transparent) 12%, var(--color-bg-app)) 0%,
-      color-mix(in srgb, var(--peek-accent, transparent) 4%, var(--color-bg-app)) 100%
-    );
-  color: var(--color-fg-primary);
-  font-family: var(--font-body);
-  font-size: var(--text-caption);
-  text-align: center;
-  cursor: pointer;
-  touch-action: manipulation;
-  /* Floor — prevents the card from collapsing too narrow inside the flex tap-order row. */
-  min-width: 90px;
-  transition:
-    border-color var(--motion-duration-fast) var(--motion-ease-base),
-    opacity var(--motion-duration-fast) var(--motion-ease-base);
+  transition: opacity var(--motion-duration-fast) var(--motion-ease-base);
 }
 
-.tapCard:active {
-  background:
-    linear-gradient(
-      180deg,
-      color-mix(in srgb, var(--peek-accent, transparent) 20%, var(--color-bg-app)) 0%,
-      color-mix(in srgb, var(--peek-accent, transparent) 8%, var(--color-bg-app)) 100%
-    );
+.peekSlot[data-tapped] {
+  opacity: 0.45;
 }
 
-.tapCard[data-tapped] {
-  border-color: var(--color-accent-intercept);
-  opacity: 0.5;
-}
-
-.tapCardIcon {
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  /* Sized to match the CardBadge child component below (28px) — structural value
-     keyed to the consumer component, not a design decision. */
-  width: 28px;
-  height: 28px;
-  color: var(--peek-accent, var(--color-fg-secondary));
-}
-
-.tapCardIcon :global(.cardBadge) {
-  position: static;
-  width: 100%;
-  height: 100%;
-}
-
-.tapCardIcon :global(.cardBadge) svg {
-  width: 100%;
-  height: 100%;
-}
-
-.tapCardName {
-  font-family: var(--font-body);
-  font-weight: 600;
-  font-size: var(--text-caption);
-  /* Per-instance accent at 70% strength blended over the primary text color —
-     subtle tinting that hints at the card's category without losing legibility. */
-  color: color-mix(in srgb, var(--peek-accent, var(--color-fg-primary)) 70%, var(--color-fg-primary));
-  line-height: 1.2;
-}
-
-.tapCardPosition {
-  font-family: var(--font-body);
-  font-size: var(--text-caption);
-  font-weight: 500;
-  color: var(--color-fg-secondary);
-}
-
-.orderBadge {
+.peekBadge {
   font-family: var(--font-display);
   font-size: var(--text-caption);
   font-weight: 700;
-  color: var(--color-accent-intercept);
+  letter-spacing: 0.14em;
+  text-transform: uppercase;
+  text-align: center;
+  color: var(--color-fg-secondary);
+  padding: var(--space-1) var(--space-2);
+  border-radius: var(--radius-sm);
+  background: color-mix(in oklab, var(--color-bg-elevated) 85%, transparent);
+}
+
+.peekSlot[data-tapped] .peekBadge {
+  background: var(--color-accent-intercept);
+  color: var(--color-fg-on-intercept);
 }
 
 /* --- Keyboard focus indicator (combined selector for all interactive elements) ---

@@ -5,17 +5,20 @@ import type { CardType, SubPhase } from '@shared/types'
 import type { NopeWindowView } from '@shared/protocol'
 import { haptic } from '@client/shared/haptics'
 import { MOTION } from '@client/shared/tokens/motion'
+import { useCurrentTurn } from '@client/shared/hooks/useSharedSelectors'
 import styles from './SmartActionBox.module.css'
 
-/** Human-readable action text for the smart action box */
+/** Human-readable action text for the smart action box.
+ *  Two-line entries stack "End turn" (primary) over the effect (secondary);
+ *  single-line entries render alone. Newline is the split sentinel. */
 const ACTION_TEXT: Partial<Record<CardType, string>> = {
-  'go-dark': 'End turn \u2014 skip drawing',
+  'go-dark': 'End turn\nskip drawing',
   'intel-briefing': 'Peek at the top 3 cards',
   'falsify-intel': 'View and rearrange top 3 cards',
-  'reassign': 'End turn \u2014 next player draws twice',
+  // 'reassign' + 'direct-order' computed dynamically — they stack with pending
+  // turns (N+2), so copy must reflect the real count at play-time.
   'burn-the-files': 'Shuffle the draw pile',
-  'back-channel': 'End turn \u2014 draw from bottom',
-  'direct-order': 'End turn \u2014 force someone to draw \u2192',
+  'back-channel': 'End turn\ndraw from bottom',
   'call-in-a-favor': 'Take a card from someone \u2192',
 }
 
@@ -40,17 +43,19 @@ interface SmartActionBoxProps {
   readonly nopeWindow: NopeWindowView | null
   readonly hasIntercept: boolean
   readonly isAlive: boolean
+  readonly favorMode: { requesterName: string } | null
   readonly onConfirm: () => void
   readonly onConfirmWithTarget: () => void
   readonly onDraw: () => void
   readonly onIntercept: () => void
+  readonly onSurrender: () => void
 }
 
 export function SmartActionBox({
   cardPlayState, isMyTurn, subPhase, drawPileCount,
   disabled, optimisticPending,
-  nopeWindow, hasIntercept, isAlive,
-  onConfirm, onConfirmWithTarget, onDraw, onIntercept,
+  nopeWindow, hasIntercept, isAlive, favorMode,
+  onConfirm, onConfirmWithTarget, onDraw, onIntercept, onSurrender,
 }: SmartActionBoxProps) {
   // Intercept window countdown — ticks fast enough to catch the "0s" frame
   // before the server's 300ms grace period resolves the window. At 3s windows
@@ -66,6 +71,13 @@ export function SmartActionBox({
     return () => clearInterval(timer)
   }, [nopeWindow?.deadlineMs, nopeWindow?.generation])
 
+  // Attack stacking: target receives (turnsRemaining - 1) + 2 = turnsRemaining + 1
+  // turns. Normal turn (turnsRemaining=1) → 2. Under an existing attack
+  // (turnsRemaining=2) → 3. Etc. Copy reflects the real count so stacking reads
+  // honestly. Fallback to 2 when turn data is missing (pre-playing phase).
+  const currentTurn = useCurrentTurn()
+  const attackTurns = (currentTurn?.turnsRemaining ?? 1) + 1
+
   const state = deriveState(cardPlayState, isMyTurn, subPhase, drawPileCount)
 
   // Intercept is always interactive during the nope window — the outer
@@ -74,6 +86,15 @@ export function SmartActionBox({
   // for non-actors, so intercept must bypass it.
   const isIntercept = state.key === 'intercept'
   const buttonDisabled = isIntercept ? optimisticPending : (disabled || optimisticPending)
+
+  const [primary, ...rest] = state.text.split('\n')
+  const secondary = rest.join(' ') || null
+  const content = secondary ? (
+    <>
+      <span className={styles.primaryLine}>{primary}</span>
+      <span className={styles.hintText}>{secondary}</span>
+    </>
+  ) : state.text
 
   return (
     <AnimatePresence mode="wait">
@@ -88,7 +109,7 @@ export function SmartActionBox({
           exit={{ opacity: 0, scale: 0.96 }}
           transition={MOTION.quickFade}
         >
-          {state.text}
+          {content}
         </m.button>
       ) : (
         <m.div
@@ -99,7 +120,7 @@ export function SmartActionBox({
           exit={{ opacity: 0, scale: 0.96 }}
           transition={MOTION.quickFade}
         >
-          {state.text}
+          {content}
         </m.div>
       )}
     </AnimatePresence>
@@ -132,6 +153,29 @@ export function SmartActionBox({
 
     const hasStaged = cps.status === 'selecting' && cps.selectedCardIds.length > 0
 
+    // Favor-target mode — you owe the requester a card. Bypass normal turn /
+    // combo logic entirely; the only legal action here is "surrender this".
+    // A favor target's hand can never contain Burned (defuse-pending is
+    // mutually exclusive with favor-pending), so no "can't surrender Burned"
+    // branch is needed.
+    if (favorMode) {
+      if (!hasStaged || cps.status !== 'selecting') {
+        return {
+          key: 'favor-empty',
+          className: `${styles.box} ${styles.standby}`,
+          text: `Stage a card\nto surrender to ${favorMode.requesterName}`,
+          interactive: false,
+        }
+      }
+      return {
+        key: 'favor-surrender',
+        className: `${styles.box} ${styles.action}`,
+        text: `Surrender this card\nto ${favorMode.requesterName} \u2192`,
+        interactive: true,
+        action: onSurrender,
+      }
+    }
+
     // No cards staged
     if (!hasStaged) {
       if (myTurn && sub === 'turn-active') {
@@ -139,7 +183,7 @@ export function SmartActionBox({
         return {
           key: 'draw',
           className: `${styles.box} ${styles.draw} ${intense ? styles.drawIntense : ''}`,
-          text: `End turn \u2014 draw (${pileCount})`,
+          text: `End turn\ndraw (${pileCount})`,
           interactive: true,
           action: onDraw,
         }
@@ -188,7 +232,11 @@ export function SmartActionBox({
     }
 
     // Single card
-    const actionText = ACTION_TEXT[playType.cardType] ?? 'Play this card'
+    const actionText = playType.cardType === 'reassign'
+      ? `End turn\nnext player takes ${attackTurns} turns`
+      : playType.cardType === 'direct-order'
+        ? `End turn\nforce ${attackTurns} turns on someone \u2192`
+        : ACTION_TEXT[playType.cardType] ?? 'Play this card'
 
     if (playType.requiresTarget) {
       return {

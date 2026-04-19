@@ -59,7 +59,16 @@ export function DefusePlacement({ maxPosition, onPlace }: DefusePlacementProps) 
 
       <div className={styles.positionInput}>
         <button onClick={() => setPosition(p => Math.max(0, p - 1))}>-</button>
-        <span>#{position + 1}</span>
+        <span className={styles.positionValue}>
+          <span className={styles.positionNumber}>#{position + 1}</span>
+          <span className={styles.positionCaption}>
+            {position === 0
+              ? 'Top · burns on next draw'
+              : position === maxPosition
+              ? 'Bottom · last card in deck'
+              : `${position} safe draw${position === 1 ? '' : 's'} first`}
+          </span>
+        </span>
         <button onClick={() => setPosition(p => Math.min(maxPosition, p + 1))}>+</button>
       </div>
       <button

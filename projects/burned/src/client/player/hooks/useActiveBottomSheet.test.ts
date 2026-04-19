@@ -30,13 +30,10 @@ describe('deriveActiveBottomSheet', () => {
     expect(result).toEqual({ sheet: 'defuse-placement', maxPosition: 20 })
   })
 
-  it('returns favor-response when favor prompt for me', () => {
+  it('returns null for favor-response prompt (handled inline via hand + staging, no sheet)', () => {
     const prompt: PendingPromptView = { type: 'favor-response', playerId: 'p1', requesterId: 'p2' }
     const result = deriveActiveBottomSheet(prompt, 'p1', players, hand, 10, undefined)
-    expect(result?.sheet).toBe('favor-response')
-    if (result?.sheet === 'favor-response') {
-      expect(result.requesterName).toBe('Bob')
-    }
+    expect(result).toBeNull()
   })
 
   it('returns future-peek for rearrange prompt', () => {

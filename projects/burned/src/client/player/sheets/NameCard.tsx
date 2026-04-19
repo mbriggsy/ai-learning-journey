@@ -6,6 +6,7 @@ import styles from './sheets.module.css'
 interface NameCardProps {
   readonly targetName: string
   readonly onNameCard: (cardType: CardType) => void
+  readonly onCancel?: () => void
 }
 
 // Group cards by category for easier selection
@@ -15,7 +16,7 @@ const SPECIAL_CARDS = CARD_DEFS.filter(d => d.category === 'wild' || d.category 
 // Exclude Burned cards — can't be in a player's hand
 const ALL_NAMEABLE = [...OPERATIVE_CARDS, ...ACTION_CARDS, ...SPECIAL_CARDS]
 
-export function NameCard({ targetName, onNameCard }: NameCardProps) {
+export function NameCard({ targetName, onNameCard, onCancel }: NameCardProps) {
   const [submitted, setSubmitted] = useState(false)
   return (
     <div>
@@ -34,6 +35,15 @@ export function NameCard({ targetName, onNameCard }: NameCardProps) {
           </button>
         ))}
       </div>
+      {onCancel && (
+        <button
+          className={styles.cancelBtn}
+          onClick={() => { if (!submitted) { setSubmitted(true); onCancel() } }}
+          disabled={submitted}
+        >
+          Call off the raid
+        </button>
+      )}
     </div>
   )
 }

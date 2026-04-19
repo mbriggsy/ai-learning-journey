@@ -132,6 +132,15 @@ export function formatEvent(event: GameEvent, players: readonly BoardPlayer[], e
         ], eventId)
     }
 
+    case 'name-card-cancelled': {
+      const s = n(event.stealerId)
+      return pick([
+        `${s} called off the raid.`,
+        `${s} stood down.`,
+        `${s} had second thoughts.`,
+      ], eventId)
+    }
+
     case 'turn-started':
       return null
 

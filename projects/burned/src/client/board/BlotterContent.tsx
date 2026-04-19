@@ -1,7 +1,7 @@
 import { useEffect, useRef } from 'react'
 import { m, AnimatePresence } from 'motion/react'
 import {
-  useDrawPileCount, useDiscardTop,
+  useDrawPileCount, useDiscardRecent,
   usePlayerList, useCurrentTurn, usePendingPrompt,
 } from '@client/shared/hooks/useSharedSelectors'
 import { useEventFeed } from '@client/shared/hooks/useEventFeed'
@@ -53,7 +53,7 @@ function getStatusText(
  */
 export function BlotterContent() {
   const drawPileCount = useDrawPileCount()
-  const discardTop = useDiscardTop()
+  const recentDiscards = useDiscardRecent(3)
   const players = usePlayerList()
   const currentTurn = useCurrentTurn()
   const prompt = usePendingPrompt()
@@ -101,7 +101,7 @@ export function BlotterContent() {
   return (
     <div className={styles.content}>
       <div className={styles.piles}>
-        <div className={styles.pileSection}>
+        <div className={`${styles.pileSection} ${styles.pilesDraw}`}>
           <DrawPile count={drawPileCount} />
           <div className={styles.pileLabelGroup}>
             <span className={styles.pileLabel}>Draw</span>
@@ -110,10 +110,10 @@ export function BlotterContent() {
         </div>
 
         <div className={styles.pileSection}>
-          <DiscardFan topCard={discardTop} />
+          <DiscardFan recentCards={recentDiscards} />
           <div className={styles.pileLabelGroup}>
             <span className={styles.pileLabel}>Discard</span>
-            <span className={styles.pileCaption}>Last Played</span>
+            <span className={styles.pileCaption}>Last Plays</span>
           </div>
         </div>
       </div>

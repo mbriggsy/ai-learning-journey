@@ -1,6 +1,7 @@
 node_modules/
 dist/
 coverage/
+.chrome-dev-profile/
 
 # Generated palette token artifact — source of truth is primitives.css
 src/client/shared/tokens/palette.generated.ts

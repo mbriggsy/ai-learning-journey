@@ -73,6 +73,43 @@
     z-index: var(--z-raised);
   }
 
+  /* Favor banner — pinned above staging when you're the favor target.
+     Warning-toned because you OWE a card and a 60s timer is ticking. Not a
+     toast: it stays until you give a card or the server times the prompt out. */
+  .favorBanner {
+    flex: 0 0 auto;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: var(--space-2);
+    padding: var(--space-2) var(--space-3);
+    margin: 0 var(--space-1);
+    background: color-mix(in oklab, var(--color-accent-burned) 18%, var(--color-bg-elevated));
+    color: var(--color-fg-primary);
+    border: 1px solid var(--color-accent-burned);
+    border-radius: var(--radius-card);
+    font-family: var(--font-display);
+    font-size: var(--text-callout);
+    font-weight: 600;
+    letter-spacing: 0.04em;
+    text-align: center;
+    box-shadow: var(--shadow-glow-danger);
+  }
+
+  .favorBannerPrimary {
+    font-family: var(--font-display);
+    font-weight: 700;
+    letter-spacing: 0.04em;
+  }
+
+  .favorBannerSecondary {
+    font-family: var(--font-display);
+    font-weight: 600;
+    font-size: var(--text-caption);
+    color: color-mix(in oklab, currentColor 70%, transparent);
+    letter-spacing: 0.02em;
+  }
+
   /* Section label — flex child, NOT absolutely positioned. Lives at the top
      of its parent .staging or .handSection as the first ordered child.
      Landmine 3: `overflow: hidden` on the parent clips absolutely-positioned

@@ -19,7 +19,7 @@ const ALLOWED_ACTIONS: Record<SubPhase, readonly ActionType[]> = {
   'eliminated-check': [],
   'favor-pending': ['favor-give'],
   'future-rearrange-pending': ['future-rearrange'],
-  'name-card-pending': ['name-card'],
+  'name-card-pending': ['name-card', 'cancel-name-card'],
 }
 
 const COMBO_EXCLUDED_CATEGORIES = new Set<CardCategory>(['burned', 'extraction'])
@@ -58,7 +58,7 @@ export function dispatch(
 
   // Player existence check (server-only actions exempt)
   const actor = playing.players.find(p => p.id === action.playerId)
-  if (!actor && action.type !== 'nope-window-expired' && action.type !== 'nope-grace-expired' && action.type !== 'prompt-timeout') {
+  if (!actor && action.type !== 'nope-window-expired' && action.type !== 'nope-grace-expired') {
     return err(playing, 'Player not found', 'INVALID_ACTION')
   }
 
@@ -93,11 +93,6 @@ export function dispatch(
       return err(playing, 'Nope window not in grace state', 'INVALID_ACTION')
     }
     return handleNopeWindowExpired(playing, action, ctx)
-  }
-
-  // prompt-timeout is server-only — auto-resolve pending sub-phases
-  if (action.type === 'prompt-timeout') {
-    return handlePromptTimeout(playing, action, ctx)
   }
 
   // Dead players cannot act
@@ -139,6 +134,7 @@ export function dispatch(
     case 'favor-give': return handleFavorGive(playing, action, ctx)
     case 'future-rearrange': return handleFutureRearrange(playing, action, ctx)
     case 'name-card': return handleNameCard(playing, action, ctx)
+    case 'cancel-name-card': return handleCancelNameCard(playing, action, ctx)
     default: return err(playing, `Unknown action type`, 'INVALID_ACTION')
   }
 }
@@ -536,14 +532,33 @@ function handleCombo(
     return err(state, `Cards must match for ${label} (Feral Cat substitutes for cat types only)`, 'INVALID_COMBO')
   }
 
-  // Target must be picked BEFORE the combo is committed, so opponents who
-  // might Nope have full information (target name) during the nope window.
   const { targetPlayerId } = action
   if (!targetPlayerId) return err(state, 'Combo requires a target', 'INVALID_TARGET')
   if (targetPlayerId === action.playerId) return err(state, 'Cannot target yourself', 'INVALID_TARGET')
   const target = state.players.find(p => p.id === targetPlayerId && p.isAlive)
   if (!target) return err(state, 'Invalid target player', 'INVALID_TARGET')
 
+  // 3-of-a-kind: defer discard + nope until the stealer commits a name.
+  // Cards stay in hand so "cancel" at the name-card prompt is a true
+  // "I changed my mind" — hand is returned untouched. The nope window
+  // opens AFTER the name so defenders can respond with full context
+  // (stealer + target + demanded card type).
+  if (comboSize === 3) {
+    const nameCardState: PlayingState = {
+      ...state,
+      subPhase: 'name-card-pending',
+      pendingNameCard: {
+        stealerId: action.playerId,
+        targetId: targetPlayerId,
+        cardIds: cards.map(c => c.id),
+      },
+      pendingPrompt: { type: 'name-card', playerId: action.playerId, targetId: targetPlayerId },
+    }
+    return ok(nameCardState)
+  }
+
+  // 2-of-a-kind: cards commit immediately (no name step to cancel into),
+  // nope window opens with target locked in.
   let newState = removeCardsFromHand(state, action.playerId, cards.map(c => c.id))
   newState = addToDiscard(newState, cards)
 
@@ -815,42 +830,91 @@ function handleFutureRearrange(
 function handleNameCard(
   state: PlayingState,
   action: EngineAction & { type: 'name-card' },
+  ctx: DispatchContext,
+): DispatchResult {
+  const pending = state.pendingNameCard
+  if (!pending) return err(state, 'No pending name card', 'INVALID_ACTION')
+  if (pending.namedCardType !== undefined) {
+    return err(state, 'Name already committed', 'INVALID_ACTION')
+  }
+
+  // Pull the staged combo cards out of the stealer's hand and commit them
+  // to discard. This is the point of no return — cancellation is now closed.
+  const stealer = getPlayer(state, pending.stealerId)
+  if (!stealer) return err(state, 'Stealer not found', 'INVALID_ACTION')
+  const cards = pending.cardIds
+    .map(id => stealer.hand.find(c => c.id === id))
+    .filter((c): c is CardInstance => c !== undefined)
+  if (cards.length !== pending.cardIds.length) {
+    return err(state, 'Staged combo cards missing from hand', 'CARD_NOT_IN_HAND')
+  }
+
+  let newState = removeCardsFromHand(state, pending.stealerId, [...pending.cardIds])
+  newState = addToDiscard(newState, cards)
+
+  const events: GameEvent[] = [
+    { type: 'card-played', playerId: pending.stealerId, cardType: cards[0]!.type, comboSize: 3 },
+  ]
+
+  // Nope window opens NOW with the full context — stealer, target, AND the
+  // named card type — so defenders can decide whether this specific demand
+  // is worth burning an Intercept on.
+  const { window: nopeWindow, nextGen } = createNopeWindow(
+    newState,
+    {
+      type: 'play-card',
+      cardIds: [...pending.cardIds],
+      targetPlayerId: pending.targetId,
+      namedCardType: action.cardType,
+    },
+    pending.stealerId,
+    state.players.filter(p => p.isAlive).length,
+    ctx,
+  )
+
+  const withNope: PlayingState = {
+    ...newState,
+    pendingNameCard: { ...pending, namedCardType: action.cardType },
+    // Prompt closes the stealer's name-card sheet — the name is committed,
+    // now everyone waits on the nope window. Keeping the prompt open here
+    // would leave the sheet blocking the stealer's view of their own play.
+    pendingPrompt: null,
+    nopeWindow,
+    nextNopeGeneration: nextGen,
+    events: [...newState.events, ...events],
+  }
+  return ok(withNope)
+}
+
+function handleCancelNameCard(
+  state: PlayingState,
+  action: EngineAction & { type: 'cancel-name-card' },
   _ctx: DispatchContext,
 ): DispatchResult {
   const pending = state.pendingNameCard
   if (!pending) return err(state, 'No pending name card', 'INVALID_ACTION')
-
-  const target = getPlayer(state, pending.targetId)!
-  const namedCard = target.hand.find(c => c.type === action.cardType)
-
-  let newState = state
-  const found = !!namedCard
-
-  if (namedCard) {
-    newState = removeCardsFromHand(newState, pending.targetId, [namedCard.id])
-    newState = addCardsToHand(newState, pending.stealerId, [namedCard])
+  if (pending.stealerId !== action.playerId) {
+    return err(state, 'Only the stealer can cancel', 'INVALID_ACTION')
+  }
+  // Post-commit cancellation is closed: once a name is submitted, the combo
+  // cards are in discard and the nope window is open. The play is now public
+  // and irreversible — opponents may already be chaining Nope-on-Nope.
+  if (pending.namedCardType !== undefined || state.nopeWindow !== null) {
+    return err(state, 'Cannot cancel after a name has been committed', 'INVALID_ACTION')
   }
 
-  // cardType here is what the stealer NAMED — always populated on the
-  // triples path (found or whiff). Stealer and target both know: the
-  // stealer obviously named it, and the target learns what was guessed.
-  // Public/other-player views strip the field at projection time.
   const events: GameEvent[] = [
-    {
-      type: 'combo-steal',
-      stealerId: pending.stealerId,
-      targetId: pending.targetId,
-      found,
-      cardType: action.cardType,
-    },
+    { type: 'name-card-cancelled', stealerId: pending.stealerId, targetId: pending.targetId },
   ]
 
+  // Cards were never removed from the stealer's hand — pre-commit cancel is
+  // a true "changed my mind": hand returns to its exact state before play.
   const finalState: PlayingState = {
-    ...newState,
+    ...state,
     subPhase: 'turn-active',
     pendingNameCard: undefined,
     pendingPrompt: null,
-    events: [...newState.events, ...events],
+    events: [...state.events, ...events],
   }
   return ok(finalState)
 }
@@ -931,6 +995,42 @@ function handleNopeWindowExpired(
     { type: 'nope-window-resolved', cancelled, chainDepth },
   ]
 
+  // Named-steal resolution takes priority over all other branches — the
+  // nope window that just closed was opened AFTER the name commit, so the
+  // pending action is "perform steal of <namedCardType>" (or whiff).
+  // Cards already moved to discard at name-commit time regardless of outcome,
+  // matching tabletop semantics ("a Noped combo still goes to discard").
+  if (state.pendingNameCard?.namedCardType) {
+    const { stealerId, targetId, namedCardType } = state.pendingNameCard
+    const baseState: PlayingState = {
+      ...state,
+      ...CLEAR_PENDING,
+      subPhase: 'turn-active',
+      nopeWindow: null,
+      events: [...state.events, ...events],
+    }
+    if (cancelled) {
+      return ok(baseState)
+    }
+    const target = getPlayer(baseState, targetId)
+    if (!target) return err(baseState, 'Target not found', 'INVALID_ACTION')
+    const namedCard = target.hand.find(c => c.type === namedCardType)
+    let resultState = baseState
+    const found = !!namedCard
+    if (namedCard) {
+      resultState = removeCardsFromHand(resultState, targetId, [namedCard.id])
+      resultState = addCardsToHand(resultState, stealerId, [namedCard])
+    }
+    const stealEvent: GameEvent = {
+      type: 'combo-steal',
+      stealerId,
+      targetId,
+      found,
+      cardType: namedCardType,
+    }
+    return ok({ ...resultState, events: [...resultState.events, stealEvent] })
+  }
+
   if (cancelled) {
     // Action was Noped — cards already in discard, return to turn-active
     const newState: PlayingState = {
@@ -947,22 +1047,15 @@ function handleNopeWindowExpired(
   const newState: PlayingState = { ...state, nopeWindow: null, events: [...state.events, ...events] }
 
   if (pendingAction.type === 'play-card') {
-    // Combo path — target was bundled with the play-card action, so we can
-    // resolve the steal (2-card) or open the name-card prompt (3-card)
-    // immediately without a separate target-select step.
+    // 2-kind combo: target was bundled, resolve the random steal directly.
+    // (3-kind no longer uses pendingSteal — it lands in the named-steal
+    // branch above before this point.)
     if (state.pendingSteal) {
       const { stealerId, targetPlayerId, comboSize } = state.pendingSteal
       if (comboSize === 2) {
         return performRandomSteal(newState, stealerId, targetPlayerId, ctx)
       }
-      const nameCardState: PlayingState = {
-        ...newState,
-        subPhase: 'name-card-pending',
-        pendingSteal: undefined,
-        pendingNameCard: { stealerId, targetId: targetPlayerId },
-        pendingPrompt: { type: 'name-card', playerId: stealerId, targetId: targetPlayerId },
-      }
-      return ok(nameCardState)
+      return err(newState, 'Stale 3-kind pendingSteal on resolution', 'INVALID_ACTION')
     }
 
     // Single card — use originalCardType stored on the NopeWindow (not discard tail, which may be a Nope card)
@@ -980,75 +1073,6 @@ function handleNopeWindowExpired(
   return ok(newState)
 }
 
-function handlePromptTimeout(
-  state: PlayingState,
-  action: EngineAction & { type: 'prompt-timeout' },
-  ctx: DispatchContext,
-): DispatchResult {
-  // Verify subPhase matches what timed out
-  if (state.subPhase !== action.subPhase) {
-    return err(state, 'SubPhase mismatch — timeout is stale', 'INVALID_ACTION')
-  }
-
-  switch (action.subPhase) {
-    case 'favor-pending': {
-      // Resolve with no transfer — target didn't respond
-      const newState: PlayingState = {
-        ...state,
-        ...CLEAR_PENDING,
-        subPhase: 'turn-active',
-        events: [...state.events],
-      }
-      return ok(newState)
-    }
-
-    case 'future-rearrange-pending': {
-      // Keep original order — player didn't rearrange
-      const newState: PlayingState = {
-        ...state,
-        ...CLEAR_PENDING,
-        subPhase: 'turn-active',
-        events: [...state.events],
-      }
-      return ok(newState)
-    }
-
-    case 'defuse-pending': {
-      // Insert the player's EK at random position (CSPRNG)
-      if (!state.pendingDefuse) return err(state, 'No pending defuse', 'INVALID_ACTION')
-      const player = getPlayer(state, state.pendingDefuse.playerId)
-      if (!player) return err(state, 'Player not found', 'INVALID_ACTION')
-      const ek = player.hand.find(c => c.type === 'burned')
-      if (!ek) return err(state, 'No EK in hand', 'INVALID_ACTION')
-      const defuseState = removeCardsFromHand(state, state.pendingDefuse.playerId, [ek.id])
-      const pile = [...defuseState.drawPile]
-      const pos = ctx.randomInt(pile.length + 1)
-      pile.splice(pos, 0, ek)
-      const newState: PlayingState = {
-        ...defuseState,
-        ...CLEAR_PENDING,
-        drawPile: pile,
-        subPhase: 'turn-active',
-        events: [...defuseState.events],
-      }
-      return ok(newState)
-    }
-
-    case 'name-card-pending': {
-      // Cancel steal — player didn't name a card before the prompt timed out.
-      const newState: PlayingState = {
-        ...state,
-        ...CLEAR_PENDING,
-        subPhase: 'turn-active',
-        events: [...state.events],
-      }
-      return ok(newState)
-    }
-
-    default:
-      return err(state, `Cannot timeout subPhase: ${action.subPhase}`, 'INVALID_ACTION')
-  }
-}
 
 // --- Elimination ---
 

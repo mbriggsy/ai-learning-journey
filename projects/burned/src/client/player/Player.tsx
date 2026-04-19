@@ -29,7 +29,6 @@ import { BottomSheet } from '@client/shared/BottomSheet'
 import { TargetSelect } from './sheets/TargetSelect'
 import { DefusePlacement } from './sheets/DefusePlacement'
 import { FuturePeek } from './sheets/FuturePeek'
-import { FavorResponse } from './sheets/FavorResponse'
 import { NameCard } from './sheets/NameCard'
 import { CardDetailSheet } from './CardDetailSheet'
 import type { CardType } from '@shared/types'
@@ -92,17 +91,22 @@ export function Player() {
         if (token) send({ type: 'join', payload: { name: '', sessionToken: token } })
         return
       }
-      // First join: dev-launcher tabs carry ?name=X and must fresh-join so
-      // 10 tabs on the same room code each get their own player identity
-      // (localStorage is shared across tabs). Normal player tabs (no urlName,
-      // e.g. QR-scanned join) fall back to a stored token if one exists
-      // — that's the refresh-recovery path for the same tab reopening.
-      if (urlName) {
-        send({ type: 'join', payload: { name: urlName } })
+      // First load in this tab. Prefer a tab-scoped sessionStorage token if
+      // one is present — that means this is a refresh (or BFCache restore)
+      // of a tab that had already joined. Reconnecting transparently is the
+      // slick path and avoids forcing the player through the Check In screen
+      // during a live game.
+      const token = getSessionToken(roomCode)
+      if (token) {
+        send({ type: 'join', payload: { name: '', sessionToken: token } })
         return
       }
-      const token = getSessionToken(roomCode)
-      if (token) send({ type: 'join', payload: { name: '', sessionToken: token } })
+      // No stored token in this tab. Dev-launcher tabs carry ?name=X and
+      // fresh-join so every tab gets its own player identity. Real player
+      // tabs with no ?name= fall through to the JoinScreen's manual entry.
+      if (urlName) {
+        send({ type: 'join', payload: { name: urlName } })
+      }
     }
 
     const unsubAutoJoin = onStatusChange(s => {
@@ -248,7 +252,18 @@ function PlayingView({ roomCode }: { roomCode: string }) {
 
   const isAlive = myPlayer?.isAlive ?? false
 
-  const { state: cardPlayState, selectedIds, toggleCard, reset: resetCardPlay } = useCardPlay(hand, isMyTurn, subPhase)
+  // Favor-target mode — the one prompt where the target interacts with their
+  // real hand + staging area instead of a dedicated sheet. Drives the banner,
+  // the staging cap, and the SmartActionBox "surrender" state.
+  const isFavorTarget =
+    pendingPrompt?.type === 'favor-response' && pendingPrompt.playerId === myPlayerId
+  const favorRequesterName = isFavorTarget
+    ? players.find(p => p.id === pendingPrompt.requesterId)?.name ?? 'Someone'
+    : null
+
+  const { state: cardPlayState, selectedIds, toggleCard, reset: resetCardPlay } = useCardPlay(
+    hand, isMyTurn, subPhase, isFavorTarget ? 1 : 3,
+  )
 
   // Card detail sheet (long-press)
   const [detailCardType, setDetailCardType] = useState<CardType | null>(null)
@@ -361,9 +376,16 @@ function PlayingView({ roomCode }: { roomCode: string }) {
     }
   }, [sendAction, drawPileCount])
 
-  const handleFavorGive = useCallback((cardId: string) => {
+  // Favor-target confirm path — pulls the single staged card out of state,
+  // sends favor-give, and resets staging so the view returns to its normal
+  // hand rendering when the server transitions out of favor-pending.
+  const handleSurrender = useCallback(() => {
+    if (cardPlayState.status !== 'selecting') return
+    const [cardId] = cardPlayState.selectedCardIds
+    if (!cardId) return
     sendAction({ type: 'favor-give', cardId })
-  }, [sendAction])
+    resetCardPlay()
+  }, [cardPlayState, sendAction, resetCardPlay])
 
   const handleFutureRearrange = useCallback((order: string[]) => {
     sendAction({ type: 'future-rearrange', order })
@@ -371,6 +393,10 @@ function PlayingView({ roomCode }: { roomCode: string }) {
 
   const handleNameCard = useCallback((cardType: CardType) => {
     sendAction({ type: 'name-card', cardType })
+  }, [sendAction])
+
+  const handleCancelNameCard = useCallback(() => {
+    sendAction({ type: 'cancel-name-card' })
   }, [sendAction])
 
   const handleLocalTargetSelect = useCallback((targetPlayerId: string) => {
@@ -400,9 +426,18 @@ function PlayingView({ roomCode }: { roomCode: string }) {
       <StatusBar isMyTurn={isMyTurn} currentPlayerName={currentPlayerName} drawPileCount={drawPileCount} />
 
       <div className={playingStyles.workbench}>
+        {isFavorTarget && favorRequesterName && (
+          <div className={playingStyles.favorBanner} role="status" aria-live="polite">
+            <span className={playingStyles.favorBannerPrimary}>
+              {favorRequesterName} demands a card
+            </span>
+            <span className={playingStyles.favorBannerSecondary}>· pick one to surrender</span>
+          </div>
+        )}
+
         {/* Staging area — compose your play */}
         <div className={playingStyles.staging}>
-          <div className={playingStyles.sectionLabel}>Staging</div>
+          <div className={playingStyles.sectionLabel}>{isFavorTarget ? 'Surrender' : 'Staging'}</div>
           <StagingArea
             hand={hand}
             cardPlayState={cardPlayState}
@@ -414,11 +449,13 @@ function PlayingView({ roomCode }: { roomCode: string }) {
             nopeWindow={nopeWindow}
             hasIntercept={hasIntercept}
             isAlive={isAlive}
+            favorMode={isFavorTarget ? { requesterName: favorRequesterName! } : null}
             onUnstageCard={toggleCard}
             onConfirm={handleConfirm}
             onConfirmWithTarget={handleConfirmWithTarget}
             onCardLongPress={handleCardLongPress}
             onIntercept={handleIntercept}
+            onSurrender={handleSurrender}
           />
         </div>
 
@@ -467,16 +504,6 @@ function PlayingView({ roomCode }: { roomCode: string }) {
         )}
       </BottomSheet>
 
-      <BottomSheet open={showServerSheet && activeSheet?.sheet === 'favor-response'}>
-        {activeSheet?.sheet === 'favor-response' && (
-          <FavorResponse
-            requesterName={activeSheet.requesterName}
-            hand={activeSheet.hand}
-            onGiveCard={handleFavorGive}
-          />
-        )}
-      </BottomSheet>
-
       <BottomSheet open={showServerSheet && activeSheet?.sheet === 'future-peek'}>
         {activeSheet?.sheet === 'future-peek' && (
           <FuturePeek
@@ -493,6 +520,7 @@ function PlayingView({ roomCode }: { roomCode: string }) {
           <NameCard
             targetName={activeSheet.targetName}
             onNameCard={handleNameCard}
+            onCancel={handleCancelNameCard}
           />
         )}
       </BottomSheet>

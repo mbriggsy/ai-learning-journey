@@ -3,107 +3,122 @@
 ## Current State
 
 - **PRODUCT-SPECIFICATION.md v1.0 LOCKED** — `docs/specifications/PRODUCT-SPECIFICATION.md` (2026-04-10).
-- **235/235 Vitest, typecheck clean** (verified 2026-04-18, end of session).
-- **Protocol version bumped to 2** — older clients connecting to the new server see `protocolMismatch` and get a warning overlay. Bump driven by the combo-flow refactor (see below).
-- **Player ring retired, PlayerStrip is live** — `src/client/board/PlayerStrip.tsx` renders a horizontal nameplate row along the bottom of the board (UMB-vocabulary). Each tile: presence dot + name (7-char cap via `truncate()`) + card-count chip. Active player tile becomes cream paper with ochre top rule and a rotated "ACTIVE" stamp. Tiles auto-size via `clamp()` font scaling so 10-player case fits one row without overflow. Ring math (`layout/ringLayout.ts`, `PlayerRing.*`) DELETED along with the ring-related CSS tokens. Blotter grew into the reclaimed space — see `--pos-blotter-left`, `--pos-blotter-top` in `semantic.board.css`.
-- **Combo target picked BEFORE nope window** — `play-card` for a 2-card or 3-card combo now requires `targetPlayerId` up-front (client picks via the `TargetSelect` bottom sheet in local-target mode). Server bundles target into `pendingSteal`; nope window opens with full info on the board so opponents can nope knowing WHO is being hit. Post-nope resolution resolves the random steal (2-card) or opens `name-card-pending` (3-card) immediately — no intermediate `select-target` step. `select-target` action + `steal-target-pending` subphase + `steal-target` PendingPrompt type all REMOVED.
-- **TargetSelect has an explicit Cancel button** — used by Favor / Targeted Attack / both combos. Cancel is free (pre-commit): nothing sent to server until a target is locked in.
-- **Attack / Targeted Attack stacking formula fixed** — was `turnsRemaining + 2` (off by 1), now `(turnsRemaining - 1) + 2` to match rules §10.2. Fresh DO gives target 2 turns (was 3). Stacked case (e.g. attacker on turn 1 of 2 plays DO) gives target 3 turns (was 4). Two new tests in `engine.test.ts` lock the correct behavior.
-- **StealReport classified-dispatch overlay** — `src/client/player/StealReport.tsx` fires a persistent, dismissable, cream-paper dispatch on the victim's phone when a combo steal resolves (hit OR triple-steal guess miss). Queues multiple reports with `+N more` chip. Gated by `useDramaActive()` so a concurrent BURNED → EXTRACTED sequence plays first. Replaces the target-side combo-steal toasts in `PlayerAlert` (which now only fires on the stealer side, where the player is guaranteed to be at the phone).
-- **Shared `dramaState`** — `src/client/shared/dramaState.ts`. `DramaOverlay` flips `setDramaActive(true/false)` across its queue; any modal/sheet consumer uses `useDramaActive()` to gate its appearance. Used by server-prompted sheets (Player.tsx `showServerSheet`) and StealReport.
-- **COMMS retention** — `gameStore.accumulateEvents` no longer TTL-filters (was 30s). Only the 20-entry cap remains, so slow decision windows (long Defuse placement) don't age prior events out of the feed.
-- **Event copy** — all event variants name their operative. "Safe. For now." → "Mittens is safe. For now." "Deck shuffled. Nobody knows anything." → "Mittens shuffles — nobody knows anything."
-- **Back Channel description unified** — three places now all begin with "End your turn —": `card-defs.ts` (canonical), `CardDetailSheet.tsx` PLAY_HINTS, `SmartActionBox.tsx` ACTION_TEXT.
-- **Phone connection fix** — `attemptAutoJoin` uses a per-tab `initialJoinDoneRef` to avoid dev-launcher tab eviction. First join in a tab with `?name=X` always fresh-joins; reconnects within that tab use the stored session token.
-- **Join screen stabilized** — `.waiting` flex row is center-aligned with explicit `line-height` so the empty↔"..." rotation on `.waitingDots::after` doesn't shift the baseline.
+- **238/238 Vitest, typecheck clean** (verified 2026-04-19, end of session).
+- **Protocol version 2** — unchanged this session.
+- **Triple-steal flow is deferred-commit.** 3-of-a-kind play stages cards in the stealer's hand; cancel returns them untouched. Name-commit discards the cards AND opens the nope window (carrying stealer+target+namedCardType), so defenders Nope with full context. Matches tabletop semantics where the named card is public before Nope. Engine: `handleCombo` skips discard/nope for comboSize===3; `handleNameCard` commits and opens the window; `handleNopeWindowExpired` has a named-steal resolution branch that runs BEFORE the legacy `pendingSteal` branch.
+- **Cancel button on NameCard sheet.** "Call off the raid" — pre-commit only (rejected post-name because the play is already public and the nope window is live).
+- **Favor-target uses hand + staging, not a sheet.** `FavorResponse.tsx` deleted. When targeted, the phone shows a pinned `Vera demands a card` banner; the hand stays live (permission carve-out in `useInteractionPermission.ts`); staging caps at 1 (auto-swap on second tap); SmartActionBox shows a `Surrender this card → Vera` confirm. One less modal, consistent grammar with normal play.
+- **All server prompt-timeouts removed.** Party-game policy: game waits for you. Favor / future-rearrange / defuse / name-card have no auto-resolve timer. Only the Nope window timer remains (it bounds a reactive window, not a decision window). Removed: `PROMPT_TIMEOUT_MS`, `updatePromptTimer`, `handlePromptTimeout`, the `prompt-timeout` action type.
+- **Session token in sessionStorage, not localStorage.** Per-tab isolation fixes the dev-launcher multi-tab clobber that was making refreshed players reconnect as the wrong identity. Tradeoff: closing a tab fully kills the session (a real player who closes their browser mid-game must rejoin by name).
+- **Name-reclaim mid-game.** Server's `handleJoin` now accepts a bare-name rejoin if (a) the name matches an existing player and (b) no other device is currently connected as them. Covers closed-tab / dead-phone recovery. Identity theft blocked: if another device is actively connected as that name, reclaim is rejected with `NAME_TAKEN`.
+- **Attack-stack copy is dynamic.** Reassign / Direct Order action buttons compute `${turnsRemaining + 1}` and render honest copy — `next player takes 2 turns` on a fresh turn, `next player takes 4 turns` when stacking under an existing attack.
+- **Discard pile is the hero.** Draw pile shrunk and dimmed (decorative counter); discard fan shows 3 face-up cards with the newest centered, previous two tilted left/right at reduced opacity. Selector `useDiscardRecent(3)` returns newest-first.
+- **Drama overlay adds a two-beat burned sequence.** Non-drawers (and the board) see `{NAME} IS…` → `BURNED`; the drawer still sees the single-beat `BURNED`. All five drama beats (`BURNED`, `EXTRACTED`, `{NAME} ELIMINATED`, `INTERCEPTED`, `{NAME} WINS`) render without terminal periods.
+- **FuturePeek (See / Alter the Future) rewrite.** Full `MinimalCard` art in a horizontal scroll-snap container (70vw per card, next peeks past the edge). Badge: `Draw 1 · next` / `Draw 2` / `Draw 3` read-only; tap-order `#1` / `#2` / `#3` in rearrange. Auto-close countdown removed.
+- **Sable Ashworth portrait regen.** Direct camera gaze, deep V-neck, Zippo at hip. Old portrait archived at `public/assets/roster/_archive/sable-ashworth-2026-04-19-flame-gaze.png`.
+- **`pnpm dev:launch`.** Spawns Chrome with `--auto-open-devtools-for-tabs` + an isolated `.chrome-dev-profile/`, lands on `/dev.html`. Every tab the launcher spawns inherits auto-DevTools.
 
 ## Next Steps (in priority order)
 
-### 1. Real-device playtest of the new combo + StealReport flow
-**Goal:** Live multi-device playtest at 4-8 players, iPad Pro 1366 + phones. Verify:
-- Combo target picker opens before nope window (nope window on board shows target name to opponents).
-- Cancel in TargetSelect cleanly returns cards to hand.
-- StealReport lands on victim phone with no overlap against BURNED → EXTRACTED overlays.
-- Attack / Direct Order stacking feels correct (target gets 2 fresh, 3 when stacking).
-- PlayerStrip 10-player case reads cleanly on real TV.
+### 1. Toast the drawn card on end-of-turn draw
+**Goal:** when a player ends their turn by tapping `End turn · draw`, surface what they just drew so they can confirm the outcome without squinting at the discard fan.
+**Prescription:**
+- `PlayerAlert.tsx` — add a `card-drawn` case when `event.playerId === myId` and `event.safe === true`. Label the alert with the card name via `CARD_DEF_BY_TYPE[event.cardType]?.name`.
+- Problem: `card-drawn` event doesn't currently carry `cardType` — check `src/shared/types.ts` and `performDraw` in `engine.ts:640`. If `cardType` is absent, add it (server-side, non-private — the card is going into the drawer's own hand and will be visible via `myHand` on the next state-update anyway, so no leak).
+- Burned draw is already covered by the drama overlay; `safe === false` path is the EXTRACTED / ELIMINATED drama, don't double-notify.
+- Tone: `info`, ~2s. Copy: `You drew {cardName}.` or `{cardName} — added to your hand.`
+- Validate: play back a turn from the requester side, confirm the toast appears, confirm Burned draws are NOT double-notified.
 
-### 2. 8-player stress test
-**Goal:** Verify PlayerStrip layout at max count on real TV, COMMS scroll under event volume, nameplate legibility from couch distance.
+### 2. Real-device playtest
+Live 4-8 player test on iPad Pro 1366 + phones. Verify this session's flows on real hardware:
+- Triple-steal deferred commit — cards return on cancel, nope window opens AFTER the name.
+- Favor-target banner + staging (no more sheet modal).
+- Discard hero sizing reads from couch distance.
+- Burned two-beat drama sequence on non-drawer phones.
+- Sable's new portrait reads at card size.
+- `pnpm dev:launch` actually makes debugging easier.
+
+### 3. Host kick-and-advance affordance
+**Goal:** when a seat is truly abandoned (not a beer break), host can force the game forward. Backstop for the "timeouts removed" policy.
+**Prescription:**
+- Board-side button in the dossier footer or alongside the blotter — `Skip {name}` or similar.
+- Only visible when the named player is disconnected (via `disconnectTimers` state) AND the game is stalled on their prompt.
+- Server action: `host-force-resolve` that auto-resolves the current pendingPrompt the same way the removed prompt-timeout used to (random Defuse position, cancel the steal, no transfer, etc).
+- Connection detection: `BoardPlayer.isConnected` already exists in the projection. Gate the button on `!isConnected`.
+
+### 4. 8-player stress test
+Verify PlayerStrip layout at max count on real TV, COMMS scroll under event volume, nameplate legibility from couch distance.
 **Landing gate:** at 1366×1024, strip math leaves ~34px headroom with all 10 tiles; verify at 1920 and 4K that tiles grow proportionally.
 
-### 3. Discard fan — show 2–3 previous plays face-up
-**Prescription:**
-- Update `DiscardFan.tsx` to accept `discardPile: readonly CardInstance[]` (already in protocol at `src/shared/protocol.ts:88`).
-- Render top card centered/straight. Render previous 1–2 cards face-UP at slight rotation (−4°, −7°), offset left by 4px / 8px, z-index behind top, opacity 0.85 / 0.7.
-- If <3 cards played, render only what exists.
-- No information leak risk — discard is public per protocol.
+### 5. Blotter content layout polish
+Options for the piles column: (a) vertically center the pile lockup, (b) scale the pile visual further, (c) decorative classified chrome (memo pad, paperclip). Briggsy's call at kickoff which direction feels right.
 
-### 4. Blotter content layout polish
-**Goal:** Maximized blotter exposed new empty space in the piles column. Pile lockup now sits high-left with unused cream above/below. Options: (a) vertically center the pile lockup, (b) scale the pile visual up, (c) add decorative classified chrome (memo pad, paperclip, etc.) to fill the unused area.
-**Landing:** Briggsy's call at kickoff which direction feels right.
-
-### 5. Live mid-play state verification (pre-existing)
+### 6. Live mid-play state verification
 Playwright script at `tests/e2e/arena-states.spec.ts`: 3-player game, play a card that triggers Nope window, screenshot mid-countdown; play a card that triggers DramaOverlay, screenshot the drama.
 
-### 6. Physical hardware verification (pre-existing)
+### 7. Physical hardware verification
 Push commits, deploy to Cloudflare Pages (wrangler), open on actual TV with phone controllers.
 
-### 7. Extend PlayerAlert coverage (optional)
-Potential additions:
-- **Reassign / Direct Order target** — no direct event type; victim only learns via `turn-started` with `turnsRemaining > 1`. If Johnny-scenario applies (victim away when attack lands), promote this to StealReport-style persistent overlay. Probably fine as-is because the target's phone sits dormant — when they come back, staging is lit and status reads "Your turn · 3 turns".
+### 8. Extend PlayerAlert coverage (optional)
+- **Reassign / Direct Order target** — no direct event type; victim only learns via `turn-started` with `turnsRemaining > 1`. Probably fine as-is because the target's phone sits dormant — when they come back, staging is lit and status reads "Your turn · 3 turns".
 - **Your card was intercepted** — optimistic snapback + board DramaOverlay already communicate this, but explicit phone toast would remove ambiguity. Skip until playtest reveals confusion.
 
-### 8. Tier 2 retheme cleanup (pre-existing, non-blocking)
-- `src/shared/card-defs.ts:27` — `'sable-ashworth'` card type → `'otto-prang'`. Stale character name from a pre-spec iteration. Rename affects the CardType union; grep first for call sites.
+### 9. Tier 2 retheme cleanup (non-blocking)
 - `src/server/game/engine.ts` — any remaining `// EKs` / `'No EK in hand'` strings → Burned vocabulary.
-- `src/shared/constants.ts:21` — `EK_REVEAL_MS` → `BURNED_REVEAL_MS` (rename across all call sites).
+- `src/shared/constants.ts` — `EK_REVEAL_MS` → `BURNED_REVEAL_MS` (rename across all call sites).
 
-### 9. Execute Phase 5 — Verification & Acceptance (pre-existing)
+### 10. Execute Phase 5 — Verification & Acceptance
 **`/ce:work docs/plans/css-foundation-rebuild/phase-5-verification-acceptance.md`**
 
-### 10. Engine coverage gaps (pre-existing)
+### 11. Engine coverage gaps
 - **G1:** No regression test that `pendingFuture` survives mid-turn if Intel Briefing is played during a non-attack turn.
-- **G3:** No explicit test of Attack+Defuse multi-turn continuation (rules §11 worked example). Engine logic at `engine.ts:715–733` is correct per audit, just untested.
+- **G3:** No explicit test of Attack+Defuse multi-turn continuation (rules §11 worked example).
 
-### 11. Optional polish follow-ups
-- **Brass studs on wood frame.** Add via CSS pseudo-elements (small radial-gradient dots at regular intervals on `.woodTop/.woodBottom`).
+### 12. Optional polish follow-ups
+- **Brass studs on wood frame.** CSS pseudo-elements (small radial-gradient dots at regular intervals on `.woodTop/.woodBottom`).
 - **Remove unused `public/assets/arena/mahogany.png`.** Superseded by the 4-edge split.
-- **Blotter piles lockup** — see priority 4.
 
 ## Landmines
 
 ### New this session
 
-- **Combo flow bundles target with `play-card`.** `select-target` action, `steal-target-pending` subphase, and `steal-target` PendingPrompt type are GONE. Do not reintroduce without a product decision — the new flow exists specifically so the nope window opens with the target name visible to opponents (rules §10.2 / real-world EK: "I play two beards on Dash"). Engine: `handleCombo` in `src/server/game/engine.ts` validates target up-front; `applyPostNope` branches on `pendingSteal.targetPlayerId` to resolve directly (2-card) or open name-card prompt (3-card).
-- **Attack / TargetedAttack formula.** `(turnsRemaining - 1) + 2`, NOT `turnsRemaining + 2`. The current turn is consumed by the turn-ending card itself per rules §10.2. Two tests in `engine.test.ts` lock the stacking case. Don't "simplify" back to the naive formula or Attack stacking over-counts.
-- **PlayerStrip tile sizing is font-driven.** Tiles auto-size; explicit `clamp(12px → 18px)` on the name font across 1280→3840 viewports ensures 10-player case fits one row. Do NOT add `min-width` on `.tile` — 10 tiles × 120px min would overflow the viewport and force ellipsis on 7-char names.
-- **Strip max-width excludes side panels.** Strip spans `100vw - 2 * frame - 16px`. CASE banner is vertical-centered and its content doesn't reach the strip's y-position, so side-panel constraint is intentionally NOT subtracted. If you add a second vertical-full-height element (e.g. a right-side COMMS panel), re-check strip math.
-- **`projectForBoard` requires `connectedPlayerIds: Set<string>`.** Room.ts uses `getConnectedPlayerIds()` helper; tests pass `new Set()`. If you add a new call site, thread the set through.
-- **PROTOCOL_VERSION = 2.** Bumped from 1 for the combo-flow change. `gameStore` emits `protocolMismatch` on version skew; overlay in Player.tsx warns the user. If you change the protocol again, bump to 3 and update `gameStore.test.ts`.
-- **`--size-blotter-width` is a direct calc.** No clamp, no ring-aware min(). The blotter maximizes into the space the dossier ring used to occupy. If you reintroduce elements that orbit the blotter, you need a new min() cap.
-- **`attemptAutoJoin` distinguishes first-join vs reconnect.** Per-tab `initialJoinDoneRef` in Player.tsx: first connection uses `?name=` for fresh-join; reconnects within the same tab use the stored token. localStorage is shared across tabs on the same origin, so a "prefer token always" strategy makes dev-launcher tabs evict each other via `SESSION_REPLACED`. Don't revert.
-- **`useDramaActive()` is the modal gate.** Any sheet / overlay that could cover a BURNED → EXTRACTED sequence must gate on it. Server-prompted sheets in Player.tsx gate via `showServerSheet`. StealReport gates internally. If you add a new modal, follow the pattern.
-- **StealReport queue is local React state.** Multiple combo-steals while a player is away all queue up with `+N more` chip; dismissing pops one. Don't reset the queue on state-update or Johnny loses his dispatches.
-- **`window.__gameStore` dev hook** (`gameStore.ts`). Guarded by `import.meta.env.DEV` / test mode. Lets Playwright inject events to verify overlays. Safe to keep; tree-shaken from prod.
-- **PlayerAlert no longer handles target-side combo-steal.** StealReport owns that surface. PlayerAlert is strictly for events happening to you while you're AT the phone (stealer-side steal outcomes, favor-given acknowledgement).
-- **Event copy rule:** every event variant in `src/client/board/events.ts` names its operative. No orphan messages like "Safe. For now." Audit before adding new variants.
+- **Triple-steal cards DO NOT leave hand until name commits.** `handleCombo` for comboSize === 3 only sets `pendingNameCard.cardIds` and transitions to `name-card-pending` — no `removeCardsFromHand`, no `addToDiscard`, no nope window, no `card-played` event. All of that fires in `handleNameCard`. Cancel is free (pre-commit). If you "simplify" by moving discard back into `handleCombo`, cancel silently destroys 3 cards.
+- **`name-card-pending` can hold an open nope window.** After name commit, subPhase stays `name-card-pending` and a nope window is active. `handleCancelNameCard` explicitly rejects when `pendingNameCard.namedCardType` is set or `nopeWindow` is non-null — don't drop those guards.
+- **`handleNopeWindowExpired` checks the named-steal branch FIRST.** Before the legacy `pendingSteal` branch. If you flip the order, a 3-of-a-kind steal will never resolve.
+- **Favor-target is the one prompt that keeps interaction live.** Carve-out in `deriveInteractionPermission`: when `pendingPrompt.type === 'favor-response' && playerId === myPlayerId`, return `{ allowed: true }`. Don't remove — it's what lets the target double-tap their hand instead of opening a sheet.
+- **`useCardPlay` has a `maxStaged` param.** Favor mode passes `1`; normal play passes `3`. At `maxStaged === 1` the reducer AUTO-SWAPS on a second tap (replaces the staged card) — don't change to "reject second tap" without reviewing the favor UX.
+- **All prompt-timeouts are gone.** No `PROMPT_TIMEOUT_MS`, no `prompt-timeout` action, no `handlePromptTimeout`. Adding any auto-resolve-by-timer for a pending prompt REVERSES the "game waits for you" policy — needs a product decision, not a regression fix.
+- **Session tokens live in `sessionStorage`.** Per-tab. Refresh: token survives, client reconnects silently. Closing the tab entirely: token gone, player falls back to name-reclaim. Don't move back to `localStorage` — dev-launcher clobber comes back.
+- **Name-reclaim is intentional.** Server accepts a bare-name rejoin mid-game IF no other device is actively connected as that name. This is the "phone died, reopen browser" backstop. Identity theft is prevented by the `activelyConnected` check — don't relax that guard.
+- **`pendingNameCard.cardIds` is projection-private.** The field lives on server `PlayingState` and is used by the engine to move cards on name commit. Clients don't see it; they only see `pendingPrompt = { type: 'name-card', ... }`.
+- **Draw pile is decorative; discard is the hero.** Size tokens diverge deliberately: `--size-draw-pile-width` is roughly 60% of `--size-discard-card-width`. Don't "unify" them.
+- **DiscardFan shows face-up history.** Top card centered, behind1 tilts left (-7°), behind2 tilts right (+7°). Information is public per protocol. If you add more fan layers, preserve the alternating tilt pattern so the fan reads as a stack, not a row.
+- **Drama overlay burned sequence is 2 beats for non-drawers, 1 beat for the drawer.** `getDramaBeats` returns an array; the queue processor handles multi-beat sequences. The drawer distinction is `myPlayerId === event.playerId`. For the board (myPlayerId === null), always show both beats.
+- **FuturePeek has NO countdown.** The old auto-close was bugged (guard flipped false at zero, dismiss never fired) AND violated the "game waits for you" policy. User-triggered `Got it` only.
+- **`.chrome-dev-profile/` is gitignored.** Delete the directory to reset the dev Chrome profile (e.g., clear cached dev servers, reset DevTools panel state).
 
 ### Pre-existing
 
-- **combo-steal.cardType is PRIVATE to stealer + target.** `stripPrivateEventFields` in `src/server/projection.ts` filters it from the public board and every non-party player. Intentional divergence from canonical EK — documented in `docs/rules/RULES-REFERENCE.md` §13.8 and tagged in a load-bearing comment above the function. Don't leak it publicly without a product decision.
-- **Hand sort lives in `useSortedHand`, not in Hand.tsx.** `TYPE_PIN_PRIORITY` in `src/client/player/hooks/useSortedHand.ts` pins Extraction rightmost (priority 11), Intercepted second-rightmost (priority 10). These override the category bucket. If you add another pinned type, bump priorities carefully.
-- **Intercept button must bypass the outer `disabled` prop.** In `SmartActionBox.tsx`, `buttonDisabled = isIntercept ? optimisticPending : (disabled || optimisticPending)`. The outer `disabled` is driven by `permission.allowed`, which is false during an opponent's turn — correct for normal card actions, but the intercept CTA is exactly the legal non-actor action. Don't re-apply the outer disabled to the intercept branch.
-- **`.card[aria-disabled='true']` no longer dims.** The opacity: 0.5 was removed so DiscardFan's top card reads correctly. Only consumer of `disabled={true}` on MinimalCard is DiscardFan; if a future consumer wants dimming, apply it explicitly.
-- **DramaOverlay cqi factors are paired with the min tokens.** Reducing the min without reducing the cqi factor doesn't help on phone (cqi falls below min, min wins, overflow). Current pairing: hero 9cqi/32px, subdued 6cqi/24px, victory 8cqi/40px.
-- **Card illustration uses `object-fit: contain`, not `cover`.** Reverting re-introduces the Louboutins crop Briggsy flagged.
-- **Card asset pipeline preserves native aspect.** `scripts/process-assets.ts` resizes to 384px max with `fit: 'inside'`. Reads from `temp/cards/*.png` for action/utility cards and `public/assets/roster/*.png` for operative portraits.
-- **Name on card title line uses `white-space: nowrap` + `overflow: hidden`.** At 9 chars the names fit the small-card clamp without wrapping. Longer names need re-verification at ~115px content box.
+- **Combo flow bundles target with `play-card`.** `select-target` action, `steal-target-pending` subphase, and `steal-target` PendingPrompt type are GONE. The new flow exists so the nope window opens with the target name visible to opponents.
+- **Attack / TargetedAttack formula.** `(turnsRemaining - 1) + 2`, NOT `turnsRemaining + 2`. Tests in `engine.test.ts` lock the stacking case.
+- **PlayerStrip tile sizing is font-driven.** No `min-width` on `.tile` — 10 tiles × 120px min would overflow the viewport.
+- **`projectForBoard` requires `connectedPlayerIds: Set<string>`.**
+- **PROTOCOL_VERSION = 2.** Bump to 3 if you change the wire protocol; update `gameStore.test.ts`.
+- **`--size-blotter-width` is a direct calc.** No clamp, no ring-aware min().
+- **`useDramaActive()` is the modal gate.** Any sheet / overlay that could cover a BURNED → EXTRACTED sequence must gate on it.
+- **StealReport queue is local React state.** Multiple combo-steals while a player is away all queue up with `+N more` chip.
+- **`window.__gameStore` dev hook.** Guarded by `import.meta.env.DEV`. Lets Playwright inject events. Tree-shaken from prod.
+- **PlayerAlert no longer handles target-side combo-steal.** StealReport owns that surface.
+- **combo-steal.cardType is PRIVATE to stealer + target.** `stripPrivateEventFields` in `src/server/projection.ts` filters it from the public board and every non-party player.
+- **Hand sort lives in `useSortedHand`, not in Hand.tsx.** `TYPE_PIN_PRIORITY` pins Extraction rightmost, Intercepted second-rightmost.
+- **Intercept button must bypass the outer `disabled` prop** in `SmartActionBox.tsx`.
+- **`.card[aria-disabled='true']` no longer dims.** Only DiscardFan consumes `disabled={true}` on MinimalCard.
+- **DramaOverlay cqi factors are paired with the min tokens.** Hero 9cqi/32px, subdued 6cqi/24px, victory 8cqi/40px.
+- **Card illustration uses `object-fit: contain`, not `cover`.**
+- **Card asset pipeline preserves native aspect.** `scripts/process-assets.ts` resizes to 384px max with `fit: 'inside'`.
 - **Imagen safety filter is inconsistent.** Retry a failed generation before assuming the prompt is unsafe.
-- **Roster regen scripts are per-character.** `set -a && source .env && set +a && npx tsx scripts/regen-<name>.ts`. Output goes to `temp/roster/<name>.png`. Eyeball before swapping into `public/assets/roster/`.
-- **Asset archive convention.** Replace: move old to `public/assets/roster/_archive/<name>-<date>-<tag>.png`. Rejected variants suffix `-<reason>-rejected.png`.
-- **Playwright MCP session-token sharing.** Tabs share localStorage; `localStorage.clear()` between tabs or use the per-tab `initialJoinDoneRef` path that's already in place.
+- **Roster regen scripts are per-character.** `set -a && source .env && set +a && npx tsx scripts/regen-<name>.ts`. Output to `temp/roster/<name>.png`; eyeball before swapping into `public/assets/roster/`.
+- **Asset archive convention.** `public/assets/roster/_archive/<name>-<date>-<tag>.png`. Rejected variants suffix `-<reason>-rejected.png`.
 - **Wrangler local SQLite corruption.** `taskkill //F //IM workerd.exe && rm -rf .wrangler/state` if DO state misbehaves.
-- **Dev launcher race condition.** The launcher opens player tabs via `window.open` in a tight loop; browser may throttle popups. User gesture must remain active (don't `setTimeout`).
-- **`.table` box-sizing is load-bearing.** `height: 100vh; box-sizing: border-box` on `.table` is required so the fixed-position status bar anchors to the visible viewport edge.
-- **Layout-sweep detector false positives.** Test suite's layout sweep sometimes flags legitimate CSS clamps.
-- **E2E button locators are copy-coupled.** `gh pr create`, `pnpm dev` etc. locators in Playwright specs break when button text changes.
+- **Dev launcher popup throttling.** User gesture must remain active; don't `setTimeout` the `window.open` calls.
+- **`.table` box-sizing is load-bearing.** `height: 100vh; box-sizing: border-box` required so fixed-position status bar anchors to visible viewport edge.

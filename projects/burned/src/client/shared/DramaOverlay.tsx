@@ -4,6 +4,7 @@ import { MOTION_DURATIONS } from '@client/shared/tokens/motion'
 import { useEventFeed } from './hooks/useEventFeed'
 import { usePlayerList } from './hooks/useSharedSelectors'
 import { setDramaActive } from './dramaState'
+import { gameStore } from './gameStore'
 import type { GameEvent } from '@shared/types'
 import type { BoardPlayer } from '@shared/protocol'
 import styles from './DramaOverlay.module.css'
@@ -15,45 +16,58 @@ interface DramaConfig {
   holdMs: number
 }
 
-function getDramaConfig(
+// Returns 0..N beats to queue for a given event. burned-drawn is the only
+// current two-beat sequence: non-drawers (and the board) get a "{NAME} IS…"
+// suspense beat before the "BURNED" payoff; the drawer skips the buildup
+// because they don't need to be told who it is.
+function getDramaBeats(
   event: GameEvent,
   players: readonly BoardPlayer[],
-): DramaConfig | null {
+  myPlayerId: string | null,
+): readonly DramaConfig[] {
   const name = (id: string) => players.find(p => p.id === id)?.name ?? 'Unknown'
 
   switch (event.type) {
-    case 'burned-drawn':
-      return {
-        text: 'BURNED.',
+    case 'burned-drawn': {
+      const payoff: DramaConfig = {
+        text: 'BURNED',
         className: styles.burned ?? '',
         holdMs: 1400,
       }
+      if (myPlayerId === event.playerId) return [payoff]
+      const buildup: DramaConfig = {
+        text: `${name(event.playerId).toUpperCase()} IS\u2026`,
+        className: styles.burned ?? '',
+        holdMs: 700,
+      }
+      return [buildup, payoff]
+    }
     case 'extraction-played':
-      return {
-        text: 'EXTRACTED.',
+      return [{
+        text: 'EXTRACTED',
         className: styles.extracted ?? '',
         holdMs: 1000,
-      }
+      }]
     case 'player-eliminated':
-      return {
-        text: `${name(event.playerId).toUpperCase()} ELIMINATED.`,
+      return [{
+        text: `${name(event.playerId).toUpperCase()} ELIMINATED`,
         className: styles.eliminated ?? '',
         holdMs: 1200,
-      }
+      }]
     case 'nope-played':
-      return {
-        text: 'INTERCEPTED.',
+      return [{
+        text: 'INTERCEPTED',
         className: styles.intercepted ?? '',
         holdMs: 800,
-      }
+      }]
     case 'game-over':
-      return {
-        text: `${name(event.winnerId).toUpperCase()} WINS.`,
+      return [{
+        text: `${name(event.winnerId).toUpperCase()} WINS`,
         className: styles.victory ?? '',
         holdMs: 2000,
-      }
+      }]
     default:
-      return null
+      return []
   }
 }
 
@@ -78,11 +92,13 @@ export function DramaOverlay() {
 
     lastProcessedRef.current = newEvents[newEvents.length - 1]!.id
 
-    // Queue drama events
+    // Queue drama events. playerId is stable post-join so a plain read off
+    // gameStore at queueing time is fine — no subscription needed.
+    const myPlayerId = gameStore.getPlayerId()
     for (const entry of newEvents) {
-      const config = getDramaConfig(entry.event, players)
-      if (config) {
-        queueRef.current.push({ config, id: entry.id })
+      const beats = getDramaBeats(entry.event, players, myPlayerId)
+      for (let i = 0; i < beats.length; i++) {
+        queueRef.current.push({ config: beats[i]!, id: `${entry.id}-${i}` })
       }
     }
 

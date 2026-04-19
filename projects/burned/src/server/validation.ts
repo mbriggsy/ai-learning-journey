@@ -51,6 +51,10 @@ const NameCardAction = BaseAction.extend({
   cardType: CardTypeSchema,
 })
 
+const CancelNameCardAction = BaseAction.extend({
+  type: z.literal('cancel-name-card'),
+})
+
 const ClientGameActionSchema = z.discriminatedUnion('type', [
   PlayCardAction,
   DrawCardAction,
@@ -59,6 +63,7 @@ const ClientGameActionSchema = z.discriminatedUnion('type', [
   FavorGiveAction,
   FutureRearrangeAction,
   NameCardAction,
+  CancelNameCardAction,
 ])
 
 // --- Client Message Schemas ---

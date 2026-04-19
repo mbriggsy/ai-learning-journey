@@ -24,18 +24,20 @@ interface StagingAreaProps {
   readonly nopeWindow: NopeWindowView | null
   readonly hasIntercept: boolean
   readonly isAlive: boolean
+  readonly favorMode: { requesterName: string } | null
   readonly onUnstageCard: (cardId: string) => void
   readonly onConfirm: () => void
   readonly onConfirmWithTarget: () => void
   readonly onCardLongPress: (cardId: string) => void
   readonly onIntercept: () => void
+  readonly onSurrender: () => void
 }
 
 export function StagingArea({
   hand, cardPlayState, isMyTurn, subPhase, drawPileCount,
   disabled, optimisticPending,
-  nopeWindow, hasIntercept, isAlive,
-  onUnstageCard, onConfirm, onConfirmWithTarget, onCardLongPress, onIntercept,
+  nopeWindow, hasIntercept, isAlive, favorMode,
+  onUnstageCard, onConfirm, onConfirmWithTarget, onCardLongPress, onIntercept, onSurrender,
 }: StagingAreaProps) {
   const sendAction = useSendAction()
   const stagedCardsRef = useRef<HTMLDivElement>(null)
@@ -135,10 +137,12 @@ export function StagingArea({
           nopeWindow={nopeWindow}
           hasIntercept={hasIntercept}
           isAlive={isAlive}
+          favorMode={favorMode}
           onConfirm={onConfirm}
           onConfirmWithTarget={onConfirmWithTarget}
           onDraw={handleDraw}
           onIntercept={onIntercept}
+          onSurrender={onSurrender}
         />
       </div>
 

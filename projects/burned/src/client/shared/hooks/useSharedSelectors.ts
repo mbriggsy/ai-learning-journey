@@ -30,6 +30,26 @@ export function useDiscardTop(): CardInstance | null {
   })
 }
 
+// Top N discarded cards, newest first. Used by the board's DiscardFan to show
+// a shallow history stack — the discard is the hero on the blotter, the draw
+// pile is decorative. Cap defensively at the pile length so callers don't have
+// to guard against undersized piles.
+export function useDiscardRecent(count: number): readonly CardInstance[] {
+  return useGameSelector(s => {
+    if (!s || s.phase === 'lobby') return EMPTY_CARDS
+    const pile = s.discardPile
+    if (pile.length === 0) return EMPTY_CARDS
+    const take = Math.min(count, pile.length)
+    const result: CardInstance[] = []
+    for (let i = 0; i < take; i++) {
+      result.push(pile[pile.length - 1 - i]!)
+    }
+    return result
+  })
+}
+
+const EMPTY_CARDS: readonly CardInstance[] = []
+
 export function useNopeWindow(): NopeWindowView | null {
   return useGameSelector(s => {
     if (!s || s.phase !== 'playing') return null

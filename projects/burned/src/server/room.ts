@@ -6,7 +6,6 @@ import { projectForBoard, projectForPlayer, getPrivateData } from './projection'
 import type { GameState, PlayingState, GameOverState, DispatchContext, DispatchResult, ErrorCode as EngineErrorCode } from './game/types'
 import type { ClientAction, EngineAction } from '@shared/actions'
 import { SERVER_ONLY_ACTIONS } from '@shared/actions'
-import type { SubPhase } from '@shared/types'
 import type { ServerMessage, LobbyView, ErrorCode } from '@shared/protocol'
 import { PROTOCOL_VERSION } from '@shared/protocol'
 import { TIMING } from '@shared/constants'
@@ -17,7 +16,6 @@ const MAX_MESSAGE_BYTES = 4096
 const MAX_PLAYERS = 10
 const MAX_CONNECTIONS = 12 // 10 players + 1 host + 1 reconnection buffer
 const MAX_MESSAGES_PER_SECOND = 10
-const PROMPT_TIMEOUT_MS = 60_000
 const INACTIVITY_TIMEOUT_MS = 15 * 60_000
 const IDLE_ROOM_TIMEOUT_MS = 30 * 60_000
 const DISCONNECT_DEBOUNCE_MS = 3_000
@@ -81,7 +79,6 @@ export class GameRoom extends Server {
   private nopeTimeout: ReturnType<typeof setTimeout> | null = null
   private nopeGraceTimeout: ReturnType<typeof setTimeout> | null = null
   private lastScheduledNopeGeneration = -1
-  private promptTimeout: ReturnType<typeof setTimeout> | null = null
   private disconnectTimers = new Map<string, ReturnType<typeof setTimeout>>() // playerId → debounce timer
   private heartbeatIntervals = new Map<string, ReturnType<typeof setInterval>>() // connectionId → interval
   private lastPongTimes = new Map<string, number>() // connectionId → last activity
@@ -113,7 +110,6 @@ export class GameRoom extends Server {
 
     // Clear any stale timers before restoring from persisted state
     this.clearNopeTimer()
-    this.clearPromptTimer()
 
     // Restore Nope timer if window was active
     if (this.gameState?.phase === 'playing') {
@@ -141,10 +137,6 @@ export class GameRoom extends Server {
         }
       }
 
-      // Restore prompt timeouts for pending sub-phases
-      if (playing.subPhase !== 'turn-active' && playing.subPhase !== 'eliminated-check') {
-        this.schedulePromptTimeout(playing.subPhase)
-      }
     }
 
     // Schedule inactivity alarm
@@ -336,9 +328,45 @@ export class GameRoom extends Server {
         this.handleReconnect(connection, existingPlayerId, sessionToken)
         return
       }
-      // Invalid token — fall through to new join (if still in lobby)
-      if (this.gameState.phase !== 'lobby') {
-        this.sendError(connection, 'INVALID_ACTION', 'Invalid session token')
+      // Invalid token — fall through to name-reclaim / new-join logic below.
+    }
+
+    // Name-reclaim path — a player who lost their session (tab closed, phone
+    // died, browser cleared storage) can rejoin mid-game by resubmitting their
+    // original name. Only allowed if no OTHER device is currently connected as
+    // that player — otherwise anyone could steal an identity by guessing a name.
+    if (rawName && rawName.trim().length > 0) {
+      const reclaimName = rawName.trim().slice(0, 12).toLowerCase()
+      let reclaimPlayerId: string | undefined
+      for (const [pid, name] of this.playerNames.entries()) {
+        if (name.toLowerCase() === reclaimName) { reclaimPlayerId = pid; break }
+      }
+      if (reclaimPlayerId) {
+        let activelyConnected = false
+        for (const conn of this.getConnections()) {
+          if (conn.id === connection.id) continue
+          const s = this.getConnState(conn)
+          if (s?.role === 'player' && s.playerId === reclaimPlayerId) {
+            activelyConnected = true
+            break
+          }
+        }
+        if (activelyConnected) {
+          this.sendError(connection, 'NAME_TAKEN', 'That operative is already connected on another device')
+          return
+        }
+        // Find or mint a session token for this player and route through the
+        // shared reconnect path so state projection + disconnect-timer cleanup
+        // + SESSION_REPLACED eviction all stay in one place.
+        let token: string | undefined
+        for (const [t, pid] of this.playerSessions.entries()) {
+          if (pid === reclaimPlayerId) { token = t; break }
+        }
+        if (!token) {
+          token = crypto.randomUUID()
+          this.playerSessions.set(token, reclaimPlayerId)
+        }
+        this.handleReconnect(connection, reclaimPlayerId, token)
         return
       }
     }
@@ -565,7 +593,6 @@ export class GameRoom extends Server {
     this.gameState = result.state
     this.lastActionTime = Date.now()
     this.updateNopeTimer(result)
-    this.updatePromptTimer()
     this.broadcastGameState()
     void this.persistState()
   }
@@ -605,7 +632,6 @@ export class GameRoom extends Server {
     this.gameState = result.state
     this.lastActionTime = Date.now()
     this.updateNopeTimer(result)
-    this.updatePromptTimer()
     this.broadcastGameState()
     void this.persistState()
   }
@@ -658,36 +684,6 @@ export class GameRoom extends Server {
     if (this.nopeGraceTimeout) {
       clearTimeout(this.nopeGraceTimeout)
       this.nopeGraceTimeout = null
-    }
-  }
-
-  // --- Prompt Timer ---
-
-  private updatePromptTimer(): void {
-    this.clearPromptTimer()
-
-    if (!this.gameState || this.gameState.phase !== 'playing') return
-    const playing = this.gameState as PlayingState
-
-    if (playing.subPhase !== 'turn-active' && playing.subPhase !== 'eliminated-check') {
-      this.schedulePromptTimeout(playing.subPhase)
-    }
-  }
-
-  private schedulePromptTimeout(subPhase: SubPhase): void {
-    this.promptTimeout = setTimeout(() => {
-      this.enqueue(() => this.dispatchServerAction({
-        type: 'prompt-timeout',
-        subPhase,
-        playerId: '_server',
-      } as EngineAction))
-    }, PROMPT_TIMEOUT_MS)
-  }
-
-  private clearPromptTimer(): void {
-    if (this.promptTimeout) {
-      clearTimeout(this.promptTimeout)
-      this.promptTimeout = null
     }
   }
 
@@ -874,7 +870,6 @@ export class GameRoom extends Server {
 
   private clearAllTimers(): void {
     this.clearNopeTimer()
-    this.clearPromptTimer()
     for (const timer of this.disconnectTimers.values()) clearTimeout(timer)
     this.disconnectTimers.clear()
     for (const interval of this.heartbeatIntervals.values()) clearInterval(interval)

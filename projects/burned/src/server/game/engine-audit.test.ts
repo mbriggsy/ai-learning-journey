@@ -70,10 +70,8 @@ describe('Two of a Kind — steal flow', () => {
 })
 
 describe('Three of a Kind — name card steal flow', () => {
-  it('plays triple with target → nope resolves → name card → steal', () => {
+  it('plays triple → name-card-pending immediately (no nope yet, cards still in hand)', () => {
     let state = startGameWith(3)
-
-    // Give p1 three matching operative cards
     const catType = state.players[0]!.hand.find(c => CARD_DEF_BY_TYPE[c.type as CardType]?.category === 'operative')?.type
     if (!catType) return
 
@@ -81,39 +79,28 @@ describe('Three of a Kind — name card steal flow', () => {
     state = giveCard(state, 'p1', catType, 'cat-b')
     state = giveCard(state, 'p1', catType, 'cat-c')
 
-    // Give p2 a known card type to steal
-    state = giveCard(state, 'p2', 'go-dark', 'steal-target-skip')
-
-    // Play the triple WITH target bundled
-    let result = act(state, {
+    const result = act(state, {
       type: 'play-card', playerId: 'p1', cardIds: ['cat-a', 'cat-b', 'cat-c'], targetPlayerId: 'p2',
     })
     expect(result.ok).toBe(true)
 
-    const pending = result.state as PlayingState
-    expect(pending.pendingSteal?.comboSize).toBe(3)
-    expect(pending.pendingSteal?.targetPlayerId).toBe('p2')
-
-    // Resolve nope window → name-card-pending (target already locked in)
-    result = resolveNopeWindow(pending, makeCtx(99999))
-    expect(result.ok).toBe(true)
-
-    const nameState = result.state as PlayingState
-    expect(nameState.subPhase).toBe('name-card-pending')
-
-    // Name "go-dark" — p2 has one
-    result = act(nameState, { type: 'name-card', playerId: 'p1', cardType: 'go-dark' })
-    expect(result.ok).toBe(true)
-
-    const final = result.state as PlayingState
-    expect(final.subPhase).toBe('turn-active')
-    // p1 should have gained the skip card
-    expect(final.players.find(p => p.id === 'p1')!.hand.some(c => c.id === 'steal-target-skip')).toBe(true)
-    // p2 should have lost it
-    expect(final.players.find(p => p.id === 'p2')!.hand.some(c => c.id === 'steal-target-skip')).toBe(false)
+    const s = result.state as PlayingState
+    expect(s.subPhase).toBe('name-card-pending')
+    // Nope window is DEFERRED until a name is committed — opponents with
+    // Intercept should wait to see the demand before burning a counter.
+    expect(s.nopeWindow).toBeNull()
+    // Cards stay in the stealer's hand — cancel returns them untouched.
+    const p1Hand = s.players.find(p => p.id === 'p1')!.hand
+    expect(p1Hand.some(c => c.id === 'cat-a')).toBe(true)
+    expect(p1Hand.some(c => c.id === 'cat-b')).toBe(true)
+    expect(p1Hand.some(c => c.id === 'cat-c')).toBe(true)
+    expect(s.discardPile.some(c => c.id === 'cat-a')).toBe(false)
+    // pendingNameCard carries the staged cards so name-commit knows what to discard.
+    expect(s.pendingNameCard?.cardIds).toEqual(['cat-a', 'cat-b', 'cat-c'])
+    expect(s.pendingNameCard?.namedCardType).toBeUndefined()
   })
 
-  it('name card miss — target does not have the named type', () => {
+  it('name commit opens nope window with full context → resolve → steal', () => {
     let state = startGameWith(3)
     const catType = state.players[0]!.hand.find(c => CARD_DEF_BY_TYPE[c.type as CardType]?.category === 'operative')?.type
     if (!catType) return
@@ -121,24 +108,136 @@ describe('Three of a Kind — name card steal flow', () => {
     state = giveCard(state, 'p1', catType, 'cat-a')
     state = giveCard(state, 'p1', catType, 'cat-b')
     state = giveCard(state, 'p1', catType, 'cat-c')
-    // Remove all burn-the-files from p2's hand so naming "burn-the-files" misses
+    state = giveCard(state, 'p2', 'go-dark', 'steal-target-skip')
+
+    let result = act(state, {
+      type: 'play-card', playerId: 'p1', cardIds: ['cat-a', 'cat-b', 'cat-c'], targetPlayerId: 'p2',
+    })
+    const nameState = result.state as PlayingState
+
+    // Commit a name — should open a nope window carrying the named type.
+    result = act(nameState, { type: 'name-card', playerId: 'p1', cardType: 'go-dark' })
+    expect(result.ok).toBe(true)
+    const afterName = result.state as PlayingState
+    expect(afterName.nopeWindow).not.toBeNull()
+    expect(afterName.pendingNameCard?.namedCardType).toBe('go-dark')
+    // Cards commit to discard at name-time regardless of nope outcome.
+    expect(afterName.discardPile.some(c => c.id === 'cat-a')).toBe(true)
+    expect(afterName.players.find(p => p.id === 'p1')!.hand.some(c => c.id === 'cat-a')).toBe(false)
+
+    // Let the nope window expire — steal should land.
+    result = resolveNopeWindow(afterName, makeCtx(99999))
+    const final = result.state as PlayingState
+    expect(final.subPhase).toBe('turn-active')
+    expect(final.players.find(p => p.id === 'p1')!.hand.some(c => c.id === 'steal-target-skip')).toBe(true)
+    expect(final.players.find(p => p.id === 'p2')!.hand.some(c => c.id === 'steal-target-skip')).toBe(false)
+  })
+
+  it('name commit on a whiff — target does not have named type', () => {
+    let state = startGameWith(3)
+    const catType = state.players[0]!.hand.find(c => CARD_DEF_BY_TYPE[c.type as CardType]?.category === 'operative')?.type
+    if (!catType) return
+
+    state = giveCard(state, 'p1', catType, 'cat-a')
+    state = giveCard(state, 'p1', catType, 'cat-b')
+    state = giveCard(state, 'p1', catType, 'cat-c')
     state = removeCardType(state, 'p2', 'burn-the-files')
 
     let result = act(state, {
       type: 'play-card', playerId: 'p1', cardIds: ['cat-a', 'cat-b', 'cat-c'], targetPlayerId: 'p2',
     })
+    result = act(result.state as PlayingState, {
+      type: 'name-card', playerId: 'p1', cardType: 'burn-the-files',
+    })
     result = resolveNopeWindow(result.state as PlayingState, makeCtx(99999))
 
+    const final = result.state as PlayingState
+    expect(final.subPhase).toBe('turn-active')
+    const stealEvent = final.events.find(e => e.type === 'combo-steal')
+    expect(stealEvent).toBeDefined()
+    if (stealEvent && stealEvent.type === 'combo-steal') {
+      expect(stealEvent.found).toBe(false)
+      expect(stealEvent.cardType).toBe('burn-the-files')
+    }
+  })
+
+  it('stealer cancels pre-commit — combo cards stay in hand, nothing goes to discard', () => {
+    let state = startGameWith(3)
+    const catType = state.players[0]!.hand.find(c => CARD_DEF_BY_TYPE[c.type as CardType]?.category === 'operative')?.type
+    if (!catType) return
+
+    state = giveCard(state, 'p1', catType, 'cat-a')
+    state = giveCard(state, 'p1', catType, 'cat-b')
+    state = giveCard(state, 'p1', catType, 'cat-c')
+    state = giveCard(state, 'p2', 'go-dark', 'safe-card')
+    const p1HandBefore = state.players.find(p => p.id === 'p1')!.hand.length
+    const discardBefore = state.discardPile.length
+
+    let result = act(state, {
+      type: 'play-card', playerId: 'p1', cardIds: ['cat-a', 'cat-b', 'cat-c'], targetPlayerId: 'p2',
+    })
     const nameState = result.state as PlayingState
-    // Name a card type p2 doesn't have
-    result = act(nameState, { type: 'name-card', playerId: 'p1', cardType: 'burn-the-files' })
+    expect(nameState.subPhase).toBe('name-card-pending')
+
+    result = act(nameState, { type: 'cancel-name-card', playerId: 'p1' })
     expect(result.ok).toBe(true)
 
     const final = result.state as PlayingState
     expect(final.subPhase).toBe('turn-active')
-    // No card transferred — check events for combo-steal with found=false
-    const stealEvent = final.events.find(e => e.type === 'combo-steal')
-    expect(stealEvent).toBeDefined()
+    expect(final.pendingNameCard).toBeUndefined()
+    expect(final.pendingPrompt).toBeNull()
+    // All three combo cards are still in the stealer's hand — "I changed my mind".
+    const p1Hand = final.players.find(p => p.id === 'p1')!.hand
+    expect(p1Hand.length).toBe(p1HandBefore)
+    expect(p1Hand.some(c => c.id === 'cat-a')).toBe(true)
+    expect(p1Hand.some(c => c.id === 'cat-b')).toBe(true)
+    expect(p1Hand.some(c => c.id === 'cat-c')).toBe(true)
+    // Discard pile is untouched.
+    expect(final.discardPile.length).toBe(discardBefore)
+    // Target's card is untouched.
+    expect(final.players.find(p => p.id === 'p2')!.hand.some(c => c.id === 'safe-card')).toBe(true)
+    expect(final.events.some(e => e.type === 'combo-steal')).toBe(false)
+    expect(final.events.some(e => e.type === 'name-card-cancelled')).toBe(true)
+    expect(final.events.some(e => e.type === 'card-played')).toBe(false)
+  })
+
+  it('cannot cancel post-commit — nope window is already open, play is public', () => {
+    let state = startGameWith(3)
+    const catType = state.players[0]!.hand.find(c => CARD_DEF_BY_TYPE[c.type as CardType]?.category === 'operative')?.type
+    if (!catType) return
+
+    state = giveCard(state, 'p1', catType, 'cat-a')
+    state = giveCard(state, 'p1', catType, 'cat-b')
+    state = giveCard(state, 'p1', catType, 'cat-c')
+
+    let result = act(state, {
+      type: 'play-card', playerId: 'p1', cardIds: ['cat-a', 'cat-b', 'cat-c'], targetPlayerId: 'p2',
+    })
+    result = act(result.state as PlayingState, {
+      type: 'name-card', playerId: 'p1', cardType: 'go-dark',
+    })
+    // Name already committed — cancel must be rejected.
+    result = act(result.state as PlayingState, { type: 'cancel-name-card', playerId: 'p1' })
+    expect(result.ok).toBe(false)
+  })
+
+  it('non-stealer cannot cancel name-card', () => {
+    let state = startGameWith(3)
+    const catType = state.players[0]!.hand.find(c => CARD_DEF_BY_TYPE[c.type as CardType]?.category === 'operative')?.type
+    if (!catType) return
+
+    state = giveCard(state, 'p1', catType, 'cat-a')
+    state = giveCard(state, 'p1', catType, 'cat-b')
+    state = giveCard(state, 'p1', catType, 'cat-c')
+
+    let result = act(state, {
+      type: 'play-card', playerId: 'p1', cardIds: ['cat-a', 'cat-b', 'cat-c'], targetPlayerId: 'p2',
+    })
+
+    const nameState = result.state as PlayingState
+    // p2 (the target) tries to cancel — should be rejected
+    result = act(nameState, { type: 'cancel-name-card', playerId: 'p2' })
+    expect(result.ok).toBe(false)
   })
 })
 

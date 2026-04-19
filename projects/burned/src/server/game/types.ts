@@ -25,7 +25,18 @@ export interface PlayingState {
   readonly pendingFavor?: { readonly requesterId: string; readonly targetId: string }
   readonly pendingFuture?: { readonly playerId: string; readonly cardIds: readonly string[] }
   readonly pendingSteal?: { readonly stealerId: string; readonly targetPlayerId: string; readonly comboSize: 2 | 3 }
-  readonly pendingNameCard?: { readonly stealerId: string; readonly targetId: string }
+  // cardIds holds the 3 cards the stealer has staged but NOT yet discarded —
+  // they stay in the stealer's hand until a name is committed (or return home
+  // on cancel). namedCardType is set the moment the stealer commits; its
+  // presence gates cancellation and signals the nope-resolver to perform the
+  // actual steal. See docs/rules/RULES-REFERENCE.md §7 (Three of a Kind) for
+  // the timing contract.
+  readonly pendingNameCard?: {
+    readonly stealerId: string
+    readonly targetId: string
+    readonly cardIds: readonly string[]
+    readonly namedCardType?: CardType
+  }
   readonly pendingDefuse?: { readonly playerId: string }
   readonly pendingPrompt: PendingPrompt | null
   readonly nextNopeGeneration: number

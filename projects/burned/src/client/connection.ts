@@ -147,10 +147,20 @@ export function onReconnect(handler: () => void): () => void {
 }
 
 // --- Session Token ---
+//
+// Session tokens live in sessionStorage, NOT localStorage. Rationale: localStorage
+// is shared across all tabs on the same origin, so the dev launcher (which opens
+// one tab per player) ends up with every tab overwriting the same key — the last
+// tab to join wins, and every other tab that later refreshes and tries to
+// reconnect ends up resolving to the wrong player's sessionToken → wrong playerId
+// → broken projection (isMyTurn=false, wrong hand, etc.). sessionStorage is
+// per-tab by design, survives refreshes, and isolates each dev-launcher tab.
+// Tradeoff: a real player who fully closes their tab loses their session and
+// cannot reconnect mid-game — an accepted edge case for a realtime party game.
 
 export function getSessionToken(roomCode: string): string | null {
   try {
-    return localStorage.getItem(`burned-session-${roomCode}`)
+    return sessionStorage.getItem(`burned-session-${roomCode}`)
   } catch {
     return null
   }
@@ -158,17 +168,17 @@ export function getSessionToken(roomCode: string): string | null {
 
 export function setSessionToken(roomCode: string, token: string): void {
   try {
-    localStorage.setItem(`burned-session-${roomCode}`, token)
+    sessionStorage.setItem(`burned-session-${roomCode}`, token)
   } catch {
-    // localStorage unavailable — tolerate
+    // sessionStorage unavailable — tolerate
   }
 }
 
 export function clearSessionToken(roomCode: string): void {
   try {
-    localStorage.removeItem(`burned-session-${roomCode}`)
+    sessionStorage.removeItem(`burned-session-${roomCode}`)
   } catch {
-    // localStorage unavailable — tolerate
+    // sessionStorage unavailable — tolerate
   }
 }
 

@@ -4,33 +4,28 @@ import type { CardInstance } from '@shared/types'
 export type ActiveBottomSheet =
   | { sheet: 'defuse-placement'; maxPosition: number }
   | { sheet: 'future-peek'; cards: readonly CardInstance[]; canRearrange: boolean }
-  | { sheet: 'favor-response'; requesterName: string; hand: readonly CardInstance[] }
   | { sheet: 'name-card'; targetName: string }
 
 export function deriveActiveBottomSheet(
   pendingPrompt: PendingPromptView | null,
   myPlayerId: string | null,
   players: readonly BoardPlayer[],
-  hand: readonly CardInstance[],
+  _hand: readonly CardInstance[],
   drawPileCount: number,
   futureCards: readonly CardInstance[] | undefined,
 ): ActiveBottomSheet | null {
   if (!myPlayerId) return null
 
-  // Server-prompted sheets (pendingPrompt targeting me)
+  // Server-prompted sheets (pendingPrompt targeting me).
+  // favor-response intentionally omitted — handled inline via hand + staging
+  // (unified play flow) instead of a dedicated sheet.
   if (pendingPrompt && pendingPrompt.playerId === myPlayerId) {
     switch (pendingPrompt.type) {
       case 'defuse':
         return { sheet: 'defuse-placement', maxPosition: drawPileCount }
 
-      case 'favor-response': {
-        const requester = players.find(p => p.id === pendingPrompt.requesterId)
-        return {
-          sheet: 'favor-response',
-          requesterName: requester?.name ?? 'Unknown',
-          hand,
-        }
-      }
+      case 'favor-response':
+        return null
 
       case 'future-rearrange':
         return {

@@ -1,5 +1,9 @@
 /**
- * Regenerate Sable Ashworth — more voluptuous, V-neck sweater.
+ * Regenerate Sable Ashworth — direct eye contact with the camera (matches
+ * Dash/Vera/Janet framing). Zippo stays as iconic prop but no longer steals
+ * her gaze. Prior pass had her staring at the flame; archived as
+ * sable-ashworth-2026-04-19-flame-gaze.png.
+ *
  * Run: set -a && source .env && set +a && npx tsx scripts/regen-sable.ts
  *
  * Output: temp/roster/sable-ashworth.png (review before moving to public/).
@@ -23,13 +27,14 @@ const NO_TEXT = 'the image contains no text and no writing';
 const PROMPT =
   STYLE_PREFIX +
   'cartoon illustration in the style of the TV show Archer, flat color animation cel style, ' +
-  'a beautiful unhinged woman in her late 20s, secretly a billionaire heiress working as a secretary at a spy agency, ' +
-  'long auburn red hair slightly wild, wide manic eyes with a dreamy unfocused expression, ' +
-  'wearing an expensive teal cashmere sweater with a V-neck collar, ' +
-  'curvy hourglass figure with classic pin-up proportions, feminine silhouette, ' +
-  'holding a lit Zippo lighter in one hand and staring at the flame with barely concealed delight, ' +
-  'posture of someone who is not entirely present in reality, ' +
-  'slight smirk that suggests she knows something terrible and finds it amusing, ' +
+  'portrait of a stunningly beautiful unhinged woman in her late 20s, secretly a billionaire heiress working as a secretary at a spy agency, ' +
+  'long auburn red hair slightly wild and voluminous, striking piercing green eyes, intense focused stare, full lips, ' +
+  'eyes locked on the camera, direct frontal gaze at the viewer, head and face turned straight toward the camera, ' +
+  'wearing an expensive fitted teal cashmere sweater with a deep V-neck that shows off a fuller bust, no collar no shirt underneath just the sweater, ' +
+  'pin-up top-heavy hourglass silhouette, fuller bust narrow slim waist, classic feminine curves, ' +
+  'holding a lit Zippo lighter down at her side in one hand, arm relaxed at her hip, held low and casually the way someone holds a cocktail glass at a party, flame visible but not her focus, ' +
+  'slight knowing smirk that suggests she knows something terrible and finds it amusing, ' +
+  'posing for a magazine cover, subject facing the camera head-on, ' +
   'warm amber and orange background with bold geometric shapes, teal and orange and cream color palette, ' +
   'half-body portrait illustration, cartoon not photograph, flat color not grayscale, ' +
   NO_TEXT;

@@ -33,4 +33,21 @@ describe('deriveInteractionPermission', () => {
     const result = deriveInteractionPermission(true, 'defuse-pending', true, 'playing', prompt, 'p1')
     expect(result).toEqual({ allowed: false, reason: 'sub-phase-active' })
   })
+
+  // Pawdrey mid-favor: someone targeted her with Call-in-a-Favor, the nope
+  // window resolved, and her phone now shows the favor-pending prompt. She's
+  // NOT on turn (it's the requester's turn). This is the one prompt where the
+  // target interacts with her real hand + staging area rather than a sheet,
+  // so the hook must override the standard "not my turn → blocked" rule.
+  it('allows favor-response target to interact even when not on turn', () => {
+    const prompt = { type: 'favor-response' as const, playerId: 'pawdrey', requesterId: 'someone-else' }
+    const result = deriveInteractionPermission(false, 'favor-pending', true, 'playing', prompt, 'pawdrey')
+    expect(result).toEqual({ allowed: true })
+  })
+
+  it('still blocks when favor-response prompt is for another player', () => {
+    const prompt = { type: 'favor-response' as const, playerId: 'pawdrey', requesterId: 'someone-else' }
+    const result = deriveInteractionPermission(false, 'favor-pending', true, 'playing', prompt, 'not-pawdrey')
+    expect(result).toEqual({ allowed: false, reason: 'sub-phase-active' })
+  })
 })

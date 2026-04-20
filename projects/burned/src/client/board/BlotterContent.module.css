@@ -37,17 +37,19 @@
   z-index: var(--z-sticky);
 
   /* Pile sizing inside the blotter — discard is the HERO. Draw pile is decorative
-     support (count-only, no card interaction). Discard grows; draw shrinks a
-     touch so the hierarchy reads visually without a label explaining it. */
+     support (count-only, no card interaction). Default (side-by-side row
+     layout) keeps discard modest because it shares the piles column with the
+     draw pile. When the viewport is tall enough to stack vertically (see
+     @media below), the ceiling lifts so the hero can breathe at TV-size. */
   --size-draw-pile-width: clamp(
     74px,
     calc(74px + (100vw - 1280px) * (56 / 2560)),
     130px
   );
   --size-discard-card-width: clamp(
-    132px,
-    calc(132px + (100vw - 1280px) * (92 / 2560)),
-    224px
+    160px,
+    calc(160px + (100vw - 1280px) * (120 / 640)),
+    300px
   );
 
   /* Content itself is non-interactive decoration container; the piles opt in. */
@@ -59,11 +61,13 @@
 .piles {
   grid-area: piles;
   display: flex;
+  /* Default: side-by-side. Works on laptop viewports where height is the
+     constraining axis — a stacked hero discard would swallow the column
+     vertically and orphan the tiny draw pile up top. See the @media block
+     below for the vertical-stack layout that unlocks on tall viewports
+     (iPad landscape, 1080p TV+). */
   flex-direction: row;
   align-items: center;
-  /* Discard is the hero — weighted center-biased via flex grow and reversed
-     gap so the tall face-up fan sits to the right of the smaller draw stack
-     and anchors the eye. */
   justify-content: center;
   gap: 18px;
   min-width: 0;
@@ -74,6 +78,26 @@
      reads as the fold line on a field-ops form. */
   border-right: 1px solid color-mix(in oklab, var(--color-ochre-6) 45%, transparent);
   pointer-events: auto;
+}
+
+/* ─── Tall-viewport layout: vertical stack, bigger hero discard ───
+   Triggers on tall viewports (≥ ~1000px tall) where stacking works: iPad
+   landscape (1366×1024), 1080p TV, 1440p, 4K. Gated on height specifically
+   because width alone can't distinguish an iPad (tall+narrow) from a laptop
+   (wide+short) — both sit near 1366–1440px wide, but the laptop can't
+   absorb the vertical weight of a stacked hero card. */
+@media (min-height: 1000px) and (min-width: 1300px) {
+  .content {
+    --size-discard-card-width: clamp(
+      300px,
+      calc(300px + (100vw - 1700px) * (180 / 940)),
+      480px
+    );
+  }
+  .piles {
+    flex-direction: column;
+    gap: 28px;
+  }
 }
 
 /* Draw pile section — subdued, decorative "files remaining" counter.

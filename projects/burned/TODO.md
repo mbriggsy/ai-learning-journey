@@ -3,7 +3,7 @@
 ## Current State
 
 - **PRODUCT-SPECIFICATION.md v1.0 LOCKED** — `docs/specifications/PRODUCT-SPECIFICATION.md` (2026-04-10).
-- **358/358 Vitest, typecheck clean** (verified 2026-04-19, end of session). Coverage expanded with `deck-composition-exhaustive.test.ts` (parameterized 2-10 players against `docs/rules/RULES-REFERENCE.md` §3) and `rules-gaps-exhaustive.test.ts` (plugs §11 Attack+Defuse continuation, §6 Intel Briefing mid-turn, §9 triple-Nope, §7 combo overrides, §10.3 Back Channel under Attack, §6 empty-hand Favor, §9 Burned/Extraction not Nopeable, §5 multi-play per turn, §12 dead-card disposal).
+- **358/358 Vitest, typecheck clean** (verified 2026-04-19, evening squeaky-clean). Coverage expanded with `deck-composition-exhaustive.test.ts` (parameterized 2-10 players against `docs/rules/RULES-REFERENCE.md` §3) and `rules-gaps-exhaustive.test.ts` (plugs §11 Attack+Defuse continuation, §6 Intel Briefing mid-turn, §9 triple-Nope, §7 combo overrides, §10.3 Back Channel under Attack, §6 empty-hand Favor, §9 Burned/Extraction not Nopeable, §5 multi-play per turn, §12 dead-card disposal).
 - **Protocol version 2** — unchanged this session.
 - **Triple-steal flow is deferred-commit.** 3-of-a-kind play stages cards in the stealer's hand; cancel returns them untouched. Name-commit discards the cards AND opens the nope window (carrying stealer+target+namedCardType), so defenders Nope with full context. Matches tabletop semantics where the named card is public before Nope. Engine: `handleCombo` skips discard/nope for comboSize===3; `handleNameCard` commits and opens the window; `handleNopeWindowExpired` has a named-steal resolution branch that runs BEFORE the legacy `pendingSteal` branch.
 - **Cancel button on NameCard sheet.** "Call off the raid" — pre-commit only (rejected post-name because the play is already public and the nope window is live).
@@ -21,10 +21,35 @@
 - **`applyShuffle` clears `pendingFuture`.** Previously, Intel Briefing peek + Burn the Files left stale peek IDs pointing at cards that had moved off the top, so Falsify Intel would validate a permutation against IDs that no longer matched the top 3. Regression locked by `rules-gaps-exhaustive.test.ts` → "pendingFuture is cleared (or still valid) when Burn the Files follows Intel Briefing".
 - **Lobby dev toolbar removed.** The Whiskrs/Mittens/Tuna/Pickles quick-join links under the `Cleared Hot` button are gone (`Lobby.tsx` + `Lobby.module.css`). `pnpm dev:launch` owns dev-time player spawning — don't restore.
 - **Layout-sweep detector tightened.** `tests/e2e/layout-sweep.spec.ts` only flags overflow on `overflow: hidden|clip` containers — `overflow: visible` (glow halos, focus rings, pseudo-elements with negative `inset`) no longer registers as a clipping bug. 253 raw findings → 198 after the fix, of which 2 are real clip issues.
+- **Action card art pass — 8 of 11 elevated to Archer-spec.** Regenerated via Imagen with tightened prompts, full-bleed scenes, noir atmosphere: `falsify-intel` (CRT terminal with Anglepoise lamp), `extraction` (helicopter rescue + city skyline), `back-channel` (trench-coat spy in a 1960s phone booth on a rainy street), `burn-the-files` (filing cabinet inferno, no dimensional-rift smoke), `reassign` (folder handoff across mahogany boardroom with bandaged wounded-agent hand), `go-dark` (trench-coat operative receding down a venetian-blind-striped corridor), `intel-briefing` (Watergate break-in: Minox camera + penlight photographing classified docs), `call-in-a-favor` (two mafia dudes side-by-side at a bar with a small cash stack between them — 29 iters burned to land on simple). Old assets archived at `public/assets/cards/_archive/<name>-2026-04-19-<reason>.webp`.
+- **Discard card sizing rework.** Piles column is side-by-side on short viewports (≤1000px tall) and vertically stacked on tall viewports (≥1000px tall, e.g. iPad landscape, 1080p TV). Media query `(min-height: 1000px) and (min-width: 1300px)` gates both the `flex-direction: column` on `.piles` AND the larger discard clamp (`300→480px` stacked vs `160→300px` side-by-side). Rationale: a stacked hero discard orphans the draw pile on laptop-aspect viewports (900h) but unlocks a 400px+ card at TV aspect.
+- **Draw pile label stack.** DOM order reversed so the count reads top-down as `39` → `Remaining` → `In Field` → `DRAW`. Small label group; "In Field" on its own line.
+- **Blotter paper is fiber-only.** Horizontal ruled lines stripped from `GameTable.module.css` `.blotter` (read too "school notebook"); vertical fiber grain stays. `--color-paper-rule` token kept for StealReport dossier on the phone.
+- **Copy nit.** Board COMMS safe-draw variant is `${name} draws a card, and is safe. For now.` (was `${name} is safe. For now.`) — `events.ts:40`.
+- **Host kick-and-advance feature CUT — not shipped.** Built and reverted in the same session (`host-force-resolve` engine handler + room.ts + board Skip button + 8 tests). Reasoning: it's the first crack in the "game waits for you" policy that the timeouts-removed decision established, and name-reclaim already handles the 90% case (dead phone / closed tab). If real playtest reveals stalled 8-player games where restart cost > friction cost, revisit then with turn-active included (not just pendingPrompt).
 
 ## Next Steps (in priority order)
 
-### 1. Real-device playtest
+### 1. Regen the final 3 action-card illustrations (kick-off with Direct Order)
+**Burned, Direct Order, Intercepted are still the only action cards at original Apr-9 quality** — visible gap vs the rest of the deck now that the other 8 are elevated.
+
+**Direct Order — concept pitches ready for next-session kickoff:**
+- **A. Mother's-office pointing finger** — commanding figure behind a desk, finger jabbed toward the viewer ("YOU — you're on this"), venetian blind shadows, cigarette smoke curling. Pure Archer Mother's-office vocabulary. *(Briggsy's preferred direction pre-wrap.)*
+- **B. Hand slamming down on a target photograph on an open dossier** — mission-assignment vocabulary, target-photo driven.
+- **C. Map with pins, gloved hand jabbing at one location** — geographic targeting, spy-operation vocabulary.
+
+**Intercepted (Nope card) — concept TBD at kickoff.** Current is a hand slamming down on a chess piece — fine but weaker than the elevated set. Possibly: a gloved hand slamming a rubber stamp marked `REJECTED` (watch for Imagen text gibberish — may need abstract symbol), OR hand forcefully slamming down on the sliding combo-steal attempt before it completes.
+
+**Burned — concept TBD at kickoff.** This is THE central card (the one everyone's afraid to draw). Current is a dramatic explosion with a spy ID badge being consumed. Could be even more cinematic: operative caught in the open with flashbulb exposure, single moment of "you've been made."
+
+**Process for each:**
+- Archive current at `public/assets/cards/_archive/<name>-2026-04-19-<reason>.webp`.
+- Tighten prompt in `scripts/generate-cards.ts` with full-bleed + no-text-gibberish guards.
+- `set -a && source .env && set +a && npx tsx scripts/generate-cards.ts --only=<type>` to regen.
+- **Critically eyeball** the temp PNG before presenting (lesson from the call-in-a-favor 29-iter grind: optimistic descriptions waste time — tell Briggsy what you actually see, not what you hope is there).
+- Process via `npx tsx scripts/process-assets.ts` once approved.
+
+### 2. Real-device playtest
 Live 4-8 player test on iPad Pro 1366 + phones. Verify recent flows on real hardware:
 - Triple-steal deferred commit — cards return on cancel, nope window opens AFTER the name.
 - Favor-target banner + staging (no more sheet modal).
@@ -33,14 +58,6 @@ Live 4-8 player test on iPad Pro 1366 + phones. Verify recent flows on real hard
 - Sable's new portrait reads at card size.
 - Card-drawn toast fires for the drawer (and ONLY the drawer) on a safe draw.
 - `pnpm dev:launch` actually makes debugging easier.
-
-### 2. Host kick-and-advance affordance
-**Goal:** when a seat is truly abandoned (not a beer break), host can force the game forward. Backstop for the "timeouts removed" policy.
-**Prescription:**
-- Board-side button in the dossier footer or alongside the blotter — `Skip {name}` or similar.
-- Only visible when the named player is disconnected (via `disconnectTimers` state) AND the game is stalled on their prompt.
-- Server action: `host-force-resolve` that auto-resolves the current pendingPrompt the same way the removed prompt-timeout used to (random Defuse position, cancel the steal, no transfer, etc).
-- Connection detection: `BoardPlayer.isConnected` already exists in the projection. Gate the button on `!isConnected`.
 
 ### 3. 8-player stress test
 Verify PlayerStrip layout at max count on real TV, COMMS scroll under event volume, nameplate legibility from couch distance.
@@ -77,7 +94,14 @@ Push commits, deploy to Cloudflare Pages (wrangler), open on actual TV with phon
 
 ## Landmines
 
-### New this session
+### New this session (evening)
+
+- **Imagen quirks cataloged.** Over ~60 card regens this session, Imagen-4 repeatedly failed at: (1) **rendering legible text** — any "rubber stamp", "document with text", "tag", "sign", or "labeled photo" in a prompt comes back as gibberish or creates text-like shapes even with explicit "NO TEXT" instructions; (2) **hand counts** — "two hands" at a bar or table reliably renders 3-4 hands unless you explicitly state "one hand in frame, other hands tucked out of view"; (3) **cigarette orientation** — will reverse filter/lit-end ~50% of the time no matter how explicit the prompt; (4) **symmetrical subjects read as "twins"** — two men at a bar default to mirror silhouettes unless given strong differentiators (fedora + bald, suit-color contrast); (5) **"slide" across a surface** — Imagen lifts objects into the air by default; forcing "flat contact with wood surface" + "no held in air" + no motion-line adjective is the only reliable way to land a sliding-object composition; (6) **occasional total anomalies** — Imagen has returned a photorealistic tabby cat AND a plaid-shirt portrait when asked for spy scenes (retry once, per prior landmine).
+- **"Birthday card envelope" trap.** Imagen renders "envelope" as a pristine thin white greeting-card shape by default. No amount of "manila", "folded", "rubber-banded", or "Sopranos-style" language reliably breaks this. When the card is supposed to suggest cash, pivot to a visible cash stack directly (no envelope wrapper). Confirmed across ~15 failed call-in-a-favor iterations.
+- **Full-bleed is now the set standard.** Every elevated action card fills the square frame edge to edge with scene content. The Apr-9 cards that still have white/cream vignettes (Burned, Direct Order, Intercepted) are the visual-cohesion gap in the current deck. Prompt pattern: `'the scene fills the entire square frame edge to edge with NO white borders NO vignette NO padding'`.
+- **Critical-eyeball-before-presenting is non-negotiable.** The call-in-a-favor grind burned ~1.10 USD and session time largely because multiple iters were presented with hopeful descriptions ("cash is clearly sliding") when the image showed something different (cash floating, 3 hands, trapezoid shadows). Tell Briggsy what you actually see — including the flaws — before he has to point them out.
+
+### New this session (morning)
 
 - **`applyShuffle` clears `pendingFuture`.** Burn the Files now wipes the peek (`engine.ts:454`). Previously, Intel Briefing + Burn the Files left stale IDs pointing at cards that had moved off the top, and Falsify Intel would then validate a permutation against IDs no longer on the top 3. Any future card that mutates draw-pile order (beyond-the-grave resurrection cards, deck-swap abilities, etc.) should clear `pendingFuture` the same way.
 - **`dev:launch` uses Chrome's positional-URL multi-tab mode.** `chrome.exe [flags] url1 url2 url3…` opens each URL as a tab in the profile's window. `--auto-open-devtools-for-tabs` applies per-tab. Works even when a profile window is already running — the second invocation appends tabs. Popup blocker is irrelevant (URLs come from the CLI, not `window.open`). If you ever re-introduce browser-side tab spawning, the isolated `.chrome-dev-profile/` will re-block popups (it's a fresh profile with defaults, separate from your main Chrome's popup-allow).

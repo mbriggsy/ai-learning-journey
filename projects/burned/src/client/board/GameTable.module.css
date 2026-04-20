@@ -263,15 +263,8 @@
   z-index: var(--z-base);
   background-color: var(--color-paper-face);
   background-image:
-    /* Faint horizontal rule lines — briefing paper */
-    repeating-linear-gradient(
-      0deg,
-      transparent 0,
-      transparent 28px,
-      var(--color-paper-rule) 28px,
-      var(--color-paper-rule) 29px
-    ),
-    /* Subtle paper fiber */
+    /* Subtle paper fiber — vertical grain only, no ruled lines (the lined
+       notebook look read too "school workbook" for a briefing blotter). */
     repeating-linear-gradient(
       90deg,
       transparent 0,

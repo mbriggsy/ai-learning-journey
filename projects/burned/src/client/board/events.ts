@@ -37,7 +37,7 @@ export function formatEvent(event: GameEvent, players: readonly BoardPlayer[], e
         ? pick([
           `${n(event.playerId)} draws... and lives.`,
           `${n(event.playerId)} survives the draw.`,
-          `${n(event.playerId)} is safe. For now.`,
+          `${n(event.playerId)} draws a card, and is safe. For now.`,
           `${n(event.playerId)} got lucky.`,
         ], eventId)
         : null

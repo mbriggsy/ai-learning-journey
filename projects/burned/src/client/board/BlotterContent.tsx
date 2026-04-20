@@ -104,8 +104,9 @@ export function BlotterContent() {
         <div className={`${styles.pileSection} ${styles.pilesDraw}`}>
           <DrawPile count={drawPileCount} />
           <div className={styles.pileLabelGroup}>
+            <span className={styles.pileCaption}>Remaining</span>
+            <span className={styles.pileCaption}>In Field</span>
             <span className={styles.pileLabel}>Draw</span>
-            <span className={styles.pileCaption}>Remaining · In Field</span>
           </div>
         </div>
 

@@ -176,14 +176,29 @@ export function BlotterContent() {
       </div>
 
       <div className={styles.statusStrip}>
-        {statusText ? (
-          <>
-            {activeColor && <PlayerIcon color={activeColor} size={14} />}
-            <span className={styles.statusText}>{statusText}</span>
-          </>
-        ) : (
-          <span className={styles.statusPlaceholder}>// STANDBY</span>
-        )}
+        <AnimatePresence mode="wait" initial={false}>
+          <m.div
+            // Key on the text itself so every turn handoff, prompt change,
+            // and turns-remaining tick triggers a crossfade. "wait" mode
+            // ensures exit completes before enter starts — avoids stacked
+            // text artifacts during rapid state flips.
+            key={statusText || '__standby__'}
+            className={styles.statusInner}
+            initial={{ opacity: 0, y: 3 }}
+            animate={{ opacity: 1, y: 0 }}
+            exit={{ opacity: 0, y: -3 }}
+            transition={MOTION.quickFade}
+          >
+            {statusText ? (
+              <>
+                {activeColor && <PlayerIcon color={activeColor} size={14} />}
+                <span className={styles.statusText}>{statusText}</span>
+              </>
+            ) : (
+              <span className={styles.statusPlaceholder}>// STANDBY</span>
+            )}
+          </m.div>
+        </AnimatePresence>
       </div>
     </div>
   )

@@ -294,13 +294,22 @@
   display: flex;
   align-items: center;
   justify-content: center;
-  gap: var(--space-2);
   min-height: 44px;
   padding: 6px 20px 10px;
   border-top: 1px solid color-mix(in oklab, var(--color-ochre-6) 55%, transparent);
   /* Leave room for the dog-ear at bottom-right — 44×44 inside. */
   margin-right: 48px;
   margin-left: 0;
+}
+
+/* Inner flex row for the icon + text pair. Lives inside AnimatePresence so
+   each turn handoff / prompt change / turns-remaining tick crossfades the
+   whole line. Previously .statusStrip owned the gap directly; moved here
+   so the motion layer can key on the text content. */
+.statusInner {
+  display: flex;
+  align-items: center;
+  gap: var(--space-2);
 }
 
 .statusText {

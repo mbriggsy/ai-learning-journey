@@ -118,11 +118,20 @@
   color: var(--color-bg-app);
   cursor: pointer;
   touch-action: manipulation;
-  transition: opacity var(--motion-duration-fast) var(--motion-ease-base);
+  transition:
+    opacity var(--motion-duration-fast) var(--motion-ease-base),
+    transform var(--motion-duration-fast) var(--motion-ease-decelerate);
 }
 
-.joinButton:hover {
-  opacity: 0.9;
+/* Hover lift — desktop only. Touch devices fire sticky hover on tap. */
+@media (hover: hover) and (pointer: fine) {
+  .joinButton:hover {
+    opacity: 0.9;
+  }
+}
+
+.joinButton:not(:disabled):active {
+  transform: scale(0.97);
 }
 
 /* Keyboard focus indicator — outline (not box-shadow), same pattern as SmartActionBox.

@@ -96,8 +96,10 @@
   z-index: -1;
 }
 
-/* Hover lift — desktop only. Touch devices fire sticky hover on tap. */
-@media (hover: hover) {
+/* Hover lift — desktop only. Touch devices (including hybrid laptops with
+   a stylus or trackpad + touchscreen) need the stricter pointer: fine guard
+   to avoid sticky hover states firing on tap. */
+@media (hover: hover) and (pointer: fine) {
   .card:hover {
     transform: translateY(-4px);
   }

@@ -73,8 +73,11 @@
     background: var(--color-bg-interactive);
     border-color: var(--color-border-interactive);
   }
-  .draw:hover {
-    background: var(--color-bg-interactive-hover);
+  /* Hover lift — desktop only. Touch devices fire sticky hover on tap. */
+  @media (hover: hover) and (pointer: fine) {
+    .draw:hover {
+      background: var(--color-bg-interactive-hover);
+    }
   }
 
   /* State: draw when deck is almost empty — gameplay-essential warning pulse.
@@ -126,8 +129,10 @@
     letter-spacing: 0.06em;
     font-weight: 700;
   }
-  .intercept:hover {
-    background: color-mix(in oklab, var(--color-accent-burned) 85%, var(--color-bg-danger));
+  @media (hover: hover) and (pointer: fine) {
+    .intercept:hover {
+      background: color-mix(in oklab, var(--color-accent-burned) 85%, var(--color-bg-danger));
+    }
   }
 
   /* Final 2 seconds — amplified pulse to telegraph the closing window.

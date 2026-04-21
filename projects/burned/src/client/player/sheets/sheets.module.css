@@ -70,10 +70,14 @@
   text-align: left;
   cursor: pointer;
   touch-action: manipulation;
+  transition:
+    background var(--motion-duration-fast) var(--motion-ease-base),
+    transform var(--motion-duration-fast) var(--motion-ease-decelerate);
 }
 
-.optionBtn:active {
+.optionBtn:not(:disabled):active {
   background: var(--color-border-subtle);
+  transform: scale(0.97);
 }
 
 .optionBtn:disabled {
@@ -99,10 +103,14 @@
   text-transform: uppercase;
   cursor: pointer;
   touch-action: manipulation;
+  transition:
+    background var(--motion-duration-fast) var(--motion-ease-base),
+    transform var(--motion-duration-fast) var(--motion-ease-decelerate);
 }
 
-.cancelBtn:active {
+.cancelBtn:not(:disabled):active {
   background: var(--color-border-subtle);
+  transform: scale(0.97);
 }
 
 .cancelBtn:disabled {
@@ -126,6 +134,11 @@
   font-weight: 600;
   cursor: pointer;
   touch-action: manipulation;
+  transition: transform var(--motion-duration-fast) var(--motion-ease-decelerate);
+}
+
+.confirmBtn:not(:disabled):active {
+  transform: scale(0.97);
 }
 
 .confirmBtn:disabled {
@@ -154,6 +167,11 @@
   text-align: center;
   cursor: pointer;
   touch-action: manipulation;
+  transition: transform var(--motion-duration-fast) var(--motion-ease-decelerate);
+}
+
+.quickBtn:not(:disabled):active {
+  transform: scale(0.97);
 }
 
 /* --- Position input (DefusePlacement: manual +/- counter) --- */

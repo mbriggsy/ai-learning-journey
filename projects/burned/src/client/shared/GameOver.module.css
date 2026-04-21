@@ -149,8 +149,11 @@
   50% { opacity: 0.8; }
 }
 
-.playAgain:hover {
-  transform: scale(1.04);
+/* Hover lift — desktop only. Touch devices fire sticky hover on tap. */
+@media (hover: hover) and (pointer: fine) {
+  .playAgain:hover {
+    transform: scale(1.04);
+  }
 }
 
 .playAgain:active {

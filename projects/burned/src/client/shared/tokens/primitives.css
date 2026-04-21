@@ -262,10 +262,13 @@
     --motion-duration-essential-spin:   1000ms;
     --motion-duration-essential-flash:  200ms;
 
-    /* --- Motion easings (mirror of motion.ts) --- */
-    --motion-ease-base:        cubic-bezier(0.4, 0, 0.2, 1);
+    /* --- Motion easings (mirror of motion.ts) ---
+       base/decelerate upgraded 2026-04-21 from Material stock to Emil-grade
+       curves (iOS drawer + strong ease-out). See post-mortem notes in
+       Phase 4 motion consolidation if reverting. */
+    --motion-ease-base:        cubic-bezier(0.32, 0.72, 0, 1);
     --motion-ease-emphasized:  cubic-bezier(0.2, 0, 0, 1);
-    --motion-ease-decelerate:  cubic-bezier(0, 0, 0.2, 1);
+    --motion-ease-decelerate:  cubic-bezier(0.23, 1, 0.32, 1);
     --motion-ease-accelerate:  cubic-bezier(0.4, 0, 1, 1);
     --motion-ease-anticipate:  cubic-bezier(0.68, -0.55, 0.265, 1.55);
 

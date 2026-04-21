@@ -55,9 +55,9 @@ export const MOTION_DURATIONS = {
 // Cubic-bezier easings. BezierDefinition = readonly [number, number, number, number]
 // which is exactly what `as const` produces — no inline cast needed.
 export const MOTION_EASINGS = {
-  base:        [0.4, 0, 0.2, 1],
+  base:        [0.32, 0.72, 0, 1],
   emphasized:  [0.2, 0, 0, 1],
-  decelerate:  [0, 0, 0.2, 1],
+  decelerate:  [0.23, 1, 0.32, 1],
   accelerate:  [0.4, 0, 1, 1],
   anticipate:  [0.68, -0.55, 0.265, 1.55],
 } as const satisfies Record<EasingName, Easing>
@@ -80,8 +80,9 @@ export const MOTION = {
   quickFade:   { duration: MOTION_DURATIONS.fast,     ease: MOTION_EASINGS.base },
   /** Standard enter transition */
   enter:       { duration: MOTION_DURATIONS.base,     ease: MOTION_EASINGS.decelerate },
-  /** Standard exit transition */
-  exit:        { duration: MOTION_DURATIONS.fast,     ease: MOTION_EASINGS.accelerate },
+  /** Standard exit transition — strong ease-out, not ease-in. ease-in on UI exits
+      delays the moment the user sees the element leave, which reads as sluggish. */
+  exit:        { duration: MOTION_DURATIONS.fast,     ease: MOTION_EASINGS.decelerate },
   /** Full attention — use sparingly for high-drama moments */
   dramatic:    { duration: MOTION_DURATIONS.dramatic, ease: MOTION_EASINGS.emphasized },
 

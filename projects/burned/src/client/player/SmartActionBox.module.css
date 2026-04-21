@@ -33,7 +33,17 @@
     transition:
       background var(--motion-duration-fast) var(--motion-ease-base),
       border-color var(--motion-duration-fast) var(--motion-ease-base),
-      box-shadow var(--motion-duration-fast) var(--motion-ease-base);
+      box-shadow var(--motion-duration-fast) var(--motion-ease-base),
+      transform var(--motion-duration-fast) var(--motion-ease-decelerate);
+  }
+
+  /* Press feedback — every pressable element needs :active scale. For variants
+     running breathe/breatheIntense/interceptPulse the animation is suspended
+     during the press so the scale actually lands; it resumes on release.
+     This is the primary CTA on phone — it must feel heard. */
+  .box:not(:disabled):not([aria-disabled="true"]):active {
+    animation: none;
+    transform: scale(0.97);
   }
 
   .box:disabled,

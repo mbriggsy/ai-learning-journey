@@ -369,14 +369,35 @@
   outline-offset: 5px;
 }
 
+/* Disabled state — waiting for more operatives. The cream sheen slides
+   left-to-right every ambient cycle, telegraphing "actively listening"
+   without the opacity pulse that was previously the only motion. Emil
+   called out opacity-pulse as the generic AI-polish move; a moving sheen
+   reads as real radio traffic / briefing-room chatter. */
 .startButton:disabled {
-  background: color-mix(in oklab, var(--color-teal-6) 60%, var(--color-charcoal-1));
+  background:
+    linear-gradient(
+      105deg,
+      transparent 40%,
+      color-mix(in oklab, var(--color-cream-12) 14%, transparent) 50%,
+      transparent 60%
+    ),
+    color-mix(in oklab, var(--color-teal-6) 60%, var(--color-charcoal-1));
+  background-size: 220% 100%, 100% 100%;
+  background-repeat: no-repeat;
+  background-position: 150% 0, 0 0;
   color: color-mix(in oklab, var(--color-cream-11) 38%, transparent);
   cursor: not-allowed;
   transform: none;
   box-shadow:
     inset 0 0 0 1px color-mix(in oklab, var(--color-cream-11) 14%, transparent),
     0 2px 0 color-mix(in oklab, var(--color-charcoal-1) 30%, transparent);
+  animation: lobbyDisabledSheen var(--motion-duration-ambient) linear infinite;
+}
+
+@keyframes lobbyDisabledSheen {
+  0%   { background-position: 150% 0, 0 0; }
+  100% { background-position: -80% 0, 0 0; }
 }
 
 .startButton:disabled::after { display: none; }
@@ -396,6 +417,7 @@
 
 @media (prefers-reduced-motion: reduce) {
   .startButton::after { animation: none; opacity: 0.6; }
+  .startButton:disabled { animation: none; }
   .waitingDot { animation: none; opacity: 0.5; }
 }
 

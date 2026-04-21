@@ -244,6 +244,48 @@
   .commsStream .announcement:last-child { animation: none; }
 }
 
+/* ─── Idle ticker — ambient chatter when no events have landed ───
+   Rotates a single line every 2.5s; the cursor blink is continuous. Anchored
+   to the bottom of the stream so real events (which follow) stack above it
+   naturally. Muted ochre so it reads as "background radio traffic," not
+   intel. */
+.idleTicker {
+  font-family: var(--font-mono);
+  font-size: var(--text-caption-board);
+  font-weight: 500;
+  letter-spacing: 0.12em;
+  line-height: 1.35;
+  color: color-mix(in oklab, var(--color-ochre-4) 65%, transparent);
+  padding: 6px 10px;
+  display: flex;
+  align-items: baseline;
+  gap: 4px;
+  flex-shrink: 0;
+  text-transform: uppercase;
+}
+
+.idleLabel {
+  /* Label carries the uppercase + letter-spacing; no independent treatment
+     needed. Exposed as its own class so future variants (e.g. color-coded
+     channel tags) have a stable hook. */
+  white-space: nowrap;
+}
+
+.idleCursor {
+  /* Blinking underscore cursor — evokes intercepted-terminal radio traffic.
+     Uses --motion-duration-essential-spin so it keeps pulsing under
+     prefers-reduced-motion; a frozen cursor reads as a frozen app. */
+  display: inline-block;
+  width: 0.6em;
+  text-align: left;
+  animation: idleCursorBlink var(--motion-duration-essential-spin) var(--motion-ease-base) infinite;
+}
+
+@keyframes idleCursorBlink {
+  0%, 49%   { opacity: 1; }
+  50%, 100% { opacity: 0; }
+}
+
 
 /* ─── Status strip (bottom, full width) ─── */
 

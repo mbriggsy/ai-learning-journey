@@ -1,4 +1,4 @@
-import { useEffect, useRef } from 'react'
+import { useEffect, useRef, useState } from 'react'
 import { m, AnimatePresence } from 'motion/react'
 import {
   useDrawPileCount, useDiscardRecent,
@@ -14,6 +14,41 @@ import { playerName } from './playerName'
 import { MOTION } from '@client/shared/tokens/motion'
 import type { BoardPlayer, PendingPromptView } from '@shared/protocol'
 import styles from './BlotterContent.module.css'
+
+// Idle comms chatter — rotates slowly when no real events have landed yet.
+// Keeps the COMMS panel breathing during setup and quiet turns so the TV
+// screen never reads as "frozen". Decorative only; aria-hidden via parent.
+const IDLE_LINES = [
+  'CHANNEL OPEN',
+  'STANDING BY',
+  'AWAITING TRAFFIC',
+  'INTERCEPT CLEAR',
+] as const
+
+function IdleTicker() {
+  const [idx, setIdx] = useState(0)
+  useEffect(() => {
+    const id = setInterval(() => {
+      setIdx(i => (i + 1) % IDLE_LINES.length)
+    }, 2500)
+    return () => clearInterval(id)
+  }, [])
+  return (
+    <AnimatePresence mode="wait">
+      <m.div
+        key={IDLE_LINES[idx]}
+        className={styles.idleTicker}
+        initial={{ opacity: 0, y: 4 }}
+        animate={{ opacity: 1, y: 0 }}
+        exit={{ opacity: 0, y: -4 }}
+        transition={MOTION.enter}
+      >
+        <span className={styles.idleLabel}>// {IDLE_LINES[idx]}</span>
+        <span className={styles.idleCursor} aria-hidden="true">_</span>
+      </m.div>
+    </AnimatePresence>
+  )
+}
 
 function getStatusText(
   currentTurn: { currentPlayerId: string; turnsRemaining: number } | null,
@@ -121,6 +156,7 @@ export function BlotterContent() {
 
       <div className={styles.comms} aria-hidden="true">
         <div className={styles.commsHeader}>Comms · Intercepted</div>
+        <IdleTicker />
         <div className={styles.commsStream} ref={streamRef}>
           <AnimatePresence mode="popLayout">
             {rendered.map(({ entry, text }) => (

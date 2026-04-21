@@ -50,6 +50,12 @@
   user-select: none;
   min-height: 48px;  /* WCAG 2.5.5 — do not remove */
   min-width: 48px;   /* WCAG 2.5.5 — do not remove */
+  /* Smooths the desktop hover lift AND the :active press. The Framer
+     parent (.slot in Hand / .stagedCard in Staging) owns its own transform
+     via motion values — that's a separate element, so this transition
+     doesn't race Framer. [data-selected] explicitly zeroes this below to
+     dodge the layoutId reflash landmine. */
+  transition: transform var(--motion-duration-fast) var(--motion-ease-decelerate);
 
   /* Resting glow — token-driven colored halo makes cards pop from felt */
   box-shadow:
@@ -107,6 +113,14 @@
   .card:hover::after {
     opacity: 1;
   }
+}
+
+/* Press feedback on tap — every card that responds to input gets a subtle
+   squeeze. Cards are already the largest tap targets on screen, so 0.98 is
+   deliberately restrained. Excluded from staged ([data-selected]) and
+   disabled cards, which aren't pressable. */
+.card:not([aria-disabled='true']):not([data-selected]):active {
+  transform: scale(0.98);
 }
 
 .card[data-selected]::after {

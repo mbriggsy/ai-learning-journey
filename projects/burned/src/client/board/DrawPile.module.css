@@ -69,12 +69,19 @@
    If Phase 1 primitives.css charcoal-1 or ochre-9 change, update the hex.
 */
 
+/* Folder drops onto the blotter after the briefing cascade settles — continues
+   the "briefing begins" arc kicked off in GameTable (case banner stagger →
+   stamp drop → folder lands). Delay is tuned so the folder arrives a beat
+   after the classified stamp impresses. Animates translateY + opacity only;
+   the parent .stack owns an infinite breathe on scale and the child's
+   transform would clash if we touched scale here. */
 .topCard {
   position: absolute;
   inset: 0;
   z-index: var(--z-raised);
   border-radius: var(--radius-card);
   background-color: var(--color-paper-face);
+  animation: topCardDrop var(--motion-duration-slow) var(--motion-ease-decelerate) 700ms both;
   background-image:
     /* Upper classified stripe (4px, at 15% height) */
     linear-gradient(var(--color-accent-burned), var(--color-accent-burned)),
@@ -112,6 +119,9 @@
   color: var(--color-accent-burned);
   pointer-events: none;
   user-select: none;
+  /* Labels fade in a beat after the folder lands so the eye reads the
+     folder arrival first, then the classification. */
+  animation: topCardLabelIn var(--motion-duration-base) var(--motion-ease-decelerate) 1000ms both;
 }
 
 /* FILE-47B — bottom-right corner tag */
@@ -126,6 +136,17 @@
   color: color-mix(in oklab, var(--color-accent-burned) 80%, transparent);
   pointer-events: none;
   user-select: none;
+  animation: topCardLabelIn var(--motion-duration-base) var(--motion-ease-decelerate) 1100ms both;
+}
+
+@keyframes topCardDrop {
+  0%   { opacity: 0; transform: translateY(-24px); }
+  100% { opacity: 1; transform: translateY(0); }
+}
+
+@keyframes topCardLabelIn {
+  0%   { opacity: 0; }
+  100% { opacity: 1; }
 }
 
 /* Inner border frame — double-line agency dossier feel */
@@ -166,6 +187,9 @@
 @media (prefers-reduced-motion: reduce) {
   .stack { animation: none; }
   .stack::after { animation: none; }
+  .topCard,
+  .topSecretLabel,
+  .fileNumber { animation: none; }
 }
 
 } /* @layer components */

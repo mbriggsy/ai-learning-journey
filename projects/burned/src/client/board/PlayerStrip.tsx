@@ -23,7 +23,7 @@ export const PlayerStrip = memo(function PlayerStrip({
 
   return (
     <div className={styles.strip} role="list" aria-label="Players">
-      {players.map(p => {
+      {players.map((p, idx) => {
         const isActive = p.id === currentPlayerId && p.isAlive
         return (
           <m.div
@@ -33,9 +33,14 @@ export const PlayerStrip = memo(function PlayerStrip({
             data-active={isActive || undefined}
             data-dead={!p.isAlive || undefined}
             data-offline={!p.isConnected || undefined}
-            initial={false}
-            animate={{ y: isActive ? -6 : 0 }}
-            transition={MOTION.deliberate}
+            // Stagger entry on mount — cascade tiles into place so the
+            // "briefing begins" moment has weight. Framer only touches
+            // opacity; the active-turn lift is pure CSS transform (see
+            // .tile[data-active] in the stylesheet) so the two never fight
+            // over the transform property.
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 1 }}
+            transition={{ ...MOTION.enter, delay: idx * 0.035 }}
           >
             <span
               className={styles.presence}

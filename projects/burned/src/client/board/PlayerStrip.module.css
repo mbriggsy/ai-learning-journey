@@ -50,6 +50,15 @@
     0 6px 14px color-mix(in oklab, var(--color-charcoal-1) 50%, transparent),
     0 2px 4px color-mix(in oklab, var(--color-charcoal-1) 55%, transparent);
   color: color-mix(in oklab, var(--color-cream-11) 92%, transparent);
+  /* Active-turn handoff transitions smoothly — transform lifts the tile,
+     background/shadow/color swap to the paper-faced active variant.
+     Framer owns opacity-only on mount (see PlayerStrip.tsx); transform
+     lives here so the two never race. */
+  transition:
+    transform var(--motion-duration-base) var(--motion-ease-decelerate),
+    background var(--motion-duration-base) var(--motion-ease-base),
+    box-shadow var(--motion-duration-base) var(--motion-ease-base),
+    color var(--motion-duration-fast) var(--motion-ease-base);
 }
 
 /* Top hairline — ochre, 2px; brightens to accent-drama when active */
@@ -62,6 +71,9 @@
   height: 2px;
   background: color-mix(in oklab, var(--color-accent-drama) 28%, transparent);
   pointer-events: none;
+  transition:
+    background var(--motion-duration-base) var(--motion-ease-base),
+    height var(--motion-duration-fast) var(--motion-ease-decelerate);
 }
 
 /* Presence dot — signals WebSocket connection status. Green when connected,
@@ -157,6 +169,7 @@
 
 /* ── Active state ── */
 .tile[data-active] {
+  transform: translateY(-6px);
   background:
     linear-gradient(
       180deg,

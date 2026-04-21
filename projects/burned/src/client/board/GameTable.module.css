@@ -450,6 +450,38 @@
   opacity: 0.55;
 }
 
+/* Case-banner entry cascade — children stagger in with short per-child
+   delays. The stamp-drop fires after all five settle (450ms) so the
+   "briefing begins" arc reads as: header → body → impact. */
+.caseBannerLabel,
+.caseBannerOperation,
+.caseBannerSub,
+.caseBannerDivider,
+.caseBannerFooter {
+  animation: caseBannerLineIn var(--motion-duration-base) var(--motion-ease-decelerate) both;
+}
+
+.caseBannerLabel     { animation-delay: 50ms; }
+.caseBannerOperation { animation-delay: 120ms; }
+.caseBannerSub       { animation-delay: 190ms; }
+.caseBannerDivider   { animation-delay: 260ms; }
+.caseBannerFooter    { animation-delay: 330ms; }
+
+@keyframes caseBannerLineIn {
+  from { opacity: 0; transform: translateX(-8px); }
+  to   { opacity: 1; transform: translateX(0); }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .caseBannerLabel,
+  .caseBannerOperation,
+  .caseBannerSub,
+  .caseBannerDivider,
+  .caseBannerFooter {
+    animation: none;
+  }
+}
+
 .caseBannerLabel {
   font-family: var(--font-mono);
   font-size: var(--text-caption-board);
@@ -515,7 +547,13 @@
 }
 
 /* Classified-stamp overlay — uses the Imagen-generated stamp png, masked to
-   red + rotated just off-axis. Sits low on the left banner as set dressing. */
+   red + rotated just off-axis. Sits low on the left banner as set dressing.
+
+   Mount reveal plays once on game-table entry (caseBanner mounts when the
+   Lobby→GameTable transition fires). Scale overshoot simulates the physical
+   impact of a rubber stamp hitting paper — oversized pre-contact, compresses
+   slightly past the resting state, settles at 1.0. The emphasized curve
+   gives the punchy "slam down" character that a gentler ease-out misses. */
 .caseBannerStamp {
   margin-top: 10px;
   width: 82%;
@@ -531,6 +569,30 @@
     saturate(1.15)
     drop-shadow(0 1px 1px color-mix(in oklab, var(--color-charcoal-1) 40%, transparent));
   mix-blend-mode: multiply;
+  animation: stampDrop var(--motion-duration-slow) var(--motion-ease-emphasized) 450ms both;
+}
+
+@keyframes stampDrop {
+  0% {
+    opacity: 0;
+    transform: rotate(-6deg) scale(1.8);
+  }
+  60% {
+    opacity: 0.5;
+    transform: rotate(-6deg) scale(0.94);
+  }
+  100% {
+    opacity: 0.35;
+    transform: rotate(-6deg) scale(1);
+  }
+}
+
+/* Reduced motion — skip the impact overshoot; the stamp just fades in at
+   its resting position. Decorative tier (fade only, no transform). */
+@media (prefers-reduced-motion: reduce) {
+  .caseBannerStamp {
+    animation: none;
+  }
 }
 
 /* ─── Full-screen event flash (GSAP target in Phase 4) ─── */

@@ -139,9 +139,15 @@ export function Hand({ hand, disabled, onStageCard, onCardLongPress }: HandProps
               <m.div
                 key={enlargedCard.id}
                 className={styles.enlargeCard}
-                initial={{ scale: 0.35, y: 120 }}
-                animate={{ scale: 1, y: 0 }}
-                exit={{ scale: 0.35, y: 120 }}
+                // Blur-mask during the scale transition — MinimalCard's
+                // container-query layout flips thresholds as it grows from
+                // 0.35 to 1, so content rejiggers mid-animation. A 4px blur
+                // at the endpoints smooths the swap into a single perceived
+                // motion instead of two layouts fighting mid-flight.
+                // Keep under 6px — blur is expensive on Safari mobile.
+                initial={{ scale: 0.35, y: 120, filter: 'blur(4px)' }}
+                animate={{ scale: 1, y: 0, filter: 'blur(0px)' }}
+                exit={{ scale: 0.35, y: 120, filter: 'blur(4px)' }}
                 transition={MOTION.snappy}
               >
                 <MinimalCard type={enlargedCard.type} />

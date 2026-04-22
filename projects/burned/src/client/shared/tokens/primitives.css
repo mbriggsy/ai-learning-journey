@@ -33,6 +33,7 @@
 @property --motion-duration-ambient           { syntax: '<time>'; inherits: true; initial-value: 4000ms; }
 @property --motion-duration-pulse             { syntax: '<time>'; inherits: true; initial-value: 1400ms; }
 @property --motion-duration-pulse-slow        { syntax: '<time>'; inherits: true; initial-value: 2500ms; }
+@property --motion-duration-stamp             { syntax: '<time>'; inherits: true; initial-value: 340ms; }
 @property --motion-duration-essential-pulse   { syntax: '<time>'; inherits: true; initial-value: 1400ms; }
 @property --motion-duration-essential-spin    { syntax: '<time>'; inherits: true; initial-value: 700ms; }
 @property --motion-duration-essential-flash   { syntax: '<time>'; inherits: true; initial-value: 200ms; }
@@ -271,6 +272,9 @@
     --motion-duration-ambient:    4000ms;
     --motion-duration-pulse:      1400ms;
     --motion-duration-pulse-slow: 2500ms;
+    /* Single-consumer: StealReport rubber-stamp thunk. See motion.ts MOTION_DURATIONS.stamp
+       for rationale (sits between base/slow so the overshoot curve has room). */
+    --motion-duration-stamp:      340ms;
 
     /* Essential — survives prefers-reduced-motion. Gameplay-signal animations. */
     --motion-duration-essential-pulse:  1400ms;
@@ -286,6 +290,10 @@
     --motion-ease-decelerate:  cubic-bezier(0.23, 1, 0.32, 1);
     --motion-ease-accelerate:  cubic-bezier(0.4, 0, 1, 1);
     --motion-ease-anticipate:  cubic-bezier(0.68, -0.55, 0.265, 1.55);
+    /* Forward overshoot — settles past 1.0 then back. See motion.ts
+       MOTION_EASINGS.overshoot for pairing guidance (use with keyframes that
+       briefly scale below target for the spring-back read). */
+    --motion-ease-overshoot:   cubic-bezier(0.34, 1.56, 0.64, 1);
 
     /* --- Z-index scale --- */
     --z-base:    0;
@@ -313,6 +321,7 @@
       --motion-duration-ambient:    0ms;
       --motion-duration-pulse:      0ms;
       --motion-duration-pulse-slow: 0ms;
+      --motion-duration-stamp:      0ms;
 
       /* Essential — PRESERVED (slowed for comfort, not zeroed) */
       --motion-duration-essential-pulse:  2400ms;

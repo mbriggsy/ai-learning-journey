@@ -11,13 +11,13 @@ import type { Transition, Easing } from 'motion/react'
 // Key unions — single source of truth.
 export const DURATION_NAMES = [
   'fast', 'base', 'slow', 'dramatic',
-  'dots', 'ambient', 'pulse', 'pulseSlow',
+  'dots', 'ambient', 'pulse', 'pulseSlow', 'stamp',
   'essentialPulse', 'essentialSpin', 'essentialFlash',
 ] as const
 export type DurationName = typeof DURATION_NAMES[number]
 
 export const EASING_NAMES = [
-  'base', 'emphasized', 'decelerate', 'accelerate', 'anticipate',
+  'base', 'emphasized', 'decelerate', 'accelerate', 'anticipate', 'overshoot',
 ] as const
 export type EasingName = typeof EASING_NAMES[number]
 
@@ -45,6 +45,12 @@ export const MOTION_DURATIONS = {
   ambient:        4.0,
   pulse:          1.4,
   pulseSlow:      2.5,
+  // Single-consumer bespoke: StealReport rubber-stamp thunk. Paired with the
+  // `overshoot` easing below and a 60%-keyframe squish to read as a physical
+  // stamp impact. Shorter than `slow` (400ms) so the ack dispatch lands before
+  // the reader's eye rests; longer than `base` (250ms) so the overshoot curve
+  // has room to breathe.
+  stamp:          0.34,
 
   // Essential — survives prefers-reduced-motion. Spinners tuned to 0.7s
   // (Emil's perceived-speed rule: faster spin = faster-feeling app).
@@ -61,6 +67,12 @@ export const MOTION_EASINGS = {
   decelerate:  [0.23, 1, 0.32, 1],
   accelerate:  [0.4, 0, 1, 1],
   anticipate:  [0.68, -0.55, 0.265, 1.55],
+  // Forward overshoot — goes past target (~1.56x on y) and settles. Pairs
+  // with keyframes that briefly scale BELOW target to amplify the bounce
+  // (e.g. StealReport stamp peaks at scale(0.95) then settles at scale(1)).
+  // Reads as physical impact / spring-back; Emil allows bounce 0.1-0.3 for
+  // playful single-fire moments (not UI chrome).
+  overshoot:   [0.34, 1.56, 0.64, 1],
 } as const satisfies Record<EasingName, Easing>
 
 // Springs — type: 'spring' + stiffness + damping.

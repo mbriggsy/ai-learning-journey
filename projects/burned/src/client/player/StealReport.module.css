@@ -213,7 +213,7 @@
     inset 0 1px 0 color-mix(in oklab, var(--color-cream-12) 22%, transparent),
     inset 0 -1px 0 color-mix(in oklab, var(--color-charcoal-1) 40%, transparent),
     0 2px 5px color-mix(in oklab, var(--color-charcoal-1) 55%, transparent);
-  animation: stampThunk 0.34s cubic-bezier(0.34, 1.56, 0.64, 1) 0.32s both;
+  animation: stampThunk var(--motion-duration-stamp) var(--motion-ease-overshoot) 0.32s both;
 }
 
 /* Misfire variant — ochre instead of crimson, reads as bureaucratic sigh */
@@ -271,7 +271,9 @@
     inset 0 1px 0 color-mix(in oklab, var(--color-cream-12) 12%, transparent),
     0 2px 0 color-mix(in oklab, var(--color-charcoal-1) 80%, transparent),
     0 4px 10px color-mix(in oklab, var(--color-charcoal-1) 40%, transparent);
-  transition: transform 0.12s ease, box-shadow 0.12s ease;
+  transition:
+    transform var(--motion-duration-fast) var(--motion-ease-decelerate),
+    box-shadow var(--motion-duration-fast) var(--motion-ease-decelerate);
 }
 
 .ackBtn:active {

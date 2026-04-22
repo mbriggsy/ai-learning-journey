@@ -87,7 +87,7 @@
   box-shadow:
     0 0 0 1px color-mix(in oklab, var(--color-charcoal-1) 55%, transparent),
     0 0 8px color-mix(in oklab, var(--color-signal-ok, #5ecc7b) 60%, transparent);
-  animation: presencePulse 2.4s ease-in-out infinite;
+  animation: presencePulse var(--motion-duration-pulse-slow) var(--motion-ease-base) infinite;
 }
 
 .tile[data-offline] .presence {

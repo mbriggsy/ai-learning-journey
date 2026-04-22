@@ -39,7 +39,26 @@
 
 ## Next Steps (in priority order)
 
-### 1. Regen the final 3 action-card illustrations (kick-off with Direct Order)
+### 1. ★ DESK REDESIGN — retire the blotter, arena becomes Mother's office
+**Plan:** `docs/plans/desk-redesign/PLAN.md` (v1.0, locked 2026-04-22)
+
+**Premise:** The cream-paper blotter is dimensionally dishonest (3D cards floating on 2D paper) and semantically mismatched (COMMS as ink-on-page when it wants to be alive intel). Retire it. The polished mahogany frame we already have becomes *the* play surface. Cards sit on wood. COMMS becomes a manila dossier folder (real object). Status becomes a brass nameplate (physical widget). Closer to an Archer screenshot — and fewer decorations, each doing more work.
+
+**Phased execution (each phase = commit point):**
+- **Phase 0** — Introduce wood/manila/brass palette tokens
+- **Phase 1** — Strip the blotter, promote the desk
+- **Phase 2** — Cards on wood: tabletop shadows + depth
+- **Phase 3** — COMMS as manila dossier (biggest ambition; Option-2 teletype fallback documented)
+- **Phase 4** — Status strip → brass nameplate with coin-flip turn handoff
+- **Phase 5** — Polish: 2-3 scene-setting details (ashtray, photo, lamp cast)
+
+**Est. session count:** 2-4. Phase 3 could be a session on its own.
+
+**Success test:** a still frame of the new arena reads as *a desk in an office*, not *a UI with paper decorations*. The Product Spec §2 Archer-frame test applies.
+
+---
+
+### 2. Regen the final 3 action-card illustrations (kick-off with Direct Order)
 **Burned, Direct Order, Intercepted are still the only action cards at original Apr-9 quality** — visible gap vs the rest of the deck now that the other 8 are elevated.
 
 **Direct Order — concept pitches ready for next-session kickoff:**
@@ -58,7 +77,7 @@
 - **Critically eyeball** the temp PNG before presenting (lesson from the call-in-a-favor 29-iter grind: optimistic descriptions waste time — tell Briggsy what you actually see, not what you hope is there).
 - Process via `npx tsx scripts/process-assets.ts` once approved.
 
-### 2. Real-device playtest
+### 3. Real-device playtest
 Live 4-8 player test on iPad Pro 1366 + phones. Verify recent flows on real hardware:
 - Triple-steal deferred commit — cards return on cancel, nope window opens AFTER the name.
 - Favor-target banner + staging (no more sheet modal).
@@ -70,35 +89,35 @@ Live 4-8 player test on iPad Pro 1366 + phones. Verify recent flows on real hard
 - **Emil design pass (2026-04-21) — verify on-phone:** SmartActionBox `:active` scale(0.97) actually lands during breathing states (.action / .drawIntense / urgent intercept); card-tap squeeze at 0.98 reads as tactile and not too subtle; hand→enlarge blur doesn't read as "stutter" on Safari mobile; sheets press feedback doesn't fight overscroll gestures.
 - **Emil design pass (2026-04-21) — verify on-TV:** briefing cascade (banner text → stamp → folder → player strip → idle ticker) reads as a coherent arc and not a list of competing entrances; the idle ticker doesn't become distracting once real COMMS events accumulate; Lobby disabled sheen is subtle enough to read as ambient and not gimmicky; status strip crossfade on turn handoff doesn't ghost under rapid state ticks.
 
-### 3. 8-player stress test
+### 4. 8-player stress test
 Verify PlayerStrip layout at max count on real TV, COMMS scroll under event volume, nameplate legibility from couch distance.
 **Landing gate:** at 1366×1024, strip math leaves ~34px headroom with all 10 tiles; verify at 1920 and 4K that tiles grow proportionally.
 
-### 4. Blotter content layout polish
+### 5. ~~Blotter content layout polish~~ [SUPERSEDED by Desk Redesign #1]
 Options for the piles column: (a) vertically center the pile lockup, (b) scale the pile visual further, (c) decorative classified chrome (memo pad, paperclip). Briggsy's call at kickoff which direction feels right.
 
-### 5. Live mid-play state verification — `tests/e2e/arena-states.spec.ts`
+### 6. Live mid-play state verification — `tests/e2e/arena-states.spec.ts`
 Playwright script: 3-player game, drive the `window.__gameStore` dev hook to force each state, screenshot each. Target states: Nope window mid-countdown, DramaOverlay (BURNED → EXTRACTED, ELIMINATED, INTERCEPTED, WINS), Favor banner + staging, Triple-steal name-card sheet pre-commit and post-name, FuturePeek (read-only and rearrange). Output to `temp/arena-states/` for eyeball review. Each state is ~30 min to script; ~3-4 hours for the full set.
 
-### 6. Physical hardware verification
+### 7. Physical hardware verification
 Push commits, deploy to Cloudflare Pages (wrangler), open on actual TV with phone controllers.
 
-### 7. Extend PlayerAlert coverage (optional)
+### 8. Extend PlayerAlert coverage (optional)
 - **Reassign / Direct Order target** — no direct event type; victim only learns via `turn-started` with `turnsRemaining > 1`. Probably fine as-is because the target's phone sits dormant — when they come back, staging is lit and status reads "Your turn · 3 turns".
 - **Your card was intercepted** — optimistic snapback + board DramaOverlay already communicate this, but explicit phone toast would remove ambiguity. Skip until playtest reveals confusion.
 
-### 8. Tier 2 retheme cleanup (non-blocking)
+### 9. Tier 2 retheme cleanup (non-blocking)
 - `src/server/game/engine.ts` — any remaining `// EKs` / `'No EK in hand'` strings → Burned vocabulary.
 - `src/shared/constants.ts` — `EK_REVEAL_MS` → `BURNED_REVEAL_MS` (rename across all call sites).
 
-### 9. Execute Phase 5 — Verification & Acceptance
+### 10. Execute Phase 5 — Verification & Acceptance
 **`/ce:work docs/plans/css-foundation-rebuild/phase-5-verification-acceptance.md`**
 
-### 10. Optional polish follow-ups
+### 11. Optional polish follow-ups
 - **Brass studs on wood frame.** CSS pseudo-elements (small radial-gradient dots at regular intervals on `.woodTop/.woodBottom`).
 - **Remove unused `public/assets/arena/mahogany.png`.** Superseded by the 4-edge split.
 
-### 11. Optional test coverage expansion (deferred until visual layer stabilizes)
+### 12. Optional test coverage expansion (deferred until visual layer stabilizes)
 - **Card-drawn toast E2E** (~30 min). Extend Tier 1 spec: active phone taps `End turn · draw`, assert `PlayerAlert` renders `You drew {name}.`. Locks today's feature end-to-end.
 - **Agent-X combo matrix** (~15 min). Add explicit tests to `combo-validation.test.ts` for `3× Agent X`, `2× Agent X + operative`, `Agent X + 2 matching operatives`. Belt-and-suspenders over the existing generic rule.
 - **Pixel-diff regression** (~2h setup + ongoing baseline maintenance). Playwright `toHaveScreenshot()` with committed baselines. Requires `MotionConfig reducedMotion="always"` in test mode + fixed server RNG seed so baselines are deterministic. Defer until after Phase 5 lands — mid-rebuild baselines churn too fast.

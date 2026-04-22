@@ -39,22 +39,16 @@
 
 ## Next Steps (in priority order)
 
-### 1. ★ DESK REDESIGN — retire the blotter, arena becomes Mother's office
+### 1. ~~DESK REDESIGN — retire the blotter, arena becomes Mother's office~~ [DONE]
 **Plan:** `docs/plans/desk-redesign/PLAN.md` (v1.0, locked 2026-04-22)
+**Shipped:** single session, 2026-04-22 — Phase 0 → Phase 5 + two mid-flight fixes (tab red family unification, dossier message-history restoration, channel ticker restoration).
 
-**Premise:** The cream-paper blotter is dimensionally dishonest (3D cards floating on 2D paper) and semantically mismatched (COMMS as ink-on-page when it wants to be alive intel). Retire it. The polished mahogany frame we already have becomes *the* play surface. Cards sit on wood. COMMS becomes a manila dossier folder (real object). Status becomes a brass nameplate (physical widget). Closer to an Archer screenshot — and fewer decorations, each doing more work.
+Commits in order: `639beec0` (tokens) → `21846469` (blotter retire) → `976898ee` (cards on wood) → `9238bc0b` (dossier) → `d7d43bf0` (tab red fix) → `3ad89796` (strip cursor, later superseded) → `ec2cf47f` (strip cap 4 → 8) → `ca6b63bd` (channel ticker restore) → `8b4c512d` (brass nameplate) → `fce4079f` (operative photo + lamp polish).
 
-**Phased execution (each phase = commit point):**
-- **Phase 0** — Introduce wood/manila/brass palette tokens
-- **Phase 1** — Strip the blotter, promote the desk
-- **Phase 2** — Cards on wood: tabletop shadows + depth
-- **Phase 3** — COMMS as manila dossier (biggest ambition; Option-2 teletype fallback documented)
-- **Phase 4** — Status strip → brass nameplate with coin-flip turn handoff
-- **Phase 5** — Polish: 2-3 scene-setting details (ashtray, photo, lamp cast)
-
-**Est. session count:** 2-4. Phase 3 could be a session on its own.
-
-**Success test:** a still frame of the new arena reads as *a desk in an office*, not *a UI with paper decorations*. The Product Spec §2 Archer-frame test applies.
+**Outstanding follow-ups:**
+- **Color check** — Briggsy flagged color blindness + nervousness about whether the manila/cordovan/brass/mahogany palette actually reads right together. Needs a color-sighted eye (Harry? separate session?) before touching manila-face, brass tones, or tab hex. The arena currently unifies all reds through `--color-accent-burned` as of `d7d43bf0`.
+- **Phase 5.5 assets (skipped this pass)** — ashtray + stubbed cigar, whisky tumbler, closed dossier stack. All need Imagen asset generation to hit the quality bar; CSS-only gradients would look toy-ish. Candidates when assets exist: upper-left corner of desk (ashtray), opposite corner (tumbler catching venetian-blind light), below/beside active dossier (closed stack = "other cases" vocabulary).
+- **Status strip height bump** — `.statusStrip` went 44 → 56px to host the plate + stand. Verify on real TV that this doesn't squeeze the piles/dossier vertical band.
 
 ---
 

@@ -168,20 +168,20 @@ describe('Deck composition — tier boundary selection', () => {
 describe('Deck composition — sanity anchors (literal rules table)', () => {
   // Hard-coded literals from §3 Defuse-and-EK-distribution table so a future
   // refactor that silently breaks tier math trips these immediately.
-  const TABLE: Array<{ n: number; pool: number; dealt: number; extra: number; eks: number }> = [
-    { n: 2, pool: 3, dealt: 2, extra: 1, eks: 1 },
-    { n: 3, pool: 3, dealt: 3, extra: 0, eks: 2 },
-    { n: 4, pool: 7, dealt: 4, extra: 3, eks: 3 },
-    { n: 5, pool: 7, dealt: 5, extra: 2, eks: 4 },
-    { n: 6, pool: 7, dealt: 6, extra: 1, eks: 5 },
-    { n: 7, pool: 7, dealt: 7, extra: 0, eks: 6 },
-    { n: 8, pool: 10, dealt: 8, extra: 2, eks: 7 },
-    { n: 9, pool: 10, dealt: 9, extra: 1, eks: 8 },
-    { n: 10, pool: 10, dealt: 10, extra: 0, eks: 9 },
+  const TABLE: Array<{ n: number; pool: number; dealt: number; extra: number; burned: number }> = [
+    { n: 2, pool: 3, dealt: 2, extra: 1, burned: 1 },
+    { n: 3, pool: 3, dealt: 3, extra: 0, burned: 2 },
+    { n: 4, pool: 7, dealt: 4, extra: 3, burned: 3 },
+    { n: 5, pool: 7, dealt: 5, extra: 2, burned: 4 },
+    { n: 6, pool: 7, dealt: 6, extra: 1, burned: 5 },
+    { n: 7, pool: 7, dealt: 7, extra: 0, burned: 6 },
+    { n: 8, pool: 10, dealt: 8, extra: 2, burned: 7 },
+    { n: 9, pool: 10, dealt: 9, extra: 1, burned: 8 },
+    { n: 10, pool: 10, dealt: 10, extra: 0, burned: 9 },
   ]
 
   for (const row of TABLE) {
-    it(`${row.n}p → pool ${row.pool}, dealt ${row.dealt}, extra ${row.extra}, EKs ${row.eks}`, () => {
+    it(`${row.n}p → pool ${row.pool}, dealt ${row.dealt}, extra ${row.extra}, Burned ${row.burned}`, () => {
       const deck = buildDeck(row.n, makeCtx())
       expect(deck.filter(c => c.type === 'extraction')).toHaveLength(row.pool)
 
@@ -190,7 +190,7 @@ describe('Deck composition — sanity anchors (literal rules table)', () => {
         (s, p) => s + p.hand.filter(c => c.type === 'extraction').length, 0)
       expect(dealt).toBe(row.dealt)
       expect(state.drawPile.filter(c => c.type === 'extraction').length).toBe(row.extra)
-      expect(state.drawPile.filter(c => c.type === 'burned').length).toBe(row.eks)
+      expect(state.drawPile.filter(c => c.type === 'burned').length).toBe(row.burned)
     })
   }
 })

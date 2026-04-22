@@ -152,7 +152,7 @@ function handleStartGame(
   const playerCount = lobby.players.length
   const deck = buildDeck(playerCount, ctx)
 
-  // Separate defuses from other cards (deck has no EKs — buildDeck excludes them)
+  // Separate defuses from other cards (deck has no Burned cards — buildDeck excludes them)
   const defuses = deck.filter(c => c.type === 'extraction')
   const others = deck.filter(c => c.type !== 'extraction')
 
@@ -215,7 +215,7 @@ export function buildDeck(playerCount: number, _ctx: DispatchContext): CardInsta
   const cards: CardInstance[] = []
 
   for (const def of CARD_DEFS) {
-    // EKs excluded — startGame creates N-1 directly
+    // Burned cards excluded — startGame creates N-1 directly
     if (def.category === 'burned') continue
 
     const count = getCountForPlayerCount(def, playerCount)
@@ -259,7 +259,7 @@ function handlePlayCard(
   if (cards.some(c => !c)) return err(state, 'Card not in hand', 'CARD_NOT_IN_HAND')
   const validCards = cards as CardInstance[]
 
-  // Cannot use EK or Defuse in combos
+  // Cannot use Burned or Extraction in combos
   if (validCards.some(c => COMBO_EXCLUDED_CATEGORIES.has(CARD_DEF_BY_TYPE[c.type].category))) {
     return err(state, 'Cannot use Burned or Extraction in combos', 'INVALID_COMBO')
   }
@@ -664,7 +664,7 @@ function performDraw(
         nopeWindow: null,
         events: [...newState.events, ...events, { type: 'extraction-played', playerId }],
       }
-      // Keep the EK in hand temporarily for placement
+      // Keep the Burned card in hand temporarily for placement
       const playerWithEk = addCardsToHand(finalState, playerId, [drawnCard])
       return ok(playerWithEk)
     }
@@ -716,17 +716,17 @@ function handleDefusePlace(
     return err(state, `Position must be 0 to ${state.drawPile.length}`, 'INVALID_POSITION')
   }
 
-  // Find EK in player's hand (was temporarily placed there)
+  // Find Burned card in player's hand (was temporarily placed there)
   const player = getPlayer(state, action.playerId)!
-  const ek = player.hand.find(c => c.type === 'burned')
-  if (!ek) return err(state, 'No Burned card in hand', 'INVALID_ACTION')
+  const burned = player.hand.find(c => c.type === 'burned')
+  if (!burned) return err(state, 'No Burned card in hand', 'INVALID_ACTION')
 
-  // Remove EK from hand
-  let newState = removeCardsFromHand(state, action.playerId, [ek.id])
+  // Remove Burned card from hand
+  let newState = removeCardsFromHand(state, action.playerId, [burned.id])
 
-  // Insert EK into draw pile at position
+  // Insert Burned card into draw pile at position
   const newDrawPile = [...newState.drawPile]
-  newDrawPile.splice(position, 0, ek)
+  newDrawPile.splice(position, 0, burned)
 
   const remaining = state.currentTurn.turnsRemaining - 1
   newState = {

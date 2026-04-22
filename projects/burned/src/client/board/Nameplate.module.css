@@ -1,0 +1,142 @@
+/* Nameplate.module.css
+   Brass desk nameplate — engraved agent codename on a beveled metal plate
+   sitting on a thin dark-wood stand. Replaces the typewriter status strip
+   as the turn indicator. Phase 4 of the desk redesign.
+
+   Turn handoff reads as a physical coin-flip: the plate rotateYs 180°
+   around its vertical center, content swaps at the edge-on moment, new
+   name engraves in. Every meaningful subject change (new active player,
+   new pending prompt) triggers a flip; minor updates like turns-remaining
+   ticking down just update text in place without another flip.
+
+   Typography: heavy mono for the name with a 1px cream highlight above
+   the letters (brass reflection catching the desk-lamp cast) and a 1px
+   deep-charcoal shadow below (engraved-into-metal depth).
+*/
+
+@layer components {
+
+.nameplate {
+  position: relative;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  /* Perspective anchors the coin-flip rotateY on children below. 1000px
+     gives a natural camera distance for a desk-scale object; shorter
+     perspective fish-eyes the flip, longer flattens it. */
+  perspective: 1000px;
+  pointer-events: none;
+}
+
+/* Thin dark-wood base under the brass plate — slightly wider so the
+   brass appears to REST on the stand rather than float above it. */
+.stand {
+  /* Sized relative to the plate's eventual width via container alignment.
+     Stand width = plate width + 16px overhang (8px per side). */
+  width: calc(100% + 16px);
+  height: 6px;
+  margin-top: -2px;
+  background: linear-gradient(
+    180deg,
+    color-mix(in oklab, var(--color-wood-surface-mid) 85%, var(--color-wood-surface-light)) 0%,
+    var(--color-wood-surface-dark) 65%,
+    color-mix(in oklab, var(--color-wood-surface-dark) 70%, var(--color-charcoal-1)) 100%
+  );
+  border-radius: 0 0 3px 3px;
+  box-shadow:
+    inset 0 1px 0 color-mix(in oklab, var(--color-wood-surface-light) 28%, transparent),
+    0 3px 6px color-mix(in oklab, var(--color-charcoal-1) 45%, transparent);
+}
+
+/* Brass plate — the focal object. Beveled via gradient + inset shadows;
+   padded so the flip content inside has room without touching the edge. */
+.plate {
+  order: -1; /* render plate above stand in flex order */
+  position: relative;
+  min-width: 220px;
+  padding: 9px 28px 11px;
+  border-radius: 4px;
+  background: linear-gradient(
+    180deg,
+    var(--color-brass-highlight) 0%,
+    color-mix(in oklab, var(--color-brass-highlight) 70%, var(--color-brass-mid)) 14%,
+    var(--color-brass-mid) 52%,
+    color-mix(in oklab, var(--color-brass-mid) 55%, var(--color-brass-shadow)) 86%,
+    var(--color-brass-shadow) 100%
+  );
+  box-shadow:
+    /* top highlight — catches lamp light */
+    inset 0 1px 0 color-mix(in oklab, var(--color-cream-12) 42%, transparent),
+    /* bottom shadow — deeper bevel edge */
+    inset 0 -1px 0 color-mix(in oklab, var(--color-charcoal-1) 70%, transparent),
+    /* side bevels */
+    inset 1px 0 0 color-mix(in oklab, var(--color-brass-highlight) 55%, transparent),
+    inset -1px 0 0 color-mix(in oklab, var(--color-brass-shadow) 70%, transparent),
+    /* tabletop depth — close contact + far soft */
+    0 2px 3px color-mix(in oklab, var(--color-charcoal-1) 55%, transparent),
+    0 6px 14px color-mix(in oklab, var(--color-charcoal-1) 30%, transparent);
+}
+
+/* Coin-flip content — each subject change (new player, new prompt)
+   remounts this block with a fresh rotateY enter. AnimatePresence in the
+   parent drives exit/enter keyed on subject identity. */
+.plateContent {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 1px;
+  min-width: 0;
+  /* Hides the back face during the rotateY transit so we see clean edge-
+     on, not a mirror of the text flashing through. */
+  backface-visibility: hidden;
+  transform-style: preserve-3d;
+}
+
+.name {
+  font-family: var(--font-mono);
+  font-weight: 900;
+  font-size: clamp(17px, 1.2vw, 26px);
+  letter-spacing: 0.14em;
+  text-transform: uppercase;
+  line-height: 1;
+  color: var(--color-brass-engrave);
+  /* Engraved effect: 1px highlight above each letter (brass reflection)
+     + 1px deep shadow below (letters sink into metal). */
+  text-shadow:
+    0 1px 0 color-mix(in oklab, var(--color-brass-highlight) 75%, transparent),
+    0 -1px 0 color-mix(in oklab, var(--color-charcoal-1) 35%, transparent);
+  white-space: nowrap;
+}
+
+.subtext {
+  font-family: var(--font-mono);
+  font-weight: 600;
+  font-size: clamp(8px, 0.55vw, 11px);
+  letter-spacing: 0.28em;
+  text-transform: uppercase;
+  line-height: 1;
+  color: color-mix(in oklab, var(--color-brass-engrave) 80%, var(--color-charcoal-1));
+  text-shadow: 0 1px 0 color-mix(in oklab, var(--color-brass-highlight) 55%, transparent);
+  opacity: 0.85;
+  white-space: nowrap;
+}
+
+.subtext::before {
+  content: '// ';
+  opacity: 0.55;
+  font-weight: 400;
+  margin-right: 0.12em;
+}
+
+/* Standby — no active subject. Plate is still visible as anchor but the
+   engraved text is replaced with a muted holding message. Lower opacity
+   on the whole plate reads as "desk quiet, no one's up." */
+.nameplateStandby {
+  opacity: 0.55;
+}
+
+.nameplateStandby .name {
+  visibility: hidden; /* preserves layout height; no name to engrave */
+}
+
+} /* @layer components */

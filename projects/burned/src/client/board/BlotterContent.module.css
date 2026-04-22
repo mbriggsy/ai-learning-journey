@@ -192,44 +192,15 @@
   pointer-events: none;
 }
 
-/* ─── Status strip (bottom, full width) ─── */
+/* ─── Status strip — grid row that hosts the Nameplate component ─── */
 
 .statusStrip {
   grid-area: status;
   display: flex;
   align-items: center;
   justify-content: center;
-  min-height: 44px;
-  padding: 6px 20px 10px;
-}
-
-/* Inner flex row for the icon + text pair. Lives inside AnimatePresence so
-   each turn handoff / prompt change / turns-remaining tick crossfades the
-   whole line. Previously .statusStrip owned the gap directly; moved here
-   so the motion layer can key on the text content. */
-.statusInner {
-  display: flex;
-  align-items: center;
-  gap: var(--space-2);
-}
-
-.statusText {
-  font-family: var(--font-mono);
-  font-size: var(--text-body);
-  font-weight: 600;
-  letter-spacing: 0.08em;
-  text-transform: none;
-  color: color-mix(in oklab, var(--color-ochre-3) 85%, var(--color-charcoal-1));
-  /* Typewriter feel — single-line baseline, no brass-plate gradient. */
-}
-
-.statusPlaceholder {
-  font-family: var(--font-mono);
-  font-size: var(--text-caption-board);
-  font-weight: 600;
-  letter-spacing: 0.32em;
-  text-transform: uppercase;
-  color: color-mix(in oklab, var(--color-ochre-5) 55%, transparent);
+  min-height: 56px;
+  padding: 4px 20px 8px;
 }
 
 } /* @layer components */

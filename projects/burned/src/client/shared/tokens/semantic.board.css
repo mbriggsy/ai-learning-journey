@@ -100,10 +100,6 @@
     /* GameOver rankings container */
     --size-rankings-max-width: clamp(360px, calc(360px + (100vw - 1280px) * (160 / 2560)), 520px);
 
-    /* GameTable felt branding SVG sizes */
-    --size-felt-reticle: clamp(320px, calc(320px + (100vw - 1280px) * (280 / 2560)), 600px);
-    --size-felt-diamond: clamp(36px, calc(36px + (100vw - 1280px) * (32 / 2560)), 68px);
-
     /* Discard card width — slightly narrower than pile container */
     --size-discard-card-width: calc(var(--size-draw-pile-width) * 0.92);
 
@@ -123,23 +119,24 @@
 
     /* ─── Briefing Room tokens — Phase A arena redesign ─── */
 
-    /* Cream-paper briefing blotter — the central play surface. Fills the
-       available band between the left CASE banner and the right wood frame
-       edge, and between the top wood frame (clearing the case tab) and the
-       top of the bottom player strip. Width/height computed so the blotter
-       ALWAYS maximizes the reclaimed real estate the dossier ring freed up. */
-    --pos-blotter-left: calc(
+    /* Desk surface — the interior of the mahogany frame, housing piles +
+       COMMS + status directly on wood. Replaces the retired blotter tokens
+       with the same computed geometry (frame-inset, clearing the left CASE
+       banner and the bottom player strip). Phase 2+ may introduce a more
+       opinionated desk-surface polish token; this is the minimum geometry
+       Phase 1 needs to keep the interior content inside the frame. */
+    --pos-desk-left: calc(
       var(--size-side-panel-width) + var(--size-wood-frame-thickness) + 12px
     );
-    --pos-blotter-top: calc(var(--size-wood-frame-thickness) + 38px);
+    --pos-desk-top: calc(var(--size-wood-frame-thickness) + 38px);
 
-    --size-blotter-width: calc(
+    --size-desk-width: calc(
       100vw
       - var(--size-side-panel-width)
       - 2 * var(--size-wood-frame-thickness)
       - 24px
     );
-    --size-blotter-height: calc(
+    --size-desk-height: calc(
       100vh
       - var(--size-wood-frame-thickness)
       - 38px

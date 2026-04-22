@@ -20,15 +20,10 @@ export function GameTable() {
       <div className={styles.blindRakeLeft} aria-hidden="true" />
       <div className={styles.blindRakeRight} aria-hidden="true" />
 
-      {/* The Pendleton Agency — war-room felt decoration */}
-      <div className={styles.feltBranding} aria-hidden="true" />
-
-      {/* Cream-paper briefing blotter — the play surface. Draw + discard,
-          COMMS, and the turn status strip all live on this plate. */}
-      <div className={styles.blotter} aria-hidden="true" />
-      <div className={styles.blotterTab} aria-hidden="true">
-        Case #47-B
-      </div>
+      {/* Desk surface — piles, COMMS feed, and turn status sit directly on
+          the mahogany frame's interior. Phase 1: naked on wood (no paper
+          underlay). Phase 2+ rebuilds each zone's physical-object treatment
+          (tabletop shadows, manila dossier, brass nameplate). */}
       <BlotterContent />
 
       {/* Mahogany wood edge inlay — briefing-table border. Four sub-divs so

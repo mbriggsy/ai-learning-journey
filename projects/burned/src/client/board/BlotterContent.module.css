@@ -1,24 +1,26 @@
 /* BlotterContent.module.css
-   The interior of the briefing blotter: piles (left), COMMS (right),
-   status strip (bottom). Positioning mirrors the decorative .blotter so
-   content lives inside the paper edges at every viewport.
+   The interior of the desk: piles (left), COMMS (right), status strip
+   (bottom). Phase 1 of the desk redesign — content now sits directly on
+   the mahogany surface, without a paper underlay. Phases 2-4 will replace
+   each zone's treatment (tabletop shadows, manila dossier, brass nameplate).
 
-   Paper skin — everything reads on cream. No dark teletype cards.
+   Component filename retained for the phase — will rename to DeskSurface in
+   Phase 3 when COMMS extracts into its own DossierFeed component.
 */
 
 @layer components {
 
 .content {
   position: absolute;
-  top: var(--pos-blotter-top);
-  left: var(--pos-blotter-left);
-  width: var(--size-blotter-width);
-  height: var(--size-blotter-height);
+  top: var(--pos-desk-top);
+  left: var(--pos-desk-left);
+  width: var(--size-desk-width);
+  height: var(--size-desk-height);
   box-sizing: border-box;
 
-  /* Keep clear of the blotter L-bracket corners (inset 18px) and dog-ear
-     (bottom-right 44×44). */
-  padding: 26px 30px 0;
+  /* Breathing room inside the wood frame. No more L-bracket / dog-ear
+     exclusions — those retired with the blotter. */
+  padding: 20px 24px 0;
 
   display: grid;
   /* COMMS gets the majority of horizontal space — 60% — so full-length
@@ -74,9 +76,6 @@
   min-height: 0;
   overflow: hidden;
   padding-right: 8px;
-  /* Subtle vertical rule separating the piles from the comms feed —
-     reads as the fold line on a field-ops form. */
-  border-right: 1px solid color-mix(in oklab, var(--color-ochre-6) 45%, transparent);
   pointer-events: auto;
 }
 
@@ -160,7 +159,6 @@
   text-transform: uppercase;
   color: color-mix(in oklab, var(--color-ochre-3) 85%, var(--color-charcoal-1));
   padding: 2px 0 6px;
-  border-bottom: 1px solid color-mix(in oklab, var(--color-ochre-6) 55%, transparent);
   flex-shrink: 0;
 }
 
@@ -296,10 +294,6 @@
   justify-content: center;
   min-height: 44px;
   padding: 6px 20px 10px;
-  border-top: 1px solid color-mix(in oklab, var(--color-ochre-6) 55%, transparent);
-  /* Leave room for the dog-ear at bottom-right — 44×44 inside. */
-  margin-right: 48px;
-  margin-left: 0;
 }
 
 /* Inner flex row for the icon + text pair. Lives inside AnimatePresence so

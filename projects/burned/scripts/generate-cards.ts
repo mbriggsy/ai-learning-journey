@@ -99,11 +99,23 @@ const CARDS: CardPrompt[] = [
     type: 'direct-order',
     name: 'Direct Order',
     prompt:
-      'a pointing hand in a military command gesture with a target crosshair behind it, ' +
-      'bold amber and gold rays radiating from the pointing finger, ' +
-      'authoritative and commanding, chain of command energy, ' +
-      'deep teal background with geometric angular shapes, ' +
-      'square composition centered object',
+      // Iter 18 (shipped): 17 iterations of cigar orientation wars and
+      // unshakeable "blinds cast stripes on desk" Imagen prior. Cigar
+      // killed entirely (replaced with smoldering ashtray — ash + embers
+      // + smoke wisp, no geometry to fight). Blind stripes killed by
+      // closing the blinds fully: slats shut, no light through, pendant
+      // lamp becomes the sole warm light source. Deck-consistent with
+      // Reassign / Intel Briefing / Go Dark / Call in a Favor —
+      // venetian blinds as motif, pendant lamp, architectural depth,
+      // suit/tie visible in partial silhouette.
+      'HERO — a slightly low-angle view of a commanding authoritative figure seated behind a large dark polished mahogany executive desk in a 1960s spy-agency private office, the figure leans forward aggressively in a sharp dark charcoal suit with a visible white collared shirt and dark tie (suit fabric, shirt collar, and tie are all clearly visible — partial silhouette with fabric texture readable, NOT a pure black blob), the figure\'s ONE arm extended straight toward the camera with the INDEX FINGER pointing directly at the viewer in dramatic foreshortening, fingertip aimed at the camera lens, other fingers curled into the palm, this pointing finger is the SOLE hero gesture of the composition, the figure\'s other hand rests naturally on the desk or at their side, the face is obscured in strong shadow — just a jawline and shoulder outline suggested, authority archetype not portrait, ' +
+      'OFFICE BACKDROP — directly behind the figure is a tall wide window with classic 1960s horizontal venetian blinds, and the blinds are FULLY CLOSED — the horizontal slats are tilted completely shut, flat and closed, blocking all outside light from passing through, the blinds read as a solid dark striped panel (slats visible as a graphic pattern on the window itself only) but NO light passes through the blinds, NO amber glow from outside, the blinds do NOT act as a light source, so ZERO blind-shadow pattern is cast anywhere in the room — the desk surface and floor show NO horizontal stripes, NO parallel shadow lines, NO train-track shadows, NO blind-pattern of any kind on any surface, blinds exist only as a dark graphic element on the window, ' +
+      'LIGHTING — the SOLE warm light source in the scene is a brass pendant lamp hanging from the ceiling above the desk casting a warm amber pool of light DOWN onto the desk surface and illuminating the figure from above, the pendant is the only warm light — no competing window light, no amber glow from behind the figure, just the overhead pendant pool on the desk with deep charcoal shadows everywhere else, the desk surface is clean mahogany wood with the pendant pool and nothing else, ' +
+      'SMOLDERING ASHTRAY — on the lower-left corner of the desk sits a small round dark glass ashtray (a required element that must appear in the frame), inside the ashtray bowl there is a small pile of gray ash with a few bright amber-orange embers glowing among the ashes (NO cigar, NO cigarette — just ash with embers), and a single thin pale wisp of smoke rises vertically upward out of the ashtray bowl from the glowing embers into the air, ' +
+      'ENVIRONMENT DEPTH — architectural richness in the back wall: the corner of a dark wood filing cabinet visible at one side of the frame, a framed decorative wall item (abstract shape only, no text) on the back wall, deep charcoal shadows in the room corners, the office feels like a real lived-in space not an empty void, ' +
+      'deep teal and charcoal shadows surround the warm amber highlights from blinds and pendant, the scene fills the entire square frame edge to edge with NO white borders NO vignette, ' +
+      'authority issuing a direct order, chain-of-command intensity, ' +
+      'square full-bleed composition centered on the pointing finger with the full office environment as backdrop',
   },
   {
     type: 'go-dark',

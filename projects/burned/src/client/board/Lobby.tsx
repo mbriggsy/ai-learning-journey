@@ -61,9 +61,12 @@ export function Lobby({ connectionStatus, onStartGame }: Props) {
             <m.div
               key={player.id}
               className={styles.playerCard}
-              initial={{ opacity: 0, x: 40, scale: 0.95 }}
-              animate={{ opacity: 1, x: 0, scale: 1 }}
-              exit={{ opacity: 0, x: -40, scale: 0.95 }}
+              // Transform string keeps the staggered slide-in GPU-composited.
+              // mode="popLayout" + staggered spring can pile up on the main
+              // thread when multiple players check in rapidly.
+              initial={{ opacity: 0, transform: 'translateX(40px) scale(0.95)' }}
+              animate={{ opacity: 1, transform: 'translateX(0px) scale(1)' }}
+              exit={{ opacity: 0, transform: 'translateX(-40px) scale(0.95)' }}
               transition={{ ...MOTION.snappy, delay: i * 0.06 }}
             >
               <PlayerIcon color={player.color} size={18} />

@@ -46,6 +46,15 @@
     position: relative;
   }
 
+  /* Empty staging collapses to content size (section label + SmartActionBox)
+     so the hand claims the reclaimed vertical space. Emil's dead-white-space
+     rule — no reserved empty zones. Flex-grow transitions aren't smoothly
+     animable in CSS; the card that triggered staging gets Framer popLayout
+     motion which owns the eye during the container resize. */
+  .staging[data-empty] {
+    flex: 0 1 auto;
+  }
+
   .handSection {
     flex: 58 1 0;
     min-height: 0;

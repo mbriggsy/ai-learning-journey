@@ -66,8 +66,12 @@
     --color-fg-info:               var(--color-teal-11);
     --color-bg-info:               var(--color-teal-3);
 
-    /* --- Game-specific accents --- */
-    --color-accent-burned:         var(--color-cordovan-9);
+    /* --- Game-specific accents ---
+       accent-burned uses the hotter burned-fire spot color (not cordovan-9)
+       so BURNED reads as danger. Danger feedback (bg/border/fg) still uses
+       cordovan — the wine family reserves for "error/rejection" vocabulary
+       distinct from the high-stakes card. */
+    --color-accent-burned:         var(--color-burned-fire);
     --color-accent-intercept:      var(--color-emerald-9);
     --color-accent-operative:      var(--color-teal-9);
     --color-accent-drama:          var(--color-ochre-9);

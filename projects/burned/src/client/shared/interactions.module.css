@@ -1,0 +1,28 @@
+/* Shared interaction utilities — composable via CSS Modules `composes:`.
+   Single source of truth for press feedback so every new button behaves
+   consistently with the rest of the deck.
+
+   Usage from a module:
+     .myNewButton {
+       composes: pressable from '../shared/interactions.module.css';
+       // ...your specific styles
+     }
+
+   Sites with specific needs keep their own rules — don't force them
+   onto this baseline:
+   - SmartActionBox.tsx — needs `animation: none` on :active so the
+     press scale lands on breathing keyframes.
+   - sheets.module.css optionBtn/cancelBtn — swap background on :active.
+   - MinimalCard.module.css — uses 0.98 (not 0.97) with extra exclusions
+     for [data-selected] and [aria-disabled='true'].
+   - JoinScreen.joinButton, GameOver.playAgain — existing buttons with
+     own transition signatures. Not worth retrofitting; ship the utility
+     for the next new button. */
+
+.pressable {
+  transition: transform var(--motion-duration-fast) var(--motion-ease-decelerate);
+}
+
+.pressable:not(:disabled):not([aria-disabled='true']):active {
+  transform: scale(0.97);
+}

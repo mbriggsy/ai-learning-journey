@@ -38,6 +38,14 @@
     min-width: 120px; /* slot floor — prevents collapse, card sizing handled by MinimalCard */
     aspect-ratio: 5 / 7;
     scroll-snap-align: start;
+    /* Cap the card size so the empty-staging state (where handSection claims
+       the reclaimed vertical space) doesn't push cards past the phone's
+       horizontal bounds. At 57svh, card height tops out around 481px on an
+       844-tall viewport; width via 5/7 aspect ≈ 344px, which fits inside a
+       390px viewport with breathing room. When staging populates, the
+       container height shrinks and cards follow naturally — this cap only
+       kicks in when staging is collapsed. */
+    max-height: 57svh;
   }
 
   /* Enlarge backdrop — portalled to document.body via createPortal in Hand.tsx.

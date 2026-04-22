@@ -20,9 +20,12 @@ export function ErrorToast() {
       {visible && error && (
         <m.div
           className={styles.toast}
-          initial={{ y: -60, opacity: 0 }}
-          animate={{ y: 0, opacity: 1 }}
-          exit={{ y: -60, opacity: 0 }}
+          // Transform string keeps the slide GPU-composited under load — toast
+          // fires during WS-hot paths (error arrives mid-action). Shorthand
+          // `y` runs on main thread via rAF.
+          initial={{ transform: 'translateY(-60px)', opacity: 0 }}
+          animate={{ transform: 'translateY(0px)', opacity: 1 }}
+          exit={{ transform: 'translateY(-60px)', opacity: 0 }}
           transition={MOTION.quickFade}
         >
           {error.code === 'STALE_STATE' ? 'Game state changed — try again' : error.message}

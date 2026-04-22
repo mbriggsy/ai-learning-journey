@@ -104,9 +104,9 @@ export function SmartActionBox({
           className={state.className}
           disabled={buttonDisabled}
           onClick={() => { haptic('medium'); state.action!() }}
-          initial={{ opacity: 0, scale: 0.96 }}
-          animate={{ opacity: 1, scale: 1 }}
-          exit={{ opacity: 0, scale: 0.96 }}
+          initial={{ opacity: 0, transform: 'scale(0.96)' }}
+          animate={{ opacity: 1, transform: 'scale(1)' }}
+          exit={{ opacity: 0, transform: 'scale(0.96)' }}
           transition={MOTION.quickFade}
         >
           {content}
@@ -115,9 +115,9 @@ export function SmartActionBox({
         <m.div
           key={state.key}
           className={state.className}
-          initial={{ opacity: 0, scale: 0.96 }}
-          animate={{ opacity: 1, scale: 1 }}
-          exit={{ opacity: 0, scale: 0.96 }}
+          initial={{ opacity: 0, transform: 'scale(0.96)' }}
+          animate={{ opacity: 1, transform: 'scale(1)' }}
+          exit={{ opacity: 0, transform: 'scale(0.96)' }}
           transition={MOTION.quickFade}
         >
           {content}

@@ -160,9 +160,9 @@ export function StagingArea({
           >
             <m.div
               className={handStyles.enlargeCard}
-              initial={{ scale: 0.35, y: -80 }}
-              animate={{ scale: 1, y: 0 }}
-              exit={{ scale: 0.35, y: -80 }}
+              initial={{ transform: 'translateY(-80px) scale(0.35)' }}
+              animate={{ transform: 'translateY(0px) scale(1)' }}
+              exit={{ transform: 'translateY(-80px) scale(0.35)' }}
               transition={MOTION.snappy}
             >
               <MinimalCard type={stagedCards.find(c => c.id === enlargedId)!.type} />

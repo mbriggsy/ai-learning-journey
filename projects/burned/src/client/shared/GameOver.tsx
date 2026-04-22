@@ -48,8 +48,10 @@ export function GameOver({ players, winnerId, eliminationOrder, myPlayerId, onPl
       {/* Winner — dramatic entrance */}
       <m.div
         className={styles.winner}
-        initial={{ opacity: 0, scale: 1.4, y: -20 }}
-        animate={{ opacity: 1, scale: 1, y: 0 }}
+        // Transform string — winner reveal is a dramatic moment and must stay
+        // smooth even while confetti / rankings animate in parallel.
+        initial={{ opacity: 0, transform: 'translateY(-20px) scale(1.4)' }}
+        animate={{ opacity: 1, transform: 'translateY(0px) scale(1)' }}
         transition={{ ...MOTION.gentle, delay: 0.2 }}
       >
         {winner?.name ?? 'Unknown'}
@@ -76,8 +78,10 @@ export function GameOver({ players, winnerId, eliminationOrder, myPlayerId, onPl
             className={styles.rank}
             data-winner={rank === 1 || undefined}
             data-me={player.id === myPlayerId || undefined}
-            initial={{ opacity: 0, x: -30 }}
-            animate={{ opacity: 1, x: 0 }}
+            // Transform string keeps the staggered ranking reveal smooth even
+            // if the browser is still painting the winner drama above.
+            initial={{ opacity: 0, transform: 'translateX(-30px)' }}
+            animate={{ opacity: 1, transform: 'translateX(0px)' }}
             transition={{ ...MOTION.snappy, delay: 0.8 + i * 0.12 }}
           >
             <span className={styles.rankNum}>#{rank}</span>
@@ -92,8 +96,9 @@ export function GameOver({ players, winnerId, eliminationOrder, myPlayerId, onPl
         <m.button
           className={styles.playAgain}
           onClick={onPlayAgain}
-          initial={{ opacity: 0, y: 20 }}
-          animate={{ opacity: 1, y: 0 }}
+          // Transform string — button appears last after the staggered rankings.
+          initial={{ opacity: 0, transform: 'translateY(20px)' }}
+          animate={{ opacity: 1, transform: 'translateY(0px)' }}
           transition={{
             ...MOTION.deliberate,
             delay: 0.8 + rankings.length * 0.12 + 0.3,

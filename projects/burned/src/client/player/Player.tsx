@@ -435,8 +435,10 @@ function PlayingView({ roomCode }: { roomCode: string }) {
           </div>
         )}
 
-        {/* Staging area — compose your play */}
-        <div className={playingStyles.staging}>
+        {/* Staging area — compose your play. data-empty flips true when no
+            cards are staged so the container collapses and the hand claims
+            the reclaimed vertical space. */}
+        <div className={playingStyles.staging} data-empty={selectedIds.size === 0 || undefined}>
           <div className={playingStyles.sectionLabel}>{isFavorTarget ? 'Surrender' : 'Staging'}</div>
           <StagingArea
             hand={hand}

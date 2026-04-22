@@ -39,9 +39,12 @@ export function BottomSheet({ open, onDismiss, children }: PropsWithChildren<Bot
         {open && (
           <m.div
             className={styles.content}
-            initial={{ y: '100%' }}
-            animate={{ y: 0 }}
-            exit={{ y: '100%' }}
+            // Transform string — sheet slide is the most common interruptible
+            // motion on phone (open/close rapidly during combo picks). Keeping
+            // it GPU-composited matters during WS-hot paths.
+            initial={{ transform: 'translateY(100%)' }}
+            animate={{ transform: 'translateY(0%)' }}
+            exit={{ transform: 'translateY(100%)' }}
             transition={MOTION.snappy}
           >
             {children}

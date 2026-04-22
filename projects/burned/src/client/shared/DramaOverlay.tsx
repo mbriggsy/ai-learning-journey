@@ -131,38 +131,50 @@ export function DramaOverlay() {
     const tl = gsap.timeline({
       onComplete: () => {
         animatingRef.current = false
-        // Reset
+        // Reset — blur stays defocused so the NEXT beat's fromTo starts from
+        // a blurred state and can "focus in," bridging beat-to-beat handoff
+        // into one perceived motion (Emil's crossfade-mask trick).
         gsap.set(overlay, { opacity: 0, pointerEvents: 'none' })
-        gsap.set(text, { opacity: 0 })
+        gsap.set(text, { opacity: 0, filter: 'blur(4px)' })
         // Process next in queue
         processQueue()
       },
     })
 
-    // SLAM IN: fast scale + opacity, dramatic entrance
+    // SLAM IN: fast scale + opacity + refocus from blur. Starting at blur(4px)
+    // bridges multi-beat sequences (e.g. "{NAME} IS…" → "BURNED") as one
+    // perceived morph instead of a harsh blink between states.
     tl.set(overlay, { opacity: 1, pointerEvents: 'none' })
     tl.fromTo(
       text,
-      { scale: 2.5, opacity: 0, y: 20 },
+      { scale: 2.5, opacity: 0, y: 20, filter: 'blur(4px)' },
       {
         scale: 1,
         opacity: 1,
         y: 0,
-        // GSAP ease: 'back.out(1.4)' is overshoot-and-settle; no cubic-bezier
-        // equivalent. Duration consolidated; ease string stays as literal.
+        filter: 'blur(0px)',
+        // GSAP ease: 'back.out(1.1)' is subtle overshoot — Archer-deadpan
+        // crisp arrival without cartoon bounce.
         duration: MOTION_DURATIONS.base,
-        ease: 'back.out(1.4)',
+        ease: 'back.out(1.1)',
       },
     )
     // HOLD: dynamic — config.holdMs is runtime-derived, not a literal
     tl.to({}, { duration: config.holdMs / 1000 })
-    // FADE OUT: graceful exit
+    // FADE OUT: graceful exit with blur ramp. The blur defocus during fadeout
+    // is what the NEXT beat's entry leverages to read as a continuous morph.
+    // Keep under 6px — blur is expensive on Safari mobile.
+    tl.to(text, {
+      filter: 'blur(4px)',
+      duration: MOTION_DURATIONS.slow,
+      ease: 'power2.in',
+    }, '<')  // start in parallel with the overlay fade below
     tl.to(overlay, {
       opacity: 0,
       // GSAP ease: 'power2.in' is an accelerate curve; no cubic-bezier equivalent
       duration: MOTION_DURATIONS.slow,
       ease: 'power2.in',
-    })
+    }, '<')
   }
 
   return (

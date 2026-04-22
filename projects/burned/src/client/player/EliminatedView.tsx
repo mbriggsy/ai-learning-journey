@@ -30,8 +30,11 @@ export function EliminatedView() {
     <div className={styles.view}>
       <m.div
         className={styles.skullWrap}
-        initial={{ scale: 0, rotate: -15 }}
-        animate={{ scale: 1, rotate: 0 }}
+        // Emil: never animate from scale(0) — nothing in the real world pops
+        // from nothing. 0.4 keeps the punch but preserves a silhouette.
+        // Transform string keeps the skull pop GPU-composited.
+        initial={{ transform: 'scale(0.4) rotate(-15deg)' }}
+        animate={{ transform: 'scale(1) rotate(0deg)' }}
         transition={MOTION.punchy}
       >
         <div className={styles.skull}>💀</div>
@@ -39,8 +42,8 @@ export function EliminatedView() {
 
       <m.div
         className={styles.title}
-        initial={{ opacity: 0, y: 20 }}
-        animate={{ opacity: 1, y: 0 }}
+        initial={{ opacity: 0, transform: 'translateY(20px)' }}
+        animate={{ opacity: 1, transform: 'translateY(0px)' }}
         transition={{ ...MOTION.snappy, delay: 0.2 }}
       >
         You&apos;re Burned.
@@ -57,8 +60,8 @@ export function EliminatedView() {
 
       <m.div
         className={styles.aliveList}
-        initial={{ opacity: 0, y: 10 }}
-        animate={{ opacity: 1, y: 0 }}
+        initial={{ opacity: 0, transform: 'translateY(10px)' }}
+        animate={{ opacity: 1, transform: 'translateY(0px)' }}
         transition={{ ...MOTION.snappy, delay: 0.7 }}
       >
         <div className={styles.aliveListLabel}>Still alive</div>

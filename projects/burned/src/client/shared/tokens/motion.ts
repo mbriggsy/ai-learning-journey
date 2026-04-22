@@ -22,13 +22,13 @@ export const EASING_NAMES = [
 export type EasingName = typeof EASING_NAMES[number]
 
 export const SPRING_NAMES = [
-  'snappy', 'deliberate', 'punchy', 'gentle',
+  'snappy', 'deliberate', 'punchy', 'gentle', 'dragMomentum',
 ] as const
 export type SpringName = typeof SPRING_NAMES[number]
 
 export const PRESET_NAMES = [
   'quickFade', 'enter', 'exit', 'dramatic',
-  'snappy', 'deliberate', 'punchy', 'gentle',
+  'snappy', 'deliberate', 'punchy', 'gentle', 'dragMomentum',
 ] as const
 export type PresetName = typeof PRESET_NAMES[number]
 
@@ -46,9 +46,10 @@ export const MOTION_DURATIONS = {
   pulse:          1.4,
   pulseSlow:      2.5,
 
-  // Essential — survives prefers-reduced-motion.
+  // Essential — survives prefers-reduced-motion. Spinners tuned to 0.7s
+  // (Emil's perceived-speed rule: faster spin = faster-feeling app).
   essentialPulse: 1.4,
-  essentialSpin:  1.0,
+  essentialSpin:  0.7,
   essentialFlash: 0.2,
 } as const satisfies Record<DurationName, number>
 
@@ -68,10 +69,14 @@ export const MOTION_SPRINGS = {
   snappy:     { type: 'spring', stiffness: 300, damping: 24 },
   /** Deliberate — card plays, panel transitions, mid-size movement */
   deliberate: { type: 'spring', stiffness: 250, damping: 25 },
-  /** Punchy — dramatic pops (EliminatedView skull, DramaOverlay entrances) */
-  punchy:     { type: 'spring', stiffness: 400, damping: 15 },
+  /** Punchy — dramatic pops (EliminatedView skull, DramaOverlay entrances).
+      Crisp arrival with minimal overshoot. Archer is deadpan — not cartoonish. */
+  punchy:     { type: 'spring', stiffness: 280, damping: 24 },
   /** Gentle — large-scale welcomes (GameOver winner reveal) */
   gentle:     { type: 'spring', stiffness: 200, damping: 20 },
+  /** Drag momentum — interruptible drag/gesture release. Apple-style: duration
+      + subtle bounce. Maintains velocity if interrupted mid-motion. */
+  dragMomentum: { type: 'spring', duration: 0.5, bounce: 0.15 },
 } as const satisfies Record<SpringName, Transition>
 
 /** Named presets combining duration + easing for common cases */
@@ -87,8 +92,9 @@ export const MOTION = {
   dramatic:    { duration: MOTION_DURATIONS.dramatic, ease: MOTION_EASINGS.emphasized },
 
   /** Spring-based — consume directly */
-  snappy:      MOTION_SPRINGS.snappy,
-  deliberate:  MOTION_SPRINGS.deliberate,
-  punchy:      MOTION_SPRINGS.punchy,
-  gentle:      MOTION_SPRINGS.gentle,
+  snappy:       MOTION_SPRINGS.snappy,
+  deliberate:   MOTION_SPRINGS.deliberate,
+  punchy:       MOTION_SPRINGS.punchy,
+  gentle:       MOTION_SPRINGS.gentle,
+  dragMomentum: MOTION_SPRINGS.dragMomentum,
 } as const satisfies Record<PresetName, Transition>

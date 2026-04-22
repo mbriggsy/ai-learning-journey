@@ -253,12 +253,26 @@
   letter-spacing: 0.05em;
 }
 
-/* ─── Waiting state ─── */
+/* ─── Waiting state ───
+   Stretches to fill available vertical space so the empty lobby / pre-players
+   roster don't read as a dead white zone in the middle of the TV. Classified-
+   terminal type treatment matches the rest of the briefing vocabulary. */
 
 .waiting {
+  flex: 1 1 auto;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: var(--space-3);
+  padding: var(--space-8) 0;
   text-align: center;
-  color: var(--color-fg-muted);
-  padding: var(--space-6) 0;
+  color: color-mix(in oklab, var(--color-cream-11) 40%, transparent);
+  font-family: var(--font-mono);
+  font-size: var(--text-caption-board);
+  font-weight: 500;
+  text-transform: uppercase;
+  letter-spacing: 0.25em;
 }
 
 .waitingDots {

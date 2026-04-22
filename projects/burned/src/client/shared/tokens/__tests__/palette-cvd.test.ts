@@ -44,7 +44,7 @@ const SEMANTIC_MAP: Record<string, string> = {
   'color-bg-success': PALETTE['color-emerald-3'],
   'color-fg-danger': PALETTE['color-cordovan-11'],
   'color-fg-success': PALETTE['color-emerald-11'],
-  'color-accent-burned': PALETTE['color-cordovan-9'],
+  'color-accent-burned': PALETTE['color-burned-fire'],
   'color-accent-intercept': PALETTE['color-emerald-9'],  // #5a9880 (lightened for CVD separation)
   'color-accent-operative': PALETTE['color-teal-9'],
   'color-border-focus': PALETTE['color-ochre-8'],

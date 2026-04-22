@@ -160,9 +160,12 @@ export function PlayerAlert() {
           key={alert.id}
           className={styles.alert}
           data-tone={alert.tone}
-          initial={{ y: -80, opacity: 0, scale: 0.96 }}
-          animate={{ y: 0, opacity: 1, scale: 1 }}
-          exit={{ y: -80, opacity: 0 }}
+          // Full transform strings (not shorthand y/scale) — Framer's shorthand
+          // x/y/scale props run on the main thread via rAF and drop frames under
+          // load. Transform strings go through the compositor. See Emil's guide.
+          initial={{ transform: 'translateY(-80px) scale(0.96)', opacity: 0 }}
+          animate={{ transform: 'translateY(0px) scale(1)', opacity: 1 }}
+          exit={{ transform: 'translateY(-80px) scale(0.96)', opacity: 0 }}
           transition={MOTION.snappy}
         >
           {alert.text}

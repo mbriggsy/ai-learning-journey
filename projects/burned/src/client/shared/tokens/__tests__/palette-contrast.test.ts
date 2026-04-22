@@ -31,7 +31,7 @@ const SEMANTIC_RESOLVE: Record<string, string> = {
   'color-fg-on-neon': PALETTE['color-cream-12'],        // APCA-tuned
   'color-bg-app': PALETTE['color-charcoal-1'],
   'color-bg-surface': PALETTE['color-charcoal-3'],
-  'color-accent-burned': PALETTE['color-cordovan-9'],
+  'color-accent-burned': PALETTE['color-burned-fire'],
   'color-accent-intercept': PALETTE['color-emerald-9'],
   'color-accent-drama': PALETTE['color-ochre-9'],
   'color-accent-neon': PALETTE['color-neon-magenta'],

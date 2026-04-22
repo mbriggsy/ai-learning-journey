@@ -247,6 +247,12 @@
 
 @media (prefers-reduced-motion: reduce) {
   .blindRakeLeft, .blindRakeRight { animation: none; }
+  .blotter { animation: none; }
+}
+
+@keyframes blotterFiberDrift {
+  0%, 100% { background-position: 0 0; }
+  50%      { background-position: 1.5px 0; }
 }
 
 /* ─── Cream-paper briefing blotter ───
@@ -272,6 +278,10 @@
       color-mix(in oklab, var(--color-ochre-8) 6%, transparent) 2px,
       color-mix(in oklab, var(--color-ochre-8) 6%, transparent) 3px
     );
+  /* Ambient fiber drift — the grain shifts 1.5px over 45s. Too slow to
+     consciously perceive, enough that the paper never reads as frozen.
+     Fills the "blotter center is static" gap noted in the Emil audit. */
+  animation: blotterFiberDrift 45s var(--motion-ease-base) infinite;
   box-shadow:
     /* inset paper rim */
     inset 0 0 0 1px color-mix(in oklab, var(--color-ochre-6) 45%, transparent),
@@ -467,9 +477,19 @@
 .caseBannerDivider   { animation-delay: 260ms; }
 .caseBannerFooter    { animation-delay: 330ms; }
 
+/* Clip-path reveal — document-uncovering vocabulary beats "slide in."
+   The inset animates from "hidden right" to "fully visible" so each banner
+   line appears to be UNCOVERED left-to-right, like classified text emerging
+   from under a redaction bar. Pure Archer. Hardware-accelerated. */
 @keyframes caseBannerLineIn {
-  from { opacity: 0; transform: translateX(-8px); }
-  to   { opacity: 1; transform: translateX(0); }
+  from {
+    opacity: 0;
+    clip-path: inset(0 100% 0 0);
+  }
+  to {
+    opacity: 1;
+    clip-path: inset(0 0 0 0);
+  }
 }
 
 @media (prefers-reduced-motion: reduce) {

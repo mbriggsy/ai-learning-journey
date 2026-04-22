@@ -279,8 +279,19 @@
 
 .iconWrap {
   flex-shrink: 0;
-  /* Spring back-out overshoot — anticipate easing scaled from 0 to 1 over slow duration. */
-  animation: joinScreenPopIn var(--motion-duration-slow) var(--motion-ease-anticipate) both;
+  /* Spring back-out overshoot — anticipate easing carries the scale+opacity
+     transition from @starting-style values to the resting state. Interruptible
+     (unlike the retired joinScreenPopIn keyframe). */
+  transition:
+    transform var(--motion-duration-slow) var(--motion-ease-anticipate),
+    opacity var(--motion-duration-slow) var(--motion-ease-anticipate);
+}
+
+@starting-style {
+  .iconWrap {
+    transform: scale(0.92);
+    opacity: 0;
+  }
 }
 
 .joinedName {
@@ -427,11 +438,6 @@
   to { transform: rotate(360deg); }
 }
 
-@keyframes joinScreenPopIn {
-  from { transform: scale(0.92); opacity: 0; }
-  to { transform: scale(1); opacity: 1; }
-}
-
 @keyframes joinScreenDots {
   0% { content: ''; }
   25% { content: '.'; }
@@ -442,9 +448,10 @@
 /* Reduced motion: .spinner consumes --motion-duration-essential-spin which
    already survives prefers-reduced-motion (1500ms slowed rotation per Phase 1
    §2.9 — Phase 1 adjudicated that slowed rotation is acceptable for essential
-   spinners; opacity-pulse fallback is abandoned). .iconWrap popIn zeroes
-   automatically via decorative --motion-duration-slow. Only the dots animation
-   needs an explicit override to freeze at "..." rather than empty content. */
+   spinners; opacity-pulse fallback is abandoned). .iconWrap @starting-style
+   transitions zero out automatically via decorative --motion-duration-slow.
+   Only the dots animation needs an explicit override to freeze at "..." rather
+   than empty content. */
 @media (prefers-reduced-motion: reduce) {
   .waitingDots::after {
     animation: none;

@@ -4,9 +4,9 @@
 
    .dotConnecting blink is GAMEPLAY-ESSENTIAL — the only signal that the app is
    trying to reconnect. Frozen dot reads as frozen app. Consumes
-   --motion-duration-essential-spin (1000ms baseline / 1500ms reduce per Phase 1
-   §2.9), syncing cadence with ConnectionOverlay .spinner so both fire in sync
-   during a reconnect.
+   --motion-duration-essential-spin (700ms baseline — Emil perceived-speed tune
+   / 1500ms reduce per Phase 1 §2.9), syncing cadence with ConnectionOverlay
+   .spinner so both fire in sync during a reconnect.
 */
 
 @layer components {
@@ -22,6 +22,14 @@
     font-family: var(--font-display);
     font-size: var(--text-caption);
     flex: 0 0 auto;
+    transition: opacity var(--motion-duration-base) var(--motion-ease-decelerate);
+  }
+
+  /* Mount-in: fade from opacity 0 on first paint. No default-mount pop. */
+  @starting-style {
+    .titleBar {
+      opacity: 0;
+    }
   }
 
   /* Left flex group — connection dot + player name. PRESERVE this class:

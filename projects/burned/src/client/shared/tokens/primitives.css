@@ -34,7 +34,7 @@
 @property --motion-duration-pulse             { syntax: '<time>'; inherits: true; initial-value: 1400ms; }
 @property --motion-duration-pulse-slow        { syntax: '<time>'; inherits: true; initial-value: 2500ms; }
 @property --motion-duration-essential-pulse   { syntax: '<time>'; inherits: true; initial-value: 1400ms; }
-@property --motion-duration-essential-spin    { syntax: '<time>'; inherits: true; initial-value: 1000ms; }
+@property --motion-duration-essential-spin    { syntax: '<time>'; inherits: true; initial-value: 700ms; }
 @property --motion-duration-essential-flash   { syntax: '<time>'; inherits: true; initial-value: 200ms; }
 
 /* Color primitives — teal scale */
@@ -124,6 +124,12 @@
 /* Color primitives — neon-magenta spot colors (NOT a scale) */
 @property --color-neon-magenta       { syntax: '<color>'; inherits: true; initial-value: #e84a9c; }
 @property --color-neon-magenta-glow  { syntax: '<color>'; inherits: true; initial-value: #ff6fb8; }
+
+/* Color primitive — burned-fire spot color (NOT a scale).
+   Hotter than cordovan-9, tuned so BURNED reads as DANGER instead of dignity.
+   Kept as a standalone primitive so the cordovan scale (wine family) stays
+   intact for danger bg/border/fg usage. */
+@property --color-burned-fire        { syntax: '<color>'; inherits: true; initial-value: #be2e27; }
 
 
 /* ========================================================================
@@ -220,6 +226,15 @@
     --color-neon-magenta:      #e84a9c;
     --color-neon-magenta-glow: #ff6fb8;
 
+    /* --- Burned-fire spot color (NOT a scale — single value) ---
+       Hot-red variant consumed exclusively by --color-accent-burned so the
+       BURNED card reads as danger, not dignity. Cordovan scale stays the
+       wine family for danger-bg / danger-border / danger-fg usage.
+       #be2e27 is #c9352e tuned one step deeper so cream-12 (#f6ebce) passes
+       WCAG 2.1 AA content tier (4.5:1) when overlaid — the initial #c9352e
+       landed at 4.39:1, just under. Slightly hotter than cordovan-9 still. */
+    --color-burned-fire:       #be2e27;
+
     /* --- Spacing (4px base, axis-independent) --- */
     --space-0:  0;
     --space-1:  0.25rem;
@@ -259,7 +274,7 @@
 
     /* Essential — survives prefers-reduced-motion. Gameplay-signal animations. */
     --motion-duration-essential-pulse:  1400ms;
-    --motion-duration-essential-spin:   1000ms;
+    --motion-duration-essential-spin:   700ms;
     --motion-duration-essential-flash:  200ms;
 
     /* --- Motion easings (mirror of motion.ts) ---

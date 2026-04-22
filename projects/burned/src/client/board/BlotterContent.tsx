@@ -38,9 +38,9 @@ function IdleTicker() {
       <m.div
         key={IDLE_LINES[idx]}
         className={styles.idleTicker}
-        initial={{ opacity: 0, y: 4 }}
-        animate={{ opacity: 1, y: 0 }}
-        exit={{ opacity: 0, y: -4 }}
+        initial={{ opacity: 0, transform: 'translateY(4px)' }}
+        animate={{ opacity: 1, transform: 'translateY(0px)' }}
+        exit={{ opacity: 0, transform: 'translateY(-4px)' }}
         transition={MOTION.enter}
       >
         <span className={styles.idleLabel}>// {IDLE_LINES[idx]}</span>
@@ -163,9 +163,12 @@ export function BlotterContent() {
               <m.div
                 key={entry.id}
                 className={styles.announcement}
-                initial={{ opacity: 0, x: 18 }}
-                animate={{ opacity: 1, x: 0 }}
-                exit={{ opacity: 0, x: 18 }}
+                // Transform string — COMMS entries arrive mid-game during WS-
+                // hot paths (card plays trigger events). Shorthand x on a
+                // popLayout list would drop frames when the main thread is busy.
+                initial={{ opacity: 0, transform: 'translateX(18px)' }}
+                animate={{ opacity: 1, transform: 'translateX(0px)' }}
+                exit={{ opacity: 0, transform: 'translateX(18px)' }}
                 transition={MOTION.enter}
               >
                 {text}
@@ -184,9 +187,9 @@ export function BlotterContent() {
             // text artifacts during rapid state flips.
             key={statusText || '__standby__'}
             className={styles.statusInner}
-            initial={{ opacity: 0, y: 3 }}
-            animate={{ opacity: 1, y: 0 }}
-            exit={{ opacity: 0, y: -3 }}
+            initial={{ opacity: 0, transform: 'translateY(3px)' }}
+            animate={{ opacity: 1, transform: 'translateY(0px)' }}
+            exit={{ opacity: 0, transform: 'translateY(-3px)' }}
             transition={MOTION.quickFade}
           >
             {statusText ? (

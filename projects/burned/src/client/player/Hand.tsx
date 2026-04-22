@@ -97,12 +97,18 @@ export function Hand({ hand, disabled, onStageCard, onCardLongPress }: HandProps
               key={card.id}
               className={styles.slot}
               layout={dealComplete ? 'position' : false}
-              initial={{ opacity: 0, x: 40, scale: 0.85 }}
-              animate={{ opacity: 1, x: 0, scale: 1 }}
-              exit={{ opacity: 0, scale: 0.7 }}
+              // Transform string — card deal is a hot path (many cards enter
+              // simultaneously). Shorthand would rAF on the main thread while
+              // MinimalCard's nested layoutId is also computing deltas.
+              initial={{ opacity: 0, transform: 'translateX(40px) scale(0.85)' }}
+              animate={{ opacity: 1, transform: 'translateX(0px) scale(1)' }}
+              exit={{ opacity: 0, transform: 'scale(0.7)' }}
               transition={{
                 ...MOTION.snappy,
-                delay: dealComplete ? 0 : i * 0.08 + 0.15,
+                // Emil perceived-speed: drop the 150ms lead-in so the first
+                // card lands immediately. 80ms stagger between cards preserves
+                // the dealing beat without front-loaded dead air.
+                delay: dealComplete ? 0 : i * 0.08,
               }}
               onPointerDown={() => startLongPress(card.id)}
               onPointerUp={(e: React.PointerEvent) => {
@@ -145,9 +151,9 @@ export function Hand({ hand, disabled, onStageCard, onCardLongPress }: HandProps
                 // at the endpoints smooths the swap into a single perceived
                 // motion instead of two layouts fighting mid-flight.
                 // Keep under 6px — blur is expensive on Safari mobile.
-                initial={{ scale: 0.35, y: 120, filter: 'blur(4px)' }}
-                animate={{ scale: 1, y: 0, filter: 'blur(0px)' }}
-                exit={{ scale: 0.35, y: 120, filter: 'blur(4px)' }}
+                initial={{ transform: 'translateY(120px) scale(0.35)', filter: 'blur(4px)' }}
+                animate={{ transform: 'translateY(0px) scale(1)', filter: 'blur(0px)' }}
+                exit={{ transform: 'translateY(120px) scale(0.35)', filter: 'blur(4px)' }}
                 transition={MOTION.snappy}
               >
                 <MinimalCard type={enlargedCard.type} />

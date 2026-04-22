@@ -125,9 +125,13 @@ export function StealReport() {
           <m.div
             className={styles.paper}
             data-kind={current.kind}
-            initial={{ y: -120, rotate: -9, scale: 0.9, opacity: 0 }}
-            animate={{ y: 0, rotate: -2, scale: 1, opacity: 1 }}
-            exit={{ y: 60, rotate: -4, scale: 0.94, opacity: 0 }}
+            // Transform string — the incident-report paper slamming in is a
+            // high-drama beat that must not stutter. Multiple axes (y, rotate,
+            // scale) on shorthand is exactly where shorthand drops frames
+            // hardest per Emil's guide.
+            initial={{ transform: 'translateY(-120px) rotate(-9deg) scale(0.9)', opacity: 0 }}
+            animate={{ transform: 'translateY(0px) rotate(-2deg) scale(1)', opacity: 1 }}
+            exit={{ transform: 'translateY(60px) rotate(-4deg) scale(0.94)', opacity: 0 }}
             transition={MOTION.deliberate}
           >
             {/* Header bar — typewriter mono */}

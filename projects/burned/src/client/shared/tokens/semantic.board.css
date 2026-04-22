@@ -179,14 +179,39 @@
     --color-paper-shadow:     color-mix(in oklab, var(--color-cream-7)  80%, var(--color-ochre-6));
     --color-paper-rule:       color-mix(in oklab, var(--color-ochre-6)  35%, transparent);
 
-    /* Mahogany wood frame — near-black warm wood; uses the ochre scale's
-       darkest warms so it ties to the drama-accent family already on board. */
-    --color-wood-mahogany:    var(--color-ochre-4);
-    --color-wood-grain:       color-mix(in oklab, var(--color-ochre-3) 85%, var(--color-charcoal-1));
-    --color-wood-highlight:   color-mix(in oklab, var(--color-ochre-8) 35%, transparent);
-
     /* Classified-stamp red for overlays (ACTIVE, BURNED, CLASSIFIED rubber stamps) */
     --color-stamp-classified: var(--color-accent-burned);
     --color-stamp-active:     var(--color-cordovan-10);
+
+    /* ─── Desk Redesign palette (Phase 0) ───
+       Retires the blotter-as-paper metaphor. The play surface becomes the
+       mahogany desk itself. Wood derives from the ochre primitives so the
+       family stays cohesive with the drama accents. Manila (dossier folder)
+       and brass (nameplate) are distinct materials that don't live on the
+       ochre scale — literal hex, anchored to Archer's Mother's-office
+       vocabulary (S01E01 "Mole Hunt", S02E02 "A Going Concern"). */
+
+    /* Wood surface — the play zone itself, not just the frame edge.
+       light = where the desk-lamp pools, mid = primary tone,
+       dark = shadow edges / ink-burn marks. */
+    --color-wood-surface-light: var(--color-ochre-5);  /* #553520 */
+    --color-wood-surface-mid:   var(--color-ochre-4);  /* #422818 */
+    --color-wood-surface-dark:  var(--color-ochre-2);  /* #25160b */
+    --color-wood-grain-rule:    color-mix(in oklab, var(--color-ochre-5) 18%, transparent);
+
+    /* Manila dossier folder — warm cream-tan paper stock. Phase 3 target.
+       Tab reuses cordovan-8 so the wine accent ties to the cordovan family
+       already in the burned-fire + stamp vocabulary. */
+    --color-manila-face:        #c9b085;
+    --color-manila-shadow:      #9d8660;
+    --color-manila-tab:         var(--color-cordovan-8);
+
+    /* Brass nameplate — Phase 4 target. Engraved codename on beveled metal.
+       highlight / mid / shadow simulate the bevel via gradient stops;
+       engrave is the etched-text fill. */
+    --color-brass-highlight:    #e8c072;
+    --color-brass-mid:          #b28744;
+    --color-brass-shadow:       #6e5328;
+    --color-brass-engrave:      #2a1e0c;
   }
 }

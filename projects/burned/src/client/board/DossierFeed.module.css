@@ -193,10 +193,34 @@
   pointer-events: none;
 }
 
-/* Single report slip. Enter motion: clip-path reveal from left + scale
-   overshoot. Resting position/rotation/opacity come from [data-index]
-   rules below — CSS individual transform props (rotate, translate)
-   compose cleanly with motion's transform animation. */
+
+/* Blinking transmission cursor on the newest strip — semantic: "this is
+   the live wire, still on air." Older strips never get the cursor. Uses
+   --motion-duration-essential-spin (0.7s) so it survives under
+   prefers-reduced-motion — a frozen live-transmission indicator reads as
+   a frozen app, which is the exact opposite of the intent. */
+.strip[data-index="0"]::after {
+  content: '_';
+  display: inline-block;
+  margin-left: 5px;
+  color: var(--color-accent-burned);
+  font-weight: 700;
+  animation: dossierStripCursorBlink
+    var(--motion-duration-essential-spin)
+    var(--motion-ease-base)
+    infinite;
+}
+
+@keyframes dossierStripCursorBlink {
+  0%, 49%   { opacity: 1; }
+  50%, 100% { opacity: 0; }
+}
+
+/* Single report slip. Resting tilt / offset / opacity come from CSS custom
+   properties set per-strip via inline style in DossierFeed.tsx — scales to
+   any MAX_VISIBLE_STRIPS without new [data-index="N"] rules. Individual
+   transform properties (rotate, translate) compose cleanly with motion's
+   transform animation on enter (scale keyframe overshoot). */
 .strip {
   position: absolute;
   top: 0;
@@ -221,61 +245,22 @@
   display: -webkit-box;
   -webkit-box-orient: vertical;
   -webkit-line-clamp: 2;
+
+  /* Per-index resting values — defaults ensure sane rendering if style vars
+     are missing (e.g. during the very first render before the style prop
+     attaches). Vars are set via inline style in DossierFeed.tsx. */
+  rotate: var(--strip-tilt, 0deg);
+  translate: var(--strip-offset-x, 0) var(--strip-offset-y, 0);
+  opacity: var(--strip-opacity, 1);
 }
 
-/* Newest strip — full opacity, no tilt, burned-red urgency rule on the left */
+/* Newest strip — live-wire styling: burned-red urgency rule on the left.
+   Position / tilt / opacity all resolve to zero-identity values from the
+   CSS-var formula above, so no transform overrides needed here. */
 .strip[data-index="0"] {
-  z-index: 4;
-  rotate: 0deg;
-  translate: 0 0;
-  opacity: 1;
   border-left-color: var(--color-accent-burned);
   border-left-width: 3px;
   padding-left: 13px;
-}
-
-/* Blinking transmission cursor on the newest strip — semantic: "this is
-   the live wire, still on air." Older strips never get the cursor. Uses
-   --motion-duration-essential-spin (0.7s) so it survives under
-   prefers-reduced-motion — a frozen live-transmission indicator reads as
-   a frozen app, which is the exact opposite of the intent. */
-.strip[data-index="0"]::after {
-  content: '_';
-  display: inline-block;
-  margin-left: 5px;
-  color: var(--color-accent-burned);
-  font-weight: 700;
-  animation: dossierStripCursorBlink
-    var(--motion-duration-essential-spin)
-    var(--motion-ease-base)
-    infinite;
-}
-
-@keyframes dossierStripCursorBlink {
-  0%, 49%   { opacity: 1; }
-  50%, 100% { opacity: 0; }
-}
-
-/* Older strips peek from under, each with a distinct tossed-on-desk angle */
-.strip[data-index="1"] {
-  z-index: 3;
-  rotate: -1.4deg;
-  translate: -4px 12px;
-  opacity: 0.80;
-}
-
-.strip[data-index="2"] {
-  z-index: 2;
-  rotate: 1.8deg;
-  translate: 5px 24px;
-  opacity: 0.56;
-}
-
-.strip[data-index="3"] {
-  z-index: 1;
-  rotate: -1deg;
-  translate: -3px 36px;
-  opacity: 0.30;
 }
 
 @media (prefers-reduced-motion: reduce) {

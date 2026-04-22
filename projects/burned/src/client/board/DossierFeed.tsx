@@ -7,7 +7,7 @@ import { MOTION_DURATIONS, MOTION_EASINGS } from '@client/shared/tokens/motion'
 import type { BoardPlayer } from '@shared/protocol'
 import styles from './DossierFeed.module.css'
 
-const MAX_VISIBLE_STRIPS = 4
+const MAX_VISIBLE_STRIPS = 8
 
 interface Props {
   players: readonly BoardPlayer[]
@@ -86,11 +86,26 @@ export function DossierFeed({ players }: Props) {
 
       <div className={styles.strips}>
         <AnimatePresence mode="popLayout">
-          {visibleStrips.map(({ entry, text }, index) => (
+          {visibleStrips.map(({ entry, text }, index) => {
+            // Per-strip resting style — computed not hardcoded, so bumping
+            // MAX_VISIBLE_STRIPS doesn't require adding new [data-index="N"]
+            // CSS rules. Alternating drift direction (index even = left drift,
+            // odd = right drift) gives the stack a natural tossed-on-desk
+            // variance instead of a tidy single-axis spiral.
+            const dir = index % 2 === 0 ? 1 : -1
+            const restingStyle = {
+              '--strip-tilt': `${index * 1.2 * -dir}deg`,
+              '--strip-offset-x': `${index * 2 * dir}px`,
+              '--strip-offset-y': `${index * 7}px`,
+              '--strip-opacity': String(Math.max(0.18, 1 - index * 0.12)),
+              zIndex: MAX_VISIBLE_STRIPS - index,
+            } as React.CSSProperties
+            return (
             <m.div
               key={entry.id}
               className={styles.strip}
               data-index={index}
+              style={restingStyle}
               // Enter: slid-across-the-desk reveal from the left (clip-path
               // inset eats from the right back to 0) + scale overshoot. Uses
               // transform STRING (not shorthand x/scale) for hardware-accel
@@ -129,7 +144,8 @@ export function DossierFeed({ players }: Props) {
             >
               {text}
             </m.div>
-          ))}
+            )
+          })}
         </AnimatePresence>
       </div>
     </div>

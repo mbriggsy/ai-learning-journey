@@ -80,9 +80,11 @@ export function GameOver({ players, winnerId, eliminationOrder, myPlayerId, onPl
             data-me={player.id === myPlayerId || undefined}
             // Transform string keeps the staggered ranking reveal smooth even
             // if the browser is still painting the winner drama above.
+            // Stagger 80ms — top of Emil's 30-80ms window. 120ms was above
+            // range and blew out total ceremony time at 10-player count.
             initial={{ opacity: 0, transform: 'translateX(-30px)' }}
             animate={{ opacity: 1, transform: 'translateX(0px)' }}
-            transition={{ ...MOTION.snappy, delay: 0.8 + i * 0.12 }}
+            transition={{ ...MOTION.snappy, delay: 0.8 + i * 0.08 }}
           >
             <span className={styles.rankNum}>#{rank}</span>
             <PlayerIcon color={player.color} size={14} />
@@ -101,7 +103,8 @@ export function GameOver({ players, winnerId, eliminationOrder, myPlayerId, onPl
           animate={{ opacity: 1, transform: 'translateY(0px)' }}
           transition={{
             ...MOTION.deliberate,
-            delay: 0.8 + rankings.length * 0.12 + 0.3,
+            // Tracks the rankings stagger above (80ms/row) + 0.3s pause.
+            delay: 0.8 + rankings.length * 0.08 + 0.3,
           }}
         >
           Run It Back

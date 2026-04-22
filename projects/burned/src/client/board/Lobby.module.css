@@ -314,9 +314,13 @@
   cursor: pointer;
   flex-shrink: 0;
   z-index: var(--z-raised);
+  /* Transitions only GPU-composited properties (transform + box-shadow).
+     letter-spacing was previously transitioned on hover; dropped — it
+     triggers layout every step and the translateY + box-shadow intensify
+     already signal the hover lift without the type-animation flourish. */
   transition:
     transform var(--motion-duration-fast) var(--motion-ease-base),
-    letter-spacing var(--motion-duration-slow) var(--motion-ease-base);
+    box-shadow var(--motion-duration-fast) var(--motion-ease-base);
   /* Double-line stamp border + subtle inner highlight */
   box-shadow:
     inset 0 0 0 1px color-mix(in oklab, var(--color-cream-12) 42%, transparent),
@@ -357,15 +361,20 @@
   50% { opacity: 1; }
 }
 
-.startButton:hover {
-  transform: translateY(-2px);
-  letter-spacing: 0.22em;
-  box-shadow:
-    inset 0 0 0 1px color-mix(in oklab, var(--color-cream-12) 55%, transparent),
-    inset 0 0 0 5px transparent,
-    inset 0 0 0 6px color-mix(in oklab, var(--color-cream-12) 18%, transparent),
-    0 5px 0 color-mix(in oklab, var(--color-charcoal-1) 40%, transparent),
-    0 10px 32px color-mix(in oklab, var(--color-accent-burned) 50%, transparent);
+/* Hover lift — desktop only. Touch devices (including hybrid laptops with
+   a stylus or trackpad + touchscreen) fire sticky hover on tap without
+   the stricter pointer: fine guard. Matches MinimalCard / GameOver.playAgain
+   / JoinScreen / SmartActionBox gating. */
+@media (hover: hover) and (pointer: fine) {
+  .startButton:hover {
+    transform: translateY(-2px);
+    box-shadow:
+      inset 0 0 0 1px color-mix(in oklab, var(--color-cream-12) 55%, transparent),
+      inset 0 0 0 5px transparent,
+      inset 0 0 0 6px color-mix(in oklab, var(--color-cream-12) 18%, transparent),
+      0 5px 0 color-mix(in oklab, var(--color-charcoal-1) 40%, transparent),
+      0 10px 32px color-mix(in oklab, var(--color-accent-burned) 50%, transparent);
+  }
 }
 
 .startButton:active {

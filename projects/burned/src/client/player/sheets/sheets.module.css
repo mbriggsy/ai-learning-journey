@@ -199,6 +199,15 @@
   font-size: var(--text-callout);
   cursor: pointer;
   touch-action: manipulation;
+  transition: transform var(--motion-duration-fast) var(--motion-ease-decelerate);
+}
+
+/* Press feedback — high-repetition tap target (stepping through 30+ positions
+   on large decks), the one sheet button missing its :active scale. 0.95 is
+   inside Emil's subtle-but-present range and gives clearer feedback than 0.97
+   would on a 44×44 round button. */
+.positionInput button:active {
+  transform: scale(0.95);
 }
 
 .positionInput span {

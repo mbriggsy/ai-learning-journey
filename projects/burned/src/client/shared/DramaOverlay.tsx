@@ -164,16 +164,20 @@ export function DramaOverlay() {
     // FADE OUT: graceful exit with blur ramp. The blur defocus during fadeout
     // is what the NEXT beat's entry leverages to read as a continuous morph.
     // Keep under 6px — blur is expensive on Safari mobile.
+    // Fade-out uses power2.out (ease-out), NOT power2.in. Emil's rule:
+    // exits still use ease-out because the user is watching the element
+    // most closely at the START of the exit — ease-in delays that initial
+    // movement and reads as sluggish. power2.in was here in the first cut;
+    // swapped 2026-04-23 per full-repo audit.
     tl.to(text, {
       filter: 'blur(4px)',
       duration: MOTION_DURATIONS.slow,
-      ease: 'power2.in',
+      ease: 'power2.out',
     }, '<')  // start in parallel with the overlay fade below
     tl.to(overlay, {
       opacity: 0,
-      // GSAP ease: 'power2.in' is an accelerate curve; no cubic-bezier equivalent
       duration: MOTION_DURATIONS.slow,
-      ease: 'power2.in',
+      ease: 'power2.out',
     }, '<')
   }
 

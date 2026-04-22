@@ -112,6 +112,7 @@ export function DossierFeed({ players }: Props) {
               ease: MOTION_EASINGS.base,
             }}
           >
+            <div className={styles.coverPhoto} aria-hidden="true" />
             <span className={styles.coverHeader}>Comms · Intercepted</span>
             <div className={styles.coverStamp} />
             <span className={styles.coverCaseId}>Case #47-B</span>

@@ -132,6 +132,51 @@
   backface-visibility: hidden;
 }
 
+/* Operative silhouette paperclipped to the top-left of the cover. Phase 5
+   scene-setting — anonymous-agent photo-on-case-file is pure Archer Mother's-
+   office vocabulary. Reuses the orphaned operative-silhouette.png asset.
+   Sits absolute so it doesn't fight the cover's centered flex layout. */
+.coverPhoto {
+  position: absolute;
+  top: 14px;
+  left: 18px;
+  width: clamp(44px, 3.4vw, 74px);
+  aspect-ratio: 3 / 4;
+  background-image: url('/assets/arena/operative-silhouette.png');
+  background-size: cover;
+  background-position: center 18%;
+  background-color: color-mix(in oklab, var(--color-manila-face) 78%, var(--color-charcoal-1));
+  /* white-bordered photo paper, slightly off-white + warm */
+  padding: 3px;
+  box-sizing: border-box;
+  border: 2px solid color-mix(in oklab, var(--color-manila-face) 86%, var(--color-cream-12));
+  border-radius: 1px;
+  rotate: -5deg;
+  box-shadow:
+    0 2px 3px color-mix(in oklab, var(--color-charcoal-1) 45%, transparent),
+    0 5px 10px color-mix(in oklab, var(--color-charcoal-1) 28%, transparent);
+  /* Slight sepia tint pushes it further into "archival agency photo" territory */
+  filter: sepia(0.22) saturate(0.9);
+}
+
+/* Paperclip — thin metal U-shape peeking from under the photo's top edge.
+   Pure CSS: a short rounded-rectangle border with the bottom stroke omitted,
+   sized to look like the clip's visible arc. */
+.coverPhoto::before {
+  content: '';
+  position: absolute;
+  top: -11px;
+  left: 50%;
+  width: 14px;
+  height: 20px;
+  transform: translateX(-50%);
+  border: 1.5px solid color-mix(in oklab, var(--color-brass-highlight) 55%, var(--color-charcoal-1));
+  border-bottom: none;
+  border-radius: 7px 7px 1px 1px;
+  background: transparent;
+  box-shadow: 0 1px 1px color-mix(in oklab, var(--color-charcoal-1) 35%, transparent);
+}
+
 .coverHeader {
   font-family: var(--font-mono);
   font-size: var(--text-caption-board);

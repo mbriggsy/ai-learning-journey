@@ -32,12 +32,21 @@
      the transition; the desk interior sits flush against it. */
   background-color: var(--color-wood-surface-mid);
   background-image:
-    /* 1. Desk-lamp pool — warm concentration high-right, fades across surface */
+    /* 1a. Lamp hot-spot — tight bright concentration at the bulb's reflection
+       point. Smaller, brighter, pushed further upper-right than the old pool. */
     radial-gradient(
-      ellipse 75% 70% at 55% 35%,
-      color-mix(in oklab, var(--color-wood-surface-light) 80%, transparent) 0%,
-      color-mix(in oklab, var(--color-wood-surface-light) 35%, transparent) 30%,
-      transparent 70%
+      ellipse 22% 28% at 64% 24%,
+      color-mix(in oklab, var(--color-wood-surface-light) 92%, var(--color-cream-12)) 0%,
+      color-mix(in oklab, var(--color-wood-surface-light) 55%, transparent) 45%,
+      transparent 85%
+    ),
+    /* 1b. Lamp pool — wider warm falloff from the hot-spot. Gives the desk
+       a soft lit zone before the edge vignette kicks in. */
+    radial-gradient(
+      ellipse 65% 60% at 58% 32%,
+      color-mix(in oklab, var(--color-wood-surface-light) 60%, transparent) 0%,
+      color-mix(in oklab, var(--color-wood-surface-light) 28%, transparent) 35%,
+      transparent 75%
     ),
     /* 2. Vertical grain rule — barely-there wood fiber */
     repeating-linear-gradient(

@@ -1,54 +1,16 @@
-import { useEffect, useRef, useState } from 'react'
 import { m, AnimatePresence } from 'motion/react'
 import {
   useDrawPileCount, useDiscardRecent,
   usePlayerList, useCurrentTurn, usePendingPrompt,
 } from '@client/shared/hooks/useSharedSelectors'
-import { useEventFeed } from '@client/shared/hooks/useEventFeed'
 import { DrawPile } from './DrawPile'
 import { DiscardFan } from './DiscardFan'
-import { formatEvent } from './events'
-import { announce } from '@client/shared/announce'
+import { DossierFeed } from './DossierFeed'
 import { PlayerIcon } from '@client/shared/PlayerIcon'
 import { playerName } from './playerName'
 import { MOTION } from '@client/shared/tokens/motion'
 import type { BoardPlayer, PendingPromptView } from '@shared/protocol'
 import styles from './BlotterContent.module.css'
-
-// Idle comms chatter — rotates slowly when no real events have landed yet.
-// Keeps the COMMS panel breathing during setup and quiet turns so the TV
-// screen never reads as "frozen". Decorative only; aria-hidden via parent.
-const IDLE_LINES = [
-  'CHANNEL OPEN',
-  'STANDING BY',
-  'AWAITING TRAFFIC',
-  'INTERCEPT CLEAR',
-] as const
-
-function IdleTicker() {
-  const [idx, setIdx] = useState(0)
-  useEffect(() => {
-    const id = setInterval(() => {
-      setIdx(i => (i + 1) % IDLE_LINES.length)
-    }, 2500)
-    return () => clearInterval(id)
-  }, [])
-  return (
-    <AnimatePresence mode="wait">
-      <m.div
-        key={IDLE_LINES[idx]}
-        className={styles.idleTicker}
-        initial={{ opacity: 0, transform: 'translateY(4px)' }}
-        animate={{ opacity: 1, transform: 'translateY(0px)' }}
-        exit={{ opacity: 0, transform: 'translateY(-4px)' }}
-        transition={MOTION.enter}
-      >
-        <span className={styles.idleLabel}>// {IDLE_LINES[idx]}</span>
-        <span className={styles.idleCursor} aria-hidden="true">_</span>
-      </m.div>
-    </AnimatePresence>
-  )
-}
 
 function getStatusText(
   currentTurn: { currentPlayerId: string; turnsRemaining: number } | null,
@@ -77,14 +39,14 @@ function getStatusText(
 }
 
 /**
- * The cream-paper briefing dossier layout. Three zones:
- *   - Left half: draw + discard piles (stacked).
- *   - Right half: COMMS event feed (newest on top, paper skin).
- *   - Bottom strip: current instruction / turn status (typewriter baseline).
+ * Desk-surface layout. Three zones inside the wood frame interior:
+ *   - Left half: draw + discard piles (stacked on mahogany).
+ *   - Right half: COMMS as a manila dossier folder (DossierFeed).
+ *   - Bottom strip: current instruction / turn status (Phase 4 retires this
+ *     for a brass nameplate).
  *
- * Sits over the decorative `.blotter` div in GameTable. Positioning mirrors
- * the blotter token dims so the content stays inside the paper edges at all
- * viewports.
+ * Component filename retained through the phased rebuild; rename to
+ * DeskSurface when the status strip retires in Phase 4.
  */
 export function BlotterContent() {
   const drawPileCount = useDrawPileCount()
@@ -92,41 +54,6 @@ export function BlotterContent() {
   const players = usePlayerList()
   const currentTurn = useCurrentTurn()
   const prompt = usePendingPrompt()
-  const events = useEventFeed()
-
-  // Auto-scroll the comms stream to the newest entry (bottom) as events land.
-  const streamRef = useRef<HTMLDivElement>(null)
-
-  // Screen reader announcements — mirror of the old AnnouncementFeed logic.
-  const lastAnnouncedIdRef = useRef<string | null>(null)
-  useEffect(() => {
-    if (events.length === 0) return
-    const lastIdx = lastAnnouncedIdRef.current
-      ? events.findIndex(e => e.id === lastAnnouncedIdRef.current)
-      : -1
-    const newEvents = events.slice(lastIdx + 1)
-    if (newEvents.length === 0) return
-    lastAnnouncedIdRef.current = newEvents[newEvents.length - 1]!.id
-    for (const entry of newEvents) {
-      const text = formatEvent(entry.event, players, entry.id)
-      if (!text) continue
-      const isUrgent = entry.event.type === 'burned-drawn' ||
-        entry.event.type === 'player-eliminated' || entry.event.type === 'game-over'
-      announce(text, isUrgent ? 'assertive' : 'polite')
-    }
-  }, [events, players])
-
-  const rendered = events
-    .map(entry => ({ entry, text: formatEvent(entry.event, players, entry.id) }))
-    .filter((r): r is { entry: typeof events[number]; text: string } => r.text != null)
-
-  // Pin the stream to its bottom when a new entry arrives. Using scrollTop
-  // directly (not smooth) so it keeps pace even if events land quickly.
-  useEffect(() => {
-    const el = streamRef.current
-    if (!el) return
-    el.scrollTop = el.scrollHeight
-  }, [rendered.length])
 
   const statusText = getStatusText(currentTurn, prompt, players)
   const activeColor = currentTurn
@@ -154,28 +81,8 @@ export function BlotterContent() {
         </div>
       </div>
 
-      <div className={styles.comms} aria-hidden="true">
-        <div className={styles.commsHeader}>Comms · Intercepted</div>
-        <IdleTicker />
-        <div className={styles.commsStream} ref={streamRef}>
-          <AnimatePresence mode="popLayout">
-            {rendered.map(({ entry, text }) => (
-              <m.div
-                key={entry.id}
-                className={styles.announcement}
-                // Transform string — COMMS entries arrive mid-game during WS-
-                // hot paths (card plays trigger events). Shorthand x on a
-                // popLayout list would drop frames when the main thread is busy.
-                initial={{ opacity: 0, transform: 'translateX(18px)' }}
-                animate={{ opacity: 1, transform: 'translateX(0px)' }}
-                exit={{ opacity: 0, transform: 'translateX(18px)' }}
-                transition={MOTION.enter}
-              >
-                {text}
-              </m.div>
-            ))}
-          </AnimatePresence>
-        </div>
+      <div className={styles.comms}>
+        <DossierFeed players={players} />
       </div>
 
       <div className={styles.statusStrip}>

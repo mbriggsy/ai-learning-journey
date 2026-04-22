@@ -1,0 +1,265 @@
+/* DossierFeed.module.css
+   COMMS as a manila dossier folder on the desk. Phase 3 of the desk redesign.
+
+   Visual model:
+   - Outer folder: manila face, cordovan-8 tab top-right, 3.5° tilt (tossed
+     onto the desk). Real tabletop drop-shadow anchors it on mahogany.
+   - Idle cover: CLASSIFIED rubber-stamp + CASE #47-B on a closed folder
+     face. Hinges up (rotateX around top edge) on first event — the "open
+     the folder, new intel's in" reveal.
+   - Strips: stack of typewriter-mono report slips. Newest sits on top at
+     z-highest with no offset; older strips peek from under with per-index
+     translate + rotation drift + opacity decay. Max 4 visible; older slip
+     out the bottom by falling off the list (popLayout exit).
+
+   Individual transform properties (rotate, translate) on the strips so
+   motion's transform animates (scale keyframe overshoot on enter) don't
+   fight the per-index resting tilt/offset. Modern CSS composition win.
+*/
+
+@layer components {
+
+.folder {
+  position: relative;
+  width: 100%;
+  height: 100%;
+  /* Perspective supports the cover's 3D rotateX hinge on first-event open */
+  perspective: 1200px;
+  /* Tossed on the desk — 3.5° feels natural, 5°+ reads cartoony */
+  rotate: 3.5deg;
+
+  /* Manila face + warm paper gradient + subliminal vertical fiber */
+  background-color: var(--color-manila-face);
+  background-image:
+    repeating-linear-gradient(
+      90deg,
+      transparent 0,
+      transparent 2px,
+      color-mix(in oklab, var(--color-manila-shadow) 8%, transparent) 2px,
+      color-mix(in oklab, var(--color-manila-shadow) 8%, transparent) 3px
+    ),
+    linear-gradient(
+      168deg,
+      color-mix(in oklab, var(--color-manila-face) 96%, var(--color-cream-12)) 0%,
+      var(--color-manila-face) 45%,
+      color-mix(in oklab, var(--color-manila-face) 90%, var(--color-manila-shadow)) 100%
+    );
+  border-radius: 2px;
+  box-shadow:
+    /* inner paper rim + subtle deep fold along the bottom edge (dossier
+       spine hint) */
+    inset 0 0 0 1px color-mix(in oklab, var(--color-manila-shadow) 55%, transparent),
+    inset 0 -2px 6px color-mix(in oklab, var(--color-manila-shadow) 30%, transparent),
+    /* real tabletop depth on the mahogany — two layers: close + far */
+    0 3px 5px color-mix(in oklab, var(--color-charcoal-1) 50%, transparent),
+    0 14px 28px color-mix(in oklab, var(--color-charcoal-1) 35%, transparent);
+}
+
+/* ─── Cordovan-8 wine tab — top-right, classic file-folder trapezoid ─── */
+
+.tab {
+  position: absolute;
+  top: 0;
+  right: 22px;
+  transform: translateY(-82%);
+  z-index: 5;
+  padding: 7px 22px 10px;
+  background: var(--color-manila-tab);
+  color: color-mix(in oklab, var(--color-cream-12) 94%, transparent);
+  font-family: var(--font-mono);
+  font-size: var(--text-caption-board);
+  font-weight: 700;
+  letter-spacing: 0.28em;
+  text-transform: uppercase;
+  white-space: nowrap;
+  /* Trapezoid — narrow top, wider bottom (actual manila-folder tab shape) */
+  clip-path: polygon(14px 0, calc(100% - 14px) 0, 100% 100%, 0 100%);
+  box-shadow:
+    inset 0 1px 0 color-mix(in oklab, var(--color-cream-12) 20%, transparent),
+    inset 0 -1px 0 color-mix(in oklab, var(--color-charcoal-1) 55%, transparent),
+    0 -2px 6px color-mix(in oklab, var(--color-charcoal-1) 35%, transparent);
+}
+
+.tab::before {
+  content: '// ';
+  opacity: 0.55;
+  font-weight: 400;
+}
+
+/* ─── Idle cover — what you see when no events have landed ───
+   Sits on top of the folder interior. Hinges up on first event via
+   transform-origin: center top + rotateX(-95deg). */
+
+.cover {
+  position: absolute;
+  inset: 0;
+  z-index: 4;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 18px;
+  padding: 22px 24px;
+
+  /* Cover reuses the manila base so it reads as the *other side* of the
+     folder (the closed flap). Slightly darker gradient on the cover sells
+     the doubled-up-paper illusion when the flap eventually hinges open. */
+  background-color: var(--color-manila-face);
+  background-image:
+    repeating-linear-gradient(
+      90deg,
+      transparent 0,
+      transparent 2px,
+      color-mix(in oklab, var(--color-manila-shadow) 10%, transparent) 2px,
+      color-mix(in oklab, var(--color-manila-shadow) 10%, transparent) 3px
+    ),
+    linear-gradient(
+      168deg,
+      color-mix(in oklab, var(--color-manila-face) 94%, var(--color-manila-shadow)) 0%,
+      color-mix(in oklab, var(--color-manila-face) 86%, var(--color-manila-shadow)) 100%
+    );
+  border-radius: 2px;
+  box-shadow:
+    inset 0 0 0 1px color-mix(in oklab, var(--color-manila-shadow) 65%, transparent),
+    inset 0 -3px 8px color-mix(in oklab, var(--color-manila-shadow) 35%, transparent);
+
+  /* 3D hinge anchor — top edge of the cover is the flap spine */
+  transform-origin: center top;
+  backface-visibility: hidden;
+}
+
+.coverHeader {
+  font-family: var(--font-mono);
+  font-size: var(--text-caption-board);
+  font-weight: 600;
+  letter-spacing: 0.34em;
+  text-transform: uppercase;
+  color: color-mix(in oklab, var(--color-charcoal-1) 70%, var(--color-cordovan-2));
+  opacity: 0.72;
+}
+
+.coverHeader::before {
+  content: '// ';
+  opacity: 0.55;
+  font-weight: 400;
+}
+
+.coverStamp {
+  width: 72%;
+  aspect-ratio: 5 / 2;
+  background-image: url('/assets/arena/stamp-classified.png');
+  background-size: contain;
+  background-repeat: no-repeat;
+  background-position: center;
+  opacity: 0.82;
+  rotate: -5deg;
+  filter:
+    grayscale(0.08)
+    saturate(1.18)
+    drop-shadow(0 1px 1px color-mix(in oklab, var(--color-charcoal-1) 40%, transparent));
+  mix-blend-mode: multiply;
+}
+
+.coverCaseId {
+  font-family: var(--font-display);
+  font-weight: 900;
+  font-size: clamp(22px, 1.8vw, 40px);
+  line-height: 1;
+  letter-spacing: 0.04em;
+  color: color-mix(in oklab, var(--color-charcoal-1) 78%, var(--color-cordovan-2));
+  text-shadow: 0 1px 0 color-mix(in oklab, var(--color-cream-12) 42%, transparent);
+}
+
+.coverFooter {
+  font-family: var(--font-mono);
+  font-size: clamp(8px, 0.52vw, 11px);
+  font-weight: 600;
+  letter-spacing: 0.24em;
+  text-transform: uppercase;
+  color: color-mix(in oklab, var(--color-charcoal-1) 50%, var(--color-cordovan-2));
+  opacity: 0.55;
+  padding-top: 8px;
+  border-top: 1px solid color-mix(in oklab, var(--color-manila-shadow) 45%, transparent);
+  align-self: stretch;
+  text-align: center;
+}
+
+/* ─── Strips stack — where report slips accumulate ─── */
+
+.strips {
+  position: absolute;
+  inset: 20px 20px 20px 20px;
+  z-index: 2;
+  pointer-events: none;
+}
+
+/* Single report slip. Enter motion: clip-path reveal from left + scale
+   overshoot. Resting position/rotation/opacity come from [data-index]
+   rules below — CSS individual transform props (rotate, translate)
+   compose cleanly with motion's transform animation. */
+.strip {
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  padding: 10px 14px 11px;
+  font-family: var(--font-mono);
+  font-size: var(--text-caption-board);
+  font-weight: 500;
+  letter-spacing: 0.06em;
+  line-height: 1.35;
+  /* typewriter ribbon — slightly reddish-black ink on manila */
+  color: color-mix(in oklab, var(--color-charcoal-1) 82%, var(--color-cordovan-2));
+  background: color-mix(in oklab, var(--color-manila-face) 94%, var(--color-cream-12));
+  border: 1px solid color-mix(in oklab, var(--color-manila-shadow) 55%, transparent);
+  border-radius: 2px;
+  box-shadow:
+    0 1px 2px color-mix(in oklab, var(--color-charcoal-1) 25%, transparent),
+    0 3px 7px color-mix(in oklab, var(--color-charcoal-1) 18%, transparent);
+  white-space: normal;
+  overflow: hidden;
+  display: -webkit-box;
+  -webkit-box-orient: vertical;
+  -webkit-line-clamp: 2;
+}
+
+/* Newest strip — full opacity, no tilt, burned-red urgency rule on the left */
+.strip[data-index="0"] {
+  z-index: 4;
+  rotate: 0deg;
+  translate: 0 0;
+  opacity: 1;
+  border-left-color: var(--color-accent-burned);
+  border-left-width: 3px;
+  padding-left: 13px;
+}
+
+/* Older strips peek from under, each with a distinct tossed-on-desk angle */
+.strip[data-index="1"] {
+  z-index: 3;
+  rotate: -1.4deg;
+  translate: -4px 12px;
+  opacity: 0.80;
+}
+
+.strip[data-index="2"] {
+  z-index: 2;
+  rotate: 1.8deg;
+  translate: 5px 24px;
+  opacity: 0.56;
+}
+
+.strip[data-index="3"] {
+  z-index: 1;
+  rotate: -1deg;
+  translate: -3px 36px;
+  opacity: 0.30;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .folder,
+  .cover,
+  .coverStamp { animation: none; }
+}
+
+} /* @layer components */

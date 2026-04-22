@@ -3,8 +3,13 @@
 ## Current State
 
 - **PRODUCT-SPECIFICATION.md v1.0 LOCKED** — `docs/specifications/PRODUCT-SPECIFICATION.md` (2026-04-10).
-- **358/358 Vitest, typecheck clean** (verified 2026-04-21, Emil-review session squeaky-clean). Coverage expanded with `deck-composition-exhaustive.test.ts` (parameterized 2-10 players against `docs/rules/RULES-REFERENCE.md` §3) and `rules-gaps-exhaustive.test.ts` (plugs §11 Attack+Defuse continuation, §6 Intel Briefing mid-turn, §9 triple-Nope, §7 combo overrides, §10.3 Back Channel under Attack, §6 empty-hand Favor, §9 Burned/Extraction not Nopeable, §5 multi-play per turn, §12 dead-card disposal).
+- **360/360 Vitest, 15/15 Playwright, typecheck clean** (verified 2026-04-23, Emil-audit Phase 3 squeaky-clean). +2 motion-token-sync cases added for `stamp` duration and `overshoot` easing (see `docs/reviews/emil-audit-2026-04-23.md`). Prior coverage expansion (2026-04-21): `deck-composition-exhaustive.test.ts` parameterized 2-10 players against `docs/rules/RULES-REFERENCE.md` §3; `rules-gaps-exhaustive.test.ts` plugs §11 Attack+Defuse continuation, §6 Intel Briefing mid-turn, §9 triple-Nope, §7 combo overrides, §10.3 Back Channel under Attack, §6 empty-hand Favor, §9 Burned/Extraction not Nopeable, §5 multi-play per turn, §12 dead-card disposal.
 - **Motion tokens upgraded to Emil-grade curves.** `--motion-ease-base` is now iOS drawer `cubic-bezier(0.32, 0.72, 0, 1)`; `--motion-ease-decelerate` is Emil's strong ease-out `cubic-bezier(0.23, 1, 0.32, 1)`. `MOTION.exit` no longer uses `accelerate` (ease-in) — flipped to `decelerate` for crisper exits. `primitives.css` and `motion.ts` stay lockstep (`motion-token-sync.test.ts` enforces). Cascades to every component consuming these tokens.
+- **Emil audit Phase 3 P1 sweep — all 10 findings shipped 2026-04-23.** Three atomic commits on main:
+  - **Cluster A (`31d28be1`) — token discipline.** New `MOTION_DURATIONS.stamp` (0.34s) + `MOTION_EASINGS.overshoot` (`[0.34, 1.56, 0.64, 1]`) tokens, mirrored to `--motion-duration-stamp` + `--motion-ease-overshoot` in primitives. StealReport stamp animation + ackBtn press-feedback transition consume them. PlayerStrip `.presence` pulse now consumes `--motion-duration-pulse-slow` + `--motion-ease-base` instead of hardcoded `2.4s ease-in-out`.
+  - **Cluster B (`a347b0fd`) — wired entry/exit motion on banner surfaces.** `NopeCountdownBar` wrapped in `AnimatePresence` + `m.div` with `MOTION.quickFade` (opacity + scale 0.98→1). `PendingPromptBanner` same treatment, keyed on `${playerId}:${type}` with `mode="wait"` so prompt-to-prompt swaps crossfade. `StagingArea` enlarge overlay got the `filter: blur(4px) → blur(0)` bridge copied from `Hand.tsx` to mask MinimalCard's container-query layout rejig.
+  - **Cluster C (`06cd98fc`) — Emil rule sweep.** Lobby `.startButton:hover` gated behind `@media (hover: hover) and (pointer: fine)`; `letter-spacing` dropped from hover + from the transition leg (it triggered layout). DramaOverlay GSAP fadeout changed from `power2.in` to `power2.out` (Emil's hardest rule: exits still use ease-out). GameOver rankings stagger cut from 120ms → 80ms per row (play-again delay tracks the new cadence). DefusePlacement ± steppers got `:active { scale(0.95) }` + transition — the one sheet button that was missing press feedback.
+- **Emil Q calls logged 2026-04-23.** (a) GSAP stays as the cinematic-beats library; DramaOverlay is its only consumer. (b) Nameplate flip duration (400ms vs 250ms) + perspective (1000px vs 600px) deferred to real-device playtest. (c) JoinScreen.joinButton hover stays opacity-only (no desktop-parity chase with Lobby). Full rationale in `docs/reviews/emil-audit-2026-04-23.md` §2.
 - **Board mount reads as a briefing cascade.** Timeline from GameTable mount: 50→330ms case banner text stagger (`.caseBannerLabel/Operation/Sub/Divider/Footer` fade + translateX) → 450ms classified stamp impact (scale 1.8→0.94→1, opacity 0→0.5→0.35, emphasized curve) → 700ms TOP SECRET folder drop (translateY -24→0) → 1000/1100ms folder label fades → player strip stagger (35ms × idx) → comms idle ticker cycles (`CHANNEL OPEN / STANDING BY / AWAITING TRAFFIC / INTERCEPT CLEAR` every 2.5s with blinking underscore cursor).
 - **Press feedback on every phone tap target.** SmartActionBox, JoinScreen joinButton, sheets (optionBtn / cancelBtn / confirmBtn / quickBtn), MinimalCard (`.card:not([aria-disabled='true']):not([data-selected]):active`) all scale to 0.97-0.98 on press with `--motion-ease-decelerate`. SmartActionBox uses `animation: none` on `:active` so the scale lands on breathing variants (action, drawIntense, urgent intercept) instead of losing the cascade to the infinite keyframe.
 - **Hover rules gated strict.** `@media (hover: hover) and (pointer: fine)` on every `:hover` in JoinScreen / SmartActionBox / GameOver / MinimalCard. Hybrid touch+trackpad laptops no longer fire sticky hover on tap.
@@ -52,50 +57,23 @@ Commits in order: `639beec0` (tokens) → `21846469` (blotter retire) → `97689
 
 ---
 
-### 2. ★ EMIL FULL-REPO AUDIT — polish every client component to Emil spec
-**Scope:** Every animated, interactive, or transitioned element in `src/client/**`. Phone + board. Shared components. Not server, not shared types, not tests.
+### 2. ~~EMIL FULL-REPO AUDIT — Phase 1 (audit) + Phase 3 P1 sweep~~ [DONE 2026-04-23]
+**Audit doc:** `docs/reviews/emil-audit-2026-04-23.md` (346 lines; 10 P1 / 7 P2 / 4 Q).
+**Shipped:** 3 atomic commits — `31d28be1` (Cluster A tokens), `a347b0fd` (Cluster B motion), `06cd98fc` (Cluster C rule sweep). 360/360 Vitest + 15/15 Playwright + typecheck clean. See Current State bullet "Emil audit Phase 3 P1 sweep" for per-cluster summary.
 
-**Why now:** The desk redesign applied Emil principles top-down on the arena; the rest of the codebase was last touched in the Apr 21 Emil review which covered specific landmines (see §Landmines "Emil review — 2026-04-21") but wasn't a full sweep. Shipping card regen, playtest verification, or new features on top of unreviewed animations compounds polish debt. Briggsy's call on 2026-04-22: "let's get this right" before building more on top.
+**Outstanding follow-ups (deferred to a future dedicated session):**
+- **P2 triage walk** (6 items, ~20 min collaborative). Needs Briggsy's taste call, not mechanical:
+  - Lobby `.startButton:active` — add `scale(0.97)` to the translateY depression for consistency with other pressables?
+  - Nameplate standby — absorb into the flip flow so standby→first-turn crossfades, or leave the one-off hard swap at game start?
+  - **EliminatedView skull initial `scale(0.4)`** — Emil's range is 0.95-0.98; current breaks the rule "for punch" (inline comment). Needs on-phone eyeball: does 0.4 read as stamp-impact or too-aggressive? Candidates: 0.6, 0.7.
+  - NameCard / TargetSelect button stagger — grid of buttons pops in together when the sheet slides up; stagger 30-50ms each = "cards flipping face-up" vocabulary?
+  - FuturePeek `.peekSlot[data-tapped]` — opacity-only feedback now; add `scale(0.97)` press feedback so the tap feels heard?
+  - PlayerStrip `.tile::before { transition: height }` — `height` triggers layout; swap to `transform: scaleY()` with `transform-origin: bottom` for a pure compositor transition? Low-frequency (active-swap only), marginal perf gain.
+- **Q verification (real-device only)** — hands off to Priority #4:
+  - Nameplate flip duration 400ms vs 250ms — which reads as "crisp brass click" on the TV?
+  - Nameplate perspective 1000px vs 600px — does closer perspective fish-eye the flip or land it as a physical desk object?
 
-**Methodology:** Per-component audit using Emil's Review Format (markdown table: `| Before | After | Why |` with one row per finding). Output goes to `docs/reviews/emil-audit-<yyyy-mm-dd>.md` so triage and fix sessions can reference concrete findings.
-
-**Checklist per component (from `/emil-design-eng` skill):**
-- Animation choices: transform STRINGS over shorthand `x`/`y`/`scale` (hardware-accel under WS-hot-path load)
-- Entry animations: never `scale(0)` — start from `scale(0.95)` + `opacity: 0`
-- Easing: custom curves only (base / emphasized / decelerate) — no default CSS easings, no `ease-in` on UI
-- Duration: ≤300ms on frequent UI; tooltips 125-200ms; dropdowns 150-250ms; modals 200-500ms
-- Transitions over keyframes for rapidly-triggered elements (interruptibility)
-- `transition: all` → specific properties only
-- `:active` scale(0.95-0.98) on every pressable element (with `animation: none` if breathing)
-- Hover gating: `@media (hover: hover) and (pointer: fine)` on every `:hover`
-- `transform-origin` on popovers → trigger location via Radix/BaseUI vars (not `center`); modals exempt
-- Stagger: 30-80ms between entering list items
-- Single-shadow elements where multi-shadow tabletop stack would read deeper
-- Missing clip-path reveal opportunities (hold-to-delete, image scroll-reveal, tab color transitions)
-- Missing blur-mask crossfades where container-query layout flips
-- `transform-style: preserve-3d` + perspective on any flip/coin/card animations
-- `backface-visibility: hidden` on 3D-rotated content
-- CSS individual transform properties (`rotate:`, `translate:`) for per-index resting states when motion animates `transform`
-- `prefers-reduced-motion` fallbacks on decorative motion; essential-duration for live-signal motion that must survive reduced-motion
-
-**Components in scope (rough inventory, verify at session start):**
-- **Board view:** Arena, NopeCountdownBar, PendingPromptBanner, Lobby, GameOver, DramaOverlay, CardFace, CardBack, the MotionProvider bootstrap
-- **Phone view:** All remaining sheets (Defuse, FutureRearrange, NameCard), JoinScreen, StealReport, FuturePeek, PlayerAlert, ErrorToast
-- **Shared:** MinimalCard, Hand (outer), PlayerIcon
-
-**Explicitly exclude (already Emil-reviewed):**
-- **Apr 21 Emil review landmines** (see §Landmines): Hand `.slot` outer, PlayerStrip `.tile`, SmartActionBox `:active` breathing states, case-banner cascade, DrawPile `.stack`+`.topCard`, MinimalCard `:active` scope, status-strip key pattern, Lobby disabled sheen.
-- **Desk redesign surfaces** (Emil-applied 2026-04-22): `BlotterContent`, `DossierFeed`, `Nameplate`, `DiscardFan` tabletop shadows, `DrawPile` `.topCard` shadows + `.countBadge`, desk-surface wood gradient.
-
-**Phase structure:**
-- **Phase 1 — Inventory + Audit** (~1 session). Grep-based inventory of every animated/transitioned element. Per-component Emil checklist. Output: `emil-audit-<date>.md` with findings table, no code changes.
-- **Phase 2 — Triage** (collaborative with Briggsy). Walk findings table. Sort into: (a) real regressions to fix, (b) improvements to add, (c) stylistic debates. Stylistic debates get ATC vote before implementation.
-- **Phase 3 — Implement fixes** (1-3 sessions depending on finding volume). Atomic commits per component or cluster. Typecheck + tests after each cluster.
-- **Phase 4 — Verify** (1 session). Run all Playwright E2Es. Screenshot-compare where possible. Hands off to Priority #4 (real-device playtest) for on-hardware validation.
-
-**Estimated total:** 3-5 sessions.
-
-**Reference:** `/emil-design-eng` skill at `C:\Users\brigg\.claude\skills\emil-design-eng` has the complete philosophy + decision framework + required Review Format. Invoke at session start so the principles are primed in context.
+**Phase 4 verification** — 15/15 Playwright E2Es pass post-Phase 3. Real-device validation folds into priority #3 below.
 
 ---
 
@@ -129,6 +107,9 @@ Live 4-8 player test on iPad Pro 1366 + phones. Verify recent flows on real hard
 - `pnpm dev:launch` actually makes debugging easier.
 - **Emil design pass (2026-04-21) — verify on-phone:** SmartActionBox `:active` scale(0.97) actually lands during breathing states (.action / .drawIntense / urgent intercept); card-tap squeeze at 0.98 reads as tactile and not too subtle; hand→enlarge blur doesn't read as "stutter" on Safari mobile; sheets press feedback doesn't fight overscroll gestures.
 - **Emil design pass (2026-04-21) — verify on-TV:** briefing cascade (banner text → stamp → folder → player strip → idle ticker) reads as a coherent arc and not a list of competing entrances; the idle ticker doesn't become distracting once real COMMS events accumulate; Lobby disabled sheen is subtle enough to read as ambient and not gimmicky; status strip crossfade on turn handoff doesn't ghost under rapid state ticks.
+- **Emil audit Phase 3 (2026-04-23) — verify on-phone:** StagingArea enlarge overlay no longer stutters mid-scale (blur-mask bridge); DefusePlacement ± steppers feel tactile at `scale(0.95)` press; PendingPromptBanner crossfade on defuse → favor-response prompt swap during a single pause reads as a status line, not a CTA flash.
+- **Emil audit Phase 3 (2026-04-23) — verify on-TV:** NopeCountdownBar fade-in doesn't delay the intercept window perception; PendingPromptBanner 6px lift reads from couch distance; Lobby startButton hover lift works on desktop preview and doesn't stick on hybrid touch laptops; GameOver 80ms rankings stagger at 10 players feels like a cascade (not a drip).
+- **Emil audit Q verification (2026-04-23) — decide on-TV:** Nameplate flip duration 400ms vs 250ms (crisp brass click vs heavy coin flip); Nameplate perspective 1000px vs 600px (flat fade-swap vs proper physical 3D rotation). See `docs/reviews/emil-audit-2026-04-23.md` §3.5 + §7.
 
 ### 5. 8-player stress test
 Verify PlayerStrip layout at max count on real TV, COMMS scroll under event volume, nameplate legibility from couch distance.
@@ -164,6 +145,19 @@ Push commits, deploy to Cloudflare Pages (wrangler), open on actual TV with phon
 - **Pixel-diff regression** (~2h setup + ongoing baseline maintenance). Playwright `toHaveScreenshot()` with committed baselines. Requires `MotionConfig reducedMotion="always"` in test mode + fixed server RNG seed so baselines are deterministic. Defer until after Phase 5 lands — mid-rebuild baselines churn too fast.
 
 ## Landmines
+
+### New this session (Emil audit — 2026-04-23)
+
+- **Two new motion tokens live in `motion.ts` + `primitives.css`: `stamp` (duration, 340ms) and `overshoot` (easing, `[0.34, 1.56, 0.64, 1]`).** Single-consumer currently (StealReport stamp animation), but the sync test enforces lockstep — deleting one without the other breaks builds. `--motion-duration-stamp` is decorative and correctly zeros under prefers-reduced-motion; the StealReport `.stamp` rule's `animation: none` reduced-motion override is belt-and-suspenders.
+- **StealReport `.ackBtn` transition now consumes `--motion-duration-fast` + `--motion-ease-decelerate`.** If you re-add the `translateY(2px)` press depression without press scale, it'll read flat. The token swap landed 2026-04-23; don't revert to the hardcoded `0.12s ease` — it was explicitly flagged in the Emil audit (finding #6).
+- **PlayerStrip `.presence` pulse uses `--motion-duration-pulse-slow` + `--motion-ease-base`.** Consistent with every other ambient loop in the codebase. The 2.4s hardcoded was orphan-drift — now 2.5s tokenized. Imperceptible on an infinite loop; don't re-hardcode.
+- **`NopeCountdownBar` is wrapped in `AnimatePresence`.** The hook call order is safe (`useNopeCountdown` always runs; `isActive` is derived). The `barRef` attaches to `.fill` inside the `m.div` — imperative scaleX updates don't conflict with the parent's entry/exit scale, they're different elements. If you add more effects keyed on `isActive`, make sure they tolerate the ~150ms exit delay introduced by AnimatePresence.
+- **`PendingPromptBanner` is keyed on `${playerId}:${type}`.** `AnimatePresence mode="wait"` handles prompt-to-prompt swaps (e.g. defuse → favor in the same pause). If you change the key shape, verify a two-step prompt sequence still crossfades instead of reusing the node and snapping text mid-read.
+- **`StagingArea` enlarge overlay has the blur-mask bridge now.** Mirrors `Hand.tsx` enlarge. MinimalCard's container-query layout thresholds flip between scale 0.35 and 1; the 4px blur at endpoints masks the rejig. Don't exceed 6px — expensive on Safari mobile.
+- **DramaOverlay fadeout uses GSAP `power2.out`, NEVER `power2.in`.** Emil rule #1: UI exits use ease-out because the user is watching most closely at the START of the exit. `power2.in` was the original and got swapped 2026-04-23 per Emil audit finding #8. If future drama beats land, inherit this pattern.
+- **GameOver stagger is 80ms per row, NOT 120ms.** Play-again button delay tracks the new cadence (`0.8 + rankings.length * 0.08 + 0.3`). If you tune the stagger, update BOTH the ranking loop (`m.div.rank`) AND the play-again delay or the button will fire at the wrong moment.
+- **Lobby `.startButton:hover` is gated behind `@media (hover: hover) and (pointer: fine)`.** The letter-spacing transition + hover change were both removed — layout-triggering property that cost frames every step of the breathing `::after` pulse. If you want a typographic hover flourish on this button, find a GPU-safe alternative (e.g. color swap on the `::before` `// ` bracket prefix).
+- **DefusePlacement ± round buttons have `:active { scale(0.95) }`.** Deeper squeeze than the 0.97 default because small round buttons show less motion per unit-scale than text buttons. Still inside Emil's 0.95-0.98 subtle range. Don't go tighter than 0.93 — visible distortion on the border-radius and font.
 
 ### New this session (Emil review — 2026-04-21)
 

@@ -52,7 +52,54 @@ Commits in order: `639beec0` (tokens) → `21846469` (blotter retire) → `97689
 
 ---
 
-### 2. Regen the final 3 action-card illustrations (kick-off with Direct Order)
+### 2. ★ EMIL FULL-REPO AUDIT — polish every client component to Emil spec
+**Scope:** Every animated, interactive, or transitioned element in `src/client/**`. Phone + board. Shared components. Not server, not shared types, not tests.
+
+**Why now:** The desk redesign applied Emil principles top-down on the arena; the rest of the codebase was last touched in the Apr 21 Emil review which covered specific landmines (see §Landmines "Emil review — 2026-04-21") but wasn't a full sweep. Shipping card regen, playtest verification, or new features on top of unreviewed animations compounds polish debt. Briggsy's call on 2026-04-22: "let's get this right" before building more on top.
+
+**Methodology:** Per-component audit using Emil's Review Format (markdown table: `| Before | After | Why |` with one row per finding). Output goes to `docs/reviews/emil-audit-<yyyy-mm-dd>.md` so triage and fix sessions can reference concrete findings.
+
+**Checklist per component (from `/emil-design-eng` skill):**
+- Animation choices: transform STRINGS over shorthand `x`/`y`/`scale` (hardware-accel under WS-hot-path load)
+- Entry animations: never `scale(0)` — start from `scale(0.95)` + `opacity: 0`
+- Easing: custom curves only (base / emphasized / decelerate) — no default CSS easings, no `ease-in` on UI
+- Duration: ≤300ms on frequent UI; tooltips 125-200ms; dropdowns 150-250ms; modals 200-500ms
+- Transitions over keyframes for rapidly-triggered elements (interruptibility)
+- `transition: all` → specific properties only
+- `:active` scale(0.95-0.98) on every pressable element (with `animation: none` if breathing)
+- Hover gating: `@media (hover: hover) and (pointer: fine)` on every `:hover`
+- `transform-origin` on popovers → trigger location via Radix/BaseUI vars (not `center`); modals exempt
+- Stagger: 30-80ms between entering list items
+- Single-shadow elements where multi-shadow tabletop stack would read deeper
+- Missing clip-path reveal opportunities (hold-to-delete, image scroll-reveal, tab color transitions)
+- Missing blur-mask crossfades where container-query layout flips
+- `transform-style: preserve-3d` + perspective on any flip/coin/card animations
+- `backface-visibility: hidden` on 3D-rotated content
+- CSS individual transform properties (`rotate:`, `translate:`) for per-index resting states when motion animates `transform`
+- `prefers-reduced-motion` fallbacks on decorative motion; essential-duration for live-signal motion that must survive reduced-motion
+
+**Components in scope (rough inventory, verify at session start):**
+- **Board view:** Arena, NopeCountdownBar, PendingPromptBanner, Lobby, GameOver, DramaOverlay, CardFace, CardBack, the MotionProvider bootstrap
+- **Phone view:** All remaining sheets (Defuse, FutureRearrange, NameCard), JoinScreen, StealReport, FuturePeek, PlayerAlert, ErrorToast
+- **Shared:** MinimalCard, Hand (outer), PlayerIcon
+
+**Explicitly exclude (already Emil-reviewed):**
+- **Apr 21 Emil review landmines** (see §Landmines): Hand `.slot` outer, PlayerStrip `.tile`, SmartActionBox `:active` breathing states, case-banner cascade, DrawPile `.stack`+`.topCard`, MinimalCard `:active` scope, status-strip key pattern, Lobby disabled sheen.
+- **Desk redesign surfaces** (Emil-applied 2026-04-22): `BlotterContent`, `DossierFeed`, `Nameplate`, `DiscardFan` tabletop shadows, `DrawPile` `.topCard` shadows + `.countBadge`, desk-surface wood gradient.
+
+**Phase structure:**
+- **Phase 1 — Inventory + Audit** (~1 session). Grep-based inventory of every animated/transitioned element. Per-component Emil checklist. Output: `emil-audit-<date>.md` with findings table, no code changes.
+- **Phase 2 — Triage** (collaborative with Briggsy). Walk findings table. Sort into: (a) real regressions to fix, (b) improvements to add, (c) stylistic debates. Stylistic debates get ATC vote before implementation.
+- **Phase 3 — Implement fixes** (1-3 sessions depending on finding volume). Atomic commits per component or cluster. Typecheck + tests after each cluster.
+- **Phase 4 — Verify** (1 session). Run all Playwright E2Es. Screenshot-compare where possible. Hands off to Priority #4 (real-device playtest) for on-hardware validation.
+
+**Estimated total:** 3-5 sessions.
+
+**Reference:** `/emil-design-eng` skill at `C:\Users\brigg\.claude\skills\emil-design-eng` has the complete philosophy + decision framework + required Review Format. Invoke at session start so the principles are primed in context.
+
+---
+
+### 3. Regen the final 3 action-card illustrations (kick-off with Direct Order)
 **Burned, Direct Order, Intercepted are still the only action cards at original Apr-9 quality** — visible gap vs the rest of the deck now that the other 8 are elevated.
 
 **Direct Order — concept pitches ready for next-session kickoff:**
@@ -71,7 +118,7 @@ Commits in order: `639beec0` (tokens) → `21846469` (blotter retire) → `97689
 - **Critically eyeball** the temp PNG before presenting (lesson from the call-in-a-favor 29-iter grind: optimistic descriptions waste time — tell Briggsy what you actually see, not what you hope is there).
 - Process via `npx tsx scripts/process-assets.ts` once approved.
 
-### 3. Real-device playtest
+### 4. Real-device playtest
 Live 4-8 player test on iPad Pro 1366 + phones. Verify recent flows on real hardware:
 - Triple-steal deferred commit — cards return on cancel, nope window opens AFTER the name.
 - Favor-target banner + staging (no more sheet modal).
@@ -83,35 +130,35 @@ Live 4-8 player test on iPad Pro 1366 + phones. Verify recent flows on real hard
 - **Emil design pass (2026-04-21) — verify on-phone:** SmartActionBox `:active` scale(0.97) actually lands during breathing states (.action / .drawIntense / urgent intercept); card-tap squeeze at 0.98 reads as tactile and not too subtle; hand→enlarge blur doesn't read as "stutter" on Safari mobile; sheets press feedback doesn't fight overscroll gestures.
 - **Emil design pass (2026-04-21) — verify on-TV:** briefing cascade (banner text → stamp → folder → player strip → idle ticker) reads as a coherent arc and not a list of competing entrances; the idle ticker doesn't become distracting once real COMMS events accumulate; Lobby disabled sheen is subtle enough to read as ambient and not gimmicky; status strip crossfade on turn handoff doesn't ghost under rapid state ticks.
 
-### 4. 8-player stress test
+### 5. 8-player stress test
 Verify PlayerStrip layout at max count on real TV, COMMS scroll under event volume, nameplate legibility from couch distance.
 **Landing gate:** at 1366×1024, strip math leaves ~34px headroom with all 10 tiles; verify at 1920 and 4K that tiles grow proportionally.
 
-### 5. ~~Blotter content layout polish~~ [SUPERSEDED by Desk Redesign #1]
+### 6. ~~Blotter content layout polish~~ [SUPERSEDED by Desk Redesign #1]
 Options for the piles column: (a) vertically center the pile lockup, (b) scale the pile visual further, (c) decorative classified chrome (memo pad, paperclip). Briggsy's call at kickoff which direction feels right.
 
-### 6. Live mid-play state verification — `tests/e2e/arena-states.spec.ts`
+### 7. Live mid-play state verification — `tests/e2e/arena-states.spec.ts`
 Playwright script: 3-player game, drive the `window.__gameStore` dev hook to force each state, screenshot each. Target states: Nope window mid-countdown, DramaOverlay (BURNED → EXTRACTED, ELIMINATED, INTERCEPTED, WINS), Favor banner + staging, Triple-steal name-card sheet pre-commit and post-name, FuturePeek (read-only and rearrange). Output to `temp/arena-states/` for eyeball review. Each state is ~30 min to script; ~3-4 hours for the full set.
 
-### 7. Physical hardware verification
+### 8. Physical hardware verification
 Push commits, deploy to Cloudflare Pages (wrangler), open on actual TV with phone controllers.
 
-### 8. Extend PlayerAlert coverage (optional)
+### 9. Extend PlayerAlert coverage (optional)
 - **Reassign / Direct Order target** — no direct event type; victim only learns via `turn-started` with `turnsRemaining > 1`. Probably fine as-is because the target's phone sits dormant — when they come back, staging is lit and status reads "Your turn · 3 turns".
 - **Your card was intercepted** — optimistic snapback + board DramaOverlay already communicate this, but explicit phone toast would remove ambiguity. Skip until playtest reveals confusion.
 
-### 9. Tier 2 retheme cleanup (non-blocking)
+### 10. Tier 2 retheme cleanup (non-blocking)
 - `src/server/game/engine.ts` — any remaining `// EKs` / `'No EK in hand'` strings → Burned vocabulary.
 - `src/shared/constants.ts` — `EK_REVEAL_MS` → `BURNED_REVEAL_MS` (rename across all call sites).
 
-### 10. Execute Phase 5 — Verification & Acceptance
+### 11. Execute Phase 5 — Verification & Acceptance
 **`/ce:work docs/plans/css-foundation-rebuild/phase-5-verification-acceptance.md`**
 
-### 11. Optional polish follow-ups
+### 12. Optional polish follow-ups
 - **Brass studs on wood frame.** CSS pseudo-elements (small radial-gradient dots at regular intervals on `.woodTop/.woodBottom`).
 - **Remove unused `public/assets/arena/mahogany.png`.** Superseded by the 4-edge split.
 
-### 12. Optional test coverage expansion (deferred until visual layer stabilizes)
+### 13. Optional test coverage expansion (deferred until visual layer stabilizes)
 - **Card-drawn toast E2E** (~30 min). Extend Tier 1 spec: active phone taps `End turn · draw`, assert `PlayerAlert` renders `You drew {name}.`. Locks today's feature end-to-end.
 - **Agent-X combo matrix** (~15 min). Add explicit tests to `combo-validation.test.ts` for `3× Agent X`, `2× Agent X + operative`, `Agent X + 2 matching operatives`. Belt-and-suspenders over the existing generic rule.
 - **Pixel-diff regression** (~2h setup + ongoing baseline maintenance). Playwright `toHaveScreenshot()` with committed baselines. Requires `MotionConfig reducedMotion="always"` in test mode + fixed server RNG seed so baselines are deterministic. Defer until after Phase 5 lands — mid-rebuild baselines churn too fast.

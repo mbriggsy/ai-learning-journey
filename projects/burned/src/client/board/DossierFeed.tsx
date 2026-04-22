@@ -1,13 +1,51 @@
-import { useEffect, useRef } from 'react'
+import { useEffect, useRef, useState } from 'react'
 import { m, AnimatePresence } from 'motion/react'
 import { useEventFeed } from '@client/shared/hooks/useEventFeed'
 import { formatEvent } from './events'
 import { announce } from '@client/shared/announce'
-import { MOTION_DURATIONS, MOTION_EASINGS } from '@client/shared/tokens/motion'
+import { MOTION, MOTION_DURATIONS, MOTION_EASINGS } from '@client/shared/tokens/motion'
 import type { BoardPlayer } from '@shared/protocol'
 import styles from './DossierFeed.module.css'
 
 const MAX_VISIBLE_STRIPS = 8
+
+// Radio-channel ambient chatter — rotates slowly whether events are landing
+// or not, so the dossier always reads as a LIVE intercept feed rather than
+// a closed folder. Pairs with the blinking cursor on the ticker to sell
+// "channel open, transmitter warm" even during dead air.
+const IDLE_LINES = [
+  'CHANNEL OPEN',
+  'STANDING BY',
+  'AWAITING TRANSMISSION',
+  'INTERCEPT CLEAR',
+] as const
+
+function ChannelTicker() {
+  const [idx, setIdx] = useState(0)
+  useEffect(() => {
+    const id = setInterval(() => {
+      setIdx(i => (i + 1) % IDLE_LINES.length)
+    }, 2500)
+    return () => clearInterval(id)
+  }, [])
+  return (
+    <div className={styles.ticker} aria-hidden="true">
+      <AnimatePresence mode="wait">
+        <m.span
+          key={IDLE_LINES[idx]}
+          className={styles.tickerLine}
+          initial={{ opacity: 0, transform: 'translateY(3px)' }}
+          animate={{ opacity: 1, transform: 'translateY(0px)' }}
+          exit={{ opacity: 0, transform: 'translateY(-3px)' }}
+          transition={MOTION.quickFade}
+        >
+          // {IDLE_LINES[idx]}
+        </m.span>
+      </AnimatePresence>
+      <span className={styles.tickerCursor}>_</span>
+    </div>
+  )
+}
 
 interface Props {
   players: readonly BoardPlayer[]
@@ -148,6 +186,8 @@ export function DossierFeed({ players }: Props) {
           })}
         </AnimatePresence>
       </div>
+
+      <ChannelTicker />
     </div>
   )
 }

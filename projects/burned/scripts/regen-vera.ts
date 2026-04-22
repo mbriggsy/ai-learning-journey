@@ -1,5 +1,8 @@
 /**
- * Regenerate Vera Khan — tiny bit more voluptuous, everything else identical.
+ * Regenerate Vera Khan — re-race to Black (Lana Kane vocabulary from Archer).
+ * All other features identical to the 2026-04-23 archived version: pose,
+ * turtleneck, hair length, pistol, Saul Bass background.
+ *
  * Run: set -a && source .env && set +a && npx tsx scripts/regen-vera.ts
  *
  * Output: temp/roster/vera-khan.png (review before moving to public/).
@@ -23,9 +26,16 @@ const NO_TEXT = 'the image contains no text and no writing';
 const PROMPT =
   STYLE_PREFIX +
   'cartoon illustration in the style of the TV show Archer, flat color animation cel style, ' +
-  'portrait of a stunningly beautiful tall woman secret agent in her early 30s, ' +
-  'long dark hair flowing over shoulders, striking piercing dark eyes, full lips, ' +
-  'wearing a fitted black tactical turtleneck that shows off a fuller bust, narrow slim waist and narrow slim hips, pin-up top-heavy hourglass silhouette, ' +
+  'portrait of a stunningly beautiful tall Black woman secret agent in her early 30s, ' +
+  'warm medium brown skin complexion, ' +
+  'dark hair pulled back into a sleek high ponytail with curtain bangs framing the face, ' +
+  'striking piercing dark eyes, full lips, ' +
+  'medium-sized silver hoop earrings, ' +
+  'wearing a cream-colored turtleneck sweater dress that ends at mid-thigh, ' +
+  'paired with black thigh-high boots reaching up to just below the hem of the dress, ' +
+  'narrow strip of warm brown skin visible between the dress hem and the boot tops, ' +
+  'cartoon exaggerated pin-up silhouette with a voluptuous top-heavy bust, dramatically cinched narrow waist, slim narrow hips and slender legs, the dress hugs the body curves, ' +
+  'humanly unrealistic hourglass proportions in the Archer cartoon tradition, ' +
   'one hand on hip the other holding a pistol pointed down, ' +
   'expression of withering contempt mixed with effortless sex appeal, ' +
   'she is clearly the most dangerous and most attractive person in any room, ' +
@@ -44,7 +54,7 @@ async function main(): Promise<void> {
   await mkdir(OUTPUT_DIR, { recursive: true });
   const ai = new GoogleGenAI({ apiKey });
 
-  console.log(`\n=== Vera Khan regen (tiny bit more voluptuous) ===`);
+  console.log(`\n=== Vera Khan regen (Lana iter 9 — cream sweater dress + thigh boots + ponytail) ===`);
   console.log(`Model: ${MODEL}`);
   console.log(`Output: ${OUTPUT_DIR}/vera-khan.png\n`);
 

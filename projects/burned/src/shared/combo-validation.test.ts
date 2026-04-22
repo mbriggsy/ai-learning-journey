@@ -114,3 +114,52 @@ describe('validateCombo', () => {
     expect(result).toEqual({ valid: false, reason: 'invalid-count' })
   })
 })
+
+describe('validateCombo — Agent X triple matrix', () => {
+  const handWithThreeWilds: CardInstance[] = [
+    card('x1', 'agent-x'), card('x2', 'agent-x'), card('x3', 'agent-x'),
+    card('op1', 'dash-barlowe'), card('op2', 'dash-barlowe'),
+    card('act1', 'go-dark'),
+  ]
+
+  it('validates 3× Agent X as triple (matchType = agent-x)', () => {
+    const result = validateCombo(
+      [card('x1', 'agent-x'), card('x2', 'agent-x'), card('x3', 'agent-x')],
+      handWithThreeWilds,
+    )
+    expect(result.valid).toBe(true)
+    if (result.valid && result.playType.kind === 'triple') {
+      expect(result.playType.matchType).toBe('agent-x')
+    }
+  })
+
+  it('validates 2× Agent X + matching operative as triple (matchType = operative)', () => {
+    const result = validateCombo(
+      [card('x1', 'agent-x'), card('x2', 'agent-x'), card('op1', 'dash-barlowe')],
+      handWithThreeWilds,
+    )
+    expect(result.valid).toBe(true)
+    if (result.valid && result.playType.kind === 'triple') {
+      expect(result.playType.matchType).toBe('dash-barlowe')
+    }
+  })
+
+  it('validates 1× Agent X + 2 matching operatives as triple (matchType = operative)', () => {
+    const result = validateCombo(
+      [card('x1', 'agent-x'), card('op1', 'dash-barlowe'), card('op2', 'dash-barlowe')],
+      handWithThreeWilds,
+    )
+    expect(result.valid).toBe(true)
+    if (result.valid && result.playType.kind === 'triple') {
+      expect(result.playType.matchType).toBe('dash-barlowe')
+    }
+  })
+
+  it('rejects 2× Agent X + non-operative action card', () => {
+    const result = validateCombo(
+      [card('x1', 'agent-x'), card('x2', 'agent-x'), card('act1', 'go-dark')],
+      handWithThreeWilds,
+    )
+    expect(result).toEqual({ valid: false, reason: 'mismatched-types' })
+  })
+})

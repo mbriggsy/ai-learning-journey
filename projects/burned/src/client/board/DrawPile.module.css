@@ -99,8 +99,15 @@
     center center;
   background-repeat: no-repeat, no-repeat, no-repeat;
   border: 1.5px solid color-mix(in oklab, var(--color-accent-burned) 38%, transparent);
+  /* Phase 2: three-layer directional tabletop shadow sells depth on wood.
+     Close contact (2px) grounds the card edge, mid (8px) gives volume,
+     far (20px) reads as the soft lamp-cast fall-off. Burned glow layers
+     stay — that's the "dangerous file" thematic aura, separate from the
+     physical shadow job. */
   box-shadow:
-    var(--shadow-lg),
+    0 2px 4px color-mix(in oklab, var(--color-charcoal-1) 55%, transparent),
+    0 8px 16px color-mix(in oklab, var(--color-charcoal-1) 45%, transparent),
+    0 20px 36px color-mix(in oklab, var(--color-charcoal-1) 30%, transparent),
     0 0 30px color-mix(in oklab, var(--color-accent-burned) 14%, transparent),
     0 0 60px color-mix(in oklab, var(--color-accent-burned) 7%, transparent);
 }
@@ -174,13 +181,14 @@
   font-variant-numeric: tabular-nums;
   font-weight: 700;
   font-size: var(--text-display);
-  /* Letterpress into the cream blotter — dark mahogany numerals with a cream
-     highlight just below and a charcoal shadow just above, reading as if the
-     count were die-stamped into the paper. */
-  color: color-mix(in oklab, var(--color-ochre-3) 92%, var(--color-charcoal-1));
+  /* Phase 2: stenciled brass numerals on the mahogany desktop. Warm ochre
+     fill with a dark drop under the baseline reads as raised metal catching
+     the desk-lamp cast. Inverse letterpress — light fill, dark shadow
+     below — versus the previous cream-paper die-stamp. */
+  color: color-mix(in oklab, var(--color-ochre-11) 88%, var(--color-cream-12));
   text-shadow:
-    0 1px 0 color-mix(in oklab, var(--color-cream-12) 60%, transparent),
-    0 -1px 0 color-mix(in oklab, var(--color-charcoal-1) 30%, transparent);
+    0 1px 0 color-mix(in oklab, var(--color-charcoal-1) 65%, transparent),
+    0 2px 6px color-mix(in oklab, var(--color-charcoal-1) 50%, transparent);
   letter-spacing: 0.05em;
 }
 

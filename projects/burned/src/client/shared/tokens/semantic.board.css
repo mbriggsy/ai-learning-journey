@@ -197,11 +197,15 @@
     --color-wood-grain-rule:    color-mix(in oklab, var(--color-ochre-5) 18%, transparent);
 
     /* Manila dossier folder — warm cream-tan paper stock. Phase 3 target.
-       Tab reuses cordovan-8 so the wine accent ties to the cordovan family
-       already in the burned-fire + stamp vocabulary. */
+       Tab is a darker-saturated variant of the arena's existing brand red
+       (accent-burned) so it unifies with the CASE BANNER "BURNED" logo and
+       the CLASSIFIED stamp rather than introducing a competing red hue.
+       Plan originally specified cordovan-8 but that's a purple-leaning wine,
+       and the rest of the arena speaks burned-fire (orange-red). One red
+       family per frame — this is the family. */
     --color-manila-face:        #c9b085;
     --color-manila-shadow:      #9d8660;
-    --color-manila-tab:         var(--color-cordovan-8);
+    --color-manila-tab:         color-mix(in oklab, var(--color-accent-burned) 82%, var(--color-charcoal-1));
 
     /* Brass nameplate — Phase 4 target. Engraved codename on beveled metal.
        highlight / mid / shadow simulate the bevel via gradient stops;

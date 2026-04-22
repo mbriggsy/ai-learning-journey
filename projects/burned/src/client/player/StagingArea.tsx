@@ -160,9 +160,16 @@ export function StagingArea({
           >
             <m.div
               className={handStyles.enlargeCard}
-              initial={{ transform: 'translateY(-80px) scale(0.35)' }}
-              animate={{ transform: 'translateY(0px) scale(1)' }}
-              exit={{ transform: 'translateY(-80px) scale(0.35)' }}
+              // Blur-mask during the scale transition — MinimalCard's
+              // container-query layout flips thresholds as it grows from
+              // 0.35 to 1, so content rejiggers mid-animation. A 4px blur
+              // at the endpoints smooths the swap into a single perceived
+              // motion instead of two layouts fighting mid-flight. Mirrors
+              // the pattern in Hand.tsx. Keep under 6px — blur is expensive
+              // on Safari mobile.
+              initial={{ transform: 'translateY(-80px) scale(0.35)', filter: 'blur(4px)' }}
+              animate={{ transform: 'translateY(0px) scale(1)', filter: 'blur(0px)' }}
+              exit={{ transform: 'translateY(-80px) scale(0.35)', filter: 'blur(4px)' }}
               transition={MOTION.snappy}
             >
               <MinimalCard type={stagedCards.find(c => c.id === enlargedId)!.type} />

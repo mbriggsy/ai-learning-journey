@@ -16,7 +16,8 @@
     "test:watch": "vitest",
     "test:e2e": "playwright test",
     "lint": "eslint src/ && bash scripts/lint-css.sh",
-    "preview": "vite preview"
+    "preview": "vite preview",
+    "verify:bundle": "tsx scripts/verify-prod-bundle.ts"
   },
   "keywords": [],
   "author": "",

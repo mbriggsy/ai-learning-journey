@@ -4,7 +4,16 @@ import type { BoardPlayer } from '@shared/protocol'
 import { MOTION } from '@client/shared/tokens/motion'
 import styles from './PlayerStrip.module.css'
 
-const NAME_MAX = 7
+// Name is truncated only as a LAST resort (CSS `text-overflow: ellipsis`
+// in the stylesheet handles the normal case). 12 is the server-enforced
+// max length for a name (room.ts NAME_PATTERN), so 12 + 1 cushion means
+// no legal name is ever JS-truncated — CSS owns any truncation when the
+// tile physically can't fit the string.
+//
+// Previous value of 7 was too aggressive: at 1920vw a 10-tile strip
+// has ~150px per tile, which fits 12 chars easily — yet "DASH B…",
+// "VERA K…" were showing. E2E audit 2026-04-23 C-08.
+const NAME_MAX = 13
 
 function truncate(name: string): string {
   return name.length > NAME_MAX ? `${name.slice(0, NAME_MAX - 1)}…` : name

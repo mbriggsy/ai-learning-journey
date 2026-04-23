@@ -118,16 +118,22 @@
   font-weight: 700;
   /* Explicit smaller scale — --text-body renders ~20px at 1366 which is too
      big for 10-player strip fit. This clamp gives 12→18px across 1280→3840,
-     so 10 tiles at the 7-char cap always fit one row without overflow. */
+     so 10 tiles at 12-char names still fit comfortably on one row. */
   font-size: clamp(12px, calc(12px + (100vw - 1280px) * (6 / 2560)), 18px);
   line-height: 1;
   letter-spacing: 0.04em;
   text-transform: uppercase;
   color: color-mix(in oklab, var(--color-cream-12) 94%, transparent);
   white-space: nowrap;
-  /* No overflow clipping — truncation in the TSX caps name to 7 chars, and
-     tile auto-sizing honors the name's natural width at every player count. */
-  flex: 0 0 auto;
+  /* TSX NAME_MAX = 13 is an absolute safety bound. CSS ellipsis handles the
+     normal case — if a tile physically can't fit the name at narrow
+     viewports, truncate gracefully instead of letting the strip overflow.
+     E2E audit 2026-04-23 C-08 fixed the old "NAME_MAX = 7" which was
+     truncating at 1920 where space was abundant. */
+  overflow: hidden;
+  text-overflow: ellipsis;
+  min-width: 0;
+  flex: 0 1 auto;
 }
 
 .cards {

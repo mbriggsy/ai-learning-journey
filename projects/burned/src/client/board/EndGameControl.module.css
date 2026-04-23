@@ -1,0 +1,207 @@
+/* EndGameControl.module.css
+   Board rage-quit button + confirm modal. Top-right corner, subtle but
+   findable — the emergency brake on a stalled room. Styled in Pendleton
+   Agency vocabulary: classified red-stamp modal, Stand Down / End It CTAs.
+*/
+
+@layer components {
+
+/* --- Trigger button — top-right of the board --- */
+
+.trigger {
+  position: fixed;
+  top: var(--space-5);
+  right: var(--space-5);
+  z-index: 40; /* above wood frame chrome, below DramaOverlay (100+) */
+
+  display: inline-flex;
+  align-items: center;
+  gap: var(--space-2);
+  padding: 6px 12px 7px;
+  border: 1px solid color-mix(in oklab, var(--color-fg-secondary) 38%, transparent);
+  border-radius: var(--radius-sm);
+  background: color-mix(in oklab, var(--color-charcoal-1) 72%, transparent);
+  color: color-mix(in oklab, var(--color-fg-secondary) 78%, transparent);
+
+  font-family: var(--font-mono);
+  font-size: 11px;
+  font-weight: 700;
+  letter-spacing: 0.22em;
+  text-transform: uppercase;
+
+  cursor: pointer;
+  transition:
+    background var(--motion-duration-fast) var(--motion-ease-base),
+    color var(--motion-duration-fast) var(--motion-ease-base),
+    border-color var(--motion-duration-fast) var(--motion-ease-base);
+}
+
+@media (hover: hover) and (pointer: fine) {
+  .trigger:hover {
+    background: color-mix(in oklab, var(--color-accent-burned) 18%, var(--color-charcoal-1));
+    color: var(--color-cream-12);
+    border-color: color-mix(in oklab, var(--color-accent-burned) 55%, transparent);
+  }
+}
+
+.trigger:active {
+  transform: scale(0.97);
+}
+
+.trigger:focus-visible {
+  outline: 2px solid var(--color-accent-burned);
+  outline-offset: 2px;
+}
+
+.triggerGlyph {
+  display: inline-block;
+  width: 10px;
+  height: 10px;
+  line-height: 10px;
+  text-align: center;
+  font-weight: 900;
+  font-size: 12px;
+  opacity: 0.75;
+}
+
+.triggerLabel {
+  line-height: 1;
+}
+
+/* --- Backdrop + modal --- */
+
+.backdrop {
+  position: fixed;
+  inset: 0;
+  z-index: 90;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: color-mix(in oklab, var(--color-charcoal-1) 70%, transparent);
+  backdrop-filter: blur(6px);
+  -webkit-backdrop-filter: blur(6px);
+  padding: var(--space-6);
+}
+
+.modal {
+  position: relative;
+  width: min(540px, 92vw);
+  padding: var(--space-7) var(--space-7) var(--space-6);
+  border-radius: var(--radius-lg);
+  border: 1px solid color-mix(in oklab, var(--color-cream-12) 22%, transparent);
+  background:
+    linear-gradient(
+      180deg,
+      color-mix(in oklab, var(--color-paper-face) 96%, transparent) 0%,
+      color-mix(in oklab, var(--color-paper-face) 92%, var(--color-charcoal-1)) 100%
+    );
+  color: var(--color-charcoal-1);
+  box-shadow:
+    0 2px 0 color-mix(in oklab, var(--color-charcoal-1) 50%, transparent),
+    0 24px 60px color-mix(in oklab, var(--color-charcoal-1) 65%, transparent);
+  text-align: left;
+}
+
+/* Classified red stamp — top-right corner of the modal, tilted */
+.modalStamp {
+  position: absolute;
+  top: 18px;
+  right: 20px;
+  padding: 4px 12px 5px;
+  border: 2px solid var(--color-accent-burned);
+  border-radius: 2px;
+  color: var(--color-accent-burned);
+  font-family: var(--font-mono);
+  font-size: 10px;
+  font-weight: 900;
+  letter-spacing: 0.3em;
+  text-transform: uppercase;
+  transform: rotate(8deg);
+  opacity: 0.85;
+  pointer-events: none;
+}
+
+.modalTitle {
+  margin: 0 0 var(--space-4);
+  font-family: var(--font-display, var(--font-body));
+  font-weight: 900;
+  font-size: clamp(24px, 2.4vw, 36px);
+  letter-spacing: -0.01em;
+  line-height: 1.1;
+  text-transform: uppercase;
+  color: var(--color-accent-burned);
+}
+
+.modalBody {
+  margin: 0 0 var(--space-6);
+  font-family: var(--font-body);
+  font-size: clamp(14px, 1vw, 17px);
+  line-height: 1.55;
+  color: color-mix(in oklab, var(--color-charcoal-1) 85%, transparent);
+  max-width: 48ch;
+}
+
+.modalActions {
+  display: flex;
+  justify-content: flex-end;
+  gap: var(--space-3);
+}
+
+/* Shared button base — applied via class composition */
+.cancelBtn,
+.confirmBtn {
+  appearance: none;
+  padding: 10px 22px;
+  border-radius: var(--radius-sm);
+  font-family: var(--font-mono);
+  font-size: 12px;
+  font-weight: 800;
+  letter-spacing: 0.2em;
+  text-transform: uppercase;
+  cursor: pointer;
+  transition:
+    background var(--motion-duration-fast) var(--motion-ease-base),
+    color var(--motion-duration-fast) var(--motion-ease-base),
+    border-color var(--motion-duration-fast) var(--motion-ease-base),
+    transform var(--motion-duration-fast) var(--motion-ease-base);
+}
+
+.cancelBtn {
+  background: transparent;
+  border: 1px solid color-mix(in oklab, var(--color-charcoal-1) 35%, transparent);
+  color: color-mix(in oklab, var(--color-charcoal-1) 75%, transparent);
+}
+
+@media (hover: hover) and (pointer: fine) {
+  .cancelBtn:hover {
+    background: color-mix(in oklab, var(--color-charcoal-1) 8%, transparent);
+    color: var(--color-charcoal-1);
+    border-color: color-mix(in oklab, var(--color-charcoal-1) 55%, transparent);
+  }
+}
+
+.confirmBtn {
+  background: var(--color-accent-burned);
+  border: 1px solid color-mix(in oklab, var(--color-accent-burned) 70%, var(--color-charcoal-1));
+  color: var(--color-cream-12);
+  box-shadow: 0 2px 0 color-mix(in oklab, var(--color-accent-burned) 50%, var(--color-charcoal-1));
+}
+
+@media (hover: hover) and (pointer: fine) {
+  .confirmBtn:hover {
+    background: color-mix(in oklab, var(--color-accent-burned) 88%, var(--color-charcoal-1));
+  }
+}
+
+.cancelBtn:active,
+.confirmBtn:active {
+  transform: scale(0.97);
+}
+
+.cancelBtn:focus-visible,
+.confirmBtn:focus-visible {
+  outline: 2px solid var(--color-accent-burned);
+  outline-offset: 2px;
+}
+
+} /* @layer components */

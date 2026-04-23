@@ -15,11 +15,15 @@ interface Subject {
    *  on prompt-type change, but NOT on turns-remaining count ticks (those
    *  update in place in the subtext without re-triggering the flip).
    *  Standby is its own key so the first turn-started event flips the
-   *  plate from quiet to active instead of hard-swapping the DOM. */
+   *  plate from quiet to active instead of hard-swapping the DOM.
+   *  Offline gets its own key suffix so the plate re-flips when the
+   *  current subject goes off/online mid-turn — room sees the state
+   *  change, not a silent swap. */
   readonly key: string
   readonly name: string
   readonly subtext: string
   readonly standby: boolean
+  readonly offline: boolean
 }
 
 const PROMPT_SUBTEXT: Record<PendingPromptView['type'], string> = {
@@ -34,9 +38,16 @@ const STANDBY_SUBJECT: Subject = {
   name:    '.',
   subtext: 'Standby',
   standby: true,
+  offline: false,
 }
 
-function resolveSubject(
+// Offline overrides the prompt/turn subtext entirely. Room needs to see
+// "game is paused because this player went dark" — not what they were
+// supposed to be doing. One meaning, clearly. Color-blind-safe: the
+// word 'Comms Down' carries the signal, the red tint is accent only.
+const OFFLINE_SUBTEXT = 'Comms Down'
+
+export function resolveSubject(
   currentTurn: Props['currentTurn'],
   prompt: Props['prompt'],
   players: readonly BoardPlayer[],
@@ -44,25 +55,29 @@ function resolveSubject(
   if (prompt) {
     const p = players.find(x => x.id === prompt.playerId)
     if (!p) return STANDBY_SUBJECT
+    const offline = !p.isConnected
     return {
-      key:     `prompt:${prompt.playerId}:${prompt.type}`,
+      key:     `prompt:${prompt.playerId}:${prompt.type}${offline ? ':offline' : ''}`,
       name:    p.name,
-      subtext: PROMPT_SUBTEXT[prompt.type],
+      subtext: offline ? OFFLINE_SUBTEXT : PROMPT_SUBTEXT[prompt.type],
       standby: false,
+      offline,
     }
   }
 
   if (currentTurn) {
     const p = players.find(x => x.id === currentTurn.currentPlayerId)
     if (!p) return STANDBY_SUBJECT
+    const offline = !p.isConnected
     const extra = currentTurn.turnsRemaining > 1
       ? ` · ${currentTurn.turnsRemaining} Turns`
       : ''
     return {
-      key:     `turn:${currentTurn.currentPlayerId}`,
+      key:     `turn:${currentTurn.currentPlayerId}${offline ? ':offline' : ''}`,
       name:    p.name,
-      subtext: `On Deck${extra}`,
+      subtext: offline ? OFFLINE_SUBTEXT : `On Deck${extra}`,
       standby: false,
+      offline,
     }
   }
 
@@ -82,9 +97,10 @@ function resolveSubject(
  */
 export function Nameplate({ players, currentTurn, prompt }: Props) {
   const subject = resolveSubject(currentTurn, prompt, players)
-  const wrapperClass = subject.standby
-    ? `${styles.nameplate} ${styles.nameplateStandby}`
-    : styles.nameplate
+  const classes = [styles.nameplate]
+  if (subject.standby) classes.push(styles.nameplateStandby)
+  if (subject.offline) classes.push(styles.nameplateOffline)
+  const wrapperClass = classes.join(' ')
 
   return (
     <div className={wrapperClass} aria-live="polite" aria-atomic="true">
@@ -98,6 +114,7 @@ export function Nameplate({ players, currentTurn, prompt }: Props) {
             // the rotateY exit — without this, the parent className flip
             // briefly reveals the "." during handoff.
             data-standby={subject.standby ? 'true' : undefined}
+            data-offline={subject.offline ? 'true' : undefined}
             // Coin-flip: enter from +90° (edge-on, rotating in), exit to
             // -90° (rotating out the same way). Transform string (not
             // shorthand rotateY) so the animation stays hardware-accel.

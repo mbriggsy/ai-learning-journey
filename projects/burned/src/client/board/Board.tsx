@@ -149,6 +149,13 @@ export function Board() {
     send({ type: 'return-to-lobby', payload: {} })
   }
 
+  // End Game nukes an in-progress game back to lobby — same wire as
+  // play-again, different user intent. Used when the party wants to bail
+  // on a stalled or abandoned room (ghost player, bad deal, whatever).
+  const handleEndGame = () => {
+    send({ type: 'return-to-lobby', payload: {} })
+  }
+
   // Portrait check wins over everything — do NOT render broken layout.
   // Protocol mismatch still needs to show because it's a different class
   // of "you can't play right now" (client needs refresh).
@@ -197,7 +204,7 @@ export function Board() {
 
   return (
     <Fragment key="playing">
-      <GameTable />
+      <GameTable onEndGame={handleEndGame} />
       <DramaOverlay />
       <BoardErrorBanner error={lastError} />
     </Fragment>

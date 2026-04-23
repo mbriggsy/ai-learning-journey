@@ -147,4 +147,58 @@
   visibility: hidden; /* preserves layout height; no name to engrave */
 }
 
+/* Offline — the prompted/active player's phone has dropped its socket.
+   Word 'Comms Down' in the subtext carries the meaning (color-blind safe).
+   The red pulse is accent only: a subtle warm glow under the brass, plus
+   a shifted subtext color so 'Comms Down' reads as warning, not status. */
+.nameplateOffline .plate {
+  box-shadow:
+    inset 0 1px 0 color-mix(in oklab, var(--color-cream-12) 42%, transparent),
+    inset 0 -1px 0 color-mix(in oklab, var(--color-charcoal-1) 70%, transparent),
+    inset 1px 0 0 color-mix(in oklab, var(--color-brass-highlight) 55%, transparent),
+    inset -1px 0 0 color-mix(in oklab, var(--color-brass-shadow) 70%, transparent),
+    0 2px 3px color-mix(in oklab, var(--color-charcoal-1) 55%, transparent),
+    0 6px 14px color-mix(in oklab, var(--color-charcoal-1) 30%, transparent),
+    /* warm warning halo — slow pulse so it reads as alarm, not decoration */
+    0 0 22px color-mix(in oklab, var(--color-accent-burned) 45%, transparent);
+  animation: offlinePulse 2.4s var(--motion-ease-base) infinite;
+}
+
+.plateContent[data-offline='true'] .subtext {
+  color: var(--color-accent-burned);
+  opacity: 1;
+  text-shadow:
+    0 1px 0 color-mix(in oklab, var(--color-brass-highlight) 40%, transparent),
+    0 0 6px color-mix(in oklab, var(--color-accent-burned) 55%, transparent);
+}
+
+@keyframes offlinePulse {
+  0%, 100% {
+    box-shadow:
+      inset 0 1px 0 color-mix(in oklab, var(--color-cream-12) 42%, transparent),
+      inset 0 -1px 0 color-mix(in oklab, var(--color-charcoal-1) 70%, transparent),
+      inset 1px 0 0 color-mix(in oklab, var(--color-brass-highlight) 55%, transparent),
+      inset -1px 0 0 color-mix(in oklab, var(--color-brass-shadow) 70%, transparent),
+      0 2px 3px color-mix(in oklab, var(--color-charcoal-1) 55%, transparent),
+      0 6px 14px color-mix(in oklab, var(--color-charcoal-1) 30%, transparent),
+      0 0 18px color-mix(in oklab, var(--color-accent-burned) 30%, transparent);
+  }
+  50% {
+    box-shadow:
+      inset 0 1px 0 color-mix(in oklab, var(--color-cream-12) 42%, transparent),
+      inset 0 -1px 0 color-mix(in oklab, var(--color-charcoal-1) 70%, transparent),
+      inset 1px 0 0 color-mix(in oklab, var(--color-brass-highlight) 55%, transparent),
+      inset -1px 0 0 color-mix(in oklab, var(--color-brass-shadow) 70%, transparent),
+      0 2px 3px color-mix(in oklab, var(--color-charcoal-1) 55%, transparent),
+      0 6px 14px color-mix(in oklab, var(--color-charcoal-1) 30%, transparent),
+      0 0 28px color-mix(in oklab, var(--color-accent-burned) 60%, transparent);
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .nameplateOffline .plate {
+    animation: none;
+  }
+}
+
 } /* @layer components */

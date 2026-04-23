@@ -6,6 +6,13 @@ import type { ClientAction } from '@shared/actions'
 // --- Wire size measurement ---
 
 /**
+ * The WS message byte cap. Keep in lockstep with the constant in room.ts —
+ * room.ts cannot export it (Workers entry treats named exports as
+ * handlers), so both files declare it and tests read from here.
+ */
+export const MAX_MESSAGE_BYTES = 4096
+
+/**
  * Measure the UTF-8 byte length of a WebSocket text frame.
  *
  * `String.length` counts UTF-16 code units, which lets a client bypass a
@@ -14,7 +21,8 @@ import type { ClientAction } from '@shared/actions'
  * ~16KB on the wire and previously slipped past the cap.
  *
  * Lives in validation.ts (not room.ts) because Vitest-Node can't import
- * partyserver transitively — this must be testable in isolation.
+ * partyserver transitively — this must be testable in isolation, and
+ * room.ts is the Workers entry where named exports are forbidden.
  */
 export function messageByteLength(message: string): number {
   return new TextEncoder().encode(message).byteLength

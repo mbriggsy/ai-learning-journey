@@ -1,5 +1,142 @@
 # BURNED — TODO
 
+## ⚠️ MORNING BRIEFING — overnight E2E audit + remediation (2026-04-24)
+
+**Morning, Briggsy. Went deep last night per your "we want gasps" directive.**
+
+### What happened
+
+Spun up 5 parallel investigation agents covering game rules fidelity, disconnect / session,
+visual fidelity via Playwright across 10 viewports, client input abuse / race conditions,
+and WS-boundary validation. **87 findings, 17 P0s.** Full issue list at
+`docs/testing/E2E-ISSUE-LIST.md`, source agent reports at `temp/audit/*.md`, screenshots
+at `temp/audit/screenshots/*` (65 files).
+
+Remediated 25 issues in atomic commits. Test baseline lifted 371 → 399. All typecheck clean.
+Playwright E2E unchanged at 15/15. Commits local, nothing pushed — your call in the morning.
+
+### What shipped (25 commits, all on `main`, all local)
+
+**11 P0 fixes** (in commit order):
+
+| Commit | Finding | One-line |
+|---|---|---|
+| `35e87dd9` | E-01 | `card-drawn.cardType` stripped from non-drawer projections — privacy leak gone |
+| `bf08fa04` | E-02 | WS message cap measured in UTF-8 bytes, not UTF-16 chars — 4× DoS bypass gone |
+| `adf26d46` | E-03 | `scripts/verify-prod-bundle.ts` greps dist/ for `__gameStore` — regression guard |
+| `e4b40101` | C-05 | `formatEvent` unknown events → `null`, not event object — crash loop gone |
+| `bc081172` | A-01 | Server rejects single Intercepted upfront — bypass path can't burn the card |
+| `b672e2a1` | C-02 | JoinScreen "DASH BARLOWE" no longer truncates at 12-char max on any phone |
+| `5c458dde` | C-06 | Staged operative miniature hides name below 114px container — no mid-glyph cut |
+| `1e40c086` | C-01 | 10-player lobby fits on 1080vh TV — 2-col grid, CLEARED HOT visible |
+| `50c23077` | C-03 | Portrait-orientation board → themed "ROTATE DEVICE" splash |
+| `7cccfffe` | C-04 | ErrorBoundary fallback is now TV-legible Pendleton comms vocabulary |
+| `c0a12abf` | D-01 | Intercept button optimistic lock — no more panic-tap burns all Nopes |
+
+**14 P1 fixes** (abridged):
+
+- `1db5ddab` — drama holdMs 800/1000/1200 → 1400/1600/1500 (couch legibility) + rank `#undefined` guard
+- `5d424d49` — PlayerStrip NAME_MAX 7 → 13 + CSS ellipsis fallback
+- `dd446945` — Draw button optimistic in-flight lock (no STALE_STATE error spam)
+- `0af60680` — StealReport 350ms debounce + NameCard Escape-to-cancel
+- `a9a8e373` — `.activeTag` moved up 6px + `.turns` margin-left 4px (no pill collision)
+- `19ce54e0` — Zod cluster: `.strict()` on every schema, NAME_PATTERN in reclaim path, name regex at WS, stateVersion max 1M
+- `d0b5bbcb` — ClientMessage exhaustive default + `consecutivePersistFailures` reset on lobby return
+- `9a0c3f20` — 5 new regression tests: elim-mid-attack, pair-Nope cleanup, triple cancel-reselect, Favor post-give Nope rejection, pair of Intercepteds
+- `23cd64c9` — JoinScreen client-side name regex pre-validation
+
+### ⏸ BLOCKED ON YOUR DECISION — 7 P0s
+
+**Disconnect-wedge cluster (B-03/04/05/06/07/13).** Currently only the Nope window has
+server-side disconnect-safety machinery. Every other hot-seat sub-phase
+(name-card-pending, defuse-pending, favor-pending, future-rearrange-pending) wedges the
+entire room if the prompted player disconnects — until the 15-min INACTIVITY_TIMEOUT
+nukes everything. Active-player disconnect during turn-active also never advances.
+
+This conflicts with the explicit **"game waits for you"** policy we locked when we ripped
+out `PROMPT_TIMEOUT_MS`. The policy was right for *slow humans*. A *disconnected* player
+is different.
+
+**Three options — I recommend (b):**
+- **(a)** Keep current policy, accept the 15-min room nuke. Simple, one bad actor kills the room.
+- **(b)** Disconnect-triggered auto-resolve with safe defaults. Server watches
+  confirmed-disconnect (not a blip) of the prompted player; after N seconds, auto-resolves:
+  - `name-card-pending` → auto `cancel-name-card` (cards return to hand)
+  - `defuse-pending` → auto `defuse-place` at random position (same fallback as the
+    client's Random button)
+  - `favor-pending` → auto-gift a random non-Burned card (or cancel entirely)
+  - `future-rearrange-pending` → auto-accept current order
+  - `turn-active` active player disconnect → advance turn (forfeit the draw)
+
+  Slow humans still wait forever (policy preserved). Ghost players unblock the room.
+  ~150 lines of infra mirroring the existing Nope timer. Generation-numbered so
+  hibernation restoration is safe.
+- **(c)** Host vote-to-kick stalled seat. More surgery, more UX, more questions
+  ("what if the host disconnected?").
+
+**D-03 — simultaneous Nope race.** Rules-correct but UX-deceptive: two Nopers at the
+same ms stack in arrival order, so the second person's Nope re-enables the action the
+first Noper already killed. Fix is either (a) broadcast a "nope-pending" optimistic flag
+so phones see "someone else already Noped" before their tap, or (b) instant-close the
+window on first Nope and require counter-Nope to reopen. Both are design decisions, not
+bug fixes.
+
+### 🔍 Phone verification still pending
+
+These fixes are Playwright-verified (or trivially verified locally) but need your eyes
+on a real phone / TV before "shipped" becomes true:
+
+- **C-02** JoinScreen hero name fits 12 chars on every phone — measured at 360×640 + 390×844 via evaluate
+- **C-06** Staged miniature name hidden below 114px container
+- **C-01** 10p lobby on 1080vh — screenshot at `temp/audit/screenshots/fix-C-01-lobby-1440x900-after.png`
+- **C-03** iPad portrait splash — screenshot at `temp/audit/screenshots/fix-C-03-ipad-portrait-splash-after.png`
+- **C-14** Drama holdMs bumps (INTERCEPTED 800→1400, EXTRACTED 1000→1600, ELIMINATED 1200→1500) — does this read right from couch distance or overstay?
+- **C-08** PlayerStrip full names at 1920/1080 — verify 10p case doesn't overflow in practice
+- **C-20** Active-player "ACTIVE" pill no longer clips tile's top chrome
+- **D-01 / D-02** Intercept + Draw optimistic locks — verify the button actually locks on rapid taps
+- **D-05** StealReport 350ms debounce — panic-tap no longer loses intel
+
+Plus the pending items from the prior arc that never got phone-tested:
+- Sub-step #1 of Cinematic Arc: drawer sees Burned card fill screen on burned-drawn
+- Server-cumulative comms fix from `02417202`
+
+### 📋 Remaining in `docs/testing/E2E-ISSUE-LIST.md`
+
+**P1 deferred** (design scope, host-identity work):
+- B-01 Host session token (significant infra)
+- B-02 Host disconnect during lobby signal
+- B-11 Non-host return-to-lobby in game_over
+- B-12 Client-side protocol version on every message
+- B-14 "Did you mean" list of disconnected names on GAME_ALREADY_STARTED
+- C-07 Nameplate brass stand height (cosmetic)
+- C-09 NameCard sheet CTA below fold on 360×640 (cosmetic)
+- C-10 / C-16 Nope countdown visual redesign (scope decision)
+- C-11 / C-12 DossierFeed decorations (scope decision)
+- C-15 Board gets card-variant for burned-drawn? (product decision)
+- C-17 GameOver redesign (scope decision)
+- C-18 EliminatedView Archer redress (scope decision)
+- C-19 JoinScreen waiting-state empty space (scope decision)
+- C-21 Hand card height bounce 368 vs 389 — needs real-phone measurement to narrow cause
+- C-25 SmartActionBox "Needs a pair or triple" vocabulary (1-line copy)
+- D-04 FuturePeek read-only `Got it` submit guard
+- D-15 Play button visual disable during own Nope window
+- D-16 Counter-counter-nope by original actor — rules-fidelity investigation
+
+**P2s** — all queued in the issue list, none ship-blocking.
+
+### 🎯 Recommended next session
+
+1. **Phone-verify the overnight work** — 15 min on real devices, confirm what's marked "pending verification" above.
+2. **Decide disconnect cluster** — (a)/(b)/(c). If (b), I can implement in one session (~2-3 hr).
+3. **Decide D-03 Nope race** — broadcast or instant-close.
+4. **Cinematic Arc #2** — Briggsy's original next priority. Once #1 is phone-verified, sub-step #2 (board + non-drawer card flip during drama) is unblocked.
+
+Nothing pushed to origin — ATC clears it.
+
+Test count at start of session: **371/371 Vitest**. End of session: **399/399 Vitest, 15/15 Playwright, typecheck clean**.
+
+---
+
 ## Current State
 
 - **PRODUCT-SPECIFICATION.md v1.0 LOCKED** — `docs/specifications/PRODUCT-SPECIFICATION.md` (2026-04-10).

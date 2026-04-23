@@ -12,7 +12,12 @@ import { TIMING } from '@shared/constants'
 
 // --- Constants ---
 
-export const MAX_MESSAGE_BYTES = 4096
+// NOT exported — room.ts is the Worker entry. The Workers runtime treats
+// every named export as a potential ExportedHandler, so exporting a plain
+// constant from this file crashes the runtime at boot with "Incorrect type
+// for map entry". Tests that need this value read it via validation.ts
+// (MAX_MESSAGE_BYTES is re-exported there for test access).
+const MAX_MESSAGE_BYTES = 4096
 const MAX_PLAYERS = 10
 const MAX_CONNECTIONS = 12 // 10 players + 1 host + 1 reconnection buffer
 const MAX_MESSAGES_PER_SECOND = 10

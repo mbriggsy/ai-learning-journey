@@ -3,8 +3,25 @@
 > **Generated:** 2026-04-23 overnight audit, 5 parallel investigation agents.
 > **Baseline at audit start:** 371/371 Vitest, 15/15 Playwright, typecheck clean.
 > **Total findings:** 89 (17 P0 / 42 P1 / 30 P2).
+> **Post-remediation:** 399/399 Vitest, 15/15 Playwright, typecheck clean.
 > **Source reports:** `temp/audit/A-rules-fidelity.md`, `B-disconnect-session.md`, `C-visual-fidelity.md`, `D-input-abuse.md`, `E-validation-boundary.md`.
 > **Screenshots:** `temp/audit/screenshots/` (65 files).
+
+## 🟢 Shipped overnight (25 fixes, 28 new regression tests)
+
+**P0 fixes (11):** E-01 card-drawn privacy, E-02 byte cap, E-03 bundle verifier,
+C-05 exhaustive-never crash, A-01 single Intercept, C-02 join name, C-06 staged
+name, C-01 lobby overflow, C-03 portrait splash, C-04 themed ErrorBoundary,
+D-01 intercept lock.
+
+**P1 fixes (14):** C-22 #undefined guard, C-14 drama holdMs, C-08 NAME_MAX,
+D-02 draw lock, D-05 StealReport debounce, D-20 NameCard Escape, C-23 target
+Unknown, C-20 pill clip, E-04/E-05/E-06/E-07 Zod cluster, B-08 persist reset,
+B-09 msg exhaustive, A-02/A-05/A-06/A-07/A-08 test coverage, D-17 regex pre-validate.
+
+**⏸ 7 P0s blocked on Briggsy's call:** B-03/04/05/06/07/13 disconnect-wedge
+cluster (policy conflict — "game waits for you" vs ghost-player stalls),
+D-03 simultaneous-Nope UX (design decision).
 
 ## Legend
 

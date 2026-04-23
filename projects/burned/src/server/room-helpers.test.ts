@@ -1,10 +1,11 @@
 import { describe, it, expect } from 'vitest'
-import { messageByteLength } from './validation'
+import { messageByteLength, MAX_MESSAGE_BYTES } from './validation'
 
-// E-02 cap constant — kept in sync with room.ts MAX_MESSAGE_BYTES but
-// asserted here to lock the expected budget. If the room.ts constant
-// moves, update this alongside so the attack-vector test stays honest.
-const EXPECTED_CAP_BYTES = 4096
+// E-02 cap constant — MAX_MESSAGE_BYTES lives in validation.ts because
+// room.ts is the Workers entry and can't export named constants.
+// room.ts declares a local copy; this test asserts the validation.ts
+// copy and trusts the two stay in lockstep.
+const EXPECTED_CAP_BYTES = MAX_MESSAGE_BYTES
 
 // Regression: overnight E2E audit 2026-04-23 E-02. `String.length` counts
 // UTF-16 code units; a 4-byte UTF-8 emoji is 2 code units, so a 4096-char

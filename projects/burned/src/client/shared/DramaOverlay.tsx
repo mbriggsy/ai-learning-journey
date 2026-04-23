@@ -10,15 +10,19 @@ import type { GameEvent } from '@shared/types'
 import type { BoardPlayer } from '@shared/protocol'
 import styles from './DramaOverlay.module.css'
 
-// Drama event config — only the BIG moments get overlays. Two variants:
-//   - 'text' — big title-card word (BURNED, EXTRACTED, etc.)
+// Drama event config — only the BIG moments get overlays. Three variants:
+//   - 'text' — big title-card word (EXTRACTED, ELIMINATED, INTERCEPTED, WINS).
 //   - 'card' — the actual game card fills the screen as the reveal. Used
-//     for the drawer's own burned-drawn moment: you drew it, the card IS
-//     the drama. Non-drawers/board keep the text variant (they need to
-//     be told WHO, and suspense→payoff serves them better).
+//     for the DRAWER's own burned-drawn moment: you drew it, the card IS
+//     the drama. Single face-up reveal, no flip — you already know.
+//   - 'card-flip' — physical card flip from face-down to face-up for
+//     NON-DRAWERS / BOARD on burned-drawn. Party-reveal cinematic: the
+//     room watches the card rotate and land, then the victim's name
+//     surfaces underneath. Cinematic Arc #2.
 type DramaConfig =
   | { variant: 'text'; text: string; className: string; holdMs: number }
   | { variant: 'card'; cardType: 'burned'; className: string; holdMs: number }
+  | { variant: 'card-flip'; cardType: 'burned'; victimName: string; className: string; holdMs: number }
 
 // Returns 0..N beats to queue for a given event. burned-drawn splits by
 // audience: the DRAWER sees the Burned card itself fill their phone
@@ -47,16 +51,18 @@ function getDramaBeats(
           holdMs:    2400,
         }]
       }
-      // Non-drawer single beat. Previously split into "{NAME} IS…" buildup
-      // (700ms) + "BURNED" payoff (1400ms); playtest said three sequential
-      // overlays (buildup, payoff, extraction) fragmented the moment. The
-      // combined form matches the "{NAME} ELIMINATED" vocabulary pattern
-      // and hands off cleanly to the extraction-played beat that follows.
+      // Non-drawer / board — cinematic Arc #2. Physical card flip from
+      // face-down to face-up, then victim's name surfaces underneath.
+      // Card flip IS the reveal — more dramatic than a text slam.
+      // Hold spans the flip animation + a settled beat for recognition:
+      // ~450ms slam-in, ~300ms face-down pause, ~500ms flip, ~1400ms
+      // settled hold with name caption, then fadeout.
       return [{
-        variant:   'text',
-        text:      `${name(event.playerId).toUpperCase()} BURNED`,
-        className: styles.burned ?? '',
-        holdMs:    1800,
+        variant:    'card-flip',
+        cardType:   'burned',
+        victimName: name(event.playerId).toUpperCase(),
+        className:  styles.burned ?? '',
+        holdMs:     1400,
       }]
     }
     case 'extraction-played':
@@ -105,6 +111,8 @@ export function DramaOverlay() {
   const overlayRef = useRef<HTMLDivElement>(null)
   const textRef = useRef<HTMLDivElement>(null)
   const cardRef = useRef<HTMLDivElement>(null)
+  const flipContainerRef = useRef<HTMLDivElement>(null)
+  const flipNameRef = useRef<HTMLDivElement>(null)
   const lastProcessedRef = useRef<string | null>(null)
   const animatingRef = useRef(false)
   const queueRef = useRef<Array<{ config: DramaConfig; id: string }>>([])
@@ -157,26 +165,41 @@ export function DramaOverlay() {
     const overlay = overlayRef.current
     const text = textRef.current
     const card = cardRef.current
-    if (!overlay || !text || !card) {
+    const flipContainer = flipContainerRef.current
+    const flipName = flipNameRef.current
+    if (!overlay || !text || !card || !flipContainer || !flipName) {
       animatingRef.current = false
       return
     }
 
     overlay.className = `${styles.overlay ?? ''} ${config.className}`
 
-    // Pick the target element based on variant. The other stays hidden
-    // (display: none) so layout isn't fighting for space and the GSAP
-    // set/fromTo calls below don't accidentally animate a stale element.
+    // Pick the target element based on variant. The other slots stay
+    // hidden (display: none) so layout isn't fighting for space and the
+    // GSAP set/fromTo calls below don't accidentally animate a stale
+    // element. Flip has an inner rotator driven separately from the
+    // outer target.
     let target: HTMLDivElement
     if (config.variant === 'text') {
       text.textContent = config.text
       target = text
       gsap.set(card, { display: 'none' })
+      gsap.set(flipContainer, { display: 'none' })
       gsap.set(text, { display: 'block' })
-    } else {
+    } else if (config.variant === 'card') {
       target = card
       gsap.set(text, { display: 'none' })
+      gsap.set(flipContainer, { display: 'none' })
       gsap.set(card, { display: 'flex' })
+    } else {
+      // card-flip — the outer slam-in targets flipContainer, the inner
+      // rotator animates within. Victim name caption is inside the
+      // same slot, fades in after the flip lands.
+      target = flipContainer
+      flipName.textContent = config.victimName
+      gsap.set(text, { display: 'none' })
+      gsap.set(card, { display: 'none' })
+      gsap.set(flipContainer, { display: 'flex' })
     }
 
     const tl = gsap.timeline({
@@ -194,17 +217,16 @@ export function DramaOverlay() {
 
     // SLAM IN: scale + opacity + refocus from blur. Starting at blur(4px)
     // bridges multi-beat sequences as one perceived morph instead of a
-    // harsh blink between states. Card variant uses a less aggressive
-    // initial scale (1.6 vs 2.5) because a card has more visual weight
-    // than a word — 2.5x-sized card is cartoon-huge, 1.6 reads as
-    // "slammed onto the table" without overshoot. Card also gets a
-    // longer entry (slow vs base) because the drawer needs time to
-    // read header+illustration+name; a 250ms scale-down landed as
-    // "flash and gone" in playtest.
-    const initialScale = config.variant === 'card' ? 1.6 : 2.5
-    const enterDuration = config.variant === 'card'
-      ? MOTION_DURATIONS.slow
-      : MOTION_DURATIONS.base
+    // harsh blink between states. Word ('text') variants slam at 2.5x;
+    // card-weighted variants ('card' + 'card-flip') use 1.6x because a
+    // card has more visual weight than a word and 2.5x reads cartoon-huge.
+    // Card/flip also get a longer entry (slow vs base) so viewers can
+    // read header+illustration+name; 250ms scale-down landed as "flash
+    // and gone" in playtest.
+    const initialScale = config.variant === 'text' ? 2.5 : 1.6
+    const enterDuration = config.variant === 'text'
+      ? MOTION_DURATIONS.base
+      : MOTION_DURATIONS.slow
     tl.set(overlay, { opacity: 1, pointerEvents: 'none' })
     tl.fromTo(
       target,
@@ -220,6 +242,66 @@ export function DramaOverlay() {
         ease: 'back.out(1.1)',
       },
     )
+
+    // CARD-FLIP: after slam-in, hold face-down briefly for suspense,
+    // rotate the inner flipRotator 180° to reveal the Burned face, then
+    // fade the victim's name in beneath.
+    //
+    // Rather than relying on CSS backface-visibility (which Chrome
+    // disables whenever it optimizes a rotateY(0deg) child to a 2D
+    // matrix — see DramaOverlay.module.css), we drive the face swap
+    // with opacity keyed off the rotator's progress. Back fades out
+    // while front fades in across a narrow edge-on window around 90°,
+    // so neither paints on top of the other at the settled states.
+    // Same cinematic result, works in every browser.
+    if (config.variant === 'card-flip') {
+      const rotator = flipContainer.querySelector(`.${styles.flipRotator}`) as HTMLElement | null
+      const back = flipContainer.querySelector(`.${styles.flipBack}`) as HTMLElement | null
+      const front = flipContainer.querySelector(`.${styles.flipFront}`) as HTMLElement | null
+      const nameEl = flipName
+      // Reset flip state — rotator returns to 0°, back visible, front
+      // hidden, so consecutive Burned draws reveal correctly each time.
+      gsap.set(rotator, { rotateY: 0 })
+      gsap.set(back, { opacity: 1 })
+      gsap.set(front, { opacity: 0 })
+      gsap.set(nameEl, { opacity: 0, y: 8 })
+      // Face-down pause before the flip kicks in. Short — the room has
+      // already seen the slam-in, longer would feel dead. 300ms lets
+      // the brain register "something's about to happen."
+      tl.to({}, { duration: 0.3 })
+      // Flip: 500ms with power2.inOut so the pivot accelerates through
+      // the edge-on frame instead of dwelling there. Edge-on is the
+      // ugliest moment; we want to pass through it, not linger.
+      tl.to(rotator, {
+        rotateY: 180,
+        duration: 0.5,
+        ease: 'power2.inOut',
+      })
+      // Face swap at the edge-on midpoint. The beat timeline so far:
+      //   t=0       slam-in starts (duration MOTION_DURATIONS.slow)
+      //   t=slow    slam-in done, face-down pause starts (duration 0.3s)
+      //   t=slow+.3 face-down pause done, flip starts (duration 0.5s)
+      //   t=slow+.8 flip done
+      // Midpoint of flip is t=slow+.3+.25. Crossfade is 80ms wide,
+      // imperceptible because the card is edge-on (near zero visible
+      // area) during that frame — the eye can't see which face is
+      // rendering when the card is rotated to 90°.
+      const slow = MOTION_DURATIONS.slow
+      const flipMidpoint = slow + 0.3 + 0.25
+      tl.to(back, { opacity: 0, duration: 0.08, ease: 'none' }, flipMidpoint)
+      tl.to(front, { opacity: 1, duration: 0.08, ease: 'none' }, flipMidpoint)
+      // Name caption fades in as the flip settles. Slight Y lift
+      // (8px→0) so it reads as "surfacing from beneath the card."
+      // Positioned at flip-end so the name surfaces right as the card
+      // lands face-up — not during the flip itself.
+      tl.to(nameEl, {
+        opacity: 1,
+        y: 0,
+        duration: MOTION_DURATIONS.base,
+        ease: 'power2.out',
+      }, slow + 0.3 + 0.5)
+    }
+
     // HOLD: dynamic — config.holdMs is runtime-derived, not a literal
     tl.to({}, { duration: config.holdMs / 1000 })
     // FADE OUT: graceful exit with blur ramp. The blur defocus during fadeout
@@ -250,6 +332,23 @@ export function DramaOverlay() {
           drawer's own burned-drawn event uses the card variant today. */}
       <div ref={cardRef} className={styles.cardSlot} style={{ display: 'none' }}>
         <MinimalCard type="burned" disabled />
+      </div>
+      {/* Card-flip slot — non-drawer/board burned-drawn reveal (Arc #2).
+          preserve-3d container wraps a rotator div with two faces:
+          back (shown at rotateY 0°) and front (rotateY 180°). GSAP
+          animates the rotator from 0 → 180 to flip face-down → face-up.
+          Name caption sits beneath the card and fades in after the flip
+          settles, telling the room WHO just burned. */}
+      <div ref={flipContainerRef} className={styles.flipSlot} style={{ display: 'none' }}>
+        <div className={styles.flipRotator}>
+          <div className={`${styles.flipFace} ${styles.flipBack}`}>
+            <MinimalCard type="burned" isFaceDown />
+          </div>
+          <div className={`${styles.flipFace} ${styles.flipFront}`}>
+            <MinimalCard type="burned" disabled />
+          </div>
+        </div>
+        <div ref={flipNameRef} className={styles.flipName} />
       </div>
     </div>
   )

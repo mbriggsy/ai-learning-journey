@@ -58,6 +58,85 @@
     drop-shadow(0 4px 12px color-mix(in oklab, var(--color-charcoal-1) 45%, transparent));
 }
 
+/* Flip slot — non-drawer / board Burned reveal (Cinematic Arc #2).
+   Same card size as the drawer's reveal, plus a name caption beneath.
+   `perspective` on the slot sets the 3D camera distance for the
+   rotator's rotateY animation; the rotator is transform-style: preserve-3d
+   and holds two absolutely-positioned face divs stacked at rotateY 0°
+   (back) and rotateY 180° (front). backface-visibility: hidden on both
+   faces ensures the back disappears at the midway edge-on moment
+   instead of ghost-rendering behind. */
+.flipSlot {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: var(--space-5);
+  width: clamp(260px, 72cqi, 420px);
+  /* Camera distance — 1400px reads as "reasonably close to the card"
+     without fish-eye distortion. Longer flattens the flip; shorter
+     exaggerates the edge-on pass-through. */
+  perspective: 1400px;
+}
+
+.flipRotator {
+  position: relative;
+  width: 100%;
+  aspect-ratio: 5 / 7;
+  transform-style: preserve-3d;
+  /* Drop-shadow on the rotator so the shadow flips with the card. A
+     filter on the parent would shadow the static name caption too. */
+  filter:
+    drop-shadow(0 20px 40px color-mix(in oklab, var(--color-charcoal-1) 60%, transparent))
+    drop-shadow(0 4px 12px color-mix(in oklab, var(--color-charcoal-1) 45%, transparent));
+}
+
+.flipFace {
+  position: absolute;
+  inset: 0;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+/* Back face — shown at rotator 0° (face-down), hidden via opacity at
+   rotator 180°. Face swap is opacity-driven (not backface-visibility)
+   because Chrome/Safari optimize rotateY(0deg) to a 2D matrix and
+   disable backface culling — unreliable across browsers. See
+   DramaOverlay.tsx card-flip branch for the crossfade timing. */
+.flipBack {
+  transform: rotateY(0deg);
+}
+
+/* Front face — rotated 180° so when the rotator finishes its own
+   180° flip, the front lands at world rotation 360° = 0° (natural
+   face-up orientation, not mirrored). */
+.flipFront {
+  transform: rotateY(180deg);
+}
+
+/* Face MinimalCards fill the face — the flip uses the card's built-in
+   intrinsic sizing. */
+.flipFace > * {
+  width: 100%;
+  height: 100%;
+}
+
+.flipName {
+  font-family: var(--font-display);
+  font-weight: 800;
+  letter-spacing: 0.18em;
+  text-transform: uppercase;
+  text-align: center;
+  /* Smaller than the main text variant — the card is the hero, the
+     name is a caption. */
+  font-size: clamp(18px, 3.5cqi + 0rem, 42px);
+  color: var(--color-cream-12);
+  text-shadow:
+    0 2px 12px color-mix(in oklab, var(--color-charcoal-1) 60%, transparent),
+    0 0 28px color-mix(in oklab, var(--color-cordovan-9) 55%, transparent);
+}
+
 /* ─── BURNED — cordovan alarm, the big one ─── */
 
 .burned {

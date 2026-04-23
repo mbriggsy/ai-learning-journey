@@ -36,7 +36,11 @@ export function deriveActiveBottomSheet(
 
       case 'name-card': {
         const target = players.find(p => p.id === pendingPrompt.targetId)
-        return { sheet: 'name-card', targetName: target?.name ?? 'Unknown' }
+        // When the target has been removed from roster (disconnected
+        // mid-turn, edge case), "Unknown" reads as a UI bug, not a
+        // game state. Use Archer-vocabulary in-universe language so it
+        // still feels intentional. E2E audit 2026-04-23 C-23.
+        return { sheet: 'name-card', targetName: target?.name ?? 'the operative' }
       }
     }
   }

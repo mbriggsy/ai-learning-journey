@@ -159,11 +159,19 @@
   border-radius: 2px;
   background: var(--color-accent-burned);
   flex: 0 0 auto;
+  /* Explicit separation from the cards count badge — without this, the
+     "+2" pill crammed against the "5" count on attacked tiles.
+     E2E audit 2026-04-23 C-20. */
+  margin-left: 4px;
 }
 
 .activeTag {
   position: absolute;
-  top: -10px;
+  /* Lift the pill clear of the tile's top hairline + shadow so the
+     rotate(-3deg) right edge doesn't dip into the tile border. Previously
+     top: -10px made the pill read as "colliding" with the tile chrome.
+     -16 keeps it visually attached but separated. E2E audit 2026-04-23 C-20. */
+  top: -16px;
   right: 8px;
   font-family: var(--font-mono);
   font-size: calc(var(--text-caption-board) * 0.82);

@@ -1,8 +1,12 @@
-/** Nope window durations in ms — tension scales as players are eliminated */
+/** Nope window durations in ms — flat 10s across all player counts.
+ *  Prior tiered values (3s/5s/7s) felt rushed at the table; playtests
+ *  consistently ran out of decision time before players registered the
+ *  action, let alone decided whether to Nope. 10s gives the couch
+ *  enough breathing room without stalling the party. */
 export const NOPE_WINDOW_MS = {
-  manyPlayers: 3_000,
-  fewPlayers: 5_000,
-  headsUp: 7_000,
+  manyPlayers: 10_000,
+  fewPlayers: 10_000,
+  headsUp: 10_000,
 } as const
 
 /** Paw-print composition: which card subsets for each player count range */

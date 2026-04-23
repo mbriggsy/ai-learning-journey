@@ -30,10 +30,16 @@ export function FuturePeek({ cards, canRearrange, onDismiss, onRearrange }: Futu
 
   const tappedSet = new Set(tapOrder)
 
+  const handleKeepOrder = useCallback(() => {
+    if (submitted) return
+    setSubmitted(true)
+    onRearrange?.(cards.map(c => c.id))
+  }, [submitted, cards, onRearrange])
+
   return (
     <div>
       <div className={styles.sheetTitle}>
-        {canRearrange ? 'Alter the Future' : 'See the Future'}
+        {canRearrange ? 'Falsify Intel' : 'Intel Briefing'}
       </div>
       {canRearrange && (
         <div className={styles.sheetSubtitle}>
@@ -72,6 +78,14 @@ export function FuturePeek({ cards, canRearrange, onDismiss, onRearrange }: Futu
         </button>
       )}
 
+      {/* canRearrange = Falsify Intel. Two paths out:
+          - Keep order: always available, submits cards in current order
+            unchanged. No-op rearrange. Lets a user bail out after peeking
+            without being trapped into tapping 3 cards they don't want to
+            reorder. Game waits for you; this is the "I've seen enough" exit.
+          - Confirm Order: only after all cards tapped, submits custom order.
+          Both submit the future-rearrange action, which clears the pending
+          prompt and advances the turn. 2026-04-23. */}
       {canRearrange && tapOrder.length === cards.length && (
         <button
           className={styles.confirmBtn}
@@ -79,6 +93,15 @@ export function FuturePeek({ cards, canRearrange, onDismiss, onRearrange }: Futu
           onClick={handleConfirmOrder}
         >
           Confirm Order
+        </button>
+      )}
+      {canRearrange && tapOrder.length !== cards.length && (
+        <button
+          className={styles.confirmBtn}
+          disabled={submitted}
+          onClick={handleKeepOrder}
+        >
+          Keep Order
         </button>
       )}
     </div>

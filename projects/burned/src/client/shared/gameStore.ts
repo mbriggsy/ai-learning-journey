@@ -130,8 +130,15 @@ class GameStore {
         this._protocolMismatch = msg.protocolVersion !== PROTOCOL_VERSION
         this.accumulateEvents(msg.payload.state)
         this.optimisticSnapshot = null
-        this.updateState(msg.payload.state)
+        // CRITICAL: privateData must be written BEFORE updateState's
+        // notify() fires. Otherwise the React re-render triggered by
+        // notify sees the new pendingPrompt (e.g. 'future-rearrange')
+        // but stale futureCards, and deriveActiveBottomSheet returns
+        // an empty peek sheet. The sheet opens with no cards until an
+        // unrelated re-render (tab focus change) flushes the new
+        // privateData. Falsify Intel bug, 2026-04-23.
         this.privateData = msg.payload.private
+        this.updateState(msg.payload.state)
         break
       case 'joined':
         this.playerId = msg.payload.playerId

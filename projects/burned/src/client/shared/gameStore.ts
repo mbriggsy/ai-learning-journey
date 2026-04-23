@@ -38,8 +38,13 @@ function shallowEqual(a: unknown, b: unknown): boolean {
 
 // --- Store ---
 
-let eventIdCounter = 0
-const MAX_ACCUMULATED_EVENTS = 20
+// Server is authoritative for event history now — state.events arrives
+// as the cumulative log (capped server-side at 500 via engine's
+// MAX_EVENT_LOG) on every broadcast. The client used to maintain its
+// own accumulator because state.events was per-dispatch-only, which
+// meant reloads and late joins dropped history. Server-cumulative +
+// client-replace means a fresh page load receives the full session log
+// in the first state-update.
 
 class GameStore {
   private serverSnapshot: ViewState | null = null
@@ -150,26 +155,34 @@ class GameStore {
   }
 
   private accumulateEvents(state: ViewState): void {
-    if (state.phase === 'lobby') return
+    if (state.phase === 'lobby') {
+      // New game / back to lobby — clear local log so the next playing
+      // state's cumulative events aren't rendered alongside stale ones
+      // from the prior round.
+      if (this.accumulatedEvents.length !== 0) {
+        this.accumulatedEvents = []
+      }
+      return
+    }
 
     const events: readonly GameEvent[] =
       state.phase === 'playing'
         ? (state as PlayingBoardView | PlayingPlayerView).events
         : state.events
 
-    if (events.length === 0) return
-
+    // Server sends a cumulative log every tick — replace the local buffer
+    // in full. React keys use position index, which is stable while the
+    // server array grows (the id for event at index N stays evt-N as long
+    // as N < cap). When the server cap (MAX_EVENT_LOG=500) rolls events
+    // off the front, keys evt-0..evt-(N-1) point to shifted events and
+    // React updates their text content in place — no unmount/remount
+    // churn, no AnimatePresence enter/exit storm.
     const now = Date.now()
-    const newEntries = events.map(event => ({
+    this.accumulatedEvents = events.map((event, index) => ({
       event,
       receivedAt: now,
-      id: `evt-${eventIdCounter++}`,
+      id: `evt-${index}`,
     }))
-
-    this.accumulatedEvents = [
-      ...this.accumulatedEvents,
-      ...newEntries,
-    ].slice(-MAX_ACCUMULATED_EVENTS)
   }
 
   private updateState(next: ViewState): void {

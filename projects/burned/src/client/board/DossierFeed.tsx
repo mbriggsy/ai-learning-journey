@@ -7,7 +7,11 @@ import { MOTION, MOTION_DURATIONS, MOTION_EASINGS } from '@client/shared/tokens/
 import type { BoardPlayer } from '@shared/protocol'
 import styles from './DossierFeed.module.css'
 
-const MAX_VISIBLE_STRIPS = 8
+// Auto-scroll stickiness — if the board viewer has scrolled more than this
+// many pixels away from the top, new events leave their scroll position
+// alone (they're reading history). Otherwise, new events keep the feed
+// pinned to the newest entry at the top.
+const STICKY_TOP_THRESHOLD_PX = 30
 
 // Radio-channel ambient chatter — rotates slowly whether events are landing
 // or not, so the dossier always reads as a LIVE intercept feed rather than
@@ -65,6 +69,7 @@ interface Props {
 export function DossierFeed({ players }: Props) {
   const events = useEventFeed()
   const lastAnnouncedIdRef = useRef<string | null>(null)
+  const stripsRef = useRef<HTMLDivElement>(null)
 
   // formatEvent returns null for event types that are silent in the feed.
   const rendered = events
@@ -74,11 +79,15 @@ export function DossierFeed({ players }: Props) {
   // Live-region announcements — mirror the AnnouncementFeed logic that used
   // to live in BlotterContent. Only announce events we haven't announced yet
   // across renders (lastAnnouncedIdRef tracks the high-water mark).
+  // First-mount seeds to the current tail so a page reload doesn't
+  // re-announce every historical event from the cumulative server buffer.
   useEffect(() => {
     if (events.length === 0) return
-    const lastIdx = lastAnnouncedIdRef.current
-      ? events.findIndex(e => e.id === lastAnnouncedIdRef.current)
-      : -1
+    if (lastAnnouncedIdRef.current === null) {
+      lastAnnouncedIdRef.current = events[events.length - 1]!.id
+      return
+    }
+    const lastIdx = events.findIndex(e => e.id === lastAnnouncedIdRef.current)
     const newEvents = events.slice(lastIdx + 1)
     if (newEvents.length === 0) return
     lastAnnouncedIdRef.current = newEvents[newEvents.length - 1]!.id
@@ -91,9 +100,23 @@ export function DossierFeed({ players }: Props) {
     }
   }, [events, players])
 
-  // Newest-first — .slice(-N) takes the tail (oldest-to-newest), .reverse()
-  // flips so index 0 = newest = top of stack.
-  const visibleStrips = rendered.slice(-MAX_VISIBLE_STRIPS).reverse()
+  // Sticky auto-scroll — when new events land, snap the strips zone to the
+  // top (newest visible) ONLY IF the viewer is already near the top. If
+  // someone's scrolled down to read older history, don't interrupt them.
+  // Covers the 99% case (nobody scrolled = newest always visible) and the
+  // 1% case (someone reading history on the board doesn't get yanked).
+  useEffect(() => {
+    const el = stripsRef.current
+    if (!el) return
+    if (el.scrollTop <= STICKY_TOP_THRESHOLD_PX) {
+      el.scrollTop = 0
+    }
+  }, [rendered.length])
+
+  // Newest-first — index 0 = newest = top of scrollable feed. No cap; the
+  // container scrolls internally and masks the bottom edge so older entries
+  // feather into the folder surface (the old mask-image flowing-log look).
+  const visibleStrips = rendered.slice().reverse()
   const hasEvents = rendered.length > 0
 
   return (
@@ -123,28 +146,19 @@ export function DossierFeed({ players }: Props) {
         )}
       </AnimatePresence>
 
-      <div className={styles.strips}>
+      <div className={styles.strips} ref={stripsRef}>
         <AnimatePresence mode="popLayout">
           {visibleStrips.map(({ entry, text }, index) => {
-            // Per-strip resting style — computed not hardcoded, so bumping
-            // MAX_VISIBLE_STRIPS doesn't require adding new [data-index="N"]
-            // CSS rules. Alternating drift direction (index even = left drift,
-            // odd = right drift) gives the stack a natural tossed-on-desk
-            // variance instead of a tidy single-axis spiral.
+            // Per-strip resting style — alternating X-drift gives the stack
+            // a natural tossed-on-desk variance instead of a tidy single-
+            // axis spiral. Vertical stacking + scroll container are handled
+            // by CSS flex — no manual Y offset here. Opacity decays for
+            // hierarchy (newest = loudest) but floors high enough that
+            // deep-history strips stay readable when scrolled into view.
             const dir = index % 2 === 0 ? 1 : -1
-            // Each strip gets its own vertical slot so the log reads as a
-            // flowing history, not a buried stack. Only the X-drift carries
-            // the "tossed on the desk" character — the per-strip tilt was
-            // previously accumulating to ~4° at index 7, whose rotated
-            // corners poked into neighboring slots and produced fragmented
-            // text bleed ("...and lives." peeking behind unrelated strips).
-            // Offset is paired with .strip's line-clamp: 1 so strip heights
-            // are predictable — don't bump one without the other.
             const restingStyle = {
               '--strip-offset-x': `${index * 2 * dir}px`,
-              '--strip-offset-y': `${index * 42}px`,
-              '--strip-opacity': String(Math.max(0.32, 1 - index * 0.09)),
-              zIndex: MAX_VISIBLE_STRIPS - index,
+              '--strip-opacity': String(Math.max(0.32, 1 - index * 0.04)),
             } as React.CSSProperties
             return (
             <m.div

@@ -35,29 +35,29 @@ function getDramaBeats(
   switch (event.type) {
     case 'burned-drawn': {
       if (myPlayerId === event.playerId) {
-        // Drawer-only card reveal. Longer hold than the text payoff
-        // because the card has more to read (header, illustration, name)
-        // and it's the emotional peak of the draw moment.
+        // Drawer-only card reveal. 2400ms hold so the drawer gets enough
+        // time to actually read and absorb the card — 1600ms (first cut)
+        // was "flash and gone" per playtest. Card has more to read than
+        // a single word (header, illustration, name, description), and
+        // this is the emotional peak of the draw moment.
         return [{
           variant:   'card',
           cardType:  'burned',
           className: styles.burned ?? '',
-          holdMs:    1600,
+          holdMs:    2400,
         }]
       }
-      const buildup: DramaConfig = {
+      // Non-drawer single beat. Previously split into "{NAME} IS…" buildup
+      // (700ms) + "BURNED" payoff (1400ms); playtest said three sequential
+      // overlays (buildup, payoff, extraction) fragmented the moment. The
+      // combined form matches the "{NAME} ELIMINATED" vocabulary pattern
+      // and hands off cleanly to the extraction-played beat that follows.
+      return [{
         variant:   'text',
-        text:      `${name(event.playerId).toUpperCase()} IS\u2026`,
+        text:      `${name(event.playerId).toUpperCase()} BURNED`,
         className: styles.burned ?? '',
-        holdMs:    700,
-      }
-      const payoff: DramaConfig = {
-        variant:   'text',
-        text:      'BURNED',
-        className: styles.burned ?? '',
-        holdMs:    1400,
-      }
-      return [buildup, payoff]
+        holdMs:    1800,
+      }]
     }
     case 'extraction-played':
       return [{
@@ -105,10 +105,18 @@ export function DramaOverlay() {
   useEffect(() => {
     if (events.length === 0) return
 
+    // First-mount: seed lastProcessed to the current tail so historical
+    // events (from a cumulative server buffer on page load or late join)
+    // DON'T re-fire every drama beat in sequence. Without this, reloading
+    // mid-game would replay every BURNED / EXTRACTED / WINS from the
+    // session. Matches the pattern in PlayerAlert / StealReport.
+    if (lastProcessedRef.current === null) {
+      lastProcessedRef.current = events[events.length - 1]!.id
+      return
+    }
+
     // Find new events we haven't processed
-    const lastIdx = lastProcessedRef.current
-      ? events.findIndex(e => e.id === lastProcessedRef.current)
-      : -1
+    const lastIdx = events.findIndex(e => e.id === lastProcessedRef.current)
     const newEvents = events.slice(lastIdx + 1)
     if (newEvents.length === 0) return
 
@@ -177,13 +185,19 @@ export function DramaOverlay() {
       },
     })
 
-    // SLAM IN: fast scale + opacity + refocus from blur. Starting at blur(4px)
-    // bridges multi-beat sequences (e.g. "{NAME} IS…" → "BURNED") as one
-    // perceived morph instead of a harsh blink between states. Card variant
-    // uses a less aggressive initial scale (1.6 vs 2.5) because a card has
-    // more visual weight than a word — 2.5x-sized card is cartoon-huge,
-    // 1.6 reads as "slammed onto the table" without overshoot.
+    // SLAM IN: scale + opacity + refocus from blur. Starting at blur(4px)
+    // bridges multi-beat sequences as one perceived morph instead of a
+    // harsh blink between states. Card variant uses a less aggressive
+    // initial scale (1.6 vs 2.5) because a card has more visual weight
+    // than a word — 2.5x-sized card is cartoon-huge, 1.6 reads as
+    // "slammed onto the table" without overshoot. Card also gets a
+    // longer entry (slow vs base) because the drawer needs time to
+    // read header+illustration+name; a 250ms scale-down landed as
+    // "flash and gone" in playtest.
     const initialScale = config.variant === 'card' ? 1.6 : 2.5
+    const enterDuration = config.variant === 'card'
+      ? MOTION_DURATIONS.slow
+      : MOTION_DURATIONS.base
     tl.set(overlay, { opacity: 1, pointerEvents: 'none' })
     tl.fromTo(
       target,
@@ -195,7 +209,7 @@ export function DramaOverlay() {
         filter: 'blur(0px)',
         // GSAP ease: 'back.out(1.1)' is subtle overshoot — Archer-deadpan
         // crisp arrival without cartoon bounce.
-        duration: MOTION_DURATIONS.base,
+        duration: enterDuration,
         ease: 'back.out(1.1)',
       },
     )

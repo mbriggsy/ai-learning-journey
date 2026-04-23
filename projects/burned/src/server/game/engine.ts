@@ -13,6 +13,14 @@ import type {
 
 const MAX_NOPE_CHAIN = 10
 
+// Event log cap — state.events is now CUMULATIVE across dispatches (the
+// clear-on-every-dispatch pattern was dropped so late-joining/reloading
+// clients can receive the full session history through a single state
+// broadcast). Cap bounds memory and wire size; 500 covers an 8-player
+// game (~150-200 events) plus comfortable headroom. Events roll off the
+// front once the cap is hit.
+const MAX_EVENT_LOG = 500
+
 const ALLOWED_ACTIONS: Record<SubPhase, readonly ActionType[]> = {
   'turn-active': ['play-card', 'draw-card'],
   'defuse-pending': ['defuse-place'],
@@ -44,7 +52,15 @@ export function dispatch(
   action: EngineAction,
   ctx: DispatchContext,
 ): DispatchResult {
-  const base = { ...state, events: [] as GameEvent[] }
+  // state.events is CUMULATIVE — we spread the existing events array into
+  // the base so handlers' `[...state.events, ...newEvents]` appends append
+  // to history. Previously this line set `events: []` which made each
+  // dispatch return only its own events, forcing the client to rebuild
+  // history via its own accumulator. Reloaded/late-joining clients would
+  // then see only the last tick's events. Cumulative semantics put the
+  // full log in every broadcast. Cap enforced in ok() / handleStartGame /
+  // game-over transition via MAX_EVENT_LOG.
+  const base = { ...state }
 
   // Phase guard: start-game only in lobby
   if (action.type === 'start-game') {
@@ -1103,6 +1119,9 @@ function eliminatePlayer(
   if (alivePlayers.length === 1) {
     const winner = alivePlayers[0]!
     const allEvents = [...events, ...eliminationEvents, { type: 'game-over' as const, winnerId: winner.id }]
+    const cappedAllEvents = allEvents.length > MAX_EVENT_LOG
+      ? allEvents.slice(-MAX_EVENT_LOG)
+      : allEvents
     const gameOver: GameOverState = {
       phase: 'game_over',
       players: updatedPlayers,
@@ -1110,9 +1129,9 @@ function eliminatePlayer(
       winnerId: winner.id,
       eliminationOrder: [...(state.players.filter(p => !p.isAlive).map(p => p.id)), playerId],
       stateVersion: state.stateVersion + 1,
-      events: allEvents,
+      events: cappedAllEvents,
     }
-    return { ok: true, state: gameOver, events: allEvents }
+    return { ok: true, state: gameOver, events: cappedAllEvents }
   }
 
   // Continue game — advance to next player
@@ -1141,7 +1160,15 @@ function eliminatePlayer(
 // --- Helpers ---
 
 function ok(state: PlayingState): DispatchResult {
-  return { ok: true, state: { ...state, stateVersion: state.stateVersion + 1 }, events: state.events }
+  const cappedEvents = state.events.length > MAX_EVENT_LOG
+    ? state.events.slice(-MAX_EVENT_LOG)
+    : state.events
+  const next: PlayingState = {
+    ...state,
+    stateVersion: state.stateVersion + 1,
+    events: cappedEvents,
+  }
+  return { ok: true, state: next, events: cappedEvents }
 }
 
 function err(state: GameState, error: string, code: ErrorCode): DispatchResult {

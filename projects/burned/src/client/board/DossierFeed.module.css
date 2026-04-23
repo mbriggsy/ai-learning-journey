@@ -241,20 +241,55 @@
      edge + a small gap between the bottom-most strip and the ticker divider. */
   inset: 20px 20px 52px 20px;
   z-index: 2;
-  pointer-events: none;
+  /* Scrollable uncapped history — strips flow in natural document order
+     via flex column; the container scrolls internally when they exceed
+     visible height. Pointer-events must opt IN on the container (was
+     `none` on the parent) so touch/trackpad scroll works on the board.
+     The strips themselves stay non-interactive (they're decoration, not
+     tap targets). */
+  pointer-events: auto;
+  overflow-y: auto;
+  overscroll-behavior: contain;
+  display: flex;
+  flex-direction: column;
+  gap: 5px;
+  /* Hide scrollbars — the feather mask below signals "more history" without
+     a visual scrollbar cluttering the manila surface. */
+  scrollbar-width: none;
+  /* Bottom-edge feather — oldest strips tail off into the folder surface
+     so the deepest history reads as "fading into the file" rather than a
+     hard cutoff. Restores the pre-desk-redesign flowing-log vocabulary.
+     70px feather matches ~1.6 strip heights so the last visible strip
+     gently ghosts, one below fully fades. */
+  mask-image: linear-gradient(
+    to bottom,
+    black 0,
+    black calc(100% - 70px),
+    transparent 100%
+  );
+  -webkit-mask-image: linear-gradient(
+    to bottom,
+    black 0,
+    black calc(100% - 70px),
+    transparent 100%
+  );
+}
+
+.strips::-webkit-scrollbar {
+  display: none;
 }
 
 
-/* Single report slip. Resting tilt / offset / opacity come from CSS custom
-   properties set per-strip via inline style in DossierFeed.tsx — scales to
-   any MAX_VISIBLE_STRIPS without new [data-index="N"] rules. Individual
-   transform properties (rotate, translate) compose cleanly with motion's
-   transform animation on enter (scale keyframe overshoot). */
+/* Single report slip. Resting X-drift / opacity come from CSS custom
+   properties set per-strip via inline style in DossierFeed.tsx. Strips
+   flow in natural document order inside the scrollable .strips flex
+   column — no more absolute positioning, no more per-index Y offsets.
+   Individual translate property composes cleanly with motion's transform
+   animation on enter (scale keyframe overshoot) without fighting the
+   flex layout. */
 .strip {
-  position: absolute;
-  top: 0;
-  left: 0;
-  right: 0;
+  position: relative;
+  flex: 0 0 auto;
   padding: 10px 14px 11px;
   font-family: var(--font-mono);
   font-size: var(--text-caption-board);
@@ -269,20 +304,19 @@
   box-shadow:
     0 1px 2px color-mix(in oklab, var(--color-charcoal-1) 25%, transparent),
     0 3px 7px color-mix(in oklab, var(--color-charcoal-1) 18%, transparent);
-  /* Single-line clamp so strips have predictable heights, which is what
-     lets the per-index --strip-offset-y (36px) give each entry its own
-     vertical slot without overlapping the next. Long events truncate
-     with ellipsis — a readable half-message beats an unreadable full one
-     buried under the strip above. */
+  /* Single-line clamp keeps strips a predictable height, which plays well
+     with the flex column's natural flow and the scroll container's scroll-
+     snap math. Long events truncate with ellipsis — readable-half beats
+     wrap-and-waste-vertical-space inside the scrollable log. */
   white-space: nowrap;
   overflow: hidden;
   text-overflow: ellipsis;
 
   /* Per-index resting values — defaults ensure sane rendering if style vars
      are missing (e.g. during the very first render before the style prop
-     attaches). Vars are set via inline style in DossierFeed.tsx. */
-  rotate: var(--strip-tilt, 0deg);
-  translate: var(--strip-offset-x, 0) var(--strip-offset-y, 0);
+     attaches). Only X-drift is set per-strip now (for the tossed-on-desk
+     variance); Y layout comes from the flex column itself. */
+  translate: var(--strip-offset-x, 0) 0;
   opacity: var(--strip-opacity, 1);
 }
 

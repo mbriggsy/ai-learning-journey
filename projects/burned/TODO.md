@@ -47,6 +47,8 @@
 - **Blotter paper is fiber-only.** Horizontal ruled lines stripped from `GameTable.module.css` `.blotter` (read too "school notebook"); vertical fiber grain stays. `--color-paper-rule` token kept for StealReport dossier on the phone.
 - **Copy nit.** Board COMMS safe-draw variant is `${name} draws a card, and is safe. For now.` (was `${name} is safe. For now.`) — `events.ts:40`.
 - **Host kick-and-advance feature CUT — not shipped.** Built and reverted in the same session (`host-force-resolve` engine handler + room.ts + board Skip button + 8 tests). Reasoning: it's the first crack in the "game waits for you" policy that the timeouts-removed decision established, and name-reclaim already handles the 90% case (dead phone / closed tab). If real playtest reveals stalled 8-player games where restart cost > friction cost, revisit then with turn-active included (not just pendingPrompt).
+- **Drawer Burned card-as-overlay SHIPPED (#1 of cinematic arc — see priority #3).** `10d220d2` + `02417202`. Drawer sees the Burned MinimalCard fill their phone (clamp 260→420px, 72cqi, drop-shadow for heft, scale 1.6→1 back.out overshoot, slow entry 400ms, hold 2400ms) instead of text "BURNED." Non-drawer / board beat merged from two-beat "{NAME} IS…" → "BURNED" into single-beat "{NAME} BURNED" at 1800ms per playtest feedback. DramaConfig is now a discriminated union (`variant: 'text' | 'card'`); card slot always mounted, display toggles per beat. **NOT yet real-device verified — Briggsy needs to phone-test a drawer-burns scenario before #2 starts.**
+- **Comms scrollable history shipped — server-cumulative event log.** `02417202` + regression tests `77eebd2a`. Root cause was `engine.ts:47` clearing `state.events` on every dispatch, so reloaded clients only saw the last tick's events (~1-3). Fix: state.events is now cumulative across dispatches, capped at 500 in `ok()` + the game-over branch. Client `accumulateEvents` became REPLACE (not append) — server is authoritative. DramaOverlay + DossierFeed announce-tracker seed `lastProcessedRef` on first mount to the tail, so page reloads don't replay historical drama. DossierFeed is scrollable (overflow-y:auto, scrollbars hidden via scrollbar-width:none + webkit rule), bottom mask-image feathers oldest strips into the manila surface. Tests: engine log cumulative semantics (4 tests) + gameStore replace/lobby-clear/position-keys (3 tests) = 371/371 Vitest passing. **Verified "looks great" by Briggsy on the tilt/offset iteration (`a88eb772`), but the final server-cumulative version (`02417202`) has NOT been explicitly confirmed by him — session hit the 90-min sloppy mark before he re-verified.**
 
 ## Next Steps (in priority order)
 
@@ -77,12 +79,47 @@ Commits in order: `639beec0` (tokens) → `21846469` (blotter retire) → `97689
 
 ---
 
-### 3. Regen the final action-card illustration — **Burned** (THE central card)
-**Direct Order + Intercepted shipped 2026-04-22.** Burned is the only action card still at original Apr-9 quality. Visible gap — it's THE central card (the one everyone's afraid to draw) and now the only remaining art below the elevated bar.
+### 3. BURNED CARD CINEMATIC ARC — four-step plan [IN PROGRESS]
+Briggsy's keystone insight 2026-04-22: the Burned card illustration is
+barely seen today (DramaOverlay is text-only; Burned never enters hand
+except briefly during defuse; DefusePlacement sheet is text-only). Fix
+is to make the card illustration LOAD-BEARING across three reveal
+surfaces, then regen the art so it pays off in more eyeballs.
 
-**Current Burned art:** dramatic explosion with a spy ID badge being consumed by flames. Fine but weaker than the elevated deck.
+**Sub-step #1 — Drawer sees card fill their screen on burned-drawn.**
+SHIPPED: `10d220d2` (initial cut) + refined in `02417202` (timing
+tune: entry 250ms→400ms slow, hold 1600ms→2400ms; non-drawer beat
+merged "{NAME} IS…" + "BURNED" → single "{NAME} BURNED" at 1800ms
+per Briggsy direction during playtest).
+**NOT YET REAL-DEVICE VERIFIED.** Before starting #2, Briggsy needs
+to phone-test a drawer-burns and confirm the card-as-overlay lands.
 
-**Concept pitches for next-session kickoff:**
+**Sub-step #2 — Board + non-drawer card flip during drama.** NOT STARTED.
+As the "{NAME} BURNED" text overlay fires on the board and non-drawer
+phones, a face-up Burned card flips onto/behind the drama text
+(shared spectacle instead of just text). Design TBD; likely a
+DramaOverlay extension that accepts a visual asset alongside the
+text variant, OR a separate surface layer.
+
+**Sub-step #3 — DefusePlacement hero card.** NOT STARTED.
+DefusePlacement sheet currently text-only ("Hide the Burned Card"
++ position buttons). Drawer just dodged death — hero the Burned
+card at the top of the sheet during the position-pick. Visual
+continuity from drama → decision: "this is what you're hiding,
+where?"
+
+**Sub-step #4 — Regen the Burned card art.** NOT STARTED.
+With all three surfaces live, the illustration becomes the visual
+keystone of the burned-drawn moment. Direct Order + Intercepted
+shipped 2026-04-22; Burned is the only action card still at
+original Apr-9 quality.
+
+**Next-session kickoff: VERIFY #1 ON PHONE first.** Until Briggsy
+has seen the drawer card-reveal land on a real device with real
+timing, #2 and #3 are built on unverified foundation. Elite bar:
+don't ship #2 against an unverified #1.
+
+**Art concept pitches for #4 (when we get there):**
 - **A. Operative caught in flashbulb exposure** — single moment of "you've been made." Bright white/amber flashbulb blast from outside frame, operative silhouette caught mid-turn looking toward the camera, surprise/recognition expression, dark city street or rooftop setting. Pure noir "the moment your cover is blown" vocabulary.
 - **B. Photograph emerging from developer tray** — close-up overhead view of a darkroom developer tray, a black-and-white surveillance photo of the operative fully developed in the chemical bath, red darkroom light overhead. Narrative: someone has the evidence now. Ties visually to Intel Briefing's photography vocabulary.
 - **C. Cinematic upgrade of the current explosion concept** — keep the badge-in-flames idea but go full Archer-spec: operative's spy ID card with a photo, burning at the edges against a dark void, embers and smoke rising. More dramatic lighting, full-bleed.

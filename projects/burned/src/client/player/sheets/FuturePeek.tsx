@@ -30,11 +30,14 @@ export function FuturePeek({ cards, canRearrange, onDismiss, onRearrange }: Futu
 
   const tappedSet = new Set(tapOrder)
 
-  const handleKeepOrder = useCallback(() => {
+  // Clear resets the tap selection so the user can re-pick. NOT an exit
+  // from the action — the Falsify Intel card already resolved, Nope
+  // window is closed, player must commit an order to advance. 'Cancel'
+  // was the wrong verb: the action can't be cancelled at this stage.
+  const handleClearOrder = useCallback(() => {
     if (submitted) return
-    setSubmitted(true)
-    onRearrange?.(cards.map(c => c.id))
-  }, [submitted, cards, onRearrange])
+    setTapOrder([])
+  }, [submitted])
 
   return (
     <div>
@@ -78,21 +81,22 @@ export function FuturePeek({ cards, canRearrange, onDismiss, onRearrange }: Futu
         </button>
       )}
 
-      {/* canRearrange = Falsify Intel. Cancel is ALWAYS visible — persistent
-          exit. It submits the current card order unchanged (no-op rearrange),
-          clears the pending prompt, turn advances. Same server action as
-          Confirm Order; the label just tells the user which intent they're
-          acting on. Confirm appears alongside Cancel once all cards are tapped.
-          "Cancel" chosen over earlier "Keep Order" because the user's mental
-          model is "I want to bail" — explicit verb beats cute phrasing. */}
+      {/* canRearrange = Falsify Intel. At this point the user has already
+          passed the Intercept window — the action resolved, the game is
+          waiting on them to commit an order. There's no way back out.
+          The only buttons the sheet needs are:
+          - Clear: reset tap selection, re-pick from scratch. Enabled once
+            at least one card is tapped.
+          - Confirm Order: submit the full order. Enabled once all cards
+            are tapped. Only valid exit from this sheet. */}
       {canRearrange && (
         <div className={styles.actionRow}>
           <button
             className={styles.cancelBtn}
-            disabled={submitted}
-            onClick={handleKeepOrder}
+            disabled={submitted || tapOrder.length === 0}
+            onClick={handleClearOrder}
           >
-            Cancel
+            Clear
           </button>
           {tapOrder.length === cards.length && (
             <button

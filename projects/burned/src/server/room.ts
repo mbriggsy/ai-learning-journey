@@ -220,6 +220,15 @@ export class GameRoom extends Server {
       case 'pong':
         // Client responding to server heartbeat — activity already tracked above
         break
+      default: {
+        // Exhaustive default — if a new ClientMessage type is added to the
+        // protocol without a case here, TypeScript forces this to be a
+        // `never`. At runtime we reject loudly so protocol drift never
+        // silently consumes a message. E2E audit 2026-04-23 B-09.
+        const _exhaustive: never = msg
+        void _exhaustive
+        this.sendError(connection, 'INVALID_MESSAGE', 'Unknown message type')
+      }
     }
   }
 
@@ -532,6 +541,11 @@ export class GameRoom extends Server {
 
     // Clear all game timers including pending disconnect debounces
     this.clearAllTimers()
+
+    // Reset persist-failure counter on explicit lobby return. Long-running
+    // rooms that accumulated write failures across games otherwise never
+    // zeroed this counter on a clean reset. E2E audit 2026-04-23 B-08.
+    this.consecutivePersistFailures = 0
 
     // Reset to lobby state, preserving all registered players
     this.gameState = createLobbyState()

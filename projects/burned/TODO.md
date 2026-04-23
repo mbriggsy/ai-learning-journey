@@ -1,146 +1,54 @@
 # BURNED — TODO
 
-## ⚠️ MORNING BRIEFING — overnight E2E audit + remediation (2026-04-24)
+## 🎯 NEXT SESSION — pick up here (2026-04-23 EOD)
 
-**Morning, Briggsy. Went deep last night per your "we want gasps" directive.**
+**32 commits on `main`, not pushed. Phone verification still outstanding for
+all of them.** Briggsy's logistical window for real-device testing was closed
+this session; resume on that first thing next session.
 
-### What happened
+### Immediate priorities (ordered)
 
-Spun up 5 parallel investigation agents covering game rules fidelity, disconnect / session,
-visual fidelity via Playwright across 10 viewports, client input abuse / race conditions,
-and WS-boundary validation. **87 findings, 17 P0s.** Full issue list at
-`docs/testing/E2E-ISSUE-LIST.md`, source agent reports at `temp/audit/*.md`, screenshots
-at `temp/audit/screenshots/*` (65 files).
+1. **Phone-verify the 32-commit pile on a real phone + TV.** Everything since
+   `origin/main` is Playwright/unit-verified only. Earth > map. Until this
+   happens, "shipped" is "believed shipped."
+2. **Decide push.** After phone verification, push `main` to origin or roll
+   back individual commits.
+3. **Host-identity cluster (P1 deferred).** B-01/B-02/B-11/B-12/B-14 —
+   significant infra, design questions first.
+4. **Remaining P1/P2 from `docs/testing/E2E-ISSUE-LIST.md`** — cosmetic and
+   scope-decision items listed below, pick opportunistically.
 
-Remediated 25 issues in atomic commits. Test baseline lifted 371 → 399. All typecheck clean.
-Playwright E2E unchanged at 15/15. Commits local, nothing pushed — your call in the morning.
+### What needs specific phone verification (this session's work)
 
-### What shipped (25 commits, all on `main`, all local)
+| Commit | What to check |
+|---|---|
+| `2abadf9e` + `da39a1ba` | End Game button top-right on TV; confirm modal renders and dismisses cleanly via tap + Escape + backdrop |
+| `2abadf9e` | Offline nameplate pulses red + reads `// COMMS DOWN` when a player's phone disconnects mid-turn |
+| `4b7be76e` | 10s Nope window reads as "breathing room" not "interminable" at the couch |
+| `16942a1b` + `e6b31b5c` | Second Noper's late tap gets the "Too late — someone intercepted first" toast (not a silent counter-nope). Counter-nope button copy reads correctly on phone. Test with 2+ real phones tapping Nope simultaneously |
+| `4985fa23` | Cinematic Arc #2: non-drawer/board sees the Burned card slam-in face-down → flip to face-up with victim name caption. Eye on timing at couch distance (currently ~2s beat) |
+| `d21d67ab` + `6abe26d5` + `12752819` | Falsify Intel: title reads "Falsify Intel", sheet renders immediately with cards populated (no alt-tab required), Clear button resets tap selection, Confirm Order only appears after all 3 tapped |
 
-**11 P0 fixes** (in commit order):
-
-| Commit | Finding | One-line |
-|---|---|---|
-| `35e87dd9` | E-01 | `card-drawn.cardType` stripped from non-drawer projections — privacy leak gone |
-| `bf08fa04` | E-02 | WS message cap measured in UTF-8 bytes, not UTF-16 chars — 4× DoS bypass gone |
-| `adf26d46` | E-03 | `scripts/verify-prod-bundle.ts` greps dist/ for `__gameStore` — regression guard |
-| `e4b40101` | C-05 | `formatEvent` unknown events → `null`, not event object — crash loop gone |
-| `bc081172` | A-01 | Server rejects single Intercepted upfront — bypass path can't burn the card |
-| `b672e2a1` | C-02 | JoinScreen "DASH BARLOWE" no longer truncates at 12-char max on any phone |
-| `5c458dde` | C-06 | Staged operative miniature hides name below 114px container — no mid-glyph cut |
-| `1e40c086` | C-01 | 10-player lobby fits on 1080vh TV — 2-col grid, CLEARED HOT visible |
-| `50c23077` | C-03 | Portrait-orientation board → themed "ROTATE DEVICE" splash |
-| `7cccfffe` | C-04 | ErrorBoundary fallback is now TV-legible Pendleton comms vocabulary |
-| `c0a12abf` | D-01 | Intercept button optimistic lock — no more panic-tap burns all Nopes |
-
-**14 P1 fixes** (abridged):
-
-- `1db5ddab` — drama holdMs 800/1000/1200 → 1400/1600/1500 (couch legibility) + rank `#undefined` guard
-- `5d424d49` — PlayerStrip NAME_MAX 7 → 13 + CSS ellipsis fallback
-- `dd446945` — Draw button optimistic in-flight lock (no STALE_STATE error spam)
-- `0af60680` — StealReport 350ms debounce + NameCard Escape-to-cancel
-- `a9a8e373` — `.activeTag` moved up 6px + `.turns` margin-left 4px (no pill collision)
-- `19ce54e0` — Zod cluster: `.strict()` on every schema, NAME_PATTERN in reclaim path, name regex at WS, stateVersion max 1M
-- `d0b5bbcb` — ClientMessage exhaustive default + `consecutivePersistFailures` reset on lobby return
-- `9a0c3f20` — 5 new regression tests: elim-mid-attack, pair-Nope cleanup, triple cancel-reselect, Favor post-give Nope rejection, pair of Intercepteds
-- `23cd64c9` — JoinScreen client-side name regex pre-validation
-
-### ⏸ BLOCKED ON YOUR DECISION — 7 P0s
-
-**Disconnect-wedge cluster (B-03/04/05/06/07/13).** Currently only the Nope window has
-server-side disconnect-safety machinery. Every other hot-seat sub-phase
-(name-card-pending, defuse-pending, favor-pending, future-rearrange-pending) wedges the
-entire room if the prompted player disconnects — until the 15-min INACTIVITY_TIMEOUT
-nukes everything. Active-player disconnect during turn-active also never advances.
-
-This conflicts with the explicit **"game waits for you"** policy we locked when we ripped
-out `PROMPT_TIMEOUT_MS`. The policy was right for *slow humans*. A *disconnected* player
-is different.
-
-**Three options — I recommend (b):**
-- **(a)** Keep current policy, accept the 15-min room nuke. Simple, one bad actor kills the room.
-- **(b)** Disconnect-triggered auto-resolve with safe defaults. Server watches
-  confirmed-disconnect (not a blip) of the prompted player; after N seconds, auto-resolves:
-  - `name-card-pending` → auto `cancel-name-card` (cards return to hand)
-  - `defuse-pending` → auto `defuse-place` at random position (same fallback as the
-    client's Random button)
-  - `favor-pending` → auto-gift a random non-Burned card (or cancel entirely)
-  - `future-rearrange-pending` → auto-accept current order
-  - `turn-active` active player disconnect → advance turn (forfeit the draw)
-
-  Slow humans still wait forever (policy preserved). Ghost players unblock the room.
-  ~150 lines of infra mirroring the existing Nope timer. Generation-numbered so
-  hibernation restoration is safe.
-- **(c)** Host vote-to-kick stalled seat. More surgery, more UX, more questions
-  ("what if the host disconnected?").
-
-**D-03 — simultaneous Nope race.** Rules-correct but UX-deceptive: two Nopers at the
-same ms stack in arrival order, so the second person's Nope re-enables the action the
-first Noper already killed. Fix is either (a) broadcast a "nope-pending" optimistic flag
-so phones see "someone else already Noped" before their tap, or (b) instant-close the
-window on first Nope and require counter-Nope to reopen. Both are design decisions, not
-bug fixes.
-
-### 🔍 Phone verification still pending
-
-These fixes are Playwright-verified (or trivially verified locally) but need your eyes
-on a real phone / TV before "shipped" becomes true:
-
-- **C-02** JoinScreen hero name fits 12 chars on every phone — measured at 360×640 + 390×844 via evaluate
-- **C-06** Staged miniature name hidden below 114px container
-- **C-01** 10p lobby on 1080vh — screenshot at `temp/audit/screenshots/fix-C-01-lobby-1440x900-after.png`
-- **C-03** iPad portrait splash — screenshot at `temp/audit/screenshots/fix-C-03-ipad-portrait-splash-after.png`
-- **C-14** Drama holdMs bumps (INTERCEPTED 800→1400, EXTRACTED 1000→1600, ELIMINATED 1200→1500) — does this read right from couch distance or overstay?
-- **C-08** PlayerStrip full names at 1920/1080 — verify 10p case doesn't overflow in practice
-- **C-20** Active-player "ACTIVE" pill no longer clips tile's top chrome
-- **D-01 / D-02** Intercept + Draw optimistic locks — verify the button actually locks on rapid taps
-- **D-05** StealReport 350ms debounce — panic-tap no longer loses intel
-
-Plus the pending items from the prior arc that never got phone-tested:
-- Sub-step #1 of Cinematic Arc: drawer sees Burned card fill screen on burned-drawn
-- Server-cumulative comms fix from `02417202`
-
-### 📋 Remaining in `docs/testing/E2E-ISSUE-LIST.md`
-
-**P1 deferred** (design scope, host-identity work):
-- B-01 Host session token (significant infra)
-- B-02 Host disconnect during lobby signal
-- B-11 Non-host return-to-lobby in game_over
-- B-12 Client-side protocol version on every message
-- B-14 "Did you mean" list of disconnected names on GAME_ALREADY_STARTED
-- C-07 Nameplate brass stand height (cosmetic)
-- C-09 NameCard sheet CTA below fold on 360×640 (cosmetic)
-- C-10 / C-16 Nope countdown visual redesign (scope decision)
-- C-11 / C-12 DossierFeed decorations (scope decision)
-- C-15 Board gets card-variant for burned-drawn? (product decision)
-- C-17 GameOver redesign (scope decision)
-- C-18 EliminatedView Archer redress (scope decision)
-- C-19 JoinScreen waiting-state empty space (scope decision)
-- C-21 Hand card height bounce 368 vs 389 — needs real-phone measurement to narrow cause
-- C-25 SmartActionBox "Needs a pair or triple" vocabulary (1-line copy)
-- D-04 FuturePeek read-only `Got it` submit guard
-- D-15 Play button visual disable during own Nope window
-- D-16 Counter-counter-nope by original actor — rules-fidelity investigation
-
-**P2s** — all queued in the issue list, none ship-blocking.
-
-### 🎯 Recommended next session
-
-1. **Phone-verify the overnight work** — 15 min on real devices, confirm what's marked "pending verification" above.
-2. **Decide disconnect cluster** — (a)/(b)/(c). If (b), I can implement in one session (~2-3 hr).
-3. **Decide D-03 Nope race** — broadcast or instant-close.
-4. **Cinematic Arc #2** — Briggsy's original next priority. Once #1 is phone-verified, sub-step #2 (board + non-drawer card flip during drama) is unblocked.
-
-Nothing pushed to origin — ATC clears it.
-
-Test count at start of session: **371/371 Vitest**. End of session: **399/399 Vitest, 15/15 Playwright, typecheck clean**.
+Plus everything Playwright-flagged in the overnight work that's still phone-pending
+(see §"Earlier: phone verification backlog" below).
 
 ---
 
 ## Current State
 
 - **PRODUCT-SPECIFICATION.md v1.0 LOCKED** — `docs/specifications/PRODUCT-SPECIFICATION.md` (2026-04-10).
-- **371/371 Vitest, 15/15 Playwright, typecheck clean** (re-verified 2026-04-22 end-of-session via `pnpm typecheck && pnpm test && pnpm exec playwright test`). +7 regression tests locked 2026-04-22 in `77eebd2a` — engine-level cumulative-events invariants (4) + client-level replace-semantics invariants (3). +4 Agent-X combo-triple matrix cases added earlier to `src/shared/combo-validation.test.ts` locking the matchType derivation: 3× Agent X → triple(matchType=agent-x), 2× Agent X + matching operative → triple(matchType=operative), 1× Agent X + 2 matching operatives → triple(matchType=operative), 2× Agent X + non-operative action → rejected(mismatched-types). Prior expansion (2026-04-21): `deck-composition-exhaustive.test.ts` parameterized 2-10 players against `docs/rules/RULES-REFERENCE.md` §3; `rules-gaps-exhaustive.test.ts` plugs §11 Attack+Defuse continuation, §6 Intel Briefing mid-turn, §9 triple-Nope, §7 combo overrides, §10.3 Back Channel under Attack, §6 empty-hand Favor, §9 Burned/Extraction not Nopeable, §5 multi-play per turn, §12 dead-card disposal.
+- **409/409 Vitest, typecheck clean** (re-verified 2026-04-23 EOS). Full Playwright not re-run after card-flip + End Game + Nope race work; run `pnpm exec playwright test` before push.
+- **Protocol version 3** (bumped 2026-04-23 for D-03 Nope race fix — client `nope` now carries `windowGeneration` for stale-generation rejection). Any client running v2 gets the "Game updated — please refresh" halt.
+- **End Game button + offline nameplate shipped 2026-04-23.** Board top-right trigger → "Scratch The Op?" confirm modal → reuses existing host-gated `return-to-lobby` wire. No new protocol. `EndGameControl` lives as SIBLING of `GameTable` (not inside) — `.table`'s `contain: layout` creates a containing block for fixed descendants and traps the modal behind game chrome (z-index 100+). When a prompted/active player's `isConnected === false`, Nameplate flips to `{NAME} · // COMMS DOWN` with a red pulse halo (subtext carries the meaning — color-blind safe). Resolves the disconnect-wedge cluster: iPad-as-host policy (no sticky host identity), party decides together to "scratch the op" and deal again.
+- **Nope windows 10s flat across player counts** (was tiered 3s/5s/7s). Playtest feedback: prior durations felt rushed; 10s gives couch enough time to process action + decide. `NOPE_WINDOW_MS.{manyPlayers,fewPlayers,headsUp}` all 10_000.
+- **D-03 Nope race closed.** Client-sent `nope` now required to carry `windowGeneration: number` in Zod schema. Engine `handleNope` rejects stale generation (after another player's Nope already advanced the window) with a dedicated `NOPE_STALE_GENERATION` engine code, mapped to wire `NOPE_TOO_LATE`. Client: `ErrorToast` shows "Too late — someone intercepted first" for that code; `SmartActionBox` button label flips `Intercept` → `Counter` based on `chainDepth > 0`. Two new regression tests in `engine-phase3.test.ts` lock the stale-gen rejection + explicit counter-Nope acceptance.
+- **Cinematic Arc #2 shipped 2026-04-23.** Non-drawer and board on `burned-drawn` now see a card-flip beat instead of plain text. New `'card-flip'` variant on `DramaConfig` union (drawer's `'card'` variant untouched — Arc #1 intact). Beat: 400ms slam-in face-down + 300ms suspense pause + 500ms rotateY 0→180 flip + 250ms victim-name fade-in + 1400ms settled hold. LANDMINE: CSS `backface-visibility: hidden` is UNRELIABLE — Chrome collapses `rotateY(0deg)` on children to 2D identity matrix, breaks backface culling. Current implementation uses opacity crossfade at the edge-on midpoint instead (both faces render, opacity switches at rotator=90° when visible area is near-zero). See memory `feedback-css-3d-backface-unreliable.md`.
+- **Falsify Intel / Intel Briefing polish (2026-04-23).** Three fixes landed in `d21d67ab` / `6abe26d5` / `12752819`:
+  - **Copy**: stale EK strings "Alter the Future" / "See the Future" → canonical "Falsify Intel" / "Intel Briefing" (from `card-defs.ts`).
+  - **Clear button**: always present on the Falsify sheet, disabled when no taps, resets tap selection. "Cancel" is the wrong verb here — the play already resolved past Intercept, user must commit an order.
+  - **Render timing**: `gameStore.handleMessage('player-update')` now writes `privateData` BEFORE calling `updateState` (which triggers `notify()`). Prior order caused React to re-render with new `pendingPrompt` but stale `futureCards` → sheet rendered empty until an unrelated re-render flushed the data. Memory: `gameStore` is a singleton export — HMR may not hot-replace reliably, hard-refresh required after editing.
+- **Motion tokens upgraded to Emil-grade curves.** `--motion-ease-base` is now iOS drawer `cubic-bezier(0.32, 0.72, 0, 1)`; `--motion-ease-decelerate` is Emil's strong ease-out `cubic-bezier(0.23, 1, 0.32, 1)`. `MOTION.exit` no longer uses `accelerate` (ease-in) — flipped to `decelerate` for crisper exits. `primitives.css` and `motion.ts` stay lockstep (`motion-token-sync.test.ts` enforces). Cascades to every component consuming these tokens.
+- **409/409 Vitest baseline** (was 371/371 at start of 2026-04-23). +38 new tests across overnight audit work + D-03 regression + Nameplate offline-subject derivation. Previously: +7 regression tests locked 2026-04-22 in `77eebd2a` — engine-level cumulative-events invariants (4) + client-level replace-semantics invariants (3). +4 Agent-X combo-triple matrix cases added earlier to `src/shared/combo-validation.test.ts` locking the matchType derivation: 3× Agent X → triple(matchType=agent-x), 2× Agent X + matching operative → triple(matchType=operative), 1× Agent X + 2 matching operatives → triple(matchType=operative), 2× Agent X + non-operative action → rejected(mismatched-types). Prior expansion (2026-04-21): `deck-composition-exhaustive.test.ts` parameterized 2-10 players against `docs/rules/RULES-REFERENCE.md` §3; `rules-gaps-exhaustive.test.ts` plugs §11 Attack+Defuse continuation, §6 Intel Briefing mid-turn, §9 triple-Nope, §7 combo overrides, §10.3 Back Channel under Attack, §6 empty-hand Favor, §9 Burned/Extraction not Nopeable, §5 multi-play per turn, §12 dead-card disposal.
 - **Motion tokens upgraded to Emil-grade curves.** `--motion-ease-base` is now iOS drawer `cubic-bezier(0.32, 0.72, 0, 1)`; `--motion-ease-decelerate` is Emil's strong ease-out `cubic-bezier(0.23, 1, 0.32, 1)`. `MOTION.exit` no longer uses `accelerate` (ease-in) — flipped to `decelerate` for crisper exits. `primitives.css` and `motion.ts` stay lockstep (`motion-token-sync.test.ts` enforces). Cascades to every component consuming these tokens.
 - **Emil audit P2 triage shipped 2026-04-23 evening.** One atomic commit, 4 of 6 items landed:
   - **#13 Nameplate standby folded into flip flow.** `resolveSubject` now always returns a `Subject` (never null), with a `standby` flag. `STANDBY_SUBJECT` has `key: 'standby'`, `name: '.'`, `subtext: 'Standby'`. `data-standby="true"` attribute on `.plateContent` scopes the `visibility: hidden` name-hide to the plateContent itself (not the parent className) so the EXITING standby plate stays blank through its rotateY exit. `.nameplate` gets `transition: opacity var(--motion-duration-slow) var(--motion-ease-base)` so the wrapper brightens from 0.55 → 1 alongside the first coin flip. Game-start first-turn now flips the plate from quiet to active instead of hard-swapping DOM.
@@ -161,7 +69,7 @@ Test count at start of session: **371/371 Vitest**. End of session: **399/399 Vi
 - **ErrorToast has no CSS keyframes.** `@keyframes slideDown` deleted from `ErrorToast.module.css` — it was racing Framer's `y: -60 → 0` in `ErrorToast.tsx`. Framer is the single source of truth for toast motion; interruptibility comes from `AnimatePresence` for free.
 - **Hand→enlarge crossfade uses blur-mask.** `Hand.tsx`'s enlarge overlay animates `filter: blur(4px) → blur(0px) → blur(4px)` alongside `scale: 0.35 → 1 → 0.35`. MinimalCard's container-query layout flips thresholds mid-scale; the 4px blur smooths the rejig into a single perceived motion (Emil's crossfade-mask trick, kept under 6px so Safari mobile doesn't rasterize heavily on the main thread).
 - **Lobby disabled start button has an ambient sheen.** Replaces the pre-existing opacity pulse (which never fired anyway — `::after` is `display: none` when disabled). `.startButton:disabled` background is now a layered gradient (105° cream-12 band over teal-charcoal base) animating `background-position` every `--motion-duration-ambient` (4s). Reads as "actively listening" rather than frozen.
-- **Protocol version 2** — unchanged this session.
+- ~~Protocol version 2~~ — bumped to 3 on 2026-04-23, see top of Current State.
 - **Triple-steal flow is deferred-commit.** 3-of-a-kind play stages cards in the stealer's hand; cancel returns them untouched. Name-commit discards the cards AND opens the nope window (carrying stealer+target+namedCardType), so defenders Nope with full context. Matches tabletop semantics where the named card is public before Nope. Engine: `handleCombo` skips discard/nope for comboSize===3; `handleNameCard` commits and opens the window; `handleNopeWindowExpired` has a named-steal resolution branch that runs BEFORE the legacy `pendingSteal` branch.
 - **Cancel button on NameCard sheet.** "Call off the raid" — pre-commit only (rejected post-name because the play is already public and the nope window is live).
 - **Favor-target uses hand + staging, not a sheet.** `FavorResponse.tsx` deleted. When targeted, the phone shows a pinned `Vera demands a card` banner; the hand stays live (permission carve-out in `useInteractionPermission.ts`); staging caps at 1 (auto-swap on second tap); SmartActionBox shows a `Surrender this card → Vera` confirm. One less modal, consistent grammar with normal play.
@@ -231,12 +139,12 @@ per Briggsy direction during playtest).
 **NOT YET REAL-DEVICE VERIFIED.** Before starting #2, Briggsy needs
 to phone-test a drawer-burns and confirm the card-as-overlay lands.
 
-**Sub-step #2 — Board + non-drawer card flip during drama.** NOT STARTED.
-As the "{NAME} BURNED" text overlay fires on the board and non-drawer
-phones, a face-up Burned card flips onto/behind the drama text
-(shared spectacle instead of just text). Design TBD; likely a
-DramaOverlay extension that accepts a visual asset alongside the
-text variant, OR a separate surface layer.
+**Sub-step #2 — Board + non-drawer card flip during drama.** SHIPPED: `4985fa23`.
+New `'card-flip'` variant on `DramaConfig` union. Beat: 400ms slam-in face-down +
+300ms suspense pause + 500ms rotateY 0→180 flip (with opacity crossfade at edge-on
+midpoint to bypass Chrome's broken `backface-visibility`) + 250ms victim-name fade-in +
+1400ms settled hold. Drawer's Arc #1 single face-up reveal is untouched — only the
+non-drawer/board beat got the flip. **NOT YET REAL-DEVICE VERIFIED.**
 
 **Sub-step #3 — DefusePlacement hero card.** NOT STARTED.
 DefusePlacement sheet currently text-only ("Hide the Burned Card"
@@ -251,10 +159,11 @@ keystone of the burned-drawn moment. Direct Order + Intercepted
 shipped 2026-04-22; Burned is the only action card still at
 original Apr-9 quality.
 
-**Next-session kickoff: VERIFY #1 ON PHONE first.** Until Briggsy
-has seen the drawer card-reveal land on a real device with real
-timing, #2 and #3 are built on unverified foundation. Elite bar:
-don't ship #2 against an unverified #1.
+**Next-session kickoff: VERIFY #1 AND #2 ON PHONE.** #1 (drawer reveal) and
+#2 (non-drawer / board card-flip) BOTH need real-device verification. Timing
+(2s+ beat for #2) may read differently on a TV at couch distance vs
+1920×1080 dev viewport. #3 (DefusePlacement hero) and #4 (art regen)
+remain NOT STARTED.
 
 **Art concept pitches for #4 (when we get there):**
 - **A. Operative caught in flashbulb exposure** — single moment of "you've been made." Bright white/amber flashbulb blast from outside frame, operative silhouette caught mid-turn looking toward the camera, surprise/recognition expression, dark city street or rooftop setting. Pure noir "the moment your cover is blown" vocabulary.

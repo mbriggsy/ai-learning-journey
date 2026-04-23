@@ -8,6 +8,7 @@ import { MOTION } from '@client/shared/tokens/motion'
 import { haptic } from '@client/shared/haptics'
 import { useDoubleTap } from './hooks/useDoubleTap'
 import { useSendAction } from '@client/shared/hooks/useSendAction'
+import { gameStore } from '@client/shared/gameStore'
 import { useScrollBounce } from './hooks/useScrollBounce'
 import { SmartActionBox } from './SmartActionBox'
 import styles from './StagingArea.module.css'
@@ -73,6 +74,14 @@ export function StagingArea({
   const handleDraw = useCallback(() => {
     haptic('medium')
     sendAction({ type: 'draw-card' })
+    // Flip optimisticPending → true so the button locks until the
+    // next state-update arrives. Without this, rapid taps all send
+    // draw-card actions (stateVersion exempts draw-card on the server
+    // for the active player until the state advances), producing a
+    // cascade of STALE_STATE errors the user sees as error-toast spam.
+    // No hand change yet — state-update decides what card was drawn.
+    // E2E audit 2026-04-23 D-02.
+    gameStore.applyOptimistic(s => s)
   }, [sendAction])
 
   const stagedCards = cardPlayState.status === 'selecting'

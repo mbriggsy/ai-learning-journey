@@ -78,31 +78,32 @@ export function FuturePeek({ cards, canRearrange, onDismiss, onRearrange }: Futu
         </button>
       )}
 
-      {/* canRearrange = Falsify Intel. Two paths out:
-          - Keep order: always available, submits cards in current order
-            unchanged. No-op rearrange. Lets a user bail out after peeking
-            without being trapped into tapping 3 cards they don't want to
-            reorder. Game waits for you; this is the "I've seen enough" exit.
-          - Confirm Order: only after all cards tapped, submits custom order.
-          Both submit the future-rearrange action, which clears the pending
-          prompt and advances the turn. 2026-04-23. */}
-      {canRearrange && tapOrder.length === cards.length && (
-        <button
-          className={styles.confirmBtn}
-          disabled={submitted}
-          onClick={handleConfirmOrder}
-        >
-          Confirm Order
-        </button>
-      )}
-      {canRearrange && tapOrder.length !== cards.length && (
-        <button
-          className={styles.confirmBtn}
-          disabled={submitted}
-          onClick={handleKeepOrder}
-        >
-          Keep Order
-        </button>
+      {/* canRearrange = Falsify Intel. Cancel is ALWAYS visible — persistent
+          exit. It submits the current card order unchanged (no-op rearrange),
+          clears the pending prompt, turn advances. Same server action as
+          Confirm Order; the label just tells the user which intent they're
+          acting on. Confirm appears alongside Cancel once all cards are tapped.
+          "Cancel" chosen over earlier "Keep Order" because the user's mental
+          model is "I want to bail" — explicit verb beats cute phrasing. */}
+      {canRearrange && (
+        <div className={styles.actionRow}>
+          <button
+            className={styles.cancelBtn}
+            disabled={submitted}
+            onClick={handleKeepOrder}
+          >
+            Cancel
+          </button>
+          {tapOrder.length === cards.length && (
+            <button
+              className={styles.confirmBtn}
+              disabled={submitted}
+              onClick={handleConfirmOrder}
+            >
+              Confirm Order
+            </button>
+          )}
+        </div>
       )}
     </div>
   )

@@ -304,6 +304,17 @@ function handleSingleCard(
     return err(state, 'Operative cards can only be played in combos', 'INVALID_ACTION')
   }
 
+  // Intercepted (Nope) is a REACTIVE interrupt only — never a proactive
+  // turn-phase play. The client validator (combo-validation.ts) blocks
+  // this, but a malicious/buggy client bypassing the client-side guard
+  // could previously reach here, get the card stripped from hand and
+  // discarded, open a Nope window, then error on resolution (in
+  // applyCardEffect) with the card permanently lost. Zero-trust: server
+  // must mirror the client validator. E2E audit 2026-04-23 A-01.
+  if (card.type === 'intercepted') {
+    return err(state, 'Intercepted cannot be played alone — it is a reactive interrupt', 'INVALID_ACTION')
+  }
+
   // Remove card from hand, add to discard
   let newState = removeCardsFromHand(state, action.playerId, [card.id])
   newState = addToDiscard(newState, [card])

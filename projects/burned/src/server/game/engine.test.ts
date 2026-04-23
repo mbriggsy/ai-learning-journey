@@ -804,6 +804,34 @@ describe('Two of a Kind', () => {
     if (!result.ok) expect(result.code).toBe('INVALID_COMBO')
   })
 
+  // Regression: overnight E2E audit 2026-04-23 A-01. Server handleSingleCard
+  // accepted a single Intercepted play, stripped it from hand + discarded,
+  // opened a nope window, then errored on resolve with the card permanently
+  // lost. Client validator (combo-validation.ts) blocks this, but
+  // zero-trust: server must mirror.
+  it('rejects single Intercepted play upfront — hand and discard unchanged (A-01)', () => {
+    let state = startGameWith(2)
+    state = giveCard(state, 'p1', 'intercepted', 'nope-solo')
+
+    const handBefore = state.players.find(p => p.id === 'p1')!.hand.length
+    const discardBefore = state.discardPile.length
+
+    const result = act(state, { type: 'play-card', playerId: 'p1', cardIds: ['nope-solo'] })
+
+    expect(result.ok).toBe(false)
+    if (!result.ok) expect(result.code).toBe('INVALID_ACTION')
+
+    // Hand unchanged
+    const handAfter = (result.state as PlayingState).players.find(p => p.id === 'p1')!.hand.length
+    expect(handAfter).toBe(handBefore)
+    // Discard unchanged
+    expect((result.state as PlayingState).discardPile.length).toBe(discardBefore)
+    // No stray nope window
+    expect((result.state as PlayingState).nopeWindow).toBeNull()
+    // Card still in hand
+    expect((result.state as PlayingState).players.find(p => p.id === 'p1')!.hand.some(c => c.id === 'nope-solo')).toBe(true)
+  })
+
   it('allows two matching action cards as valid pair', () => {
     let state = startGameWith(2)
     state = giveCard(state, 'p1', 'reassign', 'atk-1')

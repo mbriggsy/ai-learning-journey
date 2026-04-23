@@ -400,7 +400,7 @@ describe('Rules §7 — 3-of-a-kind cancel-then-reselect works end-to-end (A-06)
     expect((result.state as PlayingState).subPhase).toBe('name-card-pending')
 
     // Cancel
-    result = act(result.state, { type: 'cancel-name-card', playerId: 'p1' })
+    result = act(result.state as PlayingState, { type: 'cancel-name-card', playerId: 'p1' })
     expect(result.ok).toBe(true)
     const afterCancel = result.state as PlayingState
     expect(afterCancel.subPhase).toBe('turn-active')
@@ -418,7 +418,7 @@ describe('Rules §7 — 3-of-a-kind cancel-then-reselect works end-to-end (A-06)
     expect((result.state as PlayingState).subPhase).toBe('name-card-pending')
 
     // Commit a name — must land in open nope window.
-    result = act(result.state, {
+    result = act(result.state as PlayingState, {
       type: 'name-card', playerId: 'p1', cardType: 'skip',
     } as unknown as Parameters<typeof act>[1])
     expect(result.ok).toBe(true)

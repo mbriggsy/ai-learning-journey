@@ -25,6 +25,10 @@ export function JoinScreen({ connectionStatus, assignedColor, onJoin, roomCode, 
   const [error, setError] = useState<string | null>(null)
   const joined = assignedColor !== null
 
+  // Mirrors server NAME_PATTERN (room.ts) + validation.ts NameRegex.
+  // Keep these three in sync if the pattern ever changes.
+  const CLIENT_NAME_PATTERN = /^[a-zA-Z0-9 .!?_-]{1,12}$/
+
   function handleSubmit(e: React.FormEvent) {
     e.preventDefault()
     const trimmed = name.trim()
@@ -34,6 +38,12 @@ export function JoinScreen({ connectionStatus, assignedColor, onJoin, roomCode, 
     }
     if (trimmed.length > 12) {
       setError('Max 12 characters')
+      return
+    }
+    // Pre-validate the character class so the user gets immediate feedback
+    // instead of a server NAME_INVALID round trip. E2E audit 2026-04-23 D-17.
+    if (!CLIENT_NAME_PATTERN.test(trimmed)) {
+      setError('Letters, numbers, spaces, and . ! ? _ - only')
       return
     }
     setError(null)

@@ -153,8 +153,21 @@ export function formatEvent(event: GameEvent, players: readonly BoardPlayer[], e
       ], eventId)
 
     default: {
+      // TypeScript-exhaustive check: if a new GameEvent variant is added
+      // without a case here, this fails compilation. At runtime, return
+      // null instead of the object itself so an unknown event (protocol
+      // drift, stale client, future card, server bug) doesn't get handed
+      // to React as a child — which throws and, because events are
+      // server-cumulative (500-cap replays on remount), wedges the board
+      // permanently in ErrorBoundary Recovering state.
+      // E2E audit 2026-04-23 C-05 — verified crash-loop reproducible.
       const _exhaustive: never = event
-      return _exhaustive
+      void _exhaustive
+      if (typeof console !== 'undefined') {
+        const type = (event as { type?: string }).type ?? 'unknown'
+        console.warn(`[events] unknown event type rendered as null: ${type}`)
+      }
+      return null
     }
   }
 }

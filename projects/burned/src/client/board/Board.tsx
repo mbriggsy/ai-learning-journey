@@ -32,12 +32,94 @@ function getOrCreateRoomCode(): string {
   return code
 }
 
+// Per product spec §3.4, board view is landscape-only. An iPad in portrait
+// (or a phone accidentally navigating to /board.html) renders a broken
+// layout — DrawPile overlaps discard, PlayerStrip cuts off, COMMS stretches.
+// Detect portrait AND narrow (so landscape monitors stay fine) and show a
+// rotate-device splash. E2E audit 2026-04-23 C-03.
+function useIsPortraitBoard(): boolean {
+  // Spec §3.4: board view is landscape-only. ANY portrait render is
+  // explicitly unsupported — iPad-portrait (1024×1366) shipped a broken
+  // layout in the audit (DrawPile overlapping discard, PlayerStrip cut
+  // off left, COMMS stretched). No width threshold: if it's portrait,
+  // it's wrong. TVs are always landscape so this never fires for them.
+  const [isPortrait, setIsPortrait] = useState(() => {
+    if (typeof window === 'undefined' || typeof window.matchMedia !== 'function') return false
+    return window.matchMedia('(orientation: portrait)').matches
+  })
+  useEffect(() => {
+    if (typeof window === 'undefined' || typeof window.matchMedia !== 'function') return
+    const mq = window.matchMedia('(orientation: portrait)')
+    const check = () => setIsPortrait(mq.matches)
+    mq.addEventListener('change', check)
+    return () => mq.removeEventListener('change', check)
+  }, [])
+  return isPortrait
+}
+
+function RotateDeviceSplash() {
+  return (
+    <div style={{
+      position: 'fixed', inset: 0,
+      display: 'flex', flexDirection: 'column',
+      alignItems: 'center', justifyContent: 'center',
+      padding: '2rem', gap: '1.5rem',
+      background: 'var(--color-bg-surface, #0c0a12)',
+      color: 'var(--color-fg-primary, #f5e6d3)',
+      fontFamily: 'var(--font-mono, ui-monospace, monospace)',
+      textAlign: 'center',
+      zIndex: 9999,
+    }}>
+      <div style={{
+        fontFamily: 'var(--font-display, system-ui)',
+        fontWeight: 900,
+        fontSize: 'clamp(2rem, 8vw, 3.5rem)',
+        letterSpacing: '-0.015em',
+        textTransform: 'uppercase',
+        color: 'var(--color-accent-burned, #d0332b)',
+        textShadow: '0 0 40px color-mix(in oklab, var(--color-accent-burned, #d0332b) 40%, transparent)',
+      }}>
+        Rotate Device
+      </div>
+      <div style={{
+        fontFamily: 'var(--font-mono, monospace)',
+        fontSize: 'clamp(0.875rem, 2.5vw, 1rem)',
+        letterSpacing: '0.25em',
+        textTransform: 'uppercase',
+        opacity: 0.72,
+        maxWidth: '28ch',
+        lineHeight: 1.5,
+      }}>
+        The Pendleton Agency briefing room requires landscape orientation.
+      </div>
+      <div style={{
+        fontSize: 'clamp(3rem, 10vw, 5rem)',
+        opacity: 0.5,
+        transform: 'rotate(90deg)',
+      }}>
+        ↻
+      </div>
+      <div style={{
+        fontFamily: 'var(--font-mono, monospace)',
+        fontSize: '0.75rem',
+        letterSpacing: '0.35em',
+        textTransform: 'uppercase',
+        opacity: 0.45,
+        marginTop: '1rem',
+      }}>
+        // Classified // Awaiting signal
+      </div>
+    </div>
+  )
+}
+
 export function Board() {
   const [connectionStatus, setConnectionStatus] = useState<ConnectionStatus>(getStatus())
   const [roomCode] = useState(getOrCreateRoomCode)
   const state = useGameState()
   const protocolMismatch = useProtocolMismatch()
   const lastError = useLastError()
+  const isPortraitBoard = useIsPortraitBoard()
 
   useEffect(() => {
     const unsubMsg = onMessage(msg => gameStore.handleMessage(msg))
@@ -65,6 +147,13 @@ export function Board() {
 
   const handlePlayAgain = () => {
     send({ type: 'return-to-lobby', payload: {} })
+  }
+
+  // Portrait check wins over everything — do NOT render broken layout.
+  // Protocol mismatch still needs to show because it's a different class
+  // of "you can't play right now" (client needs refresh).
+  if (isPortraitBoard) {
+    return <RotateDeviceSplash />
   }
 
   if (protocolMismatch) {

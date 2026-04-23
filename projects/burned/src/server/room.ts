@@ -336,7 +336,16 @@ export class GameRoom extends Server {
     // original name. Only allowed if no OTHER device is currently connected as
     // that player — otherwise anyone could steal an identity by guessing a name.
     if (rawName && rawName.trim().length > 0) {
-      const reclaimName = rawName.trim().slice(0, 12).toLowerCase()
+      const reclaimTrimmed = rawName.trim().slice(0, 12)
+      // Uniform validation: reclaim must match NAME_PATTERN, same as the new-join
+      // path below. Previously reclaim tolerated inputs the registration path
+      // rejected (control chars, HTML fragments post-trim), which is a subtle
+      // cross-path inconsistency. E2E audit 2026-04-23 E-05.
+      if (!NAME_PATTERN.test(reclaimTrimmed)) {
+        this.sendError(connection, 'NAME_INVALID', 'Invalid name')
+        return
+      }
+      const reclaimName = reclaimTrimmed.toLowerCase()
       let reclaimPlayerId: string | undefined
       for (const [pid, name] of this.playerNames.entries()) {
         if (name.toLowerCase() === reclaimName) { reclaimPlayerId = pid; break }

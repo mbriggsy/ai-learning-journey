@@ -208,4 +208,84 @@ describe('Validation', () => {
     expect(result.ok).toBe(false)
     if (!result.ok) expect(result.error).toBe('Invalid message')
   })
+
+  // E2E audit 2026-04-23 E-04 regressions — Zod .strict() mode rejects
+  // extra keys instead of silently stripping them. Defense-in-depth.
+
+  it('rejects extra fields on action payload (E-04)', () => {
+    const result = parseClientMessage(JSON.stringify({
+      type: 'action',
+      payload: { type: 'nope', stateVersion: 0, adminToken: 'xxxxx' },
+    }))
+    expect(result.ok).toBe(false)
+  })
+
+  it('rejects extra fields on top-level join message (E-04)', () => {
+    const result = parseClientMessage(JSON.stringify({
+      type: 'join',
+      payload: { name: 'Alice' },
+      rogueField: 'x',
+    }))
+    expect(result.ok).toBe(false)
+  })
+
+  it('rejects extra fields on join payload (E-04)', () => {
+    const result = parseClientMessage(JSON.stringify({
+      type: 'join',
+      payload: { name: 'Alice', rogueField: 'x' },
+    }))
+    expect(result.ok).toBe(false)
+  })
+
+  // E-06 — Name schema regex at Zod boundary, not just in room.ts handler.
+
+  it('rejects join name with control chars (E-06)', () => {
+    const result = parseClientMessage(JSON.stringify({
+      type: 'join',
+      payload: { name: 'Ali\nce' },
+    }))
+    expect(result.ok).toBe(false)
+  })
+
+  it('rejects join name with emoji (E-06)', () => {
+    const result = parseClientMessage(JSON.stringify({
+      type: 'join',
+      payload: { name: '🔥ops' },
+    }))
+    expect(result.ok).toBe(false)
+  })
+
+  it('rejects empty join name without sessionToken (E-06)', () => {
+    const result = parseClientMessage(JSON.stringify({
+      type: 'join',
+      payload: { name: '' },
+    }))
+    expect(result.ok).toBe(false)
+  })
+
+  it('accepts empty join name WITH sessionToken (reconnect path)', () => {
+    const result = parseClientMessage(JSON.stringify({
+      type: 'join',
+      payload: { name: '', sessionToken: '550e8400-e29b-41d4-a716-446655440000' },
+    }))
+    expect(result.ok).toBe(true)
+  })
+
+  // E-07 — stateVersion upper bound.
+
+  it('rejects stateVersion above 1M (E-07)', () => {
+    const result = parseClientMessage(JSON.stringify({
+      type: 'action',
+      payload: { type: 'draw-card', stateVersion: 1_000_001 },
+    }))
+    expect(result.ok).toBe(false)
+  })
+
+  it('accepts stateVersion at exactly 1M (E-07 boundary)', () => {
+    const result = parseClientMessage(JSON.stringify({
+      type: 'action',
+      payload: { type: 'draw-card', stateVersion: 1_000_000 },
+    }))
+    expect(result.ok).toBe(true)
+  })
 })

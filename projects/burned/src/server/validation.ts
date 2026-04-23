@@ -26,51 +26,61 @@ const CARD_TYPE_TUPLE = CARD_DEFS.map(d => d.type) as [string, ...string[]]
 const CardTypeSchema = z.enum(CARD_TYPE_TUPLE)
 
 // --- Base Action Fields ---
+//
+// stateVersion upper bound prevents a rogue client from submitting
+// Number.MAX_SAFE_INTEGER and triggering arithmetic precision bugs in
+// any future handler. Server's stateVersion starts at 0 and increments
+// by 1 per accepted dispatch — a real game will not exceed 1M.
+// E2E audit 2026-04-23 E-07.
 
 const BaseAction = z.object({
-  stateVersion: z.int().min(0),
+  stateVersion: z.int().min(0).max(1_000_000),
 })
 
 // --- Client Game Action Schemas ---
+//
+// .strict() on every action so unknown keys in the action payload are
+// rejected. E2E audit 2026-04-23 E-04. Zod's .extend() does NOT inherit
+// strict mode from the parent — each must be marked explicitly.
 
 const PlayCardAction = BaseAction.extend({
   type: z.literal('play-card'),
   cardIds: z.array(z.string().uuid()).min(1).max(3),
   targetPlayerId: z.string().uuid().optional(),
   namedCardType: CardTypeSchema.optional(),
-})
+}).strict()
 
 const DrawCardAction = BaseAction.extend({
   type: z.literal('draw-card'),
-})
+}).strict()
 
 const NopeAction = BaseAction.extend({
   type: z.literal('nope'),
-})
+}).strict()
 
 const DefusePlaceAction = BaseAction.extend({
   type: z.literal('defuse-place'),
   position: z.int().min(0).max(120),
-})
+}).strict()
 
 const FavorGiveAction = BaseAction.extend({
   type: z.literal('favor-give'),
   cardId: z.string().uuid(),
-})
+}).strict()
 
 const FutureRearrangeAction = BaseAction.extend({
   type: z.literal('future-rearrange'),
   order: z.array(z.string().uuid()).min(1).max(3),
-})
+}).strict()
 
 const NameCardAction = BaseAction.extend({
   type: z.literal('name-card'),
   cardType: CardTypeSchema,
-})
+}).strict()
 
 const CancelNameCardAction = BaseAction.extend({
   type: z.literal('cancel-name-card'),
-})
+}).strict()
 
 const ClientGameActionSchema = z.discriminatedUnion('type', [
   PlayCardAction,
@@ -84,47 +94,60 @@ const ClientGameActionSchema = z.discriminatedUnion('type', [
 ])
 
 // --- Client Message Schemas ---
+//
+// .strict() on every z.object() rejects unknown keys at the WS boundary
+// instead of silently stripping them. Without this, a future handler
+// accidentally reading action.someField before updating Zod would be
+// exploitable. Defense-in-depth, zero runtime cost. E2E audit E-04.
+//
+// Name schema regex mirrors NAME_PATTERN in room.ts — single source of
+// truth at the WS boundary. E2E audit E-06.
+
+// Matches room.ts NAME_PATTERN — ASCII alphanumeric + punctuation, 1-12.
+const NameRegex = /^[a-zA-Z0-9 .!?_-]{1,12}$/
 
 const HostConnectMessage = z.object({
   type: z.literal('host-connect'),
-  payload: z.object({}),
-})
+  payload: z.strictObject({}),
+}).strict()
 
 const JoinMessage = z.object({
   type: z.literal('join'),
-  payload: z.object({
+  payload: z.strictObject({
+    // Allow empty name IF a sessionToken is present (reconnect path).
+    // Otherwise require the name to match NAME_PATTERN exactly.
     name: z.string().max(12),
     sessionToken: z.string().uuid().optional(),
   }).refine(
-    d => d.sessionToken !== undefined || d.name.length >= 1,
-    'Name is required for new joins',
+    d => d.sessionToken !== undefined || (d.name.length >= 1 && NameRegex.test(d.name)),
+    'Name must match NAME_PATTERN when sessionToken is absent',
   ),
-})
+}).strict()
 
 const StartGameMessage = z.object({
   type: z.literal('start-game'),
-  payload: z.object({}),
-})
+  payload: z.strictObject({}),
+}).strict()
 
 const ReturnToLobbyMessage = z.object({
   type: z.literal('return-to-lobby'),
-  payload: z.object({}),
-})
+  payload: z.strictObject({}),
+}).strict()
 
 const ActionMessage = z.object({
   type: z.literal('action'),
   payload: ClientGameActionSchema,
-})
+}).strict()
 
 const PingMessage = z.object({
   type: z.literal('ping'),
-  payload: z.object({}),
-})
+  payload: z.strictObject({}),
+}).strict()
 
 const PongMessage = z.object({
   type: z.literal('pong'),
-  payload: z.object({}),
-})
+  payload: z.strictObject({}),
+}).strict()
 
 export const ClientMessageSchema = z.discriminatedUnion('type', [
   HostConnectMessage,

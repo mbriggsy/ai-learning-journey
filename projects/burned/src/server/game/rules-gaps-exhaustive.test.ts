@@ -330,3 +330,152 @@ describe('Rules §12 — eliminated player card disposal', () => {
     expect(s.discardPile.length - discardBefore).toBeLessThanOrEqual(1)
   })
 })
+
+// E2E audit 2026-04-23 A-02/05/06/07/08 — test coverage locks for
+// behaviors that are currently correct by construction but untested.
+// Silent refactors would regress them without any suite tripping.
+
+describe('Rules §10 — elimination mid-attack collapses remaining turns (A-02)', () => {
+  it('when attacked player explodes, remaining attack turns do NOT transfer to next player', () => {
+    // p1 Reassigns p2 (2 turns). Stack to 4 turns by faking the state.
+    let state = startGameWith(3)
+    state = removeCardType(state, 'p2', 'extraction')
+    state = { ...state, currentTurn: { currentPlayerId: 'p2', turnsRemaining: 4 } }
+    state = seedTop(state, { id: 'ek-mid-atk', type: 'burned' })
+
+    const result = act(state, { type: 'draw-card', playerId: 'p2' })
+    expect(result.ok).toBe(true)
+    const s = result.state as PlayingState
+
+    // p2 eliminated. Remaining turns on the SEAT evaporate. Next player gets
+    // a fresh 1-turn slot. If a future refactor accidentally forwards the
+    // residual turns, this test trips — rules ambiguity is locked here.
+    expect(s.players.find(p => p.id === 'p2')!.isAlive).toBe(false)
+    expect(s.currentTurn.turnsRemaining).toBe(1)
+    expect(s.currentTurn.currentPlayerId).not.toBe('p2')
+  })
+})
+
+describe('Rules §9 — 2-of-a-kind Noped cleanup clears pendingSteal (A-05)', () => {
+  it('after a pair is Noped, pendingSteal returns to undefined — no stale context', () => {
+    let state = startGameWith(3)
+    state = giveCard(state, 'p1', 'reassign', 'pair-a')
+    state = giveCard(state, 'p1', 'reassign', 'pair-b')
+    state = giveCard(state, 'p3', 'intercepted', 'nope-1')
+
+    let result = act(state, {
+      type: 'play-card', playerId: 'p1', cardIds: ['pair-a', 'pair-b'], targetPlayerId: 'p2',
+    })
+    expect(result.ok).toBe(true)
+    let s = result.state as PlayingState
+    expect(s.pendingSteal).toBeDefined()
+
+    // p3 Nopes the pair.
+    result = act(s, { type: 'nope', playerId: 'p3' })
+    expect(result.ok).toBe(true)
+
+    // Resolve to cancellation.
+    result = resolveNopeWindow(result.state as PlayingState, makeCtx(99999))
+    expect(result.ok).toBe(true)
+    s = result.state as PlayingState
+
+    // pendingSteal must be cleared; subPhase back to turn-active.
+    expect(s.pendingSteal).toBeUndefined()
+    expect(s.subPhase).toBe('turn-active')
+  })
+})
+
+describe('Rules §7 — 3-of-a-kind cancel-then-reselect works end-to-end (A-06)', () => {
+  it('cancel returns cards, SAME triple can be re-played and committed', () => {
+    let state = startGameWith(3)
+    state = giveCard(state, 'p1', 'reassign', 'triple-a')
+    state = giveCard(state, 'p1', 'reassign', 'triple-b')
+    state = giveCard(state, 'p1', 'reassign', 'triple-c')
+
+    // Play triple → name-card-pending
+    let result = act(state, {
+      type: 'play-card', playerId: 'p1', cardIds: ['triple-a', 'triple-b', 'triple-c'], targetPlayerId: 'p2',
+    })
+    expect(result.ok).toBe(true)
+    expect((result.state as PlayingState).subPhase).toBe('name-card-pending')
+
+    // Cancel
+    result = act(result.state, { type: 'cancel-name-card', playerId: 'p1' })
+    expect(result.ok).toBe(true)
+    const afterCancel = result.state as PlayingState
+    expect(afterCancel.subPhase).toBe('turn-active')
+    expect(afterCancel.pendingNameCard).toBeUndefined()
+    const p1Hand = afterCancel.players.find(p => p.id === 'p1')!.hand
+    expect(p1Hand.some(c => c.id === 'triple-a')).toBe(true)
+    expect(p1Hand.some(c => c.id === 'triple-b')).toBe(true)
+    expect(p1Hand.some(c => c.id === 'triple-c')).toBe(true)
+
+    // Re-play the SAME triple, different target this time.
+    result = act(afterCancel, {
+      type: 'play-card', playerId: 'p1', cardIds: ['triple-a', 'triple-b', 'triple-c'], targetPlayerId: 'p3',
+    })
+    expect(result.ok).toBe(true)
+    expect((result.state as PlayingState).subPhase).toBe('name-card-pending')
+
+    // Commit a name — must land in open nope window.
+    result = act(result.state, {
+      type: 'name-card', playerId: 'p1', cardType: 'skip',
+    } as unknown as Parameters<typeof act>[1])
+    expect(result.ok).toBe(true)
+    expect((result.state as PlayingState).nopeWindow).toBeDefined()
+  })
+})
+
+describe('Rules §9 — Favor cannot be Noped after target gives card (A-07)', () => {
+  it('favor-give completes without opening a new nope window; late Nope rejected', () => {
+    let state = startGameWith(3)
+    state = giveCard(state, 'p1', 'call-in-a-favor', 'fav-1')
+    state = giveCard(state, 'p3', 'intercepted', 'late-nope')
+
+    let result = act(state, {
+      type: 'play-card', playerId: 'p1', cardIds: ['fav-1'], targetPlayerId: 'p2',
+    })
+    expect(result.ok).toBe(true)
+    result = resolveNopeWindow(result.state as PlayingState, makeCtx(99999))
+    expect(result.ok).toBe(true)
+    const s = result.state as PlayingState
+    expect(s.subPhase).toBe('favor-pending')
+    expect(s.nopeWindow).toBeNull()
+
+    // p3 tries to Nope at this point — must reject (window closed).
+    const lateResult = act(s, { type: 'nope', playerId: 'p3' })
+    expect(lateResult.ok).toBe(false)
+
+    // p2 gives a card.
+    const p2Card = s.players.find(p => p.id === 'p2')!.hand[0]!
+    const giveResult = act(s, { type: 'favor-give', playerId: 'p2', cardId: p2Card.id })
+    expect(giveResult.ok).toBe(true)
+    const after = giveResult.state as PlayingState
+
+    // No nope window opened after the give.
+    expect(after.nopeWindow).toBeNull()
+  })
+})
+
+describe('Rules §7 — pair of Intercepteds is legal (if silly) (A-08)', () => {
+  it('two Intercepteds form a valid pair that performs a random steal', () => {
+    let state = startGameWith(3)
+    state = giveCard(state, 'p1', 'intercepted', 'nope-pair-a')
+    state = giveCard(state, 'p1', 'intercepted', 'nope-pair-b')
+    const p2HandBefore = state.players.find(p => p.id === 'p2')!.hand.length
+
+    let result = act(state, {
+      type: 'play-card', playerId: 'p1', cardIds: ['nope-pair-a', 'nope-pair-b'], targetPlayerId: 'p2',
+    })
+    expect(result.ok).toBe(true)
+    result = resolveNopeWindow(result.state as PlayingState, makeCtx(99999))
+    expect(result.ok).toBe(true)
+
+    const final = result.state as PlayingState
+    const p2After = final.players.find(p => p.id === 'p2')!
+    // Either the steal succeeded (hand shrunk) or the target was empty. Either
+    // way, no error. Future refactor that adds intercepted to combo-excluded
+    // categories trips this.
+    expect(p2After.hand.length).toBeLessThanOrEqual(p2HandBefore)
+  })
+})

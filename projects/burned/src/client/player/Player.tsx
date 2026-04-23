@@ -531,7 +531,15 @@ function PlayingView({ roomCode }: { roomCode: string }) {
         )}
       </BottomSheet>
 
-      <BottomSheet open={showServerSheet && activeSheet?.sheet === 'name-card'}>
+      <BottomSheet
+        open={showServerSheet && activeSheet?.sheet === 'name-card'}
+        // Escape key cancels (BottomSheet wires onDismiss to the native
+        // <dialog> cancel event). Matches the explicit "Call off the raid"
+        // button — keyboard users get parity with taps, and the cancel
+        // is blocked server-side post-commit anyway so no hazard.
+        // E2E audit 2026-04-23 D-20.
+        onDismiss={handleCancelNameCard}
+      >
         {activeSheet?.sheet === 'name-card' && (
           <NameCard
             targetName={activeSheet.targetName}

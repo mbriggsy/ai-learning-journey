@@ -101,7 +101,19 @@ export function StealReport() {
 
   const current = !dramaActive && queue.length > 0 ? queue[0]! : null
 
+  // Debounce acknowledge taps. Without this, panic-tapping Acknowledge
+  // on a queued report (e.g. user returned to phone, saw "+2 more"
+  // chip, reflex-tapped three times) dismissed 3 reports in ~200ms,
+  // losing intel — the player never actually read reports 2 or 3.
+  // React re-renders the button beneath the same finger position so
+  // every tap lands on the next queued report. 350ms gate forces a
+  // brief reset per report. E2E audit 2026-04-23 D-05.
+  const lastDismissAtRef = useRef<number>(0)
+  const DISMISS_COOLDOWN_MS = 350
   const dismiss = useCallback(() => {
+    const now = Date.now()
+    if (now - lastDismissAtRef.current < DISMISS_COOLDOWN_MS) return
+    lastDismissAtRef.current = now
     setQueue(q => q.slice(1))
     haptic('light')
   }, [])

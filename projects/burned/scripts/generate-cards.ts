@@ -262,12 +262,18 @@ const CARDS: CardPrompt[] = [
     type: 'intercepted',
     name: 'Intercepted',
     prompt:
-      'a bold hand slamming down on a table and stopping a chess piece mid-move, ' +
-      'radiating impact lines from the point of contact, ' +
-      'sharp teal and electric blue color scheme, ' +
-      'the decisive moment of counter-intelligence, geometric angular style, ' +
-      'authority and denial energy, blocking and cancelling, ' +
-      'square composition centered object',
+      // Iter 13 clean rewrite. 12 prior iterations accumulated too much
+      // conflicting text; Imagen kept zooming out, dropping props, and
+      // rendering "HR" / "HR OFFICE" text banners. Stripped to minimum
+      // viable prompt: ~5 short clauses, every element mentioned ONCE.
+      // Dolores Grieves is a recurring BURNED NPC — Pam Poovey
+      // archetype HR Director (Dash=Archer, Vera=Lana, Janet=Malory,
+      // Dolores=Pam).
+      'a 1960s spy agency HR office: a confident plus-sized young blonde woman in her late 20s (smooth youthful complexion, fresh face, NOT middle-aged, NOT older — she is young and in her prime) stands behind a wooden reception counter facing the viewer, she holds up a wooden clipboard with a BOLD RED X symbol stamped on the paper (two thick crossed diagonal strokes forming a geometric X mark, NOT letters) in one hand and gives a clear THUMBS-DOWN gesture with her other hand (closed fist, thumb pointing straight down), ' +
+      'the woman is visually modeled on Pam Poovey from the animated show Archer — pale platinum-blonde hair in a high voluminous upswept pompadour-style quiff (volume swept back from her forehead), a smooth youthful face with subtle natural contouring (NO circular cheek blush marks, NO cartoon cheek-blush ovals, NO pink cheek spots, NO distinct oval shapes on the cheeks — her cheeks are smoothly integrated into her face with no separate circle-shape markings), small pale-blue eyes, a SINGLE DEFINED JAWLINE with no double chin and no sagging chin fold, slight confident smirk, broad-shouldered solid plus-sized body (she has mass and substance not softness, farm-strong not flabby), she wears a snug-fitting creamy tan cashmere sweater with a scoop neckline showing a modest hint of cleavage, a short pearl choker around her neck, and a small floral brooch at her chest, ' +
+      'behind her a wall of dark mahogany filing cabinets, NO venetian blinds anywhere in the scene (no window with horizontal blind slats, no blind pattern on any wall, no light stripes, no striped shadows, no amber bands, no horizontal line patterns of any kind — just plain solid dark walls behind her), a brass pendant lamp hangs overhead and is the SOLE light source in the entire scene casting a single soft warm amber downward cone onto the counter and Dolores (no other light sources anywhere, no window light, no ambient glow from any other direction), a black rotary desk telephone and small metal inbox tray on the counter beside her, deep teal and charcoal shadows fill the corners of the room, ' +
+      'ABSOLUTELY NO TEXT NO LETTERS NO WORDS NO NUMBERS NO TYPOGRAPHY anywhere in the scene on any surface — no writing on the counter, no writing on the cabinets, no name tags, no title cards, no signs, the only red mark in the image is the bold geometric X symbol on the clipboard paper, ' +
+      'square full-bleed composition, the scene fills the entire frame edge to edge with no white borders and no vignette',
   },
 ];
 

@@ -133,16 +133,23 @@ function stripPrivatePromptFields(prompt: import('@shared/types').PendingPrompt 
  * to a viewer who wasn't a party to the action. `viewerId === null` means
  * the public board view, which never sees these fields.
  *
- * For now this only filters `combo-steal.cardType` — stealer and target
- * legitimately know which card moved (or which card was named on a whiff),
- * everyone else must not. Pattern scales to future event-level private
- * fields without changing callers.
+ * Two events currently carry a private `cardType`:
  *
- * NOTE: This is an INTENTIONAL divergence from canonical Exploding Kittens
- * rules, where the triple-steal card-naming is public. BURNED keeps it
- * private to preserve the spy-agency fiction — intercepted transmissions
- * stay intercepted. Do not "fix" this to leak cardType publicly without
- * a product decision first. See docs/rules/RULES-REFERENCE.md.
+ *   - `combo-steal` — stealer and target legitimately know which card
+ *     moved (or which card was named on a whiff); everyone else must not.
+ *     This is an INTENTIONAL divergence from canonical Exploding Kittens
+ *     rules (public naming) to preserve BURNED's spy-agency fiction.
+ *     See docs/rules/RULES-REFERENCE.md §13.8.
+ *
+ *   - `card-drawn` — the drawer needs the type so their phone can show a
+ *     `You drew Go Dark.` confirmation toast (PlayerAlert). Nobody else
+ *     may know what landed in that hand; the board's event copy is
+ *     intentionally generic ("X draws... and lives."). Leaking this was
+ *     an E2E audit P0 (2026-04-23): any opponent reading their own event
+ *     log could read the drawer's drawn card deterministically.
+ *
+ * Pattern scales to future event-level private fields without changing
+ * callers: add a branch, strip if viewer isn't authorized.
  */
 function stripPrivateEventFields(
   events: readonly GameEvent[],
@@ -152,6 +159,13 @@ function stripPrivateEventFields(
     if (event.type === 'combo-steal' && event.cardType !== undefined) {
       const allowed = viewerId !== null &&
         (viewerId === event.stealerId || viewerId === event.targetId)
+      if (!allowed) {
+        const { cardType: _strip, ...rest } = event
+        return rest
+      }
+    }
+    if (event.type === 'card-drawn' && event.cardType !== undefined) {
+      const allowed = viewerId !== null && viewerId === event.playerId
       if (!allowed) {
         const { cardType: _strip, ...rest } = event
         return rest

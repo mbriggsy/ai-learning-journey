@@ -68,7 +68,13 @@ function alertFor(
       // draw" and needs to see what landed in their hand without squinting
       // at the discard fan. Burned draws intentionally skip this: the drama
       // overlay (BURNED → EXTRACTED / ELIMINATED) already owns that moment.
-      if (event.playerId === myId && event.safe) {
+      //
+      // `cardType` is PRIVATE to the drawer (stripped by
+      // `stripPrivateEventFields` for opponents + board — see E-01 fix
+      // in projection.ts). The `event.playerId === myId` gate is the
+      // product rule; the extra `cardType` guard is a type-safety floor
+      // in case the projection ever strips more aggressively.
+      if (event.playerId === myId && event.safe && event.cardType) {
         const name = CARD_DEF_BY_TYPE[event.cardType]?.name ?? 'a card'
         return {
           id: eventId,

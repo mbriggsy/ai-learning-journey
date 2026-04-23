@@ -30,7 +30,7 @@ export type PendingPrompt =
 export type GameEvent =
   | { type: 'game-started'; playerCount: number }
   | { type: 'card-played'; playerId: string; cardType: CardType; comboSize?: number }
-  | { type: 'card-drawn'; playerId: string; safe: boolean; cardType: CardType }
+  | { type: 'card-drawn'; playerId: string; safe: boolean; cardType?: CardType }
   | { type: 'nope-played'; playerId: string; chainDepth: number }
   | { type: 'nope-window-opened'; targetAction: string; deadlineMs: number }
   | { type: 'nope-window-resolved'; cancelled: boolean; chainDepth: number }

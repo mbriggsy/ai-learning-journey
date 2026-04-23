@@ -1,4 +1,4 @@
-import { describe, expect } from 'vitest'
+import { describe, expect, it } from 'vitest'
 import { test } from '@fast-check/vitest'
 import fc from 'fast-check'
 import { createLobbyState, dispatch } from './engine'
@@ -155,6 +155,91 @@ describe('PBT: Projection Privacy', () => {
     expect(p1Data.futureCards).toBeDefined()
     expect(p1Data.futureCards!.length).toBeGreaterThan(0)
     expect(p2Data.futureCards).toBeUndefined()
+  })
+
+  // Regression: overnight E2E audit E-01 (2026-04-23). `card-drawn` events
+  // were emitting the drawn card's type into the cumulative event log,
+  // and `stripPrivateEventFields` only filtered `combo-steal.cardType`.
+  // Every opposing player + board received the exact card that landed in
+  // the drawer's hand — letting attentive opponents deterministically
+  // track every hand composition change. The drawer still needs `cardType`
+  // for their "You drew Go Dark." toast (PlayerAlert), so strip for
+  // viewerId !== drawer only.
+  it('card-drawn.cardType stays only with the drawer (E-01 regression)', () => {
+    const state = startGame(3, 1)
+    const stateWithDraw: PlayingState = {
+      ...state,
+      events: [
+        ...state.events,
+        { type: 'card-drawn', playerId: 'p1', safe: true, cardType: 'go-dark' },
+      ],
+    }
+    const now = 1000
+
+    const boardView = projectForBoard(stateWithDraw, now, new Set(['p1', 'p2', 'p3']))
+    const p1View = projectForPlayer(stateWithDraw, 'p1', boardView)
+    const p2View = projectForPlayer(stateWithDraw, 'p2', boardView)
+
+    const boardDrawn = boardView.events.find(e => e.type === 'card-drawn')
+    const p1Drawn = p1View.events.find(e => e.type === 'card-drawn')
+    const p2Drawn = p2View.events.find(e => e.type === 'card-drawn')
+
+    expect(boardDrawn).toBeDefined()
+    expect(p1Drawn).toBeDefined()
+    expect(p2Drawn).toBeDefined()
+
+    if (boardDrawn && boardDrawn.type === 'card-drawn') {
+      expect(boardDrawn.cardType).toBeUndefined()
+      expect(boardDrawn.playerId).toBe('p1')
+      expect(boardDrawn.safe).toBe(true)
+    }
+    if (p1Drawn && p1Drawn.type === 'card-drawn') {
+      expect(p1Drawn.cardType).toBe('go-dark') // drawer keeps it
+    }
+    if (p2Drawn && p2Drawn.type === 'card-drawn') {
+      expect(p2Drawn.cardType).toBeUndefined() // opponent strips it
+    }
+  })
+
+  it('combo-steal.cardType stays only with stealer + target (parallel to E-01)', () => {
+    // Belt-and-suspenders lock on the original combo-steal filter. Was
+    // previously verified by an audit test but not an explicit unit — this
+    // pins the invariant alongside the new card-drawn regression above.
+    const state = startGame(3, 2)
+    const stateWithSteal: PlayingState = {
+      ...state,
+      events: [
+        ...state.events,
+        { type: 'combo-steal', stealerId: 'p1', targetId: 'p2', found: true, cardType: 'reassign' },
+      ],
+    }
+    const now = 1000
+
+    const boardView = projectForBoard(stateWithSteal, now, new Set(['p1', 'p2', 'p3']))
+    const stealerView = projectForPlayer(stateWithSteal, 'p1', boardView)
+    const targetView = projectForPlayer(stateWithSteal, 'p2', boardView)
+    const witnessView = projectForPlayer(stateWithSteal, 'p3', boardView)
+
+    const getSteal = (v: { events: readonly import('@shared/types').GameEvent[] }) =>
+      v.events.find(e => e.type === 'combo-steal')
+
+    const boardSteal = getSteal(boardView)
+    const stealerSteal = getSteal(stealerView)
+    const targetSteal = getSteal(targetView)
+    const witnessSteal = getSteal(witnessView)
+
+    if (boardSteal && boardSteal.type === 'combo-steal') {
+      expect(boardSteal.cardType).toBeUndefined()
+    }
+    if (stealerSteal && stealerSteal.type === 'combo-steal') {
+      expect(stealerSteal.cardType).toBe('reassign')
+    }
+    if (targetSteal && targetSteal.type === 'combo-steal') {
+      expect(targetSteal.cardType).toBe('reassign')
+    }
+    if (witnessSteal && witnessSteal.type === 'combo-steal') {
+      expect(witnessSteal.cardType).toBeUndefined()
+    }
   })
 })
 

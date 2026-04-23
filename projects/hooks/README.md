@@ -66,6 +66,22 @@ This is the key timing innovation — Stop hooks fire when work is actually DONE
 
 Unrelated to the knowledge loop. `WebFetch` has no timeout — agents hang indefinitely.
 
+### elite-engineer-session-start.sh
+
+| | |
+|---|---|
+| **Type** | SessionStart |
+| **Matcher** | (all) |
+| **Delivers** | The Elite Engineer Protocol manifesto as `additionalContext` on every new Claude Code session. |
+
+Unrelated to the knowledge loop. Guarantees Claude sees Briggsy's non-negotiable quality bar at the start of every session — no relying on memory being loaded, no relying on "Claude remembers this project." The hook reads `elite-engineer.md` (sibling file) and emits a SessionStart JSON envelope with the content.
+
+Paired file — **`elite-engineer.md`** — the manifesto. 38 lines. "You are elite. Quality is the deliverable. Here are the non-negotiable rules. Here's the test before every claim." The hook is a thin transport; the manifesto is the payload.
+
+**Rationale:** Captured 2026-04-22 after a sloppy session where Claude called a broken feature "hardened" after writing unit tests around it. Briggsy's direction: *"Figure out a way to NEVER forget that with me. Build software around it, whatever, you can't say you forgot."* Memory files were not enough — SessionStart injection is the mechanism that guarantees delivery.
+
+If `elite-engineer.md` is missing at runtime the hook emits a WARNING payload instead of silently failing — Claude sees the warning on session start and must restore the file before claiming any work is done.
+
 ---
 
 ## The Full Chain
@@ -102,11 +118,14 @@ User: "run /ce:work on Phase X plan"
 
 ## Deployment
 
-Scripts deployed at `~/.claude/hooks/`. Configuration in `~/.claude/settings.json`:
+Scripts deployed at `~/.claude/hooks/`. The Elite Engineer manifesto deploys alongside at `~/.claude/manifesto/elite-engineer.md` (sibling directory — content vs code separation). Configuration in `~/.claude/settings.json`:
 
 ```json
 {
   "hooks": {
+    "SessionStart": [
+      { "matcher": "", "hooks": [{ "type": "command", "command": "bash ~/.claude/hooks/elite-engineer-session-start.sh" }] }
+    ],
     "PreToolUse": [
       { "matcher": "WebFetch", "hooks": [{ "type": "command", "command": "bash ~/.claude/hooks/block-webfetch.sh" }] },
       { "matcher": "Skill", "hooks": [{ "type": "command", "command": "bash ~/.claude/hooks/enforce-brief-before-work.sh" }] }
@@ -121,4 +140,18 @@ Scripts deployed at `~/.claude/hooks/`. Configuration in `~/.claude/settings.jso
 }
 ```
 
-This project folder is source control. The deployed copies at `~/.claude/hooks/` are the live versions.
+This project folder is source control. The deployed copies at `~/.claude/hooks/` (and the manifesto at `~/.claude/manifesto/`) are the live versions.
+
+**Install / re-sync:**
+
+```bash
+# Shell hooks
+cp projects/hooks/*.sh ~/.claude/hooks/
+chmod +x ~/.claude/hooks/*.sh
+
+# Elite Engineer manifesto — goes to a sibling dir, NOT ~/.claude/hooks/
+mkdir -p ~/.claude/manifesto
+cp projects/hooks/elite-engineer.md ~/.claude/manifesto/elite-engineer.md
+```
+
+After any source edit in this folder, re-run the copy. The hook reads the manifesto at `~/.claude/manifesto/elite-engineer.md` at session start, so the runtime copy is what Claude sees.

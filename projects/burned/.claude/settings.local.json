@@ -7,7 +7,11 @@
       "Bash(mv \"/c/Users/brigg/.claude/projects/C--Users-brigg-ai-learning-journey-projects-burned/memory/project-burned-howto-turn-definition.md\" \"/c/Users/brigg/.claude/projects/C--Users-brigg-ai-learning-journey/memory/\")",
       "Read(//c/Users/brigg/.claude/projects/C--Users-brigg-ai-learning-journey/memory/**)",
       "Bash(rm -f ~/.claude/statusline-debug.json)",
-      "Read(//c/Users/brigg/.claude/**)"
+      "Read(//c/Users/brigg/.claude/**)",
+      "Bash(cp ~/.claude/hooks/elite-engineer-session-start.sh ~/ai-learning-journey/projects/hooks/elite-engineer-session-start.sh)",
+      "Bash(cp ~/.claude/manifesto/elite-engineer.md ~/ai-learning-journey/projects/hooks/elite-engineer.md)",
+      "Bash(chmod +x ~/ai-learning-journey/projects/hooks/elite-engineer-session-start.sh)",
+      "Read(//c/Users/brigg/ai-learning-journey/projects/hooks/**)"
     ]
   }
 }

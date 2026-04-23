@@ -3,7 +3,7 @@
 ## Current State
 
 - **PRODUCT-SPECIFICATION.md v1.0 LOCKED** — `docs/specifications/PRODUCT-SPECIFICATION.md` (2026-04-10).
-- **360/360 Vitest, 15/15 Playwright, typecheck clean** (verified 2026-04-23, Emil-audit Phase 3 squeaky-clean). +2 motion-token-sync cases added for `stamp` duration and `overshoot` easing (see `docs/reviews/emil-audit-2026-04-23.md`). Prior coverage expansion (2026-04-21): `deck-composition-exhaustive.test.ts` parameterized 2-10 players against `docs/rules/RULES-REFERENCE.md` §3; `rules-gaps-exhaustive.test.ts` plugs §11 Attack+Defuse continuation, §6 Intel Briefing mid-turn, §9 triple-Nope, §7 combo overrides, §10.3 Back Channel under Attack, §6 empty-hand Favor, §9 Burned/Extraction not Nopeable, §5 multi-play per turn, §12 dead-card disposal.
+- **364/364 Vitest, 15/15 Playwright, typecheck clean** (verified 2026-04-22). +4 Agent-X combo-triple matrix cases added to `src/shared/combo-validation.test.ts` locking the matchType derivation: 3× Agent X → triple(matchType=agent-x), 2× Agent X + matching operative → triple(matchType=operative), 1× Agent X + 2 matching operatives → triple(matchType=operative), 2× Agent X + non-operative action → rejected(mismatched-types). Prior expansion (2026-04-21): `deck-composition-exhaustive.test.ts` parameterized 2-10 players against `docs/rules/RULES-REFERENCE.md` §3; `rules-gaps-exhaustive.test.ts` plugs §11 Attack+Defuse continuation, §6 Intel Briefing mid-turn, §9 triple-Nope, §7 combo overrides, §10.3 Back Channel under Attack, §6 empty-hand Favor, §9 Burned/Extraction not Nopeable, §5 multi-play per turn, §12 dead-card disposal.
 - **Motion tokens upgraded to Emil-grade curves.** `--motion-ease-base` is now iOS drawer `cubic-bezier(0.32, 0.72, 0, 1)`; `--motion-ease-decelerate` is Emil's strong ease-out `cubic-bezier(0.23, 1, 0.32, 1)`. `MOTION.exit` no longer uses `accelerate` (ease-in) — flipped to `decelerate` for crisper exits. `primitives.css` and `motion.ts` stay lockstep (`motion-token-sync.test.ts` enforces). Cascades to every component consuming these tokens.
 - **Emil audit Phase 3 P1 sweep — all 10 findings shipped 2026-04-23.** Three atomic commits on main:
   - **Cluster A (`31d28be1`) — token discipline.** New `MOTION_DURATIONS.stamp` (0.34s) + `MOTION_EASINGS.overshoot` (`[0.34, 1.56, 0.64, 1]`) tokens, mirrored to `--motion-duration-stamp` + `--motion-ease-overshoot` in primitives. StealReport stamp animation + ackBtn press-feedback transition consume them. PlayerStrip `.presence` pulse now consumes `--motion-duration-pulse-slow` + `--motion-ease-base` instead of hardcoded `2.4s ease-in-out`.
@@ -35,7 +35,7 @@
 - **`applyShuffle` clears `pendingFuture`.** Previously, Intel Briefing peek + Burn the Files left stale peek IDs pointing at cards that had moved off the top, so Falsify Intel would validate a permutation against IDs that no longer matched the top 3. Regression locked by `rules-gaps-exhaustive.test.ts` → "pendingFuture is cleared (or still valid) when Burn the Files follows Intel Briefing".
 - **Lobby dev toolbar removed.** The Whiskrs/Mittens/Tuna/Pickles quick-join links under the `Cleared Hot` button are gone (`Lobby.tsx` + `Lobby.module.css`). `pnpm dev:launch` owns dev-time player spawning — don't restore.
 - **Layout-sweep detector tightened.** `tests/e2e/layout-sweep.spec.ts` only flags overflow on `overflow: hidden|clip` containers — `overflow: visible` (glow halos, focus rings, pseudo-elements with negative `inset`) no longer registers as a clipping bug. 253 raw findings → 198 after the fix, of which 2 are real clip issues.
-- **Action card art pass — 8 of 11 elevated to Archer-spec.** Regenerated via Imagen with tightened prompts, full-bleed scenes, noir atmosphere: `falsify-intel` (CRT terminal with Anglepoise lamp), `extraction` (helicopter rescue + city skyline), `back-channel` (trench-coat spy in a 1960s phone booth on a rainy street), `burn-the-files` (filing cabinet inferno, no dimensional-rift smoke), `reassign` (folder handoff across mahogany boardroom with bandaged wounded-agent hand), `go-dark` (trench-coat operative receding down a venetian-blind-striped corridor), `intel-briefing` (Watergate break-in: Minox camera + penlight photographing classified docs), `call-in-a-favor` (two mafia dudes side-by-side at a bar with a small cash stack between them — 29 iters burned to land on simple). Old assets archived at `public/assets/cards/_archive/<name>-2026-04-19-<reason>.webp`.
+- **Action card art pass — 10 of 11 elevated to Archer-spec.** Regenerated via Imagen with tightened prompts, full-bleed scenes, noir atmosphere: `falsify-intel` (CRT terminal with Anglepoise lamp), `extraction` (helicopter rescue + city skyline), `back-channel` (trench-coat spy in a 1960s phone booth on a rainy street), `burn-the-files` (filing cabinet inferno, no dimensional-rift smoke), `reassign` (folder handoff across mahogany boardroom with bandaged wounded-agent hand), `go-dark` (trench-coat operative receding down a venetian-blind-striped corridor), `intel-briefing` (Watergate break-in: Minox camera + penlight photographing classified docs), `call-in-a-favor` (two mafia dudes side-by-side at a bar with a small cash stack between them — 29 iters), **`direct-order` (2026-04-22, `5b2c9288`)** — Mother's-office authoritative figure behind mahogany desk with the index finger jabbed at the viewer, closed venetian blinds backdrop, brass pendant lamp as sole warm light, smoldering ashtray with embers and smoke wisp on the lower-left, suit/shirt/tie visible in partial silhouette (18 iters — 13 fighting Imagen's unbreakable cigar-ember-out prior before killing the cigar entirely, then 5 more killing the blinds-cast-stripes prior by closing the blinds so no light passes through), **`intercepted` (2026-04-22, `048ab359`)** — first cameo of **DOLORES GRIEVES**, our new agency HR Director (Pam Poovey archetype, same 1:1 mapping as Dash=Archer / Vera=Lana / Janet=Malory). Dolores stands behind the HR counter holding a clipboard stamped with a bold red X while giving a thumbs-down gesture. 18 iters — Imagen defaulted to cartoon cheek-blush ovals on plus-sized female characters (persistent artifact, subtle at card size), aggressive body-size metaphors backfired, and the blind-shadow prior forced us to remove blinds from the scene entirely. Old assets archived at `public/assets/cards/_archive/<name>-2026-04-{19,22}-<reason>.webp`.
 - **Discard card sizing rework.** Piles column is side-by-side on short viewports (≤1000px tall) and vertically stacked on tall viewports (≥1000px tall, e.g. iPad landscape, 1080p TV). Media query `(min-height: 1000px) and (min-width: 1300px)` gates both the `flex-direction: column` on `.piles` AND the larger discard clamp (`300→480px` stacked vs `160→300px` side-by-side). Rationale: a stacked hero discard orphans the draw pile on laptop-aspect viewports (900h) but unlocks a 400px+ card at TV aspect.
 - **Draw pile label stack.** DOM order reversed so the count reads top-down as `39` → `Remaining` → `In Field` → `DRAW`. Small label group; "In Field" on its own line.
 - **Blotter paper is fiber-only.** Horizontal ruled lines stripped from `GameTable.module.css` `.blotter` (read too "school notebook"); vertical fiber grain stays. `--color-paper-rule` token kept for StealReport dossier on the phone.
@@ -77,24 +77,33 @@ Commits in order: `639beec0` (tokens) → `21846469` (blotter retire) → `97689
 
 ---
 
-### 3. Regen the final 3 action-card illustrations (kick-off with Direct Order)
-**Burned, Direct Order, Intercepted are still the only action cards at original Apr-9 quality** — visible gap vs the rest of the deck now that the other 8 are elevated.
+### 3. Regen the final action-card illustration — **Burned** (THE central card)
+**Direct Order + Intercepted shipped 2026-04-22.** Burned is the only action card still at original Apr-9 quality. Visible gap — it's THE central card (the one everyone's afraid to draw) and now the only remaining art below the elevated bar.
 
-**Direct Order — concept pitches ready for next-session kickoff:**
-- **A. Mother's-office pointing finger** — commanding figure behind a desk, finger jabbed toward the viewer ("YOU — you're on this"), venetian blind shadows, cigarette smoke curling. Pure Archer Mother's-office vocabulary. *(Briggsy's preferred direction pre-wrap.)*
-- **B. Hand slamming down on a target photograph on an open dossier** — mission-assignment vocabulary, target-photo driven.
-- **C. Map with pins, gloved hand jabbing at one location** — geographic targeting, spy-operation vocabulary.
+**Current Burned art:** dramatic explosion with a spy ID badge being consumed by flames. Fine but weaker than the elevated deck.
 
-**Intercepted (Nope card) — concept TBD at kickoff.** Current is a hand slamming down on a chess piece — fine but weaker than the elevated set. Possibly: a gloved hand slamming a rubber stamp marked `REJECTED` (watch for Imagen text gibberish — may need abstract symbol), OR hand forcefully slamming down on the sliding combo-steal attempt before it completes.
+**Concept pitches for next-session kickoff:**
+- **A. Operative caught in flashbulb exposure** — single moment of "you've been made." Bright white/amber flashbulb blast from outside frame, operative silhouette caught mid-turn looking toward the camera, surprise/recognition expression, dark city street or rooftop setting. Pure noir "the moment your cover is blown" vocabulary.
+- **B. Photograph emerging from developer tray** — close-up overhead view of a darkroom developer tray, a black-and-white surveillance photo of the operative fully developed in the chemical bath, red darkroom light overhead. Narrative: someone has the evidence now. Ties visually to Intel Briefing's photography vocabulary.
+- **C. Cinematic upgrade of the current explosion concept** — keep the badge-in-flames idea but go full Archer-spec: operative's spy ID card with a photo, burning at the edges against a dark void, embers and smoke rising. More dramatic lighting, full-bleed.
 
-**Burned — concept TBD at kickoff.** This is THE central card (the one everyone's afraid to draw). Current is a dramatic explosion with a spy ID badge being consumed. Could be even more cinematic: operative caught in the open with flashbulb exposure, single moment of "you've been made."
+**My lean post-Intercepted session:** A (flashbulb exposure). Most narratively precise for "Burned" = identity exposed. Also tonally different from Direct Order and Intercepted (both interiors) — an exterior/action beat adds variety to the deck.
 
 **Process for each:**
-- Archive current at `public/assets/cards/_archive/<name>-2026-04-19-<reason>.webp`.
-- Tighten prompt in `scripts/generate-cards.ts` with full-bleed + no-text-gibberish guards.
-- `set -a && source .env && set +a && npx tsx scripts/generate-cards.ts --only=<type>` to regen.
-- **Critically eyeball** the temp PNG before presenting (lesson from the call-in-a-favor 29-iter grind: optimistic descriptions waste time — tell Briggsy what you actually see, not what you hope is there).
+- Archive current at `public/assets/cards/_archive/burned-2026-04-<date>-<reason>.webp`.
+- Tighten prompt in `scripts/generate-cards.ts` — MINIMUM VIABLE rewrites win (iter 13 Intercepted lesson). Short, clause-based prompts with every element mentioned ONCE.
+- `set -a && source .env && set +a && npx tsx scripts/generate-cards.ts --only=burned` to regen.
+- **Critically eyeball** the temp PNG before presenting (lesson from call-in-a-favor 29-iter grind + Intercepted 18-iter grind: optimistic descriptions waste time — tell Briggsy what you ACTUALLY see, flaws included, not what you hope is there).
 - Process via `npx tsx scripts/process-assets.ts` once approved.
+
+**Imagen landmines accumulated from Direct Order + Intercepted (must-know before rolling Burned):**
+- Aggressive body-size metaphors ("HULKING / TANK / NUKE / linebacker") backfire — Imagen renders SMALLER. Use calm specific markers.
+- All-caps section labels in prompts get rendered as literal title-card text. Use lowercase prose structure.
+- Quoted narrative phrases in prompts get rendered as literal text. Never quote dialogue/slogans in prompts.
+- "Close-up" / "chest-up framing" directives push Imagen to zoom OUT, not in. Full-scene framing is more reliable.
+- Unshakeable priors worth engineering AROUND rather than fighting: (a) "cigar in ashtray = ember hanging out" — we killed cigars entirely on Direct Order after 13 fight-rolls; (b) "venetian blinds cast stripes on any surface" — we either closed the blinds tight (Direct Order) or removed them entirely (Intercepted); (c) "plus-sized female character gets cartoon cheek-blush ovals" — explicit negative prompts don't eliminate, artifact subtle at card size; (d) "woman in office" prior pulls toward slim/average — name-referenced characters (Pam, Malory, etc.) override this cleanly.
+- **Occasional total anomalies** — across ~50 rolls this session we hit 3: golden retriever on seaside, man standing at a cliff, CAD architectural drawing. Retry once per landmine (always fixed by second roll).
+- **Direct Pam/Archer character references in prompts work.** Imagen doesn't safety-filter "modeled on Pam Poovey from the animated show Archer." We can use this for BURNED's roster-archetype characters in future scenes — Dolores Grieves (Pam) is the template.
 
 ### 4. Real-device playtest
 Live 4-8 player test on iPad Pro 1366 + phones. Verify recent flows on real hardware:
@@ -128,9 +137,12 @@ Push commits, deploy to Cloudflare Pages (wrangler), open on actual TV with phon
 - **Reassign / Direct Order target** — no direct event type; victim only learns via `turn-started` with `turnsRemaining > 1`. Probably fine as-is because the target's phone sits dormant — when they come back, staging is lit and status reads "Your turn · 3 turns".
 - **Your card was intercepted** — optimistic snapback + board DramaOverlay already communicate this, but explicit phone toast would remove ambiguity. Skip until playtest reveals confusion.
 
-### 10. Tier 2 retheme cleanup (non-blocking)
-- `src/server/game/engine.ts` — any remaining `// EKs` / `'No EK in hand'` strings → Burned vocabulary.
-- `src/shared/constants.ts` — `EK_REVEAL_MS` → `BURNED_REVEAL_MS` (rename across all call sites).
+### 10. ~~Tier 2 retheme cleanup~~ [DONE 2026-04-22 `4df5f555`]
+- Three unused `EK_*_MS` TIMING fields deleted (zero call sites — dead weight from old Phase 5 plan).
+- `engine.ts` comments updated (EK → Burned vocabulary) + local variable `ek` renamed to `burned`.
+- `deck-composition-exhaustive.test.ts` TABLE field `eks` renamed to `burned`.
+- Arena.tsx docblock updated.
+- `src/server/projection.ts:141` intentional "canonical Exploding Kittens" pointer left intact — that's documentation, not a retheme miss.
 
 ### 11. Execute Phase 5 — Verification & Acceptance
 **`/ce:work docs/plans/css-foundation-rebuild/phase-5-verification-acceptance.md`**
@@ -145,6 +157,21 @@ Push commits, deploy to Cloudflare Pages (wrangler), open on actual TV with phon
 - **Pixel-diff regression** (~2h setup + ongoing baseline maintenance). Playwright `toHaveScreenshot()` with committed baselines. Requires `MotionConfig reducedMotion="always"` in test mode + fixed server RNG seed so baselines are deterministic. Defer until after Phase 5 lands — mid-rebuild baselines churn too fast.
 
 ## Landmines
+
+### New this session (Direct Order + Intercepted regens — 2026-04-22)
+
+- **New recurring BURNED NPC — DOLORES GRIEVES.** Debuted in the Intercepted card. Pam Poovey archetype (same 1:1 contract as Dash=Archer, Vera=Lana, Janet=Malory). Agency HR Director. Young platinum-blonde, high-upswept quiff, broad-shouldered plus-sized confident build, cream scoop-neck sweater + pearl choker + floral brooch, clipboard + thumbs-down = her denial move. If she appears in future cards/arena surfaces, preserve this character design. Her visual signature is the Pam vocabulary translated into our IP.
+- **Imagen prior — "cigar in ashtray = ember hanging outboard."** Unbreakable through prompt text. Fought it 13 iterations on Direct Order before killing the cigar entirely (replaced with smoldering-embers-in-ash ashtray — no cigar geometry = no orientation fight). If future cards want a cigar, put it IN A HAND (where the grip naturally forces correct orientation) rather than in an ashtray.
+- **Imagen prior — "venetian blinds cast stripes on any surface."** Unbreakable. Direct Order solved it by closing the blinds tight (slats shut, no light through). Intercepted solved it by removing blinds from the scene entirely. Either strategy works; negative prompts alone do not.
+- **Imagen prior — "plus-sized female character gets cartoon cheek-blush ovals."** Persistent stylistic artifact across 18 Intercepted rolls. Explicit "no circular cheek marks, no cartoon blush ovals" negatives don't eliminate. At card size (160-300px) the marks dissolve; full-res they are stubbornly visible. Accepted on Intercepted.
+- **Aggressive body-size metaphors backfire.** Words like "HULKING / TANK / NUKE / defensive lineman" reliably trigger Imagen to render the character SMALLER and zoom out. Calm specific physical markers ("broad shoulders, thick arms, plus-sized") work. Direct Pam Poovey reference ("modeled on Pam Poovey from Archer") overrides Imagen's generic-woman prior cleanly.
+- **All-caps section labels in prompts render as title-card text.** "HR OFFICE SCENE" → rendered "HR OFFICE" banner at top of image. "HERO CHARACTER — NAME, TITLE" → rendered character name/title. Use lowercase prose structure.
+- **Quoted narrative phrases in prompts render as literal text.** Putting `"you, you are on this"` in a Direct Order prompt produced `"#YOU, YOU ARE ON THIS"` as a top banner. Never quote dialogue/slogans.
+- **"Close-up" / "chest-up framing" directives push Imagen to zoom OUT, not in.** Counterintuitive but consistent. Full-scene framing is more reliable than tight crops. If you must close-up, force the hero props into the framing clause repeatedly.
+- **Tight close-ups drop hero props.** When framed as "close-up of character," Imagen drops the clipboard/stamp/cigar the character was supposed to be holding. Full-scene framing preserves the narrative gestures.
+- **Direct character/IP references work.** "Visually modeled on Pam Poovey from the animated show Archer" renders cleanly — Imagen doesn't safety-filter this as character IP clone. Use it for BURNED's roster-archetype characters (Dash/Vera/Janet/Sable/Otto/Neal all have Archer 1:1 counterparts — reference them directly when needed, same way we did for Dolores=Pam).
+- **Imagen anomaly retry pattern.** This session had 3 total-anomaly responses across ~50 rolls: golden retriever on a cliff (Direct Order iter 13), man standing on a seaside cliff (Intercepted A1 iter 1), CAD architectural drawing (Direct Order iter 17). Per prior landmine: retry once, always fixed by second roll.
+- **MINIMUM VIABLE PROMPT WINS.** 18 iterations of accumulated prompt edits on Intercepted left us with a bloated prompt Imagen couldn't execute. Iter 13 "clean rewrite from scratch" — 5 short clauses, every element mentioned ONCE — was the turning point. For future cards: resist the urge to keep appending; rewrite clean when the prompt hits ~10+ paragraphs.
 
 ### New this session (Emil audit — 2026-04-23)
 

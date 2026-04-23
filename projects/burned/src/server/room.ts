@@ -1,6 +1,6 @@
 import { routePartykitRequest, Server } from 'partyserver'
 import type { Connection, ConnectionContext } from 'partyserver'
-import { parseClientMessage } from './validation'
+import { parseClientMessage, messageByteLength } from './validation'
 import { createLobbyState, dispatch } from './game/engine'
 import { projectForBoard, projectForPlayer, getPrivateData } from './projection'
 import type { GameState, PlayingState, GameOverState, DispatchContext, DispatchResult, ErrorCode as EngineErrorCode } from './game/types'
@@ -12,7 +12,7 @@ import { TIMING } from '@shared/constants'
 
 // --- Constants ---
 
-const MAX_MESSAGE_BYTES = 4096
+export const MAX_MESSAGE_BYTES = 4096
 const MAX_PLAYERS = 10
 const MAX_CONNECTIONS = 12 // 10 players + 1 host + 1 reconnection buffer
 const MAX_MESSAGES_PER_SECOND = 10
@@ -177,7 +177,7 @@ export class GameRoom extends Server {
       return
     }
 
-    if (message.length > MAX_MESSAGE_BYTES) {
+    if (messageByteLength(message) > MAX_MESSAGE_BYTES) {
       connection.close(1009, 'Message too large')
       return
     }

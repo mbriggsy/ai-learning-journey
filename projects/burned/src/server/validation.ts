@@ -3,6 +3,23 @@ import { CARD_DEFS } from '@shared/card-defs'
 import type { ClientMessage } from '@shared/protocol'
 import type { ClientAction } from '@shared/actions'
 
+// --- Wire size measurement ---
+
+/**
+ * Measure the UTF-8 byte length of a WebSocket text frame.
+ *
+ * `String.length` counts UTF-16 code units, which lets a client bypass a
+ * byte-budget cap by ~4x using 4-byte UTF-8 glyphs (emoji, CJK planes).
+ * E2E audit 2026-04-23 E-02 — 4096-char `.length` messages of 🔥 weigh
+ * ~16KB on the wire and previously slipped past the cap.
+ *
+ * Lives in validation.ts (not room.ts) because Vitest-Node can't import
+ * partyserver transitively — this must be testable in isolation.
+ */
+export function messageByteLength(message: string): number {
+  return new TextEncoder().encode(message).byteLength
+}
+
 // --- Card Type Literal ---
 
 const CARD_TYPE_TUPLE = CARD_DEFS.map(d => d.type) as [string, ...string[]]

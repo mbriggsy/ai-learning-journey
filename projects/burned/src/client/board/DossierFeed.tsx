@@ -132,11 +132,18 @@ export function DossierFeed({ players }: Props) {
             // odd = right drift) gives the stack a natural tossed-on-desk
             // variance instead of a tidy single-axis spiral.
             const dir = index % 2 === 0 ? 1 : -1
+            // Each strip gets its own vertical slot so the log reads as a
+            // flowing history, not a buried stack. Only the X-drift carries
+            // the "tossed on the desk" character — the per-strip tilt was
+            // previously accumulating to ~4° at index 7, whose rotated
+            // corners poked into neighboring slots and produced fragmented
+            // text bleed ("...and lives." peeking behind unrelated strips).
+            // Offset is paired with .strip's line-clamp: 1 so strip heights
+            // are predictable — don't bump one without the other.
             const restingStyle = {
-              '--strip-tilt': `${index * 1.2 * -dir}deg`,
               '--strip-offset-x': `${index * 2 * dir}px`,
-              '--strip-offset-y': `${index * 7}px`,
-              '--strip-opacity': String(Math.max(0.18, 1 - index * 0.12)),
+              '--strip-offset-y': `${index * 42}px`,
+              '--strip-opacity': String(Math.max(0.32, 1 - index * 0.09)),
               zIndex: MAX_VISIBLE_STRIPS - index,
             } as React.CSSProperties
             return (

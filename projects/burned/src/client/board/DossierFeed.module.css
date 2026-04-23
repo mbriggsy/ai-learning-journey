@@ -269,11 +269,14 @@
   box-shadow:
     0 1px 2px color-mix(in oklab, var(--color-charcoal-1) 25%, transparent),
     0 3px 7px color-mix(in oklab, var(--color-charcoal-1) 18%, transparent);
-  white-space: normal;
+  /* Single-line clamp so strips have predictable heights, which is what
+     lets the per-index --strip-offset-y (36px) give each entry its own
+     vertical slot without overlapping the next. Long events truncate
+     with ellipsis — a readable half-message beats an unreadable full one
+     buried under the strip above. */
+  white-space: nowrap;
   overflow: hidden;
-  display: -webkit-box;
-  -webkit-box-orient: vertical;
-  -webkit-line-clamp: 2;
+  text-overflow: ellipsis;
 
   /* Per-index resting values — defaults ensure sane rendering if style vars
      are missing (e.g. during the very first render before the style prop

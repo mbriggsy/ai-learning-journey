@@ -277,6 +277,20 @@ function PlayingView({ roomCode }: { roomCode: string }) {
   const handleIntercept = useCallback(() => {
     haptic('medium')
     sendAction({ type: 'nope' })
+    // Optimistic hand removal: flip optimisticPending → true so the
+    // button locks until the next state-update arrives. Without this,
+    // rapid taps sent every ~50ms burn one Intercept per tap because
+    // 'nope' is exempt from server stateVersion (race-correct by design).
+    // The server is authoritative — if the Nope is rejected, state-update
+    // rolls the card back into hand. E2E audit 2026-04-23 D-01.
+    gameStore.applyOptimistic(s => {
+      if (s.phase !== 'playing' || !('myHand' in s)) return s
+      const idx = s.myHand.findIndex(c => c.type === 'intercepted')
+      if (idx === -1) return s
+      const newHand = [...s.myHand]
+      newHand.splice(idx, 1)
+      return { ...s, myHand: newHand }
+    })
   }, [sendAction])
 
   // Local target select for pre-send actions — targetPlayerId is bundled

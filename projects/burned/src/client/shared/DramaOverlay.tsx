@@ -64,21 +64,28 @@ function getDramaBeats(
         variant:   'text',
         text:      'EXTRACTED',
         className: styles.extracted ?? '',
-        holdMs:    1000,
+        // 1000 → 1600: couch-to-TV recognition latency is ~1200ms.
+        // Anything under that clips the beat. E2E audit 2026-04-23 C-14.
+        holdMs:    1600,
       }]
     case 'player-eliminated':
       return [{
         variant:   'text',
         text:      `${name(event.playerId).toUpperCase()} ELIMINATED`,
         className: styles.eliminated ?? '',
-        holdMs:    1200,
+        // 1200 → 1500: elimination is a ceremonial beat deserving more
+        // dwell than the narrator can give at 1200. E2E audit C-14.
+        holdMs:    1500,
       }]
     case 'nope-played':
       return [{
         variant:   'text',
         text:      'INTERCEPTED',
         className: styles.intercepted ?? '',
-        holdMs:    800,
+        // 800 → 1400: the Intercept moment is peak tension. Previously
+        // the word was already fading by the time a couch viewer could
+        // focus on it. E2E audit C-14.
+        holdMs:    1400,
       }]
     case 'game-over':
       return [{

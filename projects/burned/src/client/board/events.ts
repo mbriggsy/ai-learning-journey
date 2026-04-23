@@ -74,13 +74,18 @@ export function formatEvent(event: GameEvent, players: readonly BoardPlayer[], e
         `${n(event.playerId)} activated their contingency.`,
       ], eventId)
 
-    case 'player-eliminated':
+    case 'player-eliminated': {
+      // Guard against falsy rank (server bug / protocol drift) — print
+      // '#N/A' instead of the literal string '#undefined'. E2E audit
+      // 2026-04-23 C-22.
+      const rank = event.rank ? `#${event.rank}` : '#N/A'
       return pick([
-        `${n(event.playerId)} is burned. #${event.rank}`,
-        `${n(event.playerId)} is toast. Rank #${event.rank}`,
-        `Goodbye, ${n(event.playerId)}. #${event.rank}`,
-        `${n(event.playerId)} has been disavowed. #${event.rank}`,
+        `${n(event.playerId)} is burned. ${rank}`,
+        `${n(event.playerId)} is toast. Rank ${rank}`,
+        `Goodbye, ${n(event.playerId)}. ${rank}`,
+        `${n(event.playerId)} has been disavowed. ${rank}`,
       ], eventId)
+    }
 
     case 'favor-requested':
       return pick([

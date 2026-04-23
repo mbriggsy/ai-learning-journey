@@ -959,6 +959,18 @@ function handleNope(
 ): DispatchResult {
   if (!state.nopeWindow) return err(state, 'No active Nope window', 'NOPE_NOT_ACTIVE')
 
+  // Stale-generation guard — D-03 race fix. When two players tap Nope
+  // within the same network round-trip, the second arrival would
+  // otherwise land as an un-intended counter-Nope at chainDepth+1.
+  // The client echoes the window generation it was acting on; if the
+  // server has already advanced (because another player's Nope landed
+  // first), reject with NOPE_NOT_ACTIVE so the late tapper's UI can
+  // surface "too late" instead of silently counter-Noping. Must appear
+  // BEFORE the grace check because stale gen during grace is also wrong.
+  if (action.type === 'nope' && action.windowGeneration !== state.nopeWindow.generation) {
+    return err(state, 'Nope window generation has advanced', 'NOPE_NOT_ACTIVE')
+  }
+
   // Accept Nopes during grace period (window.expired === true but grace not yet expired)
   if (state.nopeWindow.expired && state.nopeWindow.graceDeadlineMs && ctx.now > state.nopeWindow.graceDeadlineMs) {
     return err(state, 'Nope grace period expired', 'NOPE_NOT_ACTIVE')

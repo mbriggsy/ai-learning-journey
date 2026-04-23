@@ -64,6 +64,11 @@ const DrawCardAction = BaseAction.extend({
 
 const NopeAction = BaseAction.extend({
   type: z.literal('nope'),
+  // Client echoes the Nope window's generation it was acting on. Server
+  // rejects if the generation has already advanced — another player
+  // already Noped, their tap was too late. Prevents the D-03 race where
+  // a late-arriving Nope accidentally counter-Nopes instead.
+  windowGeneration: z.int().min(1).max(1_000_000),
 }).strict()
 
 const DefusePlaceAction = BaseAction.extend({

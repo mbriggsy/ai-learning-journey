@@ -21,7 +21,11 @@ function makeCtx(now = 1000): DispatchContext {
 }
 
 function act(state: GameState, action: Partial<EngineAction> & { type: string }, ctx?: DispatchContext) {
-  const fullAction = { playerId: 'p1', ...action } as EngineAction
+  let nextAction = action
+  if (action.type === 'nope' && !('windowGeneration' in action) && state.phase === 'playing' && state.nopeWindow) {
+    nextAction = { ...action, windowGeneration: state.nopeWindow.generation }
+  }
+  const fullAction = { playerId: 'p1', ...nextAction } as EngineAction
   return dispatch(state, fullAction, ctx ?? makeCtx())
 }
 
@@ -130,6 +134,74 @@ describe('Nope Window Generation', () => {
       windowGeneration: gen,
     }, makeCtx(99999))
     expect(result.ok).toBe(true)
+  })
+
+  // D-03 race regression. Two players tap Nope within the same
+  // network round-trip. Server processes them in arrival order:
+  //   t0  window gen=N
+  //   t1  A's Nope arrives (windowGeneration=N) → accepted, gen→N+1
+  //   t2  B's Nope arrives (windowGeneration=N) → MUST be rejected
+  //       because B thought they were the first Noper. Without this
+  //       guard, B's Nope lands at chainDepth+1 and un-Nopes A's cancel.
+  it('rejects client nope with stale windowGeneration (D-03 race)', () => {
+    let state = startGameWith(3)
+    state = giveCard(state, 'p1', 'go-dark', 'skip-1')
+    state = giveCard(state, 'p2', 'intercepted', 'nope-a')
+    state = giveCard(state, 'p3', 'intercepted', 'nope-b')
+
+    // Action opens window at gen N
+    let result = act(state, { type: 'play-card', playerId: 'p1', cardIds: ['skip-1'] })
+    expect(result.ok).toBe(true)
+    const openGen = (result.state as PlayingState).nopeWindow!.generation
+
+    // Player A's Nope arrives first with windowGeneration=openGen → accepted
+    result = act(result.state, {
+      type: 'nope', playerId: 'p2', windowGeneration: openGen,
+    })
+    expect(result.ok).toBe(true)
+    const afterA = result.state as PlayingState
+    expect(afterA.nopeWindow!.generation).toBeGreaterThan(openGen)
+    expect(afterA.nopeWindow!.chainDepth).toBe(1)
+
+    // Player B's Nope arrives with STALE windowGeneration=openGen → rejected.
+    // Before D-03 fix this would have landed as chainDepth=2 (counter-Nope).
+    result = act(afterA, {
+      type: 'nope', playerId: 'p3', windowGeneration: openGen,
+    })
+    expect(result.ok).toBe(false)
+    if (!result.ok) {
+      expect(result.code).toBe('NOPE_NOT_ACTIVE')
+    }
+
+    // Player B's Nope card must still be in hand — the rejection isn't
+    // allowed to burn the card.
+    const p3AfterReject = afterA.players.find(p => p.id === 'p3')!
+    expect(p3AfterReject.hand.some(c => c.type === 'intercepted')).toBe(true)
+  })
+
+  // Counter-Nope flow: B sees the state-update showing gen has advanced,
+  // then explicitly counter-Nopes with the NEW generation. That's a
+  // legitimate chainDepth=2 counter — NOT a race, an intentional counter.
+  it('accepts explicit counter-Nope at current windowGeneration', () => {
+    let state = startGameWith(3)
+    state = giveCard(state, 'p1', 'go-dark', 'skip-1')
+    state = giveCard(state, 'p2', 'intercepted', 'nope-a')
+    state = giveCard(state, 'p3', 'intercepted', 'nope-b')
+
+    let result = act(state, { type: 'play-card', playerId: 'p1', cardIds: ['skip-1'] })
+    expect(result.ok).toBe(true)
+
+    result = act(result.state, { type: 'nope', playerId: 'p2' })  // auto-injects current gen
+    expect(result.ok).toBe(true)
+    const afterA = result.state as PlayingState
+
+    // Explicit counter — reads the NEW generation and sends it
+    result = act(afterA, {
+      type: 'nope', playerId: 'p3', windowGeneration: afterA.nopeWindow!.generation,
+    })
+    expect(result.ok).toBe(true)
+    const afterB = result.state as PlayingState
+    expect(afterB.nopeWindow!.chainDepth).toBe(2)
   })
 })
 

@@ -22,7 +22,11 @@ function makeCtx(now = 1000): DispatchContext {
 }
 
 function act(state: GameState, action: Partial<EngineAction> & { type: string }, ctx?: DispatchContext): DispatchResult {
-  const fullAction = { playerId: 'p1', ...action } as EngineAction
+  let nextAction = action
+  if (action.type === 'nope' && !('windowGeneration' in action) && state.phase === 'playing' && state.nopeWindow) {
+    nextAction = { ...action, windowGeneration: state.nopeWindow.generation }
+  }
+  const fullAction = { playerId: 'p1', ...nextAction } as EngineAction
   return dispatch(state, fullAction, ctx ?? makeCtx())
 }
 

@@ -276,7 +276,13 @@ function PlayingView({ roomCode }: { roomCode: string }) {
   const hasIntercept = hand.some(c => c.type === 'intercepted')
   const handleIntercept = useCallback(() => {
     haptic('medium')
-    sendAction({ type: 'nope' })
+    // Read the Nope window's generation at tap-time. Server rejects with
+    // NOPE_NOT_ACTIVE if the generation has advanced (another player
+    // already Noped this window). Prevents D-03 race where a late-
+    // arriving Nope accidentally lands as a counter-Nope.
+    const snap = gameStore.getServerSnapshot()
+    const gen = (snap && snap.phase === 'playing' && snap.nopeWindow) ? snap.nopeWindow.generation : 0
+    sendAction({ type: 'nope', windowGeneration: gen })
     // Optimistic hand removal: flip optimisticPending → true so the
     // button locks until the next state-update arrives. Without this,
     // rapid taps sent every ~50ms burn one Intercept per tap because

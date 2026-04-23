@@ -7,7 +7,7 @@ type Empty = {}
 export type ClientActionMap = {
   'play-card': { cardIds: string[]; targetPlayerId?: string; namedCardType?: CardType }
   'draw-card': Empty
-  'nope': Empty
+  'nope': { windowGeneration: number }
   'defuse-place': { position: number }
   'favor-give': { cardId: string }
   'future-rearrange': { order: string[] }

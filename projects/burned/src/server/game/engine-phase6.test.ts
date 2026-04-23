@@ -15,7 +15,11 @@ function makeCtx(now = 1000): DispatchContext {
 }
 
 function act(state: PlayingState, action: Partial<EngineAction> & { type: string }, ctx = makeCtx()): DispatchResult {
-  return dispatch(state, action as EngineAction, ctx)
+  let finalAction = action
+  if (action.type === 'nope' && !('windowGeneration' in action) && state.nopeWindow) {
+    finalAction = { ...action, windowGeneration: state.nopeWindow.generation }
+  }
+  return dispatch(state, finalAction as EngineAction, ctx)
 }
 
 function startGameWith(playerCount: number): PlayingState {
@@ -149,7 +153,7 @@ describe('Nope Grace Window', () => {
 describe('Protocol Version', () => {
   it('PROTOCOL_VERSION is exported from protocol.ts', async () => {
     const { PROTOCOL_VERSION } = await import('@shared/protocol')
-    expect(PROTOCOL_VERSION).toBe(2)
+    expect(PROTOCOL_VERSION).toBe(3)
     expect(typeof PROTOCOL_VERSION).toBe('number')
   })
 })

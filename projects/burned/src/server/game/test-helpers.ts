@@ -12,9 +12,19 @@ export function makeCtx(now = 1000): DispatchContext {
   }
 }
 
-/** Dispatch an action with partial type safety (test convenience) */
+/** Dispatch an action with partial type safety (test convenience).
+ *  When the action is a `nope` and the caller didn't specify
+ *  `windowGeneration`, auto-inject the current nopeWindow generation —
+ *  most tests just want "a valid Nope" and shouldn't have to thread
+ *  generation bookkeeping through every call. Tests that need to
+ *  exercise the stale-generation rejection path (D-03) can pass an
+ *  explicit `windowGeneration` to override. */
 export function act(state: PlayingState | LobbyState, action: Partial<EngineAction> & { type: string }, ctx = makeCtx()): DispatchResult {
-  return dispatch(state, action as EngineAction, ctx)
+  let finalAction = action
+  if (action.type === 'nope' && !('windowGeneration' in action) && state.phase === 'playing' && state.nopeWindow) {
+    finalAction = { ...action, windowGeneration: state.nopeWindow.generation }
+  }
+  return dispatch(state, finalAction as EngineAction, ctx)
 }
 
 /** Start a game with N players */

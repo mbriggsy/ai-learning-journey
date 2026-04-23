@@ -70,7 +70,7 @@ describe('Validation', () => {
   it('parses nope action', () => {
     const result = parseClientMessage(JSON.stringify({
       type: 'action',
-      payload: { type: 'nope', stateVersion: 7 },
+      payload: { type: 'nope', stateVersion: 7, windowGeneration: 3 },
     }))
     expect(result.ok).toBe(true)
   })

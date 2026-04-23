@@ -179,15 +179,25 @@
 
 .roster {
   width: 100%;
-  max-width: var(--size-lobby-roster-max-width);
-  display: flex;
-  flex-direction: column;
+  /* When the roster holds many players, widen the max-width so the 2-col
+     grid below gives each playerCard ~280px instead of cramping to 220px.
+     At 1920vw the roster max becomes ~700px wide → two ~330px columns
+     after gap. E2E audit 2026-04-23 C-01. */
+  max-width: min(100%, calc(var(--size-lobby-roster-max-width) + 140px));
+  /* Grid so 5+ players pack into 2 columns — prevents the 10-player
+     roster overflowing a 1080vh TV (the CLEARED HOT start button was
+     217px below the fold). auto-fill + minmax(260px,1fr): 1 column
+     below ~540px container, 2 columns above. Tile sort order is left-
+     to-right top-to-bottom (natural DOM). */
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(260px, 1fr));
   gap: var(--space-2);
   margin-bottom: var(--space-6);
   flex: 1;
   min-height: 0;
   overflow-y: auto;
   scrollbar-width: none;
+  align-content: start;
 }
 
 .roster::-webkit-scrollbar {
@@ -201,6 +211,9 @@
   padding: var(--space-2) var(--space-2) var(--space-3);
   border-bottom: 1px solid color-mix(in oklab, var(--color-accent-burned) 25%, transparent);
   margin-bottom: var(--space-2);
+  /* Span full roster width in the 2-col grid — header is a single row
+     above the player tiles. E2E audit 2026-04-23 C-01. */
+  grid-column: 1 / -1;
 }
 
 .rosterLabel {

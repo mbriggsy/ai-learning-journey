@@ -167,7 +167,22 @@
   line-height: 1.1;
   white-space: nowrap;
   overflow: hidden;
-  text-overflow: clip;
+  /* ellipsis beats clip — when the miniature is narrow enough to truncate
+     (9-char "VERA KHAN" at 100px container), show "VERA…" instead of
+     "VERA KI•" mid-character. E2E audit 2026-04-23 C-06. */
+  text-overflow: ellipsis;
+}
+
+/* Below ~115px container (staged miniature territory on 360vw), hide
+   the card name entirely — illustration + accent color + badge icon
+   carry identity at that scale. Prevents the legal 9-char name truncation
+   at budget-Android widths. Container-query driven: if the same card
+   renders in a larger slot elsewhere, name reappears naturally.
+   E2E audit 2026-04-23 C-06. */
+@container (max-width: 114px) {
+  .cardName {
+    display: none;
+  }
 }
 
 /* Description only renders on large sizes (enlarge preview).

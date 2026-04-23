@@ -18,6 +18,7 @@ import { StagingArea } from './StagingArea'
 import { ErrorToast } from './ErrorToast'
 import { PlayerAlert } from './PlayerAlert'
 import { StealReport } from './StealReport'
+import { IncomingSteal } from './IncomingSteal'
 import { ConnectionOverlay } from './ConnectionOverlay'
 import { EliminatedView } from './EliminatedView'
 import { TitleBar } from './TitleBar'
@@ -561,6 +562,13 @@ function PlayingView({ roomCode }: { roomCode: string }) {
       </BottomSheet>
 
       <Suspense><DramaOverlay /></Suspense>
+
+      {/* State-driven banner that rises on the TARGET's phone during a
+          3-of-a-kind named-steal intercept window. Gives Mittens the card
+          name + stealer so she can decide whether to burn an Intercept
+          before the window closes. Pre-resolution counterpart to the
+          post-resolution incident report below. */}
+      <IncomingSteal />
 
       {/* Persistent classified-dispatch for combo-steal victims. Gated by
           dramaActive so BURNED → EXTRACTED plays first. */}

@@ -1,7 +1,7 @@
 import type {
   BoardView, PlayingBoardView, GameOverBoardView,
   BoardPlayer, PlayerView, PlayingPlayerView, GameOverPlayerView,
-  PrivateData, PendingPromptView,
+  PrivateData, PendingPromptView, NopeWindowView,
 } from '@shared/protocol'
 import type { GameEvent } from '@shared/types'
 import type { PlayingState, GameOverState, Player } from './game/types'
@@ -43,15 +43,7 @@ export function projectForBoard(
       currentPlayerId: state.currentTurn.currentPlayerId,
       turnsRemaining: state.currentTurn.turnsRemaining,
     },
-    nopeWindow: state.nopeWindow
-      ? {
-          remainingMs: Math.max(0, state.nopeWindow.deadlineMs - now),
-          deadlineMs: state.nopeWindow.deadlineMs,
-          chainDepth: state.nopeWindow.chainDepth,
-          startedAtMs: state.nopeWindow.startedAtMs,
-          generation: state.nopeWindow.generation,
-        }
-      : null,
+    nopeWindow: projectNopeWindow(state, now, null),
     pendingPrompt: stripPrivatePromptFields(state.pendingPrompt),
     events: boardEvents,
     stateVersion: state.stateVersion,
@@ -96,7 +88,7 @@ export function projectForPlayer(
     drawPileCount: b.drawPileCount,
     discardPile: [],
     currentTurn: b.currentTurn,
-    nopeWindow: b.nopeWindow,
+    nopeWindow: augmentNopeWindowForPlayer(b.nopeWindow, state, playerId),
     pendingPrompt: b.pendingPrompt,
     events,
     stateVersion: b.stateVersion,
@@ -117,6 +109,77 @@ export function getPrivateData(state: PlayingState, playerId: string): PrivateDa
   }
 
   return data
+}
+
+/**
+ * Build the public NopeWindowView from the server state. When a 3-of-a-kind
+ * named steal's window is open, attaches a `namedSteal` context object so
+ * clients can render "this window is about X targeting Y" before the window
+ * resolves — fixing the gap where targets couldn't decide whether to burn an
+ * Intercept on a specific card (RULES-REFERENCE.md §13.8).
+ *
+ * `viewerId === null` → board view. Target identity is public; the named card
+ * type is stripped. `viewerId === stealerId || viewerId === targetId` → full
+ * context including card type (see `augmentNopeWindowForPlayer`). Any other
+ * viewer sees the public projection (no card type).
+ *
+ * Rationale for sourcing from `state.pendingNameCard` (not `nopeWindow.pendingAction`):
+ * during a nope chain the window's pendingAction briefly becomes a `nope`
+ * action while the chain resolves, but `pendingNameCard` remains set until
+ * the underlying steal resolves or is Noped-out. Reading from
+ * `pendingNameCard` keeps the target's "incoming steal" affordance live
+ * across the chain instead of flickering off mid-chain.
+ */
+function projectNopeWindow(
+  state: PlayingState | GameOverState,
+  now: number,
+  viewerId: string | null,
+): NopeWindowView | null {
+  if (state.phase !== 'playing' || !state.nopeWindow) return null
+  const w = state.nopeWindow
+  const base = {
+    remainingMs: Math.max(0, w.deadlineMs - now),
+    deadlineMs: w.deadlineMs,
+    chainDepth: w.chainDepth,
+    startedAtMs: w.startedAtMs,
+    generation: w.generation,
+  }
+  const pending = state.pendingNameCard
+  if (!pending?.namedCardType) return base
+
+  const canSeeNamed = viewerId !== null &&
+    (viewerId === pending.stealerId || viewerId === pending.targetId)
+  const namedSteal = canSeeNamed
+    ? { stealerId: pending.stealerId, targetPlayerId: pending.targetId, namedCardType: pending.namedCardType }
+    : { stealerId: pending.stealerId, targetPlayerId: pending.targetId }
+  return { ...base, namedSteal }
+}
+
+/**
+ * Layer player-private context onto the public board projection of the nope
+ * window. Board view deliberately strips `namedCardType`; the player's view
+ * adds it back iff the viewer is the stealer or target. Keeps all timing /
+ * chain-depth data identical to the board's computation — there's only ever
+ * one `now` value per projection pass.
+ */
+function augmentNopeWindowForPlayer(
+  publicWindow: NopeWindowView | null,
+  state: PlayingState | GameOverState,
+  viewerId: string,
+): NopeWindowView | null {
+  if (!publicWindow || !publicWindow.namedSteal) return publicWindow
+  if (state.phase !== 'playing') return publicWindow
+  const pending = state.pendingNameCard
+  if (!pending?.namedCardType) return publicWindow
+  const canSee = viewerId === pending.stealerId || viewerId === pending.targetId
+  if (!canSee) return publicWindow
+  return {
+    ...publicWindow,
+    namedSteal: {
+      ...publicWindow.namedSteal,
+      namedCardType: pending.namedCardType,
+    },
+  }
 }
 
 function stripPrivatePromptFields(prompt: import('@shared/types').PendingPrompt | null): PendingPromptView | null {

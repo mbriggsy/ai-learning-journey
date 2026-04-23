@@ -1,4 +1,4 @@
-import type { CardInstance, GameEvent, SubPhase, PendingPrompt } from './types'
+import type { CardInstance, GameEvent, SubPhase, PendingPrompt, CardType } from './types'
 import type { ClientAction } from './actions'
 
 // --- Protocol Version ---
@@ -72,6 +72,22 @@ export interface NopeWindowView {
   readonly chainDepth: number
   readonly startedAtMs: number
   readonly generation: number
+  /**
+   * Context for a 3-of-a-kind named steal whose intercept window is open.
+   * Absent for every other nope window (single-card plays, 2-of-a-kind
+   * random steals, nope-on-nope chain windows).
+   *
+   * `namedCardType` is private per BURNED house rule §13.8 — the projection
+   * exposes it only to the stealer and the target. Board view and bystander
+   * player views see the object without the field (target identity is public
+   * so the board can show "Johnny is targeting Mittens" without leaking the
+   * card name).
+   */
+  readonly namedSteal?: {
+    readonly stealerId: string
+    readonly targetPlayerId: string
+    readonly namedCardType?: CardType
+  }
 }
 
 // --- Pending Prompt View (projected from server's PendingPrompt) ---

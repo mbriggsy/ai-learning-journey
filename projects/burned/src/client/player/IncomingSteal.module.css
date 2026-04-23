@@ -1,0 +1,112 @@
+/* IncomingSteal.module.css
+   Target-side banner: "Johnny is lifting your DASH BARLOWE · 3s"
+   Rises on the target's phone the moment the named-steal intercept
+   window opens, so the decision to burn an Intercept is informed.
+
+   Positioning matches PlayerAlert (top-anchored, respects safe-area
+   insets) but sits at a higher z so if they ever fire together the
+   banner wins — a toast is transient, this persists for the window.
+
+   Urgent state (last 2s) swaps the ochre timer for burned-red and
+   nudges the outer border toward the same color to mirror the
+   SmartActionBox's urgency cue underneath.
+*/
+
+@layer components {
+
+.banner {
+  position: absolute;
+  top: max(var(--space-4), var(--inset-top));
+  left: max(var(--space-4), var(--inset-left));
+  right: max(var(--space-4), var(--inset-right));
+  padding: var(--space-3) var(--space-4);
+  background: color-mix(in oklab, var(--color-charcoal-1) 94%, var(--color-cordovan-4) 22%);
+  color: var(--color-cream-12);
+  border: 1px solid color-mix(in oklab, var(--color-accent-burned) 60%, transparent);
+  border-left-width: 4px;
+  border-left-color: var(--color-accent-burned);
+  border-radius: var(--radius-md);
+  box-shadow:
+    0 10px 28px color-mix(in oklab, var(--color-charcoal-1) 70%, transparent),
+    inset 0 1px 0 color-mix(in oklab, var(--color-cream-12) 20%, transparent);
+  /* Sit above PlayerAlert (var(--z-toast)) so transient toasts don't
+     visually trade places with this persistent context banner. */
+  z-index: calc(var(--z-toast) + 1);
+  text-align: left;
+  line-height: 1.25;
+  font-family: var(--font-mono);
+}
+
+.header {
+  display: flex;
+  align-items: baseline;
+  justify-content: space-between;
+  gap: var(--space-2);
+}
+
+.tag {
+  font-size: var(--text-caption);
+  font-weight: 500;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  color: color-mix(in oklab, var(--color-cream-12) 70%, transparent);
+}
+
+.timer {
+  font-size: var(--text-body);
+  font-weight: 700;
+  letter-spacing: 0.04em;
+  color: var(--color-ochre-11, var(--color-cream-12));
+  font-variant-numeric: tabular-nums;
+  transition: color var(--motion-duration-fast) var(--motion-ease-standard);
+}
+
+.banner[data-urgent] .timer {
+  color: var(--color-accent-burned);
+}
+
+.banner[data-urgent] {
+  border-color: color-mix(in oklab, var(--color-accent-burned) 85%, transparent);
+}
+
+.rule {
+  height: 1px;
+  margin: var(--space-2) 0;
+  background: color-mix(in oklab, var(--color-cream-12) 18%, transparent);
+}
+
+.body {
+  display: flex;
+  flex-direction: column;
+  gap: calc(var(--space-1) / 2);
+}
+
+.stealer {
+  font-family: var(--font-display);
+  font-size: var(--text-body);
+  font-weight: 700;
+  letter-spacing: 0.02em;
+  color: var(--color-cream-12);
+}
+
+.verb {
+  font-size: var(--text-caption);
+  font-weight: 400;
+  letter-spacing: 0.04em;
+  color: color-mix(in oklab, var(--color-cream-12) 78%, transparent);
+}
+
+.card {
+  font-family: var(--font-display);
+  /* Bumped from body → heading tier so the asset reads as the thing
+     on the line. Mittens is making a decision based on this string;
+     it has to feel load-bearing, not like a subtitle. */
+  font-size: var(--text-heading-sm, var(--text-body));
+  font-weight: 800;
+  letter-spacing: 0.03em;
+  text-transform: uppercase;
+  color: var(--color-accent-burned);
+  text-shadow: 0 0 12px color-mix(in oklab, var(--color-accent-burned) 35%, transparent);
+}
+
+} /* @layer components */

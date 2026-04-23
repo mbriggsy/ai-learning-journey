@@ -1,6 +1,7 @@
 import { describe, it, expect, vi } from 'vitest'
 import { gameStore } from './gameStore'
-import type { ServerMessage, LobbyView } from '@shared/protocol'
+import type { ServerMessage, LobbyView, PlayingBoardView } from '@shared/protocol'
+import type { GameEvent } from '@shared/types'
 
 describe('GameStore', () => {
   it('starts with null snapshot', () => {
@@ -154,5 +155,107 @@ describe('GameStore', () => {
       protocolVersion: 1,
     })
     expect(gameStore.getPrivateData().futureCards).toEqual(futureCards)
+  })
+
+  // Regression lock for the comms-history bug fixed in commit 02417202.
+  // The server is now authoritative for the cumulative event log; the client
+  // MUST sync (replace) rather than append to avoid re-duplicating events
+  // that the server sends every tick. Also MUST clear on lobby so a new
+  // game doesn't inherit the previous round's events.
+  describe('Event accumulator — server-cumulative sync semantics', () => {
+    function playingViewWith(events: readonly GameEvent[]): PlayingBoardView {
+      return {
+        phase: 'playing',
+        subPhase: 'turn-active',
+        players: [],
+        drawPileCount: 10,
+        discardPile: [],
+        currentTurn: { currentPlayerId: 'p1', turnsRemaining: 1 },
+        nopeWindow: null,
+        pendingPrompt: null,
+        events,
+        stateVersion: 1,
+      }
+    }
+
+    const eventA: GameEvent = { type: 'turn-started', playerId: 'p1', turnsRemaining: 1 }
+    const eventB: GameEvent = { type: 'card-drawn', playerId: 'p1', safe: true, cardType: 'go-dark' }
+    const eventC: GameEvent = { type: 'card-drawn', playerId: 'p2', safe: true, cardType: 'reassign' }
+
+    it('REPLACES accumulated events on each state-update (not appends)', () => {
+      // First update: 2 events
+      gameStore.handleMessage({
+        type: 'state-update',
+        payload: playingViewWith([eventA, eventB]),
+        protocolVersion: 1,
+      })
+      expect(gameStore.getAccumulatedEvents().length).toBe(2)
+
+      // Server re-sends the SAME cumulative events (no new ones)
+      gameStore.handleMessage({
+        type: 'state-update',
+        payload: playingViewWith([eventA, eventB]),
+        protocolVersion: 1,
+      })
+      // If semantics were APPEND, this would be 4. Replace → still 2.
+      expect(gameStore.getAccumulatedEvents().length).toBe(2)
+
+      // Server adds a third event
+      gameStore.handleMessage({
+        type: 'state-update',
+        payload: playingViewWith([eventA, eventB, eventC]),
+        protocolVersion: 1,
+      })
+      expect(gameStore.getAccumulatedEvents().length).toBe(3)
+    })
+
+    it('clears accumulated events on phase → lobby (new-game reset)', () => {
+      // Seed a playing state with events
+      gameStore.handleMessage({
+        type: 'state-update',
+        payload: playingViewWith([eventA, eventB]),
+        protocolVersion: 1,
+      })
+      expect(gameStore.getAccumulatedEvents().length).toBe(2)
+
+      // Transition back to lobby — events from the prior round must NOT
+      // bleed into the next game.
+      const lobby: LobbyView = { phase: 'lobby', roomCode: 'NEW', players: [] }
+      gameStore.handleMessage({ type: 'state-update', payload: lobby, protocolVersion: 1 })
+      expect(gameStore.getAccumulatedEvents().length).toBe(0)
+    })
+
+    it('uses position-based React keys (evt-N) stable across updates', () => {
+      gameStore.handleMessage({
+        type: 'state-update',
+        payload: playingViewWith([eventA, eventB]),
+        protocolVersion: 1,
+      })
+      const firstPass = gameStore.getAccumulatedEvents()
+      expect(firstPass[0]?.id).toBe('evt-0')
+      expect(firstPass[1]?.id).toBe('evt-1')
+
+      // Same events again — IDs must be stable (React keeps DOM nodes,
+      // updates props in place rather than unmount/remount).
+      gameStore.handleMessage({
+        type: 'state-update',
+        payload: playingViewWith([eventA, eventB]),
+        protocolVersion: 1,
+      })
+      const secondPass = gameStore.getAccumulatedEvents()
+      expect(secondPass[0]?.id).toBe('evt-0')
+      expect(secondPass[1]?.id).toBe('evt-1')
+
+      // Appending — position 0 and 1 keys unchanged, new event gets evt-2
+      gameStore.handleMessage({
+        type: 'state-update',
+        payload: playingViewWith([eventA, eventB, eventC]),
+        protocolVersion: 1,
+      })
+      const thirdPass = gameStore.getAccumulatedEvents()
+      expect(thirdPass[0]?.id).toBe('evt-0')
+      expect(thirdPass[1]?.id).toBe('evt-1')
+      expect(thirdPass[2]?.id).toBe('evt-2')
+    })
   })
 })

@@ -2,7 +2,7 @@ import { describe, it, expect } from 'vitest'
 import { createLobbyState, dispatch, buildDeck } from './engine'
 import type { DispatchContext, DispatchResult, PlayingState, GameState } from './types'
 import type { EngineAction } from '@shared/actions'
-import type { CardInstance } from '@shared/types'
+import type { CardInstance, GameEvent } from '@shared/types'
 
 // --- Test Helpers ---
 
@@ -996,5 +996,86 @@ describe('Full game simulation', () => {
     if (state.phase === 'game_over') {
       expect(state.winnerId).toBeDefined()
     }
+  })
+})
+
+// Regression lock for the comms-history bug fixed in commit 02417202:
+// engine.ts:47 used to reset state.events to [] on every dispatch, meaning
+// the server only ever carried the last dispatch's events. Reloaded clients
+// lost history. These tests ensure future refactors don't reintroduce the
+// per-dispatch clear pattern.
+describe('Event log — cumulative semantics (history regression lock)', () => {
+  it('preserves game-started event after a subsequent dispatch', () => {
+    const state = startGameWith(3)
+    expect(state.events.some(e => e.type === 'game-started')).toBe(true)
+
+    // Any subsequent dispatch must not wipe the prior events
+    const result = act(state, { type: 'draw-card', playerId: state.currentTurn.currentPlayerId })
+    expect(result.ok).toBe(true)
+    const after = result.state as PlayingState
+
+    // game-started from start-game must STILL be in the log — this is the
+    // single most important assertion. If it fails, events are per-dispatch
+    // again and the dossier will lose history on every action.
+    expect(after.events.some(e => e.type === 'game-started')).toBe(true)
+  })
+
+  it('accumulates events across multiple dispatches (no per-dispatch reset)', () => {
+    let state = startGameWith(3)
+    const startingCount = state.events.length
+
+    // Fire three dispatches in a row — any action that reaches ok() will do.
+    // Each successful dispatch should grow (or at minimum not shrink below
+    // the starting count) state.events.
+    for (let i = 0; i < 3; i++) {
+      const actor = state.currentTurn.currentPlayerId
+      const result = act(state, { type: 'draw-card', playerId: actor })
+      if (!result.ok) break
+      state = result.state as PlayingState
+      if (state.phase !== 'playing') break
+    }
+
+    // After multiple dispatches, the log must contain at least the original
+    // start-game events PLUS the new draws. A per-dispatch clear would have
+    // left us with only the very last dispatch's events (1-2 items).
+    expect(state.events.length).toBeGreaterThanOrEqual(startingCount)
+    expect(state.events.some(e => e.type === 'game-started')).toBe(true)
+  })
+
+  it('caps state.events at 500 — oldest events roll off the front', () => {
+    let state = startGameWith(3)
+
+    // Synthetically pad state.events beyond the cap. 600 events + the
+    // dispatch below's additions should force the cap to kick in.
+    const padding: GameEvent[] = Array.from({ length: 600 }, (_, i) => ({
+      type: 'turn-started' as const,
+      playerId: `padding-${i}`,
+      turnsRemaining: 1,
+    }))
+    state = { ...state, events: padding }
+
+    // Any dispatch that goes through ok() applies the cap. draw-card is
+    // the most likely to succeed here.
+    const result = act(state, { type: 'draw-card', playerId: state.currentTurn.currentPlayerId })
+    expect(result.ok).toBe(true)
+    const capped = result.state as PlayingState
+
+    // Cap enforced at 500 events max
+    expect(capped.events.length).toBeLessThanOrEqual(500)
+
+    // The very oldest padding events (the first ones we synthesized) must
+    // have rolled off. Newer padding and the fresh card-drawn remain.
+    expect(capped.events.some(e =>
+      e.type === 'turn-started' && e.playerId === 'padding-0'
+    )).toBe(false)
+    // Sanity: very recent padding stayed
+    expect(capped.events.some(e =>
+      e.type === 'turn-started' && e.playerId === 'padding-599'
+    )).toBe(true)
+  })
+
+  it('createLobbyState() returns empty events (no cross-game leakage)', () => {
+    const lobby = createLobbyState()
+    expect(lobby.events).toEqual([])
   })
 })

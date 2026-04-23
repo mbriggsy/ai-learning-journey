@@ -61,19 +61,26 @@
     color var(--motion-duration-fast) var(--motion-ease-base);
 }
 
-/* Top hairline — ochre, 2px; brightens to accent-drama when active */
+/* Top hairline — ochre, 2px idle; brightens to accent-drama when active
+   and grows 1px taller. Height is fixed at 3px (max) and we transition
+   transform: scaleY() so the idle state paints 2/3 of the full height —
+   keeps the transition on the GPU-composited transform axis rather than
+   triggering layout via height changes. transform-origin: top anchors
+   growth to the top edge so the extra pixel appears INSIDE the tile. */
 .tile::before {
   content: '';
   position: absolute;
   top: 0;
   left: 6px;
   right: 6px;
-  height: 2px;
+  height: 3px;
+  transform: scaleY(0.667);
+  transform-origin: top;
   background: color-mix(in oklab, var(--color-accent-drama) 28%, transparent);
   pointer-events: none;
   transition:
     background var(--motion-duration-base) var(--motion-ease-base),
-    height var(--motion-duration-fast) var(--motion-ease-decelerate);
+    transform var(--motion-duration-fast) var(--motion-ease-decelerate);
 }
 
 /* Presence dot — signals WebSocket connection status. Green when connected,
@@ -185,7 +192,7 @@
 }
 .tile[data-active]::before {
   background: var(--color-accent-drama);
-  height: 3px;
+  transform: scaleY(1);
 }
 .tile[data-active] .name {
   color: var(--color-charcoal-1);

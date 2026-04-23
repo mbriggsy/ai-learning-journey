@@ -45,12 +45,39 @@
   margin-bottom: var(--space-3);
 }
 
-/* --- Option list (TargetSelect, FavorResponse) --- */
+/* --- Option list (TargetSelect) --- */
 
 .optionList {
   display: flex;
   flex-direction: column;
   gap: var(--space-2);
+}
+
+/* TargetSelect-only stagger — reveals each target button one after
+   another after the sheet slides up. Scoped to .optionList children so
+   NameCard's .cardGrid (large grid, would feel like motion soup) is
+   unaffected. Per-button delay set inline via style.animationDelay in
+   TargetSelect.tsx. `backwards` fill prevents FOUC before the delay
+   starts. */
+.optionList > .optionBtn {
+  animation: optionStagger var(--motion-duration-base) var(--motion-ease-decelerate) backwards;
+}
+
+@keyframes optionStagger {
+  from {
+    opacity: 0;
+    transform: translateY(6px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .optionList > .optionBtn {
+    animation: none;
+  }
 }
 
 .optionBtn {

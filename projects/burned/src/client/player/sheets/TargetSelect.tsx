@@ -16,10 +16,14 @@ export function TargetSelect({ eligiblePlayers, onSelectTarget, onCancel, title 
     <div>
       <div className={styles.sheetTitle}>{title ?? 'Choose a target'}</div>
       <div className={styles.optionList}>
-        {eligiblePlayers.map(p => (
+        {eligiblePlayers.map((p, i) => (
           <button
             key={p.id}
             className={styles.optionBtn}
+            // 40ms cascade per button lands inside Emil's 30-80ms stagger
+            // range. Max 9 buttons (10-player game minus self) = 360ms
+            // total reveal, tolerable on top of the sheet slide-up.
+            style={{ animationDelay: `${i * 40}ms` }}
             onClick={() => { if (!submitted) { setSubmitted(true); onSelectTarget(p.id) } }}
             disabled={submitted}
           >

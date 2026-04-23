@@ -31,9 +31,11 @@ export function EliminatedView() {
       <m.div
         className={styles.skullWrap}
         // Emil: never animate from scale(0) — nothing in the real world pops
-        // from nothing. 0.4 keeps the punch but preserves a silhouette.
-        // Transform string keeps the skull pop GPU-composited.
-        initial={{ transform: 'scale(0.4) rotate(-15deg)' }}
+        // from nothing. 0.6 preserves stamp-impact punch while landing
+        // closer to Emil's 0.95 minimum range (peak-ceremony moment, so a
+        // rule-softening is allowed; earlier 0.4 was overshooting the
+        // break). Transform string keeps the skull pop GPU-composited.
+        initial={{ transform: 'scale(0.6) rotate(-15deg)' }}
         animate={{ transform: 'scale(1) rotate(0deg)' }}
         transition={MOTION.punchy}
       >

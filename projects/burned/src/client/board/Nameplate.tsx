@@ -13,10 +13,13 @@ interface Subject {
   /** Identity key — when this changes, the plate flips. Composite of
    *  "prompt:id:type" or "turn:id" so the flip fires on player change AND
    *  on prompt-type change, but NOT on turns-remaining count ticks (those
-   *  update in place in the subtext without re-triggering the flip). */
+   *  update in place in the subtext without re-triggering the flip).
+   *  Standby is its own key so the first turn-started event flips the
+   *  plate from quiet to active instead of hard-swapping the DOM. */
   readonly key: string
   readonly name: string
   readonly subtext: string
+  readonly standby: boolean
 }
 
 const PROMPT_SUBTEXT: Record<PendingPromptView['type'], string> = {
@@ -26,24 +29,32 @@ const PROMPT_SUBTEXT: Record<PendingPromptView['type'], string> = {
   'name-card':        'Calling The Shot',
 }
 
+const STANDBY_SUBJECT: Subject = {
+  key:     'standby',
+  name:    '.',
+  subtext: 'Standby',
+  standby: true,
+}
+
 function resolveSubject(
   currentTurn: Props['currentTurn'],
   prompt: Props['prompt'],
   players: readonly BoardPlayer[],
-): Subject | null {
+): Subject {
   if (prompt) {
     const p = players.find(x => x.id === prompt.playerId)
-    if (!p) return null
+    if (!p) return STANDBY_SUBJECT
     return {
       key:     `prompt:${prompt.playerId}:${prompt.type}`,
       name:    p.name,
       subtext: PROMPT_SUBTEXT[prompt.type],
+      standby: false,
     }
   }
 
   if (currentTurn) {
     const p = players.find(x => x.id === currentTurn.currentPlayerId)
-    if (!p) return null
+    if (!p) return STANDBY_SUBJECT
     const extra = currentTurn.turnsRemaining > 1
       ? ` · ${currentTurn.turnsRemaining} Turns`
       : ''
@@ -51,10 +62,11 @@ function resolveSubject(
       key:     `turn:${currentTurn.currentPlayerId}`,
       name:    p.name,
       subtext: `On Deck${extra}`,
+      standby: false,
     }
   }
 
-  return null
+  return STANDBY_SUBJECT
 }
 
 /**
@@ -63,33 +75,29 @@ function resolveSubject(
  * prompt changes flip the plate 180° around its vertical center (rotateY),
  * content swapping at the edge-on moment — reads as a physical coin flip.
  *
- * Standby state (no current turn, no prompt) renders a muted empty plate
- * as an anchor rather than collapsing layout.
+ * Standby (no current turn, no prompt) is a keyed variant in the same
+ * flip flow — game-start renders standby with no initial flip (thanks to
+ * AnimatePresence initial={false}), and the first turn-started event
+ * flips the plate from quiet to active instead of hard-swapping DOM.
  */
 export function Nameplate({ players, currentTurn, prompt }: Props) {
   const subject = resolveSubject(currentTurn, prompt, players)
-
-  if (!subject) {
-    return (
-      <div className={`${styles.nameplate} ${styles.nameplateStandby}`} aria-hidden="true">
-        <div className={styles.plate}>
-          <div className={styles.plateContent}>
-            <span className={styles.name}>.</span>
-            <span className={styles.subtext}>Standby</span>
-          </div>
-        </div>
-        <div className={styles.stand} />
-      </div>
-    )
-  }
+  const wrapperClass = subject.standby
+    ? `${styles.nameplate} ${styles.nameplateStandby}`
+    : styles.nameplate
 
   return (
-    <div className={styles.nameplate} aria-live="polite" aria-atomic="true">
+    <div className={wrapperClass} aria-live="polite" aria-atomic="true">
       <div className={styles.plate}>
         <AnimatePresence mode="wait" initial={false}>
           <m.div
             key={subject.key}
             className={styles.plateContent}
+            // data-standby scopes the name-hide to the plateContent itself
+            // so the EXITING standby plate keeps its hidden name through
+            // the rotateY exit — without this, the parent className flip
+            // briefly reveals the "." during handoff.
+            data-standby={subject.standby ? 'true' : undefined}
             // Coin-flip: enter from +90° (edge-on, rotating in), exit to
             // -90° (rotating out the same way). Transform string (not
             // shorthand rotateY) so the animation stays hardware-accel.

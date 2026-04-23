@@ -26,6 +26,10 @@
      perspective fish-eyes the flip, longer flattens it. */
   perspective: 1000px;
   pointer-events: none;
+  /* Standby→active handoff: wrapper opacity brightens from 0.55 to 1
+     alongside the first coin-flip in. Slow curve so the plate "wakes up"
+     rather than snapping bright. */
+  transition: opacity var(--motion-duration-slow) var(--motion-ease-base);
 }
 
 /* Thin dark-wood base under the brass plate — slightly wider so the
@@ -135,7 +139,11 @@
   opacity: 0.55;
 }
 
-.nameplateStandby .name {
+/* Scoped to the plateContent itself (via data-standby) rather than the
+   parent wrapper class — this keeps the name hidden on the EXITING
+   standby plate through the whole rotateY exit when the first turn
+   starts, instead of briefly revealing the "." mid-flip. */
+.plateContent[data-standby='true'] .name {
   visibility: hidden; /* preserves layout height; no name to engrave */
 }
 

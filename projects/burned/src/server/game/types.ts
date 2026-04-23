@@ -107,4 +107,8 @@ export type ErrorCode =
   | 'INVALID_ACTION'
   | 'INVALID_POSITION'
   | 'NOPE_NOT_ACTIVE'
+  /** D-03 race: client's nope arrived with a windowGeneration the server
+      has already advanced past. Distinct from NOPE_NOT_ACTIVE (no window
+      at all) so the wire layer can surface a specific "too late" toast. */
+  | 'NOPE_STALE_GENERATION'
   | 'MAX_CHAIN_DEPTH'

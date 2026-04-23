@@ -28,7 +28,11 @@ export function ErrorToast() {
           exit={{ transform: 'translateY(-60px)', opacity: 0 }}
           transition={MOTION.quickFade}
         >
-          {error.code === 'STALE_STATE' ? 'Game state changed — try again' : error.message}
+          {
+            error.code === 'STALE_STATE' ? 'Game state changed — try again'
+            : error.code === 'NOPE_TOO_LATE' ? 'Too late — someone intercepted first'
+            : error.message
+          }
         </m.div>
       )}
     </AnimatePresence>

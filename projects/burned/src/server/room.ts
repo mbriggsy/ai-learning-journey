@@ -54,6 +54,7 @@ function mapEngineError(code: EngineErrorCode): ErrorCode {
     case 'INVALID_ACTION': return 'INVALID_ACTION'
     case 'INVALID_POSITION': return 'INVALID_ACTION'
     case 'NOPE_NOT_ACTIVE': return 'INVALID_ACTION'
+    case 'NOPE_STALE_GENERATION': return 'NOPE_TOO_LATE'
     case 'MAX_CHAIN_DEPTH': return 'INVALID_ACTION'
   }
 }

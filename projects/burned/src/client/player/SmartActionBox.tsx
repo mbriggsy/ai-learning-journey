@@ -134,19 +134,24 @@ export function SmartActionBox({
     // The acting player (myTurn) can't nope their own play.
     if (nopeWindow && !myTurn && isAlive) {
       const urgent = secondsLeft <= 2
+      // chainDepth 0 = first Nope, you're cancelling the action.
+      // chainDepth > 0 = someone already Noped. Counter-tap flips it back.
+      // Different word tells the room which side of the chain you're on.
+      const counter = nopeWindow.chainDepth > 0
+      const verb = counter ? 'Counter' : 'Intercept'
       if (hasIntercept) {
         return {
-          key: 'intercept',
+          key: counter ? 'counter' : 'intercept',
           className: `${styles.box} ${styles.intercept} ${urgent ? styles.urgent : ''}`,
-          text: `Intercept \u00b7 ${secondsLeft}s`,
+          text: `${verb} \u00b7 ${secondsLeft}s`,
           interactive: true,
           action: onIntercept,
         }
       }
       return {
-        key: 'intercept-waiting',
+        key: counter ? 'counter-waiting' : 'intercept-waiting',
         className: `${styles.box} ${styles.interceptWaiting}`,
-        text: `Intercept window \u00b7 ${secondsLeft}s`,
+        text: `${verb} window \u00b7 ${secondsLeft}s`,
         interactive: false,
       }
     }

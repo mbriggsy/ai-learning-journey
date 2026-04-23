@@ -968,7 +968,7 @@ function handleNope(
   // surface "too late" instead of silently counter-Noping. Must appear
   // BEFORE the grace check because stale gen during grace is also wrong.
   if (action.type === 'nope' && action.windowGeneration !== state.nopeWindow.generation) {
-    return err(state, 'Nope window generation has advanced', 'NOPE_NOT_ACTIVE')
+    return err(state, 'Nope window generation has advanced', 'NOPE_STALE_GENERATION')
   }
 
   // Accept Nopes during grace period (window.expired === true but grace not yet expired)

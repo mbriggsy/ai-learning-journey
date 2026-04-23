@@ -170,7 +170,7 @@ describe('Nope Window Generation', () => {
     })
     expect(result.ok).toBe(false)
     if (!result.ok) {
-      expect(result.code).toBe('NOPE_NOT_ACTIVE')
+      expect(result.code).toBe('NOPE_STALE_GENERATION')
     }
 
     // Player B's Nope card must still be in hand — the rejection isn't

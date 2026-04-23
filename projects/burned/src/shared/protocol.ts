@@ -20,6 +20,7 @@ export type ErrorCode =
   | 'SESSION_REPLACED'
   | 'DEAD_PLAYER'
   | 'INVALID_ACTION'
+  | 'NOPE_TOO_LATE'
   | 'KICKED'
 
 // --- Client -> Server Messages ---

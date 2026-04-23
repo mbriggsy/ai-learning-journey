@@ -43,6 +43,21 @@
     0 0 60px currentColor;
 }
 
+/* Card slot — drawer-only Burned reveal. The MinimalCard inside uses
+   width: 100% + aspect-ratio 5/7, so the slot's inline-size controls the
+   rendered card size. clamp floor/ceil handles tiny phones and iPads.
+   Drop-shadow gives the card heft — looks like it's hovering in front of
+   the radial-gradient background. */
+.cardSlot {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: clamp(260px, 72cqi, 420px);
+  filter:
+    drop-shadow(0 20px 40px color-mix(in oklab, var(--color-charcoal-1) 60%, transparent))
+    drop-shadow(0 4px 12px color-mix(in oklab, var(--color-charcoal-1) 45%, transparent));
+}
+
 /* ─── BURNED — cordovan alarm, the big one ─── */
 
 .burned {

@@ -1,6 +1,7 @@
 import { useRef, useEffect } from 'react'
 import gsap from 'gsap'
 import { MOTION_DURATIONS } from '@client/shared/tokens/motion'
+import { MinimalCard } from './MinimalCard'
 import { useEventFeed } from './hooks/useEventFeed'
 import { usePlayerList } from './hooks/useSharedSelectors'
 import { setDramaActive } from './dramaState'
@@ -9,17 +10,21 @@ import type { GameEvent } from '@shared/types'
 import type { BoardPlayer } from '@shared/protocol'
 import styles from './DramaOverlay.module.css'
 
-// Drama event config — only the BIG moments get overlays
-interface DramaConfig {
-  text: string
-  className: string
-  holdMs: number
-}
+// Drama event config — only the BIG moments get overlays. Two variants:
+//   - 'text' — big title-card word (BURNED, EXTRACTED, etc.)
+//   - 'card' — the actual game card fills the screen as the reveal. Used
+//     for the drawer's own burned-drawn moment: you drew it, the card IS
+//     the drama. Non-drawers/board keep the text variant (they need to
+//     be told WHO, and suspense→payoff serves them better).
+type DramaConfig =
+  | { variant: 'text'; text: string; className: string; holdMs: number }
+  | { variant: 'card'; cardType: 'burned'; className: string; holdMs: number }
 
-// Returns 0..N beats to queue for a given event. burned-drawn is the only
-// current two-beat sequence: non-drawers (and the board) get a "{NAME} IS…"
-// suspense beat before the "BURNED" payoff; the drawer skips the buildup
-// because they don't need to be told who it is.
+// Returns 0..N beats to queue for a given event. burned-drawn splits by
+// audience: the DRAWER sees the Burned card itself fill their phone
+// screen (one beat — the card is the reveal, no text needed); non-drawers
+// and the board get the two-beat "{NAME} IS…" suspense → "BURNED" payoff
+// as before (they need to learn who got hit).
 function getDramaBeats(
   event: GameEvent,
   players: readonly BoardPlayer[],
@@ -29,42 +34,58 @@ function getDramaBeats(
 
   switch (event.type) {
     case 'burned-drawn': {
-      const payoff: DramaConfig = {
-        text: 'BURNED',
-        className: styles.burned ?? '',
-        holdMs: 1400,
+      if (myPlayerId === event.playerId) {
+        // Drawer-only card reveal. Longer hold than the text payoff
+        // because the card has more to read (header, illustration, name)
+        // and it's the emotional peak of the draw moment.
+        return [{
+          variant:   'card',
+          cardType:  'burned',
+          className: styles.burned ?? '',
+          holdMs:    1600,
+        }]
       }
-      if (myPlayerId === event.playerId) return [payoff]
       const buildup: DramaConfig = {
-        text: `${name(event.playerId).toUpperCase()} IS\u2026`,
+        variant:   'text',
+        text:      `${name(event.playerId).toUpperCase()} IS\u2026`,
         className: styles.burned ?? '',
-        holdMs: 700,
+        holdMs:    700,
+      }
+      const payoff: DramaConfig = {
+        variant:   'text',
+        text:      'BURNED',
+        className: styles.burned ?? '',
+        holdMs:    1400,
       }
       return [buildup, payoff]
     }
     case 'extraction-played':
       return [{
-        text: 'EXTRACTED',
+        variant:   'text',
+        text:      'EXTRACTED',
         className: styles.extracted ?? '',
-        holdMs: 1000,
+        holdMs:    1000,
       }]
     case 'player-eliminated':
       return [{
-        text: `${name(event.playerId).toUpperCase()} ELIMINATED`,
+        variant:   'text',
+        text:      `${name(event.playerId).toUpperCase()} ELIMINATED`,
         className: styles.eliminated ?? '',
-        holdMs: 1200,
+        holdMs:    1200,
       }]
     case 'nope-played':
       return [{
-        text: 'INTERCEPTED',
+        variant:   'text',
+        text:      'INTERCEPTED',
         className: styles.intercepted ?? '',
-        holdMs: 800,
+        holdMs:    800,
       }]
     case 'game-over':
       return [{
-        text: `${name(event.winnerId).toUpperCase()} WINS`,
+        variant:   'text',
+        text:      `${name(event.winnerId).toUpperCase()} WINS`,
         className: styles.victory ?? '',
-        holdMs: 2000,
+        holdMs:    2000,
       }]
     default:
       return []
@@ -76,6 +97,7 @@ export function DramaOverlay() {
   const players = usePlayerList()
   const overlayRef = useRef<HTMLDivElement>(null)
   const textRef = useRef<HTMLDivElement>(null)
+  const cardRef = useRef<HTMLDivElement>(null)
   const lastProcessedRef = useRef<string | null>(null)
   const animatingRef = useRef(false)
   const queueRef = useRef<Array<{ config: DramaConfig; id: string }>>([])
@@ -119,14 +141,28 @@ export function DramaOverlay() {
 
     const overlay = overlayRef.current
     const text = textRef.current
-    if (!overlay || !text) {
+    const card = cardRef.current
+    if (!overlay || !text || !card) {
       animatingRef.current = false
       return
     }
 
-    // Set the text and class
-    text.textContent = config.text
     overlay.className = `${styles.overlay ?? ''} ${config.className}`
+
+    // Pick the target element based on variant. The other stays hidden
+    // (display: none) so layout isn't fighting for space and the GSAP
+    // set/fromTo calls below don't accidentally animate a stale element.
+    let target: HTMLDivElement
+    if (config.variant === 'text') {
+      text.textContent = config.text
+      target = text
+      gsap.set(card, { display: 'none' })
+      gsap.set(text, { display: 'block' })
+    } else {
+      target = card
+      gsap.set(text, { display: 'none' })
+      gsap.set(card, { display: 'flex' })
+    }
 
     const tl = gsap.timeline({
       onComplete: () => {
@@ -135,7 +171,7 @@ export function DramaOverlay() {
         // a blurred state and can "focus in," bridging beat-to-beat handoff
         // into one perceived motion (Emil's crossfade-mask trick).
         gsap.set(overlay, { opacity: 0, pointerEvents: 'none' })
-        gsap.set(text, { opacity: 0, filter: 'blur(4px)' })
+        gsap.set(target, { opacity: 0, filter: 'blur(4px)' })
         // Process next in queue
         processQueue()
       },
@@ -143,11 +179,15 @@ export function DramaOverlay() {
 
     // SLAM IN: fast scale + opacity + refocus from blur. Starting at blur(4px)
     // bridges multi-beat sequences (e.g. "{NAME} IS…" → "BURNED") as one
-    // perceived morph instead of a harsh blink between states.
+    // perceived morph instead of a harsh blink between states. Card variant
+    // uses a less aggressive initial scale (1.6 vs 2.5) because a card has
+    // more visual weight than a word — 2.5x-sized card is cartoon-huge,
+    // 1.6 reads as "slammed onto the table" without overshoot.
+    const initialScale = config.variant === 'card' ? 1.6 : 2.5
     tl.set(overlay, { opacity: 1, pointerEvents: 'none' })
     tl.fromTo(
-      text,
-      { scale: 2.5, opacity: 0, y: 20, filter: 'blur(4px)' },
+      target,
+      { scale: initialScale, opacity: 0, y: 20, filter: 'blur(4px)' },
       {
         scale: 1,
         opacity: 1,
@@ -169,7 +209,7 @@ export function DramaOverlay() {
     // most closely at the START of the exit — ease-in delays that initial
     // movement and reads as sluggish. power2.in was here in the first cut;
     // swapped 2026-04-23 per full-repo audit.
-    tl.to(text, {
+    tl.to(target, {
       filter: 'blur(4px)',
       duration: MOTION_DURATIONS.slow,
       ease: 'power2.out',
@@ -184,6 +224,12 @@ export function DramaOverlay() {
   return (
     <div ref={overlayRef} className={styles.overlay} style={{ opacity: 0 }}>
       <div ref={textRef} className={styles.text} />
+      {/* Card slot — always mounted so the ref is stable for GSAP. Hidden
+          via display:none when the active beat is a text variant. Only the
+          drawer's own burned-drawn event uses the card variant today. */}
+      <div ref={cardRef} className={styles.cardSlot} style={{ display: 'none' }}>
+        <MinimalCard type="burned" disabled />
+      </div>
     </div>
   )
 }

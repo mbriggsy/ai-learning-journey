@@ -160,6 +160,7 @@ function stripPrivateEventFields(
       const allowed = viewerId !== null &&
         (viewerId === event.stealerId || viewerId === event.targetId)
       if (!allowed) {
+        // eslint-disable-next-line @typescript-eslint/no-unused-vars
         const { cardType: _strip, ...rest } = event
         return rest
       }
@@ -167,6 +168,7 @@ function stripPrivateEventFields(
     if (event.type === 'card-drawn' && event.cardType !== undefined) {
       const allowed = viewerId !== null && viewerId === event.playerId
       if (!allowed) {
+        // eslint-disable-next-line @typescript-eslint/no-unused-vars
         const { cardType: _strip, ...rest } = event
         return rest
       }

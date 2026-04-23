@@ -79,7 +79,7 @@ describe('resolveSubject — Nameplate subject derivation', () => {
   })
 
   it('key changes when connection flips mid-prompt — plate re-flips', () => {
-    const prompt: PendingPromptView = { type: 'favor-response', playerId: 'p1' }
+    const prompt: PendingPromptView = { type: 'favor-response', playerId: 'p1', requesterId: 'p2' }
     const online = resolveSubject(null, prompt, [vera, dash])
     const offline = resolveSubject(null, prompt, [veraOffline, dash])
     expect(online.key).not.toBe(offline.key)

@@ -5,6 +5,7 @@ import { gameStore, useGameState, useProtocolMismatch, useLastError } from '@cli
 import type { GameError } from '@client/shared/gameStore'
 import { Lobby } from './Lobby'
 import { GameTable } from './GameTable'
+import { EndGameControl } from './EndGameControl'
 import { GameOver } from '@client/shared/GameOver'
 import { DramaOverlay } from '@client/shared/DramaOverlay'
 import { PARTYKIT_HOST } from '@client/shared/config'
@@ -202,10 +203,18 @@ export function Board() {
     )
   }
 
+  // EndGameControl lives as a SIBLING of GameTable, not inside it —
+  // `.table` uses `contain: layout` which creates a containing block for
+  // position: fixed descendants. A modal rendered inside the table gets
+  // scoped to table bounds AND sits below the game chrome's z-index 100
+  // layers (BlotterContent, Arena). Hoisting to this Fragment escapes
+  // the contain scope so the backdrop covers the full viewport and the
+  // modal paints above everything except DramaOverlay.
   return (
     <Fragment key="playing">
-      <GameTable onEndGame={handleEndGame} />
+      <GameTable />
       <DramaOverlay />
+      <EndGameControl onEndGame={handleEndGame} />
       <BoardErrorBanner error={lastError} />
     </Fragment>
   )

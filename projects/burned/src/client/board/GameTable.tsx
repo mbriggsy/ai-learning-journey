@@ -6,14 +6,9 @@ import { PlayerStrip } from './PlayerStrip'
 import { Arena } from './Arena'
 import { BlotterContent } from './BlotterContent'
 import { NopeCountdownBar } from './NopeCountdownBar'
-import { EndGameControl } from './EndGameControl'
 import styles from './GameTable.module.css'
 
-interface Props {
-  readonly onEndGame: () => void
-}
-
-export function GameTable({ onEndGame }: Props) {
+export function GameTable() {
   const players = usePlayerList()
   const currentTurn = useCurrentTurn()
   const flashRef = useRef<HTMLDivElement>(null)
@@ -70,10 +65,6 @@ export function GameTable({ onEndGame }: Props) {
 
       {/* Overlays */}
       <NopeCountdownBar />
-
-      {/* End Game — rage-quit control, top-right. Confirm modal prevents
-          accidental iPad-shoulder-brush from nuking the room. */}
-      <EndGameControl onEndGame={onEndGame} />
     </div>
   )
 }

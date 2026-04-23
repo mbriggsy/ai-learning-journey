@@ -161,7 +161,7 @@
     0 6px 14px color-mix(in oklab, var(--color-charcoal-1) 30%, transparent),
     /* warm warning halo — slow pulse so it reads as alarm, not decoration */
     0 0 22px color-mix(in oklab, var(--color-accent-burned) 45%, transparent);
-  animation: offlinePulse 2.4s var(--motion-ease-base) infinite;
+  animation: offlinePulse var(--motion-duration-pulse-slow) var(--motion-ease-base) infinite;
 }
 
 .plateContent[data-offline='true'] .subtext {

@@ -296,7 +296,16 @@
 
 .joinedName {
   font-family: var(--font-display);
-  font-size: var(--text-display);
+  /* The flex slot (after the 72px icon + gap) is ~240px on 360vw, ~270px
+     on 390vw, and grows linearly. Inter-900 uppercase averages ~0.72em
+     per char, so a 12-char name needs font-size ≤ slot-width / 8.6.
+     Using vw (not svh) because the constraint on THIS element is
+     horizontal, not vertical — the spec's svh default applies when the
+     viewport is the constraint; a flex-item in a fixed-icon row has a
+     different constraint. Clamp ranges: 22px on 360vw → 28px on 430vw →
+     32px on 500vw+. Gives the hero name presence without truncating
+     legal 12-char codenames. E2E audit 2026-04-23 C-02. */
+  font-size: clamp(1.375rem, 0.9rem + 3vw, 2rem);
   font-weight: 900;
   letter-spacing: -0.01em;
   text-transform: uppercase;

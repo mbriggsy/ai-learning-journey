@@ -1,6 +1,7 @@
 import { routePartykitRequest, Server } from 'partyserver'
 import type { Connection, ConnectionContext } from 'partyserver'
 import { parseClientMessage, messageByteLength } from './validation'
+import { handleHealthRequest } from './health'
 import { createLobbyState, dispatch } from './game/engine'
 import { projectForBoard, projectForPlayer, getPrivateData } from './projection'
 import type { GameState, PlayingState, GameOverState, DispatchContext, DispatchResult, ErrorCode as EngineErrorCode } from './game/types'
@@ -944,6 +945,12 @@ interface Env {
 
 export default {
   async fetch(request: Request, env: Env): Promise<Response> {
+    // /health runs BEFORE partyserver routing — no Durable Object wake,
+    // no room instantiation. Available in every build; see health.ts for
+    // response contract. Phase-3 orchestrator polls this as the readiness
+    // probe for `wrangler dev` boot.
+    const health = handleHealthRequest(request, env)
+    if (health) return health
     return (
       (await routePartykitRequest(request, env)) ||
       new Response('Not Found', { status: 404 })

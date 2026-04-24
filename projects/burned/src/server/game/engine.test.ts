@@ -6,10 +6,11 @@ import type { CardInstance, GameEvent } from '@shared/types'
 
 // --- Test Helpers ---
 
-function makeCtx(now = 1000): DispatchContext {
+function makeCtx(now = 1000, opts: { nopeWindowMs?: number } = {}): DispatchContext {
   let seed = 42
   return {
     now,
+    nopeWindowMs: opts.nopeWindowMs,
     random: () => {
       seed = (seed * 1103515245 + 12345) & 0x7fffffff
       return seed / 0x7fffffff

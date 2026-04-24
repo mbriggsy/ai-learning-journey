@@ -92,6 +92,13 @@ export interface DispatchContext {
   readonly now: number
   readonly random: () => number
   readonly randomInt: (max: number) => number
+  /**
+   * Playtest-mode override. When set, replaces the tiered
+   * `NOPE_WINDOW_MS[tier]` default uniformly across all player counts.
+   * Production callers leave this unset; only `makeDispatchContext` in
+   * playtest mode populates it.
+   */
+  readonly nopeWindowMs?: number
 }
 
 export type DispatchResult =

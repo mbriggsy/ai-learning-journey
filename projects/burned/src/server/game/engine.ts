@@ -1009,7 +1009,7 @@ function handleNope(
     ...state.nopeWindow,
     chainDepth: newDepth,
     generation: gen,
-    deadlineMs: ctx.now + getNopeWindowDuration(aliveCount),
+    deadlineMs: ctx.now + getNopeWindowDuration(ctx, aliveCount),
     startedAtMs: ctx.now,
     expired: undefined,
     graceDeadlineMs: undefined,
@@ -1307,7 +1307,7 @@ function createNopeWindow(
   originalCardType?: CardType,
 ): { window: NopeWindow; nextGen: number } {
   const gen = state.nextNopeGeneration
-  const duration = getNopeWindowDuration(alivePlayerCount)
+  const duration = getNopeWindowDuration(ctx, alivePlayerCount)
   return {
     window: {
       pendingAction,
@@ -1322,7 +1322,14 @@ function createNopeWindow(
   }
 }
 
-function getNopeWindowDuration(alivePlayerCount: number): number {
+function getNopeWindowDuration(ctx: DispatchContext, alivePlayerCount: number): number {
+  // Playtest-mode override (Unit 2). When ctx carries an explicit
+  // `nopeWindowMs`, it replaces the tiered default uniformly. Production
+  // callers do not populate `nopeWindowMs`, preserving the original
+  // tier-based behaviour. `?? ` (not `||`) so an explicit 0 override is
+  // honoured — degenerate but legal (makes "window closes immediately"
+  // testable).
+  if (ctx.nopeWindowMs !== undefined) return ctx.nopeWindowMs
   if (alivePlayerCount >= 5) return NOPE_WINDOW_MS.manyPlayers
   if (alivePlayerCount >= 3) return NOPE_WINDOW_MS.fewPlayers
   return NOPE_WINDOW_MS.headsUp

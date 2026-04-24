@@ -1,8 +1,9 @@
 import { describe, expect, it } from 'vitest'
-import { buildGodProjections } from './god-projection'
+import { buildGodEventMessage, buildGodProjections, type GodEventTrigger } from './god-projection'
 import { act, giveCard, startGameWith } from './game/test-helpers'
 import { projectForBoard, projectForPlayer } from './projection'
 import { CARD_DEF_BY_TYPE, type CardType } from '@shared/card-defs'
+import type { EngineAction } from '@shared/actions'
 import type { PlayingState } from './game/types'
 
 const NOW = 100_000
@@ -168,5 +169,87 @@ describe('buildGodProjections — purity', () => {
     if (b.phase !== 'playing') throw new Error('expected playing')
     const p3Entry = b.players.find(p => p.id === 'p3')!
     expect(p3Entry.isConnected).toBe(false)
+  })
+})
+
+// ─────────── buildGodEventMessage (Unit 6 wire shape) ───────────
+
+describe('buildGodEventMessage', () => {
+  function trigger(overrides: Partial<GodEventTrigger> = {}): GodEventTrigger {
+    return {
+      action: { type: 'draw-card', playerId: 'p1' } as EngineAction,
+      events: [],
+      stateVersion: 1,
+      nowMs: NOW,
+      ...overrides,
+    }
+  }
+
+  it('returns the full god-event envelope with type literal', () => {
+    const state = startGameWith(4)
+    const b = board(state)
+    const msg = buildGodEventMessage(state, b, new Set(allIds(state)), trigger())
+    expect(msg.type).toBe('god-event')
+  })
+
+  it('carries the trigger fields verbatim', () => {
+    const state = startGameWith(4)
+    const b = board(state)
+    const t = trigger({ stateVersion: 42, nowMs: 99_000 })
+    const msg = buildGodEventMessage(state, b, new Set(allIds(state)), t)
+    expect(msg.action).toBe(t.action)
+    expect(msg.events).toBe(t.events)
+    expect(msg.stateVersion).toBe(42)
+    expect(msg.nowMs).toBe(99_000)
+  })
+
+  it('projections equal a direct buildGodProjections call on the same inputs', () => {
+    const state = startGameWith(4)
+    const b = board(state)
+    const connected = new Set(allIds(state))
+    const msg = buildGodEventMessage(state, b, connected, trigger())
+    expect(msg.projections).toEqual(buildGodProjections(state, b, connected))
+  })
+
+  it('boardView reference is identical to the input (shared instance, not a copy)', () => {
+    const state = startGameWith(4)
+    const b = board(state)
+    const msg = buildGodEventMessage(state, b, new Set(allIds(state)), trigger())
+    expect(msg.boardView).toBe(b)
+  })
+
+  it('structural equality contract: projections[V] === projectForPlayer(V, boardView)', () => {
+    // The core guarantee Unit 6 relies on. The orchestrator treats
+    // projections[V] as the ground truth PlayerView for viewer V, and it
+    // must match what V receives on their own socket. By construction
+    // (same state + same boardView), this holds.
+    const state = startGameWith(4)
+    const b = board(state)
+    const msg = buildGodEventMessage(state, b, new Set(allIds(state)), trigger())
+    for (const p of state.players) {
+      expect(msg.projections[p.id]).toEqual(projectForPlayer(state, p.id, b))
+    }
+  })
+
+  it('pure: two calls with identical inputs produce equal outputs', () => {
+    const state = startGameWith(4)
+    const b = board(state)
+    const connected = new Set(allIds(state))
+    const t = trigger()
+    const a = buildGodEventMessage(state, b, connected, t)
+    const c = buildGodEventMessage(state, b, connected, t)
+    expect(a).toEqual(c)
+  })
+
+  it('JSON round-trips without losing fields', () => {
+    const state = startGameWith(4)
+    const b = board(state)
+    const msg = buildGodEventMessage(state, b, new Set(allIds(state)), trigger())
+    const raw = JSON.stringify(msg)
+    const parsed = JSON.parse(raw)
+    expect(parsed.type).toBe('god-event')
+    expect(parsed.stateVersion).toBe(1)
+    expect(Object.keys(parsed.projections).sort()).toEqual(allIds(state).sort())
+    expect(parsed.boardView).toBeDefined()
   })
 })

@@ -5,6 +5,8 @@ import { handleHealthRequest } from './health'
 import { mulberry32, randomIntFromRandom } from './rng'
 import { createGodRateLimiter, evaluateGodAuth } from './god-connection'
 import { applyPlaytestConfig, parsePlaytestConfigMessage } from './playtest-config'
+import { buildGodEventMessage, type GodEventTrigger } from './god-projection'
+import { isPlaytestMode } from './playtest'
 import { createLobbyState, dispatch } from './game/engine'
 import { projectForBoard, projectForPlayer, getPrivateData } from './projection'
 import type { GameState, PlayingState, GameOverState, DispatchContext, DispatchResult, ErrorCode as EngineErrorCode } from './game/types'
@@ -131,6 +133,16 @@ export class GameRoom extends Server<Env> {
   // source (remote IP via CF headers, or origin as fallback). Resets on
   // successful auth. See `src/server/god-connection.ts`.
   private godAuthFailures = new Map<string, { count: number; windowStart: number }>()
+
+  // Transient god-event trigger. Set by the two dispatch sites
+  // (`handleAction`, `dispatchServerAction`) immediately before calling
+  // `broadcastGameState`; read + cleared at the top of `broadcastGameState`.
+  // Non-dispatch callers (reconnect resync, force-clear fallback, queue-
+  // error resync) leave this null, so no god-event fires for those
+  // broadcasts. This is the seam that makes god-event emission by-
+  // construction equivalent to the concurrent player-update (both
+  // produced from the same state + boardView pass).
+  private pendingGodEventTrigger: GodEventTrigger | null = null
 
 
   // --- Lifecycle ---
@@ -623,7 +635,8 @@ export class GameRoom extends Server<Env> {
     }
 
     const ctx = this.makeDispatchContext()
-    const result = dispatch(lobbyForEngine, { type: 'start-game', playerId: '_host' } as EngineAction, ctx)
+    const startAction: EngineAction = { type: 'start-game', playerId: '_host' } as EngineAction
+    const result = dispatch(lobbyForEngine, startAction, ctx)
 
     if (!result.ok) {
       this.sendError(connection, mapEngineError(result.code), result.error)
@@ -632,6 +645,12 @@ export class GameRoom extends Server<Env> {
 
     this.gameState = result.state
     this.lastActionTime = Date.now()
+    this.pendingGodEventTrigger = {
+      action: startAction,
+      events: result.events,
+      stateVersion: result.state.stateVersion,
+      nowMs: ctx.now,
+    }
     this.broadcastGameState()
     void this.persistState()
   }
@@ -727,6 +746,12 @@ export class GameRoom extends Server<Env> {
     this.gameState = result.state
     this.lastActionTime = Date.now()
     this.updateNopeTimer(result)
+    this.pendingGodEventTrigger = {
+      action: engineAction,
+      events: result.events,
+      stateVersion: result.state.stateVersion,
+      nowMs: ctx.now,
+    }
     this.broadcastGameState()
     void this.persistState()
   }
@@ -766,6 +791,12 @@ export class GameRoom extends Server<Env> {
     this.gameState = result.state
     this.lastActionTime = Date.now()
     this.updateNopeTimer(result)
+    this.pendingGodEventTrigger = {
+      action,
+      events: result.events,
+      stateVersion: result.state.stateVersion,
+      nowMs: ctx.now,
+    }
     this.broadcastGameState()
     void this.persistState()
   }
@@ -863,13 +894,47 @@ export class GameRoom extends Server<Env> {
   private broadcastGameState(): void {
     if (!this.gameState || this.gameState.phase === 'lobby') return
 
+    // Read + clear the god-event trigger. The dispatch sites populate this
+    // immediately before calling us; non-dispatch callers (reconnect,
+    // force-clear fallback, queue-error resync) leave it null → no
+    // god-event emitted. Clearing here keeps the trigger scoped to a
+    // single broadcast pass.
+    const trigger = this.pendingGodEventTrigger
+    this.pendingGodEventTrigger = null
+
     const now = Date.now()
     const state = this.gameState as PlayingState | GameOverState
+    const connectedPlayerIds = this.getConnectedPlayerIds()
 
     // Compute board view once (P2 optimization — not N+1 times)
-    const boardView = projectForBoard(state, now, this.getConnectedPlayerIds())
+    const boardView = projectForBoard(state, now, connectedPlayerIds)
     const boardMsg: ServerMessage = { type: 'state-update', payload: boardView, protocolVersion: PROTOCOL_VERSION }
     const boardRaw = JSON.stringify(boardMsg)
+
+    // Build the god-event exactly once per broadcast pass, only when
+    // playtest mode is on AND this broadcast was dispatch-triggered. Same
+    // `state` + same `boardView` that the per-viewer `projectForPlayer`
+    // calls below consume, so `godRaw.projections[V]` is structurally
+    // identical to viewer V's concurrent player-update payload.
+    let godRaw: string | null = null
+    if (trigger !== null && isPlaytestMode(this.env)) {
+      const godMsg = buildGodEventMessage(state, boardView, connectedPlayerIds, trigger)
+      const serialized = JSON.stringify(godMsg)
+      // Workers outbound cap is 1 MiB per WS frame. 512 KiB is the phase-2
+      // budget watermark; Phase 2 Unit 8 asserts under this for the N=10
+      // saturation fixture. Above the cap we drop the god-event rather
+      // than crash the socket — Phase 3 can enable per-viewer splitting
+      // (see plan Risks row) if this ever fires.
+      const bytes = messageByteLength(serialized)
+      if (bytes > 1_000_000) {
+        console.error(JSON.stringify({ event: 'god_event_too_large', bytes, room: this.name, stateVersion: trigger.stateVersion, timestamp: Date.now() }))
+      } else {
+        if (bytes > 512_000) {
+          console.warn(JSON.stringify({ event: 'god_event_near_budget', bytes, room: this.name, timestamp: Date.now() }))
+        }
+        godRaw = serialized
+      }
+    }
 
     let hostCount = 0
     let playerCount = 0
@@ -895,9 +960,8 @@ export class GameRoom extends Server<Env> {
           }
           conn.send(JSON.stringify(playerMsg))
         } else if (connState?.role === 'god') {
-          // God connections receive only god-events, filled in by Unit 6.
-          // Counted here so the broadcast log shows distribution.
           godCount++
+          if (godRaw !== null) conn.send(godRaw)
         } else {
           untypedCount++
         }

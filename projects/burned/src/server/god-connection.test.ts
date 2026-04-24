@@ -254,7 +254,7 @@ describe('createGodRateLimiter', () => {
   })
 
   it('recordSuccess clears the counter even after failures', () => {
-    let now = 0
+    const now = 0
     const store = new Map()
     const limiter = createGodRateLimiter(store, '1.2.3.4', { nowMs: () => now })
     limiter.recordFailure()

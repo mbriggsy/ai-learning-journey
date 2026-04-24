@@ -20,13 +20,14 @@
  */
 
 import type { PlayerView, BoardView } from '@shared/protocol'
+import type { GameEvent } from '@shared/types'
+import type { EngineAction } from '@shared/actions'
 import type { PlayingState, GameOverState } from './game/types'
 import { projectForPlayer } from './projection'
 
 export function buildGodProjections(
   state: PlayingState | GameOverState,
   boardView: BoardView,
-  // eslint-disable-next-line @typescript-eslint/no-unused-vars
   _connectedPlayerIds: ReadonlySet<string>,
 ): Record<string, PlayerView> {
   // Iterate `state.players` (NOT `state.players.filter(isAlive)`).
@@ -46,4 +47,63 @@ export function buildGodProjections(
     projections[p.id] = projectForPlayer(state, p.id, boardView)
   }
   return projections
+}
+
+/**
+ * Transient trigger set by dispatch sites in `room.ts` (`handleAction`,
+ * `dispatchServerAction`) on successful dispatch, immediately before the
+ * broadcast call. The broadcast reads + clears it; non-dispatch callers
+ * (reconnect resync, force-clear fallback) leave it `null` so no god-event
+ * fires.
+ */
+export interface GodEventTrigger {
+  readonly action: EngineAction
+  readonly events: readonly GameEvent[]
+  readonly stateVersion: number
+  readonly nowMs: number
+}
+
+/**
+ * The wire shape of a god-event message. Carries enough information for
+ * the orchestrator to reconstruct a scenario from scratch (action + events +
+ * full per-viewer projections + board view), plus the same `stateVersion`
+ * and `nowMs` the broadcast pass used for host/player payloads so the
+ * orchestrator can correlate snapshots.
+ *
+ * NOT part of `ServerMessage` — god-only admin protocol. Keeping it out
+ * of `ServerMessage` means the `'god-event'` literal never leaks into
+ * production client bundles (Unit 7 sentinel guard).
+ */
+export interface GodEventMessage {
+  readonly type: 'god-event'
+  readonly action: EngineAction
+  readonly events: readonly GameEvent[]
+  readonly stateVersion: number
+  readonly nowMs: number
+  readonly projections: Record<string, PlayerView>
+  readonly boardView: BoardView
+}
+
+/**
+ * Assemble the outbound god-event message. Pure composition of the
+ * Unit 6a projection helper + the trigger fields. `boardView` + `state`
+ * are the exact same references the broadcast loop uses for host/player
+ * payloads — that's what makes `projections[V]` structurally identical
+ * to viewer V's concurrent player-update.
+ */
+export function buildGodEventMessage(
+  state: PlayingState | GameOverState,
+  boardView: BoardView,
+  connectedPlayerIds: ReadonlySet<string>,
+  trigger: GodEventTrigger,
+): GodEventMessage {
+  return {
+    type: 'god-event',
+    action: trigger.action,
+    events: trigger.events,
+    stateVersion: trigger.stateVersion,
+    nowMs: trigger.nowMs,
+    projections: buildGodProjections(state, boardView, connectedPlayerIds),
+    boardView,
+  }
 }

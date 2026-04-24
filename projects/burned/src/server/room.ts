@@ -933,6 +933,13 @@ export class GameRoom extends Server {
 
 interface Env {
   GameRoom: DurableObjectNamespace
+  // Playtest-mode env surface (all optional, absent in production).
+  // Semantics live in `src/server/playtest.ts`. Production builds MUST NOT
+  // set PLAYTEST_MODE — the prod-bundle sentinel check (Unit 7) greps the
+  // compiled output for leakage.
+  PLAYTEST_MODE?: string
+  PLAYTEST_TOKEN?: string
+  PLAYTEST_GOD_ORIGINS?: string
 }
 
 export default {

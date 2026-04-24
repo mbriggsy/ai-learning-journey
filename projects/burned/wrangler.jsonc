@@ -10,4 +10,20 @@
   "migrations": [
     { "tag": "v1", "new_sqlite_classes": ["GameRoom"] }
   ]
+
+  // --- Playtest mode (do NOT enable in production deploys) ---
+  //
+  // The playtest harness (Phase 2) gates orchestrator-only functionality
+  // behind these env vars. Production deployments MUST NOT set any of them.
+  // `scripts/verify-prod-bundle.ts` greps `dist/**/*.js` for sentinel
+  // strings as a regression guard.
+  //
+  // Local / harness usage — add to a playtest-only wrangler config or pass
+  // via `wrangler dev --var PLAYTEST_MODE=1 --var PLAYTEST_TOKEN=...`:
+  //
+  //   "vars": {
+  //     "PLAYTEST_MODE": "1",
+  //     "PLAYTEST_TOKEN": "<32+ byte random hex, orchestrator-only>",
+  //     "PLAYTEST_GOD_ORIGINS": "https://playtest.internal"  // optional; LAN + localhost always allowed
+  //   }
 }

@@ -1,29 +1,64 @@
 # BURNED — TODO
 
-## NEXT SESSION — pick up here (2026-04-24 morning)
+## NEXT SESSION — pick up here (2026-04-24 afternoon)
 
-**Playtest-harness Harden pass complete overnight (2026-04-23 → 2026-04-24).**
-All 6 phase plans LOCKED, PRD LOCKED, roadmap active. See the Harden section
-below for the full commit log + insights captured. Ready to execute builds
-when Briggsy greenlights (builds were explicitly descoped overnight —
-harden-only was the final scope).
-
-**Still pending from prior sessions:**
-- IncomingSteal banner (`82af35f9`) real-device verification — Playwright +
-  unit tests green, but phone-side pre-resolution screenshot never caught.
-  Earth > map.
+**Playtest-harness Phase 1 is drafted in full (2026-04-24 session).** 90
+scenarios landed at `docs/testing/playtest/SCENARIOS.md` across 11 content
+sections, status **DRAFT — pending Briggsy sign-off**. Typecheck clean,
+prototype-detector gate PASSED 3/3 shape modes, 10 Column divergences
+harvested as candidate new E2E-ISSUE-LIST items, 1 plan-doc inconsistency
+flagged for Phase 1 plan correction.
 
 ### Immediate priorities (ordered)
 
-1. **Phone-verify the IncomingSteal banner on a real phone + TV.** Details
-   in the dedicated section further down.
-2. **Execute playtest-harness builds phase 2 → phase 5** per locked plans.
-   Phase 6 is the first real session and requires eye-in-loop verification
-   — STOP before it runs autonomously.
-3. **Host-identity cluster (P1 deferred).** B-01/B-02/B-11/B-12/B-14 —
+1. **Briggsy reads `docs/testing/playtest/SCENARIOS.md` (especially
+   Column divergences + Known product calls ledger + Lock log self-review).**
+   - If approved: flip `Lock status:` header from DRAFT to
+     `LOCKED 2026-04-24 at engine.ts@e6b31b5c`, add a new Lock-log row
+     with your initials + date. Then discard
+     `temp/prototype-detector-gate.ts` (already deleted in session
+     cleanup, but re-verify).
+   - If revisions requested: route feedback into a revision pass.
+2. **Phase-1 plan correction.** `docs/plans/playtest-harness/phase-1-scenarios.md`
+   Unit 5 Part B parenthetical claims spectators receive `namedCardType`
+   via `projection.ts:150-154`. This is wrong — `projection.ts:174`
+   viewer-gate in `augmentNopeWindowForPlayer` excludes non-principals.
+   Catalog asserts correct engine behavior (ABSENT). Plan should be
+   corrected before Phase 1 locks.
+3. **Execute playtest-harness Phase 2 → Phase 5** per locked plans. Phase
+   6 is the first real session and requires eye-in-loop verification —
+   STOP before it runs autonomously. Cadence per Briggsy 2026-04-24:
+   phase → stop → debrief + /distill → next phase.
+4. **IncomingSteal banner real-device verification** (`82af35f9`) — still
+   pending from prior sessions. Playwright + unit tests green, phone-side
+   pre-resolution screenshot never caught. Earth > map.
+5. **Host-identity cluster (P1 deferred).** B-01/B-02/B-11/B-12/B-14 —
    significant infra, design questions first.
-4. **Remaining P1/P2 from `docs/testing/E2E-ISSUE-LIST.md`** — cosmetic and
+6. **Remaining P1/P2 from `docs/testing/E2E-ISSUE-LIST.md`** — cosmetic and
    scope-decision items, pick opportunistically.
+
+### Phase 1 Column divergences — candidates for E2E-ISSUE-LIST.md additions
+
+Ten findings surfaced during drafting. Full text in
+`docs/testing/playtest/SCENARIOS.md` §Column divergences. Highlights:
+
+- **Atomicity-gap bug class** (insight 021) — 4 scenarios re-surface the
+  pre-A-01 strip-before-validate pattern: Extraction proactive,
+  Direct Order eliminated-target, Back-Channel empty-deck, Favor
+  self-target. Same dispatch-time-guard repair template as A-01.
+- Favor auto-resolve TARGET-silence on empty-hand or Burned-only hand
+  (correct engine, weak UX).
+- Intel → Back-Channel `pendingFuture` clearing semantics — product call.
+- Spectator `namedCardType` visibility — engine correct, spec-intent TBD.
+- Board-drama variant for Burned draw (known: C-15).
+
+### Phase 1 catalog gaps (intentional — documented)
+
+- D-03 simultaneous-Nope UX — no dedicated scenario; Phase 3 orchestrator
+  can script on demand if needed.
+- B-13 active-player-mid-turn disconnect — adjacent to
+  `SCN-CONN-NAME-CARD-PENDING-DISCONNECT-01`; not dedicated.
+- Free-play scenarios (4) omit the 7-row info-gap by design.
 
 ### IncomingSteal banner — what to check (commit `82af35f9`)
 

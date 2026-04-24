@@ -3,7 +3,11 @@ title: "Multi-Agent Playtest Harness — Roadmap"
 type: feat
 parent: docs/testing/PLAYTEST-HARNESS-PRD.md
 date: 2026-04-23
-status: draft
+status: active
+locked: 2026-04-23
+locked_engine_sha: e6b31b5c
+locked_projection_sha: 5e86f811
+locked_room_sha: e6b31b5c
 phases:
   - phase-1-scenarios.md
   - phase-2-playtest-mode.md

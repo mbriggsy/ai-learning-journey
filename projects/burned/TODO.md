@@ -1,19 +1,28 @@
 # BURNED — TODO
 
-## NEXT SESSION — pick up here (2026-04-23 EOD)
+## NEXT SESSION — pick up here (2026-04-24 morning)
 
-**Main is synced with origin after the 2026-04-23 doc-audit cleanup + squeaky-clean
-push.** The IncomingSteal banner (`82af35f9`) still needs real-device verification —
-it was pushed without phone-side confirmation.
+**Playtest-harness Harden pass complete overnight (2026-04-23 → 2026-04-24).**
+All 6 phase plans LOCKED, PRD LOCKED, roadmap active. See the Harden section
+below for the full commit log + insights captured. Ready to execute builds
+when Briggsy greenlights (builds were explicitly descoped overnight —
+harden-only was the final scope).
+
+**Still pending from prior sessions:**
+- IncomingSteal banner (`82af35f9`) real-device verification — Playwright +
+  unit tests green, but phone-side pre-resolution screenshot never caught.
+  Earth > map.
 
 ### Immediate priorities (ordered)
 
-1. **Phone-verify the IncomingSteal banner on a real phone + TV.** The feature
-   is verified in Playwright + unit tests, but the live pre-resolution organic
-   screenshot was never caught due to tab-switch latency. Earth > map.
-2. **Host-identity cluster (P1 deferred).** B-01/B-02/B-11/B-12/B-14 —
+1. **Phone-verify the IncomingSteal banner on a real phone + TV.** Details
+   in the dedicated section further down.
+2. **Execute playtest-harness builds phase 2 → phase 5** per locked plans.
+   Phase 6 is the first real session and requires eye-in-loop verification
+   — STOP before it runs autonomously.
+3. **Host-identity cluster (P1 deferred).** B-01/B-02/B-11/B-12/B-14 —
    significant infra, design questions first.
-3. **Remaining P1/P2 from `docs/testing/E2E-ISSUE-LIST.md`** — cosmetic and
+4. **Remaining P1/P2 from `docs/testing/E2E-ISSUE-LIST.md`** — cosmetic and
    scope-decision items, pick opportunistically.
 
 ### IncomingSteal banner — what to check (commit `82af35f9`)
@@ -26,66 +35,65 @@ card name anywhere.
 
 ---
 
-## 🛡️ PLAYTEST HARNESS — HARDEN PASS QUEUE (2026-04-23)
+## 🛡️ PLAYTEST HARNESS — HARDEN PASS COMPLETE (2026-04-23 overnight)
 
-Six-phase plan set drafted + Phase 1 deepened + document-reviewed. Before
-build (task #9) we run the Harden pass across phases 2-6. **Resume here** if
-phone verification above completes or gets deferred.
+All 6 phase plans **LOCKED**, PRD v0.2 **LOCKED**, roadmap **active**. Ready
+to execute builds when Briggsy greenlights (builds were descoped overnight —
+harden-only was the final scope).
 
-**Artifact locations:**
-- PRD (v0.2, §8.2 updated to absolute ≥50): `docs/testing/PLAYTEST-HARNESS-PRD.md`
-- Roadmap: `docs/plans/playtest-harness/roadmap.md`
-- Phase plans: `docs/plans/playtest-harness/phase-{1..6}-*.md`
-- Phase 1 status: deepened + document-reviewed + all decisions integrated. 1036 lines.
+**Artifact locations (all LOCKED 2026-04-23 against engine/room @ `e6b31b5c`,
+projection @ `5e86f811`):**
+- PRD: `docs/testing/PLAYTEST-HARNESS-PRD.md` — v0.2 LOCKED
+- Roadmap: `docs/plans/playtest-harness/roadmap.md` — active
+- Phase plans: `docs/plans/playtest-harness/phase-{1..6}-*.md` — all `status: locked`
+- Coherence audit: `docs/plans/playtest-harness/COHERENCE-SWEEP.md`
 
-**Harden sequence (do in order — each step blocks the next):**
+**Insights captured:**
+- `docs/insights/019-surface-coherence-review-misses-signature-drift.md` —
+  surface-level confidence scoring misses code-grounded drift; rigor passes
+  need at least one code-grounded reviewer.
+- `docs/insights/020-subagent-capability-enforcement-is-frontmatter-not-wrapper.md`
+  — TypeScript wrappers can't restrict Claude subagents; enforcement lives at
+  `.claude/agents/*.md` frontmatter `tools:` whitelist because MCP tools
+  cross process boundaries.
 
-- [ ] **H-1a** Absorb Phase 1 contracts into phase-2-playtest-mode.md (mechanical).
-  Extend god-event envelope to carry `projections: Record<playerId, PlayerView>` +
-  `boardView: BoardView`. Add implementation unit for per-viewer projection broadcast.
-- [ ] **H-1b** Rigor pass on phase-2: `/ce:plan deepen phase-2-playtest-mode.md`
-  then `/compound-engineering:document-review phase-2-playtest-mode.md`, integrate.
-- [ ] **H-2a** Absorb Phase 1 contracts into phase-3-harness-infra.md (mechanical).
-  Scenario-detector parses three-tier grammar incl. `connection-events:`; coverage
-  reporter handles 7-row × 2-column info-gap; orchestrator owns form-factor axis
-  (3 viewports 360×640, 390×844, 768×1024); tracks free-play wallclock % (default 20%);
-  coverage uses absolute ≥50 not percentage.
-- [ ] **H-2b** Rigor pass on phase-3 (deepen + doc-review + integrate).
-- [ ] **H-3a** Absorb Phase 1 contracts into phase-4-seat-agents.md (mechanical).
-  Prompt renderer handles 2-column info-gap + `vibe-check:` + free-play class.
-  Also: resolve gap I flagged (tool allowlist is aspirational vs enforceable —
-  needs MCP Playwright scoping verification).
-- [ ] **H-3b** Rigor pass on phase-4. Extra attention to MCP scoping + subagent
-  tool-constraint enforceability.
-- [ ] **H-4a** Absorb Phase 1 contracts into phase-5-triage-agents.md (mechanical).
-  Triage treats `vibe-check:` as first-class; free-play issues get looser
-  duplicate-detection threshold; reads 2-column info-gap divergences; adds
-  explicit Read access for docs/testing/E2E-ISSUE-LIST.md.
-- [ ] **H-4b** Rigor pass on phase-5 (deepen + doc-review + integrate).
-- [ ] **H-5a** Absorb Phase 1 contracts into phase-6-calibration-and-first-session.md
-  (mechanical). Coverage success = ≥50 absolute (≥5 axis-11); default 20% wallclock
-  to free-play; Unit 7 prototype-detector gate must run before series #1; series
-  configs reference locked catalog's new fields.
-- [ ] **H-5b** Rigor pass on phase-6 (deepen + doc-review + integrate).
-- [ ] **H-6** Cross-doc coherence sweep. Verify every cross-phase contract agrees.
-  Phase N outputs match Phase N+1 inputs. Terminology aligned. Produce
-  `docs/plans/playtest-harness/COHERENCE-SWEEP.md`. Fix drift before lock.
-- [ ] **H-7** Final lock + status flip. All 6 phase plans draft → locked with date.
-  PRD v0.2 → LOCKED. Roadmap draft → active. Record engine.ts + projection.ts
-  commit SHAs in each phase's lock log. This gates task #9 (build).
+**Next steps (when ready):**
+- Execute builds phase 2 → phase 5 per locked plans. Phase 6 is the first
+  real session; STOP before Phase 6 without eye-in-loop verification.
+- Insights 019 + 020 should guide future rigor passes on agent-native plans.
 
-**Landmines for next Claude to avoid:**
-- H-1a through H-5a are **mechanical edits** — no judgment, just integrate the
-  contracts Phase 1 declared. Briggsy has pre-delegated this work.
-- H-1b through H-5b are **rigor passes** — Briggsy delegates judgment unless a
-  finding is load-bearing (architecture, premise, scope cap). Surface only those.
-- Phase 1 is DONE. Don't re-deepen it. Any contradiction discovered during
-  Harden where Phase 1 is wrong = update Phase 1, don't just patch downstream.
-- Prototype-detector gate (phase-1 Unit 7) runs during build, NOT during Harden.
+### Sequential-vs-parallel analysis (Briggsy's end-of-session question)
 
-**What "done" looks like after Harden:**
-- All 6 phase plans locked, all cross-phase contracts agree, coherence sweep
-  clean, PRD LOCKED, ready to execute task #9 (build).
+**Premise tested:** Phase N learns from Phase N-1. Answer: **YES, strongly
+verified.** Every H-Na absorption inherited a material architectural
+correction from the preceding H-(N-1)b rigor pass:
+
+- H-1b → H-2a: god-event emission site moved from dispatch to
+  `broadcastGameState`. Phase 3 Unit 4 reassembly architecture depends on
+  this. Parallel run would have built Phase 3 on the wrong assumption.
+- H-2b → H-3a: `expectedViewerIds` + `/health` added to Phase 2 upstream.
+  Phase 4 consumes both. Parallel run would have missed them.
+- H-3b → H-4a: `SeatPageWrapper` deleted, custom `.claude/agents/playtest-
+  seat.md` pattern introduced, `info-gap-divergence` → `ui-spec-divergence`
+  rename. Phase 5's Unit 1b + 4 entryType consumption depends on all three.
+  Parallel run would have had to rewrite Phase 5 after the fact.
+- H-4b → H-5a: role-drift demoted to LOW-SIGNAL, Column-1 analysis
+  scrubber-aware-limited. Phase 6 calibration decisions reference both.
+  Parallel run would have missed.
+- H-5b had no downstream.
+
+**Counterfactual time estimate:** Pure parallel absorptions + parallel rigor
+would save ~2-3h wall time but would require a second pass to propagate
+every cross-phase correction surfaced during rigor — effectively converging
+back to sequential + coherence-sweep fixes. The "savings" get eaten by
+rework churn, and the intermediate state (each phase locked on wrong
+upstream) invites partial commits that are hard to unwind.
+
+**Recommendation:** Keep sequential for any plan set where downstream
+phases demand contracts from upstream. Parallel is fine for orthogonal
+work (different subsystems, no shared contract surface). The premise
+held; sequential was the right call.
+
 
 ---
 

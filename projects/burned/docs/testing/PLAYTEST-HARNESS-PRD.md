@@ -1,8 +1,9 @@
 # BURNED — Multi-Agent Playtest Harness PRD
 
-**Status:** v0.2 — open questions resolved
+**Status:** v0.2 — **LOCKED** 2026-04-23 (Harden pass H-1 through H-7 complete)
 **Author:** Claude (drafting), Briggsy (reviewing)
 **Created:** 2026-04-23
+**Locked against:** `engine.ts` / `room.ts` @ `e6b31b5c`; `projection.ts` @ `5e86f811`
 
 ## 1. Problem
 

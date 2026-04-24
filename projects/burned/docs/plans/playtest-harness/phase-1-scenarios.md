@@ -1,9 +1,13 @@
 ---
 title: "Playtest Harness — Phase 1: Scenarios Catalog"
 type: feat
-status: deepened
+status: locked
 date: 2026-04-23
 deepened: 2026-04-23
+locked: 2026-04-23
+locked_engine_sha: e6b31b5c
+locked_projection_sha: 5e86f811
+locked_room_sha: e6b31b5c
 parent: docs/plans/playtest-harness/roadmap.md
 origin: docs/testing/PLAYTEST-HARNESS-PRD.md
 ---

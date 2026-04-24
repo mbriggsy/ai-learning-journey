@@ -259,21 +259,27 @@ None. Entirely repo-internal scaling of proven patterns.
   the wrapper).** Phase 3's responsibility ends at: (a) handing the
   raw Playwright `Page` object out via `SeatHandle` (Unit 5 returns
   the unwrapped `page` because no Phase 3 unit needs to wrap it), AND
-  (b) declaring the **allowlist contract** as a typed constant that
-  Phase 4 imports. Methods agents MAY call: `locator`, `waitFor`,
-  `click`, `fill`, `type`, `press`, `getByRole`, `getByText`,
-  `getByLabel`, `getByTestId`, `screenshot`. Methods agents MAY NOT
-  call: `goto`, `evaluate`, `addInitScript`, `route`,
-  `setExtraHTTPHeaders`, `setOfflineMode`, `request`, `context`,
-  `network` accessors of any kind, `addLocatorHandler`,
+  (b) declaring the **allowlist contract** as two named typed constants
+  exported from `scripts/playtest/lib/types.ts` (Unit 1):
+  `ALLOWED_PAGE_METHODS: readonly string[]` and
+  `DISALLOWED_PAGE_METHODS: readonly string[]` — both `as const` for
+  literal union derivation. Phase 4 imports both to build the runtime
+  wrapper. Methods agents MAY call (`ALLOWED_PAGE_METHODS`):
+  `locator`, `waitFor`, `click`, `fill`, `type`, `press`, `getByRole`,
+  `getByText`, `getByLabel`, `getByTestId`, `screenshot`. Methods
+  agents MAY NOT call (`DISALLOWED_PAGE_METHODS`): `goto`, `evaluate`,
+  `addInitScript`, `route`, `setExtraHTTPHeaders`, `setOfflineMode`,
+  `request`, `context`, any `network` accessor, `addLocatorHandler`,
   `setViewportSize`. The orchestrator performs the initial join flow
   itself before handing control to the agent (this is why `goto` is
   not on the allowlist). **Runtime enforcement is Phase 4's job** —
   Phase 4 owns the wrapper that exposes only allowlisted methods.
-  Phase 3's self-test check 5 asserts the allowlist constant exists
-  and excludes the eval / network / nav primitives; Phase 4's
-  contract tests will assert the wrapper actually rejects calls to
-  the disallowed list at runtime.
+  Phase 3's self-test check 5 asserts `ALLOWED_PAGE_METHODS` +
+  `DISALLOWED_PAGE_METHODS` both exist as named exports AND that the
+  intersection of their sets is empty AND that `DISALLOWED_PAGE_METHODS`
+  contains the eval / network / nav primitives. Phase 4's contract
+  tests assert the wrapper actually rejects calls to every member of
+  `DISALLOWED_PAGE_METHODS` at runtime.
 - **D6. `page.evaluate` and `page.addInitScript` are NOT in the agent's
   tool surface.** Per research finding, `window.__gameStoreSnapshot` is
   god-mode; letting an agent run arbitrary JS defeats allowlist isolation.
@@ -917,6 +923,26 @@ R14
     knownProductCalls: string[]
   }
   ```
+- **Allowlist constants (D5 / phase-4 wrapper contract):** named exports,
+  `as const`, so Phase 4's `SeatPageWrapper` derives a literal union for
+  compile-time narrowing:
+  ```ts
+  export const ALLOWED_PAGE_METHODS = [
+    'locator', 'waitFor', 'click', 'fill', 'type', 'press',
+    'getByRole', 'getByText', 'getByLabel', 'getByTestId', 'screenshot',
+  ] as const
+  export type AllowedPageMethod = typeof ALLOWED_PAGE_METHODS[number]
+
+  export const DISALLOWED_PAGE_METHODS = [
+    'goto', 'evaluate', 'addInitScript', 'route',
+    'setExtraHTTPHeaders', 'setOfflineMode', 'request', 'context',
+    'addLocatorHandler', 'setViewportSize',
+  ] as const
+  export type DisallowedPageMethod = typeof DISALLOWED_PAGE_METHODS[number]
+  ```
+  Unit 7 self-test check 5 asserts both arrays exist, their
+  intersection is empty, and `DISALLOWED_PAGE_METHODS` includes the
+  eval / network / nav primitives.
 
 - **`scripts/playtest/README.md` content.** Operator-facing warning
   document. Sections:

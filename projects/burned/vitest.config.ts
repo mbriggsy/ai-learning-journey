@@ -6,7 +6,7 @@ export default mergeConfig(viteConfig, defineConfig({
     globals: false,
     environment: 'node',
     restoreMocks: true,
-    include: ['src/**/*.{test,spec}.{ts,tsx}'],
+    include: ['src/**/*.{test,spec}.{ts,tsx}', 'scripts/playtest/**/*.{test,spec}.ts'],
     coverage: {
       provider: 'v8',
       reporter: ['text', 'json', 'html'],

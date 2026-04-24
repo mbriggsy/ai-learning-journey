@@ -119,10 +119,34 @@ instrument. The isolation self-test is the gate: if it fails, no session runs.
   server-side change (Phase 2).
 - **Out of scope:** A UI for browsing runs. Markdown + jsonl only.
 
+### Trust Model (local-only harness, single-user)
+
+- **Local-only operation, single trusted user.** The harness runs on the
+  operator's machine (laptop / dev workstation). It assumes a trusted
+  single-user environment. Specifically out of scope:
+  - **Subprocess env inspection.** `PLAYTEST_TOKEN` is passed to wrangler
+    via child env; on Linux any local user can read `/proc/<pid>/environ`;
+    on Windows, Process Explorer exposes the same. Mitigation = trusting
+    the single-user assumption. Future-work = transient-file + 0600 perms
+    + unlink-post-read, not built in v1.
+  - **Operator-side salt handling.** Scrub salt is minted per session and
+    held in orchestrator memory. Operators who deliberately share the
+    salt defeat cross-session non-reversibility — out of scope.
+  - **Shared-disk access to session dirs.** Post-run `events.jsonl`
+    retains `boardView`, `events[]`, and seat names verbatim (only
+    `myHand` is scrubbed). Sharing a session directory outside the team
+    leaks behavioral pattern data. `scripts/playtest/README.md` carries
+    the operator warning; enforcement is operational, not technical.
+  - **Concurrent users on the same machine.** v1 assumes one operator
+    per machine; concurrent runs would need run-dir locking and are
+    deferred.
+
 ### Deferred to Separate Tasks
 
 - **Remote/cloud orchestrator.** v1 is local-only. A cloud-hosted harness is
-  a future project.
+  a future project. CI execution (nightly playtest) is also future work —
+  rolling retention still applies, but operator-invoked purge has no human
+  in that mode; any archive-retrieval need would need a CI gate.
 - **Parallel session runs.** v1 runs one session at a time. Concurrent runs
   would need run-dir locking; defer.
 
@@ -364,41 +388,73 @@ None. Entirely repo-internal scaling of proven patterns.
   (`zeroCellCount === 0`). A zero cell after a session series is no
   longer "just a triage signal" — it fails the run. Triage work then
   drives scenario drafting for the next catalog pass.
-- **D14. Per-room / time-boxed playtest-token minter (phase-2
-  Open Questions → Phase 3).** Orchestrator does NOT rely on the
-  server's single global `PLAYTEST_TOKEN` Worker secret. Instead, at
-  run start, the orchestrator mints a session-scoped token, seeds it
-  into the server-controller's env (`PLAYTEST_TOKEN=<minted>`) before
-  spawning wrangler dev, and uses the same value on the god WS
-  connection. Token source: `crypto.randomBytes(32).toString('hex')`
-  (**64 hex chars**). Token scope: one token per session, invalidated on
-  session end. This is the Phase 3 answer to "a leaked global token
-  unlocks every concurrent playtest room" — since each session mints
-  its own, a leak is bounded to one run. Time-boxed rotation is deferred
-  (single-session lifetime is already a strict upper bound).
+- **D14. Per-session playtest token + scrub salt, minted together at
+  run start (phase-2 Open Questions → Phase 3).** Orchestrator does NOT
+  rely on the server's single global `PLAYTEST_TOKEN` Worker secret.
+  Instead, at run start, the orchestrator mints BOTH a session-scoped
+  token AND a session-scoped scrub salt (see D15). Both use
+  `crypto.randomBytes(32).toString('hex')` (**64 hex chars each**,
+  independent values). The token is seeded into the server-controller's
+  env (`PLAYTEST_TOKEN=<minted>`) before spawning wrangler dev, and is
+  used on the god WS connection. The salt is held in orchestrator memory
+  and passed to Unit 4b's `scrub(event, mode, salt)` on every write.
+  Scope: one token + one salt per session; both invalidated on session
+  end. Neither is ever logged or persisted. This is the Phase 3 answer
+  to "a leaked global token unlocks every concurrent playtest room" —
+  since each session mints its own, a leak is bounded to one run.
+  Time-boxed rotation within a run is deferred (single-session lifetime
+  is already a strict upper bound). Salt is independent of token so a
+  token-leak does not compromise hash non-reversibility across sessions.
 - **D15. `events.jsonl` retention + scrub policy (phase-2
   System-Wide Impact).** God-event `projections` carry full `PlayerView`
   including `myHand` contents. Once written to disk, transient in-memory
   PII becomes durable. Phase 3 ships:
-  - **Scrub rules:** `events.jsonl` lines are written AS RECEIVED by
-    default (diagnostic fidelity for triage). A `--scrub` mode, on by
-    default when `NODE_ENV !== 'development'`, hashes `myHand[*].id` and
-    strips `myHand[*].type` → `'<redacted>'` before persisting. The
-    `events:` array's private-event fields (`combo-steal.cardType`,
+  - **Scrub threat model.** The scrubber defends against (i) a session
+    directory shared outside the team, and (ii) post-incident log review
+    by someone who shouldn't see raw hands. It does NOT defend against a
+    live-session adversary, nor against an operator who shares the salt
+    value. Within-session correlation is **intentional and required for
+    triage**: a triager reading `events.jsonl` must be able to follow
+    "card X" from stealer's hand to target's discard by matching stable
+    hashes across events in the same session. Per-session salt rotation
+    guarantees hashes are non-reversible across sessions; within a
+    session, stable hashes are a feature, not a flaw.
+  - **Scrub rules (default ON).** `--no-scrub` is the explicit opt-out.
+    When scrub is on: hash `myHand[*].id` with `sha256(salt + id).slice(0,
+    12)` using the per-session salt minted in D14, and strip
+    `myHand[*].type` → `'<redacted>'` before persisting. The `events:`
+    array's private-event fields (`combo-steal.cardType`,
     `card-drawn.cardType`) are already server-stripped for non-party
     viewers; those stay verbatim. Scrub applies to the `projections`
-    map only.
-  - **Retention window:** session directories under
+    map only. `boardView` is public (already server-stripped via
+    `stripPrivateEventFields` null-viewer path) and is not re-scrubbed.
+    When scrub is **off** (operator passed `--no-scrub`): orchestrator
+    prints a loud startup banner — `⚠️  SCRUBBER DISABLED — events.jsonl
+    will contain raw player hands. Do not share this session dir.` — and
+    writes lines as-received.
+  - **Retention window.** Session directories under
     `docs/testing/playtest/runs/` are treated as ephemeral diagnostics.
     Rolling retention: keep the most recent 10 session dirs by default
-    (config: `sessionDirRetention: number`). Older runs are archived
-    (tarballed) OR purged based on a `retentionMode: 'archive' | 'purge'`
-    config field; default `'archive'`.
-  - **Purge command:** `pnpm playtest:purge [--before YYYY-MM-DD]` wipes
-    events.jsonl (and optionally the full session directory) for all
-    matching runs. No implicit scheduled purge — operator-invoked only.
-  - **gitignore:** `docs/testing/playtest/runs/**` is added to
+    (config: `sessionDirRetention: number`). Older runs are **deleted**
+    (directory recursive remove). No archive/tarball mode in v1 —
+    archives accumulate without auto-delete, so the complexity doesn't
+    pay for itself yet. If a concrete archive-retrieval need appears
+    later, add an `--archive` flag then.
+  - **Purge command.** `pnpm playtest:purge [--before YYYY-MM-DD]`
+    deletes events.jsonl (and optionally the full session directory) for
+    all matching runs. No implicit scheduled purge — operator-invoked
+    only. **CI gap:** when the harness runs in CI (future), there is no
+    operator; rolling retention still applies, but any archive-by-filter
+    need is future work. Flagged in Scope Boundaries.
+  - **gitignore.** `docs/testing/playtest/runs/**` is added to
     `.gitignore` at Unit 1. Session artifacts must not reach the repo.
+  - **Residual-risk warning.** Even post-scrub, `events.jsonl` preserves
+    `boardView`, `events[]`, and seat names verbatim — enough to
+    reconstruct behavioral patterns (who-did-what-to-whom, steal graphs,
+    decision timing). Treat session dirs as internal diagnostic
+    artifacts; do not share outside the team without first running
+    `pnpm playtest:purge --full-dir <run-id>`. `scripts/playtest/README.md`
+    (Unit 1) repeats this warning for operators.
 
 ## Open Questions
 
@@ -451,7 +507,7 @@ None. Entirely repo-internal scaling of proven patterns.
         run-directory.ts          ← layout creation + session.md writer
         scrubber.ts               ← events.jsonl scrub policy (hashes
                                     myHand ids, strips hand types)
-        retention.ts              ← session-dir rotation (archive or purge)
+        retention.ts              ← session-dir rotation (delete past window)
         scenario-detector.ts      ← parses SCENARIOS.md's three-tier grammar
                                     (events + projection-assertions +
                                     connection-events + inference) +
@@ -529,14 +585,22 @@ run-session.ts
      exposes the handle + wallclock signal.)
  10. Wait for all seat agents to finish (parallel launch, sequential
      synth). Track per-seat disconnect/reconnect transitions → append to
-     connections.jsonl.
+     connections.jsonl with `reason: 'natural'` by default.
  11. **Viewport cycling is scenario-scoped (D11 / phase-3 B3).** Only
      scenarios tagged `min-viewport:` OR carrying `ui-assertions:`
      trigger the rotate-tear-down-rebuild loop across all three
      mandatory viewports (360×640, 390×844, 768×1024). All other
      scenarios run on the default viewport (390×844) without rotation.
-     When rotation is required, tear down contexts, update the active
-     viewport, and repeat steps 8-10 for the next viewport batch.
+     When rotation is required: (a) before tearing down each seat's
+     Playwright context, call
+     `connectionLog.tag(seatId, 'disconnect', 'orchestrator-driven')`
+     so the disconnect/reconnect pair lands in `connections.jsonl`
+     with `reason: 'orchestrator-driven'` (tier-3 matcher filters
+     these out per C8); (b) tear down contexts, update the active
+     viewport, repeat steps 8-10 for the next viewport batch;
+     (c) after rebuild, the natural `'reconnect'` transition is
+     observed by the god-subscriber but the orchestrator pre-tagged
+     it so it also lands with `reason: 'orchestrator-driven'`.
      (Servers + god WS stay up across viewport rotations to preserve
      one events.jsonl per session.)
  12. Stop servers, close contexts, close god WS.
@@ -545,8 +609,8 @@ run-session.ts
      ≥50 threshold).
  14. Finalize session.md with end block (free-play-vs-scripted split,
      viewports exercised, coverage summary).
- 15. Apply retention policy (retention.ts) — archive or purge older
-     session dirs per config.
+ 15. Apply retention policy (retention.ts) — recursively delete session
+     dirs older than `sessionDirRetention` (default: keep 10 most-recent).
  16. Exit. Phase 5 triage is a separate follow-up command on the run dir.
 ```
 
@@ -777,7 +841,15 @@ R14
   scenariosPath }`.
 - `Viewport = { width: 360|390|768, height: 640|844|1024, label: string }`.
 - `ConnectionEvent = { seatId, transition: 'disconnect' | 'reconnect',
-  atStateVersion: number, atNowMs: number }`.
+  atStateVersion: number, atNowMs: number, reason:
+  'natural' | 'orchestrator-driven' }`. The `reason` field lets the
+  Unit 9 tier-3 matcher filter out harness-internal reconnects
+  (viewport rotation, seat teardown/rebuild between scenarios) so
+  scenarios targeting REAL connectivity events aren't drowned by
+  `orchestrator-driven` noise. Unit 4 writes `'natural'` by default;
+  Unit 6 (orchestrator) explicitly writes `'orchestrator-driven'`
+  when it teardown/rebuilds a seat between viewport rotations or
+  between scripted + free-play segments.
 - `FreePlayBudget = { totalMs: number, freePlayMs: number,
   scriptedMs: number, fraction: number }`.
 - `Config` shape:
@@ -793,8 +865,8 @@ R14
     viewports: Viewport[]                  // default: 360×640, 390×844, 768×1024
     freePlayWallclockFraction: number      // default: 0.20
     sessionDirRetention: number            // default: 10
-    retentionMode: 'archive' | 'purge'     // default: 'archive'
-    scrubMode: 'on' | 'off' | 'auto'       // 'auto' = on unless NODE_ENV=development
+    scrubMode: 'on' | 'off'                // default: 'on'; `--no-scrub` flips to 'off' with loud banner (D15)
+    godReassemblyTimeoutMs: number         // default: 5000; god-event split reassembly partial-flush window
     godOriginAllowlist?: string[]          // passes through to
                                             // PLAYTEST_GOD_ORIGINS in server env
   }
@@ -846,6 +918,29 @@ R14
   }
   ```
 
+- **`scripts/playtest/README.md` content.** Operator-facing warning
+  document. Sections:
+  1. **Purpose.** What the harness does + who runs it.
+  2. **Trust model.** Local-only, single-user operation; see phase-3
+     Scope Boundaries Trust Model for the full list.
+  3. **Session dirs are diagnostic artifacts.** "`docs/testing/playtest/
+     runs/<session>/events.jsonl` and `connections.jsonl` contain
+     behavioral data — `boardView` snapshots, event timelines, seat
+     names, steal graphs. The scrubber prevents cross-session card-ID
+     correlation but does NOT prevent behavioral-pattern inference. DO
+     NOT share session dirs outside the team. Before sharing any run
+     externally, run `pnpm playtest:purge --full-dir <run-id>`."
+  4. **`--no-scrub` is dangerous.** "`--no-scrub` writes raw `myHand`
+     contents into `events.jsonl`. The orchestrator banners loudly when
+     enabled. Use only for scrubber-debugging; purge immediately after."
+  5. **Retention is automatic.** Rolling `sessionDirRetention: 10`
+     dirs; older runs are **deleted**, not archived (v1 intentional).
+     Manual `pnpm playtest:purge [--before YYYY-MM-DD | --session-id X]`
+     available for explicit purges.
+  6. **CI gap.** v1 assumes a human operator. CI execution (future) has
+     no operator; rolling retention still applies but manual purge does
+     not.
+
 **Patterns to follow:**
 - `scripts/launch-dev-chrome.ts` argv parsing style.
 - Existing `src/shared/types.ts` naming conventions.
@@ -855,6 +950,9 @@ R14
 - Happy path: `pnpm playtest:run --help` prints usage (throws 'not
   implemented' on actual run is acceptable at this unit).
 - Happy path: `.gitignore` excludes `docs/testing/playtest/runs/**`.
+- README content: `scripts/playtest/README.md` exists and contains
+  the six operator-warning sections above (doc-test: grep for each
+  section heading).
 
 **Verification:**
 - Typecheck clean.
@@ -937,6 +1035,20 @@ configuration building). Live subprocess behavior covered by Unit 8 smoke.
 - Orchestrator owns the token lifecycle (mint → pass to server via env →
   pass to god-subscriber for the WS connect); server-controller is a
   conduit, not a source.
+- **Log-hygiene pre-flight (C6 — token URL leak protection).** Before
+  spawning subprocesses, server-controller asserts the following bans
+  and aborts with an actionable error if any are set:
+  1. `PLAYWRIGHT_TRACE` / any mechanism that would call
+     `context.tracing.start()` — a Playwright trace captures the full
+     god WS URL including `token=<T>` query-string.
+  2. Wrangler `--log-level=debug` / `DEBUG=*` in spawn env — wrangler
+     verbose output echoes full inbound URLs.
+  3. `NODE_DEBUG` / `NODE_OPTIONS` contains `--inspect` — source-level
+     debugger on the orchestrator exposes minted secrets in live memory.
+  An operator who genuinely needs one of these for a one-off debug
+  session must pass `--allow-trace` (explicit opt-in with a startup
+  banner: `⚠️  TRACE MODE — god WS URL with token will appear in trace
+  output. Do not share the trace file.`). Default: refuse to launch.
 
 **Patterns to follow:**
 - `scripts/launch-dev-chrome.ts` child_process usage.
@@ -969,56 +1081,67 @@ configuration building). Live subprocess behavior covered by Unit 8 smoke.
 - Unit tests pass; smoke proves live behavior.
 - Token flows from orchestrator → env → server → god WS in one direction.
 
-- [ ] **Unit 3b: `token-minter.ts` — per-session `PLAYTEST_TOKEN` minting**
+- [ ] **Unit 3b: `session-secrets.ts` — per-session token + scrub salt minting**
 
-**Goal:** Mint a fresh, session-scoped `PLAYTEST_TOKEN` so a token leak is
-bounded to one run. Replaces reliance on the server's single global
-Worker-secret token (phase-2 flagged to Phase 3 in Open Questions).
+**Goal:** Mint a fresh, session-scoped `PLAYTEST_TOKEN` AND a
+session-scoped `scrubSalt` (D14) so a token leak is bounded to one run
+AND hash non-reversibility holds across sessions. Replaces reliance on
+the server's single global Worker-secret token (phase-2 flagged to
+Phase 3 in Open Questions) and supplies the salt input to Unit 4b's
+`scrub(event, mode, salt)`.
 
-**Execution note:** Test-first. Token generation is small and
+**Execution note:** Test-first. Both primitives are small and
 security-relevant.
 
-**Requirements:** R14
+**Requirements:** R13 (scrub salt) + R14 (per-session token)
 
 **Dependencies:** Unit 1.
 
 **Files:**
-- Create: `scripts/playtest/lib/token-minter.ts`.
-- Create: `scripts/playtest/lib/token-minter.test.ts`.
+- Create: `scripts/playtest/lib/session-secrets.ts`.
+- Create: `scripts/playtest/lib/session-secrets.test.ts`.
 
 **Approach:**
 - `mintPlaytestToken(): string` returns
   `crypto.randomBytes(32).toString('hex')` (64 hex chars).
-- `mintPlaytestToken` is pure aside from crypto; exposes a
+- `mintScrubSalt(): string` returns an INDEPENDENT
+  `crypto.randomBytes(32).toString('hex')` (64 hex chars). Separate
+  invocation so a token leak does not compromise salt secrecy.
+- Both are pure aside from crypto; expose a
   `withRandomSource(source: () => Buffer)` override for tests.
-- Minted tokens never logged. Orchestrator treats the value as
-  write-to-env-then-forget; only the in-memory reference survives until
-  the god WS connects.
-- Single-session lifetime is the strict upper bound on validity. No
-  rotation logic needed within a run (kept simple; time-boxed rotation
+- Minted values NEVER logged. Orchestrator treats the token as
+  write-to-env-then-forget; salt stays in orchestrator memory only and
+  is passed to every `scrub()` call.
+- Single-session lifetime is the strict upper bound on validity for
+  both. No rotation logic needed within a run (time-boxed rotation
   deferred until a concrete threat justifies it).
 
 **Patterns to follow:**
 - `src/server/validation.ts` constant-time compare convention.
 
 **Test scenarios:**
-- Happy path: minted tokens differ across 1000 calls.
-- Happy path: minted tokens are 64 hex chars, match `/^[0-9a-f]{64}$/`.
+- Happy path: 1000 calls to each of `mintPlaytestToken` and
+  `mintScrubSalt` produce pairwise-distinct outputs.
+- Happy path: both functions return 64 hex chars, match `/^[0-9a-f]{64}$/`.
+- Independence: a single session mints one token and one salt;
+  `token !== salt` for 1000 sessions (they draw from distinct
+  `randomBytes` calls).
 - Edge case: override random source → deterministic output for tests
-  only, but documented "never use in production."
-- **Security: tree-shake sentinel grep (phase-3 B7).** Tokens are
+  only, documented "never use in production."
+- **Security: tree-shake sentinel grep (phase-3 B7).** Values are
   minted at RUNTIME — they never exist at build time, so grepping
-  `dist/**/*.js` for a token would always pass trivially. Instead,
-  reuse phase-2 Unit 7 sentinel discipline: build the production
-  bundle, then grep `dist/**/*.js` for static string literals that
-  would only be present if `token-minter.ts` got bundled. Required
-  zero-match list (each is a string the production bundle must not
-  contain): `'mintPlaytestToken'` (function name); the literal module
-  path fragment `'playtest/lib/token-minter'`; any other string
-  uniquely owned by `token-minter.ts` (e.g., a sentinel comment string
-  added at the top of the file specifically for this test). Zero
-  matches across the whole list = playtest code is tree-shaken from
-  prod. Mirrors phase-2 Unit 7 strategy character-for-character.
+  `dist/**/*.js` for a token or salt would always pass trivially.
+  Instead, reuse phase-2 Unit 7 sentinel discipline: build the
+  production bundle, then grep `dist/**/*.js` for static string
+  literals that would only be present if `session-secrets.ts` got
+  bundled. Required zero-match list (each is a string the production
+  bundle must not contain): `'mintPlaytestToken'`, `'mintScrubSalt'`
+  (function names); the literal module path fragment
+  `'playtest/lib/session-secrets'`; any other string uniquely owned by
+  `session-secrets.ts` (e.g., a sentinel comment string added at the
+  top of the file specifically for this test). Zero matches across
+  the whole list = playtest code is tree-shaken from prod. Mirrors
+  phase-2 Unit 7 strategy character-for-character.
 
 **Verification:**
 - All tests pass.
@@ -1043,9 +1166,23 @@ logic. Integration-tested via Unit 8.
 - Create: `scripts/playtest/lib/god-subscriber.test.ts`.
 
 **Approach:**
-- `connectGod(url, token, seed, nopeWindowMs, scrubMode): GodHandle` opens
-  the WS with `role=god&token=<token>`, sends `playtest-config { seed,
-  nopeWindowMs }`, begins consuming inbound god-events.
+- `connectGod(url, token, seed, nopeWindowMs, scrubMode, scrubSalt, godReassemblyTimeoutMs?): GodHandle`
+  opens the WS with `role=god&token=<token>`, sends
+  `playtest-config { seed, nopeWindowMs }`, begins consuming inbound
+  god-events. `scrubSalt` is the per-session salt minted by Unit 3b and
+  passed to every `scrub(event, scrubMode, scrubSalt)` call below.
+  `godReassemblyTimeoutMs` defaults to 5000 (see reassembly timeout
+  below).
+- **WS client library:** use the `ws` package directly (Node-native).
+  BURNED app code uses `partysocket` in the browser; the orchestrator
+  is Node-only and does NOT need partysocket's reconnection layer (god
+  WS is a single connection with explicit fatal/retry semantics owned
+  by Unit 6).
+- **Log hygiene (C6):** never emit the full `role=god&token=<T>` URL
+  to any log sink. Unit 3 additionally bans Playwright `tracing.start()`
+  and wrangler `--log-level=debug` to prevent transport-layer URL
+  capture. If log redaction is required for debugging, log the URL with
+  `token=<REDACTED>` substitution.
 - **Inbound envelope (phase-2 D4, mirrored in Unit 1 `GodEvent`):**
   `{ type: 'god-event', action, events, stateVersion, nowMs, projections,
   boardView }`. Canonical — no synthesis.
@@ -1085,11 +1222,17 @@ logic. Integration-tested via Unit 8.
      downstream (scrubber → jsonl append) and drop the buffer entry.
      Set-equality (not just size match) closes the "right count, wrong
      keys" misroute case.
-  5. **Reassembly timeout:** if a `stateVersion` entry is still partial
-     after **5 seconds** since `receivedAt`, emit a diagnostic warning,
+  5. **Reassembly timeout (tunable):** if a `stateVersion` entry is
+     still partial after `godReassemblyTimeoutMs` since `receivedAt`
+     (default **5000 ms**, configurable), emit a diagnostic warning,
      flush the partial to jsonl with a `partial: true` marker (never
      silently drop), then drop the buffer entry. Timeout is a diagnostic,
-     not a fatal.
+     not a fatal. **Hibernation caveat:** Cloudflare Durable Object
+     hibernation can pause server-side execution for tens of seconds
+     during GC or isolate eviction. A 5s default is generous for normal
+     network jitter but may false-positive when a DO wake straddles a
+     split — Phase 6 calibration retunes based on observed inter-message
+     latency at real-session scale.
   - Unsplit events (small payloads) arrive as a single message with
     `projections` already complete and `expectedViewerIds` either
     omitted, empty, or redundantly equal to `Object.keys(projections)`.
@@ -1100,7 +1243,12 @@ logic. Integration-tested via Unit 8.
   `scrub(event, scrubMode, salt)` (Unit 4b) before persistence.
   Scrubber throws → god-subscriber fails-closed: log + abort the run.
   **Never** fall back to writing the raw unscrubbed event.
-- In-memory append queue + 100ms flush interval. Final flush on `close`.
+- In-memory append queue + 100ms flush interval. Final flush + `fsync`
+  (via `fs.fdatasync`) on `close` for crash-consistency guarantee. The
+  in-process queue is unbounded in v1 — Phase 6 calibration measures
+  write throughput under nope-chain storms (3-5 dispatches/sec × 3
+  viewports) and adds backpressure bounds only if observed queue depth
+  grows unbounded. See Risks table.
 - JSONL format: one scrubbed `god-event` per line; `action`, `events`,
   and `boardView` preserved verbatim from server (scrubber leaves them
   alone). `projections` is scrubbed per D15.
@@ -1114,7 +1262,9 @@ logic. Integration-tested via Unit 8.
   **normal flow**, not an error.
 
 **Patterns to follow:**
-- `partysocket` for client WS (used by BURNED app code).
+- `ws` package for Node-side WS client (NOT `partysocket` —
+  `partysocket` is browser-primary with reconnection semantics we don't
+  need; the god WS has explicit close-code contracts owned by Unit 6).
 - `node:fs` streaming write.
 - Reassembly buffer: plain `Map`, explicit timeout via `setTimeout`
   scoped to each entry.
@@ -1171,6 +1321,13 @@ full `PlayerView` including `myHand` contents; once on disk, transient
 in-memory PII becomes durable. Scrubber is the privacy boundary between
 server wire format and disk.
 
+**Threat model (D15):** scrubber defends against (i) a session
+directory shared outside the team, and (ii) post-incident log review.
+Within-session correlation of hashed IDs is **intentional** — triage
+needs to follow "card X" across events within a run. Per-session salt
+(D14) guarantees cross-session non-reversibility. Scrubber does NOT
+defend against a live-session adversary nor operator-salt-sharing.
+
 **Execution note:** Pure-function-first; same input always yields same
 output. Deterministic under a given hash salt.
 
@@ -1198,9 +1355,16 @@ output. Deterministic under a given hash salt.
     (`projection.ts:217-241`) already removed the `combo-steal.cardType`
     and `card-drawn.cardType` for non-party viewers; the god-event log
     preserves these verbatim for triage fidelity per D4.
-- Mode `'off'` returns the event unmodified (dev-only diagnostic path).
-- Mode `'auto'` resolved at orchestrator boot (D15): on when
-  `NODE_ENV !== 'development'`, else off.
+- Mode `'off'` returns the event unmodified. Only reached when the
+  operator passes `--no-scrub` at orchestrator launch (D15). The
+  orchestrator prints a loud startup banner before any god-event is
+  written:
+  `⚠️  SCRUBBER DISABLED — events.jsonl will contain raw player hands.
+  Do not share this session dir.`
+- No `'auto'` mode. Default is `'on'`; `'off'` requires explicit
+  operator opt-in. `NODE_ENV`-sensing was removed in H-2b to close the
+  "operator forgets to set NODE_ENV=production → silent raw write"
+  failure mode.
 - Pure: no I/O, no side effects, no dates — deterministic in `(event,
   mode, salt)`.
 
@@ -1281,9 +1445,9 @@ Integration-tested via Unit 8.
 `runSession(config): Promise<SessionResult>` that Phase 4's seat-agent
 launcher will call after it has been written.
 
-**Requirements:** R1, R4, R14 (per-session token — D14)
+**Requirements:** R1, R4, R13 (scrub salt — D14/D15), R14 (per-session token — D14)
 
-**Dependencies:** Units 2, 3, 3b, 4, 5.
+**Dependencies:** Units 2, 3, 3b, 4, 4b, 5.
 
 **Files:**
 - Modify: `scripts/playtest/lib/orchestrator.ts`.
@@ -1295,19 +1459,30 @@ launcher will call after it has been written.
 - `runSession(config)`:
   1. Enforce `.last-selftest` freshness → bail if stale.
   2. `createRunDirectory` + `writeSessionStart`.
-  3. **Mint per-session token first (Unit 3b):** `token =
-     mintPlaytestToken()` → 64-hex-char string from
-     `crypto.randomBytes(32).toString('hex')`. Token is session-scoped per
-     D14 (never reuses any global `PLAYTEST_TOKEN` Worker secret); leak
-     scope is bounded to this one run.
+  3. **Mint per-session token AND scrub salt first (Unit 3b):**
+     `token = mintPlaytestToken()` and `scrubSalt = mintScrubSalt()` —
+     both 64-hex-char strings from independent
+     `crypto.randomBytes(32).toString('hex')` calls. Both session-scoped
+     per D14 (never reuses any global `PLAYTEST_TOKEN` Worker secret;
+     salt is orchestrator-memory-only, never logged, never persisted).
+     Token-leak scope is bounded to this one run; salt-leak would only
+     compromise within-session hash correlation, which is already
+     intentional for triage (D15 threat model).
   4. `startServers(token, ...)` (Unit 3) — spawns wrangler dev with
      `PLAYTEST_MODE=1` + `PLAYTEST_TOKEN=<minted>` in the child env, and
-     vite dev. Wait for both healthchecks.
-  5. `connectGod(url, token, seed, nopeWindowMs)` (Unit 4) — opens the
-     god WS with `role=god&token=<minted>` using the SAME minted value.
-     Close codes 4003/4004/4005 map to distinct handlers per D4 (abort /
-     abort / retry-once-then-abort); `PLAYTEST_CONFIG_LOCKED` on the
-     config send aborts cleanly (phase-2 Unit 5).
+     vite dev. Wait for both healthchecks. Salt is NOT passed to
+     child env (server-side code never needs it).
+  5. `connectGod(url, token, seed, nopeWindowMs, scrubMode, scrubSalt)`
+     (Unit 4) — opens the god WS with `role=god&token=<minted>` using
+     the SAME minted token, and plumbs `scrubMode` + `scrubSalt` into
+     the god-subscriber so every god-event passes through
+     `scrub(event, scrubMode, scrubSalt)` (Unit 4b) before
+     `events.jsonl` append. `scrubMode` defaults to `'on'` (D15); an
+     explicit `--no-scrub` on orchestrator launch flips it to `'off'`
+     with a loud startup banner. Close codes 4003/4004/4005 map to
+     distinct handlers per D4 (abort / abort / retry-once-then-abort);
+     `PLAYTEST_CONFIG_LOCKED` on the config send aborts cleanly (phase-2
+     Unit 5).
   6. Launch Playwright browser.
   7. For each seat: `createSeat` (Unit 5).
   8. Stub seat-agent dispatch — for Phase 3, the stub waits for a
@@ -1349,14 +1524,15 @@ launcher will call after it has been written.
 
 - [ ] **Unit 7: `selftest.ts` — isolation self-test**
 
-**Goal:** Executable self-test that verifies all six isolation checks
-from High-Level Technical Design. Writes `.last-selftest` on pass.
+**Goal:** Executable self-test that verifies all **eight** isolation
+and privacy checks from High-Level Technical Design. Writes
+`.last-selftest` on pass.
 
 **Execution note:** Integration-first; this phase IS the proof mechanism.
 
-**Requirements:** R5
+**Requirements:** R5, R13 (scrubber + retention — D15)
 
-**Dependencies:** Units 2-6.
+**Dependencies:** Units 2-6, Unit 4b (scrubber), Unit 10b (retention).
 
 **Files:**
 - Modify: `scripts/playtest/selftest.ts`.
@@ -1365,24 +1541,61 @@ from High-Level Technical Design. Writes `.last-selftest` on pass.
 
 **Approach:**
 - Boot a minimal session (2 seats, short duration).
-- Run the six checks. Report per-check pass/fail.
+- Run the eight checks. Report per-check pass/fail.
 - On all-pass: write `.last-selftest` with timestamp.
 - On any fail: print diagnostic table, exit non-zero, do not write
   stamp.
 
+**The eight checks:**
+1. **Isolation — context separation** (existing, from HTD).
+2. **Isolation — cookie scope** (existing, from HTD).
+3. **Isolation — storage scope** (existing, from HTD).
+4. **God delivery — god connection receives events no player-role
+   connection receives** (existing).
+5. **Agent allowlist definition present** (existing; wrapper
+   enforcement is Phase 4's job per D5).
+6. **God close codes 4003/4004/4005 surface distinctly** (existing).
+7. **Scrubber invoked on every write (new — C7).** Run a minimal
+   session; intercept the jsonl write path; for every god-event that
+   reaches the append-queue, assert `scrub()` was called with
+   non-empty salt AND the outbound line's `projections[*].myHand[*].id`
+   matches `/^[0-9a-f]{12}$/` (scrubbed hash shape) AND `type` equals
+   the literal `'<redacted>'`. Adversarial fixture: inject one
+   malformed projection that makes `scrub()` throw → assert the run
+   aborts fail-closed (no raw event reaches jsonl). Required for Check 7
+   to pass.
+8. **Retention evicts a synthetic dated dir (new — C7).** Create a
+   fake session directory dated `(now - sessionDirRetention - 1)`
+   sessions ago; run `applyRetention`; assert the fake dir is
+   deleted from disk. Then create a dir at exactly the boundary
+   (`now - sessionDirRetention`) and assert it is kept. Proves the
+   cutoff logic, not just that the function runs.
+
+Both Check 7 and Check 8 are **mandatory gates** — the self-test cannot
+write `.last-selftest` without them passing.
+
 **Patterns to follow:**
 - Playwright's own assertion style for the WS-frame / cookie checks.
+- Node `fs/promises` + `Date` for the synthetic retention fixture.
 
 **Test scenarios:**
-- Happy path: all six checks pass → exit 0, stamp written.
+- Happy path: all eight checks pass → exit 0, stamp written.
 - Error path: simulate one failing check (e.g., deliberately leak a cookie
   via a test-only context flag) → exit non-zero, stamp NOT written.
+- Error path (Check 7 adversarial): inject malformed projection →
+  scrubber throws → run aborts without raw jsonl write → Check 7
+  passes by observing the abort, not by observing a scrubbed write.
+- Error path (Check 8 boundary): retention boundary off-by-one
+  (cutoff includes the boundary dir) → fails with diagnostic; proves
+  we test the boundary, not just "some deletion happened."
 - Edge case: self-test boots servers itself (does not require `runSession`
   to be working end-to-end).
 - Integration: runs against real Phase 2 server code.
 
 **Verification:**
-- `pnpm playtest:selftest` green.
+- `pnpm playtest:selftest` green; `.last-selftest` stamp written.
+- A malformed-projection fixture run confirms fail-closed scrubber
+  behavior in CI.
 
 - [ ] **Unit 8: End-to-end smoke — no seat agents, 2 stub seats, full round trip**
 
@@ -1525,6 +1738,16 @@ test with fixture JSONL.
      `connectionEvents`, cross-references `connections.jsonl` (WS
      lifecycle log, D11) against the stated transitions, checking the
      declared `at:` index falls within the matched events window.
+     **Orchestrator-driven reconnect filter (C8):** before matching,
+     the tier-3 matcher filters `connections.jsonl` to retain only
+     entries with `reason === 'natural'`. Entries tagged
+     `'orchestrator-driven'` (viewport rotation between scenarios,
+     free-play → scripted seat teardown, and similar harness-internal
+     lifecycle) are excluded — they would otherwise drown real
+     axis-13 scenarios in bookkeeping noise. Scenarios that WANT to
+     assert orchestrator-driven reconnects are out of scope for v1
+     (Phase 6 calibration may surface a need; if so, add an explicit
+     `reason:` field to the scenario grammar).
   Tier 3 is a separate transport from `events.jsonl`; connection
   disconnect/reconnect is NOT a god-event.
 - **Viewport-invariance (phase-3 B3 / D11):** all three tiers operate
@@ -1807,9 +2030,13 @@ rotate / purge); integration-tested for FS ops.
   purge everything older; else purge nothing (explicit date required at
   CLI per D15 "operator-invoked only").
 - `applyRetention(config: Config): Promise<RetentionResult>` — reads
-  `docs/testing/playtest/runs/`, calls `selectForRotation`, then for each
-  rotated dir: archive (tar.gz under `runs/_archive/`) or delete per
-  `config.retentionMode`. Default `'archive'`.
+  `docs/testing/playtest/runs/`, calls `selectForRotation`, then for
+  each rotated dir: **delete it recursively**. No archive mode in v1 —
+  `retentionMode` flag was removed in H-2b because archives accumulate
+  without auto-delete, trading one disk-pressure problem for another
+  with no concrete retrieval need. If a concrete archive-retrieval
+  requirement appears later, re-add `--archive` as an explicit flag
+  then.
 - `purge(cli: { before?: string; sessionId?: string; fullDir?: boolean }):
   Promise<PurgeResult>` — the `pnpm playtest:purge` entry. Accepts
   `--before YYYY-MM-DD` OR a specific session id. `--full-dir` deletes
@@ -1820,8 +2047,6 @@ rotate / purge); integration-tested for FS ops.
 
 **Patterns to follow:**
 - `node:fs/promises` for FS ops.
-- `tar` stream via `node-tar` (already a transitive dep via wrangler) for
-  archive mode.
 - CLI arg parsing style from `scripts/launch-dev-chrome.ts`.
 
 **Test scenarios:**
@@ -1836,12 +2061,13 @@ rotate / purge); integration-tested for FS ops.
 - CLI override: `pnpm playtest:purge --before 2026-04-01` calls
   `selectForPurge` with the parsed date; `--session-id
   2026-04-23-1430-3p` restricts to that one id.
-- Retention-mode archive: rotated dir becomes `runs/_archive/
-  <session-id>.tar.gz`; original dir removed; archive round-trips via
-  `tar -xzf`.
-- Retention-mode purge: rotated dir deleted outright; no archive written.
+- Retention deletion: rotated dir is deleted recursively; no tarball
+  written (v1 has no archive mode — removed in H-2b).
+- Retention boundary: dir at exactly the `sessionDirRetention`-th
+  newest position is KEPT; the `(N+1)`-th newest is deleted. Test
+  both sides of the boundary explicitly.
 - Config override honored: passing `sessionDirRetention: 3` keeps 3,
-  rotates all others; default is 10 per D15.
+  deletes all others; default is 10 per D15.
 - Orchestrator integration: Unit 6 step 15 calls `applyRetention` after
   `appendSessionEnd`; session just written is never rotated (it IS one
   of the top N).
@@ -1857,8 +2083,8 @@ rotate / purge); integration-tested for FS ops.
   Phase 2 god connection. New subprocess management (wrangler + vite
   under orchestrator). New filesystem I/O: run directory tree,
   `events.jsonl` (scrubbed per D15), `connections.jsonl` (WS lifecycle
-  log per D11), `_retention.log`, optional archive tarballs under
-  `runs/_archive/`.
+  log per D11, `reason`-tagged per C8), `_retention.log`. No archive
+  tarballs (v1 retention = delete only).
 - **God-event consumption is broadcast-site emission, not dispatch-
   time (phase-2 D4).** The harness makes NO assumption that god-events
   are produced at `dispatch` call sites; they're emitted from
@@ -1882,10 +2108,10 @@ rotate / purge); integration-tested for FS ops.
   back to raw writes (D15 privacy boundary).
 - **Retention + purge (D15).** Unit 10b enforces a rolling
   `sessionDirRetention` (default 10 newest session dirs; older dirs
-  archived by default or purged per config). Operator purge (`pnpm
-  playtest:purge`) is explicit — no implicit scheduled deletion.
-  `docs/testing/playtest/runs/**` gitignored at Unit 1; session
-  artifacts never reach the repo.
+  **deleted recursively** — archive mode removed in H-2b). Operator
+  purge (`pnpm playtest:purge`) is explicit — no implicit scheduled
+  deletion. `docs/testing/playtest/runs/**` gitignored at Unit 1;
+  session artifacts never reach the repo.
 - **Per-session token minted locally (phase-3 D14, not global).** Unit
   6 mints a 64-hex-char token at run start via Unit 3b; seeds it into
   the wrangler child env (`PLAYTEST_TOKEN`) and uses the same value in
@@ -1948,10 +2174,18 @@ rotate / purge); integration-tested for FS ops.
 | Hibernation mid-session drops god connection | Phase 2 rebuilds via `getConnections()` filtered by `role=god` tag. Harness reassembly buffer keys on `stateVersion` — it does not care whether the WS is a fresh or post-hibernation connection. |
 | PID leaks on crash | try/finally + process-group SIGTERM. Unit 8 asserts no orphans. |
 | Run-dir collision on concurrent runs | Session id collision handler (Unit 2); concurrent runs formally out of v1 scope. |
-| Retention archives balloon disk usage | Default `retentionMode: 'archive'` tarballs older runs but does not auto-delete archives. Operator invokes `pnpm playtest:purge` explicitly (D15, Unit 10b); no implicit scheduled purge. |
+| Retention fills disk with old session dirs | Default rolling retention = 10 most-recent dirs (config `sessionDirRetention`); older dirs are **deleted recursively** by `applyRetention` at run end (Unit 10b). Archive mode was considered and dropped in H-2b (archives have their own disk-pressure problem with no retrieval consumer). If explicit retention of specific runs is needed, operator skips them via `--before` filter on `pnpm playtest:purge`. **CI gap:** when harness runs in CI (future work), rolling retention still applies, but there is no human operator — document the constraint in Scope Boundaries. |
 | Harness git SHA recorded stale (Claude forgets) | `session.md` writer reads SHA at start via `git rev-parse HEAD` — automated. |
 | Dev servers already running from separate terminal | Orchestrator detects (health endpoint responds before spawn) and aborts with clear message — do NOT reuse, because flag + minted token would be unset in the pre-existing process. |
 | Form-factor cycling tripled wallclock without coverage gain (pre-B3) | D11 / phase-3 B3 scope reduction: viewport rotation only fires for scenarios tagged `min-viewport:` OR carrying `ui-assertions:`. All other scenarios run on the default viewport (390×844). Tier-1/2/3 detector is viewport-invariant by construction (consumes `events.jsonl` + `connections.jsonl` only), so re-running viewport-insensitive scenarios at three viewports produces three identical outcomes — pure wallclock waste. Estimated wallclock reduction vs naïve cycling: ~3× on the untagged majority, while still cycling the tagged subset where seat-agent eyeballing varies by viewport. |
+| Subprocess env exposes `PLAYTEST_TOKEN` via `/proc/<pid>/environ` (Linux) or Process Explorer (Windows) | v1 assumes local-only, single-trusted-operator deployment; this is explicitly scoped in Scope Boundaries > Trust Model. Mitigation = trusting the single-user assumption. Future-work (not built): transient file with `0600` perms that the orchestrator unlinks post-read. |
+| God WS URL with `token=<T>` query-string captured by Playwright `tracing.start()` or wrangler `--log-level=debug` | Unit 3 pre-flight aborts the orchestrator if `PLAYWRIGHT_TRACE`, `DEBUG=*`, or `--log-level=debug` is set. Explicit `--allow-trace` opt-in for one-off debugging prints a startup banner warning the operator that traces will contain the token. Default: refuse to launch. |
+| Scrubber `'auto'` mode silently skipped when operator forgets `NODE_ENV=production` | Removed in H-2b (C3). Default is `'on'`. `'off'` requires explicit `--no-scrub` at orchestrator launch AND prints a loud `⚠️ SCRUBBER DISABLED` banner before any god-event writes. No NODE_ENV-sensing. |
+| Within-session hash correlation lets triager identify repeat cards | **Intentional** per D15 threat model. Scrubber's promise is cross-session non-reversibility (per-session salt) + triage fidelity (stable hash within-session); it does NOT promise within-session unlinkability. Sharing session dirs outside the team is the operational risk; see `scripts/playtest/README.md` warning. |
+| Orchestrator-driven viewport rotation pollutes `connections.jsonl` with spurious axis-13 transitions | `ConnectionEvent.reason` field (`'natural' \| 'orchestrator-driven'`) added in C8. Unit 6 step 11 explicitly tags its teardown/rebuild disconnects and reconnects as `'orchestrator-driven'`. Unit 9 tier-3 matcher filters `connections.jsonl` to `reason === 'natural'` before scenario matching. Scenarios targeting harness-internal transitions are out of v1 scope. |
+| `events.jsonl` fsync semantics: crash loses un-flushed events | Unit 4 does `fs.fdatasync` on close for deterministic flush; 100ms queue window is the only in-flight exposure. Backpressure is unbounded in v1 — Phase 6 calibration measures queue depth under nope-chain storms and adds bounds if observed growth exceeds operator memory budget. |
+| Cloudflare DO hibernation pause exceeds `godReassemblyTimeoutMs` default (5000ms) → spurious partial flush | Timeout is tunable via config (`godReassemblyTimeoutMs`). Phase 6 calibration retunes against observed inter-message latency at real-session scale. Partial flush is diagnostic (marks `partial: true`), not fatal — stuck reassembly still produces a line. |
+| `PLAYTEST_CONFIG_LOCKED` after orchestrator crash leaves room locked until DO eviction | v1 workaround: operator restarts wrangler (loses seed reproducibility for that run). Phase 2 could add an admin-unlock message in future work; out of v1 scope. Orchestrator aborts cleanly with actionable message ("config already locked — restart wrangler to recover"). |
 
 ## Documentation / Operational Notes
 

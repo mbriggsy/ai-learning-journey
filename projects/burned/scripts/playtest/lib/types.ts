@@ -342,3 +342,104 @@ export const GOD_CLOSE_CODE = {
   RATE_LIMITED: 4005,
 } as const
 export type GodCloseCode = (typeof GOD_CLOSE_CODE)[keyof typeof GOD_CLOSE_CODE]
+
+// -----------------------------------------------------------------------------
+// Phase 5 — issue-seed types consumed by triage agents.
+//
+// Additive per phase-5 plan HTD. SeedKind drives both the clusterer's
+// rule selection (Unit 2) and the triage prompt's seed-kind handling
+// cues (Unit 1 / D14). Multi-kind co-existence is permitted (D18 / I6) —
+// the same underlying event may surface as multiple seeds of different
+// kinds. Each seed becomes ONE triage agent spawn (D3) producing ONE
+// issue file under `runs/<id>/issues/NNN-<slug>.md`.
+// -----------------------------------------------------------------------------
+
+export type SeedKind =
+  | 'scripted-scenario'      // scripted fire or scenario-tagged suspicion
+  | 'free-play'              // relatedScenario === null (R9 / D12 / C4)
+  | 'vibe-check'             // VibeCheckEntry cluster (R8 / D11)
+  | 'ui-spec-divergence'     // UiSpecDivergenceEntry cluster (R10 / D13)
+  | 'role-drift'             // self-label ≠ detector-inferred role (R13 / D15)
+  | 'with-divergence-fire'   // FireRecord matched='with-divergence' (D17)
+  | 'coverage-divergence'    // self-vs-detector divergence from coverage.md
+
+/**
+ * Pointer back into a session artifact. Triage agents resolve these via
+ * Read calls; clusterer never copies content into the seed (insight 029
+ * preserved — keep producer scope tight).
+ */
+export interface SignalRef {
+  /** `seat-log` / `suspicion` / `events` / `connections` / `coverage` / `fire-record`. */
+  readonly source:
+    | 'seat-log'
+    | 'suspicion'
+    | 'events'
+    | 'connections'
+    | 'coverage'
+    | 'fire-record'
+  /** `seat-N` for seat-log/suspicion sources; `n/a` otherwise. */
+  readonly seatId?: string
+  /** Path relative to the run dir, e.g. `seats/seat-3.log.md`. */
+  readonly path: string
+  /** 1-indexed line number when the source is a markdown / jsonl file. */
+  readonly line?: number
+  /** Free-form pointer for non-line-addressable sources (e.g. fire-record id). */
+  readonly id?: string
+}
+
+export interface IssueSeed {
+  /** `NNN-<slug>` — deterministic; NNN is the temporal index across the run. */
+  readonly seedId: string
+  readonly kind: SeedKind
+  readonly sourceSignals: readonly SignalRef[]
+  /**
+   * Populated ONLY when the scenario catalog's `known-product-call:` tag
+   * matches (Ruling C / I3). Cross-tracker dedup is Briggsy-at-promotion.
+   */
+  readonly candidateDuplicate?: {
+    readonly kind: 'KNOWN-PRODUCT-CALL'
+    /** Catalog scenario ID carrying the tag. */
+    readonly id: string
+    /** E2E-ISSUE-LIST ID cited by the tag (e.g. `E-01`). Surfaced for
+     *  human-context citation only — NEVER drives matching. */
+    readonly linkedE2EIssueId?: string
+  }
+  readonly seatsInvolved: readonly string[]
+  readonly scenarioIds: readonly string[]
+  readonly suspicionSeverityHint: 'low' | 'medium' | 'high'
+  readonly timeWindow: { readonly fromMs: number; readonly toMs: number }
+  /** Pointer-only Column 1 / Column 2 context (D13 / Ruling A). */
+  readonly columnContext?: {
+    readonly scenarioId: string
+    /** ROW_DISPLAY_LABELS literal value (e.g. `'TARGET'`). */
+    readonly rowLabel: string
+    /** Column 2 prose verbatim from the seat entry. */
+    readonly agentObservation: string
+    /** `events.jsonl#L<n>` pointer at closest preceding stateVersion. */
+    readonly projectionSnapshotRef: string
+  }
+  /** Self-label vs detector-inferred role drift (D15 / Ruling B). */
+  readonly roleDrift?: {
+    /** Agent's `myRoleLabel` (ROW_DISPLAY_LABELS literal). */
+    readonly selfLabel: string
+    /** Inferred from god-event using best-effort heuristics (no
+     *  `src/server/projection.ts` import per boundary rules). May be
+     *  `'UNKNOWN'` when no god-event falls within the seat-entry
+     *  window (M1) or when the rubric cannot decide. */
+    readonly detectorLabel: string
+    readonly atStateVersion: number
+  }
+  /** Tier that failed in a `with-divergence-fire` seed (D17). */
+  readonly fireDivergence?: {
+    readonly scenarioId: string
+    readonly failedTier: 'projectionAsserts' | 'connectionEvents' | 'ui'
+    readonly notes: string
+  }
+  /** Loose-clustering fingerprint for `free-play` seeds (D12). */
+  readonly freePlayFingerprint?: {
+    readonly cardType: string
+    readonly eventType: string
+    /** ROW_DISPLAY_LABELS literal. */
+    readonly seatRole: string
+  }
+}

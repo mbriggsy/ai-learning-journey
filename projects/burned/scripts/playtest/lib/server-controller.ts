@@ -422,21 +422,89 @@ export async function stopServers(handles: ServerHandles): Promise<void> {
 
   const children: ChildProcess[] = [handles._wrangler, handles._vite]
 
-  // Send SIGTERM to any still-alive child.
-  for (const child of children) {
-    if (child.exitCode === null && !child.killed) {
-      try { child.kill('SIGTERM') } catch { /* already dead */ }
-    }
-  }
+  // Cascade teardown. On Windows, `child.kill('SIGTERM')` only terminates
+  // the immediate child (`cmd.exe` under `shell: true`) — `pnpm`, `wrangler`,
+  // and `workerd.exe` all survive as orphans holding ports + state. Use
+  // `taskkill /F /T /PID <pid>` to kill the whole process tree. On POSIX
+  // the existing SIGTERM flow is sufficient for the smoke today (revisit
+  // if we ever see POSIX leakers).
+  await Promise.all(
+    children.map((child) => {
+      if (child.exitCode !== null || child.killed) return Promise.resolve()
+      return killProcessTree(child, 'SIGTERM')
+    }),
+  )
 
   // Wait for both to exit, or grace-window elapse.
   await Promise.all(children.map((child) => waitForExit(child, SIGTERM_GRACE_MS)))
 
-  // Anything still alive after the grace window → SIGKILL.
-  for (const child of children) {
-    if (child.exitCode === null && !child.killed) {
-      try { child.kill('SIGKILL') } catch { /* noop */ }
-    }
+  // Anything still alive after the grace window → force the tree down hard.
+  await Promise.all(
+    children.map((child) => {
+      if (child.exitCode !== null || child.killed) return Promise.resolve()
+      return killProcessTree(child, 'SIGKILL')
+    }),
+  )
+}
+
+/**
+ * Tear down a spawned child AND any descendant processes it launched.
+ *
+ * Windows: `taskkill /F /T /PID <pid>` is the only reliable way to
+ * propagate termination down the tree. `process.kill(pid, ...)` only
+ * terminates the immediate child; grandchildren keep running and hold
+ * their resources (workerd holds port 8787, vite can keep 5173).
+ *
+ * POSIX: fall through to `child.kill(signal)`. The smoke was only flagged
+ * as leaking on Windows; POSIX shells typically propagate SIGTERM to
+ * subprocesses through the process group. If POSIX leakers surface
+ * later, switch to `spawn(..., { detached: true })` + `process.kill(-pid)`
+ * to signal the group.
+ */
+async function killProcessTree(
+  child: ChildProcess,
+  signal: 'SIGTERM' | 'SIGKILL',
+): Promise<void> {
+  const pid = child.pid
+  if (typeof pid !== 'number') return
+
+  if (process.platform === 'win32') {
+    await new Promise<void>((resolve) => {
+      // Always `/F` on Windows. Without it, taskkill sends WM_CLOSE to
+      // top-level windows — which does nothing for windowless processes
+      // like `workerd.exe`. That's the whole bug we're fixing. The
+      // "graceful SIGTERM" vs "forceful SIGKILL" distinction from POSIX
+      // doesn't map cleanly to Windows taskkill; the stopServers 5s
+      // grace window is where grace lives, and taskkill is the hammer.
+      const args = ['/F', '/T', '/PID', String(pid)]
+      void signal
+      const killer = defaultSpawn('taskkill', args, {
+        stdio: 'ignore',
+        shell: false,
+        windowsHide: true,
+      })
+      let settled = false
+      const done = (): void => {
+        if (settled) return
+        settled = true
+        resolve()
+      }
+      killer.once('exit', done)
+      killer.once('error', done)
+      // Safety cap — taskkill should return in <1s.
+      setTimeout(done, 3000).unref()
+    })
+  }
+
+  // Always ALSO call child.kill(). In production this is redundant (the
+  // tree is already down from taskkill) and errors silently. In tests
+  // with a FakeChildProcess, this is what triggers the mock's synthetic
+  // `exit` event so `waitForExit` resolves. Also the only kill path on
+  // non-Windows (no taskkill).
+  try {
+    child.kill(signal)
+  } catch {
+    /* already dead */
   }
 }
 

@@ -16,7 +16,7 @@ import {
   writeSessionStart,
   appendSessionEnd,
 } from './run-directory'
-import type { Config, SessionResult } from './types'
+import type { Config, SessionReport } from './types'
 
 let tmpRoot: string
 
@@ -47,12 +47,13 @@ function makeConfig(overrides: Partial<Config> = {}): Config {
   }
 }
 
-function makeResult(overrides: Partial<SessionResult> = {}): SessionResult {
+function makeResult(overrides: Partial<SessionReport> = {}): SessionReport {
   return {
     sessionId: '2026-04-24-1030-3p',
     runDir: path.join(tmpRoot, '2026-04-24-1030-3p'),
     startedAt: '2026-04-24T10:30:00',
     endedAt: '2026-04-24T10:45:00',
+    outcome: 'success',
     coverage: {
       firedCount: 55,
       threshold: 50,

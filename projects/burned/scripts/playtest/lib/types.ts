@@ -184,15 +184,45 @@ export interface Config {
 }
 
 // -----------------------------------------------------------------------------
-// Session result (the orchestrator's return value — consumed by
-// retention + the finalized session.md writer).
+// Session result (the orchestrator's return value — consumed by callers of
+// `runSession`). Plan-prompt public surface (phase-3 Unit 6).
+//
+// `SessionReport` (below) is the FULL finalized shape consumed by
+// `appendSessionEnd` + Phase 5 triage — it carries coverage/free-play/
+// viewport accounting that Unit 6 itself doesn't compute (Unit 9 does).
+// Unit 6 synthesizes a stub SessionReport to drive the end-block writer.
 // -----------------------------------------------------------------------------
+
+export type SessionOutcome =
+  | 'success'
+  | 'error'
+  | 'aborted-stale-selftest'
+  | 'aborted-config-locked'
+  | 'aborted-fatal-close'
 
 export interface SessionResult {
   readonly sessionId: string
   readonly runDir: string
+  readonly outcome: SessionOutcome
+  readonly errorMessage?: string
   readonly startedAt: string
   readonly endedAt: string
+  readonly seatsJoined: number
+  readonly eventsJsonlPath: string
+}
+
+/**
+ * Finalized session report consumed by `appendSessionEnd` + post-hoc tooling.
+ * Unit 9 (coverage reporter) populates `coverage`; Unit 6 passes a stub
+ * report with `outcome` threaded through so the end block can surface it.
+ */
+export interface SessionReport {
+  readonly sessionId: string
+  readonly runDir: string
+  readonly startedAt: string
+  readonly endedAt: string
+  readonly outcome: SessionOutcome
+  readonly errorMessage?: string
   readonly coverage: CoverageReport
   readonly freePlay: FreePlayBudget
   readonly viewportsExercised: readonly string[]

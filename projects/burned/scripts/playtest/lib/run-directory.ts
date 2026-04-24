@@ -23,7 +23,7 @@ import * as path from 'node:path'
 import { createHash } from 'node:crypto'
 import { execFile } from 'node:child_process'
 import { promisify } from 'node:util'
-import type { Config, SessionResult } from './types'
+import type { Config, SessionReport } from './types'
 
 const execFileAsync = promisify(execFile)
 
@@ -175,25 +175,33 @@ export async function writeSessionStart(
  */
 export async function appendSessionEnd(
   paths: RunDirPaths,
-  result: SessionResult,
+  result: SessionReport,
 ): Promise<void> {
   const cov = result.coverage
   const issuesProduced = await countIssuesProduced(paths.root)
 
-  const block = [
+  const outcomeLine =
+    result.outcome !== undefined
+      ? `- outcome: ${result.outcome}${cov.passed ? ' (coverage PASSED)' : ' (coverage FAILED)'}`
+      : `- outcome: ${cov.passed ? 'PASSED' : 'FAILED'}`
+
+  const lines: string[] = [
     '',
     SESSION_END_HEADING,
     '',
     `- finished-at: ${result.endedAt}`,
-    `- outcome: ${cov.passed ? 'PASSED' : 'FAILED'}`,
+    outcomeLine,
     `- coverage: fired ${cov.firedCount} / threshold ${cov.threshold} (zero-cells: ${cov.zeroCellCount})`,
     `- free-play: ${cov.freePlayAccounting.freePlayMs}ms / ${cov.freePlayAccounting.totalMs}ms (${(cov.freePlayAccounting.fraction * 100).toFixed(1)}%)`,
     `- viewports exercised: ${result.viewportsExercised.join(', ') || '(none)'}`,
     `- issues produced: ${issuesProduced}`,
-    '',
-  ].join('\n')
+  ]
+  if (result.errorMessage !== undefined && result.errorMessage.length > 0) {
+    lines.push(`- error: ${result.errorMessage}`)
+  }
+  lines.push('')
 
-  await fs.appendFile(paths.sessionMd, block, 'utf8')
+  await fs.appendFile(paths.sessionMd, lines.join('\n'), 'utf8')
 }
 
 // -----------------------------------------------------------------------------

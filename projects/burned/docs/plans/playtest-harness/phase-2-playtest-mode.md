@@ -148,10 +148,19 @@ None — entirely repo-internal patterns.
   playtest mode), use `mulberry32(seed)`. Otherwise CSPRNG. Engine already
   consumes `ctx.random`; no engine change required.
 - **D4. God-event is a new server→client WS message type.** Payload:
-  `{ type: 'god-event', action, events, stateVersion, nowMs }`. Broadcast
-  after every successful `dispatch` in playtest mode only. Normal player
+  `{ type: 'god-event', action, events, stateVersion, nowMs, projections:
+  Record<playerId, PlayerView>, boardView: BoardView }`. Broadcast after
+  every successful `dispatch` in playtest mode only. Normal player
   projections continue unchanged. Orchestrator opens a god-role connection
-  (see D5) and subscribes.
+  (see D5) and subscribes. The `projections` map carries, for every seated
+  player (including eliminated-but-connected spectators), the exact
+  `PlayerView` that seat would see via `projectForPlayer` at the same
+  dispatch moment — NOT a god-mode view. `boardView` is the TV projection
+  via `projectForBoard`. Phase 1 §System-Wide Impact (lines 958-967)
+  declares this contract as R7 and Phase 3's scenario-fire detector
+  consumes the per-viewer snapshots to verify `projection-assertions:`
+  scenarios. `PlayerView` + `BoardView` types are imported from
+  `src/shared/protocol.ts` (lines 99, 127).
 - **D5. God-role is a new connection role, gated by `PLAYTEST_MODE` + an
   auth token.** Connection query-param `role=god&token=<value>`. Server
   rejects `role=god` when `PLAYTEST_MODE` is unset or token mismatches.
@@ -251,11 +260,25 @@ handleAction(msg, connection)
       events = result.events
       broadcastToPlayers(state', events)       // unchanged
       if (this.isPlaytest) {
+          // Per-viewer projection broadcast (Unit 6a). For every seated
+          // player in state'.players, call projectForPlayer to produce the
+          // exact PlayerView that seat would see at this dispatch moment.
+          // projectForBoard produces the boardView. Both already honor the
+          // allowlist projection + card-identity privacy rules; reusing
+          // them guarantees god-events cannot accidentally leak more than
+          // a seat would see.
+          projections: Record<playerId, PlayerView> = {}
+          for (p of state'.players) {
+              projections[p.id] = projectForPlayer(state', p.id)
+          }
+          boardView: BoardView = projectForBoard(state')
           broadcastToGodConnections({
               type: 'god-event',
               action, events,
               stateVersion: state'.version,
               nowMs: ctx.now,
+              projections,
+              boardView,
           })
       }
   }
@@ -524,7 +547,9 @@ game has started.
 
 **Goal:** After `handleAction` and `dispatchServerAction` succeed, when
 `isPlaytestMode`, broadcast a `god-event` to all god connections carrying
-`{ type: 'god-event', action, events, stateVersion, nowMs }`.
+`{ type: 'god-event', action, events, stateVersion, nowMs, projections,
+boardView }`. The `projections` / `boardView` fields are computed by Unit
+6a immediately before the broadcast.
 
 **Execution note:** Test-first integration-style.
 
@@ -554,11 +579,13 @@ game has started.
 
 **Test scenarios:**
 - Happy path: player plays a card → god connection receives `god-event`
-  with correct action + events array + stateVersion.
+  with correct action + events array + stateVersion + projections map
+  (one entry per seated player) + boardView.
 - Edge case: playtest mode off → no god-event sent (and no god connections
   accepted per Unit 4).
 - Edge case: successful dispatch with `result.events === []` → still
-  broadcast (action alone is informative).
+  broadcast (action alone is informative; projections + boardView still
+  populated).
 - Edge case: failed dispatch (`result.ok === false`) → no god-event.
 - Edge case: multiple god connections → all receive.
 - Integration: seat projection (existing `state-update`) goes to players
@@ -568,6 +595,96 @@ game has started.
 - Playwright or Vitest-driven integration test passes.
 - No new entries in player-facing message types (god-event never leaves
   server except to god role).
+
+- [ ] **Unit 6a: Per-viewer projection broadcast**
+
+**Goal:** Compute the `projections: Record<playerId, PlayerView>` map and
+`boardView: BoardView` that Unit 6 attaches to every `god-event`. Per
+phase-1 R7 + §System-Wide Impact (lines 958-967), each entry in
+`projections` is the exact `PlayerView` that seat would see — not a god-
+mode view. `PlayerView` and `BoardView` are imported from
+`src/shared/protocol.ts` (lines 127 and 99 respectively).
+
+**Execution note:** Test-first. The invariant being proved is that the
+god-event never carries more information to a given viewer than that
+viewer would legitimately see via the existing `state-update` broadcast.
+Reusing `projectForPlayer` / `projectForBoard` is what guarantees this —
+Phase 3's detector can trust the snapshot because the same code produced
+it that produces the live seat view.
+
+**Requirements:** R3 (phase-2) + phase-1 R7 (downstream contract).
+
+**Dependencies:** Unit 6.
+
+**Files:**
+- Modify: `src/server/room.ts` — at both dispatch sites (lines 615-627
+  and 661-665), immediately before the `broadcastToGodConnections` call
+  added in Unit 6, compute `projections` and `boardView`.
+- Create: `src/server/god-projection.test.ts` — unit test that calls the
+  helper directly and asserts allowlist + privacy invariants.
+
+**Approach:**
+- Add a helper (named export from a new module, NOT from `room.ts` per
+  the room-exports landmine) e.g. `src/server/god-projection.ts`
+  exporting `buildGodProjections(state): { projections: Record<playerId,
+  PlayerView>, boardView: BoardView }`.
+- Inside, iterate `state.players` (including eliminated-but-seated
+  spectators — they still receive full `PlayerView` broadcasts per the
+  engine invariant cited in CLAUDE.md). For each, call
+  `projectForPlayer(state, player.id)` at `src/server/projection.ts:54`.
+  Call `projectForBoard(state)` at `src/server/projection.ts:11` for the
+  TV view.
+- Do NOT spread `state` into the envelope, do NOT synthesize a custom
+  per-viewer view, do NOT call any private engine helper that bypasses
+  projection. The allowlist pattern + `stripPrivateEventFields` +
+  `augmentNopeWindowForPlayer` viewer-gate are the privacy contract;
+  going around them reintroduces E-01 class leaks.
+- Disconnected-but-seated players: include them in the map (same
+  `projectForPlayer` call). Spectator view is explicitly in scope per
+  phase-1 D5 row 5.
+
+**Patterns to follow:**
+- `src/server/projection.ts` existing functions — reuse, do not
+  re-implement.
+- Allowlist projection pattern per CLAUDE.md "Security Conventions".
+
+**Test scenarios:**
+- Happy path: 4-player mid-game state → `projections` map has 4 entries
+  keyed by playerId; each entry equals `projectForPlayer(state,
+  playerId)` exactly (structural equality).
+- Happy path: `boardView` equals `projectForBoard(state)` exactly.
+- Privacy invariant (ACTOR): for a state with a pending named-steal,
+  `projections[stealerId].nopeWindow.namedSteal.namedCardType` is
+  populated (matches phase-1 Unit 4 `projection-assertions:` field path
+  at phase-1 line 670).
+- Privacy invariant (TARGET): same field populated on
+  `projections[targetId]` — viewer-gated branch at
+  `src/server/projection.ts:174` fires for target.
+- Privacy invariant (OTHER-ALIVE): same field ABSENT on
+  `projections[otherAliveId]` — viewer gate rejects non-stealer non-
+  target.
+- Privacy invariant (private event fields): for a combo-steal event,
+  assert `projections[otherAliveId].events` does not contain the stolen
+  `cardType` — `stripPrivateEventFields` at
+  `src/server/projection.ts:217` must have run.
+- Spectator: eliminated-but-connected player's projection entry present,
+  `myHand` returns `player?.hand ?? []` per `projection.ts:78` + `:96`.
+- Disconnected player: included in map; `BoardPlayer.isConnected: false`
+  round-trips.
+- Regression: playtest mode off → helper never called (Unit 6 gate).
+
+**Verification:**
+- All test scenarios pass.
+- `buildGodProjections` is a pure function of `state` — no I/O, no
+  mutation. Verified by a property test: calling twice with same state
+  returns structurally equal results.
+- The invariant "god-event contents for viewer V equals what V's
+  `state-update` contains" is proved structurally by the reuse of
+  `projectForPlayer` / `projectForBoard`; the dedicated test asserts
+  this explicitly for a named-steal fixture.
+- Phase 3's detector can consume `god-event.projections[viewerId]` and
+  `god-event.boardView` as the source-of-truth snapshot for
+  `projection-assertions:` scenarios per phase-1 R7.
 
 - [ ] **Unit 7: Prod-bundle sentinel regression test**
 
@@ -633,9 +750,15 @@ received the god-event, and stop.
 - `scripts/launch-dev-chrome.ts` process-spawn style.
 
 **Test scenarios:**
-- Happy path: smoke script exits 0 after verifying one god-event.
+- Happy path: smoke script exits 0 after verifying one god-event carrying
+  `projections` (one entry per seated player, keyed by playerId) and
+  `boardView`.
 - Error path: if `PLAYTEST_MODE` unset, smoke script exits non-zero with
   instructions to set the flag.
+- Invariant check: for the one observed god-event, assert
+  `projections[<test-player-id>]` is structurally equal to that player's
+  most recent `state-update` payload (confirms Unit 6a reuse of
+  `projectForPlayer` worked end-to-end).
 
 **Verification:**
 - `pnpm playtest:smoke` green locally against `pnpm dev:server`.
@@ -643,8 +766,12 @@ received the god-event, and stop.
 ## System-Wide Impact
 
 - **Interaction graph:** New WS message type `god-event` (server → god
-  role). New admin message `playtest-config` (god role → server). No
-  changes to existing player ↔ server messages.
+  role) carrying `{ type, action, events, stateVersion, nowMs,
+  projections: Record<playerId, PlayerView>, boardView: BoardView }`. New
+  admin message `playtest-config` (god role → server). No changes to
+  existing player ↔ server messages. Phase 1 R7 (lines 958-967) declares
+  the `projections` + `boardView` fields as the canonical shape; Phase 3's
+  detector consumes them.
 - **Error propagation:** Malformed `playtest-config` → Zod reject, WS stays
   open. Malformed god auth → connection rejected 4001.
 - **State lifecycle risks:** `playtestSeed` + `playtestNopeWindowMs` are
@@ -660,13 +787,18 @@ received the god-event, and stop.
 - **Unchanged invariants:** Existing player protocol, all engine rules,
   state projection allowlist, 4KB message cap, rate-limit, origin check,
   pure dispatch, serial action queue, CSPRNG-by-default for production.
+  Unit 6a relies on the allowlist projection + card-identity privacy
+  rules remaining intact: it reuses `projectForPlayer` and
+  `projectForBoard` rather than synthesizing a new view, so any change
+  to the projection contract propagates into god-events automatically.
 
 ## Risks & Dependencies
 
 | Risk | Mitigation |
 |------|------------|
 | Env-flag read path has a bug and playtest code executes in prod | Unit 1 tests the read paths exhaustively. Unit 7 prod-bundle test catches sentinel leaks. Token gate (Unit 4) is a second defense even if flag leaks. |
-| God-event payload exceeds 4KB | Unit 6 acknowledges and flags for Phase 3 (orchestrator chunking). Default events-array size is small; 4KB is generous. |
+| God-event payload exceeds 4KB | Unit 6 acknowledges and flags for Phase 3 (orchestrator chunking). Default events-array size is small; 4KB is generous. **Updated with Unit 6a:** adding `projections: Record<playerId, PlayerView>` + `boardView: BoardView` multiplies payload by N+1 viewers. At 10 players with full mid-game state the envelope likely exceeds 4KB. Server's 4KB cap is for INBOUND messages (`validation.ts:27-29`); outbound god-events are not capped the same way. Flag for Phase 3 verification — if outbound caps exist, Unit 6a splits per-viewer into multiple messages keyed by the same `stateVersion`. |
+| Unit 6a diverges from live `state-update` projection | Unit 6a MUST call the same `projectForPlayer` / `projectForBoard` functions that the live broadcast uses. Regression test in `god-projection.test.ts` asserts structural equality of `projections[viewerId]` against the `state-update` payload for that viewer. Any future projection change that touches one path and not the other is caught by this test. |
 | Hibernation loses playtest config | Addressed in System-Wide Impact; orchestrator re-sends on reconnect. |
 | Seeded shuffle diverges between Node-test harness and Workers runtime | Unit 3 uses mulberry32 (pure JS, identical across runtimes). LCG alternative same guarantee. |
 | `TEST_TIMEOUT_SCALE` from phase-6 plan and `PLAYTEST_MODE` diverge | This phase names its own env var; if phase-6 also ships `TEST_TIMEOUT_SCALE`, they coexist (different purposes). Briggsy to decide whether to merge names later. |
@@ -697,3 +829,11 @@ received the god-event, and stop.
   `docs/insights/005-stale-timers-need-generation-counters.md`
 - **Memory landmine:** `project-burned-workers-entry-no-exports.md` —
   room.ts may only export `GameRoom`.
+- **Per-viewer projection contract (from Phase 1):** R7 declared at
+  `docs/plans/playtest-harness/phase-1-scenarios.md:78-84`, concrete gap
+  called out at `phase-1-scenarios.md:958-967`. `PlayerView` at
+  `src/shared/protocol.ts:127`, `BoardView` at `src/shared/protocol.ts:99`.
+  `projectForPlayer` at `src/server/projection.ts:54`, `projectForBoard`
+  at `src/server/projection.ts:11`. Viewer-gated named-steal projection
+  at `src/server/projection.ts:165-183` (gate on :174). Private-event
+  stripping at `src/server/projection.ts:217-241`.

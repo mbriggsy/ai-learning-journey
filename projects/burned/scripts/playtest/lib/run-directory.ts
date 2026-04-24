@@ -31,6 +31,7 @@ export interface RunDirPaths {
   readonly root: string
   readonly serverDir: string
   readonly seatsDir: string
+  readonly suspicionsDir: string
   readonly eventsJsonl: string
   readonly connectionsJsonl: string
   readonly sessionMd: string
@@ -125,6 +126,7 @@ export async function createRunDirectory(
     root: rootPath,
     serverDir,
     seatsDir,
+    suspicionsDir,
     eventsJsonl: path.join(serverDir, 'events.jsonl'),
     connectionsJsonl: path.join(serverDir, 'connections.jsonl'),
     sessionMd,

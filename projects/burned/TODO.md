@@ -2,15 +2,23 @@
 
 ## NEXT SESSION — pick up here (2026-04-25+)
 
-**Playtest-harness Phase 3 — 12 of 13 units shipped.** Unit 10
-(coverage-reporter) is the ONLY remaining unit. Phase 3 formally closes
-when Unit 10 lands.
+**Playtest-harness Phase 3 — COMPLETE.** All 13 units shipped (Units 1, 2,
+3, 3b, 4, 4b, 5, 6, 7, 8, 9, 10, 10b). Unit 10 (coverage-reporter) landed
+2026-04-24 and formally closed the phase.
+
+**Pick from the active queue:**
+1. **Phase 4 — seat agents** (biggest chunk remaining; plan locked at
+   `docs/plans/playtest-harness/phase-4-seat-agents.md`).
+2. **Workerd orphan fix on Windows** (known Unit 8 gap; scoped, concrete).
+3. **BURNED card cinematic arc** sub-steps #3 + #4 (DefusePlacement hero
+   card + Burned art regen). Pure product work.
+4. **Real-device playtest** — iPad + phones Emil-pass verification list.
 
 ### Phase 3 state of the world
 
-**Full test suite:** 719/719 green (698 baseline + 21 new Unit 9 tests) ·
-typecheck clean · client-bundle sentinel regression intact (Phase 2 +
-Phase 3 Unit 3b sentinels both assert zero matches in `dist/**/*.js`).
+**Full test suite:** 749/749 green (719 baseline + 30 new Unit 10 tests:
+6 parseCatalog info-gap + 24 coverage-reporter) · typecheck clean ·
+client-bundle sentinel regression intact.
 
 **Harness surface shipped:**
 - `pnpm playtest:selftest` — 8-check isolation self-test (cookie / localStorage
@@ -29,22 +37,29 @@ Phase 3 Unit 3b sentinels both assert zero matches in `dist/**/*.js`).
   `--before / --session-id / --full-dir / --root`. Rolling retention
   (default keep 10 newest) runs automatically at end of each session via
   the orchestrator.
-- **NEW (2026-04-24) — scenario-detector (`scripts/playtest/lib/scenario-detector.ts`):**
+- **scenario-detector (`scripts/playtest/lib/scenario-detector.ts`, Unit 9):**
   `detectFires(catalogPath, eventsJsonlPath, connectionsJsonlPath, seatLogPaths)`
   parses SCENARIOS.md's three-tier grammar, walks events.jsonl + (optional)
   connections.jsonl, emits tri-state FireRecords (`clean` / `with-divergence`
-  / `no-fire`). Hand-rolled YAML-subset parser handles all 35 production
-  scenarios. Real-fixture smoke against Unit 8's live events.jsonl parses
-  clean (35 FireRecords, all `no-fire` on the thin 2-event game — honest
-  baseline for Phase 4 to flex).
+  / `no-fire`). Hand-rolled YAML-subset parser. Extended 2026-04-24 to also
+  extract the per-scenario 7×2 info-gap table (`infoGap` field on
+  `ParsedScenario`) — 83 of 86 production scenarios carry it; SERVER row
+  populated on 100% (D5 invariant).
+- **coverage-reporter (`scripts/playtest/lib/coverage-reporter.ts`, Unit 10,
+  NEW 2026-04-24):** `buildCoverageReport(input): CoverageReport` +
+  `renderCoverageMd(report, fires, catalog): string`. Pure functions. Primary
+  gate `firedCount >= 50` (PRD §8.2) + secondary gate `zeroCellCount === 0`
+  (phase-3 B5 / D13.1). Options-bag signature so Phase 4 `selfReports` and
+  Phase 5 `firedByViewport` slot in without refactors. Dedup by scenarioId,
+  excludes `knownProductCall`-tagged scenarios from `firedCount` per
+  phase-1 D4. Not wired into orchestrator yet — Phase 4+ integration.
 
 **Harness lib modules (all under `scripts/playtest/`):** `run-session.ts`,
 `selftest.ts`, `purge.ts`, `smoke.ts` entries; `lib/` has `orchestrator`,
 `server-controller`, `session-secrets`, `god-subscriber`, `seat-factory`,
 `run-directory`, `scrubber`, `retention`, `selftest-checks`,
-**`scenario-detector` (Unit 9, shipped 2026-04-24)**, plus stub for
-`coverage-reporter` (Unit 10 target). Zero imports from `src/server`
-(insight 022). All types re-declared locally.
+`scenario-detector` (Unit 9), `coverage-reporter` (Unit 10). Zero imports
+from `src/server` (insight 022). All types re-declared locally.
 
 **Phase 2 fixes rolled into Phase 3 during execution:**
 - **Unit 3 FIX (commit `adc75942`):** `startServers` switched from env-based
@@ -58,7 +73,7 @@ Phase 3 Unit 3b sentinels both assert zero matches in `dist/**/*.js`).
   drained to parent's stderr with `[wrangler]` / `[vite]` prefix. Undrained
   pipes stalled wrangler at ~64 KB. See insight 026.
 
-**Insights captured across Phase 3 (5 total, 4 prior + 1 this session):**
+**Insights captured across Phase 3 (6 total):**
 - **024** — `wrangler dev` requires `--var` CLI flags; Node env doesn't
   reach workerd.
 - **025** — `ws` package sends no Origin header by default; server LAN
@@ -67,26 +82,19 @@ Phase 3 Unit 3b sentinels both assert zero matches in `dist/**/*.js`).
   drain-with-prefix or `stdio: 'ignore'`.
 - **027** — Absence-of-X assertions need presence-of-Y companions;
   selftest Check 4 passed vacuously when god never connected.
-- **028 (NEW 2026-04-24)** — god-events broadcast cumulative event arrays,
-  not deltas. Any consumer must delta-flatten via `.slice(priorLen)` or
-  massively over-count. Verified at engine.ts (10+ append sites) +
-  projection.ts (no trim). Applies to Phase 5 triage + any replay tool.
+- **028** — god-events broadcast cumulative event arrays, not deltas.
+  Any consumer must delta-flatten via `.slice(priorLen)` or massively
+  over-count. Applies to Phase 5 triage + any replay tool.
+- **029 (NEW 2026-04-24)** — downstream plans reference structured data
+  that upstream only captured as authorial prose. Unit 10's plan said
+  "credit cells where fire signature touched (vantage, column)" — but
+  vantage data lives in the 7×2 info-gap markdown table, which Unit 9's
+  parser ignored. Audit producer output types from ALL downstream
+  consumers' perspectives before locking. Complement to insight 019.
 
 ### Known follow-ups (ordered by urgency)
 
-1. **Unit 10 — coverage-reporter.** Renders `coverage.md` as 7×2 info-gap
-   grid with `firedCount >= 50 AND zeroCellCount === 0` pass gate. Plan
-   locked at `docs/plans/playtest-harness/phase-3-harness-infra.md:1912`.
-   Depends on Unit 9 (now shipped). Pure consumer of `FireRecord[]`;
-   expected scope: smaller than Unit 9 (~200 lines impl + ~200 lines
-   tests). Types already defined: `CoverageReport` in
-   `scripts/playtest/lib/types.ts:263` with `firedCount` / `threshold: 50`
-   / `gridCells: Record<ViewerRole, {column1, column2, scenarioIds}>` /
-   `zeroCellCount` / `passed` / `firedByViewport` /
-   `freePlayAccounting` / `divergences` / `knownProductCalls`.
-   `scenario-detector` exports `FireRecord` (with `ScenarioFire` legacy
-   alias — coverage-reporter currently imports the alias).
-2. **Workerd orphan processes on Windows (Unit 8 finding).** Every smoke
+1. **Workerd orphan processes on Windows (Unit 8 finding).** Every smoke
    run leaks 2 workerd.exe processes because `stopServers` SIGTERMs the
    `pnpm exec wrangler` intermediary and doesn't propagate to the
    grandchild workerd. Fix path: spawn with `detached: true` + use
@@ -94,22 +102,27 @@ Phase 3 Unit 3b sentinels both assert zero matches in `dist/**/*.js`).
    group / Job Object. Smoke surfaces this as a warn line so pressure stays
    on it. CLAUDE.md recovery is `taskkill //F //IM workerd.exe && rm -rf
    .wrangler/state`.
-3. **Port 5173 vite collision (Unit 8 finding).** `pollViteHealth` doesn't
+2. **Port 5173 vite collision (Unit 8 finding).** `pollViteHealth` doesn't
    verify it's the orchestrator's vite vs a pre-existing user vite. Today
    accidental coexistence works; could mask a dev-server regression. Fix:
    hash an orchestrator-ID into a request header OR probe a harness-only
    endpoint.
-4. **Phase 3 Unit 7 selftest polish:** selftest.ts inlines the wrangler
+3. **Phase 3 Unit 7 selftest polish:** selftest.ts inlines the wrangler
    spawn rather than calling the fixed `startServers`. Works correctly
-   but duplicates wrangler-spawn discipline; migrating is low-risk polish
-   after Unit 10 lands. Noted in commit `adc75942`.
-5. **Negative-shape dispatch-rejection evidence (Unit 9 known limitation).**
+   but duplicates wrangler-spawn discipline; migrating is low-risk polish.
+   Noted in commit `adc75942`.
+4. **Negative-shape dispatch-rejection evidence (Unit 9 known limitation).**
    scenario-detector currently defaults `shape: negative` scenarios to
    `no-fire` because dispatch errors don't produce god-events today.
    When Phase 4 seat agents land (or whenever rejection logging lands),
    upgrade `tier1Match` in `scenario-detector.ts` to check for positive
    rejection evidence and fire `clean` when observed. Full context in
    the code comment at the `shape === 'negative'` branch.
+5. **Coverage-reporter orchestrator wiring (Unit 10 deferred).** Pure
+   functions shipped but not called from `runSession`. Phase 4+ wires
+   `buildCoverageReport` + `renderCoverageMd` into the session-end block,
+   sourcing `selfReports` from seat suspicion logs and `firedByViewport`
+   from orchestrator viewport rotation.
 6. **Phase 4 — seat agents.** Plan locked. Consumes Unit 5's `SeatHandle`
    + Unit 1's `ALLOWED_PAGE_METHODS` allowlist. Subagent tools-whitelist
    per `.claude/agents/playtest-seat.md` is the enforcement surface

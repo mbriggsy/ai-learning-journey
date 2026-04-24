@@ -4,6 +4,7 @@ import type { DispatchContext, DispatchResult, GameState, PlayingState } from '.
 import type { EngineAction } from '@shared/actions'
 import type { CardInstance } from '@shared/types'
 import { NOPE_WINDOW_MS } from '@shared/constants'
+import { mulberry32, randomIntFromRandom } from '../rng'
 
 /**
  * Local ctx builder. Mirrors engine.test.ts `makeCtx` but carries the
@@ -143,5 +144,58 @@ describe('getNopeWindowDuration — ctx.nopeWindowMs override', () => {
     expect(reset.nopeWindow!.chainDepth).toBe(1)
     expect(reset.nopeWindow!.deadlineMs).toBe(6000 + 60_000)
     expect(reset.nopeWindow!.startedAtMs).toBe(6000)
+  })
+})
+
+/**
+ * End-to-end integration: a seeded ctx drives the same engine through the
+ * same action sequence twice → identical resulting states. This is the
+ * harness's foundational replayability claim, proved at the engine boundary
+ * without needing the Workers runtime.
+ */
+function ctxSeeded(seed: number, now = 0): DispatchContext {
+  const rand = mulberry32(seed)
+  return { now, random: rand, randomInt: (max: number) => randomIntFromRandom(rand, max) }
+}
+
+function hands(state: PlayingState): string[][] {
+  return state.players.map(p => p.hand.map(c => c.type))
+}
+
+describe('seeded ctx determinism — end-to-end engine replay', () => {
+  it('startGameWith(8, ctxSeeded(42)) produces identical initial hands across runs', () => {
+    const runA = startGameWith(8, ctxSeeded(42))
+    const runB = startGameWith(8, ctxSeeded(42))
+    expect(hands(runA)).toEqual(hands(runB))
+    expect(runA.drawPile.map(c => c.type)).toEqual(runB.drawPile.map(c => c.type))
+  })
+
+  it('different seeds produce different initial hands', () => {
+    const runA = startGameWith(8, ctxSeeded(42))
+    const runB = startGameWith(8, ctxSeeded(43))
+    // Overwhelmingly likely; a collision would itself be a signal.
+    expect(hands(runA)).not.toEqual(hands(runB))
+  })
+
+  it('same seed + same action sequence → same resulting state', () => {
+    const seed = 777
+    let stateA = startGameWith(4, ctxSeeded(seed, 1000))
+    let stateB = startGameWith(4, ctxSeeded(seed, 1000))
+    expect(hands(stateA)).toEqual(hands(stateB))
+
+    // Apply the same dispatch to both — a fresh mulberry32(seed) ctx per
+    // dispatch (mirroring makeDispatchContext's per-dispatch reseeding).
+    // Any random draws inside consume the same sequence from identically-
+    // seeded streams, so both states evolve in lockstep.
+    const drawA = act(stateA, { type: 'draw-card', playerId: 'p1' } as EngineAction, ctxSeeded(seed, 2000))
+    const drawB = act(stateB, { type: 'draw-card', playerId: 'p1' } as EngineAction, ctxSeeded(seed, 2000))
+    expect(drawA.ok).toBe(true)
+    expect(drawB.ok).toBe(true)
+    if (drawA.ok && drawB.ok) {
+      stateA = drawA.state as PlayingState
+      stateB = drawB.state as PlayingState
+      expect(hands(stateA)).toEqual(hands(stateB))
+      expect(stateA.drawPile.map(c => c.type)).toEqual(stateB.drawPile.map(c => c.type))
+    }
   })
 })

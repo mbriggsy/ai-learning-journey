@@ -2,6 +2,7 @@ import { routePartykitRequest, Server } from 'partyserver'
 import type { Connection, ConnectionContext } from 'partyserver'
 import { parseClientMessage, messageByteLength } from './validation'
 import { handleHealthRequest } from './health'
+import { mulberry32, randomIntFromRandom } from './rng'
 import { createLobbyState, dispatch } from './game/engine'
 import { projectForBoard, projectForPlayer, getPrivateData } from './projection'
 import type { GameState, PlayingState, GameOverState, DispatchContext, DispatchResult, ErrorCode as EngineErrorCode } from './game/types'
@@ -95,6 +96,16 @@ export class GameRoom extends Server {
 
   // --- Rate Limiting ---
   private messageCounts = new Map<string, { count: number; windowStart: number }>()
+
+  // --- Playtest Mode (populated only under PLAYTEST_MODE=1) ---
+  // First-write-wins per-room config from the god connection's
+  // `playtest-config` message (Unit 5). Reset on hibernation; orchestrator
+  // re-sends after reconnect. `makeDispatchContext` reads these to swap in
+  // seeded RNG + stretched Nope window. Never populated in production
+  // deploys — Unit 7 sentinel check enforces.
+  private playtestSeed: number | undefined = undefined
+  private playtestNopeWindowMs: number | undefined = undefined
+  private playtestConfigLocked = false
 
 
   // --- Lifecycle ---
@@ -839,6 +850,28 @@ export class GameRoom extends Server {
   }
 
   private makeDispatchContext(): DispatchContext {
+    // Playtest-mode branch. When `playtestSeed` is populated via a god
+    // connection's `playtest-config` message (Unit 5), the ctx carries a
+    // seeded mulberry32 generator — deck evolution becomes deterministic
+    // given the same seed + action sequence. Production callers never
+    // populate `playtestSeed`; the CSPRNG branch below is unchanged.
+    //
+    // Per-dispatch reseeding (a fresh mulberry32(seed) per ctx). Replay
+    // semantics hold: same seed + same action sequence applied to the
+    // same initial state reproduces the same final state, because each
+    // dispatch consumes the same N random values from an identical
+    // stream. The tradeoff is intra-session correlation between shuffle-
+    // heavy dispatches — acceptable for harness replayability; revisit
+    // if a scenario needs truly independent shuffles.
+    if (this.playtestSeed !== undefined) {
+      const rand = mulberry32(this.playtestSeed)
+      return {
+        now: Date.now(),
+        nopeWindowMs: this.playtestNopeWindowMs,
+        random: rand,
+        randomInt: (max: number) => randomIntFromRandom(rand, max),
+      }
+    }
     const array = new Uint32Array(1)
     return {
       now: Date.now(),

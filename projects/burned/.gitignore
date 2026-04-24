@@ -15,6 +15,10 @@ playwright-report/
 .env*
 !.env.example
 
+# Playtest harness session dirs — rolling retention, diagnostic artifacts.
+# See scripts/playtest/README.md §3.
+docs/testing/playtest/runs/**
+
 # Dreamland S8 reference frames — fair-use internal research only.
 # Fan-uploaded FX/FXX captures sourced from Archer Wiki (Fandom). Allowed:
 # internal palette extraction + art-direction reference. NOT allowed: public

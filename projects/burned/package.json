@@ -18,7 +18,10 @@
     "lint": "eslint src/ && bash scripts/lint-css.sh",
     "preview": "vite preview",
     "verify:bundle": "tsx scripts/verify-prod-bundle.ts",
-    "playtest:smoke": "tsx scripts/playtest/phase2-smoke.ts"
+    "playtest:smoke": "tsx scripts/playtest/phase2-smoke.ts",
+    "playtest:run": "tsx scripts/playtest/run-session.ts",
+    "playtest:selftest": "tsx scripts/playtest/selftest.ts",
+    "playtest:purge": "tsx scripts/playtest/purge.ts"
   },
   "keywords": [],
   "author": "",

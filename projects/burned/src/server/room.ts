@@ -4,6 +4,7 @@ import { parseClientMessage, messageByteLength } from './validation'
 import { handleHealthRequest } from './health'
 import { mulberry32, randomIntFromRandom } from './rng'
 import { createGodRateLimiter, evaluateGodAuth } from './god-connection'
+import { applyPlaytestConfig, parsePlaytestConfigMessage } from './playtest-config'
 import { createLobbyState, dispatch } from './game/engine'
 import { projectForBoard, projectForPlayer, getPrivateData } from './projection'
 import type { GameState, PlayingState, GameOverState, DispatchContext, DispatchResult, ErrorCode as EngineErrorCode } from './game/types'
@@ -257,11 +258,12 @@ export class GameRoom extends Server<Env> {
       return
     }
 
-    // God-connection message routing. Until Unit 5 lands the
-    // `playtest-config` admin message, god connections have no valid
-    // incoming messages. Silently drop anything they send — do not bounce
-    // back an error (prevents probing the token surface).
+    // God-connection message routing. The only valid incoming message for
+    // a god connection is `playtest-config` (Unit 5). Anything else is
+    // silently dropped — no error bounce, which prevents token-surface
+    // probing via error semantics.
     if (this.getConnState(connection)?.role === 'god') {
+      this.handleGodMessage(connection, message)
       return
     }
 
@@ -369,6 +371,41 @@ export class GameRoom extends Server<Env> {
   }
 
   // --- Host Connect ---
+
+  /**
+   * God-connection message handler. The only legal incoming message is
+   * `playtest-config`; anything else (including well-formed player /
+   * host messages) is silently dropped. Config writes are queued on the
+   * serial action queue so the race with `start-game` is totally
+   * ordered — whichever enqueues first wins.
+   */
+  private handleGodMessage(connection: Connection, raw: string): void {
+    const parsed = parsePlaytestConfigMessage(raw)
+    if (!parsed.ok) return // silent drop — do not leak signal via error bounce
+
+    const payload = parsed.payload
+    this.enqueue(() => {
+      const current = {
+        locked: this.playtestConfigLocked,
+        seed: this.playtestSeed,
+        nopeWindowMs: this.playtestNopeWindowMs,
+      }
+      const phase = this.gameState?.phase ?? null
+      const result = applyPlaytestConfig(current, phase, payload)
+      if (!result.ok) {
+        try {
+          connection.send(JSON.stringify({ type: 'playtest-config-ack', ok: false, code: result.code }))
+        } catch { /* connection closing */ }
+        return
+      }
+      this.playtestSeed = result.nextState.seed
+      this.playtestNopeWindowMs = result.nextState.nopeWindowMs
+      this.playtestConfigLocked = result.nextState.locked
+      try {
+        connection.send(JSON.stringify({ type: 'playtest-config-ack', ok: true, seed: payload.seed, nopeWindowMs: payload.nopeWindowMs }))
+      } catch { /* connection closing */ }
+    }, connection)
+  }
 
   private handleHostConnect(connection: Connection): void {
     // Check if there's already a host (allow same connection to re-identify on reconnect)

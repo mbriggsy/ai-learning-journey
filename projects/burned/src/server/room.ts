@@ -3,10 +3,10 @@ import type { Connection, ConnectionContext } from 'partyserver'
 import { parseClientMessage, messageByteLength } from './validation'
 import { handleHealthRequest } from './health'
 import { mulberry32, randomIntFromRandom } from './rng'
-import { createGodRateLimiter, evaluateGodAuth } from './god-connection'
+import { createGodRateLimiter, evaluateGodAuth, isGodOriginAllowed } from './god-connection'
 import { applyPlaytestConfig, parsePlaytestConfigMessage } from './playtest-config'
 import { buildGodEventMessage, type GodEventTrigger } from './god-projection'
-import { isPlaytestMode } from './playtest'
+import { getGodOriginAllowlist, isPlaytestMode, matchesToken } from './playtest'
 import { createLobbyState, dispatch } from './game/engine'
 import { projectForBoard, projectForPlayer, getPrivateData } from './projection'
 import type { GameState, PlayingState, GameOverState, DispatchContext, DispatchResult, ErrorCode as EngineErrorCode } from './game/types'
@@ -206,6 +206,14 @@ export class GameRoom extends Server<Env> {
     // PLAYTEST_MODE + token + stricter origin allowlist. See
     // `src/server/god-connection.ts` for the decision logic.
     if (url.searchParams.get('role') === 'god') {
+      // HTTP-level pre-auth in the Worker entry (default-export fetch)
+      // has already rejected missing-token / wrong-token / bad-origin /
+      // playtest-off cases with a 4xx response — the upgrade never
+      // completed for those. What lands here IS pre-authorized; we
+      // double-check via `evaluateGodAuth` for DO-instance rate-limit
+      // (belt-and-suspenders). Close on any failure: partyserver's
+      // close is slow under hibernation, but at this point the attack
+      // has already been blocked at the HTTP layer — this is cleanup.
       const token = url.searchParams.get('token')
       const sourceKey = ctx.request.headers.get('CF-Connecting-IP') ?? origin ?? 'unknown'
       const rateLimiter = createGodRateLimiter(this.godAuthFailures, sourceKey)
@@ -1142,6 +1150,29 @@ export default {
     // probe for `wrangler dev` boot.
     const health = handleHealthRequest(request, env)
     if (health) return health
+
+    // God-connection pre-auth. Partyserver accepts the WS upgrade BEFORE
+    // `onConnect` runs, and calling `connection.close(4xxx)` inside
+    // `onConnect` does not promptly reach the client under hibernation.
+    // HTTP-level rejection here is the only way to give the orchestrator
+    // a clean synchronous signal. The DO-level rate-limiter lives on the
+    // GameRoom instance and double-checks in `onConnect` — belt-and-
+    // suspenders; this gate already blocks missing-token and bad-origin
+    // attempts at the HTTP boundary.
+    const url = new URL(request.url)
+    if (url.searchParams.get('role') === 'god') {
+      const origin = request.headers.get('Origin')
+      const token = url.searchParams.get('token')
+      if (!isPlaytestMode(env)) return new Response('Playtest mode off', { status: 403 })
+      if (!isGodOriginAllowed(origin, getGodOriginAllowlist(env))) {
+        return new Response('Forbidden god origin', { status: 403 })
+      }
+      if (!token) return new Response('Missing token', { status: 401 })
+      if (!matchesToken(env, token)) return new Response('Token mismatch', { status: 401 })
+      // Fall through — let partyserver complete the upgrade. `onConnect`
+      // will tag the connection as `role: 'god'`.
+    }
+
     return (
       (await routePartykitRequest(request, env)) ||
       new Response('Not Found', { status: 404 })

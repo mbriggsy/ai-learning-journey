@@ -17,7 +17,8 @@
     "test:e2e": "playwright test",
     "lint": "eslint src/ && bash scripts/lint-css.sh",
     "preview": "vite preview",
-    "verify:bundle": "tsx scripts/verify-prod-bundle.ts"
+    "verify:bundle": "tsx scripts/verify-prod-bundle.ts",
+    "playtest:smoke": "tsx scripts/playtest/phase2-smoke.ts"
   },
   "keywords": [],
   "author": "",

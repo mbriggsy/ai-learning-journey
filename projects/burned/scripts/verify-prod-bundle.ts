@@ -18,14 +18,35 @@
 import { spawnSync } from 'node:child_process'
 import { readFileSync, existsSync, readdirSync, statSync } from 'node:fs'
 import { join } from 'node:path'
+import { fileURLToPath } from 'node:url'
 
 const DIST_DIR = join(process.cwd(), 'dist')
 
-// Strings that must NOT appear in any production JS chunk.
-// Add entries here as dev-only exposures accumulate.
-const FORBIDDEN_STRINGS = [
-  '__gameStore',
-  '__gameStoreSnapshot',
+// Strings that must NOT appear in any production CLIENT JS chunk.
+// Each entry names the sentinel + a hint pointing at which guard
+// likely failed, so a leak gives an actionable error message.
+//
+// Scope is deliberately CLIENT-SIDE only. The Workers server bundle is
+// built by wrangler at deploy time and includes all imported server
+// modules (including playtest modules), guarded at RUNTIME by
+// `isPlaytestMode(env)` + `PLAYTEST_MODE=1` never being set in prod
+// deploys. The sentinel guarantee: none of these literals leak into
+// code that ships to players' browsers.
+interface Sentinel { needle: string; guard: string }
+const FORBIDDEN_STRINGS: Sentinel[] = [
+  { needle: '__gameStore', guard: 'gameStore.ts dev exposure guard (import.meta.env.DEV || MODE === test)' },
+  { needle: '__gameStoreSnapshot', guard: 'gameStore.ts dev exposure guard' },
+  // --- Playtest-harness sentinels (Phase 2) ---
+  // The harness protocol is god-role only; no client code path should
+  // reference it. If any of these appear in a client chunk, the
+  // playtest server types or strings have leaked into shared client
+  // code — check the import boundary (src/shared/ should not import
+  // from src/server/).
+  { needle: 'god-event', guard: 'Unit 6 god-event message type — keep in src/server/god-projection.ts only' },
+  { needle: 'playtest-config', guard: 'Unit 5 admin message type — keep in src/server/playtest-config.ts only' },
+  { needle: 'mulberry32', guard: 'Unit 3 seedable RNG — keep in src/server/rng.ts only' },
+  { needle: 'PLAYTEST_TOKEN', guard: 'Unit 1 env shape — server-only' },
+  { needle: 'PLAYTEST_GOD_ORIGINS', guard: 'Unit 1 env shape — server-only' },
 ]
 
 function collectJsFiles(dir: string): string[] {
@@ -68,9 +89,10 @@ function main(): number {
   let violations = 0
   for (const file of files) {
     const content = readFileSync(file, 'utf-8')
-    for (const needle of FORBIDDEN_STRINGS) {
+    for (const { needle, guard } of FORBIDDEN_STRINGS) {
       if (content.includes(needle)) {
         console.error(`[verify-prod-bundle] ✗ FORBIDDEN '${needle}' found in ${file}`)
+        console.error(`    Likely failed guard: ${guard}`)
         violations++
       }
     }
@@ -85,4 +107,26 @@ function main(): number {
   return 0
 }
 
-process.exit(main())
+/** Pure entry point for Vitest — does not run the build or call process.exit. */
+export function checkProdBundle(): { ok: boolean; violations: string[]; filesScanned: number } {
+  if (!existsSync(DIST_DIR)) {
+    return { ok: true, violations: ['NO_DIST'], filesScanned: 0 }
+  }
+  const files = collectJsFiles(DIST_DIR)
+  const violations: string[] = []
+  for (const file of files) {
+    const content = readFileSync(file, 'utf-8')
+    for (const { needle, guard } of FORBIDDEN_STRINGS) {
+      if (content.includes(needle)) {
+        violations.push(`${needle} (in ${file}) — guard: ${guard}`)
+      }
+    }
+  }
+  return { ok: violations.length === 0, violations, filesScanned: files.length }
+}
+
+// Only run as a script when invoked directly (not when imported by tests).
+const entryPath = process.argv[1] ? fileURLToPath(new URL(`file://${process.argv[1].replace(/\\/g, '/')}`)) : ''
+if (entryPath && fileURLToPath(import.meta.url) === entryPath) {
+  process.exit(main())
+}

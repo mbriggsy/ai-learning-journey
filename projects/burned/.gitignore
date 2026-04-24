@@ -18,6 +18,7 @@ playwright-report/
 # Playtest harness session dirs — rolling retention, diagnostic artifacts.
 # See scripts/playtest/README.md §3.
 docs/testing/playtest/runs/**
+!docs/testing/playtest/runs/.gitkeep
 
 # Playtest harness selftest stamp — per-machine timestamp, not source.
 .last-selftest

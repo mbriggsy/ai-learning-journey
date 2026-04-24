@@ -159,6 +159,23 @@ function buildGodUrl(base: string, token: string): string {
   return `${base}${sep}role=god&token=${token}`
 }
 
+/**
+ * Derive an HTTP Origin header value from the ws(s):// URL the caller gave
+ * us. The server's `isGodOriginAllowed` admits localhost + 127.x + LAN
+ * private ranges; we just round-trip the host+port the subscriber is
+ * already dialing. Falls back to `http://127.0.0.1` if the URL is
+ * unparseable (defensive — the caller controls this string).
+ */
+export function buildLanOriginFromWsUrl(wsUrl: string): string {
+  try {
+    const u = new URL(wsUrl)
+    const scheme = u.protocol === 'wss:' ? 'https:' : 'http:'
+    return `${scheme}//${u.host}`
+  } catch {
+    return 'http://127.0.0.1'
+  }
+}
+
 /** Strict deep-equal via stable stringify. Inputs are server-shaped JSON. */
 function jsonEquals(a: unknown, b: unknown): boolean {
   // JSON.stringify key order is NOT stable across different objects — but
@@ -214,9 +231,17 @@ export async function connectGod(args: ConnectGodArgs): Promise<GodHandle> {
     : (h: unknown) => clearTimeout(h as ReturnType<typeof setTimeout>)
 
   // ---- Open WS -----------------------------------------------------------
+  // The Worker's HTTP pre-auth (`room.ts#fetch` god-role branch) rejects
+  // connections with a missing Origin header as 4003/origin-denied. `ws`
+  // does NOT send an Origin header by default — we must set it explicitly
+  // to a LAN origin derived from the wsUrl host so the server's
+  // `isGodOriginAllowed` LAN regex (localhost/127.x/192.168.x/10.x/172.16-31.x)
+  // admits us. Mirrors `scripts/playtest/phase2-smoke.ts` which sets
+  // `Origin: http://127.0.0.1:<port>` explicitly.
+  const godOrigin = buildLanOriginFromWsUrl(wsUrl)
   const ws: WebSocketLike = wsFactory
     ? wsFactory(url)
-    : (new WebSocket(url) as unknown as WebSocketLike)
+    : (new WebSocket(url, { headers: { Origin: godOrigin } }) as unknown as WebSocketLike)
 
   // ---- Fatal-close promise ----------------------------------------------
   let resolveFatal!: (info: FatalCloseInfo) => void

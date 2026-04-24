@@ -181,6 +181,35 @@ None — entirely repo-internal patterns.
   scenario-fire detector consumes the per-viewer snapshots to verify
   `projection-assertions:` scenarios. `PlayerView` + `BoardView` types are
   imported from `src/shared/protocol.ts` (lines 127, 99).
+
+  **Split-envelope metadata fields (when per-viewer splitting fires).**
+  The unsplit envelope above is complete on its own — `projections` already
+  keys every seated player, so the consumer knows the set by reading
+  `Object.keys(projections)`. When the Unit 8 payload budget (~512 KiB at
+  N=10) fires and the server falls back to per-viewer splitting per the
+  Risks table, EACH split chunk carries an additional field:
+  `expectedViewerIds: string[]` — the canonical, authoritative list of
+  playerIds the server expects to ship projections for across the full
+  set of chunks keyed by this `stateVersion`. All chunks for a given
+  `stateVersion` carry the SAME `expectedViewerIds` array (redundantly,
+  so any first-arrived chunk is authoritative — consumers do not need
+  to wait for a designated header chunk). The consumer's reassembly
+  buffer is complete when `Object.keys(mergedProjections)` equals
+  `expectedViewerIds` as a set. `expectedViewerIds` is derived by the
+  emitter from `Object.keys(projections)` of the full (pre-split)
+  projections map — i.e. every SEATED player (including eliminated-but-
+  seated spectators and disconnected seats), matching phase-2 D4's
+  "iterate `state.players`, not `state.players.filter(isAlive)`" rule
+  in Unit 6a. `expectedViewerIds` is required on split envelopes and
+  omitted (or redundantly included) on the unsplit envelope — the
+  consumer (Phase 3 Unit 4) treats `expectedViewerIds.length === 0 ||
+  undefined` as "no splitting expected, consume in one shot." Consumers
+  MUST NOT infer completion from naive counting or from observed
+  `projections` sizes across chunks, because if the set of seated
+  players changed mid-reassembly the observed count would lie. The
+  field is an internal contract between Unit 6's split emitter and
+  Phase 3 Unit 4's reassembly buffer; it is NOT part of the public
+  player/host protocol and does not flow to any non-god connection.
 - **D5. God-role is a new connection role, gated by `PLAYTEST_MODE` + an
   auth token.** Connection query-param `role=god&token=<value>`. Server
   rejects `role=god` when `PLAYTEST_MODE` is unset or token mismatches.
@@ -465,6 +494,106 @@ unit test gates the entire phase against accidental prod leaks.
 - All tests pass.
 - Typecheck clean.
 - `src/server/room.ts:934` `Env` interface declares all three fields (`PLAYTEST_MODE`, `PLAYTEST_TOKEN`, optional `PLAYTEST_GOD_ORIGINS`).
+
+- [ ] **Unit 1b: `/health` readiness endpoint (ships in ALL builds — dev, playtest, prod)**
+
+**Goal:** Add a lightweight `GET /health` route to the Worker that returns
+`200` with `{ ok: true, playtest: boolean, version: string }`. Phase 3
+Unit 3 (server-controller) polls this as the wrangler+DO readiness probe;
+absent this endpoint, polling the bare `/` is fragile (partyserver routing
+defaults vary, returns are not guaranteed-200, response timing is coupled
+to Durable Object wake instead of just Worker boot).
+
+**Execution note:** Test-first. Tiny, pure, and the readiness probe phase-3
+depends on must be guaranteed-stable across env modes. NOT playtest-only —
+the endpoint ships in production too because it's safe (no data, no auth-
+gated info) and lets external tooling probe Worker liveness without
+inventing one later.
+
+**Requirements:** Cross-phase contract for phase-3 Unit 3 readiness
+detection. (No new R-row required — supports R3 transport indirectly by
+making harness boot deterministic.)
+
+**Dependencies:** Unit 1 (reads `isPlaytestMode(env)` for the
+informational `playtest` flag). PROTOCOL_VERSION already exists in
+`src/shared/protocol.ts` for the `version` stamp.
+
+**Files:**
+- Modify: `src/server/room.ts` — add `/health` interception in the
+  default-export `fetch` handler BEFORE partyserver's routing (so the
+  route is unambiguous and never collides with a `/parties/...` URL
+  that partyserver claims). Per the room-exports landmine, only
+  `GameRoom` is exported; the `fetch` handler is the existing default
+  export, untouched in shape — only its body gains a route check.
+- Create: `src/server/health.test.ts` — tests the response shape +
+  status against a stubbed Request.
+
+**Approach:**
+- Inside the existing default-export `fetch(request, env, ctx)` handler:
+  ```ts
+  const url = new URL(request.url)
+  if (request.method === 'GET' && url.pathname === '/health') {
+    return new Response(JSON.stringify({
+      ok: true,
+      playtest: isPlaytestMode(env),
+      version: PROTOCOL_VERSION,
+    }), {
+      status: 200,
+      headers: { 'content-type': 'application/json' },
+    })
+  }
+  // existing partyserver routing continues below
+  ```
+- `playtest: boolean` is informational ONLY. It exposes whether the
+  Worker is running with `PLAYTEST_MODE=1` — useful for harness
+  sanity-checks ("did wrangler actually pick up my env?") and for
+  operational eyeballing. It does NOT leak the token, the seed, or
+  any game state. A prod deployment that accidentally shipped
+  `PLAYTEST_MODE=1` would surface here for ops, which is the desired
+  failure-loud behavior.
+- `version: string` is the server build stamp — `PROTOCOL_VERSION`
+  from `src/shared/protocol.ts` is the closest existing canonical
+  value. (If a finer-grained build SHA is wanted later, this is the
+  surface to extend; out of scope here.)
+- The route runs BEFORE any Durable Object lookup. No DO wake, no
+  partyserver Room creation, no DB access. Worker-process-only.
+- Available in production: GET to `https://burned.pages.dev/health`
+  responds the same way. The endpoint is bare-public (no auth, no
+  rate-limit) because the response carries no actionable secrets.
+  Aggressive polling is bounded by Cloudflare's per-Worker request
+  ceiling, not by any code in this plan.
+
+**Patterns to follow:**
+- Existing Worker default-export `fetch` handler shape in `room.ts`
+  (whatever it currently is — the change is additive at the top).
+- `isPlaytestMode` from Unit 1.
+
+**Test scenarios:**
+- Happy path: `GET /health` → status 200, JSON body
+  `{ ok: true, playtest: false, version: <PROTOCOL_VERSION> }` when
+  `PLAYTEST_MODE` unset.
+- Happy path: `GET /health` with `PLAYTEST_MODE='1'` → same shape but
+  `playtest: true`.
+- Edge case: `POST /health` (or any non-GET) → falls through to the
+  partyserver router (i.e. NOT a 200 from this branch). Test asserts
+  the route is method-gated.
+- Edge case: `GET /healthcheck` or `GET /health/foo` → falls through
+  (exact-pathname match, not prefix).
+- Edge case: response time on a cold Worker invocation is < 100ms
+  measured locally. (Not asserted as a hard gate — wrangler dev cold
+  start variance is wide. Documented as expectation for phase-3 Unit
+  3's polling cadence.)
+- Independence: the response does NOT trigger Durable Object
+  instantiation. Verified by asserting no `GameRoom` constructor side
+  effect (e.g. log line) fires when only `/health` is hit.
+
+**Verification:**
+- All tests pass; typecheck clean.
+- Manual eyeball: `pnpm dev:server` then `curl http://localhost:8787/health`
+  → 200 + JSON.
+- Phase-3 Unit 3 ready-probe (which polls `/health`) reaches 200
+  before the orchestrator opens the god WS — provable via Unit 8
+  smoke ordering.
 
 - [ ] **Unit 2: Extend `DispatchContext` with optional `nopeWindowMs`**
 
@@ -806,6 +935,16 @@ invariant rather than a structural one.
   reassemble) is documented in the Risks table as the fallback design
   if the Unit 8 smoke size assertion ever fires. NOT implemented as
   part of Unit 6 — only as a defined, ready-to-land fallback.
+  **When splitting does land**, the emitter snapshots
+  `expectedViewerIds = Object.keys(projections)` of the full (pre-split)
+  projections map BEFORE partitioning, then attaches the SAME
+  `expectedViewerIds` array to every split chunk for that
+  `stateVersion`. This is the authoritative completion signal phase-3's
+  reassembly buffer consumes (see D4 "Split-envelope metadata fields"
+  and Risks row). The array is derived from the full seated roster, NOT
+  from the connected-player subset, so eliminated-but-seated and
+  disconnected seats are included — matching Unit 6a's iterate-
+  `state.players` rule.
 - `action` in the message is the `EngineAction` (with server-injected
   `playerId`), not the raw client action (matches engine log-level view).
 - **god-event payload is built ONCE per broadcast** and the same
@@ -941,6 +1080,21 @@ corrected).
   included — their `BoardPlayer.isConnected: false` flows through
   `projectForBoard` via `connectedPlayerIds.has(p.id)` at
   `projection.ts:16`.
+- **Expected-viewer-set derivation (split contract).** `Object.keys` of
+  the returned `projections` map is the canonical expected-viewer set
+  for that broadcast pass — every SEATED player, regardless of alive /
+  connected status. When Unit 6 falls back to per-viewer splitting
+  (Risks row), it snapshots `expectedViewerIds = Object.keys(projections)`
+  from this helper's return BEFORE partitioning, then attaches the same
+  array to every split chunk under that `stateVersion` (see D4 "Split-
+  envelope metadata fields"). The set MUST equal the projections-map
+  keys exactly — phase-3 Unit 4 reassembly compares
+  `Object.keys(mergedProjections)` against `expectedViewerIds` as a set
+  for completion detection. Any divergence (e.g. helper iterates a
+  filtered subset) makes reassembly hang or silently mis-complete. The
+  test scenarios below pin this contract; the property test asserts
+  `Object.keys(buildGodProjections(state, board, conn)) ===
+  state.players.map(p => p.id)` as a set.
 - Do NOT spread `state` into the envelope, do NOT synthesize a custom
   per-viewer view, do NOT call any private engine helper that bypasses
   projection. The allowlist pattern + `stripPrivateEventFields` +
@@ -1229,7 +1383,7 @@ payload size and projection-build time, shuts down.
 | Risk | Mitigation |
 |------|------------|
 | Env-flag read path has a bug and playtest code executes in prod | Unit 1 tests the read paths exhaustively. Unit 7 prod-bundle test catches sentinel leaks AND import-graph leaks. Token gate (Unit 4) is a third defense even if flag leaks. |
-| God-event outbound payload size at N=10 players | Workers **outbound** limit is 1 MiB per message (NOT the 4 KiB INBOUND cap at `validation.ts:13,27-29` — those enforce the size of messages the server ACCEPTS). At 10 players with full mid-game state, `{ projections: 10× PlayerView, boardView: BoardView }` is expected to weigh 30-60 KB gzipped, ~200-400 KB raw — well under 1 MiB but non-trivial. Unit 8 smoke asserts `< 512 KiB` for the 10-player fixture (half of the outbound ceiling as a margin). **Fallback (documented here, not implemented unless Unit 8 fires):** per-viewer splitting — emit one god-message per viewer, all keyed by the same `stateVersion` so the orchestrator reassembles. Orchestrator reassembly logic lives in Phase 3. |
+| God-event outbound payload size at N=10 players | Workers **outbound** limit is 1 MiB per message (NOT the 4 KiB INBOUND cap at `validation.ts:13,27-29` — those enforce the size of messages the server ACCEPTS). At 10 players with full mid-game state, `{ projections: 10× PlayerView, boardView: BoardView }` is expected to weigh 30-60 KB gzipped, ~200-400 KB raw — well under 1 MiB but non-trivial. Unit 8 smoke asserts `< 512 KiB` for the 10-player fixture (half of the outbound ceiling as a margin). **Fallback (documented here, not implemented unless Unit 8 fires):** per-viewer splitting — emit one god-message per viewer, all keyed by the same `stateVersion` so the orchestrator reassembles. Each split chunk MUST carry `expectedViewerIds: string[]` (D4 "Split-envelope metadata fields") — the authoritative full seated-player set the consumer's reassembly buffer compares against `Object.keys(mergedProjections)` for completion. Naive count-based completion is unsafe: if a seat disconnects mid-reassembly the server might emit fewer chunks than the original expected set, and a counting consumer would either hang waiting for a phantom chunk or silently flush an incomplete merge. `expectedViewerIds` makes the set explicit and stable across reassembly. Orchestrator reassembly logic lives in Phase 3 Unit 4 and consumes this field as the completion signal. |
 | CPU cost of `buildGodProjections` at N=10 during a nope-chain storm | A 3-5-dispatch-per-second nope chain multiplied by 10 `projectForPlayer` calls per dispatch is the worst case. Unit 8 bench asserts `buildGodProjections` < 10 ms at N=10; Unit 6 reuses the `boardView` and pre-serializes `godRaw` exactly once so god-connection count does NOT multiply projection work. If the bench fails, document a playtest cap of 8 seats (still covers the party-game sweet spot) — NOT a silent regression. |
 | Unit 6a diverges from live `player-update` projection | Risk eliminated by architecture, not by assertion. Unit 6a is invoked FROM `broadcastGameState` with the same `state` + `boardView` + `connectedPlayerIds` that the player-update branch uses, so both paths produce `projectForPlayer(state, playerId, boardView)` outputs that are the literal same JS object. No divergence is possible without introducing a new code path. Unit 6a's test asserts reference / structural equality as a regression tripwire. |
 | Hibernation loses playtest config + god-connection field | Addressed in System-Wide Impact. Instance fields reset on hibernate; god connections are re-derived from `getConnections()` filtered by `connState.role === 'god'` (setState survives hibernation). Orchestrator re-sends `playtest-config` after any reconnect. |
@@ -1274,6 +1428,16 @@ payload size and projection-build time, shuts down.
   "Protocol Landmines" section. Future changes that balloon the payload
   past 512 KiB should trigger the per-viewer split design, not a
   silent drift.
+- **`/health` endpoint (Unit 1b) ships in production.** Document in
+  `CLAUDE.md` "Workers / Protocol Landmines" that GET `/health` is a
+  bare-public, no-auth route returning `{ ok, playtest, version }`. It
+  is intentionally exposed in prod builds because (a) it carries no
+  actionable secrets, (b) the `playtest: true` field surfaces an
+  accidental playtest-mode prod deploy as a loud failure mode, and
+  (c) external readiness probes (CI, harness, monitoring) need a
+  stable contract that doesn't depend on partyserver's routing
+  defaults. Removing or auth-gating `/health` would break phase-3
+  Unit 3's readiness detection.
 
 ## Sources & References
 
@@ -1336,3 +1500,10 @@ payload size and projection-build time, shuts down.
   assertion. Extend with a `wrangler.jsonc` parse step to assert the
   production `vars` block does NOT include `PLAYTEST_MODE` /
   `PLAYTEST_TOKEN`. See Documentation / Operational Notes.
+- **`/health` route + version stamp (Unit 1b):** intercept GET
+  `/health` in the Worker default-export `fetch` handler before
+  partyserver routing. Response uses `PROTOCOL_VERSION` from
+  `src/shared/protocol.ts` for the `version` field and
+  `isPlaytestMode(env)` (Unit 1) for the informational `playtest`
+  flag. Consumed by phase-3 Unit 3 as the wrangler+DO ready probe in
+  place of polling the bare `/`. Ships in all builds.

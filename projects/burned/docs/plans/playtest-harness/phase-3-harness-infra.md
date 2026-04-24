@@ -82,8 +82,11 @@ instrument. The isolation self-test is the gate: if it fails, no session runs.
 - **R12 (phase-2 Unit 6 Risks — per-viewer splitting)** — When the god-event
   payload exceeds the Unit 8 budget (10-player mid-game should weigh
   < 512 KiB; above that triggers per-viewer splitting), the server emits one
-  god-message per viewer, all keyed by the same `stateVersion`. Orchestrator
-  reassembles by `stateVersion` before writing a single events.jsonl line.
+  god-message per viewer, all keyed by the same `stateVersion`, each
+  carrying `expectedViewerIds: string[]` per phase-2 D4 "Split-envelope
+  metadata fields." Orchestrator reassembles by `stateVersion` and
+  uses `expectedViewerIds` as the authoritative completion signal
+  (NOT chunk counting) before writing a single events.jsonl line.
 - **R13 (phase-2 System-Wide Impact)** — Orchestrator defines and enforces
   an `events.jsonl` scrub + retention policy. God-event projections contain
   full `PlayerView` including `myHand` contents; persisting them to disk
@@ -206,10 +209,16 @@ None. Entirely repo-internal scaling of proven patterns.
   no synthesis, no inference. **Reassembly of split god-events
   (from phase-2 R12 / Unit 6 Risks):** when the server splits payloads
   per-viewer (above the 512 KiB threshold), multiple god-messages arrive
-  sharing the same `stateVersion`. Subscriber buffers them by
-  `stateVersion`, flushes one merged line to `events.jsonl` when all
-  expected viewers report OR when a short timeout elapses
+  sharing the same `stateVersion`, each carrying `expectedViewerIds:
+  string[]` per phase-2 D4 "Split-envelope metadata fields" — the
+  authoritative full seated-player set the consumer compares
+  `Object.keys(mergedProjections)` against for completion. Subscriber
+  buffers them by `stateVersion` and flushes one merged line to
+  `events.jsonl` when `Object.keys(mergedProjections)` matches
+  `expectedViewerIds` as a set, OR when a short timeout elapses
   (partial-assembly is logged as a diagnostic, not silently dropped).
+  Naive chunk-counting is explicitly banned — phase-2 Unit 6 Risks row
+  documents why (mid-reassembly disconnects break the count invariant).
   **Close-code handling (from phase-2 Unit 4):** `4003` → abort the run
   with "god origin not allowlisted." `4004` → abort with "playtest mode
   off or token invalid — check server env." `4005` → back off 60s then
@@ -669,7 +678,7 @@ each subsequent unit has a clear slot.
 **Approach:**
 - `GodEvent` mirrors Phase 2 Unit 6's outgoing envelope character-for-
   character (field names pulled from `docs/plans/playtest-harness/
-  phase-2-playtest-mode.md:161-183` D4 and the HTD at line 348):
+  phase-2-playtest-mode.md` D4 and the HTD):
   ```ts
   interface GodEvent {
     type: 'god-event'
@@ -679,6 +688,16 @@ each subsequent unit has a clear slot.
     nowMs: number
     projections: Record<string, PlayerView>   // keyed by playerId
     boardView: BoardView
+    expectedViewerIds?: readonly string[]     // OPTIONAL — present only
+                                              // on per-viewer split chunks
+                                              // (phase-2 D4 "Split-envelope
+                                              // metadata fields"). Required
+                                              // by Unit 4 reassembly when
+                                              // splitting fires; absent /
+                                              // empty / redundantly equal
+                                              // to Object.keys(projections)
+                                              // means "unsplit, consume in
+                                              // one shot."
   }
   ```
   `PlayerView` and `BoardView` are re-declared locally in this module
@@ -746,7 +765,7 @@ each subsequent unit has a clear slot.
 - New pnpm scripts resolve.
 - `GodEvent` field names match phase-2 D4 character-for-character
   (`type`, `action`, `events`, `stateVersion`, `nowMs`, `projections`,
-  `boardView`).
+  `boardView`, optional `expectedViewerIds`).
 
 - [ ] **Unit 2: `run-directory.ts` — layout creator + `session.md` writer**
 
@@ -809,8 +828,15 @@ configuration building). Live subprocess behavior covered by Unit 8 smoke.
   (minted by Unit 3b per-session — NOT generated here) + optional
   `PLAYTEST_GOD_ORIGINS=<config.godOriginAllowlist.join(',')>`, and vite
   (`pnpm dev`). Tracks PIDs.
-- Healthcheck: poll `http://localhost:8787/` (or the configured origin) and
-  `http://localhost:5173/player.html` with a short timeout + retry.
+- Healthcheck: poll `http://localhost:8787/health` (the dedicated readiness
+  route shipped by phase-2 Unit 1b) until `200` with body
+  `{ ok: true, playtest: true, version: <string> }`. Asserting
+  `playtest === true` confirms wrangler picked up the env vars (catches
+  the "I forgot to set PLAYTEST_MODE" failure mode at boot rather than
+  later when the god WS rejects with `4004`). Polling the bare `/` is
+  unreliable — partyserver routing defaults aren't a stable readiness
+  contract. Also poll `http://localhost:5173/player.html` for vite, with
+  a short timeout + retry.
 - `stopServers(handles)` SIGTERMs both; SIGKILL if not down after 5s.
 - Orchestrator owns the token lifecycle (mint → pass to server via env →
   pass to god-subscriber for the WS connect); server-controller is a
@@ -830,6 +856,15 @@ configuration building). Live subprocess behavior covered by Unit 8 smoke.
 - Error path: token passed in is < 32 hex chars → throw with actionable
   message (defense-in-depth; Unit 3b should have already enforced this).
 - Error path: servers fail healthcheck → rejects with the stderr captured.
+- Health-endpoint ready detection (phase-2 Unit 1b): poller hits
+  `http://localhost:8787/health` and treats `200 + { ok: true,
+  playtest: true }` as the ready signal. If `playtest === false` (env
+  not picked up), reject with an actionable message identifying the
+  missing env var rather than waiting for the god WS to fail. If the
+  poll returns 404 / non-200 for the entire timeout window, reject
+  with "wrangler not ready or `/health` missing — confirm phase-2
+  Unit 1b shipped." Stub fetch in unit tests; live behavior covered
+  by Unit 8 smoke.
 - Integration: start → healthcheck → stop cycle exits cleanly (covered in
   Unit 8 smoke).
 
@@ -913,29 +948,48 @@ logic. Integration-tested via Unit 8.
   `projections` map would push the serialized envelope past the ~512 KiB
   soft budget (phase-2 Unit 8), the server emits MULTIPLE god-messages
   sharing the same `stateVersion`, each carrying a partial
-  `projections` map (one viewer, or a small subset). Subscriber:
+  `projections` map (one viewer, or a small subset). Per phase-2 D4
+  "Split-envelope metadata fields", every split chunk also carries
+  `expectedViewerIds: string[]` — the canonical full seated-player set
+  the server expects to ship projections for under that `stateVersion`.
+  All chunks for a `stateVersion` carry the SAME `expectedViewerIds`
+  array (redundantly authoritative). Subscriber:
   1. Maintains a `Map<stateVersion, PartialAssembly>` reassembly buffer.
      Entry shape: `{ action, events, nowMs, boardView, projections:
      Record<playerId, PlayerView>, expected: Set<playerId>, receivedAt:
      number }`.
-  2. On first message for a given `stateVersion`: record `expected`
-     viewer set (the server includes the full connected-player list in
-     the envelope metadata — consume it, do not re-derive).
+  2. On first message for a given `stateVersion`: record `expected =
+     new Set(message.expectedViewerIds)` directly from the envelope's
+     metadata field (phase-2 D4). Do NOT re-derive from the connected-
+     player list, do NOT count chunks. Naive counting is unsafe — if a
+     seat disconnects mid-reassembly the server may emit fewer chunks
+     than the original expected set, and a counting consumer would
+     either hang or silently flush an incomplete merge. On subsequent
+     messages for the same `stateVersion`, assert
+     `message.expectedViewerIds` is byte-identical to the recorded set
+     and fail-closed on mismatch (indicates a server bug — phase-2
+     contract guarantees the array is constant across chunks of one
+     `stateVersion`).
   3. On subsequent messages: merge `projections` entries; the shared
-     fields (`action`, `events`, `nowMs`, `boardView`) MUST be
-     byte-identical across splits — assert and fail-closed on mismatch
-     (indicates a server bug).
-  4. When `Object.keys(projections).length === expected.size`: emit the
-     merged event downstream (scrubber → jsonl append) and drop the
-     buffer entry.
+     fields (`action`, `events`, `nowMs`, `boardView`,
+     `expectedViewerIds`) MUST be byte-identical across splits — assert
+     and fail-closed on mismatch (indicates a server bug).
+  4. When `new Set(Object.keys(projections))` equals `expected` as a
+     set (size match + every key present): emit the merged event
+     downstream (scrubber → jsonl append) and drop the buffer entry.
+     Set-equality (not just size match) closes the "right count, wrong
+     keys" misroute case.
   5. **Reassembly timeout:** if a `stateVersion` entry is still partial
      after **5 seconds** since `receivedAt`, emit a diagnostic warning,
      flush the partial to jsonl with a `partial: true` marker (never
      silently drop), then drop the buffer entry. Timeout is a diagnostic,
      not a fatal.
   - Unsplit events (small payloads) arrive as a single message with
-    `projections` already complete — identical code path, the buffer
-    entry resolves immediately.
+    `projections` already complete and `expectedViewerIds` either
+    omitted, empty, or redundantly equal to `Object.keys(projections)`.
+    Treat any of those three shapes as "no splitting expected, consume
+    in one shot" — the buffer entry resolves immediately on the first
+    message.
 - **Scrub + append pipeline:** every reassembled event runs through
   `scrub(event, scrubMode, salt)` (Unit 4b) before persistence.
   Scrubber throws → god-subscriber fails-closed: log + abort the run.
@@ -964,12 +1018,24 @@ logic. Integration-tested via Unit 8.
   → buffer resolves immediately; file has 100 lines, each round-trips
   via `JSON.parse` and passes scrubber contract.
 - Happy path (split): 3-way split for N=10 players → 3 messages arrive
-  with same `stateVersion`, each carrying partial `projections`; buffer
-  merges; one merged line written to jsonl; reassembly asserts
-  `action`/`events`/`boardView` equal across splits.
+  with same `stateVersion`, each carrying partial `projections` and the
+  same `expectedViewerIds: string[]` (10 ids); buffer merges; one
+  merged line written to jsonl when `Object.keys(mergedProjections)`
+  set-equals `expectedViewerIds`; reassembly asserts
+  `action`/`events`/`boardView`/`expectedViewerIds` equal across splits.
 - Split byte-identity check: adversarial split where `action` differs
   between chunks → subscriber fails-closed with diagnostic (server bug
   detection).
+- Split metadata-identity check: adversarial split where
+  `expectedViewerIds` differs between chunks for the same `stateVersion`
+  → subscriber fails-closed with diagnostic (phase-2 D4 contract
+  violation).
+- Set-equality completion: chunks deliver projections for the right
+  COUNT of viewers but a wrong KEY (e.g. expected `[a,b,c]`, received
+  `[a,b,d]`) → buffer does NOT flush on count match alone; either
+  remains partial until timeout or fails-closed when a chunk's
+  `Object.keys(projections)` contains an id not in `expectedViewerIds`
+  (server bug — phase-2 contract).
 - Reassembly timeout: 2 of 3 splits received, 3rd never arrives → after
   5s, partial flushed with `partial: true` marker, warning logged.
 - Scrubber throw: scrubber throws on malformed projection → subscriber

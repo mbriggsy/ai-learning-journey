@@ -2,73 +2,106 @@
 
 ## NEXT SESSION — pick up here (2026-04-25)
 
-**Playtest-harness Phase 2 SHIPPED (2026-04-24).** All 10 units landed with
-runtime verification. Phase 1 is approved + locked. Cadence-compliant
-debrief owed at phase boundary.
+**Playtest-harness Phase 3 LARGELY SHIPPED (2026-04-24).** 11 of 13 units
+landed end-to-end; Units 9 (scenario-detector) and 10 (coverage-reporter)
+deferred to next session. Eyes-on review of `pnpm playtest:smoke` recommended
+before Phase 3 is formally closed.
 
-### Phase 2 state of the world
+### Phase 3 state of the world
 
-**Full test suite:** 527/527 green · typecheck clean · ESLint clean
-(modulo one pre-existing palette warning) · client-bundle sentinel
-regression test active (sabotage-verified)
+**Full test suite:** 698/698 green · typecheck clean · client-bundle sentinel
+regression intact (Phase 2 + Phase 3 Unit 3b sentinels both assert zero
+matches in `dist/**/*.js`).
 
-**New server surfaces:**
-- `GET /health` → `{ ok, playtest, version }` in every build (no DO wake)
-- `role=god` WS upgrade — HTTP-level auth gate in `fetch()` (401/403
-  rejections BEFORE upgrade), LAN/localhost/PLAYTEST_GOD_ORIGINS-only
-  origin allowlist, constant-time token compare
-- `playtest-config` admin message — queued, first-write-wins latch
-- `god-event` WS broadcast — emitted from `broadcastGameState` on
-  every successful dispatch; structural equality with concurrent
-  player-update by construction
-- `ctx.nopeWindowMs` override + seedable mulberry32 RNG both gated
-  on `this.playtestSeed`
+**Harness surface shipped:**
+- `pnpm playtest:selftest` — 8-check isolation self-test (cookie / localStorage
+  / WS-frame / god-non-delivery / allowlist-defined / close-codes-distinct /
+  scrubber-fail-closed / retention-boundary). Runs in ~5s against live
+  wrangler+vite; writes `.last-selftest` stamp only on all-pass.
+- `pnpm playtest:smoke` — end-to-end Phase 3 smoke. 2-seat session in room
+  `SMK<xxx>` (randomized to avoid DO-state collision on rerun), host starts
+  the game via board-view "Cleared Hot", seat 0 plays one End-turn draw,
+  god subscriber captures events to `events.jsonl`. 2× runs @ ~10s each,
+  both pass.
+- `pnpm playtest:run` — orchestrator entry with `--config / --seats / --seed
+  / --viewport / --no-scrub / --allow-trace / --help`. Seat-agent dispatch
+  is still the Phase 3 stub (waits for stdin sentinel); Phase 4 replaces.
+- `pnpm playtest:purge` — operator-invoked session-dir purge with
+  `--before / --session-id / --full-dir / --root`. Rolling retention
+  (default keep 10 newest) runs automatically at end of each session via
+  the orchestrator.
 
-**New files (all pure, unit-tested):** `playtest.ts`, `health.ts`, `rng.ts`,
-`god-connection.ts`, `playtest-config.ts`, `god-projection.ts`.
-`room.ts` is thinner: Env interface hoisted; `Server<Env>` parameterized;
-onConnect gains god-tagging branch; broadcastGameState gains god-event
-emission behind `pendingGodEventTrigger`.
+**Harness lib modules (all under `scripts/playtest/`):** `run-session.ts`,
+`selftest.ts`, `purge.ts`, `smoke.ts` entries; `lib/` has `orchestrator`,
+`server-controller`, `session-secrets`, `god-subscriber`, `seat-factory`,
+`run-directory`, `scrubber`, `retention`, `selftest-checks`, plus stubs
+for `scenario-detector` + `coverage-reporter` (Unit 9/10 targets). Zero
+imports from `src/server` (insight 022). All types re-declared locally.
 
-**Benchmarks @ N=10 (hard roster max):** buildGodProjections avg 0.005 ms
-· buildGodEventMessage avg 0.002 ms · god-event payload ~19 KiB. All
-budgets ~2000× under. Zero headroom concern.
+**Phase 2 fixes rolled into Phase 3 during execution:**
+- **Unit 3 FIX (commit `adc75942`):** `startServers` switched from env-based
+  to `pnpm exec wrangler dev --var PLAYTEST_MODE:1 --var PLAYTEST_TOKEN:<t>`.
+  Wrangler does NOT propagate Node env to workerd — discovered via Unit 7
+  live run. See insight 024.
+- **Unit 4 fix (commit `0ff2ada4`):** god-subscriber now sets `Origin` header
+  on WS open via `buildLanOriginFromWsUrl`. `ws` package sends no Origin by
+  default; Phase 2 LAN gate rejected with 403 → 4003. See insight 025.
+- **Unit 3 stdio drain (commit `adc75942`):** subprocess stdout/stderr now
+  drained to parent's stderr with `[wrangler]` / `[vite]` prefix. Undrained
+  pipes stalled wrangler at ~64 KB. See insight 026.
 
-**Smoke test (`pnpm playtest:smoke`):** 7/7 steps green against real
-`wrangler dev`. Covers /health, god auth rejection (WS + direct HTTP
-probe paths), valid auth accept, playtest-config latch LOCKED rejection.
+**Insights captured this session (4 new):**
+- **024** — `wrangler dev` requires `--var` CLI flags; Node env doesn't
+  reach workerd.
+- **025** — `ws` package sends no Origin header by default; server LAN
+  origin gate rejects bare clients with 403 → 4003.
+- **026** — Undrained subprocess stdio stalls the child at ~64 KB; use
+  drain-with-prefix or `stdio: 'ignore'`.
+- **027** — Absence-of-X assertions need presence-of-Y companions;
+  selftest Check 4 passed vacuously when god never connected.
 
-**Insights captured this session:**
-- **022** — partyserver's `cloudflare:` scheme makes `room.ts`
-  unimportable in Vitest-Node tests. Net constraint: `room.ts` is a
-  thin wiring layer; all testable logic in pure sibling modules.
-- **023** — partyserver `connection.close()` inside `onConnect` under
-  hibernation does NOT promptly deliver a close frame. WS auth gates
-  MUST live in the `fetch()` entry point, not `onConnect`.
+### Known follow-ups (ordered by urgency)
 
-### Immediate priorities (ordered)
-
-1. **Phase 2 debrief with Briggsy.** Cadence per 2026-04-24: phase →
-   stop → debrief + /distill → next phase. Distill already ran at
-   phase boundary (022 + 023). Debrief = review the 10-unit commit stack
-   and any Phase 3 scope questions BEFORE executing Phase 3.
-2. **Execute Phase 3** — harness infrastructure (orchestrator process,
-   god-event reassembly buffer, `events.jsonl` write path). Plan locked
-   at `docs/plans/playtest-harness/phase-3-harness-infra.md`. Phase 3
-   consumes Phase 2's god-event shape directly — Unit 4 in Phase 3 is
-   the reassembly buffer that the Phase 2 split-envelope design
-   anticipates (though splitting has not yet fired — payload 19 KiB at
-   N=10 is comfortable).
-3. **Phases 4 → 5** per locked plans. Phase 6 is the first REAL session
-   and requires eye-in-loop verification — STOP before it runs
-   autonomously.
-4. **IncomingSteal banner real-device verification** (`82af35f9`) — still
+1. **Unit 9 — scenario-detector.** Parses `docs/testing/playtest/SCENARIOS.md`
+   three-tier grammar; walks `events.jsonl` + `connections.jsonl`; records
+   tri-state FireRecords (`clean` / `with-divergence` / `no-fire`). Plan
+   locked at `docs/plans/playtest-harness/phase-3-harness-infra.md` Unit 9.
+   Fixture data now exists — Unit 8 smoke produces real events.jsonl lines
+   that can seed detector fixtures.
+2. **Unit 10 — coverage-reporter.** Renders `coverage.md` as 7×2 info-gap
+   grid with `firedCount >= 50 AND zeroCellCount === 0` pass gate. Plan
+   locked at Unit 10. Depends on Unit 9.
+3. **Workerd orphan processes on Windows (Unit 8 finding).** Every smoke
+   run leaks 2 workerd.exe processes because `stopServers` SIGTERMs the
+   `pnpm exec wrangler` intermediary and doesn't propagate to the
+   grandchild workerd. Fix path: spawn with `detached: true` + use
+   `taskkill //F /T /PID <wranglerPid>` on Windows, OR switch to a process
+   group / Job Object. Smoke surfaces this as a warn line so pressure stays
+   on it. CLAUDE.md recovery is `taskkill //F //IM workerd.exe && rm -rf
+   .wrangler/state`.
+4. **Port 5173 vite collision (Unit 8 finding).** `pollViteHealth` doesn't
+   verify it's the orchestrator's vite vs a pre-existing user vite. Today
+   accidental coexistence works; could mask a dev-server regression. Fix:
+   hash an orchestrator-ID into a request header OR probe a harness-only
+   endpoint.
+5. **Phase 3 Unit 7 selftest polish:** selftest.ts inlines the wrangler
+   spawn rather than calling the fixed `startServers`. Works correctly
+   but duplicates wrangler-spawn discipline; migrating is low-risk polish
+   after Unit 9/10 land. Noted in commit `adc75942`.
+6. **Phase 4 — seat agents.** Plan locked. Consumes Unit 5's `SeatHandle`
+   + Unit 1's `ALLOWED_PAGE_METHODS` allowlist. Subagent tools-whitelist
+   per `.claude/agents/playtest-seat.md` is the enforcement surface
+   (insight 020).
+7. **Phase 5 — triage agents.** Plan locked.
+8. **Phase 6 — first REAL session.** STOP before this runs autonomously;
+   eye-in-loop required.
+9. **IncomingSteal banner real-device verification** (`82af35f9`) — still
    pending from prior sessions. Playwright + unit tests green, phone-side
    pre-resolution screenshot never caught. Earth > map.
-5. **Host-identity cluster (P1 deferred).** B-01/B-02/B-11/B-12/B-14 —
-   significant infra, design questions first.
-6. **Remaining P1/P2 from `docs/testing/E2E-ISSUE-LIST.md`** — cosmetic
-   and scope-decision items, pick opportunistically.
+10. **Host-identity cluster (P1 deferred).** B-01/B-02/B-11/B-12/B-14 —
+    significant infra, design questions first.
+11. **Remaining P1/P2 from `docs/testing/E2E-ISSUE-LIST.md`** — cosmetic
+    and scope-decision items, pick opportunistically.
 
 ### Phase 1 Column divergences — candidates for E2E-ISSUE-LIST.md additions
 
@@ -128,12 +161,20 @@ projection @ `5e86f811`):**
 
 **Next steps:**
 - ✅ **Phase 2 SHIPPED 2026-04-24** — 10 units, full suite 527/527, live
-  smoke green. See top-of-file §"Phase 2 state of the world" for detail.
-- Execute Phase 3 → Phase 5 per locked plans. Phase 6 is the first real
+  smoke green.
+- ✅ **Phase 3 (11 of 13 units) SHIPPED 2026-04-24** — Units 1, 2, 3, 3b, 4,
+  4b, 5, 6, 7, 8, 10b landed. Full suite 698/698. Live `pnpm playtest:smoke`
+  passes ~10s × 2 runs. See top-of-file §"Phase 3 state of the world".
+- **Phase 3 completion:** Units 9 (scenario-detector) and 10 (coverage-reporter)
+  remain. Unit 8 smoke produces real `events.jsonl` lines suitable as Unit 9
+  fixture data.
+- Execute Phase 4 → Phase 5 per locked plans. Phase 6 is the first real
   session; STOP before Phase 6 without eye-in-loop verification.
 - Insights 019 + 020 should guide future rigor passes on agent-native plans.
-  Insights 022 + 023 (captured during Phase 2) feed into Phase 3 scope
-  decisions about how orchestrator code can be tested.
+  Insights 022 + 023 fed into Phase 3 scope decisions (room.ts quarantine;
+  HTTP-level auth gate). Insights 024-027 (captured this session) cover
+  wrangler `--var`, ws Origin headers, stdio backpressure, and
+  absence-tests-need-presence-companions.
 
 ### Sequential-vs-parallel analysis (Briggsy's end-of-session question)
 

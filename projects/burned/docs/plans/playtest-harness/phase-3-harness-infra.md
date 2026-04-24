@@ -261,9 +261,13 @@ None. Entirely repo-internal scaling of proven patterns.
   the unwrapped `page` because no Phase 3 unit needs to wrap it), AND
   (b) declaring the **allowlist contract** as two named typed constants
   exported from `scripts/playtest/lib/types.ts` (Unit 1):
-  `ALLOWED_PAGE_METHODS: readonly string[]` and
-  `DISALLOWED_PAGE_METHODS: readonly string[]` — both `as const` for
-  literal union derivation. Phase 4 imports both to build the runtime
+  `ALLOWED_PAGE_METHODS` and `DISALLOWED_PAGE_METHODS` — both declared
+  with `as const` on their tuple literals (see Unit 1's typed constant
+  block below) so the derived `AllowedPageMethod` / `DisallowedPageMethod`
+  types are literal-string unions, not `string[]`. Phase 4's
+  `SeatPageWrapper` (if retained per phase-4 C2) derives its public type
+  from those literal unions; the subagent `tools:` whitelist (phase-4 C1)
+  is the primary enforcement. Phase 4 imports both to build the runtime
   wrapper. Methods agents MAY call (`ALLOWED_PAGE_METHODS`):
   `locator`, `waitFor`, `click`, `fill`, `type`, `press`, `getByRole`,
   `getByText`, `getByLabel`, `getByTestId`, `screenshot`. Methods
@@ -584,8 +588,9 @@ run-session.ts
        b. newPage().
        c. Navigate to /player.html?room=<CODE>.
        d. Join with seat name from config.
-       e. Return SeatHandle { seatId, page, name, viewport, logPath,
-          suspicionPath }.
+       e. Return SeatHandle { seatId, seatName, roomCode, page, viewport,
+          logPath, suspicionPath, scenariosPath }. `roomCode` is threaded
+          through from step (c) so Phase 4 can emit `{{ROOM_CODE}}`.
   9. Hand N SeatHandles + the free-play wallclock controller to Phase 4's
      seat-agent launcher. (Phase 4 owns the subagent spawn; Phase 3
      exposes the handle + wallclock signal.)
@@ -691,6 +696,22 @@ Runs a minimal harness session (2 seats) and checks:
    is reserved for room-full). Validates Phase 2 Unit 4 from the harness
    perspective. Additional checks: forbidden origin → 4003; 3+ rapid
    token-mismatch attempts → 4005 before token comparison runs.
+7. **`window.__gameStore` dev-hook not agent-reachable (phase-4 C6):**
+   The dev-launcher bundle exposes `window.__gameStore` (guarded by
+   `import.meta.env.DEV`, tree-shaken in prod per CLAUDE.md). The seat
+   agent MUST NOT reach this god-mode handle. This check is an
+   **orchestrator-level** `page.evaluate(() => typeof
+   (window as any).__gameStore)` (the orchestrator has no allowlist
+   restriction — only the seat agent does) against the bundle the
+   harness is about to connect to; if the global is present AND the
+   harness is NOT running behind an explicit `PLAYTEST_EXPOSE_GAMESTORE=1`
+   flag, the self-test fails loudly. Rationale: `__gameStore` bypasses
+   projection entirely and would let any agent with `browser_evaluate`
+   access the full engine state. The subagent's `tools:` whitelist
+   (phase-4 C1) already excludes `browser_evaluate`, so this is a
+   belt-and-suspenders check — but a bundle drift that re-exposes the
+   hook in a non-DEV build would be a silent isolation break, so it is
+   caught here.
 
 Writes `.last-selftest` timestamp on pass. Fails loudly with a table of what
 broke.
@@ -843,8 +864,11 @@ R14
   `scripts/playtest/lib/types.ts` mirrors `shared/protocol.ts`'s public
   surface to avoid Workers-types pollution.
 - `SeatHandle` is the handoff type Phase 4 consumes:
-  `{ seatId, seatName, page, viewport, logPath, suspicionPath,
-  scenariosPath }`.
+  `{ seatId, seatName, roomCode, page, viewport, logPath, suspicionPath,
+  scenariosPath }`. The `roomCode: string` field mirrors the room the seat
+  joined (Unit 5 passes it through from `createSeat`'s `roomCode` arg) so
+  Phase 4's prompt renderer has a source for the `{{ROOM_CODE}}`
+  placeholder without the agent needing `Read` on `config` or `session.md`.
 - `Viewport = { width: 360|390|768, height: 640|844|1024, label: string }`.
 - `ConnectionEvent = { seatId, transition: 'disconnect' | 'reconnect',
   atStateVersion: number, atNowMs: number, reason:
@@ -1449,7 +1473,8 @@ Integration-tested via Unit 8.
 - Wait for lobby selector (name pill appears) — proof of join.
 - Return handle with `logPath = <run>/seats/seat-<id>.log.md`,
   `suspicionPath = <run>/suspicions/seat-<id>.suspicions.md`,
-  `scenariosPath = docs/testing/playtest/SCENARIOS.md`.
+  `scenariosPath = docs/testing/playtest/SCENARIOS.md`, and
+  `roomCode` (the value passed in by the orchestrator).
 
 **Patterns to follow:**
 - `tests/e2e/fixtures.ts:16-26`.

@@ -2,23 +2,82 @@
 
 ## NEXT SESSION — pick up here (2026-04-25+)
 
-**Playtest-harness Phase 3 — COMPLETE.** All 13 units shipped (Units 1, 2,
-3, 3b, 4, 4b, 5, 6, 7, 8, 9, 10, 10b). Unit 10 (coverage-reporter) landed
-2026-04-24 and formally closed the phase.
+**Playtest-harness Phase 4 — COMPLETE.** All 7 units shipped (Units 1,
+1b, 2a, 2, 3, 4, 5). Workerd orphan fix shipped same session.
 
 **Pick from the active queue:**
-1. **Phase 4 — seat agents** (biggest chunk remaining; plan locked at
-   `docs/plans/playtest-harness/phase-4-seat-agents.md`).
-2. **Workerd orphan fix on Windows** (known Unit 8 gap; scoped, concrete).
-3. **BURNED card cinematic arc** sub-steps #3 + #4 (DefusePlacement hero
+1. **Phase 5 — triage agents** (next harness phase; plan locked at
+   `docs/plans/playtest-harness/phase-5-triage-agents.md`).
+2. **BURNED card cinematic arc** sub-steps #3 + #4 (DefusePlacement hero
    card + Burned art regen). Pure product work.
-4. **Real-device playtest** — iPad + phones Emil-pass verification list.
+3. **Real-device playtest** — iPad + phones Emil-pass verification list.
+4. **Phase 6** — first real playtest session. STOP before this runs
+   autonomously; eye-in-loop required.
 
-### Phase 3 state of the world
+### Phase 4 state of the world (2026-04-24)
 
-**Full test suite:** 749/749 green (719 baseline + 30 new Unit 10 tests:
-6 parseCatalog info-gap + 24 coverage-reporter) · typecheck clean ·
-client-bundle sentinel regression intact.
+**Full test suite:** 805/805 green (+56 from Phase 3 baseline of 749:
+18 log-schema, 6 parseCatalog prose, 24 agent-launcher, 8 isolation
+audit) · typecheck clean · `pnpm playtest:phase4-smoke` PASS
+(~70 assertions) · `pnpm playtest:smoke` leaves 0 workerd zombies
+across repeat runs (was 2/run before the fix).
+
+**Phase 4 surface shipped:**
+- `scripts/playtest/agents/seat-scripted.md` + `seat-free-play.md` —
+  seat-agent prompt templates (Unit 1). 11 placeholders, D16 role
+  rubric, D17/I5 prompt-injection framing, all 7 ROW_DISPLAY_LABELS
+  verbatim, references `ui-spec-divergence` (C4 rename).
+- `.claude/agents/playtest-seat.md` — custom subagent file (Unit 1b,
+  **primary isolation enforcement**, insight 020). Frontmatter `tools:`
+  whitelist = 9 MCP Playwright tools + `Write`, comma-separated, no
+  wildcards. Deliberately absent: `browser_evaluate`, `browser_navigate*`,
+  `browser_run_code`, `browser_tabs`, `browser_console_messages`,
+  `browser_network_requests`, `browser_drag`, `browser_file_upload`,
+  `browser_handle_dialog`, `browser_close`, `browser_resize`, every
+  non-Playwright MCP tool, `Read`, `Edit`, `Bash`, `Grep`, `Glob`,
+  `Agent`.
+- `scripts/playtest/lib/log-schema.ts` + `log-parser.ts` (Unit 3) —
+  Zod discriminated union over 4 entryTypes (`scenario-fire`,
+  `suspicion`, `vibe-check`, `ui-spec-divergence`). `myRoleLabel`
+  literal union derived from `ROW_DISPLAY_LABELS` (import, no dup).
+  `proseRationale` `minLength 10` catches boilerplate. Legacy
+  `info-gap-divergence` → parse warning + coerced to
+  `ui-spec-divergence` (transition; remove after Phase 6 locks).
+- `scripts/playtest/lib/scenario-detector.ts` — parseCatalog extension
+  (Unit 2a, closes insight 029 recurrence). New fields on
+  `ParsedScenario`: `title` + optional `triggerConditions`,
+  `recognitionCriteria`, `suspicionPrompts`, `vibeCheck`,
+  `whyThisMatters`. `InfoGapPresence` gains optional `column1Prose` /
+  `column2Prose` alongside the existing booleans — coverage-reporter
+  unaffected (reads booleans only).
+- `scripts/playtest/lib/agent-launcher.ts` (Unit 2) — pure functions:
+  `inferInitialRole`, `renderScriptedCatalogForRole` (per-role
+  pre-filter; ACTOR/TARGET full detail, OTHER/SPECTATOR/DISCONNECTED
+  one-line pointer, N/A skipped), `renderFreePlayPointer`,
+  `buildSeatPrompt`, `buildLaunchSpecs`, `loadDefaultTemplates`,
+  `emitLaunchSpecs`, `createAgentLauncherDriver`. Column 1 prose
+  never leaks into agent prompts (server-internal, phase-4 C4).
+- `scripts/playtest/lib/isolation-audit.ts` (Unit 4) — post-session
+  audit enforcing path-confinement for seat-agent `Write` calls
+  (phase-4 I1/D8 — Claude Code lacks per-path Write scope today).
+  Walks `<runDir>/seats/` + `<runDir>/suspicions/`; rejects mis-named
+  files, unknown seat IDs, and cross-seat contamination. Writes
+  `isolation-audit.md`; flips session to `ISOLATION_BREACH` on any
+  violation (coverage still written). Missing dirs = PASS (scope
+  audit, not productivity audit).
+- `scripts/playtest/integration/phase4-smoke.ts` +
+  `pnpm playtest:phase4-smoke` (Unit 5) — end-to-end wiring smoke.
+  Exercises scripted + free-play spec emission, fake-agent log
+  writes, marker-based driver release, isolation audit green path,
+  and C4 rename end-to-end. ~70 assertions.
+
+**Insights captured across Phase 4 (0 new — insight 029 captured
+during Phase 3 anticipated the producer/consumer gap that recurred
+for Unit 2 → Unit 2a; no new lesson worth a separate doc).**
+
+### Phase 3 state of the world (2026-04-24 baseline)
+
+**Full test suite before Phase 4:** 749/749 green.
 
 **Harness surface shipped:**
 - `pnpm playtest:selftest` — 8-check isolation self-test (cookie / localStorage
@@ -94,14 +153,14 @@ from `src/server` (insight 022). All types re-declared locally.
 
 ### Known follow-ups (ordered by urgency)
 
-1. **Workerd orphan processes on Windows (Unit 8 finding).** Every smoke
-   run leaks 2 workerd.exe processes because `stopServers` SIGTERMs the
-   `pnpm exec wrangler` intermediary and doesn't propagate to the
-   grandchild workerd. Fix path: spawn with `detached: true` + use
-   `taskkill //F /T /PID <wranglerPid>` on Windows, OR switch to a process
-   group / Job Object. Smoke surfaces this as a warn line so pressure stays
-   on it. CLAUDE.md recovery is `taskkill //F //IM workerd.exe && rm -rf
-   .wrangler/state`.
+1. **~~Workerd orphan processes on Windows~~ FIXED 2026-04-24 (commit
+   `d5503c1d`).** `stopServers` now shells to `taskkill /F /T /PID <pid>`
+   on Windows, which propagates down the `cmd.exe → pnpm → wrangler →
+   workerd.exe` tree. Verified by repeat smoke runs producing 0 zombies.
+   Landmine for future readers: `taskkill` without `/F` sends WM_CLOSE,
+   which does nothing to windowless processes like `workerd.exe` — always
+   use `/F` on Windows. Code comment at `server-controller.ts`
+   `killProcessTree` calls this out.
 2. **Port 5173 vite collision (Unit 8 finding).** `pollViteHealth` doesn't
    verify it's the orchestrator's vite vs a pre-existing user vite. Today
    accidental coexistence works; could mask a dev-server regression. Fix:
@@ -123,13 +182,22 @@ from `src/server` (insight 022). All types re-declared locally.
    `buildCoverageReport` + `renderCoverageMd` into the session-end block,
    sourcing `selfReports` from seat suspicion logs and `firedByViewport`
    from orchestrator viewport rotation.
-6. **Phase 4 — seat agents.** Plan locked. Consumes Unit 5's `SeatHandle`
-   + Unit 1's `ALLOWED_PAGE_METHODS` allowlist. Subagent tools-whitelist
-   per `.claude/agents/playtest-seat.md` is the enforcement surface
-   (insight 020).
-7. **Phase 5 — triage agents.** Plan locked.
+6. **~~Phase 4 — seat agents~~ SHIPPED 2026-04-24.** 7 units +
+   workerd orphan fix. Real subagent dispatch (the `Agent(...)` call)
+   is the Phase 6 hand-off — requires a Claude Code conversation; can't
+   run from a pnpm script. Also deferred: the "contract test" (spawn a
+   playtest-seat with a prompt deliberately asking for
+   `browser_evaluate`, assert Claude Code refuses at the tool-surface
+   boundary). Phase 4 smoke calls this out in its output. And Phase 4
+   did NOT modify `orchestrator.ts` despite the plan's file list —
+   the existing `seatDriver` injection point is the cleaner hand-off,
+   Phase 6 will wire it up.
+7. **Phase 5 — triage agents.** Plan locked. Must carry the C4 rename
+   (`info-gap-divergence` → `ui-spec-divergence`) before lock —
+   flagged in Phase 5 rigor pass H-4b.
 8. **Phase 6 — first REAL session.** STOP before this runs autonomously;
-   eye-in-loop required.
+   eye-in-loop required. Also the home for the deferred Unit 5 contract
+   test and the `orchestrator.ts` launcher wiring.
 9. **IncomingSteal banner real-device verification** (`82af35f9`) — still
    pending from prior sessions. Playwright + unit tests green, phone-side
    pre-resolution screenshot never caught. Earth > map.

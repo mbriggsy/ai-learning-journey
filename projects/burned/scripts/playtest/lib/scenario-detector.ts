@@ -23,7 +23,7 @@
  */
 import { readFile } from 'node:fs/promises'
 import { existsSync } from 'node:fs'
-import type { ConnectionEvent, GodEvent } from './types'
+import type { ConnectionEvent, GodEvent, ViewerRole } from './types'
 
 // -----------------------------------------------------------------------------
 // Public types
@@ -49,6 +49,22 @@ export interface ConnectionPattern {
   readonly at: number | string
 }
 
+/**
+ * Per-vantage info-gap presence (phase-1 D5).
+ *
+ * A cell is "present" iff the scenario's info-gap table contains non-N/A
+ * content at that (vantage, column) pair. Column 1 = "Projection returns
+ * today"; Column 2 = "Viewer should see". N/A cells mean the vantage
+ * doesn't exist for this scenario (e.g. TARGET on a draw-only scenario)
+ * and are not credited toward coverage.
+ */
+export interface InfoGapPresence {
+  readonly column1Present: boolean
+  readonly column2Present: boolean
+}
+
+export type InfoGap = Record<ViewerRole, InfoGapPresence>
+
 /** Parsed representation of a single `### SCN-<ID>` section. */
 export interface ParsedScenario {
   readonly id: string
@@ -61,6 +77,14 @@ export interface ParsedScenario {
   readonly uiAssertions?: string
   readonly inference?: string
   readonly knownProductCall?: string
+  /**
+   * Per-vantage touched-cells map. Coverage-reporter (Unit 10) credits
+   * `gridCells[role].column{1,2}` iff the fired scenario's `infoGap[role]`
+   * has `column{1,2}Present === true`. Absent when the scenario section
+   * has no `**Info gap at decision point:**` table (fixture scenarios,
+   * free-play stubs).
+   */
+  readonly infoGap?: InfoGap
 }
 
 /**
@@ -195,6 +219,8 @@ function parseScenarioSection(
       ? 'axis-13'
       : 'other'
 
+  const infoGap = parseInfoGapTable(sectionLines)
+
   return {
     id,
     description,
@@ -208,7 +234,119 @@ function parseScenarioSection(
     ...(parsed.uiAssertions ? { uiAssertions: parsed.uiAssertions } : {}),
     ...(parsed.inference ? { inference: parsed.inference } : {}),
     ...(knownProductCall ? { knownProductCall } : {}),
+    ...(infoGap ? { infoGap } : {}),
   }
+}
+
+/**
+ * Parse the `**Info gap at decision point:**` markdown table into a
+ * per-vantage presence map (phase-1 D5).
+ *
+ * Returns `null` when no info-gap table is present (fixture scenarios).
+ * Otherwise returns a complete map with every `ViewerRole` populated —
+ * rows absent from the markdown default to `{ column1Present: false,
+ * column2Present: false }` (treated the same as an N/A row).
+ *
+ * A cell is "present" when its trimmed content does NOT start with
+ * `N/A` (case-insensitive), and is non-empty. Multiple markdown rows
+ * can map to the same `ViewerRole` (e.g. `TARGET1` / `TARGET2` both
+ * credit TARGET, `OTHER / SPECTATOR` credits both) — presence is
+ * OR-combined.
+ */
+function parseInfoGapTable(sectionLines: readonly string[]): InfoGap | null {
+  let headerIdx = -1
+  for (let i = 0; i < sectionLines.length; i++) {
+    if (/^\*\*Info gap at decision point:\*\*/.test(sectionLines[i] ?? '')) {
+      headerIdx = i
+      break
+    }
+  }
+  if (headerIdx < 0) return null
+
+  let tableHeaderIdx = -1
+  for (let i = headerIdx + 1; i < Math.min(headerIdx + 10, sectionLines.length); i++) {
+    const l = (sectionLines[i] ?? '').trim()
+    if (l.startsWith('| Vantage')) {
+      tableHeaderIdx = i
+      break
+    }
+  }
+  if (tableHeaderIdx < 0) return null
+
+  const bodyStart = tableHeaderIdx + 2
+
+  const gap: Record<ViewerRole, InfoGapPresence> = {
+    SERVER:       { column1Present: false, column2Present: false },
+    ACTOR:        { column1Present: false, column2Present: false },
+    TARGET:       { column1Present: false, column2Present: false },
+    OTHER_ALIVE:  { column1Present: false, column2Present: false },
+    SPECTATOR:    { column1Present: false, column2Present: false },
+    DISCONNECTED: { column1Present: false, column2Present: false },
+    BOARD:        { column1Present: false, column2Present: false },
+  }
+
+  for (let i = bodyStart; i < sectionLines.length; i++) {
+    const raw = sectionLines[i] ?? ''
+    const line = raw.trimEnd()
+    if (!line.startsWith('|')) break
+    const cells = splitMarkdownRow(line)
+    if (cells.length < 3) continue
+
+    const label = cells[0]!.trim()
+    const col1 = cells[1]!.trim()
+    const col2 = cells[2]!.trim()
+    const roles = vantageLabelToRoles(label)
+    if (roles.length === 0) continue
+
+    const c1 = isCellPresent(col1)
+    const c2 = isCellPresent(col2)
+    for (const role of roles) {
+      if (c1) gap[role] = { ...gap[role], column1Present: true }
+      if (c2) gap[role] = { ...gap[role], column2Present: true }
+    }
+  }
+
+  return gap
+}
+
+/**
+ * Split a markdown table row on `|` honoring leading/trailing pipes.
+ * Input: `| SERVER | desc | prescr |` → `[' SERVER ', ' desc ', ' prescr ']`.
+ * We don't need to handle escaped pipes — none appear in the catalog.
+ */
+function splitMarkdownRow(line: string): string[] {
+  const trimmed = line.replace(/^\|/, '').replace(/\|\s*$/, '')
+  return trimmed.split('|')
+}
+
+/**
+ * Map the first-column label to the ViewerRole(s) it describes.
+ * Handles parenthetical qualifiers (`ACTOR (STEALER)` → ACTOR) and
+ * combined labels (`OTHER / SPECTATOR` → [OTHER_ALIVE, SPECTATOR]).
+ * `TARGET1`, `TARGET2`, `TARGET (= ACTOR)` all map to TARGET.
+ */
+function vantageLabelToRoles(rawLabel: string): ViewerRole[] {
+  const label = rawLabel.replace(/\*\*/g, '').trim().toUpperCase()
+  const roles = new Set<ViewerRole>()
+  const tokens = label.split(/\s*\/\s*/)
+  for (const tok of tokens) {
+    const head = tok.replace(/\s*\(.*$/, '').trim()
+    if (/^SERVER\b/.test(head)) roles.add('SERVER')
+    else if (/^ACTOR\b/.test(head)) roles.add('ACTOR')
+    else if (/^TARGET[12]?\b/.test(head) || head === 'TARGET') roles.add('TARGET')
+    else if (/^OTHER\b/.test(head)) roles.add('OTHER_ALIVE')
+    else if (/^SPECTATOR\b/.test(head)) roles.add('SPECTATOR')
+    else if (/^DISCONNECTED\b/.test(head)) roles.add('DISCONNECTED')
+    else if (/^BOARD\b/.test(head)) roles.add('BOARD')
+  }
+  return [...roles]
+}
+
+/** A cell is "present" iff it has content and does not begin with `N/A`. */
+function isCellPresent(cellRaw: string): boolean {
+  const cell = cellRaw.trim()
+  if (cell === '') return false
+  return !/^n\/?a\b/i.test(cell)
 }
 
 interface ParsedFireSignature {

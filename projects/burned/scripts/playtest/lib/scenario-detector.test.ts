@@ -124,6 +124,184 @@ describe('parseCatalog', () => {
   })
 })
 
+// --- parseCatalog — info-gap extraction (Unit 10 prereq) ------------------
+
+describe('parseCatalog — info-gap extraction', () => {
+  it('extracts per-vantage presence for non-N/A cells; flags N/A as absent', () => {
+    const markdown = `### SCN-IG-BASIC-01 — Info-gap smoke
+
+**Category:** Test
+
+**Fire signature:**
+\`\`\`yaml
+events:
+  - type: burned-drawn
+    where: { playerId: $ACTOR }
+shape: strict
+\`\`\`
+
+**Info gap at decision point:**
+
+| Vantage | Column 1 — Projection returns today | Column 2 — Viewer should see |
+|---|---|---|
+| SERVER | Full state. | Same. |
+| ACTOR | Own hand + pendingPrompt. | Cinematic reveal. |
+| TARGET | N/A (no target in a draw). | N/A. |
+| OTHER (alive) | Public event stream. | Narrative legibility. |
+| SPECTATOR | Same as OTHER. | Archer narration preserved. |
+| DISCONNECTED | Nothing in real time. | "While you were away" banner. |
+| BOARD | Public events + pendingPrompt. | Board narrates the beat. |
+
+**Known product call:** none
+`
+
+    const scenarios = parseCatalog(markdown)
+    expect(scenarios).toHaveLength(1)
+    const ig = scenarios[0]!.infoGap
+    // Presence companion (insight 027): info-gap was actually parsed.
+    expect(ig).toBeDefined()
+    expect(ig!.SERVER).toEqual({ column1Present: true, column2Present: true })
+    expect(ig!.ACTOR).toEqual({ column1Present: true, column2Present: true })
+    // N/A on both columns → both absent.
+    expect(ig!.TARGET).toEqual({ column1Present: false, column2Present: false })
+    expect(ig!.OTHER_ALIVE).toEqual({ column1Present: true, column2Present: true })
+    expect(ig!.SPECTATOR).toEqual({ column1Present: true, column2Present: true })
+    expect(ig!.DISCONNECTED).toEqual({ column1Present: true, column2Present: true })
+    expect(ig!.BOARD).toEqual({ column1Present: true, column2Present: true })
+  })
+
+  it('handles parenthetical qualifiers on vantage labels (ACTOR (STEALER), TARGET1/TARGET2)', () => {
+    const markdown = `### SCN-IG-QUAL-01 — Qualified vantages
+
+**Fire signature:**
+\`\`\`yaml
+events: []
+shape: negative
+\`\`\`
+
+**Info gap at decision point:**
+
+| Vantage | Column 1 — Projection returns today | Column 2 — Viewer should see |
+|---|---|---|
+| SERVER | x | x |
+| ACTOR (STEALER) | own hand | same |
+| TARGET1 | hand minus stolen | same |
+| TARGET2 | N/A (only one target in this variant). | N/A. |
+| OTHER (alive, non-principal) | seat view | legibility |
+| SPECTATOR | stripped | archer |
+| DISCONNECTED | nothing | banner |
+| BOARD | public | drama |
+
+**Known product call:** none
+`
+    const scenarios = parseCatalog(markdown)
+    const ig = scenarios[0]!.infoGap!
+    // ACTOR row with (STEALER) qualifier maps to ACTOR.
+    expect(ig.ACTOR.column1Present).toBe(true)
+    // TARGET1 populated + TARGET2 N/A → TARGET OR-combines to present.
+    expect(ig.TARGET.column1Present).toBe(true)
+    expect(ig.OTHER_ALIVE.column1Present).toBe(true)
+  })
+
+  it('handles combined `OTHER / SPECTATOR` row — credits both vantages', () => {
+    const markdown = `### SCN-IG-COMBO-01 — Combined row
+
+**Fire signature:**
+\`\`\`yaml
+events: []
+shape: negative
+\`\`\`
+
+**Info gap at decision point:**
+
+| Vantage | Column 1 — Projection returns today | Column 2 — Viewer should see |
+|---|---|---|
+| SERVER | x | x |
+| ACTOR | x | x |
+| TARGET | x | x |
+| OTHER / SPECTATOR | shared seat view | shared narrative |
+| DISCONNECTED | n/a | n/a |
+| BOARD | public | drama |
+
+**Known product call:** none
+`
+    const scenarios = parseCatalog(markdown)
+    const ig = scenarios[0]!.infoGap!
+    expect(ig.OTHER_ALIVE.column1Present).toBe(true)
+    expect(ig.SPECTATOR.column1Present).toBe(true)
+    // Lowercase `n/a` also recognized as absent.
+    expect(ig.DISCONNECTED.column1Present).toBe(false)
+    expect(ig.DISCONNECTED.column2Present).toBe(false)
+  })
+
+  it('recognizes N/A with trailing prose as absent (e.g. "N/A (no target).")', () => {
+    const markdown = `### SCN-IG-NA-01 — N/A variants
+
+**Fire signature:**
+\`\`\`yaml
+events: []
+shape: negative
+\`\`\`
+
+**Info gap at decision point:**
+
+| Vantage | Column 1 — Projection returns today | Column 2 — Viewer should see |
+|---|---|---|
+| SERVER | x | x |
+| ACTOR | x | x |
+| TARGET | N/A (no target on a draw). | N/A. |
+| OTHER (alive) | N/A (nobody eliminated yet). | N/A. |
+| SPECTATOR | x | x |
+| DISCONNECTED | x | x |
+| BOARD | x | x |
+
+**Known product call:** none
+`
+    const scenarios = parseCatalog(markdown)
+    const ig = scenarios[0]!.infoGap!
+    expect(ig.TARGET.column1Present).toBe(false)
+    expect(ig.TARGET.column2Present).toBe(false)
+    expect(ig.OTHER_ALIVE.column1Present).toBe(false)
+    expect(ig.SPECTATOR.column1Present).toBe(true)
+  })
+
+  it('returns infoGap undefined for fixture scenarios without an info-gap table', async () => {
+    const { readFile } = await import('node:fs/promises')
+    const markdown = await readFile(SMALL_CATALOG_PATH, 'utf8')
+    const scenarios = parseCatalog(markdown)
+    // Presence companion: fixture parsed scenarios.
+    expect(scenarios.length).toBeGreaterThan(0)
+    for (const s of scenarios) {
+      expect(s.infoGap).toBeUndefined()
+    }
+  })
+
+  it('production catalog populates infoGap on the overwhelming majority of scenarios', async () => {
+    const { readFile } = await import('node:fs/promises')
+    const productionCatalog = path.resolve(
+      __dirname,
+      '..',
+      '..',
+      '..',
+      'docs',
+      'testing',
+      'playtest',
+      'SCENARIOS.md',
+    )
+    const markdown = await readFile(productionCatalog, 'utf8')
+    const scenarios = parseCatalog(markdown)
+    const withInfoGap = scenarios.filter((s) => s.infoGap !== undefined)
+    // Presence companion (insight 027): catalog actually has info-gap tables.
+    expect(withInfoGap.length).toBeGreaterThanOrEqual(30)
+    // At least 80% of real scenarios carry an info-gap table.
+    expect(withInfoGap.length / scenarios.length).toBeGreaterThanOrEqual(0.8)
+    // SERVER row is populated on every info-gap-bearing scenario (D5: server is god-mode).
+    for (const s of withInfoGap) {
+      expect(s.infoGap!.SERVER.column1Present).toBe(true)
+    }
+  })
+})
+
 // --- matchFires (Tier 1) ---------------------------------------------------
 
 describe('matchFires — Tier 1 (events)', () => {

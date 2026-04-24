@@ -60,7 +60,12 @@ instrument. The isolation self-test is the gate: if it fails, no session runs.
   criterion is **absolute ≥50 distinct catalog scenarios fired** across the
   session series, NOT a percentage of the uncapped catalog. Coverage
   reporter renders the 7-row × 2-column info-gap matrix (from phase-1 D5 —
-  SERVER, ACTOR, TARGET, OTHER-ALIVE, SPECTATOR, DISCONNECTED, BOARD ×
+  internal identifiers `SERVER`, `ACTOR`, `TARGET`, `OTHER_ALIVE`,
+  `SPECTATOR`, `DISCONNECTED`, `BOARD`, each mapped via
+  `ROW_DISPLAY_LABELS` to phase-1 D5's literal prose labels
+  (`'SERVER'`, `'ACTOR'`, `'TARGET'`, `'OTHER (alive)'`,
+  `'SPECTATOR (eliminated, connected)'`,
+  `'DISCONNECTED (alive, not connected)'`, `'BOARD'`) ×
   "Projection returns today" | "Viewer should see") and enumerates cells hit
   vs unhit against the ≥50 absolute threshold.
 - **R9 (phase-1 axis 15, orchestrator-level)** — Every session run exercises
@@ -225,11 +230,26 @@ None. Entirely repo-internal scaling of proven patterns.
   retry at most once (the server counter resets on window roll); second
   4005 aborts. `4001` is **not** a god-auth code and is not retried on
   the god socket.
-- **D5. Page navigations blocked from tool use by the seat agent.**
-  Orchestrator exposes the seat's `Page` object (or an equivalent handle)
-  with a restricted API surface. Direct `page.goto` to arbitrary URLs is
-  not part of the agent's allowlist — the orchestrator performs the
-  initial join flow before handing control to the agent.
+- **D5. Page navigations blocked from tool use by the seat agent
+  (Phase 3 declares the allowlist contract; Phase 4 enforces it via
+  the wrapper).** Phase 3's responsibility ends at: (a) handing the
+  raw Playwright `Page` object out via `SeatHandle` (Unit 5 returns
+  the unwrapped `page` because no Phase 3 unit needs to wrap it), AND
+  (b) declaring the **allowlist contract** as a typed constant that
+  Phase 4 imports. Methods agents MAY call: `locator`, `waitFor`,
+  `click`, `fill`, `type`, `press`, `getByRole`, `getByText`,
+  `getByLabel`, `getByTestId`, `screenshot`. Methods agents MAY NOT
+  call: `goto`, `evaluate`, `addInitScript`, `route`,
+  `setExtraHTTPHeaders`, `setOfflineMode`, `request`, `context`,
+  `network` accessors of any kind, `addLocatorHandler`,
+  `setViewportSize`. The orchestrator performs the initial join flow
+  itself before handing control to the agent (this is why `goto` is
+  not on the allowlist). **Runtime enforcement is Phase 4's job** —
+  Phase 4 owns the wrapper that exposes only allowlisted methods.
+  Phase 3's self-test check 5 asserts the allowlist constant exists
+  and excludes the eval / network / nav primitives; Phase 4's
+  contract tests will assert the wrapper actually rejects calls to
+  the disallowed list at runtime.
 - **D6. `page.evaluate` and `page.addInitScript` are NOT in the agent's
   tool surface.** Per research finding, `window.__gameStoreSnapshot` is
   god-mode; letting an agent run arbitrary JS defeats allowlist isolation.
@@ -278,19 +298,45 @@ None. Entirely repo-internal scaling of proven patterns.
     context for near-miss matches but does not machine-verify the prose.
   Divergence findings per PRD §9.4: self-reports without detector
   corroboration, detector matches without self-report.
+- **D9.1. Tri-state `FireRecord.matched` (phase-3 B4).** A FireRecord
+  carries `matched: 'clean' | 'with-divergence' | 'no-fire'`:
+  - `'clean'` — tier1 passed AND every present tier2/tier3 also passed.
+  - `'with-divergence'` — tier1 passed (scenario triggered) AND at
+    least one tier2/tier3 oracle failed. Counts toward `firedCount`
+    AND emits structured notes to the divergence list output.
+  - `'no-fire'` — tier1 did not match.
+  Coverage rule: `firedCount` counts BOTH `'clean'` and
+  `'with-divergence'` records. Rationale: tier-1 is the "did this
+  scenario trigger?" signal; tier-2/3 oracles report bugs, not missed
+  scenarios. The pre-B4 rule "all present tiers pass → fire" silently
+  hid a fire whenever the oracle caught a divergence — exactly inverted
+  signal (the catch became invisible). Divergence list is a separate
+  section in `coverage.md` (phase-3 B4 / Unit 10) so triage agents see
+  the bug AND the fire signal.
 - **D10. Isolation self-test is a mandatory pre-flight.** `pnpm playtest:
   selftest` runs the checks. `pnpm playtest:run` refuses to start unless
   a recent self-test pass is recorded (within last 24h, recorded in a
   .last-selftest file). Stops the "forgot to run it" failure mode.
-- **D11. Form-factor axis (phase-1 axis 15) is owned by the orchestrator,
-  not the seat agents.** Every run cycles through three mandatory
-  viewports: **360×640** (iPhone SE / small Android), **390×844**
-  (iPhone 13 / mid Android), **768×1024** (tablet / iPad mini). The
-  orchestrator sets the Playwright context's viewport per seat per
-  scenario batch; scenarios tagged `min-viewport:` with a specific value
-  are only fired at or above that viewport. Cycling policy defaults to
-  "same viewport for all seats in a scenario, rotate between scenarios"
-  — mixed-viewport-within-a-scenario is a future opportunity, not v1.
+- **D11. Form-factor axis (phase-1 axis 15) is owned by the
+  orchestrator, not the seat agents — and viewport cycling is scoped
+  to the subset of scenarios that are viewport-sensitive.** The three
+  mandatory viewports remain: **360×640** (iPhone SE / small Android),
+  **390×844** (iPhone 13 / mid Android), **768×1024** (tablet / iPad
+  mini). **Default viewport** for all other scenarios is **390×844**.
+  **Cycling rule (phase-3 B3):** a scenario cycles all three viewports
+  iff it is tagged with `min-viewport:` (the C-01/02/03/06/09/12/21
+  cluster) **OR** carries a `ui-assertions:` block (seat-agent-eyeballed
+  surfaces). All other scenarios run on the default viewport (390×844)
+  only. Justification: the scenario-detector consumes `events.jsonl` +
+  `connections.jsonl`; tier-1 (events) and tier-2 (projection-shape) are
+  viewport-invariant — three identical re-runs at three viewports
+  triple wallclock for zero detector-visible coverage gain. Only the
+  tagged subset legitimately varies. The orchestrator sets the
+  Playwright context's viewport per seat per scenario batch; scenarios
+  tagged `min-viewport:` with a specific value are only fired at or
+  above that viewport. Cycling policy: "same viewport for all seats in
+  a scenario, rotate between scenarios" — mixed-viewport-within-a-
+  scenario is a future opportunity, not v1.
 - **D12. Free-play wallclock budget (phase-1 Unit 5 Part G).** Default
   20% of session wallclock is reserved for `SCN-FREE-PLAY-*` scenarios;
   remaining 80% drives scripted catalog scenarios. Orchestrator tracks
@@ -300,25 +346,32 @@ None. Entirely repo-internal scaling of proven patterns.
   calibration may retune.
 - **D13. Coverage render = 7×2 info-gap matrix over absolute ≥50
   threshold.** Coverage reporter generates `coverage.md` with a grid
-  keyed on the phase-1 D5 info-gap rows (**SERVER, ACTOR, TARGET,
-  OTHER-ALIVE (alive), SPECTATOR (eliminated, connected), DISCONNECTED
-  (alive, not connected), BOARD**) × two columns (**Column 1 —
-  Projection returns today**, **Column 2 — Viewer should see**). Each
-  cell totals how many catalog scenarios whose fire signature touched
-  that (vantage, column) pair actually fired this run / session series.
-  Success criterion per PRD §8.2: **≥50 distinct catalog scenarios
-  fired** (absolute count, not a fraction of catalog). The 7×2 grid is
-  the breakdown used to triage under-covered cells, not the pass/fail
-  gate. A cell reading 0 after a session series is a scenario-drafting
-  signal for the next catalog pass, not a run failure.
+  keyed on the phase-1 D5 info-gap rows. **Internal identifier** →
+  **literal display label** (from phase-1 D5, character-for-character):
+  `SERVER` → `'SERVER'`; `ACTOR` → `'ACTOR'`; `TARGET` → `'TARGET'`;
+  `OTHER_ALIVE` → `'OTHER (alive)'`; `SPECTATOR` →
+  `'SPECTATOR (eliminated, connected)'`; `DISCONNECTED` →
+  `'DISCONNECTED (alive, not connected)'`; `BOARD` → `'BOARD'`.
+  Identifier form is used inside types and code; display form is
+  emitted into `coverage.md`. Columns: **Column 1 — Projection returns
+  today**, **Column 2 — Viewer should see**. Each cell totals how many
+  catalog scenarios whose fire signature touched that (vantage, column)
+  pair actually fired this run / session series. Success criterion per
+  PRD §8.2: **≥50 distinct catalog scenarios fired** (absolute count,
+  not a fraction of catalog). **Secondary gate (D13.1 / phase-3 B5):**
+  every row of the 7×2 grid must have ≥1 fire — i.e. zero zero-cells
+  across the 14 cells. Pass = (`firedCount >= 50`) AND
+  (`zeroCellCount === 0`). A zero cell after a session series is no
+  longer "just a triage signal" — it fails the run. Triage work then
+  drives scenario drafting for the next catalog pass.
 - **D14. Per-room / time-boxed playtest-token minter (phase-2
   Open Questions → Phase 3).** Orchestrator does NOT rely on the
   server's single global `PLAYTEST_TOKEN` Worker secret. Instead, at
   run start, the orchestrator mints a session-scoped token, seeds it
   into the server-controller's env (`PLAYTEST_TOKEN=<minted>`) before
   spawning wrangler dev, and uses the same value on the god WS
-  connection. Token source: `crypto.randomBytes(32).toString('hex')` (≥
-  32 hex chars). Token scope: one token per session, invalidated on
+  connection. Token source: `crypto.randomBytes(32).toString('hex')`
+  (**64 hex chars**). Token scope: one token per session, invalidated on
   session end. This is the Phase 3 answer to "a leaked global token
   unlocks every concurrent playtest room" — since each session mints
   its own, a leak is bounded to one run. Time-boxed rotation is deferred
@@ -442,8 +495,8 @@ run-session.ts
   2. Precondition gate: isolation self-test stamp < 24h old → else bail.
   3. Create run directory (run-directory.ts) with empty tree; start
      connection-log.jsonl.
-  4. Mint per-session token (token-minter.ts): 32 hex chars from
-     crypto.randomBytes.
+  4. Mint per-session token (token-minter.ts): 64 hex chars from
+     `crypto.randomBytes(32).toString('hex')`.
   5. Start servers (server-controller.ts): wrangler dev with
      PLAYTEST_MODE=1 and PLAYTEST_TOKEN=<minted>; vite dev. Wait for both
      healthchecks.
@@ -477,10 +530,15 @@ run-session.ts
  10. Wait for all seat agents to finish (parallel launch, sequential
      synth). Track per-seat disconnect/reconnect transitions → append to
      connections.jsonl.
- 11. If multi-viewport cycling is configured, tear down contexts, update
-     the active viewport, and repeat steps 8-10 for the next viewport
-     batch in the run. (Servers + god WS stay up across viewport rotations
-     to preserve one events.jsonl per session.)
+ 11. **Viewport cycling is scenario-scoped (D11 / phase-3 B3).** Only
+     scenarios tagged `min-viewport:` OR carrying `ui-assertions:`
+     trigger the rotate-tear-down-rebuild loop across all three
+     mandatory viewports (360×640, 390×844, 768×1024). All other
+     scenarios run on the default viewport (390×844) without rotation.
+     When rotation is required, tear down contexts, update the active
+     viewport, and repeat steps 8-10 for the next viewport batch.
+     (Servers + god WS stay up across viewport rotations to preserve
+     one events.jsonl per session.)
  12. Stop servers, close contexts, close god WS.
  13. Run scenario-detector (three-tier, consuming events.jsonl +
      connections.jsonl) + coverage-reporter → coverage.md (7×2 grid,
@@ -623,8 +681,14 @@ Algorithm (three-tier grammar per phase-1 D3, consumed per D9 above):
 Renders `coverage.md` keyed on the phase-1 D5 **7-row × 2-column
 info-gap matrix**:
 
-- **Rows (7):** SERVER, ACTOR, TARGET, OTHER-ALIVE, SPECTATOR,
-  DISCONNECTED, BOARD.
+- **Rows (7), identifier → displayLabel (phase-1 D5 literal):**
+  `SERVER` → `'SERVER'`; `ACTOR` → `'ACTOR'`; `TARGET` → `'TARGET'`;
+  `OTHER_ALIVE` → `'OTHER (alive)'`; `SPECTATOR` →
+  `'SPECTATOR (eliminated, connected)'`; `DISCONNECTED` →
+  `'DISCONNECTED (alive, not connected)'`; `BOARD` → `'BOARD'`.
+  Internal identifiers appear in TypeScript types; display labels
+  appear in the rendered `coverage.md`. `ROW_DISPLAY_LABELS` constant
+  defined in Unit 1 is the single source of truth.
 - **Columns (2):** Column 1 — "Projection returns today" (descriptive,
   cites `src/server/projection.ts`); Column 2 — "Viewer should see"
   (prescriptive, cites `docs/RULES-REFERENCE.md` +
@@ -658,7 +722,10 @@ Sections:
 **Goal:** Establish the folder, shared types, and empty module stubs so
 each subsequent unit has a clear slot.
 
-**Requirements:** R1, R4, R9, R10, R11, R13, R14
+**Requirements:** R1, R4, R8 (defines `CoverageReport.threshold = 50` +
+`zeroCellCount` + `passed` derivation that bake in the absolute ≥50
+gate + secondary no-zero-cell gate per D13.1 / B5), R9, R10, R11, R13,
+R14
 
 **Dependencies:** None.
 
@@ -732,16 +799,45 @@ each subsequent unit has a clear slot.
                                             // PLAYTEST_GOD_ORIGINS in server env
   }
   ```
-- `CoverageReport` shape surfaces the 7×2 grid + absolute count:
+- `ViewerRole` union (internal identifier, code-type-safe):
+  ```ts
+  type ViewerRole =
+    | 'SERVER'
+    | 'ACTOR'
+    | 'TARGET'
+    | 'OTHER_ALIVE'
+    | 'SPECTATOR'
+    | 'DISCONNECTED'
+    | 'BOARD'
+  ```
+- `ROW_DISPLAY_LABELS` constant — single source of truth mapping
+  internal identifiers to phase-1 D5's literal prose labels
+  (character-for-character):
+  ```ts
+  const ROW_DISPLAY_LABELS: Record<ViewerRole, string> = {
+    SERVER:       'SERVER',
+    ACTOR:        'ACTOR',
+    TARGET:       'TARGET',
+    OTHER_ALIVE:  'OTHER (alive)',
+    SPECTATOR:    'SPECTATOR (eliminated, connected)',
+    DISCONNECTED: 'DISCONNECTED (alive, not connected)',
+    BOARD:        'BOARD',
+  }
+  ```
+  Unit 10's regression test asserts every entry equals phase-1 D5's
+  literal prose to catch drift in either direction.
+- `CoverageReport` shape surfaces the 7×2 grid + absolute count +
+  secondary no-zero-cell gate (phase-3 B5 / D13.1):
   ```ts
   interface CoverageReport {
     firedCount: number                    // absolute, PRD §8.2 threshold = 50
     threshold: 50
     gridCells: Record<
-      'SERVER'|'ACTOR'|'TARGET'|'OTHER_ALIVE'|'SPECTATOR'|
-      'DISCONNECTED'|'BOARD',
+      ViewerRole,
       { column1: number; column2: number; scenarioIds: string[] }
     >
+    zeroCellCount: number                 // count of 14 cells with 0 fires
+    passed: boolean                       // firedCount >= 50 AND zeroCellCount === 0
     firedByViewport: Record<string, string[]>
     freePlayAccounting: FreePlayBudget
     divergences: Array<{ kind: 'self-without-detector' | 'detector-without-self'
@@ -853,8 +949,9 @@ configuration building). Live subprocess behavior covered by Unit 8 smoke.
 - Edge case: `config.godOriginAllowlist` empty/undefined → env does NOT
   set `PLAYTEST_GOD_ORIGINS` (server falls back to LAN + localhost
   defaults per phase-2 Unit 1).
-- Error path: token passed in is < 32 hex chars → throw with actionable
-  message (defense-in-depth; Unit 3b should have already enforced this).
+- Error path: token fails `token.length !== 64 || !/^[0-9a-f]{64}$/.test(token)`
+  → throw with actionable message (defense-in-depth; Unit 3b should have
+  already enforced this — both length and character-class check).
 - Error path: servers fail healthcheck → rejects with the stderr captured.
 - Health-endpoint ready detection (phase-2 Unit 1b): poller hits
   `http://localhost:8787/health` and treats `200 + { ok: true,
@@ -909,10 +1006,19 @@ security-relevant.
 - Happy path: minted tokens are 64 hex chars, match `/^[0-9a-f]{64}$/`.
 - Edge case: override random source → deterministic output for tests
   only, but documented "never use in production."
-- Security: minted token is never returned from any getter that logs;
-  grepping `dist/**/*.js` for a specific test-minted token (after a
-  build) finds zero matches (prod bundle must not ship playtest paths —
-  reuses phase-2 Unit 7 sentinel discipline).
+- **Security: tree-shake sentinel grep (phase-3 B7).** Tokens are
+  minted at RUNTIME — they never exist at build time, so grepping
+  `dist/**/*.js` for a token would always pass trivially. Instead,
+  reuse phase-2 Unit 7 sentinel discipline: build the production
+  bundle, then grep `dist/**/*.js` for static string literals that
+  would only be present if `token-minter.ts` got bundled. Required
+  zero-match list (each is a string the production bundle must not
+  contain): `'mintPlaytestToken'` (function name); the literal module
+  path fragment `'playtest/lib/token-minter'`; any other string
+  uniquely owned by `token-minter.ts` (e.g., a sentinel comment string
+  added at the top of the file specifically for this test). Zero
+  matches across the whole list = playtest code is tree-shaken from
+  prod. Mirrors phase-2 Unit 7 strategy character-for-character.
 
 **Verification:**
 - All tests pass.
@@ -1190,7 +1296,7 @@ launcher will call after it has been written.
   1. Enforce `.last-selftest` freshness → bail if stale.
   2. `createRunDirectory` + `writeSessionStart`.
   3. **Mint per-session token first (Unit 3b):** `token =
-     mintPlaytestToken()` → 32-hex-char string from
+     mintPlaytestToken()` → 64-hex-char string from
      `crypto.randomBytes(32).toString('hex')`. Token is session-scoped per
      D14 (never reuses any global `PLAYTEST_TOKEN` Worker secret); leak
      scope is bounded to this one run.
@@ -1334,9 +1440,32 @@ test with fixture JSONL.
   + sample events.jsonl + sample connections.jsonl for tests.
 
 **Approach:**
-- Parse catalog via a simple markdown walker keyed on `### SCN-` headers
-  and the YAML-ish fire-signature code block. Regex-friendly format from
-  Phase 1 §Scenario record shape.
+- **Catalog format (phase-3 B10 reconciled with phase-1 D1 + D3).**
+  Each scenario is a Markdown H3 (`### SCN-<ID>`) section. The
+  per-scenario record has two parts:
+  1. **Front-matter-style table** (phase-1 D1, line 162-163) for the
+     mandatory fields: ID, title, category, axes, player counts, game
+     moment, min-viewport, trigger conditions, why-it-matters,
+     agent-recognition criteria, suspicion prompts, vibe-check.
+     Rendered as a markdown table immediately after the header.
+  2. **Fenced code blocks** for the three-tier fire-signature fields
+     (phase-1 D3, line 176-210): `events:`, `shape:`,
+     `projection-assertions:`, `ui-assertions:`, `connection-events:`,
+     `inference:`, `known-product-call:`. The code blocks use
+     phase-1 D3's bespoke DSL — NOT strict YAML — including `$ACTOR`
+     / `$TARGET` role bindings, `$PRESENT` / `$ABSENT` sentinels, and
+     literal-match shorthands (`cardType: 'call-in-a-favor'`).
+- **Parser strategy.** Walk the Markdown AST keyed on `### SCN-`
+  headers, extract the front-matter table rows for mandatory fields,
+  then parse each fire-signature fenced code block with the bespoke
+  D3 grammar (line-oriented, regex-friendly: each top-level key on
+  its own line; nested arrays are bullet-indented). The parser is
+  hand-rolled; importing a strict YAML loader would mis-tokenize the
+  `$`-prefixed sigils.
+- (Earlier draft called this "YAML-ish code block" — the literal
+  contract is phase-1 D3's grammar at
+  `docs/plans/playtest-harness/phase-1-scenarios.md:176-210`. Cite
+  that line range from the parser source.)
 - Per-scenario parsed record (mirrors phase-1 D3 / phase-3 D9 grammar
   character-for-character):
   ```ts
@@ -1398,10 +1527,34 @@ test with fixture JSONL.
      declared `at:` index falls within the matched events window.
   Tier 3 is a separate transport from `events.jsonl`; connection
   disconnect/reconnect is NOT a god-event.
-- FireRecord fields: `{ scenarioId, seatId, firstEventIdx, lastEventIdx,
-  nowMsRange, tier1: 'pass' | 'fail', tier2: 'pass' | 'fail' | 'n/a',
-  tier3: 'pass' | 'fail' | 'n/a' }`. A scenario counts as "fired" only if
-  all present tiers pass.
+- **Viewport-invariance (phase-3 B3 / D11):** all three tiers operate
+  exclusively on `events.jsonl` + `connections.jsonl` — neither file's
+  content varies with viewport. Therefore tier-1/2/3 matching is
+  viewport-invariant, and re-firing the same scenario at three
+  viewports produces three identical detector outcomes. The only
+  viewport-sensitive check is each scenario's `ui-assertions:` block,
+  which is seat-agent-eyeballed (Phase 4) and never machine-verified
+  in Phase 3. This is the structural justification for D11's
+  cycling-only-on-tagged-subset rule.
+- FireRecord fields: `{ scenarioId, seatId, firstEventIdx,
+  lastEventIdx, nowMsRange, tier1: 'pass' | 'fail',
+  tier2: 'pass' | 'fail' | 'n/a', tier3: 'pass' | 'fail' | 'n/a',
+  matched: 'clean' | 'with-divergence' | 'no-fire',
+  divergenceNotes?: string[] }`.
+  **Tri-state coverage rule (phase-3 B4 / D9.1):**
+  - `'clean'` — tier1 passed AND every present tier2/tier3 also passed.
+  - `'with-divergence'` — tier1 passed (scenario DID fire) AND at least
+    one present tier2/tier3 failed (oracle caught a bug). Each
+    failure is captured as a structured note in `divergenceNotes` and
+    relayed to the divergence list (separate output) for triage.
+  - `'no-fire'` — tier1 did not match; the scenario did not trigger.
+  Coverage counts `'clean'` + `'with-divergence'` BOTH as "fired" toward
+  the ≥50 threshold (tier-1 passing means the scenario triggered;
+  tier-2/3 divergence is a bug report, not a missed scenario). The old
+  rule "all present tiers pass → fire" silently lost the scenario from
+  the firedCount whenever the oracle caught a divergence — exactly
+  inverted signal. New rule restores fire count + surfaces divergences
+  as a separate output.
 - `ui-assertions:` and `inference:` are diagnostic-only (never machine-
   verified) — surfaced verbatim in the coverage report for seat-agent
   corroboration.
@@ -1412,25 +1565,42 @@ test with fixture JSONL.
 
 **Test scenarios:**
 - Tier-1 happy path: strict-shape scenario, single fire → one FireRecord
-  with `tier1='pass'`, `tier2='n/a'`, `tier3='n/a'`.
-- Tier-1 `contains` shape: sparse event stream with extras → matches.
+  with `tier1='pass'`, `tier2='n/a'`, `tier3='n/a'`, `matched='clean'`.
+- Tier-1 `contains` shape: sparse event stream with extras → matches
+  (`matched='clean'`).
 - Tier-1 `negative` shape: dispatch error with cited code present → counts
-  as fire; same dispatch without error → not fired.
+  as fire (`matched='clean'`); same dispatch without error → not fired
+  (`matched='no-fire'`).
+- Tier-1 miss: events stream lacks the required shape → no FireRecord OR
+  FireRecord with `tier1='fail'`, `matched='no-fire'`.
 - Tier-2 happy path: axis-11 named-steal scenario with
   `projectionAssertions` against
   `projections[$TARGET].nopeWindow.namedSteal.namedCardType = $PRESENT` →
   tier1 passes on events window, tier2 reads the god-event projection
-  snapshot and sees the field → fire recorded.
-- Tier-2 divergence: tier1 passes but `projections[$TARGET]` is missing
-  the named-steal field → `tier2='fail'`, logged as a projection-layer
-  finding, NOT counted as a fire.
+  snapshot and sees the field → `matched='clean'`, fire recorded.
+- **Tier-2 divergence (phase-3 B4):** tier1 passes but
+  `projections[$TARGET]` is missing the named-steal field → `tier1='pass'`,
+  `tier2='fail'`, **`matched='with-divergence'`**. Counts toward
+  `firedCount` AND emits a divergence note enumerating
+  `{ scenarioId, tier: 2, viewer: 'TARGET', path:
+  'nopeWindow.namedSteal.namedCardType', expected: '$PRESENT',
+  observed: '$ABSENT' }`. The divergence is a projection-layer bug
+  report (the scenario DID fire — the engine reached the named-steal
+  state — and the oracle caught the projection bug). Old rule would
+  have hidden this fire from the count entirely.
 - Tier-3 happy path: axis-13 reconnect-before-resolve scenario with
   `connectionEvents: [{ seat: 'alice', transition: 'disconnect', at: 3 },
   { seat: 'alice', transition: 'reconnect', at: 7 }]` → matcher consults
   `connections.jsonl`, confirms both transitions occurred within the
-  events window → fire recorded.
-- Tier-3 missing connection log: axis-13 scenario but no matching
-  transitions in `connections.jsonl` → `tier3='fail'`, not a fire.
+  events window → `matched='clean'`, fire recorded.
+- **Tier-3 divergence (phase-3 B4):** axis-13 scenario fires on
+  events (tier1 pass) but expected reconnect transition missing in
+  `connections.jsonl` → `tier3='fail'`, **`matched='with-divergence'`**,
+  divergence note `{ scenarioId, tier: 3, expected: 'reconnect at 7',
+  observed: 'no reconnect transition' }`. Counts toward `firedCount`.
+- Mixed-tier divergence: tier1 passes, tier2 passes, tier3 fails →
+  `matched='with-divergence'`, divergence note enumerates only the
+  failed tier(s).
 - Edge case: two scenarios with identical tier-1 signatures differing only
   in tier-2 → both evaluated; tier-2 disambiguates.
 - Error path: malformed events.jsonl line → skipped with warning, not
@@ -1456,7 +1626,10 @@ info-gap grid** with an **absolute ≥50 fired-scenario** pass/fail gate
 **Execution note:** Test-first on rendering. The grid structure is pure-
 function output from the `CoverageReport` type (Unit 1).
 
-**Requirements:** R6
+**Requirements:** R6, R8 (this unit IS the implementation of the
+absolute ≥50 + no-zero-cell gates declared by R8 + D13.1; computes
+both gates, renders verdict, surfaces zero-cell + with-divergence
+counts in the summary banner).
 
 **Dependencies:** Units 1, 9.
 
@@ -1471,9 +1644,14 @@ function output from the `CoverageReport` type (Unit 1).
 - `renderCoverage(report: CoverageReport): string` returns markdown. The
   two are separated so tests can assert the struct without parsing
   rendered markdown.
-- Grid rows (phase-1 D5 / phase-3 D13, character-for-character):
-  **SERVER, ACTOR, TARGET, OTHER_ALIVE, SPECTATOR, DISCONNECTED, BOARD**
-  (7 rows).
+- Grid rows (7), internal identifiers → phase-1 D5 literal display
+  labels via `ROW_DISPLAY_LABELS` (from Unit 1):
+  `SERVER` → `'SERVER'`; `ACTOR` → `'ACTOR'`; `TARGET` → `'TARGET'`;
+  `OTHER_ALIVE` → `'OTHER (alive)'`; `SPECTATOR` →
+  `'SPECTATOR (eliminated, connected)'`; `DISCONNECTED` →
+  `'DISCONNECTED (alive, not connected)'`; `BOARD` → `'BOARD'`.
+  `renderCoverage` emits the display labels; types and test identities
+  use the internal form.
 - Grid columns (phase-1 D5, character-for-character):
   **Column 1 — Projection returns today** (descriptive, cites
   `src/server/projection.ts`) and **Column 2 — Viewer should see**
@@ -1483,25 +1661,48 @@ function output from the `CoverageReport` type (Unit 1).
 - Each cell tallies the scenarios whose fire signature touched that
   (vantage, column) pair AND fired this run. `gridCells[row].column1` /
   `.column2` / `.scenarioIds` mirrors the Unit 1 shape.
-- **Pass/fail gate (PRD §8.2):** `report.firedCount >= 50` →
-  `PASS`; else → `UNDER-COVERED` with unhit-per-vantage breakdown. The
-  7×2 grid is the TRIAGE view, not the gate — a cell reading 0 after a
-  session series is a scenario-drafting signal for the next catalog
-  pass, not a run failure (D13, final paragraph).
+- **Pass/fail gate (PRD §8.2 + phase-3 D13.1 / B5).** Two conjoint
+  gates:
+  - **Primary (R8 absolute count):** `report.firedCount >= 50`. Per
+    D9.1 / B4, `firedCount` includes BOTH `matched='clean'` AND
+    `matched='with-divergence'` records (a tier-2/3 oracle finding is
+    a bug report, not a missed scenario).
+  - **Secondary (no-zero-cell):** `report.zeroCellCount === 0`. Every
+    one of the 14 cells (7 rows × 2 columns) must have ≥1 fire; if
+    `DISCONNECTED × Column 1` or `SPECTATOR × Column 2` (or any other
+    cell) reads 0, the run fails. Without this gate, 50 fires can
+    concentrate in 2 cells while the vantages most likely to expose
+    projection bugs stay at zero — gameable. Pass = (`firedCount >= 50`)
+    AND (`zeroCellCount === 0`); else `UNDER-COVERED` with the failing
+    gate(s) and breakdown reported.
 - Markdown sections, in order:
-  1. **Summary banner** — `Fired: <N> / target: 50` + PASS / UNDER-COVERED
-     verdict.
+  1. **Summary banner** — `Fired: <N> / target: 50` + PASS /
+     UNDER-COVERED verdict + `Zero cells: <K>` (D13.1 secondary gate)
+     + `With-divergence: <M>` (count of FireRecord
+     `matched='with-divergence'`).
   2. **7×2 info-gap grid** — markdown table, 7 rows × 2 data columns
      (row label, column1 count, column2 count, scenarioIds summary).
+     Cells reading 0 highlighted; row labels emit via
+     `ROW_DISPLAY_LABELS` (Unit 1, B2).
   3. **Fired by viewport** — per-viewport scenario list (D11 three
-     viewports).
+     viewports). Tagged-scenario subset only per B3.
   4. **Free-play accounting** — free-play vs scripted wallclock split
      (D12).
-  5. **Fired scenarios** — flat list with tier-pass breakdown from Unit 9.
-  6. **Unfired scenarios** — grouped by axis, each with the vantage cell
-     it WOULD have covered.
-  7. **Divergences** — self-report vs detector, column-1 vs column-2
-     mismatches (the D5 "break the oracle-is-SUT tautology" findings).
+  5. **Fired scenarios** — flat list with `matched` state +
+     tier-pass breakdown from Unit 9 (`clean` and `with-divergence`
+     entries; `no-fire` entries surfaced under section 6 instead).
+  6. **Unfired scenarios** — `matched='no-fire'` records grouped by
+     axis, each with the vantage cell it WOULD have covered.
+  7. **Divergence list (phase-3 B4 / D9.1).** Two sub-categories:
+     a) **Tier-2/3 oracle divergences** — every FireRecord with
+     `matched='with-divergence'`, enumerating per-failure
+     `{ scenarioId, tier, viewer | seat | path, expected, observed }`
+     from `divergenceNotes`. These ARE bug reports against the SUT
+     (projection-layer or connection-lifecycle); the underlying
+     scenario still counts toward `firedCount`.
+     b) **Self-vs-detector divergences** — self-report-without-detector
+     and detector-without-self-report mismatches (the D5 "break the
+     oracle-is-SUT tautology" findings).
   8. **Known product calls** — scenarios fired that carry
      `known-product-call:` tags; noted, suppressed from "new findings"
      count per phase-1 D4.
@@ -1514,19 +1715,42 @@ function output from the `CoverageReport` type (Unit 1).
 **Test scenarios:**
 - Happy path: `firedCount = 50` → banner shows `Fired: 50 / target: 50`,
   verdict `PASS`.
-- Happy path: `firedCount = 60`, 20 in SERVER col1, 10 in ACTOR col2, etc.
-  → grid cells total correctly; grid sum equals sum-of-scenario
-  (vantage, column) pairs touched, NOT `firedCount` (one scenario can
-  touch multiple cells).
-- Fail path: `firedCount = 48` → verdict `UNDER-COVERED`; under-covered
-  cells listed.
-- Edge case: all axis-11 scenarios fired tier1 but failed tier2 projection-
-  assertion → grid credits column1 (events matched) but flags column2 as
-  a divergence (oracle says viewer "should see" field; projection doesn't
-  return it today).
+- Happy path: `firedCount = 60`, 20 in SERVER col1, 10 in ACTOR col2,
+  etc., `zeroCellCount = 0` → `passed=true`, verdict `PASS`. Grid
+  cells total correctly; grid sum equals sum-of-scenario (vantage,
+  column) pairs touched, NOT `firedCount` (one scenario can touch
+  multiple cells).
+- Fail path (primary gate): `firedCount = 48`, `zeroCellCount = 0` →
+  `passed=false`, verdict `UNDER-COVERED — primary (≥50) failed`;
+  under-covered cells listed.
+- **Fail path (secondary gate, phase-3 B5):** `firedCount = 80` (well
+  past primary), but ALL fires concentrate in `SERVER × Column 1` and
+  `ACTOR × Column 1` while `DISCONNECTED × Column 1`,
+  `DISCONNECTED × Column 2`, `SPECTATOR × Column 2` etc. read 0 →
+  `zeroCellCount = 12` (or however many), `passed=false`, verdict
+  `UNDER-COVERED — secondary (no-zero-cell) failed`; failing cells
+  enumerated. Without this case the suite is gameable: an 80-fire
+  ACTOR-only run would PASS while DISCONNECTED projection bugs stay
+  invisible.
+- **Tri-state coverage counting (phase-3 B4 / D9.1):** a scenario
+  with `matched='with-divergence'` (tier1 pass, tier2 fail) → counted
+  toward `firedCount` AND surfaced under section 7 (Divergence list)
+  with the structured note. Same scenario with `matched='no-fire'`
+  → NOT counted toward `firedCount` and surfaced under section 6
+  (Unfired scenarios) instead.
+- **Mixed tri-state scenario:** 40 `clean` fires + 15
+  `with-divergence` fires + 100 `no-fire` records →
+  `firedCount = 55` (40 + 15), `passed` depends on zeroCellCount;
+  Divergence list section 7 enumerates 15 entries.
+- Edge case: all axis-11 scenarios fired tier1 but failed tier2
+  projection-assertion → every record `matched='with-divergence'`;
+  grid credits column1 (events matched) AND column2 (still touched
+  by the scenario's vantage); divergence list enumerates the tier-2
+  projection-layer findings; `firedCount` includes every scenario
+  (none silently lost).
 - Edge case: scenario self-reported but no detector match → `divergences`
   array contains `{ kind: 'self-without-detector', ... }`; rendered in
-  Divergences section.
+  Divergences section 7b.
 - Edge case: detector match without self-report → `{ kind: 'detector-
   without-self', ... }` rendered.
 - Edge case: known-product-call scenario fired → appears in Known product
@@ -1534,13 +1758,23 @@ function output from the `CoverageReport` type (Unit 1).
   gate (per phase-1 D4 suppression contract).
 - Edge case: 2-player session has no OTHER_ALIVE row content → renders
   the row with `n/a` cells, does not crash.
-- Regression: grid row labels and column labels are literal strings from
-  phase-1 D5; a test asserts exact equality to catch drift.
+- Regression: for every `ViewerRole` internal identifier, the test
+  asserts `ROW_DISPLAY_LABELS[role]` equals phase-1 D5's literal prose
+  (`'SERVER'`, `'ACTOR'`, `'TARGET'`, `'OTHER (alive)'`,
+  `'SPECTATOR (eliminated, connected)'`,
+  `'DISCONNECTED (alive, not connected)'`, `'BOARD'`). Catches drift in
+  either direction. Column labels are likewise asserted
+  character-for-character against phase-1 D5.
 
 **Verification:**
 - Unit tests pass.
-- Column labels are character-for-character equal to phase-1 D5.
-- `firedCount >= threshold (=50)` maps to PASS verdict unambiguously.
+- Column labels are character-for-character equal to phase-1 D5
+  (asserted via `ROW_DISPLAY_LABELS`).
+- `passed` is true iff `firedCount >= 50` AND `zeroCellCount === 0`
+  (phase-3 D13.1 / B5); both gates required.
+- Tri-state `matched` (clean / with-divergence / no-fire) drives both
+  `firedCount` (clean + with-divergence) and divergence-list
+  population (with-divergence only) per D9.1 / B4.
 
 - [ ] **Unit 10b: `retention.ts` + `purge.ts` — session-dir rotation + operator purge** *(D15)*
 
@@ -1653,7 +1887,7 @@ rotate / purge); integration-tested for FS ops.
   `docs/testing/playtest/runs/**` gitignored at Unit 1; session
   artifacts never reach the repo.
 - **Per-session token minted locally (phase-3 D14, not global).** Unit
-  6 mints a 32-hex-char token at run start via Unit 3b; seeds it into
+  6 mints a 64-hex-char token at run start via Unit 3b; seeds it into
   the wrangler child env (`PLAYTEST_TOKEN`) and uses the same value in
   the god WS URL. No reliance on any global Worker secret. Leak scope
   = one session. Token rotation = session end (implicit, via process
@@ -1717,6 +1951,7 @@ rotate / purge); integration-tested for FS ops.
 | Retention archives balloon disk usage | Default `retentionMode: 'archive'` tarballs older runs but does not auto-delete archives. Operator invokes `pnpm playtest:purge` explicitly (D15, Unit 10b); no implicit scheduled purge. |
 | Harness git SHA recorded stale (Claude forgets) | `session.md` writer reads SHA at start via `git rev-parse HEAD` — automated. |
 | Dev servers already running from separate terminal | Orchestrator detects (health endpoint responds before spawn) and aborts with clear message — do NOT reuse, because flag + minted token would be unset in the pre-existing process. |
+| Form-factor cycling tripled wallclock without coverage gain (pre-B3) | D11 / phase-3 B3 scope reduction: viewport rotation only fires for scenarios tagged `min-viewport:` OR carrying `ui-assertions:`. All other scenarios run on the default viewport (390×844). Tier-1/2/3 detector is viewport-invariant by construction (consumes `events.jsonl` + `connections.jsonl` only), so re-running viewport-insensitive scenarios at three viewports produces three identical outcomes — pure wallclock waste. Estimated wallclock reduction vs naïve cycling: ~3× on the untagged majority, while still cycling the tagged subset where seat-agent eyeballing varies by viewport. |
 
 ## Documentation / Operational Notes
 
@@ -1734,9 +1969,15 @@ rotate / purge); integration-tested for FS ops.
 - **D3 — three-tier fire-signature grammar (events / shape /
   projection-assertions / ui-assertions / connection-events /
   inference):** `docs/plans/playtest-harness/phase-1-scenarios.md:176-210`.
-- **D5 — 7-row × 2-column info-gap table (SERVER, ACTOR, TARGET,
-  OTHER_ALIVE, SPECTATOR, DISCONNECTED, BOARD × Column 1 "Projection
-  returns today" / Column 2 "Viewer should see"):**
+- **D5 — 7-row × 2-column info-gap table.** Phase-1 prose labels
+  (literal): `SERVER`, `ACTOR`, `TARGET`, `OTHER (alive)`,
+  `SPECTATOR (eliminated, connected)`,
+  `DISCONNECTED (alive, not connected)`, `BOARD`. Phase-3 mirrors
+  these character-for-character via `ROW_DISPLAY_LABELS` (Unit 1)
+  while internal types use identifiers `SERVER`, `ACTOR`, `TARGET`,
+  `OTHER_ALIVE`, `SPECTATOR`, `DISCONNECTED`, `BOARD`. Columns:
+  `Column 1 — Projection returns today` /
+  `Column 2 — Viewer should see`.
   `docs/plans/playtest-harness/phase-1-scenarios.md:222-256`.
 - **Coverage axes (15, including axis 11 info-visibility, axis 13
   connectivity, axis 15 form-factor):**

@@ -262,28 +262,33 @@ None. Entirely repo-internal scaling of proven patterns.
   (b) declaring the **allowlist contract** as two named typed constants
   exported from `scripts/playtest/lib/types.ts` (Unit 1):
   `ALLOWED_PAGE_METHODS` and `DISALLOWED_PAGE_METHODS` — both declared
-  with `as const` on their tuple literals (see Unit 1's typed constant
-  block below) so the derived `AllowedPageMethod` / `DisallowedPageMethod`
-  types are literal-string unions, not `string[]`. Phase 4's
-  `SeatPageWrapper` (if retained per phase-4 C2) derives its public type
-  from those literal unions; the subagent `tools:` whitelist (phase-4 C1)
-  is the primary enforcement. Phase 4 imports both to build the runtime
-  wrapper. Methods agents MAY call (`ALLOWED_PAGE_METHODS`):
-  `locator`, `waitFor`, `click`, `fill`, `type`, `press`, `getByRole`,
+  with `as const` on their tuple literals so the derived
+  `AllowedPageMethod` / `DisallowedPageMethod` types are literal-string
+  unions, not `string[]`. These constants are **canonical vocabulary
+  only** — Phase 4's H-3b rigor pass established that the primary
+  enforcement mechanism is the subagent frontmatter `tools:` whitelist
+  in `.claude/agents/playtest-seat.md` (Phase 4 Unit 1b), NOT a
+  TypeScript runtime wrapper (see insight 020). Claude Code enforces
+  the tools whitelist at the MCP tool-surface boundary; a TypeScript
+  wrapper cannot constrain a subagent driving Playwright via MCP
+  because the MCP server runs in a separate process.
+  Methods allowed on the Page (`ALLOWED_PAGE_METHODS`): `locator`,
+  `waitFor`, `click`, `fill`, `type`, `press`, `getByRole`,
   `getByText`, `getByLabel`, `getByTestId`, `screenshot`. Methods
-  agents MAY NOT call (`DISALLOWED_PAGE_METHODS`): `goto`, `evaluate`,
+  forbidden (`DISALLOWED_PAGE_METHODS`): `goto`, `evaluate`,
   `addInitScript`, `route`, `setExtraHTTPHeaders`, `setOfflineMode`,
   `request`, `context`, any `network` accessor, `addLocatorHandler`,
   `setViewportSize`. The orchestrator performs the initial join flow
   itself before handing control to the agent (this is why `goto` is
-  not on the allowlist). **Runtime enforcement is Phase 4's job** —
-  Phase 4 owns the wrapper that exposes only allowlisted methods.
-  Phase 3's self-test check 5 asserts `ALLOWED_PAGE_METHODS` +
-  `DISALLOWED_PAGE_METHODS` both exist as named exports AND that the
-  intersection of their sets is empty AND that `DISALLOWED_PAGE_METHODS`
-  contains the eval / network / nav primitives. Phase 4's contract
-  tests assert the wrapper actually rejects calls to every member of
-  `DISALLOWED_PAGE_METHODS` at runtime.
+  not on the allowlist). Phase 3's self-test check 5 asserts
+  `ALLOWED_PAGE_METHODS` + `DISALLOWED_PAGE_METHODS` both exist as
+  named exports, their intersection is empty, and
+  `DISALLOWED_PAGE_METHODS` contains the eval / network / nav
+  primitives. Phase 4's Unit 1b contract tests confirm that the
+  subagent's frontmatter whitelist contains only tools consistent
+  with `ALLOWED_PAGE_METHODS` (no `browser_evaluate`, `browser_navigate`,
+  etc.). There is NO runtime TypeScript wrapper in v1 (Phase 4 D14
+  removed it).
 - **D6. `page.evaluate` and `page.addInitScript` are NOT in the agent's
   tool surface.** Per research finding, `window.__gameStoreSnapshot` is
   god-mode; letting an agent run arbitrary JS defeats allowlist isolation.
@@ -2284,15 +2289,15 @@ rotate / purge); integration-tested for FS ops.
 - **D4 — god-event envelope emitted from `broadcastGameState` (NOT
   dispatch-site):** `docs/plans/playtest-harness/phase-2-playtest-mode.md:160-183`.
 - **Unit 4 — `role=god` acceptance, close codes 4003 / 4004 / 4005:**
-  `docs/plans/playtest-harness/phase-2-playtest-mode.md:561-655`.
+  `docs/plans/playtest-harness/phase-2-playtest-mode.md:690-784`.
 - **Unit 5 — `playtest-config` first-write-wins + `PLAYTEST_CONFIG_LOCKED`
-  error:** `docs/plans/playtest-harness/phase-2-playtest-mode.md:656-748`.
+  error:** `docs/plans/playtest-harness/phase-2-playtest-mode.md:785-877`.
 - **Unit 6 — emit-from-broadcast implementation + per-viewer split
-  fallback:** `docs/plans/playtest-harness/phase-2-playtest-mode.md:749-867`.
+  fallback:** `docs/plans/playtest-harness/phase-2-playtest-mode.md:878-1006`.
 - **Unit 6a — `buildGodProjections(state, boardView, connectedPlayerIds)`
-  pure helper:** `docs/plans/playtest-harness/phase-2-playtest-mode.md:868-1087`.
+  pure helper:** `docs/plans/playtest-harness/phase-2-playtest-mode.md:1007-1166`.
 - **Unit 8 — payload budget (< 512 KiB at N=10) + per-viewer split trigger:**
-  `docs/plans/playtest-harness/phase-2-playtest-mode.md:1117-1122`.
+  `docs/plans/playtest-harness/phase-2-playtest-mode.md:1242-1318`.
 
 **Engine / projection anchors:**
 - **`broadcastGameState` (god-event emission site):**

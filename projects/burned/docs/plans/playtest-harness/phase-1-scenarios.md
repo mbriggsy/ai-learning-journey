@@ -957,14 +957,15 @@ Test expectation: none.
 - **Downstream contracts:**
   - Phase 2 inherits R7: the god-event WS broadcast must carry per-viewer
     projection snapshots for scenarios with `projection-assertions:`.
-    Declared here, shipped there. **Concrete gap:** the current
-    `docs/plans/playtest-harness/phase-2-playtest-mode.md` god-event
-    envelope (`{ type: 'god-event', action, events, stateVersion, nowMs }`)
-    has no `projections` field. Harden pass (task #8) MUST extend the
-    envelope to `{ ..., projections: Record<playerId, PlayerView>,
-    boardView: BoardView }` and add a Phase 2 implementation unit for the
-    per-viewer projection broadcast. Without this, Phase 3's detector
-    cannot verify axis-11 scenarios.
+    Declared here, shipped there. **Concrete gap (addressed 2026-04-23
+    in H-1a):** the envelope in the original `phase-2-playtest-mode.md`
+    draft (`{ type: 'god-event', action, events, stateVersion, nowMs }`)
+    had no `projections` field. H-1a absorbed the contract, extending it
+    to `{ ..., projections: Record<playerId, PlayerView>,
+    boardView: BoardView }` and adding Phase 2 Unit 6a for the per-viewer
+    projection broadcast. H-1b then corrected the emission site to
+    `broadcastGameState` (not dispatch-site) to guarantee structural
+    equality with `state-update` payloads. Gap closed.
   - Phase 3's scenario-fire detector consumes the three-tier fire signature
     grammar (events + projection-assertions + inference). Parser must
     recognize all three.

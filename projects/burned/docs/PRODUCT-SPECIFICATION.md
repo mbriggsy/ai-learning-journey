@@ -9,7 +9,7 @@
 >
 > **Primary audience: Claude.** Humans read the README. Every future Claude session loads this file into context as the contract. That changes how it's written — no fluff, acceptance tests instead of aspirations, direct imperatives instead of suggestions. Humans can still read it; good technical writing is good regardless of audience, but we optimize for the primary reader.
 >
-> **Authoring history:** written in the session `burned-product-specification-convo` on 2026-04-10, one section at a time, after a visual-layer autopsy revealed BURNED never had a product specification and three visual failures in a row traced back to that missing artifact. See `docs/post-mortems/VISUAL-LAYER-AUTOPSY.md` for the post-mortem.
+> **Authoring history:** written in the session `burned-product-specification-convo` on 2026-04-10, one section at a time, after a visual-layer autopsy revealed BURNED never had a product specification and three visual failures in a row traced back to that missing artifact. See `docs/ideation/2026-04-11-visual-layer-autopsy.md` for the post-mortem.
 
 ---
 
@@ -17,7 +17,7 @@
 
 **BURNED is a digital party card game for 2–10 players, designed for same-room play.** Nothing in the system prevents remote play — and the rules doc will explain how — but every design decision is optimized for the faces, groans, and table talk of people sitting together. One shared screen (TV, laptop, iPad in a stand) displays the game table — draw pile, discard, player ring, all the drama. Each player's phone is their private controller — showing their hand, letting them play cards, and keeping their moves secret from everyone else. Players join by scanning a QR code or entering a short room code. No accounts, no installs, no logins — open a browser and you're in.
 
-The mechanics are a faithful, unchanged port of **Exploding Kittens: Party Pack** — same 120-card deck, same card types, same rules. The **world** is completely original: **The Pendleton Agency**, a mid-century spy outfit staffed by brilliant disasters. Six original operative characters (Dash, Vera, Otto, Janet, Neal, plus Agent X as the rival wild card) replace the cats. The Exploding Kitten becomes **BURNED** — spy jargon for a blown cover, which is the lose condition. Every card type is rethemed to match: Defuse → Extraction, Nope → Intercept, Attack → Surveillance.
+The mechanics are a faithful, unchanged port of **Exploding Kittens: Party Pack** — same 120-card deck, same card types, same rules. The **world** is completely original: **The Pendleton Agency**, a mid-century spy outfit staffed by brilliant disasters. Five original operative characters (Dash, Vera, Sable, Janet, Neal) replace the cat cards, plus Agent X as the rival wild card; Otto (Krieger archetype) appears in the roster but not the deck. The Exploding Kitten becomes **BURNED** — spy jargon for a blown cover, which is the lose condition. Every card type is rethemed — for example, Defuse → Extraction, Nope → Intercepted, See the Future → Intel Briefing. Full mapping in `docs/RULES-REFERENCE.md` (source of truth: `src/shared/card-defs.ts`).
 
 The tone is **Archer**. Dry spy comedy, brilliant disasters, production polish that shouldn't exist on basic cable. The visual language is **literally Archer** — bold line illustration, flat color fills, warm teal/orange/cream palette, mid-century glamour. See §2 (Quality Bar) and §3 (Visual Reference) for the contract.
 
@@ -104,7 +104,7 @@ BURNED has two distinct form factors. Each has its own scaling constraints. Thes
 
 Every `clamp()` formula, token scale, spacing step, and typography size derives from the constraining axis. UMB's Phase 4 (host/table view) plan used formulas like `clamp(0.5rem, 0.3rem + 0.5vw, 1rem)` because the host is landscape and scales with width. **BURNED's player view must use `svh` instead**: `clamp(0.5rem, 0.3rem + 0.5svh, 1rem)` — same structure, correct axis.
 
-This is the #1 lesson from `docs/post-mortems/VISUAL-LAYER-AUTOPSY.md`: the current player view uses `42vw` for card sizing, which tracks the wrong axis and is the root cause of the visual fragility. The CSS Foundation Rebuild Plan fixes this by deriving everything from `svh`.
+This is the #1 lesson from `docs/ideation/2026-04-11-visual-layer-autopsy.md`: the current player view uses `42vw` for card sizing, which tracks the wrong axis and is the root cause of the visual fragility. The CSS Foundation Rebuild Plan fixes this by deriving everything from `svh`.
 
 **Do not mix axes.** Player view tokens scale against height. Board view tokens scale against width. Any cross-view shared token (colors, card aspect ratio, font family) must be axis-independent.
 
@@ -238,7 +238,7 @@ Things we explicitly decided *not* to decide now. Do not build these until revis
 **EliminatedView** (`EliminatedView.tsx`) — full-screen, replaces PlayingView when the player is no longer alive:
 
 - Animated skull icon (spring entry, scale 0 → 1, rotate -15° → 0°)
-- Title line (currently ⚠️ *"You Exploded!"* — **retheme gap, see §6.4**)
+- Title line (*"You're Burned."*)
 - Random flavor line from an 8-option pool (mixed spy / EK-legacy — **retheme gap**)
 - "Still alive" player list (chips with color icon + name)
 - Prompt: *"Watch the TV for the action"*
@@ -263,7 +263,7 @@ Things we explicitly decided *not* to decide now. Do not build these until revis
 | Center — DrawPile | Middle-left of center | Face-down draw pile with count remaining |
 | Center — DiscardFan | Middle-right of center | Fanned-out recently-played cards showing top card art |
 | Arena (`Arena.tsx`) | Overlaid on center | Cards "land" here during play animations (GSAP-driven) |
-| feltBranding | Background decoration | ⚠️ **Literal EK leftover** — retheme gap, see §6.4 |
+| ~~feltBranding~~ | *(retired)* | Retired during Desk Redesign — the blotter/felt concept was replaced with mahogany desk + venetian blinds + brass nameplate. See §8.4 (checked) and `docs/plans/desk-redesign/PLAN.md`. |
 | NopeCountdownBar (`NopeCountdownBar.tsx`) | Overlay | Globally-visible intercept window countdown |
 | AnnouncementFeed (`AnnouncementFeed.tsx`) | Edge of screen | Event stream (*"Vera played Intercept"*) |
 | PendingPromptBanner (`PendingPromptBanner.tsx`) | Overlay | Shows who the game is waiting on (*"Waiting for Dash to place the Extraction"*) |
@@ -398,7 +398,7 @@ These are code-level leftovers that don't appear in the UI but create cognitive 
 
 **Decision (user-facing):** Every dimension, color, spacing step, typography choice, and animation timing in BURNED traces to a shared, documented token. A card in the hand view and a card in a bottom sheet are the same size *because they consume the same token value,* not because two CSS files happened to independently arrive at the same pixel number. A button's corner radius is the same across every surface. A heading's font size is the same wherever that heading role appears.
 
-**Why this is a product decision:** Visual inconsistency is the #1 tell that a product was built by one person in spare time rather than by a team with a design system. A user can't tell you *why* a hobbyist app looks "off" — they just feel it. It's the rogue 14px next to the 16px, the extra 2px of padding on one button, the slightly-different card corner radius on one screen. **This inconsistency is what the §2.2 Archer test fails against.** An Archer episode has production-level discipline — every frame's typography, color, and spacing is coordinated. BURNED's current state (per `docs/post-mortems/VISUAL-LAYER-AUTOPSY.md`) is "organized chaos" — each CSS Module makes independent sizing decisions, and the cumulative effect reads as amateur.
+**Why this is a product decision:** Visual inconsistency is the #1 tell that a product was built by one person in spare time rather than by a team with a design system. A user can't tell you *why* a hobbyist app looks "off" — they just feel it. It's the rogue 14px next to the 16px, the extra 2px of padding on one button, the slightly-different card corner radius on one screen. **This inconsistency is what the §2.2 Archer test fails against.** An Archer episode has production-level discipline — every frame's typography, color, and spacing is coordinated. BURNED's current state (per `docs/ideation/2026-04-11-visual-layer-autopsy.md`) is "organized chaos" — each CSS Module makes independent sizing decisions, and the cumulative effect reads as amateur.
 
 **User-facing acceptance condition:** When the first-time player test (§8.7) is run, consistency must be *invisible* — the player should never notice a visual discontinuity between screens, cards, or buttons. If they can't articulate what's wrong but the experience feels "off," consistency has failed.
 
@@ -482,10 +482,10 @@ These are code-level leftovers that don't appear in the UI but create cognitive 
 - [ ] All 7 bottom sheets render and dismiss correctly: DefusePlacement, FavorResponse, FuturePeek (read-only + rearrange), TargetSelect (local + prompted), NameCard, CardDetailSheet.
 - [ ] Optimistic updates for card play: no visible lag between tap and hand update.
 - [ ] Reconnection preserves player identity (session token) — dropped player rejoins same slot with same hand.
-- [ ] EliminatedView shows corrected spy-tone copy from §6.4 retheme gaps.
+- [x] EliminatedView shows corrected spy-tone copy from §6.4 retheme gaps. *(Verified 2026-04-23: title "You're Burned."; 9 rethemed flavor lines in `EliminatedView.tsx`.)*
 
 **Technical:**
-- [ ] Phone bundle ≤ 100KB gzipped on initial load. Current ~95KB. If the CSS rebuild or retheme pushes it over, tree-shake or lazy-load before declaring done.
+- [ ] Phone bundle ≤ 100KB gzipped on initial load. Current ~96KB (measured 2026-04-23; canonical table in `CLAUDE.md` §Bundle Sizes). If the CSS rebuild or retheme pushes it over, tree-shake or lazy-load before declaring done.
 - [ ] No `motion` imports (only `m`). Enforced by ESLint.
 - [ ] No `console.log` in production build.
 
@@ -494,7 +494,7 @@ These are code-level leftovers that don't appear in the UI but create cognitive 
 **Visual:**
 - [ ] Every screen passes the Archer test. Screenshots at 1280×720 (small laptop), 1920×1080 (desktop), 3840×2160 (4K TV). Manually compared.
 - [ ] No dead void space — player ring, draw/discard piles, and arena fill the screen at every supported size.
-- [ ] `feltBranding` replaced with Archer/Pendleton branding (from §6.4).
+- [x] `feltBranding` replaced with Archer/Pendleton branding (from §6.4). *(Verified 2026-04-23: the felt/blotter concept was retired entirely during the Desk Redesign. Zero `feltBranding` matches in `src/`; the arena now uses mahogany desk + venetian blinds + brass nameplate. See `docs/plans/desk-redesign/PLAN.md`.)*
 - [ ] Card animations land in the arena with dramatic presentation.
 
 **Functional:**
@@ -510,14 +510,14 @@ These are code-level leftovers that don't appear in the UI but create cognitive 
 - [ ] HOW-TO-PLAY covers all 17 card types with clear rules, examples, and edge cases (Intercept chains, 3-card and 5-card combos, targeted attacks, self-Intercept disallowed, Draw From Bottom auto-triggers).
 - [ ] HOW-TO-PLAY includes remote-play instructions (per §1: same-room is intent, remote works).
 - [ ] HOW-TO-PLAY rendered as a polished HTML page with the same visual language as the game itself.
-- [ ] `README.md` reflects current state of the project.
-- [ ] `CLAUDE.md` references `docs/specifications/PRODUCT-SPECIFICATION.md` as the canonical contract.
-- [x] `docs/ideation/*.md` and `docs/brainstorms/*.md` each carry a *"SUPERSEDED — see `docs/specifications/PRODUCT-SPECIFICATION.md`"* banner at the top.
+- [x] `README.md` reflects current state of the project. *(Rewritten 2026-04-23.)*
+- [x] `CLAUDE.md` references `docs/PRODUCT-SPECIFICATION.md` as the canonical contract. *(See `CLAUDE.md` §The Contract.)*
+- [x] `docs/ideation/*.md` each carry a *"SUPERSEDED — see `docs/PRODUCT-SPECIFICATION.md`"* banner at the top.
 
 ### §8.4 — Retheme completeness
 
-- [ ] All §6.4 Tier 1 gaps fixed: EliminatedView title, EliminatedView flavor lines (4 cut + 4 replaced), GameTable feltBranding.
-- [ ] All §6.4 Tier 2 gaps fixed: `engine.ts` EK comments renamed, `EK_*_MS` timing constants renamed to `BURNED_*_MS`, `engine.ts:1040` error message updated, `Arena.tsx:7` comment updated.
+- [x] All §6.4 Tier 1 gaps fixed: EliminatedView title, EliminatedView flavor lines (4 cut + 4 replaced), GameTable feltBranding. *(Verified 2026-04-23. Title "You're Burned."; flavor pool fully rethemed; `feltBranding` retired during Desk Redesign.)*
+- [x] All §6.4 Tier 2 gaps fixed: `engine.ts` EK comments renamed, `EK_*_MS` timing constants renamed to `BURNED_*_MS`, `engine.ts:1040` error message updated, `Arena.tsx:7` comment updated. *(Verified 2026-04-23: zero `EK_` matches in `src/`.)*
 - [ ] §6.4 Tier 3 state machine "defuse" language documented as intentional (not a gap).
 - [ ] Fresh retheme grep returns zero Tier 1 hits on a full source scan.
 
@@ -536,7 +536,7 @@ These are code-level leftovers that don't appear in the UI but create cognitive 
 - [ ] 5-player game from lobby to game-over completes without errors.
 - [ ] Every card type gets played at least once during the game (via stacked test deck or natural play).
 - [ ] Elimination happens at least once; EliminatedView displays; eliminated player cannot act.
-- [ ] Full Party Pack mechanics tested: Burned, Extraction, Intercept chains (multi-level), Surveillance stacks, Favor, See/Alter the Future, Shuffle, Go Dark, Back Channel, all combos (pair steal, triple Name Card, 5-card Name Card).
+- [ ] Full Party Pack mechanics tested: Burned, Extraction, Intercepted chains (multi-level), Reassign / Direct Order stacks, Call in a Favor, Intel Briefing / Falsify Intel, Burn the Files, Go Dark, Back Channel, all combos (pair steal, triple Name Card, 5-card Name Card).
 - [ ] Reconnect test: a player force-closes their browser mid-game, reopens, rejoins same slot with same hand, same turn state.
 - [ ] Zero ghost turns, frozen states, or desyncs between phone and board.
 

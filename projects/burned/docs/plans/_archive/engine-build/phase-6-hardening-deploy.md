@@ -7,9 +7,10 @@ planned: 2026-04-05T11:41AM EDT
 deepened: 2026-04-05T11:30PM EDT
 executed: 2026-04-05T10:27PM EDT
 reviewed: 2026-04-06T12:22AM EDT
+status: archived
 ---
 
-> **Note:** This plan was written pre-retheme. "Exploding Kitten" → Burned, "Defuse" → Extraction, etc. See `docs/rules/RULES-REFERENCE.md` for full terminology mapping. Code already uses BURNED names. Deploy URLs and project names updated post-retheme.
+> **Note:** This plan was written pre-retheme. "Exploding Kitten" → Burned, "Defuse" → Extraction, etc. See `docs/RULES-REFERENCE.md` for full terminology mapping. Code already uses BURNED names. Deploy URLs and project names updated post-retheme.
 
 # Phase 6: Hardening & Deploy
 

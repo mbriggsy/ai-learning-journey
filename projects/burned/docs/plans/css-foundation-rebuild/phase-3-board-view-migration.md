@@ -6,8 +6,9 @@ parent: docs/plans/css-foundation-rebuild/roadmap.md
 depends_on: docs/plans/css-foundation-rebuild/phase-1-foundation.md
 also_depends_on: docs/plans/css-foundation-rebuild/phase-2-phone-view-migration.md
 date: 2026-04-11
-status: deepened
+status: completed
 deepened_on: 2026-04-12
+completed_on: 2026-04-22
 ---
 
 # Phase 3 — Board View Migration
@@ -22,9 +23,9 @@ deepened_on: 2026-04-12
 
 ### Critical corrections landed (BLOCKERS — the plan's original CSS code would fail or produce wrong results)
 
-1. **`color-mix(in oklab, ...)` → `color-mix(in oklab, ...)` — 114 instances across ALL 14 CSS files.** Phase 1 §2.3 correction #3 and §4.2 acceptance criterion ban `srgb` in all `color-mix()` calls. Phase 2 deepening extended this to every component CSS rewrite (every file header calls out the correction). The muddy-midpoint problem applies universally: `srgb` interpolation with `transparent` routes through transparent black (`rgba(0,0,0,0)`), desaturating warm amber/ochre/cordovan halos. `oklab` holds hue and chroma throughout. `color-mix()` resolves at **parse-time** (not paint-time), so `oklab` has zero performance cost over `srgb`. All 114 instances in all CSS code blocks below are corrected to `in oklab`.
+1. **`color-mix(in srgb, ...)` → `color-mix(in oklab, ...)` — 114 instances across ALL 14 CSS files.** Phase 1 §2.3 correction #3 and §4.2 acceptance criterion ban `srgb` in all `color-mix()` calls. Phase 2 deepening extended this to every component CSS rewrite (every file header calls out the correction). The muddy-midpoint problem applies universally: `srgb` interpolation with `transparent` routes through transparent black (`rgba(0,0,0,0)`), desaturating warm amber/ochre/cordovan halos. `oklab` holds hue and chroma throughout. `color-mix()` resolves at **parse-time** (not paint-time), so `oklab` has zero performance cost over `srgb`. All 114 instances in all CSS code blocks below are corrected to `in oklab`.
 
-2. **`--motion-ease-base` → `--motion-ease-base` — 13 instances across 5 files.** Phase 1 correction #19 renamed this token. `--motion-ease-base` does not exist after Phase 1 deepening; every reference resolves to the CSS initial value `ease` (incorrect). Files affected: GameTable (1), Lobby (5), PlayerRing (3), DrawPile (1), GameOver (2), MinimalCard (1). All corrected in the CSS code blocks below.
+2. **`--motion-ease-standard` → `--motion-ease-base` — 13 instances across 5 files.** Phase 1 correction #19 renamed this token. `--motion-ease-standard` does not exist after Phase 1 deepening; every reference resolves to the CSS initial value `ease` (incorrect). Files affected: GameTable (1), Lobby (5), PlayerRing (3), DrawPile (1), GameOver (2), MinimalCard (1). All corrected in the CSS code blocks below.
 
 3. **`@layer components { ... }` wrapping missing from ALL 14 CSS file rewrites.** Phase 1 §2.11 defines `@layer primitives, semantics, semantics-phone, semantics-board, components, overrides;`. Phase 2 deepening item #3 confirmed every `.module.css` MUST wrap in `@layer components { ... }`. Without it, Phase 3 CSS is unlayered and has HIGHER cascade specificity than layered Phase 1/2 CSS — exactly the cascade problem `@layer` prevents. New universal rule #13 added to §2.2. All 14 CSS code blocks below are wrapped. Exception: `fonts-mono.css` is NOT a CSS module (it's a `@font-face` declaration); like Phase 2's `player-hardening.css`, it stays outside layers.
 
@@ -134,7 +135,7 @@ From `roadmap.md`:
 - **§3.5 Form factors** — board = `vw` / `cqw`, NOT `svh` / `vh` for dimensional sizing. Full-screen bleed (`height: 100vh` on a single wrapper) is allowed because the board is a dedicated viewport, but nothing nested inside it may use vh-axis units for sizing — only `vw`-based tokens or container queries.
 - **§7 Phase 3** — roadmap's Phase 3 scope preview. This file supersedes the preview wherever the two conflict; the audit-correction block below documents the deltas.
 
-From `docs/specifications/PRODUCT-SPECIFICATION.md`:
+From `docs/PRODUCT-SPECIFICATION.md`:
 - **§6.4 Tier 1 retheme gaps** — `GameTable.tsx:24` `feltBranding` element. Current value: a generic "EK identity" branded felt with a targeting crosshair + corner diamonds rendered from inline SVG data-URIs with hardcoded ochre hex. Gap: the inline SVG is fine conceptually but the comment and implied ownership are EK-era ("branded felt decoration — EK identity baked into the table"). Phase 3 retheme: rename the comment to reference The Pendleton Agency, keep the geometric vocabulary (reticle + corner diamonds, which ARE Archer-correct), and migrate the hex values to match the new `--color-accent-drama` (ochre-9) palette semantically. See §2.7 for the concrete edit.
 - **§2 Quality Bar** — every screen ships at the Archer bar or doesn't ship.
 
@@ -331,7 +332,7 @@ The worst case is `Lobby.module.css`, which uses Era 1 + Era 2 exclusively — a
 
 **The fix**: every stale fallback value is deleted. Every `var(--foo, #hex)` → `var(--color-foo)` with no fallback. The Lobby palette is unified with the GameTable palette by routing every Lobby color through the same semantic layer (`--color-bg-app`, `--color-accent-burned` for the start-button accent, `--color-accent-drama` for the glow, `--color-fg-primary/secondary/muted`). See §2.3.2 for the specific Lobby rewrite and §4 below for the palette-unification strategy.
 
-**Why**: four palette eras coexisting is the visible symptom of the diagnosis in `VISUAL-LAYER-AUTOPSY.md` — "CSS Modules without shared tokens = organized chaos." Phase 3 is the moment that chaos gets paid down.
+**Why**: four palette eras coexisting is the visible symptom of the diagnosis in `2026-04-11-visual-layer-autopsy.md` — "CSS Modules without shared tokens = organized chaos." Phase 3 is the moment that chaos gets paid down.
 
 #### Pattern B4 — Duplicated inline-SVG data-URIs
 
@@ -2873,8 +2874,8 @@ If Phase 5 verification reveals the bundle has crept toward any ceiling, the fir
 - `docs/plans/css-foundation-rebuild/roadmap.md` — parent contract, §7 Phase 3 scope, §8 cross-phase concerns.
 - `docs/plans/css-foundation-rebuild/phase-1-foundation.md` — token contract (Phase 3 consumes its deliverables).
 - `docs/plans/css-foundation-rebuild/phase-2-phone-view-migration.md` — Phase 2 §2.7 (`MinimalCard.tsx` TSX edit inherited by Phase 3), Phase 2 §2.6 (BottomSheet cross-view pattern Phase 3 mirrors for other cross-view files).
-- `docs/specifications/PRODUCT-SPECIFICATION.md` — §6.4 Tier 1 retheme gap for `feltBranding`, §2 Quality Bar for the Archer acceptance test.
-- `docs/post-mortems/VISUAL-LAYER-AUTOPSY.md` — diagnosis of palette fragmentation (Pattern B3) and organized-chaos problem that Phase 3 resolves for the board scope.
+- `docs/PRODUCT-SPECIFICATION.md` — §6.4 Tier 1 retheme gap for `feltBranding`, §2 Quality Bar for the Archer acceptance test.
+- `docs/ideation/2026-04-11-visual-layer-autopsy.md` — diagnosis of palette fragmentation (Pattern B3) and organized-chaos problem that Phase 3 resolves for the board scope.
 - `CLAUDE.md` — BURNED project conventions (CSS strategy, axis discipline §3.4, ADR-04/05 motion and visual consistency).
 
 **External citations (re-used from roadmap §10)**:

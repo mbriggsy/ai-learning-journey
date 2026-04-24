@@ -2,7 +2,7 @@
 
 ## The Contract
 
-See **`docs/specifications/PRODUCT-SPECIFICATION.md`**. That document is the non-negotiable contract for what BURNED *is*, what quality bar it must meet, and what "done" looks like. It is loaded every session as the source of truth for product-level decisions.
+See **`docs/PRODUCT-SPECIFICATION.md`**. That document is the non-negotiable contract for what BURNED *is*, what quality bar it must meet, and what "done" looks like. It is loaded every session as the source of truth for product-level decisions.
 
 **Sections Claude should know by heart:**
 - **§2 Quality Bar** — *"Could this look like a frame from an Archer episode?"* is the binary yes/no acceptance test applied to every screen, card, button, and transition state.
@@ -11,7 +11,7 @@ See **`docs/specifications/PRODUCT-SPECIFICATION.md`**. That document is the non
 - **§7 ADRs** — nine locked architectural decisions (Cloudflare Workers + Durable Objects, React 19, Framer Motion + LazyMotion, visual consistency via shared tokens, Zod at WS boundary, allowlist projection, pure sync dispatch, protocol versioning). Do not reopen without a product-level reason.
 - **§8 Acceptance Criteria** — seven surfaces with checkbox criteria that define "done." Updated as work lands. §8.7 is the final quality gate (first-time player reaction test).
 
-**When any memory file, brainstorm doc, ideation doc, or other historical source contradicts `docs/specifications/PRODUCT-SPECIFICATION.md`, the product specification wins.**
+**When any memory file, brainstorm doc, ideation doc, or other historical source contradicts `docs/PRODUCT-SPECIFICATION.md`, the product specification wins.**
 
 The spec does not generate code. It generates the *next artifact* — the CSS Foundation Rebuild Plan — which is where code generation begins. See `TODO.md` for the prioritized work queue.
 
@@ -95,15 +95,17 @@ The spec does not generate code. It generates the *next artifact* — the CSS Fo
 
 ## Bundle Sizes
 
+Last measured 2026-04-23. Re-run `pnpm build` and update after material changes.
+
 | Chunk | Raw | Gzipped | Load |
 |-------|-----|---------|------|
-| player entry | 35.77 KB | 11.56 KB | Initial |
-| board entry | 32.38 KB | 11.62 KB | Initial |
-| shared (React + Motion core) | 221.25 KB | 71.12 KB | Initial (shared) |
-| VisualElement | 31.76 KB | 11.52 KB | Initial (shared) |
-| motion-features (domMax) | 83.57 KB | 27.39 KB | Lazy (prefetched) |
+| player entry | 47.73 KB | 14.77 KB | Initial |
+| board entry | 41.41 KB | 14.05 KB | Initial |
+| shared (React + Motion core, `config-*`) | 209.65 KB | 66.83 KB | Initial (shared) |
+| VisualElement (`is-ref-object-*`) | 39.93 KB | 14.40 KB | Initial (shared) |
+| motion-features (domMax) | 83.57 KB | 27.41 KB | Lazy (prefetched) |
 
-**Phone initial JS: ~97.5KB gzipped** (under 100KB budget, ~2.5KB headroom)
+**Phone initial JS: ~96 KB gzipped** (under 100 KB budget, ~4 KB headroom)
 
 ## Workers / Protocol Landmines
 
@@ -115,7 +117,7 @@ The spec does not generate code. It generates the *next artifact* — the CSS Fo
 
 ## Engine Invariants (quick reference)
 
-Canonical rules in `docs/rules/RULES-REFERENCE.md`. Non-obvious engine behaviors worth knowing by heart:
+Canonical rules in `docs/RULES-REFERENCE.md`. Non-obvious engine behaviors worth knowing by heart:
 
 - **Attack / TargetedAttack formula:** `(turnsRemaining - 1) + 2`, NOT `turnsRemaining + 2`. No cap — `turnsRemaining` grows unboundedly with stacking. Elimination mid-attack collapses remaining to 1 for next player.
 - **Triple-steal cards DO NOT leave hand until name commits.** `handleCombo` for `comboSize === 3` only stages; `handleNameCard` does the discard + nope-window. Moving discard into `handleCombo` silently destroys 3 cards on cancel.
@@ -197,7 +199,7 @@ See also `docs/insights/018-imagen-priors-engineer-around-dont-fight.md` for the
 
 ## Characters
 
-6 original operatives locked as Archer archetypes (1:1 mapping):
+5 operatives in the card deck + Otto (roster only) + Agent X (wild). All locked as Archer archetypes (1:1 mapping):
 
 | BURNED name | Archer counterpart | Category |
 |---|---|---|
@@ -206,11 +208,7 @@ See also `docs/insights/018-imagen-priors-engineer-around-dont-fight.md` for the
 | Sable Ashworth | Cheryl Tunt | Operative |
 | Janet Broadside | Malory Archer | Operative |
 | Neal Proctor | Cyril Figgis | Operative |
-| Otto (roster only, not in card deck) | Krieger | — |
+| Otto | Krieger | Roster only (not in card deck) |
 | Agent X | — | Wild |
 
-**Recurring NPCs** (appear on action-card art, not in the roster):
-
-- **Dolores Grieves** — Pam Poovey archetype. See [`docs/characters/dolores-grieves.md`](docs/characters/dolores-grieves.md).
-
-Visual-DNA rule: when an NPC appears in a new card or arena surface, preserve their locked design. The Archer "visually archetype / named differently" contract is load-bearing for tone — breaking it changes what BURNED feels like.
+Visual-DNA rule: when a character appears in a new card or arena surface, preserve their established design. The Archer "visually archetype / named differently" contract is load-bearing for tone — breaking it changes what BURNED feels like.

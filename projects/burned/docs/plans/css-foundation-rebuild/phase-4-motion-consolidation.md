@@ -1,3 +1,17 @@
+---
+title: "Phase 4 — Motion Consolidation"
+type: feat
+phase: 4
+parent: docs/plans/css-foundation-rebuild/roadmap.md
+depends_on: docs/plans/css-foundation-rebuild/phase-1-foundation.md
+also_depends_on:
+  - docs/plans/css-foundation-rebuild/phase-2-phone-view-migration.md
+  - docs/plans/css-foundation-rebuild/phase-3-board-view-migration.md
+date: 2026-04-11
+status: completed
+completed_on: 2026-04-22
+---
+
 # Phase 4 — Motion Consolidation
 
 **Parent**: [`roadmap.md`](./roadmap.md) §7 Phase 4
@@ -16,7 +30,7 @@
 
 ### Critical corrections landed (BLOCKERS — the plan's original code would fail or produce wrong output)
 
-1. **`--motion-ease-base` renamed to `--motion-ease-base` throughout.** Phase 1 deepening (commit `ba6f18ce`, 2026-04-11) renamed `--motion-ease-base` → `--motion-ease-base` and `MOTION_EASINGS.base` → `MOTION_EASINGS.base`. Phase 4 was drafted before the rename and referenced the dead name in 13+ locations: §2.2 Template CSS-S, §2.5.1-§2.5.3, §4.2, §4.3, §1 line 18, §9 sources. Every CSS `animation:` replacement would have written `var(--motion-ease-base)` — a property that does not exist in `primitives.css`. CSS silently falls back to the `ease` default (`cubic-bezier(0.25, 0.1, 0.25, 1)`), visually different from the intended `--motion-ease-base` (`cubic-bezier(0.4, 0, 0.2, 1)`). **Found independently by 3 of 7 agents.** Global find-and-replace applied.
+1. **`--motion-ease-standard` renamed to `--motion-ease-base` throughout.** Phase 1 deepening (commit `ba6f18ce`, 2026-04-11) renamed `--motion-ease-standard` → `--motion-ease-base` and `MOTION_EASINGS.standard` → `MOTION_EASINGS.base`. Phase 4 was drafted before the rename and referenced the dead name in 13+ locations: §2.2 Template CSS-S, §2.5.1-§2.5.3, §4.2, §4.3, §1 line 18, §9 sources. Every CSS `animation:` replacement would have written `var(--motion-ease-standard)` — a property that does not exist in `primitives.css`. CSS silently falls back to the `ease` default (`cubic-bezier(0.25, 0.1, 0.25, 1)`), visually different from the intended `--motion-ease-base` (`cubic-bezier(0.4, 0, 0.2, 1)`). **Found independently by 3 of 7 agents.** Global find-and-replace applied.
 
 2. **SmartActionBox and FloatingActionButton "before" code corrected.** Phase 2 deepening changed breathing animation durations from `--motion-duration-dramatic`/`--motion-duration-base` to `--motion-duration-essential-pulse` (these are gameplay-essential signals that must survive `prefers-reduced-motion: reduce`). Phase 4's "Current" code blocks in §2.5.1-§2.5.3 and the audit table (lines 92-94) showed the pre-Phase-2-deepening state. Updated to match what the executor will actually see in the post-Phase-2 files.
 
@@ -1953,7 +1967,7 @@ Phase 4 Step 19 runs `pnpm build` and confirms the phone entry bundle size. If t
 - `ResizeObserver` + `getBoundingClientRect` measurement-div pattern — W3C Resize Observer spec; standard technique for CSS→JS layout-value extraction.
 
 **Internal documents:**
-- `docs/specifications/PRODUCT-SPECIFICATION.md` v1.0 (locked 2026-04-10) — the parent contract. §2 Quality Bar applies.
+- `docs/PRODUCT-SPECIFICATION.md` v1.0 (locked 2026-04-10) — the parent contract. §2 Quality Bar applies.
 - `feedback-stop-after-every-phase.md` (memory) — Phase 4 is its own session; stop after draft, wait for review, then Phase 5.
 - `feedback-plans-are-baking-recipes.md` (memory) — Phase 4 specifies actual TSX and CSS snippets, not "rewrite the file per the pattern." Every site has concrete before/after.
 

@@ -1,9 +1,9 @@
 ---
-title: "feat: BURNED — Spy-Comedy Card Game"
+title: "feat: BURNED — Spy-Comedy Card Game (ARCHIVED)"
 type: feat
-status: active
+status: archived
 date: 2026-04-05
-origin: docs/ideation/2026-04-05-burned-brainstorm.md
+origin: ../../../ideation/2026-04-05-burned-brainstorm.md
 ---
 
 # BURNED — Roadmap
@@ -12,7 +12,7 @@ origin: docs/ideation/2026-04-05-burned-brainstorm.md
 
 Spy-comedy card game inspired by Exploding Kittens Party Pack, rethemed as The Pendleton Agency. Jackbox-style: shared screen (TV) shows the game table, phones are private controllers. 2-10 players, full 120-card deck, mid-century modern visual direction, full theatrical animations.
 
-**Origin:** [docs/ideation/2026-04-05-burned-brainstorm.md](../ideation/2026-04-05-burned-brainstorm.md)
+**Origin:** [docs/ideation/2026-04-05-burned-brainstorm.md](../../../ideation/2026-04-05-burned-brainstorm.md)
 *Note: Brainstorm decision #4 lists Socket.IO — superseded by PartyKit.*
 
 **Reference architecture:** UMB (`projects/undercover-mob-boss/`) — same multi-device Jackbox-style with PartyKit, typed protocol, dispatch engine, state projection, session reconnection, QR codes, Vite multi-page.

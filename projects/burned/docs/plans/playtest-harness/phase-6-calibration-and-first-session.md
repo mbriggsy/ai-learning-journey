@@ -419,7 +419,7 @@ Test expectation: live verification.
 
 **Patterns to follow:**
 - Existing `CLAUDE.md` sectioning.
-- Existing `docs/specifications/PRODUCT-SPECIFICATION.md` lock status
+- Existing `docs/PRODUCT-SPECIFICATION.md` lock status
   convention.
 
 **Test scenarios:**

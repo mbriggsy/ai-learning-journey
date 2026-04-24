@@ -1,7 +1,7 @@
 ---
 title: "Playtest Harness — Phase 1: Scenarios Catalog"
 type: feat
-status: draft
+status: deepened
 date: 2026-04-23
 deepened: 2026-04-23
 parent: docs/plans/playtest-harness/roadmap.md
@@ -129,7 +129,7 @@ reason the harness exists.
 - `src/shared/combo-validation.ts:67` — `matchType` derivation (first non-
   wild). Diverges from `engine.ts:597` and `engine.ts:887` which use
   `cards[0]!.type`. This inconsistency is a catalog fixture (deepening F2.5).
-- `docs/rules/RULES-REFERENCE.md` — canonical rules (per memory, §13.8 is
+- `docs/RULES-REFERENCE.md` — canonical rules (per memory, §13.8 is
   the spy-fiction divergence from Exploding Kittens).
 - `docs/testing/E2E-ISSUE-LIST.md` — existing issue tracker. Pre-tag source
   for `known-product-call:` scenarios AND source of bug-class clusters that
@@ -150,7 +150,7 @@ reason the harness exists.
 - `E2E-ISSUE-LIST.md` viewport cluster (C-01/02/03/06/09/12/21) — drives the
   new Form-factor axis (deepening F5).
 - Memory `feedback-primary-source-wins.md` — `src/shared/card-defs.ts` and
-  `docs/rules/RULES-REFERENCE.md` are the primary sources. Do not derive
+  `docs/RULES-REFERENCE.md` are the primary sources. Do not derive
   mechanics from web or paraphrase.
 
 ### External References
@@ -236,8 +236,8 @@ None. This phase is docs-only and grounded entirely in the repo.
   this scenario.
 
   **Column 2 — "Viewer should see" (prescriptive, cites
-  `docs/rules/RULES-REFERENCE.md` + `docs/specifications/PRODUCT-
-  SPECIFICATION.md` + Archer §3 acceptance test):** what a correctly
+  `docs/RULES-REFERENCE.md` + `docs/PRODUCT-SPECIFICATION.md` +
+  Archer §3 acceptance test):** what a correctly
   implemented projection would emit given the rules and the product
   experience bar.
 
@@ -323,7 +323,7 @@ One file. Phase 6 will add the `runs/` tree alongside.
 
 ### Scenario record shape (repeated per scenario)
 
-```markdown
+````markdown
 ### SCN-CALL-IN-FAVOR-EMPTY-HAND-01 — Favor targets an operative with 0 cards
 
 **Category:** Action card — Call in a Favor
@@ -401,7 +401,7 @@ You know you hit this scenario when:
 
 **Known product call:** none
 **Related issues:** none
-```
+````
 
 ### Catalog structure
 
@@ -475,7 +475,7 @@ proceeds systematically.
 - No scenarios yet. Empty sections with a "drafting status" flag.
 
 **Patterns to follow:**
-- `docs/specifications/PRODUCT-SPECIFICATION.md` — section numbering and
+- `docs/PRODUCT-SPECIFICATION.md` — section numbering and
   locked-document tone.
 - `docs/testing/E2E-ISSUE-LIST.md` — table format and status legend style.
 
@@ -940,7 +940,7 @@ per tested scenario in the Lock log.
 Fix anything that fails. Hand to Briggsy for sign-off.
 
 **Patterns to follow:**
-- `docs/specifications/PRODUCT-SPECIFICATION.md` "LOCKED 2026-04-10" status
+- `docs/PRODUCT-SPECIFICATION.md` "LOCKED 2026-04-10" status
   declaration template.
 
 **Test scenarios:**
@@ -1024,7 +1024,7 @@ Test expectation: none.
     ts:338-357`
   - Named-steal projection: `src/server/projection.ts:133-156`
   - Eliminated-player view: `src/server/projection.ts:78-99`
-- **Rules reference:** `docs/rules/RULES-REFERENCE.md`
+- **Rules reference:** `docs/RULES-REFERENCE.md`
 - **Existing issue list:** `docs/testing/E2E-ISSUE-LIST.md` (A-01 chain-
   burn clarification, B-01/02/11/12/14/17/18 + D-19 non-wedge connectivity
   cluster, C-01/02/03/06/09/12/21 viewport cluster, D-16 counter-counter-

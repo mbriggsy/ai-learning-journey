@@ -9,20 +9,22 @@
 > **Audit (2026-04-05):** Where web sources conflict with the PDF, the PDF wins. Three corrections
 > applied: 5-Different combo cut (not in Party Pack), dead player cards corrected, self-Nope disallowed.
 
-### BURNED Terminology Mapping
+## BURNED Terminology Mapping
+
+Source of truth: `src/shared/card-defs.ts`. If this table drifts from `card-defs.ts`, `card-defs.ts` wins.
 
 | Original (EK) | BURNED | Code identifier |
 |----------------|--------|-----------------|
 | Exploding Kitten | Burned | `burned` |
 | Defuse | Extraction | `extraction` |
-| Attack | Ambush | `ambush` |
-| Targeted Attack | Double Cross | `double-cross` |
-| Skip | Ghost | `ghost` |
-| See the Future | Surveillance | `surveillance` |
-| Alter the Future | Deep Cover | `deep-cover` |
-| Shuffle | Shakedown | `shakedown` |
+| Attack | Reassign | `reassign` |
+| Targeted Attack | Direct Order | `direct-order` |
+| Skip | Go Dark | `go-dark` |
+| See the Future | Intel Briefing | `intel-briefing` |
+| Alter the Future | Falsify Intel | `falsify-intel` |
+| Shuffle | Burn the Files | `burn-the-files` |
 | Draw from the Bottom | Back Channel | `back-channel` |
-| Favor | Intel | `intel` |
+| Favor | Call in a Favor | `call-in-a-favor` |
 | Nope | Intercepted | `intercepted` |
 | Cat cards | Operatives | `dash-barlowe`, `vera-khan`, `sable-ashworth`, `janet-broadside`, `neal-proctor` |
 | — | Agent X (wild) | `agent-x` |
@@ -802,7 +804,7 @@ Exploding Kitten on top, rest in random order).
 > In digital, the entire discard pile is browsable, so order within it doesn't
 > matter for gameplay -- just for display.
 
-### 13.8 Triple-Steal Card Naming Visibility (BURNED House Rule)
+### 13.11 Triple-Steal Card Naming Visibility (BURNED House Rule)
 
 **Canonical EK:** When a player plays three matching cards to steal a named card
 (rules §7, triple combo), the naming is **public theater** — the stealer says
@@ -864,7 +866,7 @@ public guessing drama, reconsider. Until then, locked.
 
 ## Appendix B: State Machine Summary (for implementation)
 
-```
+```text
 GAME STATES:
   SETUP -> PLAYING -> GAME_OVER
 

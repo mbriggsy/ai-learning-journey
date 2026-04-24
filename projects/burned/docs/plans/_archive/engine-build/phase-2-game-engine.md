@@ -7,9 +7,10 @@ planned: 2026-04-05T11:41AM EDT
 deepened: 2026-04-05T02:45PM EDT
 executed: 2026-04-05T06:39PM EDT
 reviewed: 2026-04-05T07:43PM EDT
+status: archived
 ---
 
-> **Note:** This plan was written pre-retheme. "Exploding Kitten" → Burned, "Defuse" → Extraction, etc. See `docs/rules/RULES-REFERENCE.md` for full terminology mapping. Code already uses BURNED names.
+> **Note:** This plan was written pre-retheme. "Exploding Kitten" → Burned, "Defuse" → Extraction, etc. See `docs/RULES-REFERENCE.md` for full terminology mapping. Code already uses BURNED names.
 
 # Phase 2: Game Engine
 

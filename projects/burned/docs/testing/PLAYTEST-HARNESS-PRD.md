@@ -155,7 +155,7 @@ event log, read access to code. Produces, in the same issue file:
 
 ### 6.5 Run directory layout
 
-```
+```text
 docs/testing/playtest/runs/YYYY-MM-DD-HHMM-<seat-count>p/
   session.md              ← summary, seed, config, coverage table
   seats/

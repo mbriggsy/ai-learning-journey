@@ -29,7 +29,7 @@ export interface PlayingState {
   // they stay in the stealer's hand until a name is committed (or return home
   // on cancel). namedCardType is set the moment the stealer commits; its
   // presence gates cancellation and signals the nope-resolver to perform the
-  // actual steal. See docs/rules/RULES-REFERENCE.md §7 (Three of a Kind) for
+  // actual steal. See docs/RULES-REFERENCE.md §7 (Three of a Kind) for
   // the timing contract.
   readonly pendingNameCard?: {
     readonly stealerId: string

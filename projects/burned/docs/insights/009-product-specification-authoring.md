@@ -2,7 +2,7 @@
 title: Authoring BURNED's product specification — lessons from a 1M-token session
 date: 2026-04-10
 phase: spec-authoring
-modules: [docs/specifications/PRODUCT-SPECIFICATION.md, docs/post-mortems/VISUAL-LAYER-AUTOPSY.md, src/client/]
+modules: [docs/PRODUCT-SPECIFICATION.md, docs/ideation/2026-04-11-visual-layer-autopsy.md, src/client/]
 tags: [process, spec, debate, architecture, retheme, authoring, pattern-learning]
 ---
 
@@ -23,7 +23,7 @@ BURNED's phase 1–6 plans couldn't inherit anything because there was no spec t
 ### 1. Specs are loaded every session; phase plans are not
 
 A decision that must be honored in *every* session (bug fixes, feature additions, post-phase work) must live in something loaded every session:
-- The SPEC (`docs/specifications/PRODUCT-SPECIFICATION.md`)
+- The SPEC (`docs/PRODUCT-SPECIFICATION.md`)
 - CLAUDE.md
 - The code itself (self-documenting via grep)
 
@@ -64,7 +64,7 @@ Second hallucination caught in the same session: the footer line *"Built with Ma
 - **Phone controller = portrait = constraining axis is HEIGHT = primary unit is `svh`**
 - **Board view = landscape = constraining axis is WIDTH = primary unit is `vw`**
 
-The current player view uses `42vw` for card sizing — wrong axis. This is the root cause of the visual fragility documented in `docs/post-mortems/VISUAL-LAYER-AUTOPSY.md`. The CSS Foundation Rebuild Plan must derive every phone dimension from `svh`.
+The current player view uses `42vw` for card sizing — wrong axis. This is the root cause of the visual fragility documented in `docs/ideation/2026-04-11-visual-layer-autopsy.md`. The CSS Foundation Rebuild Plan must derive every phone dimension from `svh`.
 
 ### 6. Debate produces better designs than fast agreement
 
@@ -93,8 +93,8 @@ The spec describes the product. Next steps in order:
 
 ## References
 
-- `docs/specifications/PRODUCT-SPECIFICATION.md` — the v1.0 contract
-- `docs/post-mortems/VISUAL-LAYER-AUTOPSY.md` — the post-mortem that triggered this session
+- `docs/PRODUCT-SPECIFICATION.md` — the v1.0 contract
+- `docs/ideation/2026-04-11-visual-layer-autopsy.md` — the post-mortem that triggered this session
 - `feedback-vibes-are-not-specs.md` in memory — universal lesson: specs are the contract
 - `feedback-transitive-contract-pattern.md` in memory — universal lesson: spec → plan → code → self-documenting
 - `feedback-hallucinated-references.md` in memory — universal lesson: never copy specific claims from templates

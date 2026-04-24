@@ -6,7 +6,7 @@ parent: docs/plans/css-foundation-rebuild/roadmap.md
 depends_on: docs/plans/css-foundation-rebuild/phase-1-foundation.md
 date: 2026-04-11
 status: completed
-deepened: 2026-04-11
+deepened_on: 2026-04-11
 ---
 
 # Phase 2 — Phone View Migration
@@ -161,7 +161,7 @@ From `roadmap.md`:
 - **§3.5 Form factors** — phone = svh, NO `vw` for dimensional sizing.
 - **§6.1 — Phone component inventory** (from spec §6.1) — this is the authoritative list of what exists and what states each component has.
 
-From `docs/specifications/PRODUCT-SPECIFICATION.md`:
+From `docs/PRODUCT-SPECIFICATION.md`:
 - **§6.4 Tier 1 retheme gaps** — `EliminatedView.tsx:45` title and `EliminatedView.tsx:8-17` flavor lines. These are user-visible violations of the Archer quality bar. Must be resolved in Phase 2.
 
 From Agent A's codebase audit (inlined in conversation, 2026-04-11):
@@ -3060,7 +3060,7 @@ Commit points between major file rewrites (every 3-4 files). Don't commit a sing
 ### §4.3 Test & build checks
 
 - [ ] `pnpm typecheck` — clean.
-- [ ] `pnpm test` — all 167+ tests pass. No regression.
+- [ ] `pnpm test` — all tests pass, no regression vs current baseline (see `CLAUDE.md` for current count).
 - [ ] `pnpm lint` — clean. No ESLint errors from import-boundary or dead-code rules.
 - [ ] `pnpm build` — succeeds. Phone entry ≤100KB gzipped.
 
@@ -3176,9 +3176,9 @@ If bundle size regresses unexpectedly, investigate the rewritten CSS modules for
 ## §9 — Sources
 
 - **Agent A codebase audit** (inlined in conversation, 2026-04-11). Per-file hardcoded value enumeration and stale-fallback contamination map.
-- **`docs/post-mortems/VISUAL-LAYER-AUTOPSY.md`** — the "two sizing systems in one layout" diagnosis that informs §2.3.1 and §2.3.3.
-- **`docs/specifications/PRODUCT-SPECIFICATION.md` §6.1** — phone component inventory (the authoritative list of states and screens).
-- **`docs/specifications/PRODUCT-SPECIFICATION.md` §6.4 Tier 1** — EliminatedView retheme gaps source.
+- **`docs/ideation/2026-04-11-visual-layer-autopsy.md`** — the "two sizing systems in one layout" diagnosis that informs §2.3.1 and §2.3.3.
+- **`docs/PRODUCT-SPECIFICATION.md` §6.1** — phone component inventory (the authoritative list of states and screens).
+- **`docs/PRODUCT-SPECIFICATION.md` §6.4 Tier 1** — EliminatedView retheme gaps source.
 - **`phase-1-foundation.md`** — token contract this phase consumes.
 - **`docs/insights/006-css-fallback-must-precede-modern-property.md`** — verified `svh` is Baseline since iOS Safari 15.4 (March 2022); the insight's pattern still applies to future fallback pairs but the specific `100vh`/`100svh` case is moot in 2026.
 

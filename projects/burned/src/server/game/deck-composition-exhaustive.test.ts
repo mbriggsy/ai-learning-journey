@@ -1,5 +1,5 @@
 /**
- * Exhaustive deck composition tests against `docs/rules/RULES-REFERENCE.md` §3.
+ * Exhaustive deck composition tests against `docs/RULES-REFERENCE.md` §3.
  *
  * Locks the Defuse / Burned / hand-size / tier-selection math for every legal
  * player count (2..10). This is the kind of table the rules audit caught three

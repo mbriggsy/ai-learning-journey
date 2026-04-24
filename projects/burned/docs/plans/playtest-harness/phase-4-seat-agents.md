@@ -94,7 +94,7 @@ agents (Phase 5) can consume them without bespoke parsing.
 - `docs/insights/008-adversarial-swarm-review-maximum-overdrive.md` —
   "hostile framing beats collaborative framing." Prompt should instruct
   the agent it *wants* to find clarity/fairness bugs, not be deferential.
-- `docs/plans/phase-6-hardening-deploy.md:553-584` — `window.__gameStore
+- `docs/plans/_archive/engine-build/phase-6-hardening-deploy.md:553-584` — `window.__gameStore
   Snapshot` is a god-mode view. Tree-shaken from prod bundles (E-03). Dev
   bundle has it available; agents must NOT call it.
 - Memory `feedback-stop-thrashing.md` — agents should not chain decisions;
@@ -596,4 +596,4 @@ a fixed number of turns or hit timeout.
 - **Phone UI source:** `src/client/player/`
 - **Join flow precedent:** `tests/e2e/helpers.ts:35-38`
 - **Hostile-framing learning:** `docs/insights/008-adversarial-swarm-review-maximum-overdrive.md`
-- **God-mode-escape hazard:** `docs/plans/phase-6-hardening-deploy.md:553-584`
+- **God-mode-escape hazard:** `docs/plans/_archive/engine-build/phase-6-hardening-deploy.md:553-584`

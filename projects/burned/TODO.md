@@ -1,34 +1,28 @@
 # BURNED — TODO
 
-## 🎯 NEXT SESSION — pick up here (2026-04-23 EOD)
+## NEXT SESSION — pick up here (2026-04-23 EOD)
 
-**32 commits on `main`, not pushed. Phone verification still outstanding for
-all of them.** Briggsy's logistical window for real-device testing was closed
-this session; resume on that first thing next session.
+**Main is synced with origin after the 2026-04-23 doc-audit cleanup + squeaky-clean
+push.** The IncomingSteal banner (`82af35f9`) still needs real-device verification —
+it was pushed without phone-side confirmation.
 
 ### Immediate priorities (ordered)
 
-1. **Phone-verify the 32-commit pile on a real phone + TV.** Everything since
-   `origin/main` is Playwright/unit-verified only. Earth > map. Until this
-   happens, "shipped" is "believed shipped."
-2. **Decide push.** After phone verification, push `main` to origin or roll
-   back individual commits.
-3. **Host-identity cluster (P1 deferred).** B-01/B-02/B-11/B-12/B-14 —
+1. **Phone-verify the IncomingSteal banner on a real phone + TV.** The feature
+   is verified in Playwright + unit tests, but the live pre-resolution organic
+   screenshot was never caught due to tab-switch latency. Earth > map.
+2. **Host-identity cluster (P1 deferred).** B-01/B-02/B-11/B-12/B-14 —
    significant infra, design questions first.
-4. **Remaining P1/P2 from `docs/testing/E2E-ISSUE-LIST.md`** — cosmetic and
+3. **Remaining P1/P2 from `docs/testing/E2E-ISSUE-LIST.md`** — cosmetic and
    scope-decision items, pick opportunistically.
 
-### What needs specific phone verification
+### IncomingSteal banner — what to check (commit `82af35f9`)
 
-| Commit | What to check |
-|---|---|
-| `2abadf9e` + `da39a1ba` | End Game button top-right on TV; confirm modal renders and dismisses cleanly via tap + Escape + backdrop |
-| `2abadf9e` | Offline nameplate pulses red + reads `// COMMS DOWN` when a player's phone disconnects mid-turn |
-| `4b7be76e` | 10s Nope window reads as "breathing room" not "interminable" at the couch |
-| `16942a1b` + `e6b31b5c` | Second Noper's late tap gets the "Too late — someone intercepted first" toast (not a silent counter-nope). Counter-nope button copy reads correctly on phone. Test with 2+ real phones tapping Nope simultaneously |
-| `4985fa23` | Cinematic Arc #2: non-drawer/board sees the Burned card slam-in face-down → flip to face-up with victim name caption. Eye on timing at couch distance (currently ~2s beat) |
-| `d21d67ab` + `6abe26d5` + `12752819` | Falsify Intel: title reads "Falsify Intel", sheet renders immediately with cards populated (no alt-tab required), Clear button resets tap selection, Confirm Order only appears after all 3 tapped |
-| IncomingSteal banner (new, uncommitted pile) | On a real 3-of-a-kind named steal: target's phone rises "// INCOMING LIFT / {STEALER} / is lifting your / {CARD NAME}" banner DURING the 10s nope window (not just post-resolution). Countdown ticks, urgent-red flip at ≤2s, banner exits clean when window resolves. Verify bystanders see no banner and no card name anywhere. Injection test + post-resolution organic verified; pre-resolution live organic screenshot never caught due to Playwright tab-switch latency. |
+On a real 3-of-a-kind named steal, target's phone shows `// INCOMING LIFT /
+{STEALER} / is lifting your / {CARD NAME}` banner DURING the 10s nope window
+(not just post-resolution). Countdown ticks, urgent-red flip at ≤2s, banner
+exits clean when the window resolves. Verify bystanders see no banner and no
+card name anywhere.
 
 ---
 
@@ -160,7 +154,7 @@ Live 4-8 player test on iPad Pro 1366 + phones. Verify:
   touch; GameOver 80ms stagger at 10 players.
 - Emil Q verification: Nameplate flip 400ms vs 250ms (crisp brass click vs
   heavy coin flip); perspective 1000px vs 600px (flat fade-swap vs physical
-  3D rotation). See `docs/reviews/emil-audit-2026-04-23.md` §3.5 + §7.
+  3D rotation).
 
 ### 3. 8-player stress test
 
@@ -214,7 +208,6 @@ phone controllers.
 
 - **Brass studs on wood frame.** CSS pseudo-elements (small radial-gradient
   dots at regular intervals on `.woodTop/.woodBottom`).
-- **Remove unused `public/assets/arena/mahogany.png`.** Superseded by 4-edge split.
 
 ### 10. Optional test coverage expansion (deferred until visual layer stabilizes)
 
@@ -235,7 +228,6 @@ Landmines no longer live in TODO.md. They found their right homes on
 
 - **Hard-won lessons** (problem → root cause → fix → pattern) → `docs/insights/`. See `013-018` for the recent migration batch.
 - **Architectural conventions** (protocol, engine invariants, client patterns, motion rules, dev tooling, Imagen workflow) → `CLAUDE.md`.
-- **Canonical game rules** → `docs/rules/RULES-REFERENCE.md`.
-- **Recurring NPC character locks** → `docs/characters/` (e.g. `dolores-grieves.md`).
+- **Canonical game rules** → `docs/RULES-REFERENCE.md`.
 
 Nothing hides here anymore. TODO.md is for actionable items only.

@@ -1,7 +1,15 @@
+---
+title: "Desk Redesign — Arena as Mother's Office"
+type: feat
+date: 2026-04-22
+status: partially-executed
+executed_on: 2026-04-22
+---
+
 # Desk Redesign — Arena as Mother's Office
 
-**Date:** 2026-04-22
-**Status:** Plan locked, awaiting execution session
+**Status:** Partially executed 2026-04-22 — `Nameplate.tsx` + `DossierFeed.tsx` extracted; blotter metaphor retired in rendering. Phase 5.5 asset work (ashtray, tumbler, closed dossier stack) + `BlotterContent` → `DeskSurface` rename deferred. Follow-ups live in `TODO.md` §8.
+
 **Premise:** Retire the cream-paper blotter concept. The central play surface becomes the polished mahogany desk itself. Cards sit on wood (dimensionally honest). COMMS becomes a manila dossier (a real object, not a region of paper). Status becomes a brass nameplate (physical, not a text strip). Closer to an Archer screenshot. Unified arena. No more 2D-paper-holding-3D-cards contradiction.
 
 ---
@@ -139,7 +147,7 @@ Five phases. Each is a commit point. Stop after every phase, review, then procee
 1. **New component:** `Nameplate.tsx` + `Nameplate.module.css`.
 2. **Visual model:**
    - Brass/gold rectangular plate with beveled edges (CSS gradients can simulate this cleanly)
-   - Engraved black text — active player's agent name (SABLE ASHWORTH, VERA MARLOWE, etc.)
+   - Engraved black text — active player's agent name (SABLE ASHWORTH, VERA KHAN, etc.)
    - Small engraved subtext: "// ON DECK" or "// ACTIVE"
    - Sits on a small dark-wood stand (thin wooden base under the brass)
    - Position: along the bottom edge of the desk surface, centered or offset-left under the dossier

@@ -202,7 +202,7 @@ function stripPrivatePromptFields(prompt: import('@shared/types').PendingPrompt 
  *     moved (or which card was named on a whiff); everyone else must not.
  *     This is an INTENTIONAL divergence from canonical Exploding Kittens
  *     rules (public naming) to preserve BURNED's spy-agency fiction.
- *     See docs/rules/RULES-REFERENCE.md §13.8.
+ *     See docs/RULES-REFERENCE.md §13.11.
  *
  *   - `card-drawn` — the drawer needs the type so their phone can show a
  *     `You drew Go Dark.` confirmation toast (PlayerAlert). Nobody else

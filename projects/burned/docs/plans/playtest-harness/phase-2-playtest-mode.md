@@ -81,7 +81,7 @@ transport.
   defines a deterministic `makeCtx(seed)` using a linear-congruential
   generator for unit tests. Lift this pattern (or `mulberry32` per the
   phase-6-hardening-deploy plan line 592) into a playtest-mode path.
-- **Phase-6 hardening plan precedent:** `docs/plans/phase-6-hardening-deploy.md`
+- **Phase-6 hardening plan precedent:** `docs/plans/_archive/engine-build/phase-6-hardening-deploy.md`
   lines 586-592 already names `TEST_TIMEOUT_SCALE` env var and `devSeed`
   query-param conventions. Align.
 - **Nope window duration source:** `src/server/game/engine.ts:1301-1329`
@@ -120,7 +120,7 @@ transport.
   duration, NOT a reset, so the existing generation contract holds. But if
   we ever add a "pause window while any agent is thinking" it MUST increment
   generation on every pause/unpause.
-- `docs/plans/phase-6-hardening-deploy.md:553-592` — `TEST_TIMEOUT_SCALE`
+- `docs/plans/_archive/engine-build/phase-6-hardening-deploy.md:553-592` — `TEST_TIMEOUT_SCALE`
   env convention + `devSeed` query-param + DCE-grep regression test. Reuse
   names where aligned.
 - E-03 in `docs/testing/E2E-ISSUE-LIST.md` — prod-bundle sentinel regression
@@ -690,7 +690,7 @@ received the god-event, and stop.
 - **Nope window source:** `src/server/game/engine.ts:1301-1329`,
   `src/shared/constants.ts:6-10`
 - **Dispatch sites:** `src/server/room.ts:615-627`, `661-665`
-- **Env precedent:** `docs/plans/phase-6-hardening-deploy.md:586-592`
+- **Env precedent:** `docs/plans/_archive/engine-build/phase-6-hardening-deploy.md:586-592`
 - **Sentinel regression test precedent:** E-03 in
   `docs/testing/E2E-ISSUE-LIST.md`
 - **Timer generation pattern:**

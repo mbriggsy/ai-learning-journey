@@ -4,7 +4,12 @@ A spy-comedy card game — rethemed from [Exploding Kittens Party Pack](https://
 
 ## Status
 
-**All 6 phases complete + adversarial swarm review** — 358/358 tests, typecheck clean, ~97.5KB phone JS (under 100KB budget). Next: art direction brief, Gauntlet recalibration, manual testing on real devices, first production deploy.
+**Engine + networking + core UI shipped.** Active work is the visual layer rebuild and playtest harness.
+
+- All tests green, typecheck clean (canonical counts in `CLAUDE.md`)
+- Phone initial JS under the 100 KB gzipped budget (see `CLAUDE.md` §Bundle Sizes for current measurement)
+- Contract: [`docs/PRODUCT-SPECIFICATION.md`](docs/PRODUCT-SPECIFICATION.md) (v1.0 — LOCKED)
+- Current work queue: [`TODO.md`](TODO.md)
 
 ## The Game
 
@@ -12,16 +17,16 @@ A spy-comedy card game — rethemed from [Exploding Kittens Party Pack](https://
 - **Shared screen** shows draw pile, discard pile, player ring, and all the drama
 - **Phone controllers** show your hand, let you play cards, and keep your moves secret
 - **Archer visual language** — literal show vocabulary: bold line illustration, flat color fills, warm teal/orange/cream palette, CVD-safe. Every screen answers "could this be a frame from an Archer episode?"
-- **Smart Intercept timing** — tension scales as players are eliminated (3s/5s/7s windows)
+- **10-second Intercept window** — flat across player counts; breathing room over twitch reflex.
 
 ## Tech Stack
 
 | Layer | Choice |
 |-------|--------|
-| Networking | partyserver + wrangler (Cloudflare Workers Durable Objects) |
+| Networking | `partyserver` + `wrangler` (Cloudflare Workers Durable Objects) |
 | UI | React 19 + TypeScript 5.9 |
-| Animation | Framer Motion |
-| Validation | Zod |
+| Animation | Framer Motion (LazyMotion) |
+| Validation | Zod (at the WebSocket boundary, server-side) |
 | Build | Vite 8 + pnpm |
 | Testing | Vitest + fast-check + Playwright |
 
@@ -31,7 +36,7 @@ Jackbox-style: one codebase, two entry points.
 
 - `board.html` — TV/shared screen (landscape). Shows the game table, player status, card animations.
 - `player.html` — Phone controller (portrait). Shows your hand, card interactions, private views.
-- PartyKit server — authoritative game state. Clients send intents, server validates and broadcasts.
+- `partyserver` room (Cloudflare Durable Object) — authoritative game state. Clients send intents; server validates, dispatches, and broadcasts per-viewer projections.
 
 Patterns adapted from [Undercover Mob Boss](../undercover-mob-boss/), which uses the same multi-device architecture.
 
@@ -39,51 +44,32 @@ Patterns adapted from [Undercover Mob Boss](../undercover-mob-boss/), which uses
 
 ```
 docs/
-  ideation/        # Brainstorm documents
-  plans/           # Roadmap + individual phase plans
-  environment/     # Setup guides
-  workflow/        # Code review strategy, design skills
-  insights/        # Hard-won lessons (populated during development)
-  rules/           # Canonical rules reference (audited against official PDF)
-  user/            # Official Party Pack rulebook PDF
+  PRODUCT-SPECIFICATION.md  # The contract (v1.0 LOCKED)
+  RULES-REFERENCE.md        # Canonical rules, audited against the official PDF
+  SETUP.md                  # Dev environment
+  insights/                 # Hard-won lessons, numbered
+  plans/                    # Active: css-foundation-rebuild/, playtest-harness/, desk-redesign/
+    _archive/               #   Completed historical plans
+  testing/                  # Issue lists, PRDs
+  user/                     # Official Party Pack rulebook PDF
 src/
-  shared/          # Pure TS types, card definitions, protocol, constants (zero runtime deps)
-  server/          # PartyKit room + game engine (Zod validation server-only)
+  shared/                   # Pure TS types, card definitions, protocol, constants (zero runtime deps)
+  server/                   # partyserver room + game engine (Zod validation server-only)
   client/
-    board/         # TV/shared screen React app
-    player/        # Phone controller React app
-    shared/        # Shared React components (MotionProvider, hooks)
+    board/                  # TV/shared screen React app
+    player/                 # Phone controller React app
+    shared/                 # Shared React components, tokens, hooks
 ```
 
 ## Setup
 
-See [docs/environment/SETUP.md](docs/environment/SETUP.md) for development environment setup.
-
-## Build Workflow
-
-We follow a deliberate plan-then-build process. No code gets written until the plan for that phase has been deepened with focused research agents.
-
-```
-Brainstorm → Roadmap → Phase Plans → Deepen Each → Fix Contradictions → Execute
-```
-
-### How It Works
-
-1. **[Roadmap](docs/plans/roadmap.md)** — high-level overview: tech stack, architecture, state machine, cross-cutting concerns, phase summary
-2. **Phase plans** — one file per phase with detailed tasks, key files, tests, and done-when criteria
-3. **Deepen each plan** — focused research agents probe each phase individually (framework docs, best practices, edge cases, security, performance)
-4. **Fix contradictions** — resolve conflicts across all 6 plans before writing any code
-5. **Execute sequentially** — one phase at a time, tests pass before moving on
-
-### Phase Status
-
-All 6 phases planned, deepened, executed, and reviewed. See [roadmap.md](docs/plans/roadmap.md) for full timeline and phase links.
+See [docs/SETUP.md](docs/SETUP.md).
 
 ## Reference
 
-- [Brainstorm](docs/ideation/2026-04-05-burned-brainstorm.md) — all design decisions and rationale
-- [Roadmap](docs/plans/roadmap.md) — tech stack, architecture, state machine, cross-cutting concerns
-- [Rules Reference](docs/rules/RULES-REFERENCE.md) — canonical rules (audited against official PDF)
-- [Party Pack Rulebook](docs/user/ekpp-instructions-english.pdf) — official PDF (primary source)
-- [Code Review Strategy](docs/workflow/CODE-REVIEW.md) — which review tools, when to use each
-- [UMB Architecture](../undercover-mob-boss/) — reference patterns for multi-device infrastructure
+- [Product Specification](docs/PRODUCT-SPECIFICATION.md) — the contract (v1.0 LOCKED 2026-04-10). Every decision traces here.
+- [Rules Reference](docs/RULES-REFERENCE.md) — canonical rules audited against the official PDF; BURNED ↔ EK terminology mapping.
+- [Party Pack Rulebook](docs/user/ekpp-instructions-english.pdf) — primary rules source.
+- [CLAUDE.md](CLAUDE.md) — project conventions, engine invariants, landmines.
+- [UMB Architecture](../undercover-mob-boss/) — reference patterns for multi-device infrastructure.
+- Genesis (SUPERSEDED by the spec, kept for provenance): [`docs/ideation/`](docs/ideation/) — original brainstorm, art-direction brainstorm, visual-layer autopsy.

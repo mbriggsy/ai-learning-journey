@@ -1,6 +1,6 @@
 /**
  * Rule-validation gaps flagged by `TODO.md` (G1, G3) plus other
- * `docs/rules/RULES-REFERENCE.md` cases that weren't yet locked by a test.
+ * `docs/RULES-REFERENCE.md` cases that weren't yet locked by a test.
  *
  * Scope: behaviors that a silent refactor could regress without any existing
  * suite catching it. Every test here ties back to a specific rules-reference

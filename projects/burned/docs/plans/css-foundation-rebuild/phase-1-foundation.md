@@ -108,7 +108,7 @@ From `roadmap.md`:
 
 [^nocount]: Deepening 2026-04-11 corrected the "5 vs 6" inline count across §1. Six scales × 12 steps + 2 spot colors = 74 primitives is the canonical total.
 
-From `docs/specifications/PRODUCT-SPECIFICATION.md`:
+From `docs/PRODUCT-SPECIFICATION.md`:
 - **ADR-04** — Framer Motion discipline must survive. Bundle budget 100KB gzipped (current ~95KB, 5KB headroom).
 - **ADR-05** — visual consistency via shared tokens is the product decision Phase 1 delivers on.
 - **§4 Goal #6** — CVD-safe palette is a **hard requirement**, not aspirational. Every color decision runs through the CVD CI gate.

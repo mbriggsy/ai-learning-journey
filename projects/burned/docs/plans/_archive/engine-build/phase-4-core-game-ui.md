@@ -7,9 +7,10 @@ planned: 2026-04-05T11:41AM EDT
 deepened: 2026-04-05T06:30PM EDT
 executed: 2026-04-05T08:52PM EDT
 reviewed: 2026-04-05T09:08PM EDT
+status: archived
 ---
 
-> **Note:** This plan was written pre-retheme. "Exploding Kitten" → Burned, "Defuse" → Extraction, etc. See `docs/rules/RULES-REFERENCE.md` for full terminology mapping. Code already uses BURNED names.
+> **Note:** This plan was written pre-retheme. "Exploding Kitten" → Burned, "Defuse" → Extraction, etc. See `docs/RULES-REFERENCE.md` for full terminology mapping. Code already uses BURNED names.
 
 # Phase 4: Core Game UI
 
@@ -22,7 +23,7 @@ reviewed: 2026-04-05T09:08PM EDT
 **Context7 docs queried:** React 19 v19.1.1 (useOptimistic), Framer Motion (layout, AnimatePresence, Reorder, drag)
 
 ### Key Improvements
-1. **`useOptimistic` REPLACED with store-level optimistic overlay** — React 19's `useOptimistic` requires `startTransition` and does not compose with `useSyncExternalStore`. Store-level `applyOptimistic()` / `clearOptimistic()` handles WebSocket state correctly. (See `docs/insights/useOptimistic-vs-store-overlay.md`)
+1. **`useOptimistic` REPLACED with store-level optimistic overlay** — React 19's `useOptimistic` requires `startTransition` and does not compose with `useSyncExternalStore`. Store-level `applyOptimistic()` / `clearOptimistic()` handles WebSocket state correctly. (See `docs/insights/001-useOptimistic-incompatible-with-websocket-stores.md`)
 2. **NopeWindow countdown: CSS `scaleX` transition, not React re-renders** — GPU-composited, zero JS per frame, 1-4 total React renders during entire Nope window lifetime. Force-reflow pattern for chain resets.
 3. **SubPhase-to-UI routing via `PhoneGameView.tsx`** — exhaustive switch on phase + SubPhase + PendingPrompt. `ActiveBottomSheet` discriminated union derives which sheet to show. No explicit `prompt-cancelled` listeners — SubPhase change auto-closes sheets.
 4. **DefusePlacement is SINGLE-TAP** — most sensitive data in the game. No highlight, no confirmation step. Shoulder-surfing protection.

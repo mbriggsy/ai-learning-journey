@@ -49,7 +49,7 @@ For phone testing during development, use your machine's local IP instead of `lo
 
 ## Key Technologies
 
-- **[PartyKit](https://partykit.io/)** — real-time multiplayer via Cloudflare Workers. Handles rooms, WebSocket connections, and server-side game logic. Same as UMB.
+- **[partyserver](https://github.com/cloudflare/partyserver)** (the library PartyKit became post-acquisition) + **wrangler** — real-time multiplayer via Cloudflare Workers Durable Objects. Handles rooms, WebSocket connections, and server-side game logic.
 - **[React 19](https://react.dev/)** — UI framework for both board and player views.
 - **[Framer Motion](https://motion.dev/)** — animation library. Card flips, hand management, theatrical reveals.
 - **[Vite 8](https://vite.dev/)** — build tool. Multi-page app with separate board and player entry points.
@@ -63,7 +63,7 @@ For phone testing during development, use your machine's local IP instead of `lo
 - **Cost:** $0 (free tier covers everything for a party game)
 - **Rollback:** CF Pages instant rollback via dashboard, wrangler via git revert + redeploy
 
-See [phase-6-hardening-deploy.md](../plans/phase-6-hardening-deploy.md) for full deployment pipeline details.
+See [phase-6-hardening-deploy.md](../plans/_archive/engine-build/phase-6-hardening-deploy.md) for the original deployment pipeline plan (archived — deployment is shipped; see `wrangler.toml` and GitHub Actions for live config).
 
 ## Troubleshooting
 

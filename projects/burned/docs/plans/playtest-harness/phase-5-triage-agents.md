@@ -125,7 +125,7 @@ None — all repo-internal signals.
   the final issue index.
 - **D4. Triage agents have a broader tool surface than seat agents.**
   Read access to: source code (`src/` tree), `docs/testing/E2E-ISSUE-LIST.md`,
-  `docs/rules/RULES-REFERENCE.md`, `docs/specifications/PRODUCT-SPECIFICATION.md`,
+  `docs/RULES-REFERENCE.md`, `docs/PRODUCT-SPECIFICATION.md`,
   the full run directory (all seat logs + suspicions + events.jsonl +
   coverage.md). Write access: the specific issue file for their seed,
   nothing else. No Bash, no server control, no browser.

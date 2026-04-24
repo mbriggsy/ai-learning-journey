@@ -1,15 +1,15 @@
 ---
 title: "CSS Foundation Rebuild — Roadmap"
 type: feat
-parent: docs/specifications/PRODUCT-SPECIFICATION.md
+parent: docs/PRODUCT-SPECIFICATION.md
 date: 2026-04-11
-status: draft
+status: in-progress
 phases:
-  - phase-1-foundation.md
-  - phase-2-phone-view-migration.md
-  - phase-3-board-view-migration.md
-  - phase-4-motion-consolidation.md
-  - phase-5-verification-acceptance.md
+  - phase-1-foundation.md               # completed 2026-04-12
+  - phase-2-phone-view-migration.md     # completed
+  - phase-3-board-view-migration.md     # completed 2026-04-22
+  - phase-4-motion-consolidation.md     # completed 2026-04-22
+  - phase-5-verification-acceptance.md  # deepened — active work
 ---
 
 # CSS Foundation Rebuild — Roadmap
@@ -24,7 +24,7 @@ phases:
 
 ### The autopsy finding
 
-BURNED's game layer is solid (167/167 tests, clean protocol, Framer Motion discipline clean, MinimalCard using container queries correctly). The **visual layer is the only broken surface**, and it's broken in exactly one way: **there is no real token system.** Per the codebase audit (2026-04-11):
+BURNED's game layer is solid (167/167 tests at plan-authoring time 2026-04-11; current count in `CLAUDE.md`, clean protocol, Framer Motion discipline clean, MinimalCard using container queries correctly). The **visual layer is the only broken surface**, and it's broken in exactly one way: **there is no real token system.** Per the codebase audit (2026-04-11):
 
 - **2,845 LOC** across 33 CSS files.
 - **123 unique hex colors** across the codebase — 52 in `theme.ts`, **71 literal hex sprinkled across `.module.css` files**. Many are stale fallbacks from the old UMB noir palette, quietly disagreeing with the current runtime values.
@@ -36,7 +36,7 @@ BURNED's game layer is solid (167/167 tests, clean protocol, Framer Motion disci
 
 ### The superseded art-direction doc's damning diagnostic
 
-From `docs/post-mortems/VISUAL-LAYER-AUTOPSY.md`, the most important line for this rebuild:
+From `docs/ideation/2026-04-11-visual-layer-autopsy.md`, the most important line for this rebuild:
 
 > *"CSS Modules without shared tokens = organized chaos. The encapsulation creates an illusion of architecture."*
 
@@ -694,8 +694,8 @@ These are the topics where phase files are most likely to introduce contradictio
 
 **Internal documents:**
 
-- `docs/specifications/PRODUCT-SPECIFICATION.md` v1.0 (locked 2026-04-10) — the parent contract.
-- `docs/post-mortems/VISUAL-LAYER-AUTOPSY.md` — diagnosis of current visual layer.
+- `docs/PRODUCT-SPECIFICATION.md` v1.0 (locked 2026-04-10) — the parent contract.
+- `docs/ideation/2026-04-11-visual-layer-autopsy.md` — diagnosis of current visual layer.
 - `docs/insights/009-product-specification-authoring.md` — the session that authored the spec (referenced, not yet read in full during this rebuild).
 - `CLAUDE.md` (BURNED project conventions).
 

@@ -4,10 +4,10 @@
 >
 > This is the post-mortem that **triggered** BURNED's product specification authoring session on 2026-04-10. Its diagnosis and recommendations are **no longer canonical** — current doctrine lives in:
 >
-> - **`docs/specifications/PRODUCT-SPECIFICATION.md`** v1.0 — the product contract (especially §2 Quality Bar, §3.4 Form Factors, §6.4 Retheme Gaps, ADR-05 Visual Consistency)
+> - **`docs/PRODUCT-SPECIFICATION.md`** v1.0 — the product contract (especially §2 Quality Bar, §3.4 Form Factors, §6.4 Retheme Gaps, ADR-05 Visual Consistency)
 > - **`docs/insights/009-product-specification-authoring.md`** — the session that authored the spec and absorbed this autopsy's lessons
 >
-> **Preserved for historical context only.** When this document disagrees with the current state of `docs/specifications/PRODUCT-SPECIFICATION.md`, **the spec wins.** Moved from `docs/` to `docs/post-mortems/` on 2026-04-10 to signal its historical status.
+> **Preserved for historical context only.** When this document disagrees with the current state of `docs/PRODUCT-SPECIFICATION.md`, **the spec wins.**
 
 *Why it's fragile, why UMB isn't, and what instructions triggered UMB's success.*
 

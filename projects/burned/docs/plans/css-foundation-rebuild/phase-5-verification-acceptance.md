@@ -29,7 +29,7 @@ status: deepened
 6. **B6 §2.2.2 — Spec vs plan viewport mismatch.** Spec §8.1 says iPhone 14 (390×844) + iPad 10.9" (820×1180). Plan says iPhone 15 (393×852) + iPad mini (744×1133). Board also diverges: spec 1280×720 vs plan 1280×800; plan adds 2560×1440. Fix: amend spec §8.1/§8.2 viewport lists to the plan's values during the Phase 5 documentation pass (§2.8.1), documenting the rationale (iPhone 15 is 2024's representative modern phone; iPad mini is a stricter floor). Reconciliation note in §2.2.2.
 7. **B7 §2.2.1 — Cross-browser CI strategy flawed.** Plan says webkit/firefox "regenerate fresh and self-compare." Playwright does NOT work this way — missing baselines cause a failure, not self-comparison. Fix: limit `toHaveScreenshot()` assertions to chromium-only projects; run webkit/firefox as functional smoke tests (no screenshot assertions). Cross-browser note in §2.2.1.
 8. **B8 §2.2.1 — `deviceScaleFactor` and `scale: 'device'` missing.** Plan specifies DPR 2/3 in viewport tables but code doesn't pass `deviceScaleFactor` to `test.use()` or `scale: 'device'` to `toHaveScreenshot` config. Without these, DPR has zero effect on screenshot dimensions. Fix: add `dpr` field to VIEWPORTS, pass as `deviceScaleFactor` in `test.use()`, add `scale: 'device'` to config. Corrected in §2.2.1 + §2.2.4.
-9. **B9 §2.6.2 — Game loop script inconsistencies.** Beat 14: can't play Burned from hand (Burned cards are drawn, not played — standard EK rules). Beat 12: mid-sentence correction leaves script ambiguous. Beat 2: Shuffle invalidates the stacked deck. Missing: 5-card combo (spec §8.6 requires it). Fix: rewrite beats 12–17 with fully traced hand state, move Shuffle to late-game, redesign Beat 14 as an Intercept chain triggered by Surveillance, add 5-card combo beat. Corrected script in §2.6.2.
+9. **B9 §2.6.2 — Game loop script inconsistencies.** Beat 14: can't play Burned from hand (Burned cards are drawn, not played — standard EK rules). Beat 12: mid-sentence correction leaves script ambiguous. Beat 2: Burn the Files invalidates the stacked deck. Missing: 5-card combo (spec §8.6 requires it). Fix: rewrite beats 12–17 with fully traced hand state, move Burn the Files to late-game, redesign Beat 14 as an Intercepted chain triggered by Reassign, add 5-card combo beat. Corrected script in §2.6.2.
 
 ### New Subsections Added (3)
 
@@ -62,7 +62,7 @@ status: deepened
 **Parent**: [`roadmap.md`](./roadmap.md) §7 Phase 5
 **Depends on**: Phases 1, 2, 3, and 4 all landed, merged to `main`, and green (`pnpm test` + `pnpm typecheck` + `pnpm lint` + `pnpm build` all clean before Phase 5 starts)
 
-**Goal**. Prove the CSS Foundation Rebuild met the spec. Phase 5 is not implementation — it is the acceptance battery that converts the spec's `docs/specifications/PRODUCT-SPECIFICATION.md` §8 checkboxes from empty to checked. The output of Phase 5 is a set of Playwright visual regression specs, expanded CVD and contrast test pair lists, an iOS 26 real-device test protocol + conditional fallback, a scripted full-game-loop test procedure (§8.6), a first-time-player test protocol (§8.7), and a final documentation pass that updates `README.md`, `TODO.md`, and the spec's §8 acceptance checkboxes. Phase 5 is the last phase of the CSS Foundation Rebuild; its successful completion is the trigger for step 5 in `TODO.md` (Cloudflare deploy).
+**Goal**. Prove the CSS Foundation Rebuild met the spec. Phase 5 is not implementation — it is the acceptance battery that converts the spec's `docs/PRODUCT-SPECIFICATION.md` §8 checkboxes from empty to checked. The output of Phase 5 is a set of Playwright visual regression specs, expanded CVD and contrast test pair lists, an iOS 26 real-device test protocol + conditional fallback, a scripted full-game-loop test procedure (§8.6), a first-time-player test protocol (§8.7), and a final documentation pass that updates `README.md`, `TODO.md`, and the spec's §8 acceptance checkboxes. Phase 5 is the last phase of the CSS Foundation Rebuild; its successful completion is the trigger for step 5 in `TODO.md` (Cloudflare deploy).
 
 **Quality bar inherited**. `PRODUCT-SPECIFICATION.md` §2 Quality Bar — *"Could this look like a frame from an Archer episode?"* §2's acceptance test is the binary yes/no applied to every screen captured in §2.2 below. §8.7 is the same question asked of a first-time player without prompting — that is the final quality gate. Phase 5 is where "the rebuild met the bar" stops being an assertion and becomes a proved fact.
 
@@ -93,7 +93,7 @@ Phase 5 inherits the outputs of every prior phase and the spec's acceptance surf
 - **Phase 2 outputs** (`phase-2-phone-view-migration.md`): every `src/client/player/*.module.css` rewritten to consume tokens; `NopeButton` + `InterceptButton` deleted and consolidated into `FloatingActionButton`; `TurnBanner` deleted; `BottomSheet.module.css` `dvh → svh` fix; `EliminatedView.tsx` Tier 1 retheme (§2.3.9a).
 - **Phase 3 outputs** (`phase-3-board-view-migration.md`): every `src/client/board/*.module.css` rewritten to consume tokens; `MinimalCard.module.css`, `GameOver.module.css`, `DramaOverlay.module.css` rewritten cross-view with `container-type` declarations; `GameTable.tsx:24` Tier 1 retheme (`feltBranding` comment → "The Pendleton Agency — war-room felt decoration").
 - **Phase 4 outputs** (`phase-4-motion-consolidation.md`): every Framer Motion transition prop, every GSAP literal timing, every CSS `animation:` keyword consuming Phase 1 motion tokens; `src/client/shared/animation-config.ts` deleted; `PlayerRing.tsx` measurement-div pattern replacing hardcoded `panelW/panelH`.
-- **Spec §8 acceptance criteria** (`docs/specifications/PRODUCT-SPECIFICATION.md`): the seven-section checklist (`§8.1` phone, `§8.2` board, `§8.3` docs, `§8.4` retheme, `§8.5` deploy, `§8.6` full game loop, `§8.7` first-time-player test). Phase 5 is the phase that drives §8.1, §8.2, §8.3 (partial), §8.4, §8.6, §8.7 to checked. §8.5 is deferred to `TODO.md` step 5.
+- **Spec §8 acceptance criteria** (`docs/PRODUCT-SPECIFICATION.md`): the seven-section checklist (`§8.1` phone, `§8.2` board, `§8.3` docs, `§8.4` retheme, `§8.5` deploy, `§8.6` full game loop, `§8.7` first-time-player test). Phase 5 is the phase that drives §8.1, §8.2, §8.3 (partial), §8.4, §8.6, §8.7 to checked. §8.5 is deferred to `TODO.md` step 5.
 - **Repository baseline**: `pnpm test` reports 167+ tests green (167 baseline from Phase 0 + any new tests Phases 1–4 added), `pnpm typecheck` clean, `pnpm lint` clean, `pnpm build` succeeds with phone entry ≤100KB gzipped. Phase 5 §3 Step 1 re-verifies all four before any work begins.
 - **Known landmine: iOS 26 regression**. iOS 26.0 broke `position: fixed` and `position: sticky` in WebKit; iOS 26.1 partial fix. See `phase-2-phone-view-migration.md` §2.3.5 (TitleBar), §2.3.6 (StatusBar), §2.3.7 (FloatingActionButton); `phase-3-board-view-migration.md` §2.6 (DramaOverlay.overlay), §2.3.7 (AnnouncementFeed.feed). Five elements are at risk. §2.1 below is the real-device protocol that confirms or refutes regression.
 - **Three pending visual-review decisions** flagged by earlier phases (TODO.md §1):
@@ -135,7 +135,7 @@ Eight subsections total. The documentation pass was listed in the roadmap as a s
 - **Test files (new)**: 1 Playwright spec for phone, 1 Playwright spec for board, 1 Playwright config. `palette-cvd.test.ts` + `palette-contrast.test.ts` are expanded (edit, not new — Phase 1 creates them).
 - **Test fixtures / helpers**: 1 `test/visual-regression/helpers/` directory with baseline storage conventions.
 - **Test baselines (new, generated)**: ~60 PNG baseline files (exact count in §2.2.4).
-- **Docs edited**: `README.md`, `TODO.md`, `docs/specifications/PRODUCT-SPECIFICATION.md` §8 checkboxes, `docs/plans/css-foundation-rebuild/roadmap.md` (if the Phase 5 results need any annotations). Optional `.gitignore` edit for `dreamland-reference/images/` (§2.8.5).
+- **Docs edited**: `README.md`, `TODO.md`, `docs/PRODUCT-SPECIFICATION.md` §8 checkboxes, `docs/plans/css-foundation-rebuild/roadmap.md` (if the Phase 5 results need any annotations). Optional `.gitignore` edit for `dreamland-reference/images/` (§2.8.5).
 - **Conditional iOS 26 fallback (§2.1.5)**: one new file `src/client/shared/useIOSFixedFallback.ts` (~40 LOC) + five 2-line TSX conditional edits. **Only if §2.1 surfaces a regression.**
 
 Bottom line: Phase 5's artifact footprint is ~10–15 files (mostly test + doc), + ~60 baseline images, + conditional fallback code. The **verification run** count is large (~60 visual-regression assertions + ~40 CVD pair assertions + ~30 contrast pair assertions + 1 full-game-loop protocol + 1 first-time-player protocol + 1 iOS 26 device protocol).
@@ -178,7 +178,7 @@ src/client/shared/tokens/__tests__/
 package.json                     ← EDITED — add `test:visual` script, add `@playwright/test` devDep
 README.md                        ← EDITED — project status + bundle size report + test count
 TODO.md                          ← EDITED — check off §1 completion, convert to maintenance backlog
-docs/specifications/PRODUCT-SPECIFICATION.md  ← EDITED — §8.1/§8.2/§8.3/§8.4/§8.6/§8.7 checkboxes
+docs/PRODUCT-SPECIFICATION.md  ← EDITED — §8.1/§8.2/§8.3/§8.4/§8.6/§8.7 checkboxes
 .gitignore                       ← CONDITIONAL EDIT (§2.8.5) — add dreamland-reference/images/ if repo goes public
 ```
 
@@ -1460,23 +1460,7 @@ When a pair fails:
 
 #### §2.6.2 Game script — deck, hands, script beats
 
-The script is authored to force every card type to appear at least once. Exploding Kittens' 17 card types in BURNED terms (full list per `docs/rules/RULES-REFERENCE.md`):
-
-| # | Card | Burned name | Mechanic |
-|---|---|---|---|
-| 1 | Exploding Kitten | Burned | Draw it = eliminated unless Defused |
-| 2 | Defuse | Extract | Save from Burned |
-| 3 | Nope | Intercept | Cancel any action |
-| 4 | Attack | Surveillance | Force next player to take 2 turns |
-| 5 | Skip | Go Dark | Skip drawing a card |
-| 6 | Favor | Favor | Force a player to give you a card |
-| 7 | Shuffle | Shuffle | Shuffle draw pile |
-| 8 | See the Future | Future Peek | View top 3 cards |
-| 9 | Alter the Future | Alter Future | Rearrange top 3 cards |
-| 10 | Draw from the Bottom | Back Channel | Draw from bottom of pile |
-| 11 | Targeted Attack | Targeted Surveillance | Attack a specific player |
-| 12–16 | 5 Cat cards | 5 Operatives (Dash, Vera, Otto, Janet, Neal) | Pair steal, triple name-steal |
-| 17 | Feral Cat | Agent X | Wild operative, pairs with any |
+The script is authored to force every card type to appear at least once. Card names + code identifiers per canonical mapping in `docs/RULES-REFERENCE.md` §BURNED Terminology Mapping (source of truth: `src/shared/card-defs.ts`). **If any name below disagrees with the mapping, the mapping wins.**
 
 **Script to force all 17**:
 
@@ -1487,52 +1471,54 @@ The script is authored to force every card type to appear at least once. Explodi
 
 2. **Deck plan** (top 30 cards, rest shuffled):
 
-   | Slot | Card | Covers mechanic |
+   | Slot | Card (`code-id`) | Covers mechanic |
    |---|---|---|
-   | 1 | See the Future (Future Peek) | peek top 3 |
-   | 2 | Shuffle | shuffle draw pile |
-   | 3 | Alter the Future (Alter Future) | rearrange top 3 |
-   | 4 | Skip (Go Dark) | skip drawing |
-   | 5 | Attack (Surveillance) | force next player 2 turns |
-   | 6 | Draw from Bottom (Back Channel) | draw from bottom |
-   | 7 | Targeted Attack (Targeted Surveillance) | attack specific player |
-   | 8 | Favor | force gift |
-   | 9 | Cat (Dash) | pair-steal setup |
-   | 10 | Cat (Dash) | complete the pair |
-   | 11 | Cat (Vera) | triple-steal setup 1 |
-   | 12 | Cat (Vera) | triple setup 2 |
-   | 13 | Cat (Vera) | complete the triple (3-card name-steal) |
-   | 14 | Feral Cat (Agent X) | wild operative pair |
-   | 15 | Cat (Otto) | pair with Agent X |
-   | 16 | Defuse (Extract) | defuse card for player 2 |
-   | 17 | Exploding Kitten (Burned) | force elimination test |
-   | 18 | Nope (Intercept) | cancel an action |
-   | 19 | Defuse (Extract) | second defuse for later |
-   | 20 | Exploding Kitten (Burned) | second Burned for the Nope chain demo |
-   | 21 | Nope (Intercept) | noped again — multi-level chain |
-   | 22 | Nope (Intercept) | third Nope — demonstrate chain depth |
-   | 23–30 | mix of Cat + Skip + Favor | filler |
+   | 1 | Intel Briefing (`intel-briefing`) | peek top 3 |
+   | 2 | Burn the Files (`burn-the-files`) | shuffle draw pile |
+   | 3 | Falsify Intel (`falsify-intel`) | rearrange top 3 |
+   | 4 | Go Dark (`go-dark`) | end turn without drawing |
+   | 5 | Reassign (`reassign`) | force next player +2 turns |
+   | 6 | Back Channel (`back-channel`) | draw from bottom |
+   | 7 | Direct Order (`direct-order`) | +2 turns onto chosen target |
+   | 8 | Call in a Favor (`call-in-a-favor`) | force target to give a card |
+   | 9 | Dash Barlowe (`dash-barlowe`) | pair-steal setup |
+   | 10 | Dash Barlowe (`dash-barlowe`) | complete the pair |
+   | 11 | Vera Khan (`vera-khan`) | triple-steal setup 1 |
+   | 12 | Vera Khan (`vera-khan`) | triple setup 2 |
+   | 13 | Vera Khan (`vera-khan`) | complete the triple (3-card name-steal) |
+   | 14 | Agent X (`agent-x`) | wild operative pair |
+   | 15 | Neal Proctor (`neal-proctor`) | pair with Agent X (wild counts as any operative) |
+   | 16 | Extraction (`extraction`) | save card for player 2 |
+   | 17 | Burned (`burned`) | force elimination test |
+   | 18 | Intercepted (`intercepted`) | cancel an action |
+   | 19 | Extraction (`extraction`) | second Extraction for later |
+   | 20 | Burned (`burned`) | second Burned for the Intercepted-chain demo |
+   | 21 | Intercepted (`intercepted`) | noped again — multi-level chain |
+   | 22 | Intercepted (`intercepted`) | third Intercepted — demonstrate chain depth |
+   | 23–30 | mix of operative cards + Go Dark + Call in a Favor | filler |
+
+   Operatives in the deck: Dash Barlowe, Vera Khan, Sable Ashworth, Janet Broadside, Neal Proctor. (Otto is roster-only — not a card type. Agent X is the wild.)
 
 3. **Player setup**: 5 players — Briggsy + 4 other clients. Starting hand = 5 cards + 1 Defuse per spec §6.1. Player 3 is the "elimination victim" — the script guides them to burn out so `EliminatedView` captures in production conditions.
 
 4. **Script beats** (condensed — full version lives in `test/game-loop/full-loop-protocol.md`):
 
-   - **Beat 1** (turn 1, P1): Play See the Future → sheet opens with top 3 → dismiss.
-   - **Beat 2** (turn 2, P2): Play Shuffle → deck shuffled (note: slot 3+ deck plan is now randomized; Briggsy re-stacks if needed via a second call to the endpoint).
-   - **Beat 3** (turn 3, P3): Play Alter the Future → sheet opens with 3 cards, rearrange, dismiss.
-   - **Beat 4** (turn 4, P4): Play Go Dark → skip draw.
-   - **Beat 5** (turn 5, P5): Play Surveillance → P1's turn becomes 2 turns.
+   - **Beat 1** (turn 1, P1): Play Intel Briefing → sheet opens with top 3 → dismiss.
+   - **Beat 2** (turn 2, P2): Play Burn the Files → deck shuffled (note: slot 3+ deck plan is now randomized; Briggsy re-stacks if needed via a second call to the endpoint).
+   - **Beat 3** (turn 3, P3): Play Falsify Intel → sheet opens with 3 cards, rearrange, dismiss.
+   - **Beat 4** (turn 4, P4): Play Go Dark → end turn without drawing.
+   - **Beat 5** (turn 5, P5): Play Reassign → P1's turn becomes 2 turns.
    - **Beat 6** (turn 6, P1): P1 plays Back Channel → draws from bottom of pile.
-   - **Beat 7** (turn 7, P1's second): Play Targeted Surveillance → target P3.
-   - **Beat 8** (turn 8, P3): P3 stuck with 2 turns. Plays Favor targeting P4 → P4 must give a card.
-   - **Beat 9** (turn 9, P3's second): Plays pair-steal Dash+Dash → forces P5 to give a random card.
-   - **Beat 10** (turn 10, P4): Plays triple-steal Vera+Vera+Vera → names a specific card, steals from P1 if P1 has it.
-   - **Beat 11** (turn 11, P5): Plays Agent X + Otto pair-steal → wild-operative pair.
-   - **Beat 12** (turn 12, P1): Plays Burned (from deck draw) — wait, P1 doesn't have Burned yet. Adjust: P3 draws Burned, plays Extract from hand — DramaOverlay.extracted fires.
-   - **Beat 13** (turn 13, P3): P3 draws another Burned, has no Extract left — DramaOverlay.eliminated fires → `EliminatedView` renders on P3's phone.
-   - **Beat 14** (turn 14, P4): P4 stages Burned they've been holding, plays it targeting P5. P5 plays Intercept (Nope). Verify NopeCountdownBar + DramaOverlay.intercepted.
-   - **Beat 15** (turn 15, P5): P5 plays another Intercept on their own turn action. Server should reject with "self-intercept disallowed" per `docs/rules/RULES-REFERENCE.md` audit 2026-04-05. Verify error feedback.
-   - **Beat 16** (turn 16, P1): Multi-level Nope chain — P1 plays any action, P2 Nopes, P4 Nopes the Nope, P5 Nopes the Nope-Nope. Chain depth 3. Verify NopeCountdownBar tracks depth, DramaOverlay fires on final resolution.
+   - **Beat 7** (turn 7, P1's second): Play Direct Order → target P3.
+   - **Beat 8** (turn 8, P3): P3 stuck with 2 turns. Plays Call in a Favor targeting P4 → P4 must give a card.
+   - **Beat 9** (turn 9, P3's second): Plays pair-steal Dash Barlowe + Dash Barlowe → forces P5 to give a random card.
+   - **Beat 10** (turn 10, P4): Plays triple-steal Vera Khan × 3 → names a specific card, steals from P1 if P1 has it.
+   - **Beat 11** (turn 11, P5): Plays Agent X + Neal Proctor pair-steal → wild-operative pair (Agent X counts as any operative).
+   - **Beat 12** (turn 12, P1): Plays Burned (from deck draw) — wait, P1 doesn't have Burned yet. Adjust: P3 draws Burned, plays Extraction from hand — DramaOverlay.extracted fires.
+   - **Beat 13** (turn 13, P3): P3 draws another Burned, has no Extraction left — DramaOverlay.eliminated fires → `EliminatedView` renders on P3's phone.
+   - **Beat 14** (turn 14, P4): P4 stages Burned they've been holding, plays it targeting P5. P5 plays Intercepted. Verify NopeCountdownBar + DramaOverlay.intercepted.
+   - **Beat 15** (turn 15, P5): P5 plays another Intercepted on their own turn action. Server should reject with "self-intercept disallowed" per `docs/RULES-REFERENCE.md` audit 2026-04-05. Verify error feedback.
+   - **Beat 16** (turn 16, P1): Multi-level Intercepted chain — P1 plays any action, P2 Intercepts, P4 Intercepts the Intercept, P5 Intercepts the Intercept-Intercept. Chain depth 3. Verify NopeCountdownBar tracks depth, DramaOverlay fires on final resolution.
    - **Beat 17** (endgame): continue play until only 1 player remains — that's the winner. Verify `GameOver` screen with winner glow (land the §2.2.5 decision 1 outcome).
 
 5. **Reconnect test** (interleave with normal play):
@@ -1810,7 +1796,7 @@ Spec §8.7: *"If we fail this test, we fix the visuals and retest. No exceptions
 
 **Why this phase owns it**. The spec's §8 acceptance criteria checkboxes are the only part of the spec that is NOT locked — they get flipped as work lands. Phase 5 is the phase in which enough work lands for §8.1, §8.2, §8.3 (partial), §8.4, §8.6, §8.7 to flip. `README.md` + `TODO.md` also get their final "rebuild complete" updates.
 
-#### §2.8.1 `docs/specifications/PRODUCT-SPECIFICATION.md` §8 updates
+#### §2.8.1 `docs/PRODUCT-SPECIFICATION.md` §8 updates
 
 The spec is LOCKED on §1–§7. Only §8 acceptance criteria checkboxes are editable. Phase 5 flips the following (contingent on the corresponding §2.X step passing):
 
@@ -1832,8 +1818,8 @@ The spec is LOCKED on §1–§7. Only §8 acceptance criteria checkboxes are edi
 **§8.3 — Documentation**:
 - **NOT flipped by Phase 5** in full: §8.3 specifies a HOW-TO-PLAY doc at UMB's bar ("that doc alone could win an award"). That work is **not** in scope for the CSS Foundation Rebuild — it's a follow-on step. Phase 5 flips only:
   - [ ] `README.md` reflects current state of the project. → flipped on §2.8.2 README update.
-  - [ ] `CLAUDE.md` references `docs/specifications/PRODUCT-SPECIFICATION.md` as the canonical contract. → already flipped pre-Phase-5; Phase 5 verifies.
-  - [x] `docs/ideation/*.md` and `docs/brainstorms/*.md` each carry a SUPERSEDED banner. → already checked.
+  - [ ] `CLAUDE.md` references `docs/PRODUCT-SPECIFICATION.md` as the canonical contract. → already flipped pre-Phase-5; Phase 5 verifies.
+  - [x] `docs/ideation/*.md` each carry a SUPERSEDED banner. → already checked.
 - The HOW-TO-PLAY doc and the remaining §8.3 items stay unchecked until the follow-on HOW-TO-PLAY work happens.
 
 **§8.4 — Retheme completeness**:
@@ -2114,7 +2100,7 @@ Phase 5 is done when **all** of the following are true:
 - [ ] `README.md` updated with final bundle table, post-rebuild test count, current project state.
 - [ ] `TODO.md` updated: §1 marked COMPLETE, §5 (deploy) is new top priority.
 - [ ] `docs/plans/css-foundation-rebuild/roadmap.md` §11 annotation added with Phase 5 results.
-- [ ] `docs/specifications/PRODUCT-SPECIFICATION.md` §8 checkboxes flipped per §2.8.1 mapping.
+- [ ] `docs/PRODUCT-SPECIFICATION.md` §8 checkboxes flipped per §2.8.1 mapping.
 - [ ] `test/retheme-grep-sweep.md` committed, Tier 1 grep zero hits.
 - [ ] `test/public-repo-prep.md` committed with `.gitignore` + `git filter-repo` instructions.
 
@@ -2313,7 +2299,7 @@ Phase 5 §3 Step 18 is the verification. `pnpm build` on clean checkout, capture
 - `docs/plans/css-foundation-rebuild/phase-2-phone-view-migration.md` §2.3.5 (TitleBar), §2.3.6 (StatusBar), §2.3.7 (FloatingActionButton), §2.3.9a (EliminatedView retheme), §2.6 (BottomSheet dvh→svh), §2.3.13 (bottom sheets) — the files Phase 5 visual-regression-captures.
 - `docs/plans/css-foundation-rebuild/phase-3-board-view-migration.md` §2.3.1–§2.3.11 (board files), §2.3.9 (NopeCountdownBar emerald — pending decision 2), §2.5 (GameOver winner glow — pending decision 1), §2.6 (DramaOverlay five variants), §2.7 (feltBranding Tier 1 retheme) — the files Phase 5 visual-regression-captures.
 - `docs/plans/css-foundation-rebuild/phase-4-motion-consolidation.md` §2.3 (all FM transition sites — Phase 5 verifies they render with the locked timing), §2.4 (GSAP sites), §2.5 (CSS keyframes) — the motion surface Phase 5 verifies.
-- `docs/specifications/PRODUCT-SPECIFICATION.md` §2 Quality Bar, §3 Visual Reference, §3.4 Form Factors, §8 Acceptance Criteria — the contract Phase 5 checks against.
+- `docs/PRODUCT-SPECIFICATION.md` §2 Quality Bar, §3 Visual Reference, §3.4 Form Factors, §8 Acceptance Criteria — the contract Phase 5 checks against.
 
 **Technical references**:
 - **Playwright visual regression**: https://playwright.dev/docs/test-snapshots — `toHaveScreenshot()` API, `threshold` and `maxDiffPixelRatio` options.
@@ -2325,7 +2311,7 @@ Phase 5 §3 Step 18 is the verification. `pnpm build` on clean checkout, capture
 - **`import.meta.env` in Vite**: https://vite.dev/guide/env-and-mode — `import.meta.env.PROD` / `import.meta.env.DEV` are compile-time booleans; branches on them are tree-shaken.
 
 **Internal documents**:
-- `docs/post-mortems/VISUAL-LAYER-AUTOPSY.md` — the failure mode Phase 5 verifies never recurs.
+- `docs/ideation/2026-04-11-visual-layer-autopsy.md` — the failure mode Phase 5 verifies never recurs.
 - `feedback-stop-after-every-phase.md` (memory) — Phase 5 is its own drafting session; stop after this file, wait for Briggsy's review, then execute.
 - `feedback-plans-are-baking-recipes.md` (memory) — Phase 5 is concrete: exact pair lists, exact MIN_DISTANCE tuning protocol, exact step order, exact commit messages.
 - `feedback-no-execute-until-plans-complete.md` (memory) — Phase 5 execution blocks on all 5 phases being deepened through `/deepen-plan`, not just drafted.

@@ -1,17 +1,16 @@
 # BURNED — TODO
 
-## NEXT SESSION — pick up here (2026-04-25)
+## NEXT SESSION — pick up here (2026-04-25+)
 
-**Playtest-harness Phase 3 LARGELY SHIPPED (2026-04-24).** 11 of 13 units
-landed end-to-end; Units 9 (scenario-detector) and 10 (coverage-reporter)
-deferred to next session. Eyes-on review of `pnpm playtest:smoke` recommended
-before Phase 3 is formally closed.
+**Playtest-harness Phase 3 — 12 of 13 units shipped.** Unit 10
+(coverage-reporter) is the ONLY remaining unit. Phase 3 formally closes
+when Unit 10 lands.
 
 ### Phase 3 state of the world
 
-**Full test suite:** 698/698 green · typecheck clean · client-bundle sentinel
-regression intact (Phase 2 + Phase 3 Unit 3b sentinels both assert zero
-matches in `dist/**/*.js`).
+**Full test suite:** 719/719 green (698 baseline + 21 new Unit 9 tests) ·
+typecheck clean · client-bundle sentinel regression intact (Phase 2 +
+Phase 3 Unit 3b sentinels both assert zero matches in `dist/**/*.js`).
 
 **Harness surface shipped:**
 - `pnpm playtest:selftest` — 8-check isolation self-test (cookie / localStorage
@@ -30,13 +29,22 @@ matches in `dist/**/*.js`).
   `--before / --session-id / --full-dir / --root`. Rolling retention
   (default keep 10 newest) runs automatically at end of each session via
   the orchestrator.
+- **NEW (2026-04-24) — scenario-detector (`scripts/playtest/lib/scenario-detector.ts`):**
+  `detectFires(catalogPath, eventsJsonlPath, connectionsJsonlPath, seatLogPaths)`
+  parses SCENARIOS.md's three-tier grammar, walks events.jsonl + (optional)
+  connections.jsonl, emits tri-state FireRecords (`clean` / `with-divergence`
+  / `no-fire`). Hand-rolled YAML-subset parser handles all 35 production
+  scenarios. Real-fixture smoke against Unit 8's live events.jsonl parses
+  clean (35 FireRecords, all `no-fire` on the thin 2-event game — honest
+  baseline for Phase 4 to flex).
 
 **Harness lib modules (all under `scripts/playtest/`):** `run-session.ts`,
 `selftest.ts`, `purge.ts`, `smoke.ts` entries; `lib/` has `orchestrator`,
 `server-controller`, `session-secrets`, `god-subscriber`, `seat-factory`,
-`run-directory`, `scrubber`, `retention`, `selftest-checks`, plus stubs
-for `scenario-detector` + `coverage-reporter` (Unit 9/10 targets). Zero
-imports from `src/server` (insight 022). All types re-declared locally.
+`run-directory`, `scrubber`, `retention`, `selftest-checks`,
+**`scenario-detector` (Unit 9, shipped 2026-04-24)**, plus stub for
+`coverage-reporter` (Unit 10 target). Zero imports from `src/server`
+(insight 022). All types re-declared locally.
 
 **Phase 2 fixes rolled into Phase 3 during execution:**
 - **Unit 3 FIX (commit `adc75942`):** `startServers` switched from env-based
@@ -50,7 +58,7 @@ imports from `src/server` (insight 022). All types re-declared locally.
   drained to parent's stderr with `[wrangler]` / `[vite]` prefix. Undrained
   pipes stalled wrangler at ~64 KB. See insight 026.
 
-**Insights captured this session (4 new):**
+**Insights captured across Phase 3 (5 total, 4 prior + 1 this session):**
 - **024** — `wrangler dev` requires `--var` CLI flags; Node env doesn't
   reach workerd.
 - **025** — `ws` package sends no Origin header by default; server LAN
@@ -59,19 +67,26 @@ imports from `src/server` (insight 022). All types re-declared locally.
   drain-with-prefix or `stdio: 'ignore'`.
 - **027** — Absence-of-X assertions need presence-of-Y companions;
   selftest Check 4 passed vacuously when god never connected.
+- **028 (NEW 2026-04-24)** — god-events broadcast cumulative event arrays,
+  not deltas. Any consumer must delta-flatten via `.slice(priorLen)` or
+  massively over-count. Verified at engine.ts (10+ append sites) +
+  projection.ts (no trim). Applies to Phase 5 triage + any replay tool.
 
 ### Known follow-ups (ordered by urgency)
 
-1. **Unit 9 — scenario-detector.** Parses `docs/testing/playtest/SCENARIOS.md`
-   three-tier grammar; walks `events.jsonl` + `connections.jsonl`; records
-   tri-state FireRecords (`clean` / `with-divergence` / `no-fire`). Plan
-   locked at `docs/plans/playtest-harness/phase-3-harness-infra.md` Unit 9.
-   Fixture data now exists — Unit 8 smoke produces real events.jsonl lines
-   that can seed detector fixtures.
-2. **Unit 10 — coverage-reporter.** Renders `coverage.md` as 7×2 info-gap
+1. **Unit 10 — coverage-reporter.** Renders `coverage.md` as 7×2 info-gap
    grid with `firedCount >= 50 AND zeroCellCount === 0` pass gate. Plan
-   locked at Unit 10. Depends on Unit 9.
-3. **Workerd orphan processes on Windows (Unit 8 finding).** Every smoke
+   locked at `docs/plans/playtest-harness/phase-3-harness-infra.md:1912`.
+   Depends on Unit 9 (now shipped). Pure consumer of `FireRecord[]`;
+   expected scope: smaller than Unit 9 (~200 lines impl + ~200 lines
+   tests). Types already defined: `CoverageReport` in
+   `scripts/playtest/lib/types.ts:263` with `firedCount` / `threshold: 50`
+   / `gridCells: Record<ViewerRole, {column1, column2, scenarioIds}>` /
+   `zeroCellCount` / `passed` / `firedByViewport` /
+   `freePlayAccounting` / `divergences` / `knownProductCalls`.
+   `scenario-detector` exports `FireRecord` (with `ScenarioFire` legacy
+   alias — coverage-reporter currently imports the alias).
+2. **Workerd orphan processes on Windows (Unit 8 finding).** Every smoke
    run leaks 2 workerd.exe processes because `stopServers` SIGTERMs the
    `pnpm exec wrangler` intermediary and doesn't propagate to the
    grandchild workerd. Fix path: spawn with `detached: true` + use
@@ -79,15 +94,22 @@ imports from `src/server` (insight 022). All types re-declared locally.
    group / Job Object. Smoke surfaces this as a warn line so pressure stays
    on it. CLAUDE.md recovery is `taskkill //F //IM workerd.exe && rm -rf
    .wrangler/state`.
-4. **Port 5173 vite collision (Unit 8 finding).** `pollViteHealth` doesn't
+3. **Port 5173 vite collision (Unit 8 finding).** `pollViteHealth` doesn't
    verify it's the orchestrator's vite vs a pre-existing user vite. Today
    accidental coexistence works; could mask a dev-server regression. Fix:
    hash an orchestrator-ID into a request header OR probe a harness-only
    endpoint.
-5. **Phase 3 Unit 7 selftest polish:** selftest.ts inlines the wrangler
+4. **Phase 3 Unit 7 selftest polish:** selftest.ts inlines the wrangler
    spawn rather than calling the fixed `startServers`. Works correctly
    but duplicates wrangler-spawn discipline; migrating is low-risk polish
-   after Unit 9/10 land. Noted in commit `adc75942`.
+   after Unit 10 lands. Noted in commit `adc75942`.
+5. **Negative-shape dispatch-rejection evidence (Unit 9 known limitation).**
+   scenario-detector currently defaults `shape: negative` scenarios to
+   `no-fire` because dispatch errors don't produce god-events today.
+   When Phase 4 seat agents land (or whenever rejection logging lands),
+   upgrade `tier1Match` in `scenario-detector.ts` to check for positive
+   rejection evidence and fire `clean` when observed. Full context in
+   the code comment at the `shape === 'negative'` branch.
 6. **Phase 4 — seat agents.** Plan locked. Consumes Unit 5's `SeatHandle`
    + Unit 1's `ALLOWED_PAGE_METHODS` allowlist. Subagent tools-whitelist
    per `.claude/agents/playtest-seat.md` is the enforcement surface
@@ -162,19 +184,19 @@ projection @ `5e86f811`):**
 **Next steps:**
 - ✅ **Phase 2 SHIPPED 2026-04-24** — 10 units, full suite 527/527, live
   smoke green.
-- ✅ **Phase 3 (11 of 13 units) SHIPPED 2026-04-24** — Units 1, 2, 3, 3b, 4,
-  4b, 5, 6, 7, 8, 10b landed. Full suite 698/698. Live `pnpm playtest:smoke`
+- ✅ **Phase 3 (12 of 13 units) SHIPPED** — Units 1, 2, 3, 3b, 4, 4b, 5, 6,
+  7, 8, 9, 10b landed. Full suite 719/719. Live `pnpm playtest:smoke`
   passes ~10s × 2 runs. See top-of-file §"Phase 3 state of the world".
-- **Phase 3 completion:** Units 9 (scenario-detector) and 10 (coverage-reporter)
-  remain. Unit 8 smoke produces real `events.jsonl` lines suitable as Unit 9
-  fixture data.
+- **Phase 3 completion:** Unit 10 (coverage-reporter) is the last
+  remaining unit. Pure consumer of Unit 9's `FireRecord[]`.
 - Execute Phase 4 → Phase 5 per locked plans. Phase 6 is the first real
   session; STOP before Phase 6 without eye-in-loop verification.
 - Insights 019 + 020 should guide future rigor passes on agent-native plans.
   Insights 022 + 023 fed into Phase 3 scope decisions (room.ts quarantine;
-  HTTP-level auth gate). Insights 024-027 (captured this session) cover
-  wrangler `--var`, ws Origin headers, stdio backpressure, and
-  absence-tests-need-presence-companions.
+  HTTP-level auth gate). Insights 024-027 cover wrangler `--var`, ws
+  Origin headers, stdio backpressure, and absence-tests-need-presence-
+  companions. Insight 028 (god-events are cumulative, not delta) applies
+  to any future events.jsonl consumer (Phase 5 triage, replay tools).
 
 ### Sequential-vs-parallel analysis (Briggsy's end-of-session question)
 

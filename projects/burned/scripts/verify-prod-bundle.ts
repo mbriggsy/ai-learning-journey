@@ -47,6 +47,14 @@ const FORBIDDEN_STRINGS: Sentinel[] = [
   { needle: 'mulberry32', guard: 'Unit 3 seedable RNG — keep in src/server/rng.ts only' },
   { needle: 'PLAYTEST_TOKEN', guard: 'Unit 1 env shape — server-only' },
   { needle: 'PLAYTEST_GOD_ORIGINS', guard: 'Unit 1 env shape — server-only' },
+  // --- Playtest-harness sentinels (Phase 3 Unit 3b) ---
+  // session-secrets.ts lives in scripts/playtest/lib/ and must not be
+  // pulled into any client bundle. Function names + module path fragment
+  // + a sentinel comment unique to the file are all grep-checked.
+  { needle: 'mintPlaytestToken', guard: 'Unit 3b session-secrets — keep in scripts/playtest/lib/ only' },
+  { needle: 'mintScrubSalt', guard: 'Unit 3b session-secrets — keep in scripts/playtest/lib/ only' },
+  { needle: 'playtest/lib/session-secrets', guard: 'Unit 3b module path — scripts-only, must not be imported by src/' },
+  { needle: 'PLAYTEST_TREE_SHAKE_SENTINEL_SESSION_SECRETS_3B', guard: 'Unit 3b sentinel comment — only appears in scripts/playtest/lib/session-secrets.ts' },
 ]
 
 function collectJsFiles(dir: string): string[] {

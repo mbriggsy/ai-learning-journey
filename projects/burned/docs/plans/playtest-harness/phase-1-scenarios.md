@@ -727,8 +727,10 @@ fills the SPECTATOR row distinctly from ACTOR/TARGET/OTHER.
 - **SCN-SPECTATOR-NAMED-STEAL-BETWEEN-OTHERS-01:** eliminated seat
   present when a triple-named-steal fires between two alive players. Does
   SPECTATOR see `pendingNamedCardType` via their projection? Should they?
-  (Per `projection.ts:150-154` they receive it when they happen to be
-  neither stealer nor target — correct behavior worth observing.)
+  (Per `projection.ts:150-154` + viewer-gate at `:174`
+  `augmentNopeWindowForPlayer`, SPECTATOR does NOT receive `namedCardType`
+  — only the stealer and target do. SCENARIOS.md observes and asserts
+  ABSENT; this scenario confirms the gate holds.)
 - **SCN-SPECTATOR-FAVOR-BETWEEN-OTHERS-01:** `favor-pending` between two
   alive players. Does the `favor-response` prompt leak to SPECTATOR?
   (Expected: no. Verify.)

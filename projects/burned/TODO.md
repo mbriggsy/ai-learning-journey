@@ -1,45 +1,78 @@
 # BURNED — TODO
 
-## NEXT SESSION — pick up here (2026-04-24 afternoon)
+## NEXT SESSION — pick up here (2026-04-25)
 
-**Playtest-harness Phase 1 is drafted in full (2026-04-24 session).** 90
-scenarios landed at `docs/testing/playtest/SCENARIOS.md` across 11 content
-sections, status **DRAFT — pending Briggsy sign-off**. Typecheck clean,
-prototype-detector gate PASSED 3/3 shape modes, 10 Column divergences
-harvested as candidate new E2E-ISSUE-LIST items, 1 plan-doc inconsistency
-flagged for Phase 1 plan correction.
+**Playtest-harness Phase 2 SHIPPED (2026-04-24).** All 10 units landed with
+runtime verification. Phase 1 is approved + locked. Cadence-compliant
+debrief owed at phase boundary.
+
+### Phase 2 state of the world
+
+**Full test suite:** 527/527 green · typecheck clean · ESLint clean
+(modulo one pre-existing palette warning) · client-bundle sentinel
+regression test active (sabotage-verified)
+
+**New server surfaces:**
+- `GET /health` → `{ ok, playtest, version }` in every build (no DO wake)
+- `role=god` WS upgrade — HTTP-level auth gate in `fetch()` (401/403
+  rejections BEFORE upgrade), LAN/localhost/PLAYTEST_GOD_ORIGINS-only
+  origin allowlist, constant-time token compare
+- `playtest-config` admin message — queued, first-write-wins latch
+- `god-event` WS broadcast — emitted from `broadcastGameState` on
+  every successful dispatch; structural equality with concurrent
+  player-update by construction
+- `ctx.nopeWindowMs` override + seedable mulberry32 RNG both gated
+  on `this.playtestSeed`
+
+**New files (all pure, unit-tested):** `playtest.ts`, `health.ts`, `rng.ts`,
+`god-connection.ts`, `playtest-config.ts`, `god-projection.ts`.
+`room.ts` is thinner: Env interface hoisted; `Server<Env>` parameterized;
+onConnect gains god-tagging branch; broadcastGameState gains god-event
+emission behind `pendingGodEventTrigger`.
+
+**Benchmarks @ N=10 (hard roster max):** buildGodProjections avg 0.005 ms
+· buildGodEventMessage avg 0.002 ms · god-event payload ~19 KiB. All
+budgets ~2000× under. Zero headroom concern.
+
+**Smoke test (`pnpm playtest:smoke`):** 7/7 steps green against real
+`wrangler dev`. Covers /health, god auth rejection (WS + direct HTTP
+probe paths), valid auth accept, playtest-config latch LOCKED rejection.
+
+**Insights captured this session:**
+- **022** — partyserver's `cloudflare:` scheme makes `room.ts`
+  unimportable in Vitest-Node tests. Net constraint: `room.ts` is a
+  thin wiring layer; all testable logic in pure sibling modules.
+- **023** — partyserver `connection.close()` inside `onConnect` under
+  hibernation does NOT promptly deliver a close frame. WS auth gates
+  MUST live in the `fetch()` entry point, not `onConnect`.
 
 ### Immediate priorities (ordered)
 
-1. **Briggsy reads `docs/testing/playtest/SCENARIOS.md` (especially
-   Column divergences + Known product calls ledger + Lock log self-review).**
-   - If approved: flip `Lock status:` header from DRAFT to
-     `LOCKED 2026-04-24 at engine.ts@e6b31b5c`, add a new Lock-log row
-     with your initials + date. Then discard
-     `temp/prototype-detector-gate.ts` (already deleted in session
-     cleanup, but re-verify).
-   - If revisions requested: route feedback into a revision pass.
-2. **Phase-1 plan correction.** `docs/plans/playtest-harness/phase-1-scenarios.md`
-   Unit 5 Part B parenthetical claims spectators receive `namedCardType`
-   via `projection.ts:150-154`. This is wrong — `projection.ts:174`
-   viewer-gate in `augmentNopeWindowForPlayer` excludes non-principals.
-   Catalog asserts correct engine behavior (ABSENT). Plan should be
-   corrected before Phase 1 locks.
-3. **Execute playtest-harness Phase 2 → Phase 5** per locked plans. Phase
-   6 is the first real session and requires eye-in-loop verification —
-   STOP before it runs autonomously. Cadence per Briggsy 2026-04-24:
-   phase → stop → debrief + /distill → next phase.
+1. **Phase 2 debrief with Briggsy.** Cadence per 2026-04-24: phase →
+   stop → debrief + /distill → next phase. Distill already ran at
+   phase boundary (022 + 023). Debrief = review the 10-unit commit stack
+   and any Phase 3 scope questions BEFORE executing Phase 3.
+2. **Execute Phase 3** — harness infrastructure (orchestrator process,
+   god-event reassembly buffer, `events.jsonl` write path). Plan locked
+   at `docs/plans/playtest-harness/phase-3-harness-infra.md`. Phase 3
+   consumes Phase 2's god-event shape directly — Unit 4 in Phase 3 is
+   the reassembly buffer that the Phase 2 split-envelope design
+   anticipates (though splitting has not yet fired — payload 19 KiB at
+   N=10 is comfortable).
+3. **Phases 4 → 5** per locked plans. Phase 6 is the first REAL session
+   and requires eye-in-loop verification — STOP before it runs
+   autonomously.
 4. **IncomingSteal banner real-device verification** (`82af35f9`) — still
    pending from prior sessions. Playwright + unit tests green, phone-side
    pre-resolution screenshot never caught. Earth > map.
 5. **Host-identity cluster (P1 deferred).** B-01/B-02/B-11/B-12/B-14 —
    significant infra, design questions first.
-6. **Remaining P1/P2 from `docs/testing/E2E-ISSUE-LIST.md`** — cosmetic and
-   scope-decision items, pick opportunistically.
+6. **Remaining P1/P2 from `docs/testing/E2E-ISSUE-LIST.md`** — cosmetic
+   and scope-decision items, pick opportunistically.
 
 ### Phase 1 Column divergences — candidates for E2E-ISSUE-LIST.md additions
 
-Ten findings surfaced during drafting. Full text in
+Still open from Phase 1 drafting. Full text in
 `docs/testing/playtest/SCENARIOS.md` §Column divergences. Highlights:
 
 - **Atomicity-gap bug class** (insight 021) — 4 scenarios re-surface the
@@ -49,7 +82,8 @@ Ten findings surfaced during drafting. Full text in
 - Favor auto-resolve TARGET-silence on empty-hand or Burned-only hand
   (correct engine, weak UX).
 - Intel → Back-Channel `pendingFuture` clearing semantics — product call.
-- Spectator `namedCardType` visibility — engine correct, spec-intent TBD.
+- Spectator `namedCardType` visibility — engine correct (closed: see
+  Phase 1 plan-doc correction, insight trail).
 - Board-drama variant for Burned draw (known: C-15).
 
 ### Phase 1 catalog gaps (intentional — documented)
@@ -92,10 +126,14 @@ projection @ `5e86f811`):**
   `.claude/agents/*.md` frontmatter `tools:` whitelist because MCP tools
   cross process boundaries.
 
-**Next steps (when ready):**
-- Execute builds phase 2 → phase 5 per locked plans. Phase 6 is the first
-  real session; STOP before Phase 6 without eye-in-loop verification.
+**Next steps:**
+- ✅ **Phase 2 SHIPPED 2026-04-24** — 10 units, full suite 527/527, live
+  smoke green. See top-of-file §"Phase 2 state of the world" for detail.
+- Execute Phase 3 → Phase 5 per locked plans. Phase 6 is the first real
+  session; STOP before Phase 6 without eye-in-loop verification.
 - Insights 019 + 020 should guide future rigor passes on agent-native plans.
+  Insights 022 + 023 (captured during Phase 2) feed into Phase 3 scope
+  decisions about how orchestrator code can be tested.
 
 ### Sequential-vs-parallel analysis (Briggsy's end-of-session question)
 

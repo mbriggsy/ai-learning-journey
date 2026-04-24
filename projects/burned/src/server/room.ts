@@ -3,6 +3,7 @@ import type { Connection, ConnectionContext } from 'partyserver'
 import { parseClientMessage, messageByteLength } from './validation'
 import { handleHealthRequest } from './health'
 import { mulberry32, randomIntFromRandom } from './rng'
+import { createGodRateLimiter, evaluateGodAuth } from './god-connection'
 import { createLobbyState, dispatch } from './game/engine'
 import { projectForBoard, projectForPlayer, getPrivateData } from './projection'
 import type { GameState, PlayingState, GameOverState, DispatchContext, DispatchResult, ErrorCode as EngineErrorCode } from './game/types'
@@ -66,10 +67,28 @@ function mapEngineError(code: EngineErrorCode): ErrorCode {
 type ConnState =
   | { role: 'host' }
   | { role: 'player'; playerId: string; sessionToken: string }
+  | { role: 'god' }
+
+// --- Workers Env ---
+//
+// Declared BEFORE the GameRoom class so `Server<Env>` can parameterize
+// `this.env` to the PLAYTEST_* shape. The Workers default export at the
+// bottom of the file re-uses this same interface.
+
+interface Env {
+  GameRoom: DurableObjectNamespace
+  // Playtest-mode env surface (all optional, absent in production).
+  // Semantics live in `src/server/playtest.ts`. Production builds MUST NOT
+  // set PLAYTEST_MODE — the prod-bundle sentinel check (Unit 7) greps the
+  // compiled output for leakage.
+  PLAYTEST_MODE?: string
+  PLAYTEST_TOKEN?: string
+  PLAYTEST_GOD_ORIGINS?: string
+}
 
 // --- Room ---
 
-export class GameRoom extends Server {
+export class GameRoom extends Server<Env> {
   static override options = { hibernate: true }
 
   // --- State ---
@@ -106,6 +125,11 @@ export class GameRoom extends Server {
   private playtestSeed: number | undefined = undefined
   private playtestNopeWindowMs: number | undefined = undefined
   private playtestConfigLocked = false
+
+  // Per-room rate-limit store for god-role auth attempts. Keyed by
+  // source (remote IP via CF headers, or origin as fallback). Resets on
+  // successful auth. See `src/server/god-connection.ts`.
+  private godAuthFailures = new Map<string, { count: number; windowStart: number }>()
 
 
   // --- Lifecycle ---
@@ -162,8 +186,28 @@ export class GameRoom extends Server {
   }
 
   override onConnect(connection: Connection, ctx: ConnectionContext): void {
-    // Origin validation — WebSocket bypasses CORS, so check on connect
+    const url = new URL(ctx.request.url)
     const origin = ctx.request.headers.get('Origin')
+
+    // God-role branch — orchestrator-only omniscient observer. Gated by
+    // PLAYTEST_MODE + token + stricter origin allowlist. See
+    // `src/server/god-connection.ts` for the decision logic.
+    if (url.searchParams.get('role') === 'god') {
+      const token = url.searchParams.get('token')
+      const sourceKey = ctx.request.headers.get('CF-Connecting-IP') ?? origin ?? 'unknown'
+      const rateLimiter = createGodRateLimiter(this.godAuthFailures, sourceKey)
+      const decision = evaluateGodAuth({ origin, token, env: this.env, rateLimiter })
+      if (!decision.ok) {
+        connection.close(decision.closeCode, decision.closeReason)
+        return
+      }
+      connection.setState({ role: 'god' } satisfies ConnState)
+      this.startHeartbeat(connection)
+      return
+    }
+
+    // Player / host origin validation — WebSocket bypasses CORS, so check
+    // on connect.
     const allowedOrigins = [
       'https://burned.pages.dev',
       'http://localhost:5173', 'http://localhost:4173',
@@ -175,10 +219,14 @@ export class GameRoom extends Server {
       return
     }
 
-    // Enforce max connections
+    // Enforce max connections — god connections don't count toward the cap.
     let connCount = 0
-    // eslint-disable-next-line @typescript-eslint/no-unused-vars
-    for (const _ of this.getConnections()) { connCount++; if (connCount > MAX_CONNECTIONS) break }
+    for (const conn of this.getConnections()) {
+      const cs = this.getConnState(conn)
+      if (cs?.role === 'god') continue
+      connCount++
+      if (connCount > MAX_CONNECTIONS) break
+    }
     if (connCount > MAX_CONNECTIONS) {
       this.sendError(connection, 'ROOM_FULL', 'Room is full')
       connection.close(4001, 'Room full')
@@ -206,6 +254,14 @@ export class GameRoom extends Server {
     // Rate limiting
     if (this.isRateLimited(connection.id)) {
       this.sendError(connection, 'RATE_LIMITED', 'Too many messages')
+      return
+    }
+
+    // God-connection message routing. Until Unit 5 lands the
+    // `playtest-config` admin message, god connections have no valid
+    // incoming messages. Silently drop anything they send — do not bounce
+    // back an error (prevents probing the token surface).
+    if (this.getConnState(connection)?.role === 'god') {
       return
     }
 
@@ -760,6 +816,9 @@ export class GameRoom extends Server {
     const msg: ServerMessage = { type: 'state-update', payload: view, protocolVersion: PROTOCOL_VERSION }
     const raw = JSON.stringify(msg)
     for (const conn of this.getConnections()) {
+      // God connections never receive the player/host state-update stream;
+      // only god-events (Unit 6). Skip them here.
+      if (this.getConnState(conn)?.role === 'god') continue
       try { conn.send(raw) } catch { /* connection closing */ }
     }
   }
@@ -777,6 +836,7 @@ export class GameRoom extends Server {
 
     let hostCount = 0
     let playerCount = 0
+    let godCount = 0
     let untypedCount = 0
     let sendFailures = 0
 
@@ -797,13 +857,17 @@ export class GameRoom extends Server {
             protocolVersion: PROTOCOL_VERSION,
           }
           conn.send(JSON.stringify(playerMsg))
+        } else if (connState?.role === 'god') {
+          // God connections receive only god-events, filled in by Unit 6.
+          // Counted here so the broadcast log shows distribution.
+          godCount++
         } else {
           untypedCount++
         }
       } catch { sendFailures++ }
     }
 
-    console.log(`[broadcastGameState] phase=${state.phase} host=${hostCount} players=${playerCount} untyped=${untypedCount} failures=${sendFailures}`)
+    console.log(`[broadcastGameState] phase=${state.phase} host=${hostCount} players=${playerCount} god=${godCount} untyped=${untypedCount} failures=${sendFailures}`)
   }
 
   private buildLobbyView(): LobbyView {
@@ -964,17 +1028,10 @@ export class GameRoom extends Server {
 }
 
 // --- Worker Entry Point (wrangler dev / wrangler deploy) ---
-
-interface Env {
-  GameRoom: DurableObjectNamespace
-  // Playtest-mode env surface (all optional, absent in production).
-  // Semantics live in `src/server/playtest.ts`. Production builds MUST NOT
-  // set PLAYTEST_MODE — the prod-bundle sentinel check (Unit 7) greps the
-  // compiled output for leakage.
-  PLAYTEST_MODE?: string
-  PLAYTEST_TOKEN?: string
-  PLAYTEST_GOD_ORIGINS?: string
-}
+//
+// The `Env` interface is declared above the `GameRoom` class so
+// `Server<Env>` can parameterize `this.env`. The default export uses the
+// same interface.
 
 export default {
   async fetch(request: Request, env: Env): Promise<Response> {

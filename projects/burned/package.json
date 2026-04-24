@@ -21,6 +21,7 @@
     "playtest:smoke": "tsx scripts/playtest/smoke.ts",
     "playtest:smoke:phase2": "tsx scripts/playtest/phase2-smoke.ts",
     "playtest:phase4-smoke": "tsx scripts/playtest/integration/phase4-smoke.ts",
+    "playtest:phase5-smoke": "tsx scripts/playtest/integration/phase5-smoke.ts",
     "playtest:run": "tsx scripts/playtest/run-session.ts",
     "playtest:selftest": "tsx scripts/playtest/selftest.ts",
     "playtest:purge": "tsx scripts/playtest/purge.ts"

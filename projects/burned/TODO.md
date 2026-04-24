@@ -2,25 +2,83 @@
 
 ## NEXT SESSION — pick up here (2026-04-25+)
 
-**Playtest-harness Phase 4 — COMPLETE.** All 7 units shipped (Units 1,
-1b, 2a, 2, 3, 4, 5). Workerd orphan fix shipped same session.
+**Playtest-harness Phase 5 — COMPLETE.** All 6 units shipped (Units 1,
+1b, 2, 3, 4, 5, 6).
 
 **Pick from the active queue:**
-1. **Phase 5 — triage agents** (next harness phase; plan locked at
-   `docs/plans/playtest-harness/phase-5-triage-agents.md`).
+1. **Phase 6 — first REAL playtest session.** STOP before this runs
+   autonomously; eye-in-loop required. Plan locked at
+   `docs/plans/playtest-harness/phase-6-calibration-and-first-session.md`.
+   Phase 6 is also the home for the deferred contract test (spawn a
+   `playtest-triage` with a prompt asking for `browser_snapshot`,
+   verify Claude Code refuses) AND the orchestrator-side wiring of
+   the real `runTriagePipeline` driver as the default
+   `runPostSessionTriage` for `runSession`.
 2. **BURNED card cinematic arc** sub-steps #3 + #4 (DefusePlacement hero
    card + Burned art regen). Pure product work.
 3. **Real-device playtest** — iPad + phones Emil-pass verification list.
-4. **Phase 6** — first real playtest session. STOP before this runs
-   autonomously; eye-in-loop required.
 
-### Phase 4 state of the world (2026-04-24)
+### Phase 5 state of the world (2026-04-24)
 
-**Full test suite:** 805/805 green (+56 from Phase 3 baseline of 749:
-18 log-schema, 6 parseCatalog prose, 24 agent-launcher, 8 isolation
-audit) · typecheck clean · `pnpm playtest:phase4-smoke` PASS
-(~70 assertions) · `pnpm playtest:smoke` leaves 0 workerd zombies
-across repeat runs (was 2/run before the fix).
+**Full test suite:** 865/865 green (+60 from Phase 4 baseline of 805:
+22 cluster-suspicions, 17 triage-launcher, 12 build-issue-index,
+4 triage-pipeline, 5 orchestrator hook) · typecheck clean ·
+`pnpm playtest:phase4-smoke` PASS · `pnpm playtest:phase5-smoke` PASS
+(~50 assertions including I1 prompt-injection, Ruling C catalog-tag
+matching, Ruling A "cannot determine" propagation, C4 rename
+end-to-end).
+
+**Phase 5 surface shipped:**
+- `.claude/agents/playtest-triage.md` (Unit 1b, **primary isolation
+  enforcement**, insight 020). Frontmatter `tools:` whitelist =
+  `Read, Write, Grep, Glob,
+  mcp__sequential-thinking__sequentialthinking`. Deliberately absent:
+  all `mcp__playwright__*`, `Bash`, `Edit`, `Agent`, `WebFetch`.
+- `scripts/playtest/agents/triage.md` (Unit 1) — canonical triage
+  prompt template with 11 placeholders. Seed-kind handling cues for
+  all 7 SeedKind values (D14 / R12). Untrusted-data framing (I1),
+  Read path-scope allowlist (I2), Scrubbed-field contract (I4).
+- `scripts/playtest/lib/cluster-suspicions.ts` (Unit 2) — pure
+  deterministic clustering of raw signals into typed `IssueSeed[]`.
+  12 clustering rules. Internal `flattenInternal` delta-flattens
+  cumulative god-events per insight 028. Zero `src/server` /
+  `src/shared` imports (insight 022).
+- `scripts/playtest/lib/triage-launcher.ts` (Unit 3) — pure prompt
+  rendering + spec emit. Every spec carries literal
+  `subagentType: 'playtest-triage'` (D16 / R14 / insight 020).
+  `buildTriagePrompt` throws on ill-formed seeds before spawn.
+  Driver wrapper `createTriageLauncherDriver` mirrors phase-4 Unit 2
+  pattern.
+- `scripts/playtest/lib/build-issue-index.ts` (Unit 4) — walks
+  `runs/<id>/issues/*.md`, parses headers, writes deterministic
+  9-section `INDEX.md` (Summary, Scripted, Free-play, Vibe-check,
+  UI-spec-divergence with Ruling A indicator column, Role-drift
+  with low-signal disclaimer, With-divergence-fires with failed-tier
+  column, Coverage divergences, Known-product-calls confirmed).
+- `scripts/playtest/integration/phase5-smoke.ts` +
+  `pnpm playtest:phase5-smoke` (Unit 5) — end-to-end Units 2-4
+  smoke. ~50 assertions across all 7 SeedKind paths,
+  prompt-injection regression (I1), catalog-tag-only matching
+  (Ruling C), Ruling A "cannot determine" propagation, C4 rename
+  end-to-end.
+- `scripts/playtest/lib/triage-pipeline.ts` (Unit 6) — single
+  `runTriagePipeline(input)` entry point bundling Units 2-4. Loads
+  parsed seat logs / events.jsonl / connections.jsonl, runs
+  cluster → emit specs → build index. Skip reasons:
+  `isolation-breach`, `no-seeds`.
+- `scripts/playtest/lib/orchestrator.ts` (Unit 6) — new optional
+  `runPostSessionTriage` dep called after `appendSessionEnd`,
+  before retention. v1 always passes `isolationStatus: 'OK'`
+  (Phase 4's audit not yet wired into orchestrator either; Phase 6
+  closes that loop). Hook failure non-fatal — only logged.
+  Skip reason / counts logged to session logger.
+
+**Phase 4 state of the world (2026-04-24 baseline)**
+
+Full test suite before Phase 5: 805/805 green. typecheck clean ·
+`pnpm playtest:phase4-smoke` PASS (~70 assertions) ·
+`pnpm playtest:smoke` leaves 0 workerd zombies across repeat runs
+(was 2/run before the fix).
 
 **Phase 4 surface shipped:**
 - `scripts/playtest/agents/seat-scripted.md` + `seat-free-play.md` —
@@ -192,12 +250,28 @@ from `src/server` (insight 022). All types re-declared locally.
    did NOT modify `orchestrator.ts` despite the plan's file list —
    the existing `seatDriver` injection point is the cleaner hand-off,
    Phase 6 will wire it up.
-7. **Phase 5 — triage agents.** Plan locked. Must carry the C4 rename
-   (`info-gap-divergence` → `ui-spec-divergence`) before lock —
-   flagged in Phase 5 rigor pass H-4b.
+7. **~~Phase 5 — triage agents~~ SHIPPED 2026-04-24.** All 6 units +
+   the C4 rename carried through end-to-end. Real subagent dispatch
+   (the `Agent({ subagent_type: 'playtest-triage', ... })` call) is
+   the Phase 6 hand-off — requires a Claude Code conversation; can't
+   run from a pnpm script. Also deferred: the contract test (spawn a
+   `playtest-triage` with a prompt asking for
+   `mcp__playwright__browser_snapshot`, assert Claude Code refuses
+   at the tool-surface boundary). Phase 5 smoke calls this out in
+   its output. The orchestrator wires `runPostSessionTriage` as an
+   optional dep but doesn't default it to the real
+   `runTriagePipeline` — Phase 6 closes that loop.
 8. **Phase 6 — first REAL session.** STOP before this runs autonomously;
-   eye-in-loop required. Also the home for the deferred Unit 5 contract
-   test and the `orchestrator.ts` launcher wiring.
+   eye-in-loop required. Also the home for:
+   (a) Phase 4 deferred contract test (`browser_evaluate` refusal),
+   (b) Phase 5 deferred contract test (`browser_snapshot` refusal),
+   (c) Default `runPostSessionTriage` to `runTriagePipeline` in
+       `runSession`,
+   (d) Default `seatDriver` to `createAgentLauncherDriver` in
+       `runSession`,
+   (e) Phase 4's isolation audit wired into the orchestrator so
+       `runPostSessionTriage` receives a real `isolationStatus`
+       instead of always-`'OK'`.
 9. **IncomingSteal banner real-device verification** (`82af35f9`) — still
    pending from prior sessions. Playwright + unit tests green, phone-side
    pre-resolution screenshot never caught. Earth > map.

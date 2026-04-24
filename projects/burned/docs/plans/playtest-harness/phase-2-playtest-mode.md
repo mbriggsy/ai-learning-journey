@@ -3,6 +3,7 @@ title: "Playtest Harness — Phase 2: Playtest-Mode Server Hooks"
 type: feat
 status: draft
 date: 2026-04-23
+deepened: 2026-04-23
 parent: docs/plans/playtest-harness/roadmap.md
 origin: docs/testing/PLAYTEST-HARNESS-PRD.md
 ---
@@ -94,10 +95,19 @@ transport.
   reads `deadlineMs` from state and sets `setTimeout`. Hibernation restore
   re-schedules correctly (`room.ts:121-146`). No change here — consumer
   handles stretched durations transparently.
-- **Dispatch + broadcast seam:** `src/server/room.ts:615-627` `handleAction`
-  and `room.ts:661-665` `dispatchServerAction` both have `result.events`
-  ready after `dispatch` returns. god-event broadcast sits right next to
-  the existing player-broadcast.
+- **Dispatch + broadcast seam:** `src/server/room.ts:615-627`
+  (`handleAction`) and `:631-666` (`dispatchServerAction`) both call
+  `broadcastGameState()` at `:755-795` after a successful dispatch. That
+  single broadcast function already computes `boardView` once via
+  `projectForBoard(state, now, connectedPlayerIds)` at `:762` and then
+  per-player `projectForPlayer(state, playerId, boardView)` at `:782`.
+  **The god-event emission must be added to `broadcastGameState` itself,
+  NOT to the dispatch sites** — emitting at the dispatch site would
+  re-sample `Date.now()` + `getConnectedPlayerIds()` and the god-event's
+  `projections[V]` would not structurally equal viewer V's concurrent
+  `player-update.payload.state`. Dispatch sites set a transient
+  `pendingGodEventTrigger` (action + events + stateVersion + nowMs) and
+  `broadcastGameState` reads + clears it. See D4 + Unit 6.
 - **Env-var convention:** no server env vars exist today. Wrangler binds
   vars via `wrangler.jsonc` `vars` block and they arrive on the `Env`
   interface (`room.ts:934-936`). Worker runtime, not `process.env`.
@@ -147,20 +157,30 @@ None — entirely repo-internal patterns.
   `makeDispatchContext(seed?: number)` — when `seed` is provided (only in
   playtest mode), use `mulberry32(seed)`. Otherwise CSPRNG. Engine already
   consumes `ctx.random`; no engine change required.
-- **D4. God-event is a new server→client WS message type.** Payload:
+- **D4. God-event is a new server→client WS message type, emitted from
+  `broadcastGameState` (NOT from the dispatch site).** Payload:
   `{ type: 'god-event', action, events, stateVersion, nowMs, projections:
-  Record<playerId, PlayerView>, boardView: BoardView }`. Broadcast after
-  every successful `dispatch` in playtest mode only. Normal player
-  projections continue unchanged. Orchestrator opens a god-role connection
-  (see D5) and subscribes. The `projections` map carries, for every seated
-  player (including eliminated-but-connected spectators), the exact
-  `PlayerView` that seat would see via `projectForPlayer` at the same
-  dispatch moment — NOT a god-mode view. `boardView` is the TV projection
-  via `projectForBoard`. Phase 1 §System-Wide Impact (lines 958-967)
-  declares this contract as R7 and Phase 3's scenario-fire detector
-  consumes the per-viewer snapshots to verify `projection-assertions:`
-  scenarios. `PlayerView` + `BoardView` types are imported from
-  `src/shared/protocol.ts` (lines 99, 127).
+  Record<playerId, PlayerView>, boardView: BoardView }`. The existing
+  `broadcastGameState` at `src/server/room.ts:755-795` already computes the
+  `boardView` once via `projectForBoard(state, now, connectedPlayerIds)` at
+  line 762 and reuses it to produce each player's `PlayerView` via
+  `projectForPlayer(state, playerId, boardView)` at line 782. Emitting the
+  god-event in the **same** per-connection loop — with a third `role: 'god'`
+  branch — is the only architecture that guarantees
+  `god-event.projections[V]` is the exact `PlayerView` that viewer V's
+  concurrent `player-update` payload carries. Emitting at the dispatch site
+  (`handleAction` line 625, `dispatchServerAction` line 664) would re-sample
+  `Date.now()` + `getConnectedPlayerIds()` and duplicate projection work,
+  silently breaking structural equality with the broadcast. The dispatch
+  sites therefore must pass the triggering `action` + `events` +
+  `stateVersion` through to `broadcastGameState` (via a transient instance
+  field set pre-broadcast and cleared after — so the non-dispatch callers
+  at `room.ts:473, 654, 735-738` that also call `broadcastGameState` simply
+  see a null transient and emit no god-event). Phase 1 §System-Wide Impact
+  (phase-1-scenarios.md:958-967) declares this contract as R7 and Phase 3's
+  scenario-fire detector consumes the per-viewer snapshots to verify
+  `projection-assertions:` scenarios. `PlayerView` + `BoardView` types are
+  imported from `src/shared/protocol.ts` (lines 127, 99).
 - **D5. God-role is a new connection role, gated by `PLAYTEST_MODE` + an
   auth token.** Connection query-param `role=god&token=<value>`. Server
   rejects `role=god` when `PLAYTEST_MODE` is unset or token mismatches.
@@ -213,6 +233,21 @@ None — entirely repo-internal patterns.
 - **Token storage at orchestrator.** Env var file, argv, or config file.
   Settle in Phase 3 (harness plans the orchestrator's config surface).
 
+### Flagged for Phase 3
+
+- **Per-room or time-boxed tokens.** This phase ships ONE global
+  `PLAYTEST_TOKEN` Worker secret. A leak unlocks every concurrent playtest
+  room. Phase 3 should mint per-room tokens via the orchestrator (token
+  known only to the orchestrator + the specific DO for the lifetime of
+  that session) OR use time-boxed tokens that rotate. Do NOT solve here —
+  the LAN-only origin gate + first-write-wins config are sufficient
+  mitigations for the Phase 2 surface.
+- **`events.jsonl` retention + scrub.** God-event projections contain full
+  `PlayerView` including hand contents. Phase 3 writes these to disk. The
+  retention policy (how long, where, redacted or raw, committed or
+  gitignored) is Phase 3's contract. This phase flags it as a downstream
+  obligation so Phase 3 cannot ship without addressing it.
+
 ## High-Level Technical Design
 
 > *Directional guidance for review, not implementation specification. Treat
@@ -222,22 +257,34 @@ None — entirely repo-internal patterns.
 
 ```text
 wrangler.jsonc (vars.PLAYTEST_MODE = "1" only in playtest deploys)
+    │  CI gate asserts production block does NOT include
+    │  PLAYTEST_MODE or PLAYTEST_TOKEN (Documentation / Operational Notes).
+    ▼
+env.PLAYTEST_MODE + env.PLAYTEST_TOKEN + optional env.PLAYTEST_GOD_ORIGINS
     │
     ▼
-env.PLAYTEST_MODE on Env interface
-    │
-    ▼
-GameRoom constructor or first-connection hook
+GameRoom constructor (or first-connection hook)
     │  reads once, caches: this.isPlaytest: boolean
     │  caches: this.playtestToken = env.PLAYTEST_TOKEN
+    │  caches: this.godOriginAllowlist = parse(env.PLAYTEST_GOD_ORIGINS)
+    │         ∪ { localhost, 127.0.0.1, RFC1918 ranges }
     │
     ▼
-accepts 'role=god&token=<T>' connections when isPlaytest
-    │  refuses when !isPlaytest OR token mismatch
+onConnect('role=god&token=<T>'):
+    │  1. If !this.isPlaytest         → close 4004 'Playtest mode off'
+    │  2. If godAuthFailures over limit → close 4005 'Rate limited'
+    │  3. If origin ∉ allowlist       → close 4003 'Forbidden god origin'
+    │  4. If !constantTimeEq(token, this.playtestToken)
+    │                                  → close 4004 'Token mismatch', bump failures
+    │  5. Otherwise → connection.setState({ role: 'god' }); accept
+    │                 (hibernation-safe; getConnections() re-derives the set)
     ▼
 god connection sends { type: 'playtest-config', seed, nopeWindowMs }
-    │  server validates, stores { seed, nopeWindowMs } on GameRoom instance
-    │  rejects if game already started
+    │  enqueued via this.enqueue() → serial queue ordering vs start-game
+    │  first-write-wins:
+    │    - if playtestConfigLocked → error PLAYTEST_CONFIG_LOCKED
+    │    - elif state.phase !== 'lobby' → error PLAYTEST_CONFIG_TOO_LATE
+    │    - else: store + set playtestConfigLocked = true
     ▼
 subsequent makeDispatchContext() reads instance config
     │  injects seed → ctx.random = mulberry32(seed)
@@ -247,42 +294,98 @@ engine.getNopeWindowDuration(ctx, alivePlayerCount)
     │  returns ctx.nopeWindowMs ?? NOPE_WINDOW_MS[tierFor(alivePlayers)]
 ```
 
-### Dispatch + god-event broadcast
+### Dispatch + broadcast-site god-event emission
+
+God-events emit from `broadcastGameState`, NOT from the dispatch site, so
+the `projections` map attached to a god-event is produced by the exact same
+`projectForPlayer(state, playerId, boardView)` call (with the exact same
+`boardView`) that concurrently builds the player-update payloads. This is a
+by-construction guarantee — not an asserted invariant — that
+`god-event.projections[V]` structurally equals the `player-update.payload.state`
+that viewer V's socket receives in the same broadcast pass.
 
 ```text
-handleAction(msg, connection)
+handleAction(msg, connection)                        // room.ts:615-627
   → enqueue(dispatch + side effects)
       │
       ▼
-  result = dispatch(state, action, ctx)
+  result = dispatch(this.gameState, engineAction, ctx)
   if (result.ok) {
-      state' = result.state
-      events = result.events
-      broadcastToPlayers(state', events)       // unchanged
-      if (this.isPlaytest) {
-          // Per-viewer projection broadcast (Unit 6a). For every seated
-          // player in state'.players, call projectForPlayer to produce the
-          // exact PlayerView that seat would see at this dispatch moment.
-          // projectForBoard produces the boardView. Both already honor the
-          // allowlist projection + card-identity privacy rules; reusing
-          // them guarantees god-events cannot accidentally leak more than
-          // a seat would see.
-          projections: Record<playerId, PlayerView> = {}
-          for (p of state'.players) {
-              projections[p.id] = projectForPlayer(state', p.id)
-          }
-          boardView: BoardView = projectForBoard(state')
-          broadcastToGodConnections({
-              type: 'god-event',
-              action, events,
-              stateVersion: state'.version,
-              nowMs: ctx.now,
-              projections,
-              boardView,
-          })
+      this.gameState = result.state
+      // Stash dispatch trigger for broadcastGameState to read.
+      this.pendingGodEventTrigger = {
+          action: engineAction,
+          events: result.events,
+          stateVersion: result.state.stateVersion,
+          nowMs: ctx.now,
       }
+      this.updateNopeTimer(result)
+      this.broadcastGameState()                      // emits god-event inline
+      void this.persistState()
+  }
+
+broadcastGameState():                                // room.ts:755-795
+  const now = Date.now()
+  const state = this.gameState
+  const connectedIds = this.getConnectedPlayerIds()
+  const boardView = projectForBoard(state, now, connectedIds)         // ONCE
+  const boardRaw  = JSON.stringify({ type: 'state-update', payload: boardView, ... })
+
+  // Prepare god-event payload ONCE if this broadcast was triggered by a
+  // dispatch AND playtest mode is on. Reuses the same boardView. Iterates
+  // state.players (not connected ids) so eliminated-but-seated spectators
+  // and disconnected seats are included — consistent with CLAUDE.md
+  // "Eliminated players still receive full PlayerView broadcasts."
+  let godRaw: string | null = null
+  const trigger = this.pendingGodEventTrigger
+  this.pendingGodEventTrigger = null                 // clear for idempotency
+  if (this.isPlaytest && trigger) {
+      const projections: Record<string, PlayerView> = {}
+      for (const p of state.players) {
+          projections[p.id] = projectForPlayer(state, p.id, boardView)
+      }
+      const godMsg = {
+          type: 'god-event',
+          action:        trigger.action,
+          events:        trigger.events,
+          stateVersion:  trigger.stateVersion,
+          nowMs:         trigger.nowMs,
+          projections,
+          boardView,
+      }
+      godRaw = JSON.stringify(godMsg)
+  }
+
+  for (const conn of this.getConnections()) {
+      const connState = this.getConnState(conn)
+      try {
+          if (connState?.role === 'host') {
+              conn.send(boardRaw)
+          } else if (connState?.role === 'player') {
+              const playerMsg = {
+                  type: 'player-update',
+                  payload: {
+                      state: projectForPlayer(state, connState.playerId, boardView),
+                      private: state.phase === 'playing'
+                          ? getPrivateData(state, connState.playerId)
+                          : {},
+                  },
+                  ...
+              }
+              conn.send(JSON.stringify(playerMsg))
+          } else if (connState?.role === 'god' && godRaw) {
+              conn.send(godRaw)
+          }
+      } catch { /* per-connection try/catch — one failing socket
+                   must NOT abort the rest of the broadcast */ }
   }
 ```
+
+Non-dispatch callers of `broadcastGameState` (reconnect resync at
+`room.ts:473`, the force-clear-nope fallback at `:654`, and the queue
+error-recovery fallbacks at `:735-738`) simply see `pendingGodEventTrigger
+=== null` and skip god-event emission. `dispatchServerAction` at `:631-666`
+populates the trigger exactly like `handleAction`.
 
 ### Nope window duration override (pseudo-sketch)
 
@@ -311,10 +414,11 @@ interface DispatchContext {
 
 - [ ] **Unit 1: Define playtest config surface + env wiring**
 
-**Goal:** Add `PLAYTEST_MODE` + `PLAYTEST_TOKEN` to the `Env` interface and
+**Goal:** Add `PLAYTEST_MODE`, `PLAYTEST_TOKEN`, and `PLAYTEST_GOD_ORIGINS`
+(optional, comma-separated allowlist — see Unit 4) to the `Env` interface and
 `wrangler.jsonc` example values. Introduce a `src/server/playtest.ts` module
 that reads and caches the flag/token and exposes `isPlaytestMode(env)` +
-`matchesToken(env, token)`.
+`matchesToken(env, token)` + `getGodOriginAllowlist(env): string[]`.
 
 **Execution note:** Test-first. The playtest module is small, pure, and the
 unit test gates the entire phase against accidental prod leaks.
@@ -326,8 +430,8 @@ unit test gates the entire phase against accidental prod leaks.
 **Files:**
 - Create: `src/server/playtest.ts`
 - Create: `src/server/playtest.test.ts`
-- Modify: `src/server/room.ts` — add `PLAYTEST_MODE` + `PLAYTEST_TOKEN` to
-  the `Env` interface (around line 934).
+- Modify: `src/server/room.ts` — add `PLAYTEST_MODE`, `PLAYTEST_TOKEN`, and
+  optional `PLAYTEST_GOD_ORIGINS` to the `Env` interface (around line 934).
 - Modify: `wrangler.jsonc` — add commented `vars` example + note that
   playtest deploys override.
 - Modify: `.env.example` — document local playtest usage.
@@ -336,6 +440,7 @@ unit test gates the entire phase against accidental prod leaks.
 - `isPlaytestMode(env)` returns `env.PLAYTEST_MODE === '1'`. Explicit string
   match, not truthy check.
 - `matchesToken(env, provided)` constant-time compare.
+- `getGodOriginAllowlist(env)` returns `env.PLAYTEST_GOD_ORIGINS?.split(',').map(s => s.trim()).filter(Boolean) ?? []`. Unit 4's god-connection handler consults this list; an empty list means "LAN + localhost defaults only."
 - Never logs token value.
 - Exports named functions only; no default export.
 
@@ -353,11 +458,13 @@ unit test gates the entire phase against accidental prod leaks.
 - Edge case: token length mismatch → returns `false` (no early-exit timing
   leak).
 - Happy path: exact token match → `true`.
+- Happy path: `PLAYTEST_GOD_ORIGINS='https://playtest.internal,http://localhost:8787'` → `getGodOriginAllowlist` returns both entries, whitespace-trimmed.
+- Edge case: `PLAYTEST_GOD_ORIGINS` unset → returns `[]` (empty allowlist; Unit 4 falls back to LAN + localhost defaults).
 
 **Verification:**
 - All tests pass.
 - Typecheck clean.
-- `src/server/room.ts:934` `Env` interface declares both fields.
+- `src/server/room.ts:934` `Env` interface declares all three fields (`PLAYTEST_MODE`, `PLAYTEST_TOKEN`, optional `PLAYTEST_GOD_ORIGINS`).
 
 - [ ] **Unit 2: Extend `DispatchContext` with optional `nopeWindowMs`**
 
@@ -451,197 +558,400 @@ CSPRNG (unchanged).
 - CSPRNG path unchanged from today (regression: existing `engine.pbt.test.ts`
   property tests still pass).
 
-- [ ] **Unit 4: Accept `role=god` connections with token gate**
+- [ ] **Unit 4: Accept `role=god` connections with stricter gate + rate-limited auth**
 
 **Goal:** `GameRoom.onConnect` (or the connection-accept path) recognizes
-`role=god&token=<T>` query params. When `isPlaytestMode` is true AND token
-matches, the connection is tagged as `role: 'god'` and added to a dedicated
-`godConnections` set. Otherwise rejected with `4001` close code (policy
-violation).
+`role=god&token=<T>` query params. When `isPlaytestMode` is true AND the
+request origin is in the god-origin allowlist AND the token matches, the
+connection is tagged as `role: 'god'` and persisted via `connection.setState`
+(so `getConnections()` can re-derive the god-connection set after
+hibernation — see System-Wide Impact). Otherwise rejected with close code
+`4004` (distinct from the existing `4001 'Room full'` at `room.ts:172` and
+`4003 'Forbidden origin'` at `:162`). Repeated auth failures from the same
+source are rate-limited and close with `4005`.
 
-**Execution note:** Test-first. Token gate is security-critical.
+**Execution note:** Test-first. Token gate is security-critical. Close-code
+collision with `room.ts:172` would make debugging god-auth failures
+impossible from the client side.
 
 **Requirements:** R3, R4
 
 **Dependencies:** Unit 1.
 
 **Files:**
-- Modify: `src/server/room.ts` — connection-accept handler.
+- Modify: `src/server/room.ts` — connection-accept handler at `:152-178`;
+  add `'god'` variant to `ConnState` at `:64-66`.
 - Modify: `src/server/validation.ts` — add `GodConnectionParams` Zod
-  schema if query parsing is validated here.
+  schema (strict) for query parsing.
 - Create: `src/server/god-connection.test.ts` — focused tests on the
   accept/reject decision.
 
 **Approach:**
-- Query param parsing: `role=god` + `token=<value>`.
-- Server rejects if playtest mode off, regardless of token presence.
-- Server rejects if token missing or mismatched.
+- Query param parsing: `role=god` + `token=<value>`. Parse via
+  `new URL(ctx.request.url).searchParams` inside `onConnect`.
+- **Origin allowlist is stricter than the player allowlist at
+  `room.ts:155-164`.** God connections accept ONLY: `http://localhost:*`,
+  `http://127.0.0.1:*`, RFC1918 ranges (`192.168.*`, `10.*`,
+  `172.16-31.*`), and any origin in an optional `PLAYTEST_GOD_ORIGINS`
+  env var (comma-separated). Public-internet origins — including
+  `https://burned.pages.dev` — are rejected with `4003` even if the
+  token is correct. Rationale: god role is omniscient; a leaked token
+  must not be exploitable without also controlling a LAN endpoint.
+- **Rejection sequence:** playtest mode off → `4004 'Playtest mode off'`.
+  Origin not allowlisted for god role → `4003 'Forbidden god origin'`.
+  Token missing → `4004 'Missing token'`. Token mismatch → `4004
+  'Token mismatch'`. Constant-time compare for the token check (Unit 1).
+- **Auth rate-limit.** Maintain a `godAuthFailures: Map<string, { count,
+  windowStart }>` keyed by request source (remote IP from `ctx.request`
+  CF headers if available; else origin). On 3+ failures in 60s, close
+  subsequent attempts with `4005 'Rate limited'` and do NOT even evaluate
+  the token. Reset counter on any successful auth (or on window roll).
+  Worker instance is the GameRoom DO, so this is per-room — acceptable.
+- **Persistence across hibernation.** `connection.setState({ role: 'god' })`
+  is the ONLY state a god connection carries. Per partyserver hibernation
+  semantics, WS attachment state on the connection survives hibernation;
+  the DO's instance-level `godConnections: Set<>` field does NOT. Therefore
+  the plan deliberately uses `getConnections()` + a role-tag filter rather
+  than a shadow set. See System-Wide Impact hibernation row.
 - God connections do not count toward `MAX_PLAYERS` or `MAX_CONNECTIONS`.
-  Tracked separately to avoid breaking player caps.
-- God connections never receive `state-update` projections — only
-  `god-event` messages. Players never receive `god-event`.
-- Close code `4001` for "auth failure" (policy-specific, not the standard
-  WebSocket close codes which start at 4000 in the app-reserved range).
+  Iterate `getConnections()` and skip `role === 'god'` when enforcing
+  the cap at `:167-174`.
+- God connections never receive `state-update` / `player-update` payloads
+  — only `god-event` messages (Unit 6 branch in `broadcastGameState`).
+  Players never receive `god-event`.
 
 **Patterns to follow:**
 - Existing origin-check in `room.ts:155-164`.
-- Existing rate-limit rejection pattern.
+- Existing rate-limit pattern in `isRateLimited` at `:861-872` (adapt
+  the per-second message limit pattern into per-minute auth failures).
 
 **Test scenarios:**
-- Happy path: playtest mode on + matching token → accept, tagged `god`.
-- Error path: playtest mode off + anything → reject with 4001.
-- Error path: playtest mode on + missing token → reject.
-- Error path: playtest mode on + mismatched token → reject.
-- Edge case: multiple concurrent god connections → all accepted; all
-  receive god-events.
+- Happy path: playtest mode on + LAN origin + matching token → accept,
+  tagged `role: 'god'`.
+- Error path: playtest mode off + anything → reject with `4004`.
+- Error path: playtest mode on + public-internet origin + matching token
+  → reject with `4003` (origin gate precedes token check).
+- Error path: playtest mode on + LAN origin + missing token → reject
+  with `4004`.
+- Error path: playtest mode on + LAN origin + mismatched token → reject
+  with `4004`.
+- Error path: 3 consecutive token mismatches within 60s → 4th attempt
+  closes with `4005` BEFORE token comparison runs (verified by not
+  logging a token-mismatch error on the 4th).
+- Edge case: multiple concurrent god connections (same origin, same
+  token) → all accepted; all receive god-events.
+- Edge case: god connection does not count toward `MAX_CONNECTIONS`
+  (12 player/host conns + 1 god → accept).
 - Integration: god connection does not appear in `state.players`.
+- Regression: existing close code `4001` is preserved for room-full
+  rejections; no god-auth path uses `4001`.
 
 **Verification:**
 - New test file passes.
 - Integration test in `tests/e2e/` optional but not required (god role is
   orchestrator-only; e2e covers player flow).
+- Close-code map in test file doubles as the public contract: `4003 =
+  forbidden origin, 4004 = god auth, 4005 = god rate-limited`.
 
-- [ ] **Unit 5: `playtest-config` admin message from god connection**
+- [ ] **Unit 5: `playtest-config` admin message from god connection (first-write-wins, queue-safe)**
 
 **Goal:** Accept a pre-game `{ type: 'playtest-config', seed, nopeWindowMs }`
-message from a god connection. Store on `GameRoom` instance. Reject after
-game has started.
+message from a god connection. Store on `GameRoom` instance. **First write
+wins per room** — subsequent `playtest-config` messages are rejected with
+a `PLAYTEST_CONFIG_LOCKED` error back to the sending god connection.
+Rejected once the game is no longer in `lobby`. Writes go through the
+serial action queue so a `playtest-config` cannot land mid-transition out
+of `lobby`.
 
-**Execution note:** Test-first.
+**Execution note:** Test-first. First-write-wins closes a seed-rewrite
+attack vector: even if two god connections are present (or a compromised
+token), the seed is nailed down by the first legitimate config and cannot
+be silently re-rolled before `start-game`.
 
 **Requirements:** R1, R2, R3, R5
 
 **Dependencies:** Unit 4.
 
 **Files:**
-- Modify: `src/server/room.ts` — god-connection message handler.
+- Modify: `src/server/room.ts` — god-connection message handler (new
+  switch case in `onMessage` at `:207-238`).
 - Modify: `src/server/validation.ts` — `PlaytestConfigSchema`.
 - Create: `src/server/playtest-config.test.ts`.
 
 **Approach:**
-- Zod schema: `{ type: 'playtest-config', seed: int ≥ 0, nopeWindowMs: int
-  > 0 with sane upper bound (≤ 30 minutes) }`.
-- Handler only accepts from god connections. Player connections rejected
-  silently (log only).
-- Before game start (`state.phase === 'lobby'` or absence of game) only.
-- After config stored, `makeDispatchContext` (Unit 3) will read it.
+- Zod schema: `{ type: 'playtest-config', seed: z.int().min(0),
+  nopeWindowMs: z.int().min(1).max(30 * 60_000) }`. `.strict()` so unknown
+  keys are rejected (matches convention in `validation.ts`).
+- Handler only runs for connections with `connState.role === 'god'`.
+  Player / host connections silently log-and-drop (no error message back
+  — prevents probing).
+- **Queue-routed writes.** The config write executes inside
+  `this.enqueue()` like every other state mutation (see `:209-222`).
+  `state.phase` is read inside the queued task, not at message-receive
+  time. This closes the race between a late `playtest-config` and an
+  early `handleStartGame`: whichever enqueues first wins. Rationale:
+  `makeDispatchContext` at `:840-859` reads `this.playtestSeed` /
+  `this.playtestNopeWindowMs` inside `handleAction` / `dispatchServerAction`
+  — both of which run inside the same queue. Placing the config write
+  on the same queue makes "config is set before any dispatch reads it"
+  a total order, not a happens-before guess.
+- **First-write-wins.** `GameRoom` gains a private `playtestConfigLocked:
+  boolean`. The queued task:
+  1. If `playtestConfigLocked === true` → send `PLAYTEST_CONFIG_LOCKED`
+     error to the god connection and return.
+  2. Else if `this.gameState !== null && this.gameState.phase !== 'lobby'`
+     → send `PLAYTEST_CONFIG_TOO_LATE` and return. (Note:
+     `this.gameState === null` is the "no lobby yet" case — also an
+     acceptable pre-game time; accept.)
+  3. Else → store `seed` + `nopeWindowMs` on the instance and set
+     `playtestConfigLocked = true`.
+- `makeDispatchContext` (Unit 3) reads the locked fields on every
+  dispatch.
+- **Hibernation consequence.** These fields reset on hibernate. After a
+  hibernated room wakes (the god connection would have disconnected on
+  the way down), the orchestrator detects the closed god socket,
+  reconnects, and re-sends `playtest-config`. Because
+  `playtestConfigLocked` also reset, the re-send is accepted. This is
+  the intended recovery path — see System-Wide Impact hibernation row.
 
 **Patterns to follow:**
-- Existing Zod-validated message handlers in `room.ts`.
+- Existing Zod-validated message handlers in `room.ts:206-238`.
+- `enqueue(fn, connection)` wrapper at `:721-742` for the queue-routing
+  pattern + error-back-to-sender semantics.
 
 **Test scenarios:**
 - Happy path: god sends config pre-game → stored; next dispatch ctx sees
   seed + nopeWindowMs.
-- Error path: sent post-start → rejected; existing config preserved.
-- Error path: sent by player connection → ignored.
+- Lock path: config sent twice pre-start → second REJECTED with
+  `PLAYTEST_CONFIG_LOCKED`; first values preserved.
+- Error path: sent post-start → rejected with `PLAYTEST_CONFIG_TOO_LATE`;
+  existing config preserved.
+- Error path: sent by player connection → silently dropped (no response,
+  no log except internal debug).
 - Error path: malformed payload (negative seed, missing nopeWindowMs) →
-  Zod reject.
-- Edge case: config sent twice pre-start → second overrides first (explicit
-  reconfig allowed).
+  Zod reject with `INVALID_MESSAGE`.
+- Race: god sends `playtest-config` and a player sends `start-game` in
+  the same tick → whichever reaches the queue first wins, and the
+  outcome is deterministic given queue-enter order. Assert: if config
+  enqueues first, it is applied; if `start-game` enqueues first, config
+  is rejected with `PLAYTEST_CONFIG_TOO_LATE`. No "applied then
+  overwritten" outcome is possible.
+- Hibernation recovery: store config, simulate hibernate (manually clear
+  instance fields in test), orchestrator re-sends → accepted (lock
+  reset with instance).
 
 **Verification:**
 - Config round-trips: send → dispatch → ctx reflects values.
-- Reconfig pre-start works; post-start rejected.
+- First-write-wins: second `playtest-config` errors out, state unchanged.
+- Queue-routing: a unit test that interleaves `playtest-config` +
+  `start-game` proves ordering is deterministic with no "torn write."
 
-- [ ] **Unit 6: Broadcast `god-event` WS message on every successful dispatch**
+- [ ] **Unit 6: Emit `god-event` from `broadcastGameState` in the per-connection loop**
 
-**Goal:** After `handleAction` and `dispatchServerAction` succeed, when
-`isPlaytestMode`, broadcast a `god-event` to all god connections carrying
-`{ type: 'god-event', action, events, stateVersion, nowMs, projections,
-boardView }`. The `projections` / `boardView` fields are computed by Unit
-6a immediately before the broadcast.
+**Goal:** Extend `broadcastGameState` at `src/server/room.ts:755-795` with
+a third `role === 'god'` branch that sends the pre-built `god-event`
+payload computed once at the top of the broadcast pass. The dispatch
+sites at `:615-627` and `:631-666` populate a transient
+`this.pendingGodEventTrigger = { action, events, stateVersion, nowMs }`
+immediately before calling `broadcastGameState`, and the broadcast clears
+it after reading. Non-dispatch callers of `broadcastGameState` (reconnect
+resync at `:473`, force-clear-nope fallback at `:654`, queue-error
+fallbacks at `:735-738`) leave the trigger `null` and emit no god-event.
 
-**Execution note:** Test-first integration-style.
+**Execution note:** Test-first integration-style. This is the ONE
+architectural decision that makes Unit 6a's by-construction guarantee
+possible. Emitting the god-event at the dispatch site (the previous plan)
+re-samples `Date.now()` and `getConnectedPlayerIds()` and would make
+`god-event.projections[V] === player-update.payload.state` an asserted
+invariant rather than a structural one.
 
 **Requirements:** R3
 
-**Dependencies:** Units 4, 5.
+**Dependencies:** Units 4, 5, 6a.
 
 **Files:**
-- Modify: `src/server/room.ts` — both dispatch sites (lines 615-627 and
-  661-665).
+- Modify: `src/server/room.ts`:
+  - Add instance field `private pendingGodEventTrigger: { action:
+    EngineAction; events: readonly GameEvent[]; stateVersion: number;
+    nowMs: number } | null = null`.
+  - At `:614-626` (`handleAction`): build `ctx`, call `dispatch`, on
+    `result.ok` set `pendingGodEventTrigger = { action: engineAction,
+    events: result.events, stateVersion: result.state.stateVersion,
+    nowMs: ctx.now }` BEFORE `broadcastGameState()`.
+  - At `:631-666` (`dispatchServerAction`): same pattern on `result.ok`.
+  - At `:755-795` (`broadcastGameState`): read + clear the trigger at
+    the top, build `godRaw` iff `isPlaytest && trigger !== null` (using
+    the Unit 6a helper for projections + the already-computed
+    `boardView`), and add a `connState?.role === 'god'` branch in the
+    per-connection loop that sends `godRaw`.
 - Create: `src/server/god-broadcast.test.ts` — end-to-end: open a god
-  connection, dispatch a player action, assert god connection received the
-  correct event.
+  connection, dispatch a player action, assert god connection received
+  the correct event AND the same player's concurrent `player-update`
+  carries a structurally identical `PlayerView` under
+  `payload.state`.
 
 **Approach:**
-- After `result.ok` is confirmed, in playtest mode only, iterate
-  `godConnections` and `conn.send(JSON.stringify(godMsg))`.
-- Respect the 4KB byte cap (use `TextEncoder`, per E-02). If event payload
-  exceeds 4KB (unlikely but possible on multi-event dispatches), split by
-  event or drop with a warning — decide in implementation; flag for Phase 3.
-- `action` in the message is the `EngineAction` (server-injected
-  `playerId`), not the raw client action.
+- **Per-connection try/catch parity.** The existing loop at `:771-792`
+  wraps every `conn.send` call in `try { ... } catch { sendFailures++ }`.
+  The god-role branch MUST follow the same pattern — a single god
+  connection in a half-closed race state must not prevent host + player
+  sockets from receiving their state-update. Never wrap the whole loop
+  in one try/catch.
+- Respect outbound size. Workers have a 1MiB per-message outbound limit
+  (NOT the 4KB inbound cap in `validation.ts:13,27-29`). Compute
+  `messageByteLength(godRaw)` and assert it's under 1MiB for safety.
+  Budget row in Risks & Dependencies quantifies expected payload size
+  at N=10 players. Per-viewer splitting (one god-message per viewer,
+  all keyed by the same `stateVersion` so the orchestrator can
+  reassemble) is documented in the Risks table as the fallback design
+  if the Unit 8 smoke size assertion ever fires. NOT implemented as
+  part of Unit 6 — only as a defined, ready-to-land fallback.
+- `action` in the message is the `EngineAction` (with server-injected
+  `playerId`), not the raw client action (matches engine log-level view).
+- **god-event payload is built ONCE per broadcast** and the same
+  pre-serialized `godRaw` string is sent to every god connection. Never
+  re-run `buildGodProjections` per connection inside the loop — that
+  would defeat the point of the broadcast-site architecture and cost
+  O(god_count × player_count) projection work.
+- **Outbound shape assertion (defense-in-depth).** Before broadcasting,
+  assert the god-event payload conforms to an outgoing Zod schema:
+  `GodEventOutgoing = z.object({ type: z.literal('god-event'), action:
+  EngineActionSchema, events: z.array(GameEventSchema), stateVersion:
+  z.int().min(0), nowMs: z.int().min(0), projections: z.record(z.string(),
+  PlayerViewSchema), boardView: BoardViewSchema })`. Running in playtest
+  mode only; gate on `isPlaytest` so production bundles tree-shake the
+  schema. Cheap insurance against a future projection change accidentally
+  leaking a raw state field into the wire. On failure, log + drop the
+  god-event (do NOT close the god connection) and increment a metric;
+  Phase 3 surfaces this as a calibration blocker.
 
 **Patterns to follow:**
-- Existing broadcast loops in `room.ts`.
-- E-02 byte-cap fix (`validation.ts:27-29`).
+- Existing broadcast loop in `room.ts:755-795`, including `hostCount /
+  playerCount / sendFailures` logging — extend with `godCount`.
+- E-02 inbound byte-cap fix (`validation.ts:13,27-29`) as the template
+  for `messageByteLength` usage (not the cap value itself).
 
 **Test scenarios:**
-- Happy path: player plays a card → god connection receives `god-event`
-  with correct action + events array + stateVersion + projections map
-  (one entry per seated player) + boardView.
-- Edge case: playtest mode off → no god-event sent (and no god connections
-  accepted per Unit 4).
+- Happy path: player plays a card → god connection receives one
+  `god-event` carrying the correct `action` + `events` array +
+  `stateVersion` + `projections` map (one entry per seated player) +
+  `boardView`. Exactly one message per dispatch per god connection.
+- Structural equality: concurrent with the god-event, each player
+  connection receives a `player-update` whose `payload.state` is
+  `JSON.stringify`-equal to `godEvent.projections[thatPlayerId]`.
+- Edge case: playtest mode off → no god-event sent (and no god
+  connections accepted per Unit 4). `pendingGodEventTrigger` is never
+  populated.
 - Edge case: successful dispatch with `result.events === []` → still
   broadcast (action alone is informative; projections + boardView still
   populated).
-- Edge case: failed dispatch (`result.ok === false`) → no god-event.
-- Edge case: multiple god connections → all receive.
-- Integration: seat projection (existing `state-update`) goes to players
-  only; god-event goes to god only. No cross-contamination.
+- Edge case: failed dispatch (`result.ok === false`) → no god-event;
+  `pendingGodEventTrigger` stays `null`.
+- Edge case: multiple god connections → all receive the same
+  pre-serialized `godRaw` string.
+- Edge case: non-dispatch `broadcastGameState` caller (reconnect
+  re-broadcast) fires → no god-event emitted.
+- Resilience: one god connection throws on `send` (simulated half-close)
+  → other god connections AND all host/player sockets still receive
+  their respective payloads. `sendFailures` counter increments.
+- Integration: seat projection (existing `state-update` / `player-update`)
+  goes to host/players only; god-event goes to god only. No
+  cross-contamination.
 
 **Verification:**
-- Playwright or Vitest-driven integration test passes.
+- Vitest-driven integration test passes.
 - No new entries in player-facing message types (god-event never leaves
   server except to god role).
+- Broadcast-loop log line extends to include `god=<n>` so operator can
+  eyeball distribution in a smoke run.
 
-- [ ] **Unit 6a: Per-viewer projection broadcast**
+- [ ] **Unit 6a: `buildGodProjections` helper (pure, correct signature, reuses broadcast's boardView)**
 
-**Goal:** Compute the `projections: Record<playerId, PlayerView>` map and
-`boardView: BoardView` that Unit 6 attaches to every `god-event`. Per
-phase-1 R7 + §System-Wide Impact (lines 958-967), each entry in
-`projections` is the exact `PlayerView` that seat would see — not a god-
-mode view. `PlayerView` and `BoardView` are imported from
-`src/shared/protocol.ts` (lines 127 and 99 respectively).
+**Goal:** Provide the pure helper `buildGodProjections(state, boardView,
+connectedPlayerIds) → Record<string, PlayerView>` that Unit 6 calls once
+per broadcast to populate the god-event's `projections` map. The helper
+does NOT compute `boardView` itself — it consumes the `boardView` already
+built by `projectForBoard(state, now, connectedPlayerIds)` at
+`broadcastGameState` `:762`, so both the god-event and the concurrent
+`player-update` payloads share one immutable `boardView` instance. Per
+phase-1 R7 + §System-Wide Impact (phase-1-scenarios.md:958-967), each
+entry is the exact `PlayerView` that seat would see — NOT a god-mode
+view.
 
-**Execution note:** Test-first. The invariant being proved is that the
+**Execution note:** Test-first. The invariant being proved is that a
 god-event never carries more information to a given viewer than that
-viewer would legitimately see via the existing `state-update` broadcast.
-Reusing `projectForPlayer` / `projectForBoard` is what guarantees this —
-Phase 3's detector can trust the snapshot because the same code produced
-it that produces the live seat view.
+viewer would legitimately see via the existing `player-update` broadcast.
+The by-construction guarantee is: because Unit 6 calls the SAME
+`projectForPlayer(state, playerId, boardView)` (same `state`, same
+`boardView`) for both the player-update and the god-event's
+`projections[playerId]`, both outputs are the same JS object reference.
+No asserted invariant can fail because no separate computation exists.
 
 **Requirements:** R3 (phase-2) + phase-1 R7 (downstream contract).
 
-**Dependencies:** Unit 6.
+**Dependencies:** None from Unit 6 (Unit 6 depends on this — order
+corrected).
 
 **Files:**
-- Modify: `src/server/room.ts` — at both dispatch sites (lines 615-627
-  and 661-665), immediately before the `broadcastToGodConnections` call
-  added in Unit 6, compute `projections` and `boardView`.
+- Create: `src/server/god-projection.ts` — named export
+  `buildGodProjections`. Lives in its own module per the room-exports
+  landmine (`src/server/room.ts` may ONLY export `GameRoom`).
 - Create: `src/server/god-projection.test.ts` — unit test that calls the
   helper directly and asserts allowlist + privacy invariants.
+- Modify: `src/server/room.ts:755-795` (`broadcastGameState`) — import
+  + call the helper in the god-event preparation block; pass the
+  already-computed `boardView` + `connectedPlayerIds`.
 
 **Approach:**
-- Add a helper (named export from a new module, NOT from `room.ts` per
-  the room-exports landmine) e.g. `src/server/god-projection.ts`
-  exporting `buildGodProjections(state): { projections: Record<playerId,
-  PlayerView>, boardView: BoardView }`.
-- Inside, iterate `state.players` (including eliminated-but-seated
-  spectators — they still receive full `PlayerView` broadcasts per the
-  engine invariant cited in CLAUDE.md). For each, call
-  `projectForPlayer(state, player.id)` at `src/server/projection.ts:54`.
-  Call `projectForBoard(state)` at `src/server/projection.ts:11` for the
-  TV view.
+- **Signature (verified against actual `projection.ts`):**
+  ```ts
+  // src/server/god-projection.ts
+  import type { PlayerView, BoardView } from '@shared/protocol'
+  import type { PlayingState, GameOverState } from './game/types'
+  import { projectForPlayer } from './projection'
+
+  export function buildGodProjections(
+    state: PlayingState | GameOverState,
+    boardView: BoardView,
+    connectedPlayerIds: ReadonlySet<string>,  // reserved for parity with
+                                              // projectForBoard's signature
+                                              // and future use; currently
+                                              // unused by projectForPlayer
+  ): Record<string, PlayerView> {
+    const projections: Record<string, PlayerView> = {}
+    for (const p of state.players) {
+      projections[p.id] = projectForPlayer(state, p.id, boardView)
+    }
+    return projections
+  }
+  ```
+  Note: `projectForPlayer` actual signature (per
+  `src/server/projection.ts:54-58`) is `(state, playerId, board) →
+  PlayerView`. It accepts the pre-computed `board` and internally invokes
+  `augmentNopeWindowForPlayer` + `stripPrivateEventFields` with the
+  viewer's `playerId`. `projectForBoard` (at `projection.ts:11-15`) is
+  `(state, now, connectedPlayerIds) → BoardView` — the caller (Unit 6 in
+  `broadcastGameState`) already invoked it and holds the result.
+- Iterate `state.players` (NOT `state.players.filter(p => p.isAlive)`).
+  Eliminated-but-seated players still receive full `PlayerView`
+  broadcasts per the engine invariant cited in CLAUDE.md "Engine
+  Invariants" (`projectForPlayer` at `projection.ts:78` + `:96` returns
+  `player?.hand ?? []`). Spectator view is explicitly in scope per
+  phase-1 D5 row 5. Disconnected-but-seated players are likewise
+  included — their `BoardPlayer.isConnected: false` flows through
+  `projectForBoard` via `connectedPlayerIds.has(p.id)` at
+  `projection.ts:16`.
 - Do NOT spread `state` into the envelope, do NOT synthesize a custom
   per-viewer view, do NOT call any private engine helper that bypasses
   projection. The allowlist pattern + `stripPrivateEventFields` +
-  `augmentNopeWindowForPlayer` viewer-gate are the privacy contract;
-  going around them reintroduces E-01 class leaks.
-- Disconnected-but-seated players: include them in the map (same
-  `projectForPlayer` call). Spectator view is explicitly in scope per
-  phase-1 D5 row 5.
+  `augmentNopeWindowForPlayer` viewer-gate (at `projection.ts:165-183`
+  and `:217-241`) are the privacy contract; going around them
+  reintroduces E-01 class leaks.
+- **Purity statement (corrected).** `buildGodProjections` is a pure
+  function of `(state, boardView, connectedPlayerIds)` — NOT of `state`
+  alone. `state` alone is insufficient because `projectForBoard` samples
+  `now` + `connectedPlayerIds`, and `projectForPlayer` inherits those
+  decisions via `board`. The property test must vary all three inputs.
 
 **Patterns to follow:**
 - `src/server/projection.ts` existing functions — reuse, do not
@@ -649,10 +959,12 @@ it that produces the live seat view.
 - Allowlist projection pattern per CLAUDE.md "Security Conventions".
 
 **Test scenarios:**
-- Happy path: 4-player mid-game state → `projections` map has 4 entries
-  keyed by playerId; each entry equals `projectForPlayer(state,
-  playerId)` exactly (structural equality).
-- Happy path: `boardView` equals `projectForBoard(state)` exactly.
+- Happy path: 4-player mid-game `state` + pre-computed `boardView` +
+  `connectedPlayerIds` containing all 4 → `projections` map has 4
+  entries keyed by `playerId`; each entry equals
+  `projectForPlayer(state, playerId, boardView)` exactly (reference
+  equality of produced objects, not just structural — same call, same
+  result).
 - Privacy invariant (ACTOR): for a state with a pending named-steal,
   `projections[stealerId].nopeWindow.namedSteal.namedCardType` is
   populated (matches phase-1 Unit 4 `projection-assertions:` field path
@@ -661,179 +973,366 @@ it that produces the live seat view.
   `projections[targetId]` — viewer-gated branch at
   `src/server/projection.ts:174` fires for target.
 - Privacy invariant (OTHER-ALIVE): same field ABSENT on
-  `projections[otherAliveId]` — viewer gate rejects non-stealer non-
-  target.
-- Privacy invariant (private event fields): for a combo-steal event,
+  `projections[otherAliveId]` — viewer gate at `projection.ts:174`
+  rejects non-stealer non-target.
+- Privacy invariant (private event fields): for a `combo-steal` event,
   assert `projections[otherAliveId].events` does not contain the stolen
-  `cardType` — `stripPrivateEventFields` at
-  `src/server/projection.ts:217` must have run.
-- Spectator: eliminated-but-connected player's projection entry present,
+  `cardType` — `stripPrivateEventFields` at `projection.ts:217-241`
+  must have run.
+- Private event fields (card-drawn): `projections[drawerId].events`
+  contains `cardType`; `projections[otherAliveId].events` does NOT.
+  Verifies the 2026-04-23 E2E audit P0 fix at `projection.ts:231-238`.
+- Spectator: eliminated-but-seated player's projection entry present,
   `myHand` returns `player?.hand ?? []` per `projection.ts:78` + `:96`.
-- Disconnected player: included in map; `BoardPlayer.isConnected: false`
-  round-trips.
-- Regression: playtest mode off → helper never called (Unit 6 gate).
+- Disconnected player: `connectedPlayerIds` excludes them; they appear
+  in `projections` AND their `BoardPlayer.isConnected === false` round-
+  trips through the shared `boardView`.
+- Property test: for random valid `(state, boardView, connectedPlayerIds)`
+  triples where `boardView === projectForBoard(state, now,
+  connectedPlayerIds)` for some `now`, calling `buildGodProjections`
+  twice with the same triple returns structurally equal results (pure).
+- Property test: different `connectedPlayerIds` sets produce different
+  `BoardPlayer.isConnected` flags in the `boardView` (caller's
+  responsibility) but do NOT change which players appear in
+  `projections` — every seated player is always keyed.
 
 **Verification:**
 - All test scenarios pass.
-- `buildGodProjections` is a pure function of `state` — no I/O, no
-  mutation. Verified by a property test: calling twice with same state
-  returns structurally equal results.
+- `buildGodProjections` is pure w.r.t. `(state, boardView,
+  connectedPlayerIds)` — no I/O, no mutation, no `Date.now()`, no
+  `crypto.getRandomValues`. Verified by a property test (same inputs →
+  structurally equal outputs).
 - The invariant "god-event contents for viewer V equals what V's
-  `state-update` contains" is proved structurally by the reuse of
-  `projectForPlayer` / `projectForBoard`; the dedicated test asserts
-  this explicitly for a named-steal fixture.
-- Phase 3's detector can consume `god-event.projections[viewerId]` and
+  `player-update` contains" is proved BY CONSTRUCTION — Unit 6 feeds
+  the same `state` + same `boardView` through `projectForPlayer(state,
+  V, boardView)` for both destinations.
+- Phase 3's detector consumes `god-event.projections[viewerId]` and
   `god-event.boardView` as the source-of-truth snapshot for
   `projection-assertions:` scenarios per phase-1 R7.
 
-- [ ] **Unit 7: Prod-bundle sentinel regression test**
+- [ ] **Unit 7: Prod-bundle sentinel + import-graph isolation regression tests**
 
-**Goal:** Build the worker bundle without `PLAYTEST_MODE` set and assert
-that sentinel strings (`'god-event'`, `'playtest-config'`, `'role=god'`)
-do not appear in the output.
+**Goal:** Two independent checks prevent playtest code from shipping to
+production:
+1. **Sentinel check (string-level).** Build the worker bundle without
+   `PLAYTEST_MODE` set and assert sentinel strings
+   (`'god-event'`, `'playtest-config'`, `'role=god'`,
+   `'PLAYTEST_TOKEN'`, `'mulberry32'`) do not appear in
+   `dist/**/*.js`.
+2. **Import-graph isolation (module-level).** Assert that no module
+   imported transitively from `src/server/room.ts`'s production code
+   path (i.e. excluding code behind the `isPlaytest` flag branch)
+   references `src/server/god-projection.ts`, `src/server/playtest.ts`,
+   or `src/server/rng.ts`. The string check catches leaks via literals;
+   the import-graph check catches leaks via unreachable-but-reachable
+   code that DCE missed.
 
 **Requirements:** R4
 
 **Dependencies:** Units 1-6.
 
 **Files:**
-- Modify: `scripts/verify-prod-bundle.ts` — extend existing verifier with
-  playtest sentinels.
+- Modify: `scripts/verify-prod-bundle.ts` — extend existing verifier
+  with playtest sentinels AND import-graph analysis.
 - Modify: `package.json` — ensure `pnpm verify:bundle` covers this.
-- Create: `src/server/playtest-sentinels.test.ts` — runs the verifier as a
-  test so CI + `pnpm test` catches regressions.
+- Create: `src/server/playtest-sentinels.test.ts` — runs the verifier
+  as a test so CI + `pnpm test` catches regressions.
+- Create: `scripts/verify-import-graph.ts` — parses `dist/` source maps
+  (or runs `tsc --traceResolution` / `rollup-plugin-visualizer`) and
+  confirms playtest modules are not in the production entry's
+  transitive closure.
 
 **Approach:**
-- Mirror E-03's `__gameStore` sentinel check. Grep `dist/**/*.js` (or the
-  wrangler output — confirm actual dist path) for each sentinel.
-- Fail if any sentinel found.
-- Provide clear error message pointing to which sentinel leaked and which
-  guard likely failed.
+- **Sentinel check** — mirror E-03's `__gameStore` sentinel pattern.
+  Grep `dist/**/*.js` for each sentinel string. Fail with a clear
+  error identifying which sentinel leaked and which guard likely
+  failed (e.g. "`'role=god'` found → check Unit 4 origin-gate guard").
+- **Import-graph check** — the stronger defense. Walk the import graph
+  starting from `src/server/room.ts` (production entry), and for every
+  import edge that is reachable WITHOUT crossing an `isPlaytest`-
+  guarded branch, assert none of `{playtest.ts, god-projection.ts,
+  rng.ts}` appear. Implementation options, pick whichever is lowest-
+  cost to maintain:
+  - Parse `dist/*.js.map` source-map sources list.
+  - Use `ts-morph` or TypeScript compiler API to walk `import`
+    declarations.
+  - Use `@rollup/plugin-visualizer` output JSON as the graph source.
+  Record the chosen approach in the Unit 7 implementation commit — the
+  choice is mechanical, not a design decision.
+- Why both checks: strings can absence while dead code lingers (tree-
+  shake missed a branch); code can be absent while a constant name
+  leaks into a tooltip or error message. Defense in depth is cheap.
 
 **Patterns to follow:**
 - `scripts/verify-prod-bundle.ts` existing structure.
-- E-03 in `E2E-ISSUE-LIST.md`.
+- E-03 in `docs/testing/E2E-ISSUE-LIST.md`.
 
 **Test scenarios:**
-- Happy path: production build → all sentinels absent → test passes.
-- Error path: deliberately remove a guard (local only) → test fails with
-  actionable message.
-- Integration: runs inside `pnpm test` and `pnpm verify:bundle`.
+- Happy path: production build → all sentinels absent, no playtest
+  modules in prod import graph → test passes.
+- Error path (sentinel): deliberately remove a guard (local only) →
+  sentinel test fails with actionable message pointing at which
+  sentinel leaked.
+- Error path (import graph): deliberately add `import { mulberry32 }
+  from './rng'` at the top of `room.ts` (outside any guard) → import-
+  graph test fails listing the offending import edge.
+- Integration: both checks run inside `pnpm test` and `pnpm
+  verify:bundle`.
 
 **Verification:**
 - `pnpm build && pnpm verify:bundle` exits 0.
-- Running the test with a sabotaged guard fails loudly.
+- Running either test with a sabotaged guard fails loudly and
+  independently — a string leak does not shadow an import leak, or
+  vice versa.
 
-- [ ] **Unit 8: Smoke test — full playtest round trip**
+- [ ] **Unit 8: Smoke test — full playtest round trip + payload + CPU budget**
 
-**Goal:** End-to-end proof that Phase 2 works: boot wrangler dev with
-`PLAYTEST_MODE=1`, connect as god, send config with seed=42 +
-nopeWindowMs=60000, have a test player play one card, assert god connection
-received the god-event, and stop.
+**Goal:** End-to-end proof that Phase 2 works AND stays within outbound
+payload + CPU budgets even at the roster's worst case (N = 10 players
+mid-game). Boots wrangler dev with `PLAYTEST_MODE=1`, connects as god,
+sends config with `seed=42 + nopeWindowMs=60000`, has a test player play
+one card, asserts god connection received the god-event, measures
+payload size and projection-build time, shuts down.
 
 **Requirements:** R1, R2, R3, R5
 
-**Dependencies:** Units 1-6.
+**Dependencies:** Units 1-6a.
 
 **Files:**
-- Create: `scripts/playtest/phase2-smoke.ts` — runs wrangler dev, opens a
-  WS god connection, asserts one god-event, shuts down.
+- Create: `scripts/playtest/phase2-smoke.ts` — runs wrangler dev, opens
+  a WS god connection, asserts one god-event, records payload size +
+  CPU timing, shuts down.
+- Create: `src/server/god-projection.bench.test.ts` — in-process
+  Vitest bench that loads a 10-player mid-game fixture and measures
+  `buildGodProjections` wall time. Asserts a soft budget; flags if
+  exceeded.
 - Modify: `package.json` — add `pnpm playtest:smoke` script.
 
 **Approach:**
-- Spawn a one-shot smoke against a real dev server.
-- Use `partysocket` or raw WS client — whichever is simpler for a script.
-- Not a Vitest test — a standalone verification. Vitest handles unit
-  behavior; this is the "actually works end to end" gate.
+- Spawn a one-shot smoke against a real dev server. Use `partysocket`
+  or raw WS client — whichever is simpler for a script.
+- Use two fixtures: a 4-player happy path and a **10-player mid-game
+  saturation fixture** (all seats alive, hands populated per engine
+  shuffle). The 10-player case is where payload size and CPU matter.
+- **Payload budget assertion.** Compute `messageByteLength(godRaw)`
+  (via `TextEncoder` per `validation.ts:27-29`). Assert `< 512 KiB`
+  for the 10-player fixture — well under the Workers 1 MiB outbound
+  cap. If this fires, per-viewer splitting (see Risks row) is the
+  fallback: split `projections` into one god-message per viewer, all
+  keyed by the same `stateVersion` so the orchestrator can reassemble.
+- **CPU budget assertion.** `buildGodProjections` wall time at N=10
+  must stay under **10 ms** in the Vitest bench. If this fires,
+  consider (a) caching the per-viewer projection list across the
+  broadcast pass if multiple god-events fire in a burst (nope chain),
+  or (b) documenting a player-count cap at 8 for playtest mode. Do
+  NOT silently ignore a budget breach — it indicates the quadratic
+  `stripPrivateEventFields` per-viewer work is becoming a bottleneck.
+- Not a Vitest test for the smoke script — it's a standalone
+  verification. The bench test IS a Vitest assertion so CI flags
+  regressions.
 
 **Patterns to follow:**
 - `scripts/launch-dev-chrome.ts` process-spawn style.
+- `validation.ts:27-29` `messageByteLength` for byte measurement.
 
 **Test scenarios:**
-- Happy path: smoke script exits 0 after verifying one god-event carrying
-  `projections` (one entry per seated player, keyed by playerId) and
-  `boardView`.
-- Error path: if `PLAYTEST_MODE` unset, smoke script exits non-zero with
-  instructions to set the flag.
+- Happy path (4 players): smoke script exits 0 after verifying one
+  god-event carrying `projections` (one entry per seated player, keyed
+  by `playerId`) and `boardView`.
+- Payload budget (10 players): smoke script builds the 10-player
+  fixture, performs one dispatch, verifies `messageByteLength(godRaw)
+  < 512 KiB`.
+- CPU budget (10 players): Vitest bench asserts `buildGodProjections`
+  completes in < 10 ms averaged over 100 iterations.
+- Error path: if `PLAYTEST_MODE` unset, smoke script exits non-zero
+  with instructions to set the flag.
 - Invariant check: for the one observed god-event, assert
-  `projections[<test-player-id>]` is structurally equal to that player's
-  most recent `state-update` payload (confirms Unit 6a reuse of
-  `projectForPlayer` worked end-to-end).
+  `JSON.stringify(projections[<test-player-id>]) ===
+  JSON.stringify(<test-player-id>'s most recent player-update
+  payload.state)` — confirms Unit 6's broadcast-site emission +
+  Unit 6a's same-boardView reuse produce structurally identical
+  viewer PlayerViews.
+- Regression guard: if a future change introduces a divergence
+  (e.g. recomputing `now` inside `buildGodProjections`), the smoke
+  invariant fails.
 
 **Verification:**
 - `pnpm playtest:smoke` green locally against `pnpm dev:server`.
+- Bench test green in `pnpm test`.
+- Payload + CPU measurements logged to stdout for operator eyeball;
+  a future tightening of the budget starts from this recorded
+  baseline.
 
 ## System-Wide Impact
 
 - **Interaction graph:** New WS message type `god-event` (server → god
-  role) carrying `{ type, action, events, stateVersion, nowMs,
-  projections: Record<playerId, PlayerView>, boardView: BoardView }`. New
-  admin message `playtest-config` (god role → server). No changes to
-  existing player ↔ server messages. Phase 1 R7 (lines 958-967) declares
-  the `projections` + `boardView` fields as the canonical shape; Phase 3's
-  detector consumes them.
-- **Error propagation:** Malformed `playtest-config` → Zod reject, WS stays
-  open. Malformed god auth → connection rejected 4001.
-- **State lifecycle risks:** `playtestSeed` + `playtestNopeWindowMs` are
-  instance state on the `GameRoom`. Hibernation must persist them OR
-  orchestrator must resend `playtest-config` on re-hydrate. Decision: keep
-  them ephemeral; if a room hibernates mid-session, the orchestrator's
-  reconnect logic re-sends config. Cheaper than persisting. If game-in-
-  progress hibernation is a real concern, Phase 3 will revisit.
-- **API surface parity:** Prod clients never see god-event. Prod builds
-  verified by Unit 7.
-- **Integration coverage:** Unit 8 smoke + Unit 6 god-broadcast integration
-  prove the full path.
+  role ONLY) emitted from `broadcastGameState` in the same per-connection
+  loop that emits `state-update` (host) + `player-update` (player),
+  carrying `{ type, action, events, stateVersion, nowMs, projections:
+  Record<playerId, PlayerView>, boardView: BoardView }`. Because all three
+  message families share one `state` + `boardView` + `now` snapshot per
+  broadcast pass, `god-event.projections[V]` is the literal same object
+  as the `PlayerView` delivered to viewer V's `player-update.payload.state`
+  in the same pass — no asserted invariant, a structural one. New admin
+  message `playtest-config` (god role → server). No changes to existing
+  player ↔ server messages. Phase 1 R7 (phase-1-scenarios.md:958-967)
+  declares the `projections` + `boardView` fields as the canonical shape;
+  Phase 3's detector consumes them.
+- **Error propagation:** Malformed `playtest-config` → Zod reject,
+  `INVALID_MESSAGE` back to god connection, WS stays open. Duplicate
+  `playtest-config` → `PLAYTEST_CONFIG_LOCKED`. Post-start `playtest-config`
+  → `PLAYTEST_CONFIG_TOO_LATE`. Malformed god auth → close `4004`.
+  Rate-limited god auth → close `4005`. Forbidden god origin → close
+  `4003`.
+- **Hibernation + god connections.** `GameRoom` has `hibernate: true` at
+  `room.ts:71`. Instance fields (`playtestSeed`, `playtestNopeWindowMs`,
+  `playtestConfigLocked`, `pendingGodEventTrigger`, the god-auth failure
+  counter) are LOST when the DO hibernates. Per-connection state tagged
+  via `connection.setState({ role: 'god' })` survives — so the set of
+  god connections is reconstructed on wake by iterating `getConnections()`
+  and filtering on `connState.role === 'god'`. The plan deliberately
+  does NOT maintain a shadow `godConnections: Set<>` field because it
+  would drift out of sync across hibernation. On wake, the orchestrator
+  detects its WS is closed, reconnects, and re-sends `playtest-config`
+  (accepted because `playtestConfigLocked` reset with the instance).
+  Cheaper than DO-storage-persisting the config.
+- **State lifecycle risks:** Config re-send after hibernation is the ONLY
+  recovery path. If the orchestrator doesn't re-send, the post-wake
+  dispatch uses CSPRNG + default nope window — scenario reproducibility
+  is silently lost. Phase 3 MUST log "awaiting playtest-config after
+  reconnect" on the god socket until the config lands, so a missed re-
+  send is visible.
+- **events.jsonl privacy scope.** God-event projections flow to the
+  orchestrator and get persisted to `events.jsonl` in Phase 3. These
+  contain full `PlayerView` for every seat — including hand contents
+  via `myHand` at `projection.ts:78, 96`. The file therefore leaves the
+  DO's privacy boundary. Phase 3 OWES a retention + scrub policy
+  (rotation, redaction, or a documented "developer-eyes-only,
+  never-committed" rule). Flagged here so Phase 3 plan must address it;
+  not solved in this phase.
+- **API surface parity:** Prod clients never see god-event or
+  playtest-config. Prod builds verified by Unit 7 (both sentinel strings
+  + import-graph isolation).
+- **Integration coverage:** Unit 8 smoke + Unit 6 god-broadcast
+  integration + Unit 6a privacy-invariant tests prove the full path.
 - **Unchanged invariants:** Existing player protocol, all engine rules,
-  state projection allowlist, 4KB message cap, rate-limit, origin check,
-  pure dispatch, serial action queue, CSPRNG-by-default for production.
-  Unit 6a relies on the allowlist projection + card-identity privacy
-  rules remaining intact: it reuses `projectForPlayer` and
-  `projectForBoard` rather than synthesizing a new view, so any change
-  to the projection contract propagates into god-events automatically.
+  state projection allowlist, 4KB inbound message cap, rate-limit,
+  origin check, pure dispatch, serial action queue, CSPRNG-by-default
+  for production. Unit 6a relies on the allowlist projection + card-
+  identity privacy rules remaining intact: it reuses `projectForPlayer`
+  and `projectForBoard` rather than synthesizing a new view, so any
+  change to the projection contract propagates into god-events
+  automatically.
 
 ## Risks & Dependencies
 
 | Risk | Mitigation |
 |------|------------|
-| Env-flag read path has a bug and playtest code executes in prod | Unit 1 tests the read paths exhaustively. Unit 7 prod-bundle test catches sentinel leaks. Token gate (Unit 4) is a second defense even if flag leaks. |
-| God-event payload exceeds 4KB | Unit 6 acknowledges and flags for Phase 3 (orchestrator chunking). Default events-array size is small; 4KB is generous. **Updated with Unit 6a:** adding `projections: Record<playerId, PlayerView>` + `boardView: BoardView` multiplies payload by N+1 viewers. At 10 players with full mid-game state the envelope likely exceeds 4KB. Server's 4KB cap is for INBOUND messages (`validation.ts:27-29`); outbound god-events are not capped the same way. Flag for Phase 3 verification — if outbound caps exist, Unit 6a splits per-viewer into multiple messages keyed by the same `stateVersion`. |
-| Unit 6a diverges from live `state-update` projection | Unit 6a MUST call the same `projectForPlayer` / `projectForBoard` functions that the live broadcast uses. Regression test in `god-projection.test.ts` asserts structural equality of `projections[viewerId]` against the `state-update` payload for that viewer. Any future projection change that touches one path and not the other is caught by this test. |
-| Hibernation loses playtest config | Addressed in System-Wide Impact; orchestrator re-sends on reconnect. |
+| Env-flag read path has a bug and playtest code executes in prod | Unit 1 tests the read paths exhaustively. Unit 7 prod-bundle test catches sentinel leaks AND import-graph leaks. Token gate (Unit 4) is a third defense even if flag leaks. |
+| God-event outbound payload size at N=10 players | Workers **outbound** limit is 1 MiB per message (NOT the 4 KiB INBOUND cap at `validation.ts:13,27-29` — those enforce the size of messages the server ACCEPTS). At 10 players with full mid-game state, `{ projections: 10× PlayerView, boardView: BoardView }` is expected to weigh 30-60 KB gzipped, ~200-400 KB raw — well under 1 MiB but non-trivial. Unit 8 smoke asserts `< 512 KiB` for the 10-player fixture (half of the outbound ceiling as a margin). **Fallback (documented here, not implemented unless Unit 8 fires):** per-viewer splitting — emit one god-message per viewer, all keyed by the same `stateVersion` so the orchestrator reassembles. Orchestrator reassembly logic lives in Phase 3. |
+| CPU cost of `buildGodProjections` at N=10 during a nope-chain storm | A 3-5-dispatch-per-second nope chain multiplied by 10 `projectForPlayer` calls per dispatch is the worst case. Unit 8 bench asserts `buildGodProjections` < 10 ms at N=10; Unit 6 reuses the `boardView` and pre-serializes `godRaw` exactly once so god-connection count does NOT multiply projection work. If the bench fails, document a playtest cap of 8 seats (still covers the party-game sweet spot) — NOT a silent regression. |
+| Unit 6a diverges from live `player-update` projection | Risk eliminated by architecture, not by assertion. Unit 6a is invoked FROM `broadcastGameState` with the same `state` + `boardView` + `connectedPlayerIds` that the player-update branch uses, so both paths produce `projectForPlayer(state, playerId, boardView)` outputs that are the literal same JS object. No divergence is possible without introducing a new code path. Unit 6a's test asserts reference / structural equality as a regression tripwire. |
+| Hibernation loses playtest config + god-connection field | Addressed in System-Wide Impact. Instance fields reset on hibernate; god connections are re-derived from `getConnections()` filtered by `connState.role === 'god'` (setState survives hibernation). Orchestrator re-sends `playtest-config` after any reconnect. |
+| `playtest-config` race vs `start-game` | Unit 5 routes `playtest-config` writes through the same `this.enqueue()` serial queue that `handleStartGame` uses (`room.ts:209-222`). Whichever enqueues first wins; no torn writes possible. |
+| Seed-rewrite attack via duplicate `playtest-config` | Unit 5 enforces first-write-wins per room — subsequent configs rejected with `PLAYTEST_CONFIG_LOCKED`. Closes the vector where a second god connection (or compromised token) could silently re-roll the seed before `start-game`. |
+| Global `PLAYTEST_TOKEN` leak = omniscient access to every active room | Acknowledged. Current plan uses a single Worker-secret token, which means a leak unlocks every concurrent playtest room. **Mitigations active in this phase:** LAN-only origin gate (Unit 4), rate-limited auth (Unit 4), first-write-wins config (Unit 5). **Deferred to Phase 3:** per-room minted tokens OR time-boxed tokens. Flagged in Open Questions. |
+| `events.jsonl` privacy scope leaves DO boundary | Addressed in System-Wide Impact. God-event projections contain full hand contents via `myHand`. Phase 3 owes a retention + scrub policy; flagged here so Phase 3 plan cannot silently skip it. |
 | Seeded shuffle diverges between Node-test harness and Workers runtime | Unit 3 uses mulberry32 (pure JS, identical across runtimes). LCG alternative same guarantee. |
 | `TEST_TIMEOUT_SCALE` from phase-6 plan and `PLAYTEST_MODE` diverge | This phase names its own env var; if phase-6 also ships `TEST_TIMEOUT_SCALE`, they coexist (different purposes). Briggsy to decide whether to merge names later. |
-| Tree-shake doesn't eliminate guarded paths in Workers build | Acceptable — Unit 7 only requires sentinel strings absent, not code branches absent. If branches linger but strings don't, prod can't activate them. |
+| Tree-shake doesn't eliminate guarded paths in Workers build | Unit 7 defends on two fronts: sentinel strings must be absent AND the import graph must not reach playtest modules from production entry. If one catches a leak the other missed, we find it. |
+| Close-code collision with existing 4001 (room-full) | Unit 4 uses 4004 (god auth failure) and 4005 (god auth rate-limited). 4001 at `room.ts:172` remains reserved for room-full. Test scenarios assert the distinction. |
 
 ## Documentation / Operational Notes
 
 - Add a **Playtest Mode** section to `CLAUDE.md` describing the env flag,
   god connection shape, and the "prod must not see sentinels" invariant.
-- Playtest deployments (if any — current assumption is local dev only) use a
-  separate Worker binding with `PLAYTEST_MODE=1` + a distinct `PLAYTEST_TOKEN`
-  generated per session.
-- Operational: rotating the token invalidates live orchestrator connections.
-  Out of scope for v1; flagged for Phase 3.
+- Playtest deployments (if any — current assumption is local dev only)
+  use a separate Worker binding with `PLAYTEST_MODE=1` + a distinct
+  `PLAYTEST_TOKEN` generated per session.
+- Operational: rotating the token invalidates live orchestrator
+  connections. Out of scope for v1; flagged for Phase 3 (per-room or
+  time-boxed tokens).
+- **CI gate on production `wrangler.jsonc`.** Wrangler per-environment
+  `vars` blocks are easy to misset — a dev engineer can accidentally
+  deploy `PLAYTEST_MODE='1'` to prod. Add a CI assertion in the existing
+  `pnpm verify:bundle` pipeline (or a sibling script): parse
+  `wrangler.jsonc` and assert the production environment block does NOT
+  contain `PLAYTEST_MODE` or `PLAYTEST_TOKEN` under `vars`. This is
+  config-level defense; Unit 7 is bundle-level defense; they are
+  complementary, not redundant. A leaked flag in the config would be
+  caught at deploy time by this gate even if the bundle contains the
+  guarded code paths (which Unit 7 already permits, as long as sentinels
+  + imports are absent).
+- **Close-code public contract.** When god-auth fails, the client sees
+  one of: `4003 'Forbidden god origin'`, `4004 'Playtest mode off' /
+  'Missing token' / 'Token mismatch'`, `4005 'Rate limited'`. Document
+  these in `CLAUDE.md` alongside the existing `4001 'Room full'` so
+  orchestrator authors (Phase 3) can distinguish retry-worthy (4005)
+  from config-fix-needed (4003, 4004).
+- **Outbound payload budget.** Publish the Unit 8 measured baseline (raw
+  + gzipped bytes for the 10-player god-event) in `CLAUDE.md`'s
+  "Protocol Landmines" section. Future changes that balloon the payload
+  past 512 KiB should trigger the per-viewer split design, not a
+  silent drift.
 
 ## Sources & References
 
 - **Origin:** [docs/testing/PLAYTEST-HARNESS-PRD.md](../../testing/PLAYTEST-HARNESS-PRD.md)
 - **Parent roadmap:** [docs/plans/playtest-harness/roadmap.md](./roadmap.md)
-- **RNG seam:** `src/server/room.ts:840-859`, `src/server/game/engine.test.ts:9-22`
-- **Nope window source:** `src/server/game/engine.ts:1301-1329`,
-  `src/shared/constants.ts:6-10`
-- **Dispatch sites:** `src/server/room.ts:615-627`, `661-665`
-- **Env precedent:** `docs/plans/_archive/engine-build/phase-6-hardening-deploy.md:586-592`
+- **RNG seam:** `src/server/room.ts:840-859` (`makeDispatchContext`),
+  `src/server/game/engine.test.ts:9-22` (seedable-ctx template).
+- **Nope window source:** `src/server/game/engine.ts:1301-1329`
+  (`createNopeWindow` + `getNopeWindowDuration`), `src/shared/constants.ts:6-10`.
+- **Broadcast site (rewrite target):** `src/server/room.ts:755-795`
+  (`broadcastGameState`). `projectForBoard` called once at `:762` with
+  `(state, now, connectedPlayerIds)`. `projectForPlayer` called per-player
+  at `:782` with `(state, playerId, boardView)`. This is the architecture
+  the god-event emission mirrors.
+- **Dispatch sites (god-event trigger population):** `src/server/room.ts:615-627`
+  (`handleAction`), `:631-666` (`dispatchServerAction`). Non-dispatch
+  callers of `broadcastGameState` that must NOT emit a god-event:
+  `:473` (reconnect resync), `:654` (force-clear-nope fallback), `:735-738`
+  (queue-error fallbacks).
+- **Connection state + hibernation:** `GameRoom` declared at
+  `src/server/room.ts:70-71` with `static override options = { hibernate:
+  true }`. `ConnState` discriminated union at `:64-66` — add `'god'`
+  variant. `connection.setState` calls at `:314, 434, 453` show the
+  pattern that the god branch mirrors. `getConnections()` at call sites
+  `:254, 291, 307, 370, 445, 750, 771, 814` is the hibernation-safe
+  iteration primitive.
+- **Origin allowlist (pattern for stricter god-role gate):**
+  `src/server/room.ts:152-164`. Close code `4003` is the existing
+  "forbidden origin" code and is the one god-role reuses for public-
+  internet rejections; `4001` at `:172` is "room full" and MUST NOT be
+  reused for god-auth (close-code collision — minor fix row in review).
+- **Inbound message cap (definitional, NOT outbound):**
+  `src/server/validation.ts:13` (`MAX_MESSAGE_BYTES = 4096`),
+  `:27-29` (`messageByteLength` helper). Workers outbound is 1 MiB —
+  different budget, relevant to Unit 6 size assertion.
+- **Env precedent:** `docs/plans/_archive/engine-build/phase-6-hardening-deploy.md:586-592`.
 - **Sentinel regression test precedent:** E-03 in
-  `docs/testing/E2E-ISSUE-LIST.md`
+  `docs/testing/E2E-ISSUE-LIST.md`.
 - **Timer generation pattern:**
-  `docs/insights/005-stale-timers-need-generation-counters.md`
+  `docs/insights/005-stale-timers-need-generation-counters.md`.
 - **Memory landmine:** `project-burned-workers-entry-no-exports.md` —
-  room.ts may only export `GameRoom`.
+  `room.ts` may only export `GameRoom` (helpers live in
+  `src/server/validation.ts` or new modules like
+  `src/server/god-projection.ts`).
+- **Serial action queue:** `src/server/room.ts:721-742` (`enqueue`
+  wrapper + per-task error recovery).
+- **Private event field contract:** `src/server/projection.ts:217-241`
+  (`stripPrivateEventFields`). Two current cases: `combo-steal.cardType`
+  at `:222-230`, `card-drawn.cardType` at `:231-238` (E2E audit
+  2026-04-23 P0 fix).
+- **Viewer-gated named-steal projection:**
+  `src/server/projection.ts:133-156` (`projectNopeWindow`),
+  `:165-183` (`augmentNopeWindowForPlayer`). Viewer gate at `:174`.
 - **Per-viewer projection contract (from Phase 1):** R7 declared at
   `docs/plans/playtest-harness/phase-1-scenarios.md:78-84`, concrete gap
   called out at `phase-1-scenarios.md:958-967`. `PlayerView` at
   `src/shared/protocol.ts:127`, `BoardView` at `src/shared/protocol.ts:99`.
-  `projectForPlayer` at `src/server/projection.ts:54`, `projectForBoard`
-  at `src/server/projection.ts:11`. Viewer-gated named-steal projection
-  at `src/server/projection.ts:165-183` (gate on :174). Private-event
-  stripping at `src/server/projection.ts:217-241`.
+- **Wrangler CI gate precedent:** the existing
+  `scripts/verify-prod-bundle.ts` is the pattern for a CI-executed
+  assertion. Extend with a `wrangler.jsonc` parse step to assert the
+  production `vars` block does NOT include `PLAYTEST_MODE` /
+  `PLAYTEST_TOKEN`. See Documentation / Operational Notes.

@@ -19,6 +19,9 @@ playwright-report/
 # See scripts/playtest/README.md §3.
 docs/testing/playtest/runs/**
 
+# Playtest harness selftest stamp — per-machine timestamp, not source.
+.last-selftest
+
 # Dreamland S8 reference frames — fair-use internal research only.
 # Fan-uploaded FX/FXX captures sourced from Archer Wiki (Fandom). Allowed:
 # internal palette extraction + art-direction reference. NOT allowed: public

@@ -61,6 +61,17 @@ export interface ConnectionPattern {
 export interface InfoGapPresence {
   readonly column1Present: boolean
   readonly column2Present: boolean
+  /**
+   * Raw Column 1 prose ("Projection returns today") for this vantage.
+   * Populated by Phase 4 Unit 2a — Coverage-reporter (Unit 10) reads
+   * only the booleans; the agent-launcher (Phase 4 Unit 2) reads the
+   * prose to inject per-role Column 2 content into seat-agent prompts.
+   * Concatenated with `\n\n` when multiple markdown rows map to the
+   * same `ViewerRole` (e.g. `TARGET1` / `TARGET2` → TARGET).
+   */
+  readonly column1Prose?: string
+  /** Raw Column 2 prose ("Viewer should see") for this vantage. See above. */
+  readonly column2Prose?: string
 }
 
 export type InfoGap = Record<ViewerRole, InfoGapPresence>
@@ -68,7 +79,24 @@ export type InfoGap = Record<ViewerRole, InfoGapPresence>
 /** Parsed representation of a single `### SCN-<ID>` section. */
 export interface ParsedScenario {
   readonly id: string
+  /**
+   * The full `### SCN-<ID> — <title>` header line's title text (everything
+   * after the ` — `). Historical name retained for source compatibility
+   * with Unit 9; new callers should prefer `title`.
+   */
   readonly description: string
+  /** Alias of `description` (phase-4 Unit 2a — explicit name for launcher). */
+  readonly title: string
+  /** Body of the `**Trigger conditions:**` section (phase-4 Unit 2a). */
+  readonly triggerConditions?: string
+  /** Body of the `**Agent recognition criteria:**` section. */
+  readonly recognitionCriteria?: string
+  /** Body of the `**Suspicion prompts:**` section. */
+  readonly suspicionPrompts?: string
+  /** Body of the `**Vibe check:**` section. */
+  readonly vibeCheck?: string
+  /** Body of the `**Why this matters:**` section. */
+  readonly whyThisMatters?: string
   readonly tier: 'axis-11' | 'axis-13' | 'other'
   readonly events: readonly EventPattern[]
   readonly shape: 'strict' | 'contains' | 'negative'
@@ -221,9 +249,16 @@ function parseScenarioSection(
 
   const infoGap = parseInfoGapTable(sectionLines)
 
+  const triggerConditions = extractProseSection(sectionLines, 'Trigger conditions')
+  const recognitionCriteria = extractProseSection(sectionLines, 'Agent recognition criteria')
+  const suspicionPrompts = extractProseSection(sectionLines, 'Suspicion prompts')
+  const vibeCheck = extractProseSection(sectionLines, 'Vibe check')
+  const whyThisMatters = extractProseSection(sectionLines, 'Why this matters')
+
   return {
     id,
     description,
+    title: description,
     tier,
     events: parsed.events,
     shape: parsed.shape,
@@ -235,7 +270,55 @@ function parseScenarioSection(
     ...(parsed.inference ? { inference: parsed.inference } : {}),
     ...(knownProductCall ? { knownProductCall } : {}),
     ...(infoGap ? { infoGap } : {}),
+    ...(triggerConditions ? { triggerConditions } : {}),
+    ...(recognitionCriteria ? { recognitionCriteria } : {}),
+    ...(suspicionPrompts ? { suspicionPrompts } : {}),
+    ...(vibeCheck ? { vibeCheck } : {}),
+    ...(whyThisMatters ? { whyThisMatters } : {}),
   }
+}
+
+/**
+ * Extract the body of a `**<header>:**` markdown section within a scenario
+ * section. Body runs from the line AFTER the header marker up to (but not
+ * including) the next `**<Something>:**` marker at column 0 of a line, or
+ * the end of the section. Returns `undefined` when the header is not
+ * present or the body is empty-after-trim (phase-4 Unit 2a).
+ *
+ * This is a PROSE extractor — it preserves line breaks and indentation so
+ * bulleted lists and multi-paragraph narrative survive intact for the
+ * agent-launcher to inject verbatim into seat-agent prompts.
+ */
+function extractProseSection(
+  sectionLines: readonly string[],
+  headerName: string,
+): string | undefined {
+  const headerRe = new RegExp(`^\\*\\*${escapeRegex(headerName)}:\\*\\*\\s*$`)
+  const anyHeaderRe = /^\*\*[^*]+:\*\*\s*$/
+
+  let startIdx = -1
+  for (let i = 0; i < sectionLines.length; i++) {
+    if (headerRe.test((sectionLines[i] ?? '').trim())) {
+      startIdx = i + 1
+      break
+    }
+  }
+  if (startIdx < 0) return undefined
+
+  let endIdx = sectionLines.length
+  for (let i = startIdx; i < sectionLines.length; i++) {
+    if (anyHeaderRe.test((sectionLines[i] ?? '').trim())) {
+      endIdx = i
+      break
+    }
+  }
+
+  const body = sectionLines.slice(startIdx, endIdx).join('\n').trim()
+  return body === '' ? undefined : body
+}
+
+function escapeRegex(s: string): string {
+  return s.replace(/[.*+?^${}()|[\]\\]/g, '\\$&')
 }
 
 /**
@@ -301,8 +384,30 @@ function parseInfoGapTable(sectionLines: readonly string[]): InfoGap | null {
     const c1 = isCellPresent(col1)
     const c2 = isCellPresent(col2)
     for (const role of roles) {
-      if (c1) gap[role] = { ...gap[role], column1Present: true }
-      if (c2) gap[role] = { ...gap[role], column2Present: true }
+      const existing = gap[role]
+      const next: InfoGapPresence = {
+        column1Present: existing.column1Present || c1,
+        column2Present: existing.column2Present || c2,
+        ...(c1
+          ? {
+              column1Prose: existing.column1Prose
+                ? `${existing.column1Prose}\n\n${col1}`
+                : col1,
+            }
+          : existing.column1Prose
+            ? { column1Prose: existing.column1Prose }
+            : {}),
+        ...(c2
+          ? {
+              column2Prose: existing.column2Prose
+                ? `${existing.column2Prose}\n\n${col2}`
+                : col2,
+            }
+          : existing.column2Prose
+            ? { column2Prose: existing.column2Prose }
+            : {}),
+      }
+      gap[role] = next
     }
   }
 

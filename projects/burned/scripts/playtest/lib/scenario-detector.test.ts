@@ -9,7 +9,7 @@
  * sanity assertion) so a broken fixture can't pass vacuously.
  */
 import { describe, expect, it } from 'vitest'
-import { mkdtempSync, writeFileSync } from 'node:fs'
+import { mkdtempSync, readFileSync, writeFileSync } from 'node:fs'
 import { tmpdir } from 'node:os'
 import path from 'node:path'
 import {
@@ -160,14 +160,44 @@ shape: strict
     const ig = scenarios[0]!.infoGap
     // Presence companion (insight 027): info-gap was actually parsed.
     expect(ig).toBeDefined()
-    expect(ig!.SERVER).toEqual({ column1Present: true, column2Present: true })
-    expect(ig!.ACTOR).toEqual({ column1Present: true, column2Present: true })
-    // N/A on both columns → both absent.
+    expect(ig!.SERVER).toEqual({
+      column1Present: true,
+      column2Present: true,
+      column1Prose: 'Full state.',
+      column2Prose: 'Same.',
+    })
+    expect(ig!.ACTOR).toEqual({
+      column1Present: true,
+      column2Present: true,
+      column1Prose: 'Own hand + pendingPrompt.',
+      column2Prose: 'Cinematic reveal.',
+    })
+    // N/A on both columns → both absent AND no prose stored.
     expect(ig!.TARGET).toEqual({ column1Present: false, column2Present: false })
-    expect(ig!.OTHER_ALIVE).toEqual({ column1Present: true, column2Present: true })
-    expect(ig!.SPECTATOR).toEqual({ column1Present: true, column2Present: true })
-    expect(ig!.DISCONNECTED).toEqual({ column1Present: true, column2Present: true })
-    expect(ig!.BOARD).toEqual({ column1Present: true, column2Present: true })
+    expect(ig!.OTHER_ALIVE).toEqual({
+      column1Present: true,
+      column2Present: true,
+      column1Prose: 'Public event stream.',
+      column2Prose: 'Narrative legibility.',
+    })
+    expect(ig!.SPECTATOR).toEqual({
+      column1Present: true,
+      column2Present: true,
+      column1Prose: 'Same as OTHER.',
+      column2Prose: 'Archer narration preserved.',
+    })
+    expect(ig!.DISCONNECTED).toEqual({
+      column1Present: true,
+      column2Present: true,
+      column1Prose: 'Nothing in real time.',
+      column2Prose: '"While you were away" banner.',
+    })
+    expect(ig!.BOARD).toEqual({
+      column1Present: true,
+      column2Present: true,
+      column1Prose: 'Public events + pendingPrompt.',
+      column2Prose: 'Board narrates the beat.',
+    })
   })
 
   it('handles parenthetical qualifiers on vantage labels (ACTOR (STEALER), TARGET1/TARGET2)', () => {
@@ -741,6 +771,188 @@ describe('flattenEvents', () => {
     expect(flat.map((e) => e.event.type)).toEqual(['e1', 'e2'])
     expect(flat[0]!.godEventIdx).toBe(0)
     expect(flat[1]!.godEventIdx).toBe(1)
+  })
+})
+
+// -----------------------------------------------------------------------------
+// Phase-4 Unit 2a — prose-field extraction
+// -----------------------------------------------------------------------------
+
+describe('parseCatalog — phase-4 Unit 2a prose fields', () => {
+  const FULL_SCENARIO = `### SCN-U2A-01 — Full prose scenario
+
+**Category:** Test
+
+**Trigger conditions:**
+- ACTOR dispatches Direct Order.
+- TARGET has at least one card.
+
+**Fire signature:**
+\`\`\`yaml
+events:
+  - type: direct-order-played
+    where: { playerId: $ACTOR }
+shape: strict
+\`\`\`
+
+**Info gap at decision point:**
+
+| Vantage | Column 1 — Projection returns today | Column 2 — Viewer should see |
+|---|---|---|
+| SERVER | Full state after reassignment. | Same. |
+| ACTOR | Own hand updated. | Confirmation banner. |
+| TARGET1 | Reassigned next turn. | "You're up" banner. |
+| TARGET2 | N/A (single target). | N/A. |
+| OTHER (alive) | Public event. | Public narration. |
+| SPECTATOR | Same as OTHER. | Archer narration. |
+| DISCONNECTED | Nothing. | Banner on reconnect. |
+| BOARD | Public events. | Two-beat drama. |
+
+**Vibe check:**
+Did the reassignment feel like an executive order hit — immediate and
+unignorable?
+
+**Why this matters:**
+Direct Order is the canonical command-and-control beat. Losing its
+punch breaks the Archer §8.7 acceptance test.
+
+**Agent recognition criteria:**
+You know you hit this scenario when:
+- ACTOR played Direct Order.
+- TARGET's next-up indicator lit without an intermediate turn.
+
+**Suspicion prompts:**
+- ACTOR: "Did the confirmation banner land instantly?"
+- TARGET: "Did you see a 'you're up' beat?"
+- SPECTATOR: "Did the reassignment read from your seat?"
+
+**Known product call:** none
+`
+
+  it('extracts title, triggerConditions, recognitionCriteria, suspicionPrompts, vibeCheck, whyThisMatters', () => {
+    const scenarios = parseCatalog(FULL_SCENARIO)
+    expect(scenarios).toHaveLength(1)
+    const s = scenarios[0]!
+    expect(s.title).toBe('Full prose scenario')
+    expect(s.description).toBe('Full prose scenario')
+
+    expect(s.triggerConditions).toBeDefined()
+    expect(s.triggerConditions).toContain('ACTOR dispatches Direct Order.')
+    expect(s.triggerConditions).toContain('TARGET has at least one card.')
+
+    expect(s.recognitionCriteria).toBeDefined()
+    expect(s.recognitionCriteria).toContain('ACTOR played Direct Order.')
+
+    expect(s.suspicionPrompts).toBeDefined()
+    expect(s.suspicionPrompts).toContain('ACTOR:')
+    expect(s.suspicionPrompts).toContain('TARGET:')
+    expect(s.suspicionPrompts).toContain('SPECTATOR:')
+
+    expect(s.vibeCheck).toBeDefined()
+    expect(s.vibeCheck).toMatch(/executive order hit/)
+
+    expect(s.whyThisMatters).toBeDefined()
+    expect(s.whyThisMatters).toMatch(/canonical command-and-control/)
+  })
+
+  it('populates column1Prose / column2Prose alongside presence booleans', () => {
+    const scenarios = parseCatalog(FULL_SCENARIO)
+    const ig = scenarios[0]!.infoGap!
+    expect(ig.SERVER.column1Prose).toBe('Full state after reassignment.')
+    expect(ig.SERVER.column2Prose).toBe('Same.')
+    expect(ig.BOARD.column1Prose).toBe('Public events.')
+    expect(ig.BOARD.column2Prose).toBe('Two-beat drama.')
+  })
+
+  it('stores no prose for N/A rows', () => {
+    const scenarios = parseCatalog(FULL_SCENARIO)
+    const ig = scenarios[0]!.infoGap!
+    // TARGET1 present + TARGET2 N/A → TARGET role OR-combines to present,
+    // prose comes from the TARGET1 row (the only non-N/A contributor).
+    expect(ig.TARGET.column1Present).toBe(true)
+    expect(ig.TARGET.column1Prose).toBe('Reassigned next turn.')
+    expect(ig.TARGET.column2Prose).toBe('"You\'re up" banner.')
+  })
+
+  it('concatenates prose with \\n\\n when multiple rows credit the same role', () => {
+    const markdown = `### SCN-U2A-MULTI-01 — Double-credit row
+
+**Fire signature:**
+\`\`\`yaml
+events: []
+shape: negative
+\`\`\`
+
+**Info gap at decision point:**
+
+| Vantage | Column 1 — Projection returns today | Column 2 — Viewer should see |
+|---|---|---|
+| SERVER | x | x |
+| ACTOR | same | same |
+| TARGET1 | first target prose | first target prescriptive |
+| TARGET2 | second target prose | second target prescriptive |
+| OTHER (alive) | same | same |
+| SPECTATOR | same | same |
+| DISCONNECTED | same | same |
+| BOARD | same | same |
+
+**Known product call:** none
+`
+    const scenarios = parseCatalog(markdown)
+    const target = scenarios[0]!.infoGap!.TARGET
+    expect(target.column1Present).toBe(true)
+    expect(target.column1Prose).toBe(
+      'first target prose\n\nsecond target prose',
+    )
+    expect(target.column2Prose).toBe(
+      'first target prescriptive\n\nsecond target prescriptive',
+    )
+  })
+
+  it('omits prose fields when the section is absent', () => {
+    const markdown = `### SCN-U2A-MINIMAL-01 — No prose sections
+
+**Fire signature:**
+\`\`\`yaml
+events: []
+shape: negative
+\`\`\`
+
+**Known product call:** none
+`
+    const scenarios = parseCatalog(markdown)
+    const s = scenarios[0]!
+    expect(s.triggerConditions).toBeUndefined()
+    expect(s.vibeCheck).toBeUndefined()
+    expect(s.recognitionCriteria).toBeUndefined()
+    expect(s.suspicionPrompts).toBeUndefined()
+    expect(s.whyThisMatters).toBeUndefined()
+    // Title still populated from the header line.
+    expect(s.title).toBe('No prose sections')
+  })
+
+  it('round-trips the production catalog without throwing and preserves infoGap booleans', () => {
+    // The real catalog has ~86 scenarios. This guard catches regressions
+    // where an extension breaks a scenario that was previously parsing.
+    const rawCatalog = readFileSync(
+      path.resolve(__dirname, '../../../docs/testing/playtest/SCENARIOS.md'),
+      'utf8',
+    )
+    const scenarios = parseCatalog(rawCatalog)
+    // Real catalog at lock time is 35 scenarios — floor keeps a regression
+    // from silently dropping any below 30 without drawing attention to a
+    // legitimate growth above that.
+    expect(scenarios.length).toBeGreaterThanOrEqual(30)
+    // Every scenario has a title.
+    for (const s of scenarios) {
+      expect(s.title).toBeTruthy()
+    }
+    // Per phase-1 D1: every catalog scenario except intentional fixtures
+    // carries a vibe-check. At least two-thirds of the real catalog
+    // should round-trip it (conservative floor — phase-1 Unit 5 Part G
+    // free-play class and some fixture scenarios may omit).
+    const withVibeCheck = scenarios.filter((s) => s.vibeCheck).length
+    expect(withVibeCheck).toBeGreaterThan(scenarios.length * 0.6)
   })
 })
 

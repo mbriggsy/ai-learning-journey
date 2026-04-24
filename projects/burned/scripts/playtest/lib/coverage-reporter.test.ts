@@ -56,6 +56,7 @@ function scenario(
   return {
     id,
     description: '',
+    title: '',
     tier: opts.tier ?? 'other',
     events: [],
     shape: 'strict',

@@ -377,7 +377,11 @@ None. Entirely repo-internal scaling of proven patterns.
   elapsed wallclock in each bucket and signals the seat-agent launcher
   (Phase 4) when to hand a free-play directive vs a scripted one. Config
   field `freePlayWallclockFraction` with default `0.20`. Phase 6
-  calibration may retune.
+  calibration may retune. **Total session wallclock is bounded by
+  `sessionTimeoutMs`, a required per-config field (no harness-side
+  default)** — callers set it (e.g. Phase 6 series scales `60min + 10min
+  × (seats-3)`; Phase 4 unit tests use 3min). Free-play budget is a
+  fraction of this caller-supplied total; the two fields travel together.
 - **D13. Coverage render = 7×2 info-gap matrix over absolute ≥50
   threshold.** Coverage reporter generates `coverage.md` with a grid
   keyed on the phase-1 D5 info-gap rows. **Internal identifier** →
@@ -889,6 +893,10 @@ R14
     seatNames?: string[]
     seed?: number
     nopeWindowMs: number
+    sessionTimeoutMs: number               // required per-config; no harness-side default.
+                                           // Caller sets (e.g. Phase 6 series scales 60min + 10min/seat beyond 3;
+                                           // Phase 4 unit tests use 3min). Orchestrator hard-stops the session when
+                                           // wallclock since seat-join exceeds this.
     roomCode?: string
     catalogPath: string
     outputRoot: string

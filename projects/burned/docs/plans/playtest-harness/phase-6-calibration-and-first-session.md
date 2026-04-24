@@ -4,6 +4,7 @@ type: feat
 status: draft
 date: 2026-04-23
 absorbed: 2026-04-23
+deepened: 2026-04-23
 parent: docs/plans/playtest-harness/roadmap.md
 origin: docs/testing/PLAYTEST-HARNESS-PRD.md
 ---
@@ -40,7 +41,21 @@ scale that hasn't been zeroed.
   (zeroCellCount === 0)`. Phase 6 additionally requires **≥5 axis-11
   info-visibility scenarios fire** across the series, since axis-11 is the
   info-presence coverage axis most likely to catch the projection-layer
-  bugs the harness exists to detect (PRD target class).
+  bugs the harness exists to detect (PRD target class). **R2 failure
+  resolution matrix** (see also §Calibration Output item 10 and D14):
+  - **R2 miss + R3 pass** (coverage shortfall but ≥1 promoted finding):
+    series result = "harness-proved, catalog-incomplete." Route to Phase 1
+    Unit 6 re-pass to extend the catalog for empty cells / under-fired
+    axes; re-run ONLY the affected scenarios (not the full series).
+  - **R2 miss + R3 miss**: full retry after catalog extension + triage
+    review. Instrument is under-proved; no scoped re-run is defensible.
+  - **zeroCellCount > 0 specifically**: per-cell remediation — Phase 1
+    Unit 6 re-pass adds scenarios targeting the empty (row, column) pair;
+    series #2 runs full catalog but triage + coverage analysis focuses on
+    the newly-targeted cells. This is a strictly narrower subset of the
+    "R2 miss + R3 pass" branch.
+  The `firedCount < 50 BUT zeroCellCount === 0` shape is still R2 miss
+  and still routes to the first branch — no special-case.
 - **R3 (PRD §8.3)** — ≥1 triaged issue file that Briggsy classifies as a
   genuine player-experience bug.
 - **R4 (PRD §8.4)** — Recorded seed allows an issue to be reproduced on
@@ -121,18 +136,32 @@ None.
   5 runs produce 40 noise issues and 0 real findings, that's a failure of
   Phase 6 — back to tuning.
 - **D7. Series-#1 authorization gate is explicit, not implicit.** Before
-  any series-#1 run fires, Unit 1 pre-flight MUST green-stamp all of:
-  (a) Phase 3 Unit 7 isolation self-test — **8 checks** including the
-  new scrubber (check 7) and retention-rotation (check 8) gates from
-  phase-3 H-2b C7. Green stamp = `.last-selftest` file < 24h old
-  (phase-3 D10); (b) custom subagent files exist and parse:
+  any series-#1 run fires, Unit 1 pre-flight MUST green-stamp **six
+  checks** (see §Unit 1 for the enumerated list):
+  (a) Phase 3 Unit 7 isolation self-test green-stamp = `.last-selftest`
+  file < 24h old (phase-3 D10). The self-test itself runs 8 checks
+  including the scrubber (check 7) and retention-rotation (check 8)
+  gates from phase-3 H-2b C7, but at the Phase 6 layer this counts as
+  one pre-flight check;
+  (b) custom subagent files exist and parse:
   `.claude/agents/playtest-seat.md` (phase-4 D2 / Unit 1b) AND
   `.claude/agents/playtest-triage.md` (phase-5 D16 / Unit 1b), both with
-  frontmatter `tools:` whitelist; (c) scenario catalog carries
-  populated `known-product-call:` tags for the A-01, B-03-07, B-13,
-  C-15, D-03, D-16 cluster per phase-1 D4 (Unit 6 of Phase 1). Phase 6
-  does NOT hot-patch any of these — a red stamp bounces back to the
-  owning phase.
+  frontmatter `tools:` whitelist;
+  (c) scenario catalog carries populated `known-product-call:` tags for
+  the A-01, B-03-07, B-13, C-15, D-03, D-16 cluster per phase-1 D4
+  (Unit 6 of Phase 1);
+  (d) `--no-scrub` refusal gate — if the CLI invocation passes
+  `--no-scrub` without `CALIBRATION_DEBUG=1` env var set, pre-flight
+  fails with an actionable message (see I3 notes in §Unit 1);
+  (e) **Phase 2 capability probe (live god WS handshake)** — open a god
+  WebSocket with the minted `PLAYTEST_TOKEN`, dispatch a no-op action
+  against an empty room, and assert the returned god-event envelope
+  carries the `expectedViewerIds` field (phase-2 D4). This is a
+  **feature-detect, not a version-parse** — the `/health` endpoint's
+  `version` string is advisory; the authoritative signal is the live
+  envelope shape. Close the probe connection cleanly before proceeding.
+  Phase 6 does NOT hot-patch any of these — a red stamp bounces back to
+  the owning phase.
 - **D8. Series configs filter + select scenarios via catalog fields.**
   Catalog now carries per-scenario `fire-signature:` (three-tier:
   `events:`, `shape:`, `projection-assertions:`, `ui-assertions:`,
@@ -163,9 +192,44 @@ None.
 - **D11. Calibration output is a decision set, not a log dump.** Phase 6
   is the first place where real-session data exists; decisions deferred
   by phases 1-5 land here. See §Calibration Output below for the
-  enumerated decisions (Column-1 sidecar, detectedRole upstream,
+  enumerated **nine** decisions (Column-1 sidecar, detectedRole upstream,
   role-drift promotion, free-play clustering retune, godReassembly
-  retune, freePlay fraction retune, split-frequency measurement).
+  retune, freePlay fraction retune, split-frequency measurement, axis-11
+  coverage floor confirmation, known-product-call match rate).
+- **D12. Calibration quality gate — tune with care, not with noise.**
+  Series #1 is simultaneously (a) the first real data the harness
+  produces AND (b) the data used to tune defaults for series #2. If the
+  data is noisy, tuning amplifies the noise. Before Unit 7 resolves any
+  of the nine calibration-output decisions, it MUST first run a
+  **signal-to-noise quality assessment** across series #1 and record a
+  per-decision verdict of either `RESOLVE` or `DEFER-TO-SERIES-2`.
+  Defer criteria (any single one is sufficient to defer the decisions
+  it feeds):
+  - **Cluster false-positive rate > 50%** (clusters that triage agent
+    dismisses as unrelated, via the Phase 5 triage `cluster-dismissed`
+    outcome field) → DEFER decisions 4 (free-play loose-cluster
+    retune) and 6 (freePlayWallclockFraction retune).
+  - **Triage run-to-run variance** (see I6 / decision 9 measurement —
+    run triage twice on the same session) exceeds the known-product-call
+    match rate's precision floor → DEFER decision 9. Precision floor is
+    defined in the Unit 7 retrospective appendix per decision; the
+    appendix ships with Unit 7.
+  - **Role-drift sample count < 3** in the LOW-SIGNAL bucket across the
+    full series → DEFER decisions 2 (detectedRole upstream) and 3
+    (role-drift LOW-SIGNAL promotion). Insufficient sample for
+    cross-corroboration.
+  - **Axis-11 fire count < 5** across the series → R2 floor failed; do
+    NOT tune anything axis-11-adjacent (no decisions keyed to axis-11
+    data). Feed back to Phase 1 Unit 6 / Phase 4 prompt refresh.
+  - **Split frequency N = 0** (no `stateVersion` arrived across > 1 WS
+    frame during series #1) → DEFER decision 5 (godReassemblyTimeoutMs
+    retune). No measurement means no retune basis.
+  When ≥3 of the nine decisions defer, series #1 retrospective is a
+  **"data collection only" outcome**: TUNING-LOG series 1 header carries
+  a `SERIES-RESULT: DATA-COLLECTION-ONLY` stamp, R3 is still evaluated
+  on its own merits, and series #2 must complete before any calibration
+  tuning lands. This is an acceptable outcome — explicitly not a Phase 6
+  failure.
 
 ## Open Questions
 
@@ -252,6 +316,24 @@ surfaces the raw signal.
    `E2E-ISSUE-LIST.md`. Series #1 verifies the tag set catches the
    expected ⏸ BLOCKED + 🔴 OPEN-but-deliberate issues (A-01, B-03-07,
    B-13, C-15, D-03, D-16). Misses feed Phase 1 Unit 6 re-pass.
+   **Measurement protocol (I6) — run triage TWICE on the SAME session
+   log** (same seed, same `events.jsonl`, same catalog; re-invoke the
+   `playtest-triage` subagent fresh without access to its prior output).
+   Report **both**: (a) match rate per run (expected-tagged / actual-
+   tagged), AND (b) run-to-run stability (how many of the N flagged
+   product calls agree between the two runs). If stability is low —
+   i.e. triage results are stochastic — the signal to log is
+   **"triage variance"**, NOT the tag set itself. Tag-set tuning is
+   DEFERRED per D12 when stability falls below the per-decision
+   precision floor defined in the Unit 7 retrospective appendix.
+
+> **R2 coverage-failure routing (not a tuning decision; procedural).**
+> The resolution matrix lives in the Requirements Trace (R2). When
+> Series #1 misses R2, Unit 7 records the diagnosed branch (`R2 miss +
+> R3 pass`, `R2 miss + R3 miss`, or `zeroCellCount > 0`) plus the
+> scenario set to re-run in series #2. This is a procedural routing
+> record, not a 10th calibration decision — the nine decisions above
+> stay tune-the-instrument; R2 routing is decide-what-to-fire-next.
 
 ## High-Level Technical Design
 
@@ -266,6 +348,7 @@ pnpm playtest:run --config config/calibration.json
     {
       seats: 3,
       nopeWindowMs: 300000,
+      sessionTimeoutMs: 900000,                                   // phase-3 Unit 1 (I8) required
       catalogPath: 'scripts/playtest/fixtures/mini-catalog.md',
       outputRoot: 'docs/testing/playtest/runs',
       seed: 1,
@@ -298,13 +381,18 @@ If all pass: calibration is green. Proceed to real session series.
 ### First real session series
 
 ```text
-Series-#1 pre-flight (D7 authorization gate):
+Series-#1 pre-flight (D7 authorization gate — SIX checks; see Unit 1):
     1. `.last-selftest` stamp < 24h old (phase-3 D10; 8 checks per
        phase-3 Unit 7 including scrubber + retention).
     2. `.claude/agents/playtest-seat.md` exists (phase-4 Unit 1b).
     3. `.claude/agents/playtest-triage.md` exists (phase-5 Unit 1b).
-    4. Scenario catalog `known-product-call:` tags populated
-       (phase-1 Unit 6).
+    4. Scenario catalog parses; `known-product-call:` tags populated
+       on the hardcoded cluster list (phase-1 Unit 6).
+    5. Phase 2 capability probe — live god WS emits `expectedViewerIds`
+       on the envelope (phase-2 D4; feature-detect, not version-parse).
+    6. `--no-scrub` refusal gate (I3) — `--no-scrub` without
+       `CALIBRATION_DEBUG=1` fails; both together warn + auto-mark
+       downstream `UNSCRUBBED-RETAIN-INTERNAL-ONLY`.
     Any red → bounce back to owning phase; do NOT hot-patch here.
 
 For each playerCount in [2, 3, 5, 8, 10]:
@@ -359,25 +447,37 @@ For each playerCount in [2, 3, 5, 8, 10]:
 # BURNED Playtest Harness — Tuning Log
 
 ## Series 1 (2026-04-25)
+- SERIES-RESULT: <RESOLVED | DATA-COLLECTION-ONLY>  # per D12 quality gate
 - Seeds: 1002, 1003, 1005, 1008, 1010
-- Harness SHA: <SHA>
+- Harness SHA: <SHA>  # pinned at series start per D5
 - Catalog SHA: <SHA>
 - nopeWindowMs: 300000
+- sessionTimeoutMs: <per-config>  # required per phase-3 Unit 1 (I8)
 - freePlayWallclockFraction: 0.20 (phase-3 D12 default)
 - godReassemblyTimeoutMs: 5000 (phase-3 D14 default)
 - sessionDirRetention: 10 (phase-3 D15 default)
 - scrubMode: 'on' (phase-3 D15 default)
 
-### Calibration-output decisions (§Calibration Output 1-9)
-- [ ] Column-1 sidecar Y/N: <decision + rationale>
-- [ ] detectedRole upstream Y/N: <decision>
-- [ ] Role-drift LOW-SIGNAL promotion Y/N: <decision>
-- [ ] Free-play loose-cluster retune (window / triple): <retune or keep>
-- [ ] godReassemblyTimeoutMs retune: <retune or keep 5000>
-- [ ] freePlayWallclockFraction retune: <retune or keep 0.20>
-- [ ] Split-frequency observed: <N splits / M stateVersion batches>
-- [ ] Axis-11 fire count across series: <count> (R2 floor = 5)
-- [ ] Known-product-call match rate: <N matched / M expected>
+### Calibration-output decisions (§Calibration Output 1-9; see §Appendix A)
+# Each resolves as RESOLVE (Y/N/value) OR DEFER-TO-SERIES-2 per D12 / I7.
+- [ ] 1. Column-1 sidecar: <RESOLVE-Y | RESOLVE-N | DEFER-TO-SERIES-2> — <rationale>
+- [ ] 2. detectedRole upstream: <RESOLVE-Y | RESOLVE-N | DEFER-TO-SERIES-2> — <rationale>
+- [ ] 3. Role-drift LOW-SIGNAL promotion: <RESOLVE-Y | RESOLVE-N | DEFER-TO-SERIES-2> — <rationale>
+- [ ] 4. Free-play loose-cluster retune: <retune window X→Y | keep | DEFER-TO-SERIES-2> — <rationale>
+- [ ] 5. godReassemblyTimeoutMs retune: <retune 5000→X | keep 5000 | DEFER-TO-SERIES-2> — <rationale>
+- [ ] 6. freePlayWallclockFraction retune: <0.30 | 0.10 | keep 0.20 | DEFER-TO-SERIES-2> — <rationale>
+- [ ] 7. Split-frequency observed: <N splits / M stateVersion batches>
+- [ ] 8. Axis-11 fire count across series: <count> (R2 floor = 5)
+- [ ] 9. Known-product-call match rate: <run1 N/M, run2 N/M, stability=Jaccard> — <RESOLVE | DEFER: triage variance>
+
+### R2 routing verdict (if R2 missed; per Requirements Trace R2 matrix)
+- Coverage outcome: <PASS | R2-miss-R3-pass | R2-miss-R3-miss | zeroCellCount>0>
+- Scenario set to re-run in series #2: <list or N/A>
+
+### Post-series resource budget (per Unit 7 / I8)
+- Token spend (est): <value>
+- Disk footprint pre-retention cull: <value>
+- Projected series-#2 budget: <value>
 
 ### Post-series observations
 - Agents consistently missed SCN-XYZ because the recognition criterion
@@ -386,6 +486,7 @@ For each playerCount in [2, 3, 5, 8, 10]:
   adjust clustering threshold.
 
 ### Changes applied before next series
+# Scope guard: catalog / prompts / configs only — harness SHA is pinned (D5 / M4).
 - Catalog SCN-XYZ recognition refined.
 - Cluster threshold: 60s window → 45s window (phase-5 D12 loose-cluster).
 
@@ -401,11 +502,15 @@ For each playerCount in [2, 3, 5, 8, 10]:
 calibration runs, `config/calibration.json`, AND the `pre-flight.ts`
 authorization gate per D7.
 
-**Requirements:** D1, D7
+**Requirements:** R1, R5 (see M1 — primary coverage is isolation
+selftest reuse plus the divergence-ready subagent files; D-numbered
+decisions anchor the structure but the requirement trace is R-numbered)
 
 **Dependencies:** Phase 1 catalog (including Unit 6 `known-product-call:`
 tags), phase-3 Unit 7 (selftest), phase-4 Unit 1b (playtest-seat agent
-file), phase-5 Unit 1b (playtest-triage agent file).
+file), phase-5 Unit 1b (playtest-triage agent file), phase-2 Unit 6 /
+D4 (god-event `expectedViewerIds` envelope field — required for
+capability probe check 5).
 
 **Files:**
 - Create: `scripts/playtest/fixtures/mini-catalog.md` — subset of the
@@ -414,7 +519,12 @@ file), phase-5 Unit 1b (playtest-triage agent file).
   ≥1 axis-11 info-visibility scenario so the mini-run exercises the
   projection-assertion path.
 - Create: `scripts/playtest/config/calibration.json`.
-- Create: `scripts/playtest/pre-flight.ts` — D7 gate script.
+- Create: `scripts/playtest/pre-flight.ts` — D7 gate script. The
+  A-01 / B-03-07 / B-13 / C-15 / D-03 / D-16 known-product-call
+  cluster list is **hardcoded here as a single `KNOWN_PRODUCT_CALL_
+  CLUSTER` constant** (M3); update this file when the cluster
+  composition changes (i.e. when a new ⏸ BLOCKED or 🔴 OPEN-but-
+  deliberate issue lands in `E2E-ISSUE-LIST.md`).
 - Create: `scripts/playtest/pre-flight.test.ts`.
 - Modify: `package.json` — add `pnpm playtest:pre-flight`.
 
@@ -424,15 +534,17 @@ file), phase-5 Unit 1b (playtest-triage agent file).
   grammar is exercised, (c) include ≥1 axis-11 scenario (even stub-level
   `projection-assertions:` is fine) so the detector's tier-2 path runs.
 - calibration.json extends the phase-3 Unit 1 Config shape (D9): 3
-  seats, 5-minute Nope window, 15-minute session timeout, seed=1,
+  seats, 5-minute Nope window, `sessionTimeoutMs: 900_000` (15 minutes;
+  phase-3 Unit 1 Config required field per I8), seed=1,
   `freePlayWallclockFraction: 0.20`, `sessionDirRetention: 10`,
   `scrubMode: 'on'`, `godReassemblyTimeoutMs: 5000`, viewports default.
-- `pre-flight.ts` checks (each fail-closed; exits non-zero with a
-  specific failure):
+- `pre-flight.ts` runs **six checks** (each fail-closed; exits non-zero
+  with a specific failure message):
   1. `.last-selftest` file exists AND timestamp < 24h old (phase-3
-     D10). Required — the self-test runs all 8 checks per phase-3
-     Unit 7 including scrubber (check 7) + retention-rotation
-     (check 8).
+     D10). Required — the self-test underneath runs all 8 checks per
+     phase-3 Unit 7 including scrubber (check 7) + retention-rotation
+     (check 8), but at this layer it is counted as one pre-flight
+     check.
   2. `.claude/agents/playtest-seat.md` exists and parses with
      frontmatter `tools:` whitelist (phase-4 D2 / Unit 1b).
   3. `.claude/agents/playtest-triage.md` exists and parses with
@@ -440,9 +552,27 @@ file), phase-5 Unit 1b (playtest-triage agent file).
   4. Scenario catalog at configured `catalogPath` parses; required
      fields per phase-1 D1 present per scenario (ID, title, axes,
      three-tier fire signature, 7×2 info-gap, `vibe-check:`).
-  5. `known-product-call:` tags populated on the A-01 / B-03-07 /
-     B-13 / C-15 / D-03 / D-16 cluster per phase-1 D4 (Unit 6).
-     At minimum: ≥1 scenario per cluster tagged.
+     `known-product-call:` tags populated on the hardcoded
+     `KNOWN_PRODUCT_CALL_CLUSTER` (phase-1 D4 / Unit 6): at minimum
+     ≥1 scenario per cluster issue tagged.
+  5. **Phase 2 capability probe (live god WS handshake).** Mint a
+     session-scoped `PLAYTEST_TOKEN` via phase-3 D14, boot wrangler
+     dev with playtest mode on, open a god WS with the token, send a
+     no-op action (e.g. `{ type: 'ping' }` or any known server-action
+     that returns without mutating state), and assert the god-event
+     envelope on the wire carries `expectedViewerIds: string[]` (phase-
+     2 D4). Close the WS + tear down wrangler before proceeding. This
+     is a feature-detect, not a version-parse — the `/health`
+     endpoint's version string is advisory only.
+  6. **`--no-scrub` refusal gate (I3).** If CLI argv contains
+     `--no-scrub` AND `process.env.CALIBRATION_DEBUG !== '1'`, fail
+     with the actionable message: `"--no-scrub requires
+     CALIBRATION_DEBUG=1 env var. Unscrubbed runs retain full myHand
+     contents and are retained-internal-only (not shareable)."` If
+     BOTH are present, pre-flight passes this check but emits a
+     warning banner on stderr; downstream (Unit 3 step 7 /
+     session.md end block) is responsible for auto-marking the run
+     `UNSCRUBBED-RETAIN-INTERNAL-ONLY`.
 
 **Patterns to follow:**
 - Full `SCENARIOS.md` format; mini-catalog is a subset.
@@ -450,7 +580,8 @@ file), phase-5 Unit 1b (playtest-triage agent file).
 
 **Test scenarios:**
 - Happy path: fresh selftest stamp + both agent files + tagged catalog
-  → pre-flight exits 0.
+  + live god WS emits `expectedViewerIds` + no `--no-scrub` → pre-flight
+  exits 0.
 - Error path: stale selftest stamp (> 24h) → exits non-zero with
   "selftest expired."
 - Error path: missing `playtest-seat.md` → exits non-zero.
@@ -458,10 +589,18 @@ file), phase-5 Unit 1b (playtest-triage agent file).
 - Error path: catalog scenario missing `vibe-check:` → exits non-zero.
 - Error path: A-01 cluster has zero `known-product-call:` tags → exits
   non-zero.
+- Error path: live god WS returns envelope WITHOUT `expectedViewerIds`
+  → exits non-zero with "Phase 2 capability probe failed — server
+  missing expectedViewerIds on god-event envelope. Bounce back to
+  Phase 2 Unit 6."
+- Error path: `--no-scrub` passed without `CALIBRATION_DEBUG=1` →
+  exits non-zero with the refusal-gate message.
+- Happy path variant: `--no-scrub` + `CALIBRATION_DEBUG=1` → passes
+  with stderr warning banner; no exit code change.
 
 **Verification:**
 - `pnpm playtest:pre-flight` passes against the real repo after
-  Phases 1-5 complete; all 5 checks green.
+  Phases 1-5 complete; all **6 checks green**.
 - Calibration config loads cleanly; mini-catalog parses with Phase 3
   scenario-detector.
 
@@ -474,7 +613,9 @@ completed run. Pass/fail output.
 **Execution note:** Test-first on check functions. Reusable for real
 series runs per Unit 5 (same script, run-agnostic).
 
-**Requirements:** R1, R5
+**Requirements:** R1 (see M2 — Unit 2 verifies run-artifact shape; it
+does NOT check self-report vs god-event divergence, which is Phase 5's
+responsibility. R5 citation removed.)
 
 **Dependencies:** Phases 3-5 complete.
 
@@ -494,6 +635,13 @@ series runs per Unit 5 (same script, run-agnostic).
   calibration floor, zero is expected for a minimal mini-catalog run;
   coverage.md renders with 7×2 grid + firedCount banner per phase-3
   Unit 10; `issues/INDEX.md` exists (empty is fine for calibration).
+- **Partial-run detection (I5).** If `session.md` exists but LACKS a
+  closing end-block (the "status: OK | FAIL | ABORTED" marker emitted
+  by the orchestrator on clean shutdown), verify-calibration treats
+  the run dir as a partial run: exits non-zero with message `"Partial
+  run detected — session.md missing end-block. Invoke 'pnpm
+  playtest:purge --full-dir <session-id>' before re-running."` Do
+  NOT attempt to salvage; partial-run scrub-salt state is untrusted.
 
 **Patterns to follow:**
 - Phase 3 Unit 7 self-test style (8 checks table).
@@ -505,6 +653,8 @@ series runs per Unit 5 (same script, run-agnostic).
 - Error path: fixture with legacy `entryType: 'info-gap-divergence'`
   entries → exit non-zero with "legacy entryType — rename to
   ui-spec-divergence per phase-4 C4."
+- Error path: fixture with `session.md` but no end-block → exits
+  non-zero with the partial-run purge instruction (I5).
 - Edge case: empty coverage.md (0 scenarios) → verified as empty, not
   crash.
 
@@ -528,7 +678,7 @@ wrote green unit tests on broken code" is not hardening.
 - Run artifacts under: `docs/testing/playtest/runs/calibration-<timestamp>/`.
 
 **Approach:**
-1. `pnpm playtest:pre-flight` — D7 gate must be green (all 5 checks).
+1. `pnpm playtest:pre-flight` — D7 gate must be green (all 6 checks per Unit 1).
 2. Confirm selftest green (Phase 3 Unit 7; 8 checks including scrubber
    + retention).
 3. `pnpm playtest:run --config scripts/playtest/config/calibration.json`.
@@ -540,10 +690,35 @@ wrote green unit tests on broken code" is not hardening.
 5. Read session.md, INDEX.md, at least 2 seat logs by eye. Confirm
    `entryType` values observed use the four-value vocabulary per
    phase-4 D5 / phase-5 D14.
-6. If any check fails or anything feels wrong: debug, fix, re-run.
-7. If green: write a brief `calibration-notes.md` in the run dir with
+6. **Crash-recovery step (I5).** If `pnpm playtest:run` aborts
+   abnormally (non-zero exit, hang, or operator `Ctrl+C`), before any
+   retry the operator MUST:
+   a. `taskkill //F //IM workerd.exe` (Windows) / `pkill -f workerd`
+      (POSIX) to kill orphaned wrangler dev worker. Same landmine as
+      CLAUDE.md "Wrangler local SQLite corruption recovery."
+   b. `rm -rf .wrangler/state` per the CLAUDE.md recipe.
+   c. `pnpm playtest:purge --full-dir <crashed-session-id>` to wipe
+      the partial run directory (scrub artifacts + any half-written
+      events.jsonl). `--full-dir` mode is an additive flag to the
+      phase-3 Unit 10b purge tool; Unit 2 verify-calibration treats a
+      run dir whose session.md lacks a closing end-block as a partial
+      run (non-zero exit, message: `"Partial run — invoke 'pnpm
+      playtest:purge --full-dir <session-id>' then re-run."`). Do
+      NOT retry `pnpm playtest:run` before purging; stale scrub salts
+      from a dead session contaminate next-run isolation.
+7. If any check fails or anything feels wrong (post-crash-recovery):
+   debug, fix, re-run. **Retry-tune scope (M4):** between-run debugging
+   within a series may adjust **catalog entries, subagent prompts, or
+   non-harness config values** (e.g. `nopeWindowMs`). It may NOT modify
+   harness source code — the SHA is pinned at series start per D5.
+   Harness source changes defer to between-series tuning. A fix that
+   requires harness code changes is itself a signal that the series is
+   over (pin a fresh SHA for series #2).
+8. If green: write a brief `calibration-notes.md` in the run dir with
    observations, including split-frequency count (calibration-output
-   item 7) and observed inter-message latency if abnormal.
+   item 7) and observed inter-message latency if abnormal. Note any
+   `--no-scrub` use (I3) — session.md end-block should already carry
+   `UNSCRUBBED-RETAIN-INTERNAL-ONLY`.
 
 **Test scenarios:**
 Test expectation: live verification, no unit tests.
@@ -553,10 +728,10 @@ Test expectation: live verification, no unit tests.
 - Claude has read enough to say "pipeline works" with evidence, not
   belief.
 
-- [ ] **Unit 4: Series configs + TUNING-LOG scaffold**
+- [ ] **Unit 4: Series configs + Zod schema + TUNING-LOG scaffold**
 
-**Goal:** Produce `config/series-<N>p.json` × 5 and scaffold
-`docs/testing/playtest/TUNING-LOG.md`.
+**Goal:** Produce `config/series-<N>p.json` × 5, the Zod schema that
+validates them, and scaffold `docs/testing/playtest/TUNING-LOG.md`.
 
 **Requirements:** R6, R7, D4, D8, D9
 
@@ -565,6 +740,19 @@ Test expectation: live verification, no unit tests.
 **Files:**
 - Create: `scripts/playtest/config/series-2p.json`,
   `series-3p.json`, `series-5p.json`, `series-8p.json`, `series-10p.json`.
+- Create: `scripts/playtest/lib/config-schema.ts` — Zod schema that
+  **mirrors phase-3 Unit 1's `interface Config` character-for-character
+  plus Phase 6 extensions** (`scenarioFilter?`, `sessionTimeoutMs`).
+  This file is the single source of truth for config validation;
+  `pnpm playtest:run` and `pnpm playtest:pre-flight` both import it.
+  Per I9: series configs are JSON files under `scripts/playtest/
+  config/` (NOT scattered across the repo); validation is centralized
+  here.
+- Create: `scripts/playtest/lib/config-schema.test.ts` — schema-parse
+  each of the 5 series configs + the calibration.json; assert all
+  parse without Zod error; assert "no unknown fields" is enforced
+  (`.strict()` on the schema — guards against silent drift per
+  verification target below).
 - Create: `docs/testing/playtest/TUNING-LOG.md` with series 1 header +
   placeholder sections (including the Calibration-output decision
   checklist from §Calibration Output).
@@ -577,7 +765,9 @@ Test expectation: live verification, no unit tests.
   - `catalogPath: 'docs/testing/playtest/SCENARIOS.md'` (real, not
     mini-catalog)
   - `outputRoot: 'docs/testing/playtest/runs'`
-  - `sessionTimeoutMs`: scaled (60 min + 10 min per seat beyond 3)
+  - `sessionTimeoutMs`: scaled (60 min + 10 min per seat beyond 3;
+    i.e. `3_600_000 + 600_000 × max(0, N-3)`) — required per phase-3
+    Unit 1 Config (I8 upstream patch)
   - `freePlayWallclockFraction: 0.20` (phase-3 D12 default; D9
     inheritance)
   - `sessionDirRetention: 10` (phase-3 D15)
@@ -586,19 +776,25 @@ Test expectation: live verification, no unit tests.
   - `viewports: [{w:360,h:640},{w:390,h:844},{w:768,h:1024}]`
   - `scenarioFilter`: omitted (default = all scenarios). D8 allows
     per-series filter; series #1 runs full catalog.
+- Zod schema uses `.strict()` to reject unknown fields; this is how
+  "no config references a field not in the Config shape" is enforced
+  mechanically rather than by eyeball review.
 
 **Patterns to follow:**
 - Phase 3 Unit 1 Config shape — character-for-character field names +
   defaults.
 
 **Test scenarios:**
-Test expectation: none — config assets.
+- `config-schema.test.ts`: each of the 5 series configs + calibration.json
+  parses without Zod error.
+- `config-schema.test.ts`: a synthesized config with an unknown field
+  (`nonExistentField: 'x'`) fails Zod parse — validates `.strict()`.
+- `config-schema.test.ts`: missing required `sessionTimeoutMs` fails
+  Zod parse.
 
 **Verification:**
-- All 5 configs parse cleanly against phase-3 Unit 1's Config schema
-  (use its Zod parser if wired, otherwise JSON schema).
-- No config references a field not in the Config shape (guards against
-  silent drift).
+- All 5 configs + calibration.json parse cleanly via `config-schema.ts`.
+- Test suite covers strict-mode drift guard + required-field guards.
 
 - [ ] **Unit 5: Run the first series, review with Briggsy, tune**
 
@@ -619,7 +815,7 @@ shortcuts.
 
 **Approach:**
 Pre-series (once, before run #1):
-- `pnpm playtest:pre-flight` — D7 gate green across all 5 checks.
+- `pnpm playtest:pre-flight` — D7 gate green across all 6 checks (Unit 1).
 
 Per run:
 1. `pnpm playtest:selftest` green (8 checks per phase-3 Unit 7 —
@@ -638,6 +834,18 @@ Per run:
    candidate findings.
 6. Briggsy decides: promote / dismiss / flag-catalog-issue. Claude
    records decisions in TUNING-LOG.md.
+   **External-sharing gate (I4):** When a finding is promoted, BEFORE
+   linking it in `E2E-ISSUE-LIST.md` Claude MUST invoke
+   `pnpm playtest:purge --full-dir <run-id> --sanitized-copy
+   <run-id>-sanitized` (or equivalent subcommand that produces a
+   sanitized copy alongside the original retained-internal run dir).
+   The `E2E-ISSUE-LIST.md` link points at the `-sanitized` copy; the
+   original stays in `docs/testing/playtest/runs/` as retained-internal
+   evidence. This applies to ALL promoted findings, not only `--no-
+   scrub` runs; scrub is defense-in-depth, sanitization is the
+   external-sharing line (phase-3 D15 operator warning at
+   `scripts/playtest/README.md` stands — names + event shapes still
+   leak behavioral pattern data even post-scrub).
 7. Only block the next run if a P0 issue is found and Briggsy chooses
    to fix before continuing.
 
@@ -703,14 +911,17 @@ Test expectation: none — docs.
 from the first series, resolve the calibration-output decisions (§1-9),
 and list the top-3 tuning priorities for series 2.
 
-**Requirements:** D4, D11
+**Requirements:** D4, D11, D12
 
-**Dependencies:** Unit 5 complete.
+**Dependencies:** Unit 5 complete. Retrospective template appendix
+(§Appendix A — Retrospective Template) must exist and be populated
+for each of the nine decisions before this unit runs.
 
 **Files:**
 - Modify: `docs/testing/playtest/TUNING-LOG.md` — series 1
   retrospective section, completing the Calibration-output decision
-  checklist (items 1-9).
+  checklist (items 1-9) using the per-decision evidence criteria from
+  §Appendix A.
 - Create: `docs/testing/playtest/NEXT-SESSION-NOTES.md` — top-3 tuning
   priorities with estimated impact + effort.
 
@@ -721,8 +932,26 @@ and list the top-3 tuning priorities for series 2.
   changes in earlier phases (e.g. decision 1 Column-1 sidecar, decision
   2 detectedRole upstream) land as items for Phase 3 Unit 9 future or
   a new unit — NOT executed in Phase 6.
+- **`DEFER-TO-SERIES-2` is an allowed resolution per D12 / I7.** Any
+  calibration-output decision whose evidence falls below the
+  appendix-defined precision floor resolves as
+  `DEFER-TO-SERIES-2` with rationale citing the trigger (e.g. "axis-11
+  fires N=3 < 5 floor," "split-frequency N=0 so no retune basis,"
+  "triage stability below precision floor," "role-drift samples < 3").
+  An `UNDEFINED-INSUFFICIENT-DATA` verdict without citing D12 is a
+  failed retrospective — the retrospective owes an explicit
+  Y/N/defer, not a hedge.
 - Identify the top pain points in the catalog, prompts, or triage.
 - Prioritize by expected uplift (coverage ↑, noise ↓, time-to-finding ↓).
+- Record **R2 routing verdict** (see §Calibration Output trailing note
+  + Requirements Trace R2 matrix) — diagnosed branch + scenario set to
+  re-run in series #2, if R2 missed.
+- Record **post-series resource budget estimate** per I8: estimated
+  Claude token spend (rough: sum of subagent invocations × avg prompt
+  size), disk footprint (sum of `runs/` dir sizes before rolling
+  retention culled them, including scrub sidecar if any), and
+  projected series-#2 budget assuming same coverage effort. Not a
+  gating metric in v1; used to track cost trajectory for PRD §9.5.
 
 **Patterns to follow:**
 - Session-end retrospective style from other BURNED memory docs.
@@ -732,8 +961,46 @@ Test expectation: none — reflection artifact.
 
 **Verification:**
 - Document exists with substantive content, not boilerplate.
-- All 9 calibration-output decisions resolved with Y/N + rationale.
+- All 9 calibration-output decisions resolved with
+  `RESOLVE` (Y/N/tuned value) OR `DEFER-TO-SERIES-2` + rationale per
+  §Appendix A evidence criteria.
+- R2 routing verdict recorded if R2 missed.
+- Post-series resource budget estimate populated.
 - Briggsy has reviewed and agreed with the top-3 priorities.
+
+## Appendix A — Retrospective Template (per-decision evidence criteria)
+
+Template populated in `docs/testing/playtest/TUNING-LOG.md` series 1
+retrospective per Unit 7 (I10). Each of the nine calibration-output
+decisions (§Calibration Output 1-9) has a row of form:
+
+| # | Decision | Evidence required | Metric | Pass/defer threshold | Resolution form |
+
+Populated rows:
+
+| # | Decision | Evidence required | Metric | Threshold (decision-ready) | Resolution form |
+|---|----------|-------------------|--------|----------------------------|-----------------|
+| 1 | Column-1 sidecar (phase-5 D13 / Ruling A) | Count of axis-11 hand-identity scenarios fired where the analyst wanted Column-1 data but couldn't reconstruct from scrubbed events alone | `axis11HandIdentityBlockedCount` | ≥5 blocked → decide; <5 → defer | BUILD sidecar in v2 if ≥1 axis-11 hand-identity scenario could not be analyzed from scrubbed data AND the block count ≥5; OTHERWISE decline (scrubber-limited is acceptable) |
+| 2 | detectedRole upstream (phase-5 Ruling B / phase-3 Unit 9 future) | Role-drift LOW-SIGNAL bucket volume + cross-corroboration with suspicion / `vibe-check: no` | `roleDriftLowSignalSamples` + `roleDriftCrossCorroborationRate` | samples ≥3 + corroboration ≥50% → decide; <3 samples → defer | BUILD `detectedRoleBySeatByStateVersion` upstream in Phase 3 Unit 9 if role-drift is HIGH-signal (corroboration ≥50%); OTHERWISE keep Phase 5 best-effort inference |
+| 3 | Role-drift LOW-SIGNAL promotion (phase-5 D15) | Same evidence as #2; correlation of drift rate with actual UI ambiguity | `roleDriftCrossCorroborationRate` | ≥50% + samples ≥3 → promote to OPEN; <50% → keep LOW-SIGNAL; samples <3 → defer | Promote to OPEN for series #2 if HIGH-signal; keep LOW-SIGNAL otherwise |
+| 4 | Free-play loose-cluster retune (phase-5 D12 / R9) | False-positive rate via Phase 5 triage `cluster-dismissed` outcome field | `clusterFalsePositiveRate` | decision-ready if rate ≤50%; >50% → defer ALL free-play tuning (D12 trigger) | Retune window (60s → e.g. 45s) or triple shape for series #2, OR keep; tie-break = fewer FPs at no-signal cost |
+| 5 | godReassemblyTimeoutMs retune (phase-3 D14) | Observed inter-message latency + split frequency | `p99InterMessageLatencyMs`, `splitFrequency` | `splitFrequency ≥1` → decide; `splitFrequency = 0` → defer (no basis) | Retune default to `ceil(p99 × 1.5)` if systematic drift; else keep 5000 |
+| 6 | freePlayWallclockFraction retune (phase-3 D12) | Finding yield per minute in free-play vs scripted segments | `freePlayFindingYield` vs `scriptedFindingYield` | both yields computable → decide; cluster-FP-rate > 50% → defer (D12 trigger) | If free-play dominates finding yield → raise to 0.30; if free-play is mostly noise → drop to 0.10; otherwise keep 0.20 |
+| 7 | Split-frequency measurement (phase-2 D4 / phase-3 Unit 4) | Count of `stateVersion` batches arriving across >1 WS frame | `splitFrequency` | always computable (even if 0) | Log count; feed decision 5; flag phase-2 Unit 8 payload budget review if `splitFrequency / totalStateVersions > 0.10` |
+| 8 | Axis-11 coverage floor confirmation (R2 / phase-1 catalog) | Count of axis-11 info-visibility scenarios that fired across series | `axis11FireCount` | ≥5 → pass; <5 → fail (R2 floor) | Pass/fail; on fail, feed Phase 1 Unit 6 (catalog under-draft) and/or Phase 4 (seat-agent prompt gap) |
+| 9 | Known-product-call match rate (phase-5 D5 / R11 / phase-1 D4) | Triage match rate against hardcoded cluster + run-to-run stability per I6 (triage runs twice on same session) | `matchRate`, `triageRunToRunStability` | stability ≥ per-decision precision floor (see note) → decide; below → defer with "triage variance" signal | On RESOLVE: record matched vs expected, feed Phase 1 Unit 6 for misses. On DEFER: record stability number; do NOT tune tag set. |
+
+**Precision floor note (decision 9).** v1 precision floor = 80% agreement
+between the two triage runs on the set of flagged product calls
+(Jaccard similarity ≥ 0.8). Below this, the signal is "triage
+variance," not "tag set broken." If v1 floor proves wrong in series #1
+retrospective, adjust the floor in series #2's Appendix A before that
+retrospective runs.
+
+**Decision-ready vs defer.** A decision is "ready" when its evidence
+meets threshold AND none of the D12 quality-gate triggers fire for
+that decision's feeder metric. Any decision can resolve to
+`DEFER-TO-SERIES-2` — this is not a failure mode (I7).
 
 ## System-Wide Impact
 
@@ -763,6 +1030,14 @@ Test expectation: none — reflection artifact.
 | Axis-11 fire count < 5 after series #1 | R2 floor failed. Diagnosis: catalog under-draft (feed Phase 1) or seat-agent prompt gap (feed Phase 4). TUNING-LOG records; series #2 re-targets. |
 | Role-drift produces noise vs signal is ambiguous | Phase 5 D15 / Ruling B: LOW-SIGNAL bucket by default. Phase 6 decision 3 measures cross-corroboration rate; promote to OPEN only if HIGH-signal. |
 | Legacy `entryType: 'info-gap-divergence'` entries leak into logs | Phase 4 C4 rename enforced by phase-4 Zod parser + verify-calibration (Unit 2 error-path test). Coercion warning surfaces, not silent accept. |
+| `--no-scrub` retains full `myHand` contents; data accidentally shared externally | Pre-flight refusal gate (I3 / Unit 1 check 6): `--no-scrub` without `CALIBRATION_DEBUG=1` fails fast. If both set: stderr warning banner + session.md end-block auto-marked `UNSCRUBBED-RETAIN-INTERNAL-ONLY`. External-sharing gate (I4 / Unit 5 step 6) refuses to link unsanitized runs in `E2E-ISSUE-LIST.md`. |
+| Promoted finding linked from `E2E-ISSUE-LIST.md` leaks behavioral-pattern data | External-sharing gate (I4): Unit 5 step 6 invokes `pnpm playtest:purge --full-dir <run-id> --sanitized-copy ...` BEFORE linking; `E2E-ISSUE-LIST.md` only ever points at the `-sanitized` copy. Original run stays retained-internal. |
+| Partial run after crash contaminates next run via stale salts / workerd state | Crash-recovery protocol (I5 / Unit 3 step 6): taskkill `workerd.exe` → `rm -rf .wrangler/state` → `pnpm playtest:purge --full-dir <crashed-session-id>`. Unit 2 detects partial runs by missing session.md end-block; exits non-zero with purge instruction. |
+| Triage stochasticity masquerades as tag-set gap | Decision 9 measurement (I6): run triage TWICE on same session; report run-to-run stability. If Jaccard <0.8 (v1 floor, see §Appendix A note), signal is "triage variance," NOT tag set — DEFER decision 9 per D12. |
+| Tuning on noisy series-#1 data calcifies bad defaults into series #2 | Calibration quality gate (C2 / D12): signal-to-noise triggers DEFER each of the nine decisions as appropriate. ≥3 defers → "DATA-COLLECTION-ONLY" series outcome stamp. Explicitly not a Phase 6 failure. |
+| Harness source change mid-series invalidates D5 SHA pin | Retry-tune scope (M4 / Unit 3 step 7): within-series debugging may adjust catalog / prompts / configs, NOT harness source. Harness change ends the current series and pins a fresh SHA for series #2. |
+| Server lacks `expectedViewerIds` despite `/health` claiming playtest mode | Unit 1 check 5 capability probe (I1): live god WS handshake feature-detects the envelope field, not the version string. Red probe → bounce back to Phase 2 Unit 6. |
+| Config drift — new field added to phase-3 Config shape, not propagated to series configs | Unit 4 Zod schema (I9) at `scripts/playtest/lib/config-schema.ts` with `.strict()` parse; `config-schema.test.ts` schema-parses all 5 series configs + calibration.json on every run of the test suite. Unknown-field config fails Zod. |
 
 ## Documentation / Operational Notes
 
@@ -810,3 +1085,19 @@ Test expectation: none — reflection artifact.
 - **Memory:** `feedback-elite-team-standard.md`,
   `feedback-verify-before-presenting.md`,
   `feedback-water-beads-polish.md`.
+- **H-5b rigor pass (2026-04-23):** this plan ingested findings
+  C1 (R2 failure resolution matrix), C2 (calibration quality gate →
+  D12), I1 (Phase 2 capability probe → Unit 1 check 5),
+  I2 (standardized to 6 pre-flight checks), I3 (`--no-scrub` refusal
+  gate → Unit 1 check 6), I4 (external-sharing purge gate → Unit 5
+  step 6), I5 (crash recovery + partial-run detection → Unit 3 step 6 /
+  Unit 2), I6 (triage-twice stability measurement → Calibration Output
+  decision 9 + §Appendix A), I7 (DEFER-TO-SERIES-2 resolution form →
+  Unit 7), I8 (upstream `sessionTimeoutMs` required per-config on
+  phase-3 Unit 1 Config; no harness default), I9 (Zod config schema
+  at `scripts/playtest/lib/config-schema.ts` → Unit 4), I10
+  (§Appendix A retrospective template), M1 (Unit 1 Requirements use
+  R-numbers not D-numbers), M2 (Unit 2 dropped R5 citation — R5 is
+  Phase 5's domain), M3 (known-product-call cluster hardcoded in
+  `scripts/playtest/pre-flight.ts`), M4 (between-run retry-tune scope
+  excludes harness source; harness SHA pin D5 preserved).

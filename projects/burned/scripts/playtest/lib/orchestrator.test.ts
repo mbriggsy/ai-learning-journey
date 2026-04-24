@@ -598,3 +598,95 @@ describe('buildGodWsUrl', () => {
     expect(buildGodWsUrl('A B')).toBe('ws://127.0.0.1:8787/parties/game-room/A%20B')
   })
 })
+
+// ---------------------------------------------------------------------------
+// Phase 5 Unit 6 — runPostSessionTriage hook
+// ---------------------------------------------------------------------------
+
+describe('runSession — runPostSessionTriage hook (Phase 5 Unit 6)', () => {
+  it('invokes the hook with runDir + paths after appendSessionEnd', async () => {
+    const log: SpyLog = { events: [] }
+    const { deps } = buildHappyDeps(log)
+    let captured: {
+      runDir?: string
+      eventsJsonlPath?: string
+      connectionsJsonlPath?: string
+      catalogPath?: string
+      isolationStatus?: string
+    } | null = null
+    const triageHook = async (input: unknown) => {
+      captured = input as typeof captured
+      return { seedCount: 3, specCount: 3, indexPath: '/tmp/INDEX.md' }
+    }
+    const result = await runSession(makeConfig(), {
+      ...deps,
+      runPostSessionTriage: triageHook,
+    })
+    expect(result.outcome).toBe('success')
+    expect(captured).not.toBeNull()
+    expect(captured!.runDir).toContain(tmpRoot)
+    expect(captured!.eventsJsonlPath).toContain('events.jsonl')
+    expect(captured!.connectionsJsonlPath).toContain('connections.jsonl')
+    expect(captured!.catalogPath).toBe(catalogPath)
+    expect(captured!.isolationStatus).toBe('OK')
+  })
+
+  it('logs skip reason when hook returns skipped result (mocked isolation breach)', async () => {
+    const log: SpyLog = { events: [] }
+    const { deps } = buildHappyDeps(log)
+    const messages: string[] = []
+    const triageHook = vi.fn(async () => ({
+      skipped: 'isolation-breach' as const,
+      seedCount: 0,
+      specCount: 0,
+    }))
+    const result = await runSession(makeConfig(), {
+      ...deps,
+      runPostSessionTriage: triageHook,
+      logger: (m: string) => messages.push(m),
+    })
+    expect(result.outcome).toBe('success')
+    expect(triageHook).toHaveBeenCalledTimes(1)
+    expect(messages.some((m) => m.includes('triage skipped: isolation-breach'))).toBe(true)
+  })
+
+  it('logs zero-seed skip when hook returns skipped="no-seeds"', async () => {
+    const log: SpyLog = { events: [] }
+    const { deps } = buildHappyDeps(log)
+    const messages: string[] = []
+    const triageHook = vi.fn(async () => ({
+      skipped: 'no-seeds' as const,
+      seedCount: 0,
+      specCount: 0,
+    }))
+    const result = await runSession(makeConfig(), {
+      ...deps,
+      runPostSessionTriage: triageHook,
+      logger: (m: string) => messages.push(m),
+    })
+    expect(result.outcome).toBe('success')
+    expect(messages.some((m) => m.includes('triage skipped: no-seeds'))).toBe(true)
+  })
+
+  it('hook failure is non-fatal — session still resolves success and runs retention', async () => {
+    const log: SpyLog = { events: [] }
+    const { deps, spies } = buildHappyDeps(log)
+    const triageHook = vi.fn(async () => {
+      throw new Error('triage exploded')
+    })
+    const result = await runSession(makeConfig(), {
+      ...deps,
+      runPostSessionTriage: triageHook,
+    })
+    expect(result.outcome).toBe('success')
+    expect(spies.applyRetention).toHaveBeenCalled()
+  })
+
+  it('absent hook is a no-op — session proceeds normally', async () => {
+    const log: SpyLog = { events: [] }
+    const { deps } = buildHappyDeps(log)
+    // No runPostSessionTriage in deps; default behaviour.
+    const result = await runSession(makeConfig(), deps)
+    expect(result.outcome).toBe('success')
+  })
+})

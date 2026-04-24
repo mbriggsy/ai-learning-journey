@@ -79,6 +79,10 @@ import {
   applyRetention as realApplyRetention,
   type RetentionResult,
 } from './retention'
+import type {
+  TriagePipelineInput,
+  TriagePipelineResult,
+} from './triage-pipeline'
 
 // ---------------------------------------------------------------------------
 // Constants
@@ -122,6 +126,17 @@ export interface RunSessionDeps {
   readSelftestStamp?: () => Promise<{ timestamp: string; ageMs: number } | null>
   writeSelftestStamp?: (ts: string) => Promise<void>
   seatDriver?: (seats: readonly SeatHandle[], god: GodHandle) => Promise<void>
+  /**
+   * Phase 5 Unit 6 — post-session triage hook. When provided, runs after
+   * `appendSessionEnd` and before retention. Default is no-op (Phase 6
+   * calibration injects the real `runTriagePipeline` driver).
+   *
+   * The hook receives an `isolationStatus` so it can short-circuit when
+   * Phase 4's audit failed. Plan v1 always passes `'OK'` from the
+   * orchestrator (the audit isn't yet wired in; Phase 6 closes that
+   * loop) — tests cover both branches by injecting mocks.
+   */
+  runPostSessionTriage?: (input: TriagePipelineInput) => Promise<TriagePipelineResult>
   nowMs?: () => number
   logger?: (msg: string) => void
   /** Test-only: cancellable setTimeout used for 4005 backoff. */
@@ -278,6 +293,7 @@ export async function runSession(
       }),
     readSelftestStamp = defaultReadSelftestStamp,
     seatDriver,
+    runPostSessionTriage,
     nowMs = Date.now,
     logger = (m: string) => {
       // eslint-disable-next-line no-console
@@ -593,6 +609,34 @@ export async function runSession(
       await appendSessionEnd(paths, report)
     } catch (err) {
       logger(`[orchestrator] appendSessionEnd failed: ${describeError(err)}`)
+    }
+
+    // Phase 5 Unit 6 — post-session triage. Non-fatal; failures only
+    // log. Plan v1 always passes `'OK'` because Phase 4's isolation
+    // audit isn't yet wired in (Phase 6 calibration closes that loop).
+    if (runPostSessionTriage) {
+      try {
+        const triageResult = await runPostSessionTriage({
+          runDir: paths.root,
+          catalogPath: config.catalogPath,
+          eventsJsonlPath: paths.eventsJsonl,
+          connectionsJsonlPath: paths.connectionsJsonl,
+          isolationStatus: 'OK',
+        })
+        if (triageResult.skipped) {
+          logger(
+            `[orchestrator] triage skipped: ${triageResult.skipped}`,
+          )
+        } else {
+          logger(
+            `[orchestrator] triage: ${triageResult.seedCount} seed(s), ${triageResult.specCount} spec(s), index=${triageResult.indexPath ?? '(none)'}`,
+          )
+        }
+      } catch (err) {
+        logger(
+          `[orchestrator] runPostSessionTriage failed (non-fatal): ${describeError(err)}`,
+        )
+      }
     }
 
     // Retention — non-fatal.

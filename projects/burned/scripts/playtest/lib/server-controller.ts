@@ -1,11 +1,12 @@
 /**
  * Server controller — wrangler + vite subprocess lifecycle (Phase 3 Unit 3).
  *
- * Spawns `pnpm dev:server` (wrangler) and `pnpm dev` (vite) with per-session
- * playtest env vars (`PLAYTEST_MODE=1`, `PLAYTEST_TOKEN=<token>`, optional
- * `PLAYTEST_GOD_ORIGINS`), polls their healthchecks, then tears them down on
- * demand. Orchestrator (Unit 6) owns token lifecycle — this module is a
- * conduit, never a source.
+ * Spawns `pnpm exec wrangler dev` (wrangler) and `pnpm dev` (vite) with
+ * per-session playtest vars (`PLAYTEST_MODE=1`, `PLAYTEST_TOKEN=<token>`,
+ * optional `PLAYTEST_GOD_ORIGINS`) forwarded via wrangler's `--var KEY:VALUE`
+ * CLI flags, polls their healthchecks, then tears them down on demand.
+ * Orchestrator (Unit 6) owns token lifecycle — this module is a conduit,
+ * never a source.
  *
  * Security invariants:
  *   - The token is a per-session secret. It is NEVER logged, NEVER embedded
@@ -14,10 +15,20 @@
  *   - Log-hygiene pre-flight aborts the launch when env vars that would
  *     capture the god WS URL (and therefore the token query-string) are set,
  *     unless the caller explicitly opts in via `allowTrace`.
- *   - The spawned child's env map is visible via `/proc/<pid>/environ`
- *     (Linux) and Process Explorer (Windows). This is ACCEPTED v1 risk per
- *     phase-3 plan "Scope Boundaries → Trust Model" — any local actor with
- *     access to process env vars already owns the developer machine.
+ *   - The spawned child's env map AND the `--var PLAYTEST_TOKEN:<t>` CLI
+ *     argument are visible via `/proc/<pid>/environ`, `/proc/<pid>/cmdline`
+ *     (Linux) and Process Explorer / `tasklist /v` (Windows). Both exposure
+ *     points are ACCEPTED v1 risk per phase-3 plan "Scope Boundaries →
+ *     Trust Model" — any local actor with access to per-process env or
+ *     cmdline already owns the developer machine.
+ *
+ * Why CLI flags and not env:
+ *   wrangler dev does NOT forward arbitrary Node process env into workerd's
+ *   binding env. Values MUST arrive via `--var KEY:VALUE` (or wrangler.toml
+ *   [vars] / .dev.vars) — phase2-smoke.ts is the authoritative precedent.
+ *   `buildServerEnv` below is retained for Node-side defense-in-depth (any
+ *   Node-level tool that inspects process env still sees the flags) but
+ *   alone it is insufficient to reach workerd bindings.
  *
  * Insight 022: NO imports from `src/server/` or transitive `partyserver` —
  * Node stdlib + local types only.
@@ -76,6 +87,13 @@ const SIGTERM_GRACE_MS = 5_000
 /**
  * Build the env map for the wrangler child process.
  *
+ * Defense-in-depth ONLY — wrangler does NOT forward arbitrary Node process
+ * env to workerd bindings. The authoritative propagation path is the
+ * `--var` CLI flags built by `buildWranglerArgs`. This helper still sets
+ * PLAYTEST_MODE / PLAYTEST_TOKEN so any Node-side tooling (scripts, hooks)
+ * observing the child's env sees a consistent view, and so a future change
+ * of propagation strategy has a known-good fallback.
+ *
  * - Always includes `PLAYTEST_MODE=1` and `PLAYTEST_TOKEN=<token>`.
  * - Includes `PLAYTEST_GOD_ORIGINS` ONLY when `config.godOriginAllowlist` is
  *   a non-empty array. When absent/empty, the key is NOT added, so phase-2
@@ -96,6 +114,52 @@ export function buildServerEnv(
     env.PLAYTEST_GOD_ORIGINS = allow.join(',')
   }
   return env
+}
+
+/**
+ * Build the argv array for `pnpm exec wrangler dev ...` — the AUTHORITATIVE
+ * propagation path for PLAYTEST_* values into workerd bindings. Mirrors
+ * phase2-smoke.ts:
+ *
+ *   pnpm exec wrangler dev --ip 0.0.0.0 --port 8787
+ *     --var PLAYTEST_MODE:1
+ *     --var PLAYTEST_TOKEN:<token>
+ *     [--var PLAYTEST_GOD_ORIGINS:<a,b,...>]
+ *
+ * Contract:
+ *   - Token is validated (length + charset) up front. On failure, throws an
+ *     error that NEVER echoes the token (defense against log leakage).
+ *   - `PLAYTEST_GOD_ORIGINS` flag is emitted ONLY when allowlist is a
+ *     non-empty array — matches `buildServerEnv`'s behaviour so the
+ *     server-side default (phase-2 Unit 1's LAN-default) is preserved.
+ *   - SECURITY: the token ends up in `argv`, which means it's visible via
+ *     `/proc/<pid>/cmdline` (Linux) / Process Explorer (Windows). This is
+ *     the same ACCEPTED v1 exposure class as per-process env — local
+ *     actors with that level of access already own the dev machine.
+ */
+export function buildWranglerArgs(
+  config: Config,
+  token: string,
+): string[] {
+  validatePlaytestToken(token)
+  const args: string[] = [
+    'exec',
+    'wrangler',
+    'dev',
+    '--ip',
+    '0.0.0.0',
+    '--port',
+    '8787',
+    '--var',
+    'PLAYTEST_MODE:1',
+    '--var',
+    `PLAYTEST_TOKEN:${token}`,
+  ]
+  const allow = config.godOriginAllowlist
+  if (Array.isArray(allow) && allow.length > 0) {
+    args.push('--var', `PLAYTEST_GOD_ORIGINS:${allow.join(',')}`)
+  }
+  return args
 }
 
 /**
@@ -191,7 +255,11 @@ export async function pollWranglerHealth(deps: HealthcheckDeps): Promise<void> {
           playtest?: unknown
           version?: unknown
         }
-        if (body && body.ok === true && typeof body.version === 'string') {
+        // `version` is PROTOCOL_VERSION from src/server/health.ts — a number
+        // in production. Accept number OR string so fixture-mocked unit
+        // tests (which use '1.0.0') still satisfy the shape check.
+        const versionOk = typeof body.version === 'string' || typeof body.version === 'number'
+        if (body && body.ok === true && versionOk) {
           if (body.playtest === true) return
           if (body.playtest === false) {
             sawPlaytestFalse = true
@@ -278,12 +346,17 @@ export async function startServers(
     )
   }
 
-  // 3. Build env (token lives here, never logged).
+  // 3. Build env (defense-in-depth — wrangler ignores this for workerd
+  //    bindings; see module-level note). Also build the wrangler CLI args
+  //    — this is the AUTHORITATIVE path for PLAYTEST_* to reach workerd.
   const spawnEnv = buildServerEnv(config, token, envSource)
+  const wranglerArgs = buildWranglerArgs(config, token)
 
-  // 4. Spawn wrangler. `pnpm dev:server` per project scripts. `shell: true`
-  //    on Windows so `pnpm.cmd` resolves correctly.
-  const wrangler = spawnFn('pnpm', ['dev:server'], {
+  // 4. Spawn wrangler directly via `pnpm exec wrangler dev ...`. We cannot
+  //    use the `pnpm dev:server` script here because pnpm would pass the
+  //    trailing `--var KEY:VALUE` flags to itself, not to wrangler. Mirrors
+  //    phase2-smoke.ts. `shell: true` on Windows so `pnpm.cmd` resolves.
+  const wrangler = spawnFn('pnpm', wranglerArgs, {
     env: spawnEnv,
     stdio: ['ignore', 'pipe', 'pipe'],
     shell: process.platform === 'win32',
@@ -296,6 +369,17 @@ export async function startServers(
     stdio: ['ignore', 'pipe', 'pipe'],
     shell: process.platform === 'win32',
   })
+
+  // Drain stdout/stderr so the OS pipe buffers don't fill up and block the
+  // child process (wrangler in particular is chatty at boot). We route
+  // everything to our own stderr with a [wrangler] / [vite] prefix so the
+  // orchestrator's normal stdout stays clean. phase2-smoke.ts mirrors this.
+  const drain = (child: ChildProcess, label: string): void => {
+    child.stdout?.on('data', (d: Buffer) => process.stderr.write(`[${label}] ${d}`))
+    child.stderr?.on('data', (d: Buffer) => process.stderr.write(`[${label}] ${d}`))
+  }
+  drain(wrangler, 'wrangler')
+  drain(vite, 'vite')
 
   const wranglerPid = wrangler.pid
   const vitePid = vite.pid

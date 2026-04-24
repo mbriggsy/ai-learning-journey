@@ -14,6 +14,7 @@ import { EventEmitter } from 'node:events'
 import type { ChildProcess } from 'node:child_process'
 import {
   buildServerEnv,
+  buildWranglerArgs,
   validatePlaytestToken,
   detectLogHygieneViolations,
   pollWranglerHealth,
@@ -43,7 +44,11 @@ function makeConfig(overrides: Partial<Config> = {}): Config {
 }
 
 // -----------------------------------------------------------------------------
-// buildServerEnv — pure.
+// buildServerEnv — pure. Defense-in-depth only: wrangler does NOT forward
+// arbitrary Node process env into workerd bindings (the authoritative path
+// is the --var CLI flags built by buildWranglerArgs). These tests verify
+// the helper still constructs a correct-at-construction env map for
+// Node-side consumers + dual-use tooling.
 // -----------------------------------------------------------------------------
 
 describe('buildServerEnv', () => {
@@ -77,6 +82,76 @@ describe('buildServerEnv', () => {
     expect(env.FOO).toBe('bar')
     expect(env.PATH).toBe('/usr/bin')
     expect(env.PLAYTEST_MODE).toBe('1')
+  })
+})
+
+// -----------------------------------------------------------------------------
+// buildWranglerArgs — pure. AUTHORITATIVE propagation path for PLAYTEST_*
+// into workerd bindings. Must match phase2-smoke.ts shape.
+// -----------------------------------------------------------------------------
+
+describe('buildWranglerArgs', () => {
+  it('emits the expected base flag sequence with --var PLAYTEST_MODE:1 and --var PLAYTEST_TOKEN:<t>', () => {
+    const args = buildWranglerArgs(makeConfig(), VALID_TOKEN)
+    expect(args).toEqual([
+      'exec',
+      'wrangler',
+      'dev',
+      '--ip',
+      '0.0.0.0',
+      '--port',
+      '8787',
+      '--var',
+      'PLAYTEST_MODE:1',
+      '--var',
+      `PLAYTEST_TOKEN:${VALID_TOKEN}`,
+    ])
+  })
+
+  it('appends --var PLAYTEST_GOD_ORIGINS:<joined> when allowlist is non-empty', () => {
+    const args = buildWranglerArgs(
+      makeConfig({ godOriginAllowlist: ['https://a.example', 'https://b.example'] }),
+      VALID_TOKEN,
+    )
+    // Final two entries should be the god-origins flag pair.
+    expect(args.slice(-2)).toEqual([
+      '--var',
+      'PLAYTEST_GOD_ORIGINS:https://a.example,https://b.example',
+    ])
+    // PLAYTEST_MODE and PLAYTEST_TOKEN flags still present earlier.
+    expect(args).toContain('PLAYTEST_MODE:1')
+    expect(args).toContain(`PLAYTEST_TOKEN:${VALID_TOKEN}`)
+  })
+
+  it('omits PLAYTEST_GOD_ORIGINS when allowlist is undefined OR empty', () => {
+    const argsUndef = buildWranglerArgs(makeConfig({ godOriginAllowlist: undefined }), VALID_TOKEN)
+    const argsEmpty = buildWranglerArgs(makeConfig({ godOriginAllowlist: [] }), VALID_TOKEN)
+    expect(argsUndef.some((a) => a.startsWith('PLAYTEST_GOD_ORIGINS'))).toBe(false)
+    expect(argsEmpty.some((a) => a.startsWith('PLAYTEST_GOD_ORIGINS'))).toBe(false)
+  })
+
+  it('throws on malformed token and does NOT echo the token in the error', () => {
+    const bad = 'nothexnothex'
+    let msg = ''
+    try {
+      buildWranglerArgs(makeConfig(), bad)
+    } catch (e) {
+      msg = (e as Error).message
+    }
+    expect(msg).toMatch(/malformed/i)
+    expect(msg).not.toContain(bad)
+  })
+
+  it('throws on uppercase hex token and does NOT echo the token in the error', () => {
+    const bad = 'A'.repeat(64)
+    let msg = ''
+    try {
+      buildWranglerArgs(makeConfig(), bad)
+    } catch (e) {
+      msg = (e as Error).message
+    }
+    expect(msg).toMatch(/charset|hex/i)
+    expect(msg).not.toContain(bad)
   })
 })
 
@@ -230,6 +305,22 @@ describe('pollWranglerHealth', () => {
     const fetchFn = buildFetchStub([
       { status: 404 }, // first poll: not ready
       { status: 200, body: { ok: true, playtest: true, version: '1.0.0' } },
+    ])
+    const clock = makeClock(0, 1)
+    await expect(
+      pollWranglerHealth({
+        fetchFn,
+        now: clock.now,
+        sleep: async () => { /* noop */ },
+        intervalMs: 1,
+        timeoutMs: 10_000,
+      }),
+    ).resolves.toBeUndefined()
+  })
+
+  it('resolves when version is a number (matches real /health which returns PROTOCOL_VERSION number)', async () => {
+    const fetchFn = buildFetchStub([
+      { status: 200, body: { ok: true, playtest: true, version: 3 } },
     ])
     const clock = makeClock(0, 1)
     await expect(
@@ -405,7 +496,7 @@ describe('startServers — log-hygiene gate', () => {
     warn.mockRestore()
   })
 
-  it('passes PLAYTEST_MODE=1 and PLAYTEST_TOKEN to the wrangler spawn env', async () => {
+  it('spawns wrangler via `pnpm exec wrangler dev` with --var PLAYTEST_* CLI flags (authoritative path)', async () => {
     const { spawn, spawned } = buildSpawnStub()
     const fetchFn = (async () => ({
       status: 200,
@@ -425,11 +516,29 @@ describe('startServers — log-hygiene gate', () => {
       },
     )
 
+    // Wrangler spawn: `pnpm exec wrangler dev ...` with --var flags for
+    // PLAYTEST_MODE, PLAYTEST_TOKEN, and PLAYTEST_GOD_ORIGINS.
     expect(spawned[0]!.cmd).toBe('pnpm')
-    expect(spawned[0]!.args).toEqual(['dev:server'])
+    const args = spawned[0]!.args
+    expect(args[0]).toBe('exec')
+    expect(args[1]).toBe('wrangler')
+    expect(args[2]).toBe('dev')
+    expect(args).toContain('--var')
+    expect(args).toContain('PLAYTEST_MODE:1')
+    expect(args).toContain(`PLAYTEST_TOKEN:${VALID_TOKEN}`)
+    expect(args).toContain('PLAYTEST_GOD_ORIGINS:https://x.example')
+    expect(args).toContain('--ip')
+    expect(args).toContain('0.0.0.0')
+    expect(args).toContain('--port')
+    expect(args).toContain('8787')
+
+    // Defense-in-depth: env still carries PLAYTEST_* for Node-side
+    // tooling, even though workerd only reads from the --var flags.
     expect(spawned[0]!.env?.PLAYTEST_MODE).toBe('1')
     expect(spawned[0]!.env?.PLAYTEST_TOKEN).toBe(VALID_TOKEN)
     expect(spawned[0]!.env?.PLAYTEST_GOD_ORIGINS).toBe('https://x.example')
+
+    // Vite spawn is unchanged.
     expect(spawned[1]!.cmd).toBe('pnpm')
     expect(spawned[1]!.args).toEqual(['dev'])
 

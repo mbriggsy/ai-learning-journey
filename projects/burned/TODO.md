@@ -2,21 +2,84 @@
 
 ## NEXT SESSION — pick up here (2026-04-25+)
 
-**Playtest-harness Phase 5 — COMPLETE.** All 6 units shipped (Units 1,
-1b, 2, 3, 4, 5, 6).
+**Playtest-harness Phase 6 Unit 1 — SHIPPED 2026-04-24.** Pre-flight
+authorization gate ships green: `pnpm playtest:pre-flight` runs all 6
+checks against the real repo and exits 0 (verified live —
+includes wrangler boot + god WS handshake). Full suite **909/909**
+(was 865; +44 new pre-flight unit tests). typecheck clean.
 
 **Pick from the active queue:**
-1. **Phase 6 — first REAL playtest session.** STOP before this runs
-   autonomously; eye-in-loop required. Plan locked at
-   `docs/plans/playtest-harness/phase-6-calibration-and-first-session.md`.
-   Phase 6 is also the home for the deferred contract test (spawn a
-   `playtest-triage` with a prompt asking for `browser_snapshot`,
-   verify Claude Code refuses) AND the orchestrator-side wiring of
-   the real `runTriagePipeline` driver as the default
-   `runPostSessionTriage` for `runSession`.
-2. **BURNED card cinematic arc** sub-steps #3 + #4 (DefusePlacement hero
-   card + Burned art regen). Pure product work.
-3. **Real-device playtest** — iPad + phones Emil-pass verification list.
+1. **Phase 6 Unit 2 — calibration run checklist script.** Plan at
+   `docs/plans/playtest-harness/phase-6-calibration-and-first-session.md`
+   §Unit 2. Pure code: `scripts/playtest/verify-calibration.ts` walks a
+   completed run dir, prints pass/fail table over session.md end-block,
+   isolation-audit, events.jsonl shape, per-seat logs (4 entryType
+   values), coverage.md, issues/INDEX.md. Reusable across calibration +
+   real series runs. Includes the I5 partial-run detection (session.md
+   missing end-block → exit non-zero with the purge-then-rerun message).
+2. **Phase 6 Unit 3 — RUN the calibration session.** EYE-IN-LOOP. STOP
+   before this runs autonomously. Live wrangler + 3 seats + first real
+   god-event broadcast. This is also where `assertGodEnvelopeShape`
+   (already exported in `scripts/playtest/pre-flight.ts`) gets invoked
+   against the FIRST real envelope to feature-detect `expectedViewerIds`
+   per the insight 030 boundary.
+3. **Phase 6 Units 4-7 (post-Unit-3).** Series configs + Zod schema +
+   TUNING-LOG scaffold (Unit 4); 5-game series + Briggsy review (Unit 5,
+   eye-in-loop x5); doc sweep (Unit 6); retrospective (Unit 7).
+4. **BURNED card cinematic arc** sub-steps #3 + #4 (DefusePlacement hero
+   card + Burned art regen). Pure product work, can interleave with
+   harness work.
+5. **Real-device playtest** — iPad + phones Emil-pass verification list.
+
+### Phase 6 Unit 1 state of the world (2026-04-24)
+
+**Full test suite:** 909/909 green (+44 from Phase 5 baseline of 865:
+all in `scripts/playtest/pre-flight.test.ts`) · typecheck clean ·
+`pnpm playtest:pre-flight` exits 0 against current repo state with all
+6 checks GREEN (live wrangler boot + god WS 101 Switching Protocols +
+playtest-config-ack ok:true).
+
+**Phase 6 Unit 1 surface shipped:**
+- `scripts/playtest/fixtures/mini-catalog.md` — 6-scenario calibration
+  fixture (Favor / triple-steal / Intercept chain-burn / Skip / Go-Dark /
+  Burned-axis-11). Real SCENARIOS.md format. All 10 KNOWN_PRODUCT_CALL_
+  CLUSTER IDs (A-01, B-03–B-07, B-13, C-15, D-03, D-16) tagged across
+  the 6 scenarios.
+- `scripts/playtest/config/calibration.json` — extends phase-3 Unit 1
+  Config shape. seats=3, nopeWindowMs=300000, sessionTimeoutMs=900000,
+  catalogPath points at the mini-catalog.
+- `scripts/playtest/pre-flight.ts` — D7 authorization gate, 6 fail-closed
+  checks: (1) `.last-selftest` < 24h, (2/3) `.claude/agents/playtest-
+  seat.md` + `playtest-triage.md` frontmatter `tools:` whitelist shape,
+  (4) catalog parse + cluster coverage via parseCatalog, (5) live god WS
+  handshake (boots wrangler via `startServers`, opens god WS with Origin
+  header via `buildLanOriginFromWsUrl`, asserts `playtest-config-ack`
+  with `ok: true`), (6) `--no-scrub` refusal gate.
+- `scripts/playtest/pre-flight.test.ts` — 44 unit tests including
+  happy-path companions for every error path (insight 027). All 6
+  check helpers + `assertGodEnvelopeShape` + `assertConfigAck` +
+  `parseAgentFrontmatter` + `parseArgs` covered.
+- `package.json` — `pnpm playtest:pre-flight` script wired.
+
+**Mid-execution course-correction (insight 030 captured).** The
+plan's check 5 design — "send a no-op action against an empty room
+and feature-detect `expectedViewerIds` on the returned god-event
+envelope" — is incompatible with the server's god-event semantics.
+`src/server/room.ts:902-911`: god-events fire only when
+`pendingGodEventTrigger` is set, and that flag is only set at engine-
+action dispatch sites. Lobby state, host-connect, and joins do NOT
+trigger god-event broadcasts. Empty-room probes can't fire one. Check
+5 was redefined as a `playtest-config-ack` handshake probe;
+`assertGodEnvelopeShape` stays exported in pre-flight.ts for Unit 3
+to invoke against the first REAL broadcast. Insight at
+`docs/insights/030-conditional-emission-gates-defeat-empty-state-feature-detection.md`.
+
+**Phase 6 Unit 1 → Unit 3 hand-off.** When Unit 3 runs the live
+calibration, import `assertGodEnvelopeShape` from
+`scripts/playtest/pre-flight.ts` and apply it to the first
+`type: 'god-event'` message that arrives on the god WS during the
+session. If it fails, Phase 2 D4 is missing the field on the wire —
+bounce back to Phase 2 Unit 6 (already a documented routing).
 
 ### Phase 5 state of the world (2026-04-24)
 

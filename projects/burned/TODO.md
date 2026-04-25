@@ -2,16 +2,25 @@
 
 ## NEXT SESSION — pick up here (2026-04-25+)
 
-**Playtest-harness Phase 6 Unit 2 — SHIPPED 2026-04-24.**
+**Playtest-harness Phase 6 Unit 4 — SHIPPED 2026-04-24.** Series configs
++ Zod schema + TUNING-LOG scaffold. `scripts/playtest/lib/config-schema.ts`
+is the single source of truth for Config validation (`.strict()` catches
+unknown-field typos + missing required-field drift). Five series configs
+shipped (`series-{2p,3p,5p,8p,10p}.json`; seeds 1000+N; sessionTimeoutMs
+scales 60min + 10min/seat beyond 3). `docs/testing/playtest/TUNING-LOG.md`
+scaffolded with the Series 1 template (9 calibration-output decisions,
+R2 routing matrix, appendix with decision rationale). Full suite
+**983/983** (+30 schema tests). typecheck clean.
+
+**Phase 6 Unit 2 — SHIPPED 2026-04-24.**
 `pnpm playtest:verify-calibration <runDir>` ships. Pure filesystem walker
 — 7 checks (session.md end-block outcome, isolation-audit status,
 events.jsonl valid JSONL, events.jsonl scrubbed, per-seat logs
 entryType vocabulary incl. C4-rename fail-closed, coverage.md renders,
 issues/INDEX.md). I5 partial-run pre-gate fires before anything else.
-Full suite **953/953** (was 909; +44 new tests). typecheck clean. CLI
-verified runtime against hand-rolled fixtures (happy path exits 0;
-partial-run exits 1 with `--full-dir` purge message; ISOLATION_BREACH
-branch exits 1 with "1 FAIL — 6/7" table).
++44 tests. CLI verified runtime against hand-rolled fixtures (happy
+path exits 0; partial-run exits 1 with `--full-dir` purge message;
+ISOLATION_BREACH branch exits 1 with "1 FAIL — 6/7" table).
 
 **Phase 6 Unit 1 — SHIPPED 2026-04-24** (previous session). Pre-flight
 authorization gate: `pnpm playtest:pre-flight` runs 6 checks green

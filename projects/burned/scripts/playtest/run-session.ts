@@ -181,6 +181,11 @@ async function main(argv: readonly string[]): Promise<void> {
   // browser via the `playwright-seat-N` MCP servers in `.mcp.json`; the
   // orchestrator no longer launches its own Chromium.
   //
+  // Phase 6 Unit 2.6: orchestrator-owned board-view client (Option 1 from
+  // insight 032). `launchBoardView: true` spawns one Chromium board page
+  // that taps "Cleared Hot" once seat agents have joined the lobby.
+  // Without this opt, agents land in the lobby and wait forever.
+  //
   // The Claude Code conversation that invokes this CLI is responsible for
   // reading `<runDir>/agent-specs.manifest.json`, dispatching one
   // `Agent({ subagent_type: 'playtest-seat-N', ... })` per entry, then
@@ -207,6 +212,7 @@ async function main(argv: readonly string[]): Promise<void> {
   const result = await runSession(config, deps, {
     allowTrace: flags.allowTrace,
     skipBrowserLaunch: true,
+    launchBoardView: true,
   })
   // eslint-disable-next-line no-console
   console.log(

@@ -83,6 +83,11 @@ import {
   runIsolationAudit as realRunIsolationAudit,
   type IsolationAuditResult,
 } from './isolation-audit'
+import {
+  launchBoardView as realLaunchBoardView,
+  type BoardViewHandle,
+  type LaunchBoardViewArgs,
+} from './board-view-launcher'
 import type {
   TriagePipelineInput,
   TriagePipelineResult,
@@ -150,6 +155,18 @@ export interface RunSessionDeps {
     runDir: string,
     seats: readonly SeatHandle[],
   ) => Promise<IsolationAuditResult>
+  /**
+   * Phase 6 Unit 2.6 — board-view launcher. Spawns ONE orchestrator-owned
+   * Chromium board page and taps "Cleared Hot" once the lobby fills. Only
+   * invoked when `opts.launchBoardView === true` (Option A path); otherwise
+   * the orchestrator assumes a board client exists out-of-band (Phase 3
+   * smoke pattern, where the seatDriver opens the board itself).
+   *
+   * Insight 032: under Option A's `skipBrowserLaunch: true`, no other
+   * component dispatches a board client. Without this dep, agent seats
+   * lobby-wait forever.
+   */
+  launchBoardView?: (args: LaunchBoardViewArgs) => Promise<BoardViewHandle>
   nowMs?: () => number
   logger?: (msg: string) => void
   /** Test-only: cancellable setTimeout used for 4005 backoff. */
@@ -173,6 +190,24 @@ export interface RunSessionOptions {
    * Default false (legacy Option B path).
    */
   readonly skipBrowserLaunch?: boolean
+  /**
+   * Phase 6 Unit 2.6 — when true, the orchestrator spawns ONE Chromium
+   * board page (orchestrator-owned, no MCP isolation) and taps "Cleared
+   * Hot" once the lobby fills. Required under Option A
+   * (`skipBrowserLaunch: true`) where seat agents own their own MCPs but
+   * no component dispatches a board client. Insight 032 captured the gap.
+   *
+   * Default false. `pnpm playtest:run` defaults this to `true` for the
+   * Option A path; tests opt in/out explicitly.
+   */
+  readonly launchBoardView?: boolean
+  /**
+   * Optional board-view URL inputs. Defaults derive from the room code
+   * in `Config` and the well-known `http://localhost:5173` vite URL.
+   * Tests may override either independently. Ignored when
+   * `launchBoardView !== true`.
+   */
+  readonly boardViewViteBaseUrl?: string
 }
 
 // ---------------------------------------------------------------------------
@@ -336,6 +371,7 @@ export async function runSession(
     seatDriver,
     runPostSessionTriage,
     runIsolationAudit = realRunIsolationAudit,
+    launchBoardView = realLaunchBoardView,
     nowMs = Date.now,
     logger = (m: string) => {
       // eslint-disable-next-line no-console
@@ -392,6 +428,7 @@ export async function runSession(
   let servers: ServerHandles | null = null
   let god: GodHandle | null = null
   let browser: Browser | null = null
+  let boardView: BoardViewHandle | null = null
   const seats: SeatHandle[] = []
 
   let outcome: SessionOutcome = 'success'
@@ -557,6 +594,43 @@ export async function runSession(
     }
 
     // -----------------------------------------------------------------------
+    // 7.5. Board-view launcher (Phase 6 Unit 2.6) — only under Option A,
+    //      or whenever the caller opts in. Spawns one orchestrator-owned
+    //      Chromium board page that taps "Cleared Hot" once the lobby
+    //      fills. Insight 032: without this, agent seats lobby-wait
+    //      forever. The launch is fire-and-forget vs. the seat-driver —
+    //      both run in parallel. `boardView.started` failures are LOGGED
+    //      not fatal; the seat-driver's session timeout is the safety net,
+    //      and the operator sees the lobby-stuck symptom in logs.
+    // -----------------------------------------------------------------------
+    if (opts.launchBoardView === true) {
+      try {
+        boardView = await launchBoardView({
+          roomCode,
+          viteBaseUrl: opts.boardViewViteBaseUrl ?? 'http://localhost:5173',
+          logger,
+        })
+        // Forward `started` failures to the orchestrator log so a stuck
+        // session has a clear diagnostic. The handle's internal logger
+        // also records this; we re-log at the orchestrator level so the
+        // operator sees one canonical line.
+        boardView.started.catch((err: unknown) => {
+          logger(
+            `[orchestrator] board-view start sequence failed (non-fatal; ` +
+            `seat-driver will time out if no game starts): ${describeError(err)}`,
+          )
+        })
+      } catch (err) {
+        // Synchronous failure (e.g., chromium.launch() rejected) IS fatal.
+        // No board client = no game start = no point running seat-driver.
+        outcome = 'error'
+        errorMessage = `launchBoardView failed: ${describeError(err)}`
+        logger(`[orchestrator] ${errorMessage}`)
+        return finalize()
+      }
+    }
+
+    // -----------------------------------------------------------------------
     // 8. Seat-driver stub (Phase 4 replaces). Race against fatal close.
     // -----------------------------------------------------------------------
     const driver = seatDriver ?? (async () => {
@@ -626,6 +700,16 @@ export async function runSession(
         }
       } catch (err) {
         logger(`[orchestrator] seat teardown failed seatId=${seat.seatId}: ${describeError(err)}`)
+      }
+    }
+    // Phase 6 Unit 2.6 — close the board view BEFORE god/servers (the
+    // board's WebSocket depends on wrangler being up; closing it later
+    // would leak a partyserver reconnect attempt during teardown).
+    if (boardView !== null) {
+      try {
+        await boardView.close()
+      } catch (err) {
+        logger(`[orchestrator] boardView close failed: ${describeError(err)}`)
       }
     }
     if (god !== null) {

@@ -765,3 +765,197 @@ describe('defaultReadSelftestStamp', () => {
     expect(result).toBeNull()
   })
 })
+
+// ---------------------------------------------------------------------------
+// Phase 6 Unit 2.6 — launchBoardView wiring
+//
+// The orchestrator gained a `launchBoardView` opt + dep so that under
+// Option A (`skipBrowserLaunch: true`) something dispatches a board client
+// that taps "Cleared Hot." Insight 032 captured the gap. These tests pin
+// the wiring's contract: invoked when opt true, skipped when false; close
+// runs in the right teardown order; sync launch failure is fatal; async
+// `started` failure is logged-not-fatal.
+// ---------------------------------------------------------------------------
+
+describe('runSession — launchBoardView wiring (Phase 6 Unit 2.6)', () => {
+  function buildBoardViewDeps(log: SpyLog) {
+    const { deps } = buildHappyDeps(log)
+    const close = vi.fn(async () => {
+      log.events.push('boardView.close')
+    })
+    let resolveStarted!: () => void
+    const started = new Promise<void>((r) => {
+      resolveStarted = r
+    })
+    const launchBoardView = vi.fn(async () => {
+      log.events.push('launchBoardView')
+      // Resolve `started` on the next tick so race ordering is observable.
+      Promise.resolve().then(resolveStarted)
+      return { started, close }
+    })
+    return {
+      deps: { ...deps, launchBoardView },
+      launchBoardView,
+      close,
+    }
+  }
+
+  it('does NOT invoke launchBoardView when opt is false / omitted (default)', async () => {
+    const log: SpyLog = { events: [] }
+    const { deps, launchBoardView, close } = buildBoardViewDeps(log)
+
+    const result = await runSession(makeConfig(), deps)
+
+    expect(result.outcome).toBe('success')
+    expect(launchBoardView).not.toHaveBeenCalled()
+    expect(close).not.toHaveBeenCalled()
+    expect(log.events).not.toContain('launchBoardView')
+    expect(log.events).not.toContain('boardView.close')
+  })
+
+  it('invokes launchBoardView when opt is true; close runs in finalize', async () => {
+    const log: SpyLog = { events: [] }
+    const { deps, launchBoardView, close } = buildBoardViewDeps(log)
+
+    const result = await runSession(makeConfig(), deps, { launchBoardView: true })
+
+    expect(result.outcome).toBe('success')
+    expect(launchBoardView).toHaveBeenCalledTimes(1)
+    expect(close).toHaveBeenCalledTimes(1)
+  })
+
+  it('forwards roomCode + default vite URL to launchBoardView', async () => {
+    const log: SpyLog = { events: [] }
+    const { deps, launchBoardView } = buildBoardViewDeps(log)
+
+    await runSession(makeConfig({ roomCode: 'PARTY' }), deps, { launchBoardView: true })
+
+    expect(launchBoardView).toHaveBeenCalledTimes(1)
+    const calls = launchBoardView.mock.calls as unknown as Array<[{ roomCode: string; viteBaseUrl: string }]>
+    expect(calls[0]![0].roomCode).toBe('PARTY')
+    expect(calls[0]![0].viteBaseUrl).toBe('http://localhost:5173')
+  })
+
+  it('honors boardViewViteBaseUrl override', async () => {
+    const log: SpyLog = { events: [] }
+    const { deps, launchBoardView } = buildBoardViewDeps(log)
+
+    await runSession(makeConfig(), deps, {
+      launchBoardView: true,
+      boardViewViteBaseUrl: 'http://localhost:5175',
+    })
+
+    const calls = launchBoardView.mock.calls as unknown as Array<[{ viteBaseUrl: string }]>
+    expect(calls[0]![0].viteBaseUrl).toBe('http://localhost:5175')
+  })
+
+  it('launches AFTER seats are constructed and BEFORE seat-driver runs', async () => {
+    const log: SpyLog = { events: [] }
+    const { deps } = buildBoardViewDeps(log)
+
+    await runSession(makeConfig(), deps, { launchBoardView: true })
+
+    const idx = (name: string): number => log.events.indexOf(name)
+    // Last seat created BEFORE board launches (so we have a valid roomCode).
+    expect(idx('createSeat:seat-3')).toBeLessThan(idx('launchBoardView'))
+    // Board launches BEFORE seat-driver kicks in.
+    expect(idx('launchBoardView')).toBeLessThan(idx('seatDriver'))
+  })
+
+  it('closes boardView AFTER seats but BEFORE god/servers (board WS depends on wrangler)', async () => {
+    const log: SpyLog = { events: [] }
+    const { deps } = buildBoardViewDeps(log)
+
+    await runSession(makeConfig(), deps, { launchBoardView: true })
+
+    const idx = (name: string): number => log.events.indexOf(name)
+    expect(idx('seat.close:seat-1')).toBeLessThan(idx('boardView.close'))
+    expect(idx('boardView.close')).toBeLessThan(idx('god.disconnect'))
+    expect(idx('god.disconnect')).toBeLessThan(idx('stopServers'))
+  })
+
+  it('aborts session with outcome=error when launchBoardView throws synchronously', async () => {
+    const log: SpyLog = { events: [] }
+    const { deps } = buildHappyDeps(log)
+    const launchBoardView = vi.fn(async () => {
+      throw new Error('chromium.launch failed: spawn ENOENT')
+    })
+
+    const result = await runSession(
+      makeConfig(),
+      { ...deps, launchBoardView },
+      { launchBoardView: true },
+    )
+
+    expect(result.outcome).toBe('error')
+    expect(result.errorMessage).toMatch(/launchBoardView failed/)
+    expect(result.errorMessage).toMatch(/spawn ENOENT/)
+    // Servers + god still torn down.
+    expect(log.events).toContain('god.disconnect')
+    expect(log.events).toContain('stopServers')
+  })
+
+  it('does NOT abort when boardView.started rejects asynchronously (logged-not-fatal)', async () => {
+    const log: SpyLog = { events: [] }
+    const logLines: string[] = []
+    const { deps } = buildHappyDeps(log)
+    const close = vi.fn(async () => {
+      log.events.push('boardView.close')
+    })
+    const launchBoardView = vi.fn(async () => {
+      const started = Promise.reject<void>(new Error('cleared-hot never appeared'))
+      // Swallow at the source so the test runtime doesn't see an
+      // unhandled-rejection (matches launchBoardView's real behavior).
+      started.catch(() => {
+        /* expected */
+      })
+      return { started, close }
+    })
+
+    const result = await runSession(
+      makeConfig(),
+      {
+        ...deps,
+        launchBoardView,
+        logger: (m: string) => logLines.push(m),
+      },
+      { launchBoardView: true },
+    )
+
+    expect(result.outcome).toBe('success')
+    // Allow the failure-log microtask to flush.
+    await new Promise<void>((r) => setTimeout(r, 10))
+    expect(
+      logLines.some((l) => /board-view start sequence failed/i.test(l) && /cleared-hot never appeared/.test(l)),
+    ).toBe(true)
+    // Close still runs in finalize.
+    expect(close).toHaveBeenCalledTimes(1)
+  })
+
+  it('boardView teardown failure is logged but does not throw', async () => {
+    const log: SpyLog = { events: [] }
+    const logLines: string[] = []
+    const { deps } = buildHappyDeps(log)
+    const close = vi.fn(async () => {
+      throw new Error('close boom')
+    })
+    const launchBoardView = vi.fn(async () => ({
+      started: Promise.resolve(),
+      close,
+    }))
+
+    const result = await runSession(
+      makeConfig(),
+      {
+        ...deps,
+        launchBoardView,
+        logger: (m: string) => logLines.push(m),
+      },
+      { launchBoardView: true },
+    )
+
+    expect(result.outcome).toBe('success')
+    expect(close).toHaveBeenCalledTimes(1)
+    expect(logLines.some((l) => /boardView close failed/i.test(l))).toBe(true)
+  })
+})

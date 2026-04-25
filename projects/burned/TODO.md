@@ -2,6 +2,31 @@
 
 ## NEXT SESSION — pick up here (2026-04-26+)
 
+**Phase 6 Unit 2.6 — SHIPPED 2026-04-25.** Orchestrator-owned board-view
+client (Option 1 from insight 032). New `scripts/playtest/lib/board-view-
+launcher.ts` exports `launchBoardView({roomCode, viteBaseUrl, ...})`
+returning `BoardViewHandle = {started, close}`. Spawns its own Chromium
+(no MCP isolation — board has no private surface), navigates to
+`/board.html#<ROOM>`, waits for `button:has-text("Cleared Hot")` to be
+visible (the text only appears when `canStart=true`, so the click is
+always against the live target), clicks once, idles. Orchestrator's
+`runSession` gained: `launchBoardView` dep + `launchBoardView: boolean`
+opt + `boardViewViteBaseUrl?: string` opt. Lifecycle: launch AFTER seats
+constructed (so we have a valid roomCode), BEFORE seat-driver kicks in
+(so the board can tap as soon as agents arrive); close in finalize AFTER
+seats but BEFORE god/servers (board WS depends on wrangler). Synchronous
+launch failure aborts the session (outcome=error); async `started`
+rejection is logged-not-fatal (seat-driver `sessionTimeoutMs` is the
+safety net). `pnpm playtest:run` defaults to `launchBoardView: true`
+under the existing Option A flow. **New** `pnpm playtest:phase6-board-
+launcher-smoke` proves end-to-end: real wrangler+vite+chromium, 2 real
+Playwright seats join lobby, board taps "Cleared Hot," game reaches
+`phase=playing`, first turn dispatched, 2 god-events captured in
+events.jsonl, 0 workerd orphans. 9.6s wallclock. Full suite **1019/1019**
+(+26: 17 board-view-launcher unit + 9 orchestrator wiring). typecheck
+clean · phase3-smoke PASS · phase4-smoke PASS · phase5-smoke PASS ·
+phase6-launcher-smoke PASS · phase6-board-launcher-smoke PASS.
+
 **Phase 6 Unit 3 — FIRST CALIBRATION ATTEMPT 2026-04-25 — diagnostic
 success, end-to-end blocked at the lobby.** Pre-flight green, selftest
 green, orchestrator booted, god WS connected, manifest emitted, three
@@ -17,13 +42,11 @@ killed them. Three parallel agents independently reported "still
 waiting for the game to start." Zero god-events, no `events.jsonl`
 created, no scenario fires. **Insight 032 captured** —
 `docs/insights/032-phase-6-option-a-harness-has-no-game-start-mechanism.md`
-— with three fix-path options (recommended: Option 1, orchestrator
-dispatches a board-view client). Unit 3 itself is not failed; it
-*caught its first real harness gap*, which is exactly what calibration
-exists to do.
+— with three fix-path options (recommended: Option 1). **Unit 2.6
+above implemented Option 1 and proved it works in a real browser.
+Unit 3 retry now unblocked.**
 
-**Pre-requisite fixes landed during the same session (uncommitted on
-main, ready to commit):**
+**Pre-requisite fixes that landed in commit `8017b899`:**
 
 1. **Selftest stamp reader fix** — `scripts/playtest/lib/orchestrator.ts`
    `defaultReadSelftestStamp` was passing the dual-line stamp file
@@ -31,9 +54,7 @@ main, ready to commit):**
    `Date.parse`, returning NaN. Fixed: split on `\r?\n`, take line 1.
    `defaultReadSelftestStamp` exported. Six new unit tests in
    `orchestrator.test.ts` cover the dual-line format, single-line legacy,
-   CRLF, absent file, malformed line 1, empty file. Full suite
-   **993/993** (+6). typecheck clean. The selftest stamp writer's
-   intent (line 1 honored as ISO) now matches the reader.
+   CRLF, absent file, malformed line 1, empty file.
 
 **Phase 6 Unit 2.5 — SHIPPED 2026-04-25.** MCP-per-seat architecture
 wiring (Phase 4 D15 Option A). 10 `playwright-seat-N` MCP servers in
@@ -82,31 +103,22 @@ against the real repo (live wrangler + god WS handshake). Commit
 `22c95260`.
 
 **Pick from the active queue:**
-1. 🛑 **Phase 6 Unit 2.6 (NEW, blocks Unit 3) — orchestrator-owned
-   board-view client.** Implement Option 1 from insight 032: a
-   `launchBoardView` orchestrator opt that spawns ONE chromium board
-   page (orchestrator-owned, no MCP isolation needed; board has no
-   private surface to protect). Lifecycle: orchestrator boots
-   servers + connects god as today; launches the board page; board
-   polls until `seats.length` matches config; board taps "Cleared
-   Hot"; game proceeds; board idles until session end and closes.
-   Mirrors Phase 3 smoke's known-working architecture. Doesn't
-   touch seat-agent prompt template (that was correctly built and
-   should not reopen). New unit + tests + small smoke. After this
-   lands, retry Unit 3.
-2. 🛑 **Phase 6 Unit 3 — RE-RUN the calibration session.** EYE-IN-LOOP.
-   STOP before this runs autonomously. Same procedure as the first
-   attempt: read `<runDir>/agent-specs.manifest.json`, dispatch one
+1. 🛑 **Phase 6 Unit 3 — RE-RUN the calibration session.** EYE-IN-LOOP.
+   STOP before this runs autonomously. Unit 2.6 above unblocked this:
+   `pnpm playtest:run` now defaults `launchBoardView: true`, so the
+   orchestrator will spawn its own Chromium board page and tap "Cleared
+   Hot" once seat agents arrive. Procedure: read
+   `<runDir>/agent-specs.manifest.json`, dispatch one
    `Agent({ subagent_type: 'playtest-seat-N', prompt })` per entry,
    touch `<runDir>/agents-done.marker` when all seats exit. Apply
    `assertGodEnvelopeShape` (already exported in
    `scripts/playtest/pre-flight.ts`) against the FIRST real envelope
    per insight 030. Unit 2's `pnpm playtest:verify-calibration <runDir>`
    is the post-run verifier — run it immediately after the session
-   ends. Also a good moment to commit (or commit before retry, doesn't
-   matter): the in-session orchestrator stamp-reader fix + 6 new
-   tests + insight 032.
-3. **Selftest hardening (now a Unit 3 prerequisite).** Migrate
+   ends. Selftest hardening (item 2) is the recommended pre-flight
+   cleanup before retry to avoid the workerd-orphan + stale-token
+   trap from attempt #1.
+2. **Selftest hardening (now a Unit 3 prerequisite).** Migrate
    `scripts/playtest/selftest.ts` to use `startServers` /
    `stopServers` from `server-controller.ts` (taskkill /F /T tree
    teardown). Today's `child.kill('SIGTERM')` against a `shell: true`

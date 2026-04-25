@@ -118,36 +118,37 @@ against the real repo (live wrangler + god WS handshake). Commit
    ends. Selftest hardening (item 2) is the recommended pre-flight
    cleanup before retry to avoid the workerd-orphan + stale-token
    trap from attempt #1.
-2. **Selftest hardening (now a Unit 3 prerequisite).** Migrate
-   `scripts/playtest/selftest.ts` to use `startServers` /
-   `stopServers` from `server-controller.ts` (taskkill /F /T tree
-   teardown). Today's `child.kill('SIGTERM')` against a `shell: true`
-   spawn leaks workerd on Windows; calibration attempt #2 hit a 401
-   because the orchestrator's god WS reached a stale workerd from
-   a prior selftest with a different `PLAYTEST_TOKEN`. Already on
-   the follow-ups list as "Phase 3 Unit 7 selftest polish"; promoted
-   to a Unit 3 prerequisite.
-4. **Vite/wrangler dynamic-port plumbing.** `agent-launcher.ts`
+2. ✅ **Selftest hardening — SHIPPED 2026-04-25.**
+   `scripts/playtest/selftest.ts:bootLiveCtx` now uses `startServers` /
+   `stopServers` from `server-controller.ts` (taskkill /F /T process-tree
+   teardown on Windows). Pre-fix `child.kill('SIGTERM')` against a
+   `shell: true` spawn was orphaning workerd (calibration attempt #2 hit
+   a 401 from a stale workerd holding port 8787 with the prior
+   `PLAYTEST_TOKEN`). Verified: full selftest run all-PASS in 7.5s, zero
+   workerd processes after teardown, `.last-selftest` stamp parsed by
+   `defaultReadSelftestStamp`. Also removes the local `shutdownProcess`
+   helper (no longer needed). Unit 3 retry trap is closed.
+3. **Vite/wrangler dynamic-port plumbing.** `agent-launcher.ts`
    defaults `viteBaseUrl = http://localhost:5173` with no override
    from the orchestrator. When 5173 is squatted, vite lands on
    5175 but seat-agent player URLs still point at 5173 — silent
    misroute potential. Plumb the orchestrator's actual vite port
    into `viteBaseUrl` at agent-launcher-driver construction time.
    Pairs with the existing TODO follow-up "Port 5173 vite collision."
-5. **Stamp-reader consolidation.** Two readers for `.last-selftest`:
+4. **Stamp-reader consolidation.** Two readers for `.last-selftest`:
    `pre-flight.ts:checkSelftestStamp` (multi-line aware) and
    `orchestrator.ts:defaultReadSelftestStamp` (line-1-only, post-fix).
    Two readers for the same file is itself a smell. Extract a shared
    reader to `lib/selftest-stamp.ts` once a third caller appears.
    Not urgent.
-6. **Phase 6 Units 5-7 (post-Unit-3).** 5-game series + Briggsy review
+5. **Phase 6 Units 5-7 (post-Unit-3).** 5-game series + Briggsy review
    (Unit 5, eye-in-loop x5); doc sweep (Unit 6, prune the legacy
    single `playtest-seat.md` + `playtest-seat.test.ts` if any);
    retrospective (Unit 7).
-7. **BURNED card cinematic arc** sub-steps #3 + #4 (DefusePlacement hero
+6. **BURNED card cinematic arc** sub-steps #3 + #4 (DefusePlacement hero
    card + Burned art regen). Pure product work, can interleave with
    harness work.
-8. **Real-device playtest** — iPad + phones Emil-pass verification list.
+7. **Real-device playtest** — iPad + phones Emil-pass verification list.
 
 ---
 
@@ -407,10 +408,11 @@ from `src/server` (insight 022). All types re-declared locally.
    accidental coexistence works; could mask a dev-server regression. Fix:
    hash an orchestrator-ID into a request header OR probe a harness-only
    endpoint.
-3. **Phase 3 Unit 7 selftest polish:** selftest.ts inlines the wrangler
-   spawn rather than calling the fixed `startServers`. Works correctly
-   but duplicates wrangler-spawn discipline; migrating is low-risk polish.
-   Noted in commit `adc75942`.
+3. ~~**Phase 3 Unit 7 selftest polish:** selftest.ts inlines the wrangler
+   spawn rather than calling the fixed `startServers`.~~ FIXED 2026-04-25.
+   `bootLiveCtx` now calls `startServers`/`stopServers` from
+   server-controller.ts; local `shutdownProcess` helper removed. Verified
+   end-to-end with full selftest run + zero workerd zombies.
 4. **Negative-shape dispatch-rejection evidence (Unit 9 known limitation).**
    scenario-detector currently defaults `shape: negative` scenarios to
    `no-fire` because dispatch errors don't produce god-events today.

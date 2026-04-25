@@ -36,9 +36,10 @@
 import * as fs from 'node:fs/promises'
 import * as path from 'node:path'
 import { setTimeout as delay } from 'node:timers/promises'
-import { spawn, type ChildProcess } from 'node:child_process'
 
 import { mintPlaytestToken } from './lib/session-secrets'
+import { startServers, stopServers, type ServerHandles } from './lib/server-controller'
+import type { Config } from './lib/types'
 
 import {
   checkCookieIsolation,
@@ -166,33 +167,28 @@ async function runLiveChecks(live: LiveCtx): Promise<CheckResult[]> {
 
 const WRANGLER_PORT = 8787
 const VITE_PORT = 5173
-const WRANGLER_HEALTH_URL = `http://127.0.0.1:${WRANGLER_PORT}/health`
-const VITE_HEALTH_URL = `http://127.0.0.1:${VITE_PORT}/player.html`
-const BOOT_TIMEOUT_MS = 60_000
 
-async function waitForHealth(
-  url: string,
-  predicate: (body: unknown) => boolean,
-  label: string,
-): Promise<void> {
-  const deadline = Date.now() + BOOT_TIMEOUT_MS
-  while (Date.now() < deadline) {
-    try {
-      const res = await fetch(url)
-      if (res.status === 200) {
-        const body = await res
-          .json()
-          .catch(() => null as unknown)
-          .then((b) => b)
-          .catch(() => null)
-        if (predicate(body)) return
-      }
-    } catch {
-      /* retry */
-    }
-    await delay(400)
+/**
+ * Build the minimum-viable Config object `startServers` needs. Selftest
+ * doesn't care about catalogPath / outputRoot / viewports — those are
+ * orchestrator-level concerns. The only field that materially affects
+ * `startServers` is `godOriginAllowlist` (which is undefined here, so
+ * the server-side LAN default kicks in and the selftest's
+ * `goodOrigin: http://127.0.0.1:8787` is accepted).
+ */
+function buildSelftestConfig(): Config {
+  return {
+    seats: 2,
+    nopeWindowMs: 5000,
+    sessionTimeoutMs: 60_000,
+    catalogPath: '(unused-by-selftest)',
+    outputRoot: '(unused-by-selftest)',
+    viewports: [{ width: 390, height: 844, label: '390x844' }],
+    freePlayWallclockFraction: 0.2,
+    sessionDirRetention: 10,
+    scrubMode: 'on',
+    godReassemblyTimeoutMs: 5000,
   }
-  throw new Error(`${label} not ready after ${BOOT_TIMEOUT_MS}ms at ${url}`)
 }
 
 async function bootLiveCtx(): Promise<{
@@ -204,63 +200,38 @@ async function bootLiveCtx(): Promise<{
   // eslint-disable-next-line no-console
   console.log('[selftest] booting wrangler + vite (may take ~30s)…')
 
-  // Spawn wrangler DIRECTLY with `--var` flags. This mirrors phase2-smoke.ts
-  // — passing PLAYTEST_* via Node's process env does NOT reach the worker
-  // runtime; wrangler dev requires `--var KEY:VALUE` / wrangler.toml [vars]
-  // / .dev.vars. Bypassing server-controller here keeps Unit 3's test
-  // contract (`args === ['dev:server']`) intact while giving Unit 7 the
-  // playtest-enabled wrangler it needs. Orchestrator (Unit 6) / Unit 8
-  // will surface the same issue — Unit 3 fix is a follow-up.
-  const wrangler = spawn(
-    'pnpm',
-    [
-      'exec',
-      'wrangler',
-      'dev',
-      '--ip',
-      '0.0.0.0',
-      '--port',
-      String(WRANGLER_PORT),
-      '--var',
-      'PLAYTEST_MODE:1',
-      '--var',
-      `PLAYTEST_TOKEN:${token}`,
-    ],
-    {
-      stdio: ['ignore', 'pipe', 'pipe'],
-      shell: process.platform === 'win32',
-    },
-  )
-  // Silent by default — uncomment for debugging.
-  // wrangler.stdout?.on('data', (d: Buffer) => process.stderr.write(`[wrangler] ${d}`))
-  // wrangler.stderr?.on('data', (d: Buffer) => process.stderr.write(`[wrangler] ${d}`))
-
-  const vite = spawn('pnpm', ['dev'], {
-    stdio: ['ignore', 'pipe', 'pipe'],
-    shell: process.platform === 'win32',
-  })
-
+  // Phase 6 Unit 2.6 follow-up: migrate to server-controller's
+  // startServers/stopServers so workerd doesn't orphan on Windows.
+  // Pre-migration, selftest used `child.kill('SIGTERM')` against a
+  // `shell: true` spawn, which only kills cmd.exe — pnpm + wrangler +
+  // workerd survived holding port 8787. Calibration attempt #2 hit a
+  // 401 because the orchestrator's god WS reached a stale workerd from
+  // a prior selftest with a different PLAYTEST_TOKEN. server-controller
+  // uses `taskkill /F /T /PID` on Windows to nuke the whole process tree.
+  const config = buildSelftestConfig()
+  let handles: ServerHandles
   try {
-    await waitForHealth(
-      WRANGLER_HEALTH_URL,
-      (b) =>
-        typeof b === 'object' &&
-        b !== null &&
-        (b as Record<string, unknown>).ok === true &&
-        (b as Record<string, unknown>).playtest === true,
-      'wrangler /health with playtest:true',
-    )
-    await waitForHealth(VITE_HEALTH_URL, () => true, 'vite /player.html')
+    handles = await startServers(config, token)
   } catch (err) {
-    await shutdownProcess(wrangler)
-    await shutdownProcess(vite)
-    throw err
+    throw new Error(
+      `selftest: startServers failed — ${err instanceof Error ? err.message : String(err)}`,
+    )
   }
 
   // eslint-disable-next-line no-console
   console.log('[selftest] launching chromium (headless)…')
   const { chromium } = await import('@playwright/test')
-  const browser = await chromium.launch({ headless: true })
+  let browser: Awaited<ReturnType<typeof chromium.launch>>
+  try {
+    browser = await chromium.launch({ headless: true })
+  } catch (err) {
+    // Tear down servers before propagating chromium failure — otherwise
+    // workerd survives and the next selftest run hits a port collision.
+    await stopServers(handles).catch(() => {
+      /* swallow during cleanup */
+    })
+    throw err
+  }
 
   const live: LiveCtx = {
     browser,
@@ -278,33 +249,16 @@ async function bootLiveCtx(): Promise<{
     } catch {
       /* ignore */
     }
-    await shutdownProcess(vite)
-    await shutdownProcess(wrangler)
-    // Small grace to let sockets fully close.
+    // stopServers is idempotent + uses taskkill /F /T on Windows for
+    // full process-tree teardown (commit d5503c1d / TODO follow-up #1).
+    await stopServers(handles).catch(() => {
+      /* swallow during cleanup */
+    })
+    // Small grace to let sockets fully close + free port 8787.
     await delay(500)
   }
 
   return { live, teardown }
-}
-
-async function shutdownProcess(child: ChildProcess): Promise<void> {
-  if (child.exitCode !== null || child.killed) return
-  try {
-    child.kill('SIGTERM')
-  } catch {
-    /* noop */
-  }
-  const exited = await Promise.race([
-    new Promise<boolean>((resolve) => child.once('exit', () => resolve(true))),
-    delay(3000).then(() => false),
-  ])
-  if (!exited) {
-    try {
-      child.kill('SIGKILL')
-    } catch {
-      /* noop */
-    }
-  }
 }
 
 async function maybeRunSingle(

@@ -2,30 +2,90 @@
 
 ## NEXT SESSION — pick up here (2026-04-26+)
 
-**Phase 6 Unit 2.6 — SHIPPED 2026-04-25.** Orchestrator-owned board-view
-client (Option 1 from insight 032). New `scripts/playtest/lib/board-view-
-launcher.ts` exports `launchBoardView({roomCode, viteBaseUrl, ...})`
-returning `BoardViewHandle = {started, close}`. Spawns its own Chromium
-(no MCP isolation — board has no private surface), navigates to
-`/board.html#<ROOM>`, waits for `button:has-text("Cleared Hot")` to be
-visible (the text only appears when `canStart=true`, so the click is
-always against the live target), clicks once, idles. Orchestrator's
-`runSession` gained: `launchBoardView` dep + `launchBoardView: boolean`
-opt + `boardViewViteBaseUrl?: string` opt. Lifecycle: launch AFTER seats
-constructed (so we have a valid roomCode), BEFORE seat-driver kicks in
-(so the board can tap as soon as agents arrive); close in finalize AFTER
-seats but BEFORE god/servers (board WS depends on wrangler). Synchronous
-launch failure aborts the session (outcome=error); async `started`
-rejection is logged-not-fatal (seat-driver `sessionTimeoutMs` is the
-safety net). `pnpm playtest:run` defaults to `launchBoardView: true`
-under the existing Option A flow. **New** `pnpm playtest:phase6-board-
-launcher-smoke` proves end-to-end: real wrangler+vite+chromium, 2 real
-Playwright seats join lobby, board taps "Cleared Hot," game reaches
-`phase=playing`, first turn dispatched, 2 god-events captured in
-events.jsonl, 0 workerd orphans. 9.6s wallclock. Full suite **1019/1019**
-(+26: 17 board-view-launcher unit + 9 orchestrator wiring). typecheck
-clean · phase3-smoke PASS · phase4-smoke PASS · phase5-smoke PASS ·
-phase6-launcher-smoke PASS · phase6-board-launcher-smoke PASS.
+### TOP OF THE QUEUE
+
+**🔥 Insight 035 fix — SmartActionBox `breathe` animation defeats
+Playwright clicks on action buttons.** Recommended Option 1 (in the
+insight): move the breathe animation from `.action` itself to a `::before`
+pseudo-element so the button DOM stays static while the visual pulse
+continues. Same for `breatheIntense` (low-deck warning) and
+`interceptPulse` (final-2-seconds-of-nope-window) — same `.action`-class
+pattern. Estimate 30-60 min including visual re-tuning. Ship with a small
+`phase6-smartactionbox-clickability-smoke` that asserts Playwright can
+click `.action` against a live game. Once this lands, retry calibration —
+should produce the first clean coverage run. Full diagnosis at
+`docs/insights/035-smartactionbox-breathe-animation-defeats-playwright-stability-check.md`.
+
+After Option 1 lands + calibration produces clean data, remaining open
+items in priority order:
+
+1. **Session-cap-vs-agent-completion mismatch.** Calibration
+   `sessionTimeoutMs: 900000` (15 min) is also the seat-driver's
+   `waitTimeoutMs` default. Driver countdown starts at orchestrator boot,
+   not at agent dispatch (agents arrive 1-3 min later). When agents are
+   still mid-game at 15 min, finalize fires anyway. Two paths: bump
+   `sessionTimeoutMs` to 30 min for calibration, OR change the driver to
+   start its countdown when the marker watcher proves agents are alive.
+   Bump is simpler; retire later if it's a real cost.
+2. **Calibration room-code collision (caught attempt #3 first launch).**
+   Default `roomCode='PLAYTEST'` collides across runs because partyserver
+   DO state is persistent across wrangler restarts. Workaround documented:
+   `rm -rf .wrangler/state` between runs. Real fix: randomize the
+   calibration room code per run (Phase 3 smoke pattern — `mintRoomCode()`
+   prefix + 3 random chars). One-line change in `run-session.ts` or
+   `calibration.json` semantics.
+3. **Triage agents not auto-dispatched.** Phase 6 calibration attempt #2
+   produced 12 triage seeds → 12 specs but 0 issues — specs were emitted,
+   the dispatch step (one `Agent({subagent_type: 'playtest-triage'})` per
+   spec) is still operator-driven. Wire it as the post-session triage
+   pipeline's final hook so `INDEX.md` populates.
+4. **Coverage.md empty — Unit 10 renderer wiring deferred.** Pure
+   functions shipped (Phase 3 Unit 10), not called from `runSession`.
+   Verify-calibration check 6 will keep failing until wired.
+5. **Heartbeat-aware regression smoke.** Add a `phase6-heartbeat-smoke`
+   that runs ≥60s and asserts god stays connected through ≥2 server
+   ping cycles. Insight 034 caught a real silent failure that none of
+   our <60s smokes could surface. Defense in depth.
+
+### THIS SESSION (2026-04-25) — what shipped
+
+Five commits. Five distinct calibration findings (031–035). Harness
+infrastructure now mechanically calibration-ready end-to-end.
+
+| Commit | Subject |
+|---|---|
+| `3a4c33a7` | Phase 6 Unit 2.6 — orchestrator-owned board-view client |
+| `cbcd79a6` | Selftest hardening — startServers/stopServers (no zombies) |
+| `04dc3f45` | Board-view timeout → sessionTimeoutMs |
+| `e0967b17` | God-subscriber heartbeat — pong handler + visibility log |
+| `feea4ec6` | Insight 035 — SmartActionBox breathe defeats Playwright |
+
+**Test surface:** typecheck clean · 1027/1027 unit tests · phase3-smoke ·
+phase4-smoke · phase5-smoke · phase6-launcher-smoke · phase6-board-launcher-smoke
+all PASS · 0 workerd zombies after each run.
+
+**Calibration cycle (insights 031–035):**
+- 031 (Unit 2.5) — Per-seat MCP isolation deferred → integration gap.
+  CLOSED by Unit 2.5.
+- 032 (attempt #1) — No game-start mechanism under Option A. CLOSED by
+  Unit 2.6.
+- 033 (attempt #2) — Board-launcher 60s timeout too tight for real agent
+  dispatch. CLOSED by `04dc3f45`.
+- 034 (attempt #2) — God subscriber heartbeat-killed at 40s; silent
+  telemetry loss. CLOSED by `e0967b17` (pong handler + visibility log).
+- 035 (attempt #3b) — SmartActionBox breathe animation defeats Playwright
+  stability check; agents can join + observe but can't drive the game.
+  OPEN — recommended fix (Option 1 above) is product-side.
+
+**Calibration attempt #3b telemetry (last live run, post-heartbeat-fix):**
+- god=1 on every broadcast (vs god=0 in attempt #2) ✅
+- 0 silent-close warnings ✅
+- 3 god events in events.jsonl (limited by SmartActionBox stall, not by
+  god disconnect) ✅
+- seat-1 logged a clean `scenario-fire` with proper YAML list
+  `questionsTried` (schema warning to agents about list format worked) ✅
+- Game stalled at turn 1; 4 of 6 mini-catalog scenarios unreachable
+  (insight 035) ❌
 
 **Phase 6 Unit 3 — FIRST CALIBRATION ATTEMPT 2026-04-25 — diagnostic
 success, end-to-end blocked at the lobby.** Pre-flight green, selftest

@@ -208,6 +208,22 @@ export interface RunSessionOptions {
    * `launchBoardView !== true`.
    */
   readonly boardViewViteBaseUrl?: string
+  /**
+   * How long the board waits for "Cleared Hot" to become visible. Default
+   * is `config.sessionTimeoutMs` — the board waits as long as the session
+   * itself can run, which means the launcher can never time out before
+   * agents finish arriving (the session-level timeout is the only deadline).
+   *
+   * Insight 033: the board-view-launcher's own default is 60s — fine for
+   * real-Playwright smokes where seats join in <1s, but too aggressive for
+   * real Claude-Code agent dispatch (3 parallel agents take 30-90s+ to
+   * spin up before issuing browser_navigate). First Unit 3 retry attempt
+   * 2026-04-25 hit this: launcher timed out before all 3 agents arrived.
+   * Plumbing through `sessionTimeoutMs` removes the artificial inner cap.
+   *
+   * Tests / direct callers may override this for unit tests.
+   */
+  readonly boardViewWaitForStartTimeoutMs?: number
 }
 
 // ---------------------------------------------------------------------------
@@ -608,6 +624,10 @@ export async function runSession(
         boardView = await launchBoardView({
           roomCode,
           viteBaseUrl: opts.boardViewViteBaseUrl ?? 'http://localhost:5173',
+          // Default to sessionTimeoutMs so the board waits as long as the
+          // session itself can run — no artificial inner cap. Insight 033.
+          waitForStartTimeoutMs:
+            opts.boardViewWaitForStartTimeoutMs ?? config.sessionTimeoutMs,
           logger,
         })
         // Forward `started` failures to the orchestrator log so a stuck

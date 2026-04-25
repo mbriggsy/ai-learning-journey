@@ -2,34 +2,37 @@
 
 ## NEXT SESSION — pick up here (2026-04-25+)
 
-**Playtest-harness Phase 6 Unit 1 — SHIPPED 2026-04-24.** Pre-flight
-authorization gate ships green: `pnpm playtest:pre-flight` runs all 6
-checks against the real repo and exits 0 (verified live —
-includes wrangler boot + god WS handshake). Full suite **909/909**
-(was 865; +44 new pre-flight unit tests). typecheck clean.
+**Playtest-harness Phase 6 Unit 2 — SHIPPED 2026-04-24.**
+`pnpm playtest:verify-calibration <runDir>` ships. Pure filesystem walker
+— 7 checks (session.md end-block outcome, isolation-audit status,
+events.jsonl valid JSONL, events.jsonl scrubbed, per-seat logs
+entryType vocabulary incl. C4-rename fail-closed, coverage.md renders,
+issues/INDEX.md). I5 partial-run pre-gate fires before anything else.
+Full suite **953/953** (was 909; +44 new tests). typecheck clean. CLI
+verified runtime against hand-rolled fixtures (happy path exits 0;
+partial-run exits 1 with `--full-dir` purge message; ISOLATION_BREACH
+branch exits 1 with "1 FAIL — 6/7" table).
+
+**Phase 6 Unit 1 — SHIPPED 2026-04-24** (previous session). Pre-flight
+authorization gate: `pnpm playtest:pre-flight` runs 6 checks green
+against the real repo (live wrangler + god WS handshake).
 
 **Pick from the active queue:**
-1. **Phase 6 Unit 2 — calibration run checklist script.** Plan at
-   `docs/plans/playtest-harness/phase-6-calibration-and-first-session.md`
-   §Unit 2. Pure code: `scripts/playtest/verify-calibration.ts` walks a
-   completed run dir, prints pass/fail table over session.md end-block,
-   isolation-audit, events.jsonl shape, per-seat logs (4 entryType
-   values), coverage.md, issues/INDEX.md. Reusable across calibration +
-   real series runs. Includes the I5 partial-run detection (session.md
-   missing end-block → exit non-zero with the purge-then-rerun message).
-2. **Phase 6 Unit 3 — RUN the calibration session.** EYE-IN-LOOP. STOP
+1. **Phase 6 Unit 3 — RUN the calibration session.** EYE-IN-LOOP. STOP
    before this runs autonomously. Live wrangler + 3 seats + first real
    god-event broadcast. This is also where `assertGodEnvelopeShape`
    (already exported in `scripts/playtest/pre-flight.ts`) gets invoked
    against the FIRST real envelope to feature-detect `expectedViewerIds`
-   per the insight 030 boundary.
-3. **Phase 6 Units 4-7 (post-Unit-3).** Series configs + Zod schema +
+   per the insight 030 boundary. Unit 2's `pnpm
+   playtest:verify-calibration <runDir>` is the post-run verifier — run
+   it immediately after the session ends.
+2. **Phase 6 Units 4-7 (post-Unit-3).** Series configs + Zod schema +
    TUNING-LOG scaffold (Unit 4); 5-game series + Briggsy review (Unit 5,
    eye-in-loop x5); doc sweep (Unit 6); retrospective (Unit 7).
-4. **BURNED card cinematic arc** sub-steps #3 + #4 (DefusePlacement hero
+3. **BURNED card cinematic arc** sub-steps #3 + #4 (DefusePlacement hero
    card + Burned art regen). Pure product work, can interleave with
    harness work.
-5. **Real-device playtest** — iPad + phones Emil-pass verification list.
+4. **Real-device playtest** — iPad + phones Emil-pass verification list.
 
 ### Phase 6 Unit 1 state of the world (2026-04-24)
 

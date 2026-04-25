@@ -1,0 +1,44 @@
+{
+  "mcpServers": {
+    "playwright-seat-1": {
+      "command": "cmd",
+      "args": ["/c", "npx", "-y", "@playwright/mcp@latest", "--isolated"]
+    },
+    "playwright-seat-2": {
+      "command": "cmd",
+      "args": ["/c", "npx", "-y", "@playwright/mcp@latest", "--isolated"]
+    },
+    "playwright-seat-3": {
+      "command": "cmd",
+      "args": ["/c", "npx", "-y", "@playwright/mcp@latest", "--isolated"]
+    },
+    "playwright-seat-4": {
+      "command": "cmd",
+      "args": ["/c", "npx", "-y", "@playwright/mcp@latest", "--isolated"]
+    },
+    "playwright-seat-5": {
+      "command": "cmd",
+      "args": ["/c", "npx", "-y", "@playwright/mcp@latest", "--isolated"]
+    },
+    "playwright-seat-6": {
+      "command": "cmd",
+      "args": ["/c", "npx", "-y", "@playwright/mcp@latest", "--isolated"]
+    },
+    "playwright-seat-7": {
+      "command": "cmd",
+      "args": ["/c", "npx", "-y", "@playwright/mcp@latest", "--isolated"]
+    },
+    "playwright-seat-8": {
+      "command": "cmd",
+      "args": ["/c", "npx", "-y", "@playwright/mcp@latest", "--isolated"]
+    },
+    "playwright-seat-9": {
+      "command": "cmd",
+      "args": ["/c", "npx", "-y", "@playwright/mcp@latest", "--isolated"]
+    },
+    "playwright-seat-10": {
+      "command": "cmd",
+      "args": ["/c", "npx", "-y", "@playwright/mcp@latest", "--isolated"]
+    }
+  }
+}

@@ -33,13 +33,24 @@ import type { ParsedScenario } from './scenario-detector'
 
 export type Mode = 'scripted' | 'free-play'
 
+/**
+ * Per-seat subagent type. Phase 6 Unit 2.5 / Option A: each seat binds to
+ * its own MCP Playwright server (`playwright-seat-N`) and its own custom
+ * agent file (`.claude/agents/playtest-seat-N.md`). The subagent type
+ * names the file directly. 1-indexed: seat 0 → `playtest-seat-1`, etc.
+ */
+export type SeatSubagentType = `playtest-seat-${number}`
+
+/** Default base URL for the local vite dev server. Mirrors `server-controller.ts:VITE_HEALTH_URL`. */
+export const DEFAULT_VITE_BASE_URL = 'http://localhost:5173'
+
 export interface SeatLaunchSpec {
   readonly seatId: string
   readonly seatName: string
   /** `Playtest seat <id> (<mode>)` — used as the spawning `Agent` tool's `description` field. */
   readonly description: string
-  /** Enforced by `.claude/agents/playtest-seat.md` frontmatter (phase-4 D2). Never `'general-purpose'`. */
-  readonly subagentType: 'playtest-seat'
+  /** Enforced by `.claude/agents/playtest-seat-N.md` frontmatter (phase-6 Unit 2.5 / Option A). Never `'general-purpose'`. */
+  readonly subagentType: SeatSubagentType
   /** Fully rendered system prompt, ready to hand to `Agent({ prompt })`. */
   readonly prompt: string
   readonly mode: Mode
@@ -47,6 +58,14 @@ export interface SeatLaunchSpec {
   readonly role: ViewerRole
   readonly logPath: string
   readonly suspicionPath: string
+  /**
+   * Pre-assembled vite URL for the seat's first `browser_navigate` call.
+   * Format: `<viteBaseUrl>/player.html?room=<URL-encoded room>&name=<URL-encoded seat name>`.
+   * The seat agent navigates to this in Step 1 of the spawn prompt.
+   */
+  readonly playerUrl: string
+  /** MCP server namespace this seat is bound to (e.g. `playwright-seat-3`). */
+  readonly mcpNamespace: string
 }
 
 export interface OtherSeatPublic {
@@ -62,6 +81,13 @@ export interface BuildLaunchSpecsInput {
   readonly startingSeatIndex?: number
   readonly scriptedTemplate: string
   readonly freePlayTemplate: string
+  /**
+   * Base URL of the local vite dev server. Defaults to `DEFAULT_VITE_BASE_URL`.
+   * Tests override to assert URL assembly without booting vite. The seat
+   * agent's Step 1 navigation URL is built as
+   * `${viteBaseUrl}/player.html?room=<...>&name=<...>`.
+   */
+  readonly viteBaseUrl?: string
 }
 
 // -----------------------------------------------------------------------------
@@ -221,6 +247,8 @@ const PLACEHOLDER_NAMES = [
   'LOG_PATH',
   'SUSPICION_PATH',
   'SESSION_TIMEOUT_MS',
+  'PLAYER_URL',
+  'MCP_NAMESPACE',
 ] as const
 
 type PlaceholderName = (typeof PLACEHOLDER_NAMES)[number]
@@ -231,10 +259,12 @@ export interface BuildSeatPromptInput {
   readonly catalogText: string
   readonly sessionTimeoutMs: number
   readonly template: string
+  readonly playerUrl: string
+  readonly mcpNamespace: string
 }
 
 export function buildSeatPrompt(input: BuildSeatPromptInput): string {
-  const { seat, otherSeats, catalogText, sessionTimeoutMs, template } = input
+  const { seat, otherSeats, catalogText, sessionTimeoutMs, template, playerUrl, mcpNamespace } = input
 
   if (seat.roomCode === '' || seat.roomCode === undefined) {
     throw new Error(
@@ -254,6 +284,8 @@ export function buildSeatPrompt(input: BuildSeatPromptInput): string {
     LOG_PATH: seat.logPath,
     SUSPICION_PATH: seat.suspicionPath,
     SESSION_TIMEOUT_MS: String(sessionTimeoutMs),
+    PLAYER_URL: playerUrl,
+    MCP_NAMESPACE: mcpNamespace,
   }
 
   return template.replace(/\{\{([A-Z_]+)\}\}/g, (full, name: string) => {
@@ -270,6 +302,19 @@ export function buildSeatPrompt(input: BuildSeatPromptInput): string {
 // Spec assembly
 // -----------------------------------------------------------------------------
 
+/**
+ * Build the seat's first-navigation URL. Encodes both the room code and
+ * the seat name so reserved chars don't break the join.
+ */
+export function buildPlayerUrl(
+  viteBaseUrl: string,
+  roomCode: string,
+  seatName: string,
+): string {
+  const trimmed = viteBaseUrl.replace(/\/+$/, '')
+  return `${trimmed}/player.html?room=${encodeURIComponent(roomCode)}&name=${encodeURIComponent(seatName)}`
+}
+
 export function buildLaunchSpecs(input: BuildLaunchSpecsInput): SeatLaunchSpec[] {
   const {
     seats,
@@ -279,6 +324,7 @@ export function buildLaunchSpecs(input: BuildLaunchSpecsInput): SeatLaunchSpec[]
     startingSeatIndex = 0,
     scriptedTemplate,
     freePlayTemplate,
+    viteBaseUrl = DEFAULT_VITE_BASE_URL,
   } = input
 
   return seats.map((seat, seatIndex) => {
@@ -294,24 +340,35 @@ export function buildLaunchSpecs(input: BuildLaunchSpecsInput): SeatLaunchSpec[]
       .filter((s) => s.seatId !== seat.seatId)
       .map((s) => ({ seatId: s.seatId, seatName: s.seatName }))
 
+    // 1-indexed seat number — matches `.claude/agents/playtest-seat-N.md`
+    // and `.mcp.json` `playwright-seat-N` (Phase 6 Unit 2.5 / Option A).
+    const seatNumber = seatIndex + 1
+    const mcpNamespace = `playwright-seat-${seatNumber}`
+    const subagentType: SeatSubagentType = `playtest-seat-${seatNumber}`
+    const playerUrl = buildPlayerUrl(viteBaseUrl, seat.roomCode, seat.seatName)
+
     const prompt = buildSeatPrompt({
       seat,
       otherSeats,
       catalogText,
       sessionTimeoutMs,
       template,
+      playerUrl,
+      mcpNamespace,
     })
 
     return {
       seatId: seat.seatId,
       seatName: seat.seatName,
       description: `Playtest seat ${seat.seatId} (${modeSignal})`,
-      subagentType: 'playtest-seat',
+      subagentType,
       prompt,
       mode: modeSignal,
       role,
       logPath: seat.logPath,
       suspicionPath: seat.suspicionPath,
+      playerUrl,
+      mcpNamespace,
     }
   })
 }
@@ -376,8 +433,16 @@ export interface CreateAgentLauncherDriverInput {
   readonly sessionTimeoutMs: number
   readonly scriptedTemplate: string
   readonly freePlayTemplate: string
-  readonly runDir: string
+  /**
+   * Run directory. Optional in production: when omitted, the driver derives
+   * it from the first seat's `logPath` at call time (logPath shape is
+   * `<runDir>/seats/<seatId>.log.md`, so `dirname(dirname(logPath))` is the
+   * run dir). Tests pass an explicit value to use a temp dir.
+   */
+  readonly runDir?: string
   readonly startingSeatIndex?: number
+  /** Base URL of the local vite dev server. Defaults to `DEFAULT_VITE_BASE_URL`. */
+  readonly viteBaseUrl?: string
   /**
    * Poll interval for the `agents-done.marker` file. Default 1000 ms.
    * Overridable for tests.
@@ -410,6 +475,7 @@ export function createAgentLauncherDriver(
   input: CreateAgentLauncherDriverInput,
 ): (seats: readonly SeatHandle[]) => Promise<void> {
   return async (seats) => {
+    const runDir = input.runDir ?? deriveRunDirFromSeats(seats)
     await emitLaunchSpecs({
       seats,
       catalog: input.catalog,
@@ -418,10 +484,11 @@ export function createAgentLauncherDriver(
       startingSeatIndex: input.startingSeatIndex,
       scriptedTemplate: input.scriptedTemplate,
       freePlayTemplate: input.freePlayTemplate,
-      runDir: input.runDir,
+      runDir,
+      viteBaseUrl: input.viteBaseUrl,
     })
 
-    const markerPath = path.join(input.runDir, AGENTS_DONE_MARKER)
+    const markerPath = path.join(runDir, AGENTS_DONE_MARKER)
     const pollMs = input.pollIntervalMs ?? 1000
     const waitMs = input.waitTimeoutMs ?? input.sessionTimeoutMs
     const deadline = Date.now() + waitMs
@@ -435,6 +502,25 @@ export function createAgentLauncherDriver(
       await new Promise<void>((resolve) => setTimeout(resolve, pollMs))
     }
   }
+}
+
+/**
+ * Derive the run directory from the first seat's logPath.
+ *
+ * Phase 3 Unit 2 builds logPath as `<runDir>/seats/<seatId>.log.md` via
+ * `buildSeatPaths` — `dirname(dirname(logPath))` is the run dir. Used by
+ * the launcher driver in production where the run dir isn't known at
+ * driver-construction time (orchestrator computes it inside `runSession`).
+ */
+function deriveRunDirFromSeats(seats: readonly SeatHandle[]): string {
+  const first = seats[0]
+  if (!first) {
+    throw new Error(
+      'createAgentLauncherDriver: cannot derive runDir without at least one seat. ' +
+      'Pass an explicit runDir at construction time, or call with a non-empty seats array.',
+    )
+  }
+  return path.dirname(path.dirname(first.logPath))
 }
 
 async function fileExists(p: string): Promise<boolean> {

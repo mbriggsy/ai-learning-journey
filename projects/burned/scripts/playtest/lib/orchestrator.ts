@@ -74,11 +74,15 @@ import {
   type GodHandle,
   type FatalCloseInfo,
 } from './god-subscriber'
-import { createSeat as realCreateSeat } from './seat-factory'
+import { createSeat as realCreateSeat, buildSeatPaths } from './seat-factory'
 import {
   applyRetention as realApplyRetention,
   type RetentionResult,
 } from './retention'
+import {
+  runIsolationAudit as realRunIsolationAudit,
+  type IsolationAuditResult,
+} from './isolation-audit'
 import type {
   TriagePipelineInput,
   TriagePipelineResult,
@@ -131,12 +135,21 @@ export interface RunSessionDeps {
    * `appendSessionEnd` and before retention. Default is no-op (Phase 6
    * calibration injects the real `runTriagePipeline` driver).
    *
-   * The hook receives an `isolationStatus` so it can short-circuit when
-   * Phase 4's audit failed. Plan v1 always passes `'OK'` from the
-   * orchestrator (the audit isn't yet wired in; Phase 6 closes that
-   * loop) — tests cover both branches by injecting mocks.
+   * Phase 6 Unit 2.5 wired the audit-then-triage chain: the orchestrator
+   * runs `runIsolationAudit` first and threads the resulting status
+   * (`'OK'` or `'ISOLATION_BREACH'`) into this hook so triage skips when
+   * isolation failed.
    */
   runPostSessionTriage?: (input: TriagePipelineInput) => Promise<TriagePipelineResult>
+  /**
+   * Phase 4 isolation audit (phase-6 Unit 2.5 wiring). Runs after
+   * `appendSessionEnd` and before triage. Failure is non-fatal — only
+   * affects the `isolationStatus` passed to triage.
+   */
+  runIsolationAudit?: (
+    runDir: string,
+    seats: readonly SeatHandle[],
+  ) => Promise<IsolationAuditResult>
   nowMs?: () => number
   logger?: (msg: string) => void
   /** Test-only: cancellable setTimeout used for 4005 backoff. */
@@ -146,6 +159,20 @@ export interface RunSessionDeps {
 export interface RunSessionOptions {
   readonly allowTrace?: boolean
   readonly skipSelftestGate?: boolean
+  /**
+   * Phase 6 Unit 2.5 / Option A: when true, the orchestrator does NOT
+   * launch its own Chromium and does NOT call `createSeat × N`. Each
+   * seat owns its own MCP-Playwright browser via the `playwright-seat-N`
+   * MCP server, so the orchestrator-level browser is dead weight.
+   *
+   * Synthetic SeatHandle objects are still built (seatId, seatName,
+   * roomCode, viewport, logPath, suspicionPath, scenariosPath) so the
+   * launcher driver can render per-seat prompts. `page` is set to `null`
+   * in that mode — the seat-teardown loop guards on optional chaining.
+   *
+   * Default false (legacy Option B path).
+   */
+  readonly skipBrowserLaunch?: boolean
 }
 
 // ---------------------------------------------------------------------------
@@ -294,6 +321,7 @@ export async function runSession(
     readSelftestStamp = defaultReadSelftestStamp,
     seatDriver,
     runPostSessionTriage,
+    runIsolationAudit = realRunIsolationAudit,
     nowMs = Date.now,
     logger = (m: string) => {
       // eslint-disable-next-line no-console
@@ -450,19 +478,27 @@ export async function runSession(
     }
 
     // -----------------------------------------------------------------------
-    // 6. Launch browser
+    // 6. Launch browser (skipped under Option A — phase-6 Unit 2.5)
     // -----------------------------------------------------------------------
-    try {
-      browser = await createBrowser()
-    } catch (err) {
-      outcome = 'error'
-      errorMessage = `createBrowser failed: ${describeError(err)}`
-      logger(`[orchestrator] ${errorMessage}`)
-      return finalize()
+    const skipBrowserLaunch = opts.skipBrowserLaunch === true
+    if (!skipBrowserLaunch) {
+      try {
+        browser = await createBrowser()
+      } catch (err) {
+        outcome = 'error'
+        errorMessage = `createBrowser failed: ${describeError(err)}`
+        logger(`[orchestrator] ${errorMessage}`)
+        return finalize()
+      }
     }
 
     // -----------------------------------------------------------------------
     // 7. Create seats
+    //
+    //    Option B path (legacy): orchestrator owns chromium → createSeat × N
+    //    drives Playwright contexts.
+    //    Option A path (Phase 6 Unit 2.5): synthetic SeatHandle objects only;
+    //    each seat owns its own MCP-Playwright browser via playwright-seat-N.
     // -----------------------------------------------------------------------
     const viewport = config.viewports[0] ?? {
       width: 390 as const,
@@ -474,16 +510,30 @@ export async function runSession(
       for (let i = 0; i < config.seats; i++) {
         const seatName = config.seatNames?.[i] ?? `Seat${i + 1}`
         const seatId = `seat-${i + 1}`
-        // eslint-disable-next-line @typescript-eslint/no-non-null-assertion
-        const seat = await createSeat({
-          browser: browser!,
-          roomCode,
-          seatName,
-          seatId,
-          runPaths: paths,
-          viewport,
-        })
-        seats.push(seat)
+        if (skipBrowserLaunch) {
+          const { logPath, suspicionPath } = buildSeatPaths(paths, seatId)
+          seats.push({
+            seatId,
+            seatName,
+            roomCode,
+            page: null,
+            viewport,
+            logPath,
+            suspicionPath,
+            scenariosPath: config.catalogPath,
+          })
+        } else {
+          // eslint-disable-next-line @typescript-eslint/no-non-null-assertion
+          const seat = await createSeat({
+            browser: browser!,
+            roomCode,
+            seatName,
+            seatId,
+            runPaths: paths,
+            viewport,
+          })
+          seats.push(seat)
+        }
       }
     } catch (err) {
       outcome = 'error'
@@ -611,9 +661,22 @@ export async function runSession(
       logger(`[orchestrator] appendSessionEnd failed: ${describeError(err)}`)
     }
 
-    // Phase 5 Unit 6 — post-session triage. Non-fatal; failures only
-    // log. Plan v1 always passes `'OK'` because Phase 4's isolation
-    // audit isn't yet wired in (Phase 6 calibration closes that loop).
+    // Phase 6 Unit 2.5 — isolation audit BEFORE triage so the triage
+    // input gets a real isolation status, not always-OK. Audit failures
+    // (e.g. dirs missing) are non-fatal; we default to 'OK' on errors so
+    // a partial run still triages whatever it has.
+    let isolationStatus: 'OK' | 'ISOLATION_BREACH' = 'OK'
+    try {
+      const audit = await runIsolationAudit(paths.root, seats)
+      if (!audit.passed) isolationStatus = 'ISOLATION_BREACH'
+      logger(
+        `[orchestrator] isolation audit: ${audit.passed ? 'PASS' : 'FAIL'} (${audit.breaches.length} breach(es), report=${audit.reportPath})`,
+      )
+    } catch (err) {
+      logger(`[orchestrator] isolation audit failed (non-fatal, defaulting status=OK): ${describeError(err)}`)
+    }
+
+    // Phase 5 Unit 6 — post-session triage. Non-fatal; failures only log.
     if (runPostSessionTriage) {
       try {
         const triageResult = await runPostSessionTriage({
@@ -621,7 +684,7 @@ export async function runSession(
           catalogPath: config.catalogPath,
           eventsJsonlPath: paths.eventsJsonl,
           connectionsJsonlPath: paths.connectionsJsonl,
-          isolationStatus: 'OK',
+          isolationStatus,
         })
         if (triageResult.skipped) {
           logger(

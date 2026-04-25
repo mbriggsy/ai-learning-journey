@@ -10,7 +10,13 @@
  */
 import * as fs from 'node:fs/promises'
 import * as path from 'node:path'
-import { runSession } from './lib/orchestrator'
+import { runSession, type RunSessionDeps } from './lib/orchestrator'
+import {
+  createAgentLauncherDriver,
+  loadDefaultTemplates,
+} from './lib/agent-launcher'
+import { runTriagePipeline } from './lib/triage-pipeline'
+import { parseCatalog } from './lib/scenario-detector'
 import type { Config, Viewport } from './lib/types'
 
 const USAGE = `
@@ -170,7 +176,38 @@ async function main(argv: readonly string[]): Promise<void> {
     )
   }
 
-  const result = await runSession(config, undefined, { allowTrace: flags.allowTrace })
+  // Phase 6 Unit 2.5 / Option A defaults: launcher-driver + triage hook
+  // wired with skipBrowserLaunch=true. Each seat owns its own MCP-Playwright
+  // browser via the `playwright-seat-N` MCP servers in `.mcp.json`; the
+  // orchestrator no longer launches its own Chromium.
+  //
+  // The Claude Code conversation that invokes this CLI is responsible for
+  // reading `<runDir>/agent-specs.manifest.json`, dispatching one
+  // `Agent({ subagent_type: 'playtest-seat-N', ... })` per entry, then
+  // touching `<runDir>/agents-done.marker` when all seats exit. This script
+  // emits the manifest and waits for the marker.
+  const repoRoot = path.resolve(import.meta.dirname ?? path.dirname(new URL(import.meta.url).pathname), '..', '..')
+  const { scriptedTemplate, freePlayTemplate } = await loadDefaultTemplates(repoRoot)
+  const catalogText = await fs.readFile(path.resolve(repoRoot, config.catalogPath), 'utf8')
+  const catalog = parseCatalog(catalogText)
+
+  const deps: RunSessionDeps = {
+    seatDriver: createAgentLauncherDriver({
+      catalog,
+      modeSignal: 'scripted',
+      sessionTimeoutMs: config.sessionTimeoutMs,
+      scriptedTemplate,
+      freePlayTemplate,
+      // runDir derived from seats[0].logPath at call time — orchestrator
+      // computes the run dir AFTER constructing this driver.
+    }),
+    runPostSessionTriage: runTriagePipeline,
+  }
+
+  const result = await runSession(config, deps, {
+    allowTrace: flags.allowTrace,
+    skipBrowserLaunch: true,
+  })
   // eslint-disable-next-line no-console
   console.log(
     `[orchestrator] outcome=${result.outcome} sessionId=${result.sessionId} seatsJoined=${result.seatsJoined}`,

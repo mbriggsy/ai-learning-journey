@@ -286,14 +286,23 @@ async function main(): Promise<void> {
 }
 
 function assertSpecsAreValid(specs: readonly SeatLaunchSpec[]): void {
-  for (const s of specs) {
+  specs.forEach((s, i) => {
+    const expectedSubagent = `playtest-seat-${i + 1}`
     assert(
-      s.subagentType === 'playtest-seat',
-      `${s.seatId} (${s.mode}): subagentType is 'playtest-seat'`,
+      s.subagentType === expectedSubagent,
+      `${s.seatId} (${s.mode}): subagentType is '${expectedSubagent}' (phase-6 Unit 2.5)`,
+    )
+    assert(
+      s.mcpNamespace === `playwright-seat-${i + 1}`,
+      `${s.seatId} (${s.mode}): mcpNamespace is 'playwright-seat-${i + 1}'`,
     )
     assert(
       String(s.subagentType) !== 'general-purpose',
       `${s.seatId} (${s.mode}): subagentType is NOT 'general-purpose' (insight 020)`,
+    )
+    assert(
+      String(s.subagentType) !== 'playtest-seat',
+      `${s.seatId} (${s.mode}): subagentType is NOT the legacy 'playtest-seat' (Option B)`,
     )
     assert(
       !/\{\{[A-Z_]+\}\}/.test(s.prompt),
@@ -313,7 +322,7 @@ function assertSpecsAreValid(specs: readonly SeatLaunchSpec[]): void {
         `${s.seatId} (${s.mode}): prompt emits row label '${label}'`,
       )
     }
-  }
+  })
 }
 
 main().catch((err: unknown) => {

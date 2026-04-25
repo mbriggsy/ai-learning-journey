@@ -247,6 +247,8 @@ TIMEOUT={{SESSION_TIMEOUT_MS}}
       catalogText: 'CATALOG-BODY',
       sessionTimeoutMs: 180_000,
       template: TEMPLATE,
+      playerUrl: 'http://localhost:5173/player.html?room=TEST&name=Dash',
+      mcpNamespace: 'playwright-seat-1',
     })
     expect(out).toContain('SEAT=seat-0')
     expect(out).toContain('NAME=Dash')
@@ -270,6 +272,8 @@ TIMEOUT={{SESSION_TIMEOUT_MS}}
         catalogText: '',
         sessionTimeoutMs: 1,
         template: TEMPLATE,
+        playerUrl: 'http://localhost:5173/player.html?room=&name=Dash',
+        mcpNamespace: 'playwright-seat-1',
       }),
     ).toThrow(/roomCode/)
   })
@@ -281,8 +285,26 @@ TIMEOUT={{SESSION_TIMEOUT_MS}}
       catalogText: '',
       sessionTimeoutMs: 1,
       template: 'unknown: {{NOT_A_REAL_PLACEHOLDER}}',
+      playerUrl: 'http://localhost:5173/player.html?room=TEST&name=Dash',
+      mcpNamespace: 'playwright-seat-1',
     })
     expect(out).toContain('{{NOT_A_REAL_PLACEHOLDER}}')
+  })
+
+  it('substitutes PLAYER_URL and MCP_NAMESPACE (phase-6 Unit 2.5 / Option A)', () => {
+    const tmpl = 'go: {{PLAYER_URL}} ns: {{MCP_NAMESPACE}}'
+    const out = buildSeatPrompt({
+      seat: seat('seat-0', 'Dash'),
+      otherSeats: [],
+      catalogText: '',
+      sessionTimeoutMs: 1,
+      template: tmpl,
+      playerUrl: 'http://localhost:5173/player.html?room=TEST&name=Dash',
+      mcpNamespace: 'playwright-seat-3',
+    })
+    expect(out).toBe(
+      'go: http://localhost:5173/player.html?room=TEST&name=Dash ns: playwright-seat-3',
+    )
   })
 })
 
@@ -319,16 +341,79 @@ describe('buildLaunchSpecs', () => {
       freePlayTemplate,
     })
     expect(specs).toHaveLength(3)
-    for (const spec of specs) {
+    specs.forEach((spec, i) => {
       expect(spec.prompt).not.toMatch(/\{\{[A-Z_]+\}\}/)
-      expect(spec.subagentType).toBe('playtest-seat')
+      expect(spec.subagentType).toBe(`playtest-seat-${i + 1}`)
+      expect(spec.mcpNamespace).toBe(`playwright-seat-${i + 1}`)
       expect(spec.description).toContain(spec.seatId)
       expect(spec.description).toContain('(scripted)')
-    }
+      expect(spec.playerUrl).toMatch(/^http:\/\/localhost:5173\/player\.html\?room=TEST&name=/)
+    })
     // Starter seat is ACTOR; others are OTHER_ALIVE.
     expect(specs[0]!.role).toBe('ACTOR')
     expect(specs[1]!.role).toBe('OTHER_ALIVE')
     expect(specs[2]!.role).toBe('OTHER_ALIVE')
+  })
+
+  it('maps seatIndex 1-indexed → playtest-seat-N + playwright-seat-N (phase-6 Unit 2.5)', () => {
+    const { scriptedTemplate, freePlayTemplate } = templatesForTest()
+    const seats = Array.from({ length: 10 }, (_, i) => seat(`seat-${i}`, `Player${i}`))
+    const specs = buildLaunchSpecs({
+      seats,
+      catalog: SYNTH_CATALOG,
+      modeSignal: 'scripted',
+      sessionTimeoutMs: 60_000,
+      scriptedTemplate,
+      freePlayTemplate,
+    })
+    expect(specs).toHaveLength(10)
+    specs.forEach((spec, i) => {
+      const n = i + 1
+      expect(spec.subagentType).toBe(`playtest-seat-${n}`)
+      expect(spec.mcpNamespace).toBe(`playwright-seat-${n}`)
+      // The rendered prompt MUST reference the seat's namespace (so the
+      // tool surface in the system prompt matches the agent file's
+      // frontmatter whitelist).
+      expect(spec.prompt).toContain(`mcp__playwright-seat-${n}__browser_navigate`)
+    })
+  })
+
+  it('playerUrl URL-encodes room code + seat name (special chars)', () => {
+    const { scriptedTemplate, freePlayTemplate } = templatesForTest()
+    const seats = [
+      seat('seat-0', 'Dash & Friends', { roomCode: 'A B' }),
+      seat('seat-1', 'Cher#1', { roomCode: 'A B' }),
+    ]
+    const specs = buildLaunchSpecs({
+      seats,
+      catalog: SYNTH_CATALOG,
+      modeSignal: 'scripted',
+      sessionTimeoutMs: 60_000,
+      scriptedTemplate,
+      freePlayTemplate,
+    })
+    expect(specs[0]!.playerUrl).toBe(
+      'http://localhost:5173/player.html?room=A%20B&name=Dash%20%26%20Friends',
+    )
+    expect(specs[1]!.playerUrl).toBe(
+      'http://localhost:5173/player.html?room=A%20B&name=Cher%231',
+    )
+  })
+
+  it('viteBaseUrl override is honored + trailing slashes stripped', () => {
+    const { scriptedTemplate, freePlayTemplate } = templatesForTest()
+    const specs = buildLaunchSpecs({
+      seats: [seat('seat-0', 'Dash')],
+      catalog: SYNTH_CATALOG,
+      modeSignal: 'scripted',
+      sessionTimeoutMs: 60_000,
+      scriptedTemplate,
+      freePlayTemplate,
+      viteBaseUrl: 'http://staging.example:9090///',
+    })
+    expect(specs[0]!.playerUrl).toBe(
+      'http://staging.example:9090/player.html?room=TEST&name=Dash',
+    )
   })
 
   it('never emits subagentType `"general-purpose"` (phase-4 D1 / insight 020)', () => {
@@ -351,11 +436,12 @@ describe('buildLaunchSpecs', () => {
       freePlayTemplate,
     })
     for (const s of [...scripted, ...freePlay]) {
-      expect(s.subagentType).toBe('playtest-seat')
-      // Runtime belt-and-suspenders: the TS literal union is the primary
-      // defense, but assert the negative so a refactor that loosens the
-      // type surfaces here.
+      expect(s.subagentType).toMatch(/^playtest-seat-(?:[1-9]|10)$/)
+      // Runtime belt-and-suspenders: the TS literal-pattern type is the
+      // primary defense, but assert the negative so a refactor that
+      // loosens the type surfaces here.
       expect(String(s.subagentType)).not.toBe('general-purpose')
+      expect(String(s.subagentType)).not.toBe('playtest-seat')
     }
   })
 
@@ -575,14 +661,18 @@ describe('emitLaunchSpecs', () => {
     }
     expect(manifest.modeSignal).toBe('scripted')
     expect(manifest.seats).toHaveLength(2)
-    for (const m of manifest.seats) {
-      expect(m.subagentType).toBe('playtest-seat')
-    }
+    manifest.seats.forEach((m, i) => {
+      expect(m.subagentType).toBe(`playtest-seat-${i + 1}`)
+    })
 
     const spec0 = JSON.parse(
       await readFile(path.join(result.specsDir, 'seat-0.json'), 'utf8'),
-    ) as { prompt: string; subagentType: string }
-    expect(spec0.subagentType).toBe('playtest-seat')
+    ) as { prompt: string; subagentType: string; playerUrl: string; mcpNamespace: string }
+    expect(spec0.subagentType).toBe('playtest-seat-1')
+    expect(spec0.mcpNamespace).toBe('playwright-seat-1')
+    expect(spec0.playerUrl).toBe(
+      'http://localhost:5173/player.html?room=TEST&name=Dash',
+    )
     expect(spec0.prompt).not.toMatch(/\{\{[A-Z_]+\}\}/)
   })
 })

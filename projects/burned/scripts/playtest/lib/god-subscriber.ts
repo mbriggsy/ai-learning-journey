@@ -373,9 +373,35 @@ export async function connectGod(args: ConnectGodArgs): Promise<GodHandle> {
       return
     }
 
+    // Heartbeat: server sends `{type: 'ping'}` every 30s and expects activity
+    // within HEARTBEAT_INTERVAL_MS + HEARTBEAT_TIMEOUT_MS (40s) or it closes
+    // the connection with code 1001 'Heartbeat timeout' (room.ts:1083-1095).
+    // The server's heartbeat counts ANY inbound message as activity
+    // (room.ts:273), so a pong reply both honors the protocol AND resets the
+    // server's activity clock.
+    //
+    // Insight 034 (Phase 6 Unit 3 calibration retry #2): pre-fix the god
+    // subscriber sent only its initial `playtest-config` at connect. After
+    // 40s of silence the server killed it with code 1001, the close handler
+    // treated 1001 as "non-fatal clean close" (lines below), and the
+    // orchestrator silently lost telemetry for the rest of the session
+    // (events.jsonl had 1 line for a 12-minute game).
+    if (parsed['type'] === 'ping') {
+      try {
+        ws.send(JSON.stringify({ type: 'pong', payload: {} }))
+      } catch (err) {
+        // Socket already closing — heartbeat will time out, fatal-close
+        // handler will fire (or leave pending if 1000/1001).
+        console.error(
+          `[god-subscriber] failed to send pong: ${err instanceof Error ? err.message : String(err)}`,
+        )
+      }
+      return
+    }
+
     if (parsed['type'] !== 'god-event') {
       // Ignore anything else (server currently emits only god-event + ack
-      // on a god connection; unknown messages are not fatal).
+      // + ping on a god connection; unknown messages are not fatal).
       return
     }
 
@@ -612,6 +638,20 @@ export async function connectGod(args: ConnectGodArgs): Promise<GodHandle> {
         if (code === 1000 || code === 1001) {
           // Clean server close — not fatal by itself. Leave onFatalClose
           // pending; the orchestrator notices via its own lifecycle signal.
+          //
+          // Insight 034: in Phase 6 calibration retry #2, the god connection
+          // was killed at 40s by the server's heartbeat-timeout (code 1001)
+          // because the subscriber wasn't responding to pings. The pong
+          // handler above is the actual fix. This log is defense-in-depth:
+          // even with the pong fix, future silent close paths (server
+          // inactivity-kill at 15min, hibernation, etc.) should be visible
+          // to the operator instead of silently halving the telemetry.
+          console.warn(
+            `[god-subscriber] server-initiated close mid-session ` +
+            `code=${code} reason=${reasonStr || '(none)'} — ` +
+            `no further god-events will be captured. orchestrator ` +
+            `will not abort (lifecycle-signal contract).`,
+          )
           return
         }
         console.warn(`[god-subscriber] unexpected close code=${code} reason=${reasonStr}`)

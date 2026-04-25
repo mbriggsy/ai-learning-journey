@@ -724,3 +724,132 @@ describe('connectGod — error when clean disconnect does not resolve fatal', ()
     expect(result).toBe('pending')
   })
 })
+
+// ---------------------------------------------------------------------------
+// Heartbeat — server sends `{type: 'ping'}`; god MUST respond with `{type:
+// 'pong'}` or the server kills the connection at 40s with code 1001.
+//
+// Insight 034 (Phase 6 Unit 3 calibration retry #2): pre-fix god subscriber
+// ignored ping → killed at 40s → close handler treated 1001 as non-fatal →
+// orchestrator silently lost telemetry for the rest of the session
+// (events.jsonl had 1 line for a 12-minute game).
+// ---------------------------------------------------------------------------
+
+describe('connectGod — heartbeat (insight 034)', () => {
+  it('responds to {type:"ping"} with {type:"pong", payload:{}}', async () => {
+    const h = makeHarness()
+    const handle = await connectGod(buildConnectArgs(h))
+    h.ws.emit('open')
+    // playtest-config goes out at open. Capture the count so we can isolate
+    // pong sends.
+    const sendsBefore = h.ws.sends.length
+
+    h.ws.emit('message', JSON.stringify({ type: 'ping', payload: {} }))
+
+    const newSends = h.ws.sends.slice(sendsBefore)
+    expect(newSends).toHaveLength(1)
+    const parsed = JSON.parse(newSends[0]!) as { type: string; payload: Record<string, never> }
+    expect(parsed.type).toBe('pong')
+    expect(parsed.payload).toEqual({})
+
+    await handle.disconnect()
+  })
+
+  it('multiple consecutive pings each trigger a pong (sustained heartbeat)', async () => {
+    const h = makeHarness()
+    const handle = await connectGod(buildConnectArgs(h))
+    h.ws.emit('open')
+    const sendsBefore = h.ws.sends.length
+
+    h.ws.emit('message', JSON.stringify({ type: 'ping', payload: {} }))
+    h.ws.emit('message', JSON.stringify({ type: 'ping', payload: {} }))
+    h.ws.emit('message', JSON.stringify({ type: 'ping', payload: {} }))
+
+    const newSends = h.ws.sends.slice(sendsBefore)
+    expect(newSends).toHaveLength(3)
+    for (const s of newSends) {
+      expect(JSON.parse(s)).toEqual({ type: 'pong', payload: {} })
+    }
+
+    await handle.disconnect()
+  })
+
+  it('ping does NOT resolve onFatalClose', async () => {
+    const h = makeHarness()
+    const handle = await connectGod(buildConnectArgs(h))
+    h.ws.emit('open')
+    h.ws.emit('message', JSON.stringify({ type: 'ping', payload: {} }))
+
+    const result = await Promise.race([
+      handle.onFatalClose.then(() => 'resolved'),
+      new Promise<string>((r) => setTimeout(() => r('pending'), 30)),
+    ])
+    expect(result).toBe('pending')
+    await handle.disconnect()
+  })
+})
+
+// ---------------------------------------------------------------------------
+// Defense-in-depth log for silent server-initiated 1000/1001 close
+// (insight 034). Pre-fix the close fired silently. Even with the pong fix,
+// any future server-initiated 1000/1001 (inactivity-kill, hibernation, etc.)
+// should be visible to the operator instead of silently halving telemetry.
+// ---------------------------------------------------------------------------
+
+describe('connectGod — silent close visibility (insight 034)', () => {
+  it('warns loudly when server closes with code 1001 mid-session', async () => {
+    const h = makeHarness()
+    const warnSpy = vi.spyOn(console, 'warn').mockImplementation((...a) => {
+      h.consoleWarns.push(a)
+    })
+    const handle = await connectGod(buildConnectArgs(h))
+    h.ws.emit('open')
+    h.ws.emit('close', 1001, 'Heartbeat timeout')
+
+    const warnText = h.consoleWarns.flat().join(' ')
+    expect(warnText).toMatch(/server-initiated close mid-session/i)
+    expect(warnText).toContain('code=1001')
+    expect(warnText).toContain('Heartbeat timeout')
+
+    // Semantics unchanged — onFatalClose still pending.
+    const result = await Promise.race([
+      handle.onFatalClose.then(() => 'resolved'),
+      new Promise<string>((r) => setTimeout(() => r('pending'), 30)),
+    ])
+    expect(result).toBe('pending')
+    warnSpy.mockRestore()
+  })
+
+  it('warns loudly when server closes with code 1000 mid-session', async () => {
+    const h = makeHarness()
+    const warnSpy = vi.spyOn(console, 'warn').mockImplementation((...a) => {
+      h.consoleWarns.push(a)
+    })
+    const handle = await connectGod(buildConnectArgs(h))
+    h.ws.emit('open')
+    h.ws.emit('close', 1000, 'Inactivity timeout')
+
+    const warnText = h.consoleWarns.flat().join(' ')
+    expect(warnText).toMatch(/server-initiated close mid-session/i)
+    expect(warnText).toContain('code=1000')
+    void handle
+    warnSpy.mockRestore()
+  })
+
+  it('does NOT warn when the orchestrator initiated the close (disconnect path)', async () => {
+    const h = makeHarness()
+    const warnSpy = vi.spyOn(console, 'warn').mockImplementation((...a) => {
+      h.consoleWarns.push(a)
+    })
+    const handle = await connectGod(buildConnectArgs(h))
+    h.ws.emit('open')
+    await handle.disconnect()
+    // Simulate the close-event echo that follows ws.close() — should be
+    // ignored because `disconnected` flag is set.
+    h.ws.emit('close', 1000, 'orchestrator-disconnect')
+
+    const warnText = h.consoleWarns.flat().join(' ')
+    expect(warnText).not.toMatch(/server-initiated close mid-session/i)
+    warnSpy.mockRestore()
+  })
+})

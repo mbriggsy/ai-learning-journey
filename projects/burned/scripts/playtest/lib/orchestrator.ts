@@ -222,15 +222,29 @@ function buildSessionId(d: Date, seats: number): string {
   )
 }
 
-/** Default selftest-stamp reader. Returns null if absent. */
-async function defaultReadSelftestStamp(): Promise<
+/**
+ * Default selftest-stamp reader. Returns null if absent.
+ *
+ * The stamp file written by `scripts/playtest/selftest.ts` has TWO lines:
+ *   1. Plain ISO timestamp (the contract this reader honors).
+ *   2. JSON object `{ts, ...}` for forward compat / additive metadata.
+ *
+ * We must read line 1 only — passing the whole file to `Date.parse` returns
+ * NaN because of the embedded newline + JSON, which would falsely report
+ * the stamp as absent. Pre-flight's reader (`pre-flight.ts`
+ * `checkSelftestStamp`) is multi-line aware; this one trusts the writer's
+ * line-1 contract for minimum surface area.
+ */
+export async function defaultReadSelftestStamp(): Promise<
   { timestamp: string; ageMs: number } | null
 > {
   try {
-    const raw = (await fs.readFile(SELFTEST_STAMP_PATH, 'utf8')).trim()
-    const t = Date.parse(raw)
+    const raw = await fs.readFile(SELFTEST_STAMP_PATH, 'utf8')
+    const firstLine = raw.split(/\r?\n/)[0]?.trim() ?? ''
+    if (firstLine.length === 0) return null
+    const t = Date.parse(firstLine)
     if (Number.isNaN(t)) return null
-    return { timestamp: raw, ageMs: Date.now() - t }
+    return { timestamp: firstLine, ageMs: Date.now() - t }
   } catch (err) {
     if ((err as NodeJS.ErrnoException).code === 'ENOENT') return null
     throw err

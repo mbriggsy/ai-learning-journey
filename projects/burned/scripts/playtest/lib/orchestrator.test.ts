@@ -17,7 +17,7 @@ import * as os from 'node:os'
 import { randomUUID } from 'node:crypto'
 import type { Browser } from '@playwright/test'
 
-import { runSession, buildGodWsUrl, type RunSessionDeps, type CreateSeatArgs } from './orchestrator'
+import { runSession, buildGodWsUrl, defaultReadSelftestStamp, type RunSessionDeps, type CreateSeatArgs } from './orchestrator'
 import type { Config, SeatHandle } from './types'
 import type { ServerHandles } from './server-controller'
 import type { GodHandle, FatalCloseInfo, ConnectGodArgs } from './god-subscriber'
@@ -688,5 +688,80 @@ describe('runSession — runPostSessionTriage hook (Phase 5 Unit 6)', () => {
     // No runPostSessionTriage in deps; default behaviour.
     const result = await runSession(makeConfig(), deps)
     expect(result.outcome).toBe('success')
+  })
+})
+
+// ---------------------------------------------------------------------------
+// defaultReadSelftestStamp — Phase 6 Unit 3 calibration regression
+// ---------------------------------------------------------------------------
+//
+// `scripts/playtest/selftest.ts:writeStamp` writes a TWO-line stamp:
+//   line 1: plain ISO timestamp (the contract this reader honors)
+//   line 2: JSON `{ts, ...}` for forward-compat metadata
+//
+// Pre-fix, defaultReadSelftestStamp called `.trim()` on the whole file and
+// fed the multi-line string straight to `Date.parse`, returning NaN — the
+// orchestrator then aborted with "stamp absent" against a freshly-written
+// stamp. Caught during Phase 6 Unit 3 calibration first-real-run attempt
+// 2026-04-25; phase6-launcher-smoke had mocked readSelftestStamp so the
+// default reader was never exercised.
+
+describe('defaultReadSelftestStamp', () => {
+  let cwdBefore: string
+  let stampDir: string
+
+  beforeEach(async () => {
+    stampDir = path.join(os.tmpdir(), `burned-stamp-${randomUUID()}`)
+    await fs.mkdir(stampDir, { recursive: true })
+    cwdBefore = process.cwd()
+    process.chdir(stampDir)
+  })
+
+  afterEach(async () => {
+    process.chdir(cwdBefore)
+    await fs.rm(stampDir, { recursive: true, force: true })
+  })
+
+  it('parses the dual-line stamp format (ISO line 1 + JSON line 2) written by selftest.ts', async () => {
+    const ts = new Date().toISOString()
+    await fs.writeFile('.last-selftest', `${ts}\n{"ts":"${ts}"}\n`, 'utf8')
+    const result = await defaultReadSelftestStamp()
+    expect(result).not.toBeNull()
+    expect(result!.timestamp).toBe(ts)
+    expect(result!.ageMs).toBeGreaterThanOrEqual(0)
+    expect(result!.ageMs).toBeLessThan(60_000)
+  })
+
+  it('parses a plain single-line ISO stamp (legacy / future writers)', async () => {
+    const ts = new Date().toISOString()
+    await fs.writeFile('.last-selftest', `${ts}\n`, 'utf8')
+    const result = await defaultReadSelftestStamp()
+    expect(result).not.toBeNull()
+    expect(result!.timestamp).toBe(ts)
+  })
+
+  it('handles CRLF line endings', async () => {
+    const ts = new Date().toISOString()
+    await fs.writeFile('.last-selftest', `${ts}\r\n{"ts":"${ts}"}\r\n`, 'utf8')
+    const result = await defaultReadSelftestStamp()
+    expect(result).not.toBeNull()
+    expect(result!.timestamp).toBe(ts)
+  })
+
+  it('returns null when the file is absent', async () => {
+    const result = await defaultReadSelftestStamp()
+    expect(result).toBeNull()
+  })
+
+  it('returns null when line 1 is not a parseable ISO timestamp', async () => {
+    await fs.writeFile('.last-selftest', `not-an-iso\n{"ts":"2026-01-01T00:00:00Z"}\n`, 'utf8')
+    const result = await defaultReadSelftestStamp()
+    expect(result).toBeNull()
+  })
+
+  it('returns null when the file is empty', async () => {
+    await fs.writeFile('.last-selftest', '', 'utf8')
+    const result = await defaultReadSelftestStamp()
+    expect(result).toBeNull()
   })
 })

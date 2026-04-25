@@ -2,6 +2,39 @@
 
 ## NEXT SESSION — pick up here (2026-04-26+)
 
+**Phase 6 Unit 3 — FIRST CALIBRATION ATTEMPT 2026-04-25 — diagnostic
+success, end-to-end blocked at the lobby.** Pre-flight green, selftest
+green, orchestrator booted, god WS connected, manifest emitted, three
+`playtest-seat-N` agents dispatched in parallel. All three agents
+successfully navigated, landed in the lobby, and then sat there
+forever. Reason: **the Option A harness has no mechanism to start the
+game from the lobby.** The "Cleared Hot" / start button lives only on
+the board view (`src/client/board`); Phase 6 Unit 2.5's
+`skipBrowserLaunch: true` retired the orchestrator-owned chromium
+without preserving an analogue of the Phase 3 smoke's board-view
+client. No human, no board, no start — agents lobby-waited until I
+killed them. Three parallel agents independently reported "still
+waiting for the game to start." Zero god-events, no `events.jsonl`
+created, no scenario fires. **Insight 032 captured** —
+`docs/insights/032-phase-6-option-a-harness-has-no-game-start-mechanism.md`
+— with three fix-path options (recommended: Option 1, orchestrator
+dispatches a board-view client). Unit 3 itself is not failed; it
+*caught its first real harness gap*, which is exactly what calibration
+exists to do.
+
+**Pre-requisite fixes landed during the same session (uncommitted on
+main, ready to commit):**
+
+1. **Selftest stamp reader fix** — `scripts/playtest/lib/orchestrator.ts`
+   `defaultReadSelftestStamp` was passing the dual-line stamp file
+   (`<ISO>\n<JSON>\n` written by `selftest.ts:writeStamp`) straight to
+   `Date.parse`, returning NaN. Fixed: split on `\r?\n`, take line 1.
+   `defaultReadSelftestStamp` exported. Six new unit tests in
+   `orchestrator.test.ts` cover the dual-line format, single-line legacy,
+   CRLF, absent file, malformed line 1, empty file. Full suite
+   **993/993** (+6). typecheck clean. The selftest stamp writer's
+   intent (line 1 honored as ISO) now matches the reader.
+
 **Phase 6 Unit 2.5 — SHIPPED 2026-04-25.** MCP-per-seat architecture
 wiring (Phase 4 D15 Option A). 10 `playwright-seat-N` MCP servers in
 `.mcp.json` (all `--isolated`); 10 generated `.claude/agents/playtest-seat-N.md`
@@ -20,8 +53,7 @@ assertions). Full suite **987/987** (+4 from per-seat-name + URL-
 encoding tests). typecheck clean · phase4-smoke PASS · phase5-smoke
 PASS. Insight 031 captured. CLAUDE.md landmines updated. Validation
 experiment (parent ↔ subagent independent browsers under `--isolated`)
-empirically confirmed before any code touched. **Unit 3 is now
-unblocked** — eye-in-loop, Briggsy STOP gate.
+empirically confirmed before any code touched.
 
 **Playtest-harness Phase 6 Unit 4 — SHIPPED 2026-04-24.** Series configs
 + Zod schema + TUNING-LOG scaffold. `scripts/playtest/lib/config-schema.ts`
@@ -50,26 +82,60 @@ against the real repo (live wrangler + god WS handshake). Commit
 `22c95260`.
 
 **Pick from the active queue:**
-1. 🛑 **Phase 6 Unit 3 — RUN the calibration session.** EYE-IN-LOOP.
-   STOP before this runs autonomously. Live wrangler + 3 seats + first
-   real god-event broadcast. This Claude Code conversation will read
-   `<runDir>/agent-specs.manifest.json` and dispatch one
+1. 🛑 **Phase 6 Unit 2.6 (NEW, blocks Unit 3) — orchestrator-owned
+   board-view client.** Implement Option 1 from insight 032: a
+   `launchBoardView` orchestrator opt that spawns ONE chromium board
+   page (orchestrator-owned, no MCP isolation needed; board has no
+   private surface to protect). Lifecycle: orchestrator boots
+   servers + connects god as today; launches the board page; board
+   polls until `seats.length` matches config; board taps "Cleared
+   Hot"; game proceeds; board idles until session end and closes.
+   Mirrors Phase 3 smoke's known-working architecture. Doesn't
+   touch seat-agent prompt template (that was correctly built and
+   should not reopen). New unit + tests + small smoke. After this
+   lands, retry Unit 3.
+2. 🛑 **Phase 6 Unit 3 — RE-RUN the calibration session.** EYE-IN-LOOP.
+   STOP before this runs autonomously. Same procedure as the first
+   attempt: read `<runDir>/agent-specs.manifest.json`, dispatch one
    `Agent({ subagent_type: 'playtest-seat-N', prompt })` per entry,
-   then touch `<runDir>/agents-done.marker` when all seats exit. The
-   orchestrator handles the rest. Also where `assertGodEnvelopeShape`
-   (already exported in `scripts/playtest/pre-flight.ts`) gets invoked
-   against the FIRST real envelope to feature-detect
-   `expectedViewerIds` per insight 030. Unit 2's
-   `pnpm playtest:verify-calibration <runDir>` is the post-run verifier
-   — run it immediately after the session ends.
-2. **Phase 6 Units 5-7 (post-Unit-3).** 5-game series + Briggsy review
+   touch `<runDir>/agents-done.marker` when all seats exit. Apply
+   `assertGodEnvelopeShape` (already exported in
+   `scripts/playtest/pre-flight.ts`) against the FIRST real envelope
+   per insight 030. Unit 2's `pnpm playtest:verify-calibration <runDir>`
+   is the post-run verifier — run it immediately after the session
+   ends. Also a good moment to commit (or commit before retry, doesn't
+   matter): the in-session orchestrator stamp-reader fix + 6 new
+   tests + insight 032.
+3. **Selftest hardening (now a Unit 3 prerequisite).** Migrate
+   `scripts/playtest/selftest.ts` to use `startServers` /
+   `stopServers` from `server-controller.ts` (taskkill /F /T tree
+   teardown). Today's `child.kill('SIGTERM')` against a `shell: true`
+   spawn leaks workerd on Windows; calibration attempt #2 hit a 401
+   because the orchestrator's god WS reached a stale workerd from
+   a prior selftest with a different `PLAYTEST_TOKEN`. Already on
+   the follow-ups list as "Phase 3 Unit 7 selftest polish"; promoted
+   to a Unit 3 prerequisite.
+4. **Vite/wrangler dynamic-port plumbing.** `agent-launcher.ts`
+   defaults `viteBaseUrl = http://localhost:5173` with no override
+   from the orchestrator. When 5173 is squatted, vite lands on
+   5175 but seat-agent player URLs still point at 5173 — silent
+   misroute potential. Plumb the orchestrator's actual vite port
+   into `viteBaseUrl` at agent-launcher-driver construction time.
+   Pairs with the existing TODO follow-up "Port 5173 vite collision."
+5. **Stamp-reader consolidation.** Two readers for `.last-selftest`:
+   `pre-flight.ts:checkSelftestStamp` (multi-line aware) and
+   `orchestrator.ts:defaultReadSelftestStamp` (line-1-only, post-fix).
+   Two readers for the same file is itself a smell. Extract a shared
+   reader to `lib/selftest-stamp.ts` once a third caller appears.
+   Not urgent.
+6. **Phase 6 Units 5-7 (post-Unit-3).** 5-game series + Briggsy review
    (Unit 5, eye-in-loop x5); doc sweep (Unit 6, prune the legacy
    single `playtest-seat.md` + `playtest-seat.test.ts` if any);
    retrospective (Unit 7).
-3. **BURNED card cinematic arc** sub-steps #3 + #4 (DefusePlacement hero
+7. **BURNED card cinematic arc** sub-steps #3 + #4 (DefusePlacement hero
    card + Burned art regen). Pure product work, can interleave with
    harness work.
-4. **Real-device playtest** — iPad + phones Emil-pass verification list.
+8. **Real-device playtest** — iPad + phones Emil-pass verification list.
 
 ---
 

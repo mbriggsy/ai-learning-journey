@@ -2,6 +2,15 @@
 
 ## NEXT SESSION — pick up here (2026-04-25+)
 
+🛑 **CRITICAL: Phase 4 D15 architectural mismatch discovered 2026-04-25.**
+Unit 3 cannot run as written. Detailed prescription below in
+**§Phase 6 Unit 2.5 — MCP-per-seat architecture wiring**. **Read that
+section in full before any code touches.** Don't try to "just run Unit 3"
+— it will hang on the orchestrator's stdin stub even if you wire the
+defaults, because the seat-subagent topology is broken.
+
+---
+
 **Playtest-harness Phase 6 Unit 4 — SHIPPED 2026-04-24.** Series configs
 + Zod schema + TUNING-LOG scaffold. `scripts/playtest/lib/config-schema.ts`
 is the single source of truth for Config validation (`.strict()` catches
@@ -10,7 +19,7 @@ shipped (`series-{2p,3p,5p,8p,10p}.json`; seeds 1000+N; sessionTimeoutMs
 scales 60min + 10min/seat beyond 3). `docs/testing/playtest/TUNING-LOG.md`
 scaffolded with the Series 1 template (9 calibration-output decisions,
 R2 routing matrix, appendix with decision rationale). Full suite
-**983/983** (+30 schema tests). typecheck clean.
+**983/983** (+30 schema tests). typecheck clean. Commit `8c7e7cad`.
 
 **Phase 6 Unit 2 — SHIPPED 2026-04-24.**
 `pnpm playtest:verify-calibration <runDir>` ships. Pure filesystem walker
@@ -20,28 +29,303 @@ entryType vocabulary incl. C4-rename fail-closed, coverage.md renders,
 issues/INDEX.md). I5 partial-run pre-gate fires before anything else.
 +44 tests. CLI verified runtime against hand-rolled fixtures (happy
 path exits 0; partial-run exits 1 with `--full-dir` purge message;
-ISOLATION_BREACH branch exits 1 with "1 FAIL — 6/7" table).
+ISOLATION_BREACH branch exits 1 with "1 FAIL — 6/7" table). Commit
+`0ed6dc00`.
 
 **Phase 6 Unit 1 — SHIPPED 2026-04-24** (previous session). Pre-flight
 authorization gate: `pnpm playtest:pre-flight` runs 6 checks green
-against the real repo (live wrangler + god WS handshake).
+against the real repo (live wrangler + god WS handshake). Commit
+`22c95260`.
 
 **Pick from the active queue:**
-1. **Phase 6 Unit 3 — RUN the calibration session.** EYE-IN-LOOP. STOP
-   before this runs autonomously. Live wrangler + 3 seats + first real
-   god-event broadcast. This is also where `assertGodEnvelopeShape`
-   (already exported in `scripts/playtest/pre-flight.ts`) gets invoked
-   against the FIRST real envelope to feature-detect `expectedViewerIds`
-   per the insight 030 boundary. Unit 2's `pnpm
-   playtest:verify-calibration <runDir>` is the post-run verifier — run
-   it immediately after the session ends.
-2. **Phase 6 Units 4-7 (post-Unit-3).** Series configs + Zod schema +
-   TUNING-LOG scaffold (Unit 4); 5-game series + Briggsy review (Unit 5,
-   eye-in-loop x5); doc sweep (Unit 6); retrospective (Unit 7).
-3. **BURNED card cinematic arc** sub-steps #3 + #4 (DefusePlacement hero
+1. 🛑 **Phase 6 Unit 2.5 — MCP-per-seat architecture wiring.** **DO THIS
+   FIRST.** Pure code, no eye-in-loop. Unblocks Unit 3. Detailed
+   prescription in dedicated section below. Estimate 4-6 hours,
+   splittable across 2-3 commits.
+2. **Phase 6 Unit 3 — RUN the calibration session.** EYE-IN-LOOP. STOP
+   before this runs autonomously. Blocked on Unit 2.5. Live wrangler +
+   3 seats + first real god-event broadcast. This is also where
+   `assertGodEnvelopeShape` (already exported in
+   `scripts/playtest/pre-flight.ts`) gets invoked against the FIRST
+   real envelope to feature-detect `expectedViewerIds` per the insight
+   030 boundary. Unit 2's `pnpm playtest:verify-calibration <runDir>`
+   is the post-run verifier — run it immediately after the session ends.
+3. **Phase 6 Units 5-7 (post-Unit-3).** 5-game series + Briggsy review
+   (Unit 5, eye-in-loop x5); doc sweep (Unit 6); retrospective (Unit 7).
+4. **BURNED card cinematic arc** sub-steps #3 + #4 (DefusePlacement hero
    card + Burned art regen). Pure product work, can interleave with
    harness work.
-4. **Real-device playtest** — iPad + phones Emil-pass verification list.
+5. **Real-device playtest** — iPad + phones Emil-pass verification list.
+
+---
+
+## 🛑 Phase 6 Unit 2.5 — MCP-per-seat architecture wiring (BLOCKER for Unit 3)
+
+### Why this exists (the discovery)
+
+During Unit 3 prep on 2026-04-25, two empirical experiments revealed:
+
+1. **Parent Claude conversation and ALL spawned subagents share a
+   single MCP Playwright browser instance.** Verified: parent
+   navigates to marker URL, subagent's `browser_snapshot` returns the
+   exact marker.
+2. **Sequential subagents inherit the previous subagent's tab state.**
+   Verified: subagent 2 (without navigating) saw subagent 1's data URL.
+
+**This breaks Phase 4's seat-agent-per-seat design** because BURNED is
+a concurrent-reactions game (10s Nope window, Favor responses across
+seats, mid-turn steals). N concurrent subagents cannot share one
+browser tab without race-clobbering each other.
+
+**But Phase 4 D15 already documented the FIX.** Re-read
+`docs/plans/playtest-harness/phase-4-seat-agents.md:363-391`:
+
+> *"Option A: one MCP Playwright server per seat (PREFERRED). The
+> orchestrator allocates one port per seat (e.g. `3100 + seatIndex`)
+> and spawns one `@playwright/mcp` process per (seat, context) pair...
+> A cross-seat tool call is structurally impossible because the
+> subagent's MCP client only knows about its own server's tools."*
+
+**What got built was Option B (shared MCP).** Phase 4 deferred Option
+A's complexity, ostensibly for later. Unit 2.5 finally builds Option A.
+
+### Validation experiment to run FIRST (15 minutes, before any other code change)
+
+Before sinking 4-6 hours into the full implementation, **prove the
+multi-MCP-server pattern works in this Claude Code install.** This is
+the only remaining empirical unknown. The mechanism is documented but
+not yet exercised in this project.
+
+1. Edit `.mcp.json` (project-root). Confirm current shape, then add a
+   second Playwright MCP server entry:
+   ```json
+   {
+     "mcpServers": {
+       "playwright": { ... existing ... },
+       "playwright-test-iso": {
+         "command": "npx",
+         "args": ["-y", "@playwright/mcp@latest"]
+       }
+     }
+   }
+   ```
+   (If `.mcp.json` doesn't exist or playwright is in user-scope rather
+   than project-scope, dig — `claude mcp list` will show what's loaded
+   and from where.)
+2. Create temporary `.claude/agents/test-iso.md` with frontmatter
+   whitelisting `mcp__playwright-test-iso__browser_navigate,
+   mcp__playwright-test-iso__browser_snapshot, mcp__playwright-test-iso__browser_close`.
+3. **Restart Claude Code** so the new MCP server loads.
+4. In a fresh conversation:
+   - As parent: `mcp__playwright__browser_navigate` to marker A URL.
+   - Dispatch `Agent({ subagent_type: 'test-iso', ... })` with prompt
+     "navigate to data:text/html,<title>BBB</title> via
+     `mcp__playwright-test-iso__browser_navigate`, then snapshot via
+     `mcp__playwright-test-iso__browser_snapshot`, report URL + title."
+   - As parent: `mcp__playwright__browser_snapshot` again. Should
+     STILL see marker A (proving the parent's browser was untouched
+     by the subagent's separate browser).
+
+If both browsers stayed independent → Option A architecture works.
+Proceed with the full Unit 2.5 build below.
+
+If they cross-contaminated or the subagent's tools were unreachable →
+something deeper about Claude Code's MCP topology needs investigation
+before proceeding. STOP and figure out what.
+
+After the validation: delete `.claude/agents/test-iso.md` and revert
+`.mcp.json` to clean state before the real build.
+
+### Full Unit 2.5 build — file-by-file prescription
+
+**1. `.mcp.json` (project root) — add 10 MCP Playwright server entries.**
+
+Today's state (verify with `claude mcp list` first; may be user-scope):
+- single `playwright` entry (probably user-scope, project may have no
+  `.mcp.json`).
+
+Target state — add at PROJECT scope (commits with the repo):
+```json
+{
+  "mcpServers": {
+    "playwright-seat-1": { "command": "npx", "args": ["-y", "@playwright/mcp@latest"] },
+    "playwright-seat-2": { ... },
+    ...
+    "playwright-seat-10": { ... }
+  }
+}
+```
+The user-scope `playwright` entry stays untouched (parent
+conversation uses it). Each seat-N MCP runs as its own process,
+spawns its own browser. Cost: up to 10 Chromium processes during a
+10-seat run; ~3GB RAM peak. Acceptable.
+
+**2. Generate 10 `playtest-seat-N.md` agent files.**
+
+Write `scripts/generate-playtest-seat-agents.ts` that templates
+`.claude/agents/playtest-seat.md` for N in 1..10 by:
+- Renaming `name: playtest-seat` → `name: playtest-seat-${N}`
+- Rewriting all `mcp__playwright__*` tool whitelist entries to
+  `mcp__playwright-seat-${N}__*`
+- **Adding `mcp__playwright-seat-${N}__browser_navigate` to the
+  whitelist** (it was deliberately absent under Option B; under
+  Option A the seat owns navigation since the orchestrator no longer
+  has a shared browser to pre-navigate)
+- Body content unchanged.
+
+Commit the 10 generated files. The original `playtest-seat.md`
+becomes deprecated — keep for now as a doc reference (mark as
+"Option B legacy"); delete in Unit 6 doc sweep.
+
+**3. Update `scripts/playtest/agents/seat-scripted.md` +
+`seat-free-play.md` prompt templates.**
+
+Add a placeholder `{{PLAYER_URL}}` for the seat's full join URL
+(e.g. `http://localhost:5173/player.html?room=ABC123&name=Alice`).
+First instruction in both templates becomes:
+> Step 1. Call `browser_navigate` with this exact URL: `{{PLAYER_URL}}`.
+> This brings up your phone view, pre-loaded with room + name params.
+
+**4. Update `scripts/playtest/lib/agent-launcher.ts`.**
+
+- `SeatLaunchSpec` shape — add `playerUrl: string` field.
+- `buildLaunchSpecs` — assemble `playerUrl` per seat from
+  `viteBaseUrl` + roomCode + seatName. Vite/wrangler URLs come from
+  orchestrator's existing dev-URL helpers.
+- `subagentType` constant `'playtest-seat'` becomes
+  `\`playtest-seat-${seatIndex + 1}\`` (1-indexed to match agent
+  filenames).
+- Tests: `agent-launcher.test.ts` line ~78 has `subagentType:
+  'playtest-seat'` hardcoded. Update to assert the per-seat names.
+
+**5. Update `scripts/playtest/run-session.ts`.**
+
+This is follow-ups 8c/8d/8e finally landing.
+
+`run-session.ts:173` currently calls `runSession(config, undefined,
+{ allowTrace: flags.allowTrace })`. The undefined is a deps object.
+Replace with a configured deps object:
+
+```ts
+import { createAgentLauncherDriver } from './lib/agent-launcher'
+import { runTriagePipeline } from './lib/triage-pipeline'
+import { runIsolationAudit } from './lib/isolation-audit'
+
+// ... after loadConfig ...
+const deps: RunSessionDeps = {
+  seatDriver: createAgentLauncherDriver({
+    catalog: parsedCatalog,
+    modeSignal: '...',
+    sessionTimeoutMs: config.sessionTimeoutMs,
+    runDir: <path>,  // pre-computed before runSession
+    scriptedTemplate: <loaded>,
+    freePlayTemplate: <loaded>,
+  }),
+  runPostSessionTriage: runTriagePipeline,
+  // 8e: orchestrator must run isolation audit BEFORE triage so the
+  //     triage input gets a real isolationStatus, not always-OK.
+  ...
+}
+const result = await runSession(config, deps, { allowTrace: ... })
+```
+
+The `runIsolationAudit` integration may require a small change in
+`orchestrator.ts` — pass the audit result into the triage call. Check
+what the current optional `runPostSessionTriage` interface expects.
+
+**6. Bypass orchestrator's `chromium.launch` + `createSeat` in
+launcher-driver path.**
+
+`scripts/playtest/lib/orchestrator.ts:285` does
+`chromium.launch({ headless: true })`. Under Option A the orchestrator
+no longer drives any browser — seats own their own MCP-Playwright
+processes. Two ways:
+
+(a) **Surgical:** Add an optional `skipBrowserLaunch: boolean` flag to
+`runSession` deps. When true, skip the launchBrowser step and the
+createSeat × N step; SeatHandle is constructed without a `page`
+field (or with `page: null` — type relaxation needed).
+
+(b) **Architectural:** Make seats no longer require a page in the
+launcher path. SeatHandle becomes a discriminated union:
+`{ kind: 'sdk', page: PlaywrightPage } | { kind: 'mcp-isolated', mcpName: string }`.
+
+Pick (a) for Unit 2.5. (b) is cleaner but bigger; defer to Phase 7
+or skip entirely.
+
+**7. Test churn (estimate ~1-2 hours).**
+
+- `agent-launcher.test.ts` — every `subagentType: 'playtest-seat'`
+  assertion gets parameterized.
+- `cluster-suspicions.test.ts:77`, `coverage-reporter.test.ts:62`,
+  any other test files with `'strict'` shape mode — unrelated to this
+  change but grep for `playtest-seat` literal to be sure.
+- New tests:
+  - `agent-launcher.test.ts` — buildLaunchSpecs emits one URL +
+    subagentType per seat with correct seatIndex → name mapping.
+  - `agent-launcher.test.ts` — playerUrl is assembled correctly
+    (room code + name URL-encoded).
+  - Generator script — output agent files round-trip parse, contain
+    the right MCP namespace.
+
+**8. Smoke test the full launcher-driver handshake (no real
+Playwright).**
+
+Write a fake-subagent test that:
+- Calls `runSession` with a seatDriver = `createAgentLauncherDriver`
+- Mock the agent dispatch by writing the marker file directly after
+  emitting the manifest
+- Verify session.md end-block writes, isolation audit runs, triage
+  runs, retention applies.
+
+This is the "I can prove the wiring is right without running real
+seats" test.
+
+**9. Capture insight 031.**
+
+`docs/insights/031-preferred-architecture-deferred-then-discovered-at-integration.md`
+— lesson: when a plan documents Options A/B with A "PREFERRED" but
+implementation goes with B for expedience, the architectural surprise
+deferred to integration time can be more expensive than just building
+A. Cite Phase 4 D15 → Phase 6 Unit 3 attempted boot.
+
+**10. Update `CLAUDE.md` "Workers / Protocol Landmines" section.**
+
+Add: per-seat MCP server topology — agents `playtest-seat-1` through
+`playtest-seat-10` each bind to their own MCP Playwright server.
+Don't merge them. Don't add `browser_tabs` to the whitelist (still a
+peek vector).
+
+### What's verified vs what's still hopeful
+
+**Verified empirically (this session, 2026-04-25):**
+- ✅ Parent ↔ subagent share the MCP Playwright browser (single
+  `playwright` server case)
+- ✅ Sequential subagents inherit each other's tab state under shared
+  MCP
+
+**Verified by docs/research only (NOT yet empirical in this repo):**
+- 🤞 Multiple MCP server entries in `.mcp.json` spawn distinct
+  processes — true for `@playwright/mcp` per package docs, but the
+  Claude Code agent file → MCP namespace binding has not been tested
+  in this project. **The 15-min validation experiment above must run
+  FIRST.**
+- 🤞 Each `@playwright/mcp` instance owns its own browser — true per
+  package design, but unverified for our env.
+
+### If the validation experiment fails
+
+Stop and bring the failure mode to Briggsy before architecting around
+it. Possible failures:
+- Multiple MCP servers configured but Claude Code only sees one →
+  investigate Claude Code MCP loading semantics.
+- Subagent tool whitelist references MCP server that isn't loaded →
+  agent file frontmatter doesn't see the server.
+- Tools work but browsers cross-contaminate (single Chrome process
+  shared) → `@playwright/mcp` flag needed for true isolation.
+
+Each of these has a different fix path. Don't predict; experiment,
+diagnose, then plan.
 
 ### Phase 6 Unit 1 state of the world (2026-04-24)
 

@@ -48,6 +48,24 @@ interface CliFlags {
   allowTrace: boolean
 }
 
+/**
+ * Mint a random 6-character room code (CAL prefix + 3 random alphanumerics
+ * from the unambiguous 31-char set). Used as the default when neither
+ * config nor CLI provides one — partyserver Durable Object state persists
+ * across wrangler restarts on local SQLite, so a fixed code (e.g. the
+ * old 'PLAYTEST' fallback) lands run 2 in 'playing' or 'game_over' phase
+ * and rejects new joiners. Fresh code per run = fresh DO = clean state.
+ * Mirrors the smoke pattern (`smoke.ts`, `phase6-*-smoke.ts`).
+ */
+function mintRoomCode(): string {
+  const chars = 'ABCDEFGHJKMNPQRSTUVWXYZ23456789'
+  let code = 'CAL'
+  for (let i = 0; i < 3; i++) {
+    code += chars[Math.floor(Math.random() * chars.length)]!
+  }
+  return code
+}
+
 function parseViewport(raw: string): Viewport {
   const match = /^(\d+)x(\d+)$/.exec(raw)
   if (!match) {
@@ -143,7 +161,7 @@ async function loadConfig(flags: CliFlags): Promise<Config> {
     seed: merged.seed,
     nopeWindowMs: merged.nopeWindowMs ?? 5000,
     sessionTimeoutMs: merged.sessionTimeoutMs ?? 3_600_000,
-    roomCode: merged.roomCode,
+    roomCode: merged.roomCode ?? mintRoomCode(),
     catalogPath: merged.catalogPath ?? 'docs/testing/playtest/SCENARIOS.md',
     outputRoot: merged.outputRoot ?? 'docs/testing/playtest/runs',
     viewports: merged.viewports ?? [

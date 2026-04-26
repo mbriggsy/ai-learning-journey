@@ -7,10 +7,18 @@
    (turn-active CTA "act now" + near-empty-deck Burned warning). They consume
    --motion-duration-essential-pulse, which survives prefers-reduced-motion: reduce
    per Phase 1 §2.9. Decorative state-swap transitions use the regular --fast tier.
+
+   Animation host: pulses live on ::after pseudo-elements, NOT the button DOM.
+   The button's bounding rect stays stable so Playwright's actionability check
+   passes — agent harness needs to click these (insight 035). The pseudo
+   overlays at inset: 0 and paints transparent; only its box-shadow + transform
+   are visible, painting outside the button's bounds. Pseudo `pointer-events:
+   none` so taps still hit the button.
 */
 
 @layer components {
   .box {
+    position: relative;
     display: flex;
     flex-direction: column;
     align-items: center;
@@ -37,13 +45,18 @@
       transform var(--motion-duration-fast) var(--motion-ease-decelerate);
   }
 
-  /* Press feedback — every pressable element needs :active scale. For variants
-     running breathe/breatheIntense/interceptPulse the animation is suspended
-     during the press so the scale actually lands; it resumes on release.
-     This is the primary CTA on phone — it must feel heard. */
+  /* Press feedback — every pressable element needs :active scale. The pulse
+     pseudo-element's animation is suspended during press (insight 016 — same
+     property + continuous animation = animation wins each frame unless killed),
+     so the scale lands cleanly; resumes on release. The button itself never
+     animates, so its `animation: none` is a no-op safety net for any future
+     direct animation. This is the primary CTA on phone — it must feel heard. */
   .box:not(:disabled):not([aria-disabled="true"]):active {
     animation: none;
     transform: scale(0.97);
+  }
+  .box:not(:disabled):not([aria-disabled="true"]):active::after {
+    animation: none;
   }
 
   .box:disabled,
@@ -81,12 +94,20 @@
   }
 
   /* State: draw when deck is almost empty — gameplay-essential warning pulse.
-     Consumes --motion-duration-essential-pulse: survives prefers-reduced-motion. */
+     Consumes --motion-duration-essential-pulse: survives prefers-reduced-motion.
+     Pulse glow + scale live on ::after so the button DOM stays stable for
+     Playwright agents (insight 035). */
   .drawIntense {
     color: var(--color-fg-primary);
     background: var(--color-bg-danger);
     border-color: var(--color-accent-burned);
-    box-shadow: var(--shadow-glow-danger);
+  }
+  .drawIntense::after {
+    content: '';
+    position: absolute;
+    inset: 0;
+    border-radius: inherit;
+    pointer-events: none;
     animation: breatheIntense var(--motion-duration-essential-pulse) var(--motion-ease-base) infinite alternate;
   }
 
@@ -100,12 +121,20 @@
   }
 
   /* State: valid single with action (renamed from .ready/.target in TSX).
-     Gameplay-essential CTA pulse — survives prefers-reduced-motion. */
+     Gameplay-essential CTA pulse — survives prefers-reduced-motion.
+     Pulse glow + scale live on ::after so the button DOM stays stable for
+     Playwright agents (insight 035). */
   .action {
     color: var(--color-fg-primary);
     background: var(--color-bg-interactive);
     border-color: var(--color-border-focus);
-    box-shadow: var(--shadow-glow-accent);
+  }
+  .action::after {
+    content: '';
+    position: absolute;
+    inset: 0;
+    border-radius: inherit;
+    pointer-events: none;
     animation: breathe var(--motion-duration-essential-pulse) var(--motion-ease-base) infinite alternate;
   }
 
@@ -136,9 +165,21 @@
   }
 
   /* Final 2 seconds — amplified pulse to telegraph the closing window.
-     Consumes --motion-duration-essential-pulse: survives reduced-motion. */
-  .urgent {
+     Consumes --motion-duration-essential-pulse: survives reduced-motion.
+     Pulse glow + scale live on ::after so the button DOM stays stable for
+     Playwright agents (insight 035). The .intercept rule above paints a
+     static danger glow; suppress it when .urgent is applied so the pseudo's
+     keyframes own the entire glow without doubling. */
+  .urgent::after {
+    content: '';
+    position: absolute;
+    inset: 0;
+    border-radius: inherit;
+    pointer-events: none;
     animation: interceptPulse var(--motion-duration-essential-pulse) var(--motion-ease-base) infinite alternate;
+  }
+  .intercept.urgent {
+    box-shadow: none;
   }
 
   /* State: intercept window open but you don't have an Intercepted card —

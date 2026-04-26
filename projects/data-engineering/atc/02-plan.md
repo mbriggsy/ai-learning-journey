@@ -36,17 +36,17 @@ Research happens at plan-time. If a join needs a specific window function, the p
 
 If the plan reads like code (method signatures, SQL strings, git commands), it's the wrong shape — fix it in the deepening pass. If the plan says "the agent will figure out X," it's punting — resolve X in deepening, or surface it as a deferred open question.
 
-## Drafting and deepening — both one at a time
+## Two passes — draft, then deepen
 
-This phase has two passes through the plan series:
+This phase runs two passes through the plan series, in order:
 
-**Drafting pass.** You tell the planning agent to draft phase 1's plan. Agent drafts. You tell it to draft phase 2's plan. Agent drafts. Continue until the series is on disk. Each plan informs the next — phase 2 is sharper for phase 1 already existing.
+**Drafting pass.** You tell the planning agent to plan. The agent reads the contract and drafts the series. Some planning skills handle the whole series in one run; others take one command per phase. Either way, drafting comes first.
 
-**Deepening pass.** Same cadence, different work. You tell the agent to deepen phase 1's plan. A panel of challenger agents reads the plan and pushes back from different angles — correctness, feasibility, scope, security, coherence, adversarial. The drafting agent integrates the findings. Plan strengthens. You tell the agent to deepen phase 2's plan. Repeat. Use a multi-persona review skill (`ce:document-review`, or whichever fork fits your stack) to drive the challenge.
+**Deepening pass.** Once the series is on disk, you tell the agent to deepen phase 1. A panel of challenger agents reads the plan and pushes back from different angles — correctness, feasibility, scope, security, coherence, adversarial. The drafting agent integrates the findings. Plan strengthens. You tell the agent to deepen phase 2. Repeat. Use a multi-persona review skill (`ce:document-review`, or whichever fork fits your stack) to drive the challenge.
 
 A drafted-but-undeepened plan is a wish list with confidence; the build agent will fly against it and produce wishes back. The challenger panel is what turns a plausible plan into a survivable one.
 
-One plan at a time, drafting then deepening. Never batch. Cascading errors land that way.
+Draft the whole series before deepening starts — cross-phase consistency checks need the full series on disk. Never batch the deepening.
 
 ## When the plan phase is done
 

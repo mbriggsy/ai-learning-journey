@@ -18,21 +18,18 @@ Use an executor skill (`gsd-executor`, `ce:work`, or whichever fork fits your st
 
 1. `/brief` to load context.
 2. Read the plan, top to bottom. Don't skim.
-3. Execute one task at a time, verifying at runtime as you go. When something breaks, one fix at a time — no chaining.
-4. Commit at the plan's commit points, with the plan's commit messages.
-5. If reality diverges from the plan, fix the right artifact (plan, or contract if the plan was correctly derived) before continuing — never paper over in code.
-6. When all tasks are done, run the phase's exit criteria check. If the phase clears the bar, advance. If not, fix in place — don't pull defects forward.
+3. Execute one task at a time, verifying at runtime as you go. Commit each task atomically with a descriptive message. When something breaks, one fix at a time — no chaining.
+4. If reality diverges from the plan, fix the right artifact (plan, or contract if the plan was correctly derived) before continuing — never paper over in code.
+5. When all tasks are done, run the phase's exit criteria check. If the phase clears the bar, advance. If not, fix in place — don't pull defects forward.
 
 Boring on purpose.
 
-## When this phase is done
+## What to expect when this phase ends
 
-The execute phase is complete when:
+After execution:
 
-1. Every plan has been executed end to end.
-2. Every task has been verified at runtime, not just in CI.
-3. Every commit point hit, with the agreed-upon commit messages.
-4. Any deviations have been written back to the plans or the contract.
-5. The build's output is ready to face the review phase.
+- Every plan has been executed end to end.
+- Every task has been verified at runtime, not just in CI.
+- Any plan or contract deviations have been written back to the source artifact.
 
 Code on disk, plans updated, contract still load-bearing. `04-review.md` starts here.

@@ -48,14 +48,13 @@ A drafted-but-undeepened plan is a wish list with confidence; the build agent wi
 
 Draft the whole series before deepening starts — cross-phase consistency checks need the full series on disk. Never batch the deepening.
 
-## When the plan phase is done
+## What to expect when this phase ends
 
-The plan phase is complete when:
+After drafting and deepening, the plan series on disk:
 
-1. Every implementation phase has a deepened plan file.
-2. Every plan covers all the decisions above.
-3. The series covers every RTM row at least once.
-4. All open questions are resolved or explicitly deferred with stated reasons.
-5. No contradictions across phase boundaries.
+- Has one deepened plan file per implementation phase.
+- Captures every RTM row across the series — nothing required by the contract is missing.
+- Has all open questions resolved or explicitly deferred with stated reasons.
+- Holds no contradictions across phase boundaries — the challenger panel catches these during deepening.
 
-Plans at this stage are **build-ready**. `03-execute.md` starts here. Do not start building from a plan series that hasn't cleared all five — that's the singular fastest way to waste a week.
+Plans at this stage are **build-ready**. `03-execute.md` starts here.

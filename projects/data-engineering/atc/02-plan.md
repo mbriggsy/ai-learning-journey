@@ -42,7 +42,7 @@ This phase runs two passes through the plan series, in order:
 
 **Drafting pass.** You tell the planning agent to plan. The agent reads the contract and drafts the series. Some planning skills handle the whole series in one run; others take one command per phase. Either way, drafting comes first.
 
-**Deepening pass.** Once the series is on disk, you tell the agent to deepen phase 1. A panel of challenger agents reads the plan and pushes back from different angles — correctness, feasibility, scope, security, coherence, adversarial. Each writes its own review. A synthesizer agent collects the reviews and updates the phase plan to strengthen it. You tell the agent to deepen phase 2. Repeat. Use a multi-persona review skill (`ce:document-review`, or whichever fork fits your stack) to drive the challenge.
+**Deepening pass.** Once the series is on disk, you tell the agent to deepen phase 1. A panel of challenger agents reads the plan and pushes back from different angles — correctness, feasibility, scope, security, coherence, adversarial. Each writes its own review. A synthesizer agent collects the reviews and updates the phase plan to strengthen it. You tell the agent to deepen phase 2. Repeat.
 
 A drafted-but-undeepened plan is a wish list with confidence; the build agent will fly against it and produce wishes back. The challenger panel is what turns a plausible plan into a survivable one.
 

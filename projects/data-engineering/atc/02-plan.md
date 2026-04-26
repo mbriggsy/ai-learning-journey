@@ -2,7 +2,7 @@
 
 The contract tells you what to build. Plans tell you how to build it, phase by phase. This file is about producing the build's execution recipe: a series of phased plans, deepened until each one is solid enough that the build agent can pick it up and fly.
 
-This chapter covers two steps from the flight pattern in one place — plans get *drafted* first, then *deepened*. Both are agent-driven; you direct.
+This chapter covers two steps from the flight pattern in one place — plans get *drafted* first, then *deepened*. Both are fully agent-driven. You start the work and call each phase in turn.
 
 ## What's a plan
 
@@ -10,7 +10,7 @@ One plan = one implementation phase. A meaningful pipeline has multiple phases (
 
 A plan is **decisions, not code**. Concrete enough that the build agent can start without ambiguity, but never pre-written implementation. If the plan reads like code, it's the wrong shape.
 
-Plans are agent-drafted. Use a planning skill (`ce:plan`, `gsd:plan-phase`, or whichever fork fits your stack) — it reads the contract (PRD + RTM) and produces phase plans against it. Your job is to direct: confirm scope, surface blockers, accept or reject the agent's proposed approach. Not to write the plan yourself.
+Plans are agent-drafted. Use a planning skill (`ce:plan`, `gsd:plan-phase`, or whichever fork fits your stack) — it reads the contract (PRD + RTM) and produces phase plans against it. Your job: kick off the phase, watch the context window, call the next phase when the agent's done. You don't write the plan, review it, or approve content — the agent and the challenger panel do that work.
 
 ## What goes in a plan
 
@@ -34,19 +34,19 @@ A plan captures decisions: scope, approach, dependencies, file paths, patterns t
 
 Research happens at plan-time. If a join needs a specific window function, the plan names it. If a merge follows a known pattern, the plan points at the pattern. The agent doesn't research mid-build — it executes the decisions the plan already made.
 
-If you find yourself writing actual code in a plan, the plan is the wrong shape. If you find yourself writing "the agent will figure out X," resolve X now or surface it under open questions.
+If the plan reads like code (method signatures, SQL strings, git commands), it's the wrong shape — fix it in the deepening pass. If the plan says "the agent will figure out X," it's punting — resolve X in deepening, or surface it as a deferred open question.
 
 ## Drafting and deepening — both one at a time
 
 This phase has two passes through the plan series:
 
-**Drafting pass.** A planning agent drafts phase 1's plan → you confirm direction → fix → agent drafts phase 2's plan → you confirm direction → fix → … Each plan informs the next; reviewing one in isolation is faster than reviewing a stack.
+**Drafting pass.** You tell the planning agent to draft phase 1's plan. Agent drafts. You tell it to draft phase 2's plan. Agent drafts. Continue until the series is on disk. Each plan informs the next — phase 2 is sharper for phase 1 already existing.
 
-**Deepening pass.** Once a plan is drafted, a panel of challenger agents reads it and pushes back. Each challenger reviews from a different angle — correctness, feasibility, scope, security, coherence, adversarial — and surfaces issues the drafting agent didn't catch. Their findings get integrated; the plan strengthens. Use a multi-persona review skill (`ce:document-review`, or whichever fork fits your stack) to drive the challenge.
+**Deepening pass.** Same cadence, different work. You tell the agent to deepen phase 1's plan. A panel of challenger agents reads the plan and pushes back from different angles — correctness, feasibility, scope, security, coherence, adversarial. The drafting agent integrates the findings. Plan strengthens. You tell the agent to deepen phase 2's plan. Repeat. Use a multi-persona review skill (`ce:document-review`, or whichever fork fits your stack) to drive the challenge.
 
 A drafted-but-undeepened plan is a wish list with confidence; the build agent will fly against it and produce wishes back. The challenger panel is what turns a plausible plan into a survivable one.
 
-Same rule — one plan at a time. Never batch the series. Cascading errors land that way.
+One plan at a time, drafting then deepening. Never batch. Cascading errors land that way.
 
 ## When the plan phase is done
 

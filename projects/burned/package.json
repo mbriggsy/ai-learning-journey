@@ -24,6 +24,7 @@
     "playtest:phase5-smoke": "tsx scripts/playtest/integration/phase5-smoke.ts",
     "playtest:phase6-launcher-smoke": "tsx scripts/playtest/integration/phase6-launcher-smoke.ts",
     "playtest:phase6-board-launcher-smoke": "tsx scripts/playtest/integration/phase6-board-launcher-smoke.ts",
+    "playtest:phase6-smartactionbox-clickability-smoke": "tsx scripts/playtest/integration/phase6-smartactionbox-clickability-smoke.ts",
     "playtest:run": "tsx scripts/playtest/run-session.ts",
     "playtest:selftest": "tsx scripts/playtest/selftest.ts",
     "playtest:pre-flight": "tsx scripts/playtest/pre-flight.ts",

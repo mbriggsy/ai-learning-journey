@@ -40,11 +40,13 @@ If you find yourself writing actual code in a plan, the plan is the wrong shape.
 
 This phase has two passes through the plan series:
 
-**Drafting pass.** Agent drafts phase 1's plan → you confirm direction → fix → agent drafts phase 2's plan → you confirm direction → fix → … Each plan informs the next; reviewing one in isolation is faster than reviewing a stack.
+**Drafting pass.** A planning agent drafts phase 1's plan → you confirm direction → fix → agent drafts phase 2's plan → you confirm direction → fix → … Each plan informs the next; reviewing one in isolation is faster than reviewing a stack.
 
-**Deepening pass.** Once the series is drafted, the agent goes back through each plan and sharpens every decision, verifies every pattern reference, cross-checks phase-boundary consistency, and resolves every open question. Same rule — one plan at a time. A drafted-but-undeepened plan is a wish list with confidence; the build agent will fly against it and produce wishes back.
+**Deepening pass.** Once a plan is drafted, a panel of challenger agents reads it and pushes back. Each challenger reviews from a different angle — correctness, feasibility, scope, security, coherence, adversarial — and surfaces issues the drafting agent didn't catch. Their findings get integrated; the plan strengthens. Use a multi-persona review skill (`ce:document-review`, or whichever fork fits your stack) to drive the challenge.
 
-Never batch the series. Cascading errors land that way.
+A drafted-but-undeepened plan is a wish list with confidence; the build agent will fly against it and produce wishes back. The challenger panel is what turns a plausible plan into a survivable one.
+
+Same rule — one plan at a time. Never batch the series. Cascading errors land that way.
 
 ## When the plan phase is done
 

@@ -23,6 +23,8 @@ Skills are singular-focused — one input, one output. The contract is built by 
 
 Either way, what lands at the end of phase 1 is the same: a PRD and an RTM, both clean-room ready, both about to lock.
 
+In both chapters, the PRD passes through a challenger panel before it locks — different angles (correctness, feasibility, scope, security, coherence, adversarial), each writing its own review; a synthesizer integrates their findings to strengthen the PRD. Some skills bundle this internally (CE's brainstorm does); others run it as a separate step. The same pattern shows up again in plan deepening.
+
 ## Clean room — the rule that makes the contract load-bearing
 
 For Chapter 1: from the moment the contract lands, the build agent does not read the legacy code. Not "to clarify a section." Not "to double-check the join logic." Not "just this once." The contract is the only acceptable input.

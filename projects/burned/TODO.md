@@ -164,19 +164,19 @@ not harness work.
     so the verifier flags individual entries instead of failing the
     whole file.
 14. **~~Agent X card renders larger than other hand cards (NEW 2026-04-27).~~**
-    CLOSED 2026-04-27 by commit `0f145148`. Diagnosis: card slots are
-    identically sized via `.stagedSlot` / `.slot` (`aspect-ratio: 5/7` +
-    flex), but the Agent X source asset framed the figure tight to the top
-    edge with no background headroom while the operatives (Dash, Vera,
-    Sable, Janet, Neal) all sit with ~10-20% canvas height as background
-    above the hair. Same DOM size, more visually-occupied frame → looked
-    "bigger." Fix: regen with explicit framing instructions added to
-    `scripts/regen-agent-x.ts` ("twelve to fifteen percent of the canvas
-    above the top of the fedora is geometric background NOT figure",
-    "figure does NOT touch the top edge of the frame"). Old asset archived
-    to `_archive/agent-x-2026-04-27-frame-too-tight.{webp,png}`. Asset
-    verified served at `/assets/cards/agent-x.webp` with proper headroom
-    matching Neal Proctor side-by-side.
+    CLOSED 2026-04-27 in two commits: `0f145148` (asset reframe — half-fix)
+    and `308bbdbf` (true root cause — `min-height: 2lh` on `.cardDesc`).
+    Diagnosis arc: initial hypothesis was asset-only (Agent X figure
+    framed tighter than operatives). Asset regen helped but didn't
+    eliminate the perception. Pixel-measured at 390×844 revealed the
+    real cause: `.cardIllustration` is `flex: 1 1 0` and was absorbing
+    21px of vertical space freed by Agent X's one-line description
+    ("Wild — counts as any operative type.") vs operatives' two-line
+    descriptions. `min-height: 2lh` on `.cardDesc` (at the >=177px
+    container breakpoint) pins the description block so outlier cards
+    don't yield space to the illustration zone. Verified across phone
+    portrait + iPad landscape: all card illusZoneH now identical
+    (368px / 465px respectively).
 15. **Vibe-check signals (NOT bugs, but worth capturing).** Old seat-2
     v1 vibe-checked SCN-INTERCEPT-CHAIN-BURN-01 as **NO** ("mechanically
     correct but cinematically flat; no dramatic framing or resolution

@@ -163,13 +163,20 @@ not harness work.
     of the YAML shape OR strengthen the schema-validator's error-recovery
     so the verifier flags individual entries instead of failing the
     whole file.
-14. **Agent X card renders larger than other hand cards (NEW 2026-04-27).**
-    Spotted on iPad Pro 1366×1024 player view: the Agent X (wild) card
-    appears taller than other operative cards in the hand fan. Reproduces
-    across multiple hands per Briggsy's spot-check, so it's not a per-card
-    fluke — likely a per-card-type sizing branch in `Hand.tsx` /
-    `MinimalCard.tsx`. Pre-existing (was visible before insight 037 refactor),
-    not a regression. Investigate next time hand-layout work surfaces.
+14. **~~Agent X card renders larger than other hand cards (NEW 2026-04-27).~~**
+    CLOSED 2026-04-27 by commit `0f145148`. Diagnosis: card slots are
+    identically sized via `.stagedSlot` / `.slot` (`aspect-ratio: 5/7` +
+    flex), but the Agent X source asset framed the figure tight to the top
+    edge with no background headroom while the operatives (Dash, Vera,
+    Sable, Janet, Neal) all sit with ~10-20% canvas height as background
+    above the hair. Same DOM size, more visually-occupied frame → looked
+    "bigger." Fix: regen with explicit framing instructions added to
+    `scripts/regen-agent-x.ts` ("twelve to fifteen percent of the canvas
+    above the top of the fedora is geometric background NOT figure",
+    "figure does NOT touch the top edge of the frame"). Old asset archived
+    to `_archive/agent-x-2026-04-27-frame-too-tight.{webp,png}`. Asset
+    verified served at `/assets/cards/agent-x.webp` with proper headroom
+    matching Neal Proctor side-by-side.
 15. **Vibe-check signals (NOT bugs, but worth capturing).** Old seat-2
     v1 vibe-checked SCN-INTERCEPT-CHAIN-BURN-01 as **NO** ("mechanically
     correct but cinematically flat; no dramatic framing or resolution

@@ -145,10 +145,16 @@ not harness work.
    End turn button until cleared with Escape + deselect." Reproduces the
    `_enlargeBackdrop_*` overlay leaving an adjacent card in `active`
    state. Investigate `Hand.tsx` enlarge-handler + state cleanup.
-10. **INTERCEPTED toast leaks across turn boundaries.** Old seat-1 v1:
-    INTERCEPTED toast from their turn persisted into Seat2's turn without
-    clearing. Probably a `PlayerAlert` / `StealReport` cleanup gap on
-    `turn-started` event.
+10. **~~INTERCEPTED toast leaks across turn boundaries.~~** CLOSED
+    2026-04-27 by commit `041e45c1`. Diagnosis: not a PlayerAlert /
+    StealReport gap — DramaOverlay's nope-played beat (1400ms hold +
+    slam-in/out = ~2s total) was overlapping the next player's turn
+    when turn-started fired during the animation window. Fix:
+    classified beats as transient (only INTERCEPTED today) vs critical
+    (BURNED / EXTRACTED / ELIMINATED / WINS); transient aborts via
+    GSAP timeline kill on turn-started arrival, or skips queueing
+    entirely if turn-started is in the same event batch. Critical
+    beats untouched. Verified via Playwright DOM injection.
 11. **"Can't play Intercepted" UI has no context.** Old seat-1 v1: when
     ACTOR tries to chain-intercept after their own card is intercepted,
     the UI blocks with the bare error string. Add a hint: "Intercepted

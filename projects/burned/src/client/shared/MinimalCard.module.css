@@ -206,6 +206,15 @@
     color: color-mix(in oklab, var(--card-accent) 25%, var(--color-fg-secondary));
     line-height: 1.4;
     margin-top: auto;
+    /* Pin description block to 2 line-heights so single-line descriptions
+       (Agent X's "Wild — counts as any operative type.") don't shrink and
+       let .cardIllustration's `flex: 1 1 0` swallow the freed space.
+       Without this, the wild card rendered ~21px taller in its illustration
+       zone — same card frame, bigger figure → "Agent X is bigger" perception.
+       The two-line descriptions of operatives + most action cards already
+       occupy ~2lh, so this is a floor for outliers, not a change for typical
+       cards. Captured 2026-04-27 by side-by-side dimension measurement. */
+    min-height: 2lh;
   }
 
   .card {

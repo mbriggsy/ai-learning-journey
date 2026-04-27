@@ -1,0 +1,806 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>ATC — Phase 03 / Concept</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Fraunces:opsz,wght@9..144,300;9..144,400;9..144,500;9..144,600;9..144,700&family=Crimson+Pro:ital,wght@0,300;0,400;0,500;0,600;1,400&family=JetBrains+Mono:wght@300;400;500&display=swap" rel="stylesheet">
+<style>
+:root {
+  --paper: #F4EDDD;
+  --paper-deep: #ECE2CC;
+  --ink: #14202E;
+  --ink-soft: #3A4757;
+  --ink-faint: #7B7765;
+  --rule: #C9BD9F;
+  --rule-soft: #D9D0BA;
+  --amber: #B8821A;
+  --amber-deep: #7A5512;
+
+  --display: 'Fraunces', Georgia, serif;
+  --body: 'Crimson Pro', Georgia, serif;
+  --mono: 'JetBrains Mono', 'Courier New', monospace;
+
+  --ease-out: cubic-bezier(0.23, 1, 0.32, 1);
+}
+
+* { box-sizing: border-box; margin: 0; padding: 0; }
+
+html, body {
+  background: var(--paper);
+  color: var(--ink);
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+}
+
+body {
+  font-family: var(--body);
+  font-size: 19px;
+  line-height: 1.55;
+  font-feature-settings: 'kern', 'liga', 'onum';
+  background-image:
+    radial-gradient(circle at 20% 10%, rgba(184, 130, 26, 0.025) 0%, transparent 50%),
+    radial-gradient(circle at 80% 80%, rgba(20, 32, 46, 0.03) 0%, transparent 50%);
+  min-height: 100vh;
+}
+
+.page {
+  max-width: 1240px;
+  margin: 0 auto;
+  padding: 56px 64px 56px;
+  position: relative;
+}
+
+/* --- Crosshair / paper-edge marks --- */
+.page::before, .page::after {
+  content: '';
+  position: absolute;
+  width: 14px;
+  height: 14px;
+  border: 1px solid var(--ink);
+  opacity: 0.5;
+}
+.page::before { top: 32px; left: 32px; border-right: none; border-bottom: none; }
+.page::after { bottom: 32px; right: 32px; border-left: none; border-top: none; }
+
+/* --- Meta bar --- */
+
+.meta-bar {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  font-family: var(--mono);
+  font-size: 11px;
+  letter-spacing: 0.16em;
+  text-transform: uppercase;
+  color: var(--ink-faint);
+  padding-bottom: 18px;
+  border-bottom: 1px solid var(--rule);
+  margin-bottom: 56px;
+}
+
+.meta-bar__group { display: flex; gap: 28px; align-items: center; }
+
+.meta-bar__id {
+  color: var(--amber);
+  font-weight: 500;
+  letter-spacing: 0.2em;
+}
+
+.meta-bar__sep {
+  width: 1px;
+  height: 12px;
+  background: var(--rule);
+}
+
+/* --- Flight pattern strip --- */
+
+.pattern {
+  position: relative;
+  margin-bottom: 88px;
+  padding: 0 8px;
+}
+
+.pattern__phases {
+  display: grid;
+  grid-template-columns: repeat(6, 1fr);
+  position: relative;
+  z-index: 1;
+}
+
+.pattern__line {
+  position: absolute;
+  left: 8.33%;
+  right: 8.33%;
+  bottom: 4px;
+  height: 1px;
+  border-top: 1px dashed #B8AB89;
+  z-index: 0;
+}
+
+.phase-marker {
+  text-align: center;
+  position: relative;
+  padding-bottom: 0;
+}
+
+.phase-marker__num {
+  font-family: var(--mono);
+  font-size: 10px;
+  letter-spacing: 0.2em;
+  color: var(--ink-faint);
+  margin-bottom: 6px;
+}
+
+.phase-marker__name {
+  font-family: var(--display);
+  font-variation-settings: 'opsz' 36;
+  font-size: 14px;
+  font-weight: 500;
+  color: var(--ink-soft);
+  letter-spacing: -0.005em;
+  margin-bottom: 16px;
+}
+
+.phase-marker__dot {
+  width: 9px;
+  height: 9px;
+  border-radius: 50%;
+  background: var(--paper);
+  border: 1.5px solid var(--rule);
+  margin: 0 auto;
+  position: relative;
+}
+
+.phase-marker--active .phase-marker__num,
+.phase-marker--active .phase-marker__name {
+  color: var(--ink);
+}
+
+.phase-marker--active .phase-marker__name {
+  font-weight: 700;
+}
+
+.phase-marker--active .phase-marker__dot {
+  background: var(--amber);
+  border-color: var(--amber);
+  width: 12px;
+  height: 12px;
+  box-shadow: 0 0 0 5px var(--paper), 0 0 0 6px var(--amber);
+}
+
+/* --- Phase hero --- */
+
+.phase-hero {
+  display: grid;
+  grid-template-columns: 1fr 380px;
+  gap: 88px;
+  margin-bottom: 88px;
+  position: relative;
+}
+
+.phase-hero__num {
+  font-family: var(--mono);
+  font-size: 12px;
+  letter-spacing: 0.24em;
+  color: var(--amber);
+  text-transform: uppercase;
+  margin-bottom: 20px;
+  display: flex;
+  align-items: center;
+  gap: 12px;
+}
+
+.phase-hero__num::before {
+  content: '';
+  width: 32px;
+  height: 1px;
+  background: var(--amber);
+}
+
+.phase-hero__title {
+  font-family: var(--display);
+  font-variation-settings: 'opsz' 144, 'SOFT' 30;
+  font-size: clamp(64px, 9vw, 108px);
+  line-height: 0.92;
+  font-weight: 600;
+  color: var(--ink);
+  letter-spacing: -0.045em;
+  margin-bottom: 32px;
+}
+
+.phase-hero__sub {
+  font-family: var(--body);
+  font-size: 22px;
+  line-height: 1.45;
+  color: var(--ink-soft);
+  font-style: italic;
+  max-width: 560px;
+  font-weight: 400;
+}
+
+/* --- Margin / operation log --- */
+
+.oplog {
+  border-left: 1px solid var(--rule);
+  padding: 0 0 0 24px;
+  align-self: stretch;
+  margin-top: 28px;
+  position: relative;
+}
+
+.oplog__head {
+  font-family: var(--mono);
+  font-size: 10px;
+  letter-spacing: 0.24em;
+  text-transform: uppercase;
+  color: var(--ink-faint);
+  font-weight: 500;
+  margin-bottom: 28px;
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+
+.oplog__head::after {
+  content: '';
+  flex: 1;
+  height: 1px;
+  background: var(--rule);
+}
+
+.oplog__entry {
+  margin-bottom: 28px;
+  padding-bottom: 24px;
+  border-bottom: 1px solid var(--rule-soft);
+}
+
+.oplog__entry:last-child {
+  border-bottom: none;
+  margin-bottom: 0;
+  padding-bottom: 0;
+}
+
+.oplog__label {
+  font-family: var(--mono);
+  font-size: 10px;
+  letter-spacing: 0.22em;
+  text-transform: uppercase;
+  color: var(--amber);
+  font-weight: 500;
+  margin-bottom: 12px;
+}
+
+.oplog__body {
+  font-family: var(--body);
+  font-style: italic;
+  color: var(--ink);
+  font-size: 17px;
+  line-height: 1.5;
+  font-weight: 400;
+}
+
+.oplog__cite {
+  font-family: var(--mono);
+  font-size: 9px;
+  letter-spacing: 0.18em;
+  text-transform: uppercase;
+  color: var(--ink-faint);
+  margin-top: 12px;
+  font-style: normal;
+}
+
+.oplog__list {
+  list-style: none;
+}
+
+.oplog__list li {
+  font-family: var(--body);
+  font-size: 16px;
+  color: var(--ink-soft);
+  padding: 6px 0 6px 16px;
+  position: relative;
+  line-height: 1.4;
+}
+
+.oplog__list li::before {
+  content: '';
+  position: absolute;
+  left: 0;
+  top: 14px;
+  width: 8px;
+  height: 1px;
+  background: var(--amber);
+}
+
+.oplog__refs {
+  font-family: var(--mono);
+  font-size: 11px;
+  color: var(--ink-soft);
+  letter-spacing: 0.04em;
+  line-height: 1.7;
+}
+
+.oplog__refs span {
+  color: var(--ink-faint);
+}
+
+/* --- Roles --- */
+
+.roles {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 96px;
+  margin-bottom: 96px;
+  border-top: 1px solid var(--rule);
+  padding-top: 56px;
+  position: relative;
+}
+
+.roles::before {
+  content: '';
+  position: absolute;
+  top: -4px;
+  left: 50%;
+  transform: translateX(-50%);
+  width: 7px;
+  height: 7px;
+  background: var(--paper);
+  border: 1px solid var(--rule);
+  border-radius: 50%;
+}
+
+.roles__divider {
+  position: absolute;
+  top: 56px;
+  bottom: 0;
+  left: 50%;
+  width: 1px;
+  background: var(--rule-soft);
+}
+
+.role { position: relative; }
+
+.role__label {
+  font-family: var(--mono);
+  font-size: 11px;
+  letter-spacing: 0.24em;
+  text-transform: uppercase;
+  color: var(--ink-faint);
+  margin-bottom: 12px;
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+
+.role__label::before {
+  content: '';
+  width: 18px;
+  height: 1px;
+  background: var(--ink-faint);
+}
+
+.role__who {
+  font-family: var(--display);
+  font-variation-settings: 'opsz' 100, 'SOFT' 50;
+  font-size: 52px;
+  font-weight: 600;
+  color: var(--ink);
+  letter-spacing: -0.025em;
+  margin-bottom: 6px;
+  line-height: 1;
+}
+
+.role__modifier {
+  font-family: var(--body);
+  font-style: italic;
+  color: var(--ink-soft);
+  font-size: 19px;
+  margin-bottom: 32px;
+}
+
+.role__list {
+  list-style: none;
+}
+
+.role__list li {
+  font-family: var(--body);
+  font-size: 18px;
+  line-height: 1.5;
+  color: var(--ink);
+  padding: 16px 0;
+  border-bottom: 1px solid var(--rule-soft);
+  display: grid;
+  grid-template-columns: 36px 1fr;
+  gap: 12px;
+  align-items: baseline;
+}
+
+.role__list li:last-child { border-bottom: none; }
+
+.role__list .key {
+  font-family: var(--mono);
+  font-size: 10px;
+  color: var(--amber);
+  letter-spacing: 0.16em;
+  font-weight: 500;
+}
+
+/* --- Gate --- */
+
+.gate {
+  position: relative;
+  border: 1px solid var(--ink);
+  padding: 48px 56px;
+  background: var(--paper);
+}
+
+.gate__corner {
+  position: absolute;
+  width: 14px;
+  height: 14px;
+}
+.gate__corner--tl { top: -1px; left: -1px; border-top: 3px solid var(--amber); border-left: 3px solid var(--amber); }
+.gate__corner--tr { top: -1px; right: -1px; border-top: 3px solid var(--amber); border-right: 3px solid var(--amber); }
+.gate__corner--bl { bottom: -1px; left: -1px; border-bottom: 3px solid var(--amber); border-left: 3px solid var(--amber); }
+.gate__corner--br { bottom: -1px; right: -1px; border-bottom: 3px solid var(--amber); border-right: 3px solid var(--amber); }
+
+.gate__head {
+  display: flex;
+  justify-content: space-between;
+  align-items: flex-end;
+  margin-bottom: 24px;
+  border-bottom: 1px solid var(--rule);
+  padding-bottom: 24px;
+}
+
+.gate__label {
+  font-family: var(--mono);
+  font-size: 11px;
+  letter-spacing: 0.24em;
+  text-transform: uppercase;
+  color: var(--amber);
+  font-weight: 500;
+  margin-bottom: 12px;
+}
+
+.gate__title {
+  font-family: var(--display);
+  font-variation-settings: 'opsz' 100;
+  font-size: 40px;
+  font-weight: 600;
+  color: var(--ink);
+  letter-spacing: -0.02em;
+  line-height: 1;
+}
+
+.gate__head-id {
+  font-family: var(--mono);
+  font-size: 11px;
+  letter-spacing: 0.2em;
+  color: var(--ink-faint);
+  text-transform: uppercase;
+}
+
+.gate__intro {
+  font-family: var(--body);
+  font-size: 19px;
+  line-height: 1.55;
+  color: var(--ink-soft);
+  max-width: 680px;
+  margin-bottom: 36px;
+  font-style: italic;
+}
+
+.gate__criteria {
+  display: grid;
+  grid-template-columns: 1fr 1fr 1fr;
+  gap: 32px;
+}
+
+.gate__criterion {
+  position: relative;
+  padding-top: 18px;
+  border-top: 1px solid var(--rule);
+}
+
+.gate__criterion::before {
+  content: '';
+  position: absolute;
+  top: -1px;
+  left: 0;
+  width: 32px;
+  height: 1px;
+  background: var(--amber);
+}
+
+.gate__criterion-num {
+  font-family: var(--mono);
+  font-size: 10px;
+  letter-spacing: 0.2em;
+  color: var(--amber);
+  font-weight: 500;
+  margin-bottom: 8px;
+}
+
+.gate__criterion strong {
+  font-family: var(--display);
+  font-variation-settings: 'opsz' 36;
+  font-size: 19px;
+  font-weight: 600;
+  color: var(--ink);
+  display: block;
+  margin-bottom: 6px;
+  letter-spacing: -0.01em;
+}
+
+.gate__criterion p {
+  font-family: var(--body);
+  font-size: 16px;
+  line-height: 1.5;
+  color: var(--ink-soft);
+}
+
+/* --- Footer --- */
+
+.footer {
+  margin-top: 88px;
+  padding-top: 24px;
+  border-top: 1px solid var(--rule);
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  font-family: var(--mono);
+  font-size: 10px;
+  letter-spacing: 0.2em;
+  text-transform: uppercase;
+  color: var(--ink-faint);
+  flex-wrap: wrap;
+  gap: 16px;
+}
+
+.footer__group {
+  display: flex;
+  gap: 24px;
+  align-items: center;
+}
+
+.footer__group span.brand {
+  color: var(--amber);
+  font-weight: 500;
+}
+
+.footer__sep {
+  width: 1px;
+  height: 10px;
+  background: var(--rule);
+}
+
+/* --- Animations --- */
+
+.reveal {
+  opacity: 0;
+  transform: translateY(10px);
+  animation: reveal 700ms var(--ease-out) forwards;
+}
+
+.r1 { animation-delay: 0ms; }
+.r2 { animation-delay: 70ms; }
+.r3 { animation-delay: 140ms; }
+.r4 { animation-delay: 210ms; }
+.r5 { animation-delay: 280ms; }
+.r6 { animation-delay: 350ms; }
+.r7 { animation-delay: 420ms; }
+
+@keyframes reveal {
+  to { opacity: 1; transform: translateY(0); }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .reveal { opacity: 1; transform: none; animation: none; }
+}
+
+/* --- Responsive --- */
+
+@media (max-width: 900px) {
+  .page { padding: 32px 24px 64px; }
+  .phase-hero {
+    grid-template-columns: 1fr;
+    gap: 40px;
+  }
+  .phase-hero__title { font-size: 56px; }
+  .roles {
+    grid-template-columns: 1fr;
+    gap: 56px;
+  }
+  .roles__divider { display: none; }
+  .gate { padding: 32px 24px; }
+  .gate__criteria {
+    grid-template-columns: 1fr;
+    gap: 24px;
+  }
+  .gate__head {
+    flex-direction: column;
+    align-items: flex-start;
+    gap: 12px;
+  }
+  .pattern__phases { grid-template-columns: repeat(6, 1fr); gap: 2px; }
+  .phase-marker__name { font-size: 11px; }
+  .phase-marker__num { font-size: 9px; }
+  .meta-bar { font-size: 9px; flex-wrap: wrap; gap: 12px; padding-bottom: 12px; margin-bottom: 32px; }
+  .meta-bar__group { gap: 14px; }
+  .meta-bar__sep { display: none; }
+}
+</style>
+</head>
+<body>
+<div class="page">
+
+  <!-- Meta bar -->
+  <div class="meta-bar reveal r1">
+    <div class="meta-bar__group">
+      <span class="meta-bar__id">ATC / FLIGHT PATTERN</span>
+      <span class="meta-bar__sep"></span>
+      <span>CONCEPT 01</span>
+    </div>
+    <div class="meta-bar__group">
+      <span>RUNWAY 03</span>
+      <span class="meta-bar__sep"></span>
+      <span>PHASE 03 / 06</span>
+    </div>
+  </div>
+
+  <!-- Flight pattern strip -->
+  <div class="pattern reveal r2">
+    <div class="pattern__line"></div>
+    <div class="pattern__phases">
+      <div class="phase-marker">
+        <div class="phase-marker__num">01</div>
+        <div class="phase-marker__name">PRD</div>
+        <div class="phase-marker__dot"></div>
+      </div>
+      <div class="phase-marker">
+        <div class="phase-marker__num">02</div>
+        <div class="phase-marker__name">Plans</div>
+        <div class="phase-marker__dot"></div>
+      </div>
+      <div class="phase-marker phase-marker--active">
+        <div class="phase-marker__num">03</div>
+        <div class="phase-marker__name">Execute</div>
+        <div class="phase-marker__dot"></div>
+      </div>
+      <div class="phase-marker">
+        <div class="phase-marker__num">04</div>
+        <div class="phase-marker__name">Review</div>
+        <div class="phase-marker__dot"></div>
+      </div>
+      <div class="phase-marker">
+        <div class="phase-marker__num">05</div>
+        <div class="phase-marker__name">Evidence</div>
+        <div class="phase-marker__dot"></div>
+      </div>
+      <div class="phase-marker">
+        <div class="phase-marker__num">∞</div>
+        <div class="phase-marker__name">Loop</div>
+        <div class="phase-marker__dot"></div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Phase hero -->
+  <div class="phase-hero">
+    <div class="reveal r3">
+      <div class="phase-hero__num">PHASE 03 — EXECUTE</div>
+      <h1 class="phase-hero__title">Time<br>to fly.</h1>
+      <p class="phase-hero__sub">The plans are deepened. The contract is locked. The agent reads the plan and translates it into code — one phase end to end before the next begins.</p>
+    </div>
+    <aside class="oplog reveal r4">
+      <div class="oplog__head">Operation Log</div>
+
+      <div class="oplog__entry">
+        <div class="oplog__label">Doctrine</div>
+        <div class="oplog__body">"Half the value of ATC is the refusal to short-circuit phases. The agent does not advance until the gate clears — and you do not let it."</div>
+        <div class="oplog__cite">— ATC / 03.04</div>
+      </div>
+
+      <div class="oplog__entry">
+        <div class="oplog__label">Watch For</div>
+        <ul class="oplog__list">
+          <li>Chained fixes — diagnose, fix, verify, then move</li>
+          <li>Code-level papering instead of fixing the plan</li>
+          <li>Skipped runtime verification</li>
+          <li>Defects pulled forward into the next phase</li>
+        </ul>
+      </div>
+
+      <div class="oplog__entry">
+        <div class="oplog__label">See Also</div>
+        <div class="oplog__refs">
+          03-execute.md<br>
+          02-plan.md <span>/ exit criteria</span><br>
+          04-review.md <span>/ panel handoff</span>
+        </div>
+      </div>
+    </aside>
+  </div>
+
+  <!-- Roles -->
+  <div class="roles reveal r5">
+    <div class="roles__divider"></div>
+    <div class="role">
+      <div class="role__label">Tower</div>
+      <div class="role__who">ATC</div>
+      <div class="role__modifier">aims, watches, approves</div>
+      <ul class="role__list">
+        <li><span class="key">T·1</span><span>Pick the executor. Aim it at phase 1. Kick off.</span></li>
+        <li><span class="key">T·2</span><span>Watch for runway intrusions — chained fixes, code-level papering, skipped verification.</span></li>
+        <li><span class="key">T·3</span><span>Sanity-check the exit criteria, then green-light phase advance.</span></li>
+      </ul>
+    </div>
+    <div class="role">
+      <div class="role__label">Cockpit</div>
+      <div class="role__who">Agent</div>
+      <div class="role__modifier">flies the loop</div>
+      <ul class="role__list">
+        <li><span class="key">C·1</span><span>Run /brief at the top of each phase to load institutional memory.</span></li>
+        <li><span class="key">C·2</span><span>Execute one task at a time, verifying at runtime, committing atomically.</span></li>
+        <li><span class="key">C·3</span><span>Fix the right artifact when reality diverges — never paper over in code.</span></li>
+      </ul>
+    </div>
+  </div>
+
+  <!-- Gate -->
+  <div class="gate reveal r6">
+    <span class="gate__corner gate__corner--tl"></span>
+    <span class="gate__corner gate__corner--tr"></span>
+    <span class="gate__corner gate__corner--bl"></span>
+    <span class="gate__corner gate__corner--br"></span>
+
+    <div class="gate__head">
+      <div>
+        <div class="gate__label">— Gate / Exit Criteria</div>
+        <div class="gate__title">When this phase clears.</div>
+      </div>
+      <div class="gate__head-id">RWY 03 → 04</div>
+    </div>
+
+    <p class="gate__intro">The agent advances to phase 04 — Review — only when all three hold. Defects do not move forward.</p>
+
+    <div class="gate__criteria">
+      <div class="gate__criterion">
+        <div class="gate__criterion-num">01</div>
+        <strong>Plans executed</strong>
+        <p>Every task in every phase plan landed end to end, in order, with atomic commits.</p>
+      </div>
+      <div class="gate__criterion">
+        <div class="gate__criterion-num">02</div>
+        <strong>Verified at runtime</strong>
+        <p>Not "passes locally." Not "green CI." Actually ran in the target environment.</p>
+      </div>
+      <div class="gate__criterion">
+        <div class="gate__criterion-num">03</div>
+        <strong>Deltas written back</strong>
+        <p>Plan or contract divergences updated at the source artifact — never papered over in code.</p>
+      </div>
+    </div>
+  </div>
+
+  <!-- Footer -->
+  <footer class="footer reveal r7">
+    <div class="footer__group">
+      <span class="brand">ATC / FLIGHT PATTERN 1.0</span>
+      <span class="footer__sep"></span>
+      <span>Concept 01 — Phase 03</span>
+    </div>
+    <div class="footer__group">
+      <span>Document 03.06</span>
+      <span class="footer__sep"></span>
+      <span>Rev. 26 Apr 2026</span>
+    </div>
+  </footer>
+
+</div>
+</body>
+</html>

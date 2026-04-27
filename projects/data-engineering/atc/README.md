@@ -34,7 +34,7 @@ If the build doesn't clear all four, it isn't wow-grade. Re-run the failing phas
 
 Vibe coding with an LLM produces lucky wins and silent disasters in roughly equal measure. ATC removes the silence. Each phase has an artifact — the ones you need to eyeball get reviewed, the rest are working context for the agent. What ships is documented, well-structured code that is inherently easier to maintain. That's the difference between an engineering practice and a demo.
 
-Heavily influenced by Compound Engineering. Skills and agents are just text files — fork what works (CE, Microsoft, Anthropic, whoever shipped it), build only the gaps, modify everything to fit your stack. Don't reinvent the wheel. Forever loop, not a milestone.
+Heavily influenced by Compound Engineering. Skills and agents are reusable text artifacts — fork what works (CE, Microsoft, Anthropic, whoever shipped it), build only the gaps, modify everything to fit your stack. Don't reinvent the wheel. Forever loop, not a milestone.
 
 ## The flight pattern
 
@@ -49,6 +49,10 @@ A `/brief` and `/distill` loop wraps every build: load what the team has learned
 A challenger panel reviews every major artifact before it locks — PRD, plans, code. Same shape (multi-angle review + synthesizer integration), different specialists per artifact. Drafts strengthen before they go downstream. Mechanics in chapter docs.
 
 ## Reading order
+
+**Start here:** [`viz/index.html`](viz/index.html) — single-page visual summary of the methodology. The whole flight pattern at a glance, two-minute read.
+
+For the depth:
 
 | # | File | What's in it |
 |---|---|---|

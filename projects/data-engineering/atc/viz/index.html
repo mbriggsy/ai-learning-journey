@@ -1,0 +1,2063 @@
+<!DOCTYPE html>
+<!--
+  ════════════════════════════════════════════════════════════════
+  ATC · THE FLIGHT PATTERN · METHODOLOGY 1.0
+  ────────────────────────────────────────────────────────────────
+  /brief ───────── TEAM MEMORY ─────────── /distill
+            │                              ▲
+            ▼                              │
+  ┌─[01]─┐ → ┌─[02]─┐ → ┌─[03]─┐ → ┌─[04]─┐ → ┌─[05]─┐ → ┌─[06]─┐
+  │ PRD  │   │Plans │   │Deepen│   │Execute│  │Review│   │Evid. │
+  └──────┘   └──────┘   └──────┘   └──────┘   └──────┘   └──────┘
+     ◆          ◆                                ◆
+   panel      panel                            panel
+   (clean room from PRD onward)
+
+  Six phases run in order. Never skip. Never short-circuit.
+  Wow-grade or it doesn't ship.
+
+  An agentic SDLC for data engineering.
+  ════════════════════════════════════════════════════════════════
+-->
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>ATC — The Flight Pattern</title>
+<meta name="description" content="An agentic SDLC for data engineering. Six phases run in order — never skip, never short-circuit, never grab the stick.">
+<meta property="og:type" content="website">
+<meta property="og:title" content="ATC — The Flight Pattern">
+<meta property="og:description" content="An agentic SDLC for data engineering. PRD → Plans → Deepen → Execute → Review → Evidence.">
+<meta name="twitter:card" content="summary">
+<meta name="theme-color" content="#F4EDDD">
+<link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 32 32'%3E%3Crect width='32' height='32' fill='%23F4EDDD'/%3E%3Ccircle cx='16' cy='16' r='10' fill='none' stroke='%23B8821A' stroke-width='1.2'/%3E%3Cpolygon points='16,5 18,16 16,14 14,16' fill='%23B8821A'/%3E%3Cpolygon points='16,27 18,16 16,18 14,16' fill='%23B8821A' opacity='0.4'/%3E%3C/svg%3E">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Fraunces:opsz,wght@9..144,300;9..144,400;9..144,500;9..144,600;9..144,700;9..144,800&family=Crimson+Pro:ital,wght@0,300;0,400;0,500;0,600;1,400;1,500&family=JetBrains+Mono:wght@300;400;500&display=swap" rel="stylesheet">
+<style>
+:root {
+  --paper: #F4EDDD;
+  --paper-deep: #ECE2CC;
+  --paper-warm: #EFE5CD;
+  --ink: #14202E;
+  --ink-soft: #3A4757;
+  --ink-faint: #7B7765;
+  --rule: #C9BD9F;
+  --rule-soft: #D9D0BA;
+  --rule-strong: #B8AB89;
+  --amber: #B8821A;
+  --amber-deep: #7A5512;
+  --amber-bright: #E0A02E;
+  --amber-soft: rgba(184, 130, 26, 0.08);
+  --amber-glow: rgba(184, 130, 26, 0.18);
+
+  --display: 'Fraunces', Georgia, serif;
+  --body: 'Crimson Pro', Georgia, serif;
+  --mono: 'JetBrains Mono', 'Courier New', monospace;
+
+  --ease-out: cubic-bezier(0.23, 1, 0.32, 1);
+  --ease-in-out: cubic-bezier(0.77, 0, 0.175, 1);
+  --ease-drawer: cubic-bezier(0.32, 0.72, 0, 1);
+}
+
+* { box-sizing: border-box; margin: 0; padding: 0; }
+
+html, body {
+  background: var(--paper);
+  color: var(--ink);
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+  scroll-behavior: smooth;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  html, body { scroll-behavior: auto; }
+}
+
+/* Anchor target offset so smooth-scrolled cards don't hit page edge */
+.phase-card { scroll-margin-top: 60px; }
+
+/* Reset link styling on phase-node anchors */
+a.phase-node {
+  text-decoration: none;
+  color: inherit;
+  display: block;
+  cursor: pointer;
+  outline: none;
+}
+
+a.phase-node:focus-visible .phase-node__inner {
+  border-color: var(--amber);
+  box-shadow: 0 0 0 3px var(--amber-glow);
+}
+
+body {
+  font-family: var(--body);
+  font-size: 19px;
+  line-height: 1.55;
+  font-feature-settings: 'kern', 'liga', 'onum';
+  background-image:
+    url("data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' width='240' height='240'><filter id='n'><feTurbulence type='fractalNoise' baseFrequency='0.85' numOctaves='3' stitchTiles='stitch'/></filter><rect width='100%25' height='100%25' filter='url(%23n)' opacity='0.06'/></svg>"),
+    radial-gradient(circle at 12% 8%, rgba(184, 130, 26, 0.06) 0%, transparent 45%),
+    radial-gradient(circle at 88% 96%, rgba(20, 32, 46, 0.05) 0%, transparent 45%);
+  background-attachment: fixed, fixed, fixed;
+  min-height: 100vh;
+}
+
+::selection { background: var(--amber); color: var(--paper); }
+
+.page {
+  max-width: 1280px;
+  margin: 0 auto;
+  padding: 56px 64px 56px;
+  position: relative;
+}
+
+.page::before, .page::after {
+  content: '';
+  position: absolute;
+  width: 14px;
+  height: 14px;
+  border: 1px solid var(--ink);
+  opacity: 0.5;
+  pointer-events: none;
+}
+.page::before { top: 32px; left: 32px; border-right: none; border-bottom: none; }
+.page::after { bottom: 32px; right: 32px; border-left: none; border-top: none; }
+
+/* ====================================================================
+   META BAR
+   ==================================================================== */
+
+.meta-bar {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  font-family: var(--mono);
+  font-size: 11px;
+  letter-spacing: 0.16em;
+  text-transform: uppercase;
+  color: var(--ink-faint);
+  padding-bottom: 18px;
+  border-bottom: 1px solid var(--rule);
+  margin-bottom: 80px;
+}
+
+.meta-bar__group { display: flex; gap: 28px; align-items: center; }
+
+.meta-bar__id {
+  color: var(--amber);
+  font-weight: 500;
+  letter-spacing: 0.22em;
+}
+
+.meta-bar__sep { width: 1px; height: 12px; background: var(--rule); }
+
+.meta-bar__live {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.meta-bar__live::before {
+  content: '';
+  width: 7px;
+  height: 7px;
+  border-radius: 50%;
+  background: var(--amber);
+  box-shadow: 0 0 0 0 var(--amber-glow);
+  animation: livePulse 2.4s var(--ease-in-out) infinite;
+}
+
+@keyframes livePulse {
+  0%, 100% { box-shadow: 0 0 0 0 var(--amber-glow); }
+  50% { box-shadow: 0 0 0 6px transparent; }
+}
+
+/* ====================================================================
+   HERO
+   ==================================================================== */
+
+.hero {
+  display: grid;
+  grid-template-columns: 1fr 360px;
+  gap: 96px;
+  margin-bottom: 120px;
+  position: relative;
+  align-items: end;
+}
+
+.hero__eyebrow {
+  font-family: var(--mono);
+  font-size: 12px;
+  letter-spacing: 0.24em;
+  color: var(--amber);
+  text-transform: uppercase;
+  margin-bottom: 28px;
+  display: flex;
+  align-items: center;
+  gap: 14px;
+}
+
+.hero__eyebrow::before {
+  content: '';
+  width: 36px;
+  height: 1px;
+  background: var(--amber);
+  transform-origin: left;
+}
+
+.hero__title {
+  font-family: var(--display);
+  font-variation-settings: 'opsz' 144, 'SOFT' 30;
+  font-size: clamp(72px, 11vw, 152px);
+  line-height: 0.88;
+  font-weight: 600;
+  color: var(--ink);
+  letter-spacing: -0.05em;
+  margin-bottom: 36px;
+}
+
+.hero__title em {
+  font-style: italic;
+  font-weight: 400;
+  font-variation-settings: 'opsz' 144, 'SOFT' 100;
+  color: var(--amber);
+  letter-spacing: -0.04em;
+}
+
+.hero__sub {
+  font-family: var(--body);
+  font-size: 22px;
+  line-height: 1.5;
+  color: var(--ink-soft);
+  font-style: italic;
+  max-width: 580px;
+  font-weight: 400;
+}
+
+.hero__sub strong {
+  color: var(--ink);
+  font-weight: 600;
+  font-style: italic;
+}
+
+.hero-aside {
+  border-left: 1px solid var(--rule);
+  padding: 8px 0 8px 28px;
+}
+
+.hero-aside__label {
+  font-family: var(--mono);
+  font-size: 10px;
+  letter-spacing: 0.24em;
+  color: var(--ink-faint);
+  text-transform: uppercase;
+  margin-bottom: 16px;
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+
+.hero-aside__label::after {
+  content: '';
+  flex: 1;
+  height: 1px;
+  background: var(--rule);
+}
+
+.hero-aside__name {
+  font-family: var(--display);
+  font-variation-settings: 'opsz' 100;
+  font-size: 28px;
+  font-weight: 600;
+  color: var(--ink);
+  letter-spacing: -0.015em;
+  margin-bottom: 6px;
+}
+
+.hero-aside__role {
+  font-family: var(--body);
+  font-style: italic;
+  color: var(--ink-soft);
+  font-size: 16px;
+  margin-bottom: 22px;
+}
+
+.hero-aside__split {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 24px;
+  margin-top: 28px;
+  padding-top: 24px;
+  border-top: 1px dashed var(--rule);
+}
+
+.hero-aside__col-label {
+  font-family: var(--mono);
+  font-size: 10px;
+  letter-spacing: 0.22em;
+  color: var(--amber);
+  text-transform: uppercase;
+  margin-bottom: 8px;
+}
+
+.hero-aside__col-name {
+  font-family: var(--display);
+  font-variation-settings: 'opsz' 60;
+  font-size: 22px;
+  font-weight: 600;
+  color: var(--ink);
+  margin-bottom: 4px;
+}
+
+.hero-aside__col-role {
+  font-family: var(--body);
+  font-style: italic;
+  color: var(--ink-soft);
+  font-size: 14px;
+  line-height: 1.4;
+}
+
+/* Hero scroll cue — vintage editorial flag */
+.hero-cue {
+  grid-column: 1 / -1;
+  margin-top: 56px;
+  padding-top: 24px;
+  border-top: 1px solid var(--rule);
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  font-family: var(--mono);
+  font-size: 11px;
+  letter-spacing: 0.22em;
+  color: var(--ink-faint);
+  text-transform: uppercase;
+}
+
+.hero-cue__group { display: flex; gap: 24px; align-items: center; }
+
+.hero-cue__amber {
+  color: var(--amber);
+  font-weight: 500;
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.hero-cue__amber::after {
+  content: '';
+  width: 24px;
+  height: 1px;
+  background: var(--amber);
+  position: relative;
+  animation: scrollCueArrow 2.4s var(--ease-in-out) infinite;
+}
+
+@keyframes scrollCueArrow {
+  0%, 100% { transform: translateX(0); opacity: 1; }
+  50% { transform: translateX(6px); opacity: 0.6; }
+}
+
+/* ====================================================================
+   SECTION DIVIDER (between major sections)
+   ==================================================================== */
+
+.divider {
+  display: flex;
+  align-items: center;
+  gap: 16px;
+  margin: 0 0 56px;
+  font-family: var(--mono);
+  font-size: 11px;
+  letter-spacing: 0.24em;
+  color: var(--amber);
+  text-transform: uppercase;
+  font-weight: 500;
+}
+
+.divider::before, .divider::after {
+  content: '';
+  flex: 1;
+  height: 1px;
+  background: var(--rule);
+}
+
+.divider__id {
+  font-family: var(--mono);
+  color: var(--ink-faint);
+  letter-spacing: 0.18em;
+  font-weight: 400;
+}
+
+/* ====================================================================
+   MASTER CHART
+   ==================================================================== */
+
+.chart {
+  margin-bottom: 120px;
+  position: relative;
+}
+
+.chart__head {
+  display: flex;
+  justify-content: space-between;
+  align-items: flex-end;
+  margin-bottom: 40px;
+  border-bottom: 1px solid var(--rule);
+  padding-bottom: 20px;
+}
+
+.chart__title {
+  font-family: var(--mono);
+  font-size: 12px;
+  letter-spacing: 0.28em;
+  color: var(--amber);
+  font-weight: 500;
+  text-transform: uppercase;
+}
+
+.chart__id {
+  font-family: var(--mono);
+  font-size: 11px;
+  letter-spacing: 0.2em;
+  color: var(--ink-faint);
+  text-transform: uppercase;
+}
+
+/* Chart body — gets the graph-paper background */
+.chart__body {
+  position: relative;
+  padding: 96px 32px 120px;
+  background-image:
+    linear-gradient(to right, rgba(184, 130, 26, 0.06) 1px, transparent 1px),
+    linear-gradient(to bottom, rgba(184, 130, 26, 0.06) 1px, transparent 1px),
+    radial-gradient(ellipse at center, rgba(244, 237, 221, 0) 0%, rgba(184, 130, 26, 0.03) 100%);
+  background-size: 24px 24px, 24px 24px, 100% 100%;
+  background-position: 0 0, 0 0, center;
+  border: 1px solid var(--rule-soft);
+  border-radius: 0;
+  box-shadow: inset 0 0 0 1px rgba(184, 130, 26, 0.04);
+}
+
+/* Inner faint frame */
+.chart__body > .chart__frame {
+  position: absolute;
+  inset: 16px 16px 16px 16px;
+  border: 1px dashed rgba(201, 189, 159, 0.5);
+  pointer-events: none;
+  z-index: 0;
+}
+
+.chart__body > .chart__sweep {
+  position: absolute;
+  inset: 0;
+  pointer-events: none;
+  background: linear-gradient(105deg,
+    transparent 0%,
+    transparent 42%,
+    rgba(184, 130, 26, 0.08) 50%,
+    transparent 58%,
+    transparent 100%);
+  background-size: 220% 100%;
+  background-position: -120% 0;
+  animation: chartSweep 16s linear infinite;
+  mix-blend-mode: multiply;
+  opacity: 0.85;
+}
+
+@keyframes chartSweep {
+  0% { background-position: -100% 0; }
+  60%, 100% { background-position: 200% 0; }
+}
+
+.chart__body > * {
+  position: relative;
+  z-index: 1;
+}
+
+/* Corner ticks on the chart body */
+.chart__body::before, .chart__body::after,
+.chart__corner-bl, .chart__corner-br {
+  content: '';
+  position: absolute;
+  width: 10px;
+  height: 10px;
+  border: 1px solid var(--ink);
+}
+.chart__body::before { top: -1px; left: -1px; border-right: none; border-bottom: none; }
+.chart__body::after { top: -1px; right: -1px; border-left: none; border-bottom: none; }
+.chart__corner-bl { bottom: -1px; left: -1px; border-right: none; border-top: none; }
+.chart__corner-br { bottom: -1px; right: -1px; border-left: none; border-top: none; }
+
+/* Chart marginalia */
+.chart__compass {
+  position: absolute;
+  top: 24px;
+  right: 32px;
+  width: 60px;
+  height: 60px;
+  pointer-events: none;
+  opacity: 0.55;
+}
+
+.chart__north {
+  position: absolute;
+  top: 24px;
+  left: 32px;
+  font-family: var(--mono);
+  font-size: 9px;
+  letter-spacing: 0.24em;
+  color: var(--ink-faint);
+  text-transform: uppercase;
+  pointer-events: none;
+}
+
+/* MEMORY LOOP BRACKET — anchored above phases 04 (Execute) and 05 (Review),
+   where /brief reads and /distill writes per chapter docs. */
+.loop {
+  position: relative;
+  height: 64px;
+  /* phases-row is 6 equal cols; phase 04 center = 58.33%, phase 05 center = 75% */
+  margin: 0 25% 36px 58.33%;
+}
+
+.loop__arc {
+  position: absolute;
+  inset: 0 0 0 0;
+  border: 1px dashed var(--amber);
+  border-bottom: none;
+  border-radius: 8px 8px 0 0;
+  opacity: 0.7;
+  clip-path: inset(0 100% 0 0);
+  transition: clip-path 1400ms var(--ease-out);
+}
+
+.is-loaded .loop__arc {
+  clip-path: inset(0 0 0 0);
+  transition-delay: 950ms;
+}
+
+.loop__label {
+  position: absolute;
+  left: 50%;
+  top: -10px;
+  transform: translateX(-50%);
+  background: var(--paper);
+  padding: 0 18px;
+  font-family: var(--mono);
+  font-size: 11px;
+  letter-spacing: 0.22em;
+  color: var(--amber);
+  text-transform: uppercase;
+  font-weight: 500;
+  white-space: nowrap;
+  opacity: 0;
+  transition: opacity 500ms var(--ease-out);
+}
+
+.is-loaded .loop__label {
+  opacity: 1;
+  transition-delay: 1700ms;
+}
+
+.loop__endpoint {
+  position: absolute;
+  bottom: -8px;
+  font-family: var(--mono);
+  font-size: 11px;
+  letter-spacing: 0.18em;
+  color: var(--amber);
+  font-weight: 500;
+  background: var(--paper);
+  padding: 0 8px;
+  z-index: 2;
+  opacity: 0;
+  transition: opacity 400ms var(--ease-out);
+}
+
+.loop__endpoint--left { left: -4px; }
+.loop__endpoint--right { right: -4px; }
+
+.is-loaded .loop__endpoint--left { opacity: 1; transition-delay: 1300ms; }
+.is-loaded .loop__endpoint--right { opacity: 1; transition-delay: 2350ms; }
+
+.loop__endpoint::before {
+  content: '';
+  position: absolute;
+  bottom: -22px;
+  left: 50%;
+  transform: translateX(-50%);
+  width: 1px;
+  height: 16px;
+  background: var(--amber);
+}
+
+.loop__endpoint::after {
+  content: '';
+  position: absolute;
+  bottom: -28px;
+  left: 50%;
+  transform: translateX(-50%);
+  width: 0;
+  height: 0;
+  border-left: 4px solid transparent;
+  border-right: 4px solid transparent;
+  border-top: 6px solid var(--amber);
+}
+
+/* Continuous traveling pulse on the loop */
+.loop__pulse {
+  position: absolute;
+  top: -4px;
+  left: 0;
+  width: 8px;
+  height: 8px;
+  border-radius: 50%;
+  background: var(--amber-bright);
+  box-shadow: 0 0 12px 2px var(--amber-glow);
+  opacity: 0;
+  pointer-events: none;
+  transform: translateX(0);
+}
+
+.is-loaded .loop__pulse {
+  animation: loopPulse 7.5s linear 4000ms infinite;
+}
+
+@keyframes loopPulse {
+  0% { opacity: 0; transform: translateX(0); }
+  6% { opacity: 1; }
+  94% { opacity: 1; }
+  100% { opacity: 0; transform: translateX(calc(100% * (1280px / 8 - 1))); /* fallback */ }
+}
+
+/* Better: use percentage-based travel via parent positioning */
+@keyframes loopTravel {
+  0% { left: 0%; opacity: 0; }
+  4% { opacity: 1; }
+  96% { opacity: 1; }
+  100% { left: 100%; opacity: 0; }
+}
+
+.is-loaded .loop__pulse {
+  animation: loopTravel 4.5s linear 4000ms infinite;
+}
+
+/* PHASES ROW */
+.phases-row {
+  display: grid;
+  grid-template-columns: repeat(6, 1fr);
+  gap: 0;
+  position: relative;
+  align-items: stretch;
+}
+
+.phase-node {
+  position: relative;
+  padding: 0 8px;
+  opacity: 0;
+  transform: translateY(8px) scale(0.96);
+  transition: opacity 600ms var(--ease-out), transform 600ms var(--ease-out);
+}
+
+.is-loaded .phase-node {
+  opacity: 1;
+  transform: translateY(0) scale(1);
+}
+
+.is-loaded .phase-node--01 { transition-delay: 1450ms; }
+.is-loaded .phase-node--02 { transition-delay: 1600ms; }
+.is-loaded .phase-node--03 { transition-delay: 1750ms; }
+.is-loaded .phase-node--04 { transition-delay: 1900ms; }
+.is-loaded .phase-node--05 { transition-delay: 2050ms; }
+.is-loaded .phase-node--06 { transition-delay: 2200ms; }
+
+.phase-node__inner {
+  border: 1px solid var(--rule-strong);
+  background: var(--paper);
+  padding: 22px 14px 18px;
+  text-align: center;
+  position: relative;
+  min-height: 124px;
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  transition: border-color 200ms var(--ease-out),
+              background-color 200ms var(--ease-out),
+              transform 200ms var(--ease-out),
+              box-shadow 200ms var(--ease-out);
+  cursor: pointer;
+  box-shadow:
+    inset 0 1px 0 rgba(255, 250, 235, 0.6),
+    0 1px 0 rgba(20, 32, 46, 0.04);
+}
+
+/* Top-corner runway notch */
+.phase-node__inner::before {
+  content: '';
+  position: absolute;
+  top: -1px;
+  left: 12px;
+  right: 12px;
+  height: 3px;
+  background: var(--paper);
+  border-left: 1px solid var(--rule-strong);
+  border-right: 1px solid var(--rule-strong);
+  transform: translateY(-1px);
+  display: none; /* off for now — keep nodes clean */
+}
+
+@media (hover: hover) and (pointer: fine) {
+  .phase-node__inner:hover {
+    border-color: var(--amber);
+    background: var(--paper-warm);
+    transform: translateY(-3px);
+    box-shadow: 0 8px 24px -12px var(--amber-glow);
+  }
+
+  .phases-row:has(.phase-node:hover) .phase-node:not(:hover) .phase-node__inner {
+    opacity: 0.5;
+  }
+}
+
+.phase-node__num {
+  font-family: var(--mono);
+  font-size: 11px;
+  letter-spacing: 0.22em;
+  color: var(--amber);
+  font-weight: 500;
+  margin-bottom: 10px;
+}
+
+.phase-node__name {
+  font-family: var(--display);
+  font-variation-settings: 'opsz' 60;
+  font-size: 23px;
+  font-weight: 600;
+  color: var(--ink);
+  letter-spacing: -0.02em;
+  line-height: 1.05;
+  margin-bottom: 6px;
+}
+
+.phase-node__verb {
+  font-family: var(--body);
+  font-style: italic;
+  font-size: 14px;
+  color: var(--ink-soft);
+  line-height: 1.3;
+}
+
+/* Connector arrows */
+.phases-row > .phase-node:not(:last-child)::after {
+  content: '';
+  position: absolute;
+  top: 50%;
+  right: -6px;
+  transform: translateY(-50%);
+  width: 0;
+  height: 0;
+  border-left: 7px solid var(--rule-strong);
+  border-top: 5px solid transparent;
+  border-bottom: 5px solid transparent;
+  z-index: 2;
+  opacity: 0;
+  transition: opacity 400ms var(--ease-out);
+}
+
+.is-loaded .phases-row > .phase-node--01::after { opacity: 1; transition-delay: 1700ms; }
+.is-loaded .phases-row > .phase-node--02::after { opacity: 1; transition-delay: 1850ms; }
+.is-loaded .phases-row > .phase-node--03::after { opacity: 1; transition-delay: 2000ms; }
+.is-loaded .phases-row > .phase-node--04::after { opacity: 1; transition-delay: 2150ms; }
+.is-loaded .phases-row > .phase-node--05::after { opacity: 1; transition-delay: 2300ms; }
+
+/* Below-chart panel + clean room */
+.chart__below {
+  display: grid;
+  grid-template-columns: repeat(6, 1fr);
+  margin-top: 28px;
+  position: relative;
+}
+
+.below-cell {
+  padding: 0 8px;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  text-align: center;
+}
+
+.below-cell--empty { visibility: hidden; }
+
+.panel-marker {
+  position: relative;
+  padding-top: 16px;
+  opacity: 0;
+  transform: translateY(-8px);
+  transition: opacity 500ms var(--ease-out), transform 500ms var(--ease-out);
+}
+
+.is-loaded .panel-marker--01 { opacity: 1; transform: translateY(0); transition-delay: 2500ms; }
+.is-loaded .panel-marker--03 { opacity: 1; transform: translateY(0); transition-delay: 2600ms; }
+.is-loaded .panel-marker--05 { opacity: 1; transform: translateY(0); transition-delay: 2700ms; }
+
+.panel-marker__connector {
+  position: absolute;
+  top: -16px;
+  left: 50%;
+  transform: translateX(-50%);
+  width: 1px;
+  height: 16px;
+  border-left: 1px dashed var(--amber);
+  opacity: 0.6;
+}
+
+.panel-marker__icon {
+  width: 14px;
+  height: 14px;
+  background: var(--amber);
+  transform: rotate(45deg);
+  margin: 0 auto 14px;
+  position: relative;
+  box-shadow: 0 0 0 4px var(--paper);
+}
+
+.panel-marker__label {
+  font-family: var(--mono);
+  font-size: 10px;
+  letter-spacing: 0.2em;
+  color: var(--ink);
+  text-transform: uppercase;
+  font-weight: 500;
+  margin-bottom: 4px;
+}
+
+.panel-marker__sub {
+  font-family: var(--body);
+  font-style: italic;
+  font-size: 13px;
+  color: var(--ink-soft);
+  line-height: 1.35;
+  max-width: 150px;
+}
+
+/* Clean room */
+.chart__cleanroom {
+  display: grid;
+  grid-template-columns: repeat(6, 1fr);
+  margin-top: 44px;
+  position: relative;
+}
+
+.cleanroom {
+  grid-column: 1 / span 3;
+  padding: 0 8px;
+  display: flex;
+  align-items: flex-start;
+  gap: 18px;
+  position: relative;
+  opacity: 0;
+  transform: translateY(8px);
+  transition: opacity 500ms var(--ease-out), transform 500ms var(--ease-out);
+}
+
+.is-loaded .cleanroom {
+  opacity: 1;
+  transform: translateY(0);
+  transition-delay: 2900ms;
+}
+
+.cleanroom::before {
+  content: '';
+  position: absolute;
+  top: -32px;
+  left: calc(8px + (100% / 3 - 16px) / 2);
+  width: 1px;
+  height: 24px;
+  border-left: 1px dashed var(--amber);
+  opacity: 0.6;
+}
+
+.cleanroom__badge {
+  font-family: var(--mono);
+  font-size: 10px;
+  letter-spacing: 0.22em;
+  color: var(--paper);
+  background: var(--ink);
+  padding: 8px 14px;
+  font-weight: 500;
+  text-transform: uppercase;
+  white-space: nowrap;
+  border: 1px solid var(--ink);
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  position: relative;
+}
+
+.cleanroom__badge::before {
+  content: '';
+  width: 6px;
+  height: 6px;
+  background: var(--amber);
+  transform: rotate(45deg);
+}
+
+.cleanroom__body {
+  font-family: var(--body);
+  font-style: italic;
+  font-size: 15px;
+  line-height: 1.5;
+  color: var(--ink-soft);
+  max-width: 480px;
+}
+
+.cleanroom__body strong {
+  font-style: normal;
+  color: var(--ink);
+  font-weight: 600;
+}
+
+/* ====================================================================
+   PHASE GRID (detail cards)
+   ==================================================================== */
+
+.detail-section {
+  margin-bottom: 120px;
+  position: relative;
+}
+
+.section-head {
+  display: grid;
+  grid-template-columns: 1fr 320px;
+  gap: 64px;
+  align-items: end;
+  margin-bottom: 56px;
+  border-bottom: 1px solid var(--rule);
+  padding-bottom: 28px;
+}
+
+.section-head__label {
+  font-family: var(--mono);
+  font-size: 11px;
+  letter-spacing: 0.24em;
+  color: var(--amber);
+  text-transform: uppercase;
+  font-weight: 500;
+  margin-bottom: 14px;
+  display: flex;
+  align-items: center;
+  gap: 12px;
+}
+
+.section-head__label::before {
+  content: '';
+  width: 28px;
+  height: 1px;
+  background: var(--amber);
+}
+
+.section-head__title {
+  font-family: var(--display);
+  font-variation-settings: 'opsz' 100, 'SOFT' 50;
+  font-size: clamp(40px, 5vw, 60px);
+  font-weight: 600;
+  color: var(--ink);
+  letter-spacing: -0.025em;
+  line-height: 1;
+}
+
+.section-head__title em {
+  font-style: italic;
+  font-weight: 500;
+  font-variation-settings: 'opsz' 100, 'SOFT' 100;
+  color: var(--amber);
+}
+
+.section-head__intro {
+  font-family: var(--body);
+  font-style: italic;
+  font-size: 17px;
+  line-height: 1.55;
+  color: var(--ink-soft);
+}
+
+.section-head__intro code {
+  font-family: var(--mono);
+  font-style: normal;
+  font-size: 14px;
+  color: var(--amber);
+  background: var(--amber-soft);
+  padding: 1px 6px;
+}
+
+.phase-grid {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 1px;
+  background: var(--rule);
+  border: 1px solid var(--rule);
+}
+
+.phase-card {
+  background: var(--paper);
+  padding: 32px 32px 36px;
+  position: relative;
+  display: flex;
+  flex-direction: column;
+  transition: background-color 240ms var(--ease-out);
+}
+
+@media (hover: hover) and (pointer: fine) {
+  .phase-card:hover { background: var(--paper-warm); }
+}
+
+/* Evidence card — special treatment, the eyeball-lands-here phase */
+.phase-card--evidence {
+  background: linear-gradient(180deg, var(--paper) 0%, var(--paper-warm) 100%);
+  position: relative;
+}
+
+.phase-card--evidence::before {
+  content: '';
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  height: 3px;
+  background: var(--amber);
+}
+
+.phase-card--evidence .phase-card__name {
+  color: var(--amber-deep);
+}
+
+.phase-card--evidence .phase-card__head {
+  position: relative;
+}
+
+.phase-card--evidence::after {
+  content: 'SHIP GATE';
+  position: absolute;
+  top: 14px;
+  right: 32px;
+  font-family: var(--mono);
+  font-size: 9px;
+  letter-spacing: 0.24em;
+  color: var(--paper);
+  background: var(--ink);
+  padding: 4px 8px;
+  font-weight: 500;
+  letter-spacing: 0.22em;
+  z-index: 2;
+}
+
+.phase-card__head {
+  display: flex;
+  justify-content: space-between;
+  align-items: flex-start;
+  margin-bottom: 20px;
+}
+
+.phase-card__num {
+  font-family: var(--mono);
+  font-size: 11px;
+  letter-spacing: 0.22em;
+  color: var(--amber);
+  font-weight: 500;
+  text-transform: uppercase;
+}
+
+.phase-card__id {
+  font-family: var(--mono);
+  font-size: 10px;
+  letter-spacing: 0.18em;
+  color: var(--ink-faint);
+  text-transform: uppercase;
+}
+
+.phase-card__name {
+  font-family: var(--display);
+  font-variation-settings: 'opsz' 100;
+  font-size: 38px;
+  font-weight: 600;
+  color: var(--ink);
+  letter-spacing: -0.025em;
+  line-height: 1;
+  margin-bottom: 14px;
+}
+
+.phase-card__what {
+  font-family: var(--body);
+  font-style: italic;
+  font-size: 16px;
+  line-height: 1.5;
+  color: var(--ink-soft);
+  margin-bottom: 24px;
+  padding-bottom: 24px;
+  border-bottom: 1px solid var(--rule-soft);
+}
+
+.phase-card__what em {
+  color: var(--ink);
+  font-weight: 600;
+}
+
+.phase-card__what code {
+  font-family: var(--mono);
+  font-style: normal;
+  font-size: 13px;
+  color: var(--amber);
+  background: var(--amber-soft);
+  padding: 1px 5px;
+}
+
+.phase-card__roles {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 20px;
+  margin-bottom: 24px;
+}
+
+.phase-card__role-label {
+  font-family: var(--mono);
+  font-size: 9px;
+  letter-spacing: 0.22em;
+  color: var(--ink-faint);
+  text-transform: uppercase;
+  margin-bottom: 6px;
+  display: flex;
+  align-items: center;
+  gap: 6px;
+}
+
+.phase-card__role-label::before {
+  content: '';
+  width: 8px;
+  height: 1px;
+  background: var(--ink-faint);
+}
+
+.phase-card__role-text {
+  font-family: var(--body);
+  font-size: 14px;
+  line-height: 1.4;
+  color: var(--ink);
+}
+
+.phase-card__gate {
+  margin-top: auto;
+  padding-top: 20px;
+  border-top: 1px dashed var(--rule);
+}
+
+.phase-card__gate-label {
+  font-family: var(--mono);
+  font-size: 10px;
+  letter-spacing: 0.22em;
+  color: var(--amber);
+  text-transform: uppercase;
+  font-weight: 500;
+  margin-bottom: 6px;
+}
+
+.phase-card__gate-text {
+  font-family: var(--body);
+  font-style: italic;
+  font-size: 14px;
+  line-height: 1.45;
+  color: var(--ink-soft);
+}
+
+.phase-card__artifact {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  margin-top: 16px;
+  padding: 6px 10px;
+  background: var(--amber-soft);
+  border: 1px solid var(--amber);
+  font-family: var(--mono);
+  font-size: 10px;
+  letter-spacing: 0.16em;
+  color: var(--amber-deep);
+  text-transform: uppercase;
+  font-weight: 500;
+  align-self: flex-start;
+}
+
+.phase-card__artifact::before {
+  content: '◆';
+  font-size: 8px;
+}
+
+/* ====================================================================
+   DOCTRINE
+   ==================================================================== */
+
+.doctrine-grid {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 32px;
+}
+
+.doctrine-card {
+  border: 1px solid var(--ink);
+  padding: 44px 36px 36px;
+  position: relative;
+  background: var(--paper);
+  transition: background-color 240ms var(--ease-out),
+              transform 240ms var(--ease-out),
+              box-shadow 240ms var(--ease-out);
+}
+
+@media (hover: hover) and (pointer: fine) {
+  .doctrine-card:hover {
+    background: var(--paper-warm);
+    transform: translateY(-3px);
+    box-shadow: 0 14px 32px -16px rgba(20, 32, 46, 0.14);
+  }
+}
+
+/* Corner brackets */
+.doctrine-card__corner {
+  position: absolute;
+  width: 14px;
+  height: 14px;
+  pointer-events: none;
+}
+.doctrine-card__corner--tl { top: -1px; left: -1px; border-top: 3px solid var(--amber); border-left: 3px solid var(--amber); }
+.doctrine-card__corner--tr { top: -1px; right: -1px; border-top: 3px solid var(--amber); border-right: 3px solid var(--amber); }
+.doctrine-card__corner--bl { bottom: -1px; left: -1px; border-bottom: 3px solid var(--amber); border-left: 3px solid var(--amber); }
+.doctrine-card__corner--br { bottom: -1px; right: -1px; border-bottom: 3px solid var(--amber); border-right: 3px solid var(--amber); }
+
+.doctrine-card__num {
+  font-family: var(--mono);
+  font-size: 10px;
+  letter-spacing: 0.24em;
+  color: var(--amber);
+  text-transform: uppercase;
+  font-weight: 500;
+  margin-bottom: 14px;
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+
+.doctrine-card__num::after {
+  content: '';
+  flex: 1;
+  height: 1px;
+  background: var(--rule);
+}
+
+.doctrine-card__title {
+  font-family: var(--display);
+  font-variation-settings: 'opsz' 60;
+  font-size: 30px;
+  font-weight: 600;
+  color: var(--ink);
+  letter-spacing: -0.025em;
+  line-height: 1.05;
+  margin-bottom: 18px;
+}
+
+.doctrine-card__title em {
+  font-style: italic;
+  color: var(--amber);
+}
+
+.doctrine-card__body {
+  font-family: var(--body);
+  font-size: 17px;
+  line-height: 1.55;
+  color: var(--ink-soft);
+}
+
+.doctrine-card__body em {
+  color: var(--ink);
+  font-weight: 600;
+  font-style: italic;
+}
+
+.doctrine-card__body code {
+  font-family: var(--mono);
+  font-style: normal;
+  font-size: 14px;
+  color: var(--amber);
+}
+
+/* ====================================================================
+   PULL QUOTE — typographic anchor between phase grid and doctrine
+   ==================================================================== */
+
+.pullquote {
+  margin: 0 0 120px;
+  padding: 88px 0;
+  border-top: 1px solid var(--rule);
+  border-bottom: 1px solid var(--rule);
+  position: relative;
+  text-align: left;
+  background-image:
+    linear-gradient(to right, rgba(184, 130, 26, 0.04) 1px, transparent 1px);
+  background-size: 96px 96px;
+}
+
+.pullquote__mark {
+  font-family: var(--display);
+  font-variation-settings: 'opsz' 144, 'SOFT' 100;
+  font-style: italic;
+  font-size: 180px;
+  line-height: 0.6;
+  color: var(--amber);
+  position: absolute;
+  top: 24px;
+  left: 0;
+  opacity: 0.55;
+  user-select: none;
+  pointer-events: none;
+}
+
+.pullquote__inner {
+  max-width: 1000px;
+  margin-left: 96px;
+  position: relative;
+}
+
+.pullquote__label {
+  font-family: var(--mono);
+  font-size: 11px;
+  letter-spacing: 0.24em;
+  color: var(--amber);
+  text-transform: uppercase;
+  font-weight: 500;
+  margin-bottom: 28px;
+  display: flex;
+  align-items: center;
+  gap: 14px;
+}
+
+.pullquote__label::before {
+  content: '';
+  width: 36px;
+  height: 1px;
+  background: var(--amber);
+}
+
+.pullquote__body {
+  font-family: var(--display);
+  font-variation-settings: 'opsz' 144, 'SOFT' 50;
+  font-size: clamp(40px, 5.5vw, 72px);
+  line-height: 1.05;
+  font-weight: 500;
+  color: var(--ink);
+  letter-spacing: -0.025em;
+  margin-bottom: 32px;
+}
+
+.pullquote__body em {
+  font-style: italic;
+  font-weight: 400;
+  font-variation-settings: 'opsz' 144, 'SOFT' 100;
+  color: var(--amber);
+}
+
+.pullquote__cite {
+  font-family: var(--mono);
+  font-size: 11px;
+  letter-spacing: 0.22em;
+  color: var(--ink-faint);
+  text-transform: uppercase;
+  font-weight: 400;
+}
+
+.pullquote__cite span {
+  color: var(--ink);
+  font-weight: 500;
+}
+
+/* ====================================================================
+   FOOTER
+   ==================================================================== */
+
+.footer {
+  margin-top: 88px;
+  padding-top: 24px;
+  border-top: 1px solid var(--rule);
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  font-family: var(--mono);
+  font-size: 10px;
+  letter-spacing: 0.2em;
+  text-transform: uppercase;
+  color: var(--ink-faint);
+  flex-wrap: wrap;
+  gap: 16px;
+}
+
+.footer__group {
+  display: flex;
+  gap: 24px;
+  align-items: center;
+}
+
+.footer__group span.brand {
+  color: var(--amber);
+  font-weight: 500;
+}
+
+.footer__sep {
+  width: 1px;
+  height: 10px;
+  background: var(--rule);
+}
+
+/* ====================================================================
+   ON-LOAD ENTRANCE — top-of-page reveals
+   ==================================================================== */
+
+.entrance {
+  opacity: 0;
+  transform: translateY(10px);
+  transition: opacity 600ms var(--ease-out), transform 600ms var(--ease-out);
+}
+
+.is-loaded .entrance { opacity: 1; transform: translateY(0); }
+
+.is-loaded .e-meta { transition-delay: 0ms; }
+.is-loaded .e-eyebrow { transition-delay: 100ms; }
+.is-loaded .e-title { transition-delay: 200ms; }
+.is-loaded .e-sub { transition-delay: 450ms; }
+.is-loaded .e-aside { transition-delay: 600ms; }
+.is-loaded .e-divider { transition-delay: 750ms; }
+.is-loaded .e-chart-head { transition-delay: 800ms; }
+.is-loaded .e-chart-body { transition-delay: 900ms; }
+
+/* ====================================================================
+   SCROLL-TRIGGERED REVEALS — below-the-fold
+   Progressive-enhancement: visible by default, JS adds animation
+   ==================================================================== */
+
+.js .scroll-reveal {
+  opacity: 0;
+  transform: translateY(20px);
+  transition: opacity 700ms var(--ease-out), transform 700ms var(--ease-out);
+}
+
+.js .scroll-reveal.is-visible {
+  opacity: 1;
+  transform: translateY(0);
+}
+
+.js .scroll-reveal.delay-1 { transition-delay: 80ms; }
+.js .scroll-reveal.delay-2 { transition-delay: 160ms; }
+.js .scroll-reveal.delay-3 { transition-delay: 240ms; }
+.js .scroll-reveal.delay-4 { transition-delay: 320ms; }
+.js .scroll-reveal.delay-5 { transition-delay: 400ms; }
+
+/* Reduced motion */
+@media (prefers-reduced-motion: reduce) {
+  .entrance, .scroll-reveal, .phase-node, .panel-marker, .cleanroom { opacity: 1; transform: none; transition: none; }
+  .loop__arc { clip-path: inset(0 0 0 0); transition: none; }
+  .loop__label, .loop__endpoint { opacity: 1; transition: none; }
+  .loop__pulse { display: none; }
+  .meta-bar__live::before { animation: none; }
+  .phase-node__inner:hover { transform: none; }
+}
+
+/* ====================================================================
+   PRINT MODE
+   ==================================================================== */
+
+@media print {
+  body {
+    background: white !important;
+    background-image: none !important;
+    color: black;
+    font-size: 11pt;
+  }
+  .page {
+    max-width: none;
+    padding: 0;
+    margin: 0;
+  }
+  .page::before, .page::after { display: none; }
+
+  /* All content visible — no animations */
+  .entrance, .scroll-reveal, .phase-node, .panel-marker, .cleanroom {
+    opacity: 1 !important;
+    transform: none !important;
+    animation: none !important;
+    transition: none !important;
+  }
+  .loop__arc { clip-path: none !important; }
+  .loop__label, .loop__endpoint { opacity: 1 !important; }
+  .loop__pulse { display: none; }
+  .chart__sweep { display: none; }
+  .meta-bar__live::before { animation: none; }
+  .hero-cue__amber::after { animation: none; }
+
+  /* Drop atmospheric backgrounds */
+  .chart__body {
+    background-image:
+      linear-gradient(to right, rgba(0, 0, 0, 0.06) 1px, transparent 1px),
+      linear-gradient(to bottom, rgba(0, 0, 0, 0.06) 1px, transparent 1px) !important;
+    border-color: #999;
+    box-shadow: none;
+  }
+
+  /* Page break hints */
+  .chart, .pullquote, .detail-section { page-break-inside: avoid; }
+  .phase-card, .doctrine-card { page-break-inside: avoid; }
+  .section-head { page-break-after: avoid; }
+
+  /* Keep amber accent in print (most modern printers handle color OK) */
+  /* Use print-color-adjust to preserve our colors */
+  * { -webkit-print-color-adjust: exact; print-color-adjust: exact; }
+
+  /* Hide hover-only elements — anchors should be visible but not styled as links */
+  a.phase-node { color: inherit; }
+}
+
+/* ====================================================================
+   RESPONSIVE
+   ==================================================================== */
+
+@media (max-width: 1100px) {
+  .phase-card__name { font-size: 32px; }
+  .phase-grid { grid-template-columns: repeat(2, 1fr); }
+  .doctrine-grid { grid-template-columns: 1fr; gap: 16px; }
+  .hero { grid-template-columns: 1fr 320px; gap: 56px; }
+}
+
+@media (max-width: 900px) {
+  .page { padding: 32px 24px 56px; }
+  .hero {
+    grid-template-columns: 1fr;
+    gap: 48px;
+    margin-bottom: 80px;
+    align-items: start;
+  }
+  .hero__title { font-size: clamp(56px, 13vw, 96px); }
+  .hero-cue { flex-direction: column; align-items: flex-start; gap: 8px; font-size: 9px; }
+  .hero-cue__amber::after { display: none; }
+  .section-head { grid-template-columns: 1fr; gap: 24px; align-items: start; }
+  .meta-bar { flex-wrap: wrap; gap: 12px; padding-bottom: 12px; margin-bottom: 48px; font-size: 9px; }
+  .meta-bar__group { gap: 14px; }
+  .meta-bar__sep { display: none; }
+  .chart { margin-bottom: 80px; }
+  .chart__head { flex-direction: column; align-items: flex-start; gap: 8px; }
+  .chart__title { font-size: 10px; line-height: 1.5; }
+  .chart__id { font-size: 10px; }
+  .chart__body { padding: 56px 16px 72px; }
+  .chart__compass, .chart__north { display: none; }
+  .chart__sweep { display: none; }
+  .phases-row { grid-template-columns: repeat(3, 1fr); grid-template-rows: auto auto; gap: 8px; }
+  .phases-row > .phase-node:not(:last-child)::after { display: none; }
+  .phases-row > .phase-node--03::after, .phases-row > .phase-node--06::after { display: none; }
+  .phase-node { padding: 0; }
+  .phase-node__name { font-size: 18px; }
+  .chart__below {
+    grid-template-columns: repeat(3, 1fr);
+    gap: 16px;
+    margin-top: 36px;
+  }
+  .below-cell--empty { display: none; }
+  .panel-marker__connector { display: none; }
+  .chart__cleanroom { grid-template-columns: 1fr; margin-top: 28px; }
+  .cleanroom { grid-column: 1; flex-direction: column; gap: 12px; }
+  .cleanroom::before { display: none; }
+  /* Mobile: loop becomes a simple full-width caption — phases stack 3x2
+     so precise 04/05 anchoring isn't meaningful here. */
+  .loop {
+    margin: 0 0 24px;
+    height: auto;
+    padding: 8px 0;
+    text-align: center;
+  }
+  .loop__arc, .loop__endpoint, .loop__pulse { display: none; }
+  .loop__label {
+    position: static;
+    transform: none;
+    display: inline-block;
+    background: transparent;
+    padding: 0;
+    font-size: 9px;
+    line-height: 1.5;
+  }
+  .loop__label::after { content: ' · /brief at every phase top, /distill at session end'; }
+  .phase-grid { grid-template-columns: 1fr; }
+  .phase-card { padding: 28px 24px 32px; }
+  .phase-card__name { font-size: 30px; }
+  .phase-card__roles { grid-template-columns: 1fr; gap: 14px; }
+  .doctrine-card { padding: 36px 24px 30px; }
+  .doctrine-card__title { font-size: 26px; }
+  .pullquote { padding: 56px 0; margin-bottom: 80px; }
+  .pullquote__inner { margin-left: 0; padding: 0 12px; }
+  .pullquote__mark { font-size: 120px; left: -8px; top: 16px; }
+  .footer { flex-direction: column; align-items: flex-start; gap: 12px; }
+}
+</style>
+</head>
+<body>
+<div class="page">
+
+  <!-- Meta bar -->
+  <div class="meta-bar entrance e-meta">
+    <div class="meta-bar__group">
+      <span class="meta-bar__id">ATC / FLIGHT PATTERN</span>
+      <span class="meta-bar__sep"></span>
+      <span>METHODOLOGY 1.0</span>
+    </div>
+    <div class="meta-bar__group">
+      <span class="meta-bar__live">RUNWAY ACTIVE</span>
+      <span class="meta-bar__sep"></span>
+      <span>REV. 27 APR 2026</span>
+    </div>
+  </div>
+
+  <!-- Hero -->
+  <header class="hero">
+    <div>
+      <div class="hero__eyebrow entrance e-eyebrow">Agentic SDLC for Data Engineering</div>
+      <h1 class="hero__title entrance e-title">The <em>flight</em><br>pattern.</h1>
+      <p class="hero__sub entrance e-sub">You are Air Traffic Control. The agent flies. Six phases run in order — never skip, never short-circuit, never grab the stick. Every artifact ships <strong>wow-grade</strong> or it doesn’t ship.</p>
+    </div>
+
+    <aside class="hero-aside entrance e-aside">
+      <div class="hero-aside__label">Roles</div>
+      <div class="hero-aside__name">Human-led, agent-flown.</div>
+      <div class="hero-aside__role">Many pilots, one tower. Each role disciplined.</div>
+      <div class="hero-aside__split">
+        <div>
+          <div class="hero-aside__col-label">Tower</div>
+          <div class="hero-aside__col-name">ATC</div>
+          <div class="hero-aside__col-role">Aims, answers, approves</div>
+        </div>
+        <div>
+          <div class="hero-aside__col-label">Cockpit</div>
+          <div class="hero-aside__col-name">Agent</div>
+          <div class="hero-aside__col-role">Flies the loop</div>
+        </div>
+      </div>
+    </aside>
+
+    <div class="hero-cue entrance e-aside">
+      <div class="hero-cue__group">
+        <span>Cleared for descent</span>
+      </div>
+      <div class="hero-cue__group">
+        <span>↓ Continue to flight chart</span>
+        <span class="hero-cue__amber">RWY 01</span>
+      </div>
+    </div>
+  </header>
+
+  <!-- Master chart section -->
+  <section class="chart">
+    <div class="divider entrance e-divider">
+      <span>Flight Pattern</span>
+      <span class="divider__id">CHART · 01</span>
+    </div>
+
+    <div class="chart__head entrance e-chart-head">
+      <div class="chart__title">— Runway 01 → 06 · agent-flown, ATC-cleared</div>
+      <div class="chart__id">DOC ATC-MAIN-01</div>
+    </div>
+
+    <div class="chart__body entrance e-chart-body">
+      <span class="chart__frame"></span>
+      <span class="chart__sweep"></span>
+      <span class="chart__corner-bl"></span>
+      <span class="chart__corner-br"></span>
+
+      <div class="chart__north">N · Build flow →</div>
+      <svg class="chart__compass" viewBox="0 0 60 60" aria-hidden="true">
+        <circle cx="30" cy="30" r="26" fill="none" stroke="#B8821A" stroke-width="0.6" opacity="0.5"/>
+        <circle cx="30" cy="30" r="20" fill="none" stroke="#B8821A" stroke-width="0.4" opacity="0.4"/>
+        <line x1="30" y1="4" x2="30" y2="56" stroke="#B8821A" stroke-width="0.5" opacity="0.5"/>
+        <line x1="4" y1="30" x2="56" y2="30" stroke="#B8821A" stroke-width="0.5" opacity="0.5"/>
+        <polygon points="30,8 33,28 30,24 27,28" fill="#B8821A" opacity="0.85"/>
+        <polygon points="30,52 33,32 30,36 27,32" fill="#B8821A" opacity="0.4"/>
+        <text x="30" y="3" text-anchor="middle" font-family="JetBrains Mono" font-size="5" fill="#B8821A" opacity="0.7">N</text>
+      </svg>
+
+      <!-- Memory loop bracket -->
+      <div class="loop">
+        <div class="loop__arc"></div>
+        <div class="loop__label">Team Memory</div>
+        <div class="loop__endpoint loop__endpoint--left">/brief</div>
+        <div class="loop__endpoint loop__endpoint--right">/distill</div>
+        <span class="loop__pulse"></span>
+      </div>
+
+      <!-- Phases — clickable, smooth-scroll to detail card -->
+      <div class="phases-row">
+        <a href="#phase-card-01" class="phase-node phase-node--01" aria-label="Phase 01: PRD — jump to detail">
+          <div class="phase-node__inner">
+            <div class="phase-node__num">01</div>
+            <div class="phase-node__name">PRD</div>
+            <div class="phase-node__verb">contract lands</div>
+          </div>
+        </a>
+        <a href="#phase-card-02" class="phase-node phase-node--02" aria-label="Phase 02: Plans — jump to detail">
+          <div class="phase-node__inner">
+            <div class="phase-node__num">02</div>
+            <div class="phase-node__name">Plans</div>
+            <div class="phase-node__verb">phases drafted</div>
+          </div>
+        </a>
+        <a href="#phase-card-03" class="phase-node phase-node--03" aria-label="Phase 03: Deepen — jump to detail">
+          <div class="phase-node__inner">
+            <div class="phase-node__num">03</div>
+            <div class="phase-node__name">Deepen</div>
+            <div class="phase-node__verb">panel pressure-tests</div>
+          </div>
+        </a>
+        <a href="#phase-card-04" class="phase-node phase-node--04" aria-label="Phase 04: Execute — jump to detail">
+          <div class="phase-node__inner">
+            <div class="phase-node__num">04</div>
+            <div class="phase-node__name">Execute</div>
+            <div class="phase-node__verb">agent flies</div>
+          </div>
+        </a>
+        <a href="#phase-card-05" class="phase-node phase-node--05" aria-label="Phase 05: Review — jump to detail">
+          <div class="phase-node__inner">
+            <div class="phase-node__num">05</div>
+            <div class="phase-node__name">Review</div>
+            <div class="phase-node__verb">code panel runs</div>
+          </div>
+        </a>
+        <a href="#phase-card-06" class="phase-node phase-node--06" aria-label="Phase 06: Evidence — jump to detail">
+          <div class="phase-node__inner">
+            <div class="phase-node__num">06</div>
+            <div class="phase-node__name">Evidence</div>
+            <div class="phase-node__verb">eyeball lands here</div>
+          </div>
+        </a>
+      </div>
+
+      <!-- Panel markers -->
+      <div class="chart__below">
+        <div class="below-cell">
+          <div class="panel-marker panel-marker--01">
+            <div class="panel-marker__connector"></div>
+            <div class="panel-marker__icon"></div>
+            <div class="panel-marker__label">Panel · PRD</div>
+            <div class="panel-marker__sub">Multi-angle review at contract lock</div>
+          </div>
+        </div>
+        <div class="below-cell below-cell--empty"></div>
+        <div class="below-cell">
+          <div class="panel-marker panel-marker--03">
+            <div class="panel-marker__connector"></div>
+            <div class="panel-marker__icon"></div>
+            <div class="panel-marker__label">Panel · Plan</div>
+            <div class="panel-marker__sub">Deepening pass per phase plan</div>
+          </div>
+        </div>
+        <div class="below-cell below-cell--empty"></div>
+        <div class="below-cell">
+          <div class="panel-marker panel-marker--05">
+            <div class="panel-marker__connector"></div>
+            <div class="panel-marker__icon"></div>
+            <div class="panel-marker__label">Panel · Code</div>
+            <div class="panel-marker__sub">Triage: fix · defer · reject</div>
+          </div>
+        </div>
+        <div class="below-cell below-cell--empty"></div>
+      </div>
+
+      <!-- Clean room -->
+      <div class="chart__cleanroom">
+        <div class="cleanroom">
+          <div class="cleanroom__badge">Clean Room</div>
+          <div class="cleanroom__body">From contract lock onward, the build agent <strong>never reads the legacy code</strong>. PRD + RTM is the only acceptable input. Output parity is proved separately, by golden tests — not by the agent peeking.</div>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- Phase grid -->
+  <section class="detail-section">
+    <div class="divider scroll-reveal">
+      <span>Phase Detail</span>
+      <span class="divider__id">06 OF 06 · GATES &amp; ARTIFACTS</span>
+    </div>
+
+    <div class="section-head scroll-reveal">
+      <div>
+        <div class="section-head__label">— Phases · 01 → 06</div>
+        <h2 class="section-head__title">Six phases.<br>Six gates.<br><em>No skipping.</em></h2>
+      </div>
+      <p class="section-head__intro">Each phase is fully agent-driven. ATC kicks off, answers when the agent asks, and approves at the gate. The gate is the catch — not constant human vigilance. <code>/brief</code> and <code>/distill</code> form the feedback loop that compounds team memory build over build — bugs the team has paid for once don't get paid for twice.</p>
+    </div>
+
+    <div class="phase-grid">
+      <article id="phase-card-01" class="phase-card scroll-reveal delay-1">
+        <div class="phase-card__head">
+          <div class="phase-card__num">Phase 01</div>
+          <div class="phase-card__id">01-prd.md</div>
+        </div>
+        <h3 class="phase-card__name">PRD</h3>
+        <p class="phase-card__what">The contract lands. PRD + RTM together — narrative spec plus row-per-behavior matrix. Inherited (Ch1 reverse-engineering) or authored fresh (Ch2). Challenger panel reviews before lock.</p>
+        <div class="phase-card__roles">
+          <div>
+            <div class="phase-card__role-label">Tower</div>
+            <div class="phase-card__role-text">Read both end to end. Hunt for holes, implicit assumptions, unresolved correctness flags. Lock when conviction holds.</div>
+          </div>
+          <div>
+            <div class="phase-card__role-label">Cockpit</div>
+            <div class="phase-card__role-text">Run the panel. Compose the contract. Surface every guess for resolution before lock.</div>
+          </div>
+        </div>
+        <div class="phase-card__gate">
+          <div class="phase-card__gate-label">Gate</div>
+          <div class="phase-card__gate-text">Both docs read end to end · nothing to kick back · every behavior has an RTM row.</div>
+          <div class="phase-card__artifact">PRD + RTM</div>
+        </div>
+      </article>
+
+      <article id="phase-card-02" class="phase-card scroll-reveal delay-2">
+        <div class="phase-card__head">
+          <div class="phase-card__num">Phase 02</div>
+          <div class="phase-card__id">02-plan.md · draft</div>
+        </div>
+        <h3 class="phase-card__name">Plans</h3>
+        <p class="phase-card__what">Implementation broken into phased plan files. Each plan captures decisions — goal, RTM rows satisfied, dependencies, files, approach, patterns, test scenarios, verification, open questions. <em>Decisions, not code.</em></p>
+        <div class="phase-card__roles">
+          <div>
+            <div class="phase-card__role-label">Tower</div>
+            <div class="phase-card__role-text">Kick off the planning skill. Watch context window. Call the next phase plan.</div>
+          </div>
+          <div>
+            <div class="phase-card__role-label">Cockpit</div>
+            <div class="phase-card__role-text">Read the contract. Draft the full series before deepening starts. Never write implementation.</div>
+          </div>
+        </div>
+        <div class="phase-card__gate">
+          <div class="phase-card__gate-label">Gate</div>
+          <div class="phase-card__gate-text">Full series drafted · every RTM row mapped · cross-phase consistency held.</div>
+          <div class="phase-card__artifact">plans/*.md (drafted)</div>
+        </div>
+      </article>
+
+      <article id="phase-card-03" class="phase-card scroll-reveal delay-3">
+        <div class="phase-card__head">
+          <div class="phase-card__num">Phase 03</div>
+          <div class="phase-card__id">02-plan.md · deepen</div>
+        </div>
+        <h3 class="phase-card__name">Deepen</h3>
+        <p class="phase-card__what">Each plan goes through a challenger panel — correctness, feasibility, scope, security, coherence, adversarial. A synthesizer integrates findings and strengthens the plan. Drafted-but-undeepened plans are wishes.</p>
+        <div class="phase-card__roles">
+          <div>
+            <div class="phase-card__role-label">Tower</div>
+            <div class="phase-card__role-text">Sequence the deepening, one plan at a time. Approve advance to next plan.</div>
+          </div>
+          <div>
+            <div class="phase-card__role-label">Cockpit</div>
+            <div class="phase-card__role-text">Run the panel. Resolve open questions or defer with reasons. Update the plan in place.</div>
+          </div>
+        </div>
+        <div class="phase-card__gate">
+          <div class="phase-card__gate-label">Gate</div>
+          <div class="phase-card__gate-text">All plans deepened · open questions resolved or deferred · no contradictions across phases.</div>
+          <div class="phase-card__artifact">plans/*.md (build-ready)</div>
+        </div>
+      </article>
+
+      <article id="phase-card-04" class="phase-card scroll-reveal delay-1">
+        <div class="phase-card__head">
+          <div class="phase-card__num">Phase 04</div>
+          <div class="phase-card__id">03-execute.md</div>
+        </div>
+        <h3 class="phase-card__name">Execute</h3>
+        <p class="phase-card__what">The agent reads each plan and translates it into code — one phase end to end before the next begins. Atomic commits, runtime verification, never papering over divergence in code.</p>
+        <div class="phase-card__roles">
+          <div>
+            <div class="phase-card__role-label">Tower</div>
+            <div class="phase-card__role-text">Start it. Answer when the agent asks. Approve at the gate — the gate is the catch, not your eyeballs.</div>
+          </div>
+          <div>
+            <div class="phase-card__role-label">Cockpit</div>
+            <div class="phase-card__role-text"><code>/brief</code> at the top. One task at a time. Fix the right artifact when reality diverges. Report clearance when criteria hold.</div>
+          </div>
+        </div>
+        <div class="phase-card__gate">
+          <div class="phase-card__gate-label">Gate</div>
+          <div class="phase-card__gate-text">Every plan executed · every task verified at runtime · plan or contract deltas written back.</div>
+          <div class="phase-card__artifact">working code</div>
+        </div>
+      </article>
+
+      <article id="phase-card-05" class="phase-card scroll-reveal delay-2">
+        <div class="phase-card__head">
+          <div class="phase-card__num">Phase 05</div>
+          <div class="phase-card__id">04-review.md</div>
+        </div>
+        <h3 class="phase-card__name">Review</h3>
+        <p class="phase-card__what">A code-review panel pressure-tests the build from multiple angles. Findings triage into <em>fix</em>, <em>defer</em>, or <em>reject</em> with reason recorded. <code>/distill</code> captures lessons into team memory.</p>
+        <div class="phase-card__roles">
+          <div>
+            <div class="phase-card__role-label">Tower</div>
+            <div class="phase-card__role-text">Aim the panel. Decide contested findings — once, recorded, move on.</div>
+          </div>
+          <div>
+            <div class="phase-card__role-label">Cockpit</div>
+            <div class="phase-card__role-text">Run the panel. Resolve actionable findings. Run <code>/distill</code> at session end.</div>
+          </div>
+        </div>
+        <div class="phase-card__gate">
+          <div class="phase-card__gate-label">Gate</div>
+          <div class="phase-card__gate-text">Every finding triaged · runtime verification holds · /distill has run.</div>
+          <div class="phase-card__artifact">reviewed code + brief delta</div>
+        </div>
+      </article>
+
+      <article id="phase-card-06" class="phase-card phase-card--evidence scroll-reveal delay-3">
+        <div class="phase-card__head">
+          <div class="phase-card__num">Phase 06</div>
+          <div class="phase-card__id">05-evidence.md</div>
+        </div>
+        <h3 class="phase-card__name">Evidence</h3>
+        <p class="phase-card__what">The build proves it shipped <em>wow-grade</em>. RTM closed, runtime tests captured, parity proved (Ch1) or AC met (Ch2), framework run end-to-end, documentation that lets a new engineer own it. ATC walks the plane.</p>
+        <div class="phase-card__roles">
+          <div>
+            <div class="phase-card__role-label">Tower</div>
+            <div class="phase-card__role-text">You ARE the panel here. Run the wow check. Sign off — or send the build back.</div>
+          </div>
+          <div>
+            <div class="phase-card__role-label">Cockpit</div>
+            <div class="phase-card__role-text">Assemble the package. Re-run failing phases until the package clears the bar.</div>
+          </div>
+        </div>
+        <div class="phase-card__gate">
+          <div class="phase-card__gate-label">Gate · Ship</div>
+          <div class="phase-card__gate-text">Package complete · the wow check passes. No half-ship, no ship-with-asterisks.</div>
+          <div class="phase-card__artifact">evidence package</div>
+        </div>
+      </article>
+    </div>
+  </section>
+
+  <!-- Pull quote — typographic anchor -->
+  <section class="pullquote scroll-reveal">
+    <div class="pullquote__mark">"</div>
+    <div class="pullquote__inner">
+      <div class="pullquote__label">— ATC Doctrine · core principle</div>
+      <p class="pullquote__body">It ships <em>wow</em> — or it doesn’t ship.</p>
+      <div class="pullquote__cite"><span>02 of 03</span> · The bar isn’t “fine,” it’s wow. If the build fails the wow check at evidence, re-run the failing phase.</div>
+    </div>
+  </section>
+
+  <!-- Doctrine -->
+  <section class="detail-section">
+    <div class="divider scroll-reveal">
+      <span>Doctrine</span>
+      <span class="divider__id">03 OF 03 · NON-NEGOTIABLE</span>
+    </div>
+
+    <div class="section-head scroll-reveal">
+      <div>
+        <div class="section-head__label">— The Bar</div>
+        <h2 class="section-head__title">Three rules.<br><em>No bending.</em></h2>
+      </div>
+      <p class="section-head__intro">Half the value of the methodology is the discipline to hold these when expedience pulls otherwise. Refuse to short-circuit. Refuse to ship six-of-ten. Refuse to break clean room.</p>
+    </div>
+
+    <div class="doctrine-grid">
+      <article class="doctrine-card scroll-reveal delay-1">
+        <span class="doctrine-card__corner doctrine-card__corner--tl"></span>
+        <span class="doctrine-card__corner doctrine-card__corner--tr"></span>
+        <span class="doctrine-card__corner doctrine-card__corner--bl"></span>
+        <span class="doctrine-card__corner doctrine-card__corner--br"></span>
+        <div class="doctrine-card__num">Rule 01</div>
+        <h3 class="doctrine-card__title">Refuse to short-circuit phases.</h3>
+        <p class="doctrine-card__body">Phases run in order. A defect at phase 04 does <em>not</em> get pulled forward into phase 05. The cost to fix in place is one update; the cost mid-flight is a re-run of every phase that depended on the broken assumption.</p>
+      </article>
+
+      <article class="doctrine-card scroll-reveal delay-2">
+        <span class="doctrine-card__corner doctrine-card__corner--tl"></span>
+        <span class="doctrine-card__corner doctrine-card__corner--tr"></span>
+        <span class="doctrine-card__corner doctrine-card__corner--bl"></span>
+        <span class="doctrine-card__corner doctrine-card__corner--br"></span>
+        <div class="doctrine-card__num">Rule 02</div>
+        <h3 class="doctrine-card__title">Wow-grade or it doesn’t ship.</h3>
+        <p class="doctrine-card__body">“The best ETL engineers on the team look at this and say <em>wow</em>.” That is the bar — not “fine,” not “ships.” If the build fails the wow check at evidence, it doesn’t ship. Re-run the failing phase until it clears.</p>
+      </article>
+
+      <article class="doctrine-card scroll-reveal delay-3">
+        <span class="doctrine-card__corner doctrine-card__corner--tl"></span>
+        <span class="doctrine-card__corner doctrine-card__corner--tr"></span>
+        <span class="doctrine-card__corner doctrine-card__corner--bl"></span>
+        <span class="doctrine-card__corner doctrine-card__corner--br"></span>
+        <div class="doctrine-card__num">Rule 03</div>
+        <h3 class="doctrine-card__title">The contract is load-bearing.</h3>
+        <p class="doctrine-card__body">PRD + RTM is the only input downstream phases see. Clean room (Ch1) means the agent <em>never</em> peeks at legacy code. If the contract has holes, every downstream artifact inherits the same holes.</p>
+      </article>
+    </div>
+  </section>
+
+  <!-- Footer -->
+  <footer class="footer scroll-reveal">
+    <div class="footer__group">
+      <span class="brand">ATC / FLIGHT PATTERN 1.0</span>
+      <span class="footer__sep"></span>
+      <span>An agentic SDLC for data engineering</span>
+    </div>
+    <div class="footer__group">
+      <span>DOC ATC-MAIN</span>
+      <span class="footer__sep"></span>
+      <span>Rev. 27 Apr 2026</span>
+    </div>
+  </footer>
+
+</div>
+
+<script>
+  // Mark JS available — enables hidden-by-default scroll-reveal pattern
+  document.documentElement.classList.add('js');
+  document.body.classList.add('js');
+
+  // Trigger on-load entrance the next frame so transitions take hold
+  requestAnimationFrame(() => {
+    document.body.classList.add('is-loaded');
+  });
+
+  // Scroll-triggered reveals via IntersectionObserver
+  const io = new IntersectionObserver((entries) => {
+    entries.forEach((entry) => {
+      if (entry.isIntersecting) {
+        entry.target.classList.add('is-visible');
+        io.unobserve(entry.target);
+      }
+    });
+  }, { threshold: 0.05, rootMargin: '0px 0px -5% 0px' });
+
+  document.querySelectorAll('.scroll-reveal').forEach((el) => io.observe(el));
+
+  // Fallback: if for any reason a scroll-reveal stays hidden after a beat
+  // (e.g., headless screenshot tools that don't actually scroll), show it.
+  setTimeout(() => {
+    document.querySelectorAll('.scroll-reveal:not(.is-visible)').forEach((el) => {
+      el.classList.add('is-visible');
+    });
+  }, 1500);
+
+  // Power-user keyboard: press 1–6 to jump to that phase's detail card.
+  document.addEventListener('keydown', (e) => {
+    if (e.metaKey || e.ctrlKey || e.altKey) return;
+    if (e.target && /^(input|textarea|select)$/i.test(e.target.tagName)) return;
+    if (e.key >= '1' && e.key <= '6') {
+      const target = document.querySelector('#phase-card-0' + e.key);
+      if (target) {
+        target.scrollIntoView({ behavior: 'smooth', block: 'start' });
+        history.replaceState(null, '', '#phase-card-0' + e.key);
+      }
+    }
+  });
+</script>
+</body>
+</html>

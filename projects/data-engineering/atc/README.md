@@ -15,6 +15,7 @@ ATC is the methodology your team uses to *build* data pipelines that are wow-gra
 In both chapters, **the PRD is the contract.** Plans, code, tests, and review all trace back to the PRD. If something gets built that isn't in the PRD, that is a process bug, not a feature.
 
 **Stack:** ADF, ADLS, Delta Lake, Azure Databricks, Unity Catalog. Production runtime is The ETL Framework 2.0 (the team's job-cluster queueing framework).
+
 **Reader:** A data engineer who already knows the stack and is steering a Claude-class agent to do the build.
 
 ## The bar

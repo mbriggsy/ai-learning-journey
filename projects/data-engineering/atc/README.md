@@ -56,12 +56,12 @@ For the depth:
 
 | # | File | What's in it |
 |---|---|---|
-| 1 | `01-prd.md` | How to own a PRD as the build contract |
-| 2 | `02-plan.md` | Phased plans and sequential deepening |
-| 3 | `03-execute.md` | Sequential execution, one phase at a time, `/brief` at the start |
-| 4 | `04-review.md` | `/code-review`, `/distill`, the review gate |
-| 5 | `05-evidence.md` | The evidence package — what proves "done" |
-| – | `skills.md` | Catalog of skills (Microsoft, Databricks, CE, ours) |
+| 1 | [`01-prd.md`](./01-prd.md) | How to own a PRD as the build contract |
+| 2 | [`02-plan.md`](./02-plan.md) | Phased plans and sequential deepening |
+| 3 | [`03-execute.md`](./03-execute.md) | Sequential execution, one phase at a time, `/brief` at the start |
+| 4 | [`04-review.md`](./04-review.md) | `/code-review`, `/distill`, the review gate |
+| 5 | [`05-evidence.md`](./05-evidence.md) | The evidence package — what proves "done" |
+| – | [`skills.md`](./skills.md) | Catalog of skills (Microsoft, Databricks, CE, ours) |
 
 First read: top to bottom, ~5 minutes per file. In-flight pickup: jump to the file for your current phase.
 

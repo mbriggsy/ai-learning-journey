@@ -96,34 +96,39 @@ export function SmartActionBox({
     </>
   ) : state.text
 
+  // Stable button DOM across state swaps (insight 037). The button element
+  // never unmounts when state.key changes — only the inner content span swaps
+  // via AnimatePresence. This prevents Playwright ref-stale errors when an
+  // automation tool's click triggers a state transition mid-click.
+  //
+  // For non-interactive states (standby / invalid / interceptWaiting / hint /
+  // favor-empty), the button is `disabled` — `:disabled` fires the not-allowed
+  // cursor and disables press feedback. Variant classes use compound
+  // `.box.invalid` etc. selectors in CSS to win specificity over `.box:disabled`
+  // so each non-interactive variant keeps its own colors instead of inheriting
+  // the muted disabled defaults.
   return (
-    <AnimatePresence mode="wait">
-      {state.interactive ? (
-        <m.button
+    <button
+      className={state.className}
+      disabled={!state.interactive || buttonDisabled}
+      onClick={state.interactive && state.action
+        ? () => { haptic('medium'); state.action!() }
+        : undefined
+      }
+    >
+      <AnimatePresence mode="wait" initial={false}>
+        <m.span
           key={state.key}
-          className={state.className}
-          disabled={buttonDisabled}
-          onClick={() => { haptic('medium'); state.action!() }}
+          className={styles.content}
           initial={{ opacity: 0, transform: 'scale(0.96)' }}
           animate={{ opacity: 1, transform: 'scale(1)' }}
           exit={{ opacity: 0, transform: 'scale(0.96)' }}
           transition={MOTION.quickFade}
         >
           {content}
-        </m.button>
-      ) : (
-        <m.div
-          key={state.key}
-          className={state.className}
-          initial={{ opacity: 0, transform: 'scale(0.96)' }}
-          animate={{ opacity: 1, transform: 'scale(1)' }}
-          exit={{ opacity: 0, transform: 'scale(0.96)' }}
-          transition={MOTION.quickFade}
-        >
-          {content}
-        </m.div>
-      )}
-    </AnimatePresence>
+        </m.span>
+      </AnimatePresence>
+    </button>
   )
 
   function deriveState(

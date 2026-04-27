@@ -73,8 +73,12 @@
     outline-offset: var(--space-1);
   }
 
-  /* State: not my turn — "Stand by, operative" (renamed from .hint in TSX) */
-  .standby {
+  /* State: not my turn — "Stand by, operative" (renamed from .hint in TSX).
+     Compound `.box.standby` selector lifts specificity to (0,0,2,0) so
+     non-interactive variants render as <button disabled> (post-insight-037
+     stable-DOM refactor) without the `.box:disabled` muted defaults
+     overriding the variant identity. */
+  .box.standby {
     color: var(--color-fg-muted);
     background: var(--color-bg-surface);
     border-color: var(--color-border-subtle);
@@ -138,8 +142,10 @@
     animation: breathe var(--motion-duration-essential-pulse) var(--motion-ease-base) infinite alternate;
   }
 
-  /* State: invalid selection — non-interactive error state */
-  .invalid {
+  /* State: invalid selection — non-interactive error state.
+     Compound selector lifts specificity over `.box:disabled` (insight 037
+     stable-DOM refactor renders this as <button disabled>). */
+  .box.invalid {
     color: var(--color-fg-danger);
     background: var(--color-bg-danger);
     border-color: var(--color-border-danger);
@@ -185,8 +191,10 @@
   /* State: intercept window open but you don't have an Intercepted card —
      non-interactive status. Uses alert colors, not disabled colors, so the
      countdown reads as "live event in progress" rather than "button turned
-     off". Cursor stays default since there's nothing to click. */
-  .interceptWaiting {
+     off". Cursor stays default since there's nothing to click.
+     Compound selector lifts specificity over `.box:disabled` (insight 037
+     stable-DOM refactor renders this as <button disabled>). */
+  .box.interceptWaiting {
     color: var(--color-accent-burned);
     background: color-mix(in oklab, var(--color-accent-burned) 12%, var(--color-bg-elevated));
     border-color: var(--color-accent-burned);
@@ -207,6 +215,18 @@
         0 0 60px color-mix(in oklab, var(--color-accent-burned) 40%, transparent);
       transform: scale(1.02);
     }
+  }
+
+  /* Inner content wrapper — hosts AnimatePresence-keyed text crossfade
+     across SmartActionBox state swaps (insight 037 stable-DOM refactor).
+     The button stays mounted; this span unmounts/remounts with a 96→100%
+     scale + opacity quickFade between state.key changes. Flex column so
+     primary + hint lines stack inside the button's flex centering. */
+  .content {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: var(--space-1);
   }
 
   /* Primary line — inherits box typography (display font, callout size).

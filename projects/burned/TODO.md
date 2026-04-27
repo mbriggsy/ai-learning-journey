@@ -2,74 +2,42 @@
 
 ## NEXT SESSION — pick up here (2026-04-28+)
 
-### TOP OF THE QUEUE — fix insight 037
+### Insight 037 — closed (2026-04-27)
 
-**Insight 037 — AnimatePresence ref-stale on SmartActionBox state swap.**
-The SmartActionBox subsystem is brittle around Playwright automation
-contracts. Insight 035 (continuous animation defeats stability check)
-shipped 2026-04-27 with the breathe lift to `::after`. 037 is the
-matching discrete-unmount failure mode on the same component — `mode="wait"`
-unmounts the OLD `<m.button>` when `state.key` changes (e.g.
-`target-burn-the-files` → `draw` after a card plays). Playwright's click
-registers server-side, but the post-click verification throws "node
-detached." Both fixes harden SmartActionBox end-to-end.
+**✅ Insight 037 closed end-to-end (2026-04-27).** SmartActionBox
+refactored to keep the `<button>` DOM stable across `state.key` changes;
+`AnimatePresence` moved INSIDE the button to crossfade only the inner
+text. Non-interactive states render as `<button disabled>` with compound
+`.box.invalid` etc. CSS selectors lifting variant specificity over
+`.box:disabled`.
 
-**Recommended fix path (Option 1 from insight 037, lines 64-66):** refactor
-SmartActionBox so the `<button>` DOM stays stable across states; only the
-inner content (text + `className`) animates.
+Shipped:
+- `src/client/player/SmartActionBox.tsx` — single stable `<button>` always
+  rendered. `disabled={!state.interactive || buttonDisabled}`. Inner
+  `<m.span key={state.key}>` wrapped in `<AnimatePresence mode="wait">`
+  for text crossfade.
+- `src/client/player/SmartActionBox.module.css` — `.box.standby`,
+  `.box.invalid`, `.box.interceptWaiting` compound selectors win source-
+  order against `.box:disabled` so each non-interactive variant keeps
+  its identity. New `.content` flex column wrapper for the inner span.
+- `src/client/player/SmartActionBox.test.tsx` — 5 new unit tests proving
+  same `<button>` reference persists across state.key changes (the
+  regression contract).
 
-Concrete plan, ready to execute:
+Verification:
+- Typecheck clean · `pnpm build` green · 1037/1037 unit tests (+5 new).
+- Existing `phase6-smartactionbox-clickability-smoke` still passes
+  end-to-end (~14s wallclock; clicked real `.action` button via real
+  wrangler+vite+Playwright; god-event landed; isolation audit PASS).
+- Phone-side eye-in-loop (Briggsy, 2026-04-27): breathe pulse intact on
+  `.action`; `:active { scale(0.97) }` still tactile during breathe;
+  text crossfade reads smooth on stage/unstage; no flicker, no
+  unmount-flash.
 
-1. **Hoist `AnimatePresence` to wrap only the inner content**, not the
-   button itself. The outer element becomes a single stable
-   `<button>` (or `<div>` when not interactive — but interactivity is
-   the dominant case during gameplay; consider always-button + `disabled` flag).
-2. **Decision point:** can the wrapper always be a `<button>`, or do we
-   need the conditional `<button>`/`<div>` split? Today the split is:
-   - `interactive: true` paths → `<m.button>` (12 cases — draw, intercept,
-     counter, pair, triple, target-*, ready-*, favor-surrender)
-   - `interactive: false` paths → `<m.div>` (8 cases — standby, hint,
-     intercept-waiting, counter-waiting, favor-empty, invalid-*, plus
-     non-acting-non-eligible windows)
-   
-   Cleanest refactor: always render `<button>`, set `disabled` when
-   `!state.interactive`, and let `:disabled` styling carry the visual
-   distinction. CSS already has `[aria-disabled='true']` carve-outs in
-   `MinimalCard` (per CLAUDE.md client patterns); SmartActionBox can
-   adopt the same idiom.
-3. **AnimatePresence wraps an inner `<m.span>` keyed on `state.key`.**
-   Crossfade the text content between states. Loses Framer's
-   button-level enter/exit choreography but the user-visible motion is
-   primarily the text swap anyway — outer scale-in/out was subtle.
-4. **`className` transitions** — today `state.className` carries
-   `${styles.box} ${styles.draw}`-style multi-class strings. New shape:
-   the box class stays on the stable `<button>`; the *variant* class
-   (`draw`, `intercept`, `action`, `comboPair`, etc.) transitions either
-   via `data-variant` attribute (CSS attribute selector) or a Framer
-   `animate` on `style` properties.
-5. **Verification:**
-   - Existing `phase6-smartactionbox-clickability-smoke` must still pass.
-   - Add a NEW smoke that simulates state-swap-during-click: mount a
-     button, schedule a state change at +50ms, click at +100ms, assert
-     no ref-stale (or assert state-change works without DOM remount).
-   - Manual phone smoke: drive a turn through several state transitions
-     (staged → ready → played → drawing → next turn) and confirm the
-     button's press-feedback `:active { scale(0.97) }` still feels
-     tactile. CLAUDE.md SmartActionBox press-scale rule.
+Commits: `65a53ce7` (refactor), `746e8e4e` (test type fix).
 
-**Landmines to respect (from CLAUDE.md):**
-- `MinimalCard :active` patterns + the Insight 016 CSS-animation-vs-`:active`-transform rule. Whatever animation hooks the new structure has, ensure `:active { animation: none; transform: scale(0.97) }` still wins.
-- The breathe pulses now live on `::after` per insight 035. The refactor
-  must NOT reintroduce them on the button DOM — that re-breaks the
-  Playwright stability check. The pseudo-element strategy is load-bearing.
-- `MOTION.exit` uses decelerate-based easing; Emil rule #1 says exits
-  use ease-out. New crossfade easings should follow.
-
-**Why this is the right next thing (decision rationale, 2026-04-27):**
-Same component as just-fixed insight 035. Calibration found this bug;
-fixing it consumes the finding rather than letting it accumulate. Bounded
-scope (one component). Player-facing (not harness-only). Continues the
-SmartActionBox hardening thread to its conclusion.
+Phone budget impact: player initial JS 14.93 KB gzipped (+0.16 KB).
+Total phone init ~96.24 KB, still under 100 KB budget.
 
 ---
 
@@ -167,14 +135,10 @@ What's still missing:
 These are real bugs the calibration found. Each goes into product triage,
 not harness work.
 
-8. **AnimatePresence ref-stale on SmartActionBox state swap (insight 037).**
-   Different from insight 035. The button DOM is stable during steady-
-   state, but `mode="wait"` unmounts the OLD `<m.button>` when state
-   changes (e.g. `target-burn-the-files` → `draw`). Playwright's click
-   succeeds server-side (state propagates) but throws ref-stale on
-   post-click verification. Three fix options in the insight; recommend
-   refactoring SmartActionBox to keep one stable `<button>` DOM next
-   time it's touched.
+8. **~~AnimatePresence ref-stale on SmartActionBox state swap (insight 037).~~**
+   CLOSED 2026-04-27. Refactor landed in commits `65a53ce7` + `746e8e4e`;
+   stable button DOM, AnimatePresence moved inside, +5 regression tests.
+   Phone-side breathe + press feedback + text crossfade all verified.
 9. **Stray card selection bug.** Old seat-1 v1: "after double-clicking
    one card (Burn the Files), an adjacent card (Call in a Favor) became
    `active` without being clicked. The resulting backdrop blocked the
@@ -199,7 +163,14 @@ not harness work.
     of the YAML shape OR strengthen the schema-validator's error-recovery
     so the verifier flags individual entries instead of failing the
     whole file.
-14. **Vibe-check signals (NOT bugs, but worth capturing).** Old seat-2
+14. **Agent X card renders larger than other hand cards (NEW 2026-04-27).**
+    Spotted on iPad Pro 1366×1024 player view: the Agent X (wild) card
+    appears taller than other operative cards in the hand fan. Reproduces
+    across multiple hands per Briggsy's spot-check, so it's not a per-card
+    fluke — likely a per-card-type sizing branch in `Hand.tsx` /
+    `MinimalCard.tsx`. Pre-existing (was visible before insight 037 refactor),
+    not a regression. Investigate next time hand-layout work surfaces.
+15. **Vibe-check signals (NOT bugs, but worth capturing).** Old seat-2
     v1 vibe-checked SCN-INTERCEPT-CHAIN-BURN-01 as **NO** ("mechanically
     correct but cinematically flat; no dramatic framing or resolution
     beat") and SCN-FAVOR-NORMAL-01 as **UNSURE** ("setup UI was visually

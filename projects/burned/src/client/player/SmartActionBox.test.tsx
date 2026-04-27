@@ -1,9 +1,11 @@
 // @vitest-environment jsdom
 import { describe, it, expect } from 'vitest'
-import { act } from 'react'
+import { act, type ComponentProps } from 'react'
 import { createRoot, type Root } from 'react-dom/client'
 import { LazyMotion, domMax } from 'motion/react'
 import { SmartActionBox } from './SmartActionBox'
+
+type SABProps = ComponentProps<typeof SmartActionBox>
 
 // Insight 037 regression contract — the SmartActionBox `<button>` element
 // must NOT unmount across `state.key` changes. The OLD architecture wrapped
@@ -20,8 +22,10 @@ import { SmartActionBox } from './SmartActionBox'
 
 const noOp = () => {}
 
-const BASE_PROPS = {
-  cardPlayState: { status: 'idle' as const },
+const BASE_PROPS: SABProps = {
+  cardPlayState: { status: 'idle' },
+  isMyTurn: false,
+  subPhase: null,
   drawPileCount: 50,
   disabled: false,
   optimisticPending: false,
@@ -145,7 +149,7 @@ describe('SmartActionBox stable-DOM contract (insight 037)', () => {
     // sibling div/button branches (the pre-insight-037 architecture).
     const { container, root } = mount()
     try {
-      const cases: Array<{ label: string; props: Partial<typeof BASE_PROPS> }> = [
+      const cases: Array<{ label: string; props: Partial<SABProps> }> = [
         { label: 'standby', props: { isMyTurn: false, subPhase: null } },
         { label: 'draw', props: { isMyTurn: true, subPhase: 'turn-active' } },
         {

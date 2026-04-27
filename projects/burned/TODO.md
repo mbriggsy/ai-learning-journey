@@ -4,28 +4,39 @@
 
 ### TOP OF THE QUEUE
 
-**🔥 P0 — WebSocket reconnect log storm hangs the browser (insight 036).**
-Two seat agents independently surfaced the same bug during Phase 6 Unit 3
-calibration: when the player WS connection drops, the client's reconnect
-loop logs 572k–1.6M console entries in seconds with no exponential
-backoff. The browser tab becomes unresponsive. This is a **player-facing
-P0**: any real player whose phone briefly loses connectivity (subway,
-elevator, weak wifi) is one minute of disconnection away from a bricked
-tab.
+**✅ Insight 036 closed end-to-end (2026-04-27).** The diagnosis was
+substantially revised after rereading the run artifacts: original "P0
+real-player" framing was extrapolation. The two triggers we actually
+observed were both harness-specific (orchestrator killed wrangler while
+seat browsers were live; seat-3's WS handshake never completed).
 
-Fix path (`src/client/connection.ts` — verify file via grep before
-editing):
-1. Exponential backoff with jitter: 250ms → 500ms → 1s → 2s → 4s → 8s,
-   capped at 30s, ±20% jitter.
-2. Upper-bound retry cap: after ~60s of failing reconnects, surface a
-   "Connection lost — refresh to rejoin" UI and STOP retrying.
-3. Throttle the connection layer's logging to ≤1 line per attempt.
+The defect itself is real — `partysocket@1.1.16` defaults to
+`maxRetries: Infinity`, so unbounded retries + the browser's
+unsuppressible native "WebSocket connection failed" logs compose into a
+storm whenever the server is unreachable.
 
-Verification: write a Playwright test that kills the server mid-session,
-waits 30s, asserts the page is still responsive AND the "refresh to
-rejoin" message renders.
+Shipped:
+- `src/client/connection.ts` — `maxRetries: 10`, `debugLogger: () => {}`,
+  `'gave-up'` status when consecutive close-without-open count reaches
+  the budget. ~75-90s wall-clock retry window before give-up.
+- `src/client/player/ConnectionOverlay.tsx` + `.module.css` — terminal
+  "// CHANNEL DOWN" UI with Refresh button on `'gave-up'`.
+- `scripts/generate-playtest-seat-agents.ts` + seat-scripted/seat-free-play
+  templates — added `browser_close` to seat-agent whitelist (Option A:
+  agent owns its browser lifecycle), regenerated all 10 `.claude/agents/playtest-seat-N.md`
+  files. Seat agents now close their browser before exit, removing the
+  "wrangler killed while seat tab still alive" trigger.
+- `src/client/connection.test.ts` — 5 unit tests covering threshold,
+  reset, and one-time gave-up emission.
+- `tests/e2e/reconnect-bounds.spec.ts` — Playwright regression: phone
+  offline for 30s keeps console under 100 entries (pre-fix was thousands).
 
-Full diagnosis at `docs/insights/036-websocket-reconnect-log-storm-hangs-browser.md`.
+Coverage gap acknowledged in the insight: `setOffline` simulates "no
+network" but not "server vanished while browser stayed alive" — the
+underlying bounded-retry contract is the same, but a kill-wrangler-mid-
+session test would close the gap if a future regression appears.
+
+Full revised diagnosis at `docs/insights/036-websocket-reconnect-log-storm-hangs-browser.md`.
 
 ### Phase 6 calibration — pipeline is live; remaining gaps in priority order
 
@@ -108,11 +119,8 @@ not harness work.
     the UI blocks with the bare error string. Add a hint: "Intercepted
     is a reactive card — only opponents can play it during your nope
     window."
-12. **Reconnect UX has no upper-bound surface.** Independent of #1
-    above (which is the unbounded LOG bug). The "Re-establishing
-    channel..." dialog renders indefinitely with no escalation. Pairs
-    with #1 — fixing #1 surfaces a refresh-to-rejoin UI which closes
-    this gap.
+12. **~~Reconnect UX has no upper-bound surface.~~** CLOSED 2026-04-27 by
+    insight 036's gave-up state + ConnectionOverlay terminal UI.
 13. **Schema drift in seat logs (calibration finding).** verify-
     calibration check 5 caught: seat-1 v2 wrote `scenarioId: null`
     (should be a string) and `questionsTried: <single string>` (should

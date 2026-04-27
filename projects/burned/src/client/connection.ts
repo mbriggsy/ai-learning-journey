@@ -3,9 +3,20 @@ import type { ClientMessage, ServerMessage } from '@shared/protocol'
 
 // --- Types ---
 
-export type ConnectionStatus = 'disconnected' | 'connecting' | 'connected'
+// 'gave-up' is terminal: PartySocket exhausted MAX_RETRIES without reaching
+// 'connected' even once after a drop. The UI must show "refresh to rejoin"
+// and stop expecting auto-recovery. No event fires from PartySocket itself
+// when maxRetries trips — we count consecutive close-without-open events.
+export type ConnectionStatus = 'disconnected' | 'connecting' | 'connected' | 'gave-up'
 type MessageHandler = (msg: ServerMessage) => void
 type StatusHandler = (status: ConnectionStatus) => void
+
+// PartySocket retry budget. With minReconnectionDelay=1-5s (built-in jitter),
+// growFactor=1.3, capped at maxReconnectionDelay=10s, MAX_RETRIES=10 yields
+// a wall-clock reconnect window of ~75-90s before give-up — long enough to
+// ride out a brief tunnel/elevator drop, short enough that a real outage
+// surfaces a refresh affordance instead of bricking the tab.
+const MAX_RETRIES = 10
 
 // --- Module State ---
 
@@ -14,6 +25,7 @@ let status: ConnectionStatus = 'disconnected'
 let hasConnectedOnce = false
 let currentRoom: string | null = null
 let pendingDisconnect: ReturnType<typeof setTimeout> | null = null
+let consecutiveFailedAttempts = 0
 const messageHandlers = new Set<MessageHandler>()
 const statusHandlers = new Set<StatusHandler>()
 const reconnectHandlers = new Set<() => void>()
@@ -27,19 +39,39 @@ export function connect(roomCode: string, host: string): void {
     pendingDisconnect = null
   }
 
-  // Already connected/connecting to this room — keep the existing socket
-  if (socket && currentRoom === roomCode && status !== 'disconnected') return
+  // Already connected/connecting to this room — keep the existing socket.
+  // 'gave-up' is terminal but a recoverable signal: caller wants to retry,
+  // so fall through to a fresh socket. 'disconnected' likewise needs a
+  // restart. Only short-circuit while a viable connection is in flight.
+  if (
+    socket &&
+    currentRoom === roomCode &&
+    (status === 'connected' || status === 'connecting')
+  ) {
+    return
+  }
 
   if (socket) disconnectImmediate()
 
   currentRoom = roomCode
   status = 'connecting'
+  consecutiveFailedAttempts = 0
   notifyStatus()
 
   socket = new PartySocket({
     host,
     room: roomCode,
     party: 'game-room',
+    // Bounded reconnect: PartySocket defaults to maxRetries:Infinity, which
+    // means a tab whose server goes away (deploy, crash, mid-session
+    // teardown) reconnects forever and the browser logs every native WS
+    // failure. After MAX_RETRIES we surface 'gave-up' instead.
+    maxRetries: MAX_RETRIES,
+    // Defense in depth: even if PartySocket's `debug` is ever flipped on
+    // by accident, route library logs to a noop. The browser's native
+    // "WebSocket connection failed" line is unsuppressible, but we don't
+    // need to compound it with library chatter.
+    debugLogger: () => {},
   })
 
   const thisSocket = socket
@@ -49,6 +81,7 @@ export function connect(roomCode: string, host: string): void {
     const isReconnect = hasConnectedOnce
     hasConnectedOnce = true
     status = 'connected'
+    consecutiveFailedAttempts = 0
     if (isReconnect) {
       for (const handler of reconnectHandlers) handler()
     }
@@ -57,7 +90,11 @@ export function connect(roomCode: string, host: string): void {
 
   socket.addEventListener('close', () => {
     if (socket !== thisSocket) return
-    status = 'disconnected'
+    consecutiveFailedAttempts++
+    // PartySocket fires no event when maxRetries trips — it just stops
+    // calling _connect. We detect give-up by counting consecutive closes
+    // without an intervening open. Resets to 0 on every successful open.
+    status = consecutiveFailedAttempts >= MAX_RETRIES ? 'gave-up' : 'disconnected'
     notifyStatus()
   })
 
@@ -79,6 +116,7 @@ export function connect(roomCode: string, host: string): void {
       socket = null
       currentRoom = null
       hasConnectedOnce = false
+      consecutiveFailedAttempts = 0
       status = 'disconnected'
       notifyStatus()
       return
@@ -118,6 +156,7 @@ function disconnectImmediate(): void {
   }
   currentRoom = null
   hasConnectedOnce = false
+  consecutiveFailedAttempts = 0
   status = 'disconnected'
   notifyStatus()
 }
@@ -196,6 +235,13 @@ function handleVisibilityChange(): void {
     // Reconnect if socket is anything other than OPEN (CLOSED, CLOSING, or stale CONNECTING).
     if (socket.readyState !== WebSocket.OPEN) {
       hasConnectedOnce = true // ensure next open is treated as reconnect
+      // socket.reconnect() resets PartySocket's internal retry counter; mirror
+      // that locally so the user gets a fresh budget on tab refocus.
+      consecutiveFailedAttempts = 0
+      if (status === 'gave-up') {
+        status = 'connecting'
+        notifyStatus()
+      }
       socket.reconnect()
     }
   }

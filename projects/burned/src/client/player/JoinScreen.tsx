@@ -51,6 +51,10 @@ export function JoinScreen({ connectionStatus, assignedColor, onJoin, roomCode, 
   }
 
   if (connectionStatus !== 'connected') {
+    // 'gave-up' renders nothing here — the ConnectionOverlay dialog owns
+    // the terminal "// CHANNEL DOWN" UI and Refresh button. Returning the
+    // "Connecting..." spinner under it would lie to the user.
+    if (connectionStatus === 'gave-up') return null
     return (
       <div className={styles.container}>
         <div className={styles.spinner} />

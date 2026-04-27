@@ -62,6 +62,8 @@ Whitelisted (under your seat's MCP namespace `{{MCP_NAMESPACE}}`):
 `mcp__{{MCP_NAMESPACE}}__browser_take_screenshot`,
 `mcp__{{MCP_NAMESPACE}}__browser_hover`,
 `mcp__{{MCP_NAMESPACE}}__browser_select_option`,
+`mcp__{{MCP_NAMESPACE}}__browser_close` (final teardown only — see EXIT
+CONDITIONS),
 `Write`.
 
 Your `Write` target MUST be exactly one of two paths: `{{LOG_PATH}}` or
@@ -183,11 +185,21 @@ Real connectivity bugs appear only when a scenario's
 
 ## EXIT CONDITIONS
 
-- Winner screen shown → log final state, exit.
+- Winner screen shown → log final state, then call
+  `mcp__{{MCP_NAMESPACE}}__browser_close` to release the WebSocket, then
+  exit.
 - Your phone shows "you are eliminated" → switch to spectator mode
   (keep snapshotting + logging; don't try to act). Your role label
-  becomes `'SPECTATOR (eliminated, connected)'`.
-- Orchestrator shutdown signal → log, exit.
+  becomes `'SPECTATOR (eliminated, connected)'`. Only call
+  `browser_close` at the very end (winner screen / orchestrator signal /
+  session timeout) — never mid-session.
+- Orchestrator shutdown signal → log, call `browser_close`, exit.
+
+**Always close the browser before you exit.** Under Option A the
+orchestrator has no handle to your browser tab — only you can close it.
+A tab left open after you exit will keep partysocket trying to reconnect
+once the orchestrator's `stopServers` kills wrangler, log-storming the
+browser console (insight 036).
 
 ## LOG SCHEMA (four entryTypes per D5)
 

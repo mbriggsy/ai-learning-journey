@@ -2,7 +2,7 @@
 name: playtest-seat-2
 description: Plays BURNED as seat 2 for the playtest harness. Bound to the `playwright-seat-2` MCP Playwright server (Phase 6 Unit 2.5 / Option A — per-seat MCP topology). Receives a filled system prompt from the orchestrator (scripted or free-play template, per phase-4 D13). Observes + acts through a phone UI; logs scenario fires, suspicions, vibe-checks, and ui-spec-divergence entries. Strictly confined to the seat's own MCP Playwright tools + Write.
 model: sonnet
-tools: mcp__playwright-seat-2__browser_navigate, mcp__playwright-seat-2__browser_snapshot, mcp__playwright-seat-2__browser_click, mcp__playwright-seat-2__browser_fill_form, mcp__playwright-seat-2__browser_type, mcp__playwright-seat-2__browser_press_key, mcp__playwright-seat-2__browser_wait_for, mcp__playwright-seat-2__browser_take_screenshot, mcp__playwright-seat-2__browser_hover, mcp__playwright-seat-2__browser_select_option, Write
+tools: mcp__playwright-seat-2__browser_navigate, mcp__playwright-seat-2__browser_snapshot, mcp__playwright-seat-2__browser_click, mcp__playwright-seat-2__browser_fill_form, mcp__playwright-seat-2__browser_type, mcp__playwright-seat-2__browser_press_key, mcp__playwright-seat-2__browser_wait_for, mcp__playwright-seat-2__browser_take_screenshot, mcp__playwright-seat-2__browser_hover, mcp__playwright-seat-2__browser_select_option, mcp__playwright-seat-2__browser_close, Write
 color: orange
 ---
 
@@ -44,7 +44,7 @@ to this file. Cross-seat MCP namespaces (`mcp__playwright-seat-K__*` for
 K ≠ 2) are also absent — a cross-seat call is refused at the same gate
 even if attempted.
 
-### Whitelisted (11 tools)
+### Whitelisted (12 tools)
 
 - `mcp__playwright-seat-2__browser_navigate` — initial URL load (Option A: seat
   owns navigation, since the orchestrator no longer drives a shared
@@ -56,6 +56,12 @@ even if attempted.
 - `mcp__playwright-seat-2__browser_wait_for` — wait for a UI condition.
 - `mcp__playwright-seat-2__browser_take_screenshot` — capture evidence for
   `ui-spec-divergence` entries.
+- `mcp__playwright-seat-2__browser_close` — final cleanup before exit. Under
+  Option A the orchestrator has NO handle to your browser
+  (`seat.page === null` in run-session.ts); only you can close it.
+  Failing to close before exit leaves the tab pointed at wrangler — when
+  the orchestrator's `stopServers` then kills wrangler, partysocket
+  reconnect-storms the browser console (insight 036). Always close.
 - `Write` — append to `{{LOG_PATH}}` and `{{SUSPICION_PATH}}` only.
 
 ### Deliberately ABSENT (inaccessible — do not request)
@@ -69,8 +75,10 @@ even if attempted.
   `mcp__playwright-seat-2__browser_network_requests` — alternate channels for
   god-event-style visibility.
 - `mcp__playwright-seat-2__browser_drag`, `browser_file_upload`,
-  `browser_handle_dialog`, `browser_close`, `browser_resize` —
-  viewport / lifecycle belong to the orchestrator (phase-3 D11).
+  `browser_handle_dialog`, `browser_resize` — viewport / lifecycle
+  shaping belongs to the orchestrator (phase-3 D11). `browser_close`
+  was previously in this list under the same rationale; Option A
+  re-classified it as agent-owned (see Whitelisted above).
 - All `mcp__playwright-seat-K__*` for K ≠ 2 — cross-seat browsers
   are out of scope.
 - All non-Playwright MCP tools (context7, gemini-grounding, Google

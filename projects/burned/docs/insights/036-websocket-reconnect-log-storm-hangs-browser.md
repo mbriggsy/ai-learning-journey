@@ -1,57 +1,192 @@
 ---
-title: "Player WebSocket reconnect generates an unbounded log storm — 1.6M console entries in seconds, browser hangs"
+title: "PartySocket's default maxRetries:Infinity + browser-native WS error logs = unbounded reconnect attempts when the server vanishes"
 date: 2026-04-26
+revised: 2026-04-27
 phase: playtest-harness Phase 6 Unit 3 (calibration retry)
-modules: [src/client/connection, src/client/player/Player.tsx]
-tags: [websocket, reconnect, exponential-backoff, console-logging, p0-product-bug, calibration-finding]
-severity: P0
+modules: [src/client/connection, scripts/playtest/lib/orchestrator, scripts/generate-playtest-seat-agents]
+tags: [websocket, reconnect, partysocket, exponential-backoff, harness-teardown, calibration-finding]
+severity: P1
 ---
 
-## Problem
+## Problem (observed — separated from extrapolation)
 
-Phase 6 Unit 3 calibration produced two seat agents that independently hit the same failure when the wrangler dev server became unreachable mid-session:
+Phase 6 Unit 3 calibration run `runs/2026-04-26-1303-3p/` produced two
+seat agents that hit unbounded reconnect behavior:
 
-- **Seat 3 (run 1, CALAM6):** "browser accumulated **572,062+ console log entries** in a ~5-second window. … browser tab completely hung."
-- **Seat 2 (run 1, CALAM6):** "Reconnect loop generated **1.6 million console entries** with no exponential backoff, eventually crashing the page."
+- **Seat 2:** Was actively playing — hand=6, pile=29, Favor pending.
+  At `17:33:30Z` they logged "Server crash detected." That timestamp
+  matches `session.md`'s `finished-at: 2026-04-26T13:33:32` exactly. The
+  orchestrator's session-end teardown killed wrangler (`stopServers`)
+  while seat-2's browser tab was still live. 7 minutes of partysocket
+  reconnect attempts followed → seat-2 reported "1.6M log entries" → tab
+  reset to join screen.
+- **Seat 3:** Never made it into the lobby — the third-seat-fails-to-join
+  pattern (TODO #6). After 25+ minutes on the join screen, the page
+  transitioned to "Re-establishing channel..." and seat-3 reported
+  "572k+ console entries" within ~5 seconds, then unresponsive tab.
 
-Two seats, same trigger (server unreachable during a live session), same failure mode (unbounded console log accumulation), two scales of measurement. The browser became unresponsive in both cases — Playwright MCP tool calls timed out at 30–60s after the storm began.
+`events.jsonl` confirms only Seat1 + Seat2 actually entered the game.
+Seat-3's WS handshake never completed.
 
-This is a **player-facing P0 product bug**, not a harness bug. Any real player whose phone briefly loses connectivity (subway, elevator, weak wifi) is one minute of disconnection away from a bricked tab. The harness merely surfaced it because it ran agents long enough for the server-side teardown to coincide with active client sessions.
+## Original framing was wrong
 
-## Root Cause (hypothesis — not yet traced to source)
+The first version of this insight extrapolated to "any real player on
+subway is one minute from a bricked tab." That was unverified. The two
+triggers we actually observed were both **harness-specific**:
 
-The client's WebSocket reconnect logic almost certainly:
+1. Orchestrator killed wrangler while a seat browser was still live
+   (a teardown timing issue under Option A, where the orchestrator has
+   no handle to seat-agent-owned MCP browsers — `seat.page === null` in
+   `run-session.ts:586`).
+2. Initial WS handshake never completed (third-seat-fails-to-join).
 
-1. Attempts reconnect immediately on close.
-2. Logs every attempt + every error (likely both at `console.error` AND something else like a status-store dispatch that re-fires).
-3. Has no exponential backoff — each failed attempt fires another attempt within milliseconds.
-4. Has no upper-bound retry count or "giving up" surface.
+We did not observe a real-player network-drop scenario. The defensive
+client-side fix below would also help that case, but the P0 framing was
+unsupported by evidence.
 
-Result: a tight loop that writes to `console` faster than the browser's devtools / log buffer can absorb, eventually starving the JS thread.
+The original draft also located the bug in `src/client/connection.ts`
+reconnect logic. That file has **zero reconnect logic** — it's a thin
+wrapper around the `partysocket` npm library, which manages reconnect
+internally. The bug was in our default-options posture, not our code.
 
-The exact code path is in `src/client/connection.ts` (or wherever `connect`/`onReconnect` live — the agent reports cite "Re-establishing channel..." dialog text which is rendered by a connection state component).
+## Root cause (verified against partysocket source)
 
-## Fix Path Sketch
+`partysocket@1.1.16` defaults (`node_modules/partysocket/dist/ws.js:55`):
 
-Three things, in order:
+```ts
+const DEFAULT = {
+  maxReconnectionDelay: 10_000,                // 10s cap
+  minReconnectionDelay: 1000 + Math.random() * 4000, // 1-5s with jitter
+  reconnectionDelayGrowFactor: 1.3,
+  connectionTimeout: 4000,
+  maxRetries: Number.POSITIVE_INFINITY,        // never gives up
+  debug: false,                                // partysocket itself stays silent
+}
+```
 
-1. **Exponential backoff** with jitter. Standard pattern: 250ms → 500ms → 1s → 2s → 4s → 8s, capped at e.g. 30s, jittered by ±20%. No tighter than ~250ms first attempt.
-2. **Upper-bound retry count** OR an absolute time cap. After e.g. 60s of failing reconnects, surface a "Connection lost — refresh to rejoin" UI and STOP retrying. Player decides what to do.
-3. **Throttle the logging.** Even if backoff ships, the connection layer should never log more than ~1 line per reconnect attempt. No nested loggers in WS event handlers.
+Two facts compose into the storm:
 
-Verification: write a Playwright test that kills the server mid-session, waits 30s, asserts `await page.evaluate(() => console.entries?.length ?? 0) < 100` (or however we count) AND `await page.locator('text=refresh to rejoin').isVisible()`.
+- `maxRetries: Infinity` — partysocket retries forever when the server
+  is unreachable. There is **no event** when reconnect fails terminally
+  because there is no terminal failure. The connection layer never
+  signals "give up."
+- The browser's native WebSocket implementation logs
+  `WebSocket connection to 'ws://...' failed:` to the devtools console
+  on every failed connect attempt. This is unsuppressible from
+  application code. With a 10s cap that's ~6 entries/min in the
+  steady-state retry loop.
 
-## Why Calibration Caught This
+`src/client/player/main.tsx:20-21` adds `window.addEventListener('error'/'unhandledrejection')` global handlers that re-log via `console.error`,
+multiplying entries on top of the native logs. None of this reaches
+1.6M in 7 minutes by itself — the seat-agent's reported counts likely
+also include Playwright's accumulating `browser_console_messages`
+buffer plus duplicate emissions across long sessions. The exact
+multiplier is uncertain, but the underlying defect (unbounded
+retries + unsuppressible native logs + global handlers) is verified.
 
-The harness ran agents for 60–80 minutes during sessionTimeoutMs experiments. Real production sessions might never exceed 15 minutes. The bug exists in production code today; production users haven't surfaced it because they don't keep tabs open through 30+ minutes of connectivity gaps.
+## Fix (shipped 2026-04-27)
 
-Two seats reproducing it independently — at vastly different scales (572k vs 1.6M log entries) — confirms it's deterministic given the right trigger window, not a once-off race.
+### Client side
+
+`src/client/connection.ts`:
+
+- Pass explicit `maxRetries: 10` to `PartySocket`. With min delay 1-5s,
+  growth 1.3x, cap 10s, this caps the retry budget at ~75-90s of
+  wall-clock — long enough to ride out a brief tunnel/elevator drop,
+  short enough that a real outage surfaces a refresh affordance.
+- Pass a `debugLogger: () => {}` for defense in depth. Even if `debug:
+  true` is ever flipped on by accident, partysocket library logs route
+  to a noop.
+- Track `consecutiveFailedAttempts` locally — increment on each close,
+  reset on every open. When the count reaches `MAX_RETRIES`, flip
+  status to `'gave-up'` and emit. partysocket itself does not signal
+  this state.
+- New `'gave-up'` status (added to `ConnectionStatus` union). Treated
+  as "needs restart" by `connect()` short-circuit (a re-call from the
+  same room while in `'gave-up'` falls through to a fresh socket).
+
+`src/client/player/ConnectionOverlay.tsx` + `.module.css`:
+
+- New terminal UI for `'gave-up'` — "// CHANNEL DOWN" headline (mono,
+  hot-red) + "Reconnect failed. Refresh to rejoin." subtext + tappable
+  Refresh button that calls `window.location.reload()`. No spinner —
+  the spinner implies "we're working on it"; gave-up means "we
+  stopped."
+
+### Harness side
+
+`scripts/generate-playtest-seat-agents.ts` + `scripts/playtest/agents/seat-{scripted,free-play}.md`:
+
+- Added `mcp__${ns}__browser_close` to the seat-agent tool whitelist
+  (12 tools, was 11).
+- Updated EXIT CONDITIONS to require seat agents call
+  `browser_close` before exiting. Under Option A the orchestrator has
+  no handle to the seat's MCP browser — only the seat agent itself can
+  close it. Failing to close before exit leaves the tab pointed at
+  wrangler, which the orchestrator's `stopServers` then kills,
+  triggering the partysocket reconnect loop on an orphaned browser.
+
+The previous classification of `browser_close` as
+"orchestrator-owned lifecycle" was correct for Option B (legacy shared
+browser). Under Option A (per-seat MCP, calibration path) lifecycle
+**must** belong to the agent — that was a deferred Option-A wiring
+gap, not a relaxation of isolation.
+
+## Verification
+
+- `src/client/connection.test.ts` (new, 5 tests): asserts maxRetries +
+  noop debugLogger are passed to PartySocket; asserts threshold +
+  reset behavior of `consecutiveFailedAttempts`; asserts gave-up emits
+  exactly once and a fresh `connect()` restarts the budget.
+- `tests/e2e/reconnect-bounds.spec.ts` (new): asserts that forcing a
+  phone offline mid-session keeps console output under 100 entries
+  for 30s. Pre-fix would already be in the thousands.
+
+**Coverage gap (acknowledged):** Playwright's `page.context().setOffline(true)`
+simulates "no network" — the browser process stays alive, the WS
+attempts fail at the network layer. The original observed trigger was
+"server vanishes, browser keeps trying" — wrangler deliberately killed
+while the browser keeps attempting connect. These are similar but not
+identical. A targeted regression that kills wrangler mid-session and
+keeps the browser alive would close the gap. Deferred — the bounded-
+retry contract is the same regardless of trigger, and the e2e test
+exercises that contract.
 
 ## Lesson
 
-**Long-running test sessions surface unbounded loops that short test sessions cannot.** Coverage smokes (5-30s) never run long enough for an exponential-no-backoff loop to manifest as a hang. Calibration sessions (30+ min) do. Adding a "kill the server mid-session, wait 30s" assertion to the test surface — even outside calibration — would catch this class of bug going forward.
+**Library defaults assume "the server's coming back" by default. They are
+wrong by default for our use case.** PartySocket's `maxRetries: Infinity`
+is sensible for a multiplayer-game library where servers stay up across
+deploys. It is wrong for a tab whose backend can vanish (mid-session
+deploy, crash, harness teardown). Always audit library defaults at
+integration time — what's "polite" for the library is "unbounded loop"
+for the embedding application.
+
+**Trace before you frame.** The original draft of this insight
+extrapolated to "P0 player-facing — subway = bricked tab" without ever
+verifying the trigger. Two separate things were confused:
+
+1. The defect (real, reproducible class).
+2. The trigger (harness teardown timing, NOT a real-player condition we
+   observed).
+
+Severity classification follows the intersection: a real defect with a
+non-real trigger is P1 defensive, not P0 active. Briggsy caught the
+overreach during review. Always separate observed-fact from extrapolated-
+risk in insight write-ups, especially when severity is at stake.
 
 ## Related
 
-- Insight 034 — god-subscriber heartbeat-timeout (different layer; that's the harness's own WS handler, not the player client). Both are WebSocket reconnect concerns; both deserve scrutiny independently.
-- The "Re-establishing channel..." UI runs indefinitely with no upper-bound (independently noted by seat-1 v2). Same root cause: no escalation surface.
+- Insight 020 — subagent capability enforcement is frontmatter, not
+  wrapper. The seat-agent tool whitelist edits here apply that
+  pattern: a security-sensitive surface lands as a reviewable diff to
+  the generator + an explicit re-run.
+- Insight 031 — preferred architecture deferred then discovered at
+  integration. The `browser_close` reclassification is another Option-
+  A discovery — a tool that was correctly orchestrator-owned under
+  Option B becomes correctly agent-owned under Option A. The
+  "lifecycle belongs to the orchestrator" comment in the original
+  generator was outdated for Option A.
+- Insight 034 — god-subscriber heartbeat-timeout. Different layer
+  (harness's own WS handler vs the player client's), but both are
+  "reconnect path needs explicit terminal handling."

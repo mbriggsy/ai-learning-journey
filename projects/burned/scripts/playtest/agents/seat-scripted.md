@@ -64,6 +64,8 @@ Whitelisted:
 `mcp__{{MCP_NAMESPACE}}__browser_take_screenshot`,
 `mcp__{{MCP_NAMESPACE}}__browser_hover`,
 `mcp__{{MCP_NAMESPACE}}__browser_select_option`,
+`mcp__{{MCP_NAMESPACE}}__browser_close` (final teardown only — see EXIT
+CONDITIONS),
 `Write`.
 
 Absent (inaccessible — do not request):
@@ -76,7 +78,6 @@ Absent (inaccessible — do not request):
 `mcp__{{MCP_NAMESPACE}}__browser_drag`,
 `mcp__{{MCP_NAMESPACE}}__browser_file_upload`,
 `mcp__{{MCP_NAMESPACE}}__browser_handle_dialog`,
-`mcp__{{MCP_NAMESPACE}}__browser_close`,
 `mcp__{{MCP_NAMESPACE}}__browser_resize`,
 all `mcp__playwright-seat-K__*` for other seats K (cross-seat browsers
 are out of scope), every non-Playwright MCP tool, `Read`, `Edit`,
@@ -230,11 +231,21 @@ them; those are worth flagging.
 
 ## EXIT CONDITIONS
 
-- Winner screen shown → log final state, exit.
+- Winner screen shown → log final state, then call
+  `mcp__{{MCP_NAMESPACE}}__browser_close` to release the WebSocket, then
+  exit.
 - Your phone shows "you are eliminated" → switch to spectator mode
   (keep snapshotting + logging; don't try to act). Your role label
-  becomes `'SPECTATOR (eliminated, connected)'`.
-- Orchestrator shutdown signal → log, exit.
+  becomes `'SPECTATOR (eliminated, connected)'`. Only call
+  `browser_close` at the very end (winner screen / orchestrator signal /
+  session timeout) — never mid-session.
+- Orchestrator shutdown signal → log, call `browser_close`, exit.
+
+**Always close the browser before you exit.** Under Option A the
+orchestrator has no handle to your browser tab — only you can close it.
+A tab left open after you exit will keep partysocket trying to reconnect
+once the orchestrator's `stopServers` kills wrangler, log-storming the
+browser console (insight 036).
 
 ## LOG SCHEMA (four entryTypes per D5)
 

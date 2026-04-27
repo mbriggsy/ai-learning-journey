@@ -60,6 +60,51 @@
     color: var(--color-fg-secondary);
   }
 
+  /* gave-up state — terminal "refresh to rejoin" UI. Different vocabulary
+     than connecting/reconnecting: no spinner, hot-red accent for the
+     headline (matches case-banner / Burned card vocabulary), refresh
+     button as the only path forward. Player is the actor now. */
+  .gaveUpHeadline {
+    font-family: var(--font-mono);
+    font-size: var(--text-body);
+    font-weight: 700;
+    color: var(--color-accent-burned);
+    letter-spacing: 0.08em;
+  }
+
+  .gaveUpLabel {
+    font-family: var(--font-body);
+    font-size: var(--text-body);
+    font-weight: 600;
+    color: var(--color-fg-secondary);
+    text-align: center;
+    max-width: 28ch;
+  }
+
+  .refreshButton {
+    margin-top: var(--space-2);
+    font-family: var(--font-body);
+    font-size: var(--text-body);
+    font-weight: 700;
+    color: var(--color-fg-primary);
+    background: var(--color-accent-burned);
+    border: none;
+    border-radius: var(--radius-sm, 4px);
+    padding: var(--space-3) var(--space-5);
+    cursor: pointer;
+    transition: transform var(--motion-duration-fast, 120ms) var(--motion-ease-decelerate, ease-out);
+  }
+
+  @media (hover: hover) and (pointer: fine) {
+    .refreshButton:hover {
+      filter: brightness(1.1);
+    }
+  }
+
+  .refreshButton:active {
+    transform: scale(0.97);
+  }
+
   @keyframes connectionSpin {
     to { transform: rotate(360deg); }
   }

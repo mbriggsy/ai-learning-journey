@@ -19,10 +19,18 @@ import styles from './DramaOverlay.module.css'
 //     NON-DRAWERS / BOARD on burned-drawn. Party-reveal cinematic: the
 //     room watches the card rotate and land, then the victim's name
 //     surfaces underneath. Cinematic Arc #2.
+//
+// `transient: true` marks beats that should be aborted (or skipped pre-queue)
+// when a `turn-started` event arrives in the same batch or while the beat
+// is mid-animation. INTERCEPTED is the only transient beat today: the action
+// got cancelled, the active player can immediately end turn, and a 1.4s hold
+// would otherwise overlay the next player's first ~2s of their turn.
+// Critical beats (BURNED, EXTRACTED, ELIMINATED, WINS) intentionally play
+// out fully because they communicate state changes the room MUST register.
 type DramaConfig =
-  | { variant: 'text'; text: string; className: string; holdMs: number }
-  | { variant: 'card'; cardType: 'burned'; className: string; holdMs: number }
-  | { variant: 'card-flip'; cardType: 'burned'; victimName: string; className: string; holdMs: number }
+  | { variant: 'text'; text: string; className: string; holdMs: number; transient?: boolean }
+  | { variant: 'card'; cardType: 'burned'; className: string; holdMs: number; transient?: boolean }
+  | { variant: 'card-flip'; cardType: 'burned'; victimName: string; className: string; holdMs: number; transient?: boolean }
 
 // Returns 0..N beats to queue for a given event. burned-drawn splits by
 // audience: the DRAWER sees the Burned card itself fill their phone
@@ -92,6 +100,12 @@ function getDramaBeats(
         // the word was already fading by the time a couch viewer could
         // focus on it. E2E audit C-14.
         holdMs:    1400,
+        // Aborts on `turn-started` arrival — see DramaConfig docstring.
+        // Calibration finding: action gets noped, active player ends turn
+        // fast, and the 1.4s hold otherwise obscures the next player's
+        // first ~2s of their turn ("INTERCEPTED toast leaks across turn
+        // boundaries"). Critical beats play out; this one steps aside.
+        transient: true,
       }]
     case 'game-over':
       return [{
@@ -116,6 +130,11 @@ export function DramaOverlay() {
   const lastProcessedRef = useRef<string | null>(null)
   const animatingRef = useRef(false)
   const queueRef = useRef<Array<{ config: DramaConfig; id: string }>>([])
+  // Active GSAP timeline + transient flag for the currently-animating beat.
+  // Lets a `turn-started` event abort an in-flight transient beat (today
+  // only INTERCEPTED) so the next player's turn isn't obscured for ~2s.
+  const currentTimelineRef = useRef<gsap.core.Timeline | null>(null)
+  const currentBeatTransientRef = useRef(false)
 
   useEffect(() => {
     if (events.length === 0) return
@@ -137,18 +156,47 @@ export function DramaOverlay() {
 
     lastProcessedRef.current = newEvents[newEvents.length - 1]!.id
 
+    // Detect turn rotation in this batch. If present, transient beats
+    // (e.g. INTERCEPTED) are obsolete — skip queueing them, and abort any
+    // in-flight transient animation. Critical beats still queue + play.
+    const turnRotates = newEvents.some(e => e.event.type === 'turn-started')
+    if (turnRotates && animatingRef.current && currentBeatTransientRef.current) {
+      abortCurrentBeat()
+    }
+
     // Queue drama events. playerId is stable post-join so a plain read off
     // gameStore at queueing time is fine — no subscription needed.
     const myPlayerId = gameStore.getPlayerId()
     for (const entry of newEvents) {
       const beats = getDramaBeats(entry.event, players, myPlayerId)
       for (let i = 0; i < beats.length; i++) {
-        queueRef.current.push({ config: beats[i]!, id: `${entry.id}-${i}` })
+        const beat = beats[i]!
+        // Same-batch turn rotation supersedes a fresh transient beat —
+        // queueing it would just animate, then immediately get cancelled.
+        if (beat.transient && turnRotates) continue
+        queueRef.current.push({ config: beat, id: `${entry.id}-${i}` })
       }
     }
 
     processQueue()
   }, [events, players])
+
+  // Kills the in-flight GSAP timeline, snaps the overlay to its post-anim
+  // state, and advances the queue. Called when a `turn-started` event
+  // arrives while a transient beat is mid-animation. Mirrors the cleanup
+  // GSAP's onComplete would have done, just earlier.
+  function abortCurrentBeat(): void {
+    const tl = currentTimelineRef.current
+    if (tl) tl.kill()
+    currentTimelineRef.current = null
+    currentBeatTransientRef.current = false
+    animatingRef.current = false
+    const overlay = overlayRef.current
+    const text = textRef.current
+    if (overlay) gsap.set(overlay, { opacity: 0, pointerEvents: 'none' })
+    if (text) gsap.set(text, { opacity: 0, filter: 'blur(4px)' })
+    processQueue()
+  }
 
   function processQueue() {
     if (animatingRef.current || queueRef.current.length === 0) {
@@ -160,6 +208,7 @@ export function DramaOverlay() {
 
     const { config } = queueRef.current.shift()!
     animatingRef.current = true
+    currentBeatTransientRef.current = config.transient === true
     setDramaActive(true)
 
     const overlay = overlayRef.current
@@ -205,6 +254,8 @@ export function DramaOverlay() {
     const tl = gsap.timeline({
       onComplete: () => {
         animatingRef.current = false
+        currentTimelineRef.current = null
+        currentBeatTransientRef.current = false
         // Reset — blur stays defocused so the NEXT beat's fromTo starts from
         // a blurred state and can "focus in," bridging beat-to-beat handoff
         // into one perceived motion (Emil's crossfade-mask trick).
@@ -214,6 +265,7 @@ export function DramaOverlay() {
         processQueue()
       },
     })
+    currentTimelineRef.current = tl
 
     // SLAM IN: scale + opacity + refocus from blur. Starting at blur(4px)
     // bridges multi-beat sequences as one perceived morph instead of a

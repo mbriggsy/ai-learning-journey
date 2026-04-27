@@ -1,7 +1,7 @@
 {
   "seats": 3,
   "seed": 1,
-  "nopeWindowMs": 300000,
+  "nopeWindowMs": 10000,
   "sessionTimeoutMs": 1800000,
   "catalogPath": "scripts/playtest/fixtures/mini-catalog.md",
   "outputRoot": "docs/testing/playtest/runs",

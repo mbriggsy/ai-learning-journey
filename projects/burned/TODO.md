@@ -1,64 +1,163 @@
 # BURNED — TODO
 
-## NEXT SESSION — pick up here (2026-04-26+)
+## NEXT SESSION — pick up here (2026-04-27+)
 
 ### TOP OF THE QUEUE
 
-**🔥 Insight 035 fix — SmartActionBox `breathe` animation defeats
-Playwright clicks on action buttons.** Recommended Option 1 (in the
-insight): move the breathe animation from `.action` itself to a `::before`
-pseudo-element so the button DOM stays static while the visual pulse
-continues. Same for `breatheIntense` (low-deck warning) and
-`interceptPulse` (final-2-seconds-of-nope-window) — same `.action`-class
-pattern. Estimate 30-60 min including visual re-tuning. Ship with a small
-`phase6-smartactionbox-clickability-smoke` that asserts Playwright can
-click `.action` against a live game. Once this lands, retry calibration —
-should produce the first clean coverage run. Full diagnosis at
-`docs/insights/035-smartactionbox-breathe-animation-defeats-playwright-stability-check.md`.
+**🔥 P0 — WebSocket reconnect log storm hangs the browser (insight 036).**
+Two seat agents independently surfaced the same bug during Phase 6 Unit 3
+calibration: when the player WS connection drops, the client's reconnect
+loop logs 572k–1.6M console entries in seconds with no exponential
+backoff. The browser tab becomes unresponsive. This is a **player-facing
+P0**: any real player whose phone briefly loses connectivity (subway,
+elevator, weak wifi) is one minute of disconnection away from a bricked
+tab.
 
-After Option 1 lands + calibration produces clean data, remaining open
-items in priority order:
+Fix path (`src/client/connection.ts` — verify file via grep before
+editing):
+1. Exponential backoff with jitter: 250ms → 500ms → 1s → 2s → 4s → 8s,
+   capped at 30s, ±20% jitter.
+2. Upper-bound retry cap: after ~60s of failing reconnects, surface a
+   "Connection lost — refresh to rejoin" UI and STOP retrying.
+3. Throttle the connection layer's logging to ≤1 line per attempt.
 
-1. **Session-cap-vs-agent-completion mismatch.** Calibration
-   `sessionTimeoutMs: 900000` (15 min) is also the seat-driver's
-   `waitTimeoutMs` default. Driver countdown starts at orchestrator boot,
-   not at agent dispatch (agents arrive 1-3 min later). When agents are
-   still mid-game at 15 min, finalize fires anyway. Two paths: bump
-   `sessionTimeoutMs` to 30 min for calibration, OR change the driver to
-   start its countdown when the marker watcher proves agents are alive.
-   Bump is simpler; retire later if it's a real cost.
-2. **Calibration room-code collision (caught attempt #3 first launch).**
-   Default `roomCode='PLAYTEST'` collides across runs because partyserver
-   DO state is persistent across wrangler restarts. Workaround documented:
-   `rm -rf .wrangler/state` between runs. Real fix: randomize the
-   calibration room code per run (Phase 3 smoke pattern — `mintRoomCode()`
-   prefix + 3 random chars). One-line change in `run-session.ts` or
-   `calibration.json` semantics.
-3. **Triage agents not auto-dispatched.** Phase 6 calibration attempt #2
-   produced 12 triage seeds → 12 specs but 0 issues — specs were emitted,
-   the dispatch step (one `Agent({subagent_type: 'playtest-triage'})` per
-   spec) is still operator-driven. Wire it as the post-session triage
-   pipeline's final hook so `INDEX.md` populates.
-4. **Coverage.md empty — Unit 10 renderer wiring deferred.** Pure
+Verification: write a Playwright test that kills the server mid-session,
+waits 30s, asserts the page is still responsive AND the "refresh to
+rejoin" message renders.
+
+Full diagnosis at `docs/insights/036-websocket-reconnect-log-storm-hangs-browser.md`.
+
+### Phase 6 calibration — pipeline is live; remaining gaps in priority order
+
+**Calibration retry attempt #4 (run 2 — `runs/2026-04-26-1339-3p/`)
+completed the full pipeline end-to-end for the first time:** manifest →
+3 agent dispatches → seat play → log writes → isolation audit (PASS, 0
+breaches) → triage clustering → 4 typed specs → INDEX.md generation.
+verify-calibration: 5/7 checks PASS.
+
+What's still missing:
+
+1. **Triage agents not auto-dispatched.** Run 2 produced 4 triage specs
+   at `runs/2026-04-26-1339-3p/triage-specs/`. INDEX.md shows 0 issues
+   because the operator (next session — eye-in-loop) still has to dispatch
+   one `Agent({subagent_type: 'playtest-triage'})` per spec. Wire as a
+   post-session-triage hook OR document as the operator's final manual
+   step.
+2. **Coverage.md empty — Unit 10 renderer wiring deferred.** Pure
    functions shipped (Phase 3 Unit 10), not called from `runSession`.
-   Verify-calibration check 6 will keep failing until wired.
+   verify-calibration check 6 will keep failing until wired. Pass
+   `buildCoverageReport({...})` + `renderCoverageMd(report, fires,
+   catalog)` from `runSession` after `appendSessionEnd`.
+3. **Coverage threshold hardcoded at 50** in
+   `coverage-reporter.ts:136,178` and types.ts:267 (`readonly threshold:
+   50`). Mini-catalog has 6 scenarios — threshold can never be hit.
+   Plumb a `coverageThreshold?: number` through `Config` + Zod schema +
+   change the type literal to `number`. Default 50 (PRD §8.2). Mostly
+   cosmetic since Item 2 keeps coverage from rendering anyway.
+4. **God-subscriber server-side inactivity timeout (NEW).** Run 2 logged
+   `[god-subscriber] server-initiated close mid-session code=1000 reason=
+   Inactivity timeout`. This is a DIFFERENT layer than insight 034 (that
+   was the harness's client-side ping handler). The server is closing
+   the WS proactively when no broadcasts flow for some interval. Long
+   calibration sessions with slow turn pacing will trip it. Either send
+   a periodic keep-alive ping from the god subscriber, or relax the
+   server-side idle timeout for the god connection only.
 5. **Heartbeat-aware regression smoke.** Add a `phase6-heartbeat-smoke`
    that runs ≥60s and asserts god stays connected through ≥2 server
-   ping cycles. Insight 034 caught a real silent failure that none of
-   our <60s smokes could surface. Defense in depth.
+   ping cycles. Defense in depth for both insight 034 (client) and the
+   new server-idle-close finding (#4 above).
+6. **Third-seat-fails-to-join — three independent occurrences.** Old
+   seat-3 v1 (run 1), new seat-2 v2 + new seat-3 v2 (run 2) all failed
+   to land in the lobby — Check In button registered as `[active]` but
+   the page didn't transition. Repro pattern: third concurrent agent to
+   navigate to `?room=X&name=Y`. Investigate: WS handshake race? Vite
+   serving the page slowly under load? The first two seats land fine.
+   Capture as own insight if root cause is non-obvious.
+7. **MCP browser cross-run collision.** When run 1's seat agents are
+   still alive and run 2's agents are dispatched, both try to use the
+   same `playwright-seat-N` MCP server / browser instance. Run 2's
+   navigates step on run 1's state and lose. Operator process gap: cancel
+   in-flight agents BEFORE re-dispatching. Worth noting in operator
+   runbook.
 
-### THIS SESSION (2026-04-25) — what shipped
+### Phase 6 calibration — product/UX bugs surfaced (independent of harness work)
 
-Five commits. Five distinct calibration findings (031–035). Harness
-infrastructure now mechanically calibration-ready end-to-end.
+These are real bugs the calibration found. Each goes into product triage,
+not harness work.
+
+8. **AnimatePresence ref-stale on SmartActionBox state swap (insight 037).**
+   Different from insight 035. The button DOM is stable during steady-
+   state, but `mode="wait"` unmounts the OLD `<m.button>` when state
+   changes (e.g. `target-burn-the-files` → `draw`). Playwright's click
+   succeeds server-side (state propagates) but throws ref-stale on
+   post-click verification. Three fix options in the insight; recommend
+   refactoring SmartActionBox to keep one stable `<button>` DOM next
+   time it's touched.
+9. **Stray card selection bug.** Old seat-1 v1: "after double-clicking
+   one card (Burn the Files), an adjacent card (Call in a Favor) became
+   `active` without being clicked. The resulting backdrop blocked the
+   End turn button until cleared with Escape + deselect." Reproduces the
+   `_enlargeBackdrop_*` overlay leaving an adjacent card in `active`
+   state. Investigate `Hand.tsx` enlarge-handler + state cleanup.
+10. **INTERCEPTED toast leaks across turn boundaries.** Old seat-1 v1:
+    INTERCEPTED toast from their turn persisted into Seat2's turn without
+    clearing. Probably a `PlayerAlert` / `StealReport` cleanup gap on
+    `turn-started` event.
+11. **"Can't play Intercepted" UI has no context.** Old seat-1 v1: when
+    ACTOR tries to chain-intercept after their own card is intercepted,
+    the UI blocks with the bare error string. Add a hint: "Intercepted
+    is a reactive card — only opponents can play it during your nope
+    window."
+12. **Reconnect UX has no upper-bound surface.** Independent of #1
+    above (which is the unbounded LOG bug). The "Re-establishing
+    channel..." dialog renders indefinitely with no escalation. Pairs
+    with #1 — fixing #1 surfaces a refresh-to-rejoin UI which closes
+    this gap.
+13. **Schema drift in seat logs (calibration finding).** verify-
+    calibration check 5 caught: seat-1 v2 wrote `scenarioId: null`
+    (should be a string) and `questionsTried: <single string>` (should
+    be an array). Either tighten the agent prompt with explicit examples
+    of the YAML shape OR strengthen the schema-validator's error-recovery
+    so the verifier flags individual entries instead of failing the
+    whole file.
+14. **Vibe-check signals (NOT bugs, but worth capturing).** Old seat-2
+    v1 vibe-checked SCN-INTERCEPT-CHAIN-BURN-01 as **NO** ("mechanically
+    correct but cinematically flat; no dramatic framing or resolution
+    beat") and SCN-FAVOR-NORMAL-01 as **UNSURE** ("setup UI was visually
+    strong, but resolution never completed"). These are §8.7 acceptance-
+    criteria signals. The first ("Archer-coded heist beat") needs a
+    framing pass on the chain-burn animation; the second is moot until
+    #5 above is closed.
+
+### THIS SESSION (2026-04-26 / 27) — what shipped
+
+Three product/test commits + this squeaky-clean. Insight 035 closed end-
+to-end with regression protection; calibration retry attempt #4 ran the
+full pipeline for the first time and surfaced 14 distinct findings (see
+TOP OF THE QUEUE above).
 
 | Commit | Subject |
 |---|---|
-| `3a4c33a7` | Phase 6 Unit 2.6 — orchestrator-owned board-view client |
-| `cbcd79a6` | Selftest hardening — startServers/stopServers (no zombies) |
-| `04dc3f45` | Board-view timeout → sessionTimeoutMs |
-| `e0967b17` | God-subscriber heartbeat — pong handler + visibility log |
-| `feea4ec6` | Insight 035 — SmartActionBox breathe defeats Playwright |
+| `85fa0365` | fix(smartactionbox): lift breathe pulses to ::after pseudo |
+| `5c0310f6` | test(playtest-harness): phase6-smartactionbox-clickability-smoke |
+| `803ebb61` | chore(playtest-harness): prep calibration retry — bump timeout, random room code |
+
+**Calibration retry results:**
+- Run 1 (`runs/2026-04-26-1303-3p/`) — 5-min nope window era, ISOLATION_BREACH
+  on screenshots-in-seats-dir. 3 scenarios fired (SCN-FAVOR-NORMAL-01,
+  SCN-INTERCEPT-CHAIN-BURN-01, SCN-SKIP-NORMAL-01) before sessionTimeoutMs.
+- Run 2 (`runs/2026-04-26-1339-3p/`) — 10s nope window. **PASS isolation, 4
+  triage specs produced (first time), 1 scenario fired (SCN-GO-DARK-NORMAL-01),
+  verify-calibration 5/7.** Failures: seat-log schema drift + coverage.md
+  empty (Unit 10 not wired).
+- Insight 035 fix held under real harness load (seat-1 v2 successfully fired
+  SCN-GO-DARK-NORMAL-01 by clicking `.action`).
+- 0 workerd zombies post-teardown.
+
+**Insights captured this session:**
+- 036 — WebSocket reconnect log storm (P0 product bug, two seats reproduced).
+- 037 — AnimatePresence mode=wait creates ref-stale on state swap
+  (different from insight 035; shares the SmartActionBox surface).
 
 **Test surface:** typecheck clean · 1027/1027 unit tests · phase3-smoke ·
 phase4-smoke · phase5-smoke · phase6-launcher-smoke · phase6-board-launcher-smoke

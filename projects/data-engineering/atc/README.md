@@ -46,6 +46,8 @@ Six phases run in order. Each one completes before the next begins. Half the val
 
 A `/brief` and `/distill` loop wraps every build: load what the team has learned before you start, capture what you just learned at the end. Knowledge compounds across builds. Mechanics in `03-execute.md` and `04-review.md`.
 
+A challenger panel reviews every major artifact before it locks — PRD, plans, code. Same shape (multi-angle review + synthesizer integration), different specialists per artifact. Drafts strengthen before they go downstream. Mechanics in chapter docs.
+
 ## Reading order
 
 | # | File | What's in it |

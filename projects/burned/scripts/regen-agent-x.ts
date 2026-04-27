@@ -33,6 +33,18 @@ const PROMPT =
   'hands partly in trench coat pockets, posture of someone who has killed people quietly and professionally, ' +
   'he looks like he could be friend or foe you genuinely cannot tell, wild card operative, ' +
   'rich magenta burnt orange and teal background with bold geometric shapes, Saul Bass style abstract rectangles, ' +
+  // Framing match: other operatives (Dash, Vera, Sable, Janet, Neal) all
+  // sit with visible background headroom above the hair / head. Without
+  // this instruction Imagen frames Agent X tight to the top because
+  // "fedora pulled low" + "trench coat collar high" reads as a vertical
+  // subject and the model fills the canvas. Result: in the hand fan, the
+  // figure looks larger than the operatives even though the card slots
+  // are identical-sized. Keep ~12-15% of canvas height as background
+  // ABOVE the hat — same visual breathing room as the other operatives.
+  'wide framing with the figure occupying the lower three-quarters of the canvas, ' +
+  'leave significant background headroom above the hat, ' +
+  'twelve to fifteen percent of the canvas above the top of the fedora is geometric background NOT figure, ' +
+  'figure does NOT touch the top edge of the frame, ' +
   'half-body portrait cartoon illustration, flat color not grayscale, ' +
   NO_TEXT;
 

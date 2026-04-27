@@ -10,8 +10,6 @@ This file is about how the agent flies, and how you keep it on the runway.
 
 Every execution session — and every phase within a session — opens with `/brief`. The brief loads what the team has already learned: prior gotchas, framework quirks, patterns that work, anti-patterns that don't. It's the agent's institutional memory.
 
-If your team's `/brief` library is empty (early days of ATC adoption), seed it with one or two known-good patterns from your existing codebase. The brief gets richer with every `/distill` at phase end (see `04-review.md`). The loop only compounds if you run both halves.
-
 ## The execution loop
 
 Use an executor skill (`gsd-executor`, `ce:work`, or whichever fork fits your stack) to drive the loop. For each phase plan, in order:

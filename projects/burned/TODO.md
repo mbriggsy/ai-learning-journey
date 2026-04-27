@@ -1,8 +1,79 @@
 # BURNED — TODO
 
-## NEXT SESSION — pick up here (2026-04-27+)
+## NEXT SESSION — pick up here (2026-04-28+)
 
-### TOP OF THE QUEUE
+### TOP OF THE QUEUE — fix insight 037
+
+**Insight 037 — AnimatePresence ref-stale on SmartActionBox state swap.**
+The SmartActionBox subsystem is brittle around Playwright automation
+contracts. Insight 035 (continuous animation defeats stability check)
+shipped 2026-04-27 with the breathe lift to `::after`. 037 is the
+matching discrete-unmount failure mode on the same component — `mode="wait"`
+unmounts the OLD `<m.button>` when `state.key` changes (e.g.
+`target-burn-the-files` → `draw` after a card plays). Playwright's click
+registers server-side, but the post-click verification throws "node
+detached." Both fixes harden SmartActionBox end-to-end.
+
+**Recommended fix path (Option 1 from insight 037, lines 64-66):** refactor
+SmartActionBox so the `<button>` DOM stays stable across states; only the
+inner content (text + `className`) animates.
+
+Concrete plan, ready to execute:
+
+1. **Hoist `AnimatePresence` to wrap only the inner content**, not the
+   button itself. The outer element becomes a single stable
+   `<button>` (or `<div>` when not interactive — but interactivity is
+   the dominant case during gameplay; consider always-button + `disabled` flag).
+2. **Decision point:** can the wrapper always be a `<button>`, or do we
+   need the conditional `<button>`/`<div>` split? Today the split is:
+   - `interactive: true` paths → `<m.button>` (12 cases — draw, intercept,
+     counter, pair, triple, target-*, ready-*, favor-surrender)
+   - `interactive: false` paths → `<m.div>` (8 cases — standby, hint,
+     intercept-waiting, counter-waiting, favor-empty, invalid-*, plus
+     non-acting-non-eligible windows)
+   
+   Cleanest refactor: always render `<button>`, set `disabled` when
+   `!state.interactive`, and let `:disabled` styling carry the visual
+   distinction. CSS already has `[aria-disabled='true']` carve-outs in
+   `MinimalCard` (per CLAUDE.md client patterns); SmartActionBox can
+   adopt the same idiom.
+3. **AnimatePresence wraps an inner `<m.span>` keyed on `state.key`.**
+   Crossfade the text content between states. Loses Framer's
+   button-level enter/exit choreography but the user-visible motion is
+   primarily the text swap anyway — outer scale-in/out was subtle.
+4. **`className` transitions** — today `state.className` carries
+   `${styles.box} ${styles.draw}`-style multi-class strings. New shape:
+   the box class stays on the stable `<button>`; the *variant* class
+   (`draw`, `intercept`, `action`, `comboPair`, etc.) transitions either
+   via `data-variant` attribute (CSS attribute selector) or a Framer
+   `animate` on `style` properties.
+5. **Verification:**
+   - Existing `phase6-smartactionbox-clickability-smoke` must still pass.
+   - Add a NEW smoke that simulates state-swap-during-click: mount a
+     button, schedule a state change at +50ms, click at +100ms, assert
+     no ref-stale (or assert state-change works without DOM remount).
+   - Manual phone smoke: drive a turn through several state transitions
+     (staged → ready → played → drawing → next turn) and confirm the
+     button's press-feedback `:active { scale(0.97) }` still feels
+     tactile. CLAUDE.md SmartActionBox press-scale rule.
+
+**Landmines to respect (from CLAUDE.md):**
+- `MinimalCard :active` patterns + the Insight 016 CSS-animation-vs-`:active`-transform rule. Whatever animation hooks the new structure has, ensure `:active { animation: none; transform: scale(0.97) }` still wins.
+- The breathe pulses now live on `::after` per insight 035. The refactor
+  must NOT reintroduce them on the button DOM — that re-breaks the
+  Playwright stability check. The pseudo-element strategy is load-bearing.
+- `MOTION.exit` uses decelerate-based easing; Emil rule #1 says exits
+  use ease-out. New crossfade easings should follow.
+
+**Why this is the right next thing (decision rationale, 2026-04-27):**
+Same component as just-fixed insight 035. Calibration found this bug;
+fixing it consumes the finding rather than letting it accumulate. Bounded
+scope (one component). Player-facing (not harness-only). Continues the
+SmartActionBox hardening thread to its conclusion.
+
+---
+
+### Insight 036 — closed (2026-04-27)
 
 **✅ Insight 036 closed end-to-end (2026-04-27).** The diagnosis was
 substantially revised after rereading the run artifacts: original "P0

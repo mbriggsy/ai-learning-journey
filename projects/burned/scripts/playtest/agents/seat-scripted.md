@@ -270,3 +270,97 @@ prose. The four `entryType` values:
 LOG FILE: `{{LOG_PATH}}` (append-only, markdown + fenced YAML).
 SUSPICION FILE: `{{SUSPICION_PATH}}` (append-only, markdown + fenced
 YAML).
+
+### Concrete YAML examples — copy-paste, replace values, preserve shapes
+
+The schema-validator (phase-4 Unit 3) rejects entries that drift on
+field shapes. Calibration retry findings (run `2026-04-26-1303-3p`):
+agents wrote `scenarioId: null` (must be a string) and `questionsTried:
+"single string"` (must be a list). Use these examples as starting
+points; do not paraphrase the field shapes.
+
+**`scenario-fire` (LOG_PATH):**
+
+````yaml
+entryType: scenario-fire
+scenarioId: "SCN-FAVOR-NORMAL-01"
+seat: "seat-1"
+seatName: "Whiskrs"
+timestamp: "2026-04-29T22:14:30Z"
+triggeringAction: "double-tap Call in a Favor, click 'Take a card from someone →', select Mittens"
+preObservation: "Hand 8, draw pile 29, my turn."
+postObservation: "Favor played → Mittens. Hand 7. Target dialog showed Mittens. No interception."
+````
+
+**`suspicion` (SUSPICION_PATH):**
+
+````yaml
+entryType: suspicion
+seat: "seat-1"
+seatName: "Whiskrs"
+timestamp: "2026-04-29T22:15:10Z"
+severity: medium
+relatedScenario: "SCN-FAVOR-NORMAL-01"
+questionsTried:
+  - "Single-click on hand card opens an enlarged preview that intercepts pointer events."
+  - "Tried multiple click patterns to bypass the preview before discovering double-click."
+````
+
+If only ONE question tried, still wrap it in a list:
+
+````yaml
+questionsTried:
+  - "Single-string form is rejected — schema requires an array."
+````
+
+If no related scenario: `relatedScenario: null` (the YAML literal, not
+the string `"null"`).
+
+**`vibe-check` (SUSPICION_PATH):**
+
+````yaml
+entryType: vibe-check
+seat: "seat-1"
+seatName: "Whiskrs"
+timestamp: "2026-04-29T22:16:45Z"
+relatedScenario: "SCN-INTERCEPT-CHAIN-BURN-01"
+feltLikeArcher: unsure
+vibeCheckPrompt: "Did the chain-burn beat feel like a heist counter — request, refusal, restoration — or a UI form rejection?"
+proseRationale: "The chain mechanically resolved correctly but the UI gave no visual cue that I had restored my own play. Read more procedural than dramatic."
+````
+
+**`ui-spec-divergence` (SUSPICION_PATH):**
+
+````yaml
+entryType: ui-spec-divergence
+seat: "seat-1"
+seatName: "Whiskrs"
+timestamp: "2026-04-29T22:18:00Z"
+myRoleLabel: "ACTOR"
+relatedScenario: "SCN-INTERCEPT-CHAIN-BURN-01"
+column2Expected: "ACTOR sees the Counter button when chainDepth >= 1."
+observedOnPhone: "Counter button absent; staging an Intercepted card showed 'Can't play Intercepted' with no path forward."
+screenshotHash: "page-2026-04-29T22-17-58-101Z.png"
+````
+
+### Field shape rules — common drift sources
+
+- `scenarioId` is always a string. There is NO `scenarioId: null` form;
+  if you have no scenario in mind, you are writing a `suspicion` (which
+  uses `relatedScenario: null`), not a `scenario-fire`.
+- `questionsTried` is ALWAYS an array of strings (YAML list syntax with
+  `-` per item), even when there is exactly one item. Single-string
+  form is rejected.
+- `relatedScenario` is either `null` (the YAML literal) or a string
+  matching a catalog `SCN-*` ID. `"null"` (the string) is rejected.
+- `timestamp` is an ISO-8601 string, e.g. `"2026-04-29T22:14:30Z"`.
+- `severity` is `low` | `medium` | `high` (lowercase, no quotes
+  needed).
+- `feltLikeArcher` is `yes` | `no` | `unsure` (lowercase, no quotes
+  needed).
+- `myRoleLabel` must match a verbatim `ROW_DISPLAY_LABELS` value —
+  e.g. `"ACTOR"`, `"TARGET"`, `"OTHER (alive)"`,
+  `"SPECTATOR (eliminated, connected)"`. Capitalisation and
+  parenthetical text are part of the value.
+- `proseRationale` must be ≥10 characters — single-word answers like
+  `"yes"` or `"flat"` are rejected by design (catches boilerplate).

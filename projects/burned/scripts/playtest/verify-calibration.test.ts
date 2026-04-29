@@ -540,6 +540,84 @@ describe('checkPerSeatLogs', () => {
     expect(r.status).toBe('fail')
     expect(r.detail).toContain('suspicions')
   })
+
+  it('reports ALL parse errors per file (TODO #13 — two drifts in one file)', async () => {
+    // Calibration retry run `2026-04-26-1303-3p` had a single suspicion
+    // file with TWO independent shape drifts. Pre-fix only the first
+    // surfaced; the second was masked until a human scrolled the raw
+    // markdown. This regression keeps both visible in the verifier's
+    // detail string with block indexes for source-file lookup.
+    const driftedSuspicions = `# Seat-1 suspicions
+
+\`\`\`yaml
+entryType: scenario-fire
+scenarioId: null
+seat: seat-1
+seatName: Seat1
+timestamp: "2026-04-29T10:00:00Z"
+triggeringAction: "x"
+preObservation: "y"
+postObservation: "z"
+\`\`\`
+
+\`\`\`yaml
+entryType: suspicion
+seat: seat-1
+seatName: Seat1
+timestamp: "2026-04-29T10:01:00Z"
+severity: medium
+relatedScenario: null
+questionsTried: "single string instead of an array"
+\`\`\`
+`
+    await fs.writeFile(
+      path.join(fixture.suspicionsDir, 'seat-1.suspicions.md'),
+      driftedSuspicions,
+      'utf8',
+    )
+    const r = await checkPerSeatLogs(fixture.runDir)
+    expect(r.status).toBe('fail')
+    // Both violations surface
+    expect(r.detail).toMatch(/scenarioId/i)
+    expect(r.detail).toMatch(/questionsTried/i)
+    // Block indexes addressable for source-file lookup
+    expect(r.detail).toContain('block 0')
+    expect(r.detail).toContain('block 1')
+    // Total error count surfaces in the header so the operator can
+    // tell at a glance "this is multiple drifts, not just one."
+    expect(r.detail).toMatch(/\(2\)/)
+  })
+
+  it('aggregates errors across MULTIPLE files (run-wide visibility)', async () => {
+    // Drift in two seats simultaneously — both must appear. Pre-fix
+    // the first error per file made it through; this test pins
+    // run-wide aggregation behaviour.
+    const driftLog = `\`\`\`yaml
+entryType: suspicion
+seat: seat-1
+seatName: Seat1
+timestamp: "2026-04-29T10:00:00Z"
+severity: low
+relatedScenario: null
+questionsTried: "string-form is rejected"
+\`\`\`
+`
+    await fs.writeFile(
+      path.join(fixture.suspicionsDir, 'seat-1.suspicions.md'),
+      driftLog,
+      'utf8',
+    )
+    await fs.writeFile(
+      path.join(fixture.suspicionsDir, 'seat-2.suspicions.md'),
+      driftLog,
+      'utf8',
+    )
+    const r = await checkPerSeatLogs(fixture.runDir)
+    expect(r.status).toBe('fail')
+    expect(r.detail).toContain('seat-1.suspicions.md')
+    expect(r.detail).toContain('seat-2.suspicions.md')
+    expect(r.detail).toMatch(/\(2\)/)
+  })
 })
 
 // ---------------------------------------------------------------------------

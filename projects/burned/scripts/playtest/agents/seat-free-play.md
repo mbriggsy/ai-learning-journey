@@ -215,3 +215,90 @@ Same four `entryType` values as scripted mode:
 LOG FILE: `{{LOG_PATH}}` (append-only, markdown + fenced YAML).
 SUSPICION FILE: `{{SUSPICION_PATH}}` (append-only, markdown + fenced
 YAML).
+
+### Concrete YAML examples — copy-paste, replace values, preserve shapes
+
+The schema-validator (phase-4 Unit 3) rejects entries that drift on
+field shapes. Calibration retry findings (run `2026-04-26-1303-3p`):
+agents wrote `scenarioId: null` (must be a string) and `questionsTried:
+"single string"` (must be a list). Use these examples as starting
+points; do not paraphrase the field shapes.
+
+**`suspicion` (most common in free-play):**
+
+````yaml
+entryType: suspicion
+seat: "seat-2"
+seatName: "Mittens"
+timestamp: "2026-04-29T22:30:14Z"
+severity: low
+relatedScenario: null
+questionsTried:
+  - "Tried tapping the discard pile to inspect played cards — nothing happened."
+  - "Long-pressed an opponent's nameplate looking for stats; no visible affordance."
+````
+
+If only ONE question tried, still wrap it in a list. If a related
+scenario applies: `relatedScenario: "SCN-FAVOR-NORMAL-01"` (the YAML
+literal `null` for the no-scenario case, not the string `"null"`).
+
+**`vibe-check` (mandatory per suspicion):**
+
+````yaml
+entryType: vibe-check
+seat: "seat-2"
+seatName: "Mittens"
+timestamp: "2026-04-29T22:31:02Z"
+relatedScenario: null
+feltLikeArcher: yes
+vibeCheckPrompt: "Did the staging area's reveal of the played card feel like a moment of commitment?"
+proseRationale: "The card slid into staging and the action box switched verbs in step. Read deliberate, not perfunctory."
+````
+
+**`ui-spec-divergence` (when phone contradicts spec):**
+
+````yaml
+entryType: ui-spec-divergence
+seat: "seat-2"
+seatName: "Mittens"
+timestamp: "2026-04-29T22:32:08Z"
+myRoleLabel: "OTHER (alive)"
+relatedScenario: null
+column2Expected: "Other-alive sees the active player's nameplate animate during their turn."
+observedOnPhone: "Active player's nameplate stayed static; no animation cue when their turn started."
+screenshotHash: "page-2026-04-29T22-32-06-841Z.png"
+````
+
+**`scenario-fire` (rare in free-play):**
+
+````yaml
+entryType: scenario-fire
+scenarioId: "SCN-FAVOR-NORMAL-01"
+seat: "seat-2"
+seatName: "Mittens"
+timestamp: "2026-04-29T22:33:55Z"
+triggeringAction: "Whiskrs played Call in a Favor and selected me as target."
+preObservation: "Hand 8 (with one Intercepted), Whiskrs's turn."
+postObservation: "Surrender prompt opened on my phone. I tapped a non-burned card to give up."
+````
+
+### Field shape rules — common drift sources
+
+- `scenarioId` is always a string. There is NO `scenarioId: null` form;
+  if you have no scenario in mind, you are writing a `suspicion`
+  (which uses `relatedScenario: null`), not a `scenario-fire`.
+- `questionsTried` is ALWAYS an array of strings (YAML list syntax
+  with `-` per item), even when there is exactly one item.
+- `relatedScenario` is either `null` (the YAML literal) or a string
+  matching a catalog `SCN-*` ID. `"null"` (the string) is rejected.
+- `timestamp` is an ISO-8601 string, e.g. `"2026-04-29T22:30:14Z"`.
+- `severity` is `low` | `medium` | `high` (lowercase, no quotes
+  needed).
+- `feltLikeArcher` is `yes` | `no` | `unsure` (lowercase, no quotes
+  needed).
+- `myRoleLabel` must match a verbatim `ROW_DISPLAY_LABELS` value —
+  e.g. `"ACTOR"`, `"TARGET"`, `"OTHER (alive)"`,
+  `"SPECTATOR (eliminated, connected)"`. Capitalisation and
+  parenthetical text are part of the value.
+- `proseRationale` must be ≥10 characters — single-word answers like
+  `"yes"` or `"flat"` are rejected by design.

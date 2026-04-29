@@ -374,9 +374,17 @@ export async function checkPerSeatLogs(
     }
 
     if (result.errors.length > 0) {
-      parseErrors.push(
-        `${path.relative(runDir, file)}: ${result.errors[0]!.message}`,
-      )
+      // Report ALL errors per file, not just the first. Calibration retry
+      // run `2026-04-26-1303-3p` had two distinct violations in one
+      // suspicion file (`scenarioId: null` + `questionsTried: <string>`);
+      // the pre-fix surface only showed the first, masking the second
+      // until triage scrolled the raw markdown. Block-index keeps each
+      // error addressable in the source file. (TODO #13.)
+      for (const err of result.errors) {
+        parseErrors.push(
+          `${path.relative(runDir, file)} block ${err.blockIndex}: ${err.message}`,
+        )
+      }
     }
     totalEntries += result.entries.length
   }
@@ -384,7 +392,7 @@ export async function checkPerSeatLogs(
   if (parseErrors.length > 0) {
     return fail(
       CHECK_NAME_SEAT_LOGS,
-      `seat-log parse errors: ${parseErrors.join('; ')}`,
+      `seat-log parse errors (${parseErrors.length}): ${parseErrors.join('; ')}`,
     )
   }
 

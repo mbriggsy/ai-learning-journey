@@ -2,7 +2,7 @@
 
 ## NEXT SESSION — pick up here (2026-04-30+)
 
-### THIS SESSION (2026-04-29) — what shipped
+### PRIOR SESSION (2026-04-29) — what shipped
 
 Four Phase 6 calibration items closed plus three product/harness
 bugs (#9 stray card selection, #11 chain-burn UX + Intercepted hint,

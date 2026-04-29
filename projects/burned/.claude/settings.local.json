@@ -14,7 +14,9 @@
       "Read(//c/Users/brigg/ai-learning-journey/projects/hooks/**)",
       "PowerShell(Get-Process -Name \"workerd\",\"node\",\"chrome\" -ErrorAction SilentlyContinue | Where-Object { $_.StartTime -gt \\(Get-Date\\).AddHours\\(-5\\) } | Select-Object Id, ProcessName, StartTime | Sort-Object StartTime | Format-Table)",
       "Bash(git push *)",
-      "Bash(git push)"
+      "Bash(git push)",
+      "Bash(rm -rf temp/* .playwright-mcp test-results playwright-report)",
+      "Bash(mkdir -p temp)"
     ]
   }
 }

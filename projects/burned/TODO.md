@@ -2,7 +2,88 @@
 
 ## NEXT SESSION — pick up here (2026-04-30+)
 
-### PRIOR SESSION (2026-04-29) — what shipped
+### PRIOR SESSION (2026-04-29 evening) — what shipped
+
+Item #6 closed end-to-end with the underlying root cause traced and a
+generalised insight captured. Plus a discovered-along-the-way UX gap
+on JoinScreen (server refusals were silently dismissed by a 2s toast
+the user couldn't catch).
+
+**Item #6 was framed wrong.** The TODO's "third-seat-fails-to-join"
+description treated the third seat as the failing party. Real cause:
+the orchestrator's board-view launcher polled for `button:has-text(
+"Cleared Hot")` and clicked the moment it became visible — but that
+selector flips on at the **product minimum** (`canStart >= 2`,
+`Lobby.tsx:35`), not the **configured roster** (`config.seats`). With
+3+ seats configured, whichever seat's MCP browser was slow to boot
+consistently missed the start. Two-step gate fix: launcher now waits
+for `[data-player-count="${seats}"]` first (slow wait,
+`waitForStartTimeoutMs`), then `button:has-text("Cleared Hot")`
+(incidental, fixed 5s), then click. Orchestrator forwards
+`config.seats` as `expectedPlayerCount`, validated to [2, 10].
+
+**JoinScreen UX gap (TODO #6 follow-up).** While tracing #6 I learned
+the JoinScreen never read `gameStore.lastError`, so server refusals
+(`GAME_ALREADY_STARTED`, `NAME_TAKEN`, etc.) only flashed via the
+global `<ErrorToast>` for 2s. A user looking at the form below the
+toast easily missed the flash and end up clicking Check In repeatedly
+with no feedback — exactly the symptom calibration seat-3 reported.
+JoinScreen now subscribes to `useLastError`, surfaces the message
+inline below the input, persistent until the user types.
+
+Three remaining items in the priority queue: #1 (operator-process —
+auto-dispatch triage agents), #7 (operator runbook — MCP cross-run
+collision), #15 (open-ended cinematic framing for chain-burn beat).
+None are autonomous-friendly without a Briggsy decision or an
+eye-in-loop session. Phase 6 calibration retry is the natural next
+unblock now that the start-gate hole is closed.
+
+| Commit | Closes | Subject |
+|---|---|---|
+| `29ad34cb` | item #6 | fix(playtest-harness): wait for ALL configured seats before clicking start |
+| `e86a5f92` | item #6 follow-up | fix(join-screen): surface server refusals inline |
+
+**Insights captured:**
+- 041 — Orchestrator gate on product minimum, not configured roster.
+  Generalised lesson: when an orchestrator polls a UI for "is the
+  right state reached," it should poll for the actual desired state,
+  not a coincidentally-correlated signal that diverges under
+  multi-actor timing. If the desired state isn't visible in the DOM,
+  add it as a data attribute rather than re-deriving it from a flag
+  that's only equal under specific configurations.
+
+**Test surface:** typecheck clean · 1093/1093 unit tests (+23 from
+prior 1070: +12 board-view-launcher count gate / validation /
+timeout split, +5 orchestrator config.seats forwarding, +6 JoinScreen
+inline server-error surfacing) · `pnpm playtest:phase6-board-launcher-
+smoke` PASS (9.4s wallclock, all 4 assertions, new count-gate log
+breadcrumbs visible) · full e2e suite (chromium project) PASS 9/9 in
+46.7s including 2 new `tests/e2e/join-screen-server-error.spec.ts`
+specs that drive the GAME_ALREADY_STARTED path against live wrangler+
+vite + the existing `tier1-lifecycle` happy-path coverage.
+
+Earth verification (#6): `pnpm playtest:phase6-board-launcher-smoke`
+log output shows the new count-gate firing and resolving against real
+DOM:
+
+```
+[board-view-launcher] waiting for 2 operatives ([data-player-count="2"], timeout 180000ms)
+[board-view-launcher] waiting for "Cleared Hot" (timeout 5000ms)
+[board-view-launcher] clicking "Cleared Hot"
+```
+
+Earth verification (#6 follow-up): `tests/e2e/join-screen-server-
+error.spec.ts` proves the inline error surfaces against a live
+GAME_ALREADY_STARTED response and clears on input.
+
+**Eye-in-loop still required for the Phase 6 calibration retry.**
+All harness-side blockers identified through the calibration pipeline
+(items #1, #3, #4, #5, #6, #13) are now closed. Running the retry
+autonomously would skip Briggsy's verification of the full pipeline
+against real seat agents — recommend booting the retry as the first
+thing next session with eye-in-loop.
+
+### PRIOR SESSION (2026-04-29 morning) — what shipped
 
 Four Phase 6 calibration items closed plus three product/harness
 bugs (#9 stray card selection, #11 chain-burn UX + Intercepted hint,
@@ -216,13 +297,33 @@ What's still missing:
    ever exercise the heartbeat. Defends insight 034. Does NOT cover
    the 15-min inactivity-kick path (item #4 above) — that's covered
    by code review + next calibration run.
-6. **Third-seat-fails-to-join — three independent occurrences.** Old
-   seat-3 v1 (run 1), new seat-2 v2 + new seat-3 v2 (run 2) all failed
-   to land in the lobby — Check In button registered as `[active]` but
-   the page didn't transition. Repro pattern: third concurrent agent to
-   navigate to `?room=X&name=Y`. Investigate: WS handshake race? Vite
-   serving the page slowly under load? The first two seats land fine.
-   Capture as own insight if root cause is non-obvious.
+6. **~~Third-seat-fails-to-join — three independent occurrences.~~**
+   CLOSED 2026-04-29 evening by commits `29ad34cb` + `e86a5f92`.
+   The TODO's framing was wrong — root cause was NOT a third-seat
+   failure. The orchestrator's board-view launcher
+   (`scripts/playtest/lib/board-view-launcher.ts:170-175`) polled for
+   `button:has-text("Cleared Hot")` and clicked the moment it became
+   visible. That selector flips on at the **product minimum**
+   (`canStart >= 2` in `Lobby.tsx:35`), not at the **configured
+   roster size** (`config.seats`). With 3+ seats configured, whichever
+   seat's MCP browser was slow to boot consistently missed the start
+   — orchestrator launched the game with the first two arrivals and
+   the N-th seat hit `GAME_ALREADY_STARTED` from the in-progress
+   server. The N-th seat couldn't see the refusal because JoinScreen
+   never read `gameStore.lastError` (only the global 2s toast did).
+   Two-part fix: (a) launcher gains `expectedPlayerCount` param +
+   `[data-player-count="${seats}"]` data attribute on Lobby roster;
+   orchestrator forwards `config.seats`. (b) JoinScreen subscribes to
+   `useLastError`, renders server message inline below input,
+   persistent until user types. +12 board-view-launcher tests, +5
+   orchestrator config.seats-forwarding tests, +6 JoinScreen inline-
+   error tests, +2 e2e specs (`tests/e2e/join-screen-server-error.
+   spec.ts`). Earth verification: `phase6-board-launcher-smoke` PASS
+   in 9.4s with new count-gate log breadcrumbs visible; full e2e
+   suite (chromium) 9/9 PASS in 46.7s. Insight 041 captures the
+   generalised lesson: orchestrators that poll a UI for state should
+   poll for the actual desired state, not a coincidentally-correlated
+   signal that diverges under multi-actor timing.
 7. **MCP browser cross-run collision.** When run 1's seat agents are
    still alive and run 2's agents are dispatched, both try to use the
    same `playwright-seat-N` MCP server / browser instance. Run 2's

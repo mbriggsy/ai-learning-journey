@@ -92,6 +92,13 @@ import type {
   TriagePipelineInput,
   TriagePipelineResult,
 } from './triage-pipeline'
+import {
+  detectFires as realDetectFires,
+  parseCatalog,
+  type FireRecord,
+  type ParsedScenario,
+} from './scenario-detector'
+import { buildCoverageReport, renderCoverageMd } from './coverage-reporter'
 
 // ---------------------------------------------------------------------------
 // Constants
@@ -167,6 +174,27 @@ export interface RunSessionDeps {
    * lobby-wait forever.
    */
   launchBoardView?: (args: LaunchBoardViewArgs) => Promise<BoardViewHandle>
+  /**
+   * Phase 6 — load + parse the scenario catalog. Real default reads the
+   * catalog file from disk and runs `parseCatalog`. Tests inject a fake
+   * to exercise the coverage pipeline without authoring a real fixture.
+   * Errors are caught at the call site and fall back to an empty catalog
+   * so a missing/malformed catalog does NOT abort the session-end block.
+   */
+  loadCatalog?: (catalogPath: string) => Promise<readonly ParsedScenario[]>
+  /**
+   * Phase 6 — fire-detector hook. Mirrors `scenario-detector#detectFires`
+   * exactly so the real default is a direct alias. Tests inject a fake
+   * to control which fires the coverage report sees. Errors at this layer
+   * fall back to `[]` so a corrupt events.jsonl doesn't abort the session-
+   * end block.
+   */
+  detectFires?: (
+    catalogPath: string,
+    eventsJsonlPath: string,
+    connectionsJsonlPath: string,
+    seatLogPaths: readonly string[],
+  ) => Promise<readonly FireRecord[]>
   nowMs?: () => number
   logger?: (msg: string) => void
   /** Test-only: cancellable setTimeout used for 4005 backoff. */
@@ -303,14 +331,36 @@ export async function defaultReadSelftestStamp(): Promise<
 }
 
 /**
- * Build the stub coverage report Unit 6 feeds into `appendSessionEnd`.
- * Unit 9 will replace this with a real computation.
+ * Default catalog loader. Reads the catalog file from disk and runs
+ * `parseCatalog`. Returns an empty catalog when the file is missing or
+ * malformed — coverage computation should not abort the session-end block.
  */
-function stubCoverageReport(): CoverageReport {
+async function defaultLoadCatalog(
+  catalogPath: string,
+): Promise<readonly ParsedScenario[]> {
+  try {
+    const md = await fs.readFile(catalogPath, 'utf8')
+    return parseCatalog(md)
+  } catch {
+    return []
+  }
+}
+
+/**
+ * Empty / fallback CoverageReport used when real coverage computation
+ * throws OR when the run aborted before any events were recorded. Same
+ * shape `appendSessionEnd` consumes, so session.md still renders.
+ *
+ * Threshold defaults to PRD §8.2 (50). When `Config.coverageThreshold`
+ * is set, the coverage pipeline returns the configured threshold via
+ * `buildCoverageReport`; this fallback preserves a sensible default for
+ * the abort-pre-events path.
+ */
+function emptyCoverageReport(threshold: number): CoverageReport {
   const emptyCell = { column1: 0, column2: 0, scenarioIds: [] as string[] }
   return {
     firedCount: 0,
-    threshold: 50,
+    threshold,
     gridCells: {
       SERVER: { ...emptyCell, scenarioIds: [] },
       ACTOR: { ...emptyCell, scenarioIds: [] },
@@ -388,6 +438,8 @@ export async function runSession(
     runPostSessionTriage,
     runIsolationAudit = realRunIsolationAudit,
     launchBoardView = realLaunchBoardView,
+    loadCatalog = defaultLoadCatalog,
+    detectFires = realDetectFires,
     nowMs = Date.now,
     logger = (m: string) => {
       // eslint-disable-next-line no-console
@@ -757,6 +809,77 @@ export async function runSession(
     // End block
     const endDate = new Date(nowMs())
     const endedAt = localIsoTimestamp(endDate)
+
+    // -----------------------------------------------------------------------
+    // Coverage computation + coverage.md render (Phase 6).
+    //
+    // Runs AFTER teardown so events.jsonl is fully flushed by the god
+    // subscriber and per-seat logs are fully written by seat agents. Each
+    // step is individually guarded — a failure in catalog/fire/coverage
+    // computation leaves session.md with an empty CoverageReport rather
+    // than aborting the end-block. coverage.md is overwritten via
+    // `fs.writeFile`; when render fails, the empty file created by
+    // `createRunDirectory` remains and verify-calibration check 6 surfaces
+    // it.
+    //
+    // freePlay accounting is left at zeros: scripted-vs-free-play wallclock
+    // tracking lives at the seat-driver layer (Phase 4+ todo). The
+    // coverage report's `freePlayAccounting` mirrors `Config.coverageThreshold
+    // -agnostic` zeros until that wires up.
+    // -----------------------------------------------------------------------
+    const fallbackThreshold = config.coverageThreshold ?? 50
+    let coverage: CoverageReport = emptyCoverageReport(fallbackThreshold)
+    try {
+      const seatLogPaths = seats.map((s) => s.logPath)
+      const [catalog, fires] = await Promise.all([
+        loadCatalog(config.catalogPath).catch((err: unknown) => {
+          logger(
+            `[orchestrator] loadCatalog failed (non-fatal, empty catalog): ${describeError(err)}`,
+          )
+          return [] as readonly ParsedScenario[]
+        }),
+        detectFires(
+          config.catalogPath,
+          paths.eventsJsonl,
+          paths.connectionsJsonl,
+          seatLogPaths,
+        ).catch((err: unknown) => {
+          logger(
+            `[orchestrator] detectFires failed (non-fatal, no fires): ${describeError(err)}`,
+          )
+          return [] as readonly FireRecord[]
+        }),
+      ])
+
+      coverage = buildCoverageReport({
+        catalog,
+        fires,
+        freePlay: {
+          totalMs: 0,
+          freePlayMs: 0,
+          scriptedMs: 0,
+          fraction: 0,
+        },
+        coverageThreshold: config.coverageThreshold,
+      })
+
+      try {
+        const md = renderCoverageMd(coverage, fires, catalog)
+        await fs.writeFile(paths.coverageMd, md, 'utf8')
+      } catch (err) {
+        logger(
+          `[orchestrator] renderCoverageMd / write failed (non-fatal): ${describeError(err)}`,
+        )
+      }
+    } catch (err) {
+      // Defensive: any unexpected throw above this point. Coverage stays
+      // at the empty fallback; coverage.md keeps its create-time empty
+      // contents; verify-calibration check 6 will fail and surface it.
+      logger(
+        `[orchestrator] coverage computation failed (non-fatal): ${describeError(err)}`,
+      )
+    }
+
     const report: SessionReport = {
       sessionId: realizedSessionId,
       runDir: paths.root,
@@ -764,13 +887,8 @@ export async function runSession(
       endedAt,
       outcome,
       errorMessage,
-      coverage: stubCoverageReport(),
-      freePlay: {
-        totalMs: 0,
-        freePlayMs: 0,
-        scriptedMs: 0,
-        fraction: 0,
-      },
+      coverage,
+      freePlay: coverage.freePlayAccounting,
       viewportsExercised: [],
     }
     try {

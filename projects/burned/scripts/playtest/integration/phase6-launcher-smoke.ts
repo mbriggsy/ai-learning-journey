@@ -253,6 +253,19 @@ async function main(): Promise<void> {
   assert(sessionMd.includes('## Session End'), 'session.md has Session End block')
   assert(/outcome:\s*success/i.test(sessionMd), 'session.md records outcome=success')
 
+  // ---- Coverage.md assertions (Phase 6 — orchestrator wires real renderer)
+  // Even with zero seats / zero fires, orchestrator must overwrite the
+  // create-time empty file with renderCoverageMd output. verify-calibration
+  // check 6 enforces these three markers; mirror them here so the smoke
+  // catches a regression before the user runs the verifier.
+  const coverageMdPath = path.join(runDir, 'coverage.md')
+  assert(await fileExists(coverageMdPath), 'coverage.md exists')
+  const coverageMd = await readFile(coverageMdPath, 'utf8')
+  assert(coverageMd.length > 0, 'coverage.md non-empty (was overwritten by renderer)')
+  assert(coverageMd.includes('# Coverage report'), 'coverage.md has header')
+  assert(/Fired:\s*\d+\s*\/\s*target:\s*\d+/.test(coverageMd), 'coverage.md has fired/target banner')
+  assert(coverageMd.includes('## 7×2 info-gap grid'), 'coverage.md has 7×2 grid heading')
+
   // eslint-disable-next-line no-console
   console.log('')
   // eslint-disable-next-line no-console

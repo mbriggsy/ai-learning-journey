@@ -22,6 +22,7 @@ import type { Config, SeatHandle } from './types'
 import type { ServerHandles } from './server-controller'
 import type { GodHandle, FatalCloseInfo, ConnectGodArgs } from './god-subscriber'
 import type { RetentionResult } from './retention'
+import type { FireRecord, ParsedScenario, InfoGap } from './scenario-detector'
 
 // ---------------------------------------------------------------------------
 // Fixtures
@@ -988,5 +989,201 @@ describe('runSession — launchBoardView wiring (Phase 6 Unit 2.6)', () => {
     expect(result.outcome).toBe('success')
     expect(close).toHaveBeenCalledTimes(1)
     expect(logLines.some((l) => /boardView close failed/i.test(l))).toBe(true)
+  })
+})
+
+// ---------------------------------------------------------------------------
+// Coverage wiring (Phase 6 — replaces stub coverage report)
+// ---------------------------------------------------------------------------
+
+const FULL_GAP: InfoGap = {
+  SERVER:       { column1Present: true, column2Present: true },
+  ACTOR:        { column1Present: true, column2Present: true },
+  TARGET:       { column1Present: true, column2Present: true },
+  OTHER_ALIVE:  { column1Present: true, column2Present: true },
+  SPECTATOR:    { column1Present: true, column2Present: true },
+  DISCONNECTED: { column1Present: true, column2Present: true },
+  BOARD:        { column1Present: true, column2Present: true },
+}
+
+function fakeScenario(id: string): ParsedScenario {
+  return {
+    id,
+    description: '',
+    title: '',
+    tier: 'other',
+    events: [],
+    shape: 'strict',
+    infoGap: FULL_GAP,
+  }
+}
+
+function fakeFire(id: string): FireRecord {
+  return {
+    scenarioId: id,
+    firstEventIdx: 0,
+    lastEventIdx: 0,
+    nowMsRange: [0, 0],
+    tier1: 'pass',
+    tier2: 'n/a',
+    tier3: 'n/a',
+    matched: 'clean',
+  }
+}
+
+describe('runSession — coverage wiring', () => {
+  it('writes coverage.md with renderCoverageMd output (header + banner + grid)', async () => {
+    const log: SpyLog = { events: [] }
+    const { deps } = buildHappyDeps(log)
+    const loadCatalog = vi.fn(async () => [
+      fakeScenario('SCN-A'),
+      fakeScenario('SCN-B'),
+    ])
+    const detectFires = vi.fn(async () => [fakeFire('SCN-A')])
+
+    const result = await runSession(
+      makeConfig({ coverageThreshold: 1 }),
+      { ...deps, loadCatalog, detectFires },
+    )
+    expect(result.outcome).toBe('success')
+
+    const md = await fs.readFile(path.join(result.runDir, 'coverage.md'), 'utf8')
+    expect(md).toContain('# Coverage report')
+    expect(md).toContain('Fired: 1 / target: 1')
+    expect(md).toContain('## 7×2 info-gap grid')
+    // Presence companion: the rendered grid actually counted SCN-A under
+    // SERVER column 1.
+    expect(md).toContain('SCN-A')
+  })
+
+  it('flows real fired count + threshold into session.md end block', async () => {
+    const log: SpyLog = { events: [] }
+    const { deps } = buildHappyDeps(log)
+    const loadCatalog = vi.fn(async () => [
+      fakeScenario('SCN-A'),
+      fakeScenario('SCN-B'),
+      fakeScenario('SCN-C'),
+    ])
+    const detectFires = vi.fn(async () => [
+      fakeFire('SCN-A'),
+      fakeFire('SCN-B'),
+    ])
+
+    const result = await runSession(
+      makeConfig({ coverageThreshold: 6 }),
+      { ...deps, loadCatalog, detectFires },
+    )
+
+    const sessionMd = await fs.readFile(
+      path.join(result.runDir, 'session.md'),
+      'utf8',
+    )
+    // session.md end-block carries the real numbers, not the old stub
+    // (which would have rendered "fired 0 / threshold 50").
+    expect(sessionMd).toContain('coverage: fired 2 / threshold 6')
+  })
+
+  it('passes config.coverageThreshold through to buildCoverageReport via the renderer', async () => {
+    const log: SpyLog = { events: [] }
+    const { deps } = buildHappyDeps(log)
+    const loadCatalog = vi.fn(async () => [fakeScenario('SCN-A')])
+    const detectFires = vi.fn(async () => [fakeFire('SCN-A')])
+
+    const result = await runSession(
+      makeConfig({ coverageThreshold: 6 }),
+      { ...deps, loadCatalog, detectFires },
+    )
+
+    const md = await fs.readFile(path.join(result.runDir, 'coverage.md'), 'utf8')
+    // 1 fire vs threshold 6 → primary gate fails, but custom threshold
+    // shows up verbatim in the banner.
+    expect(md).toContain('Fired: 1 / target: 6')
+    expect(md).toContain('UNDER-COVERED')
+    // Presence companion: the default threshold (50) is NOT used.
+    expect(md).not.toContain('target: 50')
+  })
+
+  it('omitted coverageThreshold defaults to 50 in the rendered banner', async () => {
+    const log: SpyLog = { events: [] }
+    const { deps } = buildHappyDeps(log)
+    const loadCatalog = vi.fn(async () => [fakeScenario('SCN-A')])
+    const detectFires = vi.fn(async () => [fakeFire('SCN-A')])
+
+    const result = await runSession(makeConfig(), {
+      ...deps,
+      loadCatalog,
+      detectFires,
+    })
+
+    const md = await fs.readFile(path.join(result.runDir, 'coverage.md'), 'utf8')
+    expect(md).toContain('Fired: 1 / target: 50')
+  })
+
+  it('loadCatalog throwing falls back to empty catalog (session still completes)', async () => {
+    const log: SpyLog = { events: [] }
+    const logLines: string[] = []
+    const { deps } = buildHappyDeps(log)
+    const loadCatalog = vi.fn(async () => {
+      throw new Error('catalog parse boom')
+    })
+    const detectFires = vi.fn(async () => [fakeFire('SCN-A')])
+
+    const result = await runSession(makeConfig(), {
+      ...deps,
+      loadCatalog,
+      detectFires,
+      logger: (m: string) => logLines.push(m),
+    })
+
+    expect(result.outcome).toBe('success')
+    expect(logLines.some((l) => /loadCatalog failed/.test(l))).toBe(true)
+    expect(logLines.some((l) => /catalog parse boom/.test(l))).toBe(true)
+    // coverage.md still renders with zero-grid (empty catalog → no fires
+    // credited even though detectFires returned one — buildCoverageReport
+    // dedups against catalog membership).
+    const md = await fs.readFile(path.join(result.runDir, 'coverage.md'), 'utf8')
+    expect(md).toContain('# Coverage report')
+  })
+
+  it('detectFires throwing falls back to no-fires (session still completes)', async () => {
+    const log: SpyLog = { events: [] }
+    const logLines: string[] = []
+    const { deps } = buildHappyDeps(log)
+    const loadCatalog = vi.fn(async () => [fakeScenario('SCN-A')])
+    const detectFires = vi.fn(async () => {
+      throw new Error('events.jsonl corrupt')
+    })
+
+    const result = await runSession(makeConfig(), {
+      ...deps,
+      loadCatalog,
+      detectFires,
+      logger: (m: string) => logLines.push(m),
+    })
+
+    expect(result.outcome).toBe('success')
+    expect(logLines.some((l) => /detectFires failed/.test(l))).toBe(true)
+    const md = await fs.readFile(path.join(result.runDir, 'coverage.md'), 'utf8')
+    expect(md).toContain('Fired: 0 / target: 50')
+  })
+
+  it('detectFires receives the real catalogPath + per-seat log paths', async () => {
+    const log: SpyLog = { events: [] }
+    const { deps } = buildHappyDeps(log)
+    const loadCatalog = vi.fn(async () => [])
+    const detectFires = vi.fn(async () => [])
+
+    const cfg = makeConfig()
+    await runSession(cfg, { ...deps, loadCatalog, detectFires })
+
+    expect(detectFires).toHaveBeenCalledTimes(1)
+    const [catalogPath, eventsJsonl, connectionsJsonl, seatLogPaths] =
+      detectFires.mock.calls[0]!
+    expect(catalogPath).toBe(cfg.catalogPath)
+    expect(eventsJsonl).toMatch(/events\.jsonl$/)
+    expect(connectionsJsonl).toMatch(/connections\.jsonl$/)
+    expect(seatLogPaths).toHaveLength(3)
+    // Presence companion: log paths point inside the run's seats/ dir.
+    expect((seatLogPaths as readonly string[]).every((p) => p.includes('seats'))).toBe(true)
   })
 })

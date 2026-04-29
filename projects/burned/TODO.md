@@ -1,6 +1,45 @@
 # BURNED — TODO
 
-## NEXT SESSION — pick up here (2026-04-28+)
+## NEXT SESSION — pick up here (2026-04-30+)
+
+### THIS SESSION (2026-04-29) — what shipped
+
+Four Phase 6 calibration items closed. Seven open items remain in the
+priority queue below — recommended pickup order: **product item #9
+(stray card selection bug)** for visible-impact UX work, OR **harness
+item #6 (third-seat-fails-to-join)** for an investigation thread the
+next calibration retry will hit. Items #1, #2, #7 are operator-process
+work that needs a human decision; items #11/#13/#15 are scoped product
+polish.
+
+| Commit | Closes | Subject |
+|---|---|---|
+| `76facca9` | item #3 | feat(playtest-harness): make coverage threshold configurable |
+| `cc38ee8d` | item #1 | feat(playtest-harness): wire orchestrator to render real coverage.md |
+| `4bfa80ee` |  | fix(playtest-harness): type detectFires mock so tsc accepts mock.calls[0] |
+| `31c9d853` | docs | docs(todo): close Phase 6 calibration items #1 + #3 |
+| `182cf02c` | item #4 | fix(server): exempt god observer from inactivity-kick close loop |
+| `4f6967f0` | item #5 | test(playtest-harness): phase6-heartbeat-smoke (insight 034 regression) |
+| `7729cb83` | docs | docs(todo): close Phase 6 calibration items #4 + #5 |
+
+**Insights captured:**
+- 038 — Server inactivity-kick closed god observer along with players
+  (closed by exempting god from the kick close loop).
+
+**Test surface:** typecheck clean · 1054/1054 unit tests (+17 from
+prior 1037: +5 coverage-reporter, +6 config-schema, +6 orchestrator
+coverage wiring) · `pnpm playtest:phase6-launcher-smoke` PASS (24/24,
++5 new for coverage.md presence) · `pnpm
+playtest:phase6-heartbeat-smoke` PASS twice (new — 65s wallclock, 2
+pings observed each, clean teardown, 0 workerd zombies).
+
+**verify-calibration check 6** ("coverage.md renders") GREEN for the
+first time against a phase6-launcher-smoke run-dir.
+
+**Eye-in-loop still required for the Phase 6 calibration retry.**
+The four fixes that landed today (#1, #3, #4, #5) compound underneath
+that retry; running it autonomously would skip Briggsy's
+verification of the full pipeline against real seat agents.
 
 ### Insight 037 — closed (2026-04-27)
 
@@ -216,9 +255,9 @@ not harness work.
     framing pass on the chain-burn animation; the second is moot until
     #5 above is closed.
 
-### THIS SESSION (2026-04-26 / 27) — what shipped
+### PRIOR SESSION (2026-04-26 / 27) — what shipped
 
-Three product/test commits + this squeaky-clean. Insight 035 closed end-
+Three product/test commits + a squeaky-clean. Insight 035 closed end-
 to-end with regression protection; calibration retry attempt #4 ran the
 full pipeline for the first time and surfaced 14 distinct findings (see
 TOP OF THE QUEUE above).

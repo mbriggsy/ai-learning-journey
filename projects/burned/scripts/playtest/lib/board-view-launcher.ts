@@ -40,13 +40,29 @@ export interface LaunchBoardViewArgs {
   /** Vite dev server base URL (no trailing slash). e.g. `http://localhost:5173`. */
   readonly viteBaseUrl: string
   /**
-   * How long to poll for "Cleared Hot" to become enabled before giving up.
-   * The button text flips from "N short" / "One short" → "Cleared Hot" once
-   * `lobby.players.length >= 2` (`Lobby.tsx:35`). We probe for the literal
-   * "Cleared Hot" text — it can't appear under any other state.
+   * Wait for the lobby to reach EXACTLY this many connected operatives before
+   * clicking "Cleared Hot". Required to prevent the harness from starting the
+   * game with fewer-than-configured seats — the lobby's start button enables
+   * at the product minimum (2 players, `Lobby.tsx:35`), which made any seat
+   * whose MCP browser was slow to boot miss the start (TODO #6, three observed
+   * occurrences across calibration runs 1303-3p and 1339-3p).
    *
-   * Defaults to 60_000 (60s) — generous, since seats are remote-dispatched
-   * Claude agents that take a few seconds each to navigate.
+   * Defaults to 2 (matches the product minimum and preserves prior behavior
+   * for callers that don't pass a seat count). The orchestrator passes the
+   * configured `config.seats` here.
+   *
+   * Must be an integer in [2, 10] (matches `MAX_PLAYERS` and the Config seat
+   * range). Validated synchronously before chromium launch.
+   */
+  readonly expectedPlayerCount?: number
+  /**
+   * How long to poll for the lobby to reach `expectedPlayerCount` before
+   * giving up. This is the slow wait — seats are remote-dispatched Claude
+   * agents that take a few seconds each to spawn. The subsequent
+   * "Cleared Hot" wait reuses the small fixed timeout below because once
+   * the count is reached the button is guaranteed enabled.
+   *
+   * Defaults to 60_000 (60s).
    */
   readonly waitForStartTimeoutMs?: number
   /** Optional viewport for the board page. Defaults to 1920x1080 (TV-ish). */
@@ -79,6 +95,16 @@ export interface BoardViewHandle {
 
 const DEFAULT_WAIT_TIMEOUT_MS = 60_000
 const DEFAULT_VIEWPORT = { width: 1920, height: 1080 } as const
+const DEFAULT_EXPECTED_PLAYER_COUNT = 2
+const MIN_EXPECTED_PLAYER_COUNT = 2
+const MAX_EXPECTED_PLAYER_COUNT = 10
+/**
+ * Once the lobby reaches `expectedPlayerCount` the "Cleared Hot" button is
+ * guaranteed enabled (canStart fires at >=2 in Lobby.tsx). We give it a
+ * generous-but-finite window to render the enabled label so a CSS-module
+ * hash drift doesn't hang the launcher forever.
+ */
+const BUTTON_VISIBLE_TIMEOUT_MS = 5_000
 
 async function defaultChromiumLauncher(): Promise<Browser> {
   const { chromium } = await import('@playwright/test')
@@ -90,17 +116,22 @@ async function defaultChromiumLauncher(): Promise<Browser> {
 // ---------------------------------------------------------------------------
 
 /**
- * Open a board page, click "Cleared Hot" once visible, return a close handle.
+ * Open a board page, wait for the configured operative count, click
+ * "Cleared Hot", return a close handle.
  *
  * Lifecycle:
  *   1. Launch chromium (test seam: `chromiumLauncher`).
  *   2. New context with viewport.
  *   3. New page; navigate to `${viteBaseUrl}/board.html#${roomCode}`.
- *   4. Wait for `button:has-text("Cleared Hot")` to be visible.
- *      The button text flips based on `canStart` — we wait for the enabled
- *      text specifically, so the click is always against the live target.
- *   5. Click it once.
- *   6. Resolve `started`. Idle until `close()` is called.
+ *   4. Wait for `[data-player-count="${expectedPlayerCount}"]` to be visible
+ *      — the lobby roster div carries this attribute (`Lobby.tsx:53`) and
+ *      updates live as players join. This is the slow gate; it gets the
+ *      caller-supplied `waitForStartTimeoutMs`.
+ *   5. Wait for `button:has-text("Cleared Hot")` to be visible. Once the
+ *      count is reached the button is guaranteed enabled, so this gate
+ *      uses a small fixed timeout.
+ *   6. Click it once.
+ *   7. Resolve `started`. Idle until `close()` is called.
  *
  * Errors during the start sequence reject `started` but do NOT throw from
  * `launchBoardView` itself — the handle is returned so the orchestrator can
@@ -112,6 +143,7 @@ export async function launchBoardView(
   const {
     roomCode,
     viteBaseUrl,
+    expectedPlayerCount = DEFAULT_EXPECTED_PLAYER_COUNT,
     waitForStartTimeoutMs = DEFAULT_WAIT_TIMEOUT_MS,
     viewport = DEFAULT_VIEWPORT,
     chromiumLauncher = defaultChromiumLauncher,
@@ -126,8 +158,19 @@ export async function launchBoardView(
   if (viteBaseUrl.length === 0) {
     throw new Error('launchBoardView: viteBaseUrl must be non-empty')
   }
+  if (
+    !Number.isInteger(expectedPlayerCount) ||
+    expectedPlayerCount < MIN_EXPECTED_PLAYER_COUNT ||
+    expectedPlayerCount > MAX_EXPECTED_PLAYER_COUNT
+  ) {
+    throw new Error(
+      `launchBoardView: expectedPlayerCount must be an integer in [${MIN_EXPECTED_PLAYER_COUNT}, ${MAX_EXPECTED_PLAYER_COUNT}], got ${expectedPlayerCount}`,
+    )
+  }
 
   const boardUrl = `${viteBaseUrl.replace(/\/+$/, '')}/board.html#${encodeURIComponent(roomCode)}`
+  const lobbyCountSelector = `[data-player-count="${expectedPlayerCount}"]`
+  const startButtonSelector = 'button:has-text("Cleared Hot")'
 
   logger(`[board-view-launcher] launching chromium`)
   const browser: Browser = await chromiumLauncher()
@@ -166,13 +209,21 @@ export async function launchBoardView(
     logger(`[board-view-launcher] navigating to ${boardUrl}`)
     await page.goto(boardUrl, { waitUntil: 'domcontentloaded', timeout: 15_000 })
 
-    logger(`[board-view-launcher] waiting for "Cleared Hot" (timeout ${waitForStartTimeoutMs}ms)`)
+    logger(
+      `[board-view-launcher] waiting for ${expectedPlayerCount} operatives ` +
+      `(${lobbyCountSelector}, timeout ${waitForStartTimeoutMs}ms)`,
+    )
     await page
-      .locator('button:has-text("Cleared Hot")')
+      .locator(lobbyCountSelector)
       .waitFor({ state: 'visible', timeout: waitForStartTimeoutMs })
 
+    logger(`[board-view-launcher] waiting for "Cleared Hot" (timeout ${BUTTON_VISIBLE_TIMEOUT_MS}ms)`)
+    await page
+      .locator(startButtonSelector)
+      .waitFor({ state: 'visible', timeout: BUTTON_VISIBLE_TIMEOUT_MS })
+
     logger(`[board-view-launcher] clicking "Cleared Hot"`)
-    await page.locator('button:has-text("Cleared Hot")').click({ timeout: 5_000 })
+    await page.locator(startButtonSelector).click({ timeout: 5_000 })
     logger(`[board-view-launcher] start clicked; idling until close()`)
   })()
 

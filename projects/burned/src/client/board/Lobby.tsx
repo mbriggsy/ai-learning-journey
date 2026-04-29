@@ -50,7 +50,7 @@ export function Lobby({ connectionStatus, onStartGame }: Props) {
         <span className={styles.hint}>Scan &amp; check in</span>
       </div>
 
-      <div className={styles.roster}>
+      <div className={styles.roster} data-player-count={lobby.players.length}>
         <div className={styles.rosterHeader}>
           <span className={styles.rosterLabel}>Active Operatives</span>
           <span className={styles.rosterCount}>{lobby.players.length} / 10</span>

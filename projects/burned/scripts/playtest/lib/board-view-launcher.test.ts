@@ -10,14 +10,20 @@
  *   3. Strips a trailing slash on viteBaseUrl.
  *   4. Rejects empty roomCode and viteBaseUrl synchronously (before launching).
  *   5. Drives the start sequence: launch → newContext → newPage → goto →
- *      waitFor("Cleared Hot") → click("Cleared Hot").
- *   6. Honors a custom waitForStartTimeoutMs.
+ *      waitFor(count) → waitFor("Cleared Hot") → click("Cleared Hot").
+ *   6. Honors a custom waitForStartTimeoutMs (applied to the count wait).
  *   7. Honors a custom viewport (default 1920x1080).
  *   8. `started` rejects when the click fails; the handle is still returned
  *      and `close()` runs cleanly.
  *   9. `close()` is idempotent — second call is a no-op.
  *  10. `close()` survives when individual page/context/browser closes throw.
  *  11. Logger receives the start-sequence breadcrumbs.
+ *  12. Defaults `expectedPlayerCount` to 2 (preserves prior behavior).
+ *  13. Honors a custom `expectedPlayerCount` (TODO #6 unblock — wait for
+ *      ALL configured seats, not just the product minimum).
+ *  14. Rejects `expectedPlayerCount` outside [2, 10] synchronously.
+ *  15. Selects player count BEFORE the start button (count gate is the
+ *      slow wait; button gate is incidental once count is reached).
  */
 import { describe, it, expect, vi } from 'vitest'
 import type { Browser, BrowserContext, Page } from '@playwright/test'
@@ -181,6 +187,27 @@ describe('launchBoardView — input validation', () => {
     ).rejects.toThrow(/viteBaseUrl must be non-empty/)
     expect(launcher).not.toHaveBeenCalled()
   })
+
+  it.each([
+    { value: 1, label: '< 2 (below product minimum)' },
+    { value: 11, label: '> 10 (above MAX_PLAYERS)' },
+    { value: 0, label: 'zero' },
+    { value: -1, label: 'negative' },
+    { value: 2.5, label: 'non-integer' },
+    { value: Number.NaN, label: 'NaN' },
+  ])('throws synchronously on expectedPlayerCount=$value ($label)', async ({ value }) => {
+    const m = makeMockBundle()
+    const launcher = vi.fn(m.launcher)
+    await expect(
+      launchBoardView({
+        roomCode: 'ABCD',
+        viteBaseUrl: 'http://localhost:5173',
+        expectedPlayerCount: value,
+        chromiumLauncher: launcher,
+      }),
+    ).rejects.toThrow(/expectedPlayerCount must be an integer/)
+    expect(launcher).not.toHaveBeenCalled()
+  })
 })
 
 // ---------------------------------------------------------------------------
@@ -188,7 +215,7 @@ describe('launchBoardView — input validation', () => {
 // ---------------------------------------------------------------------------
 
 describe('launchBoardView — start sequence', () => {
-  it('drives launch → newContext → newPage → goto → waitFor → click in order', async () => {
+  it('drives launch → newContext → newPage → goto → waitFor(count) → waitFor(button) → click in order', async () => {
     const order: string[] = []
     const launcher = vi.fn(async () => {
       order.push('launch')
@@ -230,11 +257,14 @@ describe('launchBoardView — start sequence', () => {
     })
     await handle.started
 
+    // Two waitFor calls — first for the lobby count selector, then for the
+    // start button — followed by the single click.
     expect(order).toEqual([
       'launch',
       'browser.newContext',
       'context.newPage',
       'page.goto',
+      'locator.waitFor',
       'locator.waitFor',
       'locator.click',
     ])
@@ -285,6 +315,65 @@ describe('launchBoardView — start sequence', () => {
     await handle.close()
   })
 
+  it('defaults expectedPlayerCount to 2 (preserves prior product-minimum behavior)', async () => {
+    const m = makeMockBundle()
+    const handle = await launchBoardView({
+      roomCode: 'ABCD',
+      viteBaseUrl: 'http://localhost:5173',
+      chromiumLauncher: m.launcher,
+    })
+    await handle.started
+    const locatorCalls = (m.page.locator as ReturnType<typeof vi.fn>).mock.calls
+    expect(locatorCalls[0]![0]).toBe('[data-player-count="2"]')
+    await handle.close()
+  })
+
+  it.each([3, 5, 8, 10])(
+    'waits for [data-player-count="%i"] when expectedPlayerCount=%i',
+    async (count) => {
+      const m = makeMockBundle()
+      const handle = await launchBoardView({
+        roomCode: 'ABCD',
+        viteBaseUrl: 'http://localhost:5173',
+        expectedPlayerCount: count,
+        chromiumLauncher: m.launcher,
+      })
+      await handle.started
+      const locatorCalls = (m.page.locator as ReturnType<typeof vi.fn>).mock.calls
+      expect(locatorCalls[0]![0]).toBe(`[data-player-count="${count}"]`)
+      await handle.close()
+    },
+  )
+
+  it('applies waitForStartTimeoutMs to the count gate, but a small fixed timeout to the button gate', async () => {
+    // Two waitFor calls. The slow wait (count gate) gets the user-supplied
+    // long timeout — that's the actual "wait for seats to arrive" budget.
+    // The button gate is incidental: once count is reached the button is
+    // already enabled, so a small fixed timeout is right (and doubling
+    // the user budget across both waits would be surprising).
+    const m = makeMockBundle()
+    const handle = await launchBoardView({
+      roomCode: 'ABCD',
+      viteBaseUrl: 'http://localhost:5173',
+      waitForStartTimeoutMs: 99_999,
+      chromiumLauncher: m.launcher,
+    })
+    await handle.started
+    const waitForCalls = m.locatorWaitFor.mock.calls
+    expect(waitForCalls.length).toBe(2)
+    expect(waitForCalls[0]![0]).toEqual(
+      expect.objectContaining({ state: 'visible', timeout: 99_999 }),
+    )
+    // Button gate timeout is a small fixed constant (5000ms). Asserting
+    // the literal value pins the contract — if a future change wants to
+    // make this configurable, the test will fail and force the choice
+    // to be deliberate.
+    expect(waitForCalls[1]![0]).toEqual(
+      expect.objectContaining({ state: 'visible', timeout: 5_000 }),
+    )
+    await handle.close()
+  })
+
   it('clicks the same Cleared-Hot selector it waited for', async () => {
     const m = makeMockBundle()
     const handle = await launchBoardView({
@@ -294,9 +383,12 @@ describe('launchBoardView — start sequence', () => {
     })
     await handle.started
     const locatorCalls = (m.page.locator as ReturnType<typeof vi.fn>).mock.calls
-    expect(locatorCalls.length).toBeGreaterThanOrEqual(2)
-    expect(locatorCalls[0]![0]).toBe('button:has-text("Cleared Hot")')
+    // Three locator calls: lobby count gate (waitFor), then the start button
+    // (waitFor + click). The button selector for waitFor and click must
+    // match — we don't want to wait for one element and click another.
+    expect(locatorCalls.length).toBe(3)
     expect(locatorCalls[1]![0]).toBe('button:has-text("Cleared Hot")')
+    expect(locatorCalls[2]![0]).toBe('button:has-text("Cleared Hot")')
     await handle.close()
   })
 })

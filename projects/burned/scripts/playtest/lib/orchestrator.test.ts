@@ -881,6 +881,25 @@ describe('runSession — launchBoardView wiring (Phase 6 Unit 2.6)', () => {
     expect(calls[0]![0].waitForStartTimeoutMs).toBe(30_000)
   })
 
+  it.each([2, 3, 5, 8, 10])(
+    'forwards config.seats=%i as expectedPlayerCount (TODO #6 unblock)',
+    async (seats) => {
+      // The launcher used to start the game at 2 players regardless of how
+      // many seats were configured. Any seat whose MCP browser was slow to
+      // boot missed the start. Wiring config.seats through forces the wait
+      // to match the configured roster.
+      const log: SpyLog = { events: [] }
+      const { deps, launchBoardView } = buildBoardViewDeps(log)
+
+      await runSession(makeConfig({ seats }), deps, { launchBoardView: true })
+
+      const calls = launchBoardView.mock.calls as unknown as Array<
+        [{ expectedPlayerCount: number }]
+      >
+      expect(calls[0]![0].expectedPlayerCount).toBe(seats)
+    },
+  )
+
   it('launches AFTER seats are constructed and BEFORE seat-driver runs', async () => {
     const log: SpyLog = { events: [] }
     const { deps } = buildBoardViewDeps(log)

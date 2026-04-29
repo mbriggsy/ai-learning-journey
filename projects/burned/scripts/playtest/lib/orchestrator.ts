@@ -676,6 +676,11 @@ export async function runSession(
         boardView = await launchBoardView({
           roomCode,
           viteBaseUrl: opts.boardViewViteBaseUrl ?? 'http://localhost:5173',
+          // Wait for ALL configured seats before tapping start. Without this
+          // the launcher fires at the product minimum (>=2 players) and any
+          // seat whose MCP browser is slow to boot misses the game start —
+          // TODO #6, three observed occurrences across calibration runs.
+          expectedPlayerCount: config.seats,
           // Default to sessionTimeoutMs so the board waits as long as the
           // session itself can run — no artificial inner cap. Insight 033.
           waitForStartTimeoutMs:

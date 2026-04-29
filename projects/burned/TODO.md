@@ -4,13 +4,15 @@
 
 ### THIS SESSION (2026-04-29) — what shipped
 
-Four Phase 6 calibration items closed plus one product/UX bug (#9 stray
-card selection). Six open items remain in the priority queue below —
-recommended pickup order: **harness item #6 (third-seat-fails-to-join)**
-for an investigation thread the next calibration retry will hit, OR
-**product item #11 ("Can't play Intercepted" UI hint)** for a quick
-scoped UX win. Items #1 and #7 are operator-process work that needs a
-human decision; items #13/#15 are scoped harness/product polish.
+Four Phase 6 calibration items closed plus two product/UX bugs (#9
+stray card selection, #11 chain-burn UX + Intercepted hint). Five open
+items remain in the priority queue below — recommended pickup order:
+**harness item #6 (third-seat-fails-to-join)** for an investigation
+thread the next calibration retry will hit, OR **harness item #13
+(seat-log schema drift)** for scoped tooling polish. Items #1 and #7
+are operator-process work that needs a human decision; item #15 is
+open-ended cinematic framing better paired with a Briggsy eye-on-loop
+session.
 
 | Commit | Closes | Subject |
 |---|---|---|
@@ -22,6 +24,7 @@ human decision; items #13/#15 are scoped harness/product polish.
 | `4f6967f0` | item #5 | test(playtest-harness): phase6-heartbeat-smoke (insight 034 regression) |
 | `7729cb83` | docs | docs(todo): close Phase 6 calibration items #4 + #5 |
 | `9fcb49e8` | item #9 | fix(card-interaction): cancel cross-card rapid taps without rescheduling |
+| `d9c40753` | item #11 | fix(smart-action-box): expose Counter button to ACTOR mid-chain-burn |
 
 **Insights captured:**
 - 038 — Server inactivity-kick closed god observer along with players
@@ -33,12 +36,13 @@ human decision; items #13/#15 are scoped harness/product polish.
   Generalised pattern: delayed-discrimination timers must cancel on
   ALL ambiguous follow-ups, not only the qualifying one.
 
-**Test surface:** typecheck clean · 1061/1061 unit tests (+24 from prior
-1037: +5 coverage-reporter, +6 config-schema, +6 orchestrator coverage
-wiring, +7 useDoubleTap hook-level with fake timers) · new e2e
-regression spec `tests/e2e/hand-cross-card-tap.spec.ts` (passes
-post-fix, fails on the pre-fix code via stash-revert-rerun cycle) ·
-`pnpm playtest:phase6-launcher-smoke` PASS (24/24) · `pnpm
+**Test surface:** typecheck clean · 1068/1068 unit tests (+31 from
+prior 1037: +5 coverage-reporter, +6 config-schema, +6 orchestrator
+coverage wiring, +7 useDoubleTap hook-level with fake timers, +7
+SmartActionBox chain-burn matrix + hint copy) · all 7 e2e tests pass
+including the new `tests/e2e/hand-cross-card-tap.spec.ts` regression
+spec (verified to fail on the pre-fix #9 code via stash-revert-rerun
+cycle) · `pnpm playtest:phase6-launcher-smoke` PASS (24/24) · `pnpm
 playtest:phase6-heartbeat-smoke` PASS twice (65s wallclock, 2 pings
 observed, clean teardown, 0 workerd zombies).
 
@@ -47,6 +51,16 @@ Earth verification (#9): Playwright MCP against live 2-player game
 adjacent stranded zero backdrops; immediate same-card double-tap on
 the same hand correctly staged. Screenshots in `temp/post-fix-no-
 backdrop.png` + `temp/post-fix-staging-works.png` (gitignored).
+
+Earth verification (#11): Playwright MCP against live 2-player game
+(room `4RXMQJ`) — direct `__gameStore.serverSnapshot` mutation
+injected an Intercepted into the active player's hand and a
+`chainDepth: 1` nope window. SmartActionBox rendered "COUNTER · Ns"
+intercept-styled and clickable; single-staged Intercepted (no
+window) rendered the two-line "Intercepted is reactive / wait for
+the Intercept button" hint. Screenshots in
+`temp/intercepted-hint.png` + `temp/actor-counter-button.png`
+(gitignored).
 
 **verify-calibration check 6** ("coverage.md renders") GREEN for the
 first time against a phase6-launcher-smoke run-dir.
@@ -242,11 +256,28 @@ not harness work.
     GSAP timeline kill on turn-started arrival, or skips queueing
     entirely if turn-started is in the same event batch. Critical
     beats untouched. Verified via Playwright DOM injection.
-11. **"Can't play Intercepted" UI has no context.** Old seat-1 v1: when
-    ACTOR tries to chain-intercept after their own card is intercepted,
-    the UI blocks with the bare error string. Add a hint: "Intercepted
-    is a reactive card — only opponents can play it during your nope
-    window."
+11. **~~"Can't play Intercepted" UI has no context.~~** CLOSED
+    2026-04-29 by commit `d9c40753`. Diagnosis was substantially revised
+    after rereading the engine: the original TODO copy ("only opponents
+    can play it") is technically wrong. `engine.ts:980` only rejects
+    self-nope at chainDepth=0 — ACTOR chain-intercept at chainDepth>=1
+    is fully legal. The bug was in the UI, not the rule:
+    SmartActionBox's `nopeWindow && !myTurn && isAlive` gate hid the
+    Intercept/Counter button from the ACTOR for the ENTIRE window, so
+    they never had a way to chain-burn except via direct hand staging,
+    which validation rejected with the flat "Can't play Intercepted"
+    label. Two-part fix: (a) expose Counter button to ACTOR when
+    `chainDepth >= 1`, and (b) replace the flat refusal with a two-line
+    hint — "Intercepted is reactive / wait for the Intercept button" —
+    for the genuine out-of-window case where the user has staged
+    Intercepted alone with no nope context to drive it. +7 unit tests
+    covering the chain-burn matrix (chainDepth=0/1/2, has/no
+    Intercept, eliminated, click fires, non-actor regression) plus
+    +1 hint-copy test. Earth-verified via Playwright MCP against live
+    2p game (room 4RXMQJ): direct gameStore mutation injected
+    Intercepted + chainDepth=1 nope window for the active player; UI
+    rendered "COUNTER · Ns" intercept-styled and clickable, single-
+    staged Intercepted showed the two-line hint as designed.
 12. **~~Reconnect UX has no upper-bound surface.~~** CLOSED 2026-04-27 by
     insight 036's gave-up state + ConnectionOverlay terminal UI.
 13. **Schema drift in seat logs (calibration finding).** verify-

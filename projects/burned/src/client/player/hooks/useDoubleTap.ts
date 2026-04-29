@@ -21,22 +21,40 @@ export function useDoubleTap(
     const now = Date.now()
     const prev = lastTap.current
 
-    if (
-      prev &&
+    const isSameCardDouble = !!prev &&
       prev.id === id &&
       now - prev.time < DOUBLE_TAP_THRESHOLD_MS &&
       Math.abs(e.clientX - prev.x) < MOVE_TOLERANCE_PX &&
       Math.abs(e.clientY - prev.y) < MOVE_TOLERANCE_PX
-    ) {
-      // Double-tap — cancel pending single-tap, fire immediately
+
+    // Cross-card rapid tap — second tap landed on a different id within the
+    // double-tap threshold. Most likely a drifted-double-tap (intended A,
+    // click 2 missed and hit adjacent B). The pre-fix path cancelled A's
+    // pending single-tap and scheduled a NEW single-tap for B, which fired
+    // 400ms later and stranded an enlarge backdrop on B — blocking End-turn
+    // until the user pressed Escape and manually deselected. Fix is to
+    // cancel + reset without rescheduling: ambiguity resolves to "no
+    // action," and the user retries cleanly.
+    const isCrossCardRapid = !!prev &&
+      prev.id !== id &&
+      now - prev.time < DOUBLE_TAP_THRESHOLD_MS
+
+    if (isSameCardDouble) {
       lastTap.current = null
       if (singleTapTimer.current) {
         clearTimeout(singleTapTimer.current)
         singleTapTimer.current = null
       }
       onDoubleTap(id)
+    } else if (isCrossCardRapid) {
+      lastTap.current = null
+      if (singleTapTimer.current) {
+        clearTimeout(singleTapTimer.current)
+        singleTapTimer.current = null
+      }
     } else {
-      // First tap — schedule single-tap, wait for potential second tap
+      // First tap from a clean state (or stale prev outside threshold) —
+      // schedule single-tap, wait for potential second tap.
       lastTap.current = { id, time: now, x: e.clientX, y: e.clientY }
       if (singleTapTimer.current) clearTimeout(singleTapTimer.current)
       if (onSingleTap) {

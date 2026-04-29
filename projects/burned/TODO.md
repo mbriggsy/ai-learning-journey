@@ -115,18 +115,31 @@ What's still missing:
    6-scenario mini-catalog can satisfy the primary gate. Verified by
    +5 coverage-reporter test cases + +6 config-schema test cases
    (boundary, default, rejection of 0/negative/non-integer).
-4. **God-subscriber server-side inactivity timeout (NEW).** Run 2 logged
-   `[god-subscriber] server-initiated close mid-session code=1000 reason=
-   Inactivity timeout`. This is a DIFFERENT layer than insight 034 (that
-   was the harness's client-side ping handler). The server is closing
-   the WS proactively when no broadcasts flow for some interval. Long
-   calibration sessions with slow turn pacing will trip it. Either send
-   a periodic keep-alive ping from the god subscriber, or relax the
-   server-side idle timeout for the god connection only.
-5. **Heartbeat-aware regression smoke.** Add a `phase6-heartbeat-smoke`
-   that runs ≥60s and asserts god stays connected through ≥2 server
-   ping cycles. Defense in depth for both insight 034 (client) and the
-   new server-idle-close finding (#4 above).
+4. **~~God-subscriber server-side inactivity timeout.~~** CLOSED
+   2026-04-29 by commit `182cf02c`. Diagnosis revised after reading the
+   code: the original framing ("server is closing the WS proactively
+   when no broadcasts flow") was wrong. Real root cause —
+   `src/server/room.ts:onAlarm` fires after `INACTIVITY_TIMEOUT_MS =
+   15min` of no PLAYER actions and closes EVERY connection (1000
+   'Inactivity timeout'), including the orchestrator's god observer.
+   Both fix paths the original TODO suggested (client keep-alive,
+   per-connection idle relax) were wrong layer — the timer is a
+   gameplay-level signal driven by `lastActionTime`, not a WS-traffic
+   signal, and is room-wide not per-connection. Real fix: filter god
+   out of the kick close loop. Three lines + comment + insight 038.
+   Real-environment proof comes from the next calibration run (absence
+   of "Inactivity timeout" close on god log).
+5. **~~Heartbeat-aware regression smoke.~~** CLOSED 2026-04-29 by
+   commit `4f6967f0`. New `pnpm playtest:phase6-heartbeat-smoke` boots
+   real wrangler+vite, connects god subscriber with a wrapper-counter
+   wsFactory, idles 65s (≥ 2 server ping cycles at 30s each), asserts
+   (a) `onFatalClose` still pending, (b) ≥2 pings observed (presence-
+   of-presence companion to defend against a server-side heartbeat
+   regression), (c) clean disconnect, (d) no workerd zombies. Fills
+   the gap left by all other smokes completing in <60s — none of them
+   ever exercise the heartbeat. Defends insight 034. Does NOT cover
+   the 15-min inactivity-kick path (item #4 above) — that's covered
+   by code review + next calibration run.
 6. **Third-seat-fails-to-join — three independent occurrences.** Old
    seat-3 v1 (run 1), new seat-2 v2 + new seat-3 v2 (run 2) all failed
    to land in the lobby — Check In button registered as `[active]` but

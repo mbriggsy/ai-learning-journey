@@ -4,13 +4,13 @@
 
 ### THIS SESSION (2026-04-29) — what shipped
 
-Four Phase 6 calibration items closed. Seven open items remain in the
-priority queue below — recommended pickup order: **product item #9
-(stray card selection bug)** for visible-impact UX work, OR **harness
-item #6 (third-seat-fails-to-join)** for an investigation thread the
-next calibration retry will hit. Items #1, #2, #7 are operator-process
-work that needs a human decision; items #11/#13/#15 are scoped product
-polish.
+Four Phase 6 calibration items closed plus one product/UX bug (#9 stray
+card selection). Six open items remain in the priority queue below —
+recommended pickup order: **harness item #6 (third-seat-fails-to-join)**
+for an investigation thread the next calibration retry will hit, OR
+**product item #11 ("Can't play Intercepted" UI hint)** for a quick
+scoped UX win. Items #1 and #7 are operator-process work that needs a
+human decision; items #13/#15 are scoped harness/product polish.
 
 | Commit | Closes | Subject |
 |---|---|---|
@@ -21,17 +21,32 @@ polish.
 | `182cf02c` | item #4 | fix(server): exempt god observer from inactivity-kick close loop |
 | `4f6967f0` | item #5 | test(playtest-harness): phase6-heartbeat-smoke (insight 034 regression) |
 | `7729cb83` | docs | docs(todo): close Phase 6 calibration items #4 + #5 |
+| `9fcb49e8` | item #9 | fix(card-interaction): cancel cross-card rapid taps without rescheduling |
 
 **Insights captured:**
 - 038 — Server inactivity-kick closed god observer along with players
   (closed by exempting god from the kick close loop).
+- 039 — Tap-discrimination timer strands on cross-input rapid second
+  event. `useDoubleTap` cancelled the pending single-tap timer on a
+  cross-card second tap, then scheduled a NEW one for the new card,
+  stranding an enlarge backdrop on a card the user didn't pick.
+  Generalised pattern: delayed-discrimination timers must cancel on
+  ALL ambiguous follow-ups, not only the qualifying one.
 
-**Test surface:** typecheck clean · 1054/1054 unit tests (+17 from
-prior 1037: +5 coverage-reporter, +6 config-schema, +6 orchestrator
-coverage wiring) · `pnpm playtest:phase6-launcher-smoke` PASS (24/24,
-+5 new for coverage.md presence) · `pnpm
-playtest:phase6-heartbeat-smoke` PASS twice (new — 65s wallclock, 2
-pings observed each, clean teardown, 0 workerd zombies).
+**Test surface:** typecheck clean · 1061/1061 unit tests (+24 from prior
+1037: +5 coverage-reporter, +6 config-schema, +6 orchestrator coverage
+wiring, +7 useDoubleTap hook-level with fake timers) · new e2e
+regression spec `tests/e2e/hand-cross-card-tap.spec.ts` (passes
+post-fix, fails on the pre-fix code via stash-revert-rerun cycle) ·
+`pnpm playtest:phase6-launcher-smoke` PASS (24/24) · `pnpm
+playtest:phase6-heartbeat-smoke` PASS twice (65s wallclock, 2 pings
+observed, clean teardown, 0 workerd zombies).
+
+Earth verification (#9): Playwright MCP against live 2-player game
+(room `BNFD3P`) — cross-card pointer-event sequence on Dash Barlowe ×2
+adjacent stranded zero backdrops; immediate same-card double-tap on
+the same hand correctly staged. Screenshots in `temp/post-fix-no-
+backdrop.png` + `temp/post-fix-staging-works.png` (gitignored).
 
 **verify-calibration check 6** ("coverage.md renders") GREEN for the
 first time against a phase6-launcher-smoke run-dir.
@@ -202,12 +217,21 @@ not harness work.
    CLOSED 2026-04-27. Refactor landed in commits `65a53ce7` + `746e8e4e`;
    stable button DOM, AnimatePresence moved inside, +5 regression tests.
    Phone-side breathe + press feedback + text crossfade all verified.
-9. **Stray card selection bug.** Old seat-1 v1: "after double-clicking
-   one card (Burn the Files), an adjacent card (Call in a Favor) became
-   `active` without being clicked. The resulting backdrop blocked the
-   End turn button until cleared with Escape + deselect." Reproduces the
-   `_enlargeBackdrop_*` overlay leaving an adjacent card in `active`
-   state. Investigate `Hand.tsx` enlarge-handler + state cleanup.
+9. **~~Stray card selection bug.~~** CLOSED 2026-04-29 by commit
+   `9fcb49e8`. Diagnosis: `useDoubleTap`'s pending single-tap timer was
+   cancelled by ANY second tap, but a cross-card second tap also
+   scheduled a NEW timer for the new card. 400ms later that timer fired
+   `onSingleTap(newCardId)` and opened the enlarge backdrop on the
+   wrong card — typically blocking End-turn. Fix: cross-card rapid taps
+   now cancel + reset without rescheduling (ambiguous intent → no
+   action). Same-card double-tap (primary stage gesture) unchanged.
+   Coverage: +7 hook-level tests with fake timers (bug-repro fails
+   pre-fix, passes post-fix); new e2e spec
+   `tests/e2e/hand-cross-card-tap.spec.ts` verified by stash-revert-
+   rerun cycle. Earth-verified via Playwright MCP against live 2p
+   game (room BNFD3P): cross-card sequence stranded zero backdrops,
+   same-card double-tap still staged Dash Barlowe cleanly. Insight 039
+   captures the delayed-discrimination-timer pattern.
 10. **~~INTERCEPTED toast leaks across turn boundaries.~~** CLOSED
     2026-04-27 by commit `041e45c1`. Diagnosis: not a PlayerAlert /
     StealReport gap — DramaOverlay's nope-played beat (1400ms hold +

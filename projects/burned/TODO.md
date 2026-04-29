@@ -93,17 +93,28 @@ What's still missing:
    one `Agent({subagent_type: 'playtest-triage'})` per spec. Wire as a
    post-session-triage hook OR document as the operator's final manual
    step.
-2. **Coverage.md empty — Unit 10 renderer wiring deferred.** Pure
-   functions shipped (Phase 3 Unit 10), not called from `runSession`.
-   verify-calibration check 6 will keep failing until wired. Pass
-   `buildCoverageReport({...})` + `renderCoverageMd(report, fires,
-   catalog)` from `runSession` after `appendSessionEnd`.
-3. **Coverage threshold hardcoded at 50** in
-   `coverage-reporter.ts:136,178` and types.ts:267 (`readonly threshold:
-   50`). Mini-catalog has 6 scenarios — threshold can never be hit.
-   Plumb a `coverageThreshold?: number` through `Config` + Zod schema +
-   change the type literal to `number`. Default 50 (PRD §8.2). Mostly
-   cosmetic since Item 2 keeps coverage from rendering anyway.
+2. **~~Coverage.md empty — Unit 10 renderer wiring deferred.~~** CLOSED
+   2026-04-29 by commit `cc38ee8d`. Orchestrator now loads catalog +
+   detects fires after teardown, calls `buildCoverageReport` +
+   `renderCoverageMd`, writes to `paths.coverageMd`, and threads the
+   real `CoverageReport` into `appendSessionEnd`. Each step is guarded
+   with non-fatal fallback so a missing catalog or corrupt events.jsonl
+   logs but does not abort the session-end block. Verified end-to-end:
+   `phase6-launcher-smoke` (24/24 assertions, +5 new for coverage.md);
+   `verify-calibration` check 6 GREEN for the first time against the
+   smoke run-dir. Real calibration retry will re-confirm with non-zero
+   fires.
+3. **~~Coverage threshold hardcoded at 50.~~** CLOSED 2026-04-29 by
+   commit `76facca9`. `Config.coverageThreshold?: number` plumbed
+   through `ConfigSchema` (Zod `int().positive().optional()`) +
+   `loadConfig` + `CoverageReportInput.coverageThreshold` +
+   `buildCoverageReport`. Default remains 50 (PRD §8.2) via the
+   exported `DEFAULT_COVERAGE_THRESHOLD` constant. The
+   `CoverageReport.threshold` literal type widened from `50` to
+   `number`. `calibration.json` sets `coverageThreshold: 1` so the
+   6-scenario mini-catalog can satisfy the primary gate. Verified by
+   +5 coverage-reporter test cases + +6 config-schema test cases
+   (boundary, default, rejection of 0/negative/non-integer).
 4. **God-subscriber server-side inactivity timeout (NEW).** Run 2 logged
    `[god-subscriber] server-initiated close mid-session code=1000 reason=
    Inactivity timeout`. This is a DIFFERENT layer than insight 034 (that
@@ -211,8 +222,10 @@ TOP OF THE QUEUE above).
   SCN-INTERCEPT-CHAIN-BURN-01, SCN-SKIP-NORMAL-01) before sessionTimeoutMs.
 - Run 2 (`runs/2026-04-26-1339-3p/`) — 10s nope window. **PASS isolation, 4
   triage specs produced (first time), 1 scenario fired (SCN-GO-DARK-NORMAL-01),
-  verify-calibration 5/7.** Failures: seat-log schema drift + coverage.md
-  empty (Unit 10 not wired).
+  verify-calibration 5/7 at the time of the run.** Failures: seat-log
+  schema drift (item #13 below, still open) + coverage.md empty (item
+  #2 above, CLOSED 2026-04-29 — next calibration retry will rerun
+  verify-calibration against a freshly-rendered coverage.md).
 - Insight 035 fix held under real harness load (seat-1 v2 successfully fired
   SCN-GO-DARK-NORMAL-01 by clicking `.action`).
 - 0 workerd zombies post-teardown.
@@ -569,13 +582,18 @@ for Unit 2 → Unit 2a; no new lesson worth a separate doc).**
   `ParsedScenario`) — 83 of 86 production scenarios carry it; SERVER row
   populated on 100% (D5 invariant).
 - **coverage-reporter (`scripts/playtest/lib/coverage-reporter.ts`, Unit 10,
-  NEW 2026-04-24):** `buildCoverageReport(input): CoverageReport` +
-  `renderCoverageMd(report, fires, catalog): string`. Pure functions. Primary
-  gate `firedCount >= 50` (PRD §8.2) + secondary gate `zeroCellCount === 0`
-  (phase-3 B5 / D13.1). Options-bag signature so Phase 4 `selfReports` and
-  Phase 5 `firedByViewport` slot in without refactors. Dedup by scenarioId,
-  excludes `knownProductCall`-tagged scenarios from `firedCount` per
-  phase-1 D4. Not wired into orchestrator yet — Phase 4+ integration.
+  NEW 2026-04-24, ORCHESTRATOR-WIRED 2026-04-29):** `buildCoverageReport(input):
+  CoverageReport` + `renderCoverageMd(report, fires, catalog): string`. Pure
+  functions. Primary gate `firedCount >= threshold` (default 50 per PRD §8.2,
+  configurable via `Config.coverageThreshold` — commit `76facca9`) + secondary
+  gate `zeroCellCount === 0` (phase-3 B5 / D13.1). Options-bag signature so
+  Phase 4 `selfReports` and Phase 5 `firedByViewport` slot in without
+  refactors. Dedup by scenarioId, excludes `knownProductCall`-tagged
+  scenarios from `firedCount` per phase-1 D4. Orchestrator wiring landed in
+  commit `cc38ee8d`: `runSession` loads catalog + detects fires after
+  teardown, builds the coverage report, renders to `paths.coverageMd`, and
+  threads the real CoverageReport into `appendSessionEnd`. `selfReports` +
+  `firedByViewport` still empty (Phase 4+ todo).
 
 **Harness lib modules (all under `scripts/playtest/`):** `run-session.ts`,
 `selftest.ts`, `purge.ts`, `smoke.ts` entries; `lib/` has `orchestrator`,
@@ -642,11 +660,13 @@ from `src/server` (insight 022). All types re-declared locally.
    upgrade `tier1Match` in `scenario-detector.ts` to check for positive
    rejection evidence and fire `clean` when observed. Full context in
    the code comment at the `shape === 'negative'` branch.
-5. **Coverage-reporter orchestrator wiring (Unit 10 deferred).** Pure
-   functions shipped but not called from `runSession`. Phase 4+ wires
-   `buildCoverageReport` + `renderCoverageMd` into the session-end block,
-   sourcing `selfReports` from seat suspicion logs and `firedByViewport`
-   from orchestrator viewport rotation.
+5. **~~Coverage-reporter orchestrator wiring (Unit 10 deferred).~~**
+   CLOSED 2026-04-29 by commit `cc38ee8d`. `runSession` now calls
+   `buildCoverageReport` + `renderCoverageMd` after teardown, before
+   `appendSessionEnd`. `selfReports` (from seat suspicion logs) and
+   `firedByViewport` (from orchestrator viewport rotation) still
+   default to empty — those are independent Phase 4+ wiring todos
+   tracked under "Phase 6 calibration — pipeline is live" item set.
 6. **~~Phase 4 — seat agents~~ SHIPPED 2026-04-24.** 7 units +
    workerd orphan fix. Real subagent dispatch (the `Agent(...)` call)
    is the Phase 6 hand-off — requires a Claude Code conversation; can't
@@ -746,11 +766,11 @@ projection @ `5e86f811`):**
 **Next steps:**
 - ✅ **Phase 2 SHIPPED 2026-04-24** — 10 units, full suite 527/527, live
   smoke green.
-- ✅ **Phase 3 (12 of 13 units) SHIPPED** — Units 1, 2, 3, 3b, 4, 4b, 5, 6,
-  7, 8, 9, 10b landed. Full suite 719/719. Live `pnpm playtest:smoke`
-  passes ~10s × 2 runs. See top-of-file §"Phase 3 state of the world".
-- **Phase 3 completion:** Unit 10 (coverage-reporter) is the last
-  remaining unit. Pure consumer of Unit 9's `FireRecord[]`.
+- ✅ **Phase 3 SHIPPED — all 13 units** — Units 1, 2, 3, 3b, 4, 4b, 5, 6,
+  7, 8, 9, 10, 10b landed. Live `pnpm playtest:smoke` passes ~10s × 2
+  runs. Unit 10 pure functions landed 2026-04-24; orchestrator wiring
+  landed 2026-04-29 (commit `cc38ee8d`). See top-of-file §"Phase 3 state
+  of the world".
 - Execute Phase 4 → Phase 5 per locked plans. Phase 6 is the first real
   session; STOP before Phase 6 without eye-in-loop verification.
 - Insights 019 + 020 should guide future rigor passes on agent-native plans.

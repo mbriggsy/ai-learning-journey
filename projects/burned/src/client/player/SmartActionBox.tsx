@@ -29,7 +29,11 @@ const INVALID_LABELS: Record<string, string> = {
   'contains-burned': "Can't play Burned",
   'wild-with-non-operative': 'Wild only pairs with operatives',
   'single-operative': 'Needs a pair or triple',
-  'single-intercepted': "Can't play Intercepted",
+  // Two-line hint — primary states the rule, secondary points to the right
+  // surface. Replaces the bare "Can't play Intercepted" that left players
+  // (especially ACTOR mid-chain-burn) staring at a flat refusal with no path
+  // forward. See TODO #11 (run 2026-04-26-1303-3p, seat-1 v1).
+  'single-intercepted': 'Intercepted is reactive\nwait for the Intercept button',
 }
 
 
@@ -135,9 +139,14 @@ export function SmartActionBox({
     cps: CardPlayState, myTurn: boolean, sub: SubPhase | null, pileCount: number,
   ): { key: string; className: string; text: string; interactive: boolean; action?: () => void } {
     // Intercept window takes priority — someone played an action card and a
-    // counter-intel window is open. Only render CTA to eligible non-actors.
-    // The acting player (myTurn) can't nope their own play.
-    if (nopeWindow && !myTurn && isAlive) {
+    // counter-intel window is open. The acting player can't nope their own
+    // initial play (engine rejects at chainDepth=0 + originalPlayerId), but
+    // CHAIN-BURN is legal: once any opponent has noped (chainDepth>=1), the
+    // ACTOR may chain-intercept to restore their action. Pre-fix the UI hid
+    // the Intercept button from the ACTOR for the entire window — they'd
+    // try to stage Intercepted from hand and hit "Can't play Intercepted"
+    // with no context. See TODO #11 / engine.ts:980.
+    if (nopeWindow && isAlive && (!myTurn || nopeWindow.chainDepth >= 1)) {
       const urgent = secondsLeft <= 2
       // chainDepth 0 = first Nope, you're cancelling the action.
       // chainDepth > 0 = someone already Noped. Counter-tap flips it back.

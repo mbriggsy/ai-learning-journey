@@ -1,8 +1,9 @@
 // @vitest-environment jsdom
-import { describe, it, expect } from 'vitest'
+import { describe, it, expect, vi } from 'vitest'
 import { act, type ComponentProps } from 'react'
 import { createRoot, type Root } from 'react-dom/client'
 import { LazyMotion, domMax } from 'motion/react'
+import type { NopeWindowView } from '@shared/protocol'
 import { SmartActionBox } from './SmartActionBox'
 
 type SABProps = ComponentProps<typeof SmartActionBox>
@@ -187,6 +188,202 @@ describe('SmartActionBox stable-DOM contract (insight 037)', () => {
       // jsdom: <button disabled> swallows click events natively
       act(() => { button.click() })
       expect(drawCount).toBe(0)
+    } finally {
+      teardown(container, root)
+    }
+  })
+})
+
+// -----------------------------------------------------------------------------
+// TODO #11 — chain-burn UX + reactive-card hint.
+//
+// Bug as reported by playtest agent (run 2026-04-26-1303-3p, seat-1 v1):
+//   "Tried to counter-intercept my own Favor being intercepted. Staging
+//    shows 'Can't play Intercepted'." → "ACTOR cannot counter-intercept
+//    their own intercepted card. UI message opaque — 'Can't play
+//    Intercepted' with no explanation."
+//
+// Engine actually allows ACTOR chain-intercept at chainDepth >= 1
+// (engine.ts:980 only rejects self-nope at chainDepth === 0). Pre-fix
+// the SmartActionBox check `nopeWindow && !myTurn && isAlive` hid the
+// Intercept button from the ACTOR for the entire window — they'd try to
+// stage Intercepted from hand and validation hit `single-intercepted`
+// with a flat refusal.
+//
+// Fix: SmartActionBox now exposes the Intercept (Counter) button to the
+// ACTOR when chainDepth >= 1. The "single-intercepted" invalid label
+// becomes a two-line hint pointing to the right surface for cases where
+// the user genuinely tries to play Intercepted outside any window.
+// -----------------------------------------------------------------------------
+
+const FAKE_NOW = 1_700_000_000_000
+
+function nopeWindow(chainDepth: number): NopeWindowView {
+  return {
+    remainingMs: 10_000,
+    deadlineMs: FAKE_NOW + 10_000,
+    chainDepth,
+    startedAtMs: FAKE_NOW,
+    generation: chainDepth + 1,
+  }
+}
+
+describe('SmartActionBox chain-burn UX (TODO #11)', () => {
+  it('hides the Intercept button from ACTOR at chainDepth=0 (engine rejects self-nope)', () => {
+    const { container, root } = mount()
+    try {
+      render(root,
+        <SmartActionBox
+          {...BASE_PROPS}
+          isMyTurn={true}
+          subPhase="turn-active"
+          nopeWindow={nopeWindow(0)}
+          hasIntercept={true}
+          isAlive={true}
+        />,
+      )
+      const button = container.querySelector('button')!
+      // ACTOR at chainDepth=0 — Intercept must NOT be exposed; the
+      // SmartActionBox falls through to its normal turn-active state.
+      expect(button.textContent ?? '').not.toMatch(/Intercept|Counter/)
+    } finally {
+      teardown(container, root)
+    }
+  })
+
+  it('exposes the Counter button to ACTOR at chainDepth>=1 with an Intercept in hand', () => {
+    const { container, root } = mount()
+    try {
+      render(root,
+        <SmartActionBox
+          {...BASE_PROPS}
+          isMyTurn={true}
+          subPhase="turn-active"
+          nopeWindow={nopeWindow(1)}
+          hasIntercept={true}
+          isAlive={true}
+        />,
+      )
+      const button = container.querySelector('button')!
+      // verb is "Counter" at chainDepth>0 (existing convention preserved)
+      expect(button.textContent ?? '').toMatch(/Counter/)
+      expect(button.disabled).toBe(false)
+    } finally {
+      teardown(container, root)
+    }
+  })
+
+  it('shows the Counter waiting state to ACTOR at chainDepth>=1 without an Intercept', () => {
+    const { container, root } = mount()
+    try {
+      render(root,
+        <SmartActionBox
+          {...BASE_PROPS}
+          isMyTurn={true}
+          subPhase="turn-active"
+          nopeWindow={nopeWindow(1)}
+          hasIntercept={false}
+          isAlive={true}
+        />,
+      )
+      const button = container.querySelector('button')!
+      expect(button.textContent ?? '').toMatch(/Counter window/)
+      expect(button.disabled).toBe(true)
+    } finally {
+      teardown(container, root)
+    }
+  })
+
+  it('preserves non-actor Intercept button at chainDepth=0 (no regression)', () => {
+    const { container, root } = mount()
+    try {
+      render(root,
+        <SmartActionBox
+          {...BASE_PROPS}
+          isMyTurn={false}
+          subPhase="turn-active"
+          nopeWindow={nopeWindow(0)}
+          hasIntercept={true}
+          isAlive={true}
+        />,
+      )
+      const button = container.querySelector('button')!
+      expect(button.textContent ?? '').toMatch(/Intercept/)
+      expect(button.disabled).toBe(false)
+    } finally {
+      teardown(container, root)
+    }
+  })
+
+  it('fires onIntercept when ACTOR clicks the Counter button at chainDepth>=1', () => {
+    const onIntercept = vi.fn()
+    const { container, root } = mount()
+    try {
+      render(root,
+        <SmartActionBox
+          {...BASE_PROPS}
+          isMyTurn={true}
+          subPhase="turn-active"
+          nopeWindow={nopeWindow(2)}
+          hasIntercept={true}
+          isAlive={true}
+          onIntercept={onIntercept}
+        />,
+      )
+      const button = container.querySelector('button')!
+      act(() => { button.click() })
+      expect(onIntercept).toHaveBeenCalledOnce()
+    } finally {
+      teardown(container, root)
+    }
+  })
+
+  it('eliminated ACTOR sees no Intercept button even at chainDepth>=1', () => {
+    // isAlive gate stays — eliminated actors can't act.
+    const { container, root } = mount()
+    try {
+      render(root,
+        <SmartActionBox
+          {...BASE_PROPS}
+          isMyTurn={true}
+          subPhase="turn-active"
+          nopeWindow={nopeWindow(1)}
+          hasIntercept={true}
+          isAlive={false}
+        />,
+      )
+      const button = container.querySelector('button')!
+      expect(button.textContent ?? '').not.toMatch(/Intercept|Counter/)
+    } finally {
+      teardown(container, root)
+    }
+  })
+})
+
+describe('SmartActionBox single-intercepted hint (TODO #11)', () => {
+  it('renders the two-line "Intercepted is reactive" hint when staged alone', () => {
+    const { container, root } = mount()
+    try {
+      render(root,
+        <SmartActionBox
+          {...BASE_PROPS}
+          isMyTurn={true}
+          subPhase="turn-active"
+          cardPlayState={{
+            status: 'selecting',
+            selectedCardIds: ['c1'],
+            validation: { valid: false, reason: 'single-intercepted' },
+          }}
+        />,
+      )
+      const button = container.querySelector('button')!
+      // Primary line states the rule, secondary points at the surface.
+      expect(button.textContent ?? '').toContain('Intercepted is reactive')
+      expect(button.textContent ?? '').toContain('wait for the Intercept button')
+      // No regression of the bare "Can't play Intercepted" copy.
+      expect(button.textContent ?? '').not.toMatch(/Can't play Intercepted/)
+      // Non-interactive — staging this combination should NOT click anything.
+      expect(button.disabled).toBe(true)
     } finally {
       teardown(container, root)
     }

@@ -1,5 +1,6 @@
-import { useState } from 'react'
+import { useEffect, useState } from 'react'
 import type { ConnectionStatus } from '@client/connection'
+import { useLastError } from '@client/shared/gameStore'
 import { PlayerIcon } from '@client/shared/PlayerIcon'
 import styles from './JoinScreen.module.css'
 
@@ -23,7 +24,26 @@ interface Props {
 export function JoinScreen({ connectionStatus, assignedColor, onJoin, roomCode, playerName, defaultName, lobbyPlayers }: Props) {
   const [name, setName] = useState(defaultName ?? '')
   const [error, setError] = useState<string | null>(null)
+  const lastError = useLastError()
   const joined = assignedColor !== null
+
+  // Surface server errors (`GAME_ALREADY_STARTED`, `NAME_TAKEN`,
+  // `NAME_INVALID`, `ROOM_FULL`, ...) the same way as client validation
+  // failures. Without this the player UI silently swallows every server
+  // refusal — a late-joining seat (or human) just sees the join form
+  // unchanged after Check In, with no feedback that the server said no
+  // (TODO #6 root-cause investigation, 2026-04-29).
+  //
+  // `lastError` is a fresh object identity per server message, so this
+  // effect re-fires for repeat refusals (same code, new attempt). User
+  // typing clears `error` (handled in the input onChange) — that
+  // suppression is intentional: it gives the user a clean slate for
+  // their next attempt.
+  useEffect(() => {
+    if (lastError !== null) {
+      setError(lastError.message)
+    }
+  }, [lastError])
 
   // Mirrors server NAME_PATTERN (room.ts) + validation.ts NameRegex.
   // Keep these three in sync if the pattern ever changes.
@@ -134,7 +154,13 @@ export function JoinScreen({ connectionStatus, assignedColor, onJoin, roomCode, 
           maxLength={12}
           autoFocus
           value={name}
-          onChange={e => setName(e.target.value)}
+          onChange={e => {
+            setName(e.target.value)
+            // Clear stale errors (client validation OR server refusal) so
+            // the next attempt starts clean. The server-error effect above
+            // will resurface a new message if Check In gets refused again.
+            if (error !== null) setError(null)
+          }}
         />
         {error && <p className={styles.error}>{error}</p>}
         <button className={styles.joinButton} type="submit">Check In</button>

@@ -181,6 +181,14 @@ export interface Config {
   readonly godReassemblyTimeoutMs: number
   /** Passed through to `PLAYTEST_GOD_ORIGINS` in server env. */
   readonly godOriginAllowlist?: string[]
+  /**
+   * Optional override for the coverage primary gate (`firedCount >= N`).
+   * Default 50 (PRD §8.2 revised 2026-04-23) — applied inside
+   * `buildCoverageReport` when omitted. Mini-catalog calibration configs
+   * (6 scenarios) set this to ≤6 so the gate can ever pass; series configs
+   * inherit the default.
+   */
+  readonly coverageThreshold?: number
 }
 
 // -----------------------------------------------------------------------------
@@ -263,8 +271,12 @@ export const ROW_DISPLAY_LABELS = {
 export interface CoverageReport {
   /** Absolute count of distinct catalog scenarios fired. PRD §8.2 gate. */
   readonly firedCount: number
-  /** PRD §8.2 (revised 2026-04-23) — 50 distinct scenarios = pass. */
-  readonly threshold: 50
+  /**
+   * Distinct-fired threshold for `passed`. Defaults to 50 (PRD §8.2 revised
+   * 2026-04-23) but is configurable via `Config.coverageThreshold` so a
+   * mini-catalog calibration run (6 scenarios) can use a smaller floor.
+   */
+  readonly threshold: number
   /** 7 rows × 2 columns = 14 cells. */
   readonly gridCells: Record<
     ViewerRole,

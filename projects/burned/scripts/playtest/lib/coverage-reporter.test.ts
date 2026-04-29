@@ -14,6 +14,7 @@ import type { FireRecord, InfoGap, ParsedScenario } from './scenario-detector'
 import {
   type CoverageReportInput,
   type SelfReport,
+  DEFAULT_COVERAGE_THRESHOLD,
   buildCoverageReport,
   renderCoverageMd,
 } from './coverage-reporter'
@@ -135,6 +136,75 @@ describe('buildCoverageReport — primary ≥50 gate (PRD §8.2)', () => {
     expect(report.firedCount).toBe(48)
     expect(report.zeroCellCount).toBe(0)
     expect(report.passed).toBe(false)
+  })
+})
+
+describe('buildCoverageReport — coverageThreshold configurability', () => {
+  it('omitted threshold defaults to PRD §8.2 (DEFAULT_COVERAGE_THRESHOLD === 50)', () => {
+    expect(DEFAULT_COVERAGE_THRESHOLD).toBe(50)
+    const report = buildCoverageReport(makeInput())
+    expect(report.threshold).toBe(50)
+  })
+
+  it('custom threshold flows through report.threshold and gate logic', () => {
+    const catalog: ParsedScenario[] = []
+    const fires: FireRecord[] = []
+    for (let i = 0; i < 6; i++) {
+      const id = `SCN-MINI-${i}`
+      catalog.push(scenario(id, { infoGap: FULL_GAP }))
+      fires.push(fire(id))
+    }
+    const report = buildCoverageReport(
+      makeInput({ catalog, fires, coverageThreshold: 6 }),
+    )
+    expect(report.threshold).toBe(6)
+    expect(report.firedCount).toBe(6)
+    expect(report.zeroCellCount).toBe(0)
+    expect(report.passed).toBe(true)
+  })
+
+  it('boundary: firedCount one below custom threshold fails the primary gate', () => {
+    const catalog: ParsedScenario[] = []
+    const fires: FireRecord[] = []
+    for (let i = 0; i < 5; i++) {
+      const id = `SCN-MINI-${i}`
+      catalog.push(scenario(id, { infoGap: FULL_GAP }))
+      fires.push(fire(id))
+    }
+    const report = buildCoverageReport(
+      makeInput({ catalog, fires, coverageThreshold: 6 }),
+    )
+    expect(report.firedCount).toBe(5)
+    expect(report.threshold).toBe(6)
+    // Secondary gate also fails (5 fires don't cover all 14 cells via FULL_GAP
+    // — wait, 5 fires × FULL_GAP DO cover all 14 cells). So the failure here
+    // is purely the primary gate.
+    expect(report.zeroCellCount).toBe(0)
+    expect(report.passed).toBe(false)
+  })
+
+  it('threshold=1 with one fire and zero-cell-clean grid → passes both gates', () => {
+    const catalog = [scenario('SCN-A', { infoGap: FULL_GAP })]
+    const fires = [fire('SCN-A')]
+    const report = buildCoverageReport(
+      makeInput({ catalog, fires, coverageThreshold: 1 }),
+    )
+    expect(report.firedCount).toBe(1)
+    expect(report.threshold).toBe(1)
+    expect(report.zeroCellCount).toBe(0)
+    expect(report.passed).toBe(true)
+  })
+
+  it('renderCoverageMd banner reflects custom threshold (not the 50 default)', () => {
+    const catalog = [scenario('SCN-A', { infoGap: FULL_GAP })]
+    const fires = [fire('SCN-A')]
+    const report = buildCoverageReport(
+      makeInput({ catalog, fires, coverageThreshold: 6 }),
+    )
+    const md = renderCoverageMd(report, fires, catalog)
+    expect(md).toContain('Fired: 1 / target: 6')
+    // Presence companion: the default of 50 must NOT leak into the banner.
+    expect(md).not.toContain('target: 50')
   })
 })
 

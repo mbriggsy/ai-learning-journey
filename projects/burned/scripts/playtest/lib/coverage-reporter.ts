@@ -44,7 +44,20 @@ export interface CoverageReportInput {
     readonly scenarioId: string
     readonly notes: string
   }>
+  /**
+   * Distinct-fired threshold for the primary gate. Default 50 (PRD §8.2,
+   * revised 2026-04-23). Calibration / mini-catalog runs override via
+   * `Config.coverageThreshold` so the gate is reachable on a 6-scenario
+   * fixture. Must be a positive integer when provided.
+   */
+  readonly coverageThreshold?: number
 }
+
+/**
+ * PRD §8.2 default. Exported so callers (and tests) can reference the same
+ * literal without re-declaring it.
+ */
+export const DEFAULT_COVERAGE_THRESHOLD = 50
 
 const ALL_ROLES: readonly ViewerRole[] = [
   'SERVER',
@@ -65,6 +78,7 @@ export function buildCoverageReport(input: CoverageReportInput): CoverageReport 
   const selfReports = input.selfReports ?? []
   const firedByViewportIn = input.firedByViewport ?? {}
   const columnDivergences = input.columnDivergences ?? []
+  const threshold = input.coverageThreshold ?? DEFAULT_COVERAGE_THRESHOLD
 
   const byId = new Map<string, ParsedScenario>()
   for (const s of catalog) byId.set(s.id, s)
@@ -133,7 +147,7 @@ export function buildCoverageReport(input: CoverageReportInput): CoverageReport 
     if (gridCells[role].column2 === 0) zeroCellCount += 1
   }
 
-  const passed = firedCount >= 50 && zeroCellCount === 0
+  const passed = firedCount >= threshold && zeroCellCount === 0
 
   // Self-vs-detector divergences (phase-1 D5 "break the oracle-is-SUT
   // tautology" — D9.1 / B4).
@@ -175,7 +189,7 @@ export function buildCoverageReport(input: CoverageReportInput): CoverageReport 
 
   return {
     firedCount,
-    threshold: 50,
+    threshold,
     gridCells,
     zeroCellCount,
     passed,

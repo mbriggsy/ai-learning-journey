@@ -168,6 +168,35 @@ describe('ConfigSchema — .strict() guards', () => {
     const mutated = { ...validBody(), scenarioFilter: ['SCN-A', 'SCN-B'] }
     expect(() => ConfigSchema.parse(mutated)).not.toThrow()
   })
+
+  it('accepts coverageThreshold as a positive integer override', () => {
+    const mutated = { ...validBody(), coverageThreshold: 6 }
+    const parsed = ConfigSchema.parse(mutated)
+    expect(parsed.coverageThreshold).toBe(6)
+  })
+
+  it('coverageThreshold is optional (omitted is the default-50 case)', () => {
+    const parsed = ConfigSchema.parse(validBody())
+    expect(parsed.coverageThreshold).toBeUndefined()
+  })
+
+  it('rejects coverageThreshold === 0 (must be positive)', () => {
+    expect(() =>
+      ConfigSchema.parse({ ...validBody(), coverageThreshold: 0 }),
+    ).toThrow()
+  })
+
+  it('rejects negative coverageThreshold', () => {
+    expect(() =>
+      ConfigSchema.parse({ ...validBody(), coverageThreshold: -1 }),
+    ).toThrow()
+  })
+
+  it('rejects non-integer coverageThreshold (e.g. 6.5)', () => {
+    expect(() =>
+      ConfigSchema.parse({ ...validBody(), coverageThreshold: 6.5 }),
+    ).toThrow()
+  })
 })
 
 // ---------------------------------------------------------------------------

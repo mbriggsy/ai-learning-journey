@@ -61,6 +61,11 @@ export const ConfigSchema = z
     // full catalog (series #1 default). series #2+ may opt into filtering
     // via TUNING-LOG.md follow-ups.
     scenarioFilter: z.array(z.string().min(1)).optional(),
+
+    // Coverage primary-gate override. PRD §8.2 default is 50 (applied
+    // inside `buildCoverageReport` when omitted). Calibration / mini-catalog
+    // configs lower this so a 6-scenario fixture can ever pass the gate.
+    coverageThreshold: z.number().int().positive().optional(),
   })
   .strict()
 

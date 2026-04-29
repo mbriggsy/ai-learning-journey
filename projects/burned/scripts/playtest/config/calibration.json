@@ -13,5 +13,6 @@
   "freePlayWallclockFraction": 0.20,
   "sessionDirRetention": 10,
   "scrubMode": "on",
-  "godReassemblyTimeoutMs": 5000
+  "godReassemblyTimeoutMs": 5000,
+  "coverageThreshold": 1
 }

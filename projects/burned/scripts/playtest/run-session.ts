@@ -174,6 +174,7 @@ async function loadConfig(flags: CliFlags): Promise<Config> {
     scrubMode: merged.scrubMode ?? 'on',
     godReassemblyTimeoutMs: merged.godReassemblyTimeoutMs ?? 5000,
     godOriginAllowlist: merged.godOriginAllowlist,
+    coverageThreshold: merged.coverageThreshold,
   }
 }
 

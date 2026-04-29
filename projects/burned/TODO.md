@@ -4,15 +4,14 @@
 
 ### THIS SESSION (2026-04-29) — what shipped
 
-Four Phase 6 calibration items closed plus two product/UX bugs (#9
-stray card selection, #11 chain-burn UX + Intercepted hint). Five open
-items remain in the priority queue below — recommended pickup order:
-**harness item #6 (third-seat-fails-to-join)** for an investigation
-thread the next calibration retry will hit, OR **harness item #13
-(seat-log schema drift)** for scoped tooling polish. Items #1 and #7
-are operator-process work that needs a human decision; item #15 is
-open-ended cinematic framing better paired with a Briggsy eye-on-loop
-session.
+Four Phase 6 calibration items closed plus three product/harness
+bugs (#9 stray card selection, #11 chain-burn UX + Intercepted hint,
+#13 seat-log schema drift). Four open items remain in the priority
+queue below — recommended pickup order: **harness item #6
+(third-seat-fails-to-join)** for an investigation thread the next
+calibration retry will hit. Items #1 and #7 are operator-process
+work that needs a human decision; item #15 is open-ended cinematic
+framing better paired with a Briggsy eye-on-loop session.
 
 | Commit | Closes | Subject |
 |---|---|---|
@@ -25,6 +24,7 @@ session.
 | `7729cb83` | docs | docs(todo): close Phase 6 calibration items #4 + #5 |
 | `9fcb49e8` | item #9 | fix(card-interaction): cancel cross-card rapid taps without rescheduling |
 | `d9c40753` | item #11 | fix(smart-action-box): expose Counter button to ACTOR mid-chain-burn |
+| `31a98148` | item #13 | fix(playtest-harness): close seat-log schema drift on both ends |
 
 **Insights captured:**
 - 038 — Server inactivity-kick closed god observer along with players
@@ -35,14 +35,22 @@ session.
   stranding an enlarge backdrop on a card the user didn't pick.
   Generalised pattern: delayed-discrimination timers must cancel on
   ALL ambiguous follow-ups, not only the qualifying one.
+- 040 — Multi-violation files need multi-error surfaces, and LLM
+  authors need concrete examples, not field lists. `verify-
+  calibration` was reducing per-file error arrays to their first
+  element before reporting; agent prompts listed required fields
+  but never showed shape. Fix both ends or drift compounds silently.
 
-**Test surface:** typecheck clean · 1068/1068 unit tests (+31 from
+**Test surface:** typecheck clean · 1070/1070 unit tests (+33 from
 prior 1037: +5 coverage-reporter, +6 config-schema, +6 orchestrator
 coverage wiring, +7 useDoubleTap hook-level with fake timers, +7
-SmartActionBox chain-burn matrix + hint copy) · all 7 e2e tests pass
-including the new `tests/e2e/hand-cross-card-tap.spec.ts` regression
-spec (verified to fail on the pre-fix #9 code via stash-revert-rerun
-cycle) · `pnpm playtest:phase6-launcher-smoke` PASS (24/24) · `pnpm
+SmartActionBox chain-burn matrix + hint copy, +2 verify-calibration
+multi-error surfacing) · all 7 e2e tests pass including the new
+`tests/e2e/hand-cross-card-tap.spec.ts` regression spec (verified to
+fail on the pre-fix #9 code via stash-revert-rerun cycle) · `pnpm
+playtest:phase4-smoke` and `phase5-smoke` both PASS (template edits
+for #13 don't break LaunchSpec rendering or the schema validator) ·
+`pnpm playtest:phase6-launcher-smoke` PASS (24/24) · `pnpm
 playtest:phase6-heartbeat-smoke` PASS twice (65s wallclock, 2 pings
 observed, clean teardown, 0 workerd zombies).
 
@@ -280,13 +288,26 @@ not harness work.
     staged Intercepted showed the two-line hint as designed.
 12. **~~Reconnect UX has no upper-bound surface.~~** CLOSED 2026-04-27 by
     insight 036's gave-up state + ConnectionOverlay terminal UI.
-13. **Schema drift in seat logs (calibration finding).** verify-
-    calibration check 5 caught: seat-1 v2 wrote `scenarioId: null`
-    (should be a string) and `questionsTried: <single string>` (should
-    be an array). Either tighten the agent prompt with explicit examples
-    of the YAML shape OR strengthen the schema-validator's error-recovery
-    so the verifier flags individual entries instead of failing the
-    whole file.
+13. **~~Schema drift in seat logs (calibration finding).~~** CLOSED
+    2026-04-29 by commit `31a98148`. The TODO suggested EITHER prompt
+    tightening OR validator improvement; the right call was BOTH —
+    drift fights happen at both ends and either alone leaves a hole.
+    Two-end fix: (a) `verify-calibration` check 5 now collects ALL
+    parse errors per file (not just the first) with block indexes
+    prefixed, total count in the header — calibration retry run
+    `2026-04-26-1303-3p` had two distinct violations in one file
+    (`scenarioId: null` + `questionsTried: <string>`); pre-fix only
+    one surfaced. (b) `seat-scripted.md` + `seat-free-play.md` gain
+    a "Concrete YAML examples" section with one fully-formed block
+    per entryType plus a "Field shape rules" section that calls out
+    the drift sources by name (scenarioId always string,
+    questionsTried always array, etc.). +2 verify-calibration tests
+    pinning multi-error visibility (two drifts one file, two seats
+    cross-file aggregation). `pnpm playtest:phase4-smoke` and
+    `phase5-smoke` both PASS — template edits don't break the
+    LaunchSpec rendering pipeline. Insight 040 captures the
+    pattern: multi-violation contexts need multi-error surfaces,
+    and LLM authors need examples not just constraints.
 14. **~~Agent X card renders larger than other hand cards (NEW 2026-04-27).~~**
     CLOSED 2026-04-27 in two commits: `0f145148` (asset reframe — half-fix)
     and `308bbdbf` (true root cause — `min-height: 2lh` on `.cardDesc`).

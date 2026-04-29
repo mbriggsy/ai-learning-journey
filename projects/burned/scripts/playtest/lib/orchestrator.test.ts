@@ -1170,8 +1170,20 @@ describe('runSession — coverage wiring', () => {
   it('detectFires receives the real catalogPath + per-seat log paths', async () => {
     const log: SpyLog = { events: [] }
     const { deps } = buildHappyDeps(log)
-    const loadCatalog = vi.fn(async () => [])
-    const detectFires = vi.fn(async () => [])
+    // Annotate the mock signature explicitly so `vi.fn` infers the call-arg
+    // tuple as the dep's real shape — bare `vi.fn(async () => [])` infers
+    // `Parameters = []` and indexing `mock.calls[0]` becomes a TS2493.
+    const loadCatalog = vi.fn(
+      async (_catalogPath: string): Promise<readonly ParsedScenario[]> => [],
+    )
+    const detectFires = vi.fn(
+      async (
+        _catalogPath: string,
+        _eventsJsonlPath: string,
+        _connectionsJsonlPath: string,
+        _seatLogPaths: readonly string[],
+      ): Promise<readonly FireRecord[]> => [],
+    )
 
     const cfg = makeConfig()
     await runSession(cfg, { ...deps, loadCatalog, detectFires })
@@ -1184,6 +1196,6 @@ describe('runSession — coverage wiring', () => {
     expect(connectionsJsonl).toMatch(/connections\.jsonl$/)
     expect(seatLogPaths).toHaveLength(3)
     // Presence companion: log paths point inside the run's seats/ dir.
-    expect((seatLogPaths as readonly string[]).every((p) => p.includes('seats'))).toBe(true)
+    expect(seatLogPaths.every((p) => p.includes('seats'))).toBe(true)
   })
 })

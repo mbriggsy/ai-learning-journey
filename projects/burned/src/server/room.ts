@@ -378,7 +378,16 @@ export class GameRoom extends Server<Env> {
         type: 'error',
         payload: { code: 'KICKED', message: 'Game ended due to inactivity' },
       } satisfies ServerMessage))
+      // God observers are exempt from the kick: the inactivity timer is a
+      // gameplay-level signal (no PLAYER actions for 15 min), not a WS-traffic
+      // signal. The orchestrator's god subscriber is read-only and never
+      // initiates actions; killing it here would silently halve telemetry
+      // for legitimately long but slow-paced games. The orchestrator owns
+      // the god lifecycle and disconnects on session end. Found 2026-04-29
+      // via Phase 6 calibration retry #4 (Run 2 god log: `code=1000
+      // reason=Inactivity timeout`). See `docs/insights/038-*`.
       for (const conn of this.getConnections()) {
+        if (this.getConnState(conn)?.role === 'god') continue
         conn.close(1000, 'Inactivity timeout')
       }
       try { await this.ctx.storage.deleteAll() } catch (err: unknown) {

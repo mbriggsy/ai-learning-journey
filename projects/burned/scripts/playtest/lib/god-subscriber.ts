@@ -639,13 +639,20 @@ export async function connectGod(args: ConnectGodArgs): Promise<GodHandle> {
           // Clean server close — not fatal by itself. Leave onFatalClose
           // pending; the orchestrator notices via its own lifecycle signal.
           //
-          // Insight 034: in Phase 6 calibration retry #2, the god connection
-          // was killed at 40s by the server's heartbeat-timeout (code 1001)
-          // because the subscriber wasn't responding to pings. The pong
-          // handler above is the actual fix. This log is defense-in-depth:
-          // even with the pong fix, future silent close paths (server
-          // inactivity-kill at 15min, hibernation, etc.) should be visible
-          // to the operator instead of silently halving the telemetry.
+          // Known causes after the two phase-6 calibration fixes:
+          //   - Insight 034 (CLOSED): heartbeat timeout, code 1001. Pre-fix
+          //     the subscriber didn't reply to server pings; the pong
+          //     handler above is the fix. Defense-in-depth: this log
+          //     surfaces the close instead of silently halving telemetry.
+          //   - Insight 038 (CLOSED): server-side inactivity kick, code
+          //     1000 reason='Inactivity timeout'. Pre-fix `room.ts`
+          //     onAlarm closed ALL connections including god; now god is
+          //     exempt from the kick. The orchestrator owns god lifecycle
+          //     and disconnects via the client-side `disconnect()` path.
+          //
+          // Future silent close paths (Cloudflare hibernation, network-
+          // layer cleanup) still benefit from this defense-in-depth log
+          // so operators see what happened.
           console.warn(
             `[god-subscriber] server-initiated close mid-session ` +
             `code=${code} reason=${reasonStr || '(none)'} — ` +

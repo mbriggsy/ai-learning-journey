@@ -38,6 +38,7 @@ function fakeRunPaths(root = '/tmp/run'): RunDirPaths {
     serverDir: path.join(root, 'server'),
     seatsDir: path.join(root, 'seats'),
     suspicionsDir: path.join(root, 'suspicions'),
+    screenshotsDir: path.join(root, 'screenshots'),
     eventsJsonl: path.join(root, 'server', 'events.jsonl'),
     connectionsJsonl: path.join(root, 'server', 'connections.jsonl'),
     sessionMd: path.join(root, 'session.md'),

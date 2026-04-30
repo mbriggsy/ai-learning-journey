@@ -237,6 +237,7 @@ CATALOG=
 {{CATALOG_TEXT}}
 LOG={{LOG_PATH}}
 SUS={{SUSPICION_PATH}}
+SHOTS={{SCREENSHOTS_DIR}}
 TIMEOUT={{SESSION_TIMEOUT_MS}}
 `
 
@@ -249,6 +250,7 @@ TIMEOUT={{SESSION_TIMEOUT_MS}}
       template: TEMPLATE,
       playerUrl: 'http://localhost:5173/player.html?room=TEST&name=Dash',
       mcpNamespace: 'playwright-seat-1',
+      screenshotsDir: '/tmp/run/screenshots',
     })
     expect(out).toContain('SEAT=seat-0')
     expect(out).toContain('NAME=Dash')
@@ -259,6 +261,7 @@ TIMEOUT={{SESSION_TIMEOUT_MS}}
     expect(out).toContain('CATALOG-BODY')
     expect(out).toContain('LOG=/tmp/run/seats/seat-0.log.md')
     expect(out).toContain('SUS=/tmp/run/suspicions/seat-0.suspicions.md')
+    expect(out).toContain('SHOTS=/tmp/run/screenshots')
     expect(out).toContain('TIMEOUT=180000')
     // No residual placeholders.
     expect(out).not.toMatch(/\{\{[A-Z_]+\}\}/)
@@ -274,6 +277,7 @@ TIMEOUT={{SESSION_TIMEOUT_MS}}
         template: TEMPLATE,
         playerUrl: 'http://localhost:5173/player.html?room=&name=Dash',
         mcpNamespace: 'playwright-seat-1',
+        screenshotsDir: '/tmp/run/screenshots',
       }),
     ).toThrow(/roomCode/)
   })
@@ -287,6 +291,7 @@ TIMEOUT={{SESSION_TIMEOUT_MS}}
       template: 'unknown: {{NOT_A_REAL_PLACEHOLDER}}',
       playerUrl: 'http://localhost:5173/player.html?room=TEST&name=Dash',
       mcpNamespace: 'playwright-seat-1',
+      screenshotsDir: '/tmp/run/screenshots',
     })
     expect(out).toContain('{{NOT_A_REAL_PLACEHOLDER}}')
   })
@@ -301,10 +306,26 @@ TIMEOUT={{SESSION_TIMEOUT_MS}}
       template: tmpl,
       playerUrl: 'http://localhost:5173/player.html?room=TEST&name=Dash',
       mcpNamespace: 'playwright-seat-3',
+      screenshotsDir: '/tmp/run/screenshots',
     })
     expect(out).toBe(
       'go: http://localhost:5173/player.html?room=TEST&name=Dash ns: playwright-seat-3',
     )
+  })
+
+  it('substitutes SCREENSHOTS_DIR (TODO #18 — explicit path arg for browser_take_screenshot)', () => {
+    const tmpl = 'shots-go-here: {{SCREENSHOTS_DIR}}'
+    const out = buildSeatPrompt({
+      seat: seat('seat-0', 'Dash'),
+      otherSeats: [],
+      catalogText: '',
+      sessionTimeoutMs: 1,
+      template: tmpl,
+      playerUrl: 'http://localhost:5173/player.html?room=TEST&name=Dash',
+      mcpNamespace: 'playwright-seat-1',
+      screenshotsDir: '/tmp/runs/2026-04-30-1200-3p/screenshots',
+    })
+    expect(out).toBe('shots-go-here: /tmp/runs/2026-04-30-1200-3p/screenshots')
   })
 })
 
@@ -339,6 +360,7 @@ describe('buildLaunchSpecs', () => {
       startingSeatIndex: 0,
       scriptedTemplate,
       freePlayTemplate,
+      screenshotsDir: '/tmp/run/screenshots',
     })
     expect(specs).toHaveLength(3)
     specs.forEach((spec, i) => {
@@ -365,6 +387,7 @@ describe('buildLaunchSpecs', () => {
       sessionTimeoutMs: 60_000,
       scriptedTemplate,
       freePlayTemplate,
+      screenshotsDir: '/tmp/run/screenshots',
     })
     expect(specs).toHaveLength(10)
     specs.forEach((spec, i) => {
@@ -391,6 +414,7 @@ describe('buildLaunchSpecs', () => {
       sessionTimeoutMs: 60_000,
       scriptedTemplate,
       freePlayTemplate,
+      screenshotsDir: '/tmp/run/screenshots',
     })
     expect(specs[0]!.playerUrl).toBe(
       'http://localhost:5173/player.html?room=A%20B&name=Dash%20%26%20Friends',
@@ -410,6 +434,7 @@ describe('buildLaunchSpecs', () => {
       scriptedTemplate,
       freePlayTemplate,
       viteBaseUrl: 'http://staging.example:9090///',
+      screenshotsDir: '/tmp/run/screenshots',
     })
     expect(specs[0]!.playerUrl).toBe(
       'http://staging.example:9090/player.html?room=TEST&name=Dash',
@@ -426,6 +451,7 @@ describe('buildLaunchSpecs', () => {
       sessionTimeoutMs: 60_000,
       scriptedTemplate,
       freePlayTemplate,
+      screenshotsDir: '/tmp/run/screenshots',
     })
     const freePlay = buildLaunchSpecs({
       seats,
@@ -434,6 +460,7 @@ describe('buildLaunchSpecs', () => {
       sessionTimeoutMs: 60_000,
       scriptedTemplate,
       freePlayTemplate,
+      screenshotsDir: '/tmp/run/screenshots',
     })
     for (const s of [...scripted, ...freePlay]) {
       expect(s.subagentType).toMatch(/^playtest-seat-(?:[1-9]|10)$/)
@@ -454,6 +481,7 @@ describe('buildLaunchSpecs', () => {
       sessionTimeoutMs: 60_000,
       scriptedTemplate,
       freePlayTemplate,
+      screenshotsDir: '/tmp/run/screenshots',
     })
     const prompt = specs[0]!.prompt
     for (const label of Object.values(ROW_DISPLAY_LABELS)) {
@@ -470,6 +498,7 @@ describe('buildLaunchSpecs', () => {
       sessionTimeoutMs: 60_000,
       scriptedTemplate,
       freePlayTemplate,
+      screenshotsDir: '/tmp/run/screenshots',
     })
     const freePlay = buildLaunchSpecs({
       seats: [seat('seat-0', 'Dash')],
@@ -478,6 +507,7 @@ describe('buildLaunchSpecs', () => {
       sessionTimeoutMs: 60_000,
       scriptedTemplate,
       freePlayTemplate,
+      screenshotsDir: '/tmp/run/screenshots',
     })
     for (const s of [...scripted, ...freePlay]) {
       expect(s.prompt).not.toContain('info-gap-divergence')
@@ -494,6 +524,7 @@ describe('buildLaunchSpecs', () => {
       sessionTimeoutMs: 60_000,
       scriptedTemplate,
       freePlayTemplate,
+      screenshotsDir: '/tmp/run/screenshots',
     })
     const prompt = specs[0]!.prompt
     expect(prompt).toContain('full scenario catalog exists')
@@ -512,6 +543,7 @@ describe('buildLaunchSpecs', () => {
       sessionTimeoutMs: 60_000,
       scriptedTemplate,
       freePlayTemplate,
+      screenshotsDir: '/tmp/run/screenshots',
     } as const
     const scripted = buildLaunchSpecs({ ...base, modeSignal: 'scripted' })
     const freePlay = buildLaunchSpecs({ ...base, modeSignal: 'free-play' })
@@ -534,6 +566,7 @@ describe('buildLaunchSpecs', () => {
       sessionTimeoutMs: 60_000,
       scriptedTemplate,
       freePlayTemplate,
+      screenshotsDir: '/tmp/run/screenshots',
     })
     const prompt = specs[0]!.prompt
     expect(prompt).toContain('No scenarios scoped to your role')
@@ -553,6 +586,7 @@ describe('buildLaunchSpecs', () => {
       sessionTimeoutMs: 60_000,
       scriptedTemplate,
       freePlayTemplate,
+      screenshotsDir: '/tmp/run/screenshots',
     })
     const prompt = specs[0]!.prompt
     expect(prompt).toContain('Name\\"With\\"Quotes')
@@ -649,6 +683,7 @@ describe('emitLaunchSpecs', () => {
       runDir,
       scriptedTemplate,
       freePlayTemplate,
+      screenshotsDir: '/tmp/run/screenshots',
     })
 
     const specFiles = await readdir(result.specsDir)

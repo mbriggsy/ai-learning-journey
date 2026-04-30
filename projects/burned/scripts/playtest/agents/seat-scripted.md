@@ -61,7 +61,8 @@ Whitelisted:
 `mcp__{{MCP_NAMESPACE}}__browser_type`,
 `mcp__{{MCP_NAMESPACE}}__browser_press_key`,
 `mcp__{{MCP_NAMESPACE}}__browser_wait_for`,
-`mcp__{{MCP_NAMESPACE}}__browser_take_screenshot`,
+`mcp__{{MCP_NAMESPACE}}__browser_take_screenshot` (REQUIRED: pass an
+explicit `path` arg — see SCREENSHOTS section below),
 `mcp__{{MCP_NAMESPACE}}__browser_hover`,
 `mcp__{{MCP_NAMESPACE}}__browser_select_option`,
 `mcp__{{MCP_NAMESPACE}}__browser_close` (final teardown only — see EXIT
@@ -105,6 +106,36 @@ Room code: `{{ROOM_CODE}}`.
 `{{VIEWPORT_LABEL}}` ({{VIEWPORT_WIDTH}}×{{VIEWPORT_HEIGHT}}).
 The orchestrator owns viewport cycling (phase-3 D11) — it does not
 change mid-scenario.
+
+## SCREENSHOTS — explicit path is MANDATORY
+
+Whenever you call
+`mcp__{{MCP_NAMESPACE}}__browser_take_screenshot`, you **MUST** pass
+an explicit `path` argument. The shared per-run screenshot directory
+is:
+
+`{{SCREENSHOTS_DIR}}`
+
+Build the filename as `{{SEAT_ID}}-<ISO-timestamp>-<short-tag>.png`
+where `<short-tag>` is a 1-3 word kebab-case description (e.g.
+`favor-target`, `defuse-placement`, `intercept-window`). Example call:
+
+```
+mcp__{{MCP_NAMESPACE}}__browser_take_screenshot({
+  path: "{{SCREENSHOTS_DIR}}/{{SEAT_ID}}-2026-04-30T01-49Z-favor-target.png"
+})
+```
+
+If you OMIT the `path` arg, the MCP Playwright server writes the
+screenshot to the project working directory instead of the run dir.
+That pollutes git status and breaks downstream triage tools that
+expect screenshots inside the run directory. Insight 042 covers the
+calibration retry where this surfaced (run `2026-04-29-2139-3p`
+left 9 untracked PNGs in the project root).
+
+When logging a `screenshotHash` field in a `ui-spec-divergence`
+entry, use the bare basename (no leading directory), e.g.
+`screenshotHash: "{{SEAT_ID}}-2026-04-30T01-49Z-favor-target.png"`.
 
 ## SESSION TIMEOUT
 
@@ -228,6 +259,10 @@ them; those are worth flagging.
 - Do NOT flag orchestrator-driven reconnect banners as anomalies.
 - Do NOT attempt Column-1-vs-Column-2 comparisons — Column 1 is
   server-internal and unobservable from your seat.
+- Do NOT call `browser_take_screenshot` without an explicit `path`
+  argument under `{{SCREENSHOTS_DIR}}/` — see SCREENSHOTS section
+  above. Omitting `path` writes to project cwd and pollutes git
+  status (insight 042).
 
 ## EXIT CONDITIONS
 

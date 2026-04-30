@@ -32,6 +32,14 @@ export interface RunDirPaths {
   readonly serverDir: string
   readonly seatsDir: string
   readonly suspicionsDir: string
+  /**
+   * Per-run screenshot dir. Seat agents call `browser_take_screenshot`
+   * with `path: '{{SCREENSHOTS_DIR}}/{{SEAT_ID}}-<timestamp>.png'`;
+   * without an explicit `path` the MCP Playwright server writes to the
+   * project cwd and pollutes git status (TODO #18, run
+   * `2026-04-29-2139-3p` produced 9 untracked PNGs in project root).
+   */
+  readonly screenshotsDir: string
   readonly eventsJsonl: string
   readonly connectionsJsonl: string
   readonly sessionMd: string
@@ -104,12 +112,14 @@ export async function createRunDirectory(
   const seatsDir = path.join(rootPath, 'seats')
   const suspicionsDir = path.join(rootPath, 'suspicions')
   const issuesDir = path.join(rootPath, 'issues')
+  const screenshotsDir = path.join(rootPath, 'screenshots')
 
   await Promise.all([
     fs.mkdir(serverDir, { recursive: true }),
     fs.mkdir(seatsDir, { recursive: true }),
     fs.mkdir(suspicionsDir, { recursive: true }),
     fs.mkdir(issuesDir, { recursive: true }),
+    fs.mkdir(screenshotsDir, { recursive: true }),
   ])
 
   const sessionMd = path.join(rootPath, 'session.md')
@@ -127,6 +137,7 @@ export async function createRunDirectory(
     serverDir,
     seatsDir,
     suspicionsDir,
+    screenshotsDir,
     eventsJsonl: path.join(serverDir, 'events.jsonl'),
     connectionsJsonl: path.join(serverDir, 'connections.jsonl'),
     sessionMd,

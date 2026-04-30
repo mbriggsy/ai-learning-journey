@@ -88,6 +88,14 @@ export interface BuildLaunchSpecsInput {
    * `${viteBaseUrl}/player.html?room=<...>&name=<...>`.
    */
   readonly viteBaseUrl?: string
+  /**
+   * Per-run shared screenshot directory (`<runDir>/screenshots`). Injected
+   * into each seat prompt as `{{SCREENSHOTS_DIR}}` so the template can
+   * mandate an explicit `path` arg on `browser_take_screenshot` calls.
+   * TODO #18 / insight 042 — without this, screenshots write to project
+   * cwd and pollute git status.
+   */
+  readonly screenshotsDir: string
 }
 
 // -----------------------------------------------------------------------------
@@ -246,6 +254,7 @@ const PLACEHOLDER_NAMES = [
   'CATALOG_TEXT',
   'LOG_PATH',
   'SUSPICION_PATH',
+  'SCREENSHOTS_DIR',
   'SESSION_TIMEOUT_MS',
   'PLAYER_URL',
   'MCP_NAMESPACE',
@@ -261,10 +270,18 @@ export interface BuildSeatPromptInput {
   readonly template: string
   readonly playerUrl: string
   readonly mcpNamespace: string
+  /**
+   * Per-run shared screenshot directory (typically `<runDir>/screenshots`).
+   * Injected as `{{SCREENSHOTS_DIR}}` so the seat-prompt template can
+   * mandate an explicit `path` argument on every `browser_take_screenshot`
+   * call. Without this, the MCP Playwright server writes screenshots to
+   * the project cwd and pollutes git status (TODO #18).
+   */
+  readonly screenshotsDir: string
 }
 
 export function buildSeatPrompt(input: BuildSeatPromptInput): string {
-  const { seat, otherSeats, catalogText, sessionTimeoutMs, template, playerUrl, mcpNamespace } = input
+  const { seat, otherSeats, catalogText, sessionTimeoutMs, template, playerUrl, mcpNamespace, screenshotsDir } = input
 
   if (seat.roomCode === '' || seat.roomCode === undefined) {
     throw new Error(
@@ -283,6 +300,7 @@ export function buildSeatPrompt(input: BuildSeatPromptInput): string {
     CATALOG_TEXT: catalogText,
     LOG_PATH: seat.logPath,
     SUSPICION_PATH: seat.suspicionPath,
+    SCREENSHOTS_DIR: screenshotsDir,
     SESSION_TIMEOUT_MS: String(sessionTimeoutMs),
     PLAYER_URL: playerUrl,
     MCP_NAMESPACE: mcpNamespace,
@@ -325,6 +343,7 @@ export function buildLaunchSpecs(input: BuildLaunchSpecsInput): SeatLaunchSpec[]
     scriptedTemplate,
     freePlayTemplate,
     viteBaseUrl = DEFAULT_VITE_BASE_URL,
+    screenshotsDir,
   } = input
 
   return seats.map((seat, seatIndex) => {
@@ -355,6 +374,7 @@ export function buildLaunchSpecs(input: BuildLaunchSpecsInput): SeatLaunchSpec[]
       template,
       playerUrl,
       mcpNamespace,
+      screenshotsDir,
     })
 
     return {
@@ -476,6 +496,7 @@ export function createAgentLauncherDriver(
 ): (seats: readonly SeatHandle[]) => Promise<void> {
   return async (seats) => {
     const runDir = input.runDir ?? deriveRunDirFromSeats(seats)
+    const screenshotsDir = path.join(runDir, 'screenshots')
     await emitLaunchSpecs({
       seats,
       catalog: input.catalog,
@@ -486,6 +507,7 @@ export function createAgentLauncherDriver(
       freePlayTemplate: input.freePlayTemplate,
       runDir,
       viteBaseUrl: input.viteBaseUrl,
+      screenshotsDir,
     })
 
     const markerPath = path.join(runDir, AGENTS_DONE_MARKER)

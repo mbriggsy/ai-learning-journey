@@ -90,7 +90,7 @@ function makeResult(overrides: Partial<SessionReport> = {}): SessionReport {
 }
 
 describe('createRunDirectory', () => {
-  it('creates the full tree (seats/, suspicions/, server/, issues/, session.md, coverage.md)', async () => {
+  it('creates the full tree (seats/, suspicions/, server/, issues/, screenshots/, session.md, coverage.md)', async () => {
     const paths = await createRunDirectory(tmpRoot, '2026-04-24-1030-3p')
 
     // Root + all subdirs exist as directories
@@ -109,6 +109,14 @@ describe('createRunDirectory', () => {
 
     const issuesStat = await fs.stat(path.join(paths.root, 'issues'))
     expect(issuesStat.isDirectory()).toBe(true)
+
+    // screenshots/ — created so seat agents can pass an explicit path arg
+    // to browser_take_screenshot (TODO #18; without it screenshots land in
+    // project cwd and pollute git status).
+    const screenshotsStat = await fs.stat(paths.screenshotsDir)
+    expect(screenshotsStat.isDirectory()).toBe(true)
+    expect(path.basename(paths.screenshotsDir)).toBe('screenshots')
+    expect(path.dirname(paths.screenshotsDir)).toBe(paths.root)
 
     // session.md and coverage.md exist as (possibly empty) files
     const sessionStat = await fs.stat(paths.sessionMd)

@@ -59,7 +59,8 @@ Whitelisted (under your seat's MCP namespace `{{MCP_NAMESPACE}}`):
 `mcp__{{MCP_NAMESPACE}}__browser_type`,
 `mcp__{{MCP_NAMESPACE}}__browser_press_key`,
 `mcp__{{MCP_NAMESPACE}}__browser_wait_for`,
-`mcp__{{MCP_NAMESPACE}}__browser_take_screenshot`,
+`mcp__{{MCP_NAMESPACE}}__browser_take_screenshot` (REQUIRED: pass an
+explicit `path` arg — see SCREENSHOTS section below),
 `mcp__{{MCP_NAMESPACE}}__browser_hover`,
 `mcp__{{MCP_NAMESPACE}}__browser_select_option`,
 `mcp__{{MCP_NAMESPACE}}__browser_close` (final teardown only — see EXIT
@@ -83,6 +84,34 @@ Room code: `{{ROOM_CODE}}`.
 ## YOUR VIEWPORT
 
 `{{VIEWPORT_LABEL}}` ({{VIEWPORT_WIDTH}}×{{VIEWPORT_HEIGHT}}).
+
+## SCREENSHOTS — explicit path is MANDATORY
+
+Whenever you call
+`mcp__{{MCP_NAMESPACE}}__browser_take_screenshot`, you **MUST** pass
+an explicit `path` argument. The shared per-run screenshot directory
+is:
+
+`{{SCREENSHOTS_DIR}}`
+
+Build the filename as `{{SEAT_ID}}-<ISO-timestamp>-<short-tag>.png`
+where `<short-tag>` is a 1-3 word kebab-case description (e.g.
+`favor-target`, `defuse-placement`, `intercept-window`). Example call:
+
+```
+mcp__{{MCP_NAMESPACE}}__browser_take_screenshot({
+  path: "{{SCREENSHOTS_DIR}}/{{SEAT_ID}}-2026-04-30T01-49Z-favor-target.png"
+})
+```
+
+If you OMIT the `path` arg, the MCP Playwright server writes the
+screenshot to the project working directory instead of the run dir.
+That pollutes git status and breaks downstream triage tools that
+expect screenshots inside the run directory. Insight 042 covers the
+calibration retry where this surfaced.
+
+When logging a `screenshotHash` field in a `ui-spec-divergence`
+entry, use the bare basename (no leading directory).
 
 ## SESSION TIMEOUT
 
@@ -182,6 +211,10 @@ Real connectivity bugs appear only when a scenario's
 - Do NOT chain 3+ actions without logging in between.
 - Do NOT flag orchestrator-driven reconnect banners as anomalies.
 - Do NOT skip vibe-check on a suspicion in this segment.
+- Do NOT call `browser_take_screenshot` without an explicit `path`
+  argument under `{{SCREENSHOTS_DIR}}/` — see SCREENSHOTS section
+  above. Omitting `path` writes to project cwd and pollutes git
+  status (insight 042).
 
 ## EXIT CONDITIONS
 

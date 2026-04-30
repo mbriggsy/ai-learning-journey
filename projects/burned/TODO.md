@@ -2,6 +2,76 @@
 
 ## NEXT SESSION — pick up here (2026-04-30+)
 
+### PRIOR SESSION (2026-04-30 overnight, autonomous) — TRIAGE + #18 + REAL #17 ROOT CAUSE
+
+While Briggsy slept, three queue items moved.
+
+**Item #1 (triage agents) — CLOSED.** All 22 `playtest-triage` agents
+dispatched in parallel against `runs/2026-04-29-2139-3p/triage-specs/`.
+Each wrote one diagnosed issue file. INDEX.md regenerated via new
+`scripts/playtest/regen-issue-index.ts` utility. Final triage shape:
+**22 issues / 0 P0 · 6 P1 · 15 P2** (one issue lacks severity);
+**12 OPEN, 8 KNOWN-PRODUCT-CALL-CONFIRMED, 2 LOW-SIGNAL.**
+`verify-calibration`: **7/7 PASS** against the run dir for the first
+time with real triage content (was 7/7 with INDEX.md=0 issues
+yesterday).
+
+The issues independently corroborate Briggsy's session findings AND
+add concrete file:line root causes:
+- **005** (P1): `StatusBar.tsx` has no `favor-pending` branch — phone
+  controllers for non-target players show stale "X is on deck" during
+  Favor exchange. New issue, not in E2E-ISSUE-LIST.
+- **006 + 007** (P1): Single-tap on hand card during favor-response
+  opens enlarged preview backdrop that intercepts pointer events;
+  staging button stays `disabled`. Double-tap is the working path.
+  Two seats found it independently. NOT covered by B-05.
+- **010** (P1): Favor exchange reads as "form submission" / "database
+  transaction" — three concrete root causes pinned to file:line
+  (`SmartActionBox.tsx:184`, `SmartActionBox.tsx:196-215`,
+  `PlayerAlert.tsx:86-96` + missing favor case in `DramaOverlay`).
+- **019** (with-divergence-fire): Tier-2 oracle has TWO
+  defects — `$ACTOR` / `$TARGET` placeholder substitution missing
+  before string compare; and `myHand[*].type` always redacted, making
+  catalog assertions structurally untestable. Affects every scenario
+  using those tokens.
+- **022**: Direct Order target sees silent double-draw — no "under
+  attack" indicator. `currentTurn.turnsRemaining` is in projection
+  already; rendering-only fix.
+- **001/002/003/011/018**: 5 separate seeds where seat agents
+  invented scenario IDs not in `SCENARIOS.md` (SESSION-START,
+  GAME-START-OBSERVATION, TURN-TRANSITION-SEAT1-TO-SEAT2,
+  INTERCEPT-WINDOW-OBSERVED-SEAT1-TURN). Schema validator should
+  cross-reference catalog at log-write time.
+
+**Item #18 (screenshots polluting cwd) — CLOSED.** Three-layer fix:
+- `RunDirPaths.screenshotsDir` added; `createRunDirectory` mkdirs
+  `<runDir>/screenshots`.
+- `BuildSeatPromptInput`+`BuildLaunchSpecsInput` accept
+  `screenshotsDir`; `SCREENSHOTS_DIR` placeholder renders into the
+  prompt. `createAgentLauncherDriver` derives it from runDir.
+- `seat-scripted.md` + `seat-free-play.md` gain a SCREENSHOTS section
+  mandating `path: '{{SCREENSHOTS_DIR}}/{{SEAT_ID}}-<ts>-<tag>.png'`,
+  a worked example, and an ANTI-PATTERN entry. Insight 042 referenced.
+
+  Verification: `pnpm typecheck` clean; 56/56 unit tests pass across
+  run-directory / agent-launcher / seat-factory; phase4-smoke +
+  phase5-smoke both PASS.
+
+**Item #17 — REDIRECTED, not closed.** Original diagnosis was wrong
+layer (it blamed seat-prompt behavior, but `coverage-reporter` reads
+`events.jsonl`, not seat logs). Real root cause is **catalog drift**
+in `scripts/playtest/fixtures/mini-catalog.md` — multiple field-name
+and event-name mismatches vs the engine's actual emitted events
+(favor uses `requesterId`/`giverId`/`receiverId`, not
+`playerId`/`recipientId`; combo-steal uses `stealerId`; cardType
+`skip` doesn't exist; `shuffle-applied` doesn't exist; `turn-ended`
+doesn't exist). Plus a parallel drift in `agent-launcher.ts:174-191`
+that scans only `where.playerId` for sigils. Full diagnosis in
+`docs/insights/042-calibration-catalog-field-name-drift-from-engine.md`
+and TODO item #17 below. **Judgment-call elements (SCN-GO-DARK
+content intent: Shuffle vs Skip; SCN-SKIP cardType naming) need
+Briggsy decision before mechanical fix.**
+
 ### PRIOR SESSION (2026-04-29 late evening) — FIRST END-TO-END CALIBRATION SUCCESS
 
 **Calibration retry attempt #3 (`runs/2026-04-29-2139-3p`) is the first
@@ -367,12 +437,19 @@ verify-calibration: 5/7 checks PASS.
 
 What's still missing:
 
-1. **Triage agents not auto-dispatched.** Run 2 produced 4 triage specs
-   at `runs/2026-04-26-1339-3p/triage-specs/`. INDEX.md shows 0 issues
-   because the operator (next session — eye-in-loop) still has to dispatch
-   one `Agent({subagent_type: 'playtest-triage'})` per spec. Wire as a
-   post-session-triage hook OR document as the operator's final manual
-   step.
+1. **~~Triage agents not auto-dispatched.~~** CLOSED 2026-04-30 overnight.
+   All 22 `playtest-triage` agents fired in parallel via the harness
+   conversation against `runs/2026-04-29-2139-3p/triage-specs/`. Each
+   wrote one diagnosed issue file. INDEX.md regenerated via new
+   `scripts/playtest/regen-issue-index.ts` utility — 22 issues / 6 P1 /
+   15 P2 / 0 P0; 12 OPEN, 8 KNOWN-PRODUCT-CALL-CONFIRMED, 2 LOW-SIGNAL.
+   `verify-calibration` now 7/7 PASS with real triage content.
+   Operator process: until a hook wires this in, the conversation
+   reads `triage-specs.manifest.json` and dispatches one
+   `Agent({subagent_type: 'playtest-triage'})` per seed (lean wrapper
+   prompt: "Read your spec at <specPath>, follow it verbatim"), then
+   runs `pnpm tsx scripts/playtest/regen-issue-index.ts <issuesDir>`.
+   Hook wiring is the next durable step — Phase 6 todo.
 2. **~~Coverage.md empty — Unit 10 renderer wiring deferred.~~** CLOSED
    2026-04-29 by commit `cc38ee8d`. Orchestrator now loads catalog +
    detects fires after teardown, calls `buildCoverageReport` +
@@ -472,41 +549,83 @@ What's still missing:
     whitelist (still excludes `browser_evaluate`, `browser_run_code`,
     `browser_console_messages`, `browser_tabs`,
     `browser_network_requests`).
-18. **Seat agents write screenshots to project cwd, not the run dir
-    (NEW 2026-04-29 late evening).** Run `2026-04-29-2139-3p` left 9
-    untracked PNGs (`page-2026-04-30T*.png`, `seat3-*.png`) in the
-    project root, polluting `git status`. Cause: the seat agent's
-    `browser_take_screenshot` calls don't specify a path, so the MCP
-    Playwright server writes to the cwd (project root). Squeaky-clean
-    moved them to `runs/2026-04-29-2139-3p/screenshots/` (where the
-    run dir's gitignore catches them). Fix: thread an explicit
-    `path` arg into `browser_take_screenshot` calls, or update the
-    seat-prompt template to mandate a path under the seat's run dir.
-    The one referenced screenshot (`page-2026-04-30T01-49-favor-
-    target.png`, in seat-2's suspicions as a `screenshotHash`) is
-    preserved in the new location — but if triage tools assume cwd,
-    update them in lockstep.
-17. **Agents log scenario references in vibe-check / ui-spec-divergence
-    entries, NOT formal `scenario-fire` entryType (NEW
-    2026-04-29 late evening).** Run `2026-04-29-2139-3p` produced
-    `coverage: fired 0 / threshold 1` despite the agents observably
-    firing 4 distinct catalog scenarios (SCN-FAVOR, SCN-GO-DARK,
-    SCN-SKIP, SCN-BURNED-DRAW-AXIS11-01) and triage clustering 22
-    seeds with proper scenario IDs. Root cause: the agents' inner-loop
-    prompt teaches them four entryTypes (`scenario-fire`, `suspicion`,
-    `vibe-check`, `ui-spec-divergence`), and they correctly use the
-    latter three with `relatedScenario` fields — but they don't write
-    the standalone `scenario-fire` entry that the coverage counter
-    looks for. Fix path: clarify in `seat-scripted.md` template that
-    every catalog-scenario observation MUST start with a
-    `scenario-fire` entry in the seat log file (`seat-N.log.md`)
-    before any related vibe-check or divergence entry in the
-    suspicions file. Or, alternative: change `coverage-reporter` to
-    count any `relatedScenario` reference, not just `scenario-fire`
-    (probably wrong — coverage is meant to count actual exercises,
-    not just observations). Worth ~10 minutes of prompt tuning + one
-    smoke run to validate. Note: this is the LAST gap between "the
-    harness ran" and "the coverage gate is meaningful."
+18. **~~Seat agents write screenshots to project cwd, not the run dir.~~**
+    CLOSED 2026-04-30 overnight. Three-layer fix landed:
+
+    - `RunDirPaths.screenshotsDir: string` added to `run-directory.ts`;
+      `createRunDirectory` now mkdirs `<runDir>/screenshots`.
+      `seat-factory` and `run-directory.test.ts` updated.
+    - `agent-launcher.ts`: `SCREENSHOTS_DIR` placeholder added to
+      `PLACEHOLDER_NAMES`; `BuildSeatPromptInput` and
+      `BuildLaunchSpecsInput` accept `screenshotsDir`. `buildLaunchSpecs`
+      threads it through to `buildSeatPrompt`.
+      `createAgentLauncherDriver` derives `<runDir>/screenshots`
+      automatically. +1 placeholder-substitution test pinning the
+      `SCREENSHOTS_DIR` resolution.
+    - `seat-scripted.md` + `seat-free-play.md`: SCREENSHOTS section
+      mandates `path: "{{SCREENSHOTS_DIR}}/{{SEAT_ID}}-<ISO-ts>-<short-tag>.png"`
+      with worked example. ANTI-PATTERNS list now flags omitted-path
+      calls. `screenshotHash` field guidance: bare basename only.
+
+    Verification: `pnpm typecheck` clean; 56/56 unit tests pass across
+    `run-directory.test.ts` / `agent-launcher.test.ts` /
+    `seat-factory.test.ts`; `pnpm playtest:phase4-smoke` PASS;
+    `pnpm playtest:phase5-smoke` PASS. Insight 042 captures the
+    related calibration-catalog drift discovery.
+17. **~~Agents log scenario references in vibe-check / ui-spec-divergence
+    entries, NOT formal `scenario-fire` entryType.~~ REDIRECTED 2026-04-30
+    — diagnosis was wrong layer.** The TODO blamed seat-prompt behavior,
+    but `coverage-reporter`'s `firedIds` set comes from
+    `detectFires(catalogPath, eventsJsonlPath, …)` reading
+    `events.jsonl`, NOT from seat-log `scenario-fire` entries
+    (`scripts/playtest/lib/scenario-detector.ts:1161-1178` —
+    `_seatLogPaths` is unused, prefixed with `_`). Whether agents
+    write `scenario-fire` entries is independent of the coverage gate.
+    **Real root cause: catalog drift in
+    `scripts/playtest/fixtures/mini-catalog.md` vs engine event shapes
+    in `src/shared/types.ts:35-65`.** Six scenarios cross-checked
+    against the actual `events.jsonl` from run `2026-04-29-2139-3p`:
+
+    - **SCN-FAVOR-NORMAL-01:** catalog `favor-requested where { playerId, targetId }`
+      → engine `favor-requested { requesterId, targetId }`. Catalog
+      `favor-given where { playerId, recipientId }` → engine
+      `favor-given { giverId, receiverId }`. Both events emitted but
+      tier-1 matcher rejected on `where`-clause mismatch.
+    - **SCN-COMBO-TRIPLE-NAMED-STEAL-NORMAL-01:** catalog `combo-steal where { playerId }`
+      → engine `combo-steal { stealerId, targetId, found, cardType? }`.
+      No combo-steal fired this run regardless.
+    - **SCN-SKIP-NORMAL-01:** catalog `cardType: skip` — there is NO
+      `skip` card type. BURNED's `go-dark` ("End your turn without
+      drawing") IS Skip per `src/shared/card-defs.ts:17`. Plus catalog
+      requires `turn-ended` event which engine never emits.
+    - **SCN-GO-DARK-NORMAL-01:** content collision. Title/prose
+      describe Shuffle ("stack-shuffle with no exposed identities")
+      but `go-dark` is Skip-without-draw, not Shuffle. The actual
+      Shuffle card is `burn-the-files`. Plus catalog requires
+      `shuffle-applied` event; engine emits `deck-shuffled { playerId }`.
+    - **SCN-INTERCEPT-CHAIN-BURN-01:** field shapes match. Didn't
+      fire because no chain-burn was attempted in the session.
+    - **SCN-BURNED-DRAW-AXIS11-01:** field shapes match. May have
+      been blocked by `shape: strict` semantics; needs verification.
+
+    **Secondary drift in agent-launcher.ts:174-191.**
+    `isRolePrimaryInFireSignature` only scans `where.playerId` for
+    `$ACTOR` / `$TARGET`. After fixing catalog field names, this
+    function would no longer recognize seats as ACTOR-primary
+    (since `requesterId: $ACTOR` ≠ `playerId: $ACTOR`), and the
+    seat would receive a one-line pointer instead of the full
+    scenario block. Parallel fix: scan all `where` field values
+    for the sigils.
+
+    **Fix scope NOT yet decided** — judgment-call elements
+    (SCN-GO-DARK semantic intent: Shuffle vs Skip; SCN-SKIP card-type
+    naming) are content decisions that change what the calibration
+    is measuring. See `docs/insights/042-calibration-catalog-field-name-drift-from-engine.md`.
+
+    The mechanical fixes (favor field names, combo-steal field
+    name, shuffle-applied → deck-shuffled, drop turn-ended,
+    agent-launcher role-primary scan) are safe to apply once
+    judgment calls are settled.
 
 ### Phase 6 calibration — product/UX bugs surfaced (independent of harness work)
 

@@ -171,6 +171,7 @@ async function main(): Promise<void> {
     startingSeatIndex: 0,
     scriptedTemplate,
     freePlayTemplate,
+    screenshotsDir: path.join(runDir, 'screenshots'),
   })
 
   console.log('\n[scripted specs]')
@@ -185,6 +186,7 @@ async function main(): Promise<void> {
     sessionTimeoutMs: 180_000,
     scriptedTemplate,
     freePlayTemplate,
+    screenshotsDir: path.join(runDir, 'screenshots'),
   })
 
   console.log('\n[free-play specs]')

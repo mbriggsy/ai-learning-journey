@@ -83,6 +83,57 @@ autonomously would skip Briggsy's verification of the full pipeline
 against real seat agents — recommend booting the retry as the first
 thing next session with eye-in-loop.
 
+### CALIBRATION RETRY ATTEMPT 2026-04-29 evening — PARTIAL: blocked on permissions
+
+Run dir: `docs/testing/playtest/runs/2026-04-29-1958-3p`. Pre-flight
+green. Orchestrator booted, manifest emitted, board view spawned.
+**Fix A from this session validated against real harness:** board
+launcher correctly waited for `[data-player-count="3"]` (not the old
+product-minimum 2) — log line `[board-view-launcher] waiting for 3
+operatives ([data-player-count="3"], timeout 1800000ms)` is the
+direct earth-verification of commit `29ad34cb` against a real
+calibration run.
+
+**Blocker:** all 3 dispatched seat agents failed on first action with
+`mcp__playwright-seat-N__browser_navigate` permission denial.
+`.claude/settings.local.json` has no allowlist for any
+`mcp__playwright-seat-*__browser_*` tool, so each call falls to
+interactive approval — and Briggsy was AFK. Marker touched manually
+to let the orchestrator finalize cleanly (didn't burn the 30-min
+sessionTimeoutMs). Outcome: `success` with `coverage FAILED (fired
+0 / threshold 1)`. verify-calibration: 6/7 PASS — same checks that
+were green for `phase6-launcher-smoke` smokes are now green against
+a real session run-dir, including check 6 (coverage.md renders).
+Check 7 (issues/INDEX.md) failed as expected — no fires → no issues.
+
+This was always the harness contract, not a regression: the seat
+agents are sandboxed via the playwright-seat-N MCP servers per
+insight 031, AND the user-level permission gate is the human-in-loop
+checkpoint for the actual tool calls. Two enforcement layers,
+intentional.
+
+### Permissions blocker — operator decision needed (NEW item)
+
+16. **Pre-approve `mcp__playwright-seat-{1..10}__browser_*` in
+    `.claude/settings.local.json` so the calibration retry can run
+    autonomously, OR commit to running it with Briggsy at the
+    keyboard for first-call approval.** Each seat agent's
+    Playwright-MCP namespace is already structurally bounded (insight
+    031 — per-seat MCP server, `--isolated` browser, narrow
+    frontmatter whitelist that excludes `browser_evaluate`,
+    `browser_run_code`, `browser_console_messages`, `browser_tabs`,
+    `browser_network_requests`). Auto-approving the whitelisted
+    subset (`browser_navigate`, `browser_snapshot`, `browser_click`,
+    `browser_fill_form`, `browser_type`, `browser_press_key`,
+    `browser_wait_for`, `browser_take_screenshot`, `browser_hover`,
+    `browser_select_option`, `browser_close`) would let the
+    orchestrator run hands-off. Risk: those 11 tools × 10 seats =
+    110 pre-approved permissions; any future addition to a seat's
+    tool surface would auto-grant without review. Counter-risk:
+    keeping interactive approval means every calibration run blocks
+    on ~30+ first-touch prompts, making real autonomous runs
+    impossible. Briggsy's call.
+
 ### PRIOR SESSION (2026-04-29 morning) — what shipped
 
 Four Phase 6 calibration items closed plus three product/harness
@@ -324,12 +375,45 @@ What's still missing:
    generalised lesson: orchestrators that poll a UI for state should
    poll for the actual desired state, not a coincidentally-correlated
    signal that diverges under multi-actor timing.
+6.  **Earth verification 2026-04-29 evening (calibration retry attempt
+    `runs/2026-04-29-1958-3p`):** Fix A confirmed working under real
+    harness — orchestrator log shows
+    `[board-view-launcher] waiting for 3 operatives ([data-player-count="3"], timeout 1800000ms)`,
+    refusing to click "Cleared Hot" until the configured roster
+    arrives. Run blocked on a separate issue (item #16 below — MCP
+    permissions); item #6 itself remains closed.
 7. **MCP browser cross-run collision.** When run 1's seat agents are
    still alive and run 2's agents are dispatched, both try to use the
    same `playwright-seat-N` MCP server / browser instance. Run 2's
    navigates step on run 1's state and lose. Operator process gap: cancel
    in-flight agents BEFORE re-dispatching. Worth noting in operator
    runbook.
+16. **MCP playwright-seat permissions blocker — operator decision
+    needed (NEW 2026-04-29 evening).** First autonomous calibration
+    retry attempt (`runs/2026-04-29-1958-3p`) blocked because every
+    seat agent's first `mcp__playwright-seat-N__browser_navigate` call
+    requires interactive user-level permission grant.
+    `.claude/settings.local.json` has no allowlist for
+    `mcp__playwright-seat-*__*` tools. Two paths forward — Briggsy's
+    call:
+    - **Path A (autonomous-friendly):** pre-approve the 11 whitelisted
+      seat tools (`browser_navigate`, `browser_snapshot`,
+      `browser_click`, `browser_fill_form`, `browser_type`,
+      `browser_press_key`, `browser_wait_for`,
+      `browser_take_screenshot`, `browser_hover`,
+      `browser_select_option`, `browser_close`) for seats 1–10 in
+      `.claude/settings.local.json`. 110 entries; future additions to
+      a seat's tool surface auto-grant without review.
+    - **Path B (eye-in-loop):** keep interactive approval; calibration
+      retries always need Briggsy at the keyboard for ~30+ first-touch
+      prompts (3 seats × ~10 unique tools per first session).
+    Insight 031's structural sandbox (per-seat MCP server +
+    `--isolated` browser + narrow frontmatter whitelist that excludes
+    `browser_evaluate`, `browser_run_code`,
+    `browser_console_messages`, `browser_tabs`,
+    `browser_network_requests`) holds either way — Path A is "auto-
+    approve the whitelisted subset that the harness already designed
+    around," not "loosen the sandbox."
 
 ### Phase 6 calibration — product/UX bugs surfaced (independent of harness work)
 

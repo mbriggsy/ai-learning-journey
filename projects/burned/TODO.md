@@ -2,6 +2,64 @@
 
 ## NEXT SESSION — pick up here (2026-04-30+)
 
+### THIS SESSION (2026-04-30 morning) — ISSUES #006/#007 CLOSED (FAVOR-TARGET STAGING BUG)
+
+Briggsy's "in order" pickup, item 2 of 3. Issues #006 + #007 from
+the calibration triage (`runs/2026-04-29-2139-3p`): two seats
+independently found that on the favor-target's phone, single-tap on
+a hand card opened the enlarged preview but a second single-tap on
+the previewed card DISMISSED instead of staging. Players got stuck
+in a preview/dismiss loop with no discoverable confirm path.
+Double-tap was the only working route — undiscoverable on touch.
+
+**Root cause traced.** `Hand.tsx` registered
+`useDoubleTap(handleEnlargedStage, handleEnlargedDismiss)` on the
+**backdrop element**, which received both card and backdrop taps as
+a single 400ms-discriminated event stream. Single-tap-on-card
+resolved as DISMISS instead of STAGE. The fix issue file's
+diagnosis was correct; I traced it independently against the source
+to confirm before editing.
+
+**Fix shipped.** Split the handlers in `Hand.tsx`:
+- Tap on the enlarged card itself = STAGE (with `e.stopPropagation()`
+  so the event does not bubble to the backdrop).
+- Tap on the backdrop area outside the card = dismiss.
+- `useDoubleTap` removed from the enlarged surface; single-tap is
+  enough since the user has already implicitly selected the card by
+  previewing it.
+- Two staging paths remain, both intuitive: double-tap card in hand
+  (fast path) OR single-tap to preview → single-tap to stage
+  (preview path).
+
+**Earth verification.** Live Playwright MCP session against real
+wrangler+vite+game: drove a 2-player game to favor-response state
+on Seat2's phone. Single-tap Dash Barlowe → enlarged preview opens.
+Single-tap enlarged Dash Barlowe → STAGES, hand 8 → 7, "Surrender
+this card to Seat1 →" CTA enables. Click confirm → "Card sent to
+Seat1." toast on Seat2; Seat1's hand grows by 1. End-to-end favor
+flow now traversable via the previously-broken single-tap path.
+Screenshot in temp/ before cleanup; verbal description above.
+
+**Regression contract.** New spec
+`tests/e2e/hand-enlarged-tap-stage.spec.ts` (2 tests): single-tap on
+enlarged card stages it; tap on backdrop area outside card
+dismisses without staging. Both PASS in 9.0s. Full chromium e2e
+suite 11/11 PASS in 42.3s (9 prior + 2 new).
+
+**Side-fix:** `playwright.config.ts` baseURL changed from
+`http://localhost:5173` → `http://127.0.0.1:5173`. On Windows
+`localhost` resolves to `::1` first, where another local vite
+process can squat on IPv6 loopback while BURNED's vite binds
+IPv4 + dual-wildcard. Tests then connected to the wrong dev server
+and silently failed at the first selector. 127.0.0.1 forces IPv4
+and bypasses the race entirely.
+
+**Vibe-check follow-up still open:** the dual-seat
+`feltLikeArcher: no` from the same scenario (issue #010 in the
+triage) is about ACTOR-waiting feedback + TARGET drama beat —
+distinct from the interaction bug fixed here. Tracked separately,
+not blocking item #006/#007 closure.
+
 ### THIS SESSION (2026-04-30 morning) — ITEM #17 CLOSED, CALIBRATION COVERAGE GATE GREEN
 
 Briggsy "go get em tiger"-style on the ordered queue. Item #17

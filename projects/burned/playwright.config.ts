@@ -6,7 +6,12 @@ export default defineConfig({
   retries: 1,
   workers: 2,
   use: {
-    baseURL: 'http://localhost:5173',
+    // 127.0.0.1 forces IPv4. `localhost` resolves to ::1 first on
+    // Windows, where another local vite process can squat on IPv6
+    // loopback (`[::1]:5173`) while BURNED's vite holds IPv4 and
+    // dual-wildcard. Tests then connect to the wrong dev server and
+    // silently fail at the first selector.
+    baseURL: 'http://127.0.0.1:5173',
     headless: true,
     screenshot: 'only-on-failure',
   },

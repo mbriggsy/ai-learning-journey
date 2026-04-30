@@ -57,8 +57,15 @@ export function Hand({ hand, disabled, onStageCard, onCardLongPress }: HandProps
 
   const handleHandTap = useDoubleTap(handleDoubleTapStage, handleSingleTap)
 
-  // --- Enlarged overlay taps: single=dismiss, double=stage ---
-  const handleEnlargedDismiss = useCallback((_id: string) => {
+  // --- Enlarged overlay taps ---
+  // Tap on the card itself = STAGE (commit-by-tap; matches "I previewed,
+  // I'm sure"). Tap on the backdrop area outside the card = dismiss.
+  // Issues #006/#007 (run 2026-04-29-2139-3p): the previous design used
+  // useDoubleTap on the backdrop, which swallowed both card and backdrop
+  // taps as a single 400ms-discriminated event — single-tap-on-card
+  // resolved as DISMISS instead of STAGE, leaving favor-target users
+  // stuck in a preview/dismiss loop with no discoverable confirm path.
+  const handleEnlargedDismiss = useCallback(() => {
     setEnlargedId(null)
   }, [])
 
@@ -68,8 +75,6 @@ export function Hand({ hand, disabled, onStageCard, onCardLongPress }: HandProps
     haptic('light')
     onStageCard(id)
   }, [disabled, onStageCard])
-
-  const handleEnlargedTap = useDoubleTap(handleEnlargedStage, handleEnlargedDismiss)
 
   const startLongPress = useCallback((cardId: string) => {
     longPressFired.current = false
@@ -138,9 +143,7 @@ export function Hand({ hand, disabled, onStageCard, onCardLongPress }: HandProps
               animate={{ opacity: 1 }}
               exit={{ opacity: 0 }}
               transition={MOTION.enter}
-              onPointerUp={(e: React.PointerEvent) => {
-                handleEnlargedTap(enlargedCard.id, e)
-              }}
+              onPointerUp={handleEnlargedDismiss}
             >
               <m.div
                 key={enlargedCard.id}
@@ -155,6 +158,12 @@ export function Hand({ hand, disabled, onStageCard, onCardLongPress }: HandProps
                 animate={{ transform: 'translateY(0px) scale(1)', filter: 'blur(0px)' }}
                 exit={{ transform: 'translateY(120px) scale(0.35)', filter: 'blur(4px)' }}
                 transition={MOTION.snappy}
+                onPointerUp={(e: React.PointerEvent) => {
+                  // stopPropagation so the backdrop's dismiss handler
+                  // does not also fire on this tap.
+                  e.stopPropagation()
+                  handleEnlargedStage(enlargedCard.id)
+                }}
               >
                 <MinimalCard type={enlargedCard.type} />
               </m.div>

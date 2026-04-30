@@ -1,27 +1,20 @@
 /**
- * E2E: Hand enlarged-card-tap stages it; backdrop tap dismisses.
+ * E2E: Hand enlarged-card tap discriminator — single=dismiss, double=stage.
  *
- * Bug as reported by playtest agents (run 2026-04-29-2139-3p, issues
- * #006 + #007, two seats independently): on the favor-target's phone, a
- * single-tap on a hand card opened the enlarged preview, but a second
- * single-tap on the previewed card DISMISSED the preview without
- * staging the card. The staging button stayed disabled. Players were
- * stuck in a preview/dismiss loop with no discoverable confirm path.
+ * REGRESSION CONTRACT for the app's gesture vocabulary:
+ *   - Hand card tap: single = preview, double = stage
+ *   - Enlarged card tap: single = return-to-hand, double = stage
+ *   - StagingArea tap: single = preview, double = unstage
  *
- * Failure mode: `Hand.tsx` registered `useDoubleTap(stage, dismiss)` on
- * the BACKDROP element, which received both card and backdrop taps as
- * a single event stream. Single-tap-on-card resolved as DISMISS instead
- * of STAGE.
+ * The discriminator is universal: single-tap is INSPECT (reversible
+ * peek), double-tap is COMMIT. Do not "fix" the enlarged surface to
+ * commit-on-single-tap — that breaks the contract a user just learned
+ * in the hand. Triage issues #006/#007 (run 2026-04-29-2139-3p) framed
+ * the user-confusion as a tap-semantic bug; it's actually first-time
+ * discoverability friction. The gesture itself is correct.
  *
- * Fix (`src/client/player/Hand.tsx`): split the handlers. Tap on the
- * card itself = STAGE (with `stopPropagation`). Tap on the backdrop
- * area outside the card = dismiss. No more `useDoubleTap` on the
- * enlarged surface; single-tap is enough since the user has already
- * implicitly selected the card by previewing it.
- *
- * The fix applies to ALL hand interactions, not just favor-response —
- * so this spec drives the simpler turn-active path (active seat's own
- * turn, no favor needed). Same code surface; same regression contract.
+ * This spec locks the gesture so a future "fix" against the same triage
+ * pressure can't silently re-invert it.
  */
 import type { Page } from '@playwright/test'
 import { test, expect } from './fixtures'
@@ -44,79 +37,85 @@ async function pickActivePhone(phones: readonly Page[], timeout = 10_000): Promi
   throw new Error('No active phone found within timeout')
 }
 
-test.describe('Hand: enlarged-card tap stages; backdrop tap dismisses (issues #006/#007)', () => {
-  test('single-tap on enlarged card stages it (the broken path now works)', async ({
+async function setupGame(board: Page, phones: readonly Page[], roomCode: string): Promise<Page> {
+  await joinPhone(phones[0]!, roomCode, 'Tester1')
+  await joinPhone(phones[1]!, roomCode, 'Tester2')
+  await waitForPlayerCount(board, 2)
+  await board.locator('button:has-text("Cleared Hot")').click()
+  await waitForPhase(board, 'playing', 10_000)
+  await Promise.all(phones.slice(0, 2).map(p => waitForPhase(p, 'playing', 10_000)))
+  return await pickActivePhone(phones.slice(0, 2))
+}
+
+// Scope to the hand region — staged cards also carry data-type and
+// role=button, so an un-scoped selector would over-count after staging.
+const handCardsLocator = (phone: Page) =>
+  phone.locator('[class*="handSection"]').locator('div[role="button"][data-type]:not([aria-disabled="true"])')
+
+test.describe('Hand: enlarged-card tap discriminator (regression contract)', () => {
+  test('single-tap on enlarged card returns it to the hand (no staging)', async ({
     board,
     phones,
     roomCode,
   }) => {
-    await joinPhone(phones[0]!, roomCode, 'Tester1')
-    await joinPhone(phones[1]!, roomCode, 'Tester2')
-    await waitForPlayerCount(board, 2)
-    await board.locator('button:has-text("Cleared Hot")').click()
-    await waitForPhase(board, 'playing', 10_000)
-    await Promise.all(phones.slice(0, 2).map(p => waitForPhase(p, 'playing', 10_000)))
-    const phone = await pickActivePhone(phones.slice(0, 2))
-
-    // Scope to the hand region — staged cards also carry data-type and
-    // role=button, so the un-scoped selector counted both the un-staged
-    // hand cards AND the staged card after the test action.
-    const handCards = phone.locator('[class*="handSection"]').locator('div[role="button"][data-type]:not([aria-disabled="true"])')
+    const phone = await setupGame(board, phones, roomCode)
+    const handCards = handCardsLocator(phone)
     await handCards.first().waitFor({ state: 'visible', timeout: 10_000 })
     await expect(handCards).toHaveCount(8)
-
-    // Baseline — no backdrop and no staged cards at game start.
     await expect(phone.locator('[class*="enlargeBackdrop"]')).toHaveCount(0)
 
-    // Step 1: single-tap a hand card → enlarged preview opens.
+    // Open preview.
     await handCards.first().click({ force: true })
     await expect(phone.locator('[class*="enlargeBackdrop"]')).toHaveCount(1)
 
-    // Step 2: tap the enlarged card itself — pre-fix this dismissed the
-    // preview without staging. Post-fix it stages.
-    // Center-of-element click lands on the enlarged card, which is
-    // centered inside the backdrop.
+    // Single-tap on the enlarged card → useDoubleTap waits 400ms then
+    // resolves as single → dismiss. Hand stays at 8 (nothing staged).
     await phone.locator('[class*="enlargeCard"]').click({ force: true })
+    await phone.waitForTimeout(600)
+    await expect(phone.locator('[class*="enlargeBackdrop"]')).toHaveCount(0)
+    await expect(handCards).toHaveCount(8)
+  })
 
-    // Backdrop dismisses, hand drops to 7, staging button now enabled.
+  test('double-tap on enlarged card stages it', async ({
+    board,
+    phones,
+    roomCode,
+  }) => {
+    const phone = await setupGame(board, phones, roomCode)
+    const handCards = handCardsLocator(phone)
+    await handCards.first().waitFor({ state: 'visible', timeout: 10_000 })
+    await expect(handCards).toHaveCount(8)
+
+    // Open preview.
+    await handCards.first().click({ force: true })
+    await expect(phone.locator('[class*="enlargeBackdrop"]')).toHaveCount(1)
+
+    // Double-tap on the enlarged card → useDoubleTap fires the double
+    // handler immediately. Hand drops to 7; backdrop dismisses.
+    await phone.locator('[class*="enlargeCard"]').dblclick({ force: true })
     await expect(phone.locator('[class*="enlargeBackdrop"]')).toHaveCount(0)
     await expect(handCards).toHaveCount(7)
   })
 
-  test('tap on backdrop area outside the card dismisses without staging', async ({
+  test('single-tap on backdrop area outside the card dismisses without staging', async ({
     board,
     phones,
     roomCode,
   }) => {
-    await joinPhone(phones[0]!, roomCode, 'Tester1')
-    await joinPhone(phones[1]!, roomCode, 'Tester2')
-    await waitForPlayerCount(board, 2)
-    await board.locator('button:has-text("Cleared Hot")').click()
-    await waitForPhase(board, 'playing', 10_000)
-
-    await Promise.all(phones.slice(0, 2).map(p => waitForPhase(p, 'playing', 10_000)))
-    const phone = await pickActivePhone(phones.slice(0, 2))
-
-    // Scope to the hand region — staged cards also carry data-type and
-    // role=button, so the un-scoped selector counted both the un-staged
-    // hand cards AND the staged card after the test action.
-    const handCards = phone.locator('[class*="handSection"]').locator('div[role="button"][data-type]:not([aria-disabled="true"])')
+    const phone = await setupGame(board, phones, roomCode)
+    const handCards = handCardsLocator(phone)
     await handCards.first().waitFor({ state: 'visible', timeout: 10_000 })
     await expect(handCards).toHaveCount(8)
 
-    // Open the enlarged preview.
+    // Open preview.
     await handCards.first().click({ force: true })
     await expect(phone.locator('[class*="enlargeBackdrop"]')).toHaveCount(1)
 
-    // Tap top-left corner of backdrop, well outside the centered card.
-    // The backdrop is the full viewport via portal-to-body; (10, 60)
-    // lands above the card vertical center. Need `position` arg so
-    // Playwright doesn't auto-center on the card (which IS the
-    // backdrop's only child).
-    const backdrop = phone.locator('[class*="enlargeBackdrop"]')
-    await backdrop.click({ position: { x: 10, y: 60 }, force: true })
-
-    // Backdrop dismisses; hand stays at 8 (nothing staged).
+    // Tap outside the centered card. (10, 60) lands above the card.
+    // `position` arg overrides Playwright's center-of-element default,
+    // which would land on the card (the backdrop's only child).
+    await phone.locator('[class*="enlargeBackdrop"]').click({ position: { x: 10, y: 60 }, force: true })
+    await phone.waitForTimeout(600)
     await expect(phone.locator('[class*="enlargeBackdrop"]')).toHaveCount(0)
     await expect(handCards).toHaveCount(8)
   })

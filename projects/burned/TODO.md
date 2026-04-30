@@ -2,6 +2,78 @@
 
 ## NEXT SESSION — pick up here (2026-04-30+)
 
+### PRIOR SESSION (2026-04-29 late evening) — FIRST END-TO-END CALIBRATION SUCCESS
+
+**Calibration retry attempt #3 (`runs/2026-04-29-2139-3p`) is the first
+end-to-end successful calibration in BURNED history.** Three real seat
+agents joined a 30-minute live game, fired scripted scenarios, logged
+vibe-checks, and surfaced real product findings. `verify-calibration`:
+**7/7 PASS for the first time ever against a real session run-dir** —
+session.md outcome=success · isolation-audit PASS (0 breaches) ·
+events.jsonl 29 lines · 630 myHand entries all `<redacted>` ·
+30 entries across 6 seat files · coverage.md renders · issues/INDEX.md
+present.
+
+**What unblocked it.** Earlier today's Fix A (board launcher waits for
+configured roster, not product minimum) compounded with the **MCP
+permissions fix shipped this session** (commit `63880585` —
+`mcp__playwright-seat-{1..10}__*` allowlisted in
+`.claude/settings.local.json`). Two earlier retry attempts in this
+session bounced because every seat agent's first
+`browser_navigate` call auto-denied: subagents in background mode
+have no foreground UI for prompts, and the global allowlist had
+`mcp__playwright__*` (the original server) but not the hyphenated
+per-seat namespaces (`mcp__playwright-seat-N__*`) added in Phase 6
+Unit 2.5 / insight 031. Closes new item #16.
+
+**Real product findings from the agents (this is the prize):**
+- **SCN-FAVOR-NORMAL-01** — Seat-1 ACTOR + Seat-2 TARGET both vibed
+  **NO**. ACTOR called it "form submission feel"; TARGET called it
+  "database transaction." Real finding for ACTOR: zero feedback that
+  prompt is pending on TARGET's side.
+- **SCN-BURNED-DRAW-AXIS11-01** — Seat-2 ACTOR vibed **YES**, "best
+  beat in the session, genuine tension." DefusePlacement hero card
+  read as tactical decision. The fix landed earlier in the session
+  (item #14 from the morning) is producing the right beat.
+- **SCN-GO-DARK-NORMAL-01** — Seat-1 vibed **UNSURE**, "shuffle
+  invisible on phone, count-only feedback."
+- **SCN-SKIP-NORMAL-01** — Seat-1 ACTOR vibed **YES** ("clean and
+  decisive"); Seat-2 OBSERVER vibed **UNSURE** (no announcement of
+  what was played).
+- **UX discoverability bug:** Seat-2 found that single-tap on a hand
+  card opens an enlarged preview whose backdrop intercepts pointer
+  events, so the staging-button stays unreachable; double-tap is the
+  working stage path. New players will not discover this.
+- **WebSocket drop mid-game:** all three seats observed a ~50s
+  reconnect window followed by `ERR_CONNECTION_REFUSED` near the
+  session timeout — consistent with orchestrator finalize timing,
+  but worth a closer look (insight 036 territory: the harness shut
+  down server while seat browsers were still alive).
+
+**Coverage counter shows `fired 0 / threshold 1` despite the agents
+referencing 4 distinct scenarios in their logs.** The agents put
+scenario references in `vibe-check` and `ui-spec-divergence` entries
+(which carry `relatedScenario`), but the formal `scenario-fire`
+entryType is what `coverage-reporter` counts. Triage clustering still
+picked them up (22 seeds → 22 specs), so the signal isn't lost — it's
+just not being counted in the coverage gate. Small prompt-tuning task
+for next session — see new item #17.
+
+**Triage agents NOT auto-dispatched** (item #1, still open). 22 specs
+under `triage-specs/` but `issues/INDEX.md` shows `Total issues: 0`
+because no `playtest-triage` agent ran on each spec. Next session can
+either dispatch them in a single parallel volley or document the
+manual procedure.
+
+| Commit | Closes | Subject |
+|---|---|---|
+| `29ad34cb` | item #6 | fix(playtest-harness): wait for ALL configured seats before clicking start |
+| `e86a5f92` | item #6 follow-up | fix(join-screen): surface server refusals inline |
+| `8f6233d6` | docs | docs(todo): close item #6 — board launcher gate + JoinScreen inline error |
+| `243be33e` | chore | chore(join-screen): normalize JoinScreen.tsx to LF line endings |
+| `72fda71f` | docs | docs(todo): calibration retry attempt — Fix A earth-verified, blocked on MCP permissions |
+| `63880585` | item #16 | chore(permissions): allowlist mcp__playwright-seat-{1..10}__* for harness seats |
+
 ### PRIOR SESSION (2026-04-29 evening) — what shipped
 
 Item #6 closed end-to-end with the underlying root cause traced and a
@@ -388,32 +460,53 @@ What's still missing:
    navigates step on run 1's state and lose. Operator process gap: cancel
    in-flight agents BEFORE re-dispatching. Worth noting in operator
    runbook.
-16. **MCP playwright-seat permissions blocker — operator decision
-    needed (NEW 2026-04-29 evening).** First autonomous calibration
-    retry attempt (`runs/2026-04-29-1958-3p`) blocked because every
-    seat agent's first `mcp__playwright-seat-N__browser_navigate` call
-    requires interactive user-level permission grant.
-    `.claude/settings.local.json` has no allowlist for
-    `mcp__playwright-seat-*__*` tools. Two paths forward — Briggsy's
-    call:
-    - **Path A (autonomous-friendly):** pre-approve the 11 whitelisted
-      seat tools (`browser_navigate`, `browser_snapshot`,
-      `browser_click`, `browser_fill_form`, `browser_type`,
-      `browser_press_key`, `browser_wait_for`,
-      `browser_take_screenshot`, `browser_hover`,
-      `browser_select_option`, `browser_close`) for seats 1–10 in
-      `.claude/settings.local.json`. 110 entries; future additions to
-      a seat's tool surface auto-grant without review.
-    - **Path B (eye-in-loop):** keep interactive approval; calibration
-      retries always need Briggsy at the keyboard for ~30+ first-touch
-      prompts (3 seats × ~10 unique tools per first session).
-    Insight 031's structural sandbox (per-seat MCP server +
-    `--isolated` browser + narrow frontmatter whitelist that excludes
-    `browser_evaluate`, `browser_run_code`,
+16. **~~MCP playwright-seat permissions blocker.~~** CLOSED
+    2026-04-29 late evening by commit `63880585`. Briggsy chose Path A
+    — `.claude/settings.local.json` now has 10 explicit
+    `mcp__playwright-seat-N__*` entries (one per seat). Earth
+    verification: calibration retry attempt #3 ran end-to-end with all
+    three seat agents successfully navigating, snapshotting, clicking,
+    and writing logs. Subagents in background mode no longer auto-deny
+    — the allowlist match auto-approves silently as designed.
+    Sandboxing remains intact via the agent-frontmatter `tools:`
+    whitelist (still excludes `browser_evaluate`, `browser_run_code`,
     `browser_console_messages`, `browser_tabs`,
-    `browser_network_requests`) holds either way — Path A is "auto-
-    approve the whitelisted subset that the harness already designed
-    around," not "loosen the sandbox."
+    `browser_network_requests`).
+18. **Seat agents write screenshots to project cwd, not the run dir
+    (NEW 2026-04-29 late evening).** Run `2026-04-29-2139-3p` left 9
+    untracked PNGs (`page-2026-04-30T*.png`, `seat3-*.png`) in the
+    project root, polluting `git status`. Cause: the seat agent's
+    `browser_take_screenshot` calls don't specify a path, so the MCP
+    Playwright server writes to the cwd (project root). Squeaky-clean
+    moved them to `runs/2026-04-29-2139-3p/screenshots/` (where the
+    run dir's gitignore catches them). Fix: thread an explicit
+    `path` arg into `browser_take_screenshot` calls, or update the
+    seat-prompt template to mandate a path under the seat's run dir.
+    The one referenced screenshot (`page-2026-04-30T01-49-favor-
+    target.png`, in seat-2's suspicions as a `screenshotHash`) is
+    preserved in the new location — but if triage tools assume cwd,
+    update them in lockstep.
+17. **Agents log scenario references in vibe-check / ui-spec-divergence
+    entries, NOT formal `scenario-fire` entryType (NEW
+    2026-04-29 late evening).** Run `2026-04-29-2139-3p` produced
+    `coverage: fired 0 / threshold 1` despite the agents observably
+    firing 4 distinct catalog scenarios (SCN-FAVOR, SCN-GO-DARK,
+    SCN-SKIP, SCN-BURNED-DRAW-AXIS11-01) and triage clustering 22
+    seeds with proper scenario IDs. Root cause: the agents' inner-loop
+    prompt teaches them four entryTypes (`scenario-fire`, `suspicion`,
+    `vibe-check`, `ui-spec-divergence`), and they correctly use the
+    latter three with `relatedScenario` fields — but they don't write
+    the standalone `scenario-fire` entry that the coverage counter
+    looks for. Fix path: clarify in `seat-scripted.md` template that
+    every catalog-scenario observation MUST start with a
+    `scenario-fire` entry in the seat log file (`seat-N.log.md`)
+    before any related vibe-check or divergence entry in the
+    suspicions file. Or, alternative: change `coverage-reporter` to
+    count any `relatedScenario` reference, not just `scenario-fire`
+    (probably wrong — coverage is meant to count actual exercises,
+    not just observations). Worth ~10 minutes of prompt tuning + one
+    smoke run to validate. Note: this is the LAST gap between "the
+    harness ran" and "the coverage gate is meaningful."
 
 ### Phase 6 calibration — product/UX bugs surfaced (independent of harness work)
 

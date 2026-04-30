@@ -50,6 +50,40 @@ From the answers, Claude synthesizes:
 
 ---
 
+## Lock-In Interview
+
+**What:** When an informal standard keeps showing up across sessions, promote it from scattered memory into the always-on manifesto via a structured 6-question interview that extracts the substance Claude needs to carry it correctly.
+
+**When:** A phrase or discipline has appeared 3+ times, you've watched it slip in past sessions, and you want it loaded at the top of every future session as non-negotiable. Examples: *"water beads off it,"* *"runtime truth ≫ unit tests,"* *"verify before you claim done."*
+
+**How:** Tell Claude *"interview me to lock [phrase] into the manifesto."* Claude runs 6 questions, ONE AT A TIME:
+
+1. **Origin** — where does this come from? What project crystallized it? Anchors the phrase in lineage so Claude carries it harder than an abstract rule.
+2. **Literal image** — what am I actually seeing or feeling when I say it? Forces a concrete render, not a vibe. *("Water on a deep-gloss car hood, sexy silhouette in the back"* beats *"polished"* by miles.)
+3. **Failure mode** — what am I usually correcting when I invoke this? Names what the violation looks like, so Claude knows what to scan for.
+4. **Self-check question** — what line do I run before claiming done? The trigger Claude installs in its own loop.
+5. **Bar vs. shipping** — is over-polish ever an enemy, or is more always more? Resolves the implicit shipping tension that contaminates most engineering work.
+6. **Catch-all + voice** — verbatim words to preserve, references to keep, what I want Claude to feel when it misses the bar. Locks tone and register, not just the rule.
+
+Claude then drafts 2-3 variants (tighter vs. richer, folded-in vs. standalone section), I pick one, Claude edits `~/.claude/manifesto/elite-engineer.md` and verifies the SessionStart hook actually injects the new content end-to-end.
+
+**Aftermath:** Trim the related memory file to a **receipt** (origin + date + pointer to manifesto). Don't duplicate the disposition — manifesto carries it now. Stale memory entries get deleted along with their `MEMORY.md` index lines. Clean separation of roles: manifesto = always-on disposition, memory = historical receipt.
+
+**Why it matters:** Memory is index-loaded as one-line pointers; the substance only reaches Claude if Claude opens the file. Manifesto is loaded in full every session via SessionStart hook. Promoting a standard from memory to manifesto turns *"Claude might remember this"* into *"Claude reads this before any first action."*
+
+The interview also captures something a paraphrase can't — verbatim words, references, emotional register. The manifesto then carries YOUR voice, not Claude's interpretation of it.
+
+**One-question-at-a-time is non-negotiable.** Batched questions get shallow answers; sharp answers come from focused ones.
+
+**Origin:** 2026-04-29. Locked *"so fucking slick that water beads off it"* into the manifesto using this exact pattern. Six questions produced six concrete substance points (UMB origin, car-hood image, pixel-perfect failure mode, the WOW/AI-disappears self-check, no-shipping-pressure axiom, partnership register). Two stale memory files were trimmed to one UMB receipt. The pattern was clean enough to earn its own playbook entry the same session.
+
+**Related:**
+- `Quality Bar First` (sibling workflow) — sets a NEW project's bar with 4 questions about destination. This pattern promotes an EXISTING informal standard to manifesto-level.
+- Manifesto section *"SO FUCKING SLICK THAT WATER BEADS OFF IT"* — first artifact produced by this workflow.
+- `project_umb_water_beads_origin.md` in Claude's memory carries the receipt.
+
+---
+
 ## Debate-Pushback
 
 **What:** When Claude has a strong position, engage the debate. When you have a strong position, push back instead of accepting fast.

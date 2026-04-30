@@ -206,6 +206,43 @@ describe('renderScriptedCatalogForRole', () => {
     expect(out).toContain('- **SCN-ACTOR-01**')
     expect(out).toContain('TARGET; flag anything strange')
   })
+
+  it('detects role-primary on non-playerId field names (insight 042)', () => {
+    // Engine event payloads use role-specific field names: `requesterId`
+    // for favor, `giverId` / `receiverId` for favor-given, `stealerId` for
+    // combo-steal. Scanning only `where.playerId` collapsed primary-role
+    // detection to a one-line pointer once the catalog adopted real
+    // engine field names. Regression contract: any where-field value of
+    // `$ACTOR` / `$TARGET` is sufficient.
+    const FAVOR_SCENARIO = scenario({
+      id: 'SCN-FAVOR-01',
+      title: 'Favor with engine field names',
+      events: [
+        { type: 'favor-requested', where: { requesterId: '$ACTOR', targetId: '$TARGET' } },
+        { type: 'favor-given', where: { giverId: '$TARGET', receiverId: '$ACTOR' } },
+      ],
+      triggerConditions: 'ACTOR plays favor.',
+      vibeCheck: 'Did the exchange land?',
+      infoGap: {
+        SERVER: presence(true, true, 's1', 's2'),
+        ACTOR: presence(true, true, 'actor c1', 'actor c2 favor'),
+        TARGET: presence(true, true, 'target c1', 'target c2 favor'),
+        OTHER_ALIVE: presence(true, true, 'o1', 'o2'),
+        SPECTATOR: presence(false, false),
+        DISCONNECTED: presence(false, false),
+        BOARD: presence(true, true, 'b1', 'b2'),
+      },
+    })
+    const actorOut = renderScriptedCatalogForRole([FAVOR_SCENARIO], 'ACTOR')
+    expect(actorOut).toContain('You are ACTOR on this scenario.')
+    expect(actorOut).toContain('actor c2 favor')
+    expect(actorOut).not.toMatch(/^- \*\*SCN-FAVOR-01\*\*/m)
+
+    const targetOut = renderScriptedCatalogForRole([FAVOR_SCENARIO], 'TARGET')
+    expect(targetOut).toContain('You are TARGET on this scenario.')
+    expect(targetOut).toContain('target c2 favor')
+    expect(targetOut).not.toMatch(/^- \*\*SCN-FAVOR-01\*\*/m)
+  })
 })
 
 // -----------------------------------------------------------------------------

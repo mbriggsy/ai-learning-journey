@@ -183,19 +183,21 @@ function isRolePrimaryInFireSignature(
   scn: ParsedScenario,
   role: ViewerRole,
 ): boolean {
-  if (role === 'ACTOR') {
-    return scn.events.some(
-      (e) =>
-        typeof e.where?.playerId === 'string' && e.where.playerId === '$ACTOR',
+  // Engine event payloads use role-specific field names — `requesterId`,
+  // `giverId`, `receiverId`, `stealerId`, etc. — not a uniform `playerId`.
+  // Scan ALL where-field values for the sigil; restricting to
+  // `where.playerId` was the secondary drift surfaced in insight 042 and
+  // collapsed primary-role recognition to a one-line pointer once the
+  // catalog adopted the real engine field names.
+  if (role !== 'ACTOR' && role !== 'TARGET') return false
+  const sigil = role === 'ACTOR' ? '$ACTOR' : '$TARGET'
+  return scn.events.some((e) => {
+    const where = e.where
+    if (where === undefined || where === null) return false
+    return Object.values(where).some(
+      (v) => typeof v === 'string' && v === sigil,
     )
-  }
-  if (role === 'TARGET') {
-    return scn.events.some(
-      (e) =>
-        typeof e.where?.playerId === 'string' && e.where.playerId === '$TARGET',
-    )
-  }
-  return false
+  })
 }
 
 function renderFullScenarioBlock(

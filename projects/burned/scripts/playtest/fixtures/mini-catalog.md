@@ -30,9 +30,9 @@ reproduce these issues.
 ```yaml
 events:
   - type: favor-requested
-    where: { playerId: $ACTOR, targetId: $TARGET }
+    where: { requesterId: $ACTOR, targetId: $TARGET }
   - type: favor-given
-    where: { playerId: $TARGET, recipientId: $ACTOR }
+    where: { giverId: $TARGET, receiverId: $ACTOR }
 shape: contains
 projection-assertions:
   - viewer: $TARGET
@@ -97,7 +97,7 @@ events:
   - type: card-played
     where: { playerId: $ACTOR, comboSize: 3 }
   - type: combo-steal
-    where: { playerId: $ACTOR, targetId: $TARGET }
+    where: { stealerId: $ACTOR, targetId: $TARGET }
 shape: contains
 projection-assertions:
   - viewer: $TARGET
@@ -216,7 +216,7 @@ visible.
 
 ---
 
-### SCN-SKIP-NORMAL-01 — Skip ends turn cleanly without draw
+### SCN-GO-DARK-NORMAL-01 — Go Dark ends turn cleanly without draw
 
 **Category:** Action cards
 **Axes:** 1 (Normal play)
@@ -225,22 +225,20 @@ visible.
 **Min viewport:** any
 
 **Trigger conditions:**
-- ACTOR plays a `skip` card on their turn.
+- ACTOR plays a `go-dark` card on their turn.
 - No Intercept is played before the nope window expires.
 
 **Fire signature:**
 ```yaml
 events:
   - type: card-played
-    where: { playerId: $ACTOR, cardType: skip }
-  - type: turn-ended
-    where: { playerId: $ACTOR }
+    where: { playerId: $ACTOR, cardType: go-dark }
   - type: turn-started
 shape: contains
 projection-assertions:
   - viewer: $ACTOR
     field: myHand
-    expect: unchanged size after Skip resolves (no draw fires)
+    expect: unchanged size after Go Dark resolves (no draw fires)
 ```
 
 **Info gap at decision point:**
@@ -250,22 +248,23 @@ projection-assertions:
 | SERVER | `turnsRemaining` decremented; next player's turn started; ACTOR did not draw. | Same. |
 | ACTOR | `myHand` size unchanged; turn handoff banner. | Clean hand-off; no phantom draw beat. |
 | TARGET | N/A. | N/A. |
-| OTHER (alive) | Public `card-played skip` + `turn-ended` + `turn-started` events. | Turn moves visibly. |
+| OTHER (alive) | Public `card-played go-dark` + `turn-started` (next player). | Turn moves visibly. |
 | SPECTATOR | Same as OTHER. | Same. |
 | DISCONNECTED | Nothing real-time. | Mid-turn disconnect lands on B-13 surface. |
 | BOARD | Turn handoff animation. | Status strip transitions cleanly. |
 
 **Vibe check:**
-Did the Skip feel decisive — your turn ended cleanly without drawing — or
+Did Go Dark feel decisive — your turn ended cleanly without drawing — or
 did the UI suggest a phantom draw before the handoff?
 
 **Why this matters:**
-Skip is the simplest turn-ending non-draw action. If the active player
-disconnects mid-Skip resolve, the B-13 surface area is in play.
+Go Dark is the simplest turn-ending non-draw action (Skip in vanilla EK).
+If the active player disconnects mid-resolve, the B-13 surface area is
+in play.
 
 **Agent recognition criteria:**
-You know you hit this scenario when, as ACTOR, you played Skip, your hand
-size did not change, and the next player's status bar lit up.
+You know you hit this scenario when, as ACTOR, you played Go Dark, your
+hand size did not change, and the next player's status bar lit up.
 
 **Suspicion prompts:**
 - ACTOR: "Did your turn end without drawing? Was the hand-off legible?"
@@ -276,7 +275,7 @@ size did not change, and the next player's status bar lit up.
 
 ---
 
-### SCN-GO-DARK-NORMAL-01 — Go Dark stack-shuffle with no exposed identities
+### SCN-BURN-THE-FILES-NORMAL-01 — Burn the Files stack-shuffle with no exposed identities
 
 **Category:** Action cards
 **Axes:** 1 (Normal play), 11 (Information visibility)
@@ -285,15 +284,16 @@ size did not change, and the next player's status bar lit up.
 **Min viewport:** any
 
 **Trigger conditions:**
-- ACTOR plays a `go-dark` (Shuffle) card.
+- ACTOR plays a `burn-the-files` (Shuffle) card.
 - Draw pile has ≥2 cards.
 
 **Fire signature:**
 ```yaml
 events:
   - type: card-played
-    where: { playerId: $ACTOR, cardType: go-dark }
-  - type: shuffle-applied
+    where: { playerId: $ACTOR, cardType: burn-the-files }
+  - type: deck-shuffled
+    where: { playerId: $ACTOR }
 shape: contains
 projection-assertions:
   - viewer: $ACTOR
@@ -301,8 +301,8 @@ projection-assertions:
     expect: cleared after applyShuffle
 inference: |
   applyShuffle clears pendingFuture. Any future card mutating draw-pile
-  order must do the same — Intel + Go-Dark same-turn left stale IDs
-  in pendingFuture before the fix.
+  order must do the same — Intel Briefing + Burn the Files same-turn
+  left stale IDs in pendingFuture before the fix.
 ```
 
 **Info gap at decision point:**
@@ -312,7 +312,7 @@ inference: |
 | SERVER | drawPile shuffled; `pendingFuture` cleared. | Same. |
 | ACTOR | No card identities exposed to anyone (the entire point). | Cinematic shuffle beat. |
 | TARGET | N/A. | N/A. |
-| OTHER (alive) | Public `card-played go-dark` + `shuffle-applied`. | Shuffle visible without card-identity leak. |
+| OTHER (alive) | Public `card-played burn-the-files` + `deck-shuffled`. | Shuffle visible without card-identity leak. |
 | SPECTATOR | Same as OTHER. | Same. |
 | DISCONNECTED | Nothing real-time. | Reconnect lands post-shuffle. |
 | BOARD | Shuffle animation on draw pile. | Pile riffles, cards face-down throughout. |
@@ -322,12 +322,14 @@ Did the shuffle feel like the deck got scrambled — not a card-by-card
 animation that risked exposing identities?
 
 **Why this matters:**
-Go-Dark mid-Intel is the canonical pendingFuture-clearing test. The
-B-04 (defuse-pending) cluster includes adjacent state-clearing rules.
+Burn the Files mid-Intel Briefing is the canonical pendingFuture-clearing
+test. The B-04 (defuse-pending) cluster includes adjacent state-clearing
+rules.
 
 **Agent recognition criteria:**
-You know you hit this scenario when, as ACTOR, you played Go Dark and the
-draw pile visibly shuffled with no card identities exposed at any point.
+You know you hit this scenario when, as ACTOR, you played Burn the Files
+and the draw pile visibly shuffled with no card identities exposed at
+any point.
 
 **Suspicion prompts:**
 - ACTOR: "Did any card identity leak during the shuffle animation?"

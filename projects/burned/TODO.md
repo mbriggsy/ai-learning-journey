@@ -2,6 +2,82 @@
 
 ## NEXT SESSION — pick up here (2026-04-30+)
 
+### THIS SESSION (2026-04-30 morning) — ITEM #17 CLOSED, CALIBRATION COVERAGE GATE GREEN
+
+Briggsy "go get em tiger"-style on the ordered queue. Item #17
+(catalog drift) closed end-to-end with the judgment call resolved
+on-the-fly: it was a false dichotomy. Both scenarios are valuable;
+they were misnamed against engine card types.
+
+**The judgment call I framed last night was wrong.**
+- `SCN-SKIP-NORMAL-01` referenced `cardType: skip` (doesn't exist).
+  The behavior under test (turn ends without draw) IS the canonical
+  Skip behavior, and BURNED's name for that card is `go-dark`. So
+  the scenario was always testing Go Dark — the catalog just had the
+  wrong cardType identifier. **Renamed: SCN-GO-DARK-NORMAL-01.**
+- Old `SCN-GO-DARK-NORMAL-01`'s prose described Shuffle ("stack-
+  shuffle with no exposed identities", "applyShuffle clears
+  pendingFuture") but its cardType said `go-dark`, which is Skip.
+  The actual Shuffle card in BURNED is `burn-the-files`. The author
+  conflated the BURNED card name "Go Dark" with the colloquial idea
+  of obscuring/scrambling. **Renamed: SCN-BURN-THE-FILES-NORMAL-01.**
+
+Both scenarios survive, both test what they were intended to test,
+and the names now match the actual cards in `card-defs.ts`. The
+production catalog (`SCENARIOS.md`) already has SCN-GO-DARK-NORMAL-01
+done correctly — the mini-catalog now matches.
+
+**Mechanical drifts fixed in same edit:**
+- favor-requested: `playerId` → `requesterId`
+- favor-given: `playerId` → `giverId`, `recipientId` → `receiverId`
+- combo-steal: `playerId` → `stealerId`
+- `shuffle-applied` → `deck-shuffled`
+- Dropped non-existent `turn-ended` event from SCN-GO-DARK-NORMAL-01
+  fire signature (engine uses next player's `turn-started` as the
+  handoff signal).
+
+**Parallel fix in `agent-launcher.ts`:**
+`isRolePrimaryInFireSignature` now scans ALL `where`-field VALUES
+for `$ACTOR` / `$TARGET` sigils, not just `where.playerId`. Without
+this, the catalog renames would have collapsed primary-role
+recognition to a one-line pointer for every favor / combo-steal
+scenario. +1 regression test pinning the contract against
+`requesterId: '$ACTOR'`.
+
+**Earth verification — `detectFires` replay against saved
+`events.jsonl` from `runs/2026-04-29-2139-3p`:**
+
+| Scenario | Tier-1 | Match |
+|---|---|---|
+| SCN-FAVOR-NORMAL-01 | pass | with-divergence (tier-2 — issue #019) |
+| SCN-COMBO-TRIPLE-NAMED-STEAL-NORMAL-01 | fail | no-fire (no triple in session) |
+| SCN-INTERCEPT-CHAIN-BURN-01 | fail | no-fire (no intercepts in session) |
+| SCN-GO-DARK-NORMAL-01 | pass | with-divergence (tier-2) |
+| SCN-BURN-THE-FILES-NORMAL-01 | pass | with-divergence (tier-2) |
+| SCN-BURNED-DRAW-AXIS11-01 | pass | with-divergence (tier-2) |
+
+**Coverage: `fired 4 / threshold 1` — primary gate PASSES.**
+Previous coverage on the SAME events.jsonl was `fired 0 / threshold 1`.
+Mechanical proof that catalog-vs-engine drift was the root cause.
+
+The 4 with-divergence fires all fail at tier-2 because of the
+placeholder substitution + redacted-myHand defects already triaged as
+issue #019. Separate work, not regression.
+
+The 2 no-fire scenarios are correct: agents didn't play a triple-
+of-a-kind combo or any intercepts in the calibration session.
+Matcher reporting truth.
+
+**Test surface:** typecheck clean · 1095/1095 unit tests (+1 from
+prior 1094: agent-launcher role-primary regression test) ·
+`pnpm playtest:phase4-smoke` PASS · `pnpm playtest:phase5-smoke`
+PASS · earth replay through `detectFires` against the prior run's
+saved events.jsonl confirms 4 real fires.
+
+**Insight 042 status:** redirected → CLOSED. Both layers fixed
+(catalog field names + agent-launcher role-primary scan). Judgment
+call resolved with renames; both scenarios kept.
+
 ### PRIOR SESSION (2026-04-30 overnight, autonomous) — TRIAGE + #18 + REAL #17 ROOT CAUSE
 
 While Briggsy slept, three queue items moved.
@@ -57,20 +133,13 @@ add concrete file:line root causes:
   run-directory / agent-launcher / seat-factory; phase4-smoke +
   phase5-smoke both PASS.
 
-**Item #17 — REDIRECTED, not closed.** Original diagnosis was wrong
-layer (it blamed seat-prompt behavior, but `coverage-reporter` reads
-`events.jsonl`, not seat logs). Real root cause is **catalog drift**
-in `scripts/playtest/fixtures/mini-catalog.md` — multiple field-name
-and event-name mismatches vs the engine's actual emitted events
-(favor uses `requesterId`/`giverId`/`receiverId`, not
-`playerId`/`recipientId`; combo-steal uses `stealerId`; cardType
-`skip` doesn't exist; `shuffle-applied` doesn't exist; `turn-ended`
-doesn't exist). Plus a parallel drift in `agent-launcher.ts:174-191`
-that scans only `where.playerId` for sigils. Full diagnosis in
-`docs/insights/042-calibration-catalog-field-name-drift-from-engine.md`
-and TODO item #17 below. **Judgment-call elements (SCN-GO-DARK
-content intent: Shuffle vs Skip; SCN-SKIP cardType naming) need
-Briggsy decision before mechanical fix.**
+**Item #17 — REDIRECTED then CLOSED 2026-04-30 morning.** Original
+diagnosis was wrong layer (it blamed seat-prompt behavior, but
+`coverage-reporter` reads `events.jsonl`, not seat logs). Real root
+cause was **catalog drift** in `scripts/playtest/fixtures/mini-catalog.md`
+— field-name and event-name mismatches vs the engine plus a parallel
+drift in `agent-launcher.ts`. Closed in the next session — see
+"THIS SESSION (2026-04-30 morning)" entry above.
 
 ### PRIOR SESSION (2026-04-29 late evening) — FIRST END-TO-END CALIBRATION SUCCESS
 
@@ -574,7 +643,12 @@ What's still missing:
     related calibration-catalog drift discovery.
 17. **~~Agents log scenario references in vibe-check / ui-spec-divergence
     entries, NOT formal `scenario-fire` entryType.~~ REDIRECTED 2026-04-30
-    — diagnosis was wrong layer.** The TODO blamed seat-prompt behavior,
+    morning, then CLOSED same day. Catalog field-name drift fixed; both
+    scenarios renamed to match engine card types; agent-launcher
+    role-primary scan widened to all where-field values; `detectFires`
+    replay against the prior run's saved events.jsonl now reports
+    `fired 4 / threshold 1` (was 0 / 1) — primary gate GREEN.** The TODO
+    blamed seat-prompt behavior,
     but `coverage-reporter`'s `firedIds` set comes from
     `detectFires(catalogPath, eventsJsonlPath, …)` reading
     `events.jsonl`, NOT from seat-log `scenario-fire` entries

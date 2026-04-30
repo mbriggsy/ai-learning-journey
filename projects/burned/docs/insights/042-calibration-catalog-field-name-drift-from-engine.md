@@ -2,7 +2,7 @@
 
 **Date:** 2026-04-30
 **Discovered while:** Investigating TODO item #17 (`fired 0 / threshold 1` in `runs/2026-04-29-2139-3p` despite agents observably exercising 4 distinct catalog scenarios).
-**Status:** Diagnosed; fix scope NOT yet decided (judgment-call elements need Briggsy in-loop).
+**Status:** CLOSED 2026-04-30 morning. Catalog renames + agent-launcher role-primary fix landed; `detectFires` replay against the prior run's saved `events.jsonl` reports `fired 4 / threshold 1` (was 0). The "judgment call" framing was a false dichotomy — both scenarios kept, renamed to match engine card types (`SCN-SKIP-NORMAL-01` → `SCN-GO-DARK-NORMAL-01`; old `SCN-GO-DARK-NORMAL-01` → `SCN-BURN-THE-FILES-NORMAL-01`).
 
 ## Symptom
 

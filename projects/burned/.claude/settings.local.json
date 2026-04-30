@@ -16,7 +16,17 @@
       "Bash(git push *)",
       "Bash(git push)",
       "Bash(rm -rf temp/* .playwright-mcp test-results playwright-report)",
-      "Bash(mkdir -p temp)"
+      "Bash(mkdir -p temp)",
+      "mcp__playwright-seat-1__*",
+      "mcp__playwright-seat-2__*",
+      "mcp__playwright-seat-3__*",
+      "mcp__playwright-seat-4__*",
+      "mcp__playwright-seat-5__*",
+      "mcp__playwright-seat-6__*",
+      "mcp__playwright-seat-7__*",
+      "mcp__playwright-seat-8__*",
+      "mcp__playwright-seat-9__*",
+      "mcp__playwright-seat-10__*"
     ]
   }
 }

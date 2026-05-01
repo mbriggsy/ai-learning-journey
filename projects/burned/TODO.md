@@ -2,7 +2,222 @@
 
 ## NEXT SESSION — pick up here (2026-05-01+)
 
-### THIS SESSION (2026-05-01) — TRIAGE QUEUE SWEEP: 6 commits, 8 issues closed
+### THIS SESSION (2026-05-01 evening) — sub-step #3, phone polish, Phase 6 #8, #019, operator docs, calibration retry
+
+Five commits this session, all green at squeaky time:
+
+| Commit | Subject |
+|---|---|
+| `98b8e1ae` | feat(burned-arc): close sub-step #3 — hero Burned card + sheet UI unification |
+| `f4ee5542` | feat(phone-polish): destage auto-scroll + DefusePlacement copy refinements |
+| `41b7032f` | feat(playtest): close Phase 6 follow-up #8(a)/#8(b) — agent tool whitelist contract tests |
+| `792829b1` | feat(playtest): close triage #019 — placeholder substitution + prose-expect skip in tier-2 |
+| `d3173520` | docs(playtest): document MCP cross-run collision in operator runbook |
+
+**Sub-step #3 — DefusePlacement hero card.** Three changes in one ship:
+hero the Burned MinimalCard at the top of the placement sheet (visual
+continuity from BURNED → EXTRACTED drama into the placement decision);
+unify on the stepper UI for every deck size (previous `maxPosition >= 10`
+branch removed — the mid-game UI swap broke muscle memory during a
+stressful "I just dodged death" moment); hide BottomSheet scrollbars
+(chrome only — content still scrolls). Earth-verified at 390×844 phone
+viewport for both `drawPileCount=29` and `=5`. Read order: title → hero
+→ subtitle → quick actions → stepper → Place Here.
+
+**Phone polish bundle.** Destage auto-scroll: when a single card joins
+the hand (destage or fresh draw), the hand scrolls horizontally so the
+new slot centers in view. Pairs with the existing Framer `layoutId`
+flight — card flies from staging while the hand scrolls to receive
+it; they meet at center. Manual `scrollTo` on `handRef` (not
+`scrollIntoView`) so page-level ancestors don't scroll. Skipped
+during initial deal + when multiple cards arrive at once (rejoin
+case). Plus DefusePlacement copy refinements: dynamic Place button
+("Place at top" / "Place at #3" / "Place at bottom" mirrors stepper
+state); drop "first" from position caption ("2 safe draws first" →
+"2 safe draws").
+
+**Phase 6 follow-up #8 fully closed.** New vitest contract test at
+`scripts/playtest/lib/agent-tool-whitelist.test.ts` (33 assertions)
+replaces the manual "DEFERRED CONTRACT TEST" notes in
+`phase4-smoke.ts` / `phase5-smoke.ts`. Per-seat agents (1..10):
+exactly the 11 expected MCP browser tools + Write, no forbidden
+tools (`browser_evaluate` / `browser_run_code` /
+`browser_console_messages` / `browser_network_request[s]` /
+`browser_tabs`), no cross-seat namespaces. Triage agent: exactly
+Read / Write / Grep / Glob / sequential-thinking, no MCP playwright,
+no Bash / Edit / NotebookEdit. Discovered 8(c)/8(d)/8(e) were already
+shipped during phase 6 wiring (`run-session.ts` defaults
+`runPostSessionTriage` → `runTriagePipeline`, `seatDriver` →
+`createAgentLauncherDriver`; orchestrator defaults `runIsolationAudit`
+to the real implementation at `orchestrator.ts:439`).
+
+**Triage #019 closed — both halves.** Two related defects in
+tier-2 projection-assertion matching, surfaced by run
+`2026-04-29-2139-3p` where 4 fires landed with-divergence not because
+the engine was wrong but because the matcher couldn't validate the
+catalog's expect clauses:
+- **Placeholder substitution.** New `substituteBindings(value, bindings)`
+  recursively walks expect values and replaces `$ACTOR` / `$TARGET`
+  with the resolved seat IDs before `expectMatches`. Tier-1 already
+  did this via `bindings`; tier-2 didn't.
+- **Prose expect skip.** New `isProseExpect(value)` heuristic (string
+  with whitespace, not starting with `$`) treats free-form English
+  expect values as documentation, surfaces them as informational
+  divergences, and does NOT count them toward the failure gate.
+  Engine values (UUIDs, kebab-case card types) never contain
+  whitespace, so the heuristic is safe.
+- +4 regression tests in `scenario-detector.test.ts`. **Verified
+  in production this session** — calibration retry coverage.md shows
+  `expected={"playerId":"26b21187-..."}` (substitution active) and
+  `tier-2 SKIPPED (prose expect, not machine-checked)` (skip active).
+
+**Operator runbook §7 — MCP cross-run collision.** Documented in
+`scripts/playtest/README.md`: per-seat MCP servers are long-lived and
+shared across whichever agent currently holds them. Cancel in-flight
+agents BEFORE dispatching another run, or run 2's calls land on the
+same browser as run 1 and both runs' logs become unreliable. Symptom
+list + operator process + future-hardening note.
+
+**Calibration retry — `runs/2026-05-01-1654-3p` — 7/7 PASS.** First
+end-to-end retry on the new (post-#019) matcher. 3 seats, mini-catalog,
+seed 1. Game played to completion. Coverage: 4 distinct fires (FAVOR,
+GO-DARK, BURN-THE-FILES, BURNED-DRAW; FAVOR fired twice). Triage: 10
+seeds → 10 issue files → INDEX regenerated.
+
+**Validation of prior + this session's work in real seat play:**
+- Sub-step #3 hero card lands cleanly — Seat-3 hit BURNED-DRAW, picked
+  Random, vibed yes
+- FavorReport "Coercion Report" cinematic (last session #010 Gap C)
+  called out unprompted by Seat-1 as "highest-quality narrative beat
+  observed"
+- Asymmetric stamp colors (orange SURRENDERED / red EXTRACTED) noted
+  as "strong design detail"
+- "Seat2 coerces Seat1 · favor pending" copy from last session #005
+  rendered correctly
+- #019 fix verified active in coverage.md output (placeholder
+  substitution + prose-skip both visible)
+
+**Findings (10 issues):** 3 OPEN · 5 KNOWN-PRODUCT-CALL-CONFIRMED ·
+2 LOW-SIGNAL. By severity: 0 P0, 0 P1 (after triage), 10 P2.
+
+The 5 KNOWN-PRODUCT-CALL-CONFIRMED all map to the disconnect-wedge
+cluster (B-03/04/05/13) awaiting Briggsy's product call.
+
+**Calibration also surfaced a critical engine bug Briggsy spotted
+manually that the agents didn't.** See "Burn the Files engine bug"
+under Unfinished Fixes below.
+
+### Unfinished Fixes (this session)
+
+These have prescriptions, not diagnoses. Drop into next session's
+queue in order.
+
+1. **Burn the Files: card disappears from game state.** Briggsy played
+   `burn-the-files` and the card vanished — not in hand, not in discard.
+   Calibration agents missed this because they read aria snapshots
+   (which show `myHand` shrunk by 1 + draw pile unchanged — looks like
+   a normal play) and the projection allowlist hides `discardPile` from
+   non-board views (so they couldn't see the card hadn't landed there
+   either). Initial code trace:
+   - `src/server/game/engine.ts:481-501` `applyShuffle` does NOT call
+     `addToDiscard` and does NOT call `removeCardsFromHand`. It only
+     shuffles `state.drawPile`.
+   - For other cards, the remove-from-hand + add-to-discard step lives
+     in the dispatch chain before `applyCardEffect` is called. Need
+     to confirm whether the dispatch path special-cases or skips the
+     discard move for `burn-the-files` specifically, or whether
+     `applyShuffle` is supposed to do it itself and is missing both
+     calls.
+   - Briggsy is verifying the bug as of squeaky time. Resume with
+     `git log -p src/server/game/engine.ts -- :^*.test.ts | head -200`
+     to see how the dispatch chain handled this historically, then
+     add `addToDiscard` + `removeCardsFromHand` to `applyShuffle` (or
+     whichever boundary owns the move).
+   - **Severity: P0 if confirmed** — state invariant violation. Cards
+     should not be able to leave hand without entering discard.
+
+2. **Stale `card-played` toast on observer phones during favor-pending
+   (P2 OPEN — calibration seed 003).** Seat-3 saw "Seat2 played Call
+   in a Favor." persist for the full ~60s favor-pending window.
+   Toasts should clear on `nope-window-resolved` semantically and/or
+   hard-cap at 8-10s wallclock as a guard. Three fix paths in the
+   issue file. Briggsy's call between (A) `nope-window-resolved` clear
+   only, (B) hard cap only, (C) both.
+
+3. **Burn the Files: zero phone-side feedback, board has only ticker
+   text (P2 OPEN — calibration seed 007).** Code search confirms
+   `deck-shuffled` event has zero handling in `src/client/player/`;
+   board only narrates via COMMS ticker, no shuffle animation on
+   `DrawPile`. Spec calls for "shuffle animation plays on DrawPile +
+   status reads 'FILES BURNED'." Three fix paths in the issue file.
+   Note the seat-prompt ID `SCN-BURN-THE-FILES` does not match the
+   catalog's `SCN-BURN-FILES` (extra "THE") — same root as
+   harness bug #5 below.
+
+4. **ACTOR drama beat absent or imperceptible before DefusePlacement
+   sheet (P2 OPEN — calibration seed 008).** Two hypotheses: lazy-load
+   race on `DramaOverlay` (component imported lazily in
+   `Player.tsx:28`; if not mounted when event arrives,
+   `setDramaActive(true)` never fires and `showServerSheet` stays
+   `true`, letting DefusePlacement open with no gate); OR visual
+   conflation with this session's hero card (the drama beat played
+   for 2400ms but blurred with DefusePlacement which now also heroes
+   the Burned MinimalCard). Recommend eye-in-loop disambiguation
+   first (Briggsy on phone, drawing Burned with Extraction in hand,
+   reporting whether the BURNED → EXTRACTED beat reads or visually
+   collides with the sheet).
+
+5. **Clusterer false-positives — 4 instances in this run (002, 004,
+   005, 006).** The triage seed builder populates
+   `candidateDuplicate` by markdown-proximity match: it leaks an
+   adjacent scenario's `known-product-call:` tag onto seeds whose own
+   catalog entry says `none`. Mechanical fix: in the spec builder
+   (likely `cluster-suspicions.ts` or `triage-pipeline.ts`),
+   look up the matched scenario's `known-product-call:` field directly
+   from the parsed catalog and clear `candidateDuplicate` to `(n/a)`
+   when the field is `none`. Seeds 002 (Go Dark → falsely linked
+   to B-13), 004 + 005 (Favor normal → falsely linked to B-05), 006
+   (Burn the Files → falsely linked to B-04) all hit this. P2
+   harness bug.
+
+6. **Mini-catalog vs production-catalog scenario ID drift.** Multiple
+   seeds noted that `scripts/playtest/fixtures/mini-catalog.md` uses
+   shortened scenario IDs that don't match the production catalog at
+   `docs/testing/playtest/SCENARIOS.md`:
+   - `SCN-FAVOR-NORMAL-01` (mini) vs `SCN-CALL-IN-FAVOR-NORMAL-01`
+     (production)
+   - `SCN-BURN-THE-FILES-NORMAL-01` (mini) vs `SCN-BURN-FILES-NORMAL-01`
+     (production)
+   - `SCN-BURNED-DRAW-AXIS11-01` (mini) vs
+     `SCN-BURNED-DRAW-AUTO-DEFUSE-01` (production)
+   The mini-catalog should mirror production IDs exactly so
+   `candidateDuplicate` matching works. P2 harness bug.
+
+7. **EXTRACTED drama overlay text persists in a11y tree across turns
+   (Seat-2 suspicion).** Visually absent in screenshots but the text
+   node hangs around in the accessibility tree on multiple subsequent
+   turns. Likely AnimatePresence exit-completion vs DOM-removal race.
+   Accessibility issue — screen readers would announce "EXTRACTED"
+   stale-narrate. P2.
+
+8. **Seat-prompt template — gesture vocabulary missing.** Today's
+   calibration agents fumbled the single-vs-double-tap discriminator
+   exactly as #006/#007 first-time-friction predicted; mid-flight
+   `SendMessage` clarifier didn't change behavior. Durable fix:
+   bake into `scripts/playtest/agents/seat-scripted.md` and
+   `seat-free-play.md` an explicit gesture-vocabulary section before
+   the inner-loop instructions. Prevents the same fumble next run.
+
+9. **Seat-prompt template — motion-quality vibe-check questions.**
+   Calibration is blind to motion-polish bugs because agents read
+   state, not motion. Today's Burn the Files state-disappearance
+   went un-flagged. Fix: amend the vibe-check rubric in
+   `seat-scripted.md` / `seat-free-play.md` with explicit motion
+   prompts: "When you played the card, did the transition from
+   staging to gone read as motion (fade, fly, scale-down), or did
+   the card teleport?" P3 harness ergonomics.
+
+
 
 Briggsy handed me the wheel and went to the hardware store.
 "Commit as you go, push when you're done, squeaky if you finish."

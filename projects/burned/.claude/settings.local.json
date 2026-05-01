@@ -26,7 +26,8 @@
       "mcp__playwright-seat-7__*",
       "mcp__playwright-seat-8__*",
       "mcp__playwright-seat-9__*",
-      "mcp__playwright-seat-10__*"
+      "mcp__playwright-seat-10__*",
+      "PowerShell(Get-NetTCPConnection *)"
     ]
   }
 }

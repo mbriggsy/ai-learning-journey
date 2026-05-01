@@ -60,7 +60,14 @@
     overscroll-behavior: contain;
     /* Preserve iOS momentum scrolling */
     -webkit-overflow-scrolling: touch;
+    /* Hide scroll bars — content still scrolls when overflowing, the chrome
+       just doesn't show. Phone bottom sheets are touch-driven; a gutter
+       scrollbar fights the polish target. Same pattern as .peekScroll in
+       sheets.module.css. */
+    scrollbar-width: none;
   }
+
+  .content::-webkit-scrollbar { display: none; }
 
   /* Short variant — smaller prompts (CardDetailSheet, NameCard). */
   .contentShort {

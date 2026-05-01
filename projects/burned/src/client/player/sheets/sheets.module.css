@@ -10,10 +10,9 @@
    - FavorResponse: .sheetTitle + .sheetSubtitle + .optionList + .optionBtn
    - NameCard: .sheetTitle + .sheetSubtitle + .cardGrid + .optionBtn (children
      are .optionBtn, NOT unstyled — Phase 2 first draft was wrong)
-   - DefusePlacement (TWO branches):
-     * small-deck: .sheetTitle + .sheetSubtitle + .optionList + .optionBtn
-     * large-deck: .sheetTitle + .sheetSubtitle + .quickActions + .quickBtn +
-                   .positionInput + .confirmBtn
+   - DefusePlacement: .sheetTitle + .heroCardSlot + .sheetSubtitle +
+                      .quickActions + .quickBtn + .positionInput + .confirmBtn.
+                      Single UI for every deck size — no small/large branch.
    - FuturePeek: .sheetTitle + .sheetSubtitle + .tapOrder + .tapCard + .tapCardIcon +
                  .tapCardName + .tapCardPosition + .orderBadge + .confirmBtn
    .optionBtn is consumed by 4 of 5 sheets (not 2 as Phase 2 first draft claimed).
@@ -43,6 +42,22 @@
   color: var(--color-fg-secondary);
   text-align: center;
   margin-bottom: var(--space-3);
+}
+
+/* --- Hero card slot (DefusePlacement: shows the Burned card you're hiding) ---
+   Single-card centered specimen above the placement controls. MinimalCard
+   sizes itself via container queries against this wrapper's inline-size, so
+   the width here drives the rendered card scale. 160px keeps the 5/7 card at
+   ~224px tall — readable at arm's length, leaves room for the Top/Bottom/
+   Random row + ± stepper + Place Here below without forcing scroll on phone
+   viewports. aria-hidden on the wrapper in JSX — sheetTitle already names
+   "Burned Card" for screen readers. */
+
+.heroCardSlot {
+  width: 160px;
+  margin: 0 auto var(--space-3);
+  /* Decorative — block any pointer interaction so it never reads as tappable. */
+  pointer-events: none;
 }
 
 /* --- Option list (TargetSelect) --- */

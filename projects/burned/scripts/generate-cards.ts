@@ -121,22 +121,30 @@ const CARDS: CardPrompt[] = [
     type: 'go-dark',
     name: 'Go Dark',
     prompt:
-      // Variant A iter 3: ditched the doorway — too many lighting sides
-      // for Imagen to handle coherently. Simpler: operative walking AWAY
-      // from the viewer down a dark receding corridor, single light
-      // source from behind the viewer, figure fading into deep shadow in
-      // the distance. One consistent light direction, no two-sided trap.
-      'a dramatic receding-perspective view down a dimly-lit narrow corridor at night, a shadowy operative in a trench coat and fedora hat is walking AWAY from the viewer deep down the corridor, their silhouetted back to us, already partway down the hall and receding further, ' +
-      'the operative is a dark silhouette — their outline catching a faint warm amber rim-light on one shoulder from an unseen overhead source, most of their form in shadow, ' +
-      'the corridor walls narrow in perspective toward a pure black vanishing point in the distance — the far end of the corridor is completely unlit, pitch black, swallowing the figure as they recede, ' +
-      'venetian blind shadow stripes fall diagonally across the left corridor wall from a single unseen window somewhere behind the viewer, bars of warm amber light and cool teal shadow alternating on the wall, ' +
-      'the corridor floor shows the figure\'s long shadow stretching back toward the viewer, cast by the single light source behind us, ONE consistent light direction — no contradicting shadows, no multiple light sources, ' +
-      'the air is dim and quiet, a lone figure disappearing off the grid, going dark, ' +
-      'warm amber rim-light accents on a cool teal and deep charcoal dominant palette, the vanishing point is pitch black, ' +
+      // Variant B iter 1 (2026-05-01): four corridor iterations all
+      // wobbled between symmetric-corridor / figure-facing-camera
+      // because the corridor framing has no narrative anchor that forces
+      // back-to-camera. Pivot to the canonical noir idiom that DOES:
+      // operative walking away into fog under a distant streetlight.
+      // Imagen has overwhelming training data for this image — the
+      // prior pulls TOWARD back-of-figure, not against it. Echoes Back
+      // Channel's already-approved wet-noir-street vocabulary for deck
+      // cohesion (Back Channel = at the booth; Go Dark = leaving).
+      'first-person POV view from inside a dark wet city street at night, the camera is positioned a few steps behind a walking operative, looking forward down the street with them; slight fog and light rain hanging in the air, a single tall vintage streetlamp stands ahead in the middle distance casting a warm amber halo of light through the fog, ' +
+      'ONE solitary operative in a long trench coat and fedora hat is walking AWAY from the viewer down the street toward the distant streetlamp, the operative is positioned mid-frame at medium-distance, slightly off-center, their entire body visible from behind, in mid-stride mid-step; ' +
+      'we see ONLY the BACK of the operative — the curved back of the fedora hat brim from behind, the shoulders and back of the long trench coat, the legs walking forward away from us, the heels of shoes on wet pavement; we never see their face, never their front, never their profile, the operative is fully turned away from us walking toward the distant fog-shrouded streetlamp; ' +
+      'the streetlamp ahead of the operative casts warm amber rim-light onto the back of the hat brim and the shoulders of the trench coat — only the silhouette outline catches the glow, the rest of the figure is dark; the operative is silhouetted against the bright fog-halo of the streetlamp; ' +
+      'the wet pavement of the street reflects the streetlamp as long stretched amber smears running toward the operative\'s feet, foreshortened by perspective; the rain falls as fine diagonal lines crossing the amber halo; ' +
+      'on both sides of the street: dark looming city architecture in deep silhouette — tall narrow buildings with rows of small dim windows, a fire escape ladder zig-zagging down one facade, a closed doorway in another, a narrow alley mouth disappearing into black; the buildings rise on both sides extending past the top of the view, two dark vertical masses with the bright fog-halo street running between them; ' +
+      'CRITICAL: ONLY ONE PERSON in the entire image, ONLY ONE FIGURE, ONLY ONE OPERATIVE, the figure walking down the street is the ONLY human in the scene, no other figures in the windows or doorways or alleys, no second silhouette anywhere; ' +
+      'CRITICAL: the operative is seen FROM BEHIND walking AWAY — their back to us, the streetlamp ahead of them — never frontal, never side profile, never iconic-hero pose; ' +
+      'a single light source — the streetlamp ahead — illuminates the entire scene from front-distance; the foreground (where the camera is) is the darkest part of the frame, the operative is mid-tone silhouetted, the streetlamp halo is the brightest point; ' +
+      'warm amber streetlamp accents on a cool deep teal and charcoal dominant palette, the foreground is nearly black, the fog catches the amber as a soft glowing halo; ' +
       'the scene fills the entire square frame edge to edge with NO white borders NO vignette NO padding, ' +
-      'NO text NO letters NO words NO numbers NO writing anywhere, ' +
+      'NO text NO letters NO words NO numbers NO writing anywhere, NO street signs NO neon signs NO storefront text, ' +
       'mid-century modern 1960s spy-film noir aesthetic, bold geometric angular style, flat illustration, ' +
-      'square full-bleed composition centered on the receding figure and the dark corridor vanishing point',
+      'the camera is positioned INSIDE this street, looking forward; the wet pavement extends from directly under the camera all the way to the streetlamp ahead and continues past it, the buildings on both sides extend up past the top of the view and down past the bottom, the rainy sky extends past the top, the camera captures only a portion of the scene with everything continuing beyond the visible area on every side; ' +
+      'the scene fills the entire square frame edge to edge with NO white borders NO cream borders NO vignette NO padding NO matting',
   },
   {
     type: 'intel-briefing',

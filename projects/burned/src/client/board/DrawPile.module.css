@@ -48,6 +48,112 @@
   50% { opacity: 1; }
 }
 
+/* ─── Burn the Files — pile tumble + ember flash ───
+   Triggered by `data-shuffling` on .stack (set for ~720ms after each
+   `deck-shuffled` event in the cumulative feed). Three coordinated beats:
+     1. Stack scales tight (1 → 1.06 → 0.98 → 1) — the pile compresses
+        like it just got slammed shut.
+     2. Each .layer riffs left-right with rotation + minor x/y offset, the
+        per-layer offset preserved via calc(var(--layer-x)..). nth-child
+        delays cascade so the layers don't move in lockstep — reads as a
+        riffle rather than a parade.
+     3. ::after glow intensifies on the burned-fire token for the same beat,
+        re-syncing with the ambient drawPileGlow at the tail.
+   Animation overrides the infinite breathe for the duration; CSS resets
+   the breathe automatically when [data-shuffling] flips off. */
+.stack[data-shuffling] {
+  animation: deckShuffleStack 720ms var(--motion-ease-base);
+}
+
+.stack[data-shuffling] .layer {
+  animation: deckShuffleLayer 640ms var(--motion-ease-base);
+}
+
+.stack[data-shuffling] .layer:nth-child(2) {
+  animation-delay: 60ms;
+}
+
+.stack[data-shuffling] .layer:nth-child(3) {
+  animation-delay: 120ms;
+}
+
+/* TopCard riffle — animation lives on the WRAPPER, not on `.topCard` itself.
+   The dossier is the visible hero of the pile (stacked layers behind it are
+   nearly hidden at desktop board scale), so the shuffle motion lands here.
+   Wrapper-scoped so .topCard's `topCardDrop` entrance animation doesn't get
+   stomped by an animation-override / animation-revert cycle, which would
+   cause the dossier to re-drop after every Burn the Files. */
+.stack[data-shuffling] .topCardWrap {
+  animation: deckShuffleTopCard 720ms var(--motion-ease-base);
+}
+
+.topCardWrap {
+  position: absolute;
+  inset: 0;
+  z-index: var(--z-raised);
+  /* No default transform — `.topCard` inside owns its entrance animation. */
+}
+
+.stack[data-shuffling]::after {
+  animation:
+    drawPileGlow var(--motion-duration-ambient) var(--motion-ease-base) infinite,
+    deckShuffleFlash 720ms var(--motion-ease-decelerate);
+}
+
+@keyframes deckShuffleStack {
+  0%   { transform: scale(1); }
+  35%  { transform: scale(1.06); }
+  65%  { transform: scale(0.985); }
+  100% { transform: scale(1); }
+}
+
+@keyframes deckShuffleLayer {
+  0% {
+    transform: translate(var(--layer-x, 0px), var(--layer-y, 0px)) rotate(0deg);
+  }
+  25% {
+    transform:
+      translate(calc(var(--layer-x, 0px) - 9px), calc(var(--layer-y, 0px) - 2px))
+      rotate(-3.5deg);
+  }
+  55% {
+    transform:
+      translate(calc(var(--layer-x, 0px) + 11px), calc(var(--layer-y, 0px) - 5px))
+      rotate(2.5deg);
+  }
+  80% {
+    transform:
+      translate(calc(var(--layer-x, 0px) - 4px), var(--layer-y, 0px))
+      rotate(-1deg);
+  }
+  100% {
+    transform: translate(var(--layer-x, 0px), var(--layer-y, 0px)) rotate(0deg);
+  }
+}
+
+@keyframes deckShuffleTopCard {
+  0%   { transform: rotate(0deg); }
+  25%  { transform: rotate(-4deg) translateX(-3px); }
+  55%  { transform: rotate(3deg) translateX(4px); }
+  80%  { transform: rotate(-1.5deg); }
+  100% { transform: rotate(0deg); }
+}
+
+@keyframes deckShuffleFlash {
+  0% {
+    opacity: 0;
+    box-shadow: 0 0 40px color-mix(in oklab, var(--color-accent-burned) 28%, transparent);
+  }
+  35% {
+    opacity: 1;
+    box-shadow: 0 0 96px color-mix(in oklab, var(--color-burned-fire) 70%, transparent);
+  }
+  100% {
+    opacity: 0;
+    box-shadow: 0 0 40px color-mix(in oklab, var(--color-accent-burned) 28%, transparent);
+  }
+}
+
 .layer {
   position: absolute;
   inset: 0;
@@ -55,6 +161,11 @@
   background-color: var(--color-teal-2);
   border: 1px solid color-mix(in oklab, var(--color-accent-drama) 18%, transparent);
   box-shadow: var(--shadow-md);
+  /* Per-layer offset is published as a CSS variable on the inline style so
+     the shuffle keyframes can compose against it via calc(). Without this
+     the animation would clobber the inline transform and all layers would
+     collapse to identical positions during the tumble. */
+  transform: translate(var(--layer-x, 0px), var(--layer-y, 0px));
 }
 
 /* ─── Top card — Classified dossier file ───
@@ -195,6 +306,10 @@
 @media (prefers-reduced-motion: reduce) {
   .stack { animation: none; }
   .stack::after { animation: none; }
+  .stack[data-shuffling] { animation: none; }
+  .stack[data-shuffling] .layer { animation: none; }
+  .stack[data-shuffling] .topCardWrap { animation: none; }
+  .stack[data-shuffling]::after { animation: none; }
   .topCard,
   .topSecretLabel,
   .fileNumber { animation: none; }

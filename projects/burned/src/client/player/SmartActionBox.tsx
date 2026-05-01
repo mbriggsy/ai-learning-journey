@@ -48,6 +48,14 @@ interface SmartActionBoxProps {
   readonly hasIntercept: boolean
   readonly isAlive: boolean
   readonly favorMode: { requesterName: string } | null
+  /**
+   * ACTOR-side mirror of `favorMode`. When set, the local player is the
+   * favor-requester waiting for the target to surrender a card. Drives a
+   * dedicated "Waiting for X / to surrender a card" state so the ACTOR
+   * isn't staring at the misleading default "Double-tap a card to stage
+   * it" hint during favor-pending. Triage issue #010 / Gap 2.
+   */
+  readonly favorWaitingFor: { targetName: string } | null
   readonly onConfirm: () => void
   readonly onConfirmWithTarget: () => void
   readonly onDraw: () => void
@@ -58,7 +66,7 @@ interface SmartActionBoxProps {
 export function SmartActionBox({
   cardPlayState, isMyTurn, subPhase, drawPileCount,
   disabled, optimisticPending,
-  nopeWindow, hasIntercept, isAlive, favorMode,
+  nopeWindow, hasIntercept, isAlive, favorMode, favorWaitingFor,
   onConfirm, onConfirmWithTarget, onDraw, onIntercept, onSurrender,
 }: SmartActionBoxProps) {
   // Intercept window countdown — ticks fast enough to catch the "0s" frame
@@ -171,6 +179,20 @@ export function SmartActionBox({
     }
 
     const hasStaged = cps.status === 'selecting' && cps.selectedCardIds.length > 0
+
+    // Favor-requester waiting state — you played Call in a Favor and the
+    // target is choosing what to surrender. Without this branch the ACTOR
+    // falls through to the default "Double-tap a card to stage it" hint,
+    // which is misleading: there's nothing useful for them to stage and no
+    // signal the request even reached the target's phone (triage #010 / Gap 2).
+    if (favorWaitingFor) {
+      return {
+        key: 'favor-waiting',
+        className: `${styles.box} ${styles.standby}`,
+        text: `Waiting for ${favorWaitingFor.targetName}\nto surrender a card`,
+        interactive: false,
+      }
+    }
 
     // Favor-target mode — you owe the requester a card. Bypass normal turn /
     // combo logic entirely; the only legal action here is "surrender this".

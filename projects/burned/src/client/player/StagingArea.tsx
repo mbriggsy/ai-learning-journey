@@ -26,6 +26,7 @@ interface StagingAreaProps {
   readonly hasIntercept: boolean
   readonly isAlive: boolean
   readonly favorMode: { requesterName: string } | null
+  readonly favorWaitingFor: { targetName: string } | null
   readonly onUnstageCard: (cardId: string) => void
   readonly onConfirm: () => void
   readonly onConfirmWithTarget: () => void
@@ -37,7 +38,7 @@ interface StagingAreaProps {
 export function StagingArea({
   hand, cardPlayState, isMyTurn, subPhase, drawPileCount,
   disabled, optimisticPending,
-  nopeWindow, hasIntercept, isAlive, favorMode,
+  nopeWindow, hasIntercept, isAlive, favorMode, favorWaitingFor,
   onUnstageCard, onConfirm, onConfirmWithTarget, onCardLongPress, onIntercept, onSurrender,
 }: StagingAreaProps) {
   const sendAction = useSendAction()
@@ -147,6 +148,7 @@ export function StagingArea({
           hasIntercept={hasIntercept}
           isAlive={isAlive}
           favorMode={favorMode}
+          favorWaitingFor={favorWaitingFor}
           onConfirm={onConfirm}
           onConfirmWithTarget={onConfirmWithTarget}
           onDraw={handleDraw}

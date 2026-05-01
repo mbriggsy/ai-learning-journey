@@ -34,6 +34,7 @@ const BASE_PROPS: SABProps = {
   hasIntercept: false,
   isAlive: true,
   favorMode: null,
+  favorWaitingFor: null,
   onConfirm: noOp,
   onConfirmWithTarget: noOp,
   onDraw: noOp,

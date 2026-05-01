@@ -262,6 +262,16 @@ function PlayingView({ roomCode }: { roomCode: string }) {
     ? players.find(p => p.id === pendingPrompt.requesterId)?.name ?? 'Someone'
     : null
 
+  // ACTOR-side mirror: I played Call in a Favor and the target is choosing
+  // what to surrender. Drives the SmartActionBox "Waiting for X..." state
+  // so the requester isn't staring at the misleading default hand-stage hint
+  // during favor-pending (triage #010 / Gap 2).
+  const isFavorRequester =
+    pendingPrompt?.type === 'favor-response' && pendingPrompt.requesterId === myPlayerId
+  const favorTargetName = isFavorRequester
+    ? players.find(p => p.id === pendingPrompt.playerId)?.name ?? 'them'
+    : null
+
   const { state: cardPlayState, selectedIds, toggleCard, reset: resetCardPlay } = useCardPlay(
     hand, isMyTurn, subPhase, isFavorTarget ? 1 : 3,
   )
@@ -473,6 +483,7 @@ function PlayingView({ roomCode }: { roomCode: string }) {
             hasIntercept={hasIntercept}
             isAlive={isAlive}
             favorMode={isFavorTarget ? { requesterName: favorRequesterName! } : null}
+            favorWaitingFor={isFavorRequester ? { targetName: favorTargetName! } : null}
             onUnstageCard={toggleCard}
             onConfirm={handleConfirm}
             onConfirmWithTarget={handleConfirmWithTarget}

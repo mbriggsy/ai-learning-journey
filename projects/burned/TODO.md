@@ -2,6 +2,69 @@
 
 ## NEXT SESSION — pick up here (2026-04-30+)
 
+### THIS SESSION (2026-04-30 morning) — ISSUE #010 PARTIAL CLOSE (FAVOR VIBE GAPS A+B)
+
+Briggsy's "in order" pickup, item 2 of 3 (after the #006/#007 revert).
+Issue #010 from the calibration triage: dual-seat
+`feltLikeArcher: no` on the Favor exchange — silent database
+transaction on both phones. ACTOR stared at locked staging for 7
+minutes with no feedback the prompt landed; TARGET surrendered card
+with no drama; ACTOR got no acknowledgment of the receive.
+
+**Challenged the premise this time.** The triage agent's Option A
+proposed adding a "Double-tap" gesture qualifier to the staging
+hint copy — that directly contradicts Briggsy's gesture-vocabulary
+call from the #006/#007 revert ("once you figure out tap previews
+and double-tap stages, UX should be good"). Skipped Gap 1 entirely.
+Gaps 2 (ACTOR has no waiting feedback) and 3 (ACTOR receives
+nothing on transfer) verified as real silence holes — engine
+produces correct state, presentation layer is absent.
+
+**Gap 2 fix shipped — ACTOR waiting state in SmartActionBox.**
+- `Player.tsx` derives `isFavorRequester` (mirror of the existing
+  `isFavorTarget`) and `favorTargetName`. New prop
+  `favorWaitingFor: { targetName } | null` threaded through
+  `StagingArea` to `SmartActionBox`.
+- `SmartActionBox` deriveState gains a new branch BEFORE `favorMode`:
+  when `favorWaitingFor` is non-null, return `key: 'favor-waiting'`
+  with text "Waiting for ${targetName} / to surrender a card",
+  interactive: false, standby styling.
+
+**Gap 3 fix shipped — receiver-side toast in PlayerAlert.**
+- `PlayerAlert.tsx` favor-given case extended: when
+  `event.receiverId === myId`, return text "Coerced a card from
+  ${nameOf(giverId)}." with `tone: 'urgent'`. Sharpens the verb to
+  match the combo-steal stealer toast — same category of moment
+  (forced surrender between operatives).
+- The `favor-given` event does not carry cardType (verified in
+  `src/shared/types.ts:41`), so the toast can't name the specific
+  card. The receiver reads it off their hand. Acceptable tradeoff
+  — generic copy beats fabricating server semantics.
+
+**Earth verification.** Live Playwright MCP against real
+wrangler+vite+game on a fresh 2-player room. Cycled turns until
+favor card landed in Seat1's hand. Played Call in a Favor →
+Seat1's phone showed "Waiting for Seat2 / to surrender a card"
+(was: misleading "Double-tap a card to stage it" hint). Seat2
+surrendered Dash Barlowe → Seat1's phone showed "Coerced a card
+from Seat2." urgent toast (was: silent, hand-count just ticked
+7→8). Both gaps closed in real environment.
+
+**Skipped Option C (full FavorReport cinematic).** The diagnosis
+correctly flagged this as scope-creep risk — favor-given doesn't
+emit cardType to the receiver, so a StealReport-style hero beat
+would either special-case the protocol or land without the card
+identity. Bigger design conversation if A+B leaves a vibe hole on
+re-test.
+
+**Side-fix:** stripped CRLF line endings from `Player.tsx` and
+`StagingArea.tsx` post-edit. The Edit tool re-wrote both files
+with CRLF, which made `git diff` show whole-file rewrites under
+LF-canonical repo policy. Caught at pre-commit.
+
+**Test surface:** typecheck clean · 1095/1095 unit tests · full
+chromium e2e 12/12 PASS in 43.8s.
+
 ### THIS SESSION (2026-04-30 morning) — ISSUES #006/#007 REVERTED (premise was wrong)
 
 Honest accounting: I shipped a fix for triage issues #006/#007 that

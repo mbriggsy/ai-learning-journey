@@ -23,11 +23,11 @@
  *
  * Exit code 0 = PASS, 1 = FAIL. Run via `pnpm playtest:phase5-smoke`.
  *
- * The DEFERRED contract test (spawn a playtest-triage with a prompt
- * deliberately asking it to call `browser_snapshot` — Claude Code
- * must refuse at the tool-surface boundary) is a manual Phase-6
- * verification step. It is called out in the output so the operator
- * remembers to run it when the harness actually dispatches.
+ * The contract test for the triage agent's tool-surface boundary
+ * (asserting `playtest-triage.md` whitelists no MCP playwright tools
+ * including `browser_snapshot`) ships as a vitest unit test in
+ * `scripts/playtest/lib/agent-tool-whitelist.test.ts` — runs on every
+ * commit, no manual step required.
  */
 import { mkdtempSync } from 'node:fs'
 import { mkdir, readFile, writeFile } from 'node:fs/promises'
@@ -529,15 +529,9 @@ async function main(): Promise<void> {
   console.log('Phase 5 smoke: PASS')
   console.log('========================================')
   console.log()
-  console.log('DEFERRED CONTRACT TEST (phase-6 manual verification):')
-  console.log('  Spawn a `playtest-triage` subagent with a prompt that')
-  console.log('  deliberately instructs it to call')
-  console.log('  `mcp__playwright__browser_snapshot`. Claude Code MUST')
-  console.log('  refuse at the tool-surface boundary before the call')
-  console.log('  reaches the MCP server. Verify by reading the agent')
-  console.log('  transcript — the refusal should be recorded.')
-  console.log('  (This cannot run from a pnpm script; a real Claude')
-  console.log('  Code conversation is required to dispatch the subagent.)')
+  console.log('Triage tool-surface boundary contract test:')
+  console.log('  See `scripts/playtest/lib/agent-tool-whitelist.test.ts`')
+  console.log('  (vitest unit, runs on every `pnpm test`).')
   process.exit(0)
 }
 

@@ -20,15 +20,15 @@
  *   8. Asserts every rendered prompt is placeholder-free.
  *   9. Asserts every spec carries `subagentType: 'playtest-seat'` and
  *      never `'general-purpose'` (insight 020 regression).
- *  10. Prints a PASS / FAIL summary + deferred contract-test note.
+ *  10. Prints a PASS / FAIL summary.
  *
  * Exit code 0 = PASS, 1 = FAIL. Run via `pnpm playtest:phase4-smoke`.
  *
- * The DEFERRED contract test (spawn a playtest-seat with a prompt
- * deliberately asking it to call `browser_evaluate` — Claude Code must
- * refuse at the tool-surface boundary) is a manual Phase-6 verification
- * step. It is called out in the output so the operator remembers to
- * run it when the harness actually dispatches subagents.
+ * The contract test for the tool-surface boundary (asserting each
+ * `playtest-seat-N.md` whitelist excludes `browser_evaluate` and other
+ * forbidden tools) ships as a vitest unit test in
+ * `scripts/playtest/lib/agent-tool-whitelist.test.ts` — runs on every
+ * commit, no manual step required.
  */
 import { mkdtempSync } from 'node:fs'
 import { mkdir, readFile, writeFile } from 'node:fs/promises'
@@ -273,15 +273,9 @@ async function main(): Promise<void> {
   }
   console.log('========================================')
   console.log('')
-  console.log('DEFERRED CONTRACT TEST (phase-6 manual verification):')
-  console.log('  Spawn a `playtest-seat` subagent with a prompt that')
-  console.log('  deliberately instructs it to call')
-  console.log('  `mcp__playwright__browser_evaluate`. Claude Code MUST')
-  console.log('  refuse at the tool-surface boundary before the call')
-  console.log('  reaches the MCP server. Verify by reading the agent')
-  console.log('  transcript — the refusal should be recorded.')
-  console.log('  (This cannot run from a pnpm script; a real Claude')
-  console.log('  Code conversation is required to dispatch the subagent.)')
+  console.log('Tool-surface boundary contract test:')
+  console.log('  See `scripts/playtest/lib/agent-tool-whitelist.test.ts`')
+  console.log('  (vitest unit, runs on every `pnpm test`).')
   console.log('')
 
   process.exit(failures.length === 0 ? 0 : 1)

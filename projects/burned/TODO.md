@@ -1,6 +1,120 @@
 # BURNED — TODO
 
-## NEXT SESSION — pick up here (2026-04-30+)
+## NEXT SESSION — pick up here (2026-05-01+)
+
+### THIS SESSION (2026-05-01) — TRIAGE QUEUE SWEEP: 6 commits, 8 issues closed
+
+Briggsy handed me the wheel and went to the hardware store.
+"Commit as you go, push when you're done, squeaky if you finish."
+Caught a clean run on the 2026-04-29-2139-3p triage queue: 8 OPEN
+issues closed across 6 commits, 1110/1110 unit tests, typecheck clean,
+zero regressions. Visual verification still pending — bundling the
+calibration retry for Briggsy eye-on-loop on his return.
+
+| Commit | Closes | Subject |
+|---|---|---|
+| `38d4c7f0` | #010 Gap C | feat(favor): close issue #010 Gap C — FavorReport cinematic on both phones |
+| `236d637d` | infra | feat(triage-index): add RESOLVED status to issue-index schema |
+| `ad4bce5c` | #022 | feat(under-attack): close issue #022 — surface forced-draw count |
+| `30837553` | #005 | feat(status-bar): close issue #005 — favor-pending OTHER-alive copy |
+| `1e7b847d` | #012/#014/#015 | feat(go-dark): close #012/#014/#015 — drama beat + observer toast |
+| `afff4181` | #001/#002/#003/#011/#018 | feat(triage): close — catalog gate at log-write time |
+
+**Issue #010 Gap C — FavorReport cinematic.** ACTOR + TARGET both get a
+hero coercion-report dispatch on favor resolution. Same StealReport
+vocabulary (cream paper, typewriter header, ochre asset strip, rubber
+stamp, dog-ear) but Case 47-D for Duress and two stamp variants:
+EXTRACTED (crimson) for ACTOR / receiver, SURRENDERED (amber) for
+TARGET / giver. `favor-given` event extended with optional
+`cardType?: CardType`; projection allowlist parallel to combo-steal +
+card-drawn so only giver+receiver see the card identity. PROTOCOL_VERSION
+3 → 4. `gameStore.test.ts` + `engine-phase6.test.ts` expectations
+updated. PlayerAlert favor-given branches retired — toast + cinematic
+on the same event would compete for attention. New regression test
+`engine.pbt.test.ts` pins `favor-given.cardType` privacy invariant
+across board / giver / receiver / witness viewpoints.
+
+**Issue-index schema (infra).** `IssueStatus` schema had no terminal-
+resolved state. OPEN counts ratcheted forever even after work shipped.
+Added `RESOLVED` to the union, the STATUS_VALUES list (FIRST so
+substring matcher wins over BLOCKED in resolution prose mentioning prior
+blocked dimensions), the byStatus init, and the Summary template.
+Regression test pins the substring-precedence trap. Closes a
+generalizable workflow gap, not a specific calibration finding.
+
+**Issue #022 — Direct Order under-attack indicator.** Seat-1 hit the
+silent double-draw: opponent played Direct Order, seat-1 came in at
+`turnsRemaining: 2`, default "End turn / draw (N)" copy on the action
+button gave no signal that the first draw wouldn't end the turn. Two
+surfaces wired:
+- StatusBar swaps "You're up" for "Under attack · N draws" when
+  `isMyTurn && turnsRemaining > 1`. Keyed on `attacked-${N}` so a
+  stack collapse from 3 → 2 animates the count down.
+- SmartActionBox draw button swaps "End turn / draw (pile)" for
+  "Forced draw (pile) / N draws this turn". Engine clamps
+  `turnsRemaining ≥ 1` post-draw so the branch flips back to default
+  on the final forced draw — count communicates progress.
+- 2 new SmartActionBox unit tests + 3 new StatusBar unit tests drive
+  the gameStore singleton with a real PlayingPlayerView so
+  `useCurrentTurn()` reads the same shape it sees in production.
+
+**Issue #005 — favor-pending OTHER-alive StatusBar copy.** Seat-3
+mistook a 7-minute silent favor exchange for a frozen game. Default
+"[Name] is on deck · 22 in the pile" copy was visually identical to
+pre-play state across the entire wait. Player.tsx now derives a
+`favorOtherContext: { requesterName, targetName } | null` for OTHER-
+alive seats (`!isFavorTarget && !isFavorRequester` during favor-
+response) and threads it into StatusBar. StatusBar swaps in
+"[requester] coerces [target] · favor pending" copy. Defense-in-depth
+test pins isMyTurn precedence — even if a future caller bug routes
+both, your own-turn copy still wins. New `StatusBar.test.tsx` (didn't
+exist) with 6 tests across both #022 and #005 surfaces.
+
+**Issues #012/#014/#015 — Go Dark drama beat + observer toast.** Three
+related vibe gaps, two surfaces:
+- DramaOverlay `card-played` case for `cardType === 'go-dark'`
+  (combos excluded). ACTOR sees "GONE DARK" (subdued, second-person);
+  observers + board see "[NAME] WENT DARK" (third-person). New
+  `.gonedark` style — charcoal radial gradient, sodium-vapor text-
+  shadow. `transient: true` so a turn-started arrival aborts the beat
+  (same treatment as INTERCEPTED).
+- PlayerAlert `card-played` toast on observer phones: "[Name] played
+  [CardName]." for non-combo, non-Go-Dark, non-extraction plays. Three
+  filters: own play (actor sees their own staging confirmation), cards
+  with their own DramaOverlay beats (Go Dark / extraction), combos
+  (combo-steal carries the meaningful payload).
+- No new unit tests for these — behavior chains across event-feed +
+  drama-active + multi-component gating that doesn't shallow-test
+  cleanly. Existing PlayerAlert / DramaOverlay surfaces follow the
+  same precedent: live calibration-run verification.
+
+**Issues #001/#002/#003/#011/#018 — catalog gate at log-write time.**
+Five seeds, all the same shape: seat agents invented scenarioIds
+(`SESSION-START`, `GAME-START-OBSERVATION`, `TURN-TRANSITION-
+SEAT1-TO-SEAT2`, `INTERCEPT-WINDOW-OBSERVED-SEAT1-TURN`) for lifecycle
+moments not in `SCENARIOS.md`. Clusterer routed each as a
+`scripted-scenario` seed — five wasted triage agent spawns. Mechanical
+fix: `parseSeatLogString` + `parseSeatLog` gain optional
+`{ validScenarioIds: ReadonlySet<string> }` option. When provided,
+every `scenario-fire` entry's scenarioId is cross-checked after schema
+validation; mismatches become parse errors with the bad ID and accepted
+catalog set in the message. Suspicion / vibe-check / ui-spec-divergence
+NOT gated — `relatedScenario` is allowed null and serves a different
+axis. `triage-pipeline.ts` `runTriagePipeline` loads catalog FIRST,
+derives validScenarioIds, threads into `loadSeatEntries`. +5 log-parser
+tests covering reject / accept / opt-out / non-fire passthrough /
+empty-catalog message.
+
+**Visual verification still pending.** 1110/1110 unit tests + typecheck
+green is necessary but not sufficient — the FavorReport cinematic, Go
+Dark drama beat, observer toast, under-attack copy, and favor-pending
+OTHER-alive copy all need real-device or calibration-retry verification.
+Bundling all of it for Briggsy's next session.
+
+**Local-only changes (gitignored).** The 2026-04-29-2139-3p run dir is
+under the rolling-retention gitignore policy, so the issue-file status
+flips for #006 and #010 are local. Schema extension that supports
+RESOLVED ships in commit `236d637d`.
 
 ### THIS SESSION (2026-04-30 morning) — ISSUE #010 PARTIAL CLOSE (FAVOR VIBE GAPS A+B)
 

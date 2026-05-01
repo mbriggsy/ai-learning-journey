@@ -455,7 +455,12 @@ function PlayingView({ roomCode }: { roomCode: string }) {
   return (
     <div className={playingStyles.view} data-diag="view">
       <TitleBar roomCode={roomCode} />
-      <StatusBar isMyTurn={isMyTurn} currentPlayerName={currentPlayerName} drawPileCount={drawPileCount} />
+      <StatusBar
+        isMyTurn={isMyTurn}
+        currentPlayerName={currentPlayerName}
+        drawPileCount={drawPileCount}
+        myTurnsRemaining={isMyTurn ? currentTurn?.turnsRemaining ?? 1 : 1}
+      />
 
       <div className={playingStyles.workbench}>
         {isFavorTarget && favorRequesterName && (

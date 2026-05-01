@@ -6,11 +6,19 @@ interface StatusBarProps {
   readonly isMyTurn: boolean
   readonly currentPlayerName: string | null
   readonly drawPileCount: number
+  /**
+   * Forced-draw count from the active turn's `currentTurn.turnsRemaining`,
+   * relevant only on `isMyTurn`. When `>1`, an opponent's Direct Order or
+   * Reassign has stacked draws on this seat — surface "Under attack" copy
+   * so the player isn't surprised when the first draw doesn't end the
+   * turn (triage #022). Pass `1` (or omit) for normal turns.
+   */
+  readonly myTurnsRemaining?: number
 }
 
-export function StatusBar({ isMyTurn, currentPlayerName, drawPileCount }: StatusBarProps) {
+export function StatusBar({ isMyTurn, currentPlayerName, drawPileCount, myTurnsRemaining }: StatusBarProps) {
   const outerClass = `${styles.statusBar} ${isMyTurn ? styles.yourTurn : styles.waiting}`
-  const { key, body } = bodyFor(isMyTurn, currentPlayerName, drawPileCount)
+  const { key, body } = bodyFor(isMyTurn, currentPlayerName, drawPileCount, myTurnsRemaining ?? 1)
 
   return (
     <div className={outerClass} data-diag="statusbar">
@@ -39,8 +47,20 @@ function bodyFor(
   isMyTurn: boolean,
   currentPlayerName: string | null,
   drawPileCount: number,
+  myTurnsRemaining: number,
 ): { key: string; body: React.ReactNode } {
   if (isMyTurn) {
+    if (myTurnsRemaining > 1) {
+      return {
+        key: `attacked-${myTurnsRemaining}`,
+        body: (
+          <>
+            Under attack
+            <span className={styles.pileCount}> &middot; {myTurnsRemaining} draws</span>
+          </>
+        ),
+      }
+    }
     return { key: 'me', body: <>You&rsquo;re up</> }
   }
   if (currentPlayerName) {

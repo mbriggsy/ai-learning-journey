@@ -221,6 +221,24 @@ export function SmartActionBox({
     if (!hasStaged) {
       if (myTurn && sub === 'turn-active') {
         const intense = pileCount <= 5
+        // Under-attack draw button — when an opponent has played Direct Order
+        // or Reassign on this seat, `turnsRemaining > 1` means the next draw
+        // will NOT end the turn. The default "End turn / draw" copy was
+        // misleading: seat-1 reported drawing once, watching the turn stay
+        // live, and not understanding why (triage #022). Surface the count
+        // explicitly so the player sees they owe more draws before the turn
+        // passes. Engine clamps `turnsRemaining` to >=1 post-draw, so this
+        // branch flips back to the default copy on the final forced draw.
+        const turnsRemaining = currentTurn?.turnsRemaining ?? 1
+        if (turnsRemaining > 1) {
+          return {
+            key: 'draw-forced',
+            className: `${styles.box} ${styles.draw} ${intense ? styles.drawIntense : ''}`,
+            text: `Forced draw (${pileCount})\n${turnsRemaining} draws this turn`,
+            interactive: true,
+            action: onDraw,
+          }
+        }
         return {
           key: 'draw',
           className: `${styles.box} ${styles.draw} ${intense ? styles.drawIntense : ''}`,

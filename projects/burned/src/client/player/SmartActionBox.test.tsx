@@ -361,6 +361,91 @@ describe('SmartActionBox chain-burn UX (TODO #11)', () => {
   })
 })
 
+describe('SmartActionBox under-attack draw button (triage #022)', () => {
+  // The default `useCurrentTurn()` hook reads from the gameStore — empty in
+  // these unit tests, so the fallback returns `turnsRemaining = 1` and the
+  // standard "End turn / draw" copy renders. To exercise the inflated-turns
+  // branch we drive the gameStore into a real PlayingPlayerView with
+  // `currentTurn.turnsRemaining = 2`. That mirrors the live shape an
+  // attacked seat receives after Direct Order resolves.
+  it('renders Forced-draw copy when turnsRemaining > 1', async () => {
+    const { gameStore } = await import('@client/shared/gameStore')
+    const view: import('@shared/protocol').PlayingPlayerView = {
+      phase: 'playing',
+      subPhase: 'turn-active',
+      players: [
+        { id: 'p1', name: 'Me', color: '#fff', cardCount: 5, isAlive: true, isConnected: true },
+      ],
+      drawPileCount: 17,
+      discardPile: [],
+      currentTurn: { currentPlayerId: 'p1', turnsRemaining: 2 },
+      nopeWindow: null,
+      pendingPrompt: null,
+      events: [],
+      stateVersion: 1,
+      myPlayerId: 'p1',
+      myHand: [],
+      isMyTurn: true,
+    }
+    gameStore.handleMessage({
+      type: 'player-update',
+      payload: { state: view, private: {} },
+      protocolVersion: 4,
+    })
+    const { container, root } = mount()
+    try {
+      render(root,
+        <SmartActionBox {...BASE_PROPS} isMyTurn={true} subPhase="turn-active" drawPileCount={17} />,
+      )
+      const button = container.querySelector('button')!
+      expect(button.textContent ?? '').toContain('Forced draw')
+      expect(button.textContent ?? '').toContain('2 draws this turn')
+      expect(button.textContent ?? '').not.toMatch(/^End turn/)
+      expect(button.disabled).toBe(false)
+    } finally {
+      teardown(container, root)
+    }
+  })
+
+  it('renders default End-turn copy when turnsRemaining === 1 (no regression)', async () => {
+    const { gameStore } = await import('@client/shared/gameStore')
+    const view: import('@shared/protocol').PlayingPlayerView = {
+      phase: 'playing',
+      subPhase: 'turn-active',
+      players: [
+        { id: 'p1', name: 'Me', color: '#fff', cardCount: 5, isAlive: true, isConnected: true },
+      ],
+      drawPileCount: 17,
+      discardPile: [],
+      currentTurn: { currentPlayerId: 'p1', turnsRemaining: 1 },
+      nopeWindow: null,
+      pendingPrompt: null,
+      events: [],
+      stateVersion: 1,
+      myPlayerId: 'p1',
+      myHand: [],
+      isMyTurn: true,
+    }
+    gameStore.handleMessage({
+      type: 'player-update',
+      payload: { state: view, private: {} },
+      protocolVersion: 4,
+    })
+    const { container, root } = mount()
+    try {
+      render(root,
+        <SmartActionBox {...BASE_PROPS} isMyTurn={true} subPhase="turn-active" drawPileCount={17} />,
+      )
+      const button = container.querySelector('button')!
+      expect(button.textContent ?? '').toContain('End turn')
+      expect(button.textContent ?? '').not.toContain('Forced')
+      expect(button.disabled).toBe(false)
+    } finally {
+      teardown(container, root)
+    }
+  })
+})
+
 describe('SmartActionBox single-intercepted hint (TODO #11)', () => {
   it('renders the two-line "Intercepted is reactive" hint when staged alone', () => {
     const { container, root } = mount()

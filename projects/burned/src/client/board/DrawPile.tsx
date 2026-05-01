@@ -11,19 +11,21 @@ interface DrawPileProps {
  * Individual Card components are NEVER rendered (information leak + perf).
  * CSS breathing animation on compositor thread.
  *
- * On every `deck-shuffled` event (Burn the Files), the pile fires a one-shot
- * tumble — layers riff left-right with staggered delays, the parent stack
- * scale-pops, and the burned-glow rim flashes hot. Closes the catalog
- * `ui-assertion` for SCN-BURN-FILES-NORMAL-01: "cards visibly tumble."
- * The COMMS ticker still narrates; this gives the eye something to track
- * before the text scrolls (TODO #3 phase 2).
+ * On every `deck-shuffled` event (Burn the Files), the pile fires a 420ms
+ * destroy-the-evidence beat: stack scale-pops once (single accent, no
+ * underbounce), the dossier wrapper riffles -3° with a 0.8px motion blur
+ * peak (blur sells fast motion better than fighting for extra rotation
+ * stops — Emil's lens), and the burned-glow rim flashes hot. Closes the
+ * catalog `ui-assertion` for SCN-BURN-FILES-NORMAL-01: "cards visibly
+ * tumble." The COMMS ticker still narrates; this gives the eye something
+ * to track before the text scrolls (TODO #3 phase 2).
  */
 export const DrawPile = memo(function DrawPile({ count }: DrawPileProps) {
   // Show 3 layers for visual depth, fewer when deck is thin
   const layers = Math.min(3, count)
 
   const shuffleNonce = useDeckShuffledNonce()
-  const isShuffling = useShuffleFlash(shuffleNonce, 720)
+  const isShuffling = useShuffleFlash(shuffleNonce, 420)
 
   return (
     <div className={styles.pile}>

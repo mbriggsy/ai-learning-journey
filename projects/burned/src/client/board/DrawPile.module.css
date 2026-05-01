@@ -48,43 +48,42 @@
   50% { opacity: 1; }
 }
 
-/* ─── Burn the Files — pile tumble + ember flash ───
-   Triggered by `data-shuffling` on .stack (set for ~720ms after each
-   `deck-shuffled` event in the cumulative feed). Three coordinated beats:
-     1. Stack scales tight (1 → 1.06 → 0.98 → 1) — the pile compresses
-        like it just got slammed shut.
-     2. Each .layer riffs left-right with rotation + minor x/y offset, the
-        per-layer offset preserved via calc(var(--layer-x)..). nth-child
-        delays cascade so the layers don't move in lockstep — reads as a
-        riffle rather than a parade.
-     3. ::after glow intensifies on the burned-fire token for the same beat,
-        re-syncing with the ambient drawPileGlow at the tail.
+/* ─── Burn the Files — destroy-the-evidence beat ───
+   Triggered by `data-shuffling` on .stack (set for 420ms after each
+   `deck-shuffled` event in the cumulative feed). One decisive gesture
+   built from three coordinated layers — chosen for visibility at TV scale
+   and cohesion with the existing ambient breathe/glow:
+
+     1. Stack scale-pop: 1 → 1.04 → 1 (single accent, no double-bounce —
+        reads as one Archer-decisive gesture, not jelly wobble).
+     2. Dossier wrapper riffle: -3° + 0.8px motion blur peak → +1° → 0.
+        Single-arc rotation with motion blur masks micro-imperfection
+        and sells fast motion better than fighting for a 4th rotation
+        stop. Layer animations were dropped — the stacked card edges
+        behind the dossier are too low-contrast on mahogany to carry
+        any motion read at desktop board scale; the visual cost didn't
+        justify the GPU work.
+     3. ::after glow flash: ramps up hot, peaks at 50%, decays. State
+        indication for "deck just got scrambled." Strong ease-out so
+        the entry pops on the moment the eye lands on it.
+
+   Easing: cubic-bezier(0.77, 0, 0.175, 1) (Emil's strong ease-in-out)
+   for on-screen back-and-forth motion. Glow flash uses a separate
+   strong ease-out (0.23, 1, 0.32, 1) — purpose-driven entrance, not
+   oscillation.
+
    Animation overrides the infinite breathe for the duration; CSS resets
    the breathe automatically when [data-shuffling] flips off. */
 .stack[data-shuffling] {
-  animation: deckShuffleStack 720ms var(--motion-ease-base);
-}
-
-.stack[data-shuffling] .layer {
-  animation: deckShuffleLayer 640ms var(--motion-ease-base);
-}
-
-.stack[data-shuffling] .layer:nth-child(2) {
-  animation-delay: 60ms;
-}
-
-.stack[data-shuffling] .layer:nth-child(3) {
-  animation-delay: 120ms;
+  animation: deckShuffleStack 420ms cubic-bezier(0.77, 0, 0.175, 1);
 }
 
 /* TopCard riffle — animation lives on the WRAPPER, not on `.topCard` itself.
-   The dossier is the visible hero of the pile (stacked layers behind it are
-   nearly hidden at desktop board scale), so the shuffle motion lands here.
    Wrapper-scoped so .topCard's `topCardDrop` entrance animation doesn't get
    stomped by an animation-override / animation-revert cycle, which would
    cause the dossier to re-drop after every Burn the Files. */
 .stack[data-shuffling] .topCardWrap {
-  animation: deckShuffleTopCard 720ms var(--motion-ease-base);
+  animation: deckShuffleTopCard 420ms cubic-bezier(0.77, 0, 0.175, 1);
 }
 
 .topCardWrap {
@@ -97,56 +96,48 @@
 .stack[data-shuffling]::after {
   animation:
     drawPileGlow var(--motion-duration-ambient) var(--motion-ease-base) infinite,
-    deckShuffleFlash 720ms var(--motion-ease-decelerate);
+    deckShuffleFlash 420ms cubic-bezier(0.23, 1, 0.32, 1);
 }
 
 @keyframes deckShuffleStack {
+  /* Single accent. No underbounce — that read as wobble, not impact. */
   0%   { transform: scale(1); }
-  35%  { transform: scale(1.06); }
-  65%  { transform: scale(0.985); }
+  50%  { transform: scale(1.04); }
   100% { transform: scale(1); }
 }
 
-@keyframes deckShuffleLayer {
+@keyframes deckShuffleTopCard {
+  /* Single decisive arc with motion blur. Peak tilt + brief blur sells
+     fast riffle without needing to draw individual layer rotations
+     (Emil: blur masks imperfect transitions). Recovery snaps quickly. */
   0% {
-    transform: translate(var(--layer-x, 0px), var(--layer-y, 0px)) rotate(0deg);
+    transform: rotate(0deg) translateX(0);
+    filter: blur(0);
   }
-  25% {
-    transform:
-      translate(calc(var(--layer-x, 0px) - 9px), calc(var(--layer-y, 0px) - 2px))
-      rotate(-3.5deg);
+  50% {
+    transform: rotate(-3deg) translateX(-3px);
+    filter: blur(0.8px);
   }
-  55% {
-    transform:
-      translate(calc(var(--layer-x, 0px) + 11px), calc(var(--layer-y, 0px) - 5px))
-      rotate(2.5deg);
-  }
-  80% {
-    transform:
-      translate(calc(var(--layer-x, 0px) - 4px), var(--layer-y, 0px))
-      rotate(-1deg);
+  72% {
+    transform: rotate(1deg) translateX(2px);
+    filter: blur(0);
   }
   100% {
-    transform: translate(var(--layer-x, 0px), var(--layer-y, 0px)) rotate(0deg);
+    transform: rotate(0deg) translateX(0);
+    filter: blur(0);
   }
-}
-
-@keyframes deckShuffleTopCard {
-  0%   { transform: rotate(0deg); }
-  25%  { transform: rotate(-4deg) translateX(-3px); }
-  55%  { transform: rotate(3deg) translateX(4px); }
-  80%  { transform: rotate(-1.5deg); }
-  100% { transform: rotate(0deg); }
 }
 
 @keyframes deckShuffleFlash {
+  /* Symmetric arc. Strong ease-out is applied per-keyframe by the
+     parent `animation:` declaration — each segment lands snappily. */
   0% {
     opacity: 0;
     box-shadow: 0 0 40px color-mix(in oklab, var(--color-accent-burned) 28%, transparent);
   }
-  35% {
+  50% {
     opacity: 1;
-    box-shadow: 0 0 96px color-mix(in oklab, var(--color-burned-fire) 70%, transparent);
+    box-shadow: 0 0 96px color-mix(in oklab, var(--color-burned-fire) 75%, transparent);
   }
   100% {
     opacity: 0;
@@ -305,11 +296,15 @@
 
 @media (prefers-reduced-motion: reduce) {
   .stack { animation: none; }
-  .stack::after { animation: none; }
+  /* Reduced motion: keep the shuffle GLOW FLASH (state indication —
+     opacity-only, comprehension-aiding) but drop the rotation, blur,
+     and scale. Emil: "fewer and gentler animations, not zero." */
   .stack[data-shuffling] { animation: none; }
-  .stack[data-shuffling] .layer { animation: none; }
   .stack[data-shuffling] .topCardWrap { animation: none; }
-  .stack[data-shuffling]::after { animation: none; }
+  .stack::after { animation: none; }
+  .stack[data-shuffling]::after {
+    animation: deckShuffleFlash 420ms cubic-bezier(0.23, 1, 0.32, 1);
+  }
   .topCard,
   .topSecretLabel,
   .fileNumber { animation: none; }

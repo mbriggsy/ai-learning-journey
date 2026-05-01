@@ -272,7 +272,7 @@ questionsTried:
 ````
 
 If only ONE question tried, still wrap it in a list. If a related
-scenario applies: `relatedScenario: "SCN-FAVOR-NORMAL-01"` (the YAML
+scenario applies: `relatedScenario: "SCN-CALL-IN-FAVOR-NORMAL-01"` (the YAML
 literal `null` for the no-scenario case, not the string `"null"`).
 
 **`vibe-check` (mandatory per suspicion):**
@@ -306,7 +306,7 @@ screenshotHash: "page-2026-04-29T22-32-06-841Z.png"
 
 ````yaml
 entryType: scenario-fire
-scenarioId: "SCN-FAVOR-NORMAL-01"
+scenarioId: "SCN-CALL-IN-FAVOR-NORMAL-01"
 seat: "seat-2"
 seatName: "Mittens"
 timestamp: "2026-04-29T22:33:55Z"

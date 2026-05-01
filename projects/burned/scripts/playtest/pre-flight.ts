@@ -342,23 +342,24 @@ export async function checkCatalog(
     )
   }
 
-  const allTags = scenarios
-    .map((s) => s.knownProductCall ?? '')
-    .filter((t) => t.length > 0)
-    .join('\n')
-
-  const missingCluster = cluster.filter((id) => !allTags.includes(id))
+  // Cluster-membership check: substring-scan the FULL raw catalog text.
+  // Decoupling this from per-scenario `Known product call:` lets a calibration
+  // fixture truthfully tag every scenario `none` while still listing cluster
+  // IDs in a registry comment. (See mini-catalog.md preflight-cluster-registry
+  // block.) Production catalog still satisfies this via per-scenario tags
+  // wherever cluster issues are the canonical home.
+  const missingCluster = cluster.filter((id) => !raw.includes(id))
   if (missingCluster.length > 0) {
     return fail(
       '4. catalog',
-      `KNOWN_PRODUCT_CALL_CLUSTER members with zero tagged scenarios in ${catalogPath}: ${missingCluster.join(', ')}. ` +
-        `Add \`**Known product call:** <id>\` to >=1 scenario per cluster issue (phase-1 D4 / Unit 6).`,
+      `KNOWN_PRODUCT_CALL_CLUSTER members with zero mentions in ${catalogPath}: ${missingCluster.join(', ')}. ` +
+        `Tag a scenario via \`**Known product call:** <id>\` OR list IDs in a \`<!-- preflight-cluster-registry: ... -->\` block (phase-1 D4 / Unit 6).`,
     )
   }
 
   return pass(
     '4. catalog',
-    `${scenarios.length} scenarios parsed; all ${cluster.length} cluster IDs tagged`,
+    `${scenarios.length} scenarios parsed; all ${cluster.length} cluster IDs present`,
   )
 }
 

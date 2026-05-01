@@ -342,19 +342,19 @@ preObservation: { title: "BURNED — Join" }
 postObservation: { lobby: true }
 `
     const result = parseSeatLogString(markdownFor(body), {
-      validScenarioIds: new Set(['SCN-FAVOR-NORMAL-01', 'SCN-GO-DARK-NORMAL-01']),
+      validScenarioIds: new Set(['SCN-CALL-IN-FAVOR-NORMAL-01', 'SCN-GO-DARK-NORMAL-01']),
     })
     expect(result.entries).toEqual([])
     expect(result.errors).toHaveLength(1)
     expect(result.errors[0]?.message).toMatch(/Unknown scenarioId `SESSION-START`/)
-    expect(result.errors[0]?.message).toContain('SCN-FAVOR-NORMAL-01')
+    expect(result.errors[0]?.message).toContain('SCN-CALL-IN-FAVOR-NORMAL-01')
     expect(result.errors[0]?.message).toContain('SCN-GO-DARK-NORMAL-01')
   })
 
   it('accepts scenario-fire entries with scenarioIds present in the catalog', () => {
     const body = `
 entryType: scenario-fire
-scenarioId: SCN-FAVOR-NORMAL-01
+scenarioId: SCN-CALL-IN-FAVOR-NORMAL-01
 seat: seat-1
 seatName: Whiskrs
 timestamp: 2026-04-30T01:48:00-04:00
@@ -363,7 +363,7 @@ preObservation: {}
 postObservation: {}
 `
     const result = parseSeatLogString(markdownFor(body), {
-      validScenarioIds: new Set(['SCN-FAVOR-NORMAL-01']),
+      validScenarioIds: new Set(['SCN-CALL-IN-FAVOR-NORMAL-01']),
     })
     expect(result.errors).toEqual([])
     expect(result.entries).toHaveLength(1)
@@ -396,7 +396,7 @@ postObservation: {}
     // described a different card; that's a clusterer concern, not a
     // parser concern).
     const result = parseSeatLogString(markdownFor(VALID_SUSPICION), {
-      validScenarioIds: new Set(['SCN-FAVOR-NORMAL-01']),
+      validScenarioIds: new Set(['SCN-CALL-IN-FAVOR-NORMAL-01']),
     })
     expect(result.errors).toEqual([])
     expect(result.entries).toHaveLength(1)
@@ -405,7 +405,7 @@ postObservation: {}
   it('reports `(empty catalog)` when validScenarioIds is an empty set', () => {
     const body = `
 entryType: scenario-fire
-scenarioId: SCN-FAVOR-NORMAL-01
+scenarioId: SCN-CALL-IN-FAVOR-NORMAL-01
 seat: seat-1
 seatName: Whiskrs
 timestamp: 2026-04-30T01:48:00-04:00

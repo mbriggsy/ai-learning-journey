@@ -318,7 +318,7 @@ points; do not paraphrase the field shapes.
 
 ````yaml
 entryType: scenario-fire
-scenarioId: "SCN-FAVOR-NORMAL-01"
+scenarioId: "SCN-CALL-IN-FAVOR-NORMAL-01"
 seat: "seat-1"
 seatName: "Whiskrs"
 timestamp: "2026-04-29T22:14:30Z"
@@ -335,7 +335,7 @@ seat: "seat-1"
 seatName: "Whiskrs"
 timestamp: "2026-04-29T22:15:10Z"
 severity: medium
-relatedScenario: "SCN-FAVOR-NORMAL-01"
+relatedScenario: "SCN-CALL-IN-FAVOR-NORMAL-01"
 questionsTried:
   - "Single-click on hand card opens an enlarged preview that intercepts pointer events."
   - "Tried multiple click patterns to bypass the preview before discovering double-click."

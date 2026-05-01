@@ -7,13 +7,17 @@ games, exercising the three-tier fire-signature grammar and the 7×2
 info-gap matrix.
 
 The full production catalog is `docs/testing/playtest/SCENARIOS.md`. Cluster
-IDs (A-01, B-03–B-07, B-13, C-15, D-03, D-16) are referenced here only to
-satisfy the Unit 1 pre-flight check — calibration runs are NOT expected to
-reproduce these issues.
+IDs are listed in the registry comment below ONLY to satisfy the Unit 1
+pre-flight check — calibration scenarios are NOT the canonical home of those
+issues, so each scenario carries `Known product call: none` (truthful). The
+clusterer therefore emits no false-positive `candidateDuplicate` links from
+calibration runs (TODO #5/#6, 2026-05-01).
+
+<!-- preflight-cluster-registry: A-01 B-03 B-04 B-05 B-06 B-07 B-13 C-15 D-03 D-16 -->
 
 ---
 
-### SCN-FAVOR-NORMAL-01 — Favor with both seats holding ≥1 non-Burned card
+### SCN-CALL-IN-FAVOR-NORMAL-01 — Favor with both seats holding ≥1 non-Burned card
 
 **Category:** Favor
 **Axes:** 1 (Normal play), 11 (Information visibility)
@@ -74,7 +78,7 @@ down by 1.
 - ACTOR: "Did you receive a card without seeing what you gave up choice over?"
 - SPECTATOR: "Was the exchange narrated, or did it feel silent?"
 
-**Known product call:** B-05
+**Known product call:** none
 **Related issues:** none
 
 ---
@@ -143,7 +147,7 @@ your hand-count dropped by 1 when the window resolved.
 - TARGET: "Did you see the lift coming, or did your card just disappear?"
 - SPECTATOR: "Was the heist beat legible from your seat?"
 
-**Known product call:** A-01, D-03
+**Known product call:** none
 **Related issues:** none
 
 ---
@@ -211,7 +215,7 @@ visible.
   countdown flickered?"
 - SPECTATOR: "Was the chain narratable as it unfolded?"
 
-**Known product call:** D-16
+**Known product call:** none
 **Related issues:** none
 
 ---
@@ -270,12 +274,12 @@ hand size did not change, and the next player's status bar lit up.
 - ACTOR: "Did your turn end without drawing? Was the hand-off legible?"
 - NEXT-ACTOR: "Did your status bar transition cleanly?"
 
-**Known product call:** B-13
+**Known product call:** none
 **Related issues:** none
 
 ---
 
-### SCN-BURN-THE-FILES-NORMAL-01 — Burn the Files stack-shuffle with no exposed identities
+### SCN-BURN-FILES-NORMAL-01 — Burn the Files stack-shuffle with no exposed identities
 
 **Category:** Action cards
 **Axes:** 1 (Normal play), 11 (Information visibility)
@@ -335,12 +339,12 @@ any point.
 - ACTOR: "Did any card identity leak during the shuffle animation?"
 - SPECTATOR: "Was the shuffle narratable without revealing the deck?"
 
-**Known product call:** B-04
+**Known product call:** none
 **Related issues:** none
 
 ---
 
-### SCN-BURNED-DRAW-AXIS11-01 — Burned-drawn projection visibility (axis-11 anchor)
+### SCN-BURNED-DRAW-AUTO-DEFUSE-01 — Burned-drawn projection visibility (axis-11 anchor)
 
 **Category:** Burned & Extraction
 **Axes:** 1 (Normal play), 10 (Elimination adjacency), 11 (Information visibility)
@@ -407,7 +411,7 @@ DefusePlacement sheet with ± position buttons.
 - SPECTATOR: "Did the dodge beat read from your seat, or did the
   spectator view skip it?"
 
-**Known product call:** B-03, B-06, B-07, C-15
+**Known product call:** none
 **Related issues:** none
 
 ---

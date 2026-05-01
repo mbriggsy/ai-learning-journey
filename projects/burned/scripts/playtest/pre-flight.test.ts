@@ -322,6 +322,22 @@ describe('checkCatalog', () => {
     })
     expect(r.status).toBe('pass')
   })
+
+  it('passes when cluster IDs live in a registry comment and every scenario tags `none` (TODO #5/#6)', async () => {
+    // Regression for the mini-catalog mis-tagging fix. Calibration
+    // fixtures truthfully tag every scenario `none` (so the clusterer
+    // never emits a false-positive candidateDuplicate) and list cluster
+    // IDs in a single registry comment for pre-flight to discover.
+    const readFile = async () =>
+      `<!-- preflight-cluster-registry: A-01 B-03 B-04 B-05 B-06 B-07 B-13 C-15 D-03 D-16 -->\n\n` +
+      scenarioMd({ id: 'SCN-A', vibe: true, knownCall: 'none' }) +
+      scenarioMd({ id: 'SCN-B', vibe: true, knownCall: 'none' }) +
+      scenarioMd({ id: 'SCN-C', vibe: true, knownCall: 'none' }) +
+      scenarioMd({ id: 'SCN-D', vibe: true, knownCall: 'none' })
+    const r = await checkCatalog('mini.md', { readFile })
+    expect(r.status).toBe('pass')
+    expect(r.detail).toContain('all 10 cluster IDs present')
+  })
 })
 
 // ---------------------------------------------------------------------------

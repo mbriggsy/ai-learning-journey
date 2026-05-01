@@ -1112,6 +1112,27 @@ shape: negative
     expect(s.title).toBe('No prose sections')
   })
 
+  it('treats `Known product call: none` as no tag (knownProductCall undefined)', () => {
+    // Regression for TODO #5/#6 (2026-05-01). Mini-catalog calibration
+    // scenarios ship with `none` because the calibration fixture is not
+    // the canonical home of any E2E cluster issue. The clusterer must
+    // therefore see knownProductCall: undefined and emit no
+    // candidateDuplicate for those seeds.
+    const markdown = `### SCN-NONE-01 — Catalog says none
+
+**Fire signature:**
+\`\`\`yaml
+events: []
+shape: negative
+\`\`\`
+
+**Known product call:** none
+`
+    const scenarios = parseCatalog(markdown)
+    expect(scenarios).toHaveLength(1)
+    expect(scenarios[0]!.knownProductCall).toBeUndefined()
+  })
+
   it('round-trips the production catalog without throwing and preserves infoGap booleans', () => {
     // The real catalog has ~86 scenarios. This guard catches regressions
     // where an extension breaks a scenario that was previously parsing.

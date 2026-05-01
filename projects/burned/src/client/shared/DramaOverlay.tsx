@@ -229,8 +229,19 @@ export function DramaOverlay() {
     animatingRef.current = false
     const overlay = overlayRef.current
     const text = textRef.current
-    if (overlay) gsap.set(overlay, { opacity: 0, pointerEvents: 'none' })
-    if (text) gsap.set(text, { opacity: 0, filter: 'blur(4px)' })
+    const flipName = flipNameRef.current
+    if (overlay) {
+      gsap.set(overlay, { opacity: 0, pointerEvents: 'none' })
+      // a11y leak fix: opacity:0 hides visually but keeps text in the
+      // accessibility tree. Flip aria-hidden + clear textContent so screen
+      // readers don't re-announce stale beats across subsequent turns.
+      overlay.setAttribute('aria-hidden', 'true')
+    }
+    if (text) {
+      gsap.set(text, { opacity: 0, filter: 'blur(4px)' })
+      text.textContent = ''
+    }
+    if (flipName) flipName.textContent = ''
     processQueue()
   }
 
@@ -258,6 +269,9 @@ export function DramaOverlay() {
     }
 
     overlay.className = `${styles.overlay ?? ''} ${config.className}`
+    // Beat is starting — expose to assistive tech (default state in JSX is
+    // aria-hidden="true" so screen readers skip the dormant overlay).
+    overlay.setAttribute('aria-hidden', 'false')
 
     // Pick the target element based on variant. The other slots stay
     // hidden (display: none) so layout isn't fighting for space and the
@@ -297,6 +311,13 @@ export function DramaOverlay() {
         // into one perceived motion (Emil's crossfade-mask trick).
         gsap.set(overlay, { opacity: 0, pointerEvents: 'none' })
         gsap.set(target, { opacity: 0, filter: 'blur(4px)' })
+        // a11y leak fix: opacity:0 hides visually but textContent stays
+        // exposed to assistive tech. Flip aria-hidden back to true and
+        // clear the text refs so screen readers don't re-announce stale
+        // EXTRACTED / FILES BURNED across the next several turns.
+        overlay.setAttribute('aria-hidden', 'true')
+        text.textContent = ''
+        flipName.textContent = ''
         // Process next in queue
         processQueue()
       },
@@ -413,7 +434,19 @@ export function DramaOverlay() {
   }
 
   return (
-    <div ref={overlayRef} className={styles.overlay} style={{ opacity: 0 }}>
+    <div
+      ref={overlayRef}
+      className={styles.overlay}
+      style={{ opacity: 0 }}
+      // a11y: aria-hidden defaults to true so a dormant overlay isn't read.
+      // Flipped to false during active beats; flipped back on completion +
+      // textContent cleared so stale text doesn't persist across turns.
+      // role="status" makes the announcement automatic when text appears
+      // — screen readers don't otherwise visit a fixed-position visual
+      // overlay unless focus passes over it.
+      aria-hidden="true"
+      role="status"
+    >
       <div ref={textRef} className={styles.text} />
       {/* Card slot — always mounted so the ref is stable for GSAP. Hidden
           via display:none when the active beat is a text variant. Only the

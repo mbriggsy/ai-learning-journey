@@ -14,11 +14,34 @@ interface StatusBarProps {
    * turn (triage #022). Pass `1` (or omit) for normal turns.
    */
   readonly myTurnsRemaining?: number
+  /**
+   * Resolved name pair for an in-flight favor exchange where THIS seat is
+   * neither the requester nor the target. Phone reads "{requester} coerces
+   * {target}" so OTHER-alive players don't mistake the silent ~minutes-long
+   * favor-pending wait for a frozen game (triage #005).
+   *
+   * Pass `null` outside `subPhase: 'favor-pending'`, on the requester's seat,
+   * or on the target's seat — they have dedicated affordances (waiting state
+   * + staging banner respectively).
+   */
+  readonly favorOtherContext?: { requesterName: string; targetName: string } | null
 }
 
-export function StatusBar({ isMyTurn, currentPlayerName, drawPileCount, myTurnsRemaining }: StatusBarProps) {
+export function StatusBar({
+  isMyTurn,
+  currentPlayerName,
+  drawPileCount,
+  myTurnsRemaining,
+  favorOtherContext,
+}: StatusBarProps) {
   const outerClass = `${styles.statusBar} ${isMyTurn ? styles.yourTurn : styles.waiting}`
-  const { key, body } = bodyFor(isMyTurn, currentPlayerName, drawPileCount, myTurnsRemaining ?? 1)
+  const { key, body } = bodyFor(
+    isMyTurn,
+    currentPlayerName,
+    drawPileCount,
+    myTurnsRemaining ?? 1,
+    favorOtherContext ?? null,
+  )
 
   return (
     <div className={outerClass} data-diag="statusbar">
@@ -48,6 +71,7 @@ function bodyFor(
   currentPlayerName: string | null,
   drawPileCount: number,
   myTurnsRemaining: number,
+  favorOtherContext: { requesterName: string; targetName: string } | null,
 ): { key: string; body: React.ReactNode } {
   if (isMyTurn) {
     if (myTurnsRemaining > 1) {
@@ -62,6 +86,20 @@ function bodyFor(
       }
     }
     return { key: 'me', body: <>You&rsquo;re up</> }
+  }
+  // Favor-pending OTHER-alive — neither requester nor target. Replaces the
+  // silent "[ACTOR] is on deck · N in the pile" status that read identical
+  // to a frozen game during the favor exchange.
+  if (favorOtherContext) {
+    return {
+      key: `favor-${favorOtherContext.requesterName}-${favorOtherContext.targetName}`,
+      body: (
+        <>
+          {favorOtherContext.requesterName} coerces {favorOtherContext.targetName}
+          <span className={styles.pileCount}> &middot; favor pending</span>
+        </>
+      ),
+    }
   }
   if (currentPlayerName) {
     return {

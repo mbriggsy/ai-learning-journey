@@ -273,6 +273,18 @@ function PlayingView({ roomCode }: { roomCode: string }) {
     ? players.find(p => p.id === pendingPrompt.playerId)?.name ?? 'them'
     : null
 
+  // OTHER-alive context — neither requester nor target. Without this branch
+  // the StatusBar reads "[ACTOR] is on deck · 22 in the pile" identical to
+  // the pre-play state across the entire favor exchange (~7 minutes in
+  // calibration), which seat-3 mistook for a frozen game. Triage #005.
+  const favorOtherContext =
+    pendingPrompt?.type === 'favor-response' && !isFavorTarget && !isFavorRequester
+      ? {
+          requesterName: players.find(p => p.id === pendingPrompt.requesterId)?.name ?? 'Someone',
+          targetName: players.find(p => p.id === pendingPrompt.playerId)?.name ?? 'someone',
+        }
+      : null
+
   const { state: cardPlayState, selectedIds, toggleCard, reset: resetCardPlay } = useCardPlay(
     hand, isMyTurn, subPhase, isFavorTarget ? 1 : 3,
   )
@@ -460,6 +472,7 @@ function PlayingView({ roomCode }: { roomCode: string }) {
         currentPlayerName={currentPlayerName}
         drawPileCount={drawPileCount}
         myTurnsRemaining={isMyTurn ? currentTurn?.turnsRemaining ?? 1 : 1}
+        favorOtherContext={favorOtherContext}
       />
 
       <div className={playingStyles.workbench}>

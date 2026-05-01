@@ -553,6 +553,187 @@ describe('matchFires — Tier 2 (projection-assertions)', () => {
     expect(f.matched).toBe('with-divergence')
     expect(f.divergenceNotes?.join(' ')).toContain('nopeWindow.namedSteal.namedCardType')
   })
+
+  // --- Triage issue #019 regressions ---
+
+  it('placeholder substitution: $TARGET in expect resolves to bound seat ID before matching', () => {
+    const markdown = `# Test
+### SCN-PLACEHOLDER-EXPECT-01 — Placeholder in expect value
+
+**Fire signature:**
+\`\`\`yaml
+events:
+  - type: card-played
+    where: { playerId: $ACTOR, cardType: 'call-in-a-favor', targetId: $TARGET }
+shape: strict
+projection-assertions:
+  - viewer: $TARGET
+    field: pendingPrompt.playerId
+    expect: $TARGET
+\`\`\`
+`
+    const scenarios = parseCatalog(markdown)
+    const events: GodEvent[] = [
+      godEvent({
+        stateVersion: 1,
+        action: { type: 'play-card', playerId: 'p-alice' },
+        events: [
+          {
+            type: 'card-played',
+            playerId: 'p-alice',
+            cardType: 'call-in-a-favor',
+            targetId: 'p-bob',
+          },
+        ],
+        projections: {
+          'p-bob': {
+            myPlayerId: 'p-bob',
+            // pendingPrompt.playerId IS the actual seat ID, not a literal '$TARGET'
+            pendingPrompt: { type: 'favor-response', playerId: 'p-bob' },
+          },
+        },
+      }),
+    ]
+    const fires = matchFires(scenarios, events, [])
+    const f = fires.find(x => x.scenarioId === 'SCN-PLACEHOLDER-EXPECT-01')!
+    expect(f.tier1).toBe('pass')
+    expect(f.tier2).toBe('pass') // would fail without substitution: '$TARGET' !== 'p-bob'
+    expect(f.matched).toBe('clean')
+  })
+
+  it('placeholder substitution inside an expect object: { playerId: $TARGET } resolves nested', () => {
+    const markdown = `# Test
+### SCN-PLACEHOLDER-NESTED-01 — Placeholder nested in expect object
+
+**Fire signature:**
+\`\`\`yaml
+events:
+  - type: card-played
+    where: { playerId: $ACTOR, cardType: 'call-in-a-favor', targetId: $TARGET }
+shape: strict
+projection-assertions:
+  - viewer: $TARGET
+    field: pendingPrompt
+    expect: { type: 'favor-response', playerId: $TARGET }
+\`\`\`
+`
+    const scenarios = parseCatalog(markdown)
+    const events: GodEvent[] = [
+      godEvent({
+        stateVersion: 1,
+        action: { type: 'play-card', playerId: 'p-alice' },
+        events: [
+          {
+            type: 'card-played',
+            playerId: 'p-alice',
+            cardType: 'call-in-a-favor',
+            targetId: 'p-bob',
+          },
+        ],
+        projections: {
+          'p-bob': {
+            myPlayerId: 'p-bob',
+            pendingPrompt: { type: 'favor-response', playerId: 'p-bob' },
+          },
+        },
+      }),
+    ]
+    const fires = matchFires(scenarios, events, [])
+    const f = fires.find(x => x.scenarioId === 'SCN-PLACEHOLDER-NESTED-01')!
+    expect(f.tier2).toBe('pass')
+    expect(f.matched).toBe('clean')
+  })
+
+  it('prose expect: free-form English assertion is logged as info, does NOT fail tier-2', () => {
+    const markdown = `# Test
+### SCN-PROSE-EXPECT-01 — Prose-style expect
+
+**Fire signature:**
+\`\`\`yaml
+events:
+  - type: card-played
+    where: { playerId: $ACTOR, cardType: 'call-in-a-favor', targetId: $TARGET }
+shape: strict
+projection-assertions:
+  - viewer: $ACTOR
+    field: myHand
+    expect: gains exactly one card after favor-given
+\`\`\`
+`
+    const scenarios = parseCatalog(markdown)
+    const events: GodEvent[] = [
+      godEvent({
+        stateVersion: 1,
+        action: { type: 'play-card', playerId: 'p-alice' },
+        events: [
+          {
+            type: 'card-played',
+            playerId: 'p-alice',
+            cardType: 'call-in-a-favor',
+            targetId: 'p-bob',
+          },
+        ],
+        projections: {
+          'p-alice': {
+            myPlayerId: 'p-alice',
+            myHand: [{ id: 'c1', type: 'dash-barlowe' }],
+          },
+        },
+      }),
+    ]
+    const fires = matchFires(scenarios, events, [])
+    const f = fires.find(x => x.scenarioId === 'SCN-PROSE-EXPECT-01')!
+    expect(f.tier1).toBe('pass')
+    expect(f.tier2).toBe('pass') // prose is skipped, not failed
+    expect(f.matched).toBe('clean')
+  })
+
+  it('prose expect does not mask a real tier-2 failure when both kinds of assertions appear', () => {
+    const markdown = `# Test
+### SCN-MIXED-EXPECT-01 — Prose + machine-checkable
+
+**Fire signature:**
+\`\`\`yaml
+events:
+  - type: card-played
+    where: { playerId: $ACTOR, cardType: 'call-in-a-favor', targetId: $TARGET }
+shape: strict
+projection-assertions:
+  - viewer: $ACTOR
+    field: myHand
+    expect: gains exactly one card after favor-given
+  - viewer: $TARGET
+    field: pendingPrompt.playerId
+    expect: $TARGET
+\`\`\`
+`
+    const scenarios = parseCatalog(markdown)
+    const events: GodEvent[] = [
+      godEvent({
+        stateVersion: 1,
+        action: { type: 'play-card', playerId: 'p-alice' },
+        events: [
+          {
+            type: 'card-played',
+            playerId: 'p-alice',
+            cardType: 'call-in-a-favor',
+            targetId: 'p-bob',
+          },
+        ],
+        projections: {
+          'p-alice': { myPlayerId: 'p-alice', myHand: [] },
+          'p-bob': {
+            myPlayerId: 'p-bob',
+            pendingPrompt: { type: 'favor-response', playerId: 'p-NOT-BOB' }, // wrong
+          },
+        },
+      }),
+    ]
+    const fires = matchFires(scenarios, events, [])
+    const f = fires.find(x => x.scenarioId === 'SCN-MIXED-EXPECT-01')!
+    expect(f.tier2).toBe('fail') // the structured one fails, prose-skip doesn't shield it
+    expect(f.matched).toBe('with-divergence')
+  })
 })
 
 // --- matchFires (Tier 3) ---------------------------------------------------

@@ -1023,6 +1023,42 @@ function matchEventPattern(
 
 // --- Tier 2 ----------------------------------------------------------------
 
+/**
+ * Recursively replace `$ACTOR` / `$TARGET` placeholders in an expect value
+ * with the resolved seat IDs from tier-1 bindings. Required because
+ * `parseScalarOrInline` parses placeholders as literal strings, so
+ * `expect: { playerId: $TARGET }` arrives at tier-2 as
+ * `{ playerId: '$TARGET' }` — a literal string that never matches the
+ * observed seat ID. Triage issue #019 (Phase 6 calibration).
+ */
+function substituteBindings(value: unknown, bindings: Bindings): unknown {
+  if (typeof value === 'string') {
+    if (value === '$ACTOR' || value === 'ACTOR') return bindings['$ACTOR'] ?? value
+    if (value === '$TARGET' || value === 'TARGET') return bindings['$TARGET'] ?? value
+    return value
+  }
+  if (Array.isArray(value)) return value.map(v => substituteBindings(v, bindings))
+  if (value && typeof value === 'object') {
+    const out: Record<string, unknown> = {}
+    for (const [k, v] of Object.entries(value)) out[k] = substituteBindings(v, bindings)
+    return out
+  }
+  return value
+}
+
+/**
+ * Detect free-form English expect values (e.g. "gains exactly one card after
+ * favor-given"). These document intent for catalog readers but are not
+ * machine-checkable; tier-2 surfaces them as informational notes rather
+ * than failing the match. Heuristic: a string that contains whitespace and
+ * does not start with `$` (sentinels like `$PRESENT` / `$ABSENT` / `$ACTOR`
+ * pass through). Engine values (UUIDs, kebab-case card types) never contain
+ * spaces, so the heuristic is safe.
+ */
+function isProseExpect(value: unknown): boolean {
+  return typeof value === 'string' && !value.startsWith('$') && /\s/.test(value)
+}
+
 function tier2Match(
   assertions: readonly ProjectionAssertion[],
   flat: readonly GodEventForMatch[],
@@ -1031,6 +1067,7 @@ function tier2Match(
   bindings: Bindings,
 ): { passed: boolean; divergences: string[] } {
   const divergences: string[] = []
+  let realFailures = 0
   const terminal = flat[lastIdx]!
 
   for (const assertion of assertions) {
@@ -1039,17 +1076,29 @@ function tier2Match(
       divergences.push(
         `tier-2: viewer ${assertion.viewer} unresolved for field ${assertion.field}`,
       )
+      realFailures++
       continue
     }
+    if (isProseExpect(assertion.expect)) {
+      // Prose expect — documentation only, not machine-checkable. Logged so
+      // catalog authors can spot the unstructured assertion, but does NOT
+      // fail tier-2 (issue #019).
+      divergences.push(
+        `tier-2 SKIPPED (prose expect, not machine-checked): viewer=${assertion.viewer} path=${assertion.field} expect=${formatExpect(assertion.expect)}`,
+      )
+      continue
+    }
+    const expectResolved = substituteBindings(assertion.expect, bindings)
     const projection = terminal.projections[viewerId]
     const observed = walkPath(projection, assertion.field)
-    if (!expectMatches(observed, assertion.expect)) {
+    if (!expectMatches(observed, expectResolved)) {
       divergences.push(
-        `tier-2: viewer=${assertion.viewer} path=${assertion.field} expected=${formatExpect(assertion.expect)} observed=${formatObserved(observed)}`,
+        `tier-2: viewer=${assertion.viewer} path=${assertion.field} expected=${formatExpect(expectResolved)} observed=${formatObserved(observed)}`,
       )
+      realFailures++
     }
   }
-  return { passed: divergences.length === 0, divergences }
+  return { passed: realFailures === 0, divergences }
 }
 
 function resolveViewer(

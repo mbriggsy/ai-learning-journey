@@ -216,6 +216,49 @@ Write 1-3 sentences naming the specific thing you saw (or didn't see)
 that drove your answer — "the banner arrived 500 ms late and overlapped
 the card flip" is useful; "it felt okay" is not.
 
+### Motion-quality sub-rubric (mandatory near any card-state change)
+
+A scenario can have a great banner AND still feel mechanical if the
+cards teleport. Motion absence is a separate axis from banner absence.
+After any card moves between zones (hand → staging, staging → discard,
+hand → opponent, draw pile → hand) OR after any state-changing action
+that should have visible feedback (shuffle, defuse-place, combo-steal
+commit), answer:
+
+- Did the transition read as MOTION (fade out, fly, scale-down, slide,
+  rotate, pulse), or did the card / pile TELEPORT — one frame visible,
+  next frame gone, no kinetic bridge?
+- Did the state change have a kinetic confirmation, or did it happen
+  entirely in numeric badges (e.g., draw count `20 → 19` with no
+  animation)?
+
+If something teleported, that's a `feltLikeArcher: no` with rationale
+"the card teleported / no kinetic confirmation" — log it explicitly,
+even if the banner copy was fine. Both axes (banner + motion) get
+logged when both are weak.
+
+## GESTURE VOCABULARY
+
+The phone uses two distinct tap gestures with different meanings:
+
+- **Single-tap on a hand card** → opens an enlarged PREVIEW (the card
+  detail sheet rises with rules + illustration). Tapping anywhere
+  outside dismisses. Single-tap NEVER stages a card or commits an
+  action.
+- **Double-tap on a hand card** → STAGES the card in the staging
+  area. This is the commitment gesture. Staged cards can be unstaged
+  (tap again) or played via the action button.
+- **Single-tap on the action button** (`SmartActionBox` at the bottom)
+  → executes the staged play (drawing, naming a card, choosing a
+  target, etc).
+- **Long-press on a hand card** → also opens the card detail preview
+  (redundant with single-tap; muscle-memory affordance).
+
+If you fumble the gesture vocabulary — single-tapping when you mean to
+stage, or double-tapping when you mean to preview — log a `suspicion`
+entry about gesture discoverability. Do NOT silently course-correct
+and pretend you "figured it out" — the friction itself is the finding.
+
 ## INNER LOOP (D10)
 
 (Step 1 navigation above happens once at session start. The loop below

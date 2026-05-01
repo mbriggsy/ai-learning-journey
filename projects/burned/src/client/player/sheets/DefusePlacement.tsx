@@ -64,18 +64,25 @@ export function DefusePlacement({ maxPosition, onPlace }: DefusePlacementProps) 
               ? 'Top · burns on next draw'
               : position === maxPosition
               ? 'Bottom · last card in deck'
-              : `${position} safe draw${position === 1 ? '' : 's'} first`}
+              : `${position} safe draw${position === 1 ? '' : 's'}`}
           </span>
         </span>
         <button onClick={() => setPosition(p => Math.min(maxPosition, p + 1))}>+</button>
       </div>
+      {/* Confirm copy mirrors the stepper state so the button reads as the
+          stepper's submit. Generic "Place Here" left ambiguous — a player
+          who tapped + to fine-tune wasn't sure how to commit. */}
       <button
         className={styles.confirmBtn}
         onClick={() => handlePlace(position)}
         disabled={submitted}
         style={{ touchAction: 'manipulation' }}
       >
-        Place Here
+        {position === 0
+          ? 'Place at top'
+          : position === maxPosition
+          ? 'Place at bottom'
+          : `Place at #${position + 1}`}
       </button>
     </div>
   )

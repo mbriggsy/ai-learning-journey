@@ -20,6 +20,8 @@ interface HandProps {
 
 export function Hand({ hand, disabled, onStageCard, onCardLongPress }: HandProps) {
   const handRef = useRef<HTMLDivElement>(null)
+  const slotRefs = useRef(new Map<string, HTMLDivElement>())
+  const prevIdsRef = useRef<Set<string>>(new Set())
   const [dealComplete, setDealComplete] = useState(false)
   const [enlargedId, setEnlargedId] = useState<string | null>(null)
   const hasCards = hand.length > 0
@@ -32,6 +34,36 @@ export function Hand({ hand, disabled, onStageCard, onCardLongPress }: HandProps
       return () => clearTimeout(timer)
     }
   }, [hasCards, dealComplete, hand.length])
+
+  // When a single card joins the hand (destage or draw), horizontally scroll
+  // so the new slot centers in view. Runs alongside the Framer layoutId
+  // flight: the card flies from the staging slot while the hand scrolls to
+  // receive it — they meet at the centered slot. Skipped during the deal
+  // (dealComplete=false), and skipped when multiple cards arrive at once
+  // (rejoin / hand reshuffle) since "follow the new card" only reads cleanly
+  // when there's a single subject.
+  useEffect(() => {
+    const prev = prevIdsRef.current
+    const current = new Set(hand.map(c => c.id))
+
+    if (dealComplete) {
+      const newIds: string[] = []
+      for (const id of current) if (!prev.has(id)) newIds.push(id)
+      if (newIds.length === 1) {
+        const handEl = handRef.current
+        const slot = slotRefs.current.get(newIds[0]!)
+        if (handEl && slot) {
+          const slotCenter = slot.offsetLeft + slot.offsetWidth / 2
+          handEl.scrollTo({
+            left: slotCenter - handEl.clientWidth / 2,
+            behavior: 'smooth',
+          })
+        }
+      }
+    }
+
+    prevIdsRef.current = current
+  }, [hand, dealComplete])
 
   // Clear enlargement when card leaves hand (staged or played)
   useEffect(() => {
@@ -102,6 +134,10 @@ export function Hand({ hand, disabled, onStageCard, onCardLongPress }: HandProps
           {hand.map((card, i) => (
             <m.div
               key={card.id}
+              ref={(el: HTMLDivElement | null) => {
+                if (el) slotRefs.current.set(card.id, el)
+                else slotRefs.current.delete(card.id)
+              }}
               className={styles.slot}
               layout={dealComplete ? 'position' : false}
               // Transform string — card deal is a hot path (many cards enter

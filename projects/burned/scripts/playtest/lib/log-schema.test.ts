@@ -323,6 +323,106 @@ seat: "unclosed quote
 })
 
 // -----------------------------------------------------------------------------
+// Catalog cross-reference (triage seeds #001/#002/#003/#011/#018).
+// -----------------------------------------------------------------------------
+
+describe('parseSeatLogString — validScenarioIds catalog gate', () => {
+  it('rejects scenario-fire entries with scenarioIds absent from the catalog', () => {
+    // Real-world: seat-1 invented "SESSION-START" for the lobby-load
+    // moment. Without this gate the clusterer routed it as a
+    // scripted-scenario seed and consumed a triage agent spawn.
+    const body = `
+entryType: scenario-fire
+scenarioId: SESSION-START
+seat: seat-1
+seatName: Whiskrs
+timestamp: 2026-04-30T01:42:08-04:00
+triggeringAction: { url: "player.html?room=CALSWF" }
+preObservation: { title: "BURNED — Join" }
+postObservation: { lobby: true }
+`
+    const result = parseSeatLogString(markdownFor(body), {
+      validScenarioIds: new Set(['SCN-FAVOR-NORMAL-01', 'SCN-GO-DARK-NORMAL-01']),
+    })
+    expect(result.entries).toEqual([])
+    expect(result.errors).toHaveLength(1)
+    expect(result.errors[0]?.message).toMatch(/Unknown scenarioId `SESSION-START`/)
+    expect(result.errors[0]?.message).toContain('SCN-FAVOR-NORMAL-01')
+    expect(result.errors[0]?.message).toContain('SCN-GO-DARK-NORMAL-01')
+  })
+
+  it('accepts scenario-fire entries with scenarioIds present in the catalog', () => {
+    const body = `
+entryType: scenario-fire
+scenarioId: SCN-FAVOR-NORMAL-01
+seat: seat-1
+seatName: Whiskrs
+timestamp: 2026-04-30T01:48:00-04:00
+triggeringAction: {}
+preObservation: {}
+postObservation: {}
+`
+    const result = parseSeatLogString(markdownFor(body), {
+      validScenarioIds: new Set(['SCN-FAVOR-NORMAL-01']),
+    })
+    expect(result.errors).toEqual([])
+    expect(result.entries).toHaveLength(1)
+  })
+
+  it('does not check the catalog when validScenarioIds is omitted (back-compat)', () => {
+    // Smoke tests / isolation audit don't have the catalog handy and just
+    // need structural validation. Omitting the option preserves prior
+    // behavior — bogus scenarioIds pass schema validation if their other
+    // fields are well-formed.
+    const body = `
+entryType: scenario-fire
+scenarioId: NOT-IN-ANY-CATALOG
+seat: seat-1
+seatName: Whiskrs
+timestamp: 2026-04-30T01:48:00-04:00
+triggeringAction: {}
+preObservation: {}
+postObservation: {}
+`
+    const result = parseSeatLogString(markdownFor(body))
+    expect(result.errors).toEqual([])
+    expect(result.entries).toHaveLength(1)
+  })
+
+  it('does not gate non-scenario-fire entries (suspicion / vibe-check / ui-spec-divergence)', () => {
+    // The catalog gate is scoped to scenario-fire only — suspicion and
+    // vibe-check use `relatedScenario` which is allowed to be null AND is
+    // not the same axis (#015 vibe-check tagged `SCN-SKIP-NORMAL-01` but
+    // described a different card; that's a clusterer concern, not a
+    // parser concern).
+    const result = parseSeatLogString(markdownFor(VALID_SUSPICION), {
+      validScenarioIds: new Set(['SCN-FAVOR-NORMAL-01']),
+    })
+    expect(result.errors).toEqual([])
+    expect(result.entries).toHaveLength(1)
+  })
+
+  it('reports `(empty catalog)` when validScenarioIds is an empty set', () => {
+    const body = `
+entryType: scenario-fire
+scenarioId: SCN-FAVOR-NORMAL-01
+seat: seat-1
+seatName: Whiskrs
+timestamp: 2026-04-30T01:48:00-04:00
+triggeringAction: {}
+preObservation: {}
+postObservation: {}
+`
+    const result = parseSeatLogString(markdownFor(body), {
+      validScenarioIds: new Set(),
+    })
+    expect(result.entries).toEqual([])
+    expect(result.errors).toHaveLength(1)
+    expect(result.errors[0]?.message).toContain('(empty catalog)')
+  })
+})
+
+// -----------------------------------------------------------------------------
 // Drift regression — the schema's literal union tracks ROW_DISPLAY_LABELS.
 // -----------------------------------------------------------------------------
 

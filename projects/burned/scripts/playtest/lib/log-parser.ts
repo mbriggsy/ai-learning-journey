@@ -49,6 +49,26 @@ export interface ParseResult {
   readonly warnings: ParseWarning[]
 }
 
+export interface ParseOptions {
+  /**
+   * If provided, every `scenario-fire` entry's `scenarioId` is cross-checked
+   * against this set after schema validation passes. Mismatches become parse
+   * errors — the entry is dropped and the bad ID is listed alongside the
+   * accepted catalog IDs in the error message.
+   *
+   * Closes triage seeds #001/#002/#003/#011/#018: seat agents invented
+   * lifecycle scenarioIds (`SESSION-START`, `GAME-START-OBSERVATION`,
+   * `TURN-TRANSITION-SEAT1-TO-SEAT2`, `INTERCEPT-WINDOW-OBSERVED-SEAT1-TURN`)
+   * not present in `SCENARIOS.md`. Without this gate the clusterer routed
+   * each invented ID as a `scripted-scenario` seed and consumed a triage
+   * agent spawn per bogus entry. Pass-through callers (smoke tests,
+   * isolation audit) can omit this option to keep purely-structural
+   * parsing behavior; triage-pipeline / orchestrator / verify-calibration
+   * opt in at their entry points.
+   */
+  readonly validScenarioIds?: ReadonlySet<string>
+}
+
 // -----------------------------------------------------------------------------
 // Fence extraction
 // -----------------------------------------------------------------------------
@@ -102,7 +122,7 @@ function extractFencedBlocks(markdown: string): string[] {
 // Public API
 // -----------------------------------------------------------------------------
 
-export function parseSeatLogString(markdown: string): ParseResult {
+export function parseSeatLogString(markdown: string, options: ParseOptions = {}): ParseResult {
   const entries: LogEntry[] = []
   const errors: ParseError[] = []
   const warnings: ParseWarning[] = []
@@ -179,15 +199,34 @@ export function parseSeatLogString(markdown: string): ParseResult {
       return
     }
 
+    // Step 5: catalog cross-reference for scenario-fire entries (optional).
+    // Drops the entry and surfaces a per-block error listing the bad ID
+    // and the accepted catalog set. Triage seeds #001/#002/#003/#011/#018
+    // — without this gate the clusterer routes invented IDs as
+    // scripted-scenario seeds.
+    if (
+      options.validScenarioIds !== undefined &&
+      result.data.entryType === 'scenario-fire' &&
+      !options.validScenarioIds.has(result.data.scenarioId)
+    ) {
+      const accepted = [...options.validScenarioIds].sort().join(', ') || '(empty catalog)'
+      errors.push({
+        blockIndex,
+        message: `Unknown scenarioId \`${result.data.scenarioId}\` for scenario-fire entry. Accepted catalog IDs: ${accepted}.`,
+        rawBlock,
+      })
+      return
+    }
+
     entries.push(result.data)
   })
 
   return { entries, errors, warnings }
 }
 
-export async function parseSeatLog(path: string): Promise<ParseResult> {
+export async function parseSeatLog(path: string, options: ParseOptions = {}): Promise<ParseResult> {
   const markdown = await readFile(path, 'utf8')
-  return parseSeatLogString(markdown)
+  return parseSeatLogString(markdown, options)
 }
 
 // -----------------------------------------------------------------------------

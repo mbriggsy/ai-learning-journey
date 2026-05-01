@@ -96,7 +96,17 @@ export async function runTriagePipeline(
     return { skipped: 'isolation-breach', seedCount: 0, specCount: 0 }
   }
 
-  const seats = await loadSeatEntries(input.runDir)
+  // Load catalog FIRST so we can pass valid scenarioIds into the seat-log
+  // parser. The parser uses them to reject `scenario-fire` entries with
+  // invented scenarioIds (lifecycle observations like SESSION-START,
+  // GAME-START-OBSERVATION, etc.) at parse time — they never reach the
+  // clusterer and never consume a triage agent spawn. Triage seeds
+  // #001/#002/#003/#011/#018 caught five separate occurrences in one
+  // session before this gate landed.
+  const catalog = await loadCatalog(input.catalogPath)
+  const validScenarioIds = new Set(catalog.map(s => s.id))
+
+  const seats = await loadSeatEntries(input.runDir, validScenarioIds)
   if (seats.length === 0) {
     // No seats means no seat-driven signals; coverage divergences could
     // still produce seeds, but for v1 a zero-seat session is treated as
@@ -104,8 +114,6 @@ export async function runTriagePipeline(
     // run becomes useful.
     return { skipped: 'no-seeds', seedCount: 0, specCount: 0 }
   }
-
-  const catalog = await loadCatalog(input.catalogPath)
   const godEvents = await loadGodEvents(input.eventsJsonlPath)
   const connections = await loadConnections(input.connectionsJsonlPath)
   const coverage = await loadCoverageReport(input.coveragePath, catalog)
@@ -157,7 +165,10 @@ export async function runTriagePipeline(
 // Loaders
 // -----------------------------------------------------------------------------
 
-async function loadSeatEntries(runDir: string): Promise<SeatEntries[]> {
+async function loadSeatEntries(
+  runDir: string,
+  validScenarioIds: ReadonlySet<string>,
+): Promise<SeatEntries[]> {
   const seatsDir = path.join(runDir, SEATS_DIR)
   const suspicionsDir = path.join(runDir, SUSPICIONS_DIR)
   const seatLogFiles = await safeReaddir(seatsDir)
@@ -172,6 +183,7 @@ async function loadSeatEntries(runDir: string): Promise<SeatEntries[]> {
     if (m) seatIds.add(m[1]!)
   }
 
+  const parseOpts = { validScenarioIds }
   const out: SeatEntries[] = []
   for (const seatId of [...seatIds].sort()) {
     const logFile = `${seatId}.log.md`
@@ -180,10 +192,10 @@ async function loadSeatEntries(runDir: string): Promise<SeatEntries[]> {
     const susRel = path.posix.join(SUSPICIONS_DIR, suspicionFile)
     const [logRes, susRes] = await Promise.all([
       seatLogFiles.includes(logFile)
-        ? parseSeatLog(path.join(seatsDir, logFile))
+        ? parseSeatLog(path.join(seatsDir, logFile), parseOpts)
         : Promise.resolve({ entries: [], errors: [], warnings: [] }),
       suspicionFiles.includes(suspicionFile)
-        ? parseSeatLog(path.join(suspicionsDir, suspicionFile))
+        ? parseSeatLog(path.join(suspicionsDir, suspicionFile), parseOpts)
         : Promise.resolve({ entries: [], errors: [], warnings: [] }),
     ])
     out.push({

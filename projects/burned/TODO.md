@@ -2,6 +2,151 @@
 
 ## NEXT SESSION — pick up here (2026-05-01+)
 
+### THIS SESSION (2026-05-01 late evening) — TODO queue sweep: #5/#6, #3 phase 1+2, shuffle redo, #7 a11y, #8/#9
+
+Six commits this session, all green at squeaky time. The previous
+session's nine "Unfinished Fixes" got swept end-to-end except for the
+three items requiring Briggsy in the loop.
+
+| Commit | Subject |
+|---|---|
+| `87640d66` | feat(playtest): close TODO #5/#6 — mini-catalog truthful tags + pre-flight registry scan |
+| `21c9e811` | feat(drama): add FILES BURNED beat for Burn the Files (TODO #3 phase 1) |
+| `923112b6` | feat(drawpile): board shuffle animation on deck-shuffled (TODO #3 phase 2) |
+| `b40585d2` | refactor(drawpile): redo shuffle animation per Emil + frontend-design lenses |
+| `e0fdc3f9` | fix(drama): close EXTRACTED a11y tree leak across turns (TODO #7) |
+| `2853f4d8` | docs(playtest): bake gesture vocab + motion vibe-check into seat prompts (TODO #8/#9) |
+
+**TODO #1 — Burn the Files vanish (P0?) — STRUCK as misdiagnosis.** Code
+trace + triage god-mode evidence both confirm the engine is clean.
+`handleSingleCard` (engine.ts:319-320) removes from hand + adds to
+discard *before* the nope window opens; `applyShuffle` only mutates
+drawPile/pendingFuture/nopeWindow. No code path removes cards from
+`discardPile` (3 mutations only: init, eliminate-preserve, append).
+Triage seed 006 god-mode notes confirm "the discard pile in boardView
+correctly shows `burn-the-files` as the top card after resolution."
+The user-perception "vanished" was a feedback gap (no phone discard
+view + no shuffle animation) — fully addressed by phase 1+2 below.
+
+**TODO #5/#6 — clusterer false-positive + ID drift (P2 harness).** The
+TODO's stated diagnosis was wrong: clusterer code is correct, mini-
+catalog content was deliberately mis-tagged. Fixed at the catalog +
+pre-flight layer. `pre-flight.ts` cluster check now substring-scans
+the FULL raw catalog text instead of joining per-scenario
+`knownProductCall` values. Added `<!-- preflight-cluster-registry: ...
+-->` block to mini-catalog + every scenario's `Known product call`
+flipped to `none` (truthful — calibration scenarios aren't the
+canonical home of any cluster issue). 3 IDs renamed to production
+spelling. +2 regression tests.
+
+**TODO #3 phase 1 — FILES BURNED drama beat.** Phone has no DrawPile
+component and `discardPile: []` in player projection (by design).
+Without a beat, BTF feels like the card vanished. Drama overlay now
+fires for `card-played: burn-the-files` (non-combo): ACTOR sees
+"FILES BURNED", observers see "[NAME] BURNED THE FILES". `.burnedfiles`
+CSS class — radial ember (`color-burned-fire` core → cordovan rim →
+charcoal char) sized to sit behind the text. Earth-verified at
+390×844 phone viewport for both ACTOR + observer copy. PlayerAlert
+toast filter extended — burn-the-files joins go-dark / extraction in
+the "DramaOverlay owns this moment" exclusion.
+
+**TODO #3 phase 2 — board shuffle animation.** Initial commit
+(`923112b6`) shipped a 720ms multi-layer riffle. Audit through
+Emil + frontend-design skills surfaced real issues: too long for
+multi-game playback, ease-out on oscillation drags the middle, double-
+bounce reads as jelly, layer riffle invisible at desktop scale. Redo
+(`b40585d2`) delivers a 420ms cubic-bezier(0.77, 0, 0.175, 1) arc:
+single-accent stack scale-pop (1 → 1.04 → 1), wrapper riffle (-3° +
+0.8px motion blur peak), glow flash on strong ease-out. Layer
+animations dropped (cost without payoff). Earth-verified mid-arc and
+post-settle. The `.topCardWrap` element introduced to isolate riffle
+from `.topCard`'s drop-in entrance — without it, the dossier would
+re-do its drop-in after every BTF (CSS animation revert when
+data-shuffling flips off). Reduced-motion now keeps glow flash but
+drops rotation/blur/scale per Emil's "fewer and gentler, not zero."
+
+**TODO #7 — EXTRACTED a11y tree leak.** Root cause: `text.textContent
+= config.text` on beat start, never cleared on completion. opacity:0
+hides visually but leaves text in the accessibility tree across
+subsequent turns. Layered fix: JSX defaults `aria-hidden="true"` +
+`role="status"`; processQueue flips `aria-hidden="false"` on beat
+start; onComplete + abortCurrentBeat flip back + clear textContent on
+text/flipName refs. Bonus: `role="status"` adds active screen-reader
+announcement when beats fire (drama beats weren't being announced at
+all before — only stale-leaking between turns). Earth-verified the
+exact failure scenario: burned-drawn → extraction-played + two turn
+rotations + 600ms settle → all state cleared.
+
+**TODO #8/#9 — seat-prompt template polish.** Two parallel additions
+to `seat-scripted.md` and `seat-free-play.md`:
+- **Gesture vocabulary section** — single-tap previews, double-tap
+  stages, single-tap action button executes. With explicit "if you
+  fumble, log a suspicion — don't silently course-correct" rule.
+  Prevents the same fumble seat agents made today.
+- **Motion-quality vibe-check sub-rubric** — explicit prompt asking
+  whether transitions read as motion or as teleport. Frames it as a
+  separate axis from banner absence. Today's BTF state-disappearance
+  vibe gap (which the engine was clean for) would have surfaced
+  immediately under this rubric.
+
+Templates loaded at runtime by `agent-launcher.ts` — no per-seat
+generator regeneration needed.
+
+### Unfinished Fixes (this session)
+
+These need Briggsy in the loop. Drop into next session's queue in order.
+
+1. **ACTOR drama beat absent or imperceptible before DefusePlacement
+   sheet (P2 OPEN — calibration seed 008).** Was item #4 last session.
+   Two hypotheses: lazy-load race on `DramaOverlay` (component
+   imported lazily in `Player.tsx:28`; if not mounted when event
+   arrives, `setDramaActive(true)` never fires and `showServerSheet`
+   stays `true`, letting DefusePlacement open with no gate); OR visual
+   conflation with this session's hero card (the drama beat played for
+   2400ms but blurred with DefusePlacement which now also heroes the
+   Burned MinimalCard). Recommend eye-in-loop disambiguation first
+   (Briggsy on phone, drawing Burned with Extraction in hand,
+   reporting whether the BURNED → EXTRACTED beat reads or visually
+   collides with the sheet).
+
+2. **Stale `card-played` toast on observer phones during favor-pending
+   (P2 OPEN — calibration seed 003).** Was item #2 last session.
+   Seat-3 saw "Seat2 played Call in a Favor." persist for the full
+   ~60s favor-pending window. Toasts should clear on `nope-window-
+   resolved` semantically and/or hard-cap at 8-10s wallclock as a
+   guard. Three fix paths in the issue file. Briggsy's call between
+   (A) `nope-window-resolved` clear only, (B) hard cap only, (C) both.
+
+3. **5 KNOWN-PRODUCT-CALL-CONFIRMED disconnect-wedge cluster items
+   (B-03/04/05/13).** Were the last session's 5 confirmed items
+   awaiting Briggsy's product call on the disconnect-wedge cluster.
+   No movement — still waiting.
+
+### Side findings (logged, not addressed this session)
+
+- **Production `SCENARIOS.md` H4 header silent drop.** Parser regex
+  `/^###\s+(SCN-...)/` only matches H3 headers. Production catalog
+  mixes H3 (35 scenarios) and H4 (55 scenarios) — the 55 H4 scenarios
+  are silently dropped from `parseCatalog` output, meaning pre-flight
+  cluster check, clusterer matching, and triage all operate on a
+  35-scenario subset. Workaround for now: mini-catalog uses only H3
+  so calibration runs unaffected. Real fix: relax the regex to
+  `/^#{3,4}\s+(SCN-...)/` and verify the 55 newly-parsed scenarios
+  don't break clusterer / pre-flight (they may have absent vibe-checks
+  or knownProductCall fields that now flag pre-flight `fail`). Surface
+  for a dedicated session — not a one-line fix because of cascading
+  validation effects.
+
+### Background processes still alive
+
+- Two dev servers (`pnpm dev` + `pnpm dev:server`) started this
+  session for visual verification. Background task IDs were
+  `bt0n2rs6r` (vite) and `bzlttg8u7` (wrangler). They WILL die when
+  the session ends but if Briggsy reopens this terminal they'll
+  already be gone — no manual kill needed.
+
+---
+
 ### THIS SESSION (2026-05-01 evening) — sub-step #3, phone polish, Phase 6 #8, #019, operator docs, calibration retry
 
 Five commits this session, all green at squeaky time:

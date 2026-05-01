@@ -133,3 +133,49 @@ least-privilege token that cannot be mint-and-forgotten from the
 
 If you're considering wiring the harness into CI, treat that wiring as a
 new RFC, not an incremental PR.
+
+---
+
+## 7. MCP Cross-Run Collision
+
+**Cancel in-flight seat agents BEFORE dispatching another run.** Each
+seat agent is bound to one of the per-seat MCP Playwright servers
+(`playwright-seat-1` … `playwright-seat-10` in `.mcp.json`). Those
+servers are long-lived processes — one browser instance per server,
+shared across whatever agent currently holds it. There is no per-run
+isolation at the MCP layer.
+
+If run 1's seat agents are still alive (waiting on a wait-for, parked
+between turns, paused on a vibe-check) when you dispatch run 2's
+agents, both runs land on the same browser. Run 2's `browser_navigate`
+calls step on run 1's open page, run 1's later snapshots see run 2's
+DOM, and both runs' logs become unreliable. The MCP server doesn't
+arbitrate — last call wins, silently.
+
+**Symptoms when this happens:**
+
+- Run 2's agents report `waiting for N operatives` forever even though
+  their navigates "succeeded" — they're looking at run 1's already-
+  finished game state, never at run 2's lobby.
+- Run 1's logs gain entries with run 2's room code in them.
+- Browser snapshots show a UI that doesn't match either run's expected
+  state at that step.
+
+**Operator process:**
+
+1. Before dispatching seats for a new run, confirm that the prior run's
+   agents have all exited. The orchestrator emits
+   `[orchestrator] outcome=… seatsJoined=…` when the session block
+   finishes; agents typically exit within a few seconds after.
+2. If any seat agent is hung (timeout window not yet elapsed, observer
+   disconnect not yet propagated), cancel it explicitly before the new
+   `Agent({ subagent_type: 'playtest-seat-N' })` dispatch — do NOT
+   assume it will exit on its own in time.
+3. Per-seat MCP browsers do NOT need restart between runs; they reset
+   to a clean profile on each `--isolated` reconnect from a fresh
+   agent. The race is purely about overlapping agent lifetimes against
+   one MCP target.
+
+A future hardening would gate dispatch on a "no agent currently holds
+this seat" lock surfaced by the MCP server. None exists today; the
+operator process is the gate.

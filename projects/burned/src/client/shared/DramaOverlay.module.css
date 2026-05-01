@@ -222,6 +222,39 @@
     0 1px 0 color-mix(in oklab, var(--color-charcoal-1) 60%, transparent);
 }
 
+/* ─── FILES BURNED — destroy-the-evidence ember beat ─── */
+
+.burnedfiles {
+  /* Hot ember centered behind the text, fades to char at the edges. The
+     core (`color-burned-fire` at 88% alpha) reads as active fire — cordovan
+     mid-rim and char outer evoke "evidence room with the incinerator
+     running." Earth-verified at 390×844 phone viewport 2026-05-01. */
+  background: radial-gradient(
+    ellipse 70% 50% at 50% 50%,
+    color-mix(in oklab, var(--color-burned-fire) 88%, transparent) 0%,
+    color-mix(in oklab, var(--color-cordovan-8) 80%, transparent) 32%,
+    color-mix(in oklab, var(--color-cordovan-3) 88%, transparent) 70%,
+    color-mix(in oklab, var(--color-charcoal-1) 96%, transparent) 100%
+  );
+}
+
+.burnedfiles .text {
+  /* Cream-on-ember: luminance contrast carries the read regardless of color
+     perception. The orange/cordovan supports the "destroy the evidence"
+     tone but never carries the meaning (Briggsy is color blind). */
+  color: var(--color-cream-12);
+  /* Subdued size — same scale as GONE DARK; this is a tactical beat, not
+     a reveal. Letterspacing widened a hair to suggest charred edges. */
+  font-size: clamp(var(--text-drama-subdued-min), 6cqi + 0rem, var(--text-drama-subdued-max));
+  letter-spacing: 0.22em;
+  /* Two-layer text-shadow: hot ember underneath + dark char on top so the
+     letters read "branded into paper" rather than "glowing in space." */
+  text-shadow:
+    0 0 28px color-mix(in oklab, var(--color-burned-fire) 72%, transparent),
+    0 0 12px color-mix(in oklab, var(--color-cordovan-9) 70%, transparent),
+    0 1px 0 color-mix(in oklab, var(--color-charcoal-1) 70%, transparent);
+}
+
 /* ─── VICTORY — ochre gold, the loudest reveal ─── */
 
 .victory {

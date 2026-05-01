@@ -133,6 +133,21 @@ function getDramaBeats(
           transient: true,
         }]
       }
+      // Burn the Files — the "destroy the evidence" beat. Phones have no
+      // discard view and no shuffle animation surface, so without a drama
+      // beat the play feels like the card vanished into nothing (TODO #3,
+      // calibration seed 007). Same shape as Go Dark — ACTOR vs observer
+      // text, transient so a fast turn handoff doesn't get obscured.
+      if (event.cardType === 'burn-the-files' && event.comboSize === undefined) {
+        const isActor = myPlayerId === event.playerId
+        return [{
+          variant:   'text',
+          text:      isActor ? 'FILES BURNED' : `${name(event.playerId).toUpperCase()} BURNED THE FILES`,
+          className: styles.burnedfiles ?? '',
+          holdMs:    1200,
+          transient: true,
+        }]
+      }
       return []
     }
     default:

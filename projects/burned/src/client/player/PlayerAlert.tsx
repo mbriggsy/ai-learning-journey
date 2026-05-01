@@ -100,17 +100,18 @@ function alertFor(
       // and the only signal was the turn indicator flipping. Brief info-tone
       // toast lets observers track the action across the table.
       //
-      // Three filters keep the toast from competing with richer surfaces:
+      // Four filters keep the toast from competing with richer surfaces:
       // - own play: actor's staging area already showed what they did
-      // - go-dark / extraction: DramaOverlay text beats own those moments
-      //   (GONE DARK / EXTRACTED), redundant toast would queue under the
-      //   overlay
+      // - go-dark / extraction / burn-the-files: DramaOverlay text beats own
+      //   those moments (GONE DARK / EXTRACTED / FILES BURNED); a redundant
+      //   toast would queue under the overlay
       // - combos (comboSize set): combo-steal event carries the meaningful
       //   payload (stealerId/targetId/found); the bare card-played would
       //   over-announce a 3-of-a-kind as just "[Name] played Vera"
       if (event.playerId === myId) break
       if (event.cardType === 'go-dark') break
       if (event.cardType === 'extraction') break
+      if (event.cardType === 'burn-the-files') break
       if (event.comboSize !== undefined) break
       const cardName = CARD_DEF_BY_TYPE[event.cardType]?.name
       if (!cardName) break

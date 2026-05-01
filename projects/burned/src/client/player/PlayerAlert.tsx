@@ -93,6 +93,34 @@ function alertFor(
       // receiver "Coerced a card from X.") were superseded by the hero beat.
       break
 
+    case 'card-played': {
+      // Observer-side announcement when an opponent plays a card. Triage
+      // #015: seat-2 saw the nope window open and close on Seat-3's turn but
+      // had no idea what was played — the phone never surfaced the cardType
+      // and the only signal was the turn indicator flipping. Brief info-tone
+      // toast lets observers track the action across the table.
+      //
+      // Three filters keep the toast from competing with richer surfaces:
+      // - own play: actor's staging area already showed what they did
+      // - go-dark / extraction: DramaOverlay text beats own those moments
+      //   (GONE DARK / EXTRACTED), redundant toast would queue under the
+      //   overlay
+      // - combos (comboSize set): combo-steal event carries the meaningful
+      //   payload (stealerId/targetId/found); the bare card-played would
+      //   over-announce a 3-of-a-kind as just "[Name] played Vera"
+      if (event.playerId === myId) break
+      if (event.cardType === 'go-dark') break
+      if (event.cardType === 'extraction') break
+      if (event.comboSize !== undefined) break
+      const cardName = CARD_DEF_BY_TYPE[event.cardType]?.name
+      if (!cardName) break
+      return {
+        id: eventId,
+        text: `${nameOf(event.playerId)} played ${cardName}.`,
+        tone: 'info',
+      }
+    }
+
     case 'nope-played':
       // Someone intercepted. Noisy if they intercept their own card's chain,
       // but only interesting to the originator of the action. Skipped for now

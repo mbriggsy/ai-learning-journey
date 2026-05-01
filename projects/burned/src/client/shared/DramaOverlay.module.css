@@ -199,6 +199,29 @@
   color: var(--color-emerald-12);
 }
 
+/* ─── GONE DARK — venetian-blinds dim, the operative ducks out ─── */
+
+.gonedark {
+  background: radial-gradient(
+    ellipse 80% 60% at 50% 50%,
+    color-mix(in oklab, var(--color-charcoal-3) 92%, transparent) 0%,
+    color-mix(in oklab, var(--color-charcoal-1) 96%, transparent) 60%,
+    color-mix(in oklab, var(--color-charcoal-1) 98%, transparent) 100%
+  );
+}
+
+.gonedark .text {
+  color: var(--color-cream-12);
+  /* Subdued size — Go Dark is a quiet, tactical exit, not a reveal. Same
+     scale as ELIMINATED so the two "fade-out" beats read consistently. */
+  font-size: clamp(var(--text-drama-subdued-min), 6cqi + 0rem, var(--text-drama-subdued-max));
+  letter-spacing: 0.18em;
+  /* Faint sodium-vapor tint — venetian blinds at night. */
+  text-shadow:
+    0 0 24px color-mix(in oklab, var(--color-charcoal-1) 75%, transparent),
+    0 1px 0 color-mix(in oklab, var(--color-charcoal-1) 60%, transparent);
+}
+
 /* ─── VICTORY — ochre gold, the loudest reveal ─── */
 
 .victory {

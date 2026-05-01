@@ -114,6 +114,27 @@ function getDramaBeats(
         className: styles.victory ?? '',
         holdMs:    2000,
       }]
+    case 'card-played': {
+      // Go Dark — the canonical "operative ducks out cleanly" beat. The card
+      // illustration carries the venetian-blinds atmosphere; this beat lifts
+      // it from the staging area onto every screen so the play registers as
+      // a tactical maneuver instead of a generic skip (triage #012/#014).
+      // No beat for any other card-played type yet — combos / favors / Direct
+      // Order have their own surfaces (StealReport, FavorReport, draw count).
+      // Transient: aborts on turn-started so the next player's turn isn't
+      // obscured.
+      if (event.cardType === 'go-dark' && event.comboSize === undefined) {
+        const isActor = myPlayerId === event.playerId
+        return [{
+          variant:   'text',
+          text:      isActor ? 'GONE DARK' : `${name(event.playerId).toUpperCase()} WENT DARK`,
+          className: styles.gonedark ?? '',
+          holdMs:    1200,
+          transient: true,
+        }]
+      }
+      return []
+    }
     default:
       return []
   }

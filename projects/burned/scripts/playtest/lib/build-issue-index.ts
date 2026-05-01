@@ -27,6 +27,7 @@ export type IssueStatus =
   | 'DUPLICATE'
   | 'KNOWN-PRODUCT-CALL-CONFIRMED'
   | 'LOW-SIGNAL'
+  | 'RESOLVED'
 
 export type IssueSeverity = 'P0' | 'P1' | 'P2'
 
@@ -69,12 +70,18 @@ export interface BuildIssueIndexResult {
 // Header parsing
 // -----------------------------------------------------------------------------
 
+// Order matters — `pickStatus` substring-matches in declared order, first
+// hit wins. RESOLVED comes first so a resolution note that mentions a prior
+// BLOCKED dimension (e.g. "B-05 still BLOCKED separately") still parses as
+// RESOLVED rather than BLOCKED. Within the unresolved tier, the more
+// specific values come before the more generic.
 const STATUS_VALUES: readonly IssueStatus[] = [
-  'OPEN',
-  'BLOCKED',
-  'DUPLICATE',
+  'RESOLVED',
   'KNOWN-PRODUCT-CALL-CONFIRMED',
   'LOW-SIGNAL',
+  'DUPLICATE',
+  'BLOCKED',
+  'OPEN',
 ]
 
 const SEED_KIND_VALUES: readonly SeedKind[] = [
@@ -205,6 +212,7 @@ function buildCounts(issues: readonly ParsedIssue[]): IndexCounts {
     DUPLICATE: 0,
     'KNOWN-PRODUCT-CALL-CONFIRMED': 0,
     'LOW-SIGNAL': 0,
+    RESOLVED: 0,
   }
   const bySeverity: Record<IssueSeverity, number> = { P0: 0, P1: 0, P2: 0 }
   const bySeedKind: Record<SeedKind, number> = {
@@ -281,7 +289,7 @@ function renderSummary(counts: IndexCounts): string {
   out.push('')
   out.push(`- **Total issues:** ${counts.total}`)
   out.push(
-    `- **Status:** OPEN ${counts.byStatus.OPEN} · BLOCKED ${counts.byStatus.BLOCKED} · DUPLICATE ${counts.byStatus.DUPLICATE} · KNOWN-PRODUCT-CALL ${counts.byStatus['KNOWN-PRODUCT-CALL-CONFIRMED']} · LOW-SIGNAL ${counts.byStatus['LOW-SIGNAL']}`,
+    `- **Status:** OPEN ${counts.byStatus.OPEN} · RESOLVED ${counts.byStatus.RESOLVED} · BLOCKED ${counts.byStatus.BLOCKED} · DUPLICATE ${counts.byStatus.DUPLICATE} · KNOWN-PRODUCT-CALL ${counts.byStatus['KNOWN-PRODUCT-CALL-CONFIRMED']} · LOW-SIGNAL ${counts.byStatus['LOW-SIGNAL']}`,
   )
   out.push(
     `- **Severity:** P0 ${counts.bySeverity.P0} · P1 ${counts.bySeverity.P1} · P2 ${counts.bySeverity.P2}`,

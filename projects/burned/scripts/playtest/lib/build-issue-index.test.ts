@@ -101,6 +101,26 @@ describe('parseIssueFile — header parsing', () => {
     expect(i.parseWarnings).toEqual([])
   })
 
+  it('parses RESOLVED status even when resolution prose mentions BLOCKED in another dimension', () => {
+    // Regression for issue-closure workflow: the substring matcher must
+    // pick the FIRST status word in declared order, and RESOLVED leads.
+    // Otherwise "RESOLVED — B-05 dimension still BLOCKED separately" would
+    // misparse as BLOCKED (the original gap that surfaced this fix).
+    const content = [
+      '# 099-resolved — favor cinematic',
+      '',
+      '**Severity (triage):** P1',
+      '**Status:** ✅ RESOLVED 2026-05-01 — Finding 1 = RESOLVED-NOT-A-BUG; B-05 dimension still ⏸ BLOCKED separately',
+      '**Seed kind:** vibe-check',
+      '**Source seats:** seat-1',
+      '**Linked scenarios:** SCN-X',
+      '',
+    ].join('\n')
+    const i = parseIssueFile('099-resolved.md', content)
+    expect(i.status).toBe('RESOLVED')
+    expect(i.parseWarnings).toEqual([])
+  })
+
   it('flags missing Status header', () => {
     const content = [
       '# 002-bad — missing status',
@@ -295,6 +315,7 @@ describe('renderIndexMarkdown — section ordering + counts', () => {
       byStatus: {
         OPEN: 0, BLOCKED: 0, DUPLICATE: 0,
         'KNOWN-PRODUCT-CALL-CONFIRMED': 0, 'LOW-SIGNAL': 0,
+        RESOLVED: 0,
       },
       bySeverity: { P0: 0, P1: 0, P2: 0 },
       bySeedKind: {

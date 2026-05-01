@@ -18,6 +18,7 @@ import { StagingArea } from './StagingArea'
 import { ErrorToast } from './ErrorToast'
 import { PlayerAlert } from './PlayerAlert'
 import { StealReport } from './StealReport'
+import { FavorReport } from './FavorReport'
 import { IncomingSteal } from './IncomingSteal'
 import { ConnectionOverlay } from './ConnectionOverlay'
 import { EliminatedView } from './EliminatedView'
@@ -584,6 +585,13 @@ function PlayingView({ roomCode }: { roomCode: string }) {
       {/* Persistent classified-dispatch for combo-steal victims. Gated by
           dramaActive so BURNED → EXTRACTED plays first. */}
       <StealReport />
+
+      {/* Coercion report — same dispatch vocabulary, fired on BOTH the
+          ACTOR's and TARGET's phones when a Call in a Favor exchange
+          resolves. Closes triage #010 Gap C — the favor exchange used to
+          read as a silent database transaction; this is the cinematic
+          counterpart to StealReport's combo-steal incident report. */}
+      <FavorReport />
     </div>
   )
 }

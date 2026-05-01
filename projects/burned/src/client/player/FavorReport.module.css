@@ -1,0 +1,341 @@
+/* FavorReport.module.css
+   Coercion-report overlay — fired on BOTH the ACTOR's and TARGET's phones
+   when a Call in a Favor exchange resolves. Same dispatch vocabulary as
+   StealReport (cream paper, typewriter header, ochre asset strip,
+   rubber stamp, dog-ear flip) — different case number (47-D for "Duress"),
+   different stamp text + color per kind:
+
+   - kind='extracted' (ACTOR / receiver): crimson EXTRACTED stamp.
+   - kind='surrendered' (TARGET / giver): amber SURRENDERED stamp.
+
+   Persistent until ACKNOWLEDGE — closes triage #010 Gap C.
+
+   Axis: phone (portrait, HEIGHT-constrained, unit = svh). Paper has a
+   fixed max-width so it never stretches awkwardly on tall phones.
+*/
+
+@layer components {
+
+.shell {
+  position: fixed;
+  inset: 0;
+  z-index: var(--z-toast);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: max(var(--space-6), var(--inset-top)) var(--space-5)
+           max(var(--space-6), var(--inset-bottom));
+  pointer-events: auto;
+}
+
+.scrim {
+  position: absolute;
+  inset: 0;
+  background:
+    radial-gradient(
+      ellipse 90% 80% at 50% 45%,
+      color-mix(in oklab, var(--color-charcoal-1) 62%, transparent) 0%,
+      color-mix(in oklab, var(--color-charcoal-1) 90%, transparent) 100%
+    );
+  backdrop-filter: blur(8px);
+  -webkit-backdrop-filter: blur(8px);
+}
+
+.paper {
+  position: relative;
+  width: min(440px, 100%);
+  max-height: calc(100svh - 2 * max(var(--space-6), var(--inset-top)));
+  overflow: hidden;
+  background-color: var(--color-paper-face, #f2ecd8);
+  background-image:
+    repeating-linear-gradient(
+      0deg,
+      transparent 0,
+      transparent 26px,
+      var(--color-paper-rule, color-mix(in oklab, var(--color-ochre-6) 18%, transparent)) 26px,
+      var(--color-paper-rule, color-mix(in oklab, var(--color-ochre-6) 18%, transparent)) 27px
+    ),
+    repeating-linear-gradient(
+      90deg,
+      transparent 0,
+      transparent 2px,
+      color-mix(in oklab, var(--color-ochre-8) 5%, transparent) 2px,
+      color-mix(in oklab, var(--color-ochre-8) 5%, transparent) 3px
+    );
+  padding: var(--space-5) var(--space-5) var(--space-4);
+  border-radius: 2px;
+  /* Stock-tab edge color tracks kind — crimson for extracted (trophy),
+     amber for surrendered (loss). Mirrors the stamp color so the paper
+     reads with the same intent as the rubber-stamp verdict. */
+  border-left: 6px solid var(--color-accent-burned);
+  box-shadow:
+    inset 0 0 0 1px color-mix(in oklab, var(--color-ochre-6) 45%, transparent),
+    0 2px 1px color-mix(in oklab, var(--color-ochre-6) 40%, transparent),
+    0 18px 38px color-mix(in oklab, var(--color-charcoal-1) 55%, transparent),
+    0 40px 80px color-mix(in oklab, var(--color-charcoal-1) 45%, transparent);
+  font-family: var(--font-mono);
+  color: var(--color-charcoal-1);
+  transform-origin: 50% 100%;
+}
+
+.paper[data-kind='surrendered'] {
+  border-left-color: var(--color-accent-drama);
+}
+
+/* ─── Header — classified mono strip ─── */
+
+.header {
+  display: flex;
+  justify-content: space-between;
+  align-items: baseline;
+  gap: var(--space-3);
+  font-size: var(--text-caption);
+  font-weight: 700;
+  letter-spacing: 0.22em;
+  text-transform: uppercase;
+}
+
+.headerTag {
+  color: color-mix(in oklab, var(--color-ochre-3) 80%, var(--color-charcoal-1));
+}
+
+.caseNum {
+  color: var(--color-accent-burned);
+  letter-spacing: 0.3em;
+}
+
+.paper[data-kind='surrendered'] .caseNum {
+  color: var(--color-accent-drama);
+}
+
+.rule {
+  margin: var(--space-2) 0 var(--space-4);
+  height: 1px;
+  background: linear-gradient(
+    90deg,
+    var(--color-accent-drama) 0%,
+    color-mix(in oklab, var(--color-ochre-6) 50%, transparent) 55%,
+    transparent 100%
+  );
+}
+
+/* ─── Body ─── */
+
+.body {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-2);
+  padding-right: var(--space-2);
+}
+
+.label {
+  margin: 0;
+  font-size: var(--text-caption);
+  font-weight: 600;
+  letter-spacing: 0.32em;
+  text-transform: uppercase;
+  color: color-mix(in oklab, var(--color-ochre-4) 75%, var(--color-charcoal-1));
+}
+
+.otherName {
+  margin: 0;
+  font-family: var(--font-display);
+  font-weight: 900;
+  font-size: var(--text-title);
+  line-height: 1;
+  letter-spacing: -0.01em;
+  text-transform: uppercase;
+  color: var(--color-accent-burned);
+  text-shadow: 0 1px 0 color-mix(in oklab, var(--color-ochre-6) 32%, transparent);
+  max-width: calc(100% - 40px);
+}
+
+.paper[data-kind='surrendered'] .otherName {
+  color: var(--color-accent-drama);
+}
+
+.verb {
+  margin: 0;
+  font-family: var(--font-mono);
+  font-size: var(--text-callout);
+  font-weight: 500;
+  letter-spacing: 0.08em;
+  color: color-mix(in oklab, var(--color-charcoal-1) 82%, transparent);
+}
+
+.cardFrame {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+  padding: var(--space-2) var(--space-3);
+  margin: var(--space-2) 0;
+  background: color-mix(in oklab, var(--color-ochre-7) 14%, transparent);
+  border-left: 2px solid var(--color-accent-drama);
+  border-radius: 0 2px 2px 0;
+}
+
+.cardLabel {
+  font-size: calc(var(--text-caption) * 0.9);
+  font-weight: 600;
+  letter-spacing: 0.28em;
+  text-transform: uppercase;
+  color: color-mix(in oklab, var(--color-ochre-4) 70%, var(--color-charcoal-1));
+}
+
+.cardName {
+  font-family: var(--font-display);
+  font-weight: 700;
+  font-size: var(--text-title);
+  letter-spacing: 0.01em;
+  color: var(--color-charcoal-1);
+  line-height: 1.1;
+}
+
+.verdict {
+  margin: 0;
+  font-family: var(--font-mono);
+  font-size: var(--text-callout);
+  font-weight: 500;
+  letter-spacing: 0.08em;
+  color: color-mix(in oklab, var(--color-charcoal-1) 82%, transparent);
+}
+
+/* ─── Rubber stamp ─── */
+
+.stamp {
+  position: absolute;
+  top: var(--space-4);
+  right: calc(-1 * var(--space-2));
+  padding: 6px 14px 8px;
+  font-family: var(--font-mono);
+  font-weight: 900;
+  font-size: calc(var(--text-caption) * 1.1);
+  letter-spacing: 0.3em;
+  text-transform: uppercase;
+  color: var(--color-cream-12);
+  background: var(--color-accent-burned);
+  border-radius: 1px;
+  transform: rotate(-7deg);
+  box-shadow:
+    inset 0 1px 0 color-mix(in oklab, var(--color-cream-12) 22%, transparent),
+    inset 0 -1px 0 color-mix(in oklab, var(--color-charcoal-1) 40%, transparent),
+    0 2px 5px color-mix(in oklab, var(--color-charcoal-1) 55%, transparent);
+  animation: stampThunk var(--motion-duration-stamp) var(--motion-ease-overshoot) 0.32s both;
+}
+
+/* Surrendered variant — amber stamp, reads as the loss instead of the trophy */
+.paper[data-kind='surrendered'] .stamp {
+  background: var(--color-accent-drama);
+}
+
+@keyframes stampThunk {
+  0%   { transform: rotate(-2deg) scale(2.1); opacity: 0; }
+  60%  { transform: rotate(-8deg) scale(0.95); opacity: 1; }
+  100% { transform: rotate(-7deg) scale(1); opacity: 1; }
+}
+
+/* ─── Footer ─── */
+
+.footerRule {
+  margin-top: var(--space-4);
+  height: 1px;
+  background: color-mix(in oklab, var(--color-ochre-6) 40%, transparent);
+}
+
+.footer {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: var(--space-3);
+  padding-top: var(--space-3);
+}
+
+.footerText {
+  font-family: var(--font-mono);
+  font-size: var(--text-caption);
+  font-weight: 500;
+  letter-spacing: 0.26em;
+  text-transform: uppercase;
+  color: color-mix(in oklab, var(--color-ochre-4) 70%, var(--color-charcoal-1));
+}
+
+.ackBtn {
+  font-family: var(--font-mono);
+  font-weight: 700;
+  font-size: var(--text-body);
+  letter-spacing: 0.22em;
+  text-transform: uppercase;
+  color: var(--color-cream-12);
+  background: var(--color-charcoal-1);
+  border: 2px solid var(--color-charcoal-1);
+  padding: 10px 20px;
+  min-height: var(--size-touch-target);
+  border-radius: 2px;
+  cursor: pointer;
+  touch-action: manipulation;
+  box-shadow:
+    inset 0 1px 0 color-mix(in oklab, var(--color-cream-12) 12%, transparent),
+    0 2px 0 color-mix(in oklab, var(--color-charcoal-1) 80%, transparent),
+    0 4px 10px color-mix(in oklab, var(--color-charcoal-1) 40%, transparent);
+  transition:
+    transform var(--motion-duration-fast) var(--motion-ease-decelerate),
+    box-shadow var(--motion-duration-fast) var(--motion-ease-decelerate);
+}
+
+.ackBtn:active {
+  transform: translateY(2px);
+  box-shadow:
+    inset 0 1px 0 color-mix(in oklab, var(--color-cream-12) 8%, transparent),
+    0 0 0 color-mix(in oklab, var(--color-charcoal-1) 80%, transparent),
+    0 2px 6px color-mix(in oklab, var(--color-charcoal-1) 40%, transparent);
+}
+
+.ackBtn:focus-visible {
+  outline: 2px solid var(--color-accent-drama);
+  outline-offset: 3px;
+}
+
+/* ─── Queued-count chip ─── */
+
+.queuedChip {
+  position: absolute;
+  bottom: 0;
+  left: var(--space-5);
+  transform: translateY(50%);
+  padding: 4px 10px 5px;
+  background: var(--color-charcoal-1);
+  color: var(--color-cream-12);
+  font-family: var(--font-mono);
+  font-size: calc(var(--text-caption) * 0.85);
+  font-weight: 700;
+  letter-spacing: 0.2em;
+  text-transform: uppercase;
+  border-radius: 2px;
+  box-shadow: 0 2px 6px color-mix(in oklab, var(--color-charcoal-1) 55%, transparent);
+}
+
+/* ─── Dog-ear ─── */
+
+.dogEar {
+  position: absolute;
+  bottom: 0;
+  right: 0;
+  width: 28px;
+  height: 28px;
+  background: linear-gradient(
+    135deg,
+    transparent 0%,
+    transparent 50%,
+    var(--color-paper-shadow, color-mix(in oklab, var(--color-cream-7) 80%, var(--color-ochre-6))) 50%,
+    color-mix(in oklab, var(--color-ochre-6) 90%, var(--color-cream-7)) 100%
+  );
+  border-radius: 0 0 2px 0;
+  pointer-events: none;
+  filter: drop-shadow(-1px -1px 1px color-mix(in oklab, var(--color-charcoal-1) 25%, transparent));
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .stamp { animation: none; }
+}
+
+} /* @layer components */

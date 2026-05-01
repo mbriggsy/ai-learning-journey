@@ -38,7 +38,7 @@ export type GameEvent =
   | { type: 'extraction-played'; playerId: string }
   | { type: 'player-eliminated'; playerId: string; rank: number }
   | { type: 'favor-requested'; requesterId: string; targetId: string }
-  | { type: 'favor-given'; giverId: string; receiverId: string }
+  | { type: 'favor-given'; giverId: string; receiverId: string; cardType?: CardType }
   | { type: 'future-peeked'; playerId: string }
   | { type: 'future-rearranged'; playerId: string }
   | { type: 'deck-shuffled'; playerId: string }

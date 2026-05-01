@@ -241,6 +241,50 @@ describe('PBT: Projection Privacy', () => {
       expect(witnessSteal.cardType).toBeUndefined()
     }
   })
+
+  it('favor-given.cardType stays only with giver + receiver (triage #010 Gap C)', () => {
+    // Drives the FavorReport hero beat on both phones — both giver and
+    // receiver legitimately know the card identity (giver picked it,
+    // receiver now holds it). Bystanders + board must not see it.
+    // Empty-handed auto-resolve case omits cardType entirely (covered
+    // by rules-gaps-exhaustive.test.ts §6); this test pins the
+    // standard case where a card actually transfers.
+    const state = startGame(3, 3)
+    const stateWithFavor: PlayingState = {
+      ...state,
+      events: [
+        ...state.events,
+        { type: 'favor-given', giverId: 'p2', receiverId: 'p1', cardType: 'go-dark' },
+      ],
+    }
+    const now = 1000
+
+    const boardView = projectForBoard(stateWithFavor, now, new Set(['p1', 'p2', 'p3']))
+    const giverView = projectForPlayer(stateWithFavor, 'p2', boardView)
+    const receiverView = projectForPlayer(stateWithFavor, 'p1', boardView)
+    const witnessView = projectForPlayer(stateWithFavor, 'p3', boardView)
+
+    const getFavor = (v: { events: readonly import('@shared/types').GameEvent[] }) =>
+      v.events.find(e => e.type === 'favor-given')
+
+    const boardFavor = getFavor(boardView)
+    const giverFavor = getFavor(giverView)
+    const receiverFavor = getFavor(receiverView)
+    const witnessFavor = getFavor(witnessView)
+
+    if (boardFavor && boardFavor.type === 'favor-given') {
+      expect(boardFavor.cardType).toBeUndefined()
+    }
+    if (giverFavor && giverFavor.type === 'favor-given') {
+      expect(giverFavor.cardType).toBe('go-dark')
+    }
+    if (receiverFavor && receiverFavor.type === 'favor-given') {
+      expect(receiverFavor.cardType).toBe('go-dark')
+    }
+    if (witnessFavor && witnessFavor.type === 'favor-given') {
+      expect(witnessFavor.cardType).toBeUndefined()
+    }
+  })
 })
 
 // --- Immutability ---

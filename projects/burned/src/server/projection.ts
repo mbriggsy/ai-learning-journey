@@ -196,7 +196,7 @@ function stripPrivatePromptFields(prompt: import('@shared/types').PendingPrompt 
  * to a viewer who wasn't a party to the action. `viewerId === null` means
  * the public board view, which never sees these fields.
  *
- * Two events currently carry a private `cardType`:
+ * Three events currently carry a private `cardType`:
  *
  *   - `combo-steal` — stealer and target legitimately know which card
  *     moved (or which card was named on a whiff); everyone else must not.
@@ -210,6 +210,13 @@ function stripPrivatePromptFields(prompt: import('@shared/types').PendingPrompt 
  *     intentionally generic ("X draws... and lives."). Leaking this was
  *     an E2E audit P0 (2026-04-23): any opponent reading their own event
  *     log could read the drawer's drawn card deterministically.
+ *
+ *   - `favor-given` — giver and receiver both legitimately know which card
+ *     was surrendered (giver picked it; receiver now holds it). Bystanders
+ *     and the board must not. Drives the FavorReport hero beat on both
+ *     phones (triage #010 Gap C). The empty-handed / Burned-only
+ *     auto-resolve case omits cardType entirely (no card moved); no
+ *     stripping needed there.
  *
  * Pattern scales to future event-level private fields without changing
  * callers: add a branch, strip if viewer isn't authorized.
@@ -230,6 +237,15 @@ function stripPrivateEventFields(
     }
     if (event.type === 'card-drawn' && event.cardType !== undefined) {
       const allowed = viewerId !== null && viewerId === event.playerId
+      if (!allowed) {
+        // eslint-disable-next-line @typescript-eslint/no-unused-vars
+        const { cardType: _strip, ...rest } = event
+        return rest
+      }
+    }
+    if (event.type === 'favor-given' && event.cardType !== undefined) {
+      const allowed = viewerId !== null &&
+        (viewerId === event.giverId || viewerId === event.receiverId)
       if (!allowed) {
         // eslint-disable-next-line @typescript-eslint/no-unused-vars
         const { cardType: _strip, ...rest } = event

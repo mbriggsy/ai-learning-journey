@@ -3,7 +3,7 @@ import type { ClientAction } from './actions'
 
 // --- Protocol Version ---
 
-export const PROTOCOL_VERSION = 3
+export const PROTOCOL_VERSION = 4
 
 // --- Error Codes ---
 

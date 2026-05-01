@@ -153,7 +153,7 @@ describe('Nope Grace Window', () => {
 describe('Protocol Version', () => {
   it('PROTOCOL_VERSION is exported from protocol.ts', async () => {
     const { PROTOCOL_VERSION } = await import('@shared/protocol')
-    expect(PROTOCOL_VERSION).toBe(3)
+    expect(PROTOCOL_VERSION).toBe(4)
     expect(typeof PROTOCOL_VERSION).toBe('number')
   })
 })

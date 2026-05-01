@@ -799,7 +799,7 @@ function handleFavorGive(
   newState = addCardsToHand(newState, pending.requesterId, [card])
 
   const events: GameEvent[] = [
-    { type: 'favor-given', giverId: pending.targetId, receiverId: pending.requesterId },
+    { type: 'favor-given', giverId: pending.targetId, receiverId: pending.requesterId, cardType: card.type },
   ]
 
   const finalState: PlayingState = {

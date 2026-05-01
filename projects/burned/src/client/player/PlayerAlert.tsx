@@ -85,30 +85,12 @@ function alertFor(
       break
 
     case 'favor-given':
-      // I just handed over a card (after choosing it on the FavorResponse sheet).
-      // Soft acknowledgement so the player has visible feedback that their
-      // pick landed.
-      if (event.giverId === myId) {
-        return {
-          id: eventId,
-          text: `Card sent to ${nameOf(event.receiverId)}.`,
-          tone: 'info',
-        }
-      }
-      // I just received a card I coerced. Without this branch the receiver's
-      // phone went silent at the resolution beat — card count ticked up and
-      // nothing else (triage #010 / Gap 3). Sharper verb + urgent tone match
-      // the combo-steal stealer toast — the favor exchange is the same
-      // category of moment (forced surrender between operatives).
-      // The favor-given event does not carry cardType, so the toast can't
-      // name the specific card. The receiver can read it off their hand.
-      if (event.receiverId === myId) {
-        return {
-          id: eventId,
-          text: `Coerced a card from ${nameOf(event.giverId)}.`,
-          tone: 'urgent',
-        }
-      }
+      // Favor resolution is owned by FavorReport (cinematic incident-report
+      // overlay on both phones, named card asset, persistent until ACK).
+      // PlayerAlert intentionally stays silent here — a transient toast
+      // alongside the dispatch would compete for attention. Triage #010
+      // Gap C; the morning's two small toasts (giver "Card sent to X." and
+      // receiver "Coerced a card from X.") were superseded by the hero beat.
       break
 
     case 'nope-played':

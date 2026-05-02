@@ -2,69 +2,120 @@
 
 ## NEXT SESSION — pick up here (2026-05-02+)
 
-### Eye-in-loop findings (2026-05-02, in progress)
+### THIS SESSION (2026-05-02) — drama-beat spot-check, disconnect-wedge product call, ACTOR awareness, phone clipping
 
-Live spot-check session; logging findings as they surface. Numbering
-restarts at end-of-session for the next-session queue.
+Five commits, all green at squeaky time. Long session — drama-beat
+spot-check became a multi-fork audit that touched product calls,
+visual rules, architecture, and a stubborn phone-only layout bug
+that turned out to be already-fixed-but-debug-overlay-masked.
 
-0. **`dev:give` silently fails on unknown card types.** Mistyping
+| Commit | Subject |
+|---|---|
+| `18475abc` | docs(disconnect-wedge): lock Option (a) by-design — no engineering |
+| `65de88cf` | refactor(drama): codify when card-played gets a beat — pull Go Dark, add Falsify Intel |
+| `33e45533` | fix(drama): hoist DramaOverlay across phase transitions; GameOver hero gains verb |
+| `b7824600` | fix(action-box): ACTOR sees nope-window awareness; defensive flex min-width |
+| `604d7bd8` | docs(insights): 046 — debug overlays can mask the very fix they're verifying |
+
+**Drama-beat spot-check (5/5 verified on phone):** FILES BURNED ·
+GONE DARK (intentionally pulled per Briggsy's "sneaking out of sight"
+narrative call) · INTERCEPTED · ELIMINATION · GAME OVER WINS. All
+holdMs values feel right post-clipping-fix (no re-tuning needed).
+
+**Disconnect-wedge cluster decided.** B-03/04/05/06/07/13 locked as
+Option (a) by-design. No engineering. Couch-of-friends context;
+disconnects resolve as "kill tab, start over." Doc + memory + future-
+Claude lock-in note shipped. The 5 calibration findings that flagged
+this were mostly clusterer false positives. See
+`docs/testing/E2E-ISSUE-LIST.md` "Disconnect-wedge cluster".
+
+**Drama overlay rule codified (with Briggsy):** drama overlay fires
+for one-shot moments where ambient feedback is too weak to convey
+what happened to the table. Multi-step interactions with resolution
+cinematics (favor / combo-steal) use the cinematic — no opener.
+Solo-actor "sneak" cards (Go Dark) deliberately don't get a beat —
+the card's narrative IS sneaking out of sight; an overlay would
+fight the card. Concrete: REMOVED Call in a Favor opener (shipped
+earlier in session, then revoked when rule applied), REMOVED Go Dark
+beat (with PlayerAlert toast un-suppressed for Go Dark to give
+observers a quiet text alert), ADDED Falsify Intel beat (parallel to
+Files Burned — same deck-mutation shape, cool teal vibe).
+
+**DramaOverlay hoist.** DramaOverlay was unmounting on the playing →
+game_over phase transition (phase-keyed Fragments force re-mount),
+so the BURNED card-flip + ELIMINATED + WINS beats on the FINAL
+elimination never fired. Hoisted to Player.tsx root + restructured
+Board.tsx so a single instance lives across phase transitions.
+Verified by Briggsy on a fresh game-over playthrough.
+
+**GameOver hero "MICHAEL Wins"** — name + verb instead of name alone.
+Two-tier within `.winner` (huge name + smaller drama-color "Wins"
+underneath). Reads as one ceremonial statement instead of a floating
+name on the loser/board variants.
+
+**ACTOR nope-window awareness** — when you play a card now, your
+phone shows the existing observer-waiting state (`Intercept window ·
+Ns`, disabled, no button) instead of dead silence for the ~10s
+window. Single boolean change in `SmartActionBox.tsx deriveState`,
+reusing the existing render path. Briggsy's design call: same
+experience as observer-without-Intercept-card.
+
+**Phone right-edge clipping (Pixel 8 Pro)** — the `min-width: 0`
+defensive add on `.workbench / .staging / .handSection` actually
+closed it on first try. The hour I spent thinking it didn't was
+all on a debug overlay positioned at `top:0; right:0` covering the
+title bar's "#1234". Insight 046 captures the meta-lesson.
+
+**Two adjacent copy fixes:**
+- favor-pending banner on target's phone now stacks the two lines
+  vertically ("X demands a card" / "· pick one to surrender") via
+  `flex-direction: column` instead of two columns.
+- "Watch the TV" / "Scan QR on the TV screen" → "Watch the screen" /
+  "the shared screen". Briggsy: "we'll likely never have a tv,
+  need more generic."
+
+### Unfinished Fixes (this session)
+
+These have prescriptions, not diagnoses. Drop into next session's
+queue in order.
+
+1. **`dev:give` silently fails on unknown card types.** Mistyping
    `call-in-favor` (correct: `call-in-a-favor`) returns `WebSocket
    closed before ack — code 1001 (Heartbeat timeout)` instead of a
-   clear "unknown card type" error. Server's `handleDevGiveCard` in
-   `src/server/room.ts` should validate against `CARD_DEFS` and reply
-   with `dev-action-ack { ok: false, code: 'INVALID_CARD_TYPE' }`.
-   Surfaced 2026-05-02. Trivial fix.
+   clear error. Server's `handleDevGiveCard` in `src/server/room.ts`
+   should validate the requested card types against `CARD_DEFS` and
+   reply with `dev-action-ack { ok: false, code: 'INVALID_CARD_TYPE',
+   message: 'Unknown card type: <bad-name>' }` BEFORE attempting any
+   state mutation. Trivial — ~10 min.
 
-0b. **DefusePlacement hero card aria-hidden blocked by browser
-   (real a11y defect).** Browser console on the placement screen:
+2. **DefusePlacement hero card `aria-hidden` blocked by browser.**
+   Browser console on the placement screen:
    `Blocked aria-hidden on an element because its descendant
    retained focus. Element with focus: <div._card_*>; Ancestor with
    aria-hidden: <div._heroCardSlot_*>`. Means the screen reader
    STILL exposes the hero card despite `aria-hidden="true"` —
-   defeats the intent. The fix is to swap `aria-hidden="true"` for
-   `inert` on the heroCardSlot wrapper (per the W3C
-   recommendation in the warning text). `inert` blocks both focus
-   and assistive-tech access, fixing the warning. Find component
-   in `src/client/player/` matching `heroCardSlot` CSS class.
-   Surfaced 2026-05-02 by Briggsy on Pickles' phone during defuse
-   placement.
+   defeats the intent. Fix per the W3C recommendation in the
+   warning text: swap `aria-hidden="true"` for `inert` on the
+   heroCardSlot wrapper. `inert` blocks both focus AND assistive-
+   tech access. Find the component owning the `heroCardSlot` CSS
+   class in `src/client/player/`. ~15 min.
 
-0c. ~~Pixel 8 Pro right-edge clipping~~ **RESOLVED 2026-05-02 in
-   `b7824600`** — the `min-width: 0` defensive fix on `.workbench /
-   .staging / .handSection` actually closed it. Was masked by a
-   later debug overlay (corner markers at `position:fixed; right:0`)
-   covering the title bar's "#1234", making it LOOK still
-   truncated to "#12" when it had been rendering fine underneath
-   the cyan corner marker the whole time. Insight worth keeping:
-   **defensive fixes can succeed silently — before declaring
-   "didn't work," remove your own debug overlays and re-check.**
-   See insight 046 (TBD).
+### Side findings (logged earlier, no movement)
 
-1. **ACTOR has no Nope-window awareness after playing a card.** When
-   Briggsy plays an action card on phone, the drama beat (when one
-   fires) covers ~1.2s, then silence for the remaining ~8.8s of the
-   nope window. Observers see `NopeCountdownBar` + Intercept CTAs;
-   ACTOR sees nothing — no timer, no "awaiting response" status, no
-   pending-card visual. ACTOR can't tell whether they're waiting or
-   it already resolved. Surfaced 2026-05-02 during FILES BURNED
-   spot-check.
-   - **Distinct from C-10 / C-16** (which are about the
-     observer-side countdown bar's visual treatment).
-   - **Distinct from announce()/toast issue 003** (just fixed in
-     `951dc2fb` — that was an observer-side a11y wart).
-   - **Fix path (Briggsy's call, 2026-05-02):** ACTOR sees the same
-     experience as an observer WITHOUT an Intercept card — the
-     `NopeCountdownBar` is visible (timer counting down, tension
-     conveyed), but no INTERCEPT button. Reuses the existing
-     observer-without-intercept code path entirely; no new visual
-     treatment. The mental model: "you played it, now everyone has
-     ~10s to react, you watch the same clock as anyone who can't
-     stop it."
-   - **Implementation pointer:** find where `NopeCountdownBar` is
-     gated to "observers only" on the player view; relax the gate so
-     `myTurn === true` no longer hides it. The Intercept-button
-     visibility is already gated by `hand.has(intercepted)` — that
-     gate keeps actor out of the button path naturally.
+- **Vanity dev room codes for phone testing.** Random alphanumeric
+  room codes (`A8ZUR7`) are hostile on a phone keyboard. Captured
+  in memory at `feedback-burned-vanity-room-codes.md`. Workaround
+  for now: just point a board to `/board.html#1234` — any string
+  works as a DO id; only the production codegen produces the
+  alphanumeric.
+
+- **Production `SCENARIOS.md` H4 header silent drop.** Parser regex
+  `/^###\s+(SCN-...)/` only matches H3 headers. Production catalog
+  mixes H3 (35 scenarios) and H4 (55 scenarios) — the 55 H4
+  scenarios are silently dropped from `parseCatalog`. Real fix
+  needs cascading-validation review (relaxing regex may fail
+  pre-flight on scenarios with absent vibe-checks/knownProductCall
+  fields). Surface for a dedicated session.
 
 ---
 

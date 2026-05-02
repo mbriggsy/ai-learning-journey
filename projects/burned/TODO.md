@@ -1,6 +1,107 @@
 # BURNED — TODO
 
-## NEXT SESSION — pick up here (2026-05-01+)
+## NEXT SESSION — pick up here (2026-05-02+)
+
+### THIS SESSION (2026-05-01 night) — dev cheats + drama-beat clipping P0 root cause
+
+Three commits, 1152/1152 tests green, typecheck clean.
+
+| Commit | Subject |
+|---|---|
+| `c38c1390` | feat(dev): scenario-setup cheats — `pnpm dev:stack` + `dev:give` |
+| `e0c8e9ef` | fix(drama): exits were anchored to hold start, clipping beats to ~30% visible |
+| `2027d68f` | docs(insights): 044 — triage fix paths anchor investigation toward presented hypotheses |
+
+**Set out to test calibration issue 008 (ACTOR drama beat absent before
+DefusePlacement). Found a P0 timing bug that had been silently clipping
+EVERY drama beat in the game to ~30% of designed duration since
+2026-04-22.** The issue 008 triage's hypotheses (lazy-load race, visual
+conflation) were both wrong; actual cause was a GSAP position parameter
+bug. See insight 043 for the GSAP-specific story, insight 044 for the
+meta-lesson on triage hypothesis anchoring.
+
+**Dev cheats — `pnpm dev:stack` + `pnpm dev:give`.** Two new god-mode
+actions for scripted scenario testing. `dev:stack <room> <cardType...>`
+prepends cards to top of draw pile; `dev:give <room> <playerName>
+<cardType...>` appends to a player's hand. Gated by existing
+`PLAYTEST_MODE=1` + `PLAYTEST_TOKEN` god-connection auth + LAN-only
+origin allowlist. Production deploys leave PLAYTEST_MODE unset →
+messages can't land. `verify-prod-bundle.ts` extended with
+`dev-stack-deck` + `dev-give-card` sentinel strings as tree-shake
+guarantees. `.env` now contains `PLAYTEST_MODE=1` + `PLAYTEST_TOKEN=...`
+for local dev (gitignored).
+
+**Drama-beat clipping fix.** `appendHoldAndExit` extracted from
+`processQueue` as a pure helper; the bug was that both exit tweens
+used GSAP position `'<'` which anchored them to the START of the hold
+tween (parallel), not its end (sequential). Visible beat collapsed to
+~enter+fade (~800ms) regardless of holdMs. Fix: blur runs sequentially
+after hold (no position param); opacity runs in parallel with blur
+(`'<'` anchored to blur). Briggsy verified post-fix experience reads
+correctly on Pixel 7 emulation; instrumented timing confirmed beats
+now hold for designed duration (card variant 2.4s + EXTRACTED 1.6s,
+matched within ±50ms). 3 regression tests in
+`src/client/shared/DramaOverlay.test.ts` pin
+`tl.totalDuration() === holdSec + exitDurationSec`.
+
+### Unfinished Fixes (this session)
+
+These need Briggsy in the loop. Drop into next session's queue in order.
+
+1. **Spot-check OTHER drama beats post-fix.** The clipping bug affected
+   every dramatic moment, not just BURNED + EXTRACTED. Briggsy verified
+   those two on Pixel 7. The OTHER beats — INTERCEPTED on a Nope (1400ms),
+   GONE DARK / FILES BURNED (1200ms each), GAME OVER WINS (2000ms),
+   ELIMINATION (1500ms) — were tuned against the clipped reality and
+   now fire for full duration. Eye-in-loop pass needed: do any feel
+   oversize now? If yes, re-tune `holdMs` values in
+   `src/client/shared/DramaOverlay.tsx` `getDramaBeats`. Use
+   `pnpm dev:stack 1234 <cardType>` to set up each scenario fast.
+
+2. **`pnpm dev:stack` ack message cosmetic.** Output reads "Stacked
+   undefined card(s)" because the server ack payload changed from
+   `stackedCount` to `count` when `dev-give-card` was added, but
+   `scripts/dev-stack-top.ts` line 80 still reads `msg.stackedCount`.
+   Trivial fix: change to `msg.count`.
+
+3. **Stale `card-played` toast on observer phones during favor-pending
+   (P2 OPEN — calibration seed 003).** Was item #2 last session.
+   Seat-3 saw "Seat2 played Call in a Favor." persist for the full
+   ~60s favor-pending window. Toasts should clear on `nope-window-
+   resolved` semantically and/or hard-cap at 8-10s wallclock as a
+   guard. Three fix paths in the issue file. Briggsy's call between
+   (A) `nope-window-resolved` clear only, (B) hard cap only, (C) both.
+
+4. **5 KNOWN-PRODUCT-CALL-CONFIRMED disconnect-wedge cluster items
+   (B-03/04/05/13).** Were last session's 5 confirmed items
+   awaiting Briggsy's product call on the disconnect-wedge cluster.
+   No movement — still waiting.
+
+### Side findings (logged, not addressed this session)
+
+- **Vanity dev room codes for phone testing.** Random alphanumeric room
+  codes (`A8ZUR7`) are hostile on a phone keyboard. Captured in memory
+  at `feedback-burned-vanity-room-codes.md`. Two paths: dev-only
+  `?room=<custom>` override (cheap), or random pool of memorable codes
+  (touches prod). Workaround for now: just navigate the board to
+  `/board.html#1234` — any string works as a DO id, no code change
+  needed; only the production codegen produces the alphanumeric.
+
+- **Production `SCENARIOS.md` H4 header silent drop.** Parser regex
+  `/^###\s+(SCN-...)/` only matches H3 headers. Production catalog
+  mixes H3 (35 scenarios) and H4 (55 scenarios) — the 55 H4 scenarios
+  are silently dropped from `parseCatalog` output. Same find as last
+  session; surface for a dedicated session.
+
+### Background processes still alive
+
+- `pnpm dev:server` background task `buz8t4a89` (wrangler) — still
+  bound to port 8787 with PLAYTEST_MODE/TOKEN loaded. `pnpm dev`
+  background task `bztqhgs0b` (vite) — still bound to 5173. They
+  WILL die when the session ends; if Briggsy reopens the terminal
+  they'll already be gone.
+
+---
 
 ### THIS SESSION (2026-05-01 late evening) — TODO queue sweep: #5/#6, #3 phase 1+2, shuffle redo, #7 a11y, #8/#9
 

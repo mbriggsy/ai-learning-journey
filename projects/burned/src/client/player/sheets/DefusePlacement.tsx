@@ -9,13 +9,16 @@ interface DefusePlacementProps {
 
 // Hero card heads the sheet: visual continuity from the BURNED drama beat to
 // the placement decision. Title says WHAT you're doing, the card shows WHAT
-// you're hiding, the subtitle says HOW. aria-hidden because the title already
-// names "Burned Card" — letting MinimalCard re-announce would double-up SR users.
+// you're hiding, the subtitle says HOW. `inert` because the title already
+// names "Burned Card" — letting MinimalCard re-announce would double-up SR
+// users. `inert` (not `aria-hidden`) so focus and assistive-tech access are
+// both blocked together — bare aria-hidden triggered a Chrome warning when
+// the descendant card retained focus.
 function DefuseHeader() {
   return (
     <>
       <div className={styles.sheetTitle}>Hide the Burned Card</div>
-      <div className={styles.heroCardSlot} aria-hidden="true">
+      <div className={styles.heroCardSlot} inert>
         <MinimalCard type="burned" disabled />
       </div>
       <div className={styles.sheetSubtitle}>Tap to place (no take-backs)</div>

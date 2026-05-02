@@ -5,6 +5,7 @@ import { handleHealthRequest } from './health'
 import { mulberry32, randomIntFromRandom } from './rng'
 import { createGodRateLimiter, evaluateGodAuth, isGodOriginAllowed } from './god-connection'
 import { applyPlaytestConfig, parsePlaytestConfigMessage } from './playtest-config'
+import { applyDevGiveCard, applyDevStackDeck, parseDevActionMessage } from './dev-actions'
 import { buildGodEventMessage, type GodEventTrigger } from './god-projection'
 import { getGodOriginAllowlist, isPlaytestMode, matchesToken } from './playtest'
 import { createLobbyState, dispatch } from './game/engine'
@@ -410,30 +411,67 @@ export class GameRoom extends Server<Env> {
    */
   private handleGodMessage(connection: Connection, raw: string): void {
     const parsed = parsePlaytestConfigMessage(raw)
-    if (!parsed.ok) return // silent drop — do not leak signal via error bounce
-
-    const payload = parsed.payload
-    this.enqueue(() => {
-      const current = {
-        locked: this.playtestConfigLocked,
-        seed: this.playtestSeed,
-        nopeWindowMs: this.playtestNopeWindowMs,
-      }
-      const phase = this.gameState?.phase ?? null
-      const result = applyPlaytestConfig(current, phase, payload)
-      if (!result.ok) {
+    if (parsed.ok) {
+      const payload = parsed.payload
+      this.enqueue(() => {
+        const current = {
+          locked: this.playtestConfigLocked,
+          seed: this.playtestSeed,
+          nopeWindowMs: this.playtestNopeWindowMs,
+        }
+        const phase = this.gameState?.phase ?? null
+        const result = applyPlaytestConfig(current, phase, payload)
+        if (!result.ok) {
+          try {
+            connection.send(JSON.stringify({ type: 'playtest-config-ack', ok: false, code: result.code }))
+          } catch { /* connection closing */ }
+          return
+        }
+        this.playtestSeed = result.nextState.seed
+        this.playtestNopeWindowMs = result.nextState.nopeWindowMs
+        this.playtestConfigLocked = result.nextState.locked
         try {
-          connection.send(JSON.stringify({ type: 'playtest-config-ack', ok: false, code: result.code }))
+          connection.send(JSON.stringify({ type: 'playtest-config-ack', ok: true, seed: payload.seed, nopeWindowMs: payload.nopeWindowMs }))
         } catch { /* connection closing */ }
-        return
-      }
-      this.playtestSeed = result.nextState.seed
-      this.playtestNopeWindowMs = result.nextState.nopeWindowMs
-      this.playtestConfigLocked = result.nextState.locked
-      try {
-        connection.send(JSON.stringify({ type: 'playtest-config-ack', ok: true, seed: payload.seed, nopeWindowMs: payload.nopeWindowMs }))
-      } catch { /* connection closing */ }
-    }, connection)
+      }, connection)
+      return
+    }
+
+    // Dev god-mode actions (scenario setup — stack the draw pile, give
+    // a card to a player's hand). Same enqueue + ack contract as
+    // playtest-config. Re-broadcasts game state on success so all
+    // observers see the mutation.
+    const dev = parseDevActionMessage(raw)
+    if (dev.ok) {
+      const payload = dev.payload
+      this.enqueue(() => {
+        if (!this.gameState) {
+          try {
+            connection.send(JSON.stringify({ type: 'dev-action-ack', ok: false, code: 'NOT_PLAYING' }))
+          } catch { /* connection closing */ }
+          return
+        }
+        const result = payload.type === 'dev-stack-deck'
+          ? applyDevStackDeck(this.gameState, payload.cards, () => crypto.randomUUID())
+          : applyDevGiveCard(this.gameState, payload.playerName, payload.cards, () => crypto.randomUUID())
+        if (!result.ok) {
+          try {
+            connection.send(JSON.stringify({ type: 'dev-action-ack', ok: false, code: result.code }))
+          } catch { /* connection closing */ }
+          return
+        }
+        this.gameState = result.nextState
+        void this.persistState()
+        this.broadcastGameState()
+        try {
+          connection.send(JSON.stringify({ type: 'dev-action-ack', ok: true, action: payload.type, count: payload.cards.length }))
+        } catch { /* connection closing */ }
+      }, connection)
+      return
+    }
+
+    // Unknown — silent drop. Preserves the no-error-bounce posture for
+    // unrecognized god messages (token-probe protection).
   }
 
   private handleHostConnect(connection: Connection): void {

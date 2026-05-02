@@ -10,6 +10,8 @@
     "dev": "vite",
     "dev:server": "wrangler dev --ip 0.0.0.0 --port 8787",
     "dev:launch": "tsx scripts/launch-dev-chrome.ts",
+    "dev:stack": "tsx scripts/dev-stack-top.ts",
+    "dev:give": "tsx scripts/dev-give-card.ts",
     "build": "tsc --noEmit && vite build",
     "typecheck": "tsc --noEmit",
     "test": "vitest run",

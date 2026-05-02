@@ -44,6 +44,8 @@ const FORBIDDEN_STRINGS: Sentinel[] = [
   // from src/server/).
   { needle: 'god-event', guard: 'Unit 6 god-event message type — keep in src/server/god-projection.ts only' },
   { needle: 'playtest-config', guard: 'Unit 5 admin message type — keep in src/server/playtest-config.ts only' },
+  { needle: 'dev-stack-deck', guard: 'Dev god-mode action message — keep in src/server/dev-actions.ts only' },
+  { needle: 'dev-give-card', guard: 'Dev god-mode action message — keep in src/server/dev-actions.ts only' },
   { needle: 'mulberry32', guard: 'Unit 3 seedable RNG — keep in src/server/rng.ts only' },
   { needle: 'PLAYTEST_TOKEN', guard: 'Unit 1 env shape — server-only' },
   { needle: 'PLAYTEST_GOD_ORIGINS', guard: 'Unit 1 env shape — server-only' },

@@ -42,39 +42,76 @@ export type DevActionPayload =
   | { type: 'dev-stack-deck'; cards: readonly CardType[] }
   | { type: 'dev-give-card'; playerName: string; cards: readonly CardType[] }
 
+// `recognized` distinguishes "garbage on a god connection — drop silently
+// (token-probe protection)" from "operator typed a known dev action with
+// a bad payload — surface the error so they see their typo." Without this
+// split, `dev:give michael call-in-favor` (typo: should be `call-in-a-favor`)
+// fell through to the silent-drop path and the CLI hit a heartbeat-timeout
+// disconnect with no signal about the cause.
 export type DevActionParseResult =
   | { ok: true; payload: DevActionPayload }
-  | { ok: false; error: string }
+  | { ok: false; recognized: false }
+  | { ok: false; recognized: true; code: 'INVALID_CARD_TYPE' | 'INVALID_ARGUMENTS'; message: string }
+
+const RECOGNIZED_TYPES = new Set(['dev-stack-deck', 'dev-give-card'])
+const VALID_CARD_TYPES = new Set<string>(CARD_TYPE_TUPLE)
 
 export function parseDevActionMessage(raw: string): DevActionParseResult {
   let json: unknown
   try {
     json = JSON.parse(raw)
   } catch {
-    return { ok: false, error: 'Invalid JSON' }
+    return { ok: false, recognized: false }
   }
-  const stack = DevStackDeckSchema.safeParse(json)
-  if (stack.success) {
-    return {
-      ok: true,
-      payload: {
-        type: 'dev-stack-deck',
-        cards: stack.data.cards as readonly CardType[],
-      },
+  const declaredType = (json as { type?: unknown } | null)?.type
+  if (typeof declaredType !== 'string' || !RECOGNIZED_TYPES.has(declaredType)) {
+    return { ok: false, recognized: false }
+  }
+
+  const schema = declaredType === 'dev-stack-deck' ? DevStackDeckSchema : DevGiveCardSchema
+  const result = schema.safeParse(json)
+  if (result.success) {
+    if (result.data.type === 'dev-stack-deck') {
+      return {
+        ok: true,
+        payload: {
+          type: 'dev-stack-deck',
+          cards: result.data.cards as readonly CardType[],
+        },
+      }
     }
-  }
-  const give = DevGiveCardSchema.safeParse(json)
-  if (give.success) {
     return {
       ok: true,
       payload: {
         type: 'dev-give-card',
-        playerName: give.data.playerName,
-        cards: give.data.cards as readonly CardType[],
+        playerName: result.data.playerName,
+        cards: result.data.cards as readonly CardType[],
       },
     }
   }
-  return { ok: false, error: 'Invalid dev action' }
+
+  // Most-common operator mistake: typo in a card type. Surface it explicitly
+  // rather than depending on Zod-version-specific issue codes — walk the
+  // candidate cards array and report the first unrecognized string.
+  const candidate = (json as { cards?: unknown }).cards
+  if (Array.isArray(candidate)) {
+    for (const c of candidate) {
+      if (typeof c === 'string' && !VALID_CARD_TYPES.has(c)) {
+        return {
+          ok: false,
+          recognized: true,
+          code: 'INVALID_CARD_TYPE',
+          message: `Unknown card type: ${c}`,
+        }
+      }
+    }
+  }
+  return {
+    ok: false,
+    recognized: true,
+    code: 'INVALID_ARGUMENTS',
+    message: result.error.issues[0]?.message ?? 'Invalid dev action arguments',
+  }
 }
 
 // --- State transition ---

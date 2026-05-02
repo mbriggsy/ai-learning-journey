@@ -469,9 +469,18 @@ export class GameRoom extends Server<Env> {
       }, connection)
       return
     }
+    if (dev.recognized) {
+      // Recognized dev-action with a bad payload (e.g. typo'd card type).
+      // Ack synchronously so the CLI shows the operator their mistake
+      // instead of dying to a heartbeat timeout.
+      try {
+        connection.send(JSON.stringify({ type: 'dev-action-ack', ok: false, code: dev.code, message: dev.message }))
+      } catch { /* connection closing */ }
+      return
+    }
 
-    // Unknown — silent drop. Preserves the no-error-bounce posture for
-    // unrecognized god messages (token-probe protection).
+    // Unrecognized message — silent drop. Preserves the no-error-bounce
+    // posture for unknown messages on god connections (token-probe protection).
   }
 
   private handleHostConnect(connection: Connection): void {

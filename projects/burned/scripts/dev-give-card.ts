@@ -63,7 +63,7 @@ ws.on('open', () => {
 
 ws.on('message', (raw: Buffer | string) => {
   const text = raw.toString()
-  let msg: { type?: string; ok?: boolean; code?: string; count?: number }
+  let msg: { type?: string; ok?: boolean; code?: string; message?: string; count?: number }
   try {
     msg = JSON.parse(text)
   } catch {
@@ -74,7 +74,7 @@ ws.on('message', (raw: Buffer | string) => {
   if (msg.ok) {
     console.log(`Gave ${msg.count} card(s) to ${playerName} in room ${room}: ${cards.join(', ')}`)
   } else {
-    console.error(`Dev action rejected: ${msg.code}`)
+    console.error(`Dev action rejected: ${msg.code}${msg.message ? ` — ${msg.message}` : ''}`)
     process.exitCode = 1
   }
   ws.close()

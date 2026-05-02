@@ -20,6 +20,52 @@ import styles from './DramaOverlay.module.css'
 //     room watches the card rotate and land, then the victim's name
 //     surfaces underneath. Cinematic Arc #2.
 //
+/**
+ * Append HOLD + dual EXIT tweens to a beat timeline. Extracted as a pure
+ * helper because this exact block carried a position-parameter bug from
+ * 2026-04-22 → 2026-05-01: the exit tweens were `'<'`-anchored to the
+ * hold tween, which GSAP reads as "start at the START of the previous
+ * tween." That collapsed every drama beat's visible duration to
+ * enter+fade (~800ms) regardless of holdMs — Briggsy's "camera flash"
+ * report 2026-05-01 + instrumented timing pinned the cause.
+ *
+ * Contract:
+ *   - HOLD runs first (duration: holdSec) — keeps the beat on screen
+ *   - BLUR exit runs SEQUENTIALLY after the hold (no position param)
+ *   - OPACITY exit runs IN PARALLEL with the blur ('<' anchored to blur)
+ *
+ * Total duration: holdSec + exitDurationSec. If anyone re-introduces
+ * `'<'` on the blur tween, total collapses to max(holdSec, exitDurationSec)
+ * and `DramaOverlay.test.ts` catches it.
+ *
+ * Emil's rule: exits use power2.out (ease-out), NOT power2.in — the user
+ * watches the element most closely at the START of the exit; ease-in
+ * delays that initial movement and reads as sluggish.
+ *
+ * Blur magnitude held under 6px — blur is expensive on Safari mobile.
+ * The 4px end-state stays applied across beat handoff so the NEXT beat's
+ * entry can "focus in" from blurred — Emil's crossfade-mask trick.
+ */
+export function appendHoldAndExit(
+  tl: gsap.core.Timeline,
+  target: HTMLElement,
+  overlay: HTMLElement,
+  holdSec: number,
+  exitDurationSec: number,
+): void {
+  tl.to({}, { duration: holdSec })
+  tl.to(target, {
+    filter: 'blur(4px)',
+    duration: exitDurationSec,
+    ease: 'power2.out',
+  })
+  tl.to(overlay, {
+    opacity: 0,
+    duration: exitDurationSec,
+    ease: 'power2.out',
+  }, '<')
+}
+
 // `transient: true` marks beats that should be aborted (or skipped pre-queue)
 // when a `turn-started` event arrives in the same batch or while the beat
 // is mid-animation. INTERCEPTED is the only transient beat today: the action
@@ -411,26 +457,7 @@ export function DramaOverlay() {
       }, slow + 0.3 + 0.5)
     }
 
-    // HOLD: dynamic — config.holdMs is runtime-derived, not a literal
-    tl.to({}, { duration: config.holdMs / 1000 })
-    // FADE OUT: graceful exit with blur ramp. The blur defocus during fadeout
-    // is what the NEXT beat's entry leverages to read as a continuous morph.
-    // Keep under 6px — blur is expensive on Safari mobile.
-    // Fade-out uses power2.out (ease-out), NOT power2.in. Emil's rule:
-    // exits still use ease-out because the user is watching the element
-    // most closely at the START of the exit — ease-in delays that initial
-    // movement and reads as sluggish. power2.in was here in the first cut;
-    // swapped 2026-04-23 per full-repo audit.
-    tl.to(target, {
-      filter: 'blur(4px)',
-      duration: MOTION_DURATIONS.slow,
-      ease: 'power2.out',
-    }, '<')  // start in parallel with the overlay fade below
-    tl.to(overlay, {
-      opacity: 0,
-      duration: MOTION_DURATIONS.slow,
-      ease: 'power2.out',
-    }, '<')
+    appendHoldAndExit(tl, target, overlay, config.holdMs / 1000, MOTION_DURATIONS.slow)
   }
 
   return (

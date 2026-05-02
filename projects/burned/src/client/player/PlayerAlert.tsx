@@ -102,16 +102,20 @@ function alertFor(
       //
       // Four filters keep the toast from competing with richer surfaces:
       // - own play: actor's staging area already showed what they did
-      // - go-dark / extraction / burn-the-files: DramaOverlay text beats own
-      //   those moments (GONE DARK / EXTRACTED / FILES BURNED); a redundant
-      //   toast would queue under the overlay
+      // - extraction / burn-the-files / falsify-intel: DramaOverlay text
+      //   beats own those moments (EXTRACTED / FILES BURNED / INTEL
+      //   FALSIFIED); a redundant toast would queue under the overlay
       // - combos (comboSize set): combo-steal event carries the meaningful
       //   payload (stealerId/targetId/found); the bare card-played would
       //   over-announce a 3-of-a-kind as just "[Name] played Vera"
+      // - go-dark intentionally falls THROUGH and shows the toast — the
+      //   card's narrative is sneaking out of sight, so the quiet "X
+      //   played Go Dark." text matches the tone better than silence
+      //   (drama overlay was removed 2026-05-02 for the same reason).
       if (event.playerId === myId) break
-      if (event.cardType === 'go-dark') break
       if (event.cardType === 'extraction') break
       if (event.cardType === 'burn-the-files') break
+      if (event.cardType === 'falsify-intel') break
       if (event.comboSize !== undefined) break
       const cardName = CARD_DEF_BY_TYPE[event.cardType]?.name
       if (!cardName) break

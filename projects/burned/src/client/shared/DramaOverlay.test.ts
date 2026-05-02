@@ -46,7 +46,7 @@ describe('DramaOverlay timeline structure', () => {
     const tl = gsap.timeline({ paused: true })
     const target = document.createElement('div')
     const overlay = document.createElement('div')
-    // INTERCEPTED uses 1400ms; GONE DARK / FILES BURNED use 1200ms
+    // INTERCEPTED uses 1400ms; FILES BURNED / INTEL FALSIFIED use 1200ms
     const holdSec = 1.2
     const exitDurationSec = 0.4
 

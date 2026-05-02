@@ -161,35 +161,39 @@ function getDramaBeats(
         holdMs:    2000,
       }]
     case 'card-played': {
-      // Go Dark — the canonical "operative ducks out cleanly" beat. The card
-      // illustration carries the venetian-blinds atmosphere; this beat lifts
-      // it from the staging area onto every screen so the play registers as
-      // a tactical maneuver instead of a generic skip (triage #012/#014).
-      // No beat for any other card-played type yet — combos / favors / Direct
-      // Order have their own surfaces (StealReport, FavorReport, draw count).
-      // Transient: aborts on turn-started so the next player's turn isn't
-      // obscured.
-      if (event.cardType === 'go-dark' && event.comboSize === undefined) {
-        const isActor = myPlayerId === event.playerId
-        return [{
-          variant:   'text',
-          text:      isActor ? 'GONE DARK' : `${name(event.playerId).toUpperCase()} WENT DARK`,
-          className: styles.gonedark ?? '',
-          holdMs:    1200,
-          transient: true,
-        }]
-      }
-      // Burn the Files — the "destroy the evidence" beat. Phones have no
+      // Drama-overlay rule (Briggsy 2026-05-02): one-shot moments where
+      // ambient feedback is too weak for the table to register what
+      // happened get a beat. Multi-step interactions (favor / combo-steal)
+      // with resolution cinematics use the cinematic — no opener.
+      // Solo-actor cards (go-dark, back-channel) intentionally don't get
+      // a beat: Go Dark's narrative IS sneaking out of sight; an overlay
+      // would fight the card's tonal intent.
+
+      // Burn the Files — "destroy the evidence" ember beat. Phones have no
       // discard view and no shuffle animation surface, so without a drama
       // beat the play feels like the card vanished into nothing (TODO #3,
-      // calibration seed 007). Same shape as Go Dark — ACTOR vs observer
-      // text, transient so a fast turn handoff doesn't get obscured.
+      // calibration seed 007). Transient so a fast turn handoff doesn't
+      // get obscured.
       if (event.cardType === 'burn-the-files' && event.comboSize === undefined) {
         const isActor = myPlayerId === event.playerId
         return [{
           variant:   'text',
           text:      isActor ? 'FILES BURNED' : `${name(event.playerId).toUpperCase()} BURNED THE FILES`,
           className: styles.burnedfiles ?? '',
+          holdMs:    1200,
+          transient: true,
+        }]
+      }
+      // Falsify Intel — same effect-shape as Burn the Files (deck mutation,
+      // weak ambient feedback). The actor's NEW order is private knowledge,
+      // but the deck-state change is public — same as a shuffle. Cool ink-
+      // stained-dossier vibe to contrast Files Burned's hot ember.
+      if (event.cardType === 'falsify-intel' && event.comboSize === undefined) {
+        const isActor = myPlayerId === event.playerId
+        return [{
+          variant:   'text',
+          text:      isActor ? 'INTEL FALSIFIED' : `${name(event.playerId).toUpperCase()} FALSIFIED INTEL`,
+          className: styles.falsifyintel ?? '',
           holdMs:    1200,
           transient: true,
         }]

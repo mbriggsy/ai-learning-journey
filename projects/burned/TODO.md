@@ -2,6 +2,47 @@
 
 ## NEXT SESSION — pick up here (2026-05-02+)
 
+### Eye-in-loop findings (2026-05-02, in progress)
+
+Live spot-check session; logging findings as they surface. Numbering
+restarts at end-of-session for the next-session queue.
+
+0. **`dev:give` silently fails on unknown card types.** Mistyping
+   `call-in-favor` (correct: `call-in-a-favor`) returns `WebSocket
+   closed before ack — code 1001 (Heartbeat timeout)` instead of a
+   clear "unknown card type" error. Server's `handleDevGiveCard` in
+   `src/server/room.ts` should validate against `CARD_DEFS` and reply
+   with `dev-action-ack { ok: false, code: 'INVALID_CARD_TYPE' }`.
+   Surfaced 2026-05-02. Trivial fix.
+
+1. **ACTOR has no Nope-window awareness after playing a card.** When
+   Briggsy plays an action card on phone, the drama beat (when one
+   fires) covers ~1.2s, then silence for the remaining ~8.8s of the
+   nope window. Observers see `NopeCountdownBar` + Intercept CTAs;
+   ACTOR sees nothing — no timer, no "awaiting response" status, no
+   pending-card visual. ACTOR can't tell whether they're waiting or
+   it already resolved. Surfaced 2026-05-02 during FILES BURNED
+   spot-check.
+   - **Distinct from C-10 / C-16** (which are about the
+     observer-side countdown bar's visual treatment).
+   - **Distinct from announce()/toast issue 003** (just fixed in
+     `951dc2fb` — that was an observer-side a11y wart).
+   - **Fix path (Briggsy's call, 2026-05-02):** ACTOR sees the same
+     experience as an observer WITHOUT an Intercept card — the
+     `NopeCountdownBar` is visible (timer counting down, tension
+     conveyed), but no INTERCEPT button. Reuses the existing
+     observer-without-intercept code path entirely; no new visual
+     treatment. The mental model: "you played it, now everyone has
+     ~10s to react, you watch the same clock as anyone who can't
+     stop it."
+   - **Implementation pointer:** find where `NopeCountdownBar` is
+     gated to "observers only" on the player view; relax the gate so
+     `myTurn === true` no longer hides it. The Intercept-button
+     visibility is already gated by `hand.has(intercepted)` — that
+     gate keeps actor out of the button path naturally.
+
+---
+
 ### THIS SESSION (2026-05-01 night) — dev cheats + drama-beat clipping P0 root cause
 
 Three commits, 1152/1152 tests green, typecheck clean.

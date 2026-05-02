@@ -199,29 +199,6 @@
   color: var(--color-emerald-12);
 }
 
-/* ─── GONE DARK — venetian-blinds dim, the operative ducks out ─── */
-
-.gonedark {
-  background: radial-gradient(
-    ellipse 80% 60% at 50% 50%,
-    color-mix(in oklab, var(--color-charcoal-3) 92%, transparent) 0%,
-    color-mix(in oklab, var(--color-charcoal-1) 96%, transparent) 60%,
-    color-mix(in oklab, var(--color-charcoal-1) 98%, transparent) 100%
-  );
-}
-
-.gonedark .text {
-  color: var(--color-cream-12);
-  /* Subdued size — Go Dark is a quiet, tactical exit, not a reveal. Same
-     scale as ELIMINATED so the two "fade-out" beats read consistently. */
-  font-size: clamp(var(--text-drama-subdued-min), 6cqi + 0rem, var(--text-drama-subdued-max));
-  letter-spacing: 0.18em;
-  /* Faint sodium-vapor tint — venetian blinds at night. */
-  text-shadow:
-    0 0 24px color-mix(in oklab, var(--color-charcoal-1) 75%, transparent),
-    0 1px 0 color-mix(in oklab, var(--color-charcoal-1) 60%, transparent);
-}
-
 /* ─── FILES BURNED — destroy-the-evidence ember beat ─── */
 
 .burnedfiles {
@@ -253,6 +230,41 @@
     0 0 28px color-mix(in oklab, var(--color-burned-fire) 72%, transparent),
     0 0 12px color-mix(in oklab, var(--color-cordovan-9) 70%, transparent),
     0 1px 0 color-mix(in oklab, var(--color-charcoal-1) 70%, transparent);
+}
+
+/* ─── INTEL FALSIFIED — ink-stained-dossier deck-mutation beat ─── */
+
+.falsifyintel {
+  /* Cool teal iris — ink seeping through doctored documents. Cold/cerebral
+     to contrast Files Burned's hot ember; both are deck mutations but the
+     vibes are opposite (overt destruction vs. covert forgery). Same
+     luminance ramp so the visual vocabulary stays consistent for
+     "the deck just changed." */
+  background: radial-gradient(
+    ellipse 70% 50% at 50% 50%,
+    color-mix(in oklab, var(--color-teal-8) 88%, transparent) 0%,
+    color-mix(in oklab, var(--color-teal-5) 82%, transparent) 35%,
+    color-mix(in oklab, var(--color-teal-2) 90%, transparent) 75%,
+    color-mix(in oklab, var(--color-charcoal-1) 96%, transparent) 100%
+  );
+}
+
+.falsifyintel .text {
+  /* Cream-on-teal: luminance contrast carries the read regardless of color
+     perception (Briggsy is color blind — never rely on color alone). */
+  color: var(--color-cream-12);
+  /* Subdued size — same scale family as FILES BURNED; this is a tactical
+     deck-tamper, not a reveal. */
+  font-size: clamp(var(--text-drama-subdued-min), 6cqi + 0rem, var(--text-drama-subdued-max));
+  /* Tighter tracking than burnedfiles — letters read "stamped on a redacted
+     dossier" rather than "branded into paper." */
+  letter-spacing: 0.18em;
+  /* Two-layer text-shadow: cool teal halo + char anchor. Letters read
+     "ink-stained" rather than "glowing in space." */
+  text-shadow:
+    0 0 26px color-mix(in oklab, var(--color-teal-9) 70%, transparent),
+    0 0 10px color-mix(in oklab, var(--color-teal-7) 60%, transparent),
+    0 1px 0 color-mix(in oklab, var(--color-charcoal-1) 75%, transparent);
 }
 
 /* ─── VICTORY — ochre gold, the loudest reveal ─── */

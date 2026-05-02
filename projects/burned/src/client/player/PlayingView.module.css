@@ -31,11 +31,18 @@
     gap: var(--space-fluid-tight);
     padding: var(--space-fluid-tight) var(--space-1) var(--space-1);
     min-height: 0; /* prevent flex child from expanding beyond parent */
+    min-width: 0;  /* same, on the inline axis — children's intrinsic
+                      content (8-card hand × 120px slot floor) was
+                      pushing the workbench wider than the .view, and
+                      .view's overflow:hidden was clipping the right
+                      edges of staging + hand. Surfaced 2026-05-02 by
+                      Briggsy on real phone. */
   }
 
   .staging {
     flex: 42 1 0;
     min-height: 0;
+    min-width: 0;
     display: flex;
     flex-direction: column;
     gap: var(--space-1);
@@ -58,6 +65,7 @@
   .handSection {
     flex: 58 1 0;
     min-height: 0;
+    min-width: 0;
     display: flex;
     flex-direction: column;
     gap: var(--space-1);

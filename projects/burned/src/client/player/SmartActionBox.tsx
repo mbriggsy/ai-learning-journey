@@ -146,22 +146,36 @@ export function SmartActionBox({
   function deriveState(
     cps: CardPlayState, myTurn: boolean, sub: SubPhase | null, pileCount: number,
   ): { key: string; className: string; text: string; interactive: boolean; action?: () => void } {
-    // Intercept window takes priority — someone played an action card and a
-    // counter-intel window is open. The acting player can't nope their own
-    // initial play (engine rejects at chainDepth=0 + originalPlayerId), but
-    // CHAIN-BURN is legal: once any opponent has noped (chainDepth>=1), the
-    // ACTOR may chain-intercept to restore their action. Pre-fix the UI hid
-    // the Intercept button from the ACTOR for the entire window — they'd
-    // try to stage Intercepted from hand and hit "Can't play Intercepted"
-    // with no context. See TODO #11 / engine.ts:980.
-    if (nopeWindow && isAlive && (!myTurn || nopeWindow.chainDepth >= 1)) {
+    // Intercept window takes priority — someone played an action card and
+    // a counter-intel window is open. The acting player can't nope their
+    // own initial play (engine rejects at chainDepth=0 + originalPlayerId),
+    // but CHAIN-BURN is legal: once any opponent has noped (chainDepth>=1),
+    // the ACTOR may chain-intercept to restore their action. See
+    // engine.ts:980.
+    //
+    // Visibility design (Briggsy 2026-05-02): the ACTOR also enters this
+    // branch at chainDepth 0 — same experience as an observer-without-an-
+    // Intercept-card. They see the timer counting down (so they know
+    // their card is in the air and others are deciding) but no button
+    // (engine would reject the self-Nope anyway). Pre-fix the actor saw
+    // nothing during the ~10s window; the play landed in dead silence.
+    // Eye-in-loop session 2026-05-02 surfaced "actor has no Nope-window
+    // awareness" — single boolean change reuses the existing observer-
+    // waiting branch, no new visual treatment needed.
+    if (nopeWindow && isAlive) {
       const urgent = secondsLeft <= 2
       // chainDepth 0 = first Nope, you're cancelling the action.
       // chainDepth > 0 = someone already Noped. Counter-tap flips it back.
       // Different word tells the room which side of the chain you're on.
       const counter = nopeWindow.chainDepth > 0
       const verb = counter ? 'Counter' : 'Intercept'
-      if (hasIntercept) {
+      // Button shows ONLY when the player has a legal Intercept play:
+      // not on their own original-tier action (engine rejects at
+      // chainDepth=0 + originalPlayerId), not without an Intercept card.
+      // Actor + chainDepth 0 lands in the waiting branch even if
+      // hasIntercept; UI matches what the engine would accept.
+      const canIntercept = hasIntercept && (!myTurn || nopeWindow.chainDepth >= 1)
+      if (canIntercept) {
         return {
           key: counter ? 'counter' : 'intercept',
           className: `${styles.box} ${styles.intercept} ${urgent ? styles.urgent : ''}`,

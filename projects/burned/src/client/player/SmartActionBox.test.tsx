@@ -230,7 +230,7 @@ function nopeWindow(chainDepth: number): NopeWindowView {
 }
 
 describe('SmartActionBox chain-burn UX (TODO #11)', () => {
-  it('hides the Intercept button from ACTOR at chainDepth=0 (engine rejects self-nope)', () => {
+  it('hides the Intercept BUTTON from ACTOR at chainDepth=0 — but shows the waiting state for nope-window awareness (Briggsy 2026-05-02)', () => {
     const { container, root } = mount()
     try {
       render(root,
@@ -244,9 +244,18 @@ describe('SmartActionBox chain-burn UX (TODO #11)', () => {
         />,
       )
       const button = container.querySelector('button')!
-      // ACTOR at chainDepth=0 — Intercept must NOT be exposed; the
-      // SmartActionBox falls through to its normal turn-active state.
-      expect(button.textContent ?? '').not.toMatch(/Intercept|Counter/)
+      // ACTOR at chainDepth=0 — engine rejects self-nope, so the button
+      // must NOT be interactive. Pre-2026-05-02 the SmartActionBox hid
+      // the entire window state from the actor (silence during the ~10s
+      // window). Now we surface the SAME waiting treatment as an
+      // observer-without-an-Intercept-card so the actor knows their card
+      // is in flight. See deriveState comment in SmartActionBox.tsx.
+      expect(button.getAttribute('disabled')).not.toBeNull()
+      // Waiting text reads "Intercept window · Ns" (interceptWaiting
+      // branch), NOT the actionable "Intercept · Ns" (intercept branch).
+      // The "window" suffix distinguishes the awareness state from the
+      // actionable button text.
+      expect(button.textContent ?? '').toMatch(/Intercept window/)
     } finally {
       teardown(container, root)
     }

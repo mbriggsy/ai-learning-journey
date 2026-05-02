@@ -81,7 +81,7 @@ export function EliminatedView() {
         animate={{ opacity: 1 }}
         transition={{ ...MOTION.enter, delay: 1.0 }}
       >
-        Watch the TV for the action
+        Watch the screen for the action
       </m.div>
     </div>
   )

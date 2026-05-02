@@ -33,19 +33,44 @@
   color: var(--color-fg-primary);
 }
 
-/* ─── Winner announcement ─── */
+/* ─── Winner announcement ───
+   Two-tier: NAME (huge, glowing) + verb "Wins" (smaller, accent-colored,
+   tracked) so the hero reads as one statement, not a floating name. */
 
 .winner {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: var(--space-1);
+  margin-bottom: var(--space-2);
+}
+
+.winnerName {
   font-family: var(--font-display);
   font-size: var(--text-display);
   font-weight: 700;
   text-transform: uppercase;
   letter-spacing: 0.06em;
-  margin-bottom: var(--space-2);
   /* Victory glow — ochre-drama, not Jackbox teal */
   text-shadow:
     0 0 30px color-mix(in oklab, var(--color-accent-drama) 40%, transparent),
     0 0 60px color-mix(in oklab, var(--color-accent-drama) 15%, transparent);
+}
+
+.winnerVerb {
+  font-family: var(--font-display);
+  font-size: var(--text-title);
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: 0.24em;
+  /* Slight padding-left to balance the wide letter-spacing visually
+     centering the word under the name. */
+  padding-left: 0.24em;
+  color: var(--color-accent-drama);
+  /* Faint glow to match the name above. Subdued so the NAME stays the
+     primary read. */
+  text-shadow:
+    0 0 16px color-mix(in oklab, var(--color-accent-drama) 35%, transparent);
 }
 
 .subtitle {

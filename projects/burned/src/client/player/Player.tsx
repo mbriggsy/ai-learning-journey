@@ -137,7 +137,7 @@ export function Player() {
 
   if (!roomCode) {
     return <div style={{ padding: 24, color: 'var(--color-fg-primary)', background: 'var(--color-bg-app)', minHeight: '100svh' }}>
-      <p>No room code. Scan the QR code on the TV screen.</p>
+      <p>No room code. Scan the QR code on the shared screen.</p>
     </div>
   }
 
@@ -165,6 +165,20 @@ export function Player() {
         roomCode={roomCode}
         urlName={urlName}
       />
+      {/* DramaOverlay lives at Player root, NOT inside PhoneRouter. The
+          phase-keyed Fragments (`key="playing"` / `key="game_over"`) force
+          full subtree re-mount on phase change. If DramaOverlay lived in
+          the playing fragment, the playing → game_over transition (which
+          fires burned-drawn + player-eliminated + game-over events in one
+          tick) would unmount it before the queue could process. The
+          fresh game_over instance would seed lastProcessedRef to the
+          tail and skip the very events that just fired. Result: no
+          BURNED card-flip, no ELIMINATION beat, no WINS ceremony — the
+          game's biggest moments rendered as silent. Hoisting here keeps
+          one DramaOverlay alive across the transition so the queue
+          drains cleanly. Surfaced 2026-05-02 by Briggsy on the GAME
+          OVER WINS spot-check ("no burned treatment"). */}
+      <Suspense><DramaOverlay /></Suspense>
       <ErrorToast />
       <PlayerAlert />
       <ConnectionOverlay status={connectionStatus} />
@@ -591,7 +605,10 @@ function PlayingView({ roomCode }: { roomCode: string }) {
         {detailCardType && <CardDetailSheet cardType={detailCardType} />}
       </BottomSheet>
 
-      <Suspense><DramaOverlay /></Suspense>
+      {/* DramaOverlay was hoisted to Player root (above PhoneRouter) so it
+          survives the playing → game_over phase transition and the WINS /
+          ELIMINATED / BURNED beats actually fire. See comment at that
+          mount site. */}
 
       {/* State-driven banner that rises on the TARGET's phone during a
           3-of-a-kind named-steal intercept window. Gives Mittens the card

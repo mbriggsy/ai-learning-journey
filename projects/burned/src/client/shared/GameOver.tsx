@@ -45,7 +45,11 @@ export function GameOver({ players, winnerId, eliminationOrder, myPlayerId, onPl
 
   return (
     <div className={styles.container}>
-      {/* Winner — dramatic entrance */}
+      {/* Winner — dramatic entrance. Two-tier: NAME huge + WINS verb
+          smaller-but-prominent right under so the hero reads as one
+          ceremonial statement ("MICHAEL WINS") instead of a name floating
+          alone. Surfaced 2026-05-02 by Briggsy ("MICHAEL" without a verb
+          felt incomplete — should say something like 'wins/survives'). */}
       <m.div
         className={styles.winner}
         // Transform string — winner reveal is a dramatic moment and must stay
@@ -54,7 +58,8 @@ export function GameOver({ players, winnerId, eliminationOrder, myPlayerId, onPl
         animate={{ opacity: 1, transform: 'translateY(0px) scale(1)' }}
         transition={{ ...MOTION.gentle, delay: 0.2 }}
       >
-        {winner?.name ?? 'Unknown'}
+        <span className={styles.winnerName}>{winner?.name ?? 'Unknown'}</span>
+        <span className={styles.winnerVerb}>Wins</span>
       </m.div>
 
       <m.div

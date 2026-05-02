@@ -1,4 +1,4 @@
-import { useState, useEffect, Fragment } from 'react'
+import { useState, useEffect, Fragment, type ReactNode } from 'react'
 import { connect, disconnect, send, onMessage, onStatusChange, getStatus } from '@client/connection'
 import type { ConnectionStatus } from '@client/connection'
 import { gameStore, useGameState, useProtocolMismatch, useLastError } from '@client/shared/gameStore'
@@ -176,21 +176,25 @@ export function Board() {
     )
   }
 
-  // Route by phase
+  // Route by phase. DramaOverlay lives OUTSIDE the phase-keyed Fragments
+  // so it survives the playing → game_over transition. If it lived inside
+  // the playing Fragment, the burned-drawn + player-eliminated + game-over
+  // events that fire on the final elimination would unmount the overlay
+  // before the queue could process. The fresh instance in game_over would
+  // seed lastProcessedRef to the tail and skip those very events. Result:
+  // no BURNED card-flip, no ELIMINATION beat, no WINS ceremony — the
+  // game's biggest moments rendered as silent. Surfaced 2026-05-02 by
+  // Briggsy on the GAME OVER WINS spot-check ("no burned treatment").
+  let phaseContent: ReactNode
   if (!state || state.phase === 'lobby') {
-    return (
-      <>
-        <Lobby
-          connectionStatus={connectionStatus}
-          onStartGame={handleStartGame}
-        />
-        <BoardErrorBanner error={lastError} />
-      </>
+    phaseContent = (
+      <Lobby
+        connectionStatus={connectionStatus}
+        onStartGame={handleStartGame}
+      />
     )
-  }
-
-  if (state.phase === 'game_over') {
-    return (
+  } else if (state.phase === 'game_over') {
+    phaseContent = (
       <Fragment key="game_over">
         <GameOver
           players={state.players}
@@ -198,25 +202,34 @@ export function Board() {
           eliminationOrder={state.eliminationOrder}
           onPlayAgain={handlePlayAgain}
         />
-        <BoardErrorBanner error={lastError} />
+      </Fragment>
+    )
+  } else {
+    // EndGameControl lives as a SIBLING of GameTable, not inside it —
+    // `.table` uses `contain: layout` which creates a containing block for
+    // position: fixed descendants. A modal rendered inside the table gets
+    // scoped to table bounds AND sits below the game chrome's z-index 100
+    // layers (BlotterContent, Arena). Hoisting to this Fragment escapes
+    // the contain scope so the backdrop covers the full viewport and the
+    // modal paints above everything except DramaOverlay.
+    phaseContent = (
+      <Fragment key="playing">
+        <GameTable />
+        <EndGameControl onEndGame={handleEndGame} />
       </Fragment>
     )
   }
 
-  // EndGameControl lives as a SIBLING of GameTable, not inside it —
-  // `.table` uses `contain: layout` which creates a containing block for
-  // position: fixed descendants. A modal rendered inside the table gets
-  // scoped to table bounds AND sits below the game chrome's z-index 100
-  // layers (BlotterContent, Arena). Hoisting to this Fragment escapes
-  // the contain scope so the backdrop covers the full viewport and the
-  // modal paints above everything except DramaOverlay.
   return (
-    <Fragment key="playing">
-      <GameTable />
-      <DramaOverlay />
-      <EndGameControl onEndGame={handleEndGame} />
+    <>
+      {phaseContent}
+      {/* DramaOverlay only mounts once we have game state (post-lobby).
+          During lobby the event feed is empty so mounting is harmless,
+          but we skip it for tidiness and to avoid the first-mount
+          seeding work on every lobby render. */}
+      {state && state.phase !== 'lobby' && <DramaOverlay />}
       <BoardErrorBanner error={lastError} />
-    </Fragment>
+    </>
   )
 }
 

@@ -15,6 +15,20 @@ restarts at end-of-session for the next-session queue.
    with `dev-action-ack { ok: false, code: 'INVALID_CARD_TYPE' }`.
    Surfaced 2026-05-02. Trivial fix.
 
+0b. **DefusePlacement hero card aria-hidden blocked by browser
+   (real a11y defect).** Browser console on the placement screen:
+   `Blocked aria-hidden on an element because its descendant
+   retained focus. Element with focus: <div._card_*>; Ancestor with
+   aria-hidden: <div._heroCardSlot_*>`. Means the screen reader
+   STILL exposes the hero card despite `aria-hidden="true"` —
+   defeats the intent. The fix is to swap `aria-hidden="true"` for
+   `inert` on the heroCardSlot wrapper (per the W3C
+   recommendation in the warning text). `inert` blocks both focus
+   and assistive-tech access, fixing the warning. Find component
+   in `src/client/player/` matching `heroCardSlot` CSS class.
+   Surfaced 2026-05-02 by Briggsy on Pickles' phone during defuse
+   placement.
+
 1. **ACTOR has no Nope-window awareness after playing a card.** When
    Briggsy plays an action card on phone, the drama beat (when one
    fires) covers ~1.2s, then silence for the remaining ~8.8s of the

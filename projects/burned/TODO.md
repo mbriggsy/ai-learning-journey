@@ -29,6 +29,17 @@ restarts at end-of-session for the next-session queue.
    Surfaced 2026-05-02 by Briggsy on Pickles' phone during defuse
    placement.
 
+0c. ~~Pixel 8 Pro right-edge clipping~~ **RESOLVED 2026-05-02 in
+   `b7824600`** — the `min-width: 0` defensive fix on `.workbench /
+   .staging / .handSection` actually closed it. Was masked by a
+   later debug overlay (corner markers at `position:fixed; right:0`)
+   covering the title bar's "#1234", making it LOOK still
+   truncated to "#12" when it had been rendering fine underneath
+   the cyan corner marker the whole time. Insight worth keeping:
+   **defensive fixes can succeed silently — before declaring
+   "didn't work," remove your own debug overlays and re-check.**
+   See insight 046 (TBD).
+
 1. **ACTOR has no Nope-window awareness after playing a card.** When
    Briggsy plays an action card on phone, the drama beat (when one
    fires) covers ~1.2s, then silence for the remaining ~8.8s of the

@@ -67,7 +67,7 @@ ws.on('open', () => {
 
 ws.on('message', (raw: Buffer | string) => {
   const text = raw.toString()
-  let msg: { type?: string; ok?: boolean; code?: string; stackedCount?: number }
+  let msg: { type?: string; ok?: boolean; code?: string; count?: number }
   try {
     msg = JSON.parse(text)
   } catch {
@@ -76,7 +76,7 @@ ws.on('message', (raw: Buffer | string) => {
   if (msg.type !== 'dev-action-ack') return
   acked = true
   if (msg.ok) {
-    console.log(`Stacked ${msg.stackedCount} card(s) on top of room ${room}: ${cards.join(', ')}`)
+    console.log(`Stacked ${msg.count} card(s) on top of room ${room}: ${cards.join(', ')}`)
     console.log('Next player draw will be the first card listed.')
   } else {
     console.error(`Dev action rejected: ${msg.code}`)

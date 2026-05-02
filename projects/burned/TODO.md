@@ -72,10 +72,15 @@ These need Briggsy in the loop. Drop into next session's queue in order.
    guard. Three fix paths in the issue file. Briggsy's call between
    (A) `nope-window-resolved` clear only, (B) hard cap only, (C) both.
 
-4. **5 KNOWN-PRODUCT-CALL-CONFIRMED disconnect-wedge cluster items
-   (B-03/04/05/13).** Were last session's 5 confirmed items
-   awaiting Briggsy's product call on the disconnect-wedge cluster.
-   No movement — still waiting.
+4. ~~**5 KNOWN-PRODUCT-CALL-CONFIRMED disconnect-wedge cluster items
+   (B-03/04/05/13).**~~ **DECIDED 2026-05-02 — Option (a), no
+   engineering.** Couch-of-friends context; kill tab + start over is
+   the resolution. Rationale + future-Claude lock-in note in
+   `docs/testing/E2E-ISSUE-LIST.md` "Disconnect-wedge cluster" section.
+   The 5 calibration findings (001/005/006/009/010) that surfaced this
+   were mostly clusterer false positives + one already-fixed (009 by
+   GSAP timing fix); see triage agent re-evaluation below if those
+   need to flip status in the run's INDEX.
 
 ### Side findings (logged, not addressed this session)
 

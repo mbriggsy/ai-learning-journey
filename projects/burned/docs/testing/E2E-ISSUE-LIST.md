@@ -20,9 +20,13 @@ D-02 draw lock, D-05 StealReport debounce, D-20 NameCard Escape, C-23 target
 Unknown, C-20 pill clip, E-04/E-05/E-06/E-07 Zod cluster, B-08 persist reset,
 B-09 msg exhaustive, A-02/A-05/A-06/A-07/A-08 test coverage, D-17 regex pre-validate.
 
-**⏸ 7 P0s blocked on Briggsy's call:** B-03/04/05/06/07/13 disconnect-wedge
-cluster (policy conflict — "game waits for you" vs ghost-player stalls),
-D-03 simultaneous-Nope UX (design decision).
+**📋 6 P0s decided by-design (no engineering):** B-03/04/05/06/07/13
+disconnect-wedge cluster — see "Disconnect-wedge cluster" section
+below for product-call rationale (couch-of-friends context; kill tab,
+start over).
+
+**⏸ 1 P0 still blocked on Briggsy's call:** D-03 simultaneous-Nope UX
+(design decision).
 
 ## Legend
 
@@ -32,6 +36,7 @@ D-03 simultaneous-Nope UX (design decision).
 | 🟡 IN-PROGRESS | Being fixed now |
 | 🟢 FIXED | Landed + verified (tests + Playwright where applicable) |
 | ⏸ BLOCKED | Needs Briggsy decision (design/product call) |
+| 📋 BY-DESIGN | Product decision made — accepted as-is, no engineering |
 | 🏷 LOGGED | Test-coverage gap — noted, not urgent |
 
 ## Severity guide
@@ -68,20 +73,35 @@ D-03 simultaneous-Nope UX (design decision).
 | **C-03** | Board on iPad-portrait (1024×1366) broken: DrawPile count overlapped by discard, PlayerStrip cut off left, COMMS stretched. Spec is landscape-only but no orientation guard. | 🔴 | Orientation splash "Rotate to landscape" at board entry point |
 | **C-06** | Staged `vera-khan` name truncates to "VERA KI•" at 360×640 — `text-overflow: clip` cuts mid-character on legal 9-char codename | 🔴 | `MinimalCard.module.css:158-171` — cqi-scaled font + `ellipsis`, or drop header below 180px |
 
-### Disconnect-wedge cluster — PRODUCT DECISION NEEDED
+### Disconnect-wedge cluster — DECIDED BY-DESIGN (2026-05-02)
 
-This cluster conflicts with the explicit "game waits for you" policy that removed all server prompt timeouts. Timeouts for *slow humans* were intentionally removed. But a *fully disconnected* player is different — the game stalls until the 15-min INACTIVITY_TIMEOUT nukes the room.
+**Product call:** Option (a) — keep current policy. No engineering.
+
+**Rationale:** BURNED is played by a couch-of-friends, not internet
+strangers. If a player disconnects (phone in toilet, browser crash,
+WiFi drop), the rest of the crew is sitting right there and knows
+immediately. The 15-min INACTIVITY_TIMEOUT is irrelevant in this
+context — the simple resolution is: everyone kills their browser tab
+and starts a new game in ~5 seconds. Engineering 5 disconnect handlers
++ 5 safe-default decisions + tests for a non-problem IS the
+compromise. The wedge only matters in a stranger-context game where
+players can't communicate out-of-band, and BURNED is not that game.
 
 | ID | Title | Status |
 |----|-------|--------|
-| **B-03** | `name-card-pending` + stealer disconnects → room frozen until 15-min nuke | ⏸ |
-| **B-04** | `defuse-pending` + drawer disconnects → room frozen, Burned stuck in dead hand | ⏸ |
-| **B-05** | `favor-pending` + target disconnects → room frozen | ⏸ |
-| **B-06** | `future-rearrange-pending` + peeker disconnects → room frozen | ⏸ |
-| **B-13** | Active player mid-`turn-active` disconnects → turn never advances | ⏸ |
-| **B-07** | Meta-finding: only Nope window has disconnect-safety machinery. All other prompts lack `scheduleNopeExpiry`-shaped infrastructure. | ⏸ |
+| **B-03** | `name-card-pending` + stealer disconnects → room frozen until 15-min nuke | 📋 |
+| **B-04** | `defuse-pending` + drawer disconnects → room frozen, Burned stuck in dead hand | 📋 |
+| **B-05** | `favor-pending` + target disconnects → room frozen | 📋 |
+| **B-06** | `future-rearrange-pending` + peeker disconnects → room frozen | 📋 |
+| **B-13** | Active player mid-`turn-active` disconnects → turn never advances | 📋 |
+| **B-07** | Meta-finding: only Nope window has disconnect-safety machinery. All other prompts lack `scheduleNopeExpiry`-shaped infrastructure. | 📋 |
 
-**Options to present:** (a) keep current policy, accept 15-min nuke; (b) introduce *disconnect-only* auto-resolve (confirmed disconnect triggers safe default — doesn't affect slow deciders); (c) host vote-to-kick a stalled seat. **Recommending (b)** — preserves "game waits for slow human" while healing ghost-player stalls.
+**Future-Claude note:** if a calibration / triage agent re-surfaces
+any of B-03/04/05/06/07/13 as "needs product call," route to this
+section. The decision is locked. Do NOT re-recommend Option (b)
+("auto-resolve with safe defaults") even though it's superficially
+nicer-sounding — it was rejected for a stronger product reason than
+appears on paper.
 
 ### Input abuse P0
 

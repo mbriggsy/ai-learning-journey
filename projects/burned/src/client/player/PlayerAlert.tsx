@@ -16,6 +16,13 @@ interface Alert {
   readonly id: string
   readonly text: string
   readonly tone: AlertTone
+  // For multi-step cards with a human-think gap (Future Peek, Call in a
+  // Favor) the 2.8s auto-fade loses the re-attendance use case (bystander
+  // grabs a beer, comes back at 45s, still wants context). When set, the
+  // alert skips auto-fade and clears on (a) the listed resolve event firing
+  // or (b) explicit user dismiss via the X. The next toast-producing event
+  // also replaces it as normal — single-slot toast unchanged.
+  readonly persistUntil?: ReadonlyArray<GameEvent['type']>
 }
 
 /** Format an event into a player-facing alert if it directly affected me.
@@ -119,10 +126,26 @@ function alertFor(
       if (event.comboSize !== undefined) break
       const cardName = CARD_DEF_BY_TYPE[event.cardType]?.name
       if (!cardName) break
+      // Call in a Favor has a human-think gap between play and resolution
+      // (target picks which card to surrender — can take 30-60s). Toast
+      // persists until favor-given fires so a re-attending bystander still
+      // has context, with an X to dismiss early if they're already caught
+      // up. Other cards in this branch commit inside the nope window, so
+      // the 2.8s auto-fade is correct.
+      //
+      // Falsify Intel (the other multi-step card in BURNED) is filtered
+      // above — DramaOverlay's INTEL FALSIFIED beat owns that moment, so
+      // there's no PlayerAlert toast to persist. Pair-steal and
+      // triple-steal name-commit also have human-think gaps but their
+      // observer surfaces are StealReport / comboSize filter, not this
+      // toast.
+      const persistUntil: ReadonlyArray<GameEvent['type']> | undefined =
+        event.cardType === 'call-in-a-favor' ? ['favor-given'] : undefined
       return {
         id: eventId,
         text: `${nameOf(event.playerId)} played ${cardName}.`,
         tone: 'info',
+        persistUntil,
       }
     }
 
@@ -184,9 +207,24 @@ export function PlayerAlert() {
 
   useEffect(() => {
     if (!alert) return
+    if (alert.persistUntil) return // persistent alerts opt out of auto-fade
     const t = setTimeout(() => setAlert(null), 2800)
     return () => clearTimeout(t)
   }, [alert])
+
+  // Persistent alerts clear when their resolve event fires anywhere in the
+  // event feed AFTER the alert's source event. The slice keeps us from
+  // misreading a resolve event that pre-dated the play (e.g. a previous
+  // turn's favor-given still in the feed when this turn's call-in-a-favor
+  // toast fires).
+  useEffect(() => {
+    if (!alert?.persistUntil) return
+    const sourceIdx = events.findIndex(e => e.id === alert.id)
+    if (sourceIdx === -1) return
+    const since = events.slice(sourceIdx + 1)
+    const resolved = since.some(e => alert.persistUntil!.includes(e.event.type))
+    if (resolved) setAlert(null)
+  }, [events, alert])
 
   return (
     <AnimatePresence>
@@ -203,7 +241,17 @@ export function PlayerAlert() {
           exit={{ transform: 'translateY(-80px) scale(0.96)', opacity: 0 }}
           transition={MOTION.snappy}
         >
-          {alert.text}
+          <span className={styles.alertText}>{alert.text}</span>
+          {alert.persistUntil && (
+            <button
+              type="button"
+              className={styles.dismissBtn}
+              onClick={() => setAlert(null)}
+              aria-label="Dismiss alert"
+            >
+              ×
+            </button>
+          )}
         </m.div>
       )}
     </AnimatePresence>

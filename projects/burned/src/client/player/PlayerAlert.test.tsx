@@ -87,8 +87,11 @@ function rerender(root: Root): void {
 }
 
 function alertText(container: HTMLElement): string | null {
+  // Read the text span specifically (firstElementChild), not the alert div's
+  // textContent — persistent alerts also render a dismiss button whose "×"
+  // glyph would otherwise contaminate the assertion.
   const node = container.querySelector('[data-tone]')
-  return node?.textContent ?? null
+  return node?.firstElementChild?.textContent ?? null
 }
 
 beforeEach(() => {
@@ -102,64 +105,56 @@ afterEach(() => {
   vi.useRealTimers()
 })
 
-describe('PlayerAlert — card-played toast lifecycle (triage #003 reproduction)', () => {
-  it('clears the favor card-played toast within the 2.8s timer even if subsequent non-alert events fire', () => {
+describe('PlayerAlert — card-played toast lifecycle', () => {
+  // Non-persistent canary: Reassign has no human-think gap (action commits
+  // inside the nope window), so its observer toast follows the standard
+  // 2.8s auto-fade path.
+  it('clears a non-persistent card-played toast at the 2.8s auto-fade boundary', () => {
     const { container, root } = mount()
     try {
-      // Seed: pre-existing event log so the first render anchors lastSeenIdRef
-      // to the tail. Without a seed, the component skips its first batch
-      // (the "events accumulated before mount" guard) and we'd never see
-      // the alert fire.
       setEvents([
         { event: { type: 'turn-started', playerId: SEAT2_ID, turnsRemaining: 1 }, receivedAt: 0, id: 'evt-0' },
       ])
       render(root)
-      expect(alertText(container)).toBeNull()
-
-      // T=0: Seat2 plays Call in a Favor targeting Seat1. Observer (Seat3)
-      // should see the card-played toast.
       setEvents([
         { event: { type: 'turn-started', playerId: SEAT2_ID, turnsRemaining: 1 }, receivedAt: 0, id: 'evt-0' },
-        { event: { type: 'card-played', playerId: SEAT2_ID, cardType: 'call-in-a-favor' }, receivedAt: 1, id: 'evt-1' },
+        { event: { type: 'card-played', playerId: SEAT2_ID, cardType: 'reassign' }, receivedAt: 1, id: 'evt-1' },
       ])
       rerender(root)
-      expect(alertText(container)).toBe('Seat2 played Call in a Favor.')
+      expect(alertText(container)).toBe('Seat2 played Reassign.')
 
-      // T=10s: nope-window-expired fires (server timer). No new card-played
-      // event. Should NOT keep the toast alive.
+      act(() => { vi.advanceTimersByTime(2_700) })
+      expect(alertText(container)).toBe('Seat2 played Reassign.')
+
+      act(() => { vi.advanceTimersByTime(1_000) })
+      act(() => { vi.runAllTimers() })
+      act(() => { vi.advanceTimersByTime(2_000) })
+      expect(alertText(container)).toBeNull()
+    } finally {
+      teardown(container, root)
+    }
+  })
+
+  it('non-persistent toast clears even when intermediate non-alert events fire (no stale-toast regression)', () => {
+    const { container, root } = mount()
+    try {
+      setEvents([
+        { event: { type: 'turn-started', playerId: SEAT2_ID, turnsRemaining: 1 }, receivedAt: 0, id: 'evt-0' },
+      ])
+      render(root)
+
+      setEvents([
+        { event: { type: 'turn-started', playerId: SEAT2_ID, turnsRemaining: 1 }, receivedAt: 0, id: 'evt-0' },
+        { event: { type: 'card-played', playerId: SEAT2_ID, cardType: 'reassign' }, receivedAt: 1, id: 'evt-1' },
+      ])
+      rerender(root)
+      expect(alertText(container)).toBe('Seat2 played Reassign.')
+
       act(() => { vi.advanceTimersByTime(10_000) })
       setEvents([
         { event: { type: 'turn-started', playerId: SEAT2_ID, turnsRemaining: 1 }, receivedAt: 0, id: 'evt-0' },
-        { event: { type: 'card-played', playerId: SEAT2_ID, cardType: 'call-in-a-favor' }, receivedAt: 1, id: 'evt-1' },
+        { event: { type: 'card-played', playerId: SEAT2_ID, cardType: 'reassign' }, receivedAt: 1, id: 'evt-1' },
         { event: { type: 'nope-window-opened', targetAction: 'card-played', deadlineMs: 10_000 }, receivedAt: 10_000, id: 'evt-2' },
-      ])
-      rerender(root)
-      // 10s >> 2.8s — toast must be cleared.
-      expect(alertText(container)).toBeNull()
-
-      // T=10.3s: nope-window-resolved + favor-requested. No new card-played.
-      // Toast stays cleared.
-      setEvents([
-        { event: { type: 'turn-started', playerId: SEAT2_ID, turnsRemaining: 1 }, receivedAt: 0, id: 'evt-0' },
-        { event: { type: 'card-played', playerId: SEAT2_ID, cardType: 'call-in-a-favor' }, receivedAt: 1, id: 'evt-1' },
-        { event: { type: 'nope-window-opened', targetAction: 'card-played', deadlineMs: 10_000 }, receivedAt: 10_000, id: 'evt-2' },
-        { event: { type: 'nope-window-resolved', cancelled: false, chainDepth: 0 }, receivedAt: 10_300, id: 'evt-3' },
-        { event: { type: 'favor-requested', requesterId: SEAT2_ID, targetId: 'seat-1-uuid' }, receivedAt: 10_300, id: 'evt-4' },
-      ])
-      rerender(root)
-      expect(alertText(container)).toBeNull()
-
-      // T=60s: favor-given. Observer DOES NOT receive cardType (server strips
-      // for non-party players). PlayerAlert deliberately stays silent on
-      // favor-given (FavorReport owns this beat). Toast stays cleared.
-      act(() => { vi.advanceTimersByTime(50_000) })
-      setEvents([
-        { event: { type: 'turn-started', playerId: SEAT2_ID, turnsRemaining: 1 }, receivedAt: 0, id: 'evt-0' },
-        { event: { type: 'card-played', playerId: SEAT2_ID, cardType: 'call-in-a-favor' }, receivedAt: 1, id: 'evt-1' },
-        { event: { type: 'nope-window-opened', targetAction: 'card-played', deadlineMs: 10_000 }, receivedAt: 10_000, id: 'evt-2' },
-        { event: { type: 'nope-window-resolved', cancelled: false, chainDepth: 0 }, receivedAt: 10_300, id: 'evt-3' },
-        { event: { type: 'favor-requested', requesterId: SEAT2_ID, targetId: 'seat-1-uuid' }, receivedAt: 10_300, id: 'evt-4' },
-        { event: { type: 'favor-given', giverId: 'seat-1-uuid', receiverId: SEAT2_ID }, receivedAt: 60_000, id: 'evt-5' },
       ])
       rerender(root)
       expect(alertText(container)).toBeNull()
@@ -167,14 +162,17 @@ describe('PlayerAlert — card-played toast lifecycle (triage #003 reproduction)
       teardown(container, root)
     }
   })
+})
 
-  it('clears the toast at the 2.8s boundary (auto-dismiss timer fires)', () => {
+describe('PlayerAlert — Call in a Favor persists until favor-given (re-attendance use case)', () => {
+  it('persists past the 2.8s auto-fade boundary while target is deciding', () => {
     const { container, root } = mount()
     try {
       setEvents([
         { event: { type: 'turn-started', playerId: SEAT2_ID, turnsRemaining: 1 }, receivedAt: 0, id: 'evt-0' },
       ])
       render(root)
+
       setEvents([
         { event: { type: 'turn-started', playerId: SEAT2_ID, turnsRemaining: 1 }, receivedAt: 0, id: 'evt-0' },
         { event: { type: 'card-played', playerId: SEAT2_ID, cardType: 'call-in-a-favor' }, receivedAt: 1, id: 'evt-1' },
@@ -182,27 +180,103 @@ describe('PlayerAlert — card-played toast lifecycle (triage #003 reproduction)
       rerender(root)
       expect(alertText(container)).toBe('Seat2 played Call in a Favor.')
 
-      // Just before the 2.8s threshold.
-      act(() => { vi.advanceTimersByTime(2_700) })
+      // Bystander grabs a beer. 45 seconds pass. Intermediate non-alert
+      // events fire (nope-window-opened, nope-window-resolved,
+      // favor-requested) — none should clear the toast. Toast must still
+      // be there for the returning bystander.
+      act(() => { vi.advanceTimersByTime(45_000) })
+      setEvents([
+        { event: { type: 'turn-started', playerId: SEAT2_ID, turnsRemaining: 1 }, receivedAt: 0, id: 'evt-0' },
+        { event: { type: 'card-played', playerId: SEAT2_ID, cardType: 'call-in-a-favor' }, receivedAt: 1, id: 'evt-1' },
+        { event: { type: 'nope-window-opened', targetAction: 'card-played', deadlineMs: 10_000 }, receivedAt: 10_000, id: 'evt-2' },
+        { event: { type: 'nope-window-resolved', cancelled: false, chainDepth: 0 }, receivedAt: 10_300, id: 'evt-3' },
+        { event: { type: 'favor-requested', requesterId: SEAT2_ID, targetId: 'seat-1-uuid' }, receivedAt: 10_300, id: 'evt-4' },
+      ])
+      rerender(root)
+      expect(alertText(container)).toBe('Seat2 played Call in a Favor.')
+    } finally {
+      teardown(container, root)
+    }
+  })
+
+  it('clears when favor-given fires (target submitted a card)', () => {
+    const { container, root } = mount()
+    try {
+      setEvents([
+        { event: { type: 'turn-started', playerId: SEAT2_ID, turnsRemaining: 1 }, receivedAt: 0, id: 'evt-0' },
+      ])
+      render(root)
+
+      setEvents([
+        { event: { type: 'turn-started', playerId: SEAT2_ID, turnsRemaining: 1 }, receivedAt: 0, id: 'evt-0' },
+        { event: { type: 'card-played', playerId: SEAT2_ID, cardType: 'call-in-a-favor' }, receivedAt: 1, id: 'evt-1' },
+      ])
+      rerender(root)
       expect(alertText(container)).toBe('Seat2 played Call in a Favor.')
 
-      // Past the threshold — `setAlert(null)` runs, AnimatePresence begins
-      // exit. The DOM node may still exist briefly during exit; querying for
-      // the active alert via [data-tone] still resolves the element until
-      // the exit animation completes. Run the remaining timers + animation
-      // ticks to settle.
-      act(() => { vi.advanceTimersByTime(1_000) })
+      act(() => { vi.advanceTimersByTime(60_000) })
+      setEvents([
+        { event: { type: 'turn-started', playerId: SEAT2_ID, turnsRemaining: 1 }, receivedAt: 0, id: 'evt-0' },
+        { event: { type: 'card-played', playerId: SEAT2_ID, cardType: 'call-in-a-favor' }, receivedAt: 1, id: 'evt-1' },
+        { event: { type: 'favor-given', giverId: 'seat-1-uuid', receiverId: SEAT2_ID }, receivedAt: 60_000, id: 'evt-2' },
+      ])
+      rerender(root)
+      // Toast cleared. The visible favor-given moment is owned by FavorReport.
+      expect(alertText(container)).toBeNull()
+    } finally {
+      teardown(container, root)
+    }
+  })
+
+  it('renders an X dismiss button for persistent alerts only', () => {
+    const { container, root } = mount()
+    try {
+      setEvents([
+        { event: { type: 'turn-started', playerId: SEAT2_ID, turnsRemaining: 1 }, receivedAt: 0, id: 'evt-0' },
+      ])
+      render(root)
+
+      // Non-persistent alert: no X button.
+      setEvents([
+        { event: { type: 'turn-started', playerId: SEAT2_ID, turnsRemaining: 1 }, receivedAt: 0, id: 'evt-0' },
+        { event: { type: 'card-played', playerId: SEAT2_ID, cardType: 'reassign' }, receivedAt: 1, id: 'evt-1' },
+      ])
+      rerender(root)
+      expect(container.querySelector('button[aria-label="Dismiss alert"]')).toBeNull()
+
+      // Persistent alert: X button rendered.
+      act(() => { vi.advanceTimersByTime(5_000) })
+      setEvents([
+        { event: { type: 'turn-started', playerId: SEAT2_ID, turnsRemaining: 1 }, receivedAt: 0, id: 'evt-0' },
+        { event: { type: 'card-played', playerId: SEAT2_ID, cardType: 'reassign' }, receivedAt: 1, id: 'evt-1' },
+        { event: { type: 'card-played', playerId: SEAT2_ID, cardType: 'call-in-a-favor' }, receivedAt: 5_000, id: 'evt-2' },
+      ])
+      rerender(root)
+      expect(container.querySelector('button[aria-label="Dismiss alert"]')).not.toBeNull()
+    } finally {
+      teardown(container, root)
+    }
+  })
+
+  it('X button click clears the toast immediately', () => {
+    const { container, root } = mount()
+    try {
+      setEvents([
+        { event: { type: 'turn-started', playerId: SEAT2_ID, turnsRemaining: 1 }, receivedAt: 0, id: 'evt-0' },
+      ])
+      render(root)
+
+      setEvents([
+        { event: { type: 'turn-started', playerId: SEAT2_ID, turnsRemaining: 1 }, receivedAt: 0, id: 'evt-0' },
+        { event: { type: 'card-played', playerId: SEAT2_ID, cardType: 'call-in-a-favor' }, receivedAt: 1, id: 'evt-1' },
+      ])
+      rerender(root)
+      expect(alertText(container)).toBe('Seat2 played Call in a Favor.')
+
+      const dismissBtn = container.querySelector('button[aria-label="Dismiss alert"]') as HTMLButtonElement | null
+      expect(dismissBtn).not.toBeNull()
+      act(() => { dismissBtn!.click() })
       act(() => { vi.runAllTimers() })
-      // After all timers drain, the alert React state is null. AnimatePresence
-      // either fully unmounted or is mid-exit. Either way the visible text
-      // path goes through `alert?.text`, so once `alert` is null React no
-      // longer commits new content into the node — but the existing DOM may
-      // still hold the prior text. The truthful assertion: `alert` state
-      // cleared, which is what the bug claim contradicts.
-      // We can't easily probe React state from outside, but we CAN observe
-      // that after running ALL timers + advancing far past any plausible
-      // exit duration, querySelector returns null because AnimatePresence
-      // removed the node.
       act(() => { vi.advanceTimersByTime(2_000) })
       expect(alertText(container)).toBeNull()
     } finally {

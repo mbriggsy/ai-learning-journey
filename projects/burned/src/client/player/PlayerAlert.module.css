@@ -34,6 +34,9 @@
   z-index: var(--z-toast);
   text-align: left;
   line-height: 1.3;
+  display: flex;
+  align-items: center;
+  gap: var(--space-3);
 }
 
 /* Info tone — ochre / less aggressive */
@@ -41,6 +44,47 @@
   background: color-mix(in oklab, var(--color-charcoal-1) 90%, var(--color-ochre-7) 12%);
   border-color: color-mix(in oklab, var(--color-accent-drama) 55%, transparent);
   border-left-color: var(--color-accent-drama);
+}
+
+.alertText {
+  flex: 1 1 auto;
+  min-width: 0;
+}
+
+/* Dismiss button — only rendered for persistent alerts (Future Peek, Call
+   in a Favor). 32px tap target meets the iOS minimum; the visual glyph is
+   smaller but the surrounding padding catches mis-taps. Cream-on-charcoal
+   matches the alert text; opacity ramps on press for tactile feedback. */
+.dismissBtn {
+  flex: 0 0 auto;
+  width: 32px;
+  height: 32px;
+  margin-right: calc(var(--space-2) * -1);
+  padding: 0;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: transparent;
+  border: 0;
+  color: color-mix(in oklab, var(--color-cream-12) 70%, transparent);
+  font-family: var(--font-mono);
+  font-size: 22px;
+  font-weight: 400;
+  line-height: 1;
+  cursor: pointer;
+  border-radius: var(--radius-sm);
+  touch-action: manipulation;
+}
+
+.dismissBtn:active {
+  color: var(--color-cream-12);
+  background: color-mix(in oklab, var(--color-cream-12) 8%, transparent);
+}
+
+@media (hover: hover) and (pointer: fine) {
+  .dismissBtn:hover {
+    color: var(--color-cream-12);
+  }
 }
 
 } /* @layer components */

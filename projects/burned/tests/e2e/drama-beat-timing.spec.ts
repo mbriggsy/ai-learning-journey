@@ -317,6 +317,47 @@ test.describe('Drama beats — visible (rendered) duration matches designed', ()
     })
   })
 
+  test('burned-drawn (drawer view, card variant) holds peak ≈2400ms', async ({ board, phones, roomCode }) => {
+    // The drawer-only branch in `getDramaBeats`: when `myPlayerId === event.playerId`,
+    // the cinematic is the Burned MinimalCard filling the screen for 2400ms —
+    // the longest dramatic hold in the game. This beat was the original 2026-05-01
+    // motivation: Briggsy's "camera flash" eye-in-loop report was THIS beat,
+    // clipped by GSAP `'<'` from a designed 2400ms to a measured ~861ms. We
+    // need the harness to pin it specifically.
+    //
+    // To exercise the drawer branch the page MUST be a phone view with a
+    // populated `gameStore.playerId`, and the injected event's playerId
+    // must match. We pull the phone's own playerId via `__gameStore` and
+    // wire it back into the synthetic event.
+    await bootGameToPlaying(board, phones, roomCode)
+
+    const drawerPhone = phones[0]!
+    // Wait for DramaOverlay to mount on the phone (it's lazy-imported in
+    // Player.tsx — see the `lazy(() => import('@client/shared/DramaOverlay'))`
+    // call. After the playing-phase state arrives, the lazy chunk fetches
+    // and the overlay reaches the DOM within a tick or two).
+    await drawerPhone.waitForFunction(() => !!document.querySelector('[role="status"]'), null, { timeout: 5_000 })
+    await drawerPhone.waitForTimeout(100)
+
+    const myPlayerId = await drawerPhone.evaluate(() => {
+      const w = window as unknown as { __gameStore?: { getPlayerId(): string | null } }
+      if (!w.__gameStore) throw new Error('drama-beat-timing: __gameStore missing on phone (DEV/test mode required)')
+      return w.__gameStore.getPlayerId()
+    })
+    expect(myPlayerId, 'phone should have a playerId after joinPhone').toBeTruthy()
+
+    await assertBeatShape(drawerPhone, {
+      label:           'burned-drawn (drawer card)',
+      event:           { type: 'burned-drawn', playerId: myPlayerId! },
+      // Card variant: enter (slow) + hold 2400 + exit (slow). Same shape as
+      // text variants but with longer enter and the `cardSlot` element as
+      // the active inner — the sampler picks it up via the `display !== 'none'`
+      // walk because card-variant beats set cardSlot to display:flex.
+      designedPeakMs:  2400,
+      designedTotalMs: ENTER_CARD_MS + 2400 + EXIT_MS,
+    })
+  })
+
   test('FAULT INJECTION: clipped paint produces sub-canary peak — proves harness is sensitive', async ({ board, phones, roomCode }) => {
     // This test does NOT use `__testInjectEvent` or DramaOverlay's GSAP
     // pipeline at all. It paints a deliberately clipped opacity arc on the

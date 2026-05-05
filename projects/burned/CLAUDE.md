@@ -92,6 +92,7 @@ The spec does not generate code. It generates the *next artifact* — the CSS Fo
 - `restoreMocks: true` — aggressive cleanup between tests.
 - fast-check for property-based tests via `@fast-check/vitest`.
 - React component tests use `environment: 'jsdom'` per-file override.
+- **Drama-beat runtime gate.** `tests/e2e/drama-beat-timing.spec.ts` samples computed opacity per animation frame and asserts the *rendered* beat shape (total visible duration ±15%, peak-sustained ≥60% of designed). It complements `DramaOverlay.test.ts`, which only pins `tl.totalDuration()` (the engine's accounting). The Vitest pin passed for ~10 days while every drama beat clipped to ~30% — that's the gap this E2E spec closes. Includes a fault-injection test that paints a bug-shape arc directly so we know the canary is sensitive, not numb. Sampling methodology is portable to chrome-devtools-mcp's `evaluate_script` for interactive agent-driven verification.
 
 ## Bundle Sizes
 
@@ -183,6 +184,8 @@ Canonical rules in `docs/RULES-REFERENCE.md`. Non-obvious engine behaviors worth
 - **Lobby debug toolbar was removed.** Don't restore Whiskrs/Mittens/Tuna/Pickles quick-join `<a>` strip. `pnpm dev:launch` owns dev-time spawning.
 - **Layout-sweep detector only flags `overflow: hidden|clip`.** Elements with `overflow: visible` don't clip — pseudo-elements with negative `inset`, focus rings, tooltips extend by design. Flagging `visible` re-surfaces ~57 false positives.
 - **`window.__gameStore` dev hook.** Guarded by `import.meta.env.DEV`. Tree-shaken from prod — `E-03` regression test greps `dist/**/*.js` for the string.
+- **`window.__testInjectEvent(event)` dev hook.** Same guard, same tree-shake. Pushes a synthetic `GameEvent` into `accumulatedEvents` + notifies — DramaOverlay/PlayerAlert/StealReport fire their real motion pipeline without needing a multi-player game flow to reach a specific moment. Used by `drama-beat-timing.spec.ts`. Verified by `verify-prod-bundle.ts` sentinel.
+- **`chrome-devtools-mcp` wired in `.mcp.json`.** Sits alongside the 11 Playwright seats; loads on Claude Code session start. CDP-level access (perf traces, heap snapshots, real-device remote attach, network/CPU throttling) — fills the gap Playwright wraps but doesn't expose. Use it for *quantitative motion / memory / perf* work that DOM-state polling can't see. Eye-in-loop motion calibration was the original driver (memory note `feedback-eye-in-loop-beats-calibration-for-motion.md`).
 - **`.chrome-dev-profile/` is gitignored.** Delete to reset dev Chrome profile.
 - **Wrangler local SQLite corruption recovery.** `taskkill //F //IM workerd.exe && rm -rf .wrangler/state`.
 - **Dev launcher popup throttling.** User gesture must remain active; don't `setTimeout` `window.open` calls.

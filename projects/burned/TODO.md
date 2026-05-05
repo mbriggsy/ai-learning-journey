@@ -1,6 +1,102 @@
 # BURNED — TODO
 
-## NEXT SESSION — pick up here (2026-05-02+)
+## NEXT SESSION — pick up here (2026-05-05+)
+
+### THIS SESSION (2026-05-05) — sweep last session's queue + runtime verification + dev:launch room override
+
+Four commits, all green at squeaky time. Two-lap session: lap 1
+swept the previous session's three "Unfinished Fixes" prescriptions;
+lap 2 ran a full Earth-verification pass on the visual changes via
+Playwright (3 chrome tabs in dev profile) AND knocked out the
+dev:launch `--room=` override that was sitting in side findings.
+
+| Commit | Subject |
+|---|---|
+| `11b870db` | fix(dev-actions): surface INVALID_CARD_TYPE on typo instead of heartbeat-timeout disconnect |
+| `218045fa` | fix(a11y): use inert (not aria-hidden) on DefusePlacement hero card |
+| `0cfd0963` | fix(alert): persist Call in a Favor toast until favor-given (re-attendance use case) |
+| `4e853346` | feat(dev): --room= override for dev:launch — memorable room codes for phone testing |
+
+**`dev:give` validation (TODO from 2026-05-02 session, item #1).** Mistyping
+`call-in-favor` (correct: `call-in-a-favor`) was hitting the silent-drop
+branch in `room.ts` designed for token-probe protection on god connections,
+and the CLI sat on the socket until heartbeat timeout. Fix is a
+`recognized` discriminant on the parser — silent-drop only when the message
+type isn't a known dev-action; recognized types with bad payload return
+`{ recognized: true, code: 'INVALID_CARD_TYPE' | 'INVALID_ARGUMENTS', message }`
+and `room.ts` synchronously acks. Both CLI scripts print the message.
+Earth-verified: `dev:give 1234 michael call-in-favor` now reports
+"Dev action rejected: INVALID_CARD_TYPE — Unknown card type: call-in-favor".
+8 new parser tests pin the contract.
+
+**DefusePlacement aria-hidden → inert (TODO from 2026-05-02 session, item #2).**
+Chrome was logging "Blocked aria-hidden on an element because its descendant
+retained focus" — aria-hidden doesn't actually prevent focus, so the screen
+reader still exposed the BURNED hero card. Swap to `inert`, which W3C
+recommends and React 19 supports as a native boolean prop. Earth-verified
+in lap 2 by drawing a stacked Burned and inspecting console — clean (1
+favicon 404 error, 0 warnings, no aria-hidden message).
+
+**PlayerAlert persist-with-X for Call in a Favor.** Bystander-on-the-couch
+re-attendance use case: 2.8s auto-fade serves engaged-watchers but loses
+the player who grabs a beer and returns at 45s. Per-alert `persistUntil`
+field carries resolve event types; auto-fade timer skips persistent alerts;
+new effect clears them when the resolve event fires anywhere in the feed
+after the alert's source event. X dismiss button renders only on
+persistent alerts. Scope: Call in a Favor only — falsify-intel filtered
+above (DramaOverlay's INTEL FALSIFIED owns it), triple-steal name commit
+filtered above (`comboSize !== undefined`), pure peeks resolve immediately,
+Burned defuse has no observer card-played toast.
+
+Earth-verified end-to-end in lap 2 across all four behaviors: toast
+renders with `×` correctly placed, persists past 2.8s, X click clears
+immediately, auto-clears on `favor-given` (Bob's post-surrender snapshot
+showed toast absent + hand at 7 cards / Vera Khan surrendered).
+
+**dev:launch --room= override.** Phone keyboards hate `A8ZUR7`-style
+random codes. New flag accepts a custom code matching `/^[a-zA-Z0-9-]{1,16}$/`
+(hyphens allowed for memorability). Combining with `--dev-html` is a config
+error (rejected with exit 1). Production codegen for non-dev rooms
+unchanged — the random alphanumeric path stays default.
+
+### Side note worth knowing
+
+The original "triage #003 calibration bug" claim was that the
+card-played toast persisted ~60s during favor-pending. The existing
+test asserted it cleared at 2.8s, and I couldn't trace a real path
+where it wouldn't. New design supersedes the question entirely — Call
+in a Favor now opts INTO persistence by design — so the bug repro is
+moot whether or not it ever existed. Future-Claude: if a calibration
+agent flags this again, check the persist-by-design list before
+chasing a regression.
+
+### Side findings (parked)
+
+- **Path B for vanity room codes (memorable random pool in prod
+  codegen).** Path A (dev:launch flag) shipped this session; Path B
+  remains. Touches `Board.tsx generateRoomCode()` + a parallel
+  implementation in `launch-dev-chrome.ts`. Don't open without
+  explicit greenlight — affects prod surface. Memory note
+  `feedback-burned-vanity-room-codes.md` updated to reflect partial
+  resolution.
+
+- **Production `SCENARIOS.md` H4 header silent drop.** Parser regex
+  `/^###\s+(SCN-...)/` only matches H3 headers; the 55 H4 scenarios
+  in production catalog are silently dropped. Real fix needs cascading-
+  validation review. TODO since 2026-05-01 — surface for a dedicated
+  session.
+
+- **Stale-wrangler session-start hook.** Mentioned in vanity-codes
+  memory file: original phone-test friction was triggered partly because
+  port 5173 was occupied by a prior wrangler. A session-start hook that
+  kills stale BURNED dev processes would prevent recurrence. Deferred.
+
+### Background processes
+
+- All session-spawned dev servers stopped at squeaky time (vite +
+  wrangler). Clean start next session.
+
+---
 
 ### THIS SESSION (2026-05-02) — drama-beat spot-check, disconnect-wedge product call, ACTOR awareness, phone clipping
 
@@ -76,38 +172,22 @@ title bar's "#1234". Insight 046 captures the meta-lesson.
 
 ### Unfinished Fixes (this session)
 
-These have prescriptions, not diagnoses. Drop into next session's
-queue in order.
+These had prescriptions, not diagnoses. Both closed 2026-05-05.
 
-1. **`dev:give` silently fails on unknown card types.** Mistyping
-   `call-in-favor` (correct: `call-in-a-favor`) returns `WebSocket
-   closed before ack — code 1001 (Heartbeat timeout)` instead of a
-   clear error. Server's `handleDevGiveCard` in `src/server/room.ts`
-   should validate the requested card types against `CARD_DEFS` and
-   reply with `dev-action-ack { ok: false, code: 'INVALID_CARD_TYPE',
-   message: 'Unknown card type: <bad-name>' }` BEFORE attempting any
-   state mutation. Trivial — ~10 min.
+1. ~~**`dev:give` silently fails on unknown card types.**~~ **CLOSED
+   2026-05-05 — commit `11b870db`.** Parser `recognized` discriminant
+   + sync ack + CLI message-print. Earth-verified.
 
-2. **DefusePlacement hero card `aria-hidden` blocked by browser.**
-   Browser console on the placement screen:
-   `Blocked aria-hidden on an element because its descendant
-   retained focus. Element with focus: <div._card_*>; Ancestor with
-   aria-hidden: <div._heroCardSlot_*>`. Means the screen reader
-   STILL exposes the hero card despite `aria-hidden="true"` —
-   defeats the intent. Fix per the W3C recommendation in the
-   warning text: swap `aria-hidden="true"` for `inert` on the
-   heroCardSlot wrapper. `inert` blocks both focus AND assistive-
-   tech access. Find the component owning the `heroCardSlot` CSS
-   class in `src/client/player/`. ~15 min.
+2. ~~**DefusePlacement hero card `aria-hidden` blocked by browser.**~~
+   **CLOSED 2026-05-05 — commit `218045fa`.** Swapped to `inert`.
+   Earth-verified in 2026-05-05 lap 2 — console clean.
 
-### Side findings (logged earlier, no movement)
+### Side findings (logged earlier)
 
-- **Vanity dev room codes for phone testing.** Random alphanumeric
-  room codes (`A8ZUR7`) are hostile on a phone keyboard. Captured
-  in memory at `feedback-burned-vanity-room-codes.md`. Workaround
-  for now: just point a board to `/board.html#1234` — any string
-  works as a DO id; only the production codegen produces the
-  alphanumeric.
+- ~~**Vanity dev room codes for phone testing.**~~ **PARTIALLY CLOSED
+  2026-05-05 — commit `4e853346`.** `pnpm dev:launch --room=devtest`
+  override shipped (Path A). Path B (memorable random pool in prod
+  codegen) remains parked — see 2026-05-05 session "Side findings".
 
 - **Production `SCENARIOS.md` H4 header silent drop.** Parser regex
   `/^###\s+(SCN-...)/` only matches H3 headers. Production catalog
@@ -181,13 +261,12 @@ These need Briggsy in the loop. Drop into next session's queue in order.
    `scripts/dev-stack-top.ts` line 80 still reads `msg.stackedCount`.
    Trivial fix: change to `msg.count`.
 
-3. **Stale `card-played` toast on observer phones during favor-pending
-   (P2 OPEN — calibration seed 003).** Was item #2 last session.
-   Seat-3 saw "Seat2 played Call in a Favor." persist for the full
-   ~60s favor-pending window. Toasts should clear on `nope-window-
-   resolved` semantically and/or hard-cap at 8-10s wallclock as a
-   guard. Three fix paths in the issue file. Briggsy's call between
-   (A) `nope-window-resolved` clear only, (B) hard cap only, (C) both.
+3. ~~**Stale `card-played` toast on observer phones during favor-pending
+   (P2 OPEN — calibration seed 003).**~~ **CLOSED 2026-05-05 — commit
+   `0cfd0963`.** Resolved via design pivot, not symptom fix: Briggsy's
+   re-attendance use case ("bystander grabs a beer, returns at 45s")
+   reframed the problem. Toast now persists until `favor-given` with
+   an X to dismiss early. Earth-verified in lap 2.
 
 4. ~~**5 KNOWN-PRODUCT-CALL-CONFIRMED disconnect-wedge cluster items
    (B-03/04/05/13).**~~ **DECIDED 2026-05-02 — Option (a), no

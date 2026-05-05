@@ -2,6 +2,109 @@
 
 ## NEXT SESSION — pick up here (2026-05-05+)
 
+### THIS SESSION (2026-05-05 afternoon) — chrome-devtools-mcp + drama-beat runtime gate
+
+Two commits, all green at squeaky time. One concrete deliverable: the
+runtime frame-timing harness that complements the engine-level Vitest
+pin and closes the eye-in-loop gap that let the 2026-04-22 GSAP `'<'`
+clip bug run for ~10 days undetected.
+
+| Commit | Subject |
+|---|---|
+| `3f725c91` | feat(drama): runtime frame-timing harness + chrome-devtools-mcp wiring |
+| `82b3f844` | test(drama): close drawer-card variant gap + document harness in CLAUDE.md |
+
+**`chrome-devtools-mcp@0.24.0` installed globally + wired into `.mcp.json`**
+alongside the 11 Playwright seats. Loads on Claude Code session start —
+**not loaded in the session it was wired in**, which is just how MCP
+server lifecycle works. Future sessions get CDP-level access (perf
+traces, heap snapshots, real-device remote attach, network/CPU
+throttling) that Playwright wraps but doesn't fully expose. The pitch
+that justified pulling it in: closing the *quantitative motion / memory
+/ perf* gap that DOM-state polling can't see.
+
+**`__testInjectEvent` dev hook on gameStore.** DEV/test-guarded same as
+`__gameStore` / `__gameStoreSnapshot`. Pushes a synthetic `GameEvent`
+into `accumulatedEvents` + notifies — DramaOverlay / PlayerAlert /
+StealReport fire their real motion pipeline without needing a multi-
+player game flow to reach a specific moment. Tree-shake verified: fresh
+`pnpm verify:bundle` clean across 15 forbidden strings. New sentinel
+registered in `verify-prod-bundle.ts`.
+
+**`tests/e2e/drama-beat-timing.spec.ts`** — 3 Playwright tests, ~37s suite:
+- **Board-visible beats (one game, 7 beats sequential):** extraction-played,
+  player-eliminated, nope-played (INTERCEPTED transient), burn-the-files
+  (FILES BURNED transient), falsify-intel (INTEL FALSIFIED transient),
+  burned-drawn card-flip cinematic, game-over (WINS). `expect.soft` so
+  all 7 report findings on a failure run. game-over runs LAST because
+  it may unmount the overlay surface.
+- **Drawer card variant on phone view:** the `myPlayerId === event.playerId`
+  branch — Burned MinimalCard fills the screen, holdMs 2400, the
+  longest dramatic hold in the game. This was the original 2026-05-01
+  "camera flash" beat. We pull the phone's playerId via `__gameStore`
+  and inject `burned-drawn` with that id so the drawer branch fires.
+- **FAULT INJECTION:** paints a deliberately bug-shaped opacity arc
+  directly (no DramaOverlay, no GSAP), proves both canary thresholds
+  catch it (peakSustained < 200ms < 960ms healthy floor; totalVisible <
+  1912ms healthy floor). Empirical proof the harness is sensitive, not
+  numb. If softening the canary thresholds, this test will fail —
+  intentional tripwire.
+
+**Methodology pivot mid-build worth noting.** First-pass asserted naively
+against raw `holdMs` and was off by 100ms+. Turned out to be ease-curve
+slack at threshold crossings (`back.out(1.1)` enter overshoots — opacity
+hits 0.99 at t≈0.5T; `power2.out` exit decays fast-then-slow — opacity
+hits 0.05 at t≈0.78T). Refactored to assert on **shape** instead of phase
+boundaries: total visible duration ±15%, peak-sustained ≥60% of designed
+peak. Tolerances wide for ease-curve slack + CI jitter, narrow enough
+to fail noisily on the bug class.
+
+**CLAUDE.md updated.** Testing section names the runtime gate vs the
+Vitest engine pin (layered defense). Dev Tooling section names
+`__testInjectEvent` and `chrome-devtools-mcp` so future sessions don't
+have to rediscover them.
+
+### Class-of-work pointer for future sessions
+
+The harness is a **template**. The methodology (synthetic-event injection
+via DEV/test hook + rAF opacity sampling + shape-derive) generalizes to
+the next places "engine claims X, render does Y" can hide:
+- **Framer Motion cinematics** — hand→stage flight, layoutId reflashes,
+  hand→enlarge blur crossfade, BottomSheet enter/exit, status strip
+  crossfade. Real bugs have hit here (insights 013–016). No runtime gate
+  today.
+- **Memory leaks across long sessions** — drama timelines, Framer refs,
+  event listeners not unmounting. The EXTRACTED a11y leak (2026-05-01)
+  was hand-traced; chrome-devtools-mcp's heap snapshot tooling exists to
+  catch this systematically.
+- **Phone-rendered layout integrity beyond Pixel 5 / iPhone 13** — Pixel
+  8 Pro right-edge clip (2026-05-02). Playwright config covers two
+  viewports; you play on a third.
+- **CSS keyframes** — `stampDrop`, `caseBannerLineIn`, `topCardDrop`.
+  Same engine-vs-render gap.
+- **Runtime perf / FPS budget** — bundle size we measure, runtime TTI we
+  don't.
+
+**Don't open these on autopilot.** Each is a separate session. The
+drama-beat slice was the highest-bug-history-evidence slice; future
+slices need the same "is this the right priority right now?" gate.
+
+### Side findings (parked)
+
+- **Drawer-only BURNED card variant note in commit 3f725c91 was closed
+  by 82b3f844** — that gap is no longer open. Mentioned only because the
+  earlier commit's body still says "not covered" and a future grep might
+  surface it.
+
+### Background processes
+
+- Session ran 3 short Playwright suites + 2 fresh builds. No persistent
+  dev servers spawned by Claude this session — Playwright auto-spawns
+  vite + wrangler with `reuseExistingServer: true`. They terminate when
+  the test run ends.
+
+---
+
 ### THIS SESSION (2026-05-05) — sweep last session's queue + runtime verification + dev:launch room override
 
 Four commits, all green at squeaky time. Two-lap session: lap 1

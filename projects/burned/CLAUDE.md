@@ -21,6 +21,7 @@ The spec does not generate code. It generates the *next artifact* — the CSS Fo
 |---------|-------------|
 | `pnpm dev` | Vite dev server (board + player views, port 5173) |
 | `pnpm dev:server` | Wrangler dev server (Durable Object, port 8787) |
+| `pnpm dev:cleanup` | Kill orphan workerd + report port-5173/8787 binders. Run when a prior session left stale processes blocking dev boot. |
 | `pnpm build` | Typecheck + production build |
 | `pnpm typecheck` | TypeScript type checking |
 | `pnpm test` | Run unit tests (Vitest) |
@@ -93,6 +94,7 @@ The spec does not generate code. It generates the *next artifact* — the CSS Fo
 - fast-check for property-based tests via `@fast-check/vitest`.
 - React component tests use `environment: 'jsdom'` per-file override.
 - **Drama-beat runtime gate.** `tests/e2e/drama-beat-timing.spec.ts` samples computed opacity per animation frame and asserts the *rendered* beat shape (total visible duration ±15%, peak-sustained ≥60% of designed). It complements `DramaOverlay.test.ts`, which only pins `tl.totalDuration()` (the engine's accounting). The Vitest pin passed for ~10 days while every drama beat clipped to ~30% — that's the gap this E2E spec closes. Includes a fault-injection test that paints a bug-shape arc directly so we know the canary is sensitive, not numb. Sampling methodology is portable to chrome-devtools-mcp's `evaluate_script` for interactive agent-driven verification.
+- **Framer cinematic runtime gate.** `tests/e2e/framer-hand-enlarge-shape.spec.ts` extends the same per-rAF sampling pattern to a Framer Motion cinematic (the hand→enlarge transition). Beyond shape (time-to-peak < 800ms, peak-sustained ≥ 6 frames), it asserts a **co-ordination invariant**: while the card is mid-scale (∈ [0.4, 0.95]) the median `filter: blur` must be ≥ 0.5px. The blur-mask deliberately layered on top of the scale arc is what hides MinimalCard's container-query layout-rejig — a future "perf cleanup" that strips it would be visually broken but engine-clean. Sensitivity proven empirically: temporarily zeroing the blur in `Hand.tsx` flips the test red with a clear message; the in-spec fault-injection canary paints a scale-only arc and asserts the same shape. This is a TEMPLATE for future cinematic gates (BottomSheet enter/exit, layoutId reflashes, status strip crossfade) — same sampler, different selectors + assertions.
 
 ## Bundle Sizes
 

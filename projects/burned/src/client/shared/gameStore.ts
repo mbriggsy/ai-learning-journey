@@ -213,6 +213,24 @@ if (typeof window !== 'undefined' && (import.meta.env.DEV || import.meta.env.MOD
   // Full store for dev-time injection (visual overlay tests, event replay).
   // Guarded by DEV/test mode — tree-shaken from prod bundle.
   w.__gameStore = gameStore
+  // Synthetic GameEvent injection for the drama-beat frame-timing harness
+  // (`tests/e2e/drama-beat-timing.spec.ts`). Pushes one event into the local
+  // `accumulatedEvents` buffer and notifies subscribers, so DramaOverlay
+  // fires its real motion pipeline without requiring a full multi-player
+  // game flow to reach a specific moment. Tree-shaken from prod by the
+  // import.meta.env guard above; verified by `verify-prod-bundle.ts`.
+  w.__testInjectEvent = (event: GameEvent) => {
+    const internals = gameStore as unknown as {
+      accumulatedEvents: AccumulatedEvent[]
+      notify: () => void
+    }
+    const idx = internals.accumulatedEvents.length
+    internals.accumulatedEvents = [
+      ...internals.accumulatedEvents,
+      { event, receivedAt: Date.now(), id: `evt-injected-${idx}` },
+    ]
+    internals.notify()
+  }
 }
 
 // --- Hooks ---

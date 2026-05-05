@@ -39,6 +39,10 @@
     "playwright-seat-10": {
       "command": "cmd",
       "args": ["/c", "npx", "-y", "@playwright/mcp@latest", "--isolated"]
+    },
+    "chrome-devtools": {
+      "command": "cmd",
+      "args": ["/c", "npx", "-y", "chrome-devtools-mcp@latest"]
     }
   }
 }

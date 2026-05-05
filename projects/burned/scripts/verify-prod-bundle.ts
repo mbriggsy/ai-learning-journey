@@ -37,6 +37,7 @@ const FORBIDDEN_STRINGS: Sentinel[] = [
   { needle: '__gameStore', guard: 'gameStore.ts dev exposure guard (import.meta.env.DEV || MODE === test)' },
   { needle: '__gameStoreSnapshot', guard: 'gameStore.ts dev exposure guard' },
   { needle: '__testInjectEvent', guard: 'gameStore.ts drama-beat-timing harness injector — DEV/test only' },
+  { needle: '__testForceLocalTarget', guard: 'Player.tsx framer-bottom-sheet harness sheet driver — DEV/test only' },
   // --- Playtest-harness sentinels (Phase 2) ---
   // The harness protocol is god-role only; no client code path should
   // reference it. If any of these appear in a client chunk, the

@@ -373,6 +373,27 @@ function PlayingView({ roomCode }: { roomCode: string }) {
     setLocalTargetMode(null)
   }, [subPhase, isMyTurn, pendingPrompt])
 
+  // DEV/test hook for the BottomSheet runtime gate
+  // (`tests/e2e/framer-bottom-sheet-shape.spec.ts`). Lets the harness drive
+  // the local-target sheet open/close without staging a target-required card
+  // through the full game flow. Mirrors the `__testInjectEvent` pattern in
+  // `gameStore.ts` — guarded by DEV/test mode, tree-shaken from prod, and
+  // verified by `verify-prod-bundle.ts`.
+  useEffect(() => {
+    if (!(import.meta.env.DEV || import.meta.env.MODE === 'test')) return
+    const w = window as unknown as Record<string, unknown>
+    w.__testForceLocalTarget = (reason: 'direct-order' | 'call-in-a-favor' | 'combo-pair' | 'combo-triple' | null) => {
+      if (reason === null) {
+        setLocalTargetMode(null)
+      } else {
+        setLocalTargetMode({ cardIds: [], reason })
+      }
+    }
+    return () => {
+      delete w.__testForceLocalTarget
+    }
+  }, [])
+
   // Mutual exclusion: server-prompted sheets take priority over local target
   useEffect(() => {
     if (activeSheet) setLocalTargetMode(null)

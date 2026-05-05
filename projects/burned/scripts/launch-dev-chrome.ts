@@ -8,8 +8,9 @@
  * Uses a repo-local --user-data-dir so the dev profile is isolated from
  * everyday browsing. Directory is gitignored; delete to reset.
  *
- * Run: pnpm dev:launch                 (4 players, default)
+ * Run: pnpm dev:launch                 (4 players, random room code)
  *      pnpm dev:launch --players=6     (6 players)
+ *      pnpm dev:launch --room=devtest  (memorable room code instead of random)
  *      pnpm dev:launch --dev-html      (old in-browser launcher flow)
  * Prereq: pnpm dev + pnpm dev:server already running in other terminals.
  */
@@ -57,6 +58,24 @@ function parsePlayerCount(argv: readonly string[]): number {
   return n
 }
 
+// Dev-only override for the room code. Phone keyboards hate `A8ZUR7` style
+// random strings — set `--room=devtest` and you can re-type it on a second
+// device without scanning the QR. Any string is technically a valid Durable
+// Object id, but constrain to URL-safe + phone-typeable to keep the QR /
+// origin allowlist / share flow honest.
+const ROOM_OVERRIDE_PATTERN = /^[a-zA-Z0-9-]{1,16}$/
+
+function parseRoomOverride(argv: readonly string[]): string | null {
+  const arg = argv.find(a => a.startsWith('--room='))
+  if (!arg) return null
+  const value = arg.slice('--room='.length)
+  if (!ROOM_OVERRIDE_PATTERN.test(value)) {
+    console.error(`--room must match ${ROOM_OVERRIDE_PATTERN}; got "${value}"`)
+    process.exit(1)
+  }
+  return value
+}
+
 function generateRoomCode(): string {
   const chars = 'ABCDEFGHJKMNPQRSTUVWXYZ23456789'
   const limit = 256 - (256 % chars.length)
@@ -73,6 +92,12 @@ function generateRoomCode(): string {
 const argv = process.argv.slice(2)
 const useDevHtml = argv.includes('--dev-html')
 const playerCount = parsePlayerCount(argv)
+const roomOverride = parseRoomOverride(argv)
+
+if (useDevHtml && roomOverride !== null) {
+  console.error('--room= cannot be combined with --dev-html (legacy flow handles its own room codes)')
+  process.exit(1)
+}
 
 const chromePath = findChrome()
 if (!chromePath) {
@@ -86,7 +111,7 @@ let room: string | null = null
 if (useDevHtml) {
   urls.push(`${ORIGIN}/dev.html`)
 } else {
-  room = generateRoomCode()
+  room = roomOverride ?? generateRoomCode()
   urls.push(`${ORIGIN}/board.html#${room}`)
   for (let i = 0; i < playerCount; i++) {
     const name = NAMES[i]!

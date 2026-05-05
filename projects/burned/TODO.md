@@ -2,6 +2,51 @@
 
 ## NEXT SESSION — pick up here (2026-05-05+)
 
+### THIS SESSION (2026-05-05 evening) — Framer runtime-gate slices + SCENARIOS.md H4 fix + squeaky integration
+
+Six commits + global skill update + 3 insight docs. All green at
+squeaky time.
+
+| Commit | Subject |
+|---|---|
+| `e067c174` | fix(playtest): SCENARIOS.md H4 parser — 35 → 90 scenarios |
+| `1d1f1a6f` | feat(dev): pnpm dev:cleanup — orphan workerd kill |
+| `fa1289f6` | test(framer): hand→enlarge co-ordination invariant |
+| `0f27bb33` | test(framer): BottomSheet position invariant |
+| `451f0de2` | test(framer): status-strip mode="wait" contract |
+| `4d9792c8` | docs(insights): 047-049 — Framer + AnimatePresence + sensitivity pattern |
+
+Plus global skill update: `~/.claude/skills/squeaky-clean/SKILL.md`
+adds step 8 — runs `pnpm dev:cleanup` at squeaky time. Project-agnostic
+(detects via `package.json` script presence; silent skip otherwise).
+
+**Class-of-work momentum.** The drama-beat runtime-gate template now
+has FOUR users (drama, hand-enlarge, BottomSheet, status-strip).
+Sensitivity pattern is locked: in-spec fault injection, never temp
+production regression — see insight 049 for why.
+
+### Actionable next — pick one
+
+- **Real-device playtest** (Active Priority #2 below). Needs Briggsy +
+  iPad + phones. The runtime gates close the per-frame motion-shape
+  question; real-device closes the per-couch experience question.
+- **Burned card art regen** (Active Priority #1 #4). Per Briggsy's call,
+  this gets its own session. Three concept pitches in §1; lean A
+  (flashbulb exposure) for narrative precision.
+- **More Framer cinematic gates.** Same template, new selectors.
+  Candidates ordered by bug-history-evidence + accessibility:
+  - **Nameplate rotateY flip** on board (insight 014 area — backface-
+    visibility-unreliable bug class)
+  - **DramaOverlay card-flip variant** (rotateY card-back-to-face,
+    same insight 014 class)
+  - **GameOver winner reveal stagger** (verifiable but lower-bug-history)
+- **Real fix for hand-reorder transform conflict** (insight 047). The
+  Hand-slot's explicit `animate.transform` clobbers `layout="position"`.
+  Fix: split into separate `x` / `scale` motion-value props OR remove
+  transform from animate. Then the runtime gate slice is testable.
+
+---
+
 ### THIS SESSION (2026-05-05 afternoon) — chrome-devtools-mcp + drama-beat runtime gate
 
 Two commits, all green at squeaky time. One concrete deliverable: the
@@ -183,16 +228,19 @@ chasing a regression.
   `feedback-burned-vanity-room-codes.md` updated to reflect partial
   resolution.
 
-- **Production `SCENARIOS.md` H4 header silent drop.** Parser regex
-  `/^###\s+(SCN-...)/` only matches H3 headers; the 55 H4 scenarios
-  in production catalog are silently dropped. Real fix needs cascading-
-  validation review. TODO since 2026-05-01 — surface for a dedicated
-  session.
+- ~~**Production `SCENARIOS.md` H4 header silent drop.**~~ **CLOSED
+  2026-05-05 — commit `e067c174`.** Parser regex relaxed to `^#{3,4}\s+`;
+  catalog goes from 35 → 90 scenarios. Cascading validation (vibe-check,
+  cluster IDs, info-gap tables) all pass. Production-catalog floor in
+  the round-trip test bumped 30 → 80 to catch future depth-level
+  regressions.
 
-- **Stale-wrangler session-start hook.** Mentioned in vanity-codes
-  memory file: original phone-test friction was triggered partly because
-  port 5173 was occupied by a prior wrangler. A session-start hook that
-  kills stale BURNED dev processes would prevent recurrence. Deferred.
+- ~~**Stale-wrangler session-start hook.**~~ **CLOSED 2026-05-05 —
+  commits `1d1f1a6f` (script + `pnpm dev:cleanup`) + global skill
+  update (squeaky-clean step 8 now runs `pnpm dev:cleanup`).** Script
+  kills orphan workerd unconditionally + reports vite/wrangler port
+  binders without killing. Auto-runs at squeaky time across all
+  projects with a `dev:cleanup` script.
 
 ### Background processes
 

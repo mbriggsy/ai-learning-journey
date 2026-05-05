@@ -101,17 +101,17 @@ The spec does not generate code. It generates the *next artifact* — the CSS Fo
 
 ## Bundle Sizes
 
-Last measured 2026-04-23. Re-run `pnpm build` and update after material changes.
+Last measured 2026-05-05. Re-run `pnpm build` and update after material changes.
 
 | Chunk | Raw | Gzipped | Load |
 |-------|-----|---------|------|
-| player entry | 47.73 KB | 14.77 KB | Initial |
-| board entry | 41.41 KB | 14.05 KB | Initial |
-| shared (React + Motion core, `config-*`) | 209.65 KB | 66.83 KB | Initial (shared) |
+| player entry | 54.25 KB | 16.09 KB | Initial |
+| board entry | 42.13 KB | 14.29 KB | Initial |
+| shared (React + Motion core, `config-*`) | 210.15 KB | 67.01 KB | Initial (shared) |
 | VisualElement (`is-ref-object-*`) | 39.93 KB | 14.40 KB | Initial (shared) |
 | motion-features (domMax) | 83.57 KB | 27.41 KB | Lazy (prefetched) |
 
-**Phone initial JS: ~96 KB gzipped** (under 100 KB budget, ~4 KB headroom)
+**Phone initial JS: ~97.5 KB gzipped** (under 100 KB budget, ~2.5 KB headroom). Player entry +1.3 KB this session — runtime-gate dev hook (`__testForceLocalTarget`) tree-shakes from prod (verified by `verify-prod-bundle.ts`); the small growth came from minor Hand.tsx + Player.tsx churn around the hook.
 
 ## Workers / Protocol Landmines
 

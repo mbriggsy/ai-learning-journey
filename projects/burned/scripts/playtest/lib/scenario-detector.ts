@@ -157,7 +157,13 @@ export interface GodEventForMatch {
 // Parser
 // -----------------------------------------------------------------------------
 
-const SCN_HEADER_RE = /^###\s+(SCN-[A-Z0-9-]+)\s*(?:—\s*(.*))?$/
+// Match scenario headers at H3 OR H4 depth. The production catalog mixes
+// both: standalone scenarios under no parent card live at H3 (`### SCN-...`),
+// while scenarios grouped under an `### <Card name>` card-section live at
+// H4 (`#### SCN-...`). The previous H3-only regex silently dropped the 55
+// H4 scenarios. Card-section H3 lines like `### Reassign` still won't match
+// because the captured ID requires the `SCN-` prefix.
+const SCN_HEADER_RE = /^#{3,4}\s+(SCN-[A-Z0-9-]+)\s*(?:—\s*(.*))?$/
 
 /** Parse a SCENARIOS.md markdown string into ParsedScenarios. */
 export function parseCatalog(markdown: string): ParsedScenario[] {

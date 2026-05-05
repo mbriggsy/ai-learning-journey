@@ -54,13 +54,17 @@ describe('parseCatalog', () => {
     const scenarios = parseCatalog(markdown)
 
     // Presence: matcher actually saw content (insight 027 companion).
-    expect(scenarios.length).toBe(5)
+    // The H4-nested scenario (SCN-TEST-H4-NESTED-01) lives under an
+    // `### Test Card` H3 card section — proves the parser accepts both
+    // depths AND skips the card-section H3 (no SCN- prefix).
+    expect(scenarios.length).toBe(6)
     expect(scenarios.map((s) => s.id)).toEqual([
       'SCN-TEST-STRICT-01',
       'SCN-TEST-CONTAINS-01',
       'SCN-TEST-NEGATIVE-01',
       'SCN-TEST-TIER2-01',
       'SCN-TEST-TIER3-01',
+      'SCN-TEST-H4-NESTED-01',
     ])
   })
 
@@ -115,7 +119,10 @@ describe('parseCatalog', () => {
     const markdown = await readFile(productionCatalog, 'utf8')
     const scenarios = parseCatalog(markdown)
     // Presence companion: catalog actually held scenarios (insight 027).
-    expect(scenarios.length).toBeGreaterThanOrEqual(30)
+    // Floor at 80 — production catalog has ~90 scenarios across H3 + H4
+    // depths. A regression that silently drops one depth (the bug fixed
+    // 2026-05-05) would collapse this back into the 30s and trip here.
+    expect(scenarios.length).toBeGreaterThanOrEqual(80)
     // Every parsed scenario has an id of the SCN-* form.
     for (const s of scenarios) {
       expect(s.id).toMatch(/^SCN-/)
@@ -1134,17 +1141,20 @@ shape: negative
   })
 
   it('round-trips the production catalog without throwing and preserves infoGap booleans', () => {
-    // The real catalog has ~86 scenarios. This guard catches regressions
-    // where an extension breaks a scenario that was previously parsing.
+    // The real catalog has ~90 scenarios across H3 + H4 depths. This
+    // guard catches regressions where an extension breaks a scenario
+    // that was previously parsing.
     const rawCatalog = readFileSync(
       path.resolve(__dirname, '../../../docs/testing/playtest/SCENARIOS.md'),
       'utf8',
     )
     const scenarios = parseCatalog(rawCatalog)
-    // Real catalog at lock time is 35 scenarios — floor keeps a regression
-    // from silently dropping any below 30 without drawing attention to a
-    // legitimate growth above that.
-    expect(scenarios.length).toBeGreaterThanOrEqual(30)
+    // Floor at 80. Pre-2026-05-05 the parser silently dropped 55 H4
+    // scenarios; that regression collapsed the count from 90 to 35,
+    // which a 30-floor would not have caught. Floor sits below current
+    // (90) by enough margin to allow legitimate scenario churn while
+    // still tripping on a depth-level regression.
+    expect(scenarios.length).toBeGreaterThanOrEqual(80)
     // Every scenario has a title.
     for (const s of scenarios) {
       expect(s.title).toBeTruthy()

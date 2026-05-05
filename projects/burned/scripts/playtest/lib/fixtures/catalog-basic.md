@@ -101,3 +101,28 @@ connection-events:
 **Known product call:** none
 
 ---
+
+### Test Card — H4 nesting fixture
+
+This card-section header is intentional. The parser must NOT treat
+`### Test Card` as a scenario (no SCN- prefix) but MUST pick up the
+`#### SCN-*` scenarios nested inside it. Mirrors the production
+catalog's mixed-depth pattern (e.g. `### Reassign` H3 with
+`#### SCN-REASSIGN-*` H4 children).
+
+#### SCN-TEST-H4-NESTED-01 — H4 scenario under an H3 card section
+
+**Category:** Test
+**Axes:** 1
+
+**Fire signature:**
+```yaml
+events:
+  - type: card-played
+    where: { playerId: $ACTOR, cardType: 'reassign' }
+shape: contains
+```
+
+**Known product call:** none
+
+---

@@ -56,11 +56,74 @@ async function measureOverflow(page: Page): Promise<OverflowReport> {
   }
 }
 
+async function installPageErrorRecorder(page: Page): Promise<void> {
+  // Push pageerror events AND errors that ErrorBoundary swallows into a
+  // window array that assertHealthyRender can read back. React's
+  // componentDidCatch consumes errors so window.onerror never fires;
+  // we hook console.error too because ErrorBoundary logs there.
+  await page.addInitScript(() => {
+    const w = window as unknown as { __wcagPageErrors?: string[] }
+    w.__wcagPageErrors = []
+    window.addEventListener('error', (e) => {
+      const msg = e.error instanceof Error
+        ? `${e.error.message}\n${e.error.stack ?? '(no stack)'}`
+        : String(e.message)
+      w.__wcagPageErrors!.push(`window.error: ${msg}`)
+    })
+    window.addEventListener('unhandledrejection', (e) => {
+      w.__wcagPageErrors!.push(`Unhandled rejection: ${String(e.reason)}`)
+    })
+    const origError = console.error.bind(console)
+    console.error = (...args: unknown[]) => {
+      const msg = args.map(a => {
+        if (a instanceof Error) return `${a.message}\n${a.stack ?? '(no stack)'}`
+        if (typeof a === 'object') {
+          try { return JSON.stringify(a) } catch { return String(a) }
+        }
+        return String(a)
+      }).join(' ')
+      // Heuristic: only capture entries that look like ErrorBoundary catches
+      // or React DOM warnings about render errors. Everything else passes
+      // through silently to avoid drowning the test output.
+      if (msg.includes('ErrorBoundary') || msg.includes('caught:') || msg.includes('Error:') || msg.includes('TypeError')) {
+        w.__wcagPageErrors!.push(`console.error: ${msg}`)
+      }
+      origError(...args)
+    }
+  })
+}
+
+async function assertHealthyRender(page: Page, screenName: string): Promise<void> {
+  // Catches "tests green but capture wrong" — if a JS error was thrown and
+  // caught by ErrorBoundary, the fallback "// COMMS SCRAMBLED" text renders
+  // instead of the target screen. Detect via text content + connection
+  // overlay's open dialog. Pulls accumulated pageerrors for diagnosis.
+  const result = await page.evaluate(() => {
+    const body = document.body.textContent ?? ''
+    const errorBoundaryFallback = body.includes('COMMS SCRAMBLED')
+    const connDialog = document.querySelector('dialog[aria-label="Connection status"]') as HTMLDialogElement | null
+    const connOverlayOpen = connDialog?.open === true
+    const w = window as unknown as { __wcagPageErrors?: string[] }
+    const errors = w.__wcagPageErrors ?? []
+    return { errorBoundaryFallback, connOverlayOpen, errors }
+  })
+  if (result.errorBoundaryFallback) {
+    const errSummary = result.errors.length > 0
+      ? `\n\nCaptured page errors (${result.errors.length}):\n${result.errors.join('\n---\n')}`
+      : '\n\n(No page errors captured — error happened before recorder installed, or was suppressed.)'
+    throw new Error(`assertHealthyRender(${screenName}): ErrorBoundary fallback is rendering ("COMMS SCRAMBLED"). A JS error was thrown — check optimistic state shape, card-type strings, or component prop types.${errSummary}`)
+  }
+  if (result.connOverlayOpen) {
+    throw new Error(`assertHealthyRender(${screenName}): ConnectionOverlay is open — WebSocket is not 'connected'. Capture would render the disconnect overlay, not the target screen.`)
+  }
+}
+
 async function captureZoomPair(
   page: Page,
   surface: 'phone' | 'board',
   name: string,
 ): Promise<{ at100: OverflowReport; at200: OverflowReport }> {
+  await assertHealthyRender(page, name)
   // 100% baseline
   await page.evaluate(() => {
     document.body.style.zoom = ''
@@ -185,6 +248,8 @@ test.describe('WCAG 1.4.4 — 200% zoom (chromium-only)', () => {
     test.skip(testInfo.project.name !== 'chromium', 'chromium-only')
     test.setTimeout(120_000)
 
+    await installPageErrorRecorder(phones[0]!)
+
     // Boot 3-player game to playing. Mirror the arena-states pattern.
     await joinPhone(phones[0]!, roomCode, 'Alice')
     await joinPhone(phones[1]!, roomCode, 'Bob')
@@ -271,33 +336,111 @@ test.describe('WCAG 1.4.4 — 200% zoom (chromium-only)', () => {
       expect.soft(pair.at100.overflow).toBe(false)
     }
 
-    // Clear pending prompt before EliminatedView injection.
+    // Clear pending prompt before remaining captures.
     await setPendingPrompt(phones[0]!, null)
     await phones[0]!.waitForTimeout(200)
 
-    // EliminatedView — inject player-eliminated event with Alice as target;
-    // her phone enters eliminated state.
+    // PlayingView with full 10-card hand (§2.3.1 row 3 — most constrained).
+    // Reshape myHand via optimistic state to 10 cards. Card types span the
+    // catalog so the hand reads as a real-game pickup.
+    {
+      await phones[0]!.evaluate(() => {
+        const w = window as unknown as { __gameStore?: { applyOptimistic: (t: (s: unknown) => unknown) => void } }
+        // Real BURNED card types per src/shared/card-defs.ts. Mix of
+        // operatives (matchable for combos) + actions to hit the visual
+        // texture of a real late-game hand.
+        const tenCards = [
+          { id: 'wcag-h-1',  type: 'dash-barlowe' },
+          { id: 'wcag-h-2',  type: 'vera-khan' },
+          { id: 'wcag-h-3',  type: 'sable-ashworth' },
+          { id: 'wcag-h-4',  type: 'janet-broadside' },
+          { id: 'wcag-h-5',  type: 'reassign' },
+          { id: 'wcag-h-6',  type: 'direct-order' },
+          { id: 'wcag-h-7',  type: 'go-dark' },
+          { id: 'wcag-h-8',  type: 'intel-briefing' },
+          { id: 'wcag-h-9',  type: 'call-in-a-favor' },
+          { id: 'wcag-h-10', type: 'intercepted' },
+        ]
+        w.__gameStore?.applyOptimistic((s) => ({
+          ...(s as Record<string, unknown>),
+          myHand: tenCards,
+        }))
+      })
+      await phones[0]!.waitForTimeout(400) // hand re-layout settle
+      const pair = await captureZoomPair(phones[0]!, 'phone', 'playingView-fullHand10')
+      record('phone', 'PlayingView — 10-card hand (§2.3 row 3)', pair)
+      expect.soft(pair.at100.overflow).toBe(false)
+    }
+
+    // Real EliminatedView component (§2.3.1 row 5). Player.tsx routes to
+    // <EliminatedView /> when myPlayer.isAlive === false. Find Alice in
+    // players[] and flip the flag.
     {
       await phones[0]!.evaluate((id) => {
-        const w = window as unknown as { __testInjectEvent?: (e: unknown) => void; __gameStore?: { applyOptimistic: (t: (s: unknown) => unknown) => void } }
-        // Optimistically mark Alice eliminated locally for capture purposes.
+        const w = window as unknown as { __gameStore?: { applyOptimistic: (t: (s: unknown) => unknown) => void } }
         w.__gameStore?.applyOptimistic((s) => {
           const state = s as Record<string, unknown>
           const players = (state.players as Array<Record<string, unknown>>) ?? []
           return {
             ...state,
-            players: players.map((p) => p.id === id ? { ...p, eliminated: true } : p),
+            players: players.map((p) => p.id === id ? { ...p, isAlive: false } : p),
           }
         })
-        if (w.__testInjectEvent) {
-          w.__testInjectEvent({ type: 'player-eliminated', playerId: id, rank: 3 })
-        }
       }, aliceId)
-      await phones[0]!.waitForTimeout(800)
-      const pair = await captureZoomPair(phones[0]!, 'phone', 'eliminatedView')
-      record('phone', 'EliminatedView', pair)
+      await phones[0]!.waitForTimeout(500) // route swap settle
+      const pair = await captureZoomPair(phones[0]!, 'phone', 'eliminatedView-real')
+      record('phone', 'EliminatedView (real component)', pair)
       expect.soft(pair.at100.overflow).toBe(false)
     }
+  })
+
+  // Board GameOver — winner reveal at smallest board viewport.
+  test('board GameOver — winner reveal', async ({ board, phones, roomCode }, testInfo) => {
+    test.skip(testInfo.project.name !== 'chromium', 'chromium-only')
+    test.setTimeout(60_000)
+
+    // Boot to playing so player ids exist; then drive board into game_over.
+    await joinPhone(phones[0]!, roomCode, 'Alice')
+    await joinPhone(phones[1]!, roomCode, 'Bob')
+    await joinPhone(phones[2]!, roomCode, 'Carol')
+    await waitForPlayerCount(board, 3)
+    await board.locator('button:has-text("Cleared Hot")').click()
+    await waitForPhase(board, 'playing', 10_000)
+    await board.waitForTimeout(300)
+
+    const aliceId = await phones[0]!.evaluate(() => {
+      const w = window as unknown as { __gameStore?: { getPlayerId(): string | null } }
+      return w.__gameStore?.getPlayerId() ?? ''
+    })
+    const bobId = await phones[1]!.evaluate(() => {
+      const w = window as unknown as { __gameStore?: { getPlayerId(): string | null } }
+      return w.__gameStore?.getPlayerId() ?? ''
+    })
+    const carolId = await phones[2]!.evaluate(() => {
+      const w = window as unknown as { __gameStore?: { getPlayerId(): string | null } }
+      return w.__gameStore?.getPlayerId() ?? ''
+    })
+
+    // Resize board to WCAG target.
+    await board.setViewportSize({ width: 1280, height: 800 })
+    await board.waitForTimeout(300)
+
+    // Drive board state to game_over with Alice winning, Carol then Bob
+    // eliminated (eliminationOrder is order-of-elimination).
+    await board.evaluate(({ winner, eliminated }) => {
+      const w = window as unknown as { __gameStore?: { applyOptimistic: (t: (s: unknown) => unknown) => void } }
+      w.__gameStore?.applyOptimistic((s) => ({
+        ...(s as Record<string, unknown>),
+        phase: 'game_over',
+        winnerId: winner,
+        eliminationOrder: eliminated,
+      }))
+    }, { winner: aliceId, eliminated: [carolId, bobId] })
+
+    await board.waitForTimeout(800) // mount + stagger settle
+    const pair = await captureZoomPair(board, 'board', 'gameOver-winner')
+    record('board', 'GameOver — winner reveal', pair)
+    expect.soft(pair.at100.overflow).toBe(false)
   })
 
   test.afterAll(async () => {

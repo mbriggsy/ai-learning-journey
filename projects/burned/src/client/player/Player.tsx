@@ -489,14 +489,20 @@ function PlayingView({ roomCode }: { roomCode: string }) {
     resetCardPlay()
   }, [localTargetMode, sendAction, resetCardPlay])
 
+  // Sorted hand — must run BEFORE the conditional return below to satisfy
+  // Rules of Hooks. When isAlive flips true → false the early return changes
+  // hook count between renders; running this hook before the return keeps the
+  // count stable and avoids ErrorBoundary catching a "rendered fewer hooks
+  // than expected" error on every elimination.
+  const sortedHand = useSortedHand(hand)
+
   // --- Conditional render AFTER all hooks ---
 
   if (!isAlive) return <EliminatedView />
 
   const eligibleTargets = players.filter(p => p.isAlive && p.id !== myPlayerId)
 
-  // Sorted hand with staged cards filtered out
-  const sortedHand = useSortedHand(hand)
+  // Display hand = sortedHand minus staged ids.
   const displayHand = sortedHand.filter(c => !selectedIds.has(c.id))
 
   return (

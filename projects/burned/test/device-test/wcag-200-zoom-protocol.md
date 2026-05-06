@@ -58,6 +58,9 @@ zoom those don't scale, but at `body.style.zoom` they do. So:
 | 8 | phone | NameCard sheet (triple-steal target picker) | 375×667 | ✅ none | ✅ none | ⚠️ flagged (text truncation at 200%) |
 | 9 | phone | Favor banner (inline, on staging area) | 375×667 | ✅ none | ✅ none | 📋 PENDING |
 | 10 | phone | DramaOverlay ELIMINATED beat (over PlayingView) | 375×667 | ✅ none | ✅ none | 📋 PENDING |
+| 11 | phone | PlayingView — 10-card hand (§2.3.1 row 3, most constrained) | 375×667 | ✅ none | ✅ none | 📋 PENDING |
+| 12 | phone | EliminatedView — real component (skull + flavor + alive list) | 375×667 | ✅ none | ✅ none | 📋 PENDING |
+| 13 | board | GameOver — winner reveal | 1280×800 | ✅ none | ✅ none | 📋 PENDING |
 
 ### Notes on flagged screens (1, 2)
 
@@ -116,12 +119,12 @@ positioned naturally.
 
 | Surface | Screen | Why deferred |
 |---|---|---|
-| phone | PlayingView with **full 10-card hand** | The §2.3.1 row 3 target. Current capture (#6) is a fresh 3-player game where Alice has the default 5-card hand. Forcing a 10-card hand needs a `__gameStore.applyOptimistic` that reshapes `myHand` to 10 cards — the reshape is straightforward but wasn't in this session's scope. |
-| phone | CardDetailSheet | Tapping a hand card opens detail. Drive via UI tap on captured Alice hand. |
-| phone | Real EliminatedView component (not the drama beat) | Requires Player.tsx routing branch on `player.eliminated` to activate. Better path: drive a real elimination via game flow rather than optimistic state. |
-| board | GameOver — winner reveal | Game-over phase + ranked list. `__testInjectEvent({ type: 'game-over' })` should fire, then capture board. |
+| phone | CardDetailSheet | Triggered by hand-card long-press, lives in local React state (`detailCardType`), not in gameStore. Needs Playwright long-press emulation: hover + mouse.down + waitForTimeout(600) + mouse.up. Out of scope this session because the long-press timing is sensitive to deviceScaleFactor. |
 
-Each of these is the same `captureZoomPair` helper + a slightly different state primer.
+The 10-card hand, real EliminatedView, and GameOver winner screens were
+all added this session via `captureZoomPair` + targeted state primers.
+Adding them surfaced a P0 React bug that was fixed inline (see
+"Surfaced bug" below).
 
 ## Canonical human-run protocol (when ready)
 
@@ -145,14 +148,46 @@ If any row fails, the fix lands at the owning phase per §7.4 of the
 plan (Phase 2 for phone components, Phase 3 for board, Phase 1 for
 token-level issues).
 
+## Surfaced bug — pre-existing P0 React Rules-of-Hooks violation (FIXED)
+
+While automating the EliminatedView capture, the test tripped its
+`assertHealthyRender` guard ("ErrorBoundary fallback is rendering").
+Root-cause traced via `console.error` capture in the page:
+
+> Rendered fewer hooks than expected. This may be caused by an
+> accidental early return statement.
+> The above error occurred in the <PlayingView> component.
+
+`Player.tsx:494` had `if (!isAlive) return <EliminatedView />` and
+`Player.tsx:499` called `useSortedHand(hand)` AFTER the early return.
+Comment on line 492 even claimed "Conditional render AFTER all hooks"
+— that contract was broken. When `isAlive` flipped true → false (every
+elimination, mid-game), the next render had fewer hooks than the
+previous, React threw, ErrorBoundary caught.
+
+**Production symptom:** users saw a brief "// COMMS SCRAMBLED" flash
+every time they got eliminated, before ErrorBoundary's auto-recover
+re-rendered cleanly into EliminatedView. Subtle enough to miss in
+playtest unless you were specifically watching for it.
+
+**Fix:** hoisted `useSortedHand(hand)` above the `if (!isAlive)` early
+return. `pnpm test` + `pnpm typecheck` clean. WCAG zoom suite (which
+exposed the bug) re-ran green; EliminatedView now renders the real
+component.
+
+The `assertHealthyRender` helper in `tests/e2e/wcag-zoom.spec.ts` is
+the regression-lock: any future hooks-violation in PlayingView's
+elimination path trips it loudly.
+
 ## §2.3.2 Acceptance thresholds
 
-- [✅] Programmatic horizontal-overflow check ran for 10 captured
-      screens; all 10 passed at both 100% and 200%.
-- [✅] Visual evidence captured (20 PNG files, 100% + 200% pairs at
+- [✅] Programmatic horizontal-overflow check ran for 13 captured
+      screens; all 13 passed at both 100% and 200%.
+- [✅] Visual evidence captured (26 PNG files, 100% + 200% pairs at
       `temp/wcag-zoom/`).
 - [📋] Canonical browser-UI zoom verification PENDING (human-run).
-- [📋] 4 deferred screens (full 10-card hand, CardDetailSheet, real
-      EliminatedView, GameOver winner reveal) — follow-up session.
+- [📋] 1 deferred screen (CardDetailSheet, needs long-press emulation)
+      — follow-up session.
+- [✅] **P0 React hooks bug surfaced + fixed** as a side effect.
 
 Phase 5 §8.1 / §8.2 spec checkbox flips await the human-run pass.

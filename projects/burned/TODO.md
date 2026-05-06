@@ -1,6 +1,86 @@
 # BURNED — TODO
 
-## NEXT SESSION — pick up here (2026-05-05+)
+## NEXT SESSION — pick up here (2026-05-06+)
+
+### THIS SESSION (2026-05-06 morning) — hand-reorder gate, insight 047 corrected, nameplate rotateY gate, global config cleanup
+
+Three project commits + global `~/.claude` config cleanup. All green at
+squeaky time.
+
+| Commit | Subject |
+|---|---|
+| `56a2f4f0` | test(framer): hand-reorder runtime gate + insight 047 corrected diagnosis |
+| `1e32ef9a` | test(framer): nameplate rotateY runtime gate — opacity-at-edge-on contract (insight 014) |
+| `46b22c59` | docs(claude-md): register nameplate runtime gate in Testing section |
+
+**Insight 047 was misdiagnosed.** Original hypothesis: explicit
+`animate.transform` on the Hand slot was clobbering layout-derived
+translate, producing the instant snap-fill on stage-out. Tested four
+fix variants (split x/scale, drop transform from animate, outer/inner
+m.div separation, explicit `transition.layout` spring) — all four
+produced identical instant-snap traces with `onLayoutAnimationStart`
+callbacks firing. **`popLayout` + `layout="position"` is structurally a
+fast-snap, not a multi-frame spring.** Removing `popLayout` produces a
+worse two-phase shape (smooth Phase 1 + late ~175px snap when card[0]
+removed from DOM). Hand.tsx is unchanged from before — the fast-snap
+IS the cinematic. Insight 047 rewritten; gate now pins the fast-snap +
+detects the realistic regression (no-popLayout two-phase).
+
+**Side finding (documented, not fixed):** `layout={dealComplete ? 'position' : false}`
+on the Hand slot makes Framer skip projection-node initialization on the
+false branch. `onLayoutAnimationStart` callbacks never fire even after
+the toggle flips true. Visible cinematic identical (same fast-snap),
+left as-is. Flagged in insight 047 for any future deal-in cinematic
+work — switch to a parent-mount gate instead.
+
+**Nameplate rotateY gate** pins the opacity-at-edge-on contract from
+insight 014. Across all sampled frames where `|rotateY| ∈ [80°, 100°]`,
+max opacity must be ≤ 0.3. Catches the regression where someone strips
+opacity from `initial`/`animate`/`exit` trusting Chrome's
+backface-culling — Chrome's compositor collapses `rotateY(0deg)` to a
+2D matrix and breaks the cull, producing a mirrored-back-face flash at
+edge-on. Sensitivity proven: stripping opacity from Nameplate.tsx flips
+the gate red with `1.00 / 0.3` and explicit "Restore opacity 0 ↔ 1"
+remediation message.
+
+**Class-of-work momentum.** Runtime-gate template now has SIX users
+(drama, hand-enlarge, BottomSheet, status-strip, hand-reorder, nameplate).
+Two of six (hand-reorder, nameplate) shipped this session. The pattern
+is locked: per-rAF sampling against real Chrome compositor, in-spec
+fault injection that paints the actual regression risk (not a
+hypothesized bug shape), error messages that point at the cause and
+remediation.
+
+**Global `~/.claude` cleanup.**
+- Removed duplicate squeaky-clean steps from `~/.claude/CLAUDE.md`.
+- Enabled model-invocation on `~/.claude/skills/squeaky-clean/SKILL.md`
+  (was `disable-model-invocation: true`, now removed). Skill description
+  strengthened with explicit trigger phrases.
+- Retired memory `feedback-squeaky-execute-directly.md` — obsolete now
+  that model can invoke directly. MEMORY.md pointer removed.
+
+### Actionable next — pick one
+
+- **Real-device playtest** (Active Priority #2). Needs Briggsy + iPad +
+  phones. The runtime gates close the per-frame motion-shape question;
+  real-device closes the per-couch experience question. Six gates now
+  guarding regressions across the cinematic surface.
+- **Burned card art regen** (Active Priority #1 sub-step #4). Per
+  Briggsy's call, gets its own session. Three concept pitches in §1;
+  lean A (flashbulb exposure) for narrative precision.
+- **CSS Phase 5 verification** (Active Priority #7). The CSS-foundation
+  rebuild plan's verification phase still on deck.
+- **Remaining gate slices (lower marginal value).**
+  - **DramaOverlay card-flip rotateY** — already covered by
+    `drama-beat-timing` for timing shape. The GSAP face-swap section in
+    `DramaOverlay.tsx` has explicit insight-014 warning comments
+    protecting against the opacity-removal regression. Marginal value of
+    a dedicated gate is low unless the protective comments get stripped
+    in a refactor. Defer.
+  - **GameOver winner reveal stagger** — lower bug-history evidence than
+    the gates already shipped. Verifiable but not urgent.
+
+---
 
 ### THIS SESSION (2026-05-05 evening) — Framer runtime-gate slices + SCENARIOS.md H4 fix + squeaky integration
 

@@ -1,8 +1,9 @@
 ---
-title: Framer `layout="position"` + explicit `animate.transform` silently fights itself
+title: Framer `layout="position"` + `popLayout` is a structural fast-snap, not an animate.transform conflict
 date: 2026-05-05
-modules: [src/client/player/Hand.tsx, src/client/shared/MinimalCard.tsx]
-tags: [framer-motion, animation, layout, transform, runtime-gate]
+updated: 2026-05-05
+modules: [src/client/player/Hand.tsx, src/client/shared/MinimalCard.tsx, tests/e2e/framer-hand-reorder-shape.spec.ts]
+tags: [framer-motion, animation, layout, transform, runtime-gate, misdiagnosis]
 ---
 
 ## Problem
@@ -11,11 +12,9 @@ Building a runtime gate for the Hand-reorder cinematic. When a card stages
 out, the remaining cards' `layout="position"` should animate them into the
 gap. Sampling card[1]'s `getBoundingClientRect().left` per rAF showed the
 position jumping from old to new in **one frame** (single 16ms tick), with
-no smooth interpolation. Earlier "passing" tests turned out to be sampler
-bugs (data-test-attribute selectors stripped on React re-renders) — the
-real cinematic was instant the whole time.
+no smooth interpolation.
 
-## Root Cause
+## Original (Incorrect) Hypothesis
 
 The Hand slot has both `layout="position"` AND an explicit `animate.transform`:
 
@@ -28,52 +27,133 @@ The Hand slot has both `layout="position"` AND an explicit `animate.transform`:
 >
 ```
 
-`layout="position"` works by measuring before/after positions, computing a
-delta, and animating `transform` from `translate(delta)` back to `translate(0)`.
-The explicit `animate.transform` sets `transform: translateX(0px) scale(1)`
-every render, clobbering the layout-derived value. Net result: layout
-position changes immediately; transform is always at the resting state;
-no visible animation.
+The first version of this insight claimed: `layout="position"` works by
+animating `transform` from `translate(delta)` back to `translate(0)`, and
+the explicit `animate.transform` clobbers the layout-derived value. The
+proposed fix was to split `transform` into separate `x` / `scale`
+motion-value props (which would supposedly compose) OR remove `transform`
+from `animate` entirely.
 
-Framer's docs acknowledge this: *"If the explicitly-defined animate prop
-is not the same as `layout` props, both can run together."* Sharing
-`transform` means they don't compose — the explicit value wins silently.
+**This hypothesis was wrong.**
 
-## Fix
+## Actual Root Cause
 
-None applied this session. The conflict has shipped in production since
-`Hand.tsx` was authored. User-facing experience: card flies to staging
-cleanly, remaining cards snap to fill the gap. Nobody's complained — the
-snap is fast enough that it reads as part of the staging exit motion.
+The runtime gate (`tests/e2e/framer-hand-reorder-shape.spec.ts`) tested
+four fix variants — every one produced the same instant snap when
+`AnimatePresence mode="popLayout"` was on the parent:
 
-If you want the layout animation to actually run, **split the explicit
-transform into separate `x` and `scale` motion-value props** (which
-compose with layout-derived transform via Framer's animator) OR remove
-`transform` from `animate` entirely and let the resting transform stay 0.
+| Variant | Snap shape |
+|---|---|
+| Split `x` / `scale` motion-value props | Instant 282px jump in 1 frame |
+| Drop `x` / `scale` from `animate` entirely | Instant 282px jump in 1 frame |
+| Outer `m.div` (layout-only) + inner `m.div` (visual transforms) | Instant 282px jump in 1 frame |
+| Explicit `transition.layout: MOTION.snappy` (and `MOTION.deliberate`) | Instant 282px jump in 1 frame |
+
+`onLayoutAnimationStart` / `onLayoutAnimationComplete` callbacks DID fire,
+so Framer is running a layout animation — it just completes within one
+rAF tick. The small ringing oscillation (~12px overshoot at t=300-450ms)
+is the spring's residual; the main 282px shift is structural reflow,
+**not** spring-interpolated.
+
+The structural reason: `popLayout` removes the exiting card from the DOM's
+layout flow inside Framer's render-cycle. By the time the projection node
+measures pre-stage and post-stage positions, both measurements are in
+adjacent rAF frames with no in-between for a spring to interpolate.
+
+`animate.transform` was a red herring. The original `transform` string and
+the four fix variants all produce identical traces.
+
+### One real bug found in passing
+
+The `dealComplete` toggle on the `layout` prop itself was load-bearing-
+broken. With `layout={dealComplete ? 'position' : false}`, Framer skips
+projection-node initialization on the false branch and the slot never
+participates in layout animations even after `dealComplete` flips true.
+`onLayoutAnimationStart` callbacks never fire. With `layout="position"`
+always-on, callbacks fire (and the snap-with-residual-ringing happens).
+This doesn't change the visible cinematic but does mean the original gate
+wasn't running its intended motion at all.
+
+We chose **not** to fix this in the same session because:
+1. The user-visible behavior is identical (snap-fill either way).
+2. The toggle's original intent was preventing layout animations during
+   the deal-in stagger — a small concern that a future session can revisit
+   alongside any actual change to the deal-in cinematic.
+3. Touching it would change cinematics outside the scope of "test the
+   hand-reorder shape," and the runtime gate now pins the behavior so a
+   future change can't silently regress it.
+
+## What Ships
+
+- Hand.tsx is **unchanged**. The fast-snap is the intended cinematic;
+  Briggsy hasn't perceived it as a problem (insight's own original
+  acknowledgement: "Nobody's complained — the snap is fast enough that it
+  reads as part of the staging exit motion").
+- The runtime gate (`framer-hand-reorder-shape.spec.ts`) pins the fast-
+  snap shape and detects the realistic regression risk: any change that
+  slows the cinematic into a perceptible two-phase or laggy spring.
+- Fault-injection canary paints a synthetic two-phase shape (smooth Phase
+  1 → 350ms plateau → snap to final) and asserts both `timeToSettleMs`
+  and `midPlateauMs` thresholds trip — proves the gate is sensitive to
+  the actual regression we'd see if someone removed `mode="popLayout"`.
+
+## Sensitivity Verified
+
+Temporarily removing `mode="popLayout"` from `Hand.tsx` flips the gate red
+with both:
+
+- `timeToSettleMs measured 533ms; max 500ms`
+- `midPlateauMs measured 333-350ms; max 150ms`
+
+The two-phase shape it produces (smooth Phase 1 ~107px during card[0]'s
+exit + late ~175px snap when card[0] is removed from DOM) is visually
+WORSE than the current single fast-snap. So the gate also functions as
+a deterrent against well-meaning future "cleanups" that drop `popLayout`
+on the assumption the spring will run smoothly without it.
 
 ## Key Insight
 
-**`layout` and explicit `animate.transform` share one CSS property —
-the explicit value silently wins.** No error, no warning, no visible
-failure — just an animation that doesn't run. Easy to ship without
-noticing because nothing fails loudly.
+**`popLayout` + `layout="position"` is a fast-snap by structure, not a
+multi-frame spring.** Don't try to "fix" the snap by splitting `transform`
+into `x`/`scale` props — they don't compose with layout-derived translate
+in the way the first version of this insight assumed, and the snap
+behavior survives every variation.
 
-When auditing or building runtime gates for layout animations, sample
-the visible position per rAF and verify motion is **multi-frame**.
-Shape-derivation must include both a `min-duration` floor AND a
-`mid-transit-frames` floor — a max-only `settle-time` check passes
-both a real spring AND an instant jump. The framer-bottom-sheet and
-framer-status-strip gates assert min duration ≥ 150ms and mid-transit
-frames ≥ 10 specifically because of this finding.
+If a future session genuinely wants a multi-frame spring on hand-reorder,
+the fix is structural: animate the slot's WIDTH or `flex-basis` during
+exit so the layout footprint collapses gradually (not a transform mask).
+That removes the need for `popLayout` entirely. But the bar is "is this
+better than what users see today?" — and today's snap reads cleanly as
+part of the staging cinematic.
+
+## Lessons
+
+- **Runtime gates kill speculation.** The first version of this insight
+  shipped a hypothesis without the gate to test it. Four variants of the
+  proposed fix produced identical traces; the empirical answer was "the
+  hypothesis was wrong."
+- **`onLayoutAnimationStart` / `onLayoutAnimationComplete` are the
+  cheapest diagnostic tools available** for "is the layout animation
+  even running?" Pipe browser console to test stdout via
+  `page.on('console', ...)` and you have a 30-second sanity check.
+- **Conditional `layout` props are footguns.** `layout={cond ? 'position' : false}`
+  reads as "turn it on conditionally," but Framer skips projection-node
+  setup on the falsy branch and never retrofits later. If you need to
+  gate layout animation, gate the PARENT's mount or use a different
+  mechanism — don't toggle `layout` on the same element.
+- **Fault injection should target the ACTUAL regression risk, not a
+  hypothesized bug.** The first canary in this gate painted an instant-
+  jump synthetic — but the production code already produces that shape
+  by design. The corrected canary paints a two-phase synthetic (the real
+  regression risk if `popLayout` is removed), and now the gate is a
+  meaningful deterrent.
 
 ## Also Applies To
 
-- Any Framer cinematic combining `layout` / `layoutId` with an explicit
-  `animate.transform` on the same element. Audit StagingArea, DiscardFan,
-  PlayerStrip — anywhere FLIP-style position animations and explicit
-  transforms coexist.
-- Runtime gates for layout animations — single-frame jumps must be
-  detected as failures, not as fast successes.
-- The same conflict shape exists for `filter`, `opacity`, `x`, `y`, etc.
-  if `layout` is configured to animate them. Whichever property is
-  explicitly set in `animate` wins.
+- **`StagingArea.tsx`** uses the same `popLayout` + `layout="position"`
+  pattern. Its reorder probably has the same fast-snap shape — not yet
+  gated. Future gate slice candidate.
+- **Any `AnimatePresence mode="popLayout"` + layout="position"`
+  combination** in this codebase. The fast-snap is the rule, not the
+  exception. Don't try to make these spring-smooth by tweaking
+  `transition` props.

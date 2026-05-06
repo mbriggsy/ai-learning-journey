@@ -1,5 +1,5 @@
 ---
-title: "Phase 5 §2.4 follow-up — CVD palette amendments"
+title: "Phase 5 §2.4 + §2.5 follow-up — CVD + contrast palette amendments"
 type: follow-up
 phase: 5
 parent: docs/plans/css-foundation-rebuild/phase-5-verification-acceptance.md
@@ -7,7 +7,7 @@ status: pending
 date: 2026-05-06
 ---
 
-# Phase 5 §2.4 follow-up — CVD palette amendments
+# Phase 5 §2.4 + §2.5 follow-up — palette amendments
 
 ## Why this exists
 
@@ -129,11 +129,63 @@ Each amendment is one commit:
   emerald-8/teal-8/ochre-9 against the Dreamland reference frames).
 - Re-run downstream tests (`palette-contrast`, any visual regressions).
 
+## §2.5 contrast follow-up (added by Step 9)
+
+Phase 5 §2.5 expanded `palette-contrast.test.ts` from 13 pairs to 31.
+Five (pair, metric) combos failed tier minimums and ratchet via
+`test.fails` in `DESIGN_ATTENTION`. All overlap heavily with §2.4 — the
+same ochre-9 / emerald-9 / teal-9 / cream-12 collisions that hurt CVD
+distinguishability also fail body-text contrast against `cream-12`.
+
+| # | Pair | Metric | Value | Min | Surface |
+|---|---|---|---|---|---|
+| 1 | `color-fg-muted` × `color-bg-surface` | APCA | Lc 43.0 | 45 | Muted text on card (large-text floor, just under) |
+| 2 | `color-fg-on-intercept` × `color-accent-intercept` | APCA | Lc 46.1 | 60 | Intercept card face (charcoal-1 on emerald-9) |
+| 3 | `color-fg-on-operative` × `color-accent-operative` | WCAG | 4.12:1 | 4.5 | Operative card face (cream-12 on teal-9) |
+| 4 | `color-fg-on-drama` × `color-accent-drama` | WCAG | 3.22:1 | 4.5 | Drama-accent card face (cream-12 on ochre-9) |
+| 5 | `color-fg-on-drama` × `color-accent-drama` | APCA | Lc 58.3 | 60 | Drama-accent card face (cream-12 on ochre-9) |
+
+### How contrast fixes interact with CVD fixes
+
+- **Option A (bump emerald-8 cooler)** — addresses §2.4 E6 tritan but
+  doesn't directly help any §2.5 contrast pair (those touch emerald-9
+  not -8). No conflict.
+- **Option C (bump ochre-9 warmer/darker)** — addresses §2.4 B4/B5/E10
+  AND §2.5 #4 + #5 (drama-accent card face cream-on-ochre). Same fix,
+  two improvements. Highest-leverage amendment.
+- **#2 Intercept card face APCA** — fixable by bumping `--color-fg-on-intercept`
+  from `charcoal-1` to `charcoal-2` (slightly lighter) OR bumping
+  `--color-accent-intercept` (`emerald-9`) deeper. Either preserves the
+  dark-on-light intent.
+- **#3 Operative card face WCAG** — cream-12 on teal-9 at 4.12:1 just
+  misses 4.5. Bump teal-9 darker by half a step, or accept LARGE tier
+  here (text-card-name-large clamp hits 24px so large-tier 3.0 passes
+  comfortably). Re-classify decision is cheaper than palette amendment.
+- **#1 muted on card APCA** — Lc 43 vs 45 is sub-JND distance. Could
+  defend at LARGE-floor 45 by bumping `--color-fg-muted` from `cream-9`
+  to `cream-10`, or accept as a known 2-Lc shortfall.
+
+### Recommended sequence (revised, including §2.5)
+
+1. **Option A first** (emerald-8 cooler) — clears §2.4 E6 (the worst
+   case). Smallest blast radius.
+2. **Option C second** (ochre-9 warmer/darker) — clears §2.4 B4/B5/E10
+   AND §2.5 drama-accent card face #4 + #5. Two birds.
+3. **§2.5 #2** — bump `--color-fg-on-intercept` lighter or
+   `--color-accent-intercept` deeper. Local fix.
+4. **§2.5 #3** — re-classify operative card face to LARGE tier OR bump
+   teal-9 darker. Smaller footprint than amendment.
+5. **§2.5 #1** — accept-as-known OR bump `--color-fg-muted` to cream-10.
+6. **Option B/D last** — only if 1+2+3+4+5 don't clear all of §2.4 + §2.5.
+
 ## When this is done
 
-`DESIGN_ATTENTION_CASES` is empty. All 36 pairs are in `STRICT_PAIRS` or
-`INFORMATIONAL_PAIRS`, and all 108 strict cases pass at
-`MIN_DISTANCE = 0.10`.
+`DESIGN_ATTENTION_CASES` (in `palette-cvd.test.ts`) is empty. All 36
+CVD pairs are in `STRICT_PAIRS` or `INFORMATIONAL_PAIRS`, and all 108
+strict cases pass at `MIN_DISTANCE = 0.10`.
+
+`DESIGN_ATTENTION` (in `palette-contrast.test.ts`) is empty. All 31
+contrast pairs pass their declared (WCAG, APCA) tier minimums.
 
 ## What this is NOT
 

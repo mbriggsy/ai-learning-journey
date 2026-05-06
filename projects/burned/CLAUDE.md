@@ -102,7 +102,7 @@ The spec does not generate code. It generates the *next artifact* — the CSS Fo
 
 ## Bundle Sizes
 
-Last measured 2026-05-05. Re-run `pnpm build` and update after material changes.
+Last measured 2026-05-06 (Phase 5 §2.8.3 final audit). Re-run `pnpm build` and update after material changes.
 
 | Chunk | Raw | Gzipped | Load |
 |-------|-----|---------|------|
@@ -112,7 +112,7 @@ Last measured 2026-05-05. Re-run `pnpm build` and update after material changes.
 | VisualElement (`is-ref-object-*`) | 39.93 KB | 14.40 KB | Initial (shared) |
 | motion-features (domMax) | 83.57 KB | 27.41 KB | Lazy (prefetched) |
 
-**Phone initial JS: ~97.5 KB gzipped** (under 100 KB budget, ~2.5 KB headroom). Player entry +1.3 KB this session — runtime-gate dev hook (`__testForceLocalTarget`) tree-shakes from prod (verified by `verify-prod-bundle.ts`); the small growth came from minor Hand.tsx + Player.tsx churn around the hook.
+**Phone initial JS: ~97.5 KB gzipped** (under 100 KB budget, ~2.5 KB headroom). Phase 5 §2.8.3 expected ~99 KB post-rebuild; we're 1.5 KB under that. All dev hooks (`__gameStore`, `__testInjectEvent`, `__testForceLocalTarget`) tree-shake correctly — verified by `pnpm verify:bundle` (9 JS chunks × 15 forbidden strings, all clean).
 
 ## Workers / Protocol Landmines
 

@@ -372,6 +372,31 @@ test.describe('WCAG 1.4.4 — 200% zoom (chromium-only)', () => {
       expect.soft(pair.at100.overflow).toBe(false)
     }
 
+    // CardDetailSheet — long-press on a hand card. Hand.tsx:113-119 fires
+    // onCardLongPress after a 600ms pointerdown hold; Player.tsx:309-312
+    // sets detailCardType which mounts the sheet. Position the mouse over
+    // the first slot, hold for 700ms (margin over the 600ms threshold),
+    // release. onPointerLeave / onPointerCancel both abort the timer, so
+    // do NOT move the mouse between down and up. The 10-card optimistic
+    // hand from the previous block puts `dash-barlowe` at slot[0], so the
+    // sheet renders "Dash Barlowe" as the deterministic wait target.
+    {
+      const slot = phones[0]!.locator('[class*="handSection"] [class*="slot"]').first()
+      await slot.hover()
+      await phones[0]!.mouse.down()
+      await phones[0]!.waitForTimeout(700)
+      await phones[0]!.mouse.up()
+      await expectDialogWithText(phones[0]!, 'Dash Barlowe')
+      await phones[0]!.waitForTimeout(400) // BottomSheet enter settle
+      const pair = await captureZoomPair(phones[0]!, 'phone', 'cardDetailSheet')
+      record('phone', 'CardDetailSheet (long-press detail)', pair)
+      expect.soft(pair.at100.overflow).toBe(false)
+      // Native <dialog> closes on Escape. Dismiss before EliminatedView
+      // flip so the next capture starts from a clean canvas.
+      await phones[0]!.keyboard.press('Escape')
+      await phones[0]!.waitForTimeout(300)
+    }
+
     // Real EliminatedView component (§2.3.1 row 5). Player.tsx routes to
     // <EliminatedView /> when myPlayer.isAlive === false. Find Alice in
     // players[] and flip the flag.

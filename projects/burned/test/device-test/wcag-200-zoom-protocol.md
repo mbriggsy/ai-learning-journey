@@ -4,7 +4,7 @@ type: protocol-results
 phase: 5
 parent: docs/plans/css-foundation-rebuild/phase-5-verification-acceptance.md
 date: 2026-05-06
-status: partial — programmatic complete, canonical visual review PENDING
+status: programmatic complete (14/14 screens) — canonical visual review PENDING
 ---
 
 # Phase 5 §2.3 — WCAG 1.4.4 200% browser zoom protocol
@@ -61,6 +61,7 @@ zoom those don't scale, but at `body.style.zoom` they do. So:
 | 11 | phone | PlayingView — 10-card hand (§2.3.1 row 3, most constrained) | 375×667 | ✅ none | ✅ none | 📋 PENDING |
 | 12 | phone | EliminatedView — real component (skull + flavor + alive list) | 375×667 | ✅ none | ✅ none | 📋 PENDING |
 | 13 | board | GameOver — winner reveal | 1280×800 | ✅ none | ✅ none | 📋 PENDING |
+| 14 | phone | CardDetailSheet (long-press detail) | 375×667 | ✅ none | ✅ none | 📋 PENDING |
 
 ### Notes on flagged screens (1, 2)
 
@@ -115,16 +116,23 @@ The drama beat capture IS useful evidence of what overlays look like
 during high-zoom — the BURNED title behind it is dimmed but
 positioned naturally.
 
-## Pending automation (next session)
+## Pending automation
 
-| Surface | Screen | Why deferred |
-|---|---|---|
-| phone | CardDetailSheet | Triggered by hand-card long-press, lives in local React state (`detailCardType`), not in gameStore. Needs Playwright long-press emulation: hover + mouse.down + waitForTimeout(600) + mouse.up. Out of scope this session because the long-press timing is sensitive to deviceScaleFactor. |
+All automation-eligible screens captured. CardDetailSheet (the only
+deferred screen at the prior pass) closed in this session via
+Playwright long-press emulation: `slot.hover()` → `mouse.down()` →
+`waitForTimeout(700)` → `mouse.up()`, with `Hand.tsx`'s
+`onPointerLeave`/`onPointerCancel` cancellation paths avoided by
+holding the mouse stationary. Wait target is the `dialog[open]`
+containing the dependent card name (`Dash Barlowe` from the prior
+block's optimistic 10-card hand at slot[0]). Native `<dialog>` Escape
+dismisses the sheet for clean teardown before the EliminatedView
+flip.
 
-The 10-card hand, real EliminatedView, and GameOver winner screens were
-all added this session via `captureZoomPair` + targeted state primers.
-Adding them surfaced a P0 React bug that was fixed inline (see
-"Surfaced bug" below).
+The 10-card hand, real EliminatedView, GameOver winner, and now
+CardDetailSheet screens were all added via `captureZoomPair` +
+targeted state primers. The 13→14 expansion surfaced a P0 React bug
+that was fixed inline (see "Surfaced bug" below).
 
 ## Canonical human-run protocol (when ready)
 
@@ -181,13 +189,13 @@ elimination path trips it loudly.
 
 ## §2.3.2 Acceptance thresholds
 
-- [✅] Programmatic horizontal-overflow check ran for 13 captured
-      screens; all 13 passed at both 100% and 200%.
-- [✅] Visual evidence captured (26 PNG files, 100% + 200% pairs at
+- [✅] Programmatic horizontal-overflow check ran for 14 captured
+      screens; all 14 passed at both 100% and 200%.
+- [✅] Visual evidence captured (28 PNG files, 100% + 200% pairs at
       `temp/wcag-zoom/`).
 - [📋] Canonical browser-UI zoom verification PENDING (human-run).
-- [📋] 1 deferred screen (CardDetailSheet, needs long-press emulation)
-      — follow-up session.
+- [✅] All automation-eligible screens covered (CardDetailSheet
+      closed via long-press emulation this session).
 - [✅] **P0 React hooks bug surfaced + fixed** as a side effect.
 
 Phase 5 §8.1 / §8.2 spec checkbox flips await the human-run pass.

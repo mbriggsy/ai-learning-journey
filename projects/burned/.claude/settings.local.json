@@ -29,7 +29,8 @@
       "mcp__playwright-seat-10__*",
       "PowerShell(Get-NetTCPConnection *)",
       "Bash(rm -f temp/*)",
-      "Bash(rm -rf .playwright-mcp/)"
+      "Bash(rm -rf .playwright-mcp/)",
+      "PowerShell(Stop-Process *)"
     ]
   }
 }

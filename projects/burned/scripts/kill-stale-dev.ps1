@@ -1,49 +1,62 @@
-# Session-start cleanup for BURNED dev workflow.
+# Cleanup for BURNED dev workflow — kills orphan dev processes.
 #
-# Wrangler's local runtime (workerd.exe) is fragile — prior sessions that
-# crashed or were force-closed often leave it bound to port 8787, which
-# blocks the next `pnpm dev:server` boot AND was implicated in the
-# 2026-05-01 phone-test friction that triggered the vanity-room-code work.
+# Two modes:
+#   - DEFAULT (mid-session use, `pnpm dev:cleanup`): kills orphan
+#     workerd.exe; REPORTS but does not kill vite/wrangler port binders
+#     because the user may be running `pnpm dev` in parallel.
+#   - --force-ports (squeaky-clean / end-of-session use): also kills
+#     whatever process owns ports 5173 and 8787. By definition the user
+#     is done with the session, so killing the dev servers is safe.
 #
-# This hook runs on every Claude Code SessionStart. It:
-#   - Kills any orphaned workerd.exe processes (always safe — wrangler
-#     respawns workerd on demand, and a workerd outliving its parent
-#     wrangler is by definition stale).
-#   - Reports (does NOT kill) port-5173 / port-8787 binders. Vite is owned
-#     by an interactive `pnpm dev` terminal that the user may legitimately
-#     have running in parallel; killing it would disrupt active work. The
-#     report gives the user enough info to clean up manually if needed.
+# Wrangler's local runtime (workerd.exe) is fragile — prior sessions
+# that crashed or were force-closed often leave it bound to port 8787,
+# blocking the next `pnpm dev:server` boot. Stale node on 5173 (vite)
+# also recurs across sessions when terminals are killed without clean
+# shutdown.
 #
-# Output convention: one summary line on the no-op path, one line per
-# action otherwise. The hook should be invisible when nothing is wrong.
+# Output convention: one line per action, plus a summary line on the
+# no-op path. Should be invisible when nothing is wrong.
 #
-# Exit 0 always — a hook failure here must NOT block session start.
+# Exit 0 always — cleanup failure must NOT block whatever invoked us.
 
 $ErrorActionPreference = 'Continue'
+$forcePorts = $args -contains '--force-ports'
 $killed = 0
 $reported = 0
 
-# --- Kill orphaned workerd ----------------------------------------------------
-$workerd = Get-Process -Name workerd -ErrorAction SilentlyContinue
-foreach ($p in $workerd) {
+function Kill-Process-Safely {
+    param([int]$Id, [string]$Tag)
     try {
+        $p = Get-Process -Id $Id -ErrorAction Stop
         $startTime = $p.StartTime
-        Stop-Process -Id $p.Id -Force -ErrorAction Stop
-        Write-Host "[burned-cleanup] killed stale workerd PID $($p.Id) (started $startTime)"
-        $killed++
+        $name = $p.ProcessName
+        Stop-Process -Id $Id -Force -ErrorAction Stop
+        Write-Host "[burned-cleanup] killed $Tag PID $Id ($name, started $startTime)"
+        return $true
     } catch {
-        Write-Host "[burned-cleanup] could not kill workerd PID $($p.Id): $_"
+        Write-Host "[burned-cleanup] could not kill $Tag PID $Id : $_"
+        return $false
     }
 }
 
-# --- Report port binders ------------------------------------------------------
+# --- Kill orphaned workerd (both modes) ---------------------------------------
+$workerd = Get-Process -Name workerd -ErrorAction SilentlyContinue
+foreach ($p in $workerd) {
+    if (Kill-Process-Safely -Id $p.Id -Tag 'stale workerd') { $killed++ }
+}
+
+# --- Port binders: report (default) or kill (--force-ports) -------------------
 foreach ($port in @(5173, 8787)) {
     $conns = Get-NetTCPConnection -LocalPort $port -State Listen -ErrorAction SilentlyContinue
     foreach ($c in $conns) {
         $owner = Get-Process -Id $c.OwningProcess -ErrorAction SilentlyContinue
         $name = if ($owner) { $owner.ProcessName } else { 'unknown' }
-        Write-Host "[burned-cleanup] port $port still bound by PID $($c.OwningProcess) ($name) — kill with 'Stop-Process -Id $($c.OwningProcess) -Force' if stale"
-        $reported++
+        if ($forcePorts) {
+            if (Kill-Process-Safely -Id $c.OwningProcess -Tag "port-$port binder") { $killed++ }
+        } else {
+            Write-Host "[burned-cleanup] port $port still bound by PID $($c.OwningProcess) ($name) - kill with 'Stop-Process -Id $($c.OwningProcess) -Force' if stale, or run 'pnpm dev:cleanup --force-ports' to kill all"
+            $reported++
+        }
     }
 }
 

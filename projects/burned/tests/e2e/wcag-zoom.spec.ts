@@ -1,0 +1,187 @@
+/**
+ * WCAG 1.4.4 — 200% browser zoom protocol (Phase 5 §2.3).
+ *
+ * Captures each target screen at 100% baseline and 200% zoom, programmatically
+ * checks for horizontal-overflow at each, and writes evidence screenshots to
+ * temp/wcag-zoom/{phone,board}/<name>-{100,200}.png. The protocol doc
+ * (test/device-test/wcag-200-zoom-protocol.md) consumes the programmatic
+ * results + the screenshots; visual inspection (text legibility, no clipping,
+ * fluid clamps engage) is a HUMAN review step that the protocol structure
+ * leaves PENDING.
+ *
+ * Why approximate via body.style.zoom = '200%' instead of browser-UI zoom.
+ * Playwright/Chromium do not expose user-level browser zoom programmatically
+ * (chrome://settings/zoom is UI-only). body.style.zoom is the closest
+ * scriptable equivalent: Chrome scales rendered content by the factor while
+ * leaving the physical viewport unchanged, which mirrors what Ctrl + + does.
+ * Non-Chromium browsers don't honor body.style.zoom; this spec is chromium-
+ * only for that reason.
+ *
+ * Smallest viewport per axis is the target — if 1.4.4 passes at 375×667
+ * (phone) and 1280×800 (board), it passes at larger viewports by construction.
+ *
+ * Coverage in this session:
+ *   - JoinScreen (empty / name-typed) — fresh route, no game state.
+ *   - Lobby phone (1 player joined) — minimal state.
+ *   - Lobby board (room code + QR) — fresh route.
+ * PENDING for next session (complex state setup):
+ *   - PlayingView with 10-card hand, CardDetailSheet, EliminatedView,
+ *     DefusePlacement sheet, NameCard sheet, GameOver.
+ *   These need the arena-states-style 3-player boot + state injection.
+ */
+
+import { test, expect } from './fixtures'
+import type { Page } from '@playwright/test'
+import { joinPhone } from './helpers'
+import { writeFileSync } from 'node:fs'
+
+interface OverflowReport {
+  scrollWidth: number
+  clientWidth: number
+  overflow: boolean
+  overflowPx: number
+}
+
+async function measureOverflow(page: Page): Promise<OverflowReport> {
+  const m = await page.evaluate(() => {
+    const sw = document.documentElement.scrollWidth
+    const cw = document.documentElement.clientWidth
+    return { scrollWidth: sw, clientWidth: cw }
+  })
+  return {
+    scrollWidth: m.scrollWidth,
+    clientWidth: m.clientWidth,
+    overflow: m.scrollWidth > m.clientWidth,
+    overflowPx: Math.max(0, m.scrollWidth - m.clientWidth),
+  }
+}
+
+async function captureZoomPair(
+  page: Page,
+  surface: 'phone' | 'board',
+  name: string,
+): Promise<{ at100: OverflowReport; at200: OverflowReport }> {
+  // 100% baseline
+  await page.evaluate(() => {
+    document.body.style.zoom = ''
+  })
+  await page.waitForTimeout(150)
+  const at100 = await measureOverflow(page)
+  await page.screenshot({
+    path: `temp/wcag-zoom/${surface}/${name}-100.png`,
+    fullPage: false,
+  })
+
+  // 200% zoom
+  await page.evaluate(() => {
+    document.body.style.zoom = '200%'
+  })
+  await page.waitForTimeout(200) // settle layout reflow
+  const at200 = await measureOverflow(page)
+  await page.screenshot({
+    path: `temp/wcag-zoom/${surface}/${name}-200.png`,
+    fullPage: false,
+  })
+
+  // Reset for next test
+  await page.evaluate(() => {
+    document.body.style.zoom = ''
+  })
+  return { at100, at200 }
+}
+
+interface Result {
+  surface: 'phone' | 'board'
+  screen: string
+  at100: OverflowReport
+  at200: OverflowReport
+}
+const results: Result[] = []
+
+function record(surface: Result['surface'], screen: string, pair: { at100: OverflowReport; at200: OverflowReport }): void {
+  results.push({ surface, screen, ...pair })
+}
+
+test.describe('WCAG 1.4.4 — 200% zoom (chromium-only)', () => {
+  // Single project for this protocol — body.style.zoom is Chrome-specific.
+  test.skip(({ browserName }) => browserName !== 'chromium', 'chromium-only')
+
+  test.describe('phone (375×667)', () => {
+    test.use({ viewport: { width: 375, height: 667 }, hasTouch: true })
+
+    test('JoinScreen — empty', async ({ page, board, roomCode }) => {
+      // /player.html without ?room= shows the "No room code" screen, not
+      // JoinScreen. Use the roomCode fixture so the name input renders.
+      void board
+      await page.goto(`/player.html?room=${roomCode}`)
+      await page.locator('input[type="text"]').waitFor({ state: 'visible' })
+      const pair = await captureZoomPair(page, 'phone', 'joinScreen-empty')
+      record('phone', 'JoinScreen — empty', pair)
+      // Soft assertion — record but don't fail (this is a survey)
+      expect.soft(pair.at100.overflow, 'no horizontal overflow at 100%').toBe(false)
+    })
+
+    test('JoinScreen — name typed', async ({ page, board, roomCode }) => {
+      void board
+      await page.goto(`/player.html?room=${roomCode}`)
+      await page.locator('input[type="text"]').waitFor({ state: 'visible' })
+      await page.locator('input[type="text"]').fill('Cyril')
+      const pair = await captureZoomPair(page, 'phone', 'joinScreen-nameTyped')
+      record('phone', 'JoinScreen — name typed', pair)
+      expect.soft(pair.at100.overflow).toBe(false)
+    })
+
+    test('NoRoomCode — bare /player.html', async ({ page }) => {
+      // Plan §2.2.3 row 32 — the screen a confused user lands on without ?room=.
+      await page.goto('/player.html')
+      await page.waitForFunction(
+        () => document.body.textContent?.includes('No room code'),
+        null,
+        { timeout: 5000 },
+      )
+      const pair = await captureZoomPair(page, 'phone', 'noRoomCode')
+      record('phone', 'NoRoomCode', pair)
+      expect.soft(pair.at100.overflow).toBe(false)
+    })
+
+    test('Lobby — 1 player joined', async ({ page, board, roomCode }) => {
+      await joinPhone(page, roomCode, 'Cyril')
+      // Wait for lobby state — the player should be visible in their own client
+      await page.waitForFunction(
+        () => {
+          const w = window as unknown as { __gameStoreSnapshot?: () => { phase?: string } }
+          return w.__gameStoreSnapshot?.()?.phase === 'lobby'
+        },
+        null,
+        { timeout: 5000 },
+      )
+      await page.waitForTimeout(200)
+      const pair = await captureZoomPair(page, 'phone', 'lobby-1player')
+      record('phone', 'Lobby — 1 player joined', pair)
+      expect.soft(pair.at100.overflow).toBe(false)
+      // Avoid unused-var on board fixture — touch it.
+      void board
+    })
+  })
+
+  test.describe('board (1280×800)', () => {
+    test.use({ viewport: { width: 1280, height: 800 } })
+
+    test('Lobby — empty (QR + room code)', async ({ page }) => {
+      await page.goto('/board.html')
+      await page.locator('[class*="roomCode"]').waitFor({ state: 'visible', timeout: 10_000 })
+      await page.waitForTimeout(200)
+      const pair = await captureZoomPair(page, 'board', 'lobby-empty')
+      record('board', 'Lobby — empty', pair)
+      expect.soft(pair.at100.overflow).toBe(false)
+    })
+  })
+
+  test.afterAll(async () => {
+    // Write a JSON sidecar that the protocol doc consumes.
+    writeFileSync(
+      'temp/wcag-zoom/results.json',
+      JSON.stringify({ generatedAt: new Date().toISOString(), results }, null, 2),
+    )
+  })
+})

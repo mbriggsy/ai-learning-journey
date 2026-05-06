@@ -30,7 +30,11 @@
       "PowerShell(Get-NetTCPConnection *)",
       "Bash(rm -f temp/*)",
       "Bash(rm -rf .playwright-mcp/)",
-      "PowerShell(Stop-Process *)"
+      "PowerShell(Stop-Process *)",
+      "mcp__chrome-devtools__new_page",
+      "mcp__chrome-devtools__list_pages",
+      "mcp__chrome-devtools__evaluate_script",
+      "mcp__chrome-devtools__take_screenshot"
     ]
   }
 }

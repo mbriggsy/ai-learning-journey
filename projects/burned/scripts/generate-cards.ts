@@ -35,12 +35,37 @@ const CARDS: CardPrompt[] = [
     type: 'burned',
     name: 'Burned',
     prompt:
-      'a dramatic explosion with a spy ID badge being consumed by flames, ' +
-      'bold radiating lines emanating from center, shattered glass fragments flying outward, ' +
-      'alarm red and bright orange color scheme against deep charcoal, ' +
-      'danger and urgency feeling, the moment a cover is blown, ' +
-      'geometric abstract style with sharp angular shapes, ' +
-      'square composition centered object',
+      // Iter 1 (2026-05-06): pivot from the original Apr-9 abstract
+      // explosion + spy ID badge concept (text leaked onto badge "SPI[K]";
+      // Memphis-pattern radiating triangles read 1980s graphic design not
+      // 1960s Saul Bass; cream border violated full-bleed deck standard).
+      // Re-architected to Concept A — the MOMENT of identity exposure: a
+      // covert operative on a rooftop at night caught in the burst of an
+      // unseen camera flashbulb. Insight 018 strategies: REMOVE the
+      // problem element (no badge, no ID card — kills text leak + bad
+      // anatomy), RECONTEXTUALIZE to bypass priors (rooftop + covert kills
+      // paparazzi/red-carpet/mugshot priors that "flashbulb + person"
+      // would otherwise summon). Deck cohesion: trench coat + fedora
+      // silhouette + duotone night palette matches Go Dark, Back Channel,
+      // Call in a Favor. The bright white-amber blast is the SOLE light
+      // source — every shadow falls left because the flash is at screen-
+      // right just outside frame.
+      'a dramatic rooftop at night caught in the instant of a flashbulb detonation, ' +
+      'ONE solitary operative in a long trench coat and fedora hat is mid-stride across the rooftop, captured mid-turn — body angled forward but head and shoulders rotating to look toward a brilliant blast of white-amber light coming from screen-right just outside the frame, ' +
+      'the operative is hit by the flashbulb burst from the right side, harshly side-lit so the right half of the silhouette is washed out in pure white-amber glare and the left half is deep charcoal shadow, the SILHOUETTE of the figure is the hero, no detailed facial features required, the form reads as posture and outline, ' +
+      'the operative\'s right hand is raised toward the light in a defensive shielding gesture, fingers splayed with the palm facing the blast and the back of the hand toward the operative\'s own face, ' +
+      'a radial flare of bright white-amber rays emanates from the screen-right edge of the frame, with a few sparkling lens-flare pinpricks scattered across the air around the burst, ' +
+      'a dark city skyline silhouette of tall rectangular buildings runs across the bottom horizon line, deep charcoal shapes with a few tiny warm amber pinpricks for distant lit windows, ' +
+      'a thin layer of fog and mist hangs in the air on the rooftop and catches the flashbulb burst as a soft glowing white-amber haze, ' +
+      'CRITICAL: ONLY ONE PERSON in the entire image, the lone operative is the only human, NO photographer visible, NO second figure, NO crowd, NO red carpet, NO event, NO formal venue, NO press scrum — this is a covert rooftop at night, not a public setting, ' +
+      'the SOLE light source is the white-amber flashbulb burst from screen-right, no other light sources, the rooftop is otherwise dark with only faint distant city ambient glow at the horizon, every shadow in the scene falls toward the left because the light comes from the right, ' +
+      'NO badge, NO ID card, NO photograph, NO camera in frame, NO sign, NO document — the flashbulb burst alone tells the story of identity captured, ' +
+      'the moment your cover is blown, surprise frozen in white light, the unseen camera that just made you, ' +
+      'cool deep teal and charcoal night palette with the SINGLE blast of brilliant white-amber as the dominant accent, ' +
+      'the scene fills the entire square frame edge to edge with NO white borders NO cream borders NO vignette NO padding NO matting, every corner contains rooftop or sky or city silhouette, ' +
+      'NO text NO letters NO words NO numbers NO writing anywhere in the scene on any surface, ' +
+      'mid-century modern 1960s spy-film noir aesthetic, bold geometric angular style, flat illustration, ' +
+      'square full-bleed composition centered on the silhouetted operative caught in the flashbulb burst',
   },
   {
     type: 'extraction',

@@ -2,6 +2,74 @@
 
 ## NEXT SESSION — pick up here (2026-05-06+)
 
+### THIS SESSION (2026-05-06 afternoon) — Burned card art regen (concept A flashbulb) + Active Priority #1 closed
+
+One feature commit. Closes the BURNED CARD CINEMATIC ARC priority — all four
+sub-steps now shipped.
+
+| Commit | Subject |
+|---|---|
+| (this) | feat(burned-arc): close sub-step #4 — Burned card art (concept A flashbulb) |
+
+**Stale-TODO catch.** Sub-step #3 (DefusePlacement hero card) was listed as
+"remaining" but actually shipped in commit `98b8e1ae` (`feat(burned-arc): close
+sub-step #3 — hero Burned card + sheet UI unification`). Caught at session-
+start verification — saved a duplicate-work session. Crossed off below.
+
+**Sub-step #4 — Burned card art regen.** Concept A (flashbulb exposure) shipped
+on the first roll. Re-architected from the original Apr-9 abstract spy-badge-
+explosion (text leaked onto badge "SPI[K]"; Memphis-pattern triangles read
+1980s-graphic-design not 1960s-Saul-Bass; cream border violated full-bleed
+deck standard) to a single-frame noir cinematic: lone trench-coated operative
+mid-stride on a dark rooftop, caught in the burst of a tripod-mounted vintage
+studio flashbulb at screen-right, hand raised to shield from the white-amber
+blast, dark-charcoal city skyline behind with tiny amber window pinpricks.
+Saul Bass duotone palette (deep teal night + charcoal silhouette + brilliant
+white-amber accent) matches Direct Order / Go Dark / Back Channel deck
+cohesion.
+
+**Insight 018 strategies in play.** REMOVE the problem element (no badge,
+no ID card → kills both the text-leak risk AND the bad anatomy at low
+resolution). RECONTEXTUALIZE to bypass priors (rooftop + covert kills the
+paparazzi/red-carpet/mugshot pulls that "flashbulb + person" would otherwise
+summon).
+
+**Happy-accident worth flagging for future regens.** I explicitly said "NO
+camera in frame" — Imagen rendered a tripod-mounted studio strobe at screen-
+right anyway. Kept it: the tripod GROUNDS the threat ("someone rigged this
+ahead of time, you walked into it") and is period-correct for 1960s flashbulb
+tech. Eyeball outcomes vs intentions; deviations that strengthen the image
+get kept. Documented in the prompt comment in `scripts/generate-cards.ts`.
+
+**Verification.** Hero size (160px DefusePlacement slot) + hand size (108px
+hand strip) checked side-by-side with `direct-order.webp` via in-page DOM-
+injection harness on `localhost:5173`. Frame fit clean (full-bleed honored,
+`object-fit: contain` matches). Color cohesion strong (both cards same
+visual language + duotone palette + warm accent). At hand size the white
+blast is the at-glance Burned identifier — strong glanceability differentiator
+from amber-warm action cards.
+
+### Actionable next — pick one
+
+The BURNED CARD CINEMATIC ARC is now CLOSED. Remaining solo-friendly work:
+
+- **CSS Phase 5 verification** (Active Priority #7). Run
+  `/ce:work docs/plans/css-foundation-rebuild/phase-5-verification-acceptance.md`.
+- **Live mid-play state verification** (Active Priority #4). Playwright spec
+  that drives `__gameStore` to force each pending-prompt state, screenshots to
+  `temp/arena-states/` for eyeball review.
+- **More Framer cinematic gates.** DramaOverlay card-flip variant
+  (insight 014 area, lower marginal value — protective comments already in
+  place); GameOver winner reveal stagger.
+
+Briggsy-required work (don't pick autonomously):
+- **Real-device playtest** (Active Priority #2) — needs Briggsy + iPad + phones.
+- **8-player stress test** (Active Priority #3) — needs real TV + 8 phones.
+- **Physical hardware verification** (Active Priority #5) — deploy + real TV.
+- **Desk redesign color-blindness check** (Active Priority #8) — needs Harry.
+
+---
+
 ### THIS SESSION (2026-05-06 morning) — hand-reorder gate, insight 047 corrected, nameplate rotateY gate, global config cleanup
 
 Three project commits + global `~/.claude` config cleanup. All green at
@@ -2551,43 +2619,18 @@ held; sequential was the right call.
 
 ## Active Priorities
 
-### 1. BURNED CARD CINEMATIC ARC — sub-steps #3 and #4
+### 1. BURNED CARD CINEMATIC ARC — CLOSED ✅
 
-Sub-steps #1 (drawer card-fill) and #2 (non-drawer/board card-flip) SHIPPED
-(see phone-verify table above). #3 and #4 remain.
+All four sub-steps shipped. Leaving the section here for archival traceability;
+will be removed in a future TODO sweep.
 
-**Sub-step #3 — DefusePlacement hero card.** Sheet is currently text-only
-("Hide the Burned Card" + position buttons). Drawer just dodged death — hero
-the Burned card at the top of the sheet during position-pick. Visual continuity
-from drama → decision: "this is what you're hiding, where?"
-
-**Sub-step #4 — Regen the Burned card art.** Once #3 lands, the illustration
-becomes the visual keystone. Direct Order + Intercepted shipped; Burned is the
-only action card still at original Apr-9 quality.
-
-Art concept pitches for #4:
-- **A. Operative caught in flashbulb exposure** — bright white/amber flashbulb
-  blast from outside frame, operative silhouette caught mid-turn looking
-  toward camera, surprise/recognition expression, dark city street or rooftop.
-  Pure noir "the moment your cover is blown."
-- **B. Photograph emerging from developer tray** — close-up overhead of
-  darkroom developer tray, B&W surveillance photo of the operative fully
-  developed, red darkroom light overhead. Ties to Intel Briefing's photography
-  vocabulary.
-- **C. Cinematic upgrade of the current explosion concept** — keep the badge-
-  in-flames idea but go full Archer-spec: operative's spy ID card with photo,
-  burning at edges against dark void, embers and smoke rising.
-
-**Claude's lean:** A (flashbulb exposure) — most narratively precise for
-"Burned" = identity exposed. Tonally different from Direct Order / Intercepted
-(both interiors) — exterior/action beat adds variety.
-
-Process per regen:
-1. Archive current: `public/assets/cards/_archive/burned-<date>-<reason>.webp`.
-2. Tighten prompt in `scripts/generate-cards.ts` — minimum-viable wins.
-3. `set -a && source .env && set +a && npx tsx scripts/generate-cards.ts --only=burned`.
-4. Critically eyeball the temp PNG — state flaws, don't narrate hopes.
-5. `npx tsx scripts/process-assets.ts` once approved.
+- **#1 (drawer card-fill)** — shipped (see phone-verify table further down).
+- **#2 (non-drawer/board card-flip)** — shipped.
+- **#3 (DefusePlacement hero card)** — shipped in commit `98b8e1ae`
+  (`feat(burned-arc): close sub-step #3 — hero Burned card + sheet UI
+  unification`).
+- **#4 (Burned card art regen, concept A flashbulb)** — shipped this session.
+  See afternoon entry above.
 
 ### 2. Real-device playtest
 

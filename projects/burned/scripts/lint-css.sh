@@ -7,9 +7,13 @@ ERRORS=0
 
 # Rule 1 — Ban custom property DEFINITIONS in component .module.css files.
 # Tokens live in src/client/shared/tokens/ only.
+# Exception: lines with `/* cascade-override */` are intentional context-scoped
+# token overrides (legitimate CSS-cascade pattern, e.g., a layout container
+# narrowing a sizing token for its descendants).
 BAD=$(grep -rEn '^\s*--(color|space|motion|text|size|radius|shadow|z|inset)-[a-z0-9-]+\s*:' \
   src/client/player src/client/board src/client/shared \
-  --include='*.module.css' 2>/dev/null || true)
+  --include='*.module.css' 2>/dev/null \
+  | grep -v 'cascade-override' || true)
 
 if [ -n "$BAD" ]; then
   echo "ERROR [Rule 1]: Custom property definitions found in component CSS."

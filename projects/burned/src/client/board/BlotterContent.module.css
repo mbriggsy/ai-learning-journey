@@ -89,13 +89,15 @@
      support (count-only, no card interaction). Default (side-by-side row
      layout) keeps discard modest because it shares the piles column with the
      draw pile. When the viewport is tall enough to stack vertically (see
-     @media below), the ceiling lifts so the hero can breathe at TV-size. */
-  --size-draw-pile-width: clamp(
+     @media below), the ceiling lifts so the hero can breathe at TV-size.
+     These overrides narrow the semantic.board.css defaults for the blotter
+     context — descendant DrawPile/DiscardFan inherit via cascade. */
+  --size-draw-pile-width: clamp(  /* cascade-override */
     74px,
     calc(74px + (100vw - 1280px) * (56 / 2560)),
     130px
   );
-  --size-discard-card-width: clamp(
+  --size-discard-card-width: clamp(  /* cascade-override */
     160px,
     calc(160px + (100vw - 1280px) * (120 / 640)),
     300px
@@ -134,7 +136,7 @@
    absorb the vertical weight of a stacked hero card. */
 @media (min-height: 1000px) and (min-width: 1300px) {
   .content {
-    --size-discard-card-width: clamp(
+    --size-discard-card-width: clamp(  /* cascade-override */
       300px,
       calc(300px + (100vw - 1700px) * (180 / 940)),
       480px

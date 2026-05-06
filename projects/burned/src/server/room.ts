@@ -1000,20 +1000,12 @@ export class GameRoom extends Server<Env> {
       }
     }
 
-    let hostCount = 0
-    let playerCount = 0
-    let godCount = 0
-    let untypedCount = 0
-    let sendFailures = 0
-
     for (const conn of this.getConnections()) {
       const connState = this.getConnState(conn)
       try {
         if (connState?.role === 'host') {
-          hostCount++
           conn.send(boardRaw)
         } else if (connState?.role === 'player') {
-          playerCount++
           const playerMsg: ServerMessage = {
             type: 'player-update',
             payload: {
@@ -1024,15 +1016,15 @@ export class GameRoom extends Server<Env> {
           }
           conn.send(JSON.stringify(playerMsg))
         } else if (connState?.role === 'god') {
-          godCount++
           if (godRaw !== null) conn.send(godRaw)
-        } else {
-          untypedCount++
         }
-      } catch { sendFailures++ }
+      } catch {
+        // Per-connection send failure is logged at the conn.send level by the
+        // CF Worker runtime; we swallow here to avoid one bad conn breaking
+        // the broadcast loop. Counter vars + console.log removed (Phase 5
+        // §2.8.4 retheme sweep — spec §8.1 "no console.log in production").
+      }
     }
-
-    console.log(`[broadcastGameState] phase=${state.phase} host=${hostCount} players=${playerCount} god=${godCount} untyped=${untypedCount} failures=${sendFailures}`)
   }
 
   private buildLobbyView(): LobbyView {

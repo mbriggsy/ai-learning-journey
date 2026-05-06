@@ -190,6 +190,118 @@ test.describe('arena state screenshots', () => {
     await phones[0]!.waitForTimeout(600)
     await phones[0]!.screenshot({ path: `${OUTPUT_DIR}/phone/04-favor-banner.png` })
 
+    // --- State 5b: Nope window mid-countdown (board) ------------------------
+    //
+    // NopeCountdownBar renders when boardView.nopeWindow !== null. We force
+    // a mid-countdown state by setting remainingMs ≈ 4000ms (out of ~10000)
+    // and a recent startedAtMs so the visual clock reads as actively ticking.
+    // Capture the board state showing the bar at ~mid-fill.
+
+    await board.evaluate(() => {
+      const w = window as unknown as {
+        __gameStore?: { applyOptimistic: (t: (s: unknown) => unknown) => void }
+      }
+      const now = Date.now()
+      w.__gameStore?.applyOptimistic((s) => ({
+        ...(s as Record<string, unknown>),
+        nopeWindow: {
+          remainingMs: 4000,
+          deadlineMs: now + 4000,
+          chainDepth: 1,
+          startedAtMs: now - 6000,
+          generation: 1,
+        },
+      }))
+    })
+    await board.waitForTimeout(400) // NopeCountdownBar mount + fade-in
+    await board.screenshot({ path: `${OUTPUT_DIR}/board/04-nope-window.png` })
+    // Clear nope window so it doesn't pollute later captures.
+    await board.evaluate(() => {
+      const w = window as unknown as {
+        __gameStore?: { applyOptimistic: (t: (s: unknown) => unknown) => void }
+      }
+      w.__gameStore?.applyOptimistic((s) => ({
+        ...(s as Record<string, unknown>),
+        nopeWindow: null,
+      }))
+    })
+
+    // --- State 5c: FuturePeek read-only (drawer phone) ----------------------
+    //
+    // FuturePeek renders when pendingPrompt is null AND privateData.futureCards
+    // exists with length > 0 (the See the Future case). The store does not
+    // expose a setPrivateData helper, but __gameStore IS the singleton, so we
+    // mutate privateData directly + call notify().
+
+    // Clear any lingering pending prompt from earlier captures.
+    await setPendingPrompt(phones[0]!, null)
+    await phones[0]!.waitForTimeout(150)
+
+    await phones[0]!.evaluate(() => {
+      const w = window as unknown as {
+        __gameStore?: {
+          privateData: { futureCards?: Array<{ id: string; type: string }> }
+          notify: () => void
+        }
+      }
+      if (!w.__gameStore) throw new Error('arena-states: __gameStore missing')
+      // Real BURNED card types — see the future shows the top 3 cards in
+      // draw-pile order.
+      w.__gameStore.privateData = {
+        futureCards: [
+          { id: 'fp-1', type: 'reassign' },
+          { id: 'fp-2', type: 'go-dark' },
+          { id: 'fp-3', type: 'dash-barlowe' },
+        ],
+      }
+      w.__gameStore.notify()
+    })
+    await phones[0]!.waitForFunction(
+      () => !!document.querySelector('dialog[open]'),
+      null,
+      { timeout: 3000 },
+    )
+    await phones[0]!.waitForTimeout(500) // BottomSheet spring settle
+    await phones[0]!.screenshot({ path: `${OUTPUT_DIR}/phone/05-future-peek-readonly.png` })
+
+    // --- State 5d: FuturePeek rearrange (drawer phone) ----------------------
+    //
+    // Alter the Future variant. Same privateData shape, but the pendingPrompt
+    // type is 'future-rearrange' which makes deriveActiveBottomSheet return
+    // canRearrange: true. The grip-handle drag affordance becomes active.
+
+    await phones[0]!.evaluate((id) => {
+      const w = window as unknown as {
+        __gameStore?: {
+          privateData: { futureCards?: Array<{ id: string; type: string }> }
+          applyOptimistic: (t: (s: unknown) => unknown) => void
+          notify: () => void
+        }
+      }
+      if (!w.__gameStore) throw new Error('arena-states: __gameStore missing')
+      // Keep the same futureCards — only the prompt type changes.
+      w.__gameStore.applyOptimistic((s) => ({
+        ...(s as Record<string, unknown>),
+        pendingPrompt: { type: 'future-rearrange', playerId: id },
+      }))
+      w.__gameStore.notify()
+    }, aliceId)
+    await phones[0]!.waitForTimeout(500)
+    await phones[0]!.screenshot({ path: `${OUTPUT_DIR}/phone/06-future-peek-rearrange.png` })
+
+    // Clear pendingPrompt + privateData before ELIMINATED capture so the
+    // sheet dismisses cleanly.
+    await setPendingPrompt(phones[0]!, null)
+    await phones[0]!.evaluate(() => {
+      const w = window as unknown as {
+        __gameStore?: { privateData: Record<string, unknown>; notify: () => void }
+      }
+      if (!w.__gameStore) return
+      w.__gameStore.privateData = {}
+      w.__gameStore.notify()
+    })
+    await phones[0]!.waitForTimeout(200)
+
     // --- State 6: DramaOverlay ELIMINATED (board) ----------------------------
     //
     // Use a REAL player id so the overlay renders the player's name

@@ -15,16 +15,20 @@
  * are also useful evidence for visual-regression discussions and as
  * shareable references for design reviews.
  *
- * First batch (this file at landing time):
- *   - board/00-baseline-playing.png         (just-started game on board)
- *   - phone/00-baseline-playing.png         (just-started game on drawer phone)
- *   - board/01-drama-intercepted.png        (DramaOverlay text — INTERCEPTED transient)
- *   - phone/01-drama-burned.png             (DramaOverlay card flip — BURNED on drawer phone)
- *   - phone/02-defuse-placement.png         (DefusePlacement sheet — uses the new burned card art)
+ * State manifest:
+ *   - board/00-baseline-playing.png         Just-started game on board
+ *   - phone/00-baseline-playing.png         Just-started game on drawer phone
+ *   - board/01-drama-intercepted.png        DramaOverlay text — INTERCEPTED transient
+ *   - phone/01-drama-burned.png             DramaOverlay card flip — BURNED on drawer phone
+ *   - phone/02-defuse-placement.png         DefusePlacement sheet — uses the new burned card art
+ *   - phone/03-name-card.png                NameCard sheet — triple-steal target picker
+ *   - phone/04-favor-banner.png             FavorBanner — pending favor-response on target phone
+ *   - board/02-drama-eliminated.png         DramaOverlay text — player-eliminated peak
+ *   - board/03-drama-wins.png               DramaOverlay text — game-over WINS (LAST: unmounts host)
  *
- * Output paths and ordering chosen so future expansion (Nope window,
- * ELIMINATED, WINS, NameCard, FavorBanner, FuturePeek, etc.) can
- * append numerically without renumbering existing artifacts.
+ * Numbered prefixes give stable ordering. Future states (Nope window
+ * mid-countdown, FuturePeek read-only + rearrange) can append without
+ * renumbering existing artifacts.
  *
  * Single-project gate. The screenshot output is deterministic across
  * project runs (the fixture pins board to 1920x1080 and phones to
@@ -74,11 +78,55 @@ async function getPlayerId(page: Page): Promise<string> {
   return id!
 }
 
+async function setPendingPrompt(page: Page, prompt: Record<string, unknown> | null): Promise<void> {
+  await page.evaluate((p) => {
+    const w = window as unknown as { __gameStore?: { applyOptimistic: (t: (s: unknown) => unknown) => void; clearOptimistic: () => void } }
+    if (!w.__gameStore) throw new Error('arena-states: __gameStore missing')
+    if (p === null) {
+      w.__gameStore.clearOptimistic()
+    } else {
+      w.__gameStore.applyOptimistic((s) => ({
+        ...(s as Record<string, unknown>),
+        pendingPrompt: p,
+      }))
+    }
+  }, prompt)
+}
+
+async function expectOverlayText(page: Page, text: string): Promise<void> {
+  // Polls the [role="status"] overlay for the expected text (DramaOverlay
+  // is mounted in DOM throughout — only its content swaps per beat).
+  await page.waitForFunction(
+    (expected) => {
+      const overlay = document.querySelector('[role="status"]')
+      return !!overlay && overlay.textContent?.includes(expected) === true
+    },
+    text,
+    { timeout: 2_000 },
+  )
+}
+
+async function expectDialogWithText(page: Page, text: string): Promise<void> {
+  await page.waitForFunction(
+    (expected) => {
+      const dlg = document.querySelector('dialog[open]')
+      return !!dlg && dlg.textContent?.includes(expected) === true
+    },
+    text,
+    { timeout: 2_000 },
+  )
+}
+
 test.describe('arena state screenshots', () => {
-  test('first batch — baselines + drama variants + defuse', async ({ board, phones, roomCode }, testInfo) => {
+  test('captures live mid-play UI states', async ({ board, phones, roomCode }, testInfo) => {
     test.skip(testInfo.project.name !== 'chromium', 'Single-project screenshot harness')
-    test.setTimeout(60_000)
+    test.setTimeout(90_000)
     await bootGameToPlaying(board, phones, roomCode)
+
+    // Capture player ids up front — we need targetIds for NameCard +
+    // FavorBanner priming.
+    const aliceId = await getPlayerId(phones[0]!)
+    const bobId   = await getPlayerId(phones[1]!)
 
     // --- Baseline: just-started playing phase ---------------------------------
 
@@ -86,54 +134,91 @@ test.describe('arena state screenshots', () => {
     await phones[0]!.screenshot({ path: `${OUTPUT_DIR}/phone/00-baseline-playing.png` })
 
     // --- State 1: DramaOverlay INTERCEPTED transient (board) -----------------
-    //
-    // Text-variant beat — peak ~1400ms designed; capture mid-peak. The
-    // synthetic event uses an arbitrary playerId because DramaOverlay's
-    // text variants don't render the player's name in the INTERCEPTED
-    // overlay (just the action label).
 
     await injectEvent(board, { type: 'nope-played', playerId: 'p-ext', chainDepth: 1 })
+    await expectOverlayText(board, 'INTERCEPTED')
     // Enter (~250ms) + half of the 1400ms hold = capture at ~950ms in
-    await board.waitForTimeout(950)
+    await board.waitForTimeout(700) // expectOverlayText absorbs ~enter, then hold mid-peak
     await board.screenshot({ path: `${OUTPUT_DIR}/board/01-drama-intercepted.png` })
-    // Wait for beat to fully clear before next forcing
-    await board.waitForTimeout(1200)
+    await board.waitForTimeout(1200) // let beat clear
 
     // --- State 2: DramaOverlay BURNED card-flip (drawer phone) ---------------
     //
-    // Drawer-only branch fires when myPlayerId === event.playerId. The
-    // Burned card MinimalCard fills the screen for 2400ms — the longest
-    // dramatic hold in the game and the variant whose original 2026-04-22
-    // GSAP-clip bug was visible to Briggsy as the "camera flash" beat.
-    // This screenshot captures the card-flip cinematic at peak (after
-    // face-down pause + flip rotation).
+    // Drawer-only branch fires when myPlayerId === event.playerId. Burned
+    // card MinimalCard fills the screen for 2400ms — the longest dramatic
+    // hold in the game and the variant whose original 2026-04-22 GSAP-clip
+    // bug was visible to Briggsy as the "camera flash" beat.
 
-    const drawerId = await getPlayerId(phones[0]!)
-    await injectEvent(phones[0]!, { type: 'burned-drawn', playerId: drawerId })
+    await injectEvent(phones[0]!, { type: 'burned-drawn', playerId: aliceId })
     // Enter (~400ms) + face-down pause (~300ms) + flip (~500ms) = ~1200ms
     // in. Capture mid-hold to land squarely on the face-up Burned card.
     await phones[0]!.waitForTimeout(1500)
     await phones[0]!.screenshot({ path: `${OUTPUT_DIR}/phone/01-drama-burned.png` })
-    // Wait for beat to fully clear (total ~3700ms; we've already burned
-    // 1500ms of it)
-    await phones[0]!.waitForTimeout(2400)
+    await phones[0]!.waitForTimeout(2400) // let beat fully clear
 
     // --- State 3: DefusePlacement sheet (drawer phone) -----------------------
-    //
-    // Forces the sheet by writing pendingPrompt directly via
-    // applyOptimistic. The sheet renders with the new Burned card at
-    // hero size — closes the loop with this morning's regen work.
 
-    await phones[0]!.evaluate((id) => {
-      const w = window as unknown as { __gameStore?: { applyOptimistic: (t: (s: unknown) => unknown) => void } }
-      if (!w.__gameStore) throw new Error('arena-states: __gameStore missing on phone')
-      w.__gameStore.applyOptimistic((s) => ({
-        ...(s as Record<string, unknown>),
-        pendingPrompt: { type: 'defuse', playerId: id },
-      }))
-    }, drawerId)
-    // BottomSheet enter spring settles in ~400-700ms; pad to 900ms
-    await phones[0]!.waitForTimeout(900)
+    await setPendingPrompt(phones[0]!, { type: 'defuse', playerId: aliceId })
+    await expectDialogWithText(phones[0]!, 'Hide the Burned Card')
+    await phones[0]!.waitForTimeout(500) // BottomSheet spring settle
     await phones[0]!.screenshot({ path: `${OUTPUT_DIR}/phone/02-defuse-placement.png` })
+
+    // --- State 4: NameCard sheet (drawer phone) ------------------------------
+    //
+    // Triple-steal target-picker. Forces with name-card prompt + targetId
+    // pointing at Bob (phones[1]). Sheet header reads "Name a card to
+    // steal from Bob".
+
+    await setPendingPrompt(phones[0]!, { type: 'name-card', playerId: aliceId, targetId: bobId })
+    await expectDialogWithText(phones[0]!, 'Name a card to steal from')
+    await phones[0]!.waitForTimeout(500)
+    await phones[0]!.screenshot({ path: `${OUTPUT_DIR}/phone/03-name-card.png` })
+
+    // --- State 5: FavorBanner (target phone) ---------------------------------
+    //
+    // Favor-response prompt is handled INLINE in the player view (banner +
+    // staging unified flow), not as a bottom sheet — see Player.tsx
+    // pendingPrompt?.type === 'favor-response' branches. Target phone's
+    // hand stays interactive; we capture the banner state.
+    //
+    // Clear NameCard sheet first (closing it cleanly) by setting a fresh
+    // optimistic snapshot for favor-response.
+
+    await setPendingPrompt(phones[0]!, { type: 'favor-response', playerId: aliceId, requesterId: bobId })
+    // No dialog this time — banner renders inline. Just give the layout a
+    // beat to settle, then capture.
+    await phones[0]!.waitForTimeout(600)
+    await phones[0]!.screenshot({ path: `${OUTPUT_DIR}/phone/04-favor-banner.png` })
+
+    // --- State 6: DramaOverlay ELIMINATED (board) ----------------------------
+    //
+    // Use a REAL player id so the overlay renders the player's name
+    // instead of falling back to "UNKNOWN" for an unresolved id. Bob's
+    // the obvious eliminated stand-in here — Alice is the active drawer
+    // through the rest of the spec, and using the win-id-target for the
+    // eliminated screenshot would cross-pollute the visual.
+
+    await injectEvent(board, { type: 'player-eliminated', playerId: bobId, rank: 3 })
+    await expectOverlayText(board, 'ELIMINATED')
+    await board.waitForTimeout(700)
+    await board.screenshot({ path: `${OUTPUT_DIR}/board/02-drama-eliminated.png` })
+    await board.waitForTimeout(1200)
+
+    // --- State 7: DramaOverlay WINS (board) — LAST ---------------------------
+    //
+    // game-over swaps the board into a phase that may unmount or
+    // restructure DramaOverlay's host — running this before any other
+    // beat would invalidate the overlay for everything after.
+    //
+    // Use a real player id so the overlay renders "ALICE WINS" — the
+    // synthetic 'p-win' fallback rendered "UNKNOWN WINS" which read as
+    // a bug, not a representative production state.
+
+    await injectEvent(board, { type: 'game-over', winnerId: aliceId })
+    await expectOverlayText(board, 'WINS')
+    // game-over text variant uses 2000ms holdMs — designed peak ~2000ms.
+    // Capture mid-peak for stable text + glow.
+    await board.waitForTimeout(900)
+    await board.screenshot({ path: `${OUTPUT_DIR}/board/03-drama-wins.png` })
   })
 })

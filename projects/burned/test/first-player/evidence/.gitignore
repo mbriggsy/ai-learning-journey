@@ -1,0 +1,7 @@
+# Session video recordings — not committed (privacy + size).
+# Only timestamped notes in protocol.md are committed.
+*.mov
+*.mp4
+*.webm
+*.MOV
+*.MP4

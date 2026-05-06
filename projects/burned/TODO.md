@@ -2,6 +2,110 @@
 
 ## NEXT SESSION — pick up here (2026-05-06+)
 
+### THIS SESSION (2026-05-06 evening) — CSS Phase 5 substantially advanced + Priority #4 closed + P0 React fix
+
+Ten commits in two productive arcs: Phase 5 verification battery (8 of
+23 steps shipped solo) and Active Priority #4 finished. Mid-flight a
+pre-existing React Rules-of-Hooks bug was surfaced + fixed.
+
+| Commit | Subject |
+|---|---|
+| `1e703474` | feat(css-foundation): Phase 5 §2.4 — palette-cvd 3 → 36 pairs, severity-tiered |
+| `9c0e8ee5` | feat(css-foundation): Phase 5 §2.5 — palette-contrast 13 → 31 pairs, severity-tiered |
+| `da469d27` | fix(lint): repair pre-existing lint chain — restore as Step 17 gate |
+| `a07c14a0` | docs(test): Phase 5 §2.8.4 retheme grep sweep — clean + 1 console.log fix |
+| `8148522e` | docs(test): Phase 5 §2.8.3 + §2.8.5 — bundle audit + public-repo-prep |
+| `b5bc7671` | test(wcag): Phase 5 §2.3 — 200% zoom programmatic harness + protocol doc |
+| `8ac04742` | test(wcag): extend 200% zoom harness with 5 complex-state screens |
+| `1f7d36ff` | docs(test): Phase 5 §2.7 — first-time player protocol |
+| `6d95f124` | fix(player): hoist useSortedHand above isAlive early return — Rules of Hooks |
+| `429f6faa` | test(arena-states): close priority #4 — Nope window + FuturePeek captures |
+
+**Phase 5 status now 8/23 steps shipped solo:** Steps 1 (prereqs), 8
+(CVD pair expansion), 9 (contrast pair expansion), 12 (200% zoom 13/14
+screens), 15 (first-time player protocol doc), 17 (retheme grep sweep),
+18 (bundle audit), 21 (public-repo-prep checklist). Plus the lint-debt
+repair surfaced during Step 17. Plus the P0 React fix surfaced during
+Step 12 expansion. Test count 1171 → 1302 (1288 pass + 14
+expected-fail design-attention ratchets).
+
+**P0 React fix (commit 6d95f124).** `Player.tsx:494` had
+`if (!isAlive) return <EliminatedView />` and `Player.tsx:499` called
+`useSortedHand(hand)` AFTER the early return — Rules of Hooks
+violation. Comment on line 492 even claimed "Conditional render AFTER
+all hooks" — broken. Production symptom: brief "// COMMS SCRAMBLED"
+ErrorBoundary flash on every elimination before auto-recover
+re-rendered EliminatedView. Fix: hoist useSortedHand above the early
+return. The `assertHealthyRender` helper in `tests/e2e/wcag-zoom.spec.ts`
+is the regression-lock for this class of bug.
+
+**Honest accounting on Step 1.** Step 1 prereq verification reported
+"lint exit code 0" via the harness — that was either misleading or my
+misreading. Actual lint state was failing (PlayerAlert.test.tsx
+underscore-prefixed destructuring vars + BlotterContent.module.css
+cascade-overrides). Caught + fixed cleanly during Step 17 validation
+before it could ship a false-pass. Pattern to remember: harness
+exit-code reports CAN be wrong; verify with my own eyes when the
+result matters.
+
+**Lint debt cleanup (commit da469d27).** Two fixes:
+- ESLint config: added `varsIgnorePattern: '^_'` (had `argsIgnorePattern`
+  only). Underscore-prefixed destructuring aliases now ignored.
+- CSS lint Rule 1: added `cascade-override` sentinel comment mechanism
+  to allow legitimate token overrides in component CSS.
+- Both pre-existing, hidden behind the chain short-circuit on JS lint
+  failure. Now lint runs end-to-end clean.
+
+### Actionable next — pick one
+
+Solo-friendly remaining work:
+
+- **CardDetailSheet WCAG zoom capture** (Step 12 last screen). Needs
+  Playwright long-press emulation: hover + mouse.down + waitForTimeout(600)
+  + mouse.up on a hand card. Only screen still PENDING in the WCAG
+  protocol's automation-eligible list.
+- **Palette amendment Option C** (clears 5 of 14 design-attention
+  ratchets — see `docs/plans/css-foundation-rebuild/phase-5-cvd-followup.md`).
+  Bumps ochre-9 warmer/darker, addresses §2.4 B4/B5/E10 + §2.5 #4/#5
+  drama-accent contrast. Highest-leverage single move. Visual identity
+  touch on VICTORY ceremony — defensible as my call per
+  `user_color_blind` rule, but better with Briggsy's eyes on
+  before/after.
+- **Steps 19+20 partial** — README/TODO/spec checkbox updates for the
+  Phase 5 work that's already shipped. Premature for the §8.7 final
+  gate flips (still blocked on first-time-player session) but the
+  bundle / retheme / CVD / contrast / public-repo-prep / first-player-
+  protocol checkboxes can flip now.
+
+Briggsy-required (don't pick autonomously):
+
+- **Canonical 200% zoom human-run pass** (§2.3 protocol). Real
+  browser-UI zoom verification on the 13 captures already evidenced.
+  Protocol doc has the row template: `test/device-test/wcag-200-zoom-protocol.md`.
+- **Phase 5 §2.7 first-time player session.** Recruit a qualifying
+  tester (Archer-familiar, never seen BURNED, casual gamer). Protocol
+  ready: `test/first-player/protocol.md`. Final-final gate before §8
+  spec checkboxes flip.
+- **Visual review meeting** (§2.2.5). Three pending decisions —
+  GameOver winner glow hue, NopeCountdownBar emerald saturation,
+  Baveuse font purchase — block on Briggsy at the terminal with
+  Dreamland reference frames.
+- **Real-device playtest** (Active Priority #2) — Briggsy + iPad +
+  phones.
+- **8-player stress test** (Active Priority #3) — real TV + 8 phones.
+- **Physical hardware verification** (Active Priority #5) — deploy +
+  real TV.
+
+### Followups parked
+
+- **`phase-5-cvd-followup.md`** documents 14 design-attention ratchets
+  (9 CVD + 5 contrast). Option C (ochre-9 amendment) clears 5 in one
+  move. Option A (emerald-8 cooler) clears the worst tritan E6
+  collision (0.0098 distance). Each amendment is 1 commit + visual
+  verification + re-run palette tests.
+
+---
+
 ### THIS SESSION (2026-05-06 afternoon) — Burned card art regen (concept A flashbulb, iter 3) + Active Priority #1 closed
 
 Two feature commits — initial regen + Briggsy-flagged iteration. Closes the

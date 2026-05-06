@@ -116,7 +116,7 @@
 @property --color-emerald-5   { syntax: '<color>'; inherits: true; initial-value: #1f4336; }
 @property --color-emerald-6   { syntax: '<color>'; inherits: true; initial-value: #275043; }
 @property --color-emerald-7   { syntax: '<color>'; inherits: true; initial-value: #2f5e4f; }
-@property --color-emerald-8   { syntax: '<color>'; inherits: true; initial-value: #396d5a; }
+@property --color-emerald-8   { syntax: '<color>'; inherits: true; initial-value: #3f8d7e; }
 @property --color-emerald-9   { syntax: '<color>'; inherits: true; initial-value: #649e88; }
 @property --color-emerald-10  { syntax: '<color>'; inherits: true; initial-value: #7ab49c; }
 @property --color-emerald-11  { syntax: '<color>'; inherits: true; initial-value: #91c9af; }
@@ -217,7 +217,7 @@
     --color-emerald-5:  #1f4336;
     --color-emerald-6:  #275043;
     --color-emerald-7:  #2f5e4f;
-    --color-emerald-8:  #396d5a;
+    --color-emerald-8:  #3f8d7e;
     --color-emerald-9:  #649e88;
     --color-emerald-10: #7ab49c;
     --color-emerald-11: #91c9af;

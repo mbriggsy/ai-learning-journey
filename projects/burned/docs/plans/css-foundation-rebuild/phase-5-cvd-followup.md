@@ -3,7 +3,7 @@ title: "Phase 5 §2.4 + §2.5 follow-up — CVD + contrast palette amendments"
 type: follow-up
 phase: 5
 parent: docs/plans/css-foundation-rebuild/phase-5-verification-acceptance.md
-status: pending
+status: in-progress — Option A landed 2026-05-06; Option C + §2.5 #2/#3/#1 pending
 date: 2026-05-06
 ---
 
@@ -67,20 +67,34 @@ Three collision axes account for all 9 cases:
 These are starting points, not decisions — visual review needed before
 landing.
 
-### Option A — bump emerald-8 cooler (most impact, smallest visual cost)
+### Option A — bump emerald-8 cooler (most impact, smallest visual cost) ✅ LANDED 2026-05-06
 
-`emerald-8` shifts toward more blue-green (closer to teal-7 territory in
-hue, lower in chroma). Pulls E6 (teal-8 vs emerald-8) apart while leaving
-emerald-9 (`color-accent-intercept`, the card-color identity) alone.
+**Shipped value**: `#396d5a` → `#3f8d7e` (mint-saturated mid-green-cyan).
 
-- **Affected surfaces**: DramaOverlay INTERCEPTED background only
-  (`emerald-8` is referenced in `DramaOverlay.module.css` for the
-  intercepted variant). Other surfaces use `emerald-9` (intercept accent)
-  or `emerald-3/11` (success bg/fg).
-- **Risk**: small. Emerald-8 only appears as a DramaOverlay variant bg;
-  changing it doesn't ripple through cards, badges, or status.
-- **Likely fixes**: E6 all 3 sims, E3 deuter, E8 (currently passing —
-  monitor), E10 protan.
+The original spec ("closer to teal-7 in hue, lower in chroma") couldn't
+clear E6 tritan within the constraints. Empirical probing of 30+
+candidates surfaced `#3f8d7e` as the optimum: **higher saturation +
+moderate L lift** (still under emerald-9's L ceiling) gives the headline
+tritan separation AND preserves E10 deuter's STRICT pass.
+
+**Graduated to STRICT**: E3 deuter (cordovan-9 vs emerald-8), E6 protan,
+E6 tritan. E3 was added to `STRICT_PAIRS` (it wasn't there before — only
+existed as a deuter design-attention case). E6 was added formally.
+
+**Residual**: E6 deuter improved ~9× (the headline 0.0098 tritan
+collision is gone) but at 0.0862 still under the 0.10 STRICT floor.
+Awaits Option C — bumping ochre-9 won't help E6 directly, but the
+residual emerald-8 vs teal-8 deuter gap may close as we re-tier
+neighboring tokens in the next pass.
+
+**Affected surfaces**: DramaOverlay INTERCEPTED background only (radial
+gradient in `DramaOverlay.module.css:189-195`). Eyeballed at
+`temp/arena-states/board/01-drama-intercepted.png` — the new mint-green
+center reads brighter and more agency-Archer than the old forest tone;
+APCA Lc 59.8 LARGE-tier confirmed via `palette-contrast.test.ts`.
+
+**Test count delta**: +2 (gained 5 STRICT passes, lost 3 design-attention
+ratchets; no STRICT regressions).
 
 ### Option B — bump teal-8 cooler/darker (medium impact)
 

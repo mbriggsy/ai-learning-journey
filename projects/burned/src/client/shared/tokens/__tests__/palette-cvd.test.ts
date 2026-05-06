@@ -57,10 +57,16 @@ const STRICT_PAIRS = [
   ['color-border-focus',     'color-border-strong',  'C6 focus vs static border'],
 
   // Group E — DramaOverlay variant backgrounds (full-screen, color carries
-  // the moment). E2/E3/E6 fail strict and are listed in DESIGN_ATTENTION.
+  // the moment). E2 still fails strict (cordovan-9 vs charcoal-6 protan)
+  // and is listed in DESIGN_ATTENTION. E3 + E6 (protan/tritan) graduated
+  // to STRICT after the 2026-05-06 emerald-8 amendment (#396d5a → #3f8d7e
+  // per phase-5-cvd-followup.md Option A); E6 deuter remains the lone
+  // residual fail awaiting Option C (ochre-9 amendment).
   ['color-cordovan-9',       'color-teal-8',         'E1 BURNED vs EXTRACTED'],
+  ['color-cordovan-9',       'color-emerald-8',      'E3 BURNED vs INTERCEPTED'],
   ['color-cordovan-9',       'color-ochre-9',        'E4 BURNED vs VICTORY'],
   ['color-teal-8',           'color-charcoal-6',     'E5 EXTRACTED vs ELIMINATED'],
+  ['color-teal-8',           'color-emerald-8',      'E6 EXTRACTED vs INTERCEPTED'],
   ['color-teal-8',           'color-ochre-9',        'E7 EXTRACTED vs VICTORY'],
   ['color-charcoal-6',       'color-emerald-8',      'E8 ELIMINATED vs INTERCEPTED'],
   ['color-charcoal-6',       'color-ochre-9',        'E9 ELIMINATED vs VICTORY'],
@@ -94,25 +100,33 @@ const INFORMATIONAL_PAIRS = [
 // as a tripwire — if a palette change makes the pair pass, the test fails
 // ("Expect test to fail"), signaling the pair should be moved to STRICT_PAIRS.
 //
-// Tritan collapses the cool blue-green axis: teal-8 and emerald-8 read as
-// nearly the same color. Deuteranopia/protanopia collapse the red-green
-// axis: cordovan-9 (wine) loses separation against charcoal-6 / emerald-8;
-// emerald-8/9 lose separation against ochre-9 (yellow-toned green/yellow);
-// teal-8 loses separation against cordovan-9.
+// Original 9 cases (Phase 5 §2.4 re-tier, 2026-05-06 morning):
+//   B4, B5  — accent collisions under deuter/protan
+//   E1      — cordovan-9 vs teal-8 deuter
+//   E2      — cordovan-9 vs charcoal-6 protan
+//   E3      — cordovan-9 vs emerald-8 deuter
+//   E6 ×3   — teal-8 vs emerald-8 deuter/protan/tritan
+//   E10     — emerald-8 vs ochre-9 protan
+//
+// 2026-05-06 evening — Option A amendment (emerald-8 #396d5a → #3f8d7e)
+// graduated 3 cases to STRICT: E3 deuter, E6 protan, E6 tritan. E6 deuter
+// remains a residual ratchet — improved ~9× (0.0098 baseline tritan was the
+// worst; deuter went 0.0374 → 0.0862) but under 0.10 floor. Option C
+// (ochre-9 amendment) is queued to address E10 protan + the residual E6.
 //
 // Follow-up: docs/plans/css-foundation-rebuild/phase-5-cvd-followup.md
-// authored alongside this re-tier — the palette amendment is its own
-// session because it ripples through DramaOverlay backgrounds, badges,
-// and accent-color visual identity.
+// is the canonical record of remaining amendments and rationale.
 const DESIGN_ATTENTION_CASES: Array<readonly [string, string, 'deuteranopia' | 'protanopia' | 'tritanopia', string]> = [
   ['color-accent-intercept', 'color-accent-drama',  'deuteranopia', 'B4 Intercept vs drama'],
   ['color-accent-operative', 'color-accent-drama',  'protanopia',   'B5 operative vs drama'],
   ['color-cordovan-9',       'color-teal-8',        'deuteranopia', 'E1 BURNED vs EXTRACTED'],
   ['color-cordovan-9',       'color-charcoal-6',    'protanopia',   'E2 BURNED vs ELIMINATED'],
-  ['color-cordovan-9',       'color-emerald-8',     'deuteranopia', 'E3 BURNED vs INTERCEPTED'],
-  ['color-teal-8',           'color-emerald-8',     'tritanopia',   'E6 EXTRACTED vs INTERCEPTED'],
+  // E3 deuter graduated 2026-05-06 by Option A emerald-8 amendment.
   ['color-teal-8',           'color-emerald-8',     'deuteranopia', 'E6 EXTRACTED vs INTERCEPTED'],
-  ['color-teal-8',           'color-emerald-8',     'protanopia',   'E6 EXTRACTED vs INTERCEPTED'],
+  // E6 protan + tritan graduated 2026-05-06 by Option A emerald-8 amendment.
+  // E6 deuter remains the residual fail — improved 0.0374 → 0.0862 but still
+  // under the 0.10 STRICT floor; awaits Option C (ochre-9 amendment) which
+  // pulls ochre-9 deuter projection further from the new emerald-8.
   ['color-emerald-8',        'color-ochre-9',       'protanopia',   'E10 INTERCEPTED vs VICTORY'],
 ]
 

@@ -32,7 +32,7 @@
 
 import { test, expect } from './fixtures'
 import type { Page } from '@playwright/test'
-import { joinPhone } from './helpers'
+import { joinPhone, waitForPhase, waitForPlayerCount } from './helpers'
 import { writeFileSync } from 'node:fs'
 
 interface OverflowReport {
@@ -175,6 +175,129 @@ test.describe('WCAG 1.4.4 — 200% zoom (chromium-only)', () => {
       record('board', 'Lobby — empty', pair)
       expect.soft(pair.at100.overflow).toBe(false)
     })
+  })
+
+  // Complex-state phone screens: drive a 3-player game to playing, then
+  // step through state primers (the arena-states pattern). Phone viewport is
+  // resized to 375×667 mid-test before each capture so the captureZoomPair
+  // helper measures the correct WCAG target dimensions.
+  test('phone complex states (PlayingView, sheets, EliminatedView)', async ({ board, phones, roomCode }, testInfo) => {
+    test.skip(testInfo.project.name !== 'chromium', 'chromium-only')
+    test.setTimeout(120_000)
+
+    // Boot 3-player game to playing. Mirror the arena-states pattern.
+    await joinPhone(phones[0]!, roomCode, 'Alice')
+    await joinPhone(phones[1]!, roomCode, 'Bob')
+    await joinPhone(phones[2]!, roomCode, 'Carol')
+    await waitForPlayerCount(board, 3)
+    await board.locator('button:has-text("Cleared Hot")').click()
+    await waitForPhase(board, 'playing', 10_000)
+    await phones[0]!.waitForFunction(() => !!document.querySelector('[role="status"]'), null, { timeout: 5_000 })
+    await board.waitForTimeout(300)
+
+    // Resize Alice (drawer) to WCAG target viewport — clamps re-evaluate.
+    await phones[0]!.setViewportSize({ width: 375, height: 667 })
+    await phones[0]!.waitForTimeout(300) // settle layout reflow
+
+    const aliceId = await phones[0]!.evaluate(() => {
+      const w = window as unknown as { __gameStore?: { getPlayerId(): string | null } }
+      return w.__gameStore?.getPlayerId() ?? ''
+    })
+    const bobId = await phones[1]!.evaluate(() => {
+      const w = window as unknown as { __gameStore?: { getPlayerId(): string | null } }
+      return w.__gameStore?.getPlayerId() ?? ''
+    })
+
+    async function setPendingPrompt(page: Page, prompt: Record<string, unknown> | null): Promise<void> {
+      await page.evaluate((p) => {
+        const w = window as unknown as { __gameStore?: { applyOptimistic: (t: (s: unknown) => unknown) => void; clearOptimistic: () => void } }
+        if (!w.__gameStore) throw new Error('wcag-zoom: __gameStore missing')
+        if (p === null) {
+          w.__gameStore.clearOptimistic()
+        } else {
+          w.__gameStore.applyOptimistic((s) => ({
+            ...(s as Record<string, unknown>),
+            pendingPrompt: p,
+          }))
+        }
+      }, prompt)
+    }
+
+    async function expectDialogWithText(page: Page, text: string): Promise<void> {
+      await page.waitForFunction(
+        (expected) => {
+          const dlg = document.querySelector('dialog[open]')
+          return !!dlg && dlg.textContent?.includes(expected) === true
+        },
+        text,
+        { timeout: 3_000 },
+      )
+    }
+
+    // PlayingView baseline (no overlay, no sheet).
+    {
+      const pair = await captureZoomPair(phones[0]!, 'phone', 'playingView-baseline')
+      record('phone', 'PlayingView — baseline', pair)
+      expect.soft(pair.at100.overflow).toBe(false)
+    }
+
+    // DefusePlacement sheet.
+    {
+      await setPendingPrompt(phones[0]!, { type: 'defuse', playerId: aliceId })
+      await expectDialogWithText(phones[0]!, 'Hide the Burned Card')
+      await phones[0]!.waitForTimeout(500)
+      const pair = await captureZoomPair(phones[0]!, 'phone', 'defusePlacement-sheet')
+      record('phone', 'DefusePlacement sheet', pair)
+      expect.soft(pair.at100.overflow).toBe(false)
+    }
+
+    // NameCard sheet (triple-steal target picker).
+    {
+      await setPendingPrompt(phones[0]!, { type: 'name-card', playerId: aliceId, targetId: bobId })
+      await expectDialogWithText(phones[0]!, 'Name a card to steal from')
+      await phones[0]!.waitForTimeout(500)
+      const pair = await captureZoomPair(phones[0]!, 'phone', 'nameCard-sheet')
+      record('phone', 'NameCard sheet', pair)
+      expect.soft(pair.at100.overflow).toBe(false)
+    }
+
+    // Favor banner (inline, not a sheet — Player.tsx renders favor-response
+    // as a banner above the staging area).
+    {
+      await setPendingPrompt(phones[0]!, { type: 'favor-response', playerId: aliceId, requesterId: bobId })
+      await phones[0]!.waitForTimeout(600)
+      const pair = await captureZoomPair(phones[0]!, 'phone', 'favorBanner')
+      record('phone', 'Favor banner (inline)', pair)
+      expect.soft(pair.at100.overflow).toBe(false)
+    }
+
+    // Clear pending prompt before EliminatedView injection.
+    await setPendingPrompt(phones[0]!, null)
+    await phones[0]!.waitForTimeout(200)
+
+    // EliminatedView — inject player-eliminated event with Alice as target;
+    // her phone enters eliminated state.
+    {
+      await phones[0]!.evaluate((id) => {
+        const w = window as unknown as { __testInjectEvent?: (e: unknown) => void; __gameStore?: { applyOptimistic: (t: (s: unknown) => unknown) => void } }
+        // Optimistically mark Alice eliminated locally for capture purposes.
+        w.__gameStore?.applyOptimistic((s) => {
+          const state = s as Record<string, unknown>
+          const players = (state.players as Array<Record<string, unknown>>) ?? []
+          return {
+            ...state,
+            players: players.map((p) => p.id === id ? { ...p, eliminated: true } : p),
+          }
+        })
+        if (w.__testInjectEvent) {
+          w.__testInjectEvent({ type: 'player-eliminated', playerId: id, rank: 3 })
+        }
+      }, aliceId)
+      await phones[0]!.waitForTimeout(800)
+      const pair = await captureZoomPair(phones[0]!, 'phone', 'eliminatedView')
+      record('phone', 'EliminatedView', pair)
+      expect.soft(pair.at100.overflow).toBe(false)
+    }
   })
 
   test.afterAll(async () => {

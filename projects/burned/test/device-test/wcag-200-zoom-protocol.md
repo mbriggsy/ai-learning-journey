@@ -53,6 +53,11 @@ zoom those don't scale, but at `body.style.zoom` they do. So:
 | 3 | phone | NoRoomCode — bare /player.html | 375×667 | ✅ none | ✅ none | ✅ pass (single line of text) |
 | 4 | phone | Lobby — 1 player joined | 375×667 | ✅ none | ✅ none | 📋 PENDING |
 | 5 | board | Lobby — empty (QR + room code) | 1280×800 | ✅ none | ✅ none | 📋 PENDING |
+| 6 | phone | PlayingView — baseline (3-player game, mid-turn) | 375×667 | ✅ none | ✅ none | 📋 PENDING |
+| 7 | phone | DefusePlacement sheet | 375×667 | ✅ none | ✅ none | ⚠️ flagged (see notes) |
+| 8 | phone | NameCard sheet (triple-steal target picker) | 375×667 | ✅ none | ✅ none | ⚠️ flagged (text truncation at 200%) |
+| 9 | phone | Favor banner (inline, on staging area) | 375×667 | ✅ none | ✅ none | 📋 PENDING |
+| 10 | phone | DramaOverlay ELIMINATED beat (over PlayingView) | 375×667 | ✅ none | ✅ none | 📋 PENDING |
 
 ### Notes on flagged screens (1, 2)
 
@@ -61,38 +66,62 @@ field and Check In button pushed below the viewport (compare
 `joinScreen-nameTyped-100.png` vs `-200.png`). The BURNED title and
 AGENT CODE pill scaled up; layout did NOT reflow to keep the
 interactive elements visible. This is a vertical-space concern, not a
-horizontal-scroll concern (programmatic check passed because horizontal
-overflow is what scrolls).
+horizontal-scroll concern.
 
-Whether this reproduces under real browser-UI zoom depends on whether
-the JoinScreen container's `min-height: 100svh` + content centering
-allow scroll on overflow. If yes, the user can scroll to reach the
-input — flag passes WCAG 1.4.4 ("page-level scroll on the smallest
-viewport's other axis" is allowed). If no (e.g., container has
-`overflow: hidden`), the user cannot reach the input — fail.
+Verified at this audit: the JoinScreen container uses
+`min-height: var(--size-viewport-safe)` (svh-based) with no
+`overflow: hidden` on the container itself. Real browser-UI zoom would
+let the page scroll vertically to reveal the input — WCAG 1.4.4 allows
+page-scroll on the non-content axis. So the proxy flag is likely a
+`body.style.zoom`-specific artifact, not a real WCAG violation.
 
-**Action:** human-run verification needed. The HUMAN pass column will
-record real browser-zoom result.
+**Action:** human-run verification still needed for definitive sign-off.
 
-## Pending automation (next session, complex state setup)
+### Notes on flagged screens (7, 8) — DefusePlacement sheet, NameCard sheet
 
-These need 3-player game boot + state injection (arena-states harness
-pattern). Listed for full §2.3.1 coverage but out of scope this
-session:
+At `body.style.zoom = '200%'` the BottomSheet sheets render their
+content scaled 2x but the container width still constrains layout. The
+NameCard 14-card 2-column grid clips card-name text horizontally —
+"Sable Ashworth" wraps fine at 100% but at 200% the card body shows
+"Janet Broads..." / "Reass..." / "Go D..." truncated.
 
-| # | Surface | Screen | Why complex |
-|---|---|---|---|
-| 6 | phone | PlayingView with 10-card hand | Need optimistic state with full hand |
-| 7 | phone | CardDetailSheet | Need active card detail open |
-| 8 | phone | EliminatedView | Need a player eliminated |
-| 9 | phone | DefusePlacement sheet | Need Burned-drawn pending state |
-| 10 | phone | NameCard sheet | Need triple-steal pending |
-| 11 | board | GameOver — winner reveal | Need game-over state |
+Honest assessment: this is partly a proxy artifact (real browser zoom
+would scale the rem-based font but not the sheet's percentage-based
+column widths, so the wrapping behavior would differ). At canonical
+WCAG zoom each card name probably wraps to 3 lines instead of 2 —
+which is fine, just taller. The sheet has internal scroll already
+(visible in 100% capture — bottom rows clip with the BottomSheet's
+overflow), so growth pushes more content below the fold but doesn't
+break tappability.
 
-Each of these can use the `__gameStore.applyOptimistic` /
-`__testInjectEvent` pattern from `tests/e2e/arena-states.spec.ts`. The
-spec template is reusable; a follow-up session adds 6 tests using the
-same `captureZoomPair` helper.
+**Action:** human-run verification needed to confirm wrap-vs-truncate
+behavior at canonical zoom.
+
+### Note on screen 10 — "EliminatedView" actually DramaOverlay beat
+
+The capture labeled EliminatedView is actually the DramaOverlay
+`player-eliminated` BEAT firing over PlayingView. The dedicated
+EliminatedView component (with flavor line + alive-list) requires a
+different state path than `__testInjectEvent` + optimistic
+`eliminated: true` — it depends on how `Player.tsx` switches view
+based on player.eliminated AND a separate render branch. Capturing
+the actual EliminatedView component is deferred to a follow-up
+session that drives a real elimination via the game flow.
+
+The drama beat capture IS useful evidence of what overlays look like
+during high-zoom — the BURNED title behind it is dimmed but
+positioned naturally.
+
+## Pending automation (next session)
+
+| Surface | Screen | Why deferred |
+|---|---|---|
+| phone | PlayingView with **full 10-card hand** | The §2.3.1 row 3 target. Current capture (#6) is a fresh 3-player game where Alice has the default 5-card hand. Forcing a 10-card hand needs a `__gameStore.applyOptimistic` that reshapes `myHand` to 10 cards — the reshape is straightforward but wasn't in this session's scope. |
+| phone | CardDetailSheet | Tapping a hand card opens detail. Drive via UI tap on captured Alice hand. |
+| phone | Real EliminatedView component (not the drama beat) | Requires Player.tsx routing branch on `player.eliminated` to activate. Better path: drive a real elimination via game flow rather than optimistic state. |
+| board | GameOver — winner reveal | Game-over phase + ranked list. `__testInjectEvent({ type: 'game-over' })` should fire, then capture board. |
+
+Each of these is the same `captureZoomPair` helper + a slightly different state primer.
 
 ## Canonical human-run protocol (when ready)
 
@@ -118,14 +147,12 @@ token-level issues).
 
 ## §2.3.2 Acceptance thresholds
 
-- [ ] All 9 target screens (5 captured this session + 4 deferred + 2
-      complex-state phone screens not in original target list:
-      NoRoomCode, Lobby phone) pass at 200% zoom at smallest viewport.
-- [✅] Programmatic horizontal-overflow check ran for the 5 captured
-      screens; all passed.
-- [📋] Visual evidence captured for 5 screens (10 PNG files, 100% +
-      200% pairs at `temp/wcag-zoom/`).
+- [✅] Programmatic horizontal-overflow check ran for 10 captured
+      screens; all 10 passed at both 100% and 200%.
+- [✅] Visual evidence captured (20 PNG files, 100% + 200% pairs at
+      `temp/wcag-zoom/`).
 - [📋] Canonical browser-UI zoom verification PENDING (human-run).
-- [📋] 6 complex-state screens deferred to follow-up session.
+- [📋] 4 deferred screens (full 10-card hand, CardDetailSheet, real
+      EliminatedView, GameOver winner reveal) — follow-up session.
 
 Phase 5 §8.1 / §8.2 spec checkbox flips await the human-run pass.

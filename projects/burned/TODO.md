@@ -2,52 +2,66 @@
 
 ## NEXT SESSION — pick up here (2026-05-06+)
 
-### THIS SESSION (2026-05-06 afternoon) — Burned card art regen (concept A flashbulb) + Active Priority #1 closed
+### THIS SESSION (2026-05-06 afternoon) — Burned card art regen (concept A flashbulb, iter 3) + Active Priority #1 closed
 
-One feature commit. Closes the BURNED CARD CINEMATIC ARC priority — all four
-sub-steps now shipped.
+Two feature commits — initial regen + Briggsy-flagged iteration. Closes the
+BURNED CARD CINEMATIC ARC priority; all four sub-steps shipped.
 
 | Commit | Subject |
 |---|---|
-| (this) | feat(burned-arc): close sub-step #4 — Burned card art (concept A flashbulb) |
+| `fea581fd` | feat(burned-arc): close sub-step #4 — Burned card art (concept A flashbulb) |
+| (this) | feat(burned-arc): iter 3 — foreground hero operative + continuous cone (caught/discovered) |
 
 **Stale-TODO catch.** Sub-step #3 (DefusePlacement hero card) was listed as
-"remaining" but actually shipped in commit `98b8e1ae` (`feat(burned-arc): close
-sub-step #3 — hero Burned card + sheet UI unification`). Caught at session-
-start verification — saved a duplicate-work session. Crossed off below.
+"remaining" but actually shipped in commit `98b8e1ae`. Caught at session-start
+verification — saved a duplicate-work session.
 
-**Sub-step #4 — Burned card art regen.** Concept A (flashbulb exposure) shipped
-on the first roll. Re-architected from the original Apr-9 abstract spy-badge-
-explosion (text leaked onto badge "SPI[K]"; Memphis-pattern triangles read
-1980s-graphic-design not 1960s-Saul-Bass; cream border violated full-bleed
-deck standard) to a single-frame noir cinematic: lone trench-coated operative
-mid-stride on a dark rooftop, caught in the burst of a tripod-mounted vintage
-studio flashbulb at screen-right, hand raised to shield from the white-amber
-blast, dark-charcoal city skyline behind with tiny amber window pinpricks.
-Saul Bass duotone palette (deep teal night + charcoal silhouette + brilliant
-white-amber accent) matches Direct Order / Go Dark / Back Channel deck
-cohesion.
+**Three-iteration arc on the regen.** Concept A (flashbulb exposure) was the
+right concept; took three rolls to land it. Each iter solved the previous
+iter's failure mode while introducing a new one — classic eye-in-loop
+calibration:
 
-**Insight 018 strategies in play.** REMOVE the problem element (no badge,
-no ID card → kills both the text-leak risk AND the bad anatomy at low
-resolution). RECONTEXTUALIZE to bypass priors (rooftop + covert kills the
-paparazzi/red-carpet/mugshot pulls that "flashbulb + person" would otherwise
-summon).
+- **Iter 1** — fixed every original-Apr-9 issue (no text leak, full-bleed
+  honored, Saul Bass language) but produced a hard-edged cone of light that
+  TRUNCATED in mid-air at the operative's torso. Polygon-of-light reading,
+  not a physical event. Briggsy caught it in his check-in.
+  Archive: `_archive/burned-2026-05-06-iter1-cone-truncation-rejected.webp`.
+- **Iter 2** — fixed the cone (continuous, gradient falloff, extends to
+  frame-left) and added the operative's cast shadow on the rooftop floor for
+  physical motivation, BUT the bulb apparatus dominated the frame and the
+  operative shrank to a peripheral walking figure. Lost the operative drama.
+  Archive: `_archive/burned-2026-05-06-iter2-operative-too-small-rejected.webp`.
+- **Iter 3** ✅ — combined iter 1's foreground hero operative (large, dramatic
+  shielding pose, half-lit silhouette, frozen mid-stride) WITH iter 2's
+  continuous cone + cast shadow, plus an explicit emotional directive: the
+  agent has been CAUGHT/DISCOVERED, body language reads as INSTANT REACTION
+  to being seen. Compositional structural directive: operative occupies the
+  LEFT TWO-THIRDS of the frame, bulb apparatus at far-right edge as
+  subordinate source. Shipping this.
 
-**Happy-accident worth flagging for future regens.** I explicitly said "NO
-camera in frame" — Imagen rendered a tripod-mounted studio strobe at screen-
-right anyway. Kept it: the tripod GROUNDS the threat ("someone rigged this
-ahead of time, you walked into it") and is period-correct for 1960s flashbulb
-tech. Eyeball outcomes vs intentions; deviations that strengthen the image
-get kept. Documented in the prompt comment in `scripts/generate-cards.ts`.
+**Insight 018 strategies in play.** REMOVE the problem element (no badge, no
+ID card — kills text-leak + bad anatomy). RECONTEXTUALIZE to bypass priors
+(rooftop + covert kills paparazzi/red-carpet/mugshot pulls). And iter 3
+proved a fourth: PRESCRIBE COMPOSITIONAL LAYOUT in numbers/fractions ("LEFT
+TWO-THIRDS", "HALF the vertical height") — Imagen responded to structural
+directives where prose alone hadn't.
 
-**Verification.** Hero size (160px DefusePlacement slot) + hand size (108px
-hand strip) checked side-by-side with `direct-order.webp` via in-page DOM-
-injection harness on `localhost:5173`. Frame fit clean (full-bleed honored,
-`object-fit: contain` matches). Color cohesion strong (both cards same
-visual language + duotone palette + warm accent). At hand size the white
-blast is the at-glance Burned identifier — strong glanceability differentiator
-from amber-warm action cards.
+**Eye-in-loop catch worth keeping.** Iter 1 cleared my critical-eyeball pass
+(I called out the tripod-bulb deviation as a happy accident, which was true,
+and I missed the cone truncation completely). Briggsy spotted it in seconds.
+Pattern: my agent-eye gets locked on composition + anatomy + frame-fit and
+misses LIGHT PHYSICS / MOTION / continuity. Same gap as the
+`feedback-eye-in-loop-beats-calibration-for-motion.md` lesson —
+generalizes from motion to other perceptual continuities (light spread,
+shadow direction, depth cues).
+
+**Verification.** Three-card harness (Burned + Direct Order + Go Dark) at
+hero size (160px) + hand size (108px) via in-page DOM-injection on
+`localhost:5173`. Deck cohesion confirmed — three trench-coat-and-fedora
+cards reading as one visual language. Burned and Go Dark are visual mirrors
+with opposite emotional payloads (caught vs escape). At hand size the
+white-amber cone is the at-glance Burned identifier vs the amber-warm
+interior action cards.
 
 ### Actionable next — pick one
 

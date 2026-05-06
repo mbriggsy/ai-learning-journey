@@ -35,37 +35,45 @@ const CARDS: CardPrompt[] = [
     type: 'burned',
     name: 'Burned',
     prompt:
-      // Iter 1 (2026-05-06): pivot from the original Apr-9 abstract
-      // explosion + spy ID badge concept (text leaked onto badge "SPI[K]";
-      // Memphis-pattern radiating triangles read 1980s graphic design not
-      // 1960s Saul Bass; cream border violated full-bleed deck standard).
-      // Re-architected to Concept A — the MOMENT of identity exposure: a
-      // covert operative on a rooftop at night caught in the burst of an
-      // unseen camera flashbulb. Insight 018 strategies: REMOVE the
-      // problem element (no badge, no ID card — kills text leak + bad
-      // anatomy), RECONTEXTUALIZE to bypass priors (rooftop + covert kills
-      // paparazzi/red-carpet/mugshot priors that "flashbulb + person"
-      // would otherwise summon). Deck cohesion: trench coat + fedora
-      // silhouette + duotone night palette matches Go Dark, Back Channel,
-      // Call in a Favor. The bright white-amber blast is the SOLE light
-      // source — every shadow falls left because the flash is at screen-
-      // right just outside frame.
-      'a dramatic rooftop at night caught in the instant of a flashbulb detonation, ' +
-      'ONE solitary operative in a long trench coat and fedora hat is mid-stride across the rooftop, captured mid-turn — body angled forward but head and shoulders rotating to look toward a brilliant blast of white-amber light coming from screen-right just outside the frame, ' +
-      'the operative is hit by the flashbulb burst from the right side, harshly side-lit so the right half of the silhouette is washed out in pure white-amber glare and the left half is deep charcoal shadow, the SILHOUETTE of the figure is the hero, no detailed facial features required, the form reads as posture and outline, ' +
-      'the operative\'s right hand is raised toward the light in a defensive shielding gesture, fingers splayed with the palm facing the blast and the back of the hand toward the operative\'s own face, ' +
-      'a radial flare of bright white-amber rays emanates from the screen-right edge of the frame, with a few sparkling lens-flare pinpricks scattered across the air around the burst, ' +
-      'a dark city skyline silhouette of tall rectangular buildings runs across the bottom horizon line, deep charcoal shapes with a few tiny warm amber pinpricks for distant lit windows, ' +
-      'a thin layer of fog and mist hangs in the air on the rooftop and catches the flashbulb burst as a soft glowing white-amber haze, ' +
-      'CRITICAL: ONLY ONE PERSON in the entire image, the lone operative is the only human, NO photographer visible, NO second figure, NO crowd, NO red carpet, NO event, NO formal venue, NO press scrum — this is a covert rooftop at night, not a public setting, ' +
-      'the SOLE light source is the white-amber flashbulb burst from screen-right, no other light sources, the rooftop is otherwise dark with only faint distant city ambient glow at the horizon, every shadow in the scene falls toward the left because the light comes from the right, ' +
-      'NO badge, NO ID card, NO photograph, NO camera in frame, NO sign, NO document — the flashbulb burst alone tells the story of identity captured, ' +
-      'the moment your cover is blown, surprise frozen in white light, the unseen camera that just made you, ' +
-      'cool deep teal and charcoal night palette with the SINGLE blast of brilliant white-amber as the dominant accent, ' +
+      // Iter 3 (2026-05-06): iter 2 fixed iter 1's hard-edged cone
+      // truncation but lost iter 1's operative drama — the bulb apparatus
+      // dominated and the operative shrank to a peripheral walking
+      // figure. Briggsy verdict: "convey the agent has been caught /
+      // discovered." Iter 3 combines:
+      //   * Iter 1's foreground HERO operative (large in frame,
+      //     dramatic shielding pose, half-lit silhouette).
+      //   * Iter 2's continuous cone (extends past operative, gradual
+      //     falloff, NO hard mid-air boundary) + cast shadow on the
+      //     rooftop floor.
+      //   * NEW: explicit emotional payload — frozen at the instant of
+      //     DISCOVERY, head snapped sharply to face the bulb, body
+      //     reading as REACTIVE not in-motion. The card is called
+      //     BURNED; the cinematic in-game is the moment of being made.
+      // Compositional structural directive: operative occupies the LEFT
+      // TWO-THIRDS of the frame as dominant subject, bulb + tripod at
+      // far-right edge as the source of the cone, NOT the hero.
+      //
+      // Iter 1 archive: public/assets/cards/_archive/burned-2026-05-06-iter1-cone-truncation-rejected.webp
+      // Iter 2 archive: public/assets/cards/_archive/burned-2026-05-06-iter2-operative-too-small-rejected.webp
+      'a dramatic close-up rooftop scene at night at the instant of a flashbulb detonation, the moment of DISCOVERY captured in still frame — an operative caught and made by an unseen camera, ' +
+      'COMPOSITIONAL LAYOUT — ONE solitary operative occupies the LEFT TWO-THIRDS of the frame as the dominant subject filling roughly HALF the vertical height of the frame, a tripod-mounted vintage flashbulb sits at the FAR-RIGHT edge of the frame as the source of the cone of light but NOT the visual hero, the cone of light fills the space between them and extends past the operative to fade at the screen-left edge, ' +
+      'the operative wears a long trench coat and a fedora hat, captured FROZEN mid-stride at the precise instant of being SEEN — his body angled forward as if walking but his head snapped sharply to the right looking directly toward the firing bulb, shoulders rotating in startled recognition, knee bent from the interrupted stride, the body language reads as INSTANT REACTION to being caught: this is the moment of cover blown, surprise and recognition frozen in white light, ' +
+      'the operative\'s right arm is raised toward the light in a defensive shielding gesture, palm of the hand facing the bulb and the back of the hand toward the operative\'s own face, fingers splayed, the arm at shoulder height, ' +
+      'the operative is harshly side-lit by the cone of light from the right — his right side facing the bulb is brightly washed in pure white-amber glare, the contour of his right arm shoulder hat brim and trench coat catches the light as a hard-edged bright silhouette outline, his left side falls into deep self-shadow, the operative reads as a HIGH-CONTRAST silhouette with one harshly-lit edge and one shadowed edge — body and emotion reading through posture and outline alone, no detailed facial features required, ' +
+      'a BROAD WIDE cone of brilliant white-amber light fans out from the firing flashbulb at screen-right across the entire rooftop, the cone is ONE CONTINUOUS WEDGE of illumination starting at the bulb and extending all the way past the operative to the screen-left edge of the frame, the cone widens as it travels leftward and the light fades GRADUALLY at its outer reaches with a soft gradient falloff, NO hard-edged truncation in mid-air anywhere, the cone CONTINUES past the operative and reaches the rooftop floor on the far side, ' +
+      'the operative\'s body casts a long elongated dark SHADOW on the rooftop floor stretching toward screen-left as the bulb\'s light hits him — his own shadow on the floor is the only motivated dark zone within the cone\'s reach, ' +
+      'a vintage 1960s studio flashbulb on a slim metal tripod is positioned at the FAR RIGHT edge of the frame, the bulb FIRING at the moment of capture with sparkling lens-flare pinpricks scattered around it, the tripod and bulb apparatus are visible but compositionally SUBORDINATE to the operative — they live at the right edge as the source of the cone, not the visual focus, ' +
+      'a dark city skyline silhouette of tall rectangular buildings runs across the bottom horizon line behind the operative, deep charcoal shapes with a few tiny warm amber pinpricks for distant lit windows, ' +
+      'a thin layer of fog and mist hangs in the air on the rooftop and catches the cone of light as a soft glowing white-amber haze, especially dense near the bulb, ' +
+      'CRITICAL: ONLY ONE PERSON in the entire image, the lone operative is the only human, NO photographer visible behind the tripod, NO second figure, NO crowd, NO red carpet, NO event, NO formal venue, NO press scrum — this is a covert rooftop at night, the tripod stands alone with no operator, ' +
+      'the SOLE light source is the firing flashbulb at screen-right, no other light sources, every shadow in the scene falls toward the left because the light comes from the right, ' +
+      'NO badge, NO ID card, NO photograph in frame, NO sign, NO document — the firing flashbulb alone tells the story of identity captured, ' +
+      'the moment your cover is blown, the instant of being SEEN, the agent caught and discovered, REVELATION frozen in white light, ' +
+      'cool deep teal and charcoal night palette with the SINGLE cone of brilliant white-amber as the dominant accent, ' +
       'the scene fills the entire square frame edge to edge with NO white borders NO cream borders NO vignette NO padding NO matting, every corner contains rooftop or sky or city silhouette, ' +
       'NO text NO letters NO words NO numbers NO writing anywhere in the scene on any surface, ' +
       'mid-century modern 1960s spy-film noir aesthetic, bold geometric angular style, flat illustration, ' +
-      'square full-bleed composition centered on the silhouetted operative caught in the flashbulb burst',
+      'square full-bleed composition with the foreground operative as the dominant hero, caught in the continuous cone of light at the instant of discovery',
   },
   {
     type: 'extraction',

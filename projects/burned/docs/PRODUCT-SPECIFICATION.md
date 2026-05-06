@@ -485,9 +485,9 @@ These are code-level leftovers that don't appear in the UI but create cognitive 
 - [x] EliminatedView shows corrected spy-tone copy from §6.4 retheme gaps. *(Verified 2026-04-23: title "You're Burned."; 9 rethemed flavor lines in `EliminatedView.tsx`.)*
 
 **Technical:**
-- [ ] Phone bundle ≤ 100KB gzipped on initial load. Current ~96KB (measured 2026-04-23; canonical table in `CLAUDE.md` §Bundle Sizes). If the CSS rebuild or retheme pushes it over, tree-shake or lazy-load before declaring done.
+- [x] Phone bundle ≤ 100KB gzipped on initial load. *(Verified 2026-05-06 §2.8.3 audit: 97.5 KB gzipped, 2.5 KB under budget. Canonical table in `CLAUDE.md` §Bundle Sizes.)*
 - [ ] No `motion` imports (only `m`). Enforced by ESLint.
-- [ ] No `console.log` in production build.
+- [x] No `console.log` in production build. *(Verified 2026-05-06 §2.8.4 retheme grep sweep: one violation in `room.ts` found and fixed; production bundle clean of dev-hook sentinels via `verify-prod-bundle.ts`.)*
 
 ### §8.2 — Board view (shared screen)
 
@@ -519,7 +519,7 @@ These are code-level leftovers that don't appear in the UI but create cognitive 
 - [x] All §6.4 Tier 1 gaps fixed: EliminatedView title, EliminatedView flavor lines (4 cut + 4 replaced), GameTable feltBranding. *(Verified 2026-04-23. Title "You're Burned."; flavor pool fully rethemed; `feltBranding` retired during Desk Redesign.)*
 - [x] All §6.4 Tier 2 gaps fixed: `engine.ts` EK comments renamed, `EK_*_MS` timing constants renamed to `BURNED_*_MS`, `engine.ts:1040` error message updated, `Arena.tsx:7` comment updated. *(Verified 2026-04-23: zero `EK_` matches in `src/`.)*
 - [ ] §6.4 Tier 3 state machine "defuse" language documented as intentional (not a gap).
-- [ ] Fresh retheme grep returns zero Tier 1 hits on a full source scan.
+- [x] Fresh retheme grep returns zero Tier 1 hits on a full source scan. *(Verified 2026-05-06: see `test/retheme/grep-sweep.md` — 8 checks complete, zero user-facing references to "Exploding Kittens"/"EK"/"You Exploded"; all `EK` mentions are code comments documenting rule provenance.)*
 
 ### §8.5 — Deploy
 

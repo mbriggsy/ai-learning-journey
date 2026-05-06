@@ -2,7 +2,96 @@
 
 ## NEXT SESSION — pick up here (2026-05-06+)
 
-### THIS SESSION (2026-05-06 evening) — CSS Phase 5 substantially advanced + Priority #4 closed + P0 React fix
+### THIS SESSION (2026-05-06 night) — CardDetailSheet zoom closed + spec §8 partial sweep
+
+Two commits, both surgical. Closes the only deferred WCAG zoom screen
+and flips the §8 spec checkboxes that have evidence to back them.
+
+| Commit | Subject |
+|---|---|
+| `97f21297` | test(wcag): close §2.3 deferred CardDetailSheet — long-press capture |
+| (this) | docs(spec): Phase 5 §8 partial sweep — bundle / console.log / retheme grep flipped |
+
+**CardDetailSheet capture (commit 97f21297).** Step 12 advances from
+13/14 → 14/14 programmatic-pass. Long-press emulation pattern: hover
+the slot → `mouse.down()` → `waitForTimeout(700)` (margin over
+`Hand.tsx`'s 600ms `LONG_PRESS_MS`) → `mouse.up()`. Mouse stays
+stationary so `onPointerLeave` / `onPointerCancel` cancellation paths
+don't fire. Wait target is the `dialog[open]` containing "Dash Barlowe"
+— deterministic because slot[0] of the prior block's optimistic 10-card
+hand has type `dash-barlowe`. Native `<dialog>` Escape dismisses
+cleanly before the EliminatedView flip. Eyeballed both PNGs: at 200%
+the play hint wraps 3→4 lines without truncation or horizontal
+overflow. All 7 wcag-zoom tests green; typecheck clean.
+
+**Spec §8 sweep.** Three checkboxes flipped against verified evidence:
+
+- §8.1 L488 — Phone bundle ≤100KB ✅ (97.5 KB gzipped per §2.8.3 audit)
+- §8.1 L490 — No console.log in production ✅ (§2.8.4 grep sweep found
+  one, fixed in `room.ts`; `verify-prod-bundle.ts` keeps it that way)
+- §8.4 L522 — Fresh retheme grep zero Tier 1 hits ✅ (§2.8.4 sweep doc)
+
+§2.3 protocol doc updated to `programmatic complete (14/14)` status.
+Acceptance threshold flipped from "13 screens" to "14 screens" with
+"all automation-eligible screens covered." §8.1/§8.2 spec checkboxes
+that depend on canonical browser-UI zoom verification still gated on
+Briggsy's human-run pass — those `[ ]` boxes deliberately untouched.
+
+**What did NOT flip (and why).** §8.1 L489 "No `motion` imports (only
+`m`)" is enforced by ESLint at every commit, but the spec checkbox
+implies a final audit pass; flipping it solo would over-claim. §8.7
+final-gate items remain blocked on the first-time-player session.
+Plan-internal `[ ]` boxes in `phase-5-verification-acceptance.md`
+left as-is — they're internal bookkeeping for the plan's own §3 step
+sequence; the `THIS SESSION` log + commit history are the authoritative
+shipped-work record.
+
+### Actionable next — pick one
+
+Solo-friendly remaining work:
+
+- **Palette amendment Option C** (clears 5 of 14 design-attention
+  ratchets — see `docs/plans/css-foundation-rebuild/phase-5-cvd-followup.md`).
+  Bumps ochre-9 warmer/darker, addresses §2.4 B4/B5/E10 + §2.5 #4/#5
+  drama-accent contrast. Highest-leverage single move. Visual identity
+  touch on VICTORY ceremony — defensible as my call per
+  `user_color_blind` rule, but better with Briggsy's eyes on
+  before/after.
+- **Palette amendment Option A** (clears the worst tritan E6 collision
+  at 0.0098 distance — emerald-8 cooler shift). Smaller leverage than
+  Option C but lower visual-identity risk. Could land first as a low-
+  risk warm-up before tackling Option C.
+
+Briggsy-required (don't pick autonomously):
+
+- **Canonical 200% zoom human-run pass** (§2.3 protocol). Real
+  browser-UI zoom verification on the 14 captures now evidenced.
+  Protocol doc has the row template: `test/device-test/wcag-200-zoom-protocol.md`.
+- **Phase 5 §2.7 first-time player session.** Recruit a qualifying
+  tester (Archer-familiar, never seen BURNED, casual gamer). Protocol
+  ready: `test/first-player/protocol.md`. Final-final gate before §8
+  spec checkboxes flip.
+- **Visual review meeting** (§2.2.5). Three pending decisions —
+  GameOver winner glow hue, NopeCountdownBar emerald saturation,
+  Baveuse font purchase — block on Briggsy at the terminal with
+  Dreamland reference frames.
+- **Real-device playtest** (Active Priority #2) — Briggsy + iPad +
+  phones.
+- **8-player stress test** (Active Priority #3) — real TV + 8 phones.
+- **Physical hardware verification** (Active Priority #5) — deploy +
+  real TV.
+
+### Followups parked
+
+- **`phase-5-cvd-followup.md`** documents 14 design-attention ratchets
+  (9 CVD + 5 contrast). Option C (ochre-9 amendment) clears 5 in one
+  move. Option A (emerald-8 cooler) clears the worst tritan E6
+  collision (0.0098 distance). Each amendment is 1 commit + visual
+  verification + re-run palette tests.
+
+---
+
+### PRIOR SESSION (2026-05-06 evening) — CSS Phase 5 substantially advanced + Priority #4 closed + P0 React fix
 
 Ten commits in two productive arcs: Phase 5 verification battery (8 of
 23 steps shipped solo) and Active Priority #4 finished. Mid-flight a

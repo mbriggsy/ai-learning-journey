@@ -228,7 +228,7 @@ appears on paper.
 | **B-10** | Stale Nope bypasses stateVersion (intentional race), but windowGeneration check could gate stale replays | 🏷 |
 | **B-15** | Enqueued player-update reads gameState via closure — correct but brittle if player-removal ever lands | 🏷 |
 | **B-16** | 11th connection lingers until disconnect; MAX_CONNECTIONS=12 vs MAX_PLAYERS=10 buffer could be exhausted by unidentified connections | 🏷 |
-| **B-17** | Double-tap Cancel on NameCard → second fails `ALLOWED_ACTIONS`, user sees error toast after success | 🔴 |
+| **B-17** | Double-tap Cancel on NameCard → second fails `ALLOWED_ACTIONS`, user sees error toast after success. **Shipped 2026-05-07** — `NameCard.tsx` now uses a ref-based in-flight guard (`submittedRef`) alongside the state-based `disabled` prop. Refs update synchronously, so the second tap in a same-tick double-tap reads `submittedRef.current === true` and bails before the state-driven `disabled` prop has applied. Same race-class fix would also apply if other sheets show similar symptoms. | 🟢 |
 | **B-18** | iOS Safari visibility handler races React StrictMode pending-disconnect window | 🏷 |
 
 ### C (visual polish)
@@ -256,7 +256,7 @@ appears on paper.
 | **D-10** | Defuse Random uses client `Math.random()` (OK — not a cheat surface) | 🏷 |
 | **D-11** | TargetSelect rapid-tap fully guarded by `submitted` flag | 🏷 |
 | **D-12** | Double-tap stage/unstage — reducer idempotent | 🏷 |
-| **D-15** | Play card during own Nope window — server correctly rejects, button is not visually disabled | 🔴 |
+| **D-15** | Play card during own Nope window — server correctly rejects, button is not visually disabled. **Shipped 2026-05-02 in `b7824600`** — `SmartActionBox` outer gate relaxed from `(!myTurn \|\| nopeWindow.chainDepth >= 1)` to just `nopeWindow && isAlive`, so the ACTOR enters the nope-window branch unconditionally. During their own ~10s window the box shows "Intercept window · Ns" with `interactive: false` — there is no play CTA to spam-tap. Same end-effect as a disabled button. Fix referenced "ACTOR nope-window awareness" not "D-15," another ID-disconnect missed by the first audit pass. | 🟢 |
 | **D-22** | Tap outside TargetSelect clears staged cards (intentional) | 🏷 |
 | **D-23** | Intel Briefing with <3 cards in deck — flag for engine-level test | 🔴 |
 

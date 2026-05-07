@@ -1,4 +1,4 @@
-import { useState } from 'react'
+import { useRef, useState } from 'react'
 import { CARD_DEFS } from '@shared/card-defs'
 import type { CardType } from '@shared/types'
 import styles from './sheets.module.css'
@@ -17,7 +17,18 @@ const SPECIAL_CARDS = CARD_DEFS.filter(d => d.category === 'wild' || d.category 
 const ALL_NAMEABLE = [...OPERATIVE_CARDS, ...ACTION_CARDS, ...SPECIAL_CARDS]
 
 export function NameCard({ targetName, onNameCard, onCancel }: NameCardProps) {
+  // Two-track guard: the ref blocks rapid double-taps within a single
+  // event tick (React hasn't re-rendered yet, so the closure's `submitted`
+  // is still false, and `disabled={submitted}` hasn't applied). The state
+  // is what actually disables the button after re-render. B-17.
+  const submittedRef = useRef(false)
   const [submitted, setSubmitted] = useState(false)
+  const guard = (run: () => void) => () => {
+    if (submittedRef.current) return
+    submittedRef.current = true
+    setSubmitted(true)
+    run()
+  }
   return (
     <div>
       <div className={styles.sheetTitle}>Name a card to steal from {targetName}</div>
@@ -27,7 +38,7 @@ export function NameCard({ targetName, onNameCard, onCancel }: NameCardProps) {
           <button
             key={def.type}
             className={styles.optionBtn}
-            onClick={() => { if (!submitted) { setSubmitted(true); onNameCard(def.type as CardType) } }}
+            onClick={guard(() => onNameCard(def.type as CardType))}
             disabled={submitted}
             style={{ justifyContent: 'center' }}
           >
@@ -38,7 +49,7 @@ export function NameCard({ targetName, onNameCard, onCancel }: NameCardProps) {
       {onCancel && (
         <button
           className={styles.cancelBtn}
-          onClick={() => { if (!submitted) { setSubmitted(true); onCancel() } }}
+          onClick={guard(onCancel)}
           disabled={submitted}
         >
           Call off the raid

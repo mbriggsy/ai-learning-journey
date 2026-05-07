@@ -2,6 +2,131 @@
 
 ## NEXT SESSION — pick up here (2026-05-07+)
 
+### THIS SESSION (2026-05-07 evening) — 7-commit solo run: 6 issue-list rows closed (B-14, B-02, E-08, B-11, B-01, D-23)
+
+Briggsy went to happy hour and asked Claude to "hit everything you can do
+without me." Worked through the 5 truly-open non-visual 🔴 rows on the
+issue list, then a +1 (D-23 test-coverage row) after the visual eyeball.
+All 7 commits below shipped to origin/main.
+
+| Commit | Subject |
+|---|---|
+| `774fbf4a` | fix(join-screen): close B-14 — disconnected-name picker on GAME_ALREADY_STARTED |
+| `6843cce7` | fix(lobby): close B-02 — surface host-disconnect signal on phones |
+| `eae3ce96` | fix(server): close E-08 — close unidentified connections after 5s grace window |
+| `37e43fa0` | fix(server): close B-11 — any seated participant can return-to-lobby in game_over |
+| `6d885080` | fix(server): close B-01 — host session token prevents WiFi-blip race-steal |
+| `e57a25ef` | docs(triage): flip 5 rows 🔴 → 🟢 in E2E-ISSUE-LIST — evening sweep |
+| `ecd406ee` | fix(engine): close D-23 — Intel Briefing test coverage for <3-card deck |
+
+**Issue-list state:** 🟢 41 / 📋 8 / ⏸ 6 / 🔴 6 (down from 🔴 12 at
+session start). All 6 remaining 🔴 rows are visual (C-07/09/10/11/12/21)
+— need Briggsy-eye design input before they're solo-actionable.
+
+**B-14 (commit `774fbf4a`).** Returning player who wiped sessionStorage
+and mistypes their name was hitting a dead-end on `GAME_ALREADY_STARTED`.
+Server now computes the list of disconnected (reclaimable) names and
+ships them on the error payload. JoinScreen renders a "// Resume as"
+picker; tapping a name auto-submits and reclaims via the existing
+name-reclaim path. Privacy bar unchanged — only un-connected names are
+listed. Eyeballed live in Playwright: picker rendered correctly,
+disconnected name (Otto) shown, connected name (Vera) correctly omitted.
+
+**B-02 (commit `6843cce7`).** Host-disconnect during lobby was silent
+on phones — players stared at "Standing by, awaiting deployment" forever.
+`LobbyView` gains `hostConnected: boolean`; server flips it false after
+a debounced 3s host-disconnect (mirrors player disconnect debounce).
+JoinScreen swaps the joined-state waiting label from "Standing by..."
+to "// HOST OFFLINE" in accent-burned with color transition. Eyeballed:
+clean swap, no layout shift, accent-burned reads as warning without
+screaming.
+
+**E-08 (commit `eae3ce96`).** Unidentified WS connections could squat a
+MAX_CONNECTIONS slot for ~40s (heartbeat timeout). Server now schedules
+a 5s `identifyTimer` per accepted connection; if no role is set
+(host-connect/join/god) before fire, connection closes with code 4002
+(`Identify timeout`). Bounds slot-squat from 40s to 5s.
+
+**B-11 (commit `37e43fa0`).** `handleReturnToLobby` was host-only across
+all phases, so a closed-host-tab at the victory screen wedged the room.
+Widened in `game_over` only (playing-phase host-only privilege preserved).
+Player.tsx now passes `onPlayAgain`, so phones get a "Run It Back"
+button alongside the host's. Eyeballed: phone game_over shows VERA WINS
+hero stack + rankings + RUN IT BACK button in ochre.
+
+**B-01 (commit `6d885080`).** WiFi-blip race-steal vulnerability. Hosts
+now have session tokens (mirrors player session-tokens). Client mints a
+UUID in sessionStorage on first board load, sends in every host-connect.
+Server tracks `hostSession` (persisted in ctx.storage), accepts matching
+token reclaims, rejects mismatches. Disconnect grace (3s, shared with
+B-02) holds the token through blips. After grace expires with no
+reclaim, hostSession clears so anyone can claim.
+
+**D-23 (commit `ecd406ee`).** Intel Briefing test-coverage gap for
+<3-card decks. Behavior was already correct (`drawPile.slice(0, 3)`
+naturally short-results); 4 new engine tests pin the contract for deck
+sizes 0/1/2 + Falsify Intel parallel. Protects against a future
+"if drawPile.length >= 3" guard regression that would silently break
+the late-game shrinking-pile state.
+
+**Verification artifacts:** Eyeball screenshots were captured live in
+Playwright (`temp/eyeball/*.png`) and re-displayed inline during the
+session for Briggsy's "shippable" verdict. Cleaned by squeaky — re-run
+the visual scenarios via `tests/e2e/host-disconnect-lobby.spec.ts`,
+`tests/e2e/join-screen-server-error.spec.ts` (B-14 case), or any phone
+session driven through game_over (B-11) to regenerate.
+
+### Actionable next — pick one
+
+Solo-doable:
+
+- **Resume burned escort-concept via NBP** when `gemini-3-pro-image-preview`
+  is no longer 503ing. Carryover from the afternoon session — script is
+  ready, base image staged, just need NBP availability.
+- **Live mid-play state verification** (Active Priority #4). Playwright
+  E2E driving `__gameStore` to force each state, screenshot for eyeball.
+  Target states: Nope window mid-countdown, DramaOverlay variants,
+  Favor banner + staging, Triple-steal name-card sheet, FuturePeek.
+  ~3-4 hours; produces an artifact for couch eyeball later.
+- **Visual rows brief.** Capture before/after screenshots of the 5
+  remaining 🔴 visual issues (C-07/09/10/11/21) so Briggsy can make
+  design calls on each from his couch. Lower-leverage than #4 but
+  closes off the issue list as a coupled batch.
+
+Briggsy-required (carryover, all still open):
+
+- **Canonical 200% zoom human-run pass** (§2.3 protocol).
+- **Phase 5 §2.7 first-time player session.**
+- **Visual review meeting** (§2.2.5) — GameOver glow, Nope emerald sat,
+  Baveuse font.
+- **Real-device playtest** (Active Priority #2).
+- **8-player stress test** (Active Priority #3).
+- **Physical hardware verification** (Active Priority #5).
+- **Visual rows in issue list:** C-07 / C-09 / C-10 / C-11 / C-12 / C-21.
+
+### Landmines (read before next session)
+
+- **`LobbyView.hostConnected: boolean` is now a REQUIRED field** on the
+  server-projected lobby view. 7 unit-test fixtures in
+  `gameStore.test.ts` were updated; any new lobby-view fixture must
+  include `hostConnected: true|false`.
+- **`host-connect` payload now carries `sessionToken?: string`** —
+  optional at the schema level (Zod `z.string().uuid().optional()`)
+  for backward compat. NEW board clients must send a UUID via
+  `getOrCreateHostSessionToken()`; OLD clients that don't send fall
+  through to the no-token branch (mints + adopts first-time, rejected
+  on reclaim attempts).
+- **WS close code `4002`** is now used for E-08 identify timeout
+  closures. Reserved — don't reuse for other close paths.
+- **Zod v4's UUID validator strictly enforces RFC 4122 v4** version +
+  variant bits. Test fixtures must use real-shaped UUIDs (not all-1s
+  patterns). `crypto.randomUUID()` produces conforming UUIDs.
+- **`hostSession` persists across DO restarts** via `ctx.storage`. If
+  you ever need to forcibly evict a host (admin reset?), clear
+  `hostSession` in storage AND in-memory.
+
+---
+
 ### THIS SESSION (2026-05-07 afternoon) — 11-commit run: card art, triage cleanup, race-class hardening, protocol bump
 
 Big productive afternoon. Card art swap, then a thorough audit of

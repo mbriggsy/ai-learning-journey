@@ -899,6 +899,97 @@ describe('Intel Briefing', () => {
       expect(drawn.pendingFuture).toBeUndefined()
     }
   })
+
+  // --- D-23: <3 cards in deck ---
+  // Intel Briefing peeks the top 3 cards of the draw pile via slice(0, 3).
+  // The slice naturally returns whatever is there, so deck sizes 0/1/2
+  // structurally produce a short pendingFuture.cardIds. These tests pin
+  // that contract: the engine MUST accept the play, MUST emit the
+  // future-peeked event, and MUST set pendingFuture even when the deck
+  // can't fill the full peek. A regression that adds an "if drawPile.length
+  // >= 3" guard would silently destroy Intel Briefing in the late-game
+  // shrinking-pile state where it most matters strategically.
+  it('D-23: empty draw pile — pendingFuture.cardIds is empty', () => {
+    let state = startGameWith(2)
+    state = giveCard(state, 'p1', 'intel-briefing', 'd23-empty')
+    state = { ...state, drawPile: [] }
+
+    const card = findCard(state, 'p1', 'intel-briefing')!
+    let result = act(state, { type: 'play-card', playerId: 'p1', cardIds: [card.id] })
+    expect(result.ok).toBe(true)
+
+    result = resolveNopeWindow((result as { ok: true; state: GameState }).state as PlayingState, makeCtx(99999))
+    expect(result.ok).toBe(true)
+
+    const s = (result as { ok: true; state: GameState }).state as PlayingState
+    expect(s.pendingFuture).toBeDefined()
+    expect(s.pendingFuture!.cardIds).toEqual([])
+    expect(s.pendingFuture!.playerId).toBe('p1')
+    expect(s.events.some(e => e.type === 'future-peeked' && e.playerId === 'p1')).toBe(true)
+  })
+
+  it('D-23: 1 card in draw pile — pendingFuture.cardIds has 1 entry', () => {
+    let state = startGameWith(2)
+    state = giveCard(state, 'p1', 'intel-briefing', 'd23-one')
+    state = { ...state, drawPile: [{ id: 'top', type: 'extraction' } as CardInstance] }
+
+    const card = findCard(state, 'p1', 'intel-briefing')!
+    let result = act(state, { type: 'play-card', playerId: 'p1', cardIds: [card.id] })
+    result = resolveNopeWindow((result as { ok: true; state: GameState }).state as PlayingState, makeCtx(99999))
+    expect(result.ok).toBe(true)
+
+    const s = (result as { ok: true; state: GameState }).state as PlayingState
+    expect(s.pendingFuture!.cardIds).toEqual(['top'])
+  })
+
+  it('D-23: 2 cards in draw pile — pendingFuture.cardIds has 2 entries in top-down order', () => {
+    let state = startGameWith(2)
+    state = giveCard(state, 'p1', 'intel-briefing', 'd23-two')
+    state = {
+      ...state,
+      drawPile: [
+        { id: 'top', type: 'extraction' } as CardInstance,
+        { id: 'second', type: 'extraction' } as CardInstance,
+      ],
+    }
+
+    const card = findCard(state, 'p1', 'intel-briefing')!
+    let result = act(state, { type: 'play-card', playerId: 'p1', cardIds: [card.id] })
+    result = resolveNopeWindow((result as { ok: true; state: GameState }).state as PlayingState, makeCtx(99999))
+    expect(result.ok).toBe(true)
+
+    const s = (result as { ok: true; state: GameState }).state as PlayingState
+    // Order matters — Intel Briefing is "top 3 in order"; the peek UI
+    // surfaces position #1/#2/#3. cardIds[0] must be the literal top card.
+    expect(s.pendingFuture!.cardIds).toEqual(['top', 'second'])
+  })
+
+  it('D-23: Falsify Intel with <3 cards — same short-pile shape', () => {
+    // Falsify Intel (alter-the-future) shares the slice(0, 3) read; the
+    // rearrange UI must therefore handle 0/1/2-card piles too. Pin the
+    // engine contract here so a future "guard if length >= 3" change
+    // can't break Falsify silently.
+    let state = startGameWith(2)
+    state = giveCard(state, 'p1', 'falsify-intel', 'd23-falsify')
+    state = {
+      ...state,
+      drawPile: [{ id: 'only', type: 'extraction' } as CardInstance],
+    }
+
+    const card = findCard(state, 'p1', 'falsify-intel')!
+    let result = act(state, { type: 'play-card', playerId: 'p1', cardIds: [card.id] })
+    result = resolveNopeWindow((result as { ok: true; state: GameState }).state as PlayingState, makeCtx(99999))
+    expect(result.ok).toBe(true)
+
+    const s = (result as { ok: true; state: GameState }).state as PlayingState
+    expect(s.subPhase).toBe('future-rearrange-pending')
+    expect(s.pendingFuture!.cardIds).toEqual(['only'])
+    expect(s.pendingPrompt).toEqual({
+      type: 'future-rearrange',
+      playerId: 'p1',
+      cardIds: ['only'],
+    })
+  })
 })
 
 describe('Falsify Intel', () => {

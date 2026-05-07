@@ -43,12 +43,16 @@ they're actionable solo. (B-12, B-17, C-25, D-04, D-15, D-16 were
 closed inline by additional 2026-05-07 commits — see their rows
 for citations.)
 
-**2026-05-07 evening sweep — 5 of 12 truly-open rows closed:**
+**2026-05-07 evening sweep — 6 of 12 truly-open rows closed:**
 B-14 (`774fbf4a`), B-02 (`6843cce7`), E-08 (`eae3ce96`), B-11
-(`37e43fa0`), B-01 (`6d885080`). All five ship with new E2E test
-coverage (host-disconnect-lobby, identify-timeout, host-session-token,
-plus extension to join-screen-server-error). Remaining 🔴 visual rows
-(C-07/09/10/11/21) need design-eye input.
+(`37e43fa0`), B-01 (`6d885080`), D-23 (this commit). The five non-test
+rows ship with new E2E test coverage (host-disconnect-lobby,
+identify-timeout, host-session-token, plus extension to
+join-screen-server-error). D-23 ships with 4 new engine-level tests
+covering Intel Briefing + Falsify Intel against deck sizes 0/1/2.
+
+**Truly-open 🔴 rows after sweep: 6 — all visual** (C-07, C-09, C-10,
+C-11, C-12, C-21). Need design-eye input before they're solo-actionable.
 
 **Audit follow-up 2026-05-07 (later pass + inline fixes):** D-16 +
 D-15 found to have been shipped in `d9c40753` and `b7824600`
@@ -274,7 +278,7 @@ appears on paper.
 | **D-12** | Double-tap stage/unstage — reducer idempotent | 🏷 |
 | **D-15** | Play card during own Nope window — server correctly rejects, button is not visually disabled. **Shipped 2026-05-02 in `b7824600`** — `SmartActionBox` outer gate relaxed from `(!myTurn \|\| nopeWindow.chainDepth >= 1)` to just `nopeWindow && isAlive`, so the ACTOR enters the nope-window branch unconditionally. During their own ~10s window the box shows "Intercept window · Ns" with `interactive: false` — there is no play CTA to spam-tap. Same end-effect as a disabled button. Fix referenced "ACTOR nope-window awareness" not "D-15," another ID-disconnect missed by the first audit pass. | 🟢 |
 | **D-22** | Tap outside TargetSelect clears staged cards (intentional) | 🏷 |
-| **D-23** | Intel Briefing with <3 cards in deck — flag for engine-level test | 🔴 |
+| **D-23** | Intel Briefing with <3 cards in deck — flag for engine-level test. **Shipped 2026-05-07 in `<HEAD>`** — `applySeeTheFuture` slices `drawPile.slice(0, 3)`, structurally returning `[]` / `[c]` / `[c, c]` for short piles. Locked with 4 engine tests in `engine.test.ts`: deck sizes 0/1/2 for Intel Briefing + Falsify Intel sharing the same read path. Tests pin the contract that engine MUST accept the play, MUST emit `future-peeked`, MUST set `pendingFuture` even when the deck can't fill the full 3 — protects against a future "guard if length >= 3" regression that would silently break the late-game shrinking-pile state where Intel Briefing matters most. | 🟢 |
 
 ### E (validation)
 

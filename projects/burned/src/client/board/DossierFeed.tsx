@@ -151,13 +151,18 @@ export function DossierFeed({ players }: Props) {
           {visibleStrips.map(({ entry, text }, index) => {
             // Per-strip resting style — alternating X-drift gives the stack
             // a natural tossed-on-desk variance instead of a tidy single-
-            // axis spiral. Vertical stacking + scroll container are handled
+            // axis spiral. Magnitude capped at 6px so deep-history strips
+            // don't accumulate offset past `.strips`'s overflow-x clip
+            // (overflow-y: auto forces overflow-x clipping per CSS spec —
+            // unbounded growth left-clipped early letters of strips at
+            // index 7+). Vertical stacking + scroll container are handled
             // by CSS flex — no manual Y offset here. Opacity decays for
             // hierarchy (newest = loudest) but floors high enough that
             // deep-history strips stay readable when scrolled into view.
             const dir = index % 2 === 0 ? 1 : -1
+            const offsetMagnitudePx = Math.min(index, 3) * 2
             const restingStyle = {
-              '--strip-offset-x': `${index * 2 * dir}px`,
+              '--strip-offset-x': `${offsetMagnitudePx * dir}px`,
               '--strip-opacity': String(Math.max(0.32, 1 - index * 0.04)),
             } as React.CSSProperties
             return (

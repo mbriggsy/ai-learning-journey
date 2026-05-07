@@ -27,6 +27,16 @@ export function JoinScreen({ connectionStatus, assignedColor, onJoin, roomCode, 
   const lastError = useLastError()
   const joined = assignedColor !== null
 
+  // Reclaim hint — populated when the server rejects a mid-game join with
+  // GAME_ALREADY_STARTED. The dead-end scenario is a returning player who
+  // wiped sessionStorage (closed tab, browser cleared) and mistyped their
+  // name. Server returns the list of disconnected (reclaimable) names so
+  // we can render a "Did you mean?" picker. B-14.
+  const reclaimNames =
+    lastError?.code === 'GAME_ALREADY_STARTED' && lastError.disconnectedNames
+      ? lastError.disconnectedNames
+      : null
+
   // Surface server errors (`GAME_ALREADY_STARTED`, `NAME_TAKEN`,
   // `NAME_INVALID`, `ROOM_FULL`, ...) the same way as client validation
   // failures. Without this the player UI silently swallows every server
@@ -163,6 +173,28 @@ export function JoinScreen({ connectionStatus, assignedColor, onJoin, roomCode, 
           }}
         />
         {error && <p className={styles.error}>{error}</p>}
+        {reclaimNames && reclaimNames.length > 0 && (
+          <div className={styles.reclaimPanel}>
+            <p className={styles.reclaimLabel}>// Resume as</p>
+            <ul className={styles.reclaimList}>
+              {reclaimNames.map(reclaimName => (
+                <li key={reclaimName}>
+                  <button
+                    type="button"
+                    className={styles.reclaimButton}
+                    onClick={() => {
+                      setName(reclaimName)
+                      setError(null)
+                      onJoin(reclaimName)
+                    }}
+                  >
+                    {reclaimName}
+                  </button>
+                </li>
+              ))}
+            </ul>
+          </div>
+        )}
         <button className={styles.joinButton} type="submit">Check In</button>
       </form>
     </div>

@@ -74,4 +74,51 @@ test.describe('JoinScreen: server-error surfacing', () => {
     await late.locator('input[type="text"]').fill('Latecomer2')
     await expect(errorMsg).toHaveCount(0)
   })
+
+  test('B-14: GAME_ALREADY_STARTED surfaces a reclaim picker for disconnected names', async ({
+    board,
+    phones,
+    roomCode,
+  }) => {
+    // Two phones join + game starts.
+    await joinPhone(phones[0]!, roomCode, 'Vera')
+    await joinPhone(phones[1]!, roomCode, 'Otto')
+    await waitForPlayerCount(board, 2)
+    await board.locator('button:has-text("Cleared Hot")').click()
+    await waitForPhase(board, 'playing', 10_000)
+
+    // Otto's tab dies (sessionStorage is wiped from server's perspective —
+    // his WebSocket closes, so his playerId is no longer in any active
+    // connection state). Vera stays connected.
+    await phones[1]!.close()
+
+    // Latecomer phone — a returning Otto whose phone died, with a typo on
+    // his retry. Server refuses with GAME_ALREADY_STARTED but now includes
+    // disconnectedNames=['Otto'] so the dead-end becomes a recovery path.
+    const late = phones[2]!
+    await late.goto(`/player.html?room=${roomCode}&name=Stranger`)
+
+    // Picker button for the disconnected name appears under the input.
+    const reclaimBtn = late.locator('button[class*="reclaimButton"]:has-text("Otto")')
+    await reclaimBtn.waitFor({ state: 'visible', timeout: 5_000 })
+
+    // Vera's name MUST NOT appear — she's still actively connected.
+    await expect(
+      late.locator('button[class*="reclaimButton"]:has-text("Vera")'),
+    ).toHaveCount(0)
+
+    // Tap the picker. Server takes the reclaim and projects the player's
+    // hand back to this tab — assignedColor flips, the join form is
+    // replaced by the in-game UI.
+    await reclaimBtn.click()
+    await late.waitForFunction(
+      () => {
+        const snap = (window as unknown as Record<string, () => Record<string, unknown> | null>)
+          .__gameStoreSnapshot?.()
+        return snap?.phase === 'playing'
+      },
+      undefined,
+      { timeout: 5_000 },
+    )
+  })
 })

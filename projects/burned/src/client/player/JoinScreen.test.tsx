@@ -7,7 +7,9 @@ import { LazyMotion, domMax } from 'motion/react'
 // Controlled mock for useLastError so tests can drive server-error UI without
 // poking the real singleton store between tests. The rest of the gameStore
 // module is preserved via importActual — the mock only replaces this one hook.
-const lastErrorRef: { current: { code: string; message: string } | null } = {
+const lastErrorRef: {
+  current: { code: string; message: string; disconnectedNames?: readonly string[] } | null
+} = {
   current: null,
 }
 
@@ -68,10 +70,16 @@ function getErrorText(container: HTMLElement): string | null {
   return el?.textContent ?? null
 }
 
-function setLastError(code: string, message: string): void {
+function setLastError(
+  code: string,
+  message: string,
+  disconnectedNames?: readonly string[],
+): void {
   // Each call constructs a fresh object so React's effect dependency
   // (referential equality) re-fires for repeat refusals.
-  lastErrorRef.current = { code, message }
+  lastErrorRef.current = disconnectedNames
+    ? { code, message, disconnectedNames }
+    : { code, message }
 }
 
 // ---------------------------------------------------------------------------
@@ -196,6 +204,74 @@ describe('JoinScreen — server error surfacing', () => {
       })
       expect(getErrorText(container)).toBe('Enter a name')
       expect(onJoin).not.toHaveBeenCalled()
+    } finally {
+      teardown(container, root)
+    }
+  })
+})
+
+// ---------------------------------------------------------------------------
+// Reclaim picker (B-14)
+//
+// When a returning player wipes sessionStorage and mistypes their name, the
+// server returns GAME_ALREADY_STARTED with `disconnectedNames` listing the
+// reclaimable seats. JoinScreen renders a "Resume as" picker so the player
+// can recover instead of dead-ending on the bare error.
+// ---------------------------------------------------------------------------
+
+function getReclaimButtons(container: HTMLElement): HTMLButtonElement[] {
+  return Array.from(
+    container.querySelectorAll<HTMLButtonElement>('button[class*="reclaimButton"]'),
+  )
+}
+
+describe('JoinScreen — reclaim picker (B-14)', () => {
+  it('renders disconnected names as picker buttons on GAME_ALREADY_STARTED', () => {
+    setLastError('GAME_ALREADY_STARTED', 'Game has already started', ['Vera', 'Otto'])
+    const { container, root } = mount()
+    try {
+      renderJoinForm(root)
+      const buttons = getReclaimButtons(container)
+      expect(buttons.map(b => b.textContent)).toEqual(['Vera', 'Otto'])
+    } finally {
+      teardown(container, root)
+    }
+  })
+
+  it('does not render the picker when disconnectedNames is empty', () => {
+    setLastError('GAME_ALREADY_STARTED', 'Game has already started', [])
+    const { container, root } = mount()
+    try {
+      renderJoinForm(root)
+      expect(getReclaimButtons(container)).toHaveLength(0)
+    } finally {
+      teardown(container, root)
+    }
+  })
+
+  it('does not render the picker for non-GAME_ALREADY_STARTED errors', () => {
+    setLastError('NAME_TAKEN', 'Name already taken', ['Vera'])
+    const { container, root } = mount()
+    try {
+      renderJoinForm(root)
+      expect(getReclaimButtons(container)).toHaveLength(0)
+    } finally {
+      teardown(container, root)
+    }
+  })
+
+  it('tapping a name calls onJoin with that name', () => {
+    setLastError('GAME_ALREADY_STARTED', 'Game has already started', ['Vera', 'Otto'])
+    const onJoin = vi.fn()
+    const { container, root } = mount()
+    try {
+      renderJoinForm(root, { onJoin })
+      const buttons = getReclaimButtons(container)
+      act(() => {
+        buttons[1]!.dispatchEvent(new MouseEvent('click', { bubbles: true }))
+      })
+      expect(onJoin).toHaveBeenCalledTimes(1)
+      expect(onJoin).toHaveBeenCalledWith('Otto')
     } finally {
       teardown(container, root)
     }

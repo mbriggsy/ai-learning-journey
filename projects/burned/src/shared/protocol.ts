@@ -45,7 +45,7 @@ export type ServerMessage =
   | { type: 'state-update'; payload: LobbyView | BoardView; protocolVersion: number }
   | { type: 'player-update'; payload: { state: PlayerView; private: PrivateData }; protocolVersion: number }
   | { type: 'joined'; payload: { playerId: string; sessionToken: string; color: string; protocolVersion: number } }
-  | { type: 'error'; payload: { code: ErrorCode; message: string } }
+  | { type: 'error'; payload: { code: ErrorCode; message: string; disconnectedNames?: readonly string[] } }
   | { type: 'action-rejected'; payload: { message: string } }
   | { type: 'ping'; payload: Record<string, never> }
   | { type: 'pong'; payload: Record<string, never> }

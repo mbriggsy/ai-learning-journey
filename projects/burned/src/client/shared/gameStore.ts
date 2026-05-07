@@ -9,7 +9,7 @@ import type { GameEvent } from '@shared/types'
 // --- Types ---
 
 export type ViewState = LobbyView | BoardView | PlayerView
-export interface GameError { code: ErrorCode; message: string }
+export interface GameError { code: ErrorCode; message: string; disconnectedNames?: readonly string[] }
 type Listener = () => void
 
 // --- Accumulated Event ---

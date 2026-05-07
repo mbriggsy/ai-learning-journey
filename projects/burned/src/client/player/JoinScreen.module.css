@@ -142,6 +142,80 @@
   outline-offset: var(--space-1);
 }
 
+/* --- Reclaim Picker (B-14) ---
+   Shown when the server rejects a mid-game join with GAME_ALREADY_STARTED
+   AND the room has disconnected players the joiner could reclaim. Shape
+   borrows from .rosterPanel (joined-state operatives panel) so the dead-end
+   recovery path stays inside the Pendleton-Agency dossier vocabulary. */
+.reclaimPanel {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-2);
+  padding: var(--space-3) var(--space-4);
+  background: color-mix(in oklab, var(--color-bg-surface) 70%, transparent);
+  border: 1px solid color-mix(in oklab, var(--color-accent-drama) 14%, transparent);
+  border-radius: 3px;
+}
+
+.reclaimLabel {
+  font-family: var(--font-mono);
+  font-size: var(--text-caption);
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: 0.22em;
+  color: color-mix(in oklab, var(--color-accent-drama) 82%, transparent);
+  margin: 0;
+}
+
+.reclaimList {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-2);
+  list-style: none;
+  margin: 0;
+  padding: 0;
+}
+
+.reclaimButton {
+  width: 100%;
+  display: flex;
+  align-items: center;
+  gap: var(--space-3);
+  padding: var(--space-3) var(--space-4);
+  font-family: var(--font-display);
+  font-size: var(--text-body);
+  font-weight: 600;
+  letter-spacing: 0.04em;
+  text-transform: uppercase;
+  text-align: left;
+  color: var(--color-fg-primary);
+  background: color-mix(in oklab, var(--color-bg-elevated) 55%, transparent);
+  border: 1px solid color-mix(in oklab, var(--color-border-subtle) 60%, transparent);
+  border-radius: 2px;
+  cursor: pointer;
+  touch-action: manipulation;
+  transition:
+    background var(--motion-duration-fast) var(--motion-ease-base),
+    border-color var(--motion-duration-fast) var(--motion-ease-base),
+    transform var(--motion-duration-fast) var(--motion-ease-decelerate);
+}
+
+@media (hover: hover) and (pointer: fine) {
+  .reclaimButton:hover {
+    background: color-mix(in oklab, var(--color-bg-elevated) 80%, transparent);
+    border-color: color-mix(in oklab, var(--color-accent-drama) 30%, transparent);
+  }
+}
+
+.reclaimButton:active {
+  transform: scale(0.98);
+}
+
+.reclaimButton:focus-visible {
+  outline: 2px solid var(--color-border-focus);
+  outline-offset: var(--space-1);
+}
+
 /* --- Connecting State --- */
 
 .spinner {

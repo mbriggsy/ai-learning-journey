@@ -590,9 +590,27 @@ export class GameRoom extends Server<Env> {
       }
     }
 
-    // New join requires lobby phase
+    // New join requires lobby phase. If a returning player wiped their
+    // session and mistyped their name, the bare error becomes a dead end
+    // — they can't see who's already in the room to pick the right name
+    // back out. Surface the list of disconnected (reclaimable) names so
+    // the client can render a "Did you mean?" picker. B-14.
     if (this.gameState.phase !== 'lobby') {
-      this.sendError(connection, 'GAME_ALREADY_STARTED', 'Game has already started')
+      const activePlayerIds = new Set<string>()
+      for (const conn of this.getConnections()) {
+        const s = this.getConnState(conn)
+        if (s?.role === 'player') activePlayerIds.add(s.playerId)
+      }
+      const disconnectedNames: string[] = []
+      for (const [pid, name] of this.playerNames.entries()) {
+        if (!activePlayerIds.has(pid)) disconnectedNames.push(name)
+      }
+      this.sendError(
+        connection,
+        'GAME_ALREADY_STARTED',
+        'Game has already started',
+        { disconnectedNames },
+      )
       return
     }
 
@@ -1080,8 +1098,18 @@ export class GameRoom extends Server<Env> {
     try { connection.send(JSON.stringify(msg)) } catch { /* closing */ }
   }
 
-  private sendError(connection: Connection, code: ErrorCode, message: string): void {
-    this.send(connection, { type: 'error', payload: { code, message } })
+  private sendError(
+    connection: Connection,
+    code: ErrorCode,
+    message: string,
+    extras?: { disconnectedNames?: readonly string[] },
+  ): void {
+    const payload: { code: ErrorCode; message: string; disconnectedNames?: readonly string[] } =
+      { code, message }
+    if (extras?.disconnectedNames && extras.disconnectedNames.length > 0) {
+      payload.disconnectedNames = extras.disconnectedNames
+    }
+    this.send(connection, { type: 'error', payload })
   }
 
   private makeDispatchContext(): DispatchContext {

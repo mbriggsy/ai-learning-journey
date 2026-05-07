@@ -13,6 +13,9 @@ DESIGN_ATTENTION ratchets logged at session start.
 | `6bd331d4` | feat(css-foundation): Phase 5 Option A — emerald-8 #396d5a → #3f8d7e (3 CVD ratchets graduate) |
 | `79858e22` | feat(css-foundation): Phase 5 Option C — ochre-9 #b0754c → #947226 (4 ratchets graduate) |
 | `c716d329` | feat(css-foundation): Phase 5 §2.5 #1 — fg-muted cream-9 → cream-10 (Lc 43 → 48) |
+| `e773d762` | docs(todo): bring current — Options A/C/fg-muted commits, ratchet inventory 14 → 6 |
+| `92d296d0` | test(arena-states): permanent drama-accent CardDetailSheet capture (07) |
+| `f9d80ce4` | docs(insights): 051 — prose CVD recommendations are wrong-direction more often than not |
 
 **Ratchet inventory: 14 → 6.** `DESIGN_ATTENTION_CASES` (CVD) trimmed
 from 9 → 3 entries (E1 deuter, E2 protan, E6 deuter remain).

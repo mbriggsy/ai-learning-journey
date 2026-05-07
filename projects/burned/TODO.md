@@ -102,7 +102,7 @@ Briggsy-required (carryover, all still open):
 - **Real-device playtest** (Active Priority #2).
 - **8-player stress test** (Active Priority #3).
 - **Physical hardware verification** (Active Priority #5).
-- **Visual rows in issue list:** C-07 / C-09 / C-10 / C-11 / C-12 / C-21.
+- **Visual rows in issue list:** C-07 / C-09 / C-10 / C-11 / C-12.
 
 ### Landmines (read before next session)
 
@@ -302,14 +302,11 @@ Solo-doable:
   any front door, open the rear door). The script reads from
   `temp/cards/burned-iter11-cropped-LOCKED.png` so copy the candidate
   to that path before re-running.
-- **Continue the E2E-ISSUE-LIST cleanup.** 12 truly-open 🔴 rows
-  remain. Highest-leverage solo-doable picks: B-01 (host session
-  token / race-steal risk, security work), B-02 (host-disconnect
-  during lobby silent, UI signal), B-11 (rejoin after game_over only
-  host can return-to-lobby, server logic), B-14 (sessionStorage-wiped
-  name dead-end, UI), E-08 (rate limit pre-join, server). The
-  remaining visual rows (C-07 / C-09 / C-10 / C-11 / C-21) all need
-  Briggsy-eye visual-identity input.
+- **Continue the E2E-ISSUE-LIST cleanup.** 5 truly-open 🔴 rows
+  remain after the 2026-05-07 evening sweep + C-21 measurement-driven
+  closure (resolved by side-effect of `308bbdbf` from 2026-04-27).
+  All 5 are visual: C-07, C-09, C-10, C-11, C-12. They all need
+  Briggsy-eye visual-identity input before they're solo-actionable.
 - **Visual review on the 5-commit Phase 5 palette batch** (carryover
   from prior session) — drama-accent CARD FACE inspection still
   pending. Now unblocked from extraction + intel-briefing perspective;

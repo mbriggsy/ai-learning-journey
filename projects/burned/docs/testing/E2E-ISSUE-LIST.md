@@ -36,11 +36,11 @@ rows below were back-filled in a single sweep after spot-checks
 during the C-30..C-33 triage cleanup found rows that had been left
 🔴 even though their commits had landed weeks earlier. Each shipped
 row now cites its commit. The ⏸ rows (C-13, C-15, C-16-19) and the
-remaining 🔴 rows (C-07/09/10/11/12/21, D-23 — 7 IDs after the
-2026-05-07 evening sweep below) are genuinely-open per the same
-commit-history audit. Visual rows need Briggsy-eye review before
-they're actionable solo. (B-12, B-17, C-25, D-04, D-15, D-16 were
-closed inline by additional 2026-05-07 commits — see their rows
+remaining 🔴 rows (C-07/09/10/11/12, D-23 — 6 IDs after the
+2026-05-07 evening sweep + C-21 closure below) are genuinely-open
+per the same commit-history audit. Visual rows need Briggsy-eye review
+before they're actionable solo. (B-12, B-17, C-25, D-04, D-15, D-16
+were closed inline by additional 2026-05-07 commits — see their rows
 for citations.)
 
 **2026-05-07 evening sweep — 6 of 12 truly-open rows closed:**
@@ -51,8 +51,15 @@ identify-timeout, host-session-token, plus extension to
 join-screen-server-error). D-23 ships with 4 new engine-level tests
 covering Intel Briefing + Falsify Intel against deck sizes 0/1/2.
 
-**Truly-open 🔴 rows after sweep: 6 — all visual** (C-07, C-09, C-10,
-C-11, C-12, C-21). Need design-eye input before they're solo-actionable.
+**Truly-open 🔴 rows after sweep: 5 — all visual** (C-07, C-09, C-10,
+C-11, C-12). Need design-eye input before they're solo-actionable.
+
+**C-21 closure 2026-05-07 (this commit):** measurement re-test via
+chrome-devtools-mcp confirmed C-21 was resolved by side-effect of
+`308bbdbf` (2026-04-27, "pin .cardDesc to 2lh" — landed 4 days after
+the original 2026-04-23 audit). Five viewports × six scroll positions ×
+stage-transition probe — all within-hand heights uniform at every
+measurement. The mechanism is documented in the C-21 row.
 
 **Audit follow-up 2026-05-07 (later pass + inline fixes):** D-16 +
 D-15 found to have been shipped in `d9c40753` and `b7824600`
@@ -189,7 +196,7 @@ appears on paper.
 | **C-14** | INTERCEPTED drama hold 800ms, EXTRACTED 1000ms — too short to read from couch across a 15ft room. **Shipped 2026-04-23 in `1db5ddab`** — drama hold extended; transient INTERCEPTED beat aborts on `turn-started` (later refined). | 🟢 |
 | **C-15** | Board shows `{NAME} BURNED` text while drawer sees the CARD — board arguably should get the card variant too (it's the narrator) | ⏸ (product call) |
 | **C-20** | Active player "ACTIVE" pill on PlayerStrip clips tile's top border; +2 turns badge crams against card count. **Shipped 2026-04-23 in `a9a8e373`** — PlayerStrip pill spacing fix. | 🟢 |
-| **C-21** | Hand cards render 368 vs 389 tall depending on `@container (min-width: 177px)` — neighbor heights bounce during scroll-snap | 🔴 |
+| **C-21** | Hand cards render 368 vs 389 tall depending on `@container (min-width: 177px)` — neighbor heights bounce during scroll-snap. **Resolved by side-effect of `308bbdbf` (2026-04-27, post-audit)** — `.cardDesc { min-height: 2lh }` floors single-line description cards (Agent X, Burn the Files, Intel Briefing, Scramble) to the same content min-height as multi-line ones. Pre-fix, single-line desc cards collapsed and 2-line desc cards' min-content height could exceed the aspect-ratio-derived height (CSS `aspect-ratio` is a hint, not a hard cap), bouncing within a single hand. Post-fix, all descs occupy 2lh and all cards converge on aspect-ratio height. Verified 2026-05-07 via chrome-devtools-mcp at viewports 320×568, 360×640, 390×844, 414×896, 768×1024 across 6 scroll positions and a stage-transition probe — within-hand heights uniform at every measurement (max delta 0.0px). The audit's "368 vs 389" doesn't reproduce at any tested viewport. | 🟢 |
 | **C-22** | `player-eliminated` event without `rank` renders `#undefined` — unguarded template interpolation. **Shipped 2026-04-23 in `1db5ddab`** — eliminated rank guard. | 🟢 |
 | **C-23** | TargetSelect "Unknown" fallback when targetId doesn't resolve reads as a bug, not game state. **Shipped 2026-04-23 in `a9a8e373`** — target-unknown copy fix. | 🟢 |
 

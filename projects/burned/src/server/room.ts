@@ -804,15 +804,29 @@ export class GameRoom extends Server<Env> {
   // --- Return to Lobby ---
 
   private handleReturnToLobby(connection: Connection): void {
-    const connState = this.getConnState(connection)
-    if (connState?.role !== 'host') {
-      this.sendError(connection, 'NOT_HOST', 'Only the host can return to lobby')
-      return
-    }
-
     if (!this.gameState || this.gameState.phase === 'lobby') {
       this.sendError(connection, 'INVALID_ACTION', 'Already in lobby')
       return
+    }
+
+    const connState = this.getConnState(connection)
+    const isGameOver = this.gameState.phase === 'game_over'
+
+    // B-11: in game-over, any seated participant can return everyone to
+    // lobby — recovery path for when the host tab closed at the victory
+    // screen and the room would otherwise be wedged. In playing phase the
+    // host-only privilege is preserved (mid-game return-to-lobby is a
+    // host decision; one player can't drag everyone back to lobby).
+    if (isGameOver) {
+      if (connState?.role !== 'host' && connState?.role !== 'player') {
+        this.sendError(connection, 'INVALID_ACTION', 'Not connected as host or player')
+        return
+      }
+    } else {
+      if (connState?.role !== 'host') {
+        this.sendError(connection, 'NOT_HOST', 'Only the host can return to lobby')
+        return
+      }
     }
 
     // Clear all game timers including pending disconnect debounces

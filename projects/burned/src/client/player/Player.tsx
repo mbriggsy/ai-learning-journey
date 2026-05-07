@@ -227,6 +227,13 @@ function PhoneRouter({ connectionStatus, assignedColor, onJoin, roomCode, urlNam
 
   if (state.phase === 'game_over') {
     const myId = 'myPlayerId' in state ? state.myPlayerId : undefined
+    // B-11: phones get a "Run It Back" button too. The host has one on
+    // the TV, but if the host tab is closed at the victory screen the
+    // room would otherwise be wedged — players couldn't recover. Server
+    // accepts return-to-lobby from any player in game_over phase.
+    const handlePlayAgain = myId
+      ? () => send({ type: 'return-to-lobby', payload: {} })
+      : undefined
     return (
       <Fragment key="game_over">
         <GameOver
@@ -234,6 +241,7 @@ function PhoneRouter({ connectionStatus, assignedColor, onJoin, roomCode, urlNam
           winnerId={state.winnerId}
           eliminationOrder={state.eliminationOrder}
           myPlayerId={myId}
+          onPlayAgain={handlePlayAgain}
         />
       </Fragment>
     )

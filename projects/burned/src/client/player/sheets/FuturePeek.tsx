@@ -60,11 +60,13 @@ export function FuturePeek({ cards, canRearrange, onDismiss, onRearrange }: Futu
               className={styles.peekSlot}
               data-tapped={isTapped || undefined}
             >
-              <MinimalCard
-                type={card.type}
-                disabled={!canRearrange || isTapped || submitted}
-                onClick={canRearrange ? () => handleTap(card.id) : undefined}
-              />
+              <div className={styles.peekCard}>
+                <MinimalCard
+                  type={card.type}
+                  disabled={!canRearrange || isTapped || submitted}
+                  onClick={canRearrange ? () => handleTap(card.id) : undefined}
+                />
+              </div>
               <span className={styles.peekBadge}>
                 {canRearrange
                   ? (orderIndex >= 0 ? `#${orderIndex + 1}` : `Card ${i + 1}`)

@@ -2,55 +2,92 @@
 
 ## NEXT SESSION — pick up here (2026-05-07+)
 
-### THIS SESSION (2026-05-07 afternoon) — extraction + intel-briefing winners shipped
+### THIS SESSION (2026-05-07 afternoon) — 11-commit run: card art, triage cleanup, race-class hardening, protocol bump
 
-One commit shipped on top of the morning session. The two
-border-bug card assets that were ready for swap-in this morning are
-now live in `public/assets/cards/`. Burned card still parked on iter3
-rooftop-flashbulb (NBP probe #4 today returned same 503
-high-demand error).
+Big productive afternoon. Card art swap, then a thorough audit of
+`E2E-ISSUE-LIST.md` that surfaced 27 already-shipped fixes still
+flagged 🔴, plus three solo-doable issues actually-still-open that
+got fixed inline (C-25, B-17, D-04) plus a same-race-class harden
+sweep (DefusePlacement, TargetSelect) plus a protocol-version
+slot-burn fix (B-12).
 
 | Commit | Subject |
 |---|---|
-| (this) | feat(cards): swap in extraction + intel-briefing winners (border bug killed) |
+| `3f6f6b37` | feat(cards): swap in extraction + intel-briefing winners (border bug killed) |
+| `6d7a5d0e` | docs(triage): correct C-30..C-33 statuses + lock go-dark by-design |
+| `e02f6827` | fix(future-peek): badge legibility — dim only the card, not the slot |
+| `f0f92bf5` | docs(triage): audit-cleanup E2E-ISSUE-LIST — 27 stale 🔴 rows flipped to 🟢 |
+| `71d4e304` | docs(triage): close D-16 — chain-burn UI fix landed 2026-04-29 |
+| `1456aea1` | fix(action-box): close C-25 — single-operative refusal in Archer vocabulary |
+| `45184648` | fix(name-card): close B-17 — ref-based in-flight guard kills double-tap race |
+| `a8984d1b` | fix(future-peek): close D-04 — Got it button gains ref-based dismiss guard |
+| `6a3d0f92` | harden(sheets): same-tick double-tap race fix sweep — DefusePlacement + TargetSelect |
+| `d6c96f65` | feat(protocol): close B-12 — pre-allocate version check + PROTOCOL_VERSION 4→5 |
 
-**Asset swap (this commit).** PNG → WEBP via `scripts/process-assets.ts`
-at the standard 384px / q80 settings. Source candidates in
-`public/assets/cards/_archive/2026-05-07-session/` were unchanged from
-this morning's eyeball-approved set:
+(Plus the morning's `c7414523` COMMS clip fix, totaling 11 today.)
 
-- `extraction-iter03-FINAL-CANDIDATE.png` → `public/assets/cards/extraction.webp`
-- `intel-briefing-iter12-FINAL-CANDIDATE.png` → `public/assets/cards/intel-briefing.webp`
+**Issue list state (content rows only):** 🟢 35 / 📋 8 / ⏸ 6 / 🔴 12
+(+ 🏷 34 logged-not-actionable). Comparable count at start of day was
+~🟢 4 / 🔴 ~45 — the audit cleanup did the bulk of the move.
 
-Prior `.webp` files preserved at:
+**Card art (commit `3f6f6b37`).** PNG → WEBP via
+`scripts/process-assets.ts` at 384px / q80. Source candidates in
+`public/assets/cards/_archive/2026-05-07-session/`. Edge-pixel
+sampling: 0/96 near-white (was 96/96 on the bug versions). Live
+render via Vite + Playwright at 4 sizes (96px hand → 320px hero) —
+both hold up at hand size, sing at hero. Burned card stays parked
+on iter3 (NBP probe #4 today returned same 503 high-demand error;
+genuine external blocker). Escort-concept work-product preserved in
+`_archive/2026-05-07-session/`.
 
-- `public/assets/cards/_archive/extraction-2026-05-07-white-border-baked.webp`
-- `public/assets/cards/_archive/intel-briefing-2026-05-07-white-border-baked.webp`
+**Triage cleanup arc (commits `6d7a5d0e` / `f0f92bf5` / `71d4e304`).**
+The morning's 4 backlog promotions (C-30..C-33) cross-checked against
+git: 2 already shipped 2026-05-01, 2 are by-design product calls.
+Promotion sweep had been a stale paper exercise. Then a broader audit
+on the same pattern: the file's 45 🔴 OPEN entries were dominated by
+already-shipped work — git-grep per issue ID found 27 commits closing
+issues without flipping the row. All 27 flipped 🟢 with commit
+citations. D-16 caught later by topic-grep when its commit referenced
+"TODO #11" not "D-16" (audit follow-up note added: future fix commits
+should cite the issue ID in the subject so audits don't have to
+topic-grep). Also locked SCN-GO-DARK-NORMAL-01 in `SCENARIOS.md` to
+prevent the misleading "load-bearing" vibe-check language from
+re-creating the same false-promotion loop.
 
-Verifications run before commit:
+**FuturePeek badge legibility (commit `e02f6827`).** Briggsy spotted
+"#3" position number unreadable in the Falsify Intel rearrange sheet.
+Slot-level `opacity: 0.45` on tapped cards was dragging the badge
+text down with it — at 0.45-alpha-charcoal-1 on emerald-9 the number
+went unreadable. Refactor: split into a `peekCard` wrapper inside the
+slot, dim only the wrapper, badge stays at full opacity. Card-side
+dim signal still works (signal: "this card is in the order").
 
-- Edge-pixel sampling: 0/96 near-white (was 96/96 on the prior versions
-  — that was the bug we fixed). Reference cards `back-channel.webp` and
-  `burned.webp` also re-sampled at 0/96 as the full-bleed control.
-- Direct webp visual read at 384×384: full-bleed, on-vocabulary, peak
-  Mother's-office for intel-briefing, dramatic spotlight rescue for
-  extraction.
-- Live render via Vite dev server + Playwright at 4 representative
-  sizes (96px hand, 128px hand-enlarged, 200px discard, 320px hero).
-  Both compositions hold up at hand size — silhouettes and lighting
-  carry the narrative beat even at the smallest representative card
-  size. Side-by-side with `back-channel` and `burned` (already-approved
-  reference cards), the new ones fit the deck visually.
+**Race-class hardening sweep (commits `45184648` / `a8984d1b` /
+`6a3d0f92`).** B-17 (NameCard double-tap Cancel error toast race) was
+the seed; investigation found three more sheets with the same
+state-only guard pattern (FuturePeek's Got it, DefusePlacement,
+TargetSelect — TargetSelect's Cancel didn't even setSubmitted). All
+flipped to a two-track guard: sync ref + async state. Refs update
+synchronously so the second tap in a same-tick double-tap reads the
+post-tap value and bails before the state-driven `disabled` prop has
+applied.
 
-**Burned card — NBP probe #4 today, same 503.** Re-ran
-`scripts/edit-burned-door-nbp.ts` against
-`burned-iter11-cropped-awesome-CANDIDATE.png` (renamed locally to
-`burned-iter11-cropped-LOCKED.png` to satisfy the script's hardcoded
-input path). Got the same `code: 503 / status: UNAVAILABLE / "This
-model is currently experiencing high demand"` as the morning probes.
-Genuine external blocker. Burned card stays parked on iter3
-rooftop-flashbulb; the escort-concept work-product is preserved in
-`public/assets/cards/_archive/2026-05-07-session/`.
+**Protocol slot-burn (commit `d6c96f65`).** B-12. Pre-fix the version
+check was server → client only: an old client's first tab burned a
+seat in the room before the client realised the mismatch via the
+joined response and refreshed. Fix: `join` payload carries optional
+`protocolVersion`; server's `handleClientMessage` rejects mismatches
+with the new `PROTOCOL_MISMATCH` error code BEFORE allocating a slot.
+Client `gameStore` mirrors the rejection onto `_protocolMismatch`.
+PROTOCOL_VERSION bumped 4 → 5. Verified live: happy path joins
+cleanly; old-client-style join (no `protocolVersion`) gets rejected
+in 1ms with the message "Game updated — please refresh."
+
+**Single-operative copy (commit `1456aea1`).** C-25. "Needs a pair or
+triple" rewritten to "Powerless alone\\npair or triple to act" —
+mirrors the canonical operative card description ("Powerless alone.
+Pairs steal random. Triples name + steal."). Same two-line
+primary-rule + action-hint shape as `single-intercepted`.
 
 ### PRIOR SESSION (2026-05-07 morning) — COMMS clip fix + card-asset regen attempt
 
@@ -137,17 +174,42 @@ Solo-doable:
   to surgically edit `burned-iter10-backs-walking-no-door.png` (open
   the rear door, add the warm amber doorway glow as the figures'
   destination) OR `burned-iter11-cropped-awesome-CANDIDATE.png` (close
-  any front door, open the rear door). NBP supports multi-turn
-  refinement and image editing where Imagen 4 only does text-to-image,
-  so it should be able to do surgical pixel-level corrections rather
-  than the prayer-and-roll-the-dice approach Imagen requires. The
-  script reads from `temp/cards/burned-iter11-cropped-LOCKED.png` so
-  copy the candidate to that path before re-running.
+  any front door, open the rear door). The script reads from
+  `temp/cards/burned-iter11-cropped-LOCKED.png` so copy the candidate
+  to that path before re-running.
+- **Continue the E2E-ISSUE-LIST cleanup.** 12 truly-open 🔴 rows
+  remain. Highest-leverage solo-doable picks: B-01 (host session
+  token / race-steal risk, security work), B-02 (host-disconnect
+  during lobby silent, UI signal), B-11 (rejoin after game_over only
+  host can return-to-lobby, server logic), B-14 (sessionStorage-wiped
+  name dead-end, UI), E-08 (rate limit pre-join, server). The
+  remaining visual rows (C-07 / C-09 / C-10 / C-11 / C-21) all need
+  Briggsy-eye visual-identity input.
 - **Visual review on the 5-commit Phase 5 palette batch** (carryover
   from prior session) — drama-accent CARD FACE inspection still
   pending. Now unblocked from extraction + intel-briefing perspective;
   burned card stays parked but on a clean iter3 art so the rest of the
   deck reads consistently.
+
+Landmines (read before next session):
+
+- **PROTOCOL_VERSION is now 5** (was 4). Any browser tab still running
+  pre-`d6c96f65` client code will get rejected by the new server with
+  PROTOCOL_MISMATCH. Hard-refresh dev tabs after `git pull`. New
+  schema field is `protocolVersion?: number` on the `join` payload —
+  optional in Zod (so old clients hit the explicit error code, not a
+  generic Zod failure), required-by-equality at runtime in
+  `handleClientMessage`.
+- **Sheet button race-class fix is now the convention.** Every sheet
+  with a terminal action button (NameCard, FuturePeek, DefusePlacement,
+  TargetSelect) uses the two-track guard pattern: sync `submittedRef`
+  + async `submitted` state. Future sheets should follow the same
+  pattern; state-only guards have a same-tick double-tap race.
+- **Audit pattern catch:** future fix commits should cite the issue
+  ID in the subject (e.g. `fix(...): close X-NN — summary`) so
+  E2E-ISSUE-LIST audits can git-grep accurately. D-15 / D-16 were
+  missed by the first-sweep audit because their commits referenced
+  topic IDs not issue IDs ("TODO #11", "ACTOR nope-window awareness").
 
 Briggsy-required (carryover, all still open):
 

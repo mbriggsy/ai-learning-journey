@@ -36,18 +36,26 @@ rows below were back-filled in a single sweep after spot-checks
 during the C-30..C-33 triage cleanup found rows that had been left
 🔴 even though their commits had landed weeks earlier. Each shipped
 row now cites its commit. The ⏸ rows (C-13, C-15, C-16-19) and the
-remaining 🔴 rows (B-01/02/11/12/14/17, C-07/09/10/11/12/21/25,
-D-04/15/23, E-08) are genuinely-open per the same commit-history
-audit — no commit references those IDs.
+remaining 🔴 rows (B-01/02/11/14, C-07/09/10/11/12/21, D-23, E-08 —
+12 IDs) are genuinely-open per the same commit-history audit — no
+commit references those IDs. (B-12, B-17, C-25, D-04, D-15, D-16
+were closed inline by additional 2026-05-07 commits — see their
+rows for citations.)
 
-**Audit follow-up 2026-05-07 (later pass):** D-16 found to have been
-shipped in `d9c40753` but was missed by the first sweep because the
-commit message referenced "TODO #11" not "D-16". A topic-grep
-follow-up would catch ID-disconnects of this kind, but would be
-slow and noisy; the cheaper move is to require future fix commits
-to cite the issue ID in the subject (e.g. "fix(...): close X-NN —
-{summary}"). The remaining 🔴 IDs were spot-checked via topic search
-and have no obvious fix commit; treating them as actually-open.
+**Audit follow-up 2026-05-07 (later pass + inline fixes):** D-16 +
+D-15 found to have been shipped in `d9c40753` and `b7824600`
+respectively but were missed by the first sweep because the commit
+messages referenced topic IDs ("TODO #11", "ACTOR nope-window
+awareness") not the issue IDs. A topic-grep follow-up would catch
+ID-disconnects of this kind but would be slow and noisy; the cheaper
+move is to require future fix commits to cite the issue ID in the
+subject (e.g. "fix(...): close X-NN — {summary}"). Inline fixes the
+same day landed C-25 (`1456aea1`), B-17 (`45184648`), D-04
+(`a8984d1b`), and B-12 (`d6c96f65`); a same-race-class harden sweep
+(`6a3d0f92`) tightened DefusePlacement + TargetSelect against the
+same closure-staleness pattern that B-17 surfaced. Remaining 🔴 IDs
+were spot-checked via topic search and have no obvious fix commit;
+treating them as actually-open.
 
 ## Legend
 

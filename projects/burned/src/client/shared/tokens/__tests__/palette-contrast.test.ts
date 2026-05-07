@@ -93,7 +93,7 @@ const SEMANTIC_MAP: Record<string, string> = {
   // Foreground
   'color-fg-primary':            PALETTE['color-cream-12'],
   'color-fg-secondary':          PALETTE['color-cream-11'],
-  'color-fg-muted':              PALETTE['color-cream-9'],
+  'color-fg-muted':              PALETTE['color-cream-10'],
   'color-fg-disabled':           PALETTE['color-charcoal-8'],
   'color-fg-interactive':        PALETTE['color-teal-12'],
   'color-fg-on-accent':          PALETTE['color-cream-12'],
@@ -157,7 +157,9 @@ function toApcaRgb(cssColor: string): [number, number, number, number] {
 // (same followup doc as §2.4 — both groups want palette amendments touching
 // emerald-8/9, ochre-9, teal-9 and the cream-12 fg pairings).
 const DESIGN_ATTENTION: Array<readonly [string, string, 'wcag' | 'apca', string]> = [
-  ['color-fg-muted',        'color-bg-surface',       'apca', 'muted on card'],
+  // muted on card APCA graduated 2026-05-06 by --color-fg-muted swap from
+  // cream-9 (Lc 43 — sub-JND under the 45 large-floor) to cream-10 (Lc 48,
+  // comfortably over). Single-token semantic shift, no palette amendment.
   ['color-fg-on-intercept', 'color-accent-intercept', 'apca', 'Intercept card face'],
   ['color-fg-on-operative', 'color-accent-operative', 'wcag', 'operative card face'],
   ['color-fg-on-drama',     'color-accent-drama',     'wcag', 'drama-accent card face'],

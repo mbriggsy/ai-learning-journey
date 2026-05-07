@@ -33,7 +33,7 @@
     /* --- Text --- */
     --color-fg-primary:            var(--color-cream-12);
     --color-fg-secondary:          var(--color-cream-11);
-    --color-fg-muted:              var(--color-cream-9);
+    --color-fg-muted:              var(--color-cream-10);
     --color-fg-disabled:           var(--color-charcoal-8);
 
     /* Text-on-solid pairs — each tuned to pass APCA Lc 60 on its paired step-9 solid. */

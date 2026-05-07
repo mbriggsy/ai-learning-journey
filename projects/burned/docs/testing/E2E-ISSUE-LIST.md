@@ -220,6 +220,10 @@ appears on paper.
 | **C-27** | Card back never appears in common gameplay — worth confirming intended usage | 🏷 |
 | **C-28** | Roster/portrait asset asymmetry (6 portraits, 5 operative types) | 🏷 |
 | **C-29** | DossierFeed strip X-drift (`index * 2 * dir`) accumulates to ±58px at 20+ strips | 🏷 |
+| **C-30** | StatusBar silent during `favor-pending` for OTHER (alive) — observer waits ~7 min seeing identical "Seat1 is on deck · 22 in the pile" with no signal that a Favor is in flight; reads as frozen game. Fix: extend `StatusBar.tsx` `bodyFor()` with `subPhase === 'favor-pending'` branch ("[Requester] is calling in a favor from [Target]…"). Source: `runs/2026-04-29-2139-3p/issues/005`. | 🔴 |
+| **C-31** | Go Dark ACTOR phone has no drama beat — play resolves correctly but card is removed and turn passes with zero cinematic framing; spec explicitly calls this load-bearing ("if it reads like a generic skip, the theme has leaked out"). Card art is atmospheric but the moment is undifferentiated. Fix: register `go-dark` in `getDramaBeats` for ACTOR + board (venetian-blinds / `// WENT DARK`). Source: `runs/2026-04-29-2139-3p/issues/012` + `014` (2 seats). | 🔴 |
+| **C-32** | Phone observers receive zero card-played narration — board has `AnnouncementFeed` but phones don't; non-actor, non-target players see only nope-window open/close + turn flip, can't tell what was played. Architectural gap (or product call: declare phones hand-focused, board owns narration). Fix candidates: StatusBar inline `lastPlayedCardName` annotation, or PlayerAlert toast for opponent card-played events. Source: `runs/2026-04-29-2139-3p/issues/015`. | 🔴 |
+| **C-33** | Direct Order target has no `turnsRemaining > 1` indicator on phone — attacked player draws once, turn doesn't end, player has no UI signal explaining why. `currentTurn.turnsRemaining` is already projected; purely a render gap. Fix: contextual status line ("Direct Order: draw 2 cards this turn") when `turnsRemaining > 1` and ACTOR's phone. Source: `runs/2026-04-29-2139-3p/issues/022`. | 🔴 |
 
 ### D (input)
 

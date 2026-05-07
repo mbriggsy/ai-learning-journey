@@ -167,7 +167,7 @@
 
    Data-URI hex tracks semantic tokens (manual sync required):
      %230a0906 ≡ var(--color-charcoal-1)                      (binder rings)
-     %23b0754c ≡ var(--color-accent-drama) ≡ var(--color-ochre-9)  (seal)
+     %23947226 ≡ var(--color-accent-drama) ≡ var(--color-ochre-9)  (seal)
    If Phase 1 primitives.css charcoal-1 or ochre-9 change, update the hex.
 */
 
@@ -190,7 +190,7 @@
     /* Lower classified stripe (4px, at 85% height) */
     linear-gradient(var(--color-accent-burned), var(--color-accent-burned)),
     /* Binder rings (top-left/right) + faint Pendleton Agency seal (centered) */
-    url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 140'%3E%3Ccircle cx='14' cy='10' r='3' fill='%230a0906'/%3E%3Ccircle cx='86' cy='10' r='3' fill='%230a0906'/%3E%3Cg opacity='0.25'%3E%3Cpath d='M50 50 L72 75 L50 100 L28 75 Z' fill='none' stroke='%23b0754c' stroke-width='1.2'/%3E%3Cpath d='M50 60 L65 75 L50 90 L35 75 Z' fill='none' stroke='%23b0754c' stroke-width='0.9'/%3E%3Ccircle cx='50' cy='75' r='6' fill='none' stroke='%23b0754c' stroke-width='0.8'/%3E%3Ccircle cx='50' cy='75' r='2' fill='%23b0754c'/%3E%3Cline x1='50' y1='40' x2='50' y2='48' stroke='%23b0754c' stroke-width='0.6'/%3E%3Cline x1='50' y1='102' x2='50' y2='110' stroke='%23b0754c' stroke-width='0.6'/%3E%3Cline x1='20' y1='75' x2='26' y2='75' stroke='%23b0754c' stroke-width='0.6'/%3E%3Cline x1='74' y1='75' x2='80' y2='75' stroke='%23b0754c' stroke-width='0.6'/%3E%3C/g%3E%3C/svg%3E");
+    url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 140'%3E%3Ccircle cx='14' cy='10' r='3' fill='%230a0906'/%3E%3Ccircle cx='86' cy='10' r='3' fill='%230a0906'/%3E%3Cg opacity='0.25'%3E%3Cpath d='M50 50 L72 75 L50 100 L28 75 Z' fill='none' stroke='%23947226' stroke-width='1.2'/%3E%3Cpath d='M50 60 L65 75 L50 90 L35 75 Z' fill='none' stroke='%23947226' stroke-width='0.9'/%3E%3Ccircle cx='50' cy='75' r='6' fill='none' stroke='%23947226' stroke-width='0.8'/%3E%3Ccircle cx='50' cy='75' r='2' fill='%23947226'/%3E%3Cline x1='50' y1='40' x2='50' y2='48' stroke='%23947226' stroke-width='0.6'/%3E%3Cline x1='50' y1='102' x2='50' y2='110' stroke='%23947226' stroke-width='0.6'/%3E%3Cline x1='20' y1='75' x2='26' y2='75' stroke='%23947226' stroke-width='0.6'/%3E%3Cline x1='74' y1='75' x2='80' y2='75' stroke='%23947226' stroke-width='0.6'/%3E%3C/g%3E%3C/svg%3E");
   background-size:
     100% 4px,
     100% 4px,

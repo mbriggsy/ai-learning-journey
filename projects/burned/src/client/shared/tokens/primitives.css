@@ -61,7 +61,7 @@
 @property --color-ochre-6   { syntax: '<color>'; inherits: true; initial-value: #6a4228; }
 @property --color-ochre-7   { syntax: '<color>'; inherits: true; initial-value: #805032; }
 @property --color-ochre-8   { syntax: '<color>'; inherits: true; initial-value: #98603e; }
-@property --color-ochre-9   { syntax: '<color>'; inherits: true; initial-value: #b0754c; }
+@property --color-ochre-9   { syntax: '<color>'; inherits: true; initial-value: #947226; }
 @property --color-ochre-10  { syntax: '<color>'; inherits: true; initial-value: #c98a5c; }
 @property --color-ochre-11  { syntax: '<color>'; inherits: true; initial-value: #edb182; }
 @property --color-ochre-12  { syntax: '<color>'; inherits: true; initial-value: #ffe9b9; }
@@ -162,7 +162,7 @@
     --color-ochre-6:  #6a4228;
     --color-ochre-7:  #805032;
     --color-ochre-8:  #98603e;
-    --color-ochre-9:  #b0754c;
+    --color-ochre-9:  #947226;
     --color-ochre-10: #c98a5c;
     --color-ochre-11: #edb182;
     --color-ochre-12: #ffe9b9;

@@ -248,7 +248,7 @@
 /* ─── Card back — Pendleton Agency dossier pattern ─���─
    Data-URI hex tracks semantic tokens (manual sync required):
      %23a33340 ≡ var(--color-accent-burned) ≡ var(--color-cordovan-9)
-     %23b0754c ≡ var(--color-accent-drama)  ≡ var(--color-ochre-9)
+     %23947226 ≡ var(--color-accent-drama)  ≡ var(--color-ochre-9)
    Same pattern as DrawPile.module.css; if one changes, update both.
 */
 
@@ -260,7 +260,7 @@
   border-radius: var(--radius-card);
   background-color: var(--color-teal-2);
   background-image:
-    url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 140'%3E%3Cpath d='M50 20 L80 70 L50 120 L20 70 Z' fill='none' stroke='%23a33340' stroke-width='1.5' opacity='0.3'/%3E%3Cpath d='M50 35 L70 70 L50 105 L30 70 Z' fill='none' stroke='%23b0754c' stroke-width='1' opacity='0.2'/%3E%3Ccircle cx='50' cy='70' r='8' fill='none' stroke='%23a33340' stroke-width='1' opacity='0.25'/%3E%3Ccircle cx='50' cy='70' r='3' fill='%23a33340' opacity='0.2'/%3E%3C/svg%3E");
+    url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 140'%3E%3Cpath d='M50 20 L80 70 L50 120 L20 70 Z' fill='none' stroke='%23a33340' stroke-width='1.5' opacity='0.3'/%3E%3Cpath d='M50 35 L70 70 L50 105 L30 70 Z' fill='none' stroke='%23947226' stroke-width='1' opacity='0.2'/%3E%3Ccircle cx='50' cy='70' r='8' fill='none' stroke='%23a33340' stroke-width='1' opacity='0.25'/%3E%3Ccircle cx='50' cy='70' r='3' fill='%23a33340' opacity='0.2'/%3E%3C/svg%3E");
   background-size: 100% 100%;
   background-repeat: no-repeat;
   border: 1px solid color-mix(in oklab, var(--color-accent-burned) 25%, var(--color-border-subtle));

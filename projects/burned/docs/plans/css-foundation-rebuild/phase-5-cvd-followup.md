@@ -3,7 +3,7 @@ title: "Phase 5 §2.4 + §2.5 follow-up — CVD + contrast palette amendments"
 type: follow-up
 phase: 5
 parent: docs/plans/css-foundation-rebuild/phase-5-verification-acceptance.md
-status: in-progress — Option A landed 2026-05-06; Option C + §2.5 #2/#3/#1 pending
+status: in-progress — Options A + C landed 2026-05-06; §2.5 #1/#2/#3 + residuals pending
 date: 2026-05-06
 ---
 
@@ -107,16 +107,56 @@ vs teal) and E6 (teal vs emerald) apart.
 - **Risk**: medium. Teal is the BURNED brand color; step-8 is the dark
   variant.
 
-### Option C — bump ochre-9 warmer (medium impact)
+### Option C — bump ochre-9 warmer (medium impact) ✅ LANDED 2026-05-06
 
-`ochre-9 #b58a3e` shifts toward `#c97a2e` (more orange, less yellow).
-Pulls B4, B5, E10 apart from emerald/teal accents.
+**Shipped value**: `#b0754c` → `#947226` (deep mustard).
 
-- **Affected surfaces**: `--color-accent-drama` (DramaOverlay VICTORY +
-  IntelBriefing); `--color-border-focus` (focus ring) is `ochre-8` so
-  unaffected.
-- **Risk**: medium. VICTORY is a peak-ceremony moment; the warm-amber
-  carries the celebratory tone.
+The doc's first-pass rec ("more orange, less yellow") was the OPPOSITE
+of what worked. Pushing ochre redder collapsed E4 tritan against
+cordovan-9 — both warm tones lost separation. The empirical optimum
+was the YELLOW direction: `#947226` is a saturated dark mustard that
+preserves cordovan-9 separation across all 3 sims while widening
+separation from emerald/teal accents.
+
+The followup also referenced the wrong baseline hex (`#b58a3e` —
+yellower than reality); current ochre-9 was actually `#b0754c`
+(orange-honey). Real shift is `b0754c` → `947226` (more saturated,
+darker, slightly yellower in hue).
+
+**Graduated**:
+- §2.4 B4 deuter (Intercept vs drama)
+- §2.4 B5 protan (operative vs drama)
+- §2.4 E10 protan (INTERCEPTED vs VICTORY) — already partially helped
+  by Option A's emerald-8 shift; Option C closed it
+- §2.5 #5 drama-accent card face APCA (Lc 58.3 → Lc 63.7)
+
+**Residual**: §2.5 #4 drama-accent card face WCAG (3.22 → 3.77;
+CONTENT-tier needs 4.5). Closure requires either fg-on-drama swap
+(cream-12 → darker token) or a deeper ochre-9 — both have downstream
+visual identity risk and stay deferred.
+
+**Affected surfaces**: 14 files reference `--color-accent-drama`,
+including DramaOverlay VICTORY radial gradient, GameOver Play-Again
+button, StagingArea active-player tag, JoinScreen check-in button,
+FavorReport / StealReport / PlayerAlert toasts. Eyeballed VICTORY
+beat at `temp/arena-states/board/03-drama-wins.png` — the new mustard
+center reads as trophy-gold/military-mustard, more punchy than the
+prior honey-tan; "ALICE WINS" cream text glows clean.
+
+**Hardcoded hex sync**: `DrawPile.module.css` (Pendleton seal SVG, 8
+instances) and `MinimalCard.module.css` (card-back seal, 1 instance)
+both carry inline-data-URL `%23b0754c` references with comments
+naming them as ochre-9 mirrors. All updated to `%23947226`.
+
+**Test count delta**: -4 expected fail (CVD 3 + contrast 1 graduated);
+no STRICT regressions.
+
+### Option C-original — bump ochre-9 warmer (medium impact) [SUPERSEDED]
+
+The original recommendation pushed toward `#c97a2e` (more orange).
+Probe data showed this collapses E4 tritan against cordovan-9. Yellow
+direction (Option C-shipped above) is the corrected approach and is
+what landed.
 
 ### Option D — re-tune cordovan-9 darker (high impact, big visual)
 

@@ -109,25 +109,33 @@ const INFORMATIONAL_PAIRS = [
 //   E10     — emerald-8 vs ochre-9 protan
 //
 // 2026-05-06 evening — Option A amendment (emerald-8 #396d5a → #3f8d7e)
-// graduated 3 cases to STRICT: E3 deuter, E6 protan, E6 tritan. E6 deuter
-// remains a residual ratchet — improved ~9× (0.0098 baseline tritan was the
-// worst; deuter went 0.0374 → 0.0862) but under 0.10 floor. Option C
-// (ochre-9 amendment) is queued to address E10 protan + the residual E6.
+// graduated 3 cases to STRICT: E3 deuter, E6 protan, E6 tritan.
+//
+// 2026-05-06 night — Option C amendment (ochre-9 #b0754c → #947226,
+// dark mustard) graduated 3 more: B4 deuter, B5 protan, E10 protan. The
+// yellow-direction shift was empirical, not the followup doc's "more
+// orange" prescription — pushing redder collapsed E4 tritan against
+// cordovan-9. Yellow-mustard preserves cordovan-9 separation across all
+// 3 sims while widening separation from emerald/teal.
+//
+// Residual: E1 deuter, E2 protan, E6 deuter. The E6 deuter ratchet
+// improved further with the new ochre-9 (no spillover effect) but
+// stays under the 0.10 floor. Closure of E1/E2 needs cordovan or
+// charcoal amendments — Option D-equivalent territory, deferred.
 //
 // Follow-up: docs/plans/css-foundation-rebuild/phase-5-cvd-followup.md
 // is the canonical record of remaining amendments and rationale.
 const DESIGN_ATTENTION_CASES: Array<readonly [string, string, 'deuteranopia' | 'protanopia' | 'tritanopia', string]> = [
-  ['color-accent-intercept', 'color-accent-drama',  'deuteranopia', 'B4 Intercept vs drama'],
-  ['color-accent-operative', 'color-accent-drama',  'protanopia',   'B5 operative vs drama'],
+  // B4 deuter / B5 protan graduated 2026-05-06 by Option C ochre-9 amendment.
   ['color-cordovan-9',       'color-teal-8',        'deuteranopia', 'E1 BURNED vs EXTRACTED'],
   ['color-cordovan-9',       'color-charcoal-6',    'protanopia',   'E2 BURNED vs ELIMINATED'],
   // E3 deuter graduated 2026-05-06 by Option A emerald-8 amendment.
+  // E6 deuter is the residual: Option A improved 0.0374 → 0.0862 (still
+  // under floor); Option C didn't move it further (ochre-9 isn't in this
+  // pair). Closure needs cordovan or charcoal-targeted amendment.
   ['color-teal-8',           'color-emerald-8',     'deuteranopia', 'E6 EXTRACTED vs INTERCEPTED'],
   // E6 protan + tritan graduated 2026-05-06 by Option A emerald-8 amendment.
-  // E6 deuter remains the residual fail — improved 0.0374 → 0.0862 but still
-  // under the 0.10 STRICT floor; awaits Option C (ochre-9 amendment) which
-  // pulls ochre-9 deuter projection further from the new emerald-8.
-  ['color-emerald-8',        'color-ochre-9',       'protanopia',   'E10 INTERCEPTED vs VICTORY'],
+  // E10 protan graduated 2026-05-06 by Option C ochre-9 amendment.
 ]
 
 const STRICT_MIN_DISTANCE = 0.10

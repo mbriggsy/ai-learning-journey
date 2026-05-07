@@ -161,7 +161,11 @@ const DESIGN_ATTENTION: Array<readonly [string, string, 'wcag' | 'apca', string]
   ['color-fg-on-intercept', 'color-accent-intercept', 'apca', 'Intercept card face'],
   ['color-fg-on-operative', 'color-accent-operative', 'wcag', 'operative card face'],
   ['color-fg-on-drama',     'color-accent-drama',     'wcag', 'drama-accent card face'],
-  ['color-fg-on-drama',     'color-accent-drama',     'apca', 'drama-accent card face'],
+  // drama-accent card face APCA graduated 2026-05-06 by Option C ochre-9
+  // amendment (cream-12 on #947226 = Lc 63.7, was Lc 58.3 against #b0754c).
+  // The WCAG variant remains in DESIGN_ATTENTION — ratio 3.77 is still
+  // under 4.5:1 CONTENT-tier; full closure would need cream-12 → cream-11
+  // OR a darker --color-fg-on-drama token, both deferred.
 ]
 
 const SKIP = new Set(DESIGN_ATTENTION.map(([fg, bg, m]) => `${fg}|${bg}|${m}`))

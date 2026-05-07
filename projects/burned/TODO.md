@@ -2,7 +2,119 @@
 
 ## NEXT SESSION — pick up here (2026-05-06+)
 
-### THIS SESSION (2026-05-06 night) — CardDetailSheet zoom closed + spec §8 partial sweep
+### THIS SESSION (2026-05-06 night, late) — Phase 5 palette amendments
+
+Three commits extending the prior block's two. Lands Options A + C +
+fg-muted from the §2.4/§2.5 followup — graduating 8 of the 14
+DESIGN_ATTENTION ratchets logged at session start.
+
+| Commit | Subject |
+|---|---|
+| `6bd331d4` | feat(css-foundation): Phase 5 Option A — emerald-8 #396d5a → #3f8d7e (3 CVD ratchets graduate) |
+| `79858e22` | feat(css-foundation): Phase 5 Option C — ochre-9 #b0754c → #947226 (4 ratchets graduate) |
+| `c716d329` | feat(css-foundation): Phase 5 §2.5 #1 — fg-muted cream-9 → cream-10 (Lc 43 → 48) |
+
+**Ratchet inventory: 14 → 6.** `DESIGN_ATTENTION_CASES` (CVD) trimmed
+from 9 → 3 entries (E1 deuter, E2 protan, E6 deuter remain).
+`DESIGN_ATTENTION` (contrast) trimmed from 5 → 3 entries (Intercept
+APCA, operative WCAG, drama-accent WCAG remain). All 6 residuals
+need visual-identity input — closure paths touch cordovan / teal-8 /
+fg-on-intercept / fg-on-drama / teal-9, all card-face or hero-color
+identity decisions.
+
+**Honest accounting on Options A + C.** Followup doc's first-pass
+recommendations were wrong directions for both:
+
+- Option A spec'd "cooler emerald-8 toward teal-7 hue, lower chroma."
+  Probed ~30 candidates; that direction couldn't clear E6 tritan
+  within scale-ordering constraints. Empirical optimum was the
+  OPPOSITE shape — higher saturation + moderate L lift, blue channel
+  kept high to preserve E10 deuter STRICT.
+- Option C spec'd "more orange." Probed ~25 candidates; pushing
+  redder collapsed E4 tritan against cordovan-9 (both warm tones lose
+  hue distinction under tritan). Empirical optimum was the YELLOW
+  direction — saturated dark mustard at #947226. Doc also had a
+  stale baseline hex (`#b58a3e` was wrong; real was `#b0754c`).
+
+Both wrong directions are now corrected in the followup with explicit
+"first rec was wrong, here's why and what shipped" entries. Pattern
+to remember: per-feature CVD math is non-intuitive; probe before
+trusting prose recommendations.
+
+**Hardcoded SVG hex sync (Option C landmine).** Two CSS files carry
+inline `data:image/svg+xml,...` URLs that can't use CSS variables:
+`DrawPile.module.css` (8 instances) + `MinimalCard.module.css` (1
+instance). Both have explicit comments naming them as `var(--color-ochre-9)`
+mirrors. All synced manually via `replace_all`. If a future palette
+change touches ochre-9 OR cordovan-9 again, audit these two files.
+
+**Visual eyeball pass.** Three surfaces canonically inspected:
+
+- VICTORY DramaOverlay (`temp/arena-states/board/03-drama-wins.png`)
+  — new mustard reads trophy-gold / military-mustard, more punchy
+  than prior honey-tan. ALICE WINS cream text glows clean. APCA Lc
+  63.7 confirmed.
+- INTERCEPTED DramaOverlay (`temp/arena-states/board/01-drama-intercepted.png`)
+  — new mint-green flash brighter and more agency-Archer than prior
+  forest-pine.
+- Baseline arena + ALICE active-player pill — drama-accent mustard
+  reads as a saturated golden tag; draw-pile dossier seal SVG renders
+  the new mustard correctly via the manual sync.
+
+NOT yet seen at full size: drama-accent CARD FACE (Reassign / Direct
+Order / Go Dark / Intel Briefing / Falsify Intel / Burn the Files /
+Back Channel cards). The §2.5 #4 WCAG residual lives on this surface
+— Briggsy review should focus there.
+
+### Actionable next — pick one
+
+**Briggsy-only from here on the palette thread.** Every remaining
+ratchet needs visual-identity input. Options:
+
+- **§2.5 #4 closure** — change `--color-fg-on-drama` from cream-12 to
+  a darker token (charcoal-1?), giving cream-on-mustard polarity
+  inverts. Touches drama-accent CARD FACE (Reassign / Direct Order /
+  etc.). Visual review needed.
+- **§2.5 #2 closure** — Intercept card face APCA. Bump
+  `--color-fg-on-intercept` (currently charcoal-1) OR push
+  `--color-accent-intercept` (emerald-9) deeper. Both touch Intercept
+  card identity.
+- **§2.5 #3 closure** — operative card face WCAG. Followup says
+  "re-classify to LARGE tier" but the cardName is `clamp(9px, 7.5cqi,
+  13px)` font-weight 700 — 13px bold is BELOW WCAG 14pt-bold large-text
+  threshold (18.66px). Re-classify isn't honest. Also `--color-fg-on-operative`
+  isn't actually applied in any component CSS today; pair tests a
+  future-proofing contract. Closure requires teal-9 darker (touches
+  operative card identity).
+- **CVD residuals (E1 / E2 / E6 deuter)** — Option B (teal-8) or Option D
+  (cordovan-9) territory. High-impact, big-blast-radius. Keep deferred.
+
+Briggsy-required:
+
+- **Visual review on the 5-commit shipped batch.** Walk through
+  `pnpm dev`, hit INTERCEPTED, VICTORY, drama-accent CARD FACE
+  (Reassign / Direct Order / etc.), Pendleton seals on draw pile +
+  card backs, and verify the new mustard / mint don't break
+  Archer-tone identity. If any feel wrong, easy to revert; if right,
+  cleaner to chase remaining ratchets next.
+- **Canonical 200% zoom human-run pass** (§2.3 protocol).
+- **Phase 5 §2.7 first-time player session.**
+- **Visual review meeting** (§2.2.5) — GameOver glow, Nope emerald sat,
+  Baveuse font.
+- **Real-device playtest** (Active Priority #2).
+- **8-player stress test** (Active Priority #3).
+- **Physical hardware verification** (Active Priority #5).
+
+### Followups parked
+
+- **`phase-5-cvd-followup.md`** — Options A + C marked LANDED with
+  empirical-correction notes. Original "more orange" rec for Option C
+  marked SUPERSEDED. 3 §2.5 ratchets remain documented. Options B + D
+  (teal-8 / cordovan-9) still labeled "last resort."
+
+---
+
+### PRIOR SESSION (2026-05-06 night, earlier) — CardDetailSheet zoom closed + spec §8 partial sweep
 
 Two commits, both surgical. Closes the only deferred WCAG zoom screen
 and flips the §8 spec checkboxes that have evidence to back them.

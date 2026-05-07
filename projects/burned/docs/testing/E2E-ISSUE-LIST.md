@@ -36,11 +36,19 @@ rows below were back-filled in a single sweep after spot-checks
 during the C-30..C-33 triage cleanup found rows that had been left
 🔴 even though their commits had landed weeks earlier. Each shipped
 row now cites its commit. The ⏸ rows (C-13, C-15, C-16-19) and the
-remaining 🔴 rows (B-01/02/11/14, C-07/09/10/11/12/21, D-23, E-08 —
-12 IDs) are genuinely-open per the same commit-history audit — no
-commit references those IDs. (B-12, B-17, C-25, D-04, D-15, D-16
-were closed inline by additional 2026-05-07 commits — see their
-rows for citations.)
+remaining 🔴 rows (C-07/09/10/11/12/21, D-23 — 7 IDs after the
+2026-05-07 evening sweep below) are genuinely-open per the same
+commit-history audit. Visual rows need Briggsy-eye review before
+they're actionable solo. (B-12, B-17, C-25, D-04, D-15, D-16 were
+closed inline by additional 2026-05-07 commits — see their rows
+for citations.)
+
+**2026-05-07 evening sweep — 5 of 12 truly-open rows closed:**
+B-14 (`774fbf4a`), B-02 (`6843cce7`), E-08 (`eae3ce96`), B-11
+(`37e43fa0`), B-01 (`6d885080`). All five ship with new E2E test
+coverage (host-disconnect-lobby, identify-timeout, host-session-token,
+plus extension to join-screen-server-error). Remaining 🔴 visual rows
+(C-07/09/10/11/21) need design-eye input.
 
 **Audit follow-up 2026-05-07 (later pass + inline fixes):** D-16 +
 D-15 found to have been shipped in `d9c40753` and `b7824600`
@@ -157,11 +165,11 @@ appears on paper.
 
 | ID | Title | Status |
 |----|-------|--------|
-| **B-01** | Host has no session token — another tab can race-steal the host role on WiFi blip | 🔴 |
-| **B-02** | Host-disconnect-during-lobby is silent; game can't start, no UI signal | 🔴 |
-| **B-11** | Rejoin after game_over: only host can trigger `return-to-lobby`; if host tab closed at victory screen, room is stuck | 🔴 |
+| **B-01** | Host has no session token — another tab can race-steal the host role on WiFi blip. **Shipped 2026-05-07 in `6d885080`** — board mints a UUID stored in sessionStorage and sends it in `host-connect`. Server tracks `hostSession`; reclaim requires matching token; mismatch is rejected with `Room already has a host`. Persisted across DO restarts. Disconnect grace (3s, shared with B-02) holds the token so blip-reclaim works. E2E proves both rejection of a thief and reclaim of the original holder after grace expiry. | 🟢 |
+| **B-02** | Host-disconnect-during-lobby is silent; game can't start, no UI signal. **Shipped 2026-05-07 in `6843cce7`** — `LobbyView` gains `hostConnected: boolean`; server flips it false after a debounced 3s host-disconnect. JoinScreen swaps the joined-state waiting label from "Standing by, awaiting deployment" to "// HOST OFFLINE" in accent-burned. E2E: 2 phones join, board.close(), phones see the swap within 6s. | 🟢 |
+| **B-11** | Rejoin after game_over: only host can trigger `return-to-lobby`; if host tab closed at victory screen, room is stuck. **Shipped 2026-05-07 in `37e43fa0`** — `handleReturnToLobby` widened: in `game_over` phase, host OR any player can trigger; in `playing` phase, host-only privilege preserved. Player.tsx now passes `onPlayAgain` so phones get a "Run It Back" button. | 🟢 |
 | **B-12** | Protocol version check is server → client only; old clients get admitted and burn player slots. **Shipped 2026-05-07** — `join` payload now carries optional `protocolVersion`; server's `handleClientMessage` rejects mismatches with the new `PROTOCOL_MISMATCH` error code BEFORE allocating a slot. `PROTOCOL_VERSION` bumped 4 → 5 to mark the wire-format change. Client `gameStore` mirrors the rejection onto `_protocolMismatch` so the existing polished mismatch UI handles it. Verified live via Playwright: happy path joins cleanly; old-client style join (no `protocolVersion`) gets rejected within 1ms with the error message "Game updated — please refresh," no slot allocated. | 🟢 |
-| **B-14** | SessionStorage-wiped player who mistypes their name gets dead-end `GAME_ALREADY_STARTED` — no "did you mean" list of disconnected names | 🔴 |
+| **B-14** | SessionStorage-wiped player who mistypes their name gets dead-end `GAME_ALREADY_STARTED` — no "did you mean" list of disconnected names. **Shipped 2026-05-07 in `774fbf4a`** — server computes the list of disconnected (reclaimable) names and ships them on the error payload. JoinScreen renders a "// Resume as" picker; tapping a name auto-submits and reclaims via the existing name-reclaim path. Privacy bar unchanged (only un-connected names are listed; connected players never appear). | 🟢 |
 
 ### C (visual) — 13
 
@@ -213,7 +221,7 @@ appears on paper.
 | **E-05** | Name-reclaim skips `NAME_PATTERN` — reclaim accepts control chars + HTML in raw input. **Shipped 2026-04-23 in `19ce54e0`** — name-reclaim regex pattern enforced. | 🟢 |
 | **E-06** | Zod `z.string().max(12)` no `min(1)`, no regex — whole `NAME_PATTERN` contract lives downstream instead of at WS boundary. **Shipped 2026-04-23 in `19ce54e0`** — name regex enforced at WS boundary. | 🟢 |
 | **E-07** | `stateVersion` unbounded upper range. **Shipped 2026-04-23 in `19ce54e0`** — stateVersion cap. | 🟢 |
-| **E-08** | Rate limit doesn't cover unidentified connections before `join` | 🔴 |
+| **E-08** | Rate limit doesn't cover unidentified connections before `join`. **Shipped 2026-05-07 in `eae3ce96`** — server schedules a 5s `identifyTimer` per accepted connection; if no role is set (host-connect / join / god) before it fires, the connection closes with code 4002 (`Identify timeout`). Bounds slot-squatting on `MAX_CONNECTIONS=12` from ~40s (heartbeat timeout) to 5s. | 🟢 |
 
 ---
 

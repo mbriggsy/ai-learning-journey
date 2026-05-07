@@ -187,7 +187,7 @@ appears on paper.
 | ID | Title | Status |
 |----|-------|--------|
 | **D-02** | Draw button no optimistic lock → 10 rapid taps spam STALE_STATE errors to user. **Shipped 2026-04-23 in `dd446945`** — optimistic in-flight lock on Draw button. | 🟢 |
-| **D-04** | FuturePeek read-only `Got it` button has no submit guard (low impact, back-to-back Intel Briefing impossible per deck) | 🔴 |
+| **D-04** | FuturePeek read-only `Got it` button has no submit guard (low impact, back-to-back Intel Briefing impossible per deck). **Shipped 2026-05-07** — `dismissedRef` ref-guard added; bare `onClick={onDismiss}` swapped for the same two-track pattern as B-17 (sync ref + async state). Defensive consistency with the rest of the sheet button conventions. | 🟢 |
 | **D-05** | StealReport Acknowledge has `autoFocus` + no debounce — panic-tap dismisses queued reports unread. **Shipped 2026-04-23 in `0af60680`** — StealReport debounce. | 🟢 |
 | **D-13** | Hand updates mid-stage mostly safe; optimistic rollback correctly validated | 🏷 |
 | **D-14** | Drama overlay doesn't block hand (by design — visualization layer) | 🏷 |

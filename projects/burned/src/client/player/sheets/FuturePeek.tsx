@@ -1,4 +1,4 @@
-import { useState, useCallback } from 'react'
+import { useState, useCallback, useRef } from 'react'
 import type { CardInstance } from '@shared/types'
 import { MinimalCard } from '@client/shared/MinimalCard'
 import styles from './sheets.module.css'
@@ -13,6 +13,11 @@ interface FuturePeekProps {
 export function FuturePeek({ cards, canRearrange, onDismiss, onRearrange }: FuturePeekProps) {
   const [tapOrder, setTapOrder] = useState<string[]>([])
   const [submitted, setSubmitted] = useState(false)
+  // Ref guard for the read-only "Got it" button — prevents same-tick
+  // double-tap from firing `onDismiss` twice. State-based guards have
+  // a known race (closure value stale within the event tick); ref
+  // updates synchronously. D-04 / same race class as B-17.
+  const dismissedRef = useRef(false)
 
   const handleTap = useCallback((cardId: string) => {
     if (!canRearrange || submitted) return
@@ -78,7 +83,14 @@ export function FuturePeek({ cards, canRearrange, onDismiss, onRearrange }: Futu
       </div>
 
       {!canRearrange && (
-        <button className={styles.confirmBtn} onClick={onDismiss}>
+        <button
+          className={styles.confirmBtn}
+          onClick={() => {
+            if (dismissedRef.current) return
+            dismissedRef.current = true
+            onDismiss()
+          }}
+        >
           Got it
         </button>
       )}

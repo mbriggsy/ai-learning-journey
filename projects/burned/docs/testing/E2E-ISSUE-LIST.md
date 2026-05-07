@@ -25,8 +25,20 @@ disconnect-wedge cluster — see "Disconnect-wedge cluster" section
 below for product-call rationale (couch-of-friends context; kill tab,
 start over).
 
-**⏸ 1 P0 still blocked on Briggsy's call:** D-03 simultaneous-Nope UX
-(design decision).
+**🟢 D-03 simultaneous-Nope race shipped 2026-04-23 in `16942a1b`** —
+client `nope` action carries `windowGeneration`; engine rejects
+stale-gen Nopes (protocol bumped 2 → 3). The "still blocked on
+Briggsy's call" framing was the pre-fix posture; resolution went
+mechanical (generation-gated rejection) rather than UX-design.
+
+**Audit cleanup 2026-05-07:** the 🔴 → 🟢 status flips on the table
+rows below were back-filled in a single sweep after spot-checks
+during the C-30..C-33 triage cleanup found rows that had been left
+🔴 even though their commits had landed weeks earlier. Each shipped
+row now cites its commit. The ⏸ rows (C-13, C-15, C-16-19) and the
+remaining 🔴 rows (B-01/02/11/12/14/17, C-07/09/10/11/12/21/25,
+D-04/15/16/23, E-08) are genuinely-open per the same commit-history
+audit — no commit references those IDs.
 
 ## Legend
 
@@ -53,25 +65,25 @@ start over).
 
 | ID | Title | Status | Fix |
 |----|-------|--------|-----|
-| **E-01** | `card-drawn.cardType` leaks drawn card identity to every opponent + board | 🔴 | Extend `stripPrivateEventFields` — card type stays only for `viewerId === event.playerId` |
-| **E-02** | 4KB message cap uses `.length` (UTF-16 chars) not bytes — 4× DoS bypass | 🔴 | Switch to `new TextEncoder().encode(message).length` |
-| **E-03** | `window.__gameStore` DCE relies on Vite static replacement — no regression test for prod bundle | 🔴 | Add test that greps `dist/**/*.js` for the string `__gameStore` |
+| **E-01** | `card-drawn.cardType` leaks drawn card identity to every opponent + board | 🟢 | Shipped 2026-04-23 in `35e87dd9` — `stripPrivateEventFields` keeps cardType only for `viewerId === event.playerId`. |
+| **E-02** | 4KB message cap uses `.length` (UTF-16 chars) not bytes — 4× DoS bypass | 🟢 | Shipped 2026-04-23 in `bf08fa04` — measure WS message cap in UTF-8 bytes via `TextEncoder`. |
+| **E-03** | `window.__gameStore` DCE relies on Vite static replacement — no regression test for prod bundle | 🟢 | Shipped 2026-04-23 in `adf26d46` — `verify-prod-bundle.ts` greps `dist/**/*.js` for forbidden DEV-only strings. |
 
 ### Crash / systemic failure cluster
 
 | ID | Title | Status | Fix |
 |----|-------|--------|-----|
-| **C-05** | `formatEvent` default arm uses `return _exhaustive` (TypeScript-exhaustive, runtime-trap). Unknown event → render object → ErrorBoundary. Cumulative event log replays on remount → permanent lock. | 🔴 | `src/client/board/events.ts:155-158` change to `return null` with `console.warn` |
-| **C-04** | ErrorBoundary "Recovering..." fallback is inline grey-on-black 16px text — invisible on a TV across the room | 🔴 | Replace with themed Comms-scrambled fallback using design tokens + large display font |
+| **C-05** | `formatEvent` default arm uses `return _exhaustive` (TypeScript-exhaustive, runtime-trap). Unknown event → render object → ErrorBoundary. Cumulative event log replays on remount → permanent lock. | 🟢 | Shipped 2026-04-23 in `e4b40101` — unknown GameEvent types return `null`, not the event object. |
+| **C-04** | ErrorBoundary "Recovering..." fallback is inline grey-on-black 16px text — invisible on a TV across the room | 🟢 | Shipped 2026-04-23 in `7cccfffe` — themed Comms-scrambled fallback with design tokens + display font. |
 
 ### Layout / readability P0 cluster
 
 | ID | Title | Status | Fix |
 |----|-------|--------|-----|
-| **C-01** | 10-player lobby overflows 1920×1080 TV — CLEARED HOT start button ~217px below fold. Worse on 1440×900. | 🔴 | 2-column roster grid when players > 5, guaranteed bottom-visible start button |
-| **C-02** | JoinScreen `joinedName` truncates the legal 12-char maxLength — "DASH BARLOWE" → "DASH BAR…" on every phone. Player's first confirmation their name was accepted is visually butchered. | 🔴 | Font scales with `cqi`, or cap at 24-26px on phone widths (`JoinScreen.module.css:297`) |
-| **C-03** | Board on iPad-portrait (1024×1366) broken: DrawPile count overlapped by discard, PlayerStrip cut off left, COMMS stretched. Spec is landscape-only but no orientation guard. | 🔴 | Orientation splash "Rotate to landscape" at board entry point |
-| **C-06** | Staged `vera-khan` name truncates to "VERA KI•" at 360×640 — `text-overflow: clip` cuts mid-character on legal 9-char codename | 🔴 | `MinimalCard.module.css:158-171` — cqi-scaled font + `ellipsis`, or drop header below 180px |
+| **C-01** | 10-player lobby overflows 1920×1080 TV — CLEARED HOT start button ~217px below fold. Worse on 1440×900. | 🟢 | Shipped 2026-04-23 in `1e40c086` — 2-column roster grid when players > 5; bottom-visible start button. |
+| **C-02** | JoinScreen `joinedName` truncates the legal 12-char maxLength — "DASH BARLOWE" → "DASH BAR…" on every phone. Player's first confirmation their name was accepted is visually butchered. | 🟢 | Shipped 2026-04-23 in `b672e2a1` — 12-char hero name no longer truncates on any phone. |
+| **C-03** | Board on iPad-portrait (1024×1366) broken: DrawPile count overlapped by discard, PlayerStrip cut off left, COMMS stretched. Spec is landscape-only but no orientation guard. | 🟢 | Shipped 2026-04-23 in `50c23077` — portrait orientation splash at board entry point. |
+| **C-06** | Staged `vera-khan` name truncates to "VERA KI•" at 360×640 — `text-overflow: clip` cuts mid-character on legal 9-char codename | 🟢 | Shipped 2026-04-23 in `5c458dde` — hide name on tiny staged miniature; ellipsis fallback. |
 
 ### Disconnect-wedge cluster — DECIDED BY-DESIGN (2026-05-02)
 
@@ -107,8 +119,8 @@ appears on paper.
 
 | ID | Title | Status | Fix |
 |----|-------|--------|-----|
-| **D-01** | Intercept button has no optimistic lock; `nope` action is stateVersion-exempt — 5 rapid taps burn 5 Intercepts in ~500ms | 🔴 | Add optimistic hand removal on intercept click, or in-flight guard |
-| **D-03** | Two simultaneous Nopes stack by arrival order with no "someone noped" broadcast — second Noper's Yup re-enables an action the first Noper thought they killed | ⏸ | UX design — nope-pending broadcast or instant-close semantics |
+| **D-01** | Intercept button has no optimistic lock; `nope` action is stateVersion-exempt — 5 rapid taps burn 5 Intercepts in ~500ms | 🟢 | Shipped 2026-04-23 in `c0a12abf` — optimistic hand lock on Intercept tap. |
+| **D-03** | Two simultaneous Nopes stack by arrival order with no "someone noped" broadcast — second Noper's Yup re-enables an action the first Noper thought they killed | 🟢 | Shipped 2026-04-23 in `16942a1b` — `nope` action carries `windowGeneration`; engine rejects stale-gen Nopes (protocol v3). |
 
 ---
 
@@ -118,7 +130,7 @@ appears on paper.
 
 | ID | Title | Status |
 |----|-------|--------|
-| **A-01** | Server `handleSingleCard` accepts single `intercepted` plays — strips card from hand, opens Nope window, errors on resolve. Card permanently lost if client bypasses `validateCombo`. | 🔴 |
+| **A-01** | Server `handleSingleCard` accepts single `intercepted` plays — strips card from hand, opens Nope window, errors on resolve. Card permanently lost if client bypasses `validateCombo`. **Shipped 2026-04-23 in `bc081172`** — engine rejects single Intercepted plays upfront (zero-trust). | 🟢 |
 | **A-02** | Eliminated-while-under-attack: `turnsRemaining` evaporates. Behavior is defensible but un-tested; rule ambiguous. | 🏷 |
 | **A-05** | 2-of-a-kind Noped cleanup: `pendingSteal` cleared correctly but no test asserts it | 🏷 |
 | **A-06** | 3-of-a-kind cancel-then-reselect flow untested | 🏷 |
@@ -139,18 +151,18 @@ appears on paper.
 | ID | Title | Status |
 |----|-------|--------|
 | **C-07** | Nameplate brass "stand" is 4-6px tall on 1920 — reads as underline | 🔴 |
-| **C-08** | PlayerStrip `NAME_MAX = 7` hard-coded — "DASH B…" on 1920 where 150px per tile easily fits 12 chars. Short names (`Kimi R.`) don't truncate, creating visual inconsistency. | 🔴 |
+| **C-08** | PlayerStrip `NAME_MAX = 7` hard-coded — "DASH B…" on 1920 where 150px per tile easily fits 12 chars. Short names (`Kimi R.`) don't truncate, creating visual inconsistency. **Shipped 2026-04-23 in `5d424d49`** — drop aggressive `NAME_MAX=7` truncation. | 🟢 |
 | **C-09** | NameCard grid + "CALL OFF THE RAID" button below fold on 360×640 | 🔴 |
 | **C-10** | NopeCountdownBar floats above arena frame — reads as browser notification, not spy tension | 🔴 |
 | **C-11** | DossierFeed side CASE FILE + inner CLASSIFIED stamp are two-of-a-kind competing for attention | 🔴 |
 | **C-12** | Channel ticker `// AWAITING TRANSMISSION` would wrap on narrower containers (phone overlays) | 🔴 |
 | **C-13** | 11 of 17 card illustrations are 384×384 square art letterboxed in 5:7 frames → ~29px teal mat top+bottom. Inconsistent with operative portraits (tall aspect, fill-to-edge). Cuts against the Archer edge-to-edge feel. | ⏸ (asset regen decision) |
-| **C-14** | INTERCEPTED drama hold 800ms, EXTRACTED 1000ms — too short to read from couch across a 15ft room | 🔴 |
+| **C-14** | INTERCEPTED drama hold 800ms, EXTRACTED 1000ms — too short to read from couch across a 15ft room. **Shipped 2026-04-23 in `1db5ddab`** — drama hold extended; transient INTERCEPTED beat aborts on `turn-started` (later refined). | 🟢 |
 | **C-15** | Board shows `{NAME} BURNED` text while drawer sees the CARD — board arguably should get the card variant too (it's the narrator) | ⏸ (product call) |
-| **C-20** | Active player "ACTIVE" pill on PlayerStrip clips tile's top border; +2 turns badge crams against card count | 🔴 |
+| **C-20** | Active player "ACTIVE" pill on PlayerStrip clips tile's top border; +2 turns badge crams against card count. **Shipped 2026-04-23 in `a9a8e373`** — PlayerStrip pill spacing fix. | 🟢 |
 | **C-21** | Hand cards render 368 vs 389 tall depending on `@container (min-width: 177px)` — neighbor heights bounce during scroll-snap | 🔴 |
-| **C-22** | `player-eliminated` event without `rank` renders `#undefined` — unguarded template interpolation | 🔴 |
-| **C-23** | TargetSelect "Unknown" fallback when targetId doesn't resolve reads as a bug, not game state | 🔴 |
+| **C-22** | `player-eliminated` event without `rank` renders `#undefined` — unguarded template interpolation. **Shipped 2026-04-23 in `1db5ddab`** — eliminated rank guard. | 🟢 |
+| **C-23** | TargetSelect "Unknown" fallback when targetId doesn't resolve reads as a bug, not game state. **Shipped 2026-04-23 in `a9a8e373`** — target-unknown copy fix. | 🟢 |
 
 ### C (aesthetic reworks — P1 scope decision) — 5
 
@@ -165,25 +177,25 @@ appears on paper.
 
 | ID | Title | Status |
 |----|-------|--------|
-| **D-02** | Draw button no optimistic lock → 10 rapid taps spam STALE_STATE errors to user | 🔴 |
+| **D-02** | Draw button no optimistic lock → 10 rapid taps spam STALE_STATE errors to user. **Shipped 2026-04-23 in `dd446945`** — optimistic in-flight lock on Draw button. | 🟢 |
 | **D-04** | FuturePeek read-only `Got it` button has no submit guard (low impact, back-to-back Intel Briefing impossible per deck) | 🔴 |
-| **D-05** | StealReport Acknowledge has `autoFocus` + no debounce — panic-tap dismisses queued reports unread | 🔴 |
+| **D-05** | StealReport Acknowledge has `autoFocus` + no debounce — panic-tap dismisses queued reports unread. **Shipped 2026-04-23 in `0af60680`** — StealReport debounce. | 🟢 |
 | **D-13** | Hand updates mid-stage mostly safe; optimistic rollback correctly validated | 🏷 |
 | **D-14** | Drama overlay doesn't block hand (by design — visualization layer) | 🏷 |
 | **D-16** | Counter-counter-nope by original actor at chainDepth≥1: rules allow it but SmartActionBox only shows Intercept CTA for `!myTurn` — actor can't Intercept their own attacker's Intercept via UI. **Possible rule violation.** | 🔴 |
-| **D-17** | JoinScreen doesn't pre-validate `NAME_PATTERN` — user types "name@" (invalid), hits submit, sees server error | 🔴 |
+| **D-17** | JoinScreen doesn't pre-validate `NAME_PATTERN` — user types "name@" (invalid), hits submit, sees server error. **Shipped 2026-04-23 in `23cd64c9`** — JoinScreen regex pre-validate. | 🟢 |
 | **D-19** | Reconnect stale-state window (~100ms) — mostly suppressed by isReconnecting flag | 🏷 |
-| **D-20** | NameCard BottomSheet doesn't honor Escape key | 🔴 |
+| **D-20** | NameCard BottomSheet doesn't honor Escape key. **Shipped 2026-04-23 in `0af60680`** — NameCard Escape. | 🟢 |
 | **D-21** | Favor surrender race — server authoritative, error shown | 🏷 |
 
 ### E (validation) — 6
 
 | ID | Title | Status |
 |----|-------|--------|
-| **E-04** | Zod default `strip` mode — unknown keys silently dropped. Defense-in-depth missing. | 🔴 |
-| **E-05** | Name-reclaim skips `NAME_PATTERN` — reclaim accepts control chars + HTML in raw input | 🔴 |
-| **E-06** | Zod `z.string().max(12)` no `min(1)`, no regex — whole `NAME_PATTERN` contract lives downstream instead of at WS boundary | 🔴 |
-| **E-07** | `stateVersion` unbounded upper range | 🔴 |
+| **E-04** | Zod default `strip` mode — unknown keys silently dropped. Defense-in-depth missing. **Shipped 2026-04-23 in `19ce54e0`** — Zod strict mode. | 🟢 |
+| **E-05** | Name-reclaim skips `NAME_PATTERN` — reclaim accepts control chars + HTML in raw input. **Shipped 2026-04-23 in `19ce54e0`** — name-reclaim regex pattern enforced. | 🟢 |
+| **E-06** | Zod `z.string().max(12)` no `min(1)`, no regex — whole `NAME_PATTERN` contract lives downstream instead of at WS boundary. **Shipped 2026-04-23 in `19ce54e0`** — name regex enforced at WS boundary. | 🟢 |
+| **E-07** | `stateVersion` unbounded upper range. **Shipped 2026-04-23 in `19ce54e0`** — stateVersion cap. | 🟢 |
 | **E-08** | Rate limit doesn't cover unidentified connections before `join` | 🔴 |
 
 ---
@@ -202,8 +214,8 @@ appears on paper.
 
 | ID | Title | Status |
 |----|-------|--------|
-| **B-08** | `consecutivePersistFailures` never reset on lobby return | 🔴 |
-| **B-09** | Unknown ClientMessage type in switch has no default case — silent consume | 🔴 |
+| **B-08** | `consecutivePersistFailures` never reset on lobby return. **Shipped 2026-04-23 in `d0b5bbcb`** — persist-fail counter resets on lobby return. | 🟢 |
+| **B-09** | Unknown ClientMessage type in switch has no default case — silent consume. **Shipped 2026-04-23 in `d0b5bbcb`** — exhaustive ClientMessage default. | 🟢 |
 | **B-10** | Stale Nope bypasses stateVersion (intentional race), but windowGeneration check could gate stale replays | 🏷 |
 | **B-15** | Enqueued player-update reads gameState via closure — correct but brittle if player-removal ever lands | 🏷 |
 | **B-16** | 11th connection lingers until disconnect; MAX_CONNECTIONS=12 vs MAX_PLAYERS=10 buffer could be exhausted by unidentified connections | 🏷 |

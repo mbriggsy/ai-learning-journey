@@ -2,7 +2,57 @@
 
 ## NEXT SESSION — pick up here (2026-05-07+)
 
-### THIS SESSION (2026-05-07) — COMMS clip fix + card-asset regen attempt
+### THIS SESSION (2026-05-07 afternoon) — extraction + intel-briefing winners shipped
+
+One commit shipped on top of the morning session. The two
+border-bug card assets that were ready for swap-in this morning are
+now live in `public/assets/cards/`. Burned card still parked on iter3
+rooftop-flashbulb (NBP probe #4 today returned same 503
+high-demand error).
+
+| Commit | Subject |
+|---|---|
+| (this) | feat(cards): swap in extraction + intel-briefing winners (border bug killed) |
+
+**Asset swap (this commit).** PNG → WEBP via `scripts/process-assets.ts`
+at the standard 384px / q80 settings. Source candidates in
+`public/assets/cards/_archive/2026-05-07-session/` were unchanged from
+this morning's eyeball-approved set:
+
+- `extraction-iter03-FINAL-CANDIDATE.png` → `public/assets/cards/extraction.webp`
+- `intel-briefing-iter12-FINAL-CANDIDATE.png` → `public/assets/cards/intel-briefing.webp`
+
+Prior `.webp` files preserved at:
+
+- `public/assets/cards/_archive/extraction-2026-05-07-white-border-baked.webp`
+- `public/assets/cards/_archive/intel-briefing-2026-05-07-white-border-baked.webp`
+
+Verifications run before commit:
+
+- Edge-pixel sampling: 0/96 near-white (was 96/96 on the prior versions
+  — that was the bug we fixed). Reference cards `back-channel.webp` and
+  `burned.webp` also re-sampled at 0/96 as the full-bleed control.
+- Direct webp visual read at 384×384: full-bleed, on-vocabulary, peak
+  Mother's-office for intel-briefing, dramatic spotlight rescue for
+  extraction.
+- Live render via Vite dev server + Playwright at 4 representative
+  sizes (96px hand, 128px hand-enlarged, 200px discard, 320px hero).
+  Both compositions hold up at hand size — silhouettes and lighting
+  carry the narrative beat even at the smallest representative card
+  size. Side-by-side with `back-channel` and `burned` (already-approved
+  reference cards), the new ones fit the deck visually.
+
+**Burned card — NBP probe #4 today, same 503.** Re-ran
+`scripts/edit-burned-door-nbp.ts` against
+`burned-iter11-cropped-awesome-CANDIDATE.png` (renamed locally to
+`burned-iter11-cropped-LOCKED.png` to satisfy the script's hardcoded
+input path). Got the same `code: 503 / status: UNAVAILABLE / "This
+model is currently experiencing high demand"` as the morning probes.
+Genuine external blocker. Burned card stays parked on iter3
+rooftop-flashbulb; the escort-concept work-product is preserved in
+`public/assets/cards/_archive/2026-05-07-session/`.
+
+### PRIOR SESSION (2026-05-07 morning) — COMMS clip fix + card-asset regen attempt
 
 One commit shipped. Card-asset regen substantially advanced but parked
 mid-flight on the Burned card.
@@ -81,27 +131,23 @@ editing capability — `scripts/edit-burned-door-nbp.ts` returned 503
 
 Solo-doable:
 
-- **Swap in extraction + intel-briefing winners** (~30 min). Convert
-  PNG → WEBP at the existing 384×384 resolution, archive the current
-  `public/assets/cards/{extraction,intel-briefing}.webp` to the
-  `_archive/` folder with date+reason tags, drop the new ones in. Vite
-  HMR flashes them on any active board. Test the live board renders.
-  Both candidates already verified for full-bleed (0/100 near-white edge
-  sampling) and Briggsy approved both compositions. This is a clean
-  ship — burned can stay parked at its current iter3 rooftop-flashbulb
-  asset until the escort-concept is solvable.
 - **Resume burned escort-concept via NBP** when `gemini-3-pro-image-preview`
-  is no longer 503ing. Use `scripts/edit-burned-door-nbp.ts` to surgically
-  edit `burned-iter10-backs-walking-no-door.png` (open the rear door,
-  add the warm amber doorway glow as the figures' destination) OR
-  `burned-iter11-cropped-awesome-CANDIDATE.png` (close any front door,
-  open the rear door). NBP supports multi-turn refinement and image
-  editing where Imagen 4 only does text-to-image, so it should be able
-  to do surgical pixel-level corrections rather than the
-  prayer-and-roll-the-dice approach Imagen requires.
+  is no longer 503ing. Probe #4 today (afternoon) returned same 503 as
+  the morning's three attempts. Use `scripts/edit-burned-door-nbp.ts`
+  to surgically edit `burned-iter10-backs-walking-no-door.png` (open
+  the rear door, add the warm amber doorway glow as the figures'
+  destination) OR `burned-iter11-cropped-awesome-CANDIDATE.png` (close
+  any front door, open the rear door). NBP supports multi-turn
+  refinement and image editing where Imagen 4 only does text-to-image,
+  so it should be able to do surgical pixel-level corrections rather
+  than the prayer-and-roll-the-dice approach Imagen requires. The
+  script reads from `temp/cards/burned-iter11-cropped-LOCKED.png` so
+  copy the candidate to that path before re-running.
 - **Visual review on the 5-commit Phase 5 palette batch** (carryover
   from prior session) — drama-accent CARD FACE inspection still
-  pending. Now blocked on burned card asset stabilizing.
+  pending. Now unblocked from extraction + intel-briefing perspective;
+  burned card stays parked but on a clean iter3 art so the rest of the
+  deck reads consistently.
 
 Briggsy-required (carryover, all still open):
 

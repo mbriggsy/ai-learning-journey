@@ -426,6 +426,18 @@
   text-transform: uppercase;
   color: color-mix(in oklab, var(--color-cream-11) 70%, transparent);
   line-height: 1.2;
+  /* Cross-fade when "// HOST OFFLINE" replaces "Standing by..." — keeps
+     the swap from being a hard text-jolt. B-02. */
+  transition: color var(--motion-duration-base) var(--motion-ease-base);
+}
+
+/* Host disconnected — color shifts to accent-burned (warning) and the
+   font-weight nudges up to bold-mono since the line carries more weight
+   in this state. Dots animation continues unchanged (signals "we're
+   waiting for it to come back"). B-02. */
+.waiting[data-host-offline] .waitingLabel {
+  color: var(--color-accent-burned);
+  font-weight: 700;
 }
 
 .waitingDots {

@@ -56,6 +56,11 @@ export interface LobbyView {
   readonly phase: 'lobby'
   readonly roomCode: string
   readonly players: readonly { readonly id: string; readonly name: string; readonly color: string; readonly isConnected: boolean }[]
+  /** Whether the board/TV (host) is currently connected. Phone players need
+   *  this to know when to surface a "host disconnected" signal — without it
+   *  the joined-state phone UI silently waits forever while the only thing
+   *  that can start the game is gone. B-02. */
+  readonly hostConnected: boolean
 }
 
 // --- Board Player ---

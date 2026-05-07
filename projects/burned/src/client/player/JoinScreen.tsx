@@ -19,9 +19,14 @@ interface Props {
   playerName?: string
   defaultName?: string
   lobbyPlayers?: readonly LobbyPlayer[]
+  /** Whether the board/TV (host) is currently connected. `undefined` while the
+   *  client is still pre-lobby (no LobbyView received yet). When `false` AND
+   *  the player is already joined, JoinScreen surfaces a "host disconnected"
+   *  banner so the user understands why the lobby is frozen. B-02. */
+  hostConnected?: boolean
 }
 
-export function JoinScreen({ connectionStatus, assignedColor, onJoin, roomCode, playerName, defaultName, lobbyPlayers }: Props) {
+export function JoinScreen({ connectionStatus, assignedColor, onJoin, roomCode, playerName, defaultName, lobbyPlayers, hostConnected }: Props) {
   const [name, setName] = useState(defaultName ?? '')
   const [error, setError] = useState<string | null>(null)
   const lastError = useLastError()
@@ -121,8 +126,10 @@ export function JoinScreen({ connectionStatus, assignedColor, onJoin, roomCode, 
 
           <div className={styles.dossierDivider} />
 
-          <p className={styles.waiting}>
-            <span className={styles.waitingLabel}>Standing by, awaiting deployment</span>
+          <p className={styles.waiting} data-host-offline={hostConnected === false || undefined}>
+            <span className={styles.waitingLabel}>
+              {hostConnected === false ? '// HOST OFFLINE' : 'Standing by, awaiting deployment'}
+            </span>
             <span className={styles.waitingDots} />
           </p>
         </section>

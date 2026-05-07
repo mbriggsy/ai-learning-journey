@@ -277,3 +277,58 @@ describe('JoinScreen — reclaim picker (B-14)', () => {
     }
   })
 })
+
+// ---------------------------------------------------------------------------
+// Host-offline banner (B-02)
+//
+// When the board/TV (host) disconnects during lobby, the joined-state phone
+// shows a "Standing by..." dots animation that will never resolve — the
+// game can't start without a host. This banner swaps the "Standing by..."
+// label for "// HOST OFFLINE" so the player understands the freeze.
+// ---------------------------------------------------------------------------
+
+function getWaitingLabel(container: HTMLElement): string | null {
+  const el = container.querySelector('p[class*="waiting"] span[class*="waitingLabel"]')
+  return el?.textContent ?? null
+}
+
+function getWaitingNode(container: HTMLElement): HTMLElement | null {
+  return container.querySelector('p[class*="waiting"]')
+}
+
+describe('JoinScreen — host-offline banner (B-02)', () => {
+  it('shows "Standing by..." when host is connected', () => {
+    const { container, root } = mount()
+    try {
+      renderJoinForm(root, { assignedColor: '#e74c3c', hostConnected: true })
+      expect(getWaitingLabel(container)).toBe('Standing by, awaiting deployment')
+      expect(getWaitingNode(container)?.dataset.hostOffline).toBeUndefined()
+    } finally {
+      teardown(container, root)
+    }
+  })
+
+  it('swaps to "// HOST OFFLINE" when hostConnected is false', () => {
+    const { container, root } = mount()
+    try {
+      renderJoinForm(root, { assignedColor: '#e74c3c', hostConnected: false })
+      expect(getWaitingLabel(container)).toBe('// HOST OFFLINE')
+      expect(getWaitingNode(container)?.dataset.hostOffline).toBe('true')
+    } finally {
+      teardown(container, root)
+    }
+  })
+
+  it('keeps "Standing by..." when hostConnected is undefined (pre-lobby)', () => {
+    // Before the first LobbyView arrives, hostConnected is undefined. The
+    // banner should NOT flash the warning — we don't know yet.
+    const { container, root } = mount()
+    try {
+      renderJoinForm(root, { assignedColor: '#e74c3c' })
+      expect(getWaitingLabel(container)).toBe('Standing by, awaiting deployment')
+      expect(getWaitingNode(container)?.dataset.hostOffline).toBeUndefined()
+    } finally {
+      teardown(container, root)
+    }
+  })
+})

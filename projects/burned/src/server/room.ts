@@ -111,6 +111,7 @@ export class GameRoom extends Server<Env> {
   private nopeGraceTimeout: ReturnType<typeof setTimeout> | null = null
   private lastScheduledNopeGeneration = -1
   private disconnectTimers = new Map<string, ReturnType<typeof setTimeout>>() // playerId → debounce timer
+  private hostDisconnectTimer: ReturnType<typeof setTimeout> | null = null
   private heartbeatIntervals = new Map<string, ReturnType<typeof setInterval>>() // connectionId → interval
   private lastPongTimes = new Map<string, number>() // connectionId → last activity
 
@@ -368,6 +369,18 @@ export class GameRoom extends Server<Env> {
         }
         void this.persistState()
       }, DISCONNECT_DEBOUNCE_MS))
+    } else if (state?.role === 'host' && this.gameState?.phase === 'lobby') {
+      // Debounce host disconnect on the same window as players. Phone
+      // players need to learn the board/TV is gone so they can stop
+      // staring at a "Standing by..." dots animation that will never
+      // resolve. B-02. Only fires in lobby phase — mid-game host-gone
+      // is a different problem (see B-11).
+      if (this.hostDisconnectTimer) clearTimeout(this.hostDisconnectTimer)
+      this.hostDisconnectTimer = setTimeout(() => {
+        this.hostDisconnectTimer = null
+        if (this.isHostConnected()) return
+        if (this.gameState?.phase === 'lobby') this.broadcastLobbyState()
+      }, DISCONNECT_DEBOUNCE_MS)
     }
 
     // Schedule idle room cleanup if no connections remain
@@ -507,6 +520,12 @@ export class GameRoom extends Server<Env> {
     }
 
     connection.setState({ role: 'host' } satisfies ConnState)
+
+    // Cancel any pending host-disconnect broadcast — host is back. B-02.
+    if (this.hostDisconnectTimer) {
+      clearTimeout(this.hostDisconnectTimer)
+      this.hostDisconnectTimer = null
+    }
 
     if (!this.gameState) {
       this.gameState = createLobbyState()
@@ -1061,6 +1080,7 @@ export class GameRoom extends Server<Env> {
 
   private buildLobbyView(): LobbyView {
     const connectedPlayerIds = this.getConnectedPlayerIds()
+    const hostConnected = this.isHostConnected()
 
     return {
       phase: 'lobby',
@@ -1071,7 +1091,15 @@ export class GameRoom extends Server<Env> {
         color: this.playerColors.get(id) ?? '#888',
         isConnected: connectedPlayerIds.has(id),
       })),
+      hostConnected,
     }
+  }
+
+  private isHostConnected(): boolean {
+    for (const conn of this.getConnections()) {
+      if (this.getConnState(conn)?.role === 'host') return true
+    }
+    return false
   }
 
   private getConnectedPlayerIds(): Set<string> {
@@ -1198,6 +1226,10 @@ export class GameRoom extends Server<Env> {
     this.clearNopeTimer()
     for (const timer of this.disconnectTimers.values()) clearTimeout(timer)
     this.disconnectTimers.clear()
+    if (this.hostDisconnectTimer) {
+      clearTimeout(this.hostDisconnectTimer)
+      this.hostDisconnectTimer = null
+    }
     for (const interval of this.heartbeatIntervals.values()) clearInterval(interval)
     this.heartbeatIntervals.clear()
     this.lastPongTimes.clear()

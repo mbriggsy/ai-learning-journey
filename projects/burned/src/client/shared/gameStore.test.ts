@@ -13,6 +13,7 @@ describe('GameStore', () => {
       phase: 'lobby',
       roomCode: 'ABCD',
       players: [{ id: '1', name: 'Alice', color: '#e74c3c', isConnected: true }],
+      hostConnected: true,
     }
     const msg: ServerMessage = { type: 'state-update', payload: lobby, protocolVersion: 1 }
     gameStore.handleMessage(msg)
@@ -27,6 +28,7 @@ describe('GameStore', () => {
       phase: 'lobby',
       roomCode: 'EFGH',
       players: [],
+      hostConnected: true,
     }
     gameStore.handleMessage({ type: 'state-update', payload: lobby, protocolVersion: 1 })
     expect(called).toBe(1)
@@ -53,7 +55,7 @@ describe('GameStore', () => {
     expect(gameStore.getLastError()).toBeNull()
 
     // state-update clears reconnecting
-    const lobby: LobbyView = { phase: 'lobby', roomCode: 'TEST', players: [] }
+    const lobby: LobbyView = { phase: 'lobby', roomCode: 'TEST', players: [], hostConnected: true }
     gameStore.handleMessage({ type: 'state-update', payload: lobby, protocolVersion: 1 })
     expect(gameStore.getIsReconnecting()).toBe(false)
   })
@@ -89,7 +91,7 @@ describe('GameStore', () => {
   // object each time. React detected "tearing" and forced infinite re-renders.
 
   it('getSnapshot returns stable reference with optimistic state active', () => {
-    const lobby: LobbyView = { phase: 'lobby', roomCode: 'STAB', players: [] }
+    const lobby: LobbyView = { phase: 'lobby', roomCode: 'STAB', players: [], hostConnected: true }
     gameStore.handleMessage({ type: 'state-update', payload: lobby, protocolVersion: 1 })
 
     gameStore.applyOptimistic(s => ({ ...s, roomCode: 'OPTI' } as LobbyView))
@@ -105,7 +107,7 @@ describe('GameStore', () => {
   })
 
   it('getSnapshot returns server state after optimistic is cleared', () => {
-    const lobby: LobbyView = { phase: 'lobby', roomCode: 'SERV', players: [] }
+    const lobby: LobbyView = { phase: 'lobby', roomCode: 'SERV', players: [], hostConnected: true }
     gameStore.handleMessage({ type: 'state-update', payload: lobby, protocolVersion: 1 })
 
     gameStore.applyOptimistic(s => ({ ...s, roomCode: 'OPT' } as LobbyView))
@@ -117,13 +119,13 @@ describe('GameStore', () => {
   })
 
   it('handleMessage clears optimistic on state-update', () => {
-    const lobby1: LobbyView = { phase: 'lobby', roomCode: 'OLD', players: [] }
+    const lobby1: LobbyView = { phase: 'lobby', roomCode: 'OLD', players: [], hostConnected: true }
     gameStore.handleMessage({ type: 'state-update', payload: lobby1, protocolVersion: 1 })
 
     gameStore.applyOptimistic(s => ({ ...s, roomCode: 'OPT' } as LobbyView))
     expect(gameStore.getIsOptimisticPending()).toBe(true)
 
-    const lobby2: LobbyView = { phase: 'lobby', roomCode: 'NEW', players: [] }
+    const lobby2: LobbyView = { phase: 'lobby', roomCode: 'NEW', players: [], hostConnected: true }
     gameStore.handleMessage({ type: 'state-update', payload: lobby2, protocolVersion: 1 })
 
     expect(gameStore.getIsOptimisticPending()).toBe(false)
@@ -220,7 +222,7 @@ describe('GameStore', () => {
 
       // Transition back to lobby — events from the prior round must NOT
       // bleed into the next game.
-      const lobby: LobbyView = { phase: 'lobby', roomCode: 'NEW', players: [] }
+      const lobby: LobbyView = { phase: 'lobby', roomCode: 'NEW', players: [], hostConnected: true }
       gameStore.handleMessage({ type: 'state-update', payload: lobby, protocolVersion: 1 })
       expect(gameStore.getAccumulatedEvents().length).toBe(0)
     })

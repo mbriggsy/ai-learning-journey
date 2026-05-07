@@ -209,6 +209,7 @@ function PhoneRouter({ connectionStatus, assignedColor, onJoin, roomCode, urlNam
       : undefined
 
     const lobbyPlayers = state?.phase === 'lobby' ? state.players : undefined
+    const hostConnected = state?.phase === 'lobby' ? state.hostConnected : undefined
 
     return (
       <JoinScreen
@@ -219,6 +220,7 @@ function PhoneRouter({ connectionStatus, assignedColor, onJoin, roomCode, urlNam
         playerName={lobbyName}
         defaultName={urlName || undefined}
         lobbyPlayers={lobbyPlayers}
+        hostConnected={hostConnected}
       />
     )
   }

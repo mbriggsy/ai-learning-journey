@@ -1,4 +1,4 @@
-import { useState } from 'react'
+import { useRef, useState } from 'react'
 import { MinimalCard } from '@client/shared/MinimalCard'
 import styles from './sheets.module.css'
 
@@ -35,9 +35,15 @@ function DefuseHeader() {
 export function DefusePlacement({ maxPosition, onPlace }: DefusePlacementProps) {
   const [position, setPosition] = useState(0)
   const [submitted, setSubmitted] = useState(false)
+  // Sync ref guard alongside the state-driven `disabled` prop —
+  // protects against same-tick double-tap firing onPlace twice
+  // (state closure stale within the event tick before re-render).
+  // Same pattern as B-17 / D-04.
+  const submittedRef = useRef(false)
 
   const handlePlace = (pos: number) => {
-    if (submitted) return
+    if (submittedRef.current) return
+    submittedRef.current = true
     setSubmitted(true)
     onPlace(pos)
   }

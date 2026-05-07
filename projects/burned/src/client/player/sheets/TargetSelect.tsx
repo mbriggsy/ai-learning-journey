@@ -1,4 +1,4 @@
-import { useState } from 'react'
+import { useRef, useState } from 'react'
 import type { BoardPlayer } from '@shared/protocol'
 import { PlayerIcon } from '@client/shared/PlayerIcon'
 import styles from './sheets.module.css'
@@ -12,6 +12,17 @@ interface TargetSelectProps {
 
 export function TargetSelect({ eligiblePlayers, onSelectTarget, onCancel, title }: TargetSelectProps) {
   const [submitted, setSubmitted] = useState(false)
+  // Sync ref guard alongside the state-driven `disabled` prop. Both
+  // tracks: target-select and cancel route through the same lock
+  // because either one is a terminal action for this sheet. Same
+  // race-class fix as B-17 / D-04.
+  const submittedRef = useRef(false)
+  const guard = (run: () => void) => () => {
+    if (submittedRef.current) return
+    submittedRef.current = true
+    setSubmitted(true)
+    run()
+  }
   return (
     <div>
       <div className={styles.sheetTitle}>{title ?? 'Choose a target'}</div>
@@ -24,7 +35,7 @@ export function TargetSelect({ eligiblePlayers, onSelectTarget, onCancel, title 
             // range. Max 9 buttons (10-player game minus self) = 360ms
             // total reveal, tolerable on top of the sheet slide-up.
             style={{ animationDelay: `${i * 40}ms` }}
-            onClick={() => { if (!submitted) { setSubmitted(true); onSelectTarget(p.id) } }}
+            onClick={guard(() => onSelectTarget(p.id))}
             disabled={submitted}
           >
             <PlayerIcon color={p.color} size={16} />
@@ -38,7 +49,7 @@ export function TargetSelect({ eligiblePlayers, onSelectTarget, onCancel, title 
       {onCancel && (
         <button
           className={styles.cancelBtn}
-          onClick={() => { if (!submitted) onCancel() }}
+          onClick={guard(onCancel)}
           disabled={submitted}
         >
           Cancel

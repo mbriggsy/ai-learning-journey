@@ -35,45 +35,49 @@ const CARDS: CardPrompt[] = [
     type: 'burned',
     name: 'Burned',
     prompt:
-      // Iter 3 (2026-05-06): iter 2 fixed iter 1's hard-edged cone
-      // truncation but lost iter 1's operative drama — the bulb apparatus
-      // dominated and the operative shrank to a peripheral walking
-      // figure. Briggsy verdict: "convey the agent has been caught /
-      // discovered." Iter 3 combines:
-      //   * Iter 1's foreground HERO operative (large in frame,
-      //     dramatic shielding pose, half-lit silhouette).
-      //   * Iter 2's continuous cone (extends past operative, gradual
-      //     falloff, NO hard mid-air boundary) + cast shadow on the
-      //     rooftop floor.
-      //   * NEW: explicit emotional payload — frozen at the instant of
-      //     DISCOVERY, head snapped sharply to face the bulb, body
-      //     reading as REACTIVE not in-motion. The card is called
-      //     BURNED; the cinematic in-game is the moment of being made.
-      // Compositional structural directive: operative occupies the LEFT
-      // TWO-THIRDS of the frame as dominant subject, bulb + tripod at
-      // far-right edge as the source of the cone, NOT the hero.
+      // Iter 4 (2026-05-07): pivot to a different burned-narrative beat.
+      // Iter 3 (rooftop flashbulb-discovery) shipped successfully but
+      // Briggsy wanted to try the consequence beat instead of the
+      // discovery beat — agent being escorted/loaded into the back of a
+      // 1960s police cruiser. Same emotional payload (your cover is
+      // blown, you're done) but rendered through the moment AFTER the
+      // catch rather than the instant of capture. Tonally closer to
+      // Archer's "Mother's people came for you" beats than the "frozen
+      // at the bulb" iter 3.
+      //
+      // Iter 3 (rooftop flashbulb) prompt archived in commit history.
+      // If iter 4 doesn't land, revert this block.
       //
       // Iter 1 archive: public/assets/cards/_archive/burned-2026-05-06-iter1-cone-truncation-rejected.webp
       // Iter 2 archive: public/assets/cards/_archive/burned-2026-05-06-iter2-operative-too-small-rejected.webp
-      'a dramatic close-up rooftop scene at night at the instant of a flashbulb detonation, the moment of DISCOVERY captured in still frame — an operative caught and made by an unseen camera, ' +
-      'COMPOSITIONAL LAYOUT — ONE solitary operative occupies the LEFT TWO-THIRDS of the frame as the dominant subject filling roughly HALF the vertical height of the frame, a tripod-mounted vintage flashbulb sits at the FAR-RIGHT edge of the frame as the source of the cone of light but NOT the visual hero, the cone of light fills the space between them and extends past the operative to fade at the screen-left edge, ' +
-      'the operative wears a long trench coat and a fedora hat, captured FROZEN mid-stride at the precise instant of being SEEN — his body angled forward as if walking but his head snapped sharply to the right looking directly toward the firing bulb, shoulders rotating in startled recognition, knee bent from the interrupted stride, the body language reads as INSTANT REACTION to being caught: this is the moment of cover blown, surprise and recognition frozen in white light, ' +
-      'the operative\'s right arm is raised toward the light in a defensive shielding gesture, palm of the hand facing the bulb and the back of the hand toward the operative\'s own face, fingers splayed, the arm at shoulder height, ' +
-      'the operative is harshly side-lit by the cone of light from the right — his right side facing the bulb is brightly washed in pure white-amber glare, the contour of his right arm shoulder hat brim and trench coat catches the light as a hard-edged bright silhouette outline, his left side falls into deep self-shadow, the operative reads as a HIGH-CONTRAST silhouette with one harshly-lit edge and one shadowed edge — body and emotion reading through posture and outline alone, no detailed facial features required, ' +
-      'a BROAD WIDE cone of brilliant white-amber light fans out from the firing flashbulb at screen-right across the entire rooftop, the cone is ONE CONTINUOUS WEDGE of illumination starting at the bulb and extending all the way past the operative to the screen-left edge of the frame, the cone widens as it travels leftward and the light fades GRADUALLY at its outer reaches with a soft gradient falloff, NO hard-edged truncation in mid-air anywhere, the cone CONTINUES past the operative and reaches the rooftop floor on the far side, ' +
-      'the operative\'s body casts a long elongated dark SHADOW on the rooftop floor stretching toward screen-left as the bulb\'s light hits him — his own shadow on the floor is the only motivated dark zone within the cone\'s reach, ' +
-      'a vintage 1960s studio flashbulb on a slim metal tripod is positioned at the FAR RIGHT edge of the frame, the bulb FIRING at the moment of capture with sparkling lens-flare pinpricks scattered around it, the tripod and bulb apparatus are visible but compositionally SUBORDINATE to the operative — they live at the right edge as the source of the cone, not the visual focus, ' +
-      'a dark city skyline silhouette of tall rectangular buildings runs across the bottom horizon line behind the operative, deep charcoal shapes with a few tiny warm amber pinpricks for distant lit windows, ' +
-      'a thin layer of fog and mist hangs in the air on the rooftop and catches the cone of light as a soft glowing white-amber haze, especially dense near the bulb, ' +
-      'CRITICAL: ONLY ONE PERSON in the entire image, the lone operative is the only human, NO photographer visible behind the tripod, NO second figure, NO crowd, NO red carpet, NO event, NO formal venue, NO press scrum — this is a covert rooftop at night, the tripod stands alone with no operator, ' +
-      'the SOLE light source is the firing flashbulb at screen-right, no other light sources, every shadow in the scene falls toward the left because the light comes from the right, ' +
-      'NO badge, NO ID card, NO photograph in frame, NO sign, NO document — the firing flashbulb alone tells the story of identity captured, ' +
-      'the moment your cover is blown, the instant of being SEEN, the agent caught and discovered, REVELATION frozen in white light, ' +
-      'cool deep teal and charcoal night palette with the SINGLE cone of brilliant white-amber as the dominant accent, ' +
-      'the scene fills the entire square frame edge to edge with NO white borders NO cream borders NO vignette NO padding NO matting, every corner contains rooftop or sky or city silhouette, ' +
-      'NO text NO letters NO words NO numbers NO writing anywhere in the scene on any surface, ' +
-      'mid-century modern 1960s spy-film noir aesthetic, bold geometric angular style, flat illustration, ' +
-      'square full-bleed composition with the foreground operative as the dominant hero, caught in the continuous cone of light at the instant of discovery',
+      // Iter 17 (2026-05-07): pull camera back from iter 15-16 close-
+      // crop so the REAR of the sedan (taillights, trunk silhouette,
+      // bumper) is visible as spatial context. Iter 16 succeeded at
+      // killing the quantum-door but cropped so close that the open
+      // door read as the FRONT door (no rear-of-car visible to give
+      // it spatial position as "the second door from the front").
+      // Plus: push flat-illustration cel-shaded Archer style harder
+      // — iter 16 went too painterly/dimensional, lost the cartoony
+      // animated-frame feel of the rest of the deck.
+      'a wet city street at night, mid-century 1960s noir scene rendered as a FLAT 2D ILLUSTRATION ANIMATED CEL — bold geometric angular shapes, flat color fills with minimal shading, deliberately stylized like a frame from a 1960s animated spy series, NOT photorealistic, NOT 3D rendered, NOT painterly with dimensional gradients. ' +
+      'CAMERA POSITION — the camera is positioned BEHIND the parked sedan, looking forward at the REAR of the car from a few feet back at street level. The sedan is parked head-first away from the camera so we see the BACK of the car closest to us, with the body receding into the distance toward the front. This is a REAR-THREE-QUARTER view weighted heavily toward the rear of the vehicle. ' +
+      'FOREGROUND ELEMENTS — closest to the camera in the foreground: the REAR BUMPER + TRUNK LID (closed) + TWO ROUND RED TAILLIGHTS glowing warm red, one at each rear corner of the trunk. The taillights are bright prominent red circles in the foreground. ' +
+      'MID-GROUND ELEMENTS — the BACK-SEAT door of the sedan is SWUNG WIDE OPEN, hinged at its forward edge (the B-pillar) and swinging outward toward the camera. Because the back-seat is geometrically closest to the trunk, the back-seat door is the NEAREST door to the camera in the frame, prominently positioned in mid-ground. The dark amber-lit back-bench-seat interior is visible through the open doorway. ' +
+      'BACKGROUND ELEMENTS — receding into the distance toward the front of the sedan: the FRONT-PASSENGER door (CLOSED, partially visible at distance), then the front fender, hood, and windshield disappearing into the misty perspective. The front of the car is small and distant, the back of the car is large and dominant in the frame. ' +
+      'WHY THIS COMPOSITION KEEPS THE BACK-SEAT DOOR THE OPEN ONE — the camera is positioned behind the sedan, so the rear-of-car elements (bumper, taillights, trunk, back-seat door) are the prominent foreground/midground subjects. The front door is far in the distance, smaller and unimportant. The BACK-SEAT door is the dominant door in the frame and unambiguously the open one because it\'s the only door at this proximity to the camera. ' +
+      'CRITICAL CAR ANATOMY — this is a 1960s 4-DOOR sedan viewed from BEHIND-AND-SLIGHTLY-OFFSET. On the visible side of the car there are EXACTLY TWO doors: the back-seat door (NEAR the camera, OPEN) and the front-passenger door (FAR from camera, CLOSED). The trunk is closed. The roof is bare smooth metal. ' +
+      'OPEN DOOR ANATOMY — the open back-seat door is swung wide outward from the body, a distinct flat rectangular panel hanging outward from its hinge with the door handle visible on its outer face. Through the rectangular opening where the door used to cover, the dark upholstered back-bench-seat interior glows WARM AMBER from the dome light. The door panel and the opening are spatially distinct — the panel is to one side of the opening, the opening is the rectangular hole in the body. ' +
+      'TWO FIGURES — camera positioned behind both figures looking forward at the parked sedan ahead. The two men walk together forward across wet pavement toward the parked sedan, both seen from behind with their backs to the viewer, faces hidden. ' +
+      'COMPOSITION ACTION — the two figures walk forward, mid-stride, approaching the open back-seat door which sits ahead of them in the middle-background of the frame. They are NOT yet at the car; the open back-seat doorway is their destination a few steps ahead. ' +
+      '(1) The first man wears a long dark trench coat and a dark grey fedora pulled low (brim covers his face). His hands are held together behind his back with simple steel handcuffs visible at the small of his back. He walks forward mid-stride, body upright. ' +
+      '(2) The second man, in a sharp dark charcoal suit, dark narrow tie, and dark grey fedora, walks close beside the first, one hand resting on the first man\'s upper arm in a guiding gesture. Also seen from behind. ' +
+      'AROUND THE FIGURES — wet asphalt under their feet reflecting warm amber from the open doorway and a distant streetlamp. Fine diagonal rain streaks. Faint mist. Dark city silhouette in the far background past the figures. ' +
+      'Lighting: the warm amber rectangle of the open back-seat doorway is the brightest light in the scene, casting amber rim-light onto the figures\' backs and a warm pool on the wet pavement at their feet. A distant streetlamp halo in the upper background adds a secondary cool-amber accent. Cool deep teal and charcoal night palette with warm amber as the dominant accent. ' +
+      'PER-CORNER COMPOSITION ANCHORS — the bottom-left corner contains wet asphalt reflections, the bottom-right corner contains the bottom edge of the open door OR wet pavement, the top-left corner contains dark city silhouette OR misty teal sky, the top-right corner contains the upper edge of the open doorway OR amber dome-light glow. Every corner of the rendered image contains scene content; never empty white space. ' +
+      'CRITICAL ANTI-MATTE — rendered like a CINEMA FILM FRAME (edge-to-edge content), NOT like a postage stamp (with a white perimeter border), NOT like a framed art print (with a matte around it). NO white border, NO white edges, NO matte, NO vignette, NO padding, NO frame. The painted scene goes ALL THE WAY to every edge. ' +
+      'CRITICAL — absolutely NO text, NO letters, NO words, NO numbers, NO writing, NO captions, NO banners, NO labels. ' +
+      'No other figures, no faces visible, only the backs of the two men at the open doorway. ' +
+      'mid-century modern 1960s spy-film noir aesthetic, bold geometric angular style, flat illustration, full-bleed square frame',
   },
   {
     type: 'extraction',
@@ -97,7 +101,16 @@ const CARDS: CardPrompt[] = [
       'just the helicopter, rope, and figure alone in the spotlight, ' +
       'the urgent moment of rescue and escape, cool teal and charcoal sky with a warm amber spotlight beam and burnt orange cloud highlights, ' +
       'bold geometric angular style, flat illustration, ' +
-      'square composition centered on the helicopter and descending rope',
+      // Iter 3 (2026-05-07): iter 2 shipped with a thin baked-in white
+      // perimeter border that wasn't visible at preview size but read
+      // clearly on the rendered card face (edge-pixel sampling: 96/96
+      // near-white). Strengthen the anti-border directive using the
+      // pattern that empirically worked for back-channel and burn iter3:
+      // EVERY CORNER must contain a scene element by name. Imagen's
+      // sky-heavy-illustration prior pulls toward a white frame; this
+      // forces it to commit pixels at the perimeter to actual content.
+      'CRITICAL — the scene fills the entire square frame edge to edge with absolutely NO white borders NO white edges NO white perimeter NO cream borders NO vignette NO padding NO matting NO frame, every single corner of the frame contains either dark teal twilight sky or geometric cloud silhouette or city-skyline building silhouette, the perimeter of the image at all four edges is sky or cloud or building — never empty white space, ' +
+      'square full-bleed composition centered on the helicopter and descending rope',
   },
   {
     type: 'reassign',
@@ -183,24 +196,26 @@ const CARDS: CardPrompt[] = [
     type: 'intel-briefing',
     name: 'Intel Briefing',
     prompt:
-      // Iter 2: Watergate-era break-in visual — gloved hand holding a
-      // miniature spy camera photographing classified documents on a desk,
-      // pen-light beam illuminating from a low angle, filing cabinet
-      // drawer cracked open in the background, dark office at night.
-      // Peak espionage-gathering imagery, directly maps to the card\'s
-      // "look at top 3 cards of the deck" mechanic.
-      'a dramatic close-up overhead view of a dark office at night during a break-in, captured in the moment of espionage, ' +
-      'a gloved hand holds a small silver miniature Minox-style spy camera hovering over a spread of classified paper documents laid out on the desk, the camera pointed straight down about to photograph the pages, ' +
-      'a small silver pen-flashlight gripped in the other gloved hand casts a narrow amber beam across the documents from a low side angle, illuminating just the paper surface in a sharp wedge of warm light, ' +
-      'in the background the dim shape of a metal filing cabinet has one drawer cracked open with folders visible, the rest of the room in deep charcoal shadow, ' +
-      'the documents on the desk show rows of abstract horizontal line patterns suggesting paragraphs of text but absolutely no letters or words of any kind, a few of them are slightly askew as if recently rifled through, ' +
-      'venetian blind shadow stripes fall diagonally across the back wall from an unseen window with streetlight outside, signature Archer venetian-blind lighting, ' +
-      'the only warm light comes from the narrow flashlight beam on the documents, everything else is cool teal and deep charcoal shadow, ' +
-      'Watergate-era 1970s spy break-in energy, photographing classified intelligence under a flashlight, ' +
-      'the scene fills the entire square frame edge to edge with NO white borders NO vignette NO padding, ' +
-      'NO text NO letters NO words NO numbers NO writing anywhere on the documents or camera or any surface, ' +
-      'mid-century modern 1960s-1970s spy-film noir aesthetic, bold geometric angular style, flat illustration, ' +
-      'square full-bleed composition centered on the gloved hands camera and illuminated documents',
+      // FRESH START 2026-05-07: 10 iterations of camera-photographing-
+      // documents fought Imagen's "render the iconic lens-side of a
+      // camera" prior to a draw. The lens-barrel-protrusion variant
+      // technically worked (lens points down) but produced weird
+      // tubular gadgets. New concept entirely: the card mechanic is
+      // "look at the top 3 cards of the deck" — direct visual metaphor
+      // is a gloved hand lifting the top of three fanned classified
+      // surveillance photos in a manila dossier folder. No camera, no
+      // orientation problems, peak Mother\'s-office vocabulary.
+      'a dramatic close-up overhead view of a polished mahogany desk in a dark 1960s spy-agency office at night. ' +
+      'CENTERED ON THE DESK — an open manila dossier folder lying flat on the desk surface, with three classified surveillance photographs fanned out from the folder, each photo a slightly-overlapping rectangle of glossy black-and-white photographic paper, the three photos arranged in a tight overlapping fan with one photo in front and two slightly visible behind it. Each photograph shows an abstract human silhouette against a generic urban background — a figure in a trench coat seen from the side or behind, no faces, no identifying details. The surfaces of the photographs are entirely image (silhouette + background) — NO captions, NO labels, NO timestamps, NO text printed anywhere on any of the photographs. ' +
+      'A single dark espionage-gloved hand enters the frame from the upper-right edge, lifting the corner of the FRONTMOST photograph in the fan with thumb and forefinger — the photograph is partially raised at one corner exposing a glimpse of the photograph beneath it. The gesture reads as covert peeking, examining what\'s underneath, taking a look at intel laid out for review. ' +
+      'A brass pendant lamp hangs above the desk casting a warm amber pool of light directly onto the dossier and the fanned photographs. The lamp\'s light source is implied above the frame — the warm amber pool is centered on the photographs as the focal point. ' +
+      'AROUND THE DOSSIER on the desk: a wax-stamped manila envelope partially visible at one edge, a brass paperweight or letter opener at another, faint cigarette smoke wisp rising from off-frame. The desk surface is dark polished mahogany with subtle wood grain. ' +
+      'BACKGROUND — beyond the desk, deep charcoal shadow fills the rest of the office; faint diagonal venetian-blind shadow stripes fall across one corner of the desk surface from an unseen window with a streetlight outside, signature Archer-Mother-office lighting vocabulary. ' +
+      'The photographs show abstract grayscale silhouettes only — no letters, no words, no faces, no recognizable identifying details. The dossier folder is plain manila, no text, no labels. The desk is bare wood, no text on any surface. ' +
+      'CRITICAL — full-bleed square composition, every corner of the frame contains either dark mahogany desk surface or deep charcoal shadow; absolutely NO white borders, NO white edges, NO matte, NO vignette, NO padding, NO frame. The painted scene goes all the way to every edge. ' +
+      'CRITICAL — absolutely NO text, NO letters, NO words, NO numbers, NO writing, NO captions, NO banners, NO labels anywhere in the scene on any surface — the dossier folder, the photographs, the envelope, the desk are all blank of any writing. ' +
+      'cool deep teal and charcoal palette with the warm amber pendant-lamp pool on the photographs as the dominant accent, ' +
+      'mid-century modern 1960s spy-film noir aesthetic, bold geometric angular style, flat illustration, full-bleed square frame, peak Mother\'s-office briefing vocabulary',
   },
   {
     type: 'falsify-intel',

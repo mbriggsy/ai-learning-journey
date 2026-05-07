@@ -1,8 +1,149 @@
 # BURNED — TODO
 
-## NEXT SESSION — pick up here (2026-05-06+)
+## NEXT SESSION — pick up here (2026-05-07+)
 
-### THIS SESSION (2026-05-06 night, late) — Phase 5 palette amendments
+### THIS SESSION (2026-05-07) — COMMS clip fix + card-asset regen attempt
+
+One commit shipped. Card-asset regen substantially advanced but parked
+mid-flight on the Burned card.
+
+| Commit | Subject |
+|---|---|
+| `c7414523` | fix(comms): cap strip x-drift so deep-history entries don't left-clip |
+
+**COMMS strip clip fix (commit `c7414523`).** Visual walkthrough of the
+Phase 5 palette batch surfaced left-edge truncation on COMMS strips at
+deeper indices ("ancelled!" / "ibbles drops…" / ":OVER BLOWN"). Root
+cause at `DossierFeed.tsx:160` — per-strip `--strip-offset-x` was
+`index * 2 * dir` with `dir` alternating ±1; odd indices grew unboundedly
+negative (strip 11 = −22px), pushing letters past `.strips`'s overflow-x
+clip (`.strips` has `overflow-y: auto` which forces overflow-x clipping
+per CSS spec). Fixed via `Math.min(index, 3) * 2` cap → max ±6px.
+Variance still alternates and grows for the first three strips, then
+plateaus. Verified live in board view.
+
+**Card-asset border bug (parked mid-fix).** Briggsy noticed Extraction
+and Intel Briefing card faces had a white border. Edge-pixel sampling
+confirmed: both shipped `.webp` assets had baked-in white perimeter
+borders (96/96 near-white edge samples vs 0/96 for full-bleed siblings).
+Imagen ignored the "no white borders" prompt directive on these two rolls.
+Regen work ran via `scripts/generate-cards.ts --only=burned,extraction,intel-briefing`.
+
+  Final candidates ready for swap-in (in `public/assets/cards/_archive/2026-05-07-session/`):
+  - `extraction-iter03-FINAL-CANDIDATE.png` — full-bleed helicopter
+    rescue, bolder palette than prior version (saturated burnt-orange/
+    cream clouds, cordovan-red cityscape silhouette). 0/100 near-white.
+  - `intel-briefing-iter12-FINAL-CANDIDATE.png` — overhead view of
+    open dossier folder with three classified surveillance photos
+    fanned, dark espionage-gloved hand lifting the corner of the
+    front-most photograph (direct visual metaphor for "look at top 3
+    cards" mechanic). Pendant lamp amber pool + Mother's-office
+    vocabulary. 0/100 near-white. Replaces the camera-photographing-
+    documents concept after 10 iters of fighting Imagen's
+    "render-the-iconic-lens-side" prior.
+
+**Burned card escort-concept (parked — Imagen wall hit).** Briggsy
+wanted a new Burned card direction: agent escorting cuffed operative
+into the back of an unmarked sedan, wet-noir setting, hat-pulled-low.
+21 iterations across multiple compositional pivots. Imagen's "open door
+= front passenger door" prior is structurally unbeatable through prompt
+engineering at this account/session — every iter that landed a
+structurally-clean composition put the open door at the FRONT, not the
+rear. Per-corner anchors, positive anatomy descriptions, geographic
+occlusion, tail-first camera angles all attempted; all fell to the
+prior. Imagen's content filter also began consistently triggering
+stock-photo anomaly fallbacks (woman in scarf, corporate headshot,
+engineering schematic) on this prompt cluster. Nano Banana Pro
+(`gemini-3-pro-image-preview`) attempted as alternate model with image-
+editing capability — `scripts/edit-burned-door-nbp.ts` returned 503
+"high demand" on 3 attempts spaced 60s+ apart. Genuine external blocker.
+
+  All session candidates preserved (23 files) at
+  `public/assets/cards/_archive/2026-05-07-session/`. Most relevant
+  starting points for next attempt:
+  - `burned-iter11-cropped-awesome-CANDIDATE.png` — Briggsy's most
+    explicit approval ("shit burned is awesome"); thin white matte
+    cropped off in post. May still have front-door issue per his later
+    critical eye on iters 16-20 (he flagged front-door pattern across
+    multiple iters, never explicitly re-eyeballed iter 11 against that
+    standard).
+  - `burned-iter10-backs-walking-no-door.png` — composition Briggsy
+    explicitly preferred (two backs walking toward parked sedan, hat
+    pulled low). Missing the open-door element. NBP edit could
+    surgically open the rear door without disrupting the figure
+    composition.
+  - `burned-iter19-loading-action.png` — closest to actual "loading"
+    body language (operative bent forward into doorway, agent behind
+    pushing). Briggsy preferred the walking-toward composition over
+    loading.
+
+### Actionable next — pick one
+
+Solo-doable:
+
+- **Swap in extraction + intel-briefing winners** (~30 min). Convert
+  PNG → WEBP at the existing 384×384 resolution, archive the current
+  `public/assets/cards/{extraction,intel-briefing}.webp` to the
+  `_archive/` folder with date+reason tags, drop the new ones in. Vite
+  HMR flashes them on any active board. Test the live board renders.
+  Both candidates already verified for full-bleed (0/100 near-white edge
+  sampling) and Briggsy approved both compositions. This is a clean
+  ship — burned can stay parked at its current iter3 rooftop-flashbulb
+  asset until the escort-concept is solvable.
+- **Resume burned escort-concept via NBP** when `gemini-3-pro-image-preview`
+  is no longer 503ing. Use `scripts/edit-burned-door-nbp.ts` to surgically
+  edit `burned-iter10-backs-walking-no-door.png` (open the rear door,
+  add the warm amber doorway glow as the figures' destination) OR
+  `burned-iter11-cropped-awesome-CANDIDATE.png` (close any front door,
+  open the rear door). NBP supports multi-turn refinement and image
+  editing where Imagen 4 only does text-to-image, so it should be able
+  to do surgical pixel-level corrections rather than the
+  prayer-and-roll-the-dice approach Imagen requires.
+- **Visual review on the 5-commit Phase 5 palette batch** (carryover
+  from prior session) — drama-accent CARD FACE inspection still
+  pending. Now blocked on burned card asset stabilizing.
+
+Briggsy-required (carryover, all still open):
+
+- **Canonical 200% zoom human-run pass** (§2.3 protocol).
+- **Phase 5 §2.7 first-time player session.**
+- **Visual review meeting** (§2.2.5) — GameOver glow, Nope emerald sat,
+  Baveuse font.
+- **Real-device playtest** (Active Priority #2).
+- **8-player stress test** (Active Priority #3).
+- **Physical hardware verification** (Active Priority #5).
+
+### Followups parked
+
+- **`scripts/edit-burned-door-nbp.ts`** — committed and ready to run
+  when NBP is available. Reads a base image, calls Nano Banana Pro
+  with a surgical edit prompt to swap the front-door-open / rear-door-
+  closed state. Currently points at iter 11 cropped as the base; can
+  be edited to point at iter 10 if the walking-toward composition is
+  preferred for the surgical fix.
+- **Imagen prior landmine** — the "open door on a sedan in side view =
+  front passenger door" prior is unbeatable across 20+ Imagen 4 prompt-
+  engineering iterations. Approaches that failed: per-corner anchors,
+  positive anatomy ("smooth uninterrupted dark roof"), negative anchors
+  ("trunk closed"), spatial-context anchors ("two taillights at left"),
+  geographic occlusion ("front of car off-frame"), tail-first camera
+  angle. The model strongly biases toward the iconic getting-out-of-
+  passenger-seat shot. Engineering-around tactics that DID partially
+  work: tight close-crop on doorway only (iter 15 — eliminated trunk +
+  front door from frame, then quantum-door overlap appeared). Genuine
+  conclusion: this composition needs an image-editing model (NBP) or
+  manual compositing, not text-to-image alone.
+- **Stock-photo anomaly cluster** — Imagen returned obviously-unrelated
+  stock-photo derails on 6+ rolls of the burned escort prompt this
+  session (woman in scarf, woman in overalls, corporate headshot,
+  smiling man in denim, schoolboy art). The prompt cluster involving
+  "agent + cuffed person + sedan at night" appears to consistently
+  trip the safety/content filter. Softening force-language reduced but
+  did not eliminate the anomaly rate.
+
+---
+
+### PRIOR SESSION (2026-05-06 night, late) — Phase 5 palette amendments
 
 Three commits extending the prior block's two. Lands Options A + C +
 fg-muted from the §2.4/§2.5 followup — graduating 8 of the 14

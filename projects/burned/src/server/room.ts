@@ -33,6 +33,13 @@ const IDLE_ROOM_TIMEOUT_MS = 30 * 60_000
 const DISCONNECT_DEBOUNCE_MS = 3_000
 const HEARTBEAT_INTERVAL_MS = 30_000
 const HEARTBEAT_TIMEOUT_MS = 10_000
+// Pre-identify grace window — a freshly-accepted connection has this long
+// to send `host-connect` or `join` before the server closes it. Without
+// this, an unauthenticated client can hold a MAX_CONNECTIONS slot for up
+// to HEARTBEAT_INTERVAL_MS + HEARTBEAT_TIMEOUT_MS (~40s), squatting on
+// resources real players need. Real clients identify within milliseconds
+// of connect; 5s leaves headroom for slow networks. E-08.
+const IDENTIFY_TIMEOUT_MS = 5_000
 const MAX_QUEUE_DEPTH = 100
 const NOPE_GRACE_MS = TIMING.NOPE_GRACE_MS
 
@@ -112,6 +119,7 @@ export class GameRoom extends Server<Env> {
   private lastScheduledNopeGeneration = -1
   private disconnectTimers = new Map<string, ReturnType<typeof setTimeout>>() // playerId → debounce timer
   private hostDisconnectTimer: ReturnType<typeof setTimeout> | null = null
+  private identifyTimers = new Map<string, ReturnType<typeof setTimeout>>() // connectionId → grace-period timer
   private heartbeatIntervals = new Map<string, ReturnType<typeof setInterval>>() // connectionId → interval
   private lastPongTimes = new Map<string, number>() // connectionId → last activity
 
@@ -258,6 +266,25 @@ export class GameRoom extends Server<Env> {
 
     // Start heartbeat for this connection
     this.startHeartbeat(connection)
+
+    // Pre-identify grace window — a real client identifies (host-connect /
+    // join) within milliseconds. If nothing arrives in IDENTIFY_TIMEOUT_MS
+    // the connection is silently squatting on a MAX_CONNECTIONS slot and
+    // gets closed. Cleared by handleHostConnect / handleJoin / the
+    // session-token reconnect branch as soon as a role gets set. E-08.
+    const heldConnection = connection
+    this.identifyTimers.set(
+      connection.id,
+      setTimeout(() => {
+        this.identifyTimers.delete(heldConnection.id)
+        // If the connection has been assigned a role since the timer was
+        // scheduled, the clear path should have already run. Belt-and-
+        // suspenders: skip the close anyway.
+        if (this.getConnState(heldConnection)) return
+        console.log(JSON.stringify({ event: 'identify_timeout_close', connId: heldConnection.id, timestamp: Date.now() }))
+        try { heldConnection.close(4002, 'Identify timeout') } catch { /* closing */ }
+      }, IDENTIFY_TIMEOUT_MS),
+    )
   }
 
   override onMessage(connection: Connection, message: string | ArrayBuffer): void {
@@ -349,6 +376,7 @@ export class GameRoom extends Server<Env> {
     this.stopHeartbeat(connection.id)
     this.lastPongTimes.delete(connection.id)
     this.messageCounts.delete(connection.id)
+    this.clearIdentifyTimer(connection.id)
 
     const state = this.getConnState(connection)
     if (state?.role === 'player') {
@@ -520,6 +548,7 @@ export class GameRoom extends Server<Env> {
     }
 
     connection.setState({ role: 'host' } satisfies ConnState)
+    this.clearIdentifyTimer(connection.id)
 
     // Cancel any pending host-disconnect broadcast — host is back. B-02.
     if (this.hostDisconnectTimer) {
@@ -664,6 +693,7 @@ export class GameRoom extends Server<Env> {
     this.playerColors.set(playerId, color)
 
     connection.setState({ role: 'player', playerId, sessionToken: token } satisfies ConnState)
+    this.clearIdentifyTimer(connection.id)
 
     this.send(connection, { type: 'joined', payload: { playerId, sessionToken: token, color, protocolVersion: PROTOCOL_VERSION } })
 
@@ -683,6 +713,7 @@ export class GameRoom extends Server<Env> {
     }
 
     connection.setState({ role: 'player', playerId, sessionToken } satisfies ConnState)
+    this.clearIdentifyTimer(connection.id)
 
     const color = this.playerColors.get(playerId) ?? PLAYER_COLORS[0]!
     this.send(connection, { type: 'joined', payload: { playerId, sessionToken, color, protocolVersion: PROTOCOL_VERSION } })
@@ -1102,6 +1133,14 @@ export class GameRoom extends Server<Env> {
     return false
   }
 
+  private clearIdentifyTimer(connectionId: string): void {
+    const timer = this.identifyTimers.get(connectionId)
+    if (timer) {
+      clearTimeout(timer)
+      this.identifyTimers.delete(connectionId)
+    }
+  }
+
   private getConnectedPlayerIds(): Set<string> {
     const ids = new Set<string>()
     for (const conn of this.getConnections()) {
@@ -1230,6 +1269,8 @@ export class GameRoom extends Server<Env> {
       clearTimeout(this.hostDisconnectTimer)
       this.hostDisconnectTimer = null
     }
+    for (const timer of this.identifyTimers.values()) clearTimeout(timer)
+    this.identifyTimers.clear()
     for (const interval of this.heartbeatIntervals.values()) clearInterval(interval)
     this.heartbeatIntervals.clear()
     this.lastPongTimes.clear()

@@ -28,7 +28,14 @@ const INVALID_LABELS: Record<string, string> = {
   'contains-extraction': "Can't play Extraction",
   'contains-burned': "Can't play Burned",
   'wild-with-non-operative': 'Wild only pairs with operatives',
-  'single-operative': 'Needs a pair or triple',
+  // Mirrors the canonical operative card text ("Powerless alone.
+  // Pairs steal random. Triples name + steal."), same two-line
+  // primary-rule + action-hint shape as `single-intercepted`. Tight
+  // enough for the narrowest phone — line 2 is shorter than the
+  // existing widest single-line label ("Wild only pairs with
+  // operatives", 32 chars). Replaces the generic "Needs a pair or
+  // triple" that read like a validation string. C-25.
+  'single-operative': 'Powerless alone\npair or triple to act',
   // Two-line hint — primary states the rule, secondary points to the right
   // surface. Replaces the bare "Can't play Intercepted" that left players
   // (especially ACTOR mid-chain-burn) staring at a flat refusal with no path

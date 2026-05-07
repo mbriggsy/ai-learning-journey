@@ -236,7 +236,7 @@ appears on paper.
 | ID | Title | Status |
 |----|-------|--------|
 | **C-24** | FuturePeek illustration letterbox more visible (mat is wider top/bottom than sides) | 🏷 |
-| **C-25** | "Needs a pair or triple" error message is generic — not in Archer vocabulary | 🔴 |
+| **C-25** | "Needs a pair or triple" error message is generic — not in Archer vocabulary. **Shipped 2026-05-07** — `SmartActionBox.tsx` `INVALID_LABELS['single-operative']` rewritten to "Powerless alone\\npair or triple to act" (mirrors the canonical operative card text "Powerless alone. Pairs steal random. Triples name + steal."), same two-line shape as `single-intercepted`. | 🟢 |
 | **C-26** | INTERCEPTED emerald gradient fades muddy against manila backdrop | 🏷 |
 | **C-27** | Card back never appears in common gameplay — worth confirming intended usage | 🏷 |
 | **C-28** | Roster/portrait asset asymmetry (6 portraits, 5 operative types) | 🏷 |

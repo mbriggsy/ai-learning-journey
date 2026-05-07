@@ -1678,27 +1678,41 @@ inference: |
   `turn-started` for next alive player with `turnsRemaining: 1`.
   ACTOR skips their draw.
 ui-assertions: |
-  ACTOR's phone: "you went dark" toast; turn hands off. NEXT alive
+  ACTOR's phone: hand returns to standby; turn hands off. NEXT alive
   player's phone: nameplate rotates in; `turnsRemaining=1`. No
-  forced-draw animation.
+  forced-draw animation. NO drama-overlay beat — see "Product call"
+  below.
 ```
+
+**Product call (2026-05-02 — locked):** Go Dark is intentionally
+beatless. The card's narrative IS sneaking out of sight — a drama
+overlay would fight the tonal intent. `DramaOverlay.tsx:163-201` carries
+the rationale comment ("Solo-actor cards (go-dark, back-channel)
+intentionally don't get a beat"). `PRODUCT-SPECIFICATION.md` §6.2 +
+§8.3 enumerate drama overlays for BURNED / EXTRACTED / ELIMINATED /
+WINNER only. The card art (venetian blinds + amber streetlamp) carries
+the tonal moment on its own. **Triage seeds re-flagging this gap should
+be marked by-design and not re-promoted.** History: E2E-ISSUE-LIST.md
+C-31 was promoted from this scenario's vibe-check signal on 2026-05-07
+and immediately re-classified 📋 BY-DESIGN.
 
 **Info gap at decision point:**
 
 | Vantage | Column 1 — Projection returns today | Column 2 — Viewer should see |
 |---|---|---|
 | SERVER | `currentTurn={currentPlayerId:NEXT, turnsRemaining:1}`. Draw pile unchanged — no draw occurred. | Same. |
-| ACTOR | `isMyTurn=false`, hand minus go-dark. | Per spec: "you dodged the draw" feels like escape. |
+| ACTOR | `isMyTurn=false`, hand minus go-dark. | Per product call above: hand returns to standby with no overlay; the card art carried the moment on play. |
 | TARGET | N/A (no target). | N/A. |
 | OTHER (alive) | Public event log, turn rotated. | Narrative: "ACTOR skipped — pressure moves on." |
 | SPECTATOR | Same. | Same. |
 | DISCONNECTED | N/A. | N/A. |
-| BOARD | Public turn transition + go-dark event. | Per spec §8.7: the "lights-dim" beat should read as Archer comms going silent. |
+| BOARD | Public turn transition + go-dark event. | Board AnnouncementFeed + COMMS strip surface the play publicly; no DramaOverlay beat per product call. |
 
 **Vibe check:**
-Go Dark should feel LIKE Go Dark — venetian blinds close, nameplate
-dims, a "we lost contact" line. If it reads like a generic skip, the
-theme has leaked out.
+Go Dark intentionally reads "agent ducks out without fanfare." The
+absence of an overlay IS the cinematic — venetian-blind silhouettes
+on the card face do the narrative work; the system going quiet around
+the play is the point. A loud beat here would be wrong.
 
 **Why this matters:**
 Validates the simplest skip case. Regression risk: if `applySkip`

@@ -302,6 +302,54 @@ test.describe('arena state screenshots', () => {
     })
     await phones[0]!.waitForTimeout(200)
 
+    // --- State 5e: CardDetailSheet for a drama-accent card -------------------
+    //
+    // Long-press a drama-accent card to open CardDetailSheet at hero size.
+    // This is the canonical surface for `--color-accent-drama` on a card-face
+    // — captures the ochre-9 mustard rendering at full size, including the
+    // card-name header, the ACTION pill, the icon glyph, and the play hint.
+    // Same long-press emulation pattern as `tests/e2e/wcag-zoom.spec.ts`.
+    //
+    // useSortedHand groups action-category cards alphabetically by display
+    // name within their bucket. With reassign / direct-order / go-dark seeded
+    // here, slot[0] resolves to "Direct Order" (D < G < R).
+    {
+      await phones[0]!.evaluate(() => {
+        const w = window as unknown as {
+          __gameStore?: { applyOptimistic: (t: (s: unknown) => unknown) => void }
+        }
+        w.__gameStore?.applyOptimistic((s) => ({
+          ...(s as Record<string, unknown>),
+          myHand: [
+            { id: 'arena-h-1', type: 'reassign' },
+            { id: 'arena-h-2', type: 'direct-order' },
+            { id: 'arena-h-3', type: 'go-dark' },
+          ],
+        }))
+      })
+      await phones[0]!.waitForTimeout(400) // hand re-layout settle
+
+      const slot = phones[0]!.locator('[class*="handSection"] [class*="slot"]').first()
+      await slot.hover()
+      await phones[0]!.mouse.down()
+      await phones[0]!.waitForTimeout(700) // > 600ms LONG_PRESS_MS
+      await phones[0]!.mouse.up()
+      await expectDialogWithText(phones[0]!, 'Direct Order')
+      await phones[0]!.waitForTimeout(400) // BottomSheet enter settle
+      await phones[0]!.screenshot({ path: `${OUTPUT_DIR}/phone/07-card-detail-drama.png` })
+      await phones[0]!.keyboard.press('Escape')
+      await phones[0]!.waitForTimeout(300)
+
+      // Reset hand so subsequent state primers start from a clean slate.
+      await phones[0]!.evaluate(() => {
+        const w = window as unknown as {
+          __gameStore?: { clearOptimistic: () => void }
+        }
+        w.__gameStore?.clearOptimistic()
+      })
+      await phones[0]!.waitForTimeout(200)
+    }
+
     // --- State 6: DramaOverlay ELIMINATED (board) ----------------------------
     //
     // Use a REAL player id so the overlay renders the player's name

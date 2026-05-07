@@ -37,8 +37,17 @@ during the C-30..C-33 triage cleanup found rows that had been left
 🔴 even though their commits had landed weeks earlier. Each shipped
 row now cites its commit. The ⏸ rows (C-13, C-15, C-16-19) and the
 remaining 🔴 rows (B-01/02/11/12/14/17, C-07/09/10/11/12/21/25,
-D-04/15/16/23, E-08) are genuinely-open per the same commit-history
+D-04/15/23, E-08) are genuinely-open per the same commit-history
 audit — no commit references those IDs.
+
+**Audit follow-up 2026-05-07 (later pass):** D-16 found to have been
+shipped in `d9c40753` but was missed by the first sweep because the
+commit message referenced "TODO #11" not "D-16". A topic-grep
+follow-up would catch ID-disconnects of this kind, but would be
+slow and noisy; the cheaper move is to require future fix commits
+to cite the issue ID in the subject (e.g. "fix(...): close X-NN —
+{summary}"). The remaining 🔴 IDs were spot-checked via topic search
+and have no obvious fix commit; treating them as actually-open.
 
 ## Legend
 
@@ -182,7 +191,7 @@ appears on paper.
 | **D-05** | StealReport Acknowledge has `autoFocus` + no debounce — panic-tap dismisses queued reports unread. **Shipped 2026-04-23 in `0af60680`** — StealReport debounce. | 🟢 |
 | **D-13** | Hand updates mid-stage mostly safe; optimistic rollback correctly validated | 🏷 |
 | **D-14** | Drama overlay doesn't block hand (by design — visualization layer) | 🏷 |
-| **D-16** | Counter-counter-nope by original actor at chainDepth≥1: rules allow it but SmartActionBox only shows Intercept CTA for `!myTurn` — actor can't Intercept their own attacker's Intercept via UI. **Possible rule violation.** | 🔴 |
+| **D-16** | Counter-counter-nope by original actor at chainDepth≥1: rules allow it but SmartActionBox only shows Intercept CTA for `!myTurn` — actor can't Intercept their own attacker's Intercept via UI. **Possible rule violation.** **Shipped 2026-04-29 in `d9c40753`** — `canIntercept` gate widened to `(!myTurn \|\| nopeWindow.chainDepth >= 1)` so ACTOR can chain-counter once the chain has progressed. Fix referenced "TODO #11" not "D-16," which is why the 2026-05-07 audit pass missed it on first sweep. | 🟢 |
 | **D-17** | JoinScreen doesn't pre-validate `NAME_PATTERN` — user types "name@" (invalid), hits submit, sees server error. **Shipped 2026-04-23 in `23cd64c9`** — JoinScreen regex pre-validate. | 🟢 |
 | **D-19** | Reconnect stale-state window (~100ms) — mostly suppressed by isReconnecting flag | 🏷 |
 | **D-20** | NameCard BottomSheet doesn't honor Escape key. **Shipped 2026-04-23 in `0af60680`** — NameCard Escape. | 🟢 |

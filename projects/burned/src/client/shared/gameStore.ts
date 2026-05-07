@@ -149,6 +149,14 @@ class GameStore {
       case 'error':
         this.lastError = msg.payload
         this.optimisticSnapshot = null
+        // Mirror the protocol-mismatch flag onto the server-rejected
+        // pre-join path. Old clients hitting a new server get rejected
+        // here BEFORE the server sends a `joined` response, so the flag
+        // would never flip via the existing `joined`/state-update arms.
+        // B-12.
+        if (msg.payload.code === 'PROTOCOL_MISMATCH') {
+          this._protocolMismatch = true
+        }
         this.notify()
         break
       case 'action-rejected':

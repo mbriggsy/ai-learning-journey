@@ -299,9 +299,23 @@ export class GameRoom extends Server<Env> {
       case 'host-connect':
         this.enqueue(() => this.handleHostConnect(connection), connection)
         break
-      case 'join':
+      case 'join': {
+        // Reject mismatched clients BEFORE allocating a slot. Pre-fix
+        // an old client could connect, get a slot allocated + persisted,
+        // then realise the version mismatch via the joined response and
+        // refresh — burning a player slot until reaper. B-12.
+        const clientVersion = msg.payload.protocolVersion ?? 0
+        if (clientVersion !== PROTOCOL_VERSION) {
+          this.sendError(
+            connection,
+            'PROTOCOL_MISMATCH',
+            'Game updated — please refresh',
+          )
+          break
+        }
         this.enqueue(() => this.handleJoin(connection, msg.payload.name, msg.payload.sessionToken), connection)
         break
+      }
       case 'start-game':
         this.enqueue(() => this.handleStartGame(connection), connection)
         break

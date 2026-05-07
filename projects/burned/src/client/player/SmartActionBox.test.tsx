@@ -399,7 +399,7 @@ describe('SmartActionBox under-attack draw button (triage #022)', () => {
     gameStore.handleMessage({
       type: 'player-update',
       payload: { state: view, private: {} },
-      protocolVersion: 4,
+      protocolVersion: 5,
     })
     const { container, root } = mount()
     try {
@@ -438,7 +438,7 @@ describe('SmartActionBox under-attack draw button (triage #022)', () => {
     gameStore.handleMessage({
       type: 'player-update',
       payload: { state: view, private: {} },
-      protocolVersion: 4,
+      protocolVersion: 5,
     })
     const { container, root } = mount()
     try {

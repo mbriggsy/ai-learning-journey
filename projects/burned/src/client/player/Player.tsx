@@ -1,4 +1,5 @@
 import { useState, useEffect, useCallback, useMemo, useRef, Fragment, lazy, Suspense, type ComponentType } from 'react'
+import { PROTOCOL_VERSION } from '@shared/protocol'
 import { connect, disconnect, send, onMessage, onStatusChange, onReconnect, getStatus, getSessionToken, setSessionToken } from '@client/connection'
 import type { ConnectionStatus } from '@client/connection'
 import { gameStore, useGameState, useProtocolMismatch, useIsOptimisticPending } from '@client/shared/gameStore'
@@ -90,7 +91,7 @@ export function Player() {
       // fails with "Not connected as player".
       if (initialJoinDoneRef.current) {
         const token = getSessionToken(roomCode)
-        if (token) send({ type: 'join', payload: { name: '', sessionToken: token } })
+        if (token) send({ type: 'join', payload: { name: '', sessionToken: token, protocolVersion: PROTOCOL_VERSION } })
         return
       }
       // First load in this tab. Prefer a tab-scoped sessionStorage token if
@@ -100,14 +101,14 @@ export function Player() {
       // during a live game.
       const token = getSessionToken(roomCode)
       if (token) {
-        send({ type: 'join', payload: { name: '', sessionToken: token } })
+        send({ type: 'join', payload: { name: '', sessionToken: token, protocolVersion: PROTOCOL_VERSION } })
         return
       }
       // No stored token in this tab. Dev-launcher tabs carry ?name=X and
       // fresh-join so every tab gets its own player identity. Real player
       // tabs with no ?name= fall through to the JoinScreen's manual entry.
       if (urlName) {
-        send({ type: 'join', payload: { name: urlName } })
+        send({ type: 'join', payload: { name: urlName, protocolVersion: PROTOCOL_VERSION } })
       }
     }
 
@@ -143,7 +144,7 @@ export function Player() {
 
   const handleJoin = (name: string) => {
     const token = getSessionToken(roomCode)
-    send({ type: 'join', payload: { name, sessionToken: token ?? undefined } })
+    send({ type: 'join', payload: { name, sessionToken: token ?? undefined, protocolVersion: PROTOCOL_VERSION } })
   }
 
   return (

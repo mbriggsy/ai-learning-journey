@@ -3,7 +3,11 @@ import type { ClientAction } from './actions'
 
 // --- Protocol Version ---
 
-export const PROTOCOL_VERSION = 4
+// v4 → v5 (2026-05-07): client `join` now carries `protocolVersion` so
+// the server can reject mismatched clients BEFORE allocating a player
+// slot (B-12). Old clients that don't send the field get rejected the
+// same way — the field's absence reads as v0, mismatch with v5.
+export const PROTOCOL_VERSION = 5
 
 // --- Error Codes ---
 
@@ -22,12 +26,13 @@ export type ErrorCode =
   | 'INVALID_ACTION'
   | 'NOPE_TOO_LATE'
   | 'KICKED'
+  | 'PROTOCOL_MISMATCH'
 
 // --- Client -> Server Messages ---
 
 export type ClientMessage =
   | { type: 'host-connect'; payload: Record<string, never> }
-  | { type: 'join'; payload: { name: string; sessionToken?: string } }
+  | { type: 'join'; payload: { name: string; sessionToken?: string; protocolVersion?: number } }
   | { type: 'start-game'; payload: Record<string, never> }
   | { type: 'return-to-lobby'; payload: Record<string, never> }
   | { type: 'action'; payload: ClientAction }

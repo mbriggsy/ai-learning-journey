@@ -131,6 +131,11 @@ const JoinMessage = z.object({
     // Otherwise require the name to match NAME_PATTERN exactly.
     name: z.string().max(12),
     sessionToken: z.string().uuid().optional(),
+    // Optional at the schema level so old clients (which don't send it)
+    // don't get a generic Zod validation error. The runtime check in
+    // room.ts handleClientMessage rejects mismatches with the explicit
+    // PROTOCOL_MISMATCH error code instead. B-12.
+    protocolVersion: z.number().int().nonnegative().optional(),
   }).refine(
     d => d.sessionToken !== undefined || (d.name.length >= 1 && NameRegex.test(d.name)),
     'Name must match NAME_PATTERN when sessionToken is absent',

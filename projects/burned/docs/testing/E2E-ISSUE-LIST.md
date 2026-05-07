@@ -152,7 +152,7 @@ appears on paper.
 | **B-01** | Host has no session token — another tab can race-steal the host role on WiFi blip | 🔴 |
 | **B-02** | Host-disconnect-during-lobby is silent; game can't start, no UI signal | 🔴 |
 | **B-11** | Rejoin after game_over: only host can trigger `return-to-lobby`; if host tab closed at victory screen, room is stuck | 🔴 |
-| **B-12** | Protocol version check is server → client only; old clients get admitted and burn player slots | 🔴 |
+| **B-12** | Protocol version check is server → client only; old clients get admitted and burn player slots. **Shipped 2026-05-07** — `join` payload now carries optional `protocolVersion`; server's `handleClientMessage` rejects mismatches with the new `PROTOCOL_MISMATCH` error code BEFORE allocating a slot. `PROTOCOL_VERSION` bumped 4 → 5 to mark the wire-format change. Client `gameStore` mirrors the rejection onto `_protocolMismatch` so the existing polished mismatch UI handles it. Verified live via Playwright: happy path joins cleanly; old-client style join (no `protocolVersion`) gets rejected within 1ms with the error message "Game updated — please refresh," no slot allocated. | 🟢 |
 | **B-14** | SessionStorage-wiped player who mistypes their name gets dead-end `GAME_ALREADY_STARTED` — no "did you mean" list of disconnected names | 🔴 |
 
 ### C (visual) — 13

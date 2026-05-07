@@ -31,7 +31,7 @@ export type ErrorCode =
 // --- Client -> Server Messages ---
 
 export type ClientMessage =
-  | { type: 'host-connect'; payload: Record<string, never> }
+  | { type: 'host-connect'; payload: { sessionToken?: string } }
   | { type: 'join'; payload: { name: string; sessionToken?: string; protocolVersion?: number } }
   | { type: 'start-game'; payload: Record<string, never> }
   | { type: 'return-to-lobby'; payload: Record<string, never> }

@@ -121,7 +121,15 @@ const NameRegex = /^[a-zA-Z0-9 .!?_-]{1,12}$/
 
 const HostConnectMessage = z.object({
   type: z.literal('host-connect'),
-  payload: z.strictObject({}),
+  payload: z.strictObject({
+    // Client-minted UUID, persisted in board sessionStorage. Required so a
+    // WiFi blip + reconnect can reclaim the host role with the same token
+    // — without it, a second tab opening during the blip can race-steal
+    // the seat. Optional at the schema level for backward compat: an old
+    // client without the token gets the no-token branch (mints + adopts
+    // first-time, rejected on reclaim attempts). B-01.
+    sessionToken: z.string().uuid().optional(),
+  }),
 }).strict()
 
 const JoinMessage = z.object({

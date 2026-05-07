@@ -76,7 +76,7 @@ function mapEngineError(code: EngineErrorCode): ErrorCode {
 // --- Connection State ---
 
 type ConnState =
-  | { role: 'host' }
+  | { role: 'host'; sessionToken: string }
   | { role: 'player'; playerId: string; sessionToken: string }
   | { role: 'god' }
 
@@ -105,6 +105,12 @@ export class GameRoom extends Server<Env> {
   // --- State ---
   private gameState: GameState | null = null
   private playerSessions = new Map<string, string>()  // sessionToken → playerId
+  // The currently-claimed host session token. Set when a host successfully
+  // claims (or reclaims) the seat; cleared when the disconnect grace
+  // expires with no active host. While set, only a host-connect that
+  // presents a matching token can claim — prevents WiFi-blip race-steal
+  // by a second tab. Persisted across DO restarts. B-01.
+  private hostSession: string | null = null
   private playerNames = new Map<string, string>()      // playerId → name
   private playerColors = new Map<string, string>()     // playerId → color
   private lastActionTime = 0
@@ -164,6 +170,7 @@ export class GameRoom extends Server<Env> {
       this.playerNames = new Map(await this.ctx.storage.get<[string, string][]>('playerNames') ?? [])
       this.playerColors = new Map(await this.ctx.storage.get<[string, string][]>('playerColors') ?? [])
       this.lastActionTime = await this.ctx.storage.get<number>('lastActionTime') ?? Date.now()
+      this.hostSession = await this.ctx.storage.get<string>('hostSession') ?? null
     } catch (err: unknown) {
       console.error('Failed to restore room state, resetting:', err)
       this.gameState = null
@@ -171,6 +178,7 @@ export class GameRoom extends Server<Env> {
       this.playerNames = new Map()
       this.playerColors = new Map()
       this.lastActionTime = Date.now()
+      this.hostSession = null
     }
 
     // Clear any stale timers before restoring from persisted state
@@ -325,7 +333,7 @@ export class GameRoom extends Server<Env> {
     const msg = parsed.message
     switch (msg.type) {
       case 'host-connect':
-        this.enqueue(() => this.handleHostConnect(connection), connection)
+        this.enqueue(() => this.handleHostConnect(connection, msg.payload.sessionToken), connection)
         break
       case 'join': {
         // Reject mismatched clients BEFORE allocating a slot. Pre-fix
@@ -397,16 +405,27 @@ export class GameRoom extends Server<Env> {
         }
         void this.persistState()
       }, DISCONNECT_DEBOUNCE_MS))
-    } else if (state?.role === 'host' && this.gameState?.phase === 'lobby') {
-      // Debounce host disconnect on the same window as players. Phone
-      // players need to learn the board/TV is gone so they can stop
-      // staring at a "Standing by..." dots animation that will never
-      // resolve. B-02. Only fires in lobby phase — mid-game host-gone
-      // is a different problem (see B-11).
+    } else if (state?.role === 'host') {
+      // Debounce host disconnect on the same window as players. Two
+      // payloads on the timer:
+      //   B-02: phone players need to learn the board/TV is gone so
+      //         they can stop staring at "Standing by..." dots forever
+      //         — `hostConnected: false` is broadcast in the lobby view.
+      //   B-01: hostSession token is held for the grace window so a
+      //         blip-reconnect with the same token can reclaim. After
+      //         the grace expires with no reclaim, hostSession clears
+      //         — anyone can claim the host seat next.
       if (this.hostDisconnectTimer) clearTimeout(this.hostDisconnectTimer)
       this.hostDisconnectTimer = setTimeout(() => {
         this.hostDisconnectTimer = null
         if (this.isHostConnected()) return
+        // Grace expired with no reclaim — release the host seat for any
+        // future tab to claim. Token-less host-connects after this point
+        // are accepted because hostSession is null.
+        if (this.hostSession !== null) {
+          this.hostSession = null
+          void this.persistState()
+        }
         if (this.gameState?.phase === 'lobby') this.broadcastLobbyState()
       }, DISCONNECT_DEBOUNCE_MS)
     }
@@ -538,16 +557,42 @@ export class GameRoom extends Server<Env> {
     // posture for unknown messages on god connections (token-probe protection).
   }
 
-  private handleHostConnect(connection: Connection): void {
-    // Check if there's already a host (allow same connection to re-identify on reconnect)
-    for (const conn of this.getConnections()) {
-      if (this.getConnState(conn)?.role === 'host' && conn.id !== connection.id) {
-        this.sendError(connection, 'INVALID_ACTION', 'Room already has a host')
-        return
+  private handleHostConnect(connection: Connection, incomingToken?: string): void {
+    // Decide who owns the host seat. B-01:
+    //
+    // - hostSession is null      → first-ever host claim (or grace expired
+    //                              with no reclaim). Adopt the incoming
+    //                              token (or mint one if absent) and
+    //                              record. Any future host-connect MUST
+    //                              present this token to claim/reclaim.
+    // - hostSession matches      → reclaim. Boots any existing host conn
+    //                              (SESSION_REPLACED-style). Same tab
+    //                              after WiFi blip lands here.
+    // - hostSession set, no/wrong token → reject. Another tab can't
+    //                              steal during a blip; the original
+    //                              session-storage holder retains dibs
+    //                              until grace expiry clears hostSession.
+    let resolvedToken: string
+    if (this.hostSession === null) {
+      resolvedToken = incomingToken ?? crypto.randomUUID()
+      this.hostSession = resolvedToken
+      void this.persistState()
+    } else if (incomingToken && incomingToken === this.hostSession) {
+      resolvedToken = this.hostSession
+      // Boot any existing host conn — typical reclaim after WiFi blip
+      // OR a same-token claim from a different tab.
+      for (const existing of this.getConnections()) {
+        if (existing.id === connection.id) continue
+        if (this.getConnState(existing)?.role !== 'host') continue
+        this.send(existing, { type: 'error', payload: { code: 'SESSION_REPLACED', message: 'Host seat reclaimed from another tab' } })
+        try { existing.close(4000, 'Session replaced') } catch { /* closing */ }
       }
+    } else {
+      this.sendError(connection, 'INVALID_ACTION', 'Room already has a host')
+      return
     }
 
-    connection.setState({ role: 'host' } satisfies ConnState)
+    connection.setState({ role: 'host', sessionToken: resolvedToken } satisfies ConnState)
     this.clearIdentifyTimer(connection.id)
 
     // Cancel any pending host-disconnect broadcast — host is back. B-02.
@@ -1298,6 +1343,7 @@ export class GameRoom extends Server<Env> {
         playerNames: [...this.playerNames],
         playerColors: [...this.playerColors],
         lastActionTime: this.lastActionTime,
+        hostSession: this.hostSession,
       })
       this.consecutivePersistFailures = 0
     } catch (err: unknown) {

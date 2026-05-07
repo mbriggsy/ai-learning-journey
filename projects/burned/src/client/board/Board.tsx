@@ -33,6 +33,29 @@ function getOrCreateRoomCode(): string {
   return code
 }
 
+// Host session token — held in sessionStorage so a WiFi-blip reconnect
+// from the same tab presents the same token and reclaims the host seat.
+// A second tab opening during the blip mints a DIFFERENT token; the
+// server rejects its claim while hostSession is still set on the prior
+// holder. Per-tab via sessionStorage so closing the tab fully releases
+// the seat (after the server-side grace expires). B-01.
+const HOST_SESSION_KEY = 'burned-host-session'
+
+function getOrCreateHostSessionToken(): string {
+  try {
+    const existing = window.sessionStorage.getItem(HOST_SESSION_KEY)
+    if (existing) return existing
+    const token = crypto.randomUUID()
+    window.sessionStorage.setItem(HOST_SESSION_KEY, token)
+    return token
+  } catch {
+    // sessionStorage unavailable (private mode, sandbox restrictions) —
+    // fall back to a freshly-minted token. Reclaim won't work in that
+    // mode, but a host claim still succeeds first-time.
+    return crypto.randomUUID()
+  }
+}
+
 // Per product spec §3.4, board view is landscape-only. An iPad in portrait
 // (or a phone accidentally navigating to /board.html) renders a broken
 // layout — DrawPile overlaps discard, PlayerStrip cuts off, COMMS stretches.
@@ -128,7 +151,7 @@ export function Board() {
 
     const unsubHostConnect = onStatusChange(s => {
       if (s === 'connected') {
-        send({ type: 'host-connect', payload: {} })
+        send({ type: 'host-connect', payload: { sessionToken: getOrCreateHostSessionToken() } })
       }
     })
 

@@ -23,12 +23,21 @@
  *   - phone/02-defuse-placement.png         DefusePlacement sheet — uses the new burned card art
  *   - phone/03-name-card.png                NameCard sheet — triple-steal target picker
  *   - phone/04-favor-banner.png             FavorBanner — pending favor-response on target phone
+ *   - board/04-nope-window.png              NopeCountdownBar — single-Nope mid-countdown
+ *   - board/05-nope-chain-burn.png          NopeCountdownBar — chainDepth ≥ 2
+ *   - phone/05-future-peek-readonly.png     FuturePeek — Intel Briefing read-only
+ *   - phone/06-future-peek-rearrange.png    FuturePeek — Falsify Intel rearrange
+ *   - phone/07-card-detail-drama.png        CardDetailSheet long-press — drama-accent card
+ *   - phone/08-nope-chain-burn-counter.png  SmartActionBox — Counter verb during chainDepth ≥ 1
+ *   - phone/09-steal-report-queue.png       StealReport queue — +N more chip with stacked dispatches
  *   - board/02-drama-eliminated.png         DramaOverlay text — player-eliminated peak
  *   - board/03-drama-wins.png               DramaOverlay text — game-over WINS (LAST: unmounts host)
+ *   - phone/10-game-over-rankings.png       GameOver — phone view with Run It Back button (B-11)
+ *   - phone/11-host-offline.png             JoinScreen joined-state — // HOST OFFLINE label (B-02)
+ *   - phone/12-disconnected-name-picker.png JoinScreen pre-join — Resume as picker (B-14)
  *
- * Numbered prefixes give stable ordering. Future states (Nope window
- * mid-countdown, FuturePeek read-only + rearrange) can append without
- * renumbering existing artifacts.
+ * Numbered prefixes give stable ordering. Future states can append
+ * without renumbering existing artifacts.
  *
  * Single-project gate. The screenshot output is deterministic across
  * project runs (the fixture pins board to 1920x1080 and phones to
@@ -215,7 +224,62 @@ test.describe('arena state screenshots', () => {
     })
     await board.waitForTimeout(400) // NopeCountdownBar mount + fade-in
     await board.screenshot({ path: `${OUTPUT_DIR}/board/04-nope-window.png` })
-    // Clear nope window so it doesn't pollute later captures.
+
+    // --- State 5b2: Chain-burn nope window (board + observer phone) --------
+    //
+    // chainDepth ≥ 1 flips the SmartActionBox verb from "Intercept" to
+    // "Counter" on any opponent holding an Intercepted card (engine.ts:980;
+    // SmartActionBox.tsx:177). Captures Bob's phone as observer with an
+    // Intercepted card forced into hand + the board view at chainDepth 2.
+    //
+    // Observer is critical: the actor (Alice) at chainDepth 0 lands in the
+    // waiting branch, but at chainDepth ≥ 1 chain-burn becomes legal even
+    // for the actor — observers are simpler to seed.
+
+    await board.evaluate(() => {
+      const w = window as unknown as {
+        __gameStore?: { applyOptimistic: (t: (s: unknown) => unknown) => void }
+      }
+      const now = Date.now()
+      w.__gameStore?.applyOptimistic((s) => ({
+        ...(s as Record<string, unknown>),
+        nopeWindow: {
+          remainingMs: 4000,
+          deadlineMs: now + 4000,
+          chainDepth: 2,
+          startedAtMs: now - 6000,
+          generation: 1,
+        },
+      }))
+    })
+    await phones[1]!.evaluate(() => {
+      const w = window as unknown as {
+        __gameStore?: { applyOptimistic: (t: (s: unknown) => unknown) => void }
+      }
+      const now = Date.now()
+      w.__gameStore?.applyOptimistic((s) => ({
+        ...(s as Record<string, unknown>),
+        nopeWindow: {
+          remainingMs: 4000,
+          deadlineMs: now + 4000,
+          chainDepth: 2,
+          startedAtMs: now - 6000,
+          generation: 1,
+        },
+        myHand: [
+          { id: 'chain-h-1', type: 'intercepted' },
+          { id: 'chain-h-2', type: 'reassign' },
+          { id: 'chain-h-3', type: 'go-dark' },
+        ],
+      }))
+    })
+    await board.waitForTimeout(400)
+    await phones[1]!.waitForTimeout(400)
+    await board.screenshot({ path: `${OUTPUT_DIR}/board/05-nope-chain-burn.png` })
+    await phones[1]!.screenshot({ path: `${OUTPUT_DIR}/phone/08-nope-chain-burn-counter.png` })
+
+    // Clear nope window on board AND clear observer phone's optimistic
+    // patch so subsequent captures aren't polluted.
     await board.evaluate(() => {
       const w = window as unknown as {
         __gameStore?: { applyOptimistic: (t: (s: unknown) => unknown) => void }
@@ -224,6 +288,12 @@ test.describe('arena state screenshots', () => {
         ...(s as Record<string, unknown>),
         nopeWindow: null,
       }))
+    })
+    await phones[1]!.evaluate(() => {
+      const w = window as unknown as {
+        __gameStore?: { clearOptimistic: () => void }
+      }
+      w.__gameStore?.clearOptimistic()
     })
 
     // --- State 5c: FuturePeek read-only (drawer phone) ----------------------
@@ -350,6 +420,37 @@ test.describe('arena state screenshots', () => {
       await phones[0]!.waitForTimeout(200)
     }
 
+    // --- State 7b: StealReport queue with +N more chip ----------------------
+    //
+    // Inject 3 combo-steal events targeting Alice. The StealReport queue
+    // processes them in order and surfaces the first dispatch with a
+    // "+2 more" chip indicating the queued reports waiting behind it.
+    // Cooldown gate (350ms) on the Acknowledge button means the queue
+    // visibly stacks instead of dismissing in a tap-storm — that's the
+    // surface we want to capture.
+
+    await injectEvent(phones[0]!, { type: 'combo-steal', stealerId: bobId, targetId: aliceId, found: true, cardType: 'go-dark' })
+    await injectEvent(phones[0]!, { type: 'combo-steal', stealerId: bobId, targetId: aliceId, found: true, cardType: 'reassign' })
+    await injectEvent(phones[0]!, { type: 'combo-steal', stealerId: bobId, targetId: aliceId, found: false, cardType: 'direct-order' })
+    await phones[0]!.waitForFunction(
+      () => !!document.querySelector('[role="alertdialog"]'),
+      null,
+      { timeout: 3_000 },
+    )
+    // StealReport's paper "deliberate" Framer transition holds ~480ms;
+    // a 700ms wait lands the capture squarely in the rest pose.
+    await phones[0]!.waitForTimeout(700)
+    await phones[0]!.screenshot({ path: `${OUTPUT_DIR}/phone/09-steal-report-queue.png` })
+
+    // Drain the queue so subsequent captures aren't polluted by the
+    // dispatch overlay. 350ms cooldown between Acknowledge taps.
+    for (let i = 0; i < 3; i++) {
+      const ackBtn = phones[0]!.locator('button:has-text("Acknowledge")')
+      if ((await ackBtn.count()) === 0) break
+      await ackBtn.click().catch(() => undefined)
+      await phones[0]!.waitForTimeout(420)
+    }
+
     // --- State 6: DramaOverlay ELIMINATED (board) ----------------------------
     //
     // Use a REAL player id so the overlay renders the player's name
@@ -380,5 +481,112 @@ test.describe('arena state screenshots', () => {
     // Capture mid-peak for stable text + glow.
     await board.waitForTimeout(900)
     await board.screenshot({ path: `${OUTPUT_DIR}/board/03-drama-wins.png` })
+
+    // --- State 8: Phone game_over rankings (Alice's phone) -----------------
+    //
+    // Real flow: server pushes phase=game_over to all clients after the
+    // engine emits game-over. Harness path: optimistically swap the phone's
+    // phase + populate winnerId/eliminationOrder so GameOver renders
+    // rankings + the B-11 "Run It Back" button. Captured AFTER the board
+    // WINS beat to mirror the real lifecycle ordering (overlay first,
+    // rankings after).
+
+    await phones[0]!.evaluate(({ winner, elim }) => {
+      const w = window as unknown as {
+        __gameStore?: { applyOptimistic: (t: (s: unknown) => unknown) => void }
+      }
+      w.__gameStore?.applyOptimistic((s) => ({
+        ...(s as Record<string, unknown>),
+        phase: 'game_over',
+        winnerId: winner,
+        eliminationOrder: elim,
+      }))
+    }, { winner: aliceId, elim: [bobId] })
+    // Phone GameOver vocabulary: "// CASE 47-B · CLOSED [CLASSIFIED]" header,
+    // winner hero stack, "// OPERATIVE STATUS: SURVIVED|ELIMINATED",
+    // rankings list, "// NEW CASE" button (Run It Back per B-11). Wait
+    // for the "// NEW CASE" button — most specific marker, only present
+    // in the GameOver tree.
+    await phones[0]!.locator('button:has-text("NEW CASE")').waitFor({ timeout: 8_000 })
+    // GameOver row stagger is 80ms × N + the play-again button delay
+    // (0.8s + 0.08*rankings + 0.3s). For a 3-player game, total animate-in
+    // window is ~1.4s. Capture at 1500ms for stable layout.
+    await phones[0]!.waitForTimeout(1500)
+    await phones[0]!.screenshot({ path: `${OUTPUT_DIR}/phone/10-game-over-rankings.png` })
+  })
+
+  test('captures lobby + pre-join states', async ({ board, phones, roomCode }, testInfo) => {
+    test.skip(testInfo.project.name !== 'chromium', 'Single-project screenshot harness')
+    test.setTimeout(45_000)
+
+    // --- State 9: Phone host-offline label (B-02) --------------------------
+    //
+    // Phone joins (lobby state, game NOT started). Optimistic patch flips
+    // hostConnected to false. JoinScreen swaps the joined-state waiting
+    // label from "Standing by..." to "// HOST OFFLINE" in accent-burned.
+
+    await joinPhone(phones[0]!, roomCode, 'Alice')
+    await waitForPlayerCount(board, 1)
+    // Wait for phone's gameStore to receive the lobby projection.
+    await phones[0]!.waitForFunction(() => {
+      const snap = (window as unknown as { __gameStoreSnapshot?: () => Record<string, unknown> }).__gameStoreSnapshot?.()
+      return snap?.phase === 'lobby'
+    }, null, { timeout: 5_000 })
+
+    await phones[0]!.evaluate(() => {
+      const w = window as unknown as {
+        __gameStore?: { applyOptimistic: (t: (s: unknown) => unknown) => void }
+      }
+      w.__gameStore?.applyOptimistic((s) => ({
+        ...(s as Record<string, unknown>),
+        hostConnected: false,
+      }))
+    })
+    await phones[0]!.waitForFunction(
+      () => /HOST OFFLINE/.test(document.body.textContent ?? ''),
+      null,
+      { timeout: 2_000 },
+    )
+    await phones[0]!.waitForTimeout(500) // label color transition settle
+    await phones[0]!.screenshot({ path: `${OUTPUT_DIR}/phone/11-host-offline.png` })
+
+    // --- State 10: Disconnected-name picker (pre-join, B-14) ---------------
+    //
+    // Fresh phone navigates to /player.html?room=XYZ but does NOT submit
+    // a name. Inject lastError = GAME_ALREADY_STARTED with disconnectedNames
+    // so JoinScreen's reclaimNames branch renders the "// Resume as"
+    // picker. lastError is private on GameStore — runtime mutation works
+    // because TS privacy is compile-time only.
+
+    const freshPhone = await phones[1]!.context().newPage()
+    await freshPhone.goto(`/player.html?room=${roomCode}`)
+    await freshPhone.waitForFunction(
+      () => !!(window as unknown as { __gameStore?: unknown }).__gameStore,
+      null,
+      { timeout: 5_000 },
+    )
+    await freshPhone.evaluate(() => {
+      const w = window as unknown as {
+        __gameStore?: {
+          lastError: unknown
+          notify: () => void
+        }
+      }
+      if (!w.__gameStore) throw new Error('arena-states: __gameStore missing')
+      w.__gameStore.lastError = {
+        code: 'GAME_ALREADY_STARTED',
+        message: 'Game has already started',
+        disconnectedNames: ['Vera', 'Otto'],
+      }
+      w.__gameStore.notify()
+    })
+    await freshPhone.waitForFunction(
+      () => /Resume as/.test(document.body.textContent ?? ''),
+      null,
+      { timeout: 3_000 },
+    )
+    await freshPhone.waitForTimeout(400)
+    await freshPhone.screenshot({ path: `${OUTPUT_DIR}/phone/12-disconnected-name-picker.png` })
+    await freshPhone.close()
   })
 })

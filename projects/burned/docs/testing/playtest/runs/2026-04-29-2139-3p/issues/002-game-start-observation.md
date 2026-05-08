@@ -1,7 +1,7 @@
 # 002-game-start-observation — Self-generated scenario ID not in catalog; lobby showed 2/3 players pre-start
 
 **Severity (triage):** P2
-**Status:** 🔴 OPEN
+**Status:** ✅ RESOLVED (2026-05-08)
 **Seed kind:** scripted-scenario
 **Source seats:** seat-1
 **Linked scenarios:** GAME-START-OBSERVATION
@@ -48,6 +48,26 @@ No engine bug is present. The game-start sequence is correct per `engine.ts` `ha
 ## Recommended next step
 
 Apply Option B immediately to prevent future non-catalog scenario-fire entries from reaching triage, then evaluate Option A if Briggsy wants game-start formally covered in the next harness session.
+
+## Resolution — 2026-05-08
+
+Closed (Finding 1 — primary). The schema-validator catalog gate (Option B
+equivalent) landed in commit `afff4181` on 2026-05-01 — explicitly cites
+this issue. `parseSeatLogString` rejects any `scenario-fire` entry whose
+`scenarioId` is not in the catalog set; `triage-pipeline.ts` opts in via
+`new Set(catalog.map(s => s.id))`. `GAME-START-OBSERVATION` would now
+parse-error at log-read time and never reach the clusterer.
+
+Finding 2 (lobby player-list incomplete at game start, secondary) is not
+addressed by this closure — the seat agent's observation that Seat3 was
+"not yet visible" pre-start could be a slice-update-order race in the
+lobby player-list. There's no recurrence in subsequent runs and no
+production complaint, so it's archived rather than escalated. Open a
+fresh issue with a reproduction if it surfaces again.
+
+Citation: `scripts/playtest/lib/log-parser.ts:52-70` + `:207-219` +
+`scripts/playtest/lib/triage-pipeline.ts:107`. Tests: 23/23 passing
+on `log-schema.test.ts §validScenarioIds catalog gate`.
 
 ---
 

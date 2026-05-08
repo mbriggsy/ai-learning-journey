@@ -1,7 +1,7 @@
 # 011-turn-transition-seat1-to-seat2 — Ghost scenario ID: uncataloged turn-advance fire from OTHER observer
 
 **Severity (triage):** P2
-**Status:** 🔴 OPEN
+**Status:** ✅ RESOLVED (2026-05-08)
 **Seed kind:** scripted-scenario
 **Source seats:** seat-3
 **Linked scenarios:** TURN-TRANSITION-SEAT1-TO-SEAT2
@@ -49,6 +49,28 @@ No engine bug is present. `advanceTurn` at `src/server/game/engine.ts` emitted t
 ## Recommended next step
 
 Add the missing catalog scenario (Option A) first — the seat-3 observation is valid evidence the mechanic fires naturally in play and needs coverage — then follow with the agent-ID validation from Option B to prevent recurrence.
+
+## Resolution — 2026-05-08
+
+Closed. The mechanical half (Option B equivalent — agent ID validation
+via the parser) landed in commit `afff4181` on 2026-05-01 — commit
+subject explicitly cites #001/002/003/011/018. Future seat agents
+that emit `scenario-fire` with `scenarioId: 'TURN-TRANSITION-SEAT1-TO-SEAT2'`
+will hit a parse error at log-read time, surfacing the bad ID and the
+accepted catalog set; the clusterer never sees the entry.
+
+Option A (add a catalog scenario for plain-draw turn advance) was NOT
+implemented in this closure — the suggested
+`SCN-DRAW-NORMAL-TURN-ADVANCE-01` would add a low-signal scenario
+(structural observation, not an information-asymmetry axis) that
+inflates the coverage denominator without testing the bug class the
+harness exists to catch. The product-level catalog discipline favors
+fewer high-signal scenarios over many trivial ones; if a future
+session demonstrates a real coverage gap on draw-and-advance, file
+a fresh issue.
+
+Citation: `scripts/playtest/lib/log-parser.ts:52-70` + `:207-219` +
+`scripts/playtest/lib/triage-pipeline.ts:107`.
 
 ---
 

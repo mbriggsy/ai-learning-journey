@@ -5,7 +5,7 @@
 ## Summary
 
 - **Total issues:** 22
-- **Status:** OPEN 5 · RESOLVED 7 · BLOCKED 0 · DUPLICATE 0 · KNOWN-PRODUCT-CALL 8 · LOW-SIGNAL 2
+- **Status:** OPEN 0 · RESOLVED 12 · BLOCKED 0 · DUPLICATE 0 · KNOWN-PRODUCT-CALL 8 · LOW-SIGNAL 2
 - **Severity:** P0 0 · P1 6 · P2 15
 - **By seed kind:**
   - scripted-scenario: 14
@@ -20,14 +20,14 @@
 
 | ID | Title | Severity | Status | Linked | Candidate dup |
 | --- | --- | --- | --- | --- | --- |
-| [001-session-start](001-session-start.md) | Seat agent used `scenario-fire` with non-catalog scenario ID "SESSION-START" | P2 | OPEN | SESSION-START | — |
-| [002-game-start-observation](002-game-start-observation.md) | Self-generated scenario ID not in catalog; lobby showed 2/3 players pre-start | P2 | OPEN | GAME-START-OBSERVATION | — |
-| [003-session-start](003-session-start.md) | Uncatalogued scenario ID "SESSION-START" fired by seat-3; no catalog definition exists | P2 | OPEN | SESSION-START | — |
+| [001-session-start](001-session-start.md) | Seat agent used `scenario-fire` with non-catalog scenario ID "SESSION-START" | P2 | RESOLVED | SESSION-START | resolved by `afff4181` — parser catalog gate |
+| [002-game-start-observation](002-game-start-observation.md) | Self-generated scenario ID not in catalog; lobby showed 2/3 players pre-start | P2 | RESOLVED | GAME-START-OBSERVATION | resolved by `afff4181` — parser catalog gate |
+| [003-session-start](003-session-start.md) | Uncatalogued scenario ID "SESSION-START" fired by seat-3; no catalog definition exists | P2 | RESOLVED | SESSION-START | resolved by `afff4181` — parser catalog gate |
 | [006-scn-favor-normal-01](006-scn-favor-normal-01.md) | Favor target single-tap path broken; dual-seat vibe-check "no"; B-05 stall did not fire | P1 | RESOLVED | SCN-FAVOR-NORMAL-01 (catalog: SCN-CALL-IN-FAVOR-NORMAL-01) | SCN-CALL-IN-FAVOR-NORMAL-01 / B-05 (known-product-call: favor-pending + target disconnects → room frozen) |
-| [011-turn-transition-seat1-to-seat2](011-turn-transition-seat1-to-seat2.md) | Ghost scenario ID: uncataloged turn-advance fire from OTHER observer | P2 | OPEN | TURN-TRANSITION-SEAT1-TO-SEAT2 | — |
+| [011-turn-transition-seat1-to-seat2](011-turn-transition-seat1-to-seat2.md) | Ghost scenario ID: uncataloged turn-advance fire from OTHER observer | P2 | RESOLVED | TURN-TRANSITION-SEAT1-TO-SEAT2 | resolved by `afff4181` — parser catalog gate |
 | [012-scn-go-dark-normal-01](012-scn-go-dark-normal-01.md) | Go Dark ACTOR phone missing drama beat — play feels mechanical, not cinematic | P2 | RESOLVED-BY-DESIGN | SCN-GO-DARK-NORMAL-01 | resolved by `65de88cf` — Briggsy locked Go Dark drama-silent by-design; toast on observer phones |
 | [016-scn-go-dark-normal-01](016-scn-go-dark-normal-01.md) | Seat-1 agent mislabeled SCN-GO-DARK-NORMAL-01 to a Burn the Files (shuffle) action | P2 | LOW-SIGNAL | SCN-GO-DARK-NORMAL-01 | Clusterer proposed B-04 (defuse-pending disconnect); catalog entry for SCN-GO-DARK-NORMAL-01 says `known-product-call: none` — candidate duplicate is erroneous, not confirmed. |
-| [018-intercept-window-observed-seat1-turn](018-intercept-window-observed-seat1-turn.md) | Uncatalogued scenario ID: nope/Intercept window observed as OTHER (alive) with disabled button | P2 | OPEN | INTERCEPT-WINDOW-OBSERVED-SEAT1-TURN | — |
+| [018-intercept-window-observed-seat1-turn](018-intercept-window-observed-seat1-turn.md) | Uncatalogued scenario ID: nope/Intercept window observed as OTHER (alive) with disabled button | P2 | RESOLVED | INTERCEPT-WINDOW-OBSERVED-SEAT1-TURN | resolved by `afff4181` — parser catalog gate |
 
 ## Free-play findings
 

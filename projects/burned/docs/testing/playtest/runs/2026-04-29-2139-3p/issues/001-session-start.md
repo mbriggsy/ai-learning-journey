@@ -1,7 +1,7 @@
 # 001-session-start — Seat agent used `scenario-fire` with non-catalog scenario ID "SESSION-START"
 
 **Severity (triage):** P2
-**Status:** 🔴 OPEN
+**Status:** ✅ RESOLVED (2026-05-08)
 **Seed kind:** scripted-scenario
 **Source seats:** seat-1
 **Linked scenarios:** SESSION-START
@@ -47,6 +47,34 @@ No game engine bug, no rules violation, no privacy or projection leak. Player-fa
 ## Recommended next step
 
 Implement Option B (schema validator cross-reference against catalog) as the primary fix, then add Option A's anti-pattern language to the seat agent prompt as defense-in-depth.
+
+## Resolution — 2026-05-08
+
+Closed. The recommended Option B (schema validator catalog gate) was
+implemented in commit `afff4181` ("feat(triage): close #001/002/003/011/018
+— catalog gate at log-write time") on 2026-05-01. The commit explicitly
+cites this issue.
+
+`parseSeatLogString` / `parseSeatLog` gained an optional
+`{ validScenarioIds: ReadonlySet<string> }` ParseOption; when provided,
+every `scenario-fire` entry's `scenarioId` is cross-checked against the
+catalog after schema validation. Mismatches become parse errors with
+the bad ID and the accepted catalog set surfaced in the message —
+the entry is dropped, never reaching the clusterer.
+
+`triage-pipeline.ts` opts in via
+`new Set(catalog.map(s => s.id))` (lines 107, 195, 198), so future
+runs reject `SESSION-START` (and any other invented lifecycle ID)
+before triage agents are spawned.
+
+The 04-29-2139-3p run predates the gate (run 2026-04-29; gate landed
+2026-05-01) — the seed in this file is a historical artifact, not
+recurring behavior.
+
+Citation: `scripts/playtest/lib/log-parser.ts:52-70` (ParseOption
+JSDoc) + `:207-219` (the gate) + `scripts/playtest/lib/triage-pipeline.ts:107`
+(opt-in). Tests: `scripts/playtest/lib/log-schema.test.ts §validScenarioIds catalog gate`
+(23/23 passing 2026-05-08).
 
 ---
 

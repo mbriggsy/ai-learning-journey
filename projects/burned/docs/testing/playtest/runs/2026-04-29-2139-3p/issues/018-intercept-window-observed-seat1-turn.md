@@ -1,7 +1,7 @@
 # 018-intercept-window-observed-seat1-turn — Uncatalogued scenario ID: nope/Intercept window observed as OTHER (alive) with disabled button
 
 **Severity (triage):** P2
-**Status:** 🔴 OPEN
+**Status:** ✅ RESOLVED (2026-05-08)
 **Seed kind:** scripted-scenario
 **Source seats:** seat-3
 **Linked scenarios:** INTERCEPT-WINDOW-OBSERVED-SEAT1-TURN
@@ -52,6 +52,30 @@ No engine bug detected. The root cause of this triage seed is the seat agent sel
 ## Recommended next step
 
 Add a catalog entry per Option A (defining the OTHER-alive nope-window disabled-button observation) and pair with Option B lint to reject uncatalogued self-coined IDs at seed-generation time.
+
+## Resolution — 2026-05-08
+
+Closed. The harness-validation half (Option B in this seed) landed in
+commit `afff4181` on 2026-05-01 — commit subject explicitly cites
+#001/002/003/011/018. The seat-agent-coined ID
+`INTERCEPT-WINDOW-OBSERVED-SEAT1-TURN` would now parse-error at
+log-read time.
+
+Option A (add a catalog entry for the OTHER-alive nope-window
+disabled-button observation, e.g.
+`SCN-INTERCEPT-WINDOW-OBSERVED-OTHER-ALIVE-DISABLED`) was NOT
+implemented in this closure for the same reason as sibling #011 —
+catalog-discipline favors high-signal information-asymmetry scenarios
+over structural observations. The "intercept button disabled when
+no Intercepted card in hand" behavior is engine-correct (verified in
+the body diagnosis) and would not test a bug class the harness was
+built to catch.
+
+Finding 3 in the body diagnosis (behavior verified correct) confirms
+no engine action is required; the closure is harness-discipline only.
+
+Citation: `scripts/playtest/lib/log-parser.ts:52-70` + `:207-219` +
+`scripts/playtest/lib/triage-pipeline.ts:107`.
 
 ---
 

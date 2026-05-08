@@ -1,7 +1,7 @@
 # 003-session-start — Uncatalogued scenario ID "SESSION-START" fired by seat-3; no catalog definition exists
 
 **Severity (triage):** P2
-**Status:** 🔴 OPEN
+**Status:** ✅ RESOLVED (2026-05-08)
 **Seed kind:** scripted-scenario
 **Source seats:** seat-3
 **Linked scenarios:** SESSION-START
@@ -42,6 +42,26 @@ The underlying game state at session start was internally consistent per the sea
 ## Recommended next step
 
 Apply Option B — remove the SESSION-START `scenario-fire` emission from seat agent scripts, treating it as an operational navigation step rather than a catalogued gameplay scenario, and update the harness documentation to note this distinction.
+
+## Resolution — 2026-05-08
+
+Closed — same root cause and same fix as sibling seed #001. The
+schema-validator catalog gate (Option B in this seed's recommended
+fix paths) landed in commit `afff4181` on 2026-05-01 — commit
+subject explicitly cites #001/002/003/011/018. `SESSION-START` now
+parse-errors at log-read time and never reaches the clusterer.
+
+The recommended next step in the body (Option B — remove SESSION-START
+from seat agent scripts) is the agent-side complement to the
+parser-side fix; the agent-prompt update lives in
+`scripts/playtest/agents/seat-scripted.md` (line 437) and
+`seat-free-play.md` (line 372) which already restrict
+`relatedScenario` to `null` or a catalog SCN-* ID. The agent prompt
+update for `scenarioId` itself is partially covered there but could
+be tightened — flagged in the closure-bundle commit body.
+
+Citation: `scripts/playtest/lib/log-parser.ts:52-70` + `:207-219` +
+`scripts/playtest/lib/triage-pipeline.ts:107`.
 
 ---
 

@@ -17,24 +17,16 @@ Solo-doable, ranked:
    eyeball: Nope window mid-countdown, all DramaOverlay variants, Favor
    banner + staging, Triple-steal name-card sheet, FuturePeek read-only +
    rearrange. Output to `temp/arena-states/`. ~3-4h.
-3. **RESOLVED-BY-SIDE-EFFECT triage sweep — partial complete 2026-05-08.**
-   6 of 12 OPEN issues closed across two runs. Remaining 6 cluster as
-   two work items:
-   - **5× uncatalogued-scenario family** at
-     `runs/2026-04-29-2139-3p/issues/` (#001, #002, #003, #011, #018) —
-     seat agents fired non-catalog scenario IDs (`SESSION-START`,
-     `GAME-START-OBSERVATION`, `TURN-TRANSITION-SEAT1-TO-SEAT2`,
-     `INTERCEPT-WINDOW-OBSERVED-SEAT1-TURN`). Single fix: extend the
-     seat-prompt or log-schema validator to reject `scenarioId` not in
-     SCENARIOS.md catalog. Pair with optional Option A in selected
-     issues — add catalog entries for the legitimate observed mechanics
-     (turn-advance, OTHER-alive nope-window). ~1-2h.
-   - **1× needs Briggsy eyeball** at
-     `runs/2026-05-01-1654-3p/issues/008-scn-burned-draw-axis11-01.md` —
-     Burned-draw ACTOR drama beat presence/conflation question; Option C
-     recommends real-device verification before A vs B fork. Add to §4.
-   Triage issue summaries are now tracked in git
-   (`runs/*/issues/*.md`), so closures survive `pnpm playtest:purge`.
+3. **RESOLVED-BY-SIDE-EFFECT triage sweep — DONE 2026-05-08.** All 22
+   issues across runs/2026-04-29-2139-3p closed. 9 of 10 issues across
+   runs/2026-05-01-1654-3p closed; the lone holdout is
+   `008-scn-burned-draw-axis11-01.md` which needs your real-device
+   eyeball — surfaced in §4. The uncatalogued-scenario family
+   (#001/#002/#003/#011/#018) was discovered to already be resolved
+   by commit `afff4181` (2026-05-01 parser catalog gate); closure
+   commit cites the historical fix. Triage issue summaries are now
+   tracked in git (`runs/*/issues/*.md`), so closures survive
+   `pnpm playtest:purge`.
 4. **Resume burned card escort-concept via NBP** when
    `gemini-3-pro-image-preview` stops 503ing. Script + base image staged at
    `scripts/edit-burned-door-nbp.ts`. Probe before committing time —

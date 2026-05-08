@@ -356,10 +356,26 @@
   letter-spacing: 0.22em;
   text-transform: uppercase;
   color: color-mix(in oklab, var(--color-charcoal-1) 55%, var(--color-cordovan-2));
+  /* Containment — at narrow board widths (iPhone-landscape ≈ 667-812 wide,
+     where the dossier folder shrinks to ~170-260px), the longest IDLE_LINES
+     string ("// AWAITING TRANSMISSION" ≈ 197px at the 10px font-size floor)
+     plus gap + cursor exceeds the ticker's flex width and would paint past
+     the manila edge into adjacent surfaces. Ellipsis (set on .tickerLine
+     below) requires this clip. E2E audit C-12. */
+  overflow: hidden;
 }
 
 .tickerLine {
+  /* flex 1 1 0 + min-width 0: lets the line compress past its nowrap
+     intrinsic width so text-overflow: ellipsis can engage. Without min-width
+     0, flex items default to min-content (full nowrap text width) and the
+     line steamrolls the cursor + the ticker bounds. The cursor sibling stays
+     intrinsically sized (inline-block 0.6em) and always visible. */
+  flex: 1 1 0;
+  min-width: 0;
   white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
   opacity: 0.78;
 }
 

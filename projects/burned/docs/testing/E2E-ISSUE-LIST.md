@@ -36,8 +36,8 @@ rows below were back-filled in a single sweep after spot-checks
 during the C-30..C-33 triage cleanup found rows that had been left
 🔴 even though their commits had landed weeks earlier. Each shipped
 row now cites its commit. The ⏸ rows (C-13, C-15, C-16-19) and the
-remaining 🔴 rows (C-07/09/10/11/12, D-23 — 6 IDs after the
-2026-05-07 evening sweep + C-21 closure below) are genuinely-open
+remaining 🔴 rows (C-07/09/10/11 — 4 IDs after the 2026-05-07
+evening sweep + C-21 + C-12 closures below) are genuinely-open
 per the same commit-history audit. Visual rows need Briggsy-eye review
 before they're actionable solo. (B-12, B-17, C-25, D-04, D-15, D-16
 were closed inline by additional 2026-05-07 commits — see their rows
@@ -51,15 +51,24 @@ identify-timeout, host-session-token, plus extension to
 join-screen-server-error). D-23 ships with 4 new engine-level tests
 covering Intel Briefing + Falsify Intel against deck sizes 0/1/2.
 
-**Truly-open 🔴 rows after sweep: 5 — all visual** (C-07, C-09, C-10,
-C-11, C-12). Need design-eye input before they're solo-actionable.
+**Truly-open 🔴 rows after sweep: 4 — all visual** (C-07, C-09, C-10,
+C-11). Need design-eye input before they're solo-actionable.
 
-**C-21 closure 2026-05-07 (this commit):** measurement re-test via
-chrome-devtools-mcp confirmed C-21 was resolved by side-effect of
-`308bbdbf` (2026-04-27, "pin .cardDesc to 2lh" — landed 4 days after
-the original 2026-04-23 audit). Five viewports × six scroll positions ×
-stage-transition probe — all within-hand heights uniform at every
-measurement. The mechanism is documented in the C-21 row.
+**C-21 closure 2026-05-07:** measurement re-test via chrome-devtools-mcp
+confirmed C-21 was resolved by side-effect of `308bbdbf` (2026-04-27,
+"pin .cardDesc to 2lh" — landed 4 days after the original 2026-04-23
+audit). Five viewports × six scroll positions × stage-transition probe —
+all within-hand heights uniform at every measurement. Mechanism documented
+in the C-21 row.
+
+**C-12 closure 2026-05-07 (this commit):** repro'd at 667×375 (iPhone SE
+landscape — smallest realistic landscape board host) — folder shrank to
+170px wide, ticker container 123px, "// AWAITING TRANSMISSION" at the
+10px font floor needed 197px → 74px paint overflow past the manila edge.
+Fixed by adding `overflow: hidden` to `.ticker` and `flex: 1 1 0;
+min-width: 0; overflow: hidden; text-overflow: ellipsis` to `.tickerLine`
+in `DossierFeed.module.css`. Verified post-fix at 667×375 (legible
+ellipsis, cursor still visible) and 1280×720 (full text, no regression).
 
 **Audit follow-up 2026-05-07 (later pass + inline fixes):** D-16 +
 D-15 found to have been shipped in `d9c40753` and `b7824600`
@@ -191,7 +200,7 @@ appears on paper.
 | **C-09** | NameCard grid + "CALL OFF THE RAID" button below fold on 360×640 | 🔴 |
 | **C-10** | NopeCountdownBar floats above arena frame — reads as browser notification, not spy tension | 🔴 |
 | **C-11** | DossierFeed side CASE FILE + inner CLASSIFIED stamp are two-of-a-kind competing for attention | 🔴 |
-| **C-12** | Channel ticker `// AWAITING TRANSMISSION` would wrap on narrower containers (phone overlays) | 🔴 |
+| **C-12** | Channel ticker `// AWAITING TRANSMISSION` would wrap on narrower containers (phone overlays). **Shipped 2026-05-07 (this commit)** — `.ticker { overflow: hidden }` + `.tickerLine { flex: 1 1 0; min-width: 0; overflow: hidden; text-overflow: ellipsis }`. Pre-fix repro at 667×375 (iPhone SE landscape): folder shrank to 170px wide → ticker container 123px → "// AWAITING TRANSMISSION" at the 10px font-size floor needed 197px → 74px paint overflow past the manila edge with `overflow: visible`. Post-fix at 667×375: line painted 110px inside 123px, ellipsis truncates legibly, cursor stays visible at right edge; verified no regression at 1280×720 (line 477px, no truncation, full text). The audit's "would wrap" wording was structurally inaccurate (the line had `white-space: nowrap`, so it overflowed instead of wrapping) but the symptom they were guarding against — text painting beyond the ticker band — was real and reproducible. | 🟢 |
 | **C-13** | 11 of 17 card illustrations are 384×384 square art letterboxed in 5:7 frames → ~29px teal mat top+bottom. Inconsistent with operative portraits (tall aspect, fill-to-edge). Cuts against the Archer edge-to-edge feel. | ⏸ (asset regen decision) |
 | **C-14** | INTERCEPTED drama hold 800ms, EXTRACTED 1000ms — too short to read from couch across a 15ft room. **Shipped 2026-04-23 in `1db5ddab`** — drama hold extended; transient INTERCEPTED beat aborts on `turn-started` (later refined). | 🟢 |
 | **C-15** | Board shows `{NAME} BURNED` text while drawer sees the CARD — board arguably should get the card variant too (it's the narrator) | ⏸ (product call) |

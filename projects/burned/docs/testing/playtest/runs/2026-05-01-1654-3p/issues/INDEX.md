@@ -5,7 +5,7 @@
 ## Summary
 
 - **Total issues:** 10
-- **Status:** OPEN 1 · RESOLVED 2 · BLOCKED 0 · DUPLICATE 0 · KNOWN-PRODUCT-CALL 5 · LOW-SIGNAL 2
+- **Status:** OPEN 0 · RESOLVED 3 · BLOCKED 0 · DUPLICATE 0 · KNOWN-PRODUCT-CALL 5 · LOW-SIGNAL 2
 - **Severity:** P0 0 · P1 2 · P2 8
 - **By seed kind:**
   - scripted-scenario: 8
@@ -23,7 +23,7 @@
 | [002-scn-go-dark-normal-01](002-scn-go-dark-normal-01.md) | Go Dark normal play: scenario fired clean; clusterer candidate-duplicate is a false positive | P2 | LOW-SIGNAL | SCN-GO-DARK-NORMAL-01 | SCN-GO-DARK-NORMAL-01 / B-13 (clusterer-populated) — FALSE POSITIVE: catalog `known-product-call:` for SCN-GO-DARK-NORMAL-01 is `none`; the B-13 link does not appear in this scenario's catalog entry. See Diagnosis. |
 | [003-scn-favor-normal-01](003-scn-favor-normal-01.md) | Card-played toast persists through full favor-pending sub-phase for observer | P2 | RESOLVED | SCN-FAVOR-NORMAL-01 (catalog ID: SCN-CALL-IN-FAVOR-NORMAL-01) | Root cause was aria-live region staleness in `announce()`, not React toast lifecycle; `announce()` now self-clears 5s after each message. See insight 045. |
 | [004-scn-favor-normal-01](004-scn-favor-normal-01.md) | Normal favor exchange is clean; candidateDuplicate is a clusterer false-positive | P2 | LOW-SIGNAL | SCN-FAVOR-NORMAL-01 (catalog: SCN-CALL-IN-FAVOR-NORMAL-01) | SCN-CALL-IN-FAVOR-TARGET-DISCONNECT-01 / B-05 — CATALOG MISMATCH (see Diagnosis) |
-| [008-scn-burned-draw-axis11-01](008-scn-burned-draw-axis11-01.md) | ACTOR drama beat absent or imperceptible before DefusePlacement sheet | P2 | OPEN | SCN-BURNED-DRAW-AXIS11-01 (catalog: SCN-BURNED-DRAW-AUTO-DEFUSE-01) | Clusterer field populated as `B-03` — FALSE POSITIVE. Catalog entry `SCN-BURNED-DRAW-AUTO-DEFUSE-01` carries `Known product call: none` (SCENARIOS.md line 256). B-03 belongs to `SCN-CONN-NAME-CARD-PENDING-DISCONNECT-01` (the `name-card-pending` + stealer-disconnect wedge). The clusterer incorrectly cross-linked the disconnect-wedge tag to this seed. Catalog authority wins; this is a new finding, not a known product call. |
+| [008-scn-burned-draw-axis11-01](008-scn-burned-draw-axis11-01.md) | ACTOR drama beat absent or imperceptible before DefusePlacement sheet | P2 | RESOLVED-NO-FIX | SCN-BURNED-DRAW-AXIS11-01 (catalog: SCN-BURNED-DRAW-AUTO-DEFUSE-01) | Briggsy real-device eyeball 2026-05-08: distinct moments, no blur — agent perception artifact, no code change |
 
 ## Free-play findings
 

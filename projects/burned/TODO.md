@@ -17,14 +17,14 @@ Solo-doable, ranked:
    eyeball: Nope window mid-countdown, all DramaOverlay variants, Favor
    banner + staging, Triple-steal name-card sheet, FuturePeek read-only +
    rearrange. Output to `temp/arena-states/`. ~3-4h.
-3. **RESOLVED-BY-SIDE-EFFECT triage sweep — DONE 2026-05-08.** All 22
-   issues across runs/2026-04-29-2139-3p closed. 9 of 10 issues across
-   runs/2026-05-01-1654-3p closed; the lone holdout is
-   `008-scn-burned-draw-axis11-01.md` which needs your real-device
-   eyeball — surfaced in §4. The uncatalogued-scenario family
+3. **RESOLVED-BY-SIDE-EFFECT triage sweep — FULLY DONE 2026-05-08.**
+   All 22 issues across runs/2026-04-29-2139-3p closed. All 10 issues
+   across runs/2026-05-01-1654-3p closed (the lone holdout #008 was
+   verdicted by Briggsy's real-device eyeball as a no-fix-needed
+   perception artifact). The uncatalogued-scenario family
    (#001/#002/#003/#011/#018) was discovered to already be resolved
    by commit `afff4181` (2026-05-01 parser catalog gate); closure
-   commit cites the historical fix. Triage issue summaries are now
+   commits cite the historical fix. Triage issue summaries are now
    tracked in git (`runs/*/issues/*.md`), so closures survive
    `pnpm playtest:purge`.
 4. **NBP burned-door edit — STAGED 2026-05-08, awaiting eyeball.**
@@ -166,12 +166,6 @@ Only Briggsy can do these.
   - Board nope-countdown legibility from couch distance.
   - StealReport stamp occlusion of `Case 47-B` (still open — pre-existing
     visual issue I noticed but didn't touch since it's a design call).
-- **Burned-draw ACTOR drama-beat presence verification** (carryover from
-  triage 05-01-1654-3p #008). Question: does the DramaOverlay `card`
-  variant render as a discrete fullscreen moment before DefusePlacement
-  opens, or does it visually blur into the sheet's hero card? Real-device
-  eyeball decides patch (Option B — visual break) vs. rip-out (Option A —
-  eager-load + bundle-budget check).
 
 Remaining ⏸ rows in `E2E-ISSUE-LIST` (C-13, C-15, C-16-19) are blocked
 on product/asset decisions — surface in a visual review.

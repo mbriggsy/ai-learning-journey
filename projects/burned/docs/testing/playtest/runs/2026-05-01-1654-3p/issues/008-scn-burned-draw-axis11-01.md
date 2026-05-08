@@ -1,7 +1,7 @@
 # 008-scn-burned-draw-axis11-01 — ACTOR drama beat absent or imperceptible before DefusePlacement sheet
 
 **Severity (triage):** P2
-**Status:** 🔴 OPEN
+**Status:** ✅ RESOLVED-NO-FIX (2026-05-08)
 **Seed kind:** scripted-scenario
 **Source seats:** seat-1
 **Linked scenarios:** SCN-BURNED-DRAW-AXIS11-01 (catalog: SCN-BURNED-DRAW-AUTO-DEFUSE-01)
@@ -62,6 +62,49 @@ The catalog entry's "Why this matters" section calls this "the canonical 'escape
 ## Recommended next step
 
 Option C: confirm on a real device whether the DramaOverlay `card` beat is visually absent or present-but-conflated with the DefusePlacement hero card, then route to A or B accordingly.
+
+## Resolution — 2026-05-08
+
+Closed via Option C from the recommended next step (real-device
+eye-in-loop verification before A-vs-B fork). Briggsy ran the
+forced-state harness in a real phone-viewport browser tab via the
+dev console:
+
+```js
+const base = s => ({
+  ...s, phase: 'playing', myPlayerId: 'self',
+  players: [{id:'self', name:'You', color:'teal', cardCount:1, isAlive:true, isConnected:true}],
+  myHand: [{id:'h1', type:'reassign'}],
+  currentTurn: { currentPlayerId: 'self', turnsRemaining: 1 },
+  drawPileCount: 20,
+});
+window.__gameStore.applyOptimistic(base);
+setTimeout(() => {
+  window.__testInjectEvent({type:'burned-drawn', playerId:'self'});
+  window.__gameStore.applyOptimistic(s => ({...base(s), pendingPrompt:{type:'defuse', playerId:'self'}}));
+}, 250);
+```
+
+**Eyeball verdict: Option (a) — distinct moments, no blur.**
+The DramaOverlay BURNED card-flip plays as a discrete fullscreen
+moment, briefly showing the arena/staging between, THEN the
+DefusePlacement sheet rises. The transition reads with a clear
+visual break — Hypothesis 2 (visual conflation between drama-beat
+hero card and sheet hero card) is rejected.
+
+Hypothesis 1 (lazy-load race) is also implicitly cleared — if the
+DramaOverlay chunk hadn't loaded, the burned-drawn event would have
+fallen through to no beat at all. The card-flip rendered cleanly,
+which means the chunk was mounted before the event fired.
+
+The agent's original "no drama beat visible" report was a perception
+artifact, consistent with the broader pattern documented in
+`memory/feedback-eye-in-loop-beats-calibration-for-motion.md` —
+calibration agents poll DOM state and can't FEEL motion the way a
+real-device viewer can.
+
+No code change. The cinematic was working as designed; the agent's
+self-report was wrong.
 
 ---
 

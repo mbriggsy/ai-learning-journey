@@ -16,9 +16,15 @@ playwright-report/
 !.env.example
 
 # Playtest harness session dirs — rolling retention, diagnostic artifacts.
+# Logs, screenshots, events.jsonl etc. stay gitignored. Triage issue
+# summaries (issues/*.md, INDEX.md) ARE tracked — institutional record
+# of resolved-by-side-effect closures, surviving `pnpm playtest:purge`.
 # See scripts/playtest/README.md §3.
 docs/testing/playtest/runs/**
 !docs/testing/playtest/runs/.gitkeep
+!docs/testing/playtest/runs/*/
+!docs/testing/playtest/runs/*/issues/
+!docs/testing/playtest/runs/*/issues/*.md
 
 # Playtest harness selftest stamp — per-machine timestamp, not source.
 .last-selftest

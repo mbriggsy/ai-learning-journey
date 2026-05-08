@@ -463,6 +463,123 @@
   animation: joinScreenDots var(--motion-duration-dots) steps(4, end) infinite;
 }
 
+/* Mission briefing panel — mirrors the board's left case banner so phone
+   + board read the same operation. Same vocabulary as the .rosterPanel
+   below (paper-card on faded surface) so the joined screen reads as a
+   stack of in-universe surfaces, not three different design eras.
+   E2E audit C-19 fill. */
+.briefingPanel {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-1);
+  padding: var(--space-4);
+  background: color-mix(in oklab, var(--color-bg-surface) 70%, transparent);
+  border: 1px solid color-mix(in oklab, var(--color-accent-drama) 14%, transparent);
+  border-radius: 3px;
+}
+
+.briefingLabel {
+  font-family: var(--font-mono);
+  font-size: var(--text-caption);
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: 0.22em;
+  color: color-mix(in oklab, var(--color-accent-drama) 82%, transparent);
+  margin: 0;
+}
+
+.briefingOperation {
+  font-family: var(--font-display);
+  font-weight: 900;
+  font-size: clamp(1.5rem, 0.8rem + 4vw, 2.25rem);
+  letter-spacing: 0.02em;
+  color: var(--color-accent-burned);
+  text-transform: uppercase;
+  line-height: 1;
+  margin: var(--space-1) 0 0;
+}
+
+.briefingSub {
+  font-family: var(--font-mono);
+  font-size: var(--text-caption);
+  font-weight: 600;
+  letter-spacing: 0.18em;
+  text-transform: uppercase;
+  color: color-mix(in oklab, var(--color-cream-11) 70%, transparent);
+  margin: var(--space-1) 0 0;
+}
+
+.briefingDivider {
+  height: 1px;
+  background: linear-gradient(
+    90deg,
+    color-mix(in oklab, var(--color-accent-burned) 50%, transparent) 0%,
+    color-mix(in oklab, var(--color-accent-burned) 20%, transparent) 30%,
+    transparent 100%
+  );
+  margin: var(--space-2) 0;
+}
+
+.briefingFooter {
+  font-family: var(--font-body);
+  font-size: var(--text-caption);
+  color: color-mix(in oklab, var(--color-cream-11) 65%, transparent);
+  margin: 0;
+  letter-spacing: 0.04em;
+}
+
+.briefingFooter strong {
+  font-weight: 700;
+  color: color-mix(in oklab, var(--color-cream-11) 88%, transparent);
+}
+
+/* Channel ticker — cycling on-air signal at the bottom of the joined
+   screen. Mirrors DossierFeed.tsx's ChannelTicker on the board so phone
+   + board read the same live-channel ambient layer. `margin-top: auto`
+   inside .joinedContainer's flex column claims the remaining vertical
+   space, planting the ticker at the bottom regardless of how much
+   intermediate content (briefing + roster) is visible. The flex 1 +
+   min-width 0 + ellipsis pattern on .channelTickerLine is the same C-12
+   trick — at narrow phone widths "// AWAITING TRANSMISSION" exceeds the
+   ticker's flex band and would otherwise paint past the cursor.
+   E2E audit C-19 ambient fill. */
+.channelTicker {
+  display: flex;
+  align-items: baseline;
+  gap: 6px;
+  margin-top: auto;
+  padding-top: var(--space-3);
+  border-top: 1px solid color-mix(in oklab, var(--color-accent-burned) 16%, transparent);
+  font-family: var(--font-mono);
+  font-size: var(--text-caption);
+  font-weight: 600;
+  letter-spacing: 0.22em;
+  text-transform: uppercase;
+  color: color-mix(in oklab, var(--color-cream-11) 55%, transparent);
+}
+
+.channelTickerLine {
+  flex: 1 1 auto;
+  min-width: 0;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  opacity: 0.78;
+}
+
+.channelTickerCursor {
+  display: inline-block;
+  width: 0.6em;
+  color: var(--color-accent-burned);
+  font-weight: 700;
+  animation: joinChannelCursorBlink var(--motion-duration-essential-spin) var(--motion-ease-base) infinite;
+}
+
+@keyframes joinChannelCursorBlink {
+  0%, 49%   { opacity: 1; }
+  50%, 100% { opacity: 0; }
+}
+
 /* Active Operatives panel */
 .rosterPanel {
   display: flex;

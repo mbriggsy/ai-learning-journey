@@ -52,9 +52,10 @@ covering Intel Briefing + Falsify Intel against deck sizes 0/1/2.
 
 **Truly-open 🔴 rows after sweep: 0.** All P0 / P1 / P2 audit rows from
 the 2026-04-23 audit are now closed (🟢 / 📋 / ⏸ / 🏷). The remaining ⏸
-rows (C-13, C-15, C-17-19) are blocked on product/asset decisions, not
-engineering. (C-16 was structurally subsumed by the C-10 fix — same
-browser-notification symptom, one structural resolution.)
+rows (C-13, C-15, C-17, C-18) are blocked on product/asset decisions,
+not engineering. (C-16 was structurally subsumed by the C-10 fix; C-19
+shipped a Mission Briefing panel + Channel Ticker on the JoinScreen
+joined state.)
 
 **C-21 closure 2026-05-07:** measurement re-test via chrome-devtools-mcp
 confirmed C-21 was resolved by side-effect of `308bbdbf` (2026-04-27,
@@ -240,7 +241,7 @@ appears on paper.
 | **C-16** | Nope countdown bar color/shape reads as browser notification not spy thriller. **Resolved by the C-10 fix in `b0885de3` (2026-05-07).** Same browser-notification symptom, same structural root cause. The C-10 closure repositioned the bar from the table grid's first auto row (thin teal stripe stretched across the top of the viewport — the literal browser-banner spot) to an absolute-positioned wrapper anchored centered below the arena, AND reframed it as a transmission band: dark surface, intercept-teal border + glow + inset cream highlight, `// Intercept Window` mono-caps label with tabular-num timer in the header row, contracting fill bar below. Color stayed teal-accent-intercept (system-wide intercept token, deliberate consistency); shape went from "flat horizontal stripe" to "framed transmission window with internal structure." Verification screenshots in `temp/c10-nope-bar-after-1920.png` (1920×1080) and `temp/c10-nope-bar-after-1280.png` (1280×720). | 🟢 |
 | **C-17** | GameOver screen is visually anonymous vs the Briefing Room arena — climax moment is the weakest surface | ⏸ |
 | **C-18** | EliminatedView phone screen drops all Archer vocabulary | ⏸ |
-| **C-19** | JoinScreen "joined" state has 450-550px of empty space below dossier — reads like half-loaded | ⏸ |
+| **C-19** | JoinScreen "joined" state has 450-550px of empty space below dossier — reads like half-loaded. **Shipped 2026-05-07 (this commit)** — Mission Briefing panel + cycling Channel Ticker added below the operative dossier card. Briefing panel mirrors the board's left case banner: `// Briefing` label + `BURNED` (cordovan-display) + `Case File 47-B · Mayfair` + divider + `Briefed by M.` Channel ticker mirrors DossierFeed's `ChannelTicker` (cycles `CHANNEL OPEN` / `STANDING BY` / `AWAITING TRANSMISSION` / `INTERCEPT CLEAR` every 2.5s, blinking cordovan cursor) and is pinned to the bottom via `margin-top: auto` on the flex column. The flex 1 + min-width 0 + ellipsis pattern on `.channelTickerLine` is the same C-12 trick — at 360×640 the longest line ("// AWAITING TRANSMISSION") would otherwise paint past the cursor. Phone now reads the same case file as the board: when Briggsy plays at the table, the phone literally shows the same operation he's looking at on the TV. Verified visually at 390×844 and 360×640 (joined-as-only-operative state — the most empty-prone case). | 🟢 |
 
 ### D (input) — 10
 

@@ -4,6 +4,32 @@ import { useLastError } from '@client/shared/gameStore'
 import { PlayerIcon } from '@client/shared/PlayerIcon'
 import styles from './JoinScreen.module.css'
 
+// Cycling ambient on-air signal — mirrors DossierFeed.tsx's ChannelTicker
+// vocabulary so phone + board read the same "live channel" layer. C-19
+// fill for the empty space below the dossier on the joined screen.
+const IDLE_LINES = [
+  'CHANNEL OPEN',
+  'STANDING BY',
+  'AWAITING TRANSMISSION',
+  'INTERCEPT CLEAR',
+] as const
+
+function ChannelTicker() {
+  const [idx, setIdx] = useState(0)
+  useEffect(() => {
+    const id = setInterval(() => {
+      setIdx(i => (i + 1) % IDLE_LINES.length)
+    }, 2500)
+    return () => clearInterval(id)
+  }, [])
+  return (
+    <div className={styles.channelTicker} aria-hidden="true">
+      <span className={styles.channelTickerLine}>// {IDLE_LINES[idx]}</span>
+      <span className={styles.channelTickerCursor}>_</span>
+    </div>
+  )
+}
+
 interface LobbyPlayer {
   readonly id: string
   readonly name: string
@@ -134,6 +160,18 @@ export function JoinScreen({ connectionStatus, assignedColor, onJoin, roomCode, 
           </p>
         </section>
 
+        {/* Mission Briefing — mirrors the board's left case banner so the
+            phone and board read the same operation. Sits between the
+            operative dossier card and the active-operatives roster (or
+            alone, when the joiner is the first checked in). C-19 fill. */}
+        <section className={styles.briefingPanel} aria-label="Mission briefing">
+          <p className={styles.briefingLabel}>// Briefing</p>
+          <p className={styles.briefingOperation}>BURNED</p>
+          <p className={styles.briefingSub}>Case File 47-B · Mayfair</p>
+          <div className={styles.briefingDivider} />
+          <p className={styles.briefingFooter}>Briefed by <strong>M.</strong></p>
+        </section>
+
         {/* Active operatives panel */}
         {lobbyPlayers && lobbyPlayers.length > 1 && (
           <section className={styles.rosterPanel} aria-label="Active operatives">
@@ -151,6 +189,12 @@ export function JoinScreen({ connectionStatus, assignedColor, onJoin, roomCode, 
             </ul>
           </section>
         )}
+
+        {/* Channel ticker — cycling on-air signal pinned to the bottom of
+            the joined screen. Mirrors the board's DossierFeed ChannelTicker
+            "live channel" ambient layer. Uses `margin-top: auto` to claim
+            remaining vertical space inside .joinedContainer's flex column. */}
+        <ChannelTicker />
       </div>
     )
   }

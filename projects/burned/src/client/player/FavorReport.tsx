@@ -47,15 +47,21 @@ function reportFor(
 
 /**
  * Coercion-report overlay fired on BOTH the ACTOR's and TARGET's phones when
- * a Call in a Favor exchange resolves. Same paper vocabulary as StealReport
+ * a Call in a Favor exchange resolves. Paper vocabulary mirrors StealReport
  * (manila dispatch on cream paper, typewriter header, ochre asset strip,
- * rubber stamp, dog-ear flip) — different case number, different stamp text,
- * different stamp color per kind.
+ * dog-ear flip) — different case number, different verbs per kind.
  *
  * - kind='extracted' (ACTOR / receiver POV): "[TARGET] has surrendered [card]
- *   under coercion." Crimson EXTRACTED stamp.
+ *   under coercion."
  * - kind='surrendered' (TARGET / giver POV): "[ACTOR] has extracted [card]
- *   from your bag." Amber SURRENDERED stamp.
+ *   from your bag."
+ *
+ * Stamp dropped 2026-05-08 alongside the StealReport stamp removal: the
+ * stealer-side `EXTRACTED` stamp shared a word with the BURNED game's
+ * survive-Burned-via-Extraction drama beat — same flavour of word
+ * collision the StealReport's `INTERCEPTED` stamp had. Body text alone
+ * carries the verdict ("has surrendered ... under coercion." /
+ * "has extracted ... from your bag.").
  *
  * Closes triage #010 Gap C — favor exchange used to read as a silent database
  * transaction on both phones; this beat is the cinematic counterpart to
@@ -169,10 +175,6 @@ export function FavorReport() {
                   ? 'under coercion.'
                   : 'from your bag.'}
               </p>
-            </div>
-
-            <div className={styles.stamp} aria-hidden="true">
-              {current.kind === 'extracted' ? 'Extracted' : 'Surrendered'}
             </div>
 
             <div className={styles.footerRule} aria-hidden="true" />

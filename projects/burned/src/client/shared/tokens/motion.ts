@@ -11,7 +11,7 @@ import type { Transition, Easing } from 'motion/react'
 // Key unions — single source of truth.
 export const DURATION_NAMES = [
   'fast', 'base', 'slow', 'dramatic',
-  'dots', 'ambient', 'pulse', 'pulseSlow', 'stamp',
+  'dots', 'ambient', 'pulse', 'pulseSlow',
   'essentialPulse', 'essentialSpin', 'essentialFlash',
 ] as const
 export type DurationName = typeof DURATION_NAMES[number]
@@ -45,12 +45,6 @@ export const MOTION_DURATIONS = {
   ambient:        4.0,
   pulse:          1.4,
   pulseSlow:      2.5,
-  // Single-consumer bespoke: StealReport rubber-stamp thunk. Paired with the
-  // `overshoot` easing below and a 60%-keyframe squish to read as a physical
-  // stamp impact. Shorter than `slow` (400ms) so the ack dispatch lands before
-  // the reader's eye rests; longer than `base` (250ms) so the overshoot curve
-  // has room to breathe.
-  stamp:          0.34,
 
   // Essential — survives prefers-reduced-motion. Spinners tuned to 0.7s
   // (Emil's perceived-speed rule: faster spin = faster-feeling app).

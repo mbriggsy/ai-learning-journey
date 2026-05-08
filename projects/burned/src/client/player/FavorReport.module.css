@@ -2,11 +2,16 @@
    Coercion-report overlay — fired on BOTH the ACTOR's and TARGET's phones
    when a Call in a Favor exchange resolves. Same dispatch vocabulary as
    StealReport (cream paper, typewriter header, ochre asset strip,
-   rubber stamp, dog-ear flip) — different case number (47-D for "Duress"),
-   different stamp text + color per kind:
+   dog-ear flip) — different case number (47-D for "Duress"). Body text
+   carries the verdict per kind:
 
-   - kind='extracted' (ACTOR / receiver): crimson EXTRACTED stamp.
-   - kind='surrendered' (TARGET / giver): amber SURRENDERED stamp.
+   - kind='extracted' (ACTOR / receiver): "has surrendered ... under coercion."
+   - kind='surrendered' (TARGET / giver): "has extracted ... from your bag."
+
+   Stamp dropped 2026-05-08 alongside the StealReport stamp removal —
+   the EXTRACTED text collided with the BURNED game's survive-Burned
+   drama beat (same word-collision pattern as the INTERCEPTED stamp on
+   StealReport). Body text + ack button alone carry the dispatch.
 
    Persistent until ACKNOWLEDGE — closes triage #010 Gap C.
 
@@ -65,8 +70,9 @@
   padding: var(--space-5) var(--space-5) var(--space-4);
   border-radius: 2px;
   /* Stock-tab edge color tracks kind — crimson for extracted (trophy),
-     amber for surrendered (loss). Mirrors the stamp color so the paper
-     reads with the same intent as the rubber-stamp verdict. */
+     amber for surrendered (loss). Once carried the rubber-stamp verdict;
+     stamp dropped 2026-05-08 but the kind-tracked edge color remains as
+     the paper's at-a-glance kind signal (data-kind variant below). */
   border-left: 6px solid var(--color-accent-burned);
   box-shadow:
     inset 0 0 0 1px color-mix(in oklab, var(--color-ochre-6) 45%, transparent),
@@ -200,40 +206,6 @@
   color: color-mix(in oklab, var(--color-charcoal-1) 82%, transparent);
 }
 
-/* ─── Rubber stamp ─── */
-
-.stamp {
-  position: absolute;
-  top: var(--space-4);
-  right: calc(-1 * var(--space-2));
-  padding: 6px 14px 8px;
-  font-family: var(--font-mono);
-  font-weight: 900;
-  font-size: calc(var(--text-caption) * 1.1);
-  letter-spacing: 0.3em;
-  text-transform: uppercase;
-  color: var(--color-cream-12);
-  background: var(--color-accent-burned);
-  border-radius: 1px;
-  transform: rotate(-7deg);
-  box-shadow:
-    inset 0 1px 0 color-mix(in oklab, var(--color-cream-12) 22%, transparent),
-    inset 0 -1px 0 color-mix(in oklab, var(--color-charcoal-1) 40%, transparent),
-    0 2px 5px color-mix(in oklab, var(--color-charcoal-1) 55%, transparent);
-  animation: stampThunk var(--motion-duration-stamp) var(--motion-ease-overshoot) 0.32s both;
-}
-
-/* Surrendered variant — amber stamp, reads as the loss instead of the trophy */
-.paper[data-kind='surrendered'] .stamp {
-  background: var(--color-accent-drama);
-}
-
-@keyframes stampThunk {
-  0%   { transform: rotate(-2deg) scale(2.1); opacity: 0; }
-  60%  { transform: rotate(-8deg) scale(0.95); opacity: 1; }
-  100% { transform: rotate(-7deg) scale(1); opacity: 1; }
-}
-
 /* ─── Footer ─── */
 
 .footerRule {
@@ -332,10 +304,6 @@
   border-radius: 0 0 2px 0;
   pointer-events: none;
   filter: drop-shadow(-1px -1px 1px color-mix(in oklab, var(--color-charcoal-1) 25%, transparent));
-}
-
-@media (prefers-reduced-motion: reduce) {
-  .stamp { animation: none; }
 }
 
 } /* @layer components */

@@ -1172,7 +1172,7 @@ describe('runSession — coverage wiring', () => {
 
     const md = await fs.readFile(path.join(result.runDir, 'coverage.md'), 'utf8')
     expect(md).toContain('# Coverage report')
-    expect(md).toContain('Fired: 1 / target: 1')
+    expect(md).toContain('Fired: 1 / per-run target: 1')
     expect(md).toContain('## 7×2 info-gap grid')
     // Presence companion: the rendered grid actually counted SCN-A under
     // SERVER column 1.
@@ -1218,15 +1218,15 @@ describe('runSession — coverage wiring', () => {
     )
 
     const md = await fs.readFile(path.join(result.runDir, 'coverage.md'), 'utf8')
-    // 1 fire vs threshold 6 → primary gate fails, but custom threshold
+    // 1 fire vs threshold 6 → per-run gate fails, but custom threshold
     // shows up verbatim in the banner.
-    expect(md).toContain('Fired: 1 / target: 6')
+    expect(md).toContain('Fired: 1 / per-run target: 6')
     expect(md).toContain('UNDER-COVERED')
-    // Presence companion: the default threshold (50) is NOT used.
-    expect(md).not.toContain('target: 50')
+    // Presence companion: the default per-run threshold (15) is NOT used.
+    expect(md).not.toContain('per-run target: 15')
   })
 
-  it('omitted coverageThreshold defaults to 50 in the rendered banner', async () => {
+  it('omitted coverageThreshold defaults to 15 (per-run) in the rendered banner', async () => {
     const log: SpyLog = { events: [] }
     const { deps } = buildHappyDeps(log)
     const loadCatalog = vi.fn(async () => [fakeScenario('SCN-A')])
@@ -1239,7 +1239,9 @@ describe('runSession — coverage wiring', () => {
     })
 
     const md = await fs.readFile(path.join(result.runDir, 'coverage.md'), 'utf8')
-    expect(md).toContain('Fired: 1 / target: 50')
+    expect(md).toContain('Fired: 1 / per-run target: 15')
+    // Series target line surfaces the cumulative bar separately.
+    expect(md).toContain('Series target (cumulative across runs): 50')
   })
 
   it('loadCatalog throwing falls back to empty catalog (session still completes)', async () => {
@@ -1287,7 +1289,7 @@ describe('runSession — coverage wiring', () => {
     expect(result.outcome).toBe('success')
     expect(logLines.some((l) => /detectFires failed/.test(l))).toBe(true)
     const md = await fs.readFile(path.join(result.runDir, 'coverage.md'), 'utf8')
-    expect(md).toContain('Fired: 0 / target: 50')
+    expect(md).toContain('Fired: 0 / per-run target: 15')
   })
 
   it('detectFires receives the real catalogPath + per-seat log paths', async () => {

@@ -1,6 +1,6 @@
 /**
  * Coverage reporter — renders `coverage.md` as the phase-1 D5 /
- * phase-3 D13 7×2 info-gap grid with PRD §8.2 absolute ≥50 gate AND
+ * phase-3 D13 7×2 info-gap grid with per-run pass gate (default ≥15) AND
  * phase-3 B5 / D13.1 secondary no-zero-cell gate.
  *
  * Phase 3 Unit 10. Pure consumer of Unit 9's `FireRecord[]` + catalog's
@@ -45,19 +45,46 @@ export interface CoverageReportInput {
     readonly notes: string
   }>
   /**
-   * Distinct-fired threshold for the primary gate. Default 50 (PRD §8.2,
-   * revised 2026-04-23). Calibration / mini-catalog runs override via
-   * `Config.coverageThreshold` so the gate is reachable on a 6-scenario
-   * fixture. Must be a positive integer when provided.
+   * Per-run distinct-fired threshold for the run-level pass gate.
+   * Default 15 (Briggsy 2026-05-08). A 3-player production run typically
+   * fires 18-25 distinct scenarios; 15 leaves headroom for run-to-run
+   * variance without flagging realistic single-run coverage as a
+   * shortfall. Calibration / mini-catalog runs override via
+   * `Config.coverageThreshold` (calibration.json sets 1 so the gate is
+   * reachable on a 6-scenario fixture). Must be a positive integer
+   * when provided.
    */
   readonly coverageThreshold?: number
+  /**
+   * Series-level distinct-fired target — the cumulative bar across
+   * multiple runs in a series (e.g. a series of 3-4 production runs at
+   * the same player count). Default 50 (PRD §8.2, revised 2026-04-23).
+   * Informational only at the per-run level; surfaced in the rendered
+   * coverage.md so operators can track contribution toward the
+   * series target across runs. Series-level rollup tracking is a
+   * future feature; for now this is documentation, not an enforced
+   * gate. Must be a positive integer when provided.
+   */
+  readonly seriesTarget?: number
 }
 
 /**
- * PRD §8.2 default. Exported so callers (and tests) can reference the same
- * literal without re-declaring it.
+ * Per-run threshold default. The single-run pass gate.
+ * Briggsy 2026-05-08: 50 was treated as a per-run target which mismatched
+ * production-run reality (typical 3p runs fire 18-25). 15 leaves variance
+ * room without misreporting realistic coverage as a failure. Series
+ * cumulative target lives in `DEFAULT_SERIES_TARGET`.
  */
-export const DEFAULT_COVERAGE_THRESHOLD = 50
+export const DEFAULT_COVERAGE_THRESHOLD = 15
+
+/**
+ * Series-level cumulative target. Informational at per-run level — surfaced
+ * in coverage.md so operators see how each run contributes to the series
+ * total. Pre-2026-05-08 this was conflated with the per-run threshold,
+ * which produced "UNDER-COVERED — primary (≥50) failed: 18" verdicts on
+ * runs that actually achieved their per-run sub-target.
+ */
+export const DEFAULT_SERIES_TARGET = 50
 
 const ALL_ROLES: readonly ViewerRole[] = [
   'SERVER',
@@ -79,6 +106,7 @@ export function buildCoverageReport(input: CoverageReportInput): CoverageReport 
   const firedByViewportIn = input.firedByViewport ?? {}
   const columnDivergences = input.columnDivergences ?? []
   const threshold = input.coverageThreshold ?? DEFAULT_COVERAGE_THRESHOLD
+  const seriesTarget = input.seriesTarget ?? DEFAULT_SERIES_TARGET
 
   const byId = new Map<string, ParsedScenario>()
   for (const s of catalog) byId.set(s.id, s)
@@ -90,7 +118,7 @@ export function buildCoverageReport(input: CoverageReportInput): CoverageReport 
 
   // Dedup fires by scenarioId, exclude `no-fire`, exclude known-product-calls
   // (phase-1 D4: known-product-call fires surfaced separately, not counted
-  // toward ≥50).
+  // toward the per-run gate).
   const firedIds = new Set<string>()
   const firedKnownProductCalls = new Set<string>()
   for (const fr of fires) {
@@ -190,6 +218,7 @@ export function buildCoverageReport(input: CoverageReportInput): CoverageReport 
   return {
     firedCount,
     threshold,
+    seriesTarget,
     gridCells,
     zeroCellCount,
     passed,
@@ -216,7 +245,12 @@ export function renderCoverageMd(
   const verdict = renderVerdict(report)
   out.push('# Coverage report')
   out.push('')
-  out.push(`**Fired: ${report.firedCount} / target: ${report.threshold}** — ${verdict}`)
+  out.push(
+    `**Fired: ${report.firedCount} / per-run target: ${report.threshold}** — ${verdict}`,
+  )
+  out.push(
+    `Series target (cumulative across runs): ${report.seriesTarget} — this run contributes ${report.firedCount}.`,
+  )
   out.push(`Zero cells: ${report.zeroCellCount} / 14`)
   out.push(`With-divergence fires: ${withDivergenceCount}`)
   out.push('')
@@ -356,7 +390,7 @@ export function renderCoverageMd(
     out.push('_None fired this run._')
   } else {
     out.push(
-      '_These scenarios fired but are tagged as known product calls; suppressed from the ≥50 gate per phase-1 D4._',
+      '_These scenarios fired but are tagged as known product calls; suppressed from the per-run gate per phase-1 D4._',
     )
     for (const id of report.knownProductCalls) out.push(`- ${id}`)
   }
@@ -369,7 +403,9 @@ function renderVerdict(report: CoverageReport): string {
   if (report.passed) return 'PASS'
   const fails: string[] = []
   if (report.firedCount < report.threshold) {
-    fails.push(`primary (≥${report.threshold}) failed: ${report.firedCount}`)
+    fails.push(
+      `per-run (≥${report.threshold}) failed: ${report.firedCount}`,
+    )
   }
   if (report.zeroCellCount > 0) {
     fails.push(`secondary (no-zero-cell) failed: ${report.zeroCellCount}/14 zero`)

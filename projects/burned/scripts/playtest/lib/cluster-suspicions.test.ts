@@ -102,6 +102,7 @@ function emptyCoverage(
   return {
     firedCount: 0,
     threshold: 50,
+    seriesTarget: 50,
     gridCells: EMPTY_GRID,
     zeroCellCount: 14,
     passed: false,

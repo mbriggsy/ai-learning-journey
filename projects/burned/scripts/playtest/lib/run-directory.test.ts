@@ -56,7 +56,8 @@ function makeResult(overrides: Partial<SessionReport> = {}): SessionReport {
     outcome: 'success',
     coverage: {
       firedCount: 55,
-      threshold: 50,
+      threshold: 15,
+      seriesTarget: 50,
       gridCells: {
         SERVER: { column1: 5, column2: 5, scenarioIds: [] },
         ACTOR: { column1: 5, column2: 5, scenarioIds: [] },

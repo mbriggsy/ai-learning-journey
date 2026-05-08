@@ -289,11 +289,20 @@ export interface CoverageReport {
   /** Absolute count of distinct catalog scenarios fired. PRD §8.2 gate. */
   readonly firedCount: number
   /**
-   * Distinct-fired threshold for `passed`. Defaults to 50 (PRD §8.2 revised
-   * 2026-04-23) but is configurable via `Config.coverageThreshold` so a
-   * mini-catalog calibration run (6 scenarios) can use a smaller floor.
+   * Per-run distinct-fired threshold for `passed`. Defaults to 15
+   * (Briggsy 2026-05-08 — production 3p runs typically fire 18-25).
+   * Configurable via `Config.coverageThreshold` so a mini-catalog
+   * calibration run (6 scenarios) can use a smaller floor (=1).
    */
   readonly threshold: number
+  /**
+   * Series-level cumulative target — informational at per-run level,
+   * surfaced in coverage.md for operator tracking. Defaults to 50.
+   * Pre-2026-05-08 this was conflated with the per-run threshold,
+   * producing "UNDER-COVERED" verdicts on runs that hit their
+   * realistic per-run sub-target.
+   */
+  readonly seriesTarget: number
   /** 7 rows × 2 columns = 14 cells. */
   readonly gridCells: Record<
     ViewerRole,
@@ -301,7 +310,7 @@ export interface CoverageReport {
   >
   /** Count of cells (out of 14) with zero fires. Secondary gate (B5). */
   readonly zeroCellCount: number
-  /** `firedCount >= 50 && zeroCellCount === 0`. */
+  /** `firedCount >= threshold && zeroCellCount === 0` — per-run gate. */
   readonly passed: boolean
   /** Scenario IDs fired under each viewport label (e.g. '390x844'). */
   readonly firedByViewport: Record<string, string[]>

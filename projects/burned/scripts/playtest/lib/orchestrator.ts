@@ -373,6 +373,7 @@ function emptyCoverageReport(threshold: number): CoverageReport {
   return {
     firedCount: 0,
     threshold,
+    seriesTarget: 50,
     gridCells: {
       SERVER: { ...emptyCell, scenarioIds: [] },
       ACTOR: { ...emptyCell, scenarioIds: [] },

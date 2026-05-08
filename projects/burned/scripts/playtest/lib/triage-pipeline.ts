@@ -280,7 +280,8 @@ function emptyCoverageReport(): CoverageReport {
   const cell = { column1: 0, column2: 0, scenarioIds: [] as string[] }
   return {
     firedCount: 0,
-    threshold: 50,
+    threshold: 15,
+    seriesTarget: 50,
     gridCells: {
       SERVER: { ...cell, scenarioIds: [] },
       ACTOR: { ...cell, scenarioIds: [] },

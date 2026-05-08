@@ -102,11 +102,11 @@ function makeInput(overrides: Partial<CoverageReportInput> = {}): CoverageReport
 
 // --- buildCoverageReport ---------------------------------------------------
 
-describe('buildCoverageReport — primary ≥50 gate (PRD §8.2)', () => {
-  it('50 fires, every scenario has full info-gap → passes primary AND secondary', () => {
+describe('buildCoverageReport — per-run pass gate (Briggsy 2026-05-08)', () => {
+  it('20 fires, every scenario has full info-gap → passes per-run AND secondary', () => {
     const catalog: ParsedScenario[] = []
     const fires: FireRecord[] = []
-    for (let i = 0; i < 50; i++) {
+    for (let i = 0; i < 20; i++) {
       const id = `SCN-X-${String(i).padStart(3, '0')}`
       catalog.push(scenario(id, { infoGap: FULL_GAP }))
       fires.push(fire(id))
@@ -114,18 +114,19 @@ describe('buildCoverageReport — primary ≥50 gate (PRD §8.2)', () => {
 
     const report = buildCoverageReport(makeInput({ catalog, fires }))
 
-    expect(report.firedCount).toBe(50)
+    expect(report.firedCount).toBe(20)
     expect(report.zeroCellCount).toBe(0)
+    // 20 ≥ 15 (per-run default) → pass.
     expect(report.passed).toBe(true)
     // Presence companion: grid actually populated.
-    expect(report.gridCells.SERVER.column1).toBe(50)
-    expect(report.gridCells.BOARD.column2).toBe(50)
+    expect(report.gridCells.SERVER.column1).toBe(20)
+    expect(report.gridCells.BOARD.column2).toBe(20)
   })
 
-  it('48 fires with full info-gap → primary fails even though zeroCellCount === 0', () => {
+  it('14 fires with full info-gap → per-run fails even though zeroCellCount === 0', () => {
     const catalog: ParsedScenario[] = []
     const fires: FireRecord[] = []
-    for (let i = 0; i < 48; i++) {
+    for (let i = 0; i < 14; i++) {
       const id = `SCN-X-${i}`
       catalog.push(scenario(id, { infoGap: FULL_GAP }))
       fires.push(fire(id))
@@ -133,17 +134,23 @@ describe('buildCoverageReport — primary ≥50 gate (PRD §8.2)', () => {
 
     const report = buildCoverageReport(makeInput({ catalog, fires }))
 
-    expect(report.firedCount).toBe(48)
+    expect(report.firedCount).toBe(14)
     expect(report.zeroCellCount).toBe(0)
+    // 14 < 15 (per-run default) → fail.
     expect(report.passed).toBe(false)
   })
 })
 
 describe('buildCoverageReport — coverageThreshold configurability', () => {
-  it('omitted threshold defaults to PRD §8.2 (DEFAULT_COVERAGE_THRESHOLD === 50)', () => {
-    expect(DEFAULT_COVERAGE_THRESHOLD).toBe(50)
+  it('omitted threshold defaults to per-run target (DEFAULT_COVERAGE_THRESHOLD === 15)', () => {
+    expect(DEFAULT_COVERAGE_THRESHOLD).toBe(15)
     const report = buildCoverageReport(makeInput())
-    expect(report.threshold).toBe(50)
+    expect(report.threshold).toBe(15)
+  })
+
+  it('omitted seriesTarget defaults to 50 (cumulative across runs)', () => {
+    const report = buildCoverageReport(makeInput())
+    expect(report.seriesTarget).toBe(50)
   })
 
   it('custom threshold flows through report.threshold and gate logic', () => {
@@ -163,7 +170,7 @@ describe('buildCoverageReport — coverageThreshold configurability', () => {
     expect(report.passed).toBe(true)
   })
 
-  it('boundary: firedCount one below custom threshold fails the primary gate', () => {
+  it('boundary: firedCount one below custom threshold fails the per-run gate', () => {
     const catalog: ParsedScenario[] = []
     const fires: FireRecord[] = []
     for (let i = 0; i < 5; i++) {
@@ -178,7 +185,7 @@ describe('buildCoverageReport — coverageThreshold configurability', () => {
     expect(report.threshold).toBe(6)
     // Secondary gate also fails (5 fires don't cover all 14 cells via FULL_GAP
     // — wait, 5 fires × FULL_GAP DO cover all 14 cells). So the failure here
-    // is purely the primary gate.
+    // is purely the per-run gate.
     expect(report.zeroCellCount).toBe(0)
     expect(report.passed).toBe(false)
   })
@@ -195,16 +202,21 @@ describe('buildCoverageReport — coverageThreshold configurability', () => {
     expect(report.passed).toBe(true)
   })
 
-  it('renderCoverageMd banner reflects custom threshold (not the 50 default)', () => {
+  it('renderCoverageMd banner reflects custom threshold and series target', () => {
     const catalog = [scenario('SCN-A', { infoGap: FULL_GAP })]
     const fires = [fire('SCN-A')]
     const report = buildCoverageReport(
       makeInput({ catalog, fires, coverageThreshold: 6 }),
     )
     const md = renderCoverageMd(report, fires, catalog)
-    expect(md).toContain('Fired: 1 / target: 6')
-    // Presence companion: the default of 50 must NOT leak into the banner.
-    expect(md).not.toContain('target: 50')
+    // Custom threshold appears as the per-run target.
+    expect(md).toContain('Fired: 1 / per-run target: 6')
+    // Presence companion: the per-run default of 15 must NOT leak into the
+    // banner when a custom threshold is supplied. (50 still appears as the
+    // series target — that's a separate field; surfacing it is intentional.)
+    expect(md).not.toContain('per-run target: 15')
+    // Series target line surfaces the cumulative bar.
+    expect(md).toContain('Series target (cumulative across runs): 50')
   })
 })
 
@@ -429,6 +441,7 @@ describe('renderCoverageMd — summary banner', () => {
     const report: CoverageReport = {
       firedCount: 55,
       threshold: 50,
+      seriesTarget: 50,
       gridCells: fullGridOfOnes(),
       zeroCellCount: 0,
       passed: true,
@@ -439,7 +452,7 @@ describe('renderCoverageMd — summary banner', () => {
     }
 
     const md = renderCoverageMd(report)
-    expect(md).toContain('Fired: 55 / target: 50')
+    expect(md).toContain('Fired: 55 / per-run target: 50')
     expect(md).toContain('PASS')
     // Presence companion: no leakage of fail-only text.
     expect(md).not.toContain('UNDER-COVERED')
@@ -449,6 +462,7 @@ describe('renderCoverageMd — summary banner', () => {
     const report: CoverageReport = {
       firedCount: 30,
       threshold: 50,
+      seriesTarget: 50,
       gridCells: emptyGrid(),
       zeroCellCount: 14,
       passed: false,
@@ -460,7 +474,7 @@ describe('renderCoverageMd — summary banner', () => {
 
     const md = renderCoverageMd(report)
     expect(md).toContain('UNDER-COVERED')
-    expect(md).toContain('primary (≥50) failed: 30')
+    expect(md).toContain('per-run (≥50) failed: 30')
     expect(md).toContain('secondary (no-zero-cell) failed: 14/14 zero')
   })
 })
@@ -470,6 +484,7 @@ describe('renderCoverageMd — 7×2 grid + D5 column labels (regression test)', 
     const report: CoverageReport = {
       firedCount: 0,
       threshold: 50,
+      seriesTarget: 50,
       gridCells: emptyGrid(),
       zeroCellCount: 14,
       passed: false,
@@ -495,7 +510,8 @@ describe('renderCoverageMd — 7×2 grid + D5 column labels (regression test)', 
   it('highlights zero cells in bold', () => {
     const report: CoverageReport = {
       firedCount: 10,
-      threshold: 50,
+      threshold: 15,
+      seriesTarget: 50,
       gridCells: {
         ...emptyGrid(),
         SERVER: { column1: 10, column2: 10, scenarioIds: ['SCN-X'] },

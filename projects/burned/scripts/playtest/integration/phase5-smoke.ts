@@ -264,7 +264,8 @@ const FREE_PLAY_BUDGET: FreePlayBudget = {
 
 const SAMPLE_COVERAGE: CoverageReport = {
   firedCount: 1,
-  threshold: 50,
+  threshold: 15,
+  seriesTarget: 50,
   gridCells: {
     SERVER: { column1: 0, column2: 0, scenarioIds: [] },
     ACTOR: { column1: 0, column2: 0, scenarioIds: [] },

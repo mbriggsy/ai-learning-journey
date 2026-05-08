@@ -99,12 +99,13 @@ finished `outcome=success` with 18 fires + 40 triage seeds.
   `createTriageLauncherDriver` exists with the marker-wait loop, just
   isn't wired in. Wire it via a new opts.waitForTriageMarker flag when
   the operator skill `/playtest-run` is built.
-- 🟡 **§3.2 coverage threshold = 50 vs 18 fired** — **needs Briggsy.**
-  `coverage.md` says "FAILED — primary (≥50) failed: 18" while the run
-  outcome is "success". Real question: is 50 a realistic per-run target,
-  or a series target? Adjust threshold OR reframe the wording in
-  `scripts/playtest/lib/coverage-reporter.ts`. Engineering can't pick
-  without your call on what 50 represents.
+- ✅ **§3.2 coverage threshold semantics** — fixed in this session.
+  Briggsy verdict: 50 is a series-level cumulative target, not per-run.
+  `coverage-reporter.ts` now exposes two distinct fields: per-run
+  `threshold` (default 15) and `seriesTarget` (default 50, informational).
+  Banner reads "Fired: N / per-run target: 15 — PASS" plus a series
+  contribution line. The recent 18-fire run no longer reads as a
+  failure when the harness outcome is success.
 - ✅ **§3.3 viewport rotation** — fixed in `873d45e9`. Round-robin per
   seat via `i % viewports.length`. `viewportsExercised` derives from
   the actual seats array. New tests in `orchestrator.test.ts §8a`.

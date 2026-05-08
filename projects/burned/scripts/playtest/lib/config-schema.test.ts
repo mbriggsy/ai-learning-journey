@@ -150,10 +150,20 @@ describe('ConfigSchema — .strict() guards', () => {
 
   it('rejects typo like `nopeWindowMS` (case-sensitivity drift)', () => {
     const body = validBody()
-    // Drop the real key, add the misspelled one.
+    // Drop the real key, add the misspelled one. The real key is now
+    // optional (production-default fallthrough), so the dropped form
+    // alone parses fine — adding the misspelled neighbour must still
+    // be rejected by .strict() to catch silent typos.
     delete (body as { nopeWindowMs?: unknown }).nopeWindowMs
     const mutated = { ...body, nopeWindowMS: 300000 }
     expect(() => ConfigSchema.parse(mutated)).toThrow()
+  })
+
+  it('accepts omitted nopeWindowMs (production-default fallthrough)', () => {
+    const body = validBody()
+    delete (body as { nopeWindowMs?: unknown }).nopeWindowMs
+    const parsed = ConfigSchema.parse(body)
+    expect(parsed.nopeWindowMs).toBeUndefined()
   })
 
   it('rejects unknown field inside viewport entries', () => {

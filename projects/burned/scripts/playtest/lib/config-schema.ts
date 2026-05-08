@@ -45,7 +45,7 @@ export const ConfigSchema = z
     seats: z.number().int().min(2).max(10),
     seatNames: z.array(z.string().min(1)).optional(),
     seed: z.number().int().optional(),
-    nopeWindowMs: z.number().int().nonnegative(),
+    nopeWindowMs: z.number().int().nonnegative().optional(),
     sessionTimeoutMs: z.number().int().positive(),
     roomCode: z.string().min(1).optional(),
     catalogPath: z.string().min(1),

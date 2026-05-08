@@ -159,7 +159,10 @@ async function loadConfig(flags: CliFlags): Promise<Config> {
     seats: merged.seats ?? 4,
     seatNames: merged.seatNames,
     seed: merged.seed,
-    nopeWindowMs: merged.nopeWindowMs ?? 5000,
+    // Optional override. When omitted, harness sends `playtest-config`
+    // without it and the engine falls through to NOPE_WINDOW_MS in
+    // src/shared/constants.ts (production-bar runs).
+    nopeWindowMs: merged.nopeWindowMs,
     sessionTimeoutMs: merged.sessionTimeoutMs ?? 3_600_000,
     roomCode: merged.roomCode ?? mintRoomCode(),
     catalogPath: merged.catalogPath ?? 'docs/testing/playtest/SCENARIOS.md',

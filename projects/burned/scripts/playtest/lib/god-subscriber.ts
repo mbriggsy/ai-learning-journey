@@ -88,8 +88,13 @@ export interface ConnectGodArgs {
   readonly token: string
   /** Seed for `playtest-config`; undefined lets server roll its own. */
   readonly seed: number | undefined
-  /** Nope-window override in ms for `playtest-config`. */
-  readonly nopeWindowMs: number
+  /**
+   * Optional nope-window override in ms for `playtest-config`. Omitted
+   * = harness sends `playtest-config` without the field, server falls
+   * through to NOPE_WINDOW_MS tier defaults in
+   * `src/shared/constants.ts` (production-bar run).
+   */
+  readonly nopeWindowMs: number | undefined
   /** `'on'` = scrub, `'off'` = identity. */
   readonly scrubMode: 'on' | 'off'
   /** 64-hex session salt (from Unit 3b). Passed to scrub() on every call. */
@@ -599,9 +604,9 @@ export async function connectGod(args: ConnectGodArgs): Promise<GodHandle> {
   ws.on('open', () => {
     const configMsg: Record<string, unknown> = {
       type: 'playtest-config',
-      nopeWindowMs,
     }
     if (seed !== undefined) configMsg['seed'] = seed
+    if (nopeWindowMs !== undefined) configMsg['nopeWindowMs'] = nopeWindowMs
     ws.send(JSON.stringify(configMsg))
   })
 

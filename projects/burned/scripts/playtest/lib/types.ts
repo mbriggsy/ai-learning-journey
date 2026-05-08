@@ -158,7 +158,17 @@ export interface Config {
   readonly seats: number
   readonly seatNames?: string[]
   readonly seed?: number
-  readonly nopeWindowMs: number
+  /**
+   * Optional override for the engine's nope-window timer. When omitted,
+   * the harness sends `playtest-config` without this field and the
+   * server's engine falls through to the production tier defaults
+   * defined in `src/shared/constants.ts:NOPE_WINDOW_MS` — i.e. the
+   * harness plays the real game. Set this only when a session has a
+   * legitimate reason to deviate from production (e.g.
+   * `calibration.json` runs that intentionally measure agent-decision
+   * timing at a fixed window).
+   */
+  readonly nopeWindowMs?: number
   /**
    * Required per-config; no harness-side default. Caller sets
    * (e.g. Phase 6 series scales 60min + 10min/seat beyond 3; Phase 4 unit

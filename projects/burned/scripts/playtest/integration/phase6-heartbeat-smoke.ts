@@ -143,7 +143,6 @@ async function isStillPending<T>(promise: Promise<T>, ms: number): Promise<boole
 
 function buildConfig(roomCode: string): Config {
   const base = defaultConfig as {
-    nopeWindowMs: number
     catalogPath: string
     outputRoot: string
     viewports: { width: number; height: number; label: string }[]

@@ -230,6 +230,14 @@ describe('connectGod — handshake', () => {
     expect(msg).toEqual({ type: 'playtest-config', nopeWindowMs: 4000 })
   })
 
+  it('omits nopeWindowMs when undefined (production-default fallthrough)', async () => {
+    const h = makeHarness()
+    await connectGod(buildConnectArgs(h, { nopeWindowMs: undefined }))
+    h.ws.emit('open')
+    const msg = JSON.parse(h.ws.sends[0]!)
+    expect(msg).toEqual({ type: 'playtest-config', seed: 123 })
+  })
+
   it('fatal-aborts on playtest-config-ack ok:false', async () => {
     const h = makeHarness()
     const handle = await connectGod(buildConnectArgs(h))

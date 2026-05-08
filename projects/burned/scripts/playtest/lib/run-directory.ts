@@ -168,7 +168,7 @@ export async function writeSessionStart(
     SESSION_START_HEADING,
     '',
     `- seed: ${seedLine}`,
-    `- nopeWindowMs: ${config.nopeWindowMs}`,
+    `- nopeWindowMs: ${config.nopeWindowMs === undefined ? 'production-default (NOPE_WINDOW_MS)' : String(config.nopeWindowMs)}`,
     `- seats: ${config.seats}`,
     `- seat names: ${seatNames.length > 0 ? seatNames.join(', ') : '(unnamed)'}`,
     `- started-at: ${startedAt}`,

@@ -187,7 +187,6 @@ async function assertSessionMd(runDir: string): Promise<AssertionResult> {
 
 function buildConfig(): Config {
   const base = defaultConfig as {
-    nopeWindowMs: number
     catalogPath: string
     outputRoot: string
     viewports: { width: number; height: number; label: string }[]

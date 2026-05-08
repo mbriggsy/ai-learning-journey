@@ -1,7 +1,6 @@
 {
   "seats": 8,
   "seed": 1008,
-  "nopeWindowMs": 300000,
   "sessionTimeoutMs": 6600000,
   "catalogPath": "docs/testing/playtest/SCENARIOS.md",
   "outputRoot": "docs/testing/playtest/runs",

@@ -83,12 +83,16 @@ describe('parsePlaytestConfigMessage', () => {
     expect(result.ok).toBe(true)
   })
 
-  it('rejects missing nopeWindowMs', () => {
+  it('accepts missing nopeWindowMs (production-default fallthrough)', () => {
     const result = parsePlaytestConfigMessage(JSON.stringify({
       type: 'playtest-config',
       seed: 42,
     }))
-    expect(result.ok).toBe(false)
+    expect(result.ok).toBe(true)
+    if (result.ok) {
+      expect(result.payload).toEqual({ seed: 42 })
+      expect(result.payload.nopeWindowMs).toBeUndefined()
+    }
   })
 
   it('rejects unknown keys (strict schema)', () => {

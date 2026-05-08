@@ -18,12 +18,12 @@ import { z } from 'zod'
 const PlaytestConfigMessageSchema = z.object({
   type: z.literal('playtest-config'),
   seed: z.int().min(0),
-  nopeWindowMs: z.int().min(1).max(30 * 60_000),
+  nopeWindowMs: z.int().min(1).max(30 * 60_000).optional(),
 }).strict()
 
 export type PlaytestConfigPayload = {
   seed: number
-  nopeWindowMs: number
+  nopeWindowMs?: number
 }
 
 export type PlaytestConfigParseResult =
@@ -41,7 +41,11 @@ export function parsePlaytestConfigMessage(raw: string): PlaytestConfigParseResu
   if (!result.success) {
     return { ok: false, error: 'Invalid playtest-config' }
   }
-  return { ok: true, payload: { seed: result.data.seed, nopeWindowMs: result.data.nopeWindowMs } }
+  const payload: PlaytestConfigPayload = { seed: result.data.seed }
+  if (result.data.nopeWindowMs !== undefined) {
+    payload.nopeWindowMs = result.data.nopeWindowMs
+  }
+  return { ok: true, payload }
 }
 
 // --- Latch transition ---

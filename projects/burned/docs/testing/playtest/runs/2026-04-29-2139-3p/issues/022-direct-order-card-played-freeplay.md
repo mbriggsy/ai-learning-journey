@@ -1,7 +1,7 @@
 # 022-direct-order-card-played-freeplay — direct-order target sees silent double-draw — no "under attack" indicator
 
 **Severity (triage):** P2
-**Status:** 🔴 OPEN
+**Status:** ✅ RESOLVED (2026-05-08)
 **Seed kind:** free-play
 **Source seats:** seat-1
 **Linked scenarios:** (none)
@@ -48,6 +48,26 @@ No source file change required to confirm the engine behavior. The relevant proj
 ## Recommended next step
 
 Implement Option A (turnsRemaining indicator on ACTOR's phone when >1) alongside Option C (catalog the scenario) — the rendering change is a small lift against an already-projected field and directly addresses the opacity Seat1 experienced; the scenario catalog entry ensures regression coverage.
+
+## Resolution — 2026-05-08
+
+Closed. The recommended Option A (turnsRemaining indicator on the
+ACTOR's phone when > 1) was implemented in commit `ad4bce5c`
+("feat(under-attack): close issue #022 — surface forced-draw count
+to attacked seat"). The commit explicitly cites this issue.
+
+`SmartActionBox` now derives the staging-area button copy from
+`currentTurn.turnsRemaining`: when `turnsRemaining > 1` the button
+reads `Forced draw (<pile>)\n<N> draws this turn` instead of the
+default `End turn draw (<pile>)`. The attacked player no longer sees
+silent double-draws — the under-attack state is surfaced explicitly.
+
+Catalog scenario `SCN-DIRECT-ORDER-TARGET-01` (Option C) was a
+nice-to-have for regression tracking; the run-sweep coverage will
+re-fire on this surface naturally as part of the normal-play axis-11
+matrix.
+
+Citation: `src/client/player/SmartActionBox.tsx:253-258`.
 
 ---
 

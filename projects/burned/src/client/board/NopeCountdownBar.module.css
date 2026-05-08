@@ -3,43 +3,28 @@
    after a card is played. The fill contracts from right to left as the
    window closes (transform: scaleX driven by useNopeCountdown, not CSS).
 
-   Anchored below the arena (where the played card sits) so it reads as
-   a transmission-window indicator on the play in progress, not a
-   browser-banner-style notification floating at the top of the viewport.
-   E2E audit C-10 — pre-fix the bar landed in the table grid's first auto
-   row at y=22 across the full table width, dead-ringer for an iOS
-   notification stripe. Now centered horizontally, bounded width, framed
-   as a transmission band on a dark surface with intercept-teal accents.
+   2026-05-08: anchored INSIDE the case-banner aside between the
+   divider and the briefer footer. Reads as a live mission update
+   inside the briefing narrative — typography matches the case-banner
+   labels (mono caps, accent-drama tint), the bar fill stays in
+   intercept-teal so the live colour still pops against the
+   ochre/cream briefing palette. Pre-2026-05-08 the bar floated as a
+   dark-surface band below the arena (E2E audit C-10 fix), which read
+   as a notification-style add-on rather than a board element.
 */
 
 @layer components {
 
 .wrapper {
-  position: absolute;
-  box-sizing: border-box;
-  /* Center horizontally below the arena. The arena uses
-     `top: 50%; transform: translate(-50%, -50%)` so its bottom edge sits
-     at `50% + min-height/2`; we offset another space-4 below that for the
-     band's resting position. */
-  top: calc(50% + var(--size-arena-min-height) / 2 + var(--space-4));
-  left: 50%;
-  transform: translateX(-50%);
-  width: min(38vw, 480px);
-  padding: var(--space-3) var(--space-4);
+  /* Inline child of the case-banner column — flex layout drives the
+     vertical placement; we just need to fill the column horizontally
+     and own a small column of our own for the label + bar. */
   display: flex;
   flex-direction: column;
-  gap: var(--space-2);
-  border-radius: var(--radius-sm);
-  background: color-mix(in oklab, var(--color-charcoal-1) 90%, var(--color-accent-intercept));
-  border: 1px solid color-mix(in oklab, var(--color-accent-intercept) 45%, transparent);
-  box-shadow:
-    inset 0 1px 0 color-mix(in oklab, var(--color-cream-12) 14%, transparent),
-    0 8px 22px color-mix(in oklab, var(--color-charcoal-1) 55%, transparent),
-    0 0 26px color-mix(in oklab, var(--color-accent-intercept) 22%, transparent);
-  z-index: var(--z-sticky);
-  /* The bar is informational, not interactive (intercept lives on phones).
-     Keeping pointer-events off avoids stealing clicks from any board chrome
-     that might overlap during edge-case viewport shrinks. */
+  gap: 6px;
+  /* Pointer-events off matches the case banner's own posture — the
+     intercept happens on phones, the board surface is purely
+     informational. */
   pointer-events: none;
 }
 
@@ -52,10 +37,14 @@
   font-weight: 700;
   letter-spacing: 0.22em;
   text-transform: uppercase;
+  /* Intercept-teal so the live transmission colour pops against the
+     surrounding ochre/cream briefing typography without fighting it. */
   color: var(--color-accent-intercept);
 }
 
 .label::before {
+  /* Match the case-banner label vocabulary so the row reads as a
+     sibling of the static `// Operation` line above. */
   content: '// ';
   opacity: 0.6;
   font-weight: 400;

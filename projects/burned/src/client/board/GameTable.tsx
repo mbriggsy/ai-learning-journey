@@ -45,12 +45,19 @@ export function GameTable() {
           redundancy with the dossier cover stamp. Stamp removed; the
           dossier cover is now the singular CLASSIFIED-stamp surface,
           which also gets meaningful dramaturgy (cover hinges open on
-          first event → stamp leaves with it). */}
+          first event → stamp leaves with it).
+
+          NopeCountdownBar lives BETWEEN the divider and the briefer
+          footer (2026-05-08): the bar is a live mission update inside
+          the briefing narrative, not a floating overlay. Static case
+          banner content reads as the standing dossier; the intercept
+          window reads as the active transmission. */}
       <aside className={styles.caseBanner} aria-hidden="true">
         <span className={styles.caseBannerLabel}>Operation</span>
         <span className={styles.caseBannerOperation}>BURNED</span>
         <span className={styles.caseBannerSub}>Case File 47-B · Mayfair</span>
         <div className={styles.caseBannerDivider} />
+        <NopeCountdownBar />
         <span className={styles.caseBannerFooter}>
           Briefed by <strong>M.</strong>
         </span>
@@ -69,9 +76,6 @@ export function GameTable() {
 
       {/* Full-screen event flash — GSAP target */}
       <div ref={flashRef} className={styles.eventFlash} />
-
-      {/* Overlays */}
-      <NopeCountdownBar />
     </div>
   )
 }

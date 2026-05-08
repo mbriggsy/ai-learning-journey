@@ -27,10 +27,16 @@ Solo-doable, ranked:
    commit cites the historical fix. Triage issue summaries are now
    tracked in git (`runs/*/issues/*.md`), so closures survive
    `pnpm playtest:purge`.
-4. **Resume burned card escort-concept via NBP** when
-   `gemini-3-pro-image-preview` stops 503ing. Script + base image staged at
-   `scripts/edit-burned-door-nbp.ts`. Probe before committing time —
-   external blocker, not engineering work.
+4. **NBP burned-door edit — STAGED 2026-05-08, awaiting eyeball.**
+   `gemini-3-pro-image-preview` is reachable again (HTTP 200 on probe).
+   Script ran successfully against the iter-11 base recovered from
+   `public/assets/cards/_archive/2026-05-07-session/burned-iter11-cropped-awesome-CANDIDATE.png`.
+   Output at `temp/cards/burned-nbp-edit.png`. My eyeball: ship-grade —
+   open door now reads as the back-seat door, front door closed flush,
+   cuffed hands visible behind the operative, resolution upgraded to
+   full quality, cel-shading preserved. Briggsy verdicts: convert
+   PNG→WebP and swap into `public/assets/cards/burned.webp` (archiving
+   iter-11), iterate further on door state, or reject.
 5. **Visual rows brief for couch design calls** — capture before/after
    screenshots of the 4 carryover design calls in §4 below (drama beat
    tonal hierarchy, FuturePeek swipe, board nope-countdown legibility,

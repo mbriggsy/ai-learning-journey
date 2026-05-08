@@ -14,8 +14,12 @@ import styles from './StealReport.module.css'
 
 interface Report {
   readonly id: string
-  readonly kind: 'lifted' | 'whiffed-guess'
-  readonly stealerName: string
+  readonly kind: 'lifted' | 'whiffed-guess' | 'dry-bag'
+  readonly viewerRole: 'target' | 'stealer'
+  // The OTHER party's name — target's view shows the stealer; stealer's view
+  // shows the target. Rendered through `.stealerName` (legacy class — kept
+  // stable to avoid a CSS module churn for what is purely a copy split).
+  readonly otherName: string
   readonly cardType: CardType | null
   readonly cardName: string | null
 }
@@ -27,22 +31,68 @@ function reportFor(
   players: readonly BoardPlayer[],
 ): Report | null {
   if (event.type !== 'combo-steal') return null
-  if (event.targetId !== myId) return null
 
-  const stealerName = players.find(p => p.id === event.stealerId)?.name ?? 'Unknown'
+  const isTarget = event.targetId === myId
+  const isStealer = event.stealerId === myId
+  if (!isTarget && !isStealer) return null
+
+  const viewerRole: 'target' | 'stealer' = isStealer ? 'stealer' : 'target'
+  const otherId = isStealer ? event.targetId : event.stealerId
+  const otherName = players.find(p => p.id === otherId)?.name ?? 'Unknown'
   const cardName = event.cardType ? CARD_DEF_BY_TYPE[event.cardType]?.name ?? null : null
 
   if (event.found) {
-    return { id: eventId, kind: 'lifted', stealerName, cardType: event.cardType ?? null, cardName }
+    return { id: eventId, kind: 'lifted', viewerRole, otherName, cardType: event.cardType ?? null, cardName }
   }
 
-  // Named guess that missed — Johnny should know WHAT was guessed. Intel.
-  // Random-pair whiff with no cardType = your hand was empty; Johnny already
-  // knew that; no dispatch generated.
+  // Whiff branches:
+  //  - cardType present → named-triple miss (target was named; engine sets cardType).
+  //    Both sides care: target learns what was guessed, stealer learns the guess missed.
+  //  - cardType absent → pair-against-empty-bag random steal.
+  //    Stealer needs the dispatch; target already knew their bag was empty
+  //    (their hand badge is 0), so we suppress on target side.
   if (event.cardType) {
-    return { id: eventId, kind: 'whiffed-guess', stealerName, cardType: event.cardType, cardName }
+    return { id: eventId, kind: 'whiffed-guess', viewerRole, otherName, cardType: event.cardType, cardName }
+  }
+  if (isStealer) {
+    return { id: eventId, kind: 'dry-bag', viewerRole, otherName, cardType: null, cardName: null }
   }
   return null
+}
+
+// Copy split by (viewerRole, kind). Subject-verb-asset-verdict structure
+// preserved across all variants so the paper layout reads identical.
+function copyFor(report: Report): {
+  readonly verb: string
+  readonly assetName: string
+  readonly verdict: string
+  readonly stamp: string
+} {
+  const { kind, viewerRole, cardName } = report
+  if (viewerRole === 'target') {
+    if (kind === 'lifted') {
+      return { verb: 'has lifted', assetName: cardName ?? 'Unknown file', verdict: 'from your burn bag.', stamp: 'Intercepted' }
+    }
+    return { verb: 'attempted to lift', assetName: cardName ?? 'Unknown file', verdict: '— none in your bag.', stamp: 'Misfire' }
+  }
+  if (kind === 'lifted') {
+    return { verb: 'surrendered', assetName: cardName ?? 'Unknown file', verdict: 'to your burn bag.', stamp: 'Lifted' }
+  }
+  if (kind === 'whiffed-guess') {
+    return { verb: 'had no', assetName: cardName ?? 'Unknown file', verdict: 'in their burn bag.', stamp: 'Misfire' }
+  }
+  return { verb: 'carried', assetName: 'No assets', verdict: 'in their burn bag.', stamp: 'Misfire' }
+}
+
+function announcementFor(report: Report): string {
+  const { viewerRole, kind, otherName, cardName } = report
+  if (viewerRole === 'target') {
+    if (kind === 'lifted') return `${otherName} stole your ${cardName ?? 'card'}.`
+    return `${otherName} guessed ${cardName} — nothing in your bag.`
+  }
+  if (kind === 'lifted') return `You lifted ${cardName ?? 'a card'} from ${otherName}.`
+  if (kind === 'whiffed-guess') return `${otherName} did not have ${cardName}.`
+  return `${otherName}'s bag was empty — nothing lifted.`
 }
 
 /**
@@ -88,18 +138,14 @@ export function StealReport() {
     if (additions.length > 0) {
       setQueue(q => [...q, ...additions])
       const latest = additions[additions.length - 1]!
-      announce(
-        latest.kind === 'lifted'
-          ? `${latest.stealerName} stole your ${latest.cardName ?? 'card'}.`
-          : `${latest.stealerName} guessed ${latest.cardName} — nothing in your bag.`,
-        'assertive',
-      )
+      announce(announcementFor(latest), 'assertive')
       haptic('medium')
     }
     lastSeenIdRef.current = newEntries[newEntries.length - 1]!.id
   }, [events, myId, players])
 
   const current = !dramaActive && queue.length > 0 ? queue[0]! : null
+  const currentCopy = current ? copyFor(current) : null
 
   // Debounce acknowledge taps. Without this, panic-tapping Acknowledge
   // on a queued report (e.g. user returned to phone, saw "+2 more"
@@ -120,7 +166,7 @@ export function StealReport() {
 
   return (
     <AnimatePresence>
-      {current && (
+      {current && currentCopy && (
         <m.div
           key={current.id}
           className={styles.shell}
@@ -137,6 +183,7 @@ export function StealReport() {
           <m.div
             className={styles.paper}
             data-kind={current.kind}
+            data-viewer-role={current.viewerRole}
             // Transform string — the incident-report paper slamming in is a
             // high-drama beat that must not stutter. Multiple axes (y, rotate,
             // scale) on shorthand is exactly where shorthand drops frames
@@ -157,30 +204,22 @@ export function StealReport() {
             <div className={styles.body}>
               <p className={styles.label}>Operative</p>
               <p id={`steal-${current.id}-title`} className={styles.stealerName}>
-                {current.stealerName}
+                {current.otherName}
               </p>
 
-              <p className={styles.verb}>
-                {current.kind === 'lifted' ? 'has lifted' : 'attempted to lift'}
-              </p>
+              <p className={styles.verb}>{currentCopy.verb}</p>
 
               <div className={styles.cardFrame}>
                 <span className={styles.cardLabel}>// Asset</span>
-                <span className={styles.cardName}>
-                  {current.cardName ?? 'Unknown file'}
-                </span>
+                <span className={styles.cardName}>{currentCopy.assetName}</span>
               </div>
 
-              <p className={styles.verdict}>
-                {current.kind === 'lifted'
-                  ? 'from your burn bag.'
-                  : '— none in your bag.'}
-              </p>
+              <p className={styles.verdict}>{currentCopy.verdict}</p>
             </div>
 
             {/* Red rubber stamp — thunks in after the paper arrives */}
             <div className={styles.stamp} aria-hidden="true">
-              {current.kind === 'lifted' ? 'Intercepted' : 'Misfire'}
+              {currentCopy.stamp}
             </div>
 
             {/* Footer — eyes-only + carriage-return dismiss */}

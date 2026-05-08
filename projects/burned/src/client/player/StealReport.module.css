@@ -216,8 +216,10 @@
   animation: stampThunk var(--motion-duration-stamp) var(--motion-ease-overshoot) 0.32s both;
 }
 
-/* Misfire variant — ochre instead of crimson, reads as bureaucratic sigh */
-.paper[data-kind='whiffed-guess'] .stamp {
+/* Misfire variants — ochre instead of crimson, reads as bureaucratic sigh.
+   Both named-guess miss and pair-against-empty-bag share the same tone. */
+.paper[data-kind='whiffed-guess'] .stamp,
+.paper[data-kind='dry-bag'] .stamp {
   background: color-mix(in oklab, var(--color-accent-drama) 88%, var(--color-charcoal-1));
 }
 

@@ -274,11 +274,15 @@ runs continuously after that.)
    - Otherwise, play the natural move.
    - In a reactive window, decide within ~10 s of wall time (the window
      is stretched — you have time, but don't stall forever).
-5. Log. Every observable transition gets a log entry. Scenario fires
+5. Log — **write to disk BEFORE the next snapshot/action**, not at the
+   end. Every observable transition gets a log entry. Scenario fires
    are structured. Suspicions are mandatory and low-friction.
    Vibe-checks are mandatory near fire conditions. `ui-spec-divergence`
    entries are mandatory whenever your phone contradicts Column 2 for
-   your role.
+   your role. If you noticed three things and only logged one, the
+   other two are lost — your summary at session end cannot recover
+   them. Treat the `Write` call as the act of recording, not a
+   commentary on what you already wrote in your head.
 
 ## HOSTILE FRAMING
 
@@ -306,6 +310,13 @@ them; those are worth flagging.
   argument under `{{SCREENSHOTS_DIR}}/` — see SCREENSHOTS section
   above. Omitting `path` writes to project cwd and pollutes git
   status (insight 042).
+- Do NOT report a vibe-check / suspicion / ui-spec-divergence in your
+  final summary unless you ALSO wrote it to `{{SUSPICION_PATH}}` via
+  `Write` during the session. **The file on disk is the only ground
+  truth.** Summary text the orchestrator can't read against the file
+  is uncounted; harness audits across recent runs found agents
+  reporting 7-12 entries in summary while writing 0-1 to disk. Write
+  first; narrate from the file second.
 
 ## EXIT CONDITIONS
 

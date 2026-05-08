@@ -232,9 +232,13 @@ runs continuously after that.)
 3. Identify your current role label.
 4. Decide your next action — prefer an unusual / edge-case move you
    haven't tried yet this session.
-5. Log. Suspicions + vibe-checks are mandatory;
+5. Log — **write to disk BEFORE the next snapshot/action**, not at
+   the end. Suspicions + vibe-checks are mandatory;
    `ui-spec-divergence` entries whenever your phone contradicts what
-   the rules + spec say you should see.
+   the rules + spec say you should see. If you noticed three things
+   and only logged one, the other two are lost — your summary at
+   session end cannot recover them. The `Write` call is the act of
+   recording.
 
 ## HOSTILE FRAMING
 
@@ -258,6 +262,12 @@ Real connectivity bugs appear only when a scenario's
   argument under `{{SCREENSHOTS_DIR}}/` — see SCREENSHOTS section
   above. Omitting `path` writes to project cwd and pollutes git
   status (insight 042).
+- Do NOT report a vibe-check / suspicion / ui-spec-divergence in your
+  final summary unless you ALSO wrote it to `{{SUSPICION_PATH}}` via
+  `Write` during the session. **The file on disk is the only ground
+  truth.** Recent harness runs found agents reporting 7-12 entries in
+  summary while writing 0-1 to disk. Write first; narrate from the
+  file second.
 
 ## EXIT CONDITIONS
 

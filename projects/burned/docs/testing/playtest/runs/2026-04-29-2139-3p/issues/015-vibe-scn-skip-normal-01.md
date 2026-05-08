@@ -1,7 +1,7 @@
 # 015-vibe-scn-skip-normal-01 — Observer phone shows no card-played announcement during Go Dark skip beat
 
 **Severity (triage):** P2
-**Status:** 🔴 OPEN
+**Status:** ✅ RESOLVED-BY-SIDE-EFFECT (2026-05-08)
 **Seed kind:** vibe-check
 **Source seats:** seat-2
 **Linked scenarios:** SCN-SKIP-NORMAL-01
@@ -51,6 +51,31 @@ Note: The mini-catalog entry for `SCN-SKIP-NORMAL-01` carries `known-product-cal
 ## Recommended next step
 
 Pursue Option B — it is the lowest-risk incremental change (one prop addition + one derived value from the event feed) and directly addresses the concrete observer complaint without the toast-overload risk of Option A, while keeping the product debate about "phone vs. TV narration" open for Briggsy to decide separately.
+
+## Resolution — 2026-05-08
+
+Closed-by-side-effect. The observer-feedback gap was filled by a
+fourth path beyond the proposed Options A/B/C: commit `65de88cf`
+("codify when card-played gets a beat — pull Go Dark, add Falsify
+Intel") added a `card-played` case to `PlayerAlert.alertFor` that
+fires for any non-actor card play (with explicit go-dark fall-through
+and intentional filters for extraction / burn-the-files /
+falsify-intel / combos that have richer surfaces). Seat-2 (the
+original observer who reported this) would now see
+`"Seat3 played Go Dark."` as a brief info-tone toast.
+
+The product debate from Option C ("phone vs. TV narration") was
+resolved in favor of phone toasts for the cards where ambient feedback
+is too weak — Go Dark specifically falls through this filter because
+its narrative cue (sneaking out of sight) needs a *quiet* phone
+acknowledgement to track the action across the table without fighting
+the card's tonal intent.
+
+Citation: `src/client/player/PlayerAlert.tsx:103-149` (card-played
+case). The explicit comment at `:118-121` documents the go-dark
+fall-through reasoning ("the card's narrative is sneaking out of
+sight, so the quiet 'X played Go Dark.' text matches the tone better
+than silence").
 
 ---
 

@@ -5,7 +5,7 @@
 ## Summary
 
 - **Total issues:** 22
-- **Status:** OPEN 7 · RESOLVED 5 · BLOCKED 0 · DUPLICATE 0 · KNOWN-PRODUCT-CALL 8 · LOW-SIGNAL 2
+- **Status:** OPEN 6 · RESOLVED 6 · BLOCKED 0 · DUPLICATE 0 · KNOWN-PRODUCT-CALL 8 · LOW-SIGNAL 2
 - **Severity:** P0 0 · P1 6 · P2 15
 - **By seed kind:**
   - scripted-scenario: 14
@@ -46,7 +46,7 @@ Spec-level findings against `docs/PRODUCT-SPECIFICATION.md` §2 (Quality Bar) + 
 | --- | --- | --- | --- | --- | --- |
 | [010-vibe-scn-favor-normal-01](010-vibe-scn-favor-normal-01.md) | Favor exchange reads as silent database transaction on both phones | P1 | RESOLVED | SCN-FAVOR-NORMAL-01 | — |
 | [014-vibe-scn-go-dark-normal-01](014-vibe-scn-go-dark-normal-01.md) | Go Dark ACTOR phone has no drama beat; play reads as mechanical skip | P2 | RESOLVED-BY-DESIGN | SCN-GO-DARK-NORMAL-01 | resolved by `65de88cf` — Go Dark drama-silent by-design |
-| [015-vibe-scn-skip-normal-01](015-vibe-scn-skip-normal-01.md) | Observer phone shows no card-played announcement during Go Dark skip beat | P2 | OPEN | SCN-SKIP-NORMAL-01 | — |
+| [015-vibe-scn-skip-normal-01](015-vibe-scn-skip-normal-01.md) | Observer phone shows no card-played announcement during Go Dark skip beat | P2 | RESOLVED-BY-SIDE-EFFECT | SCN-SKIP-NORMAL-01 | resolved by `65de88cf` — PlayerAlert card-played case fires for observers |
 
 ## UI-spec-divergence findings
 

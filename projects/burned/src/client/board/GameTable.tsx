@@ -37,7 +37,15 @@ export function GameTable() {
         <div className={styles.woodRight} />
       </div>
 
-      {/* Left ambient case banner — Pendleton Agency mission chrome */}
+      {/* Left ambient case banner — Pendleton Agency mission chrome.
+          Reads as a typeset briefing-board poster, NOT a stamped paper
+          document — that vocabulary lives on the dossier folder cover
+          (DossierFeed). Pre-2026-05-07 we duplicated the CLASSIFIED
+          stamp here too; the audit (E2E C-11) flagged it as two-of-a-kind
+          redundancy with the dossier cover stamp. Stamp removed; the
+          dossier cover is now the singular CLASSIFIED-stamp surface,
+          which also gets meaningful dramaturgy (cover hinges open on
+          first event → stamp leaves with it). */}
       <aside className={styles.caseBanner} aria-hidden="true">
         <span className={styles.caseBannerLabel}>Operation</span>
         <span className={styles.caseBannerOperation}>BURNED</span>
@@ -46,7 +54,6 @@ export function GameTable() {
         <span className={styles.caseBannerFooter}>
           Briefed by <strong>M.</strong>
         </span>
-        <div className={styles.caseBannerStamp} />
       </aside>
 
       {/* Player strip — UMB-style nameplate row along the bottom */}

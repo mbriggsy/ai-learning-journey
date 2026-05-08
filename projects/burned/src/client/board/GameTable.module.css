@@ -398,54 +398,12 @@
   padding-left: 6px;
 }
 
-/* Classified-stamp overlay — uses the Imagen-generated stamp png, masked to
-   red + rotated just off-axis. Sits low on the left banner as set dressing.
-
-   Mount reveal plays once on game-table entry (caseBanner mounts when the
-   Lobby→GameTable transition fires). Scale overshoot simulates the physical
-   impact of a rubber stamp hitting paper — oversized pre-contact, compresses
-   slightly past the resting state, settles at 1.0. The emphasized curve
-   gives the punchy "slam down" character that a gentler ease-out misses. */
-.caseBannerStamp {
-  margin-top: 10px;
-  width: 82%;
-  aspect-ratio: 5 / 2;
-  background-image: url('/assets/arena/stamp-classified.png');
-  background-size: contain;
-  background-repeat: no-repeat;
-  background-position: left center;
-  opacity: 0.35;
-  transform: rotate(-6deg);
-  filter:
-    grayscale(0.1)
-    saturate(1.15)
-    drop-shadow(0 1px 1px color-mix(in oklab, var(--color-charcoal-1) 40%, transparent));
-  mix-blend-mode: multiply;
-  animation: stampDrop var(--motion-duration-slow) var(--motion-ease-emphasized) 450ms both;
-}
-
-@keyframes stampDrop {
-  0% {
-    opacity: 0;
-    transform: rotate(-6deg) scale(1.8);
-  }
-  60% {
-    opacity: 0.5;
-    transform: rotate(-6deg) scale(0.94);
-  }
-  100% {
-    opacity: 0.35;
-    transform: rotate(-6deg) scale(1);
-  }
-}
-
-/* Reduced motion — skip the impact overshoot; the stamp just fades in at
-   its resting position. Decorative tier (fade only, no transform). */
-@media (prefers-reduced-motion: reduce) {
-  .caseBannerStamp {
-    animation: none;
-  }
-}
+/* The CLASSIFIED stamp formerly anchored at the case banner's bottom was
+   removed 2026-05-07 (E2E audit C-11) — duplicated the dossier-folder
+   cover's CLASSIFIED stamp and read as two-of-a-kind. Stamp + stampDrop
+   keyframe + reduced-motion entry all dropped together. The CLAUDE.md
+   landmine note that named `stampDrop` as living in this file is now
+   stale; only `caseBannerLineIn` remains. */
 
 /* ─── Full-screen event flash (GSAP target in Phase 4) ─── */
 

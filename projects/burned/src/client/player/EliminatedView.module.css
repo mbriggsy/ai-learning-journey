@@ -2,6 +2,13 @@
    Full-screen eliminated state. Replaces PlayingView when the player is no longer alive.
    No interaction beyond dismissing — by design, the §5.6 "vocal participation" experience.
    Player watches the TV with the group.
+
+   2026-05-07: reframed as a "Burn Notice" memo (E2E audit C-18) so the
+   phone reads as the same agency-document layer as the JoinScreen
+   briefing panel and the GameOver After-Action Report header. Mono caps
+   + `//` prefix + classified-tag accent on the header strip; agency
+   vocabulary on the alive-list label and footer prompt; status tags
+   on each alive operative.
 */
 
 @layer components {
@@ -12,7 +19,7 @@
     justify-content: center;
     gap: var(--space-4);
     min-height: var(--size-viewport-safe);
-    padding-top: max(var(--space-8), var(--inset-top));
+    padding-top: max(var(--space-4), var(--inset-top));
     padding-right: max(var(--space-6), var(--inset-right));
     padding-bottom: max(var(--space-8), var(--inset-bottom));
     padding-left: max(var(--space-6), var(--inset-left));
@@ -23,10 +30,45 @@
     box-sizing: border-box;
   }
 
+  /* Burn-notice header strip — same shape and vocabulary as
+     GameOver.module.css's .caseClosedBar (mono caps, `//` prefix label,
+     [classified-style] tag, cordovan border-bottom). Phone reads as the
+     same continuous agency layer across briefing → playing → burned.
+     E2E audit C-18. */
+  .burnNoticeBar {
+    display: flex;
+    align-items: baseline;
+    justify-content: space-between;
+    gap: var(--space-4);
+    width: 100%;
+    max-width: min(100%, 480px);
+    margin-bottom: var(--space-3);
+    padding: 0 var(--space-2) var(--space-3);
+    border-bottom: 1px solid color-mix(in oklab, var(--color-accent-burned) 28%, transparent);
+  }
+
+  .burnNoticeLabel {
+    font-family: var(--font-mono);
+    font-size: var(--text-caption);
+    font-weight: 600;
+    text-transform: uppercase;
+    letter-spacing: 0.22em;
+    color: color-mix(in oklab, var(--color-cream-11) 75%, transparent);
+    white-space: nowrap;
+  }
+
+  .burnNoticeTag {
+    font-family: var(--font-mono);
+    font-size: var(--text-caption);
+    font-weight: 700;
+    letter-spacing: 0.22em;
+    text-transform: uppercase;
+    color: var(--color-accent-burned);
+    white-space: nowrap;
+  }
+
   /* Animated skull icon — spring entry, scale 0 → 1, rotate -15° → 0°.
-     Framer Motion controls the entry animation; CSS controls the resting state.
-     Wrapper class .skullWrap is consumed by the m.div in EliminatedView.tsx
-     (renamed from .explosionWrap per §2.3.9b). */
+     Framer Motion controls the entry animation; CSS controls the resting state. */
   .skullWrap {
     flex: 0 0 auto;
   }
@@ -46,6 +88,22 @@
     margin: 0;
   }
 
+  /* Status caption — mono-caps memo line under the title. Mirrors
+     GameOver's .winnerStatus. The `//` prefix + tracked caps cue
+     "agency document" rather than "UI text," keeping the burn beat in
+     the same vocabulary layer as the rest of the app. */
+  .statusCaption {
+    font-family: var(--font-mono);
+    font-size: var(--text-caption);
+    font-weight: 600;
+    letter-spacing: 0.18em;
+    text-transform: uppercase;
+    color: color-mix(in oklab, var(--color-accent-burned) 78%, transparent);
+    margin: 0;
+    line-height: 1.3;
+    max-width: min(94%, var(--size-content-narrow));
+  }
+
   .flavor {
     font-family: var(--font-body);
     font-size: var(--text-body);
@@ -58,45 +116,69 @@
 
   .aliveList {
     display: flex;
-    flex-wrap: wrap;
-    justify-content: center;
+    flex-direction: column;
     gap: var(--space-2);
     padding: var(--space-4);
     background: var(--color-bg-surface);
     border: 1px solid var(--color-border-subtle);
     border-radius: var(--radius-lg);
-    max-width: min(90%, var(--size-content-narrow));
-    margin-top: var(--space-5);
+    max-width: min(94%, var(--size-content-narrow));
+    margin-top: var(--space-4);
   }
 
   .aliveListLabel {
-    width: 100%;
-    font-family: var(--font-display);
+    font-family: var(--font-mono);
     font-size: var(--text-caption);
     font-weight: 600;
-    color: var(--color-fg-muted);
-    letter-spacing: 0.14em;
+    color: color-mix(in oklab, var(--color-accent-drama) 82%, transparent);
+    letter-spacing: 0.22em;
     text-transform: uppercase;
-    margin-bottom: var(--space-2);
+    text-align: left;
+    padding-bottom: var(--space-2);
+    border-bottom: 1px solid color-mix(in oklab, var(--color-accent-drama) 18%, transparent);
+    margin-bottom: var(--space-1);
   }
 
   .alivePlayer {
-    display: inline-flex;
+    display: flex;
     align-items: center;
-    gap: var(--space-1);
-    padding: var(--space-1) var(--space-3);
+    gap: var(--space-3);
+    padding: var(--space-2) var(--space-3);
     background: var(--color-bg-elevated);
     border: 1px solid var(--color-border-subtle);
-    border-radius: var(--radius-full);
-    font-size: var(--text-caption);
+    border-radius: 2px;
+    font-size: var(--text-body);
     color: var(--color-fg-primary);
   }
 
-  .prompt {
-    font-family: var(--font-body);
-    font-size: var(--text-caption);
-    color: var(--color-fg-muted);
-    margin-top: var(--space-6);
+  .alivePlayerName {
+    flex: 1;
+    text-align: left;
+    font-family: var(--font-display);
+    font-weight: 600;
+    text-transform: uppercase;
     letter-spacing: 0.04em;
+  }
+
+  /* Status tag mirrors GameOver's .rankStatus — mono caps, drama-accent.
+     "ALIVE" reads as the after-action verdict on operatives still in
+     play, balancing the COMPROMISED tag in the header strip. */
+  .aliveStatus {
+    font-family: var(--font-mono);
+    font-size: var(--text-caption);
+    font-weight: 700;
+    letter-spacing: 0.18em;
+    text-transform: uppercase;
+    color: var(--color-accent-drama);
+  }
+
+  .prompt {
+    font-family: var(--font-mono);
+    font-size: var(--text-caption);
+    font-weight: 600;
+    color: var(--color-fg-muted);
+    margin-top: var(--space-5);
+    letter-spacing: 0.2em;
+    text-transform: uppercase;
   }
 }

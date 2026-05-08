@@ -28,6 +28,20 @@ export function EliminatedView() {
 
   return (
     <div className={styles.view}>
+      {/* Burn-notice header strip — same vocabulary layer as the GameOver
+          After-Action Report header and the JoinScreen briefing panel,
+          so the phone reads as a continuous agency-document stack across
+          briefing → playing → burned. E2E audit C-18. */}
+      <m.header
+        className={styles.burnNoticeBar}
+        initial={{ opacity: 0, transform: 'translateY(-12px)' }}
+        animate={{ opacity: 1, transform: 'translateY(0px)' }}
+        transition={{ ...MOTION.enter, delay: 0.05 }}
+      >
+        <span className={styles.burnNoticeLabel}>// Burn Notice</span>
+        <span className={styles.burnNoticeTag}>[ Compromised ]</span>
+      </m.header>
+
       <m.div
         className={styles.skullWrap}
         // Emil: never animate from scale(0) — nothing in the real world pops
@@ -51,11 +65,24 @@ export function EliminatedView() {
         You&apos;re Burned.
       </m.div>
 
+      {/* Mono-caps status caption — agency-style memo line that connects
+          the title to the burn-notice header. Same role as the
+          "// Operative Status: Survived" caption on the GameOver winner.
+          E2E audit C-18. */}
+      <m.div
+        className={styles.statusCaption}
+        initial={{ opacity: 0 }}
+        animate={{ opacity: 1 }}
+        transition={{ ...MOTION.enter, delay: 0.35 }}
+      >
+        // Status: Cover compromised. HR notified.
+      </m.div>
+
       <m.div
         className={styles.flavor}
         initial={{ opacity: 0 }}
         animate={{ opacity: 1 }}
-        transition={{ ...MOTION.enter, delay: 0.5 }}
+        transition={{ ...MOTION.enter, delay: 0.55 }}
       >
         {flavor}
       </m.div>
@@ -64,13 +91,14 @@ export function EliminatedView() {
         className={styles.aliveList}
         initial={{ opacity: 0, transform: 'translateY(10px)' }}
         animate={{ opacity: 1, transform: 'translateY(0px)' }}
-        transition={{ ...MOTION.snappy, delay: 0.7 }}
+        transition={{ ...MOTION.snappy, delay: 0.75 }}
       >
-        <div className={styles.aliveListLabel}>Still alive</div>
+        <div className={styles.aliveListLabel}>// Active Operatives</div>
         {alivePlayers.map(p => (
           <div key={p.id} className={styles.alivePlayer}>
             <PlayerIcon color={p.color} size={18} />
-            <span>{p.name}</span>
+            <span className={styles.alivePlayerName}>{p.name}</span>
+            <span className={styles.aliveStatus}>Alive</span>
           </div>
         ))}
       </m.div>
@@ -79,9 +107,9 @@ export function EliminatedView() {
         className={styles.prompt}
         initial={{ opacity: 0 }}
         animate={{ opacity: 1 }}
-        transition={{ ...MOTION.enter, delay: 1.0 }}
+        transition={{ ...MOTION.enter, delay: 1.05 }}
       >
-        Watch the screen for the action
+        // Stand by for next briefing
       </m.div>
     </div>
   )

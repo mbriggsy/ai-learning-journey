@@ -59,13 +59,12 @@ Run dir: `docs/testing/playtest/runs/2026-05-08-0935-3p` (gitignored —
 - ✅ **§2.1 + §2.6 stealer-side reveal** — fixed in `ff31990d`.
   StealReport now matches both viewer roles; closed both pair-steal
   silent and triple-steal whiff feedback gaps in one shape.
-- 🟡 **§2.2 nope-window observer info gap** — **needs Briggsy.**
-  Decision required: should observers (non-target, non-actor) see the
-  played card type during the nope window, or stay opaque so only the
-  direct target sees it? 4× confirmed across runs that observers can't
-  make informed Intercept decisions today. Privacy vs. clarity tradeoff
-  — engineering can't pick. Once decided, fix lives at
-  `src/server/projection.ts:165-183` (allowlist projection edge).
+- ✅ **§2.2 nope-window observer info gap** — fixed in `3c82c572`.
+  Briggsy verdict: show to everyone (clarity); board already does
+  via DiscardFan (engine pushes card to discardPile at card-played
+  before the nope window opens), phone now mirrors via persistent
+  PlayerAlert toast that lives the full window and clears at
+  `nope-window-resolved`.
 - ✅ **§2.3 Direct Order self-target** — fixed in `c961a1f1`. Card text
   said "ANY operative", engine accepts, UI was filtering self at
   `Player.tsx:514`. Conditional self-permit on

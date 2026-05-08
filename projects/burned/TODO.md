@@ -1,148 +1,59 @@
 # BURNED — TODO
 
-Operator's queue. Actionable items only. **Not a diary** — git log has the
-history. (Rule: `feedback-todo-is-not-a-diary.md`.)
+Operator's queue. Actionable items only. **Not a diary** — git log has
+the history. (Rule: `feedback-todo-is-not-a-diary.md`.)
 
 ---
 
-## 1. Active priorities — pick one
+## 1. Active priorities
 
-Solo-doable, ranked:
+**No solo-doable engineering work in queue.** All §1 items from prior
+sessions closed. Active priorities are now §4 — real-life sessions
+(real-device playtest, 8-player stress, hardware verification, visual
+review meeting, SCENARIOS.md sign-off).
 
-1. **Decide §2.2 + §3.2.** Two short product calls unblock the last
-   two items from the 2026-05-08 harness sweep. See those sections
-   below.
-2. **Live mid-play state verification** — `tests/e2e/arena-states.spec.ts`.
-   Drive `window.__gameStore` to force each state, screenshot for couch
-   eyeball: Nope window mid-countdown, all DramaOverlay variants, Favor
-   banner + staging, Triple-steal name-card sheet, FuturePeek read-only +
-   rearrange. Output to `temp/arena-states/`. ~3-4h.
-3. **RESOLVED-BY-SIDE-EFFECT triage sweep — FULLY DONE 2026-05-08.**
-   All 22 issues across runs/2026-04-29-2139-3p closed. All 10 issues
-   across runs/2026-05-01-1654-3p closed (the lone holdout #008 was
-   verdicted by Briggsy's real-device eyeball as a no-fix-needed
-   perception artifact). The uncatalogued-scenario family
-   (#001/#002/#003/#011/#018) was discovered to already be resolved
-   by commit `afff4181` (2026-05-01 parser catalog gate); closure
-   commits cite the historical fix. Triage issue summaries are now
-   tracked in git (`runs/*/issues/*.md`), so closures survive
-   `pnpm playtest:purge`.
-4. **NBP burned-door edit — STAGED 2026-05-08, awaiting eyeball.**
-   `gemini-3-pro-image-preview` is reachable again (HTTP 200 on probe).
-   Script ran successfully against the iter-11 base recovered from
-   `public/assets/cards/_archive/2026-05-07-session/burned-iter11-cropped-awesome-CANDIDATE.png`.
-   Output at `temp/cards/burned-nbp-edit.png`. My eyeball: ship-grade —
-   open door now reads as the back-seat door, front door closed flush,
-   cuffed hands visible behind the operative, resolution upgraded to
-   full quality, cel-shading preserved. Briggsy verdicts: convert
-   PNG→WebP and swap into `public/assets/cards/burned.webp` (archiving
-   iter-11), iterate further on door state, or reject.
-5. **Visual rows brief for couch design calls** — capture before/after
-   screenshots of the 4 carryover design calls in §4 below (drama beat
-   tonal hierarchy, FuturePeek swipe, board nope-countdown legibility,
-   StealReport stamp occlusion of `Case 47-B`) so Briggsy can verdict
-   each from the couch.
+Current state (verified 2026-05-08):
 
-E2E-ISSUE-LIST 🔴 cleanup is **DONE**. All red rows from the 2026-04-23
-audit are closed.
-
-The 2026-05-08-0935 harness sweep is **DONE** — see §2 + §3 for the
-single open product call in each.
+- Tests: 1317 pass | 6 expected fail (65/65 files green).
+- Build: clean (`pnpm build`).
+- Phone initial JS: ~98.8 KB gzipped (player 17.27 + shared 67.15 +
+  VisualElement 14.40). Under 100 KB budget with ~1.2 KB headroom —
+  tighter than the 2026-05-06 baseline (~97.5 KB) due to PlayerAlert
+  persistUntil expansion.
+- Triage state across all run dirs: zero-OPEN.
 
 ---
 
-## 2. Gameplay bugs from 2026-05-08 harness run — closed except §2.2
+## 2. Gameplay bugs from 2026-05-08 harness run — DONE
 
-Run dir: `docs/testing/playtest/runs/2026-05-08-0935-3p` (gitignored —
+All seven items (§2.1-§2.7) closed. Run dir at
+`docs/testing/playtest/runs/2026-05-08-0935-3p` (gitignored —
 `pnpm playtest:purge --session-id 2026-05-08-0935-3p` when done).
 
-- ✅ **§2.1 + §2.6 stealer-side reveal** — fixed in `ff31990d`.
-  StealReport now matches both viewer roles; closed both pair-steal
-  silent and triple-steal whiff feedback gaps in one shape.
-- ✅ **§2.2 nope-window observer info gap** — fixed in `3c82c572`.
-  Briggsy verdict: show to everyone (clarity); board already does
-  via DiscardFan (engine pushes card to discardPile at card-played
-  before the nope window opens), phone now mirrors via persistent
-  PlayerAlert toast that lives the full window and clears at
-  `nope-window-resolved`.
-- ✅ **§2.3 Direct Order self-target** — fixed in `c961a1f1`. Card text
-  said "ANY operative", engine accepts, UI was filtering self at
-  `Player.tsx:514`. Conditional self-permit on
-  `localTargetMode.reason === 'direct-order'`.
-- ✅ **§2.4 Back Channel deck position** — closed-no-fix in `3e6c0125`.
-  Engine traces correctly: S3 drew their own Burned that they had
-  Extraction-placed at the bottom 33 god-events earlier. Agent missed
-  their own placement + the N-1 Burned cards rule. Insight 053
-  documents the audit pattern.
-- ✅ **§2.5 hand badge count** — fixed in `3b7e75d9`. Bound to
-  `displayHand.length` so badge matches visible hand cards during
-  staging.
-- ✅ **§2.7 observer Extraction drama beat** — closed-no-fix in
-  `ae31defc`. Per-rAF sampler proved both beats fire on observer phone
-  with sustained peaks (3117ms flip + 2100ms EXTRACTED text); agent
-  perception missed the cinematic that competed with persistent
-  StatusBar text. Insight 053 amended.
+§2.2 (nope-window observer info gap) closed in `3c82c572` —
+PlayerAlert toast persists through nope window for observers.
 
 ---
 
-## 3. Playtest harness — clean run achieved, residual gaps mostly closed
+## 3. Playtest harness — DONE
 
-**Status: production-bar runs work.** First clean run with production
-timings (10s nope window) completed 2026-05-08 — `runs/2026-05-08-0935-3p`
-finished `outcome=success` with 18 fires + 40 triage seeds.
+Production-bar runs work. All §3.1-§3.5 items closed. Operator skill
+`/playtest-run` shipped at `.claude/skills/playtest-run/SKILL.md`
+(commit `57872c41`) — codifies seat + triage dispatch dances.
 
-### Residual harness defects
+§3.2 (coverage threshold semantics) closed in `0a174691` — split into
+per-run `threshold` (default 15) + `seriesTarget` (default 50,
+informational).
 
-- ✅ **§3.1 triage promotion (docs half)** — fixed in `b29a258d`.
-  `run-session.ts` comment now documents both dispatch dances (seat
-  BEFORE, triage AFTER). The auto-dispatch second half remains open;
-  `createTriageLauncherDriver` exists with the marker-wait loop, just
-  isn't wired in. Wire it via a new opts.waitForTriageMarker flag when
-  the operator skill `/playtest-run` is built.
-- ✅ **§3.2 coverage threshold semantics** — fixed in this session.
-  Briggsy verdict: 50 is a series-level cumulative target, not per-run.
-  `coverage-reporter.ts` now exposes two distinct fields: per-run
-  `threshold` (default 15) and `seriesTarget` (default 50, informational).
-  Banner reads "Fired: N / per-run target: 15 — PASS" plus a series
-  contribution line. The recent 18-fire run no longer reads as a
-  failure when the harness outcome is success.
-- ✅ **§3.3 viewport rotation** — fixed in `873d45e9`. Round-robin per
-  seat via `i % viewports.length`. `viewportsExercised` derives from
-  the actual seats array. New tests in `orchestrator.test.ts §8a`.
-- ✅ **§3.4 agent-logging discipline (prompt half)** — fixed in
-  `56a5a3c8`. Both seat templates carry an explicit ordering rule and
-  ANTI-PATTERN bullet: write to disk BEFORE the next snapshot/action,
-  not at session end. The validator-feedback half (real-time schema
-  rejection back to the agent) remains open — would need a Write-tool
-  hook in the harness, more than a docs change.
-- ✅ **§3.5 silent-timeout-as-success** — fixed in `64ecda46`. New
-  `'failed-launch'` SessionOutcome variant; `detectFailedLaunch: true`
-  opt-in in run-session.ts. After driver returns clean, scans
-  events.jsonl for `"game-started"` — absent → demote outcome.
-
-### Operator skill `/playtest-run` — DONE 2026-05-08
-
-Built as `.claude/skills/playtest-run/SKILL.md`. Codifies all six
-dance steps: (a) start orchestrator in background, (b) wait for
-`agent-specs.manifest.json`, (c) dispatch `playtest-seat-N` agents in
-parallel via single-message Agent tool calls, (d) touch
-`agents-done.marker`, (e) read `triage-specs.manifest.json`,
-(f) dispatch `playtest-triage` agents per spec in parallel, (g) regen
-`INDEX.md`. Includes pre-flight checks (dirty tree, port collisions),
-failure-mode handling (failed-launch, partial triage), and an explicit
-report phase. Trigger phrases: "run a playtest", "/playtest-run",
-"kick off a playtest".
+The lone remaining hard prereq for "fully done" is **SCENARIOS.md
+sign-off** (line 3, still DRAFT) — see §4.
 
 ---
 
 ## 4. Carryover requiring Briggsy
 
-Only Briggsy can do these.
+Real-life sessions only Briggsy can do.
 
-- **Decision: nope-window observer info policy** (gates §2.2). Show card
-  type to observers, or only direct target?
-- **Decision: §3.2 coverage threshold** — is 50 a per-run target or a
-  series target?
 - **Real-device playtest** — iPad Pro 1366 + 4-8 phones. Verify
   triple-steal deferred commit, Favor staging, discard hero from couch,
   Burned two-beat on non-drawer phones, Emil press-feedback on phone +
@@ -160,15 +71,16 @@ Only Briggsy can do these.
   Files / Back Channel — §2.5 #4 WCAG residual lives there).
 - **Sign off `docs/testing/playtest/SCENARIOS.md`** — still DRAFT
   (line 3). Hard prereq for closing §3 fully.
-- **Couch design calls from the 2026-05-07 eyeball pack:**
-  - Drama beat tonal hierarchy.
-  - FuturePeek swipe affordance.
-  - Board nope-countdown legibility from couch distance.
-  - StealReport stamp occlusion of `Case 47-B` (still open — pre-existing
-    visual issue I noticed but didn't touch since it's a design call).
 
 Remaining ⏸ rows in `E2E-ISSUE-LIST` (C-13, C-15, C-16-19) are blocked
 on product/asset decisions — surface in a visual review.
+
+The 2026-05-07 couch eyeball-pack design calls all closed in this
+session: StealReport stamp dropped (`17514aae` — also fixed Case 47-B
+occlusion as side effect), NopeCountdownBar anchored into case banner
+(`4e4431c9`), drama tier hierarchy ship-as-is, FuturePeek swipe ship-
+as-is, Burned-draw drama beat verdicted distinct
+(`d555af9a` — perception artifact, no fix needed).
 
 ---
 
@@ -189,11 +101,13 @@ Active warnings only. Older landmines have moved to `docs/insights/` and
   (round-robin via `i % viewports.length`). Don't assume all seats
   share viewports[0] anymore. `viewportsExercised` in the session
   report now reflects the actual exercised set.
-- **`createTriageLauncherDriver` exists but isn't wired** (per
-  `run-session.ts` updated comment). When the operator skill lands,
-  wire it via a new `opts.waitForTriageMarker` flag in
-  `runSession`/`run-session.ts`. The infrastructure is ready —
-  emits-spec + waits-for-marker shape mirrors the seat driver.
+- **`createTriageLauncherDriver` exists but is NOT wired into
+  `runSession`** (per `run-session.ts:200-240` operator-doc comment).
+  The `/playtest-run` skill landed (commit `57872c41`) but the
+  in-process triage launcher driver is still a future option — the
+  current skill orchestrates triage agents from the operator's side
+  via Agent tool calls per the manifest. If you ever want
+  in-orchestrator triage spawn, wire via `opts.waitForTriageMarker`.
 - **`nopeWindowMs` is now optional end-to-end** (commit `b29ba31c`).
   Series configs (2p/3p/5p/8p/10p) and `default-config.json` no longer
   carry the field. Production tier defaults from
@@ -202,6 +116,42 @@ Active warnings only. Older landmines have moved to `docs/insights/` and
   explicit override (10s) for legitimate calibration deviation. Adding
   the field back to a series config means "this run deviates from
   production" — make sure that's deliberate.
+- **Coverage threshold split: per-run vs series** (commit `0a174691`).
+  `coverageThreshold` config field now means PER-RUN gate (default 15).
+  `CoverageReport.seriesTarget` (default 50) is informational only —
+  surfaced in coverage.md as cumulative across-runs context. Don't
+  conflate the two; calibration.json's `coverageThreshold: 1` overrides
+  the per-run gate (which is what calibration always meant).
+- **Triage issue summaries are now tracked in git** (commit `37150919`).
+  `runs/*/issues/*.md` and `runs/*/issues/INDEX.md` are
+  gitignore-allowlisted; the rest of each run dir (logs, screenshots,
+  events.jsonl, server/, scrubbed/, etc.) stays gitignored. Closure
+  records survive `pnpm playtest:purge`. Adding a new gitignored file
+  type under `runs/` requires no allowlist change; un-ignoring a new
+  artifact type does.
+- **PlayerAlert observer toast persistence semantic** (commit `3c82c572`).
+  Card-played observer toast now persists through the nope window
+  (`persistUntil: ['nope-window-resolved']`) for ALL non-favor cards.
+  Favor stays on `persistUntil: ['favor-given']` (longer window). The
+  observer X dismiss button now appears on every persistent toast,
+  not just the favor case. Filtered cards (extraction / burn-the-files
+  / falsify-intel / combos) still skip the toast — DramaOverlay or
+  StealReport own those moments.
+- **NopeCountdownBar lives INSIDE the case-banner aside** (commit
+  `4e4431c9`). Pre-2026-05-08 it floated below the arena as a centered
+  dark-surface band. Now it's a child of `<aside className=
+  {styles.caseBanner}>` between the divider and the briefer footer.
+  The case-banner's flex `justify-content: center` recomposes the
+  static lines when the intercept row appears/disappears (~10px shift
+  on BURNED). Read as the briefing recomposing live; flagged as
+  acceptable. If reframing as a fixed-height slot becomes worth it,
+  fix path is documented in commit body.
+- **StealReport + FavorReport rubber stamps removed** (commits
+  `17514aae` + `09a4ae44`). The rubber-stamp visual + thunk
+  choreography + `--motion-duration-stamp` token are GONE. Body text
+  carries the verdict on both reports. The `--motion-ease-overshoot`
+  primitive stays (zero current consumers but generic curve worth
+  preserving for future spring cinematics).
 - **`LobbyView.hostConnected: boolean` is REQUIRED** on the
   server-projected lobby view. New lobby-view fixtures must include
   `hostConnected: true|false`.
@@ -227,10 +177,6 @@ Active warnings only. Older landmines have moved to `docs/insights/` and
 - **Audit pattern catch.** Fix commits should cite the issue ID in the
   subject line (`fix(...): close X-NN — summary`). Topic-only refs
   (`"TODO #11"`) hide commits from `E2E-ISSUE-LIST` git-grep audits.
-- **`scripts/playtest/run-session.ts:200-235`** documents the operator's
-  responsibility for both dispatch dances (seat + triage). Until the
-  `/playtest-run` skill exists (§3), this comment is the only mention
-  of the step.
 - **Pre-starting dev servers breaks the orchestrator.** `pnpm
   playtest:run` spawns its own wrangler with `PLAYTEST_TOKEN` baked in
   via `.env`. Pre-starting `pnpm dev:server` binds 8787 with no token

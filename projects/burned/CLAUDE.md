@@ -102,17 +102,18 @@ The spec does not generate code. It generates the *next artifact* — the CSS Fo
 
 ## Bundle Sizes
 
-Last measured 2026-05-06 (Phase 5 §2.8.3 final audit). Re-run `pnpm build` and update after material changes.
+Last measured 2026-05-08 (post couch-design-call sweep). Re-run `pnpm build` and update after material changes.
 
 | Chunk | Raw | Gzipped | Load |
 |-------|-----|---------|------|
-| player entry | 54.25 KB | 16.09 KB | Initial |
-| board entry | 42.13 KB | 14.29 KB | Initial |
-| shared (React + Motion core, `config-*`) | 210.15 KB | 67.01 KB | Initial (shared) |
+| player entry | 58.23 KB | 17.27 KB | Initial |
+| board entry | 42.48 KB | 14.41 KB | Initial |
+| shared (React + Motion core, `config-*`) | 210.78 KB | 67.15 KB | Initial (shared) |
 | VisualElement (`is-ref-object-*`) | 39.93 KB | 14.40 KB | Initial (shared) |
 | motion-features (domMax) | 83.57 KB | 27.41 KB | Lazy (prefetched) |
+| DramaOverlay | 75.00 KB | 29.00 KB | Lazy |
 
-**Phone initial JS: ~97.5 KB gzipped** (under 100 KB budget, ~2.5 KB headroom). Phase 5 §2.8.3 expected ~99 KB post-rebuild; we're 1.5 KB under that. All dev hooks (`__gameStore`, `__testInjectEvent`, `__testForceLocalTarget`) tree-shake correctly — verified by `pnpm verify:bundle` (9 JS chunks × 15 forbidden strings, all clean).
+**Phone initial JS: ~98.82 KB gzipped** (under 100 KB budget, ~1.2 KB headroom). Slightly tighter than the 2026-05-06 baseline (97.5 KB) — PlayerAlert observer-toast persistence pattern (commit `3c82c572`) added a small persistUntil branch + nope-window-resolved gating. All dev hooks (`__gameStore`, `__testInjectEvent`, `__testForceLocalTarget`) tree-shake correctly — verified by `pnpm verify:bundle` (9 JS chunks × 15 forbidden strings, all clean).
 
 ## Workers / Protocol Landmines
 
@@ -168,7 +169,7 @@ Canonical rules in `docs/RULES-REFERENCE.md`. Non-obvious engine behaviors worth
 - **CSS animations override `:active { transform }` without `animation: none`.** See `docs/insights/016-css-animation-vs-active-transform.md`.
 - **`backface-visibility: hidden` is unreliable in Chrome.** See `docs/insights/014-backface-visibility-unreliable-in-chrome.md`. Use opacity crossfade at edge-on midpoint instead.
 - **`contain: layout` (and siblings) trap `position: fixed` descendants.** See `docs/insights/013-contain-layout-traps-fixed-descendants.md`.
-- **Case banner cascade timings (board mount) load-bearing.** `GameTable.module.css`: label 50ms, operation 120ms, sub 190ms, divider 260ms, footer 330ms, stamp 450ms; `DrawPile.module.css`: topCard 700ms, topSecretLabel 1000ms, fileNumber 1100ms. Tighten any → verify full arc reads "briefing → impact → folder lands."
+- **Case banner cascade timings (board mount) load-bearing.** `GameTable.module.css`: label 50ms, operation 120ms, sub 190ms, divider 260ms, footer 330ms; `DrawPile.module.css`: topCard 700ms, topSecretLabel 1000ms, fileNumber 1100ms. Tighten any → verify full arc reads "briefing → impact → folder lands." (NopeCountdownBar lives between divider and footer per commit `4e4431c9` but enters on play events, not at mount — it doesn't participate in this cascade.)
 - **Hand→enlarge + StagingArea crossfade use blur-mask.** `filter: blur(4px → 0 → 4px)` alongside `scale: 0.35 → 1 → 0.35`. MinimalCard's container-query thresholds flip mid-scale; 4px blur smooths the rejig. Don't exceed 6px — Safari mobile rasterization gets expensive.
 - **Hover rules gated strict.** `@media (hover: hover) and (pointer: fine)` on every `:hover` in JoinScreen / SmartActionBox / GameOver / MinimalCard / Lobby startButton. Hybrid touch+trackpad laptops no longer fire sticky hover on tap.
 - **Lobby disabled-sheen uses layered backgrounds, not pseudo-element.** `::after` is `display: none` when disabled; `::before` owns the `// ` prefix. Sheen is a `background-position` animation.

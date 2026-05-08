@@ -62,26 +62,31 @@ function reportFor(
 
 // Copy split by (viewerRole, kind). Subject-verb-asset-verdict structure
 // preserved across all variants so the paper layout reads identical.
+//
+// Stamp dropped 2026-05-08 per Briggsy: the target-side `INTERCEPTED`
+// stamp collided with the Intercepted card mechanic and read as
+// confusing. Body text alone carries the verdict — the rubber-stamp
+// thunk choreography was a casualty but the report still reads as a
+// classified dispatch.
 function copyFor(report: Report): {
   readonly verb: string
   readonly assetName: string
   readonly verdict: string
-  readonly stamp: string
 } {
   const { kind, viewerRole, cardName } = report
   if (viewerRole === 'target') {
     if (kind === 'lifted') {
-      return { verb: 'has lifted', assetName: cardName ?? 'Unknown file', verdict: 'from your burn bag.', stamp: 'Intercepted' }
+      return { verb: 'has lifted', assetName: cardName ?? 'Unknown file', verdict: 'from your burn bag.' }
     }
-    return { verb: 'attempted to lift', assetName: cardName ?? 'Unknown file', verdict: '— none in your bag.', stamp: 'Misfire' }
+    return { verb: 'attempted to lift', assetName: cardName ?? 'Unknown file', verdict: '— none in your bag.' }
   }
   if (kind === 'lifted') {
-    return { verb: 'surrendered', assetName: cardName ?? 'Unknown file', verdict: 'to your burn bag.', stamp: 'Lifted' }
+    return { verb: 'surrendered', assetName: cardName ?? 'Unknown file', verdict: 'to your burn bag.' }
   }
   if (kind === 'whiffed-guess') {
-    return { verb: 'had no', assetName: cardName ?? 'Unknown file', verdict: 'in their burn bag.', stamp: 'Misfire' }
+    return { verb: 'had no', assetName: cardName ?? 'Unknown file', verdict: 'in their burn bag.' }
   }
-  return { verb: 'carried', assetName: 'No assets', verdict: 'in their burn bag.', stamp: 'Misfire' }
+  return { verb: 'carried', assetName: 'No assets', verdict: 'in their burn bag.' }
 }
 
 function announcementFor(report: Report): string {
@@ -215,11 +220,6 @@ export function StealReport() {
               </div>
 
               <p className={styles.verdict}>{currentCopy.verdict}</p>
-            </div>
-
-            {/* Red rubber stamp — thunks in after the paper arrives */}
-            <div className={styles.stamp} aria-hidden="true">
-              {currentCopy.stamp}
             </div>
 
             {/* Footer — eyes-only + carriage-return dismiss */}

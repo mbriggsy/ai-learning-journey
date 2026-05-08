@@ -193,42 +193,6 @@
   color: color-mix(in oklab, var(--color-charcoal-1) 82%, transparent);
 }
 
-/* ─── Rubber stamp ─── */
-
-.stamp {
-  position: absolute;
-  top: var(--space-4);
-  right: calc(-1 * var(--space-2));
-  padding: 6px 14px 8px;
-  font-family: var(--font-mono);
-  font-weight: 900;
-  font-size: calc(var(--text-caption) * 1.1);
-  letter-spacing: 0.3em;
-  text-transform: uppercase;
-  color: var(--color-cream-12);
-  background: var(--color-accent-burned);
-  border-radius: 1px;
-  transform: rotate(-7deg);
-  box-shadow:
-    inset 0 1px 0 color-mix(in oklab, var(--color-cream-12) 22%, transparent),
-    inset 0 -1px 0 color-mix(in oklab, var(--color-charcoal-1) 40%, transparent),
-    0 2px 5px color-mix(in oklab, var(--color-charcoal-1) 55%, transparent);
-  animation: stampThunk var(--motion-duration-stamp) var(--motion-ease-overshoot) 0.32s both;
-}
-
-/* Misfire variants — ochre instead of crimson, reads as bureaucratic sigh.
-   Both named-guess miss and pair-against-empty-bag share the same tone. */
-.paper[data-kind='whiffed-guess'] .stamp,
-.paper[data-kind='dry-bag'] .stamp {
-  background: color-mix(in oklab, var(--color-accent-drama) 88%, var(--color-charcoal-1));
-}
-
-@keyframes stampThunk {
-  0%   { transform: rotate(-2deg) scale(2.1); opacity: 0; }
-  60%  { transform: rotate(-8deg) scale(0.95); opacity: 1; }
-  100% { transform: rotate(-7deg) scale(1); opacity: 1; }
-}
-
 /* ─── Footer ─── */
 
 .footerRule {
@@ -328,12 +292,6 @@
   border-radius: 0 0 2px 0;
   pointer-events: none;
   filter: drop-shadow(-1px -1px 1px color-mix(in oklab, var(--color-charcoal-1) 25%, transparent));
-}
-
-/* ─── Reduced motion: skip the stamp-thunk, keep the paper drop subtle ─── */
-
-@media (prefers-reduced-motion: reduce) {
-  .stamp { animation: none; }
 }
 
 } /* @layer components */

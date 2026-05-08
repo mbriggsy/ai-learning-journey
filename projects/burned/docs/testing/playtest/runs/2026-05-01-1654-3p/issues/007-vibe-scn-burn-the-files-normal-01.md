@@ -1,7 +1,7 @@
 # 007-vibe-scn-burn-the-files-normal-01 — Phone gives zero feedback when burn-the-files shuffles the deck
 
 **Severity (triage):** P2
-**Status:** 🔴 OPEN
+**Status:** ✅ RESOLVED (2026-05-08)
 **Seed kind:** vibe-check
 **Source seats:** seat-1
 **Linked scenarios:** SCN-BURN-THE-FILES-NORMAL-01 (catalog ID: SCN-BURN-FILES-NORMAL-01 — see note)
@@ -57,3 +57,31 @@ Land Option A (phone "FILES BURNED" status-bar flash) first as a one-line delta 
 
 **Triage seed kind:** vibe-check
 **Triage agent session:** playtest-triage / seed 007-vibe-scn-burn-the-files-normal-01
+
+---
+
+## Resolution — 2026-05-08
+
+Closed. The recommended Option A path was implemented in commit
+`21c9e811` ("feat(drama): add FILES BURNED beat for Burn the Files
+(TODO #3 phase 1)") — commit message explicitly cites *calibration
+seed 007*.
+
+`DramaOverlay.getDramaBeats` now returns a `text` variant beat for
+`card-played { cardType: 'burn-the-files' }`:
+
+- ACTOR phone: `FILES BURNED` (1200ms hold, transient).
+- Observer phones / board: `<NAME> BURNED THE FILES`.
+
+The drama beat fires on both phone and board surfaces (DramaOverlay
+is hoisted to Player root in `Player.tsx:182`). The "phone has no
+discard view and no shuffle animation surface" diagnosis from the
+seed is preserved in the source comment at `DramaOverlay.tsx:172-176`.
+
+Catalog ui-assertion "Status line briefly reads 'FILES BURNED'" is
+now satisfied via the drama overlay rather than the StatusBar text
+mutation suggested in Option A. The "cards visibly tumble" board
+assertion (DrawPile shake) was deferred — the drama beat carries the
+narrative weight per Briggsy's drama codification call (`65de88cf`).
+
+Citation: `src/client/shared/DramaOverlay.tsx:172-186`.

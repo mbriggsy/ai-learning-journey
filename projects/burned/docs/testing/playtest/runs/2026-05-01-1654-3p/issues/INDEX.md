@@ -5,7 +5,7 @@
 ## Summary
 
 - **Total issues:** 10
-- **Status:** OPEN 2 · RESOLVED 1 · BLOCKED 0 · DUPLICATE 0 · KNOWN-PRODUCT-CALL 5 · LOW-SIGNAL 2
+- **Status:** OPEN 1 · RESOLVED 2 · BLOCKED 0 · DUPLICATE 0 · KNOWN-PRODUCT-CALL 5 · LOW-SIGNAL 2
 - **Severity:** P0 0 · P1 2 · P2 8
 - **By seed kind:**
   - scripted-scenario: 8
@@ -37,7 +37,7 @@ Spec-level findings against `docs/PRODUCT-SPECIFICATION.md` §2 (Quality Bar) + 
 
 | ID | Title | Severity | Status | Linked | Candidate dup |
 | --- | --- | --- | --- | --- | --- |
-| [007-vibe-scn-burn-the-files-normal-01](007-vibe-scn-burn-the-files-normal-01.md) | Phone gives zero feedback when burn-the-files shuffles the deck | P2 | OPEN | SCN-BURN-THE-FILES-NORMAL-01 (catalog ID: SCN-BURN-FILES-NORMAL-01 — see note) | — |
+| [007-vibe-scn-burn-the-files-normal-01](007-vibe-scn-burn-the-files-normal-01.md) | Phone gives zero feedback when burn-the-files shuffles the deck | P2 | RESOLVED | SCN-BURN-THE-FILES-NORMAL-01 (catalog ID: SCN-BURN-FILES-NORMAL-01 — see note) | resolved by `21c9e811` — DramaOverlay FILES BURNED beat |
 
 ## UI-spec-divergence findings
 

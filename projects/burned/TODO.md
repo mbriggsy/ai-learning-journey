@@ -102,7 +102,7 @@ Briggsy-required (carryover, all still open):
 - **Real-device playtest** (Active Priority #2).
 - **8-player stress test** (Active Priority #3).
 - **Physical hardware verification** (Active Priority #5).
-- **Visual rows in issue list:** C-09 / C-10 / C-11.
+- **Visual rows in issue list:** C-10 / C-11.
 
 ### Landmines (read before next session)
 
@@ -302,12 +302,12 @@ Solo-doable:
   any front door, open the rear door). The script reads from
   `temp/cards/burned-iter11-cropped-LOCKED.png` so copy the candidate
   to that path before re-running.
-- **Continue the E2E-ISSUE-LIST cleanup.** 3 truly-open 🔴 rows
+- **Continue the E2E-ISSUE-LIST cleanup.** 2 truly-open 🔴 rows
   remain after the 2026-05-07 evening sweep + C-21 (resolved by
   side-effect of `308bbdbf`) + C-12 (channel-ticker overflow) + C-07
-  (brass stand height) closures. All 3 are visual: C-09, C-10, C-11.
-  They need Briggsy-eye visual-identity input before they're
-  solo-actionable.
+  (brass stand height) + C-09 (NameCard flex layout) closures.
+  Both are visual: C-10, C-11. They need Briggsy-eye visual-identity
+  input before they're solo-actionable.
 - **Visual review on the 5-commit Phase 5 palette batch** (carryover
   from prior session) — drama-accent CARD FACE inspection still
   pending. Now unblocked from extraction + intel-briefing perspective;

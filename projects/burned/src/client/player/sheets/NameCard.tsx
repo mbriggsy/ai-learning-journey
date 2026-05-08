@@ -30,7 +30,7 @@ export function NameCard({ targetName, onNameCard, onCancel }: NameCardProps) {
     run()
   }
   return (
-    <div>
+    <div className={styles.nameCardLayout}>
       <div className={styles.sheetTitle}>Name a card to steal from {targetName}</div>
       <div className={styles.sheetSubtitle}>One tap — choose wisely</div>
       <div className={styles.cardGrid}>

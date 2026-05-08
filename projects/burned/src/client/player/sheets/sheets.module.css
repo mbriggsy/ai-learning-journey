@@ -328,12 +328,75 @@
   letter-spacing: 0.04em;
 }
 
-/* --- Card grid (NameCard: pick a card type to name) --- */
-
+/* --- Card grid (NameCard: pick a card type to name) ---
+   Lives inside .nameCardLayout's flex column — the grid takes the
+   remaining vertical space between the pinned title/subtitle and the
+   pinned cancel button, scrolling internally when 16 buttons exceed
+   that band. `min-height: 0` is load-bearing: without it, flex items
+   default to min-content (full intrinsic grid height) and overflow:auto
+   never engages. Same pattern as the C-12 ticker ellipsis fix.
+   E2E audit C-09. */
 .cardGrid {
   display: grid;
   grid-template-columns: repeat(2, 1fr);
   gap: var(--space-2);
+  flex: 1 1 0;
+  min-height: 0;
+  overflow-y: auto;
+  -webkit-overflow-scrolling: touch;
+  overscroll-behavior: contain;
+  /* Bottom-edge feather signals "more cards below" without a visible
+     scrollbar on the sheet surface. 24px feather ≈ half a button row. */
+  mask-image: linear-gradient(
+    to bottom,
+    black 0,
+    black calc(100% - 24px),
+    transparent 100%
+  );
+  -webkit-mask-image: linear-gradient(
+    to bottom,
+    black 0,
+    black calc(100% - 24px),
+    transparent 100%
+  );
+}
+
+.cardGrid::-webkit-scrollbar {
+  display: none;
+}
+
+/* NameCard wrapper — flex column claims the BottomSheet content area's
+   interior height so the cardGrid can scroll between pinned title/subtitle
+   (top) and pinned cancel (bottom). Without this, all 16 buttons + chrome
+   stack vertically and the cancel slides below the fold on phones
+   ≤ 414×896 (audit baseline 360×640: cancel sat 108px below fold).
+
+   Why a fixed `height: calc(...)` instead of `height: 100%`: BottomSheet's
+   `.content` is `overflow-y: auto` with a `max-height: 0.8 × viewport-safe`
+   but no explicit height — its size is content-driven. `height: 100%` of
+   an auto-height parent collapses to 0. We mirror BottomSheet's interior
+   formula here (`0.8 × viewport-safe - 2 × space-5` for the symmetric
+   padding pair) so the wrapper occupies the visible sheet exactly. On iOS
+   with home-bar inset > space-5, `.content`'s `padding-bottom` becomes
+   slightly taller than space-5 — the wrapper may be 1-2px taller than
+   .content's true interior, absorbed by `.content`'s overflow:auto.
+
+   E2E audit C-09. */
+.nameCardLayout {
+  display: flex;
+  flex-direction: column;
+  height: calc(var(--size-viewport-safe) * 0.8 - var(--space-5) * 2);
+  min-height: 0;
+}
+
+/* Pin title/subtitle/cancel — only the grid scrolls. Without this,
+   default flex-shrink:1 lets every child compress when content exceeds
+   the layout, which would re-introduce the cancel-below-fold bug if
+   tokens grow. */
+.nameCardLayout > .sheetTitle,
+.nameCardLayout > .sheetSubtitle,
+.nameCardLayout > .cancelBtn {
+  flex-shrink: 0;
 }
 
 /* --- Full-card peek scroller (FuturePeek: See the Future + Alter the Future) ---

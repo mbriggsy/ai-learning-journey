@@ -90,7 +90,59 @@ When triaging a HIGH suspicion from a seat agent:
    run carries less weight than a multi-run pattern (compare §2.1
    pair-steal, confirmed 4×).
 
+## Sister case: §2.7 (observer Extraction drama beat "weak")
+
+Same run, same audit pattern, different agent-blind-spot.
+
+Seat agent: *"Observers see only 'EXTRACTED' briefly (~4s) in the status
+bar. No cinematic overlay visible on observer's phone."*
+
+Trace via `__testInjectEvent({type:'burned-drawn'})` then
+`__testInjectEvent({type:'extraction-played'})` on the observer's phone,
+with a per-frame opacity sampler installed on the DramaOverlay
+(`[role="status"]`) for 12 seconds:
+
+| Block | Slot | Window | Duration |
+|---|---|---|---|
+| 1 | flipSlot (burned-drawn cinematic with victim name) | 19–3136ms | 3117ms |
+| 2 | text (EXTRACTED on teal scrim) | 3286–5386ms | 2100ms |
+
+Total ~5.4 seconds of cinematic visible on observer's phone. Both beats
+reach opacity 1 with sustained peaks. Frozen-state screenshots
+(`temp/observer-flip-truly-frozen.png` showing the full Burned card flip
+with "BURNED" header + illustration; `temp/observer-extracted-frozen-2.png`
+showing the giant EXTRACTED text on teal scrim) verify the cinematic
+content paints to the compositor.
+
+The agent's perception missed it. Two contributing factors:
+
+1. **Per-tick DOM polling samples brief states.** Agents that poll the
+   DOM state at intervals (rather than continuously sampling per-rAF)
+   read overlay opacity 0 most of the time — beats are sub-second-rate
+   transients between long opacity-0 quiescent periods. The 5.4s
+   cinematic window is ~10% of the total observation time at most.
+2. **Status bar EXTRACTED was a separate, longer signal that captured
+   attention.** StatusBar's status-strip update for `extraction-played`
+   stays visible for the full nope-window-resolved period — that's the
+   "EXTRACTED ~4s" the agent reported. The DramaOverlay beat is
+   shorter and easier to miss when there's a competing concurrent
+   surface that *is* persistent.
+
+Same class as insight 050 (agent-eye verification misses perceptual
+continuities) at the harness level: agents read discretizable signals
+(StatusBar text persistence) but miss continuous beats (DramaOverlay
+peak-and-fade).
+
 ## Outcome
 
-§2.4 in TODO.md (run 2026-05-08-0935-3p) closed as **resolved-no-fix —
-correct engine behavior, agent memory lapse**. No code change.
+§2.4 and §2.7 in TODO.md (run 2026-05-08-0935-3p) both closed as
+**resolved-no-fix — correct system behavior, agent perception/memory
+limitations**. No code change for either.
+
+For the operator running future harness runs: a HIGH suspicion that a
+"cinematic isn't visible" or "X doesn't fire" should trigger a sampler
+verification BEFORE a fix path opens. The sampler pattern from
+`tests/e2e/drama-beat-timing.spec.ts` ports cleanly to
+chrome-devtools-mcp's `evaluate_script` — install a per-rAF opacity
+sampler, inject the event via `__testInjectEvent`, read the trace.
+Takes ~30 seconds; saves hours of misdirected investigation.

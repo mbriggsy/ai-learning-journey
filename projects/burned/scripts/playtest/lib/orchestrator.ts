@@ -631,16 +631,28 @@ export async function runSession(
     //    Option A path (Phase 6 Unit 2.5): synthetic SeatHandle objects only;
     //    each seat owns its own MCP-Playwright browser via playwright-seat-N.
     // -----------------------------------------------------------------------
-    const viewport = config.viewports[0] ?? {
+    // Default viewport when config.viewports is empty — same as existing
+    // single-viewport fallback.
+    const defaultViewport = {
       width: 390 as const,
       height: 844 as const,
       label: '390x844',
     }
+    // Rotate viewports across seats. With a 3-viewport config and 3 seats,
+    // each seat picks up a different viewport so one run exercises all
+    // configured shapes. Modulo handles the asymmetric case (more seats
+    // than viewports → wraps; fewer seats → tail viewports unexercised
+    // this run, picked up by larger-seat-count series).
+    const pickViewport = (i: number) =>
+      config.viewports.length === 0
+        ? defaultViewport
+        : config.viewports[i % config.viewports.length]!
     const roomCode = config.roomCode ?? 'PLAYTEST'
     try {
       for (let i = 0; i < config.seats; i++) {
         const seatName = config.seatNames?.[i] ?? `Seat${i + 1}`
         const seatId = `seat-${i + 1}`
+        const viewport = pickViewport(i)
         if (skipBrowserLaunch) {
           const { logPath, suspicionPath } = buildSeatPaths(paths, seatId)
           seats.push({
@@ -926,7 +938,11 @@ export async function runSession(
       errorMessage,
       coverage,
       freePlay: coverage.freePlayAccounting,
-      viewportsExercised: [],
+      // Unique viewport labels across seats this run. Order-preserving by
+      // first occurrence so the report reads stably (seat-1's first, etc.).
+      viewportsExercised: Array.from(
+        new Map(seats.map(s => [s.viewport.label, s.viewport.label])).values(),
+      ),
     }
     try {
       await appendSessionEnd(paths, report)

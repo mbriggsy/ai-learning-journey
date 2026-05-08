@@ -431,6 +431,60 @@ describe('runSession — fatal close during seat-driver', () => {
 })
 
 // ---------------------------------------------------------------------------
+// 8a. viewport rotation across seats
+// ---------------------------------------------------------------------------
+
+describe('runSession — viewport rotation', () => {
+  it('assigns each seat a distinct viewport from the configured list (round-robin)', async () => {
+    const log: SpyLog = { events: [] }
+    const { deps, spies } = buildHappyDeps(log)
+
+    const config = makeConfig({
+      viewports: [
+        { width: 360, height: 640, label: '360x640' },
+        { width: 390, height: 844, label: '390x844' },
+        { width: 768, height: 1024, label: '768x1024' },
+      ],
+    })
+
+    await runSession(config, deps)
+
+    // 3 seats, 3 viewports → one of each, in order.
+    const seatViewports = spies.createSeat.mock.calls.map(
+      c => (c[0] as { viewport: { label: string } }).viewport.label,
+    )
+    expect(seatViewports).toEqual(['360x640', '390x844', '768x1024'])
+  })
+
+  it('reports viewportsExercised in session.md (the exercised set, not empty)', async () => {
+    const log: SpyLog = { events: [] }
+    const { deps } = buildHappyDeps(log)
+    const config = makeConfig({
+      viewports: [
+        { width: 360, height: 640, label: '360x640' },
+        { width: 390, height: 844, label: '390x844' },
+        { width: 768, height: 1024, label: '768x1024' },
+      ],
+    })
+    const result = await runSession(config, deps)
+    const md = await fs.readFile(path.join(result.runDir, 'session.md'), 'utf8')
+    expect(md).toMatch(/viewports exercised:.*360x640.*390x844.*768x1024/)
+    expect(md).not.toMatch(/viewports exercised:\s*\(none\)/)
+  })
+
+  it('wraps when seats > viewports (modulo) — 3 seats, 1 viewport → all same', async () => {
+    const log: SpyLog = { events: [] }
+    const { deps, spies } = buildHappyDeps(log)
+    await runSession(makeConfig(), deps) // single viewport in default
+
+    const seatViewports = spies.createSeat.mock.calls.map(
+      c => (c[0] as { viewport: { label: string } }).viewport.label,
+    )
+    expect(seatViewports).toEqual(['390x844', '390x844', '390x844'])
+  })
+})
+
+// ---------------------------------------------------------------------------
 // 8b. failed-launch detection (driver returned but no agents joined)
 // ---------------------------------------------------------------------------
 

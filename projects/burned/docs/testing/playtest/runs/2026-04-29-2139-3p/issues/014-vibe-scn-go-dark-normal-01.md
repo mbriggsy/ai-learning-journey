@@ -1,7 +1,7 @@
 # 014-vibe-scn-go-dark-normal-01 — Go Dark ACTOR phone has no drama beat; play reads as mechanical skip
 
 **Severity (triage):** P2
-**Status:** 🔴 OPEN
+**Status:** ✅ RESOLVED-BY-DESIGN (2026-05-08)
 **Seed kind:** vibe-check
 **Source seats:** seat-1, seat-3
 **Linked scenarios:** SCN-GO-DARK-NORMAL-01
@@ -58,6 +58,33 @@ Secondary observation: Seat-1's vibe-check was tagged `relatedScenario: "SCN-GO-
 ## Recommended next step
 
 Implement Option A first (wire `go-dark` ACTOR toast into the drama beats registry), verify the ACTOR phone shows the toast and turn hands off cleanly, then evaluate whether the board-side lights-dim beat from Option B is worth the additional surface.
+
+## Resolution — 2026-05-08
+
+Closed-by-design — same shape as #012. Commit `65de88cf` ("codify
+when card-played gets a beat — pull Go Dark, add Falsify Intel")
+records Briggsy's tonal call: a loud "GONE DARK" overlay fights the
+card's "sneaking out of sight" intent. The drama overlay was
+deliberately removed for Go Dark; observer phones now receive a
+quiet `PlayerAlert` toast ("X played Go Dark.") that matches the
+tone better than either silence or a flashy beat.
+
+The catalog scenario `SCN-GO-DARK-NORMAL-01`'s ui-assertions for an
+ACTOR "you went dark" toast and venetian-blinds beat are
+aspirational; the product-level call is to honor card tonal intent
+over catalog text.
+
+The seat-1 misfiling noted in the diagnosis section (vibe-check
+tagged SCN-GO-DARK-NORMAL-01 but referencing a shuffle mechanic) is
+a separate harness/agent ID-discipline gap — covered by the
+broader uncatalogued-scenario family of OPEN issues
+(#001/#002/#003/#011/#018), pending a single agent-prompt or
+schema-validator fix.
+
+Reference: commit `6d7a5d0e` ("docs(triage): ... lock go-dark
+by-design") records the locked decision.
+
+Citation: `src/client/player/PlayerAlert.tsx:118-121`.
 
 ---
 

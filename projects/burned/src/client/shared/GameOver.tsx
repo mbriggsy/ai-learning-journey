@@ -45,11 +45,24 @@ export function GameOver({ players, winnerId, eliminationOrder, myPlayerId, onPl
 
   return (
     <div className={styles.container}>
-      {/* Winner — dramatic entrance. Two-tier: NAME huge + WINS verb
-          smaller-but-prominent right under so the hero reads as one
-          ceremonial statement ("MICHAEL WINS") instead of a name floating
-          alone. Surfaced 2026-05-02 by Briggsy ("MICHAEL" without a verb
-          felt incomplete — should say something like 'wins/survives'). */}
+      {/* Case Closed header strip — frames the entire screen as an
+          after-action report. Mirrors the JoinScreen / case-banner /
+          dossier vocabulary so the climax slots into the agency layer
+          rather than reading as an out-of-universe game-over screen.
+          E2E audit C-17. */}
+      <m.header
+        className={styles.caseClosedBar}
+        initial={{ opacity: 0, transform: 'translateY(-12px)' }}
+        animate={{ opacity: 1, transform: 'translateY(0px)' }}
+        transition={{ ...MOTION.enter, delay: 0.05 }}
+      >
+        <span className={styles.caseClosedLabel}>// Case 47-B · Closed</span>
+        <span className={styles.classifiedTag}>[ Classified ]</span>
+      </m.header>
+
+      {/* Winner — dramatic entrance. NAME huge + agency-status caption
+          beneath so the hero reads as a closed-case verdict, not a
+          context-free name floating alone. */}
       <m.div
         className={styles.winner}
         // Transform string — winner reveal is a dramatic moment and must stay
@@ -59,7 +72,7 @@ export function GameOver({ players, winnerId, eliminationOrder, myPlayerId, onPl
         transition={{ ...MOTION.gentle, delay: 0.2 }}
       >
         <span className={styles.winnerName}>{winner?.name ?? 'Unknown'}</span>
-        <span className={styles.winnerVerb}>Wins</span>
+        <span className={styles.winnerStatus}>// Operative Status: Survived</span>
       </m.div>
 
       <m.div
@@ -69,13 +82,15 @@ export function GameOver({ players, winnerId, eliminationOrder, myPlayerId, onPl
         transition={{ ...MOTION.enter, delay: 0.6 }}
       >
         {myResult?.rank === 1
-          ? 'You won!'
+          ? 'You closed the case.'
           : myResult
             ? `You placed #${myResult.rank} of ${players.length}`
             : pickMessage(winnerId)}
       </m.div>
 
-      {/* Rankings — staggered reveal */}
+      {/* Rankings — staggered reveal. Each row carries a status tag
+          (SURVIVED / ELIMINATED) so the roster reads as an after-action
+          report on the operatives, not just a numbered list. */}
       <div className={styles.rankings}>
         {rankings.map(({ player, rank }, i) => (
           <m.div
@@ -94,6 +109,9 @@ export function GameOver({ players, winnerId, eliminationOrder, myPlayerId, onPl
             <span className={styles.rankNum}>#{rank}</span>
             <PlayerIcon color={player.color} size={14} />
             <span className={styles.rankName}>{player.name}</span>
+            <span className={styles.rankStatus}>
+              {rank === 1 ? 'Survived' : 'Eliminated'}
+            </span>
           </m.div>
         ))}
       </div>
@@ -112,7 +130,7 @@ export function GameOver({ players, winnerId, eliminationOrder, myPlayerId, onPl
             delay: 0.8 + rankings.length * 0.08 + 0.3,
           }}
         >
-          Run It Back
+          // New Case
         </m.button>
       ) : myPlayerId ? (
         <m.div

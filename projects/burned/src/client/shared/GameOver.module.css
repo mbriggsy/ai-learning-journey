@@ -33,6 +33,52 @@
   color: var(--color-fg-primary);
 }
 
+/* ─── Case-closed header strip ───
+   Frames the entire screen as an after-action report. Mono caps with a
+   `//` prefix mirror the agency vocabulary used on the JoinScreen
+   briefing panel, the dossier feed tab, and the case banner — so the
+   climax slots into the same layer as the rest of the app rather than
+   reading as a generic game-over surface. E2E audit C-17. */
+.caseClosedBar {
+  display: flex;
+  align-items: baseline;
+  justify-content: space-between;
+  gap: var(--space-6);
+  width: 100%;
+  /* Wider than the rankings container so the case-closed strip spans
+     enough of the climax screen to read as a "report header" rather
+     than a tight mid-page label. Caps at 720px so the strip doesn't
+     stretch absurdly wide on 4K boards. */
+  max-width: min(100%, 720px);
+  margin-bottom: var(--space-8);
+  padding: 0 var(--space-3) var(--space-3);
+  border-bottom: 1px solid color-mix(in oklab, var(--color-accent-burned) 28%, transparent);
+}
+
+.caseClosedLabel {
+  font-family: var(--font-mono);
+  font-size: var(--text-caption);
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: 0.22em;
+  color: color-mix(in oklab, var(--color-cream-11) 75%, transparent);
+  /* nowrap on both spans — at narrower phone widths (≤390px) the
+     letter-spacing makes "// CASE 47-B · CLOSED" + "[CLASSIFIED]"
+     overflow. Strict nowrap prevents broken mid-word wraps; the
+     header strip simply takes its natural content width. */
+  white-space: nowrap;
+}
+
+.classifiedTag {
+  font-family: var(--font-mono);
+  font-size: var(--text-caption);
+  font-weight: 700;
+  letter-spacing: 0.22em;
+  text-transform: uppercase;
+  color: var(--color-accent-burned);
+  white-space: nowrap;
+}
+
 /* ─── Winner announcement ───
    Two-tier: NAME (huge, glowing) + verb "Wins" (smaller, accent-colored,
    tracked) so the hero reads as one statement, not a floating name. */
@@ -57,18 +103,18 @@
     0 0 60px color-mix(in oklab, var(--color-accent-drama) 15%, transparent);
 }
 
-.winnerVerb {
-  font-family: var(--font-display);
-  font-size: var(--text-title);
-  font-weight: 600;
+/* Operative status caption under the winner name — replaced the prior
+   "Wins" verb. Mono caps + `//` prefix mirror the agency vocabulary on
+   the case-closed header bar above. Smaller than the prior winner verb
+   on purpose: NAME stays the primary read, status caption explains it
+   in-universe. E2E audit C-17. */
+.winnerStatus {
+  font-family: var(--font-mono);
+  font-size: var(--text-callout);
+  font-weight: 700;
   text-transform: uppercase;
   letter-spacing: 0.24em;
-  /* Slight padding-left to balance the wide letter-spacing visually
-     centering the word under the name. */
-  padding-left: 0.24em;
   color: var(--color-accent-drama);
-  /* Faint glow to match the name above. Subdued so the NAME stays the
-     primary read. */
   text-shadow:
     0 0 16px color-mix(in oklab, var(--color-accent-drama) 35%, transparent);
 }
@@ -134,6 +180,24 @@
   font-size: var(--text-body);
   font-weight: 500;
   flex: 1;
+  text-align: left;
+}
+
+/* After-action status tag on each rank row — winner = SURVIVED (drama
+   accent), eliminated = ELIMINATED (muted cordovan). Mono caps continue
+   the agency vocabulary; the contrast makes the at-a-glance read of the
+   roster a status report rather than a numbered list. E2E audit C-17. */
+.rankStatus {
+  font-family: var(--font-mono);
+  font-size: var(--text-caption);
+  font-weight: 700;
+  letter-spacing: 0.18em;
+  text-transform: uppercase;
+  color: color-mix(in oklab, var(--color-accent-burned) 65%, transparent);
+}
+
+.rank[data-winner] .rankStatus {
+  color: var(--color-accent-drama);
 }
 
 /* ─── Play again button ─── */
@@ -141,12 +205,17 @@
 .playAgain {
   position: relative;
   margin-top: var(--space-10);
-  padding: var(--space-4) var(--space-12);
-  font-family: var(--font-display);
-  font-size: var(--text-title);
+  padding: var(--space-4) var(--space-10);
+  /* Mono caps + agency vocabulary — the `// New Case` label reads as a
+     case-file action ("open a new case") rather than a generic "play
+     again" CTA. Display font would cue "celebration"; mono cues "agency
+     instruction" which sits cleaner on the After-Action Report frame.
+     Size + glow + drama-accent bg keep the prominence. E2E audit C-17. */
+  font-family: var(--font-mono);
+  font-size: var(--text-callout);
   font-weight: 700;
   text-transform: uppercase;
-  letter-spacing: 0.08em;
+  letter-spacing: 0.18em;
   border: none;
   border-radius: var(--radius-md);
   background: var(--color-accent-drama);

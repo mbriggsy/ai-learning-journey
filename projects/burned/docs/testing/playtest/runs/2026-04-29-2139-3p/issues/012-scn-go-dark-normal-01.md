@@ -1,7 +1,7 @@
 # 012-scn-go-dark-normal-01 — Go Dark ACTOR phone missing drama beat — play feels mechanical, not cinematic
 
 **Severity (triage):** P2
-**Status:** 🔴 OPEN
+**Status:** ✅ RESOLVED-BY-DESIGN (2026-05-08)
 **Seed kind:** scripted-scenario
 **Source seats:** seat-3
 **Linked scenarios:** SCN-GO-DARK-NORMAL-01
@@ -44,6 +44,30 @@ The vibe-check severity is P2: a single-seat `unsure` (not `no`) on a scenario t
 ## Recommended next step
 
 Implement Option A as the immediate minimum fix (one client-side event handler addition clears the `ui-assertions` gap and removes the mechanical-skip feel), then schedule Option C as the aspirational Archer-vocabulary pass in the next visual polish pass.
+
+## Resolution — 2026-05-08
+
+Closed-by-design. Briggsy's explicit tonal call in commit `65de88cf`
+("codify when card-played gets a beat — pull Go Dark, add Falsify
+Intel"): *the card's narrative IS sneaking out of sight, so a loud
+overlay fights the card*. The drama overlay was deliberately REMOVED
+for go-dark, replaced with a quiet PlayerAlert toast for observers
+(see #015). The ACTOR phone surfacing nothing on Go Dark is the
+intended behavior — the staging area returning to neutral matches the
+"operative ducks out cleanly" tonal beat.
+
+Reference: commit `6d7a5d0e` ("docs(triage): correct C-30..C-33
+statuses + lock go-dark by-design") records the locked decision.
+
+Catalog scenario `SCN-GO-DARK-NORMAL-01`'s ui-assertions for an ACTOR
+"you went dark" toast and venetian-blinds beat are aspirational; the
+product-level decision is to honor the card's tonal intent (silence)
+over the catalog text. Future authoring of the catalog should reflect
+the by-design silence.
+
+Citation: `src/client/player/PlayerAlert.tsx:118-121` (the explicit
+"go-dark intentionally falls THROUGH and shows the toast — the card's
+narrative is sneaking out of sight" comment).
 
 ---
 

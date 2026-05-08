@@ -5,7 +5,7 @@
 ## Summary
 
 - **Total issues:** 22
-- **Status:** OPEN 9 · RESOLVED 3 · BLOCKED 0 · DUPLICATE 0 · KNOWN-PRODUCT-CALL 8 · LOW-SIGNAL 2
+- **Status:** OPEN 8 · RESOLVED 4 · BLOCKED 0 · DUPLICATE 0 · KNOWN-PRODUCT-CALL 8 · LOW-SIGNAL 2
 - **Severity:** P0 0 · P1 6 · P2 15
 - **By seed kind:**
   - scripted-scenario: 14
@@ -25,7 +25,7 @@
 | [003-session-start](003-session-start.md) | Uncatalogued scenario ID "SESSION-START" fired by seat-3; no catalog definition exists | P2 | OPEN | SESSION-START | — |
 | [006-scn-favor-normal-01](006-scn-favor-normal-01.md) | Favor target single-tap path broken; dual-seat vibe-check "no"; B-05 stall did not fire | P1 | RESOLVED | SCN-FAVOR-NORMAL-01 (catalog: SCN-CALL-IN-FAVOR-NORMAL-01) | SCN-CALL-IN-FAVOR-NORMAL-01 / B-05 (known-product-call: favor-pending + target disconnects → room frozen) |
 | [011-turn-transition-seat1-to-seat2](011-turn-transition-seat1-to-seat2.md) | Ghost scenario ID: uncataloged turn-advance fire from OTHER observer | P2 | OPEN | TURN-TRANSITION-SEAT1-TO-SEAT2 | — |
-| [012-scn-go-dark-normal-01](012-scn-go-dark-normal-01.md) | Go Dark ACTOR phone missing drama beat — play feels mechanical, not cinematic | P2 | OPEN | SCN-GO-DARK-NORMAL-01 | SCN-GO-DARK-NORMAL-01 — catalog entry shows `known-product-call: none`; clusterer candidate `(linked: B-04)` is a false-positive (B-04 = defuse-pending + disconnect, unrelated to Go Dark). Not a confirmed known product call — full diagnosis follows. |
+| [012-scn-go-dark-normal-01](012-scn-go-dark-normal-01.md) | Go Dark ACTOR phone missing drama beat — play feels mechanical, not cinematic | P2 | RESOLVED-BY-DESIGN | SCN-GO-DARK-NORMAL-01 | resolved by `65de88cf` — Briggsy locked Go Dark drama-silent by-design; toast on observer phones |
 | [016-scn-go-dark-normal-01](016-scn-go-dark-normal-01.md) | Seat-1 agent mislabeled SCN-GO-DARK-NORMAL-01 to a Burn the Files (shuffle) action | P2 | LOW-SIGNAL | SCN-GO-DARK-NORMAL-01 | Clusterer proposed B-04 (defuse-pending disconnect); catalog entry for SCN-GO-DARK-NORMAL-01 says `known-product-call: none` — candidate duplicate is erroneous, not confirmed. |
 | [018-intercept-window-observed-seat1-turn](018-intercept-window-observed-seat1-turn.md) | Uncatalogued scenario ID: nope/Intercept window observed as OTHER (alive) with disabled button | P2 | OPEN | INTERCEPT-WINDOW-OBSERVED-SEAT1-TURN | — |
 

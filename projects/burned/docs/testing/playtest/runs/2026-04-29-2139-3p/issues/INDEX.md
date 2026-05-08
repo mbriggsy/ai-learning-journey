@@ -5,7 +5,7 @@
 ## Summary
 
 - **Total issues:** 22
-- **Status:** OPEN 10 · RESOLVED 2 · BLOCKED 0 · DUPLICATE 0 · KNOWN-PRODUCT-CALL 8 · LOW-SIGNAL 2
+- **Status:** OPEN 9 · RESOLVED 3 · BLOCKED 0 · DUPLICATE 0 · KNOWN-PRODUCT-CALL 8 · LOW-SIGNAL 2
 - **Severity:** P0 0 · P1 6 · P2 15
 - **By seed kind:**
   - scripted-scenario: 14
@@ -35,7 +35,7 @@ Loose clustering — no fixed scenario IDs (D12 / R9). Phase 6 calibration tunes
 
 | ID | Title | Severity | Status | Linked | Candidate dup |
 | --- | --- | --- | --- | --- | --- |
-| [005-call-in-a-favor-card-played-freeplay](005-call-in-a-favor-card-played-freeplay.md) | StatusBar shows no feedback to OTHER (alive) during favor exchange | P1 | OPEN | — | — |
+| [005-call-in-a-favor-card-played-freeplay](005-call-in-a-favor-card-played-freeplay.md) | StatusBar shows no feedback to OTHER (alive) during favor exchange | P1 | RESOLVED-BY-SIDE-EFFECT | — | resolved by `0cfd0963` (PlayerAlert persistUntil favor-given) |
 | [022-direct-order-card-played-freeplay](022-direct-order-card-played-freeplay.md) | direct-order target sees silent double-draw — no "under attack" indicator | P2 | OPEN | — | — |
 
 ## Vibe-check findings

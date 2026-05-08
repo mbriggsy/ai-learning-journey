@@ -1,7 +1,7 @@
 # 005-call-in-a-favor-card-played-freeplay — StatusBar shows no feedback to OTHER (alive) during favor exchange
 
 **Severity (triage):** P1
-**Status:** 🔴 OPEN
+**Status:** ✅ RESOLVED-BY-SIDE-EFFECT (2026-05-08)
 **Seed kind:** free-play
 **Source seats:** seat-3
 **Linked scenarios:** (none)
@@ -55,6 +55,30 @@ This is a novel free-play observation — Call In A Favor as witnessed from OTHE
 ## Recommended next step
 
 Implement Option A — extend `StatusBar` to branch on `subPhase === 'favor-pending'` for non-involved OTHER (alive) players, emitting a "[Requester] is calling in a favor from [Target]…" string, since it is the lowest-effort targeted fix that directly addresses the confusion Seat3 experienced.
+
+## Resolution — 2026-05-08
+
+Closed-by-side-effect. The observer-feedback gap was filled by a
+different mechanism than the proposed Option A (StatusBar branch):
+commit `0cfd0963` ("persist Call in a Favor toast until favor-given")
+gives every non-actor phone a `PlayerAlert` toast reading
+`"<Requester> played Call in a Favor."` with
+`persistUntil: ['favor-given']`. The toast remains visible across the
+full pending-favor window — including for a re-attending bystander
+who only looks 30-60s after the play (the original Seat3 7-minute
+silent-wait symptom).
+
+The toast supersedes the StatusBar branch from Option A because:
+
+- Higher visual prominence than a status-bar text mutation.
+- Persists across the multi-minute human-think gap.
+- Matches the broader card-played observer toast pattern added in
+  `65de88cf` (drama codification) — every non-actor card play
+  surfaces a toast unless a richer surface (DramaOverlay text beat /
+  StealReport / FavorReport) owns the moment.
+
+Citation: `src/client/player/PlayerAlert.tsx:103-149` (card-played
+case) + `:142-148` (persistUntil for call-in-a-favor).
 
 ---
 

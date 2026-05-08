@@ -52,10 +52,11 @@ covering Intel Briefing + Falsify Intel against deck sizes 0/1/2.
 
 **Truly-open 🔴 rows after sweep: 0.** All P0 / P1 / P2 audit rows from
 the 2026-04-23 audit are now closed (🟢 / 📋 / ⏸ / 🏷). The remaining ⏸
-rows (C-13, C-15, C-17, C-18) are blocked on product/asset decisions,
-not engineering. (C-16 was structurally subsumed by the C-10 fix; C-19
+rows (C-13, C-17, C-18) are blocked on product/asset decisions, not
+engineering. (C-16 was structurally subsumed by the C-10 fix; C-19
 shipped a Mission Briefing panel + Channel Ticker on the JoinScreen
-joined state.)
+joined state; C-15 was resolved by side-effect of `4985fa23` — same-day
+post-audit fix.)
 
 **C-21 closure 2026-05-07:** measurement re-test via chrome-devtools-mcp
 confirmed C-21 was resolved by side-effect of `308bbdbf` (2026-04-27,
@@ -228,7 +229,7 @@ appears on paper.
 | **C-12** | Channel ticker `// AWAITING TRANSMISSION` would wrap on narrower containers (phone overlays). **Shipped 2026-05-07 (this commit)** — `.ticker { overflow: hidden }` + `.tickerLine { flex: 1 1 0; min-width: 0; overflow: hidden; text-overflow: ellipsis }`. Pre-fix repro at 667×375 (iPhone SE landscape): folder shrank to 170px wide → ticker container 123px → "// AWAITING TRANSMISSION" at the 10px font-size floor needed 197px → 74px paint overflow past the manila edge with `overflow: visible`. Post-fix at 667×375: line painted 110px inside 123px, ellipsis truncates legibly, cursor stays visible at right edge; verified no regression at 1280×720 (line 477px, no truncation, full text). The audit's "would wrap" wording was structurally inaccurate (the line had `white-space: nowrap`, so it overflowed instead of wrapping) but the symptom they were guarding against — text painting beyond the ticker band — was real and reproducible. | 🟢 |
 | **C-13** | 11 of 17 card illustrations are 384×384 square art letterboxed in 5:7 frames → ~29px teal mat top+bottom. Inconsistent with operative portraits (tall aspect, fill-to-edge). Cuts against the Archer edge-to-edge feel. | ⏸ (asset regen decision) |
 | **C-14** | INTERCEPTED drama hold 800ms, EXTRACTED 1000ms — too short to read from couch across a 15ft room. **Shipped 2026-04-23 in `1db5ddab`** — drama hold extended; transient INTERCEPTED beat aborts on `turn-started` (later refined). | 🟢 |
-| **C-15** | Board shows `{NAME} BURNED` text while drawer sees the CARD — board arguably should get the card variant too (it's the narrator) | ⏸ (product call) |
+| **C-15** | Board shows `{NAME} BURNED` text while drawer sees the CARD — board arguably should get the card variant too (it's the narrator). **Resolved by side-effect of `4985fa23` (2026-04-23, "card-flip beat for non-drawer burned reveal — Arc #2")** which landed the same day as the audit but after the audit was written. Audit caught the pre-fix state; the fix landed within hours. The current code in `src/client/shared/DramaOverlay.tsx` returns `variant: 'card-flip'` for the non-drawer / board branch on `burned-drawn` events — a physical card flip from face-down to face-up, then victim's name surfaces underneath. Runtime-verified on the board via `__testInjectEvent` + DOM probe — `.flipFront` DOM contains the actual `cardIllustration` image, no `{NAME} BURNED` text-only path exists for `burned-drawn`. Briggsy approved the "show the card" direction in the same session — the resolution that already shipped matches the directed outcome. | 🟢 |
 | **C-20** | Active player "ACTIVE" pill on PlayerStrip clips tile's top border; +2 turns badge crams against card count. **Shipped 2026-04-23 in `a9a8e373`** — PlayerStrip pill spacing fix. | 🟢 |
 | **C-21** | Hand cards render 368 vs 389 tall depending on `@container (min-width: 177px)` — neighbor heights bounce during scroll-snap. **Resolved by side-effect of `308bbdbf` (2026-04-27, post-audit)** — `.cardDesc { min-height: 2lh }` floors single-line description cards (Agent X, Burn the Files, Intel Briefing, Scramble) to the same content min-height as multi-line ones. Pre-fix, single-line desc cards collapsed and 2-line desc cards' min-content height could exceed the aspect-ratio-derived height (CSS `aspect-ratio` is a hint, not a hard cap), bouncing within a single hand. Post-fix, all descs occupy 2lh and all cards converge on aspect-ratio height. Verified 2026-05-07 via chrome-devtools-mcp at viewports 320×568, 360×640, 390×844, 414×896, 768×1024 across 6 scroll positions and a stage-transition probe — within-hand heights uniform at every measurement (max delta 0.0px). The audit's "368 vs 389" doesn't reproduce at any tested viewport. | 🟢 |
 | **C-22** | `player-eliminated` event without `rank` renders `#undefined` — unguarded template interpolation. **Shipped 2026-04-23 in `1db5ddab`** — eliminated rank guard. | 🟢 |

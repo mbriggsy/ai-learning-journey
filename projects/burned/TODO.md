@@ -120,15 +120,18 @@ finished `outcome=success` with 18 fires + 40 triage seeds.
   opt-in in run-session.ts. After driver returns clean, scans
   events.jsonl for `"game-started"` — absent → demote outcome.
 
-### Operator skill `/playtest-run` (still missing)
+### Operator skill `/playtest-run` — DONE 2026-05-08
 
-Codify the seat-dispatch + triage-dispatch dances as a slash command
-or skill: (a) start orchestrator, (b) wait for
+Built as `.claude/skills/playtest-run/SKILL.md`. Codifies all six
+dance steps: (a) start orchestrator in background, (b) wait for
 `agent-specs.manifest.json`, (c) dispatch `playtest-seat-N` agents in
-parallel, (d) touch `agents-done.marker` when seats exit, (e) read
-`triage-specs.manifest.json` after the harness returns, (f) dispatch
-`playtest-triage` agents per spec, (g) regen `INDEX.md`. Both manifests
-+ both markers documented in `run-session.ts:200-235`.
+parallel via single-message Agent tool calls, (d) touch
+`agents-done.marker`, (e) read `triage-specs.manifest.json`,
+(f) dispatch `playtest-triage` agents per spec in parallel, (g) regen
+`INDEX.md`. Includes pre-flight checks (dirty tree, port collisions),
+failure-mode handling (failed-launch, partial triage), and an explicit
+report phase. Trigger phrases: "run a playtest", "/playtest-run",
+"kick off a playtest".
 
 ---
 

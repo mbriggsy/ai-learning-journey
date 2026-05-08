@@ -235,6 +235,9 @@ async function main(argv: readonly string[]): Promise<void> {
     allowTrace: flags.allowTrace,
     skipBrowserLaunch: true,
     launchBoardView: true,
+    // Demote silent timeouts (driver returned cleanly but no agents joined,
+    // hence no game-started event) from 'success' to 'failed-launch'.
+    detectFailedLaunch: true,
   })
   // eslint-disable-next-line no-console
   console.log(

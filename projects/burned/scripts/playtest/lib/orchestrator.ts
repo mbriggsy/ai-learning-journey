@@ -219,6 +219,18 @@ export interface RunSessionOptions {
    */
   readonly skipBrowserLaunch?: boolean
   /**
+   * When true, demote outcome from 'success' to 'failed-launch' if the
+   * seat driver returned cleanly but events.jsonl contains no
+   * `game-started` event — i.e., agents never connected to the lobby and
+   * the deadline simply elapsed. Production (`pnpm playtest:run`) opts in
+   * via run-session.ts; unit tests with stubbed drivers / stubbed god
+   * leave it off so happy-path coverage tests don't trip on the absence
+   * of a real game.
+   *
+   * Default false.
+   */
+  readonly detectFailedLaunch?: boolean
+  /**
    * Phase 6 Unit 2.6 — when true, the orchestrator spawns ONE Chromium
    * board page (orchestrator-owned, no MCP isolation) and taps "Cleared
    * Hot" once the lobby fills. Required under Option A
@@ -745,6 +757,26 @@ export async function runSession(
           token,
         )
         logger(`[orchestrator] ${errorMessage}`)
+      } else if (outcome === 'success' && config.seats > 0 && opts.detectFailedLaunch === true) {
+        // Driver returned cleanly. Verify the game actually started — if
+        // the marker was never touched and the deadline simply elapsed
+        // with zero agents joining, events.jsonl will contain no
+        // `game-started` event. Demote to 'failed-launch' so silent
+        // operator-failed launches don't masquerade as passing runs.
+        try {
+          const eventsContent = await fs.readFile(paths.eventsJsonl, 'utf8')
+          if (!eventsContent.includes('"type":"game-started"')) {
+            outcome = 'failed-launch'
+            errorMessage = `seat-driver returned but no game-started event in events.jsonl — agents likely never joined the lobby (expectedSeats=${config.seats})`
+            logger(`[orchestrator] ${errorMessage}`)
+          }
+        } catch (err) {
+          // events.jsonl missing or unreadable is itself a failed-launch
+          // signal — god subscriber would have created the file.
+          outcome = 'failed-launch'
+          errorMessage = `seat-driver returned but events.jsonl unreadable (${describeError(err)})`
+          logger(`[orchestrator] ${errorMessage}`)
+        }
       }
     } catch (err) {
       outcome = 'error'

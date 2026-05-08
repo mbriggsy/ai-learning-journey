@@ -431,6 +431,56 @@ describe('runSession — fatal close during seat-driver', () => {
 })
 
 // ---------------------------------------------------------------------------
+// 8b. failed-launch detection (driver returned but no agents joined)
+// ---------------------------------------------------------------------------
+
+describe('runSession — detectFailedLaunch', () => {
+  it('demotes outcome to failed-launch when driver returns cleanly but events.jsonl has no game-started', async () => {
+    const log: SpyLog = { events: [] }
+    const { deps } = buildHappyDeps(log)
+    // Stub seatDriver returns immediately — game never starts. The
+    // happy-path stub god never writes to events.jsonl, so the file is
+    // empty. With detectFailedLaunch: true the orchestrator must trip.
+    const result = await runSession(makeConfig(), deps, { detectFailedLaunch: true })
+
+    expect(result.outcome).toBe('failed-launch')
+    // Either signal flips it: events.jsonl missing OR present but lacking
+    // a game-started line. Stub god never writes the file → ENOENT path.
+    expect(result.errorMessage).toMatch(/no game-started|events\.jsonl unreadable/i)
+    const content = await fs.readFile(path.join(result.runDir, 'session.md'), 'utf8')
+    expect(content).toMatch(/failed-launch/)
+  })
+
+  it('keeps outcome=success when game-started is present in events.jsonl', async () => {
+    const log: SpyLog = { events: [] }
+    const { deps } = buildHappyDeps(log)
+    // The seatDriver runs after the run dir + events.jsonl path are set up.
+    // Have it append a synthetic god-event line so the failed-launch check
+    // sees a real game-started signal.
+    deps.seatDriver = vi.fn(async (seats) => {
+      log.events.push('seatDriver')
+      const first = seats[0]!
+      const runDir = path.dirname(path.dirname(first.logPath))
+      const eventsJsonl = path.join(runDir, 'server', 'events.jsonl')
+      await fs.appendFile(eventsJsonl, JSON.stringify({
+        type: 'god-event',
+        events: [{ type: 'game-started', playerCount: 3 }],
+      }) + '\n')
+    })
+
+    const result = await runSession(makeConfig(), deps, { detectFailedLaunch: true })
+    expect(result.outcome).toBe('success')
+  })
+
+  it('opt-out (default): does NOT demote even when events.jsonl has no game-started', async () => {
+    const log: SpyLog = { events: [] }
+    const { deps } = buildHappyDeps(log)
+    const result = await runSession(makeConfig(), deps)
+    expect(result.outcome).toBe('success')
+  })
+})
+
+// ---------------------------------------------------------------------------
 // 9. 4005 retry-once (first retries, second aborts)
 // ---------------------------------------------------------------------------
 

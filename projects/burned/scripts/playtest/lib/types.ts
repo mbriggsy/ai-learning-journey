@@ -217,6 +217,13 @@ export type SessionOutcome =
   | 'aborted-stale-selftest'
   | 'aborted-config-locked'
   | 'aborted-fatal-close'
+  // Driver returned cleanly (marker received OR deadline elapsed) but no
+  // `game-started` event ever fired — agents never connected to the lobby
+  // or never tapped Cleared Hot. Distinguished from 'success' so silent
+  // operator-failed launches don't masquerade as passing runs. Emitted
+  // post-driver in orchestrator.ts when expectedSeats > 0 and events.jsonl
+  // contains no game-started line.
+  | 'failed-launch'
 
 export interface SessionResult {
   readonly sessionId: string

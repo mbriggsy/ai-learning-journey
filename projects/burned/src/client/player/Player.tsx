@@ -576,7 +576,7 @@ function PlayingView({ roomCode }: { roomCode: string }) {
 
         {/* Hand — large scrollable cards */}
         <div className={playingStyles.handSection} data-disabled={(!permission.allowed || optimisticPending) || undefined}>
-          <div className={playingStyles.sectionLabel}>Hand ({hand.length})</div>
+          <div className={playingStyles.sectionLabel}>Hand ({displayHand.length})</div>
           <Hand
             hand={displayHand}
             disabled={!permission.allowed || optimisticPending}

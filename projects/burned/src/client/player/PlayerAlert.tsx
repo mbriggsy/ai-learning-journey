@@ -126,21 +126,33 @@ function alertFor(
       if (event.comboSize !== undefined) break
       const cardName = CARD_DEF_BY_TYPE[event.cardType]?.name
       if (!cardName) break
-      // Call in a Favor has a human-think gap between play and resolution
-      // (target picks which card to surrender — can take 30-60s). Toast
-      // persists until favor-given fires so a re-attending bystander still
-      // has context, with an X to dismiss early if they're already caught
-      // up. Other cards in this branch commit inside the nope window, so
-      // the 2.8s auto-fade is correct.
+      // Persistence by card kind:
+      //
+      // - call-in-a-favor: persist until `favor-given`. Has a human-think
+      //   gap between play and resolution (target picks which card to
+      //   surrender — can take 30-60s). A re-attending bystander still
+      //   has context. X dismisses early if they're already caught up.
+      //
+      // - everything else (reassign, direct-order, go-dark, back-channel,
+      //   intel-briefing): persist until `nope-window-resolved`. Closes
+      //   the §2.2 observer-info gap (Briggsy 2026-05-08): observers need
+      //   the full 10s nope window to read what was played and decide
+      //   whether to Intercept. The 2.8s auto-fade misses 7s of the
+      //   decision window. nope-window-resolved fires at window close
+      //   (intercepted or not), at which point the action is committed
+      //   and the toast has done its job. The board's DiscardFan also
+      //   shows the played card during the window — the toast is the
+      //   phone-side mirror.
       //
       // Falsify Intel (the other multi-step card in BURNED) is filtered
-      // above — DramaOverlay's INTEL FALSIFIED beat owns that moment, so
-      // there's no PlayerAlert toast to persist. Pair-steal and
-      // triple-steal name-commit also have human-think gaps but their
-      // observer surfaces are StealReport / comboSize filter, not this
-      // toast.
+      // above — DramaOverlay's INTEL FALSIFIED beat owns that moment.
+      // Pair-steal and triple-steal name-commit also have human-think
+      // gaps but their observer surfaces are StealReport / comboSize
+      // filter, not this toast.
       const persistUntil: ReadonlyArray<GameEvent['type']> | undefined =
-        event.cardType === 'call-in-a-favor' ? ['favor-given'] : undefined
+        event.cardType === 'call-in-a-favor'
+          ? ['favor-given']
+          : ['nope-window-resolved']
       return {
         id: eventId,
         text: `${nameOf(event.playerId)} played ${cardName}.`,

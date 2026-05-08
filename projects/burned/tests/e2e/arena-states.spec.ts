@@ -220,6 +220,13 @@ test.describe('arena state screenshots', () => {
           startedAtMs: now - 6000,
           generation: 1,
         },
+        // Populate discardPile so the screenshot captures the DiscardFan in its
+        // populated state (showing the most recent face-up card during the
+        // nope window) rather than the EMPTY / NO PLAY YET placeholder.
+        discardPile: [
+          { id: 'discard-1', type: 'go-dark' },
+          { id: 'discard-2', type: 'reassign' },
+        ],
       }))
     })
     await board.waitForTimeout(400) // NopeCountdownBar mount + fade-in

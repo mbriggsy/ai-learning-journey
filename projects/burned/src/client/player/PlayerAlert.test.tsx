@@ -106,10 +106,12 @@ afterEach(() => {
 })
 
 describe('PlayerAlert — card-played toast lifecycle', () => {
-  // Non-persistent canary: Reassign has no human-think gap (action commits
-  // inside the nope window), so its observer toast follows the standard
-  // 2.8s auto-fade path.
-  it('clears a non-persistent card-played toast at the 2.8s auto-fade boundary', () => {
+  // Briggsy 2026-05-08 §2.2 fix: observer card-played toasts now persist
+  // through the full nope window so observers have the entire 10s window
+  // to read what was played and decide whether to Intercept. The toast
+  // clears at `nope-window-resolved` (window close, intercepted or not),
+  // at which point the action is committed and the toast has done its job.
+  it('persists past the 2.8s auto-fade boundary while the nope window is open', () => {
     const { container, root } = mount()
     try {
       setEvents([
@@ -123,19 +125,18 @@ describe('PlayerAlert — card-played toast lifecycle', () => {
       rerender(root)
       expect(alertText(container)).toBe('Seat2 played Reassign.')
 
-      act(() => { vi.advanceTimersByTime(2_700) })
+      // Fast-forward past the old 2.8s auto-fade boundary.
+      act(() => { vi.advanceTimersByTime(5_000) })
+      // Pre-fix: toast would be null here. Post-fix: still visible because
+      // persistUntil includes 'nope-window-resolved', and nope-window-resolved
+      // hasn't fired yet.
       expect(alertText(container)).toBe('Seat2 played Reassign.')
-
-      act(() => { vi.advanceTimersByTime(1_000) })
-      act(() => { vi.runAllTimers() })
-      act(() => { vi.advanceTimersByTime(2_000) })
-      expect(alertText(container)).toBeNull()
     } finally {
       teardown(container, root)
     }
   })
 
-  it('non-persistent toast clears even when intermediate non-alert events fire (no stale-toast regression)', () => {
+  it('clears at nope-window-resolved (window closed, action committed)', () => {
     const { container, root } = mount()
     try {
       setEvents([
@@ -154,9 +155,11 @@ describe('PlayerAlert — card-played toast lifecycle', () => {
       setEvents([
         { event: { type: 'turn-started', playerId: SEAT2_ID, turnsRemaining: 1 }, receivedAt: 0, id: 'evt-0' },
         { event: { type: 'card-played', playerId: SEAT2_ID, cardType: 'reassign' }, receivedAt: 1, id: 'evt-1' },
-        { event: { type: 'nope-window-opened', targetAction: 'card-played', deadlineMs: 10_000 }, receivedAt: 10_000, id: 'evt-2' },
+        { event: { type: 'nope-window-resolved', cancelled: false, chainDepth: 0 }, receivedAt: 10_300, id: 'evt-2' },
       ])
       rerender(root)
+      // Window resolved → toast clears. The action is committed and the
+      // observer's decision moment has passed.
       expect(alertText(container)).toBeNull()
     } finally {
       teardown(container, root)
@@ -228,7 +231,13 @@ describe('PlayerAlert — Call in a Favor persists until favor-given (re-attenda
     }
   })
 
-  it('renders an X dismiss button for persistent alerts only', () => {
+  it('renders an X dismiss button on every persistent observer toast', () => {
+    // Per the §2.2 fix (2026-05-08), ALL non-favor observer card-played
+    // toasts are persistent (until nope-window-resolved) — Reassign is
+    // representative. The X dismiss control therefore renders on every
+    // observer toast, not just the favor case. Card-drawn (self-only,
+    // non-persistent info toast) is the only remaining non-persistent
+    // path; covered separately by `auto-fades a card-drawn self-toast`.
     const { container, root } = mount()
     try {
       setEvents([
@@ -236,15 +245,16 @@ describe('PlayerAlert — Call in a Favor persists until favor-given (re-attenda
       ])
       render(root)
 
-      // Non-persistent alert: no X button.
       setEvents([
         { event: { type: 'turn-started', playerId: SEAT2_ID, turnsRemaining: 1 }, receivedAt: 0, id: 'evt-0' },
         { event: { type: 'card-played', playerId: SEAT2_ID, cardType: 'reassign' }, receivedAt: 1, id: 'evt-1' },
       ])
       rerender(root)
-      expect(container.querySelector('button[aria-label="Dismiss alert"]')).toBeNull()
+      // Reassign observer toast is persistent → X dismiss control rendered.
+      expect(container.querySelector('button[aria-label="Dismiss alert"]')).not.toBeNull()
 
-      // Persistent alert: X button rendered.
+      // Favor toast is also persistent (until favor-given, not just
+      // nope-window-resolved) — same X control.
       act(() => { vi.advanceTimersByTime(5_000) })
       setEvents([
         { event: { type: 'turn-started', playerId: SEAT2_ID, turnsRemaining: 1 }, receivedAt: 0, id: 'evt-0' },

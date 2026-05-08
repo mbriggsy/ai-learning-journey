@@ -36,8 +36,8 @@ rows below were back-filled in a single sweep after spot-checks
 during the C-30..C-33 triage cleanup found rows that had been left
 🔴 even though their commits had landed weeks earlier. Each shipped
 row now cites its commit. The ⏸ rows (C-13, C-15, C-16-19) and the
-remaining 🔴 rows (C-10/11 — 2 IDs after the 2026-05-07 evening
-sweep + C-21 + C-12 + C-07 + C-09 closures below) are genuinely-open
+remaining 🔴 row (C-11 — 1 ID after the 2026-05-07 evening sweep +
+C-21 + C-12 + C-07 + C-09 + C-10 closures below) is genuinely-open
 per the same commit-history audit. Visual rows need Briggsy-eye review
 before they're actionable solo. (B-12, B-17, C-25, D-04, D-15, D-16
 were closed inline by additional 2026-05-07 commits — see their rows
@@ -51,8 +51,8 @@ identify-timeout, host-session-token, plus extension to
 join-screen-server-error). D-23 ships with 4 new engine-level tests
 covering Intel Briefing + Falsify Intel against deck sizes 0/1/2.
 
-**Truly-open 🔴 rows after sweep: 2 — all visual** (C-10, C-11).
-Need design-eye input before they're solo-actionable.
+**Truly-open 🔴 rows after sweep: 1 — visual** (C-11).
+Needs design-eye input before solo-actionable.
 
 **C-21 closure 2026-05-07:** measurement re-test via chrome-devtools-mcp
 confirmed C-21 was resolved by side-effect of `308bbdbf` (2026-04-27,
@@ -61,7 +61,13 @@ audit). Five viewports × six scroll positions × stage-transition probe —
 all within-hand heights uniform at every measurement. Mechanism documented
 in the C-21 row.
 
-**C-09 closure 2026-05-07 (this commit):** `.nameCardLayout` flex-column
+**C-10 closure 2026-05-07 (this commit):** NopeCountdownBar moved out of
+the table grid's first auto row (where it stretched full-width as a
+top-of-screen banner) into an absolute-positioned wrapper anchored
+centered below the arena, framed as a "transmission window" surface
+instead of a flat colored stripe. Mechanism documented in the C-10 row.
+
+**C-09 closure 2026-05-07:** `.nameCardLayout` flex-column
 wrapper added so the cardGrid scrolls between pinned title/subtitle and
 pinned cancel button. Pre-fix at 360×640: cancel 108px below fold. Post-fix:
 cancel 18px above fold, grid scrolls internally. Mechanism documented in
@@ -209,7 +215,7 @@ appears on paper.
 | **C-07** | Nameplate brass "stand" is 4-6px tall on 1920 — reads as underline. **Shipped 2026-05-07 (this commit)** — `.stand { height: clamp(10px, 0.65vw, 13px) }` (was a fixed 6px) plus an extra `inset 0 -1px 0 charcoal 55%` to deepen the bottom edge. Pre-fix on 1920: stand visible at 4px (6px CSS minus -2px overlap), 7% of plate height — read as a hairline. Post-fix on 1920: ~10.5px visible (12.5px CSS minus -2px overlap), 22% of plate height; on 1280: ~8px visible (10px floor), 21.7% of plate height. Same ~22% proportional ratio across the supported board range, well into "wood block under brass" territory rather than underline. The clamp shape mirrors `.subtext`'s existing `clamp(8px, 0.55vw, 11px)` pattern so the stand grows in step with the rest of the nameplate's typography. | 🟢 |
 | **C-08** | PlayerStrip `NAME_MAX = 7` hard-coded — "DASH B…" on 1920 where 150px per tile easily fits 12 chars. Short names (`Kimi R.`) don't truncate, creating visual inconsistency. **Shipped 2026-04-23 in `5d424d49`** — drop aggressive `NAME_MAX=7` truncation. | 🟢 |
 | **C-09** | NameCard grid + "CALL OFF THE RAID" button below fold on 360×640. **Shipped 2026-05-07 (this commit)** — `.nameCardLayout` flex-column wrapper added (`height: calc(0.8 × var(--size-viewport-safe) - 2 × var(--space-5))` to match BottomSheet's `.content` interior, since `.content` is overflow-y:auto with no explicit height — `height: 100%` would collapse to 0). Title/subtitle/cancel pinned via `flex-shrink: 0`; `.cardGrid` becomes `flex: 1 1 0; min-height: 0; overflow-y: auto` with a 24px bottom mask-image feather signaling more cards below. Pre-fix at 360×640: cancel sat 108px below the fold (bottom 748 in a 640px viewport). Post-fix: cancel at bottom 622 (18px above fold), grid scrolls 124px internally for the 16 buttons. Verified at 390×844 — cancel at bottom 825 (19px above fold), grid 494px tall with 499px scroll content. Pattern is the same flex+min-width:0 trick used for the C-12 ticker and the Hand strip's container queries — flex children need `min-height: 0` to allow overflow:auto to engage past their intrinsic min-content size. | 🟢 |
-| **C-10** | NopeCountdownBar floats above arena frame — reads as browser notification, not spy tension | 🔴 |
+| **C-10** | NopeCountdownBar floats above arena frame — reads as browser notification, not spy tension. **Shipped 2026-05-07 (this commit)** — bar restructured + repositioned. Pre-fix the bar landed in the table grid's first auto row at y=22 across the full 1832px table width — a thin teal stripe at the very top of the screen, dead-ringer for an iOS/system notification. Now wrapped in `.wrapper` with `position: absolute; top: calc(50% + var(--size-arena-min-height)/2 + var(--space-4)); left: 50%; transform: translateX(-50%); width: min(38vw, 480px)`, anchored centered immediately below the arena (where the played card sits) and framed as a transmission band — dark surface, teal-edged border, mono `// Intercept Window` label + tabular-num timer in the header row, contracting fill below. The contracting fill stays the urgency motion; the frame attaches the urgency to the play in progress. Verified at 1920×1080 (bar at x=703, y=644, w=480, centered below arena bottom 628) and 1280×720 (bar at y=446, 16px below arena bottom 430). | 🟢 |
 | **C-11** | DossierFeed side CASE FILE + inner CLASSIFIED stamp are two-of-a-kind competing for attention | 🔴 |
 | **C-12** | Channel ticker `// AWAITING TRANSMISSION` would wrap on narrower containers (phone overlays). **Shipped 2026-05-07 (this commit)** — `.ticker { overflow: hidden }` + `.tickerLine { flex: 1 1 0; min-width: 0; overflow: hidden; text-overflow: ellipsis }`. Pre-fix repro at 667×375 (iPhone SE landscape): folder shrank to 170px wide → ticker container 123px → "// AWAITING TRANSMISSION" at the 10px font-size floor needed 197px → 74px paint overflow past the manila edge with `overflow: visible`. Post-fix at 667×375: line painted 110px inside 123px, ellipsis truncates legibly, cursor stays visible at right edge; verified no regression at 1280×720 (line 477px, no truncation, full text). The audit's "would wrap" wording was structurally inaccurate (the line had `white-space: nowrap`, so it overflowed instead of wrapping) but the symptom they were guarding against — text painting beyond the ticker band — was real and reproducible. | 🟢 |
 | **C-13** | 11 of 17 card illustrations are 384×384 square art letterboxed in 5:7 frames → ~29px teal mat top+bottom. Inconsistent with operative portraits (tall aspect, fill-to-edge). Cuts against the Archer edge-to-edge feel. | ⏸ (asset regen decision) |

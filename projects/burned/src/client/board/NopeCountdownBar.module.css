@@ -1,18 +1,78 @@
 /* NopeCountdownBar.module.css
-   Board — countdown bar that appears during the Intercept window after
-   a card is played. The fill contracts from right to left as the window
-   closes (transform: scaleX driven by the component, not CSS).
+   Board — countdown surface that appears during the Intercept window
+   after a card is played. The fill contracts from right to left as the
+   window closes (transform: scaleX driven by useNopeCountdown, not CSS).
+
+   Anchored below the arena (where the played card sits) so it reads as
+   a transmission-window indicator on the play in progress, not a
+   browser-banner-style notification floating at the top of the viewport.
+   E2E audit C-10 — pre-fix the bar landed in the table grid's first auto
+   row at y=22 across the full table width, dead-ringer for an iOS
+   notification stripe. Now centered horizontally, bounded width, framed
+   as a transmission band on a dark surface with intercept-teal accents.
 */
 
 @layer components {
 
+.wrapper {
+  position: absolute;
+  box-sizing: border-box;
+  /* Center horizontally below the arena. The arena uses
+     `top: 50%; transform: translate(-50%, -50%)` so its bottom edge sits
+     at `50% + min-height/2`; we offset another space-4 below that for the
+     band's resting position. */
+  top: calc(50% + var(--size-arena-min-height) / 2 + var(--space-4));
+  left: 50%;
+  transform: translateX(-50%);
+  width: min(38vw, 480px);
+  padding: var(--space-3) var(--space-4);
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-2);
+  border-radius: var(--radius-sm);
+  background: color-mix(in oklab, var(--color-charcoal-1) 90%, var(--color-accent-intercept));
+  border: 1px solid color-mix(in oklab, var(--color-accent-intercept) 45%, transparent);
+  box-shadow:
+    inset 0 1px 0 color-mix(in oklab, var(--color-cream-12) 14%, transparent),
+    0 8px 22px color-mix(in oklab, var(--color-charcoal-1) 55%, transparent),
+    0 0 26px color-mix(in oklab, var(--color-accent-intercept) 22%, transparent);
+  z-index: var(--z-sticky);
+  /* The bar is informational, not interactive (intercept lives on phones).
+     Keeping pointer-events off avoids stealing clicks from any board chrome
+     that might overlap during edge-case viewport shrinks. */
+  pointer-events: none;
+}
+
+.headerRow {
+  display: flex;
+  justify-content: space-between;
+  align-items: baseline;
+  font-family: var(--font-mono);
+  font-size: var(--text-caption-board);
+  font-weight: 700;
+  letter-spacing: 0.22em;
+  text-transform: uppercase;
+  color: var(--color-accent-intercept);
+}
+
+.label::before {
+  content: '// ';
+  opacity: 0.6;
+  font-weight: 400;
+}
+
+.timer {
+  /* Tabular nums so the digit doesn't jitter as it ticks 5 → 4 → 3 → 2 → 1. */
+  font-variant-numeric: tabular-nums;
+  font-weight: 800;
+}
+
 .container {
   position: relative;
   height: var(--space-2);
-  background: color-mix(in oklab, var(--color-accent-intercept) 20%, transparent);
+  background: color-mix(in oklab, var(--color-accent-intercept) 18%, transparent);
   border-radius: var(--radius-sm);
   overflow: hidden;
-  margin: var(--space-2) var(--space-4);
 }
 
 .fill {
@@ -21,15 +81,14 @@
   background: var(--color-accent-intercept);
   transform-origin: left center;
   will-change: transform;
-}
-
-.text {
-  text-align: center;
-  font-family: var(--font-mono);
-  font-size: var(--text-caption-board);
-  color: var(--color-accent-intercept);
-  font-weight: 600;
-  padding: var(--space-0) 0;
+  /* Subtle scan-line shimmer keeps the fill alive even while it contracts —
+     reads as a "live signal" rather than a static bar draining. */
+  background-image: linear-gradient(
+    90deg,
+    color-mix(in oklab, var(--color-accent-intercept) 88%, var(--color-cream-12)) 0%,
+    var(--color-accent-intercept) 50%,
+    color-mix(in oklab, var(--color-accent-intercept) 88%, var(--color-cream-12)) 100%
+  );
 }
 
 } /* @layer components */

@@ -12,19 +12,26 @@ export function NopeCountdownBar() {
   return (
     <AnimatePresence>
       {isActive && (
-        // Enter/exit crossfade so the countdown doesn't hard-pop — this is the
-        // most time-critical board affordance and a hard appear reads as a bug.
-        // Fast enough (quickFade = 150ms) not to delay the intercept window itself.
+        // Anchored below the arena (where the played card sits) so the
+        // countdown reads as a transmission window for the moment in play —
+        // not a system-style banner floating at the top of the viewport.
+        // Enter/exit crossfade keeps it from hard-popping during the most
+        // time-critical board affordance. quickFade = 150ms, well under the
+        // 5s intercept window so the appearance never feels delayed.
         <m.div
-          initial={{ opacity: 0, transform: 'scale(0.98)' }}
-          animate={{ opacity: 1, transform: 'scale(1)' }}
-          exit={{ opacity: 0, transform: 'scale(0.98)' }}
+          className={styles.wrapper}
+          initial={{ opacity: 0, transform: 'translate(-50%, -6px) scale(0.97)' }}
+          animate={{ opacity: 1, transform: 'translate(-50%, 0px) scale(1)' }}
+          exit={{ opacity: 0, transform: 'translate(-50%, -6px) scale(0.97)' }}
           transition={MOTION.quickFade}
         >
+          <div className={styles.headerRow}>
+            <span className={styles.label}>Intercept Window</span>
+            <span className={styles.timer}>{secondsLeft}s</span>
+          </div>
           <div className={styles.container}>
             <div ref={barRef} className={styles.fill} />
           </div>
-          <div className={styles.text}>INTERCEPT? {secondsLeft}s</div>
         </m.div>
       )}
     </AnimatePresence>

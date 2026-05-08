@@ -511,7 +511,17 @@ function PlayingView({ roomCode }: { roomCode: string }) {
 
   if (!isAlive) return <EliminatedView />
 
-  const eligibleTargets = players.filter(p => p.isAlive && p.id !== myPlayerId)
+  // Direct Order self-target is legal per RULES-REFERENCE §13.8 (engine
+  // pinned by rules-gaps-exhaustive.test.ts:220-244): "Allow it — equivalent
+  // to taking your turns normally. Could be funny for trolling." Card flavor
+  // says ANY operative; UI must mirror. Other target reasons (favor, pair,
+  // triple) don't accept self — engine semantics mean self-target is either
+  // nonsensical or a no-op, so we keep the exclusion there.
+  const eligibleTargets = players.filter(p => {
+    if (!p.isAlive) return false
+    if (p.id !== myPlayerId) return true
+    return localTargetMode?.reason === 'direct-order'
+  })
 
   // Display hand = sortedHand minus staged ids.
   const displayHand = sortedHand.filter(c => !selectedIds.has(c.id))

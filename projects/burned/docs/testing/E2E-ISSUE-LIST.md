@@ -36,8 +36,8 @@ rows below were back-filled in a single sweep after spot-checks
 during the C-30..C-33 triage cleanup found rows that had been left
 🔴 even though their commits had landed weeks earlier. Each shipped
 row now cites its commit. The ⏸ rows (C-13, C-15, C-16-19) and the
-remaining 🔴 rows (C-07/09/10/11 — 4 IDs after the 2026-05-07
-evening sweep + C-21 + C-12 closures below) are genuinely-open
+remaining 🔴 rows (C-09/10/11 — 3 IDs after the 2026-05-07
+evening sweep + C-21 + C-12 + C-07 closures below) are genuinely-open
 per the same commit-history audit. Visual rows need Briggsy-eye review
 before they're actionable solo. (B-12, B-17, C-25, D-04, D-15, D-16
 were closed inline by additional 2026-05-07 commits — see their rows
@@ -51,8 +51,8 @@ identify-timeout, host-session-token, plus extension to
 join-screen-server-error). D-23 ships with 4 new engine-level tests
 covering Intel Briefing + Falsify Intel against deck sizes 0/1/2.
 
-**Truly-open 🔴 rows after sweep: 4 — all visual** (C-07, C-09, C-10,
-C-11). Need design-eye input before they're solo-actionable.
+**Truly-open 🔴 rows after sweep: 3 — all visual** (C-09, C-10, C-11).
+Need design-eye input before they're solo-actionable.
 
 **C-21 closure 2026-05-07:** measurement re-test via chrome-devtools-mcp
 confirmed C-21 was resolved by side-effect of `308bbdbf` (2026-04-27,
@@ -61,7 +61,12 @@ audit). Five viewports × six scroll positions × stage-transition probe —
 all within-hand heights uniform at every measurement. Mechanism documented
 in the C-21 row.
 
-**C-12 closure 2026-05-07 (this commit):** repro'd at 667×375 (iPhone SE
+**C-07 closure 2026-05-07 (this commit):** brass stand height bumped from
+fixed 6px to `clamp(10px, 0.65vw, 13px)`, plus a deeper bottom-edge inset
+shadow. Visible stand height on 1920 went 4px → 10.5px (7% → 22% of plate
+height). Mechanism documented in the C-07 row.
+
+**C-12 closure 2026-05-07:** repro'd at 667×375 (iPhone SE
 landscape — smallest realistic landscape board host) — folder shrank to
 170px wide, ticker container 123px, "// AWAITING TRANSMISSION" at the
 10px font floor needed 197px → 74px paint overflow past the manila edge.
@@ -195,7 +200,7 @@ appears on paper.
 
 | ID | Title | Status |
 |----|-------|--------|
-| **C-07** | Nameplate brass "stand" is 4-6px tall on 1920 — reads as underline | 🔴 |
+| **C-07** | Nameplate brass "stand" is 4-6px tall on 1920 — reads as underline. **Shipped 2026-05-07 (this commit)** — `.stand { height: clamp(10px, 0.65vw, 13px) }` (was a fixed 6px) plus an extra `inset 0 -1px 0 charcoal 55%` to deepen the bottom edge. Pre-fix on 1920: stand visible at 4px (6px CSS minus -2px overlap), 7% of plate height — read as a hairline. Post-fix on 1920: ~10.5px visible (12.5px CSS minus -2px overlap), 22% of plate height; on 1280: ~8px visible (10px floor), 21.7% of plate height. Same ~22% proportional ratio across the supported board range, well into "wood block under brass" territory rather than underline. The clamp shape mirrors `.subtext`'s existing `clamp(8px, 0.55vw, 11px)` pattern so the stand grows in step with the rest of the nameplate's typography. | 🟢 |
 | **C-08** | PlayerStrip `NAME_MAX = 7` hard-coded — "DASH B…" on 1920 where 150px per tile easily fits 12 chars. Short names (`Kimi R.`) don't truncate, creating visual inconsistency. **Shipped 2026-04-23 in `5d424d49`** — drop aggressive `NAME_MAX=7` truncation. | 🟢 |
 | **C-09** | NameCard grid + "CALL OFF THE RAID" button below fold on 360×640 | 🔴 |
 | **C-10** | NopeCountdownBar floats above arena frame — reads as browser notification, not spy tension | 🔴 |

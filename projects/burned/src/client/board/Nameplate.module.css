@@ -32,13 +32,18 @@
   transition: opacity var(--motion-duration-slow) var(--motion-ease-base);
 }
 
-/* Thin dark-wood base under the brass plate — slightly wider so the
-   brass appears to REST on the stand rather than float above it. */
+/* Dark-wood base under the brass plate — slightly wider so the brass
+   appears to REST on the stand rather than float above it. Height clamps
+   with viewport so the stand reads as a real wooden block (not a hairline
+   underline) on big-board displays while staying restrained on smaller
+   landscape boards. E2E audit C-07: at the prior fixed 6px - 2px overlap
+   the visible 4px slab read as an underline at 1920. Now ~12.5px on 1920,
+   10px floor on 1024-wide boards, 13px ceiling above 2000. */
 .stand {
   /* Sized relative to the plate's eventual width via container alignment.
      Stand width = plate width + 16px overhang (8px per side). */
   width: calc(100% + 16px);
-  height: 6px;
+  height: clamp(10px, 0.65vw, 13px);
   margin-top: -2px;
   background: linear-gradient(
     180deg,
@@ -48,7 +53,8 @@
   );
   border-radius: 0 0 3px 3px;
   box-shadow:
-    inset 0 1px 0 color-mix(in oklab, var(--color-wood-surface-light) 28%, transparent),
+    inset 0 1px 0 color-mix(in oklab, var(--color-wood-surface-light) 32%, transparent),
+    inset 0 -1px 0 color-mix(in oklab, var(--color-charcoal-1) 55%, transparent),
     0 3px 6px color-mix(in oklab, var(--color-charcoal-1) 45%, transparent);
 }
 

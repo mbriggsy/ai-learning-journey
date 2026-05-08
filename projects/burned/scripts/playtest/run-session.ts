@@ -208,11 +208,36 @@ async function main(argv: readonly string[]): Promise<void> {
   // that taps "Cleared Hot" once seat agents have joined the lobby.
   // Without this opt, agents land in the lobby and wait forever.
   //
-  // The Claude Code conversation that invokes this CLI is responsible for
-  // reading `<runDir>/agent-specs.manifest.json`, dispatching one
-  // `Agent({ subagent_type: 'playtest-seat-N', ... })` per entry, then
-  // touching `<runDir>/agents-done.marker` when all seats exit. This script
-  // emits the manifest and waits for the marker.
+  // The Claude Code conversation that invokes this CLI is responsible
+  // for the TWO dispatch dances:
+  //
+  //   (A) Seat dispatch (BEFORE the harness completes) —
+  //       1. Read `<runDir>/agent-specs.manifest.json`.
+  //       2. Dispatch one `Agent({ subagent_type: 'playtest-seat-N', ... })`
+  //          per entry (in parallel — single message, multiple tool calls).
+  //       3. Touch `<runDir>/agents-done.marker` when all seats exit.
+  //       runSession() waits on this marker (or the session timeout) before
+  //       finalizing.
+  //
+  //   (B) Triage dispatch (AFTER the harness completes) —
+  //       1. Wait for runSession() to return (it runs the in-process
+  //          triage pipeline as part of finalize, emitting per-seed JSONs
+  //          to `<runDir>/triage-specs/` and a manifest at
+  //          `<runDir>/triage-specs.manifest.json`).
+  //       2. Read the triage manifest.
+  //       3. Dispatch one `Agent({ subagent_type: 'playtest-triage', ... })`
+  //          per entry — each writes one `<runDir>/issues/NNN-<slug>.md`.
+  //       4. Re-run `INDEX.md` regeneration if needed
+  //          (`tsx scripts/playtest/regen-issue-index.ts <runDir>`).
+  //       Without (B), `<runDir>/issues/` stays empty even on a clean run
+  //       — the seeds are diagnosed by Claude subagents, not by harness
+  //       in-process code (insight: subagent diagnosis is too expensive
+  //       for the harness CLI itself, so it's deferred to the operator's
+  //       conversation).
+  //
+  // This script emits the seat manifest, waits for the seat marker, then
+  // runs the triage pipeline in-process. The triage manifest is left on
+  // disk for the operator to act on per (B).
   const repoRoot = path.resolve(import.meta.dirname ?? path.dirname(new URL(import.meta.url).pathname), '..', '..')
   const { scriptedTemplate, freePlayTemplate } = await loadDefaultTemplates(repoRoot)
   const catalogText = await fs.readFile(path.resolve(repoRoot, config.catalogPath), 'utf8')

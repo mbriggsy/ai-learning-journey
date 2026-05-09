@@ -7,35 +7,58 @@ the history. (Rule: `feedback-todo-is-not-a-diary.md`.)
 
 ## 1. Active priorities
 
-**Working through 2026-05-08-2022-5p triage backlog (29 OPEN, 4 P1).**
-Imported into git 2026-05-09 (commit `ba77e42e`). Clusters by root
-cause — see §1.1.
+**Triage backlog `2026-05-08-2022-5p` fully dispositioned 2026-05-09.**
+All P1s closed. All design/motion residuals BLOCKED with explicit
+scope notes — see §1.2.
 
-Current state (verified 2026-05-09):
+Current state (verified 2026-05-09 end-of-session):
 
-- Tests: 1323 pass | 6 expected fail (66/66 files green).
+- Tests: 1350 pass | 6 expected fail (66/66 files green).
 - Build: clean (`pnpm build`).
-- Phone initial JS: ~98.85 KB gzipped (player 17.30 + shared 67.15 +
-  VisualElement 14.40). Under 100 KB budget with ~1.15 KB headroom —
-  +30B vs 2026-05-08 baseline (ConnectionOverlay split into transient
-  div + terminal dialog).
-- Triage state, run `2026-05-08-2022-5p`: 29 OPEN · 2 RESOLVED · 5
-  LOW-SIGNAL · 2 KNOWN-PRODUCT · 1 DUPLICATE. P1 6 · P2 33.
+- Phone initial JS: ~99.51 KB gzipped (player 17.96 + shared 67.15 +
+  VisualElement 14.40). Under 100 KB budget with ~490B headroom —
+  +690B vs 2026-05-08 baseline. Tightening; future feature work
+  should plan for this constraint.
+- Triage state, run `2026-05-08-2022-5p`: **0 OPEN** · 5 BLOCKED ·
+  24 RESOLVED · 7 LOW-SIGNAL · 2 KNOWN-PRODUCT · 1 DUPLICATE. P1 6 · P2 33.
 
-### 1.1 Cluster queue
+### 1.1 Cluster results
 
-| Cluster | Sev | IDs | Status |
+| Cluster | Sev | IDs | Result |
 |---|---|---|---|
-| **A. ConnectionOverlay blocks Intercept** | 2× P1 | 001, 023 | ✅ DONE — `ba77e42e` |
-| **B. Back Channel cinematics flat** | 3× P1 + 4× P2 | 008, 009, 012, 013, 014, 025, 028 | open |
-| **C. Falsify Intel rearrange tap-form, not espionage** | 4× P2 + 030 engine | 003, 004, 005, 006, 030 | open |
-| **D. Intercept observability** | 3× P2 | 011, 022, 027 | open |
-| **E. Direct Order uses Reassign vocabulary** | 2× P2 | 031, 032 | open (quick text fix) |
-| **F. Burn the Files no kinetic payoff** | 3× P2 | 033, 036, 037 | open |
-| **G. Favor UX gaps** | 3× P2 | 016, 017, 034 | open |
-| **H. StealReport missing card art** | 1× P2 | 020 | open |
-| **I. Harness oracle false-positives** | 1× P1 + 2× P2 | 002, 015, 021 | open (test infra) |
-| Singletons | — | 039 (portal) | open |
+| A. ConnectionOverlay blocks Intercept | 2× P1 | 001, 023 | ✅ `ba77e42e` |
+| B. Back Channel cinematics flat | 3× P1 + 4× P2 | 008, 009, 012, 013, 014, 025, 028 | ✅ `6cdc51c5` |
+| C. Falsify Intel rearrange | 4× P2 + 030 engine | 003, 030 ✅ · 004, 005, 006 🟡 | mixed (see §1.2) |
+| D. Intercept observability | 3× P2 | 011, 022, 027 | ✅ `28ff4011` |
+| E. Direct Order vocabulary | 2× P2 | 031, 032 | ✅ `cb3655cb` |
+| F. Burn the Files | 3× P2 | 033, 036 ✅ · 037 🟡 | mixed (see §1.2) |
+| G. Favor UX gaps | 3× P2 | 016, 017, 034 | ✅ `d3c76528` |
+| H. StealReport missing card art | 1× P2 | 020 | ✅ `beed50e9` |
+| I. Harness oracle false-positives | 1× P1 + 2× P2 | 002, 015 ✅ · 021 🟡 | mixed (see §1.2) |
+| Singletons | — | 039 portal ✅ · 038 LOW-SIGNAL | ✅ `a24bc89f`, `d3c76528` |
+
+### 1.2 Residual BLOCKED items (intentional, scoped)
+
+5 issues remain BLOCKED with explicit scope notes:
+
+- **#021 (P2)** — Seat-agent fidelity scope. Self-report-on-
+  intercepted-pair-steal is a seat-agent prompt-following gap, not a
+  catalog/oracle gap. Coverage-reporter already logs the divergence;
+  fix lives in coverage-filter or seat-agent prompt enforcement.
+
+- **#037 (P2)** — Motion-calibration scope. GSAP ember-pulse during
+  the DramaOverlay holdMs to lift the Burn the Files phone beat from
+  "status subtitle" to "fire is active." Narration baseline is in
+  place via #036's deck-shuffled toast. Motion design needs eye-in-
+  loop verification per `feedback-eye-in-loop-beats-calibration-for-motion`.
+
+- **#004 + #005 + #006 (3× P2)** — Falsify Intel rearrange UI design
+  sprint. Three vibe-checks of the same gap: tap-to-order form
+  doesn't feel like espionage. Substantive fix is a drag-to-reorder
+  UI with dossier vocabulary. Multi-hour design + motion craft
+  needing eye-in-loop iteration. Engine, projection, status-strip
+  (#003), and stale-pendingFuture clear (#030) are all in place
+  already — only the rearrange surface itself is the design ask.
 
 ---
 

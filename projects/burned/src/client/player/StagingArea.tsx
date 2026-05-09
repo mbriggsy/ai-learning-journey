@@ -1,4 +1,5 @@
 import { useState, useCallback, useRef, useEffect } from 'react'
+import { createPortal } from 'react-dom'
 import { m, AnimatePresence } from 'motion/react'
 import type { CardInstance, SubPhase } from '@shared/types'
 import type { NopeWindowView } from '@shared/protocol'
@@ -157,37 +158,48 @@ export function StagingArea({
         />
       </div>
 
-      {/* Full-screen enlarge overlay — same as hand */}
-      <AnimatePresence>
-        {enlargedId && stagedCards.find(c => c.id === enlargedId) && (
-          <m.div
-            key="enlarge-backdrop"
-            className={handStyles.enlargeBackdrop}
-            initial={{ opacity: 0 }}
-            animate={{ opacity: 1 }}
-            exit={{ opacity: 0 }}
-            transition={MOTION.enter}
-            onPointerUp={() => setEnlargedId(null)}
-          >
+      {/* Full-screen enlarge overlay — portalled to <body>, same pattern
+          as Hand.tsx. The shared `handStyles.enlargeBackdrop` class uses
+          `position: absolute; inset: 0` against <body> (which is
+          position:relative) — rendering inline as a child of `.staging`
+          would resolve `inset:0` against the nearest positioned ancestor,
+          breaking the full-viewport coverage if any ancestor in the
+          render tree later picks up `position: relative` or `contain`.
+          Portalling matches Hand.tsx and dodges WebKit bug 297779 on
+          iOS 26 the same way (close 05-08-2022-5p #039). */}
+      {createPortal(
+        <AnimatePresence>
+          {enlargedId && stagedCards.find(c => c.id === enlargedId) && (
             <m.div
-              className={handStyles.enlargeCard}
-              // Blur-mask during the scale transition — MinimalCard's
-              // container-query layout flips thresholds as it grows from
-              // 0.35 to 1, so content rejiggers mid-animation. A 4px blur
-              // at the endpoints smooths the swap into a single perceived
-              // motion instead of two layouts fighting mid-flight. Mirrors
-              // the pattern in Hand.tsx. Keep under 6px — blur is expensive
-              // on Safari mobile.
-              initial={{ transform: 'translateY(-80px) scale(0.35)', filter: 'blur(4px)' }}
-              animate={{ transform: 'translateY(0px) scale(1)', filter: 'blur(0px)' }}
-              exit={{ transform: 'translateY(-80px) scale(0.35)', filter: 'blur(4px)' }}
-              transition={MOTION.snappy}
+              key="enlarge-backdrop"
+              className={handStyles.enlargeBackdrop}
+              initial={{ opacity: 0 }}
+              animate={{ opacity: 1 }}
+              exit={{ opacity: 0 }}
+              transition={MOTION.enter}
+              onPointerUp={() => setEnlargedId(null)}
             >
-              <MinimalCard type={stagedCards.find(c => c.id === enlargedId)!.type} />
+              <m.div
+                className={handStyles.enlargeCard}
+                // Blur-mask during the scale transition — MinimalCard's
+                // container-query layout flips thresholds as it grows from
+                // 0.35 to 1, so content rejiggers mid-animation. A 4px blur
+                // at the endpoints smooths the swap into a single perceived
+                // motion instead of two layouts fighting mid-flight. Mirrors
+                // the pattern in Hand.tsx. Keep under 6px — blur is expensive
+                // on Safari mobile.
+                initial={{ transform: 'translateY(-80px) scale(0.35)', filter: 'blur(4px)' }}
+                animate={{ transform: 'translateY(0px) scale(1)', filter: 'blur(0px)' }}
+                exit={{ transform: 'translateY(-80px) scale(0.35)', filter: 'blur(4px)' }}
+                transition={MOTION.snappy}
+              >
+                <MinimalCard type={stagedCards.find(c => c.id === enlargedId)!.type} />
+              </m.div>
             </m.div>
-          </m.div>
-        )}
-      </AnimatePresence>
+          )}
+        </AnimatePresence>,
+        document.body,
+      )}
     </div>
   )
 }

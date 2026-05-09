@@ -5,7 +5,7 @@
 ## Summary
 
 - **Total issues:** 39
-- **Status:** OPEN 13 · RESOLVED 16 · BLOCKED 1 · DUPLICATE 1 · KNOWN-PRODUCT-CALL 2 · LOW-SIGNAL 6
+- **Status:** OPEN 11 · RESOLVED 18 · BLOCKED 1 · DUPLICATE 1 · KNOWN-PRODUCT-CALL 2 · LOW-SIGNAL 6
 - **Severity:** P0 0 · P1 6 · P2 33
 - **By seed kind:**
   - scripted-scenario: 23
@@ -50,8 +50,8 @@ Loose clustering — no fixed scenario IDs (D12 / R9). Phase 6 calibration tunes
 | ID | Title | Severity | Status | Linked | Candidate dup |
 | --- | --- | --- | --- | --- | --- |
 | [001-unknown-unknown-freeplay](001-unknown-unknown-freeplay.md) | Connection Status modal blocks Intercept button during active nope windows | P1 | RESOLVED | — | 023-scn-intercepted-single-01 (same root cause) |
-| [003-falsify-intel-card-played-freeplay](003-falsify-intel-card-played-freeplay.md) | Observer status strip silent during Falsify Intel rearrange phase | P2 | OPEN | — | — |
-| [039-burn-the-files-card-played-freeplay](039-burn-the-files-card-played-freeplay.md) | StagingArea enlarge overlay not portalled to body (structural inconsistency with Hand.tsx) | P2 | OPEN | — | — |
+| [003-falsify-intel-card-played-freeplay](003-falsify-intel-card-played-freeplay.md) | Observer status strip silent during Falsify Intel rearrange phase | P2 | RESOLVED | — | — |
+| [039-burn-the-files-card-played-freeplay](039-burn-the-files-card-played-freeplay.md) | StagingArea enlarge overlay not portalled to body (structural inconsistency with Hand.tsx) | P2 | RESOLVED | — | — |
 
 ## Vibe-check findings
 

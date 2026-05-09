@@ -1,7 +1,8 @@
 # 003-falsify-intel-card-played-freeplay — Observer status strip silent during Falsify Intel rearrange phase
 
 **Severity (triage):** P2
-**Status:** 🔴 OPEN
+**Status:** ✅ RESOLVED
+**Resolution:** Fix landed 2026-05-09. Implementation matches triage Option A in spirit but uses the existing `subPhase` field (already public in projections) instead of adding a new field — no protocol change needed. Player.tsx derives `rearrangeOtherContext` when `subPhase === 'future-rearrange-pending'` and the local seat is not the actor; passes it to StatusBar which renders "{actorName} is reviewing intel · rearranging" in place of the silent "[ACTOR] is on deck · N in the pile" default. Same shape as the existing favor-pending OTHER-alive branch (triage #005). Closes the silent ~30s rearrange phase that observers mistook for a frozen game. Contracts pinned by 2 new StatusBar tests.
 **Seed kind:** free-play
 **Source seats:** seat-2, seat-3
 **Linked scenarios:** (none)

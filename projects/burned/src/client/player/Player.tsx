@@ -310,6 +310,16 @@ function PlayingView({ roomCode }: { roomCode: string }) {
         }
       : null
 
+  // Falsify Intel rearrange OTHER-alive. Without this branch the StatusBar
+  // reads "[ACTOR] is on deck · N in the pile" identical to the pre-play
+  // state for the entire ~30s rearrange phase — observers can't tell the
+  // game from frozen (close 05-08-2022-5p #003). subPhase is public so
+  // observers can derive it without server-side projection changes.
+  const rearrangeOtherContext =
+    subPhase === 'future-rearrange-pending' && !isMyTurn && currentPlayerName !== null
+      ? { actorName: currentPlayerName }
+      : null
+
   const { state: cardPlayState, selectedIds, toggleCard, reset: resetCardPlay } = useCardPlay(
     hand, isMyTurn, subPhase, isFavorTarget ? 1 : 3,
   )
@@ -549,6 +559,7 @@ function PlayingView({ roomCode }: { roomCode: string }) {
         drawPileCount={drawPileCount}
         myTurnsRemaining={isMyTurn ? currentTurn?.turnsRemaining ?? 1 : 1}
         favorOtherContext={favorOtherContext}
+        rearrangeOtherContext={rearrangeOtherContext}
       />
 
       <div className={playingStyles.workbench}>

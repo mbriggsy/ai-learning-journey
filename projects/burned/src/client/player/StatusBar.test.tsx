@@ -143,3 +143,47 @@ describe('StatusBar — favor-pending OTHER-alive branch (triage #005)', () => {
     }
   })
 })
+
+describe('StatusBar — rearrange-pending OTHER-alive branch (close 05-08-2022-5p #003)', () => {
+  it('renders "{actor} is reviewing intel · rearranging" for OTHER-alive seats during Falsify Intel', () => {
+    const { container, root } = mount()
+    try {
+      render(root,
+        <StatusBar
+          isMyTurn={false}
+          currentPlayerName="Vera"
+          drawPileCount={22}
+          rearrangeOtherContext={{ actorName: 'Vera' }}
+        />,
+      )
+      const text = container.querySelector('[data-diag="statusbar"]')!.textContent ?? ''
+      expect(text).toContain('Vera is reviewing intel')
+      expect(text).toContain('rearranging')
+      // The silent "Vera is on deck · 22 in the pile" must NOT win — that
+      // was the exact read-as-frozen state that 003 surfaced.
+      expect(text).not.toContain('on deck')
+      expect(text).not.toContain('in the pile')
+    } finally {
+      teardown(container, root)
+    }
+  })
+
+  it('falls back to default "{name} is on deck" when rearrangeOtherContext is null', () => {
+    const { container, root } = mount()
+    try {
+      render(root,
+        <StatusBar
+          isMyTurn={false}
+          currentPlayerName="Vera"
+          drawPileCount={22}
+          rearrangeOtherContext={null}
+        />,
+      )
+      const text = container.querySelector('[data-diag="statusbar"]')!.textContent ?? ''
+      expect(text).toContain('on deck')
+      expect(text).not.toContain('reviewing intel')
+    } finally {
+      teardown(container, root)
+    }
+  })
+})

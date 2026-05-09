@@ -25,6 +25,17 @@ interface StatusBarProps {
    * + staging banner respectively).
    */
   readonly favorOtherContext?: { requesterName: string; targetName: string } | null
+  /**
+   * Resolved actor name when subPhase is `future-rearrange-pending` and
+   * THIS seat is an observer. Phone reads "{actor} is reviewing intel ·
+   * rearranging" so OTHER players don't mistake the silent ~30s rearrange
+   * phase for a frozen game (close 05-08-2022-5p #003 — observer status
+   * strip silent during Falsify Intel rearrange).
+   *
+   * Pass `null` outside `subPhase: 'future-rearrange-pending'` or on the
+   * actor's seat (they have the rearrange sheet itself).
+   */
+  readonly rearrangeOtherContext?: { actorName: string } | null
 }
 
 export function StatusBar({
@@ -33,6 +44,7 @@ export function StatusBar({
   drawPileCount,
   myTurnsRemaining,
   favorOtherContext,
+  rearrangeOtherContext,
 }: StatusBarProps) {
   const outerClass = `${styles.statusBar} ${isMyTurn ? styles.yourTurn : styles.waiting}`
   const { key, body } = bodyFor(
@@ -41,6 +53,7 @@ export function StatusBar({
     drawPileCount,
     myTurnsRemaining ?? 1,
     favorOtherContext ?? null,
+    rearrangeOtherContext ?? null,
   )
 
   return (
@@ -72,6 +85,7 @@ function bodyFor(
   drawPileCount: number,
   myTurnsRemaining: number,
   favorOtherContext: { requesterName: string; targetName: string } | null,
+  rearrangeOtherContext: { actorName: string } | null,
 ): { key: string; body: React.ReactNode } {
   if (isMyTurn) {
     if (myTurnsRemaining > 1) {
@@ -97,6 +111,21 @@ function bodyFor(
         <>
           {favorOtherContext.requesterName} coerces {favorOtherContext.targetName}
           <span className={styles.pileCount}> &middot; favor pending</span>
+        </>
+      ),
+    }
+  }
+  // Falsify Intel rearrange-pending OTHER-alive — actor is privately
+  // rearranging the top 3. Same shape as the favor branch: replaces the
+  // silent "[ACTOR] is on deck" with a status that explicitly signals
+  // the actor is doing something.
+  if (rearrangeOtherContext) {
+    return {
+      key: `rearrange-${rearrangeOtherContext.actorName}`,
+      body: (
+        <>
+          {rearrangeOtherContext.actorName} is reviewing intel
+          <span className={styles.pileCount}> &middot; rearranging</span>
         </>
       ),
     }

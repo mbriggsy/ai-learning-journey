@@ -1,7 +1,8 @@
 # 039-burn-the-files-card-played-freeplay — StagingArea enlarge overlay not portalled to body (structural inconsistency with Hand.tsx)
 
 **Severity (triage):** P2
-**Status:** 🔴 OPEN
+**Status:** ✅ RESOLVED
+**Resolution:** Fix landed 2026-05-09. Implementation matches triage Option A: StagingArea's enlarge overlay now renders via `createPortal(..., document.body)`, mirroring Hand.tsx exactly. The shared `handStyles.enlargeBackdrop` class (`position: absolute; inset: 0`) now resolves against `<body>` consistently from both consumers — the latent `position: relative` / `contain` ancestor trap that would clip the backdrop is closed, and the iOS 26 WebKit bug 297779 dodge is preserved. No behavioral change for players; structural consistency with the documented CSS contract.
 **Seed kind:** free-play
 **Source seats:** seat-1
 **Linked scenarios:** (none)

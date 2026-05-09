@@ -1,8 +1,13 @@
 ---
 name: playtest-run
 description: "Run a full BURNED playtest harness session — codifies the seat-dispatch + triage-dispatch dances documented in scripts/playtest/run-session.ts:200-240. Use when the user says 'run a playtest', '/playtest-run', 'kick off a playtest', or 'do a playtest'. Has significant side effects: spawns 11 Chromium browsers (1 board + 10 MCP-Playwright seat servers), creates a run dir under docs/testing/playtest/runs/, writes seat logs + suspicion files + triage issue files. Do NOT auto-trigger."
-context: fork
 ---
+
+> **MUST run in main context — never `context: fork`.** The two dispatch
+> dances (seat + triage) require the `Agent` tool to spawn subagents. A
+> forked subcontext does NOT inherit `Agent`, and the skill aborts at
+> Phase 2. If you ever re-add `context: fork`, restore it only along with
+> a parallel mechanism to dispatch subagents from the fork.
 
 # Playtest harness — operator skill
 
@@ -54,9 +59,12 @@ Before starting the harness:
    minutes debugging.
 
 3. **Optional flags from the user.** The user may have asked for a
-   specific config (e.g. `--config calibration.json`, `--players 5`,
+   specific config (e.g. `--config calibration.json`, `--seats 5`,
    `--no-scrub`). Pass through verbatim. If unspecified, default to
-   plain `pnpm playtest:run`.
+   plain `pnpm playtest:run`. **Note:** the seat-count flag is
+   `--seats <N>` (per `scripts/playtest/run-session.ts:91`). `--players`
+   is NOT a real flag and dies in <1s with an "unknown argument"-style
+   error — don't infer it from natural-language phrasing like "5 players".
 
 ## Phase 1 — Start the harness
 
@@ -168,22 +176,49 @@ Check the harness exit code:
    }
    ```
 
-2. **For each seed, read its spec JSON:** `<seed.specPath>`. The spec
-   contains the full filled-in prompt for that triage agent (analogous
-   to the seat-agent specs).
+2. **DO NOT read the spec JSONs yourself.** The full filled-in spawn
+   prompts live inside `spec.prompt`, but each is ~5k tokens. Inlining
+   N of them into a dispatch message burns context for nothing — the
+   triage agent already has `Read` scoped to the run dir (per
+   `.claude/agents/playtest-triage.md`'s `tools:` whitelist + the
+   per-spawn path-scope allowlist), and the spec file lives under
+   `<RUN_DIR>/triage-specs/<seedId>.json`. **Agents self-load.**
 
-3. **Dispatch all triage agents IN PARALLEL.** Single message, N Agent
-   calls — one per seed. Triage agents are diagnostic; running them in
-   parallel scales linearly with available subagent slots.
+3. **Dispatch all triage agents IN PARALLEL with a SHORT pointer
+   prompt.** Single message, N Agent calls — one per seed. Pass each
+   agent ONLY the spec path; the agent reads its own authoritative
+   spawn prompt from disk.
 
-   For each seed:
+   For each manifest entry:
    ```
    Agent({
      subagent_type: "playtest-triage",
      description:   `Triage seed ${seed.seedId}`,
-     prompt:        <contents of spec.prompt field>,
+     prompt: `You are a BURNED playtest-harness triage agent.
+
+Your full authoritative spawn prompt is the \`.prompt\` field of this
+spec file:
+
+  ${seed.specPath}
+
+STEP 1: Read that file. It is JSON. Parse the \`.prompt\` field as a
+string. That string is your real system prompt — follow it exactly as
+if it had been delivered to you directly. The string contains your
+seed ID, seed kind, output issue path, signals to read, and the full
+process you must follow.
+
+STEP 2: Execute the spawn-prompt instructions. Do NOT echo the spawn
+prompt back; just act on it.
+
+Output path (also in the spawn prompt): ${seed.issuePath}`,
    })
    ```
+
+   This pattern moves the ~5k-token spawn prompt off the dispatch
+   message and onto the agent's own `Read` tool call. Cuts dispatch
+   context per-seed by ~50x. The agent's behavior is identical — it
+   reads its full prompt and follows it, exactly as if the orchestrator
+   had inlined it.
 
 4. **Wait for ALL triage agents to return.** Each writes one
    `<RUN_DIR>/issues/<seed.seedId>.md` file.

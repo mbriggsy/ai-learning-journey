@@ -342,7 +342,21 @@ function handleSingleCard(
     ctx,
     card.type,
   )
-  const withNope: PlayingState = { ...newState, nopeWindow, nextNopeGeneration: nextGen, events: [...newState.events, ...events] }
+  // Clear pendingFuture before opening the new nope window — a prior Intel
+  // Briefing peek must not bleed into a subsequent card's window. Without
+  // this clear, playing Falsify Intel after Intel Briefing on the same turn
+  // leaves the actor's phone showing the prior peek's "Intel Briefing"
+  // dialog throughout Falsify Intel's nope window (close 05-08-2022-5p
+  // #030). applyAlterTheFuture re-reads `state.drawPile.slice(0, 3)` fresh
+  // when Falsify Intel resolves cleanly, so no functional dependency on
+  // the carried-over value.
+  const withNope: PlayingState = {
+    ...newState,
+    pendingFuture: undefined,
+    nopeWindow,
+    nextNopeGeneration: nextGen,
+    events: [...newState.events, ...events],
+  }
   return ok(withNope)
 }
 

@@ -1038,6 +1038,38 @@ describe('Intel Briefing', () => {
 })
 
 describe('Falsify Intel', () => {
+  it("clears prior Intel Briefing pendingFuture when next single card opens its nope window (close 05-08-2022-5p #030)", () => {
+    // Repro: play Intel Briefing → applySeeTheFuture sets pendingFuture
+    // for the actor's peek; then play Falsify Intel on the same turn.
+    // Pre-fix `handleSingleCard` opened Falsify Intel's nope window
+    // without clearing pendingFuture, so the actor's phone projection
+    // showed Intel Briefing's stale peek for the entire 10s window.
+    let state = startGameWith(2)
+    state = giveCard(state, 'p1', 'intel-briefing', 'ib-1')
+    state = giveCard(state, 'p1', 'falsify-intel', 'fi-1')
+    state = { ...state, currentTurn: { currentPlayerId: 'p1', turnsRemaining: 1 } }
+
+    // Step 1: play Intel Briefing → resolve nope window → pendingFuture set.
+    const ib = findCard(state, 'p1', 'intel-briefing')!
+    let result = act(state, { type: 'play-card', playerId: 'p1', cardIds: [ib.id] })
+    let s = (result as { ok: true; state: GameState }).state as PlayingState
+    result = resolveNopeWindow(s, makeCtx(99999))
+    s = (result as { ok: true; state: GameState }).state as PlayingState
+    expect(s.pendingFuture).toBeDefined()
+    expect(s.pendingFuture?.playerId).toBe('p1')
+
+    // Step 2: play Falsify Intel — handleSingleCard MUST clear pendingFuture
+    // when opening the new nope window so the prior peek doesn't bleed
+    // through to the actor's phone view.
+    const fi = findCard(s, 'p1', 'falsify-intel')!
+    result = act(s, { type: 'play-card', playerId: 'p1', cardIds: [fi.id] })
+    expect(result.ok).toBe(true)
+    if (!result.ok) return
+    const duringWindow = result.state as PlayingState
+    expect(duringWindow.pendingFuture, 'pendingFuture must be cleared during the new nope window').toBeUndefined()
+    expect(duringWindow.nopeWindow, 'nope window opened').not.toBeNull()
+  })
+
   it('enters future-rearrange-pending', () => {
     let state = startGameWith(2)
     state = giveCard(state, 'p1', 'falsify-intel', 'atf-1')

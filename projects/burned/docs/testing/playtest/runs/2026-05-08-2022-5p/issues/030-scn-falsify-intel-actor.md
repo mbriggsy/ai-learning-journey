@@ -1,7 +1,8 @@
 # 030-scn-falsify-intel-actor — Falsify Intel nope window shows "Intel Briefing" dialog (stale pendingFuture bleed-through)
 
 **Severity (triage):** P2
-**Status:** 🔴 OPEN
+**Status:** ✅ RESOLVED
+**Resolution:** Fix landed 2026-05-09. Implementation matches triage Option A: `handleSingleCard` now spreads `pendingFuture: undefined` into the `withNope` state alongside opening the new nope window. Any prior Intel Briefing peek is cleared the moment a new single card is played, so Falsify Intel (or any other single card) starts its nope window with a clean private-state slate. `applyAlterTheFuture` re-reads `state.drawPile.slice(0, 3)` fresh when Falsify Intel resolves cleanly, so no functional regression for the rearrange path itself. Contract pinned by a new engine test reproducing the Intel-Briefing-then-Falsify-Intel sequence and asserting `pendingFuture` is undefined during the second card's nope window.
 **Seed kind:** scripted-scenario
 **Source seats:** seat-5
 **Linked scenarios:** SCN-FALSIFY-INTEL-ACTOR

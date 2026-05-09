@@ -5,7 +5,7 @@
 ## Summary
 
 - **Total issues:** 39
-- **Status:** OPEN 14 · RESOLVED 15 · BLOCKED 1 · DUPLICATE 1 · KNOWN-PRODUCT-CALL 2 · LOW-SIGNAL 6
+- **Status:** OPEN 13 · RESOLVED 16 · BLOCKED 1 · DUPLICATE 1 · KNOWN-PRODUCT-CALL 2 · LOW-SIGNAL 6
 - **Severity:** P0 0 · P1 6 · P2 33
 - **By seed kind:**
   - scripted-scenario: 23
@@ -35,7 +35,7 @@
 | [025-scn-back-channel-normal-01](025-scn-back-channel-normal-01.md) | Back Channel intercepted: ACTOR receives no phone feedback; FuturePeek re-displays after cancelled nope window | P1 | RESOLVED | SCN-BACK-CHANNEL-NORMAL-01 | — |
 | [027-scn-intercepted-single-at-depth-0-01](027-scn-intercepted-single-at-depth-0-01.md) | Interceptor never sees what card they just cancelled (fast-click timing gap) | P2 | RESOLVED | SCN-INTERCEPTED-SINGLE-AT-DEPTH-0-01 | — |
 | [029-scn-intel-briefing-normal-01](029-scn-intel-briefing-normal-01.md) | Disabled intercept button shows countdown when observer has no Intercepted cards (working as designed) | P2 | LOW-SIGNAL | SCN-INTEL-BRIEFING-NORMAL-01 | — |
-| [030-scn-falsify-intel-actor](030-scn-falsify-intel-actor.md) | Falsify Intel nope window shows "Intel Briefing" dialog (stale pendingFuture bleed-through) | P2 | OPEN | SCN-FALSIFY-INTEL-ACTOR | — |
+| [030-scn-falsify-intel-actor](030-scn-falsify-intel-actor.md) | Falsify Intel nope window shows "Intel Briefing" dialog (stale pendingFuture bleed-through) | P2 | RESOLVED | SCN-FALSIFY-INTEL-ACTOR | — |
 | [031-scn-direct-order-actor](031-scn-direct-order-actor.md) | Direct Order target-select dialog uses Reassign card vocabulary | P2 | RESOLVED | SCN-DIRECT-ORDER-ACTOR | 032-scn-direct-order-normal-01 (paired Direct Order finding) |
 | [032-scn-direct-order-normal-01](032-scn-direct-order-normal-01.md) | Direct Order target not surfaced to observers during nope window; actor dialog title uses Reassign language | P2 | RESOLVED | SCN-DIRECT-ORDER-NORMAL-01 | 031-scn-direct-order-actor (paired Direct Order finding) |
 | [034-scn-call-in-favor-info-vis-01](034-scn-call-in-favor-info-vis-01.md) | Favor info-visibility: OTHER vantage confirmed clean; gesture discoverability gap on TARGET vantage | P2 | OPEN | SCN-CALL-IN-FAVOR-INFO-VIS-01 | — |

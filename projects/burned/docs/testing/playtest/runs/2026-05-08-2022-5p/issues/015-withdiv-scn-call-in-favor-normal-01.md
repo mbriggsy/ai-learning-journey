@@ -1,13 +1,14 @@
 # 015-withdiv-scn-call-in-favor-normal-01 — Tier-2 oracle false-positive: pendingPrompt sampled at stateVersion pre-nope-resolution
 
 **Severity (triage):** P1
-**Status:** 🔴 OPEN
+**Status:** ✅ RESOLVED
 **Seed kind:** with-divergence-fire
 **Source seats:** 3c5a0afb-52d0-4eb8-89a7-a72336a788fa
 **Linked scenarios:** SCN-CALL-IN-FAVOR-NORMAL-01
 **Viewer role (if ui-spec-divergence):** n/a
 **Session:** 2026-05-08-2022-5p
-**Candidate duplicate:** n/a
+**Candidate duplicate:** 002-withdiv-scn-falsify-intel-normal-01 (same root cause: oracle samples projection at terminal, transient-state assertion fails)
+**Resolution:** Fix landed 2026-05-09. Implementation matches triage Option A: extended `ProjectionAssertion` with optional `afterEvent` (parsed as `after-event:` in catalog YAML); `tier2Match` walks `flat[firstIdx..lastIdx]` for the first event of the named type and samples projections from THAT god-event instead of the terminal. SCN-CALL-IN-FAVOR-NORMAL-01's TARGET + OTHER_ALIVE pendingPrompt assertions now carry `after-event: favor-requested`, so the snapshot lands at the moment the prompt is actually set instead of post-favor-give-clear. Engine + projection layer untouched (no game bug). Contracts pinned by 3 new scenario-detector tests covering happy/sad paths + bad-anchor diagnostics.
 
 ## Player-POV summary
 

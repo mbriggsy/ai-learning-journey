@@ -40,6 +40,17 @@ export interface ProjectionAssertion {
   readonly viewer: string
   readonly field: string
   readonly expect: unknown
+  /**
+   * Optional snapshot anchor. When set, the oracle samples the projection
+   * snapshot at the first flat-event of the named type within
+   * [firstIdx..lastIdx] of the matched fire sequence, instead of defaulting
+   * to the terminal (last-matched) event. Required for assertions that
+   * check transient state — e.g. SCN-CALL-IN-FAVOR's pendingPrompt is set
+   * after `favor-requested` and cleared by the time `favor-given` lands,
+   * so sampling at terminal sees null. Triage 015 + 002 (run
+   * 2026-05-08-2022-5p) traced both false-positives to this gap.
+   */
+  readonly afterEvent?: string
 }
 
 /** One entry under `connection-events:` (axis-13 tier-3). */
@@ -678,6 +689,7 @@ function parseProjectionAssertionBlock(block: readonly string[]): ProjectionAsse
   let viewer: string | undefined
   let field: string | undefined
   let expect: unknown = undefined
+  let afterEvent: string | undefined
   for (const raw of block) {
     const line = raw.replace(/\s+$/, '')
     const mKv = /^(\s*)([A-Za-z][A-Za-z0-9-]*):\s*(.*)$/.exec(line)
@@ -687,9 +699,12 @@ function parseProjectionAssertionBlock(block: readonly string[]): ProjectionAsse
     if (key === 'viewer') viewer = unquote(rest)
     else if (key === 'field') field = unquote(rest)
     else if (key === 'expect') expect = parseScalarOrInline(rest)
+    else if (key === 'after-event') afterEvent = unquote(rest)
   }
   if (!viewer || !field) return null
-  return { viewer, field, expect }
+  return afterEvent !== undefined
+    ? { viewer, field, expect, afterEvent }
+    : { viewer, field, expect }
 }
 
 function parseConnectionPatternBlock(block: readonly string[]): ConnectionPattern | null {
@@ -1068,7 +1083,7 @@ function isProseExpect(value: unknown): boolean {
 function tier2Match(
   assertions: readonly ProjectionAssertion[],
   flat: readonly GodEventForMatch[],
-  _firstIdx: number,
+  firstIdx: number,
   lastIdx: number,
   bindings: Bindings,
 ): { passed: boolean; divergences: string[] } {
@@ -1077,7 +1092,33 @@ function tier2Match(
   const terminal = flat[lastIdx]!
 
   for (const assertion of assertions) {
-    const viewerId = resolveViewer(assertion.viewer, bindings, terminal)
+    // Resolve which flat-event's projections to sample. Default = terminal
+    // (last-matched event in the fire sequence). Override = first event of
+    // the named type within [firstIdx..lastIdx]. The override exists for
+    // assertions checking transient state — e.g. SCN-CALL-IN-FAVOR's
+    // pendingPrompt is set after `favor-requested` and cleared by the time
+    // `favor-given` lands; sampling at terminal sees null. Triage 015 + 002.
+    let sample = terminal
+    if (assertion.afterEvent !== undefined) {
+      let foundIdx = -1
+      for (let i = firstIdx; i <= lastIdx; i++) {
+        const e = flat[i]?.event as { type?: unknown } | undefined
+        if (e !== undefined && e.type === assertion.afterEvent) {
+          foundIdx = i
+          break
+        }
+      }
+      if (foundIdx === -1) {
+        divergences.push(
+          `tier-2: after-event "${assertion.afterEvent}" not present in fire sequence — cannot sample projection for field ${assertion.field}`,
+        )
+        realFailures++
+        continue
+      }
+      sample = flat[foundIdx]!
+    }
+
+    const viewerId = resolveViewer(assertion.viewer, bindings, sample)
     if (!viewerId) {
       divergences.push(
         `tier-2: viewer ${assertion.viewer} unresolved for field ${assertion.field}`,
@@ -1095,7 +1136,7 @@ function tier2Match(
       continue
     }
     const expectResolved = substituteBindings(assertion.expect, bindings)
-    const projection = terminal.projections[viewerId]
+    const projection = sample.projections[viewerId]
     const observed = walkPath(projection, assertion.field)
     if (!expectMatches(observed, expectResolved)) {
       divergences.push(

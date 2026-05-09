@@ -1,7 +1,8 @@
 # 002-withdiv-scn-falsify-intel-normal-01 — Tier-2 oracle false alarm: pendingPrompt snapshot taken post-rearrange (null), expected pre-resolution value
 
 **Severity (triage):** P2
-**Status:** 🔴 OPEN
+**Status:** ✅ RESOLVED
+**Resolution:** Fix landed 2026-05-09. Two-piece fix: (1) extended ProjectionAssertion with `afterEvent` and updated `tier2Match` to sample at the named-event index instead of terminal — same harness change as 015. (2) Catalog SCN-FALSIFY-INTEL-NORMAL-01's second projection-assertion: removed the `cardIds: [...3 IDs...]` field from the expect (projection deliberately strips it to `[]`, captured by the third prose assertion), and added `after-event: nope-window-resolved` so the snapshot lands at the moment `applyAlterTheFuture` set pendingPrompt rather than post-`future-rearranged` when it's been cleared. No engine or projection bug.
 **Seed kind:** with-divergence-fire
 **Source seats:** e9a5ccd7-6150-4dbd-8c4f-1989df7d5af4 (Seat1 / "Seat1")
 **Linked scenarios:** SCN-FALSIFY-INTEL-NORMAL-01

@@ -743,6 +743,166 @@ projection-assertions:
   })
 })
 
+// --- matchFires — after-event snapshot anchor (close 05-08-2022-5p #015 + #002) ---
+
+describe('matchFires — projection-assertion after-event anchor', () => {
+  // Without after-event the oracle samples projections at the terminal
+  // (last-matched) flat event. For scenarios where the assertion checks
+  // transient state set at an INTERMEDIATE event in the fire sequence,
+  // terminal sampling sees null and reports a tier-2 false-positive.
+  // The after-event field anchors the snapshot to the first flat-event
+  // of the named type within [firstIdx..lastIdx].
+
+  function makeFavorEvents(): readonly GodEvent[] {
+    // Mirrors the SCN-CALL-IN-FAVOR-NORMAL-01 wire shape that tripped
+    // the false-positive. pendingPrompt is set at the favor-requested
+    // moment, then cleared by the time favor-given lands.
+    return [
+      godEvent({
+        stateVersion: 1,
+        action: { type: 'play-card', playerId: 'p-alice' },
+        events: [
+          { type: 'card-played', playerId: 'p-alice', cardType: 'call-in-a-favor' },
+          { type: 'nope-window-resolved', cancelled: false, chainDepth: 0 },
+          { type: 'favor-requested', requesterId: 'p-alice', targetId: 'p-bob' },
+        ],
+        projections: {
+          'p-bob': {
+            myPlayerId: 'p-bob',
+            pendingPrompt: { type: 'favor-response', playerId: 'p-bob', requesterId: 'p-alice' },
+          },
+        },
+      }),
+      godEvent({
+        stateVersion: 2,
+        action: { type: 'favor-give', playerId: 'p-bob' },
+        events: [
+          { type: 'card-played', playerId: 'p-alice', cardType: 'call-in-a-favor' },
+          { type: 'nope-window-resolved', cancelled: false, chainDepth: 0 },
+          { type: 'favor-requested', requesterId: 'p-alice', targetId: 'p-bob' },
+          { type: 'favor-given', giverId: 'p-bob', receiverId: 'p-alice' },
+        ],
+        projections: {
+          'p-bob': {
+            myPlayerId: 'p-bob',
+            pendingPrompt: null, // cleared post-favor-give — the gap that tripped the false-positive
+          },
+        },
+      }),
+    ]
+  }
+
+  it('samples at terminal by default — transient field returns null and tier-2 fails', () => {
+    const markdown = `
+### SCN-FAVOR-DEFAULT-SAMPLE-01 — no after-event, samples at terminal
+**Fire signature:**
+\`\`\`yaml
+events:
+  - type: card-played
+    where: { playerId: $ACTOR, cardType: 'call-in-a-favor' }
+  - type: nope-window-resolved
+    where: { cancelled: false }
+  - type: favor-requested
+    where: { requesterId: $ACTOR, targetId: $TARGET }
+  - type: favor-given
+    where: { giverId: $TARGET, receiverId: $ACTOR }
+shape: strict
+projection-assertions:
+  - viewer: $TARGET
+    field: pendingPrompt.type
+    expect: favor-response
+\`\`\`
+
+---
+`
+    const scenarios = parseCatalog(markdown)
+    const fires = matchFires(scenarios, makeFavorEvents(), [])
+    const f = fires.find(x => x.scenarioId === 'SCN-FAVOR-DEFAULT-SAMPLE-01')!
+    expect(f.tier1).toBe('pass')
+    expect(f.tier2).toBe('fail') // terminal projection has pendingPrompt:null
+    expect(f.matched).toBe('with-divergence')
+  })
+
+  it("samples at after-event — transient field is captured and tier-2 passes", () => {
+    const markdown = `
+### SCN-FAVOR-AFTER-EVENT-01 — anchored to favor-requested
+**Fire signature:**
+\`\`\`yaml
+events:
+  - type: card-played
+    where: { playerId: $ACTOR, cardType: 'call-in-a-favor' }
+  - type: nope-window-resolved
+    where: { cancelled: false }
+  - type: favor-requested
+    where: { requesterId: $ACTOR, targetId: $TARGET }
+  - type: favor-given
+    where: { giverId: $TARGET, receiverId: $ACTOR }
+shape: strict
+projection-assertions:
+  - viewer: $TARGET
+    field: pendingPrompt.type
+    expect: favor-response
+    after-event: favor-requested
+\`\`\`
+
+---
+`
+    const scenarios = parseCatalog(markdown)
+    const fires = matchFires(scenarios, makeFavorEvents(), [])
+    const f = fires.find(x => x.scenarioId === 'SCN-FAVOR-AFTER-EVENT-01')!
+    expect(f.tier1).toBe('pass')
+    expect(f.tier2).toBe('pass')
+    expect(f.matched).toBe('clean')
+  })
+
+  it('reports a divergence when after-event references a type not in the fire sequence', () => {
+    const markdown = `
+### SCN-FAVOR-BAD-AFTER-01 — anchor refers to a non-existent event
+**Fire signature:**
+\`\`\`yaml
+events:
+  - type: card-played
+    where: { playerId: $ACTOR, cardType: 'call-in-a-favor' }
+  - type: favor-requested
+    where: { requesterId: $ACTOR, targetId: $TARGET }
+shape: strict
+projection-assertions:
+  - viewer: $TARGET
+    field: pendingPrompt.type
+    expect: favor-response
+    after-event: never-fires-here
+\`\`\`
+
+---
+`
+    const scenarios = parseCatalog(markdown)
+    const events: GodEvent[] = [
+      godEvent({
+        stateVersion: 1,
+        action: { type: 'play-card', playerId: 'p-alice' },
+        events: [
+          { type: 'card-played', playerId: 'p-alice', cardType: 'call-in-a-favor' },
+          { type: 'favor-requested', requesterId: 'p-alice', targetId: 'p-bob' },
+        ],
+        projections: {
+          'p-bob': {
+            myPlayerId: 'p-bob',
+            pendingPrompt: { type: 'favor-response', playerId: 'p-bob', requesterId: 'p-alice' },
+          },
+        },
+      }),
+    ]
+    const fires = matchFires(scenarios, events, [])
+    const f = fires.find(x => x.scenarioId === 'SCN-FAVOR-BAD-AFTER-01')!
+    expect(f.tier1).toBe('pass')
+    expect(f.tier2).toBe('fail')
+    // Divergence message names the missing anchor — catalog authors get a
+    // surgical pointer, not a generic field-mismatch.
+    const notes = f.divergenceNotes ?? []
+    expect(notes.some(d => d.includes('after-event "never-fires-here"'))).toBe(true)
+  })
+})
+
 // --- matchFires (Tier 3) ---------------------------------------------------
 
 describe('matchFires — Tier 3 (connection-events)', () => {

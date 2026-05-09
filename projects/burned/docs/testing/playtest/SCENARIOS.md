@@ -2259,8 +2259,9 @@ projection-assertions:
     source: projection.ts:102-112, populated when pendingFuture.playerId === viewer
   - viewer: $ACTOR
     field: pendingPrompt
-    expect: { type: 'future-rearrange', playerId: $ACTOR, cardIds: [...3 IDs...] }
-    source: projection.ts:47 (board strips cardIds via stripPrivatePromptFields at :185-192) — ACTOR gets the full list from board.pendingPrompt which PRESERVES cardIds for non-future-rearrange prompts; future-rearrange specifically strips cardIds to [] at projection.ts:189 on the board. ACTOR pendingPrompt.cardIds COMES from BOARD which stripped them.
+    expect: { type: 'future-rearrange', playerId: $ACTOR }
+    after-event: nope-window-resolved
+    source: projection.ts:47 (board strips cardIds via stripPrivatePromptFields at :185-192) — ACTOR gets the full list from board.pendingPrompt which PRESERVES cardIds for non-future-rearrange prompts; future-rearrange specifically strips cardIds to [] at projection.ts:189 on the board. ACTOR pendingPrompt.cardIds COMES from BOARD which stripped them. cardIds is intentionally absent from `expect` here — the stripped-to-[] reality is captured by the next prose assertion. after-event anchors to the post-nope-window state where applyAlterTheFuture set pendingPrompt; sampling at terminal (post-future-rearranged) saw null and tripped a tier-2 false-positive (close 05-08-2022-5p #002).
   - viewer: $ACTOR
     field: pendingPrompt.cardIds
     expect: empty array [] — cardIds stripped even from ACTOR's view because projection passes board's stripped prompt through
@@ -3063,11 +3064,13 @@ projection-assertions:
   - viewer: $TARGET
     field: pendingPrompt
     expect: { type: 'favor-response', playerId: $TARGET, requesterId: $ACTOR }
-    source: projection.ts:47 via state.pendingPrompt set at engine.ts:543
+    after-event: favor-requested
+    source: projection.ts:47 via state.pendingPrompt set at engine.ts:543. after-event anchors the snapshot to the favor-requested moment — pendingPrompt is set there and CLEARED by the time `favor-given` lands, so terminal-snapshot oracles previously read null and tripped a tier-2 false-positive (close 05-08-2022-5p #015).
   - viewer: $OTHER_ALIVE
     field: pendingPrompt
     expect: { type: 'favor-response', playerId: $TARGET, requesterId: $ACTOR }
-    rationale: favor-response prompt is PUBLIC — every viewer sees that TARGET owes a card to ACTOR
+    after-event: favor-requested
+    rationale: favor-response prompt is PUBLIC — every viewer sees that TARGET owes a card to ACTOR. Same intermediate-state anchor as TARGET's assertion above.
   - viewer: $TARGET
     field: myHand
     expect: unchanged until target dispatches favor-give

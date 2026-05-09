@@ -5,7 +5,7 @@
 ## Summary
 
 - **Total issues:** 39
-- **Status:** OPEN 27 · RESOLVED 4 · BLOCKED 0 · DUPLICATE 1 · KNOWN-PRODUCT-CALL 2 · LOW-SIGNAL 5
+- **Status:** OPEN 24 · RESOLVED 6 · BLOCKED 1 · DUPLICATE 1 · KNOWN-PRODUCT-CALL 2 · LOW-SIGNAL 5
 - **Severity:** P0 0 · P1 6 · P2 33
 - **By seed kind:**
   - scripted-scenario: 23
@@ -28,7 +28,7 @@
 | [018-scn-call-in-favor-normal-01](018-scn-call-in-favor-normal-01.md) | Favor-response double-tap discoverability (duplicate of 017) | P2 | DUPLICATE | SCN-CALL-IN-FAVOR-NORMAL-01 | n/a (catalog tag; within-session duplicate → see issue 017) |
 | [019-scn-falsify-intel-normal-01](019-scn-falsify-intel-normal-01.md) | Falsify Intel normal play: clean fire, privateData channel confirmed working | P2 | LOW-SIGNAL | SCN-FALSIFY-INTEL-NORMAL-01 | — |
 | [020-pair-operatives-hit](020-pair-operatives-hit.md) | StealReport shows card name only; no card art rendered for either principal | P2 | OPEN | PAIR-OPERATIVES-HIT (SCN-PAIR-OPERATIVES-HIT-01) | — |
-| [021-scn-pair-operatives-hit-01](021-scn-pair-operatives-hit-01.md) | Seat-3 self-reported SCN-PAIR-OPERATIVES-HIT-01 on an intercepted (cancelled) pair steal — false-positive fire | P2 | OPEN | SCN-PAIR-OPERATIVES-HIT-01 | — |
+| [021-scn-pair-operatives-hit-01](021-scn-pair-operatives-hit-01.md) | Seat-3 self-reported SCN-PAIR-OPERATIVES-HIT-01 on an intercepted (cancelled) pair steal — false-positive fire | P2 | BLOCKED | SCN-PAIR-OPERATIVES-HIT-01 | — |
 | [022-scn-intercepted-single-at-depth-0-01](022-scn-intercepted-single-at-depth-0-01.md) | Interceptor did not see what card was cancelled (pair-combo play, no toast) | P2 | OPEN | SCN-INTERCEPTED-SINGLE-AT-DEPTH-0-01 | — |
 | [023-scn-intercepted-single-01](023-scn-intercepted-single-01.md) | Connection Status modal blocks Intercept tap during nope window | P1 | RESOLVED | SCN-INTERCEPTED-SINGLE-01 | 001-unknown-unknown-freeplay (same root cause) |
 | [024-scn-intel-briefing-normal-01](024-scn-intel-briefing-normal-01.md) | Intel Briefing normal play: clean fire, privateData not captured in god-event snapshot | P2 | LOW-SIGNAL | SCN-INTEL-BRIEFING-NORMAL-01 | — |
@@ -90,8 +90,8 @@ Scenario fired but a tier-2 / tier-3 oracle caught a divergence (D17). Counted a
 
 | ID | Title | Severity | Status | Linked | Candidate dup | Failed tier |
 | --- | --- | --- | --- | --- | --- | --- |
-| [002-withdiv-scn-falsify-intel-normal-01](002-withdiv-scn-falsify-intel-normal-01.md) | Tier-2 oracle false alarm: pendingPrompt snapshot taken post-rearrange (null), expected pre-resolution value | P2 | OPEN | SCN-FALSIFY-INTEL-NORMAL-01 | — | — |
-| [015-withdiv-scn-call-in-favor-normal-01](015-withdiv-scn-call-in-favor-normal-01.md) | Tier-2 oracle false-positive: pendingPrompt sampled at stateVersion pre-nope-resolution | P1 | OPEN | SCN-CALL-IN-FAVOR-NORMAL-01 | — | — |
+| [002-withdiv-scn-falsify-intel-normal-01](002-withdiv-scn-falsify-intel-normal-01.md) | Tier-2 oracle false alarm: pendingPrompt snapshot taken post-rearrange (null), expected pre-resolution value | P2 | RESOLVED | SCN-FALSIFY-INTEL-NORMAL-01 | — | — |
+| [015-withdiv-scn-call-in-favor-normal-01](015-withdiv-scn-call-in-favor-normal-01.md) | Tier-2 oracle false-positive: pendingPrompt sampled at stateVersion pre-nope-resolution | P1 | RESOLVED | SCN-CALL-IN-FAVOR-NORMAL-01 | 002-withdiv-scn-falsify-intel-normal-01 (same root cause: oracle samples projection at terminal, transient-state assertion fails) | — |
 
 ## Coverage divergences
 

@@ -1,13 +1,14 @@
 # 021-scn-pair-operatives-hit-01 — Seat-3 self-reported SCN-PAIR-OPERATIVES-HIT-01 on an intercepted (cancelled) pair steal — false-positive fire
 
 **Severity (triage):** P2
-**Status:** 🔴 OPEN
+**Status:** 🟡 BLOCKED — seat-agent fidelity scope
 **Seed kind:** scripted-scenario
 **Source seats:** seat-3
 **Linked scenarios:** SCN-PAIR-OPERATIVES-HIT-01
 **Viewer role (if ui-spec-divergence):** n/a
 **Session:** 2026-05-08-2022-5p
 **Candidate duplicate:** n/a
+**Disposition:** Bundled into Cluster I (harness oracle false-positives) for 2026-05-09 review. The existing recognition criteria already require both "watched the nope window expire WITHOUT an Intercept" and "received a StealReport naming the specific card that moved" — seat-3's session record shows neither condition was met (the steal was intercepted, no StealReport surfaced), so the criteria did NOT permit the self-report. This is a seat-agent FIDELITY issue (agent reported despite criteria-mismatch), not a catalog or oracle gap that can be fixed by tightening the criteria text. The structurally-correct fix is in the coverage-reporter or seat-agent prompt enforcement — separate scope from the 015 + 002 oracle-snapshot fix that landed in the same commit. Coverage-reporter already logs `seat-without-detector` divergences for these cases (`scripts/playtest/lib/coverage-reporter.ts:188-204`), so the false-positive does NOT inflate the production fire count — it surfaces as a coverage divergence note. Tracking as known limitation pending a dedicated seat-agent fidelity / coverage-filter pass.
 
 ## Player-POV summary
 

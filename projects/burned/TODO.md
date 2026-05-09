@@ -7,20 +7,35 @@ the history. (Rule: `feedback-todo-is-not-a-diary.md`.)
 
 ## 1. Active priorities
 
-**No solo-doable engineering work in queue.** All §1 items from prior
-sessions closed. Active priorities are now §4 — real-life sessions
-(real-device playtest, 8-player stress, hardware verification, visual
-review meeting, SCENARIOS.md sign-off).
+**Working through 2026-05-08-2022-5p triage backlog (29 OPEN, 4 P1).**
+Imported into git 2026-05-09 (commit `ba77e42e`). Clusters by root
+cause — see §1.1.
 
-Current state (verified 2026-05-08):
+Current state (verified 2026-05-09):
 
-- Tests: 1317 pass | 6 expected fail (65/65 files green).
+- Tests: 1323 pass | 6 expected fail (66/66 files green).
 - Build: clean (`pnpm build`).
-- Phone initial JS: ~98.8 KB gzipped (player 17.27 + shared 67.15 +
-  VisualElement 14.40). Under 100 KB budget with ~1.2 KB headroom —
-  tighter than the 2026-05-06 baseline (~97.5 KB) due to PlayerAlert
-  persistUntil expansion.
-- Triage state across all run dirs: zero-OPEN.
+- Phone initial JS: ~98.85 KB gzipped (player 17.30 + shared 67.15 +
+  VisualElement 14.40). Under 100 KB budget with ~1.15 KB headroom —
+  +30B vs 2026-05-08 baseline (ConnectionOverlay split into transient
+  div + terminal dialog).
+- Triage state, run `2026-05-08-2022-5p`: 29 OPEN · 2 RESOLVED · 5
+  LOW-SIGNAL · 2 KNOWN-PRODUCT · 1 DUPLICATE. P1 6 · P2 33.
+
+### 1.1 Cluster queue
+
+| Cluster | Sev | IDs | Status |
+|---|---|---|---|
+| **A. ConnectionOverlay blocks Intercept** | 2× P1 | 001, 023 | ✅ DONE — `ba77e42e` |
+| **B. Back Channel cinematics flat** | 3× P1 + 4× P2 | 008, 009, 012, 013, 014, 025, 028 | open |
+| **C. Falsify Intel rearrange tap-form, not espionage** | 4× P2 + 030 engine | 003, 004, 005, 006, 030 | open |
+| **D. Intercept observability** | 3× P2 | 011, 022, 027 | open |
+| **E. Direct Order uses Reassign vocabulary** | 2× P2 | 031, 032 | open (quick text fix) |
+| **F. Burn the Files no kinetic payoff** | 3× P2 | 033, 036, 037 | open |
+| **G. Favor UX gaps** | 3× P2 | 016, 017, 034 | open |
+| **H. StealReport missing card art** | 1× P2 | 020 | open |
+| **I. Harness oracle false-positives** | 1× P1 + 2× P2 | 002, 015, 021 | open (test infra) |
+| Singletons | — | 039 (portal) | open |
 
 ---
 

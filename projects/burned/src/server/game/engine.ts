@@ -319,9 +319,19 @@ function handleSingleCard(
   let newState = removeCardsFromHand(state, action.playerId, [card.id])
   newState = addToDiscard(newState, [card])
 
-  const events: GameEvent[] = [
-    { type: 'card-played', playerId: action.playerId, cardType: card.type },
-  ]
+  // Direct Order's narrative beat is "ACTOR picked TARGET on purpose" —
+  // observers need to know who was targeted DURING the nope window so the
+  // chosen-vs-defaulted distinction lands (vs Reassign, which defaults to
+  // next-in-rotation). Surfaced by triage 031 + 032 (run 2026-05-08-2022-5p):
+  // observer toast and TV side both showed only the card name, leaving the
+  // target unknown until `turn-started` fired AFTER the window closed.
+  // `targetId` on `card-played` is additive (optional in the event type),
+  // so old clients that don't read the field still parse the event cleanly.
+  const cardPlayed: GameEvent =
+    card.type === 'direct-order' && action.targetPlayerId !== undefined
+      ? { type: 'card-played', playerId: action.playerId, cardType: card.type, targetId: action.targetPlayerId }
+      : { type: 'card-played', playerId: action.playerId, cardType: card.type }
+  const events: GameEvent[] = [cardPlayed]
 
   // All single-card plays open a nope window
   const { window: nopeWindow, nextGen } = createNopeWindow(

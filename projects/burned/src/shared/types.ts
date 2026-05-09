@@ -29,7 +29,7 @@ export type PendingPrompt =
 /** Events emitted by the engine — drive UI text and animation triggers */
 export type GameEvent =
   | { type: 'game-started'; playerCount: number }
-  | { type: 'card-played'; playerId: string; cardType: CardType; comboSize?: number }
+  | { type: 'card-played'; playerId: string; cardType: CardType; comboSize?: number; targetId?: string }
   | { type: 'card-drawn'; playerId: string; safe: boolean; cardType?: CardType }
   | { type: 'nope-played'; playerId: string; chainDepth: number }
   | { type: 'nope-window-opened'; targetAction: string; deadlineMs: number }

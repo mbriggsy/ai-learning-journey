@@ -1,13 +1,14 @@
 # 031-scn-direct-order-actor — Direct Order target-select dialog uses Reassign card vocabulary
 
 **Severity (triage):** P2
-**Status:** 🔴 OPEN
+**Status:** ✅ RESOLVED
 **Seed kind:** scripted-scenario
 **Source seats:** seat-5
 **Linked scenarios:** SCN-DIRECT-ORDER-ACTOR
 **Viewer role (if ui-spec-divergence):** n/a
 **Session:** 2026-05-08-2022-5p
-**Candidate duplicate:** n/a
+**Candidate duplicate:** 032-scn-direct-order-normal-01 (paired Direct Order finding)
+**Resolution:** Fix landed 2026-05-09. `Player.tsx:602` target-picker title for Direct Order changed from `"Choose who to reassign to"` to `"Direct your orders to..."` — Archer-tone copy that matches the card's spy-thriller flavor and removes the Reassign vocabulary contamination. Self-target inclusion in the eligible list (Finding 2) is working-as-intended per rules §13.8 — no change. Bundled with the protocol-additive fix from 032 (targetId on card-played) so the ACTOR's choice of target also surfaces on observer phones.
 
 ## Player-POV summary
 

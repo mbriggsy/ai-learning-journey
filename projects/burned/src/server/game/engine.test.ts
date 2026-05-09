@@ -292,6 +292,51 @@ describe('Direct Order', () => {
     }
   })
 
+  it("emits targetId on card-played for observer toast (close 05-08-2022-5p #032)", () => {
+    // The Direct Order narrative beat is "ACTOR picked TARGET on purpose."
+    // Observers must see the target DURING the nope window, not only after
+    // turn-started fires post-resolution. The card-played event carries an
+    // optional targetId for that purpose.
+    let state = startGameWith(3)
+    state = giveCard(state, 'p1', 'direct-order', 'ta-targetid')
+
+    const card = findCard(state, 'p1', 'direct-order')!
+    const result = act(state, {
+      type: 'play-card', playerId: 'p1', cardIds: [card.id], targetPlayerId: 'p3',
+    })
+    expect(result.ok).toBe(true)
+    if (!result.ok) return
+    const s = result.state as PlayingState
+    const cardPlayed = s.events.find(e => e.type === 'card-played')
+    expect(cardPlayed).toBeDefined()
+    expect(cardPlayed).toMatchObject({
+      type: 'card-played',
+      playerId: 'p1',
+      cardType: 'direct-order',
+      targetId: 'p3',
+    })
+  })
+
+  it('does NOT emit targetId on card-played for non-targeted single-card plays', () => {
+    // Additive contract: targetId is only emitted for direct-order. Other
+    // single-card plays (go-dark, intel-briefing, etc.) carry no target so
+    // the field stays absent — old clients that don't read it remain
+    // unaffected, new clients can branch on its presence.
+    let state = startGameWith(3)
+    state = giveCard(state, 'p1', 'go-dark', 'gd-no-target')
+
+    const card = findCard(state, 'p1', 'go-dark')!
+    const result = act(state, {
+      type: 'play-card', playerId: 'p1', cardIds: [card.id],
+    })
+    expect(result.ok).toBe(true)
+    if (!result.ok) return
+    const s = result.state as PlayingState
+    const cardPlayed = s.events.find(e => e.type === 'card-played')
+    expect(cardPlayed).toBeDefined()
+    expect(cardPlayed).not.toHaveProperty('targetId')
+  })
+
   it('allows self-targeting per rules §13.8 (adds 2 turns to self)', () => {
     let state = startGameWith(3)
     state = giveCard(state, 'p1', 'direct-order', 'ta-self')

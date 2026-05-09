@@ -167,6 +167,71 @@ describe('PlayerAlert — card-played toast lifecycle', () => {
   })
 })
 
+describe('PlayerAlert — Direct Order target name in toast (close 05-08-2022-5p #032)', () => {
+  // The Direct Order narrative beat is "ACTOR picked TARGET on purpose."
+  // The card-played event now carries an optional targetId for direct-order
+  // so observer toasts can surface who was targeted DURING the nope window.
+  // Two-phase render is required because PlayerAlert's lastProcessedRef
+  // baselines all events present at mount; only events arriving AFTER the
+  // first render trip the toast pipeline.
+  it('renders "targeting <name>" when the toast viewer is not the target', () => {
+    const { container, root } = mount()
+    try {
+      myIdRef.current = SEAT3_ID // viewer is Seat3, not the target
+      setEvents([
+        { event: { type: 'turn-started', playerId: SEAT2_ID, turnsRemaining: 1 }, receivedAt: 0, id: 'evt-0' },
+      ])
+      render(root)
+      setEvents([
+        { event: { type: 'turn-started', playerId: SEAT2_ID, turnsRemaining: 1 }, receivedAt: 0, id: 'evt-0' },
+        { event: { type: 'card-played', playerId: SEAT2_ID, cardType: 'direct-order', targetId: 'seat-1-uuid' }, receivedAt: 1, id: 'evt-1' },
+      ])
+      rerender(root)
+      expect(alertText(container)).toBe('Seat2 played Direct Order — targeting Seat1.')
+    } finally {
+      teardown(container, root)
+    }
+  })
+
+  it('renders "targeting you" when the viewer is the target', () => {
+    const { container, root } = mount()
+    try {
+      myIdRef.current = SEAT3_ID // viewer IS the target
+      setEvents([
+        { event: { type: 'turn-started', playerId: SEAT2_ID, turnsRemaining: 1 }, receivedAt: 0, id: 'evt-0' },
+      ])
+      render(root)
+      setEvents([
+        { event: { type: 'turn-started', playerId: SEAT2_ID, turnsRemaining: 1 }, receivedAt: 0, id: 'evt-0' },
+        { event: { type: 'card-played', playerId: SEAT2_ID, cardType: 'direct-order', targetId: SEAT3_ID }, receivedAt: 1, id: 'evt-1' },
+      ])
+      rerender(root)
+      expect(alertText(container)).toBe('Seat2 played Direct Order — targeting you.')
+    } finally {
+      teardown(container, root)
+    }
+  })
+
+  it('omits target suffix when card-played carries no targetId (e.g. reassign)', () => {
+    const { container, root } = mount()
+    try {
+      myIdRef.current = SEAT3_ID
+      setEvents([
+        { event: { type: 'turn-started', playerId: SEAT2_ID, turnsRemaining: 1 }, receivedAt: 0, id: 'evt-0' },
+      ])
+      render(root)
+      setEvents([
+        { event: { type: 'turn-started', playerId: SEAT2_ID, turnsRemaining: 1 }, receivedAt: 0, id: 'evt-0' },
+        { event: { type: 'card-played', playerId: SEAT2_ID, cardType: 'reassign' }, receivedAt: 1, id: 'evt-1' },
+      ])
+      rerender(root)
+      expect(alertText(container)).toBe('Seat2 played Reassign.')
+    } finally {
+      teardown(container, root)
+    }
+  })
+})
+
 describe('PlayerAlert — Call in a Favor persists until favor-given (re-attendance use case)', () => {
   it('persists past the 2.8s auto-fade boundary while target is deciding', () => {
     const { container, root } = mount()

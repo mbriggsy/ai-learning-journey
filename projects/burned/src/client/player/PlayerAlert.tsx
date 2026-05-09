@@ -153,9 +153,20 @@ function alertFor(
         event.cardType === 'call-in-a-favor'
           ? ['favor-given']
           : ['nope-window-resolved']
+      // Direct Order's narrative beat is "chosen, not defaulted" — when the
+      // event carries a target the toast surfaces it so observers know
+      // immediately who was directed (close §1.1 Cluster E). Self-reference
+      // resolves to the receiver's name "you"; same-player target ("Dash
+      // played Direct Order — targeting Dash") keeps the §13.8 self-target
+      // comedy beat readable on observer phones.
+      const target = event.targetId
+      const targetSuffix =
+        target === undefined ? ''
+        : target === myId ? ' — targeting you'
+        : ` — targeting ${nameOf(target)}`
       return {
         id: eventId,
-        text: `${nameOf(event.playerId)} played ${cardName}.`,
+        text: `${nameOf(event.playerId)} played ${cardName}${targetSuffix}.`,
         tone: 'info',
         persistUntil,
       }

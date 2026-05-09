@@ -1,13 +1,14 @@
 # 032-scn-direct-order-normal-01 — Direct Order target not surfaced to observers during nope window; actor dialog title uses Reassign language
 
 **Severity (triage):** P2
-**Status:** 🔴 OPEN
+**Status:** ✅ RESOLVED
 **Seed kind:** scripted-scenario
 **Source seats:** seat-2
 **Linked scenarios:** SCN-DIRECT-ORDER-NORMAL-01
 **Viewer role (if ui-spec-divergence):** n/a
 **Session:** 2026-05-08-2022-5p
-**Candidate duplicate:** n/a
+**Candidate duplicate:** 031-scn-direct-order-actor (paired Direct Order finding)
+**Resolution:** Fix landed 2026-05-09. Implementation matches triage Option A: added optional `targetId` to the `card-played` GameEvent type (`src/shared/types.ts:32`); engine emits it from `handleSingleCard` when card is `direct-order` and `action.targetPlayerId` is set (`src/server/game/engine.ts:322-329`). PlayerAlert now appends `" — targeting <name>"` (or `" — targeting you"` when the viewer is the target) to the observer toast during the nope window. `PROTOCOL_VERSION` not bumped — additive optional field is backwards-compatible (old clients ignore the field). Contracts pinned by 2 new engine tests + 3 new PlayerAlert tests. Dialog title (Finding 2) addressed in same commit per 031.
 
 ## Player-POV summary
 

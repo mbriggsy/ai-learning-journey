@@ -599,7 +599,7 @@ function PlayingView({ roomCode }: { roomCode: string }) {
             onCancel={() => { setLocalTargetMode(null); resetCardPlay() }}
             title={
               localTargetMode.reason === 'call-in-a-favor' ? 'Choose who gives you a card'
-              : localTargetMode.reason === 'direct-order' ? 'Choose who to reassign to'
+              : localTargetMode.reason === 'direct-order' ? 'Direct your orders to...'
               : localTargetMode.reason === 'combo-pair' ? 'Choose who to steal from'
               : 'Choose who to steal from'
             }

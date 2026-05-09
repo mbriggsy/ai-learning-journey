@@ -5,7 +5,7 @@
 ## Summary
 
 - **Total issues:** 39
-- **Status:** OPEN 24 · RESOLVED 6 · BLOCKED 1 · DUPLICATE 1 · KNOWN-PRODUCT-CALL 2 · LOW-SIGNAL 5
+- **Status:** OPEN 17 · RESOLVED 12 · BLOCKED 1 · DUPLICATE 1 · KNOWN-PRODUCT-CALL 2 · LOW-SIGNAL 6
 - **Severity:** P0 0 · P1 6 · P2 33
 - **By seed kind:**
   - scripted-scenario: 23
@@ -21,9 +21,9 @@
 | ID | Title | Severity | Status | Linked | Candidate dup |
 | --- | --- | --- | --- | --- | --- |
 | [005-falsify-intel-normal](005-falsify-intel-normal.md) | Falsify Intel rearrange UI is a tap-number form, not an espionage-weighted cinematic panel | P2 | OPEN | FALSIFY-INTEL-NORMAL (SCN-FALSIFY-INTEL-NORMAL-01) | — |
-| [008-scn-back-channel-normal-01](008-scn-back-channel-normal-01.md) | Back Channel normal-play: scenario fires clean; OTHER observer phone view lacks post-resolution drama beat | P2 | OPEN | SCN-BACK-CHANNEL-NORMAL-01 | — |
+| [008-scn-back-channel-normal-01](008-scn-back-channel-normal-01.md) | Back Channel normal-play: scenario fires clean; OTHER observer phone view lacks post-resolution drama beat | P2 | RESOLVED | SCN-BACK-CHANNEL-NORMAL-01 | — |
 | [011-scn-intercepted-single-at-depth-0-01](011-scn-intercepted-single-at-depth-0-01.md) | Interceptor sees no toast describing what combo is being played during nope window | P2 | OPEN | SCN-INTERCEPTED-SINGLE-AT-DEPTH-0-01 | — |
-| [014-back-channel-normal](014-back-channel-normal.md) | Back Channel scenario fires clean from ACTOR seat; low-severity presentation gap corroborates issue 012 | P2 | OPEN | BACK-CHANNEL-NORMAL | — |
+| [014-back-channel-normal](014-back-channel-normal.md) | Back Channel scenario fires clean from ACTOR seat; low-severity presentation gap corroborates issue 012 | P2 | RESOLVED | BACK-CHANNEL-NORMAL | — |
 | [017-scn-call-in-favor-normal-01](017-scn-call-in-favor-normal-01.md) | Favor-response gesture not surfaced to first-time TARGET | P2 | OPEN | SCN-CALL-IN-FAVOR-NORMAL-01 | — |
 | [018-scn-call-in-favor-normal-01](018-scn-call-in-favor-normal-01.md) | Favor-response double-tap discoverability (duplicate of 017) | P2 | DUPLICATE | SCN-CALL-IN-FAVOR-NORMAL-01 | n/a (catalog tag; within-session duplicate → see issue 017) |
 | [019-scn-falsify-intel-normal-01](019-scn-falsify-intel-normal-01.md) | Falsify Intel normal play: clean fire, privateData channel confirmed working | P2 | LOW-SIGNAL | SCN-FALSIFY-INTEL-NORMAL-01 | — |
@@ -32,7 +32,7 @@
 | [022-scn-intercepted-single-at-depth-0-01](022-scn-intercepted-single-at-depth-0-01.md) | Interceptor did not see what card was cancelled (pair-combo play, no toast) | P2 | OPEN | SCN-INTERCEPTED-SINGLE-AT-DEPTH-0-01 | — |
 | [023-scn-intercepted-single-01](023-scn-intercepted-single-01.md) | Connection Status modal blocks Intercept tap during nope window | P1 | RESOLVED | SCN-INTERCEPTED-SINGLE-01 | 001-unknown-unknown-freeplay (same root cause) |
 | [024-scn-intel-briefing-normal-01](024-scn-intel-briefing-normal-01.md) | Intel Briefing normal play: clean fire, privateData not captured in god-event snapshot | P2 | LOW-SIGNAL | SCN-INTEL-BRIEFING-NORMAL-01 | — |
-| [025-scn-back-channel-normal-01](025-scn-back-channel-normal-01.md) | Back Channel intercepted: ACTOR receives no phone feedback; FuturePeek re-displays after cancelled nope window | P1 | OPEN | SCN-BACK-CHANNEL-NORMAL-01 | — |
+| [025-scn-back-channel-normal-01](025-scn-back-channel-normal-01.md) | Back Channel intercepted: ACTOR receives no phone feedback; FuturePeek re-displays after cancelled nope window | P1 | RESOLVED | SCN-BACK-CHANNEL-NORMAL-01 | — |
 | [027-scn-intercepted-single-at-depth-0-01](027-scn-intercepted-single-at-depth-0-01.md) | Interceptor never sees what card they just cancelled (fast-click timing gap) | P2 | OPEN | SCN-INTERCEPTED-SINGLE-AT-DEPTH-0-01 | — |
 | [029-scn-intel-briefing-normal-01](029-scn-intel-briefing-normal-01.md) | Disabled intercept button shows countdown when observer has no Intercepted cards (working as designed) | P2 | LOW-SIGNAL | SCN-INTEL-BRIEFING-NORMAL-01 | — |
 | [030-scn-falsify-intel-actor](030-scn-falsify-intel-actor.md) | Falsify Intel nope window shows "Intel Briefing" dialog (stale pendingFuture bleed-through) | P2 | OPEN | SCN-FALSIFY-INTEL-ACTOR | — |
@@ -60,11 +60,11 @@ Spec-level findings against `docs/PRODUCT-SPECIFICATION.md` §2 (Quality Bar) + 
 | ID | Title | Severity | Status | Linked | Candidate dup |
 | --- | --- | --- | --- | --- | --- |
 | [004-vibe-falsify-intel-normal](004-vibe-falsify-intel-normal.md) | Falsify Intel rearrange feels like a form, not espionage | P2 | OPEN | FALSIFY-INTEL-NORMAL | — |
-| [009-vibe-scn-back-channel-normal-01](009-vibe-scn-back-channel-normal-01.md) | Back Channel observer intercept-window lacks assessed dramatic weight (agent-polling artifact) | P2 | OPEN | SCN-BACK-CHANNEL-NORMAL-01 | — |
-| [012-vibe-back-channel-normal](012-vibe-back-channel-normal.md) | Back Channel bottom-draw has no cinematic distinction from a top-draw | P1 | OPEN | BACK-CHANNEL-NORMAL | — |
-| [013-vibe-game-moment-first-turn-back-channel](013-vibe-game-moment-first-turn-back-channel.md) | First-turn Back Channel landing flat: no opening-gambit framing, no bottom-draw visual distinction | P2 | OPEN | GAME-MOMENT-FIRST-TURN-BACK-CHANNEL | — |
+| [009-vibe-scn-back-channel-normal-01](009-vibe-scn-back-channel-normal-01.md) | Back Channel observer intercept-window lacks assessed dramatic weight (agent-polling artifact) | P2 | LOW-SIGNAL | SCN-BACK-CHANNEL-NORMAL-01 | — |
+| [012-vibe-back-channel-normal](012-vibe-back-channel-normal.md) | Back Channel bottom-draw has no cinematic distinction from a top-draw | P1 | RESOLVED | BACK-CHANNEL-NORMAL | — |
+| [013-vibe-game-moment-first-turn-back-channel](013-vibe-game-moment-first-turn-back-channel.md) | First-turn Back Channel landing flat: no opening-gambit framing, no bottom-draw visual distinction | P2 | RESOLVED | GAME-MOMENT-FIRST-TURN-BACK-CHANNEL | — |
 | [016-vibe-scn-call-in-a-favor-normal-01](016-vibe-scn-call-in-a-favor-normal-01.md) | Observer gets no closing beat when favor resolves | P2 | OPEN | SCN-CALL-IN-A-FAVOR-NORMAL-01 | — |
-| [028-vibe-scn-back-channel-normal-01](028-vibe-scn-back-channel-normal-01.md) | Actor receives zero narration when their card is intercepted | P1 | OPEN | SCN-BACK-CHANNEL-NORMAL-01 | — |
+| [028-vibe-scn-back-channel-normal-01](028-vibe-scn-back-channel-normal-01.md) | Actor receives zero narration when their card is intercepted | P1 | RESOLVED | SCN-BACK-CHANNEL-NORMAL-01 | — |
 | [033-vibe-scn-burn-the-files-normal-01](033-vibe-scn-burn-the-files-normal-01.md) | Burn the Files shuffle has no kinetic payoff (silent shuffle) | P2 | OPEN | SCN-BURN-THE-FILES-NORMAL-01 | — |
 | [037-vibe-burn-files-normal](037-vibe-burn-files-normal.md) | Phone drama beat lacks destruction weight for Burn the Files | P2 | OPEN | BURN-FILES-NORMAL | — |
 

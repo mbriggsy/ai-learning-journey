@@ -1,7 +1,8 @@
 # 009-vibe-scn-back-channel-normal-01 — Back Channel observer intercept-window lacks assessed dramatic weight (agent-polling artifact)
 
 **Severity (triage):** P2
-**Status:** 🔴 OPEN
+**Status:** 〰 LOW-SIGNAL
+**Resolution:** Triage Option C accepted 2026-05-09. The `unsure` vibe-check was traced to a seat-agent-polling artifact (the agent sampled the intercept window mid-countdown and missed the full 10s arc) rather than a presentation gap. The Cluster B narration fix (commit closing #012, #008, #013, #014, #025, #028) incidentally adds the dramatic build-up the original `unsure` was probing for — if a real human playtest returns the same `unsure` on this specific moment, re-open with that signal.
 **Seed kind:** vibe-check
 **Source seats:** seat-2, seat-3
 **Linked scenarios:** SCN-BACK-CHANNEL-NORMAL-01

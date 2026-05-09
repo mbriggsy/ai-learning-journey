@@ -1,7 +1,8 @@
 # 013-vibe-game-moment-first-turn-back-channel — First-turn Back Channel landing flat: no opening-gambit framing, no bottom-draw visual distinction
 
 **Severity (triage):** P2
-**Status:** 🔴 OPEN
+**Status:** ✅ RESOLVED
+**Resolution:** Fix landed 2026-05-09 in the same commit as #012. The "no bottom-draw distinction" component of the finding is addressed by the new ACTOR `// BACK CHANNEL — <Card> extracted.` urgent toast and observer `<Name> went off-channel.` info toast — same fix as 012's Option B. The first-turn-specific framing (triage Option C) is not separately implemented; ACTORS playing Back Channel as the literal first move of a game still get the standard Archer-tone narration, which closes the load-bearing presentation gap. Confirmed scoping rationale matches triage's "defer to BACK-CHANNEL-NORMAL triage cluster (012) for the architectural call."
 **Seed kind:** vibe-check
 **Source seats:** seat-1
 **Linked scenarios:** GAME-MOMENT-FIRST-TURN-BACK-CHANNEL

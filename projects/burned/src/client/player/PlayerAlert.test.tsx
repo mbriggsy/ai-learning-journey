@@ -167,6 +167,192 @@ describe('PlayerAlert — card-played toast lifecycle', () => {
   })
 })
 
+describe('PlayerAlert — Back Channel resolution narration (close 05-08-2022-5p #012 + #008 + #013 + #014)', () => {
+  // The Back Channel is "THE Archer spy move" per the catalog vibe note.
+  // ACTOR sees Archer-tone "// BACK CHANNEL — <Card> extracted." instead of
+  // generic "You drew <Card>"; observers see a quiet resolution beat
+  // "<Name> went off-channel." after their persistent card-played toast
+  // clears.
+
+  it('ACTOR: Back Channel draw produces "// BACK CHANNEL — <Card> extracted."', () => {
+    const { container, root } = mount()
+    try {
+      myIdRef.current = SEAT2_ID // viewer is the ACTOR
+      setEvents([
+        { event: { type: 'turn-started', playerId: SEAT2_ID, turnsRemaining: 1 }, receivedAt: 0, id: 'evt-0' },
+      ])
+      render(root)
+      setEvents([
+        { event: { type: 'turn-started', playerId: SEAT2_ID, turnsRemaining: 1 }, receivedAt: 0, id: 'evt-0' },
+        { event: { type: 'card-played', playerId: SEAT2_ID, cardType: 'back-channel' }, receivedAt: 1, id: 'evt-1' },
+        { event: { type: 'nope-window-resolved', cancelled: false, chainDepth: 0 }, receivedAt: 2, id: 'evt-2' },
+        { event: { type: 'card-drawn', playerId: SEAT2_ID, safe: true, cardType: 'go-dark' }, receivedAt: 3, id: 'evt-3' },
+      ])
+      rerender(root)
+      expect(alertText(container)).toBe('// BACK CHANNEL — Go Dark extracted.')
+    } finally {
+      teardown(container, root)
+    }
+  })
+
+  it('ACTOR: a regular end-of-turn draw still uses the generic "You drew <Card>." text', () => {
+    const { container, root } = mount()
+    try {
+      myIdRef.current = SEAT2_ID
+      setEvents([
+        { event: { type: 'turn-started', playerId: SEAT2_ID, turnsRemaining: 1 }, receivedAt: 0, id: 'evt-0' },
+      ])
+      render(root)
+      // No preceding card-played → walkBack hits turn-started boundary → false.
+      setEvents([
+        { event: { type: 'turn-started', playerId: SEAT2_ID, turnsRemaining: 1 }, receivedAt: 0, id: 'evt-0' },
+        { event: { type: 'card-drawn', playerId: SEAT2_ID, safe: true, cardType: 'go-dark' }, receivedAt: 1, id: 'evt-1' },
+      ])
+      rerender(root)
+      expect(alertText(container)).toBe('You drew Go Dark.')
+    } finally {
+      teardown(container, root)
+    }
+  })
+
+  it('OBSERVER: Back Channel draw produces "<Name> went off-channel."', () => {
+    const { container, root } = mount()
+    try {
+      myIdRef.current = SEAT3_ID // viewer is an OBSERVER
+      setEvents([
+        { event: { type: 'turn-started', playerId: SEAT2_ID, turnsRemaining: 1 }, receivedAt: 0, id: 'evt-0' },
+      ])
+      render(root)
+      setEvents([
+        { event: { type: 'turn-started', playerId: SEAT2_ID, turnsRemaining: 1 }, receivedAt: 0, id: 'evt-0' },
+        { event: { type: 'card-played', playerId: SEAT2_ID, cardType: 'back-channel' }, receivedAt: 1, id: 'evt-1' },
+        { event: { type: 'nope-window-resolved', cancelled: false, chainDepth: 0 }, receivedAt: 2, id: 'evt-2' },
+        // Observer's card-drawn is stripped of cardType (private to drawer)
+        { event: { type: 'card-drawn', playerId: SEAT2_ID, safe: true }, receivedAt: 3, id: 'evt-3' },
+      ])
+      rerender(root)
+      expect(alertText(container)).toBe('Seat2 went off-channel.')
+    } finally {
+      teardown(container, root)
+    }
+  })
+
+  it('OBSERVER: a regular end-of-turn draw fires no toast (default silent)', () => {
+    const { container, root } = mount()
+    try {
+      myIdRef.current = SEAT3_ID
+      setEvents([
+        { event: { type: 'turn-started', playerId: SEAT2_ID, turnsRemaining: 1 }, receivedAt: 0, id: 'evt-0' },
+      ])
+      render(root)
+      // Observer's card-drawn for a non-Back-Channel draw is silent.
+      setEvents([
+        { event: { type: 'turn-started', playerId: SEAT2_ID, turnsRemaining: 1 }, receivedAt: 0, id: 'evt-0' },
+        { event: { type: 'card-drawn', playerId: SEAT2_ID, safe: true }, receivedAt: 1, id: 'evt-1' },
+      ])
+      rerender(root)
+      expect(alertText(container)).toBeNull()
+    } finally {
+      teardown(container, root)
+    }
+  })
+})
+
+describe('PlayerAlert — ACTOR intercepted toast (close 05-08-2022-5p #025 Gap 1 + #028)', () => {
+  // Pre-fix: when the ACTOR's card was intercepted, the staging area silently
+  // snapped back with no text. Observers got a persistent "Seat X played
+  // [Card]" toast through the nope window — the actor got nothing. This
+  // closes the asymmetry: a `nope-window-resolved {cancelled: true}` for a
+  // card the local player just played fires an urgent ACTOR-side toast
+  // naming the interceptor.
+  it('renders "<Interceptor> intercepted your <Card>." when my card is cancelled', () => {
+    const { container, root } = mount()
+    try {
+      myIdRef.current = SEAT2_ID // viewer is the ACTOR whose card was blocked
+      setEvents([
+        { event: { type: 'turn-started', playerId: SEAT2_ID, turnsRemaining: 1 }, receivedAt: 0, id: 'evt-0' },
+      ])
+      render(root)
+      setEvents([
+        { event: { type: 'turn-started', playerId: SEAT2_ID, turnsRemaining: 1 }, receivedAt: 0, id: 'evt-0' },
+        { event: { type: 'card-played', playerId: SEAT2_ID, cardType: 'back-channel' }, receivedAt: 1, id: 'evt-1' },
+        { event: { type: 'nope-played', playerId: SEAT3_ID, chainDepth: 1 }, receivedAt: 2, id: 'evt-2' },
+        { event: { type: 'nope-window-resolved', cancelled: true, chainDepth: 0 }, receivedAt: 3, id: 'evt-3' },
+      ])
+      rerender(root)
+      expect(alertText(container)).toBe('Seat3 intercepted your Back Channel.')
+    } finally {
+      teardown(container, root)
+    }
+  })
+
+  it("falls back to 'Your <Card> was intercepted.' when no nope-played is in the feed", () => {
+    // Defensive — server should always emit nope-played alongside a
+    // cancelled resolve, but the feed-walk degrades gracefully if it's
+    // absent (e.g. event ordering edge case, projection strip future).
+    const { container, root } = mount()
+    try {
+      myIdRef.current = SEAT2_ID
+      setEvents([
+        { event: { type: 'turn-started', playerId: SEAT2_ID, turnsRemaining: 1 }, receivedAt: 0, id: 'evt-0' },
+      ])
+      render(root)
+      setEvents([
+        { event: { type: 'turn-started', playerId: SEAT2_ID, turnsRemaining: 1 }, receivedAt: 0, id: 'evt-0' },
+        { event: { type: 'card-played', playerId: SEAT2_ID, cardType: 'reassign' }, receivedAt: 1, id: 'evt-1' },
+        { event: { type: 'nope-window-resolved', cancelled: true, chainDepth: 0 }, receivedAt: 2, id: 'evt-2' },
+      ])
+      rerender(root)
+      expect(alertText(container)).toBe('Your Reassign was intercepted.')
+    } finally {
+      teardown(container, root)
+    }
+  })
+
+  it('does NOT fire on cancelled:true when the cancelled card belongs to someone else', () => {
+    const { container, root } = mount()
+    try {
+      myIdRef.current = SEAT3_ID // viewer is an OBSERVER, not the actor
+      setEvents([
+        { event: { type: 'turn-started', playerId: SEAT2_ID, turnsRemaining: 1 }, receivedAt: 0, id: 'evt-0' },
+      ])
+      render(root)
+      setEvents([
+        { event: { type: 'turn-started', playerId: SEAT2_ID, turnsRemaining: 1 }, receivedAt: 0, id: 'evt-0' },
+        { event: { type: 'card-played', playerId: SEAT2_ID, cardType: 'back-channel' }, receivedAt: 1, id: 'evt-1' },
+        { event: { type: 'nope-played', playerId: SEAT3_ID, chainDepth: 1 }, receivedAt: 2, id: 'evt-2' },
+        { event: { type: 'nope-window-resolved', cancelled: true, chainDepth: 0 }, receivedAt: 3, id: 'evt-3' },
+      ])
+      rerender(root)
+      // Observer's card-played persistent toast clears at nope-window-resolved.
+      // No new urgent toast — observers don't need actor-side narration.
+      expect(alertText(container)).toBeNull()
+    } finally {
+      teardown(container, root)
+    }
+  })
+
+  it('does NOT fire on cancelled:false (the card resolved cleanly, no narration needed)', () => {
+    const { container, root } = mount()
+    try {
+      myIdRef.current = SEAT2_ID
+      setEvents([
+        { event: { type: 'turn-started', playerId: SEAT2_ID, turnsRemaining: 1 }, receivedAt: 0, id: 'evt-0' },
+      ])
+      render(root)
+      setEvents([
+        { event: { type: 'turn-started', playerId: SEAT2_ID, turnsRemaining: 1 }, receivedAt: 0, id: 'evt-0' },
+        { event: { type: 'card-played', playerId: SEAT2_ID, cardType: 'back-channel' }, receivedAt: 1, id: 'evt-1' },
+        { event: { type: 'nope-window-resolved', cancelled: false, chainDepth: 0 }, receivedAt: 2, id: 'evt-2' },
+      ])
+      rerender(root)
+      expect(alertText(container)).toBeNull()
+    } finally {
+      teardown(container, root)
+    }
+  })
+})
+
 describe('PlayerAlert — Direct Order target name in toast (close 05-08-2022-5p #032)', () => {
   // The Direct Order narrative beat is "ACTOR picked TARGET on purpose."
   // The card-played event now carries an optional targetId for direct-order

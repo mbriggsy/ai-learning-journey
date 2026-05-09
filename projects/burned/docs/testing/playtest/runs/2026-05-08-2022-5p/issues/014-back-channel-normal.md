@@ -1,7 +1,8 @@
 # 014-back-channel-normal — Back Channel scenario fires clean from ACTOR seat; low-severity presentation gap corroborates issue 012
 
 **Severity (triage):** P2
-**Status:** 🔴 OPEN
+**Status:** ✅ RESOLVED
+**Resolution:** Fix landed 2026-05-09 in the same commit as #012. Confirmatory ACTOR-POV finding closed by the underlying narration fix. The timer-confusion secondary signal (triage's Option B note about "no explanation of why the Intercept countdown exists") is not separately surfaced — the new Archer-tone narration covers the primary `no` vibe vector and the timer-explanation gap can resurface in future runs if it remains a felt issue without other context to anchor it.
 **Seed kind:** scripted-scenario
 **Source seats:** seat-1
 **Linked scenarios:** BACK-CHANNEL-NORMAL

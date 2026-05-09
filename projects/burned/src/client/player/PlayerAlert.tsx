@@ -9,6 +9,7 @@ import { MOTION } from '@client/shared/tokens/motion'
 import { CARD_DEF_BY_TYPE } from '@shared/card-defs'
 import type { BoardPlayer } from '@shared/protocol'
 import type { GameEvent } from '@shared/types'
+import type { AccumulatedEvent } from '@client/shared/gameStore'
 import styles from './PlayerAlert.module.css'
 
 type AlertTone = 'urgent' | 'info'
@@ -25,13 +26,43 @@ interface Alert {
   readonly persistUntil?: ReadonlyArray<GameEvent['type']>
 }
 
+/** Walk backward from `feedIdx` looking for the most recent `card-played`
+ *  emitted by `playerId`. Returns true if the found event's cardType matches
+ *  `cardType`. Bounds the walk at the previous turn-started OR a card-played
+ *  by a different player — both indicate we've left the current play's
+ *  context. Used by `alertFor`'s `card-drawn` case to detect "this draw is
+ *  the resolution of a Back Channel." */
+function walkBackForCardPlayed(
+  feed: readonly AccumulatedEvent[],
+  feedIdx: number,
+  playerId: string,
+  cardType: string,
+): boolean {
+  for (let i = feedIdx - 1; i >= 0; i--) {
+    const e = feed[i]!.event
+    if (e.type === 'turn-started') return false
+    if (e.type === 'card-played') {
+      return e.playerId === playerId && e.cardType === cardType
+    }
+  }
+  return false
+}
+
 /** Format an event into a player-facing alert if it directly affected me.
- *  Null = no alert (event wasn't about this player). */
+ *  Null = no alert (event wasn't about this player).
+ *
+ *  The `feed` + `feedIdx` parameters give the function access to the
+ *  preceding accumulated events so cases that depend on context (e.g.
+ *  "this nope-window-resolved cancelled the card I just played") can
+ *  walk backward without re-deriving identity from each event in
+ *  isolation. */
 function alertFor(
   event: GameEvent,
   eventId: string,
   myId: string,
   players: readonly BoardPlayer[],
+  feed: readonly AccumulatedEvent[],
+  feedIdx: number,
 ): Alert | null {
   const nameOf = (id: string): string =>
     players.find(p => p.id === id)?.name ?? 'Someone'
@@ -70,26 +101,36 @@ function alertFor(
       break
     }
 
-    case 'card-drawn':
-      // Confirmation toast for end-of-turn draw — player tapped "End turn ·
-      // draw" and needs to see what landed in their hand without squinting
-      // at the discard fan. Burned draws intentionally skip this: the drama
-      // overlay (BURNED → EXTRACTED / ELIMINATED) already owns that moment.
+    case 'card-drawn': {
+      // ACTOR draw confirmation — player tapped "End turn · draw" and needs
+      // to see what landed in their hand without squinting at the discard
+      // fan. Burned draws intentionally skip: DramaOverlay (BURNED →
+      // EXTRACTED / ELIMINATED) owns those moments.
       //
       // `cardType` is PRIVATE to the drawer (stripped by
-      // `stripPrivateEventFields` for opponents + board — see E-01 fix
-      // in projection.ts). The `event.playerId === myId` gate is the
-      // product rule; the extra `cardType` guard is a type-safety floor
-      // in case the projection ever strips more aggressively.
+      // `stripPrivateEventFields` for opponents + board, projection.ts:238-244).
+      // ACTOR side branches on the preceding card-played: a Back Channel
+      // resolution gets Archer-tone "// BACK CHANNEL — X extracted." instead
+      // of the generic "You drew X." (close 05-08-2022-5p #012). Observer
+      // side fires a quiet "<Name> went off-channel." resolution beat after
+      // their persistent card-played toast clears at nope-window-resolved
+      // (close 05-08-2022-5p #008 + #013 + #014).
+      const wasBackChannel = walkBackForCardPlayed(feed, feedIdx, event.playerId, 'back-channel')
       if (event.playerId === myId && event.safe && event.cardType) {
         const name = CARD_DEF_BY_TYPE[event.cardType]?.name ?? 'a card'
+        return wasBackChannel
+          ? { id: eventId, text: `// BACK CHANNEL — ${name} extracted.`, tone: 'urgent' }
+          : { id: eventId, text: `You drew ${name}.`, tone: 'info' }
+      }
+      if (event.playerId !== myId && event.safe && wasBackChannel) {
         return {
           id: eventId,
-          text: `You drew ${name}.`,
+          text: `${nameOf(event.playerId)} went off-channel.`,
           tone: 'info',
         }
       }
       break
+    }
 
     case 'favor-given':
       // Favor resolution is owned by FavorReport (cinematic incident-report
@@ -173,11 +214,56 @@ function alertFor(
     }
 
     case 'nope-played':
-      // Someone intercepted. Noisy if they intercept their own card's chain,
-      // but only interesting to the originator of the action. Skipped for now
-      // — the StagingArea's optimistic UI already snaps back when an action
-      // is rejected server-side.
+      // Silent for the bare nope — the resolution beat (`nope-window-resolved`
+      // with cancelled:true) carries the meaningful "your card was blocked"
+      // narration. A standalone nope toast would compete with that resolution
+      // moment without adding information.
       break
+
+    case 'nope-window-resolved': {
+      // ACTOR-side narration when YOUR card was intercepted. Pre-fix the
+      // staging area silently snapped back with no text, no interceptor
+      // identity, and no Archer-tone narration of the block — observers
+      // knew more than the actor at the moment that mattered most to the
+      // actor (close 05-08-2022-5p #025 Gap 1 + #028).
+      //
+      // Walk backward from this resolve to:
+      //   (1) the most-recent `card-played` — the card whose window just
+      //       closed. If it's mine and `cancelled === true`, my card was
+      //       blocked.
+      //   (2) the most-recent `nope-played` BEFORE that card-played is the
+      //       interceptor we credit in the toast. (We stop accepting nope-
+      //       played candidates once we've passed the card-played, because
+      //       any nope-played further back belongs to a prior chain.)
+      if (!event.cancelled) break
+      let cardPlayed: GameEvent | null = null
+      let interceptorId: string | null = null
+      for (let i = feedIdx - 1; i >= 0; i--) {
+        const e = feed[i]!.event
+        if (e.type === 'nope-played' && cardPlayed === null && interceptorId === null) {
+          // Most recent nope before we've found the card-played — this is
+          // the interceptor whose nope cancelled the card.
+          interceptorId = e.playerId
+          continue
+        }
+        if (e.type === 'card-played') {
+          cardPlayed = e
+          break
+        }
+        if (e.type === 'nope-window-resolved') {
+          // Walked past a prior window — current window's card-played
+          // would have appeared between that resolve and this one.
+          break
+        }
+      }
+      if (cardPlayed === null || cardPlayed.type !== 'card-played') break
+      if (cardPlayed.playerId !== myId) break
+      const cardName = CARD_DEF_BY_TYPE[cardPlayed.cardType]?.name ?? 'a card'
+      const text = interceptorId !== null
+        ? `${nameOf(interceptorId)} intercepted your ${cardName}.`
+        : `Your ${cardName} was intercepted.`
+      return { id: eventId, text, tone: 'urgent' }
+    }
   }
 
   return null
@@ -218,7 +304,8 @@ export function PlayerAlert() {
     // tail so the latest wins if multiple fire in the same batch.
     for (let i = newEntries.length - 1; i >= 0; i--) {
       const entry = newEntries[i]!
-      const next = alertFor(entry.event, entry.id, myId, players)
+      const feedIdx = events.indexOf(entry)
+      const next = alertFor(entry.event, entry.id, myId, players, events, feedIdx)
       if (!next) continue
       setAlert(next)
       announce(next.text, next.tone === 'urgent' ? 'assertive' : 'polite')

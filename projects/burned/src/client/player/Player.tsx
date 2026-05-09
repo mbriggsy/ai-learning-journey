@@ -356,14 +356,28 @@ function PlayingView({ roomCode }: { roomCode: string }) {
     { cardIds: string[]; reason: 'direct-order' | 'call-in-a-favor' | 'combo-pair' | 'combo-triple' } | null
   >(null)
 
-  // Track dismissed See the Future peek (prevents sheet loop)
+  // Track dismissed See the Future peek (prevents sheet loop). Compare by
+  // CONTENTS (card-id key) rather than array reference — `privateData.
+  // futureCards` is rebuilt on every projection, so a reference-only
+  // dependency would re-open the dismissed sheet on every state push
+  // (close 05-08-2022-5p #025 Gap 2: dismissed FuturePeek re-displayed
+  // after a cancelled nope window because the projection rebuild gave
+  // futureCards a new identity even though the contents were unchanged).
   const [futureDismissed, setFutureDismissed] = useState(false)
-
-  // Reset dismissed flag when futureCards changes (new peek)
+  const dismissedFutureKeyRef = useRef<string | null>(null)
   const futureCards = privateData.futureCards
+  const futureCardsKey = futureCards && futureCards.length > 0
+    ? futureCards.map(c => c.id).join('|')
+    : null
   useEffect(() => {
-    if (futureCards && futureCards.length > 0) setFutureDismissed(false)
-  }, [futureCards])
+    if (futureCardsKey !== null && futureCardsKey !== dismissedFutureKeyRef.current) {
+      setFutureDismissed(false)
+    }
+  }, [futureCardsKey])
+  const handleFutureDismiss = useCallback(() => {
+    setFutureDismissed(true)
+    dismissedFutureKeyRef.current = futureCardsKey
+  }, [futureCardsKey])
 
   // Bottom sheet derivation — pass undefined if dismissed
   const activeSheet = useMemo(
@@ -624,7 +638,7 @@ function PlayingView({ roomCode }: { roomCode: string }) {
           <FuturePeek
             cards={activeSheet.cards}
             canRearrange={activeSheet.canRearrange}
-            onDismiss={() => setFutureDismissed(true)}
+            onDismiss={handleFutureDismiss}
             onRearrange={handleFutureRearrange}
           />
         )}

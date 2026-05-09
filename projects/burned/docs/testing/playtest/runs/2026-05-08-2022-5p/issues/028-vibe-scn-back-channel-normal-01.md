@@ -1,7 +1,8 @@
 # 028-vibe-scn-back-channel-normal-01 — Actor receives zero narration when their card is intercepted
 
 **Severity (triage):** P1
-**Status:** 🔴 OPEN
+**Status:** ✅ RESOLVED
+**Resolution:** Fix landed 2026-05-09. Same root cause + same fix as #025 Gap 1 (PlayerAlert `nope-window-resolved` ACTOR toast). Implementation matches triage Option A (interceptor named via backward feed walk). The fix applies to every intercepted card across the game — Back Channel made it vivid because of its catalog vibe weighting, but the universal narration gap is closed for all card types.
 **Seed kind:** vibe-check
 **Source seats:** seat-4
 **Linked scenarios:** SCN-BACK-CHANNEL-NORMAL-01

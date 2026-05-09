@@ -1,7 +1,8 @@
 # 012-vibe-back-channel-normal — Back Channel bottom-draw has no cinematic distinction from a top-draw
 
 **Severity (triage):** P1
-**Status:** 🔴 OPEN
+**Status:** ✅ RESOLVED
+**Resolution:** Fix landed 2026-05-09. Implementation matches triage Option B: ACTOR's `card-drawn` toast for a Back Channel resolution now reads `// BACK CHANNEL — <Card> extracted.` (urgent tone) instead of generic `You drew <Card>.`; observer phones fire a quiet `<Name> went off-channel.` resolution beat after the persistent card-played toast clears at nope-window-resolved. Both branches walk back through `useEventFeed()` to detect the preceding `card-played` was Back Channel. Observer beat closes #008 + #013 + #014 in the same commit. The full bottom-draw animation (triage Option A) is deferred to a dedicated cinematic polish sprint per the recommended path. Contracts pinned by 4 new PlayerAlert tests covering ACTOR Back Channel, ACTOR generic-draw, observer Back Channel, and observer non-Back-Channel-silent.
 **Seed kind:** vibe-check
 **Source seats:** seat-1
 **Linked scenarios:** BACK-CHANNEL-NORMAL

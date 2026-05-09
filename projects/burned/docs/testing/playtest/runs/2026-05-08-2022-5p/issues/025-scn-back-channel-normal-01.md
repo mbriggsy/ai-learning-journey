@@ -1,7 +1,8 @@
 # 025-scn-back-channel-normal-01 — Back Channel intercepted: ACTOR receives no phone feedback; FuturePeek re-displays after cancelled nope window
 
 **Severity (triage):** P1
-**Status:** 🔴 OPEN
+**Status:** ✅ RESOLVED
+**Resolution:** Fix landed 2026-05-09. Both gaps closed: (1) Gap 1 — added `nope-window-resolved` case to PlayerAlert that walks the event feed backward for the most-recent `card-played` from `myId` and the most-recent `nope-played` for the interceptor's name; emits urgent `<Interceptor> intercepted your <Card>.` (bundles 028 — same root cause). (2) Gap 2 — FuturePeek dismiss now compares by stable card-id key (`futureCardsKey = futureCards.map(c => c.id).join('|')`) instead of array reference; dismissed key is recorded in a ref and reset only when the actual peek contents change. Pre-fix every projection rebuild gave futureCards a new identity and re-opened the dismissed sheet. 4 new PlayerAlert tests cover the intercept-toast contract (named, fallback, observer-silent, cancelled:false-silent).
 **Seed kind:** scripted-scenario
 **Source seats:** seat-4
 **Linked scenarios:** SCN-BACK-CHANNEL-NORMAL-01

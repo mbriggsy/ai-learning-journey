@@ -1,7 +1,8 @@
 # 008-scn-back-channel-normal-01 — Back Channel normal-play: scenario fires clean; OTHER observer phone view lacks post-resolution drama beat
 
 **Severity (triage):** P2
-**Status:** 🔴 OPEN
+**Status:** ✅ RESOLVED
+**Resolution:** Fix landed 2026-05-09 in the same commit as #012. The OTHER-phone resolution gap is closed by the new observer-side `card-drawn` toast `<Name> went off-channel.` that fires after the persistent card-played toast clears at nope-window-resolved. Two-step beat: announcement (persistent through nope window) → resolution (off-channel confirmation).
 **Seed kind:** scripted-scenario
 **Source seats:** seat-2, seat-3
 **Linked scenarios:** SCN-BACK-CHANNEL-NORMAL-01

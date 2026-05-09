@@ -1,7 +1,8 @@
 # 011-scn-intercepted-single-at-depth-0-01 — Interceptor sees no toast describing what combo is being played during nope window
 
 **Severity (triage):** P2
-**Status:** 🔴 OPEN
+**Status:** ✅ RESOLVED
+**Resolution:** Fix landed 2026-05-09. Implementation matches triage Option A: removed the combo-suppression filter (`if (event.comboSize !== undefined) break`) in PlayerAlert's `card-played` case and replaced it with a combo-aware text branch — `<Name> played a <Operative> pair.` (comboSize===2) and `<Name> played a <Operative> triple.` (comboSize===3). The persistent-until-nope-window-resolved behavior carries over unchanged. Observers/interceptors during the nope window now know what they're potentially blocking. Same commit also adds the noper-side post-cancel toast (closes 027 + the rest of 022) so fast-clickers get confirmation of what they cancelled.
 **Seed kind:** scripted-scenario
 **Source seats:** seat-2
 **Linked scenarios:** SCN-INTERCEPTED-SINGLE-AT-DEPTH-0-01

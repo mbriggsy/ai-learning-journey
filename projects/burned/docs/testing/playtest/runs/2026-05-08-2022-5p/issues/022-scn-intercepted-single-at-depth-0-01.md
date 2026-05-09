@@ -1,7 +1,8 @@
 # 022-scn-intercepted-single-at-depth-0-01 — Interceptor did not see what card was cancelled (pair-combo play, no toast)
 
 **Severity (triage):** P2
-**Status:** 🔴 OPEN
+**Status:** ✅ RESOLVED
+**Resolution:** Fix landed 2026-05-09. Two-part fix in the same commit: (1) Sub-cause A (combo card-played suppression) — the suppression filter was removed and combos now emit `<Name> played a <Operative> pair.` / `triple.` toasts during the nope window. (2) The fast-click variant of the same gap (#027) is closed by the new noper-side post-cancel toast `You intercepted <Name>'s <Card phrase>.` that fires regardless of how quickly the noper clicked Intercept.
 **Seed kind:** scripted-scenario
 **Source seats:** seat-2
 **Linked scenarios:** SCN-INTERCEPTED-SINGLE-AT-DEPTH-0-01

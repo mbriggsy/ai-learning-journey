@@ -148,23 +148,27 @@ function alertFor(
       // and the only signal was the turn indicator flipping. Brief info-tone
       // toast lets observers track the action across the table.
       //
-      // Four filters keep the toast from competing with richer surfaces:
+      // Three filters keep the toast from competing with richer surfaces:
       // - own play: actor's staging area already showed what they did
       // - extraction / burn-the-files / falsify-intel: DramaOverlay text
       //   beats own those moments (EXTRACTED / FILES BURNED / INTEL
       //   FALSIFIED); a redundant toast would queue under the overlay
-      // - combos (comboSize set): combo-steal event carries the meaningful
-      //   payload (stealerId/targetId/found); the bare card-played would
-      //   over-announce a 3-of-a-kind as just "[Name] played Vera"
       // - go-dark intentionally falls THROUGH and shows the toast — the
       //   card's narrative is sneaking out of sight, so the quiet "X
       //   played Go Dark." text matches the tone better than silence
       //   (drama overlay was removed 2026-05-02 for the same reason).
+      //
+      // Combos (comboSize set) used to be suppressed entirely — the
+      // rationale was that combo-steal carries the meaningful payload and
+      // a bare "[Name] played Vera" under-described the 3-of-a-kind. The
+      // new "<Name> played a <Operative> pair." / "...triple." form keeps
+      // the operative name AND signals the mechanic, closing the
+      // observer/interceptor info-gap during the nope window
+      // (close 05-08-2022-5p #011 + #022).
       if (event.playerId === myId) break
       if (event.cardType === 'extraction') break
       if (event.cardType === 'burn-the-files') break
       if (event.cardType === 'falsify-intel') break
-      if (event.comboSize !== undefined) break
       const cardName = CARD_DEF_BY_TYPE[event.cardType]?.name
       if (!cardName) break
       // Persistence by card kind:
@@ -205,12 +209,15 @@ function alertFor(
         target === undefined ? ''
         : target === myId ? ' — targeting you'
         : ` — targeting ${nameOf(target)}`
-      return {
-        id: eventId,
-        text: `${nameOf(event.playerId)} played ${cardName}${targetSuffix}.`,
-        tone: 'info',
-        persistUntil,
-      }
+      // Combo plays announce the mechanic + operative ("a Neal Proctor pair")
+      // so observers know what they're potentially intercepting. Single plays
+      // keep the "<Name> played <Card>" + optional target suffix shape.
+      const text = event.comboSize === 2
+        ? `${nameOf(event.playerId)} played a ${cardName} pair.`
+        : event.comboSize === 3
+        ? `${nameOf(event.playerId)} played a ${cardName} triple.`
+        : `${nameOf(event.playerId)} played ${cardName}${targetSuffix}.`
+      return { id: eventId, text, tone: 'info', persistUntil }
     }
 
     case 'nope-played':
@@ -257,12 +264,38 @@ function alertFor(
         }
       }
       if (cardPlayed === null || cardPlayed.type !== 'card-played') break
-      if (cardPlayed.playerId !== myId) break
       const cardName = CARD_DEF_BY_TYPE[cardPlayed.cardType]?.name ?? 'a card'
-      const text = interceptorId !== null
-        ? `${nameOf(interceptorId)} intercepted your ${cardName}.`
-        : `Your ${cardName} was intercepted.`
-      return { id: eventId, text, tone: 'urgent' }
+      // Combo plays carry the mechanic in the post-intercept narration —
+      // "<Operative> pair" / "<Operative> triple" — so the noper knows
+      // what shape they cancelled, closing the fast-click info gap
+      // (close 05-08-2022-5p #022 + #027).
+      const cardPhrase = cardPlayed.comboSize === 2
+        ? `${cardName} pair`
+        : cardPlayed.comboSize === 3
+        ? `${cardName} triple`
+        : cardName
+
+      // ACTOR-side: my card was just cancelled.
+      if (cardPlayed.playerId === myId) {
+        const text = interceptorId !== null
+          ? `${nameOf(interceptorId)} intercepted your ${cardPhrase}.`
+          : `Your ${cardPhrase} was intercepted.`
+        return { id: eventId, text, tone: 'urgent' }
+      }
+
+      // NOPER-side: I successfully intercepted someone else's card. The
+      // most-recent nope-played in the chain was mine — the chain ended
+      // in my favor because cancelled === true. Pre-fix nopers got no
+      // post-action confirmation toast, leaving fast-clickers especially
+      // unsure what they'd just spent an Intercepted card to cancel.
+      if (interceptorId === myId && cardPlayed.playerId !== myId) {
+        return {
+          id: eventId,
+          text: `You intercepted ${nameOf(cardPlayed.playerId)}'s ${cardPhrase}.`,
+          tone: 'urgent',
+        }
+      }
+      break
     }
   }
 

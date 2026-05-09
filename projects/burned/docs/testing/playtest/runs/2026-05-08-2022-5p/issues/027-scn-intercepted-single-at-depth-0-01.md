@@ -1,7 +1,8 @@
 # 027-scn-intercepted-single-at-depth-0-01 — Interceptor never sees what card they just cancelled (fast-click timing gap)
 
 **Severity (triage):** P2
-**Status:** 🔴 OPEN
+**Status:** ✅ RESOLVED
+**Resolution:** Fix landed 2026-05-09. Implementation matches triage Option A: PlayerAlert's `nope-window-resolved` branch now also handles the NOPER case — when the most-recent `nope-played` in the chain matches `myId` and `cancelled === true`, emit `You intercepted <Name>'s <Card phrase>.` (urgent tone). Combo plays carry the mechanic in the suffix (`<Operative> pair` / `<Operative> triple`) so the noper knows what shape they cancelled. Fires regardless of fast-click — the toast emerges from the resolved event itself, not from racing the persistent card-played toast.
 **Seed kind:** scripted-scenario
 **Source seats:** seat-2
 **Linked scenarios:** SCN-INTERCEPTED-SINGLE-AT-DEPTH-0-01

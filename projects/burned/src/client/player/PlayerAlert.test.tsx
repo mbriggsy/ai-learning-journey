@@ -309,10 +309,10 @@ describe('PlayerAlert — ACTOR intercepted toast (close 05-08-2022-5p #025 Gap 
     }
   })
 
-  it('does NOT fire on cancelled:true when the cancelled card belongs to someone else', () => {
+  it('does NOT fire on cancelled:true when the viewer is an UNINVOLVED observer (neither actor nor noper)', () => {
     const { container, root } = mount()
     try {
-      myIdRef.current = SEAT3_ID // viewer is an OBSERVER, not the actor
+      myIdRef.current = 'seat-1-uuid' // uninvolved bystander — Seat1
       setEvents([
         { event: { type: 'turn-started', playerId: SEAT2_ID, turnsRemaining: 1 }, receivedAt: 0, id: 'evt-0' },
       ])
@@ -324,8 +324,9 @@ describe('PlayerAlert — ACTOR intercepted toast (close 05-08-2022-5p #025 Gap 
         { event: { type: 'nope-window-resolved', cancelled: true, chainDepth: 0 }, receivedAt: 3, id: 'evt-3' },
       ])
       rerender(root)
-      // Observer's card-played persistent toast clears at nope-window-resolved.
-      // No new urgent toast — observers don't need actor-side narration.
+      // Seat1's persistent card-played toast clears at nope-window-resolved.
+      // No new urgent toast — uninvolved bystanders need no actor- or
+      // noper-side narration.
       expect(alertText(container)).toBeNull()
     } finally {
       teardown(container, root)
@@ -347,6 +348,95 @@ describe('PlayerAlert — ACTOR intercepted toast (close 05-08-2022-5p #025 Gap 
       ])
       rerender(root)
       expect(alertText(container)).toBeNull()
+    } finally {
+      teardown(container, root)
+    }
+  })
+})
+
+describe('PlayerAlert — combo + intercept observability (close 05-08-2022-5p Cluster D)', () => {
+  // Pre-fix the card-played path suppressed combos entirely
+  // (`if (event.comboSize !== undefined) break`), so observers got NO
+  // information about pair- or triple-combo plays during the nope window.
+  // Plus the noper themselves got no post-cancel confirmation of what
+  // they'd intercepted — fast-clickers were left guessing what they
+  // spent an Intercepted card on.
+
+  it('OBSERVER: pair combo card-played emits "<Name> played a <Operative> pair."', () => {
+    const { container, root } = mount()
+    try {
+      myIdRef.current = SEAT3_ID
+      setEvents([
+        { event: { type: 'turn-started', playerId: SEAT2_ID, turnsRemaining: 1 }, receivedAt: 0, id: 'evt-0' },
+      ])
+      render(root)
+      setEvents([
+        { event: { type: 'turn-started', playerId: SEAT2_ID, turnsRemaining: 1 }, receivedAt: 0, id: 'evt-0' },
+        { event: { type: 'card-played', playerId: SEAT2_ID, cardType: 'neal-proctor', comboSize: 2 }, receivedAt: 1, id: 'evt-1' },
+      ])
+      rerender(root)
+      expect(alertText(container)).toBe('Seat2 played a Neal Proctor pair.')
+    } finally {
+      teardown(container, root)
+    }
+  })
+
+  it('OBSERVER: triple combo card-played emits "<Name> played a <Operative> triple."', () => {
+    const { container, root } = mount()
+    try {
+      myIdRef.current = SEAT3_ID
+      setEvents([
+        { event: { type: 'turn-started', playerId: SEAT2_ID, turnsRemaining: 1 }, receivedAt: 0, id: 'evt-0' },
+      ])
+      render(root)
+      setEvents([
+        { event: { type: 'turn-started', playerId: SEAT2_ID, turnsRemaining: 1 }, receivedAt: 0, id: 'evt-0' },
+        { event: { type: 'card-played', playerId: SEAT2_ID, cardType: 'vera-khan', comboSize: 3 }, receivedAt: 1, id: 'evt-1' },
+      ])
+      rerender(root)
+      expect(alertText(container)).toBe('Seat2 played a Vera Khan triple.')
+    } finally {
+      teardown(container, root)
+    }
+  })
+
+  it('NOPER: cancelled:true with my nope as the most-recent emits "You intercepted <Name>\'s <Card>."', () => {
+    const { container, root } = mount()
+    try {
+      myIdRef.current = SEAT3_ID // viewer played the successful intercept
+      setEvents([
+        { event: { type: 'turn-started', playerId: SEAT2_ID, turnsRemaining: 1 }, receivedAt: 0, id: 'evt-0' },
+      ])
+      render(root)
+      setEvents([
+        { event: { type: 'turn-started', playerId: SEAT2_ID, turnsRemaining: 1 }, receivedAt: 0, id: 'evt-0' },
+        { event: { type: 'card-played', playerId: SEAT2_ID, cardType: 'reassign' }, receivedAt: 1, id: 'evt-1' },
+        { event: { type: 'nope-played', playerId: SEAT3_ID, chainDepth: 1 }, receivedAt: 2, id: 'evt-2' },
+        { event: { type: 'nope-window-resolved', cancelled: true, chainDepth: 0 }, receivedAt: 3, id: 'evt-3' },
+      ])
+      rerender(root)
+      expect(alertText(container)).toBe("You intercepted Seat2's Reassign.")
+    } finally {
+      teardown(container, root)
+    }
+  })
+
+  it("NOPER: cancelling a pair combo emits the mechanic in the suffix (\"<Operative> pair\")", () => {
+    const { container, root } = mount()
+    try {
+      myIdRef.current = SEAT3_ID
+      setEvents([
+        { event: { type: 'turn-started', playerId: SEAT2_ID, turnsRemaining: 1 }, receivedAt: 0, id: 'evt-0' },
+      ])
+      render(root)
+      setEvents([
+        { event: { type: 'turn-started', playerId: SEAT2_ID, turnsRemaining: 1 }, receivedAt: 0, id: 'evt-0' },
+        { event: { type: 'card-played', playerId: SEAT2_ID, cardType: 'neal-proctor', comboSize: 2 }, receivedAt: 1, id: 'evt-1' },
+        { event: { type: 'nope-played', playerId: SEAT3_ID, chainDepth: 1 }, receivedAt: 2, id: 'evt-2' },
+        { event: { type: 'nope-window-resolved', cancelled: true, chainDepth: 0 }, receivedAt: 3, id: 'evt-3' },
+      ])
+      rerender(root)
+      expect(alertText(container)).toBe("You intercepted Seat2's Neal Proctor pair.")
     } finally {
       teardown(container, root)
     }

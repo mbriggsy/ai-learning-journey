@@ -1,20 +1,52 @@
 /* ConnectionOverlay.module.css
-   Full-screen overlay shown when the WebSocket is connecting or reconnecting.
-   Radial gradient backdrop (lighter center, darker edges) draws focus to the
-   center spinner. Sits at --z-overlay — above sticky chrome (TitleBar/StatusBar),
-   below modals (BottomSheet) and toasts (ErrorToast).
+   Two visual layers driven by ConnectionStatus:
 
-   Semantic consistency: the spinner accent color is --color-accent-drama, which
-   matches TitleBar's .dotConnecting. The whole system uses the drama (ochre)
-   channel for "we are trying to connect" — never invent a new amber.
+   - .transient (connecting / disconnected) — non-blocking <div> at
+     --z-overlay. pointer-events: none is load-bearing — a brief mid-game
+     reconnect during a 7s nope window must NOT silently swallow the
+     player's Intercept tap (triage 001 + 023, run 2026-05-08-2022-5p).
+
+   - .overlay[open] (gave-up only) — native <dialog showModal()>, which
+     promotes to the browser's top layer and blocks all pointer events.
+     Correct here because the player MUST take Refresh to continue.
+
+   Semantic consistency: the spinner accent color is --color-accent-drama,
+   which matches TitleBar's .dotConnecting. The whole system uses the
+   drama (ochre) channel for "we are trying to connect" — never invent a
+   new amber.
 */
 
 @layer components {
-  /* The <dialog> element. NO `position` declaration — UA stylesheet applies
-     position: fixed + top-layer when showModal() is called. Override the
-     UA's default centering via inset + margin. */
-  /* Only style when open — the UA stylesheet hides closed dialogs via
-     display:none, but an unconditional display:flex would override it. */
+  /* Transient state — plain <div>, participates in normal stacking at
+     --z-overlay. Visually identical to the legacy .overlay[open]
+     treatment so a brief blip looks the same as before; the difference
+     is pointer-events: none lets game UI underneath stay tappable. */
+  .transient {
+    position: fixed;
+    inset: 0;
+    width: 100%;
+    height: 100%;
+    z-index: var(--z-overlay);
+    pointer-events: none;
+    background: radial-gradient(
+      ellipse at center,
+      var(--color-bg-overlay-light) 0%,
+      var(--color-bg-overlay-heavy) 100%
+    );
+    color: var(--color-fg-primary);
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    gap: var(--space-4);
+    overflow: hidden;
+  }
+
+  /* Terminal 'gave-up' — native dialog promoted to top layer via
+     showModal(). NO `position` declaration — UA stylesheet applies
+     position: fixed + top-layer. Only styled when open: the UA hides
+     closed dialogs via display:none, but an unconditional display:flex
+     would override it. */
   .overlay[open] {
     inset: 0;
     width: 100%;

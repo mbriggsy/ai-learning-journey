@@ -101,8 +101,14 @@ async function assertHealthyRender(page: Page, screenName: string): Promise<void
   const result = await page.evaluate(() => {
     const body = document.body.textContent ?? ''
     const errorBoundaryFallback = body.includes('COMMS SCRAMBLED')
+    // ConnectionOverlay renders one of two elements depending on status:
+    //   - <dialog showModal()> for terminal 'gave-up'
+    //   - <div role="status"> for transient 'connecting' / 'disconnected'
+    // Either form indicates the WS is not 'connected' and a screenshot
+    // would capture the disconnect overlay instead of the target screen.
     const connDialog = document.querySelector('dialog[aria-label="Connection status"]') as HTMLDialogElement | null
-    const connOverlayOpen = connDialog?.open === true
+    const transientOverlay = document.querySelector('div[role="status"][aria-label="Connection status"]')
+    const connOverlayOpen = connDialog?.open === true || transientOverlay !== null
     const w = window as unknown as { __wcagPageErrors?: string[] }
     const errors = w.__wcagPageErrors ?? []
     return { errorBoundaryFallback, connOverlayOpen, errors }

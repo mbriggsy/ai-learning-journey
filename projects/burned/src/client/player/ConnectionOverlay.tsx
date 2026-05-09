@@ -8,21 +8,27 @@ interface ConnectionOverlayProps {
 
 export function ConnectionOverlay({ status }: ConnectionOverlayProps) {
   const dialogRef = useRef<HTMLDialogElement>(null)
-  const showOverlay = status !== 'connected'
+  const isGaveUp = status === 'gave-up'
+  const isTransient = status === 'connecting' || status === 'disconnected'
 
-  // Imperatively open/close the native dialog. Always-mounted lets the top
-  // layer pick it up once; showModal()/close() toggles visibility.
+  // showModal() is reserved for the terminal 'gave-up' state. The HTML
+  // dialog API promotes the element to the browser's top layer, which
+  // captures all pointer events for the viewport regardless of CSS — that
+  // is correct when the player MUST take Refresh to continue, but a P1
+  // game-blocker if applied to brief mid-game reconnects: a sub-second
+  // packet drop during a 7s nope window silently swallowed the player's
+  // Intercept tap (triage 001 + 023, run 2026-05-08-2022-5p). Transient
+  // states render below as a non-blocking <div> at --z-overlay.
   useEffect(() => {
     const dialog = dialogRef.current
     if (!dialog) return
-    if (showOverlay && !dialog.open) {
+    if (isGaveUp && !dialog.open) {
       dialog.showModal()
-    } else if (!showOverlay && dialog.open) {
+    } else if (!isGaveUp && dialog.open) {
       dialog.close()
     }
-  }, [showOverlay])
+  }, [isGaveUp])
 
-  // Suppress Esc-to-dismiss — reconnection is not user-dismissable.
   useEffect(() => {
     const dialog = dialogRef.current
     if (!dialog) return
@@ -31,30 +37,36 @@ export function ConnectionOverlay({ status }: ConnectionOverlayProps) {
     return () => dialog.removeEventListener('cancel', handleCancel)
   }, [])
 
-  const isGaveUp = status === 'gave-up'
-
   return (
-    <dialog ref={dialogRef} className={styles.overlay} aria-label="Connection status">
-      {isGaveUp ? (
-        <>
-          <div className={styles.gaveUpHeadline}>// CHANNEL DOWN</div>
-          <div className={styles.gaveUpLabel}>Reconnect failed. Refresh to rejoin.</div>
-          <button
-            type="button"
-            className={styles.refreshButton}
-            onClick={() => window.location.reload()}
-          >
-            Refresh
-          </button>
-        </>
-      ) : (
-        <>
+    <>
+      <dialog ref={dialogRef} className={styles.overlay} aria-label="Connection status">
+        {isGaveUp && (
+          <>
+            <div className={styles.gaveUpHeadline}>// CHANNEL DOWN</div>
+            <div className={styles.gaveUpLabel}>Reconnect failed. Refresh to rejoin.</div>
+            <button
+              type="button"
+              className={styles.refreshButton}
+              onClick={() => window.location.reload()}
+            >
+              Refresh
+            </button>
+          </>
+        )}
+      </dialog>
+      {isTransient && (
+        <div
+          className={styles.transient}
+          role="status"
+          aria-live="polite"
+          aria-label="Connection status"
+        >
           <div className={styles.spinner} aria-hidden="true" />
           <div className={styles.label}>
             {status === 'connecting' ? 'Opening channel...' : 'Re-establishing channel...'}
           </div>
-        </>
+        </div>
       )}
-    </dialog>
+    </>
   )
 }

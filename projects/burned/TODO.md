@@ -15,10 +15,10 @@ Current state (verified 2026-05-09 end-of-session):
 
 - Tests: 1350 pass | 6 expected fail (66/66 files green).
 - Build: clean (`pnpm build`).
-- Phone initial JS: ~99.51 KB gzipped (player 17.96 + shared 67.15 +
-  VisualElement 14.40). Under 100 KB budget with ~490B headroom —
-  +690B vs 2026-05-08 baseline. Tightening; future feature work
-  should plan for this constraint.
+- Phone initial JS: ~99.55 KB gzipped (player 18.00 + shared 67.15 +
+  VisualElement 14.40). Under 100 KB budget with ~450B headroom —
+  +730B vs 2026-05-08 baseline (98.82 KB). Tightening; future feature
+  work should plan for this constraint.
 - Triage state, run `2026-05-08-2022-5p`: **0 OPEN** · 5 BLOCKED ·
   24 RESOLVED · 7 LOW-SIGNAL · 2 KNOWN-PRODUCT · 1 DUPLICATE. P1 6 · P2 33.
 

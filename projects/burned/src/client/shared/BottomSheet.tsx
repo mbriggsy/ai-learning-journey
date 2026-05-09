@@ -7,9 +7,16 @@ import styles from './BottomSheet.module.css'
 interface BottomSheetProps {
   readonly open: boolean
   readonly onDismiss?: () => void
+  /**
+   * Bump the sheet to ~94vh so the content can dominate the screen rather
+   * than read as a modal cap. Used for Falsify Intel rearrange where the
+   * dossier UX wants the file to fill the field of view. Default false
+   * keeps the existing 80vh cap for prompts (Defuse / NameCard / TargetSelect).
+   */
+  readonly tall?: boolean
 }
 
-export function BottomSheet({ open, onDismiss, children }: PropsWithChildren<BottomSheetProps>) {
+export function BottomSheet({ open, onDismiss, tall, children }: PropsWithChildren<BottomSheetProps>) {
   const dialogRef = useRef<HTMLDialogElement>(null)
 
   // Only open the dialog — closing is deferred to onExitComplete to preserve exit animation
@@ -34,11 +41,14 @@ export function BottomSheet({ open, onDismiss, children }: PropsWithChildren<Bot
   }, [handleCancel, onDismiss])
 
   return (
-    <dialog ref={dialogRef} className={styles.dialog}>
+    <dialog
+      ref={dialogRef}
+      className={tall ? `${styles.dialog} ${styles.dialogTall}` : styles.dialog}
+    >
       <AnimatePresence onExitComplete={() => { dialogRef.current?.close() }}>
         {open && (
           <m.div
-            className={styles.content}
+            className={tall ? `${styles.content} ${styles.contentTall}` : styles.content}
             // Transform string — sheet slide is the most common interruptible
             // motion on phone (open/close rapidly during combo picks). Keeping
             // it GPU-composited matters during WS-hot paths.

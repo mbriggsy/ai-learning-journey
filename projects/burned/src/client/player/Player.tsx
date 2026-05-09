@@ -644,7 +644,13 @@ function PlayingView({ roomCode }: { roomCode: string }) {
         )}
       </BottomSheet>
 
-      <BottomSheet open={showServerSheet && activeSheet?.sheet === 'future-peek'}>
+      <BottomSheet
+        open={showServerSheet && activeSheet?.sheet === 'future-peek'}
+        // Rearrange branch (Falsify Intel) goes tall — the dossier UX wants
+        // to dominate the screen so the photos read at full presence.
+        // Read-only Intel Briefing keeps the default 80vh cap.
+        tall={activeSheet?.sheet === 'future-peek' && activeSheet.canRearrange}
+      >
         {activeSheet?.sheet === 'future-peek' && (
           <FuturePeek
             cards={activeSheet.cards}

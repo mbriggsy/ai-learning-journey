@@ -138,6 +138,22 @@
   pointer-events: none;
 }
 
+/* ─── Compact variant ───
+   Tighter internal padding for space-constrained surfaces. Used by the
+   Falsify Intel rearrange dossier where 3 cards must share the phone
+   viewport. The smaller padding INCREASES the card's content-box width
+   for the same border-box, so MinimalCard's `@container (max-width:
+   114px)` rule (which hides .cardName) stops triggering at smaller
+   border-box sizes — name chrome stays visible at sizes where the
+   default-padding card would have hidden it.
+
+   Higher specificity (.card.cardCompact, two classes) overrides the
+   single-class `.card { padding: var(--space-3) }` AND the @container
+   rule's `.card { padding: var(--space-4) }`. */
+.card.cardCompact {
+  padding: var(--space-1);
+}
+
 /* Focus ring — two-ring for dark background visibility */
 .card:focus-visible {
   outline: 2px solid var(--color-border-focus);

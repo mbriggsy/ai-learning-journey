@@ -465,6 +465,294 @@
   color: var(--color-fg-on-intercept);
 }
 
+/* --- Falsify Intel dossier rearrange (FuturePeek canRearrange branch) ---
+   Vertical drag-to-reorder stack. Three "dossier slots" — each is a
+   horizontal row with a redact-stamp position indicator, card name, and a
+   drag handle. Framer's `Reorder.Item` owns the transform during drag, so
+   no CSS transitions on `transform` here (would race the inline style per
+   insight 015). Press/active states live on inner content if needed.
+
+   Layout claims the BottomSheet interior so the commit button stays
+   anchored at the bottom even with three full-height slots. Same pattern
+   as `.nameCardLayout` — see comment there for the height formula. */
+
+.falsifyLayout {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-2);
+  /* Claim the BottomSheet content interior so the dossier stack can
+     `flex: 1` into the available height, sizing each slot evenly. Title
+     pinned at top, commit pinned at bottom, slots fill what's between
+     and stretch to use it.
+
+     `position: relative` is the positioning anchor for the inline
+     enlarge overlay (`.enlargeBackdrop`) — that overlay covers the
+     layout when a card is enlarged. Can't use a body portal here
+     because BottomSheet's `<dialog>` is in the browser top layer. */
+  position: relative;
+  height: 100%;
+  min-height: 0;
+}
+
+/* Pin title and commit at natural size; stack carries all flex-grow. */
+.falsifyLayout > .sheetTitle,
+.falsifyLayout > .confirmBtn {
+  flex-shrink: 0;
+}
+
+/* Dossier stack distributes vertical space evenly across 3 slots — each
+   slot grows to claim 1/3 of the available stack height, which sets the
+   card height directly via `.dossierPhoto { height: 100%; aspect-ratio:
+   5/7 }`. On bigger phones, slots are taller → cards are wider → name
+   chrome (>=115px content-box) appears. On smaller phones, slots are
+   shorter → cards smaller → name chrome hidden. Same MinimalCard
+   component throughout — same render rules as hand/staging. */
+.falsifyLayout > .dossierStack {
+  flex: 1 1 0;
+  min-height: 0;
+  /* Slots split the stack evenly; no scroll needed because each card
+     adapts to fit its share. */
+  justify-content: space-between;
+}
+
+.falsifyLayout > .dossierStack > .dossierSlot {
+  flex: 1 1 0;
+  min-height: 0;
+}
+
+/* Atmospheric dossier header — small mono caption flanked by hairlines, sits
+   above the title to reframe the sheet as opening a classified file rather
+   than a UI form. Fixed file number "047-B" reads as in-universe atmosphere
+   (same convention as `tests/e2e/...spec.ts` Case 47-B references); not
+   intended to be unique per play. The hairlines are linear-gradient pseudo-
+   bars that fade into the surface so the tag isn't fenced in by hard rules. */
+.dossierHeader {
+  display: grid;
+  grid-template-columns: 1fr auto 1fr;
+  align-items: center;
+  gap: var(--space-2);
+  margin-bottom: var(--space-1);
+  /* Negative top margin pulls the header upward to claim a bit of the
+     BottomSheet's interior padding without reflowing the rest. */
+  margin-top: calc(var(--space-2) * -1);
+}
+
+.dossierStripe {
+  display: block;
+  height: 1px;
+  background: linear-gradient(
+    to right,
+    transparent 0%,
+    color-mix(in oklab, var(--color-fg-muted) 60%, transparent) 50%,
+    transparent 100%
+  );
+}
+
+.dossierTag {
+  font-family: var(--font-mono);
+  font-size: 10px;
+  letter-spacing: 0.28em;
+  font-weight: 600;
+  color: var(--color-fg-muted);
+  text-transform: uppercase;
+  /* Small inline padding lets the tag breathe inside the hairline gaps. */
+  padding: 0 var(--space-1);
+}
+
+.dossierStack {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-2);
+  padding: 0;
+  margin: 0;
+  list-style: none;
+}
+
+.dossierSlot {
+  display: flex;
+  align-items: center;
+  /* Card on the left (its width follows from height via the 5/7 aspect),
+     drag handle pushed to the right via auto-margin so the slot reads
+     as "the card, with a grip on the side." Slot vertical padding is
+     deliberately 0 so the photo wrapper claims the full slot height —
+     every pixel of slot height translates to card width via the 5/7
+     aspect, and that's what determines whether MinimalCard's container
+     query crosses the 115px-content-box threshold for name visibility. */
+  gap: var(--space-3);
+  padding: 0 var(--space-3);
+  background: var(--color-bg-elevated);
+  border: 1px solid var(--color-border-subtle);
+  border-radius: var(--radius-card);
+  cursor: grab;
+  /* `touch-action: none` hands the touch gesture to Framer's drag listener.
+     Without this, mobile browsers consume the vertical pan as scroll and
+     drag never fires. The BottomSheet's outer container handles its own
+     scroll if content overflows; the slots themselves never scroll. */
+  touch-action: none;
+  user-select: none;
+  -webkit-user-select: none;
+  /* Per insight 015 — Framer writes inline `transform` while dragging, so
+     don't transition `transform` here. Color transitions are safe. */
+  transition: background var(--motion-duration-fast) var(--motion-ease-base);
+}
+
+.dossierSlot:active {
+  cursor: grabbing;
+}
+
+/* Dossier photo — the card art rendered as a square 72×72 file photo.
+   Background charcoal so any transparent edges in the .webp read as
+   classified-folder shadow. The redact stamp overlays this in the
+   bottom-right corner, partially extending past the edge for the
+   "stamped after the fact" feel. */
+.dossierPhoto {
+  position: relative;
+  /* Height-driven so the wrapper claims the slot row's available height
+     (slot row = 1/3 of the dossier stack via `flex: 1 1 0`). The 5/7
+     aspect-ratio matches MinimalCard's locked aspect; width follows from
+     height. On bigger phones, slots are taller → cards wider → past the
+     115px content-box threshold so MinimalCard's name chrome shows. On
+     smaller phones, slots shorter → cards narrower → name hides under
+     MinimalCard's container query — same graceful degradation as cards
+     rendered at small sizes anywhere else in the app.
+     `overflow: visible` lets the redact stamp escape the card's bottom-right. */
+  height: 100%;
+  aspect-ratio: 5 / 7;
+  min-height: 110px;
+  flex-shrink: 0;
+  overflow: visible;
+}
+
+/* Redact-stamp priority marker — overlays the bottom-right of the photo,
+   extending past the edge by a few pixels for the "stamped on top" feel.
+   Black ink + cream display text, alternating rotation per row position so
+   the stack reads as hand-applied, not aligned. The stamp is purely visual
+   feedback for the drag-set order — it updates in place as positions swap. */
+.dossierStamp {
+  position: absolute;
+  right: -12px;
+  bottom: -10px;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  min-width: 52px;
+  padding: 4px var(--space-3) 5px;
+  background: var(--color-charcoal-1);
+  color: var(--color-fg-primary);
+  border-radius: 1px;
+  font-family: var(--font-display);
+  font-weight: 800;
+  z-index: 2;
+  /* Default tilt — overridden per-position-index below for visual irregularity. */
+  transform: rotate(-3deg);
+  /* Faux ink-edge — outer outline + inset highlight simulate the irregular
+     bleed of a real rubber stamp. The 1px outline is darker-than-charcoal
+     (oklab mix toward shadow base) so the stamp reads as printed onto, not
+     floating above, the photo. */
+  outline: 1px solid color-mix(in oklab, var(--color-charcoal-1) 80%, var(--color-shadow-base));
+  outline-offset: -1px;
+  /* Drop shadow + interior cream highlight together read as ink pressed
+     onto the photo. The shadow's downward bias matches the slight upward
+     light implied by the dimmed sheet surface. */
+  box-shadow:
+    0 2px 4px color-mix(in oklab, var(--color-shadow-base) 65%, transparent),
+    0 1px 0 color-mix(in oklab, var(--color-shadow-base) 70%, transparent),
+    inset 0 1px 0 color-mix(in oklab, var(--color-cream-12) 14%, transparent);
+}
+
+/* Per-row rotation overrides give the stack character. Use index-based
+   selector ranges; the `nth-child(N) .dossierStamp` chain reaches into the
+   stamp specifically. */
+.dossierStack > li:nth-child(2) .dossierStamp {
+  transform: rotate(2.4deg);
+}
+
+.dossierStack > li:nth-child(3) .dossierStamp {
+  transform: rotate(-1.6deg);
+  right: -6px;
+  bottom: -4px;
+}
+
+.dossierStampNum {
+  font-size: 16px;
+  line-height: 1;
+  letter-spacing: 0.06em;
+}
+
+.dossierStampLabel {
+  font-size: 9px;
+  letter-spacing: 0.22em;
+  margin-top: 2px;
+  opacity: 0.82;
+}
+
+/* Drag handle — three short bars (≡ glyph) drawn from spans for token
+   alignment. Visual hint only; the entire slot is the drag target. Bumped
+   from 0.45 → 0.6 opacity so the affordance reads on first glance.
+   `margin-left: auto` pushes the handle to the right edge of the slot
+   so the card sits left-anchored with the grip on the far side. */
+.dragHandle {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+  padding: var(--space-2) var(--space-1);
+  margin-left: auto;
+  opacity: 0.6;
+}
+
+.dragHandle > span {
+  display: block;
+  width: 18px;
+  height: 2px;
+  background: var(--color-fg-secondary);
+  border-radius: 1px;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  /* Reorder still works (Framer falls back) but skip rotation flair on
+     stamps so the page reads quietly. */
+  .dossierStamp,
+  .dossierStack > li:nth-child(2) .dossierStamp,
+  .dossierStack > li:nth-child(3) .dossierStamp {
+    transform: none;
+  }
+}
+
+/* --- Falsify Intel enlarge overlay ---
+   Inline overlay inside `.falsifyLayout` (`position: relative` anchor).
+   Covers the BottomSheet content area when a card is enlarged. Tap
+   anywhere on the backdrop dismisses. Inside, the enlarged MinimalCard
+   is sized to render past the 177px content-box threshold — that's
+   MinimalCard's band for showing the description text, which is the
+   whole point of enlarging: read the card's rules. Same pattern as
+   Hand's enlarge but rendered inside the dialog rather than portalled
+   (BottomSheet's <dialog> uses showModal which uses the top-layer; a
+   body portal would render BEHIND the sheet). Negative-margin extends
+   the backdrop past the .falsifyLayout's safe-area paddings to cover
+   the full sheet content area. */
+
+.enlargeBackdrop {
+  position: absolute;
+  inset: 0;
+  background: var(--color-bg-overlay-heavy);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: var(--space-4);
+  /* Stack above all sibling content (slots + title + commit) so taps on
+     the backdrop dismiss reliably. */
+  z-index: 5;
+}
+
+.enlargeCard {
+  /* Card sized to fill ~70% of viewport min-axis so the description text
+     renders at MinimalCard's `@container (min-width: 177px)` band. The
+     5/7 aspect-ratio is enforced by MinimalCard internally. */
+  width: min(70vmin, 320px);
+  aspect-ratio: 5 / 7;
+}
+
 /* --- Keyboard focus indicator (combined selector for all interactive elements) ---
    Same pattern as SmartActionBox / JoinScreen / FloatingActionButton: outline (not
    box-shadow) so the focus ring never fights variant colors or per-instance accents.

@@ -1,7 +1,14 @@
-import { useState, useCallback, useRef } from 'react'
+import { useCallback, useRef, lazy, Suspense } from 'react'
 import type { CardInstance } from '@shared/types'
 import { MinimalCard } from '@client/shared/MinimalCard'
 import styles from './sheets.module.css'
+
+// `FalsifyIntelRearrange` lives in its own chunk so `Reorder` (drag + layout
+// machinery from motion/react) doesn't ship in the always-loaded player
+// entry. Verified: sync import jumped player entry by ~30KB gzipped, lazy
+// keeps it out. Prefetched at idle (see player/main.tsx) so the chunk is
+// already warm by the time the user plays Falsify Intel.
+const FalsifyIntelRearrange = lazy(() => import('./FalsifyIntelRearrange'))
 
 interface FuturePeekProps {
   readonly cards: readonly CardInstance[]
@@ -11,118 +18,69 @@ interface FuturePeekProps {
 }
 
 export function FuturePeek({ cards, canRearrange, onDismiss, onRearrange }: FuturePeekProps) {
-  const [tapOrder, setTapOrder] = useState<string[]>([])
-  const [submitted, setSubmitted] = useState(false)
-  // Ref guard for the read-only "Got it" button — prevents same-tick
-  // double-tap from firing `onDismiss` twice. State-based guards have
-  // a known race (closure value stale within the event tick); ref
-  // updates synchronously. D-04 / same race class as B-17.
+  if (canRearrange) {
+    // Suspense fallback is intentionally minimal — the chunk is prefetched at
+    // idle so it's already cached by the time a player plays Falsify Intel.
+    // Even on a cold load the chunk is ~30KB gzipped (one fast roundtrip on
+    // any modern phone connection); a flash of the title + skeleton beats
+    // shipping the drag machinery to every player on every page load.
+    return (
+      <Suspense fallback={<RearrangeSkeleton />}>
+        <FalsifyIntelRearrange cards={cards} onRearrange={onRearrange} />
+      </Suspense>
+    )
+  }
+  return <FuturePeekReadOnly cards={cards} onDismiss={onDismiss} />
+}
+
+// Read-only Intel Briefing path — horizontal scroll-snap dossier-spread.
+// `See the Future` (no rearrange); player just reads the upcoming draws.
+function FuturePeekReadOnly({
+  cards,
+  onDismiss,
+}: { readonly cards: readonly CardInstance[]; readonly onDismiss: () => void }) {
   const dismissedRef = useRef(false)
-
-  const handleTap = useCallback((cardId: string) => {
-    if (!canRearrange || submitted) return
-    setTapOrder(prev => {
-      if (prev.includes(cardId)) return prev
-      return [...prev, cardId]
-    })
-  }, [canRearrange, submitted])
-
-  const handleConfirmOrder = useCallback(() => {
-    if (submitted || tapOrder.length !== cards.length) return
-    setSubmitted(true)
-    onRearrange?.(tapOrder)
-  }, [submitted, tapOrder, cards.length, onRearrange])
-
-  const tappedSet = new Set(tapOrder)
-
-  // Clear resets the tap selection so the user can re-pick. NOT an exit
-  // from the action — the Falsify Intel card already resolved, Nope
-  // window is closed, player must commit an order to advance. 'Cancel'
-  // was the wrong verb: the action can't be cancelled at this stage.
-  const handleClearOrder = useCallback(() => {
-    if (submitted) return
-    setTapOrder([])
-  }, [submitted])
+  const handleDismiss = useCallback(() => {
+    if (dismissedRef.current) return
+    dismissedRef.current = true
+    onDismiss()
+  }, [onDismiss])
 
   return (
     <div>
-      <div className={styles.sheetTitle}>
-        {canRearrange ? 'Falsify Intel' : 'Intel Briefing'}
-      </div>
-      {canRearrange && (
-        <div className={styles.sheetSubtitle}>
-          Tap cards in desired order — top card first
-        </div>
-      )}
-
+      <div className={styles.sheetTitle}>Intel Briefing</div>
       <div className={styles.peekScroll}>
-        {cards.map((card, i) => {
-          const orderIndex = tapOrder.indexOf(card.id)
-          const isTapped = tappedSet.has(card.id)
-          return (
-            <div
-              key={card.id}
-              className={styles.peekSlot}
-              data-tapped={isTapped || undefined}
-            >
-              <div className={styles.peekCard}>
-                <MinimalCard
-                  type={card.type}
-                  disabled={!canRearrange || isTapped || submitted}
-                  onClick={canRearrange ? () => handleTap(card.id) : undefined}
-                />
-              </div>
-              <span className={styles.peekBadge}>
-                {canRearrange
-                  ? (orderIndex >= 0 ? `#${orderIndex + 1}` : `Card ${i + 1}`)
-                  : `Draw ${i + 1}${i === 0 ? ' · next' : ''}`}
-              </span>
+        {cards.map((card, i) => (
+          <div key={card.id} className={styles.peekSlot}>
+            <div className={styles.peekCard}>
+              <MinimalCard type={card.type} disabled />
             </div>
-          )
-        })}
+            <span className={styles.peekBadge}>
+              {`Draw ${i + 1}${i === 0 ? ' · next' : ''}`}
+            </span>
+          </div>
+        ))}
       </div>
+      <button className={styles.confirmBtn} onClick={handleDismiss}>
+        Got it
+      </button>
+    </div>
+  )
+}
 
-      {!canRearrange && (
-        <button
-          className={styles.confirmBtn}
-          onClick={() => {
-            if (dismissedRef.current) return
-            dismissedRef.current = true
-            onDismiss()
-          }}
-        >
-          Got it
-        </button>
-      )}
-
-      {/* canRearrange = Falsify Intel. At this point the user has already
-          passed the Intercept window — the action resolved, the game is
-          waiting on them to commit an order. There's no way back out.
-          The only buttons the sheet needs are:
-          - Clear: reset tap selection, re-pick from scratch. Enabled once
-            at least one card is tapped.
-          - Confirm Order: submit the full order. Enabled once all cards
-            are tapped. Only valid exit from this sheet. */}
-      {canRearrange && (
-        <div className={styles.actionRow}>
-          <button
-            className={styles.cancelBtn}
-            disabled={submitted || tapOrder.length === 0}
-            onClick={handleClearOrder}
-          >
-            Clear
-          </button>
-          {tapOrder.length === cards.length && (
-            <button
-              className={styles.confirmBtn}
-              disabled={submitted}
-              onClick={handleConfirmOrder}
-            >
-              Confirm Order
-            </button>
-          )}
-        </div>
-      )}
+// Skeleton shown while the FalsifyIntelRearrange chunk loads. Keeps the
+// title + dossier header in place so the perceived load is "the file is
+// opening" rather than "the UI broke."
+function RearrangeSkeleton() {
+  return (
+    <div className={styles.falsifyLayout}>
+      <div className={styles.dossierHeader} aria-hidden="true">
+        <span className={styles.dossierStripe} />
+        <span className={styles.dossierTag}>DOSSIER · 047-B</span>
+        <span className={styles.dossierStripe} />
+      </div>
+      <div className={styles.sheetTitle}>Falsify Intel</div>
+      <div className={styles.sheetSubtitle}>Loading file…</div>
     </div>
   )
 }

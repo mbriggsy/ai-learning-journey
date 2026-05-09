@@ -17,12 +17,22 @@ export interface CardProps {
 interface CardVisualProps {
   readonly isFaceDown?: boolean
   readonly layoutId?: string
+  /**
+   * Tighter internal padding (4px vs default 12px). Used in space-
+   * constrained surfaces like the Falsify Intel rearrange dossier where
+   * 3 cards share vertical viewport. Same chrome composition (icon + name
+   * + illustration) — just less padding inside the card frame, which
+   * shifts MinimalCard's container-query thresholds down so name chrome
+   * remains visible at smaller border-box widths. Default consumers
+   * (hand, staging, board) keep the standard padding.
+   */
+  readonly compact?: boolean
 }
 
 type PremiumCardProps = CardProps & CardVisualProps
 
 export const MinimalCard = memo(function MinimalCard({
-  type, isSelected, disabled, onClick, isFaceDown, layoutId,
+  type, isSelected, disabled, onClick, isFaceDown, layoutId, compact,
 }: PremiumCardProps) {
   const def = CARD_DEF_BY_TYPE[type]
   const accent = cardAccent(type)
@@ -40,7 +50,7 @@ export const MinimalCard = memo(function MinimalCard({
 
   return (
     <m.div
-      className={styles.card}
+      className={compact ? `${styles.card} ${styles.cardCompact}` : styles.card}
       style={{
         '--card-accent': accent.fill,
         '--card-glow-color': accent.glow,

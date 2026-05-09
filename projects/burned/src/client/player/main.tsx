@@ -13,6 +13,12 @@ import './player-hardening.css'
 // Prefetch motion features chunk — prevents 27KB lazy load on first Nope tap over slow WiFi
 void import('@client/shared/motion-features')
 
+// Prefetch the Falsify Intel rearrange chunk so `Reorder` (drag + layout
+// machinery from motion/react) is warm before the player plays the card.
+// Lives in its own chunk to keep the always-loaded player entry small —
+// see FuturePeek.tsx for the load boundary.
+void import('@client/player/sheets/FalsifyIntelRearrange')
+
 // Suppress PWA install prompt — this is a web game, not an app
 window.addEventListener('beforeinstallprompt', (e) => e.preventDefault())
 

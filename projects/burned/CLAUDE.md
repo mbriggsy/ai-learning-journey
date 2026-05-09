@@ -102,18 +102,22 @@ The spec does not generate code. It generates the *next artifact* — the CSS Fo
 
 ## Bundle Sizes
 
-Last measured 2026-05-08 (post couch-design-call sweep). Re-run `pnpm build` and update after material changes.
+Last measured 2026-05-09 (post Falsify Intel drag/tap/enlarge ship). Re-run `pnpm build` and update after material changes.
 
 | Chunk | Raw | Gzipped | Load |
 |-------|-----|---------|------|
-| player entry | 58.23 KB | 17.27 KB | Initial |
-| board entry | 42.48 KB | 14.41 KB | Initial |
-| shared (React + Motion core, `config-*`) | 210.78 KB | 67.15 KB | Initial (shared) |
-| VisualElement (`is-ref-object-*`) | 39.93 KB | 14.40 KB | Initial (shared) |
-| motion-features (domMax) | 83.57 KB | 27.41 KB | Lazy (prefetched) |
-| DramaOverlay | 75.00 KB | 29.00 KB | Lazy |
+| player entry | 61.60 KB | 18.26 KB | Initial |
+| board entry | 42.56 KB | 14.44 KB | Initial |
+| shared (React core, `config-*`) | 206.91 KB | 65.68 KB | Initial (shared) |
+| VisualElement (`is-ref-object-*`) | 40.09 KB | 14.46 KB | Initial (shared) |
+| MinimalCard | 15.30 KB | 5.95 KB | Lazy (used by Hand, Staging, FalsifyIntel) |
+| AnimatePresence | 4.02 KB | 1.87 KB | Lazy |
+| motion-features (domMax base) | 0.11 KB | 0.11 KB | Lazy (prefetched) |
+| layout (Reorder + drag projection) | 83.55 KB | 27.40 KB | Lazy (prefetched, used by FalsifyIntelRearrange) |
+| FalsifyIntelRearrange | 7.24 KB | 3.20 KB | Lazy (prefetched) |
+| DramaOverlay | 75.04 KB | 29.02 KB | Lazy |
 
-**Phone initial JS: ~98.82 KB gzipped** (under 100 KB budget, ~1.2 KB headroom). Slightly tighter than the 2026-05-06 baseline (97.5 KB) — PlayerAlert observer-toast persistence pattern (commit `3c82c572`) added a small persistUntil branch + nope-window-resolved gating. All dev hooks (`__gameStore`, `__testInjectEvent`, `__testForceLocalTarget`) tree-shake correctly — verified by `pnpm verify:bundle` (9 JS chunks × 15 forbidden strings, all clean).
+**Phone initial JS: ~98.40 KB gzipped** (under 100 KB budget, ~1.6 KB headroom). Improved vs the 2026-05-08 baseline (98.82 KB) because Vite extracted `MinimalCard` and `AnimatePresence` into their own lazy chunks rather than bundling them in `config-*`. The drag/layout-projection machinery (~27.40 KB gz `layout-*` chunk), the rearrange UI itself (3.20 KB gz), and the MinimalCard chunk (5.95 KB gz) live in their own lazy chunks, prefetched at idle from `player/main.tsx`. **Don't sync-import `Reorder` from `motion/react`** — it would pull the 27 KB `layout-*` chunk into the always-loaded player entry and blow the phone budget by ~30 KB. All dev hooks (`__gameStore`, `__testInjectEvent`, `__testForceLocalTarget`) tree-shake correctly — verified by `pnpm verify:bundle`.
 
 ## Workers / Protocol Landmines
 

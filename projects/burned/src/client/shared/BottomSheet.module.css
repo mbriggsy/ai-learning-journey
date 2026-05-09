@@ -73,4 +73,36 @@
   .contentShort {
     max-height: calc(var(--size-viewport-safe) * 0.6);
   }
+
+  /* Tall variant — used by Falsify Intel rearrange where the dossier UX
+     wants to OWN the viewport. Goes full safe-area height (notch / Dynamic
+     Island still respected via --size-viewport-safe) and drops the top
+     border-radius so the sheet reads as "you're inside the classified
+     file" rather than as a modal. No dim backdrop tap-to-dismiss area
+     needed for this sheet — Falsify Intel can't be cancelled at the
+     rearrange stage anyway (action already resolved past the nope window),
+     so the only exit is the Commit File button. */
+  .dialogTall {
+    max-height: var(--size-viewport-safe);
+  }
+
+  .contentTall {
+    /* Claim the full pane — height (not just max-height) forces the inner
+       layout to fill, so flex-grown children (the dossier stack) actually
+       distribute the extra vertical headroom rather than collapsing to
+       intrinsic content height. `box-sizing: border-box` keeps the padding
+       INSIDE the declared height — without it the commit button clips off
+       the bottom of the viewport. Scoped to .contentTall only because the
+       short/default content paths have their layouts tuned around content-
+       box sizing. */
+    box-sizing: border-box;
+    height: var(--size-viewport-safe);
+    max-height: var(--size-viewport-safe);
+    /* Reclaim the top safe-area inset for content padding rather than
+       baking it into the dialog's offset — the inner sheet now owns the
+       full pane and needs to keep title/header out of the notch. Top
+       border-radius is preserved (NOT zeroed) so the sheet still reads
+       as a "panel from below" rather than an edge-to-edge takeover. */
+    padding-top: max(var(--space-5), var(--inset-top, 0px));
+  }
 }

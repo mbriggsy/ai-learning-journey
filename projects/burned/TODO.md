@@ -8,19 +8,22 @@ the history. (Rule: `feedback-todo-is-not-a-diary.md`.)
 ## 1. Active priorities
 
 **Triage backlog `2026-05-08-2022-5p` fully dispositioned 2026-05-09.**
-All P1s closed. All design/motion residuals BLOCKED with explicit
-scope notes — see §1.2.
+All P1s closed. **Falsify Intel design-sprint cluster (#004/#005/#006)
+shipped 2026-05-09** — drag-to-reorder dossier UI with redact-stamp
+priority markers, card photos, and Archer-vocab "Commit File" CTA. See
+§1.2 for remaining residuals.
 
 Current state (verified 2026-05-09 end-of-session):
 
 - Tests: 1350 pass | 6 expected fail (66/66 files green).
 - Build: clean (`pnpm build`).
-- Phone initial JS: ~99.55 KB gzipped (player 18.00 + shared 67.15 +
-  VisualElement 14.40). Under 100 KB budget with ~450B headroom —
-  +730B vs 2026-05-08 baseline (98.82 KB). Tightening; future feature
-  work should plan for this constraint.
-- Triage state, run `2026-05-08-2022-5p`: **0 OPEN** · 5 BLOCKED ·
-  24 RESOLVED · 7 LOW-SIGNAL · 2 KNOWN-PRODUCT · 1 DUPLICATE. P1 6 · P2 33.
+- Phone initial JS: ~98.40 KB gzipped (player 18.26 + shared 65.68 +
+  VisualElement 14.46). **Improved** vs 2026-05-08 baseline (98.82 KB) —
+  Vite extracted MinimalCard + AnimatePresence into lazy chunks. Drag/
+  layout-projection chunk (~27.40 KB gz), rearrange UI (3.20 KB gz), and
+  MinimalCard chunk (5.95 KB gz) all lazy + prefetched at idle.
+- Triage state, run `2026-05-08-2022-5p`: **0 OPEN** · 2 BLOCKED ·
+  27 RESOLVED · 7 LOW-SIGNAL · 2 KNOWN-PRODUCT · 1 DUPLICATE. P1 6 · P2 33.
 
 ### 1.1 Cluster results
 
@@ -28,7 +31,7 @@ Current state (verified 2026-05-09 end-of-session):
 |---|---|---|---|
 | A. ConnectionOverlay blocks Intercept | 2× P1 | 001, 023 | ✅ `ba77e42e` |
 | B. Back Channel cinematics flat | 3× P1 + 4× P2 | 008, 009, 012, 013, 014, 025, 028 | ✅ `6cdc51c5` |
-| C. Falsify Intel rearrange | 4× P2 + 030 engine | 003, 030 ✅ · 004, 005, 006 🟡 | mixed (see §1.2) |
+| C. Falsify Intel rearrange | 4× P2 + 030 engine | 003, 030, 004, 005, 006 | ✅ design sprint shipped 2026-05-09 |
 | D. Intercept observability | 3× P2 | 011, 022, 027 | ✅ `28ff4011` |
 | E. Direct Order vocabulary | 2× P2 | 031, 032 | ✅ `cb3655cb` |
 | F. Burn the Files | 3× P2 | 033, 036 ✅ · 037 🟡 | mixed (see §1.2) |
@@ -39,7 +42,7 @@ Current state (verified 2026-05-09 end-of-session):
 
 ### 1.2 Residual BLOCKED items (intentional, scoped)
 
-5 issues remain BLOCKED with explicit scope notes:
+2 issues remain BLOCKED with explicit scope notes:
 
 - **#021 (P2)** — Seat-agent fidelity scope. Self-report-on-
   intercepted-pair-steal is a seat-agent prompt-following gap, not a
@@ -52,13 +55,22 @@ Current state (verified 2026-05-09 end-of-session):
   place via #036's deck-shuffled toast. Motion design needs eye-in-
   loop verification per `feedback-eye-in-loop-beats-calibration-for-motion`.
 
-- **#004 + #005 + #006 (3× P2)** — Falsify Intel rearrange UI design
-  sprint. Three vibe-checks of the same gap: tap-to-order form
-  doesn't feel like espionage. Substantive fix is a drag-to-reorder
-  UI with dossier vocabulary. Multi-hour design + motion craft
-  needing eye-in-loop iteration. Engine, projection, status-strip
-  (#003), and stale-pendingFuture clear (#030) are all in place
-  already — only the rearrange surface itself is the design ask.
+**Closed 2026-05-09** — #004 + #005 + #006 (Falsify Intel rearrange
+design sprint): replaced tap-to-assign-number form with vertical
+`Reorder.Group` drag-to-reorder. Each slot renders the canonical
+`MinimalCard` (same component as hand/staging) with `compact` padding
+that shifts MinimalCard's `@container (max-width: 114)` threshold —
+name chrome stays visible at smaller card sizes where 3 fit in
+viewport. Slot has full-bleed `BottomSheet` (new `tall` prop) so the
+dossier dominates rather than reads as a modal. Redact-stamp priority
+markers (01/TOP, 02/MID, 03/BOTTOM) overlay each card's bottom-right
+corner with alternating hand-stamped rotation. Single-tap a card →
+enlarge to detail view (description visible) with custom 8px movement
+threshold to discriminate tap from drag. "Commit File" CTA pinned at
+sheet bottom. Implementation: `FalsifyIntelRearrange.tsx` behind a
+`lazy()` boundary — sync-importing `Reorder` would pull the ~27 KB
+`layout-*` chunk into the always-loaded player entry. Rearrange UI +
+drag/layout chunks prefetched at idle from `player/main.tsx`.
 
 ---
 

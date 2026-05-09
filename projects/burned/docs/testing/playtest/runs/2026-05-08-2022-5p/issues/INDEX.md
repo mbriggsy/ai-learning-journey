@@ -5,7 +5,7 @@
 ## Summary
 
 - **Total issues:** 39
-- **Status:** OPEN 11 · RESOLVED 18 · BLOCKED 1 · DUPLICATE 1 · KNOWN-PRODUCT-CALL 2 · LOW-SIGNAL 6
+- **Status:** OPEN 10 · RESOLVED 19 · BLOCKED 1 · DUPLICATE 1 · KNOWN-PRODUCT-CALL 2 · LOW-SIGNAL 6
 - **Severity:** P0 0 · P1 6 · P2 33
 - **By seed kind:**
   - scripted-scenario: 23
@@ -27,7 +27,7 @@
 | [017-scn-call-in-favor-normal-01](017-scn-call-in-favor-normal-01.md) | Favor-response gesture not surfaced to first-time TARGET | P2 | OPEN | SCN-CALL-IN-FAVOR-NORMAL-01 | — |
 | [018-scn-call-in-favor-normal-01](018-scn-call-in-favor-normal-01.md) | Favor-response double-tap discoverability (duplicate of 017) | P2 | DUPLICATE | SCN-CALL-IN-FAVOR-NORMAL-01 | n/a (catalog tag; within-session duplicate → see issue 017) |
 | [019-scn-falsify-intel-normal-01](019-scn-falsify-intel-normal-01.md) | Falsify Intel normal play: clean fire, privateData channel confirmed working | P2 | LOW-SIGNAL | SCN-FALSIFY-INTEL-NORMAL-01 | — |
-| [020-pair-operatives-hit](020-pair-operatives-hit.md) | StealReport shows card name only; no card art rendered for either principal | P2 | OPEN | PAIR-OPERATIVES-HIT (SCN-PAIR-OPERATIVES-HIT-01) | — |
+| [020-pair-operatives-hit](020-pair-operatives-hit.md) | StealReport shows card name only; no card art rendered for either principal | P2 | RESOLVED | PAIR-OPERATIVES-HIT (SCN-PAIR-OPERATIVES-HIT-01) | — |
 | [021-scn-pair-operatives-hit-01](021-scn-pair-operatives-hit-01.md) | Seat-3 self-reported SCN-PAIR-OPERATIVES-HIT-01 on an intercepted (cancelled) pair steal — false-positive fire | P2 | BLOCKED | SCN-PAIR-OPERATIVES-HIT-01 | — |
 | [022-scn-intercepted-single-at-depth-0-01](022-scn-intercepted-single-at-depth-0-01.md) | Interceptor did not see what card was cancelled (pair-combo play, no toast) | P2 | RESOLVED | SCN-INTERCEPTED-SINGLE-AT-DEPTH-0-01 | — |
 | [023-scn-intercepted-single-01](023-scn-intercepted-single-01.md) | Connection Status modal blocks Intercept tap during nope window | P1 | RESOLVED | SCN-INTERCEPTED-SINGLE-01 | 001-unknown-unknown-freeplay (same root cause) |

@@ -1,7 +1,8 @@
 # 020-pair-operatives-hit — StealReport shows card name only; no card art rendered for either principal
 
 **Severity (triage):** P2
-**Status:** 🔴 OPEN
+**Status:** ✅ RESOLVED
+**Resolution:** Fix landed 2026-05-09. Implementation matches triage Option A: StealReport's `cardFrame` is now a two-column layout — `MinimalCard` thumbnail (64px wide, 5/7 aspect ratio, dossier-photo framing) on the left, `// Asset` label + name on the right. Renders only when `current.cardType !== null` so the `dry-bag` (random-pair-against-empty) variant correctly stays text-only. The card thumbnail uses MinimalCard's existing container-query layout — no new visual chrome. Closes the gap between the spec's "art + name" ui-assertion and the prior text-only Incident Report dialog. Phone initial JS +200B (99.48 KB gz, ~520B headroom under the 100 KB budget).
 **Seed kind:** scripted-scenario
 **Source seats:** seat-1
 **Linked scenarios:** PAIR-OPERATIVES-HIT (SCN-PAIR-OPERATIVES-HIT-01)

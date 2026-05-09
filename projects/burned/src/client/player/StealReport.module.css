@@ -155,16 +155,44 @@
   color: color-mix(in oklab, var(--color-charcoal-1) 82%, transparent);
 }
 
-/* The "asset" — styled as a filed record strip with an ochre left edge */
+/* The "asset" — styled as a filed record strip with an ochre left edge.
+   Two-column layout: dossier photo (cardArt, when cardType is known) on
+   the left, label + name stacked on the right. The card art lands as
+   the "here's the file you took" reveal — spec ui-assertion calls for
+   "art + name" on ACTOR's StealReport. (close 05-08-2022-5p #020) */
 .cardFrame {
   display: flex;
-  flex-direction: column;
-  gap: 2px;
+  flex-direction: row;
+  align-items: center;
+  gap: var(--space-3);
   padding: var(--space-2) var(--space-3);
   margin: var(--space-2) 0;
   background: color-mix(in oklab, var(--color-ochre-7) 14%, transparent);
   border-left: 2px solid var(--color-accent-drama);
   border-radius: 0 2px 2px 0;
+}
+
+.cardArt {
+  /* Compact thumbnail — the StealReport is a typewritten dispatch, not a
+     hand-card surface. ~64px wide reads as a dossier photo, not as a
+     full game card. MinimalCard's container-query layout adapts to the
+     constrained size. */
+  flex: 0 0 auto;
+  width: 64px;
+  aspect-ratio: 5 / 7;
+  border-radius: 3px;
+  overflow: hidden;
+  /* Subtle photographic frame to lean into the dossier vocabulary —
+     thin ochre border + soft inner shadow so the thumbnail reads as
+     pasted-in evidence rather than a fresh card chrome. */
+  box-shadow: inset 0 0 0 1px color-mix(in oklab, var(--color-charcoal-1) 22%, transparent);
+}
+
+.cardText {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+  min-width: 0;
 }
 
 .cardLabel {

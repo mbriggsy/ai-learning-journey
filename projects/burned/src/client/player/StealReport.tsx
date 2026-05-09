@@ -8,6 +8,7 @@ import { haptic } from '@client/shared/haptics'
 import { announce } from '@client/shared/announce'
 import { MOTION } from '@client/shared/tokens/motion'
 import { CARD_DEF_BY_TYPE } from '@shared/card-defs'
+import { MinimalCard } from '@client/shared/MinimalCard'
 import type { BoardPlayer } from '@shared/protocol'
 import type { GameEvent, CardType } from '@shared/types'
 import styles from './StealReport.module.css'
@@ -215,8 +216,15 @@ export function StealReport() {
               <p className={styles.verb}>{currentCopy.verb}</p>
 
               <div className={styles.cardFrame}>
-                <span className={styles.cardLabel}>// Asset</span>
-                <span className={styles.cardName}>{currentCopy.assetName}</span>
+                {current.cardType !== null && (
+                  <div className={styles.cardArt} aria-hidden="true">
+                    <MinimalCard type={current.cardType} />
+                  </div>
+                )}
+                <div className={styles.cardText}>
+                  <span className={styles.cardLabel}>// Asset</span>
+                  <span className={styles.cardName}>{currentCopy.assetName}</span>
+                </div>
               </div>
 
               <p className={styles.verdict}>{currentCopy.verdict}</p>

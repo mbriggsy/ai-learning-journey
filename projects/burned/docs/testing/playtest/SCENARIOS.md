@@ -2763,9 +2763,18 @@ presence, not on a cached "you played intel-briefing" flag.
 
 **Agent recognition criteria:**
 You know you hit this scenario when:
-- Played intel-briefing → future-peeked.
+- Played **intel-briefing** → `future-peeked` event in your log.
 - Played burn-the-files → deck-shuffled.
 - Inspect `privateData` — `futureCards` is absent.
+
+**NOTE:** falsify-intel is NOT the trigger card here — it emits
+`future-rearranged`, not `future-peeked`, and READS+CLEARS
+`pendingFuture` rather than setting it. If your earlier play was
+falsify-intel followed by burn-the-files, you are NOT in this
+scenario; you played a separate sequence that has no catalogued
+"invalidates-peek" variant. Surface similarity ("peek-shaped card
+followed by shuffle") is a known pattern-match trap (close
+05-08-2022-5p #038).
 
 **Suspicion prompts:**
 - ACTOR: "Did the UI make it clear the peek no longer held?"

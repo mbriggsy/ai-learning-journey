@@ -1,7 +1,8 @@
 # 016-vibe-scn-call-in-a-favor-normal-01 — Observer gets no closing beat when favor resolves
 
 **Severity (triage):** P2
-**Status:** 🔴 OPEN
+**Status:** ✅ RESOLVED
+**Resolution:** Fix landed 2026-05-09. Implementation matches triage Option A: PlayerAlert's `favor-given` case now branches — principals (giver or receiver) stay silent (FavorReport owns their hero beat), and OBSERVERS (`giverId !== myId && receiverId !== myId`) get a quiet info-tone toast `<Giver> surrendered a card to <Receiver>.` Privacy-correct — `cardType` is stripped for observers in the projection, so the toast text never mentions the card. Closes the asymmetry where the persistent card-played toast cleared at `favor-given` but observers got no replacement signal. Contracts pinned by 2 new PlayerAlert tests covering the observer fire and the principal-silent guard.
 **Seed kind:** vibe-check
 **Source seats:** seat-4
 **Linked scenarios:** SCN-CALL-IN-A-FAVOR-NORMAL-01

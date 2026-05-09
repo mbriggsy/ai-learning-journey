@@ -5,7 +5,7 @@
 ## Summary
 
 - **Total issues:** 39
-- **Status:** OPEN 10 · RESOLVED 19 · BLOCKED 1 · DUPLICATE 1 · KNOWN-PRODUCT-CALL 2 · LOW-SIGNAL 6
+- **Status:** OPEN 6 · RESOLVED 22 · BLOCKED 1 · DUPLICATE 1 · KNOWN-PRODUCT-CALL 2 · LOW-SIGNAL 7
 - **Severity:** P0 0 · P1 6 · P2 33
 - **By seed kind:**
   - scripted-scenario: 23
@@ -24,7 +24,7 @@
 | [008-scn-back-channel-normal-01](008-scn-back-channel-normal-01.md) | Back Channel normal-play: scenario fires clean; OTHER observer phone view lacks post-resolution drama beat | P2 | RESOLVED | SCN-BACK-CHANNEL-NORMAL-01 | — |
 | [011-scn-intercepted-single-at-depth-0-01](011-scn-intercepted-single-at-depth-0-01.md) | Interceptor sees no toast describing what combo is being played during nope window | P2 | RESOLVED | SCN-INTERCEPTED-SINGLE-AT-DEPTH-0-01 | — |
 | [014-back-channel-normal](014-back-channel-normal.md) | Back Channel scenario fires clean from ACTOR seat; low-severity presentation gap corroborates issue 012 | P2 | RESOLVED | BACK-CHANNEL-NORMAL | — |
-| [017-scn-call-in-favor-normal-01](017-scn-call-in-favor-normal-01.md) | Favor-response gesture not surfaced to first-time TARGET | P2 | OPEN | SCN-CALL-IN-FAVOR-NORMAL-01 | — |
+| [017-scn-call-in-favor-normal-01](017-scn-call-in-favor-normal-01.md) | Favor-response gesture not surfaced to first-time TARGET | P2 | RESOLVED | SCN-CALL-IN-FAVOR-NORMAL-01 | — |
 | [018-scn-call-in-favor-normal-01](018-scn-call-in-favor-normal-01.md) | Favor-response double-tap discoverability (duplicate of 017) | P2 | DUPLICATE | SCN-CALL-IN-FAVOR-NORMAL-01 | n/a (catalog tag; within-session duplicate → see issue 017) |
 | [019-scn-falsify-intel-normal-01](019-scn-falsify-intel-normal-01.md) | Falsify Intel normal play: clean fire, privateData channel confirmed working | P2 | LOW-SIGNAL | SCN-FALSIFY-INTEL-NORMAL-01 | — |
 | [020-pair-operatives-hit](020-pair-operatives-hit.md) | StealReport shows card name only; no card art rendered for either principal | P2 | RESOLVED | PAIR-OPERATIVES-HIT (SCN-PAIR-OPERATIVES-HIT-01) | — |
@@ -38,10 +38,10 @@
 | [030-scn-falsify-intel-actor](030-scn-falsify-intel-actor.md) | Falsify Intel nope window shows "Intel Briefing" dialog (stale pendingFuture bleed-through) | P2 | RESOLVED | SCN-FALSIFY-INTEL-ACTOR | — |
 | [031-scn-direct-order-actor](031-scn-direct-order-actor.md) | Direct Order target-select dialog uses Reassign card vocabulary | P2 | RESOLVED | SCN-DIRECT-ORDER-ACTOR | 032-scn-direct-order-normal-01 (paired Direct Order finding) |
 | [032-scn-direct-order-normal-01](032-scn-direct-order-normal-01.md) | Direct Order target not surfaced to observers during nope window; actor dialog title uses Reassign language | P2 | RESOLVED | SCN-DIRECT-ORDER-NORMAL-01 | 031-scn-direct-order-actor (paired Direct Order finding) |
-| [034-scn-call-in-favor-info-vis-01](034-scn-call-in-favor-info-vis-01.md) | Favor info-visibility: OTHER vantage confirmed clean; gesture discoverability gap on TARGET vantage | P2 | OPEN | SCN-CALL-IN-FAVOR-INFO-VIS-01 | — |
+| [034-scn-call-in-favor-info-vis-01](034-scn-call-in-favor-info-vis-01.md) | Favor info-visibility: OTHER vantage confirmed clean; gesture discoverability gap on TARGET vantage | P2 | RESOLVED | SCN-CALL-IN-FAVOR-INFO-VIS-01 | — |
 | [035-scn-call-in-favor-normal-01](035-scn-call-in-favor-normal-01.md) | Call in a Favor fired clean (ACTOR + TARGET perspectives) | P2 | LOW-SIGNAL | SCN-CALL-IN-FAVOR-NORMAL-01 | — |
 | [036-scn-burn-the-files-normal-01](036-scn-burn-the-files-normal-01.md) | Burn the Files has no kinetic payoff on ACTOR phone — shuffle is narratively silent | P2 | OPEN | SCN-BURN-THE-FILES-NORMAL-01 (catalog ID: SCN-BURN-FILES-NORMAL-01 — minor ID discrepancy between triage spec and catalog, content match is unambiguous) | — |
-| [038-burn-files-invalidates-peek](038-burn-files-invalidates-peek.md) | Seat agent conflated falsify-intel with intel-briefing; actual ACTOR (Seat4) never self-reported | P2 | OPEN | BURN-FILES-INVALIDATES-PEEK | — |
+| [038-burn-files-invalidates-peek](038-burn-files-invalidates-peek.md) | Seat agent conflated falsify-intel with intel-briefing; actual ACTOR (Seat4) never self-reported | P2 | LOW-SIGNAL | BURN-FILES-INVALIDATES-PEEK | — |
 
 ## Free-play findings
 
@@ -63,7 +63,7 @@ Spec-level findings against `docs/PRODUCT-SPECIFICATION.md` §2 (Quality Bar) + 
 | [009-vibe-scn-back-channel-normal-01](009-vibe-scn-back-channel-normal-01.md) | Back Channel observer intercept-window lacks assessed dramatic weight (agent-polling artifact) | P2 | LOW-SIGNAL | SCN-BACK-CHANNEL-NORMAL-01 | — |
 | [012-vibe-back-channel-normal](012-vibe-back-channel-normal.md) | Back Channel bottom-draw has no cinematic distinction from a top-draw | P1 | RESOLVED | BACK-CHANNEL-NORMAL | — |
 | [013-vibe-game-moment-first-turn-back-channel](013-vibe-game-moment-first-turn-back-channel.md) | First-turn Back Channel landing flat: no opening-gambit framing, no bottom-draw visual distinction | P2 | RESOLVED | GAME-MOMENT-FIRST-TURN-BACK-CHANNEL | — |
-| [016-vibe-scn-call-in-a-favor-normal-01](016-vibe-scn-call-in-a-favor-normal-01.md) | Observer gets no closing beat when favor resolves | P2 | OPEN | SCN-CALL-IN-A-FAVOR-NORMAL-01 | — |
+| [016-vibe-scn-call-in-a-favor-normal-01](016-vibe-scn-call-in-a-favor-normal-01.md) | Observer gets no closing beat when favor resolves | P2 | RESOLVED | SCN-CALL-IN-A-FAVOR-NORMAL-01 | — |
 | [028-vibe-scn-back-channel-normal-01](028-vibe-scn-back-channel-normal-01.md) | Actor receives zero narration when their card is intercepted | P1 | RESOLVED | SCN-BACK-CHANNEL-NORMAL-01 | — |
 | [033-vibe-scn-burn-the-files-normal-01](033-vibe-scn-burn-the-files-normal-01.md) | Burn the Files shuffle has no kinetic payoff (silent shuffle) | P2 | OPEN | SCN-BURN-THE-FILES-NORMAL-01 | — |
 | [037-vibe-burn-files-normal](037-vibe-burn-files-normal.md) | Phone drama beat lacks destruction weight for Burn the Files | P2 | OPEN | BURN-FILES-NORMAL | — |

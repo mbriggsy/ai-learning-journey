@@ -354,6 +354,50 @@ describe('PlayerAlert — ACTOR intercepted toast (close 05-08-2022-5p #025 Gap 
   })
 })
 
+describe('PlayerAlert — observer favor-given closing beat (close 05-08-2022-5p #016)', () => {
+  // Pre-fix the favor-given case was silent for ALL viewers — principals
+  // got the FavorReport overlay, observers got NOTHING after the persistent
+  // card-played toast cleared at favor-given. The closing beat now fires
+  // for OTHER viewers as a quiet info-tone toast.
+  it('renders "<Giver> surrendered a card to <Receiver>." for observers', () => {
+    const { container, root } = mount()
+    try {
+      myIdRef.current = 'seat-1-uuid' // viewer is OTHER (alive), not principal
+      setEvents([
+        { event: { type: 'turn-started', playerId: SEAT2_ID, turnsRemaining: 1 }, receivedAt: 0, id: 'evt-0' },
+      ])
+      render(root)
+      setEvents([
+        { event: { type: 'turn-started', playerId: SEAT2_ID, turnsRemaining: 1 }, receivedAt: 0, id: 'evt-0' },
+        { event: { type: 'favor-given', giverId: SEAT3_ID, receiverId: SEAT2_ID }, receivedAt: 1, id: 'evt-1' },
+      ])
+      rerender(root)
+      expect(alertText(container)).toBe('Seat3 surrendered a card to Seat2.')
+    } finally {
+      teardown(container, root)
+    }
+  })
+
+  it('stays silent on favor-given when the viewer is a principal (FavorReport owns it)', () => {
+    const { container, root } = mount()
+    try {
+      myIdRef.current = SEAT2_ID // viewer is the receiver
+      setEvents([
+        { event: { type: 'turn-started', playerId: SEAT2_ID, turnsRemaining: 1 }, receivedAt: 0, id: 'evt-0' },
+      ])
+      render(root)
+      setEvents([
+        { event: { type: 'turn-started', playerId: SEAT2_ID, turnsRemaining: 1 }, receivedAt: 0, id: 'evt-0' },
+        { event: { type: 'favor-given', giverId: SEAT3_ID, receiverId: SEAT2_ID }, receivedAt: 1, id: 'evt-1' },
+      ])
+      rerender(root)
+      expect(alertText(container)).toBeNull()
+    } finally {
+      teardown(container, root)
+    }
+  })
+})
+
 describe('PlayerAlert — combo + intercept observability (close 05-08-2022-5p Cluster D)', () => {
   // Pre-fix the card-played path suppressed combos entirely
   // (`if (event.comboSize !== undefined) break`), so observers got NO

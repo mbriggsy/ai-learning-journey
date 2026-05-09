@@ -1,7 +1,8 @@
 # 017-scn-call-in-favor-normal-01 — Favor-response gesture not surfaced to first-time TARGET
 
 **Severity (triage):** P2
-**Status:** 🔴 OPEN
+**Status:** ✅ RESOLVED
+**Resolution:** Fix landed 2026-05-09. Implementation: SmartActionBox's favor-target empty-staging copy changed from `Stage a card / to surrender to <X>` to `Double-tap a card / to surrender to <X>`. The gesture vocabulary is now visible at the exact decision moment, so a first-time TARGET who would otherwise single-tap (preview) sees the explicit "double-tap" instruction. One-line change scoped to the favorMode branch — preserves the coercive Archer tone via "surrender" vocabulary while filling the gesture-discoverability gap. Closes 034 in the same edit (same root cause, same surface).
 **Seed kind:** scripted-scenario
 **Source seats:** seat-2, seat-3
 **Linked scenarios:** SCN-CALL-IN-FAVOR-NORMAL-01

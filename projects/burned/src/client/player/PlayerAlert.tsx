@@ -132,14 +132,22 @@ function alertFor(
       break
     }
 
-    case 'favor-given':
-      // Favor resolution is owned by FavorReport (cinematic incident-report
-      // overlay on both phones, named card asset, persistent until ACK).
-      // PlayerAlert intentionally stays silent here — a transient toast
-      // alongside the dispatch would compete for attention. Triage #010
-      // Gap C; the morning's two small toasts (giver "Card sent to X." and
-      // receiver "Coerced a card from X.") were superseded by the hero beat.
-      break
+    case 'favor-given': {
+      // Principals' resolution is owned by FavorReport (cinematic incident-
+      // report overlay with the named card asset, persistent until ACK).
+      // PlayerAlert stays silent on the principal sides to avoid competing
+      // with the hero beat (triage #010 Gap C). OBSERVER side gets a quiet
+      // closing beat — the persistent card-played toast cleared at
+      // `favor-given`, leaving observers with no resolution signal at all
+      // pre-fix (close 05-08-2022-5p #016). Privacy-correct: cardType is
+      // stripped for observers so we never include it in the toast.
+      if (event.giverId === myId || event.receiverId === myId) break
+      return {
+        id: eventId,
+        text: `${nameOf(event.giverId)} surrendered a card to ${nameOf(event.receiverId)}.`,
+        tone: 'info',
+      }
+    }
 
     case 'card-played': {
       // Observer-side announcement when an opponent plays a card. Triage

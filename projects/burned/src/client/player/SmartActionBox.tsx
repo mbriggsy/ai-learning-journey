@@ -225,7 +225,11 @@ export function SmartActionBox({
         return {
           key: 'favor-empty',
           className: `${styles.box} ${styles.standby}`,
-          text: `Stage a card\nto surrender to ${favorMode.requesterName}`,
+          // "Double-tap" surfaces the gesture vocabulary at the decision
+          // moment so a first-time TARGET doesn't single-tap (preview)
+          // and stall (close 05-08-2022-5p #017 + #034 — favor-response
+          // gesture not surfaced to first-time TARGET).
+          text: `Double-tap a card\nto surrender to ${favorMode.requesterName}`,
           interactive: false,
         }
       }

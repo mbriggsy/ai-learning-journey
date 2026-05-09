@@ -1,7 +1,8 @@
 # 034-scn-call-in-favor-info-vis-01 — Favor info-visibility: OTHER vantage confirmed clean; gesture discoverability gap on TARGET vantage
 
 **Severity (triage):** P2
-**Status:** 🔴 OPEN
+**Status:** ✅ RESOLVED
+**Resolution:** Fix landed 2026-05-09 in the same commit as #017 (same root cause: gesture-discoverability gap on the favor-response TARGET vantage). SmartActionBox's favor-empty copy now reads "Double-tap a card / to surrender to <X>" so the gesture vocabulary surfaces at the decision moment instead of relying on the player to know the double-tap pattern. The OTHER-vantage privacy properties verified by the triage (cardType stripped from `favor-given` for non-principals) remain correct.
 **Seed kind:** scripted-scenario
 **Source seats:** seat-3
 **Linked scenarios:** SCN-CALL-IN-FAVOR-INFO-VIS-01

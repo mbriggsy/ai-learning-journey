@@ -1,7 +1,8 @@
 # 038-burn-files-invalidates-peek — Seat agent conflated falsify-intel with intel-briefing; actual ACTOR (Seat4) never self-reported
 
 **Severity (triage):** P2
-**Status:** 🔴 OPEN
+**Status:** 〰 LOW-SIGNAL
+**Resolution:** 2026-05-09. Triage Option A applied: SCN-BURN-FILES-INVALIDATES-PEEK-01's recognition criteria now carry an explicit NOTE distinguishing intel-briefing (sets pendingFuture, emits future-peeked) from falsify-intel (reads + clears pendingFuture, emits future-rearranged). Future seats won't make seat-1's surface-similarity pattern-match. Triage confirms the engine + projection are correct (`applyShuffle` clears pendingFuture per CLAUDE.md landmine; tier-2 oracle verified absent post-burn). The detector-without-self coverage divergence in this run was caused entirely by (a) Seat4 not self-reporting their own legitimate fire and (b) seat-1 false-firing from the wrong role/trigger. Coverage-reporter logs `seat-without-detector` and `detector-without-self` divergences for these cases — the underlying mechanic worked.
 **Seed kind:** scripted-scenario
 **Source seats:** seat-1
 **Linked scenarios:** BURN-FILES-INVALIDATES-PEEK

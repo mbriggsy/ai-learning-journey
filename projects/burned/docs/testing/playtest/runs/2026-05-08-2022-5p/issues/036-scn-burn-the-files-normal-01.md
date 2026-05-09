@@ -1,7 +1,8 @@
 # 036-scn-burn-the-files-normal-01 — Burn the Files has no kinetic payoff on ACTOR phone — shuffle is narratively silent
 
 **Severity (triage):** P2
-**Status:** 🔴 OPEN
+**Status:** ✅ RESOLVED
+**Resolution:** Fix landed 2026-05-09. Implementation matches triage Option A: PlayerAlert now handles `deck-shuffled` events and emits an urgent ACTOR-side toast `// FILES BURNED — deck scrambled.` The Archer-tone copy lands the destroy-the-evidence narrative on the actor's phone where pre-fix it landed nowhere (the board's `useShuffleFlash` choreography is shared-screen only). Observers stay silent — their persistent `card-played` toast already narrated the play. Closes #033 in the same edit (same root cause: phone-side response to deck-shuffled). Contracts pinned by 2 new PlayerAlert tests covering the actor fire and the observer-silent guard. The further motion-design ask (037: phone GSAP pulse during DramaOverlay holdMs) is BLOCKED on dedicated motion calibration.
 **Seed kind:** scripted-scenario
 **Source seats:** seat-4
 **Linked scenarios:** SCN-BURN-THE-FILES-NORMAL-01 (catalog ID: SCN-BURN-FILES-NORMAL-01 — minor ID discrepancy between triage spec and catalog, content match is unambiguous)

@@ -1,7 +1,8 @@
 # 005-falsify-intel-normal — Falsify Intel rearrange UI is a tap-number form, not an espionage-weighted cinematic panel
 
 **Severity (triage):** P2
-**Status:** 🔴 OPEN
+**Status:** 🟡 BLOCKED — design-sprint scope
+**Disposition:** Bundled with #004 + #006 as one Falsify Intel rearrange redesign sprint (drag-to-reorder UI, dossier vocabulary, motion). See #004 for full disposition.
 **Seed kind:** scripted-scenario
 **Source seats:** seat-1
 **Linked scenarios:** FALSIFY-INTEL-NORMAL (SCN-FALSIFY-INTEL-NORMAL-01)

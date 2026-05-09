@@ -1,7 +1,8 @@
 # 033-vibe-scn-burn-the-files-normal-01 — Burn the Files shuffle has no kinetic payoff (silent shuffle)
 
 **Severity (triage):** P2 (borders P1 — see diagnosis)
-**Status:** 🔴 OPEN
+**Status:** ✅ RESOLVED
+**Resolution:** Fix landed 2026-05-09 in the same commit as #036. The kinetic-payoff vibe shortfall is closed at the narration level: PlayerAlert's new `deck-shuffled` urgent ACTOR toast `// FILES BURNED — deck scrambled.` gives Seat4's experience a direct destroy-the-evidence response. The deeper motion ask (#037 — phone-side ember pulse during the DramaOverlay holdMs) remains BLOCKED for motion-calibration scope; this fix establishes the narration baseline that future motion work can build on without re-litigating the silent-shuffle gap.
 **Seed kind:** vibe-check
 **Source seats:** seat-4
 **Linked scenarios:** SCN-BURN-THE-FILES-NORMAL-01

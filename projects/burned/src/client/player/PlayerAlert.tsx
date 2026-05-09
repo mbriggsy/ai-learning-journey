@@ -235,6 +235,24 @@ function alertFor(
       // moment without adding information.
       break
 
+    case 'deck-shuffled': {
+      // Burn the Files resolution beat for the ACTOR's phone. The board
+      // gets the shuffle animation (`useShuffleFlash` in DrawPile.tsx);
+      // the phone got nothing pre-fix — nope window resolved silently
+      // and the only signal that anything happened was the card leaving
+      // hand. Seat-4 reported "the tension of 'did this scramble the
+      // pile?' has no kinetic payoff" (close 05-08-2022-5p #033 + #036).
+      // Urgent tone matches the destroy-the-evidence Archer beat —
+      // observers stay silent because their existing card-played toast
+      // already narrated the play.
+      if (event.playerId !== myId) break
+      return {
+        id: eventId,
+        text: '// FILES BURNED — deck scrambled.',
+        tone: 'urgent',
+      }
+    }
+
     case 'nope-window-resolved': {
       // ACTOR-side narration when YOUR card was intercepted. Pre-fix the
       // staging area silently snapped back with no text, no interceptor

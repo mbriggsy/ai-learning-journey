@@ -1,7 +1,8 @@
 # 004-vibe-falsify-intel-normal — Falsify Intel rearrange feels like a form, not espionage
 
 **Severity (triage):** P2
-**Status:** 🔴 OPEN
+**Status:** 🟡 BLOCKED — design-sprint scope
+**Disposition:** All three Falsify Intel rearrange UX vibe checks (#004, #005, #006) describe the same gap: the tap-to-order mechanic is functional but feels like a business form, not espionage. The substantive fix is a drag-to-reorder UI built around dossier vocabulary (e.g. case-file cards in a manila folder, drop-zones with intelligence-officer markup). That is multi-hour design + motion craft that needs eye-in-loop iteration on the phone — autonomous agents can ship "shape" but not "feel" for this kind of beat (per Briggsy's `feedback-eye-in-loop-beats-calibration-for-motion.md`). Tracking with #005, #006 as a single Falsify Intel rearrange redesign sprint. Engine + projection + #003 status-strip + #030 stale-pendingFuture clear are all already in place — the rearrange surface itself is what needs the cinematic pass.
 **Seed kind:** vibe-check
 **Source seats:** seat-1
 **Linked scenarios:** FALSIFY-INTEL-NORMAL

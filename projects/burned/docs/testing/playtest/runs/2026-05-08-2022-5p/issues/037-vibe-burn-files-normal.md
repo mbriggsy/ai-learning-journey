@@ -1,7 +1,8 @@
 # 037-vibe-burn-files-normal — Phone drama beat lacks destruction weight for Burn the Files
 
 **Severity (triage):** P2
-**Status:** 🔴 OPEN
+**Status:** 🟡 BLOCKED — motion-calibration scope
+**Disposition:** Narration baseline restored 2026-05-09 by #036's PlayerAlert `deck-shuffled` toast. The remaining ask (GSAP ember-pulse during the DramaOverlay holdMs to lift the beat from "status subtitle" to "fire is active") is motion design that needs eye-in-loop verification — Briggsy memory `feedback-eye-in-loop-beats-calibration-for-motion.md` warns that calibration agents poll DOM state but can't FEEL motion. Doing this autonomously would risk shipping unverified vibe work. Tracking as motion-calibration scope alongside the broader DramaOverlay polish queue. Pinned by `tests/e2e/drama-beat-timing.spec.ts` — any future motion change must keep the runtime gate green.
 **Seed kind:** vibe-check
 **Source seats:** seat-1
 **Linked scenarios:** BURN-FILES-NORMAL

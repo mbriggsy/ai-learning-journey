@@ -354,6 +354,50 @@ describe('PlayerAlert — ACTOR intercepted toast (close 05-08-2022-5p #025 Gap 
   })
 })
 
+describe('PlayerAlert — Burn the Files ACTOR resolution beat (close 05-08-2022-5p #033 + #036)', () => {
+  // Pre-fix the phone had no response to deck-shuffled — the board got the
+  // shuffle animation, the actor's phone got silence. The new urgent toast
+  // gives the ACTOR a destroy-the-evidence moment that mirrors the board.
+  // Observers stay silent (their card-played toast already narrated the play).
+  it('renders "// FILES BURNED — deck scrambled." for the ACTOR', () => {
+    const { container, root } = mount()
+    try {
+      myIdRef.current = SEAT2_ID // viewer is the ACTOR
+      setEvents([
+        { event: { type: 'turn-started', playerId: SEAT2_ID, turnsRemaining: 1 }, receivedAt: 0, id: 'evt-0' },
+      ])
+      render(root)
+      setEvents([
+        { event: { type: 'turn-started', playerId: SEAT2_ID, turnsRemaining: 1 }, receivedAt: 0, id: 'evt-0' },
+        { event: { type: 'deck-shuffled', playerId: SEAT2_ID }, receivedAt: 1, id: 'evt-1' },
+      ])
+      rerender(root)
+      expect(alertText(container)).toBe('// FILES BURNED — deck scrambled.')
+    } finally {
+      teardown(container, root)
+    }
+  })
+
+  it('stays silent on deck-shuffled when the viewer is an OBSERVER', () => {
+    const { container, root } = mount()
+    try {
+      myIdRef.current = SEAT3_ID // viewer is OTHER, the actor is Seat2
+      setEvents([
+        { event: { type: 'turn-started', playerId: SEAT2_ID, turnsRemaining: 1 }, receivedAt: 0, id: 'evt-0' },
+      ])
+      render(root)
+      setEvents([
+        { event: { type: 'turn-started', playerId: SEAT2_ID, turnsRemaining: 1 }, receivedAt: 0, id: 'evt-0' },
+        { event: { type: 'deck-shuffled', playerId: SEAT2_ID }, receivedAt: 1, id: 'evt-1' },
+      ])
+      rerender(root)
+      expect(alertText(container)).toBeNull()
+    } finally {
+      teardown(container, root)
+    }
+  })
+})
+
 describe('PlayerAlert — observer favor-given closing beat (close 05-08-2022-5p #016)', () => {
   // Pre-fix the favor-given case was silent for ALL viewers — principals
   // got the FavorReport overlay, observers got NOTHING after the persistent

@@ -1,7 +1,8 @@
 # 006-uispec-falsify-intel-normal — Falsify Intel rearrange uses tap-to-order form, not drag/espionage UI
 
 **Severity (triage):** P2
-**Status:** 🔴 OPEN
+**Status:** 🟡 BLOCKED — design-sprint scope
+**Disposition:** Bundled with #004 + #005 as one Falsify Intel rearrange redesign sprint (drag-to-reorder UI, dossier vocabulary, motion). See #004 for full disposition.
 **Seed kind:** ui-spec-divergence
 **Source seats:** seat-1
 **Linked scenarios:** FALSIFY-INTEL-NORMAL (catalog: SCN-FALSIFY-INTEL-NORMAL-01)

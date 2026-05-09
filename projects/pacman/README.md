@@ -1,8 +1,19 @@
+---
+aliases: [pacman, Pac-Man]
+tags: [project, complete]
+---
+
 # Pac-Man
 
 **Status: COMPLETE**
 
 A faithful browser-based recreation of the classic Pac-Man arcade game, built entirely with vanilla JavaScript and HTML5 Canvas. No installation, no server, no dependencies — just open `index.html` in any modern browser and play. The game features all four original ghosts with their authentic AI behaviours, five progressively faster levels, power pellets, a consecutive ghost-eat scoring multiplier, and synthesised sound effects via the Web Audio API.
+
+## Project Map
+
+> Internal docs surfaced for the Obsidian graph.
+
+- [[session-summary]] — full build story + debugging deep-dives
 
 ## Fully Autonomous SDLC
 
@@ -119,6 +130,4 @@ pacman/
   game.js             — All game logic (~1,550 lines)
   tests.html          — Open this to run unit tests (110 tests)
   tests.js            — Unit test suite
-  session-summary.md  — Full build story + debugging deep-dives
-  README.md           — This file
-```
+  session-summary.md  — Full build story +

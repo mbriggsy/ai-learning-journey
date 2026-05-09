@@ -1,3 +1,8 @@
+---
+aliases: [workflows, workflow, patterns]
+tags: [playbook]
+---
+
 # Workflows that work
 
 Patterns proven to produce great results. Each entry: what it is, when to use it, how to run it, and why it matters.
@@ -104,14 +109,14 @@ The interview also captures something a paraphrase can't — verbatim words, ref
 
 ---
 
-## Spec → Plan → Code (Transitive Enforcement)
+## Spec → Plan → Strengthen → Code (Transitive Enforcement)
 
-**What:** Before any code, establish a product specification. Specs have WHAT (quality bar, form factors, user-facing decisions). Plans have HOW (token values, clamp formulas, implementation). Code becomes the living contract.
+**What:** Before any code, establish a product specification. Specs have WHAT (quality bar, form factors, user-facing decisions). Plans have HOW (token values, clamp formulas, implementation). Plans get strengthened (bug-hunted by review agents) phase-by-phase, sequentially, before code is written. Code becomes the living contract.
 
 **When:** Any non-trivial project. Especially new ones.
 
 **How:**
-1. Author `docs/specifications/PRODUCT-SPECIFICATION.md` with Claude (use `/product-specification` once built, or manual authoring)
+1. Author `docs/specifications/PRODUCT-SPECIFICATION.md` with Claude using `/ce:ce-brainstorm` (collaborative dialogue, quality bar elicitation built in)
 2. Lock at v1.0 when contract is complete
 3. Generate phase plans from the spec — plan generators automatically pick up the quality bar phrase and embed it
 4. Execute plans — implementation produces tokenized, self-documenting code
@@ -147,63 +152,20 @@ The interview also captures something a paraphrase can't — verbatim words, ref
 
 ---
 
-## Write The TODO
+## Write The TODO / Squeaky Clean
 
-**What:** Explicit verbal signal for Claude to update `TODO.md` at end of session.
+End-of-session protocols. Both are explicit verbal triggers — Claude won't auto-run either. Full mechanics in [[commands-and-skills]].
 
-**When:** End of any session with meaningful work, OR when you're about to start a new terminal.
+- **Write the TODO** — say *"write the TODO"* or *"update the TODO"*. Updates `TODO.md` as a forward-looking handoff (prescriptions, not diagnoses; no session diary). [[commands-and-skills#"Write the TODO"|Full reference]].
+- **Squeaky clean** — say *"squeaky clean"*. Runs the `/squeaky-clean` skill in a fork: TODO + typechecks + git verify + temp cleanup + commit + push. Safe by default. [[commands-and-skills#`/squeaky-clean`|Full reference]].
 
-**How:** Say *"write the TODO"* or *"update the TODO"*. Claude will update with:
-- What we did this session (briefly)
-- Current state (tests passing, what's working)
-- Unfinished fixes (as **prescriptions** — exact file:line changes, not diagnoses)
-- Next steps in priority order
-- Landmines (things to watch out for)
-
-**Why it matters:** Claude has no memory of the session once the terminal closes. `TODO.md` is the hand-off to future-you and future-Claude.
-
-**Critical:** Claude must NEVER auto-update TODO without your signal. It's opt-in.
-
-**What doesn't belong in TODO:** Session history, "what we did" logs, diary entries. That's what git log is for.
-
----
-
-## Squeaky Clean
-
-**What:** Full end-of-session cleanup protocol.
-
-**When:** You say *"squeaky clean"* — end of a meaningful session where you want a ship-ready state.
-
-**How:** Claude runs the `/squeaky-clean` slash-command skill in a fork. It:
-1. Updates TODO.md (if not already done)
-2. Runs typechecks — must pass
-3. Verifies `git status` — only expected files changed
-4. Deletes contents of `temp/` folder
-5. Deletes any other temporary files/folders from the session
-6. Commits all changes with descriptive message
-7. Pushes to origin
-
-**Why it matters:** Sessions end with cruft (debug files, screenshots, notes). Squeaky-clean ships everything and leaves the project clean for the next session.
-
-**What it doesn't do:** Force-push, amend, or touch other branches. Safe by default.
+**Why the workflow framing matters:** Claude has no memory of the session once the terminal closes. The TODO is the handoff to future-you and future-Claude. Squeaky-clean ensures the project is ship-ready when you walk away.
 
 ---
 
 ## One Change At A Time (Visual Work)
 
-**What:** For visual/CSS changes, change ONE thing, verify on phone, then the next.
-
-**When:** Any visual work where you're iterating based on how it looks.
-
-**How:**
-1. Describe ONE specific change
-2. Claude implements it
-3. You verify on phone
-4. Only THEN move to the next
-
-**Why it matters:** Visual changes compound unpredictably. Chaining 3 changes blind means you can't isolate which one broke things. This rule came from painful experiences with layout thrashing that took entire sessions to untangle.
-
-**Origin:** `feedback-visual-work-one-change-at-a-time.md` in Claude's memory.
+**Promoted to a principle.** See [[principles#8. One visual change at a time.|principle #8]] for the rule. The mechanics: one change → verify on phone → next; never chain visual changes blind. Origin: `feedback-visual-work-one-change-at-a-time.md` in Claude's memory.
 
 ---
 
@@ -248,6 +210,36 @@ The interview also captures something a paraphrase can't — verbatim words, ref
 
 ---
 
+## Plan Mode (Claude Code)
+
+**What:** A Claude Code interaction mode where Claude is locked into read-only/research mode and must propose a plan via `ExitPlanMode` before any state-changing tool call. You approve or reject; no edits, commands, or file writes happen until you do.
+
+**When to use:**
+- Foundational or high-blast-radius work — schema migrations, refactors that touch many files, anything where *"oh, I also went ahead and..."* would be a problem
+- New codebase Claude hasn't seen — you want the read-and-propose pass before the do pass
+- Right after `/clear` when you want to verify Claude's understanding before letting it act
+- When the user (you) doesn't fully trust the prompt yet — Plan Mode buys you a vetting step for free
+
+**When to skip:**
+- Bounded bug fixes Claude can knock out in 2-3 tool calls
+- Iterative visual work — One Change At A Time already enforces verification per step
+- Quick conversational asks where the cost of a plan-and-approve loop exceeds the cost of just doing it
+- Tasks where the spec/CLAUDE.md already constrains scope tightly enough
+
+**How:**
+- **Toggle:** `Shift+Tab` cycles through input modes; Plan Mode is one of them. The status line shows you're in it.
+- **Inside the mode:** Claude reads files, searches, asks questions, but cannot Edit/Write/Bash anything that mutates state.
+- **Exit:** Claude calls `ExitPlanMode` with the plan text. You accept → Claude exits Plan Mode and executes. You reject → stay in Plan Mode and refine.
+- **Combine with `/ce:plan`:** Plan Mode is the *enforcement gate*; `/ce:plan` is the *codified discipline*. Stack them when the work is foundational AND you want zero "while I was in there..." drift.
+
+**Why it matters:** Native plans (Claude proposes a plan in prose, then continues) rely on Claude's restraint. Plan Mode replaces restraint with a hard structural gate. For destructive or foundational work, the structural gate is worth more than the trust.
+
+**Distinction from `/ce:plan`:** `/ce:plan` is a heavy planning *skill* that produces a plan *file* with forcing functions (System-Wide Impact, parallel research agents, gap-finder). Plan Mode is an interactive *mode* with a hard read-only gate. They're orthogonal; use either, both, or neither.
+
+**Origin:** Built into Claude Code. Not a Briggsy invention — but worth surfacing here because it's underused.
+
+---
+
 ## Sequential Thinking After Multi-Agent Research
 
 **What:** After multiple agents return findings, invoke the `sequential-thinking` MCP tool to synthesize before acting.
@@ -258,4 +250,4 @@ The interview also captures something a paraphrase can't — verbatim words, ref
 
 **Why it matters:** Without synthesis, Claude tends to cherry-pick one agent's findings and ignore contradictions. Sequential thinking forces integration.
 
-**Origin:** `feedback-sequential-thinking-always.md` in Claude's memory.
+**Orig

@@ -1,3 +1,8 @@
+---
+aliases: [context7, context7-research, context7-deep-dive]
+tags: [research]
+---
+
 # Context7 MCP Server — Deep Dive
 
 Live, version-specific documentation injected directly into your AI's context window. No hallucinated APIs. No deprecated patterns. No stale training data.

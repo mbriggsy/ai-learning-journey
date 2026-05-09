@@ -1,3 +1,8 @@
+---
+aliases: [skills-2.0-start, skills-2-start]
+tags: [research]
+---
+
 # Skills 101
 
 **Read time:** ~5 minutes. Read this first.

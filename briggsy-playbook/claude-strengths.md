@@ -1,3 +1,8 @@
+---
+aliases: [strengths, claude-strengths, what-claude-is-good-at]
+tags: [playbook]
+---
+
 # What to lean on Claude for
 
 Things Claude is reliably good at. Use these as prompts for *"what should I delegate to Claude vs. figure out myself?"*
@@ -62,7 +67,7 @@ Things Claude is reliably good at. Use these as prompts for *"what should I dele
 
 **Example:** The BURNED spec session ran memory updates, file reads, spec authoring, subagent delegation, a major design debate, retheme audit, and multiple rounds of verification simultaneously. Claude kept track of all of them.
 
-**Best practice:** Don't worry about *"am I asking Claude to hold too much in mind?"* — Claude Opus 4.6 has a 1M token context window. That's enormous. Use it.
+**Best practice:** Don't worry about *"am I asking Claude to hold too much in mind?"* — the current Opus model has a 1M token context window. That's enormous. Use it. (That said: quality starts to degrade past ~70% utilization. See [[session-hygiene#Start a new terminal at ~70% context|session-hygiene]] for the wrap protocol.)
 
 ## Drafting memory and insight files
 
@@ -74,4 +79,4 @@ Things Claude is reliably good at. Use these as prompts for *"what should I dele
 
 **Example:** The `pr-review-toolkit` has multiple specialist reviewers (security, test coverage, comment analyzer, silent failure hunter, type design analyzer). Running all of them in parallel produces a comprehensive review from angles a single pass would miss.
 
-**Best practice:** For high-stakes changes (before a production deploy, before merging a complex PR), use multi-agent review.
+**Best practice:** For high-stakes ch

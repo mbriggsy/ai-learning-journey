@@ -1,3 +1,8 @@
+---
+aliases: [firecrawl, firecrawl-research]
+tags: [research]
+---
+
 # Firecrawl — Deep Dive
 
 Turn any website into clean, LLM-ready data. The web data engine for Claude Code.

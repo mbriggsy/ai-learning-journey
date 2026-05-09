@@ -1,3 +1,8 @@
+---
+aliases: [openclaw-s2, openclaw-session2, harry-gets-a-brain]
+tags: [research]
+---
+
 # 🦞 OpenClaw Session 2 — Harry Gets a Brain
 
 **Session Date:** February 21, 2026  

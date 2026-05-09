@@ -1,10 +1,26 @@
+---
+aliases: [status-line, statusline, status-bar]
+tags: [playbook]
+---
+
 # Claude Code Custom Status Line — Setup Guide
 
 How to replace the default Claude Code status bar with a custom one that shows you what actually matters: model, context usage, cost, session duration, git branch, and effort level — all at a glance.
 
+**Contents:**
+- [How it works](#how-it-works)
+- [Step 1: Create the status line script](#step-1-create-the-status-line-script)
+- [Step 2: Tell Claude Code to use it](#step-2-tell-claude-code-to-use-it)
+- [Step 3: Restart Claude Code](#step-3-restart-claude-code)
+- [What each piece of the status line shows](#what-each-piece-of-the-status-line-shows)
+- [Available data fields](#available-data-fields)
+- [Customization ideas](#customization-ideas)
+- [Troubleshooting](#troubleshooting)
+- [The full settings.json reference](#the-full-settingsjson-reference-just-the-statusline-part)
+
 **What you'll end up with:**
 ```
-[Opus 4.6 (1M context)] burned  🌿 main | █░░░░░░░░░ 19% | $14.65 | 2210m53s | high
+[Opus 4.7 (1M context)] burned  🌿 main | █░░░░░░░░░ 19% | $14.65 | 2210m53s | high
 ```
 
 **Time to set up:** ~5 minutes.
@@ -167,14 +183,14 @@ If it doesn't appear, check:
 ## What each piece of the status line shows
 
 ```
-[Opus 4.6 (1M context)] burned  🌿 main | █░░░░░░░░░ 19% | $14.65 | 2210m53s | high
+[Opus 4.7 (1M context)] burned  🌿 main | █░░░░░░░░░ 19% | $14.65 | 2210m53s | high
  ─────────────────────  ──────  ────────   ─────────────   ──────   ────────   ────
  Model + context size   Project Git branch Context usage    Cost    Duration  Effort
 ```
 
 | Segment | Source | What it tells you |
 |---|---|---|
-| `[Opus 4.6 (1M context)]` | `model.display_name` + `context_window.context_window_size` | Which model and how big the context window is |
+| `[Opus 4.7 (1M context)]` | `model.display_name` + `context_window.context_window_size` | Which model and how big the context window is |
 | `burned` | `workspace.current_dir` | Which project folder you're in |
 | `🌿 main` | `git branch --show-current` | Current git branch |
 | `█░░░░░░░░░ 19%` | `context_window.used_percentage` | How much of your context window is used (green/yellow/red) |
@@ -189,8 +205,8 @@ If it doesn't appear, check:
 Claude Code pipes a JSON object into your script on stdin. Here are the fields you can use:
 
 ```
-model.display_name          "Opus 4.6"
-model.id                    "claude-opus-4-6"
+model.display_name          "Opus 4.7"
+model.id                    "claude-opus-4-7"
 
 context_window
   .context_window_size      1000000
@@ -269,4 +285,4 @@ echo "[$model] ctx: ${pct}%"
 }
 ```
 
-That's the whole thing. One key, one command. Everything else happens in the script.
+That's the w

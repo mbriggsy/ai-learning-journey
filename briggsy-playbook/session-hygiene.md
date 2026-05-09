@@ -1,3 +1,8 @@
+---
+aliases: [hygiene, session-hygiene, session]
+tags: [playbook]
+---
+
 # Session hygiene
 
 Session-level protocols that prevent pain. Follow these and your sessions end cleanly.
@@ -18,7 +23,7 @@ When Claude Code's context window is ~70% full, start a new terminal. Don't wait
 
 **How to know current usage:** Claude should warn you. If Claude doesn't, ask: *"what's my context usage?"*
 
-**Context window note:** Claude Opus 4.6 has a **1 million token context window**. 70% of that is a LOT — long sessions are fine. But when approaching the limit, transition gracefully.
+**Context window note:** The current Opus model has a **1 million token context window**. 70% of that is a LOT — long sessions are fine. But when approaching the limit, transition gracefully.
 
 **Transition protocol:**
 1. Say *"write the TODO"* — updates `TODO.md` with current state
@@ -47,60 +52,19 @@ That's where Claude stores everything it remembers about you. If you're curious 
 
 ---
 
-## "Write the TODO" is explicit
+## End-of-session protocols
 
-Claude won't update `TODO.md` unless you say so. That's intentional — TODO is opt-in, not auto-managed.
+These are the protocols you reach for when wrapping up. Full mechanics live in [[commands-and-skills]] — this section covers when to use them in your session flow.
 
-**How to trigger:** *"write the TODO"* or *"update the TODO"*
-
-**What gets updated:**
-- Current state (what's done, what's working)
-- Next steps in priority order
-- Unfinished fixes (as **prescriptions** — exact file:line changes to make next time, not diagnoses)
-- Landmines (things to watch out for)
-
-**What does NOT go in TODO:** Session history, "what we did" logs, diary entries. Git log has the history. TODO is forward-looking.
-
-**Origin:** `feedback-todo-is-not-a-diary.md` in Claude's memory.
+- **Update the TODO** before stepping away or starting a new terminal. Say *"write the TODO"*. Forward-looking only — no session history, no diary. See [[commands-and-skills#"Write the TODO"]].
+- **Squeaky clean** when you want a ship-ready state. Say *"squeaky clean"*. Updates TODO + typechecks + temp cleanup + commit + push, all in a fork. See [[commands-and-skills#`/squeaky-clean`]].
+- **Distill** when you've solved something tricky and the lesson would otherwise evaporate. Say *"capture this"* or *"distill this"*. Hard-won knowledge only — not bug fixes or feature work. See [[commands-and-skills#`/distill`]].
 
 ---
 
-## "Squeaky clean" is the nuclear cleanup
+## Start-of-work protocols
 
-When you say *"squeaky clean"*, Claude runs the `/squeaky-clean` slash-command skill in a fork. It:
-
-1. Updates `TODO.md` (if not already done)
-2. Runs typechecks — must pass
-3. Verifies `git status` — only expected files changed
-4. Deletes contents of `temp/` folder (keeps the folder)
-5. Deletes any other temporary files/folders from the session
-6. Commits all changes with a descriptive message
-7. Pushes to origin
-
-**When to use:** End of any meaningful session where you want a clean ship-ready state.
-
-**What it doesn't do:** Force-push, amend previous commits, touch other branches. Safe by default.
-
----
-
-## Distill: capture hard-won insights
-
-When you solve a tricky problem or learn something the hard way, say *"capture this"* or *"distill this"*. Claude runs the `/distill` skill, which writes `docs/insights/NNN-<slug>.md` in the project with the problem, investigation, fix, and lesson.
-
-**Why:** Future sessions load these insights via `/brief` before starting work. You won't rediscover the same pain twice.
-
-**Not for:** Feature implementations, bug fixes, general code changes. Only for hard-won *knowledge* that would be lost if not captured.
-
----
-
-## Brief: load past insights before work
-
-At the start of meaningful work on a subsystem, say *"brief me on X"* or run `/brief`. Claude loads relevant insights from `docs/insights/` so you start informed about past gotchas.
-
-**When to use:**
-- Before touching a subsystem you haven't worked on in a while
-- Before starting a new feature that might intersect with known issues
-- When Claude mentions *"I think I've seen this before"* — make Claude verify in insights
+- **Brief** before touching a subsystem you haven't worked on in a while, or when Claude says *"I think I've seen this before"* (make Claude verify against insights). Say *"brief me on X"*. See [[commands-and-skills#`/brief`]].
 
 ---
 
@@ -123,5 +87,4 @@ All Claude Code memory in `C:/Users/brigg/.claude/projects/C--Users-brigg-ai-lea
 
 **If you want project-specific knowledge**, use:
 - `projects/<name>/docs/insights/` for project-specific lessons
-- `projects/<name>/CLAUDE.md` for project-specific conventions
-- `projects/<name>/TODO.md` for project-specific task tracking
+- `projects/<name>/CLAUDE.md` for project-specific conv

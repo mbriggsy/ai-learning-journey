@@ -1,3 +1,8 @@
+---
+aliases: [watch-outs, gotchas, failure-modes, claude-bugs, claude-watchouts]
+tags: [playbook]
+---
+
 # Claude's failure modes — catch them before they propagate
 
 Known Claude behaviors that have caused problems. Each entry: what it looks like, why it happens, how to catch it, and what to do instead.
@@ -10,7 +15,7 @@ Known Claude behaviors that have caused problems. Each entry: what it looks like
 
 **How to catch:** When Claude creates a document by mirroring another one, ask *"what did you copy exactly vs. adapt?"* Audit any specific claims — names, methodologies, dates, references — for accuracy in the NEW context.
 
-**Example from BURNED session (2026-04-10):** *"Built with Maximum Overdrive. SDLC is the product."* — copied from UMB's SPEC.md footer. UMB was NOT built with Maximum Overdrive either; it was a latent bug in UMB's spec that Claude replicated without verifying.
+**Example from BURNED session (2026-04-10):** *"Built with Maximum Overdrive. SDLC is the product."* — copied from UMB's SPEC.md footer. UMB was NOT built with Maximum Overdrive either; it was a latent bug in UMB's spec that Claude replicated without verifying. Full incident: [[lessons-learned#2026-04-10 — "Maximum Overdrive" footer copied from UMB's spec by reflex|see lessons-learned]].
 
 **Rule for Claude:** Copy structure only; never copy specific claims from reference templates.
 
@@ -24,7 +29,7 @@ Known Claude behaviors that have caused problems. Each entry: what it looks like
 
 **How to catch:** When Claude uses a proper noun or specific methodology you don't recognize, ASK immediately. *"Where did that come from?"* or *"Did I say that?"* If Claude can't trace it to something you said, it's a hallucination. **Purge it.**
 
-**Example from BURNED session (2026-04-10):** "Saul Bass" as BURNED's visual reference. Claude dropped the phrase into `docs/ideation/2026-04-05-burned-brainstorm.md` during a prior session. I didn't know who Saul Bass was. Over 5 days the phrase propagated across **13 files**: memory, README, the visual autopsy, the gauntlet calibration, 5 image generation scripts, and 2 more brainstorm docs. Saul Bass's actual aesthetic happens to overlap with Archer, which HID the error — the generated card art was accidentally on-target. The UI chrome, which didn't benefit from the overlap, is the broken part. Fix was to purge all 13 files and replace with "Archer the TV show, literally" (my actual vocabulary).
+**Example:** *"Saul Bass"* as BURNED's visual reference — Claude introduced the phrase, Briggsy didn't know who Saul Bass was, didn't flag it. Phrase propagated across **13 files in 5 days** before being purged. Full incident: [[lessons-learned#2026-04-10 — The Saul Bass incident (hallucinated reference calcified across 13 files)|see lessons-learned]].
 
 **Rule for Claude:** When user says *"I don't know what X is"*, treat it as a flag to verify. Users don't own vocabulary they've never heard.
 
@@ -38,7 +43,7 @@ Known Claude behaviors that have caused problems. Each entry: what it looks like
 
 **How to catch:** After you give feedback, watch whether Claude's next response has visibly sanitized beyond what you asked. If yes, call it out.
 
-**Example from BURNED session (2026-04-10):** I mentioned I didn't know "touchstone." Claude immediately said *"I'll stop using words like that."* I corrected: *"Just because I don't know a word, doesn't mean we shouldn't use it. If that's the right word, just give me a quick explanation and I can always google it. Don't dumb your vocab for me."* Correct response would have been: use "touchstone" with a brief inline gloss.
+**Example from BURNED session (2026-04-10):** I mentioned I didn't know "touchstone." Claude immediately said *"I'll stop using words like that."* — wrong correction. The right move: use "touchstone" with a brief inline gloss. Full incident: [[lessons-learned#2026-04-10 — Claude over-corrected on vocabulary ("touchstone")|see lessons-learned]].
 
 **Rule for Claude:** Feedback is usually specific, not categorical. Fix the instance and note the pattern — don't generalize to the whole class unless explicitly told to.
 
@@ -130,4 +135,4 @@ Known Claude behaviors that have caused problems. Each entry: what it looks like
 
 **How to catch:** If output feels out of order, ask Claude to explain the sequence.
 
-**Fix:** For dependency-sensitive work, tell Claude the order explicitly: *"first A, then B, then C in parallel, then D."*
+**Fix:** For depende

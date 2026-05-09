@@ -1,3 +1,8 @@
+---
+aliases: [GSD-vs-agents, GSD-comparison, gsd-vs-agent-teams]
+tags: [research]
+---
+
 # GSD vs. Claude Code Agent Teams
 
 A comparison of two approaches to multi-agent development with Claude Code.

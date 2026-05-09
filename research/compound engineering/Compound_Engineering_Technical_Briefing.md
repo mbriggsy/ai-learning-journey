@@ -1,3 +1,8 @@
+---
+aliases: [CE-briefing, compound-engineering-briefing, compound-briefing]
+tags: [research]
+---
+
 # Compound Engineering: A Technical Briefing
 
 ## 1. Executive summary

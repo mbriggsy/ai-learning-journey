@@ -1,3 +1,8 @@
+---
+aliases: [skills-2.0, claude-skills-2, skills-user-guide]
+tags: [research]
+---
+
 # Claude Skills 2.0: The Definitive User Guide
 
 **Version:** 2.2 | **Last Updated:** 2026-04-16 | **Author:** Claude (with Briggsy)

@@ -1,3 +1,8 @@
+---
+aliases: [game-platforms, platforms, game-platforms-landscape]
+tags: [research]
+---
+
 # Game Development Platforms — Landscape Overview
 
 Where we've been, what's out there, and what to think about when picking the next proving ground.

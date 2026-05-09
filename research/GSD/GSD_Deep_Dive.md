@@ -1,3 +1,8 @@
+---
+aliases: [GSD, gsd, get-shit-done, GSD-deep-dive]
+tags: [research]
+---
+
 # GSD (Get Shit Done) — Deep Dive
 
 The context engineering layer that makes Claude Code reliable at scale.

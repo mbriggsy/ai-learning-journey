@@ -1,6 +1,29 @@
+---
+aliases: [burned, BURNED]
+tags: [project, active]
+---
+
 # BURNED
 
 A spy-comedy card game — rethemed from [Exploding Kittens Party Pack](https://www.explodingkittens.com/), set in the world of The Pendleton Agency. Jackbox-style: one shared screen (TV/laptop) shows the game table, each player uses their phone as a private controller.
+
+## Project Map
+
+> Internal docs surfaced for the Obsidian graph. Full README continues below.
+
+- [[CLAUDE|CLAUDE.md]] — project conventions, engine invariants, landmines
+- [[TODO]] — current work queue
+- [[compound-engineering.local|compound-engineering.local.md]] — local CE notes
+- **The contract:** [[docs/PRODUCT-SPECIFICATION|PRODUCT-SPECIFICATION]] (v1.0 LOCKED) · [[docs/RULES-REFERENCE|RULES-REFERENCE]] · [[docs/SETUP|SETUP]]
+- **Active plans (roadmaps):** [[docs/plans/css-foundation-rebuild/roadmap|CSS foundation rebuild roadmap]] · [[docs/plans/playtest-harness/roadmap|playtest harness roadmap]] · [[docs/plans/desk-redesign/PLAN|desk redesign]]
+- **Playtest harness phases:** [[docs/plans/playtest-harness/phase-1-scenarios|p1 scenarios]] · [[docs/plans/playtest-harness/phase-2-playtest-mode|p2 playtest mode]] · [[docs/plans/playtest-harness/phase-3-harness-infra|p3 harness]] · [[docs/plans/playtest-harness/phase-4-seat-agents|p4 seat agents]] · [[docs/plans/playtest-harness/phase-5-triage-agents|p5 triage]] · [[docs/plans/playtest-harness/phase-6-calibration-and-first-session|p6 calibration]] · [[docs/plans/playtest-harness/phase-7-rules-coverage-cascade|p7 rules cascade]] · [[docs/plans/playtest-harness/COHERENCE-SWEEP|coherence sweep]] · [[docs/plans/playtest-harness/deferred-items|deferred]]
+- **CSS rebuild phases:** [[docs/plans/css-foundation-rebuild/phase-1-foundation|p1 foundation]] · [[docs/plans/css-foundation-rebuild/phase-2-phone-view-migration|p2 phone view]] · [[docs/plans/css-foundation-rebuild/phase-3-board-view-migration|p3 board view]] · [[docs/plans/css-foundation-rebuild/phase-4-motion-consolidation|p4 motion]] · [[docs/plans/css-foundation-rebuild/phase-5-cvd-followup|p5 CVD]] · [[docs/plans/css-foundation-rebuild/phase-5-verification-acceptance|p5 verification]]
+- **Testing:** [[docs/testing/PLAYTEST-HARNESS-PRD|playtest harness PRD]] · [[docs/testing/E2E-ISSUE-LIST|E2E issue list]] · [[docs/testing/playtest/SCENARIOS|playtest scenarios]] · [[docs/testing/playtest/TUNING-LOG|tuning log]]
+- **Ideation (origin):** [[docs/ideation/2026-04-05-burned-brainstorm|original brainstorm]] · [[docs/ideation/2026-04-08-art-direction-brainstorm|art direction]] · [[docs/ideation/2026-04-11-visual-layer-autopsy|visual layer autopsy]]
+- **Insights:** 53 numbered insights in `docs/insights/` — too many to wikilink individually; representative entry: [[docs/insights/008-adversarial-swarm-review-maximum-overdrive|#008 adversarial swarm (Maximum Overdrive)]] · [[docs/insights/009-product-specification-authoring|#009 PRD authoring]]
+- **Test protocols:** [[test/public-repo-prep|public repo prep]] · [[test/first-player/protocol|first-player protocol]] · [[test/device-test/wcag-200-zoom-protocol|WCAG 200% zoom protocol]] · [[test/retheme/grep-sweep|retheme grep sweep]]
+
+---
 
 ## Status
 
@@ -72,4 +95,4 @@ See [docs/SETUP.md](docs/SETUP.md).
 - [Party Pack Rulebook](docs/user/ekpp-instructions-english.pdf) — primary rules source.
 - [CLAUDE.md](CLAUDE.md) — project conventions, engine invariants, landmines.
 - [UMB Architecture](../undercover-mob-boss/) — reference patterns for multi-device infrastructure.
-- Genesis (SUPERSEDED by the spec, kept for provenance): [`docs/ideation/`](docs/ideation/) — original brainstorm, art-direction brainstorm, visual-layer autopsy.
+- Genesis (SUPERSEDED by the spec, kept for provenance): [`docs/ideation/`](docs/ideation/) — original b

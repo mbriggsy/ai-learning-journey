@@ -1,3 +1,8 @@
+---
+aliases: [skills-2.0-build, skills-2-build]
+tags: [research]
+---
+
 # Your First Skill
 
 **Read time:** ~15 minutes. Hands-on: plan to spend 30–45 minutes building along.

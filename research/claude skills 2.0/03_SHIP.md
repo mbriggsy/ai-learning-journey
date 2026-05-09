@@ -1,3 +1,8 @@
+---
+aliases: [skills-2.0-ship, skills-2-ship]
+tags: [research]
+---
+
 # Shipping With Discipline
 
 **Read time:** ~10 minutes. Read this before your first skill hits a teammate's hands.

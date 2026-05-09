@@ -1,3 +1,8 @@
+---
+aliases: [tools, integrations, tools-and-integrations, mcp]
+tags: [playbook]
+---
+
 # Tools and integrations — MCP servers, hooks, external tools
 
 Claude Code integrates with several external tools via MCP (Model Context Protocol) servers, hooks, and built-in integrations. This is the inventory and how to use them.
@@ -157,20 +162,9 @@ See `feedback-serena-killed.md` in Claude's memory.
 
 ## Status line
 
-**What:** Custom status bar at the bottom of the Claude Code terminal showing live session info at a glance.
+Custom status bar showing model, context %, cost, duration, git branch, and effort level. Context window % is the one to watch — when it hits yellow, start wrapping up.
 
-**Location:** `~/.claude/statusline.py` — configured in `~/.claude/settings.json` under `statusLine`.
-
-**What it shows (left to right):**
-- **Model** — current model name (e.g. `[Claude Opus 4.6]`)
-- **Directory** — basename of the working directory
-- **Git branch** — current branch with a 🌿 icon
-- **Context window** — 10-block progress bar, color-coded: green (<70%), yellow (70-89%), red (90%+)
-- **Cost** — running session cost in USD
-- **Duration** — session elapsed time (minutes + seconds)
-- **Effort level** — current effort setting from `settings.json` (e.g. `high`)
-
-**Why it matters:** Context window % is the one to watch — when it hits yellow, start wrapping up or plan a new terminal. Cost keeps you from burning money on runaway sessions.
+**Full setup + customization:** [[status-line]]
 
 ---
 
@@ -186,6 +180,4 @@ See `feedback-serena-killed.md` in Claude's memory.
 | Cloudflare deploy | `wrangler` via Bash |
 | One-off HTTP fetches | `curl --max-time 15` via Bash (never WebFetch) |
 | File search | `Glob` dedicated tool |
-| Content search | `Grep` dedicated tool |
-| File reading | `Read` dedicated tool |
-| File editing | `Edit` dedicated tool |
+| Content search | `Grep` dedicated too

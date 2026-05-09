@@ -1,3 +1,8 @@
+---
+aliases: [lessons, lessons-learned, mistakes, incidents]
+tags: [playbook]
+---
+
 # Lessons learned — dated incidents with specific lessons
 
 Things we figured out the hard way. Each entry: date, incident, lesson. Newest at top.
@@ -105,28 +110,31 @@ Claude initially held the position. I pushed on the UMB precedent — UMB's Phas
 
 ## (Earlier lessons from Claude's memory — incorporated by reference)
 
-These lessons live in `C:/Users/brigg/.claude/projects/C--Users-brigg-ai-learning-journey/memory/` as feedback-* files. Rather than duplicate here, just know the pattern: when Claude has a failure mode that repeats, it gets written down as a feedback entry with date, reason, and how-to-apply.
+These lessons live in `C:/Users/brigg/.claude/projects/C--Users-brigg-ai-learning-journey/memory/` as `feedback-*.md` files. Rather than duplicate the full content here, the table below names each file and the rule it carries. Open the actual file when you need the full incident, the *why*, and the *how to apply*.
 
-Topics covered by existing memory:
-- `feedback-water-beads-polish.md` — the quality bar standard
-- `feedback-wow-over-simplicity.md` — visual richness is the deliverable
-- `feedback-stats-single-source.md` — stats live in 9+ places; updating means ALL surfaces
-- `feedback-webfetch-timeout-hook.md` — WebFetch has no timeout
-- `feedback-serena-killed.md` — Serena removed after 10 sessions of non-use
-- `feedback-mcp-server-install.md` — MCP install gotchas on Windows
-- `feedback-stop-thrashing.md` — one fix, test it, move on
-- `feedback-stop-layout-thrashing.md` — THINK before CSS changes
-- `feedback-imagen-budget.md` — one test image first, align on style, THEN batch
-- `feedback-todo-is-not-a-diary.md` — TODO is forward-looking, git log has history
-- `feedback-visual-work-one-change-at-a-time.md` — iterate one change at a time
-- `feedback-no-execute-until-plans-complete.md` — deepen all plans before coding
-- `feedback-wait-for-all-agents.md` — never synthesize before all agents report
-- `feedback-proven-not-believed.md` — never present beliefs as facts
-- `feedback-plans-are-menus-not-orders.md` — plan existing ≠ build order
-- `feedback-css-tokens-before-components.md` — build token system FIRST
-- `feedback-primary-source-wins.md` — read the actual doc before trusting web research
-- `feedback-dont-offer-empty-options.md` — don't ask "want to tweak?" when nothing's broken
-- `feedback-debate-pushback.md` — engage in design debates
-- `feedback-sequential-thinking-always.md` — always sequential-think after multi-agent research
+| File | Rule |
+|---|---|
+| `project_umb_water_beads_origin.md` *(receipt — disposition lives in the manifesto)* | The water-beads quality bar was set by UMB on 2026-04-29 — three pillars (zero human code, jaw-dropping imagery, professional voiceover); the bar itself loads via the manifesto's SessionStart hook |
+| `feedback-wow-over-simplicity.md` | Visual richness IS the deliverable — override "simplicity" reviewers when the cut is visual, not correctness |
+| `feedback-stats-single-source.md` | When stats change, grep ALL surfaces (README, TODO, CLAUDE.md, evidence docs, trailer scenes, narrator prompts) — they're all docs |
+| `feedback-webfetch-timeout-hook.md` | WebFetch has no timeout and hangs forever — PreToolUse hook redirects to `gemini-grounding` MCP or `curl --max-time 15` |
+| `feedback-serena-killed.md` | Serena removed — `find_referencing_symbols` returned empty for TS in 4/4 tests; Grep + Read + Glob is the winning stack for TS projects under 500 files |
+| `feedback-mcp-server-install.md` | Register MCP servers via `claude mcp add` (NOT by editing `.mcp.json`); on Windows Git Bash, use `//c` to prevent path expansion |
+| `feedback-stop-thrashing.md` | One fix, test the OUTCOME, move on — chained fixes erode confidence; if Briggsy says "stop" once, you're already too far |
+| `feedback-stop-layout-thrashing.md` | Calculate actual pixel values at the target viewport BEFORE changing CSS — never oscillate between sizes hoping something works |
+| `feedback-imagen-budget.md` | One test image first → align on style → THEN batch; UMB hit masterpiece for <$3, H&S burned $25 on ugly results |
+| `feedback-todo-is-not-a-diary.md` | TODO.md = current state + next steps + landmines; no "What We Did," no session numbers, no past-work dates |
+| `feedback-visual-work-one-change-at-a-time.md` | Visual changes: ONE change → Briggsy verifies on phone → next. Never chain blind (cost: 5 reverted commits in one session) |
+| `feedback-no-execute-until-plans-complete.md` | Never propose execution while phase plans are still raw — deepen ALL → fix contradictions → THEN execute sequentially |
+| `feedback-wait-for-all-agents.md` | Wait for ALL parallel agents to return before synthesis — 11/13 done is not enough; missing agents may surface contradictions |
+| `feedback-proven-not-believed.md` | Mark claims as PROVEN (tested end-to-end) vs. BELIEVED (sounds right, not verified) — engineering voice only, no marketing voice about own work |
+| `feedback-plans-are-menus-not-orders.md` | A plan existing in `docs/plans/` ≠ "build it" — match scope to the actual ask; Briggsy chooses, plans are options |
+| `feedback-css-tokens-before-components.md` | Build the clamp()-based token system FIRST; one card-sizing approach per project (height-driven for portrait, width-driven for landscape — never both) |
+| `feedback-primary-source-wins.md` | Read the project's primary source (rulebook, spec, API doc) BEFORE trusting web research — when sources conflict, primary wins |
+| `feedback-dont-offer-empty-options.md` | Don't ask "want to tweak?" when nothing's broken — empty offers waste round-trips; surface only genuine uncertainties |
+| `feedback-debate-pushback.md` | Engage design debates (steelman both sides, flip on evidence not pressure) AND refuse to guess on ambiguous protocol-gated triggers (`squeaky clean`, `push`, etc.) |
+| `feedback-sequential-thinking-always.md` | After 2+ research agents return, run Sequential Thinking BEFORE writing the synthesis artifact — applies to `/deepen-plan` AND `/workflows:plan` |
 
-Browse the memory folder when you want to understand a specific behavior pattern. Every one of those files has a real incident behind it.
+**Note on `feedback-water-beads-polish.md`:** previously listed here, no longer exists. Trimmed when the standard was promoted to the manifesto on 2026-04-29 (Lock-In Interview pattern aftermath — manifesto carries the disposition; memory keeps the receipt only). The receipt is `project_umb_water_beads_origin.md`, listed above.
+
+Browse the memory folder when you want the full context of a 

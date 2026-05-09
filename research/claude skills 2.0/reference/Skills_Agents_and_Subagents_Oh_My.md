@@ -1,3 +1,8 @@
+---
+aliases: [skills-and-agents, oh-my, subagents-oh-my]
+tags: [research]
+---
+
 # Skills, Agents, and Subagents, Oh My!
 ## A Terminology & Architecture Clarification
 

@@ -1,3 +1,8 @@
+---
+aliases: [superclaude, superclaude-deep-dive, super-claude]
+tags: [research]
+---
+
 # SuperClaude — Framework Deep Dive
 
 A configuration framework that transforms Claude Code from a generic AI assistant into a specialized, context-aware development partner.

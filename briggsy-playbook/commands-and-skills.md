@@ -1,3 +1,8 @@
+---
+aliases: [commands, skills, slash-commands, commands-and-skills]
+tags: [playbook]
+---
+
 # Commands and skills inventory
 
 Slash commands and skills available in Claude Code. Say `/command-name` to invoke, or describe what you want and Claude will find the right one.
@@ -8,18 +13,50 @@ Slash commands and skills available in Claude Code. Say `/command-name` to invok
 **What:** Preserve a hard-won technical insight so future sessions don't rediscover it.
 **Triggers:** "capture this", "distill", "write it up", "document this", "before we forget", "worth noting for next time"
 **When:** After solving a tricky problem or learning something the hard way.
-**Output:** `docs/insights/NNN-<slug>.md` in the project.
-**Not for:** Feature implementations, bug fixes, general code changes.
+**Output:** `docs/insights/NNN-<slug>.md` in the project, with the problem, investigation, fix, and lesson.
+**Not for:** Feature implementations, bug fixes, general code changes. Only for hard-won *knowledge* that would otherwise evaporate.
+**Why:** Future sessions load these via `/brief` before starting work. Pain stops compounding.
 
 ### `/brief`
 **What:** Surface documented gotchas and lessons from `docs/insights/` before starting work.
-**When:** At the start of any meaningful work, especially on a subsystem you haven't touched in a while.
+**When:** Before touching a subsystem you haven't worked on in a while; before starting a new feature that might intersect with known issues; when Claude says *"I think I've seen this before"* — make Claude verify against insights.
 **Output:** Claude reports relevant past insights inline in the conversation.
 
 ### `/squeaky-clean`
-**What:** End-of-session cleanup — TODO update, typecheck, git verify, temp cleanup, commit, push.
-**When:** You say *"squeaky clean"* at the end of a meaningful session.
-**Runs in:** A fork (so it doesn't pollute the main session).
+**What:** End-of-session nuclear cleanup. Runs in a fork (so it doesn't pollute the main session).
+
+**Steps:**
+1. Updates `TODO.md` (if not already done)
+2. Runs typechecks — must pass
+3. Verifies `git status` — only expected files changed
+4. Deletes contents of `temp/` folder (keeps the folder)
+5. Deletes any other temporary files/folders from the session
+6. Commits all changes with a descriptive message
+7. Pushes to origin
+
+**Triggers:** *"squeaky clean"*, *"squeaky-clean"*
+**When:** End of any meaningful session where you want a ship-ready state.
+**Safety:** Does NOT force-push, amend previous commits, or touch other branches.
+
+---
+
+## Verbal triggers (not slash commands)
+
+### "Write the TODO"
+**What:** Updates `TODO.md` with the current state of work.
+**Triggers:** *"write the TODO"*, *"update the TODO"*
+
+**What gets updated:**
+- Current state (what's done, what's working)
+- Next steps in priority order
+- Unfinished fixes — as **prescriptions** (exact `file:line` changes to make next time, not diagnoses)
+- Landmines (things to watch out for)
+
+**What does NOT go in TODO:** Session history, "what we did" logs, diary entries. Git log has the history. TODO is forward-looking.
+
+**Critical:** Claude must NEVER auto-update TODO without your explicit signal. It's opt-in.
+
+**Origin:** `feedback-todo-is-not-a-diary.md` in Claude's memory.
 
 ---
 
@@ -71,10 +108,10 @@ Slash commands and skills available in Claude Code. Say `/command-name` to invok
 **What:** GAN-inspired design improvement loop. Evaluates live UI via Playwright, scores against a 4-criteria rubric, generates one coherent improvement per iteration.
 **When:** Visual polish work on BURNED. Say *"run the gauntlet"* or *"design loop"*.
 
-### `/product-specification` (PENDING — NOT BUILT YET)
-**What:** Author a `PRODUCT-SPECIFICATION.md` for a project.
-**Status:** Pending. Design proven in BURNED 2026-04-10 session. See `project_skills_next_steps.md` in Claude's memory.
-**When built:** Run at the start of any new project, before any CE workflow.
+### `/product-specification` — SUPERSEDED by `/ce:ce-brainstorm`
+**Status:** Never built. Use `/ce:ce-brainstorm` instead — it covers the same need (collaborative spec authoring through dialogue, with quality bar elicitation).
+**Origin:** Design was proven in BURNED 2026-04-10 session and originally planned as a dedicated skill. In practice `/ce:ce-brainstorm` was already filling the role; building a separate skill would have been duct tape on top of duct tape.
+**See:** the `/ce:ce-brainstorm` entry below under Compound engineering skills.
 
 ---
 
@@ -86,7 +123,7 @@ Slash commands and skills available in Claude Code. Say `/command-name` to invok
 
 ### `/ce:ce-plan`
 **What:** Transform feature descriptions into well-structured project plans following conventions.
-**When:** After brainstorm, before execution. For foundational work where agent-orchestrated research and forcing-function sections (System-Wide Impact, alternatives, quality gates) pay rent. See `workflows.md` → **Planning: Codified vs. Native** for the decision framework.
+**When:** After brainstorm, before execution. For foundational work where agent-orchestrated research and forcing-function sections (System-Wide Impact, alternatives, quality gates) pay rent. See [[workflows#Planning: Codified vs. Native]] for the decision framework.
 **Under the hood:** 6-step pipeline — brainstorm ingestion → parallel local research (repo + learnings) → conditional external research → SpecFlow gap-finder → templated plan with mandatory sections → standardized downstream handoff menu. Hard "NEVER CODE" gate at the end.
 **Full breakdown:** `projects/burned/docs/workflow/ce-plan-skill-analysis.md`
 
@@ -152,4 +189,4 @@ Slash commands and skills available in Claude Code. Say `/command-name` to invok
 
 Slash commands are provided by plugins installed in Claude Code. When Claude loads a session, it lists available skills in a system reminder. If you want to see what's available, ask Claude *"what skills do you have?"* and Claude will list them.
 
-**Managing skills:** Skills live in `~/.claude/skills/` (global) and `projects/skills/` (source). See `project_skills_next_steps.md` in Claude's memory for the source→global sync protocol.
+**Managing skills:** Skills live in `~/.claude/skills/` (global) and `projects/skills/` (source). See `projec

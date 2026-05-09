@@ -1,3 +1,8 @@
+---
+aliases: [skill-creator, skill-creator-guide, practitioners-guide]
+tags: [research]
+---
+
 # The Skill Creator: A Practitioner's Guide to Engineering Agent Skills
 
 **Version:** 1.1 | **Last Updated:** 2026-04-16 | **Author:** Claude (with Briggsy)

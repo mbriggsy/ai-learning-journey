@@ -1,6 +1,22 @@
+---
+aliases: [top-down-racer-01, racer-01, td-01, racer01, td-racer-01]
+tags: [project, archived]
+---
+
 # Top-Down Racer 01
 
-**Status: COMPLETE** — learning lab that led to Racer 02 and 04. Chaotic, educational, and worth every training run.
+**Status: COMPLETE / ARCHIVED** — learning lab that led to Racer 02 and 04. Chaotic, educational, and worth every training run.
+
+## Project Map
+
+> Internal docs surfaced for the Obsidian graph. This project is archived but the docs are kept as a record of what we learned.
+
+- [[CLAUDE|CLAUDE.md]] — project conventions
+- **Status & history:** [[BUILD_LOG]] — build journal · [[CURRENT_STATUS]] · [[ISSUES]] · [[PROJECT_GENESIS]]
+- **Setup & quickstart:** [[SETUP]] · [[QUICKSTART]]
+- **Specs:** [[PHASE2_AI_SPEC|Phase 2 AI spec]] · [[WATCH_FIX_SPEC]]
+- **Fix prompts (chronological iteration log):** [[v4_fix_prompt|v4]] · [[v5_fix_prompt|v5]] · [[v6_fix_prompt|v6]] · [[v7_fix_prompt|v7]] · [[v8_fix_prompt|v8]] · [[v9_fix_prompt|v9]] · [[v10_fix_prompt|v10]] · [[v11_fix_prompt|v11]] · [[v12_fix_prompt|v12]]
+- **Other prompts:** [[spawn_fix_prompt]] · [[reward_tune_prompt]] · [[watch_fix_prompt]] · [[docs_update_prompt]]
 
 A 2D top-down racing game with drift mechanics, built in Python with Arcade + pymunk, trained by reinforcement learning AI (PPO via Stable-Baselines3). 12 training iterations, 9 distinct reward-shaping strategies, and a pile of hard-won RL lessons.
 
@@ -73,29 +89,4 @@ The game is wrapped as a Gymnasium environment and trained with PPO via Stable-B
 ### AI Files
 ```
 ai/
-├── racing_env.py           # Gymnasium environment wrapper
-├── observations.py         # Ray casting + observation space (21-dim)
-├── rewards.py              # Reward function (8 components, all configurable)
-├── train.py                # PPO training script (SB3 + SubprocVecEnv)
-├── watch.py                # Watch trained AI play (Arcade visualization)
-├── evaluate.py             # Headless evaluation + stats
-├── watch_renderer.py       # Render utilities for watch mode
-└── training_checkpoints.py # Dense breadcrumb system for reward shaping
-```
-
-### Running
-
-```bash
-# Train a new model
-python ai/train.py
-
-# Watch the AI drive
-python ai/watch.py
-
-# Evaluate over N episodes
-python ai/evaluate.py --episodes 50
-```
-
-## Build Method
-Built using Claude Code Agent Teams — 4 specialized agents + 1 team lead.
-See `BUILD_LOG.md` for the full build journal and `ISSUES.md` for the bug log.
+├── ra

@@ -1,3 +1,8 @@
+---
+aliases: [ralph-wiggum, ralph, ralph-wiggum-deep-dive]
+tags: [research]
+---
+
 # Ralph Wiggum — Deep Dive
 
 Autonomous development loops. Let Claude keep working until the job is actually done.

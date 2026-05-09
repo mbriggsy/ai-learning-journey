@@ -1,8 +1,27 @@
+---
+aliases: [top-down-racer-02, racer-02, td-02, racer02]
+tags: [project, complete]
+---
+
 # TOP-DOWN RACER v02
 
 **Status: COMPLETE** — deployed, playable, documented. One of the jewels.
 
 **Best-in-Class SDLC. Built by AI. Directed by Humans.**
+
+## Project Map
+
+> Internal docs surfaced for the Obsidian graph. Full README continues below.
+
+- [[CLAUDE|CLAUDE.md]] — project conventions
+- **Headline docs:** [[docs/summary/00-Executive-Summary|Executive Summary]] · [[docs/summary/AI-Autonomy-Executive-Deck|AI Autonomy Executive Deck]] · [[docs/Top-Down-Racer-v02-Complete-Tool-Stack|Complete Tool Stack]]
+- **Build history & process:** [[docs/2026-02-27-build-day|build-day notes]] · [[docs/gsd-interview-prep|GSD interview prep]] · [[docs/autonomous-pipeline-future-plan|autonomous pipeline future plan]] · [[docs/issues|issues log]]
+- **Project planning hub:** [[.planning/PROJECT|PROJECT]] · [[.planning/REQUIREMENTS|REQUIREMENTS]] · [[.planning/ROADMAP|ROADMAP]] · [[.planning/STATE|STATE]] · context: [[.planning/01-CONTEXT|01]] · [[.planning/02-CONTEXT|02]] · [[.planning/03-CONTEXT|03]]
+- **Codebase analysis:** [[.planning/codebase/ARCHITECTURE|ARCHITECTURE]] · [[.planning/codebase/STACK|STACK]] · [[.planning/codebase/STRUCTURE|STRUCTURE]] · [[.planning/codebase/CONVENTIONS|CONVENTIONS]] · [[.planning/codebase/TESTING|TESTING]] · [[.planning/codebase/INTEGRATIONS|INTEGRATIONS]] · [[.planning/codebase/CONCERNS|CONCERNS]]
+- **Pre-build research:** [[.planning/research/SUMMARY|research SUMMARY]] · [[.planning/research/ARCHITECTURE|architecture]] · [[.planning/research/STACK|stack]] · [[.planning/research/FEATURES|features]] · [[.planning/research/PITFALLS|pitfalls]]
+- **Phase plans:** ~70 phase plan/summary files across 6 phases under `.planning/phases/`. Phase entry points: [[.planning/phases/01-core-simulation-engine/01-RESEARCH|p1 research]] · [[.planning/phases/02-pixijs-renderer-playable-game/02-CONTEXT|p2 context]] · [[.planning/phases/04-gymnasium-environment-wrapper/04-RESEARCH|p4 research]] · [[.planning/phases/05-ai-training-pipeline/05-CONTEXT|p5 context]] · [[.planning/phases/06-ai-vs-human-mode/06-CONTEXT|p6 context]]
+
+---
 
 A complete top-down racing game with a self-taught neural network AI opponent — built entirely through autonomous AI SDLC that meets or exceeds the rigor of the best human-led teams. Zero hand-written game code. Specification, architecture, planning, code, testing, review, defect prevention, and deployment — all executed by AI under human decision-making. Backed by a 7-document evidence package most teams never produce.
 
@@ -287,8 +306,4 @@ Every architectural claim can be independently verified:
 
 ## License
 
-[Add your license here]
-
----
-
-*Best-in-class SDLC. Built by AI. Directed by humans. Proven by evidence.*
+[Add your licen

@@ -1,3 +1,8 @@
+---
+aliases: [serena, serena-research, serena-deep-dive]
+tags: [research]
+---
+
 # Serena — Deep Dive
 
 IDE-like semantic code intelligence for Claude. The Eyes of the Holy Trinity.

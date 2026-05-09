@@ -1,3 +1,8 @@
+---
+aliases: [openclaw-s3, openclaw-session3, harry-gets-eyes]
+tags: [research]
+---
+
 # 🦞 OpenClaw Session 3 — Harry Gets Eyes
 
 **Session Date:** February 21, 2026  

@@ -224,11 +224,18 @@
      a reveal. Letterspacing widened a hair to suggest charred edges. */
   font-size: clamp(var(--text-drama-subdued-min), 6cqi + 0rem, var(--text-drama-subdued-max));
   letter-spacing: 0.22em;
+  /* `--ember-pulse` modulates the ember layers' blur radius + alpha so
+     GSAP can yoyo this single variable to create a "fire is active"
+     breathing effect during the hold window without touching opacity
+     (which would crater the runtime motion gate). Animated by
+     `appendEmberFlicker` in DramaOverlay.tsx. Char layer (the typographic
+     anchor) is NOT pulsed — keeps the letters legible at every phase. */
+  --ember-pulse: 1;
   /* Two-layer text-shadow: hot ember underneath + dark char on top so the
      letters read "branded into paper" rather than "glowing in space." */
   text-shadow:
-    0 0 28px color-mix(in oklab, var(--color-burned-fire) 72%, transparent),
-    0 0 12px color-mix(in oklab, var(--color-cordovan-9) 70%, transparent),
+    0 0 calc(28px * var(--ember-pulse)) color-mix(in oklab, var(--color-burned-fire) calc(72% * var(--ember-pulse)), transparent),
+    0 0 calc(12px * var(--ember-pulse)) color-mix(in oklab, var(--color-cordovan-9) calc(70% * var(--ember-pulse)), transparent),
     0 1px 0 color-mix(in oklab, var(--color-charcoal-1) 70%, transparent);
 }
 

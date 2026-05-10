@@ -5,7 +5,7 @@
 ## Summary
 
 - **Total issues:** 39
-- **Status:** OPEN 0 · RESOLVED 27 · BLOCKED 2 · DUPLICATE 1 · KNOWN-PRODUCT-CALL 2 · LOW-SIGNAL 7
+- **Status:** OPEN 0 · RESOLVED 28 · BLOCKED 1 · DUPLICATE 1 · KNOWN-PRODUCT-CALL 2 · LOW-SIGNAL 7
 - **Severity:** P0 0 · P1 6 · P2 33
 - **By seed kind:**
   - scripted-scenario: 23
@@ -66,7 +66,7 @@ Spec-level findings against `docs/PRODUCT-SPECIFICATION.md` §2 (Quality Bar) + 
 | [016-vibe-scn-call-in-a-favor-normal-01](016-vibe-scn-call-in-a-favor-normal-01.md) | Observer gets no closing beat when favor resolves | P2 | RESOLVED | SCN-CALL-IN-A-FAVOR-NORMAL-01 | — |
 | [028-vibe-scn-back-channel-normal-01](028-vibe-scn-back-channel-normal-01.md) | Actor receives zero narration when their card is intercepted | P1 | RESOLVED | SCN-BACK-CHANNEL-NORMAL-01 | — |
 | [033-vibe-scn-burn-the-files-normal-01](033-vibe-scn-burn-the-files-normal-01.md) | Burn the Files shuffle has no kinetic payoff (silent shuffle) | P2 | RESOLVED | SCN-BURN-THE-FILES-NORMAL-01 | — |
-| [037-vibe-burn-files-normal](037-vibe-burn-files-normal.md) | Phone drama beat lacks destruction weight for Burn the Files | P2 | BLOCKED | BURN-FILES-NORMAL | — |
+| [037-vibe-burn-files-normal](037-vibe-burn-files-normal.md) | Phone drama beat lacks destruction weight for Burn the Files | P2 | RESOLVED | BURN-FILES-NORMAL | — |
 
 ## UI-spec-divergence findings
 

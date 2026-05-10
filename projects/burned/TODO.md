@@ -10,8 +10,11 @@ the history. (Rule: `feedback-todo-is-not-a-diary.md`.)
 **Triage backlog `2026-05-08-2022-5p` fully dispositioned 2026-05-09.**
 All P1s closed. **Falsify Intel design-sprint cluster (#004/#005/#006)
 shipped 2026-05-09** — drag-to-reorder dossier UI with redact-stamp
-priority markers, card photos, and Archer-vocab "Commit File" CTA. See
-§1.2 for remaining residuals.
+priority markers, card photos, and Archer-vocab "Commit File" CTA.
+**Burn the Files ember-breath drama beat (#037) shipped 2026-05-09** —
+asymmetric two-layer breath (text glow + overlay brightness, slow flare /
+faster settle), Emil-design-eng-reviewed, runtime motion gate green.
+See §1.2 for remaining residual.
 
 Current state (verified 2026-05-09 end-of-session):
 
@@ -22,8 +25,8 @@ Current state (verified 2026-05-09 end-of-session):
   Vite extracted MinimalCard + AnimatePresence into lazy chunks. Drag/
   layout-projection chunk (~27.40 KB gz), rearrange UI (3.20 KB gz), and
   MinimalCard chunk (5.95 KB gz) all lazy + prefetched at idle.
-- Triage state, run `2026-05-08-2022-5p`: **0 OPEN** · 2 BLOCKED ·
-  27 RESOLVED · 7 LOW-SIGNAL · 2 KNOWN-PRODUCT · 1 DUPLICATE. P1 6 · P2 33.
+- Triage state, run `2026-05-08-2022-5p`: **0 OPEN** · 1 BLOCKED ·
+  28 RESOLVED · 7 LOW-SIGNAL · 2 KNOWN-PRODUCT · 1 DUPLICATE. P1 6 · P2 33.
 
 ### 1.1 Cluster results
 
@@ -34,7 +37,7 @@ Current state (verified 2026-05-09 end-of-session):
 | C. Falsify Intel rearrange | 4× P2 + 030 engine | 003, 030, 004, 005, 006 | ✅ design sprint shipped 2026-05-09 |
 | D. Intercept observability | 3× P2 | 011, 022, 027 | ✅ `28ff4011` |
 | E. Direct Order vocabulary | 2× P2 | 031, 032 | ✅ `cb3655cb` |
-| F. Burn the Files | 3× P2 | 033, 036 ✅ · 037 🟡 | mixed (see §1.2) |
+| F. Burn the Files | 3× P2 | 033, 036, 037 | ✅ ember-breath shipped 2026-05-09 |
 | G. Favor UX gaps | 3× P2 | 016, 017, 034 | ✅ `d3c76528` |
 | H. StealReport missing card art | 1× P2 | 020 | ✅ `beed50e9` |
 | I. Harness oracle false-positives | 1× P1 + 2× P2 | 002, 015 ✅ · 021 🟡 | mixed (see §1.2) |
@@ -42,18 +45,12 @@ Current state (verified 2026-05-09 end-of-session):
 
 ### 1.2 Residual BLOCKED items (intentional, scoped)
 
-2 issues remain BLOCKED with explicit scope notes:
+1 issue remains BLOCKED with explicit scope notes:
 
 - **#021 (P2)** — Seat-agent fidelity scope. Self-report-on-
   intercepted-pair-steal is a seat-agent prompt-following gap, not a
   catalog/oracle gap. Coverage-reporter already logs the divergence;
   fix lives in coverage-filter or seat-agent prompt enforcement.
-
-- **#037 (P2)** — Motion-calibration scope. GSAP ember-pulse during
-  the DramaOverlay holdMs to lift the Burn the Files phone beat from
-  "status subtitle" to "fire is active." Narration baseline is in
-  place via #036's deck-shuffled toast. Motion design needs eye-in-
-  loop verification per `feedback-eye-in-loop-beats-calibration-for-motion`.
 
 **Closed 2026-05-09** — #004 + #005 + #006 (Falsify Intel rearrange
 design sprint): replaced tap-to-assign-number form with vertical
@@ -71,6 +68,27 @@ sheet bottom. Implementation: `FalsifyIntelRearrange.tsx` behind a
 `lazy()` boundary — sync-importing `Reorder` would pull the ~27 KB
 `layout-*` chunk into the always-loaded player entry. Rearrange UI +
 drag/layout chunks prefetched at idle from `player/main.tsx`.
+
+**Closed 2026-05-09** — #037 (Burn the Files ember-breath drama beat):
+`DramaOverlay.tsx` gains an `appendEmberFlicker` helper running in
+parallel with the hold window, anchored at a new `HOLD_START_LABEL`
+that `appendHoldAndExit` plants. Two layers, one asymmetric arc each
+across the 1200ms hold (no metronomic pulses): text `--ember-pulse`
+1.0→1.18→1.0 (5/8 inhale `sine.out` + 3/8 exhale `sine.in`) modulating
+text-shadow blur radius + color-mix alpha; overlay `filter:
+brightness()` 1.0→1.06→1.0 (17/24 + 7/24, slightly slower flare so
+layers don't lock). `.burnedfiles .text` CSS uses `--ember-pulse` in
+`calc()` and `color-mix()` so GSAP can drive intensity without ever
+touching the element's filter or opacity (preserves the
+drama-beat-timing runtime gate). Design ratified by Emil-design-eng
+review across two passes: V1 metronomic 280ms-half-period yoyos read
+as ~4 strobes inside the hold; V2 single asymmetric breath shipped.
+A V3 sub-perceptual `scale` crackle layer was prototyped + A/B'd —
+indistinguishable from breath-alone, dropped per Emil's "every layer
+earns its keep" rule. Crackle pattern preserved in git history (search
+`CRACKLE_HALF_SEC`) for resurrection if a future playtest reports
+breath-alone reads inert. Pinned follow-ups: next-day fresh-eyes
+review + real-device phone-hardware pass (§4 carryover).
 
 ---
 

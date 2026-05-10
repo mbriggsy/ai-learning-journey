@@ -21,6 +21,13 @@ import styles from './DramaOverlay.module.css'
 //     surfaces underneath. Cinematic Arc #2.
 //
 /**
+ * Label that marks the start of the hold window in a beat timeline.
+ * Embellishment helpers (e.g. `appendEmberFlicker`) anchor to this label
+ * so their concurrent tweens overlap the hold rather than extend it.
+ */
+export const HOLD_START_LABEL = 'holdStart'
+
+/**
  * Append HOLD + dual EXIT tweens to a beat timeline. Extracted as a pure
  * helper because this exact block carried a position-parameter bug from
  * 2026-04-22 → 2026-05-01: the exit tweens were `'<'`-anchored to the
@@ -30,13 +37,15 @@ import styles from './DramaOverlay.module.css'
  * report 2026-05-01 + instrumented timing pinned the cause.
  *
  * Contract:
- *   - HOLD runs first (duration: holdSec) — keeps the beat on screen
- *   - BLUR exit runs SEQUENTIALLY after the hold (no position param)
- *   - OPACITY exit runs IN PARALLEL with the blur ('<' anchored to blur)
+ *   - HOLD_START_LABEL added at hold-start so embellishments can anchor.
+ *   - HOLD runs first (duration: holdSec) — keeps the beat on screen.
+ *   - BLUR exit runs SEQUENTIALLY after the hold (no position param).
+ *   - OPACITY exit runs IN PARALLEL with the blur ('<' anchored to blur).
  *
  * Total duration: holdSec + exitDurationSec. If anyone re-introduces
  * `'<'` on the blur tween, total collapses to max(holdSec, exitDurationSec)
- * and `DramaOverlay.test.ts` catches it.
+ * and `DramaOverlay.test.ts` catches it. Adding the label is zero-duration
+ * — does not affect that contract.
  *
  * Emil's rule: exits use power2.out (ease-out), NOT power2.in — the user
  * watches the element most closely at the START of the exit; ease-in
@@ -53,7 +62,8 @@ export function appendHoldAndExit(
   holdSec: number,
   exitDurationSec: number,
 ): void {
-  tl.to({}, { duration: holdSec })
+  tl.addLabel(HOLD_START_LABEL)
+  tl.to({}, { duration: holdSec }, HOLD_START_LABEL)
   tl.to(target, {
     filter: 'blur(4px)',
     duration: exitDurationSec,
@@ -66,6 +76,89 @@ export function appendHoldAndExit(
   }, '<')
 }
 
+/**
+ * Append an ember-breath sub-timeline that runs IN PARALLEL with the
+ * hold window. ONE asymmetric swell across the entire hold — slow
+ * inhale (eases into peak), faster exhale (settles back to baseline).
+ * Two layers, slightly different inhale/exhale ratios so they don't
+ * lock cadence:
+ *
+ *   - Target text: `--ember-pulse` 1.0 → 1.18 → 1.0 over the hold.
+ *     Inhale 5/8 holdSec with `sine.out`; exhale 3/8 with `sine.in`.
+ *     The CSS var is consumed by `.burnedfiles .text` text-shadow blur
+ *     radius + color-mix alpha — pulses the glow halo, not the type.
+ *   - Overlay (radial-gradient bg): `filter: brightness()` 1.0 → 1.06
+ *     → 1.0 with the same arc shape but slightly slower flare (17/24)
+ *     and faster settle (7/24). Atmosphere layer — the room smolders
+ *     alongside the text but doesn't lock cadence.
+ *
+ * Why ONE breath, not yoyo'd pulses (Emil-design-eng review 2026-05-09):
+ * a 1200ms hold with 280ms half-cycle pulses gives ~4 strobes — even
+ * with `sine.inOut`, the eye reads multiple distinct rises/falls as
+ * flicker, not breath. "Glow out, glow in" requires the eye to
+ * perceive ONE motion arc. Asymmetric inhale/exhale (slow flare,
+ * faster settle) reads as fire flaring up then dying back down, not
+ * as a metronome. Lower amplitudes (1.18 / 1.06 vs the prior 1.25 /
+ * 1.10) because at slow speed the eye notices the *change*, not the
+ * state.
+ *
+ * Why no third "crackle" texture layer (A/B verdict 2026-05-09): a
+ * sub-perceptual high-frequency `scale` jitter (1.000 ↔ 1.004 at 60ms
+ * half-period) was prototyped underneath the breath as fire-alive
+ * noise floor. Eye-in-loop A/B (with vs without): indistinguishable.
+ * Per Emil's "every layer earns its keep" rule, dropped. If a future
+ * playtest reports the breath alone reads inert, the crackle pattern
+ * is documented in this file's git history (search "CRACKLE_HALF_SEC")
+ * — restore + re-A/B before iterating in any other direction.
+ *
+ * Critical: NEVER touches target/overlay opacity. The runtime motion
+ * gate (`tests/e2e/drama-beat-timing.spec.ts`) samples
+ * `min(outerOpacity, innerOpacity)` frame-by-frame and asserts
+ * peak-sustained ≥60% of holdMs at >=0.99. A single sub-0.99 frame
+ * caused by an opacity pulse would crater that to 0% and break the
+ * gate. Filter and CSS-variable changes don't show up in the opacity
+ * sampler.
+ *
+ * Caller contract: `appendHoldAndExit` MUST run before this helper
+ * (the helper anchors against `HOLD_START_LABEL`, which that function
+ * adds). The breath naturally returns to baseline at the exhale end —
+ * no `tl.set` reset needed because exhale terminus IS the baseline.
+ */
+export function appendEmberFlicker(
+  tl: gsap.core.Timeline,
+  target: HTMLElement,
+  overlay: HTMLElement,
+  holdSec: number,
+): void {
+  // Text breath — slightly faster arc than overlay so they don't lock.
+  // 5/8 inhale + 3/8 exhale = full holdSec.
+  tl.to(target, {
+    '--ember-pulse': 1.18,
+    duration: holdSec * 0.625,
+    ease: 'sine.out',
+  }, HOLD_START_LABEL)
+  tl.to(target, {
+    '--ember-pulse': 1.0,
+    duration: holdSec * 0.375,
+    ease: 'sine.in',
+  })
+
+  // Overlay breath — slower flare, faster settle, gentler amplitude.
+  // 17/24 inhale + 7/24 exhale ≈ full holdSec. Anchored at the same
+  // hold-start position so both layers begin together and just diverge
+  // in pacing across the arc.
+  tl.to(overlay, {
+    filter: 'brightness(1.06)',
+    duration: holdSec * 0.708,
+    ease: 'sine.out',
+  }, HOLD_START_LABEL)
+  tl.to(overlay, {
+    filter: 'brightness(1.0)',
+    duration: holdSec * 0.292,
+    ease: 'sine.in',
+  })
+}
+
 // `transient: true` marks beats that should be aborted (or skipped pre-queue)
 // when a `turn-started` event arrives in the same batch or while the beat
 // is mid-animation. INTERCEPTED is the only transient beat today: the action
@@ -74,7 +167,7 @@ export function appendHoldAndExit(
 // Critical beats (BURNED, EXTRACTED, ELIMINATED, WINS) intentionally play
 // out fully because they communicate state changes the room MUST register.
 type DramaConfig =
-  | { variant: 'text'; text: string; className: string; holdMs: number; transient?: boolean }
+  | { variant: 'text'; text: string; className: string; holdMs: number; transient?: boolean; embellishment?: 'ember-flicker' }
   | { variant: 'card'; cardType: 'burned'; className: string; holdMs: number; transient?: boolean }
   | { variant: 'card-flip'; cardType: 'burned'; victimName: string; className: string; holdMs: number; transient?: boolean }
 
@@ -182,6 +275,13 @@ function getDramaBeats(
           className: styles.burnedfiles ?? '',
           holdMs:    1200,
           transient: true,
+          // ember-flicker: subtle text-shadow pulse + scale breath + overlay
+          // brightness yoyo during the holdMs window. Lifts the beat from
+          // "status subtitle" to "fire is active" — closes triage #037
+          // (vibe: phone drama beat lacks destruction weight). Filter +
+          // transform + CSS-var animation only; never touches opacity, so
+          // the runtime motion gate (drama-beat-timing.spec.ts) stays green.
+          embellishment: 'ember-flicker',
         }]
       }
       // Falsify Intel — same effect-shape as Burn the Files (deck mutation,
@@ -462,6 +562,14 @@ export function DramaOverlay() {
     }
 
     appendHoldAndExit(tl, target, overlay, config.holdMs / 1000, MOTION_DURATIONS.slow)
+
+    // Embellishments — concurrent sub-timelines anchored at HOLD_START_LABEL
+    // (added by appendHoldAndExit). Run AFTER appendHoldAndExit so their
+    // tweens insert later in GSAP's internal list, but they don't extend
+    // total duration — the yoyo tweens fit inside holdSec via repeat math.
+    if (config.variant === 'text' && config.embellishment === 'ember-flicker') {
+      appendEmberFlicker(tl, target, overlay, config.holdMs / 1000)
+    }
   }
 
   return (

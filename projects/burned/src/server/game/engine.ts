@@ -617,8 +617,14 @@ function handleCombo(
   let newState = removeCardsFromHand(state, action.playerId, cards.map(c => c.id))
   newState = addToDiscard(newState, cards)
 
+  // 2026-05-10: emit targetId on the pair card-played event so observers
+  // (especially the TARGET) can read who's losing a card during the nope
+  // window. Mirrors the Direct Order fix at line ~330 (cluster E close
+  // 05-08-2022-5p #032). Without this the target only sees "Dash played a
+  // Vera Khan pair" and has no idea they're the steal target until the
+  // window resolves.
   const events: GameEvent[] = [
-    { type: 'card-played', playerId: action.playerId, cardType: cards[0]!.type, comboSize },
+    { type: 'card-played', playerId: action.playerId, cardType: cards[0]!.type, comboSize, targetId: targetPlayerId },
   ]
 
   const { window: nopeWindow, nextGen } = createNopeWindow(
@@ -907,8 +913,13 @@ function handleNameCard(
   let newState = removeCardsFromHand(state, pending.stealerId, [...pending.cardIds])
   newState = addToDiscard(newState, cards)
 
+  // 2026-05-10: same target-on-card-played contract as the pair path
+  // above — the triple commit also surfaces the target so observers and
+  // the target see who's about to lose a named card during the nope
+  // window. The named cardType is private (DM via the engine's named-
+  // steal flow), but the target identity is public.
   const events: GameEvent[] = [
-    { type: 'card-played', playerId: pending.stealerId, cardType: cards[0]!.type, comboSize: 3 },
+    { type: 'card-played', playerId: pending.stealerId, cardType: cards[0]!.type, comboSize: 3, targetId: pending.targetId },
   ]
 
   // Nope window opens NOW with the full context — stealer, target, AND the
@@ -1005,6 +1016,16 @@ function handleNope(
     return err(state, 'Cannot Nope your own action', 'INVALID_ACTION')
   }
 
+  // Self-Nope of own Nope disallowed (chainDepth >= 1) — same rule. Per
+  // RULES-REFERENCE.md §9: "you cannot Nope your own card play." A noper
+  // who just played the most recent Nope on the chain cannot Nope it
+  // themselves on the next step (would be self-undoing). Original ACTOR
+  // chain-burn is still allowed because the actor is Noping the OTHER
+  // player's Nope, not their own. Closes the gap caught 2026-05-10.
+  if (state.nopeWindow.chainDepth >= 1 && state.nopeWindow.lastNoperId === action.playerId) {
+    return err(state, 'Cannot Nope your own Nope', 'INVALID_ACTION')
+  }
+
   if (state.nopeWindow.chainDepth >= MAX_NOPE_CHAIN) {
     return err(state, 'Maximum Nope chain depth reached', 'MAX_CHAIN_DEPTH')
   }
@@ -1037,6 +1058,11 @@ function handleNope(
     startedAtMs: ctx.now,
     expired: undefined,
     graceDeadlineMs: undefined,
+    // Track the noper for the next-step self-Nope check. Per
+    // RULES-REFERENCE.md §9 the noper cannot Nope their own Nope on the
+    // following step (would be a self-undo, treated as Noping your own
+    // card play).
+    lastNoperId: action.playerId,
   }
 
   const finalState: PlayingState = {

@@ -6,6 +6,7 @@ import type { NopeWindowView } from '@shared/protocol'
 import { haptic } from '@client/shared/haptics'
 import { MOTION } from '@client/shared/tokens/motion'
 import { useCurrentTurn } from '@client/shared/hooks/useSharedSelectors'
+import { useMyPlayerId } from './hooks/usePlayerSelectors'
 import styles from './SmartActionBox.module.css'
 
 /** Human-readable action text for the smart action box.
@@ -29,7 +30,7 @@ const INVALID_LABELS: Record<string, string> = {
   'contains-burned': "Can't play Burned",
   'wild-with-non-operative': 'Wild only pairs with operatives',
   // Mirrors the canonical operative card text ("Powerless alone.
-  // Pairs steal random. Triples name + steal."), same two-line
+  // Pairs steal random. Triples named steal."), same two-line
   // primary-rule + action-hint shape as `single-intercepted`. Tight
   // enough for the narrowest phone — line 2 is shorter than the
   // existing widest single-line label ("Wild only pairs with
@@ -97,14 +98,30 @@ export function SmartActionBox({
   const currentTurn = useCurrentTurn()
   const attackTurns = (currentTurn?.turnsRemaining ?? 1) + 1
 
-  const state = deriveState(cardPlayState, isMyTurn, subPhase, drawPileCount)
+  // Self-Nope-of-own-Nope gate. The engine rejects this per
+  // RULES-REFERENCE.md §9 (close 2026-05-10); the client also disables the
+  // Counter affordance up-front so the noper doesn't tap a "live" button
+  // and get an error toast back. Compares the projected lastNoperId to
+  // the local player id. Undefined at chainDepth 0 (existing
+  // `originalPlayerId` check inside deriveState handles that case).
+  const myPlayerId = useMyPlayerId()
+  const isOwnLastNope =
+    nopeWindow?.lastNoperId !== undefined &&
+    nopeWindow.lastNoperId === myPlayerId
 
-  // Intercept is always interactive during the nope window — the outer
-  // `disabled` prop (driven by permission.allowed) correctly blocks normal
-  // card actions when it's not your turn, but nope-ing IS the legal action
-  // for non-actors, so intercept must bypass it.
-  const isIntercept = state.key === 'intercept'
-  const buttonDisabled = isIntercept ? optimisticPending : (disabled || optimisticPending)
+  const state = deriveState(cardPlayState, isMyTurn, subPhase, drawPileCount, isOwnLastNope)
+
+  // Intercept (chain-start) AND Counter (chain-extend) are always interactive
+  // during the nope window — the outer `disabled` prop (driven by
+  // permission.allowed) correctly blocks normal card actions when it's not
+  // your turn, but nope-ing IS the legal action for non-actors, so both
+  // chain positions must bypass it. Pre-2026-05-10 this only checked the
+  // first key ('intercept'); when an opponent intercepted and the local
+  // state.key flipped to 'counter', the outer `disabled` re-disabled the
+  // button — the original target couldn't counter-intercept their own
+  // re-blocked play. Caught on real-device 2026-05-10.
+  const isInterceptAction = state.key === 'intercept' || state.key === 'counter'
+  const buttonDisabled = isInterceptAction ? optimisticPending : (disabled || optimisticPending)
 
   const [primary, ...rest] = state.text.split('\n')
   const secondary = rest.join(' ') || null
@@ -152,6 +169,7 @@ export function SmartActionBox({
 
   function deriveState(
     cps: CardPlayState, myTurn: boolean, sub: SubPhase | null, pileCount: number,
+    isOwnLastNope: boolean,
   ): { key: string; className: string; text: string; interactive: boolean; action?: () => void } {
     // Intercept window takes priority — someone played an action card and
     // a counter-intel window is open. The acting player can't nope their
@@ -178,10 +196,12 @@ export function SmartActionBox({
       const verb = counter ? 'Counter' : 'Intercept'
       // Button shows ONLY when the player has a legal Intercept play:
       // not on their own original-tier action (engine rejects at
-      // chainDepth=0 + originalPlayerId), not without an Intercept card.
-      // Actor + chainDepth 0 lands in the waiting branch even if
+      // chainDepth=0 + originalPlayerId), not on their own most-recent
+      // Nope (engine rejects at chainDepth>=1 + lastNoperId — close
+      // 2026-05-10 self-Nope-own-Nope gap), not without an Intercept
+      // card. Actor + chainDepth 0 lands in the waiting branch even if
       // hasIntercept; UI matches what the engine would accept.
-      const canIntercept = hasIntercept && (!myTurn || nopeWindow.chainDepth >= 1)
+      const canIntercept = hasIntercept && !isOwnLastNope && (!myTurn || nopeWindow.chainDepth >= 1)
       if (canIntercept) {
         return {
           key: counter ? 'counter' : 'intercept',

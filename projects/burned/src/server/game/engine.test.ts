@@ -318,10 +318,12 @@ describe('Direct Order', () => {
   })
 
   it('does NOT emit targetId on card-played for non-targeted single-card plays', () => {
-    // Additive contract: targetId is only emitted for direct-order. Other
-    // single-card plays (go-dark, intel-briefing, etc.) carry no target so
-    // the field stays absent — old clients that don't read it remain
-    // unaffected, new clients can branch on its presence.
+    // Additive contract: targetId is emitted for direct-order (target picked
+    // explicitly) and for pair/triple combo plays (target picked at play
+    // time for the steal). Other single-card plays (go-dark, intel-briefing,
+    // etc.) carry no target so the field stays absent — old clients that
+    // don't read it remain unaffected, new clients can branch on its
+    // presence.
     let state = startGameWith(3)
     state = giveCard(state, 'p1', 'go-dark', 'gd-no-target')
 
@@ -335,6 +337,78 @@ describe('Direct Order', () => {
     const cardPlayed = s.events.find(e => e.type === 'card-played')
     expect(cardPlayed).toBeDefined()
     expect(cardPlayed).not.toHaveProperty('targetId')
+  })
+
+  it('emits targetId on card-played for pair-steal (close pair/triple-steal target info gap 2026-05-10)', () => {
+    // Pair-steal commits at play time with the target locked in (no name-
+    // card step like triples have). Pre-2026-05-10 the card-played event
+    // dropped the target identity, leaving the TARGET viewer with no
+    // signal that they were the steal subject during the nope window —
+    // observer toasts said "Dash played a Vera Khan pair" with no further
+    // information. The fix mirrors the Direct Order targetId contract:
+    // engine emits targetId so PlayerAlert can branch the toast by
+    // viewer perspective (urgent target message + observer "targeting X"
+    // callout).
+    let state = startGameWith(3)
+    state = giveCard(state, 'p1', 'vera-khan', 'pair-1')
+    state = giveCard(state, 'p1', 'vera-khan', 'pair-2')
+
+    const cards = state.players[0]!.hand.filter(c => c.type === 'vera-khan')
+    expect(cards.length).toBeGreaterThanOrEqual(2)
+    const result = act(state, {
+      type: 'play-card', playerId: 'p1', cardIds: [cards[0]!.id, cards[1]!.id], targetPlayerId: 'p2',
+    })
+    expect(result.ok).toBe(true)
+    if (!result.ok) return
+    const s = result.state as PlayingState
+    const cardPlayed = s.events.find(e => e.type === 'card-played')
+    expect(cardPlayed).toBeDefined()
+    expect(cardPlayed).toMatchObject({
+      type: 'card-played',
+      playerId: 'p1',
+      cardType: 'vera-khan',
+      comboSize: 2,
+      targetId: 'p2',
+    })
+  })
+
+  it('emits targetId on card-played for triple-steal after name-card commit (close pair/triple-steal target info gap 2026-05-10)', () => {
+    // Triple-steal flow: play 3 → name-card → commit. The card-played
+    // event fires at COMMIT (engine.ts:911 in commitNamedSteal) with the
+    // target already locked in via the pendingNameCard state. Same
+    // contract as pair-steal — engine surfaces targetId on card-played
+    // so the target's phone reads "Dash named a card to steal from you."
+    let state = startGameWith(3)
+    state = giveCard(state, 'p1', 'neal-proctor', 'triple-1')
+    state = giveCard(state, 'p1', 'neal-proctor', 'triple-2')
+    state = giveCard(state, 'p1', 'neal-proctor', 'triple-3')
+
+    const cards = state.players[0]!.hand.filter(c => c.type === 'neal-proctor')
+    expect(cards.length).toBeGreaterThanOrEqual(3)
+    let result = act(state, {
+      type: 'play-card', playerId: 'p1',
+      cardIds: [cards[0]!.id, cards[1]!.id, cards[2]!.id],
+      targetPlayerId: 'p3',
+    })
+    expect(result.ok).toBe(true)
+    if (!result.ok) return
+    // Triple-steal stages a name-card prompt; the card-played event fires
+    // when the stealer commits the named card type.
+    result = act(result.state, {
+      type: 'name-card', playerId: 'p1', cardType: 'reassign',
+    })
+    expect(result.ok).toBe(true)
+    if (!result.ok) return
+    const s = result.state as PlayingState
+    const cardPlayed = s.events.find(e => e.type === 'card-played' && e.comboSize === 3)
+    expect(cardPlayed).toBeDefined()
+    expect(cardPlayed).toMatchObject({
+      type: 'card-played',
+      playerId: 'p1',
+      cardType: 'neal-proctor',
+      comboSize: 3,
+      targetId: 'p3',
+    })
   })
 
   it('allows self-targeting per rules §13.8 (adds 2 turns to self)', () => {
@@ -479,6 +553,70 @@ describe('Nope', () => {
     result = act(withWindow, { type: 'nope', playerId: 'p1' })
     expect(result.ok).toBe(false)
     if (!result.ok) expect(result.code).toBe('INVALID_ACTION')
+  })
+
+  it('rejects self-Nope of own Nope at chainDepth >= 1 (close 2026-05-10 self-Nope-own-Nope gap)', () => {
+    // Per RULES-REFERENCE.md §9 ("you cannot Nope your own card play"),
+    // the noper who just played the most recent Nope on the chain cannot
+    // Nope it themselves on the next step — that would be self-undoing
+    // and the rule treats it as Noping your own card play.
+    //
+    // Setup: p1 plays go-dark → nope window opens. p2 plays Nope (chain
+    // depth 1, p2 is now lastNoper). p2 still holds another Intercept.
+    // p2 tries to Nope their own Nope — must be rejected. Original
+    // ACTOR (p1) chain-burn at the same chainDepth IS still allowed
+    // (covered by a separate test below); this test only blocks the
+    // noper's self-Nope path.
+    let state = startGameWith(3)
+    state = giveCard(state, 'p1', 'go-dark', 'skip-trigger')
+    state = giveCard(state, 'p2', 'intercepted', 'nope-1st')
+    state = giveCard(state, 'p2', 'intercepted', 'nope-2nd')
+
+    const skipCard = findCard(state, 'p1', 'go-dark')!
+    let result = act(state, { type: 'play-card', playerId: 'p1', cardIds: [skipCard.id] })
+    expect(result.ok).toBe(true)
+    let s = (result as { ok: true; state: GameState }).state as PlayingState
+
+    result = act(s, { type: 'nope', playerId: 'p2' })
+    expect(result.ok).toBe(true)
+    s = (result as { ok: true; state: GameState }).state as PlayingState
+    expect(s.nopeWindow!.chainDepth).toBe(1)
+    expect(s.nopeWindow!.lastNoperId).toBe('p2')
+
+    // p2 tries to Nope their own Nope — should fail with INVALID_ACTION.
+    result = act(s, { type: 'nope', playerId: 'p2' })
+    expect(result.ok).toBe(false)
+    if (!result.ok) expect(result.code).toBe('INVALID_ACTION')
+  })
+
+  it('still allows original ACTOR chain-burn at chainDepth >= 1 (regression pin)', () => {
+    // The self-Nope-of-own-Nope gate must NOT block the original actor's
+    // chain-burn — they are Noping the OTHER player's Nope, not their
+    // own. p1 plays go-dark, p2 Nopes, p1 then chain-burns with their
+    // own Intercept to restore the action. Pin so a future tightening
+    // of the self-Nope rule can't accidentally re-disable chain-burn.
+    let state = startGameWith(3)
+    state = giveCard(state, 'p1', 'go-dark', 'skip-cb')
+    state = giveCard(state, 'p1', 'intercepted', 'cb-actor')
+    state = giveCard(state, 'p2', 'intercepted', 'cb-noper')
+
+    const skipCard = findCard(state, 'p1', 'go-dark')!
+    let result = act(state, { type: 'play-card', playerId: 'p1', cardIds: [skipCard.id] })
+    let s = (result as { ok: true; state: GameState }).state as PlayingState
+
+    result = act(s, { type: 'nope', playerId: 'p2' })
+    s = (result as { ok: true; state: GameState }).state as PlayingState
+    expect(s.nopeWindow!.lastNoperId).toBe('p2')
+
+    // p1 chain-burns p2's Nope — allowed (Noping someone else's card,
+    // not their own).
+    result = act(s, { type: 'nope', playerId: 'p1' })
+    expect(result.ok).toBe(true)
+    if (result.ok) {
+      const after = result.state as PlayingState
+      expect(after.nopeWindow!.chainDepth).toBe(2)
+      expect(after.nopeWindow!.lastNoperId).toBe('p1')
+    }
   })
 
   it('increments chain depth on valid Nope', () => {

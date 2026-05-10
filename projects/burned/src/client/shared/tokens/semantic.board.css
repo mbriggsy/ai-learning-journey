@@ -50,6 +50,16 @@
       1.0625rem
     );
 
+    /* Nope-dial timer digit — sits centered inside the analog countdown
+       ring in the case-banner. ~22px at 1280, scaling to ~32px at 3840
+       so the number stays the focal point of the dial as the dial size
+       scales with the side-panel column. */
+    --text-nope-timer: clamp(
+      1.375rem,
+      calc(1.375rem + (100vw - 1280px) * (10 / 2560)),
+      2rem
+    );
+
     /* --- Sizing --- */
 
     /* Card — width-driven with 5:7 aspect ratio */
@@ -166,6 +176,18 @@
       220px,
       calc(220px + (100vw - 1280px) * (180 / 2560)),
       400px
+    );
+
+    /* Nope-dial diameter — the analog countdown ring in the case-banner.
+       ~64px at 1280 (fits comfortably in the ~148px content column),
+       scaling to ~96px at 3840 (where the column is ~276px wide and
+       can host a more prominent dial). The SVG viewBox stays fixed at
+       56×56 so stroke math is invariant; this token just drives the
+       rendered display size. */
+    --size-nope-dial: clamp(
+      64px,
+      calc(64px + (100vw - 1280px) * (32 / 2560)),
+      96px
     );
 
     /* ─── Briefing Room semantic colors ─── */

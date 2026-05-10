@@ -298,25 +298,58 @@ function alertFor(
       //
       // Per-card flavor pools (2026-05-10) seed Phrasing! cadence across the
       // observer card-played path per spec §3.5 (~25% saturation per pool).
-      // Direct Order is the only single-card play that carries `targetId` on
-      // the card-played event (engine.ts:332) — its pool weaves the target
-      // name into all variants. Other targeted cards (Reassign, Call in a
-      // Favor) get target-free pools; the engine fires `favor-requested` /
-      // skip-turn events later if targets need surfacing. Combo plays keep
-      // the dedicated "<Operative> pair/triple" mechanic announcement —
-      // observers need to read the mechanic to decide whether to Intercept,
-      // and a flavor pool would dilute that signal.
+      // Direct Order and combo plays carry `targetId` on the card-played
+      // event (engine.ts:332/621/911) — those weave the target name into the
+      // toast. Other targeted cards (Reassign, Call in a Favor) get target-
+      // free pools; the engine fires `favor-requested` / skip-turn events
+      // later if targets need surfacing.
       const target = event.targetId
       const targetName: string | null =
         target === undefined ? null
         : target === myId ? 'you'
         : nameOf(target)
       const playerName = nameOf(event.playerId)
-      const text = event.comboSize === 2
-        ? `${playerName} played a ${cardName} pair.`
-        : event.comboSize === 3
-        ? `${playerName} played a ${cardName} triple.`
-        : observerCardPlayedText(event.cardType, playerName, cardName, targetName, eventId)
+
+      // Combo plays — pair / triple. Pre-2026-05-10 the toast just said
+      // "Dash played a Vera Khan pair" and observers (especially the
+      // TARGET) had no idea who the steal was aimed at. Now the engine
+      // emits targetId on combo card-played events so we can fork by
+      // viewer perspective:
+      //
+      // - TARGET (myId === targetId): urgent toast naming the actor +
+      //   the steal threat. "Dash is going for a random card from you."
+      //   for pairs (random steal); "Dash named a card to steal from you."
+      //   for triples (the name-card step already happened by the time
+      //   card-played fires for a triple — see engine.ts:911 in
+      //   commitNamedSteal). Urgent tone gets medium haptic + assertive
+      //   announcement so the target reads it as a decision moment.
+      //
+      // - OBSERVER (uninvolved): info toast naming the actor + the
+      //   operative + who's being targeted. Same shape as Direct Order's
+      //   observer toast for parity — "Dash played a Vera Khan pair —
+      //   targeting Michael."
+      //
+      // - ACTOR: filtered out at the top of this case (line 259).
+      if (event.comboSize === 2 || event.comboSize === 3) {
+        const isTarget = target !== undefined && target === myId
+        if (isTarget) {
+          const text = event.comboSize === 2
+            ? `${playerName} is going for a random card from you.`
+            : `${playerName} named a card to steal from you.`
+          return { id: eventId, text, tone: 'urgent', persistUntil }
+        }
+        const targetSuffix = targetName !== null ? ` — targeting ${targetName}` : ''
+        const text = event.comboSize === 2
+          ? `${playerName} played a ${cardName} pair${targetSuffix}.`
+          : `${playerName} played a ${cardName} triple${targetSuffix}.`
+        return { id: eventId, text, tone: 'info', persistUntil }
+      }
+
+      // Single-card plays — per-card flavor pools. Combo plays keep the
+      // dedicated "<Operative> pair/triple" mechanic announcement (handled
+      // above); a flavor pool there would dilute the intercept-decision
+      // signal.
+      const text = observerCardPlayedText(event.cardType, playerName, cardName, targetName, eventId)
       return { id: eventId, text, tone: 'info', persistUntil }
     }
 

@@ -22,11 +22,11 @@ export const CARD_DEFS = [
   { type: 'call-in-a-favor', name: 'Call in a Favor', description: 'Force an operative to give you 1 card (their choice).', category: 'action', pawCount: 2, nonPawCount: 4 },
   { type: 'intercepted', name: 'Intercepted', description: 'Counter-intel. Cancel any action. Playable any time.', category: 'action', pawCount: 4, nonPawCount: 5 },
   { type: 'agent-x', name: 'Agent X', description: 'Wild — counts as any operative type.', category: 'wild', pawCount: 2, nonPawCount: 4 },
-  { type: 'dash-barlowe', name: 'Dash Barlowe', description: 'Powerless alone. Pairs steal random. Triples name + steal.', category: 'operative', pawCount: 3, nonPawCount: 4 },
-  { type: 'vera-khan', name: 'Vera Khan', description: 'Powerless alone. Pairs steal random. Triples name + steal.', category: 'operative', pawCount: 3, nonPawCount: 4 },
-  { type: 'sable-ashworth', name: 'Sable Ashworth', description: 'Powerless alone. Pairs steal random. Triples name + steal.', category: 'operative', pawCount: 3, nonPawCount: 4 },
-  { type: 'janet-broadside', name: 'Janet Broadside', description: 'Powerless alone. Pairs steal random. Triples name + steal.', category: 'operative', pawCount: 3, nonPawCount: 4 },
-  { type: 'neal-proctor', name: 'Neal Proctor', description: 'Powerless alone. Pairs steal random. Triples name + steal.', category: 'operative', pawCount: 3, nonPawCount: 4 },
+  { type: 'dash-barlowe', name: 'Dash Barlowe', description: 'Powerless alone. Pairs steal random. Triples named steal.', category: 'operative', pawCount: 3, nonPawCount: 4 },
+  { type: 'vera-khan', name: 'Vera Khan', description: 'Powerless alone. Pairs steal random. Triples named steal.', category: 'operative', pawCount: 3, nonPawCount: 4 },
+  { type: 'sable-ashworth', name: 'Sable Ashworth', description: 'Powerless alone. Pairs steal random. Triples named steal.', category: 'operative', pawCount: 3, nonPawCount: 4 },
+  { type: 'janet-broadside', name: 'Janet Broadside', description: 'Powerless alone. Pairs steal random. Triples named steal.', category: 'operative', pawCount: 3, nonPawCount: 4 },
+  { type: 'neal-proctor', name: 'Neal Proctor', description: 'Powerless alone. Pairs steal random. Triples named steal.', category: 'operative', pawCount: 3, nonPawCount: 4 },
 ] as const satisfies readonly CardDef[]
 
 export type CardType = typeof CARD_DEFS[number]['type']

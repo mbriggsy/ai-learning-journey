@@ -74,6 +74,20 @@
     max-height: calc(var(--size-viewport-safe) * 0.6);
   }
 
+  /* Medium variant — used by NameCard where 16 button rows + title +
+     subtitle + cancel was crowding the bottom row against the cancel CTA
+     under the default 0.8 cap. 0.88 gives ~one extra button-row of
+     breathing room without going full-screen (still reads as a sheet,
+     not a takeover panel). Top border-radius preserved. Caught on real-
+     device 2026-05-10. */
+  .dialogMedium {
+    max-height: calc(var(--size-viewport-safe) * 0.88);
+  }
+
+  .contentMedium {
+    max-height: calc(var(--size-viewport-safe) * 0.88);
+  }
+
   /* Tall variant — used by Falsify Intel rearrange where the dossier UX
      wants to OWN the viewport. Goes full safe-area height (notch / Dynamic
      Island still respected via --size-viewport-safe) and drops the top

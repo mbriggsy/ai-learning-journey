@@ -18,17 +18,17 @@ three-beat Phrasing! batch on the COMMS feed + observer-favor toast
 
 Current state (verified 2026-05-09 end-of-session):
 
-- Tests: **1361 pass** | 6 expected fail (67/67 files green).
+- Tests: **1376 pass** | 6 expected fail (67/67 files green).
 - Build: clean (`pnpm build`).
-- Phone initial JS: **~98.82 KB gzipped** (player 18.65 + shared 65.71
-  + VisualElement 14.46). +0.31 KB vs prior end-of-session baseline
-  (98.51 KB) for the six per-card observer Phrasing! pools + GameOver
-  winner Phrasing! variant; the GameOver refactor to shared `pick()`
-  saved 0.02 KB on the shared chunk. 1.18 KB headroom under the
-  100 KB ceiling. Vite extracted MinimalCard + AnimatePresence into
-  lazy chunks. Drag/layout-projection chunk (~27.40 KB gz), rearrange
-  UI (3.20 KB gz), and MinimalCard chunk (5.95 KB gz) all lazy +
-  prefetched at idle.
+- Phone initial JS: **~98.98 KB gzipped** (player 18.81 + shared 65.71
+  + VisualElement 14.46). +0.47 KB vs the start-of-session 98.51 KB
+  baseline for the 2026-05-10 real-device session work (combo target
+  branching in PlayerAlert, chain-counter bypass in SmartActionBox,
+  self-Nope-of-own-Nope UI gate, ring-countdown redesign, NameCard
+  sheet medium variant). 1.02 KB headroom under the 100 KB ceiling.
+  Vite extracted MinimalCard + AnimatePresence into lazy chunks.
+  Drag/layout-projection chunk (~27.40 KB gz), rearrange UI (3.20 KB
+  gz), and MinimalCard chunk (5.95 KB gz) all lazy + prefetched at idle.
 - Triage state, run `2026-05-08-2022-5p`: **0 OPEN · 0 BLOCKED** ·
   29 RESOLVED · 7 LOW-SIGNAL · 2 KNOWN-PRODUCT · 1 DUPLICATE. P1 6 · P2 33.
 
@@ -103,6 +103,18 @@ appearing alone is explicitly NOT sufficient. Pure catalog edit — no
 engine, projection, or oracle change. Future hardening if the catalog
 guard alone is insufficient: Option C from issue #021 (oracle-side
 self-report validation in the detector pipeline).
+
+### 1.3 Open follow-ups (queued)
+
+- **PlayerStrip `.activeTag` clipping** — on the active player's
+  nameplate, the "ACTIVE" pill clips the top of the bold uppercase
+  glyphs (caught real-device 2026-05-10). Diagnosis: 3px top padding
+  is too tight for the 800-weight rendering and there's no explicit
+  `line-height`, so glyph metrics spill above the box. Fix path: add
+  `line-height: 1` and bump top padding 3px → 5px at
+  `src/client/board/PlayerStrip.module.css:168-189`. Scoped, no risk
+  beyond the PlayerStrip nameplate. Holding for a focused visual
+  sweep alongside any other nameplate tweaks.
 
 ---
 

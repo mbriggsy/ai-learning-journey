@@ -934,3 +934,115 @@ describe('PlayerAlert — observer card-played Phrasing! pool variants (spec §3
     }
   })
 })
+
+describe('PlayerAlert — combo target/observer perspective (pair/triple-steal target info gap, 2026-05-10)', () => {
+  // Engine now emits `targetId` on combo card-played events (engine.ts:621
+  // for pairs, engine.ts:911 for triples). PlayerAlert branches the toast
+  // by viewer perspective:
+  //   - TARGET: urgent toast naming the steal threat
+  //   - OBSERVER: info toast naming who's being targeted
+  //   - ACTOR: filtered out (own-play branch at top of card-played case)
+  // Pre-fix the toast was just "Dash played a Vera Khan pair" with no
+  // target info — Briggsy caught it on real-device 2026-05-10.
+
+  it('TARGET: pair combo card-played emits urgent "going for a random card from you"', () => {
+    const { container, root } = mount()
+    try {
+      myIdRef.current = SEAT3_ID // viewer IS the target
+      setEvents([
+        { event: { type: 'turn-started', playerId: SEAT2_ID, turnsRemaining: 1 }, receivedAt: 0, id: 'evt-0' },
+      ])
+      render(root)
+      setEvents([
+        { event: { type: 'turn-started', playerId: SEAT2_ID, turnsRemaining: 1 }, receivedAt: 0, id: 'evt-0' },
+        { event: { type: 'card-played', playerId: SEAT2_ID, cardType: 'vera-khan', comboSize: 2, targetId: SEAT3_ID }, receivedAt: 1, id: 'evt-1' },
+      ])
+      rerender(root)
+      expect(alertText(container)).toBe('Seat2 is going for a random card from you.')
+      expect(container.querySelector('[data-tone="urgent"]')).not.toBeNull()
+    } finally {
+      teardown(container, root)
+    }
+  })
+
+  it('OBSERVER: pair combo card-played emits info "<Name> played a <Operative> pair — targeting <Target>."', () => {
+    const { container, root } = mount()
+    try {
+      myIdRef.current = 'seat-1-uuid' // viewer is uninvolved bystander
+      setEvents([
+        { event: { type: 'turn-started', playerId: SEAT2_ID, turnsRemaining: 1 }, receivedAt: 0, id: 'evt-0' },
+      ])
+      render(root)
+      setEvents([
+        { event: { type: 'turn-started', playerId: SEAT2_ID, turnsRemaining: 1 }, receivedAt: 0, id: 'evt-0' },
+        { event: { type: 'card-played', playerId: SEAT2_ID, cardType: 'vera-khan', comboSize: 2, targetId: SEAT3_ID }, receivedAt: 1, id: 'evt-1' },
+      ])
+      rerender(root)
+      expect(alertText(container)).toBe('Seat2 played a Vera Khan pair — targeting Seat3.')
+      expect(container.querySelector('[data-tone="info"]')).not.toBeNull()
+    } finally {
+      teardown(container, root)
+    }
+  })
+
+  it('TARGET: triple combo card-played emits urgent "named a card to steal from you"', () => {
+    const { container, root } = mount()
+    try {
+      myIdRef.current = SEAT3_ID
+      setEvents([
+        { event: { type: 'turn-started', playerId: SEAT2_ID, turnsRemaining: 1 }, receivedAt: 0, id: 'evt-0' },
+      ])
+      render(root)
+      setEvents([
+        { event: { type: 'turn-started', playerId: SEAT2_ID, turnsRemaining: 1 }, receivedAt: 0, id: 'evt-0' },
+        { event: { type: 'card-played', playerId: SEAT2_ID, cardType: 'neal-proctor', comboSize: 3, targetId: SEAT3_ID }, receivedAt: 1, id: 'evt-1' },
+      ])
+      rerender(root)
+      expect(alertText(container)).toBe('Seat2 named a card to steal from you.')
+      expect(container.querySelector('[data-tone="urgent"]')).not.toBeNull()
+    } finally {
+      teardown(container, root)
+    }
+  })
+
+  it('OBSERVER: triple combo card-played emits info "<Name> played a <Operative> triple — targeting <Target>."', () => {
+    const { container, root } = mount()
+    try {
+      myIdRef.current = 'seat-1-uuid'
+      setEvents([
+        { event: { type: 'turn-started', playerId: SEAT2_ID, turnsRemaining: 1 }, receivedAt: 0, id: 'evt-0' },
+      ])
+      render(root)
+      setEvents([
+        { event: { type: 'turn-started', playerId: SEAT2_ID, turnsRemaining: 1 }, receivedAt: 0, id: 'evt-0' },
+        { event: { type: 'card-played', playerId: SEAT2_ID, cardType: 'neal-proctor', comboSize: 3, targetId: SEAT3_ID }, receivedAt: 1, id: 'evt-1' },
+      ])
+      rerender(root)
+      expect(alertText(container)).toBe('Seat2 played a Neal Proctor triple — targeting Seat3.')
+      expect(container.querySelector('[data-tone="info"]')).not.toBeNull()
+    } finally {
+      teardown(container, root)
+    }
+  })
+
+  it('ACTOR: own combo play stays silent (own-play filter at top of card-played case)', () => {
+    const { container, root } = mount()
+    try {
+      myIdRef.current = SEAT2_ID // viewer is the actor
+      setEvents([
+        { event: { type: 'turn-started', playerId: SEAT2_ID, turnsRemaining: 1 }, receivedAt: 0, id: 'evt-0' },
+      ])
+      render(root)
+      setEvents([
+        { event: { type: 'turn-started', playerId: SEAT2_ID, turnsRemaining: 1 }, receivedAt: 0, id: 'evt-0' },
+        { event: { type: 'card-played', playerId: SEAT2_ID, cardType: 'vera-khan', comboSize: 2, targetId: SEAT3_ID }, receivedAt: 1, id: 'evt-1' },
+      ])
+      rerender(root)
+      // Actor sees their own staging area + animation; the toast would
+      // duplicate that surface. Same filter as single-card plays.
+      expect(alertText(container)).toBeNull()
+    } finally {
+      teardown(container, root)
+    }
+  })
+})

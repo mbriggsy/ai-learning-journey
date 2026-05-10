@@ -84,6 +84,17 @@ export interface NopeWindow {
   readonly startedAtMs: number
   readonly expired?: boolean
   readonly graceDeadlineMs?: number
+  /**
+   * Player who played the most recent Nope on the chain. Undefined at
+   * chainDepth 0 (no Nopes yet — `originalPlayerId` covers self-Nope of the
+   * initial action). Set to the noper's id at chainDepth >= 1 so the engine
+   * can reject "Nope your own Nope" — per RULES-REFERENCE.md §9 ("you cannot
+   * Nope your own card play"), the noper is treated as the most recent
+   * actor and cannot Nope themselves on the next chain step. Pre-2026-05-10
+   * the engine only blocked self-Nope at chainDepth 0; the gap let a noper
+   * play consecutive Nopes (self-undo). Caught Briggsy 2026-05-10.
+   */
+  readonly lastNoperId?: string
 }
 
 // --- Dispatch ---

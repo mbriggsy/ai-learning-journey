@@ -346,7 +346,11 @@
   -webkit-overflow-scrolling: touch;
   overscroll-behavior: contain;
   /* Bottom-edge feather signals "more cards below" without a visible
-     scrollbar on the sheet surface. 24px feather ≈ half a button row. */
+     scrollbar on the sheet surface. 24px feather ≈ half a button row.
+     padding-bottom matches the feather depth so when content fits without
+     scroll, the mask fades empty padding instead of the bottom button row
+     (real-device 2026-05-10: "blur bleed" on Extraction / Agent X row). */
+  padding-bottom: 24px;
   mask-image: linear-gradient(
     to bottom,
     black 0,
@@ -385,7 +389,12 @@
 .nameCardLayout {
   display: flex;
   flex-direction: column;
-  height: calc(var(--size-viewport-safe) * 0.8 - var(--space-5) * 2);
+  /* Mirrors BottomSheet's `medium` variant interior (0.88 viewport-safe)
+     minus the symmetric vertical padding pair. NameCard switched from the
+     default 0.8 to 0.88 on 2026-05-10 (real-device check) — the 16-button
+     grid + title + subtitle + cancel was crowding the bottom row against
+     the cancel CTA at 0.8. */
+  height: calc(var(--size-viewport-safe) * 0.88 - var(--space-5) * 2);
   min-height: 0;
 }
 

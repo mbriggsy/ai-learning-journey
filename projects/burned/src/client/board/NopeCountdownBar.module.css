@@ -1,45 +1,46 @@
 /* NopeCountdownBar.module.css
-   Board — countdown surface that appears during the Intercept window
-   after a card is played. The fill contracts from right to left as the
-   window closes (transform: scaleX driven by useNopeCountdown, not CSS).
+   Board — analog ring countdown that appears during the Intercept window
+   after a card is played. The foreground arc drains clockwise from 12
+   o'clock as the window closes (stroke-dashoffset driven by
+   useNopeCountdown, not CSS keyframes).
 
-   2026-05-08: anchored INSIDE the case-banner aside between the
-   divider and the briefer footer. Reads as a live mission update
-   inside the briefing narrative — typography matches the case-banner
-   labels (mono caps, accent-drama tint), the bar fill stays in
-   intercept-teal so the live colour still pops against the
-   ochre/cream briefing palette. Pre-2026-05-08 the bar floated as a
-   dark-surface band below the arena (E2E audit C-10 fix), which read
-   as a notification-style add-on rather than a board element.
+   2026-05-10 redesign — was a horizontal bar with label LEFT + timer
+   RIGHT in a flex row. Lived inside the case-banner aside since
+   2026-05-08 (commit 4e4431c9). The case-banner is a narrow column
+   (~148-276px content width depending on viewport scale, since
+   --size-side-panel-width clamps 220→400 from 1280→3840) and the bar
+   fought that geometry: long labels wrapped, the timer got pushed to
+   positions that clipped against the column's right edge or got
+   occluded by the central blotter. A dial reads as a single composed
+   object, is width-agnostic, and matches the Pendleton mid-century
+   gauge vocabulary (dossier-era clock face, briefing-room dial).
 */
 
 @layer components {
 
 .wrapper {
-  /* Inline child of the case-banner column — flex layout drives the
-     vertical placement; we just need to fill the column horizontally
-     and own a small column of our own for the label + bar. */
+  /* Inline child of the case-banner column — centered horizontally so
+     the dial reads as a poster element, not pinned to the left ribbon. */
   display: flex;
   flex-direction: column;
-  gap: 6px;
+  align-items: center;
+  gap: 8px;
   /* Pointer-events off matches the case banner's own posture — the
-     intercept happens on phones, the board surface is purely
-     informational. */
+     intercept happens on phones, the board surface is informational. */
   pointer-events: none;
 }
 
-.headerRow {
-  display: flex;
-  justify-content: space-between;
-  align-items: baseline;
+.label {
   font-family: var(--font-mono);
   font-size: var(--text-caption-board);
   font-weight: 700;
   letter-spacing: 0.22em;
   text-transform: uppercase;
-  /* Intercept-teal so the live transmission colour pops against the
-     surrounding ochre/cream briefing typography without fighting it. */
+  /* Intercept-teal so the live transmission color pops against the
+     surrounding ochre/cream briefing typography. */
   color: var(--color-accent-intercept);
+  align-self: stretch;
+  text-align: center;
 }
 
 .label::before {
@@ -50,34 +51,67 @@
   font-weight: 400;
 }
 
-.timer {
-  /* Tabular nums so the digit doesn't jitter as it ticks 5 → 4 → 3 → 2 → 1. */
-  font-variant-numeric: tabular-nums;
-  font-weight: 800;
+/* Dial — composed positioned container. The SVG fills the dial size;
+   the timer text sits absolutely centered on top of it. Width and
+   height defined here drive the SVG's display size; viewBox stays at
+   56×56 so stroke math is consistent across viewport scales. */
+.dial {
+  position: relative;
+  width: var(--size-nope-dial);
+  height: var(--size-nope-dial);
+  display: grid;
+  place-items: center;
 }
 
-.container {
-  position: relative;
-  height: var(--space-2);
-  background: color-mix(in oklab, var(--color-accent-intercept) 18%, transparent);
-  border-radius: var(--radius-sm);
-  overflow: hidden;
+.dialSvg {
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+  /* Rotate the SVG so the foreground arc's start point sits at 12
+     o'clock instead of 3 o'clock (SVG default). Combined with the
+     dashoffset drain direction, the arc reads as draining clockwise
+     from the top — the natural clock-face metaphor. */
+  transform: rotate(-90deg);
+}
+
+.track {
+  /* Subtle teal-tinted track. Low alpha so the draining foreground arc
+     reads as the live element while the track is just structure. */
+  stroke: color-mix(in oklab, var(--color-accent-intercept) 22%, transparent);
+  stroke-width: 3;
 }
 
 .fill {
-  position: absolute;
-  inset: 0;
-  background: var(--color-accent-intercept);
-  transform-origin: left center;
-  will-change: transform;
-  /* Subtle scan-line shimmer keeps the fill alive even while it contracts —
-     reads as a "live signal" rather than a static bar draining. */
-  background-image: linear-gradient(
-    90deg,
-    color-mix(in oklab, var(--color-accent-intercept) 88%, var(--color-cream-12)) 0%,
-    var(--color-accent-intercept) 50%,
-    color-mix(in oklab, var(--color-accent-intercept) 88%, var(--color-cream-12)) 100%
-  );
+  /* Foreground arc — full intercept-teal, rounded line caps so the
+     arc end reads as a polished moving needle rather than a chopped
+     edge. Dashoffset 0 = full ring; the hook drives offset →
+     circumference (drained) over the remaining window. */
+  stroke: var(--color-accent-intercept);
+  stroke-width: 3;
+  stroke-linecap: round;
+  /* will-change pins the stroke-dashoffset onto the compositor —
+     stroke is a paint-driven property so this matters for smoothness
+     during the 10s+ linear drain. */
+  will-change: stroke-dashoffset;
+}
+
+.timer {
+  /* The number is the focal point of the moment — bigger and bolder
+     than the label, tabular-nums so the digit doesn't jitter as it
+     ticks 10 → 9 → 8 → 7 ... down to 0. Sits inside the ring via the
+     grid place-items: center on .dial. */
+  font-family: var(--font-mono);
+  font-variant-numeric: tabular-nums;
+  font-size: var(--text-nope-timer);
+  font-weight: 800;
+  /* Tight letter-spacing for digits — the wide tracking on the label
+     above is for typeset chrome; numbers want tight kerning. */
+  letter-spacing: 0.02em;
+  color: var(--color-accent-intercept);
+  /* Subtle glow tying the digit to the ring it sits inside. */
+  text-shadow: 0 0 12px color-mix(in oklab, var(--color-accent-intercept) 50%, transparent);
+  line-height: 1;
 }
 
 } /* @layer components */

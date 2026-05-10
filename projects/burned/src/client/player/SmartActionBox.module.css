@@ -152,10 +152,22 @@
     cursor: not-allowed;
   }
 
-  /* State: intercept window open (non-actor with Intercepted in hand).
-     Gameplay-essential state — this is the ONLY way to counter an action
-     before it resolves. Danger-toned so the urgency reads at a glance. */
-  .intercept {
+  /* State: intercept window open (player with Intercepted in hand who
+     can play it — non-actor at chainDepth=0, anyone non-noper at
+     chainDepth>=1). Gameplay-essential state — this is the ONLY way to
+     counter an action before it resolves. Danger-toned so the urgency
+     reads at a glance.
+
+     Compound `.box.intercept` selector (specificity 0,2,0) lifts above
+     `.box:disabled` (line 62, also 0,2,0) — and being declared LATER in
+     source wins the cascade tie. Without it, the button's brief
+     `disabled` flip during optimisticPending (post-tap, pre-server-ack)
+     swapped the red fill for `.box:disabled`'s muted surface bg, leaving
+     the burned border but draining the interior color. Other variants
+     (.box.standby, .box.invalid, .box.interceptWaiting) already use
+     this compound pattern; .intercept was the lone holdout — caught
+     2026-05-10 (Briggsy real-device, Counter button mid-chain). */
+  .box.intercept {
     color: var(--color-fg-on-burned);
     background: var(--color-bg-danger);
     border-color: var(--color-accent-burned);
@@ -165,7 +177,7 @@
     font-weight: 700;
   }
   @media (hover: hover) and (pointer: fine) {
-    .intercept:hover {
+    .box.intercept:hover {
       background: color-mix(in oklab, var(--color-accent-burned) 85%, var(--color-bg-danger));
     }
   }

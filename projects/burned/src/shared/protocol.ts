@@ -83,6 +83,16 @@ export interface NopeWindowView {
   readonly startedAtMs: number
   readonly generation: number
   /**
+   * Player who played the most recent Nope on the chain. Absent at
+   * chainDepth 0. Used by client UI (SmartActionBox) to pre-disable the
+   * Counter button for the player who would otherwise tap-and-reject:
+   * the engine rejects self-Nope-of-own-Nope per RULES-REFERENCE.md §9,
+   * and the client gates the affordance up-front so the failure isn't
+   * surfaced as an error toast. Public — every viewer sees who Noped
+   * most recently.
+   */
+  readonly lastNoperId?: string
+  /**
    * Context for a 3-of-a-kind named steal whose intercept window is open.
    * Absent for every other nope window (single-card plays, 2-of-a-kind
    * random steals, nope-on-nope chain windows).

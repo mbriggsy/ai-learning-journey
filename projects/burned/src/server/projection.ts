@@ -137,12 +137,16 @@ function projectNopeWindow(
 ): NopeWindowView | null {
   if (state.phase !== 'playing' || !state.nopeWindow) return null
   const w = state.nopeWindow
-  const base = {
+  // Allowlist projection — every field explicitly picked. lastNoperId is
+  // public (treated like chainDepth) so observer UIs can pre-disable the
+  // self-Nope-own-Nope path before the engine rejects it.
+  const base: NopeWindowView = {
     remainingMs: Math.max(0, w.deadlineMs - now),
     deadlineMs: w.deadlineMs,
     chainDepth: w.chainDepth,
     startedAtMs: w.startedAtMs,
     generation: w.generation,
+    ...(w.lastNoperId !== undefined ? { lastNoperId: w.lastNoperId } : {}),
   }
   const pending = state.pendingNameCard
   if (!pending?.namedCardType) return base

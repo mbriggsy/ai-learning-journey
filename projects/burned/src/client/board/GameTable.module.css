@@ -263,9 +263,16 @@
   width: var(--size-side-panel-width);
   z-index: var(--z-raised);
   pointer-events: none;
+  /* Right padding bumped 8px → 24px on 2026-05-10 (real-device). The static
+     labels are short and left-aligned, so the asymmetric 8px right inset
+     went unnoticed — but the full-width NopeCountdownBar exposed it: the
+     bar's right edge ran flush against the boundary with the central
+     blotter, reading as if the bar bled into the felt. 24px gives the bar
+     visual breathing room from the play area without forcing the labels
+     into a narrower column. Left side keeps the ribbon-aware inset. */
   padding:
     calc(var(--size-wood-frame-thickness) + 24px)
-    8px
+    24px
     calc(var(--size-wood-frame-thickness) + 24px)
     calc(var(--size-wood-frame-thickness) + 20px);
   display: flex;

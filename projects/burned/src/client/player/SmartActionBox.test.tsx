@@ -4,6 +4,16 @@ import { act, type ComponentProps } from 'react'
 import { createRoot, type Root } from 'react-dom/client'
 import { LazyMotion, domMax } from 'motion/react'
 import type { NopeWindowView } from '@shared/protocol'
+
+// Mock useMyPlayerId — SmartActionBox calls it to gate the self-Nope-of-
+// own-Nope path (lastNoperId === myPlayerId disables the Counter button).
+// Default to a stable id; individual tests rebind via the ref-mutation
+// pattern used by PlayerAlert.test.tsx.
+const myPlayerIdRef: { current: string | null } = { current: 'viewer-default' }
+vi.mock('./hooks/usePlayerSelectors', () => ({
+  useMyPlayerId: () => myPlayerIdRef.current,
+}))
+
 import { SmartActionBox } from './SmartActionBox'
 
 type SABProps = ComponentProps<typeof SmartActionBox>
@@ -325,6 +335,60 @@ describe('SmartActionBox chain-burn UX (TODO #11)', () => {
     }
   })
 
+  it('keeps non-actor Counter button ENABLED at chainDepth>=1 even when outer disabled=true (chain-counter bypass — Briggsy 2026-05-10 real-device)', () => {
+    // Repro: Michael played a card targeting Dash. Vera intercepted.
+    // Chain depth is now 1. Dash holds an Intercept and should be able to
+    // counter-intercept Vera to restore Michael's play. Pre-fix, the
+    // outer `disabled` prop (driven by permission.allowed when it's not
+    // your turn) re-disabled the button because the bypass at line 106
+    // only matched state.key === 'intercept' and not 'counter'. Dash
+    // saw the Counter button rendered but greyed-out.
+    const { container, root } = mount()
+    try {
+      render(root,
+        <SmartActionBox
+          {...BASE_PROPS}
+          isMyTurn={false}
+          subPhase={null}
+          nopeWindow={nopeWindow(1)}
+          hasIntercept={true}
+          isAlive={true}
+          disabled={true}
+        />,
+      )
+      const button = container.querySelector('button')!
+      expect(button.textContent ?? '').toMatch(/Counter/)
+      expect(button.disabled).toBe(false)
+    } finally {
+      teardown(container, root)
+    }
+  })
+
+  it('keeps non-actor Intercept button ENABLED at chainDepth=0 even when outer disabled=true (parity contract pin)', () => {
+    // The intercept-bypass has worked at chainDepth=0 since shipping —
+    // pinning it explicitly so any future regression on the chain-counter
+    // bypass can't silently re-break the chain-zero case.
+    const { container, root } = mount()
+    try {
+      render(root,
+        <SmartActionBox
+          {...BASE_PROPS}
+          isMyTurn={false}
+          subPhase={null}
+          nopeWindow={nopeWindow(0)}
+          hasIntercept={true}
+          isAlive={true}
+          disabled={true}
+        />,
+      )
+      const button = container.querySelector('button')!
+      expect(button.textContent ?? '').toMatch(/Intercept/)
+      expect(button.disabled).toBe(false)
+    } finally {
+      teardown(container, root)
+    }
+  })
+
   it('fires onIntercept when ACTOR clicks the Counter button at chainDepth>=1', () => {
     const onIntercept = vi.fn()
     const { container, root } = mount()
@@ -479,6 +543,127 @@ describe('SmartActionBox single-intercepted hint (TODO #11)', () => {
       expect(button.textContent ?? '').not.toMatch(/Can't play Intercepted/)
       // Non-interactive — staging this combination should NOT click anything.
       expect(button.disabled).toBe(true)
+    } finally {
+      teardown(container, root)
+    }
+  })
+})
+
+describe('SmartActionBox self-Nope-own-Nope gate (close 2026-05-10 chain self-undo gap)', () => {
+  // Per RULES-REFERENCE.md §9, the noper who just played the most recent
+  // Nope cannot Nope it themselves on the next step. The engine rejects
+  // (engine.ts:1019), and the client also disables the Counter button so
+  // the noper doesn't tap a "live" affordance and get an error toast back.
+  // Gate: nopeWindow.lastNoperId === myPlayerId → counter-waiting state.
+
+  function nopeWindowWithLast(chainDepth: number, lastNoperId?: string): NopeWindowView {
+    return {
+      remainingMs: 10_000,
+      deadlineMs: FAKE_NOW + 10_000,
+      chainDepth,
+      startedAtMs: FAKE_NOW,
+      generation: chainDepth + 1,
+      ...(lastNoperId !== undefined ? { lastNoperId } : {}),
+    }
+  }
+
+  it('disables Counter button when local player IS the most recent noper', () => {
+    myPlayerIdRef.current = 'p2'
+    const { container, root } = mount()
+    try {
+      render(root,
+        <SmartActionBox
+          {...BASE_PROPS}
+          isMyTurn={false}
+          subPhase={null}
+          nopeWindow={nopeWindowWithLast(1, 'p2')}
+          hasIntercept={true}
+          isAlive={true}
+        />,
+      )
+      const button = container.querySelector('button')!
+      // Falls into the waiting branch — text is "<verb> window · Ns" not
+      // the bare "<verb> · Ns" of the active Counter button.
+      expect(button.textContent ?? '').toMatch(/Counter window/)
+      expect(button.disabled).toBe(true)
+    } finally {
+      teardown(container, root)
+    }
+  })
+
+  it('keeps Counter button ENABLED when local player is NOT the most recent noper', () => {
+    myPlayerIdRef.current = 'p3'
+    const { container, root } = mount()
+    try {
+      render(root,
+        <SmartActionBox
+          {...BASE_PROPS}
+          isMyTurn={false}
+          subPhase={null}
+          nopeWindow={nopeWindowWithLast(1, 'p2')}
+          hasIntercept={true}
+          isAlive={true}
+        />,
+      )
+      const button = container.querySelector('button')!
+      // p3 is uninvolved-with-Nope and holds an Intercept — the Counter
+      // button should be active (no "window" suffix in the text).
+      expect(button.textContent ?? '').toMatch(/^Counter\b/)
+      expect(button.textContent ?? '').not.toMatch(/Counter window/)
+      expect(button.disabled).toBe(false)
+    } finally {
+      teardown(container, root)
+    }
+  })
+
+  it('original ACTOR can still chain-burn at chainDepth >= 1 when ANOTHER player was the last noper (regression pin)', () => {
+    // The gate must only fire on the noper. The original actor's chain-
+    // burn at chainDepth >= 1 (already covered by an earlier test in the
+    // chain-burn UX block) must remain enabled — they're Noping the
+    // OTHER player's Nope, not their own.
+    myPlayerIdRef.current = 'p1'
+    const { container, root } = mount()
+    try {
+      render(root,
+        <SmartActionBox
+          {...BASE_PROPS}
+          isMyTurn={true}
+          subPhase="turn-active"
+          nopeWindow={nopeWindowWithLast(1, 'p2')}
+          hasIntercept={true}
+          isAlive={true}
+        />,
+      )
+      const button = container.querySelector('button')!
+      expect(button.textContent ?? '').toMatch(/^Counter\b/)
+      expect(button.disabled).toBe(false)
+    } finally {
+      teardown(container, root)
+    }
+  })
+
+  it('chainDepth 0 is unaffected (no lastNoperId yet — existing originalPlayerId check governs)', () => {
+    // The gate is scoped to chainDepth >= 1 only. At chainDepth 0 the
+    // self-Nope check uses originalPlayerId (existing behavior). A
+    // missing lastNoperId at chainDepth 0 must NOT accidentally disable
+    // a non-actor's Intercept button.
+    myPlayerIdRef.current = 'p2'
+    const { container, root } = mount()
+    try {
+      render(root,
+        <SmartActionBox
+          {...BASE_PROPS}
+          isMyTurn={false}
+          subPhase={null}
+          nopeWindow={nopeWindowWithLast(0)} // no lastNoperId
+          hasIntercept={true}
+          isAlive={true}
+        />,
+      )
+      const button = container.querySelector('button')!
+      expect(button.textContent ?? '').toMatch(/^Intercept\b/)
+      expect(button.textContent ?? '').not.toMatch(/Intercept window/)
+      expect(button.disabled).toBe(false)
     } finally {
       teardown(container, root)
     }

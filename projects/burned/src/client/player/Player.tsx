@@ -669,6 +669,10 @@ function PlayingView({ roomCode }: { roomCode: string }) {
         // is blocked server-side post-commit anyway so no hazard.
         // E2E audit 2026-04-23 D-20.
         onDismiss={handleCancelNameCard}
+        // Medium variant — 16 buttons + title/subtitle/cancel needed a
+        // little more height than the default 0.8 cap to keep the bottom
+        // row clear of the cancel CTA. Real-device 2026-05-10.
+        medium
       >
         {activeSheet?.sheet === 'name-card' && (
           <NameCard

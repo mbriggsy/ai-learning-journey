@@ -9,20 +9,24 @@ the history. (Rule: `feedback-todo-is-not-a-diary.md`.)
 
 **Triage backlog `2026-05-08-2022-5p` fully closed 2026-05-09.** All
 P1s closed. All P2s closed. The Claude-actionable triage queue from
-this run is empty — only Briggsy-only carryover (§4) and the Phrasing!
-beats / HOW-TO-PLAY queues (§6 / §7) remain. Three sprints landed in
-the closing session: Falsify Intel rearrange (#004/#005/#006), Burn
-the Files ember-breath (#037), and HIT-variant catalog hardening (#021).
+this run is empty — only Briggsy-only carryover (§4) and the
+HOW-TO-PLAY draft (§7) remain. Four sprints landed in the closing
+session: Falsify Intel rearrange (#004/#005/#006), Burn the Files
+ember-breath (#037), HIT-variant catalog hardening (#021), and a
+three-beat Phrasing! batch on the COMMS feed + observer-favor toast
+(see §6).
 
 Current state (verified 2026-05-09 end-of-session):
 
-- Tests: 1350 pass | 6 expected fail (66/66 files green).
+- Tests: **1351 pass** | 6 expected fail (66/66 files green).
 - Build: clean (`pnpm build`).
-- Phone initial JS: ~98.40 KB gzipped (player 18.26 + shared 65.68 +
-  VisualElement 14.46). **Improved** vs 2026-05-08 baseline (98.82 KB) —
-  Vite extracted MinimalCard + AnimatePresence into lazy chunks. Drag/
-  layout-projection chunk (~27.40 KB gz), rearrange UI (3.20 KB gz), and
-  MinimalCard chunk (5.95 KB gz) all lazy + prefetched at idle.
+- Phone initial JS: **~98.51 KB gzipped** (player 18.32 + shared 65.73
+  + VisualElement 14.46). +0.11 KB vs prior end-of-session baseline
+  (98.40 KB) for the new Phrasing! beat strings — well under the
+  100 KB ceiling. Vite extracted MinimalCard + AnimatePresence into
+  lazy chunks. Drag/layout-projection chunk (~27.40 KB gz), rearrange
+  UI (3.20 KB gz), and MinimalCard chunk (5.95 KB gz) all lazy +
+  prefetched at idle.
 - Triage state, run `2026-05-08-2022-5p`: **0 OPEN · 0 BLOCKED** ·
   29 RESOLVED · 7 LOW-SIGNAL · 2 KNOWN-PRODUCT · 1 DUPLICATE. P1 6 · P2 33.
 
@@ -283,19 +287,29 @@ Tone DNA — see `docs/PRODUCT-SPECIFICATION.md` §3.5. Cadence is
 unlikely if you respect the ❌ guards (no errors, no repeat-view, no
 rule text).
 
-**Shipped (1):**
+**Shipped (5):**
 
 - ✅ EliminatedView flavor pool — *"Penetrated by enemy assets.
   ...Phrasing."* (`src/client/player/EliminatedView.tsx:17`)
+- ✅ DossierFeed `favor-given` board narration —
+  *"X put out for Y. ...Phrasing."* (`src/client/board/events.ts`)
+- ✅ DossierFeed `combo-steal` board narration —
+  *"X drilled Y for it. ...Phrasing."* (`src/client/board/events.ts`)
+- ✅ DossierFeed `future-peeked` board narration —
+  *"X went deep on the deck. ...Phrasing."* (`src/client/board/events.ts`)
+- ✅ PlayerAlert `favor-given` observer toast —
+  *"X put out for Y. ...Phrasing."* (`src/client/player/PlayerAlert.tsx`)
 
 **Planned beats (queue):**
 
-- [ ] **AnnouncementFeed copy** — sweep the card-played narration +
-  observer toasts in `src/client/player/PlayerAlert.tsx` and
-  `src/client/board/AnnouncementFeed.tsx` for places where a phrasing
-  beat reads naturally. Likely 2-4 beats minimum. Card transitions like
-  Direct Order, Reassign, Back Channel, Call in a Favor are
-  innuendo-rich by name alone.
+- [ ] **PlayerAlert observer sweep — Direct Order / Reassign / Back
+  Channel** — `src/client/player/PlayerAlert.tsx` `card-played`
+  observer branch currently uses one generic template
+  (`"<Name> played <Card>"`). Per-card branches would unlock
+  card-specific Phrasing! (Direct Order = command innuendo, Reassign =
+  HR innuendo, Back Channel = covert innuendo). Tradeoff: adds size to
+  PlayerAlert's switch — currently 1 path covers all card-played
+  observer toasts. Worth it if 2-3 beats land naturally.
 - [ ] **Lobby / waiting copy** — implicit phrasing in idle states.
   Currently `Lobby.tsx` has *"Waiting for players to come..."* —
   evaluate whether other lobby strings (host disconnected, session
@@ -310,7 +324,10 @@ rule text).
 - [ ] **Loading / connection messages** — anywhere a player sits idle
   during reconnect, host-handoff, or initial join.
 
-Append to spec §3.5 "Shipped beats" list as each lands.
+Append to spec §3.5 "Shipped beats" list as each lands. Saturation
+guardrail: each pool sized so Phrasing! lands at ~25% (e.g. 1
+Phrasing! variant per 4-line pool) — abundance without exhausting the
+joke.
 
 ---
 

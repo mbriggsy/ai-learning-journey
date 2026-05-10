@@ -2,6 +2,7 @@ import { m } from 'motion/react'
 import { MOTION } from '@client/shared/tokens/motion'
 import type { BoardPlayer } from '@shared/protocol'
 import { PlayerIcon } from '@client/shared/PlayerIcon'
+import { pick } from '@client/shared/pick'
 import styles from './GameOver.module.css'
 
 interface GameOverProps {
@@ -12,20 +13,21 @@ interface GameOverProps {
   readonly onPlayAgain?: () => void
 }
 
-const WINNER_MESSAGES = [
+/** Board-side winner subtitle pool. Selected deterministically on `winnerId`
+ *  (via shared `pick()`) so the same operative winning multiple games gets
+ *  the same agency-style sign-off — replay consistency, not surprise. The
+ *  Phrasing! variant lives at the end and lands for ~1/5 of winners by
+ *  uniform-hash distribution; spec §3.5 cadence is "abundance, not
+ *  restraint" but on a per-player-replay surface that means "every winner
+ *  has ONE line, and some lines are Phrasing!" rather than "every winner
+ *  rolls fresh." Exported for the §3.5 Shipped-beats contract test. */
+export const WINNER_MESSAGES = [
   'survived the agency!',
   'is the last one standing!',
   'never got burned!',
   'outlasted them all!',
-]
-
-function pickMessage(winnerId: string): string {
-  let hash = 0
-  for (let i = 0; i < winnerId.length; i++) {
-    hash = ((hash << 5) - hash + winnerId.charCodeAt(i)) | 0
-  }
-  return WINNER_MESSAGES[Math.abs(hash) % WINNER_MESSAGES.length]!
-}
+  'came out on top. ...Phrasing.',
+] as const
 
 export function GameOver({ players, winnerId, eliminationOrder, myPlayerId, onPlayAgain }: GameOverProps) {
   const winner = players.find(p => p.id === winnerId)
@@ -85,7 +87,7 @@ export function GameOver({ players, winnerId, eliminationOrder, myPlayerId, onPl
           ? 'You closed the case.'
           : myResult
             ? `You placed #${myResult.rank} of ${players.length}`
-            : pickMessage(winnerId)}
+            : pick(WINNER_MESSAGES, winnerId)}
       </m.div>
 
       {/* Rankings — staggered reveal. Each row carries a status tag

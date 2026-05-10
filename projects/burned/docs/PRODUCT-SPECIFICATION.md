@@ -156,6 +156,7 @@ This is the #1 lesson from `docs/ideation/2026-04-11-visual-layer-autopsy.md`: t
 - PlayerAlert `card-played` observer toast, Back Channel pool — *"X slipped in through the back. ...Phrasing."* (`src/client/player/PlayerAlert.tsx`)
 - PlayerAlert `card-played` observer toast, Intel Briefing pool — *"X is checking what's coming. ...Phrasing."* (`src/client/player/PlayerAlert.tsx`)
 - PlayerAlert `card-played` observer toast, Go Dark pool — *"X turned off the lights. ...Phrasing."* (`src/client/player/PlayerAlert.tsx`)
+- GameOver winner-subtitle pool (board view) — *"X came out on top. ...Phrasing."* (`src/client/shared/GameOver.tsx`)
 
 **Planned beats** are tracked in `TODO.md`. As beats land, append them to the "Shipped beats" list above.
 

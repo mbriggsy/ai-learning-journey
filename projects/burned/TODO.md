@@ -18,15 +18,17 @@ three-beat Phrasing! batch on the COMMS feed + observer-favor toast
 
 Current state (verified 2026-05-09 end-of-session):
 
-- Tests: **1358 pass** | 6 expected fail (66/66 files green).
+- Tests: **1361 pass** | 6 expected fail (67/67 files green).
 - Build: clean (`pnpm build`).
-- Phone initial JS: **~98.84 KB gzipped** (player 18.65 + shared 65.73
-  + VisualElement 14.46). +0.33 KB vs prior end-of-session baseline
-  (98.51 KB) for the six per-card observer Phrasing! pools — well
-  under the 100 KB ceiling (1.16 KB headroom). Vite extracted
-  MinimalCard + AnimatePresence into lazy chunks. Drag/layout-
-  projection chunk (~27.40 KB gz), rearrange UI (3.20 KB gz), and
-  MinimalCard chunk (5.95 KB gz) all lazy + prefetched at idle.
+- Phone initial JS: **~98.82 KB gzipped** (player 18.65 + shared 65.71
+  + VisualElement 14.46). +0.31 KB vs prior end-of-session baseline
+  (98.51 KB) for the six per-card observer Phrasing! pools + GameOver
+  winner Phrasing! variant; the GameOver refactor to shared `pick()`
+  saved 0.02 KB on the shared chunk. 1.18 KB headroom under the
+  100 KB ceiling. Vite extracted MinimalCard + AnimatePresence into
+  lazy chunks. Drag/layout-projection chunk (~27.40 KB gz), rearrange
+  UI (3.20 KB gz), and MinimalCard chunk (5.95 KB gz) all lazy +
+  prefetched at idle.
 - Triage state, run `2026-05-08-2022-5p`: **0 OPEN · 0 BLOCKED** ·
   29 RESOLVED · 7 LOW-SIGNAL · 2 KNOWN-PRODUCT · 1 DUPLICATE. P1 6 · P2 33.
 
@@ -287,7 +289,7 @@ Tone DNA — see `docs/PRODUCT-SPECIFICATION.md` §3.5. Cadence is
 unlikely if you respect the ❌ guards (no errors, no repeat-view, no
 rule text).
 
-**Shipped (11):**
+**Shipped (12):**
 
 - ✅ EliminatedView flavor pool — *"Penetrated by enemy assets.
   ...Phrasing."* (`src/client/player/EliminatedView.tsx:17`)
@@ -307,22 +309,28 @@ rule text).
   - Back Channel — *"X slipped in through the back. ...Phrasing."*
   - Intel Briefing — *"X is checking what's coming. ...Phrasing."*
   - Go Dark — *"X turned off the lights. ...Phrasing."*
+- ✅ GameOver winner-subtitle pool (board view) —
+  *"X came out on top. ...Phrasing."* (`src/client/shared/GameOver.tsx`)
 
 **Planned beats (queue):**
 
 - [ ] **Lobby / waiting copy** — implicit phrasing in idle states.
-  Currently `Lobby.tsx` has *"Waiting for players to come..."* —
-  evaluate whether other lobby strings (host disconnected, session
-  reconnect) can carry the rhythm.
+  Currently `Lobby.tsx` uses *"Awaiting check-in"* + animated dots
+  and *"Opening secure channel"* + dots. Both are tonally strong as
+  written; explicit Phrasing! callout would cheapen the Pendleton
+  voice. Skip unless a new idle surface lands that wants explicit
+  cadence (host-handoff, multi-room transition, etc.).
 - [ ] **DramaOverlay beat** — one rare, high-drama interrupt where a
   Phrasing! beat lands inside the cinematic. BURNED-draw is a candidate
   ("Burned" + reaction copy). Coordinate with motion design — beat must
-  not interrupt the cinematic's pacing.
-- [ ] **GameOver flavor pool** — if/when GameOver has a flavor pool,
-  add Phrasing! beats. If it doesn't, evaluate adding one (this is
-  natural cadence territory).
-- [ ] **Loading / connection messages** — anywhere a player sits idle
-  during reconnect, host-handoff, or initial join.
+  not interrupt the cinematic's pacing. Flagged risky for solo Claude
+  session; pair with a motion/timing review before shipping.
+- [ ] **Loading / connection messages** — `ConnectionOverlay.tsx`
+  currently shows *"Opening channel..."* and *"Re-establishing
+  channel..."* (transient) and *"// CHANNEL DOWN"* (terminal-error,
+  ❌ surface). The transient strings are too brief and too rare for a
+  Phrasing! beat to land naturally; revisit if a longer-lived loading
+  state is added (asset preload, multi-server handshake, etc.).
 
 Append to spec §3.5 "Shipped beats" list as each lands. Saturation
 guardrail: each pool sized so Phrasing! lands at ~25% (e.g. 1

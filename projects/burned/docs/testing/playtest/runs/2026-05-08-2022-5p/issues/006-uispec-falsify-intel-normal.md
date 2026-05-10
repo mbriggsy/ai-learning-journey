@@ -1,8 +1,9 @@
 # 006-uispec-falsify-intel-normal — Falsify Intel rearrange uses tap-to-order form, not drag/espionage UI
 
 **Severity (triage):** P2
-**Status:** 🟡 BLOCKED — design-sprint scope
-**Disposition:** Bundled with #004 + #005 as one Falsify Intel rearrange redesign sprint (drag-to-reorder UI, dossier vocabulary, motion). See #004 for full disposition.
+**Status:** ✅ RESOLVED
+**Resolution:** Falsify Intel design sprint shipped 2026-05-09 in `7c4b8f5d`. Drag-to-reorder UI now matches the catalog spec call-out (`docs/testing/playtest/SCENARIOS.md:2268-2272` "drag-to-reorder affordance" + lines 2297-2300 vibe note "drag, redact-marker, commit"). `Reorder.Group` provides the drag affordance, redact-stamp priority markers (01/TOP, 02/MID, 03/BOTTOM) provide the redact-marker, "Commit File" CTA provides the commit verb. Column-2 ACTOR spec satisfied — no longer a divergence. See #004 for full sprint disposition. Implementation in `FalsifyIntelRearrange.tsx` behind a `lazy()` boundary to keep the ~27 KB `layout-*` chunk out of the always-loaded player entry.
+**Original disposition (pre-fix):** Bundled with #004 + #005 as one Falsify Intel rearrange redesign sprint (drag-to-reorder UI, dossier vocabulary, motion). See #004 for full disposition.
 **Seed kind:** ui-spec-divergence
 **Source seats:** seat-1
 **Linked scenarios:** FALSIFY-INTEL-NORMAL (catalog: SCN-FALSIFY-INTEL-NORMAL-01)

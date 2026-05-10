@@ -224,9 +224,22 @@ Active warnings only. Older landmines have moved to `docs/insights/` and
   action button (NameCard, FuturePeek, DefusePlacement, TargetSelect)
   uses the two-track guard pattern: sync `submittedRef` + async
   `submitted` state. New sheets follow the same shape.
-- **Audit pattern catch.** Fix commits should cite the issue ID in the
-  subject line (`fix(...): close X-NN — summary`). Topic-only refs
-  (`"TODO #11"`) hide commits from `E2E-ISSUE-LIST` git-grep audits.
+- **Triage closure hygiene** (caught 2026-05-09 on Falsify sprint
+  #004/#005/#006). When a fix commit closes one or more triage issues,
+  three updates land in the SAME commit (or an immediate follow-up):
+  (1) **Subject line cites issue ID(s)** — `fix(...): close X-NN — summary`.
+  Topic-only refs (`"TODO #11"`) hide commits from `E2E-ISSUE-LIST`
+  git-grep audits and from triage-archeology grep.
+  (2) **Issue body Status field flips** — `🟡 BLOCKED ...` →
+  `✅ RESOLVED`, with a `**Resolution:**` line citing the commit SHA +
+  what shipped. Preserve the original `**Disposition:**` as
+  `**Original disposition (pre-fix):**` for audit trail.
+  (3) **Regenerate INDEX.md** — `pnpm exec tsx
+  scripts/playtest/regen-issue-index.ts <RUN_DIR>/issues`. INDEX is
+  derivative of the body Status fields; skipping (2) leaves it stale
+  even after regen. Note: the script wants the `issues/` subdir as its
+  arg, NOT the run dir. The `.claude/skills/playtest-run/SKILL.md:230`
+  example writes `<RUN_DIR>` which is wrong — use the `issues/` path.
 - **Pre-starting dev servers breaks the orchestrator.** `pnpm
   playtest:run` spawns its own wrangler with `PLAYTEST_TOKEN` baked in
   via `.env`. Pre-starting `pnpm dev:server` binds 8787 with no token

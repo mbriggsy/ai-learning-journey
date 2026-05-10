@@ -5,7 +5,7 @@
 ## Summary
 
 - **Total issues:** 39
-- **Status:** OPEN 0 · RESOLVED 24 · BLOCKED 5 · DUPLICATE 1 · KNOWN-PRODUCT-CALL 2 · LOW-SIGNAL 7
+- **Status:** OPEN 0 · RESOLVED 27 · BLOCKED 2 · DUPLICATE 1 · KNOWN-PRODUCT-CALL 2 · LOW-SIGNAL 7
 - **Severity:** P0 0 · P1 6 · P2 33
 - **By seed kind:**
   - scripted-scenario: 23
@@ -20,7 +20,7 @@
 
 | ID | Title | Severity | Status | Linked | Candidate dup |
 | --- | --- | --- | --- | --- | --- |
-| [005-falsify-intel-normal](005-falsify-intel-normal.md) | Falsify Intel rearrange UI is a tap-number form, not an espionage-weighted cinematic panel | P2 | BLOCKED | FALSIFY-INTEL-NORMAL (SCN-FALSIFY-INTEL-NORMAL-01) | — |
+| [005-falsify-intel-normal](005-falsify-intel-normal.md) | Falsify Intel rearrange UI is a tap-number form, not an espionage-weighted cinematic panel | P2 | RESOLVED | FALSIFY-INTEL-NORMAL (SCN-FALSIFY-INTEL-NORMAL-01) | — |
 | [008-scn-back-channel-normal-01](008-scn-back-channel-normal-01.md) | Back Channel normal-play: scenario fires clean; OTHER observer phone view lacks post-resolution drama beat | P2 | RESOLVED | SCN-BACK-CHANNEL-NORMAL-01 | — |
 | [011-scn-intercepted-single-at-depth-0-01](011-scn-intercepted-single-at-depth-0-01.md) | Interceptor sees no toast describing what combo is being played during nope window | P2 | RESOLVED | SCN-INTERCEPTED-SINGLE-AT-DEPTH-0-01 | — |
 | [014-back-channel-normal](014-back-channel-normal.md) | Back Channel scenario fires clean from ACTOR seat; low-severity presentation gap corroborates issue 012 | P2 | RESOLVED | BACK-CHANNEL-NORMAL | — |
@@ -59,7 +59,7 @@ Spec-level findings against `docs/PRODUCT-SPECIFICATION.md` §2 (Quality Bar) + 
 
 | ID | Title | Severity | Status | Linked | Candidate dup |
 | --- | --- | --- | --- | --- | --- |
-| [004-vibe-falsify-intel-normal](004-vibe-falsify-intel-normal.md) | Falsify Intel rearrange feels like a form, not espionage | P2 | BLOCKED | FALSIFY-INTEL-NORMAL | — |
+| [004-vibe-falsify-intel-normal](004-vibe-falsify-intel-normal.md) | Falsify Intel rearrange feels like a form, not espionage | P2 | RESOLVED | FALSIFY-INTEL-NORMAL | — |
 | [009-vibe-scn-back-channel-normal-01](009-vibe-scn-back-channel-normal-01.md) | Back Channel observer intercept-window lacks assessed dramatic weight (agent-polling artifact) | P2 | LOW-SIGNAL | SCN-BACK-CHANNEL-NORMAL-01 | — |
 | [012-vibe-back-channel-normal](012-vibe-back-channel-normal.md) | Back Channel bottom-draw has no cinematic distinction from a top-draw | P1 | RESOLVED | BACK-CHANNEL-NORMAL | — |
 | [013-vibe-game-moment-first-turn-back-channel](013-vibe-game-moment-first-turn-back-channel.md) | First-turn Back Channel landing flat: no opening-gambit framing, no bottom-draw visual distinction | P2 | RESOLVED | GAME-MOMENT-FIRST-TURN-BACK-CHANNEL | — |
@@ -74,7 +74,7 @@ Phone view contradicts Column 2 prose for the seat's role (D13 / R10). The "Ruli
 
 | ID | Title | Severity | Status | Linked | Candidate dup | Viewer role | Ruling A |
 | --- | --- | --- | --- | --- | --- | --- | --- |
-| [006-uispec-falsify-intel-normal](006-uispec-falsify-intel-normal.md) | Falsify Intel rearrange uses tap-to-order form, not drag/espionage UI | P2 | BLOCKED | FALSIFY-INTEL-NORMAL (catalog: SCN-FALSIFY-INTEL-NORMAL-01) | — | ACTOR | — |
+| [006-uispec-falsify-intel-normal](006-uispec-falsify-intel-normal.md) | Falsify Intel rearrange uses tap-to-order form, not drag/espionage UI | P2 | RESOLVED | FALSIFY-INTEL-NORMAL (catalog: SCN-FALSIFY-INTEL-NORMAL-01) | — | ACTOR | — |
 
 ## Role-drift findings — low-signal
 

@@ -1,8 +1,9 @@
 # 005-falsify-intel-normal — Falsify Intel rearrange UI is a tap-number form, not an espionage-weighted cinematic panel
 
 **Severity (triage):** P2
-**Status:** 🟡 BLOCKED — design-sprint scope
-**Disposition:** Bundled with #004 + #006 as one Falsify Intel rearrange redesign sprint (drag-to-reorder UI, dossier vocabulary, motion). See #004 for full disposition.
+**Status:** ✅ RESOLVED
+**Resolution:** Falsify Intel design sprint shipped 2026-05-09 in `7c4b8f5d`. Tap-to-assign-number form replaced with a `Reorder.Group` drag-to-reorder dossier UI — each slot renders the canonical `MinimalCard`, redact-stamp priority markers (01/TOP, 02/MID, 03/BOTTOM) overlay with alternating hand-stamped rotation, full-bleed `BottomSheet` (`tall` prop), single-tap enlarges to detail view, "Commit File" CTA. Cinematic panel delivered via drag affordance + dossier framing + redact stamps — closes the espionage-weighted-cinematic-panel gap. See #004 for full sprint disposition. Implementation in `FalsifyIntelRearrange.tsx` behind a `lazy()` boundary to keep the ~27 KB `layout-*` chunk out of the always-loaded player entry.
+**Original disposition (pre-fix):** Bundled with #004 + #006 as one Falsify Intel rearrange redesign sprint (drag-to-reorder UI, dossier vocabulary, motion). See #004 for full disposition.
 **Seed kind:** scripted-scenario
 **Source seats:** seat-1
 **Linked scenarios:** FALSIFY-INTEL-NORMAL (SCN-FALSIFY-INTEL-NORMAL-01)

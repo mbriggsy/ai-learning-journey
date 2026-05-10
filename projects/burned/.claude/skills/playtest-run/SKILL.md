@@ -227,9 +227,11 @@ Output path (also in the spawn prompt): ${seed.issuePath}`,
 
 After all triage agents finish:
 ```bash
-pnpm exec tsx scripts/playtest/regen-issue-index.ts "<RUN_DIR>"
+pnpm exec tsx scripts/playtest/regen-issue-index.ts "<RUN_DIR>/issues"
 ```
-This rebuilds `<RUN_DIR>/issues/INDEX.md` from the per-issue files.
+This rebuilds `<RUN_DIR>/issues/INDEX.md` from the per-issue files. The
+script wants the `issues/` subdir as its arg, not the run dir — passing
+the run dir writes a zero-issue INDEX to the wrong path.
 
 ## Phase 6 — Report
 

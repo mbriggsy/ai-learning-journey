@@ -1,7 +1,6 @@
 ---
 title: Art-directed palettes fail Radix APCA guarantees without significant lightness adjustments
 date: 2026-04-12
-phase: css-foundation-rebuild/phase-1
 modules: [src/client/shared/tokens/primitives.css]
 tags: [apca, wcag, radix, cvd, color, accessibility, palette]
 ---

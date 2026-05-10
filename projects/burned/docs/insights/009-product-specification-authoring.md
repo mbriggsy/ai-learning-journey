@@ -1,7 +1,6 @@
 ---
 title: Authoring BURNED's product specification — lessons from a 1M-token session
 date: 2026-04-10
-phase: spec-authoring
 modules: [docs/PRODUCT-SPECIFICATION.md, docs/ideation/2026-04-11-visual-layer-autopsy.md, src/client/]
 tags: [process, spec, debate, architecture, retheme, authoring, pattern-learning]
 ---
@@ -18,7 +17,7 @@ UMB's phase 4 and phase 5 plans both inherited *"indistinguishable from a polish
 
 BURNED's phase 1–6 plans couldn't inherit anything because there was no spec to inherit from. Each CSS Module made independent decisions — "organized chaos" per the visual autopsy. The fix is not *"put Visual Architecture in the spec"* — it's *"write the spec, then generate a new plan from it."*
 
-## Key learnings
+## Key Insight
 
 ### 1. Specs are loaded every session; phase plans are not
 

@@ -1,5 +1,5 @@
 ---
-title: AnimatePresence has a one-rAF window where content reads as `transform: none` before `initial` applies
+title: "AnimatePresence has a one-rAF window where content reads as `transform: none` before `initial` applies"
 date: 2026-05-05
 modules: [src/client/shared/BottomSheet.tsx, tests/e2e/framer-bottom-sheet-shape.spec.ts]
 tags: [framer-motion, animatepresence, runtime-gate, per-frame-sampling]

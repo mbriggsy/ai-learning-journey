@@ -1,7 +1,6 @@
 ---
-title: "React re-renders read whatever's in the store AT notify time — write ALL slices before triggering notify"
+title: React re-renders read whatever's in the store AT notify time — write ALL slices before triggering notify
 date: 2026-04-23
-phase: playtest-harness docs migration (originally debugged 2026-04-23 Falsify Intel empty-sheet)
 modules: [src/client/shared/gameStore]
 tags: [react, useSyncExternalStore, state-management, websocket, render-order]
 ---

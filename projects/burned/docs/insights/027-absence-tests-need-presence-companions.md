@@ -1,7 +1,6 @@
 ---
-title: "Absence-of-X assertions need presence-of-Y companions — otherwise 'no leak' passes when 'no traffic at all'"
+title: Absence-of-X assertions need presence-of-Y companions — otherwise 'no leak' passes when 'no traffic at all'
 date: 2026-04-24
-phase: playtest-harness Phase 3
 modules: [scripts/playtest/lib/selftest-checks.ts]
 tags: [testing, integration-testing, vacuous-truth, assertion-design, self-test]
 ---

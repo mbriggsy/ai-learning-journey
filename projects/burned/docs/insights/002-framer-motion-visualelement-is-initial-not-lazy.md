@@ -1,7 +1,6 @@
 ---
 title: Framer Motion VisualElement chunk is initial (modulepreloaded), not lazy
 date: 2026-04-05
-phase: 1
 modules: [src/client/shared/MotionProvider.tsx, src/client/shared/motion-features.ts]
 tags: [framer-motion, bundle-size, vite8, LazyMotion, modulepreload, budget]
 ---

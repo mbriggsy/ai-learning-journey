@@ -524,6 +524,8 @@ Nopes can be played on top of Nopes, creating a chain:
 
 There is **no limit** to how many Nopes can be chained.
 
+*(Digital implementation caps the chain at 10 (`MAX_NOPE_CHAIN`, see `src/server/game/engine.ts:14`) as a state-machine depth bound. Practical limit only — physical game has no limit.)*
+
 ### Nope Timing
 
 - A Nope can be played **at any time** by **any player**, even when it is not

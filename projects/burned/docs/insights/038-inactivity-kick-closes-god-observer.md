@@ -1,7 +1,6 @@
 ---
-title: "Server inactivity-kick alarm closed god observer along with players → orchestrator silently lost telemetry on slow-paced sessions"
+title: Server inactivity-kick alarm closed god observer along with players → orchestrator silently lost telemetry on slow-paced sessions
 date: 2026-04-29
-phase: playtest-harness Phase 6 Unit 3 (calibration retry attempt #4)
 modules: [src/server/room.ts, scripts/playtest/lib/god-subscriber.ts]
 tags: [playtest-harness, calibration, websocket, inactivity-timer, silent-failure, observer-exempt]
 ---

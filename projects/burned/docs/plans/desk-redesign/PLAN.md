@@ -2,13 +2,14 @@
 title: "Desk Redesign — Arena as Mother's Office"
 type: feat
 date: 2026-04-22
-status: partially-executed
+status: shipped
 executed_on: 2026-04-22
+note: Board ships as-is. Asset polish (ashtray/tumbler/dossier-stack) + BlotterContent→DeskSurface rename deferred indefinitely.
 ---
 
 # Desk Redesign — Arena as Mother's Office
 
-**Status:** Partially executed 2026-04-22 — `Nameplate.tsx` + `DossierFeed.tsx` extracted; blotter metaphor retired in rendering. Phase 5.5 asset work (ashtray, tumbler, closed dossier stack) + `BlotterContent` → `DeskSurface` rename deferred. Follow-ups live in `TODO.md` §8.
+**Status:** Shipped 2026-04-22 — `Nameplate.tsx` + `DossierFeed.tsx` extracted; blotter metaphor retired in rendering; board reads as polished mahogany desk. **Board ships as-is.** Phase 5.5 asset work (ashtray, tumbler, closed dossier stack) + `BlotterContent` → `DeskSurface` rename deferred indefinitely — not currently tracked; revisit only if a future visual pass surfaces them.
 
 **Premise:** Retire the cream-paper blotter concept. The central play surface becomes the polished mahogany desk itself. Cards sit on wood (dimensionally honest). COMMS becomes a manila dossier (a real object, not a region of paper). Status becomes a brass nameplate (physical, not a text strip). Closer to an Archer screenshot. Unified arena. No more 2D-paper-holding-3D-cards contradiction.
 

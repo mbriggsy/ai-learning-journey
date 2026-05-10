@@ -40,12 +40,17 @@ For phone testing during development, use your machine's local IP instead of `lo
 |---------|-------------|
 | `pnpm dev:server` | Start wrangler dev server (game server, port 8787) |
 | `pnpm dev` | Start Vite dev server (hot reload, port 5173) |
+| `pnpm dev:cleanup` | Kill orphan workerd + report port-5173/8787 binders |
 | `pnpm build` | Typecheck + production build |
 | `pnpm typecheck` | TypeScript type checking |
 | `pnpm test` | Run unit tests (Vitest) |
 | `pnpm test:watch` | Run tests in watch mode |
-| `pnpm lint` | ESLint (import boundary enforcement) |
+| `pnpm test:e2e` | Run Playwright E2E tests |
+| `pnpm lint` | ESLint + CSS lint (import boundary + CSS rules) |
 | `pnpm preview` | Preview production build |
+| `pnpm verify:bundle` | Verify prod bundle (dev hooks tree-shaken, chunk sizes) |
+
+> Common-use subset. Full script inventory is in `package.json`; playtest harness scripts (`pnpm playtest:*`) are documented in `scripts/playtest/README.md`.
 
 ## Key Technologies
 
@@ -56,14 +61,16 @@ For phone testing during development, use your machine's local IP instead of `lo
 - **[Vitest](https://vitest.dev/)** — unit testing. Same config pattern as UMB.
 - **[Playwright](https://playwright.dev/)** — E2E testing. Multi-browser context for simulating board + phone clients.
 
-## Deployment
+## Deployment (planned — not yet deployed)
 
-- **Client:** Cloudflare Pages — auto-deploy via GitHub Actions on push to main
-- **Server:** Wrangler deploy via GitHub Actions (server deploys before client)
-- **Cost:** $0 (free tier covers everything for a party game)
-- **Rollback:** CF Pages instant rollback via dashboard, wrangler via git revert + redeploy
+> **Status:** Nothing has been deployed to Cloudflare yet. Spec §8.5 acceptance criteria are unchecked. The plan below is the intended target shape; treat as a roadmap, not a description of current reality.
 
-See [phase-6-hardening-deploy.md](../plans/_archive/engine-build/phase-6-hardening-deploy.md) for the original deployment pipeline plan (archived — deployment is shipped; see `wrangler.toml` and GitHub Actions for live config).
+- **Client (planned):** Cloudflare Pages — auto-deploy via GitHub Actions on push to main
+- **Server (planned):** Wrangler deploy via GitHub Actions (server deploys before client)
+- **Cost (target):** $0 (free tier covers everything for a party game)
+- **Rollback (planned):** CF Pages instant rollback via dashboard; wrangler via git revert + redeploy
+
+See [phase-6-hardening-deploy.md](../plans/_archive/engine-build/phase-6-hardening-deploy.md) for the original deployment pipeline plan (archived from the engine-build phase set; current deploy work is gated behind the visual rebuild and playtest harness landing — see `TODO.md` §4 carryover).
 
 ## Troubleshooting
 
@@ -71,4 +78,4 @@ See [phase-6-hardening-deploy.md](../plans/_archive/engine-build/phase-6-hardeni
 Make sure your phone and dev machine are on the same WiFi. Use the machine's local IP (e.g., `http://192.168.1.x:5173/player.html?room=ROOMCODE`), not `localhost`.
 
 ### Wrangler dev server won't start
-Check that port 8787 isn't in use. Kill any orphaned processes: `npx kill-port 8787`.
+Check that port 8787 isn't in use. Run `pnpm dev:cleanup` — kills orphan workerd + reports binders on ports 5173/8787.

@@ -1,7 +1,6 @@
 ---
 title: Adversarial swarm review — "maximum overdrive" due diligence
 date: 2026-04-06
-phase: post-review
 modules: [full codebase]
 tags: [process, review, agents, quality, methodology]
 ---

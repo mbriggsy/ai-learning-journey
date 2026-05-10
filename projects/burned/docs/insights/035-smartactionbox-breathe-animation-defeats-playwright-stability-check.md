@@ -1,7 +1,6 @@
 ---
-title: "SmartActionBox breathe animation defeats Playwright element-stability check — agents cannot click action buttons"
+title: SmartActionBox breathe animation defeats Playwright element-stability check — agents cannot click action buttons
 date: 2026-04-25
-phase: playtest-harness Phase 6 Unit 3 (calibration retry attempt #3b)
 modules: [src/client/player/SmartActionBox.module.css, scripts/playtest/agents/seat-scripted.md, .claude/agents/playtest-seat-N.md]
 tags: [playtest-harness, calibration, animation, playwright, click-stability, real-vs-smoke]
 ---
@@ -148,7 +147,7 @@ phase6-smartactionbox-clickability-smoke that asserts Playwright can click
 
 If Option 1 turns out to look bad after re-tuning, fall back to Option 2.
 
-## Lesson
+## Key Insight
 
 **Animation as gameplay-signal vs animation as DOM motion.** The breathe
 pulse is correct UX — the player NEEDS the button to look "alive." But
@@ -181,7 +180,7 @@ Insights 031-034 were harness bugs; insight 035 is a product testability
 concern. Calibration is now finding things its mid-stack tests can't —
 exactly the calibration mandate.
 
-## Next
+## Follow-up
 
 Decide Option 1 vs Option 2. If Option 1: implement, add regression smoke,
 retry calibration. If Option 2: add `?harness=1` honoring + a 1-line agent

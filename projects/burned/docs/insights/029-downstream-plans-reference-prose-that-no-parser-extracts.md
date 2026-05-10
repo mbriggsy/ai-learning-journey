@@ -1,7 +1,6 @@
 ---
 title: Downstream plans reference structured data that upstream only captured as authorial prose
 date: 2026-04-24
-phase: playtest-harness Phase 3
 modules: [scripts/playtest/lib/scenario-detector.ts, scripts/playtest/lib/coverage-reporter.ts]
 tags: [planning, multi-unit-plans, producer-consumer, parser-scope, signature-audit, data-flow]
 ---

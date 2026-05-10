@@ -1,7 +1,6 @@
 ---
 title: "`contain: layout` (and siblings) creates a containing block that traps `position: fixed` descendants"
 date: 2026-04-23
-phase: playtest-harness docs migration (originally debugged 2026-04-23 EndGameControl)
 modules: [src/client/board, src/client/shared]
 tags: [css, modal, contain, position-fixed, containing-block, z-index]
 ---

@@ -1,7 +1,6 @@
 ---
 title: Nope chain breaks effect resolution — reading identity from a mutated discard pile
 date: 2026-04-05
-phase: 2
 modules: [src/server/game/engine.ts]
 tags: [nope, discard-pile, state-mutation, identity, showstopper]
 ---

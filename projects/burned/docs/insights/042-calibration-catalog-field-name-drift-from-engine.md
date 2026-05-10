@@ -1,8 +1,11 @@
-# Insight 042 — Calibration catalog drifts from engine event shapes; `coverage: fired 0` is field-name mismatch, not prompt-tuning
-
-**Date:** 2026-04-30
-**Discovered while:** Investigating TODO item #17 (`fired 0 / threshold 1` in `runs/2026-04-29-2139-3p` despite agents observably exercising 4 distinct catalog scenarios).
-**Status:** CLOSED 2026-04-30 morning. Catalog renames + agent-launcher role-primary fix landed; `detectFires` replay against the prior run's saved `events.jsonl` reports `fired 4 / threshold 1` (was 0). The "judgment call" framing was a false dichotomy — both scenarios kept, renamed to match engine card types (`SCN-SKIP-NORMAL-01` → `SCN-GO-DARK-NORMAL-01`; old `SCN-GO-DARK-NORMAL-01` → `SCN-BURN-THE-FILES-NORMAL-01`).
+---
+title: "Calibration catalog drifts from engine event shapes; `coverage: fired 0` is field-name mismatch, not prompt-tuning"
+date: 2026-04-30
+discovered_while: Investigating TODO item #17 (`fired 0 / threshold 1` in `runs/2026-04-29-2139-3p` despite agents observably exercising 4 distinct catalog scenarios)
+status: CLOSED 2026-04-30 morning. Catalog renames + agent-launcher role-primary fix landed; `detectFires` replay against the prior run's saved `events.jsonl` reports `fired 4 / threshold 1` (was 0). The "judgment call" framing was a false dichotomy — both scenarios kept, renamed to match engine card types (`SCN-SKIP-NORMAL-01` → `SCN-GO-DARK-NORMAL-01`; old `SCN-GO-DARK-NORMAL-01` → `SCN-BURN-THE-FILES-NORMAL-01`).
+modules: [scripts/playtest/fixtures/mini-catalog.md, scripts/playtest/lib/scenario-detector.ts, scripts/playtest/lib/agent-launcher.ts, src/server/game/engine.ts]
+tags: [playtest-harness, calibration, scenario-catalog, engine-events, field-drift, coverage-reporter, role-primary]
+---
 
 ## Symptom
 
@@ -90,7 +93,7 @@ get a one-line pointer instead of the full block. So the catalog fix
 needs a parallel fix here: scan ALL `where` field values for `$ACTOR`
 / `$TARGET` sigils, not just `playerId`.
 
-## The general lesson
+## Key Insight
 
 **"The TODO told me what was wrong" is a hypothesis, not a finding.**
 The real diagnosis lives in the actual artifacts (events.jsonl,

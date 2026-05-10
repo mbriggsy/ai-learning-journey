@@ -1,7 +1,6 @@
 ---
 title: Redundant timeout layers mask each other when an inner mechanism resets the outer
 date: 2026-04-06
-phase: 6
 modules: [src/server/room.ts]
 tags: [timers, heartbeat, idle, redundancy, server]
 ---

@@ -1,7 +1,6 @@
 ---
 title: "`wrangler dev` does not propagate Node process env to workerd — must use `--var` CLI flags"
 date: 2026-04-24
-phase: playtest-harness Phase 3
 modules: [scripts/playtest/lib/server-controller.ts, scripts/playtest/phase2-smoke.ts]
 tags: [wrangler, cloudflare-workers, workerd, subprocess, env-vars, integration-testing]
 ---

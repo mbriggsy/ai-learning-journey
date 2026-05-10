@@ -1,7 +1,6 @@
 ---
-title: "Multi-violation files need multi-error surfaces — and LLM authors need concrete examples, not field lists"
+title: Multi-violation files need multi-error surfaces — and LLM authors need concrete examples, not field lists
 date: 2026-04-29
-phase: BURNED Phase 6 calibration harness polish — playtest finding (TODO #13)
 modules: [scripts/playtest/verify-calibration.ts, scripts/playtest/agents/seat-scripted.md, scripts/playtest/agents/seat-free-play.md]
 tags: [validator-ergonomics, error-aggregation, prompt-engineering, llm-authoring, calibration-finding]
 ---
@@ -88,7 +87,7 @@ Examples are wrapped in 4-tick fences inside the markdown so the
 content shows AS code without being parsed by the seat-log parser at
 calibration time.
 
-## Lesson
+## Key Insight
 
 **Multi-error contexts demand multi-error surfaces.** If a downstream
 artifact can hold N independent violations, surfacing one and bailing

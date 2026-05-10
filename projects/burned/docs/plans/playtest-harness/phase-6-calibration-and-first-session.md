@@ -13,6 +13,9 @@ parent: docs/plans/playtest-harness/roadmap.md
 origin: docs/testing/PLAYTEST-HARNESS-PRD.md
 ---
 
+> **2026-05-09 update — formal Series workflow never operationalized.** This plan was authored against a formal "Series N → tune → Series N+1" cadence that the harness never adopted in practice. The harness shipped, ran ad-hoc sessions (`runs/2026-04-29-2139-3p`, `2026-05-01-1654-3p`, `2026-05-08-0935-3p`, `2026-05-08-2022-5p`), and tuning lived in commit messages + run-dir artifacts rather than a TUNING-LOG. **`docs/testing/playtest/TUNING-LOG.md` was deleted 2026-05-09.** All in-text references below to "TUNING-LOG entries" / "post-series entry in TUNING-LOG.md" are plan-time intent; the actual record of harness tuning is git history. If formal calibration becomes a workstream later, the scaffold structure can be regenerated from §Calibration Output below.
+
+
 # Phase 6 — Calibration & First Real Session
 
 ## Overview

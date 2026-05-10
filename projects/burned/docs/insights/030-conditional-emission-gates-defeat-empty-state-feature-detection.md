@@ -1,7 +1,6 @@
 ---
-title: "Pub/sub feature-detection breaks when emission is gated by a transient internal flag, not by the message-shape contract"
+title: Pub/sub feature-detection breaks when emission is gated by a transient internal flag, not by the message-shape contract
 date: 2026-04-24
-phase: playtest-harness Phase 6 Unit 1
 modules: [src/server/room.ts, scripts/playtest/pre-flight.ts]
 tags: [pub-sub, emission-gates, feature-detection, websockets, capability-probes, plan-vs-reality, partyserver, god-events]
 ---

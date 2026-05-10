@@ -1,7 +1,6 @@
 ---
 title: Stale server timers silently fire on superseded state
 date: 2026-04-05
-phase: Phase 3
 modules: [src/server/game/engine.ts, src/server/room.ts]
 tags: [timer, race-condition, nope-window, generation-counter, async, stale-callback]
 ---

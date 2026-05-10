@@ -10,6 +10,7 @@ phases:
   - phase-3-board-view-migration.md     # completed 2026-04-22
   - phase-4-motion-consolidation.md     # completed 2026-04-22
   - phase-5-verification-acceptance.md  # deepened — active work
+  - phase-5-cvd-followup.md             # in-progress — Options A + C landed 2026-05-06; §2.5 #1/#2/#3 + residuals pending
 ---
 
 # CSS Foundation Rebuild — Roadmap
@@ -24,7 +25,7 @@ phases:
 
 ### The autopsy finding
 
-BURNED's game layer is solid (167/167 tests at plan-authoring time 2026-04-11; current count in `CLAUDE.md`, clean protocol, Framer Motion discipline clean, MinimalCard using container queries correctly). The **visual layer is the only broken surface**, and it's broken in exactly one way: **there is no real token system.** Per the codebase audit (2026-04-11):
+BURNED's game layer is solid (167/167 tests at plan-authoring time 2026-04-11; current count in `TODO.md` §1, clean protocol, Framer Motion discipline clean, MinimalCard using container queries correctly). The **visual layer is the only broken surface**, and it's broken in exactly one way: **there is no real token system.** Per the codebase audit (2026-04-11):
 
 - **2,845 LOC** across 33 CSS files.
 - **123 unique hex colors** across the codebase — 52 in `theme.ts`, **71 literal hex sprinkled across `.module.css` files**. Many are stale fallbacks from the old UMB noir palette, quietly disagreeing with the current runtime values.
@@ -71,53 +72,24 @@ This quality bar is transitively enforced: the roadmap inherits it from the spec
 
 ## §3 — Visual Reference
 
-### §3.1 Verified influences on Archer (primary-source sourced)
+### §3.1 Verified influences (inherited from spec §3.6)
 
-The touchstones below are not Claude's invention and not fan analysis. Each has a named production-team member citing it on the record at an authoritative venue. The single most important verification came on 2026-04-11 when deep research reversed the earlier "Saul Bass is a hallucination" conclusion.
+> **Migrated 2026-05-09.** The verified-influences table (Saul Bass, Kirby/Ditko, Mad Men, 1960 Bond, OSS 117, Pink Panther, deliberate anachronism) and the synthesis derived from it are product-DNA — they live in `docs/PRODUCT-SPECIFICATION.md` §3.6 with their primary-source footnotes. This roadmap inherits them.
 
-| Influence | Who cited it | Where | Role |
-|---|---|---|---|
-| **Saul Bass** | Neal Holman (production designer) | Art of the Title, May 2016[^1] | "Almost every work by Saul Bass was a heavy influence on Archer." |
-| **Catch Me If You Can / Kiss Kiss Bang Bang / The Incredibles end titles** | Neal Holman | Art of the Title, May 2016[^1] | Title-sequence influences, cited in the same interview |
-| **Jack Kirby, Steve Ditko** | Neal Holman | Salon, 2016[^2] | Character rendering references — flat color, bold outlines |
-| **Mad Men** | Neal Holman | Salon, 2016[^2] | Mid-century production design influence |
-| **1960 James Bond** | Adam Reed (creator) | A.V. Club, 2011[^3] | Spy-genre visual vocabulary |
-| **OSS 117** | Adam Reed | A.V. Club, 2011[^3] | Comedy spy aesthetic |
-| **Pink Panther** | Adam Reed | A.V. Club, 2011[^3] | Mid-century comedy spy aesthetic |
-| **Mid-century furniture, 1960s clothing, 1970s muscle cars** | Adam Reed | A.V. Club, 2011[^3] | Era markers |
-| **Deliberate anachronism** | Adam Reed | A.V. Club, 2011[^3] | "Cherry-picking from several decades" — **the show is not a period piece, it's a collage** |
+**Implementation note (footnote pattern).** Spec §3.6's `[^N]` inline-citation pattern (every external reference that could be mistaken for a hallucination gets a numbered footnote, Sources section names the primary source) is a proof-of-shape. If it survives the first-time-player test, formalize as a project-wide doc-standard.
 
-[^1]: Neal Holman, interview at Art of the Title, May 2016. https://www.artofthetitle.com/title/archer/
-[^2]: Neal Holman, Salon, 2016 (accessed via Wayback Machine). Jack Kirby + Steve Ditko + Mad Men cited as influences on character rendering and production design.
-[^3]: Adam Reed, A.V. Club, 2011 (accessed via Wayback Machine). Reed's own list of intentional influences: 1960 Bond, OSS 117, Pink Panther, mid-century furniture, '60s clothing, '70s muscle cars, "deliberate anachronism."
+### §3.2 (merged into spec §3.6)
 
-**Footnote pattern note:** these inline citations are a proof-of-shape for the footnoting idea Briggsy floated on 2026-04-11. The pattern is: any external reference that could be mistaken for a hallucination gets a `[^N]` marker, and the Sources section at the bottom names the primary source. If this pattern survives the first-time-player test, we make it a doc-standard.
+> **Removed 2026-05-09.** Synthesis of the verified influences moved to spec §3.6 alongside the citations table. No standalone content here.
 
-### §3.2 What the verified influences tell us about the look
+### §3.3 Palette implementation (inherited from spec §3.7)
 
-Synthesizing the citations:
+> **Migrated 2026-05-09.** The Season 8 Dreamland reference-season decision and the "inspired by, not licensed from" honest-scoping rule live in spec §3.7. The "teal and orange is fan vocabulary" warning also lives there.
 
-- **Strong silhouettes + flat color fills + bold black outlines** (Kirby + Ditko reference, verified).
-- **Mid-century geometric framing** (Bass + Mad Men + mid-century furniture references, all verified).
-- **Title-sequence DNA** with Bass-style kinetic typography, bold color blocks, silhouette figures, strong horizontals (Bass, Catch Me If You Can, Kiss Kiss Bang Bang, The Incredibles — all verified).
-- **Dry comedy meets spy glamour** — comedy wins when they conflict (per spec §3.3, ratified 2026-04-10).
-- **Deliberate anachronism** — the show pulls from multiple decades intentionally. This gives BURNED license to mix '60s Bond + '60s Bass + '50s mid-century + '70s muscle — we are not bound to a single decade as long as the collage reads coherent.
-- **Ink on flat color** is the show's signature character-rendering technique, documented in production interviews: flat-color vector figures in Illustrator with deliberately thick black outlines, composited in After Effects. Backgrounds are 3D-modeled in Autodesk 3ds Max and painted over in Photoshop. (Not directly relevant to the CSS rebuild, but it's the illustration-style language we should echo in component treatments where possible.)
-
-### §3.3 Palette — reference season and honest scope
-
-**Critical finding from Agent B's research:** No public hex values exist for Archer's production palette. Not in interviews, not in production documents, nowhere. Mark Paterson (art director on later seasons) is on record that **Archer's palette varies intentionally by season** — Season 5 (Vice) was pastel + airbrush; Season 7 (LA detective) was "hot LA hues + letterpress"; Season 8 (Dreamland 1947, Holman's stated favorite — "the prettiest season") was the most mid-century-coherent. No season's hex values are published.
-
-**Decision: Season 8 Dreamland is our reference.** Reasoning:
-- Most mid-century-coherent palette across the whole show.
-- 1947 noir-inflected setting maps cleanly to the cocktail-lounge temperature the spec already describes ("warm teals, burnt oranges, rich creams, amber accents, charcoals").
-- Holman-endorsed as "the prettiest season" — maximum production-designer stamp.
-- Avoids Season 5's pastel-Miami direction (wrong temperature) and Season 7's letterpress-LA direction (too muted for a party game).
-- **Not** a period-piece lock — per §3.1's "deliberate anachronism" finding, we can pull color intensities and accents from other seasons' title cards where useful.
-
-**Honest scoping:** Every hex value we propose is **"inspired by, not licensed from."** No frame-extracted palette becomes "Archer's official palette" in any BURNED doc. Phase 1 frame-extracts colors from representative Season 8 stills, labels them as `observed from S8E01 @ 12:34` or similar, and runs them through the CVD verification gate.
-
-**"Teal and orange" is fan vocabulary.** The spec's direction uses "warm teals, burnt oranges, rich creams, amber accents, deep charcoals" — that's fine as a *direction*, but Agent B's research confirmed it is NOT production-team vocabulary for Archer. Phase 1's palette must justify itself against Dreamland stills, not against a fan-observed label.
+**Phase 1 implementation:**
+- Frame-extract observed colors from representative Season 8 Dreamland stills.
+- Label every extracted color as `observed from S8E01 @ 12:34` (or similar timestamp anchor) — per spec §3.7's honest-scoping rule, no extracted palette becomes "Archer's official palette" in any BURNED doc.
+- Run all fg/bg pairings through the CVD (color-vision-deficiency) verification gate before they enter the token system.
 
 ### §3.4 Typography
 
@@ -159,27 +131,7 @@ Two form factors, two scaling axes, no mixing.
 
 ### §3.6 Recurring design motifs (cross-phase)
 
-Archer's signature bits should land across BURNED as running gags, not one-off planted beats. Every phase file should ask *"does my surface area support this motif? Where?"* and land the beat where it fits naturally. Concentrating jokes on one screen burns them; sprinkling them across the game makes them feel like Archer DNA.
-
-#### Phrasing!
-
-*"Phrasing!"* is Archer's most iconic running joke — a character delivers an unintentional double entendre, and someone (usually Archer himself) calls out *"Phrasing!"* to spotlight the innuendo. It's been in the show since Season 1. Malory famously tried to ban it in Season 3's *"El Contador"*; everyone kept doing it anyway and the joke got funnier for the attempted ban.
-
-**Where phrasing lands in BURNED** (by surface type, not by phase):
-
-- ✅ **Random flavor pools** (like EliminatedView's 8-option pool) — ideal home. Player sees different beats over time, joke doesn't exhaust, surprise preserved.
-- ✅ **Announcement feed copy** (board view — *"Vera played Intercept"*) — subtle phrasing-adjacent framings where they work. The announcement feed scrolls past fast, so a phrasing beat is there-and-gone, doesn't overstay.
-- ✅ **Drama overlay moments** — rare, high-drama interrupts where a sudden phrasing beat cuts tension. Use sparingly.
-- ✅ **Lobby copy / waiting text** — *"Waiting for players to come..."* with trailing ellipsis does the work implicitly without an explicit "Phrasing!" callout. Subtlest landing spot.
-- ❌ **Error messages** — errors are functional, not comedic. Phrasing in a server-rejection text is noise when a player is trying to fix something.
-- ❌ **Repeat-view text** — anything a player sees every turn (like SmartActionBox "Stand by, operative"). Phrasing jokes stale fast on repetition.
-- ❌ **Rule text / card descriptions** — players consult these to learn the game, not to laugh.
-
-**Target cadence across the whole game**: 3-5 distinct phrasing beats total, spread across EliminatedView / AnnouncementFeed / DramaOverlay / Lobby. A player in a full 5-player BURNED game should encounter phrasing 1-2 times (random pool draws) and feel that it's Archer DNA, not a forced bit.
-
-**Committed Phase 2 phrasing beat**: EliminatedView flavor pool adds *"Penetrated by enemy assets. ...Phrasing."* as a 9th flavor line (random draw with the 8 existing lines). Phase 3 should find AnnouncementFeed / Lobby beats. Phase 5 should find a DramaOverlay beat.
-
-**Attribution** — *Phrasing!* as a running joke: Archer seasons 1-14, FX/FXX, Adam Reed and writers' room. The joke needs no footnote citation — it's the show's best-known catchphrase.
+> **Moved 2026-05-09.** The Phrasing! cadence contract migrated to `docs/PRODUCT-SPECIFICATION.md` §3.5 — it's product-DNA tone direction, not CSS plan-time research. Cadence target was also revised to **abundance, not restraint** (away from the original "3-5 distinct beats total" cap). Spec is the source of truth; phase plans inherit. Planned-but-unshipped beats are tracked in `TODO.md` §6.
 
 ---
 
@@ -528,7 +480,7 @@ Five phases. Each phase is its own file in this directory. Each is sequenced; ea
 - Add Vitest CI test: `palette-contrast.test.ts` with WCAG + APCA contrast checks on all fg/bg pairs.
 - Add Vitest CI test: `motion-token-sync.test.ts` verifying TS motion tokens match CSS mirrors.
 - **Fonts:** keep currently-loaded Clash Display for `--font-display` initial render. **Baveuse decision gated on visual review** — if Clash Display fails the §2.2 Archer test against Dreamland reference stills, purchase Baveuse ($30 from Typodermic) and swap the one-line token value. Decision point logged in `TODO.md`.
-- Frame-extract Dreamland S8 reference stills, document in `docs/plans/css-foundation-rebuild/dreamland-reference.md`, derive hex values.
+- Frame-extract Dreamland S8 reference stills, document in `docs/plans/css-foundation-rebuild/dreamland-reference/README.md`, derive hex values.
 
 **Acceptance criteria:**
 - [ ] `pnpm typecheck` clean.

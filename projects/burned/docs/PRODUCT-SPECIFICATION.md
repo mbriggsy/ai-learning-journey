@@ -19,6 +19,20 @@
 
 The mechanics are a faithful, unchanged port of **Exploding Kittens: Party Pack** — same 120-card deck, same card types, same rules. The **world** is completely original: **The Pendleton Agency**, a mid-century spy outfit staffed by brilliant disasters. Five original operative characters (Dash, Vera, Sable, Janet, Neal) replace the cat cards, plus Agent X as the rival wild card; Otto (Krieger archetype) appears in the roster but not the deck. The Exploding Kitten becomes **BURNED** — spy jargon for a blown cover, which is the lose condition. Every card type is rethemed — for example, Defuse → Extraction, Nope → Intercepted, See the Future → Intel Briefing. Full mapping in `docs/RULES-REFERENCE.md` (source of truth: `src/shared/card-defs.ts`).
 
+**Roster (1:1 Archer archetype mapping):**
+
+| BURNED name | Archer counterpart | Category |
+|---|---|---|
+| Dash Barlowe | Sterling Archer | Operative |
+| Vera Khan | Lana Kane | Operative |
+| Sable Ashworth | Cheryl Tunt | Operative |
+| Janet Broadside | Malory Archer | Operative |
+| Neal Proctor | Cyril Figgis | Operative |
+| Otto | Krieger | Roster only (not in card deck) |
+| Agent X | — | Wild |
+
+**Visual-DNA rule:** when a character appears in a new card or arena surface, preserve their established design. The Archer "visually archetype / named differently" contract is load-bearing for tone — breaking it changes what BURNED feels like.
+
 The tone is **Archer**. Dry spy comedy, brilliant disasters, production polish that shouldn't exist on basic cable. The visual language is **literally Archer** — bold line illustration, flat color fills, warm teal/orange/cream palette, mid-century glamour. See §2 (Quality Bar) and §3 (Visual Reference) for the contract.
 
 **BURNED is not a commercial product and has no revenue target. It is an engineering proving ground.** The deliverable is the quality itself. Every decision is judged against §2 (Quality Bar), not against a release date, a scope count, or a shipping deadline. **Quality is the job. Completion without quality is failure.**
@@ -67,11 +81,12 @@ This is a **LOOK** reference, not a vibe reference:
 
 Lifted from Archer's actual visual vocabulary:
 
-- **Illustration style:** bold outlines, flat color fills, minimal shading, angular geometry. Vector-illustrated characters with strong silhouettes. Pendleton-era spy-agency portraiture.
-- **Palette:** warm teals, burnt oranges, rich creams, saturated amber accents. Cocktail-lounge temperature. Deep charcoals for UI chrome. NOT noir black.
+- **Illustration style:** bold outlines, flat color fills, minimal shading, angular geometry. Vector-illustrated characters with strong silhouettes. Pendleton-era spy-agency portraiture. The show's signature character-rendering technique is **ink on flat color** — flat-color vector figures with deliberately thick black outlines (Kirby + Ditko reference, verified — see §3.6).
+- **Palette:** warm teals, burnt oranges, rich creams, saturated amber accents. Cocktail-lounge temperature. Deep charcoals for UI chrome. NOT noir black. Reference season is **Season 8 Dreamland** (see §3.7 for derivation and palette-scoping rules).
 - **Typography:** bold sans serif for display (title cards, card names, headings). Clean geometric sans for body. ISIS-logo-energy for the heaviest hits.
 - **Composition:** confident negative space, dramatic centered compositions, strong horizontals, mid-century geometric framing.
 - **Mood:** dry comedy meets spy glamour. **Comedy wins when the two conflict** (ratified 2026-04-10).
+- **Deliberate anachronism.** Per creator Adam Reed (A.V. Club, 2011), Archer "cherry-picks from several decades" — the show is not a period piece, it's a collage. BURNED inherits this license: '60s Bond + '60s Bass + '50s mid-century + '70s muscle can co-exist as long as the collage reads coherent.
 
 ### §3.3 What Briggsy confirmed (2026-04-10)
 
@@ -107,6 +122,78 @@ Every `clamp()` formula, token scale, spacing step, and typography size derives 
 This is the #1 lesson from `docs/ideation/2026-04-11-visual-layer-autopsy.md`: the current player view uses `42vw` for card sizing, which tracks the wrong axis and is the root cause of the visual fragility. The CSS Foundation Rebuild Plan fixes this by deriving everything from `svh`.
 
 **Do not mix axes.** Player view tokens scale against height. Board view tokens scale against width. Any cross-view shared token (colors, card aspect ratio, font family) must be axis-independent.
+
+### §3.5 Recurring tone motif: "Phrasing!"
+
+*"Phrasing!"* is Archer's signature running joke — a character delivers an unintentional double entendre and someone (usually Archer himself) calls out *"Phrasing!"* to spotlight the innuendo. It's been in the show since Season 1; Malory tried to ban it in Season 3's *"El Contador"* and the joke got funnier for the attempted ban. It is the show's best-known catchphrase and is **core BURNED tone DNA**.
+
+**Cadence: abundance, not restraint.** Phrasing! beats should be seeded generously across the game. Players should encounter Phrasing! often enough that it reads as Archer DNA — a recurring rhythm — not a one-time easter egg. The bar isn't "spread thin to keep the joke fresh"; it's "land it everywhere it lands naturally." Over-saturation is unlikely as long as the constraints below hold.
+
+**Where Phrasing! lands** (✅ surfaces):
+
+- **Random flavor pools** — variety naturally surprises; players see different beats over time. Examples: EliminatedView, GameOver, BURNED-draw flavor lines.
+- **Announcement feed copy** (board view) — fast-scrolling text where a phrasing beat is there-and-gone. Card-played descriptions, transition narration, observer toasts.
+- **Drama overlay moments** — high-drama interrupts where a phrasing beat cuts tension. Use sparingly per beat but recurring across the catalog.
+- **Lobby copy / waiting text** — implicit phrasing (e.g. *"Waiting for players to come..."* with trailing ellipsis) does the work without an explicit *Phrasing!* callout.
+- **Loading / connection messages** — anywhere the player is briefly idle.
+
+**Where Phrasing! does NOT land** (❌ surfaces):
+
+- **Error messages.** Errors are functional, not comedic. Phrasing in a server-rejection text is noise when a player is trying to fix something.
+- **Repeat-view text.** Anything a player sees every turn (SmartActionBox prompts, status strip). Phrasing jokes stale fast on repetition.
+- **Rule text / card descriptions.** Players consult these to learn the game, not to laugh.
+
+**Shipped beats:**
+
+- EliminatedView flavor pool — *"Penetrated by enemy assets. ...Phrasing."* (`src/client/player/EliminatedView.tsx:17`)
+
+**Planned beats** are tracked in `TODO.md`. As beats land, append them to the "Shipped beats" list above.
+
+**Attribution.** *Phrasing!* as a running joke: Archer seasons 1-14, FX/FXX, Adam Reed and writers' room. The joke needs no footnote citation in-game — it's the show's best-known catchphrase.
+
+### §3.6 Verified influences on Archer (primary-source sourced)
+
+The touchstones below are not Claude's invention and not fan analysis. Each has a named production-team member citing it on the record at an authoritative venue.
+
+| Influence | Who cited it | Where | Role |
+|---|---|---|---|
+| **Saul Bass** | Neal Holman (production designer) | Art of the Title, May 2016[^1] | "Almost every work by Saul Bass was a heavy influence on Archer." |
+| **Catch Me If You Can / Kiss Kiss Bang Bang / The Incredibles end titles** | Neal Holman | Art of the Title, May 2016[^1] | Title-sequence influences, cited in the same interview |
+| **Jack Kirby, Steve Ditko** | Neal Holman | Salon, 2016[^2] | Character rendering references — flat color, bold outlines |
+| **Mad Men** | Neal Holman | Salon, 2016[^2] | Mid-century production design influence |
+| **1960 James Bond** | Adam Reed (creator) | A.V. Club, 2011[^3] | Spy-genre visual vocabulary |
+| **OSS 117** | Adam Reed | A.V. Club, 2011[^3] | Comedy spy aesthetic |
+| **Pink Panther** | Adam Reed | A.V. Club, 2011[^3] | Mid-century comedy spy aesthetic |
+| **Mid-century furniture, 1960s clothing, 1970s muscle cars** | Adam Reed | A.V. Club, 2011[^3] | Era markers |
+| **Deliberate anachronism** | Adam Reed | A.V. Club, 2011[^3] | "Cherry-picking from several decades" — the show is not a period piece, it's a collage |
+
+[^1]: Neal Holman, interview at Art of the Title, May 2016. https://www.artofthetitle.com/title/archer/
+[^2]: Neal Holman, Salon, 2016 (accessed via Wayback Machine). Jack Kirby + Steve Ditko + Mad Men cited as influences on character rendering and production design.
+[^3]: Adam Reed, A.V. Club, 2011 (accessed via Wayback Machine). Reed's own list of intentional influences: 1960 Bond, OSS 117, Pink Panther, mid-century furniture, '60s clothing, '70s muscle cars, "deliberate anachronism."
+
+**Synthesis:**
+
+- **Strong silhouettes + flat color fills + bold black outlines** (Kirby + Ditko reference, verified).
+- **Mid-century geometric framing** (Bass + Mad Men + mid-century furniture references, all verified).
+- **Title-sequence DNA** with Bass-style kinetic typography, bold color blocks, silhouette figures, strong horizontals (Bass, Catch Me If You Can, Kiss Kiss Bang Bang, The Incredibles — all verified).
+
+These citations are load-bearing: any future visual-rebuild plan inheriting from this spec gets the Archer-fidelity contract grounded in production-team statements, not fan analysis.
+
+### §3.7 Palette reference season
+
+**Season 8 Dreamland is BURNED's palette reference.**
+
+Reasoning:
+- Archer's palette varies intentionally by season — there is no single "Archer palette." Mark Paterson (art director, later seasons) is on record about this. No public hex values exist for Archer's production palette in any source.
+- Season 8 Dreamland (1947 noir-inflected setting) is the most mid-century-coherent palette across the show.
+- Holman-endorsed as "the prettiest season."
+- Maps cleanly to the cocktail-lounge temperature §3.2 already describes (warm teals, burnt oranges, rich creams, amber accents, charcoals).
+- Avoids Season 5's pastel-Miami direction (wrong temperature) and Season 7's letterpress-LA direction (too muted for a party game).
+- **Not** a period-piece lock — per §3.6's "deliberate anachronism" finding, color intensities and accents from other seasons' title cards are usable where they serve.
+
+**Honest scoping rule.** Every hex value in BURNED is **"inspired by, not licensed from."** No frame-extracted palette becomes "Archer's official palette" in any BURNED doc. Implementation plans frame-extract from Season 8 stills, label them as `observed from S8E01 @ 12:34` or similar, and run them through CVD (color-vision-deficiency) verification.
+
+**"Teal and orange" is fan vocabulary, not production-team vocabulary.** §3.2's direction ("warm teals, burnt oranges, rich creams, amber accents, deep charcoals") is fine as a *direction*, but it is NOT how Archer's production team describes the show. Implementation palettes must justify themselves against Dreamland stills, not against fan-observed labels.
 
 ---
 
@@ -239,7 +326,7 @@ Things we explicitly decided *not* to decide now. Do not build these until revis
 
 - Animated skull icon (spring entry, scale 0 → 1, rotate -15° → 0°)
 - Title line (*"You're Burned."*)
-- Random flavor line from an 8-option pool (mixed spy / EK-legacy — **retheme gap**)
+- Random flavor line from a 9-option pool (rethemed 2026-04-23 per §6.4 Tier 1 closure; see §8.1)
 - "Still alive" player list (chips with color icon + name)
 - Prompt: *"Watch the TV for the action"*
 - **No interaction beyond dismissing** — this is the §5.6 "vocal participation" experience by design
@@ -283,9 +370,9 @@ Shared between phone and board, in `src/client/shared/`:
 
 *Inventory compiled from a full-codebase audit on 2026-04-10 via `Explore` subagent. Grouped by priority tier. These are places where Exploding Kittens leftover language/assets still exist in code, comments, or UI text. **Tier 1 items must be fixed before beginning Visual Architecture implementation.** Tier 2 and 3 are cleanup that should not block visual work but should be completed before the spec exits draft.*
 
-#### Tier 1 — User-visible violations (MUST fix before visual lock)
+#### Tier 1 — User-visible violations (MUST fix before visual lock) — ✅ ALL CLOSED 2026-04-23 (see §8.4)
 
-These directly violate §2 (Quality Bar) and §3 (Archer Visual Reference) because they're text a player sees during gameplay.
+These directly violate §2 (Quality Bar) and §3 (Archer Visual Reference) because they're text a player sees during gameplay. **Status:** all three Tier 1 items closed in the 2026-04-23 retheme pass; original audit prose preserved below for historical context.
 
 1. **EliminatedView title** (`src/client/player/EliminatedView.tsx:45`) — currently says *"You Exploded!"* That's a direct EK phrase. Replace with a spy-tone equivalent — candidates: *"Cover Blown"*, *"You're Burned"*, *"Mission Failed"*. Final copy decided at acceptance pass.
 2. **EliminatedView flavor lines** (`src/client/player/EliminatedView.tsx:8-17`) — 8-option pool, mixed tone. Retheme audit:
@@ -388,7 +475,7 @@ These are code-level leftovers that don't appear in the UI but create cognitive 
 
 **Implementation:** Framer Motion via `motion/react`, with `LazyMotion` + `domMax` lazy-loaded. All components use the tree-shakable `m` component, never the full `motion` component. Enforced by ESLint. Motion features load in a separate chunk after initial paint.
 
-**Alternatives rejected:** GSAP (larger bundle, imperative API doesn't compose with React); Motion One (feature-incomplete for BURNED's needs); React Spring (idiom mismatch); CSS-only animations (insufficient for complex card-play sequencing).
+**Alternatives rejected:** GSAP (larger bundle, imperative API doesn't compose with React; retained as scoped dependency for DramaOverlay's cinematic timeline orchestration only — see insight 043); Motion One (feature-incomplete for BURNED's needs); React Spring (idiom mismatch); CSS-only animations (insufficient for complex card-play sequencing).
 
 **Ratified:** Phase 4/5 of BURNED build.
 

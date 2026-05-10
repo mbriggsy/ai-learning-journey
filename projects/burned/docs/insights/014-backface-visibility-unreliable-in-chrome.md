@@ -1,7 +1,6 @@
 ---
 title: "`backface-visibility: hidden` breaks when Chrome collapses `rotateY(0deg)` to a 2D identity matrix"
 date: 2026-04-23
-phase: playtest-harness docs migration (originally debugged 2026-04-23 Cinematic Arc #2 card-flip)
 modules: [src/client/board/DramaOverlay, src/client/shared/motion]
 tags: [css, 3d-transform, backface-visibility, rotateY, chrome, card-flip, framer-motion]
 ---

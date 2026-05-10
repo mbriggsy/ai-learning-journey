@@ -1,7 +1,6 @@
 ---
 title: "partyserver `connection.close()` inside `onConnect` under hibernation does not promptly deliver a close frame"
 date: 2026-04-24
-phase: playtest-harness Phase 2
 modules: [src/server/room.ts, src/server/god-connection.ts]
 tags: [partyserver, cloudflare-workers, websocket, security, auth, hibernation]
 ---

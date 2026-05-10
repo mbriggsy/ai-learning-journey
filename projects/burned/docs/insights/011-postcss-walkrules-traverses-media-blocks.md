@@ -1,7 +1,6 @@
 ---
 title: PostCSS walkRules traverses into @media blocks — reduced-motion values clobber baseline
 date: 2026-04-12
-phase: css-foundation-rebuild/phase-1
 modules: [src/client/shared/tokens/__tests__/motion-token-sync.test.ts]
 tags: [postcss, testing, css, reduced-motion, parsing]
 ---

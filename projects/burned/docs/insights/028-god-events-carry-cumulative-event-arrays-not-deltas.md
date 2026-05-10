@@ -1,7 +1,6 @@
 ---
 title: "god-events broadcast cumulative event arrays, not deltas — flatten via `.slice(priorLen)` or double-count"
 date: 2026-04-24
-phase: playtest-harness Phase 3
 modules: [src/server/game/engine.ts, src/server/projection.ts, scripts/playtest/lib/scenario-detector.ts]
 tags: [protocol, events-stream, god-subscriber, playtest-harness, cumulative-state, wire-format]
 ---

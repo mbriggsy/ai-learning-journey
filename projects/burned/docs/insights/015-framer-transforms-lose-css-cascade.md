@@ -1,7 +1,6 @@
 ---
 title: "Framer-managed transforms lose the CSS cascade war — can't layer CSS `:active` on the same element"
 date: 2026-04-23
-phase: playtest-harness docs migration (originally debugged 2026-04-21 Emil audit, reverted in `caad694c`)
 modules: [src/client/player/Hand, src/client/board/PlayerStrip]
 tags: [framer-motion, css-cascade, active, transform, press-feedback]
 ---

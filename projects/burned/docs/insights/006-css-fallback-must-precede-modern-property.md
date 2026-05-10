@@ -1,7 +1,6 @@
 ---
 title: CSS fallback declarations must precede the modern property, not follow it
 date: 2026-04-06
-phase: 6
 modules: [src/client/player/player-hardening.css]
 tags: [css, svh, dvh, viewport, mobile, cascade]
 ---

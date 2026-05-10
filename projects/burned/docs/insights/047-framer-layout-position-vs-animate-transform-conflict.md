@@ -126,8 +126,6 @@ That removes the need for `popLayout` entirely. But the bar is "is this
 better than what users see today?" — and today's snap reads cleanly as
 part of the staging cinematic.
 
-## Lessons
-
 - **Runtime gates kill speculation.** The first version of this insight
   shipped a hypothesis without the gate to test it. Four variants of the
   proposed fix produced identical traces; the empirical answer was "the

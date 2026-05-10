@@ -12,6 +12,13 @@ date: 2026-04-11
 status: deepened
 ---
 
+> **Note on test-count references.** This plan was authored against a **167-test
+> baseline** at 2026-04-11. Subsequent test additions are tracked relative to
+> that baseline (e.g. "167 + Phase 1 §2.7 additions"). The current absolute
+> count lives in `TODO.md` §1 (now ~8× the baseline). When this plan says "167
+> baseline + Phase X additions," read it as plan-time historical math — to know
+> the live count, check `TODO.md`.
+
 ## Enhancement Summary
 
 **Deepened on:** 2026-04-12

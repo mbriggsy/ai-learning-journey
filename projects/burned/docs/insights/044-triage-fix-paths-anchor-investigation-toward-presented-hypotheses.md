@@ -1,7 +1,6 @@
 ---
 title: Triage agent fix paths anchor subsequent investigation toward presented hypotheses
 date: 2026-05-01
-phase: post-Phase-6 — calibration-driven bug triage
 modules: [docs/testing/playtest/runs/, scripts/playtest/agents/playtest-triage.md, src/client/shared/DramaOverlay.tsx]
 tags: [debugging, triage, anchoring, instrumentation, eye-in-loop, drama-overlay]
 ---

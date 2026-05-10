@@ -1,7 +1,6 @@
 ---
 title: TypeScript wrappers can't restrict Claude subagents — enforcement lives at the frontmatter tools whitelist, not in the orchestrator's memory
 date: 2026-04-23
-phase: playtest-harness H-3b rigor pass
 modules: [docs/plans]
 tags: [subagents, mcp, tool-allowlist, enforcement-boundary, claude-code, cross-process, frontmatter]
 ---

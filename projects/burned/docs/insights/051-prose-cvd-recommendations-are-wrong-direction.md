@@ -1,7 +1,6 @@
 ---
-title: "Prose CVD recommendations in followup docs are wrong-direction more often than not — probe before editing primitives"
+title: Prose CVD recommendations in followup docs are wrong-direction more often than not — probe before editing primitives
 date: 2026-05-06
-phase: 5
 modules: [src/client/shared/tokens]
 tags: [cvd, palette, oklab, design-system, color, accessibility, deuteranopia, protanopia, tritanopia, culori]
 ---

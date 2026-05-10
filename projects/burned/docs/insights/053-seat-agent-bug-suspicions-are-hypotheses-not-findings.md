@@ -1,7 +1,6 @@
 ---
-title: "Seat-agent bug suspicions are hypotheses — verify against the engine event log before treating as a defect"
+title: Seat-agent bug suspicions are hypotheses — verify against the engine event log before treating as a defect
 date: 2026-05-08
-phase: BURNED playtest harness (production-timing run, 3p)
 modules: [docs/testing/playtest, src/server/game/engine]
 tags: [playtest-harness, agent-blind-spots, ground-truth, engine-verification, false-positive, multi-turn-memory]
 ---
@@ -63,7 +62,7 @@ The agent's mental model collapsed three independent facts (their own
 placement, deck size, no intervening shuffle) into a single faulty
 inference about Back Channel mechanics.
 
-## Lesson
+## Key Insight
 
 **Treat seat-agent bug suspicions as hypotheses, not findings.** Verify
 against the engine event log (`runs/<id>/server/events.jsonl`) before
@@ -133,7 +132,7 @@ continuities) at the harness level: agents read discretizable signals
 (StatusBar text persistence) but miss continuous beats (DramaOverlay
 peak-and-fade).
 
-## Outcome
+## Resolution
 
 §2.4 and §2.7 in TODO.md (run 2026-05-08-0935-3p) both closed as
 **resolved-no-fix — correct system behavior, agent perception/memory

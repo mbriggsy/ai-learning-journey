@@ -4,7 +4,7 @@
 > **Baseline at audit start:** 371/371 Vitest, 15/15 Playwright, typecheck clean.
 > **Total findings:** 89 (17 P0 / 42 P1 / 30 P2).
 > **Post-remediation:** 399/399 Vitest, 15/15 Playwright, typecheck clean.
-> **Current (2026-04-23 post-audit):** 414/414 Vitest, typecheck clean — 15 additional regression tests landed after the audit remediation block.
+> **Current test count:** see `TODO.md` §1 (canonical live count). Audit-snapshot baselines above are preserved as historical reference.
 > **Source reports:** `temp/audit/A-rules-fidelity.md`, `B-disconnect-session.md`, `C-visual-fidelity.md`, `D-input-abuse.md`, `E-validation-boundary.md`.
 > **Screenshots:** `temp/audit/screenshots/` (65 files).
 

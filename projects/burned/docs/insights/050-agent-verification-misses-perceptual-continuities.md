@@ -1,7 +1,6 @@
 ---
-title: "Agent-eye verification systematically misses perceptual continuities — calibration-style passes need eye-in-loop for light, shadow, motion"
+title: Agent-eye verification systematically misses perceptual continuities — calibration-style passes need eye-in-loop for light, shadow, motion
 date: 2026-05-06
-phase: BURNED visual layer (post-CSS-rebuild, asset regen)
 modules: [scripts/generate-cards, public/assets/cards]
 tags: [imagen, eye-in-loop, asset-pipeline, verification, perceptual-continuity, asset-review, agent-blind-spots, prompt-engineering]
 ---

@@ -1,7 +1,6 @@
 ---
 title: Burned card bypassed by paw-tier deck composition despite explicit warning
 date: 2026-04-05
-phase: 2
 modules: [src/server/game/engine.ts]
 tags: [deck-building, classification, special-case, paw-tier, burned-card]
 ---

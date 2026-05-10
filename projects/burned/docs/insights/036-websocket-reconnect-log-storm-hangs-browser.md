@@ -1,8 +1,7 @@
 ---
-title: "PartySocket's default maxRetries:Infinity + browser-native WS error logs = unbounded reconnect attempts when the server vanishes"
+title: PartySocket's default maxRetries:Infinity + browser-native WS error logs = unbounded reconnect attempts when the server vanishes
 date: 2026-04-26
-revised: 2026-04-27
-phase: playtest-harness Phase 6 Unit 3 (calibration retry)
+updated: 2026-04-27
 modules: [src/client/connection, scripts/playtest/lib/orchestrator, scripts/generate-playtest-seat-agents]
 tags: [websocket, reconnect, partysocket, exponential-backoff, harness-teardown, calibration-finding]
 severity: P1
@@ -152,7 +151,7 @@ keeps the browser alive would close the gap. Deferred — the bounded-
 retry contract is the same regardless of trigger, and the e2e test
 exercises that contract.
 
-## Lesson
+## Key Insight
 
 **Library defaults assume "the server's coming back" by default. They are
 wrong by default for our use case.** PartySocket's `maxRetries: Infinity`

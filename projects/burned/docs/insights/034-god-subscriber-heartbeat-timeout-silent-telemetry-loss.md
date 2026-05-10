@@ -1,7 +1,6 @@
 ---
-title: "God-subscriber didn't respond to server heartbeat pings → killed at 40s → silent telemetry loss for the rest of the session"
+title: God-subscriber didn't respond to server heartbeat pings → killed at 40s → silent telemetry loss for the rest of the session
 date: 2026-04-25
-phase: playtest-harness Phase 6 Unit 3 (calibration retry attempt #2)
 modules: [scripts/playtest/lib/god-subscriber.ts, src/server/room.ts]
 tags: [playtest-harness, calibration, websocket, heartbeat, silent-failure, defense-in-depth, real-vs-smoke]
 ---
@@ -140,7 +139,7 @@ Calibration found four distinct harness gaps in three live attempts. Each
 caught earlier would have been cheaper, but each was undetectable without
 running the harness against real Claude agents at real session lengths.
 
-## Lesson
+## Key Insight
 
 **Silent failure compounds.** Bug A (no pong) by itself would just kill the
 connection. Bug B (silent 1001 handling) by itself would just be a debt
@@ -159,7 +158,7 @@ pending; the upstream will notice some other way" as a failed contract until
 you can name the upstream signal. If you can't name it, the failure mode is
 silent.
 
-## Next
+## Follow-up
 
 Verify the fix with a targeted retry. If it sticks, Unit 3 calibration is
 ready to produce real coverage data.

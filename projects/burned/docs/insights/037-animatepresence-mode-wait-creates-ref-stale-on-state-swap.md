@@ -1,7 +1,6 @@
 ---
-title: "AnimatePresence mode='wait' replaces the click target on state swap — Playwright ref goes stale even when the breathe fix holds"
+title: AnimatePresence mode='wait' replaces the click target on state swap — Playwright ref goes stale even when the breathe fix holds
 date: 2026-04-26
-phase: playtest-harness Phase 6 Unit 3 (calibration retry, post-insight-035 fix)
 modules: [src/client/player/SmartActionBox.tsx]
 tags: [framer-motion, animatepresence, playwright, ref-stale, state-transition, calibration-finding]
 ---
@@ -77,7 +76,7 @@ The click DOES register server-side. The "failure" is purely cosmetic in the har
 
 Option 1 if we want the harness to look clean and not produce false-positive "click failed" entries; Option 2 if we want a quick stop-gap; Option 3 if we accept the noise. Probably do Option 1 the next time SmartActionBox is touched for product reasons — don't refactor purely for the harness.
 
-## Lesson
+## Key Insight
 
 **Two distinct Playwright failure modes share the same surface:** stability timeout (continuous animation) and ref-stale (discrete unmount). Insight 035 fixed the first; this is the second. Naming them apart prevents future "we already fixed that" confusion.
 

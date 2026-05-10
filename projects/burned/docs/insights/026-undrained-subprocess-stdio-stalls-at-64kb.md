@@ -1,7 +1,6 @@
 ---
-title: "Undrained Node subprocess stdio pipes stall the child at ~64 KB of output"
+title: Undrained Node subprocess stdio pipes stall the child at ~64 KB of output
 date: 2026-04-24
-phase: playtest-harness Phase 3
 modules: [scripts/playtest/lib/server-controller.ts]
 tags: [node, child-process, subprocess, stdio, backpressure, pipe-buffer]
 ---

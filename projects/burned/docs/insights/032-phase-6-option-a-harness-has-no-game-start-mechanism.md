@@ -1,7 +1,6 @@
 ---
-title: "Phase 6 Option A harness has no mechanism to start the game from the lobby — first real calibration finding"
+title: Phase 6 Option A harness has no mechanism to start the game from the lobby — first real calibration finding
 date: 2026-04-25
-phase: playtest-harness Phase 6 Unit 3 (calibration)
 modules: [scripts/playtest/lib/orchestrator.ts, scripts/playtest/lib/agent-launcher.ts, scripts/playtest/agents/seat-scripted.md, src/client/board, src/client/player]
 tags: [playtest-harness, calibration, lobby, board-view, integration, phase-3-vs-phase-6, scope-gap, option-a]
 ---
@@ -141,7 +140,7 @@ audit trail.
    collision"); no plumbing change made this session, only stale
    processes were killed manually before each retry.
 
-## Lesson
+## Key Insight
 
 Insight 031 captured "preferred architecture deferred → discovered at
 integration." This is a recurrence of the same pattern: the Option A
@@ -159,7 +158,7 @@ zeroed."* The instrument was untunable until calibration revealed the
 zero point was offset by a missing component. Calibration earned its
 keep on the first attempt.
 
-## Next
+## Follow-up
 
 Implement Option 1. New units, fresh SHA pin, retry calibration. Three
 selftest / port-collision follow-ups remain open in TODO.md and become

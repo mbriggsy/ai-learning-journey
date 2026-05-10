@@ -1,7 +1,6 @@
 ---
 title: Surface-coherence plan review misses signature drift — rigor passes need at least one code-grounded reviewer
 date: 2026-04-23
-phase: playtest-harness harden pass (H-1b)
 modules: [docs/plans]
 tags: [planning, review, rigor-pass, methodology, confidence-scoring, citation-verification]
 ---

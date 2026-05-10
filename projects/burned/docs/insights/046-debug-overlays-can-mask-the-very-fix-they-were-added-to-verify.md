@@ -1,7 +1,6 @@
 ---
 title: Debug overlays can mask the very fix they were added to verify
 date: 2026-05-02
-phase: ACTOR nope-window awareness eye-in-loop verification
 modules: [src/client/player/PlayingView.module.css, player.html]
 tags: [debugging, verification-bias, layout, observer-effect, eye-in-loop, false-negative]
 ---
@@ -36,7 +35,7 @@ Two complementary disciplines:
 
 For the specific case of `position: fixed; right: 0` widgets diagnosing right-edge clipping: this is structurally backwards. The widget IS at the right edge — by definition it's at the same place as the bug — and any text inside that's wider than its container will visually mimic the very symptom under investigation.
 
-## Lesson
+## Key Insight
 
 When the symptom is "content at coordinate X looks wrong," diagnostic UI MUST NOT be at coordinate X. The diagnostic and the symptom can become indistinguishable, and the diagnostic's failure modes (overlay clipping its own text, right-anchored content shifting weird) compound the misreading.
 

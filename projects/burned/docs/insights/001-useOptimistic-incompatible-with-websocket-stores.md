@@ -1,7 +1,6 @@
 ---
 title: useOptimistic is incompatible with WebSocket + useSyncExternalStore
 date: 2026-04-05
-phase: phase-3, phase-4
 modules: [src/client, src/shared]
 tags: [react-19, useOptimistic, useSyncExternalStore, websocket, optimistic-updates, partykit]
 ---

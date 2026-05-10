@@ -15,6 +15,7 @@ phases:
   - phase-4-seat-agents.md
   - phase-5-triage-agents.md
   - phase-6-calibration-and-first-session.md
+  - phase-7-rules-coverage-cascade.md   # deferred 2026-05-06 (see insight 052 — drafted then deferred)
 ---
 
 # Multi-Agent Playtest Harness — Roadmap

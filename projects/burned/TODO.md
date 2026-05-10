@@ -233,3 +233,67 @@ Active warnings only. Older landmines have moved to `docs/insights/` and
   → orchestrator's god-connect gets HTTP 401 → `code=4004`. Don't
   pre-start dev servers when running the harness — it owns the
   lifecycle.
+
+---
+
+## 6. Phrasing! beats (planned)
+
+Tone DNA — see `docs/PRODUCT-SPECIFICATION.md` §3.5. Cadence is
+**abundance, not restraint** — seed Phrasing! generously across all
+✅ surfaces. Land beats wherever they fit naturally; over-saturation is
+unlikely if you respect the ❌ guards (no errors, no repeat-view, no
+rule text).
+
+**Shipped (1):**
+
+- ✅ EliminatedView flavor pool — *"Penetrated by enemy assets.
+  ...Phrasing."* (`src/client/player/EliminatedView.tsx:17`)
+
+**Planned beats (queue):**
+
+- [ ] **AnnouncementFeed copy** — sweep the card-played narration +
+  observer toasts in `src/client/player/PlayerAlert.tsx` and
+  `src/client/board/AnnouncementFeed.tsx` for places where a phrasing
+  beat reads naturally. Likely 2-4 beats minimum. Card transitions like
+  Direct Order, Reassign, Back Channel, Call in a Favor are
+  innuendo-rich by name alone.
+- [ ] **Lobby / waiting copy** — implicit phrasing in idle states.
+  Currently `Lobby.tsx` has *"Waiting for players to come..."* —
+  evaluate whether other lobby strings (host disconnected, session
+  reconnect) can carry the rhythm.
+- [ ] **DramaOverlay beat** — one rare, high-drama interrupt where a
+  Phrasing! beat lands inside the cinematic. BURNED-draw is a candidate
+  ("Burned" + reaction copy). Coordinate with motion design — beat must
+  not interrupt the cinematic's pacing.
+- [ ] **GameOver flavor pool** — if/when GameOver has a flavor pool,
+  add Phrasing! beats. If it doesn't, evaluate adding one (this is
+  natural cadence territory).
+- [ ] **Loading / connection messages** — anywhere a player sits idle
+  during reconnect, host-handoff, or initial join.
+
+Append to spec §3.5 "Shipped beats" list as each lands.
+
+---
+
+## 7. HOW-TO-PLAY draft (queued — needs a focused session)
+
+Spec §8.3 contracts a polished how-to-play doc covering:
+
+- All 17 card types (definitions + worked examples)
+- Edge cases (favor empty-hand, triple-steal naming, attack stacking, nope chains, intel briefing + shuffle ordering)
+- Remote-play instructions (how non-local players join + share screen)
+- **Archer-quality writing** — dry-spy comedy register, Phrasing! cadence per spec §3.5
+
+Why deferred: this is real product writing that needs Briggsy's voice. A
+late-session skeleton-write produces tone-deficient slop; the right path
+is a focused session.
+
+When picking it up:
+
+- File at `docs/HOW-TO-PLAY.md`.
+- Source-of-truth for card mechanics is `docs/RULES-REFERENCE.md` — copy nothing verbatim, but every claim must check against that doc.
+- The 5 operatives + Otto + Agent X are introduced in spec §1 with the Archer mapping; how-to-play can lean on those names in examples.
+- Phrasing! beats land naturally in flavor copy and intro framing — see spec §3.5 for the cadence contract.
+- Acceptance test (spec §8.3): "first-time player can read this and play correctly without a host explanation."
+
+When the doc lands, check off spec §8.3 and update README's Project Map.

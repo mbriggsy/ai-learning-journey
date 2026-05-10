@@ -1,7 +1,6 @@
 ---
-title: "Tap-discrimination timer strands on cross-input rapid second event — adjacent card enlarges 400ms after a drifted double-tap"
+title: Tap-discrimination timer strands on cross-input rapid second event — adjacent card enlarges 400ms after a drifted double-tap
 date: 2026-04-29
-phase: BURNED Phase 6 calibration product/UX bug — playtest finding (TODO #9)
 modules: [src/client/player/hooks/useDoubleTap.ts]
 tags: [react-hook, settimeout, state-machine, tap-discrimination, ux, playtest-finding]
 ---
@@ -106,7 +105,7 @@ Verification:
   backdrop and no stage; immediate clean same-card double-tap on the
   same hand correctly staged Dash Barlowe.
 
-## Lesson
+## Key Insight
 
 **Delayed-discrimination timers — those that fire only after a window
 expires without a qualifying follow-up — must cancel on ALL ambiguous

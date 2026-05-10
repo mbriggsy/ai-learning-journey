@@ -1,7 +1,6 @@
 ---
 title: Unlayered CSS modules silently override layered ones
 date: 2026-04-12
-phase: Phase 3 — Board View Migration
 modules: [src/client/board/*.module.css, src/client/shared/*.module.css]
 tags: [css, @layer, cascade, specificity, silent-failure, css-modules]
 ---

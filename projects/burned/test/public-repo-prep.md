@@ -85,11 +85,9 @@ This is a HUMAN review step, not automatable.
 
 ## 5. License + attribution
 
-If the repo flips public, a top-level `LICENSE` file is needed. BURNED
-is currently private and has no license file. Briggsy chooses the
-license at flip time (MIT / Apache-2.0 / proprietary-with-source).
-
-Not a Phase 5 concern — flagged here so it's not forgotten.
+✅ **DONE 2026-05-09.** MIT license picked; `LICENSE` file at repo root.
+`CONTRIBUTING.md` shipped same date with project norms. Both required
+for public flip.
 
 ## 6. Pre-flip command sequence
 
@@ -100,7 +98,7 @@ git status
 # 2. Run all the verification greps from §1 + §2.
 # (Copy-paste from above.)
 
-# 3. Choose + add LICENSE file. Commit.
+# 3. (LICENSE already added 2026-05-09 — verify it's still present.)
 
 # 4. Flip visibility:
 gh repo edit <repo> --visibility public

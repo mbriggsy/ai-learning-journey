@@ -176,7 +176,7 @@ The CSS layer is the only problem. The game works. The visuals need a foundation
 
 ---
 
-## Part 4: The Missing Artifact — Vibes vs Requirements
+## Part 5: The Missing Artifact — Vibes vs Requirements
 
 ### How UMB's Spec Actually Got Created
 

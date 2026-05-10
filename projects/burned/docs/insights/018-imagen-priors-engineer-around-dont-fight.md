@@ -1,7 +1,6 @@
 ---
-title: "Generative-image model priors are unbreakable by prompt engineering — remove or recontextualize, don't argue"
+title: Generative-image model priors are unbreakable by prompt engineering — remove or recontextualize, don't argue
 date: 2026-04-23
-phase: playtest-harness docs migration (observed across Mar-Apr 2026 card/roster generation)
 modules: [scripts/generate-cards, scripts/regen-*, public/assets]
 tags: [imagen, generative-ai, prompt-engineering, asset-pipeline, meta]
 ---

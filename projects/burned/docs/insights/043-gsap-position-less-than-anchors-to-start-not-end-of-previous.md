@@ -1,8 +1,13 @@
-# GSAP `'<'` position parameter anchors to START of previous tween, not end
+---
+title: GSAP `'<'` position parameter anchors to START of previous tween, not end
+date: 2026-05-01
+severity: P0
+surface: src/client/shared/DramaOverlay.tsx
+modules: [src/client/shared/DramaOverlay.tsx, src/client/shared/DramaOverlay.test.ts]
+tags: [gsap, timeline, position-parameter, drama-overlay, motion, p0, instrumentation]
+---
 
-**Date:** 2026-05-01
-**Surface:** `src/client/shared/DramaOverlay.tsx`
-**Severity:** P0 — silently invalidated all drama-beat pacing tuning across the entire game from 2026-04-22 → 2026-05-01.
+P0 — silently invalidated all drama-beat pacing tuning across the entire game from 2026-04-22 → 2026-05-01.
 
 ## What broke
 
@@ -50,7 +55,7 @@ Remove the `'<'` from the BLUR exit tween (so it runs sequentially after the hol
 
 Extracted into `appendHoldAndExit` helper for testability. `DramaOverlay.test.ts` pins the contract via `tl.totalDuration()` assertion: total must equal `holdSec + exitDurationSec`. If anyone re-introduces `'<'` on the blur, total collapses to `max(holdSec, exitDurationSec)` and the test fails noisily.
 
-## The meta-lesson
+## Key Insight
 
 **Calibration agents read state, not motion.** Playtest seat agents reported issue 008 ("ACTOR drama beat absent or imperceptible before DefusePlacement") — they were correct that the beat wasn't perceptible, but their hypothesis was lazy-load race or visual conflation. The actual cause was a quantitative timing bug invisible to discrete state polls.
 

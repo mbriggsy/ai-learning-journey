@@ -1,7 +1,6 @@
 ---
 title: "Continuous CSS animations override `:active { transform }` every frame — must `animation: none` in `:active`"
 date: 2026-04-23
-phase: playtest-harness docs migration (originally debugged 2026-04-21 Emil audit, SmartActionBox)
 modules: [src/client/player/SmartActionBox]
 tags: [css, animation, active, transform, press-feedback, keyframes]
 ---

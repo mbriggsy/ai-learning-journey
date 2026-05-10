@@ -1,7 +1,6 @@
 ---
-title: "Deferring a plan's PREFERRED option for an easier one ships an architectural mismatch that surfaces at integration, not at planning"
+title: Deferring a plan's PREFERRED option for an easier one ships an architectural mismatch that surfaces at integration, not at planning
 date: 2026-04-25
-phase: playtest-harness Phase 6 Unit 2.5
 modules: [.claude/agents/playtest-seat.md, .mcp.json, scripts/playtest/lib/agent-launcher.ts, scripts/playtest/lib/orchestrator.ts]
 tags: [architecture, planning, agent-isolation, mcp-topology, options-A-vs-B, integration-time-discovery, claude-code-subagents]
 ---
@@ -72,7 +71,7 @@ browser (parent navigates to AAA → subagent navigates to BBB on its
 own browser → parent still sees AAA after subagent finishes). That
 experiment could have been run during Phase 4 planning. It wasn't.
 
-## Lesson
+## Key Insight
 
 When a plan documents Options A/B with A "PREFERRED" but you choose B
 for expedience, the **deferred cost** is never deferred — it's

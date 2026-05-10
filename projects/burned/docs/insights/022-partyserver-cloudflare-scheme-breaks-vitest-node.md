@@ -1,7 +1,6 @@
 ---
 title: "partyserver's `cloudflare:` module scheme makes `room.ts` unimportable in Vitest-Node tests"
 date: 2026-04-24
-phase: playtest-harness Phase 2
 modules: [src/server/room.ts, src/server/health.ts]
 tags: [testing, vitest, cloudflare-workers, partyserver, module-resolution, room-exports]
 ---

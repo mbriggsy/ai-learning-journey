@@ -1,7 +1,6 @@
 ---
-title: "When asked to build instrumentation, first check whether existing instrumentation already produced unread data"
+title: When asked to build instrumentation, first check whether existing instrumentation already produced unread data
 date: 2026-05-06
-phase: playtest-harness/phase-7 (drafted then deferred)
 modules: [docs/plans/playtest-harness/, docs/testing/playtest/runs/, docs/testing/E2E-ISSUE-LIST.md]
 tags: [planning, document-review, instrumentation, observability, harness, meta-process]
 ---

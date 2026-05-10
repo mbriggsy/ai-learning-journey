@@ -1,7 +1,6 @@
 ---
 title: Aria-live region staleness mistaken for visible toast persistence
 date: 2026-05-01
-phase: post-Phase-6 — calibration-driven bug triage
 modules: [src/client/shared/announce.ts, src/client/player/PlayerAlert.tsx, scripts/playtest/agents/playtest-seat.md]
 tags: [accessibility, aria-live, calibration, debugging, triage, observability, false-positive]
 ---

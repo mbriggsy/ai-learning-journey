@@ -1,7 +1,6 @@
 ---
 title: "`ws` package's `new WebSocket(url)` sends no Origin header by default — server origin checks reject silently"
 date: 2026-04-24
-phase: playtest-harness Phase 3
 modules: [scripts/playtest/lib/god-subscriber.ts, src/server/room.ts, src/server/god-connection.ts]
 tags: [websocket, ws-package, origin-header, cors, partyserver, god-auth]
 ---

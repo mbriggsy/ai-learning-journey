@@ -1,7 +1,6 @@
 ---
-title: "Board-view-launcher's 60s default timeout is too tight for real Claude-agent dispatch — second harness gap caught by calibration"
+title: Board-view-launcher's 60s default timeout is too tight for real Claude-agent dispatch — second harness gap caught by calibration
 date: 2026-04-25
-phase: playtest-harness Phase 6 Unit 3 (calibration retry attempt #1)
 modules: [scripts/playtest/lib/board-view-launcher.ts, scripts/playtest/lib/orchestrator.ts]
 tags: [playtest-harness, calibration, timeouts, integration, real-vs-smoke, insight-trail]
 ---
@@ -79,7 +78,7 @@ boardView = await launchBoardView({
 The launcher's own 60s default stays — direct callers (the smoke) get the
 old behavior; the orchestrator overrides it to a sensible per-session value.
 
-## Lesson
+## Key Insight
 
 **Smokes that mock the consumer can't surface latency profiles of the real
 consumer.** The board-launcher smoke used Playwright seats in place of agents
@@ -114,7 +113,7 @@ caught earlier would have been cheaper. Calibration is doing exactly what the
 plan called it to do — *"the harness is an instrument; running it
 uncalibrated is like shipping a scale that hasn't been zeroed."*
 
-## Next
+## Follow-up
 
 Retry calibration with the timeout fix in place. If a third gap surfaces, the
 pattern is worth examining as a meta-finding — what kind of integration tests

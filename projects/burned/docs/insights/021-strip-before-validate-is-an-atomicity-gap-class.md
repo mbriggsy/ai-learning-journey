@@ -1,7 +1,6 @@
 ---
 title: Strip-before-validate is an atomicity-gap bug class, not a single bug
 date: 2026-04-24
-phase: playtest-harness-phase-1
 modules: [src/server/game/engine.ts]
 tags: [atomicity, validation-order, engine, zero-trust, audit-pattern, bug-class]
 ---

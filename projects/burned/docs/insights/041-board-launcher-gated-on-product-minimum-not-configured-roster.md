@@ -1,4 +1,9 @@
-# Insight 041 — Orchestrator gate on product minimum, not configured roster
+---
+title: Orchestrator gate on product minimum, not configured roster
+date: 2026-04-29
+modules: [scripts/playtest/lib/board-view-launcher.ts, scripts/playtest/lib/orchestrator.ts, src/client/board/Lobby.tsx]
+tags: [playtest-harness, orchestrator, dom-attributes, polling, roster, board-launcher, calibration-finding]
+---
 
 **TL;DR.** The playtest harness's board-view launcher polled the live UI
 for `button:has-text("Cleared Hot")` and clicked the moment it became
@@ -70,7 +75,7 @@ pass. New log breadcrumbs visible:
 The fact that the count waitFor resolved (didn't time out) proves the
 attribute renders correctly in real DOM at the right value.
 
-## Generalised lesson
+## Key Insight
 
 When an orchestrator polls a UI for "is the right state reached," it
 should poll for the **actual desired state**, not a coincidentally-

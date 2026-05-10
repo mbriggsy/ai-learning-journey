@@ -4253,6 +4253,27 @@ You know you hit this scenario when:
   followed by `nope-window-resolved { cancelled: false }` followed by
   `combo-steal { found: true, cardType: <type> }`.
 
+**Do NOT self-report this scenario if:**
+- A Counter window (`Counter · Ns`) appeared after your nope window
+  opened. That means an opponent played Intercepted — the steal is
+  CANCELLED unless YOU successfully counter within the 2s window.
+  The visible signals up to this point (staged pair, nope window,
+  counter window) are present in BOTH the HIT outcome AND the
+  intercepted outcome; the distinction is the resolution event.
+- No StealReport modal surfaced on your phone after the nope window
+  closed — the steal didn't execute. This is the intercepted /
+  cancelled outcome (`nope-window-resolved { cancelled: true }`, no
+  `combo-steal` event), not the HIT. Log nothing for this scenario;
+  the intercepted outcome is its own scenario class
+  (`SCN-INTERCEPTED-*`) covered by other seats' vantages.
+- Your hand count did NOT net +1 across the resolution. If you ended
+  the turn at H-2 instead of H-1, the steal cancelled — same logic
+  as above.
+
+The terminal conditions (StealReport modal observed AND hand count
+net +1) are the unambiguous signal. Counter window appearing alone
+is NOT sufficient — wait for the resolution.
+
 **Suspicion prompts:**
 - ACTOR: "Did you INSTANTLY know what you grabbed? Did the StealReport
   land with weight or flash past?"
@@ -5004,6 +5025,27 @@ You know you hit this scenario when:
   `card-played { comboSize: 3 }` after name commit, then
   `combo-steal { found: true, cardType: <named> }`.
 
+**Do NOT self-report this scenario if:**
+- A Counter window (`Counter · Ns`) appeared after your nope window
+  opened. That means an opponent played Intercepted — the steal is
+  CANCELLED unless YOU successfully counter within the 2s window.
+  The visible signals up through name-commit (NameCard sheet, triple
+  discard, nope window opening, counter window) are present in BOTH
+  the HIT outcome AND the intercepted outcome; the distinction is the
+  resolution event.
+- No StealReport modal surfaced on your phone after the nope window
+  closed — the named steal didn't execute. This is the intercepted /
+  cancelled outcome (`nope-window-resolved { cancelled: true }`, no
+  `combo-steal` event), not the HIT. Log
+  `SCN-TRIPLE-OPERATIVES-INTERCEPTED-STEALER-VIEW-01` from your
+  vantage if applicable; otherwise log nothing.
+- Your hand count did NOT net +1 across the resolution. If you ended
+  the turn at H-3 instead of H-2, the steal cancelled — same logic.
+
+The terminal conditions (StealReport modal observed AND hand count
+net +1) are the unambiguous HIT signal. Counter window appearing
+alone is NOT sufficient — wait for the resolution.
+
 **Suspicion prompts:**
 - ACTOR: "Was the two-stage sheet → fire sequence cinematic, or
   bureaucratic?"
@@ -5708,6 +5750,24 @@ You know you hit this scenario when:
 - Triple discarded, named card moved TARGET → you.
 - Event log: `card-played { cardType: 'agent-x', comboSize: 3 }`
   + `combo-steal { found: true, cardType: <named> }`.
+
+**Do NOT self-report this scenario if:**
+- A Counter window (`Counter · Ns`) appeared after your nope window
+  opened. That means an opponent played Intercepted — the steal is
+  CANCELLED unless YOU successfully counter within the 2s window.
+  The visible signals up through name-commit are present in BOTH the
+  HIT outcome AND the intercepted outcome; the distinction is the
+  resolution event.
+- No StealReport modal surfaced on your phone after the nope window
+  closed — the named steal didn't execute. This is the intercepted /
+  cancelled outcome (`nope-window-resolved { cancelled: true }`, no
+  `combo-steal` event), not the HIT. Log nothing.
+- Your hand count did NOT net +1 across the resolution. If you ended
+  the turn at H-3 instead of H-2, the steal cancelled — same logic.
+
+The terminal conditions (StealReport modal observed AND hand count
+net +1) are the unambiguous HIT signal. Counter window appearing
+alone is NOT sufficient — wait for the resolution.
 
 **Suspicion prompts:**
 - ACTOR: "Did the 3-wild triple feel like the event it is, or just

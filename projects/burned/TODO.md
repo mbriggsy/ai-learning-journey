@@ -7,14 +7,12 @@ the history. (Rule: `feedback-todo-is-not-a-diary.md`.)
 
 ## 1. Active priorities
 
-**Triage backlog `2026-05-08-2022-5p` fully dispositioned 2026-05-09.**
-All P1s closed. **Falsify Intel design-sprint cluster (#004/#005/#006)
-shipped 2026-05-09** — drag-to-reorder dossier UI with redact-stamp
-priority markers, card photos, and Archer-vocab "Commit File" CTA.
-**Burn the Files ember-breath drama beat (#037) shipped 2026-05-09** —
-asymmetric two-layer breath (text glow + overlay brightness, slow flare /
-faster settle), Emil-design-eng-reviewed, runtime motion gate green.
-See §1.2 for remaining residual.
+**Triage backlog `2026-05-08-2022-5p` fully closed 2026-05-09.** All
+P1s closed. All P2s closed. The Claude-actionable triage queue from
+this run is empty — only Briggsy-only carryover (§4) and the Phrasing!
+beats / HOW-TO-PLAY queues (§6 / §7) remain. Three sprints landed in
+the closing session: Falsify Intel rearrange (#004/#005/#006), Burn
+the Files ember-breath (#037), and HIT-variant catalog hardening (#021).
 
 Current state (verified 2026-05-09 end-of-session):
 
@@ -25,8 +23,8 @@ Current state (verified 2026-05-09 end-of-session):
   Vite extracted MinimalCard + AnimatePresence into lazy chunks. Drag/
   layout-projection chunk (~27.40 KB gz), rearrange UI (3.20 KB gz), and
   MinimalCard chunk (5.95 KB gz) all lazy + prefetched at idle.
-- Triage state, run `2026-05-08-2022-5p`: **0 OPEN** · 1 BLOCKED ·
-  28 RESOLVED · 7 LOW-SIGNAL · 2 KNOWN-PRODUCT · 1 DUPLICATE. P1 6 · P2 33.
+- Triage state, run `2026-05-08-2022-5p`: **0 OPEN · 0 BLOCKED** ·
+  29 RESOLVED · 7 LOW-SIGNAL · 2 KNOWN-PRODUCT · 1 DUPLICATE. P1 6 · P2 33.
 
 ### 1.1 Cluster results
 
@@ -40,17 +38,10 @@ Current state (verified 2026-05-09 end-of-session):
 | F. Burn the Files | 3× P2 | 033, 036, 037 | ✅ ember-breath shipped 2026-05-09 |
 | G. Favor UX gaps | 3× P2 | 016, 017, 034 | ✅ `d3c76528` |
 | H. StealReport missing card art | 1× P2 | 020 | ✅ `beed50e9` |
-| I. Harness oracle false-positives | 1× P1 + 2× P2 | 002, 015 ✅ · 021 🟡 | mixed (see §1.2) |
+| I. Harness oracle false-positives | 1× P1 + 2× P2 | 002, 015, 021 | ✅ HIT-variant catalog guard shipped 2026-05-09 |
 | Singletons | — | 039 portal ✅ · 038 LOW-SIGNAL | ✅ `a24bc89f`, `d3c76528` |
 
-### 1.2 Residual BLOCKED items (intentional, scoped)
-
-1 issue remains BLOCKED with explicit scope notes:
-
-- **#021 (P2)** — Seat-agent fidelity scope. Self-report-on-
-  intercepted-pair-steal is a seat-agent prompt-following gap, not a
-  catalog/oracle gap. Coverage-reporter already logs the divergence;
-  fix lives in coverage-filter or seat-agent prompt enforcement.
+### 1.2 Closures
 
 **Closed 2026-05-09** — #004 + #005 + #006 (Falsify Intel rearrange
 design sprint): replaced tap-to-assign-number form with vertical
@@ -89,6 +80,23 @@ earns its keep" rule. Crackle pattern preserved in git history (search
 `CRACKLE_HALF_SEC`) for resurrection if a future playtest reports
 breath-alone reads inert. Pinned follow-ups: next-day fresh-eyes
 review + real-device phone-hardware pass (§4 carryover).
+
+**Closed 2026-05-09** — #021 (HIT-variant catalog hardening): the
+seat-3 false-positive on an intercepted pair-steal traced to inclusive-
+only recognition criteria in the scenario catalog — agents inferred
+fire from front-of-list signals (staged combo, nope window, counter
+window) without validating the terminal condition. Three HIT-variant
+scenarios (`SCN-PAIR-OPERATIVES-HIT-01`,
+`SCN-TRIPLE-OPERATIVES-NAMED-HIT-01`,
+`SCN-TRIPLE-AGENTX-ONLY-NAMED-HIT-01`) now carry a uniform **"Do NOT
+self-report this scenario if:"** guard explicitly enumerating the
+intercepted-outcome failure mode and pointing to the unambiguous
+terminals (StealReport modal observed AND hand-count net delta of +1
+for pair / +1 for triple — H-1 / H-2 respectively). Counter window
+appearing alone is explicitly NOT sufficient. Pure catalog edit — no
+engine, projection, or oracle change. Future hardening if the catalog
+guard alone is insufficient: Option C from issue #021 (oracle-side
+self-report validation in the detector pipeline).
 
 ---
 

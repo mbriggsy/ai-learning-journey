@@ -111,6 +111,10 @@ describe('PlayerAlert — card-played toast lifecycle', () => {
   // to read what was played and decide whether to Intercept. The toast
   // clears at `nope-window-resolved` (window close, intercepted or not),
   // at which point the action is committed and the toast has done its job.
+  // 2026-05-10: observer card-played text is now a per-card flavor pool
+  // (spec §3.5 PlayerAlert observer sweep). Lifecycle assertions below check
+  // toast presence + actor-name inclusion structurally; the Phrasing! pin
+  // tests further down lock specific pool variants for known seeds.
   it('persists past the 2.8s auto-fade boundary while the nope window is open', () => {
     const { container, root } = mount()
     try {
@@ -123,14 +127,17 @@ describe('PlayerAlert — card-played toast lifecycle', () => {
         { event: { type: 'card-played', playerId: SEAT2_ID, cardType: 'reassign' }, receivedAt: 1, id: 'evt-1' },
       ])
       rerender(root)
-      expect(alertText(container)).toBe('Seat2 played Reassign.')
+      const initial = alertText(container)
+      expect(initial).not.toBeNull()
+      expect(initial).toContain('Seat2')
 
       // Fast-forward past the old 2.8s auto-fade boundary.
       act(() => { vi.advanceTimersByTime(5_000) })
       // Pre-fix: toast would be null here. Post-fix: still visible because
       // persistUntil includes 'nope-window-resolved', and nope-window-resolved
-      // hasn't fired yet.
-      expect(alertText(container)).toBe('Seat2 played Reassign.')
+      // hasn't fired yet. Same flavor variant — pool selection is stable on
+      // eventId, not wall-clock.
+      expect(alertText(container)).toBe(initial)
     } finally {
       teardown(container, root)
     }
@@ -149,7 +156,8 @@ describe('PlayerAlert — card-played toast lifecycle', () => {
         { event: { type: 'card-played', playerId: SEAT2_ID, cardType: 'reassign' }, receivedAt: 1, id: 'evt-1' },
       ])
       rerender(root)
-      expect(alertText(container)).toBe('Seat2 played Reassign.')
+      expect(alertText(container)).not.toBeNull()
+      expect(alertText(container)).toContain('Seat2')
 
       act(() => { vi.advanceTimersByTime(10_000) })
       setEvents([
@@ -571,7 +579,12 @@ describe('PlayerAlert — Direct Order target name in toast (close 05-08-2022-5p
   // Two-phase render is required because PlayerAlert's lastProcessedRef
   // baselines all events present at mount; only events arriving AFTER the
   // first render trip the toast pipeline.
-  it('renders "targeting <name>" when the toast viewer is not the target', () => {
+  //
+  // 2026-05-10: text is now a 4-variant flavor pool (spec §3.5 PlayerAlert
+  // observer sweep). Every Direct Order pool variant weaves the target name
+  // in — these tests pin that contract structurally; the Phrasing! pool
+  // variant is pinned by seed in the dedicated describe block below.
+  it('renders the target name in any flavor variant when the viewer is not the target', () => {
     const { container, root } = mount()
     try {
       myIdRef.current = SEAT3_ID // viewer is Seat3, not the target
@@ -584,13 +597,16 @@ describe('PlayerAlert — Direct Order target name in toast (close 05-08-2022-5p
         { event: { type: 'card-played', playerId: SEAT2_ID, cardType: 'direct-order', targetId: 'seat-1-uuid' }, receivedAt: 1, id: 'evt-1' },
       ])
       rerender(root)
-      expect(alertText(container)).toBe('Seat2 played Direct Order — targeting Seat1.')
+      const text = alertText(container)
+      expect(text).not.toBeNull()
+      expect(text).toContain('Seat2') // actor named
+      expect(text).toContain('Seat1') // target named
     } finally {
       teardown(container, root)
     }
   })
 
-  it('renders "targeting you" when the viewer is the target', () => {
+  it('uses "you" as the target name when the viewer is the target', () => {
     const { container, root } = mount()
     try {
       myIdRef.current = SEAT3_ID // viewer IS the target
@@ -603,13 +619,19 @@ describe('PlayerAlert — Direct Order target name in toast (close 05-08-2022-5p
         { event: { type: 'card-played', playerId: SEAT2_ID, cardType: 'direct-order', targetId: SEAT3_ID }, receivedAt: 1, id: 'evt-1' },
       ])
       rerender(root)
-      expect(alertText(container)).toBe('Seat2 played Direct Order — targeting you.')
+      const text = alertText(container)
+      expect(text).not.toBeNull()
+      expect(text).toContain('Seat2')
+      // Target resolves to "you" — every pool variant references the target,
+      // so "you" must appear regardless of which variant is picked.
+      expect(text).toMatch(/\byou\b/)
+      expect(text).not.toContain('Seat3') // no leak of the target's literal name
     } finally {
       teardown(container, root)
     }
   })
 
-  it('omits target suffix when card-played carries no targetId (e.g. reassign)', () => {
+  it('does not surface a target string when card-played carries no targetId (e.g. reassign)', () => {
     const { container, root } = mount()
     try {
       myIdRef.current = SEAT3_ID
@@ -622,7 +644,12 @@ describe('PlayerAlert — Direct Order target name in toast (close 05-08-2022-5p
         { event: { type: 'card-played', playerId: SEAT2_ID, cardType: 'reassign' }, receivedAt: 1, id: 'evt-1' },
       ])
       rerender(root)
-      expect(alertText(container)).toBe('Seat2 played Reassign.')
+      const text = alertText(container)
+      expect(text).not.toBeNull()
+      expect(text).toContain('Seat2') // actor named
+      expect(text).not.toContain('targeting') // no target callout in any reassign variant
+      expect(text).not.toContain('Seat1')
+      expect(text).not.toContain('Seat3')
     } finally {
       teardown(container, root)
     }
@@ -643,12 +670,15 @@ describe('PlayerAlert — Call in a Favor persists until favor-given (re-attenda
         { event: { type: 'card-played', playerId: SEAT2_ID, cardType: 'call-in-a-favor' }, receivedAt: 1, id: 'evt-1' },
       ])
       rerender(root)
-      expect(alertText(container)).toBe('Seat2 played Call in a Favor.')
+      const initial = alertText(container)
+      expect(initial).not.toBeNull()
+      expect(initial).toContain('Seat2')
 
       // Bystander grabs a beer. 45 seconds pass. Intermediate non-alert
       // events fire (nope-window-opened, nope-window-resolved,
       // favor-requested) — none should clear the toast. Toast must still
-      // be there for the returning bystander.
+      // be there for the returning bystander, with the same flavor variant
+      // (pool selection is stable on eventId).
       act(() => { vi.advanceTimersByTime(45_000) })
       setEvents([
         { event: { type: 'turn-started', playerId: SEAT2_ID, turnsRemaining: 1 }, receivedAt: 0, id: 'evt-0' },
@@ -658,7 +688,7 @@ describe('PlayerAlert — Call in a Favor persists until favor-given (re-attenda
         { event: { type: 'favor-requested', requesterId: SEAT2_ID, targetId: 'seat-1-uuid' }, receivedAt: 10_300, id: 'evt-4' },
       ])
       rerender(root)
-      expect(alertText(container)).toBe('Seat2 played Call in a Favor.')
+      expect(alertText(container)).toBe(initial)
     } finally {
       teardown(container, root)
     }
@@ -677,7 +707,8 @@ describe('PlayerAlert — Call in a Favor persists until favor-given (re-attenda
         { event: { type: 'card-played', playerId: SEAT2_ID, cardType: 'call-in-a-favor' }, receivedAt: 1, id: 'evt-1' },
       ])
       rerender(root)
-      expect(alertText(container)).toBe('Seat2 played Call in a Favor.')
+      expect(alertText(container)).not.toBeNull()
+      expect(alertText(container)).toContain('Seat2')
 
       act(() => { vi.advanceTimersByTime(60_000) })
       setEvents([
@@ -743,7 +774,8 @@ describe('PlayerAlert — Call in a Favor persists until favor-given (re-attenda
         { event: { type: 'card-played', playerId: SEAT2_ID, cardType: 'call-in-a-favor' }, receivedAt: 1, id: 'evt-1' },
       ])
       rerender(root)
-      expect(alertText(container)).toBe('Seat2 played Call in a Favor.')
+      expect(alertText(container)).not.toBeNull()
+      expect(alertText(container)).toContain('Seat2')
 
       const dismissBtn = container.querySelector('button[aria-label="Dismiss alert"]') as HTMLButtonElement | null
       expect(dismissBtn).not.toBeNull()
@@ -751,6 +783,152 @@ describe('PlayerAlert — Call in a Favor persists until favor-given (re-attenda
       act(() => { vi.runAllTimers() })
       act(() => { vi.advanceTimersByTime(2_000) })
       expect(alertText(container)).toBeNull()
+    } finally {
+      teardown(container, root)
+    }
+  })
+})
+
+describe('PlayerAlert — observer card-played Phrasing! pool variants (spec §3.5)', () => {
+  // Pins each per-card pool's Phrasing! variant for the deterministic seed
+  // `evt-1`. The pick() hash function (src/client/shared/pick.ts:13) maps
+  // seed `evt-1` to index 3 of a 4-pool — every pool below places its
+  // Phrasing! variant there. If a pool is reordered, expanded, or shrunk,
+  // the corresponding test below will fail and remind us to (a) re-pick the
+  // seed or (b) update the spec §3.5 "Shipped beats" entry.
+  //
+  // Cadence per spec §3.5: abundance, ~25% saturation per pool. One Phrasing!
+  // beat seeded among three straight variants, deterministic on eventId so
+  // every observer's phone lands on the same beat for the same fire.
+
+  it('Direct Order Phrasing! variant lands when the viewer is not the target', () => {
+    const { container, root } = mount()
+    try {
+      myIdRef.current = SEAT3_ID
+      setEvents([
+        { event: { type: 'turn-started', playerId: SEAT2_ID, turnsRemaining: 1 }, receivedAt: 0, id: 'evt-0' },
+      ])
+      render(root)
+      setEvents([
+        { event: { type: 'turn-started', playerId: SEAT2_ID, turnsRemaining: 1 }, receivedAt: 0, id: 'evt-0' },
+        { event: { type: 'card-played', playerId: SEAT2_ID, cardType: 'direct-order', targetId: 'seat-1-uuid' }, receivedAt: 1, id: 'evt-1' },
+      ])
+      rerender(root)
+      expect(alertText(container)).toBe('Seat2 got Seat1 to do it for them. ...Phrasing.')
+    } finally {
+      teardown(container, root)
+    }
+  })
+
+  it('Direct Order Phrasing! variant resolves "you" when the viewer is the target', () => {
+    const { container, root } = mount()
+    try {
+      myIdRef.current = SEAT3_ID
+      setEvents([
+        { event: { type: 'turn-started', playerId: SEAT2_ID, turnsRemaining: 1 }, receivedAt: 0, id: 'evt-0' },
+      ])
+      render(root)
+      setEvents([
+        { event: { type: 'turn-started', playerId: SEAT2_ID, turnsRemaining: 1 }, receivedAt: 0, id: 'evt-0' },
+        { event: { type: 'card-played', playerId: SEAT2_ID, cardType: 'direct-order', targetId: SEAT3_ID }, receivedAt: 1, id: 'evt-1' },
+      ])
+      rerender(root)
+      expect(alertText(container)).toBe('Seat2 got you to do it for them. ...Phrasing.')
+    } finally {
+      teardown(container, root)
+    }
+  })
+
+  it('Reassign Phrasing! variant lands for the matching seed', () => {
+    const { container, root } = mount()
+    try {
+      myIdRef.current = SEAT3_ID
+      setEvents([
+        { event: { type: 'turn-started', playerId: SEAT2_ID, turnsRemaining: 1 }, receivedAt: 0, id: 'evt-0' },
+      ])
+      render(root)
+      setEvents([
+        { event: { type: 'turn-started', playerId: SEAT2_ID, turnsRemaining: 1 }, receivedAt: 0, id: 'evt-0' },
+        { event: { type: 'card-played', playerId: SEAT2_ID, cardType: 'reassign' }, receivedAt: 1, id: 'evt-1' },
+      ])
+      rerender(root)
+      expect(alertText(container)).toBe('Seat2 made someone else take it. ...Phrasing.')
+    } finally {
+      teardown(container, root)
+    }
+  })
+
+  it('Call in a Favor Phrasing! variant lands for the matching seed', () => {
+    const { container, root } = mount()
+    try {
+      myIdRef.current = SEAT3_ID
+      setEvents([
+        { event: { type: 'turn-started', playerId: SEAT2_ID, turnsRemaining: 1 }, receivedAt: 0, id: 'evt-0' },
+      ])
+      render(root)
+      setEvents([
+        { event: { type: 'turn-started', playerId: SEAT2_ID, turnsRemaining: 1 }, receivedAt: 0, id: 'evt-0' },
+        { event: { type: 'card-played', playerId: SEAT2_ID, cardType: 'call-in-a-favor' }, receivedAt: 1, id: 'evt-1' },
+      ])
+      rerender(root)
+      expect(alertText(container)).toBe('Seat2 needs someone to come through. ...Phrasing.')
+    } finally {
+      teardown(container, root)
+    }
+  })
+
+  it('Back Channel Phrasing! variant lands for the matching seed', () => {
+    const { container, root } = mount()
+    try {
+      myIdRef.current = SEAT3_ID
+      setEvents([
+        { event: { type: 'turn-started', playerId: SEAT2_ID, turnsRemaining: 1 }, receivedAt: 0, id: 'evt-0' },
+      ])
+      render(root)
+      setEvents([
+        { event: { type: 'turn-started', playerId: SEAT2_ID, turnsRemaining: 1 }, receivedAt: 0, id: 'evt-0' },
+        { event: { type: 'card-played', playerId: SEAT2_ID, cardType: 'back-channel' }, receivedAt: 1, id: 'evt-1' },
+      ])
+      rerender(root)
+      expect(alertText(container)).toBe('Seat2 slipped in through the back. ...Phrasing.')
+    } finally {
+      teardown(container, root)
+    }
+  })
+
+  it('Intel Briefing Phrasing! variant lands for the matching seed', () => {
+    const { container, root } = mount()
+    try {
+      myIdRef.current = SEAT3_ID
+      setEvents([
+        { event: { type: 'turn-started', playerId: SEAT2_ID, turnsRemaining: 1 }, receivedAt: 0, id: 'evt-0' },
+      ])
+      render(root)
+      setEvents([
+        { event: { type: 'turn-started', playerId: SEAT2_ID, turnsRemaining: 1 }, receivedAt: 0, id: 'evt-0' },
+        { event: { type: 'card-played', playerId: SEAT2_ID, cardType: 'intel-briefing' }, receivedAt: 1, id: 'evt-1' },
+      ])
+      rerender(root)
+      expect(alertText(container)).toBe("Seat2 is checking what's coming. ...Phrasing.")
+    } finally {
+      teardown(container, root)
+    }
+  })
+
+  it('Go Dark Phrasing! variant lands for the matching seed', () => {
+    const { container, root } = mount()
+    try {
+      myIdRef.current = SEAT3_ID
+      setEvents([
+        { event: { type: 'turn-started', playerId: SEAT2_ID, turnsRemaining: 1 }, receivedAt: 0, id: 'evt-0' },
+      ])
+      render(root)
+      setEvents([
+        { event: { type: 'turn-started', playerId: SEAT2_ID, turnsRemaining: 1 }, receivedAt: 0, id: 'evt-0' },
+        { event: { type: 'card-played', playerId: SEAT2_ID, cardType: 'go-dark' }, receivedAt: 1, id: 'evt-1' },
+      ])
+      rerender(root)
+      expect(alertText(container)).toBe('Seat2 turned off the lights. ...Phrasing.')
     } finally {
       teardown(container, root)
     }

@@ -150,6 +150,12 @@ This is the #1 lesson from `docs/ideation/2026-04-11-visual-layer-autopsy.md`: t
 - DossierFeed `combo-steal` board narration — *"X drilled Y for it. ...Phrasing."* (`src/client/board/events.ts`)
 - DossierFeed `future-peeked` board narration — *"X went deep on the deck. ...Phrasing."* (`src/client/board/events.ts`)
 - PlayerAlert `favor-given` observer toast — *"X put out for Y. ...Phrasing."* (`src/client/player/PlayerAlert.tsx`)
+- PlayerAlert `card-played` observer toast, Direct Order pool — *"X got Y to do it for them. ...Phrasing."* (`src/client/player/PlayerAlert.tsx`)
+- PlayerAlert `card-played` observer toast, Reassign pool — *"X made someone else take it. ...Phrasing."* (`src/client/player/PlayerAlert.tsx`)
+- PlayerAlert `card-played` observer toast, Call in a Favor pool — *"X needs someone to come through. ...Phrasing."* (`src/client/player/PlayerAlert.tsx`)
+- PlayerAlert `card-played` observer toast, Back Channel pool — *"X slipped in through the back. ...Phrasing."* (`src/client/player/PlayerAlert.tsx`)
+- PlayerAlert `card-played` observer toast, Intel Briefing pool — *"X is checking what's coming. ...Phrasing."* (`src/client/player/PlayerAlert.tsx`)
+- PlayerAlert `card-played` observer toast, Go Dark pool — *"X turned off the lights. ...Phrasing."* (`src/client/player/PlayerAlert.tsx`)
 
 **Planned beats** are tracked in `TODO.md`. As beats land, append them to the "Shipped beats" list above.
 

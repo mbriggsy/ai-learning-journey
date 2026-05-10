@@ -49,6 +49,79 @@ function walkBackForCardPlayed(
   return false
 }
 
+/** Per-card flavor pool for the observer card-played toast. One Phrasing!
+ *  variant seeded among 2-3 straight variants per pool (~25% saturation per
+ *  spec §3.5). Pool selection is deterministic on `eventId` so every observer's
+ *  phone lands on the same variant for the same fire (matches the favor-given
+ *  pool pattern at PlayerAlert.tsx:148-159 + DossierFeed events.ts).
+ *
+ *  Direct Order is the only single-card play whose `card-played` event carries
+ *  `targetId` (engine.ts:332); its pool weaves the target name in. The other
+ *  targeted cards (Reassign, Call in a Favor) get target-free pools — engine
+ *  fires `favor-requested` / skip-turn events later for target-naming surfaces.
+ *  Cards filtered above (extraction / burn-the-files / falsify-intel) never
+ *  reach this function; combo plays branch out before it. */
+function observerCardPlayedText(
+  cardType: string,
+  playerName: string,
+  cardName: string,
+  targetName: string | null,
+  eventId: string,
+): string {
+  if (cardType === 'direct-order' && targetName !== null) {
+    return pick([
+      `${playerName} played ${cardName} — targeting ${targetName}.`,
+      `${playerName} put ${targetName} on assignment.`,
+      `${playerName} sent ${targetName} marching orders.`,
+      `${playerName} got ${targetName} to do it for them. ...Phrasing.`,
+    ], eventId)
+  }
+  if (cardType === 'reassign') {
+    return pick([
+      `${playerName} played ${cardName}.`,
+      `${playerName} kicked the work down the line.`,
+      `${playerName} delegated and walked away.`,
+      `${playerName} made someone else take it. ...Phrasing.`,
+    ], eventId)
+  }
+  if (cardType === 'call-in-a-favor') {
+    return pick([
+      `${playerName} played ${cardName}.`,
+      `${playerName} is calling in a marker.`,
+      `${playerName} wants tribute.`,
+      `${playerName} needs someone to come through. ...Phrasing.`,
+    ], eventId)
+  }
+  if (cardType === 'back-channel') {
+    return pick([
+      `${playerName} played ${cardName}.`,
+      `${playerName} went off the books.`,
+      `${playerName} cut a back-door deal.`,
+      `${playerName} slipped in through the back. ...Phrasing.`,
+    ], eventId)
+  }
+  if (cardType === 'intel-briefing') {
+    return pick([
+      `${playerName} played ${cardName}.`,
+      `${playerName} is reading ahead.`,
+      `${playerName} is scanning the deck.`,
+      `${playerName} is checking what's coming. ...Phrasing.`,
+    ], eventId)
+  }
+  if (cardType === 'go-dark') {
+    return pick([
+      `${playerName} played ${cardName}.`,
+      `${playerName} is off the grid.`,
+      `${playerName} went silent.`,
+      `${playerName} turned off the lights. ...Phrasing.`,
+    ], eventId)
+  }
+  // Fallback for card types not custom-pooled (future cards, protocol drift).
+  // Preserves the original mechanic-only shape with optional target suffix.
+  const targetSuffix = targetName === null ? '' : ` — targeting ${targetName}`
+  return `${playerName} played ${cardName}${targetSuffix}.`
+}
+
 /** Format an event into a player-facing alert if it directly affected me.
  *  Null = no alert (event wasn't about this player).
  *
@@ -222,19 +295,28 @@ function alertFor(
       // resolves to the receiver's name "you"; same-player target ("Dash
       // played Direct Order — targeting Dash") keeps the §13.8 self-target
       // comedy beat readable on observer phones.
+      //
+      // Per-card flavor pools (2026-05-10) seed Phrasing! cadence across the
+      // observer card-played path per spec §3.5 (~25% saturation per pool).
+      // Direct Order is the only single-card play that carries `targetId` on
+      // the card-played event (engine.ts:332) — its pool weaves the target
+      // name into all variants. Other targeted cards (Reassign, Call in a
+      // Favor) get target-free pools; the engine fires `favor-requested` /
+      // skip-turn events later if targets need surfacing. Combo plays keep
+      // the dedicated "<Operative> pair/triple" mechanic announcement —
+      // observers need to read the mechanic to decide whether to Intercept,
+      // and a flavor pool would dilute that signal.
       const target = event.targetId
-      const targetSuffix =
-        target === undefined ? ''
-        : target === myId ? ' — targeting you'
-        : ` — targeting ${nameOf(target)}`
-      // Combo plays announce the mechanic + operative ("a Neal Proctor pair")
-      // so observers know what they're potentially intercepting. Single plays
-      // keep the "<Name> played <Card>" + optional target suffix shape.
+      const targetName: string | null =
+        target === undefined ? null
+        : target === myId ? 'you'
+        : nameOf(target)
+      const playerName = nameOf(event.playerId)
       const text = event.comboSize === 2
-        ? `${nameOf(event.playerId)} played a ${cardName} pair.`
+        ? `${playerName} played a ${cardName} pair.`
         : event.comboSize === 3
-        ? `${nameOf(event.playerId)} played a ${cardName} triple.`
-        : `${nameOf(event.playerId)} played ${cardName}${targetSuffix}.`
+        ? `${playerName} played a ${cardName} triple.`
+        : observerCardPlayedText(event.cardType, playerName, cardName, targetName, eventId)
       return { id: eventId, text, tone: 'info', persistUntil }
     }
 

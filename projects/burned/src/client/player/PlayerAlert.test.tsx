@@ -403,7 +403,12 @@ describe('PlayerAlert — observer favor-given closing beat (close 05-08-2022-5p
   // got the FavorReport overlay, observers got NOTHING after the persistent
   // card-played toast cleared at favor-given. The closing beat now fires
   // for OTHER viewers as a quiet info-tone toast.
-  it('renders "<Giver> surrendered a card to <Receiver>." for observers', () => {
+  //
+  // 2026-05-09: text upgraded from a single static line to a 4-variant
+  // flavor pool with Phrasing! seeded among 3 straight variants per spec
+  // §3.5 cadence. The structural pin below survives future pool iteration;
+  // the Phrasing!-shipping test below pins the deterministic seed/variant.
+  it('renders an observer toast naming both principals (any flavor variant)', () => {
     const { container, root } = mount()
     try {
       myIdRef.current = 'seat-1-uuid' // viewer is OTHER (alive), not principal
@@ -416,7 +421,35 @@ describe('PlayerAlert — observer favor-given closing beat (close 05-08-2022-5p
         { event: { type: 'favor-given', giverId: SEAT3_ID, receiverId: SEAT2_ID }, receivedAt: 1, id: 'evt-1' },
       ])
       rerender(root)
-      expect(alertText(container)).toBe('Seat3 surrendered a card to Seat2.')
+      const text = alertText(container)
+      expect(text).not.toBeNull()
+      expect(text).toContain('Seat3')
+      expect(text).toContain('Seat2')
+      expect(text!.length).toBeGreaterThan(10)
+    } finally {
+      teardown(container, root)
+    }
+  })
+
+  it('lands the Phrasing! variant ("X put out for Y. ...Phrasing.") for the matching seed', () => {
+    // Pins the spec §3.5 contract: a Phrasing! beat is shipped on this
+    // surface and the deterministic flavor-pool picker reaches it. Seed
+    // chosen to hash into the Phrasing! variant of the 4-pool. If the
+    // pool changes (variant order, count, copy), this test will need
+    // updating alongside the spec's "Shipped beats" entry.
+    const { container, root } = mount()
+    try {
+      myIdRef.current = 'seat-1-uuid'
+      setEvents([
+        { event: { type: 'turn-started', playerId: SEAT2_ID, turnsRemaining: 1 }, receivedAt: 0, id: 'evt-0' },
+      ])
+      render(root)
+      setEvents([
+        { event: { type: 'turn-started', playerId: SEAT2_ID, turnsRemaining: 1 }, receivedAt: 0, id: 'evt-0' },
+        { event: { type: 'favor-given', giverId: SEAT3_ID, receiverId: SEAT2_ID }, receivedAt: 1, id: 'evt-1' },
+      ])
+      rerender(root)
+      expect(alertText(container)).toBe('Seat3 put out for Seat2. ...Phrasing.')
     } finally {
       teardown(container, root)
     }

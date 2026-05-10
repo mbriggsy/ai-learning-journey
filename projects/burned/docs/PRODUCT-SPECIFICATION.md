@@ -146,6 +146,10 @@ This is the #1 lesson from `docs/ideation/2026-04-11-visual-layer-autopsy.md`: t
 **Shipped beats:**
 
 - EliminatedView flavor pool — *"Penetrated by enemy assets. ...Phrasing."* (`src/client/player/EliminatedView.tsx:17`)
+- DossierFeed `favor-given` board narration — *"X put out for Y. ...Phrasing."* (`src/client/board/events.ts`)
+- DossierFeed `combo-steal` board narration — *"X drilled Y for it. ...Phrasing."* (`src/client/board/events.ts`)
+- DossierFeed `future-peeked` board narration — *"X went deep on the deck. ...Phrasing."* (`src/client/board/events.ts`)
+- PlayerAlert `favor-given` observer toast — *"X put out for Y. ...Phrasing."* (`src/client/player/PlayerAlert.tsx`)
 
 **Planned beats** are tracked in `TODO.md`. As beats land, append them to the "Shipped beats" list above.
 

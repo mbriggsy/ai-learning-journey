@@ -5,6 +5,7 @@ import { usePlayerList } from '@client/shared/hooks/useSharedSelectors'
 import { useMyPlayerId } from './hooks/usePlayerSelectors'
 import { haptic } from '@client/shared/haptics'
 import { announce } from '@client/shared/announce'
+import { pick } from '@client/shared/pick'
 import { MOTION } from '@client/shared/tokens/motion'
 import { CARD_DEF_BY_TYPE } from '@shared/card-defs'
 import type { BoardPlayer } from '@shared/protocol'
@@ -141,12 +142,21 @@ function alertFor(
       // `favor-given`, leaving observers with no resolution signal at all
       // pre-fix (close 05-08-2022-5p #016). Privacy-correct: cardType is
       // stripped for observers so we never include it in the toast.
+      //
+      // Flavor pool deterministic on eventId — every observer's phone +
+      // the board's COMMS feed land on the same variant for the same fire.
+      // One Phrasing! beat seeded among three straight variants per spec
+      // §3.5 cadence (abundance, ~25% saturation by pool size).
       if (event.giverId === myId || event.receiverId === myId) break
-      return {
-        id: eventId,
-        text: `${nameOf(event.giverId)} surrendered a card to ${nameOf(event.receiverId)}.`,
-        tone: 'info',
-      }
+      const giver = nameOf(event.giverId)
+      const receiver = nameOf(event.receiverId)
+      const text = pick([
+        `${giver} surrendered a card to ${receiver}.`,
+        `${giver} caved to ${receiver}.`,
+        `${giver} handed it over to ${receiver}.`,
+        `${giver} put out for ${receiver}. ...Phrasing.`,
+      ], eventId)
+      return { id: eventId, text, tone: 'info' }
     }
 
     case 'card-played': {

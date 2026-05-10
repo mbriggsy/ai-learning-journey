@@ -1,14 +1,7 @@
 import type { GameEvent } from '@shared/types'
 import type { BoardPlayer } from '@shared/protocol'
 import { playerName } from './playerName'
-
-function pick(variants: readonly string[], seed: string): string {
-  let hash = 0
-  for (let i = 0; i < seed.length; i++) {
-    hash = ((hash << 5) - hash + seed.charCodeAt(i)) | 0
-  }
-  return variants[Math.abs(hash) % variants.length]!
-}
+import { pick } from '@client/shared/pick'
 
 export function formatEvent(event: GameEvent, players: readonly BoardPlayer[], eventId: string): string | null {
   const n = (id: string) => playerName(players, id)
@@ -98,6 +91,7 @@ export function formatEvent(event: GameEvent, players: readonly BoardPlayer[], e
       return pick([
         `${n(event.giverId)} reluctantly hands one over`,
         `${n(event.receiverId)} got what they wanted`,
+        `${n(event.giverId)} put out for ${n(event.receiverId)}. ...Phrasing.`,
       ], eventId)
 
     case 'future-peeked':
@@ -105,6 +99,7 @@ export function formatEvent(event: GameEvent, players: readonly BoardPlayer[], e
         `${n(event.playerId)} peeks at the future...`,
         `${n(event.playerId)} knows what's coming.`,
         `${n(event.playerId)} has inside information.`,
+        `${n(event.playerId)} went deep on the deck. ...Phrasing.`,
       ], eventId)
 
     case 'future-rearranged':
@@ -129,6 +124,7 @@ export function formatEvent(event: GameEvent, players: readonly BoardPlayer[], e
           `${s} steals from ${t}!`,
           `${s} pickpockets ${t}.`,
           `${t} just got robbed by ${s}.`,
+          `${s} drilled ${t} for it. ...Phrasing.`,
         ], eventId)
         : pick([
           `${s} tried to steal — nothing there!`,

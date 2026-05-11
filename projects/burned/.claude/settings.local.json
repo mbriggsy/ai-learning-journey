@@ -38,7 +38,8 @@
       "mcp__chrome-devtools__close_page",
       "mcp__chrome-devtools__emulate",
       "Bash(rm -rf temp/*)",
-      "Bash(rm -rf .playwright-mcp)"
+      "Bash(rm -rf .playwright-mcp)",
+      "Bash(pnpm dev:cleanup *)"
     ]
   }
 }

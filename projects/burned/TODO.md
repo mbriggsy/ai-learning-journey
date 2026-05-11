@@ -16,25 +16,23 @@ ember-breath (#037), HIT-variant catalog hardening (#021), and a
 three-beat Phrasing! batch on the COMMS feed + observer-favor toast
 (see §6).
 
-Current state (verified 2026-05-10 end-of-session):
+Current state (verified 2026-05-11 end-of-session):
 
-- Tests: **1385 pass** | 6 expected fail (67/67 files green). +9 vs prior
-  session: 1 Reassign target case, 1 Call in a Favor target case + 7
-  engine pause/resume cases (pause sets pausedAtMs, resume advances
-  deadline by elapsed pause, plus rejection cases for no-window /
-  stale-gen / already-paused / not-paused / grace-state).
+- Tests: **1389 pass** | 6 expected fail (67/67 files green). +4 vs prior
+  session: 1 engine case (intercept-during-pause clears pausedAtMs on the
+  new chain window) + 3 permission-hook cases (actor-mid-window
+  play-in-flight gate + non-actor reason-ordering + favor-target
+  chain-preservation).
 - Build: clean (`pnpm build`).
-- Phone initial JS: **~99.10 KB gzipped** (player 18.93 + shared 65.71
-  + VisualElement 14.46). +0.12 KB vs start-of-session 98.98 KB baseline
-  for the 2026-05-10 evening session work (Direct Order / Reassign /
-  Favor target consequence toasts + pause-aware tick in SmartActionBox
-  + IncomingSteal). **0.90 KB headroom** under the 100 KB ceiling.
-- Board chunk: 14.98 KB gz (+0.38 KB for the NopeCountdownBar pause
-  button + paused-state CSS; board-side only, doesn't touch phone budget).
-- Protocol bumped to **v6** (was v5) — new ClientMessage variant
-  `host-action` for board-issued pause/resume; new `NopeWindowView.pausedAtMs`
-  field; new `nope-window-paused` / `nope-window-resumed` GameEvents.
-  Hard refresh required on any pre-v6 tabs.
+- Phone initial JS: **~99.11 KB gzipped** (player 18.94 + shared 65.71
+  + VisualElement 14.46). +0.01 KB vs prior 99.10 baseline — the
+  2026-05-11 fixes were small (1-line filter, hook param, permission
+  branch, no new components). **0.89 KB headroom** under the 100 KB
+  ceiling.
+- Board chunk: 15.00 KB gz (+0.02 KB for the `.nopeSlot` wrapper +
+  CSS rule; board-side only, doesn't touch phone budget).
+- Protocol still v6 (no shape changes this session — pure code-side
+  fixes).
 - Triage state, run `2026-05-08-2022-5p`: **0 OPEN · 0 BLOCKED** ·
   29 RESOLVED · 7 LOW-SIGNAL · 2 KNOWN-PRODUCT · 1 DUPLICATE. P1 6 · P2 33.
 
@@ -112,7 +110,70 @@ self-report validation in the detector pipeline).
 
 ### 1.3 Open follow-ups (queued)
 
-_None. Closed 2026-05-10:_
+_None. Closed in recent sessions:_
+
+**2026-05-11 — couch-validation session (this run):**
+
+- **Direct Order self-target — hidden on phone TargetSelect (engine
+  unchanged).** Briggsy couch: actor could pick themselves with
+  Direct Order. Code was intentional per RULES-REFERENCE §13.8
+  ("could be funny for trolling"), but reads as bug to a first-time
+  player who can't see §13.8. UI now filters self across all target
+  reasons; engine remains permissive (replay / harness validity,
+  still pinned by `engine.test.ts:414`). RULES doc §13.8 also
+  corrected — claimed "equivalent to taking your turns normally" but
+  engine actually nets **+1 turn** (current consumed, target gets +2,
+  actor ends with 2 remaining). Filter at `Player.tsx:544`.
+
+- **Intercept-during-pause clears `pausedAtMs` on the new chain
+  window.** Briggsy couch: intercept played while host had paused
+  the window left the new chain window born paused; next decider's
+  countdown stayed frozen until host hit Resume. Root cause:
+  `handleNope` built the new window via `...state.nopeWindow` spread,
+  carrying `pausedAtMs` forward. Fix: destructure-drop `pausedAtMs`
+  before the spread (matches the resume path's pattern at
+  `engine.ts:123`). Intercept play now implicitly cancels host hold.
+  New regression test "intercept play during pause clears pausedAtMs
+  and starts a fresh running chain window" in `engine.test.ts`.
+
+- **NopeCountdownBar slot reserve — case-banner static text no
+  longer shifts ~70 px on dial mount/unmount.** Briggsy couch: the
+  static briefing chunk (Operation / BURNED / Case File / Briefed by
+  M.) bounces when the dial appears. Root cause: case-banner uses
+  `justify-content: center`; dial mounting added ~140 px of column
+  content, shifting the centered static chunk by ~70 px. The earlier
+  "~10 px, acceptable" call in commit `4e4431c9` was an eyeball
+  estimate — real measured shift was 70 px. Fix: new token
+  `--size-nope-slot` (clamp 128→172 px, scales alongside
+  `--size-nope-dial`), wraps `<NopeCountdownBar />` in a
+  fixed-height `.nopeSlot` div inside the case-banner. Slot reserves
+  the dial's column contribution whether mounted or not. Verified
+  empirically: **0.00 px delta** on every static line across
+  mount/unmount.
+
+- **Actor staging gate during own nope window — `play-in-flight`
+  block.** Briggsy couch: Dash plays Go Dark, intercept window
+  opens, Dash can still stage cards from his hand. Root cause:
+  `deriveInteractionPermission` didn't consider the nope window —
+  `isMyTurn` stayed true, `subPhase` stayed `turn-active`,
+  permission returned `allowed: true`. Fix: new `nopeWindowActive`
+  param + new reason `play-in-flight`; gate fires when
+  `isMyTurn && nopeWindowActive`. Favor-response branch
+  short-circuits before the new gate so a chained nope on a Favor
+  doesn't lock the target. Chain-intercept (Counter button) is
+  unaffected — routes through SmartActionBox, not staging. 3 new
+  tests cover the gate + reason ordering + favor-target preservation.
+
+- **"Tribute" copy → spy-register replacements.** Briggsy couch:
+  "Michael wants tribute" reads medieval/fantasy, breaks Pendleton
+  Cold-War-spy voice. PlayerAlert observer pool for `call-in-a-favor`:
+  `"X wants tribute."` → `"X is putting the squeeze on."` Board
+  COMMS feed `favor-requested` pool: `"X demands tribute from Y"` →
+  `"X taps Y for a favor"`. Two stale "tribute" mentions remain in
+  dev-facing comments (`PlayerAlert.module.css:10`, `PlayerAlert.tsx:500`)
+  — not user copy, leaving alone.
+
+**2026-05-10:**
 
 - **PlayerStrip ACTIVE pill — REMOVED entirely.** Original report was
   "ACTIVE pill clips bold caps on real-device." Three padding-bump
@@ -221,12 +282,18 @@ Real-life sessions only Briggsy can do.
   verify tile growth at 1920 + 4K beyond the 1366×1024 baseline.
 - **Physical hardware verification** — push to Cloudflare Pages, open on
   actual TV with phone controllers.
-- **Canonical 200% zoom human-run pass** (spec §2.3 protocol).
-- **First-time-player session** (spec Phase 5 §2.7).
-- **Visual review meeting** (spec §2.2.5) — GameOver glow, Nope emerald
-  saturation, Baveuse font, drama-accent CARD FACE inspection (Reassign /
-  Direct Order / Go Dark / Intel Briefing / Falsify Intel / Burn the
-  Files / Back Channel — §2.5 #4 WCAG residual lives there).
+- **Canonical 200% zoom human-run pass.** (No spec section defines a
+  protocol — earlier "spec §2.3 protocol" reference was stale, §2.3
+  is the first-time-player line. Open desktop browser, walk a 2-3
+  player game at 200% zoom, flag layout/text/button breakage.)
+- **First-time-player session** (spec §8.7 — the quality bar,
+  cashed in).
+- **Visual review meeting** — GameOver glow, Nope emerald saturation,
+  Baveuse font, drama-accent CARD FACE inspection (Reassign / Direct
+  Order / Go Dark / Intel Briefing / Falsify Intel / Burn the Files /
+  Back Channel). Earlier "spec §2.2.5" reference was stale — no such
+  section. Acceptance criterion lives at spec §2.2 ("could this look
+  like a frame from an Archer episode?") + §3 visual reference.
 - **Sign off `docs/testing/playtest/SCENARIOS.md`** — still DRAFT
   (line 3). Hard prereq for closing §3 fully.
 
@@ -295,15 +362,20 @@ Active warnings only. Older landmines have moved to `docs/insights/` and
   not just the favor case. Filtered cards (extraction / burn-the-files
   / falsify-intel / combos) still skip the toast — DramaOverlay or
   StealReport own those moments.
-- **NopeCountdownBar lives INSIDE the case-banner aside** (commit
-  `4e4431c9`). Pre-2026-05-08 it floated below the arena as a centered
-  dark-surface band. Now it's a child of `<aside className=
-  {styles.caseBanner}>` between the divider and the briefer footer.
-  The case-banner's flex `justify-content: center` recomposes the
-  static lines when the intercept row appears/disappears (~10px shift
-  on BURNED). Read as the briefing recomposing live; flagged as
-  acceptable. If reframing as a fixed-height slot becomes worth it,
-  fix path is documented in commit body.
+- **NopeCountdownBar lives INSIDE the case-banner aside, in a
+  fixed-height `.nopeSlot`** (commits `4e4431c9` original + 2026-05-11
+  slot-reserve follow-up). The dial is wrapped in `<div
+  className={styles.nopeSlot}>` whose `height: var(--size-nope-slot)`
+  reserves the dial's column contribution whether the dial is mounted
+  or not. This prevents the case-banner's `justify-content: center`
+  from shifting the static briefing chunk by ~70 px on
+  mount/unmount (the original "~10 px acceptable" call from 4e4431c9
+  was an eyeball estimate — real measured shift was 70 px). If the
+  NopeCountdownBar wrapper's natural height changes (new content,
+  font-scale tweak, dial geometry change), keep `--size-nope-slot` in
+  `semantic.board.css` ≥ wrapper natural max height across the
+  viewport band — otherwise the slot will overflow OR collapse and
+  the bounce returns.
 - **StealReport + FavorReport rubber stamps removed** (commits
   `17514aae` + `09a4ae44`). The rubber-stamp visual + thunk
   choreography + `--motion-duration-stamp` token are GONE. Body text
@@ -324,10 +396,21 @@ Active warnings only. Older landmines have moved to `docs/insights/` and
 - **Zod v4 strictly enforces RFC 4122 v4 UUID** version + variant bits.
   Test fixtures need real-shaped UUIDs (not all-1s patterns).
   `crypto.randomUUID()` produces conforming output.
-- **`PROTOCOL_VERSION = 5`** (was 4). Hard-refresh dev tabs after pulling
-  the B-12 fix. `protocolVersion?: number` on the `join` payload —
-  optional in Zod so old clients hit `PROTOCOL_MISMATCH` not a generic
-  Zod failure.
+- **`PROTOCOL_VERSION = 6`** (was 5, bumped 2026-05-10 for `host-action`
+  pause/resume + `NopeWindowView.pausedAtMs`). Hard-refresh dev tabs
+  after pulling any protocol bump. `protocolVersion?: number` on the
+  `join` payload — optional in Zod so old clients hit
+  `PROTOCOL_MISMATCH` not a generic Zod failure.
+- **`deriveInteractionPermission` requires a `nopeWindowActive: boolean`
+  arg** (2026-05-11 — `play-in-flight` gate). When the actor's card
+  is in flight awaiting intercept resolution, staging is blocked.
+  Chain-intercept (Counter button) still works — routes through
+  SmartActionBox, not staging. New `'play-in-flight'`
+  `InteractionBlockReason` variant — handle it in any
+  reason-switching code added downstream. Favor-response branch
+  short-circuits before the new gate so a chained nope on a Favor
+  doesn't lock the target. Test file `useInteractionPermission.test.ts`
+  has the three regression cases.
 - **Sheet button race-class convention.** Every sheet with a terminal
   action button (NameCard, FuturePeek, DefusePlacement, TargetSelect)
   uses the two-track guard pattern: sync `submittedRef` + async

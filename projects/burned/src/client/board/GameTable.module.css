@@ -412,6 +412,20 @@
    landmine note that named `stampDrop` as living in this file is now
    stale; only `caseBannerLineIn` remains. */
 
+/* Reserved fixed-height slot for NopeCountdownBar. Locks the dial's
+   contribution to the case-banner column so `justify-content: center`
+   doesn't reflow the static briefing chunk by ~70 px when the dial
+   mounts / unmounts. Slot height tracks --size-nope-slot which scales
+   alongside --size-nope-dial across viewport bands. AnimatePresence
+   inside NopeCountdownBar handles the dial's enter/exit inside the
+   slot — slot itself stays the same height whether mounted or not. */
+.nopeSlot {
+  height: var(--size-nope-slot);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
 /* ─── Full-screen event flash (GSAP target in Phase 4) ─── */
 
 .eventFlash {

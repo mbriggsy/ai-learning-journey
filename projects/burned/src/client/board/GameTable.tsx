@@ -54,7 +54,15 @@ export function GameTable() {
           Earlier placement between divider and briefer (2026-05-08) put
           the live dial inside the briefing typography stack and the
           briefer line read as a footer to the dial rather than a
-          standalone byline. */}
+          standalone byline.
+
+          The dial sits inside a FIXED-HEIGHT slot (.nopeSlot ~
+          --size-nope-slot) so the case-banner's `justify-content: center`
+          doesn't reflow the static chunk ~70 px each time the dial
+          mounts / unmounts (Briggsy 2026-05-11 — supersedes the
+          "~10 px, acceptable" call from 4e4431c9; real shift measured
+          70 px). Slot always reserves the dial's space whether or not
+          the AnimatePresence has the dial mounted. */}
       <aside className={styles.caseBanner} aria-hidden="true">
         <span className={styles.caseBannerLabel}>Operation</span>
         <span className={styles.caseBannerOperation}>BURNED</span>
@@ -63,7 +71,9 @@ export function GameTable() {
         <span className={styles.caseBannerFooter}>
           Briefed by <strong>M.</strong>
         </span>
-        <NopeCountdownBar />
+        <div className={styles.nopeSlot}>
+          <NopeCountdownBar />
+        </div>
       </aside>
 
       {/* Player strip — UMB-style nameplate row along the bottom */}

@@ -190,6 +190,23 @@
       96px
     );
 
+    /* Reserved slot height for NopeCountdownBar inside the case-banner
+       column. The bar's wrapper is label (caption-board, ~1.5 line-height)
+       + 8px gap + dial (--size-nope-dial) + 8px gap + button (caption-
+       board × 0.9 + 10px padding). Slot fixes the height so the case-
+       banner's `justify-content: center` doesn't reflow the static
+       briefing chunk (Operation / BURNED / Case File / Briefed by M.)
+       by ~70 px each time the dial mounts or unmounts. Briggsy 2026-05-11
+       follow-up — supersedes the "~10 px shift, acceptable" call in
+       commit 4e4431c9 (actual measured shift was 70 px, hard jump).
+       Scales alongside --size-nope-dial across viewport. Keep ≥ wrapper
+       natural max height at every scale band. */
+    --size-nope-slot: clamp(
+      128px,
+      calc(128px + (100vw - 1280px) * (44 / 2560)),
+      172px
+    );
+
     /* ─── Briefing Room semantic colors ─── */
 
     /* Cream-paper blotter face (warmer than pure cream-11 so it reads as paper

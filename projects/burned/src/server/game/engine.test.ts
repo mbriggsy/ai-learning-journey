@@ -1543,4 +1543,38 @@ describe('pause-nope-window / resume-nope-window', () => {
     )
     expect(pauseResult.ok).toBe(false)
   })
+
+  it('intercept play during pause clears pausedAtMs and starts a fresh running chain window (Briggsy 2026-05-11)', () => {
+    // p1 plays Go Dark, opening a nope window. Host pauses it. p2 has an
+    // Intercept card and plays it while paused. The new chain window must
+    // be running, not born paused — the next decider (the original actor
+    // or another holder) needs the countdown live without the host
+    // hitting Resume.
+    const { state, generation } = openNopeWindow()
+    const withNope = giveCard(state, 'p2', 'intercepted', 'nope-during-pause')
+
+    const pauseResult = act(
+      withNope,
+      { type: 'pause-nope-window', playerId: '_host', windowGeneration: generation },
+      makeCtx(3000),
+    )
+    expect(pauseResult.ok).toBe(true)
+    const paused = (pauseResult as { ok: true; state: GameState }).state as PlayingState
+    expect(paused.nopeWindow!.pausedAtMs).toBe(3000)
+
+    const interceptResult = act(paused, { type: 'nope', playerId: 'p2' }, makeCtx(5000))
+    expect(interceptResult.ok).toBe(true)
+    if (interceptResult.ok) {
+      const s = interceptResult.state as PlayingState
+      // New chain window must not be paused.
+      expect(s.nopeWindow!.pausedAtMs).toBeUndefined()
+      // Chain advanced.
+      expect(s.nopeWindow!.chainDepth).toBe(1)
+      // Fresh deadline anchored to intercept time, not carried from the
+      // paused window's frozen deadline.
+      expect(s.nopeWindow!.startedAtMs).toBe(5000)
+      expect(s.nopeWindow!.deadlineMs).toBeGreaterThan(5000)
+      expect(s.nopeWindow!.lastNoperId).toBe('p2')
+    }
+  })
 })

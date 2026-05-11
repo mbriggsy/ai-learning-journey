@@ -88,7 +88,7 @@ function observerCardPlayedText(
     return pick([
       `${playerName} played ${cardName}.`,
       `${playerName} is calling in a marker.`,
-      `${playerName} wants tribute.`,
+      `${playerName} is putting the squeeze on.`,
       `${playerName} needs someone to come through. ...Phrasing.`,
     ], eventId)
   }

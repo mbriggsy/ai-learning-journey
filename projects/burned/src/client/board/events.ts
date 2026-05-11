@@ -96,7 +96,7 @@ export function formatEvent(event: GameEvent, players: readonly BoardPlayer[], e
 
     case 'favor-requested':
       return pick([
-        `${n(event.requesterId)} demands tribute from ${n(event.targetId)}`,
+        `${n(event.requesterId)} taps ${n(event.targetId)} for a favor`,
         `${n(event.requesterId)} wants a card from ${n(event.targetId)}`,
         `Pay up, ${n(event.targetId)}.`,
       ], eventId)

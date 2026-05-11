@@ -784,11 +784,24 @@ remaining turns from Attack.
 
 ### 13.8 Targeted Attack -- Can You Target Yourself?
 
-**Ambiguity:** Some sources mention you CAN target yourself with Targeted Attack.
-This is a bizarre edge case with no strategic value.
+**Source-text:** EK rules don't explicitly forbid self-target on Direct
+Order (Targeted Attack). Compare: Call in a Favor explicitly says
+"another player."
 
-**Recommendation:** Allow it (rules don't explicitly forbid it), but it is
-equivalent to just taking your turns normally. Could be funny for trolling.
+**Engine:** Self-target is permitted. Mechanically: actor's current turn
+is consumed by the play; target (self) receives +2 turns → actor ends
+with 2 turns remaining. Net **+1 turn** vs. not playing the card — a
+real (if niche) strategic option for an extra draw cycle. Pinned by
+`src/server/game/engine.test.ts:414`. The earlier "equivalent to taking
+your turns normally" framing in this section was wrong about the engine
+and is corrected here.
+
+**UI (2026-05-11):** Phone `TargetSelect` hides self across all target
+reasons including Direct Order. A first-time player can't see this
+section, so self-in-target-list reads as a bug (violates spec §2.3
+first-time-player premise). Engine remains permissive so replays /
+harness scenarios stay valid. Filter location: `src/client/player/
+Player.tsx`.
 
 ### 13.9 Combo with Action Cards
 

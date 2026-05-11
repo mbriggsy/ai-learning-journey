@@ -1122,10 +1122,15 @@ function handleNope(
     { type: 'nope-played', playerId: action.playerId, chainDepth: newDepth },
   ]
 
-  // Reset timer with full duration + new generation (invalidates stale timers, clears grace)
+  // Reset timer with full duration + new generation (invalidates stale timers, clears grace).
+  // Intercept play implicitly cancels any host pause — the new chain window
+  // must run immediately for the next decider, not be born already paused
+  // (Briggsy 2026-05-11). Destructure-drop pausedAtMs matches the resume
+  // path's pattern above.
+  const { pausedAtMs: _droppedPause, ...prevWindow } = state.nopeWindow
   const gen = state.nextNopeGeneration
   const newWindow: NopeWindow = {
-    ...state.nopeWindow,
+    ...prevWindow,
     chainDepth: newDepth,
     generation: gen,
     deadlineMs: ctx.now + getNopeWindowDuration(ctx, aliveCount),

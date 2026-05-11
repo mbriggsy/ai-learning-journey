@@ -1,6 +1,6 @@
 # BURNED — Playtest Scenarios Catalog
 
-**Lock status: DRAFT — pending Briggsy sign-off.**
+**Lock status: LOCKED 2026-05-11 at engine.ts@`e6b31b5c`.**
 **Drafted against:** `engine.ts @ e6b31b5c`, `projection.ts @ 5e86f811`,
 `room.ts @ e6b31b5c` (matches roadmap lock `docs/plans/playtest-harness/roadmap.md`).
 **Parent plan:** `docs/plans/playtest-harness/phase-1-scenarios.md` (LOCKED 2026-04-23).
@@ -8766,12 +8766,21 @@ or scope changes), Unit 7 Lock log captures the change and:
    nope window resolves to the error. Same bug class as pre-A-01 Intercept.
    **Recommendation:** add engine-side guard at :294-316 analogous to the
    A-01 fix.
+   **Dismissed at lock 2026-05-11:** unreachable via UI. SmartActionBox
+   `'contains-extraction'` invalid-label (`SmartActionBox.tsx:29`) blocks
+   proactive staging client-side with a clear refusal. Atomicity gap is
+   defense-in-depth only, not a user-visible bug.
 
 2. **Direct Order eliminated-target atomicity gap** — `SCN-DIRECT-ORDER-ELIMINATED-TARGET-01`.
    Same atomicity class: card stripped before the target-is-alive check
    fires, error returned post nope-window. Card lost on error.
    **Recommendation:** move target-validation to dispatch-time in
    `handleSingleCard`.
+   **Dismissed at lock 2026-05-11:** unreachable via UI. `eligibleTargets`
+   filter at `Player.tsx:541` excludes eliminated players from
+   TargetSelect. If a dead player ever appeared on the target list, THAT
+   would be the bug — atomicity gap is downstream of an already-broken
+   filter.
 
 3. **Back-Channel empty-deck atomicity gap** — `SCN-BACK-CHANNEL-EMPTY-DECK-01`.
    Back-Channel passes `performDraw` which checks drawPile emptiness at
@@ -8779,6 +8788,10 @@ or scope changes), Unit 7 Lock log captures the change and:
    Back-Channel card is stripped (in single-card play) before the empty-
    deck check. **Recommendation:** validate drawPile non-empty at
    dispatch-time OR accept "Back Channel is wasted" as legal.
+   **Dismissed at lock 2026-05-11:** unreachable in normal play. Rules
+   guarantee the deck is never empty before game-over (Burned cards =
+   players − 1; once last Burned is drawn, game ends). Empty-deck BC
+   needs a playtest seed to fire. Accept as no-op if it ever does.
 
 4. **Intel → Back-Channel `pendingFuture` clearing** — `SCN-INTEL-BRIEFING-SEQ-BACK-CHANNEL-01`
    + `SCN-SEQ-INTEL-THEN-BACK-CHANNEL-01`. Back-Channel does NOT clear
@@ -8787,6 +8800,11 @@ or scope changes), Unit 7 Lock log captures the change and:
    behavior: data preserved but invalidated. **Recommendation:** explicit
    product-call — does Back-Channel invalidate prior Intel peeks? Currently
    no.
+   **Dismissed at lock 2026-05-11:** not a divergence. Intel→BC is
+   legitimate strategy — peek top 3, see Burned, dodge by drawing from
+   the bottom. Intel's peek was accurate at peek-time; BC is a separate
+   action that shifts the deck. No contract that Intel's peek persists
+   through subsequent plays.
 
 5. **Favor auto-resolve TARGET-silence** — `SCN-CALL-IN-FAVOR-EMPTY-HAND-01`
    + `SCN-CALL-IN-FAVOR-ONLY-BURNED-01`. Engine emits `favor-requested`
@@ -8794,9 +8812,16 @@ or scope changes), Unit 7 Lock log captures the change and:
    exhaustive.test.ts:220-244), but TARGET's phone may show nothing. Per
    spec §2 Archer quality bar: TARGET should feel the beat. **Product call
    candidate.**
+   **Kept open at lock 2026-05-11:** real-device playtest watch item.
+   Verify on hardware whether the target's phone communicates the empty-
+   hand auto-resolve before promoting to E2E-ISSUE-LIST.
 
 6. **Favor self-target atomicity gap** — `SCN-CALL-IN-FAVOR-SELF-TARGET-01`.
    Same stripped-before-error class.
+   **Dismissed at lock 2026-05-11:** unreachable via UI. `Player.tsx:541`
+   excludes self from `eligibleTargets`. Engine `applyFavor` (engine.ts:618)
+   also rejects self-target with `'Cannot target yourself'`. Defense-in-
+   depth only.
 
 ### Spec-level divergences (product decisions, not engine bugs)
 
@@ -8856,6 +8881,7 @@ or scope changes), Unit 7 Lock log captures the change and:
 |------|--------|------------|----------------|----------|-------|
 | 2026-04-24 | DRAFT | `e6b31b5c` | `5e86f811` | `e6b31b5c` | Catalog scaffolded (Unit 1). |
 | 2026-04-24 | DRAFT | `e6b31b5c` | `5e86f811` | `e6b31b5c` | Units 2-7 complete. 90 scenarios; prototype-detector gate PASS 3/3. Pending Briggsy sign-off. |
+| 2026-05-11 | LOCKED | `e6b31b5c` | `5e86f811` | `e6b31b5c` | Briggsy sign-off. Approver: Briggsy (mbriggsy). 4 engine-correctness divergence candidates (#1 Extraction proactive, #2 Direct Order eliminated target, #3 BC empty deck, #6 Favor self-target) dismissed — unreachable via UI filters / SmartActionBox refusals. #4 Intel→BC dismissed — intended strategy, not a bug. #5 Favor target silence kept open as real-device watch item. Spec-level #7/#8/#9 + plan-doc #10 unchanged. Catalog proof-by-use: 3+ harness runs against subsequent engine states (current: engine `2c862155` / projection+room `ab89337f`) produced no scenario-grammar drift. Lock SHA preserved at original draft `e6b31b5c` for audit integrity. |
 
 ### Self-review checklist results (Unit 7 — completed 2026-04-24)
 
@@ -8921,6 +8947,8 @@ per plan.
 
 ### Reviewer
 
-**Pending Briggsy sign-off.** When approved, flip status line from
-`DRAFT — pending Briggsy sign-off` to `LOCKED YYYY-MM-DD at
-engine.ts@<SHA>` and add a new Lock log row with approver initials + date.
+**Signed off 2026-05-11 by Briggsy (mbriggsy).** Status line flipped
+to `LOCKED 2026-05-11 at engine.ts@e6b31b5c`. Lock log row added with
+divergence dispositions (4 dismissed unreachable, 1 dismissed
+not-a-bug, 1 kept open as real-device watch item, spec-level + plan
+items unchanged). `temp/prototype-detector-gate.ts` confirmed deleted.

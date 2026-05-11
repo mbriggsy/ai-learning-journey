@@ -264,8 +264,14 @@ Production-bar runs work. All §3.1-§3.5 items closed. Operator skill
 per-run `threshold` (default 15) + `seriesTarget` (default 50,
 informational).
 
-The lone remaining hard prereq for "fully done" is **SCENARIOS.md
-sign-off** (line 3, still DRAFT) — see §4.
+**SCENARIOS.md signed off 2026-05-11.** Status flipped DRAFT → LOCKED
+at original draft SHA `e6b31b5c` (proof-by-use against subsequent
+engine states — 3+ harness runs produced no scenario-grammar drift).
+6 engine-correctness divergence candidates dispositioned: 4 dismissed
+unreachable via UI filters, 1 dismissed not-a-bug (Intel→BC is
+strategy), 1 kept open as real-device watch item (Favor empty-hand
+target silence). Spec-level + plan-doc items unchanged. Harness phase
+fully closed.
 
 ---
 
@@ -294,8 +300,11 @@ Real-life sessions only Briggsy can do.
   Back Channel). Earlier "spec §2.2.5" reference was stale — no such
   section. Acceptance criterion lives at spec §2.2 ("could this look
   like a frame from an Archer episode?") + §3 visual reference.
-- **Sign off `docs/testing/playtest/SCENARIOS.md`** — still DRAFT
-  (line 3). Hard prereq for closing §3 fully.
+- **Favor empty-hand target silence** — real-device watch item kept
+  open from SCENARIOS.md Column divergences §5. Verify on hardware
+  whether the target's phone communicates the engine's auto-resolve
+  (empty hand or Burned-only hand). Promote to E2E-ISSUE-LIST if the
+  beat reads dead.
 
 Remaining ⏸ rows in `E2E-ISSUE-LIST` (C-13, C-15, C-16-19) are blocked
 on product/asset decisions — surface in a visual review.

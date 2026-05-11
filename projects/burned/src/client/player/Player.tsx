@@ -25,6 +25,7 @@ import { ConnectionOverlay } from './ConnectionOverlay'
 import { EliminatedView } from './EliminatedView'
 import { TitleBar } from './TitleBar'
 import { StatusBar } from './StatusBar'
+import { getEligibleTargets, type LocalTargetReason } from './eligibleTargets'
 import { GameOver } from '@client/shared/GameOver'
 const DramaOverlay = lazy(() => import('@client/shared/DramaOverlay').then(m => ({ default: m.DramaOverlay })))
 import { useDramaActive } from '@client/shared/dramaState'
@@ -363,7 +364,7 @@ function PlayingView({ roomCode }: { roomCode: string }) {
   // (target visible to opponents). Reasons: Targeted Attack, Favor,
   // and both Two-of-a-Kind / Three-of-a-Kind combos.
   const [localTargetMode, setLocalTargetMode] = useState<
-    { cardIds: string[]; reason: 'direct-order' | 'call-in-a-favor' | 'combo-pair' | 'combo-triple' } | null
+    { cardIds: string[]; reason: LocalTargetReason } | null
   >(null)
 
   // Track dismissed See the Future peek (prevents sheet loop). Compare by
@@ -417,7 +418,7 @@ function PlayingView({ roomCode }: { roomCode: string }) {
   useEffect(() => {
     if (!(import.meta.env.DEV || import.meta.env.MODE === 'test')) return
     const w = window as unknown as Record<string, unknown>
-    w.__testForceLocalTarget = (reason: 'direct-order' | 'call-in-a-favor' | 'combo-pair' | 'combo-triple' | null) => {
+    w.__testForceLocalTarget = (reason: LocalTargetReason | null) => {
       if (reason === null) {
         setLocalTargetMode(null)
       } else {
@@ -536,9 +537,10 @@ function PlayingView({ roomCode }: { roomCode: string }) {
 
   if (!isAlive) return <EliminatedView />
 
-  // Engine permits Direct Order self-target per RULES §13.8; UI hides self
-  // for first-time-player clarity (spec §2.3 first-time-player premise).
-  const eligibleTargets = players.filter(p => p.isAlive && p.id !== myPlayerId)
+  // Base filter (alive + not self) + reason-conditional `cardCount > 0`
+  // for Favor / combo-pair / combo-triple. See `eligibleTargets.ts` for
+  // rationale + spec/rules citations.
+  const eligibleTargets = getEligibleTargets(players, myPlayerId, localTargetMode?.reason ?? null)
 
   // Display hand = sortedHand minus staged ids.
   const displayHand = sortedHand.filter(c => !selectedIds.has(c.id))

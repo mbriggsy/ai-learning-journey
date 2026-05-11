@@ -18,17 +18,15 @@ three-beat Phrasing! batch on the COMMS feed + observer-favor toast
 
 Current state (verified 2026-05-11 end-of-session):
 
-- Tests: **1389 pass** | 6 expected fail (67/67 files green). +4 vs prior
-  session: 1 engine case (intercept-during-pause clears pausedAtMs on the
-  new chain window) + 3 permission-hook cases (actor-mid-window
-  play-in-flight gate + non-actor reason-ordering + favor-target
-  chain-preservation).
+- Tests: **1398 pass** | 6 expected fail (68/68 files green). +9 vs
+  prior couch-validation block: full coverage suite for the new
+  `getEligibleTargets` helper (8 cases + a parametric self-exclusion
+  case).
 - Build: clean (`pnpm build`).
-- Phone initial JS: **~99.11 KB gzipped** (player 18.94 + shared 65.71
-  + VisualElement 14.46). +0.01 KB vs prior 99.10 baseline — the
-  2026-05-11 fixes were small (1-line filter, hook param, permission
-  branch, no new components). **0.89 KB headroom** under the 100 KB
-  ceiling.
+- Phone initial JS: **~99.17 KB gzipped** (player 19.00 + shared 65.71
+  + VisualElement 14.46). +0.06 KB vs 99.11 baseline — small helper
+  module + reason-conditional filter in Player.tsx. **0.83 KB
+  headroom** under the 100 KB ceiling.
 - Board chunk: 15.00 KB gz (+0.02 KB for the `.nopeSlot` wrapper +
   CSS rule; board-side only, doesn't touch phone budget).
 - Protocol still v6 (no shape changes this session — pure code-side
@@ -112,7 +110,30 @@ self-report validation in the detector pipeline).
 
 _None. Closed in recent sessions:_
 
-**2026-05-11 — couch-validation session (this run):**
+**2026-05-11 — SCENARIOS.md sign-off + Favor empty-hand follow-through:**
+
+- **SCENARIOS.md catalog signed off — DRAFT → LOCKED 2026-05-11 at
+  engine.ts@e6b31b5c.** SHA pinned at original draft for audit
+  integrity. 6 Column-divergence atomicity candidates dispositioned:
+  4 dismissed unreachable via UI filters (Extraction proactive, Direct
+  Order eliminated target, BC empty deck, Favor self-target), 1
+  dismissed not-a-bug (Intel→BC is intended strategy). #5 Favor target
+  silence closed by following bullet. Spec-level + plan-doc items
+  unchanged. Harness phase fully closed.
+
+- **Favor + combo-steal target list excludes 0-card players.** New
+  pure helper `getEligibleTargets` in
+  `src/client/player/eligibleTargets.ts` replaces the inline filter
+  at `Player.tsx:541`. Reason-conditional: `call-in-a-favor`,
+  `combo-pair`, and `combo-triple` exclude `cardCount === 0` targets
+  (hand-extraction class); `direct-order` and the null/default case
+  keep the original alive + not-self shape. Mirrors the four
+  atomicity-gap dismissals from SCENARIOS.md lock — UI filter blocks
+  the engine edge, engine branch stays as defense-in-depth so the
+  harness can still seed the empty-hand path. 9 unit tests cover all
+  reasons + the all-others-empty edge.
+
+**2026-05-11 — couch-validation session (prior block):**
 
 - **Direct Order self-target — hidden on phone TargetSelect (engine
   unchanged).** Briggsy couch: actor could pick themselves with
@@ -300,12 +321,6 @@ Real-life sessions only Briggsy can do.
   Back Channel). Earlier "spec §2.2.5" reference was stale — no such
   section. Acceptance criterion lives at spec §2.2 ("could this look
   like a frame from an Archer episode?") + §3 visual reference.
-- **Favor empty-hand target silence** — real-device watch item kept
-  open from SCENARIOS.md Column divergences §5. Verify on hardware
-  whether the target's phone communicates the engine's auto-resolve
-  (empty hand or Burned-only hand). Promote to E2E-ISSUE-LIST if the
-  beat reads dead.
-
 Remaining ⏸ rows in `E2E-ISSUE-LIST` (C-13, C-15, C-16-19) are blocked
 on product/asset decisions — surface in a visual review.
 

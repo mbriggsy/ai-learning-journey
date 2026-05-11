@@ -8812,9 +8812,14 @@ or scope changes), Unit 7 Lock log captures the change and:
    exhaustive.test.ts:220-244), but TARGET's phone may show nothing. Per
    spec §2 Archer quality bar: TARGET should feel the beat. **Product call
    candidate.**
-   **Kept open at lock 2026-05-11:** real-device playtest watch item.
-   Verify on hardware whether the target's phone communicates the empty-
-   hand auto-resolve before promoting to E2E-ISSUE-LIST.
+   **Resolved post-lock 2026-05-11:** filtered at UI — same pattern as
+   #1/#2/#3/#6. `getEligibleTargets` in `src/client/player/eligibleTargets.ts`
+   excludes 0-card players for `call-in-a-favor`, `combo-pair`, and
+   `combo-triple` reasons (extended to combos since they share the same
+   hand-extraction class). Engine branch remains as defense-in-depth so
+   harness can still seed the empty-hand path via scripted input. Note:
+   the `*-ONLY-BURNED-01` scenario is unreachable for a separate reason —
+   Burned is never in a hand (auto-actioned on draw).
 
 6. **Favor self-target atomicity gap** — `SCN-CALL-IN-FAVOR-SELF-TARGET-01`.
    Same stripped-before-error class.

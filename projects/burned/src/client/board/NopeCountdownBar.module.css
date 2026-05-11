@@ -25,8 +25,9 @@
   flex-direction: column;
   align-items: center;
   gap: 8px;
-  /* Pointer-events off matches the case banner's own posture — the
-     intercept happens on phones, the board surface is informational. */
+  /* The dial + label inherit pointer-events: none from the case banner,
+     but the pause button below opts back in via its own rule. The host
+     needs to be able to call a hold via the board surface. */
   pointer-events: none;
 }
 
@@ -112,6 +113,68 @@
   /* Subtle glow tying the digit to the ring it sits inside. */
   text-shadow: 0 0 12px color-mix(in oklab, var(--color-accent-intercept) 50%, transparent);
   line-height: 1;
+}
+
+/* Hold / Resume — the host's pause control. Sits below the dial as a
+   compact briefing-room button. Opts back into pointer-events (parent
+   wrapper inherits none from the case-banner) so the board can capture
+   the tap. Aesthetic mirrors the case-banner typography — mono caps,
+   ochre-on-charcoal — so it reads as part of the briefing chrome, not
+   a generic UI affordance. */
+.pauseButton {
+  pointer-events: auto;
+  font-family: var(--font-mono);
+  font-size: calc(var(--text-caption-board) * 0.9);
+  font-weight: 700;
+  letter-spacing: 0.18em;
+  text-transform: uppercase;
+  color: var(--color-accent-intercept);
+  background: color-mix(in oklab, var(--color-charcoal-1) 65%, transparent);
+  border: 1px solid color-mix(in oklab, var(--color-accent-intercept) 45%, transparent);
+  padding: 5px 12px;
+  border-radius: 2px;
+  cursor: pointer;
+  transition:
+    background var(--motion-duration-fast) var(--motion-ease-base),
+    border-color var(--motion-duration-fast) var(--motion-ease-base),
+    transform var(--motion-duration-fast) var(--motion-ease-base);
+}
+
+.pauseButton:hover {
+  background: color-mix(in oklab, var(--color-accent-intercept) 18%, var(--color-charcoal-1) 70%);
+  border-color: var(--color-accent-intercept);
+}
+
+.pauseButton:active {
+  transform: scale(0.97);
+}
+
+/* Paused state — dial drains stop, label flips to "Paused", the ring
+   color softens to drama-amber so the live transmission is unmistakably
+   on hold. Color-blind-safe: the word "Paused" carries the signal; the
+   color shift is accent only. */
+.wrapper[data-paused] .label,
+.wrapper[data-paused] .timer {
+  color: var(--color-accent-drama);
+  text-shadow: 0 0 12px color-mix(in oklab, var(--color-accent-drama) 45%, transparent);
+}
+
+.wrapper[data-paused] .fill {
+  stroke: var(--color-accent-drama);
+}
+
+.wrapper[data-paused] .track {
+  stroke: color-mix(in oklab, var(--color-accent-drama) 22%, transparent);
+}
+
+.wrapper[data-paused] .pauseButton {
+  color: var(--color-accent-drama);
+  border-color: color-mix(in oklab, var(--color-accent-drama) 55%, transparent);
+}
+
+.wrapper[data-paused] .pauseButton:hover {
+  background: color-mix(in oklab, var(--color-accent-drama) 22%, var(--color-charcoal-1) 65%);
+  border-color: var(--color-accent-drama);
 }
 
 } /* @layer components */

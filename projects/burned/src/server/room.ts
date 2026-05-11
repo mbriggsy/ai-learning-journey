@@ -12,8 +12,8 @@ import { createLobbyState, dispatch } from './game/engine'
 import { projectForBoard, projectForPlayer, getPrivateData } from './projection'
 import type { GameState, PlayingState, GameOverState, DispatchContext, DispatchResult, ErrorCode as EngineErrorCode } from './game/types'
 import type { ClientAction, EngineAction } from '@shared/actions'
-import { SERVER_ONLY_ACTIONS } from '@shared/actions'
-import type { ServerMessage, LobbyView, ErrorCode } from '@shared/protocol'
+import { SERVER_ONLY_ACTIONS, HOST_ONLY_ACTIONS } from '@shared/actions'
+import type { HostClientAction, ServerMessage, LobbyView, ErrorCode } from '@shared/protocol'
 import { PROTOCOL_VERSION } from '@shared/protocol'
 import { TIMING } from '@shared/constants'
 
@@ -360,6 +360,9 @@ export class GameRoom extends Server<Env> {
         break
       case 'action':
         this.enqueue(() => this.handleAction(connection, msg.payload), connection)
+        break
+      case 'host-action':
+        this.enqueue(() => this.handleHostAction(connection, msg.payload), connection)
         break
       case 'ping':
         this.send(connection, { type: 'pong', payload: {} })
@@ -961,6 +964,53 @@ export class GameRoom extends Server<Env> {
     void this.persistState()
   }
 
+  // --- Host Actions ---
+
+  /** Host-issued commands routed from the board (e.g., pause/resume the
+   *  intercept countdown). Sender must own the host slot — player phones
+   *  cannot reach this path. */
+  private handleHostAction(connection: Connection, action: HostClientAction): void {
+    const connState = this.getConnState(connection)
+
+    if (connState?.role !== 'host') {
+      this.sendError(connection, 'INVALID_ACTION', 'Only the board can issue host actions')
+      return
+    }
+
+    if (!this.gameState || this.gameState.phase !== 'playing') {
+      this.sendError(connection, 'INVALID_ACTION', 'Game is not in progress')
+      return
+    }
+
+    // Whitelist guard — only the known host-action types are dispatched.
+    // A typo'd client sending an unknown subtype gets a clean reject.
+    if (!(HOST_ONLY_ACTIONS as Set<string>).has(action.type)) {
+      this.sendError(connection, 'INVALID_ACTION', 'Unknown host action')
+      return
+    }
+
+    // Sentinel playerId — mirrors '_server' for timer-driven actions. The
+    // engine's actor-existence guard exempts host-only action types.
+    const engineAction: EngineAction = {
+      ...action,
+      playerId: '_host',
+    } as EngineAction
+
+    const ctx = this.makeDispatchContext()
+    const result = dispatch(this.gameState, engineAction, ctx)
+
+    if (!result.ok) {
+      this.sendError(connection, mapEngineError(result.code), result.error)
+      return
+    }
+
+    this.gameState = result.state
+    this.lastActionTime = Date.now()
+    this.updateNopeTimer(result)
+    this.broadcastGameState()
+    void this.persistState()
+  }
+
   // --- Server Actions ---
 
   private dispatchServerAction(action: EngineAction): void {
@@ -1015,12 +1065,27 @@ export class GameRoom extends Server<Env> {
     }
 
     const playing = result.state as PlayingState
-    if (playing.nopeWindow && playing.nopeWindow.generation !== this.lastScheduledNopeGeneration) {
+    const w = playing.nopeWindow
+    if (!w) {
       this.clearNopeTimer()
-      this.lastScheduledNopeGeneration = playing.nopeWindow.generation
-      this.scheduleNopeExpiry(playing.nopeWindow.generation, playing.nopeWindow.deadlineMs - Date.now())
-    } else if (!playing.nopeWindow) {
+      return
+    }
+    // While paused, the engine froze the deadline and we must not let the
+    // expiry timer fire — clear it. On resume the engine pushes deadlineMs
+    // forward and clears pausedAtMs; we re-schedule against the new deadline.
+    if (w.pausedAtMs !== undefined) {
       this.clearNopeTimer()
+      return
+    }
+    // New generation → fresh schedule. Also covers the resume path: the
+    // generation hasn't changed but lastScheduledNopeGeneration was set when
+    // the timer was last installed, so we force a re-schedule whenever the
+    // window is running and either (a) generation advanced or (b) no timer
+    // is currently armed (the pause path cleared it above).
+    if (w.generation !== this.lastScheduledNopeGeneration || this.nopeTimeout === null) {
+      this.clearNopeTimer()
+      this.lastScheduledNopeGeneration = w.generation
+      this.scheduleNopeExpiry(w.generation, w.deadlineMs - Date.now())
     }
   }
 

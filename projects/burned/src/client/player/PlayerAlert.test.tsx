@@ -820,7 +820,12 @@ describe('PlayerAlert — observer card-played Phrasing! pool variants (spec §3
     }
   })
 
-  it('Direct Order Phrasing! variant resolves "you" when the viewer is the target', () => {
+  it('Direct Order target sees the urgent consequence toast (not the observer pool)', () => {
+    // 2026-05-10: when viewer IS the target, the observer flavor pool is
+    // bypassed for an urgent consequence toast that names the +2-turns
+    // contract — a first-time player needs to know what hit them, not
+    // dry-flavored prose. Pool still runs for non-target observers (test
+    // above pins one variant for the matching seed).
     const { container, root } = mount()
     try {
       myIdRef.current = SEAT3_ID
@@ -833,7 +838,56 @@ describe('PlayerAlert — observer card-played Phrasing! pool variants (spec §3
         { event: { type: 'card-played', playerId: SEAT2_ID, cardType: 'direct-order', targetId: SEAT3_ID }, receivedAt: 1, id: 'evt-1' },
       ])
       rerender(root)
-      expect(alertText(container)).toBe('Seat2 got you to do it for them. ...Phrasing.')
+      expect(alertText(container)).toBe('Seat2 put you on assignment. 2 turns in a row!')
+    } finally {
+      teardown(container, root)
+    }
+  })
+
+  it('Reassign target sees the urgent consequence toast (not the observer pool)', () => {
+    // 2026-05-10: parallel to Direct Order's target branch. Reassign's
+    // card-played event now carries `targetId` (engine adds it at play
+    // time from getNextAlivePlayer) so the next-in-rotation player gets
+    // the same urgent "2 turns in a row" callout. Pool still owns the
+    // non-target observer toast.
+    const { container, root } = mount()
+    try {
+      myIdRef.current = SEAT3_ID
+      setEvents([
+        { event: { type: 'turn-started', playerId: SEAT2_ID, turnsRemaining: 1 }, receivedAt: 0, id: 'evt-0' },
+      ])
+      render(root)
+      setEvents([
+        { event: { type: 'turn-started', playerId: SEAT2_ID, turnsRemaining: 1 }, receivedAt: 0, id: 'evt-0' },
+        { event: { type: 'card-played', playerId: SEAT2_ID, cardType: 'reassign', targetId: SEAT3_ID }, receivedAt: 1, id: 'evt-1' },
+      ])
+      rerender(root)
+      expect(alertText(container)).toBe('Seat2 kicked the assignment to you. 2 turns in a row!')
+    } finally {
+      teardown(container, root)
+    }
+  })
+
+  it('Call in a Favor target sees the urgent consequence toast (not the observer pool)', () => {
+    // 2026-05-10: Favor was the third targeted single-card play surfaced.
+    // Without the target callout, a first-time player can't make an
+    // informed intercept decision during the nope window — by the time
+    // the favor-response sheet appears the window has closed. Engine
+    // emits `targetId` on call-in-a-favor card-played; PlayerAlert routes
+    // viewer === target to the urgent toast.
+    const { container, root } = mount()
+    try {
+      myIdRef.current = SEAT3_ID
+      setEvents([
+        { event: { type: 'turn-started', playerId: SEAT2_ID, turnsRemaining: 1 }, receivedAt: 0, id: 'evt-0' },
+      ])
+      render(root)
+      setEvents([
+        { event: { type: 'turn-started', playerId: SEAT2_ID, turnsRemaining: 1 }, receivedAt: 0, id: 'evt-0' },
+        { event: { type: 'card-played', playerId: SEAT2_ID, cardType: 'call-in-a-favor', targetId: SEAT3_ID }, receivedAt: 1, id: 'evt-1' },
+      ])
+      rerender(root)
+      expect(alertText(container)).toBe('Seat2 is calling in a marker from you!')
     } finally {
       teardown(container, root)
     }

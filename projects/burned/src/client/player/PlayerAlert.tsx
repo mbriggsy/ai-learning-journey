@@ -345,6 +345,48 @@ function alertFor(
         return { id: eventId, text, tone: 'info', persistUntil }
       }
 
+      // Targeted single-card plays — viewer === target branch. Mirrors the
+      // combo-target urgent branch above. The observer pool doesn't tell
+      // the target they're the mark, so a first-time player can't make an
+      // informed intercept decision during the nope window. Spell out the
+      // consequence on the target's phone (Briggsy 2026-05-10). The engine
+      // emits `targetId` on all three card-played events:
+      //   Direct Order  — chosen target (action.targetPlayerId)
+      //   Reassign      — next-in-rotation target (getNextAlivePlayer)
+      //   Favor         — chosen target (action.targetPlayerId)
+      // Direct Order / Reassign add "2 turns in a row!" since that's the
+      // card's contract beyond targeting. Favor's consequence (you'll be
+      // asked to surrender a card after the window closes) is implicit in
+      // the verb phrase — no explicit "+N turns" since favor doesn't shift
+      // turns. persistUntil is already card-specific (favor: 'favor-given';
+      // others: 'nope-window-resolved'), set above at line 288-291.
+      if (target === myId) {
+        if (event.cardType === 'direct-order') {
+          return {
+            id: eventId,
+            text: `${playerName} put you on assignment. 2 turns in a row!`,
+            tone: 'urgent',
+            persistUntil,
+          }
+        }
+        if (event.cardType === 'reassign') {
+          return {
+            id: eventId,
+            text: `${playerName} kicked the assignment to you. 2 turns in a row!`,
+            tone: 'urgent',
+            persistUntil,
+          }
+        }
+        if (event.cardType === 'call-in-a-favor') {
+          return {
+            id: eventId,
+            text: `${playerName} is calling in a marker from you!`,
+            tone: 'urgent',
+            persistUntil,
+          }
+        }
+      }
+
       // Single-card plays — per-card flavor pools. Combo plays keep the
       // dedicated "<Operative> pair/triple" mechanic announcement (handled
       // above); a flavor pool there would dilute the intercept-decision

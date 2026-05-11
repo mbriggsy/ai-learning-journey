@@ -80,16 +80,25 @@ export function SmartActionBox({
   // Intercept window countdown — ticks fast enough to catch the "0s" frame
   // before the server's 300ms grace period resolves the window. At 3s windows
   // a coarser tick can skip "0s" entirely, which reads as "timer disappeared".
+  // When the host paused the window, `pausedAtMs` is set and the display
+  // freezes at the frozen-remaining value (deadlineMs - pausedAtMs); without
+  // this check the phone ticks against wall-clock while the server clock is
+  // frozen, draining to 0 while the board still shows time remaining.
   const [secondsLeft, setSecondsLeft] = useState(0)
   useEffect(() => {
     if (!nopeWindow) { setSecondsLeft(0); return }
+    const pausedAt = nopeWindow.pausedAtMs
     const update = () => {
-      setSecondsLeft(Math.max(0, Math.ceil((nopeWindow.deadlineMs - Date.now()) / 1000)))
+      const base = pausedAt !== undefined ? pausedAt : Date.now()
+      setSecondsLeft(Math.max(0, Math.ceil((nopeWindow.deadlineMs - base) / 1000)))
     }
     update()
+    // No interval needed while paused — the frozen value won't change until
+    // the next state update flips pausedAtMs (resume) or generation (close).
+    if (pausedAt !== undefined) return
     const timer = setInterval(update, 100)
     return () => clearInterval(timer)
-  }, [nopeWindow?.deadlineMs, nopeWindow?.generation])
+  }, [nopeWindow?.deadlineMs, nopeWindow?.generation, nopeWindow?.pausedAtMs])
 
   // Attack stacking: target receives (turnsRemaining - 1) + 2 = turnsRemaining + 1
   // turns. Normal turn (turnsRemaining=1) → 2. Under an existing attack

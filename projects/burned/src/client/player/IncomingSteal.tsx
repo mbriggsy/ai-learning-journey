@@ -47,14 +47,19 @@ export function IncomingSteal() {
   }, [isTargetOfNamedSteal, nopeWindow])
 
   // Countdown tick. Matches SmartActionBox's 100ms cadence so the two stay
-  // visually synced (same "0s" frame lands at the same instant).
+  // visually synced (same "0s" frame lands at the same instant). Freezes
+  // when the host paused the window — same logic as SmartActionBox so the
+  // two phone surfaces don't disagree on remaining time.
   const [secondsLeft, setSecondsLeft] = useState(0)
   useEffect(() => {
     if (!isTargetOfNamedSteal || !nopeWindow) { setSecondsLeft(0); return }
+    const pausedAt = nopeWindow.pausedAtMs
     const update = () => {
-      setSecondsLeft(Math.max(0, Math.ceil((nopeWindow.deadlineMs - Date.now()) / 1000)))
+      const base = pausedAt !== undefined ? pausedAt : Date.now()
+      setSecondsLeft(Math.max(0, Math.ceil((nopeWindow.deadlineMs - base) / 1000)))
     }
     update()
+    if (pausedAt !== undefined) return
     const timer = setInterval(update, 100)
     return () => clearInterval(timer)
   }, [isTargetOfNamedSteal, nopeWindow])

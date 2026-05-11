@@ -24,6 +24,15 @@ interface Subject {
   readonly subtext: string
   readonly standby: boolean
   readonly offline: boolean
+  /** True when the subject's player differs from the current turn player —
+   *  i.e., the prompted player isn't already named by PlayerStrip. Only
+   *  favor-response triggers this in practice today (defuse / future-
+   *  rearrange / name-card all prompt the active turn player, which the
+   *  strip already highlights). When true, the plate shows the player's
+   *  codename above the state engraving so observers know WHO is in the
+   *  state — critical during favor-response where the active turn player
+   *  and the prompted player are different humans. */
+  readonly showName: boolean
 }
 
 const PROMPT_SUBTEXT: Record<PendingPromptView['type'], string> = {
@@ -34,11 +43,12 @@ const PROMPT_SUBTEXT: Record<PendingPromptView['type'], string> = {
 }
 
 const STANDBY_SUBJECT: Subject = {
-  key:     'standby',
-  name:    '.',
-  subtext: 'Standby',
-  standby: true,
-  offline: false,
+  key:      'standby',
+  name:     '.',
+  subtext:  'Standby',
+  standby:  true,
+  offline:  false,
+  showName: false,
 }
 
 // Offline overrides the prompt/turn subtext entirely. Room needs to see
@@ -56,12 +66,20 @@ export function resolveSubject(
     const p = players.find(x => x.id === prompt.playerId)
     if (!p) return STANDBY_SUBJECT
     const offline = !p.isConnected
+    // showName when the prompted player differs from the current turn
+    // player. Favor-response is the canonical case: actor plays the favor
+    // card from their turn, target is a different human handling the
+    // prompt. Defuse / future-rearrange / name-card all prompt the active
+    // turn player and the PlayerStrip already names them — no plate-name
+    // redundancy needed there.
+    const showName = currentTurn !== null && currentTurn.currentPlayerId !== prompt.playerId
     return {
       key:     `prompt:${prompt.playerId}:${prompt.type}${offline ? ':offline' : ''}`,
       name:    p.name,
       subtext: offline ? OFFLINE_SUBTEXT : PROMPT_SUBTEXT[prompt.type],
       standby: false,
       offline,
+      showName,
     }
   }
 
@@ -73,11 +91,12 @@ export function resolveSubject(
       ? ` · ${currentTurn.turnsRemaining} Turns`
       : ''
     return {
-      key:     `turn:${currentTurn.currentPlayerId}${offline ? ':offline' : ''}`,
-      name:    p.name,
-      subtext: offline ? OFFLINE_SUBTEXT : `On Deck${extra}`,
-      standby: false,
+      key:      `turn:${currentTurn.currentPlayerId}${offline ? ':offline' : ''}`,
+      name:     p.name,
+      subtext:  offline ? OFFLINE_SUBTEXT : `On Deck${extra}`,
+      standby:  false,
       offline,
+      showName: false,
     }
   }
 
@@ -126,8 +145,15 @@ export function Nameplate({ players, currentTurn, prompt }: Props) {
               ease: MOTION_EASINGS.emphasized,
             }}
           >
-            <span className={styles.name}>{subject.name}</span>
-            <span className={styles.subtext}>{subject.subtext}</span>
+            {/* Name span is visually hidden by default (PlayerStrip names
+                the active player — duplicating it here was redundant) but
+                shows visibly when the subject's player ≠ the current turn
+                player. Favor-response is the practical case: the favor
+                target is a different human from the actor whose turn it
+                is, and the plate is the only surface that can name them.
+                Screen readers and tests always read the codename. */}
+            <span className={subject.showName ? styles.name : styles.nameSr}>{subject.name}</span>
+            <span className={subject.showName ? styles.subtext : styles.subtextSolo}>{subject.subtext}</span>
           </m.div>
         </AnimatePresence>
       </div>

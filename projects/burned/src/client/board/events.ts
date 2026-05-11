@@ -46,6 +46,20 @@ export function formatEvent(event: GameEvent, players: readonly BoardPlayer[], e
     case 'nope-window-opened':
       return null
 
+    case 'nope-window-paused':
+      return pick([
+        '// HOLD CALLED. Intercept window paused.',
+        '// HOLD ON THE LINE — clock stopped.',
+        '// TABLE-MASTER paused the intercept.',
+      ], eventId)
+
+    case 'nope-window-resumed':
+      return pick([
+        '// CLOCK RUNNING. Intercept window resumed.',
+        '// HOLD LIFTED — back live.',
+        '// RESUMED. Intercept window is live again.',
+      ], eventId)
+
     case 'nope-window-resolved':
       return event.cancelled
         ? pick(['Cancelled!', 'Shot down.', 'Counter-intel wins.'], eventId)

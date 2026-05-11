@@ -140,13 +140,23 @@ function projectNopeWindow(
   // Allowlist projection — every field explicitly picked. lastNoperId is
   // public (treated like chainDepth) so observer UIs can pre-disable the
   // self-Nope-own-Nope path before the engine rejects it.
+  // While paused, the deadline is frozen at its pre-pause value and
+  // `remainingMs` reflects the deadline-minus-pausedAt (NOT the wall clock)
+  // so the dial holds its display instead of ticking past zero during the
+  // hold. On resume the engine pushes `deadlineMs` forward and clears
+  // pausedAtMs, returning to wall-clock countdown.
+  const isPaused = w.pausedAtMs !== undefined
+  const remainingMs = isPaused
+    ? Math.max(0, w.deadlineMs - w.pausedAtMs!)
+    : Math.max(0, w.deadlineMs - now)
   const base: NopeWindowView = {
-    remainingMs: Math.max(0, w.deadlineMs - now),
+    remainingMs,
     deadlineMs: w.deadlineMs,
     chainDepth: w.chainDepth,
     startedAtMs: w.startedAtMs,
     generation: w.generation,
     ...(w.lastNoperId !== undefined ? { lastNoperId: w.lastNoperId } : {}),
+    ...(isPaused ? { pausedAtMs: w.pausedAtMs } : {}),
   }
   const pending = state.pendingNameCard
   if (!pending?.namedCardType) return base

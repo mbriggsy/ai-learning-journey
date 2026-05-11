@@ -33,6 +33,8 @@ export type GameEvent =
   | { type: 'card-drawn'; playerId: string; safe: boolean; cardType?: CardType }
   | { type: 'nope-played'; playerId: string; chainDepth: number }
   | { type: 'nope-window-opened'; targetAction: string; deadlineMs: number }
+  | { type: 'nope-window-paused'; pausedAtMs: number }
+  | { type: 'nope-window-resumed'; deadlineMs: number }
   | { type: 'nope-window-resolved'; cancelled: boolean; chainDepth: number }
   | { type: 'burned-drawn'; playerId: string }
   | { type: 'extraction-played'; playerId: string }

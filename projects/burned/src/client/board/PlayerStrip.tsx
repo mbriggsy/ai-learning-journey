@@ -68,7 +68,6 @@ export const PlayerStrip = memo(function PlayerStrip({
                 +{turnsRemaining - 1}
               </span>
             )}
-            {isActive && <span className={styles.activeTag}>ACTIVE</span>}
           </m.div>
         )
       })}

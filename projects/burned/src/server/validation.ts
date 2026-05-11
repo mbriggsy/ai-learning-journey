@@ -165,6 +165,27 @@ const ActionMessage = z.object({
   payload: ClientGameActionSchema,
 }).strict()
 
+// Host-action — board-issued control commands. Currently only the
+// pause/resume controls on the intercept countdown. windowGeneration is
+// the current intercept window's generation so a stale tap can't affect
+// a freshly-opened follow-up window (mirrors the nope-window-expired
+// guard at engine.ts).
+const HostActionPayload = z.discriminatedUnion('type', [
+  z.object({
+    type: z.literal('pause-nope-window'),
+    windowGeneration: z.number().int().nonnegative(),
+  }).strict(),
+  z.object({
+    type: z.literal('resume-nope-window'),
+    windowGeneration: z.number().int().nonnegative(),
+  }).strict(),
+])
+
+const HostActionMessage = z.object({
+  type: z.literal('host-action'),
+  payload: HostActionPayload,
+}).strict()
+
 const PingMessage = z.object({
   type: z.literal('ping'),
   payload: z.strictObject({}),
@@ -181,6 +202,7 @@ export const ClientMessageSchema = z.discriminatedUnion('type', [
   StartGameMessage,
   ReturnToLobbyMessage,
   ActionMessage,
+  HostActionMessage,
   PingMessage,
   PongMessage,
 ])

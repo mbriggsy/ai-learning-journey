@@ -6,8 +6,10 @@ import type { ClientAction } from './actions'
 // v4 → v5 (2026-05-07): client `join` now carries `protocolVersion` so
 // the server can reject mismatched clients BEFORE allocating a player
 // slot (B-12). Old clients that don't send the field get rejected the
-// same way — the field's absence reads as v0, mismatch with v5.
-export const PROTOCOL_VERSION = 5
+// same way — the field's absence reads as v0, mismatch with v6.
+// v6 adds host-action message + pause/resume engine actions + pausedAtMs
+// on NopeWindowView + nope-window-paused/resumed events (Briggsy 2026-05-10).
+export const PROTOCOL_VERSION = 6
 
 // --- Error Codes ---
 
@@ -36,8 +38,20 @@ export type ClientMessage =
   | { type: 'start-game'; payload: Record<string, never> }
   | { type: 'return-to-lobby'; payload: Record<string, never> }
   | { type: 'action'; payload: ClientAction }
+  /** Host-issued commands — the board's connection sends these (not a
+   *  player phone). Currently used for the pause/resume control on the
+   *  intercept countdown so the table can call a hold. Server validates
+   *  the sender owns the host slot before routing. */
+  | { type: 'host-action'; payload: HostClientAction }
   | { type: 'ping'; payload: Record<string, never> }
   | { type: 'pong'; payload: Record<string, never> }
+
+/** What the board's host connection can request. `windowGeneration` is the
+ *  current intercept window's generation so a stale tap (after the window
+ *  closed and a new one opened) can't accidentally affect the new window. */
+export type HostClientAction =
+  | { type: 'pause-nope-window'; windowGeneration: number }
+  | { type: 'resume-nope-window'; windowGeneration: number }
 
 // --- Server -> Client Messages ---
 
@@ -82,6 +96,15 @@ export interface NopeWindowView {
   readonly chainDepth: number
   readonly startedAtMs: number
   readonly generation: number
+  /**
+   * When the host has called a hold on the intercept window via the board's
+   * pause control. The countdown stops draining server-side (the expiry
+   * timer is cleared), and clients freeze the displayed time. `deadlineMs`
+   * remains the pre-pause deadline while paused; on resume the server
+   * pushes `deadlineMs` forward by the elapsed pause duration and clears
+   * `pausedAtMs`, then re-schedules the expiry timer. Absent when not paused.
+   */
+  readonly pausedAtMs?: number
   /**
    * Player who played the most recent Nope on the chain. Absent at
    * chainDepth 0. Used by client UI (SmartActionBox) to pre-disable the

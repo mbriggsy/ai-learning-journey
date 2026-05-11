@@ -47,20 +47,23 @@ export function GameTable() {
           which also gets meaningful dramaturgy (cover hinges open on
           first event → stamp leaves with it).
 
-          NopeCountdownBar lives BETWEEN the divider and the briefer
-          footer (2026-05-08): the bar is a live mission update inside
-          the briefing narrative, not a floating overlay. Static case
-          banner content reads as the standing dossier; the intercept
-          window reads as the active transmission. */}
+          NopeCountdownBar lives BELOW the briefer footer (Briggsy
+          2026-05-10): the static briefing (operation / case / divider /
+          briefer) reads as one settled chunk; the live intercept dial
+          drops in beneath it as a separate "transmission" stratum.
+          Earlier placement between divider and briefer (2026-05-08) put
+          the live dial inside the briefing typography stack and the
+          briefer line read as a footer to the dial rather than a
+          standalone byline. */}
       <aside className={styles.caseBanner} aria-hidden="true">
         <span className={styles.caseBannerLabel}>Operation</span>
         <span className={styles.caseBannerOperation}>BURNED</span>
         <span className={styles.caseBannerSub}>Case File 47-B · Mayfair</span>
         <div className={styles.caseBannerDivider} />
-        <NopeCountdownBar />
         <span className={styles.caseBannerFooter}>
           Briefed by <strong>M.</strong>
         </span>
+        <NopeCountdownBar />
       </aside>
 
       {/* Player strip — UMB-style nameplate row along the bottom */}

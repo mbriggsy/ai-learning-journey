@@ -72,10 +72,61 @@ export function dispatch(
   if (base.phase !== 'playing') return err(base, 'Game is not in playing phase', 'INVALID_PHASE')
   const playing = base as PlayingState
 
-  // Player existence check (server-only actions exempt)
+  // Player existence check (server-only and host-only actions exempt —
+  // they're issued with sentinel playerIds and don't map to a roster seat)
   const actor = playing.players.find(p => p.id === action.playerId)
-  if (!actor && action.type !== 'nope-window-expired' && action.type !== 'nope-grace-expired') {
+  if (!actor
+      && action.type !== 'nope-window-expired'
+      && action.type !== 'nope-grace-expired'
+      && action.type !== 'pause-nope-window'
+      && action.type !== 'resume-nope-window') {
     return err(playing, 'Player not found', 'INVALID_ACTION')
+  }
+
+  // Host-issued pause — freezes the intercept countdown. deadlineMs stays
+  // at the pre-pause value while paused; on resume the engine advances it
+  // by the elapsed pause duration. Server-side timer management (clearing
+  // and re-scheduling the expiry timeout) lives in room.ts, gated on the
+  // pausedAtMs field flipping.
+  if (action.type === 'pause-nope-window') {
+    if (!playing.nopeWindow) return err(playing, 'No active Nope window', 'NOPE_NOT_ACTIVE')
+    if (action.windowGeneration !== playing.nopeWindow.generation) {
+      return err(playing, 'Stale Nope window generation', 'NOPE_NOT_ACTIVE')
+    }
+    if (playing.nopeWindow.expired) {
+      return err(playing, 'Nope window in grace state cannot be paused', 'INVALID_ACTION')
+    }
+    if (playing.nopeWindow.pausedAtMs !== undefined) {
+      return err(playing, 'Nope window already paused', 'INVALID_ACTION')
+    }
+    const pausedState: PlayingState = {
+      ...playing,
+      nopeWindow: { ...playing.nopeWindow, pausedAtMs: ctx.now },
+      events: [...playing.events, { type: 'nope-window-paused', pausedAtMs: ctx.now }],
+    }
+    return ok(pausedState)
+  }
+
+  // Host-issued resume — advances deadlineMs by elapsed pause duration so
+  // the operator gets the full remaining window back, then clears the pause
+  // marker. room.ts picks up the change and re-schedules the expiry timer.
+  if (action.type === 'resume-nope-window') {
+    if (!playing.nopeWindow) return err(playing, 'No active Nope window', 'NOPE_NOT_ACTIVE')
+    if (action.windowGeneration !== playing.nopeWindow.generation) {
+      return err(playing, 'Stale Nope window generation', 'NOPE_NOT_ACTIVE')
+    }
+    if (playing.nopeWindow.pausedAtMs === undefined) {
+      return err(playing, 'Nope window is not paused', 'INVALID_ACTION')
+    }
+    const pauseDurationMs = ctx.now - playing.nopeWindow.pausedAtMs
+    const newDeadlineMs = playing.nopeWindow.deadlineMs + pauseDurationMs
+    const { pausedAtMs: _drop, ...rest } = playing.nopeWindow
+    const resumedState: PlayingState = {
+      ...playing,
+      nopeWindow: { ...rest, deadlineMs: newDeadlineMs },
+      events: [...playing.events, { type: 'nope-window-resumed', deadlineMs: newDeadlineMs }],
+    }
+    return ok(resumedState)
   }
 
   // nope-window-expired is server-only — transition to grace state (don't resolve yet)
@@ -321,16 +372,39 @@ function handleSingleCard(
 
   // Direct Order's narrative beat is "ACTOR picked TARGET on purpose" —
   // observers need to know who was targeted DURING the nope window so the
-  // chosen-vs-defaulted distinction lands (vs Reassign, which defaults to
-  // next-in-rotation). Surfaced by triage 031 + 032 (run 2026-05-08-2022-5p):
-  // observer toast and TV side both showed only the card name, leaving the
-  // target unknown until `turn-started` fired AFTER the window closed.
+  // chosen-vs-defaulted distinction lands. Surfaced by triage 031 + 032
+  // (run 2026-05-08-2022-5p): observer toast and TV side both showed only
+  // the card name, leaving the target unknown until `turn-started` fired
+  // AFTER the window closed.
+  //
+  // Reassign also rides on `targetId` (2026-05-10) — the target player
+  // needs an urgent consequence toast on their phone ("X reassigned this
+  // to you. 2 turns in a row!") parallel to Direct Order, so a first-time
+  // player isn't surprised when the Nameplate flips to "On Deck · 2 Turns"
+  // without any prior signal. Target = next alive player at play time,
+  // since Reassign defaults to next-in-rotation. If the play is intercepted
+  // the toast clears via `nope-window-resolved` and the targetId becomes
+  // moot — informational only during the open window.
+  //
   // `targetId` on `card-played` is additive (optional in the event type),
   // so old clients that don't read the field still parse the event cleanly.
-  const cardPlayed: GameEvent =
-    card.type === 'direct-order' && action.targetPlayerId !== undefined
-      ? { type: 'card-played', playerId: action.playerId, cardType: card.type, targetId: action.targetPlayerId }
-      : { type: 'card-played', playerId: action.playerId, cardType: card.type }
+  let targetId: string | undefined
+  if (card.type === 'direct-order' && action.targetPlayerId !== undefined) {
+    targetId = action.targetPlayerId
+  } else if (card.type === 'reassign') {
+    const reassignTarget = getNextAlivePlayer(newState, action.playerId)
+    if (reassignTarget) targetId = reassignTarget.id
+  } else if (card.type === 'call-in-a-favor' && action.targetPlayerId !== undefined) {
+    // The target needs to know they're being asked DURING the nope window
+    // so the intercept decision (play Back Channel) is informed, not blind.
+    // The observer pool ("X is calling in a marker") never references the
+    // target, leaving target seats unaware until favor-response sheet pops
+    // AFTER the window closed — too late to block. Briggsy 2026-05-10.
+    targetId = action.targetPlayerId
+  }
+  const cardPlayed: GameEvent = targetId !== undefined
+    ? { type: 'card-played', playerId: action.playerId, cardType: card.type, targetId }
+    : { type: 'card-played', playerId: action.playerId, cardType: card.type }
   const events: GameEvent[] = [cardPlayed]
 
   // All single-card plays open a nope window

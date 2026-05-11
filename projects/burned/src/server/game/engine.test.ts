@@ -1418,3 +1418,129 @@ describe('Event log — cumulative semantics (history regression lock)', () => {
     expect(lobby.events).toEqual([])
   })
 })
+
+// --- Pause / Resume Nope Window (host-issued) ---
+
+describe('pause-nope-window / resume-nope-window', () => {
+  function openNopeWindow(): { state: PlayingState; generation: number; deadlineMs: number } {
+    let state = startGameWith(3)
+    state = giveCard(state, 'p1', 'go-dark', 'pause-test')
+    const card = findCard(state, 'p1', 'go-dark')!
+    const result = act(
+      state,
+      { type: 'play-card', playerId: 'p1', cardIds: [card.id] },
+      makeCtx(1000),
+    )
+    expect(result.ok).toBe(true)
+    const s = (result as { ok: true; state: GameState }).state as PlayingState
+    return { state: s, generation: s.nopeWindow!.generation, deadlineMs: s.nopeWindow!.deadlineMs }
+  }
+
+  it('pause sets pausedAtMs and emits nope-window-paused', () => {
+    const { state, generation } = openNopeWindow()
+    const result = act(
+      state,
+      { type: 'pause-nope-window', playerId: '_host', windowGeneration: generation },
+      makeCtx(3000),
+    )
+    expect(result.ok).toBe(true)
+    if (result.ok) {
+      const s = result.state as PlayingState
+      expect(s.nopeWindow!.pausedAtMs).toBe(3000)
+      const paused = s.events.find(e => e.type === 'nope-window-paused')
+      expect(paused).toBeDefined()
+    }
+  })
+
+  it('resume advances deadlineMs by the pause duration and clears pausedAtMs', () => {
+    const opened = openNopeWindow()
+    const pauseResult = act(
+      opened.state,
+      { type: 'pause-nope-window', playerId: '_host', windowGeneration: opened.generation },
+      makeCtx(3000),
+    )
+    expect(pauseResult.ok).toBe(true)
+    const paused = (pauseResult as { ok: true; state: GameState }).state as PlayingState
+
+    // Host resumes 7 seconds later. Engine pushes deadline forward by
+    // (now - pausedAtMs) = 7000ms and clears pausedAtMs.
+    const resumeResult = act(
+      paused,
+      { type: 'resume-nope-window', playerId: '_host', windowGeneration: opened.generation },
+      makeCtx(10000),
+    )
+    expect(resumeResult.ok).toBe(true)
+    if (resumeResult.ok) {
+      const s = resumeResult.state as PlayingState
+      expect(s.nopeWindow!.pausedAtMs).toBeUndefined()
+      expect(s.nopeWindow!.deadlineMs).toBe(opened.deadlineMs + 7000)
+      const resumed = s.events.find(e => e.type === 'nope-window-resumed')
+      expect(resumed).toBeDefined()
+    }
+  })
+
+  it('pause rejects when no nope window is open', () => {
+    const state = startGameWith(2)
+    const result = act(
+      state,
+      { type: 'pause-nope-window', playerId: '_host', windowGeneration: 1 },
+      makeCtx(1000),
+    )
+    expect(result.ok).toBe(false)
+    if (!result.ok) expect(result.code).toBe('NOPE_NOT_ACTIVE')
+  })
+
+  it('pause rejects stale generation (window already closed and a new one opened)', () => {
+    const { state, generation } = openNopeWindow()
+    const result = act(
+      state,
+      { type: 'pause-nope-window', playerId: '_host', windowGeneration: generation + 99 },
+      makeCtx(2000),
+    )
+    expect(result.ok).toBe(false)
+    if (!result.ok) expect(result.code).toBe('NOPE_NOT_ACTIVE')
+  })
+
+  it('pause rejects when already paused (double-tap idempotency)', () => {
+    const { state, generation } = openNopeWindow()
+    const first = act(
+      state,
+      { type: 'pause-nope-window', playerId: '_host', windowGeneration: generation },
+      makeCtx(3000),
+    )
+    expect(first.ok).toBe(true)
+    const paused = (first as { ok: true; state: GameState }).state as PlayingState
+    const second = act(
+      paused,
+      { type: 'pause-nope-window', playerId: '_host', windowGeneration: generation },
+      makeCtx(4000),
+    )
+    expect(second.ok).toBe(false)
+  })
+
+  it('resume rejects when not paused', () => {
+    const { state, generation } = openNopeWindow()
+    const result = act(
+      state,
+      { type: 'resume-nope-window', playerId: '_host', windowGeneration: generation },
+      makeCtx(2000),
+    )
+    expect(result.ok).toBe(false)
+  })
+
+  it('pause rejects during grace state (window already expired, just resolving)', () => {
+    const { state, generation } = openNopeWindow()
+    // Push past deadline to expire
+    const graceResult = act(state, expireNope(state), makeCtx(99999))
+    expect(graceResult.ok).toBe(true)
+    const grace = (graceResult as { ok: true; state: GameState }).state as PlayingState
+    expect(grace.nopeWindow?.expired).toBe(true)
+
+    const pauseResult = act(
+      grace,
+      { type: 'pause-nope-window', playerId: '_host', windowGeneration: generation },
+      makeCtx(99999),
+    )
+    expect(pauseResult.ok).toBe(false)
+  })
+})

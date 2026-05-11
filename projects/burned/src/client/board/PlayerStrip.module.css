@@ -1,7 +1,8 @@
 /* PlayerStrip.module.css
    Horizontal nameplate row along the bottom of the board — UMB-style.
    Minimal chrome: color-shape + name + card count. Active player raises
-   slightly and gets an ochre-ribbon top edge + ACTIVE chip.
+   slightly, brightens to a paper-faced background, and gets a brighter
+   ochre-ribbon top edge — no separate ACTIVE pill (state is in the tile).
 */
 
 @layer components {
@@ -163,29 +164,6 @@
      "+2" pill crammed against the "5" count on attacked tiles.
      E2E audit 2026-04-23 C-20. */
   margin-left: 4px;
-}
-
-.activeTag {
-  position: absolute;
-  /* Lift the pill clear of the tile's top hairline + shadow so the
-     rotate(-3deg) right edge doesn't dip into the tile border. Previously
-     top: -10px made the pill read as "colliding" with the tile chrome.
-     -16 keeps it visually attached but separated. E2E audit 2026-04-23 C-20. */
-  top: -16px;
-  right: 8px;
-  font-family: var(--font-mono);
-  font-size: calc(var(--text-caption-board) * 0.82);
-  font-weight: 800;
-  letter-spacing: 0.32em;
-  text-transform: uppercase;
-  color: var(--color-cream-12);
-  background: var(--color-accent-burned);
-  padding: 3px 7px 4px;
-  border-radius: 2px;
-  transform: rotate(-3deg);
-  box-shadow:
-    0 2px 6px color-mix(in oklab, var(--color-charcoal-1) 55%, transparent),
-    inset 0 1px 0 color-mix(in oklab, var(--color-cream-12) 22%, transparent);
 }
 
 /* ── Active state ── */

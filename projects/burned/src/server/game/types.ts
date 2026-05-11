@@ -95,6 +95,16 @@ export interface NopeWindow {
    * play consecutive Nopes (self-undo). Caught Briggsy 2026-05-10.
    */
   readonly lastNoperId?: string
+  /**
+   * Server-time ms when the host paused the intercept countdown. Undefined
+   * when running. While paused, `deadlineMs` stays at the pre-pause value
+   * and the server's expiry timer is cleared so the window doesn't lapse.
+   * On resume the engine advances `deadlineMs` by (resumeNow - pausedAtMs)
+   * and clears this field; room.ts then re-schedules the expiry timer.
+   * Pause lives only on the *current* generation — a Nope mid-pause closes
+   * the window and a new generation opens unpaused. Briggsy 2026-05-10.
+   */
+  readonly pausedAtMs?: number
 }
 
 // --- Dispatch ---

@@ -16,19 +16,25 @@ ember-breath (#037), HIT-variant catalog hardening (#021), and a
 three-beat Phrasing! batch on the COMMS feed + observer-favor toast
 (see §6).
 
-Current state (verified 2026-05-09 end-of-session):
+Current state (verified 2026-05-10 end-of-session):
 
-- Tests: **1376 pass** | 6 expected fail (67/67 files green).
+- Tests: **1385 pass** | 6 expected fail (67/67 files green). +9 vs prior
+  session: 1 Reassign target case, 1 Call in a Favor target case + 7
+  engine pause/resume cases (pause sets pausedAtMs, resume advances
+  deadline by elapsed pause, plus rejection cases for no-window /
+  stale-gen / already-paused / not-paused / grace-state).
 - Build: clean (`pnpm build`).
-- Phone initial JS: **~98.98 KB gzipped** (player 18.81 + shared 65.71
-  + VisualElement 14.46). +0.47 KB vs the start-of-session 98.51 KB
-  baseline for the 2026-05-10 real-device session work (combo target
-  branching in PlayerAlert, chain-counter bypass in SmartActionBox,
-  self-Nope-of-own-Nope UI gate, ring-countdown redesign, NameCard
-  sheet medium variant). 1.02 KB headroom under the 100 KB ceiling.
-  Vite extracted MinimalCard + AnimatePresence into lazy chunks.
-  Drag/layout-projection chunk (~27.40 KB gz), rearrange UI (3.20 KB
-  gz), and MinimalCard chunk (5.95 KB gz) all lazy + prefetched at idle.
+- Phone initial JS: **~99.10 KB gzipped** (player 18.93 + shared 65.71
+  + VisualElement 14.46). +0.12 KB vs start-of-session 98.98 KB baseline
+  for the 2026-05-10 evening session work (Direct Order / Reassign /
+  Favor target consequence toasts + pause-aware tick in SmartActionBox
+  + IncomingSteal). **0.90 KB headroom** under the 100 KB ceiling.
+- Board chunk: 14.98 KB gz (+0.38 KB for the NopeCountdownBar pause
+  button + paused-state CSS; board-side only, doesn't touch phone budget).
+- Protocol bumped to **v6** (was v5) — new ClientMessage variant
+  `host-action` for board-issued pause/resume; new `NopeWindowView.pausedAtMs`
+  field; new `nope-window-paused` / `nope-window-resumed` GameEvents.
+  Hard refresh required on any pre-v6 tabs.
 - Triage state, run `2026-05-08-2022-5p`: **0 OPEN · 0 BLOCKED** ·
   29 RESOLVED · 7 LOW-SIGNAL · 2 KNOWN-PRODUCT · 1 DUPLICATE. P1 6 · P2 33.
 
@@ -106,15 +112,73 @@ self-report validation in the detector pipeline).
 
 ### 1.3 Open follow-ups (queued)
 
-- **PlayerStrip `.activeTag` clipping** — on the active player's
-  nameplate, the "ACTIVE" pill clips the top of the bold uppercase
-  glyphs (caught real-device 2026-05-10). Diagnosis: 3px top padding
-  is too tight for the 800-weight rendering and there's no explicit
-  `line-height`, so glyph metrics spill above the box. Fix path: add
-  `line-height: 1` and bump top padding 3px → 5px at
-  `src/client/board/PlayerStrip.module.css:168-189`. Scoped, no risk
-  beyond the PlayerStrip nameplate. Holding for a focused visual
-  sweep alongside any other nameplate tweaks.
+_None. Closed 2026-05-10:_
+
+- **PlayerStrip ACTIVE pill — REMOVED entirely.** Original report was
+  "ACTIVE pill clips bold caps on real-device." Three padding-bump
+  fixes (3→5→7px top), then a flex-center fix, all read as "still
+  clipped." Root cause traced (with sequential-thinking + Emil lens):
+  the `transform: rotate(-3deg)` on bold-800 mono caps at small sizes
+  produced sub-pixel anti-aliasing flat-tops that READ as clipping
+  even though no glyph was pixel-clipped. Briggsy's call: kill the
+  pill — the tile's active state (translateY lift + paper-face bg
+  swap + brighter ochre top hairline + darker text) already carries
+  the signal unambiguously. `.activeTag` JSX removed from
+  `PlayerStrip.tsx:71`, CSS rule deleted, file header comment
+  updated. Banked lesson: tilt + bold + small + tight metrics = anti-
+  aliasing optical clip. Diagnose before padding-bumping.
+- **Nameplate name/state redundancy** — fresh ask, same session. Big
+  brass plate was duplicating the active player's codename already
+  shown by PlayerStrip's nameplate. Path chosen: hide the name (now
+  visually-hidden `.nameSr` for a11y/tests), promote the subtext to
+  be the focal engraved text on the brass plate (clamp 15→22px,
+  weight 800, full engrave shadow). Plate now reads "// ON DECK" /
+  "// DEFUSING" / "// HANDING OVER" / "// STANDBY" / "// COMMS DOWN"
+  — the STATE is the engraving, not a redundant name. Flip animation
+  + standby/offline behaviors preserved.
+- **Direct Order / Reassign / Call in a Favor target consequence
+  toast** — observer pool ("X put you on assignment" / "X kicked the
+  work down the line" / "X is calling in a marker") doesn't tell the
+  target it's them, leaving the intercept-decision window blind for
+  a first-time player. All three card-played events now carry
+  `targetId` (engine: Direct Order = chosen, Reassign =
+  `getNextAlivePlayer`, Favor = chosen). PlayerAlert routes viewer
+  === target to urgent toasts:
+  - Direct Order: "X put you on assignment. 2 turns in a row!"
+  - Reassign: "X kicked the assignment to you. 2 turns in a row!"
+  - Favor: "X is calling in a marker from you!"
+  Non-target observers keep the existing flavor pool. Bundle
+  +0.07 KB gz (99.05 / 100 KB).
+- **Nameplate shows codename during prompts that target a different
+  player** — favor-response is the canonical case: actor plays the
+  favor card during THEIR turn, target is a different human handling
+  the prompt. The brass plate's prior name-hide (turn redundancy
+  with PlayerStrip) broke this — observers saw "// HANDING OVER" or
+  "// COMMS DOWN" with no indication of WHO. New `Subject.showName`
+  flag fires when `prompt.playerId !== currentTurn.currentPlayerId`,
+  toggling the plate's big-name styling back on for those prompts.
+  Defuse / future-rearrange / name-card prompts all target the active
+  turn player (already named by PlayerStrip), so they keep the
+  state-only engraving. Hard refresh required on already-open tabs.
+- **NopeCountdownBar moved below "Briefed by M." footer** — was
+  between the divider and the briefer. New placement reads as static
+  briefing → live transmission stratum below.
+- **Pause control on the intercept countdown — physical-play parity
+  for "hold on, I gotta think"** — new host-only action pair
+  (`pause-nope-window` / `resume-nope-window`) wired board-side only,
+  no phone UI. Engine freezes `deadlineMs` while paused (clearing
+  pausedAtMs on resume after advancing the deadline by elapsed pause
+  duration); room.ts clears the expiry setTimeout on pause and
+  re-schedules on resume. Protocol bumped to v6 — new ClientMessage
+  variant `host-action` with `HostClientAction` payload, new
+  `NopeWindowView.pausedAtMs` field, new `nope-window-paused` and
+  `nope-window-resumed` events. Board UI: pause button below the
+  dial; when paused, ring color softens to drama-amber, drain
+  freezes (hook captures live `strokeDashoffset` via getComputedStyle
+  and pins it), label flips "Intercept" → "Paused", button text
+  flips "Hold" → "Resume". 7 new engine tests + COMMS feed narration
+  for both events. Phone bundle unchanged (99.05 KB gz); board +0.38
+  KB gz for button + CSS.
 
 ---
 

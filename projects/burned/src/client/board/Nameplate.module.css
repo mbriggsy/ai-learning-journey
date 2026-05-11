@@ -102,6 +102,9 @@
   transform-style: preserve-3d;
 }
 
+/* Codename — focal big text when the prompted player ≠ current turn
+   player (favor-response is the practical case). Otherwise hidden as an
+   SR-only a11y label via .nameSr below. */
 .name {
   font-family: var(--font-mono);
   font-weight: 900;
@@ -118,6 +121,23 @@
   white-space: nowrap;
 }
 
+/* Visually-hidden codename — PlayerStrip already names the active player
+   in turn states, so the plate engraves the STATE alone. Screen readers
+   still resolve the name via this span. */
+.nameSr {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  padding: 0;
+  margin: -1px;
+  overflow: hidden;
+  clip: rect(0, 0, 0, 0);
+  white-space: nowrap;
+  border: 0;
+}
+
+/* Caption subtext — pairs with the visible focal .name above (prompt
+   state where the prompted player differs from the current turn player). */
 .subtext {
   font-family: var(--font-mono);
   font-weight: 600;
@@ -131,7 +151,24 @@
   white-space: nowrap;
 }
 
-.subtext::before {
+/* Solo subtext — the state engraving when the name is SR-hidden. Sized
+   to fill the plate's mass alone, no caption-sibling to balance against. */
+.subtextSolo {
+  font-family: var(--font-mono);
+  font-weight: 800;
+  font-size: clamp(15px, 1.05vw, 22px);
+  letter-spacing: 0.22em;
+  text-transform: uppercase;
+  line-height: 1;
+  color: var(--color-brass-engrave);
+  text-shadow:
+    0 1px 0 color-mix(in oklab, var(--color-brass-highlight) 75%, transparent),
+    0 -1px 0 color-mix(in oklab, var(--color-charcoal-1) 35%, transparent);
+  white-space: nowrap;
+}
+
+.subtext::before,
+.subtextSolo::before {
   content: '// ';
   opacity: 0.55;
   font-weight: 400;
@@ -143,14 +180,6 @@
    on the whole plate reads as "desk quiet, no one's up." */
 .nameplateStandby {
   opacity: 0.55;
-}
-
-/* Scoped to the plateContent itself (via data-standby) rather than the
-   parent wrapper class — this keeps the name hidden on the EXITING
-   standby plate through the whole rotateY exit when the first turn
-   starts, instead of briefly revealing the "." mid-flip. */
-.plateContent[data-standby='true'] .name {
-  visibility: hidden; /* preserves layout height; no name to engrave */
 }
 
 /* Offline — the prompted/active player's phone has dropped its socket.
@@ -170,7 +199,8 @@
   animation: offlinePulse var(--motion-duration-pulse-slow) var(--motion-ease-base) infinite;
 }
 
-.plateContent[data-offline='true'] .subtext {
+.plateContent[data-offline='true'] .subtext,
+.plateContent[data-offline='true'] .subtextSolo {
   color: var(--color-accent-burned);
   opacity: 1;
   text-shadow:

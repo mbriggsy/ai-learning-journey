@@ -518,10 +518,22 @@ export class GameRoom extends Server<Env> {
     // a card to a player's hand). Same enqueue + ack contract as
     // playtest-config. Re-broadcasts game state on success so all
     // observers see the mutation.
+    //
+    // Unlike normal play actions (which use `void this.persistState()`
+    // fire-and-forget), dev-actions AWAIT persistence before sending
+    // the ack. In dev mode, wrangler hot-reload re-instantiates the DO
+    // from ctx.storage — if a fire-and-forget storage write hasn't
+    // completed before the reload, the mutation reverts on
+    // reinstantiation. Normal play actions can recover by replaying;
+    // dev-actions are operator intent and have no retry path beyond
+    // the operator running the CLI again. Awaiting here makes the ack
+    // a TRUE commit signal. Discovered 2026-05-13 when `pnpm dev:take`
+    // reported success twice in a row against the same 8-card hand —
+    // the first take's persistence lost the race to a wrangler reload.
     const dev = parseDevActionMessage(raw)
     if (dev.ok) {
       const payload = dev.payload
-      this.enqueue(() => {
+      this.enqueue(async () => {
         if (!this.gameState) {
           try {
             connection.send(JSON.stringify({ type: 'dev-action-ack', ok: false, code: 'NOT_PLAYING' }))
@@ -541,7 +553,7 @@ export class GameRoom extends Server<Env> {
           return
         }
         this.gameState = result.nextState
-        void this.persistState()
+        await this.persistState()
         this.broadcastGameState()
         const count =
           payload.type === 'dev-take-card'
@@ -1131,7 +1143,7 @@ export class GameRoom extends Server<Env> {
 
   // --- Serial Queue ---
 
-  private enqueue(task: () => void, connection?: Connection): void {
+  private enqueue(task: () => void | Promise<void>, connection?: Connection): void {
     if (this.queueDepth >= MAX_QUEUE_DEPTH) {
       console.error(JSON.stringify({ event: 'queue_overflow', room: this.name, queueDepth: this.queueDepth, timestamp: Date.now() }))
       if (connection) this.sendError(connection, 'RATE_LIMITED', 'Server busy, try again')

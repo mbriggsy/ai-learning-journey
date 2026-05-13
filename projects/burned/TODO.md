@@ -461,6 +461,22 @@ Active warnings only. Older landmines have moved to `docs/insights/` and
   → orchestrator's god-connect gets HTTP 401 → `code=4004`. Don't
   pre-start dev servers when running the harness — it owns the
   lifecycle.
+- **Persistence is fire-and-forget for normal play actions, AWAITED
+  for dev-actions** (commit `<this commit>`, 2026-05-13). `room.ts`
+  calls `void this.persistState()` at 13+ call sites for play /
+  reconnect / host actions — in production this is fine (worker is
+  stable, no hot-reload). In dev mode, wrangler hot-reload between a
+  mutation and the storage write can revert state on DO
+  reinstantiation. The dev-action handler at `room.ts:521-555` now
+  uses `await this.persistState()` because dev-actions are operator
+  intent with no retry path. Normal play actions remain fire-and-
+  forget — they have natural retry via gameplay if a hot-reload
+  swallows a write. If you add a new dev-action OR observe a real
+  production persistence race, follow the dev-action handler's
+  pattern: `async () => { ... await this.persistState(); ... }`. The
+  `enqueue` task signature was widened to `() => void | Promise<void>`
+  to support this — `actionQueue.then(task)` naturally chains async
+  tasks.
 
 ---
 

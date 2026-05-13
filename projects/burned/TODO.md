@@ -16,17 +16,19 @@ ember-breath (#037), HIT-variant catalog hardening (#021), and a
 three-beat Phrasing! batch on the COMMS feed + observer-favor toast
 (see §6).
 
-Current state (verified 2026-05-11 end-of-session):
+Current state (verified 2026-05-13 end-of-session):
 
-- Tests: **1398 pass** | 6 expected fail (68/68 files green). +9 vs
-  prior couch-validation block: full coverage suite for the new
-  `getEligibleTargets` helper (8 cases + a parametric self-exclusion
-  case).
+- Tests: **1407 pass** | 6 expected fail (68/68 files green). +9 vs
+  2026-05-11 close: `dev-take-card` parser + apply tests (3 parser
+  cases — well-formed, missing playerName, extra-keys rejection; 6
+  apply cases — happy-path with takenCount, idempotent on empty hand,
+  case-insensitive resolve, PLAYER_NOT_FOUND, NOT_PLAYING, immutability).
 - Build: clean (`pnpm build`).
 - Phone initial JS: **~99.17 KB gzipped** (player 19.00 + shared 65.71
-  + VisualElement 14.46). +0.06 KB vs 99.11 baseline — small helper
-  module + reason-conditional filter in Player.tsx. **0.83 KB
-  headroom** under the 100 KB ceiling.
+  + VisualElement 14.46). Unchanged from 2026-05-11 — this session's
+  work landed entirely in server code + scripts (no phone-bundle
+  surface touched).
+- **0.83 KB headroom** under the 100 KB ceiling.
 - Board chunk: 15.00 KB gz (+0.02 KB for the `.nopeSlot` wrapper +
   CSS rule; board-side only, doesn't touch phone budget).
 - Protocol still v6 (no shape changes this session — pure code-side
@@ -109,6 +111,42 @@ self-report validation in the detector pipeline).
 ### 1.3 Open follow-ups (queued)
 
 _None. Closed in recent sessions:_
+
+**2026-05-13 — real-device filter verification + dev tooling + persistence race:**
+
+- **Filter verified end-to-end on real hardware (room 1234).** All
+  four target-requiring stages exercised with one 0-card opponent
+  (Vera) AND with all opponents at 0 (Vera + Dash both drained,
+  Michael holds the test hand): Favor / pair / triple all filter as
+  designed, Direct Order regression check intact (0-card players
+  still appear because Direct Order doesn't extract from hand), empty
+  TargetSelect renders cancel-only and restores staged cards on
+  cancel. No buttons rendered when none should be. Filter commit
+  `176e43b0` cleared the eye-in-loop gate.
+
+- **`dev-take-card` god-mode action + CLI (commit `cbbf35e9`).**
+  Symmetric counterpart to `dev-give-card` — empties a named
+  player's hand in one call (discarded cards vanish, not routed to
+  discard pile — this is god-mode scenario setup, not in-rules play).
+  Built to verify the 0-card-target filter without multi-turn manual
+  gameplay setup. Reusable for any future scenario needing a 0-card
+  target. New: `applyDevTakeCard` + Zod schema + room.ts dispatch
+  branch + `scripts/dev-take-card.ts` CLI + `pnpm dev:take` script.
+
+- **Persistence race fix in dev-action handler (commit `36c1af9f`,
+  verified by forced wrangler reload).** Discovered during testing:
+  ran `pnpm dev:take 1234 vera`, ack reported "Took 8 cards", but
+  Vera still had 8 cards on the board. Re-ran — ack reported the
+  same 8 cards. Root cause: `void this.persistState()` is fire-and-
+  forget; wrangler hot-reload between the in-memory mutation and the
+  storage write reverts state on DO reinstantiation. Fix: dev-action
+  handler now `await`s persistState before sending the ack. Widened
+  `enqueue` task signature to `() => void | Promise<void>` —
+  `actionQueue.then(task)` chains async tasks naturally. Verified by
+  forced-reload test: dev:take → touch room.ts → wrangler reloaded →
+  dev:take again returned "Took 0" (state held). Normal play actions
+  keep fire-and-forget (no production hot-reload exists; natural
+  gameplay retry covers any dev-mode race for play actions).
 
 **2026-05-11 — SCENARIOS.md sign-off + Favor empty-hand follow-through:**
 

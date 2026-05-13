@@ -180,4 +180,6 @@ Custom status bar showing model, context %, cost, duration, git branch, and effo
 | Cloudflare deploy | `wrangler` via Bash |
 | One-off HTTP fetches | `curl --max-time 15` via Bash (never WebFetch) |
 | File search | `Glob` dedicated tool |
-| Content search | `Grep` dedicated too
+| Content search | `Grep` dedicated tool |
+| File reading | `Read` dedicated tool |
+| File editing | `Edit` dedicated tool |

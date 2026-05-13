@@ -89,4 +89,29 @@ The game is wrapped as a Gymnasium environment and trained with PPO via Stable-B
 ### AI Files
 ```
 ai/
-├── ra
+├── racing_env.py           # Gymnasium environment wrapper
+├── observations.py         # Ray casting + observation space (21-dim)
+├── rewards.py              # Reward function (8 components, all configurable)
+├── train.py                # PPO training script (SB3 + SubprocVecEnv)
+├── watch.py                # Watch trained AI play (Arcade visualization)
+├── evaluate.py             # Headless evaluation + stats
+├── watch_renderer.py       # Render utilities for watch mode
+└── training_checkpoints.py # Dense breadcrumb system for reward shaping
+```
+
+### Running
+
+```bash
+# Train a new model
+python ai/train.py
+
+# Watch the AI drive
+python ai/watch.py
+
+# Evaluate over N episodes
+python ai/evaluate.py --episodes 50
+```
+
+## Build Method
+Built using Claude Code Agent Teams — 4 specialized agents + 1 team lead.
+See `BUILD_LOG.md` for the full build journal and `ISSUES.md` for the bug log.

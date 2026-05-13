@@ -87,4 +87,5 @@ All Claude Code memory in `C:/Users/brigg/.claude/projects/C--Users-brigg-ai-lea
 
 **If you want project-specific knowledge**, use:
 - `projects/<name>/docs/insights/` for project-specific lessons
-- `projects/<name>/CLAUDE.md` for project-specific conv
+- `projects/<name>/CLAUDE.md` for project-specific conventions
+- `projects/<name>/TODO.md` for project-specific task tracking

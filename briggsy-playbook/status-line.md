@@ -285,4 +285,4 @@ echo "[$model] ctx: ${pct}%"
 }
 ```
 
-That's the w
+That's the whole thing. One key, one command. Everything else happens in the script.

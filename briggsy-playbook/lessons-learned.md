@@ -137,4 +137,4 @@ These lessons live in `C:/Users/brigg/.claude/projects/C--Users-brigg-ai-learnin
 
 **Note on `feedback-water-beads-polish.md`:** previously listed here, no longer exists. Trimmed when the standard was promoted to the manifesto on 2026-04-29 (Lock-In Interview pattern aftermath — manifesto carries the disposition; memory keeps the receipt only). The receipt is `project_umb_water_beads_origin.md`, listed above.
 
-Browse the memory folder when you want the full context of a 
+Browse the memory folder when you want the full context of a specific behavior pattern. Every one of those files has a real incident behind it.

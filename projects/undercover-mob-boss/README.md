@@ -109,4 +109,59 @@ src/
 public/
   assets/           AI-generated images (30 card art + 16 game + 7 trailer)
   audio/            Pre-generated narrator audio (91 game OGGs + 15 V3 trailer WAVs)
-  how-to-play.html  Player-facing rul
+  how-to-play.html  Player-facing rules (GSAP-animated, standalone)
+scripts/            Asset generation pipelines (Imagen 4, Gemini TTS)
+videos/
+  trailer/          Remotion video project (cinematic trailer)
+tests/
+  unit/             Game engine unit tests (24 files)
+  integration/      Full-game simulations + stress tests
+  e2e/              Playwright browser tests (15 specs)
+docs/
+  shared/user/      How-to-play guide (markdown source)
+  v1/spec/          V1 specification (LOCKED)
+  v1/verification/  Rules checklist, test evidence
+  v2/spec/          V2 specification (LOCKED)
+```
+
+## Commands
+
+```bash
+pnpm run dev              # Vite dev server
+pnpm run build            # Production build
+pnpm run test             # Unit + integration tests (843 tests)
+pnpm run test:e2e         # Playwright E2E (498 tests across 4 browsers)
+pnpm run typecheck        # tsc --noEmit
+pnpm run generate-assets  # Regenerate images via Imagen 4
+pnpm run generate-narrator # Regenerate narrator audio via Gemini TTS
+```
+
+## Test Coverage
+
+| Layer | Tests | What it proves |
+|-------|-------|---------------|
+| Unit | 843 | Game engine logic, role distribution, deck mechanics, executive powers, projections, routing |
+| Integration | (included above) | Full games to completion, 300+ randomized simulations, state invariants at every dispatch |
+| E2E | 498 | Complete game flows across Chromium, WebKit, Mobile Chrome, Mobile Safari |
+| Rules verification | 209/209 | Every discrete Secret Hitler rule mapped to code + tests |
+
+## Theme Mapping
+
+| Secret Hitler | Undercover Mob Boss |
+|--------------|-------------------|
+| Liberal | Citizen |
+| Fascist | Mob Soldier |
+| Hitler | Mob Boss |
+| President | Mayor |
+| Chancellor | Commissioner |
+| Liberal Policy | Virtuous Policy |
+| Fascist Policy | Corrupt Policy |
+
+## Environment Variables
+
+Copy `.env.example` to `.env`. Requires:
+- `GEMINI_API_KEY` — Gemini API with billing enabled (asset + TTS generation only, not needed for gameplay)
+
+## License
+
+CC BY-NC-SA 4.0 — Based on Secret Hitler by Goat, Wolf, & Cabbage. Game mechanics adapted under Creative Commons license. All visual assets, audio, code, and theme are original.

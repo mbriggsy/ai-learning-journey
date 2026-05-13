@@ -80,4 +80,13 @@ Deep-dives into tools, frameworks, and concepts.
 
 ## Daily Notes
 
-Use `Ctrl+P` → "Daily notes: Open toda
+Use `Ctrl+P` → "Daily notes: Open today's daily note" to start journaling.
+Notes land in `daily/YYYY-MM-DD.md`.
+
+## How this vault works
+
+See [[OBSIDIAN]] for the setup, conventions, and how to ask Claude/Cowork to maintain it.
+
+---
+
+#moc #home

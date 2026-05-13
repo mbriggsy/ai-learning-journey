@@ -58,4 +58,31 @@ Until the plugin is installed, the file explorer will look noisy. That's cosmeti
 You can ask Claude to maintain this vault directly. Examples that work:
 
 - "Add a new note in `briggsy-playbook/` summarizing the lessons from today's session."
-- "Find all CLAU
+- "Find all CLAUDE.md files across projects and pull the common patterns into a single note in `briggsy-playbook/`."
+- "Update `_HOME.md` to include a link to my new note about X."
+- "Search the vault for anywhere I've written about 'compound engineering' and consolidate into one MOC."
+- "Find broken wikilinks and list them so I can fix or remove them."
+- "I just made a decision about X. Append it to `briggsy-playbook/lessons-learned.md` in the right section."
+
+## Git
+
+`.obsidian/` is currently NOT in `.gitignore` — that means your vault config will travel with the repo if you push it. That's usually what you want for `app.json`, `core-plugins.json`, and `appearance.json`. If you ever want to keep UI state out of git, add `.obsidian/workspace.json` and `.obsidian/workspace-mobile.json` to `.gitignore`.
+
+## Backups
+
+- Obsidian Sync (paid) — easiest, end-to-end encrypted.
+- Free alternative — your repo is git-tracked. Commit and push to your remote periodically.
+- Belt-and-suspenders — copy the whole folder to OneDrive/Dropbox/external drive every so often.
+
+## Expanding into other areas
+
+Want to add life topics (family, health, finances, hobbies)? Two options:
+
+1. **Add folders to this vault.** Create `personal/`, `family/`, `health/` directly in this repo. They become part of the same graph as your code knowledge.
+2. **Separate personal vault.** Create a new folder somewhere private, point Obsidian at it. Use Obsidian's vault switcher (bottom-left) to bounce between vaults.
+
+Recommended: option 2 if any of it is sensitive (medical, financial). Code repos sometimes get pushed to GitHub; you don't want HSA receipts going public by accident.
+
+---
+
+#meta #setup

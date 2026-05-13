@@ -79,4 +79,4 @@ Things Claude is reliably good at. Use these as prompts for *"what should I dele
 
 **Example:** The `pr-review-toolkit` has multiple specialist reviewers (security, test coverage, comment analyzer, silent failure hunter, type design analyzer). Running all of them in parallel produces a comprehensive review from angles a single pass would miss.
 
-**Best practice:** For high-stakes ch
+**Best practice:** For high-stakes changes (before a production deploy, before merging a complex PR), use multi-agent review.

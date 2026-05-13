@@ -74,4 +74,6 @@ The same trick works for any long-running task — write the resumption state in
 
 ## Origin
 
-This file added 2026-05-09 during the playbook audit (L1 finding). The pattern of "use Cowork to maintain the vault, and write checkpoints into the work product so the next cold-start session can resume" was already established by the time this got written — `PLAYBOOK-AUDIT.md` is the 
+This file added 2026-05-09 during the playbook audit (L1 finding). The pattern of "use Cowork to maintain the vault, and write checkpoints into the work product so the next cold-start session can resume" was already established by the time this got written — `PLAYBOOK-AUDIT.md` is the proof of concept.
+
+#cowork #playbook #workflow

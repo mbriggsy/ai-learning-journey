@@ -134,4 +134,5 @@ pnpm run test:build    # Build verification tests (13 tests)
 
 - Full spec + ADRs: `docs/Top-Down-Racer-v04-CE-Spec.md`
 - Evidence package: `docs/evidence/` — executive summary, technical architecture, methodology
-- Reference build (GSD): `../top-down-racer-0
+- Reference build (GSD): `../top-down-racer-02`
+- GitHub: [mbriggsy/ai-learning-journey](https://github.com/mbriggsy/ai-learning-journey)

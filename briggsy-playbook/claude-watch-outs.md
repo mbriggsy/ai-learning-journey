@@ -135,4 +135,4 @@ Known Claude behaviors that have caused problems. Each entry: what it looks like
 
 **How to catch:** If output feels out of order, ask Claude to explain the sequence.
 
-**Fix:** For depende
+**Fix:** For dependency-sensitive work, tell Claude the order explicitly: *"first A, then B, then C in parallel, then D."*

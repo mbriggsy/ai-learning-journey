@@ -189,4 +189,4 @@ Slash commands and skills available in Claude Code. Say `/command-name` to invok
 
 Slash commands are provided by plugins installed in Claude Code. When Claude loads a session, it lists available skills in a system reminder. If you want to see what's available, ask Claude *"what skills do you have?"* and Claude will list them.
 
-**Managing skills:** Skills live in `~/.claude/skills/` (global) and `projects/skills/` (source). See `projec
+**Managing skills:** Skills live in `~/.claude/skills/` (global) and `projects/skills/` (source). See `project_skills_next_steps.md` in Claude's memory for the source→global sync protocol.

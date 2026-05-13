@@ -26,4 +26,5 @@ For the at-a-glance intro to ATC, open [`atc/viz/index.html`](./atc/viz/index.ht
 
 > Internal docs surfaced for the Obsidian graph.
 
-- **ATC methodology:** [[atc/README|atc/README]] · [[atc/01-prd|01 PRD]] · [[atc/02-plan|02 Plan]] · [[atc/03-execute|03 Execute]] · [[atc/04-review|04 Review]] · [[atc/05-evidence|05 Evidence]] · [[atc/skills|skills]] · [[atc/TODO
+- **ATC methodology:** [[atc/README|atc/README]] · [[atc/01-prd|01 PRD]] · [[atc/02-plan|02 Plan]] · [[atc/03-execute|03 Execute]] · [[atc/04-review|04 Review]] · [[atc/05-evidence|05 Evidence]] · [[atc/skills|skills]] · [[atc/TODO|TODO]]
+- **ETL reverse-engineering:** [[etl-reverse-engineering/BRIEF|BRIEF]]

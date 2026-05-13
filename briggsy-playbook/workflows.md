@@ -250,4 +250,4 @@ End-of-session protocols. Both are explicit verbal triggers — Claude won't aut
 
 **Why it matters:** Without synthesis, Claude tends to cherry-pick one agent's findings and ignore contradictions. Sequential thinking forces integration.
 
-**Orig
+**Origin:** `feedback-sequential-thinking-always.md` in Claude's memory.

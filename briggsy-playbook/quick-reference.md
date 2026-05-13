@@ -95,4 +95,6 @@ Common scenarios, fast answers. When something's not here, check the other files
 - *"capture this"* / *"distill this"* → `/distill` skill
 - *"brief me"* → `/brief` skill
 - *"in parallel"* → use parallel tool calls, not serial
-- *"make a note"* → save to Claude memory imme
+- *"make a note"* → save to Claude memory immediately
+- *"look at this"* → read most recent image from `temp/`
+- *"fuck yeah"* → celebrate, match energy

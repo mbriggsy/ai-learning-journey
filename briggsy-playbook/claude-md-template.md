@@ -159,4 +159,6 @@ The variance is intentional. **Match the doc to the project, not the project to 
 
 ## Origin
 
-Authored 2026-05-09 during the playbook audit (H3 finding). Patterns extracted from the corpus of nine CLAUDE.md files already in the vault. Sharpened over time as new project CLAUD
+Authored 2026-05-09 during the playbook audit (H3 finding). Patterns extracted from the corpus of nine CLAUDE.md files already in the vault. Sharpened over time as new project CLAUDE.md files reveal what was missing or wrong.
+
+#claude-md #template #playbook

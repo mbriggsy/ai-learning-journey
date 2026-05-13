@@ -130,4 +130,6 @@ pacman/
   game.js             — All game logic (~1,550 lines)
   tests.html          — Open this to run unit tests (110 tests)
   tests.js            — Unit test suite
-  session-summary.md  — Full build story +
+  session-summary.md  — Full build story + debugging deep-dives
+  README.md           — This file
+```

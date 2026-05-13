@@ -127,4 +127,6 @@ A few candidates I considered and excluded:
 
 ---
 
-*— Living document. Auth
+*— Living document. Authored 2026-05-08, last directed edit 2026-05-09. —*
+
+#principles #playbook #manifesto

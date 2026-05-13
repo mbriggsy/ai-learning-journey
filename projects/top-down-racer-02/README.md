@@ -306,4 +306,8 @@ Every architectural claim can be independently verified:
 
 ## License
 
-[Add your licen
+[Add your license here]
+
+---
+
+*Best-in-class SDLC. Built by AI. Directed by humans. Proven by evidence.*

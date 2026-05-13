@@ -5,7 +5,7 @@ import { handleHealthRequest } from './health'
 import { mulberry32, randomIntFromRandom } from './rng'
 import { createGodRateLimiter, evaluateGodAuth, isGodOriginAllowed } from './god-connection'
 import { applyPlaytestConfig, parsePlaytestConfigMessage } from './playtest-config'
-import { applyDevGiveCard, applyDevStackDeck, parseDevActionMessage } from './dev-actions'
+import { applyDevGiveCard, applyDevStackDeck, applyDevTakeCard, parseDevActionMessage } from './dev-actions'
 import { buildGodEventMessage, type GodEventTrigger } from './god-projection'
 import { getGodOriginAllowlist, isPlaytestMode, matchesToken } from './playtest'
 import { createLobbyState, dispatch } from './game/engine'
@@ -528,9 +528,12 @@ export class GameRoom extends Server<Env> {
           } catch { /* connection closing */ }
           return
         }
-        const result = payload.type === 'dev-stack-deck'
-          ? applyDevStackDeck(this.gameState, payload.cards, () => crypto.randomUUID())
-          : applyDevGiveCard(this.gameState, payload.playerName, payload.cards, () => crypto.randomUUID())
+        const result =
+          payload.type === 'dev-stack-deck'
+            ? applyDevStackDeck(this.gameState, payload.cards, () => crypto.randomUUID())
+          : payload.type === 'dev-give-card'
+            ? applyDevGiveCard(this.gameState, payload.playerName, payload.cards, () => crypto.randomUUID())
+          : applyDevTakeCard(this.gameState, payload.playerName)
         if (!result.ok) {
           try {
             connection.send(JSON.stringify({ type: 'dev-action-ack', ok: false, code: result.code }))
@@ -540,8 +543,12 @@ export class GameRoom extends Server<Env> {
         this.gameState = result.nextState
         void this.persistState()
         this.broadcastGameState()
+        const count =
+          payload.type === 'dev-take-card'
+            ? (result as { takenCount?: number }).takenCount ?? 0
+            : payload.cards.length
         try {
-          connection.send(JSON.stringify({ type: 'dev-action-ack', ok: true, action: payload.type, count: payload.cards.length }))
+          connection.send(JSON.stringify({ type: 'dev-action-ack', ok: true, action: payload.type, count }))
         } catch { /* connection closing */ }
       }, connection)
       return

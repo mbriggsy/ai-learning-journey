@@ -38,9 +38,19 @@ const DevGiveCardSchema = z.object({
   cards: z.array(CardTypeSchema).min(1).max(10),
 }).strict()
 
+const DevTakeCardSchema = z.object({
+  type: z.literal('dev-take-card'),
+  // Same case-insensitive name resolution as dev-give-card. v1 always
+  // empties the entire hand — no count option. Discarded cards vanish
+  // (not routed to the discard pile) since this is god-mode scenario
+  // setup, not in-rules play.
+  playerName: z.string().min(1).max(40),
+}).strict()
+
 export type DevActionPayload =
   | { type: 'dev-stack-deck'; cards: readonly CardType[] }
   | { type: 'dev-give-card'; playerName: string; cards: readonly CardType[] }
+  | { type: 'dev-take-card'; playerName: string }
 
 // `recognized` distinguishes "garbage on a god connection — drop silently
 // (token-probe protection)" from "operator typed a known dev action with
@@ -53,7 +63,7 @@ export type DevActionParseResult =
   | { ok: false; recognized: false }
   | { ok: false; recognized: true; code: 'INVALID_CARD_TYPE' | 'INVALID_ARGUMENTS'; message: string }
 
-const RECOGNIZED_TYPES = new Set(['dev-stack-deck', 'dev-give-card'])
+const RECOGNIZED_TYPES = new Set(['dev-stack-deck', 'dev-give-card', 'dev-take-card'])
 const VALID_CARD_TYPES = new Set<string>(CARD_TYPE_TUPLE)
 
 export function parseDevActionMessage(raw: string): DevActionParseResult {
@@ -68,7 +78,10 @@ export function parseDevActionMessage(raw: string): DevActionParseResult {
     return { ok: false, recognized: false }
   }
 
-  const schema = declaredType === 'dev-stack-deck' ? DevStackDeckSchema : DevGiveCardSchema
+  const schema =
+    declaredType === 'dev-stack-deck' ? DevStackDeckSchema
+    : declaredType === 'dev-give-card' ? DevGiveCardSchema
+    : DevTakeCardSchema
   const result = schema.safeParse(json)
   if (result.success) {
     if (result.data.type === 'dev-stack-deck') {
@@ -80,12 +93,21 @@ export function parseDevActionMessage(raw: string): DevActionParseResult {
         },
       }
     }
+    if (result.data.type === 'dev-give-card') {
+      return {
+        ok: true,
+        payload: {
+          type: 'dev-give-card',
+          playerName: result.data.playerName,
+          cards: result.data.cards as readonly CardType[],
+        },
+      }
+    }
     return {
       ok: true,
       payload: {
-        type: 'dev-give-card',
+        type: 'dev-take-card',
         playerName: result.data.playerName,
-        cards: result.data.cards as readonly CardType[],
       },
     }
   }
@@ -143,6 +165,42 @@ export function applyDevStackDeck(
     nextState: {
       ...state,
       drawPile: [...newCards, ...state.drawPile],
+    },
+  }
+}
+
+/**
+ * Empty the named player's hand. Resolves by case-insensitive name
+ * match. Removed cards vanish (not routed to discard) — this is
+ * god-mode scenario setup, not in-rules play. Pure — does not mutate
+ * `state`.
+ *
+ * Used to set up scenarios that need a 0-card target (e.g. verify
+ * Favor + combo-steal TargetSelect filters 0-card players per
+ * eligibleTargets.ts).
+ */
+export function applyDevTakeCard(
+  state: GameState,
+  playerName: string,
+): DevActionApplyResult & { takenCount?: number } {
+  if (state.phase !== 'playing') {
+    return { ok: false, code: 'NOT_PLAYING' }
+  }
+  const targetName = playerName.toLowerCase()
+  const targetIndex = state.players.findIndex(p => p.name.toLowerCase() === targetName)
+  if (targetIndex === -1) {
+    return { ok: false, code: 'PLAYER_NOT_FOUND' }
+  }
+  const target = state.players[targetIndex]!
+  const takenCount = target.hand.length
+  const updatedPlayer = { ...target, hand: [] }
+  const updatedPlayers = state.players.map((p, i) => i === targetIndex ? updatedPlayer : p)
+  return {
+    ok: true,
+    takenCount,
+    nextState: {
+      ...state,
+      players: updatedPlayers,
     },
   }
 }

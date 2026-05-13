@@ -12,6 +12,7 @@
     "dev:launch": "tsx scripts/launch-dev-chrome.ts",
     "dev:stack": "tsx scripts/dev-stack-top.ts",
     "dev:give": "tsx scripts/dev-give-card.ts",
+    "dev:take": "tsx scripts/dev-take-card.ts",
     "dev:cleanup": "pwsh -NoProfile -ExecutionPolicy Bypass -File scripts/kill-stale-dev.ps1",
     "build": "tsc --noEmit && vite build",
     "typecheck": "tsc --noEmit",

@@ -7,6 +7,12 @@
   flex-shrink: 0;
   display: flex;
   flex-direction: column;
+  /* Card frame is portrait 5:7 — matches the in-game MinimalCard.
+     Real playing-card metaphor. Mixed-aspect source art (action cards 1:1,
+     operative cards 2:3) renders INSIDE this frame with object-fit: contain
+     so every pixel of every source shows. No cropping. Source variation
+     reads as natural art-on-card variation, not implementation quirk. */
+  aspect-ratio: 5 / 7;
   border-radius: clamp(4px, 0.4vw, 8px);
   background: var(--color-charcoal-2);
   border: 1px solid color-mix(in oklab, var(--color-ochre-9) 35%, transparent);
@@ -25,9 +31,20 @@
 
 .art {
   display: block;
+  flex: 1;
+  min-height: 0;
   width: 100%;
-  aspect-ratio: 1 / 1;
-  object-fit: cover;
+  /* object-fit: contain — preserves source aspect, letterboxes within the
+     card's art region. Action cards (1:1 source) show as square art with
+     matting top+bottom. Operatives (2:3 source) nearly fill the portrait
+     frame with ~1% side matting. Full head-to-feet visible on every
+     operative; full composition visible on every action card. */
+  object-fit: contain;
+  object-position: center;
+  /* Slight inner padding so the art floats inside the card frame instead
+     of touching the edges — sells the "art on card" reading. */
+  padding: clamp(3px, 0.4vw, 6px);
+  box-sizing: border-box;
 }
 
 .label {
@@ -57,11 +74,12 @@
 }
 
 .back {
+  /* Parent .card owns the 5/7 aspect now — back fills the entire card. */
   display: flex;
   align-items: center;
   justify-content: center;
+  flex: 1;
   width: 100%;
-  aspect-ratio: 5 / 7;
   background:
     radial-gradient(circle at 50% 50%,
       var(--color-cordovan-5) 0%,

@@ -7,65 +7,23 @@ the history. (Rule: `feedback-todo-is-not-a-diary.md`.)
 
 ## 1. Active priorities
 
-Current state (verified 2026-05-14 end-of-session):
+Current state (verified 2026-05-14 squeaky-clean):
 
 - Tests: **1407 pass** | 6 expected fail (68/68 files green).
 - Build: clean (`pnpm build`).
-- Phone initial JS: **~99.17 KB gzipped** — ~0.8 KB headroom under the
-  100 KB ceiling.
+- Phone player entry: **19.17 KB gz** (was 19.04, +0.13 KB from the
+  ManualLink helper + `HOWTOPLAY_URL` shared util). Total initial JS
+  remains under the 100 KB phone ceiling with the same ~0.7 KB
+  headroom band.
 - HOW-TO-PLAY bundle (separate entry, NOT under phone ceiling):
-  `howtoplay-*.js` 98.91 KB (33.85 KB gz) + `howtoplay-*.css` 65.83 KB
-  (10.68 KB gz) + shared GSAP chunk 69.42 KB (27.21 KB gz).
+  `howtoplay-*.js` 99.04 KB (33.90 KB gz, +0.05 KB for `returnToGame`)
+  + `howtoplay-*.css` 65.83 KB (10.68 KB gz, unchanged) + shared GSAP
+  chunk 69.42 KB (27.21 KB gz, unchanged).
 - Protocol: v6.
 
-### 1.1 Surface HOW-TO-PLAY from the Lobby
-
-Page lives at `/howtoplay.html` but no surface in the game links to it.
-First-time players who land on the Lobby won't know to read it.
-
-- **File:** `src/client/board/Lobby.tsx`
-- **Insert after** the QR section block (after line 51 — the closing
-  `</div>` of `.qrSection`) but BEFORE the roster block (line 53).
-- **Markup:**
-  ```tsx
-  <a
-    href="/howtoplay"
-    target="_blank"
-    rel="noopener"
-    className={styles.briefLink}
-  >
-    First-timer? Read the brief →
-  </a>
-  ```
-- **Companion CSS** in `Lobby.module.css` (append near the existing
-  `.hint` rule):
-  ```css
-  .briefLink {
-    margin-top: var(--space-3);
-    font-family: var(--font-mono);
-    font-size: clamp(0.7rem, 0.6rem + 0.3vw, 0.9rem);
-    font-weight: 600;
-    letter-spacing: 0.16em;
-    text-transform: uppercase;
-    color: var(--color-ochre-10);
-    opacity: 0.85;
-    text-decoration: none;
-    transition: opacity var(--motion-duration-fast) var(--motion-ease-decelerate);
-  }
-  .briefLink:hover,
-  .briefLink:focus-visible {
-    opacity: 1;
-    text-decoration: underline;
-    text-underline-offset: 3px;
-  }
-  ```
-- **URL handling:** `/howtoplay` works in prod (Cloudflare Pages strips
-  `.html`). In dev, the browser will 404; either accept that as
-  dev-only or use `import.meta.env.DEV ? '/howtoplay.html' : '/howtoplay'`.
-- **Acceptance:** link visible on the Lobby below the QR/room code,
-  doesn't break the existing layout, opens the brief in a new tab so
-  players don't lose the room code in their tab history. Verify at
-  1366×768, 1920×1080, and a 4K-projection-via-laptop scenario.
+_No live prescriptions. Operations Manual link surfaced from Lobby +
+JoinScreen (both states) + GameTable shipped this session; back/CTA
+return-trip fix landed alongside._
 
 ---
 
@@ -113,6 +71,47 @@ Real-life sessions only Briggsy can do.
 Active warnings only. Older landmines have moved to `docs/insights/` and
 `CLAUDE.md`.
 
+- **`// CAPS LETTERSPACED` is non-interactive chrome vocabulary**
+  (commit `96744440`, 2026-05-14). Codebase-wide pattern: `//
+  Deploy Operative`, `// Briefing`, `// Operation`, `// Standing By`,
+  `// CHANNEL OPEN` — all static labels. Putting `// LABEL` on a
+  tappable element camouflages affordance: users read it as another
+  label, not a link. First Operations Manual ship used `// OPERATIONS
+  MANUAL` and Briggsy flagged it as visually indistinguishable from
+  the surrounding chrome. Fix was to drop the `//` prefix and replace
+  with a trailing `→` arrow (the brief's PlayCTA established that
+  vocabulary already). When adding a new interactive element to a
+  classified-chrome surface, reach for `→` / `↗` / a bracket-shape
+  container — NOT the `//` prefix.
+- **Touch-device affordance needs its own gate** (commit `96744440`).
+  `@media (hover: hover) and (pointer: fine)` is the project-wide
+  guard against phantom sticky-hover on touch (per `MinimalCard`,
+  `joinButton`, `startButton`, `reclaimButton`, `playAgain`). Side
+  effect: any hover-only affordance signal is INVISIBLE on phones.
+  Pattern shipped for the Operations Manual arrow: a parallel `@media
+  (hover: none) and (pointer: coarse)` rule that drives a slow
+  periodic transform-keyframe attract loop on the arrow. Touch
+  devices get the equivalent "alive" cue. Use this dual-gate pattern
+  whenever a new tappable element relies on hover motion as its
+  affordance signal — phones see neither hover nor `:active` until
+  AFTER the tap, so without the touch-side attract loop the element
+  reads as static.
+- **HOW-TO-PLAY back/CTA return-trip pattern** (commit `96744440`,
+  `src/client/howtoplay/returnToGame.ts`). The brief's "Back" link
+  and bottom CTA both used `href="/"` which 404s in Vite dev (no
+  root index) and lands on the wrong surface in prod (Pages
+  `_redirects` sends `/` → `/board.html`, wrong for phone readers
+  who came from `/player.html?room=X` and would lose room context).
+  Fix: `returnToGame` onClick handler. If `window.history.length > 1`
+  → `history.back()` (same-tab nav case). Else → `window.close()`
+  (new-tab from `target="_blank"` case — closes brief, user lands
+  back on their game tab with state intact). `e.preventDefault`
+  blocks the broken href fallback; middle/right-click still follows
+  href as a niche escape hatch. Any future link inside HOW-TO-PLAY
+  that needs to "return to game" should use this helper, NOT a
+  hardcoded href. Adding HOW-TO-PLAY entry points from other game
+  surfaces is fine — the existing `target="_blank"` on those source
+  links makes `window.close()` the natural return path.
 - **HOW-TO-PLAY: card aspect contract** (commit `22b2d683`). Card
   source art is MIXED aspect: 11 action cards are 384×384 (1:1
   square), 6 operative cards are 269×384 (2:3 portrait). The howtoplay

@@ -67,10 +67,10 @@ export function ActCombos() {
           </div>
 
           <p className={styles.sceneTactic}>
-            Tactical note: any matching pair works. Two Skips, two Shuffles,
-            two Intel Briefings — all valid. The economy of it doesn't usually
-            justify the math, but if a particular target has been hoarding,
-            do the heist anyway. They'll learn.{' '}
+            Tactical note: any matching pair works. Two Intel Briefings,
+            two Reassigns, two Go Darks — all valid. The economy of it
+            doesn't usually justify the math, but if a particular target
+            has been hoarding, do the heist anyway. They'll learn.{' '}
             <span className={styles.phrasing}>…Phrasing.</span>
           </p>
         </section>

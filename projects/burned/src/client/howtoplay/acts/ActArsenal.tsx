@@ -73,7 +73,7 @@ const GROUPS: ArsenalGroup[] = [
         card: 'burn-the-files',
         classification: 'Intel · Sabotage',
         rules:
-          "Shuffle the deck. Anything anyone knew about the next three cards — gone. Does not end your turn.",
+          "Reshuffle the deck. Anything anyone knew about the next three cards — gone. Does not end your turn.",
         tactic: 'Especially funny if you just watched Dash peek and look pleased.',
       },
     ],

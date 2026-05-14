@@ -178,7 +178,8 @@ body {
   -webkit-backdrop-filter: blur(8px);
   transition:
     background var(--motion-duration-fast) var(--motion-ease-base),
-    border-color var(--motion-duration-fast) var(--motion-ease-base);
+    border-color var(--motion-duration-fast) var(--motion-ease-base),
+    transform var(--motion-duration-fast) var(--motion-ease-decelerate);
   min-height: 36px;
 }
 
@@ -194,6 +195,12 @@ body {
   background: color-mix(in oklab, var(--color-charcoal-1) 80%, transparent);
   border-color: color-mix(in oklab, var(--color-ochre-9) 60%, transparent);
   color: var(--color-cream-12);
+}
+
+/* Press feedback — instant tactile "heard you" tell. */
+.back-link:active {
+  transform: scale(0.97);
+  transition-duration: 100ms;
 }
 
 .back-link:focus-visible {

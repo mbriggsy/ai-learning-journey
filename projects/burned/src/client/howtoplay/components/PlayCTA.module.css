@@ -118,6 +118,13 @@
     0 8px 16px color-mix(in oklab, var(--color-charcoal-1) 60%, transparent);
 }
 
+/* Press feedback — buttons must feel responsive on click. Subtle scale
+   below 1.0 is the canonical "interface heard you" tell. */
+.button:active {
+  transform: scale(0.97);
+  transition-duration: 100ms;
+}
+
 .button:focus-visible {
   outline: 2px solid var(--color-cream-12);
   outline-offset: 3px;
@@ -127,6 +134,12 @@
   font-family: var(--font-display);
   font-size: 1.1em;
   line-height: 1;
+  transition: transform 200ms ease-out;
+}
+
+.button:hover .arrow,
+.button:focus-visible .arrow {
+  transform: translateX(2px);
 }
 
 .fineprint {

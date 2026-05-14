@@ -86,12 +86,16 @@
   isolation: isolate;
 }
 
-.card:hover {
-  transform: translateY(-3px) rotate(-0.2deg);
-  box-shadow:
-    0 1px 0 color-mix(in oklab, var(--color-cream-12) 35%, transparent) inset,
-    0 14px 28px -10px color-mix(in oklab, var(--color-charcoal-1) 55%, transparent),
-    0 4px 6px color-mix(in oklab, var(--color-charcoal-1) 35%, transparent);
+/* Hover lift — desktop-only. Touch devices fire :hover on tap, so the
+   media query guard prevents sticky-hover false positives. */
+@media (hover: hover) and (pointer: fine) {
+  .card:hover {
+    transform: translateY(-3px) rotate(-0.2deg);
+    box-shadow:
+      0 1px 0 color-mix(in oklab, var(--color-cream-12) 35%, transparent) inset,
+      0 14px 28px -10px color-mix(in oklab, var(--color-charcoal-1) 55%, transparent),
+      0 4px 6px color-mix(in oklab, var(--color-charcoal-1) 35%, transparent);
+  }
 }
 
 @media (prefers-reduced-motion: reduce) {
@@ -124,11 +128,15 @@
   height: 100%;
   object-fit: cover;
   filter: contrast(1.05) saturate(0.85);
-  transition: transform var(--motion-duration-slow) var(--motion-ease-decelerate);
+  /* 250ms (base) feels more responsive than 400ms (slow) for a small
+     scale on hover — Emil's rule: 150-250ms for image-y interactions. */
+  transition: transform var(--motion-duration-base) var(--motion-ease-decelerate);
 }
 
-.card:hover .photo {
-  transform: scale(1.04);
+@media (hover: hover) and (pointer: fine) {
+  .card:hover .photo {
+    transform: scale(1.04);
+  }
 }
 
 /* Adhesive tape — top of photo, faux clear tape look */

@@ -106,10 +106,7 @@ export function ActCombos() {
             High-risk, high-information play. Names are spoken privately
             between you and the target — the rest of the table sees only{' '}
             <em>that</em> something was tried, not <em>what</em>. Bluff
-            accordingly. And the economy doesn't usually justify the math —
-            worse here, three cards for a maybe-steal — but if a particular
-            target has been hoarding, do the heist anyway. They'll learn.{' '}
-            <span className={styles.phrasing}>…Phrasing.</span>
+            accordingly.
           </p>
         </section>
 
@@ -120,7 +117,9 @@ export function ActCombos() {
             Two Intel Briefings or three of them; two Reassigns or three;
             two Go Darks or three. All legal. Their printed effects are{' '}
             <em>ignored</em> — only the steal counts. Burning action cards
-            as combo fodder is steep economy, but the heist still hits.
+            as combo fodder is steep economy — but if a particular target
+            has been hoarding, do the heist anyway. They'll learn.{' '}
+            <span className={styles.phrasing}>…Phrasing.</span>
           </p>
         </aside>
 

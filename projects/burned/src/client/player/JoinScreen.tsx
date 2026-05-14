@@ -2,7 +2,22 @@ import { useEffect, useState } from 'react'
 import type { ConnectionStatus } from '@client/connection'
 import { useLastError } from '@client/shared/gameStore'
 import { PlayerIcon } from '@client/shared/PlayerIcon'
+import { HOWTOPLAY_URL } from '@client/shared/howtoplayUrl'
 import styles from './JoinScreen.module.css'
+
+function ManualLink() {
+  return (
+    <a
+      className={styles.manualLink}
+      href={HOWTOPLAY_URL}
+      target="_blank"
+      rel="noopener"
+    >
+      <span className={styles.manualLinkText}>Operations Manual</span>
+      <span className={styles.manualLinkArrow} aria-hidden="true">→</span>
+    </a>
+  )
+}
 
 // Cycling ambient on-air signal — mirrors DossierFeed.tsx's ChannelTicker
 // vocabulary so phone + board read the same "live channel" layer. C-19
@@ -172,6 +187,8 @@ export function JoinScreen({ connectionStatus, assignedColor, onJoin, roomCode, 
           <p className={styles.briefingFooter}>Briefed by <strong>M.</strong></p>
         </section>
 
+        <ManualLink />
+
         {/* Active operatives panel */}
         {lobbyPlayers && lobbyPlayers.length > 1 && (
           <section className={styles.rosterPanel} aria-label="Active operatives">
@@ -248,6 +265,7 @@ export function JoinScreen({ connectionStatus, assignedColor, onJoin, roomCode, 
         )}
         <button className={styles.joinButton} type="submit">Check In</button>
       </form>
+      <ManualLink />
     </div>
   )
 }

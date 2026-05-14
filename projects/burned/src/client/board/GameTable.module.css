@@ -426,6 +426,86 @@
   justify-content: center;
 }
 
+/* Operations Manual reference — classified footer below the nope slot.
+   Same mono-caps vocabulary as the rest of the case banner. Anchor
+   element gets pointer-events restored (parent aside is pointer-events:
+   none) so dev/laptop browsers can tap; on a real TV it's just
+   classified type. Picks up the same clip-path reveal as the other
+   banner lines on mount, with a delay AFTER the footer so the cascade
+   reads top-to-bottom intact.
+
+   Brightness pass 2026-05-14: bumped from cream-11 @ 40% to a stronger
+   ochre with text-shadow halo — visible against the case banner
+   without screaming over the briefing typography. No sheen on this
+   surface because the in-game board is a high-frequency context (per
+   Emil's animation framework — the player is staring at it for
+   minutes at a time, decoration becomes distraction). Brightness is
+   enough to draw a confused mid-game eye. */
+.manualLink {
+  align-self: flex-start;
+  display: inline-flex;
+  align-items: baseline;
+  gap: 0.5em;
+  font-family: var(--font-mono);
+  font-size: calc(var(--text-caption-board) * 0.92);
+  font-weight: 600;
+  letter-spacing: 0.28em;
+  text-transform: uppercase;
+  color: color-mix(in oklab, var(--color-accent-drama) 88%, transparent);
+  text-decoration: none;
+  text-shadow:
+    0 0 8px color-mix(in oklab, var(--color-accent-drama) 28%, transparent),
+    0 0 18px color-mix(in oklab, var(--color-accent-drama) 14%, transparent);
+  pointer-events: auto;
+  transition:
+    color var(--motion-duration-fast) var(--motion-ease-base),
+    text-shadow var(--motion-duration-fast) var(--motion-ease-base);
+  animation: caseBannerLineIn var(--motion-duration-base) var(--motion-ease-decelerate) both;
+  animation-delay: 420ms;
+}
+
+.manualLinkText {
+  /* No sheen on the in-game surface (see block comment above). The
+     span exists for markup parity with Lobby/JoinScreen but stays
+     visually identical to the parent link's resting color. */
+  color: inherit;
+}
+
+/* Trailing → arrow — affordance signal. See Lobby.module.css for the
+   full rationale (the `//` label-prefix was reading as non-interactive
+   chrome). */
+.manualLinkArrow {
+  display: inline-block;
+  margin-left: 0.5em;
+  font-family: var(--font-mono);
+  font-weight: 500;
+  letter-spacing: 0;
+  color: var(--color-accent-burned);
+  transition: transform var(--motion-duration-fast) var(--motion-ease-decelerate);
+  will-change: transform;
+}
+
+@media (hover: hover) and (pointer: fine) {
+  .manualLink:hover {
+    color: var(--color-accent-drama);
+    text-shadow:
+      0 0 12px color-mix(in oklab, var(--color-accent-drama) 45%, transparent),
+      0 0 24px color-mix(in oklab, var(--color-accent-drama) 22%, transparent);
+  }
+}
+
+.manualLink:focus-visible {
+  outline: 2px solid var(--color-border-focus);
+  outline-offset: 3px;
+  color: var(--color-accent-drama);
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .manualLink {
+    animation: none;
+  }
+}
+
 /* ─── Full-screen event flash (GSAP target in Phase 4) ─── */
 
 .eventFlash {

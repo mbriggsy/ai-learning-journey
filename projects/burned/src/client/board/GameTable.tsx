@@ -6,6 +6,7 @@ import { PlayerStrip } from './PlayerStrip'
 import { Arena } from './Arena'
 import { BlotterContent } from './BlotterContent'
 import { NopeCountdownBar } from './NopeCountdownBar'
+import { HOWTOPLAY_URL } from '@client/shared/howtoplayUrl'
 import styles from './GameTable.module.css'
 
 export function GameTable() {
@@ -74,6 +75,16 @@ export function GameTable() {
         <div className={styles.nopeSlot}>
           <NopeCountdownBar />
         </div>
+        <a
+          className={styles.manualLink}
+          href={HOWTOPLAY_URL}
+          target="_blank"
+          rel="noopener"
+          aria-hidden="true"
+        >
+          <span className={styles.manualLinkText}>Operations Manual</span>
+          <span className={styles.manualLinkArrow}>→</span>
+        </a>
       </aside>
 
       {/* Player strip — UMB-style nameplate row along the bottom */}

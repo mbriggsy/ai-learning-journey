@@ -11,13 +11,14 @@ import { ActSignoff } from './acts/ActSignoff'
 import { useScrollReveal } from './hooks/useScrollReveal'
 import { ReadingProgress } from './components/ReadingProgress'
 import { PlayCTA } from './components/PlayCTA'
+import { returnToGame } from './returnToGame'
 
 export function App() {
   useScrollReveal()
 
   return (
     <main className="desk">
-      <a href="/" className="back-link" aria-label="Back to game">Back</a>
+      <a href="/" onClick={returnToGame} className="back-link" aria-label="Back to game">Back</a>
       <ReadingProgress />
       <article className="page" aria-labelledby="dossier-title">
         <ActCover />

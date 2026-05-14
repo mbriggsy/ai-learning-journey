@@ -142,6 +142,128 @@
   outline-offset: var(--space-1);
 }
 
+/* Operations Manual link — classified caption surfaced in two states:
+   below Check In on the pre-join screen, and below the briefing panel
+   on the joined-waiting screen. Same chrome on both so the link reads
+   as a single recurring artifact of the Pendleton vocabulary.
+
+   Brightness pass 2026-05-14: dropped the opacity buffer + color-mix
+   so the link is fully visible against the dark app background.
+
+   Sheen pass 2026-05-14: cream highlight clipped to glyph shapes
+   sweeps right-to-left every ambient cycle, the same vocabulary as
+   the Lobby surface so phone + TV read as the same kind of "alive"
+   classified chrome. `:active scale(0.97)` per the project's
+   phone-tap response pattern (matches .joinButton, .reclaimButton). */
+.manualLink {
+  align-self: center;
+  display: inline-flex;
+  align-items: baseline;
+  gap: 0.55em;
+  padding: var(--space-3) var(--space-4);
+  margin-top: var(--space-2);
+  font-family: var(--font-mono);
+  font-size: var(--text-caption);
+  font-weight: 600;
+  letter-spacing: 0.24em;
+  text-transform: uppercase;
+  color: var(--color-accent-drama);
+  text-decoration: none;
+  text-shadow:
+    0 0 10px color-mix(in oklab, var(--color-accent-drama) 36%, transparent),
+    0 0 22px color-mix(in oklab, var(--color-accent-drama) 18%, transparent);
+  touch-action: manipulation;
+  transition:
+    text-shadow var(--motion-duration-fast) var(--motion-ease-base),
+    transform var(--motion-duration-fast) var(--motion-ease-decelerate);
+}
+
+/* Trailing → arrow — the affordance signal. See Lobby.module.css for
+   the full rationale (the `//` label-prefix vocabulary was reading as
+   non-interactive). Arrow nudges right on hover (desktop) or via a
+   periodic attract loop on touch devices — the latter is the primary
+   case for this surface since JoinScreen ships only on phones. The
+   `:active scale(0.97)` on the parent .manualLink supplies the press
+   feedback once the user actually taps. */
+.manualLinkArrow {
+  display: inline-block;
+  margin-left: 0.55em;
+  font-family: var(--font-mono);
+  font-weight: 500;
+  letter-spacing: 0;
+  color: var(--color-accent-burned);
+  transition: transform var(--motion-duration-fast) var(--motion-ease-decelerate);
+  will-change: transform;
+}
+
+@media (hover: none) and (pointer: coarse) {
+  .manualLinkArrow {
+    animation: manualLinkArrowAttract 2.4s ease-in-out infinite;
+  }
+}
+
+@keyframes manualLinkArrowAttract {
+  0%, 75%, 100% { transform: translateX(0); }
+  85%          { transform: translateX(3px); }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .manualLinkArrow {
+    animation: none;
+  }
+}
+
+.manualLinkText {
+  background-image: linear-gradient(
+    105deg,
+    transparent 38%,
+    color-mix(in oklab, var(--color-cream-12) 78%, transparent) 50%,
+    transparent 62%
+  );
+  background-size: 220% 100%;
+  background-repeat: no-repeat;
+  background-position: 200% 0;
+  background-clip: text;
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: var(--color-accent-drama);
+  animation: manualLinkSheen var(--motion-duration-ambient) linear infinite;
+}
+
+@keyframes manualLinkSheen {
+  0%, 55%   { background-position: 200% 0; }
+  100%      { background-position: -100% 0; }
+}
+
+@media (hover: hover) and (pointer: fine) {
+  .manualLink:hover {
+    text-shadow:
+      0 0 14px color-mix(in oklab, var(--color-accent-drama) 52%, transparent),
+      0 0 28px color-mix(in oklab, var(--color-accent-drama) 26%, transparent);
+    text-decoration: underline;
+    text-underline-offset: 4px;
+    text-decoration-thickness: 1px;
+    text-decoration-color: color-mix(in oklab, var(--color-accent-drama) 60%, transparent);
+  }
+  .manualLink:hover .manualLinkArrow {
+    transform: translateX(3px);
+  }
+}
+
+.manualLink:active {
+  transform: scale(0.97);
+}
+
+.manualLink:focus-visible {
+  outline: 2px solid var(--color-border-focus);
+  outline-offset: var(--space-1);
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .manualLinkText {
+    animation: none;
+  }
+}
+
 /* --- Reclaim Picker (B-14) ---
    Shown when the server rejects a mid-game join with GAME_ALREADY_STARTED
    AND the room has disconnected players the joiner could reclaim. Shape

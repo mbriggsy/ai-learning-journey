@@ -4,6 +4,7 @@ import { useLobbyState } from '@client/shared/gameStore'
 import { MOTION } from '@client/shared/tokens/motion'
 import type { ConnectionStatus } from '@client/connection'
 import { PlayerIcon } from '@client/shared/PlayerIcon'
+import { HOWTOPLAY_URL } from '@client/shared/howtoplayUrl'
 import styles from './Lobby.module.css'
 
 interface Props {
@@ -49,6 +50,16 @@ export function Lobby({ connectionStatus, onStartGame }: Props) {
         <span className={styles.roomCode}>{lobby.roomCode}</span>
         <span className={styles.hint}>Scan &amp; check in</span>
       </div>
+
+      <a
+        className={styles.manualLink}
+        href={HOWTOPLAY_URL}
+        target="_blank"
+        rel="noopener"
+      >
+        <span className={styles.manualLinkText}>Operations Manual</span>
+        <span className={styles.manualLinkArrow} aria-hidden="true">→</span>
+      </a>
 
       <div className={styles.roster} data-player-count={lobby.players.length}>
         <div className={styles.rosterHeader}>

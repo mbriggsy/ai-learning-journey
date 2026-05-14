@@ -1,3 +1,4 @@
+import { returnToGame } from '../returnToGame'
 import styles from './PlayCTA.module.css'
 
 /**
@@ -15,7 +16,7 @@ export function PlayCTA() {
           Now find some operatives, point them at a screen, and see who's
           left at the end.
         </p>
-        <a href="/" className={styles.button}>
+        <a href="/" onClick={returnToGame} className={styles.button}>
           <span>Open the Agency</span>
           <span aria-hidden="true" className={styles.arrow}>→</span>
         </a>

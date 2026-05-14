@@ -67,10 +67,9 @@ export function ActCombos() {
           </div>
 
           <p className={styles.sceneTactic}>
-            Tactical note: any matching pair works. Two Intel Briefings,
-            two Reassigns, two Go Darks — all valid. The economy of it
-            doesn't usually justify the math, but if a particular target
-            has been hoarding, do the heist anyway. They'll learn.{' '}
+            Tactical note: the economy doesn't usually justify the math,
+            but if a particular target has been hoarding, do the heist
+            anyway. They'll learn.{' '}
             <span className={styles.phrasing}>…Phrasing.</span>
           </p>
         </section>
@@ -116,6 +115,17 @@ export function ActCombos() {
             accordingly.
           </p>
         </section>
+
+        <aside className={styles.aside}>
+          <EyebrowLabel tone="cream">Footnote · Eligible cards</EyebrowLabel>
+          <p>
+            <strong>Any matching cards qualify — pairs or triples, operatives or actions.</strong>{' '}
+            Two Intel Briefings or three of them; two Reassigns or three;
+            two Go Darks or three. All legal. Their printed effects are{' '}
+            <em>ignored</em> — only the steal counts. Burning action cards
+            as combo fodder is steep economy, but the heist still hits.
+          </p>
+        </aside>
 
         <aside className={styles.aside}>
           <EyebrowLabel tone="cream">Wildcard rule · Agent X</EyebrowLabel>

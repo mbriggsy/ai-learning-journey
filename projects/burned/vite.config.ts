@@ -15,6 +15,7 @@ export default defineConfig({
       input: {
         board: resolve(import.meta.dirname, 'board.html'),
         player: resolve(import.meta.dirname, 'player.html'),
+        howtoplay: resolve(import.meta.dirname, 'howtoplay.html'),
       },
     },
   },

@@ -1,0 +1,320 @@
+.head {
+  display: flex;
+  flex-direction: column;
+  gap: 0.5rem;
+  margin-bottom: clamp(1.5rem, 1rem + 2vw, 2.5rem);
+}
+
+.title {
+  font-family: var(--font-display);
+  font-weight: 700;
+  line-height: var(--htp-lead-display);
+  color: var(--paper-ink);
+  display: flex;
+  flex-direction: column;
+  gap: 0.15em;
+}
+
+.titleKicker {
+  font-family: var(--font-mono);
+  font-weight: 600;
+  font-size: var(--htp-size-meta);
+  letter-spacing: var(--htp-track-eyebrow);
+  text-transform: uppercase;
+  color: var(--paper-ink-accent);
+}
+
+.titleMain {
+  font-size: var(--htp-size-display-2);
+  letter-spacing: 0.01em;
+}
+
+.lede {
+  font-family: var(--font-body);
+  font-size: var(--htp-size-body-lg);
+  font-style: italic;
+  color: var(--paper-ink);
+  line-height: var(--htp-lead-body);
+  max-width: 62ch;
+}
+
+/* ─── BEATS ─────────────────────────────────────────────────────────── */
+
+.beats {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  display: flex;
+  flex-direction: column;
+  gap: clamp(2rem, 1rem + 3vw, 3.5rem);
+}
+
+.beat {
+  display: grid;
+  grid-template-columns: 1fr;
+  gap: clamp(1rem, 0.5rem + 1.5vw, 2rem);
+  align-items: center;
+}
+
+@media (min-width: 720px) {
+  .beat {
+    grid-template-columns: minmax(0, 1.1fr) minmax(0, 1fr);
+  }
+  .beat:nth-child(even) {
+    grid-template-columns: minmax(0, 1fr) minmax(0, 1.1fr);
+  }
+  .beat:nth-child(even) .beatStage {
+    order: 2;
+  }
+}
+
+/* ─── STAGE (the visualization side) ─────────────────────────────────── */
+
+.beatStage {
+  position: relative;
+  min-height: 220px;
+  padding: clamp(1.25rem, 0.75rem + 2vw, 2rem);
+  background:
+    /* warmer panel highlight */
+    radial-gradient(ellipse at 30% 20%,
+      color-mix(in oklab, var(--color-cream-12) 16%, transparent) 0%,
+      transparent 50%
+    ),
+    color-mix(in oklab, var(--color-charcoal-1) 75%, transparent);
+  border: 1px solid color-mix(in oklab, var(--color-ochre-9) 25%, transparent);
+  border-radius: 3px;
+  overflow: hidden;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  isolation: isolate;
+}
+
+.beatStage::before {
+  /* Subtle scanline overlay — slight cinematic feel */
+  content: '';
+  position: absolute;
+  inset: 0;
+  background: repeating-linear-gradient(
+    0deg,
+    transparent,
+    transparent 3px,
+    color-mix(in oklab, var(--color-charcoal-1) 10%, transparent) 3px,
+    color-mix(in oklab, var(--color-charcoal-1) 10%, transparent) 4px
+  );
+  pointer-events: none;
+  opacity: 0.4;
+}
+
+/* ─── BEAT 1: HAND FAN ───────────────────────────────────────────────── */
+
+.handFan {
+  position: relative;
+  display: flex;
+  align-items: flex-end;
+  justify-content: center;
+  gap: -2rem;
+  min-height: 260px;
+  padding-top: 1.5rem;
+}
+
+.handFan > * {
+  margin-inline: -1.5rem;
+}
+
+@media (max-width: 600px) {
+  .handFan > * {
+    margin-inline: -2rem;
+  }
+}
+
+/* ─── BEAT 2: TURN ARROW ─────────────────────────────────────────────── */
+
+.turnStage {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: clamp(1rem, 0.75rem + 2vw, 2.5rem);
+  flex-wrap: wrap;
+}
+
+.turnGroup {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 0.6rem;
+}
+
+.turnLabel {
+  font-family: var(--font-mono);
+  font-size: var(--htp-size-eyebrow);
+  font-weight: 700;
+  letter-spacing: var(--htp-track-eyebrow);
+  text-transform: uppercase;
+  color: var(--color-cream-11);
+}
+
+.turnArrow {
+  font-family: var(--font-display);
+  font-size: clamp(1.5rem, 1rem + 1vw, 2.4rem);
+  font-weight: 700;
+  color: var(--drama-amber);
+  line-height: 1;
+  align-self: center;
+  padding-top: clamp(0rem, 0.5rem, 1rem);
+}
+
+/* ─── BEAT 3: BURN ───────────────────────────────────────────────────── */
+
+.beatBurn {
+  /* Full-bleed treatment on the burn beat */
+}
+
+.burnStage {
+  background:
+    radial-gradient(ellipse at 50% 50%,
+      color-mix(in oklab, var(--burn-fire) 25%, transparent) 0%,
+      color-mix(in oklab, var(--color-charcoal-1) 50%, transparent) 60%,
+      var(--color-charcoal-1) 100%
+    );
+  min-height: clamp(280px, 240px + 8vw, 380px);
+  border-color: color-mix(in oklab, var(--burn-fire) 50%, transparent);
+  position: relative;
+}
+
+.burnGlow {
+  position: absolute;
+  inset: 0;
+  background:
+    radial-gradient(circle at 50% 60%,
+      color-mix(in oklab, var(--burn-fire) 50%, transparent) 0%,
+      transparent 50%
+    );
+  filter: blur(20px);
+  pointer-events: none;
+  animation: burn-pulse var(--motion-duration-pulse-slow) ease-in-out infinite;
+}
+
+@keyframes burn-pulse {
+  0%, 100% { opacity: 0.7; transform: scale(1); }
+  50%      { opacity: 1.0; transform: scale(1.05); }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .burnGlow { animation: none; }
+}
+
+.burnStamp {
+  position: absolute;
+  top: clamp(0.75rem, 0.5rem + 1vw, 1.5rem);
+  right: clamp(0.75rem, 0.5rem + 1vw, 1.5rem);
+  z-index: 3;
+}
+
+.beatBurnTitle {
+  color: var(--burn-fire);
+  text-shadow:
+    0 0 12px color-mix(in oklab, var(--burn-fire) 40%, transparent);
+}
+
+.beatBurnLede {
+  font-size: var(--htp-size-body-lg);
+  font-style: italic;
+}
+
+.burnWord {
+  color: var(--burn-fire);
+  font-weight: 700;
+  font-style: normal;
+  text-transform: uppercase;
+  letter-spacing: 0.04em;
+}
+
+/* ─── BEAT BODY (the prose side) ─────────────────────────────────────── */
+
+.beatBody {
+  display: flex;
+  flex-direction: column;
+  gap: 0.85rem;
+  position: relative;
+  padding-left: clamp(2.25rem, 1.5rem + 2vw, 3rem);
+}
+
+.beatNum {
+  position: absolute;
+  top: 0;
+  left: 0;
+  font-family: var(--font-display);
+  font-weight: 700;
+  font-size: clamp(1.6rem, 1.1rem + 1.5vw, 2.4rem);
+  line-height: 1;
+  color: var(--paper-ink-accent);
+  letter-spacing: 0.02em;
+  text-transform: lowercase;
+}
+
+.beatBody h3 {
+  font-family: var(--font-display);
+  font-size: clamp(1.3rem, 1rem + 0.8vw, 1.7rem);
+  font-weight: 700;
+  letter-spacing: 0.01em;
+  color: var(--paper-ink);
+  line-height: 1.15;
+}
+
+.beatBody p {
+  font-family: var(--font-body);
+  font-size: var(--htp-size-body);
+  line-height: var(--htp-lead-body);
+  color: var(--paper-ink);
+  max-width: 58ch;
+}
+
+.beatBody strong {
+  font-weight: 600;
+  color: var(--paper-ink);
+}
+
+.beatBody em {
+  font-style: italic;
+  color: var(--paper-ink-accent);
+  font-weight: 500;
+}
+
+.beatAside {
+  padding-top: 0.5rem;
+  border-top: 1px dashed var(--paper-rule);
+  font-size: var(--htp-size-body-sm) !important;
+  font-style: italic;
+  color: var(--paper-ink-soft) !important;
+}
+
+/* ─── ASIDE (Endgame footnote) ───────────────────────────────────────── */
+
+.aside {
+  margin-top: clamp(1.5rem, 1rem + 1.5vw, 2.5rem);
+  padding: clamp(0.85rem, 0.5rem + 1vw, 1.2rem);
+  background:
+    linear-gradient(0deg,
+      color-mix(in oklab, var(--color-charcoal-1) 78%, transparent),
+      color-mix(in oklab, var(--color-charcoal-1) 70%, transparent)
+    );
+  border: 1px solid color-mix(in oklab, var(--color-ochre-9) 30%, transparent);
+  border-radius: 3px;
+  color: var(--color-cream-11);
+  display: flex;
+  flex-direction: column;
+  gap: 0.5rem;
+}
+
+.aside p {
+  font-family: var(--font-body);
+  font-size: var(--htp-size-body-sm);
+  line-height: var(--htp-lead-body);
+  color: var(--color-cream-11);
+}
+
+.aside strong {
+  color: var(--color-cream-12);
+  font-weight: 600;
+}

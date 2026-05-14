@@ -604,10 +604,10 @@ These are code-level leftovers that don't appear in the UI but create cognitive 
 
 ### §8.3 — Documentation
 
-- [ ] **HOW-TO-PLAY doc** matches the production polish of UMB's HOW-TO-PLAY. Per Briggsy 2026-04-10: *"that doc alone could win an award."* That's the bar.
-- [ ] HOW-TO-PLAY covers all 17 card types with clear rules, examples, and edge cases (Intercept chains, 3-card and 5-card combos, targeted attacks, self-Intercept disallowed, Draw From Bottom auto-triggers).
-- [ ] HOW-TO-PLAY includes remote-play instructions (per §1: same-room is intent, remote works).
-- [ ] HOW-TO-PLAY rendered as a polished HTML page with the same visual language as the game itself.
+- [x] **HOW-TO-PLAY doc** matches the production polish of UMB's HOW-TO-PLAY. Per Briggsy 2026-04-10: *"that doc alone could win an award."* That's the bar. *(Shipped 2026-05-13 as `howtoplay.html` — "Operations Manual" dossier with 9 acts, Imagen-generated Pendleton crest seal + Saul Bass title plate, scroll-reveal motion, reading-progress indicator, brass-plaque CTA back to game.)*
+- [x] HOW-TO-PLAY covers all 17 card types with clear rules, examples, and edge cases (Intercept chains, 3-card combos, targeted attacks, self-Intercept disallowed, Draw From Bottom auto-triggers). *(5-Different combo is intentionally absent — not in Party Pack per `docs/RULES-REFERENCE.md`.)*
+- [x] HOW-TO-PLAY includes remote-play instructions (per §1: same-room is intent, remote works). *(Act VII — Remote Briefing.)*
+- [x] HOW-TO-PLAY rendered as a polished HTML page with the same visual language as the game itself. *(Same Dreamland token palette, same Clash Display + General Sans + JetBrains Mono families, same mahogany/manila/stamp vocabulary as the Briefing Room arena.)*
 - [x] `README.md` reflects current state of the project. *(Rewritten 2026-04-23.)*
 - [x] `CLAUDE.md` references `docs/PRODUCT-SPECIFICATION.md` as the canonical contract. *(See `CLAUDE.md` §The Contract.)*
 - [x] `docs/ideation/*.md` each carry a *"SUPERSEDED — see `docs/PRODUCT-SPECIFICATION.md`"* banner at the top.

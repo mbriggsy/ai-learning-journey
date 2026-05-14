@@ -1,0 +1,13 @@
+/* Mono font loaded for the how-to-play page (typewriter / case-numbers / file metadata).
+   The phone view doesn't load mono — see src/client/shared/fonts-mono.css for the
+   board's equivalent declaration. */
+
+@layer components {
+  @font-face {
+    font-family: 'JetBrains Mono';
+    src: url('/fonts/JetBrainsMono-Variable.woff2') format('woff2');
+    font-weight: 100 900;
+    font-display: optional;
+    font-style: normal;
+  }
+}

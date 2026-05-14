@@ -1,0 +1,209 @@
+.head {
+  display: flex;
+  flex-direction: column;
+  gap: 0.5rem;
+  margin-bottom: clamp(1.5rem, 1rem + 2vw, 2.5rem);
+}
+
+.title {
+  font-family: var(--font-display);
+  font-weight: 700;
+  line-height: var(--htp-lead-display);
+  color: var(--paper-ink);
+  display: flex;
+  flex-direction: column;
+  gap: 0.15em;
+}
+
+.titleKicker {
+  font-family: var(--font-mono);
+  font-weight: 600;
+  font-size: var(--htp-size-meta);
+  letter-spacing: var(--htp-track-eyebrow);
+  text-transform: uppercase;
+  color: var(--paper-ink-accent);
+}
+
+.titleMain {
+  font-size: var(--htp-size-display-2);
+  letter-spacing: 0.01em;
+}
+
+.lede {
+  font-family: var(--font-body);
+  font-size: var(--htp-size-body-lg);
+  font-style: italic;
+  color: var(--paper-ink);
+  line-height: var(--htp-lead-body);
+  max-width: 62ch;
+}
+
+/* ─── SCENES ────────────────────────────────────────────────────────── */
+
+.scene {
+  margin-top: clamp(1.5rem, 1rem + 2vw, 2.5rem);
+  padding-top: clamp(1.25rem, 0.75rem + 1.5vw, 2rem);
+  border-top: 1px dashed var(--paper-rule);
+}
+
+.scene:first-of-type {
+  margin-top: 0.5rem;
+  padding-top: 0;
+  border-top: 0;
+}
+
+.sceneHead {
+  display: flex;
+  flex-direction: column;
+  gap: 0.6rem;
+  margin-bottom: clamp(1rem, 0.5rem + 1.5vw, 1.5rem);
+}
+
+.sceneTitle {
+  display: inline-flex;
+}
+
+.sceneRules {
+  font-family: var(--font-body);
+  font-size: var(--htp-size-body);
+  line-height: var(--htp-lead-body);
+  color: var(--paper-ink);
+  max-width: 62ch;
+}
+
+.sceneRules strong { color: var(--paper-ink); font-weight: 600; }
+.sceneRules em { font-style: italic; color: var(--paper-ink-accent); font-weight: 500; }
+
+/* ─── STAGE (the visualization) ──────────────────────────────────────── */
+
+.stage {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 1.5rem;
+  padding: clamp(1.25rem, 0.75rem + 1.5vw, 2rem);
+  background:
+    radial-gradient(ellipse at 30% 20%,
+      color-mix(in oklab, var(--color-cream-12) 16%, transparent) 0%,
+      transparent 50%
+    ),
+    color-mix(in oklab, var(--color-charcoal-1) 75%, transparent);
+  border: 1px solid color-mix(in oklab, var(--color-ochre-9) 22%, transparent);
+  border-radius: 3px;
+  margin-bottom: clamp(0.75rem, 0.5rem + 1vw, 1.25rem);
+}
+
+@media (min-width: 720px) {
+  .stage {
+    flex-direction: row;
+    justify-content: center;
+    gap: clamp(1.5rem, 1rem + 2vw, 3.5rem);
+  }
+}
+
+.stageSide {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 0.75rem;
+}
+
+.stageLabel {
+  font-family: var(--font-mono);
+  font-size: var(--htp-size-eyebrow);
+  font-weight: 700;
+  letter-spacing: var(--htp-track-eyebrow);
+  text-transform: uppercase;
+  color: var(--color-cream-11);
+}
+
+.stageMeta {
+  font-family: var(--font-body);
+  font-size: var(--htp-size-body-sm);
+  font-style: italic;
+  color: var(--color-cream-10);
+}
+
+.stageArrow {
+  font-family: var(--font-display);
+  font-size: clamp(1.5rem, 1rem + 1.5vw, 2.6rem);
+  font-weight: 700;
+  color: var(--drama-amber);
+  line-height: 1;
+}
+
+@media (max-width: 720px) {
+  .stageArrow {
+    transform: rotate(90deg);
+  }
+}
+
+/* ─── PAIR / TRIPLE CARD STACKS ──────────────────────────────────────── */
+
+.pair {
+  position: relative;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.pair > * {
+  margin-inline: -1rem;
+}
+
+.triple {
+  position: relative;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.triple > * {
+  margin-inline: -1.25rem;
+}
+
+.sceneTactic {
+  font-family: var(--font-body);
+  font-size: var(--htp-size-body-sm);
+  font-style: italic;
+  line-height: var(--htp-lead-body);
+  color: var(--paper-ink-soft);
+  max-width: 62ch;
+}
+
+.phrasing {
+  font-family: var(--font-display);
+  font-style: normal;
+  font-weight: 700;
+  letter-spacing: 0.06em;
+  color: var(--paper-ink-accent);
+  white-space: nowrap;
+}
+
+/* ─── ASIDE ──────────────────────────────────────────────────────────── */
+
+.aside {
+  margin-top: clamp(1.5rem, 1rem + 1.5vw, 2.5rem);
+  padding: clamp(0.85rem, 0.5rem + 1vw, 1.2rem);
+  background:
+    linear-gradient(0deg,
+      color-mix(in oklab, var(--color-charcoal-1) 78%, transparent),
+      color-mix(in oklab, var(--color-charcoal-1) 70%, transparent)
+    );
+  border: 1px solid color-mix(in oklab, var(--color-ochre-9) 30%, transparent);
+  border-radius: 3px;
+  color: var(--color-cream-11);
+  display: flex;
+  flex-direction: column;
+  gap: 0.5rem;
+}
+
+.aside p {
+  font-family: var(--font-body);
+  font-size: var(--htp-size-body-sm);
+  line-height: var(--htp-lead-body);
+  color: var(--color-cream-11);
+}
+
+.aside strong { color: var(--color-cream-12); font-weight: 600; }
+.parenthetical { color: var(--color-cream-10); font-style: italic; }

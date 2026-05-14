@@ -1,0 +1,49 @@
+.marginalia {
+  position: absolute;
+  display: inline-block;
+  pointer-events: none;
+  opacity: 0.78;
+  user-select: none;
+}
+
+.pos-top-left      { top: 1rem;     left: 1rem; }
+.pos-top-right     { top: 1rem;     right: 1rem; }
+.pos-bottom-left   { bottom: 1rem;  left: 1rem; }
+.pos-bottom-right  { bottom: 1rem;  right: 1rem; }
+.pos-inline        { position: relative; opacity: 1; }
+
+/* ─── DATE STAMP STYLE ───────────────────────────────────────────────── */
+
+.date-stamp {
+  padding: 0.25rem 0.55rem;
+  font-family: var(--font-mono);
+  font-size: var(--htp-size-eyebrow);
+  font-weight: 700;
+  letter-spacing: var(--htp-track-mono);
+  text-transform: uppercase;
+  color: var(--stamp-red);
+  border: 2px solid currentColor;
+  border-radius: 2px;
+}
+
+/* ─── PAGE NUMBER STYLE ──────────────────────────────────────────────── */
+
+.page-num {
+  font-family: var(--font-mono);
+  font-size: var(--htp-size-eyebrow);
+  font-weight: 600;
+  letter-spacing: var(--htp-track-mono);
+  color: var(--paper-ink-muted);
+}
+
+/* ─── HANDWRITTEN STYLE ──────────────────────────────────────────────── */
+
+.handwritten {
+  font-family: var(--font-body);
+  font-size: var(--htp-size-body-sm);
+  font-style: italic;
+  font-weight: 500;
+  color: var(--stamp-blue);
+  /* Slight ink-bleed effect via text shadow */
+  text-shadow: 0 0 1px color-mix(in oklab, var(--stamp-blue) 30%, transparent);
+}

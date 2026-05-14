@@ -13,6 +13,7 @@ A spy-comedy card game — rethemed from [Exploding Kittens Party Pack](https://
 - [TODO.md](./TODO.md) — current work queue
 - [compound-engineering.local.md](./compound-engineering.local.md) — local CE notes
 - **The contract:** [PRODUCT-SPECIFICATION](./docs/PRODUCT-SPECIFICATION.md) (v1.0 LOCKED) · [RULES-REFERENCE](./docs/RULES-REFERENCE.md) · [SETUP](./docs/SETUP.md)
+- **Player-facing:** [HOW-TO-PLAY](./howtoplay.html) — *Operations Manual* (Vite entry at `src/client/howtoplay/`) — opens at `/howtoplay.html` in dev, `/howtoplay` in prod
 - **Operator docs:** [ARCHITECTURE](./docs/ARCHITECTURE.md) · [CONTRIBUTING](./CONTRIBUTING.md) · [DEPLOY](./docs/DEPLOY.md) (planned)
 - **Domain conventions** (read on demand): [motion](./docs/conventions/motion.md) · [engine](./docs/conventions/engine.md) · [server](./docs/conventions/server.md) · [client](./docs/conventions/client.md) · [dev-environment](./docs/conventions/dev-environment.md) · [assets](./docs/conventions/assets.md)
 - **Active plans (roadmaps):** [CSS foundation rebuild roadmap](./docs/plans/css-foundation-rebuild/roadmap.md) · [playtest harness roadmap](./docs/plans/playtest-harness/roadmap.md) · [desk redesign](./docs/plans/desk-redesign/PLAN.md)

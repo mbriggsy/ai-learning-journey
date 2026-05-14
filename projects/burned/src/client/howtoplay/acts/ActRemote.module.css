@@ -1,0 +1,121 @@
+.head {
+  display: flex;
+  flex-direction: column;
+  gap: 0.5rem;
+  margin-bottom: clamp(1.5rem, 1rem + 2vw, 2.5rem);
+}
+
+.title {
+  font-family: var(--font-display);
+  font-weight: 700;
+  line-height: var(--htp-lead-display);
+  color: var(--paper-ink);
+  display: flex;
+  flex-direction: column;
+  gap: 0.15em;
+}
+
+.titleKicker {
+  font-family: var(--font-mono);
+  font-weight: 600;
+  font-size: var(--htp-size-meta);
+  letter-spacing: var(--htp-track-eyebrow);
+  text-transform: uppercase;
+  color: var(--paper-ink-accent);
+}
+
+.titleMain {
+  font-size: var(--htp-size-display-2);
+  letter-spacing: 0.01em;
+}
+
+.lede {
+  font-family: var(--font-body);
+  font-size: var(--htp-size-body-lg);
+  font-style: italic;
+  color: var(--paper-ink);
+  line-height: var(--htp-lead-body);
+  max-width: 62ch;
+}
+
+.steps {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  display: flex;
+  flex-direction: column;
+  gap: clamp(1rem, 0.5rem + 1.5vw, 1.75rem);
+}
+
+.steps li {
+  display: grid;
+  grid-template-columns: clamp(2rem, 1.5rem + 1vw, 2.8rem) 1fr;
+  gap: clamp(0.75rem, 0.5rem + 0.6vw, 1rem);
+  align-items: baseline;
+  padding-block: 0.5rem;
+}
+
+.steps li:not(:first-child) {
+  border-top: 1px dashed var(--paper-rule);
+  padding-top: clamp(0.85rem, 0.5rem + 1vw, 1.25rem);
+}
+
+.stepNum {
+  font-family: var(--font-display);
+  font-weight: 700;
+  font-size: clamp(1.4rem, 1rem + 0.8vw, 1.9rem);
+  color: var(--paper-ink-accent);
+  letter-spacing: 0.02em;
+  text-transform: lowercase;
+  line-height: 1;
+}
+
+.steps h3 {
+  font-family: var(--font-display);
+  font-size: clamp(1.1rem, 0.95rem + 0.4vw, 1.4rem);
+  font-weight: 700;
+  letter-spacing: 0.01em;
+  color: var(--paper-ink);
+  margin-bottom: 0.35rem;
+  line-height: 1.2;
+}
+
+.steps p {
+  font-family: var(--font-body);
+  font-size: var(--htp-size-body);
+  line-height: var(--htp-lead-body);
+  color: var(--paper-ink);
+  max-width: 56ch;
+}
+
+.steps em { font-style: italic; color: var(--paper-ink-accent); font-weight: 500; }
+
+.mono {
+  font-family: var(--font-mono);
+  font-weight: 600;
+  font-size: 0.92em;
+  letter-spacing: var(--htp-track-mono);
+  color: var(--paper-ink-accent);
+}
+
+.aside {
+  margin-top: clamp(1.5rem, 1rem + 1.5vw, 2.5rem);
+  padding: clamp(0.85rem, 0.5rem + 1vw, 1.25rem);
+  background:
+    linear-gradient(0deg,
+      color-mix(in oklab, var(--color-charcoal-1) 78%, transparent),
+      color-mix(in oklab, var(--color-charcoal-1) 70%, transparent)
+    );
+  border: 1px solid color-mix(in oklab, var(--color-ochre-9) 30%, transparent);
+  border-radius: 3px;
+  display: flex;
+  flex-direction: column;
+  gap: 0.4rem;
+}
+
+.aside p {
+  font-family: var(--font-body);
+  font-size: var(--htp-size-body-sm);
+  line-height: var(--htp-lead-body);
+  color: var(--color-cream-11);
+}

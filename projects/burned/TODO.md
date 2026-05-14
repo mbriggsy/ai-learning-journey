@@ -576,25 +576,59 @@ joke.
 
 ---
 
-## 7. HOW-TO-PLAY draft (queued — needs a focused session)
+## 7. HOW-TO-PLAY — DONE 2026-05-13
 
-Spec §8.3 contracts a polished how-to-play doc covering:
+Shipped as `howtoplay.html` — *"Operations Manual"* dossier-style web asset
+at a new Vite entry `src/client/howtoplay/`. 9-act long-scroll document
+themed as a classified Pendleton Agency case file (47-B). Spec §8.3 all
+four checkboxes flipped to ✅.
 
-- All 17 card types (definitions + worked examples)
-- Edge cases (favor empty-hand, triple-steal naming, attack stacking, nope chains, intel briefing + shuffle ordering)
-- Remote-play instructions (how non-local players join + share screen)
-- **Archer-quality writing** — dry-spy comedy register, Phrasing! cadence per spec §3.5
+Composition (act by act):
 
-Why deferred: this is real product writing that needs Briggsy's voice. A
-late-session skeleton-write produces tone-deficient slop; the right path
-is a focused session.
+- **Act 0 — Cover:** Pendleton crest seal (Imagen 4) + Saul Bass title
+  plate (Imagen 4) + CLASSIFIED slam stamp + manila paper + classification
+  banner top/bottom + file tab + originator/clearance/reading-time
+  metadata + signature line + handwritten marginalia.
+- **Act I — The Mission:** M's three-sentence brief with Roman-numeral
+  beats + first Phrasing! beat ("Try to look like you've done this before.
+  …Phrasing.").
+- **Act II — The Roster:** Six operative dossier cards (Dash, Vera, Sable,
+  Janet, Neal, Agent X) using existing roster portraits. Photo frame +
+  tape + threat-dot + last-seen + Archer-tone blurb. Otto footnote.
+- **Act III — The Loop:** Three-beat staged sequence — fanned hand, play-
+  then-draw arrow, BURNED card reveal with `burn-fire` glow + Cover Blown
+  stamp. The cinematic centerpiece.
+- **Act IV — The Arsenal:** 17 cards in 6 mechanical groups (Coercion,
+  Intelligence, Cover Ops, Defense, Survival, The Operatives) — each card
+  art + classification stamp + rules + tactic line.
+- **Act V — Special Operations (combos):** Pair-steal + triple-name-steal
+  scenes with card stacks + arrow + outcome.
+- **Act VI — The Intercept Chain:** 4-step chain visualization with depth
+  numbers, left-border colors (red cancelled / green proceeds), per-step
+  outcome stamps. Plus a 3-bullet summary box.
+- **Act VII — Remote Briefing:** 3-step host-table / share-room-code /
+  share-your-face guidance + lag advisory.
+- **Act VIII — Sign-off:** M's closing with final Phrasing! beat + CASE
+  CLOSED stamp + fair-use disclaimer + bottom classification banner.
+- **CTA plaque:** "You've Been Briefed." brass-plaque component routes
+  back to `/`.
 
-When picking it up:
+Tech notes:
 
-- File at `docs/HOW-TO-PLAY.md`.
-- Source-of-truth for card mechanics is `docs/RULES-REFERENCE.md` — copy nothing verbatim, but every claim must check against that doc.
-- The 5 operatives + Otto + Agent X are introduced in spec §1 with the Archer mapping; how-to-play can lean on those names in examples.
-- Phrasing! beats land naturally in flavor copy and intro framing — see spec §3.5 for the cadence contract.
-- Acceptance test (spec §8.3): "first-time player can read this and play correctly without a host explanation."
-
-When the doc lands, check off spec §8.3 and update README's Project Map.
+- New Vite entry added at `vite.config.ts` `rolldownOptions.input.howtoplay`.
+- Bundle: `howtoplay-*.js` 95 KB (33 KB gz) + `howtoplay-*.css` 62 KB
+  (10 KB gz) + GSAP split chunk 69 KB (27 KB gz). NOT under the 100 KB
+  phone ceiling — separate entry, separate chunk, loaded only when reader
+  hits `/howtoplay.html`.
+- Consumes existing token system: `primitives.css` (Dreamland scales),
+  `semantic.css` (font families), with a page-scoped `dossier.css` layer
+  adding paper/stamp/desk/typography tokens.
+- Scroll-reveal motion via GSAP + ScrollTrigger (registered once, killed
+  on unmount). Reduced-motion path sets opacity:1 immediately.
+- Reading-progress indicator at the right edge (hidden under 720px).
+- Imagen 4 assets at `public/assets/howtoplay/`: `pendleton-crest.png`,
+  `operations-manual-plate.png`. Script: `scripts/generate-htp-assets.ts`
+  (set `HTP_ASSET=<filename>` to regenerate one; `HTP_ASSET=all` for the
+  full batch including `desk-scene` which is generated but unused).
+- All 17 rules-accurate per `docs/RULES-REFERENCE.md`. No 5-Different
+  combo (correctly excluded per Party Pack edition).

@@ -1,0 +1,135 @@
+.card {
+  --card-w-sm: clamp(72px, 60px + 4vw, 110px);
+  --card-w-md: clamp(96px, 80px + 6vw, 150px);
+  --card-w-lg: clamp(140px, 100px + 10vw, 240px);
+
+  position: relative;
+  flex-shrink: 0;
+  display: flex;
+  flex-direction: column;
+  border-radius: clamp(4px, 0.4vw, 8px);
+  background: var(--color-charcoal-2);
+  border: 1px solid color-mix(in oklab, var(--color-ochre-9) 35%, transparent);
+  overflow: hidden;
+  box-shadow:
+    0 1px 0 color-mix(in oklab, var(--color-cream-12) 12%, transparent) inset,
+    0 6px 18px -6px color-mix(in oklab, var(--color-charcoal-1) 65%, transparent),
+    0 2px 4px color-mix(in oklab, var(--color-charcoal-1) 40%, transparent);
+  transform-origin: center bottom;
+  transition: transform var(--motion-duration-base) var(--motion-ease-decelerate);
+}
+
+.size-sm { width: var(--card-w-sm); }
+.size-md { width: var(--card-w-md); }
+.size-lg { width: var(--card-w-lg); }
+
+.art {
+  display: block;
+  width: 100%;
+  aspect-ratio: 1 / 1;
+  object-fit: cover;
+}
+
+.label {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 0.4em 0.45em;
+  font-family: var(--font-display);
+  font-size: clamp(0.55rem, 0.5rem + 0.25vw, 0.85rem);
+  font-weight: 700;
+  letter-spacing: 0.04em;
+  text-transform: uppercase;
+  text-align: center;
+  color: var(--color-cream-12);
+  background:
+    linear-gradient(180deg,
+      color-mix(in oklab, var(--color-charcoal-1) 60%, transparent) 0%,
+      var(--color-charcoal-2) 100%);
+  border-top: 1px solid color-mix(in oklab, var(--color-ochre-9) 25%, transparent);
+  line-height: 1.1;
+}
+
+/* ─── FACE-DOWN BACK ─────────────────────────────────────────────────── */
+
+.faceDown {
+  border-color: color-mix(in oklab, var(--color-ochre-9) 60%, transparent);
+}
+
+.back {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 100%;
+  aspect-ratio: 5 / 7;
+  background:
+    radial-gradient(circle at 50% 50%,
+      var(--color-cordovan-5) 0%,
+      var(--color-cordovan-3) 100%
+    ),
+    var(--color-cordovan-4);
+  background-blend-mode: normal;
+  position: relative;
+}
+
+.back::before {
+  /* Inner ring */
+  content: '';
+  position: absolute;
+  inset: 8%;
+  border: 2px solid var(--color-ochre-8);
+  border-radius: clamp(2px, 0.4vw, 6px);
+  opacity: 0.7;
+}
+
+.back::after {
+  /* Inner ring 2 */
+  content: '';
+  position: absolute;
+  inset: 14%;
+  border: 1px solid var(--color-ochre-9);
+  border-radius: clamp(2px, 0.4vw, 4px);
+  opacity: 0.5;
+}
+
+.backMark {
+  position: relative;
+  font-family: var(--font-display);
+  font-weight: 700;
+  font-size: clamp(1.8rem, 1rem + 2vw, 3.4rem);
+  letter-spacing: 0;
+  color: var(--color-ochre-10);
+  text-shadow: 0 1px 2px color-mix(in oklab, var(--color-charcoal-1) 60%, transparent);
+}
+
+/* ─── TREATMENTS ─────────────────────────────────────────────────────── */
+
+.tx-dim {
+  filter: brightness(0.55) saturate(0.7);
+}
+
+.tx-glow {
+  box-shadow:
+    0 0 0 1px var(--drama-amber) inset,
+    0 0 12px 0 color-mix(in oklab, var(--drama-amber) 35%, transparent),
+    0 6px 18px -6px color-mix(in oklab, var(--color-charcoal-1) 65%, transparent),
+    0 2px 4px color-mix(in oklab, var(--color-charcoal-1) 40%, transparent);
+}
+
+.tx-burn {
+  box-shadow:
+    0 0 0 2px var(--burn-fire) inset,
+    0 0 24px 4px color-mix(in oklab, var(--burn-fire) 45%, transparent),
+    0 0 60px 8px color-mix(in oklab, var(--burn-glow) 30%, transparent),
+    0 8px 24px -6px color-mix(in oklab, var(--color-charcoal-1) 70%, transparent);
+  border-color: var(--burn-fire);
+}
+
+.tx-burn .label {
+  background:
+    linear-gradient(180deg,
+      color-mix(in oklab, var(--burn-fire) 80%, var(--color-charcoal-1) 20%) 0%,
+      color-mix(in oklab, var(--burn-fire) 50%, var(--color-charcoal-1) 50%) 100%);
+  color: var(--color-cream-12);
+  border-top-color: var(--burn-glow);
+}

@@ -1,0 +1,115 @@
+/*
+ * BURNED — Dossier token layer
+ *
+ * Tokens scoped to the how-to-play "Operations Manual" page. Consumes the game's
+ * primitives (teal/ochre/cream/charcoal/cordovan) so visual continuity with the
+ * game is enforced at the token level, not by eyeball matching.
+ *
+ * Reads: src/client/shared/tokens/primitives.css (color scales, motion, spacing).
+ * Reads: src/client/shared/tokens/semantic.css (font families).
+ *
+ * Layer ordering: @layer components — sits above primitives/semantics, below
+ * page-level overrides. Matches the cascade declared in primitives.css.
+ */
+
+@layer components {
+  :root {
+    /* ─── PAPER ─────────────────────────────────────────────────────── */
+    /* The dossier page itself: warm manila tone, slightly aged. */
+    --paper-bg:          color-mix(in oklab, var(--color-cream-11) 92%, var(--color-ochre-9) 8%);
+    --paper-bg-lit:      color-mix(in oklab, var(--color-cream-12) 90%, var(--color-ochre-10) 10%);
+    --paper-bg-edge:     color-mix(in oklab, var(--color-cream-9) 80%, var(--color-ochre-7) 20%);
+    --paper-rule:        color-mix(in oklab, var(--color-charcoal-6) 65%, transparent);
+    --paper-ink:         var(--color-charcoal-2);
+    --paper-ink-soft:    var(--color-charcoal-4);
+    --paper-ink-muted:   var(--color-charcoal-7);
+    --paper-ink-accent:  var(--color-ochre-7);
+
+    /* Dossier shadow stack — paper sitting on the desk. */
+    --paper-shadow:
+      0 1px 0 color-mix(in oklab, var(--color-cream-12) 30%, transparent) inset,
+      0 -1px 2px color-mix(in oklab, var(--color-charcoal-1) 10%, transparent) inset,
+      0 2px 0 color-mix(in oklab, var(--color-charcoal-1) 25%, transparent),
+      0 12px 28px -8px color-mix(in oklab, var(--color-charcoal-1) 55%, transparent),
+      0 32px 60px -20px color-mix(in oklab, var(--color-charcoal-1) 50%, transparent);
+
+    --paper-shadow-light:
+      0 1px 0 color-mix(in oklab, var(--color-cream-12) 22%, transparent) inset,
+      0 6px 14px -4px color-mix(in oklab, var(--color-charcoal-1) 40%, transparent),
+      0 16px 32px -10px color-mix(in oklab, var(--color-charcoal-1) 35%, transparent);
+
+    /* ─── DESK (the background under everything) ─────────────────────── */
+    --desk-bg:           var(--color-ochre-3);
+    --desk-edge:         var(--color-ochre-2);
+    --desk-pin:          color-mix(in oklab, var(--color-ochre-1) 60%, var(--color-charcoal-1) 40%);
+
+    /* ─── STAMPS & MARKS ─────────────────────────────────────────────── */
+    --stamp-red:         #b8252e;            /* hot, like ink-stamp red */
+    --stamp-red-dark:    #882028;
+    --stamp-black:       color-mix(in oklab, var(--color-charcoal-1) 95%, var(--color-ochre-3) 5%);
+    --stamp-blue:        #1b3b6a;            /* navy stamp ink */
+    --stamp-amber:       var(--color-ochre-8);
+
+    /* Redaction — pure charcoal, but with a slight ink-bleed tint */
+    --redact-fill:       var(--color-charcoal-1);
+    --redact-bleed:      color-mix(in oklab, var(--color-charcoal-1) 80%, var(--color-charcoal-3) 20%);
+
+    /* ─── HIGH-DRAMA ACCENTS ─────────────────────────────────────────── */
+    --burn-fire:         var(--color-accent-burned);   /* the BURNED reveal */
+    --burn-glow:         color-mix(in oklab, var(--color-accent-burned) 60%, var(--color-ochre-10) 40%);
+    --intercept-green:   var(--color-emerald-9);
+    --operative-teal:    var(--color-teal-9);
+    --drama-amber:       var(--color-accent-drama);
+
+    /* ─── TYPOGRAPHY ─────────────────────────────────────────────────── */
+    /* Font families inherit from semantic.css — display/body/mono.
+       Define size scale specifically tuned for this page. */
+    --htp-size-stamp:        clamp(1.4rem, 1.0rem + 2.0vw, 2.6rem);   /* CLASSIFIED-style stamps */
+    --htp-size-display-1:    clamp(2.6rem, 1.6rem + 5.5vw, 6.2rem);   /* hero title BURNED */
+    --htp-size-display-2:    clamp(1.6rem, 1.1rem + 2.8vw, 3.4rem);   /* act headers */
+    --htp-size-display-3:    clamp(1.05rem, 0.85rem + 1.0vw, 1.6rem); /* subheads */
+    --htp-size-body-lg:      clamp(1.05rem, 0.95rem + 0.5vw, 1.25rem);
+    --htp-size-body:         clamp(0.95rem, 0.85rem + 0.35vw, 1.05rem);
+    --htp-size-body-sm:      clamp(0.85rem, 0.78rem + 0.25vw, 0.95rem);
+    --htp-size-meta:         clamp(0.7rem, 0.65rem + 0.2vw, 0.82rem); /* file metadata, case numbers */
+    --htp-size-eyebrow:      clamp(0.62rem, 0.58rem + 0.15vw, 0.72rem); /* small mono labels */
+
+    /* Tracking — Archer / Bass titles run wide; mono runs tight. */
+    --htp-track-stamp:       0.14em;
+    --htp-track-display:     0.02em;
+    --htp-track-eyebrow:     0.22em;
+    --htp-track-mono:        0.02em;
+
+    /* Leading */
+    --htp-lead-tight:        1.05;
+    --htp-lead-display:      1.15;
+    --htp-lead-body:         1.62;
+
+    /* ─── LAYOUT ─────────────────────────────────────────────────────── */
+    --htp-page-max:          min(960px, 92vw);
+    --htp-page-pad-x:        clamp(1rem, 0.5rem + 3vw, 3.5rem);
+    --htp-page-pad-y:        clamp(2rem, 1rem + 4vw, 5rem);
+    --htp-act-gap:           clamp(3rem, 2rem + 5vw, 7rem);
+    --htp-stack-gap:         clamp(1rem, 0.6rem + 1.2vw, 1.6rem);
+
+    /* ─── MOTION (consumes game tokens; no new durations) ─────────────── */
+    --htp-ease-stamp:        cubic-bezier(0.6, -0.4, 0.4, 1.4);  /* overshoot, like a stamp slamming */
+    --htp-ease-page:         var(--motion-ease-decelerate);
+    --htp-ease-redact:       var(--motion-ease-emphasized);
+
+    /* Page-specific decorative durations. The how-to-play page is a static
+       artifact — these are scoped to this layer so the game's stricter
+       motion-token discipline doesn't have to absorb them. */
+    --htp-duration-stamp-slam: 720ms;
+    --htp-duration-scroll-cue: 1800ms;
+  }
+}
+
+/* ─── REDUCED MOTION — match the game's dual-family pattern ────────────
+   Decorative motion off; structural motion still happens (instant). */
+@media (prefers-reduced-motion: reduce) {
+  :root {
+    --htp-ease-stamp: linear;
+    --htp-ease-page:  linear;
+  }
+}

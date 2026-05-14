@@ -1,0 +1,154 @@
+.head {
+  display: flex;
+  flex-direction: column;
+  gap: 0.5rem;
+  margin-bottom: clamp(1.5rem, 1rem + 2vw, 2.5rem);
+}
+
+.title {
+  font-family: var(--font-display);
+  font-weight: 700;
+  line-height: var(--htp-lead-display);
+  color: var(--paper-ink);
+  display: flex;
+  flex-direction: column;
+  gap: 0.15em;
+}
+
+.titleKicker {
+  font-family: var(--font-mono);
+  font-weight: 600;
+  font-size: var(--htp-size-meta);
+  letter-spacing: var(--htp-track-eyebrow);
+  text-transform: uppercase;
+  color: var(--paper-ink-accent);
+}
+
+.titleMain {
+  font-size: var(--htp-size-display-2);
+  letter-spacing: 0.01em;
+}
+
+.lede {
+  font-family: var(--font-body);
+  font-size: var(--htp-size-body-lg);
+  font-style: italic;
+  color: var(--paper-ink);
+  line-height: var(--htp-lead-body);
+  max-width: 64ch;
+}
+
+.aside {
+  font-style: normal;
+  color: var(--paper-ink-soft);
+  font-size: 0.92em;
+}
+
+/* ─── GROUPS ─────────────────────────────────────────────────────────── */
+
+.group {
+  margin-top: clamp(1.75rem, 1rem + 2.5vw, 3rem);
+  padding-top: clamp(1.5rem, 1rem + 1.5vw, 2rem);
+  border-top: 1px dashed var(--paper-rule);
+}
+
+.group:first-of-type {
+  margin-top: 0;
+  padding-top: 0;
+  border-top: 0;
+}
+
+.groupHead {
+  display: flex;
+  flex-direction: column;
+  gap: 0.65rem;
+  margin-bottom: clamp(1rem, 0.5rem + 1.5vw, 1.5rem);
+}
+
+.groupTitle {
+  display: inline-flex;
+  margin: 0;
+}
+
+.groupLede {
+  font-family: var(--font-body);
+  font-size: var(--htp-size-body);
+  line-height: var(--htp-lead-body);
+  font-style: italic;
+  color: var(--paper-ink-soft);
+  max-width: 62ch;
+}
+
+/* ─── CARD GRID ──────────────────────────────────────────────────────── */
+
+.cardGrid {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  display: grid;
+  grid-template-columns: 1fr;
+  gap: clamp(1rem, 0.5rem + 1.5vw, 1.5rem);
+}
+
+@media (min-width: 720px) {
+  .cardGrid {
+    grid-template-columns: 1fr 1fr;
+  }
+}
+
+@media (min-width: 1100px) {
+  .cardGrid {
+    grid-template-columns: 1fr 1fr 1fr;
+  }
+}
+
+.cardEntry {
+  display: grid;
+  grid-template-columns: auto 1fr;
+  gap: clamp(0.75rem, 0.5rem + 1vw, 1.25rem);
+  align-items: start;
+  padding: clamp(0.75rem, 0.5rem + 0.6vw, 1rem);
+  background: color-mix(in oklab, var(--paper-bg-lit) 96%, var(--color-ochre-7) 4%);
+  border: 1px solid color-mix(in oklab, var(--color-ochre-9) 18%, transparent);
+  border-radius: 3px;
+  box-shadow:
+    0 1px 0 color-mix(in oklab, var(--color-cream-12) 20%, transparent) inset,
+    0 2px 6px -2px color-mix(in oklab, var(--color-charcoal-1) 35%, transparent);
+}
+
+.cardArt {
+  display: flex;
+  align-items: flex-start;
+}
+
+.cardCopy {
+  display: flex;
+  flex-direction: column;
+  gap: 0.4rem;
+}
+
+.cardClass {
+  font-family: var(--font-mono);
+  font-size: var(--htp-size-eyebrow);
+  font-weight: 600;
+  letter-spacing: var(--htp-track-eyebrow);
+  text-transform: uppercase;
+  color: var(--paper-ink-accent);
+}
+
+.cardRules {
+  font-family: var(--font-body);
+  font-size: var(--htp-size-body-sm);
+  line-height: var(--htp-lead-body);
+  color: var(--paper-ink);
+}
+
+.cardTactic {
+  font-family: var(--font-body);
+  font-size: var(--htp-size-body-sm);
+  font-style: italic;
+  line-height: var(--htp-lead-body);
+  color: var(--paper-ink-soft);
+  padding-top: 0.35rem;
+  border-top: 1px dashed var(--paper-rule);
+}

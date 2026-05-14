@@ -1,0 +1,213 @@
+.cover {
+  min-height: calc(100svh - var(--htp-page-pad-y) * 2);
+  display: flex;
+  align-items: stretch;
+}
+
+.folder {
+  flex: 1;
+  /* min-width: 0 lets the flex child shrink below content size — without it,
+     wide children (the classification banner) grow the page past viewport. */
+  min-width: 0;
+  display: flex;
+  flex-direction: column;
+  /* Ensure absolutely-positioned marginalia + file tab anchor correctly */
+  position: relative;
+  overflow: visible;
+}
+
+.header {
+  margin-bottom: clamp(1.5rem, 0.5rem + 3vw, 3rem);
+}
+
+.hero {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: clamp(0.75rem, 0.5rem + 1vw, 1.5rem);
+  text-align: center;
+  position: relative;
+  padding-block: clamp(1.5rem, 1rem + 2vw, 3.5rem);
+}
+
+/* The big CLASSIFIED stamp slammed across the upper-right corner of the page.
+   Positioned to overlap the edge of the dossier — like the original physical stamp
+   was slammed at an angle and the ink ran past the paper edge. */
+.heroStamp {
+  position: absolute;
+  top: -0.5rem;
+  right: -1rem;
+  pointer-events: none;
+  z-index: 3;
+}
+
+@media (max-width: 640px) {
+  .heroStamp {
+    position: relative;
+    top: 0;
+    right: 0;
+    margin-bottom: 0.5rem;
+  }
+}
+
+/* Smaller secondary stamp anchored lower-left */
+.heroStampSecondary {
+  position: absolute;
+  bottom: -0.5rem;
+  left: -0.5rem;
+  pointer-events: none;
+  z-index: 3;
+}
+
+@media (max-width: 640px) {
+  .heroStampSecondary {
+    position: relative;
+    bottom: 0;
+    left: 0;
+    margin-top: 0.75rem;
+  }
+}
+
+.title {
+  margin-top: clamp(0.5rem, 0.25rem + 1vw, 1.25rem);
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+}
+
+.titlePlate {
+  display: block;
+  width: clamp(280px, 50vw, 540px);
+  height: auto;
+  /* Same drop-shadow + multiply blend as the crest — sits ON the paper, not above it */
+  mix-blend-mode: multiply;
+  filter:
+    drop-shadow(0 1px 0 color-mix(in oklab, var(--color-cream-12) 35%, transparent))
+    drop-shadow(0 2px 6px color-mix(in oklab, var(--color-charcoal-1) 30%, transparent));
+}
+
+/* ─── FOOTER METADATA TABLE ─────────────────────────────────────────── */
+
+.footer {
+  margin-top: auto;
+  padding-top: clamp(2rem, 1rem + 3vw, 3rem);
+  border-top: 1px dashed var(--paper-rule);
+}
+
+.meta {
+  display: grid;
+  grid-template-columns: 1fr;
+  gap: 0.75rem 2rem;
+  font-family: var(--font-mono);
+  font-size: var(--htp-size-meta);
+  text-transform: uppercase;
+  letter-spacing: var(--htp-track-mono);
+}
+
+@media (min-width: 560px) {
+  .meta {
+    grid-template-columns: 1fr 1fr;
+  }
+}
+
+.meta > div {
+  display: flex;
+  flex-direction: column;
+  gap: 0.2em;
+}
+
+.meta dt {
+  font-weight: 600;
+  font-size: 0.85em;
+  color: var(--paper-ink-muted);
+  letter-spacing: var(--htp-track-eyebrow);
+}
+
+.meta dd {
+  font-weight: 500;
+  color: var(--paper-ink);
+}
+
+/* ─── SIGNATURE LINE ────────────────────────────────────────────────── */
+
+.signoff {
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
+  margin-top: clamp(1.5rem, 0.75rem + 2vw, 2.5rem);
+  font-family: var(--font-mono);
+  font-size: var(--htp-size-eyebrow);
+  font-weight: 600;
+  letter-spacing: var(--htp-track-eyebrow);
+  text-transform: uppercase;
+  color: var(--paper-ink-soft);
+}
+
+.signLine {
+  flex: 1;
+  height: 1px;
+  background: linear-gradient(90deg, var(--paper-rule), color-mix(in oklab, var(--paper-rule) 30%, transparent));
+}
+
+.signLine:last-child {
+  background: linear-gradient(90deg, color-mix(in oklab, var(--paper-rule) 30%, transparent), var(--paper-rule));
+}
+
+.signText {
+  white-space: nowrap;
+}
+
+.disclaimer {
+  margin-top: clamp(1rem, 0.5rem + 1.5vw, 1.5rem);
+  font-family: var(--font-body);
+  font-size: var(--htp-size-body-sm);
+  font-style: italic;
+  color: var(--paper-ink-soft);
+  text-align: center;
+}
+
+.parenthetical {
+  font-style: normal;
+  color: var(--paper-ink-muted);
+}
+
+/* ─── SCROLL CUE ────────────────────────────────────────────────────── */
+
+.scrollCue {
+  position: absolute;
+  bottom: clamp(-2.5rem, -2rem - 1vw, -1.5rem);
+  left: 50%;
+  transform: translateX(-50%);
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 0.5rem;
+  font-family: var(--font-mono);
+  font-size: var(--htp-size-eyebrow);
+  font-weight: 600;
+  letter-spacing: var(--htp-track-eyebrow);
+  text-transform: uppercase;
+  color: var(--color-cream-11);
+  opacity: 0.75;
+}
+
+.scrollArrow {
+  display: block;
+  width: 10px;
+  height: 10px;
+  border-right: 2px solid currentColor;
+  border-bottom: 2px solid currentColor;
+  transform: rotate(45deg);
+  animation: scroll-cue-bounce var(--htp-duration-scroll-cue) var(--motion-ease-base) infinite;
+}
+
+@keyframes scroll-cue-bounce {
+  0%, 100% { transform: rotate(45deg) translate(0, 0); }
+  50% { transform: rotate(45deg) translate(2px, 2px); }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .scrollArrow { animation: none; }
+}

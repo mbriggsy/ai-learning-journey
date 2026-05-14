@@ -1,0 +1,35 @@
+import { ActCover } from './acts/ActCover'
+import { ActMission } from './acts/ActMission'
+import { ActRoster } from './acts/ActRoster'
+import { ActLoop } from './acts/ActLoop'
+import { ActArsenal } from './acts/ActArsenal'
+import { ActCombos } from './acts/ActCombos'
+import { ActIntercept } from './acts/ActIntercept'
+import { ActRemote } from './acts/ActRemote'
+import { ActSignoff } from './acts/ActSignoff'
+import { useScrollReveal } from './hooks/useScrollReveal'
+import { ReadingProgress } from './components/ReadingProgress'
+import { PlayCTA } from './components/PlayCTA'
+
+export function App() {
+  useScrollReveal()
+
+  return (
+    <main className="desk">
+      <a href="/" className="back-link" aria-label="Back to game">Back</a>
+      <ReadingProgress />
+      <article className="page" aria-labelledby="dossier-title">
+        <ActCover />
+        <ActMission />
+        <ActRoster />
+        <ActLoop />
+        <ActArsenal />
+        <ActCombos />
+        <ActIntercept />
+        <ActRemote />
+        <ActSignoff />
+        <PlayCTA />
+      </article>
+    </main>
+  )
+}

@@ -1,0 +1,49 @@
+.crest {
+  display: block;
+  color: var(--paper-ink-accent);
+}
+
+.image {
+  border-radius: 50%;
+  /* Tonal blend so the seal looks like ink stamped INTO the paper, not pasted ON.
+     `multiply` mixes the seal with the paper underneath; the soft drop shadow
+     lifts it slightly so the stamp reads. */
+  mix-blend-mode: multiply;
+  filter: drop-shadow(0 1px 0 color-mix(in oklab, var(--color-cream-12) 40%, transparent))
+          drop-shadow(0 2px 6px color-mix(in oklab, var(--color-charcoal-1) 25%, transparent));
+}
+
+.size-sm { width: 64px; height: 64px; }
+.size-md { width: 128px; height: 128px; }
+.size-lg { width: clamp(160px, 12rem + 6vw, 280px); height: clamp(160px, 12rem + 6vw, 280px); }
+
+.outerText {
+  font-family: var(--font-mono);
+  font-size: 8.5px;
+  font-weight: 700;
+  letter-spacing: 0.18em;
+  fill: currentColor;
+  text-transform: uppercase;
+}
+
+.innerText {
+  font-family: var(--font-mono);
+  font-size: 6.5px;
+  font-weight: 600;
+  letter-spacing: 0.18em;
+  fill: currentColor;
+  text-transform: uppercase;
+  opacity: 0.85;
+}
+
+.centerText {
+  font-family: var(--font-display);
+  font-size: 14px;
+  font-weight: 700;
+  fill: var(--paper-bg-lit);
+  letter-spacing: 0;
+}
+
+.crossed {
+  opacity: 0.85;
+}

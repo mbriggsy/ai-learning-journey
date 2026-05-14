@@ -16,23 +16,22 @@ ember-breath (#037), HIT-variant catalog hardening (#021), and a
 three-beat Phrasing! batch on the COMMS feed + observer-favor toast
 (see §6).
 
-Current state (verified 2026-05-13 end-of-session):
+Current state (verified 2026-05-14 end-of-session):
 
-- Tests: **1407 pass** | 6 expected fail (68/68 files green). +9 vs
-  2026-05-11 close: `dev-take-card` parser + apply tests (3 parser
-  cases — well-formed, missing playerName, extra-keys rejection; 6
-  apply cases — happy-path with takenCount, idempotent on empty hand,
-  case-insensitive resolve, PLAYER_NOT_FOUND, NOT_PLAYING, immutability).
+- Tests: **1407 pass** | 6 expected fail (68/68 files green). Unchanged
+  from 2026-05-13 — today's work is HOW-TO-PLAY only (no engine /
+  protocol / phone-bundle surface touched).
 - Build: clean (`pnpm build`).
-- Phone initial JS: **~99.17 KB gzipped** (player 19.00 + shared 65.71
-  + VisualElement 14.46). Unchanged from 2026-05-11 — this session's
-  work landed entirely in server code + scripts (no phone-bundle
-  surface touched).
-- **0.83 KB headroom** under the 100 KB ceiling.
-- Board chunk: 15.00 KB gz (+0.02 KB for the `.nopeSlot` wrapper +
-  CSS rule; board-side only, doesn't touch phone budget).
-- Protocol still v6 (no shape changes this session — pure code-side
-  fixes).
+- Phone initial JS: **~99.17 KB gzipped** (player 19.04 + shared
+  chunks unchanged). No movement — today's work landed in the
+  HOW-TO-PLAY entry only.
+- **~0.8 KB headroom** under the 100 KB ceiling.
+- HOW-TO-PLAY bundle: `howtoplay-*.js` 98.91 KB (33.85 KB gz, was
+  95.24/33.08) + `howtoplay-*.css` 65.83 KB (10.68 KB gz, was
+  62.29/10.43) + shared GSAP chunk 69.42 KB (27.21 KB gz). Growth =
+  new Act VI · Turn Inheritance.
+- Protocol still v6 (no shape changes — HOW-TO-PLAY is client-side
+  static).
 - Triage state, run `2026-05-08-2022-5p`: **0 OPEN · 0 BLOCKED** ·
   29 RESOLVED · 7 LOW-SIGNAL · 2 KNOWN-PRODUCT · 1 DUPLICATE. P1 6 · P2 33.
 
@@ -522,14 +521,53 @@ Active warnings only. Older landmines have moved to `docs/insights/` and
   matches the in-game `MinimalCard.module.css` aspect-ratio: 5/7 +
   contain pattern (line 33, 81-85). Do NOT force 1:1 with cover —
   that crops operative heads.
-- **HOW-TO-PLAY: card label corners + amber color** (commit `9ef77e7d`).
-  The card label uses `border-bottom-left/right-radius: inherit` from
-  the card frame so its bottom corners curve cleanly with the rounded
-  card, instead of relying on `overflow: hidden` to mask square
-  corners (which leaves subpixel slivers). Label `border-top` uses the
-  SAME `color-mix(in oklab, var(--color-ochre-9) 35%, transparent)` as
-  the card's outer border — different opacity reads as misaligned
-  even when geometry is correct.
+- **HOW-TO-PLAY: card label corners + amber color** (commit `9ef77e7d`,
+  refined `f87dc09e`). The card label's bottom-corner radius is now
+  `var(--card-radius-inner)` = `calc(--card-radius - --card-border-w)`
+  for concentric curves with the visible inner edge. Label `border-top`
+  uses the SAME `color-mix(in oklab, var(--color-ochre-9) 35%,
+  transparent)` as the card's outer border — different opacity reads
+  as misaligned even when geometry is correct.
+- **HOW-TO-PLAY: card treatments use REAL border-width, not inset
+  box-shadow** (commit `f87dc09e`). `.tx-glow` overrides
+  `--card-border-w: 2px` + `border-color: var(--drama-amber)`.
+  `.tx-burn` overrides `--card-border-w: 3px` (border-color already
+  burn-fire). DO NOT add `box-shadow: ... inset` ring layers back —
+  inset shadows paint BELOW content per spec, so the label's solid
+  background overpaints them at the label's vertical extent, making
+  the colored ring visibly shrink AT the label (reads as "label is
+  wider than the rest of the card"). Real borders shrink the content
+  area so the label fits inside the ring automatically; the existing
+  `--card-radius-inner` calc resolves concentric corners.
+- **HOW-TO-PLAY: card-width tokens live on `.desk`, NOT on `.card`**
+  (commit `f87dc09e`). `--card-w-sm/md/lg` are defined in
+  `styles.css` on `.desk` as defaults. Defining them on `.card` (the
+  prior location) blocks inheritance — outer scopes (e.g. ActLoop's
+  `.handFan` portrait override) couldn't override the local
+  declaration. If you ever need a per-context card size, set the
+  token on a parent of `.card`, NOT on `.card` itself.
+- **HOW-TO-PLAY: hand-fan portrait card bump scoped to `.handFan`**
+  (commit `f87dc09e`, ActLoop.module.css). On portrait orientation,
+  `.handFan` overrides `--card-w-sm` to `clamp(95px, 70px + 8vw, 130px)`
+  and tightens overlap to `margin-inline: -2.75rem`. Landscape uses
+  the default token from `.desk`. If you add another fanned hand
+  surface, scope its own token override the same way — don't bump
+  the global default.
+- **HOW-TO-PLAY: bottom marginalia clears the bottom aside via
+  `margin-bottom: 3rem`** (commit `f87dc09e`). Each act with a
+  bottom aside/summary box adds `margin-bottom: 3rem` to that
+  element so the absolutely-positioned bottom-left handwritten
+  Marginalia (78% opacity blue) doesn't bleed into the dark aside
+  above. Marginalia's `position: absolute; bottom: 1rem` puts it in
+  the same y-band as the aside's bottom edge by default. Combos uses
+  `:last-of-type` because it has back-to-back asides — only the last
+  one needs the clearance. If you add a new act with a bottom aside +
+  bottom-left marginalia, follow the same pattern.
+- **HOW-TO-PLAY: FileTab component is GONE** (commit `f87dc09e`).
+  Removed across all 10 acts + component files deleted. The
+  decorative folder-tab overlapped body copy on phone and didn't
+  earn its keep. Don't reintroduce — if you need a visual
+  section-marker on phone, design for the constrained width first.
 - **HOW-TO-PLAY: vite entry registration** (commit `b48fd4fd`). The
   `howtoplay` entry is in `vite.config.ts` `rolldownOptions.input`
   alongside board/player. Don't remove it. Dev URL is
@@ -729,7 +767,7 @@ rule text).
 - ✅ GameOver winner-subtitle pool (board view) —
   *"X came out on top. ...Phrasing."* (`src/client/shared/GameOver.tsx`)
 
-**HOW-TO-PLAY (shipped 2026-05-13, +6 beats):**
+**HOW-TO-PLAY (shipped 2026-05-13, +6 beats; +1 on 2026-05-14):**
 
 - ✅ Dash Barlowe roster dossier flourish — *"Tell him you read his
   file. He's been waiting. …Phrasing."* (`src/client/howtoplay/acts/
@@ -745,6 +783,8 @@ rule text).
   on their fingers. …Phrasing."* (`ActIntercept.tsx`)
 - ✅ Signoff act, M's closing — *"Good luck, operative. Don't burn.
   …Phrasing."* (`ActSignoff.tsx`)
+- ✅ Turn Inheritance act, lede — *"By the time it lands, someone is
+  taking five turns in a row. …Phrasing."* (`ActTurnInheritance.tsx`)
 
 **Planned beats (queue):**
 
@@ -773,12 +813,16 @@ joke.
 
 ---
 
-## 7. HOW-TO-PLAY — DONE 2026-05-13
+## 7. HOW-TO-PLAY — DONE 2026-05-13, phone-fitness pass 2026-05-14
 
 Shipped as `howtoplay.html` — *"Operations Manual"* dossier-style web asset
-at a new Vite entry `src/client/howtoplay/`. 9-act long-scroll document
+at a new Vite entry `src/client/howtoplay/`. **10-act** long-scroll document
 themed as a classified Pendleton Agency case file (47-B). Spec §8.3 all
-four checkboxes flipped to ✅.
+four checkboxes flipped to ✅. Acts grew from 9 to 10 on 2026-05-14 with
+the addition of Act VI · Turn Inheritance (Reassign/Direct Order stacking
+mechanics, mirrors the Intercept Chain pattern). FileTabs dropped same
+session — they kept overlapping body copy on phone and the folder-tab
+affordance wasn't earning its keep.
 
 Composition (act by act):
 
@@ -800,12 +844,18 @@ Composition (act by act):
   art + classification stamp + rules + tactic line.
 - **Act V — Special Operations (combos):** Pair-steal + triple-name-steal
   scenes with card stacks + arrow + outcome.
-- **Act VI — The Intercept Chain:** 4-step chain visualization with depth
+- **Act VI — Turn Inheritance:** 4-step staged chain showing
+  Reassign/Direct Order stacking — owed-turn counter ticks 2 → 3 → 4
+  → 3 as plays land + Go Dark cancels one. Red-themed (threat chain)
+  visually parallel to Intercept Chain (defense). Summary box covers
+  the `remaining + 2` formula, Go Dark single-turn cancel, target
+  selection difference, and intercept handoff.
+- **Act VII — The Intercept Chain:** 4-step chain visualization with depth
   numbers, left-border colors (red cancelled / green proceeds), per-step
   outcome stamps. Plus a 3-bullet summary box.
-- **Act VII — Remote Briefing:** 3-step host-table / share-room-code /
+- **Act VIII — Remote Briefing:** 3-step host-table / share-room-code /
   share-your-face guidance + lag advisory.
-- **Act VIII — Sign-off:** M's closing with final Phrasing! beat + CASE
+- **Act IX — Sign-off:** M's closing with final Phrasing! beat + CASE
   CLOSED stamp + fair-use disclaimer + bottom classification banner.
 - **CTA plaque:** "You've Been Briefed." brass-plaque component routes
   back to `/`.

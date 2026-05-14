@@ -103,11 +103,14 @@
 }
 
 .cardEntry {
-  display: grid;
-  grid-template-columns: auto 1fr;
-  gap: clamp(0.75rem, 0.5rem + 1vw, 1.25rem);
-  align-items: start;
-  padding: clamp(0.75rem, 0.5rem + 0.6vw, 1rem);
+  /* Stack card art ABOVE text — the dossier's max content width (~860px)
+     divided across 3 columns leaves each entry with ~270px, which can't
+     accommodate a 150px card AND a readable text column side-by-side.
+     Vertical stack gives the text the full entry width. */
+  display: flex;
+  flex-direction: column;
+  gap: clamp(0.75rem, 0.5rem + 0.6vw, 1rem);
+  padding: clamp(0.85rem, 0.6rem + 0.6vw, 1.1rem);
   background: color-mix(in oklab, var(--paper-bg-lit) 96%, var(--color-ochre-7) 4%);
   border: 1px solid color-mix(in oklab, var(--color-ochre-9) 18%, transparent);
   border-radius: 3px;
@@ -118,7 +121,8 @@
 
 .cardArt {
   display: flex;
-  align-items: flex-start;
+  justify-content: center;
+  /* Card sits centered in the entry; entry width drives the text column */
 }
 
 .cardCopy {

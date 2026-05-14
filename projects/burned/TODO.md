@@ -112,6 +112,129 @@ self-report validation in the detector pipeline).
 
 _None. Closed in recent sessions:_
 
+**2026-05-13 evening — HOW-TO-PLAY web asset shipped + 8 polish commits.**
+
+Initial ship + 8 follow-up commits across the session. The page lives at
+`howtoplay.html` (Vite entry at `src/client/howtoplay/`), opens at
+`/howtoplay.html` in dev, `/howtoplay` in prod. **Spec §8.3 all four
+checkboxes ✅.** Full description of the artifact in §7 below.
+
+Commit chain (this session, in order):
+
+1. `b48fd4fd` — feat: initial HOW-TO-PLAY ship (9 acts, dossier
+   composition, 2 Imagen assets, GSAP scroll-reveal, reading-progress,
+   brass-plaque CTA).
+2. `1d119fee` — fix: Arsenal entries stack card-above-text instead of
+   side-by-side. The 3-column outer grid × the `auto 1fr` inner grid
+   left text columns at ~120px, breaking rules into chimneys of single
+   words. Inner layout is now `flex column`, card centers above full-
+   width text.
+3. `6504de7d` — fix: retheme — "Two Skips, two Shuffles" → "Two Intel
+   Briefings, two Reassigns, two Go Darks" (BURNED card names). Plus
+   Burn the Files rules "Shuffle the deck" → "Reshuffle" (verb as
+   mechanic, not as card name). Full grep sweep clean for
+   Skip/Shuffle/Defuse/Nope/Exploding Kitten/See the Future/Alter the
+   Future/Draw from the Bottom/Attack/Cat/Feral Cat outside the
+   intentional fair-use attribution in ActSignoff.
+4. `23f2f72e` — fix: Combos — matching rule extracted from pair tactic
+   into a dedicated "Footnote · Eligible cards" aside below the triple
+   scene, so it lands once and covers both pair and triple.
+5. `681cfbeb` — fix: Combos — moved hoarder tactic + Phrasing! into
+   combined triple tactic. (Intermediate step; superseded by 094468c5.)
+6. `094468c5` — fix: Combos — final placement. Triple tactic shrinks
+   back to the private-naming insight only. Eligible Cards footnote
+   absorbs the hoarder tactic + Phrasing!. Pair scene now lean (rules +
+   stage); triple keeps the bluff insight; rules + economy + Phrasing!
+   live in the footnote.
+7. `22b2d683` — fix: card aspect-ratio. Caught when operative card
+   heads were getting cropped in the Arsenal. Sources are mixed
+   aspect: action cards 384×384 (1:1 square), operatives 269×384 (2:3
+   portrait, head at top of frame). My Card component forced 1:1 with
+   object-fit:cover — center-crop ate ~15% top/bottom on operatives.
+   Fix: portrait 5:7 card frame (matches in-game MinimalCard) +
+   object-fit:contain on the art. Every source pixel survives. Action
+   cards get matting top/bottom; operatives fill the frame with ~1%
+   side letterbox. Cards in the doc now read as the same metaphor as
+   in-game cards.
+8. `487877ef` — polish(Emil-lens): 6 interaction fixes — Roster card
+   hover guarded by `@media (hover: hover) and (pointer: fine)`,
+   Roster photo scale 400ms → 250ms, PlayCTA button gains
+   `:active scale(0.97)` + arrow nudge on hover, back-link gains
+   `:active scale(0.97)` + extends transition to include `transform`.
+9. `9ef77e7d` — fix: card label color/corner alignment. Briggsy
+   noticed Direct Order / Extraction / Intercepted labels were "a
+   pixel or two off." Two causes: (a) label `border-top` used 25%
+   ochre-9 mix while card outer border uses 35% — two amber lines at
+   different shades read as misalignment, (b) label had
+   `border-radius: 0` relying on `overflow: hidden` to mask, leaving
+   subpixel slivers at corners. Fix: matched border-top to 35%, added
+   `border-bottom-left/right-radius: inherit` so corners follow the
+   card's interior curve natively.
+
+Health (HOW-TO-PLAY only):
+- Bundle: `howtoplay-*.js` 95.24 KB (33.08 KB gz) + `howtoplay-*.css`
+  62.29 KB (10.43 KB gz) + shared GSAP chunk 69.42 KB (27.21 KB gz).
+  Not under the 100 KB phone ceiling — separate entry, separate chunk,
+  loaded only when reader hits `/howtoplay.html`.
+- Player phone initial JS bundle unchanged (still 99.17 KB gz).
+- Typecheck clean. CSS lint clean (new files).
+- 2 Imagen 4 assets at `public/assets/howtoplay/`:
+  `pendleton-crest.png`, `operations-manual-plate.png`. Script:
+  `scripts/generate-htp-assets.ts`.
+
+LAN URL for phone testing (Briggsy):
+- `http://192.168.1.151:5173/howtoplay.html` while `pnpm dev` is up.
+
+**Unfinished prescription — surface the HOW-TO-PLAY from the Lobby:**
+
+Right now the page exists at `/howtoplay.html` but no surface in the
+game itself links to it. First-time players who land on the Lobby
+won't know to read it. Add a discreet link.
+
+- **File:** `src/client/board/Lobby.tsx`
+- **Insert after** the QR section block (after line 51 — the closing
+  `</div>` of `.qrSection`) but BEFORE the roster block (line 53).
+- **Markup:**
+  ```tsx
+  <a
+    href="/howtoplay"
+    target="_blank"
+    rel="noopener"
+    className={styles.briefLink}
+  >
+    First-timer? Read the brief →
+  </a>
+  ```
+- **Companion CSS** in `Lobby.module.css` (append near the existing
+  `.hint` rule):
+  ```css
+  .briefLink {
+    margin-top: var(--space-3);
+    font-family: var(--font-mono);
+    font-size: clamp(0.7rem, 0.6rem + 0.3vw, 0.9rem);
+    font-weight: 600;
+    letter-spacing: 0.16em;
+    text-transform: uppercase;
+    color: var(--color-ochre-10);
+    opacity: 0.85;
+    text-decoration: none;
+    transition: opacity var(--motion-duration-fast) var(--motion-ease-decelerate);
+  }
+  .briefLink:hover,
+  .briefLink:focus-visible {
+    opacity: 1;
+    text-decoration: underline;
+    text-underline-offset: 3px;
+  }
+  ```
+- **URL handling:** `/howtoplay` works in prod (Cloudflare Pages strips
+  `.html`). In dev, the browser will 404; either accept that as
+  dev-only or use `import.meta.env.DEV ? '/howtoplay.html' : '/howtoplay'`.
+- **Acceptance:** link visible on the Lobby below the QR/room code,
+  doesn't break the existing layout, opens the brief in a new tab so
+  players don't lose the room code in their tab history. Verify at
+  1366×768, 1920×1080, and a 4K-projection-via-laptop scenario.
+
 **2026-05-13 — real-device filter verification + dev tooling + persistence race:**
 
 - **Filter verified end-to-end on real hardware (room 1234).** All
@@ -338,6 +461,19 @@ fully closed.
 
 Real-life sessions only Briggsy can do.
 
+- **Real-device verification of `/howtoplay.html`** — open
+  `http://192.168.1.151:5173/howtoplay.html` on phone (LAN URL while
+  `pnpm dev` is up) and read the whole document. Check at minimum: hand
+  fan in Act III (cards uniform, no clipped heads), Burn beat (red glow
+  + Cover Blown stamp), Roster cards (all 6 operative heads visible,
+  hover sticking is gone on touch — tap shouldn't leave a card lifted),
+  Arsenal entries (rules text reads as paragraphs, not chimneys), the
+  card labels (Direct Order / Extraction / Intercepted — no
+  pixel-or-two misalignment), the PlayCTA brass plaque press feedback,
+  the back-link tap response. **First-time-player test** is the spec
+  §8.7 acceptance gate for this artifact too — a stranger reading the
+  doc should react with some version of *"wait, did Archer actually
+  release this?"*.
 - **Real-device playtest** — iPad Pro 1366 + 4-8 phones. Verify
   triple-steal deferred commit, Favor staging, discard hero from couch,
   Burned two-beat on non-drawer phones, Emil press-feedback on phone +
@@ -376,6 +512,50 @@ as-is, Burned-draw drama beat verdicted distinct
 Active warnings only. Older landmines have moved to `docs/insights/` and
 `CLAUDE.md`.
 
+- **HOW-TO-PLAY: card aspect contract** (commit `22b2d683`). Card
+  source art is MIXED aspect: 11 action cards are 384×384 (1:1
+  square), 6 operative cards are 269×384 (2:3 portrait). The howtoplay
+  `Card` component renders at portrait 5:7 frame with
+  `object-fit: contain` so every source pixel survives. Action cards
+  display as a centered square with ~20% matting top + bottom;
+  operatives nearly fill the frame with ~1% side letterbox. This
+  matches the in-game `MinimalCard.module.css` aspect-ratio: 5/7 +
+  contain pattern (line 33, 81-85). Do NOT force 1:1 with cover —
+  that crops operative heads.
+- **HOW-TO-PLAY: card label corners + amber color** (commit `9ef77e7d`).
+  The card label uses `border-bottom-left/right-radius: inherit` from
+  the card frame so its bottom corners curve cleanly with the rounded
+  card, instead of relying on `overflow: hidden` to mask square
+  corners (which leaves subpixel slivers). Label `border-top` uses the
+  SAME `color-mix(in oklab, var(--color-ochre-9) 35%, transparent)` as
+  the card's outer border — different opacity reads as misaligned
+  even when geometry is correct.
+- **HOW-TO-PLAY: vite entry registration** (commit `b48fd4fd`). The
+  `howtoplay` entry is in `vite.config.ts` `rolldownOptions.input`
+  alongside board/player. Don't remove it. Dev URL is
+  `/howtoplay.html`; prod URL is `/howtoplay` (Cloudflare Pages strips
+  `.html`).
+- **HOW-TO-PLAY: Imagen prompt gotcha — hex codes bake in as text**
+  (caught in title plate v1). DO NOT reference hex codes like
+  `#94 7226` in Imagen prompts — the model renders them as literal
+  visible text in the output. Always describe colors in words ("burnt
+  orange," "warm gold"). Regenerator script:
+  `scripts/generate-htp-assets.ts` with `HTP_ASSET=<filename>` env var
+  to target one asset (filenames: `pendleton-crest`,
+  `operations-manual-plate`, `desk-scene`; or `all` for the batch).
+- **HOW-TO-PLAY: separate mono font import** (commit `b48fd4fd`). The
+  page imports `src/client/howtoplay/fonts-mono-htp.css` for
+  JetBrains Mono. Cannot share `src/client/shared/fonts-mono.css`
+  because that one is documented board-only (per its header comment).
+  If you add another mono-using surface, follow the per-surface
+  font-face declaration pattern, not import-the-board's-file.
+- **HOW-TO-PLAY: scroll-reveal motion ownership** (commit `b48fd4fd`).
+  GSAP + ScrollTrigger registered ONCE on the howtoplay page via
+  `useScrollReveal()` mounted at App root. Every `<DossierPage>` gets
+  a `data-reveal` attribute and animates on enter. Reduced-motion
+  branch sets `opacity: 1` immediately. Don't add another
+  ScrollTrigger.register() call elsewhere on this page; the singleton
+  guard handles it.
 - **`detectFailedLaunch: true` is OPT-IN per call site** (commit
   `64ecda46`). `pnpm playtest:run` opts in. Tests with stubbed god (no
   events.jsonl writes) leave it off so happy-path coverage tests don't
@@ -526,7 +706,7 @@ Tone DNA — see `docs/PRODUCT-SPECIFICATION.md` §3.5. Cadence is
 unlikely if you respect the ❌ guards (no errors, no repeat-view, no
 rule text).
 
-**Shipped (12):**
+**Shipped (18):**
 
 - ✅ EliminatedView flavor pool — *"Penetrated by enemy assets.
   ...Phrasing."* (`src/client/player/EliminatedView.tsx:17`)
@@ -548,6 +728,23 @@ rule text).
   - Go Dark — *"X turned off the lights. ...Phrasing."*
 - ✅ GameOver winner-subtitle pool (board view) —
   *"X came out on top. ...Phrasing."* (`src/client/shared/GameOver.tsx`)
+
+**HOW-TO-PLAY (shipped 2026-05-13, +6 beats):**
+
+- ✅ Dash Barlowe roster dossier flourish — *"Tell him you read his
+  file. He's been waiting. …Phrasing."* (`src/client/howtoplay/acts/
+  ActRoster.tsx`)
+- ✅ Sable Ashworth roster dossier flourish — *"Do not let her near
+  the deck. Or the matches. …Phrasing."* (`ActRoster.tsx`)
+- ✅ Mission act, M's signoff sentence — *"Try to look like you've
+  done this before. …Phrasing."* (`ActMission.tsx`)
+- ✅ Combos act, Footnote · Eligible cards — *"...if a particular
+  target has been hoarding, do the heist anyway. They'll learn.
+  …Phrasing."* (`ActCombos.tsx`)
+- ✅ Intercept act, lede — *"…Most of the table will start counting
+  on their fingers. …Phrasing."* (`ActIntercept.tsx`)
+- ✅ Signoff act, M's closing — *"Good luck, operative. Don't burn.
+  …Phrasing."* (`ActSignoff.tsx`)
 
 **Planned beats (queue):**
 

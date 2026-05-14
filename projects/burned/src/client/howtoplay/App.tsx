@@ -4,6 +4,7 @@ import { ActRoster } from './acts/ActRoster'
 import { ActLoop } from './acts/ActLoop'
 import { ActArsenal } from './acts/ActArsenal'
 import { ActCombos } from './acts/ActCombos'
+import { ActTurnInheritance } from './acts/ActTurnInheritance'
 import { ActIntercept } from './acts/ActIntercept'
 import { ActRemote } from './acts/ActRemote'
 import { ActSignoff } from './acts/ActSignoff'
@@ -25,6 +26,7 @@ export function App() {
         <ActLoop />
         <ActArsenal />
         <ActCombos />
+        <ActTurnInheritance />
         <ActIntercept />
         <ActRemote />
         <ActSignoff />

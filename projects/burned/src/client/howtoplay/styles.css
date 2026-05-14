@@ -76,6 +76,14 @@ body {
  */
 
 .desk {
+  /* Card-width tokens — defaults for the howtoplay surface. Defined
+     at this scope (rather than on `.card`) so any inner element can
+     override per-context — e.g. ActLoop's `.handFan` bumps
+     --card-w-sm on portrait viewports where the default reads small. */
+  --card-w-sm: clamp(72px, 60px + 4vw, 110px);
+  --card-w-md: clamp(96px, 80px + 6vw, 150px);
+  --card-w-lg: clamp(140px, 100px + 10vw, 240px);
+
   position: relative;
   min-height: 100svh;
   isolation: isolate;

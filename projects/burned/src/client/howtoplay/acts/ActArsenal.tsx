@@ -1,6 +1,5 @@
 import { DossierPage } from '../components/DossierPage'
 import { EyebrowLabel } from '../components/EyebrowLabel'
-import { FileTab } from '../components/FileTab'
 import { Marginalia } from '../components/Marginalia'
 import { Card, type CardKey } from '../components/Card'
 import { Stamp } from '../components/Stamp'
@@ -152,9 +151,7 @@ export function ActArsenal() {
   return (
     <section className="act" aria-labelledby="arsenal-title">
       <DossierPage tilt={-0.4} clip="paperclip">
-        <FileTab tone="amber" top="5%">Arsenal</FileTab>
-
-        <Marginalia position="top-right" style="page-num">PG 05 / 09</Marginalia>
+        <Marginalia position="top-right" style="page-num">PG 05 / 10</Marginalia>
 
         <header className={styles.head}>
           <EyebrowLabel rule>Act IV · The Arsenal — 17 Operations</EyebrowLabel>

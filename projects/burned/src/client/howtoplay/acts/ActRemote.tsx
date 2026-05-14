@@ -1,11 +1,10 @@
 import { DossierPage } from '../components/DossierPage'
 import { EyebrowLabel } from '../components/EyebrowLabel'
-import { FileTab } from '../components/FileTab'
 import { Marginalia } from '../components/Marginalia'
 import styles from './ActRemote.module.css'
 
 /**
- * Act VII — Remote Briefing.
+ * Act VIII — Remote Briefing.
  *
  * Spec §8.3 requires remote-play instructions. Short, dispatcher-tone.
  * "Same-room is intent. Remote works."
@@ -14,12 +13,10 @@ export function ActRemote() {
   return (
     <section className="act" aria-labelledby="remote-title">
       <DossierPage tilt={0.4} clip="paperclip">
-        <FileTab tone="blue" top="6%">Remote</FileTab>
-
-        <Marginalia position="top-right" style="page-num">PG 08 / 09</Marginalia>
+        <Marginalia position="top-right" style="page-num">PG 09 / 10</Marginalia>
 
         <header className={styles.head}>
-          <EyebrowLabel rule>Act VII · Remote Operations</EyebrowLabel>
+          <EyebrowLabel rule>Act VIII · Remote Operations</EyebrowLabel>
           <h2 id="remote-title" className={styles.title}>
             <span aria-hidden="true" className={styles.titleKicker}>Off-site operatives</span>
             <span className={styles.titleMain}>Remote Briefing.</span>

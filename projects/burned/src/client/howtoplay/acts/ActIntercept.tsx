@@ -1,6 +1,5 @@
 import { DossierPage } from '../components/DossierPage'
 import { EyebrowLabel } from '../components/EyebrowLabel'
-import { FileTab } from '../components/FileTab'
 import { Marginalia } from '../components/Marginalia'
 import { Card } from '../components/Card'
 import { Stamp } from '../components/Stamp'
@@ -24,12 +23,10 @@ export function ActIntercept() {
   return (
     <section className="act" aria-labelledby="intercept-title">
       <DossierPage tilt={-0.4} clip="paperclip">
-        <FileTab tone="green" top="6%">Intercepts</FileTab>
-
-        <Marginalia position="top-right" style="page-num">PG 07 / 09</Marginalia>
+        <Marginalia position="top-right" style="page-num">PG 08 / 10</Marginalia>
 
         <header className={styles.head}>
-          <EyebrowLabel rule>Act VI · The Intercept Chain</EyebrowLabel>
+          <EyebrowLabel rule>Act VII · The Intercept Chain</EyebrowLabel>
           <h2 id="intercept-title" className={styles.title}>
             <span aria-hidden="true" className={styles.titleKicker}>Defense doctrine</span>
             <span className={styles.titleMain}>Interception.</span>

@@ -4,7 +4,6 @@ import { EyebrowLabel } from '../components/EyebrowLabel'
 import { RedactBar } from '../components/RedactBar'
 import { DossierPage } from '../components/DossierPage'
 import { ClassificationBanner } from '../components/ClassificationBanner'
-import { FileTab } from '../components/FileTab'
 import { Marginalia } from '../components/Marginalia'
 import styles from './ActCover.module.css'
 
@@ -13,7 +12,6 @@ import styles from './ActCover.module.css'
  *
  * Composition (real-document vocabulary):
  *   - Top classification banner (red)
- *   - File tab on the right edge ("47-B")
  *   - Marginalia in the corners (date stamps, page number)
  *   - Hero: crest + title + subtitle, big CLASSIFIED stamp slammed across
  *     the upper-right corner of the page
@@ -26,14 +24,12 @@ export function ActCover() {
   return (
     <section className={`act ${styles.cover}`} aria-labelledby="cover-title">
       <DossierPage tilt={-0.6} clip="none" className={styles.folder}>
-        <FileTab tone="red" top="9%">47-B</FileTab>
-
         <Marginalia position="top-left" style="date-stamp" tilt={-4}>
           Rec'd 13·V·26
         </Marginalia>
 
         <Marginalia position="top-right" style="page-num" tilt={0}>
-          PG 01 / 09
+          PG 01 / 10
         </Marginalia>
 
         <ClassificationBanner position="top" tone="red">

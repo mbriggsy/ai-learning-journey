@@ -63,7 +63,10 @@
 }
 
 .chain::before {
-  /* The vertical "transmission line" running between intercepts */
+  /* The vertical "burden line" running between inheritance steps —
+     visually mirrors the Intercept Chain's transmission line so the two
+     acts read as parallel chain mechanics. Red because the burden grows;
+     the Intercept Chain uses paper-ink-accent because it cancels. */
   content: '';
   position: absolute;
   top: 1.5rem;
@@ -72,12 +75,12 @@
   width: 2px;
   background: repeating-linear-gradient(
     180deg,
-    var(--paper-ink-accent) 0,
-    var(--paper-ink-accent) 6px,
+    var(--burn-fire) 0,
+    var(--burn-fire) 6px,
     transparent 6px,
     transparent 12px
   );
-  opacity: 0.5;
+  opacity: 0.45;
   z-index: 0;
 }
 
@@ -90,14 +93,12 @@
   padding: clamp(0.65rem, 0.4rem + 0.6vw, 1rem);
   background: color-mix(in oklab, var(--paper-bg-lit) 95%, var(--color-ochre-8) 5%);
   border: 1px solid color-mix(in oklab, var(--color-ochre-9) 20%, transparent);
+  border-left: 4px solid var(--burn-fire);
   border-radius: 3px;
   box-shadow:
     0 1px 0 color-mix(in oklab, var(--color-cream-12) 20%, transparent) inset,
     0 2px 5px -2px color-mix(in oklab, var(--color-charcoal-1) 30%, transparent);
 }
-
-.cancelled { border-left: 4px solid var(--burn-fire); }
-.proceeds  { border-left: 4px solid var(--intercept-green); }
 
 .stepIndex {
   display: flex;
@@ -109,7 +110,7 @@
   letter-spacing: var(--htp-track-mono);
   color: var(--color-cream-12);
   background: var(--color-charcoal-1);
-  border: 2px solid var(--paper-ink-accent);
+  border: 2px solid var(--burn-fire);
   border-radius: 50%;
   width: clamp(1.8rem, 1.4rem + 0.8vw, 2.4rem);
   height: clamp(1.8rem, 1.4rem + 0.8vw, 2.4rem);
@@ -207,3 +208,4 @@
 }
 
 .summary strong { color: var(--color-cream-12); font-weight: 600; }
+.summary em { color: var(--color-ochre-10); font-style: italic; font-weight: 500; }

@@ -1,6 +1,5 @@
 import { DossierPage } from '../components/DossierPage'
 import { EyebrowLabel } from '../components/EyebrowLabel'
-import { FileTab } from '../components/FileTab'
 import { Marginalia } from '../components/Marginalia'
 import { Card } from '../components/Card'
 import { Stamp } from '../components/Stamp'
@@ -16,9 +15,7 @@ export function ActCombos() {
   return (
     <section className="act" aria-labelledby="combos-title">
       <DossierPage tilt={0.3} clip="paperclip">
-        <FileTab tone="red" top="6%">Special Ops</FileTab>
-
-        <Marginalia position="top-right" style="page-num">PG 06 / 09</Marginalia>
+        <Marginalia position="top-right" style="page-num">PG 06 / 10</Marginalia>
 
         <header className={styles.head}>
           <EyebrowLabel rule>Act V · Special Operations</EyebrowLabel>

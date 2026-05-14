@@ -1,6 +1,5 @@
 import { DossierPage } from '../components/DossierPage'
 import { EyebrowLabel } from '../components/EyebrowLabel'
-import { FileTab } from '../components/FileTab'
 import { Marginalia } from '../components/Marginalia'
 import { Card } from '../components/Card'
 import { Stamp } from '../components/Stamp'
@@ -23,9 +22,7 @@ export function ActLoop() {
   return (
     <section className="act" aria-labelledby="loop-title">
       <DossierPage tilt={0.4} clip="paperclip">
-        <FileTab tone="green" top="6%">Operations</FileTab>
-
-        <Marginalia position="top-right" style="page-num">PG 04 / 09</Marginalia>
+        <Marginalia position="top-right" style="page-num">PG 04 / 10</Marginalia>
 
         <header className={styles.head}>
           <EyebrowLabel rule>Act III · The Loop</EyebrowLabel>

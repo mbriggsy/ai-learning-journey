@@ -128,6 +128,21 @@
   }
 }
 
+/* On portrait phone viewports the default --card-w-sm clamp evaluates
+   to ~76px — six cards in a tight fan inside a 220px-tall stage read
+   as buried thumbnails. Landscape has horizontal room and grows the
+   formula naturally. This rule scopes a more aggressive card-width
+   clamp to the hand fan in portrait, and tightens the overlap margin
+   so the fan still fits the content area at the larger card size. */
+@media (orientation: portrait) {
+  .handFan {
+    --card-w-sm: clamp(95px, 70px + 8vw, 130px);
+  }
+  .handFan > * {
+    margin-inline: -2.75rem;
+  }
+}
+
 /* ─── BEAT 2: TURN ARROW ─────────────────────────────────────────────── */
 
 .turnStage {
@@ -293,6 +308,10 @@
 
 .aside {
   margin-top: clamp(1.5rem, 1rem + 1.5vw, 2.5rem);
+  /* Bottom clearance for the handwritten marginalia (position: absolute,
+     bottom: 1rem) so it doesn't visually bleed into the aside's dark
+     background. The marginalia's 78% opacity disappears against dark. */
+  margin-bottom: 3rem;
   padding: clamp(0.85rem, 0.5rem + 1vw, 1.2rem);
   background:
     linear-gradient(0deg,

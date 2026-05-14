@@ -1,6 +1,5 @@
 import { DossierPage } from '../components/DossierPage'
 import { EyebrowLabel } from '../components/EyebrowLabel'
-import { FileTab } from '../components/FileTab'
 import { Marginalia } from '../components/Marginalia'
 import { Stamp } from '../components/Stamp'
 import styles from './ActRoster.module.css'
@@ -86,9 +85,7 @@ export function ActRoster() {
   return (
     <section className="act" aria-labelledby="roster-title">
       <DossierPage tilt={-0.3} clip="paperclip">
-        <FileTab tone="blue" top="6%">Personnel</FileTab>
-
-        <Marginalia position="top-right" style="page-num">PG 03 / 09</Marginalia>
+        <Marginalia position="top-right" style="page-num">PG 03 / 10</Marginalia>
 
         <header className={styles.head}>
           <EyebrowLabel rule>Act II · Personnel Dossiers</EyebrowLabel>

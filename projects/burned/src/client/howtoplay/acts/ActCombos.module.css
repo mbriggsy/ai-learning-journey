@@ -207,3 +207,11 @@
 
 .aside strong { color: var(--color-cream-12); font-weight: 600; }
 .parenthetical { color: var(--color-cream-10); font-style: italic; }
+
+/* Bottom clearance for the handwritten marginalia (position: absolute,
+   bottom: 1rem) so it doesn't visually bleed into the aside's dark
+   background. Only the LAST aside in flow needs the clearance — keeps
+   the gap between back-to-back asides at its normal rhythm. */
+.aside:last-of-type {
+  margin-bottom: 3rem;
+}

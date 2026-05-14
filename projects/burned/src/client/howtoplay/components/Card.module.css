@@ -1,7 +1,22 @@
 .card {
-  --card-w-sm: clamp(72px, 60px + 4vw, 110px);
-  --card-w-md: clamp(96px, 80px + 6vw, 150px);
-  --card-w-lg: clamp(140px, 100px + 10vw, 240px);
+  /* Card-width tokens live on `.desk` in `styles.css` so outer scopes
+     (e.g. `.handFan` on portrait) can override them. Defining them
+     here would shadow the inherited value and block the cascade. */
+
+  /* Frame geometry tokens — the card's outer radius and structural
+     border width. The label below reads --card-radius-inner so its
+     bottom corners are CONCENTRIC with the visible inner edge of the
+     border. Treatments (.tx-glow, .tx-burn) override --card-border-w
+     to make the colored ring a REAL border rather than an inset
+     box-shadow. This matters because inset box-shadows render BELOW
+     content per spec — the label's solid background would overpaint
+     them at the label's vertical extent, visually breaking the ring
+     where the label is (looks like "the label is wider than the rest
+     of the card"). Making the ring a structural border puts it
+     OUTSIDE the content area so the label fits inside it cleanly. */
+  --card-radius: clamp(4px, 0.4vw, 8px);
+  --card-border-w: 1px;
+  --card-radius-inner: calc(var(--card-radius) - var(--card-border-w));
 
   position: relative;
   flex-shrink: 0;
@@ -13,14 +28,21 @@
      so every pixel of every source shows. No cropping. Source variation
      reads as natural art-on-card variation, not implementation quirk. */
   aspect-ratio: 5 / 7;
-  border-radius: clamp(4px, 0.4vw, 8px);
+  border-radius: var(--card-radius);
   background: var(--color-charcoal-2);
-  border: 1px solid color-mix(in oklab, var(--color-ochre-9) 35%, transparent);
+  border: var(--card-border-w) solid color-mix(in oklab, var(--color-ochre-9) 35%, transparent);
   overflow: hidden;
+  /* Drop shadow: WARM ink (cordovan) instead of cold charcoal. On the cream
+     dossier background, a charcoal drop shadow optically merges with the card's
+     own dark label band — making the band look like it overruns the rounded
+     frame at the bottom corners. A warm-toned shadow with softer falloff reads
+     as ink-on-paper depth instead, and still gives the card real lift on the
+     dark arena background. Spread is also narrowed (-8px) so the shadow stays
+     under the card silhouette and doesn't pool past the rounded corners. */
   box-shadow:
     0 1px 0 color-mix(in oklab, var(--color-cream-12) 12%, transparent) inset,
-    0 6px 18px -6px color-mix(in oklab, var(--color-charcoal-1) 65%, transparent),
-    0 2px 4px color-mix(in oklab, var(--color-charcoal-1) 40%, transparent);
+    0 6px 20px -8px color-mix(in oklab, var(--color-cordovan-1) 50%, transparent),
+    0 1px 3px color-mix(in oklab, var(--color-cordovan-2) 32%, transparent);
   transform-origin: center bottom;
   transition: transform var(--motion-duration-base) var(--motion-ease-decelerate);
 }
@@ -41,9 +63,15 @@
      operative; full composition visible on every action card. */
   object-fit: contain;
   object-position: center;
-  /* Slight inner padding so the art floats inside the card frame instead
-     of touching the edges — sells the "art on card" reading. */
-  padding: clamp(3px, 0.4vw, 6px);
+  /* No padding here. Previously this insets the art ~5px from the card
+     frame, but the .label below has no matching inset, so the label band
+     visibly extends past the art on both sides (worst on action cards with
+     1:1 source where padding determines width). Letting the art fill the
+     content area edge-to-edge means the IMG box and the label box have
+     the same horizontal extent, so the label no longer reads as poking
+     past the art. For 1:1 action cards the image still letterboxes top/
+     bottom inside the 5:7 frame; for 2:3 operative cards the natural
+     aspect-ratio letterbox provides the side matting. */
   box-sizing: border-box;
 }
 
@@ -67,11 +95,15 @@
      so the two amber lines read as one continuous frame, not two
      mismatched shades. Was at 25%, card border is at 35%. */
   border-top: 1px solid color-mix(in oklab, var(--color-ochre-9) 35%, transparent);
-  /* Match the card's rounded interior corners so the label's bottom edges
-     curve with the card frame instead of leaving square-corner slivers
-     where the card's overflow:hidden mask rounds them. */
-  border-bottom-left-radius: inherit;
-  border-bottom-right-radius: inherit;
+  /* Label's bottom corners use the card's INNER radius (outer minus border
+     width). Result: the label's curve and the gold border's curve share a
+     center → concentric. If we inherited the outer radius (4px) instead,
+     the label sits 0.8px inside the border so its 4px curve is offset by
+     (0.8, 0.8) from the gold curve — the curves drift apart at the corner
+     and read as "square-cornered label poking past the rounded frame" at
+     high DPR. The calc() makes the geometry exact. */
+  border-bottom-left-radius: var(--card-radius-inner);
+  border-bottom-right-radius: var(--card-radius-inner);
   line-height: 1.1;
 }
 
@@ -135,20 +167,39 @@
 }
 
 .tx-glow {
+  /* The "glow" treatment is a 2px amber ring — implemented as a real
+     border (not an inset box-shadow) so the label below sits INSIDE
+     the ring instead of overpainting it. With box-sizing: border-box,
+     the card's outer dimensions are unchanged; the content area
+     shrinks by 1px each side so the label and image fit cleanly
+     inside the thicker amber edge. --card-radius-inner auto-resolves
+     to (outer − 2px) for concentric label corners. */
+  --card-border-w: 2px;
+  border-color: var(--drama-amber);
   box-shadow:
-    0 0 0 1px var(--drama-amber) inset,
     0 0 12px 0 color-mix(in oklab, var(--drama-amber) 35%, transparent),
-    0 6px 18px -6px color-mix(in oklab, var(--color-charcoal-1) 65%, transparent),
-    0 2px 4px color-mix(in oklab, var(--color-charcoal-1) 40%, transparent);
+    0 6px 20px -8px color-mix(in oklab, var(--color-cordovan-1) 50%, transparent),
+    0 1px 3px color-mix(in oklab, var(--color-cordovan-2) 32%, transparent);
 }
 
 .tx-burn {
+  /* The burn treatment is a 3px burn-fire ring — implemented as a real
+     border (not inset box-shadow + border) so the BURNED label below
+     sits INSIDE the ring instead of overpainting it. Previously the
+     ring was 1px structural border + 2px inset shadow, but the label's
+     pink/red background painted over the inset layer at the bottom of
+     the card, making the label visually 4px wider than the content
+     area above it — Briggsy's "burned is blatantly off." Collapsing
+     both red layers into a single 3px border keeps the visual
+     identical above the label AND continuous through the label area.
+     Drop shadow stays aggressive — the burning card is meant to read
+     as a P0 threat, slightly heavier than the standard lift. */
+  --card-border-w: 3px;
+  border-color: var(--burn-fire);
   box-shadow:
-    0 0 0 2px var(--burn-fire) inset,
     0 0 24px 4px color-mix(in oklab, var(--burn-fire) 45%, transparent),
     0 0 60px 8px color-mix(in oklab, var(--burn-glow) 30%, transparent),
-    0 8px 24px -6px color-mix(in oklab, var(--color-charcoal-1) 70%, transparent);
-  border-color: var(--burn-fire);
+    0 8px 24px -8px color-mix(in oklab, var(--color-cordovan-1) 55%, transparent);
 }
 
 .tx-burn .label {

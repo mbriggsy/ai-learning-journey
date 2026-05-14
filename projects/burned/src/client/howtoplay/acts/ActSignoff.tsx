@@ -1,6 +1,5 @@
 import { DossierPage } from '../components/DossierPage'
 import { EyebrowLabel } from '../components/EyebrowLabel'
-import { FileTab } from '../components/FileTab'
 import { Stamp } from '../components/Stamp'
 import { Crest } from '../components/Crest'
 import { Marginalia } from '../components/Marginalia'
@@ -9,7 +8,7 @@ import { RedactBar } from '../components/RedactBar'
 import styles from './ActSignoff.module.css'
 
 /**
- * Act VIII — Sign-off.
+ * Act IX — Sign-off.
  *
  * M's closing line + final stamps + Pendleton crest as bookend.
  * Phrasing! lands one last time.
@@ -18,16 +17,14 @@ export function ActSignoff() {
   return (
     <section className="act" aria-labelledby="signoff-title">
       <DossierPage tilt={-0.3} clip="paperclip">
-        <FileTab tone="red" top="6%">Closed</FileTab>
-
-        <Marginalia position="top-right" style="page-num">PG 09 / 09</Marginalia>
+        <Marginalia position="top-right" style="page-num">PG 10 / 10</Marginalia>
 
         <ClassificationBanner position="top" tone="red">
           Top Secret // SCI // Operative Eyes Only // No Foreign Nationals
         </ClassificationBanner>
 
         <header className={styles.head}>
-          <EyebrowLabel rule>Act VIII · End of File</EyebrowLabel>
+          <EyebrowLabel rule>Act IX · End of File</EyebrowLabel>
         </header>
 
         <div className={styles.hero}>

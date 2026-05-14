@@ -1,6 +1,5 @@
 import { DossierPage } from '../components/DossierPage'
 import { EyebrowLabel } from '../components/EyebrowLabel'
-import { FileTab } from '../components/FileTab'
 import { Marginalia } from '../components/Marginalia'
 import { RedactBar } from '../components/RedactBar'
 import { Stamp } from '../components/Stamp'
@@ -17,9 +16,7 @@ export function ActMission() {
   return (
     <section className="act" aria-labelledby="mission-title">
       <DossierPage tilt={0.5} clip="paperclip">
-        <FileTab tone="amber" top="6%">Brief</FileTab>
-
-        <Marginalia position="top-right" style="page-num">PG 02 / 09</Marginalia>
+        <Marginalia position="top-right" style="page-num">PG 02 / 10</Marginalia>
 
         <header className={styles.head}>
           <EyebrowLabel rule>Act I · Briefing — Originator: M.</EyebrowLabel>

@@ -63,7 +63,15 @@
     linear-gradient(180deg,
       color-mix(in oklab, var(--color-charcoal-1) 60%, transparent) 0%,
       var(--color-charcoal-2) 100%);
-  border-top: 1px solid color-mix(in oklab, var(--color-ochre-9) 25%, transparent);
+  /* Amber divider — matches the card's outer border color/opacity EXACTLY
+     so the two amber lines read as one continuous frame, not two
+     mismatched shades. Was at 25%, card border is at 35%. */
+  border-top: 1px solid color-mix(in oklab, var(--color-ochre-9) 35%, transparent);
+  /* Match the card's rounded interior corners so the label's bottom edges
+     curve with the card frame instead of leaving square-corner slivers
+     where the card's overflow:hidden mask rounds them. */
+  border-bottom-left-radius: inherit;
+  border-bottom-right-radius: inherit;
   line-height: 1.1;
 }
 

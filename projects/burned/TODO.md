@@ -7,23 +7,23 @@ the history. (Rule: `feedback-todo-is-not-a-diary.md`.)
 
 ## 1. Active priorities
 
-Current state (verified 2026-05-14 squeaky-clean):
+Current state (verified 2026-05-14 squeaky-clean, second pass):
 
 - Tests: **1407 pass** | 6 expected fail (68/68 files green).
 - Build: clean (`pnpm build`).
-- Phone player entry: **19.17 KB gz** (was 19.04, +0.13 KB from the
-  ManualLink helper + `HOWTOPLAY_URL` shared util). Total initial JS
-  remains under the 100 KB phone ceiling with the same ~0.7 KB
-  headroom band.
-- HOW-TO-PLAY bundle (separate entry, NOT under phone ceiling):
-  `howtoplay-*.js` 99.04 KB (33.90 KB gz, +0.05 KB for `returnToGame`)
-  + `howtoplay-*.css` 65.83 KB (10.68 KB gz, unchanged) + shared GSAP
-  chunk 69.42 KB (27.21 KB gz, unchanged).
+- Typecheck: clean (`pnpm typecheck`).
+- Phone player entry: **19.17 KB gz** (unchanged — this session was
+  CSS-rule edits only, no new code). Total initial JS still under the
+  100 KB phone ceiling.
+- HOW-TO-PLAY bundle: `howtoplay-*.js` 99.04 KB (33.90 KB gz)
+  + `howtoplay-*.css` 65.83 KB (10.68 KB gz) + shared GSAP chunk
+  69.42 KB (27.21 KB gz). All unchanged.
 - Protocol: v6.
 
-_No live prescriptions. Operations Manual link surfaced from Lobby +
-JoinScreen (both states) + GameTable shipped this session; back/CTA
-return-trip fix landed alongside._
+_No live prescriptions. Hero discard clipping at iPad tall-viewport
+fixed this session — `.piles` grid bumped from 40% to 1fr (50/50);
+behind1/behind2 now fan out instead of clipping 50px each side
+against `.piles` `overflow:hidden`._
 
 ---
 
@@ -47,6 +47,27 @@ Real-life sessions only Briggsy can do.
 Active warnings only. Older landmines have moved to `docs/insights/` and
 `CLAUDE.md`.
 
+- **Absolute-positioned cards in `.fan` are anchored to `.piles` center,
+  not `.fan` center** (commit `b274a12b`, 2026-05-14). The three discard
+  layers (`.top`, `.behind1`, `.behind2`) are `position: absolute` with
+  no explicit top/left, which puts their static position at the center
+  of the nearest flex parent. The flex chain is `.piles` (centered) →
+  `.pileSection` (centered) → `.fan` (centered) → cards. Because every
+  link is centered, the cards' fixed positions are determined by
+  `.piles` center, not `.fan` center. **Consequence:** changing `.fan`
+  width does NOT move the cards or change which pixels get clipped at
+  the `.piles overflow:hidden` boundary. The cards spill 0.827W from
+  fan-center after rotation; the clip ancestor (`.piles`) must be wide
+  enough to contain that spread, period. Bumping `.fan` width is a NOP
+  from the user's POV. If you ever see "fan-width edit didn't change
+  anything," that's why — go widen the column, not the frame. Geometry
+  scratchpad lives in `DiscardFan.module.css` next to the `.fan` rule.
+- **Blotter grid is 50/50 by intention** (commit `b274a12b`). Don't
+  revert to 40/60 favoring COMMS without re-running the math at the
+  iPad-tall-viewport 300px card-width floor. The hero discard's
+  rotated peek-card bbox is ~496px wide there; 40% column = 395px
+  content area = 50px clipped per side, every game. COMMS's longest
+  event line (~38 chars ≈ 270-300px) fits easily at 50%.
 - **`// CAPS LETTERSPACED` is non-interactive chrome vocabulary**
   (commit `96744440`, 2026-05-14). Codebase-wide pattern: `//
   Deploy Operative`, `// Briefing`, `// Operation`, `// Standing By`,

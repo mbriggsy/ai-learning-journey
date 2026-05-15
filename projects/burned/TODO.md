@@ -316,16 +316,21 @@ Active warnings only. Older landmines have moved to `docs/insights/` and
   `enqueue` task signature was widened to `() => void | Promise<void>`
   to support this — `actionQueue.then(task)` naturally chains async
   tasks.
-- **Phrasing! queue surfaces already considered + closed** (2026-05-14).
-  Three surfaces evaluated in detail and rejected from the queue, not
-  because Phrasing! doesn't fit BURNED, but because each surface has a
-  reason the beat won't land: (1) Lobby/idle copy ("Awaiting check-in",
-  "Opening secure channel") is already tonally strong in Pendleton
-  voice — an explicit Phrasing! callout would cheapen it; (2)
-  ConnectionOverlay strings are too transient/rare for a beat to land;
-  (3) DramaOverlay BURNED-draw beat is a real candidate but requires a
-  pair-design session (text choice, cinematic timing, font/motion) —
-  NOT a quick-add. If a future longer-lived loading state, new idle
-  surface, or DramaOverlay pair-design session opens, revisit. Cadence
-  rule remains: seed Phrasing! abundantly across ✅ surfaces (random
-  flavor pools, AnnouncementFeed, COMMS combos) per spec §3.5.
+- **Phrasing! queue — surfaces resolved** (2026-05-14 / 2026-05-15).
+  (1) Lobby/idle copy: SKIPPED — "Awaiting check-in" / "Opening secure
+  channel" already tonally strong in Pendleton voice; explicit
+  Phrasing! callout would cheapen it. (2) ConnectionOverlay strings:
+  SKIPPED — too transient/rare for a beat to land. (3) DramaOverlay
+  BURNED-draw beat: SHIPPED 2026-05-15 as `BURNED_PHRASING_POOL` in
+  DramaOverlay.tsx — 6 wire-report sub-caption variants ("// CASE
+  CLOSED", "// FILE TERMINATED", "// COVER COMPROMISED", "// OPERATIVE
+  BURNED", "// CASE CLOSED. NEXT.", "// TOAST.") that surface beneath
+  the victim-name caption on the non-drawer/board cinematic. These are
+  **tonal cousins, not literal Phrasing! catchphrase landings** — they
+  juxtapose formal `//` chrome with Archer-deadpan kickers ("TOAST.",
+  "NEXT.") rather than the double-entendre-plus-callout pattern of
+  spec §3.5 shipped beats. A literal "...Phrasing." landing on the
+  BURNED cinematic was considered but rejected: the cinematic is the
+  game's heaviest dramatic moment and a comedic callout would compete
+  with the beat. If a future surface wants a literal Phrasing! landing,
+  spec §3.5 catalog remains the source of truth.

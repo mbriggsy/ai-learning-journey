@@ -169,7 +169,29 @@ export function appendEmberFlicker(
 type DramaConfig =
   | { variant: 'text'; text: string; className: string; holdMs: number; transient?: boolean; embellishment?: 'ember-flicker' }
   | { variant: 'card'; cardType: 'burned'; className: string; holdMs: number; transient?: boolean }
-  | { variant: 'card-flip'; cardType: 'burned'; victimName: string; className: string; holdMs: number; transient?: boolean }
+  | { variant: 'card-flip'; cardType: 'burned'; victimName: string; phrasing: string; className: string; holdMs: number; transient?: boolean }
+
+// Wire-report sub-caption pool for the non-drawer BURNED beat. Each
+// entry is a single line in the project's established `//` mono-chrome
+// vocabulary (cf. "// Deploy Operative", "// Briefing", COMMS sentinels).
+// Mix is intentional: four formal closure lines (Pendleton-voice
+// dossier sign-off) + two Phrasing!-tone kickers ("// CASE CLOSED.
+// NEXT." with the bored-corporate kicker; "// TOAST." for monosyllabic
+// Archer-deadpan finality). The Phrasing! tension comes from delivering
+// irreverent voice INSIDE the formal wire-report chrome — same trick
+// COMMS uses with the parenthetical "(2x combo!)" beats.
+//
+// Cadence rule (spec §3.5): seed Phrasing! at ~25% across pools.
+// Current ratio: 2/6 ≈ 33% — slightly hot, but a 6-line pool with
+// only 1 Phrasing! variant repeats the joke too often. Keep at 6.
+const BURNED_PHRASING_POOL = [
+  '// CASE CLOSED',
+  '// FILE TERMINATED',
+  '// COVER COMPROMISED',
+  '// OPERATIVE BURNED',
+  '// CASE CLOSED. NEXT.',
+  '// TOAST.',
+] as const
 
 // Returns 0..N beats to queue for a given event. burned-drawn splits by
 // audience: the DRAWER sees the Burned card itself fill their phone
@@ -199,15 +221,22 @@ function getDramaBeats(
         }]
       }
       // Non-drawer / board — cinematic Arc #2. Physical card flip from
-      // face-down to face-up, then victim's name surfaces underneath.
-      // Card flip IS the reveal — more dramatic than a text slam.
+      // face-down to face-up, then victim's name surfaces underneath,
+      // followed by a wire-report sub-caption (Phrasing! beat) that
+      // delivers the dossier sign-off in the project's `//` chrome
+      // vocabulary. Two-beat reveal: name lands, then sub.
       // Hold spans the flip animation + a settled beat for recognition:
-      // ~450ms slam-in, ~300ms face-down pause, ~500ms flip, ~1400ms
-      // settled hold with name caption, then fadeout.
+      // ~450ms slam-in, ~300ms face-down pause, ~500ms flip, ~250ms
+      // name fade, ~100ms beat, ~250ms phrasing fade, ~1400ms settled
+      // hold with both captions, then fadeout.
+      const phrasing = BURNED_PHRASING_POOL[
+        Math.floor(Math.random() * BURNED_PHRASING_POOL.length)
+      ]!
       return [{
         variant:    'card-flip',
         cardType:   'burned',
         victimName: name(event.playerId).toUpperCase(),
+        phrasing,
         className:  styles.burned ?? '',
         holdMs:     1400,
       }]
@@ -313,6 +342,7 @@ export function DramaOverlay() {
   const cardRef = useRef<HTMLDivElement>(null)
   const flipContainerRef = useRef<HTMLDivElement>(null)
   const flipNameRef = useRef<HTMLDivElement>(null)
+  const flipPhrasingRef = useRef<HTMLDivElement>(null)
   const lastProcessedRef = useRef<string | null>(null)
   const animatingRef = useRef(false)
   const queueRef = useRef<Array<{ config: DramaConfig; id: string }>>([])
@@ -380,6 +410,7 @@ export function DramaOverlay() {
     const overlay = overlayRef.current
     const text = textRef.current
     const flipName = flipNameRef.current
+    const flipPhrasing = flipPhrasingRef.current
     if (overlay) {
       gsap.set(overlay, { opacity: 0, pointerEvents: 'none' })
       // a11y leak fix: opacity:0 hides visually but keeps text in the
@@ -392,6 +423,7 @@ export function DramaOverlay() {
       text.textContent = ''
     }
     if (flipName) flipName.textContent = ''
+    if (flipPhrasing) flipPhrasing.textContent = ''
     processQueue()
   }
 
@@ -413,7 +445,8 @@ export function DramaOverlay() {
     const card = cardRef.current
     const flipContainer = flipContainerRef.current
     const flipName = flipNameRef.current
-    if (!overlay || !text || !card || !flipContainer || !flipName) {
+    const flipPhrasing = flipPhrasingRef.current
+    if (!overlay || !text || !card || !flipContainer || !flipName || !flipPhrasing) {
       animatingRef.current = false
       return
     }
@@ -443,9 +476,12 @@ export function DramaOverlay() {
     } else {
       // card-flip — the outer slam-in targets flipContainer, the inner
       // rotator animates within. Victim name caption is inside the
-      // same slot, fades in after the flip lands.
+      // same slot, fades in after the flip lands. Phrasing! wire-report
+      // sub-caption surfaces a beat after the name, completing the
+      // two-step reveal (name = WHO, phrasing = the dossier sign-off).
       target = flipContainer
       flipName.textContent = config.victimName
+      flipPhrasing.textContent = config.phrasing
       gsap.set(text, { display: 'none' })
       gsap.set(card, { display: 'none' })
       gsap.set(flipContainer, { display: 'flex' })
@@ -468,6 +504,7 @@ export function DramaOverlay() {
         overlay.setAttribute('aria-hidden', 'true')
         text.textContent = ''
         flipName.textContent = ''
+        flipPhrasing.textContent = ''
         // Process next in queue
         processQueue()
       },
@@ -518,12 +555,16 @@ export function DramaOverlay() {
       const back = flipContainer.querySelector(`.${styles.flipBack}`) as HTMLElement | null
       const front = flipContainer.querySelector(`.${styles.flipFront}`) as HTMLElement | null
       const nameEl = flipName
+      const phrasingEl = flipPhrasing
       // Reset flip state — rotator returns to 0°, back visible, front
       // hidden, so consecutive Burned draws reveal correctly each time.
+      // Name + phrasing reset to their pre-fade state (transparent,
+      // slight Y offset) so each beat enters cleanly.
       gsap.set(rotator, { rotateY: 0 })
       gsap.set(back, { opacity: 1 })
       gsap.set(front, { opacity: 0 })
       gsap.set(nameEl, { opacity: 0, y: 8 })
+      gsap.set(phrasingEl, { opacity: 0, y: 8 })
       // Face-down pause before the flip kicks in. Short — the room has
       // already seen the slam-in, longer would feel dead. 300ms lets
       // the brain register "something's about to happen."
@@ -553,12 +594,26 @@ export function DramaOverlay() {
       // (8px→0) so it reads as "surfacing from beneath the card."
       // Positioned at flip-end so the name surfaces right as the card
       // lands face-up — not during the flip itself.
+      const flipEnd = slow + 0.3 + 0.5
       tl.to(nameEl, {
         opacity: 1,
         y: 0,
         duration: MOTION_DURATIONS.base,
         ease: 'power2.out',
-      }, slow + 0.3 + 0.5)
+      }, flipEnd)
+      // Phrasing wire-report sub-caption fades in a beat AFTER the name
+      // has landed. Sequential beat (not simultaneous stagger): the room
+      // reads WHO first, then the dossier sign-off lands underneath as
+      // the Pendleton voice closing the case. Start offset = flipEnd +
+      // MOTION_DURATIONS.base (name's full fade duration) so the name is
+      // fully visible when the sub begins, NOT competing during its fade.
+      // Same y-lift treatment for visual continuity with the name above.
+      tl.to(phrasingEl, {
+        opacity: 1,
+        y: 0,
+        duration: MOTION_DURATIONS.base,
+        ease: 'power2.out',
+      }, flipEnd + MOTION_DURATIONS.base)
     }
 
     appendHoldAndExit(tl, target, overlay, config.holdMs / 1000, MOTION_DURATIONS.slow)
@@ -608,7 +663,15 @@ export function DramaOverlay() {
             <MinimalCard type="burned" disabled />
           </div>
         </div>
-        <div ref={flipNameRef} className={styles.flipName} />
+        {/* Name + Phrasing! sub-caption pair. Tight-coupled in their own
+            stack so the slot-level gap (var(--space-5)) still sets the
+            card-to-caption distance, while the stack-internal gap
+            (var(--space-2)) keeps name + sub visually paired as ONE
+            captioning unit, not two separate elements. */}
+        <div className={styles.flipNameStack}>
+          <div ref={flipNameRef} className={styles.flipName} />
+          <div ref={flipPhrasingRef} className={styles.flipPhrasing} />
+        </div>
       </div>
     </div>
   )

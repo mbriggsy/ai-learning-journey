@@ -137,6 +137,36 @@
     0 0 28px color-mix(in oklab, var(--color-cordovan-9) 55%, transparent);
 }
 
+/* Caption-stack — wraps the victim name + Phrasing! sub-caption as a
+   single visual unit beneath the flipped card. The slot-level gap
+   (var(--space-5)) handles card-to-stack distance; this internal gap
+   (var(--space-2)) keeps name and sub tightly paired. */
+.flipNameStack {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: var(--space-2);
+}
+
+/* Phrasing! sub-caption — wire-report `//` chrome line that lands a
+   beat after the victim name as the dossier sign-off (Pendleton voice).
+   Mono font matches the project's existing `//` chrome vocabulary
+   (Operations Manual link, COMMS sentinels, "// Deploy Operative").
+   Hierarchy vs .flipName above:
+     - smaller font (~half size)
+     - lighter weight (600 vs 800)
+     - cream-12 dimmed to 70% alpha (recessive — name is headline)
+     - no text-shadow (the name carries the cordovan glow halo) */
+.flipPhrasing {
+  font-family: var(--font-mono);
+  font-weight: 600;
+  font-size: clamp(11px, 1.6cqi + 0rem, 18px);
+  letter-spacing: 0.32em;
+  text-transform: uppercase;
+  text-align: center;
+  color: color-mix(in oklab, var(--color-cream-12) 70%, transparent);
+}
+
 /* ─── BURNED — cordovan alarm, the big one ─── */
 
 .burned {

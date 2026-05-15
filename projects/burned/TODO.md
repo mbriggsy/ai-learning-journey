@@ -7,23 +7,27 @@ the history. (Rule: `feedback-todo-is-not-a-diary.md`.)
 
 ## 1. Active priorities
 
-Current state (verified 2026-05-14 squeaky-clean, second pass):
+Current state (verified 2026-05-15 squeaky-clean):
 
 - Tests: **1407 pass** | 6 expected fail (68/68 files green).
 - Build: clean (`pnpm build`).
 - Typecheck: clean (`pnpm typecheck`).
-- Phone player entry: **19.17 KB gz** (unchanged — this session was
-  CSS-rule edits only, no new code). Total initial JS still under the
-  100 KB phone ceiling.
+- Phone player entry: **19.17 KB gz** (unchanged — DramaOverlay is a
+  lazy chunk, not on the phone initial-JS ceiling). Total initial JS
+  still under the 100 KB phone ceiling.
+- DramaOverlay lazy chunk: **2.34 KB gz** (was 2.13 KB; +0.21 KB gz
+  for the new `BURNED_PHRASING_POOL` constant + flipPhrasing fade-in
+  tween).
 - HOW-TO-PLAY bundle: `howtoplay-*.js` 99.04 KB (33.90 KB gz)
   + `howtoplay-*.css` 65.83 KB (10.68 KB gz) + shared GSAP chunk
   69.42 KB (27.21 KB gz). All unchanged.
 - Protocol: v6.
 
-_No live prescriptions. Hero discard clipping at iPad tall-viewport
-fixed this session — `.piles` grid bumped from 40% to 1fr (50/50);
-behind1/behind2 now fan out instead of clipping 50px each side
-against `.piles` `overflow:hidden`._
+_No live prescriptions. This session shipped: (1) hero discard
+clipping fix at iPad tall-viewport — `.piles` grid 40% → 1fr;
+(2) DramaOverlay BURNED beat wire-report sub-caption pool (6 variants)
+that lands beneath the victim-name caption as a Pendleton-voice
+dossier sign-off._
 
 ---
 

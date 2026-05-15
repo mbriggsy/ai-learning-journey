@@ -27,22 +27,7 @@ against `.piles` `overflow:hidden`._
 
 ---
 
-## 2. Carryover requiring Briggsy
-
-Real-life sessions only Briggsy can do.
-
-- **First-time-player session** (spec §8.7 — the quality bar, cashed in).
-- **Visual review meeting** — GameOver glow, Nope emerald saturation,
-  Baveuse font, drama-accent CARD FACE inspection (Reassign / Direct
-  Order / Go Dark / Intel Briefing / Falsify Intel / Burn the Files /
-  Back Channel). Acceptance criterion lives at spec §2.2 ("could this
-  look like a frame from an Archer episode?") + §3 visual reference.
-  Remaining ⏸ rows in `E2E-ISSUE-LIST` (C-13, C-15, C-16-19) are blocked
-  on product/asset decisions — surface here.
-
----
-
-## 3. Landmines
+## 2. Landmines
 
 Active warnings only. Older landmines have moved to `docs/insights/` and
 `CLAUDE.md`.
@@ -331,36 +316,16 @@ Active warnings only. Older landmines have moved to `docs/insights/` and
   `enqueue` task signature was widened to `() => void | Promise<void>`
   to support this — `actionQueue.then(task)` naturally chains async
   tasks.
-
----
-
-## 4. Phrasing! beats — planned queue
-
-Tone DNA — see `docs/PRODUCT-SPECIFICATION.md` §3.5 for the shipped
-beats catalog. Cadence is **abundance, not restraint** — seed Phrasing!
-generously across all ✅ surfaces. Land beats wherever they fit
-naturally; over-saturation is unlikely if you respect the ❌ guards
-(no errors, no repeat-view, no rule text).
-
-- [ ] **Lobby / waiting copy** — implicit phrasing in idle states.
-  Currently `Lobby.tsx` uses *"Awaiting check-in"* + animated dots
-  and *"Opening secure channel"* + dots. Both are tonally strong as
-  written; explicit Phrasing! callout would cheapen the Pendleton
-  voice. Skip unless a new idle surface lands that wants explicit
-  cadence (host-handoff, multi-room transition, etc.).
-- [ ] **DramaOverlay beat** — one rare, high-drama interrupt where a
-  Phrasing! beat lands inside the cinematic. BURNED-draw is a candidate
-  ("Burned" + reaction copy). Coordinate with motion design — beat must
-  not interrupt the cinematic's pacing. Flagged risky for solo Claude
-  session; pair with a motion/timing review before shipping.
-- [ ] **Loading / connection messages** — `ConnectionOverlay.tsx`
-  currently shows *"Opening channel..."* and *"Re-establishing
-  channel..."* (transient) and *"// CHANNEL DOWN"* (terminal-error,
-  ❌ surface). The transient strings are too brief and too rare for a
-  Phrasing! beat to land naturally; revisit if a longer-lived loading
-  state is added (asset preload, multi-server handshake, etc.).
-
-Append to spec §3.5 "Shipped beats" list as each lands. Saturation
-guardrail: each pool sized so Phrasing! lands at ~25% (e.g. 1
-Phrasing! variant per 4-line pool) — abundance without exhausting the
-joke.
+- **Phrasing! queue surfaces already considered + closed** (2026-05-14).
+  Three surfaces evaluated in detail and rejected from the queue, not
+  because Phrasing! doesn't fit BURNED, but because each surface has a
+  reason the beat won't land: (1) Lobby/idle copy ("Awaiting check-in",
+  "Opening secure channel") is already tonally strong in Pendleton
+  voice — an explicit Phrasing! callout would cheapen it; (2)
+  ConnectionOverlay strings are too transient/rare for a beat to land;
+  (3) DramaOverlay BURNED-draw beat is a real candidate but requires a
+  pair-design session (text choice, cinematic timing, font/motion) —
+  NOT a quick-add. If a future longer-lived loading state, new idle
+  surface, or DramaOverlay pair-design session opens, revisit. Cadence
+  rule remains: seed Phrasing! abundantly across ✅ surfaces (random
+  flavor pools, AnnouncementFeed, COMMS combos) per spec §3.5.

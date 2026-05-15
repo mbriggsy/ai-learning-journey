@@ -12,9 +12,12 @@
   display: flex;
   align-items: center;
   justify-content: center;
-  /* Width wider than a single card so the fanned left/right peeks have room
-     to breathe without colliding with the blotter gutter. */
-  width: calc(var(--size-discard-card-width) * 1.35);
+  /* Width contains the rotated peek cards' bounding box, not just the
+     translation centers. behind1/behind2 rotate ±7° around bottom-center
+     (transform-origin below) and translate ±0.16W — rotated top corners
+     extend to ~±0.827W from fan center (cos7·W/2 + sin7·H + 0.16W, H=1.4W).
+     1.7W gives a small margin over the math minimum of 1.654W. */
+  width: calc(var(--size-discard-card-width) * 1.7);
   height: calc(var(--size-discard-card-width) * 7 / 5);
 }
 

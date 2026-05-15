@@ -31,30 +31,6 @@ return-trip fix landed alongside._
 
 Real-life sessions only Briggsy can do.
 
-- **Real-device verification of `/howtoplay.html`** — open
-  `http://192.168.1.151:5173/howtoplay.html` on phone (LAN URL while
-  `pnpm dev` is up) and read the whole document. Check at minimum: hand
-  fan in Act III (cards uniform, no clipped heads), Burn beat (red glow
-  + Cover Blown stamp), Roster cards (all 6 operative heads visible,
-  hover sticking is gone on touch — tap shouldn't leave a card lifted),
-  Arsenal entries (rules text reads as paragraphs, not chimneys), the
-  card labels (Direct Order / Extraction / Intercepted — no
-  pixel-or-two misalignment), the PlayCTA brass plaque press feedback,
-  the back-link tap response. **First-time-player test** is the spec
-  §8.7 acceptance gate for this artifact too — a stranger reading the
-  doc should react with some version of *"wait, did Archer actually
-  release this?"*.
-- **Real-device playtest** — iPad Pro 1366 + 4-8 phones. Verify
-  triple-steal deferred commit, Favor staging, discard hero from couch,
-  Burned two-beat on non-drawer phones, Emil press-feedback on phone +
-  TV, Nameplate flip 400ms vs 250ms, perspective 1000px vs 600px.
-- **8-player stress test** — PlayerStrip layout at max count on real TV;
-  COMMS scroll under event volume; nameplate legibility from couch;
-  verify tile growth at 1920 + 4K beyond the 1366×1024 baseline.
-- **Physical hardware verification** — push to Cloudflare Pages, open on
-  actual TV with phone controllers.
-- **Canonical 200% zoom human-run pass.** Open desktop browser, walk a
-  2-3 player game at 200% zoom, flag layout/text/button breakage.
 - **First-time-player session** (spec §8.7 — the quality bar, cashed in).
 - **Visual review meeting** — GameOver glow, Nope emerald saturation,
   Baveuse font, drama-accent CARD FACE inspection (Reassign / Direct

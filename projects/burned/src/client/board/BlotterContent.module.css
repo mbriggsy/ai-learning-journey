@@ -70,11 +70,18 @@
     inset 0 -2px 4px color-mix(in oklab, var(--color-charcoal-1) 30%, transparent);
 
   display: grid;
-  /* COMMS gets the majority of horizontal space — 60% — so full-length
-     event lines (e.g. "Vera intercepted Dash's steal attempt") read on one
-     line without ellipsis. Piles compact to 40%; two piles side-by-side at
-     generous size still fit comfortably. */
-  grid-template-columns: 40% 60%;
+  /* 50/50 split. The hero discard fan needs room: at iPad-tall-viewport's
+     300px card-width floor, the rotated peek-card bbox is ~496px wide.
+     The prior 40/60 split gave .piles only ~395px content area at that
+     viewport — the fanned cards were silently clipped at the .piles
+     overflow:hidden edge, hiding most of behind1/behind2. COMMS at 50%
+     still comfortably fits its longest event lines ("Vera intercepted
+     Dash's steal attempt" ≈ 38 chars ≈ 270-300px at body font).
+     Empirical fix discovered 2026-05-14 — the .fan-width adjustment
+     alone has no effect because cards are absolute-positioned and
+     centered on .piles' center; only the clipping ancestor's width
+     determines visibility. */
+  grid-template-columns: 1fr 1fr;
   grid-template-rows: minmax(0, 1fr) auto;
   grid-template-areas:
     "piles comms"

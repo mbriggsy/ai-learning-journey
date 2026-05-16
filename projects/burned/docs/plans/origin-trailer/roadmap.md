@@ -8,13 +8,13 @@ reviewed: pending
 status: active
 phases:
   - phase-0-gate-resolution.md             # drafted 2026-05-16
-  - phase-1-beat-sheet-lock.md             # pending — write next session
-  - phase-2-voice-pipeline.md              # pending — write next session
-  - phase-3-visual-asset-prep.md           # pending — write next session
-  - phase-4-remotion-composite.md          # pending — write next session
-  - phase-5-gameplay-capture.md            # pending — write next session
-  - phase-6-final-render-qa.md             # pending — write next session
-  - phase-7-distribution.md                # pending — write next session
+  - phase-1-beat-sheet-lock.md             # drafted 2026-05-16
+  - phase-2-voice-pipeline.md              # drafted 2026-05-16
+  - phase-3-visual-asset-prep.md           # drafted 2026-05-16
+  - phase-4-remotion-composite.md          # drafted 2026-05-16
+  - phase-5-gameplay-capture.md            # drafted 2026-05-16
+  - phase-6-final-render-qa.md             # drafted 2026-05-16
+  - phase-7-distribution.md                # drafted 2026-05-16
 ---
 
 # BURNED Origin Trailer — Roadmap
@@ -25,12 +25,11 @@ phases:
 > file disagrees with the roadmap, the roadmap wins unless the roadmap is
 > demonstrably wrong — in which case we update the roadmap.*
 
-> **Status: Phase 0 drafted; Phases 1–7 pending (context-density split, will
-> draft in one workflow next session).** Per
+> **Status: All 8 phase files drafted (2026-05-16). Deepening
+> pending — runs sequentially across all 8 phase files next.** Per
 > `feedback-phase-plan-drafting-workflow.md`, the complete set of phase
 > files is written in one workflow; deepening runs sequentially across
-> all 8 after all are drafted. This session ran out of budget after
-> Phase 0; the remaining 7 land next session.
+> all 8 after all are drafted.
 
 **Mission.** Ship a ~95-second 16:9 origin trailer for BURNED that lands
 the Archer-grade quality bar on every frame, telegraphs the
@@ -112,11 +111,10 @@ transition state, every cascade card, every cold-open title flash.
 | 6 | **Final Render + QA** | `out/trailer.mp4` at H264/CRF 18, bar-raise criteria evaluation against UMB v3 on the three locked axes. `qa-report.md`. | Phases 4 + 5 — all scenes integrated, gameplay closer in place. |
 | 7 | **Distribution** | X-native cutdown + portfolio embed + distribution plan. | Phase 6 — final QA pass cleared. |
 
-Phase 0 is drafted (`phase-0-gate-resolution.md`). **Phases 1–7 are
-pending** — they get written as a complete set in one workflow next
-session, per `feedback-phase-plan-drafting-workflow.md`. Deepening
-runs sequentially across all 8 phase files AFTER they're all drafted,
-not per-phase during drafting.
+All 8 phase plans drafted (2026-05-16). Deepening runs sequentially
+across all 8 phase files next, per
+`feedback-phase-plan-drafting-workflow.md`. Briggsy reviews after
+deepening completes.
 
 ---
 
@@ -129,7 +127,7 @@ not per-phase during drafting.
 | 3 | **Self-hosted woff2 via `@remotion/fonts`** | UMB precedent. `loadFont()` from `@remotion/fonts` returns a promise Remotion auto-tracks for `delayRender` — no manual machinery, no studio-vs-export font fallback trap. **NOT `@remotion/google-fonts`.** |
 | 4 | **ADD `@remotion/transitions`** (not in UMB) | Required for R3 cascade→gameplay cross-dissolve via `<TransitionSeries>` + `fade()` + `linearTiming()`. |
 | 5 | **ADD `@remotion/media`** (UMB uses legacy `Html5Audio`) | Newer `<Audio>` component (4.0.x) — better frame-accuracy, Mediabunny-backed. Required for R3's audio crossfade and R9's music bed. |
-| 6 | **ADD `@remotion/lottie`** if needed | Reserved for R14 chevron / target-reticle motion graphics if static SVG won't deliver. Planning-phase call in Phase 0 spike. |
+| 6 | **`@remotion/lottie` — install ON-DEMAND** | Reserved for R14 chevron / target-reticle motion graphics if static SVG won't deliver. **NOT pre-installed in Unit 0.1.** Phase 0 Unit 0.5 spike validates all three Archer-grammar transition candidates (stamp-slap primary / iris wipe fallback / kinetic typography for stat overlays) in pure Remotion FIRST. Install only if a candidate's pure-Remotion render fails (YAGNI — the spike decides necessity). |
 | 7 | **INSTALL `@remotion/skills`** | Remotion Agent Skills for Claude Code (Jan 2026 release, ~126k installs). 28 rule files auto-load when Claude touches Remotion code. Fundamentally improves the agentic iteration story. |
 | 8 | **`Config.setPublicDir('../../public')`** | UMB pattern. Trailer reads BURNED's existing public/ — card art, fonts, audio — without duplication. |
 | 9 | **VOICE_DIRECTION anti-pattern guard** | Inline comment at TTS API call site mirroring UMB's `generate-narrator.ts:195-198`. Gemini TTS reads ALL text verbatim — style instructions become spoken audio. Codify on first write of `generate-dash-tts.ts`. |
@@ -186,21 +184,45 @@ or voice-actor. The acceptance test is *"does this voice land in the
 Sterling-coded register?"* — character-archetype recognition, not
 actor recognition.
 
-### §5.2 — Blind-tester protocol: MUSHRA, not informal A/B
+### §5.2 — Blind-tester protocol: MUSHRA, register-recognition framing
 
 Industry standard for "does this fool listeners" research is **MUSHRA**
 (ITU-R BS.1534-3). The brainstorm specifies "≥2 testers, blind
 protocol" — research shows this is too thin for statistical confidence
 on a voice authenticity question. **6–8 listeners minimum** for an
-informal research pass (8–12 for a formal one). Hidden reference (real
-Benjamin clip) + 2–3 TTS candidates + low-quality anchor. Question
-phrasing must avoid "which is fake" leading-the-witness — use
-"rate naturalness 0–100" + forced-choice "which sounds like same
-speaker as Clip X." Open-source hosting via **WebMUSHRA** (ed.ac.uk).
+informal research pass (8–12 for a formal one).
 
-**Acceptance threshold for R4:** TTS candidate within ±10 MUSHRA points
-of hidden reference AND >50% misidentified as "could be the real actor"
-in forced-choice for the Archer-fan portion of the listener pool.
+**Stimuli per ADR #13 (Sterling-CODED, not Sterling-cloned):** 3–4 TTS
+candidates + low-quality anchor + **non-Benjamin Sterling-coded
+reference clip** (voice-actor portfolio sample in the deadpan-spy
+register) used as the cadence target — NOT as an identity reference.
+The reference anchors the MUSHRA score scale; it never serves as a
+clone-match target. Question phrasing avoids "which is fake"
+leading-the-witness. Open-source hosting via **WebMUSHRA** (ed.ac.uk).
+
+**Acceptance threshold for R4 (register-recognition, NOT
+actor-identity):**
+- ≥4 of 6 listeners' open-description responses include ≥2 terms from
+  the Sterling-coded register cluster (*deadpan / dry / mid-Atlantic /
+  sardonic / spy / detective / film-noir / Archer-coded /
+  briefing-room*).
+- ≥5 of 6 listeners say *Yes* or *Mixed* on character-fit ("does this
+  voice match a fictional spy-agency briefer named Dash Barlowe, ~90%
+  of trailer runtime?").
+- **Joint pass:** ≥4 listeners clear character-fit AND register-cluster
+  AND don't flag obviously-synthetic — **same listener across all
+  three dimensions**.
+- ≤1 of 6 flags "obviously synthetic" on the uncanny-check (with
+  free-text capture of what sounded synthetic, for triage).
+- MUSHRA naturalness within **±10 points of the non-Benjamin
+  Sterling-coded reference clip** (reference-anchored, not absolute).
+
+**Bonus-signal disambiguation:** if a listener invokes Archer/Sterling
+unprompted ("sounds Sterling-y," "reminds me of Archer"), the protocol
+follows up: *"does it sound like the same actor, or the same style?"*
+*Same style* → register pass (target achieved). *Same actor* → engines
+drifted toward impression and a Step 4 re-spec is triggered. See Phase
+0 Unit 0.2 Step 4 + spectrum bands (Floor / Target / Ceiling).
 
 ### §5.3 — Twitter/X mobile crop resolved
 
@@ -352,10 +374,11 @@ place by feeling like Archer set-dressing, not a credits roll.
 
 - ✅ **Brainstorm landed:** `docs/ideation/2026-05-15-origin-trailer-brainstorm.md` (2026-05-15, two-pass document review, 15 requirements, 5 Resolve-Before-Planning gates).
 - ✅ **Roadmap written:** this file (2026-05-16).
-- ✅ **Phase 0 plan written:** `phase-0-gate-resolution.md` (this turn).
-- ⏸ **Phase 0 review (Briggsy):** pending.
-- ⏸ **Phase 1–7 plans:** stubbed in §3 table, individual files materialize after each preceding phase reviews + ships.
-- ⏸ **Phase 0 execution:** begins after Briggsy reviews Phase 0 plan.
+- ✅ **Phase 0 plan written:** `phase-0-gate-resolution.md` (2026-05-16).
+- ✅ **Phases 1–7 plans written:** all 7 drafted 2026-05-16 in one workflow per `feedback-phase-plan-drafting-workflow.md`.
+- ⏸ **Deepening pass (all 8 phases, sequentially):** pending — next action.
+- ⏸ **Briggsy review of deepened plans:** pending — after deepening completes.
+- ⏸ **Phase 0 execution:** begins after Briggsy reviews deepened plans.
 
 **Open carry-forward decisions** (resolve at Phase 0 → Phase 1 boundary,
 not now):

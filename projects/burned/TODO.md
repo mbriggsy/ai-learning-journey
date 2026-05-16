@@ -7,27 +7,18 @@ the history. (Rule: `feedback-todo-is-not-a-diary.md`.)
 
 ## 1. Active priorities
 
-Current state (verified 2026-05-15 squeaky-clean):
+Current state (verified 2026-05-16 squeaky-clean):
 
-- Tests: **1407 pass** | 6 expected fail (68/68 files green).
-- Build: clean (`pnpm build`).
-- Typecheck: clean (`pnpm typecheck`).
-- Phone player entry: **19.17 KB gz** (unchanged — DramaOverlay is a
-  lazy chunk, not on the phone initial-JS ceiling). Total initial JS
-  still under the 100 KB phone ceiling.
-- DramaOverlay lazy chunk: **2.34 KB gz** (was 2.13 KB; +0.21 KB gz
-  for the new `BURNED_PHRASING_POOL` constant + flipPhrasing fade-in
-  tween).
-- HOW-TO-PLAY bundle: `howtoplay-*.js` 99.04 KB (33.90 KB gz)
-  + `howtoplay-*.css` 65.83 KB (10.68 KB gz) + shared GSAP chunk
-  69.42 KB (27.21 KB gz). All unchanged.
+- Tests: **1407 pass** | 6 expected fail (68/68 files green) — unchanged, no code shipped this session.
+- Typecheck: clean (`pnpm typecheck`) — verified this squeaky.
+- Phone player entry: **19.17 KB gz**. Total initial JS still under the 100 KB phone ceiling.
+- DramaOverlay lazy chunk: **2.34 KB gz**.
+- HOW-TO-PLAY bundle: `howtoplay-*.js` 99.04 KB (33.90 KB gz) + `howtoplay-*.css` 65.83 KB (10.68 KB gz) + shared GSAP chunk 69.42 KB (27.21 KB gz).
 - Protocol: v6.
 
-_No live prescriptions. This session shipped: (1) hero discard
-clipping fix at iPad tall-viewport — `.piles` grid 40% → 1fr;
-(2) DramaOverlay BURNED beat wire-report sub-caption pool (6 variants)
-that lands beneath the victim-name caption as a Pendleton-voice
-dossier sign-off._
+_No live prescriptions on the BURNED product. This session shipped one new artifact: the BURNED origin trailer brainstorm at `docs/ideation/2026-05-15-origin-trailer-brainstorm.md` — 15 requirements, 5 Resolve-Before-Planning gates (2× P0, 3× P1), R14 anchored in compressed Archer-title-sequence vocabulary, R15 layered for agentic-SDLC signal. Two-pass document-review (6 reviewer agents per pass). Next session entry: `/ce:plan` on the brainstorm doc. The 5 gates must clear before beat-sheet structure locks._
+
+_Note: 5 modified files at squeaky time (board.html, player.html, public/\_headers, src/client/howtoplay/acts/ActRemote.tsx, src/server/room.ts) + 1 untracked file (`../../.github/workflows/deploy-burned.yml`) are an in-progress deploy migration (partykit → Cloudflare Workers, `mbriggsy.partykit.dev` → `briggsy007.workers.dev`, adding `burned-cxa.pages.dev` as allowed origin). Deliberately NOT swept into this squeaky commit — deserves its own deployment commit when ready._
 
 ---
 

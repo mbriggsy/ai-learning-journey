@@ -7,36 +7,65 @@ the history. (Rule: `feedback-todo-is-not-a-diary.md`.)
 
 ## 1. Active priorities
 
-Current state (verified 2026-05-16 squeaky-clean):
+Current state (verified 2026-05-17 mid-session):
 
 - Tests: **1407 pass** | 6 expected fail (68/68 files green) — unchanged, no code shipped this session.
-- Typecheck: clean (`pnpm typecheck`) — verified this squeaky.
+- Typecheck: clean (`pnpm typecheck`) — last verified at 2026-05-16 squeaky.
 - Phone player entry: **19.17 KB gz**. Total initial JS still under the 100 KB phone ceiling.
 - DramaOverlay lazy chunk: **2.34 KB gz**.
 - HOW-TO-PLAY bundle: `howtoplay-*.js` 99.04 KB (33.90 KB gz) + `howtoplay-*.css` 65.83 KB (10.68 KB gz) + shared GSAP chunk 69.42 KB (27.21 KB gz).
 - Protocol: v6.
 
-_No live prescriptions on the BURNED product. **Origin-trailer plan state (2026-05-16): Phase 0 DEEPENED + committed (`b9617d9d`); Phases 1–7 drafted + committed (`de20650b`); deepening continues sequentially, 1 phase per session.**_
+_No live prescriptions on the BURNED product. **Origin-trailer plan state (2026-05-17): Phase 0 DEEPENED (`b9617d9d`); Phase 1 DEEPENED (`43d44ef4`, 60+ amendments, 1862→2728 lines); Phases 2–7 drafted + committed (`de20650b`); deepening continues sequentially.**_
 
-- _[`roadmap.md`](docs/plans/origin-trailer/roadmap.md) — 13 ADRs, R1–R15 trace, 3-axis bar-raise criteria, ~95s/2850-frame target_
-- _[`phase-0-gate-resolution.md`](docs/plans/origin-trailer/phase-0-gate-resolution.md) ✅ **DEEPENED** — 6 units (scaffold + 5 brainstorm gates); 39 amendments across 7 tiers landed via 8-agent parallel review + sequential-thinking + emil-design-eng synthesis_
-- _[`phase-1-beat-sheet-lock.md`](docs/plans/origin-trailer/phase-1-beat-sheet-lock.md) — 10 units (scene count + narration script + voice cast + transitions + cascade composition + goofy stats + music + typography + R15 chrome + briefing-room composition) — **next deepening target**_
-- _[`phase-2-voice-pipeline.md`](docs/plans/origin-trailer/phase-2-voice-pipeline.md) — 8 units (script-lines.ts + generate-dash-tts + canaries + full gen + post-process + intra-line beats + Phase 1 reconciliation + manifest)_
+- _[`roadmap.md`](docs/plans/origin-trailer/roadmap.md) — 13 ADRs (ADR #4 + #11 revised 2026-05-17 per Phase 1 deepening: bare `<Series>` + scene-internal overlay components, NOT `<TransitionSeries>`; `@remotion/transitions` install-on-demand), R1–R15 trace, 3-axis bar-raise criteria, ~95s/2850-frame target_
+- _[`phase-0-gate-resolution.md`](docs/plans/origin-trailer/phase-0-gate-resolution.md) ✅ **DEEPENED 2026-05-16** — 6 units (scaffold + 5 brainstorm gates); 39 amendments across 7 tiers landed via 8-agent parallel review + sequential-thinking + emil-design-eng synthesis_
+- _[`phase-1-beat-sheet-lock.md`](docs/plans/origin-trailer/phase-1-beat-sheet-lock.md) ✅ **DEEPENED 2026-05-17** — 10 units (scene count + narration script + voice cast + transitions + cascade composition + goofy stats + music + typography + R15 chrome + briefing-room composition); 60+ amendments via same 8-agent shape + emil-design-eng_
+- _[`phase-2-voice-pipeline.md`](docs/plans/origin-trailer/phase-2-voice-pipeline.md) — 8 units (script-lines.ts + generate-dash-tts + canaries + full gen + post-process + intra-line beats + Phase 1 reconciliation + manifest) — **next deepening target**_
 - _[`phase-3-visual-asset-prep.md`](docs/plans/origin-trailer/phase-3-visual-asset-prep.md) — 7 units (HTP capture + card curation + briefing-room assets + R15 chrome SVGs + music procurement + title-sequence assets + visual manifest)_
 - _[`phase-4-remotion-composite.md`](docs/plans/origin-trailer/phase-4-remotion-composite.md) — 10 units (Root + composition wiring + 6 scene files + transitions + per-scene Archer tests + full studio-preview render)_
 - _[`phase-5-gameplay-capture.md`](docs/plans/origin-trailer/phase-5-gameplay-capture.md) — 6 units (mechanism evaluation + shot list + harness + take selection + post-process + Phase 4 re-render)_
 - _[`phase-6-final-render-qa.md`](docs/plans/origin-trailer/phase-6-final-render-qa.md) — 7 units (production encode settings + render + §2 frame-pass audit + bar-raise vs UMB v3 + A/V sync + mobile crop + decode test)_
 - _[`phase-7-distribution.md`](docs/plans/origin-trailer/phase-7-distribution.md) — 5 units (X-native cutdown + portfolio embed + post copy + calendar + metrics tracking)_
 
-_**Locked decisions during drafting pass:**_
+_**Locked decisions during initial drafting pass:**_
 - _ADR #13 "Sterling-CODED, not Sterling-cloned" (Phase 0; voice analog of Archer-CODED — mimicry of style, never replication of identity)_
 - _Project-wide security convention: `execFileSync` argv arrays for all shell-outs (caught by `security_reminder_hook` during Phase 2 drafting; codified throughout Phases 2/3/5/6/7)_
-- _6-scene layout, 95s/2850-frame total, layered-simultaneous cascade composition, BURNED-typography inheritance (Phase 1)_
+- _6-scene layout, 95s/2850-frame total, BURNED-typography inheritance (Phase 1; cascade composition revised below per Phase 1 deepening)_
 - _Per-line WAV granularity + EBU R128 -23 LUFS post-processing (Phase 2)_
 - _HTP rendering via UMB-clone of `capture-htp-scroll.ts` + Phase 0 ADR #8 `setPublicDir('../../public')` for card-art read-through (Phase 3)_
 - _Pure-Remotion animation paradigm (no Framer Motion in trailer project) (Phase 4)_
 - _Mechanism B default (OBS + real devices) per water-beads rule, Mechanism A fallback (Phase 5)_
 - _3-post X distribution sequence: flagship + cutdown quote + pinned (Phase 7)_
+
+_**Locked decisions during Phase 1 deepening pass (2026-05-17, `43d44ef4`):**_
+- _R3 cross-dissolve REPLACED with hard cut at S04→S05 after 1.0s payoff visual hold (more Archer per design-lens; dissolves 3 internal timing contradictions; removes need for `<TransitionSeries>` overlap math)_
+- _**Bare `<Series>` + scene-internal overlay components** (NOT `<TransitionSeries>`) — matches UMB v3 TrailerV3.tsx precedent exactly. Roadmap ADR #4 + #11 revised._
+- _Cascade composition: **sequential revelation with focal hierarchy** (was layered-simultaneous; failed §2.2 design-lens as AI-slop-shaped). Anti-pattern guard: no frame except 1950 payoff stamp has >2 elements at full visual weight_
+- _Variable woff2 fonts (3 files: ClashDisplay/GeneralSans/JetBrainsMono-Variable), not 6 weight-specific files. Promise.all loading pattern per Phase 0 prescription_
+- _R6 grep regex rewritten — POSIX ERE lookahead unsupported on Windows; rg --pcre2 + 2-pass; vocabulary 11→25 terms_
+- _Per-cue wps validated (first-draft cue table had Stat 3 at 3.0 wps + S04 opener at 4.5 wps — unbuildable for Sterling-coded delivery); band 1.9-2.3 sustained / 2.4-2.6 list / 1.6-1.8 payoff_
+- _Udio struck from candidate pool (Nov 2025 settlement disabled exports); Suno Pro/Premier ToS corrected; Artlist Pro $199/yr is the minimum tier (was $50/yr Social tier — doesn't cover portfolio embed); Suno Pro $10/mo budgeted as expected fallback_
+- _Roster reframe: "Seven on the roster, six in the deck, one in the basement. Don't ask." (matches `ActRoster.tsx:153-158` Otto-exclusion aside; first-draft "seven" mismatched on-screen dossier)_
+- _Color tokens use Radix-style scale+step (`--color-cream-12`, `--color-ochre-3`, `--color-burned-fire`); bare-family tokens (`--color-cream`, `--color-mahogany`, `--color-ink`) do NOT exist in primitives.css_
+- _CaseBanner.tsx ghost-reference → `GameTable.tsx:67-88` inline `.caseBanner` aside_
+- _useFonts.ts Promise.all pattern (was sync flag-then-async loads; race condition fixed)_
+- _Sterling-screams-Lana identity-replication framing rewritten to cadence-spec citation only (ADR #13 compliance)_
+- _R15 #4 reframed to status grammar ("OPERATION STATUS: FIELD-READY") differentiating from #3 origin claim_
+- _emil custom easing curves added (EASE_OUT / EASE_IN_OUT / EASE_DRAWER); asymmetric stat-caption timing (200ms in / 1s read / 400ms decay); stamp slap never scale(0) — scale(0.95) → 1.04 overshoot → 1.0 settle_
+- _Briefing-room S02 depth-plane foreground element added (manila folder stack / brass nameplate / doorframe vignette — Phase 4 picks); venetian-blind shadow 1.5-2px/frame (survives H.264; was 0.5px = subpixel)_
+- _script.ts machine contract added for Phase 2 (typed `BURNED_TRAILER_LINES` const; UMB precedent: TRAILER_V3_PROMPTS)_
+- _Vitest devDep + test scripts added to trailer package.json (Phase 0 scaffold gap)_
+- _S05 budget tolerance band 14-22s (`S05_BUDGET_MIN/MAX_FRAMES`)_
+- _R11-cut bridge line drafted inline (was punted to Phase 2 execution)_
+- _Cold-read gate N=3 + 0-2 scale + recorded stimulus + consensus on pairings (was N=1 binary)_
+
+_**Cross-phase dependencies surfaced by Phase 1 deepening** (Phases 2/3/5/7 must absorb during their own deepening passes):_
+- _**Phase 2:** consume `script.ts` (not Markdown) for line set; per-engine cadenceAdapter (ElevenLabs `[shouts]` vs Gemini `[mood: shouting]`); `script.test.ts` asserts sync with BEAT-SHEET.md_
+- _**Phase 3:** budget BOTH static-PNG AND Playwright trace-video paths for HTP capture (conditional on Phase 3-entry perceptual gate)_
+- _**Phase 3:** take ownership of `videos/trailer/public/audio/music-bed.mp3` (was double-claimed by Phase 1 Unit 1.7 verification)_
+- _**Phase 5:** ship `gameplay-raw.mp4` + `gameplay-markers.json` contract (in-point + BURNED-draw-frame); Phase 4 trims via `<OffthreadVideo startFrom={M} endAt={M + S05_BUDGET_TARGET_FRAMES}>` to land BURNED draw at scene-relative frame 160_
+- _**Phase 7:** carry explicit "built by autonomous agents" cold-viewer decode in distribution copy (R15 chrome in trailer carries engineering-peer confirmation only; cold-decode signal lives in Phase 7 metadata)_
 
 _**Locked decisions during Phase 0 deepening pass:**_
 - _ADR #6 refined: `@remotion/lottie` install ON-DEMAND only (cut from Unit 0.1 scaffold; Unit 0.5 spike decides necessity per YAGNI)_
@@ -54,7 +83,7 @@ _**Locked decisions during Phase 0 deepening pass:**_
 - _Pricing math: real engine ceiling ~$24 (ElevenLabs $22 + Gemini ~$1 + OpenAI ~$1), not $37; $50 envelope retained as safety margin_
 - _WebMUSHRA hosting: Cloudflare Pages subpath default ($0, permanent URL, survives laptop-asleep)_
 
-_**Next session entry: `/deepen-plan` on `phase-1-beat-sheet-lock.md`.** Per `feedback-phase-plan-drafting-workflow.md`. Sequential, one phase per session._
+_**Next session entry: `/deepen-plan` on `phase-2-voice-pipeline.md`.** Per `feedback-phase-plan-drafting-workflow.md`. Sequential, one phase per session. Phase 2 must absorb the cross-phase dependencies surfaced by Phase 1 deepening (script.ts machine contract, per-engine cadenceAdapter)._
 
 _Note: 5 modified files (board.html, player.html, public/\_headers, src/client/howtoplay/acts/ActRemote.tsx, src/server/room.ts) + 1 untracked file (`../../.github/workflows/deploy-burned.yml`) are an in-progress deploy migration (partykit → Cloudflare Workers, `mbriggsy.partykit.dev` → `briggsy007.workers.dev`, adding `burned-cxa.pages.dev` as allowed origin). Deliberately NOT swept into either origin-trailer commit — deserves its own deployment commit when ready._
 

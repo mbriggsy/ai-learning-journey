@@ -1170,5 +1170,5 @@ already-paid Voice Changer credits).
 - `feedback-narrator-voice-direction.md` — VOICE_DIRECTION anti-pattern (critical, applies to every TTS call)
 - `feedback-imagen-budget.md` — one-test-image-first / budget envelope discipline
 - `feedback-wait-for-all-agents.md` — synthesis discipline (applied to research phase)
-- `feedback-stop-after-every-phase.md` — phase-at-a-time writing (this Phase 0 is the only detailed file this turn)
+- `feedback-phase-plan-drafting-workflow.md` — write all phase files in one workflow; deepen sequentially after (corrected 2026-05-16)
 - `user_harry.md` — Harry as tester recruitment routing

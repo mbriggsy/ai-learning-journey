@@ -7,14 +7,14 @@ deepened: pending
 reviewed: pending
 status: active
 phases:
-  - phase-0-gate-resolution.md             # active — this turn
-  - phase-1-beat-sheet-lock.md             # stubbed — depends on Phase 0
-  - phase-2-voice-pipeline.md              # stubbed — depends on Phase 1
-  - phase-3-visual-asset-prep.md           # stubbed — depends on Phase 1
-  - phase-4-remotion-composite.md          # stubbed — depends on Phases 2 + 3
-  - phase-5-gameplay-capture.md            # stubbed — depends on deploy migration
-  - phase-6-final-render-qa.md             # stubbed — depends on Phases 4 + 5
-  - phase-7-distribution.md                # stubbed — depends on Phase 6
+  - phase-0-gate-resolution.md             # drafted 2026-05-16
+  - phase-1-beat-sheet-lock.md             # pending — write next session
+  - phase-2-voice-pipeline.md              # pending — write next session
+  - phase-3-visual-asset-prep.md           # pending — write next session
+  - phase-4-remotion-composite.md          # pending — write next session
+  - phase-5-gameplay-capture.md            # pending — write next session
+  - phase-6-final-render-qa.md             # pending — write next session
+  - phase-7-distribution.md                # pending — write next session
 ---
 
 # BURNED Origin Trailer — Roadmap
@@ -25,10 +25,12 @@ phases:
 > file disagrees with the roadmap, the roadmap wins unless the roadmap is
 > demonstrably wrong — in which case we update the roadmap.*
 
-> **Status: Phase 0 detailed. Phases 1–7 stubbed.** Per BURNED's
-> `feedback-stop-after-every-phase.md` convention, individual phase files
-> are written one at a time AFTER the preceding phase is reviewed.
-> Subsequent phase files materialize as Phase 0 closes.
+> **Status: Phase 0 drafted; Phases 1–7 pending (context-density split, will
+> draft in one workflow next session).** Per
+> `feedback-phase-plan-drafting-workflow.md`, the complete set of phase
+> files is written in one workflow; deepening runs sequentially across
+> all 8 after all are drafted. This session ran out of budget after
+> Phase 0; the remaining 7 land next session.
 
 **Mission.** Ship a ~95-second 16:9 origin trailer for BURNED that lands
 the Archer-grade quality bar on every frame, telegraphs the
@@ -110,7 +112,11 @@ transition state, every cascade card, every cold-open title flash.
 | 6 | **Final Render + QA** | `out/trailer.mp4` at H264/CRF 18, bar-raise criteria evaluation against UMB v3 on the three locked axes. `qa-report.md`. | Phases 4 + 5 — all scenes integrated, gameplay closer in place. |
 | 7 | **Distribution** | X-native cutdown + portfolio embed + distribution plan. | Phase 6 — final QA pass cleared. |
 
-**Phase 1–7 are stubbed in this roadmap.** They get individual `phase-N-*.md` files written one at a time AFTER the preceding phase ships, per `feedback-stop-after-every-phase.md`. This roadmap names their inputs, outputs, and gating dependencies so the forward shape is visible without prematurely locking detail.
+Phase 0 is drafted (`phase-0-gate-resolution.md`). **Phases 1–7 are
+pending** — they get written as a complete set in one workflow next
+session, per `feedback-phase-plan-drafting-workflow.md`. Deepening
+runs sequentially across all 8 phase files AFTER they're all drafted,
+not per-phase during drafting.
 
 ---
 
@@ -129,7 +135,7 @@ transition state, every cascade card, every cold-open title flash.
 | 9 | **VOICE_DIRECTION anti-pattern guard** | Inline comment at TTS API call site mirroring UMB's `generate-narrator.ts:195-198`. Gemini TTS reads ALL text verbatim — style instructions become spoken audio. Codify on first write of `generate-dash-tts.ts`. |
 | 10 | **TTS-budget envelope: $50** | Research-corrected from brainstorm's $10. Real engine-eval cost across ElevenLabs Creator ($22) + Gemini ($10) + OpenAI ($5) + WebMUSHRA hosting ($0–20). Hybrid path adds $200–500. |
 | 11 | **No `@remotion/transitions` between every scene** | UMB uses `<Series>` + custom `FadeTransition` overlay components inside each scene for scene-internal fades. `<TransitionSeries>` is reserved for the cascade→gameplay cross-dissolve specifically (R3). Mixing both is acceptable. |
-| 12 | **Plan-stop after each phase** | Per `feedback-stop-after-every-phase.md` — write ONE phase file, stop, wait for review, then write the next. The forward shape is in the roadmap §3 table; per-phase detail materializes incrementally. |
+| 12 | **All phase files drafted in one workflow** | Per `feedback-phase-plan-drafting-workflow.md` (corrected 2026-05-16): write the complete set of phase files sequentially in one drafting workflow. Mid-drafting stops are for Claude's context-density management, never for Briggsy's review. Deepen all phases sequentially AFTER they're written, not per-phase during drafting. Briggsy reviews output, not intermediate planning artifacts. |
 | 13 | **Sterling-CODED, not Sterling-cloned** (locked 2026-05-16) | BURNED's visuals scream Archer without being Archer (per `docs/PRODUCT-SPECIFICATION.md` §3.6 "verified influences" — Bass, Ditko, Mad Men, OSS 117 as influences, not literal reproductions; `project-burned-creative-direction` memory). **Voice follows the same principle:** Sterling-CODED cadence (deadpan mid-Atlantic clip, sardonic lift, deliberate pace, declarative falling intonation on punchlines) without being a Benjamin clone or impression. This is a design choice first; the legal floor (see §5.1) aligns with it. |
 
 ---
@@ -420,7 +426,7 @@ not now):
 - `feedback-imagen-budget.md` — one-test-image-first protocol
 - `feedback-imagen4-over-nbp.md` — Imagen 4 preferred for any new asset
 - `feedback-wow-over-simplicity.md` — visual richness over "cut layers" advice
-- `feedback-stop-after-every-phase.md` — phase-at-a-time writing
+- `feedback-phase-plan-drafting-workflow.md` — write all phase files in one workflow; deepen sequentially after
 - `feedback-wait-for-all-agents.md` — synthesis discipline
 - `feedback-eye-in-loop-beats-calibration-for-motion.md` — motion validation rule (applies to Phase 4 scene timing review)
 

@@ -16,9 +16,47 @@ Current state (verified 2026-05-16 squeaky-clean):
 - HOW-TO-PLAY bundle: `howtoplay-*.js` 99.04 KB (33.90 KB gz) + `howtoplay-*.css` 65.83 KB (10.68 KB gz) + shared GSAP chunk 69.42 KB (27.21 KB gz).
 - Protocol: v6.
 
-_No live prescriptions on the BURNED product. Origin-trailer plan landed this session: [`docs/plans/origin-trailer/roadmap.md`](docs/plans/origin-trailer/roadmap.md) (master, 8-phase index) + [`docs/plans/origin-trailer/phase-0-gate-resolution.md`](docs/plans/origin-trailer/phase-0-gate-resolution.md) (6 units — scaffold + 5 gates from the brainstorm's Resolve-Before-Planning list). **ADR #13 locked: "Sterling-CODED, not Sterling-cloned"** — voice analog of the Archer-CODED visual rule (mimicry of style, never replication of identity). Persisted to memory as `project-burned-sterling-coded-voice.md`. R4 Unit 0.2 restructured around a new Step 0 — Benjamin Sterling cadence characterization as teachable specs fed to engines as steering; MUSHRA listening tests register-recognition (not actor-identity). Phases 1–7 stubbed in roadmap §3, materialize one at a time after each preceding phase reviews + ships. **Next session entry: write Phases 1–7 in one workflow** (Beat Sheet Lock, Voice Pipeline, Visual Asset Prep, Remotion Composite Build, Gameplay Capture, Final Render + QA, Distribution) — per the corrected `feedback-phase-plan-drafting-workflow.md`. **After all 7 are drafted, then `/deepen-plan` sequentially across all 8 phase files.** Plan files are uncommitted on disk (per "no commits without explicit ask" rule)._
+_No live prescriptions on the BURNED product. **Origin-trailer plan state (2026-05-16): Phase 0 DEEPENED + committed (`b9617d9d`); Phases 1–7 drafted + committed (`de20650b`); deepening continues sequentially, 1 phase per session.**_
 
-_Note: 5 modified files at squeaky time (board.html, player.html, public/\_headers, src/client/howtoplay/acts/ActRemote.tsx, src/server/room.ts) + 1 untracked file (`../../.github/workflows/deploy-burned.yml`) are an in-progress deploy migration (partykit → Cloudflare Workers, `mbriggsy.partykit.dev` → `briggsy007.workers.dev`, adding `burned-cxa.pages.dev` as allowed origin). Deliberately NOT swept into this squeaky commit — deserves its own deployment commit when ready._
+- _[`roadmap.md`](docs/plans/origin-trailer/roadmap.md) — 13 ADRs, R1–R15 trace, 3-axis bar-raise criteria, ~95s/2850-frame target_
+- _[`phase-0-gate-resolution.md`](docs/plans/origin-trailer/phase-0-gate-resolution.md) ✅ **DEEPENED** — 6 units (scaffold + 5 brainstorm gates); 39 amendments across 7 tiers landed via 8-agent parallel review + sequential-thinking + emil-design-eng synthesis_
+- _[`phase-1-beat-sheet-lock.md`](docs/plans/origin-trailer/phase-1-beat-sheet-lock.md) — 10 units (scene count + narration script + voice cast + transitions + cascade composition + goofy stats + music + typography + R15 chrome + briefing-room composition) — **next deepening target**_
+- _[`phase-2-voice-pipeline.md`](docs/plans/origin-trailer/phase-2-voice-pipeline.md) — 8 units (script-lines.ts + generate-dash-tts + canaries + full gen + post-process + intra-line beats + Phase 1 reconciliation + manifest)_
+- _[`phase-3-visual-asset-prep.md`](docs/plans/origin-trailer/phase-3-visual-asset-prep.md) — 7 units (HTP capture + card curation + briefing-room assets + R15 chrome SVGs + music procurement + title-sequence assets + visual manifest)_
+- _[`phase-4-remotion-composite.md`](docs/plans/origin-trailer/phase-4-remotion-composite.md) — 10 units (Root + composition wiring + 6 scene files + transitions + per-scene Archer tests + full studio-preview render)_
+- _[`phase-5-gameplay-capture.md`](docs/plans/origin-trailer/phase-5-gameplay-capture.md) — 6 units (mechanism evaluation + shot list + harness + take selection + post-process + Phase 4 re-render)_
+- _[`phase-6-final-render-qa.md`](docs/plans/origin-trailer/phase-6-final-render-qa.md) — 7 units (production encode settings + render + §2 frame-pass audit + bar-raise vs UMB v3 + A/V sync + mobile crop + decode test)_
+- _[`phase-7-distribution.md`](docs/plans/origin-trailer/phase-7-distribution.md) — 5 units (X-native cutdown + portfolio embed + post copy + calendar + metrics tracking)_
+
+_**Locked decisions during drafting pass:**_
+- _ADR #13 "Sterling-CODED, not Sterling-cloned" (Phase 0; voice analog of Archer-CODED — mimicry of style, never replication of identity)_
+- _Project-wide security convention: `execFileSync` argv arrays for all shell-outs (caught by `security_reminder_hook` during Phase 2 drafting; codified throughout Phases 2/3/5/6/7)_
+- _6-scene layout, 95s/2850-frame total, layered-simultaneous cascade composition, BURNED-typography inheritance (Phase 1)_
+- _Per-line WAV granularity + EBU R128 -23 LUFS post-processing (Phase 2)_
+- _HTP rendering via UMB-clone of `capture-htp-scroll.ts` + Phase 0 ADR #8 `setPublicDir('../../public')` for card-art read-through (Phase 3)_
+- _Pure-Remotion animation paradigm (no Framer Motion in trailer project) (Phase 4)_
+- _Mechanism B default (OBS + real devices) per water-beads rule, Mechanism A fallback (Phase 5)_
+- _3-post X distribution sequence: flagship + cutdown quote + pinned (Phase 7)_
+
+_**Locked decisions during Phase 0 deepening pass:**_
+- _ADR #6 refined: `@remotion/lottie` install ON-DEMAND only (cut from Unit 0.1 scaffold; Unit 0.5 spike decides necessity per YAGNI)_
+- _Roadmap §5.2 rewritten: acceptance threshold is **register-recognition** (Sterling-CODED cluster terms + joint-pass + ±10 MUSHRA vs non-Benjamin reference), NOT actor-identity confusion (previous framing contradicted ADR #13)_
+- _`BurnedDisplay` = Clash Display (variable woff2 already in BURNED at `/public/fonts/`, weight 700; no new font face forked for trailer)_
+- _Archer-grammar transition primary = classification-stamp slap (continuity with DramaOverlay stamp-reveal motion grammar); iris wipe = documented fallback; kinetic typography = constrained to goofy-stat overlays only (the AI-trailer cliché, NOT for scene-to-scene)_
+- _R15 chrome placement minimum-spec: bottom-third + BURNED orange/teal (`--paper-signal-orange` / `--paper-ink`) + Clash Display_
+- _Unit ordering: 0.6 before 0.3 (R5 outcome filters R14 candidate pool — brainstorm's stated resolution order now operationally enforced)_
+- _Vera→Dash timbre coherence bug fixed (the screamer is Dash; the addressee is Vera)_
+- _Path B = Instant Voice Cloning only (Professional eliminated; removes 30-min recording schedule dependency)_
+- _Path D = Sub-phase 0a deliverable (not in-flight ladder step); Brainstorm-Restructure terminal with three honest options (synthetic-tinged Dash / non-Dash briefer / abandon)_
+- _PHASE-0-EXIT.md template specified at plan time so Phase 1 consumes without back-reading 5 eval files_
+- _VOICE_DIRECTION guards = per-engine variants (ElevenLabs bracket-tag-only / Gemini section-marker / OpenAI separate-parameter); generalized from UMB's Gemini-only original_
+- _ElevenLabs steering surface corrected: NOT long-form natural-language; uses numeric `voice_settings` + sparse bracket tags + Voice Design prompt. cadence-spec.md gets translated into three per-engine adapter files in Step 1.5_
+- _Pricing math: real engine ceiling ~$24 (ElevenLabs $22 + Gemini ~$1 + OpenAI ~$1), not $37; $50 envelope retained as safety margin_
+- _WebMUSHRA hosting: Cloudflare Pages subpath default ($0, permanent URL, survives laptop-asleep)_
+
+_**Next session entry: `/deepen-plan` on `phase-1-beat-sheet-lock.md`.** Per `feedback-phase-plan-drafting-workflow.md`. Sequential, one phase per session._
+
+_Note: 5 modified files (board.html, player.html, public/\_headers, src/client/howtoplay/acts/ActRemote.tsx, src/server/room.ts) + 1 untracked file (`../../.github/workflows/deploy-burned.yml`) are an in-progress deploy migration (partykit → Cloudflare Workers, `mbriggsy.partykit.dev` → `briggsy007.workers.dev`, adding `burned-cxa.pages.dev` as allowed origin). Deliberately NOT swept into either origin-trailer commit — deserves its own deployment commit when ready._
 
 ---
 

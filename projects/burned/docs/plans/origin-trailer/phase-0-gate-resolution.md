@@ -270,7 +270,7 @@ packages required for `TransitionSeries`, new `Audio`, and Lottie.
     "scripts": {
       "studio": "npx remotion studio src/index.ts",
       "render": "npx remotion render src/index.ts BurnedTrailer out/trailer-landscape.mp4 --codec h264 --crf 18",
-      "render:final": "npx remotion render src/index.ts BurnedTrailer out/trailer-final.mp4 --codec h264 --crf 16 --x264-preset slow",
+      "render:final": "npx remotion render src/index.ts BurnedTrailer out/trailer-final.mp4 --codec h264 --crf 18 --x264-preset slow --pixel-format yuv420p --audio-codec aac --audio-bitrate 128K",
       "render:thumbnail": "npx remotion still src/index.ts BurnedTrailer out/thumbnail.png --frame 450",
       "typecheck": "tsc --noEmit"
     },

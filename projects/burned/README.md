@@ -7,6 +7,16 @@ tags: [project, active]
 
 A spy-comedy card game — rethemed from [Exploding Kittens Party Pack](https://www.explodingkittens.com/), set in the world of The Pendleton Agency. Jackbox-style: one shared screen (TV/laptop) shows the game table, each player uses their phone as a private controller.
 
+## Play
+
+**Live at [burned-cxa.pages.dev](https://burned-cxa.pages.dev/board)** — open `/board` on a TV or laptop to host, then phones scan the QR code to join.
+
+| Surface | URL |
+|---|---|
+| Board (TV) | https://burned-cxa.pages.dev/board |
+| Phone join (via QR) | https://burned-cxa.pages.dev/player?room=&lt;CODE&gt; |
+| Operations Manual | https://burned-cxa.pages.dev/howtoplay |
+
 ## Project Map
 
 - [CLAUDE.md](./CLAUDE.md) — project orientation, guardrails, conventions index

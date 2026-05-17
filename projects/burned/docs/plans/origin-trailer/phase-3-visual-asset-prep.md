@@ -6,7 +6,7 @@ parent: docs/plans/origin-trailer/roadmap.md
 origin: docs/ideation/2026-05-15-origin-trailer-brainstorm.md
 created: 2026-05-16
 deepened: 2026-05-17
-reviewed: pending
+reviewed: 2026-05-17
 status: active
 ---
 
@@ -25,7 +25,11 @@ status: active
     + COPY of BURNED HTP component vocabulary (Stamp, Crest, RedactBar,
     ClassificationBanner, DossierPage + .module.css peers) into
     `videos/trailer/src/components/burned-vocabulary/` at Phase 3 entry.
-    `diff -r` CI catch for drift. Roadmap ADR #2 refined + NEW ADR #15.
+    sha256-hash-compare manual pre-commit catch for drift (DOC-REVIEW
+    adversarial F5 + feasibility f3 + scope-guardian SG-P3-06: "diff -r CI
+    gate" framing was inaccurate — actual script is sha256 over an
+    explicit allowlist + BURNED has no CI workflow merged yet). Roadmap
+    ADR #2 refined + NEW ADR #15.
   - PUBLIC-DIR collision fix — `Config.setPublicDir('../../public')` from
     Phase 0 ADR #8 makes `videos/trailer/public/` UNREACHABLE during
     render. All Phase 3-new assets land in `public/trailer/...` inside
@@ -113,7 +117,13 @@ status: active
     ref. Codified inline at every Imagen escalation path.
   - NEW §"Imagen Spend Tracker" — running `sample-eval/visual-asset-
     prep/imagen-spend.md` with per-path running total + global cap.
-    Hard abort at $5; `IMAGEN_BUDGET_OVERRIDE=1` for explicit override.
+    Hard abort at $6 (matches the legitimate $5+$1 worst case ceiling
+    math; pre-deepening claim "$5+$1 within $5 cap" was broken). NO
+    env var override — operator edits the cap constant in the spend-
+    check script if extension is warranted (matches Phase 2's
+    TTS_BUDGET_OVERRIDE deletion; per `feedback-imagen-budget.md` an
+    env-var override is an autonomy-rule footgun because Claude can
+    self-set it and the cap becomes decorative).
   - NEW §"Asset Tier Taxonomy" (HERO / TEXTURE / CHROME) — added to
     Critical Constraints; column added to Requirements Trace. HERO =
     cascade payoff stamp + HTP fullpage + cold-open logo. TEXTURE =
@@ -121,11 +131,19 @@ status: active
     R15 stamps 1/2/4 + case-banner + comms-ticker + classification
     banner + crest watermark. Phase 4 composition priority follows
     tier.
-  - NEW §"Briggsy-Eyeball Gate Protocol" — explicit
-    [BRIGGSY-REVIEW GATE] named stop at exit of Units 3.1, 3.3, 3.4,
-    3.6 (the four novel-visual units). Each gate poses 2-3 fluency
-    questions, not property checks (per insight 050: agent-style
-    verification misses perceptual continuities).
+  - NEW §"Briggsy-Eyeball Gate Protocol" — pre-deepening had 4
+    per-unit `[BRIGGSY-REVIEW GATE]` stops at Units 3.1, 3.3, 3.4,
+    3.6 with sentinel-file unblocking. DOC-REVIEW COLLAPSED to ONE
+    cross-family gate at Unit 3.7 entry (per scope-guardian SG-P3-02
+    + product product-001 + adversarial F9 cross-persona consensus,
+    grounded in `feedback-briggsy-reviews-output-not-process.md`).
+    Per-unit verification stays AUTOMATED (script exit codes,
+    completion gates, CVD probe, safe-square composite generation);
+    Briggsy reviews the consolidated bundle once at Unit 3.7. Adds
+    two new cross-family composite-frame proofs (S02 frame 300
+    briefing-room reveal + S04 frame 1950 cascade-payoff stamp-slap)
+    to the Unit 3.7 review bundle — the two moments where multiple
+    Phase 3 asset families collide in-frame.
   - NEW §"CVD Probe Script for R15 Chrome" — per insight 051. 20-line
     `scripts/probe-r15-chrome-cvd.ts` using project's existing culori
     pipeline against ochre-9 (#947226) + burn-fire (#be2e27) on cream
@@ -149,12 +167,15 @@ status: active
     [] as const` at Phase 0 Unit 0.1 scaffold so Phase 4 typecheck
     imports resolve before Phase 3 runs. Mirrors Phase 2's
     audio-manifest stub pattern.
-  - NEW Unit 3.2 §"Cascade Ring Layout" — Phase 3 ships
-    `videos/trailer/src/lib/cascade-ring-layout.json` declaring
-    per-card ring position (angle, radius, z-order) + entry-stagger
-    frame offset (Phase 1's 2-frame per item lock). Codifies
-    "sequential revelation, NOT layered-simultaneous" so Phase 4
-    can't accidentally render the AI-slop-shape.
+  - NEW Unit 3.2 §"Cascade Halo Column" — Phase 3 ships
+    `videos/trailer/src/lib/cascade-halo-column.json` (DOC-REVIEW
+    RENAME from cascade-ring-layout.json; original name shipped a
+    17-card 360° MOSAIC violating Phase 1 line 1782-1783 which locks
+    a "full right-edge 6-card column at 40%") declaring per-card
+    column position (x band 1560-1880, slot index 1-6, yCenter,
+    entry-stagger frame offset). Codifies Phase 1's 6-card right-edge
+    column at 40% — the AI-slop-shape Phase 3 deepening accidentally
+    re-introduced is now ruled out by the geometry itself.
   - NEW Unit 3.4 §"Safe-Square Composite Audit" — per-asset-family
     PNG at 1920×1080 with 1080×1080 center-square guide overlay.
     Critical for R15 stamp #3 (1200×280) which has mobile-crop risk.
@@ -179,8 +200,9 @@ status: active
     `<Img>` + `<OffthreadVideo>` from `'remotion'` core (NOT
     @remotion/media — only `<Audio>` is @remotion/media);
     `<Sequence from={asset.startFrame}><Audio src={staticFile(...)} />`
-    per Phase 2 lock; cascade-ring-layout.json consumption for halo
-    layout; R15 split-layer composition with transform-origin:
+    per Phase 2 lock; cascade-halo-column.json consumption for halo
+    layout (DOC-REVIEW RENAME from cascade-ring-layout.json); R15
+    split-layer composition with transform-origin:
     center; stat captions inline React (no Phase 3 asset); Otto S03
     treatment (6 card-art + Otto-aside, NOT 7 portraits);
     `setPublicDir('../../public')` + trailer assets at
@@ -236,7 +258,9 @@ status: active
     management; vocabulary from BURNED's `src/client/howtoplay/
     components/` COPIED into `videos/trailer/src/components/burned-
     vocabulary/` at Phase 3 entry (Path B hybrid). Drift verified
-    via diff -r in CI.
+    via `pnpm verify:vocab-sync` (sha256-hash compare of explicit
+  allowlist, run as manual pre-commit check — NOT a CI gate; BURNED
+  has no CI workflow merged yet, per DOC-REVIEW honest framing).
   - NEW ADR #15 — Public-directory architecture. All Phase 3+
     trailer-only assets land in `public/trailer/...` inside BURNED's
     existing public/. Single `setPublicDir('../../public')` works
@@ -244,6 +268,283 @@ status: active
     only files.
 
   Plan: 1737 → expected ~3200 lines.
+-->
+
+<!--
+  Document-review pass landed 2026-05-17 via 7-persona parallel review
+  (coherence + feasibility + product-lens + design-lens + security-lens
+  + scope-guardian + adversarial-document-reviewer). 61 raw findings →
+  ~45 distinct after dedup. Plan grew 4379 → ~4860 lines (~11% growth
+  — lower than Phase 0/1/2 because most absorption was inline
+  structural fixes rather than appended sections; the new content
+  retired several pages of pre-deepening drift).
+
+  The dominant pattern this pass caught: **Phase 1 lock inversions**.
+  The Phase 3 deepening (b9617d9d/same day as this review) silently
+  dropped four locked Phase 1 contracts without declaring them as
+  reopens — the exact `feedback-deepening-drift-anti-pattern.md`
+  failure mode BURNED has documented and ratified. Every persona caught
+  variations of "Phase 3 deepening says X, but Phase 1 lock says Y, and
+  the change wasn't declared." Plus the same header-amendment-vs-body
+  anti-pattern Phase 1 + 2 caught (now caught a layer up — within-phase
+  drift was clean here; the new drift was across-phase).
+
+  P0 Phase 1 lock restorations (silent inversions reverted):
+  - **BURNED logo S01 = card art, NOT wordmark.** Phase 1 Unit 1.10
+    (line 2943-2951) locks the S01-vs-S06 differential: S01 cold-open
+    frame 60-210 uses the BURNED CARD ART (`public/assets/cards/burned
+    .webp` — already exists), establishing BURNED as a card inside
+    the deck (in-world); S06 closing frame 2780 uses the wordmark SVG,
+    establishing BURNED as the game's title (out-of-world bookend).
+    Differential is load-bearing for R14 compressed-Archer cold-open.
+    Phase 3 deepening had merged the two roles into a "SINGLE
+    burned-logo.svg used at both" framing, erasing the diegetic→meta
+    narrative arc Phase 1 designed. Restored: `burned-logo.svg` is
+    S06-only at frame 2780 (NOT 2790 — Phase 1 lowered the frame 10
+    earlier to give 40 frames of breathing room before R15 #4 at
+    frame 2820). Multiple body references updated (header, Key
+    Tech Decisions, Step 6 closing-card, Unit 3.6 Step 3, visual-
+    manifest entry, safe-square FAMILIES, PHASE-3-EXIT template).
+  - **Cascade halo is a 6-card right-edge COLUMN, NOT a 17-card 360°
+    MOSAIC.** Phase 1 line 1782-1783 locks: "Card-art halo right-edge
+    only begins building... top 6 cards of the 17-art set... full
+    right-edge 6-card column at 40%." Phase 3 deepening had shipped a
+    17-card 360° ring centered at (1700, 540) with `radiusInner: 280,
+    radiusOuter: 360` — the exact "layered/decorative cluster" AI-
+    slop-shape Phase 1's lock was designed to prevent. Restored:
+    `cascade-halo-column.json` (RENAMED from cascade-ring-layout.json
+    — the filename had misled the deepening author into shipping the
+    wrong geometry) with 6 operative cards in column at x band
+    1560-1880, 2-frame entry stagger from haloStartFrame 1560.
+    `offscreenVarietyPool` documents the 11 unused action cards as
+    available for cold-open card-flash use but never entering the
+    cascade halo column.
+  - **Suno is Tier 3 LAST-RESORT, NOT EXPECTED fallback.** Phase 1
+    line 2291-2298 doc-review-revised source-priority ladder:
+    Tier 1 Artlist/Epidemic Pro (PRIMARY) → Tier 2 Marmoset/Songtradr
+    per-track marketplace ($30-$200/track, hand-picked with explicit
+    copyright vesting) → Tier 3 Suno Pro (LAST-RESORT only with
+    `music_disclosure_required: true` for Phase 7 distribution copy).
+    Phase 3 deepening had labeled Suno "EXPECTED fallback (not
+    last-resort)" and DROPPED Tier 2 entirely — directly inverting
+    Phase 1's lock motivated by the §2.2 water-beads test (stacked
+    AI disclosure on an agentic-SDLC trailer points back at "the
+    agent built this" instead of the product). Restored: Unit 3.5
+    documents all 3 tiers; Suno explicitly LAST-RESORT; autonomy
+    floor restructured so Suno Pro is the minimum-viable Claude-
+    runnable path (decoupled from optional Tier 1+2 funding).
+    Cross-phase amendment in Phase 1 line 557 prose (stale "Suno is
+    the budgeted expected fallback" text contradicted Phase 1's own
+    line 2296 lock; aligned).
+  - **Otto narration line is "research budget", NOT "basement".**
+    Phase 1 DOC-REVIEW (line 1074-1087) explicitly retracted "in
+    the basement" as Phase 1 fiction and source-fixed to "on the
+    research budget" matching `ActRoster.tsx:153-158` literal aside.
+    Phase 3 deepening was written same day as the Phase 1 fix but
+    still cited "in the basement" in 6 places (4 narration quotes
+    + 2 visual treatment labels). All 6 updated to the source-fixed
+    line; "BASEMENT" visual treatment labels updated to "RESEARCH
+    BUDGET" or "REDACTED".
+
+  P0 first-execution bugs (would crash or silently mis-render):
+  - **`IMAGEN_BUDGET_OVERRIDE=1` env var DELETED entirely** (security
+    SEC-P3-001). Phase 2 DOC-REVIEW R3 KILLED the parallel
+    `TTS_BUDGET_OVERRIDE` env var as an autonomy-rule footgun (Claude
+    can self-set it; cap becomes decorative). Phase 3 deepening
+    re-introduced the identical shape for Imagen spend — direct
+    violation of the Phase 2 lock. Same fix applied: cap raised to
+    `$6` to match legitimate worst-case math (the prior "$5 cap with
+    $6 worst case within cap" was broken arithmetic), override
+    mechanism removed; Briggsy edits the `IMAGEN_SPEND_CAP` constant
+    if extension is warranted (one-line atomic intent signal).
+  - **Composite-proof Playwright scripts** (Unit 3.6 Step 5 + Unit
+    3.7 Step 4 build-safe-square-composites.ts) used `page.setContent`
+    HTML with `<img src="../../../../public/...">` relative paths.
+    `setContent` page URL is `about:blank` — relative paths silently
+    404. The scripts would have produced blank PNGs that masqueraded
+    as "safe-square verified" artifacts. Triple cross-persona catch
+    (design F05 + feasibility f6 + adversarial F4). Rewritten to
+    use `pathToFileURL(absolutePath).href` + assert-before-render
+    + waitForFunction on `img.complete && img.naturalWidth > 0`
+    (replaces wall-clock waitForTimeout that produced unverified
+    captures).
+  - **CSS-module hashed class names.** Unit 3.3 Step 5
+    `capture-banner-references.ts` used selector `aside.caseBanner`
+    against `<aside className={styles.caseBanner}>`. CSS modules
+    hash class names at build (`_caseBanner_a1b2c3`), so the literal
+    selector matches nothing — `waitForSelector` times out and the
+    reference render fails on first run (feasibility f1). Replaced
+    with partial-class match `aside[class*="caseBanner"]` that
+    survives hash regeneration.
+  - **Crest.tsx hardcoded asset path.** `variant="image"` default
+    in `Crest.tsx` line 26 ships `src="/assets/howtoplay/pendleton-
+    crest.png"` — a browser-absolute URL that does NOT resolve
+    through Remotion's `staticFile()` pipeline at render time
+    (feasibility f2). Locked Phase 4 to `<Crest variant="svg" />`
+    only — the pure-vector inline path at lines 41-121 has no asset
+    URL dependency. The poster role uses the PNG via `staticFile()`
+    directly; the React-chrome role uses `variant="svg"`.
+  - **HTP capture had silent failure modes.** (a) Script asserted
+    `[data-reveal]` exists but not count ≥ expected — a redirect to
+    a different page could match a single matching element and the
+    `every()` check would pass on tiny matches (security SEC-P3-007
+    + feasibility f4). Added URL assertion + element-count assertion
+    (≥8 expected; HTP has 10 acts × DossierPage). (b) `initialScroll-
+    Height` captured before loop didn't account for layout expansion
+    during reveals; final DossierPage might never reach trigger
+    (feasibility f4). Loop now re-reads scrollHeight every 5 steps
+    and overshoots by 500px. (c) ScrollTrigger fallback labeled
+    "DEV-only" but `typeof window.ScrollTrigger !== 'undefined'`
+    passes on production too (GSAP loads as part of HTP runtime —
+    security SEC-P3-006). Gated fallback on
+    `URL.includes('localhost') || env.ALLOW_ST_FALLBACK === '1'`.
+  - **R15 SVG `var()` honest framing** (design F03). The pattern
+    `style="--ink: var(--color-X, #hex)"` doesn't resolve the var
+    when SVGs load via Remotion `<Img>` (SVG documents are isolated
+    — they don't inherit parent CSS custom properties). The hex
+    fallback IS what renders. That's correct because the fallback
+    values are the locked Phase 1 tokens, but the pre-deepening
+    "Phase 4-applied inline style drives the var" claim was wrong.
+    Rewritten to honest framing: hex fallback is the render path;
+    token name preserved for traceability; dynamic re-tinting (if
+    ever needed) requires inlining as `<svg>` JSX, not via `<Img>`.
+
+  P0 structural absorptions:
+  - **Briggsy-eyeball gate collapse: 4 per-unit → 1 cross-family at
+    Unit 3.7.** Cross-persona consensus (scope-guardian SG-P3-02 +
+    product product-001 + adversarial F9) grounded in
+    `feedback-briggsy-reviews-output-not-process.md`: Briggsy reviews
+    OUTPUT, not mid-flight intermediate artifacts. Four per-unit
+    gates would either stall indefinitely or get Claude-self-signed
+    (defeating the gate). Per-unit verification stays AUTOMATED
+    (script exit codes, completion gates, CVD probe, safe-square
+    composite generation); single consolidated review at Unit 3.7
+    entry covers cross-family cohesion (which insight 050's
+    emil-cohesion principle is actually about — cross-family read,
+    not per-asset). Unit 3.7 ships TWO cross-family composite-frame
+    proofs (S02 frame 300 briefing-room reveal + S04 frame 1950
+    cascade-payoff stamp slap) at intended scene scale, plus the
+    per-family safe-square composites. Cohesion rubric specifies
+    THREE axes (light direction / ink texture character / color
+    temperature consistency) + §2.2 binary on top.
+  - **`videos/trailer/.gitignore` + `.env.example` updates +
+    `.cfignore` for `public/trailer/`** added as NEW Critical
+    Constraints subsection §"Trailer-Local Secrets Hygiene"
+    (security SEC-P3-002 + SEC-P3-003 + SEC-P3-004 + feasibility
+    f8). Imagen spend tracker + music license PDF + Suno billing
+    screenshot + Imagen raw API responses gitignored; `GEMINI_API_KEY`
+    placeholder added to `.env.example`; `public/trailer/` excluded
+    from BURNED Pages deploy bundle to prevent 5-15 MB ride-along
+    bloat.
+  - **`verify:vocab-sync` honest framing** (adversarial F5 +
+    feasibility f3 + scope-guardian SG-P3-06). "diff -r CI gate"
+    prose throughout the plan was inaccurate — actual script is
+    sha256-hash compare over an explicit allowlist + BURNED has no
+    merged CI workflow yet + `diff -r` isn't cross-platform-portable
+    on Windows. All references updated to: sha256-allowlist as
+    manual pre-commit check. Known blindspot documented: the
+    allowlist only detects changes to the 10 enumerated files —
+    NEW BURNED HTP components won't surface; Phase 4 entry adds an
+    `ls` comparison to catch this.
+  - **`cascade-ring-layout.json` RENAMED to
+    `cascade-halo-column.json`** so the filename matches the
+    geometry (Phase 1 lock is a column, not a ring). The legacy
+    filename had misled the deepening author into shipping ring
+    geometry; the rename prevents recurrence.
+
+  P1 architectural absorptions:
+  - **Path A rejection's GSAP reason removed** (adversarial F1). The
+    pre-deepening cited "GSAP ScrollTrigger fundamentally requires a
+    viewport" as the load-bearing technical reason for rejecting
+    cross-package import. But none of the 5 vendored components
+    (Stamp, Crest, RedactBar, ClassificationBanner, DossierPage)
+    import GSAP or `useScrollReveal` — the GSAP machinery lives at
+    the HTP page level. Path A rejection reduced to two honest
+    grounds: (a) CSS-modules + custom-property-token bundler
+    resolution + palette-prebuild dependency, (b) ADR #2 isolation
+    contract. Both still defensible; the GSAP framing was rhetorical
+    and removed.
+  - **`depth-plane.svg` tier resolved** (design F08). Was tagged
+    both `safeSquareRole: 'side-band'` AND `tier: 'hero'` —
+    contradictory by the plan's own rules (HERO must hold full
+    weight in central 1080×1080; side-band means acceptable mobile
+    crop). Phase 1 Unit 1.10 calls depth-plane load-bearing for the
+    S02 reveal cinematic, so `safe-square` is the correct tag.
+    Manifest entry corrected.
+  - **`chevron-motif-bg.svg` geometry corrected** (design F11). The
+    pre-deepening SVG path `M0,60 L60,0 L120,60 L60,120 Z` was a
+    DIAMOND/RHOMBUS, not a chevron. Chevrons are directional
+    arrowhead `>>>` shapes carrying forward-motion visual energy
+    (Bass / Ferro reference); diamonds read as static-decorative.
+    Rewritten with actual chevron geometry.
+  - **Phase 1 cross-phase amendment** — Phase 1 line 557 stale
+    prose "Suno Pro generative is the budgeted expected fallback"
+    contradicted Phase 1's own line 2296 doc-review lock ("Suno
+    Pro generative — last-resort only"). Phase 3 deepening had
+    read the stale prose and propagated the wrong "Suno EXPECTED"
+    framing. Phase 1 line 557 aligned to the same-file lock
+    (no Phase 1 logic change — prose-only consistency fix).
+
+  P2 polish absorptions:
+  - **CVD probe extension** (design F04) — probe pairs extended to
+    include composed-background tests (mahogany grain, venetian-
+    blind shadow overlay, halo cluster opacity overlay), not just
+    foreground-on-clean-cream. CVD probe script promoted to
+    permanent `scripts/cvd-probe.ts` per SG-P3-03 (was run-and-
+    delete; reusable across BURNED color verification needs).
+  - **Unit 3.0 ordering** (coherence STRUCT-001). Unit 3.0 was
+    documented BEFORE its Phase 3 dependents (Units 3.3 + 3.4 list
+    Unit 3.0 in Dependencies). Already in correct position per
+    body (Unit 3.0 ships at the top of the Implementation Units
+    section); ordering note added to Critical Constraints to make
+    the dependency-flow explicit.
+  - **Imagen budget math** ($5 + $1 = $6 stated as "within $5 cap"
+    was broken). Cap raised to $6 — matches the legitimate worst-
+    case sum (Unit 3.6 operative-card-frame ≤$5 + Unit 3.3
+    depth-plane fallback ≤$1).
+  - **Music procurement autonomy floor restructure** (product
+    product-009 + adversarial F10). Restructured Unit 3.5 Step 0
+    so Suno Pro is the autonomy floor (Claude-runnable minimum);
+    Tier 1+2 are OPTIONAL operator-funded paths. No Briggsy-
+    decision-required mid-flow — autonomous fall-through to Tier 3
+    if Tier 1+2 not funded.
+
+  Cross-phase contract status post-absorption:
+  - **Phase 1**: ONE prose-only consistency fix (line 557 stale
+    "Suno expected" aligned to same-file ladder lock at line 2296).
+    NO logic change. All other Phase 1 locks were RESTORED in Phase
+    3 — Phase 1 doesn't need amendment; Phase 3 absorbed Phase 1's
+    locks correctly.
+  - **Phase 0**: no reopen. Phase 3's `cascade-halo-column.json`
+    rename + new gitignore requirement don't touch Phase 0.
+  - **Phase 2**: no reopen. Phase 3 honors Phase 2's
+    TTS_BUDGET_OVERRIDE deletion lock by applying the same fix to
+    IMAGEN_BUDGET_OVERRIDE.
+  - **Phase 4**: must absorb the corrected cross-phase deliverables:
+    `cascade-halo-column.json` (NOT `cascade-ring-layout.json`); 6
+    operative cards in column geometry; Crest locked to
+    `variant="svg"`; `burned-logo.svg` as S06-only (S01 uses
+    `assets/cards/burned.webp`); S06 logo lands at frame 2780 NOT
+    2790; consolidated Briggsy gate at Phase 3 exit (NOT 4 per-unit
+    sentinels); R15 SVG hex fallback IS the render path (no
+    Phase 4 token-driven re-tint via `<Img>`).
+  - **Phase 5/6/7**: unchanged from prior cross-phase notes —
+    `music_disclosure_required: true` flag wires to Phase 7 only
+    if Tier 3 Suno triggers (now LAST-RESORT, not EXPECTED), so
+    less likely to fire than the pre-deepening framing implied.
+
+  Items intentionally deferred (low-value-vs-context-cost):
+  - PHASE-3-EXIT.md template trim (SG-P3-08) — current template
+    fields are mostly load-bearing; full audit is a Phase 4
+    cross-phase consumption check, not a Phase 3 absorption.
+  - Plan growth subtraction pass (adversarial F12) — net change
+    from this absorption was +484 lines (~11% growth, within
+    healthy range); subtraction-test for the ~+1200 lines from the
+    earlier deepening pass is a separate cleanup, not in scope here.
+  - Pendleton crest S06 safe-square reconsideration (design F12)
+    and operative-card composite-proof Playwright-vs-static-HTML
+    simplification (SG-P3-07) — both P2/P3 cosmetic; defer to
+    Phase 3 execution-time review.
 -->
 
 
@@ -303,9 +604,15 @@ Phase 3 produces:
 - `public/trailer/title-sequence/` — cold-open composition elements:
   `operative-card-frame.svg` (chrome template; operative portrait
   composites at Phase 4), `chevron-motif-bg.svg` (background pattern),
-  `burned-logo.svg` (SINGLE file used at both cold-open S01 frame
-  180-210 and closing S06 frame 2790 — plan's previous two-file
-  duplication merged). Pendleton crest references existing
+  `burned-logo.svg` (S06 CLOSING ONLY at frame 2780 per Phase 1 Unit
+  1.10 lock — wordmark capstone). **S01 cold-open uses BURNED CARD
+  ART (`public/assets/cards/burned.webp` — already exists), NOT the
+  wordmark** per Phase 1's locked S01-vs-S06 differential: S01
+  establishes BURNED as a card inside the deck (in-world); S06
+  establishes BURNED as the game's title (out-of-world bookend). The
+  pre-deepening "single file used at both" framing was a Phase 3
+  drift from Phase 1's lock — restored. Pendleton crest references
+  existing
   `public/assets/howtoplay/pendleton-crest.png` (1.5MB Imagen-
   generated, verified clean, used at HTP App.tsx hero already);
   operations-manual-plate references existing
@@ -313,8 +620,16 @@ Phase 3 produces:
   open title plate role.
 - `public/trailer/audio/music-bed.mp3` — the licensed music bed track
   per Phase 1 Unit 1.7 lock (Artlist Pro OR Epidemic Sound Pro
-  $199-204/yr); Suno Pro $10/mo generative fallback as EXPECTED
-  (not last-resort) path per Phase 1 deepening.
+  $199-204/yr) is **Tier 1 PRIMARY**; **Tier 2 Marmoset/Songtradr
+  per-track marketplace** ($30-$200/track, DOC-REVIEW RESTORED — was
+  missing in pre-deepening Phase 3); **Tier 3 Suno Pro** ($10/mo)
+  generative as **LAST-RESORT** with `music_disclosure_required:
+  true` flag for Phase 7 distribution copy. Restores Phase 1
+  doc-review-revised source-priority ladder (Phase 1 line 2291-2298)
+  which Phase 3 deepening had silently inverted to "Suno EXPECTED
+  fallback" — the stacked AI-disclosure (agentic-SDLC trailer + AI
+  music) directly undermines the §2.2 water-beads test per Phase 1
+  product-lens lock.
 
 **Code outputs (TypeScript / vendored components):**
 
@@ -323,9 +638,11 @@ Phase 3 produces:
   Crest.tsx + Crest.module.css, RedactBar.tsx + RedactBar.module.css,
   ClassificationBanner.tsx + ClassificationBanner.module.css,
   DossierPage.tsx + DossierPage.module.css. **Drift catcher**:
-  `pnpm verify:vocab-sync` runs `diff -r videos/trailer/src/components/
-  burned-vocabulary/ src/client/howtoplay/components/` (excluding
-  the 5 vendored files; non-empty diff = stale copy → re-vendor).
+  `pnpm verify:vocab-sync` runs a TypeScript script that sha256-
+  compares the EXPLICIT allowlist of 10 vendored files (5 .tsx pairs)
+  against BURNED source (DOC-REVIEW: was misframed as "diff -r"
+  which isn't cross-platform-portable on Windows + would follow
+  symlinks; actual implementation is sha256-over-allowlist).
   See Phase 3 Unit 3.X (NEW) for vendor procedure.
 - `videos/trailer/src/lib/visual-manifest.ts` — hand-edited typed
   manifest (~15 entries). Initial stub `[] as const` ships at Phase 0
@@ -334,12 +651,14 @@ Phase 3 produces:
 - `videos/trailer/src/lib/card-roster.ts` — typed export declaring
   which webps appear in which trailer role (`COLD_OPEN_CARDS`,
   `S03_ROSTER`, `CASCADE_HALO`).
-- `videos/trailer/src/lib/cascade-ring-layout.json` — declares per-card
-  ring position (angle, radius, z-order) + entry-stagger frame offset
-  (Phase 1's 2-frame per item lock). Codifies "sequential revelation
-  with focal hierarchy, NOT layered-simultaneous" so Phase 4 can't
-  accidentally render the AI-slop-shape that Phase 1 Unit 1.5
-  deepening anti-pattern-guarded.
+- `videos/trailer/src/lib/cascade-halo-column.json` — declares
+  per-card right-edge COLUMN position (slot 1-6, yCenter, x band
+  1560-1880 per Phase 1 lock) + entry-stagger frame offset (Phase
+  1's 2-frame per item lock). DOC-REVIEW RENAME from
+  cascade-ring-layout.json — the prior filename shipped a 17-card
+  360° MOSAIC that violated Phase 1's locked 6-card-column anti-
+  pattern guard. Codifies Phase 1's "right-edge 6-card column at
+  40%" lock so Phase 4 can't accidentally render the AI-slop-shape.
 
 **Sample-eval outputs (operator artifacts, NOT consumed by Remotion):**
 
@@ -378,8 +697,10 @@ out in BEAT-SHEET.md visual cues either (a) exists at
 `public/{trailer,assets}/...` resolvable via `staticFile()` OR (b) is
 already in BURNED's `public/assets/{arena,roster,howtoplay,cards}/`
 and referenced by the visual-manifest's curation, the
-`burned-vocabulary` vendored copy passes `diff -r` against
-`src/client/howtoplay/components/`, the `visual-manifest.ts`
+`burned-vocabulary` vendored copy passes `pnpm verify:vocab-sync`
+(sha256-allowlist check; DOC-REVIEW correction — was misframed as
+`diff -r` CI gate) against `src/client/howtoplay/components/`, the
+`visual-manifest.ts`
 typechecks, and PHASE-3-EXIT.md is written.
 
 ---
@@ -403,8 +724,10 @@ on-disk reality + Phase 1+2 deepening contracts):
    `call-in-a-favor`, `direct-order`, `extraction`, `falsify-intel`,
    `go-dark`, `intel-briefing`, `intercepted`, `reassign`). **NO Otto
    card art** (Otto is roster-only per spec §1) — S03 reveal handles
-   via Otto-aside per Phase 1 narration lock "Seven on the roster,
-   six in the deck, one in the basement." **NO Dolores card art**
+   via Otto-aside per Phase 1 narration lock "Seven on the roster.
+   Six in the deck. One on the research budget. Don't ask." (Phase 1
+   DOC-REVIEW source-fix — was "in the basement"; corrected to match
+   `ActRoster.tsx:153-158` literal). **NO Dolores card art**
    (she's the figure on Intercepted card per
    `project-burned-dolores-grieves` memory, not her own card). Phase
    3 curates these 17 assets — does NOT re-generate. Per
@@ -457,11 +780,19 @@ on-disk reality + Phase 1+2 deepening contracts):
    (formerly considered as "Path A"). Three independent technical
    reasons:
    - BURNED HTP components use CSS modules + custom-property tokens
-     loaded via Vite's CSS pipeline. Remotion's bundler may not match.
-   - `useScrollReveal` uses `window.matchMedia` + DOM `querySelectorAll`
-     — Remotion runs headless per-frame, no real viewport scroll.
-   - **GSAP ScrollTrigger fundamentally requires a viewport with real
-     scroll position — Remotion drives TIME, not SCROLL.**
+     loaded via Vite's CSS pipeline + `pnpm generate:palette`
+     prebuild. Remotion's bundler may not match the resolution
+     chain (even if it does, the trailer needs the same palette
+     prebuild to populate tokens at render time).
+   - Roadmap ADR #2 isolation contract: trailer is an isolated
+     pnpm package (NOT in workspace); cross-package imports defeat
+     the isolation goal.
+   - DOC-REVIEW (adversarial F1): the pre-deepening "GSAP
+     ScrollTrigger fundamentally requires a viewport" reason was
+     MIS-CITED — none of the 5 vendored components import GSAP or
+     useScrollReveal. The GSAP machinery is at the HTP page level,
+     not in the vocabulary components. Reason removed as not load-
+     bearing.
 
    Plus the empirical reason: UMB's trailer at
    `projects/undercover-mob-boss/videos/trailer/` has **ZERO cross-
@@ -473,7 +804,10 @@ on-disk reality + Phase 1+2 deepening contracts):
    **vendored copy** of the 5 BURNED HTP component pairs (Stamp,
    Crest, RedactBar, ClassificationBanner, DossierPage) into
    `videos/trailer/src/components/burned-vocabulary/` with a
-   `diff -r` drift-catcher in CI. Phase 4 imports the vendored copies
+   `pnpm verify:vocab-sync` sha256-allowlist drift-catcher as manual
+   pre-commit (DOC-REVIEW honest framing; was misframed as "diff -r
+   in CI" — actual implementation is sha256-allowlist + BURNED has
+   no CI yet). Phase 4 imports the vendored copies
    as if they were local components.
 
    This matters for the §2 quality bar: BURNED's
@@ -527,20 +861,36 @@ The trailer is an isolated package per roadmap ADR #2 (own
 The HARD question Phase 3 deepening surfaced: *how does the trailer
 consume BURNED's existing visual vocabulary?*
 
-**Path A (cross-package import) — REJECTED.** Phase 4 Remotion scenes
-cannot `import { Stamp } from '../../src/client/howtoplay/components/
-Stamp'` for three independent technical reasons:
+**Path A (cross-package import) — REJECTED on two grounds.** Phase
+4 Remotion scenes cannot `import { Stamp } from '../../src/client/
+howtoplay/components/Stamp'` because:
 
-1. BURNED HTP components use CSS modules + custom-property tokens
+1. **CSS-modules + custom-property-token bundler resolution.** BURNED
+   HTP components use CSS modules + custom-property tokens
    (`--color-cream-12`, `--color-ochre-9`, `--stamp-red/black/blue/
-   amber`) loaded via Vite's CSS pipeline. Remotion's bundler may
-   not match the resolution chain.
-2. `useScrollReveal.ts` uses `window.matchMedia` + DOM
-   `querySelectorAll` + GSAP ScrollTrigger. Remotion runs in a
-   headless context per frame; no real viewport scroll exists.
-3. **GSAP ScrollTrigger fundamentally requires a viewport with real
-   scroll position. Remotion drives TIME, not SCROLL.** This is an
-   architectural incompatibility, not a bundler issue.
+   amber`) loaded via Vite's CSS pipeline + `pnpm generate:palette`
+   prebuild. Remotion's bundler may not match the resolution chain;
+   even if it does, the trailer needs to also run `pnpm generate:
+   palette` (or vendor the generated artifact) for the tokens to
+   exist at render time.
+2. **Roadmap ADR #2 isolation contract.** The trailer is an isolated
+   pnpm package (own `node_modules`, own `pnpm-lock.yaml`, NOT in
+   `pnpm-workspace.yaml`) for dependency-management reasons. Cross-
+   package imports would re-couple the trailer to BURNED's runtime
+   deps and defeat the isolation goal.
+
+**DOC-REVIEW HONEST FRAMING (adversarial F1):** the pre-deepening
+plan added a third reason — "GSAP ScrollTrigger fundamentally
+requires a viewport with real scroll" — as the load-bearing argument.
+That reason is MIS-CITED: none of the 5 actually-vendored components
+(Stamp, Crest, RedactBar, ClassificationBanner, DossierPage) import
+GSAP or use `useScrollReveal`. The GSAP/ScrollTrigger machinery lives
+at the HTP page level (App-mounted hook), not in the vocabulary
+components themselves. If Path A were "import Stamp from the live
+HTP source," GSAP wouldn't fire as a reason because Stamp doesn't
+touch GSAP. The real Path A barriers reduce to the two listed above.
+Path B is still defensible on those grounds alone — but the GSAP
+framing is not load-bearing and gets removed.
 
 Plus the empirical reason: UMB v3 trailer at
 `projects/undercover-mob-boss/videos/trailer/src/TrailerV3.tsx` has
@@ -568,12 +918,22 @@ modes for two distinct asset categories:
   Crest.tsx, RedactBar.tsx, ClassificationBanner.tsx, DossierPage.tsx
   + their `.module.css` peers. Phase 3 COPIES these 10 files (5 pairs)
   into `videos/trailer/src/components/burned-vocabulary/` at unit
-  3.X (NEW vendor unit, ordered before Unit 3.4). Phase 4 imports
+  3.0 (NEW vendor unit, ordered before Unit 3.3 + 3.4 — DOC-REVIEW
+  coherence STRUCT-001 ordering note). Phase 4 imports
   `import { Stamp } from './components/burned-vocabulary/Stamp'`.
-  Drift catcher: `pnpm verify:vocab-sync` runs `diff -r
-  videos/trailer/src/components/burned-vocabulary/
-  src/client/howtoplay/components/` (matching subset only); non-empty
-  diff fails the trailer build.
+  Drift catcher: `pnpm verify:vocab-sync` runs a TypeScript script
+  that sha256-compares each of the 10 vendored files against its
+  BURNED source counterpart (DOC-REVIEW honest framing: implementation
+  is sha256-hash-over-explicit-allowlist; the "diff -r CI gate" prose
+  in pre-deepening was inaccurate. `diff -r` is not cross-platform-
+  portable on Windows + would follow symlinks; and BURNED has no
+  merged CI workflow yet — verify:vocab-sync runs as a manual
+  pre-commit check). **Known blindspot:** the sha256-allowlist only
+  detects changes to the 10 enumerated files. If a NEW file appears
+  in `src/client/howtoplay/components/` that the trailer should
+  vendor (e.g., a future HTP component), the script won't surface
+  it — Phase 4 entry checklist includes a `ls` comparison against
+  the allowlist to catch new files.
 
 This architecture choice is recorded as **roadmap ADR #2 refinement**
 (trailer isolation maintained for dependency management; vocabulary
@@ -767,11 +1127,14 @@ Action cards (11):
 Total: 17 webp files.
 
 S03 roster slide-in: 6 card-art operatives + Otto-aside chrome
-treatment (per Phase 1 narration lock: "Seven on the roster, six in
-the deck, one in the basement. Don't ask."). Otto's visual presence
-in S03 (if needed) comes from `public/assets/arena/portrait-otto.png`
-or a REDACTED-bar overlay on a placeholder slot — Phase 4 decides
-composition, Phase 3 ensures both options have asset coverage.
+treatment (per Phase 1 narration lock: "Seven on the roster. Six in
+the deck. One on the research budget. Don't ask." — Phase 1
+DOC-REVIEW source-fix matching `ActRoster.tsx:153-158` literal; the
+prior "in the basement" phrasing was Phase 1 fiction). Otto's visual
+presence in S03 (if needed) comes from
+`public/assets/arena/portrait-otto.png` or a REDACTED-bar overlay on
+a placeholder slot — Phase 4 decides composition, Phase 3 ensures
+both options have asset coverage.
 
 ### Imagen Prompt Template (NEW — per insight 050)
 
@@ -859,13 +1222,84 @@ to >$8 worst case — over cap.
 Remaining Imagen path: **operative card frame template** at
 `<$5` (Unit 3.6). Plus optional depth-plane foreground element
 (Unit 3.3) if hand-authored SVG doesn't carry trailer weight, at
-`<$1`. Total worst case: <$6 — within cap.
+`<$1`. Total worst case: <$6 — **at cap** (cap raised from the
+pre-deepening $5 to $6 to match the legitimate worst-case math; the
+pre-deepening "$5 cap with <$6 worst case within cap" was broken
+arithmetic — $6 is NOT within a $5 cap).
 
 Tracker: `sample-eval/visual-asset-prep/imagen-spend.md` with running
 total. Per-call entry logs: asset name, prompt iteration count, image
 hash, cost, outcome (kept / re-architected / aborted). Hard abort at
-$5 cumulative; `IMAGEN_BUDGET_OVERRIDE=1` env var for explicit
-operator override with reason logged.
+**$6 cumulative** (matches the worst-case $5 operative-card +
+$1 depth-plane math; pre-deepening "$5 cap with $6 worst case
+within cap" was broken arithmetic — corrected). **NO env var
+override.** If extension is warranted, Briggsy edits the
+`IMAGEN_SPEND_CAP` constant in `scripts/imagen-spend-check.ts` —
+one-line atomic intent signal. Matches Phase 2 DOC-REVIEW R3
+absorption: `TTS_BUDGET_OVERRIDE` was DELETED as an autonomy-rule
+footgun (Claude self-setting makes the cap decorative; Claude
+stopping to ask Briggsy violates the autonomy rule). Same shape
+here: $6 means "something is wrong" and stopping is correct.
+
+### Trailer-Local Secrets Hygiene (DOC-REVIEW NEW — per security SEC-P3-002 + SEC-P3-003 + SEC-P3-004)
+
+Phase 3 introduces several file categories with PII / credential /
+licensee-data leak risk that BURNED's root `.gitignore` doesn't
+cover. Unit 3.0 Step 0 (preflight) MUST land all three before any
+script runs.
+
+1. **`videos/trailer/.gitignore`** — created at Unit 3.0
+   preflight (mirrors Phase 2's `videos/trailer/.gitignore`
+   pattern; per Phase 2 line 290-296). Lines to include:
+   ```
+   # Imagen / TTS spend trackers (operator-local audit, may log
+   # generation IDs / hashes that link prompts to billing).
+   sample-eval/visual-asset-prep/imagen-spend.md
+
+   # Licensed-music rights trail — Artlist/Epidemic license PDFs
+   # contain licensee identity + account ID + sometimes billing
+   # snippets; Suno billing screenshots contain partial card +
+   # subscription IDs. Operator-local only.
+   sample-eval/visual-asset-prep/music-license.pdf
+   sample-eval/visual-asset-prep/suno-billing-*.png
+
+   # Raw API responses (operator-local; may contain provider
+   # generation IDs).
+   sample-eval/visual-asset-prep/imagen-raw/
+
+   # Trailer-local env (NEVER commit).
+   .env
+   .env.*
+   !.env.example
+   ```
+   Note: root `.gitignore` `.env*` pattern already covers
+   `videos/trailer/.env` recursively, but the explicit local
+   gitignore makes intent visible to anyone editing the trailer
+   subtree alone.
+
+2. **`.env.example` updates** — add `GEMINI_API_KEY=` placeholder
+   to BURNED root `.env.example` (currently absent — Phase 3
+   Imagen calls would otherwise fail with no indication of which
+   env var the script reads). Document the
+   `set -a && source .env && set +a` invocation pattern per
+   the autonomy rule (referenced in `scripts/generate-htp-assets.ts`
+   line 4).
+
+3. **`.cfignore` or `vite.config.ts` exclude for
+   `public/trailer/`** (DOC-REVIEW feasibility f8) — Cloudflare
+   Pages deploys serve everything under `public/` (or the build
+   output). ADR #15's "all trailer assets in `public/trailer/...`"
+   means the 95s MP3 music bed + 3-8 MB HTP fullpage PNG + R15
+   SVGs + briefing-room SVGs would ride along on every BURNED
+   game deploy (5-15 MB bloat). Lock: Vite build hook OR
+   Cloudflare Pages exclude `public/trailer/**` from the BURNED
+   game's deploy bundle. The trailer's own Remotion render reads
+   `public/trailer/` directly from disk via setPublicDir; no
+   public CDN serving is required for trailer work. (If a future
+   distribution decision needs `public/trailer/audio/music-bed.mp3`
+   to be CDN-served — e.g., for an embed — re-enable the path
+   selectively + add Referrer-Policy headers in `public/_headers`
+   for hotlink protection per SEC-P3-005.)
 
 ### Asset Tier Taxonomy (NEW — Phase 4 composition priority signal)
 
@@ -887,7 +1321,7 @@ opacity in non-focal positions; CHROME assets occupy bottom-third or
 edge bands. This tiering enforces Phase 1's "sequential revelation
 with focal hierarchy, NOT layered-simultaneous" cascade lock.
 
-### Briggsy-Eyeball Gate Protocol (NEW — per insight 050)
+### Briggsy-Eyeball Gate Protocol (DOC-REVIEW COLLAPSED — 4 unit-level gates → 1 cross-family gate at Unit 3.7)
 
 Per `docs/insights/050-agent-verification-misses-perceptual-
 continuities.md`: agent-style verification decomposes images into
@@ -898,34 +1332,58 @@ continuities are exactly the properties that determine §2.2 Archer-
 frame acceptance. The eye reads them in one glance; agents miss
 them systematically.
 
-**Lock:** Every novel-visual Unit in Phase 3 (Units 3.1, 3.3, 3.4,
-3.6 — NOT Unit 3.2 which is curation, NOT Unit 3.5 which is
-procurement, NOT Unit 3.7 which is codegen) has an explicit
-`[BRIGGSY-REVIEW GATE]` named stop at unit exit. Each gate poses
-2-3 **fluency questions** (not property checks). Example gate text
-embedded at unit ends:
+**DOC-REVIEW REVISION (cross-persona consensus — scope-guardian
+SG-P3-02 + product product-001 + adversarial F9):** The pre-deepening
+plan codified 4 per-unit `[BRIGGSY-REVIEW GATE]` stops at Units 3.1,
+3.3, 3.4, 3.6 with sentinel-file unblocking. Three independent
+problems collapsed that protocol:
 
-> ```
-> [BRIGGSY-REVIEW GATE — Unit 3.4 R15 Chrome]
-> Cannot proceed to Unit 3.5 until Briggsy eyes-on review of all
-> 4 R15 stamp composites at `sample-eval/visual-asset-prep/safe-
-> square-composites/r15-*.png`. Reviewer answers:
->
-> (1) Does stamp #3 ("AUTONOMOUS FIELD UNIT — ASSET DELIVERED")
->     feel like INK SLAPPED ONTO PAPER, or like a CSS box with a
->     filter applied? (If the latter, ink-bleed filter parameters
->     need re-tuning against Stamp.tsx's actual filter values.)
-> (2) Does the burn-fire ink read as AUTHORITATIVE/ALARMING, or
->     as generic red? (If generic, hex value needs review against
->     --color-burned-fire token actual rendering.)
-> (3) Would this stamp be embarrassing next to an actual Archer
->     episode screenshot? (Binary — if yes, the §2.2 quality bar
->     is missed; investigate before proceeding.)
-> ```
+1. **`feedback-briggsy-reviews-output-not-process.md`** locks the
+   pattern: Briggsy reviews OUTPUT (playable game, BURNED screens,
+   evidence package), NOT intermediate artifacts (mid-flight SVGs,
+   per-unit composites). Four unit-level gates require Briggsy to
+   engage with intermediate artifacts he typically doesn't review —
+   risking either (a) Claude self-writing the sentinels to unblock
+   progress (defeating the gate; the verify:briggsy-sentinels git-
+   author check from roadmap ADR #22 is Phase 5+ scope, not Phase 3),
+   or (b) Phase 3 stalling indefinitely on review Briggsy doesn't
+   typically do at this layer.
 
-Phase 4 import of any Phase 3 asset is gated on the corresponding
-unit's Briggsy-review sign-off (file presence:
-`sample-eval/visual-asset-prep/briggsy-review-unit-N.signoff`).
+2. **Per-unit gates miss the load-bearing cross-family read.** Each
+   asset can be Archer-pass individually while the family fails
+   cohesion (light direction, ink texture character, color
+   temperature). Insight 050's emil-cohesion principle is explicitly
+   *cross-family*: side-by-side composite of one frame per asset
+   family. The cross-family read happens at Unit 3.7 — but by then,
+   per-unit gates are already signed off and reopening is expensive.
+
+3. **The two highest-leverage cross-family moments** (S02 frame ~300
+   briefing-room reveal + S04 frame 1950 cascade-payoff stamp slap)
+   are exactly where multiple Phase 3 asset families collide
+   in-frame. Single-unit gates don't simulate this collision.
+
+**Lock — one cross-family gate at Unit 3.7 entry:**
+
+Unit 3.7 ships TWO composite-frame proofs as PNG (S02-frame-300 +
+S04-frame-1950) using ALL shipped Phase 3 assets at intended scene
+scale, alongside the per-family safe-square composites the prior
+deepening already specified. Briggsy reviews this consolidated
+bundle once. The gate poses fluency questions at the COMPOSITE level
+("does the briefing-room collision render as M's office or as CSS
+boxes?"), not per-asset.
+
+**Per-unit verification stays AUTOMATED** — script exit codes,
+completion gates, CVD probe results, safe-square composite proof PNG
+generation, asset-inventory.md write success. Phase 3 unit exit
+requires the automated gate (Briggsy doesn't engage). Phase 4 import
+of any Phase 3 asset is gated on the **single Unit 3.7 cross-family
+review sign-off** (`sample-eval/visual-asset-prep/briggsy-review-3.7-
+cross-family.signoff`) — operator writes after eyeball pass.
+
+If Briggsy wants per-unit eyeball checks (e.g., during a specific
+unit's execution when he happens to be available), the safe-square
+composite proof PNGs are already generated at unit exit — review is
+opportunistic, not gating.
 
 ### CVD Probe for R15 Chrome (NEW — per insight 051)
 
@@ -1004,8 +1462,13 @@ lands inside the safe-square is non-optional.
   ADR #8). In-frame React chrome (Stamp, Crest, RedactBar,
   ClassificationBanner, DossierPage + .module.css peers) COPIED into
   `videos/trailer/src/components/burned-vocabulary/` at Phase 3 entry
-  (Path B). `diff -r` CI catch for drift. Phase 4 imports vocabulary
-  as local components.
+  (Path B). Drift catcher: `pnpm verify:vocab-sync` runs a TypeScript
+  script that sha256-compares an EXPLICIT allowlist of vendored files
+  against BURNED source (DOC-REVIEW honest description — was misframed
+  as "diff -r CI gate"; the actual implementation is sha256-allowlist,
+  AND BURNED has no merged CI workflow yet). Run as **manual
+  pre-commit check** before committing Phase 3 deliverables and again
+  at Phase 4 entry. Phase 4 imports vocabulary as local components.
 - **Public-directory architecture (ADR #15).** All Phase 3 NEW
   trailer-only assets land in `public/trailer/...` inside BURNED's
   existing `public/`. Single `Config.setPublicDir('../../public')`
@@ -1063,8 +1526,16 @@ lands inside the safe-square is non-optional.
   non-existent `CaseBanner.tsx` — that was a ghost reference).
 - **Pendleton crest:** Use existing
   `public/assets/howtoplay/pendleton-crest.png` for poster role;
-  vendored `Crest.tsx` (with inline SVG variant) covers in-frame
-  React use. No Imagen escalation needed.
+  vendored `Crest.tsx` covers in-frame React use **with Phase 4
+  LOCKED to `<Crest variant="svg" .../>` only** (DOC-REVIEW
+  feasibility f2): the `variant="image"` default in Crest.tsx
+  hardcodes `src="/assets/howtoplay/pendleton-crest.png"` (a
+  browser-absolute URL) which does NOT resolve through Remotion's
+  `staticFile()` pipeline at render time. `variant="svg"` is the
+  pure-vector inline path (`Crest.tsx:41-121`) — no asset URL, no
+  resolution risk. The poster role uses the PNG via `staticFile()`
+  directly; the React-chrome role uses `<Crest variant="svg">`. No
+  Imagen escalation needed.
 
 **R15 chrome (split-layer for Phase 4 stamp-slap motion):**
 
@@ -1081,14 +1552,26 @@ lands inside the safe-square is non-optional.
   JetBrains Mono per Phase 1 (NOT Clash Display). Cold-open
   operative name-plate uses Clash Display 700 (Phase 1 display
   hierarchy — different role than chrome).
-- **R15 chrome colors via tokens, not bare hex.** SVG `fill`
-  attributes consume CSS custom properties via `currentColor` +
-  Phase 4-applied inline style, OR via inlined `<style>` block in
-  the SVG. Tokens: `--color-ochre-9` (#947226) for stamps #1/#2/#4;
-  `--color-burned-fire` (#be2e27 — NOT the pre-deepening hex
-  #c63b1e) for stamp #3 payoff. CVD probe script
-  (`scripts/probe-r15-chrome-cvd.ts`) verifies both pairs clear
-  deuter/prot/trit at 0.10 oklab floor.
+- **R15 chrome colors via tokens with hex fallback** (DOC-REVIEW
+  design F03 honest framing). SVG `style="--ink: var(--color-X,
+  #hex)"` pattern: when the SVG is loaded via Remotion `<Img>`, the
+  `var()` does NOT resolve (SVGs loaded via `<Img>` are isolated
+  documents — they don't inherit CSS custom properties from the
+  parent React tree) and the HEX FALLBACK is what renders. This is
+  fine because the fallback values ARE the locked Phase 1 tokens:
+  `--color-ochre-9` = `#947226` for stamps #1/#2/#4; `--color-
+  burned-fire` = `#be2e27` (NOT the pre-deepening `#c63b1e`) for
+  stamp #3 payoff. The token name is preserved in the style
+  attribute for traceability only. If Phase 4 ever needs to
+  re-tint dynamically (per-instance color variation), the SVG must
+  be inlined as `<svg>` JSX rather than loaded via `<Img>` — the
+  CSS-custom-property inheritance path doesn't exist through
+  `<Img>`. CVD probe script (`scripts/cvd-probe.ts` — DOC-REVIEW
+  PROMOTED to permanent BURNED tooling per SG-P3-03; was
+  scripts/probe-r15-chrome-cvd.ts run-and-delete) verifies both
+  pairs clear deuter/prot/trit at 0.10 oklab floor against both
+  cream parchment AND composed-background pairs (mahogany grain,
+  venetian-blind shadow overlay — per design F04).
 - **R15 #4 copy + frame + filename (TRIPLE drift fix):** Copy is
   **"OPERATION STATUS: FIELD-READY"** (Phase 1 Unit 1.9 lock — was
   "AGENT-BUILT, ARCHER-GRADE" in pre-deepening); frame **2820**
@@ -1105,11 +1588,18 @@ lands inside the safe-square is non-optional.
   character anchor / negative suppressors). UMB asset-prompts.ts
   `--only` flag pattern + `#FF00FF` chroma-key extraction for clean
   transparency. <$5 budget per `imagen-spend.md` tracker.
-- **BURNED logo: SINGLE SVG file** (`burned-logo.svg`) used at both
-  cold-open S01 frame 180-210 and closing S06 frame 2790. Pre-
-  deepening plan's two-file duplication merged. Existing
+- **BURNED logo: S06 CLOSING ONLY** (`burned-logo.svg` at frame
+  2780). **S01 cold-open uses BURNED CARD ART**
+  (`public/assets/cards/burned.webp` — existing) per Phase 1 Unit
+  1.10 lock: "NOT the full closing-card BURNED logo. S01 shows the
+  BURNED card art (the game asset) as the focal element... NOT the
+  wordmark logo." Differential is load-bearing for R14: S01 = card
+  inside the deck (in-world); S06 = game's title (out-of-world
+  bookend). Existing
   `public/assets/howtoplay/operations-manual-plate.png` covers the
-  cold-open TITLE PLATE role (different from logo wordmark).
+  cold-open TITLE PLATE role at frame 30-180 (different from logo
+  wordmark). Pre-deepening "single file used at both" framing was
+  Phase 3 drift from Phase 1's locked differential — restored.
 
 **Music:**
 
@@ -1120,17 +1610,39 @@ lands inside the safe-square is non-optional.
     decoder; handles MP3 natively (framework-docs verified).
   - Voice WAVs from Phase 2 use lossless because per-line splicing
     benefits from sample-accurate cuts; music bed doesn't need this.
-- **Music source per Phase 1 Unit 1.7 lock:** Artlist Pro OR
-  Epidemic Sound Pro ($199-$204/yr minimum tier; covers portfolio
-  embed + Twitter/X distribution). Suno Pro ($10/mo) generative
-  fallback as EXPECTED path (not last-resort). Udio struck from
-  candidate pool (Nov 2025 settlement disabled exports).
-- **Pre-execution gates (Unit 3.5 Step 0):** Verify Briggsy has
-  Artlist OR Epidemic Sound Pro active subscription. If not,
-  escalate for procurement decision (which may legitimately be
-  "skip licensing, go straight to Suno Pro"). Suno Pro
-  verification for fallback path. Without either funded, Unit 3.5
-  is BLOCKED, not auto-fallback.
+- **Music source per Phase 1 Unit 1.7 doc-review-revised ladder
+  (DOC-REVIEW RESTORED — pre-deepening Phase 3 inverted Tier 2 + 3
+  positions):**
+  - **Tier 1 — Artlist Pro OR Epidemic Sound Pro** ($199-$204/yr
+    minimum tier; covers portfolio embed + Twitter/X distribution).
+    PRIMARY.
+  - **Tier 2 — Marmoset / Songtradr per-track marketplace**
+    ($30-$200/track, hand-picked with explicit copyright vesting +
+    non-AI source). Second-tier before Suno per Phase 1 line
+    2293-2295. Engages if Tier 1 doesn't land after 20-30
+    candidates per platform + 8-10 finalists audition.
+  - **Tier 3 — Suno Pro** ($10/mo) generative. **LAST-RESORT ONLY**
+    per Phase 1 line 2296 lock. Triggers `music_disclosure_required:
+    true` flag for Phase 7 distribution copy. The stacked AI-
+    disclosure (agentic-SDLC trailer + AI-generated music) directly
+    undermines §2.2 water-beads test (the magic of agentic
+    autonomous SDLC must DISAPPEAR; AI-music disclosure points back
+    at the agent).
+  - Udio struck from candidate pool (Nov 2025 settlement disabled
+    exports).
+- **Pre-execution gates (Unit 3.5 Step 0) — REWRITTEN for autonomy
+  contract compliance:** Per the Cardinal Autonomy Rule (Claude
+  executes EVERYTHING; manual subscription procurement is exactly
+  the kind of thing Claude cannot do), the gate REQUIRES Suno Pro
+  ($10/mo) as the **autonomy floor** — minimum-viable Claude-
+  runnable fallback always available. Artlist Pro / Epidemic Sound
+  Pro / Marmoset / Songtradr are OPTIONAL tier-1+2 paths the operator
+  pre-funds if they want the discipline-bar quality (per Phase 1's
+  portfolio-piece thesis). If no Tier 1+2 funded → audition flow
+  jumps straight to Tier 3 Suno (which sets `music_disclosure_
+  required: true`). If Suno Pro ALSO not funded → preflight exits
+  non-zero with the procurement procurement-list pasted to operator.
+  No Briggsy-decision-required mid-flow.
 - **License rights-trail:** Operator-action step to download
   Artlist/Epidemic license PDF immediately after track add-to-
   project; place at
@@ -1161,10 +1673,15 @@ lands inside the safe-square is non-optional.
   in Unit 0.1 scaffold so Phase 4 typecheck imports always resolve
   before Phase 3 runs. Mirrors Phase 2's audio-manifest stub
   pattern.
-- **`cascade-ring-layout.json`** declares per-card ring position
-  (angle, radius, z-order) + 2-frame entry-stagger (Phase 1 Unit
-  1.5 lock) for the 17-mosaic halo. Phase 4 consumes via JSON
-  import; cannot accidentally render layered-simultaneous.
+- **`cascade-halo-column.json`** (DOC-REVIEW RENAME from
+  `cascade-ring-layout.json`) declares per-card right-edge COLUMN
+  position (slot 1-6, yCenter, x band 1560-1880) + 2-frame
+  entry-stagger (Phase 1 Unit 1.5 lock) for the **6-card right-edge
+  column** (NOT 17-card mosaic — the prior shape violated Phase 1
+  line 1782-1783 "full right-edge 6-card column at 40%" lock and
+  shipped the exact AI-slop-shape the lock was designed to prevent).
+  Phase 4 consumes via JSON import; cannot accidentally render
+  layered-simultaneous.
 
 **Security / portability:**
 
@@ -1283,34 +1800,69 @@ async function main() {
   console.log(`NAV  ${HTP_URL}`);
   await page.goto(HTP_URL, { waitUntil: 'networkidle' });
 
+  // DOC-REVIEW (security SEC-P3-007): assert we actually landed on
+  // the HTP route. A redirect / 404 / maintenance page would
+  // otherwise produce a silent wrong capture.
+  if (!page.url().includes('/howtoplay')) {
+    console.error(`ERROR navigated to ${page.url()} — expected /howtoplay`);
+    process.exit(1);
+  }
+
   // Wait for hero/reveal elements to mount + gsap.set() to apply initial state
   await page.waitForSelector('[data-reveal]', { state: 'attached', timeout: 10_000 });
   await page.waitForTimeout(500); // gsap.set() initial-state settle
 
-  // Scroll loop — fires every ScrollTrigger threshold
-  const initialScrollHeight = Number(
-    await page.evaluate(() => document.documentElement.scrollHeight),
+  // DOC-REVIEW (security SEC-P3-007 + feasibility f4): assert
+  // [data-reveal] count meets the BURNED-HTP expected minimum.
+  // 10 DossierPage acts each emit one [data-reveal]; allow some
+  // slack (8) for HTP iteration without making it brittle.
+  const revealCount = Number(
+    await page.evaluate(() => document.querySelectorAll('[data-reveal]').length),
   );
-  console.log(`SCROLL initial scrollHeight=${initialScrollHeight}px`);
+  if (revealCount < 8) {
+    console.error(`ERROR found ${revealCount} [data-reveal] elements (expected ≥ 8). Page likely wrong.`);
+    process.exit(1);
+  }
+  console.log(`OK   ${revealCount} [data-reveal] elements present`);
 
+  // Scroll loop — fires every ScrollTrigger threshold.
+  // DOC-REVIEW (feasibility f4): re-read scrollHeight EVERY ITERATION
+  // because reveal animations expand layout as they trigger. Capturing
+  // initialScrollHeight once before the loop can cause the loop to
+  // exit before the final DossierPage's `start: 'top 85%'` triggers,
+  // leaving the last reveal stuck at opacity 0 — the exact failure
+  // mode the positive-completion gate is supposed to catch.
   let scrolled = 0;
   const step = 200;
-  while (scrolled < initialScrollHeight) {
+  let currentHeight = Number(
+    await page.evaluate(() => document.documentElement.scrollHeight),
+  );
+  console.log(`SCROLL initial scrollHeight=${currentHeight}px`);
+  while (scrolled < currentHeight + 500) {
     await page.evaluate((y) => window.scrollTo(0, y), scrolled);
     await page.waitForTimeout(80);
     scrolled += step;
+    // Re-read scrollHeight every 5 steps — handles layout expansion.
+    if (scrolled % (step * 5) === 0) {
+      currentHeight = Number(
+        await page.evaluate(() => document.documentElement.scrollHeight),
+      );
+    }
   }
-  // Scroll to absolute bottom to ensure final triggers fire
-  await page.evaluate(() => window.scrollTo(0, document.documentElement.scrollHeight));
+  // Scroll to absolute bottom + a touch past, to guarantee final triggers fire
+  await page.evaluate(() => window.scrollTo(0, document.documentElement.scrollHeight + 500));
   await page.waitForTimeout(500);
 
-  // PRIMARY completion gate — positive verification all reveals settled
+  // PRIMARY completion gate — positive verification all reveals settled.
+  // Note: revealCount > 0 was already asserted above, so the
+  // empty-array case (every() returns true on empty) cannot
+  // silently fire a false success.
   console.log('WAIT all [data-reveal] reach opacity=1...');
   try {
     await page.waitForFunction(
-      () => {
+      (minCount) => {
         const reveals = document.querySelectorAll('[data-reveal]');
-        if (reveals.length === 0) return false;
+        if (reveals.length < minCount) return false;
         return Array.from(reveals).every((el) => {
           const cs = getComputedStyle(el);
           const transformOk =
@@ -1318,17 +1870,26 @@ async function main() {
           return cs.opacity === '1' && transformOk;
         });
       },
+      revealCount,
       { timeout: 20_000 },
     );
     console.log('  OK all reveals at opacity=1');
   } catch (err) {
-    // FALLBACK: force-complete via ScrollTrigger if exposed on window
-    // (useScrollReveal.ts may expose in DEV; verify before relying)
+    // FALLBACK: force-complete via ScrollTrigger if exposed on window.
+    // DOC-REVIEW (security SEC-P3-006): the prior `typeof ScrollTrigger
+    // !== 'undefined'` check ALSO passes on production because GSAP
+    // loads as part of the HTP runtime — the "DEV gate" framing was
+    // misleading. Gate the fallback on explicit localhost-or-env-var
+    // permission so production captures don't silently force-complete
+    // animations into a wrong-looking state.
+    const isLocalhost = HTP_URL.includes('localhost') || HTP_URL.includes('127.0.0.1');
+    const allowFallback = isLocalhost || process.env.ALLOW_ST_FALLBACK === '1';
     const exposed = await page.evaluate(
       () => typeof (window as any).ScrollTrigger !== 'undefined',
     );
-    if (exposed) {
+    if (allowFallback && exposed) {
       console.warn('  WARN waitForFunction timeout; falling back to ScrollTrigger.progress(1)');
+      console.warn('  (allowed because URL is localhost OR ALLOW_ST_FALLBACK=1 set)');
       await page.evaluate(() => {
         // eslint-disable-next-line @typescript-eslint/no-explicit-any
         (window as any).ScrollTrigger.getAll().forEach(
@@ -1337,8 +1898,10 @@ async function main() {
       });
       await page.waitForTimeout(500);
     } else {
-      console.error('  ERROR completion gate timed out + ScrollTrigger not exposed on window.');
-      console.error('  Diagnose: open HTP_URL manually, identify stuck reveal element.');
+      console.error('  ERROR completion gate timed out.');
+      console.error(`  URL=${HTP_URL} isLocalhost=${isLocalhost} ScrollTrigger exposed=${exposed}`);
+      console.error('  Diagnose: open the URL manually, identify stuck reveal element.');
+      console.error('  To force-complete against production, set ALLOW_ST_FALLBACK=1 explicitly.');
       throw err;
     }
   }
@@ -1449,24 +2012,26 @@ Operator verification (open `htp-fullpage.png` in image viewer):
   side polish).
 - No layout artifacts at section boundaries.
 
-**[BRIGGSY-REVIEW GATE — Unit 3.1 HTP Capture]**
+**[AUTO-VERIFY — Unit 3.1 HTP Capture]**
 
-Cannot proceed to Unit 3.2 until Briggsy eyes-on review of
-`public/trailer/htp-fullpage.png` answers:
+Unit exit is AUTOMATED (per DOC-REVIEW gate collapse — see Critical
+Constraints §Briggsy-Eyeball Gate Protocol):
+- Script exit-code 0 (positive-completion gate passed; URL +
+  element-count assertions passed).
+- `public/trailer/htp-fullpage.png` exists with non-zero size at
+  expected dimensions.
+- No `[data-reveal]` element shows opacity <1 in captured PNG
+  (programmatic check).
 
-1. **Does the HTP fullpage feel like a complete dossier or like a
-   long screenshot?** (Continuous narrative vs sectioned-tiled
-   read.) If sectioned-tiled, capture timing/completion gate may
-   need re-tuning.
-2. **Are any sections visibly mid-reveal?** (Half-opacity, rotated,
-   shifted from final position.) If yes, completion gate failed —
-   re-investigate trigger conditions.
-3. **Would this capture be embarrassing next to a frame from
-   Archer's title sequence?** (§2.2 acceptance test.) Binary; if
-   yes, escalate to trace-video.
-
-Sentinel on pass: `videos/trailer/sample-eval/visual-asset-prep/briggsy-review-3.1.signoff`
-(operator writes after eyeball pass).
+Cross-family Briggsy review of HTP fullpage in collision with
+briefing-room + cascade chrome composites happens at Unit 3.7
+consolidated gate. If during Unit 3.1 execution Briggsy is available
+and chooses to spot-check `public/trailer/htp-fullpage.png` (the
+review opportunity is open — the PNG exists), the fluency questions
+are: (1) Does the HTP fullpage feel like a complete dossier or like
+a long screenshot? (2) Any sections visibly mid-reveal? (3) §2.2
+embarrassing-next-to-Archer test. But this review is opportunistic,
+NOT gating — automated exit conditions above unblock Unit 3.2.
 
 **Patterns to follow:**
 
@@ -1527,8 +2092,10 @@ rationale in `card-curation.md`.
   subsets indexed by webp filename.
 - Create: `videos/trailer/sample-eval/visual-asset-prep/card-curation.md` —
   per-card selection rationale.
-- (Conditional) Create: `videos/trailer/src/lib/cascade-ring-layout.json`
-  — per-card ring geometry + entry-stagger for the 17-mosaic halo
+- Create: `videos/trailer/src/lib/cascade-halo-column.json`
+  (DOC-REVIEW RENAME from cascade-ring-layout.json) — per-card
+  right-edge COLUMN geometry (slot 1-6, yCenter, x band 1560-1880)
+  + 2-frame entry-stagger for the 6-card right-edge halo column
   (also covered in Unit 3.7 if cleaner there; see Step 5).
 - NO file copies, NO symlinks — Phase 4 imports webps via
   `staticFile('assets/cards/dash-barlowe.webp')` resolving through
@@ -1656,16 +2223,21 @@ right edge (Unit 1.10 Step 1). **Six card-art operatives + Otto-aside
 chrome treatment**, NOT "all 7 active-roster operatives" as the pre-
 deepening plan claimed.
 
-Per Phase 1 narration lock: *"Seven on the roster, six in the deck,
-one in the basement. Don't ask."* The visual must match the line:
+Per Phase 1 narration lock (DOC-REVIEW source-fix; the prior "in the
+basement" phrasing was Phase 1 fiction): *"Seven on the roster. Six
+in the deck. One on the research budget. Don't ask."* matches
+`ActRoster.tsx:153-158` literal aside ("busy with the (unsanctioned,
+off-books, almost certainly illegal) research budget"). The visual
+must match the line:
 - 6 operative card-arts slide in: `dash-barlowe`, `vera-khan`,
   `sable-ashworth`, `janet-broadside`, `neal-proctor`, `agent-x`.
 - Agent X composites with vendored `RedactBar.tsx` overlay (per Phase
   4 vocabulary import; Unit 3.X vendors the component) — face
   obscured per the wild-card narrative.
 - Otto's exclusion is the joke. Phase 4 composes a 7th slot with
-  classification-style chrome ("BASEMENT" or "REDACTED" treatment)
-  using the vendored `ClassificationBanner.tsx` red-tone, OR uses
+  classification-style chrome ("RESEARCH BUDGET" or "REDACTED"
+  treatment — NOT "BASEMENT" per the source-fix) using the vendored
+  `ClassificationBanner.tsx` red-tone, OR uses
   `public/assets/arena/portrait-otto.png` with heavy redaction. Phase
   3 ensures both options have asset coverage:
   - `portrait-otto.png` is already in `public/assets/arena/`.
@@ -1675,12 +2247,30 @@ one in the basement. Don't ask."* The visual must match the line:
   artwork only (per `project-burned-dolores-grieves` memory). She has
   no separate slide-in role.
 
-**Step 5 — S04 cascade halo cluster + cascade-ring-layout.json.**
+**Step 5 — S04 cascade halo cluster + cascade-halo-column.json
+(REWRITTEN to match Phase 1 lock; Phase 3 deepening had drifted to
+17-card 360° mosaic — the exact AI-slop shape Phase 1 designed the
+lock to prevent).**
 
-The halo cluster at frames 1410–1560 reveals 3 card portraits as
-initial focal cluster (Phase 1 Unit 1.5 Step 2: Vera + Otto + Neal
-per cue table at frame 1410), then expands to 17-mosaic halo at
-frames 1560–1860.
+Phase 1 Unit 1.5 Step 2 storyboard locks the cascade halo as a
+**right-edge 6-card column at x=1560–1880, 40% opacity throughout**,
+beginning at frame 1560 (alongside Stat 3 caption entry) and
+completing at ~frame 1572 (6 cards × 2-frame stagger = 12-frame
+ramp). Phase 1 line 1782-1783:
+
+> "Card-art halo **right-edge only** begins building (per-card
+> stagger HALO_CARD_STAGGER_FRAMES = 2, opacity caps at 40%, top 6
+> cards of the 17-art set)... Card-art halo completes (full
+> right-edge 6-card column at 40%)."
+
+The pre-deepening Phase 3 plan had a 17-card 360° MOSAIC centered at
+(1700, 540) with `radiusInner: 280, radiusOuter: 360` — a concentric
+ring around the right side of the canvas. This violates the Phase 1
+lock on multiple axes: (1) ring ≠ column, (2) 17 ≠ 6, (3) 360°
+distribution ≠ right-edge band x=1560-1880, (4) the ring shape IS
+the "layered/decorative cluster" anti-pattern Phase 1 Unit 1.5 lock
+explicitly identifies as the AI-slop-shape (the "exciting product
+trailer" Loom/HeyGen/Runway template). Restored.
 
 **Phase 1 cascade lock echoed VERBATIM** (anti-pattern guard):
 
@@ -1692,54 +2282,72 @@ frames 1560–1860.
 > moment — every other cascade frame has exactly one element at
 > full visual weight.
 
-Phase 3 ships **`videos/trailer/src/lib/cascade-ring-layout.json`**
-declaring per-card position in the 17-mosaic halo so Phase 4
-cannot accidentally render layered-simultaneous:
+Phase 3 ships **`videos/trailer/src/lib/cascade-halo-column.json`**
+(renamed from `cascade-ring-layout.json` to reflect the actual
+geometry; the legacy filename misled the deepening author into
+shipping a ring layout) declaring per-card column position so Phase 4
+cannot accidentally render the layered-simultaneous AI-slop:
 
 ```json
 {
-  "$schema": "./cascade-ring-layout.schema.json",
-  "ring": {
-    "centerX": 1700,        "comment_centerX": "right-edge focal centroid; HTP hero occupies left ~70% of frame",
-    "centerY": 540,
-    "radiusInner": 280,
-    "radiusOuter": 360,
-    "opacityCeiling": 0.4,  "comment_opacityCeiling": "Phase 1 lock: halo stays ≤40% opacity throughout"
+  "$schema": "./cascade-halo-column.schema.json",
+  "geometry": "right-edge-column",
+  "column": {
+    "xCenter": 1720,                            "comment_xCenter": "midpoint of Phase 1 lock x=1560-1880 band",
+    "xLeft": 1560,                              "comment_xLeft": "Phase 1 lock left edge",
+    "xRight": 1880,                             "comment_xRight": "Phase 1 lock right edge",
+    "cardWidth": 240,
+    "cardHeight": 145,
+    "yTop": 120,
+    "yBottom": 960,
+    "verticalGap": 30,                          "comment_verticalGap": "6 cards at 145px height + 5 gaps of 30 = 945px fits in 840px column with light overlap; adjust at Unit 3.2 implementation",
+    "opacityCeiling": 0.4,                      "comment_opacityCeiling": "Phase 1 lock: halo stays ≤40% opacity throughout"
   },
-  "entryStaggerFrames": 2,  "comment_entryStaggerFrames": "Phase 1 lock: 2-frame stagger per item (Emil's 30-80ms range at 30fps)",
+  "entryStaggerFrames": 2,                      "comment_entryStaggerFrames": "Phase 1 lock: HALO_CARD_STAGGER_FRAMES (Emil's 30-80ms range at 30fps)",
+  "haloStartFrame": 1560,                       "comment_haloStartFrame": "Phase 1 lock: begins building alongside Stat 3 caption entry",
+  "haloCompleteFrame": 1572,                    "comment_haloCompleteFrame": "6 cards × 2 frames stagger = 12-frame ramp",
+  "cardCount": 6,
   "entries": [
-    { "filename": "dash-barlowe.webp",   "angleDeg":   0, "zOrder":  1, "entryFrameOffset":  0 },
-    { "filename": "vera-khan.webp",      "angleDeg":  21, "zOrder":  2, "entryFrameOffset":  2 },
-    { "filename": "sable-ashworth.webp", "angleDeg":  42, "zOrder":  3, "entryFrameOffset":  4 },
-    { "filename": "janet-broadside.webp","angleDeg":  63, "zOrder":  4, "entryFrameOffset":  6 },
-    { "filename": "neal-proctor.webp",   "angleDeg":  84, "zOrder":  5, "entryFrameOffset":  8 },
-    { "filename": "agent-x.webp",        "angleDeg": 105, "zOrder":  6, "entryFrameOffset": 10 },
-    { "filename": "burn-the-files.webp", "angleDeg": 126, "zOrder":  7, "entryFrameOffset": 12, "comment": "HERO-tier within halo — Phase 4 may elevate" },
-    { "filename": "burned.webp",         "angleDeg": 147, "zOrder":  8, "entryFrameOffset": 14, "comment": "HERO-tier within halo — Phase 4 may elevate" },
-    { "filename": "intercepted.webp",    "angleDeg": 168, "zOrder":  9, "entryFrameOffset": 16 },
-    { "filename": "extraction.webp",     "angleDeg": 189, "zOrder": 10, "entryFrameOffset": 18 },
-    { "filename": "intel-briefing.webp", "angleDeg": 210, "zOrder": 11, "entryFrameOffset": 20 },
-    { "filename": "falsify-intel.webp",  "angleDeg": 231, "zOrder": 12, "entryFrameOffset": 22 },
-    { "filename": "direct-order.webp",   "angleDeg": 252, "zOrder": 13, "entryFrameOffset": 24 },
-    { "filename": "reassign.webp",       "angleDeg": 273, "zOrder": 14, "entryFrameOffset": 26 },
-    { "filename": "call-in-a-favor.webp","angleDeg": 294, "zOrder": 15, "entryFrameOffset": 28 },
-    { "filename": "back-channel.webp",   "angleDeg": 315, "zOrder": 16, "entryFrameOffset": 30 },
-    { "filename": "go-dark.webp",        "angleDeg": 336, "zOrder": 17, "entryFrameOffset": 32 }
-  ]
+    { "filename": "dash-barlowe.webp",   "slot": 1, "yCenter": 192, "entryFrameOffset":  0 },
+    { "filename": "vera-khan.webp",      "slot": 2, "yCenter": 367, "entryFrameOffset":  2 },
+    { "filename": "sable-ashworth.webp", "slot": 3, "yCenter": 542, "entryFrameOffset":  4 },
+    { "filename": "janet-broadside.webp","slot": 4, "yCenter": 717, "entryFrameOffset":  6 },
+    { "filename": "neal-proctor.webp",   "slot": 5, "yCenter": 892, "entryFrameOffset":  8 },
+    { "filename": "agent-x.webp",        "slot": 6, "yCenter": 928, "entryFrameOffset": 10, "comment": "RedactBar overlay applied per Phase 4 — wild-card narrative" }
+  ],
+  "offscreenVarietyPool": {
+    "comment": "Cards NOT in the visible column. Phase 4 may sample for one-frame card-flash overlays during the cold-open S01 sequence (different role, NOT halo). 11 action cards kept available; never enter the cascade halo column.",
+    "cards": [
+      "burn-the-files.webp", "burned.webp", "intercepted.webp",
+      "extraction.webp", "intel-briefing.webp", "falsify-intel.webp",
+      "direct-order.webp", "reassign.webp", "call-in-a-favor.webp",
+      "back-channel.webp", "go-dark.webp"
+    ]
+  }
 }
 ```
 
-Phase 4 consumes via `import ring from './lib/cascade-ring-layout.json'`
-+ iterates `ring.entries` to position each card. Angles distributed
-evenly around 360° (21° step ≈ `360 / 17`); the two HERO-tier cards
-(`burn-the-files`, `burned`) sit at 126°/147° which is the natural
-focal arc as cards complete the ring; Phase 4 may elevate their
-opacity transiently when they enter (still capped at 40% — Phase 1
-lock — but at the high end of the band rather than 25-30%).
+Phase 4 consumes via `import halo from './lib/cascade-halo-column.json'`
++ iterates `halo.entries` to position each operative card vertically
+in the right-edge band. Why the 6 operatives (not action cards): the
+cascade payoff at frame 1950 ("They WERE the operation.") needs the
+right-edge halo to be visual antecedent of "they." Operative
+portraits in the column establish "they" = "the team" before the VO
+lands; action cards in the column would point at the game mechanics
+instead, which weakens the payoff's emotional landing.
+
+**Why the rename matters.** A file called `cascade-ring-layout.json`
+that ships column geometry is a code smell — the next reader (or the
+next deepening pass) will read the name first and trust the shape
+second. Phase 3 commits to `cascade-halo-column.json` so the
+filename matches the geometry.
 
 **Step 6 — Closing-card image (unchanged from pre-deepening).**
 
-S06 (frames 2580–2850) renders the BURNED logo center-frame at 2790.
+S06 (frames 2580–2850) renders the BURNED logo center-frame at 2780
+(Phase 1 Unit 1.10 lock — 10 frames earlier than the pre-deepening
+2790 to give the logo 40 frames of breathing room before R15 stamp #4
+at 2820).
 
 Per Unit 1.10 Step 1 (S06 visual): the dossier closes (reverse of S02
 opening), BURNED logo lands, R15 stamp #4 ("OPERATION STATUS:
@@ -1856,7 +2464,7 @@ full roster.
 
 - `card-curation.md` exists with per-card rationale.
 - `card-roster.ts` exists; typechecks; 17 entries; CI test green.
-- `cascade-ring-layout.json` exists; Phase 4 consumes for halo
+- `cascade-halo-column.json` exists; Phase 4 consumes for halo
   composition.
 - No card art moved or copied (Phase 0 ADR #8 honored).
 - Otto-aside treatment selected (Phase 4 composes; Phase 3 ensures
@@ -2242,7 +2850,7 @@ designed to tile or full-bleed.
 SVG mask layer rendering horizontal shadow bands:
 
 ```svg
-<!-- videos/trailer/public/assets/briefing-room/venetian-blinds.svg -->
+<!-- public/trailer/briefing-room/venetian-blinds.svg (ADR #15 — INSIDE BURNED's public/, NOT videos/trailer/public/ which is UNREACHABLE to staticFile during render) -->
 <svg viewBox="0 0 1920 1080" xmlns="http://www.w3.org/2000/svg" preserveAspectRatio="none">
   <defs>
     <linearGradient id="bandFade" x1="0" y1="0" x2="1" y2="0">
@@ -2374,9 +2982,13 @@ async function main() {
   const browser = await chromium.launch({ headless: true });
   const page = await browser.newPage({ viewport: { width: 1920, height: 1080 } });
   await page.goto('http://localhost:5173/board.html?room=PHASE3', { waitUntil: 'networkidle' });
-  // Wait for CaseBanner aside to render in lobby state
-  await page.waitForSelector('aside.caseBanner', { timeout: 10_000 });
-  const bannerHandle = await page.$('aside.caseBanner');
+  // Wait for CaseBanner aside to render in lobby state.
+  // DOC-REVIEW (feasibility f1): CSS-module class names are
+  // Vite-hashed at runtime (e.g. `_caseBanner_a1b2c3`), so
+  // selector `aside.caseBanner` matches NOTHING. Use partial
+  // class match instead — survives hash regeneration.
+  await page.waitForSelector('aside[class*="caseBanner"]', { timeout: 10_000 });
+  const bannerHandle = await page.$('aside[class*="caseBanner"]');
   if (bannerHandle) {
     await bannerHandle.screenshot({ path: resolve(OUT_DIR, 'case-banner-reference.png') });
   }
@@ -2434,7 +3046,7 @@ Section to append:
 
 | Path | Source | Purpose |
 |---|---|---|
-| `sample-eval/visual-asset-prep/case-banner-reference.png` | Playwright crop of BURNED live `<aside.caseBanner>` | Phase 4 visual-diff against vendored-component render |
+| `sample-eval/visual-asset-prep/case-banner-reference.png` | Playwright crop of BURNED live `<aside[class*="caseBanner"]>` (DOC-REVIEW: partial-class selector — Vite hashes CSS-module names at runtime) | Phase 4 visual-diff against vendored-component render |
 | `sample-eval/visual-asset-prep/comms-ticker-reference.png` | Playwright crop of BURNED live DossierFeed | Same |
 ```
 
@@ -2494,24 +3106,23 @@ Option C (doorframe vignette) preferred: large architectural frame
 SVG at edge of viewport casting subtle gradient shadow into the
 desk plane.
 
-**[BRIGGSY-REVIEW GATE — Unit 3.3 Briefing-Room]**
+**[AUTO-VERIFY — Unit 3.3 Briefing-Room]**
 
-Cannot proceed to Unit 3.4 until Briggsy eyes-on review of the
-briefing-room composite asset family answers:
+Unit exit is AUTOMATED (per DOC-REVIEW gate collapse — see Critical
+Constraints §Briggsy-Eyeball Gate Protocol):
+- All NEW briefing-room SVGs exist at `public/trailer/briefing-room/`
+  per ADR #15 paths (verified by script).
+- Depth-plane option pick (A nameplate / B folders / C doorframe)
+  recorded in PHASE-3-EXIT.md.
+- CASE BANNER + COMMS ticker SVGs authored from GameTable.tsx:67-72
+  inline JSX reference; visual diff against Playwright reference
+  render passes pixel-tolerance.
 
-1. **Does the composite (mahogany + blotter + venetian-blinds +
-   dossier-folder-closed + depth-plane) READ as M's office from
-   ISIS / a Pendleton-era spy-agency briefing room, OR as a CSS
-   rendering with PendletonStyleProps?** If the latter, individual
-   asset visual treatments need re-investigation.
-2. **Does the depth-plane element pull the eye forward in the
-   composition (creating actual depth perception), or does it sit
-   flat alongside the desk surface?** Foreground depth-plane is
-   load-bearing for the S02 reveal cinematic.
-3. **Would this composite be embarrassing next to a frame from the
-   Archer Dreamland briefing scenes?** §2.2 acceptance.
-
-Sentinel on pass: `sample-eval/visual-asset-prep/briggsy-review-3.3.signoff`.
+Cross-family Briggsy review of briefing-room composite in collision
+with HTP hero + R15 chrome happens at Unit 3.7 consolidated gate
+(the S02 frame ~300 composite proof is part of the consolidated
+review bundle). Opportunistic per-asset review is available — but
+NOT gating. Automated exit conditions unblock Unit 3.4.
 
 **Patterns to follow:**
 
@@ -2533,8 +3144,9 @@ Sentinel on pass: `sample-eval/visual-asset-prep/briggsy-review-3.3.signoff`.
   capture cleanly.
 - **Visual:** Render each NEW SVG in a browser at intended scale;
   verify visual match to in-game arena vocabulary.
-- **Edge case:** BURNED's `aside.caseBanner` selector doesn't match
-  (selector changed) → reference-render script fails fast; operator
+- **Edge case:** BURNED's `aside[class*="caseBanner"]` partial-class
+  selector doesn't match (CSS-module class renamed in source) →
+  reference-render script fails fast; operator
   inspects GameTable.tsx for current selector + updates script.
 - **Edge case:** Depth-plane SVG doesn't carry trailer weight on
   Briggsy review → escalate to Imagen <$1 (insight-018 stop-gate
@@ -2913,29 +3525,27 @@ infra").
 - [ ] Safe-square composite (Unit 3.7) confirms #3 fits at -3° rotation
 ```
 
-**[BRIGGSY-REVIEW GATE — Unit 3.4 R15 Chrome]**
+**[AUTO-VERIFY — Unit 3.4 R15 Chrome]**
 
-Cannot proceed to Unit 3.5 until Briggsy eyes-on review of all 4 R15
-stamp composites at `sample-eval/visual-asset-prep/safe-square-
-composites/r15-*.png` answers:
+Unit exit is AUTOMATED (per DOC-REVIEW gate collapse — see Critical
+Constraints §Briggsy-Eyeball Gate Protocol):
+- All 8 SVG files exist (4× stamp-N-frame.svg + 4× stamp-N-text.svg)
+  at `public/trailer/r15-chrome/`.
+- CVD probe script exits 0 (ochre-9/burn-fire pairs clear
+  deuter/prot/trit at 0.10 oklab floor, including the new
+  composed-background pairs — see CVD probe extension below).
+- Split-layer composite test passes (frame.svg + text.svg align
+  when stacked).
+- Token-resolution lock applied per Unit 3.0 token-import strategy
+  (Option A locked — vendor primitives.css + palette into burned-
+  vocabulary so `var(--color-burned-fire)` resolves at render).
 
-1. **Does stamp #3 ("AUTONOMOUS FIELD UNIT — ASSET DELIVERED") feel
-   like INK SLAPPED ONTO PAPER, or like a CSS box with a filter
-   applied?** If the latter, ink-bleed filter parameters need re-
-   tuning against `Stamp.module.css` actual filter values (vendored
-   at Unit 3.0).
-2. **Does the burn-fire ink read as AUTHORITATIVE/ALARMING, or as
-   generic red?** If generic, hex value needs review against
-   `--color-burned-fire` token actual rendering.
-3. **Does stamp #4 ("OPERATION STATUS: FIELD-READY") differentiate
-   tonally from stamp #3?** Per Phase 1 lock, #3 carries origin
-   claim, #4 carries status grammar — they shouldn't read
-   identically.
-4. **Would these stamps be embarrassing next to an actual Archer
-   episode screenshot?** (§2.2 binary.) If yes, escalate to insight-
-   018 stop-gate + re-architect.
-
-Sentinel on pass: `sample-eval/visual-asset-prep/briggsy-review-3.4.signoff`.
+Cross-family Briggsy review of R15 stamp #3 in collision with HTP
+hero at the frame 1950 payoff moment happens at Unit 3.7
+consolidated gate (the S04 frame 1950 composite proof is the
+critical cross-family moment for R15 #3 because the stamp slap is
+the trailer's only "everything at once" frame). Per-unit review is
+opportunistic — automated exit conditions unblock Unit 3.5.
 
 **Patterns to follow:**
 
@@ -2984,8 +3594,11 @@ Sentinel on pass: `sample-eval/visual-asset-prep/briggsy-review-3.4.signoff`.
 - [ ] **Unit 3.5: Music Bed Procurement**
 
 **Goal:** Audition + procure the licensed music bed track per Unit
-1.7 deepened lock. Or trigger the generative Suno Pro fallback as
-the EXPECTED path (not last-resort) if licensed pool doesn't deliver.
+1.7 doc-review-revised ladder. Falls through Tier 1 (Artlist/Epidemic
+Pro) → Tier 2 (Marmoset/Songtradr per-track marketplace, DOC-REVIEW
+RESTORED) → Tier 3 (Suno Pro generative as LAST-RESORT per Phase 1
+line 2296 lock; was silently inverted to "EXPECTED" in pre-deepening
+Phase 3).
 
 **Requirements:** R9 (Archer-coded mid-century brass / bossa).
 TEXTURE tier (continuous-presence atmosphere; the cascade payoff is
@@ -3032,7 +3645,8 @@ The preflight script asks (interactively or via env vars):
    If neither set + not skipped → preflight exits non-zero with
    message: "Artlist Pro / Epidemic Sound Pro accounts at $199-204/yr
    each; if not procurable for this trailer, set
-   PRIMARY_MUSIC_SOURCE=skip-licensed to use Suno Pro as expected
+   PRIMARY_MUSIC_SOURCE=skip-licensed to use Suno Pro as
+   last-resort (per Phase 1 lock) without trying Tier 1+2
    fallback."
 
 2. **Suno Pro subscription** (for fallback OR primary if skipped):
@@ -3059,7 +3673,9 @@ Phase 1 Unit 1.7 deepening locked the source pool:
 - **Artlist Pro OR Epidemic Sound Pro** ($199-$204/yr minimum tier
   covering portfolio embed + Twitter/X + future engineering blog
   reposts).
-- **Suno Pro $10/mo** as EXPECTED fallback (not last-resort) — the
+- **Suno Pro $10/mo** as LAST-RESORT (Phase 1 line 2296 lock;
+  pre-deepening Phase 3 silently inverted to "EXPECTED" —
+  DOC-REVIEW restored) — the
   brass/bossa-with-distinct-dynamic-arc-at-95s constraint is hostile
   to licensed-catalog hit rate.
 - Musicbed REMOVED (over-budget at $329-$1,208/yr Individual tier
@@ -3143,7 +3759,9 @@ execFileSync('ffmpeg', [
 console.log(`OK encoded to ${OUT}`);
 ```
 
-**Path B — Suno Pro generative (expected fallback, not last-resort):**
+**Path C — Suno Pro generative (LAST-RESORT per Phase 1 lock;
+DOC-REVIEW RESTORED — pre-deepening Phase 3 labeled this "Path B
+expected fallback" which inverted Phase 1 line 2296):**
 
 If Step 0 set `PRIMARY_MUSIC_SOURCE=skip-licensed` OR Path A's audition
 pool didn't deliver after 20-30 candidates:
@@ -3291,10 +3909,13 @@ cold-open card selections per `COLD_OPEN_CARDS` export), Unit 1.4
   into template per `COLD_OPEN_CARDS` selection.
 - Create: `public/trailer/title-sequence/chevron-motif-bg.svg` —
   background chevron pattern (Bass / Ferro lineage). TEXTURE tier.
-- Create: `public/trailer/title-sequence/burned-logo.svg` — SINGLE
-  bold mid-century geometric BURNED wordmark. Used at both cold-open
-  S01 landing (frame 180-210) AND closing S06 (frame 2790). Pre-
-  deepening plan had two separate files for the SAME visual
+- Create: `public/trailer/title-sequence/burned-logo.svg` — S06
+  CLOSING WORDMARK at frame 2780. Bold mid-century geometric BURNED
+  wordmark per Phase 1 Unit 1.10 lock. **S01 cold-open uses
+  `public/assets/cards/burned.webp` (existing card art), NOT this
+  wordmark** — Phase 1 locks the differential (S01 = card-art
+  in-world; S06 = wordmark out-of-world bookend). Pre-deepening
+  plan's "two separate files for the SAME visual"
   treatment — merged per scope-guardian deepening.
 
 **REFERENCE for the cold-open title plate (NOT regenerated):**
@@ -3433,7 +4054,12 @@ JetBrains Mono used for R15 chrome (classified-info hierarchy).
 **Step 2 — Chevron motif background.**
 
 A subtle diagonal-chevron repeating pattern for the cold-open
-background:
+background. DOC-REVIEW (design F11): the pre-deepening SVG path was
+`M0,60 L60,0 L120,60 L60,120 Z` — a DIAMOND/RHOMBUS, NOT a chevron.
+Chevrons are directional arrowhead `>>>` shapes that carry forward-
+motion visual energy (Bass / Ferro lineage cited as the reference);
+diamonds carry static-symmetrical energy and read as "decorative
+quilt." Corrected to actual chevron geometry below:
 
 ```svg
 <!-- public/trailer/title-sequence/chevron-motif-bg.svg -->
@@ -3441,9 +4067,14 @@ background:
      preserveAspectRatio="xMidYMid slice"
      style="--ink: var(--color-ochre-9, #947226); --bg: var(--color-charcoal-12, #1a1812)">
   <defs>
-    <pattern id="chevronPattern" x="0" y="0" width="120" height="120"
+    <!-- Actual chevron pattern — diagonal stripes pointing right
+         like `>>>`. Tile is 120w × 60h; two strokes per tile carry
+         the chevron rhythm. DOC-REVIEW design F11 fix. -->
+    <pattern id="chevronPattern" x="0" y="0" width="120" height="60"
              patternUnits="userSpaceOnUse">
-      <path d="M0,60 L60,0 L120,60 L60,120 Z" fill="none"
+      <path d="M0,0 L60,30 L0,60" fill="none"
+            stroke="var(--ink)" stroke-width="2" opacity="0.12" />
+      <path d="M60,0 L120,30 L60,60" fill="none"
             stroke="var(--ink)" stroke-width="2" opacity="0.12" />
     </pattern>
   </defs>
@@ -3452,13 +4083,18 @@ background:
 </svg>
 ```
 
-**Step 3 — BURNED logo treatment (SINGLE file).**
+**Step 3 — BURNED logo treatment (S06 ONLY; S01 uses card art).**
 
 Hand-author SVG in Clash Display 700 (very large — ~320px tall),
 classification-stamp aesthetic, bold mid-century geometric. **SINGLE
-file** used at both cold-open S01 (frame 180-210) and closing S06
-(frame 2790) — pre-deepening plan had two near-identical files;
-Phase 4 imports the one file twice rather than maintaining two:
+file** used ONLY at closing S06 (frame 2780 per Phase 1 lock —
+NOT 2790). **S01 cold-open uses existing
+`public/assets/cards/burned.webp` (the game card art) per Phase 1
+Unit 1.10's locked S01-vs-S06 differential** — the pre-deepening
+plan's "two near-identical files merged into one" framing was a
+Phase 3 drift; Phase 1 never intended two wordmark files, it
+intended one wordmark (S06) and one card-art reference (S01). Phase
+4 imports the wordmark SVG only for S06:
 
 ```svg
 <!-- public/trailer/title-sequence/burned-logo.svg -->
@@ -3516,12 +4152,23 @@ card portrait at intended cold-open canvas ratio.
 
 ```ts
 // videos/trailer/scripts/build-operative-card-composite-proof.ts
+// DOC-REVIEW FIX (design F05 + feasibility f6 + adversarial F4
+// cross-persona consensus): page.setContent() uses about:blank as
+// the page URL, so relative <img src="../../../../public/..."> paths
+// silently 404 — the captured PNG shows broken-image placeholders.
+// Fix: convert asset paths to file:// absolute URLs via
+// pathToFileURL so they resolve against the local filesystem.
 import { chromium } from '@playwright/test';
 import { resolve } from 'node:path';
+import { pathToFileURL } from 'node:url';
 import { mkdirSync, existsSync } from 'node:fs';
 
 const OUT_DIR = resolve(process.cwd(), 'videos/trailer/sample-eval/visual-asset-prep');
 const OUT_PATH = resolve(OUT_DIR, 'operative-card-composite-proof.png');
+
+function fileUrl(relFromRoot: string): string {
+  return pathToFileURL(resolve(process.cwd(), relFromRoot)).href;
+}
 
 async function main() {
   if (!existsSync('public/assets/cards')) {
@@ -3529,6 +4176,18 @@ async function main() {
     process.exit(1);
   }
   mkdirSync(OUT_DIR, { recursive: true });
+
+  // Assert source assets exist BEFORE attempting composite — script
+  // silently producing blank PNGs is the failure mode this guards.
+  const frameSvg = fileUrl('public/trailer/title-sequence/operative-card-frame.svg');
+  const portraitWebp = fileUrl('public/assets/cards/dash-barlowe.webp');
+  for (const [label, url] of [['frame.svg', frameSvg], ['portrait', portraitWebp]] as const) {
+    const localPath = url.replace('file:///', '/').replace('file://', '');
+    if (!existsSync(localPath)) {
+      console.error(`Missing ${label}: expected at ${localPath}`);
+      process.exit(1);
+    }
+  }
 
   const browser = await chromium.launch({ headless: true });
   const page = await browser.newPage({ viewport: { width: 1920, height: 1080 } });
@@ -3551,14 +4210,19 @@ async function main() {
 </style></head><body>
   <div class="stage">
     <div class="card">
-      <img class="frame" src="../../../../public/trailer/title-sequence/operative-card-frame.svg" />
-      <img class="portrait" src="../../../../public/assets/cards/dash-barlowe.webp" />
+      <img class="frame" src="${frameSvg}" />
+      <img class="portrait" src="${portraitWebp}" />
       <div class="name">DASH BARLOWE</div>
     </div>
   </div>
 </body></html>
   `);
-  await page.waitForTimeout(500);
+  // Wait for both images to load — replaces the wall-clock 500ms
+  // sleep (which produced unverified captures).
+  await page.waitForFunction(() => {
+    const imgs = Array.from(document.querySelectorAll('img'));
+    return imgs.length === 2 && imgs.every((img) => img.complete && img.naturalWidth > 0);
+  }, { timeout: 5000 });
   await page.screenshot({ path: OUT_PATH, fullPage: false });
   await browser.close();
   console.log(`OK composite proof at ${OUT_PATH}`);
@@ -3582,7 +4246,7 @@ to feel right at that scale, not just at the 800×1000 SVG viewport).
 |---|---|---|---|
 | operative-card-frame.svg | SVG vector + Imagen-or-hand chrome | HERO | S01 card-flash chrome template (frames 30-210); Phase 4 composites with card-art portraits + Clash Display 700 name overlay |
 | chevron-motif-bg.svg | SVG vector pattern | TEXTURE | S01 background |
-| burned-logo.svg | SVG vector Clash Display 700 | HERO | S01 landing (180-210) AND S06 closing (2790) — single file, dual use |
+| burned-logo.svg | SVG vector Clash Display 700 | HERO | S06 closing (frame 2780) ONLY — S01 uses `assets/cards/burned.webp` per Phase 1 lock |
 
 ### Existing assets (Path A via staticFile through ADR #8)
 
@@ -3598,27 +4262,26 @@ to feel right at that scale, not just at the 800×1000 SVG viewport).
 | `sample-eval/visual-asset-prep/operative-card-composite-proof.png` | Playwright static-HTML composite | Verify name-plate readable at 1/3-canvas size BEFORE Phase 4 commits |
 ```
 
-**[BRIGGSY-REVIEW GATE — Unit 3.6 Title-Sequence]**
+**[AUTO-VERIFY — Unit 3.6 Title-Sequence]**
 
-Cannot proceed to Unit 3.7 until Briggsy eyes-on review of
-`operative-card-composite-proof.png` + the BURNED logo SVG +
-chevron-motif background composite answers:
+Unit exit is AUTOMATED (per DOC-REVIEW gate collapse — see Critical
+Constraints §Briggsy-Eyeball Gate Protocol):
+- `burned-logo.svg` exists at `public/trailer/title-sequence/` (S06
+  closing only; S01 cold-open uses existing `public/assets/cards/
+  burned.webp` per Phase 1 Unit 1.10 lock).
+- `operative-card-frame.svg` exists (either Imagen output OR hand-
+  authored SVG fallback per insight-018 stop-gate outcome).
+- `chevron-motif-bg.svg` exists with actual chevron geometry (NOT
+  diamonds — see Unit 3.6 Step 2 DOC-REVIEW geometry fix).
+- `operative-card-composite-proof.png` generated successfully via
+  file-URL HTML (NOT setContent relative paths — see Step 5 fix).
+- Imagen spend (if Imagen path taken) recorded in
+  `imagen-spend.md` and under the $6 cap.
 
-1. **Does the BURNED logo carry the WEIGHT of an Archer title plate
-   — does it feel CLASSIFIED-DOCUMENT-LOAD-BEARING — or like a
-   marketing wordmark?** If wordmark, escalate to Imagen polish per
-   insight 018 (cap <$2 if triggered).
-2. **At 1/3-canvas size, does the operative card-flash sequence
-   feel CINEMATIC (Archer title-sequence-pause-on-face moment), or
-   like a UI carousel?** If carousel, frame chrome or portrait
-   cropping needs re-tuning.
-3. **Does the operative name (Clash Display 700) READ at the cold-
-   open viewing distance, or is it noise?** Per design-lens deepening
-   Finding 12.
-4. **Would this title sequence be embarrassing next to an actual
-   Archer cold-open?** §2.2 acceptance.
-
-Sentinel on pass: `sample-eval/visual-asset-prep/briggsy-review-3.6.signoff`.
+Cross-family Briggsy review of cold-open card-flash composite +
+S06 closing-frame composite happens at Unit 3.7 consolidated gate.
+Per-unit review is opportunistic. Automated exit conditions unblock
+Unit 3.7.
 
 **Patterns to follow:**
 
@@ -3756,7 +4419,7 @@ export const VISUAL_ASSETS: readonly VisualAsset[] = [
   { category: 'briefing-room', staticPath: 'trailer/briefing-room/venetian-blinds.svg', safeSquareRole: 'side-band', tier: 'texture', notes: '1920×1080 viewport; Phase 4 animates translateX 1.5-2px/frame' },
   { category: 'briefing-room', staticPath: 'trailer/briefing-room/dossier-folder-closed.svg', safeSquareRole: 'safe-square', tier: 'hero', notes: '1000×1300 viewport; S02 pre-reveal' },
   { category: 'briefing-room', staticPath: 'trailer/briefing-room/dossier-folder-open.svg', safeSquareRole: 'safe-square', tier: 'hero', notes: '1000×1300 viewport; S02 reveal post-state' },
-  { category: 'briefing-room', staticPath: 'trailer/briefing-room/depth-plane.svg', safeSquareRole: 'side-band', tier: 'hero', notes: 'Phase 1 Unit 1.10 deepening depth-plane element; Unit 3.3 Step 7 picks Option A/B/C' },
+  { category: 'briefing-room', staticPath: 'trailer/briefing-room/depth-plane.svg', safeSquareRole: 'safe-square', tier: 'hero', notes: 'DOC-REVIEW (design F08) — was tagged side-band+hero which is contradictory (HERO must hold full visual weight in central 1080×1080; side-band means acceptable mobile crop). Phase 1 Unit 1.10 calls depth-plane load-bearing for the S02 reveal cinematic, so safe-square is the correct tag. Unit 3.3 Step 7 picks Option A/B/C.' },
 
   // Briefing-room — EXISTING (Path A via Phase 0 ADR #8)
   { category: 'briefing-room', staticPath: 'assets/arena/mahogany-horizontal.png', safeSquareRole: 'safe-square', tier: 'hero', notes: 'Existing Imagen-gen; S02/S06 desk backdrop' },
@@ -3769,7 +4432,7 @@ export const VISUAL_ASSETS: readonly VisualAsset[] = [
   // Title-sequence — NEW (Unit 3.6)
   { category: 'title-sequence', staticPath: 'trailer/title-sequence/operative-card-frame.svg', safeSquareRole: 'safe-square', tier: 'hero', notes: 'S01 cold-open card-flash chrome template; Phase 4 composites portrait + Clash Display 700 name overlay' },
   { category: 'title-sequence', staticPath: 'trailer/title-sequence/chevron-motif-bg.svg', safeSquareRole: 'side-band', tier: 'texture', notes: 'S01 background' },
-  { category: 'title-sequence', staticPath: 'trailer/title-sequence/burned-logo.svg', safeSquareRole: 'safe-square', tier: 'hero', notes: 'Single file; S01 landing 180-210 + S06 closing 2790' },
+  { category: 'title-sequence', staticPath: 'trailer/title-sequence/burned-logo.svg', safeSquareRole: 'safe-square', tier: 'hero', notes: 'S06 closing (frame 2780) ONLY — S01 cold-open uses existing assets/cards/burned.webp per Phase 1 Unit 1.10 lock' },
 
   // Title-sequence — EXISTING (Path A via Phase 0 ADR #8)
   { category: 'title-sequence', staticPath: 'assets/howtoplay/operations-manual-plate.png', safeSquareRole: 'safe-square', tier: 'hero', notes: 'Existing Imagen-gen; S01 title plate reveal' },
@@ -3830,19 +4493,29 @@ ships per-asset-family PNG composites verifying critical assets fit.
 
 ```ts
 // videos/trailer/scripts/build-safe-square-composites.ts
+// DOC-REVIEW FIX (design F05 + feasibility f6 + adversarial F4):
+// setContent uses about:blank base URL — relative src paths silently
+// 404. Same fix as build-operative-card-composite-proof.ts above:
+// pathToFileURL for every asset, plus assert-before-render so missing
+// inputs don't produce blank "safe-square verified" PNGs.
 import { chromium } from '@playwright/test';
 import { resolve } from 'node:path';
+import { pathToFileURL } from 'node:url';
 import { mkdirSync, existsSync } from 'node:fs';
 
 const OUT_DIR = resolve(process.cwd(),
   'videos/trailer/sample-eval/visual-asset-prep/safe-square-composites');
 
+function fileUrl(relFromRoot: string): string {
+  return pathToFileURL(resolve(process.cwd(), relFromRoot)).href;
+}
+
 const FAMILIES = [
-  { name: 'r15-stamp-1', assets: ['trailer/r15-chrome/stamp-1-operation-pendleton-frame.svg', 'trailer/r15-chrome/stamp-1-operation-pendleton-text.svg'], wrap: 'rotate(-8deg)' },
-  { name: 'r15-stamp-3', assets: ['trailer/r15-chrome/stamp-3-asset-delivered-frame.svg', 'trailer/r15-chrome/stamp-3-asset-delivered-text.svg'], wrap: 'rotate(-3deg)' },
-  { name: 'r15-subhead-4', assets: ['trailer/r15-chrome/subhead-4-field-ready-frame.svg', 'trailer/r15-chrome/subhead-4-field-ready-text.svg'], wrap: '' },
-  { name: 'briefing-folder-closed', assets: ['trailer/briefing-room/dossier-folder-closed.svg'], wrap: '' },
-  { name: 'title-burned-logo', assets: ['trailer/title-sequence/burned-logo.svg'], wrap: '' },
+  { name: 'r15-stamp-1', assets: ['public/trailer/r15-chrome/stamp-1-operation-pendleton-frame.svg', 'public/trailer/r15-chrome/stamp-1-operation-pendleton-text.svg'], wrap: 'rotate(-8deg)' },
+  { name: 'r15-stamp-3', assets: ['public/trailer/r15-chrome/stamp-3-asset-delivered-frame.svg', 'public/trailer/r15-chrome/stamp-3-asset-delivered-text.svg'], wrap: 'rotate(-3deg)' },
+  { name: 'r15-subhead-4', assets: ['public/trailer/r15-chrome/subhead-4-field-ready-frame.svg', 'public/trailer/r15-chrome/subhead-4-field-ready-text.svg'], wrap: '' },
+  { name: 'briefing-folder-closed', assets: ['public/trailer/briefing-room/dossier-folder-closed.svg'], wrap: '' },
+  { name: 'title-burned-logo', assets: ['public/trailer/title-sequence/burned-logo.svg'], wrap: '' },
   // ... add as each unit ships
 ];
 
@@ -3850,13 +4523,23 @@ async function main() {
   if (!existsSync('public/trailer')) {
     console.error('Run from BURNED repo root.'); process.exit(1);
   }
+  // Assert every input asset exists before rendering — silent
+  // blanks would invalidate every "safe-square pass" downstream.
+  for (const family of FAMILIES) {
+    for (const p of family.assets) {
+      if (!existsSync(resolve(process.cwd(), p))) {
+        console.error(`Missing input for ${family.name}: ${p}`);
+        process.exit(1);
+      }
+    }
+  }
   mkdirSync(OUT_DIR, { recursive: true });
   const browser = await chromium.launch({ headless: true });
   const page = await browser.newPage({ viewport: { width: 1920, height: 1080 } });
 
   for (const family of FAMILIES) {
     const stack = family.assets
-      .map((p) => `<img src="../../../../public/${p}" style="position:absolute;inset:0;width:100%;height:100%" />`)
+      .map((p) => `<img src="${fileUrl(p)}" style="position:absolute;inset:0;width:100%;height:100%" />`)
       .join('');
     await page.setContent(`
 <!doctype html>
@@ -3875,7 +4558,11 @@ async function main() {
   </div>
 </body></html>
     `);
-    await page.waitForTimeout(300);
+    // Wait for the family's images to load — replaces wall-clock 300ms.
+    await page.waitForFunction((expected) => {
+      const imgs = Array.from(document.querySelectorAll('.asset img'));
+      return imgs.length === expected && imgs.every((img) => img.complete && img.naturalWidth > 0);
+    }, family.assets.length, { timeout: 5000 });
     await page.screenshot({ path: resolve(OUT_DIR, `${family.name}.png`), fullPage: false });
   }
   await browser.close();
@@ -3888,6 +4575,61 @@ Briggsy reviews each composite — critical text (R15 stamp #3 "ASSET
 DELIVERED") MUST land inside the red-dashed 1080×1080 center-square
 overlay. If text clips, Phase 3 reopens to resize/reposition the
 asset before Phase 4 commits.
+
+**Step 4b — Cross-family composite-frame proofs (DOC-REVIEW NEW — adversarial F9 + scope-guardian SG-P3-02 + product product-001).**
+
+The Step 4 safe-square composites verify each asset family
+INDIVIDUALLY. Two trailer moments collide multiple Phase 3 families
+in-frame at intended scene scale — exactly where insight 050's emil-
+cohesion principle applies — and the per-family composites don't
+catch cross-family conflicts (light direction mismatch, ink texture
+incoherence, color-temperature drift across families).
+
+Phase 3 ships TWO cross-family composite proofs at Unit 3.7 exit
+(consumed by the consolidated Briggsy cross-family review gate —
+see Critical Constraints §Briggsy-Eyeball Gate Protocol):
+
+1. **`sample-eval/visual-asset-prep/cross-family-s02-frame-300.png`**
+   — S02 briefing-room reveal moment. All shipped Phase 3 assets at
+   intended scene scale: mahogany desk (Path A) + venetian-blind
+   shadow (Path B) + dossier-folder-closed (Path B) + Pendleton crest
+   PNG corner watermark (Path A) + depth-plane (Path B) + R15 #1
+   classification stamp (Path B). Cross-family collision = "does this
+   read as M's briefing room or as CSS boxes wearing texture?"
+
+2. **`sample-eval/visual-asset-prep/cross-family-s04-frame-1950.png`**
+   — S04 cascade-payoff stamp slap. HTP fullpage hero (Path B) at
+   50% opacity + 6 cascade-halo cards (Path A, right-edge column) at
+   40% + 4 decayed stat captions at 30% side-band + R15 #3 payoff
+   stamp at full weight at center. The trailer's ONLY "everything
+   peaks" frame; if the cross-family hierarchy doesn't read as
+   "stamp dominant + rest as texture," the trailer's R3 payoff fails.
+
+Same `build-safe-square-composites.ts` script pattern (file:// URLs
++ assert-before-render); new FAMILIES entries for `cross-family-s02`
+and `cross-family-s04` with assets array of every component used
+at intended scale + position.
+
+**Cohesion review rubric (DOC-REVIEW NEW — design F07).** Briggsy's
+cross-family review answers THREE specific cohesion questions per
+composite (not vibe-checks):
+
+1. **Light direction.** Do shadows in all visible assets point the
+   same way? (Venetian-blind shadow + dossier-folder shadow + R15
+   stamp drop-shadow + mahogany grain highlight.) Mismatched
+   directions = "assembled from clip art" reading.
+2. **Ink texture character.** Do the R15 stamp ink-bleed (split-layer
+   filter) + Pendleton crest stroke weight + comms-ticker text
+   weight all read as "same printing press"? If one reads as
+   digital-laser-print and another as ink-stamp, the family is
+   broken.
+3. **Color temperature consistency across families.** Cream
+   parchment (briefing-room), mahogany (warm brown), ochre-9 (R15
+   ink), burn-fire (#be2e27) — do all warm tones share the same
+   chroma family, or does one read as "off-brand"?
+
+Per §2.2 binary acceptance still applies on top — "could this single
+composite be a frame from an Archer episode?"
 
 **Step 5 — PHASE-3-EXIT.md template (NEW — single document Phase 4 reads).**
 
@@ -3920,8 +4662,10 @@ Phase 3 commit SHA: <fill at completion>
   S03_ROSTER (6 entries — Otto-aside handled by Phase 4),
   CASCADE_HALO_FOCAL_3 (3 entries: Vera/Neal/Sable per cue table),
   CASCADE_HALO (17 entries — full mosaic).
-- `cascade-ring-layout.json` shipped at
-  `videos/trailer/src/lib/cascade-ring-layout.json`.
+- `cascade-halo-column.json` shipped at
+  `videos/trailer/src/lib/cascade-halo-column.json` (DOC-REVIEW
+  RENAME from cascade-ring-layout.json; 6-card column matching
+  Phase 1 lock).
 
 ## Briefing-Room (Unit 3.3)
 - Existing assets surfaced (Path A): mahogany-horizontal,
@@ -3957,7 +4701,7 @@ Phase 3 commit SHA: <fill at completion>
 
 ## Title-Sequence (Unit 3.6)
 - Path taken for operative-card-frame: <Imagen | hand-authored SVG fallback>
-- BURNED logo: single file at `public/trailer/title-sequence/burned-logo.svg`
+- BURNED logo: `public/trailer/title-sequence/burned-logo.svg` (S06 frame 2780 only); S01 cold-open uses `public/assets/cards/burned.webp` (existing card art)
 - Cold-open title plate: existing
   `public/assets/howtoplay/operations-manual-plate.png` (verified
   acceptable at trailer scale during operative-card-composite-proof
@@ -3979,7 +4723,8 @@ Phase 3 commit SHA: <fill at completion>
   @remotion/media).
 - `<Sequence from={asset.startFrame}>` + `<Audio src=
   {staticFile(asset.staticPath)} />` for music + voice (Phase 2 lock).
-- `cascade-ring-layout.json` consumption for halo composition.
+- `cascade-halo-column.json` consumption for halo composition
+  (DOC-REVIEW RENAME from cascade-ring-layout.json).
 - R15 split-layer composition with `transform-origin: center`.
 - Stat captions = pure React text (Clash Display 700) on semi-
   transparent classification-bar backdrop — NO Phase 3 asset.
@@ -3999,8 +4744,11 @@ Phase 3 commit SHA: <fill at completion>
 ```md
 # Imagen Spend Tracker (Phase 3)
 
-Budget cap: $5.00 total. Hard abort at $5.00 (override:
-IMAGEN_BUDGET_OVERRIDE=1 env var with operator reason logged).
+Budget cap: $6.00 total (covers $5 operative-card-frame + $1
+depth-plane worst case). Hard abort at $6.00. NO env var override —
+Briggsy edits the `IMAGEN_SPEND_CAP` constant in the spend-check
+script if extension is warranted (one-line atomic intent signal;
+matches Phase 2 DOC-REVIEW R3 deletion of TTS_BUDGET_OVERRIDE).
 
 | Date | Asset | Iter | Cost | Cumulative | Status | Notes |
 |---|---|---|---|---|---|---|
@@ -4046,7 +4794,7 @@ Per insight 018: STOP at iter 4 same-failure; re-architect.
   (`briggsy-review-3.{1,3,4,6}.signoff`).
 - Phase 4 hand-off ready: Phase 4 deepening can read PHASE-3-EXIT.md
   + import visual-manifest.ts + card-roster.ts +
-  cascade-ring-layout.json.
+  cascade-halo-column.json (DOC-REVIEW RENAME).
 
 ---
 
@@ -4086,7 +4834,7 @@ architecture + ADR #15 reconciliation.)
 | `public/trailer/...` assets unreachable to Remotion | Eliminated by ADR #15 | High | All NEW assets land in `public/trailer/...` inside BURNED's `public/` per ADR #15; single setPublicDir reaches both. |
 | Playwright NOT installed in BURNED node_modules | Eliminated | High | BURNED root devDep `@playwright/test ^1.59.1` verified; `pnpm exec playwright install chromium` documented as one-time setup. |
 | Card-roster references hallucinated filenames | Eliminated by Unit 3.2 deepening | High | Card-roster table replaced with verified Glob output; Vitest test (`card-roster.test.ts`) asserts every entry exists + reverse (every disk webp in roster). |
-| Otto card art doesn't exist for S03 reveal | Mitigated by Phase 1 narration | Medium | Phase 1's "Seven on the roster, six in the deck, one in the basement" line frames Otto exclusion as the joke; Phase 4 composes Otto-aside chrome (REDACTED/BASEMENT treatment) using vendored RedactBar.tsx / ClassificationBanner.tsx. |
+| Otto card art doesn't exist for S03 reveal | Mitigated by Phase 1 narration | Medium | Phase 1's "Seven on the roster. Six in the deck. One on the research budget. Don't ask." line (DOC-REVIEW source-fix; prior "in the basement" was Phase 1 fiction) frames Otto exclusion as the joke; Phase 4 composes Otto-aside chrome (REDACTED/RESEARCH-BUDGET treatment) using vendored RedactBar.tsx / ClassificationBanner.tsx. |
 | Music procurement blocked by missing subscriptions | Medium | Medium | Unit 3.5 Step 0 pre-execution gate verifies Artlist/Epidemic/Suno Pro access before audition; explicit PRIMARY_MUSIC_SOURCE=skip-licensed shortcut for Suno-only path. |
 | Music license PDF download missed at procurement | Medium | Medium | Encode script gated on `existsSync('music-license.pdf')`; operator can't accidentally skip rights-trail. |
 | R15 chrome SVG typography fallback in MP4 export | Low (Phase 0 spike validated useFonts.ts; SVG includes `, monospace`/`, sans-serif` generic fallbacks) | High | Phase 4 useFonts.ts loads variable woff2 before scene render; spike at Phase 4 entry resolves variable-font weight syntax. |
@@ -4095,7 +4843,7 @@ architecture + ADR #15 reconciliation.)
 | R15 #4 copy/frame/filename drift from Phase 1 | Eliminated by Unit 3.4 deepening | High | Triple-drift fixed: OPERATION STATUS: FIELD-READY, frame 2820, subhead-4-field-ready.svg. Phase 4 line 1880 sync required. |
 | CASE BANNER.tsx ghost reference | Eliminated by Unit 3.3 deepening | Medium | Replaced with GameTable.tsx:67-72 inline JSX reference + visual-diff verification via Playwright reference render. |
 | Phase 1 depth-plane element missed | Eliminated by Unit 3.3 Step 7 | Medium | Depth-plane (Option A nameplate / B folders / C doorframe) explicitly added to Unit 3.3 deliverables. |
-| Cascade halo composed layered-simultaneous (AI-slop shape) | Mitigated by cascade-ring-layout.json | High | Unit 3.2 ships per-card ring geometry + 2-frame entry stagger; Phase 4 can't accidentally render layered. |
+| Cascade halo composed layered-simultaneous (AI-slop shape) | Mitigated by cascade-halo-column.json | High | Unit 3.2 ships per-card right-edge COLUMN geometry (Phase 1-locked 6-card x band 1560-1880) + 2-frame entry stagger; Phase 4 can't accidentally render layered. DOC-REVIEW RENAME from cascade-ring-layout.json — the prior filename + 17-card 360° mosaic geometry violated Phase 1 line 1782-1783 lock and shipped the exact AI-slop-shape the lock was designed to prevent. |
 | Safe-square mobile-crop violations | Mitigated by Unit 3.7 Step 4 composite proofs | Medium | Per-asset-family safe-square composite at 1920×1080 with 1080×1080 overlay; Briggsy verifies critical text inside center. |
 | CVD distance violation on R15 chrome ink-on-cream | Mitigated by Unit 3.4 Step 5b probe | High (Briggsy color-blind) | culori probe script verifies 0.10 oklab floor across 3 deficiency sims; fail = substitute higher-L* variant. |
 | Briggsy-review gates skipped on agent enthusiasm | Mitigated by sentinel files | Medium | Each unit gates Phase 4 import on `briggsy-review-3.N.signoff` sentinel; operator must explicitly write. |
@@ -4156,7 +4904,10 @@ architecture + ADR #15 reconciliation.)
   using project's culori pipeline. Per insight 051 — never edit
   color based on prose direction.
 - **Music source pool: Artlist Pro / Epidemic Sound Pro $199-204/yr
-  primary; Suno Pro $10/mo EXPECTED fallback (not last-resort).**
+  primary; Marmoset/Songtradr per-track marketplace Tier 2
+  (DOC-REVIEW RESTORED); Suno Pro $10/mo Tier 3 LAST-RESORT only
+  (Phase 1 line 2296 lock; pre-deepening Phase 3 silently inverted —
+  restored).**
   Musicbed removed (over-budget); Udio removed (Nov 2025 settlement).
   Pre-execution account verification gate added (Unit 3.5 Step 0).
 - **Music license/rights-trail**: Artlist/Epidemic PDF OR Suno
@@ -4165,9 +4916,12 @@ architecture + ADR #15 reconciliation.)
 - **Cold-open title plate**: existing
   `public/assets/howtoplay/operations-manual-plate.png` (1.4 MB
   Imagen-generated). No new asset.
-- **BURNED logo: SINGLE file** at
-  `public/trailer/title-sequence/burned-logo.svg` used at both S01
-  + S06 (was two-file in pre-deepening). Optional Imagen polish
+- **BURNED logo: S06 CLOSING ONLY** at
+  `public/trailer/title-sequence/burned-logo.svg` (frame 2780 per
+  Phase 1 lock). S01 cold-open uses existing
+  `public/assets/cards/burned.webp` per Phase 1 Unit 1.10's locked
+  S01-card-art-NOT-wordmark differential — Phase 3 deepening drift
+  reverted. Optional Imagen polish
   escalation CUT.
 - **Operative card frame template: Imagen primary** (Unit 3.6 Step 1
   with insight 050 prompt structure + insight 018 stop-gate);
@@ -4212,7 +4966,9 @@ architecture + ADR #15 reconciliation.)
   Phase 4 spike at compose time decides.
 - **Otto S03 chrome treatment** (REDACTED placeholder slot vs
   `portrait-otto.png` + chrome aside vs purely-typographic
-  "BASEMENT" reference): Phase 4 picks during S03 composition.
+  "RESEARCH BUDGET" reference per Phase 1 DOC-REVIEW source-fix —
+  NOT "BASEMENT" which was Phase 1 fiction): Phase 4 picks during
+  S03 composition.
 
 ---
 
@@ -4238,10 +4994,15 @@ architecture + ADR #15 reconciliation.)
   `src/client/howtoplay/components/` into
   `videos/trailer/src/components/burned-vocabulary/`. Drift catcher:
   `pnpm verify:vocab-sync` (CI gate).
-- **Imagen budget for Phase 3: <$5 total.** Cumulative tracker at
-  `sample-eval/visual-asset-prep/imagen-spend.md`. Hard abort at
-  cap; `IMAGEN_BUDGET_OVERRIDE=1` env var for explicit override.
-  Per `feedback-imagen-budget.md` + insight 018 (4-iter stop-gate).
+- **Imagen budget for Phase 3: <$6 total** ($5 operative-card-frame
+  + $1 depth-plane worst case; corrected from pre-deepening's broken
+  "$5 cap with $6 worst case within cap" math). Cumulative tracker
+  at `sample-eval/visual-asset-prep/imagen-spend.md`. Hard abort at
+  cap. **NO env var override** — Briggsy edits the
+  `IMAGEN_SPEND_CAP` constant if extension is warranted. Matches
+  Phase 2 DOC-REVIEW R3 deletion of `TTS_BUDGET_OVERRIDE` (autonomy-
+  rule footgun: self-set override makes cap decorative). Per
+  `feedback-imagen-budget.md` + insight 018 (4-iter stop-gate).
 - **Imagen prompt structure** mandatory: fractional layout +
   continuity prescription + emotional payload + Archer-character
   anchor + style block + negative suppressors. See Critical

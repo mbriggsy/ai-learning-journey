@@ -553,12 +553,22 @@ with hard-cut-after-hold per Unit 1.4 Step 2 lock).
   reposts).** Lower "Social/Creator" tiers ($120/yr) excluded —
   they don't cover portfolio-site embedding when the site touches
   client/employer work. Reasoning: licensed tracks give published
-  metadata + clear rights for a portfolio piece. **Suno Pro
-  ($10/mo, $120/yr) generative is the budgeted expected fallback**
-  if catalog audition pass doesn't land the 95s cascade-arc within
-  20–30 candidates — the brass/bossa-with-distinct-dynamic-arc-at-
-  95s constraint is hostile to catalog hit rate. Udio is OUT
-  (Nov 2025 settlement disabled external downloads).
+  metadata + clear rights for a portfolio piece. **PHASE-3 DOC-REVIEW
+  CROSS-PHASE FIX 2026-05-17:** the prose below originally read "Suno
+  Pro generative is the budgeted expected fallback" which CONTRADICTED
+  Phase 1's own DOC-REVIEW source-priority ladder at line 2291-2298
+  ("Suno Pro generative is LAST-RESORT only"). The Phase 3 doc-review
+  read the stale prose here and propagated the wrong "Suno EXPECTED"
+  framing into Phase 3 Unit 3.5 (product product-003). Stale prose
+  rewritten to align with the ladder lock: **Suno Pro ($10/mo, $120/yr)
+  generative is the Tier 3 LAST-RESORT fallback** (after Tier 1
+  catalog and Tier 2 per-track marketplace per the doc-review ladder
+  at line 2291-2298) if catalog audition + per-track marketplace
+  passes don't land the 95s cascade-arc within 20–30 candidates per
+  platform — the brass/bossa-with-distinct-dynamic-arc-at-95s
+  constraint is hostile to catalog hit rate; Suno triggers
+  `music_disclosure_required: true` flag for Phase 7 distribution
+  copy. Udio is OUT (Nov 2025 settlement disabled external downloads).
 - **R15 chrome copy: 4 instances across the trailer.** One in cold
   open (classification stamp), one mid-trailer (comms-ticker pulse
   during cascade), one at the stacked-payoff peak (dossier stamp),

@@ -16,13 +16,13 @@ Current state (verified 2026-05-17 mid-session):
 - HOW-TO-PLAY bundle: `howtoplay-*.js` 99.04 KB (33.90 KB gz) + `howtoplay-*.css` 65.83 KB (10.68 KB gz) + shared GSAP chunk 69.42 KB (27.21 KB gz).
 - Protocol: v6.
 
-_No live prescriptions on the BURNED product. **Origin-trailer plan state (2026-05-17): Phase 0 DEEPENED (`b9617d9d`); Phase 1 DEEPENED (`43d44ef4`, 60+ amendments, 1862→2728 lines); Phases 2–7 drafted + committed (`de20650b`); deepening continues sequentially.**_
+_No live prescriptions on the BURNED product. **Origin-trailer plan state (2026-05-17): Phase 0 DEEPENED (`b9617d9d`); Phase 1 DEEPENED (`43d44ef4`, 60+ amendments, 1862→2728 lines); Phase 2 DEEPENED (this commit, 35 amendments across 4 tiers, 1929→4064 lines, +3 new units 2.0/2.X/2.Y); Phases 3–7 drafted + committed (`de20650b`); deepening continues sequentially.**_
 
 - _[`roadmap.md`](docs/plans/origin-trailer/roadmap.md) — 13 ADRs (ADR #4 + #11 revised 2026-05-17 per Phase 1 deepening: bare `<Series>` + scene-internal overlay components, NOT `<TransitionSeries>`; `@remotion/transitions` install-on-demand), R1–R15 trace, 3-axis bar-raise criteria, ~95s/2850-frame target_
 - _[`phase-0-gate-resolution.md`](docs/plans/origin-trailer/phase-0-gate-resolution.md) ✅ **DEEPENED 2026-05-16** — 6 units (scaffold + 5 brainstorm gates); 39 amendments across 7 tiers landed via 8-agent parallel review + sequential-thinking + emil-design-eng synthesis_
 - _[`phase-1-beat-sheet-lock.md`](docs/plans/origin-trailer/phase-1-beat-sheet-lock.md) ✅ **DEEPENED 2026-05-17** — 10 units (scene count + narration script + voice cast + transitions + cascade composition + goofy stats + music + typography + R15 chrome + briefing-room composition); 60+ amendments via same 8-agent shape + emil-design-eng_
-- _[`phase-2-voice-pipeline.md`](docs/plans/origin-trailer/phase-2-voice-pipeline.md) — 8 units (script-lines.ts + generate-dash-tts + canaries + full gen + post-process + intra-line beats + Phase 1 reconciliation + manifest) — **next deepening target**_
-- _[`phase-3-visual-asset-prep.md`](docs/plans/origin-trailer/phase-3-visual-asset-prep.md) — 7 units (HTP capture + card curation + briefing-room assets + R15 chrome SVGs + music procurement + title-sequence assets + visual manifest)_
+- _[`phase-2-voice-pipeline.md`](docs/plans/origin-trailer/phase-2-voice-pipeline.md) ✅ **DEEPENED 2026-05-17** — 11 units now (NEW 2.0 preflight + 2.X Path D voice-actor ingestion + 2.Y Path B hybrid scream Voice Changer; 2.1 gutted+recast to consume Phase 1's BURNED_TRAILER_LINES instead of recreating; 2.2 engine clients fully rewritten per Context7-verified API surfaces; 2.3-2.8 deepening callouts); 35 amendments across 4 tiers via same 8-agent shape (best-practices / framework-docs / repo-research / adversarial / scope-guardian / coherence / feasibility / design-lens) + emil-design-eng_
+- _[`phase-3-visual-asset-prep.md`](docs/plans/origin-trailer/phase-3-visual-asset-prep.md) — 7 units (HTP capture + card curation + briefing-room assets + R15 chrome SVGs + music procurement + title-sequence assets + visual manifest) — **next deepening target**_
 - _[`phase-4-remotion-composite.md`](docs/plans/origin-trailer/phase-4-remotion-composite.md) — 10 units (Root + composition wiring + 6 scene files + transitions + per-scene Archer tests + full studio-preview render)_
 - _[`phase-5-gameplay-capture.md`](docs/plans/origin-trailer/phase-5-gameplay-capture.md) — 6 units (mechanism evaluation + shot list + harness + take selection + post-process + Phase 4 re-render)_
 - _[`phase-6-final-render-qa.md`](docs/plans/origin-trailer/phase-6-final-render-qa.md) — 7 units (production encode settings + render + §2 frame-pass audit + bar-raise vs UMB v3 + A/V sync + mobile crop + decode test)_
@@ -61,11 +61,52 @@ _**Locked decisions during Phase 1 deepening pass (2026-05-17, `43d44ef4`):**_
 - _Cold-read gate N=3 + 0-2 scale + recorded stimulus + consensus on pairings (was N=1 binary)_
 
 _**Cross-phase dependencies surfaced by Phase 1 deepening** (Phases 2/3/5/7 must absorb during their own deepening passes):_
-- _**Phase 2:** consume `script.ts` (not Markdown) for line set; per-engine cadenceAdapter (ElevenLabs `[shouts]` vs Gemini `[mood: shouting]`); `script.test.ts` asserts sync with BEAT-SHEET.md_
+- _**Phase 2:** ✅ ABSORBED in Phase 2 deepening — consumes `script.ts` (not Markdown) for line set; per-engine cadenceAdapter (ElevenLabs `[shouts]` vs Gemini `[mood: shouting]`); `script.test.ts` asserts sync with BEAT-SHEET.md_
 - _**Phase 3:** budget BOTH static-PNG AND Playwright trace-video paths for HTP capture (conditional on Phase 3-entry perceptual gate)_
 - _**Phase 3:** take ownership of `videos/trailer/public/audio/music-bed.mp3` (was double-claimed by Phase 1 Unit 1.7 verification)_
 - _**Phase 5:** ship `gameplay-raw.mp4` + `gameplay-markers.json` contract (in-point + BURNED-draw-frame); Phase 4 trims via `<OffthreadVideo startFrom={M} endAt={M + S05_BUDGET_TARGET_FRAMES}>` to land BURNED draw at scene-relative frame 160_
 - _**Phase 7:** carry explicit "built by autonomous agents" cold-viewer decode in distribution copy (R15 chrome in trailer carries engineering-peer confirmation only; cold-decode signal lives in Phase 7 metadata)_
+
+_**Locked decisions during Phase 2 deepening pass (2026-05-17, this commit):**_
+- _Phase 2 `SCRIPT_CUES` literal GUTTED — Phase 2 consumes Phase 1's `BURNED_TRAILER_LINES` directly via `script.ts` import; `script-lines.ts` file removed (single source of truth)_
+- _Voice union aligned to Phase 1's `'dash'|'sable'|'janet'|'vera'` (drops invented `'cold-open-speaker'` + `'dash-scream'` cells); scream cue is `voice: 'dash'` with `cadenceAdapter.prefixTag: '[shouts]'` steering_
+- _**Gemini gemini.ts MUST `pcmToWav()` wrap** — Gemini returns raw 24kHz PCM, NOT formatted WAV; original draft wrote raw PCM as `.wav` (invalid file FFmpeg/Remotion can't decode); helper ported verbatim from UMB `generate-narrator.ts:127-155`_
+- _ElevenLabs `model_id: 'eleven_v3'` (NOT `eleven_multilingual_v2` which silently ignores audio tags); `[shouts]` not `[scream]` (Context7-verified — `[scream]` undocumented; tags SELF-CLOSING in v3); `[pause:Xms]` REMOVED (doesn't exist in v3 — only qualitative `[pause]`/`[short pause]`/`[long pause]`)_
+- _Gemini model name corrected to `'gemini-2.5-flash-preview-tts'` (was `'gemini-3.1-flash-tts'` — doesn't exist as of 2026)_
+- _OpenAI snapshot pin `'gpt-4o-mini-tts-2025-03-20'` (Context7-corroborated compliance regression on later snapshots)_
+- _`<Audio from={frame}>` language REMOVED — prop doesn't exist on `@remotion/media`'s `<Audio>`. Phase 4 placement pattern: `<Sequence from={asset.startFrame - leadFramesHint}><Audio src={staticFile(asset.staticPath)} /></Sequence>` per Phase 0 ADR #5 + Context7 verification_
+- _FFmpeg `silenceremove` REWRITTEN to areverse-sandwich pattern (was `start_periods=1:start_duration=0:...:stop_periods=1:stop_duration=0` which can cut interior silence + drop final syllables)_
+- _**`loudnorm` TWO-PASS workflow** (single-pass drifts ±2-3 LU on clips <30s per k.ylo.ph canonical guide; every Phase 2 cue is in the danger zone)_
+- _**LUFS target -16** (NOT -23 broadcast) — compromise for X/YouTube portfolio distribution; preserves dynamic range for cadence + payoff contrast_
+- _Audio format lock: 48kHz / 16-bit signed LE PCM / **MONO** (`-ac 1` on every FFmpeg invocation; matches anullsrc silence; eliminates concat-demuxer codec-mismatch)_
+- _FFmpeg ≥5.0 minimum version pin (≥6.0 recommended); Unit 2.0 preflight enforces_
+- _**NEW Unit 2.0** — Prerequisites + Preflight + PHASE-0-EXIT.md ingest (single source of truth for engine/voice/model lock; no `TTS_ENGINE` env var override)_
+- _**NEW Unit 2.X** — Path D Voice-Actor WAV Ingestion (replaces Units 2.2-2.4 when PHASE-0-EXIT.md locks engine=voice-actor)_
+- _**NEW Unit 2.Y** — Path B Hybrid Scream Voice Changer (replaces scream cue branch of Unit 2.2 when R5 outcome = kept-via-B)_
+- _Three-tier Phase 1 reconciliation escalation ladder (Tier 0 silent absorb → Tier 1 Phase 2 regen → Tier 2 Phase 1 line-trim via Step 2a reopen procedure → Tier 3 timing.ts → Tier 4 TOTAL_FRAMES roadmap reopen)_
+- _Per-cue tolerance bands by cue type (sustained ±5% / list ±7% / payoff ±4% / scream ±20%) replace flat ±5%/±20%_
+- _Hash-based skip-or-regen invalidation (sidecar `${wav}.meta.json` sha256 of inputs; stale WAVs auto-regen on Phase 1 text edits without `--force`)_
+- _Atomic-write pattern across all FS writes (`${path}.tmp` intermediate + atomic-rename); mid-process crash recovery_
+- _JSONL machine-readable generation log alongside Markdown human-readable; Phase 6 QA + Phase 7 retrospective consume programmatically_
+- _Cumulative TTS spend tracker with hard abort at $30 ceiling (`tts-spend.json`; `TTS_BUDGET_OVERRIDE=1` for explicit override)_
+- _ElevenLabs `previous_text` / `next_text` context-priming LOCKED ENABLED for same-scene adjacent Dash cues (PROMOTED from "Deferred to Implementation")_
+- _Engine model version pins recorded in PHASE-0-EXIT.md (PROMOTED from "Deferred")_
+- _Sentinel-file gating between units (`cadence-consistency-signoff.txt` → Unit 2.4; `phase-1-reconciliation-signoff.txt` → Unit 2.8)_
+- _Per-cue fade-in/fade-out shape overrides (default 30ms/30ms; payoff 1950 = 5ms in / 30ms out; phrasing 2790 = 30ms in / 50ms out + qsin curve; scream 2400 = 0ms in / 30ms out)_
+- _Scream-attack preservation: SKIP `silenceremove` entirely for cue 2400 (preserve full attack envelope)_
+- _Audio lead-frames hint on AudioAsset (Phase 4 places audio 1-2 frames before visual sync target for perceptual A/V sync; payoff 1950 = 2 frames; scream 2400 = 1 frame)_
+- _"Phrasing." cue expectedFrames RAISED 12 → 27 frames (Sterling-CODED deliberate delivery is ~0.9s not 0.4s); drift tolerance ±20%_
+- _Three per-engine VOICE_DIRECTION guard variants codified inline at each engine client's API call site (per Phase 0 Unit 0.2 deepening; Phase 2 lifts to production-script)_
+- _Linear (not exponential) backoff per UMB precedent: 5s/10s/15s + jitter; max 30s elapsed; `INTER_CALL_DELAY_MS = 2000` between successful cues_
+- _CLI argv via `node:util.parseArgs` strict mode replaces hand-rolled parser_
+- _"UMB v3 audio processing pipeline" pattern reference REMOVED — hallucinated (UMB has NO post-processing pipeline; Phase 2's FFmpeg work is NEW for BURNED)_
+- _Engine billing math correction (216 words ≈ 1300 chars not 1000; ~$0.39/run × 5 iterations ≈ $2 total under $30 ceiling)_
+
+_**Cross-phase dependencies surfaced by Phase 2 deepening** (Phases 1/3/4/5 must absorb during their own deepening passes):_
+- _**Phase 1 follow-up amendments (flagged not triggered):** Add 7 optional fields to `Line` type (`expectedFrames` / `cueType` / `driftToleranceOverride` / `fadeInMs` / `fadeOutMs` / `skipSilenceremove` / `leadFramesHint` / `contextPrimingPrevious` / `contextPrimingNext`); per-cue overrides per Phase 2 Unit 2.1 §Step 4 table; frame numbering canonicalization to absolute (Phase 1's S05/S06 table mixes scene-relative); beat encoding canonical format `{{BEAT_NNNMS}}` marker tokens (text-edit-robust; replaces fragile afterWord index)_
+- _**Phase 0 follow-up amendment (flagged not triggered):** PHASE-0-EXIT.md template extension — add `Model ID:` field under §Voice Cast Lock; add per-voice-cell voice ID fields (Sable/Janet/Vera) when those are the locked cold-open speakers_
+- _**Phase 4 deepening must absorb:** voice union `'dash'|'sable'|'janet'|'vera'` (NOT `'cold-open-speaker'|'dash-scream'`); `<Sequence from={asset.startFrame - leadFramesHint}><Audio src={staticFile(asset.staticPath)} /></Sequence>` pattern (NOT `<Audio from>`); `leadFramesHint` consumption per cue; `<OffthreadVideo muted />` for S05 gameplay clip_
+- _**Phase 5 deepening must absorb:** ship `gameplay.mp4` AUDIO-STRIPPED (`ffmpeg -an`) for belt-and-suspenders with Phase 4's `muted` prop (Phase 1 deepening's `gameplay-markers.json` contract still governs S05 scream cue alignment)_
 
 _**Locked decisions during Phase 0 deepening pass:**_
 - _ADR #6 refined: `@remotion/lottie` install ON-DEMAND only (cut from Unit 0.1 scaffold; Unit 0.5 spike decides necessity per YAGNI)_
@@ -83,7 +124,7 @@ _**Locked decisions during Phase 0 deepening pass:**_
 - _Pricing math: real engine ceiling ~$24 (ElevenLabs $22 + Gemini ~$1 + OpenAI ~$1), not $37; $50 envelope retained as safety margin_
 - _WebMUSHRA hosting: Cloudflare Pages subpath default ($0, permanent URL, survives laptop-asleep)_
 
-_**Next session entry: `/deepen-plan` on `phase-2-voice-pipeline.md`.** Per `feedback-phase-plan-drafting-workflow.md`. Sequential, one phase per session. Phase 2 must absorb the cross-phase dependencies surfaced by Phase 1 deepening (script.ts machine contract, per-engine cadenceAdapter)._
+_**Next session entry: `/deepen-plan` on `phase-3-visual-asset-prep.md`.** Per `feedback-phase-plan-drafting-workflow.md`. Sequential, one phase per session. Phase 3 must absorb the cross-phase dependencies surfaced by Phase 1 deepening (HTP trace-video conditional fallback; music-bed ownership) AND verify Phase 2 deepening's `<Sequence>+<Audio>` consumption contract doesn't conflict with Phase 3's visual-manifest shape._
 
 _Note: 5 modified files (board.html, player.html, public/\_headers, src/client/howtoplay/acts/ActRemote.tsx, src/server/room.ts) + 1 untracked file (`../../.github/workflows/deploy-burned.yml`) are an in-progress deploy migration (partykit → Cloudflare Workers, `mbriggsy.partykit.dev` → `briggsy007.workers.dev`, adding `burned-cxa.pages.dev` as allowed origin). Deliberately NOT swept into either origin-trailer commit — deserves its own deployment commit when ready._
 

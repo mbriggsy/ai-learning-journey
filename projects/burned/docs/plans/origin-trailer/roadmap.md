@@ -135,6 +135,7 @@ deepening completes.
 | 11 | **No `<TransitionSeries>` at composition level — bare `<Series>` + scene-internal overlay components** (revised 2026-05-17 per Phase 1 deepening) | UMB v3 TrailerV3.tsx (verified lines 28-56) uses bare `<Series>` of `<Series.Sequence>` with ZERO scene-boundary transitions. FadeTransition exists in UMB only as scene-internal element fader (V3S08, etc.). BURNED inherits this composition shape exactly. Scene transitions (stamp slap, dossier-page wipe, iris wipe) are overlay components rendered inside scene tail/head frames, NOT TransitionSeries presentations. This avoids the `<TransitionSeries>` overlap-math (`total = sum - transitions`) that would contradict `timing.ts`'s declared TOTAL_FRAMES=2850. |
 | 12 | **All phase files drafted in one workflow** | Per `feedback-phase-plan-drafting-workflow.md` (corrected 2026-05-16): write the complete set of phase files sequentially in one drafting workflow. Mid-drafting stops are for Claude's context-density management, never for Briggsy's review. Deepen all phases sequentially AFTER they're written, not per-phase during drafting. Briggsy reviews output, not intermediate planning artifacts. |
 | 13 | **Sterling-CODED, not Sterling-cloned** (locked 2026-05-16) | BURNED's visuals scream Archer without being Archer (per `docs/PRODUCT-SPECIFICATION.md` §3.6 "verified influences" — Bass, Ditko, Mad Men, OSS 117 as influences, not literal reproductions; `project-burned-creative-direction` memory). **Voice follows the same principle:** Sterling-CODED cadence (deadpan mid-Atlantic clip, sardonic lift, deliberate pace, declarative falling intonation on punchlines) without being a Benjamin clone or impression. This is a design choice first; the legal floor (see §5.1) aligns with it. |
+| 14 | **Audio loudness target: -16 LUFS** (locked 2026-05-17 per Phase 2 deepening) | Compromise between EBU R128 broadcast (-23 LUFS — too quiet for X muted-autoplay portfolio distribution; X's linear normalization gains UP but doesn't restore dynamic range) and platform-target (-14 LUFS — over-compressed, kills Sterling-CODED cadence + R3 payoff dynamic contrast). -16 LUFS (Apple Podcasts target) preserves dynamic range for cadence + payoff impact while landing audibly "present" in X feed. `loudnorm=I=-16:LRA=9:TP=-1.5` two-pass workflow per k.ylo.ph/loudnorm canonical guide (single-pass inaccurate for clips <30s — every Phase 2 cue is in the danger zone). Audio format also locked: 48kHz / 16-bit signed LE PCM / **MONO** (`-ac 1` on every FFmpeg invocation). |
 
 ---
 
@@ -373,11 +374,16 @@ place by feeling like Archer set-dressing, not a credits roll.
 ## §11 — Status & Next Steps
 
 - ✅ **Brainstorm landed:** `docs/ideation/2026-05-15-origin-trailer-brainstorm.md` (2026-05-15, two-pass document review, 15 requirements, 5 Resolve-Before-Planning gates).
-- ✅ **Roadmap written:** this file (2026-05-16).
+- ✅ **Roadmap written:** this file (2026-05-16; ADR #4 + #11 revised 2026-05-17 per Phase 1 deepening; ADR #14 added 2026-05-17 per Phase 2 deepening).
 - ✅ **Phase 0 plan written:** `phase-0-gate-resolution.md` (2026-05-16).
 - ✅ **Phases 1–7 plans written:** all 7 drafted 2026-05-16 in one workflow per `feedback-phase-plan-drafting-workflow.md`.
-- ⏸ **Deepening pass (all 8 phases, sequentially):** pending — next action.
-- ⏸ **Briggsy review of deepened plans:** pending — after deepening completes.
+- 🟡 **Deepening pass (all 8 phases, sequentially):** in progress.
+  - ✅ Phase 0 DEEPENED 2026-05-16 (`b9617d9d`) — 39 amendments, 7 tiers.
+  - ✅ Phase 1 DEEPENED 2026-05-17 (`43d44ef4`) — 60+ amendments, 1862→2728 lines.
+  - ✅ Phase 2 DEEPENED 2026-05-17 (this commit) — 35 amendments, 4 tiers, 1929→4064 lines, +3 new units (2.0/2.X/2.Y).
+  - ⏸ Phase 3 deepening — next action.
+  - ⏸ Phases 4-7 deepening — sequential after Phase 3.
+- ⏸ **Briggsy review of deepened plans:** pending — after all phases deepened.
 - ⏸ **Phase 0 execution:** begins after Briggsy reviews deepened plans.
 
 **Open carry-forward decisions** (resolve at Phase 0 → Phase 1 boundary,

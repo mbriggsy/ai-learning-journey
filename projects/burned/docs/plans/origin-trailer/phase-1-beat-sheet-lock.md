@@ -6,7 +6,7 @@ parent: docs/plans/origin-trailer/roadmap.md
 origin: docs/ideation/2026-05-15-origin-trailer-brainstorm.md
 created: 2026-05-16
 deepened: 2026-05-17
-reviewed: pending
+reviewed: 2026-05-17
 status: active
 ---
 
@@ -52,7 +52,172 @@ status: active
   - Briefing-room S02 depth-plane foreground element added
   - R15 #4 status grammar — differentiated from #3 origin claim
 
-  Plan: 1862 → expected ~2500+ lines.
+  Plan: 1862 → 2728 lines after deepening.
+
+  ===================================================================
+  DOCUMENT-REVIEW PASS landed 2026-05-17 via 7-CE-persona parallel
+  review (coherence / feasibility / product-lens / design-lens /
+  security-lens / scope-guardian / adversarial-document-reviewer).
+  83 raw findings → ~50 unique after dedup; mitigation pass below.
+  Phase 0 precedent: 59 findings absorbed in same pattern.
+  ===================================================================
+
+  Product-level re-opens (Briggsy-decided live during synthesis):
+  - R1: Cold-open candidate #5 PROMOTED over #4 ("Briggsy didn't
+    write this one either. He's getting good at not writing them.")
+    — carries explicit repeatability + autonomous-build claim;
+    #4's "machine" double meaning was decode-fragile.
+  - R2: Cascade content KEPT as locked (SDLC-translated engineering
+    output). Loses water-beads tiebreaker BY DESIGN per brainstorm
+    R3. Open Risk added — Phase 6 QA must screen against §2 with a
+    critical engineering peer; if dominant reaction is "wow Claude
+    built this" rather than "I want to play this game," cascade
+    reopens at the roadmap level.
+  - R3: R15 cold-decode STRENGTHENED via NEW R15 #5 closing card at
+    frame 2835 ("DRAFTED, RENDERED, AND SHIPPED BY AUTONOMOUS
+    AGENTS." + 30%-opacity subhead "Briggsy didn't write this part
+    either.") — survives trailer-in-isolation embedding + echoes
+    promoted S01 line as bookend. R15 #1-#4 stay in-world diegetic.
+
+  P0 mechanical fixes (review math broken in prior deepening pass):
+  - Cascade payoff cue table — 16-word line at 1950 in 2.0s window
+    = 8.0 wps, FIVE TIMES the declared 1.6-1.8 payoff ceiling. The
+    deepening claimed this resolved; it wasn't. REWRITTEN: payoff
+    collapses to 4-word truth-collision ("They WERE the operation.")
+    fitting 60-frame window at 2.0 wps controlled-deadpan. The
+    cascade items become the verbal antecedent of "they" — the
+    visible cascade chrome at 30% IS the cascade-callback the old
+    17-word line tried to verbalize. SHOWING beats TELLING.
+  - Stat 4 source mismatch — "one in the basement" was Phase 1
+    fiction; ActRoster.tsx:153-158 says Otto is "busy with the
+    research budget." REWRITTEN to "One on the research budget"
+    matching source. Risk-register "Resolved" claim retracted.
+  - JetBrains Mono variable-axis range '100 800' → '100 900'
+    (matches src/client/howtoplay/fonts-mono-htp.css:9 source).
+  - Font copy path violated ADR #15 — fonts at videos/trailer/public/
+    fonts/ would be UNREACHABLE to staticFile() during render.
+    Fonts already at BURNED's public/fonts/; useFonts.ts reads
+    through Phase 0 ADR #8 setPublicDir('../../public'). Copy step
+    REMOVED.
+  - Line schema in script.ts missing fields Phase 2 deepening
+    declared it needs (expectedFrames, leadFramesHint, cueType,
+    driftToleranceOverride, fadeInMs, fadeOutMs, skipSilenceremove).
+    EXTENDED — Phase 1 ships the full Phase 2 consumption contract.
+  - Per-line table mixed absolute + "S05-rel 240" / "S06-rel 30"
+    relative frames with no type disambiguator. ADR #16 audio
+    placement would misplace the scream from 2400 → 360. CONVERTED
+    to absolute frames throughout; invariant added (every frame
+    satisfies S{N}_START ≤ frame < S{N}_END).
+  - S05/S06 trim policy contradicted tolerance band (Phase 4
+    trim-to-target made S05_BUDGET_MIN/MAX_FRAMES decorative).
+    LOCKED trim-to-target; MIN/MAX dropped as exported constants;
+    band documented as Phase 5 prose constraint only.
+  - S01 visual composition was entirely unspecified (Unit 1.10
+    covered S02/S03/S06 only). S01 block ADDED to Unit 1.10 with
+    composition, card-flash cadence, brass-hook timing, BURNED-logo
+    treatment differential vs S06.
+  - Phase 0 cadence-spec wps band claim — Phase 0 Unit 0.2 Step 0
+    declares pitch/pace/articulation but NOT a numeric wps band.
+    Phase 1 was citing a band that doesn't exist as a Phase 0
+    output. REDECLARED as Phase-1-authored research-supported
+    provisional defaults; Phase 2 first-batch validates.
+  - Path D timing — Unit 1.3 (Voice Cast Lock) restructured to
+    split Path-A/B/C-conditional locks (fire immediately on Phase
+    0 exit) from Path-D-conditional locks (wait 1-3 weeks for
+    actor delivery; Phase 2 voice pipeline can begin against the
+    Path-A/B/C subset).
+
+  P1 quality fixes:
+  - Sterling-coded scream guardrail reframed — success criterion =
+    Archer-aware listener feels "that's the Archer scream" (the
+    joke is the recognition); no-attribution-claim in distribution
+    copy. Guard against identity attribution, not against
+    successful cadence recognition.
+  - Phrasing! close rewritten — "Try not to embarrass me." → "...
+    Phrasing." was unearned (no innuendo to call out). New S06
+    close: "That's the briefing. Operation Pendleton is in your
+    hands. Hold it tight." → "Phrasing." — "hold it tight" carries
+    physical-double-meaning shape Phrasing! responds to. Also
+    differentiates from S02's "Try not to embarrass me."
+  - script.test.ts simplified — id-reference comment pattern
+    (BEAT-SHEET.md embeds `<!-- @line: S04-payoff -->` markers,
+    test asserts every Line.id appears exactly once by marker
+    grep). Avoids Markdown-table-cell parser fragility +
+    [BEAT NNNms] verbatim-match drift.
+  - R6 grep verification ported to PowerShell-native (`rg ... |
+    Select-String -Pattern 'Agent X' -NotMatch`) + $env:TEMP path
+    (Briggsy's Windows host has no /tmp; default rg release on
+    Windows lacks PCRE2).
+  - Cold-read gate consensus threshold replaced with per-reviewer-
+    floor ("≥2 of 3 reviewers each score ≥1 on the same pairing"
+    — old threshold passed with N=1 zealous reviewer).
+  - Side-band-right coordinates SPECIFIED — and decay destination
+    moved INSIDE safe-square (mobile-X autoplay would otherwise
+    crop the accumulating chrome off-screen, losing the cascade's
+    rising-action reading).
+  - Dossier-page wipe direction clarified (left-to-right reveal of
+    destination — old clip-path math direction contradicted the
+    "page peeling away rightward" diegetic framing).
+  - S05 gameplay audio treatment SPECIFIED (level relative to 30%
+    music bed; BURNED-draw-frame duck shape; edit policy).
+  - Suno fallback HARDENED — catalog audition expanded (8-10
+    finalists not 3); per-track marketplace ($30-$200) elevated
+    to second-tier-before-Suno; music_disclosure_required: true
+    flag added to BEAT-SHEET.md preamble for Phase 7 consumption
+    if Suno fires.
+  - Player-name scrub gap CLOSED — gameplay-markers.json contract
+    extends with `player_names_scrubbed: boolean`; Phase 5 must
+    either capture with synthetic test names OR obtain written
+    consent from named players before Phase 6 finalizes render.
+  - Briefing-room composition rule TIGHTENED — same ">2 elements
+    at full visual weight" rule the cascade rewrite applied now
+    applies to S02/S03/S06. S02 had 8 elements competing for 12s
+    — same AI-slop trap the cascade was just rewritten to avoid.
+  - Cascade meaning-stack vs visual-density DISAMBIGUATED. R3's
+    "stack" is the audio-visual meaning-collision at frame 1950,
+    not a visual-density frame. Phase 4 must not interpret
+    "stack" as "load more pixels into one frame."
+  - BEAT-SHEET.signoff sentinel ADDED per Phase 0 ADR #22
+    pattern (machine-readable freeze gate; Phase 2 asserts
+    sentinel existence before consuming script.ts).
+  - P5 ("engine.test.ts, which feels redundant") FLAGGED R6-
+    ineligible (raw filename = SDLC vocab) + removed from soft-
+    fail backup list. R6 grep scope extended to scan visual stat
+    caption text in cascade-composition.md, not just
+    BURNED_TRAILER_LINES VO body.
+  - Hat-count audit MOVED to Unit 1.6 Step 1 (pre-gate) — was
+    Step 5 post-gate, which meant cold-read evaluated stat
+    phrasing that might still rewrite.
+
+  P2 polish:
+  - CASE BANNER per-scene copy table ADDED (S02/S03/S06 each
+    declare label, operation, sub, divider, footer text).
+  - Dossier-interior content spec ADDED (clearance level token,
+    visible field names, render owner).
+  - S03 operative-portraits vs S04 card-art-halo reconciled (6
+    operative portraits exit at S03→S04 dossier-wipe; halo cards
+    are the 6 action cards that pair with the 4 locked stats).
+  - Open Questions "Resolved During Planning" section TRIMMED
+    (32 bullets restating Units → cross-references only). Saves
+    ~50 lines; "Deferred to Implementation" + "New Open Questions
+    Surfaced by Deepening" kept (they're action items).
+  - Suno litigation procedural status STRIPPED (date-stale at
+    execution time); ToS-derived obligations kept.
+
+  P3 cleanup:
+  - First-draft 37-word S02 scratchpad REMOVED (kept locked 28w).
+  - Banned Transition List trimmed (architectural bans now live in
+    Step 1, not duplicated in Step 5).
+  - Remotion API URLs REMOVED from Sources (Phase 4 consults docs
+    at execution time).
+  - _archive directory exclusion noted in card-count citation.
+  - 16-frame dossier-wipe perceptual threshold cited
+    (emil-design-eng motion-shape vocabulary).
+  - Citation-verification step ADDED to Unit 1.10 (grep over
+    src/client/...:lines refs; documented in
+    citation-verification.md).
+
+  Plan: 2728 → ~3500 lines after document-review pass (1.28×).
 -->
 
 
@@ -164,21 +329,47 @@ Unacceptable framings: "the Sterling-screams-Lana cadence," "the
 Archer-S03E08 briefing cadence," anything that points at a literal
 performance moment.
 
-### Per-cue words-per-second band (cadence-spec dependent)
+### Per-cue words-per-second band (Phase-1-authored; Phase 2 validates)
 
-The cadence-spec.md from Phase 0 Unit 0.2 Step 0 must declare a wps
-band — otherwise Phase 1's scene budgets float. Phase 1 plans against:
+**Provenance correction (DOCUMENT-REVIEW PASS):** the deepening draft
+claimed the wps band came from Phase 0's `cadence-spec.md`. Phase 0
+Unit 0.2 Step 0 declares pitch / pace / articulation / intonation /
+mannerisms / volume dynamics — it does **NOT** declare a numeric wps
+band. Phase 1 is the authoring layer for the bands; Phase 2's
+first-batch TTS output is the validation gate.
+
+Phase 1 plans against these **provisional research-supported defaults**:
 
 - **Sustained narration (S02 briefing, S03 background):** 1.9–2.3 wps
 - **List / stat reads (S04 cascade stat lines):** 2.4–2.6 wps (ceiling)
-- **Declarative payoff lines (S04 stacked payoff, S06 Phrasing):** 1.6–1.8 wps
+- **Declarative payoff lines (S04 stacked payoff, S06 close):** 1.6–2.0 wps
+  *(payoff ceiling raised from 1.8 → 2.0 to fit a 4-word Sterling-deadpan
+  "They WERE the operation." inside a 60-frame window without
+  contradicting the cue table — see Unit 1.2 Step 5 doc-review rewrite)*
+
+**Source basis (Phase-1-authored):**
+- Sustained band derived from mid-Atlantic narration norms (Mancini-
+  era spy-jazz underscore VO timing); declarative-payoff band derived
+  from Sterling-CODED deliberate-pause cadence (slower than
+  conversational baseline by ~30%).
+- Phase 0 `cadence-spec.md` carries the qualitative register; Phase 1
+  carries the quantitative budget. These are layered, not redundant.
 
 **Per-cue wps validation is required at lock time** — every cue in the
 S04 cascade table must have its wps computed and verified against the
-band. If a cue exceeds 2.6 wps, either the line shortens or the cue
-window widens. This was a load-bearing gap in the first-draft Phase 1
-(several cues landed at 3.0–4.5 wps, infeasible for Sterling-coded
-delivery).
+band. If a cue exceeds the relevant ceiling, either the line shortens
+or the cue window widens. This was a load-bearing gap in the first-
+draft Phase 1 (several cues landed at 3.0–4.5 wps, infeasible for
+Sterling-coded delivery). **DOC-REVIEW NOTE: the deepening pass
+claimed the cascade payoff cue was resolved — it wasn't (16 words in
+60 frames = 8.0 wps, 5× over ceiling). Rewritten in Step 5 below.**
+
+**Phase 2 validation gate:** Phase 2 Unit 2.4 must compare each cue's
+actual TTS-generated audio duration against this band. If any cue's
+delivered wps falls outside the band, Phase 2 either (a) re-steers
+the engine with cadenceAdapter overrides, (b) re-times the cue
+window via Phase 4 hand-off note, or (c) escalates to Phase 1 reopen
+for line-trim. Bands are firm-but-not-frozen until Phase 2 confirms.
 
 ### Tone gate result feeds back into the script
 
@@ -419,6 +610,26 @@ viability all resolved).
 
 **Approach:**
 
+**Step 0 — Phase 0 scaffold prerequisite (DOC-REVIEW FEASIBILITY
+GATE).** Before Phase 1 begins, verify Phase 0 Unit 0.1 scaffold
+output exists. Run:
+
+```powershell
+Test-Path videos/trailer/src/Root.tsx                  # must be $true
+Test-Path videos/trailer/package.json                  # must be $true
+Test-Path videos/trailer/remotion.config.ts            # must be $true
+Test-Path docs/plans/origin-trailer/PHASE-0-EXIT.md    # must be $true
+Test-Path docs/plans/origin-trailer/PHASE-0-EXIT.signoff # ADR #22 sentinel
+# Run typecheck inside trailer subproject:
+Set-Location videos/trailer; pnpm typecheck; Set-Location ../..
+```
+
+If any check fails, Phase 1 BLOCKS — Phase 0 Unit 0.1 scaffold
+must complete first. Was implicit dependency in prior draft; the
+feasibility review surfaced that `videos/trailer/` doesn't exist
+in the working tree at Phase 1 lock time and the unconditional
+write to that path would fail.
+
 **Step 1 — Scene table.** Lock the 6 scenes with frame ranges:
 
 | # | Name | Duration (s) | Frame range | Notes |
@@ -460,12 +671,16 @@ export const S06_END = 2850;    // 9.0s — Closing Directive
 
 // === S04 Stacked-payoff beat (R3) ===
 // Stamp slaps onto HTP hero overprint at frame 1950 + Dash VO begins
-// the stacked-payoff line. VO continues through PAYOFF_VO_END_FRAME.
-// 1.0s visual hold + music-bed-only after VO ends. Hard cut to S05
-// gameplay at S04_END (frame 2040). NO cross-dissolve — see Unit 1.4
-// deepening lock.
+// the 4-word truth-collision "They WERE the operation." VO completes
+// at PAYOFF_VO_END_FRAME. 1.0s visual hold + music-bed-only after
+// VO ends. Hard cut to S05 gameplay at S04_END (frame 2040). NO
+// cross-dissolve — see Unit 1.4 deepening lock.
+// DOC-REVIEW (2026-05-17): payoff line collapsed from 17+5-word
+// split to single 4-word truth-collision. 60-frame window at 2.0
+// wps controlled-deadpan fits cleanly. Cascade chrome at 30% IS
+// the visual antecedent of "they"; SHOWING beats TELLING.
 export const STACKED_PAYOFF_FRAME = 1950;
-export const PAYOFF_VO_END_FRAME = 2010;   // ~60 frames / 2.0s of VO at 1.6-1.8 wps payoff cadence
+export const PAYOFF_VO_END_FRAME = 2010;   // 60 frames / 2.0s for 4 words at 2.0 wps controlled-deadpan
 export const PAYOFF_HOLD_FRAMES = 30;      // 1.0s silent visual hold after VO ends
 // Music duck pre-anticipated: starts at PAYOFF_VO_END_FRAME - 30 = 1980,
 // completes at PAYOFF_VO_END_FRAME (2010), so duck lands as VO ends.
@@ -473,14 +688,18 @@ export const PAYOFF_MUSIC_DUCK_START_FRAME = PAYOFF_VO_END_FRAME - 30; // 1980
 export const PAYOFF_MUSIC_DUCK_END_FRAME = PAYOFF_VO_END_FRAME;       // 2010
 // Hard cut to gameplay at S04_END = PAYOFF_VO_END_FRAME + PAYOFF_HOLD_FRAMES = 2040 ✓
 
-// === S05 budget tolerance band ===
-// Phase 5 captures gameplay; final clip length lands inside this band.
-// Phase 4 trims captured footage to fit; S06_START shifts to S05_START
-// + actual S05 length. S06's 9s closer has 0.3s of buffer (per Unit
-// 1.2 Step 8) absorbing ±10 frames of S05 length variance.
-export const S05_BUDGET_MIN_FRAMES = 420;  // 14.0s minimum
-export const S05_BUDGET_MAX_FRAMES = 660;  // 22.0s maximum
-export const S05_BUDGET_TARGET_FRAMES = 540; // 18.0s ideal (locked unless Phase 5 reports drift)
+// === S05 budget ===
+// Phase 5 captures ≥30s of raw gameplay containing at least one
+// BURNED-card-draw moment. Phase 4 ALWAYS trims to S05_BUDGET_TARGET_
+// FRAMES (540 frames / 18s); S05_END is invariant. The "tolerance
+// band" 14-22s applies only to Phase 5's RAW capture (capture must
+// contain enough lead-in/tail for trim flexibility), NOT to the
+// trailer's S05 scene length.
+// DOC-REVIEW (2026-05-17): S05_BUDGET_MIN/MAX_FRAMES were exported
+// constants implying Phase 4 trim-to-captured-length. They contradicted
+// the TOTAL_FRAMES = 2850 invariant. Removed. Tolerance band lives in
+// Phase 5 plan prose only.
+export const S05_BUDGET_TARGET_FRAMES = 540; // 18.0s — Phase 4 always trims to this
 
 // === Custom easing curves (emil-design-eng vocabulary) ===
 // Strong custom curves — built-in CSS easings (ease, ease-out, etc.)
@@ -574,8 +793,9 @@ why 6 instead of 5 or 7:
   payoff-to-hard-cut math checks out: 1950 + 60 + 30 = 2040).
 - **Edge case:** `PAYOFF_MUSIC_DUCK_START_FRAME + 30 ===
   PAYOFF_MUSIC_DUCK_END_FRAME` (duck ramp is 30 frames / 1.0s).
-- **Edge case:** `S05_BUDGET_MIN_FRAMES <= S05_BUDGET_TARGET_FRAMES
-  <= S05_BUDGET_MAX_FRAMES` (tolerance band is valid).
+- **Edge case:** `S05_BUDGET_TARGET_FRAMES === 540` (Phase 4 trim
+  target locked; tolerance band lives in Phase 5 capture stage only
+  per doc-review fix).
 - **Verification:** Markdown lint passes on BEAT-SHEET.md skeleton
   (no broken headings, all 6 scenes present with structural
   placeholders).
@@ -617,25 +837,75 @@ cleared), Phase 0 Unit 0.6 outcome (scream kept or cut).
 - Edit: `videos/trailer/BEAT-SHEET.md` — fill in **Audio** block for
   each scene with verbatim lines + per-line voice assignment.
 - Create: `videos/trailer/src/lib/script.ts` — **machine contract for
-  Phase 2.** Typed `readonly Line[]` const export:
+  Phase 2.** Typed `readonly Line[]` const export (EXTENDED per
+  document-review feasibility fix — Phase 2 deepening declared these
+  fields as required consumption surface; the previous Line shape
+  forced Phase 2 to silently extend the contract or block on a
+  Phase 1 amendment):
   ```ts
+  export type CueType =
+    | 'sustained'   // briefing / background narration; 1.9-2.3 wps
+    | 'list'        // cascade stats; 2.4-2.6 wps ceiling
+    | 'payoff'      // declarative truth-collision; 1.6-2.0 wps
+    | 'cold-open'   // S01 establishing cue
+    | 'scream';     // S05-scream Sterling-CODED volume-discontinuous
+
   export type Line = {
-    readonly id: string;         // e.g., 'S04-payoff'
+    readonly id: string;          // e.g., 'S04-payoff'
     readonly scene: 'S01'|'S02'|'S03'|'S04'|'S05'|'S06';
-    readonly frame: number;      // start frame
+    readonly frame: number;       // ABSOLUTE composition frame (NOT scene-relative)
     readonly voice: 'dash'|'sable'|'janet'|'vera';
-    readonly text: string;       // verbatim, no embedded direction
+    readonly text: string;        // verbatim, no embedded direction
+
+    // Cue-type drives Phase 2's per-engine fade/silenceremove behavior
+    // and Phase 6's QA tolerance band selection.
+    readonly cueType: CueType;
+
+    // Phase 2 computes expectedFrames at TTS generation time; Phase 1
+    // ships the budgeted target so the drift gate has a reference.
+    readonly expectedFrames: number;
+
+    // Phase 4 places <Audio> at <Sequence from={frame - leadFramesHint}>
+    // per ADR #16 composition-level audio placement. Phase 1 sets the
+    // perceptual-sync hint per cue (default 0; payoff cues use 2;
+    // scream uses 1).
+    readonly leadFramesHint: number;
+
+    // Per-cue tolerance override; falls back to cueType band when
+    // omitted. Sustained ±5% / list ±7% / payoff ±4% / scream ±20%.
+    readonly driftToleranceOverride?: number;
+
+    // Per-cue fade-in/fade-out shape overrides (defaults 30ms/30ms
+    // for sustained; payoff = 5ms in / 30ms out; phrasing = 30ms in /
+    // 50ms out + qsin curve; scream = 0ms in / 30ms out).
+    readonly fadeInMs?: number;
+    readonly fadeOutMs?: number;
+
+    // Scream cue (frame 2400) must preserve full attack envelope —
+    // FFmpeg silenceremove would clip the volume-discontinuous onset.
+    readonly skipSilenceremove?: boolean;
+
     readonly cadenceAdapter?: {  // optional per-engine annotations
       readonly engine: 'elevenlabs-v3'|'gemini-tts'|'openai-tts'|'voice-actor';
-      readonly prefixTag?: string;  // e.g., '[shouts]' for ElevenLabs
+      readonly prefixTag?: string;  // e.g., '[shouts]' (ElevenLabs v3 ONLY; SELF-CLOSING tag) or '[mood: shouting]' (Gemini)
       readonly notes?: string;      // free-text director notes
     };
   };
+
   export const BURNED_TRAILER_LINES: readonly Line[] = [/* ... */] as const;
   ```
   Mirrors UMB v3 `narrator-prompts.ts` `TRAILER_V3_PROMPTS` precedent
   (lines 648–685). Phase 2 imports this; BEAT-SHEET.md is the human
   contract; `script.ts` is the machine contract.
+
+  **Frame absolute-only invariant (DOC-REVIEW FEASIBILITY FIX):**
+  every `Line.frame` is an absolute composition frame (0 ≤ frame <
+  TOTAL_FRAMES). NO scene-relative encoding. `script.test.ts`
+  asserts `frame >= S{N}_START && frame < S{N}_END` for the
+  declared scene N. The previous draft mixed absolute frames (60,
+  240, 600...) with relative (`S05-rel 240`, `S06-rel 30`) which
+  would have caused Phase 4's `<Audio from={frame}>` to misplace
+  the scream from frame 2400 to frame 360 (mid-roster S03).
 - Create: `videos/trailer/src/lib/script.test.ts` — asserts every
   BEAT-SHEET.md line text appears in `BURNED_TRAILER_LINES` with
   matching scene + frame. Catches drift between human and machine
@@ -667,46 +937,51 @@ From brainstorm R6, restated in BEAT-SHEET.md preamble:
 
 **Step 2 — Cold-open line (S01, frames 0–210, ~7.0s).**
 
-Speaker: cold-open speaker per Phase 0 Unit 0.3 outcome. Primary
-candidate per Phase 0 candidates table: **Candidate #4** ("He's a
-machine, this kid. Honestly at this point I'm just impressed.") —
-contains the "machine" double-meaning hook R14 requires. Backup:
-**Candidate #5** ("Briggsy didn't write this one either. He's getting
-good at not writing them.") — direct UMB v3 callback for engineering
-peers who've seen the first trailer.
+Speaker: cold-open speaker per Phase 0 Unit 0.3 outcome. **Candidate
+#5 LOCKED via document-review re-open (2026-05-17):**
 
-Drafted line (Candidate #4 path, ~4.5s of speech inside the 7.0s
-scene):
+> *"Briggsy didn't write this one either. He's getting good at not
+> writing them."*
 
-> *"He's a machine, this kid. Honestly at this point I'm just
-> impressed."*
+**Why #5 over #4 (doc-review product-lens re-open):** Candidate #4
+("He's a machine, this kid…") relied on "machine" as the engineering-
+peer hook — a decode-fragile double meaning a no-context viewer hears
+as "this kid grinds." #4 also dropped "AGAIN" — the repeatability
+claim that's the central engineering bet per roadmap §1 ("the
+bar-raise is the repeat itself"). Candidate #5 carries the
+repeatability claim AND the autonomous-build claim explicitly in one
+line, with direct UMB v3 callback via "this one either." The
+"didn't write" decode mechanic is verbatim, not metaphorical —
+satisfies Phase 0 Unit 0.3 R14 decode-gate criterion ("at least one
+of two testers surfaces 'AI / agent / autonomous / built itself'
+unprompted within first 30 seconds"). Briggsy ratified the swap
+during doc-review synthesis.
 
-Word count: 11 words. At ~2.5 wps (deadpan pace), ≈ 4.4s. Leaves ~2.6s
-of scene runtime for the BURNED logo land + brass hook + R15 stamp
-without spoken audio overlap.
+**Word count:** 13 words. At ~2.5 wps (deadpan pace), ≈ 5.2s. Leaves
+~1.8s of scene runtime for the BURNED logo land + brass hook + R15 #1
+stamp without spoken audio overlap.
+
+**S06 closing-card bookend:** the new R15 #5 closing card at frame
+2835 carries the 30%-opacity subhead *"Briggsy didn't write this part
+either."* — explicit echo of the S01 line, bookending the trailer
+with the autonomous-build claim. See Unit 1.9 Step 1 + Unit 1.10 S06.
 
 **Step 3 — Briefing Setup (S02, frames 210–570, ~12.0s).**
 
 Speaker: Dash. Sterling-coded cadence (deadpan, deliberate, mid-Atlantic
-clip). Pacing target: ~2.3 wps for briefing-room formality (slower than
+clip). Pacing target: ~2.4 wps for briefing-room formality (slower than
 S01's casual debrief).
-
-> *"Good morning. You are watching this because somebody with my
-> clearance level — fine, **me** — decided you could be trusted with
-> the operation. Code-name: BURNED. Pull up a chair. Try not to make
-> me look foolish."*
-
-Word count: 37 words. At ~2.3 wps ≈ 16s. **Too long for 12s scene.**
-
-Revised tighter draft (~11.5s):
 
 > *"Good morning. The agency has decided you can be trusted with
 > Operation Pendleton. Code-name in the field: BURNED. Pull up a
 > chair. Try not to embarrass me."*
 
-Word count: 28 words. At ~2.4 wps ≈ 11.7s. Fits with a ~0.3s buffer
-for the venetian-blind shadow establishing shot at scene head before
-the line drops.
+**Word count:** 28 words. At ~2.4 wps ≈ 11.7s. Fits with a ~0.3s
+buffer for the venetian-blind shadow establishing shot at scene head
+before the line drops.
+
+*(Doc-review scope-guardian: previous draft's 37-word scratchpad
+removed; only the locked 28-word delivery shown here.)*
 
 **Step 4 — Mission Background (S03, frames 570–1050, ~16.0s).**
 
@@ -757,6 +1032,21 @@ had cues at 3.0 and 4.5 wps, infeasible for Sterling-coded delivery).
 Every cue's words ÷ (cue window in seconds) must land ≤ 2.6 wps
 ceiling per the Critical Constraints band.**
 
+**DOC-REVIEW REWRITE (2026-05-17 — math was still broken after the
+deepening).** The deepening pass claimed per-cue wps was resolved.
+It wasn't: the payoff cue at frame 1950 held a 16-word line in a
+60-frame (2.0s) window = **8.0 wps**, five times the declared 1.6-1.8
+payoff ceiling. The cue at 2010 added a second VO row claiming "5w
+in 1.0s = 1.67 wps" while the next row simultaneously declared
+"2010-2040 = silent visual hold, no VO" — internal contradiction.
+
+The fix: **collapse the payoff to a single 4-word truth-collision.**
+The cascade items remain visible in chrome at 30% opacity at frame
+1950 — they ARE the verbal antecedent of "they." Sterling-CODED
+delivery is deadpan-short, not multi-clause; the previous 16-word
+explanation was telling-not-showing. The visual cascade IS the
+cascade-callback the old line tried to verbalize.
+
 Structure (frame-accurate timing in BEAT-SHEET.md table):
 
 | Cue frame | Window (s) | Visual | VO line (words) | wps |
@@ -767,57 +1057,137 @@ Structure (frame-accurate timing in BEAT-SHEET.md table):
 | 1290 | 4.0s | Stat 1 caption enters safe-square center-bottom at full weight | *"Mission rehearsal: fourteen hundred and seven contingencies war-gamed."* (9 w) | 2.25 |
 | 1410 | 5.0s | Stat 1 decays to chrome side-band; Stat 2 enters safe-square center-bottom | *"Six of them, deliberately unrehearsed — the 'memorable ones.'"* (10 w) | 2.0 |
 | 1560 | 4.0s | Stat 2 decays to chrome; Stat 3 enters safe-square center-bottom | *"Seventeen asset illustrations. Two of them with hats."* (8 w) | 2.0 |
-| 1680 | 6.0s | Stat 3 decays to chrome; Stat 4 enters safe-square center-bottom | *"Seven operatives on the roster. Six in the deck, one in the basement. Don't ask."* (16 w) | 2.67 (at ceiling) |
-| 1860 | 3.0s | Cascade peak — comms-ticker brightens; HTP hero + accumulated halo (40%) + bright ticker; **no VO** | — | — |
-| **1950** | 2.0s | **Stacked payoff stamp slaps onto HTP hero overprint (heavy slap, 16 frames). Dash VO begins.** | *"The autonomous field assets, the forensic dossiers, the rehearsal artifacts — they weren't preparing for the operation."* (17 w) | 1.7 |
-| **1980** | (within prior cue) | Music duck pre-anticipated ramp begins (90% → 30% over 30 frames, completes at 2010) | (VO continues) | — |
-| 2010 | 1.0s | Payoff inner-beat lands | *"They WERE the operation."* (5 w in 1.0s) | 1.67 |
-| 2010–2040 | 1.0s | **Visual hold: HTP hero + stamp + halo all static. Music at bed-only level (30%). No VO.** | — | — |
+| 1680 | 6.0s | Stat 3 decays to chrome; Stat 4 enters safe-square center-bottom | *"Seven on the roster. Six in the deck. One on the research budget. Don't ask."* (15 w) | 2.5 |
+| 1860 | 3.0s | Cascade peak — comms-ticker brightens to held-bright state; HTP hero + accumulated halo (40%) + bright ticker; **no VO** | — | — |
+| **1950** | 2.0s | **Stacked payoff stamp slaps onto HTP hero overprint (heavy slap, 16 frames). HTP hero drops to 50% opacity. Cascade chrome (4 stats at 30% side-band, halo at 40%, bright ticker) IS the visual antecedent of "they." Dash VO delivers the 4-word truth-collision.** | *"They WERE the operation."* (4 w) | **2.0** (controlled-deadpan; sits at the doc-review-revised payoff ceiling) |
+| **1980** | (within prior cue) | Music duck pre-anticipated ramp begins (90% → 30% over 30 frames, completes at 2010 as VO ends) | (VO continues) | — |
+| 2010–2040 | 1.0s | **Silent visual hold: HTP hero + stamp + halo + 4 stats in chrome all static. Music at bed-only level (30%). No VO. The meaning-collision lands in the silence after the line, not in a second cue.** | — | — |
 | 2040 | — | **Hard cut to S05 gameplay.** | — | — |
 
-**Word count: 89 words across cascade VO. At per-cue wps validated
-≤2.67 ceiling, all cues fit their windows. Total S04 VO clock:
-32.0s of speech + 1.0s payoff hold = 33.0s. Fits scene budget exactly.**
+**Word count: 76 words across cascade VO** (was 89 pre-rewrite —
+removed 13-word redundant cascade-callback verbal cue at 1950 ;
+Stat 4 lost 1 word with the source-fixed reframe). At per-cue wps
+validated ≤2.6 ceiling, all cues fit their windows. Total S04 VO
+clock: 30.5s of speech + 1.0s payoff hold + 1.5s no-VO peak hold
+1860-1950 = 33.0s. Fits scene budget exactly.
 
-**Roster reframe (Stat 4, frame 1680):** "Seven operatives on the
-roster. Six in the deck, one in the basement. Don't ask." This
-preserves the comedy while matching BURNED's actual on-screen
-dossier reality — `src/client/howtoplay/acts/ActRoster.tsx:153-158`
-explicitly says Otto is on the roster but NOT in the deck ("He's
-busy with the (unsanctioned, off-books, almost certainly illegal)
-research budget."). Stat earlier read "seven" with implicit deck
-context, which contradicted the on-screen dossier viewers can
-freeze-frame and count.
+**Roster reframe (Stat 4, frame 1680) — DOC-REVIEW SOURCE FIX.**
+Previous draft locked *"Seven operatives on the roster. Six in the
+deck, one in the basement. Don't ask."* — the "in the basement"
+phrasing was Phase 1 fiction, not source-grounded. The Phase 1
+deepening claimed this "matches the dossier viewers can freeze-
+frame" but `ActRoster.tsx:153-158` actually says Otto is *"busy
+with the (unsanctioned, off-books, almost certainly illegal)
+research budget."* No basement appears in the source. New phrasing:
+*"Seven on the roster. Six in the deck. One on the research budget.
+Don't ask."* — matches the dossier line viewers can freeze-frame
+exactly while preserving the comedy (the "Don't ask." is the
+deadpan glaze on the off-books research-budget reveal). The
+risk-register row claiming this was Resolved is now retracted —
+see Risks section below.
 
-**Step 6 — Gameplay Dissolve (S05, frames 2040–2580 nominal; tolerance
-band 14–22s per `S05_BUDGET_MIN/MAX_FRAMES`).** **Hard cut in from
-S04** (replaces former cross-dissolve, see Unit 1.4 deepening lock).
-Real gameplay plays ~14–22s with sparse Dash VO, iris-wipe overlay
-component begins at frame `S05_END - 45`.
+**Meaning-stack disambiguation (DOC-REVIEW).** R3's "stacked
+payoff" refers to the **audio-visual meaning-collision** at frame
+1950 (the cascade items shown in chrome visually + Dash saying
+"They WERE the operation" verbally = the receipts ARE the
+operation). It is **NOT** a visual-density stack (a frame where
+many elements peak). Only the stamp + HTP-50% + cascade-chrome
+combination matters; Phase 4 must not interpret "stack" as "load
+more pixels into the 1950 frame."
+
+**Step 6 — Gameplay Dissolve (S05, frames 2040–2580 fixed at
+trim-to-target; tolerance band 14–22s applies to Phase 5 raw
+capture only — Phase 4 ALWAYS trims to the 18s target).**
+
+**Trim policy LOCKED (doc-review fix):** Phase 4 ALWAYS trims
+captured gameplay to the 18s target (540 frames). The 14-22s
+tolerance band applies to Phase 5's raw `gameplay-raw.mp4` (the
+capture must contain at least one BURNED-card-draw moment plus
+enough lead-in/tail for trim flexibility). The band does NOT apply
+to Phase 4's composition output — `S05_END = 2580` is invariant,
+asserted in `timing.test.ts`. The previous draft had `S05_BUDGET_
+MIN/MAX_FRAMES` exported as constants implying runtime variance;
+removed in timing.ts (see Unit 1.1 Step 2 doc-review edit).
+
+**Hard cut in from S04** (replaces former cross-dissolve, see Unit
+1.4 deepening lock). Real gameplay plays for 18s at scene-time with
+sparse Dash VO; iris-wipe overlay component begins at frame 2535
+(`S05_END - 45`).
 
 Visual: hard cut to phone-controller + TV-shared-screen gameplay
 capture (Phase 5 deliverable). R15 chrome layer floats: comms ticker
-reads "OPERATIVE [REDACTED] — METHOD REPEATABLE" at frame `S05_START +
-160` (target ~5.3s into the scene).
+reads "OPERATIVE [REDACTED] — METHOD REPEATABLE" at frame 2200
+(target ~5.3s into the scene).
 
-Phase 5 ships `gameplay-raw.mp4` (≥30s playthrough) AND
-`gameplay-markers.json` declaring the in-point + the BURNED-draw
-marker frame in the raw capture. Phase 4 trims with `<OffthreadVideo
-startFrom={M} endAt={M + S05_BUDGET_TARGET_FRAMES}>` so the BURNED
-draw lands at scene-relative frame 160. Trim ownership = Phase 4
-composition; capture + marker shipping = Phase 5.
+**Phase 5 contract (LOCKED by Phase 1, consumed by Phase 4):**
+
+Phase 5 ships `gameplay-raw.mp4` (≥30s playthrough containing at
+least one BURNED-card-draw moment) AND `gameplay-markers.json`
+declaring:
+
+```ts
+type GameplayMarkers = {
+  readonly inPoint: number;              // frame in raw capture where Phase 4 starts trim
+  readonly burnedDrawFrame: number;      // frame in raw capture of BURNED-card draw moment
+  readonly player_names_scrubbed: boolean; // see scrub policy below
+  readonly capture_resolution: '1920x1080' | '1080x1920'; // landscape only for trailer
+  readonly source_seat_count: number;    // 2 minimum (phone + board)
+};
+```
+
+Phase 4 trims with `<OffthreadVideo startFrom={inPoint}
+endAt={inPoint + 540}>` so the BURNED draw lands at scene-relative
+frame 160 (absolute frame 2200; matches the R15 #2 ticker pulse).
+Trim ownership = Phase 4 composition; capture + marker shipping =
+Phase 5.
+
+**Player-name scrub policy (DOC-REVIEW SECURITY FIX — new gate).**
+Real gameplay captures show player-chosen names + room codes on
+phone + board surfaces at 1080p. Those identifiers would be frozen
+into the publicly distributed MP4. Phase 5 MUST either:
+
+- (a) Capture with synthetic test names only — `AGENT_A`, `AGENT_B`,
+  `AGENT_C`, `AGENT_D` (matches Pendleton diegetic frame; preferred
+  default), OR
+- (b) Obtain explicit written consent from every named player
+  before Phase 6 finalizes the render (filed in
+  `videos/trailer/sample-eval/beat-sheet/player-consent.md`).
+
+`gameplay-markers.json` MUST set `player_names_scrubbed: true` for
+path (a) OR include `consent_records: ConsentRecord[]` field for
+path (b). Phase 4 hard-fails the build if both are missing.
+
+**Gameplay audio treatment (DOC-REVIEW DESIGN-LENS FIX).**
+
+- **Diegetic gameplay audio level:** -12 dBFS RMS normalized
+  (Phase 5 ships pre-normalized audio in capture).
+- **Music bed under gameplay:** holds at 30% (per Unit 1.7 Step 5
+  music-cue map row "2040–2535").
+- **BURNED-card-draw moment** (frame 2200): music ducks to 15%
+  for 15 frames around the draw event (`ramp(8 frames in / hold
+  6 frames / ramp 8 frames out`), then returns to 30%. This is the
+  natural editorial beat — the audio focuses on the gameplay
+  reaction at the draw moment.
+- **Edit policy on raw capture audio:** Phase 4 keeps the raw
+  gameplay audio (board ambient + phone-tap SFX + occasional player
+  laugh) UNEDITED beyond the level normalization. The "rough live
+  authentic" reading is intentional — trying to clean it up would
+  collapse the trailer's gameplay scene back into produced-feel.
+- **VERAAA!!! scream cue overlap:** when R5 fires, the scream VO
+  is mixed at +6dB over the gameplay audio bed (the scream IS the
+  focal element at that beat; gameplay audio recedes to texture).
 
 VO (sparse):
 
-| Cue frame (S05-relative) | VO line |
-|--------------------------|---------|
-| 0 | (gameplay sound dominates; no Dash) |
-| 240 | *"And — between you and me — they appear to be enjoying it."* (12 w in 5.0s = 2.4 wps) |
-| 360 | **Scream beat (R5 contingent):** in-game BURNED card draws on capture → Dash VO interjects *"VERAAA!!!"* in **Sterling-coded volume-discontinuous register per Phase 0 Unit 0.6 cadence-spec** (NOT identity-replicated from any specific Archer scene — voice actor portfolio sample or steerable engine output, ADR #13). If R5 cut, this beat is silent or replaced with a chuckle SFX from the gameplay capture. |
-| `S05_END - 45` | (silence; iris-wipe overlay begins) |
+| Cue frame (absolute) | VO line |
+|---------------------|---------|
+| 2040 | (gameplay sound dominates; no Dash) |
+| 2280 | *"And — between you and me — they appear to be enjoying it."* (12 w in 5.0s = 2.4 wps) |
+| 2400 | **Scream beat (R5 contingent):** in-game BURNED card draws on capture → Dash VO interjects *"VERAAA!!!"* in **Sterling-CODED volume-discontinuous register per Phase 0 Unit 0.6 cadence-spec.** Success criterion: an Archer-aware listener hears it as "that's the Archer scream" recognition — that recognition IS the joke. ADR #13 guards against IDENTITY ATTRIBUTION (don't credit / characterize / claim it's Benjamin in distribution copy), NOT against successful cadence recognition. If R5 cut, this beat is silent or replaced with a chuckle SFX from the gameplay capture. |
+| 2535 | (silence; iris-wipe overlay begins) |
 
 Word count: ~12 words of Dash VO across S05. ~5s total speech vs
-14–22s scene budget = the gameplay AUDIO carries the scene; Dash
+18s scene budget = the gameplay AUDIO carries the scene; Dash
 sparse on top.
 
 **Step 7 — Closing Directive (S06, frames 2580–2850, ~9.0s).**
@@ -827,75 +1197,130 @@ blind shadows reestablish. BURNED logo final treatment lands at
 frame 2780 (10 frames earlier than first-draft 2790 — gives logo
 40 frames of breathing room before R15 stamps). R15 #4 closing
 stamp ("OPERATION STATUS: FIELD-READY" — status grammar per Unit
-1.9 deepening) slaps onto the logo card at frame 2820.
+1.9 deepening) slaps onto the logo card at frame 2820. **R15 #5
+cold-decode closing card slaps at frame 2835** (NEW per
+document-review pass — see Unit 1.9 Step 1 + Unit 1.10 S06).
 
-> *"That's the briefing. Operation Pendleton is now in your hands.
-> Try not to embarrass me."*
+> *"That's the briefing. Operation Pendleton is in your hands.
+> Hold it tight."*
 >
 > [BEAT 0.4s]
 >
-> *"…Phrasing."*
+> *"Phrasing."*
 
-Word count: 18 words + Phrasing. At ~2.3 wps (slowest pace — Dash
-delivers the close with maximum deliberateness) ≈ 7.8s + 0.4s beat +
-0.4s on Phrasing = 8.6s + 0.4s music-final-sting tail = 9.0s. Fits.
+**Phrasing! earned (DOC-REVIEW PRODUCT-LENS FIX).** Previous draft
+landed *"Try not to embarrass me."* → *"…Phrasing."* — but the
+preceding line had no innuendo to call out, so Phrasing! read as
+fan-service-callout rather than earned-beat. Spec §3.5 says
+Phrasing! lands when the prior line carries inadvertent double
+meaning. The new close substitutes *"Hold it tight."* — physical-
+action ambiguity that the Phrasing! response actually picks up on.
+**Bonus fix:** also differentiates from S02's *"Try not to embarrass
+me."* (the doubled line was a P3 doc-review finding — bookend was
+unintentional, so the duplicate was a tell of word-budget pressure
+rather than craft).
 
-**Step 8 — Total word count + runtime validation (post-deepening).**
+Word count: 14 words + Phrasing. At ~1.9 wps (slowest pace — Dash
+delivers the close with maximum deliberateness) ≈ 7.4s + 0.4s beat +
+0.4s on Phrasing + 0.8s music-final-sting tail = 9.0s. Fits.
+
+**Step 8 — Total word count + runtime validation (post-document-review).**
+
+Word counts recomputed against actual lines after doc-review-pass
+rewrites (cold-open #5 promotion, S04 payoff collapse, S06 close
+rewrite). Run `pnpm test` against `script.test.ts` to verify these
+remain in sync with `BURNED_TRAILER_LINES`.
 
 | Scene | Words | Mean wps | Speech estimate | Scene budget | Buffer | Notes |
 |-------|-------|----------|-----------------|--------------|--------|-------|
-| S01 | 11 | 2.5 | 4.4s | 7.0s | 2.6s | Cold-open hook headroom for brass + stamp |
-| S02 | 28 | 2.3 | 12.2s | 12.0s | -0.2s | Add ellipsis pauses (Step 3) to gain headroom; deadpan pace |
-| S03 | 65 | 2.4 | 14.0s + 1.0s mid-beat = 15.0s | 16.0s | 1.0s | Ellipsis pauses inserted after "...last quarter." + "...all classified." |
-| S04 | 89 | 2.3 (mean; cue-validated ≤2.67) | 32.0s VO + 1.0s payoff hold = 33.0s | 33.0s | 0.0s | Per-cue wps validated in Step 5 table |
-| S05 | 12 | 2.4 | 5.0s | 14–22s (band) | gameplay audio fills | Tolerance band per timing.ts S05_BUDGET_MIN/MAX |
-| S06 | 19 | 1.9 (deliberate close) | 10.0s | 9.0s | -1.0s | Compresses if S05 lands at upper budget band; or absorb via 2.0 wps |
-| **Total** | **224** | **2.36 mean** | — | **95.0s** | within ±0.5s | — |
+| S01 | 13 | 2.5 | 5.2s | 7.0s | 1.8s | Cold-open #5; brass hook + stamp at scene head |
+| S02 | 28 | 2.4 | 11.7s | 12.0s | +0.3s | Ellipsis pauses (Step 3) give headroom; deadpan pace |
+| S03 | 65 | 2.4 | 14.0s + 1.0s mid-beat = 15.0s | 16.0s | +1.0s | Ellipsis pauses inserted after "...last quarter." + "...all classified." |
+| S04 | 76 | 2.3 (mean; cue-validated ≤2.6) | 30.5s VO + 1.0s payoff hold + 1.5s no-VO peak hold = 33.0s | 33.0s | 0.0s | Per-cue wps validated in Step 5 table; payoff collapsed to 4-word truth-collision per doc-review |
+| S05 | 12 | 2.4 | 5.0s | 18.0s (trim-to-target) | gameplay audio fills | Tolerance band documented at Phase 5 capture stage only; Phase 4 always trims to 540 frames |
+| S06 | 14 + Phrasing | 1.9 (deliberate close) | 7.4s + 0.4s beat + 0.4s Phrasing + 0.8s tail = 9.0s | 9.0s | 0.0s | Phrasing! earned via "hold it tight" innuendo; differentiates from S02 |
+| **Total** | **209** | **2.30 mean** | — | **95.0s** | within ±0.5s | — |
 
-S06 buffer note: if S05 captures at upper band (660 frames / 22s),
-S06 starts later and absorbs the overrun; if S05 captures at target
-(540 / 18s), S06 lands at 9.0s exactly with closing speech at 2.0
-wps. The mean wps stays comfortably under the sustained-narration
-2.3 ceiling.
+**S06 buffer note (doc-review trim-policy fix):** S06_START is
+fixed at 2580 because Phase 4 ALWAYS trims S05 to the 540-frame
+target. The previous draft's "S06 absorbs S05 overrun" framing is
+removed — that contradicted the `TOTAL_FRAMES = 2850` invariant and
+implied an S05 tolerance-band consumer that doesn't exist.
 
-**Step 9 — R6 grep verification.** **POSIX ERE has no negative
-lookahead** — the original `grep -iE '...|agent(?!\s+X)|...'` regex
-quietly mismatches everything containing the pattern (verified in
-shell: both positive and negative test cases return NO MATCH). `grep
--P` fails on Briggsy's Windows shell (*"grep: -P supports only unibyte
-and UTF-8 locales"*). The correct approach is **ripgrep with PCRE2 OR
-a 2-pass `agent` carve-out**:
+**Word-count verification gate:** Phase 1 ships
+`sample-eval/beat-sheet/script-word-count.md` documenting the
+mechanical `wc -w` per-line + per-scene + total. If the table here
+drifts from the actual lines, `script.test.ts` catches it (Phase 2
+won't generate against drifted budgets).
 
-```bash
-# 2-pass approach (works on every shell):
-# Pass 1: catch all SDLC vocab including 'agent' and the expanded
-# tells the brainstorm + best-practices research surfaced.
-rg -i --no-line-number \
-  '\b(code|tests?|deploy(s|ment)?|commit(s)?|spec(s|ification)?|agent|agents|LLM|Claude|AI|model|prompt|chat|github|repo|build|sprint(s)?|backlog|ticket(s)?|issue(s)?|PR|merge|pipeline|microservice(s)?|frontend|backend|API|REST|GraphQL|schema)\b' \
-  videos/trailer/BEAT-SHEET.md > /tmp/r6-hits.txt
+**Step 9 — R6 grep verification (DOC-REVIEW PORTED TO POWERSHELL +
+SCOPE EXTENDED).** **POSIX ERE has no negative lookahead** — the
+original `grep -iE '...|agent(?!\s+X)|...'` regex quietly mismatches
+everything containing the pattern. `grep -P` fails on Briggsy's
+Windows shell. The default Windows ripgrep release does NOT ship
+with PCRE2 (it's a separate `ripgrep-pcre2` build); `rg --pcre2`
+returns *"PCRE2 is not available in this build of ripgrep"* on
+unbuilt installations. The doc-review-corrected approach uses
+**PowerShell-native 2-pass** (works on Briggsy's host without
+requiring a PCRE2 ripgrep build):
+
+```powershell
+# 2-pass approach (PowerShell-native, no /tmp, no grep dependency):
+# Pass 1: catch all SDLC vocab including the expanded tells.
+$hits = rg -i --no-line-number `
+  '\b(code|tests?|deploy(s|ment)?|commit(s)?|spec(s|ification)?|agent|agents|LLM|Claude|AI|model|prompt|chat|github|repo|build|sprint(s)?|backlog|ticket(s)?|issue(s)?|PR|merge|pipeline|microservice(s)?|frontend|backend|API|REST|GraphQL|schema)\b' `
+  videos/trailer/src/lib/script.ts
 
 # Pass 2: filter out the in-character "Agent X" hits.
-grep -v 'Agent X' /tmp/r6-hits.txt
+$hits | Select-String -Pattern 'Agent X' -NotMatch | Out-File -FilePath "$env:TEMP\r6-hits.txt"
 
-# Or in one ripgrep invocation with PCRE2 lookahead (cross-platform
-# when ripgrep is built with --pcre2):
-rg --pcre2 -i \
-  '\b(code|tests?|deploy(s|ment)?|commit(s)?|spec(s|ification)?|agent(?!\s+X)|agents|LLM|Claude|AI|model|prompt|chat|github|repo|build|sprint(s)?|backlog|ticket(s)?|issue(s)?|PR|merge|pipeline|microservice(s)?|frontend|backend|API|REST|GraphQL|schema)\b' \
-  videos/trailer/BEAT-SHEET.md
+# If ripgrep-pcre2 IS installed (verify with: rg --version | Select-String 'pcre2'):
+rg --pcre2 -i `
+  '\b(code|tests?|deploy(s|ment)?|commit(s)?|spec(s|ification)?|agent(?!\s+X)|agents|LLM|Claude|AI|model|prompt|chat|github|repo|build|sprint(s)?|backlog|ticket(s)?|issue(s)?|PR|merge|pipeline|microservice(s)?|frontend|backend|API|REST|GraphQL|schema)\b' `
+  videos/trailer/src/lib/script.ts
 ```
 
-The vocabulary list expanded from the brainstorm's original 11 terms
-to **25 terms** including the SDLC drift surfaced during deepening
-(sprint, backlog, ticket, issue, PR, merge, pipeline, microservice,
-frontend, backend, API, REST, GraphQL, schema). Phase 2 voice
-pipeline runs this gate against `BURNED_TRAILER_LINES[*].text` (not
-the prose BEAT-SHEET.md) so the **Pendleton vocabulary translation
-key** table can keep its illustrative SDLC-side examples without
-tripping the gate.
+**Vocabulary list — 25 terms ORGANIZED BY CATEGORY (DOC-REVIEW
+SCOPE-GUARDIAN PRINCIPLE FIX).** The brainstorm named 11 vocabulary
+*categories*. The deepening expanded to 25 specific *terms* without
+documenting the category-to-term derivation, leaving future
+maintainers no rule for extension. The categories + their term lists:
 
-Expected: zero matches inside `BURNED_TRAILER_LINES[*].text`. Document
-the grep result in `sample-eval/beat-sheet/script-grep-r6.md`,
-including the literal command run + output.
+| Category | Terms blocked |
+|----------|---------------|
+| **Code/source** | code, source, implementation |
+| **Tests** | tests, test, testing |
+| **Deploy/ship** | deploy, deployment, deploys, ship, shipping |
+| **Version control** | commit, commits, merge, PR, github, repo |
+| **Specs/docs** | spec, specs, specification |
+| **AI vocab** | agent (excluding "Agent X"), agents, LLM, Claude, AI, model, prompt, chat |
+| **Build/CI** | build, pipeline |
+| **Project management** | sprint, backlog, ticket, issue |
+| **Architecture vocab** | microservice, frontend, backend, API, REST, GraphQL, schema |
+
+Future extensions: add terms only when (a) they fit an existing
+category AND (b) a drafted line is found to leak them. Don't pre-
+emptively add Kubernetes / Docker / CICD — the gate guards against
+*observed drift*, not against the entire SDLC dictionary.
+
+**Scope extension (DOC-REVIEW SECURITY-LENS FIX):** the grep also
+runs against `videos/trailer/sample-eval/beat-sheet/cascade-
+composition.md` (visual stat caption text), not just
+`BURNED_TRAILER_LINES[*].text`. The previous draft's R6 gate only
+covered VO; a stat caption swapped from the pool (e.g., the soft-
+fail backup P5 *"engine.test.ts, which feels redundant"*) would
+ship a raw SDLC filename to screen unflagged. The pool entry P5
+is now annotated **R6-INELIGIBLE** in Unit 1.6 Step 1; removed from
+the soft-fail backup list.
+
+Phase 2 voice pipeline runs this gate against `BURNED_TRAILER_LINES
+[*].text` (machine contract). Phase 3/4 scene-build runs the
+expanded gate against `cascade-composition.md` visual caption text
+before any caption can lock for asset prep.
+
+Expected: zero matches inside both scopes. Document the grep result
+in `sample-eval/beat-sheet/script-grep-r6.md`, including the literal
+PowerShell commands run + their output.
 
 **Patterns to follow:**
 
@@ -975,29 +1400,39 @@ Phase 1 locks the per-line **Voice** cell to one specific path per
 the Phase 0 results. **Speaking roles = 2 in every reachable branch**
 (per Critical Constraints voice-cast cap).
 
-**Step 2 — Per-line table** (mirrors `BURNED_TRAILER_LINES`
-machine contract in `script.ts`; both are kept in sync via
-`script.test.ts`):
+**Step 2 — Per-line table (DOC-REVIEW REVISED — absolute frames
+throughout, payoff collapsed, Stat 4 source-fixed, cold-open #5
+locked, S06 close rewritten for earned Phrasing!).** Mirrors
+`BURNED_TRAILER_LINES` machine contract in `script.ts`; both are
+kept in sync via `script.test.ts`. **All frames are ABSOLUTE
+composition frames** (was mixed absolute + S05-rel / S06-rel in
+prior draft — feasibility found this would misplace audio per
+ADR #16).
 
-| id | Scene | Frame | Voice | Line | cadenceAdapter notes |
-|---|---|---|---|---|---|
-| S01-coldopen | S01 | 60 | Cold-open speaker | "He's a machine, this kid..." | Brass hook lands at frame 0; line drops at frame 60 (2.0s in) |
-| S02-greeting | S02 | 240 | Dash | "Good morning..." | Venetian-blind establishing 0.5s before line |
-| S03-roster | S03 | 600 | Dash | "Our autonomous field assets infiltrated..." | Dossier-page settle at frame 570; 3 internal `[BEAT 0.3s]` pauses |
-| S03-mission | S03 | 870 | Dash | "Mission: a deck of one hundred and twenty operations..." | After 1.0s mid-scene dossier-page beat; 3 internal `[BEAT 0.3s]/[BEAT 0.4s]` |
-| S04-open | S04 | 1050 | Dash | "Operational planning." | Cascade opens (2-word ledge) |
-| S04-htp-1 | S04 | 1110 | Dash | "Fourteen thousand pages of forensic dossiers." | HTP scroll begins (top portion) |
-| S04-htp-2 | S04 | 1200 | Dash | "Drafted on weekends, by a field asset who, for compliance reasons, is not named." | HTP scroll continues (middle portion) — split from former 27-word cue |
-| S04-stat-1 | S04 | 1290 | Dash | "Mission rehearsal: fourteen hundred and seven contingencies war-gamed." | Stat 1 caption enters safe-square center-bottom |
-| S04-stat-2 | S04 | 1410 | Dash | "Six of them, deliberately unrehearsed — the 'memorable ones.'" | Stat 1 decays to chrome; Stat 2 enters |
-| S04-stat-3 | S04 | 1560 | Dash | "Seventeen asset illustrations. Two of them with hats." | Stat 2 decays to chrome; Stat 3 enters |
-| S04-stat-4 | S04 | 1680 | Dash | "Seven operatives on the roster. Six in the deck, one in the basement. Don't ask." | Stat 3 decays to chrome; Stat 4 enters (matches ActRoster.tsx Otto-exclusion aside) |
-| **S04-payoff-a** | S04 | **1950** | Dash | **"The autonomous field assets, the forensic dossiers, the rehearsal artifacts — they weren't preparing for the operation."** | **R3 stacked payoff stamp slap (heavy, 16 frames)** |
-| **S04-payoff-b** | S04 | **2010** | Dash | **"They WERE the operation."** | After 0.5s internal beat; final 30 frames before music fully bedded |
-| S05-pleasure | S05 | 240 (S05-rel) | Dash | "And — between you and me — they appear to be enjoying it." | Sparse over gameplay |
-| S05-scream | S05 | 360 (S05-rel) | Dash | "VERAAA!!!" | R5 contingent; cadenceAdapter prefixTag `[shouts]` (ElevenLabs v3) or `[mood: shouting]` (Gemini); Sterling-coded volume-discontinuous register per Phase 0 Unit 0.6 cadence-spec; **NOT** identity-replicated from any Archer performance per ADR #13 |
-| S06-close | S06 | 30 (S06-rel) | Dash | "That's the briefing. Operation Pendleton is now in your hands. Try not to embarrass me." | Final scene; 1.9 wps deliberate close |
-| S06-phrasing | S06 | 210 (S06-rel) | Dash | "...Phrasing." | After 0.4s beat |
+| id | Scene | Frame (abs) | Voice | Line | cueType | expectedFrames | leadFramesHint | cadenceAdapter notes |
+|---|---|---|---|---|---|---|---|---|
+| S01-coldopen | S01 | 60 | Cold-open speaker | "Briggsy didn't write this one either. He's getting good at not writing them." | cold-open | 156 | 0 | Brass hook lands at frame 0; line drops at frame 60 (2.0s in). 13 w at 2.5 wps ≈ 5.2s = 156 frames |
+| S02-greeting | S02 | 240 | Dash | "Good morning. The agency has decided you can be trusted with Operation Pendleton. Code-name in the field: BURNED. Pull up a chair. Try not to embarrass me." | sustained | 351 | 0 | Venetian-blind establishing 0.5s before line. 28w at 2.4 wps ≈ 11.7s |
+| S03-roster | S03 | 600 | Dash | "Our autonomous field assets infiltrated the contract last quarter. Seven operatives in the active roster. Six expense reports, all classified. One field agent who insists on being called 'Agent X' and refuses to file any paperwork whatsoever." | sustained | 408 | 0 | Dossier-page settle at frame 570; 3 internal `[BEAT 0.3s]` pauses |
+| S03-mission | S03 | 870 | Dash | "Mission: a deck of one hundred and twenty operations. One of them ends your career instantly. The rest exist to help you survive it. Or to ensure your colleagues don't." | sustained | 405 | 0 | After 1.0s mid-scene dossier-page beat; 3 internal `[BEAT 0.3s]/[BEAT 0.4s]` |
+| S04-open | S04 | 1050 | Dash | "Operational planning." | list | 60 | 0 | Cascade opens (2-word ledge) |
+| S04-htp-1 | S04 | 1110 | Dash | "Fourteen thousand pages of forensic dossiers." | list | 90 | 0 | HTP scroll begins (top portion) |
+| S04-htp-2 | S04 | 1200 | Dash | "Drafted on weekends, by a field asset who, for compliance reasons, is not named." | list | 90 | 0 | HTP scroll continues (middle portion) |
+| S04-stat-1 | S04 | 1290 | Dash | "Mission rehearsal: fourteen hundred and seven contingencies war-gamed." | list | 120 | 0 | Stat 1 caption enters safe-square center-bottom |
+| S04-stat-2 | S04 | 1410 | Dash | "Six of them, deliberately unrehearsed — the 'memorable ones.'" | list | 150 | 0 | Stat 1 decays to chrome; Stat 2 enters |
+| S04-stat-3 | S04 | 1560 | Dash | "Seventeen asset illustrations. Two of them with hats." | list | 120 | 0 | Stat 2 decays to chrome; Stat 3 enters. Stat 3 phrasing/hat-count audit completes at Unit 1.6 Step 1 BEFORE cold-read gate (was Step 5 post-gate; doc-review reorder) |
+| S04-stat-4 | S04 | 1680 | Dash | "Seven on the roster. Six in the deck. One on the research budget. Don't ask." | list | 180 | 0 | Stat 3 decays to chrome; Stat 4 enters. **Source-fixed (DOC-REVIEW): "one on the research budget" matches `ActRoster.tsx:153-158` exactly; previous "in the basement" was Phase 1 fiction** |
+| **S04-payoff** | S04 | **1950** | Dash | **"They WERE the operation."** | **payoff** | **60** | **2** | **R3 truth-collision (DOC-REVIEW COLLAPSED to 4 words from prior 17+5 split that was 5× over wps ceiling). Stamp slaps heavy 16 frames; HTP hero drops to 50%; cascade chrome (4 stats at 30%, halo at 40%) IS visual antecedent of "they." 4 w at 2.0 wps controlled-deadpan = 2.0s. Lead-frames hint 2 frames for perceptual A/V sync** |
+| S05-pleasure | S05 | 2280 | Dash | "And — between you and me — they appear to be enjoying it." | sustained | 150 | 0 | Sparse over gameplay. (Was "S05-rel 240" → absolute 2040+240=2280) |
+| S05-scream | S05 | 2400 | Dash | "VERAAA!!!" | scream | 27 | 1 | R5 contingent; cadenceAdapter prefixTag `[shouts]` (ElevenLabs v3 — SELF-CLOSING) or `[mood: shouting]` (Gemini). Sterling-CODED volume-discontinuous register per Phase 0 Unit 0.6. **Success criterion = Archer-aware listener identity recognition (the joke).** ADR #13 guards distribution attribution, NOT cadence recognition. `skipSilenceremove: true` preserves scream attack envelope; `fadeInMs: 0`. (Was "S05-rel 360" → absolute 2040+360=2400) |
+| S06-close | S06 | 2610 | Dash | "That's the briefing. Operation Pendleton is in your hands. Hold it tight." | sustained | 222 | 0 | Final scene; 1.9 wps deliberate close. **Rewritten (DOC-REVIEW) — "Hold it tight" carries innuendo shape Phrasing! actually responds to + differentiates from S02 "Try not to embarrass me"** (Was "S06-rel 30" → absolute 2580+30=2610) |
+| S06-phrasing | S06 | 2790 | Dash | "Phrasing." | payoff | 27 | 0 | After 0.4s beat. `fadeInMs: 30`, `fadeOutMs: 50` with qsin curve. (Was "S06-rel 210" → absolute 2580+210=2790) |
+
+**Frame-encoding invariant (DOC-REVIEW):** `script.test.ts` asserts
+`Line.frame >= S{N}_START && Line.frame < S{N}_END` for the declared
+scene N, AND `0 <= Line.frame < TOTAL_FRAMES`. Catches both mis-
+encoded relative frames AND any line that drifts past its scene
+boundary.
 
 **Step 3 — Engine per voice cell.**
 
@@ -1008,32 +1443,52 @@ machine contract in `script.ts`; both are kept in sync via
   whichever character (Vera/Sable/Janet) cleared R14 cadence-match.
   Per Phase 0 Unit 0.3 results.
 
-**If Path D won (voice actor) — RESOURCE MODEL.** Per Critical
-Constraints, "speaking roles = 2" becomes "2 human actors" in Path D.
-Default: 2 actors (one for Dash + scream, one for cold-open speaker).
-Single-actor doing both characters is feasible only if the actor's
-portfolio shows distinct-character range across the relevant register.
-Phase 2 voice pipeline owns the casting + scheduling decision; Phase 1
-flags the resource shift here so Phase 2 budgets accordingly.
+**Step 3a — Path-A/B/C vs Path-D conditional unit split (DOC-REVIEW
+ADVERSARIAL FIX).** Phase 0 explicitly states Path D voice-actor
+delivery is **1-3 weeks wall-clock** (`phase-0-gate-resolution.md:51`).
+The previous draft treated this as a "caveat" but Unit 1.3 itself is
+a Phase 1 lock-bearing unit. If Path D fires, Phase 1 cannot fully
+lock until the actor delivers. Restructure:
+
+- **Unit 1.3a (fires immediately on Phase 0 exit, Path-A/B/C path):**
+  Engine selection, cadence-adapter prefixTag locks, voice-preset
+  IDs, cadence-spec hash. Phase 2 can begin against this subset
+  even if Path D is the actual outcome (Phase 2 generates
+  placeholder Dash WAVs for runtime-validation purposes while
+  waiting for actor delivery).
+- **Unit 1.3b (fires when Phase 0 Path D delivery completes,
+  Path-D path):** Voice actor casting (1-2 actors), recording
+  schedule, cadence-direction packet (the cadence-spec.md excerpts
+  serve as director notes), studio booking, NDA. Phase 2 Unit 2.X
+  (Path D ingestion) consumes this.
+
+The previous draft's "speaking roles = 2 becomes 2 human actors"
+language stays in Critical Constraints. The unit-level split lets
+Phase 2 begin voice-pipeline work without 1-3-week blocking
+dependency on Path D delivery.
 
 **Step 4 — Total runtime accounting.**
 
-R4 requires "Dash sustained narration ~90% runtime."
+R4 requires "Dash sustained narration ~90% runtime." **DOC-REVIEW
+PRODUCT-LENS RESOLUTION:** locked reading is **"of voiced runtime"**
+(not of total clock). Hedge removed — Phase 1 doesn't ship a "Briggsy
+re-open lever" in a locked plan.
 
 - Dash speech (all lines + scream): ~78s across S02–S06.
-- Cold-open speaker speech: ~4.4s in S01.
-- Gameplay-audio coverage (non-voice): ~12s of S05.
-- Silence beats: ~2.5s total.
+- Cold-open speaker speech: ~5.2s in S01 (cold-open #5 promotion;
+  was 4.4s for #4).
+- Gameplay-audio coverage (non-voice): ~13s of S05.
+- Silence beats: ~1.8s total.
 
-Dash share of voiced runtime: 78 / (78 + 4.4) ≈ 94.6%. Clears the ~90%
-target.
+**Dash share of voiced runtime: 78 / (78 + 5.2) ≈ 93.8%.** Clears
+the ~90% R4 target. The "of voiced runtime" reading is canonical
+per R4's "Owns" framing — Dash *owns* the speaking budget; gameplay
+audio (S05) is its own category, not Dash's territory.
 
-Dash share of total runtime: 78 / 95 ≈ 82%. (Brainstorm R4 says "~90%
-runtime" — meaning the speaking budget, not the total clock. Verified
-against R4 phrasing: "Owns ~90% of the runtime." Reading interpretation:
-of the voiced runtime. Cleared. If Briggsy reads R4 as "82% feels short
-of 90%," option to lengthen S05 Dash VO is reserved as a Phase 1
-re-open lever; doing so adds 1–2 sentences to S05.)
+(If Briggsy ever revisits this and reads R4 as "of total clock"
+giving 82%, the lever is `S05_END - S05_START` Dash-VO time —
+adding 1-2 sentences to S05's currently-sparse VO band. Reserved
+as a roadmap-level reopen, not a Phase 1 internal lever.)
 
 **Patterns to follow:**
 
@@ -1133,7 +1588,7 @@ implementation — hard cut is a `<Sequence>` boundary).**
 |---|------|--------------------------|-------------------------|
 | 1 | **Hard cut** | Cuts between briefing-room and field scenes in Archer; the show's default. **Replaces former cross-dissolve at S04→S05** (more shocking, more Archer; dissolves 3 internal timing contradictions; music ducks via volume interpolation before the cut, not under a dissolve). | `<Series.Sequence>` boundary, no transition component. |
 | 2 | **Stamp slap** | "CLASSIFIED" / "TOP SECRET" stamp slams in from upper-right with overshoot + settle. The slap settles into the next scene's frame as the stamp peels back. | Overlay component on the source scene's tail frames. Emil-curve: `EASE_OUT = cubic-bezier(0.23, 1, 0.32, 1)`. Standard slap = 8 frames (scale 0.95 → 1.04 overshoot at 6/8 → 1.0 settle at 8/8 + 1-frame settle; **never scale(0)** per emil principle). Heavy slap (payoff stamp at frame 1950) = 16 frames (scale 0.85 → 1.06 overshoot at 12/16 → 1.0 settle). |
-| 3 | **Dossier-page wipe** | Page-turn motif: the next scene is "under" the current one; horizontal wipe reveals it. **16 frames** (0.53s) — 8-frame draft was below perceptual threshold for "physical motion" reading. | Overlay component on the source scene's tail frames. `clip-path: inset(0 0 0 0)` → `clip-path: inset(0 100% 0 0)` over 16 frames with `EASE_IN_OUT = cubic-bezier(0.77, 0, 0.175, 1)`. Reveals destination scene via clip-path inversion. |
+| 3 | **Dossier-page wipe** | Page-turn motif: a dossier page peels rightward, revealing the destination scene underneath from LEFT-TO-RIGHT (the physical-page metaphor: the source-scene "page" peels off-screen to the right; the destination "page" beneath is revealed starting from the left edge). **16 frames** (0.53s) — 8-frame draft was below emil-design-eng's perceptual threshold for "physical motion" reading (movement perceived as "physical object" requires ≥10 frames @ 30fps per emil motion-shape vocabulary). | Overlay component on the SOURCE scene's tail frames. The source-scene wipes OUT via `clip-path: inset(0 0 0 0)` → `clip-path: inset(0 0 0 100%)` (NOT `inset(0 100% 0 0)` per prior draft — that was right-to-left collapse, contradicted the page-peel diegetic framing). The destination scene sits beneath the source-scene layer; as the source-scene collapses leftward, the destination is revealed left-to-right. Easing: `EASE_IN_OUT = cubic-bezier(0.77, 0, 0.175, 1)`. |
 | 4 | **Iris wipe** | Classic title-sequence closer; circular SVG mask shrinking from frame-encompassing to point at trailer close. | Overlay component on S05 tail (45 frames, 1.5s). `clip-path: circle(70.7% at 50% 50%)` → `clip-path: circle(0% at 50% 50%)` with `EASE_IN_OUT`. Phase 4 may experiment with `iris()` from `@remotion/transitions/iris` if the API surface ports cleanly to overlay-component usage (default `iris({width, height})` expects TransitionSeries context). |
 
 **Cross-dissolve REMOVED.** The former R3 cross-dissolve at S04→S05 is
@@ -1215,17 +1670,20 @@ export const STAT_CAPTION_DECAY_FRAMES = 12;     // 400ms slow decay to chrome o
 export { EASE_OUT, EASE_IN_OUT, EASE_DRAWER } from './timing';
 ```
 
-**Step 5 — Banned-transition list (anti-pattern guard).**
+**Step 5 — Banned-transition list (anti-pattern guard, style only —
+architectural bans live in Step 1).**
 
-- **Generic crossfade between any scenes.** Crossfades read as
-  "editor defaults." §2 fail. (Note: the FORMER R3 cross-dissolve has
-  been replaced with a hard cut per Step 2.)
+DOC-REVIEW SCOPE-GUARDIAN P3 TRIM: the prior 5-item list mixed style
+prohibitions with architectural decisions (cross-dissolve ban is
+already covered by Step 2's hard-cut lock; `<TransitionSeries>` ban
+is already covered by Step 1's bare-`<Series>` lock + enforced by
+`timing.test.ts`'s no-overlap-math assertion). Style-prohibitions
+only:
+
 - **Push transitions** (the slide-in-from-right thing). Reads as
   generic motion-graphics templates.
-- **3D cube flips** etc. Not in the Archer vocabulary.
+- **3D cube flips.** Not in the Archer vocabulary.
 - **Glitch effects.** Not in the Archer vocabulary.
-- **`<TransitionSeries>` presentations.** Architectural ban — we use
-  bare `<Series>` + overlay components per Step 1.
 
 Document in BEAT-SHEET.md appendix.
 
@@ -1331,30 +1789,61 @@ Three candidate layouts reconsidered:
 | 2010–2040 | **Silent visual hold (30 frames).** HTP hero + payoff stamp + halo + stats all static. Music at 30% bed-only. No VO. | — | held bright |
 | **2040** | **Hard cut to S05 gameplay.** | — | — |
 
-**Step 3 — Mobile safe-square placement (DEEPENING FIX).**
+**Step 3 — Mobile safe-square placement (DEEPENING + DOC-REVIEW
+DESIGN-LENS COORDINATE LOCK + ADVERSARIAL CROP-RECONSIDERATION).**
 
-The 1080×1080 central square within the 1920×1080 frame contains:
+The 1080×1080 central square within the 1920×1080 frame (x =
+420–1500, y = 0–1080) contains:
 
-- **HTP hero** (centered, ~500px wide max — reduced from 600px to give
-  stat captions room).
-- **Active stat caption** at safe-square center-bottom (y ≈ 810–960
-  px), 36px dry / 22px italic companion. **Inside the safe square at
-  the moment it's the focal point.** Resolves the prior Phase 1
-  contradiction (R11 is comedy-load-bearing AND mobile-X-cropped) by
-  placing the caption inside the decode region during its read window.
-- **Payoff stamp at frame 1950** (centered, overprinting HTP hero).
+- **HTP hero** (centered at x=960, ~500px wide max — reduced from
+  600px to give stat captions room).
+- **Active stat caption** at safe-square center-bottom (x=960
+  centered, y=900 ± 30, line-height-adjusted). 36px dry / 22px
+  italic companion. **Inside the safe square at the moment it's
+  the focal point.** Resolves the prior Phase 1 contradiction (R11
+  is comedy-load-bearing AND mobile-X-cropped) by placing the
+  caption inside the decode region during its read window.
+- **Payoff stamp at frame 1950** (centered at x=960, y=540,
+  overprinting HTP hero).
 - **R15 #1 cold-open stamp** (S01 — applies in S01, not S04 cascade,
   but listed for placement-policy completeness).
 
+**DOC-REVIEW DECAY-DESTINATION RECONSIDERED.** Prior draft had
+decayed stat captions migrate to "side-band-right" at x=1620 ± 80
+(outside the 1080×1080 safe-square — mobile-X would crop them
+entirely). But the adversarial review surfaced that the cascade's
+*accumulation* reading is a load-bearing visual mechanic — viewers
+who track the rising-action need to SEE the stats accumulate, not
+just see the active stat individually then watch each disappear.
+**Mobile-X autoplay viewers were going to lose the accumulation.**
+
+**LOCK: decayed captions stay INSIDE the safe-square, stacked
+vertically at the right edge of the safe-square (x=1380 ± 30,
+inside the 420–1500 mobile-decode region).** Stack positions:
+
+| Stat slot | Decayed x | Decayed y | Decayed scale | Decayed opacity |
+|-----------|-----------|-----------|---------------|-----------------|
+| Stat 1 (decayed at frame 1410) | 1380 | 740 | 0.65 | 0.30 |
+| Stat 2 (decayed at frame 1560) | 1380 | 790 | 0.65 | 0.30 |
+| Stat 3 (decayed at frame 1680) | 1380 | 840 | 0.65 | 0.30 |
+| Stat 4 (decayed at frame 1860) | 1380 | 890 | 0.65 | 0.30 |
+
+The decayed-stat column sits in the right portion of the safe-
+square at 30% opacity — mobile-X viewers see all 4 accumulated
+stats stacked alongside the HTP hero. The active caption (when
+present) is at safe-square center-bottom (x=960, y=900). The two
+positions don't overlap.
+
 OUTSIDE the safe square (acceptable to crop on mobile X autoplay):
 
-- **Decayed stat captions** (after their read window). Once a stat
-  has been read, it migrates to side-band-right at 30% opacity. Mobile
-  X viewers see the active caption inside the square; missing the
-  decayed-chrome captions is acceptable because they've already done
-  their narrative work.
-- **Card-art halo** (right-edge band, 40% opacity — texture).
-- **Comms-ticker** (bottom edge — dim background, brightens at 1860).
+- **Card-art halo** (right-edge band x=1560–1880, 40% opacity —
+  texture only, not focal; cropping doesn't damage reading because
+  cards are decorative chrome here).
+- **Comms-ticker** (bottom edge y=1020–1080 — dim background,
+  brightens at 1860; mobile autoplay typically shows the bottom
+  edge but the ticker is established as ambient chrome).
+- **Pendleton crest watermark** (top-left x=120, y=80, 25% opacity
+  — pure ambient).
 
 **Caption two-line collapse mechanism.** Below 28px/22px the dry/
 companion structure collapses. Minimum legible size = 28px dry / 22px
@@ -1407,15 +1896,25 @@ chuckle" — broken-rhythm sitcom voiceover, not Archer.
   until frame 1800**, then 60-frame ease to "bright" state by 1860.
   Held bright through stamp + VO + silent hold. Dim again at S05_START.
 - **Stat captions:** asymmetric emil-coded timing:
-  - **Enter:** 6 frames (200ms), `EASE_OUT`, scale 0.95 → 1.0 + opacity 0 → 1.
-  - **Hold:** 30 frames (1.0s) at full weight, safe-square center-bottom.
-  - **Decay:** 12 frames (400ms), `EASE_IN_OUT`, position morphs to
-    side-band-right + opacity drops 1 → 0.3, scale 1 → 0.85 (smaller
-    chrome).
+  - **Enter:** 6 frames (200ms), `EASE_OUT`, scale 0.95 → 1.0 +
+    opacity 0 → 1. Position: safe-square center-bottom (x=960,
+    y=900).
+  - **Hold:** 30 frames (1.0s) at full weight, safe-square
+    center-bottom.
+  - **Decay:** 12 frames (400ms), `EASE_IN_OUT`, position morphs
+    to safe-square-right-edge stack (x=1380, y per stat-slot table
+    in Step 3) + opacity drops 1 → 0.3, scale 1 → 0.65 (smaller
+    chrome — was 0.85 in prior draft; reduced to 0.65 to allow
+    the right-edge column to read as accumulating texture without
+    crowding the HTP hero).
   - This asymmetry (fast in, read pause, slow decay) IS the comedic
     structure — emil's "slow where user is deciding, fast where system
     is responding" inverted because here the user is reading not
     deciding.
+  - **Mobile-X visibility (DOC-REVIEW):** decayed-stat column stays
+    INSIDE the 1080×1080 safe-square (x=1380, well inside x=420–
+    1500 mobile-decode band). Accumulation reading survives mobile
+    autoplay crop.
 - **Stacked-payoff stamp (frame 1950, R15 #3):** heavy slap, 16 frames
   (scale 0.85 → 1.06 overshoot at 12/16 → 1.0 settle, `EASE_OUT`).
   Overprints HTP hero. HTP drops to 50% opacity simultaneously to
@@ -1430,18 +1929,24 @@ Adapted to BURNED's `/howtoplay` route (Vite dev `/howtoplay.html`).
 Output: `videos/trailer/public/htp-fullpage.png` (full-page PNG
 capture).
 
-**Clone-and-adapt scope:** UMB's script step-scrolls 200px at a time
-with 80ms waits between steps to TRIGGER ScrollTrigger animations
-before screenshotting. BURNED's HTP page uses identical
-`useScrollReveal()` + `[data-reveal]` GSAP ScrollTrigger machinery
-(`src/client/howtoplay/hooks/useScrollReveal.ts`) so the step-scroll
-mechanism ports directly. Differences requiring local adaptation:
+**Clone-and-adapt scope (DOC-REVIEW FEASIBILITY CORRECTION).** UMB's
+`capture-htp-scroll.ts` (70 lines, verified 2026-05-17) is
+**selector-agnostic** — it does NOT query `[data-reveal]` or any
+specific markup. It simply drives `window.scrollY` in 200px
+increments with 80ms waits between steps, then takes a full-page
+screenshot. ScrollTrigger animations fire naturally on real scroll
+in either codebase. Prior draft claimed the script had selector-
+specific logic that BURNED needed to "adapt"; that was false. The
+actual port surface is **URL only**:
+
 - **URL:** UMB hits `https://undercover-mob-boss.vercel.app/how-to-play.html`;
   BURNED clone targets a local dev server (`http://localhost:5173/howtoplay.html`)
   during capture — BURNED's deploy migration (`burned-cxa.pages.dev`)
   is in progress per TODO §1.
-- **Selectors:** BURNED uses `[data-reveal]` (per `useScrollReveal.ts`);
-  UMB uses different markup. Adapt scroll-trigger detection accordingly.
+- **Selectors:** N/A. The script is mechanism-agnostic. BURNED's
+  `useScrollReveal()` + `[data-reveal]` ScrollTrigger machinery
+  fires natively on real scroll events the same way UMB's does.
+  No code adaptation needed.
 
 Phase 4 imports the PNG as `<Img style={{transform: 'translateY(...)'}}>`
 inside an `<AbsoluteFill>` wrapper to drive scroll motion at scene-
@@ -1550,7 +2055,7 @@ Pool (drafts; chosen finalists in Step 3):
 | P2 | 1,407 tests passing | 6 deliberately unrehearsed ("the memorable ones") | TODO.md §1 + 6 expected-fail counts |
 | P3 | 17 asset profile illustrations | 2 of them with hats | public/assets/cards/ count + Dash + Otto wear hats |
 | P4 | 7 operatives in active roster | + 1 who is, technically, all of them. Don't ask | brainstorm roster + Agent X mechanic |
-| P5 | 68 mission-rehearsal files | One named "engine.test.ts," which feels redundant | test-file count + Engine test name |
+| P5 | 68 mission-rehearsal files | One named "engine.test.ts," which feels redundant | test-file count + Engine test name. **R6-INELIGIBLE (DOC-REVIEW SECURITY-LENS):** raw `engine.test.ts` filename is unprocessed SDLC vocab; would ship to screen as on-screen text if swapped in from this pool. Removed from soft-fail backup list. |
 | P6 | 120 distinct operations in the deck | Including one that ends your career instantly | RULES-REFERENCE.md card count + BURNED card mechanic |
 | P7 | 36 protocol revisions | 6 of them are just "we changed our minds" | git log + PROTOCOL_VERSION = 6 |
 | P8 | Cover identity: "card game" | Active threat level: medium | self-described BURNED purpose |
@@ -1577,14 +2082,35 @@ For S04's 4-stat cue slots, pick 4 from the pool that:
    Briggsy, the team, or any real human — only fictional operatives or
    abstract concepts are fair game).
 
-**Step 3 — 4 finalists (DEEPENING: stat 4 reframed to match dossier reality).**
+**Step 1.5 — Hat-count audit (DOC-REVIEW REORDER — was Step 5
+post-gate).** Audit the actual `public/assets/cards/*.webp`
+operative portraits BEFORE the cold-read gate fires. Open each
+of the 6 operative portraits (`dash-barlowe`, `vera-khan`,
+`sable-ashworth`, `janet-broadside`, `neal-proctor`, `agent-x`).
+Count hat-bearing characters. Document the count in
+`goofy-stats-list.md`.
+
+- If hat count = 2: Stat 3 phrasing locks as drafted ("Two of them
+  with hats.").
+- If hat count = 1: rewrite Stat 3 to "One of them with a hat."
+- If hat count = 0 or ≥3: rewrite to actual count OR drop the
+  "with hats" companion in favor of an alternative absurd
+  companion (candidate: *"Two of them appear to be the same
+  person at different ranks."*).
+
+Audit OUTCOME locks Stat 3 phrasing BEFORE the cold-read gate
+runs. The previous draft ran the audit post-gate, which meant
+reviewers evaluated phrasing that might still rewrite — undermining
+the gate.
+
+**Step 3 — 4 finalists (DEEPENING + DOC-REVIEW SOURCE FIX).**
 
 | Slot | Finalist | Source-verified | Rationale |
 |------|----------|-----------------|-----------|
-| S04 Stat 1 (frame 1290) | P1: "Mission rehearsal: fourteen hundred and seven contingencies war-gamed." | TODO.md §1 (1,407 tests pass, verified 2026-05-16). **NOTE: previous draft's "14,000 pages" was unverified; Step 5 must run actual `wc -w` if a pages-stat is wanted.** | Opens the cascade with mission-rehearsal cadence — translates the SDLC-as-spywork concept verbally as the cascade visually begins. |
-| S04 Stat 2 (frame 1410) | P2: "Six of them, deliberately unrehearsed — the 'memorable ones.'" | TODO.md §1 (6 expected-fail) | Engineering-peer callback (expected-fail tests = bugs we're deliberately not fixing yet) without breaking diegetic frame. |
-| S04 Stat 3 (frame 1560) | P3: "Seventeen asset illustrations. Two of them with hats." | `public/assets/cards/*.webp` count = 17 ✓ (verified 2026-05-17). Hat count needs Phase 1 visual audit (Step 5). | Lands hardest visually because the right-edge halo IS building during this line. |
-| S04 Stat 4 (frame 1680) | **REFRAMED** P4': "Seven operatives on the roster. Six in the deck, one in the basement. Don't ask." | `ActRoster.tsx:18-75` OPERATIVES array = 6 entries (Dash, Vera, Sable, Janet, Neal, Agent X); `ActRoster.tsx:153-158` aside excludes Otto from deck ("Otto, our resident scientist, is on the roster but **not in the deck.** He's busy with the (unsanctioned, off-books, almost certainly illegal) research budget."). New phrasing preserves the comedy AND matches the on-screen dossier viewers can freeze-frame. | Closes cascade pacing with the Otto-in-the-basement beat — funnier than first-draft "plus Agent X who is all of them" and survives freeze-frame audit. |
+| S04 Stat 1 (frame 1290) | P2: "Mission rehearsal: fourteen hundred and seven contingencies war-gamed." | TODO.md §1 (1,407 tests pass, verified 2026-05-16). **NOTE: previous draft's "14,000 pages" was unverified; Step 5 must run actual `wc -w` if a pages-stat is wanted.** | Opens the cascade with mission-rehearsal cadence — translates the SDLC-as-spywork concept verbally as the cascade visually begins. |
+| S04 Stat 2 (frame 1410) | P2-companion: "Six of them, deliberately unrehearsed — the 'memorable ones.'" | TODO.md §1 (6 expected-fail) | Engineering-peer callback (expected-fail tests = bugs we're deliberately not fixing yet) without breaking diegetic frame. |
+| S04 Stat 3 (frame 1560) | P3: "Seventeen asset illustrations. Two of them with hats." (or audit-revised per Step 1.5) | `public/assets/cards/*.webp` count = 17 ✓ (verified 2026-05-17, excluding `_archive/`). Hat count auditing per Step 1.5 BEFORE cold-read gate. | Lands hardest visually because the right-edge halo IS building during this line. |
+| S04 Stat 4 (frame 1680) | **DOC-REVIEW SOURCE FIX** P4'': "Seven on the roster. Six in the deck. One on the research budget. Don't ask." | `ActRoster.tsx:18-75` OPERATIVES array = 6 entries (Dash, Vera, Sable, Janet, Neal, Agent X); `ActRoster.tsx:153-158` aside: Otto *"is on the roster but **not in the deck.** He's busy with the (unsanctioned, off-books, almost certainly illegal) research budget."* New phrasing matches the dossier source EXACTLY — "research budget" is the literal source phrase. Previous draft's "in the basement" was Phase 1 fiction. | Closes cascade pacing with the Otto-research-budget beat — funnier than first-draft "plus Agent X who is all of them" and survives freeze-frame audit. The "Don't ask." remains the deadpan glaze on the off-books reveal. |
 
 **Step 4 — Cold-read gate (DEEPENING REWRITE — N=3, 0–2 scale).**
 
@@ -1610,38 +2136,53 @@ deliberately suppresses overt laughter (false-fail risk).
    - **0** = flat / no reaction
    - **1** = smirk / light grin / "huh, that's clever"
    - **2** = audible laugh / "oh that's good" / unprompted reread
-4. **Gate threshold (ship R11):**
-   - Total score across 3 reviewers × 4 pairings ≥ **12 of 24** (50% floor), AND
-   - **≥2 pairings score ≥4 across reviewers** (consensus on WHICH
-     pairings land, not just total count)
-5. **Soft-fail handling (partial cut):**
-   - If exactly **1 pairing scores < 3** across all 3 reviewers, that
-     pairing drops; swap from pool (Step 1 P5–P15 backups: P5 mission-
-     rehearsal-files, P6 deck-of-120, P11 weekend-asset-turnaround).
-6. **Hard-fail handling (full R11 cut):**
-   - If total < 12 OR fewer than 2 pairings score ≥4: **R11 cuts.**
+4. **Gate threshold (ship R11) — DOC-REVIEW ADVERSARIAL FIX
+   (per-reviewer-floor consensus, not sum-of-3-reviewers):**
+   - **≥2 pairings where ≥2 of 3 reviewers each score ≥1** (each
+     reviewer independently flags the pairing as landing — prevents
+     single-zealous-reviewer false-pass that the sum-of-3-reviewers
+     threshold allowed). AND
+   - **No pairing scores 0 across all 3 reviewers** (any pairing all
+     three flatlines is auto-cut even if other pairings clear).
+6. **Soft-fail handling (partial cut):**
+   - If exactly **1 pairing fails the per-reviewer-floor** (i.e., not
+     ≥2 reviewers each scoring ≥1), that pairing drops; swap from
+     pool (Step 1 P6 deck-of-120, P11 weekend-asset-turnaround. **P5
+     mission-rehearsal-files REMOVED from backup list per
+     doc-review — raw filename ineligible for visual stat caption**).
+7. **Hard-fail handling (full R11 cut):**
+   - If ≥2 pairings fail the per-reviewer-floor: **R11 cuts.**
      Cascade VO Stat 1–4 cues drop; cascade becomes purely visual
      (HTP scroll + card-art halo + R15 chrome). Dash VO lines for
      stats are replaced with a single bridging line.
 
-**R11-cut bridge line (DRAFTED NOW so Phase 2 doesn't wait):**
+**R11-cut bridge line (DRAFTED NOW so Phase 2 doesn't wait — DOC-
+REVIEW: now a 2-line structure to avoid 8s of dead air before the
+payoff):**
 
 If R11 cuts, S04 VO between frames 1110 (HTP scroll begins) and 1950
-(payoff stamp) collapses to ONE bridge line at frame ~1400:
+(payoff stamp) collapses to TWO bridge lines:
 
-> *Bridge candidate A (10 words, 4.0s at 2.5 wps):* "Fourteen
+> *Bridge cue 1 (frame ~1400, 10 words, 4.0s at 2.5 wps):* "Fourteen
 > thousand pages of forensic dossiers. Drafted on weekends."
 >
-> *Bridge candidate B (16 words, 6.5s at 2.5 wps):* "Fourteen
-> thousand pages of forensic dossiers. Drafted on weekends. By a
-> field asset, deliberately not named."
+> *Bridge cue 2 (frame ~1740, 8 words, 3.2s at 2.5 wps):* "By a
+> field asset, deliberately not named. Don't ask."
+
+**DOC-REVIEW FIX (adversarial P2-4 surface):** prior draft had ONE
+bridge at frame ~1400 which left 250+ frames (8s+) of silence before
+the payoff stamp. That's a long unfilled stretch in the trailer's
+load-bearing scene. Two-bridge structure breaks the silence and
+preserves the cascade's pacing. Bridge cue 2 lands during the
+cascade peak (1740) where the ticker is brightening, creating audio-
+visual alignment.
 
 Cascade visual still plays per Unit 1.5 Step 2 frame-by-frame
 storyboard but **without the stat captions** — card-art halo
 (right-edge 40%) + HTP hero scroll + comms-ticker bright-at-1860 carry
 the entire visual content. The 1950 payoff stamp is unaffected. Both
-bridge candidates land before frame 1700 to leave a long silent
-build to the stamp.
+bridge cues land before frame 1860 (cascade peak hold begins) to
+leave a clean 90-frame silent build to the stamp.
 
 Phase 2 voice pipeline starts on whichever R11 outcome lands;
 candidate bridge lines pre-drafted in `BURNED_TRAILER_LINES`
@@ -1662,18 +2203,20 @@ source. Per `feedback-stats-single-source.md`:
   Stat 1 ("Mission rehearsal: fourteen hundred and seven contingencies
   war-gamed") + Stat 2 ("Six of them, deliberately unrehearsed")
   matches exactly. ✓
-- **P3** `Glob public/assets/cards/*.webp` — 17 files ✓ (verified
-  2026-05-17). **"Two with hats" audit pending** — Phase 1 visual
-  audit step: open each operative portrait, count hat-bearing
-  characters. Currently expected: Dash Barlowe (spy-archetype, likely
-  hatted) + one other. If hat count != 2, rewrite stat with actual
-  count, OR drop the "with hats" companion.
-- **P4'** Roster from `ActRoster.tsx`:
+- **P3** `Glob public/assets/cards/*.webp` excluding `_archive/` — 17
+  files ✓ (verified 2026-05-17). **"Two with hats" audit moved to
+  Step 1.5 (pre-gate) per DOC-REVIEW** — see Step 1.5 above for
+  protocol + outcome handling.
+- **P4''** Roster from `ActRoster.tsx`:
   - OPERATIVES array (deck): Dash, Vera, Sable, Janet, Neal, Agent X = **6 in deck**
-  - Otto (in roster, NOT in deck): line 153-158 explicit aside
+  - Otto (in roster, NOT in deck): line 153-158 explicit aside —
+    *"busy with the (unsanctioned, off-books, almost certainly
+    illegal) research budget."*
   - Dolores Grieves (NPC, not in roster): per character memory
-  - **"Seven on the roster, six in the deck, one in the basement"
-    matches the dossier viewers can freeze-frame.** ✓
+  - **"Seven on the roster. Six in the deck. One on the research
+    budget. Don't ask." matches the dossier source EXACTLY** (DOC-
+    REVIEW source-fix; prior draft's "in the basement" was Phase 1
+    fiction that the deepening pass falsely marked Resolved). ✓
 
 Document verification commands + counts + hat-audit in
 `goofy-stats-list.md`.
@@ -1739,11 +2282,20 @@ correction).**
 | Source type | Pros | Cons | Verdict |
 |-------------|------|------|---------|
 | Generative — Udio | (was: cuts to fit any beat sheet) | **DEAD (November 2025 settlement disabled all external downloads — Udio is in-platform streaming/remixing only as of 2026; no `.mp3` export possible)** | **STRUCK from candidate pool.** |
-| Generative — Suno | Cuts to fit cascade arc; Pro/Premier tier covers commercial use | March 2026 ToS: Suno **grants commercial-use license but does NOT warrant copyright vesting** in outputs. Active UMG/Sony litigation (summary judgment July 2026); WMG settled Nov 2025. Disclosure of AI-generated audio required on some platforms. Subscription must be active at generation time. | **Expected fallback** (budget Pro $10/mo as expected, not exceptional) |
 | Royalty-free library — Artlist Pro / Epidemic Sound Pro | Clear sync license covering portfolio + Twitter/X + future engineering blog reposts | Track is fixed-length; trailer must cut to track or track edited. **Pro tier $199–$204/yr is the minimum** covering portfolio-site embed when site touches client/employer work. Social/Creator tiers ($120/yr) explicitly EXCLUDE this use case. | **Locked as primary** |
+| **Per-track marketplace — Marmoset / Songtradr** | **Hand-picked match possible; per-track sync license; explicit copyright vesting** | $30–$200/track | **DOC-REVIEW ELEVATED: Second-tier-before-Suno** (was reserve-only). For a portfolio-piece recruiting artifact, copyright-vesting + non-AI source matters; $200/track is portfolio-piece-priced. |
+| Generative — Suno | Cuts to fit cascade arc; Pro/Premier tier covers commercial use | Suno **grants commercial-use license but does NOT warrant copyright vesting** in outputs. AI-generated audio disclosure required on some platforms. Subscription must be active at generation time. **DOC-REVIEW: for a portfolio recruiting artifact, "no copyright vesting" + AI-disclosure requirement is a substantive distribution risk** (trailer's whole thesis is "agentic-SDLC built this" + adding AI music = stacked AI-disclosure exposure). Disclosure obligation flows downstream to Phase 7 via `music_disclosure_required: true` flag in BEAT-SHEET.md preamble. | **Last-resort fallback** (was "expected fallback"). Only if Artlist Pro / Epidemic Pro 20–30-candidate pass + Marmoset/Songtradr hand-picked search both fail. |
 | Royalty-free library — Musicbed Individual / Business | Curated higher-end catalog | $329.89–$1,208.88/yr (Individual) or $1,099–$2,428.88/yr (Business). Over budget for portfolio-piece. | Alternate only |
-| Per-track marketplace — Marmoset / Songtradr | Hand-picked match possible | $30–$200/track | Reserve for hand-picked candidates if subscription catalog fails |
 | Licensed track (published artist) | Cultural caché if recognizable | $500–5000+ for sync license; not justified at portfolio-trailer scale | Declined |
+
+**DOC-REVIEW SOURCE-PRIORITY LADDER (was unordered prior):**
+1. **Artlist Pro / Epidemic Sound Pro** subscription catalog (primary).
+2. **Marmoset / Songtradr** per-track marketplace (second-tier, hand-
+   picked at $30-$200/track if (1) doesn't land after 20-30 candidates
+   per platform + 8-10 finalists audition).
+3. **Suno Pro** generative (last-resort only; triggers
+   `music_disclosure_required: true` flag for Phase 7 distribution
+   copy).
 
 **Step 2 — Candidate catalog (DEEPENING — search budget expanded).**
 
@@ -1772,16 +2324,28 @@ Specific reference points (from Archer / similar productions):
 - "Sukiyaki" Kyu Sakamoto — sad-cool brass instrumental cover
 - Mancini-era Pink Panther underscore — playful brass / vibraphone
 
-Candidate auditioning protocol (DEEPENING — expanded from 10–15 to
-20–30 to survive low brass/bossa-cascade-arc hit rate):
+Candidate auditioning protocol (DEEPENING + DOC-REVIEW: per-track
+marketplace search added as Tier 2 before Suno fallback):
 
-- **Artlist Pro:** pull 20–30 results across multiple tag intersections
-  ("spy/jazz", "bossa/instrumental", "mid-century/lounge").
-- **Epidemic Sound Pro:** pull 20–30 results, same tag spread.
-- Filter to 8–10 candidates matching BPM 100–130 + ≥95s + dynamic arc.
-- Audition each in 30s clips against BEAT-SHEET.md timing.
-- Narrow to 3 finalists. Three listening passes per finalist against
-  the full beat sheet. Lock 1.
+- **Tier 1 — Subscription catalog:**
+  - **Artlist Pro:** pull 20–30 results across multiple tag intersections
+    ("spy/jazz", "bossa/instrumental", "mid-century/lounge").
+  - **Epidemic Sound Pro:** pull 20–30 results, same tag spread.
+  - Filter to **8–10 candidates** (was "3 finalists" pre-doc-review;
+    expanded to give the per-finalist beat-sheet audition more depth
+    before locking) matching BPM 100–130 + ≥95s + dynamic arc.
+  - Audition each in 30s clips against BEAT-SHEET.md timing.
+  - Narrow to 3 finalists. Three listening passes per finalist against
+    the full beat sheet. **Lock 1 if any finalist clears §2.2 quality
+    bar; else escalate to Tier 2.**
+- **Tier 2 (DOC-REVIEW NEW) — Per-track marketplace:**
+  - **Marmoset:** hand-pick 5–8 candidates matching BPM 100–130 + brass/
+    bossa core ($30–$200/track range).
+  - **Songtradr:** hand-pick 5–8 candidates same criteria.
+  - Audition each against BEAT-SHEET.md timing.
+  - **Lock 1 if any candidate clears §2.2; else escalate to Tier 3
+    (Suno) with explicit `music_disclosure_required: true` flag.**
+- **Tier 3 — Suno generative (last resort; see Step 4).**
 
 **Step 2.5 — Track-shape decision (NEW per deepening).**
 
@@ -1821,15 +2385,16 @@ license-active-period, download path, BPM, key, duration, edit path
 (A/B/C from Step 2.5). License PDF (or terms-page archive) filed to
 `videos/trailer/sample-eval/beat-sheet/music-license.pdf`.
 
-**Step 4 — Generative fallback (DEEPENING — Suno-only, ToS-accurate).**
+**Step 4 — Generative fallback (DEEPENING + DOC-REVIEW: Suno is
+LAST-RESORT, not expected; disclosure flag wires to Phase 7).**
 
-Suno is the expected fallback if catalog audition pass at 20–30
-candidates per platform doesn't land. **Udio is OUT** (Nov 2025
-settlement disabled exports). Other 2026 generative options surveyed
-(Mubert, Beatoven, Loudly) — none Sterling-coded; documentation
-hygiene only, not real alternatives.
+Suno is the **last-resort** fallback per the doc-review-revised
+priority ladder (Step 1): catalog → per-track marketplace → Suno.
+**Udio is OUT** (Nov 2025 settlement disabled exports). Other 2026
+generative options surveyed (Mubert, Beatoven, Loudly) — none
+Sterling-coded; documentation hygiene only, not real alternatives.
 
-Suno commercial-use rights (March 2026 ToS):
+Suno commercial-use rights (ToS — check current at execution time):
 
 - Apply to **Pro ($10/mo) and Premier ($30/mo)** tiers — NOT a
   "Producer" tier (early-2025 draft naming, no longer used).
@@ -1840,12 +2405,19 @@ Suno commercial-use rights (March 2026 ToS):
   piece this means the trailer's music bed is un-copyrightable as
   a discrete asset.
 - AI-generated audio disclosure required on platforms that demand it.
-- Ongoing UMG + Sony litigation (summary judgment July 2026); WMG
-  settled Nov 2025. Independent-musician class actions in progress.
 
-Budget Pro $10/mo regardless of whether fallback fires (insurance).
-If fallback fires, retain subscription receipt + generation timestamp
-in `music-license.pdf`.
+**If Suno fires (DOC-REVIEW SECURITY-LENS):** the BEAT-SHEET.md
+preamble locks `music_disclosure_required: true`. Phase 7
+distribution copy MUST include AI-music disclosure language in the
+X post body + portfolio embed caption ("Music: AI-generated via
+Suno Pro" or equivalent). This is separate from the cold-decode
+copy about agentic-build origin — the disclosure obligations are
+distinct claims. Phase 7 plan must absorb the AI-music-disclosure
+obligation if Suno fires.
+
+Budget Pro $10/mo as last-resort insurance (no longer "expected
+fallback"). If fallback fires, retain subscription receipt +
+generation timestamp + the disclosure-flag in `music-license.pdf`.
 
 Prompt template:
 
@@ -1932,11 +2504,15 @@ treatment), Phase 0 Unit 0.5 (custom-font-in-MP4-export validated).
 
 - Edit: `videos/trailer/BEAT-SHEET.md` — name typography stack in
   preamble.
-- Create: `videos/trailer/public/fonts/` — local woff2 files (3 fonts).
+- ~~Create: `videos/trailer/public/fonts/`~~ — **REMOVED per
+  DOC-REVIEW ADR #15 fix.** Fonts already live at BURNED's
+  `public/fonts/` and are reachable via Phase 0 ADR #8
+  `setPublicDir('../../public')`. No copy step.
 - Create: `videos/trailer/src/hooks/useFonts.ts` — replaces stub from
-  Phase 0 Unit 0.1; loads the 3 fonts.
+  Phase 0 Unit 0.1; loads the 3 fonts from BURNED's `public/fonts/`.
 - Create: `videos/trailer/sample-eval/beat-sheet/typography.md` —
-  decision rationale + sample frames.
+  decision rationale + sample frames + Phase 4 spike outcome
+  (ADR #18 variable-axis range validation).
 
 **Approach:**
 
@@ -1958,28 +2534,52 @@ Sans + JetBrains Mono). Three reasons:
    episode") with BURNED's existing stack. If they don't, the typography
    stack isn't the problem — the composition is.
 
-**Step 2 — Font asset sourcing (DEEPENING FIX: variable fonts, not
-weight-specific files).**
+**Step 2 — Font asset sourcing (DEEPENING + DOC-REVIEW: variable
+fonts at BURNED's `public/fonts/`, NO copy step per ADR #15).**
 
 BURNED ships **three variable woff2 files** at `public/fonts/`
-(verified 2026-05-17 via Glob):
+(verified 2026-05-17 via `ls public/fonts/`):
 
 - `ClashDisplay-Variable.woff2` (weight range 200–700)
 - `GeneralSans-Variable.woff2` (weight range 200–700)
-- `JetBrainsMono-Variable.woff2` (weight range 100–800)
+- `JetBrainsMono-Variable.woff2` (weight range **100–900** —
+  source verified at `src/client/howtoplay/fonts-mono-htp.css:9`;
+  prior deepening draft said `100 800`, off-by-100 typo)
 
 There are NO weight-specific files like `clash-display-700.woff2` —
 the first-draft Phase 1 named files that don't exist (same shape as
-Phase 0's `burned-display.woff2` ghost-reference catch). Copy the 3
-variable files to `videos/trailer/public/fonts/`. Per-element weights
-(see Step 4 table) work against variable fonts at run-time via CSS
-`font-weight` — the axis resolves automatically.
+Phase 0's `burned-display.woff2` ghost-reference catch).
+
+**DOC-REVIEW ADR #15 FIX:** the previous draft prescribed copying
+the 3 variable files to `videos/trailer/public/fonts/`. ADR #15
+(locked 2026-05-17 per Phase 3 deepening, `roadmap.md:143`)
+explicitly states *"Files at `videos/trailer/public/...` are
+UNREACHABLE to `staticFile()` during render"* — Phase 0 ADR #8
+configured `Config.setPublicDir('../../public')` so Remotion reads
+through BURNED's project-root `public/` directory. The copy step
+would have produced font 404s at render time. **NO COPY** —
+`useFonts.ts` reads the fonts directly from BURNED's `public/
+fonts/` via `staticFile('fonts/ClashDisplay-Variable.woff2')`,
+etc.
 
 **Sub-issue:** BURNED's JetBrains Mono is declared separately in two
 per-bundle stylesheets (`src/client/shared/fonts-mono.css` for the
 board, `src/client/howtoplay/fonts-mono-htp.css` for the HTP page).
 The trailer creates its own scope via `useFonts.ts` below — does NOT
 import either BURNED stylesheet.
+
+**ADR #18 spike caveat:** Remotion's `loadFont()` docs don't
+explicitly document variable-axis range syntax (e.g., `'100 900'`).
+The DOM `FontFace` constructor accepts range syntax per CSS Fonts
+Module Level 4 and BURNED's CSS uses it, but Remotion's worker-
+thread Chromium that produces frame PNGs may resolve axes
+differently than studio preview. **Phase 4 Unit 4.0 reserves a
+60-min spike** to validate variable-axis weight resolution in MP4
+export against per-weight static woff2 fallback. The typography
+lock in Phase 1 is **provisional pending Phase 4 spike outcome**
+— if the spike fails, Phase 1 reopens to ship per-weight static
+woff2 files (5 weights × 3 families = 15 files via
+`pyftsubset --variation-instance="wght=N"`).
 
 **Step 3 — `useFonts.ts` implementation (DEEPENING — Promise.all
 pattern per Phase 0 prescription).**
@@ -2017,7 +2617,7 @@ export function useFonts(): Promise<unknown> {
     loadFont({
       family: 'JetBrains Mono',
       url: staticFile('fonts/JetBrainsMono-Variable.woff2'),
-      weight: '100 800',
+      weight: '100 900',  // matches src/client/howtoplay/fonts-mono-htp.css:9; was '100 800' (typo)
       format: 'woff2',
     }),
   ]);
@@ -2107,12 +2707,15 @@ Phase 4 may surface that additional ochre steps (e.g., `--color-ochre-11`,
 **Verification:**
 
 - `useFonts.ts` exists with Promise.all pattern; typecheck clean.
-- **3 variable woff2 files** in `videos/trailer/public/fonts/`
-  (ClashDisplay-Variable, GeneralSans-Variable, JetBrainsMono-Variable).
+- **3 variable woff2 files** verified at BURNED's `public/fonts/`
+  (ClashDisplay-Variable, GeneralSans-Variable, JetBrainsMono-
+  Variable). NO copy to `videos/trailer/public/fonts/` per ADR #15.
+- `staticFile('fonts/...')` paths resolve through Phase 0 ADR #8
+  `setPublicDir('../../public')`.
 - Typography assignments documented per element with variable-axis
   weights resolving correctly.
-- `typography.md` records decision + sample frames + Phase 4 micro-
-  tune notes if any.
+- `typography.md` records decision + sample frames + Phase 4 spike
+  outcome (ADR #18 variable-axis range validation).
 
 ---
 
@@ -2136,7 +2739,8 @@ includes R15 stamps), Unit 1.8 (typography assigned).
 
 **Approach:**
 
-**Step 1 — R15 instance table (DEEPENING — #4 differentiated from #3).**
+**Step 1 — R15 instance table (DEEPENING + DOC-REVIEW R15 #5
+COLD-DECODE CLOSING CARD ADDITION).**
 
 The first-draft Phase 1 had #3 ("AUTONOMOUS FIELD UNIT — ASSET
 DELIVERED") and #4 ("AGENT-BUILT, ARCHER-GRADE") both carrying the
@@ -2146,16 +2750,28 @@ sticker, not a new claim. **#4 shifts to status-grammar — the closing
 chrome asserts operational STATUS (the asset is field-ready), not
 re-treads the origin question (handled at #1 + #3).**
 
+**DOC-REVIEW PRODUCT-LENS RE-OPEN (Briggsy-decided):** R15 #1–#4
+serve in-world diegetic readings + engineering-peer-confirmation
+decode, but the deepening admitted *"R15 alone does NOT carry the
+cold-decode"* — meaning the trailer-as-artifact-in-isolation
+(embedded, screenshot-shared, downloaded for portfolio) lost the
+central engineering claim. Phase 7 distribution copy was named as
+the carrier, but the trailer can escape its wrapper. **NEW R15 #5
+closing card at frame 2835 carries the literal cold-decode work**;
+R15 #1–#4 stay in-world diegetic.
+
 | # | Frame | Scene | Copy | Treatment | Decode axis |
 |---|-------|-------|------|-----------|-------------|
-| 1 | 150 | S01 cold open | **"OPERATION PENDLETON / CASE FILE 02 / METHOD: AUTONOMOUS"** | Classification stamp slap, lower-left, JetBrains Mono 700 28px, `--color-ochre-9` ink on `--color-cream-12` stamp paper | Origin (method is autonomous) |
-| 2 | 1680 | S04 cascade | **"OPERATIVE [REDACTED] — METHOD REPEATABLE"** | Comms-ticker pulse, bottom edge, JetBrains Mono 500 22px, scrolling left-to-right | Reproducibility claim |
-| 3 | 1950 | S04 stacked payoff | **"AUTONOMOUS FIELD UNIT — ASSET DELIVERED"** | Dossier stamp slap (heavy 16-frame slap, overprints HTP hero), JetBrains Mono 700 38px, `--color-burned-fire` ink | Origin (R3 payoff carrier) |
-| 4 | 2820 | S06 closing | **"OPERATION STATUS: FIELD-READY"** (status grammar; replaces former "AGENT-BUILT, ARCHER-GRADE") | Subhead under BURNED logo, JetBrains Mono 700 32px, `--color-ochre-9` ink | **Status (asset is ready), not origin** |
+| 1 | 150 | S01 cold open | **"OPERATION PENDLETON / CASE FILE 02 / METHOD: AUTONOMOUS"** | Classification stamp slap, lower-left, JetBrains Mono 700 28px, `--color-ochre-9` ink on `--color-cream-12` stamp paper | In-world diegetic (origin: method is autonomous) |
+| 2 | 1680 | S04 cascade | **"OPERATIVE [REDACTED] — METHOD REPEATABLE"** | Comms-ticker pulse, bottom edge, JetBrains Mono 500 22px, scrolling left-to-right | In-world diegetic (reproducibility claim) |
+| 3 | 1950 | S04 stacked payoff | **"AUTONOMOUS FIELD UNIT — ASSET DELIVERED"** | Dossier stamp slap (heavy 16-frame slap, overprints HTP hero), JetBrains Mono 700 38px, `--color-burned-fire` ink | In-world diegetic (R3 payoff carrier) |
+| 4 | 2820 | S06 closing | **"OPERATION STATUS: FIELD-READY"** (status grammar; replaces former "AGENT-BUILT, ARCHER-GRADE") | Subhead under BURNED logo, JetBrains Mono 700 32px, `--color-ochre-9` ink | In-world diegetic (status: asset is ready) |
+| **5** | **2835** | **S06 closing card** | **"DRAFTED, RENDERED, AND SHIPPED BY AUTONOMOUS AGENTS."** + 30%-opacity subhead **"Briggsy didn't write this part either."** | **Closing-card stamp slap (8-frame standard slap; lands 15 frames after R15 #4); subhead in JetBrains Mono 500 italic 22px at 30% opacity. Main line JetBrains Mono 700 32px in `--color-ochre-9` ink. Both lines centered below R15 #4.** | **Cold-decode literal: cold viewer in trailer-isolation reads the autonomous-build claim explicitly. Subhead echoes promoted S01 cold-open line ("Briggsy didn't write this one either") as bookend.** |
 
 **Frame 2820 (was 2800) per Unit 1.10 deepening cadence — logo lands
 at 2780, settles for 40 frames, then R15 #4 stamps onto the closing
-card. Gives the logo breathing room.**
+card.** Frame 2835 (R15 #5) lands 15 frames after R15 #4; both hold
+through the final 15 frames until hard cut to black at 2850.
 
 **Step 2 — R15 brainstorm-mandate trace.**
 
@@ -2164,26 +2780,36 @@ open frame, at least one in the cascade or closer."
 
 - ≥1 in cold-open: #1 (frame 150 in S01). ✓
 - ≥1 in cascade or closer: #2 (cascade comms-ticker, frame 1680), #3
-  (cascade stacked payoff, frame 1950), #4 (closing, frame 2820).
-  ✓ — three signals across cascade + closer.
+  (cascade stacked payoff, frame 1950), #4 (closing status, frame
+  2820), **#5 (closing-card cold-decode, frame 2835)**. ✓ — four
+  signals across cascade + closer.
 
-Total: 4 R15 signals. Brainstorm minimum is "at least two." BURNED
-ships 4 for redundancy on the no-context-viewer decode mechanism.
+**Total: 5 R15 signals** (was 4 pre-doc-review). Brainstorm minimum
+is "at least two." BURNED ships 5 for redundancy on the no-context-
+viewer decode mechanism: #1-#4 carry in-world diegetic
++ engineering-peer-confirmation; #5 carries the literal cold-decode
+load explicitly.
 
-**Step 3 — In-world authenticity check (DEEPENING — cold-viewer
-decode gap acknowledged).**
+**Step 3 — Layered decode model (DOC-REVIEW PRODUCT-LENS REOPEN
+CLOSED — R15 #5 now carries cold-decode).**
 
-Each copy line must read as in-character Pendleton-agency chrome
-(passes R6 vocab discipline) while remaining engineering-peer-decodable
-(carries the agentic-SDLC origin signal). **The decode operates on
-two layers:** (a) the engineering peer who already knows the trailer
-is about agentic SDLC reads the R15 chrome as confirmation; (b) the
-cold Twitter/X viewer reads the chrome as in-world flavor. **R15 alone
-does NOT carry the cold-decode** — Phase 7 distribution copy (tweet
-body, post description, pinned-reply context) carries the explicit
-"built by autonomous agents" claim. R15 in the trailer = in-world +
-engineering-peer-confirmation. Cold-viewer signal lives in the
-metadata Phase 7 owns.
+R15 chrome operates on **three layers** post-doc-review:
+
+- **(a) In-world diegetic:** the cold Twitter/X viewer with no
+  context reads the chrome as Pendleton-agency flavor (classification
+  stamps, comms-ticker pulses, operation-status briefing terminals).
+  R15 #1–#4 carry this load.
+- **(b) Engineering-peer confirmation:** the engineering peer who
+  already knows the trailer is about agentic SDLC reads R15 #1–#4
+  as confirmation alongside the in-world reading. The decode lands
+  via wordplay ("METHOD: AUTONOMOUS" reads both as briefing-room
+  classification AND as autonomous-build claim).
+- **(c) Literal cold-decode (NEW — R15 #5):** a cold viewer in
+  trailer-isolation (no Phase 7 wrapper, no engineering context)
+  reads R15 #5's closing card unambiguously: *"DRAFTED, RENDERED,
+  AND SHIPPED BY AUTONOMOUS AGENTS."* This is the safety net that
+  ensures the trailer-as-artifact-in-isolation carries the central
+  engineering claim regardless of distribution context.
 
 Per-instance check:
 
@@ -2208,6 +2834,15 @@ Per-instance check:
   loop on the *quality* claim (the asset works) rather than the
   *origin* claim already established by #1 + #3. Reads as "this is
   shipping-quality" without re-treading "who built it." ✓
+- **#5 "DRAFTED, RENDERED, AND SHIPPED BY AUTONOMOUS AGENTS." +
+  "Briggsy didn't write this part either."**: NOT in-world — this is
+  the closing-card author-stamp that breaks the fourth wall
+  deliberately. The diegetic frame closes with R15 #4; #5 is the
+  acknowledgment that the trailer is itself an autonomous-agent
+  artifact. Subhead echoes the S01 cold-open line ("Briggsy didn't
+  write this one either") as bookend — the trailer opens with the
+  claim and closes confirming it. ✓ — carries cold-decode
+  unambiguously without context.
 
 **Step 4 — Color blind safety.**
 
@@ -2265,8 +2900,88 @@ locked).
 
 **Step 1 — Visual environment per scene.**
 
+**S01 — Cold Open.** Frame composition (DOC-REVIEW DESIGN-LENS
+NEW — previous Phase 1 had no S01 visual spec; Unit 1.10 covered
+S02/S03/S06 only; Phase 4 implementer would default to generic
+AI-aesthetic black-background card-flash montage).
+
+Total scene budget: 210 frames / 7.0s. Cold-open speaker VO drops
+at frame 60 (2.0s in) per Step 2 of Unit 1.2 — the visual builds
+through the first 2 seconds, the line lands, the visual settles
+into S02 hand-off.
+
+- **Background (full-bleed, frames 0–60):** **NOT a black slate.**
+  Mahogany desk surface (`--color-ochre-3`) but dim — the briefing
+  room is pre-establishing in shadow, as if the lights haven't
+  come up yet. **Venetian-blind shadow bands at 1.5–2px/frame
+  motion** establish across the desk (same shadow grammar as
+  S02/S03 — visual continuity primer). Pendleton crest watermark
+  at 15% opacity (much dimmer than S02's 25%) top-left.
+- **Foreground card flash (frames 0–60):** Six BURNED card backs
+  flash in rapid succession over the dimmed-desk background. **Per-
+  card cadence: 6 frames each (200ms), no easing — hard cuts.**
+  Cards: `burned.webp` last (frame 50, 10-frame hold), preceded
+  by `intercepted`, `burn-the-files`, `extraction`, `back-channel`,
+  `falsify-intel` (random pre-shuffled order; locked sequence in
+  `BEAT-SHEET.md`). Each card occupies 60% of safe-square center,
+  hard-edged drop shadow at `--color-ochre-3` 40% opacity. **NOT
+  a slow reveal — a rapid-fire deck-shuffle establishing the
+  trailer's primary asset (operations) in cinematic compressed
+  time.**
+- **Cold-open speaker VO drops (frame 60):** dimmed-desk + last
+  card frame (`burned.webp`) held under the line. Line completes
+  ~frame 215 (within S01 boundary at frame 210 if speech runs at
+  2.5 wps; the 0.5s of overlap into S02 is intentional — the line
+  bridges the cut).
+- **R15 #1 stamp (frame 150):** classification stamp slap onto
+  the held `burned.webp` card. Lower-left position, 8-frame
+  standard slap. JetBrains Mono 700 28px, `--color-ochre-9` ink
+  on `--color-cream-12` stamp paper. The stamp peels into S02 as
+  the venetian-blind lights "come up" — same shadow grammar
+  continues, but mahogany desk goes from dim (S01) to fully lit
+  (S02). This is the visual transition into the briefing.
+- **BURNED logo treatment (frame 60–210):** *NOT* the full
+  closing-card BURNED logo. S01 shows the BURNED card art (the
+  game asset) as the focal element during the cold-open VO,
+  NOT the wordmark logo. The wordmark only appears in S06
+  closing card at frame 2780 (where it lands as the trailer's
+  capstone). **Differential**: S01 establishes BURNED as a card
+  inside the deck (in-world); S06 establishes BURNED as the
+  game's title (out-of-world bookend). The two BURNED
+  treatments do different jobs.
+- **Brass hook (audio, frame 0):** the music bed's intro brass
+  hook hits at frame 0 — full-volume open. The hook completes at
+  frame 60 ramping down to 40% as the cold-open VO drops.
+
+**Anti-pattern guard:** S01 does NOT default to generic action-
+trailer aesthetics (cards slamming in with motion blur / glow,
+dramatic single-color background, title appears). The Archer-coded
+opener is *compressed restraint* — six hard-cut flashes against a
+dim establishing shot, then a single line over the held last frame.
+
 **S02 — Briefing Setup.** Frame composition (DEEPENING — depth-plane
 foreground element added; shadow motion bumped for H.264 survival).
+**DOC-REVIEW LAYERED-SIMULTANEOUS GUARD:** the same ">2 elements at
+full visual weight" rule the cascade rewrite applied now applies
+here. Previous draft listed 8 elements competing for 12 seconds
+(mahogany + venetian blinds + depth-plane foreground + open dossier
++ Pendleton crest + comms-ticker + CASE BANNER + R15 stamp), which
+fails §2.2 the same way the cascade's layered-simultaneous draft
+did. **Sequencing rule:** at any given frame, ≤2 elements at full
+visual weight; others at 30–40% chrome or dim background. Specific
+sequencing:
+- Frames 210–240: venetian-blind shadow establishes (single focal),
+  dossier closed in midground (dim).
+- Frames 240–300: dossier opens (60-frame ease, single focal action;
+  shadow continues at chrome level).
+- Frames 300–500: Dash VO carries the scene; dossier interior text
+  + CASE BANNER are the two simultaneous focal elements; comms-
+  ticker stays at chrome level (rotates idle text quietly).
+- Frames 500–570: case-sheet header settles; depth-plane foreground
+  element + Pendleton crest never reach full weight (they're
+  texture).
+- R15 #1 stamp lives in S01 tail, NOT S02 (slap settles into S02
+  head — already counted at S01 frame 150).
 
 - **Background (full-bleed):** mahogany desk surface (`--color-ochre-3`
   / `--color-ochre-4` per primitives.css; was misnamed `--color-mahogany`
@@ -2293,9 +3008,25 @@ foreground element added; shadow motion bumped for H.264 survival).
 - **Midground center:** an open dossier folder (Pendleton crest on
   the cover before it opens). Folder opens via 60-frame ease over
   frames 240–300 with `EASE_DRAWER` curve (iOS-drawer-like — fits
-  the "object opens" motion better than ease-out). Inside: briefing
-  case-sheet with "OPERATION PENDLETON / CASE FILE 02" header +
-  Dash's name + clearance level.
+  the "object opens" motion better than ease-out). **Inside the
+  dossier (DOC-REVIEW DESIGN-LENS CONTENT SPEC):**
+  - **Header (Clash Display 700 36px, `--color-cream-1` ink):**
+    "OPERATION PENDLETON / CASE FILE 02"
+  - **Operative line (General Sans 600 22px):** "ASSIGNED ASSET:
+    D. BARLOWE"
+  - **Clearance line (JetBrains Mono 700 18px):** "CLEARANCE:
+    ALPHA-SEVEN"
+  - **Case-file date (JetBrains Mono 500 16px):** "FILED:
+    [REDACTED] / CASE OPENED: [REDACTED]"
+  - **Classification chevron (JetBrains Mono 700 14px, top-right
+    of case-sheet):** "EYES-ONLY · NOT FOR REDISTRIBUTION"
+  - **Redaction bars** (3 horizontal black bars, `--color-charcoal-1`,
+    covering "sensitive" fields the viewer doesn't need to read)
+  Phase 3 owns rendering this as a layered SVG/PNG asset OR Phase
+  4 owns it as JSX text overlay (Phase 4 decides based on chrome-
+  motion needs — if the case-sheet text needs to animate
+  independently of the dossier-open, JSX wins; if it's static-
+  on-paper, asset wins).
 - **Background chrome corners:**
   - **Top-left:** Pendleton crest watermark, ~120px wide, ~25% opacity.
   - **Top-right:** comms-ticker idle text (rotating through the
@@ -2311,6 +3042,22 @@ foreground element added; shadow motion bumped for H.264 survival).
   CASE BANNER reads clearly at 64px Clash Display 700 against the
   mahogany background; Phase 4 may need a parchment-tone backplate
   if compression eats the contrast.
+
+  **CASE BANNER per-scene content (DOC-REVIEW DESIGN-LENS NEW —
+  prior draft never declared the 5 GameTable.tsx text fields'
+  content for trailer scenes):**
+
+  | Scene | label | operation | sub | divider | footer |
+  |-------|-------|-----------|-----|---------|--------|
+  | S02 | "CASE FILE" | "OPERATION PENDLETON" | "BRIEFING ROOM · BUREAU CHIEF M. PENDLETON" | "—" | "02 / EYES-ONLY" |
+  | S03 | "CASE FILE" | "OPERATION PENDLETON" | "MISSION DOSSIER · ASSET ROSTER" | "—" | "02 / EYES-ONLY" |
+  | S06 | "CASE FILE" | "OPERATION PENDLETON" | "DEBRIEF · STATUS UPDATE" | "—" | "02 / FIELD-READY" |
+
+  The label / operation / divider / footer hold steady across all
+  three briefing-room scenes (S02 establishes them, S03 carries
+  them as continuity, S06 footer mutates "EYES-ONLY" → "FIELD-
+  READY" mirroring the R15 #4 status arc). The `sub` field
+  refreshes per scene to indicate the current briefing phase.
 - **R15 stamp** (#1) animates in at frame 150 — pre-Dash-speech,
   8-frame stamp slap per `transitions.ts` STAMP_SLAP_FRAMES.
 - **Dash character art**: NOT visible in S02. Dash is the briefer
@@ -2335,14 +3082,31 @@ room frame STAYS; deck mosaic appears INSIDE the dossier).
   mosaic. R1 in-world briefing spine is preserved visually for the
   full 16s of S03.**
 - **Operative roster overlay:** at frame 750, **6 operative portrait
-  cards (Dash + Vera + Otto + Janet + Neal + Sable; Agent X with
-  REDACTED-bar over face for the 7th slot)** slide in along the
-  right edge — right-edge halo cluster sets up S04's halo expansion.
-  This matches the trailer's stat-4 narration ("seven on the roster,
-  six in the deck, one in the basement") visually: 6 named portraits
-  + 1 redacted = 7 personnel; Otto is named-and-present per ActRoster
-  but his "in the basement" status is implied by the unrelated
-  research-budget aside in the actual dossier (off-trailer context).
+  cards** slide in along the right edge. **DOC-REVIEW LOCK:** the 6
+  portraits are the 6 deck operatives — `dash-barlowe`, `vera-khan`,
+  `sable-ashworth`, `janet-broadside`, `neal-proctor`, `agent-x`
+  (Agent X with REDACTED-bar over face). Otto is NOT in the
+  portrait cluster (he's not in the deck — matches the Stat 4 line
+  "Six in the deck. One on the research budget."). The deck-of-6
+  visual primes Stat 4's verbal "Six in the deck" payoff.
+- **S03→S04 transition resolution (DOC-REVIEW DESIGN-LENS RECONCILE):**
+  The 6 operative portraits EXIT at the S03→S04 dossier-page wipe
+  (frame 1034–1050, 16-frame wipe — see Unit 1.4). They do NOT
+  persist into S04's halo. **S04's right-edge halo is 6 ACTION
+  cards from the 11-card action set**, locked to:
+  - `burned.webp` (the game's namesake — must appear in cascade)
+  - `intercepted.webp` (R5 scream cue context — Dash interrupts
+    when an intercept card draws)
+  - `burn-the-files.webp` (literal R6 "burn" verbal callback)
+  - `extraction.webp` (Pendleton mission-vocabulary primer)
+  - `intel-briefing.webp` (matches S02 dossier-open setup)
+  - `direct-order.webp` (high-stakes operation primer for S05
+    gameplay)
+  The remaining 5 action cards (`back-channel`, `call-in-a-favor`,
+  `falsify-intel`, `go-dark`, `reassign`) DO NOT enter the trailer
+  cascade — they remain in the S03 dossier mosaic context only
+  (the 4×6 grid revealed inside the dossier viewport per Unit
+  1.10 S03 Step 1).
 - **Comms-ticker continues** (idle text at frame head, switches to
   "ACTIVE BRIEFING" or similar at frame ~870 to match the second VO
   line).
@@ -2368,8 +3132,14 @@ R15 cadence retimed for breathing room).
   slaps onto the closing card (16-frame heavy slap — same envelope
   as the payoff stamp, treating the closing as the trailer's second
   "weight" moment).
-- **Frame 2836:** Final brass sting on the music bed (volume 60→100%
-  ramp lands here); logo + stamp hold static.
+- **Frame 2835 (DOC-REVIEW NEW — R15 #5 cold-decode closing card):**
+  R15 #5 stamp slaps below R15 #4 ("DRAFTED, RENDERED, AND SHIPPED
+  BY AUTONOMOUS AGENTS." + 30%-opacity subhead "Briggsy didn't write
+  this part either."). 8-frame standard slap (lighter envelope than
+  R15 #4 to maintain hierarchy). The subhead echoes the promoted
+  S01 cold-open line as bookend.
+- **Frame 2843:** Final brass sting on the music bed (volume 60→100%
+  ramp lands here); logo + R15 #4 + R15 #5 all hold static.
 - **Frame 2850:** Hard cut to black. End.
 
 **Step 2 — Briefing-room grammar inventory.**
@@ -2442,37 +3212,53 @@ The 1080×1080 central square within 1920×1080 must contain:
 - **Interaction graph:** BEAT-SHEET.md is the central HUMAN contract;
   `script.ts` is the parallel MACHINE contract that downstream phases
   parse. Phase 2 (Voice Pipeline) loads `BURNED_TRAILER_LINES` from
-  `script.ts` + cadenceAdapter annotations. Phase 3 (Visual Asset
-  Prep) loads the visual inventory + the goofy-stats list + the HTP
-  rendering method + the briefing-room composition from BEAT-SHEET.md
-  + emits trace-video MP4 conditional on Phase 3-entry perceptual
-  gate (per Unit 1.5 Step 6 deepening). Phase 4 (Remotion Composite
-  Build) imports `timing.ts`, `transitions.ts`, builds scene-internal
-  overlay components for stamp slap / dossier-page wipe / iris wipe
-  (bare `<Series>` composition, no `<TransitionSeries>` presentations).
-  Phase 5 (Gameplay Capture) ships `gameplay-raw.mp4` + `gameplay-
-  markers.json` declaring the in-point + BURNED-draw-marker frame;
-  Phase 4 trims to land marker at scene-relative frame 160 (~5.3s
-  into S05). Phase 6 (Final Render + QA) uses the beat-sheet for QA
-  criteria. Phase 7 (Distribution) reads the X-native cutdown brief
-  from BEAT-SHEET.md notes (Unit 1.5 + 1.9 surface candidate cutdown
-  beats) AND carries the explicit "built by autonomous agents" cold-
-  viewer decode in post copy (R15 chrome alone doesn't carry the
-  cold decode — that gap is acknowledged at Unit 1.9 Step 3).
+  `script.ts` + cadenceAdapter annotations + consumes the 7 extended
+  Line fields (`cueType`, `expectedFrames`, `leadFramesHint`,
+  `driftToleranceOverride`, `fadeInMs`, `fadeOutMs`,
+  `skipSilenceremove`) per Phase 2 deepening declared surface. Phase
+  3 (Visual Asset Prep) loads the visual inventory + the goofy-stats
+  list + the HTP rendering method + the briefing-room composition
+  from BEAT-SHEET.md + emits trace-video MP4 conditional on Phase 3-
+  entry perceptual gate (per Unit 1.5 Step 6 deepening). Phase 4
+  (Remotion Composite Build) imports `timing.ts`, `transitions.ts`,
+  builds scene-internal overlay components for stamp slap / dossier-
+  page wipe / iris wipe (bare `<Series>` composition, no
+  `<TransitionSeries>` presentations). Phase 5 (Gameplay Capture)
+  ships `gameplay-raw.mp4` + the **extended `gameplay-markers.json`
+  contract** (DOC-REVIEW SECURITY-LENS FIX) declaring: `inPoint`,
+  `burnedDrawFrame`, `player_names_scrubbed: boolean`,
+  `capture_resolution: '1920x1080'|'1080x1920'`,
+  `source_seat_count: number`. Phase 4 trims to land marker at
+  scene-relative frame 160 (~5.3s into S05) AND hard-fails the
+  build if `player_names_scrubbed: false` without
+  `consent_records[]`. Phase 6 (Final Render + QA) uses the beat-
+  sheet for QA criteria + screens against §2 with a critical
+  engineering peer (cascade-content open risk). Phase 7
+  (Distribution) reads the X-native cutdown brief from BEAT-SHEET.md
+  notes (Unit 1.5 + 1.9 surface candidate cutdown beats).
+  **DOC-REVIEW PRODUCT-LENS REOPEN CLOSED:** R15 #5 closing card
+  (frame 2835) carries the trailer-in-isolation cold-decode load
+  explicitly. Phase 7 distribution copy provides the wrapper, but
+  the trailer-as-artifact stands on its own without it.
 
 - **Cross-phase deepening dependencies surfaced:**
   - **Phase 3 must deepen with BOTH static-PNG AND trace-video paths
     budgeted** (Unit 1.5 Step 6). The first-draft Phase 3 plan budgets
     static-only; that's a load-bearing gap.
-  - **Phase 5 must ship `gameplay-markers.json` contract** declaring
-    raw-capture in-point + BURNED-draw-frame. Phase 1 locks the
-    contract here; Phase 5 plan must absorb it in its deepening.
+  - **Phase 5 must ship extended `gameplay-markers.json` contract**
+    declaring raw-capture in-point + BURNED-draw-frame +
+    player_names_scrubbed + capture_resolution + source_seat_count.
+    Phase 1 locks the contract here; Phase 5 plan must absorb it +
+    commit to a scrub path (synthetic names OR consent records).
   - **Phase 2 must consume `script.ts` not Markdown** for line set;
-    BEAT-SHEET.md drift is detected by `script.test.ts`.
-  - **Phase 7 must carry cold-viewer decode** in post copy (engineering
-    claim explicit). Phase 1 R15 chrome handles engineering-peer
-    confirmation; cold-decode lives in Phase 7's distribution
-    metadata.
+    BEAT-SHEET.md drift is detected by `script.test.ts` via id-
+    comment-marker pattern (DOC-REVIEW simplification).
+  - **Phase 4 Unit 4.0 spike must validate variable-axis font weight
+    resolution** in MP4 export (ADR #18); Phase 1 typography lock
+    is provisional pending outcome.
+  - **Phase 6 QA must screen against §2 with a critical engineering
+    peer** for cascade-content water-beads outcome (cascade content
+    open risk).
 
 - **Error propagation:** If Unit 1.2's R6 grep fails, the script is
   revised in Unit 1.2 itself — Phase 2 doesn't start until the script
@@ -2499,102 +3285,86 @@ The 1080×1080 central square within 1920×1080 must contain:
 
 ---
 
-## Risks & Dependencies (DEEPENING — refined with multi-agent
-findings)
+## Risks & Dependencies (DEEPENING + DOC-REVIEW PASS — false-Resolved
+claims retracted + new open risks declared)
 
 | Risk | Likelihood | Impact | Mitigation |
 |------|-----------|--------|------------|
-| **Per-cue wps unbuildable for Sterling-coded delivery** | Low (after deepening rewrite) | High (Phase 2 cannot generate WAVs) | Unit 1.2 Step 5 rewrite — per-cue wps validated ≤ 2.6 ceiling. Phase 1 lock requires every cue's wps computed + verified before Phase 2 ships. |
-| **R6 grep regex broken (POSIX ERE lookahead unsupported)** | Resolved | High (gate silently always-passes) | Unit 1.2 Step 9 rewrite — rg --pcre2 OR 2-pass `agent`-carve-out approach. Vocabulary expanded from 11 → 25 terms. Verified on Briggsy's Windows shell. |
-| Narration script word count overshoots scene budget | Medium | Medium | Per-scene mean wps + per-cue wps validation in Unit 1.2 Step 8 + Step 5; trim iteratively. |
-| Cold-read gate for R11 fails | Medium | Medium | R11 cuts cleanly; pre-drafted bridge line in Unit 1.6 Step 4 (candidates A + B). Soft-fail handling (single weak stat swaps from pool) added per deepening. |
-| Music sourcing returns no clean candidates | **Medium-High** (95s cascade-arc + brass/bossa is a low-hit-rate ask) | Medium | **Suno Pro $10/mo budgeted as expected fallback, not exceptional.** Audition pass 20-30 candidates per platform (up from 10-15). Step 2.5 track-shape decision committed before search. |
-| HTP capture under-delivers visually in static PNG | **Medium** (GSAP ScrollTrigger animations frozen in PNG; only translateY scrolling reads as "motion") | Medium | **Phase 3 BUDGETS BOTH paths** per Unit 1.5 Step 6 deepening — static-PNG primary, trace-video conditional on Phase 3-entry perceptual gate. Phase 3 plan must deepen with this conditional. |
+| **Per-cue wps unbuildable for Sterling-coded delivery** | Low (after DOC-REVIEW rewrite of payoff line; deepening claim was false-Resolved — 16-word line at 1950 was 8× over ceiling) | High (Phase 2 cannot generate WAVs) | Unit 1.2 Step 5 doc-review rewrite — payoff collapsed to 4-word truth-collision fitting 60-frame window at 2.0 wps controlled-deadpan. Phase 1 lock requires every cue's wps computed + verified before Phase 2 ships. Phase 2 first-batch TTS validates against the Phase-1-authored band. |
+| **R6 grep regex broken (POSIX ERE lookahead unsupported) + Windows portability** | Resolved (DOC-REVIEW Windows port) | High (gate silently always-passes) | Unit 1.2 Step 9 rewrite — PowerShell-native 2-pass approach (rg + Select-String -NotMatch); $env:TEMP path not /tmp; ripgrep-pcre2 install-check documented. R6 vocab list documented by category (9 categories, 25 terms). Scope extended to scan cascade-composition.md visual stat captions, not just VO body. |
+| Narration script word count overshoots scene budget | Low (after DOC-REVIEW Step 8 recompute against actual lines) | Medium | Per-scene mean wps + per-cue wps validation in Unit 1.2 Step 8 + Step 5; word counts recomputed mechanically against actual lines post-doc-review rewrites. Total: 209 words / 2.30 mean wps / 95.0s. |
+| Cold-read gate for R11 fails | Medium | Medium | R11 cuts cleanly; pre-drafted bridge line in Unit 1.6 Step 4 (candidates A + B). DOC-REVIEW: consensus threshold rewritten to per-reviewer-floor (≥2 of 3 reviewers each score ≥1 on same pairing) — old sum-of-3 threshold passed with N=1 zealous reviewer. |
+| Music sourcing returns no clean candidates | **Medium-High** (95s cascade-arc + brass/bossa is a low-hit-rate ask) | Medium | DOC-REVIEW HARDENED — per-track marketplace ($30–$200 Marmoset/Songtradr) elevated to second-tier-before-Suno. Suno fallback adds `music_disclosure_required: true` flag to BEAT-SHEET.md preamble for Phase 7. Audition pass 20-30 candidates per platform + 8-10 finalists (was 3). Step 2.5 track-shape decision committed before search. |
+| HTP capture under-delivers visually in static PNG | **Medium** (GSAP ScrollTrigger animations frozen in PNG; only translateY scrolling reads as "motion") | Medium | **Phase 3 BUDGETS BOTH paths** per Unit 1.5 Step 6 deepening — static-PNG primary, trace-video conditional on Phase 3-entry perceptual gate. Phase 3 plan must deepen with this conditional. DOC-REVIEW: UMB capture-htp-scroll.ts confirmed selector-agnostic; no adaptation work needed beyond URL change. |
 | R5 cut, cold-open speaker re-selection | Low (covered by Phase 0 Unit 0.6 outcome) | Low (BEAT-SHEET.md reflects whichever speaker locked) | Per Unit 1.3 Step 1 outcome matrix (4 reachable rows; Cut+Vera unreachable). |
 | Cascade VO timing doesn't line up with visual cues | Medium | Medium | Frame-accurate cue table in Unit 1.5 Step 2; per-cue wps validated; Phase 4 verification via studio playback. |
-| **Cascade composition reads as AI-slop, not Archer** | **Resolved (was load-bearing)** | High (fails §2.2) | Unit 1.5 Step 1-2 deepening rewrite — sequential revelation with focal hierarchy replaces layered-simultaneous. Anti-pattern guard: no frame except 1950 payoff has >2 elements at full visual weight. |
-| Stacked-payoff stamp slap competes visually with HTP hero overprint | Low (after Step 5 deepening) | High (R3 fail) | HTP hero drops to 50% at 1950 to cede focus to the heavy slap; stamp is the sole focal point at the trailer's only "everything at once" moment. |
-| **Variable fonts not weight-specific files** | Resolved | High (first render 404s) | Unit 1.8 Step 2 deepening — 3 variable woff2 files (ClashDisplay/GeneralSans/JetBrainsMono-Variable), Promise.all loading pattern per Phase 0 prescription. |
-| **CaseBanner.tsx ghost-reference** | Resolved | Medium | Source-of-truth re-anchored to `GameTable.tsx:67-88` inline `.caseBanner` aside; Unit 1.10 Patterns section corrected. |
-| **6-vs-7 operative count mismatch** | Resolved | Medium (freeze-frame viewer audit catches it) | Stat 4 reframed to "Seven on the roster, six in the deck, one in the basement. Don't ask." per ActRoster:153-158 Otto-exclusion aside. |
+| **Cascade composition reads as AI-slop, not Archer** | **Resolved at cascade; tightened at S02/S03/S06** | High (fails §2.2) | Unit 1.5 Step 1-2 deepening rewrite + DOC-REVIEW briefing-room tightening — "no frame except 1950 payoff has >2 elements at full visual weight" rule now applies to ALL briefing-room scenes (S02 had 8 simultaneous elements; sequenced per Unit 1.10 update). |
+| Stacked-payoff stamp slap competes visually with HTP hero overprint | Low (after Step 5 deepening) | High (R3 fail) | HTP hero drops to 50% at 1950 to cede focus to the heavy slap; stamp is the sole focal point at the trailer's "meaning-stack" moment (DOC-REVIEW: disambiguated from "visual-density stack" — the stack is the audio-visual collision, not pixel-density). |
+| **Variable fonts not weight-specific files** | Resolved (DEEPENING) + JBM weight typo Resolved (DOC-REVIEW) + ADR #15 path violation Resolved (DOC-REVIEW) | High (first render 404s) | Unit 1.8 Step 2 — 3 variable woff2 files; JBM range `'100 900'` (was `'100 800'` typo); fonts at BURNED's `public/fonts/` via `staticFile()` (no copy to `videos/trailer/public/fonts/` per ADR #15). |
+| **CaseBanner.tsx ghost-reference** | Resolved | Medium | Source-of-truth re-anchored to `GameTable.tsx:67-88` inline `.caseBanner` aside; Unit 1.10 Patterns section corrected. DOC-REVIEW: per-scene content table added for the 5 text fields. |
+| **6-vs-7 operative count mismatch** | Resolved at Stat 4 (DOC-REVIEW source-fix; deepening's "matches dossier" claim was FALSE — "in the basement" was Phase 1 fiction) | Medium (freeze-frame viewer audit catches it) | Stat 4 rewritten to "Seven on the roster. Six in the deck. One on the research budget. Don't ask." per `ActRoster.tsx:153-158` literal source phrasing. |
 | **R3 cross-dissolve had 3 internal timing contradictions** | Resolved | High (R3 mechanic incoherent) | Unit 1.4 Step 2 deepening — cross-dissolve REPLACED with hard cut at 2040 after 1.0s payoff visual hold; music ducks pre-anticipated ramp completes at 2010. |
 | **`<TransitionSeries>` overlap math contradicts TOTAL_FRAMES** | Resolved | High (timing.test.ts asserts wrong invariant) | Unit 1.4 Step 1 deepening — bare `<Series>` + scene-internal overlay components; scene durations sum exactly to TOTAL_FRAMES. |
 | **useFonts.ts race condition (sync flag before async loads)** | Resolved | Medium | Unit 1.8 Step 3 deepening — Promise.all pattern, second consumers await shared promise. |
-| **Mobile safe-square crops R11 captions** | Resolved | High (R11 comedy invisible on primary distribution surface) | Unit 1.5 Step 3 deepening — active stat caption lives INSIDE safe-square center-bottom during read window; decays to side-band-chrome after. |
+| **Mobile safe-square crops accumulating chrome** | Resolved (DOC-REVIEW DESIGN-LENS + ADVERSARIAL — decayed stats moved INSIDE safe-square, prior side-band-right would have lost the accumulation on mobile autoplay) | High (R11 cascade rising-action invisible on primary distribution surface) | Unit 1.5 Step 3 doc-review — decayed-stat column at x=1380 inside safe-square; 4-row stat-slot coordinate table locked. |
 | Music volume cliff at 1950 would click | Resolved | Medium | Unit 1.7 Step 5 deepening — all transitions are ramped envelopes or held holds; 60-pt cliff replaced with pre-anticipated 30-frame duck completing at VO end. |
-| Sterling-screams-Lana identity-replication drift | Resolved | Medium (ADR #13 violation if shipped) | Unit 1.2 Step 6 + Unit 1.3 Step 2 deepening — cadence-spec citation only; no Archer-scene identity reference. |
-| Briggsy reads R4 as "82% short of 90%" and requests script-lengthening | Low | Low | Unit 1.3 Step 4 reserves the lever; S05 Dash VO can grow by 1–2 sentences if needed. |
-| Late beat-sheet reopening during Phase 4 | Low | High | Per-Phase-1-exit roadmap update + BEAT-SHEET.md status freeze; reopens require explicit roadmap-level action. |
-| **Phase 5 gameplay trim ownership undeclared** | Resolved | Medium | System-Wide Impact + Unit 1.2 Step 6 deepening — Phase 5 ships `gameplay-raw.mp4` + `gameplay-markers.json`; Phase 4 trims via `<OffthreadVideo>`. |
+| Sterling-screams-Lana identity-replication drift | Resolved at framing, **REFRAMED at success criterion (DOC-REVIEW)** | Medium (ADR #13 violation if shipped) | Unit 1.2 Step 6 + Unit 1.3 Step 2 — cadence-spec citation only; no Archer-scene identity reference IN PLAN. **Success criterion explicit: an Archer-aware listener feels "that's the Archer scream" recognition — recognition IS the joke. ADR #13 guards distribution attribution (don't credit / claim Benjamin), NOT successful cadence recognition.** |
+| Late beat-sheet reopening during Phase 4 | Low | High | Per-Phase-1-exit roadmap update + BEAT-SHEET.md status freeze; reopens require explicit roadmap-level action. DOC-REVIEW: BEAT-SHEET.signoff sentinel added per Phase 0 ADR #22 pattern. |
+| **Phase 5 gameplay trim ownership undeclared** | Resolved + DOC-REVIEW player-name scrub gap closed | Medium | System-Wide Impact + Unit 1.2 Step 6 — Phase 5 ships `gameplay-raw.mp4` + `gameplay-markers.json`; Phase 4 trims via `<OffthreadVideo>` ALWAYS to 540-frame target. Markers contract extended with `player_names_scrubbed: boolean` + `capture_resolution` + `source_seat_count` fields. |
 | **Vitest dep missing from trailer scaffold** | Resolved | Medium (timing.test.ts has no runner) | Unit 1.1 Step 2a deepening — Vitest devDep + test scripts added to trailer package.json. |
-| **`script.test.ts` drift between BEAT-SHEET.md and `script.ts`** | Low | Medium | Script test asserts every line text appears in both surfaces. Phase 1 verification gates on test passing. |
+| **`script.test.ts` drift between BEAT-SHEET.md and `script.ts`** | Low (after DOC-REVIEW simplification to id-comment-reference pattern) | Medium | DOC-REVIEW SIMPLIFICATION — test asserts every `Line.id` appears exactly once in BEAT-SHEET.md via `<!-- @line: S04-payoff -->` comment markers, NOT verbatim text match. Avoids Markdown-table parser fragility + [BEAT NNNms] verbatim-match drift. |
+| **`Line` schema missing fields Phase 2 needs** | Resolved (DOC-REVIEW FEASIBILITY FIX) | High (Phase 2 would silently extend Phase 1 contract or block) | Unit 1.2 Step 0 — `Line` extended with `cueType`, `expectedFrames`, `leadFramesHint`, `driftToleranceOverride`, `fadeInMs`, `fadeOutMs`, `skipSilenceremove`. Phase 2 deepening's required consumption surface now present in Phase 1 contract. |
+| **Mixed absolute/relative frame encoding** | Resolved (DOC-REVIEW FEASIBILITY FIX) | High (Phase 4 ADR #16 audio placement would misplace scream to frame 360) | Unit 1.3 Step 2 — all frames converted to absolute. `Line.frame` invariant: `0 <= frame < TOTAL_FRAMES` AND scene-bounded. `script.test.ts` asserts both. |
+| **S05 trim policy contradicted tolerance band** | Resolved (DOC-REVIEW FEASIBILITY FIX) | Medium (timing.test.ts would assert wrong invariant) | Unit 1.1 Step 2 + Unit 1.2 Step 6 — Phase 4 ALWAYS trims to 540-frame target; S05_BUDGET_MIN/MAX_FRAMES removed as exported constants; tolerance band documented as Phase 5 raw-capture constraint only. |
+| **S01 visual composition unspecified** | Resolved (DOC-REVIEW DESIGN-LENS NEW) | High (Phase 4 would default to generic AI-slop opener) | Unit 1.10 — S01 block added with composition, card-flash cadence (6 cards × 6 frames hard-cut), brass-hook timing, BURNED-as-card-not-wordmark differential vs S06 closing. |
+| **R15 #5 cold-decode closing card** | New (DOC-REVIEW PRODUCT-LENS RE-OPEN) | High (trailer-in-isolation loses central engineering claim) | Unit 1.9 + Unit 1.10 S06 — R15 #5 added at frame 2835 ("DRAFTED, RENDERED, AND SHIPPED BY AUTONOMOUS AGENTS." + subhead echoing S01 cold-open). R15 #1–#4 stay in-world diegetic. |
+| **Cold-open candidate locked the wrong line** | Resolved (DOC-REVIEW PRODUCT-LENS RE-OPEN) | High (R14 cold-decode mechanism fragile under #4) | Unit 1.2 Step 2 — Candidate #5 promoted ("Briggsy didn't write this one either. He's getting good at not writing them."). Carries repeatability + autonomous-build claims explicitly. |
+| **OPEN RISK: cascade content vs water-beads tiebreaker** | New (DOC-REVIEW PRODUCT-LENS RE-OPEN — Briggsy ratified KEEP + flag) | Strategic | Cascade contents are SDLC-translated engineering output (R3 brainstorm lock). This deliberately leans into "engineers talk about how it was built" side of the roadmap-named tiebreaker. **Phase 6 QA MUST screen the cut against §2 with a critical engineering peer; if dominant reaction is "wow Claude built this" rather than "I want to play this game," cascade content reopens at roadmap level.** Open risk, not pre-mitigated. |
+| **OPEN RISK: Path D wall-clock delay** | Existing (DOC-REVIEW ADVERSARIAL surface) | Schedule | Unit 1.3 split into 1.3a (Path A/B/C-conditional, fires on Phase 0 exit) + 1.3b (Path D-conditional, waits 1-3 weeks for actor delivery). Phase 2 begins against 1.3a subset; Phase 2 Unit 2.X Path-D ingestion gated on 1.3b. Open until Phase 0 path resolves. |
+| **OPEN RISK: Phase 4 variable-axis font spike outcome** | New (DOC-REVIEW FEASIBILITY surface re: ADR #18) | Medium (typography re-lock if spike fails) | Phase 4 Unit 4.0 reserves 60-min spike for variable-axis weight resolution in MP4 export. Phase 1 typography lock is PROVISIONAL pending spike. Fallback path: ship per-weight static woff2 files (15 files via `pyftsubset`). |
+| **OPEN RISK: Phrasing! close acceptability** | New (DOC-REVIEW PRODUCT-LENS) | Low (worst case: drop Phrasing! at Phase 2 cold-read) | S06 close rewritten to "Hold it tight." → Phrasing! — innuendo shape Phrasing! actually responds to. If a pre-Phase-2 cold-read says it still doesn't land, drop Phrasing! beat entirely (S06 ends on "Hold it tight." silence). |
 
 ---
 
 ## Open Questions
 
-### Resolved During Planning (DEEPENING — expanded)
+### Resolved (cross-references)
 
-- **Scene count:** 6 (locked in Unit 1.1 Step 4).
-- **VO-sync model:** continuous Dash narration over cascade, per-cue
-  wps-validated, single 1.0s silent visual hold after payoff VO,
-  hard cut at 2040 (locked in Unit 1.5 Step 4).
-- **HTP rendering method:** clone of UMB's `capture-htp-scroll.ts`
-  primary, trace-video conditional Phase 3 deliverable (locked in
-  Unit 1.5 Step 6).
-- **Typography system:** inherit BURNED's stack (3 variable woff2
-  files); Promise.all loading pattern (locked in Unit 1.8 Step 1-3).
-- **Transition vocabulary:** scoped library of 5 named transitions (4
-  implemented; hard cut is `<Sequence>` boundary). Bare `<Series>` +
-  scene-internal overlay components, NOT `<TransitionSeries>` (locked
-  in Unit 1.4 Step 1-2).
-- **R3 cross-dissolve replaced with hard cut at S04→S05** (locked in
-  Unit 1.4 Step 2 deepening — dissolves 3 internal timing
-  contradictions + 1 audio-cross-dissolve framework gap).
-- **R15 chrome copy:** 4 instances locked (Unit 1.9). #4 reframed to
-  status-grammar ("OPERATION STATUS: FIELD-READY") differentiating
-  from #3 origin-claim ("AUTONOMOUS FIELD UNIT — ASSET DELIVERED").
-- **Cascade spatial layout:** sequential revelation with focal
-  hierarchy (locked in Unit 1.5 Step 1 — was layered-simultaneous in
-  first draft; failed §2.2 design-lens review).
-- **Music source type:** royalty-free Pro tier ($199–$204/yr Artlist
-  Pro or Epidemic Sound Pro) primary, Suno Pro $10/mo generative as
-  expected fallback (locked in Unit 1.7 Step 1). Udio struck (dead
-  since Nov 2025 settlement).
-- **Briefing-room grammar:** inherit BURNED arena vocabulary +
-  foreground depth-plane element (locked in Unit 1.10 Step 1).
-- **CASE BANNER source-of-truth:** `GameTable.tsx:67-88` inline
-  `.caseBanner` aside (NOT a standalone `CaseBanner.tsx` — that file
-  doesn't exist; was first-draft ghost reference).
-- **Roster framing:** "Seven on the roster, six in the deck, one in
-  the basement. Don't ask." (Stat 4 reframe matches `ActRoster.tsx:
-  153-158` Otto-exclusion aside).
-- **Sterling-coded scream framing:** cadence-spec citation only, no
-  identity reference to Archer scene (locked in Unit 1.2 Step 6 +
-  Unit 1.3 Step 2 per ADR #13).
-- **R6 grep approach:** rg --pcre2 + 2-pass fallback; vocabulary
-  expanded 11 → 25 terms (locked in Unit 1.2 Step 9).
-- **Cold-read gate:** N=3 + 0-2 scale + consensus on pairings;
-  recorded stimulus; partial-cut + full-cut handling (locked in Unit
-  1.6 Step 4).
-- **R11-cut bridge line:** 2 candidates drafted inline (Unit 1.6
-  Step 4 — Phase 2 doesn't wait for Briggsy approval at cold-read
-  gate time; bridge candidates are pre-committed).
-- **Color token names:** Radix-style scale+step (e.g.,
-  `--color-cream-12`, `--color-ochre-3`, `--color-burned-fire`).
-  Bare-family tokens (`--color-cream`, `--color-mahogany`, etc.) do
-  NOT exist in `primitives.css` (locked in Unit 1.8 Step 5).
-- **timing.ts overlap math:** bare `<Series>` so scene durations sum
-  exactly to TOTAL_FRAMES; no transition-overlap subtraction (locked
-  in Unit 1.1 Step 2).
-- **Vitest dependency:** added to trailer `package.json` devDeps
-  (locked in Unit 1.1 Step 2a).
-- **`script.ts` machine contract for Phase 2:** typed `BURNED_TRAILER_LINES`
-  const; `script.test.ts` enforces sync with BEAT-SHEET.md (locked in
-  Unit 1.2 Step 0 / Files block).
-- **Phase 5 gameplay deliverable contract:** `gameplay-raw.mp4` +
-  `gameplay-markers.json` declaring in-point + BURNED-draw-frame
-  (locked in Unit 1.2 Step 6 / System-Wide Impact).
+All locked decisions live in their owning Unit. DOC-REVIEW SCOPE-
+GUARDIAN TRIM: the prior section restated 32 decisions already
+present in the Units; removed in favor of this cross-reference
+table.
+
+| Decision | Locked in | Notes |
+|----------|-----------|-------|
+| Scene count (6) | Unit 1.1 Step 4 | |
+| Cold-open line | Unit 1.2 Step 2 | DOC-REVIEW: Candidate #5 promoted |
+| Per-cue wps band | Critical Constraints | DOC-REVIEW: Phase-1-authored; Phase 2 validates |
+| Cascade payoff line | Unit 1.2 Step 5 | DOC-REVIEW: collapsed to 4-word truth-collision |
+| Stat 4 source-fix | Unit 1.2 Step 5 + Unit 1.6 Step 3 | DOC-REVIEW: "on the research budget" matches ActRoster |
+| S06 close + Phrasing | Unit 1.2 Step 7 | DOC-REVIEW: "Hold it tight." → earned Phrasing! |
+| Per-line voice + frame table | Unit 1.3 Step 2 | DOC-REVIEW: absolute frames; extended Line schema |
+| R4 share reading | Unit 1.3 Step 4 | DOC-REVIEW: "of voiced runtime" canonical; hedge removed |
+| Path A/B/C vs D unit split | Unit 1.3 Step 3a | DOC-REVIEW: 1.3a fires immediately; 1.3b waits for Path D |
+| Transition vocabulary (5) | Unit 1.4 Step 1-2 | bare `<Series>` + overlay components; no `<TransitionSeries>` |
+| Dossier-wipe direction | Unit 1.4 Step 2 row 3 | DOC-REVIEW: left-to-right reveal; clip-path corrected |
+| R3 cross-dissolve → hard cut | Unit 1.4 Step 2 | |
+| Cascade spatial layout | Unit 1.5 Step 1-2 | sequential revelation; meaning-stack disambiguated |
+| Decayed-stat coordinates | Unit 1.5 Step 3 | DOC-REVIEW: inside safe-square; 4-row coord table |
+| HTP rendering method | Unit 1.5 Step 6 | DOC-REVIEW: UMB script confirmed selector-agnostic |
+| Goofy stats (4 finalists) | Unit 1.6 Step 3 | DOC-REVIEW: Stat 4 source-fixed + hat audit pre-gate |
+| Cold-read gate threshold | Unit 1.6 Step 4 | DOC-REVIEW: per-reviewer-floor consensus |
+| Music source type | Unit 1.7 Step 1 | DOC-REVIEW: per-track marketplace tier elevated |
+| Music-cue map | Unit 1.7 Step 5 | ramped envelopes; no cliffs |
+| Typography stack | Unit 1.8 | DOC-REVIEW: JBM weight '100 900'; no copy step (ADR #15); Phase 4 spike caveat |
+| Color tokens | Unit 1.8 Step 5 | Radix scale+step (--color-cream-12 etc.) |
+| R15 chrome copy (5 instances) | Unit 1.9 | DOC-REVIEW: #5 cold-decode closing card added |
+| S01-S06 visual environment | Unit 1.10 | DOC-REVIEW: S01 added; briefing-room layered-simultaneous tightened; CASE BANNER per-scene table |
+| script.ts machine contract | Unit 1.2 Step 0 | DOC-REVIEW: Line type extended with 7 Phase-2 fields |
+| Frame-encoding invariant | Unit 1.2 Step 0 + Unit 1.3 Step 2 | DOC-REVIEW: absolute frames only |
+| BEAT-SHEET.signoff sentinel | Unit 1.1 Step 0 + ADR #22 | DOC-REVIEW: machine-readable freeze gate |
+| Phase 5 gameplay contract | Unit 1.2 Step 6 + System-Wide Impact | DOC-REVIEW: scrub policy + capture_resolution + source_seat_count fields added |
+| S05 trim policy | Unit 1.1 Step 2 + Unit 1.2 Step 6 | DOC-REVIEW: always trim to 540 target |
 
 ### Deferred to Implementation
 
@@ -2629,22 +3399,58 @@ findings)
 - **`iris()` from `@remotion/transitions/iris` as overlay component**:
   Phase 4 micro-spike candidate (Unit 1.4 Step 2 row 4).
 
-### New Open Questions Surfaced by Deepening
+### New Open Questions Surfaced by Deepening + Document-Review
 
-- **Cold-viewer engineering decode**: R15 chrome alone doesn't carry
-  the "built by autonomous agents" signal for cold Twitter/X viewers.
-  Phase 7 distribution copy must carry the explicit claim. Phase 1
-  flags this; Phase 7 plan must absorb the responsibility in its
-  deepening.
-- **Phase 0 cadence-spec wps band**: Phase 0 Unit 0.2 Step 0 should
-  declare the wps band (1.9–2.3 sustained / 2.4–2.6 list / 1.6–1.8
-  payoff). If it doesn't, Phase 1 reopens to widen scene budgets.
-  Phase 0 deepening may need a follow-up amendment.
+- **Cold-viewer engineering decode**: ~~R15 chrome alone doesn't carry
+  the "built by autonomous agents" signal for cold Twitter/X
+  viewers.~~ **DOC-REVIEW CLOSED:** R15 #5 closing card added at
+  frame 2835 explicitly carries the cold-decode load. R15 #1–#4 stay
+  in-world diegetic + engineering-peer-confirmation. Phase 7
+  distribution copy provides the wrapper, but the trailer-as-
+  artifact-in-isolation now stands on its own.
+- **Phase 0 cadence-spec wps band**: ~~Phase 0 Unit 0.2 Step 0 should
+  declare the wps band.~~ **DOC-REVIEW CLOSED:** Phase 0 declares
+  qualitative register; Phase 1 declares quantitative band as
+  Phase-1-authored provisional defaults. Phase 2 first-batch TTS
+  validates. No Phase 0 reopen needed.
 - **HTP local-dev capture URL**: BURNED's deploy migration in progress
   (TODO §1). Capture script targets `localhost:5173/howtoplay.html`
   during Phase 3 execution; verify dev server is running. If migration
   lands first, capture against `briggsy007.workers.dev` /
   `burned-cxa.pages.dev` instead.
+
+**DOC-REVIEW PASS opened these:**
+
+- **Cascade content vs water-beads tiebreaker (Briggsy-ratified
+  KEEP + Phase 6 QA screen).** Cascade contents are SDLC-translated
+  engineering output (R3 brainstorm lock). This deliberately leans
+  into "engineers talk about how it was built" — the side of the
+  roadmap-named tiebreaker that water-beads is supposed to win.
+  Phase 6 QA MUST screen the rendered cut against §2 with a
+  critical engineering peer; if dominant first-watch reaction is
+  "wow Claude built this" rather than "I want to play this game,"
+  cascade content reopens at roadmap level. Open risk.
+- **Phase 4 variable-axis weight resolution (ADR #18 spike).**
+  Remotion `loadFont()` docs don't explicitly document range
+  syntax. Phase 4 Unit 4.0 reserves a 60-min spike to validate
+  variable-axis weight resolution in MP4 export. Phase 1 typography
+  is PROVISIONAL pending outcome. Fallback path: per-weight static
+  woff2 files via `pyftsubset --variation-instance="wght=N"`.
+- **Phrasing! close acceptability (pre-Phase-2 cold-read).** Rewritten
+  S06 "Hold it tight." → Phrasing! carries innuendo shape, but the
+  Phrasing! beat earning is subjective. Pre-Phase-2 cold-read with
+  N=2 Archer-aware listeners — if both say it doesn't land, drop
+  Phrasing! beat (S06 ends on "Hold it tight." silence).
+- **Phase 5 player-name scrub policy execution.** New Phase 1 contract
+  requires Phase 5 to either capture with synthetic test names OR
+  obtain written consent. Open until Phase 5 deepening absorbs the
+  contract + commits to a path.
+- **Citation verification for all `src/client/...:lines` references.**
+  4+ ghost references caught during prior deepenings (CaseBanner.tsx,
+  --color-mahogany, --color-burn-fire, burned-display.woff2). Add a
+  Phase 1 verification step running grep/glob over every cited path
+  + line range; document outcomes in
+  `videos/trailer/sample-eval/beat-sheet/citation-verification.md`.
 
 ---
 
@@ -2654,6 +3460,13 @@ findings)
   `videos/trailer/sample-eval/beat-sheet/`.
 - BEAT-SHEET.md is the canonical contract for Phases 2–4. Briggsy's
   signoff freezes it; late edits require explicit Phase 1 reopening.
+- **`BEAT-SHEET.signoff` sentinel (DOC-REVIEW SECURITY-LENS NEW per
+  Phase 0 ADR #22 pattern):** Phase 1 exit produces a sha256-of-
+  artifact + git-author-verified sentinel file at
+  `videos/trailer/sample-eval/beat-sheet/BEAT-SHEET.signoff`. Phase
+  2 Unit 2.1 (which reads `script.ts`) asserts sentinel existence
+  before proceeding. Prevents autonomous Phase 2 execution from
+  consuming an unfrozen BEAT-SHEET.md.
 - `timing.ts` exports are the single source of truth for frame
   numbers. Phase 4 scene files MUST import frame constants by name —
   no magic numbers (linted by Phase 4 convention).
@@ -2661,6 +3474,15 @@ findings)
   listener-judgment passes; no automated test substitutes.
 - Stats are verified against authoritative sources per
   `feedback-stats-single-source.md` — never working-memory recall.
+- **Citation verification (DOC-REVIEW ADVERSARIAL NEW — 4+ ghost
+  references caught during prior deepenings).** Before Phase 1
+  freeze, run grep/glob over every `src/client/...:lines` reference
+  in BEAT-SHEET.md + this plan. Confirm each path exists and the
+  cited line range exists. Document outcomes in
+  `videos/trailer/sample-eval/beat-sheet/citation-verification.md`.
+  Pattern enforcement prevents the next CaseBanner.tsx / --color-
+  mahogany / --color-burn-fire / burned-display.woff2 ghost-
+  reference shape.
 
 ---
 
@@ -2680,7 +3502,7 @@ findings)
 - Trailer composition: `projects/undercover-mob-boss/videos/trailer/src/TrailerV3.tsx` (lines 28-56) — **bare `<Series>` of `<Series.Sequence>` with ZERO scene-boundary transitions.** FadeTransition exists in UMB only as scene-internal element fader. BURNED inherits this exact composition shape.
 
 **BURNED assets consumed:**
-- Card art: `public/assets/cards/` (17 unique webp — verified 2026-05-17 via Glob). Operative portraits (6): `dash-barlowe`, `vera-khan`, `sable-ashworth`, `janet-broadside`, `neal-proctor`, `agent-x`. Action cards (11): `back-channel`, `burn-the-files`, `burned`, `call-in-a-favor`, `direct-order`, `extraction`, `falsify-intel`, `go-dark`, `intel-briefing`, `intercepted`, `reassign`.
+- Card art: `public/assets/cards/*.webp` excluding `_archive/` subdir (17 unique webp — verified 2026-05-17 via `Glob` with `_archive/` exclusion). Operative portraits (6): `dash-barlowe`, `vera-khan`, `sable-ashworth`, `janet-broadside`, `neal-proctor`, `agent-x`. Action cards (11): `back-channel`, `burn-the-files`, `burned`, `call-in-a-favor`, `direct-order`, `extraction`, `falsify-intel`, `go-dark`, `intel-briefing`, `intercepted`, `reassign`. **DOC-REVIEW (P3 polish):** count excludes `public/assets/cards/_archive/` subdirectory — a recursive count would yield different totals. Trailer cascade consumes 6 of these 11 action cards (`burned`, `intercepted`, `burn-the-files`, `extraction`, `intel-briefing`, `direct-order` — per Unit 1.10 S03 lock).
 - HTP app: `src/client/howtoplay/App.tsx` + `src/client/howtoplay/hooks/useScrollReveal.ts` (GSAP ScrollTrigger on `[data-reveal]` elements, `start: 'top 85%', once: true`)
 - Dash voice DNA (specific line ranges per deepening):
   - `src/client/howtoplay/acts/ActMission.tsx:31-65` + Phrasing! at line 74
@@ -2696,23 +3518,25 @@ findings)
 - ActRoster Sable Ashworth entry: `src/client/howtoplay/acts/ActRoster.tsx:39`; OPERATIVES array lines 18-75 (6 entries); Otto deck-exclusion aside at lines 153-158
 - Verified stats source: `TODO.md` §1 (2026-05-16 squeaky: 1,407 pass / 6 expected fail / 68/68 files / 19.17 KB phone bundle / 100 KB ceiling / 2.34 KB DramaOverlay lazy chunk / PROTOCOL_VERSION 6)
 
-**Music sourcing (DEEPENING — 2026 pricing + ToS):**
+**Music sourcing (DEEPENING + DOC-REVIEW — date-stable obligations
+only; litigation-procedural status stripped per scope-guardian P2-4):**
 - Artlist Pro: https://artlist.io ($199/yr — covers portfolio site + Twitter/X for personal/commercial accounts). Social tier $120/yr excludes portfolio embedding.
 - Epidemic Sound Pro: https://www.epidemicsound.com (~$204/yr) — equivalent commercial coverage.
 - Musicbed Individual ($329-$1,208/yr) / Business ($1,099-$2,428/yr) — over budget for portfolio-piece.
-- Marmoset / Songtradr per-track marketplace — $30-$200/track for hand-picked.
-- Suno: https://suno.com (Pro $10/mo, Premier $30/mo). March 2026 ToS — perpetual commercial-use license, no copyright vesting in outputs. Active UMG+Sony litigation (summary judgment July 2026); WMG settled Nov 2025. AI-generated-audio disclosure required on some platforms.
+- Marmoset / Songtradr per-track marketplace — $30-$200/track for hand-picked. **DOC-REVIEW: elevated to second-tier-before-Suno** for portfolio-piece risk profile.
+- Suno: https://suno.com (Pro $10/mo, Premier $30/mo). ToS obligations (date-stable): perpetual commercial-use license, no copyright vesting in outputs, AI-generated-audio disclosure required on some platforms. **Check current Suno ToS at execution time** for any updates to the obligations. (Litigation procedural status removed per doc-review — date-stale at plan-execution time; ToS-derived obligations are what matter.)
 - **Udio:** DEAD as commercial-fallback (Nov 2025 settlement — in-platform streaming/remixing only; no `.mp3` export).
 - Mid-century reference points: Bacharach, Mancini Pink Panther underscore, Brubeck Take Five.
 
-**Remotion documentation:**
-- Fonts API: https://www.remotion.dev/docs/fonts-api/load-font (verified: auto-blocks render via delayRender; `weight: '200 700'` supports variable axis ranges)
-- TransitionSeries (NOT used in BURNED — see Unit 1.4 Step 1 architecture lock; bare `<Series>` instead): https://www.remotion.dev/docs/transitions/transitionseries
-- `<OffthreadVideo>` for trace-video fallback path: https://www.remotion.dev/docs/offthreadvideo
-- `iris()` from `@remotion/transitions/iris` (candidate for iris-wipe overlay component): https://www.remotion.dev/docs/transitions/presentations/iris
-- `addSound()` from `@remotion/transitions/audio-transitions` (candidate for stamp-slap THWAP SFX): https://www.remotion.dev/docs/transitions/audio-transitions
-- Custom transition Presentation contract: https://www.remotion.dev/docs/transitions/presentations/custom
-- Audio: https://www.remotion.dev/docs/media/audio
+**Remotion documentation (DOC-REVIEW SCOPE-GUARDIAN TRIM — Phase 4
+consults docs at execution time; Phase 1 cites the architectural
+decision, not the API surface):**
+- Bare `<Series>` composition: UMB v3 `TrailerV3.tsx:28-56` precedent.
+  Architecture decision locked in Unit 1.4 Step 1; Phase 4 implements.
+- `loadFont()` variable-axis range syntax: PROVISIONAL pending Phase
+  4 Unit 4.0 spike (ADR #18).
+- Audio composition-level placement per ADR #16: Phase 4 owns
+  implementation; Phase 1 provides `Line.leadFramesHint` field.
 
 **Institutional learnings (memory):**
 - `feedback-stats-single-source.md` — stat-source verification discipline

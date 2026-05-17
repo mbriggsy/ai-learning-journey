@@ -16,14 +16,14 @@ Current state (verified 2026-05-17 mid-session):
 - HOW-TO-PLAY bundle: `howtoplay-*.js` 99.04 KB (33.90 KB gz) + `howtoplay-*.css` 65.83 KB (10.68 KB gz) + shared GSAP chunk 69.42 KB (27.21 KB gz).
 - Protocol: v6.
 
-_No live prescriptions on the BURNED product. **Origin-trailer plan state (2026-05-17): Phase 0 DEEPENED (`b9617d9d`); Phase 1 DEEPENED (`43d44ef4`, 60+ amendments, 1862→2728 lines); Phase 2 DEEPENED (this commit, 35 amendments across 4 tiers, 1929→4064 lines, +3 new units 2.0/2.X/2.Y); Phases 3–7 drafted + committed (`de20650b`); deepening continues sequentially.**_
+_No live prescriptions on the BURNED product. **Origin-trailer plan state (2026-05-17): Phase 0 DEEPENED (`b9617d9d`); Phase 1 DEEPENED (`43d44ef4`, 60+ amendments, 1862→2728 lines); Phase 2 DEEPENED (`e56e69e5`, 35 amendments across 4 tiers, 1929→4064 lines, +3 new units 2.0/2.X/2.Y); Phase 3 DEEPENED (this commit, 69 amendments across 5 tiers, 1737→4379 lines, 2.52× growth, +1 new unit 3.0 vocabulary vendoring); Phases 4–7 drafted + committed (`de20650b`); deepening continues sequentially.**_
 
 - _[`roadmap.md`](docs/plans/origin-trailer/roadmap.md) — 13 ADRs (ADR #4 + #11 revised 2026-05-17 per Phase 1 deepening: bare `<Series>` + scene-internal overlay components, NOT `<TransitionSeries>`; `@remotion/transitions` install-on-demand), R1–R15 trace, 3-axis bar-raise criteria, ~95s/2850-frame target_
 - _[`phase-0-gate-resolution.md`](docs/plans/origin-trailer/phase-0-gate-resolution.md) ✅ **DEEPENED 2026-05-16** — 6 units (scaffold + 5 brainstorm gates); 39 amendments across 7 tiers landed via 8-agent parallel review + sequential-thinking + emil-design-eng synthesis_
 - _[`phase-1-beat-sheet-lock.md`](docs/plans/origin-trailer/phase-1-beat-sheet-lock.md) ✅ **DEEPENED 2026-05-17** — 10 units (scene count + narration script + voice cast + transitions + cascade composition + goofy stats + music + typography + R15 chrome + briefing-room composition); 60+ amendments via same 8-agent shape + emil-design-eng_
 - _[`phase-2-voice-pipeline.md`](docs/plans/origin-trailer/phase-2-voice-pipeline.md) ✅ **DEEPENED 2026-05-17** — 11 units now (NEW 2.0 preflight + 2.X Path D voice-actor ingestion + 2.Y Path B hybrid scream Voice Changer; 2.1 gutted+recast to consume Phase 1's BURNED_TRAILER_LINES instead of recreating; 2.2 engine clients fully rewritten per Context7-verified API surfaces; 2.3-2.8 deepening callouts); 35 amendments across 4 tiers via same 8-agent shape (best-practices / framework-docs / repo-research / adversarial / scope-guardian / coherence / feasibility / design-lens) + emil-design-eng_
-- _[`phase-3-visual-asset-prep.md`](docs/plans/origin-trailer/phase-3-visual-asset-prep.md) — 7 units (HTP capture + card curation + briefing-room assets + R15 chrome SVGs + music procurement + title-sequence assets + visual manifest) — **next deepening target**_
-- _[`phase-4-remotion-composite.md`](docs/plans/origin-trailer/phase-4-remotion-composite.md) — 10 units (Root + composition wiring + 6 scene files + transitions + per-scene Archer tests + full studio-preview render)_
+- _[`phase-3-visual-asset-prep.md`](docs/plans/origin-trailer/phase-3-visual-asset-prep.md) ✅ **DEEPENED 2026-05-17** — 8 units now (NEW 3.0 vocabulary vendoring + 3.1-3.7 with Path B hybrid architecture lock); 69 amendments across 5 tiers via same 8-agent shape (best-practices / framework-docs / repo-research / adversarial / scope-guardian / coherence / feasibility / design-lens) + emil-design-eng + /brief_
+- _[`phase-4-remotion-composite.md`](docs/plans/origin-trailer/phase-4-remotion-composite.md) — 10 units (Root + composition wiring + 6 scene files + transitions + per-scene Archer tests + full studio-preview render) — **next deepening target**_
 - _[`phase-5-gameplay-capture.md`](docs/plans/origin-trailer/phase-5-gameplay-capture.md) — 6 units (mechanism evaluation + shot list + harness + take selection + post-process + Phase 4 re-render)_
 - _[`phase-6-final-render-qa.md`](docs/plans/origin-trailer/phase-6-final-render-qa.md) — 7 units (production encode settings + render + §2 frame-pass audit + bar-raise vs UMB v3 + A/V sync + mobile crop + decode test)_
 - _[`phase-7-distribution.md`](docs/plans/origin-trailer/phase-7-distribution.md) — 5 units (X-native cutdown + portfolio embed + post copy + calendar + metrics tracking)_
@@ -124,7 +124,48 @@ _**Locked decisions during Phase 0 deepening pass:**_
 - _Pricing math: real engine ceiling ~$24 (ElevenLabs $22 + Gemini ~$1 + OpenAI ~$1), not $37; $50 envelope retained as safety margin_
 - _WebMUSHRA hosting: Cloudflare Pages subpath default ($0, permanent URL, survives laptop-asleep)_
 
-_**Next session entry: `/deepen-plan` on `phase-3-visual-asset-prep.md`.** Per `feedback-phase-plan-drafting-workflow.md`. Sequential, one phase per session. Phase 3 must absorb the cross-phase dependencies surfaced by Phase 1 deepening (HTP trace-video conditional fallback; music-bed ownership) AND verify Phase 2 deepening's `<Sequence>+<Audio>` consumption contract doesn't conflict with Phase 3's visual-manifest shape._
+_**Locked decisions during Phase 3 deepening pass (2026-05-17, this commit):**_
+- _**HYBRID architecture (NEW)** — Path A (Remotion imports BURNED React components) formally REJECTED for 3 technical reasons (CSS module bundler diff / `window.matchMedia` absent / GSAP ScrollTrigger needs real-scroll vs Remotion's time-driven model) + 1 empirical reason (UMB has zero cross-package imports). Path C (raw SVG reimplementation) rejected on §2.2 quality-bar grounds. **Path B HYBRID locked**: set-dressing PNGs via staticFile through Phase 0 ADR #8; React chrome vocabulary (Stamp + Crest + RedactBar + ClassificationBanner + DossierPage + .module.css peers — 10 files) COPIED into `videos/trailer/src/components/burned-vocabulary/` at Phase 3 Unit 3.0 entry; `diff -r` CI catch via `pnpm verify:vocab-sync`_
+- _**Public-directory architecture (NEW ADR #15)** — All Phase 3 NEW trailer-only assets land in `public/trailer/...` inside BURNED's existing `public/`. Single `setPublicDir('../../public')` (Phase 0 ADR #8) reaches both BURNED game assets via `staticFile('assets/...')` and trailer-only via `staticFile('trailer/...')`. `videos/trailer/public/` reserved for sample-eval artifacts (Remotion doesn't render from there). Resolves the silent-404 collision the pre-deepening plan would have hit_
+- _**NEW Unit 3.0 — BURNED HTP Vocabulary Vendoring** (`vendor-burned-vocab.ts` + `verify-vocab-sync.ts` scripts; vendored at Phase 3 entry, CI-gated for drift)_
+- _**R15 #4 triple-drift fixed** — Copy "AGENT-BUILT, ARCHER-GRADE" → "OPERATION STATUS: FIELD-READY" (Phase 1 Unit 1.9 lock); frame 2800 → 2820; filename `subhead-4-agent-built.svg` → `subhead-4-field-ready-{frame,text}.svg`. Downstream Phase 4 line 1880 sync required during Phase 4 deepening_
+- _**Card-roster table REPLACED** — 9 hallucinated filenames (`vera-aubrey`, `sable-vance`, `janet-mallory`, `dolores-grieves`, `otto-...`, `counter`, `skip`, `defuse`, `steal-2`, `shuffle`, etc.) ALL absent on disk. Replaced with verified 17-webp Glob output: 6 operative portraits (`dash-barlowe`, `vera-khan`, `sable-ashworth`, `janet-broadside`, `neal-proctor`, `agent-x`) + 11 action cards using BURNED's rethemed names. NO Otto card art (roster-only per spec §1); NO Dolores card art (she's on Intercepted card per memory). S03 roster reveal = 6 card-art + Otto-aside chrome (NOT "all 7" as pre-deepening claimed) matching Phase 1 narration "Seven on the roster, six in the deck, one in the basement."_
+- _**R15 chrome SPLIT-LAYER architecture** — each R15 instance produces 2 SVG files (`-frame.svg` + `-text.svg`); Phase 4 composes with `transform-origin: center` for Phase 1 Unit 1.4 stamp-slap motion. Monolithic SVG with baked `transform="rotate()"` would break the overshoot animation_
+- _**R15 chrome color tokens** — `--color-ochre-9` (#947226), `--color-burned-fire` (**#be2e27** — NOT `#c63b1e` as pre-deepening had). SVGs consume via `currentColor` + Phase 4-applied inline style OR inlined `<style>` block. CVD probe script (`scripts/probe-r15-chrome-cvd.ts`) verifies both pairs clear deuter/prot/trit at 0.10 oklab floor per insight 051_
+- _**HTP capture positive-completion gate** replaces 80ms timing heuristic — `page.waitForFunction(() => [...querySelectorAll('[data-reveal]')].every(el => getComputedStyle(el).opacity === '1'))` is the primary gate; `ScrollTrigger.getAll().forEach(progress(1))` fallback if useScrollReveal exposes window globals in DEV. UMB's 80ms-per-200px-scroll is 20× faster than BURNED's 900ms GSAP tween duration; pre-deepening would have produced partial-opacity captures_
+- _**HTP capture URL: production primary** (`https://burned-cxa.pages.dev/howtoplay` — no `.html`, Pages strips per TODO landmine); localhost fallback for script development. Phase 0 explicitly deferred this to Phase 3 post-deploy-migration_
+- _**HTP capture DPR=1** (was DPR=2). UMB precedent + 4× source decode cost reduction. Phase 6 renders with `--scale=2` for output-side crispness_
+- _**Playwright package: `@playwright/test`** (NOT bare `'playwright'`). BURNED root has `@playwright/test ^1.59.1` devDep; UMB precedent matches; scripts run from BURNED root cwd_
+- _**Imagen budget consolidation** — Original 4 escalation paths (cold-open <$5, crest <$1, mahogany unbudgeted, logo polish <$2) summed >$5 cap. Post-inventory: mahogany (existing `arena/mahogany-horizontal.png`), crest (existing `howtoplay/pendleton-crest.png` + inline SVG in Crest.tsx), logo polish (existing `howtoplay/operations-manual-plate.png`) all CUT — Imagen budget consumed only by operative-card-frame template (<$5 cap retained). Running spend tracker at `imagen-spend.md` with hard abort at $5 + `IMAGEN_BUDGET_OVERRIDE=1` explicit override_
+- _**Imagen prompt structure** mandatory per insight 050 — fractional layout directive + continuity prescription + emotional payload + Archer-character anchor + style block + negative suppressors. Insight 018 stop-gate codified inline (4-iter same-failure → re-architect via remove/recontextualize/stronger-IP-ref/minimum-viable). UMB asset-prompts.ts `--only` flag + `#FF00FF` chroma-key extraction pattern adopted for clean transparency_
+- _**Hex codes in Imagen prompts RESOLVED** — Pre-deepening plan + TODO.md landmine said "DO NOT reference hex codes." Visual inspection of shipped assets (pendleton-crest, operations-manual-plate, blotter, mahogany) shows NO bake-in. Working recipe: hex codes OK IF explicit "NO additional text NO words NO numbers NO hex codes NO color codes" negatives at end (BURNED's `generate-htp-assets.ts` + `generate-briefing-assets.ts` both use this pattern + shipped clean). TODO landmine reword: see new landmine entry below_
+- _**Music source pool (per Phase 1 Unit 1.7 deepening)** — Artlist Pro / Epidemic Sound Pro $199-204/yr minimum (Musicbed dropped, Udio dropped); Suno Pro $10/mo EXPECTED fallback. Audition pool 20-30 per platform (was 10-15). Pre-execution account verification gate at Unit 3.5 Step 0; license rights-trail (PDF for Path A, billing screenshot + DDEX disclosure for Path B); encode script gated on `existsSync('music-license.pdf')`_
+- _**CaseBanner.tsx GHOST REFERENCE fixed** — Phase 3 lines 836-838 cited non-existent `src/client/board/CaseBanner.tsx`. Replaced with `GameTable.tsx:67-72` inline JSX per Phase 1 Unit 1.10 explicit directive. CASE BANNER + COMMS ticker reference renders via Playwright crop of BURNED live components for Phase 4 visual-diff_
+- _**Phase 1 Unit 1.10 depth-plane add ABSORBED** — Phase 1 deepening added foreground depth-plane element (Option A brass nameplate / B manila folders stack / C doorframe vignette) with explicit "add to Phase 3 unit 3.3 briefing-room-assets shot list." Phase 3 had missed; deepening adds as Unit 3.3 Step 7 (default Option A = brass nameplate "M. PENDLETON / BUREAU CHIEF")_
+- _**Asset tier taxonomy NEW** (HERO / TEXTURE / CHROME) — added to Critical Constraints + manifest entry field. Drives Phase 4 composition priority._
+- _**Briggsy-eyeball gates** at exit of Units 3.1, 3.3, 3.4, 3.6 (4 novel-visual units). Fluency questions (NOT property checks) per insight 050. Phase 4 import gated on `briggsy-review-3.N.signoff` sentinel file presence_
+- _**Cascade-ring-layout.json** ships at `videos/trailer/src/lib/cascade-ring-layout.json` — per-card ring position (angle, radius, z-order) + 2-frame entry stagger per Phase 1 Unit 1.5 lock. Codifies "sequential revelation, NOT layered-simultaneous" so Phase 4 can't accidentally render the AI-slop shape_
+- _**Stat captions resolved**: pure React text (Clash Display 700) on semi-transparent classification-bar backdrop, composed inline by Phase 4. NO Phase 3 asset deliverable for stat captions_
+- _**Visual-manifest SIMPLIFIED to hand-edited** (~25 entries). Pre-deepening codegen + .meta.json sidecar CUT (no churn driver for static visuals; sidecars never materialized). `safeSquareRole` becomes REQUIRED field per-entry. Phase 0 ships empty stub `VISUAL_ASSETS: readonly VisualAsset[] = [] as const` mirroring Phase 2's audio-manifest stub pattern_
+- _**PHASE-3-EXIT.md** template — single document Phase 4 reads for HTP outcome, capture method, card-roster assignments, R15 filenames+frames, music-bed track+duration+license-path, briefing-room inventory, Imagen spend actual. Mirrors Phase 0/1/2 exit-document pattern_
+- _**Per-unit eval markdowns CONSOLIDATED** — 4 per-unit MDs (htp-capture, briefing-room-assets, r15-chrome, title-sequence) merged into single `asset-inventory.md`. music-audition-log.md + card-curation.md + music-license.pdf kept standalone_
+- _**Safe-square composite proofs NEW** (Unit 3.7 Step 4) — per-asset-family PNG at 1920×1080 with 1080×1080 center-square guide overlay. Critical for R15 stamp #3 (1200×280 at -3° rotation, mobile-crop risk). Briggsy verifies critical text inside center before Phase 4 imports_
+
+_**Cross-phase dependencies surfaced by Phase 3 deepening** (Phase 4 must absorb during its own deepening pass):_
+- _**Phase 4 imports BURNED vocabulary from `./components/burned-vocabulary/`** (NOT `../../src/client/howtoplay/components/` — Path B hybrid; Path A formally rejected). Token-import strategy decision (Option A vendor / B path-import / C shim per Unit 3.0 README) deferred to Phase 4 deepening_
+- _**Phase 4 `<Img>` + `<OffthreadVideo>` from `'remotion'` core** (NOT `@remotion/media` — only `<Audio>` migrated to @remotion/media per Phase 0 ADR #5)_
+- _**Phase 4 staticFile paths**: `staticFile('trailer/r15-chrome/stamp-1-frame.svg')` for Phase 3 NEW assets; `staticFile('assets/{cards,arena,roster,howtoplay}/...')` for BURNED existing assets (per ADR #8 + ADR #15)_
+- _**Phase 4 R15 split-layer composition**: `<AbsoluteFill style={{ transformOrigin: 'center', transform: ` rotate(${tilt}deg) ${scaleSlap(frame)}` }}>` wrapping two `<Img>` (frame + text) per stamp. Phase 4 line 1880 references the OLD R15 #4 filename `subhead-4-agent-built.svg` — must update to `subhead-4-field-ready-frame.svg` + `subhead-4-field-ready-text.svg` during Phase 4 deepening_
+- _**Phase 4 R15 #4 frame**: 2820 (was 2800)_
+- _**Phase 4 cascade halo composition**: import `cascade-ring-layout.json` for per-card geometry + entry stagger; CANNOT compose layered-simultaneous_
+- _**Phase 4 stat captions**: pure React text in Clash Display 700 with semi-transparent classification-bar backdrop; NO Phase 3 asset to import_
+- _**Phase 4 Otto S03 handling**: 6 card-art operatives slide in + Otto-aside chrome (REDACTED placeholder / `arena/portrait-otto.png` with classification-bar / typographic "BASEMENT" reference — Phase 4 picks). NOT 7 operatives_
+- _**Phase 4 trace-video fallback**: output is `.webm` (Playwright recordVideo default); Phase 4 OffthreadVideo decodes; Phase 6 may optionally transcode to `.mp4`_
+- _**Phase 4 SPIKE NEEDED at entry**: variable woff2 `weight: '200 700'` syntax with `@remotion/fonts.loadFont()`. Framework-docs research found Remotion docs only demonstrate single-weight or per-weight-file loading; variable-range syntax unresolved. Either resolves at spike OR Phase 4 splits the 3 variable woff2 into per-weight static subsets_
+- _**Phase 4 imports `useFonts()` BEFORE rendering ANY scene** to ensure JetBrains Mono + Clash Display load before SVG text renders in MP4 export_
+- _**Phase 4 imports vendored vocabulary CSS modules**: Phase 4 entry decision per Unit 3.0 README — vendor token CSS files (Option A) OR path-import from BURNED (Option B) OR ship fixed-value shim (Option C)_
+
+_**Next session entry: `/deepen-plan` on `phase-4-remotion-composite.md`.** Per `feedback-phase-plan-drafting-workflow.md`. Sequential, one phase per session. Phase 4 must absorb the 11 cross-phase dependencies surfaced above PLUS Phase 2's audio contract (`<Sequence from={asset.startFrame - leadFramesHint}><Audio>` placement, voice union `'dash'|'sable'|'janet'|'vera'`, leadFramesHint consumption)._
 
 _Note: 5 modified files (board.html, player.html, public/\_headers, src/client/howtoplay/acts/ActRemote.tsx, src/server/room.ts) + 1 untracked file (`../../.github/workflows/deploy-burned.yml`) are an in-progress deploy migration (partykit → Cloudflare Workers, `mbriggsy.partykit.dev` → `briggsy007.workers.dev`, adding `burned-cxa.pages.dev` as allowed origin). Deliberately NOT swept into either origin-trailer commit — deserves its own deployment commit when ready._
 
@@ -259,14 +300,26 @@ Active warnings only. Older landmines have moved to `docs/insights/` and
   alongside board/player. Don't remove it. Dev URL is
   `/howtoplay.html`; prod URL is `/howtoplay` (Cloudflare Pages strips
   `.html`).
-- **HOW-TO-PLAY: Imagen prompt gotcha — hex codes bake in as text**
-  (caught in title plate v1). DO NOT reference hex codes like
-  `#94 7226` in Imagen prompts — the model renders them as literal
-  visible text in the output. Always describe colors in words ("burnt
-  orange," "warm gold"). Regenerator script:
-  `scripts/generate-htp-assets.ts` with `HTP_ASSET=<filename>` env var
-  to target one asset (filenames: `pendleton-crest`,
-  `operations-manual-plate`, `desk-scene`; or `all` for the batch).
+- **HOW-TO-PLAY: Imagen prompt gotcha — hex codes WITHOUT trailing
+  negatives bake in as text** (caught in title plate v1; reworded
+  2026-05-17 per Phase 3 deepening repo-research). Original landmine
+  said "DO NOT reference hex codes like `#94 7226` in Imagen prompts."
+  Visual inspection of shipped assets (`public/assets/howtoplay/
+  pendleton-crest.png` + `operations-manual-plate.png` +
+  `public/assets/arena/blotter.png` + `mahogany-horizontal.png` —
+  all generated by `scripts/generate-htp-assets.ts` +
+  `scripts/generate-briefing-assets.ts` which BOTH use hex codes in
+  prompts) shows ZERO baked hex-text. **Working recipe**: hex codes
+  are OK IF every prompt ends with explicit negative suppressors —
+  "absolutely NO additional text NO words NO numbers NO hex codes NO
+  color codes beyond [whitelisted text if any]". The shipping
+  scripts use this pattern; the outputs are clean. The original
+  landmine warning was overstated. **Rule**: hex codes safe with
+  negative suppressors at end; hex codes unsafe without them.
+  Regenerator script: `scripts/generate-htp-assets.ts` with
+  `HTP_ASSET=<filename>` env var to target one asset (filenames:
+  `pendleton-crest`, `operations-manual-plate`, `desk-scene`; or
+  `all` for the batch).
 - **HOW-TO-PLAY: separate mono font import** (commit `b48fd4fd`). The
   page imports `src/client/howtoplay/fonts-mono-htp.css` for
   JetBrains Mono. Cannot share `src/client/shared/fonts-mono.css`

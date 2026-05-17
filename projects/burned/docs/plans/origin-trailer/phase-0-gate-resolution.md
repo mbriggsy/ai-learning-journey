@@ -6,7 +6,7 @@ parent: docs/plans/origin-trailer/roadmap.md
 origin: docs/ideation/2026-05-15-origin-trailer-brainstorm.md
 created: 2026-05-16
 deepened: 2026-05-16
-reviewed: pending
+reviewed: 2026-05-17
 status: active
 ---
 
@@ -32,20 +32,45 @@ Phase 0 produces:
 - A locked R14 cold-open line, locked R5 scream disposition, locked
   Archer-grammar transition primary
 
-Phase 0 exits when every gate has a documented outcome and the
-**five locks** (voice-cast / tone / composite-viability / cold-open
-line / scream outcome) are recorded in
+Phase 0 exits when every gate has a documented **disposition** and
+the **five dispositions** (voice-cast / tone / composite-viability /
+cold-open line / scream outcome) are recorded in
 `videos/trailer/PHASE-0-EXIT.md`, whose template is locked at plan
 time (see §**PHASE-0-EXIT.md template** at the tail of this document).
+
+"Documented disposition" means one of three states:
+- **cleared** — original gate intent landed, acceptance threshold cleared
+- **restructured** — fail-action redirected to a documented alternative (Path B instead of A, non-Dash briefer instead of Dash, etc.)
+- **cut** — gate intent abandoned, downstream phases re-scope around the absence
+
+Phase 1 reads `PHASE-0-EXIT.md` to know which of the three each
+disposition is — "all cleared" and "all dispositioned" are different
+states and Phase 1's beat-sheet scaffolding branches on which.
+
+**Exit semantics when Sub-phase 0a (Path D) is active:** voice-cast
+disposition cannot finalize until Path D actor delivers (1-3 weeks) +
+Unit 0.3 decode-eval runs on the actor recording (Unit 0.3 depends on
+locked voice). During Sub-phase 0a, Phase 0 stays open; Phase 1
+**voice-agnostic** structural work (scene count, scene order, cascade
+composition, R15 chrome design) may proceed in parallel BUT Phase 1's
+beat-sheet does NOT lock until PHASE-0-EXIT.md is complete. This
+extends elapsed Phase 0 duration by 1-4 weeks when Sub-phase 0a fires.
+Voice lock under Sub-phase 0a remains **provisional until Phase 6
+N=6 cold-decode panel re-validates** — see Phase 6 ADR #21 + the
+"Ceiling-band rollback" subsection in §4 Acceptance below.
 
 **Unit ordering** (refined during deepening — supersedes naive
 "parallel after 0.1" framing):
 
 1. **Unit 0.1** — scaffold (entry point).
 2. **Unit 0.2 Steps 0 / 0a / 0.5** — cadence-spec.md + account
-   readiness + spec sanity check (no engine spend).
-3. **Unit 0.5** — composite spike (no TTS dependency; can run in
-   parallel with Step 0/0a/0.5 above).
+   readiness + spec sanity check (no full engine matrix spend; Step
+   0.5 uses one cheap Gemini-free-tier clip — see Step 0.5 below).
+3. **Unit 0.5** — composite spike. **No TTS-engine-API dependency**
+   (uses placeholder audio for crossfade test). May run in parallel
+   with Steps 0/0a/0.5 once Step 0 cadence-spec **research** completes,
+   but BEFORE Step 1.5 engine-adapter translation. Step 0.5's audio
+   pre-flight is engine-light enough that 0.5 ∥ 0.5 doesn't block.
 4. **Unit 0.2 Steps 1.5 / 2 / 3a / 3 / 4 / 5** — engine-adapter
    translation + engine matrix + hosting + MUSHRA + acceptance + fail
    ladder.
@@ -146,6 +171,53 @@ Brainstorm says "≥2 testers, blind protocol." Research says MUSHRA
 (ITU-R BS.1534-3) is the right shape; **6–8 listeners minimum** for an
 informal voice-authenticity research pass.
 
+### Design Locks Made at Phase 0 (Beyond Gate Resolution)
+
+Phase 0's stated charter is gate resolution. In practice, the deepening
+pass landed several **design locks** that exceed gate-clearing — they
+are pre-locked so Unit 0.5's spike validates production-grade values
+(not placeholders) and so downstream phases inherit a stable contract.
+Surfacing them explicitly so the scope expansion is visible, not buried:
+
+| Lock | What's locked | Why at Phase 0 (vs later) | Roadmap ADR |
+|------|---------------|---------------------------|-------------|
+| **BurnedDisplay = Clash Display variable woff2** | Existing BURNED face at `public/fonts/ClashDisplay-Variable.woff2`, weight 200–700 axis | Unit 0.5(c) spike validates the rendering pipeline against the *actual* production face. Using a placeholder would defeat the spike. | (inherits BURNED product spec; no trailer-specific ADR) |
+| **Archer-grammar transition vocabulary** | Stamp-slap PRIMARY (scene-to-scene); iris-wipe FALLBACK (cold-open→Act-1 only); kinetic-typography CONSTRAINED to R11 goofy-stat overlays | Unit 0.5(e) spike validates all three render in pure Remotion; Phase 4 inherits the vocabulary set, doesn't re-decide | ADR #4 (revised — TransitionSeries removed; bare `<Series>` + scene-internal overlays) |
+| **R15 chrome stamp minimum-spec** | Bottom-third placement; BURNED orange/teal (`--paper-signal-orange` / `--paper-ink`); Clash Display | Unit 0.3 cold-open spike uses production R15 specs so decode-eval tests structural design, not placeholder design | (Phase 3 owns final SVGs; Phase 0 locks the shape) |
+| **VOICE_DIRECTION per-engine guard variants** | ElevenLabs bracket-tag-only / Gemini section-marker / OpenAI separate-parameter — codified at API call sites in `generate-tts-eval.ts` | Generalizes UMB's Gemini-only guard; mistake-prevention has been hit TWICE per `feedback-narrator-voice-direction.md` | (Unit 0.2 Test Scenarios — assertion tests, not just comments) |
+| **Sterling-CODED, not Sterling-cloned** | Voice analog of Archer-CODED visual rule; mimicry of style, never replication of identity | Locked during deepening 2026-05-16; aligns design choice with ElevenLabs ToS + ELVIS Act + NO FAKES + EU AI Act legal floor | ADR #13 |
+| **Unit ordering** | 0.1 → (0.2 Steps 0/0a/0.5 ∥ 0.5 spike post-Step-0-research) → 0.2 Steps 1.5/2/3a/3/4/5 → 0.6 → 0.4 → 0.3 | Unit 0.6 outcome filters Unit 0.3 candidate pool; Unit 0.4 consumes locked briefer voice; brainstorm-stated resolution order operationally enforced | (preface above) |
+
+If a later-phase finding requires revisiting one of these locks, the
+amendment route is: file a Phase 0 ADR-revision proposal in the
+roadmap, re-validate the spike's affected integration point, update
+PHASE-0-EXIT.md disposition entry. Locks are not silently editable.
+
+### ADR Dependency Manifest
+
+This plan was deepened 2026-05-16. ADRs landed **after** that date in
+later-phase deepening (Phase 6 #19-23 + Phase 7 #24-29) may invalidate
+references in this plan. Plan-time dependencies:
+
+| ADR | Version source | Phase 0 consumer |
+|-----|----------------|------------------|
+| #4 | revised 2026-05-17 (Phase 1 deepening — TransitionSeries removed, bare `<Series>` + scene-internal overlays) | Unit 0.5(e) — vocabulary lock + spike rendering pattern |
+| #6 | refined 2026-05-16 (Lottie on-demand, NOT pre-installed) | Unit 0.1 — package.json deps; Unit 0.5(e) — fallback only |
+| #8 | 2026-05-16 (`setPublicDir('../../public')` for cross-package staticFile resolution) | Unit 0.1 — `remotion.config.ts`; Unit 0.5(c)+(d) — static asset paths |
+| #11 | revised 2026-05-17 (matches #4 revision) | Unit 0.5(e) — composition pattern |
+| #13 | locked 2026-05-16 (Sterling-CODED) | Unit 0.2 — entire R4 acceptance shape; Unit 0.3 — R14 line acceptance; Unit 0.6 — scream Path B framing |
+| #15 | 2026-05-17 (Phase 3 deepening — `public/trailer/` subdirectory architecture) | Phase 3 dependency only; no Phase 0 consumer |
+
+**Cross-phase consistency rule:** any later-phase ADR revision that
+touches voice / audio / cadence / composite-spike vocabulary triggers
+Phase 0 re-review before Phase 0 execution begins. New ADRs landing
+after Phase 0 execution starts surface as a Phase-0-amendment proposal,
+not a silent absorb. Specifically watch:
+- ADR #21 (Phase 6 keyword-precision rule for R14 decode) — already
+  propagated into Unit 0.3 Step 3 below.
+- ADR #22 (sign-off ceremony with `.signoff` sentinels) — applies to
+  PHASE-0-EXIT.md sign-off; codified in §PHASE-0-EXIT.md template.
+
 ---
 
 ## Requirements Trace
@@ -170,10 +242,12 @@ informal voice-authenticity research pass.
 - **Trailer scaffold uses UMB v3's structure** as the precedent
   (`projects/undercover-mob-boss/videos/trailer/`) — same `package.json`
   shape, same `remotion.config.ts`, same `src/index.ts → Root.tsx →
-  Composition` chain. Diff vs UMB: add `@remotion/transitions` +
-  `@remotion/media` packages. `@remotion/lottie` is **NOT pre-installed**
-  — Unit 0.5 spike decides necessity; install only if a transition
-  candidate fails pure-Remotion render (per roadmap ADR #6, refined).
+  Composition` chain. Diff vs UMB: add `@remotion/media` for the new
+  `<Audio>` API (per Phase 0 ADR #5). `@remotion/transitions` and
+  `@remotion/lottie` are **NOT pre-installed** — Unit 0.5 spike
+  validates the production patterns (bare `<Series>` + scene-internal
+  overlays per ADR #4 revised) and installs only on-demand if a
+  specific helper is needed (per roadmap ADR #4 + ADR #6).
 - **`@remotion/skills` is a Claude Code skills artifact, NOT an npm
   dependency.** It's a GitHub repo (`github.com/remotion-dev/skills`)
   cloned into `~/.claude/skills/remotion/`. The npm registry returns
@@ -235,8 +309,10 @@ informal voice-authenticity research pass.
 
 **Goal:** Create the isolated Remotion 4.0.438 trailer package at
 `projects/burned/videos/trailer/` so Phase 0 units 0.2–0.6 have a home.
-Mirror UMB v3 structure exactly; diff is only the additional Remotion
-packages required for `TransitionSeries`, new `Audio`, and Lottie.
+Mirror UMB v3 structure exactly; the only Remotion-package diff is
+`@remotion/media` for new `<Audio>` per Phase 0 ADR #5.
+`@remotion/transitions` + `@remotion/lottie` are deliberately
+on-demand (ADR #4 revised + ADR #6 refined — see Approach below).
 
 **Requirements:** Foundation for all subsequent Phase 0 units.
 
@@ -247,7 +323,29 @@ packages required for `TransitionSeries`, new `Audio`, and Lottie.
 - Create: `videos/trailer/package.json`
 - Create: `videos/trailer/remotion.config.ts`
 - Create: `videos/trailer/tsconfig.json`
-- Create: `videos/trailer/.gitignore`
+- Create: `videos/trailer/.gitignore` — **specific content required**:
+  ```gitignore
+  node_modules/
+  out/
+  # Sample-eval audio binaries — NEVER commit (privacy + repo bloat)
+  sample-eval/**/*.wav
+  sample-eval/**/*.mp3
+  sample-eval/**/*.ogg
+  sample-eval/**/*.m4a
+  # Owned-voice source recording (Path B; security-sensitive)
+  sample-eval/r5-scream/path-b-source-recording.*
+  sample-eval/r4-dash/voice-clone-source.*
+  # Rendered MP4 clips for listener-panel stimuli (pre-launch audio leak risk)
+  sample-eval/**/clips/*.mp4
+  # Allow markdown / JSON / yaml (eval protocols + adapter files + results)
+  !sample-eval/**/*.md
+  !sample-eval/**/*.json
+  !sample-eval/**/*.yaml
+  ```
+  Rationale: WAV outputs (with Briggsy's processed voice on Path B
+  and engine cadence-steering content) + rendered MP4 stimuli must not
+  land in git history. Eval protocol/results files (markdown, JSON,
+  YAML) stay tracked. See P1.21 / security-lens finding 2026-05-17.
 - Create: `videos/trailer/src/index.ts` — registerRoot call
 - Create: `videos/trailer/src/Root.tsx` — single placeholder `<Composition>`
 - Create: `videos/trailer/src/hooks/useFonts.ts` — stubbed `useFonts()` (no fonts loaded yet)
@@ -257,10 +355,21 @@ packages required for `TransitionSeries`, new `Audio`, and Lottie.
 **Approach:**
 
 - `package.json` mirrors UMB but with BURNED-specific name and a
-  trimmed dependency set (`@remotion/lottie` deliberately excluded
-  per roadmap ADR #6 refined — install on-demand only if Unit 0.5
-  spike requires it). `render:final` added for Phase 6 production
-  encode:
+  trimmed dependency set. Two packages **deliberately excluded** per
+  ADR #4 (revised 2026-05-17) and ADR #6 (refined 2026-05-16):
+  - **`@remotion/lottie`** — install on-demand only if Unit 0.5(e)
+    spike's stamp-slap OR iris-wipe fails in pure Remotion. ADR #6.
+  - **`@remotion/transitions`** — install on-demand only if Unit
+    0.5(e) needs `iris()` / `addSound()` primitives as overlay-
+    component helpers. Phase 4 deepening REMOVED `TransitionSeries`
+    across 15+ sections (R3 is a HARD CUT, not cross-dissolve);
+    composition uses bare `<Series>` + scene-internal overlays. ADR #4.
+
+  `render:final` is **NOT** added in Unit 0.1 — production encode flags
+  (CRF 16 + slow preset + audio-bitrate 128K) are a Phase 6 artifact
+  that serves no Phase 0 gate. Phase 6's plan adds it when production
+  encoding actually needs the configuration.
+
   ```jsonc
   {
     "name": "burned-trailer",
@@ -270,32 +379,38 @@ packages required for `TransitionSeries`, new `Audio`, and Lottie.
     "scripts": {
       "studio": "npx remotion studio src/index.ts",
       "render": "npx remotion render src/index.ts BurnedTrailer out/trailer-landscape.mp4 --codec h264 --crf 18",
-      "render:final": "npx remotion render src/index.ts BurnedTrailer out/trailer-final.mp4 --codec h264 --crf 18 --x264-preset slow --pixel-format yuv420p --audio-codec aac --audio-bitrate 128K",
       "render:thumbnail": "npx remotion still src/index.ts BurnedTrailer out/thumbnail.png --frame 450",
-      "typecheck": "tsc --noEmit"
+      "typecheck": "tsc --noEmit",
+      "test": "vitest run",
+      "check:tts": "tsx scripts/check-tts-readiness.ts"
     },
     "dependencies": {
       "remotion":             "4.0.438",
       "@remotion/cli":        "4.0.438",
       "@remotion/fonts":      "4.0.438",
-      "@remotion/transitions":"4.0.438",
       "@remotion/media":      "4.0.438",
       "react":     "^19.1.0",
       "react-dom": "^19.1.0"
     },
     "devDependencies": {
       "@types/react": "^19.1.0",
-      "typescript":   "^5.9.3"
+      "typescript":   "^5.9.3",
+      "tsx":          "^4.20.0",
+      "dotenv":       "^17.0.0",
+      "vitest":       "^4.0.0"
     }
   }
   ```
+  `tsx` runs the Step 0a `check-tts-readiness.ts` + the Step 2
+  `generate-tts-eval.ts` scripts in a shell-agnostic way (no
+  ts-node dependency, works on Windows + Unix). `dotenv` loads `.env`
+  inside Node so we don't depend on bash `set -a && source .env`.
+  `vitest` runs the VOICE_DIRECTION assertion tests + the
+  `sample-script-dash.test.ts` line-range citation test.
   Encoder default math: Remotion 4.0.x already defaults
   `pixel-format=yuv420p` + `audio-codec=aac` + `x264-preset=medium`.
   Plan's `--codec h264 --crf 18` is functionally identical to the
-  pure-default invocation; explicit flags document intent.
-  `render:final` drops CRF to 16 + uses `slow` preset for Phase 6
-  near-lossless trailer-grade output (~5% quality bump at the cost
-  of render time — appropriate for the one production render). All
+  pure-default invocation; explicit flags document intent. All
   defaults are X/Twitter-mobile-decoder safe out of the box.
 - `remotion.config.ts` is one import + one call:
   ```ts
@@ -355,6 +470,28 @@ through four legal Paths A–D.
 **Requirements:** R4 (Dash sustained narration ~90% runtime).
 
 **Dependencies:** Unit 0.1 (scaffold).
+
+**Pre-Execution Prerequisites (HARD BLOCK — verify BEFORE Step 0a).**
+
+Current `.env` at BURNED project root contains only `GEMINI_API_KEY`,
+`PLAYTEST_MODE`, `PLAYTEST_TOKEN`. Two additional engine accounts must
+be set up + keys written to `.env` BEFORE Unit 0.2 can advance past
+Step 0a. Step 0a's curl probes will return 401 on missing keys — this
+is the documented failure mode, not a silent skip.
+
+| Prerequisite | Owner | Verification |
+|---|---|---|
+| ElevenLabs **Creator** subscription active ($22/mo, 100K char allowance) — Paths A + B require this tier specifically (Voice Library commercial rights + Instant Voice Cloning). Free / Starter tier passes Step 0a auth probe but silently fails at Path A generation. | Briggsy | Step 0a's enhanced probe asserts `subscription.tier == "creator"` |
+| `ELEVENLABS_API_KEY=<...>` written to `.env` at BURNED project root | Briggsy | Probe returns 200 + correct tier |
+| OpenAI API key with billing enabled AND `gpt-4o-mini-tts` model access enabled (this is a separate enablement gate on some accounts) | Briggsy | Step 0a probe asserts `.data[] \| select(.id == "gpt-4o-mini-tts")` returns the model row, not empty |
+| `OPENAI_API_KEY=<...>` written to `.env` | Briggsy | Probe returns 200 + model accessible |
+| Gemini API key (already present in current `.env`) — verify still valid | Existing | Probe returns 200 |
+
+If any prerequisite is missing when Unit 0.2 starts, the executor halts
+at Step 0a with a Brief Memo to Briggsy listing the missing accounts +
+expected setup time (ElevenLabs Creator activation ~10 min including
+billing; OpenAI billing setup ~10 min; total prerequisite-setup window
+~30 min). Unit 0.2 does not proceed to Step 1 with unsatisfied prereqs.
 
 **Files:**
 
@@ -434,68 +571,251 @@ Specs to extract and document:
 | **Volume dynamics** | Compressed dynamic range in conversational reads; sudden hard volume jumps on screams (the "LANA!" mechanic) — Sterling-CODED screaming is volume-discontinuous, not pitch-discontinuous |
 | **What NOT to encode** | Anything that would identify Benjamin specifically — a recognizable laugh signature, exact vowel placement on "Lana," etc. The spec is style abstraction, not impression mimicry. |
 
-**Three-band spectrum (locked at plan time per Adversarial Finding 19):**
+**Three-band spectrum shape (template, refined during Step 0 research).**
 
-| Band | Listener describes the voice as... | Disposition |
+The plan REQUIRES the cadence-spec to use a three-band shape:
+**Floor** (insufficient) / **Target Band** (success) / **Ceiling** (too
+close). The content of each band is the deliverable of Step 0 research
+— filled in once the cadence characterization completes against
+primary sources. Use the table below as the **starting hypothesis**;
+Step 0 may refine the band descriptions if the research surfaces
+adjacent-register vocabulary the working hypothesis missed.
+
+| Band | Starting-hypothesis listener descriptions | Disposition |
 |------|------------------------------------|-------------|
 | **Floor** (insufficient) | "generic narrator," "doesn't sound like anything in particular," "could be any audiobook" | Re-steer (the spec is too generic — tighten genre-anchor mannerisms) |
 | **Target Band** (success) | "deadpan briefing voice," "spy register," "film-noir," "sardonic detective," "Archer-coded register," "briefing-room" | Pass |
 | **Ceiling** (too close) | "this is impersonating Jon Benjamin," "this IS Sterling Archer," "trying to BE Archer" | Re-spec (strip identity-suggesting characteristics; re-run engine matrix) |
 
-The Target Band is broad on purpose — Sterling-CODED register is a
+The Target Band is intentionally broad — Sterling-CODED register is a
 cluster of adjacent registers (noir narrator, deadpan spy briefer,
 sardonic detective) that all read as "Archer-coded" without being
 "Archer impression." The Ceiling is the bound; listener-volunteered
 actor recognition is the diagnostic signal (Step 4 bonus-signal +
 disambiguation question).
 
+**Step 0's deliverable refines or confirms this table.** If research
+reveals additional Target-Band descriptors not in the starting
+hypothesis, ADD them. If a starting-hypothesis descriptor turns out to
+NOT be Sterling-coded, REMOVE it. The plan describes the shape (three
+bands required, broad Target, listener-volunteered Ceiling); the
+content is filled by the research.
+
 Output: `cadence-spec.md`. Source document for every engine in Step
 2 via the per-engine adapters built in Step 1.5. Cite every claim
 against the source consulted; this is the proof-of-shape that
 style-mimicry is the goal, not impression.
 
-**Step 0a — Engine account readiness check.** Before Step 0.5 sanity
-check (or while Step 0 research is underway), verify each engine API
-key is present in `.env` and produces a valid 200 response from a
-minimal probe:
+**Step 0a — Engine account readiness check.** Implemented as
+`videos/trailer/scripts/check-tts-readiness.ts` (Node + dotenv +
+fetch — **shell-agnostic by design**, works identically on Windows
+PowerShell and Unix bash; auth headers never enter shell history).
 
-```bash
-set -a && source .env && set +a   # CLAUDE.md autonomy rule — always load .env
+```ts
+// scripts/check-tts-readiness.ts (full source — execute via `pnpm tsx`)
+import 'dotenv/config';
+import { writeFileSync } from 'node:fs';
 
-# ElevenLabs
-curl -s -H "xi-api-key: $ELEVENLABS_API_KEY" https://api.elevenlabs.io/v1/user | jq .
+type Probe = { engine: string; ok: boolean; detail: string };
 
-# Gemini
-curl -s "https://generativelanguage.googleapis.com/v1beta/models?key=$GEMINI_API_KEY" | jq '.models[0].name'
+async function probeElevenLabs(): Promise<Probe> {
+  const key = process.env.ELEVENLABS_API_KEY;
+  if (!key) return { engine: 'elevenlabs', ok: false, detail: 'ELEVENLABS_API_KEY missing from .env' };
+  // Auth + subscription_tier check
+  const u = await fetch('https://api.elevenlabs.io/v1/user', { headers: { 'xi-api-key': key } });
+  if (!u.ok) return { engine: 'elevenlabs', ok: false, detail: `auth probe ${u.status}` };
+  const body = await u.json();
+  const tier = body?.subscription?.tier;
+  if (tier !== 'creator') return { engine: 'elevenlabs', ok: false, detail: `tier=${tier} (need 'creator')` };
+  // Real TTS endpoint probe (not just auth) — generate 10 chars on a default voice
+  // Voice ID 21m00Tcm4TlvDq8ikWAM = 'Rachel', always available in Voice Library
+  const tts = await fetch('https://api.elevenlabs.io/v1/text-to-speech/21m00Tcm4TlvDq8ikWAM', {
+    method: 'POST',
+    headers: { 'xi-api-key': key, 'Content-Type': 'application/json' },
+    body: JSON.stringify({ text: 'hello', model_id: 'eleven_v3' }),
+  });
+  if (!tts.ok) return { engine: 'elevenlabs', ok: false, detail: `tts endpoint ${tts.status}` };
+  const bytes = await tts.arrayBuffer();
+  if (bytes.byteLength < 1000) return { engine: 'elevenlabs', ok: false, detail: 'tts returned <1KB' };
+  return { engine: 'elevenlabs', ok: true, detail: `tier=creator, tts ok (${bytes.byteLength} bytes)` };
+}
 
-# OpenAI
-curl -s -H "Authorization: Bearer $OPENAI_API_KEY" https://api.openai.com/v1/models | jq '.data[0].id'
+async function probeOpenAI(): Promise<Probe> {
+  const key = process.env.OPENAI_API_KEY;
+  if (!key) return { engine: 'openai', ok: false, detail: 'OPENAI_API_KEY missing from .env' };
+  // Auth + model scope check
+  const m = await fetch('https://api.openai.com/v1/models', { headers: { Authorization: `Bearer ${key}` } });
+  if (!m.ok) return { engine: 'openai', ok: false, detail: `auth probe ${m.status}` };
+  const body = await m.json();
+  const hasTTS = body?.data?.some((row: { id: string }) => row.id === 'gpt-4o-mini-tts');
+  if (!hasTTS) return { engine: 'openai', ok: false, detail: 'gpt-4o-mini-tts not in model list (account scope missing)' };
+  // Real TTS endpoint probe
+  const tts = await fetch('https://api.openai.com/v1/audio/speech', {
+    method: 'POST',
+    headers: { Authorization: `Bearer ${key}`, 'Content-Type': 'application/json' },
+    body: JSON.stringify({ model: 'gpt-4o-mini-tts', input: 'hello', voice: 'alloy' }),
+  });
+  if (!tts.ok) return { engine: 'openai', ok: false, detail: `tts endpoint ${tts.status}` };
+  const bytes = await tts.arrayBuffer();
+  if (bytes.byteLength < 1000) return { engine: 'openai', ok: false, detail: 'tts returned <1KB' };
+  return { engine: 'openai', ok: true, detail: `model scope ok, tts ok (${bytes.byteLength} bytes)` };
+}
+
+async function probeGemini(): Promise<Probe> {
+  const key = process.env.GEMINI_API_KEY;
+  if (!key) return { engine: 'gemini', ok: false, detail: 'GEMINI_API_KEY missing from .env' };
+  // Verify the TTS-specific model is accessible
+  const model = 'gemini-2.5-flash-preview-tts';
+  const m = await fetch(`https://generativelanguage.googleapis.com/v1beta/models/${model}?key=${key}`);
+  if (!m.ok) return { engine: 'gemini', ok: false, detail: `model probe ${m.status} for ${model}` };
+  // Real TTS endpoint probe — generateContent with TTS audio output requested
+  const tts = await fetch(`https://generativelanguage.googleapis.com/v1beta/models/${model}:generateContent?key=${key}`, {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify({
+      contents: [{ parts: [{ text: 'hello' }] }],
+      generationConfig: { responseModalities: ['AUDIO'] },
+    }),
+  });
+  if (!tts.ok) return { engine: 'gemini', ok: false, detail: `tts endpoint ${tts.status}` };
+  return { engine: 'gemini', ok: true, detail: `model ${model} ok, tts endpoint ok` };
+}
+
+async function main() {
+  const results = await Promise.all([probeElevenLabs(), probeOpenAI(), probeGemini()]);
+  // Initialize char-budget tracker at first successful probe
+  const budget = { month: new Date().toISOString().slice(0, 7), elevenlabs_chars_used: 0, elevenlabs_chars_cap: 100_000, tripwire_50pct: false, tripwire_80pct: false };
+  writeFileSync('sample-eval/r4-dash/char-budget.json', JSON.stringify(budget, null, 2));
+  // Write readiness report
+  const md = ['# Engine Account Readiness\n', `Probed: ${new Date().toISOString()}\n`,
+    ...results.map(r => `- **${r.engine}**: ${r.ok ? 'OK' : 'FAIL'} — ${r.detail}`)].join('\n');
+  writeFileSync('sample-eval/r4-dash/account-readiness.md', md);
+  const failed = results.filter(r => !r.ok);
+  if (failed.length) { console.error('FAIL:', failed); process.exit(1); }
+  console.log('All engines ready. Char-budget tracker initialized.');
+}
+main();
 ```
 
-For any engine returning 401/403 or missing the env var, set up the
-account + billing before proceeding. Paths A/B require ElevenLabs
-**Creator** tier ($22/mo, 100K char allowance) — verify subscription
-active before Step 2. Document each engine's readiness state in
-`account-readiness.md`.
+**Key behaviors:**
+- **Subscription/scope verification, not just auth.** ElevenLabs probe
+  asserts `subscription.tier === 'creator'`; OpenAI probe asserts the
+  `gpt-4o-mini-tts` model is in the account's model list.
+- **Real TTS endpoint probes (P1.11).** Each engine generates 10 chars
+  on a default voice and verifies actual audio bytes return. Auth + model
+  listing don't catch service outages, voice-access gating, or regional
+  restrictions. A 200 on `/v1/user` with broken TTS slips through; the
+  full probe doesn't.
+- **Char-budget tracker initialized (P1.12).** Writes
+  `sample-eval/r4-dash/char-budget.json` with month + elevenlabs char
+  count + tripwire flags. `generate-tts-eval.ts` (Step 2) reads this
+  file before every API call and FAILS-FAST at the 80% threshold
+  (80,000 chars) unless `ELEVENLABS_BUDGET_OVERRIDE=1` is set. At
+  50,000 chars, the script writes a tripwire warning to
+  `account-readiness.md` but does not halt. At 80,000 chars, it halts
+  with a Brief Memo to Briggsy requiring explicit approval before more
+  spend (typical scenario: adversarial re-spec iteration burning the
+  monthly cap before a Path locks).
+- **Shell-agnostic (P2.7).** Node + dotenv reads `.env` from BURNED
+  project root regardless of Windows PowerShell or Unix bash. No
+  `set -a && source .env` idiom; no `jq` dependency; no curl `-H` flag
+  that puts keys in PSReadLine history (P2.10 —
+  `%APPDATA%\Microsoft\Windows\PowerShell\PSReadLine\ConsoleHost_history.txt`).
+- **Invocation:** `pnpm tsx scripts/check-tts-readiness.ts` from
+  `videos/trailer/` directory. Add `tsx` + `dotenv` to trailer's
+  `devDependencies` (both are tiny, no runtime impact).
 
-**Step 0.5 — Spec sanity check (BEFORE engine spend).** The
-cadence-spec is the load-bearing input to every engine. If the spec
-is bad, all three Paths fail not because the engines are bad but
-because the steering is bad. Insert a cheap validation gate:
+**Char-budget tripwire contract (referenced from Step 2 + Step 5):**
+- ≤50,000 chars: green. Continue.
+- 50,001–80,000: yellow. `account-readiness.md` flags the threshold;
+  Step 2 keeps running but every adversarial re-spec round adds an
+  explicit "Are we sure?" log line.
+- 80,001+: red. `generate-tts-eval.ts` halts. Brief Memo to Briggsy:
+  "ElevenLabs Creator monthly char cap at 80K; further spend may
+  exhaust the 100K allowance before Step 5 fail-action escalations.
+  Approve override OR wait for billing-cycle reset." Override mechanism:
+  `ELEVENLABS_BUDGET_OVERRIDE=1 pnpm tsx scripts/generate-tts-eval.ts`.
+- Hard cap: 100,000 chars (ElevenLabs Creator monthly). Auto-halt with
+  no override — exhaustion would burn out billing cycle.
 
-- Hand `cadence-spec.md` to **two engineering-peer Archer-fan readers**
-  (Briggsy + Harry, or Briggsy + one Discord contact).
-- Ask: *"If you handed this to a voice actor with no other context,
-  could they deliver a read that lands in the Sterling-coded register
-  (deadpan briefing voice, sardonic-spy register) without it being a
-  Benjamin impression?"*
-- Both readers must answer **Yes** before Step 1.5 begins.
-- If either says No: revise the spec (typically the Target Band
-  characterizations are too thin or the Ceiling distinctions
-  unclear), re-run the check.
+If any engine returns FAIL in the readiness probe, the executor halts
+and routes to Pre-Execution Prerequisites above (account setup +
+billing + .env writes). Step 0a only passes when all three engines
+return OK with their FULL probes (auth + scope + endpoint reality).
 
-Cost: 15 minutes, two people. Saves: a full engine-matrix re-run if
-the spec is the problem.
+**Step 0.5 — Audio pre-flight (BEFORE full engine matrix spend).**
+The cadence-spec is the load-bearing input to every engine. If the
+spec is bad, all three Paths fail because the steering is bad, not
+because the engines are bad. The gate is a cheap **audio** validation,
+not a markdown review — per `feedback-briggsy-reviews-output-not-process.md`,
+Briggsy reviews output (a listenable WAV), not intermediate process
+artifacts (a cadence-spec markdown). Hand-spec markdown review is
+also susceptible to Archer-fan halo bias (two fans share cultural
+memory and fill in spec gaps from priors).
+
+**Procedure:**
+
+1. **Generate one cheap audio clip from the spec.** Translate the
+   working cadence-spec into the Gemini adapter shape (Director's
+   Chair structured prompt — same shape Step 1.5 will produce, just
+   one-off rather than the full three-engine matrix). Generate ONE
+   15-second clip via Gemini 3.1 Flash TTS (free tier covers this —
+   ~$0 cost) on a non-identifying mid-baritone male preset voice
+   reading Sample Paragraph 1 (the 20s deadpan exposition trimmed to
+   15s for the pre-flight). Output: `sample-eval/r4-dash/preflight/gemini-spec-test.wav`.
+2. **Hand the WAV to two engineering peers — one Archer-fan, one cold.**
+   - Reader A: Briggsy OR Harry (Archer-fan; validates Sterling-coded
+     register is reachable from the spec).
+   - Reader B: **one engineering-peer non-Archer-fan** (Discord
+     contact who has NOT watched the show). Validates the spec
+     produces an intelligible, in-genre delivery without Archer
+     priors. **Do NOT use two Archer-fans** — correlated halo bias
+     guarantees Yes votes even on thin specs (P1.2).
+3. **Question (asked of each reader independently):** *"Listen to
+   this clip. Does it land in the deadpan-spy / noir-narrator /
+   sardonic-detective cluster? Does it sound like a Benjamin
+   impression? Answer in your own words (~30 seconds)."*
+4. **Acceptance:** Both readers must independently say *Yes,
+   Target-Band cluster* AND *No, not a Benjamin impression* before
+   Step 1.5 (the full three-engine adapter translation) begins.
+5. **Tiebreaker / fail loop:**
+   - **Split vote (one Yes, one No):** the No vote wins (P1.4 —
+     thin-spec failure is the cheaper diagnostic; spend the 15-min
+     spec revision rather than the full engine-matrix run). Claude
+     revises the cadence-spec based on the No-vote reader's specific
+     feedback (typically: tighten Target Band cluster vocabulary, add
+     genre-anchor mannerisms, clarify Ceiling distinction). Re-run
+     Step 0.5 with same readers OR fresh readers if the same readers
+     are unavailable.
+   - **Both No:** spec is too generic. Revise as above, re-run.
+   - **Revision cap: 3 rounds.** After three Step-0.5 failures, the
+     cadence-spec is treated as fundamentally unachievable in current
+     form; surface to Briggsy as a **brainstorm-level question** (the
+     played-straight Sterling-CODED thesis may need restructuring
+     before Phase 1 — e.g., abandon Sterling-CODED for noir-narrator,
+     OR accept synthetic-tinged register as a stylistic choice).
+6. **SLA + interaction model (P1.1):**
+   - **Reader A (Briggsy):** synchronous or async — Briggsy's call.
+     Typical turn: same session.
+   - **Reader B (Discord contact):** **async Discord thread**, 48-hour
+     SLA from message-sent. Recruiter: Briggsy (his network).
+     Fallback if no Discord cold-reader available within 48h: Harry
+     can substitute as Reader A and Briggsy substitutes as Reader B
+     (Briggsy's own engineering-peer perspective even though he's an
+     Archer-fan), with explicit note in `account-readiness.md` that
+     "Reader B was a degraded substitute; reduced confidence on
+     cold-reader vector."
+   - If neither cold-reader option is reachable within 48h: Step 0.5
+     proceeds with Reader A only + explicit "single-reader fallback"
+     flag in `results.md`. Step 1.5 is **gated on Step 0.5 sign-off**
+     OR an explicit Briggsy override (`STEP_0_5_OVERRIDE=1` documented
+     in `results.md`).
+
+Output: `sample-eval/r4-dash/preflight/preflight-decision.md` (file
+existence + contents are the sentinel Step 1.5 reads).
+
+Cost: ~$0 (Gemini free tier) + 15-30 min × 2 readers. Saves: a full
+engine-matrix re-run ($24 + 2-3 days) if the spec is the problem.
 
 **Step 1.5 — Engine-adapter translation.** The cadence-spec.md is a
 single human-readable artifact; each engine's steering surface
@@ -549,9 +869,40 @@ voice.
 | Engine | Voice path | Cost estimate |
 |--------|------------|---------------|
 | **ElevenLabs v3** | **Path A** — pre-existing preset voice (mid-baritone male, deadpan-spy register) from ElevenLabs **Voice Library** (the generic catalog with commercial rights baked into the Creator plan). Steering via `cadence-spec-elevenlabs.json` (voice_settings numbers + inline bracket-tag annotations on the sample paragraphs + optional Voice Design prompt). The **Iconic Voice Marketplace** is for per-individual identity licensing (Michael Caine, John Wayne, etc., gated on rights-holder review) — NOT relevant for this generic-cadence use case. | ~$22 (Creator month, 100K char allowance) |
-| **ElevenLabs v3** | **Path B** — Briggsy's owned voice cloned via **Instant Voice Cloning** (10s sample, full legal license since he owns it). Same steering via `cadence-spec-elevenlabs.json`. Recording conditions: cardioid mic, kill room reflections (closet / fabric-draped corner), peak around -12 dBFS, 15s neutral-text read trimmed to cleanest 10s. **Professional Voice Cloning eliminated** (would need 30-min recording session — schedule dependency removed; if Instant fails, Path B fails and ladder proceeds to Path C). | (same Creator month, no extra cost) |
-| **Gemini 3.1 Flash TTS** | **Path C engine variant** — Steerable preset + **Director's Chair workflow** (Google AI Studio paradigm; the real surface name) with `cadence-spec-gemini.md` providing the structured prompt (Audio Profile + Scene + Director's Notes + Transcript). 8K context window fits the full spec. | ~$0.50–$1 (output tokens, ~3 min audio across iteration). Free tier covers initial experiments. |
-| **OpenAI gpt-4o-mini-tts** | **Path C engine variant** — Steerable preset; `cadence-spec-openai.md` (~500 words) goes in the `instructions` API parameter; script goes in the separate `input` parameter (≤4096 char limit, comfortable for our paragraphs). | ~$0.45 (output audio tokens, ~3 min across iteration) |
+| **ElevenLabs v3** | **Path B** — Briggsy's owned voice cloned via **Instant Voice Cloning** (10s sample, full legal license since he owns it). Same steering via `cadence-spec-elevenlabs.json`. Recording conditions: cardioid mic, kill room reflections (closet / fabric-draped corner), peak around -12 dBFS, 15s neutral-text read trimmed to cleanest 10s. **Professional Voice Cloning eliminated** (would need 30-min recording session — schedule dependency removed; if Instant fails, Path B fails and ladder proceeds to Path C). **Path B IVC profile lifecycle** — see Step 2 §"Path B clone lifecycle" below. | (same Creator month, no extra cost) |
+| **Gemini 3.1 Flash TTS** | **Path C-Gemini** — Steerable preset + **Director's Chair workflow** (Google AI Studio paradigm; the real surface name) with `cadence-spec-gemini.md` providing the structured prompt (Audio Profile + Scene + Director's Notes + Transcript). 8K context window fits the full spec. | ~$0.50–$1 (output tokens, ~3 min audio across iteration). Free tier covers initial experiments. |
+| **OpenAI gpt-4o-mini-tts** | **Path C-OpenAI** — Steerable preset; `cadence-spec-openai.md` (~500 words) goes in the `instructions` API parameter; script goes in the separate `input` parameter (≤4096 char limit, comfortable for our paragraphs). | ~$0.45 (output audio tokens, ~3 min across iteration) |
+
+**Path C invocation order** (resolves the previous "Path C engine
+variant" ambiguity): Path C-Gemini runs first (free tier covers
+initial experiments — cheapest cost). If Path C-Gemini fails, Path
+C-OpenAI runs second. "Path C fail" in Step 5 means **BOTH** C-Gemini
+AND C-OpenAI failed acceptance. Phase 2 voice-engine pipeline reads
+the engine + voice ID + Path label from `PHASE-0-EXIT.md` and invokes
+the single winning engine; Path C is never a runtime ambiguity, only
+a Step 5 ladder label.
+
+**Path B clone lifecycle (P2.25 + P2.28).** ElevenLabs Instant Voice
+Clones persist on ElevenLabs' infrastructure indefinitely under the
+Creator plan's default terms — ownership of source audio (Briggsy
+owns his recording) does NOT auto-grant deletable-on-demand
+retention. Before submitting the 10s Path B sample:
+1. **Document IVC deletion-on-request procedure** under Creator tier.
+   Verify the deletion UI works (test with a throwaway voice clone
+   first) AND that ElevenLabs honors deletion as an API contract
+   (not just a UI affordance). Record findings in
+   `sample-eval/r4-dash/account-readiness.md`.
+2. **If non-verifiably-deletable:** Path B requires explicit Briggsy
+   acknowledgment of indefinite ElevenLabs retention before clone
+   creation. Skip Path B if Briggsy declines the indefinite-retention
+   risk. Ladder proceeds Path A → (skip B) → Path C.
+3. **Post-Phase-0 cleanup:** If Path B is NOT selected as the winning
+   path, delete the Briggsy voice clone from ElevenLabs within 7 days
+   of Phase 0 exit. Verify deletion by API or UI. Record verification
+   in `sample-eval/r4-dash/post-eval-cleanup.md`. If Path B IS selected,
+   retention is documented as expected-behavior for the trailer's
+   lifecycle; delete when the trailer is retired from active
+   distribution.
 
 **VOICE_DIRECTION anti-pattern guard codified at each engine's API
 call site** with per-engine inline comments — see Key Technical
@@ -565,20 +916,91 @@ The guards catch future agent edits.
 
 **Step 3a — Hosting decision (BEFORE Step 2 generation begins).** The
 WAV URLs in the WebMUSHRA YAML config are stable per-deployment; pick
-the host first so URLs don't have to move. Three options:
+the host first so URLs don't have to move. **The pre-deepening
+"Cloudflare Pages subpath recommended" framing was wrong** — WebMUSHRA
+submits results via PHP, and Cloudflare Pages is static-only with no
+PHP runtime (P0.2). The corrected ranking:
 
-1. **Cloudflare Pages subpath** (recommended). BURNED already deploys
-   to `burned-cxa.pages.dev`. Add `/trailer-eval/` subpath serving the
-   WebMUSHRA static assets + WAVs. Permanent URL, $0 cost, survives
-   laptop-asleep, listener can resume mid-session next day.
-2. **Cloudflare Tunnel from laptop** ($0, ~5min setup). Free `cloudflared`
-   tunnel exposes `localhost:8000` (php -S) at a stable subdomain.
-   Laptop must stay awake during the listening window.
-3. **VPS** ($4–6/mo, fallback). DigitalOcean / Linode / Hetzner droplet
-   with PHP. Only if the Pages subpath doesn't work for some
-   deployment-config reason.
+1. **Cloudflare Tunnel from laptop** ($0, ~5min setup). **NEW DEFAULT.**
+   Free `cloudflared` tunnel exposes `localhost:8000` (`php -S`) at a
+   stable subdomain. PHP runs natively on Briggsy's local machine;
+   `cloudflared` exposes it at an external URL listeners can reach
+   from their browser. Result submission works end-to-end without
+   extra plumbing. Trade-off: laptop must stay awake during the
+   listening window. Mitigation: schedule listener sessions in
+   batches (e.g., one 4-hour window where 4 listeners hit the panel
+   consecutively); Briggsy is at the keyboard anyway for recruitment
+   acks.
+2. **Cloudflare Pages subpath + Worker results-bridge** ($0, ~30min
+   setup). BURNED already deploys to `burned-cxa.pages.dev`. Add
+   `/trailer-eval/` subpath serving the WebMUSHRA static assets +
+   WAVs. WebMUSHRA's "send results to PHP" endpoint is replaced with
+   a Cloudflare Worker that receives the form-POST and persists to
+   Cloudflare D1 (free tier covers 25M reads / 50K writes per day,
+   trivially over-provisioned for a 6-listener panel). Worker code is
+   ~50 lines. Use this option if the laptop-awake constraint is
+   unworkable for the listener pool's schedule. Survives laptop-
+   asleep, permanent URL, supports mid-session-resume next day.
+3. **VPS with PHP** ($4–6/mo, second fallback). DigitalOcean / Linode /
+   Hetzner droplet running `php -S` behind nginx. Use if both above
+   options fail for unforeseen reasons (Cloudflare account issues,
+   tunnel restrictions on Briggsy's network).
 
-Document the chosen path + setup steps in `hosting-decision.md`.
+**The pre-deepening "Cloudflare Pages subpath recommended" framing
+silently lost listener data** — the recommended path served WebMUSHRA
+static assets but had no PHP runtime, so the WebMUSHRA results-POST
+would 404 and each listener's responses would be lost between session
+end and Briggsy realizing the data wasn't captured. The corrected
+ranking treats this failure mode as the load-bearing risk it actually
+was.
+
+**Access control (P1.22 — MANDATORY regardless of host choice).** The
+WebMUSHRA panel must NOT be openly addressable at a guessable URL.
+Whoever discovers the URL can vote-stuff rating data OR pull pre-launch
+audio samples (Path B Briggsy-voice-clone + cold-open candidate lines).
+Hardening:
+1. **Non-guessable subpath:** generate a random 32-char token; URL
+   becomes e.g. `/trailer-eval/<token>/` not `/trailer-eval/`.
+2. **Per-listener token in WebMUSHRA URL.** Each listener gets a
+   distinct token (e.g., `?listener=<8-char-token>`) recorded in
+   `listener-roster.md`. Submitted results carry the token; any
+   submission with an unrecognized token is discarded with an
+   alert.
+3. **Cloudflare Access (Option 2 only):** free-tier supports
+   email-based one-time-PIN. Add an Access policy restricting
+   `/trailer-eval/<token>/*` to specific listener emails. For
+   Option 1 (tunnel), `cloudflared`'s Access integration provides
+   the same control.
+4. **Pollution recovery procedure:** if any rating submission with an
+   unrecognized listener token appears in results — OR if listener
+   responses spike beyond the roster's 6-8 expected sessions — the
+   entire panel is discarded, the random token rotates, the URL
+   re-distributes to the roster, and listeners re-run. Budget for
+   one pollution-recovery cycle = $0 (no extra spend, just elapsed
+   time).
+
+**CSP path-override (P2.12 — MANDATORY for Option 2).** BURNED ships
+`public/_headers` with `default-src 'self'; script-src 'self'; ...` —
+strict policy that may reject WebMUSHRA's bundled JS (some WebMUSHRA
+builds use inline event handlers). Add path-scoped override:
+```
+/trailer-eval/*
+  Content-Security-Policy: default-src 'self'; script-src 'self' 'unsafe-inline'; style-src 'self' 'unsafe-inline'; connect-src 'self'; media-src 'self'; img-src 'self' data:
+```
+The `_headers` file is processed top-to-bottom with path-pattern
+matches; the `/trailer-eval/*` block must precede the global `/*`
+block. Test the WebMUSHRA static bundle under this policy before
+listener panel begins — load the panel in a private window with
+DevTools open and verify no CSP violations log. If WebMUSHRA needs
+additional sources (e.g., a CDN audio path), add them to the
+override list. The override is REMOVED from `_headers` after Phase
+0 exits (or kept if other phases need it — Phase 7 may revisit).
+
+**Hosting-decision deliverable:**
+Document chosen option + setup steps + access-control + CSP-override
+status in `hosting-decision.md`. If Option 1 (tunnel) is chosen, also
+document the scheduled listener-session windows so the keyboard-
+awake-during-windows constraint is operationally clear.
 
 **Step 3 — MUSHRA listening protocol.** Document in `MUSHRA-protocol.md`.
 The protocol is **register-recognition testing**, not actor-identity
@@ -586,20 +1008,116 @@ testing, per ADR #13 (Sterling-CODED, not Sterling-cloned):
 
 - **Stimuli:** 3–4 TTS candidates (one per engine path) + 1 low-quality
   anchor (band-limited TTS) + 1 baseline reference (a **NON-Benjamin
-  Sterling-coded delivery** — voice-actor portfolio sample doing a
-  deadpan-spy-detective read, sourced from a publicly-listenable demo
-  reel on voices.com or voice123.com with attribution noted) used as
-  the **cadence target**, NOT as an identity reference. The reference
-  anchors the MUSHRA scale (rate it ~100); it's not what candidates
-  are trying to clone. Order randomized per listener.
-- **Listeners:** 6 minimum (8 target). Mix: 3+ Archer fans (validates
-  Sterling-coded register recognition) + 3+ cold (validates that the
-  voice works on engineering-peer baseline without Archer pre-loading).
-  Briggsy's Discord network for recruitment (Harry et al.).
+  Sterling-coded delivery**) used as the **cadence target**, NOT as
+  an identity reference. The reference anchors the MUSHRA scale (rate
+  it ~100); it's not what candidates are trying to clone.
+- **Reference clip selection criteria (LOCKED at plan time per P1.20).**
+  The ±10-point pass-band depends on this reference; selection cannot
+  be deferred to implementation without leaving the gate's anchor
+  unconstrained. Selection rules:
+  1. Source: voices.com top-100-rated mid-baritone-male voice-actor
+     portfolio reel OR voice123.com equivalent, with explicit
+     "deadpan / spy / noir narrator / film-noir / sardonic detective"
+     demo tagging in the actor's profile.
+  2. Reel must be rated by ≥3 industry sources (voices.com reviews,
+     Backstage profile, or actor's own portfolio testimonials) as
+     standard-of-genre delivery — NOT a vanity recording or hobbyist
+     reel.
+  3. Independent of Briggsy's network — selected via marketplace
+     search by Claude, candidate list of 3 reels reviewed by Briggsy
+     AND by the Step 0.5 cold-reader (the non-Archer-fan engineering
+     peer who validated the cadence-spec). Both must agree the
+     finalist represents the Target Band cluster before lock.
+  4. Documented in `MUSHRA-protocol.md` with: source URL, actor name
+     + license/attribution, why this reel anchors the cluster, plus
+     the 2 alternates considered.
+  5. Lock the reference at Step 3a-equivalent timing — BEFORE
+     stimulus order is finalized and listener panel begins.
+- **Stimulus order — Latin-square design (P2.30).** "Randomized per
+  listener" with N=6 covers <1% of possible orderings (6/720 = 0.83%);
+  listener fatigue across slot-1 vs slot-6 creates systematic ordering
+  bias. Replace with a 4×4 Latin square covering the 4 candidates +
+  2 random orderings for the remaining 2 listeners. The low-quality
+  anchor is presented FIRST for every listener (per ITU-R BS.1534-3
+  calibration convention). Per-listener order assignment table is
+  documented in `MUSHRA-protocol.md` and the WebMUSHRA YAML config is
+  generated from that table (one YAML per listener if needed, or a
+  pre-assigned token at session entry).
+- **Listeners:** 6 minimum (8 target) for the FULL panel. Mix: 3+
+  Archer fans (validates Sterling-coded register recognition) + 3+
+  cold (validates that the voice works on engineering-peer baseline
+  without Archer pre-loading). Briggsy's Discord network for
+  recruitment (Harry et al.).
+- **Sliding-ladder option (P1.14 — executor's call at Phase 0
+  entry).** For a portfolio project where 3-week MUSHRA recruitment
+  is the critical path blocking Phase 1, Briggsy may choose a
+  sliding-ladder protocol instead of the N=6-floor default:
+  - **Tier 1 (N=2):** Briggsy + Harry hear the candidates side-by-side
+    in an ad-hoc session. If both agree the winner lands in Target
+    Band cluster AND neither flags Ceiling (forced-choice probe still
+    mandatory), the gate clears. Total elapsed: 1 hour.
+  - **Tier 2 (N=4):** if Tier 1 produces split votes OR ambiguity,
+    recruit 2 additional non-overlapping listeners (1 Archer-fan,
+    1 cold). Re-run protocol. Threshold scales: ≥3 of 4 register
+    cluster + ≥3 of 4 character-fit + no Ceiling triggers + joint-pass.
+  - **Tier 3 (N=6, default):** if Tier 2 produces conflicting verdicts
+    OR any Ceiling trigger, escalate to the full N=6 ITU-R BS.1534-3
+    protocol with original thresholds (≥4/6 + ≥5/6 + joint-pass +
+    ±10 MUSHRA naturalness).
+  - **When to use sliding-ladder:** Briggsy's call at Phase 0 entry,
+    documented in `MUSHRA-protocol.md` Section §"Listener count
+    decision." Sliding-ladder trades research-grade rigor for
+    execution velocity; appropriate for portfolio projects where
+    calendar weeks dominate confidence-of-acceptance value. NOT
+    appropriate if a downstream Phase 6 cold-decode panel would
+    discover drift the sliding-ladder missed — in that case Phase 6
+    re-spec cost dominates.
+  - **Default is N=6.** Sliding-ladder is opt-in, not the default,
+    because the portfolio-trailer-vs-research-paper trade-off is
+    Briggsy's product decision and the manifesto's "time is the asset,
+    not the constraint" rule favors rigor unless explicitly waived.
+- **Recruitment flow (P2.16).** Specified before listener panel begins:
+  1. **Recruitment message (Discord DM template):** Briggsy sends a
+     templated message to each candidate listener with: session
+     length (~25-30 min), what they'll hear (~6 short audio clips,
+     ~15s each, in a deadpan-spy register), what they'll do (rate
+     + describe each clip), scheduling window (Briggsy proposes 3
+     candidate 30-min slots over the next 7 days), URL placeholder.
+  2. **Listener confirmation:** Listener responds within 48h with
+     selected slot. Briggsy records confirmation in `listener-roster.md`
+     (per-listener: name, Archer-fan/cold flag, slot, URL token).
+  3. **Pre-session reminder:** 1 hour before slot, Briggsy DMs the
+     WebMUSHRA URL + token + reminder of session shape. Listener
+     completes session in their browser within ~30 min.
+  4. **Post-session ack:** Listener confirms completion via Discord
+     ("done"); Briggsy verifies results landed in the WebMUSHRA
+     backend (Cloudflare Worker D1 row OR localhost PHP results file
+     per Step 3a hosting choice).
+- **Consent + retention + privacy notice (P2.24).** Listeners are
+  human subjects providing perception judgments — GDPR/CCPA-relevant
+  personal data depending on listener jurisdiction. Required:
+  1. **Consent form** (1-page) sent with the Discord recruitment DM:
+     *"You'll listen to ~6 audio clips and provide ratings + open-
+     text descriptions. Your responses (ratings, open text, optional
+     name/handle for follow-up) will be retained for ~90 days after
+     Phase 6 trailer release for evaluation analysis. You may
+     withdraw consent and request deletion at any time. Responses
+     are not published verbatim outside the BURNED development
+     workspace."*
+  2. Listener signals consent by clicking through an explicit
+     "I agree" checkbox in the WebMUSHRA onboarding screen (NOT
+     a buried ToS link).
+  3. Retention: 90 days from Phase 6 trailer release date. After
+     that, listener-identifying fields are stripped; ratings retained
+     anonymized for institutional learning. Documented in
+     `MUSHRA-protocol.md` and re-cited in PHASE-0-EXIT.md.
+  4. Deletion request: any listener emailing/DMing Briggsy can request
+     full removal; Briggsy deletes within 7 days and confirms.
 - **Session UX (per ITU-R BS.1534-3 + WebMUSHRA conventions):**
-  - **Onboarding screen** explaining MUSHRA + what "naturalness"
-    means in this context (not "is it real" — "does it sound like a
-    human deliberately recorded this, vs. synthetic / robotic").
+  - **Onboarding screen** with consent checkbox + MUSHRA explanation
+    + what "naturalness" means in this context (not "is it real" —
+    "does it sound like a human deliberately recorded this, vs.
+    synthetic / robotic").
   - **Practice trial** on a non-test script (use a generic
     voice-actor demo clip; not scored).
   - **Anchor calibration:** the low-quality anchor MUST be explicitly
@@ -614,7 +1132,19 @@ testing, per ADR #13 (Sterling-CODED, not Sterling-cloned):
   - **Session length budget:** target ≤25 minutes / listener, hard
     cap 35 minutes. Beyond that, fatigue degrades the open-text
     descriptions.
-- **Questions** (no actor-identity questions):
+  - **Completion screen (P2.14).** End-of-session state: a confirmation
+    screen reading *"Thank you — your responses have been recorded.
+    You can close this tab now. Briggsy will follow up if any
+    response needs clarification."* Triggers a final results-submit
+    POST (idempotent — if listener refreshes, the submit fires once;
+    duplicate submissions are deduplicated by listener token in the
+    results backend). On submission failure (network glitch), the
+    screen shows *"Your responses didn't save. Please retry, or
+    message Briggsy in Discord if this persists"* with a Retry
+    button. Responses persist locally in browser storage between
+    stimuli until final submit (so closing the tab mid-session and
+    re-entering with the same token resumes from last-rated stimulus).
+- **Questions** (no actor-identity questions in the open form):
   - Per stimulus: *"Rate this clip's naturalness from 0–100."*
   - Per stimulus open: *"Describe this voice in your own words —
     register, tone, character archetype it suggests."* (Listening for
@@ -627,9 +1157,31 @@ testing, per ADR #13 (Sterling-CODED, not Sterling-cloned):
   - Per stimulus uncanny-check: *"Does anything about this voice
     sound obviously synthetic or off?"* (Yes / No / free-text "if
     yes, what?")
-  - **Bonus-signal disambiguation (conditional follow-up):** if a
-    listener invokes Archer/Sterling unprompted in any open
-    response, the protocol shows a follow-up question:
+  - **Forced-choice Ceiling probe (P1.15 — NEW, MANDATORY per
+    stimulus, NOT conditional on volunteered recognition).** After
+    the open-description + character-fit + uncanny-check questions,
+    the protocol asks every listener directly per stimulus:
+    *"Does this voice sound like any specific actor or character
+    you can name? If yes, who, and how confident are you that it's
+    them?"* with options: *No / Yes (low confidence) / Yes (med
+    confidence) / Yes (high confidence)* + free-text "who?"
+    - **Why mandatory:** engineering-peer listeners often don't
+      volunteer "Jon Benjamin" / "Sterling Archer" in open
+      description (politeness, vocabulary gap, no actor-name in
+      working memory). Conditional follow-up depended on
+      unprompted volunteering — Ceiling drift slipped through.
+      Forced choice makes Ceiling detection a measurement, not a
+      hope.
+    - **Trigger:** ANY *Yes (med)* or *Yes (high)* response naming
+      "Jon Benjamin" / "Sterling Archer" / "Archer" → **Ceiling
+      band triggered** per Step 4 below.
+    - **No / Yes (low):** does not trigger Ceiling. Low-confidence
+      hits are noise — engineering peers may guess characters
+      under prompt pressure even when the stimulus is non-specific.
+  - **Bonus-signal disambiguation (conditional follow-up, RETAINED
+    for open-form unprompted recognition):** if a listener invokes
+    Archer/Sterling unprompted in any open response, the protocol
+    shows a follow-up question:
     *"You mentioned Archer / Sterling — does this voice sound like
     the same ACTOR (you'd recognize the speaker), or the same
     STYLE (deadpan-spy register but a different voice)?"*
@@ -668,7 +1220,7 @@ joint-pass requirement is satisfied**:
   listener* cleared all three for the same candidate. The joint
   pass ensures coherent endorsement.
 
-**Bonus-signal disambiguation (Step 3's conditional follow-up):**
+**Bonus-signal disambiguation (Step 3's open-form unprompted recognition):**
 
 - If 0 listeners volunteer Archer/Sterling unprompted → register
   pass, target achieved.
@@ -677,10 +1229,73 @@ joint-pass requirement is satisfied**:
   cluster recognition is success).
 - If a listener volunteers Archer/Sterling AND the follow-up answer
   is *"same ACTOR"* OR *"could be Jon Benjamin"* → **Ceiling band
-  triggered** (per Step 0 three-band spectrum). The engine drifted
-  toward impression. Step 5 re-spec triggered: strip
-  identity-suggesting characteristics from cadence-spec.md, re-run
-  engine matrix. Do not lock this candidate.
+  triggered** (see halt procedure below).
+
+**Forced-choice Ceiling probe (Step 3's MANDATORY per-stimulus prompt):**
+
+- ANY *Yes (med)* or *Yes (high)* response naming "Jon Benjamin" /
+  "Sterling Archer" / "Archer" → **Ceiling band triggered**.
+- *Yes (low)* OR *No* → no Ceiling trigger.
+
+**Ceiling-band halt procedure (P1.16 — MANDATORY).**
+
+When Ceiling band triggers (either via bonus-signal or forced-choice
+probe), the candidate is DISQUALIFIED for voice-cast lock. Procedure:
+
+1. **Do NOT lock this candidate** under any disposition (cleared /
+   restructured / cut). The candidate is dead for Phase 0.
+2. **Step 5 re-spec triggers** — strip identity-suggesting
+   characteristics from `cadence-spec.md` (typically: remove any
+   mannerism that recapitulates Benjamin's specific vowel placement,
+   laugh signature, or rhythmic tic; tighten the "What NOT to encode"
+   row of the cadence-spec table).
+3. **Spec-revision cap: 3 rounds.** After three Step-4 Ceiling-trigger
+   failures, the cadence-spec is treated as fundamentally unachievable
+   at the Sterling-CODED bar with the legal floor intact. Surface
+   to Briggsy as a **brainstorm-level question** routing to Step 5's
+   Brainstorm-Restructure Memo (the played-straight Sterling-CODED
+   thesis may need to ship synthetic-tinged OR pivot form factor —
+   see Step 5 Options (i)/(iv)).
+4. **PHASE-0-EXIT.md template records the Ceiling history.** New
+   fields: `Ceiling-band triggered: [Y/N]`, `Re-spec iterations: [N]`,
+   `Final disposition cleared after re-spec: [Y/N]`. See template
+   below.
+5. **Listener follow-up:** any listener whose response triggered
+   Ceiling gets a personal Discord ack from Briggsy: "Thanks — you
+   spotted what we were testing for. We're re-running with adjusted
+   spec." No data is silently discarded.
+
+**Voice lock is PROVISIONAL until Phase 6 (P0.3 — load-bearing).**
+
+Even when Phase 0 Step 4 clears (all four individual gates + joint-pass
++ no Ceiling trigger), the locked voice is **not absolute** — Phase 6
+runs a separate **N=6 cold-decode panel** (ADR #21) with fresh listeners
+who have NOT participated in Phase 0. If Phase 6's panel volunteers
+"that's Archer" / "this IS Sterling" (Ceiling drift slipping through
+Phase 0's listener priors), the voice lock is invalidated mid-Phase-6.
+
+**Rollback contract:**
+
+- **Phase 0 disposition** records `Voice lock provisional: Y` —
+  Phase 6 N=6 cold-decode panel must re-validate before disposition
+  becomes final.
+- **Phase 4-entry mini-cold-decode (NEW, optional but recommended).**
+  Before Phase 4 commits scenes to rendering, run a 2-listener
+  cold-decode mini-panel on a single ~20s rendered scene with the
+  locked voice. Cheaper than waiting for Phase 6 to discover drift.
+  If mini-panel volunteers Ceiling, halt scene commits and re-spec
+  in Phase 0 (re-opens Phase 0 from current state). Mini-panel
+  listeners are NOT the Phase 0 listener pool (independence rule).
+- **Phase 6 re-spec budget.** If Phase 6 N=6 panel triggers Ceiling,
+  the cost is: Phase 0 Step 5 re-spec (~$24 ElevenLabs re-run + 3-7
+  days new listener panel) + Phase 4 re-render of every voiced scene
+  (~12-24 hours render time at Phase 6 production CRF). Budget = 2-4
+  weeks elapsed + ~$24 engine spend. This is documented expected-cost
+  for a Ceiling drift; not a project-killer, just a real delay.
+- **Phase 6 listener-pool independence.** ADR #21 requires Phase 6's
+  N=6 panel to be FRESH listeners — zero overlap with Phase 0's pool.
+  See Documentation / Operational Notes §"Listener pool independence
+  rule" below for cross-phase enforcement.
 
 If multiple engines clear, pick lowest-cost.
 
@@ -692,23 +1307,86 @@ If multiple engines clear, pick lowest-cost.
   clear): Path B is eliminated. Do **not** auto-escalate to
   Professional Voice Cloning — Professional requires a 30-min
   recording session and would create a hidden schedule dependency.
-  Ladder proceeds to Path C.
-- **Path C fail** (all three steerable engines on the Step 1.5
-  adapter inputs fail): Phase 0 **exits with a Path D Sub-phase 0a
-  deliverable** as the next Phase 0 work. The Sub-phase 0a deliverable
-  is documented separately:
+  Ladder proceeds to Path C (C-Gemini first, then C-OpenAI).
+- **Path C fail** (BOTH Path C-Gemini AND Path C-OpenAI fail on
+  the Step 1.5 adapter inputs): Phase 0 **exits with a Path D
+  Sub-phase 0a deliverable** as the next Phase 0 work.
+
+  The Sub-phase 0a deliverable contains:
   - 1-page Brief Memo to Briggsy listing: confirmed engine fail
     summary + Path D casting brief + actor-marketplace shortlist
     (Voices.com / Voice123 picks reading in Sterling-coded register)
     + budget request ($150–500 for 60–90s trailer read).
-  - Briggsy explicitly approves Path D spend before any casting
-    begins. Phase 1 structural decisions that DON'T depend on voice
-    identity (scene count, scene order, cascade composition) may
-    proceed in parallel with actor casting, so Phase 0 doesn't
-    hold Phase 1 entirely.
-- **Path D fail or actor delivery exceeds reasonable timeline:**
-  Phase 0 produces a **Brainstorm-Restructure Memo** to Briggsy
-  with three explicit options laid out for decision:
+  - **Draft AI-disclosure-clause contract template (P2.26).** Path D
+    engages a paid human voice actor for copyrightable creative
+    content. Federal NO FAKES Act (proposed), state right-of-publicity
+    law, and standard industry contracting require an AI-disclosure
+    clause informing the actor their recording may be processed with
+    AI tools (e.g., Voice Changer / speech-to-speech for Path B-style
+    polish, OR pure-VO use). Contract template MUST include:
+    1. Work-for-hire grant of recording rights to Briggsy.
+    2. Explicit AI-disclosure clause: *"Buyer may apply AI audio
+       processing (including but not limited to speech-to-speech
+       voice conversion, denoising, equalization, time-stretching)
+       to the delivered recording for the trailer use case. Buyer
+       will NOT use the recording to train any voice-cloning model
+       OR to generate new audio in your voice beyond the licensed
+       trailer use."*
+    3. Retention + re-release terms (e.g., 5 years from delivery, or
+       indefinite for the trailer cut).
+    4. Compensation + delivery schedule.
+    Briggsy + actor sign before recording begins. Template draft is
+    a Sub-phase 0a deliverable, NOT deferred to actor engagement
+    time.
+  - **Briggsy explicitly approves Path D spend AND contract template
+    before any casting begins.** Phase 1 voice-AGNOSTIC structural
+    decisions (scene count, scene order, cascade composition, R15
+    chrome design) may proceed in parallel with actor casting. Phase 1
+    voice-DEPENDENT decisions (beat-sheet line attribution, Unit 0.3
+    cold-open line decode) cannot proceed until Path D voice lands.
+
+  **Optional: Path D parallel-first hedge (P3.4).** The Step 5 ladder
+  treats Path D as a fallback (only if A/B/C all fail). For a project
+  where calendar weeks are the binding constraint (Briggsy's hourly
+  rate dwarfs the $150-500 actor budget; 3-week Path D fail-then-cast
+  recovery is expensive in elapsed time), Briggsy may choose to:
+  - **Run Paths A/B/C engine eval in week 1** (Steps 1.5-2-3) AND
+  - **Simultaneously post the Path D casting brief in week 1**
+    (instead of waiting for A/B/C fail confirmation).
+  - **Step 3 MUSHRA panel evaluates ALL FOUR paths side-by-side** —
+    Paths A/B/C TTS candidates + Path D actor demo reels (1-3 demos
+    from the actor shortlist) as stimuli.
+  - **If A/B/C clear:** Path D casting brief is withdrawn (no spend);
+    pocket the $150-500.
+  - **If A/B/C fail:** actor is already cast; schedule preserved; no
+    additional 2-3 weeks of casting-from-scratch on the critical path.
+
+  Decision is Briggsy's at Phase 0 entry. If chosen, document in
+  `account-readiness.md` + `MUSHRA-protocol.md` (Step 3 stimulus list
+  expands to 4 candidates + anchor + reference = 6 total stimuli;
+  Latin-square widens to 4×4 + 2 random).
+
+- **Path D hard deadline (P1.18):** **21 calendar days from Briggsy's
+  Brief-Memo approval.** Status checkpoints:
+  - **Day 0:** Briggsy approves Brief Memo + contract template.
+    Casting brief posted to Voices.com / Voice123.
+  - **Day 7:** Status check. Auditions returned? If zero auditions,
+    re-post brief OR widen marketplace (add ACX, MassiveVoices).
+  - **Day 14:** Status check. If no shortlisted actor by day 14,
+    surface to Briggsy as red-flag — likely Path D fail trajectory.
+    Begin drafting the Brainstorm-Restructure Memo in parallel.
+  - **Day 21:** Hard ceiling. If no delivered VO by day 21, auto-
+    trigger Brainstorm-Restructure Memo (next section). Phase 1
+    voice-agnostic work continues; beat-sheet does NOT lock until
+    either VO lands OR restructure resolves. The 21-day budget
+    matches typical Voices.com / Voice123 actor turnaround (1-2
+    weeks delivery + 1 week buffer for retakes / contract round-trip).
+
+- **Path D fail (delivery exceeded 21 days OR delivered VO fails
+  MUSHRA acceptance) OR actor unavailable:** Phase 0 produces a
+  **Brainstorm-Restructure Memo** to Briggsy with four explicit
+  options laid out for decision:
+
   - **(i) Ship synthetic-tinged Dash** — accept that the voice has
     a TTS register; lean into it as a stylistic choice (the trailer
     owns the synthetic-ness rather than fighting it).
@@ -718,17 +1396,40 @@ If multiple engines clear, pick lowest-cost.
     the available engines can match the cadence-spec best wins.
     R4 is recast to ~90% of the new briefer's voice. Beat sheet
     (Phase 1) restructures around new briefer.
+    **Re-gating circular dep (P2.21):** Unit 0.4 (tone gate)
+    consumes the **briefer voice locked by Unit 0.2**. If Option (ii)
+    fires, Unit 0.4 MUST re-run with the new briefer voice before
+    Phase 1's beat-sheet locks. The played-straight thesis is
+    voice-specific (Sterling-coded gap-comedy works on Dash; Janet's
+    Malory-coded dryness, Sable's Cheryl-coded chaos, Vera's
+    Lana-coded exasperation each carry different played-straight
+    registers). Re-running Unit 0.4 adds ~3-7 days to Phase 0 elapsed
+    duration; flag as a known cost in the Brief Memo presenting
+    Option (ii).
   - **(iii) Abandon the trailer concept** — surface this option
     honestly. The plan does NOT pretend Path A–D fail is
     auto-routable; if every legal path produces a register that
     misses the bar, the trailer concept may be wrong-shaped for
     this product and abandonment is a legitimate Briggsy decision.
+  - **(iv) Re-frame to a shorter form factor (NEW per P3.6).** If
+    the bar-clearing voice doesn't exist within budget+timeline, the
+    trailer concept may need to **change form**, not be abandoned.
+    Engineering-peer X consumption patterns favor short loops
+    (15-30s), demo screen captures, side-by-side comparisons — NOT
+    95s narrative trailers with sustained Dash narration. Option
+    (iv) re-scopes to **30-45s gameplay-led** (no sustained
+    narration; minimal voice; agentic-SDLC signal carried by R15
+    chrome + visual cascade + a single hook line that any engine
+    can deliver). This is a product-design pivot, not a
+    capitulation — the same audience may decode "agent-built"
+    faster from a shorter, more visually-led form.
 
 This is the **brainstorm-level restructure** terminal. The previous
 "design pivot, no abandon" framing softened the outcome; the honest
 framing is: the cadence-match bar may be unachievable within the
 allowed legal floor, and that's a real possible outcome that requires
-a real Briggsy decision.
+a real Briggsy decision. Options (i)–(iv) preserve all real product
+choices; abandonment is not the only off-ramp.
 
 **Budget envelope:** $50 across Paths A/B/C + WebMUSHRA hosting
 (real spend likely ~$24 per pricing-corrected estimates above; $50
@@ -794,39 +1495,145 @@ spend, per the Sub-phase 0a structure above.
 - **Error path:** API 401/403 produces fatal exit (auth issue, no retry).
 - **Error path:** API 429 / 5xx triggers exponential backoff retry
   (3 attempts max, mirroring UMB pattern).
-- **Integration:** `sample-script-dash.test.ts` greps
-  `src/client/howtoplay/acts/ActMission.tsx` AND `ActRoster.tsx` for
-  the source lines — verifies the sample paragraphs are derived from
-  existing copy, not invented.
-- **Anti-pattern guard:** `generate-tts-eval.test.ts` greps the
-  source for all three per-engine VOICE_DIRECTION guard variants
-  (ElevenLabs / Gemini / OpenAI) at API call sites. Lint-grep
-  candidate for follow-up.
+- **Integration:** `sample-script-dash.test.ts` verifies the sample
+  paragraphs are derived from existing copy AND that the cited line
+  ranges in the plan + adapter files match the actual file lines.
+  Two-layer assertion (P2.31):
+  1. **Content match:** regex-locate the sample paragraph source
+    substrings in `src/client/howtoplay/acts/ActMission.tsx` and
+    `ActRoster.tsx`; fail if not found.
+  2. **Line-range pin:** for each cited line range
+    (`ActMission.tsx:30-34`, `ActMission.tsx:52-57`,
+    `ActRoster.tsx:18-28`, etc.), read those exact lines from the
+    file and assert the expected leading substring is present at
+    that range. If an unrelated PR shifts line numbers, the test
+    fails with a clear "line citation drift — update X to line N" —
+    pointing the editor at the actual location.
+  Test runs in CI on every commit touching `src/client/howtoplay/acts/`
+  OR `videos/trailer/scripts/sample-script-dash.ts` (whichever side
+  shifts).
+- **Anti-pattern guard (P0.1 — executable assertions, not grep
+  theater).** `generate-tts-eval.test.ts` mocks each engine's API
+  client and asserts the ACTUAL outgoing payload separates steering
+  from script per engine surface. The previous grep-of-comments
+  pattern was theater — comments don't prevent edits, and Briggsy
+  has hit the VOICE_DIRECTION-prose-in-script bug TWICE per
+  `feedback-narrator-voice-direction.md`. Tests:
+  ```ts
+  // generate-tts-eval.test.ts
+  import { describe, it, expect, vi } from 'vitest';
+  import { generateTtsEval } from './generate-tts-eval.js';
+  import { SAMPLE_PARAGRAPHS } from './sample-script-dash.js';
+
+  describe('VOICE_DIRECTION anti-pattern guards', () => {
+    it('ElevenLabs: text payload contains ONLY the sample paragraph, no cadence-spec prose', async () => {
+      const fetchMock = vi.fn().mockResolvedValue(new Response(new ArrayBuffer(8000), { status: 200 }));
+      global.fetch = fetchMock;
+      await generateTtsEval({ engine: 'elevenlabs', dryRun: false });
+      const elevenLabsCalls = fetchMock.mock.calls.filter(([url]) => String(url).includes('elevenlabs.io/v1/text-to-speech'));
+      for (const [, init] of elevenLabsCalls) {
+        const body = JSON.parse(init.body as string);
+        // text MUST equal exactly one of the sample paragraphs — no extra prose
+        expect(SAMPLE_PARAGRAPHS.map(p => p.text)).toContain(body.text);
+        // No cadence-spec keywords leaked into the script payload
+        const forbidden = ['cadence-spec', 'deadpan', 'mid-Atlantic', 'sardonic lift', 'Floor band', 'Target Band', 'Ceiling'];
+        for (const word of forbidden) {
+          expect(body.text.toLowerCase()).not.toContain(word.toLowerCase());
+        }
+      }
+    });
+
+    it('Gemini: structured prompt has DIRECTOR\'S NOTES + TRANSCRIPT markers; script ONLY below TRANSCRIPT', async () => {
+      const fetchMock = vi.fn().mockResolvedValue(new Response(JSON.stringify({}), { status: 200 }));
+      global.fetch = fetchMock;
+      await generateTtsEval({ engine: 'gemini', dryRun: false });
+      const geminiCalls = fetchMock.mock.calls.filter(([url]) => String(url).includes('generativelanguage.googleapis'));
+      for (const [, init] of geminiCalls) {
+        const body = JSON.parse(init.body as string);
+        const promptText = body.contents[0].parts[0].text;
+        expect(promptText).toContain('## DIRECTOR\'S NOTES');
+        expect(promptText).toContain('### TRANSCRIPT');
+        // Sample-script content must appear BELOW the TRANSCRIPT marker, not above
+        const transcriptIdx = promptText.indexOf('### TRANSCRIPT');
+        for (const p of SAMPLE_PARAGRAPHS) {
+          const scriptIdx = promptText.indexOf(p.text.slice(0, 40)); // match first 40 chars
+          if (scriptIdx >= 0) expect(scriptIdx).toBeGreaterThan(transcriptIdx);
+        }
+      }
+    });
+
+    it('OpenAI: input contains ONLY sample-script, instructions contains cadence-spec — never mixed', async () => {
+      const fetchMock = vi.fn().mockResolvedValue(new Response(new ArrayBuffer(8000), { status: 200 }));
+      global.fetch = fetchMock;
+      await generateTtsEval({ engine: 'openai', dryRun: false });
+      const openAiCalls = fetchMock.mock.calls.filter(([url]) => String(url).includes('api.openai.com/v1/audio/speech'));
+      for (const [, init] of openAiCalls) {
+        const body = JSON.parse(init.body as string);
+        // input MUST be a sample paragraph verbatim
+        expect(SAMPLE_PARAGRAPHS.map(p => p.text)).toContain(body.input);
+        // input MUST NOT contain cadence-spec prose
+        const forbidden = ['cadence-spec', 'deadpan briefing voice', 'Floor band', 'Target Band'];
+        for (const word of forbidden) {
+          expect(body.input.toLowerCase()).not.toContain(word.toLowerCase());
+        }
+        // instructions field MUST exist and contain cadence-spec keywords (the steering)
+        expect(body.instructions).toBeDefined();
+        expect(body.instructions.length).toBeGreaterThan(100);
+      }
+    });
+  });
+  ```
+  These assertions catch the exact mistake a future agent edit would
+  introduce — moving cadence-spec prose into the `text` / `input`
+  field. The forbidden-keyword list pulls from cadence-spec.md
+  vocabulary; update it if the spec adds new keywords. **CI runs
+  these tests on every commit touching `videos/trailer/scripts/`** —
+  see Unit 0.1 `package.json` `typecheck` script extension + Phase 0
+  Verification §test commands below.
 
 **Verification:**
 
 - `videos/trailer/sample-eval/r4-dash/cadence-spec.md` exists with
   each characteristic documented + source citations + three-band
-  spectrum (Floor / Target / Ceiling) explicit.
+  spectrum (Floor / Target / Ceiling) explicit (band content
+  research-validated, not template-copied).
 - `videos/trailer/sample-eval/r4-dash/account-readiness.md` exists
-  with per-engine 200-response confirmation (Step 0a).
+  with per-engine full-probe confirmation (auth + subscription_tier /
+  model.id scope + actual TTS endpoint reality) — output of
+  `scripts/check-tts-readiness.ts` (Step 0a). Char-budget tracker
+  initialized at `sample-eval/r4-dash/char-budget.json`.
 - `videos/trailer/sample-eval/r4-dash/cadence-spec-{elevenlabs,gemini,openai}.{json,md,md}`
   all three exist (Step 1.5 outputs), each derived from cadence-spec.md.
-- Two engineering-peer Archer-fan readers signed off on cadence-spec
-  sanity check (Step 0.5) — note in results.md.
+- Step 0.5 audio pre-flight cleared: WAV at
+  `sample-eval/r4-dash/preflight/gemini-spec-test.wav` exists; decision
+  documented at `sample-eval/r4-dash/preflight/preflight-decision.md`
+  with both reader (one Archer-fan + one non-Archer-fan engineering
+  peer) Target-Band-Yes + No-Benjamin-impression signoffs.
 - `videos/trailer/sample-eval/r4-dash/hosting-decision.md` exists
-  with chosen WebMUSHRA host + setup steps (Step 3a).
+  with chosen WebMUSHRA host + setup steps (Step 3a — Tunnel default;
+  Pages+Worker option 2; VPS fallback). Access control verified
+  (non-guessable subpath + per-listener tokens). CSP path-override
+  added to `_headers` if Option 2 chosen.
 - `videos/trailer/sample-eval/r4-dash/{elevenlabs,gemini,openai}/`
   each contain three WAV files matching the sample paragraphs.
 - `videos/trailer/sample-eval/r4-dash/MUSHRA-protocol.md` exists with
   WebMUSHRA setup instructions + question wording + listener tracking
   + anchor calibration step + practice trial + paragraph selection +
-  session length budget + bonus-signal disambiguation follow-up.
+  session length budget + bonus-signal disambiguation follow-up +
+  forced-choice Ceiling probe + Latin-square stimulus order table +
+  consent form + retention policy + completion-state UX + recruitment
+  message template + reference clip selection criteria + source URL +
+  attribution.
+- `videos/trailer/sample-eval/listener-roster.md` tracks pool
+  membership (which listener participated in which unit + date) —
+  pool independence rule enforcement artifact.
 - `videos/trailer/sample-eval/r4-dash/results.md` documents listener
-  responses + joint-pass verification + which path cleared (A/B/C/D
-  /Sub-phase 0a/Restructure). **Voice cast + cadence steering choice
-  lock** for Phase 1 recorded in results.md AND propagated to
-  `PHASE-0-EXIT.md` per the template.
+  responses + joint-pass verification + Ceiling-band history (any
+  triggers + re-spec iterations + final disposition) + which path
+  cleared (A/B/C-Gemini/C-OpenAI/Sub-phase 0a/Restructure). **Voice
+  cast disposition** for Phase 1 recorded in results.md AND
+  propagated to `PHASE-0-EXIT.md` Section 1 per the template (Y/N
+  provisional-until-Phase-6 flag included).
 
 ---
 
@@ -950,6 +1757,26 @@ agentic-SDLC-thesis tag + landing logo). Frame timing references
   per Unit 0.5 lock). Tests whether the visual signal layer
   reinforces the audio.
 
+  **R15 chrome stamp inventory across the full trailer (P2.19).**
+  Phase 0 spec locks only the cold-open instance content above. The
+  full trailer surfaces ~4 R15 stamps (per Phase 1 deepening's
+  R15 #1-#4 trace in `phase-1-beat-sheet-lock.md`). Phase 0 does
+  NOT author stamp content for the non-cold-open instances — those
+  belong to Phase 1's beat-sheet authoring (Unit 1.9). Phase 0 locks
+  only:
+  - Cold-open instance: `"OPERATION PENDLETON / CASE FILE 02 /
+    METHOD: AUTONOMOUS"` at frame ~75 of the cold-open spike.
+  - Visual specification (placement, color, font) inherited by all
+    Phase 1 R15 stamps.
+  - Split-layer architecture (frame.svg + text.svg per stamp, with
+    `transform-origin: center` on the outer wrapper) — Phase 4 owns
+    composition mechanics; Phase 3 produces final SVGs.
+  Phase 1's beat-sheet specifies the remaining 3-4 stamp contents +
+  landing frames; Phase 3 produces the SVG assets; Phase 4 composes
+  with the stamp-slap motion grammar. Phase 0's role is to validate
+  the cold-open instance reads correctly + lock the visual minimum-
+  spec — NOT to inventory the full trailer's stamp set.
+
 **Step 3 — Tester protocol.** Document in `decode-eval.md`:
 
 - **Listeners: minimum n=4** engineering-peer testers (raised from
@@ -965,10 +1792,25 @@ agentic-SDLC-thesis tag + landing logo). Frame timing references
   - *[Show UMB v3 cold-open thumbnail]* *"Do you recognize this image
     or remember seeing it before?"*
 
-  If yes to either, the tester is either **disqualified** (preferred,
-  if substitute available) OR their response is logged as **"primed"**
-  and not counted toward the acceptance threshold (used as informative
-  context only).
+  If yes to either, branching:
+  - **If a substitute non-primed tester is available** within 48h:
+    DISQUALIFY. Tester sees a polite exit screen: *"Thank you — for
+    this study we need testers who haven't seen prior trailers in
+    this series. Briggsy will follow up if a different study fits."*
+    Tester exits without proceeding to stimulus.
+  - **If no substitute available** within 48h (recruitment-stalled
+    state): tester is logged as **"primed"** and proceeds to a
+    **shortened protocol** — open question only (no Tier scoring,
+    no stimulus rating). Their open-response decode is captured as
+    INFORMATIVE CONTEXT in `decode-eval.md` but does NOT count
+    toward acceptance threshold. They see: *"You've seen the prior
+    trailer — your decode here is helpful context but won't count
+    toward the formal test. Listen and describe what you think
+    this trailer is about (~30 seconds)."* — shortened to ~5 min
+    from the ~25 min full protocol.
+  - The pre-screen + branching is implemented in the WebMUSHRA
+    onboarding screen flow (or as a brief intro form before the
+    rendered MP4 stimulus loads).
 - **Stimulus:** First 5s of the 6–8s rendered MP4 clip played cold —
   no setup beyond "watch this." (Acknowledged limitation: the framing
   meta-cues that it's a trailer; this is unavoidable in a recruited
@@ -976,17 +1818,51 @@ agentic-SDLC-thesis tag + landing logo). Frame timing references
 - **Open question (asked first, after pre-screen):** *"What do you
   think this trailer is about?"* Tester narrates their reaction
   stream-of-consciousness for 30 seconds.
-- **Two-tier decode acceptance** (replaces flat "AI/agent/autonomous"
-  bag-of-words):
-  - **Tier 1 decode** (full thesis): tester unprompted surfaces
-    *"agent," "autonomous," "built itself," "wrote itself," "made
-    itself," "the machine did it"* — i.e., the agentic-SDLC thesis.
-  - **Tier 2 decode** (partial / surface signal): tester unprompted
-    surfaces *"AI"* alone with no agentic specification.
+- **Two-tier decode acceptance — aligned with ADR #21 keyword
+  precision (P1.17, updated 2026-05-17).** ADR #21 (locked in Phase 6
+  deepening) explicitly distinguishes BUILD PROCESS / AGENT AUTHORSHIP
+  keywords (which count) from RENDER TECHNOLOGY keywords (which do
+  not). The pre-deepening Tier 2 framing accepted "AI alone" as a
+  partial decode — but a listener saying "this looks like an AI-
+  rendered trailer" (Midjourney / Sora interpretation) is reading
+  the visuals, not the agentic-SDLC build process. Allowing that to
+  pass Phase 0 would lock a line that Phase 6's full decode panel
+  rejects per ADR #21 hard rule. Updated tiers:
+  - **Tier 1 decode** (full thesis — BUILD PROCESS / AGENT
+    AUTHORSHIP): tester unprompted surfaces *"agent," "autonomous,"
+    "built itself," "wrote itself," "made itself," "the machine did
+    it," "Claude wrote this," "autonomous development"* — keywords
+    specifically about the BUILD PROCESS, not the visual rendering.
+  - **Tier 2 decode** (partial — AI + AUTHORSHIP CONTEXT): tester
+    unprompted surfaces *"AI"* coupled with explicit authorship
+    framing (*"AI built it," "AI wrote the code," "AI made the
+    game"*). The authorship verb is the diagnostic — *"AI"* alone
+    is NOT Tier 2 anymore.
+  - **Render-tech keywords DO NOT count** (per ADR #21 hard rule):
+    *"AI-rendered visuals," "Midjourney-generated," "AI-generated
+    images," "AI trailer animation," "looks AI-made"* (when "AI-made"
+    refers to the trailer aesthetic, not the project). If a tester
+    says one of these, it's a Failure Mode 2 signal (visual decodes
+    as AI-rendered but audio+thesis don't decode as autonomous build).
   - **Acceptance threshold:** **≥50% of non-primed testers reach
-    Tier 1** OR **≥75% of non-primed testers reach Tier 1 OR Tier 2
-    combined**. With n=4 non-primed: 2 Tier 1 (50%) OR 3 of any tier
-    (75%). The threshold scales with sample size — 3 of 6, 4 of 8, etc.
+    Tier 1**. Tier-2-only pass (no Tier 1 listeners) is NOT
+    sufficient — the full thesis must land for at least half. With
+    n=4 non-primed: ≥2 Tier 1. With n=6: ≥3 Tier 1. With n=8:
+    ≥4 Tier 1.
+  - **Non-primed N HARD FLOOR (P2.32):** Unit 0.3 cannot lock on
+    fewer than **n=4 non-primed testers**. If pre-screen disqualifies
+    the recruited pool below n=4, re-recruitment is MANDATORY before
+    the decode threshold can evaluate. Proceeding with n=3 (50% = 1.5
+    testers) is statistical noise; the floor prevents it.
+  - **Three-band parity (P3.5).** Like cadence-spec, decode acceptance
+    has an implicit Ceiling band: a line that **over-telegraphs the
+    autonomous-build thesis** (e.g., "this is a trailer built by
+    Claude Sonnet 4.6 to demonstrate autonomous software development")
+    is too on-the-nose and reads as marketing rather than the Archer-
+    grade aesthetic the trailer is going for. The Ceiling is detected
+    if ≥2 testers volunteer "feels like an ad" / "marketing copy" /
+    "too explicit" in open response. Ceiling triggers line rewrite
+    (Failure Mode 1).
 - **Failure mode 1 — line decodes but not as autonomous:** testers
   describe the trailer as "Archer parody" or "spy comedy" without
   mentioning autonomy/agent/machine. **Rewrite line** with more
@@ -1047,8 +1923,8 @@ agentic-SDLC-thesis tag + landing logo). Frame timing references
 - [ ] **Unit 0.4: Tone Prototype Gate**
 
 **Goal:** Validate that gap-comedy (deadpan briefing-vocabulary over
-SDLC-reality subject matter) lands with two engineering-peer test
-listeners — one Archer-aware, one Archer-unaware — both articulating
+SDLC-reality subject matter) lands with engineering-peer test
+listeners — both Archer-aware and Archer-unaware — articulating
 unprompted that the gap is the joke. Fail-action re-opens the
 played-straight Key Decision.
 
@@ -1058,6 +1934,35 @@ vocabulary discipline).
 **Dependencies:** Unit 0.1 (scaffold), Unit 0.2 (engine chosen — TTS the
 sample paragraph via the engine that cleared R4 or the nearest
 substitute).
+
+**Optional tone-first early-test (P3.3 — recommended hedge).** Tone
+is the trailer's strategic differentiator vs UMB (deadpan-spy register
+vs UMB's noir-Charon). If the played-straight thesis doesn't land,
+the entire voice eval may be moot — Briggsy is spending $24 + 3 weeks
+on voice when the underlying premise needs a redesign. A cheap early-
+tone test can hedge this dependency-chain risk:
+
+- **Mechanism:** Extend Step 0.5's Gemini-free-tier audio pre-flight
+  (~$0, 15 min). Generate a SECOND clip from the Step 0.5 cadence
+  pre-flight session — same engine, but read Unit 0.4 Step 1's
+  20-second deadpan sample paragraph instead of Sample Paragraph 1.
+  Same two readers (Briggsy + non-Archer-fan engineering peer) hear
+  the clip and answer: *"What's the joke here? Describe it in your
+  own words."*
+- **Early signal:** If both readers articulate gap-comedy (Tier 1 or
+  Tier 2 per Unit 0.4 rubric below), proceed with the full Unit 0.2
+  + Unit 0.4 sequence with high confidence the thesis lands. If
+  either says "I don't get the joke" or describes only one register,
+  surface the thesis-fragility flag to Briggsy BEFORE engine-matrix
+  spend begins — Step 5's brainstorm-restructure Option (i)/(iv) may
+  trigger earlier than the formal Unit 0.4 fail-action.
+- **Why optional:** the formal Unit 0.4 gate still runs on the locked
+  briefer voice (which carries character-specific cadence the Gemini
+  pre-flight doesn't fully capture). The early-test is a strategic
+  hedge, not a replacement gate. Skipping it = accepting the standard
+  sequential risk.
+- **Cost:** ~$0 + 15 min added to Step 0.5. Saves: up to $24 + 3 weeks
+  if the played-straight thesis is broken in current form.
 
 **Files:**
 
@@ -1195,7 +2100,8 @@ validation).
   HTP fullpage screenshot animated via translateY interpolation is
   the lightest precedent).
 - Create: `videos/trailer/src/SpikeCompositionMain.tsx` — wraps
-  SpikeS01 + cross-dissolve transition + SpikeS02 in `<TransitionSeries>`.
+  SpikeS01 + scene-internal fade-to-black overlay + SpikeS02 in bare
+  `<Series>` (matches ADR #4 revised production pattern).
 - Create: `videos/trailer/scripts/capture-htp-scroll-burned.ts` — clone
   of UMB's `capture-htp-scroll.ts` pointed at BURNED's HTP page. **This
   script is NOT throwaway** — Phase 3 Unit 3.1 owns the production
@@ -1223,24 +2129,42 @@ validation).
 
 **Approach:**
 
-**Integration point (a) — Cross-dissolve via `<TransitionSeries>`.**
-```tsx
-import { TransitionSeries, linearTiming } from '@remotion/transitions';
-import { fade } from '@remotion/transitions/fade';
+**Integration point (a) — Scene boundary via bare `<Series>` (ADR #4
+revised — TransitionSeries REMOVED).** Phase 4 deepening removed
+`<TransitionSeries>` across 15+ sections (R3 is a HARD CUT per Phase
+1 deepening, not cross-dissolve; ADR #11 also revised). Phase 0's
+spike validates the production pattern: bare `<Series>` of
+`<Series.Sequence>` with scene-internal fade overlays where needed.
+The `@remotion/transitions` package is NOT pre-installed (see Unit
+0.1 deps) — only installed on-demand if Unit 0.5(e)'s stamp-slap
+needs `iris()` helper or similar primitives.
 
-<TransitionSeries>
-  <TransitionSeries.Sequence durationInFrames={60}>
+```tsx
+import { Series, AbsoluteFill, interpolate, useCurrentFrame } from 'remotion';
+
+// Scene-internal fade overlay component (per Phase 4 pattern)
+function S01TailFadeToBlack({ startFrame, durationFrames }: { startFrame: number; durationFrames: number }) {
+  const frame = useCurrentFrame();
+  const opacity = interpolate(frame, [startFrame, startFrame + durationFrames], [0, 1], { extrapolateLeft: 'clamp', extrapolateRight: 'clamp' });
+  return <AbsoluteFill style={{ backgroundColor: 'black', opacity }} />;
+}
+
+<Series>
+  <Series.Sequence durationInFrames={60}>
     <SpikeS01_Cascade />
-  </TransitionSeries.Sequence>
-  <TransitionSeries.Transition
-    presentation={fade()}
-    timing={linearTiming({ durationInFrames: 20 })}
-  />
-  <TransitionSeries.Sequence durationInFrames={60}>
+    <S01TailFadeToBlack startFrame={50} durationFrames={10} />
+  </Series.Sequence>
+  <Series.Sequence durationInFrames={60}>
     <SpikeS02_Gameplay />
-  </TransitionSeries.Sequence>
-</TransitionSeries>
+  </Series.Sequence>
+</Series>
 ```
+This is the Phase 4 production pattern at spike scale. Spike validates
+the bare-`<Series>` + scene-internal-overlay approach works in MP4
+export (no `TransitionSeries` cross-dissolve math). If the spike
+reveals timing issues at the boundary (overlay opacity doesn't reach
+1.0 at the cut, etc.), Phase 4 inherits the failure mode + remediation
+documented here.
 
 **Integration point (b) — Audio crossfade via `@remotion/media`.**
 ```tsx
@@ -1295,18 +2219,48 @@ export function useFonts() {
   loadFont({
     family: 'Clash Display',
     url: staticFile('fonts/ClashDisplay-Variable.woff2'),
-    weight: '200 700',  // variable font weight range
+    weight: '200 700',  // variable font weight range — PHASE 0 SPIKE QUESTION
     format: 'woff2',
   });
 }
 ```
 `@remotion/fonts.loadFont()` auto-blocks the render until the font is
 ready — no manual `delayRender` / `continueRender`. Used in
-`Root.tsx` at top. Spike validates by rendering a text overlay using
-`font-family: 'Clash Display'` at weight 700 and confirming the
-EXPORTED MP4 shows the loaded font (not a fallback). If fallback
-appears in MP4 but not studio preview, the bug is in our load
-timing — not the package. Multiple weights later: use
+`Root.tsx` at top.
+
+**Variable-axis multi-weight spike test (P1.10 — pulls Phase 4 Unit
+4.0 spike into Phase 0).** Remotion 4.0.x docs do NOT document
+`weight: '200 700'` range syntax with `@remotion/fonts.loadFont()`;
+Phase 4 deepening had added a Unit 4.0 entry spike specifically to
+resolve this question. Phase 0's Unit 0.5(c) is the FIRST place the
+question can be answered — landing it here saves a Phase 4-entry
+delay AND prevents a silent-pass failure mode.
+
+Spike renders **3 text lines at weights 200 / 400 / 700** from the
+SAME loaded variable woff2, each with the same word ("BURNED" — bold
+all-caps mirrors the production logo treatment). Visual inspection
+of the exported MP4:
+
+- **PASS criterion:** all three weights are visually DISTINCT (200 is
+  visibly lighter / hairline strokes; 400 is mid-body; 700 is bold
+  with thick strokes). The variable-axis range syntax works.
+- **FAIL criterion:** all three weights look identical (Remotion
+  ignored the range; the rendering engine used a single weight
+  default). Surface to Phase 3 escalation: regenerate static-weight
+  woff2 subsets via `pyftsubset` for each used weight (200/400/700);
+  Phase 4 imports 3 separate `loadFont()` calls with `weight: '200'`,
+  `weight: '400'`, `weight: '700'`. Document the FAIL outcome in
+  `spike-results.md` and add to Phase 3's deepening agenda.
+
+**Why this matters:** the pre-deepening single-weight 700 test only
+verified "Clash Display rendered" — Chromium-in-Remotion would
+visually pass even if the range syntax failed silently, because it
+falls back to whatever weight the loaded file defaults to. Testing
+3 weights catches the silent fallback. Phase 4's Unit 4.0 spike is
+now REDUNDANT and CAN be dropped from Phase 4 (Phase 4 deepening
+should re-validate when this lock lands).
+
+Multiple weight families later: use
 `await Promise.all([loadFont(...), loadFont(...)])` if adding
 secondary faces (General Sans, JetBrains Mono).
 
@@ -1318,9 +2272,22 @@ secondary faces (General Sans, JetBrains Mono).
   Phase 3 after deploy migration completes.
 - Output: `videos/trailer/public/htp-fullpage.png`.
 - 1920×1080 viewport, scroll-by-200px-then-wait-80ms loop (same UMB
-  trick — verified compatible with BURNED's `useScrollReveal`
-  GSAP+ScrollTrigger pattern at `src/client/howtoplay/scroll/useScrollReveal.ts`,
-  which uses `start: 'top 85%', once: true` per reveal element).
+  trick). **Compatibility verification REQUIRED at spike-start (P2.13)** —
+  the pre-deepening claim "verified compatible with BURNED's
+  useScrollReveal" was assertion-by-fiat, not measured. UMB's
+  scroll-reveal differs from BURNED's. The actual verification step:
+  Phase 0 executor runs the capture script against the local Vite dev
+  HTP page with DevTools open + breakpoint on `useScrollReveal`
+  internals; confirms all `[data-reveal]` elements transition to
+  `opacity: 1` after the scroll-and-wait loop completes (NOT after a
+  fixed timer). If incompatible (e.g., ScrollTrigger doesn't fire on
+  Playwright's synthesized scroll events), the FAIL path triggers
+  alternate capture: pre-render the HTP page in a real browser session,
+  page-down through reveals manually, screenshot once all `[data-reveal]`
+  elements are visible. Spike-results.md records which path succeeded.
+  Real path: `src/client/howtoplay/hooks/useScrollReveal.ts` (NOT
+  `scroll/` — pre-deepening typo). The file uses `start: 'top 85%',
+  once: true` per reveal element.
 - Reports `scrollHeight` so Phase 3 can compute the Remotion scroll
   distance. BURNED HTP's 10 acts produce ~8000–15000 px total height;
   spike's 800-px scroll over 60 frames is intentional — viability
@@ -1345,39 +2312,53 @@ interpolation) is a Phase 4 decision; the spike validates the
 rendering pipeline only.*
 
 **Integration point (e) — Archer-grammar transition vocabulary
-(LOCK + VALIDATE all three).**
+(RENDER-VALIDATE all three; Phase 4 picks final ranking).**
 
-**Design lock at plan time (Emil lens applied):**
+The spike's purpose is to validate that pure Remotion can render
+all three Archer-grammar transition candidates without artifacts.
+**The spike does NOT rank them or lock roles** (P2.3) — that's Phase
+4 design work. Phase 0's role: prove each candidate is technically
+achievable in pure Remotion + provide enough mechanical specification
+that Phase 4 inherits a stable contract, not a re-research surface.
 
-| Candidate | Primary use | Lock status |
-|-----------|-------------|-------------|
-| **Classification-stamp slap** | **PRIMARY scene-to-scene transition** in the trailer | LOCKED |
-| **Iris wipe** | Cold-open → Act 1 boundary; documented FALLBACK if stamp-slap reveals rendering artifacts | LOCKED as secondary |
-| **Kinetic typography reveal** | Goofy-stat overlays ONLY (cascade scene) — **NOT a scene-to-scene transition** | LOCKED as constrained |
+**Starting recommendation (Phase 4 may revisit during deepening):**
 
-Rationale for stamp-slap primary:
-- Maps directly to Pendleton briefing-room aesthetic (CLASSIFIED stamps,
-  redacted dossiers, bureaucratic-thriller register).
-- Creates **continuity with BURNED's existing motion grammar** —
-  `DramaOverlay.tsx` already uses stamp-reveal motion for the
-  BURNED-draw cinematic beat. The trailer cribbing that motion
-  grammar reads as product-of-piece, not generic transition library.
-- Avoids the 2025–2026 AI-launch-trailer cliché (kinetic typography
-  is the Anthropic-keynote / Cursor-launch / every-AI-trailer
-  default; using it for scene-to-scene transitions reads as "another
-  AI startup trailer" and fails the water-beads bar).
+| Candidate | Recommended use | Rationale |
+|-----------|-----------------|-----------|
+| **Classification-stamp slap** | Scene-to-scene transitions | Maps to Pendleton briefing-room aesthetic; continuity with `DramaOverlay.tsx`'s existing stamp-reveal motion |
+| **Iris wipe** | Cold-open → Act 1 boundary; fallback for stamp-slap | Genre-classical (60s spy films); achievable in pure Remotion with `<clipPath>` |
+| **Kinetic typography** | Goofy-stat overlays (R11) — NOT scene-to-scene | Scene-to-scene kinetic-type reads as "another AI startup trailer" (Anthropic / Cursor launch cliché); constrained to stat overlays preserves novelty |
 
-Kinetic typography is still validated in the spike because it has a
-legitimate constrained role — Phase 4's goofy-stat overlays (R11)
-will use word-by-word reveals at stat-card landing time. But it
-doesn't get to be a scene-to-scene transition.
+Phase 4's deepening pass may re-rank if implementation reveals
+artifacts the spike didn't catch, OR if Phase 1 beat-sheet structure
+makes one candidate's mechanical shape unworkable.
+
+**Stamp-slap mechanical shape contract (P2.18 — for Phase 4 inheritance).**
+Pre-deepening single-sentence spec was insufficient. Full mechanical
+contract:
+
+| Property | Value | Rationale |
+|----------|-------|-----------|
+| Source graphic | CLASSIFIED stamp SVG (Phase 3 produces; split-layer per ADR — frame.svg + text.svg) | Reuses BURNED's existing stamp vocabulary |
+| Rotation range | Lands at **-3°** (slightly tilted left, Archer-style) from start angle of **-8°** | Phase 1 deepening locked the -3° tilt for visual chrome stamps |
+| Scale envelope | `0.95 → 1.04 → 1.0` (overshoot + settle) per Phase 1 Unit 1.4 lock | NOT scale(0) → scale(1.4) → scale(1.0); pre-deepening had the direction inverted |
+| Easing curve | `EASE_OUT (0.16, 1, 0.3, 1)` emil curve (registered in `src/lib/animations.ts` per Phase 4 ADR) | Emil-coded snap-then-settle, matches BURNED's existing motion grammar |
+| Duration | 12 frames total — 6f scale-in (0.95→1.04), 4f settle (1.04→1.0), 2f hold | 0.4s total at 30fps reads as snap, not gradual |
+| Transform origin | `center` (NOT `top-left` or default) | Ensures rotation + scale pivot around stamp center, not corner |
+| Audio cue (Phase 4 layer) | Single "thunk" SFX at landing frame, ~30ms duration | Reinforces tactile feel; Phase 4 sources |
+| Coverage | Stamp lands as overlay on the outgoing scene's final frame; full scene transition triggered after stamp settles | NOT full-screen wipe — stamp is a chrome layer over a hard cut |
+
+This contract is **not a Phase 0 lock** — Phase 4 may amend during
+deepening if implementation surfaces a constraint that changes the
+shape. But Phase 4 inherits this as a starting point, not a blank
+slate.
 
 **The spike renders all three as sub-clips** (each is a 2-second
-sub-clip inside the larger spike composition; Phase 4 inherits the
-vocabulary set):
+sub-clip inside the larger spike composition; spike validates RENDER,
+not ranking):
 
 ```tsx
-// SpikeS01_Cascade.tsx — transition vocabulary sub-clips
+// SpikeS01_Cascade.tsx — transition vocabulary sub-clips (render-only validation)
 <Series>
   <Series.Sequence durationInFrames={60}><SpikeStampSlap /></Series.Sequence>
   <Series.Sequence durationInFrames={60}><SpikeIrisWipe /></Series.Sequence>
@@ -1385,9 +2366,10 @@ vocabulary set):
 </Series>
 ```
 
-- **Classification-stamp slap.** Stamp graphic rotates in from
-  upper-right + lands with a 1-frame scale-up + 1-frame settle.
-  Pure Remotion (interpolation of rotation + scale).
+- **Classification-stamp slap.** Stamp graphic rotates from -8° to
+  -3° + scales 0.95 → 1.04 → 1.0 over 12 frames with `transform-origin:
+  center`. Pure Remotion (interpolation of rotation + scale with emil
+  easing curve).
 - **Iris wipe.** Circular SVG mask animating from full-screen to
   point. Achievable in pure Remotion with `<clipPath>` + interpolated
   radius.
@@ -1398,22 +2380,30 @@ vocabulary set):
 **Pass criterion.** All five points (a–e) clear in
 `out/spike-frame-test.mp4`:
 
-- (a) Cross-dissolve visually completes over 20 frames (no hard cut).
+- (a) Bare `<Series>` of two `<Series.Sequence>` blocks renders with
+  scene-internal fade overlay reaching opacity 1.0 by the boundary
+  frame. No frame-skipping, no overlay-clipping at the cut.
 - (b) Music bed audibly drops to 20% when VO drops, returns to 60%
   after VO ends.
-- (c) Custom-font text overlay renders with `'Clash Display'` family
-  at weight 700 (not the default sans-serif fallback).
-- (d) HTP dossier scrolls smoothly in the cascade window.
+- (c) Custom-font text overlay renders 3 weights (200/400/700) from
+  the SAME variable woff2, each visually distinct. If all weights
+  render identically, escalate to Phase 3 pyftsubset per integration
+  point (c) FAIL contract above.
+- (d) HTP dossier scrolls smoothly in the cascade window. Capture
+  script's GSAP+ScrollTrigger compat path documented in
+  `spike-results.md`.
 - (e) **All three** Archer-grammar transition sub-clips land without
-  visual artifacts. If stamp-slap fails: iris wipe steps up to primary.
-  If iris fails: surface the pure-Remotion-can't-deliver finding back
-  to a brainstorm-level decision (does the trailer concept survive
-  without iris vocabulary?). If kinetic typography fails: the goofy-
-  stat overlay design needs a different motion grammar for Phase 4.
+  visual artifacts. If stamp-slap render fails: Phase 4 may pick
+  iris wipe as primary (or vice versa). If iris fails: surface the
+  pure-Remotion-can't-deliver finding to Phase 4 deepening for
+  decision. If kinetic typography fails: the goofy-stat overlay
+  design needs a different motion grammar for Phase 4.
 
-**Spike-results.md MUST include the transition-candidate ranking**
-(chosen primary, runner-up, anything cut) with one-sentence
-rationale per choice. This is the lock document Phase 4 inherits.
+**Spike-results.md MUST document per-candidate render outcomes**
+(rendered cleanly / had artifacts / failed entirely) with screenshots
+or notes. Phase 4 reads this as the technical-feasibility input to
+its ranking decision (Phase 4 ranking is design work, not Phase 0
+work). Phase 0's spike doesn't pre-judge Phase 4's pick.
 
 **Fail-mode isolation rule:** if the combined render fails any single
 point, produce an isolated single-point repro composition
@@ -1423,8 +2413,10 @@ than rendering a 1-concern isolated repro.
 
 **Patterns to follow:**
 
-- UMB cross-dissolve precedent: UMB doesn't use `<TransitionSeries>` —
-  BURNED is breaking new ground here. Trust framework-docs research.
+- UMB scene-boundary precedent: UMB uses bare `<Series>` with
+  scene-internal overlay components, NOT `<TransitionSeries>` (verified
+  via `projects/undercover-mob-boss/videos/trailer/src/TrailerV3.tsx:28-56`).
+  ADR #4 revised matches the UMB pattern; BURNED inherits it.
 - UMB audio precedent: `Html5Audio` placed at absolute `<Sequence from={frame}>`. New `<Audio>` from `@remotion/media` is the modernization.
 - UMB font loading: `projects/undercover-mob-boss/videos/trailer/src/hooks/useFonts.ts`
 - UMB HTP capture: `projects/undercover-mob-boss/scripts/capture-htp-scroll.ts`
@@ -1433,7 +2425,7 @@ than rendering a 1-concern isolated repro.
 
 - **Happy path:** `pnpm render` (spike target) produces a valid 1920×1080 H264 MP4 at `out/spike-frame-test.mp4` in <5 minutes.
 - **Happy path:** `capture-htp-scroll-burned.ts` produces a valid PNG at `public/htp-fullpage.png` with non-zero file size.
-- **Integration:** Custom font appears in MP4 export (verified by viewing the rendered file, NOT just studio preview).
+- **Integration:** Custom font multi-weight test passes in MP4 export — weights 200/400/700 visually distinct (verified by viewing the rendered file, NOT just studio preview). If all three render identically, variable-axis range syntax has failed silently — escalate to Phase 3 pyftsubset per Unit 0.5(c) FAIL contract.
 - **Integration:** Audio crossfade audibly works in MP4 export (verified by listening to rendered file).
 - **Edge case:** Playwright capture script handles BURNED's HTP `useScrollReveal` GSAP animations — the 200px-scroll-then-80ms-wait loop triggers every `[data-reveal]` element before screenshot.
 - **Edge case:** Vite dev server is running before capture script invocation (script fails fast with clear error if not).
@@ -1442,10 +2434,17 @@ than rendering a 1-concern isolated repro.
 **Verification:**
 
 - `out/spike-frame-test.mp4` exists and plays cleanly.
-- All five integration points (a–e) pass per inspection.
+- All five integration points (a–e) pass per inspection. Per-candidate
+  render outcomes for (e) documented (Phase 4 inherits as feasibility
+  input, not as ranking lock).
 - `spike-results.md` documents per-point pass/fail with screenshots /
-  notes. Remediation plan for any failures.
-- **Composite-viability lock** for Phase 4 recorded in `spike-results.md`.
+  notes. Remediation plan for any failures. Variable-woff2 multi-weight
+  test result explicitly noted (PASS = ship variable file; FAIL =
+  Phase 3 pyftsubset escalation).
+- **Composite-viability disposition** for Phase 4 recorded in
+  `spike-results.md` (cleared = all 5 points rendered cleanly;
+  restructured = at least one point needs Phase 4 amendment;
+  cut = trailer concept needs brainstorm-level reopen).
 
 ---
 
@@ -1460,11 +2459,13 @@ rule: flat scream is worse than no scream.
 **Requirements:** R5 (Vera scream cameo, authentic or cut).
 
 **Dependencies:** Unit 0.2 (engine + voice cast chosen — the
-**screamer is Dash**, not Vera; corrects previous "Vera target
-timbre" phrasing — in Sterling lore the screamer is the agent
-character, the addressee is the named target. So Path (b) speech-to-
-speech target is the **Dash voice from Unit 0.2 lock**, applied to
-Briggsy's owned-voice source recording).
+**screamer is Dash**, not Vera; in Sterling lore the screamer is the
+agent character, the addressee is the named target). Path (a) **reuses
+the isolated scream clip already generated in Unit 0.2 Step 1
+Paragraph 3** ("VERAAA!!!") — this is the single clip both Unit 0.2
+Step 4 acceptance and Unit 0.6 evaluate. Path (b) speech-to-speech
+target is the **Dash voice from Unit 0.2 lock**, applied to Briggsy's
+owned-voice source recording.
 
 **Files:**
 
@@ -1519,8 +2520,12 @@ already generates this clip; Path (a) reuses it directly.
 
 **Listener protocol.** Document in `scream-eval.md`:
 
-- **Listeners:** 2 minimum Archer-fan testers (same pool as Unit 0.2
-  Archer-fan portion). 3 target for marginal-case disambiguation.
+- **Listeners:** 3 minimum Archer-fan testers (raised from 2 — P2.34;
+  cut outcome permanently removes Vera, asymmetric to ≥4-of-6 used in
+  Unit 0.2). 4 target for marginal-case disambiguation. Pool
+  independence rule applies (see Documentation / Operational Notes) —
+  Unit 0.6 listeners must NOT have been Step 0.5 readers or Step 3
+  MUSHRA panelists.
 - **Stimuli:** Three clips played in randomized order — (a) Path A
   TTS, (b) Path B hybrid, (c) a **non-Benjamin authentic-human scream
   in Sterling-coded register** (sourced from a voice-actor portfolio
@@ -1533,9 +2538,13 @@ already generates this clip; Path (a) reuses it directly.
 - **Question:** *"Which of these would you ship in a comedy trailer
   where the joke depends on the scream being authentic? You can pick
   multiple. You can pick none."*
-- **Acceptance:** At least one of (a) or (b) is selected by at least
-  one listener AND no listener selects "none" exclusively. If "none"
-  is the consensus, R5 is cut.
+- **Acceptance:** ≥2 of 3 listeners select at least one of (a) or
+  (b) AND no listener selects "none" exclusively across the panel.
+  Raised from the pre-deepening "1 of 2 selects (a) or (b)" — that
+  threshold cleared on a single listener's pick, which is too thin a
+  basis for a character-removal decision. The ≥2-of-3 floor matches
+  the impact (Vera permanently removed from trailer if cut). If "none"
+  is the consensus OR fewer than 2 listeners pick (a) or (b), R5 is cut.
 
 **Fail-action.** If neither (a) nor (b) is selected by any listener:
 
@@ -1649,9 +2658,15 @@ already-paid Voice Changer credits).
 | Path D budget approval delays | Low | Medium | Path D is a separate **Sub-phase 0a** deliverable, not an in-flight ladder step. Phase 0 exits with the Sub-phase 0a Brief Memo when Paths A/B/C fail. Phase 1 structural decisions independent of voice identity may proceed in parallel during casting. |
 | Path D actor delivery exceeds reasonable timeline | Medium | Medium | Sub-phase 0a Brief Memo includes explicit timeline expectations (1–2 weeks typical actor turnaround on Voices.com / Voice123). If exceeded, escalate to Brainstorm-Restructure Memo (three explicit options for Briggsy: synthetic-tinged Dash / non-Dash briefer / abandon). |
 | Listener recognizes voice as Benjamin clone unprompted | Low (cadence-spec is style-only) | High (means engines drifted toward impression, not style) | Re-spec the cadence input — strip any identity-suggesting characteristic, re-run engine matrix. |
-| MUSHRA tester recruitment delay (no 6 listeners within 1 week) | Medium | **Medium** (was: Low — re-rated up; this gate blocks Phase 1) | Reduce to 4-listener pass with stated reduced confidence; document gap explicitly in results.md. **Hosting decision (Step 3a) is now Cloudflare Pages subpath by default** — permanent URL, no laptop-online dependency, listeners can resume mid-session next day. |
-| WebMUSHRA hosting blocker (laptop not externally addressable) | Was implicit | Was implicit | Resolved by Step 3a hosting decision: Cloudflare Pages subpath ($0, recommended) OR Cloudflare Tunnel ($0, laptop-must-stay-awake) OR VPS ($4–6/mo fallback). The original "share URL with listeners" hand-wave assumed external addressability that Briggsy's laptop doesn't have by default. |
-| Spike reveals Remotion 4.0.438 incompatibility with `@remotion/transitions` or `@remotion/media` | Low | Medium | Pin to latest 4.0.x compatible release; fallback to UMB's `<Series>` + `Html5Audio` pattern (audio crossfade becomes manual frame-math). Document downgrade in spike-results.md if triggered. |
+| MUSHRA tester recruitment delay (no 6 listeners within 1 week) | Medium | **Medium** (gate blocks Phase 1) | Reduce to 4-listener pass with stated reduced confidence; document gap explicitly in results.md. Recruitment flow specified in Step 3 §Recruitment flow. Pool independence rule enforced — cross-unit listener overlap surfaces as a Briggsy-decision Brief Memo, never silent acceptance. |
+| WebMUSHRA hosting blocker (laptop not externally addressable + PHP runtime requirement) | Was implicit | Was implicit | Step 3a hosting ranking corrected 2026-05-17 (P0.2): Cloudflare Tunnel ($0, laptop-awake — DEFAULT, PHP runs locally) OR Cloudflare Pages + Worker results-bridge ($0, ~30min setup — PHP not available on Pages, Worker bridges results to D1) OR VPS ($4–6/mo fallback). The pre-deepening "Pages subpath recommended" framing would have silently lost listener data — Pages is static-only, no PHP. |
+| Step 0a curl probes pass on auth/listing but real TTS endpoint is broken/rate-limited | Low | High (engines look ready but generate-tts-eval fails mid-Step-2 with billed retries) | Step 0a's `check-tts-readiness.ts` probes each engine's REAL TTS endpoint (10-char throwaway) — not just auth + model listing (P1.11 fix 2026-05-17). |
+| ElevenLabs Creator 100K char allowance exhausted by adversarial re-spec iteration before Path locks | Medium | High (Phase 0 stalls until billing-cycle reset OR forces premature Path-D escalation) | Char-budget tripwire in `char-budget.json` — 50K yellow warning, 80K hard halt with override flag (P1.12 fix). Plan budgets ~76K for the worst-case Path A re-spin × 3 voices × 3 paragraphs scenario; tripwire surfaces overshoot before billing exhaustion. |
+| Pool overlap across gates compounds priming bias (Harry signs Step 0.5 + sits Step 3 + Unit 0.3 + Unit 0.4) | Medium | Medium-High (joint-pass guarantees invalidated; Phase 6 may surface drift Phase 0 missed) | Listener pool independence rule (P1.13 fix) — hard exclusion of prior-unit listeners; pool tracked in `listener-roster.md`; cross-overlap conflicts surface to Briggsy as Brief Memos, never silent. Phase 6 N=6 panel is fresh listeners zero-overlap with Phase 0 (ADR #21 cross-phase). |
+| Voice locked at Phase 0 but Phase 6 cold-decode discovers Ceiling drift | Low (multi-listener panel + forced-choice probe catches most) | High (re-spec adds 2-4 weeks + ~$24 + Phase 4 re-render of voiced scenes) | Voice lock is PROVISIONAL until Phase 6 N=6 (P0.3 fix). Optional Phase-4-entry mini-cold-decode panel (2 fresh listeners on 1 rendered scene) catches drift earlier. Phase 6 panel is the absolute backstop. |
+| Path D contract missing AI-disclosure clause exposes Briggsy under NO FAKES / right-of-publicity law | Low | High (legal exposure on a portfolio project) | Sub-phase 0a deliverable now includes draft contract template with AI-disclosure clause as a hard requirement before casting begins (P2.26 fix). |
+| Path B Briggsy-voice clone persists on ElevenLabs infrastructure indefinitely after Phase 0 | Medium | Medium (latent exposure if API key ever leaks) | Path B preconditions verify deletion-on-request procedure; post-Phase-0 cleanup deletes the IVC profile within 7 days if Path B not selected (P2.25 fix). |
+| Spike reveals Remotion 4.0.438 incompatibility with `@remotion/media` `<Audio>` | Low | Medium | Pin to latest 4.0.x compatible release; fallback to UMB's `Html5Audio` pattern (audio crossfade becomes manual frame-math). Document downgrade in spike-results.md if triggered. `@remotion/transitions` is no longer pre-installed per ADR #4 revised; bare `<Series>` + scene-internal overlays is the validated production pattern. |
 | Spike custom-font fallback in MP4 export | Low | Medium | `@remotion/fonts.loadFont()` auto-blocks; if it still falls back, the bug is in our config — debug session in Phase 0 (don't carry to Phase 4). |
 | Vite dev server not running when capture-htp-scroll-burned.ts invoked | Low | Low | Script fails fast with clear error message naming the prerequisite. |
 | Deploy migration completes mid-Phase-0 and BURNED HTP URL changes | Low | Low | Phase 0 spike uses local Vite dev URL (`http://localhost:5173/howtoplay.html`). Production URL deferred to Phase 3. |
@@ -1680,15 +2695,21 @@ already-paid Voice Changer credits).
   non-Benjamin reference clip** (reference-anchored). Bonus-signal
   disambiguation: "same actor or same style?" follow-up if listener
   invokes Archer/Sterling.
-- **Three-band spectrum:** Floor / Target Band / Ceiling defined in
-  `cadence-spec.md` per Step 0. Sterling-CODED is a spectrum,
-  acceptance is the Target Band, Ceiling triggers re-spec.
+- **Three-band spectrum SHAPE:** Floor / Target Band / Ceiling
+  required in `cadence-spec.md` per Step 0. Sterling-CODED is a
+  spectrum, acceptance is the Target Band, Ceiling triggers re-spec.
+  Band CONTENT is filled by Step 0 research (the plan provides a
+  starting hypothesis, not a finalized lock).
 - **TTS budget envelope:** $50 retained as safety margin
   (research-corrected real ceiling ~$24); separate $0–500 line for
   Path D hybrid as Sub-phase 0a deliverable.
-- **WebMUSHRA hosting:** Cloudflare Pages subpath recommended ($0,
-  permanent URL); Cloudflare Tunnel ($0, laptop-awake) or VPS ($4–6/mo)
-  as alternatives. Decision documented in Step 3a output.
+- **WebMUSHRA hosting:** Cloudflare Tunnel from laptop ($0, ~5min
+  setup) recommended as DEFAULT — supports PHP runtime that WebMUSHRA
+  needs for result submission. Cloudflare Pages subpath ($0) is
+  option 2 BUT requires a Cloudflare Worker results-bridge (PHP not
+  available on Pages). VPS ($4–6/mo) is fallback. Decision documented
+  in Step 3a output. Access control mandatory regardless of host
+  (non-guessable subpath + per-listener token + Cloudflare Access).
 - **Twitter/X mobile crop:** 1:1 safe square within 16:9 frame. No
   separate vertical track.
 - **R14 cold-open candidate lines:** Three brainstorm originals
@@ -1733,9 +2754,11 @@ already-paid Voice Changer credits).
 
 - **Cadence-spec characterization completeness:** Step 0 output
   document quality determined by Unit 0.2 execution AND the Step 0.5
-  two-reader sanity-check gate. Re-spec triggered if Step 4
-  acceptance fails on "too generic" grounds OR if Step 0.5 reviewers
-  flag spec inadequacy.
+  audio pre-flight gate (one Archer-fan + one non-Archer-fan reader
+  hear a Gemini-free-tier clip from the spec, both must agree
+  Target-Band-Yes + No-Benjamin-impression). Re-spec triggered if
+  Step 4 acceptance fails on "too generic" grounds OR if Step 0.5
+  pre-flight readers flag spec inadequacy.
 - **Which TTS engine + voice path clears R4 cadence-match:** answered
   by Unit 0.2 listener pass (Path A preset / Path B Briggsy
   Instant-clone / Path C Gemini or OpenAI / Sub-phase 0a hybrid VO /
@@ -1765,6 +2788,14 @@ already-paid Voice Changer credits).
   hidden reference:** sourced during Unit 0.6 setup from voice-actor
   portfolio reels (voices.com / voice123.com) or stock libraries.
   Documented with source + license/attribution in `scream-eval.md`.
+
+- **MUSHRA non-Benjamin reference clip (Unit 0.2 Step 3 ±10
+  anchor):** selection criteria are now LOCKED at plan time (Step 3
+  §Reference clip selection criteria) — top-100-rated mid-baritone-male
+  voices.com/voice123.com portfolio reel with deadpan/spy/noir tagging,
+  ≥3 industry sources, reviewed by Briggsy + Step 0.5 cold-reader
+  before lock. Implementation = identify the specific reel from the
+  candidate list of 3.
 
 ---
 
@@ -1808,97 +2839,198 @@ already-paid Voice Changer credits).
   ownership note above).
 - Listener recruitment routing: Briggsy's Discord network + Harry
   (per `user_harry.md`) as the primary tester pool. Documented in
-  each unit's protocol file with consent confirmation. Same individuals
-  may appear in multiple unit pools (R4 / R14 / R5 / tone) — note this
-  in `results.md` per pool; statistical-independence is informally
-  acceptable for these gates given Briggsy's network size.
+  each unit's protocol file with consent confirmation.
+- **Listener pool independence rule (P1.13 — MANDATORY).** The
+  pre-deepening "same individuals may appear in multiple unit pools;
+  informally acceptable" wave-away invalidated joint-pass guarantees:
+  the FIRST gate a listener participates in CALIBRATES their downstream
+  judgments. If Harry signs off on Step 0.5 (cadence-spec pre-flight),
+  then sits in the Step 3 MUSHRA panel, then takes Unit 0.3 cold-decode,
+  then Unit 0.4 tone — his Unit-0.4 Yes vote is biased by 4 cumulative
+  exposures to the cadence vocabulary + trailer thesis. The compounding
+  effect breaks gate independence. Hard rule:
+  - **Step 0.5 readers** are EXCLUDED from Step 3 MUSHRA, Unit 0.3
+    decode-eval, Unit 0.4 tone gate, Unit 0.6 scream eval.
+  - **Step 3 MUSHRA listeners** are EXCLUDED from Unit 0.3 decode-eval,
+    Unit 0.4 tone gate, Unit 0.6 scream eval. (Same listener pool can
+    take Step 3 multiple times for re-spec rounds, but their priors
+    accumulate; flag re-pass priors in `results.md`.)
+  - **Unit 0.3 decode-eval testers** are EXCLUDED from Unit 0.4 and
+    Unit 0.6.
+  - **Unit 0.4 tone testers** are EXCLUDED from Unit 0.6 (smaller
+    pool; less critical).
+  - **Phase 6 N=6 cold-decode panel** is EXCLUDED from ALL Phase 0
+    units (ADR #21 cross-phase requirement; Phase 6 must surface
+    drift Phase 0 missed).
+  - Pool membership tracked per-listener in
+    `sample-eval/listener-roster.md` with which unit they participated
+    in + date. Each unit's protocol file references the roster and
+    asserts zero overlap with prior units before lock. **Pool
+    independence is a verifiable contract, not a vibe.**
+  - **Recovery if pool exhaustion forces overlap:** if Briggsy's
+    network genuinely can't supply non-overlapping listeners for
+    every unit, the executor surfaces the conflict to Briggsy with
+    a Brief Memo identifying which listener would overlap which
+    units + estimated bias direction. Briggsy decides: accept the
+    overlap (with stated reduced confidence in results.md) OR delay
+    the affected unit until a fresh listener is recruited. Never
+    silently overlap.
 
 ---
 
 ## PHASE-0-EXIT.md template
 
 Phase 0 closes when this document is written and every section is
-populated with a documented outcome. Phase 1 consumes it to scaffold
-beat-sheet work without needing to back-read five per-unit eval files.
+populated with a documented disposition. Phase 1 consumes it to
+scaffold beat-sheet work without needing to back-read five per-unit
+eval files.
 
-A "documented outcome" means: (i) the unit cleared its acceptance
-threshold, OR (ii) the unit triggered a documented fail-action that
-produced a different but locked decision (Path B instead of A, R5
-cut instead of kept, Sub-phase 0a triggered, etc.). Incomplete data
-(e.g., 3 of 6 MUSHRA listeners completed) without a fail-action
-invocation is NOT a documented outcome; it's a failed gate.
+A "documented disposition" is one of three states:
+- **cleared** — original gate intent landed, acceptance threshold cleared
+- **restructured** — fail-action redirected to a documented alternative
+- **cut** — gate intent abandoned, downstream re-scopes around absence
+
+Incomplete data (e.g., 3 of 6 MUSHRA listeners completed) without a
+fail-action invocation is NOT a documented disposition; it's a failed
+gate. The disposition must be explicit.
+
+**Sign-off ceremony (ADR #22).** Phase 0 exit requires Briggsy
+explicit sign-off via `.signoff` sentinel files:
+- `sample-eval/PHASE-0-EXIT.signoff` — Briggsy signs off on full
+  exit document. File contents: `signed-off-by: Briggsy /
+  date: YYYY-MM-DD / sha256: <hash of PHASE-0-EXIT.md at sign-off>`.
+- Per-unit sign-off sentinels:
+  `sample-eval/r4-dash/briggsy-review-0.2.signoff`,
+  `sample-eval/r14-cold-open/briggsy-review-0.3.signoff`,
+  `sample-eval/tone/briggsy-review-0.4.signoff`,
+  `sample-eval/spike/briggsy-review-0.5.signoff`,
+  `sample-eval/r5-scream/briggsy-review-0.6.signoff`.
+- A future automated `verify-briggsy-sentinels.ts` script (Phase 4
+  introduces this pattern at scale) verifies git-author of the
+  sentinel commit matches Briggsy's email — prevents Claude from
+  fabricating sign-offs.
+
+**Section ordering** (P2.15 — Phase 1 critical-path fields at top):
 
 ```markdown
 # Phase 0 Exit Record
 
-## Voice Cast Lock (Unit 0.2)
-- Cleared path: [A | B | C | Sub-phase 0a (Path D) | Brainstorm-Restructure]
+## Section 1 — Voice Cast Disposition (Unit 0.2) [PHASE 1 BLOCKER]
+
+This section is the first thing Phase 1 reads. Phase 1's beat-sheet
+authoring depends on the locked voice (line attribution, cadence
+beats, scream cue placement).
+
+- Disposition: [cleared | restructured-to-non-Dash | restructured-to-Sub-phase-0a | cut]
+- **Voice lock provisional?: [Y/N]** — Y if Phase 6 N=6 cold-decode
+  has not yet re-validated; voice cast may invalidate at Phase 6 and
+  trigger Phase 0 re-spec (see Step 4 "Voice lock is PROVISIONAL"
+  contract above).
+- Cleared path: [A | B | C-Gemini | C-OpenAI | Sub-phase 0a (Path D) | Brainstorm-Restructure-(i)/(ii)/(iv)]
 - Engine: [ElevenLabs Voice Library preset | ElevenLabs Briggsy
   Instant clone | Gemini 3.1 Flash TTS | OpenAI gpt-4o-mini-tts |
-  voice-actor name from Voices.com/Voice123]
+  voice-actor name from Voices.com/Voice123 | (if (iii) abandoned: N/A)]
+- **Engine model version pin** (P2.20 — Phase 2 Unit 2.0 parser reads
+  this): [e.g., `eleven_v3` | `gemini-2.5-flash-preview-tts` |
+  `gpt-4o-mini-tts-2025-03-20`]. No `@latest` aliases — dated snapshot
+  pin where engine supports.
 - Voice ID / actor identifier: [string]
 - Engine-adapter file path: [sample-eval/r4-dash/cadence-spec-{engine}.{json|md}]
 - MUSHRA listener count: [N / 6 minimum — note any shortfall + confidence impact]
 - Joint-pass verification: [N listeners cleared all three dimensions]
-- Cadence-spec.md path + sanity-check sign-off:
-  [sample-eval/r4-dash/cadence-spec.md, reviewers: Briggsy + <name>]
+- **Ceiling-band history (P1.16):**
+  - Ceiling-band triggered during eval?: [Y/N]
+  - Re-spec iterations run: [0 / 1 / 2 / 3]
+  - Final disposition cleared after re-spec: [Y/N]
+  - Per-iteration cadence-spec.md diff summary: [bulleted, what was
+    stripped/tightened]
+- Cadence-spec.md path + Step 0.5 audio pre-flight sign-off:
+  - Path: [sample-eval/r4-dash/cadence-spec.md]
+  - Pre-flight reviewers: [Briggsy + <non-Archer-fan reader>]
+  - Pre-flight WAV: [sample-eval/r4-dash/preflight/gemini-spec-test.wav]
 
-## Tone Lock (Unit 0.4)
+## Section 2 — R14 Cold-Open Line Disposition (Unit 0.3) [PHASE 1 BLOCKER]
+
+Phase 1 scene 1 (cold open) is shaped by this disposition. Without
+the line + speaker locked, the cold open is unwritable.
+
+- Disposition: [cleared | restructured-to-non-voice-fallback | cut]
+- Line (verbatim): [string OR `N/A — non-voice fallback`]
+- Speaker character: [Sable | Janet | Vera (if R5 cleared) | N/A]
+- Tester count: [N non-primed / 4 minimum — Unit 0.3 non-primed N
+  hard floor is 4; document shortfall + recovery if applicable]
+- Decode tier achieved: [Tier 1 only N | Tier 1 + Tier 2 (AI + authorship): N total | NEITHER (failed)]
+- Pre-screen battery — UMB-v3 contamination check: [N primed (excluded or shortened) / N non-primed (counted)]
+- ADR #21 keyword-precision check: [no render-tech keywords drove a Tier pass — verified Y/N]
+- If non-voice fallback: [R15-only decode spike outcome documented + tester decode tier]
+
+## Section 3 — Tone Disposition (Unit 0.4)
+
+- Disposition: [played-straight-cleared | played-straight-reopened-to-brainstorm | restructured-with-non-Dash-briefer]
 - Played-straight thesis: [SURVIVES | REOPENED]
-- Tester count: [N / 4 minimum, mix preservation noted]
+- Tester count: [N / 4 minimum, Archer-aware/unaware mix preservation noted]
 - Two-reader coding agreement: [Y/N — disagreements reconciled in eval.md]
 - Listener decode citations: [2 verbatim Tier-1 or Tier-2 quotes]
 - If REOPENED: [link to Brainstorm-Restructure Memo to Briggsy]
+- If briefer changed via Option (ii) restructure: [Unit 0.4 was re-run on new briefer voice — date + outcome]
 
-## Composite-Viability Lock (Unit 0.5)
-- (a) Cross-dissolve via `<TransitionSeries>`: [PASS | FAIL + remediation]
+## Section 4 — Composite-Viability Disposition (Unit 0.5)
+
+- (a) Bare `<Series>` + scene-internal overlay (per ADR #4 revised): [PASS | FAIL + remediation]
 - (b) Audio crossfade via `@remotion/media` + `<Sequence>`: [PASS | FAIL + remediation]
-- (c) Custom font (Clash Display, weight 700, woff2): [PASS | FAIL + remediation]
+- (c) Custom font multi-weight (Clash Display, 200/400/700 from variable woff2): [PASS | FAIL + escalation to Phase 3 pyftsubset]
 - (d) HTP scroll via Playwright capture: [PASS | FAIL + remediation]
-- (e) Archer-grammar transition vocabulary:
-  - Stamp-slap (primary): [PASS | FAIL + remediation]
-  - Iris wipe (fallback): [PASS | FAIL + remediation]
-  - Kinetic typography (constrained to stats): [PASS | FAIL + remediation]
-- Transition primary lock: [stamp-slap | iris-wipe-promoted | brainstorm-restructure]
+- (e) Archer-grammar transition vocabulary — render-validation per candidate:
+  - Stamp-slap render: [PASS | FAIL + artifacts noted]
+  - Iris wipe render: [PASS | FAIL + artifacts noted]
+  - Kinetic typography render: [PASS | FAIL + artifacts noted]
+- Phase 4 inherits the stamp-slap mechanical contract: [Y — see Unit 0.5(e) §"Stamp-slap mechanical shape contract" / N — Phase 4 must amend]
 - `@remotion/lottie` install required: [Y/N — if Y, which transition needs it]
+- `@remotion/transitions` install required for Phase 4: [N — bare `<Series>` confirmed sufficient | Y — for iris() helper specifically]
 
-## R14 Cold-Open Line Lock (Unit 0.3)
-- Line (verbatim): [string]
-- Speaker character: [Sable | Janet | Vera (if R5 cleared)]
-- Tester count: [N non-primed / 4 minimum]
-- Decode tier achieved: [Tier 1 (full thesis) | Tier 2 (partial) | both]
-- Pre-screen battery — UMB-v3 contamination check: [N primed / N non-primed]
-- If non-voice fallback: [R15-only decode spike outcome]
+## Section 5 — R5 Scream Disposition (Unit 0.6)
 
-## R5 Scream Outcome (Unit 0.6)
-- Outcome: [kept-A (TTS) | kept-B (hybrid) | cut]
-- If cut: Vera removed from trailer cast (yes/no impact on R14 lock noted)
+- Disposition: [kept-A (TTS) | kept-B (hybrid) | cut]
+- If cut: Vera removed from trailer cast (Y/N impact on R14 lock noted in Section 2)
+- Listener count: [N / 3 minimum]
 - Voice Changer source recording path: [if Path B]
 - Reference clip source + license: [non-Benjamin clip provenance]
+- Path B IVC profile lifecycle: [Created date / deletion-on-Phase-0-exit verified Y/N / OR retained-for-trailer-lifetime + deletion-date-target]
 
 ## Open carry-forwards to Phase 1
 - [bulleted list of decisions deferred to Phase 1 — e.g., specific
   Voice Library voice ID not yet finalized, specific brass-jazz hook
   source, specific operative-card-flash artwork selection beyond
-  Unit 0.3 spike]
-
-## Open carry-forwards to Phase 3
-- [bulleted list — typically R15 chrome SVG production design (Phase
-  0 locks placement+color+font, Phase 3 produces final SVGs),
-  music procurement, specific operative-card-art selection for
-  cascade composition]
+  Unit 0.3 spike, additional R15 chrome stamp content for Phase 1's
+  R15 #2-#4 instances (Phase 0 locks #1 cold-open only)]
 
 ## Phase 0 budget reconciliation
 - Engine eval actual spend: [$X across ElevenLabs Creator + Gemini +
   OpenAI vs $50 envelope]
-- WebMUSHRA hosting actual spend: [$0 Cloudflare Pages | $X VPS]
+- ElevenLabs Creator char count actual: [N / 100K monthly cap; tripwire status]
+- Hosting actual spend: [$0 Cloudflare Tunnel (default) | $0 Cloudflare Pages + Worker | $X VPS]
 - Sub-phase 0a actual spend (if Path D triggered): [$X actor +
-  Voice Changer polish]
+  Voice Changer polish + contract drafting time]
+- Total Phase 0 elapsed days (incl. Sub-phase 0a if triggered): [N days]
+
+## Amendments (template-amendment log per P2.33)
+
+Template fields are **add-only** after Phase 0 exit. If Phase 1+
+deepening discovers a field this template missed, append the new
+field here with date stamp + originating phase:
+
+- (initial) — Template locked at Phase 0 deepening 2026-05-16
+- 2026-05-17: P0.3 / P1.16 / P1.19 / P2.5 / P2.15 / P2.20 / P2.33 /
+  P3.2 amendments absorbed during doc-review pass — see commit log.
+
+Removing fields or changing field semantics requires a brainstorm-
+level re-open routed through `/ce:plan` deepening, NOT a silent edit.
 ```
 
 The PHASE-0-EXIT.md exits the phase. Phase 1's first task is to
 read this document and scaffold the beat-sheet around the locked
-decisions.
+dispositions — Sections 1 + 2 are read first, the remainder fills in
+once the beat-sheet skeleton is in place.
 
 ---
 

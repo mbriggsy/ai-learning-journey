@@ -2957,6 +2957,11 @@ the line + speaker locked, the cold open is unwritable.
 - Disposition: [cleared | restructured-to-non-voice-fallback | cut]
 - Line (verbatim): [string OR `N/A — non-voice fallback`]
 - Speaker character: [Sable | Janet | Vera (if R5 cleared) | N/A]
+- **Speaker voice ID** (P2.34 — Phase 2 Unit 2.0 parser reads this for
+  the cold-open WAV generation): [engine-specific identifier — e.g.,
+  ElevenLabs voice_id GUID, Gemini preset name like `Algenib`, OpenAI
+  preset name like `nova` — or `N/A` if non-voice fallback]. Determined
+  during Unit 0.3 cold-open spike when the candidate preset was chosen.
 - Tester count: [N non-primed / 4 minimum — Unit 0.3 non-primed N
   hard floor is 4; document shortfall + recovery if applicable]
 - Decode tier achieved: [Tier 1 only N | Tier 1 + Tier 2 (AI + authorship): N total | NEITHER (failed)]
@@ -3022,6 +3027,11 @@ field here with date stamp + originating phase:
 - (initial) — Template locked at Phase 0 deepening 2026-05-16
 - 2026-05-17: P0.3 / P1.16 / P1.19 / P2.5 / P2.15 / P2.20 / P2.33 /
   P3.2 amendments absorbed during doc-review pass — see commit log.
+- 2026-05-17 (Phase 2 doc-review pass): P2.34 — Section 2 gains
+  "Speaker voice ID" field so Phase 2 can generate the cold-open WAV
+  without a separate Phase 2-owned voice-id-overrides file. Single
+  source of truth (PHASE-0-EXIT.md) for all locked voice identifiers.
+  Add-only amendment per template policy.
 
 Removing fields or changing field semantics requires a brainstorm-
 level re-open routed through `/ce:plan` deepening, NOT a silent edit.

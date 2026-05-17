@@ -5,7 +5,7 @@ phase: 5
 parent: docs/plans/origin-trailer/roadmap.md
 origin: docs/ideation/2026-05-15-origin-trailer-brainstorm.md
 created: 2026-05-16
-deepened: pending
+deepened: 2026-05-17
 reviewed: pending
 status: active
 ---
@@ -17,34 +17,51 @@ status: active
 Phase 5 produces the **live gameplay footage** for S05's closer:
 real BURNED multiplayer gameplay captured in a way that visually
 sells "BURNED is shipped and playable" within ~18 seconds of screen
-time. Output: `videos/trailer/public/gameplay.mp4` consumed by Phase
-4's S05 scene via `<OffthreadVideo>`.
+time. Output: **`public/trailer/gameplay.mp4`** (BURNED root
+`public/` per ADR #15) — 1920×1080 @ 30fps, exactly 540 frames,
+audio-stripped, BURNED-draw lands at **clip-relative frame 160**
+(per Phase 1 Unit 1.2 Step 6 lock). Phase 4's S05 consumes via
+`<OffthreadVideo src={staticFile('trailer/gameplay.mp4')} muted />`
+with NO `startFrom`/`endAt` props (Phase 4 deepening locked the
+pre-trimmed contract; see Critical Constraints below).
 
-This is the trailer's **only phase that requires running BURNED end-
-to-end as a real product** — Phase 4 composes assets but doesn't
-boot a game. Phase 5 boots a game, runs through a curated game-flow
-sequence, captures it, and post-processes for trailer integration.
+This is the trailer's **only phase that requires running BURNED
+end-to-end as a real product** — Phase 4 composes assets but doesn't
+boot a game. Phase 5 boots a game, runs through a choreographed
+game-flow sequence, captures it, post-processes for trailer
+integration, and atomically swaps the file into place.
 
 Phase 5 produces:
 
-- `videos/trailer/public/gameplay.mp4` — the captured clip,
-  1920×1080 @ 30fps, ~18 seconds, music-bed-only audio (any in-game
-  audio either stripped or never captured per brainstorm Scope
-  Boundaries)
-- `videos/trailer/scripts/capture-gameplay.ts` — the capture harness
-  (Playwright-based or OBS-based depending on Unit 5.1 mechanism
-  decision)
-- `videos/trailer/scripts/shot-list.ts` — the typed shot-list
-  definition (game-phase sequence to capture)
+- `public/trailer/gameplay.mp4` — the captured + trimmed clip,
+  1920×1080 @ 30fps, exactly 540 frames (18.0s), audio stream
+  absent (`ffmpeg -an` + `-map 0:v:0`), BURNED-draw at clip-relative
+  frame 160 (5.33s in)
 - `videos/trailer/sample-eval/gameplay-capture/` — capture proofs,
-  per-shot verification, post-processing log
+  per-take logs, post-process log, take-selection record
+- `videos/trailer/sample-eval/gameplay-capture/PHASE-5-EXIT.md` —
+  handoff document Phase 6 reads
+- `videos/trailer/sample-eval/gameplay-capture/briggsy-review-5.4.signoff` —
+  take-selection sentinel (git-author check; per Phase 4 deepening
+  pattern)
+- `videos/trailer/sample-eval/gameplay-capture/briggsy-review-5.6.signoff` —
+  R13 acceptance sentinel
+- (Mechanism A path only) `scripts/playtest/run-session.ts`
+  EXTENSION via `--trailer-capture` mode flag + `recordVideo` on
+  context creation (do NOT reinvent the harness)
 
 Phase 5 exits when:
-1. `public/gameplay.mp4` exists at expected dimensions + duration.
-2. Briggsy signs off on the captured clip visually selling "BURNED
-   is shipped + playable" + the §2 Archer test.
+1. `public/trailer/gameplay.mp4` exists and `pnpm verify:gameplay-clip`
+   gate passes (Phase 4-owned script: 540 frames, 1920×1080, no
+   audio stream, YAVG luminance logged).
+2. Briggsy signs off via `briggsy-review-5.4.signoff` (take
+   selection) + `briggsy-review-5.6.signoff` (R13 acceptance).
 3. Phase 4 S05 scene re-renders successfully with the real clip
-   (placeholder swapped out).
+   (Phase 4's `scripts/sync-gameplay-clip.ts` lifecycle hook flips
+   `GAMEPLAY_CLIP_SOURCE` constant to point at real file).
+4. `PHASE-5-EXIT.md` documents: mechanism used, take selected,
+   capture date, BURNED-draw raw frame, head-trim frames,
+   first-frame YAVG luminance, R5 outcome scream alignment.
 
 ---
 
@@ -62,359 +79,932 @@ Per brainstorm Outstanding Questions §Deferred-to-Planning:
 
 Per roadmap §5.6: **"Playwright `page.video()` / trace-video gameplay
 capture (R13) — brand-new. Phase 5 budgets a full standalone phase
-for invention."** No prior art. UMB v3 captured an HTP scroll (Phase
-3 Unit 3.1 precedent in spirit) but never captured live gameplay
-with multi-context state.
+for invention."** No prior art for live gameplay capture across
+multi-context state, but Phase 5 deepening surfaces two important
+precedents that change the framing:
 
-Three viable mechanisms to evaluate:
+1. **The BURNED playtest harness at `scripts/playtest/` already
+   runs multi-context Playwright across BURNED with correct DOM
+   selectors, `PLAYTEST_TOKEN` auth, and `dev:give`/`dev:stack`
+   dev-action hooks for choreographed plays.** Adding `recordVideo`
+   to its context creation is a 2-3 line change. If Mechanism A is
+   invoked, it MUST extend the harness — NOT build a parallel
+   spike. Repo-research verified this: the harness has
+   `seat-factory.ts:160-161` joining via `input[type="text"]` +
+   `button:has-text("Check In")` (the correct selectors), handles
+   `PLAYTEST_TOKEN` via `--var KEY:VALUE` to wrangler, and exposes
+   god-event subscriber for state observation. Building a from-
+   scratch spike would re-implement 95% of what already ships.
+
+2. **Insight 035 (SmartActionBox breathe animation defeats Playwright
+   stability) is RESOLVED.** Verified in
+   `src/client/player/SmartActionBox.module.css:136-143`: the
+   breathe animation now lives on `.action::after` pseudo-element;
+   the button DOM stays stable for Playwright agents. Comment at
+   line 130 confirms: *"Pulse glow + scale live on ::after so the
+   button DOM stays stable for Playwright agents (insight 035)."*
+   Phase 5 Mechanism A is unblocked on this specific gotcha.
+
+Three capture mechanisms remain in scope. Mechanism C (hybrid) is
+**CUT** during deepening — it produces a two-source-sync problem
+Phase 4 has no composition lane for, and Mechanism A + B alone
+cover the design space.
 
 | Mechanism | Pros | Cons | Resolution / framerate |
 |-----------|------|------|------------------------|
-| **A. Playwright multi-context + page.video()** | Fully scripted, deterministic, no real devices | Headless rendering may not visually match real phone screens (no actual touch/tap "feel"); WebSocket sync may need orchestration | Per Playwright config — typically 1280×720 @ ~30fps; needs upscale for trailer 1920×1080 |
-| **B. OBS + real devices** (board on TV, 2–3 phones held by humans) | Real touch animation, real phone screens, real human reaction | Requires Briggsy + 1–2 friends physically present; less reproducible if recapture needed; iPhone screen mirroring quality varies | OBS 1920×1080 @ 30/60fps; quality matches consumer screen recording |
-| **C. Hybrid: Playwright board + OBS phones** | Captures both halves at maximum quality | Two capture sources to sync; orchestration heavy | Mixed; requires PiP composition in Phase 4 or Phase 5 |
-| **D. Headless WSS replay** | No real game runtime; replay pre-recorded WSS messages through clients | Doesn't capture real visuals — clients still render; same as A | Same as A |
+| **A. Playwright multi-context (via playtest harness extension)** | Fully scripted, deterministic, no real devices, reuses tested harness infrastructure | **Records WebM/VP8 at ~1Mbps ceiling** (Playwright default) — visual quality strictly inferior to native 1080p OBS regardless of post-processing. Headless GSAP/Framer animation fidelity unverified at capture-time (spike must validate DramaOverlay BURNED beat). Browser chrome has no ambient context (cleaner-than-Archer aesthetic). | WebM/VP8 default, 1280×720 or 1920×1080 record-size; needs full re-encode to H.264 (NOT stream-copy) in post |
+| **B. OBS + real devices** (board on TV, 2-3 phones held by humans) | Real touch animation, real phone screens, real human reaction, native 1080p H.264 quality, Archer-coded ambient lighting controllable | Requires Briggsy + 1-2 friends physically present; less reproducible if recapture needed; iPhone screen mirroring quality varies; production-design (lighting, camera angle, table dressing) must be deliberately directed to avoid AI-slop | OBS 1920×1080 @ 30fps native (MKV-then-remux for crash safety per OBS 30/31; or Hybrid MP4 on OBS 32+) |
+| ~~**C. Hybrid: Playwright board + OBS phones**~~ | ~~Captures both halves at maximum quality~~ | **CUT during deepening.** Two-source sync produces a Phase 4 composition problem with no downstream lane. Not reconsidered unless A and B both fail completely. | n/a |
 
-The brainstorm doesn't pre-select. Unit 5.1 evaluates A vs B vs C
-against the gameplay-clip requirements (~18s, visually convincing,
-multiplayer feel, music-bed-only audio).
+**Mechanism B locks as Phase 5 default** per water-beads rule +
+visual-quality ceiling (Mechanism A's VP8 1Mbps cannot be
+recovered post-hoc). Mechanism A retreats to **escalation path** if
+Mechanism B logistics fail — and when invoked, MUST go via
+playtest-harness extension, not parallel spike.
 
 The brainstorm's gating dependency: **"Deploy migration partykit →
-Cloudflare Workers complete (per TODO.md §1 note)."** The trailer
-captures a deployed, multi-device-accessible version of BURNED. The
-in-flight deploy migration is at the BURNED project root (TODO.md §1
-note 2026-05-16); Phase 5 cannot begin until that's complete OR
-Phase 5 uses local-dev capture as fallback if migration drags out.
+Cloudflare Workers complete (per TODO.md §1 note)."** Concrete
+state as of 2026-05-17: 5 single-line code changes uncommitted
+(board.html, player.html, public/_headers, ActRemote.tsx, room.ts)
++ 1 untracked CI workflow (`.github/workflows/deploy-burned.yml`).
+Shippable in minutes once Briggsy + Harry verify Cloudflare
+dashboard side (CLOUDFLARE_API_TOKEN, CLOUDFLARE_ACCOUNT_ID,
+Pages binding for `burned-cxa.pages.dev`). **Phase 5 entry gate**
+(Unit 5.0): if migration is not green by **2026-05-24** (one week
+from candidate Phase 5 entry), Phase 5 unblocks via local-dev
+fallback unconditionally — production credibility degrades
+slightly but visual quality is unchanged.
+
+**Production URL note:** Pages project name in
+`deploy-burned.yml:77` is `burned` (canonical URL `burned.pages.dev`).
+The `burned-cxa.pages.dev` URL in `ActRemote.tsx` is likely a
+PR-preview / canary subdomain on the same project. Verify with
+Briggsy at Phase 5 execution start which production URL is
+canonical for the capture session.
 
 The largest risk Phase 5 manages: **the capture doesn't visually
 sell "playable game"** — instead reads as a screen recording of a
-local dev session. Phase 5 mitigation: shot list curated for moments
-of REAL multiplayer drama (BURNED card draw, intercept stack, favor
-flow, defuse placement) rather than empty lobby or static board
-views. The clip is 18 seconds; every second must carry visual
-weight.
+local dev session OR as engineering footage rather than water-beads
+joy. Phase 5 mitigations:
+- Shot list curated for moments of REAL multiplayer drama (BURNED
+  card draw, intercept stack, favor flow, defuse placement)
+- Approach III hybrid (deterministic deck-seeding via
+  `pnpm dev:stack` + natural human reactions on top) eliminates the
+  30-second-capture-vs-natural-BURNED-timing problem while
+  preserving water-beads (reactions are unscripted; only the deck
+  order is rigged, which is invisible to viewers)
+- Insight 050 fluency gate at take selection: Briggsy-eye continuity
+  check OVERRIDES property-rubric ties
+- Director's-eye production guidance for Mechanism B (camera angle,
+  ambient lighting, phone-holding posture, table dressing,
+  faces-cropping)
 
 ---
 
 ## Critical Constraints Surfaced by Research
 
-Cross-reference: roadmap §5.6, brainstorm Outstanding Questions.
+Cross-reference: roadmap §5.6, brainstorm Outstanding Questions,
+Phase 4 deepening commit `9e31ae4b`, Phase 1 deepening commit
+`43d44ef4`, insights 026/035/050/022.
 
-### Deploy migration is a hard prerequisite
+### Path discipline (ADR #15)
 
-TODO.md §1 (2026-05-16 squeaky) flags:
-> *5 modified files at squeaky time + 1 untracked file are an in-
-> progress deploy migration (partykit → Cloudflare Workers,
-> `mbriggsy.partykit.dev` → `briggsy007.workers.dev`, adding
-> `burned-cxa.pages.dev` as allowed origin). Deliberately NOT swept
-> into this squeaky commit — deserves its own deployment commit when
-> ready.*
+**All Phase 5 render-consumed artifacts land at `public/trailer/...`
+inside BURNED's root `public/`.** Phase 0 ADR #8
+`Config.setPublicDir('../../public')` resolves `staticFile()` against
+BURNED's `public/` directory; Phase 4's `scripts/sync-gameplay-clip.ts`
+calls `existsSync(resolve('public/trailer/gameplay.mp4'))`. Phase 5
+writing to `videos/trailer/public/gameplay.mp4` (the pre-deepening
+path) is UNREACHABLE — the file would never be discovered by Phase
+4's lifecycle hook, S05 would silently render the placeholder forever.
 
-Phase 5 starts AFTER the deploy migration completes + production URL
-is verified accessible across devices. If deploy migration drags
-out, Phase 5 has a fallback: capture against **local Vite dev +
-Wrangler dev** with all clients pointing at `localhost:8787`. The
-fallback degrades the "captured on production" credibility but
-unblocks Phase 5 from drift on a migration that isn't critical-path
-for the trailer beyond "URL must work."
+`videos/trailer/sample-eval/gameplay-capture/` remains the correct
+location for ALL non-render artifacts: takes/, raw/, intermediate
+trimmed, logs, signoff sentinels, eval markdowns. Sample-eval is
+reserved (per ADR #15) for files Remotion render does NOT load.
+
+### BURNED-draw clip-relative frame 160 (NOT 360)
+
+Per Phase 1 Unit 1.2 Step 6 lock (line 807): **BURNED-draw lands
+at scene-relative frame 160** (~5.33s into S05). Phase 5
+pre-deepening had frame 360 throughout — that was wrong. Frame 360
+is the SCREAM cue (R5-contingent), which is a REACTION beat **200
+frames after the draw**, NOT simultaneous with it.
+
+S05 cue timeline (relative frames):
+
+| Relative frame | Beat | Note |
+|----------------|------|------|
+| 0 | Hard cut entry from S04; S05HeadFadeFromBlack overlay frames 0-15 ramps black→frame-0 | Phase 4 owns the fade overlay |
+| 0-159 | Active gameplay establishing; multiplayer dynamic visible | R15 chrome ticker continues |
+| **160** | **BURNED card draws; DramaOverlay BURNED beat begins** | R15 chrome "OPERATIVE [REDACTED] — METHOD REPEATABLE" at frame 160 + 0 |
+| 160-280 | DramaOverlay BURNED beat plays out (in-game cinematic) | ~4s |
+| 280-360 | Visible reaction window; players reacting to the draw | Lead-in to scream beat |
+| 240 | Sparse Dash VO: "And — between you and me — they appear to be enjoying it." | Phase 4 composition-level audio |
+| 360 | Scream cue (R5-contingent): "VERAAA!!!" | Sterling-CODED deadpan-late reaction; if R5=cut, beat replaced with chuckle SFX from gameplay |
+| 360-450 | Continuation; aftermath visible | |
+| 450-540 | Tail; iris-wipe begins at frame 495 (S05_END - 45 per Phase 1) | Frame composition must support iris collapse |
+
+**This reframing eliminates a category of conflations in
+pre-deepening Phase 5.** Draw and scream are not the same beat; the
+trailer's narrative grammar is "visual surprise → sardonic delayed
+VO reaction" (Archer-coded), not "scream sound effects on draw
+moment" (action-movie-coded).
+
+**Cross-phase note:** Phase 1 line 815 cue-table prose ("in-game
+BURNED card draws on capture → Dash VO interjects") is ambiguous
+between this interpretation and a simultaneous-beat reading. Phase 1
+line 807 trim-spec is unambiguous: draw at frame 160. The two are
+internally inconsistent in Phase 1; flagged for Phase 1 follow-up
+amendment in Cross-Phase Amendments section below.
+
+### Pre-trimmed contract — Phase 5 trims, Phase 4 consumes verbatim
+
+Phase 4 deepening (commit `9e31ae4b`) locked the consumption pattern
+at `phase-4-remotion-composite.md:2559-2562`:
+
+```tsx
+<Sequence from={0} durationInFrames={540}>
+  <OffthreadVideo
+    src={staticFile(GAMEPLAY_CLIP_SOURCE)}
+    muted
+    // NO startFrom / NO endAt / NO trimBefore / NO trimAfter
+  />
+</Sequence>
+```
+
+**Trim ownership = Phase 5.** Phase 5 ships
+`public/trailer/gameplay.mp4` already trimmed to exactly 540 frames
+with BURNED-draw at clip-relative frame 160. Phase 4 plays it
+start-to-end. There is NO `gameplay-markers.json` artifact; the
+markers contract from Phase 1 deepening's earlier formulation is
+**OBSOLETE** (Phase 1 follow-up amendment flagged below).
+
+This contract also means: if Phase 5's trim math is wrong (e.g.,
+BURNED draw lands at clip-relative frame 200 not 160), the scream
+beat at scene-relative frame 360 will fire on the wrong visual
+context. Trim math is load-bearing.
+
+**Trim viability filter:** Phase 5 take-selection must reject any
+take whose RAW BURNED frame is < 160 (head-trim cannot pad
+backward) OR whose RAW total length is < 160 + 380 = 540 frames
+post-draw (Shot 5 reaction beat needs ~12.7s of post-draw content
+for natural play + iris-wipe target composition). Realistic raw-take
+minimum: ~30 seconds (900 frames) at 30fps.
+
+### Atomic-swap pattern
+
+Phase 4 line 2722-2724 defines the handoff procedure:
+
+```
+1. Phase 5 writes public/trailer/gameplay.mp4.new
+2. pnpm verify:gameplay-clip ./public/trailer/gameplay.mp4.new  ← ffprobe gate
+3. If PASS: mv public/trailer/gameplay.mp4.new public/trailer/gameplay.mp4
+4. If FAIL: surface failure (duration drift / has audio / wrong aspect); re-encode
+```
+
+Reasons:
+- Remotion's `<OffthreadVideo>` may have an open read handle; on
+  Windows `fs.renameSync` over an open file throws EBUSY. Atomic
+  swap minimizes the window.
+- If `pnpm render` or `pnpm studio` is in-flight when Phase 5
+  overwrites, partial-file reads corrupt the render output.
+- Phase 4's `sync-gameplay-clip.ts` prerender hook checks
+  `existsSync` for the final filename, not `.new` — the atomic
+  rename triggers the source-of-truth flip.
+
+**Windows note:** If Briggsy keeps `pnpm studio` running during a
+Phase 5 capture session, close studio BEFORE the swap to avoid
+EBUSY. Document in `PHASE-5-EXIT.md`.
+
+### Audio policy — three-layer belt-and-suspenders
+
+Per Phase 2 deepening contract #3 + Phase 4 deepening:
+
+1. **Capture silent** (preferred): OBS scene config mutes all audio
+   sources OR Playwright records context with no audio attached.
+2. **`ffmpeg -an` + `-map 0:v:0`** in Phase 5 Unit 5.5 post-process
+   explicitly drops audio streams (handles OBS-captured silent PCM
+   tracks that would otherwise persist).
+3. **`<OffthreadVideo muted />`** in Phase 4 Unit 4.6 scene
+   composition is the final gate.
+
+All three are intentional. The `pnpm verify:gameplay-clip` ffprobe
+gate fails if ANY audio stream is present (including silent PCM),
+so layer 2 must execute even when layer 1 succeeds.
+
+### Mobile-safe-square constraint (X-feed 1.91:1 crop)
+
+Per roadmap §5.3: X serves a 1.91:1 in-feed preview crop on mobile.
+Critical visual content must live within the central 1:1 safe
+square inside the 16:9 frame.
+
+**For Phase 5:** the BURNED-draw beat at clip-relative frame 160 is
+the trailer's emotional climax. The phone screen (showing the
+BURNED card) and the board TV (showing the DramaOverlay BURNED
+beat) MUST land within the central horizontal band x=420 to x=1500
+(the central 1080px of 1920). Capture composition direction:
+
+- **Mechanism B**: position camera so that TV screen center sits
+  within x=[420, 1500] band; phones held in foreground also within
+  this band when visible during the BURNED-draw beat.
+- **Mechanism A**: if invoked, the board context (1920×1080) is
+  full-width — but the critical UI elements (DramaOverlay center,
+  active player indicator) typically already sit center-frame, so
+  this constraint is automatically satisfied.
+
+The establishing shot (Shot 1, frames 0-90) MAY push to edges for
+context, but the BURNED-draw beat and Dash VO frame 240 ("between
+you and me") are high-priority safe-square moments.
+
+### Frame-0 luminance / head-fade interaction
+
+Phase 4's `S05HeadFadeFromBlack` overlay (mandatory per Phase 4
+deepening amendment TIER 1 #5) ramps black→frame-0 opacity over 15
+frames. Phase 4's `pnpm verify:gameplay-clip` measures first-frame
+mean luminance via FFmpeg `signalstats` YAVG (range 0-255):
+
+- **YAVG ≤ 76.5** (≤30% luminance): natural fade-friendly; head-fade
+  is cosmetic insurance.
+- **YAVG > 76.5**: head-fade is LOAD-BEARING for the hard-cut
+  chapter break; do NOT remove the overlay; soft-warning logged.
+
+**Phase 5 capture direction** (optional optimization): prefer
+establishing shots where frame 0 is mid-tone-to-dark — venetian
+blinds nearly-closed, room ambient warm-not-overhead, players'
+hands holding phones at the lower band, board mid-game with dim
+DiscardFan rather than full-bright lobby. If natural lighting
+demands frame 0 is bright, the mandatory head-fade carries the
+chapter break either way — this is not a correctness gate, but a
+craft optimization.
+
+### Iris-wipe center anchor (frames 495-540)
+
+Phase 4's iris-wipe is a circular SVG mask collapsing from full
+frame to 0% radius, anchored at frame center (960, 540 in 1920×1080).
+**The last 3 seconds of gameplay.mp4 must support iris collapse.**
+Capture direction:
+
+- **Frames 480-540** (last 2 seconds): primary subject (player
+  reaction OR board CASE BANNER OR active gameplay) sits center-frame
+  within ~400px radius of (960, 540).
+- Background motion minimal in this window — auto-exposure shifts,
+  hand crossings through center, sudden camera moves all jank the
+  iris collapse.
+- **Mechanism B direction**: tell players to freeze for a beat
+  after BURNED-draw reaction so the camera settles before iris
+  starts.
+
+**Iris-frame composition test** in take selection: pause take at
+clip-relative frame 510 (mid-iris-collapse moment); is there a
+clear focal point within the central 30% of the frame? If NO, take
+is rejected for iris incompatibility.
+
+### Lower-40px ticker reservation (R15 #2)
+
+Phase 4's R15 #2 comms-ticker continues through S05 (per Phase 4
+Requirements Trace, line 588). The ticker occupies the lower ~40px
+band of the 1920×1080 frame as a composition-level overlay.
+
+**Phase 5 capture direction**: ensure no critical subject (phone
+bezels, hands, player bodies, ASCII chrome) sits in the bottom 40
+pixels of the capture frame. Table edge should appear as clean
+surface or subtle gradient in this band. Phase 4's ticker renders
+with appropriate backdrop opacity but a visually cluttered band
+underneath degrades readability.
+
+### Mechanism A reality — Playwright records WebM/VP8 at ~1Mbps
+
+If Mechanism A is invoked, the output container is **WebM (VP8)**,
+NOT MP4. This has four consequences:
+
+1. **Filename convention**: takes saved as `take-NN.webm`, not
+   `.mp4`.
+2. **Trim cannot be stream-copy**: WebM→MP4 requires full re-encode
+   (libx264) because the container/codec differ. `ffmpeg -c copy`
+   will fail with container mismatch error.
+3. **Visual quality is CEILED at VP8 ~1Mbps target bitrate**
+   (Playwright's encoder default). Post-processing cannot recover
+   detail that VP8 never encoded. This makes Mechanism A's visual
+   quality strictly inferior to Mechanism B's native 1080p H.264
+   OBS capture, regardless of trailer-side encode quality.
+4. **Frame-accurate trim requires `-ss AFTER -i` + re-encode** (NOT
+   `-ss BEFORE -i + -c copy`). The "fast keyframe seek" pattern
+   drifts to nearest preceding keyframe (up to ~2-8s on default GOP
+   sizes for both VP8 and OBS-default H.264).
+
+### Insight 035 RESOLVED — Mechanism A click stability unblocked
+
+Verified in `src/client/player/SmartActionBox.module.css:131-143`:
+the breathe animation now lives on `.action::after` pseudo-element
+(content: '', position: absolute, inset: 0); the `<button
+className={styles.action}>` DOM stays stable for Playwright agents.
+
+This was a Phase 6 calibration blocker (`docs/insights/035-...md`)
+that has shipped. Phase 5 Mechanism A's `locator.click()` on
+SmartActionBox action buttons will pass actionability checks. The
+RELATED constraints that remain (selectors must match real DOM,
+headless GSAP/Framer fidelity must be validated in spike) are
+addressed in Unit 5.1.
+
+### dev:stack / dev:give available for Approach III
+
+Per `package.json:13-15`:
+```
+"dev:stack": "tsx scripts/dev-stack-top.ts",
+"dev:give":  "tsx scripts/dev-give-card.ts",
+"dev:take":  "tsx scripts/dev-take-card.ts",
+```
+
+These dev-action scripts are tested infrastructure (see
+`src/server/dev-actions.test.ts:11-87`) that send `dev-stack-deck` /
+`dev-give-card` / `dev-take-card` payloads to the room's
+dev-action handler. Phase 5 Unit 5.2 adopts **Approach III** —
+deterministic deck-seeding via `dev:stack` before each take, so
+BURNED lands at a predictable deck position relative to the
+turn-rotation cadence. Real human play and reactions happen on top
+of the seeded deck. The deck order is INVISIBLE to viewers; the
+reactions are UNSCRIPTED. Water-beads preserved; capture-budget
+collapsed from 3-5 sessions × 30s-windows-that-miss-BURNED to
+1-2 sessions × predictable BURNED-draw timing.
 
 ### 18-second window forces shot-list discipline
 
-S05 budget: ~18 seconds of gameplay clip (Phase 1 Unit 1.5 frame
-2040–2535, dissolve in at 2040, iris-wipe at 2535). Within 18s, the
-clip must:
+S05 budget: 540 frames @ 30fps = 18.0s. Within 18s, the clip must:
 
-- Establish multiplayer (multiple players visible)
-- Show phone-controller + TV-shared-screen relationship
-- Land at least one dramatic moment (BURNED card draw OR intercept
-  OR cinematic equivalent)
-- Read as "real game in progress" not "loading screen / lobby"
-- Support sparse Dash VO ("And — between you and me — they appear to
-  be enjoying it.") at frame 2280 (240 relative)
-- Optionally support a scream beat at frame 2400 (360 relative) — if
-  R5 kept, the captured clip should have someone DRAW BURNED at that
-  exact moment OR Phase 5 captures multiple takes and Phase 4 syncs
+- Establish multiplayer (multiple players visible) — frames 0-160
+- Show phone-controller + TV-shared-screen relationship — throughout
+- Land the BURNED-draw moment at clip-relative frame 160
+- Carry the DramaOverlay BURNED beat through frames 160-280
+- Support sparse Dash VO at frame 240
+- Support optional scream cue at frame 360 (R5-contingent)
+- End with reaction + iris-wipe-compatible composition frames 480-540
 
-Shot list per Unit 5.2.
-
-### Audio policy: music-bed-only, no player voice
-
-Per brainstorm Scope Boundaries:
-> *"Gameplay capture audio is music-bed-only — any player voice in
-> the captured clip must be stripped or never captured; the voice
-> cap of 3 includes the captured clip's audio surface."*
-
-Two options:
-- **Capture silent**: phones in airplane-mode mic-disabled mode OR
-  Playwright captures without audio.
-- **Capture + strip**: capture with player voice; Phase 5 post-
-  process strips the audio track entirely; Phase 4's MusicBed +
-  Dash VO is the sole audio in S05.
-
-Either works. Phase 5 default: capture silent (no mic activation).
-
-### Resolution + framerate target: 1920×1080 @ 30fps
-
-Phase 4 composition is 1920×1080 @ 30fps. Capture clip must match OR
-upscale cleanly. Playwright headless typically produces 1280×720 @
-~30fps; upscaling to 1920×1080 introduces blur but acceptable for an
-18-second clip not at primary focus.
-
-OBS captures natively at any resolution including 1920×1080. If
-mechanism B (OBS + real devices) wins, capture at native 1920×1080.
+Per Derek Lieu trailer-editing best practice ("fewer cuts, longer
+takes" produces more authentic feel), the 18 seconds should read
+as ONE continuous take (with R15 chrome overlays cycling above)
+rather than 5 quick cuts. Shot list (Unit 5.2) is **capture-time
+direction** for what should be visible at each window, not edit-time
+cut points.
 
 ### Brainstorm's tiebreaker-rule applies
 
 Per brainstorm: *"When (a) 'engineers talk about how it was built'
 and (b) 'water-beads / product-joy takes over' conflict in the edit
 bay, water-beads wins. The build is the subtext; the game is the
-text. The cascade earns its place by feeling like Archer set-
-dressing, not a credits roll."*
+text. The cascade earns its place by feeling like Archer
+set-dressing, not a credits roll."*
 
-For S05 gameplay clip: water-beads-wins means the clip should sell
-**joy of playing BURNED**, not "look at the engineering." If a real-
-device capture (mechanism B) reads as more joyful (real human
-reactions, real phone-in-hand) than headless Playwright (mechanism
-A), B wins regardless of reproducibility.
-
-### Brainstorm-stated gameplay shot inventory (R10 dossier reference)
-
-Brainstorm R13: "Live gameplay footage closer — actual phone-
-controller + TV-shared-screen multiplayer capture."
-
-Specific moments that visually sell BURNED:
-- Player phone showing hand of operative cards
-- Board view showing CASE BANNER + DiscardFan + ActionBox
-- A card play action (player taps card, animation plays on board)
-- The DramaOverlay BURNED draw moment (Phase 1 §3.5 ships beats —
-  the visual + audio drama IS the trailer-grade moment)
-- Intercept window with NopeCountdownBar (the dial)
-- Multi-player dynamics (more than 2 players visible on TV board)
-
-Shot list draws from these.
+For S05 gameplay clip: water-beads-wins means the clip sells **joy
+of playing BURNED**, not "look at the engineering." Mechanism B
+real-device capture preserves real human reactions (hands holding
+phones, audible laughter eyes flicking up to TV, leans-in). The
+Mechanism A path produces a clean engineering aesthetic that has
+less ambient context. **Mechanism B is the water-beads choice; the
+quality and aliveness ceiling are aligned.**
 
 ---
 
 ## Requirements Trace
 
-- **R13** (live gameplay footage closer): Unit 5.2 (shot list) + Unit
-  5.4 (capture).
-- **R5** (Vera scream cameo, conditional): Unit 5.4 if the captured
-  clip contains a BURNED draw at the right relative frame; Phase 4
-  syncs.
-- **R8** (16:9 landscape): Unit 5.5 (post-processing aspect-fit if
-  capture isn't native 1920×1080).
-- **R15** (on-screen text signal layer): not directly Phase 5 — but
-  the R15 #2 comms-ticker continues through S05 per Phase 4 Unit
-  4.6, so the captured gameplay clip's edges must accommodate ticker
-  overlay (lower 40px-band reserved).
+- **R13** (live gameplay footage closer): Unit 5.2 (shot list) +
+  Unit 5.3 (capture) + Unit 5.4 (take selection) + Unit 5.6
+  (acceptance).
+- **R5** (Vera scream cameo, conditional): Unit 5.4 take-selection
+  weighs BURNED-draw alignment with frame 160 (the visual draw);
+  the scream cue at frame 360 lands as a delayed reaction beat
+  regardless of R5 outcome (if R5=cut, replaced with chuckle SFX
+  from gameplay).
+- **R8** (16:9 landscape): Unit 5.5 post-processing aspect-fit
+  produces 1920×1080 native.
+- **R15** (on-screen text signal layer): not directly Phase 5,
+  but R15 #2 comms-ticker continues through S05; Phase 5 reserves
+  lower 40px band per Critical Constraints.
 
 ---
 
 ## Key Technical Decisions
 
-- **Capture mechanism**: TBD by Unit 5.1 evaluation. Default
-  starting hypothesis is **Mechanism B (OBS + real devices)** for
-  water-beads-wins reasons; Playwright fallback if logistics fail.
-- **Resolution**: native 1920×1080 if Mechanism B; 1280×720 upscaled
-  if Mechanism A. Either way, Phase 5 ships at 1920×1080.
-- **Framerate**: 30fps. Match Phase 4 composition framerate.
-- **Audio**: capture silent (no mic). Phase 4 supplies all audio.
-- **Shot list**: 18-second curated game-flow sequence ending on a
-  BURNED draw OR equivalent climax (per Unit 5.2).
-- **Recapture tolerance**: Phase 5 may need multiple takes. Budget:
-  3–5 capture sessions; each ~2 hours including setup.
-- **Production URL**: deploy migration must complete first;
-  `burned-cxa.pages.dev` or successor URL. Fallback to local-dev
-  documented.
-- **Post-processing in FFmpeg via `execFileSync` argv arrays** —
-  project security convention.
-- **Take selection**: Phase 5 captures multiple takes (3–5); Briggsy
-  selects best take based on visual + dramatic content. Selection
-  documented.
+- **Capture mechanism**: Mechanism B (OBS + real devices) is the
+  **locked default** per water-beads rule + visual-quality ceiling.
+  Mechanism A (Playwright multi-context via playtest-harness
+  extension) is **escalation path** if Mechanism B logistics fail.
+  Mechanism C (hybrid) **CUT during deepening**.
+- **BURNED-draw target frame**: clip-relative frame 160 (~5.33s in).
+  NOT frame 360 (that's the scream cue).
+- **Approach III adopted**: deterministic deck-seeding via
+  `pnpm dev:stack burned,...` + natural human play. Approach I
+  (multiple natural takes without seeding) retained as fallback.
+  Approach II (engineered full sequence) rejected.
+- **Resolution**: native 1920×1080 if Mechanism B; for Mechanism A
+  if invoked, record at 1920×1080 viewport size for the BOARD
+  context only (NOT for phone contexts — see Unit 5.3).
+- **Framerate**: 30fps target. Mechanism A records at Playwright
+  default; Mechanism B captures native 30fps OR 60fps with
+  downsample-in-post via `fps=30` filter (NOT `-r 30`).
+- **Audio**: three-layer belt-and-suspenders (capture silent +
+  `ffmpeg -an` + `<OffthreadVideo muted />`).
+- **Output path**: `public/trailer/gameplay.mp4` per ADR #15.
+- **Atomic swap**: write `.new` → `pnpm verify:gameplay-clip` →
+  `mv` on PASS.
+- **Post-process**: single-pass re-encode (libx264 CRF 18 preset
+  slow `-ss AFTER -i` `-frames:v 540` `-an` `-map 0:v:0`); NO
+  stream-copy intermediate.
+- **First ffmpeg/ffprobe callsite in BURNED**: project security
+  convention `execFileSync('ffmpeg', [argv-array])` per Phase 2
+  deepening lock. CI must verify ffmpeg ≥5.0 installed.
+- **`pnpm verify:gameplay-clip` consumption**: Phase 4 owns the
+  script (`scripts/verify-gameplay-clip.ts`); Phase 5 invokes it,
+  does NOT re-implement.
+- **`scripts/generate-placeholder-gameplay.ts`**: Phase 5 OWNS
+  this script per Phase 4 deepening cross-phase dep (Phase 4 Unit
+  4.6 sketches the file but designates Phase 5 ownership).
+- **Take selection**: insight 050 fluency gate overrides
+  property-rubric on ties. Briggsy-eye continuity check is
+  load-bearing.
+- **Sentinel files**: `briggsy-review-5.4.signoff` (take selection)
+  + `briggsy-review-5.6.signoff` (R13 acceptance); wired to
+  `pnpm verify:briggsy-sentinels` git-author check per Phase 4
+  pattern.
+- **Exit doc**: `PHASE-5-EXIT.md` mirrors Phase 0/1/2/3/4 exit-doc
+  pattern.
 
 ---
 
 ## Implementation Units
 
-### Unit 5.1 — Capture Mechanism Evaluation + Lock
+### Unit 5.0 — Prerequisites + Contract Sync
 
-- [ ] **Unit 5.1: Capture Mechanism Evaluation + Lock**
+- [ ] **Unit 5.0: Prerequisites + Contract Sync**
 
-**Goal:** Evaluate Mechanism A (Playwright multi-context), B (OBS +
-real devices), or C (hybrid). Lock the mechanism per the water-beads
-rule + logistical feasibility. Document the decision + setup
-prerequisites.
+**Goal:** Pre-flight verification that all Phase 4/5 contract
+surfaces are in place + production URL accessible (or local-dev
+fallback decided) + insight 035 status verified + harness +
+dev-actions available. Mirrors Phase 2 deepening's Unit 2.0
+preflight pattern.
 
-**Requirements:** R13 (capture mechanism is the load-bearing decision
-for the closer).
+**Requirements:** All R# (gates Phase 5 entry).
 
-**Dependencies:** Deploy migration partykit → Cloudflare Workers
-complete (or fallback to local-dev decided).
+**Dependencies:** Phase 4 deepening committed (achieved; commit
+`9e31ae4b`).
 
 **Files:**
 
-- Create: `videos/trailer/sample-eval/gameplay-capture/mechanism-eval.md` —
-  per-mechanism evaluation, lock decision.
+- Create: `videos/trailer/sample-eval/gameplay-capture/PHASE-5-PREFLIGHT.md`
 
 **Approach:**
 
-**Step 1 — Per-mechanism quick spike.**
+**Step 1 — Path discipline verification.**
 
-A 5-minute spike of each mechanism. NOT full implementation — just
-enough to evaluate feasibility + visual quality.
+```bash
+# Confirm Phase 4 sync script exists at expected path
+test -f scripts/sync-gameplay-clip.ts && echo "OK sync script"
 
-**Mechanism A — Playwright multi-context spike:**
+# Confirm Phase 4 verify script exists
+test -f scripts/verify-gameplay-clip.ts && echo "OK verify script"
 
-```ts
-// scripts/spike-playwright-capture.ts
-import { chromium } from 'playwright';
-import { existsSync, mkdirSync } from 'node:fs';
-
-async function main() {
-  const browser = await chromium.launch();
-  const recordOpts = {
-    recordVideo: { dir: 'sample-eval/gameplay-capture/spike-playwright/', size: { width: 1280, height: 720 } },
-  };
-  // Spawn 3 contexts: board + 2 players
-  const boardCtx = await browser.newContext({ ...recordOpts, viewport: { width: 1920, height: 1080 } });
-  const player1Ctx = await browser.newContext({ ...recordOpts, viewport: { width: 390, height: 844 } });
-  const player2Ctx = await browser.newContext({ ...recordOpts, viewport: { width: 390, height: 844 } });
-
-  const boardPage = await boardCtx.newPage();
-  const p1Page = await player1Ctx.newPage();
-  const p2Page = await player2Ctx.newPage();
-
-  const URL = process.env.BURNED_URL ?? 'http://localhost:5173';
-  await boardPage.goto(`${URL}/board.html`);
-  // Get the room code from board screen
-  // ... navigate player pages to /player.html?room=XXX
-  // ... orchestrate a few card plays
-
-  await new Promise(r => setTimeout(r, 30_000)); // 30s capture window
-
-  await boardCtx.close();
-  await player1Ctx.close();
-  await player2Ctx.close();
-  await browser.close();
-  // Each context generates a video file on close
-}
-
-main().catch(console.error);
+# Confirm Phase 0 setPublicDir points where ADR #15 expects
+rg "setPublicDir" videos/trailer/src/
+# Expect: setPublicDir('../../public')
 ```
 
-Output: 3 separate video files (one per context). Phase 5 composites
-in post if Mechanism A picked.
+If any of these fail, Phase 4 deepening's Unit 4.6 deliverables
+have not landed — Phase 5 entry is blocked until they do.
 
-Evaluation: visual quality of board + phone in 720p? Animation
-smoothness? Multiplayer feel?
+**Step 2 — Insight 035 status verification.**
 
-**Mechanism B — OBS + real devices spike:**
+```bash
+# Verify breathe animation lives on ::after, NOT directly on .action
+rg --multiline 'breathe.*infinite alternate' src/client/player/SmartActionBox.module.css
+# Expect: matches within .action::after { ... animation: breathe ... } block
+# AND .drawIntense::after { ... animation: breatheIntense ... } block
+# Should NOT match .action { ... animation: breathe ... } directly
+```
 
-Setup: TV (or external monitor) with board view full-screen; 2
-phones with player.html loaded; OBS recording the TV at 1920×1080
-@ 30fps.
+If the animation is on `.action` (not `.action::after`), insight 035
+fix has regressed — Mechanism A is BLOCKED until restored.
 
-Capture: ~30s of natural multi-player play. Real human hands holding
-phones, real reactions.
+**Step 3 — Playtest harness availability.**
 
-Output: a single 1920×1080 MP4. Higher production value but requires
-physical setup.
+```bash
+# Verify the multi-context Playwright harness exists
+test -d scripts/playtest && echo "OK harness"
+test -f scripts/playtest/run-session.ts && echo "OK orchestrator"
+test -f scripts/playtest/lib/seat-factory.ts && echo "OK seat factory"
+```
 
-Evaluation: does the capture read as MORE alive than Mechanism A?
-Per water-beads rule.
+If absent, Mechanism A (which extends the harness) is BLOCKED —
+fall through to Mechanism B only.
 
-**Mechanism C — Hybrid spike:**
+**Step 4 — Dev-action availability.**
 
-Skip for now. Hybrid requires both A and B; if A or B alone clears,
-Hybrid is over-engineering.
+```bash
+# Verify dev:stack / dev:give exist for Approach III
+pnpm dev:stack --help 2>&1 | head -1
+pnpm dev:give --help 2>&1 | head -1
+test -f scripts/dev-stack-top.ts && echo "OK dev:stack"
+test -f scripts/dev-give-card.ts && echo "OK dev:give"
+test -f src/server/dev-actions.ts && echo "OK dev-actions handler"
+```
 
-**Step 2 — Evaluation matrix.**
+If absent, Approach III is BLOCKED — fall through to Approach I
+(natural multiple takes, 30s+ windows, BURNED-draw timing variance
+accepted).
 
-| Criterion | Weight | A (Playwright) | B (OBS+devices) |
-|-----------|--------|----------------|-----------------|
-| Visual quality | High | 720p upscale; clean but flat | 1080p native; phone screens slightly blurry but human-real |
-| Multiplayer feel | High | Synthetic — no real-time human reactions | Real — hands holding phones |
-| Reproducibility | Medium | High (re-run script) | Low (must reassemble setup) |
-| Setup time | High | Low (15 min) | High (2+ hours with 2 friends) |
-| Audio policy | Trivial | Silent by default | Mic-off, no capture issue |
-| Water-beads test | DECIDING | Less alive | More alive |
+**Step 5 — Deploy migration status check.**
 
-**Step 3 — Lock decision.**
+```bash
+# Production URL probe (both candidate URLs)
+curl -sI https://burned.pages.dev/board.html | head -1
+curl -sI https://burned-cxa.pages.dev/board.html | head -1
+curl -sI https://burned.briggsy007.workers.dev/health | head -1
+```
 
-Per water-beads rule + brainstorm Tiebreaker, **Mechanism B locks**
-unless logistics make B impossible. Logistics check: can Briggsy
-recruit 1–2 friends + arrange a 2-hour capture window within Phase 5
-timeline?
+Capture which URL responds 200. If neither Pages URL responds OR
+the worker URL does not 200 on `/health`:
 
-If yes (default expectation): lock B.
-If no: fall back to A; document the trade-off in mechanism-eval.md.
+- **Migration deadline gate**: if today is on or after 2026-05-24,
+  Phase 5 unblocks via local-dev fallback unconditionally
+  (degrades production credibility; visual quality unaffected).
+- **Otherwise**: escalate to Briggsy + Harry to verify Cloudflare
+  dashboard state (CLOUDFLARE_API_TOKEN, CLOUDFLARE_ACCOUNT_ID
+  secrets, Worker name binding, Pages domain binding).
 
-**Step 4 — Recapture-tolerance budget.**
+**Step 6 — Local-dev fallback LAN setup (if invoked).**
 
-Phase 5 budgets 3–5 capture sessions (each session = setup +
-multiple takes). Phase 5 doesn't lock the take until Unit 5.4
-runs.
+If deploy migration not green AND deadline has passed AND
+Mechanism B (real devices) is selected, real phones must reach the
+dev host via LAN IP:
 
-**Step 5 — Documentation.**
+```bash
+# 1. Get laptop LAN IP
+ipconfig | grep "IPv4"   # Windows; record 192.168.x.x
 
-`mechanism-eval.md`:
+# 2. Start Vite dev with --host so LAN can reach it
+pnpm dev -- --host 0.0.0.0    # binds 5173 to all interfaces
+
+# 3. Start Wrangler dev with --ip so LAN can reach the WSS endpoint
+pnpm dev:server -- --ip 0.0.0.0    # binds 8787 to all interfaces
+
+# 4. Windows Firewall: allow inbound on 5173 + 8787
+# (One-time per machine; via Settings → Network → Firewall)
+
+# 5. Phones navigate to http://192.168.x.x:5173/player.html?room=CODE
+# (NOT localhost — phones can't resolve a remote host's localhost)
+
+# 6. Verify board's WebSocket target — board.html may need a query
+# param or local config to point WSS at ws://192.168.x.x:8787 rather
+# than the production WSS URL.
+```
+
+**Cross-platform note:** macOS uses `ifconfig`/`networksetup -getinfo`
+for LAN IP discovery; Windows uses `ipconfig`. Firewall config
+differs accordingly.
+
+**Setup time:** ~30 min first session, ~5 min subsequent. Document
+in the per-session log.
+
+**Step 7 — Playwright availability (Mechanism A only).**
+
+```bash
+# Confirm Playwright installed + Chromium downloaded
+pnpm exec playwright --version
+test -d node_modules/playwright-core && echo "OK Playwright core"
+```
+
+**Step 8 — FFmpeg version pin (per Phase 2 deepening lock).**
+
+```bash
+# Minimum FFmpeg 5.0; recommended 6.0+
+ffmpeg -version | head -1    # e.g. "ffmpeg version 6.1.1"
+```
+
+If `ffmpeg --version | grep -E "version ([5-9]|[1-9][0-9])"` fails,
+upgrade FFmpeg before Unit 5.5.
+
+**Step 9 — PHASE-5-PREFLIGHT.md authoring.**
+
+Record the verification results:
 
 ```md
-# Capture Mechanism Evaluation — Phase 5 Unit 5.1
+# Phase 5 Preflight — <YYYY-MM-DD>
 
-## Mechanism A — Playwright multi-context
-- Spike: `scripts/spike-playwright-capture.ts`
-- Output: 3 video files (board + 2 players, separate contexts)
-- Visual quality: 720p upscale to 1080p, slight blur
-- Multiplayer feel: synthetic — programmatic taps, no human reaction
-- Reproducibility: HIGH
-- Setup time: ~15 minutes
+## Path discipline
+- [ ] scripts/sync-gameplay-clip.ts exists
+- [ ] scripts/verify-gameplay-clip.ts exists
+- [ ] setPublicDir('../../public') confirmed
 
-## Mechanism B — OBS + real devices
-- Setup: TV/monitor running board.html, 2 phones running player.html,
-  OBS capturing TV at 1920×1080/30fps
-- Output: single 1920×1080 MP4 file
-- Visual quality: native 1080p
-- Multiplayer feel: REAL — human reactions visible
-- Reproducibility: LOW — requires reassembly
-- Setup time: ~2 hours including friend recruitment
+## Insight 035 status
+- [ ] breathe animation on .action::after (NOT .action directly)
 
-## Lock: <A or B>
-Date: <YYYY-MM-DD>
-Logistics check (B only): <feasible / not feasible>
-Rationale: <per water-beads rule + logistical feasibility>
+## Playtest harness
+- [ ] scripts/playtest/run-session.ts present
+- [ ] scripts/playtest/lib/seat-factory.ts present
+
+## Dev actions
+- [ ] pnpm dev:stack available
+- [ ] pnpm dev:give available
+- [ ] src/server/dev-actions.ts present
+
+## Deploy migration
+- [ ] Production URL: <chosen> responds 200
+- [ ] OR: deadline 2026-05-24 passed → local-dev fallback locked
+- [ ] LAN IP recorded: <if Mechanism B + local-dev>
+
+## FFmpeg version
+- [ ] ffmpeg >= 5.0 (recorded: <version>)
+
+## Decisions
+- Capture mechanism lock: <A | B>
+- Production URL: <burned.pages.dev | burned-cxa.pages.dev | local-dev>
+- Approach: <III (default, dev:stack) | I (natural multi-take fallback)>
 ```
 
 **Patterns to follow:**
 
-- Phase 3 Unit 3.1 Playwright pattern (capture-htp-scroll-burned.ts)
-  for Mechanism A skeleton.
-- OBS Studio 30/31.x (verify version available to Briggsy).
+- Phase 2 Unit 2.0 preflight pattern (PHASE-0-EXIT.md ingest +
+  engine/voice lock).
+- TODO.md landmines for `pnpm dev:cleanup` (kills orphan
+  workerd/vite if a prior session left stale processes).
 
 **Test scenarios:**
 
-- **Spike A passes:** 3 video files generated; manual playback
-  confirms 720p board + player viewports.
-- **Spike B passes:** OBS captures TV at 1080p; manual playback
-  confirms phones visible in frame.
-- **Decision recorded:** mechanism-eval.md commits the choice.
+- **Happy path:** All checks PASS; PHASE-5-PREFLIGHT.md committed;
+  Unit 5.1 entry unblocked.
+- **Deploy migration not done, before deadline:** flag for Briggsy
+  resolution.
+- **Deploy migration not done, after deadline:** local-dev fallback
+  locks; LAN IP recorded; Unit 5.1 proceeds.
+- **Insight 035 regressed:** abort Phase 5; reopen insight 035 fix
+  as a blocking BURNED CSS task.
+- **FFmpeg < 5.0:** upgrade required; abort until resolved.
 
 **Verification:**
 
-- Mechanism locked in mechanism-eval.md.
-- Spike output exists for whichever mechanism was evaluated.
-- Logistics confirmed (friends available if B chosen).
+- All Step 1-8 checks executed and recorded.
+- PHASE-5-PREFLIGHT.md committed at
+  `videos/trailer/sample-eval/gameplay-capture/PHASE-5-PREFLIGHT.md`.
+- Decisions captured (mechanism, URL, approach).
 
 ---
 
-### Unit 5.2 — Shot List Definition
+### Unit 5.1 — Capture Mechanism Lock + Spike
 
-- [ ] **Unit 5.2: Shot List Definition**
+- [ ] **Unit 5.1: Capture Mechanism Lock + Spike**
 
-**Goal:** Define the 18-second curated gameplay sequence: which game
-phases, which dramatic beats, which player count, which screens
-visible. Output: `shot-list.ts` + storyboard.
+**Goal:** Confirm Mechanism B viability OR escalate to Mechanism A
+(via playtest-harness extension). Lock the mechanism + document the
+trade-off in `capture-log.md`.
+
+**Requirements:** R13.
+
+**Dependencies:** Unit 5.0 (preflight green).
+
+**Files:**
+
+- Create: `videos/trailer/sample-eval/gameplay-capture/capture-log.md`
+  (consolidated mechanism-eval + harness-build + session log per
+  consolidation cut SC-6 below)
+- (Mechanism A path only): edit `scripts/playtest/run-session.ts`
+  + `scripts/playtest/lib/seat-factory.ts` to add `--trailer-capture`
+  mode + `recordVideo` context option
+
+**Approach:**
+
+**Step 1 — Mechanism B logistics check.**
+
+Briggsy logistics: can 1-2 friends + 2-hour capture window be
+scheduled within Phase 5 timeline? Harry counts (per `user_harry.md`
+memory: "OpenClaw wizard, communicates via Discord, been with us
+since day 1").
+
+- **YES** (default expectation): Mechanism B locks. Skip to Step 3.
+- **NO**: proceed to Step 2 for Mechanism A spike.
+
+**Step 2 — Mechanism A escalation: playtest-harness extension
+spike** (ONLY IF Mechanism B impossible).
+
+Mechanism A reuses the playtest harness wholesale + adds `recordVideo`.
+The harness already handles:
+
+- Multi-context Playwright orchestration (`seat-factory.ts:144-153`
+  spawns iPhone-13 contexts per seat)
+- Correct DOM selectors (`seat-factory.ts:160-161`:
+  `input[type="text"]` + `button:has-text("Check In")`)
+- Server lifecycle (`server-controller.ts` spawns wrangler + vite
+  with `PLAYTEST_TOKEN`)
+- God-event subscriber for state observation
+- Seat-driver agents that play coherent BURNED games
+
+**Spike scope** (60-90 min time-box):
+
+1. Add `recordVideo` option to seat-factory's `newContext`:
+   ```ts
+   // scripts/playtest/lib/seat-factory.ts (DIRECTIONAL EDIT)
+   const context = await browser.newContext({
+     ...iPhone13,
+     hasTouch: true,
+     viewport: { width: viewport.width, height: viewport.height },
+     // NEW: optional video recording for trailer capture
+     ...(trailerCapture ? {
+       recordVideo: {
+         dir: `videos/trailer/sample-eval/gameplay-capture/takes/seat-${seatId}/`,
+         size: { width: viewport.width, height: viewport.height },
+       },
+     } : {}),
+   })
+   ```
+   **CRITICAL**: `recordVideo.size` MUST match viewport dimensions
+   1:1 — using 1920×1080 on a 390×844 phone-viewport context
+   produces letterboxed garbage with black bars.
+
+2. Add `--trailer-capture` flag to `run-session.ts` that:
+   - Sets `trailerCapture: true` in seat-factory invocations
+   - Adds a board-context recording at native 1920×1080
+   - Extends session duration to 45s (enough for setup + 18s
+     capture + tail)
+   - Reads from `pnpm dev:stack burned,extraction,defuse,...`
+     (Approach III) so BURNED lands at predictable deck position
+
+3. Run the spike: `pnpm playtest:run --trailer-capture --seats 3`
+
+4. Verify outputs:
+   - WebM file(s) per context — **not MP4** (Playwright records VP8)
+   - DramaOverlay BURNED beat visible at full duration in board
+     recording (NOT clipped or frozen; GSAP/Framer fidelity
+     acceptance criterion)
+   - File length matches session length
+
+**Acceptance criteria for Mechanism A spike:**
+
+- (a) WebM file is non-empty and decodes successfully via ffprobe
+- (b) Board recording shows DramaOverlay BURNED beat playing at
+  full visible duration (~3-4s on screen)
+- (c) Per-context recording delivers ≥28fps measured via
+  `ffprobe -count_frames -show_entries stream=nb_read_frames` over
+  recorded duration
+- (d) Memory peak during 45s session stays below 4GB RSS (laptop
+  feasibility)
+
+**If (a)-(d) all PASS:** Mechanism A is viable. Lock with the
+note that visual quality is VP8 ~1Mbps ceiling (strictly inferior
+to Mechanism B's native 1080p H.264).
+
+**If ANY of (a)-(d) FAIL:** Mechanism A is NOT viable. Either
+escalate to Mechanism B (despite logistics) OR pause Phase 5 until
+logistics resolve.
+
+**Step 3 — Mechanism B spike + scene config.**
+
+Setup:
+- TV (or external monitor at 1920×1080 @ 60Hz preferred) running
+  board view (production URL OR LAN IP per Unit 5.0)
+- 2-3 phones loaded with player view, joined as players
+- OBS capturing the TV display at 1920×1080 @ 30fps
+- Camera angle: **30° to TV** (NOT dead-on); captures TV screen
+  plus 1-2 phones in-hand within the central horizontal band
+  (mobile-safe-square per Critical Constraints)
+
+Capture ~45 seconds of natural play. Approach III: deck pre-seeded
+via `pnpm dev:stack burned,extraction,defuse,attack,...` so BURNED
+lands at draw position N (calibrate N per game-flow rate; ~5-7
+draws into the round typically lands at clip-relative frame ~160
+after head-trim).
+
+OBS recording settings (per Step 4 scene config):
+
+- Encoder: NVENC HEVC or NVENC H.264 on NVIDIA GPU (CQP 18,
+  Look-ahead ON, Max Quality preset). Fallback: x264 CRF 18 medium.
+- Resolution: 1920×1080
+- FPS: 30 (verify — OBS defaults to 60 on most modern displays;
+  must explicitly set 30 in Settings → Video → Common FPS Values)
+- Container: **MKV** on OBS 30/31 (then ffmpeg remux to MP4 per
+  Unit 5.5 Step 0) OR **Hybrid MP4** on OBS 32+ (crash-safe)
+- Audio: ALL audio sources muted at the scene level
+
+**Step 4 — OBS scene config (Mechanism B).**
+
+Scene composition:
+
+- **Source 1**: Display Capture (Primary Monitor / TV) at 1920×1080
+- **Source 2 (optional)**: Window Capture for board.html if TV
+  mirroring is unstable (fallback only)
+- **Audio sources**: all muted (Display Capture audio off,
+  Microphone disabled, Game/Window Capture audio off)
+
+**Director's-eye production guidance** (mandatory; per design-lens
+findings):
+
+- **Camera angle**: 30° to TV (NOT dead-on). Captures both TV
+  screen and 1-2 phones in-hand within frame. Dead-on reads as
+  surveillance footage; 30° reads as gameplay-from-the-table.
+- **Ambient lighting**: warm lamps (2700-3000K) at side angles.
+  AVOID overhead fluorescent (reads as office, not Archer).
+  Teal-gelled practical light visible in background is ideal
+  (Archer-coded warmth/teal palette).
+- **Table dressing**: ONE OR TWO practical objects at table edge
+  (water glass, notepad). AVOID game boxes, laptops, or anything
+  that reads "software demo." Briefing-room cream/mahogany tones
+  preferred.
+- **Player posture**: phones held in hand (NOT flat on table).
+  Held reads as actively playing; flat reads as watching.
+- **Faces**: crop below eyeline OR frame from behind. Full faces
+  on screen read less Archer-world (Archer's visual grammar is
+  graphic + posed, not documentary). Hands + bodies-from-shoulders
+  is the Archer-coded frame.
+- **Frame-0 luminance preference**: aim for mid-tone-to-dark first
+  frame (lights dimmer, blinds nearly-closed background, phones
+  face-down or off until pickup). Phase 4's mandatory
+  `S05HeadFadeFromBlack` overlay carries the chapter break either
+  way; this is craft optimization.
+- **Mobile-safe-square awareness**: TV screen center within
+  x=[420, 1500] band of 1920×1080 frame; BURNED-draw beat phone +
+  TV both in this band.
+- **Lower-40px ticker reservation**: bottom 40px clean (table edge
+  or subtle gradient; no critical content).
+- **Iris-anchor at frames 480-540**: primary reaction subject
+  center-frame within ±400px of (960, 540). Tell players to
+  "freeze for a beat" after BURNED-draw reaction so camera settles
+  before iris.
+
+**Step 5 — Capture-log documentation.**
+
+`capture-log.md` consolidates mechanism evaluation + setup +
+session-by-session record:
+
+```md
+# Capture Log — Phase 5
+
+## Mechanism lock (Unit 5.1)
+- Date: <YYYY-MM-DD>
+- Locked: <A | B>
+- Rationale: <Mechanism B default per water-beads; A as escalation;
+  C cut per scope-guardian deepening>
+- Production URL: <burned.pages.dev | burned-cxa.pages.dev | local-dev>
+- Approach: <III default | I fallback>
+- Friends recruited (Mechanism B): <name list>
+- Spike output: <if Mechanism A — link to first WebM>
+
+## OBS scene config (Mechanism B only)
+- OBS version: <e.g., 31.0.1>
+- Container: <MKV | Hybrid MP4 (OBS 32+)>
+- Encoder: <NVENC HEVC | NVENC H.264 | x264 CRF 18>
+- Resolution × FPS: 1920×1080 @ 30fps
+- Audio: all sources muted
+- Camera angle: 30° to TV
+- Lighting: <warm lamps notes>
+- Table dressing: <notes>
+
+## Sessions (filled progressively)
+### Session 1 — <YYYY-MM-DD>
+- Setup tax (first session expected ~30 min)
+- Takes attempted: <N>
+- Takes saved: <N>
+- Best take: <filename>
+- Notes: <per-take observations>
+
+(continues for sessions 2-N)
+```
+
+**Patterns to follow:**
+
+- `feedback-eye-in-loop-beats-calibration-for-motion.md` — direct
+  observation over rubric metrics.
+- Phase 3 Unit 3.7 capture-log consolidation pattern.
+
+**Test scenarios:**
+
+- **Mechanism B happy path**: OBS captures 45s at 1920×1080 @
+  30fps; takes/take-01.mkv plays cleanly; mid-game UI visible
+  end-to-end.
+- **Mechanism A happy path** (escalation): WebM file decodes;
+  DramaOverlay BURNED beat visible at full duration in board
+  recording.
+- **Frame-rate mismatch (OBS captured at 60fps)**: caught in
+  Unit 5.5 raw-take ffprobe; force-downsample via `fps=30` filter.
+- **Production URL down**: fall through to local-dev per Unit 5.0
+  preflight.
+- **DramaOverlay clips in Mechanism A headless capture**: spike
+  fails (c); escalate to Mechanism B.
+
+**Verification:**
+
+- `capture-log.md` records mechanism lock + rationale.
+- Spike output present (if Mechanism A invoked).
+- OBS scene config verified visually (if Mechanism B).
+
+---
+
+### Unit 5.2 — Shot List + Approach III Deck Choreography
+
+- [ ] **Unit 5.2: Shot List + Approach III Deck Choreography**
+
+**Goal:** Define the 18-second curated gameplay sequence with
+BURNED-draw at clip-relative frame 160, scream cue at relative
+frame 360 as separate reaction beat. Specify Approach III deck
+seeding for deterministic BURNED placement. Apply composition
+constraints (mobile-safe-square, iris-anchor, frame-0 luminance,
+lower-40px ticker).
 
 **Requirements:** R13 + S05 cue timings from Phase 1 Unit 1.2 Step 6.
 
@@ -422,144 +1012,131 @@ visible. Output: `shot-list.ts` + storyboard.
 
 **Files:**
 
-- Create: `videos/trailer/scripts/shot-list.ts`
-- Create: `videos/trailer/sample-eval/gameplay-capture/shot-list.md` —
-  human-readable storyboard.
+- Append to: `videos/trailer/sample-eval/gameplay-capture/capture-log.md`
+  (shot list section)
+- NO TypeScript shot-list module (`shot-list.ts` CUT during
+  deepening per scope-guardian — no consumers, markdown table
+  suffices)
 
 **Approach:**
 
-**Step 1 — S05 cue map review (from Phase 1 Unit 1.2 Step 6).**
+**Step 1 — S05 cue map review (final-state, post Phase 1+5
+deepening).**
 
-S05 absolute frames 2040–2580 (relative 0–540):
+S05 absolute frames 2040-2580 (clip-relative 0-540):
 
 | Relative frame | Beat | Audio | Visual need |
 |----------------|------|-------|-------------|
-| 0–60 | Cross-dissolve from S04 cascade settles into gameplay | Music bed at 25% | Gameplay clip starts; reads as "real game" within 1 second |
-| 60–240 | Initial game presence | Sparse music; no Dash VO | Multiplayer dynamic visible — phones in foreground, board on TV |
-| 240–290 | Sparse Dash VO drops | Dash: "And — between you and me — they appear to be enjoying it." | Continue gameplay; ideally a card play or intercept action overlaps |
-| 360–405 | Scream beat (R5 contingent) | Dash: "VERAAA!!!" | A player draws the BURNED card on capture; DramaOverlay BURNED beat plays |
-| 405–495 | Reaction beat | Music bed 25% | Real human reaction to BURNED draw (gasp, "no!", laugh) |
-| 495–540 | Iris-wipe begins | Music bed rising to 50% | Frame freezes naturally as iris-wipe overlays |
+| 0 | Hard cut entry from S04; S05HeadFadeFromBlack overlay frames 0-15 ramps black→frame-0 | Music bed at 25% | Frame 0 prefer YAVG ≤ 76.5 (mid-tone-to-dark) |
+| 0-160 | Active gameplay establishing; multiplayer visible | Music bed continuous | Phones + board both readable; mobile-safe-square applies |
+| **160** | **BURNED card draws — DramaOverlay BURNED beat begins** | Music bed | Phone screen shows BURNED card; board shows DramaOverlay cinematic |
+| 160-280 | DramaOverlay BURNED beat plays out (in-game cinematic ~4s) | Music bed | Players visibly turn attention to TV |
+| 240 | Sparse Dash VO: "And — between you and me — they appear to be enjoying it." | VO layered over music bed | INTIMATE register — close-on-phone or close-on-reaction preferred; NOT wide shot |
+| 280-360 | Reaction window — players reacting to the draw | Music bed | Genuine body language: lean-in, cover-mouth, point at TV |
+| 360 | Scream cue (R5-contingent): "VERAAA!!!" Sterling-CODED deadpan-late | VO layered over music bed | Continuation of reaction; no need for "draw moment" visual — that already happened at 160 |
+| 360-480 | Aftermath; continued play | Music bed | |
+| 480-540 | Tail; iris-wipe begins at 495 (S05_END - 45) | Music bed rising to 50% | Primary subject center-frame ±400px of (960, 540); minimal motion |
 
-**Step 2 — 18-second shot list (5 shots).**
+**Step 2 — Shot list (capture-time direction; NOT edit-time cuts).**
 
-| Shot # | Relative frames | Duration | Description |
-|--------|----------------|----------|-------------|
-| Shot 1 | 0–90 | 3s | **ESTABLISHING SHOT**: Wide shot of phones + TV. Board shows CASE BANNER + DiscardFan + active player indicator. 1–2 player hands visible holding phones. Multiple operative cards visible in DiscardFan. |
-| Shot 2 | 90–240 | 5s | **CARD PLAY**: Closeup or medium shot of a player tapping a card on their phone; cut to board showing the card animating into DiscardFan with sticker pop. Dash card or Attack card or Defuse — visually rich. |
-| Shot 3 | 240–360 | 4s | **DASH VO MOMENT**: Continue active play, multiple player phones visible, music + Dash VO ("they appear to be enjoying it") on top. Visual content: maybe a steal action or intercept window opening (NopeCountdownBar visible). |
-| Shot 4 | 360–450 | 3s | **BURNED DRAW CLIMAX (R5 hook)**: Player draws BURNED card; phone screen shows the BURNED card face revealed; cut to board showing DramaOverlay's BURNED beat playing (the cinematic moment). |
-| Shot 5 | 450–540 | 3s | **REACTION + IRIS-WIPE TARGET**: Wide shot, real human reactions to BURNED draw (gasps, "oh no", laughter). Frame composition supports iris-wipe collapsing toward center at frame ~510. |
+Per Derek Lieu's "fewer cuts, longer takes" principle for trailer
+authenticity, the 18 seconds should read as ONE continuous take
+with R15 chrome overlays cycling above — not 5 quick cuts. The
+"shots" below are CAPTURE-TIME framing windows for the camera
+operator (Mechanism B) or context-state expectations (Mechanism A),
+not separate clip segments.
 
-Total: 18 seconds. Each shot has a clear visual goal.
+| Window | Relative frames | Duration | Capture direction |
+|--------|-----------------|----------|-------------------|
+| **W1 ESTABLISHING** | 0-90 | 3s | Wide enough to read multiplayer; board chrome (CASE BANNER + DiscardFan) clearly visible; phones held by 1-2 players in foreground; first frame mid-tone-to-dark preferred. Players gameplay-state: active round mid-game; ≥2 cards in DiscardFan; 2-4 players seated. |
+| **W2 BUILDUP** | 90-160 | 2.3s | Continue active play; visible card play (player tap → board animation lands); rising tension toward BURNED moment. Approach III: Briggsy directs play tempo so the active player about to draw at frame ~160 is positioned to be visible. |
+| **W3 BURNED DRAW (CRITICAL)** | 160-280 | 4s | **The trailer's emotional anchor.** Player draws BURNED card; phone screen shows BURNED card face; board shows DramaOverlay BURNED beat playing. BOTH visible in frame. Mobile-safe-square: phone + board within x=[420, 1500] central band. |
+| **W4 DASH VO INTIMACY** | 240-300 | 2s | Overlaps W3 partially. Camera should favor closer-on-phone OR closer-on-reaction during this window — Dash VO is a confidential aside, audio register intimate. Player visibly registers what happened (raised eyebrow, slight lean). |
+| **W5 SCREAM + REACTION** | 360-480 | 4s | If R5=kept, scream lands at 360 layered over visible aftermath. Genuine reaction body language: lean-in, gesture, cover-mouth. Real laughter, real "no!", real shock. (If R5=cut, this window is silent reaction continuation.) |
+| **W6 IRIS TARGET** | 480-540 | 2s | Settle the frame — primary subject center, minimal motion. Camera holds steady. Iris-wipe begins at 495. Players "freeze for a beat" per director's-eye direction. |
 
-**Step 3 — `shot-list.ts`.**
+Total: 18 seconds. Six capture-direction windows; one continuous
+take. Shot transitions are NOT cut points — they are guidance for
+where the camera operator's attention should be at each moment.
 
-```ts
-// videos/trailer/scripts/shot-list.ts
-export interface GameplayShot {
-  shotNumber: number;
-  /** Relative-to-S05 frame range. */
-  startFrame: number;
-  endFrame: number;
-  /** Description for capture-time direction. */
-  description: string;
-  /** Critical visual content. */
-  visualGoal: string;
-  /** Game-state precondition for the shot to land. */
-  gameStatePrecondition: string;
-  /** Optional audio cue this shot aligns with. */
-  alignedAudioCue?: string;
-}
+**Step 3 — Approach III deck choreography.**
 
-export const GAMEPLAY_SHOTS: readonly GameplayShot[] = [
-  {
-    shotNumber: 1,
-    startFrame: 0,
-    endFrame: 90,
-    description: 'ESTABLISHING SHOT — wide of phones + TV',
-    visualGoal: 'Multiplayer dynamic visible; board chrome (CASE BANNER + DiscardFan) clearly readable',
-    gameStatePrecondition: 'Active round mid-game; 2–4 players seated; at least 2 cards in DiscardFan',
-  },
-  {
-    shotNumber: 2,
-    startFrame: 90,
-    endFrame: 240,
-    description: 'CARD PLAY — phone tap → board animation',
-    visualGoal: 'Player taps card; card animates into DiscardFan with sticker pop',
-    gameStatePrecondition: 'Player has a visually rich card in hand (Dash / Attack / Defuse)',
-  },
-  {
-    shotNumber: 3,
-    startFrame: 240,
-    endFrame: 360,
-    description: 'DASH VO MOMENT — continue play with VO overlay',
-    visualGoal: 'Visible game progression; possible intercept window (NopeCountdownBar)',
-    gameStatePrecondition: 'Active card-play turn with intercept potential',
-    alignedAudioCue: 'Dash VO at relative frame 240 ("And — between you and me...")',
-  },
-  {
-    shotNumber: 4,
-    startFrame: 360,
-    endFrame: 450,
-    description: 'BURNED DRAW CLIMAX — R5 hook target',
-    visualGoal: 'Player draws BURNED; phone shows BURNED card; board shows DramaOverlay BURNED beat',
-    gameStatePrecondition: 'Deck has exactly 1 BURNED card remaining (~5–8 cards left in deck); active player draws',
-    alignedAudioCue: 'Scream "VERAAA!!!" at relative frame 360 (if R5 kept)',
-  },
-  {
-    shotNumber: 5,
-    startFrame: 450,
-    endFrame: 540,
-    description: 'REACTION + IRIS-WIPE TARGET',
-    visualGoal: 'Real human reactions; composition supports iris-wipe collapse',
-    gameStatePrecondition: 'Post-BURNED-draw beat; players reacting',
-  },
-] as const;
+Phase 5 default: deterministic deck-seeding via `pnpm dev:stack`
++ natural human play.
+
+**Why Approach III** (replacing Approach I as default):
+
+- Approach I (multiple natural takes, no seeding) struggles with
+  30-second capture windows. BURNED draws naturally after 60-300s
+  in real play; landing the draw within trim-rescuable distance
+  of clip-relative frame 160 across 3-5 takes is statistically
+  unreliable. Phase 5 budget collapses to setup-burn.
+- Approach III: seed the deck so BURNED is the Nth card drawn
+  (calibrate N to ~5-7 draws-into-the-round, which lands at
+  clip-relative frame ~160 after head-trim). Real human play +
+  reactions happen on top. The deck order is INVISIBLE to viewers.
+  Reactions are UNSCRIPTED.
+- Approach II (engineered full sequence) still rejected — would
+  require scripting all card plays + would read as artificial in
+  the action sequencing, not just the deck order.
+
+**Concrete invocation** (calibrate exact card sequence at capture
+time):
+
+```bash
+# Pre-game seed: BURNED at position 7 from top of deck (calibrate
+# per game-flow rate; ~5-7 draws-in lands at relative frame ~160)
+pnpm dev:stack defuse,extraction,attack,skip,future-vision,direct-order,burned,...
+
+# Then start the game and play naturally
+# BURNED will draw at turn ~5-7 depending on Skip/Attack usage
 ```
 
-**Step 4 — Game-state choreography.**
+**Calibration**: first capture session, run 2-3 calibration plays
+with stop-watch on first 10 turns; measure average seconds-to-draw
+when seeding at positions 5, 6, 7, 8. Pick the position that
+produces a draw closest to 5.33s into a CAPTURE window (starting
+from "Cleared Hot" → first card animation).
 
-To land Shot 4 (BURNED draw at relative frame 360), the captured
-game session must be ENGINEERED to have the BURNED card remaining
-when a specific player draws at the target moment. Two approaches:
+**Approach I fallback** (if Approach III dev-actions are unavailable
+or undesired):
 
-- **Approach I — Multiple takes:** Run the game naturally; capture
-  4+ takes; pick the take where BURNED draws closest to frame 360.
-  Phase 4 syncs the timing in post.
-- **Approach II — Engineered deck:** Use BURNED's dev-action handler
-  to seed a specific deck order so BURNED lands at the target draw.
-  Requires `pnpm dev` + dev-action injection.
+- Multiple natural takes; capture 60+ seconds per take (NOT 30);
+  apply trim-viability filter at take-selection.
+- Reject takes where raw BURNED frame < 160 (head-trim cannot
+  pad backward).
+- Reject takes where raw total length < (raw_BURNED_frame + 380)
+  (Shot 5 reaction beat needs 12.7s post-draw content).
+- Practical implication: each take should be 60-90 seconds of raw
+  capture to allow head-trim freedom; ~10 takes per session needed
+  to land 1-2 with BURNED in the right position.
 
-Lock: **Approach I (multiple takes)**. Engineering the deck is
-fragile and reads as artificial; multiple takes lets real-game
-variation produce the moment naturally. Take selection is
-documented per Unit 5.4.
+**Step 4 — Shot-list documentation in capture-log.md.**
 
-**Step 5 — Shot-list storyboard documentation.**
-
-`shot-list.md` mirrors `shot-list.ts` with prose + storyboard
-sketches per shot. Optional: ASCII storyboards for the visual goals.
+Append the W1-W6 table + the deck-choreography seed pattern to
+`capture-log.md` under a "Shot list (capture direction)" section.
 
 **Patterns to follow:**
 
-- UMB v3 shot-list precedent (if any — verify; UMB used cascade
-  composition rather than discrete shots).
 - Phase 1 Unit 1.5 Step 2 cue table pattern.
+- `feedback-eye-in-loop-beats-calibration-for-motion.md` —
+  capture-time direction is calibration-time work; not edit-time.
+- Derek Lieu trailer-editing: "fewer cuts, longer takes" for
+  authenticity (sourced from best-practices research Finding 11).
 
 **Test scenarios:**
 
-- **Happy path:** Shot list lands in `shot-list.ts` + `shot-list.md`
-  with all 5 shots documented.
-- **Coverage:** Total shot durations sum to 540 frames (S05 length).
-- **Pre-condition check:** Each shot's precondition is achievable in
-  a natural game session.
+- **Happy path:** Shot list documented; W1-W6 align with cue map.
+- **Approach III calibration:** seed position N produces BURNED
+  draw at ~5.33s into 3 of 3 calibration plays.
+- **Approach III fallback:** if dev-action handler refuses payload,
+  switch to Approach I with extended take windows.
 
 **Verification:**
 
-- `shot-list.ts` typechecks.
-- `shot-list.md` documents per-shot direction + visual goal.
-- Take-engineering decision (Approach I) locked.
+- Shot list table in `capture-log.md`.
+- Approach III deck-seeding command documented.
+- Calibration position N recorded.
 
 ---
 
@@ -567,8 +1144,7 @@ sketches per shot. Optional: ASCII storyboards for the visual goals.
 
 - [ ] **Unit 5.3: Capture Harness Build**
 
-**Goal:** Build the capture-mechanism-specific harness. Mechanism A
-= Playwright script; Mechanism B = OBS scene config + checklist.
+**Goal:** Stand up the capture-mechanism-specific harness.
 
 **Requirements:** R13.
 
@@ -576,551 +1152,844 @@ sketches per shot. Optional: ASCII storyboards for the visual goals.
 
 **Files:**
 
-- (Mechanism A): Create: `videos/trailer/scripts/capture-gameplay-playwright.ts`
-- (Mechanism B): Create: `videos/trailer/sample-eval/gameplay-capture/obs-scene-config.md`
-- Create: `videos/trailer/sample-eval/gameplay-capture/harness-build.md`
+- **Mechanism A path**: edit existing
+  `scripts/playtest/lib/seat-factory.ts` +
+  `scripts/playtest/run-session.ts` to add `--trailer-capture` mode.
+  NO new from-scratch script.
+- **Mechanism B path**: no source-code changes needed. OBS scene
+  config + capture checklist live in `capture-log.md`.
+- (Both paths): `scripts/generate-placeholder-gameplay.ts` —
+  Phase 5 OWNS this script (Phase 4 cross-phase dep). Creates the
+  18s placeholder MP4 that Phase 4 standalone-render consumes
+  before Phase 5 ships the real clip.
 
-**Approach (Mechanism A path):**
+**Approach (Mechanism A — playtest-harness extension):**
+
+The playtest harness already provides 95% of what Mechanism A
+needs. Phase 5 adds the missing 5%: video recording + trailer-mode
+flag.
+
+**Step A.1 — Audit existing harness surface.**
+
+Required reading before editing:
+
+- `scripts/playtest/run-session.ts` (orchestrator)
+- `scripts/playtest/lib/seat-factory.ts` (context creation per seat)
+- `scripts/playtest/lib/server-controller.ts` (wrangler + vite
+  lifecycle; insight 026 stdio drain pattern applies)
+- `scripts/playtest/lib/orchestrator.ts` (game-flow coordination)
+
+**Step A.2 — Add `--trailer-capture` mode flag.**
+
+CLI argv via `node:util.parseArgs` strict mode (per Phase 2
+deepening lock):
 
 ```ts
-// videos/trailer/scripts/capture-gameplay-playwright.ts
-import 'dotenv/config';
-import { chromium, type BrowserContext } from 'playwright';
-import { existsSync, mkdirSync } from 'node:fs';
-import { GAMEPLAY_SHOTS } from './shot-list';
+// scripts/playtest/run-session.ts (DIRECTIONAL EDIT)
+const args = parseArgs({
+  options: {
+    'trailer-capture': { type: 'boolean', default: false },
+    'seats':           { type: 'string',  default: '3' },
+    // existing args preserved
+  },
+})
 
-const URL = process.env.BURNED_URL ?? 'https://burned-cxa.pages.dev';
-const OUT_DIR = 'videos/trailer/sample-eval/gameplay-capture/takes';
-
-async function main() {
-  if (!existsSync(OUT_DIR)) mkdirSync(OUT_DIR, { recursive: true });
-  const browser = await chromium.launch();
-
-  const recordOpts = (subdir: string) => ({
-    recordVideo: { dir: `${OUT_DIR}/${subdir}`, size: { width: 1920, height: 1080 } },
-  });
-
-  // Board view: TV-shared-screen
-  const boardCtx = await browser.newContext({
-    ...recordOpts('board'),
-    viewport: { width: 1920, height: 1080 },
-  });
-  const boardPage = await boardCtx.newPage();
-  await boardPage.goto(`${URL}/board.html`);
-
-  // Wait for room code to render
-  const roomCode = await boardPage.locator('[data-room-code]').textContent({ timeout: 30_000 });
-  if (!roomCode) throw new Error('Room code did not render on board');
-  console.log(`Room code: ${roomCode}`);
-
-  // Spawn 3 player contexts (3 phones)
-  const players: BrowserContext[] = [];
-  for (let i = 1; i <= 3; i++) {
-    const pCtx = await browser.newContext({
-      ...recordOpts(`player-${i}`),
-      viewport: { width: 390, height: 844 },
-      deviceScaleFactor: 3,
-    });
-    const pPage = await pCtx.newPage();
-    await pPage.goto(`${URL}/player.html?room=${roomCode}`);
-    // Player joins with a generated name
-    await pPage.fill('input[name="playerName"]', `Player ${i}`);
-    await pPage.click('button:has-text("Join")');
-    players.push(pCtx);
-  }
-
-  // Wait for board to show "ready to start"
-  await boardPage.waitForTimeout(5000);
-  // Host start game
-  await boardPage.click('button:has-text("Start")', { timeout: 10_000 });
-
-  // Run scripted card plays — this is shot list choreography
-  // Approach I (multiple takes natural play): simulate ~20s of natural plays
-  // ...
-
-  // Capture for 30s (longer than the 18s S05 budget; Phase 5 takes 30s and trims)
-  await boardPage.waitForTimeout(30_000);
-
-  await boardCtx.close();
-  for (const p of players) await p.close();
-  await browser.close();
-
-  console.log(`Take complete. Videos in ${OUT_DIR}/`);
-}
-
-main().catch((err) => {
-  console.error(err);
-  process.exit(1);
-});
+const trailerCapture = args.values['trailer-capture'] === true
 ```
 
-(Note: scripted card plays are non-trivial — Phase 5 may iterate
-the play sequence over multiple takes per Approach I.)
+**Step A.3 — Add `recordVideo` to context creation.**
 
-**Approach (Mechanism B path):**
+```ts
+// scripts/playtest/lib/seat-factory.ts (DIRECTIONAL EDIT)
+const context = await browser.newContext({
+  ...iPhone13,
+  hasTouch: true,
+  viewport: { width: viewport.width, height: viewport.height },
+  // NEW per Phase 5 Unit 5.3 — trailer-mode video recording
+  ...(trailerCapture ? {
+    recordVideo: {
+      // CRITICAL: size MUST match viewport 1:1 or letterboxing occurs
+      dir: `videos/trailer/sample-eval/gameplay-capture/takes/seat-${seatId}/`,
+      size: { width: viewport.width, height: viewport.height },
+    },
+  } : {}),
+})
+```
 
-`obs-scene-config.md` lists the OBS scene setup:
+**Step A.4 — Add board-context recording at 1920×1080.**
 
-```md
-# OBS Scene Config — Phase 5 Mechanism B
+The board-view-launcher (`scripts/playtest/lib/board-view-launcher.ts`
+per insight 032) doesn't currently record video. Add similar
+`recordVideo` option to its newContext call, with `viewport: {
+width: 1920, height: 1080 }` matching record size.
 
-## Source 1: Display Capture (Primary Monitor / TV)
-- Source type: Display Capture
-- Display: External TV (1920×1080 @ 60Hz preferred)
-- Source rectangle: full display
-- Position: full canvas
+**Step A.5 — Approach III deck seeding integration.**
 
-## Source 2 (optional): Window Capture (board.html browser window)
-- If TV mirroring is unstable, capture the board.html window
-  directly via the host laptop's browser.
-- Window: BURNED board (browser window title pattern)
+Before "Start Game" click in orchestrator, send `dev-stack-deck`
+via the existing dev-action WSS message:
 
-## Audio
-- Mute all audio sources. The trailer's S05 audio comes from Phase 2 +
-  Phase 1's music bed; capture audio is discarded.
+```ts
+// scripts/playtest/lib/orchestrator.ts (DIRECTIONAL EDIT)
+if (trailerCapture) {
+  await godClient.send({
+    type: 'dev-stack-deck',
+    cards: ['defuse', 'extraction', 'attack', 'skip',
+            'future-vision', 'direct-order', 'burned', /* ... */],
+  })
+  // Wait for ack
+  await godClient.waitForAck('dev-stack-deck')
+}
+```
 
-## Recording settings
-- Output Mode: Advanced
-- Encoder: x264 (or NVENC if GPU acceleration available)
-- Rate Control: CRF, value 18 (production-quality)
-- Resolution: 1920×1080
-- FPS: 30
-- Container: MP4
+**Step A.6 — Run trailer-capture sessions.**
 
-## Capture checklist
-1. TV running board.html via host laptop browser; full-screen mode
-2. Phones loaded with player.html?room=XXX, joined as 2–3 players
-3. Music + ambient room sound disabled (no audio capture)
-4. Host starts OBS recording
-5. Host clicks "Start Game" on board
-6. Multi-player session plays through ~30 seconds of natural game
-7. Host stops OBS recording after BURNED-draw beat lands
-8. Take saved to videos/trailer/sample-eval/gameplay-capture/takes/take-NN.mp4
+```bash
+# 3 seats, trailer-mode, 45s window
+pnpm playtest:run --trailer-capture --seats 3 --duration 45
+```
+
+Outputs land at `videos/trailer/sample-eval/gameplay-capture/takes/
+seat-{1,2,3}/<uuid>.webm` + `board/<uuid>.webm`.
+
+**Approach (Mechanism B — OBS + real devices):**
+
+**Step B.1 — OBS pre-flight check** (per session).
+
+Open OBS Settings → Video → Common FPS Values. Confirm **30**.
+(OBS often defaults to 60.) Settings → Output → Container:
+**MKV** (or Hybrid MP4 on OBS 32+). Encoder: NVENC HEVC if
+available, else x264 CRF 18 medium.
+
+Verify Display Capture preview shows the actual TV content (NOT a
+black square — HDCP-protected outputs cause black-out; if so,
+switch to Window Capture for the board.html browser window).
+
+**Step B.2 — Production-design pre-flight** (per session).
+
+Run through the director's-eye checklist from Unit 5.1 Step 4
+before recording:
+
+- Camera angle 30° to TV? Y/N
+- Warm ambient lighting (no overhead fluorescent)? Y/N
+- Table dressing (1-2 practical objects, no game boxes)? Y/N
+- Phone-holding posture (phones held, not flat)? Y/N
+- Faces cropped at eyeline or behind? Y/N
+- Frame-0 mid-tone-to-dark preference set up? Y/N
+- Mobile-safe-square: TV center within x=[420, 1500]? Y/N
+- Lower 40px clean (no critical content)? Y/N
+
+If ANY answer is N, fix before recording.
+
+**Step B.3 — Approach III deck seeding for Mechanism B.**
+
+In a separate terminal on the dev host:
+
+```bash
+# Seed deck with BURNED at position 7 (or calibrated N from Unit 5.2)
+pnpm dev:stack defuse,extraction,attack,skip,future-vision,direct-order,burned,...
+```
+
+Verify the dev-action acknowledged (server log shows
+`dev-stack-deck ok`).
+
+**Step B.4 — Capture session execution.**
+
+1. Host clicks OBS "Start Recording"
+2. Host clicks "Cleared Hot" on board (the real selector per
+   `Lobby.tsx:104-110` — NOT "Start")
+3. Players + Briggsy play through ~45 seconds; BURNED draws at
+   the seeded position around 5-7 turns in
+4. Players freeze briefly after BURNED-draw reaction (for iris
+   anchor)
+5. Host clicks OBS "Stop Recording" ~5 seconds after BURNED-draw
+   reaction settles
+6. Take saved to `videos/trailer/sample-eval/gameplay-capture/
+   takes/take-NN.mkv`
+
+**Step B.5 — MKV → MP4 remux (OBS 30/31 only; skip on 32+ Hybrid MP4).**
+
+```bash
+# Lossless remux (no re-encode; safe with -c copy because container
+# both has H.264 already)
+ffmpeg -i takes/take-01.mkv -c copy takes/take-01.mp4
+```
+
+**Step B.6 — Placeholder script ownership** (both mechanisms; pre-Phase-5-ship).
+
+Phase 5 OWNS `scripts/generate-placeholder-gameplay.ts` per Phase 4
+deepening cross-phase dep. The script writes an 18-second silent
+MP4 looping a placeholder image (typically `htp-fullpage.png` or a
+black frame) to `public/trailer/gameplay-placeholder.mp4`. Phase 4
+standalone-render consumes this before Phase 5 ships the real
+clip.
+
+```ts
+// scripts/generate-placeholder-gameplay.ts (DIRECTIONAL; Phase 5 owns)
+// SAFE: execFileSync with argv arrays (project security convention)
+import { execFileSync } from 'node:child_process'
+
+const SOURCE_IMG = 'public/trailer/htp-fullpage.png'  // OR 'public/trailer/placeholder-black.png'
+const OUTPUT     = 'public/trailer/gameplay-placeholder.mp4'
+
+execFileSync('ffmpeg', [
+  '-y',
+  '-loop', '1',
+  '-i', SOURCE_IMG,
+  '-c:v', 'libx264',
+  '-t', '18',
+  '-pix_fmt', 'yuv420p',
+  // NOTE: Phase 4's pre-deepening sketch used force_original_aspect_ratio=cover,
+  // which is INVALID ffmpeg syntax (valid values: disable|decrease|increase).
+  // Using `increase` here matches the Unit 5.5 encode pattern.
+  '-vf', 'scale=1920:1080:force_original_aspect_ratio=increase,crop=1920:1080,setsar=1',
+  '-r', '30',
+  '-an',
+  '-map', '0:v:0',
+  '-movflags', '+faststart',
+  OUTPUT,
+])
+console.log(`[generate-placeholder-gameplay] wrote ${OUTPUT}`)
 ```
 
 **Patterns to follow:**
 
-- Playwright multi-context: https://playwright.dev/docs/api/class-browsercontext
-- OBS Studio: https://obsproject.com/
-- BURNED room-code chrome (per board.html DOM): `data-room-code`
-  attribute or similar.
+- `scripts/playtest/lib/seat-factory.ts:144-153` — context creation
+  precedent.
+- Insight 026 — drain subprocess stdio if Phase 5 ever spawns
+  ffmpeg as a long-running process (one-shot execFileSync is fine
+  for ~10-30s encodes).
+- Insight 022 — Phase 5 scripts MUST NOT import anything that
+  transitively touches `partyserver` (room.ts quarantine zone).
+- Phase 2 deepening: `execFileSync` argv-arrays; no shell strings.
+- Vanity room codes: per `feedback-burned-vanity-room-codes.md`,
+  random codes are hostile on phone keyboard during capture. The
+  playtest harness mints its own `CAL`-prefixed code; for
+  Mechanism B real-device sessions, friends can use QR-code scan
+  + URL hash from the board view to avoid manual entry.
 
 **Test scenarios:**
 
-- **Happy path A:** Playwright script runs; 4 video files (1 board + 3 players) saved to takes/.
-- **Happy path B:** OBS captures 30s clip to takes/take-01.mp4; mid-game scene visible end-to-end.
-- **Edge case:** Production URL fails (deploy not migrated) → script
-  switches to local-dev URL via env var.
-- **Edge case:** Player join fails (room-code mismatch / timeout) →
-  retry once; if still fails, fall back to manual join.
-- **Recapture tolerance:** Harness supports running multiple takes
-  iteratively (`pnpm tsx ... --take=01`, `--take=02`).
+- **Mechanism A spike pass**: WebM files generated; DramaOverlay
+  BURNED beat visible at full duration.
+- **Mechanism B happy path**: take-01.mkv captured; remux to
+  take-01.mp4 succeeds; mid-game UI visible end-to-end.
+- **Placeholder script**: produces 18s MP4 at correct path; Phase 4
+  standalone render consumes it.
+- **OBS HDCP black-out**: pre-flight check catches it; switch to
+  Window Capture.
+- **Production URL stale**: switch to local-dev fallback per
+  Unit 5.0.
 
 **Verification:**
 
-- Harness builds + runs without errors.
-- One spike take captured to verify mechanism end-to-end.
-- `harness-build.md` documents setup + invocation.
+- Mechanism A: harness extension committed; trailer-capture mode
+  produces WebM output.
+- Mechanism B: OBS scene config + director's-eye production
+  checklist verified; at least one spike take captured.
+- Placeholder script: `pnpm tsx scripts/generate-placeholder-gameplay.ts`
+  produces `public/trailer/gameplay-placeholder.mp4` (18s, silent).
 
 ---
 
-### Unit 5.4 — Gameplay Capture Run + Take Selection
+### Unit 5.4 — Gameplay Capture Run + Take Selection (Fluency Gate)
 
-- [ ] **Unit 5.4: Gameplay Capture Run + Take Selection**
+- [ ] **Unit 5.4: Gameplay Capture Run + Take Selection (Fluency Gate)**
 
-**Goal:** Run 3–5 capture sessions, picking the take that best
-satisfies the shot list. Selected take saved as `gameplay-raw.mp4`.
+**Goal:** Run capture sessions; pick the take that best satisfies
+the shot list AND the insight-050 fluency gate. Selected take
+saved as `gameplay-raw.<ext>` for Unit 5.5 post-processing.
 
-**Requirements:** R13 + R5 (if R5 kept, take must include a BURNED
-draw at suitable moment).
+**Requirements:** R13 + R5 (alignment with scream cue at relative
+frame 360 if R5=kept).
 
-**Dependencies:** Unit 5.3 (harness built), deploy migration
-complete OR local-dev fallback.
+**Dependencies:** Unit 5.3 (harness built), Unit 5.0 (production
+URL OR local-dev fallback decided).
 
 **Files:**
 
-- Create: `videos/trailer/sample-eval/gameplay-capture/takes/take-{01..05}.mp4` —
-  raw captures.
-- Create: `videos/trailer/sample-eval/gameplay-capture/take-selection.md`
-- Create: `videos/trailer/sample-eval/gameplay-capture/gameplay-raw.mp4` —
-  the selected take.
+- Create: `videos/trailer/sample-eval/gameplay-capture/takes/take-{NN}.{mp4,webm}` —
+  raw captures
+- Append to: `capture-log.md` — session log + per-take rubric +
+  selection rationale
+- Create: `videos/trailer/sample-eval/gameplay-capture/briggsy-review-5.4.signoff` —
+  Briggsy git-authored sentinel
+- Create: `videos/trailer/sample-eval/gameplay-capture/gameplay-raw.{mp4,webm}` —
+  selected take copy (symlink OR cp depending on platform)
 
 **Approach:**
 
-**Step 1 — Capture session execution.**
+**Step 1 — Session budget allocation.**
 
-For each session, ~2 hours of total time:
+Per scope-guardian + adversarial findings: first session is
+setup-heavy. Budget:
 
-1. Pre-flight check:
-   - Production URL accessible? (or local-dev fallback)
-   - 1–2 friends available (Mechanism B)?
-   - OBS recording settings verified
-   - Phones charged + on Wi-Fi
-2. Run capture (~30s per take, multiple takes per session)
-3. Review takes immediately; log per-take notes
+| Session | Purpose | Expected output |
+|---------|---------|-----------------|
+| 1 | Setup pass — OBS config verified, friends know how to play, calibration of Approach III seed position N | 0-2 usable takes |
+| 2 | First real capture session | 3-5 takes, hopefully 1-2 ship-able |
+| 3 | Second capture session | 3-5 takes |
+| 4 | Contingency / re-shoot | 0-3 takes |
 
-**Step 2 — Per-take evaluation rubric.**
+Total: 4 sessions × ~2 hours. Adjust based on actual yield.
 
-For each take, evaluate against shot list:
+**Step 2 — Per-session execution.**
 
-| Shot | Achieved? | Notes |
-|------|-----------|-------|
-| Shot 1 (establishing) | ✓ / ✗ / partial | Notes on visual quality |
-| Shot 2 (card play) | ✓ / ✗ / partial | Which card; visual richness |
-| Shot 3 (Dash VO moment) | ✓ / ✗ / partial | Intercept window opened? |
-| Shot 4 (BURNED draw) | ✓ / ✗ / partial | Frame at which BURNED drawn; reaction visible |
-| Shot 5 (reaction + iris) | ✓ / ✗ / partial | Real reaction; iris-wipe compatible composition |
+Pre-flight (each session):
 
-Score: 5/5 = ideal; 4/5 = ship-able; 3/5 = recapture; <3/5 = bad
-take.
+- Production URL + WSS health probe (or local-dev verified)
+- R5 outcome confirmed from PHASE-0-EXIT.md (so take selection
+  knows whether scream cue alignment matters)
+- OBS recording profile verified (FPS=30, encoder, container)
+- Director's-eye production checklist run-through
+- Approach III deck seed prepared
 
-**Step 3 — Take selection.**
+Capture loop:
 
-Pick the take that:
-1. Hits all 5 shots (or 4 of 5 ship-able)
-2. BURNED draw lands closest to the target frame 360 (Phase 4 will
-   sync by trimming a few frames at clip head)
-3. Real human reactions feel ALIVE (water-beads rule)
-4. Visual quality acceptable (focus, exposure, framing)
+1. Seed deck via `pnpm dev:stack ...` (Approach III)
+2. Players join via QR/URL hash (Mechanism B) or via harness
+   (Mechanism A)
+3. Host clicks OBS Start Recording → "Cleared Hot" on board
+4. ~45-60 seconds of natural play; BURNED draws at the seeded
+   position
+5. Brief freeze after BURNED-draw reaction settles
+6. Host stops recording
+7. Take saved + named (`take-01.mp4`, `take-02.mp4`, ...)
+8. Re-seed deck for next take
 
-If no take hits 4+/5, run another session.
+**Step 3 — Per-take evaluation rubric (CALIBRATION FLOOR).**
 
-**Step 4 — Selected take + frame-trim plan.**
+For each take, evaluate against shot windows + property criteria:
 
-Selected take's raw length is ~30 seconds. S05 needs ~18 seconds.
-Phase 5 Unit 5.5 trims:
+| Window | Criterion | ✓/✗/partial | Notes |
+|--------|-----------|--------------|-------|
+| W1 (establishing) | Multiplayer dynamic visible; board chrome readable | | |
+| W2 (buildup) | Visible card-play action; rising tension | | |
+| W3 (BURNED draw) | Card visible on phone; DramaOverlay visible on board | | |
+| W4 (Dash VO intimacy) | Close enough to read reaction face / phone | | |
+| W5 (scream + reaction) | Genuine body-language reaction (lean, gesture, cover-mouth) | | |
+| W6 (iris target) | Center-frame focal point; minimal motion | | |
 
-- **Head trim**: cut N frames from start to align BURNED draw with
-  S05 relative frame 360. N depends on per-take BURNED-draw frame.
-- **Tail trim**: total final length 540 frames (18s).
+**Take scoring**:
+- 6/6 = ideal
+- 5/6 = ship-able
+- 4/6 = marginal (recapture preferred)
+- < 4/6 = reject
 
-Documented in `take-selection.md`:
+**NOTE**: AUDIO IS STRIPPED IN UNIT 5.5. Do NOT rate on audio
+quality. Score visual content only.
 
-```md
-# Take Selection — Phase 5 Unit 5.4
+**Step 4 — Fluency gate (insight 050; LOAD-BEARING).**
 
-## Session log
-- Session 1 (date): 4 takes captured. Take 02 best (4/5 score).
-- Session 2 (date): 2 takes captured. Take 06 (5/5 score, BURNED at perfect timing).
+Per `docs/insights/050-agent-verification-misses-perceptual-continuities.md`:
+property-style checklists pass takes that read as DEAD on
+perceptual fluency. The rubric in Step 3 is a CALIBRATION FLOOR —
+takes below 5/6 are rejected; takes at 5/6 or 6/6 proceed to the
+fluency gate.
 
-## Selected take: take-06.mp4
-- Raw length: 32.4s (972 frames)
-- BURNED draw at raw frame 472 (15.7s in)
-- Target: BURNED draw at S05 relative frame 360 (12.0s in)
-- Head trim: 112 frames (3.7s)
-- Tail trim: 320 frames after target (10.7s remaining post-trim)
-- Final clip: 540 frames (18s) starting at original raw frame 112
+**Fluency gate** (Briggsy-eye only; CANNOT be agent-scored):
 
-## Briggsy sign-off
-Take 06 selected. APPROVED.
+Briggsy watches each top-2 candidate take FULL-SPEED, ONCE, with
+sound (Phase 2 Dash VO + Phase 1 music bed dubbed in temp if
+available; otherwise silent). Open-text question:
+
+> *"Does this take feel like a real playable game in your hands?
+> Does watching it produce a real reaction — laugh, lean-in,
+> 'oh shit', interest?"*
+
+Optional fluency signals (not a checklist; just things Briggsy may
+notice on first watch):
+
+- Does at least one player look up at TV during the DramaOverlay
+  animation?
+- Is there at least one genuine physical reaction (lean, gesture,
+  cover-mouth) during BURNED draw?
+- Lighting consistent warm-tone throughout (no auto-exposure shifts)?
+- Phone-holding posture maintained (no mid-take put-down)?
+- DramaOverlay BURNED beat visible at full duration (not clipped
+  by another player's action or camera shift)?
+
+A take scoring 6/6 on property rubric but NO on fluency = reject
+(or recapture).
+
+A take scoring 5/6 with strong fluency may BEAT a 6/6 with weak
+fluency.
+
+**Step 5 — Trim-viability filter.**
+
+For each candidate take, identify the BURNED-draw raw-frame
+position via ffprobe + visual scrub:
+
+```bash
+# Open the take and scrub to where BURNED card draws; record raw frame
+ffmpeg -i takes/take-NN.mp4 -vf scale=480:270 -an out/take-NN-preview.mp4
+# (Or just open the .mkv/.mp4 in any player and note the timecode)
 ```
 
-**Step 5 — Raw save.**
+Compute trim plan:
+- `BURNED_DRAW_RAW_FRAME` = N (per visual scrub)
+- `HEAD_TRIM_FRAMES` = BURNED_DRAW_RAW_FRAME - 160
+- `TAIL_TRIM_TARGET_FRAME` = HEAD_TRIM_FRAMES + 540
 
-Copy selected take to `videos/trailer/sample-eval/gameplay-capture/gameplay-raw.mp4`
-for Phase 5 Unit 5.5 post-processing.
+**Reject** the take if:
+- `HEAD_TRIM_FRAMES < 0`: BURNED drew before frame 160; head-trim
+  cannot pad backward.
+- `TAIL_TRIM_TARGET_FRAME > TOTAL_RAW_FRAMES`: not enough
+  post-draw content for Shot 5 + iris.
+
+**Step 6 — Selected take.**
+
+Pick the take that:
+1. Scores ≥ 5/6 on property rubric
+2. Passes fluency gate (Briggsy YES)
+3. Passes trim-viability filter
+4. BURNED-draw lands closest to the head-trim sweet spot (smaller
+   head trim = more establishing time visible)
+5. R5 outcome alignment: if R5=kept, scream cue at relative frame
+   360 lands on visibly dramatic reaction window (not flat).
+
+Tiebreaker hierarchy (per adversarial scenario 17):
+- (a) If both takes score equal: BURNED-draw beat quality is
+  highest weight
+- (b) If tied: Shot 5 reaction quality (iris-wipe context)
+- (c) If tied: Briggsy's gut on full-speed first viewing (fluency)
+- (d) If unresolved after 3 minutes of review: pick the take seen
+  FIRST (fatigue corrupts second viewing more)
+
+**Step 7 — Take selection documentation.**
+
+Append to `capture-log.md`:
+
+```md
+## Take selection (Unit 5.4)
+
+### Session log
+- Session 1 (<YYYY-MM-DD>): setup; <N> calibration takes
+- Session 2 (<YYYY-MM-DD>): <N> takes captured
+- ... (continues)
+
+### Per-take rubric scores
+| Take | Date | W1 | W2 | W3 | W4 | W5 | W6 | Score | BURNED raw frame | Trim viable | Fluency | Notes |
+|------|------|----|----|----|----|----|----|-------|------------------|-------------|---------|-------|
+| 01 | ... | ✓ | ✓ | ✓ | partial | ✗ | ✓ | 5/6 | 245 | ✓ | YES | best Shot 4 |
+| 02 | ... | ✓ | ✓ | ✓ | ✓ | ✓ | partial | 5/6 | 89 | ✗ (negative head trim) | n/a | rejected — BURNED too early |
+| 06 | ... | ✓ | ✓ | ✓ | ✓ | ✓ | ✓ | 6/6 | 478 | ✓ | YES | SELECTED |
+
+### Selected: take-06.mp4
+- BURNED-draw raw frame: 478
+- Head trim: 478 - 160 = 318 frames (10.6s)
+- Trimmed clip target: frames 318 to 858 (= 540 frames @ 30fps)
+- R5 outcome alignment: scream cue at relative frame 360 lands on
+  player visibly leaning back — STRONG alignment
+
+### Briggsy sign-off
+Take 06 selected — APPROVED.
+(briggsy-review-5.4.signoff written by Briggsy git-author)
+```
+
+**Step 8 — Sentinel + raw save.**
+
+```bash
+# Symlink (Linux/macOS) or cp (Windows) the selected take
+cp videos/trailer/sample-eval/gameplay-capture/takes/take-06.mp4 \
+   videos/trailer/sample-eval/gameplay-capture/gameplay-raw.mp4
+
+# Briggsy commits the signoff sentinel via git with his author identity
+# (briggsy007@gmail.com); Phase 4's verify:briggsy-sentinels gates on
+# this author check
+touch videos/trailer/sample-eval/gameplay-capture/briggsy-review-5.4.signoff
+git add videos/trailer/sample-eval/gameplay-capture/briggsy-review-5.4.signoff
+git commit -m "phase-5: briggsy-review-5.4.signoff (take-06 selected)"
+```
 
 **Patterns to follow:**
 
 - `feedback-eye-in-loop-beats-calibration-for-motion.md` — direct
   observation of real-world output, not metrics alone.
+- Insight 050 — fluency reads over property checklists.
+- Phase 4 `briggsy-review-N.signoff` git-author pattern (Phase 4
+  Unit 4.9 NEW Step 3a `scripts/verify-briggsy-sentinels.ts`).
 - `feedback-imagen-budget.md` adapted: multiple takes ≠ over-budget;
-  budget is across the whole session, not per take.
+  budget is across sessions, not per take.
 
 **Test scenarios:**
 
-- **Happy path:** Best take achieves 5/5; trim plan straightforward.
-- **Edge case:** Multiple takes score 4/5 with different strengths;
-  Briggsy picks based on water-beads-rule preference (most alive).
-- **Edge case:** No take hits 4+/5 → recapture session; document
-  why.
+- **Happy path**: a take scores 6/6, passes fluency, passes
+  trim-viability; Briggsy approves.
+- **Edge case — best take has negative head-trim**: rejected;
+  recapture in next session with earlier draws-into-the-round
+  calibration.
+- **Edge case — all takes score 5/6 with different strengths**:
+  apply tiebreaker hierarchy.
+- **Edge case — Approach III seed position drifts (BURNED keeps
+  landing too early or too late)**: recalibrate N for next session.
 
 **Verification:**
 
-- Takes captured + saved.
-- `take-selection.md` documents per-take rubric scores.
-- Selected take saved as `gameplay-raw.mp4`.
-- Briggsy signs off on selection.
+- ≥ 3 takes captured.
+- `capture-log.md` records rubric + fluency + trim-viability.
+- Selected take saved as `gameplay-raw.<ext>`.
+- `briggsy-review-5.4.signoff` written by Briggsy git author.
 
 ---
 
-### Unit 5.5 — Gameplay Post-Processing
+### Unit 5.5 — Post-Processing (Single-Pass Re-Encode + Atomic Swap)
 
-- [ ] **Unit 5.5: Gameplay Post-Processing**
+- [ ] **Unit 5.5: Post-Processing (Single-Pass Re-Encode + Atomic Swap)**
 
-**Goal:** Trim selected take to 18s + aspect-fit to 1920×1080 + strip
-audio + final encode as `public/gameplay.mp4` ready for Phase 4 S05
-import.
+**Goal:** Trim selected take to exactly 540 frames + place
+BURNED-draw at clip-relative frame 160 + aspect-fit to 1920×1080 +
+strip audio + atomic-swap into `public/trailer/gameplay.mp4`.
 
 **Requirements:** R8 (16:9 landscape), R13.
 
-**Dependencies:** Unit 5.4 (gameplay-raw.mp4 selected).
+**Dependencies:** Unit 5.4 (gameplay-raw.<ext> selected + head-trim
+plan recorded).
 
 **Files:**
 
-- Create: `videos/trailer/public/gameplay.mp4` — final.
-- Create: `videos/trailer/scripts/post-process-gameplay.ts` — the
-  processing script.
-- Create: `videos/trailer/sample-eval/gameplay-capture/post-process.md`
+- Create: `scripts/post-process-gameplay.ts` — the processing
+  script (Phase 5 owns)
+- Output: `public/trailer/gameplay.mp4` — final (gitignored per
+  Phase 4 Unit 4.6 contract)
+- Append to: `capture-log.md` — post-process log section
 
 **Approach:**
 
-**Step 1 — Trim head + tail per Unit 5.4 plan.**
+**Step 1 — Single-pass frame-accurate re-encode.**
 
-Using `execFileSync` (project security pattern):
-
-```ts
-// videos/trailer/scripts/post-process-gameplay.ts
-import { execFileSync } from 'node:child_process';
-
-const RAW = 'videos/trailer/sample-eval/gameplay-capture/gameplay-raw.mp4';
-const TRIMMED = 'videos/trailer/sample-eval/gameplay-capture/gameplay-trimmed.mp4';
-const FINAL = 'videos/trailer/public/gameplay.mp4';
-
-// From take-selection.md: head trim 112 frames, total 540 frames = 18s
-const HEAD_SECONDS = 112 / 30;  // 3.733s
-const DURATION_SECONDS = 540 / 30;  // 18.0s
-
-// Trim with stream copy (lossless)
-// SAFE: argv array
-execFileSync('ffmpeg', [
-  '-y',
-  '-ss', String(HEAD_SECONDS),
-  '-i', RAW,
-  '-t', String(DURATION_SECONDS),
-  '-c', 'copy',
-  '-an',                          // strip audio
-  TRIMMED,
-]);
-console.log('OK trimmed');
-```
-
-**Step 2 — Aspect-fit + final encode.**
-
-If Mechanism B captured at native 1920×1080, no aspect adjustment
-needed. If Mechanism A captured at 1280×720, upscale to 1920×1080.
+Per framework-docs + best-practices findings: the pre-deepening
+two-stage stream-copy-then-re-encode pattern is WRONG. `ffmpeg -ss
+BEFORE -i + -c copy` drifts to nearest keyframe (up to 8s on
+default OBS GOP). Single-pass re-encode with `-ss AFTER -i` +
+`-frames:v 540` is frame-precise.
 
 ```ts
-// Final encode: scale to 1920×1080, H.264 CRF 18, 30fps, no audio
-// SAFE: argv array
+// scripts/post-process-gameplay.ts (DIRECTIONAL)
+// SAFE: execFileSync with argv arrays (project security convention)
+import { execFileSync } from 'node:child_process'
+import { renameSync } from 'node:fs'
+
+// Inputs from take-selection.md / capture-log.md:
+// SOURCE = videos/trailer/sample-eval/gameplay-capture/gameplay-raw.<ext>
+// HEAD_TRIM_FRAMES = (BURNED_DRAW_RAW_FRAME - 160)  ← example: 478 - 160 = 318
+const SOURCE = 'videos/trailer/sample-eval/gameplay-capture/gameplay-raw.mp4'
+const STAGING = 'public/trailer/gameplay.mp4.new'
+const FINAL = 'public/trailer/gameplay.mp4'
+
+const HEAD_TRIM_FRAMES = 318  // EXAMPLE — substitute from capture-log.md per take
+const HEAD_TRIM_SECONDS = HEAD_TRIM_FRAMES / 30
+
+// Single-pass re-encode. `-ss AFTER -i` is frame-accurate
+// (decode-side seek). `-frames:v 540` is count-precise (NOT `-t`
+// which is wallclock-based and rounds). `fps=30` filter (NOT `-r 30`)
+// properly drops/duplicates frames if source is 60fps. `-map 0:v:0`
+// + `-an` strips audio.
 execFileSync('ffmpeg', [
   '-y',
-  '-i', TRIMMED,
-  '-vf', 'scale=1920:1080:force_original_aspect_ratio=increase,crop=1920:1080,setsar=1',
+  '-i', SOURCE,
+  '-ss', HEAD_TRIM_SECONDS.toString(),
+  '-frames:v', '540',
+  '-vf', 'fps=30,scale=1920:1080:force_original_aspect_ratio=increase,crop=1920:1080,setsar=1',
   '-c:v', 'libx264',
   '-crf', '18',
-  '-preset', 'slow',              // higher-quality encode for trailer asset
+  '-preset', 'slow',
   '-pix_fmt', 'yuv420p',
-  '-r', '30',                      // force 30fps
-  '-an',                          // strip audio (redundant; already stripped)
+  '-map', '0:v:0',
+  '-an',
   '-movflags', '+faststart',
-  FINAL,
-]);
-console.log('OK encoded to', FINAL);
+  STAGING,
+], {
+  // execFileSync maxBuffer default 1MB — too small for slow-preset
+  // 1080p ffmpeg stderr (per-frame progress). Raise to 50MB defensive
+  // bound; drain stderr via stdio passthrough.
+  maxBuffer: 50 * 1024 * 1024,
+  stdio: ['ignore', 'pipe', 'inherit'],
+})
+console.log(`OK encoded ${STAGING}`)
 ```
 
-**Step 3 — Duration + dimensions verification.**
+**Step 2 — `pnpm verify:gameplay-clip` gate** (Phase 4-owned script).
 
 ```ts
-// SAFE: argv array
-const out = execFileSync('ffprobe', [
-  '-v', 'error',
-  '-select_streams', 'v:0',
-  '-show_entries', 'stream=width,height,duration,r_frame_rate',
-  '-of', 'json',
-  FINAL,
-], { encoding: 'utf-8' });
-const probe = JSON.parse(out);
-const stream = probe.streams[0];
-console.log(`Final clip:
-  Dimensions: ${stream.width}×${stream.height} (expected 1920×1080)
-  Duration: ${stream.duration}s (expected 18.0s)
-  Frame rate: ${stream.r_frame_rate} (expected 30/1)
-`);
+// Continued in scripts/post-process-gameplay.ts
+// Invoke Phase 4's verify script (do NOT re-implement)
+try {
+  execFileSync('pnpm', ['verify:gameplay-clip', STAGING], {
+    stdio: 'inherit',
+    maxBuffer: 50 * 1024 * 1024,
+  })
+  console.log('OK verify:gameplay-clip passed')
+} catch (err) {
+  console.error('FAIL verify:gameplay-clip — review staging file:', STAGING)
+  console.error('Common causes: frame count != 540, audio stream present, dims != 1920×1080.')
+  // Do NOT mv staging to final on failure; surface for re-encode.
+  process.exit(1)
+}
 ```
 
-Expected output:
-- 1920×1080
-- 18.000s ±0.05s
-- 30/1 frame rate
+`pnpm verify:gameplay-clip` (Phase 4 deliverable at
+`scripts/verify-gameplay-clip.ts`) asserts:
+- Exactly 540 video frames (`stream=nb_frames` via ffprobe)
+- Dimensions 1920×1080
+- No audio stream (`-select_streams a` returns empty)
+- First-frame YAVG luminance (logged; warns if > 76.5 — informs
+  head-fade engagement, not a hard fail)
 
-**Step 4 — Final inspection.**
+**Step 3 — Atomic swap.**
 
-Open `public/gameplay.mp4` in any player. Verify:
-- Plays smoothly start-to-end
-- BURNED draw lands at ~12.0s in (Phase 4 S05 relative frame 360)
-- No audio (silent track)
-- Composition supports iris-wipe overlay in last ~3 seconds
+```ts
+// Continued in scripts/post-process-gameplay.ts
+// Atomic rename — on Windows, fs.renameSync over open file throws EBUSY.
+// Document the "close Remotion studio before swap" prerequisite.
+try {
+  renameSync(STAGING, FINAL)
+  console.log(`OK atomic swap ${STAGING} → ${FINAL}`)
+} catch (err) {
+  console.error('FAIL atomic swap — is Remotion studio holding a handle?')
+  console.error('Close pnpm studio + retry, or rm the destination first.')
+  throw err
+}
+```
+
+**Step 4 — Phase 4 lifecycle trigger.**
+
+After the swap, Phase 4's `sync-gameplay-clip.ts` regenerates
+`gameplay-clip-source.ts` on next `pnpm render` / `pnpm studio` /
+`pnpm install` via the prerender/prestudio/postinstall lifecycle
+hooks. Phase 5 doesn't invoke it directly — but Unit 5.6 will need
+to `pnpm sync-gameplay && pnpm render` explicitly to ensure pickup.
 
 **Step 5 — Post-process log.**
 
-```md
-# Gameplay Post-Process Log
+Append to `capture-log.md`:
 
-- Raw take: take-06.mp4 (32.4s)
-- Head trim: 3.733s (112 frames)
-- Tail trim: <calculated>s
-- Final duration: 18.000s
-- Final dimensions: 1920×1080
-- Final framerate: 30fps
-- Audio: stripped
-- Encode settings: H.264 CRF 18, preset slow, yuv420p, faststart
+```md
+## Post-process log (Unit 5.5)
+
+- Raw take: gameplay-raw.mp4 (selected from take-06)
+- Source duration: 30.2s (906 frames @ 30fps native)
+- Head trim: 318 frames (10.6s)
+- Output frames: 540 (18.000s)
+- Output dimensions: 1920×1080
+- Output framerate: 30/1
+- Audio: stripped (`-an` + `-map 0:v:0`)
+- Encode: libx264 CRF 18 preset slow yuv420p faststart
+- First-frame YAVG: <value from verify-gameplay-clip log>
+  - YAVG ≤ 76.5: natural fade-friendly; head-fade cosmetic
+  - YAVG > 76.5: head-fade is load-bearing for chapter-break
 - File size: <N> MB
+- Atomic swap: gameplay.mp4.new → gameplay.mp4
+- verify:gameplay-clip: PASS
 ```
 
 **Patterns to follow:**
 
-- FFmpeg trim with stream-copy: https://ffmpeg.org/ffmpeg.html#Stream-copy
-- FFmpeg scale + crop: https://ffmpeg.org/ffmpeg-filters.html#scale-1
-- Project security rule: `execFileSync` with argv arrays.
+- FFmpeg seek-after-input for frame accuracy:
+  https://trac.ffmpeg.org/wiki/Seeking
+- `execFileSync` argv arrays (project security convention per
+  Phase 2 deepening).
+- Insight 026 — maxBuffer + stdio drain for ffmpeg.
+- Phase 4 atomic-swap contract (line 2722-2724).
+- Phase 4 `verify-gameplay-clip.ts` ownership (do NOT re-implement).
 
 **Test scenarios:**
 
-- **Happy path:** Trim + encode produces 18.0s 1920×1080 30fps MP4.
-- **Edge case:** Mechanism A 720p source → upscale produces visible
-  but acceptable blur; Briggsy reviews trade-off.
-- **Edge case:** Frame rate mismatch (source 60fps from OBS) →
-  re-encode forces 30fps; check no motion-judder artifacts.
-- **Security:** No shell-string interpolation in FFmpeg calls.
+- **Happy path**: single-pass re-encode produces 540-frame 1920×1080
+  30fps MP4; verify gate passes; atomic swap succeeds.
+- **Mechanism A source is WebM**: ffmpeg accepts WebM input; encode
+  to MP4 transcodes cleanly (no `-c copy` needed because container
+  + codec both change).
+- **Edge case — verify gate fails on frame count drift**: do NOT
+  swap; re-encode with adjusted parameters.
+- **Edge case — Windows EBUSY on rename**: close Remotion studio +
+  retry.
+- **Edge case — frame rate mismatch** (source 60fps from OBS):
+  `fps=30` filter properly decimates; no judder.
 
 **Verification:**
 
-- `public/gameplay.mp4` exists at expected dimensions + duration.
-- Probe output matches spec.
-- Visual inspection confirms BURNED-draw timing + no audio.
-- `post-process.md` logs the encode.
+- `public/trailer/gameplay.mp4` exists at expected dimensions +
+  duration.
+- `pnpm verify:gameplay-clip ./public/trailer/gameplay.mp4` PASSES
+  (re-run post-swap for belt-and-suspenders).
+- BURNED-draw lands at clip-relative frame 160 (visual scrub
+  confirms).
+- `capture-log.md` post-process section complete.
 
 ---
 
-### Unit 5.6 — Phase 4 Re-render with Real Clip
+### Unit 5.6 — Phase 4 Re-render + R13 Acceptance
 
-- [ ] **Unit 5.6: Phase 4 Re-render with Real Clip**
+- [ ] **Unit 5.6: Phase 4 Re-render + R13 Acceptance**
 
 **Goal:** Re-run Phase 4's full composition render with the real
-`gameplay.mp4` (replacing the placeholder). Verify S05 reads as
-intended; the real-gameplay closer lands per R13 acceptance.
+`gameplay.mp4` (replacing the placeholder via the sync-gameplay
+lifecycle hook). Verify S05 reads as intended. R13 acceptance via
+fluency gate.
 
 **Requirements:** R13.
 
-**Dependencies:** Unit 5.5 (gameplay.mp4 final).
+**Dependencies:** Unit 5.5 (gameplay.mp4 final + verify passed).
 
 **Files:**
 
-- Re-render: `videos/trailer/out/trailer-preview.mp4` — full
-  composition with real gameplay.
-- Create: `videos/trailer/sample-eval/gameplay-capture/phase-4-rerender.md`
+- Re-render: `videos/trailer/out/trailer-scene-build.mp4` — full
+  composition with real gameplay
+- Append to: `capture-log.md` — re-render verification section
+- Create: `videos/trailer/sample-eval/gameplay-capture/briggsy-review-5.6.signoff`
 
 **Approach:**
 
-**Step 1 — Re-render.**
+**Step 1 — Re-render with explicit lifecycle invocation.**
 
-The Phase 4 S05 scene file (`S05_GameplayDissolve.tsx`) imports
-`staticFile('gameplay.mp4')` via `<OffthreadVideo>`. Unit 5.5
-overwrote the placeholder at this path. No Phase 4 code edit needed
-— next `pnpm render` picks up the new clip.
-
-```
+```bash
 cd videos/trailer
+# Remove stale render to avoid reviewing a cached output
+rm -f out/trailer-scene-build.mp4
+# Explicit sync-gameplay (also runs via prerender hook but be explicit)
+pnpm sync-gameplay
+# Render
 pnpm render
 ```
 
+Phase 4's `sync-gameplay-clip.ts` detects
+`public/trailer/gameplay.mp4` exists and regenerates
+`gameplay-clip-source.ts` to point at the real clip. The next
+render picks it up.
+
 **Step 2 — Full-runtime verification.**
 
-Open the new `out/trailer-preview.mp4`. Verify against Phase 4 Unit
+Open `out/trailer-scene-build.mp4`. Verify against Phase 4 Unit
 4.10's verification card:
 
-- All 12 sample frames pass §2 (including the 2 S05 samples).
-- BURNED-draw moment lands at frame 2400 (within ±5 frames of
-  Phase 1 Unit 1.2 Step 6 spec).
-- Scream beat (if R5 kept) aligns with the gameplay clip's BURNED
-  draw.
-- Iris-wipe at S05→S06 transitions cleanly out of the gameplay clip.
+- All 12 sample frames pass §2 Quality Bar (including the 2 S05
+  samples at relative frames 90 + 240).
+- BURNED-draw moment lands at absolute frame 2200 (= S05 start
+  2040 + relative 160), ±2 frames.
+- Scream cue (if R5=kept) at absolute frame 2400 (= S05 start +
+  relative 360) lands on visible reaction window.
+- Iris-wipe at S05→S06 transitions cleanly out of the gameplay
+  clip.
+- S05HeadFadeFromBlack overlay carries the hard-cut chapter break.
 
-**Step 3 — R13 acceptance check.**
+**Step 3 — R13 acceptance via fluency gate** (insight 050;
+LOAD-BEARING).
 
-Per brainstorm Success Criteria: *"the closing gameplay dissolve [is
-recognized as] a real playable game by an engineering-peer viewer."*
+Per brainstorm Success Criteria: *"the closing gameplay dissolve
+[is recognized as] a real playable game by an engineering-peer
+viewer."*
 
-Briggsy reviews S05 segment specifically:
-- Reads as REAL game in progress? (not screen recording of empty
-  lobby)
-- Multiplayer dynamic visible? (multiple players or phones)
-- Card play action visible? (taps + animations land)
-- Dramatic moment lands? (BURNED draw)
-- Reaction visible? (human response to BURNED)
+Briggsy watches the full S05 + S06 segment ONCE, full-speed,
+WITHOUT a property checklist. Single open-text question:
 
-R13 PASS if 4/5. FAIL routes to: regrade take selection (Phase 5
-Unit 5.4) or recapture.
+> *"Does watching this feel like watching real friends play BURNED?"*
 
-**Step 4 — Documentation.**
+If YES: R13 PASS.
+
+If NO: surface specifically what didn't land (not which property
+failed). Routes:
+- "Reaction reads as forced" → recapture session
+- "Game state looks staged" → recapture with different Approach III
+  seed position
+- "DramaOverlay missed the moment" → check post-process trim math
+- "Iris-wipe edge competes with motion" → recapture Shot 6 with
+  tighter freeze
+- "S05 head-fade reads as flash" → re-pick a darker-frame-0 take
+
+**Step 4 — Sentinel + documentation.**
+
+Append to `capture-log.md`:
 
 ```md
-# Phase 4 Re-render with Real Gameplay — Verification
+## Phase 4 re-render + R13 acceptance (Unit 5.6)
 
-## Render
-- Date: <YYYY-MM-DD>
-- Time: <N> minutes
-- File size: <N> MB
+- Re-render date: <YYYY-MM-DD>
+- Render duration: <N> minutes
+- Output file size: <N> MB
+- gameplay-clip-source.ts: pointing at trailer/gameplay.mp4 (real)
+  (NOT placeholder)
 
-## Verification
-- [ ] S05 segment plays real gameplay clip
-- [ ] BURNED draw at frame 2400 ±5 frames
-- [ ] Scream beat aligned (if R5 kept)
-- [ ] Iris-wipe at frame 2535 transitions cleanly
-- [ ] §2 sample frames at 2100 + 2355 pass
+### §2 sample frame verification
+- [ ] S05 relative frame 0 (head-fade): § PASS
+- [ ] S05 relative frame 160 (BURNED draw): § PASS
+- [ ] S05 relative frame 240 (Dash VO): § PASS
+- [ ] S05 relative frame 360 (scream cue if R5=kept): § PASS
+- [ ] S05 relative frame 510 (iris-wipe): § PASS
 
-## R13 acceptance (5 criteria)
-- [ ] Reads as REAL game (not empty lobby)
-- [ ] Multiplayer visible
-- [ ] Card play action visible
-- [ ] Dramatic moment lands
-- [ ] Reaction visible
-- Verdict: PASS / FAIL
+### R13 fluency gate
+- Verdict: <PASS | FAIL>
+- If FAIL: what didn't land: <Briggsy text>
+- If FAIL: route: <recapture | re-trim | re-pick take>
 
-## Briggsy sign-off
-- S05 with real gameplay clip: APPROVED / ITERATE
+### Briggsy sign-off
+<PASS = briggsy-review-5.6.signoff written; FAIL = unit reopens>
+```
+
+```bash
+# Briggsy commits the signoff sentinel
+touch videos/trailer/sample-eval/gameplay-capture/briggsy-review-5.6.signoff
+git add videos/trailer/sample-eval/gameplay-capture/briggsy-review-5.6.signoff
+git commit -m "phase-5: briggsy-review-5.6.signoff (R13 accepted)"
 ```
 
 **Patterns to follow:**
 
 - Phase 4 Unit 4.10 verification pattern.
 - `feedback-verify-before-presenting.md` — render-MP4 review.
+- Insight 050 — fluency over property.
+- Phase 4 briggsy-sentinel git-author verification.
 
 **Test scenarios:**
 
-- **Happy path:** Re-render succeeds; full verification passes;
-  R13 PASS.
-- **Edge case:** BURNED-draw frame drift from target → re-trim in
-  Unit 5.5 (slide head trim by ±N frames); re-render.
-- **Edge case:** S05 visual reads as less alive than placeholder →
-  Phase 5 Unit 5.4 take-selection reopen; recapture if needed.
+- **Happy path**: re-render succeeds; verify-gameplay-clip remains
+  PASS; fluency YES; R13 ACCEPTED.
+- **Edge case — BURNED-draw frame drift**: re-pick a different
+  take OR adjust head-trim in Unit 5.5.
+- **Edge case — S05 reads less alive than placeholder**: take
+  selection reopen.
+- **Edge case — Phase 4 composition changed during Phase 5
+  execution**: re-read Phase 4 Unit 4.6 contract; reconcile any
+  drift before re-render.
 
 **Verification:**
 
-- `out/trailer-preview.mp4` re-rendered with real gameplay clip.
-- `phase-4-rerender.md` documents verification.
-- Briggsy signs off on S05 + R13 acceptance.
+- `out/trailer-scene-build.mp4` re-rendered with real gameplay.
+- Fluency gate YES.
+- `briggsy-review-5.6.signoff` written by Briggsy git author.
+- `capture-log.md` re-render section complete.
 
 ---
 
 ## System-Wide Impact
 
-- **Interaction graph:** Phase 5 ingests deploy-migration completion
-  (or local-dev fallback) + Phase 1 S05 cue map + Phase 4 S05 scene
-  + Phase 2 sparse-Dash + scream audio cues. Produces gameplay.mp4
-  consumed by Phase 4 S05. Re-renders Phase 4 deliverable.
+- **Interaction graph:** Phase 5 ingests Unit 5.0 preflight
+  (deploy migration state, insight 035 status, harness +
+  dev-actions availability) + Phase 1 S05 cue map + Phase 4 S05
+  scene + Phase 2 sparse-Dash + scream audio cues. Produces
+  `public/trailer/gameplay.mp4` consumed by Phase 4 S05's
+  `<OffthreadVideo>`. Re-renders Phase 4's deliverable via
+  `sync-gameplay-clip` lifecycle hook.
 - **Error propagation:** Failed capture → recapture session →
-  iterate. Failed R13 acceptance → re-evaluate take selection or
-  recapture.
+  iterate. Failed `verify:gameplay-clip` gate → re-encode with
+  adjusted parameters (do NOT swap). Failed R13 fluency → reopen
+  Unit 5.4 take selection or recapture.
 - **State lifecycle risks:** Phase 5 depends on BURNED being
-  deployed + accessible. Deploy migration in flight at TODO.md §1;
-  Phase 5 cannot start until that's resolved (or fallback to local).
-- **API surface parity:** Phase 5 USES BURNED's user-facing surface
-  to capture gameplay. No BURNED code modification.
+  deployed + accessible OR local-dev fallback working with phones
+  on LAN. Atomic-swap pattern guards against partial-file reads
+  during in-flight Remotion renders. `gameplay-clip-source.ts`
+  lifecycle hook (Phase 4-owned) flips source-of-truth on
+  prerender/prestudio/postinstall.
+- **API surface parity:** Phase 5 USES BURNED's user-facing
+  surface to capture gameplay + uses dev-action surface
+  (`dev-stack-deck`, `dev-give-card`) for Approach III seeding. No
+  BURNED game-code modification beyond optional `data-testid`
+  attribute additions if Mechanism A path is invoked and existing
+  harness selectors prove insufficient.
 - **Integration coverage:** Phase 4 S05 scene imports the clip via
   `<OffthreadVideo>`; integration validated by Unit 5.6 re-render.
-- **Unchanged invariants:** BURNED game code untouched. Phone bundle
-  budget unaffected. Trailer remains isolated.
+  `pnpm verify:gameplay-clip` ffprobe gate catches contract drift.
+- **Unchanged invariants:** BURNED game code untouched. Phone
+  bundle budget unaffected. Trailer remains isolated.
 
 ---
 
@@ -1128,69 +1997,206 @@ Unit 5.4) or recapture.
 
 | Risk | Likelihood | Impact | Mitigation |
 |------|-----------|--------|------------|
-| Deploy migration drags out past Phase 5 start | Medium (in flight 2026-05-16) | High (blocks Phase 5) | Local-dev fallback documented; trailer URL = localhost; visual quality unaffected. |
-| Mechanism B logistics fail (no friends available) | Medium | Medium | Mechanism A fallback. Visual quality trade-off documented in mechanism-eval.md. |
-| Playwright headless capture doesn't render BURNED's GSAP animations | Medium | High (Mechanism A fails) | Spike in Unit 5.1 validates animations capture. If fails, fall back to OBS even at higher logistical cost. |
-| BURNED-draw timing variance across takes too wide | Medium | Medium | Multiple-takes Approach I; pick the take with BURNED at closest target frame. Phase 4 syncs by trim. |
-| Real-device capture has phone bezel / hand obstruction over critical chrome | Medium | Low | Reshoot with adjusted framing. |
-| Mic accidentally captures player voice violating brainstorm Scope | Low | Medium | OBS audio sources muted in checklist (Unit 5.3 Step 2 obs-scene-config). Phase 5 Unit 5.5 strips audio as belt-and-suspenders. |
-| Captured clip reads as less alive than Phase 4 placeholder | Low | Medium | Take selection rubric favors alive-ness; multiple sessions allowed. |
-| OBS recording settings produce file that won't play in Remotion | Low | Medium | Unit 5.5 re-encode to known-good H.264 yuv420p MP4. |
-| Re-render time after gameplay swap blocks Phase 6 | Low | Low | Re-render is ~6–9 minutes; absorb in Phase 6 schedule. |
-| FFmpeg trim introduces audio-video desync (despite strip) | Low | Low | Stream-copy trim preserves video; audio strip happens before trim. |
-| Phase 4 S05 scene file changed during Phase 5 idle, breaks clip integration | Low | Low | Re-render in Unit 5.6 catches any breakage immediately. |
+| Deploy migration drags past Phase 5 deadline (2026-05-24) | Medium (5 single-line changes uncommitted) | Medium | Local-dev fallback documented + concrete LAN setup checklist in Unit 5.0; trailer URL = LAN IP; visual quality unaffected. |
+| Mechanism B logistics fail (no friends available) | Medium | Medium | Mechanism A escalation via playtest-harness extension. Visual quality trade-off documented (VP8 ~1Mbps ceiling) in capture-log.md. |
+| Mechanism A spike fails GSAP/Framer fidelity acceptance | Medium | High (forces back to B) | Spike at Unit 5.1 Step A.6 explicitly verifies DramaOverlay BURNED beat at full duration. If fail, B logistics escalate even at higher cost. |
+| BURNED-draw timing variance across takes with Approach I fallback | High (without Approach III) | Medium | Approach III default — deterministic deck-seeding via `pnpm dev:stack` collapses variance. Fall back to Approach I only if dev-actions unavailable. |
+| Real-device capture has phone bezel / hand obstruction over critical chrome | Medium | Low | Director's-eye production guidance (camera 30°, mobile-safe-square awareness); reshoot with adjusted framing if needed. |
+| Mic accidentally captures player voice | Low | Low | Three-layer audio defense: capture silent + `ffmpeg -an` + `<OffthreadVideo muted />`. `verify:gameplay-clip` audio-stream-absence gate. |
+| Captured clip reads as less alive than Phase 4 placeholder | Low | Medium | Take selection fluency gate (insight 050) override property rubric on ties; recapture allowed across sessions. |
+| OBS recording settings produce file that won't play in Remotion | Low | Medium | Unit 5.5 re-encode to known-good H.264 yuv420p MP4; Phase 4's `verify-gameplay-clip` ffprobe gate validates Remotion-compatibility. |
+| Re-render time after gameplay swap blocks Phase 6 | Low | Low | Re-render is ~6-9 minutes; absorb in Phase 6 schedule. |
+| FFmpeg trim introduces frame-count drift (off-by-N) | Low (single-pass re-encode + `-frames:v 540`) | High | `verify:gameplay-clip` asserts exactly 540 frames; gate failure prevents swap. |
+| Windows EBUSY on atomic rename (Remotion studio holding handle) | Medium (Briggsy is Windows-primary) | Low | Documented in Unit 5.5 Step 3; close studio before swap. |
+| Phase 4 S05 scene file changed during Phase 5 idle, breaks integration | Low | Low | Re-render in Unit 5.6 catches breakage; Phase 4 contract pinned by `verify:gameplay-clip` gate. |
+| Insight 035 regresses (someone moves breathe animation back onto `.action`) | Very Low | High | Unit 5.0 preflight Step 2 explicitly verifies; harness CI tests would catch it before Phase 5 entry. |
+| Pre-flight deploy migration verification fails due to wrong-URL guess | Medium | Low | Probe BOTH candidate URLs (`burned.pages.dev` AND `burned-cxa.pages.dev`); record which responds. |
+| First-frame YAVG > 76.5 (bright frame 0) | Medium (depends on take) | Low (cosmetic) | Phase 4's mandatory `S05HeadFadeFromBlack` overlay carries the chapter break regardless. Optimization opportunity, not correctness gate. |
+| Iris-wipe collapses on empty frame center | Medium (without direction) | Medium | Iris-frame composition test at take selection (frame 510 pause). Reject takes that fail. |
 
 ---
 
 ## Open Questions
 
-### Resolved During Planning
+### Resolved During Planning (deepening pass)
 
-- **Capture mechanism**: TBD by Unit 5.1 evaluation. Default
-  hypothesis Mechanism B (OBS + real devices) per water-beads rule;
-  Mechanism A fallback.
-- **Audio policy**: capture silent + Unit 5.5 strip as belt-and-
-  suspenders.
-- **Shot list**: 5 shots, 18 seconds total, BURNED-draw climax at
-  shot 4.
-- **Take engineering**: Approach I (multiple takes natural play), not
-  Approach II (engineered deck) — alive-ness wins.
-- **Deploy migration dependency**: Phase 5 blocked until migration
-  complete; local-dev fallback documented.
-- **Final format**: 1920×1080 H.264 CRF 18 30fps no-audio MP4.
+- **Capture mechanism**: Mechanism B locked default per
+  water-beads + visual-quality ceiling. Mechanism A as escalation
+  via playtest-harness extension. Mechanism C cut entirely.
+- **BURNED-draw target frame**: clip-relative frame **160** (NOT
+  360). Scream cue at frame 360 is a separate reaction beat.
+- **Trim ownership**: Phase 5 trims; Phase 4 consumes pre-trimmed.
+  No `gameplay-markers.json`.
+- **Approach III adopted**: deterministic deck-seeding via
+  `pnpm dev:stack` is the default. Approach I (natural multi-take)
+  is fallback only.
+- **Audio policy**: 3-layer belt-and-suspenders (capture silent +
+  `ffmpeg -an` + `<OffthreadVideo muted />`).
+- **Output path**: `public/trailer/gameplay.mp4` per ADR #15.
+  Sample-eval at `videos/trailer/sample-eval/gameplay-capture/`.
+- **Atomic swap**: write `.new` → `pnpm verify:gameplay-clip` →
+  `mv` on PASS.
+- **Post-process**: single-pass re-encode (libx264 CRF 18 preset
+  slow); NO stream-copy intermediate; `-ss AFTER -i` for frame
+  accuracy; `fps=30` filter (NOT `-r 30`); `-map 0:v:0 -an` audio
+  strip.
+- **`verify:gameplay-clip` consumption**: Phase 4 owns the script;
+  Phase 5 invokes via `pnpm verify:gameplay-clip` — does NOT
+  re-implement.
+- **`scripts/generate-placeholder-gameplay.ts` ownership**: Phase 5
+  owns. Phase 4 sketches it but designates Phase 5 ownership per
+  Phase 4 deepening cross-phase dep.
+- **Take selection**: insight 050 fluency gate overrides property
+  rubric on ties; Briggsy-eye is load-bearing.
+- **Sentinel files**: `briggsy-review-5.4.signoff` + `briggsy-review-5.6.signoff`
+  per Phase 4 git-author pattern.
+- **Exit document**: `PHASE-5-EXIT.md` (see template below).
+- **Production URL**: probe both `burned.pages.dev` (Pages project
+  name = `burned`) and `burned-cxa.pages.dev` (likely canary) at
+  Unit 5.0 preflight; default to whichever responds 200.
+- **Final format**: 1920×1080 H.264 CRF 18 30fps no-audio MP4 with
+  faststart.
 
 ### Deferred to Implementation
 
-- **Specific URL** (production migration target): may shift between
-  Phase 5 start and end; `BURNED_URL` env var configures.
-- **Real-device friend recruitment**: Briggsy / Harry / others —
-  scheduled per session availability.
-- **Specific shot 4 take selection**: depends on capture sessions;
-  Unit 5.4 picks.
-- **Whether iris-wipe edge composition needs cropping the clip's
-  last frames**: Phase 4 may iterate after Unit 5.6 if iris-wipe
-  doesn't land cleanly.
-- **Mechanism A scripted-play sequence**: if Mechanism A selected,
-  exact play sequence (which player taps which card when) needs
-  implementation; deferred to Unit 5.3 execution.
+- **Specific URL** (production migration target): `BURNED_URL` env
+  var configures; default determined at Unit 5.0 preflight.
+- **Approach III seed-position N calibration**: depends on
+  game-flow rate per capture session; calibrate at Unit 5.4
+  Session 1.
+- **R5 outcome alignment specifics**: read from `PHASE-0-EXIT.md`
+  at Unit 5.4 pre-flight; if scream cut, take-selection weighs
+  BURNED-draw alignment as primary; if scream kept, also weighs
+  visible reaction at relative frame 360.
+- **Real-device friend recruitment scheduling** (Mechanism B):
+  Briggsy / Harry / others — scheduled per session availability.
+- **OBS Hybrid MP4 vs MKV+remux**: depends on installed OBS
+  version (30/31 → MKV; 32+ → Hybrid MP4); verified at Unit 5.0
+  preflight.
+- **NVENC vs x264 encoder choice**: depends on Briggsy's GPU;
+  verified at Unit 5.0 preflight.
+- **Local-dev LAN setup specifics** (firewall config, WSS scheme
+  for board client): verified at Unit 5.0 preflight if fallback
+  invoked.
 
 ---
 
 ## Documentation / Operational Notes
 
-- All Phase 5 artifacts land in
+- All Phase 5 capture artifacts land at
   `videos/trailer/sample-eval/gameplay-capture/` (takes, logs,
-  evals) and `videos/trailer/public/gameplay.mp4` (final clip).
+  evals, sentinels). The **only** Phase-5-produced asset that goes
+  to BURNED root `public/` is the final `gameplay.mp4` (per ADR #15).
 - Capture sessions are physical events (Mechanism B): schedule
-  + 1–2 friend recruitment + 2-hour window per session.
+  + 1-2 friend recruitment + 2-hour window per session.
+- Session budget: 4 sessions total (1 setup + 2 capture + 1
+  contingency).
 - `BURNED_URL` env var configures the capture target URL —
-  production or local-dev fallback.
+  production or local-dev LAN IP fallback.
 - `execFileSync` argv arrays throughout (project security
-  convention).
-- Take selection is Briggsy's judgment call; rubric guides but
-  doesn't override.
-- R13 acceptance check (Unit 5.6) is the load-bearing pass — if S05
-  doesn't sell "real game," the closer doesn't land.
+  convention per Phase 2 deepening).
+- Take selection: rubric is CALIBRATION FLOOR; fluency gate is
+  LOAD-BEARING. Don't ship a 6/6 take that reads dead.
+- `pnpm verify:gameplay-clip` (Phase 4-owned) is the cross-phase
+  contract gate — Phase 5 does NOT re-implement.
+- Atomic-swap (`.new` → verify → `mv`) prevents partial-file reads
+  during in-flight Remotion renders.
+- Briggsy-sentinel git-author check (Phase 4-owned `pnpm
+  verify:briggsy-sentinels`) — Phase 5's signoffs must be authored
+  by `briggsy007@gmail.com`.
+
+### PHASE-5-EXIT.md template
+
+Phase 5 ships a single exit document Phase 6 reads:
+
+```md
+# Phase 5 Exit — <YYYY-MM-DD>
+
+## Capture mechanism
+- Locked: <A | B>
+- Production URL used: <burned.pages.dev | burned-cxa.pages.dev | local-dev LAN>
+- Approach: <III | I fallback>
+- Friends recruited: <names if Mechanism B>
+- Sessions: <count> (setup: <N>, capture: <N>, contingency: <N>)
+
+## Selected take
+- Filename: take-NN.<ext>
+- BURNED-draw raw frame: <N>
+- Head-trim frames: <N>
+- Output clip-relative BURNED-draw frame: 160
+
+## Output
+- Path: public/trailer/gameplay.mp4
+- Frames: 540 (verified)
+- Dimensions: 1920×1080
+- Framerate: 30/1
+- Audio: stripped (no streams)
+- First-frame YAVG: <value>
+  - Head-fade engagement: <cosmetic | load-bearing>
+- File size: <N> MB
+- SHA256: <hash if recorded>
+
+## R5 alignment
+- Scream cue outcome (from PHASE-0-EXIT.md): <kept | cut>
+- If kept: scream cue at scene-relative frame 360 lands on:
+  <description of visible reaction at that frame>
+
+## Briggsy sentinels
+- briggsy-review-5.4.signoff: committed by <git-author>
+- briggsy-review-5.6.signoff: committed by <git-author>
+
+## Phase 6 read-points
+- Phase 6 acceptance reads: out/trailer-scene-build.mp4 (re-rendered
+  in Unit 5.6 with real gameplay clip)
+- Phase 6 may re-render with production encoding settings (per
+  Phase 4 deepening amendment TIER 2 #8: re-render is NOT precluded
+  by Phase 5 ship).
+- Phase 6 mobile-crop audit: BURNED-draw beat verified within
+  x=[420, 1500] safe-square band.
+
+## Operational notes for Phase 6
+- gameplay-clip-source.ts: pointing at trailer/gameplay.mp4 (NOT placeholder)
+- Run `pnpm sync-gameplay && pnpm render` if re-rendering from scratch
+- If Phase 6 needs to roll back to placeholder: `rm public/trailer/gameplay.mp4`
+  + `pnpm sync-gameplay` flips constant back to placeholder
+```
+
+### Cross-phase amendments surfaced by Phase 5 deepening
+
+Items flagged for upstream/lateral plan amendments. These do NOT
+land in this commit but are surfaced for the relevant plan's next
+deepening or review pass:
+
+**Phase 1 follow-up amendments** (Phase 1 deepening's obsolete
+content):
+- **Phase 1 Step 6 line 803-808**: retire the
+  `gameplay-raw.mp4 + gameplay-markers.json` contract; replace
+  with: "Phase 5 ships pre-trimmed `public/trailer/gameplay.mp4`
+  (540 frames, 18.0s @ 30fps, audio-stripped). The BURNED-draw
+  moment lands at clip-relative frame 160. Phase 4 consumes via
+  `<OffthreadVideo src={staticFile(...)} muted />` with no
+  trim props (NOT `startFrom`/`endAt`)."
+- **Phase 1 Step 6 line 815**: clarify cue table — "BURNED card
+  draws on capture at scene-relative frame 160 (CLIP VISUAL);
+  Dash VO scream interjects at scene-relative frame 360 (200
+  frames / 6.67s after draw — Sterling-CODED delayed reaction,
+  NOT simultaneous beat)."
+- **Phase 1 System-Wide Impact lines 2453-2467**: update to match
+  the pre-trimmed contract; remove `gameplay-markers.json`
+  references.
+
+**Phase 4 follow-up amendments**:
+- **Phase 4 Unit 4.6 Step 2 line 2708** placeholder script: invalid
+  ffmpeg filter syntax `force_original_aspect_ratio=cover` (valid
+  values are `disable|decrease|increase`). Should be `increase`.
+  Will crash placeholder generation on first invocation. Phase 5's
+  Unit 5.3 Step B.6 placeholder script (owned by Phase 5) uses the
+  correct `increase` syntax; Phase 4's sketch needs the same fix.
+
+**Roadmap follow-up amendments**:
+- **Roadmap §3 row 5 (line 110)**: path drift — currently reads
+  `videos/trailer/assets/gameplay.mp4`; should be
+  `public/trailer/gameplay.mp4` per ADR #15.
 
 ---
 
@@ -1207,29 +2213,71 @@ Unit 5.4) or recapture.
 - Board view: `src/client/board/`
 - Player view: `src/client/player/`
 - DramaOverlay BURNED beat: `src/client/shared/DramaOverlay.tsx`
-- NopeCountdownBar: `src/client/shared/NopeCountdownBar.tsx`
-- CASE BANNER: `src/client/board/CaseBanner.tsx`
+- NopeCountdownBar: `src/client/board/NopeCountdownBar.tsx` (NOT `shared/` — corrected per Phase 5 deepening)
+- CASE BANNER: `src/client/board/GameTable.tsx:67-88` (inline `.caseBanner` aside; NOT `CaseBanner.tsx` which doesn't exist — corrected per Phase 5 deepening, matching Phase 1 + Phase 3 deepening notes)
 - DiscardFan: `src/client/board/DiscardFan.tsx`
+- SmartActionBox: `src/client/player/SmartActionBox.tsx` (+ `.module.css` line 136-143 for insight 035 fix verification)
+- Join screen selectors: `src/client/player/JoinScreen.tsx:228-266` (`input[type="text"]`, `button:has-text("Check In")`)
+- Lobby selectors: `src/client/board/Lobby.tsx:104-110` (`button:has-text("Cleared Hot")`)
 
-**Playwright references:**
+**Playtest harness (Mechanism A precedent):**
+- `scripts/playtest/run-session.ts` (orchestrator)
+- `scripts/playtest/lib/seat-factory.ts` (context creation per seat; line 144-153 viewport + 160-161 selectors)
+- `scripts/playtest/lib/server-controller.ts` (wrangler + vite lifecycle with PLAYTEST_TOKEN; insight 026 stdio drain)
+- `scripts/playtest/lib/orchestrator.ts` (game-flow coordination)
+- `scripts/playtest/agents/seat-scripted.md` (seat-driver pattern)
+- `pnpm playtest:run` (existing CLI entry)
+
+**Dev-action surface (Approach III):**
+- `src/server/dev-actions.ts` (dev-action handler)
+- `src/server/dev-actions.test.ts` (parser contract tests, lines 11-87)
+- `scripts/dev-stack-top.ts` → `pnpm dev:stack`
+- `scripts/dev-give-card.ts` → `pnpm dev:give`
+- `scripts/dev-take-card.ts` → `pnpm dev:take`
+
+**Playwright references** (Mechanism A; if invoked):
 - Multi-context: https://playwright.dev/docs/api/class-browsercontext
-- Video recording: https://playwright.dev/docs/videos
-- Network conditions (for live URL captures): https://playwright.dev/docs/api/class-browsercontext#browser-context-set-extra-http-headers
+- Video recording (WebM/VP8 default): https://playwright.dev/docs/videos
+- Record-video-size + viewport interplay: https://playwright.dev/docs/api/class-browser#browser-new-context
 
-**OBS references:**
+**OBS references** (Mechanism B):
 - OBS Studio: https://obsproject.com/
 - OBS recording settings: https://obsproject.com/wiki/Settings-Guide
+- NVENC OBS guide: https://www.nvidia.com/en-us/geforce/guides/broadcasting-guide/
+- Hybrid MP4 (OBS 32+): https://obsproject.com/forum/threads/obs-32-0-released.179800/
 
 **FFmpeg references:**
-- Stream copy trim: https://ffmpeg.org/ffmpeg.html#Stream-copy
+- Stream copy + seeking (NOT used in Phase 5 final encode; documented for completeness): https://ffmpeg.org/ffmpeg.html#Stream-copy + https://trac.ffmpeg.org/wiki/Seeking
 - Scale + crop filters: https://ffmpeg.org/ffmpeg-filters.html#scale-1
-- CRF + preset: https://trac.ffmpeg.org/wiki/Encode/H.264
+- `fps` filter (proper frame decimation): https://ffmpeg.org/ffmpeg-filters.html#fps
+- `signalstats` filter (luminance probe): https://ffmpeg.org/ffmpeg-filters.html#signalstats
+- CRF + preset H.264: https://trac.ffmpeg.org/wiki/Encode/H.264
+- Stream selection (`-map`): https://ffmpeg.org/ffmpeg.html#Stream-selection
+
+**Cloudflare references:**
+- Pages clean URLs: https://developers.cloudflare.com/pages/configuration/serving-pages/
+- Wrangler Workers deploy: https://developers.cloudflare.com/workers/wrangler/
+
+**Trailer-editing references** (take selection + cut count):
+- Derek Lieu trailer editing: https://www.derek-lieu.com/editing
+- "What Game Trailers Can Learn From Film History": https://www.derek-lieu.com/blog/2023/1/7/what-game-trailers-can-learn-from-film-history
 
 **Institutional learnings (memory):**
 - `feedback-eye-in-loop-beats-calibration-for-motion.md` — direct
   observation over rubric metrics
 - `feedback-verify-before-presenting.md` — render-MP4 review,
   not studio preview
+- `feedback-burned-vanity-room-codes.md` — phone friction with
+  random room codes (acknowledged; QR/URL-hash mitigates)
 - `user_harry.md` — Harry as potential capture-session participant
 - `feedback-phase-plan-drafting-workflow.md` — write all phase
   files in one workflow; deepen sequentially after
+- `feedback-elite-team-standard.md` — hardening = feature works
+  end-to-end, NOT green unit tests on broken code
+
+**BURNED insights consumed:**
+- `docs/insights/021-strip-before-validate-is-an-atomicity-gap-class.md` — atomic-swap pattern rationale
+- `docs/insights/022-partyserver-cloudflare-scheme-breaks-vitest-node.md` — room.ts quarantine zone (Phase 5 scripts must not import partyserver)
+- `docs/insights/026-undrained-subprocess-stdio-stalls-at-64kb.md` — execFileSync maxBuffer + stdio drain
+- `docs/insights/035-smartactionbox-breathe-animation-defeats-playwright-stability-check.md` — RESOLVED; verified at Unit 5.0 Step 2
+- `docs/insights/050-agent-verification-misses-perceptual-continuities.md` — fluency gate over property rubric (Unit 5.4 Step 4 + Unit 5.6 Step 3)

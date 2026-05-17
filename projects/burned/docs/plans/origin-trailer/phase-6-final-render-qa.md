@@ -2123,8 +2123,53 @@ spec, not a guess.
 - Reasoning: <short>
 ```
 
-(Phase 7 may choose differently based on distribution-context
-decisions; this is recommendation, not lock.)
+**Phase 7 contract (tightened 2026-05-17 per Phase 7 deepening
+cross-phase amendment):** Phase 7 picks ONE of the documented
+Options A/B/C; Phase 7 does NOT invent a 4th option. If Phase 6
+marks a Primary recommendation, Phase 7 defaults to it. Phase 7 may
+override the Primary only with a `briggsy-review-7.1.signoff`
+sentinel documenting the override reason (e.g., cutdown standalone
+§2 audit per Phase 7 ADR #25 FAILs on the Primary; an alternate
+Option clears the audit). Pre-deepening Phase 7 invented a 4th
+option ("Candidate B — cascade peak → gameplay" at frames 1860–
+2220 — not present in any Phase 6 Option) which is now structurally
+prevented.
+
+**Composed-not-mid-motion verdict per Option (added 2026-05-17
+per Phase 7 deepening + ADR #25):** Each Option's segment START_FRAMEs
+must be annotated:
+
+```md
+- Composed-not-mid-motion verdict on START_FRAME of each segment:
+  - Segment N (frame X): <PASS — settled state / FAIL — inside ease window per `transitions.ts` line Y>
+  - (Cross-reference Unit 6.2 Step 3 selection rule + Phase 7 ADR #25)
+```
+
+For Option A/C frame 1880 (R3 stacked-payoff segment start): PASS —
+20 frames past the ticker-brightening ease completion at 1860 per
+Phase 1 line 1326 amended row (held bright 1860-1950).
+
+**Expected cutdown file size per Option (added 2026-05-17 per Phase
+7 deepening + ADR #28):** Each Option includes file size estimate
+at production encoding (CRF 18 / `--x264-preset slow` / mono AAC
+128k):
+
+```md
+- Expected file size at production encoding: <N> MB (Phase 7 hard
+  cap 50 MB — well under X 512 MB cap; >50 MB triggers note-but-not-
+  fail in Phase 7 Unit 7.1 cutdown-eval.md). VBR average target 8-
+  12 Mbps per ADR #28; CRF 18 + preset slow naturally lands 12-18
+  Mbps for action content within 25 Mbps platform ceiling.
+```
+
+**9:16 cutdown feasibility — Phase 7 contract (clarified 2026-05-17
+per Phase 7 deepening):** Phase 7 Unit 7.1 Step 6 reads the 9:16
+verdict per the selected Option and:
+- **GO** → renders second cutdown via `vf
+  "crop=607:1080:656:0,scale=1080:1920:flags=lanczos"`
+- **NEEDS-RECOMPOSE** → skips with documented reason; does NOT
+  recompose from Phase 7 (Phase 4 work; out of Phase 7 scope)
+- **NOGO** → skips vertical surface for this trailer
 
 **Step 3 — Final commit + Phase 6 close.**
 
@@ -2251,6 +2296,16 @@ proceeds.
   `gameplay.mp4` pattern).
 - **Thumbnail selection rule**: default frame 2790 (visual closure);
   fallback 180; 1950 reserved for last-resort.
+- **Thumbnail README derivative (added 2026-05-17 per Phase 7
+  deepening cross-phase amendment + frontend-design Tier 1.2):**
+  Additionally produce `docs/trailer/thumbnail.jpg` — 1200×675 JPEG
+  q85, target <100 KB. Phase 6 generates via single FFmpeg
+  invocation after `out/thumbnail.png` selection (Unit 6.2 Step 3):
+  `ffmpeg -y -i out/thumbnail.png -vf scale=1200:675:flags=lanczos
+  -q:v 2 docs/trailer/thumbnail.jpg`. Phase 7 Unit 7.1b references
+  this derivative as a Release asset; Phase 7 Unit 7.2
+  `portfolio-embed.md` may reference it as a poster image for the
+  tertiary portfolio-site surface. Commit at Phase 6 close.
 - **Tester recording mechanism** (feasibility #11): phone voice memo
   / Discord DM → Briggsy uploads → `decode-audio/tester-{N}.{m4a,ogg}`
   → Gemini-grounding transcription or Briggsy types verbatim.

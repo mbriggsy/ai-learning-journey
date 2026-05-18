@@ -14,7 +14,14 @@ deepening_pass:
   new_adrs: 6 (roadmap §4 #24/#25/#26/#27/#28/#29)
   new_units: 4 (7.0 stat-verify + 7.1b release-provisioning + 7.6 pre-post-verify + 7.7 pin-lifecycle)
   consolidated_units: 1 (7.5 metrics folds into 7.4)
-reviewed: pending
+reviewed: 2026-05-17
+review_pass:
+  agents: 7 CE personas (coherence / feasibility / product-lens / design-lens / security-lens / scope-guardian / adversarial-document-reviewer)
+  synthesis: sequential-thinking (3 thoughts; 5 load-bearing source claims re-verified — Phase 1 line 1086 narration / Phase 6 lines 1232-1240 thumbnail rule / Phase 6 line 2126-2127 cutdown contract / Phase 6 Unit 6.2 thumbnail derivative / ffmpeg flag against installed binary)
+  raw_findings: ~48 (coherence 5 / feasibility 5 / product-lens 10 / design-lens 5 / security-lens 6 / scope-guardian 7 / adversarial 10)
+  unique_absorbed: ~38 after dedup (3 P0 / 8 P1 / 20 P2 / 7 P3)
+  strategic_calls: 8 (CALL-1 caption audience-fit + Variation A-alt / CALL-2 pin lifecycle collapse / CALL-3 cutdown frame-0 audience-aware option ranking / CALL-4 README hero trade-off explicit / CALL-5 cut "...Phrasing." per Sterling-CODED / CALL-6 decouple character-cap from audience-fit / CALL-7 D+30 metrics method-signals-first + falsification test / CALL-8 minimum-viable-distribution section)
+  growth: 2539 → ~target lines
 status: active
 ---
 
@@ -54,9 +61,12 @@ convergence):
   brightening ease completes at 1860 per Phase 1 line 1325) → shift
   to composed-not-mid-motion frame per **new ADR #25**.
 - Variation A caption "7 operatives" hallucination — codebase ships
-  6 (5 named + Agent X wild); Phase 1 trailer narration says "six in
-  the deck, one in the basement." → stat-verification gate **new
-  ADR #26**.
+  6 (5 named + Agent X wild); Phase 1 trailer narration (line 1086
+  locked) says "six in the deck, one on the research budget." (The
+  pre-doc-review "in the basement" phrasing was Phase 1 fiction —
+  see Phase 1 lines 1100-1113 source-fix; ActRoster.tsx:153-158 is
+  canonical: Otto is "busy with the research budget".) →
+  stat-verification gate **new ADR #26**.
 - "Approximately 14,000 pages of forensic dossiers" fabricated stat
   (Phase 1 line 1584 explicitly flags as unverified) → cut.
 - 24h quote-tweet for Post 2 breaks algorithmic momentum window → 3-
@@ -72,9 +82,17 @@ convergence):
 - Cloudflare Pages "Option II" fallback hosting has a **25 MiB asset
   cap** — 95s trailer at production encoding is 60–95 MB; option
   structurally broken → cut.
-- Thumbnail default Phase 7 said frame 1950; Phase 6 line 2253 lock
-  is **default 2790 / fallback 180 / 1950 last-resort** → Phase 7
-  inherits Phase 6 lock.
+- Thumbnail default — pre-doc-review Phase 7 cited "Phase 6 line
+  2253" lock as `default 2790 / fallback 180 / 1950 last-resort`,
+  but line 2253 is a mobile-crop-audit table row, not the selection
+  rule. Phase 6 Unit 6.2 Step 3 **lines 1232-1240** are the canonical
+  rule: **1950 PRIMARY (R3 stacked-payoff stamp) / 1860 second
+  (cascade peak pre-stamp) / 1425 third (S04 stat 2 + halo) / 2790
+  last-resort (logo closure — kept as fallback because it extracts
+  cleanly)**. Mid-process feed-stoppers preferred over logo-closure
+  per Phase 6 Adversarial Attack 14 + Product-lens F3 (logo-on-desk
+  is what engineering Twitter scrolls past). Phase 7 inherits Phase
+  6's actual lock; pre-doc-review citation corrected throughout.
 
 ---
 
@@ -95,8 +113,12 @@ during Phase 6 deepening).
 - `videos/trailer/out/trailer.mp4` — Phase 6 final at H.264 / CRF 18
   / `--x264-preset slow` / yuv420p / 30fps 1920×1080 / AAC 128k mono
   / -16 LUFS / +faststart.
-- `videos/trailer/out/thumbnail.png` — Phase 6 thumbnail at frame
-  2790 default per Phase 6 line 2253 selection rule.
+- `videos/trailer/out/thumbnail.png` — Phase 6 thumbnail at
+  **frame 1950 PRIMARY** (R3 stacked-payoff stamp + Dash reveal) per
+  Phase 6 Unit 6.2 Step 3 lines 1232-1240 selection rule; fallbacks
+  1860 / 1425 / 2790 last-resort. Phase 7 does NOT override; if the
+  PRIMARY candidate fails composed-not-mid-motion, Phase 6 walks the
+  precedence ladder.
 - `docs/trailer/thumbnail.jpg` — Phase 6 README derivative
   (1200×675 JPEG q85, <100 KB; **cross-phase amendment to Phase 6**
   — see §Cross-Phase Amendments below).
@@ -128,16 +150,43 @@ during Phase 6 deepening).
   link-demotion severity, post-character-extended variant unlock,
   algorithmic boost). Record in `videos/trailer/distribution/account-state.md`
   before Unit 7.3 caption drafting.
+- **Briggsy GitHub plan state** recorded in the same file: Free /
+  Pro / Team / Enterprise. Plan state gates the Unit 7.2 README
+  inline-embed mechanism — Free has a 10 MiB user-attachments cap;
+  Pro/paid lifts the cap to 100 MiB. ADR #29 attachment caps drive
+  whether the cutdown can drag-drop inline (Pro/paid) or must use
+  the option (c) re-encode / option (d) clickable-thumbnail fallback
+  (Free). Per adversarial-document-reviewer A8 (Phase 7 doc-review
+  2026-05-17): pre-doc-review plan implicitly assumed paid GitHub.
+- **Repo-publicity check** recorded inline: `mbriggsy/burned` is
+  public/private/internal. Phase 7 commits `.signoff` sentinels +
+  `account-state.md` to git history; if the repo is public, those
+  files surface `briggsy007@gmail.com` git-author identity + X-tier
+  + GitHub-plan-tier together (per security-lens S5). Public repo →
+  add `account-state.md` to `.gitignore` and reference the decision
+  inline in `x-post.md` without exposing tiers. Private repo →
+  commit as-is.
 
 ### Entry gate enforcement
 
-`pnpm verify:phase-7-entry` (light script wrapping existing
-`pnpm verify:briggsy-sentinels` + presence checks for the 5 artifacts
-above + parse of PHASE-6-EXIT.md verdict-summary fields). Phase 7
-Unit 7.0 does not start until this returns GREEN.
+`pnpm verify:phase-7-entry` — **light script Phase 7 Unit 7.0 Step 0
+creates** (per scope-guardian SG1 — pre-doc-review plan invoked the
+script but never assigned its creation to any unit). Wraps the
+existing `pnpm verify:briggsy-sentinels` script (also Phase 7-era;
+see Unit 7.0 Step 0 for creation contract) + presence checks for the
+artifacts above + parse of PHASE-6-EXIT.md verdict-summary fields.
+Phase 7 Unit 7.0 does not start until this returns GREEN.
 
 If any artifact is missing or any verdict is FAIL: STOP. Re-open
 Phase 6 for the responsible Unit; do not proceed.
+
+**Note on script-existence at execution time** (per adversarial A4
+residual risk + scope-guardian SG1): Phase 7 assumes
+`pnpm verify:briggsy-sentinels` is also Phase 7-era. Pre-doc-review
+plan body cited it as "existing" but `package.json` shipped only
+`verify:bundle` at Phase 7 drafting time. Unit 7.0 Step 0 creates
+BOTH scripts + wires the `package.json` `scripts` entries; the entry
+gate runs after Step 0 completes, not before.
 
 ---
 
@@ -181,17 +230,35 @@ Phase 7 produces:
 
 Phase 7 exits when:
 1. X-native cutdown rendered + atomic-swap verified at Unit 7.6 spec.
-2. (Conditional) 9:16 cutdown rendered if Phase 6 verdict GO; OR
-   documented skip if NO-GO.
+2. (Conditional) 9:16 cutdown rendered if Phase 6 verdict GO **AND
+   recorded as YES in cutdown-eval.md**; OR `cutdown-eval.md` block
+   documents `9:16 render produced: NO` with explicit skip reason
+   (NEEDS-RECOMPOSE / NOGO / not-attempted). Unit 7.6 verifies the
+   block is populated either way (per coherence C3 — pre-doc-review
+   verify gate could green-light without checking the 9:16 decision).
 3. Verified-stats.json captures the canonical numbers used in all
    distribution copy.
-4. All distribution-surface copy written, drag-drop README embed
-   procedure documented with the live user-attachments URL captured.
+4. All distribution-surface copy written; the github.com web-editor
+   drag-drop step (Briggsy execution) has run AND the live
+   user-attachments URL has been captured back into `release-urls.json`
+   as `user_attachments_cutdown_url` (per adversarial A3 — without
+   the capture step, regenerating the README from any source-of-truth
+   template loses the UUID). Local `portfolio-embed.md` updated to
+   show the captured URL (no `<UUID-cutdown>` placeholders survive
+   into committed artifacts).
 5. Pre-post `pnpm verify:cutdown-ready` returns GREEN within 60min
-   of D+0 T+0.
+   of D+0 T+0. The terminal gate ALSO invokes
+   `pnpm verify:briggsy-sentinels` as a subprocess (per security-lens
+   S6 — pre-doc-review separation allowed a green verify with the
+   git-author check skipped).
 6. Briggsy posts according to the 3-beat burst calendar OR schedules
    via X scheduling.
-7. Pin lifecycle sentinel committed at D+0 (replace trigger documented).
+7. `pin-lifecycle.md` sentinel **document committed at D+0** documenting
+   the OR-of-explicit-events replacement triggers per Unit 7.7. (Pin
+   *action* itself happens at D+0 evening per CALL-2 — see Unit 7.4
+   calendar; this exit condition is about the document, not the
+   action.) Per coherence C2 — pre-doc-review wording conflated
+   document commit with pin action.
 
 ---
 
@@ -277,8 +344,12 @@ The risks Phase 7 manages (revised per agent reviews):
 - **AV-sync at cutdown seek-in point**: Phase 5 canonical `-ss
   AFTER -i` pattern eliminates the audio-packet boundary drift that
   threatens ADR #20 R3 audio-must-not-lead rule.
-- **Wrong-frame thumbnail**: Phase 6 line 2253 locked frame 2790
-  default; Phase 7 inherits, does not override.
+- **Wrong-frame thumbnail**: Phase 6 Unit 6.2 Step 3 lines 1232-1240
+  lock frame **1950 PRIMARY** (R3 stamp + Dash reveal — mid-process
+  feed-stopper) with 1860 / 1425 / 2790 fallback ladder; Phase 7
+  inherits the ladder, does not override. Mid-process moments stop
+  scrolls; logo-closure scrolls past (per Phase 6 Adversarial Attack
+  14 + Product-lens F3).
 - **Network failure at post time**: Unit 7.6 pre-post verify gate.
 - **No UMB v3 distribution baseline**: brief confirmed `projects/
   undercover-mob-boss/docs/` has no `insights/`, no launch
@@ -418,7 +489,8 @@ Phase 7-invented option; deepening removes it.
 
 The cutdown's first frame is the X autoplay-entry image for the
 majority of feed impressions. The "static thumbnail" (`out/thumbnail.png`
-at frame 2790 per Phase 6 lock) is only served in the paused state.
+at frame 1950 PRIMARY per Phase 6 Unit 6.2 Step 3 lock, with
+1860/1425/2790 fallback ladder) is only served in the paused state.
 For 80%+ of impressions, **cutdown frame 0 is the scroll-stop image**.
 
 Per ADR #25 (Phase 6 Unit 6.2 Step 3 selection rule extension to
@@ -436,7 +508,38 @@ which include 1880-2000.
 
 **Phase 6 Unit 6.8 cutdown-frame-list.md must annotate each
 Option's START_FRAME with composed-not-mid-motion verdict** (cross-
-phase amendment to Phase 6).
+phase amendment to Phase 6 — confirmed landed at Phase 6 Unit 6.8
+Step 2 lines 2869-2886 during Phase 7 doc-review verification).
+
+**CALL-3 — Audience-aware Option-selection rule** (per product-lens
+P7 + adversarial A frame-0-decode concern, Phase 7 doc-review
+2026-05-17). The cutdown autoplay-entry frame is the highest-leverage
+single image in Phase 7 distribution. For the engineering-peer
+audience (locked per project context — `project-burned-creative-direction.md`
++ §Problem Frame), Phase 7's Option-selection rule prefers Options
+whose START_FRAME shows **product or gameplay**, not character. The
+ranked criteria, applied in order:
+
+  1. START_FRAME passes ADR #25 composed-not-mid-motion check.
+  2. START_FRAME shows product/gameplay/text-overlay (R3 stamp, R13
+     gameplay, R15 chyron) over character beat (cold-open Dash).
+  3. START_FRAME passes greyscale color-blind-safe legibility check
+     per design-lens D5 (desaturate frame 0; focal element must
+     remain highest-contrast region without hue).
+  4. Phase 6 Primary recommendation (if no audience-aware Option
+     dominates).
+
+  Phase 7 Unit 7.1 Step 4 applies this ranking explicitly. Option C
+  (frame 60 cold-open spike) starts on a character beat; Option B
+  (frame 60-150) same; Option A (frame 0-150) same. NONE of the
+  pre-doc-review Options have a product/gameplay START_FRAME. CALL-3
+  resolution: ship the cutdown Option whose START_FRAME is *as
+  composed-and-product-leaning as the documented set allows*, AND
+  acknowledge in `cutdown-eval.md` that the trailer's identity bet
+  is "character-first cold-open even at the autoplay-entry cost"
+  (Briggsy-deliberate, not Phase-7-default-by-omission). If a future
+  re-cut emerges that opens on gameplay then back-fills the hook,
+  it ranks above the existing Options.
 
 ### Cutdown closure rule (new ADR #24)
 
@@ -468,9 +571,21 @@ Inherits Phase 6 production encoding (ADR #19) **except** runtime is
 - Container: MP4 / +faststart
 - Codec: H.264 High profile / libx264
 - CRF: **18** (ADR #19; pre-deepening Phase 7 said 17 — wrong)
-- Preset flag: **`-x264-preset slow`** (ADR #19; pre-deepening Phase
-  7 said `-preset slow` which silently no-ops in Remotion/FFmpeg
-  contexts and is a regression ADR #19 explicitly guards against)
+- Preset flag (raw FFmpeg argv): **`-preset slow`** — single dash,
+  no `x264-` prefix. This is the canonical libx264 encoder option.
+  (Pre-doc-review Phase 7 had `-x264-preset slow`, which is invalid
+  in raw FFmpeg — `ffmpeg ... -c:v libx264 -x264-preset slow` returns
+  `Unrecognized option 'x264-preset'` and exits non-zero. Verified
+  2026-05-17 against installed FFmpeg 8.1 during Phase 7 doc-review.
+  Per feasibility F1 + adversarial A1.)
+- **ADR #19 cross-tool note** — ADR #19's `--x264-preset slow` flag
+  applies to **Remotion CLI invocations only** (Phase 6 Unit 6.1
+  production render). Remotion's CLI translates `--x264-preset` to
+  the libx264 internal preset. When Phase 7 calls raw FFmpeg directly
+  (cutdown render, 9:16 render, post-process scripts), use the raw
+  libx264 encoder option name `-preset slow`. The two flags map to
+  the same underlying encoder option through different tooling
+  surfaces; do NOT use `-x264-preset` against raw `ffmpeg` argv.
 - Pixel format: yuv420p
 - Frame rate: 30 fps explicit
 - Audio codec: AAC-LC 128k **mono** (`-ac 1`) at 48000 Hz (`-ar 48000`
@@ -504,23 +619,38 @@ audio-packet-boundary drift; preserves ADR #20 R3-must-not-lead-
 visual guarantee (audio-lead at the seek-in point is exactly what
 ADR #20 forbids).
 
-### Thumbnail lock (Phase 6 inheritance)
+### Thumbnail lock (Phase 6 inheritance — corrected per design-lens D2)
 
-Per Phase 6 line 2253 selection rule (lock 2026-05-17 during Phase 6
-deepening):
+Per Phase 6 **Unit 6.2 Step 3 lines 1232-1240** selection rule (lock
+2026-05-17 during Phase 6 deepening). Pre-doc-review Phase 7 cited
+"Phase 6 line 2253" — that line is a mobile-crop-audit table row,
+NOT the thumbnail rule; and pre-doc-review claimed frame 2790 was
+default. Phase 6's actual rule INVERTED that ordering: 1950 is
+PRIMARY, 2790 is last-resort (the rationale: mid-process moments
+stop scrolls, logo-closure scrolls past). Phase 7 doc-review
+restoration:
 
-- **Default**: frame **2790** (visual closure; BURNED logo + R15 #4
-  subhead). Phase 7 inherits this.
-- **Fallback**: frame 180 (BURNED logo land in S01).
-- **Last-resort**: frame 1950 (stacked-payoff stamp + HTP) —
-  reserved for last-resort because the stamp slap is mid-motion at
-  frame 1950 (composed-not-mid-motion rule). Pre-deepening Phase 7
-  defaulted to 1950 — wrong per Phase 6 lock.
+- **PRIMARY**: frame **1950** (R3 stacked-payoff stamp + Dash audio
+  reveal — most likely feed-stopper). IF the extracted still reads
+  composed-not-mid-motion (stamp fully opaque + halo readable).
+- **Fallback 2**: frame 1860 (cascade peak pre-stamp; high-density
+  chrome, R15 visible, no motion blur).
+- **Fallback 3**: frame 1425 (S04 stat 2 + halo; operative-density
+  flourish if 1950 + 1860 both fail composed-state check).
+- **Last-resort**: frame 2790 (S06 closure — kept as fallback for
+  the same reason it was the prior default: extracts cleanly with
+  no motion-blur risk).
 
 Phase 6 produces `out/thumbnail.png` (1920×1080 master) at the
-selected default frame. **Phase 6 cross-phase amendment**: also
-produce `docs/trailer/thumbnail.jpg` (1200×675 q85 <100KB derivative
-for README; see frontend-design spec in Cross-Phase Amendments below).
+PRIMARY frame that clears composed-not-mid-motion; Phase 6 walks
+the precedence ladder if PRIMARY fails. Phase 7 inherits whichever
+frame Phase 6 ships and does NOT override.
+
+**Phase 6 cross-phase amendment** (confirmed landed at Phase 6 Unit
+6.2 Step 3 lines 1244-1254 during Phase 7 doc-review verification):
+Phase 6 also produces `docs/trailer/thumbnail.jpg` (1200×675 q85
+<100KB derivative for README; see frontend-design spec in
+Cross-Phase Amendments below).
 
 ### Stat-verification gate (new ADR #26)
 
@@ -536,12 +666,19 @@ institutional gap):
   + 1 burned + 1 extraction + 1 wild (Agent X) + 5 named operatives
   (Dash, Vera, Sable, Janet, Neal). NO Otto. Operative-category
   count = 5; operative-or-wild = 6.
-- Trailer narration (Phase 1 line 49): *"Seven on the roster, six in
-  the deck, one in the basement. Don't ask."* The trailer ITSELF
-  resolves this — six in the deck, one in the basement (Otto).
-- Caption should match trailer narration, not invent a 7th: **"six
-  operatives in the deck, one in the basement"** is the correct
-  framing.
+- Trailer narration (Phase 1 line **1086** — the LOCKED cue table
+  row at frame 1680 Stat 4): *"Seven on the roster. Six in the deck.
+  **One on the research budget. Don't ask.**"* (Pre-doc-review Phase
+  7 cited Phase 1 "line 49" with "one in the basement" — that text
+  was Phase 1 fiction explicitly retracted at Phase 1 lines 1100-1113
+  during Phase 1 doc-review: ActRoster.tsx:153-158 is canonical;
+  Otto is *"busy with the (unsanctioned, off-books, almost certainly
+  illegal) research budget"*. No basement appears in source. Per
+  design-lens D2 Phase 7 doc-review.)
+- Caption should match the LOCKED trailer narration: **"six
+  operatives in the deck, one on the research budget"** is the
+  correct framing — viewers can freeze-frame the dossier line and
+  fact-check.
 - "Approximately 14,000 pages of forensic dossiers" — Phase 1 line
   1584 explicitly says: *"NOTE: previous draft's '14,000 pages' was
   unverified; Step 5 must run actual `wc -w` if a pages-stat is
@@ -617,9 +754,14 @@ to Phase 6's Primary recommendation; does not invent.
 
 ### D-7B — Cutdown encoding lock
 
-CRF 18 / `--x264-preset slow` / yuv420p / 30fps explicit / AAC 128k
+Raw FFmpeg argv (Phase 7 uses raw `ffmpeg`, not Remotion CLI):
+CRF 18 / **`-preset slow`** / yuv420p / 30fps explicit / AAC 128k
 mono 48kHz / +faststart / no `-tune` / no `-r` (source-verified
-30fps). Inherits ADR #19 / ADR #14 (mono).
+30fps). Inherits ADR #19 production target + ADR #14 mono. NOTE:
+ADR #19's `--x264-preset slow` is the **Remotion CLI** spelling;
+raw FFmpeg uses the libx264 encoder option name `-preset slow`. See
+Critical Constraints / Encoding lock for the cross-tool note. Per
+feasibility F1 + adversarial A1 Phase 7 doc-review.
 
 ### D-7C — Seek pattern `-ss AFTER -i`
 
@@ -666,15 +808,24 @@ Phase 7 gates with sign-off sentinels at:
   7.0).
 - `briggsy-review-7.1.signoff` — Cutdown render + standalone audit
   approved (Unit 7.1).
+- `briggsy-review-7.1b.signoff` — Release assets published + URLs
+  verified (Unit 7.1b). Added per coherence C1/C5 + scope-guardian
+  SG2/SG3 + adversarial A2 Phase 7 doc-review (pre-doc-review D-7I
+  omitted this sentinel despite Unit 7.1b creating it).
+- `briggsy-review-7.2.signoff` — Portfolio embed committed (Unit
+  7.2). Added per scope-guardian SG4 Phase 7 doc-review.
 - `briggsy-review-7.3.signoff` — Post copy locked (Unit 7.3).
 - `briggsy-review-7.4.signoff` — Calendar approved (Unit 7.4).
 - `briggsy-review-7.6.signoff` — Pre-post verify GREEN within 60min
   of T+0 (Unit 7.6).
 - `.unpin-burned.signoff` — Pin replacement triggered (Unit 7.7,
-  D+180 or new-project ship; deferred).
+  new-project ship primary; D+360 time-fallback per CALL-2).
 
 `pnpm verify:briggsy-sentinels` enforces git-author check at each
-gate.
+gate (script creation contracted in Unit 7.0 Step 0 per
+SG1/feasibility — pre-doc-review plan body cited it as "existing"
+but `package.json` shipped only `verify:bundle` at Phase 7 drafting
+time).
 
 ### D-7J — 3-beat burst post sequence (ADR #27)
 
@@ -689,9 +840,12 @@ clickable thumbnail download). The ONLY mechanism producing inline
 `<video>` in README is the drag-drop user-attachments URL injected
 by GitHub's web editor. Phase 7 Unit 7.2 documents this procedure.
 
-### D-7L — Thumbnail default frame 2790 (Phase 6 lock inheritance)
+### D-7L — Thumbnail PRIMARY frame 1950 (Phase 6 lock inheritance)
 
-Phase 6 line 2253 selection rule. Phase 7 does not override.
+Phase 6 Unit 6.2 Step 3 lines 1232-1240 selection rule: 1950 PRIMARY
+(R3 stamp + Dash reveal) / 1860 second / 1425 third / 2790 last-resort
+(logo closure). Phase 7 does not override. (Pre-doc-review D-7L cited
+wrong line + wrong default frame; per design-lens D2 Phase 7 doc-review.)
 
 ### D-7M — Bitrate target 8–12 Mbps (ADR #28)
 
@@ -724,12 +878,46 @@ caption drafting.
 
 **Files:**
 
+- Create: `scripts/verify-phase-7-entry.ts` (Step 0a — entry-gate
+  enforcer; per scope-guardian SG1 Phase 7 doc-review).
+- Create: `scripts/verify-briggsy-sentinels.ts` (Step 0b — git-author
+  check; per scope-guardian SG1 + feasibility — pre-doc-review plan
+  body cited it as existing but `package.json` shipped only
+  `verify:bundle`).
+- Create: `src/shared/narrative-stats.ts` (Step 1 — single source-of-
+  truth for narration-locked counts; per adversarial A7 — the
+  verifier should import the constant, not hardcode it inline).
 - Create: `scripts/verify-caption-stats.ts`.
 - Create: `videos/trailer/distribution/verified-stats.json` (output).
 - Create: `videos/trailer/distribution/briggsy-review-7.0.signoff`
   (sentinel).
 
 **Approach:**
+
+**Step 0a — Create `scripts/verify-phase-7-entry.ts` + wire
+`package.json` script entry `verify:phase-7-entry`** (per
+scope-guardian SG1). The script:
+1. Reads PHASE-6-EXIT.md and asserts the GO verdict + §2 frame-pass
+   ≥8/10 + bar-raise threshold cleared + A/V sync PASS + 9:16 verdict
+   present (GO/NEEDS-RECOMPOSE/NOGO).
+2. Asserts presence of `videos/trailer/sample-eval/final-render-qa/
+   briggsy-review-6.4.signoff` + `briggsy-review-6.7.signoff` +
+   `cutdown-frame-list.md` + `videos/trailer/out/trailer.mp4` +
+   `videos/trailer/out/thumbnail.png` + `docs/trailer/thumbnail.jpg`
+   + `videos/trailer/distribution/account-state.md` (X-tier + GitHub
+   plan-tier + repo publicity per Entry Gate).
+3. Calls `scripts/verify-briggsy-sentinels.ts` as a subprocess for
+   git-author identity check on the two Phase 6 sentinels.
+4. Exits 0 GREEN / non-zero RED.
+
+**Step 0b — Create `scripts/verify-briggsy-sentinels.ts` + wire
+`verify:briggsy-sentinels`**. Takes one or more sentinel paths as
+argv; uses `execFileSync('git', ['log', '-1', '--format=%ae', path])`
+to read the committing email and asserts it equals
+`briggsy007@gmail.com`. Phase 7 Unit 7.6 also invokes this script
+as part of the terminal pre-post gate (per security-lens S6 —
+pre-doc-review separation allowed a green Unit 7.6 with the
+git-author check skipped).
 
 **Step 1 — Stat enumeration.**
 
@@ -740,53 +928,92 @@ The canonical claims that appear in Phase 7 distribution copy are:
 | `illustrations` | `public/assets/cards/*.webp` (excluding `_archive/`) | `glob().length` |
 | `operations` (deck total) | `src/shared/card-defs.ts` `CARD_DEFS` | `sum(pawCount + nonPawCount)` across all entries |
 | `operatives_in_deck` | `src/shared/card-defs.ts` `CARD_DEFS` filtered to `category in ['operative','wild']` | `.length` |
-| `operatives_in_basement` | Trailer narration constant per Phase 1 line 49 (Otto) | hardcoded `1` (narrative-locked) |
-| `operatives_on_roster_total` | `operatives_in_deck + operatives_in_basement` | computed |
-| `phases_in_plan` | `docs/plans/origin-trailer/roadmap.md` `phases:` frontmatter | parse YAML, `.length` |
-| `phase_files_drafted` | filesystem count | matches above |
+| `operatives_off_books` | `src/shared/narrative-stats.ts` `OPERATIVES_OFF_BOOKS` constant (Otto, per Phase 1 line 1086 "one on the research budget") | import |
+| `operatives_on_roster_total` | `operatives_in_deck + operatives_off_books` | computed |
 | `trailer_seconds` | `videos/trailer/src/lib/timing.ts` TOTAL_FRAMES / 30 | computed |
-| `act_count_in_htp` | `src/client/howtoplay/` act files | filesystem count |
-| `card_types` | `CARD_DEFS.length` | `.length` |
+
+(Pre-doc-review stat table enumerated four additional rows —
+`phases_in_plan` / `phase_files_drafted` / `act_count_in_htp` /
+`card_types` — that do NOT appear in any caption draft and are not
+emitted by the verifier. Removed per scope-guardian SG5/SG6
+Phase 7 doc-review: framework-ahead-of-need; the verifier should
+enumerate only stats that ship in copy. Caption stats source:
+`verified-stats.json` Unit 7.0 output; landed in narration order
+matching the trailer's freeze-frameable dossier.)
 
 **Step 2 — Verifier script.**
 
+Per feasibility F4/F5 Phase 7 doc-review: tsx + bundler-resolution
+convention (no `.js` extensions on TS imports — matches existing
+`scripts/check-bundle-size.ts` + `scripts/playtest/*.ts`). Per
+feasibility F4: `node:fs.globSync` option is `exclude`, not `ignore`
+(silently dropped). Per security-lens S2 + adversarial A7: real
+`git rev-parse HEAD` capture (was placeholder comment); narrative
+constant imported from `src/shared/narrative-stats.ts` (was hardcoded
+inline — defeats the verifier's stated purpose if Otto ever ships).
+
+```ts
+// src/shared/narrative-stats.ts — Phase 7 doc-review per adversarial A7
+//
+// Narration-locked counts that distribute into Phase 7 caption copy.
+// Source: Phase 1 line 1086 cue table — Stat 4 at frame 1680.
+// Update this file ONLY when the trailer narration itself is re-locked.
+export const OPERATIVES_OFF_BOOKS = 1 as const; // Otto, "one on the research budget"
+```
+
 ```ts
 // scripts/verify-caption-stats.ts (DIRECTIONAL — final names per repo conventions)
-import { readFileSync, writeFileSync, globSync } from 'node:fs';
-import { CARD_DEFS } from '../src/shared/card-defs.js';
-import { TOTAL_FRAMES, FPS } from '../videos/trailer/src/lib/timing.js';
-// ... (verify imports against repo state at execution time)
+import { execFileSync } from 'node:child_process';
+import { readFileSync, writeFileSync, statSync } from 'node:fs';
+import { globSync } from 'node:fs';
+import { CARD_DEFS } from '../src/shared/card-defs';
+import { OPERATIVES_OFF_BOOKS } from '../src/shared/narrative-stats';
+import { TOTAL_FRAMES, FPS } from '../videos/trailer/src/lib/timing';
 
 const cards = CARD_DEFS;
 const illustrations = globSync('public/assets/cards/*.webp', {
-  ignore: ['public/assets/cards/_archive/**']
+  exclude: ['public/assets/cards/_archive/**'],   // node:fs uses `exclude`, NOT `ignore`
 }).length;
 
 const operations = cards.reduce((s, c) => s + c.pawCount + c.nonPawCount, 0);
 const operatives_in_deck = cards.filter(c =>
   c.category === 'operative' || c.category === 'wild'
 ).length;
-const operatives_in_basement = 1; // Otto, per Phase 1 line 49
+const operatives_off_books = OPERATIVES_OFF_BOOKS;
+
+// SAFE: argv array
+const source_git_sha = execFileSync('git', ['rev-parse', 'HEAD'])
+  .toString().trim();
 
 const verified = {
   generated_at: new Date().toISOString(),
-  source_git_sha: /* git rev-parse HEAD */ '',
-  card_types: cards.length,
+  source_git_sha,
   illustrations,
   operations,
   operatives_in_deck,
-  operatives_in_basement,
-  operatives_on_roster_total: operatives_in_deck + operatives_in_basement,
+  operatives_off_books,
+  operatives_on_roster_total: operatives_in_deck + operatives_off_books,
   trailer_seconds: TOTAL_FRAMES / FPS,
 };
 
-// Cross-check: trailer narration (Phase 1 line 49) says "six in the deck, one in the basement"
-// Hard-assert operatives_in_deck === 6 AND operatives_in_basement === 1
+// Cross-check: trailer narration (Phase 1 line 1086) says
+// "Six in the deck. One on the research budget. Don't ask."
+// Hard-assert operatives_in_deck === 6.
 if (verified.operatives_in_deck !== 6) {
   throw new Error(
     `Stat drift: operatives_in_deck = ${verified.operatives_in_deck}, ` +
     `trailer narration says 6. Either trailer is wrong or codebase is wrong; ` +
     `reconcile before posting.`
+  );
+}
+// Otto-doesn't-ship invariant — if Otto becomes a real card, narrative
+// stat must update via narrative-stats.ts AND re-verify here:
+const ottoShipped = cards.some(c => c.id === 'otto');
+if (ottoShipped) {
+  throw new Error(
+    `Otto now ships as a real card; OPERATIVES_OFF_BOOKS in ` +
+    `src/shared/narrative-stats.ts must be updated AND trailer narration ` +
+    `re-evaluated. Otto-in-basement framing no longer matches ground truth.`
   );
 }
 
@@ -803,11 +1030,14 @@ The verifier surfaces a known roadmap §1 contradiction: roadmap §1
 line 50 currently says *"seven named operatives in the roster (Dash,
 Vera, Sable, Janet, Neal, Otto, Agent X)"* — Otto is a roadmap ghost
 not in `card-defs.ts` and has no `.webp` art. **Phase 7 cross-phase
-amendment**: roadmap §1 should either (a) note Otto-in-basement is
-narrative-only-not-shipped (cheap fix; aligns with Phase 1 line 49),
-or (b) ship Otto card + art (expensive; out of Phase 7 scope). Phase
-7 picks (a); roadmap §1 amendment in this same commit. (See Cross-
-Phase Amendments section.)
+amendment**: roadmap §1 should either (a) note Otto-off-books-on-the-
+research-budget is narrative-only-not-shipped (cheap fix; aligns with
+Phase 1 line 1086 locked narration), or (b) ship Otto card + art
+(expensive; out of Phase 7 scope). Phase 7 picks (a); roadmap §1
+amendment landed during Phase 7 deepening — per design-lens D2
+Phase 7 doc-review, replace the prior "in the basement" wording with
+"on the research budget" to match locked narration. (See Cross-
+Phase Amendments section for the corrected text.)
 
 **Step 4 — Briggsy review + sentinel.**
 
@@ -900,19 +1130,32 @@ compositional state.
   `gameplay.mp4` segment markers per Phase 5 Unit 5.4.
 - Segment 4 START = 2790: closer logo land; settled. ✓
 
-**Step 2 — Render via single-pass FFmpeg multi-segment trim.**
+**Step 2 — Render via FFmpeg multi-segment trim.**
 
-Two implementation approaches:
+Two implementation approaches. **Phase 7 doc-review CALL — flipped
+default from 2a to 2b** per adversarial A4: filter_complex
+`atrim=start=N/FPS` is sample-accurate to 1/30s (33ms) on the audio
+stream, but the AAC packet boundary is 21.33ms — accumulated drift
+across multi-segment concat can produce audio-lead at any segment
+seam, exactly the failure mode ADR #20 R3 forbids. Per-segment +
+concat-demuxer (Approach 2b) preserves the Phase 5 canonical
+`-ss AFTER -i` invariant per segment and lets each segment's audio
+resync at a clean boundary before concat. 2a stays documented as
+an option for the trivial single-segment case.
 
-**Approach 2a — Multi-input concat (preferred per FFmpeg trac wiki):**
+**Approach 2b — Per-segment files + concat demuxer (DEFAULT):**
+
+For each segment, run a single-pass frame-accurate re-encode (Phase 5
+canonical pattern, Phase 5 deepening line 1660-1665):
 
 ```ts
-// scripts/render-cutdown.ts (DIRECTIONAL)
+// scripts/render-cutdown.ts (DIRECTIONAL — Approach 2b default)
 import { execFileSync } from 'node:child_process';
-import { renameSync, readFileSync } from 'node:fs';
+import { renameSync, writeFileSync } from 'node:fs';
 
 // SAFE: argv array, no shell-string interpolation
 const SOURCE = 'videos/trailer/out/trailer.mp4';
+const STAGING_DIR = 'videos/trailer/out/.cutdown-staging';
 const STAGING = 'videos/trailer/out/trailer-x-cutdown.mp4.new';
 const FINAL = 'videos/trailer/out/trailer-x-cutdown.mp4';
 
@@ -926,10 +1169,75 @@ const SEGMENTS = [
 ];
 const FPS = 30;
 
-// Build filter_complex for multi-segment trim + concat
-// Each segment: [0:v]trim=start_frame=N:end_frame=M,setpts=PTS-STARTPTS[vN]
-//               [0:a]atrim=start=N/FPS:end=M/FPS,asetpts=PTS-STARTPTS[aN]
-// Final concat: [v0][a0][v1][a1]...concat=n=N:v=1:a=1[outv][outa]
+// Per security-lens S1 Phase 7 doc-review: validate every frame
+// integer before it enters any FFmpeg arg value, since values flow
+// into filter syntax (filter-graph injection surface even though
+// argv prevents shell injection).
+for (const seg of SEGMENTS) {
+  for (const f of [seg.startFrame, seg.endFrame] as const) {
+    if (!Number.isInteger(f) || f < 0 || f > 100_000) {
+      throw new Error(`Invalid frame value from cutdown-frame-list.md: ${f}`);
+    }
+  }
+  if (seg.startFrame >= seg.endFrame) {
+    throw new Error(`startFrame ${seg.startFrame} >= endFrame ${seg.endFrame}`);
+  }
+}
+
+// Per-segment re-encode (NO -vf fade=t=out / NO -af afade=t=out per ADR #24)
+const segFiles: string[] = [];
+SEGMENTS.forEach((seg, i) => {
+  const segPath = `${STAGING_DIR}/seg-${String(i).padStart(2,'0')}.mp4`;
+  segFiles.push(segPath);
+  const startSec = (seg.startFrame / FPS).toFixed(3);
+  const nFrames  = String(seg.endFrame - seg.startFrame);
+  execFileSync('ffmpeg', [
+    '-y',
+    '-i', SOURCE,                   // -ss AFTER -i per Phase 5 canonical
+    '-ss', startSec,
+    '-frames:v', nFrames,
+    '-c:v', 'libx264',
+    '-crf', '18',                   // ADR #19 production target
+    '-preset', 'slow',              // raw libx264 option (ADR #19 cross-tool note)
+    '-pix_fmt', 'yuv420p',
+    '-c:a', 'aac',
+    '-b:a', '128k',
+    '-ar', '48000',                 // framework-docs T2-B
+    '-ac', '1',                     // ADR #14 mono
+    '-movflags', '+faststart',
+    segPath,
+  ]);
+});
+
+// Concat demuxer — single concat list, no re-encode
+const listPath = `${STAGING_DIR}/concat-list.txt`;
+writeFileSync(
+  listPath,
+  segFiles.map(f => `file '${f.replace(/'/g, "'\\''")}'`).join('\n') + '\n'
+);
+execFileSync('ffmpeg', [
+  '-y',
+  '-f', 'concat',
+  '-safe', '0',
+  '-i', listPath,
+  '-c', 'copy',
+  '-movflags', '+faststart',
+  STAGING,
+]);
+```
+
+**Approach 2a — Multi-input filter_complex (documented fallback):**
+
+A single-FFmpeg-invocation filter_complex trim-and-concat pattern
+exists. Use ONLY if Step 5 per-seam AV-sync verification on 2b
+fails (e.g., concat-demuxer codec-mismatch surfaces despite per-
+segment identical encoding), in which case the docs/forum-canonical
+filter_complex pattern is the fallback:
+
+```ts
+// Per-segment trim then concat all streams in one FFmpeg invocation.
+// Documented because the filter_complex pattern is otherwise canonical;
+// 2b is preferred per adversarial A4 audio-seam drift concern.
 const filterParts: string[] = [];
 SEGMENTS.forEach((seg, i) => {
   filterParts.push(
@@ -943,41 +1251,29 @@ const concatInputs = SEGMENTS.map((_, i) => `[v${i}][a${i}]`).join('');
 filterParts.push(
   `${concatInputs}concat=n=${SEGMENTS.length}:v=1:a=1[outv][outa]`
 );
-const filterComplex = filterParts.join(';');
-
-// NO -vf fade=t=out / NO -af afade=t=out (ADR #24 hard-cut closure)
 execFileSync('ffmpeg', [
   '-y',
   '-i', SOURCE,
-  '-filter_complex', filterComplex,
+  '-filter_complex', filterParts.join(';'),
   '-map', '[outv]',
   '-map', '[outa]',
   '-c:v', 'libx264',
-  '-crf', '18',                     // ADR #19
-  '-x264-preset', 'slow',           // ADR #19 (NOT -preset slow)
+  '-crf', '18',
+  '-preset', 'slow',                // raw libx264 option (NOT -x264-preset)
   '-pix_fmt', 'yuv420p',
   '-c:a', 'aac',
   '-b:a', '128k',
-  '-ar', '48000',                   // framework-docs T2-B
+  '-ar', '48000',
   '-ac', '1',                       // ADR #14 mono
   '-movflags', '+faststart',
   STAGING,
 ]);
 ```
 
-**Approach 2b — Per-segment files + concat demuxer** (fallback if
-filter_complex hits edge cases on this footage):
-
-For each segment, run `ffmpeg -i SRC -ss <startSec> -frames:v <N>
--c:v libx264 -crf 18 -x264-preset slow ... seg-<i>.mp4` then
-concat-demuxer-join. Slower (per-segment re-encode) but simpler.
-Phase 5 deepening line 1660-1665 documents the per-segment frame-
-accurate single-pass pattern Phase 7 inherits.
-
-**Approach decision**: Default to 2a (single FFmpeg invocation,
-filter_complex). Fall back to 2b if 2a hits an edge case (e.g., A/V
-stream-ordering mismatch in source). Document the chosen approach
-in `cutdown-eval.md`.
+**Approach decision**: Default to **2b** (per-segment + concat-
+demuxer). Fall back to 2a only if Step 5 per-seam AV-sync check
+surfaces an unfixable boundary issue with 2b. Document the chosen
+approach + reason in `cutdown-eval.md`.
 
 **Step 3 — Render verification (ffprobe).**
 
@@ -1016,7 +1312,21 @@ from an Archer trailer, or a generic sizzle-reel?" PASS requires
 autoplay-entry image. Verify (i) settled compositional state (not
 inside an active interpolation window per `transitions.ts`), (ii)
 focal element within 1:1 safe square + 9:16 vertical strip per ADR
-#23, (iii) reads cold (cold-viewer reports scroll-stop intent).
+#23, (iii) reads cold (cold-viewer reports scroll-stop intent),
+(iv) **greyscale color-blind-safe check** per design-lens D5
+Phase 7 doc-review: desaturate frame 0 to luma-only (`ffmpeg -i
+frame0.png -vf format=gray frame0-gray.png`); confirm the focal
+element remains the highest-contrast region and any text overlays
+remain legible. Briggsy is color-blind (per user context); if frame
+0 reads only via hue, it fails the autoplay-entry test. This is a
+one-image check, not a blocking gate — log result in cutdown-eval.md.
+
+(d) Audience-fit ranking per CALL-3 + product-lens P7 Phase 7
+doc-review: cross-check that the selected Option's START_FRAME
+shows product/gameplay/text-overlay over character-only. If the
+ranked Option choice differs from Phase 6's Primary recommendation,
+document the override reason in cutdown-eval.md and obtain
+`briggsy-review-7.1.signoff` per D-7A.
 
 If any audit FAIL: shift START_FRAME of the first segment forward
 by 15–30 frames; re-render; re-audit. If 3 iterations fail: route
@@ -1024,20 +1334,36 @@ to a different Option (Phase 6 cutdown-frame-list.md A or B); if
 all 3 Options fail: 16:9 cutdown does NOT ship (flagship-only
 distribution); document the skip.
 
-**Step 5 — AV-sync verification on cutdown.**
+**Step 5 — AV-sync verification on cutdown (per-seam, not just
+per-cue).**
 
 Mirror Phase 6 Unit 6.5 manifest-driven approach scoped to the
-cutdown. If Option C, the R3 stacked-payoff at cutdown frame ~40
-(segment 2 start + ~10 frames into R3) gets the ADR #20 zero-
-tolerance check: audio MUST NOT lead visual. ffprobe + manifest
-parse + tolerance assertion.
+cutdown. ADR #20 zero-tolerance check at every cue inside the
+cutdown: audio MUST NOT lead visual. For Option C, R3 stacked-
+payoff at cutdown frame ~40 (segment 2 start + ~10 frames into R3)
+is the critical assertion.
 
-If audio-lead detected at R3: investigate. Likely causes per
-feasibility F1: (a) filter_complex `atrim` and `trim` produce
-different start-PTS due to keyframe alignment; (b) source has
-keyframe gaps that misalign on segment boundary. Fix: regenerate
-trim with `setpts=PTS-STARTPTS+0.001` adjustment OR re-route to
-Approach 2b per-segment files.
+**Per-seam verification** (per adversarial A4 Phase 7 doc-review —
+green Step 5 verdict was historically a per-cue check; the new risk
+is per-seam drift produced by the multi-segment concat):
+
+```ts
+// For each segment boundary in the cutdown (3 seams for Option C):
+// - ffprobe-frame the visual frame closest to the seam PTS
+// - ffprobe-packet the audio packet closest to the seam PTS
+// - Assert audio-packet PTS <= visual-frame PTS within ADR #20 R3
+//   tolerance ([-1 frame, 0 frames] = -33ms to 0ms on R3, ±5%
+//   elsewhere)
+```
+
+If audio-lead detected at any seam: investigate. Likely causes per
+feasibility F1 + adversarial A4: (a) per-segment encoder rounding
+shifts audio packet start by up to one packet (21.33ms); (b)
+filter_complex `atrim` is sample-accurate not packet-accurate; (c)
+source has keyframe gaps that misalign on segment boundary. Fix:
+shift the affected segment's `-ss` value by ±21ms (one audio packet)
+and re-render that segment only; if persistent, fall back to
+Approach 2a filter_complex and re-run per-seam Step 5.
 
 **Step 6 — (Conditional) 9:16 cutdown render.**
 
@@ -1053,7 +1379,7 @@ execFileSync('ffmpeg', [
   '-vf', 'crop=607:1080:656:0,scale=1080:1920:flags=lanczos',
   '-c:v', 'libx264',
   '-crf', '18',
-  '-x264-preset', 'slow',
+  '-preset', 'slow',                // raw libx264 option (NOT -x264-preset)
   '-pix_fmt', 'yuv420p',
   '-c:a', 'copy',                   // audio unchanged from 16:9
   '-movflags', '+faststart',
@@ -1103,7 +1429,7 @@ execution).
 - File: out/trailer-x-cutdown.mp4
 - Duration: <measured>s (target 12-15s per Option)
 - Dimensions: 1920×1080
-- Codec: H.264 High / CRF 18 / `--x264-preset slow` / yuv420p
+- Codec: H.264 High / CRF 18 / raw FFmpeg `-preset slow` (libx264 encoder option; ADR #19 `--x264-preset slow` is the Remotion CLI spelling, not raw ffmpeg) / yuv420p
 - Audio: AAC 128k mono 48kHz
 - File size: <N> MB (X cap 512 MB; trivially clears)
 - Bitrate VBR avg: <N> Mbps (ADR #28 target 8-12; CRF 18 typically 12-18)
@@ -1188,10 +1514,46 @@ present (cross-phase amendment — see below).
 **Files:**
 
 - Create: `scripts/publish-trailer-release.ts`.
+- Create: `videos/trailer/distribution/release-notes.md` (per
+  feasibility F2 + scope-guardian SG2 Phase 7 doc-review —
+  pre-doc-review plan invoked `--notes-file` without specifying who
+  created the file; `gh release create` would fail on first run).
 - Create: `videos/trailer/distribution/release-urls.json` (output).
 - Create: GitHub Release `burned-origin-trailer-v1` (remote).
 
 **Approach:**
+
+**Step 0 — Pre-flight authentication + release-notes authoring.**
+
+Per security-lens S3 + feasibility F2 + scope-guardian SG2 Phase 7
+doc-review. Two preconditions blow up `gh release create` at mid-
+workflow if not staged:
+
+```ts
+// 0a. Confirm gh auth + target repo access
+execFileSync('gh', ['auth', 'status']);                 // exits non-zero if unauthenticated
+execFileSync('gh', ['repo', 'view', 'mbriggsy/burned']); // confirms target repo access
+
+// 0b. Author release-notes.md
+import { writeFileSync, existsSync } from 'node:fs';
+const notesPath = 'videos/trailer/distribution/release-notes.md';
+if (!existsSync(notesPath)) {
+  writeFileSync(notesPath, [
+    '# BURNED Origin Trailer v1',
+    '',
+    'A ~95-second Archer-tone origin trailer for BURNED — autonomous-SDLC',
+    'party game built end-to-end by Claude under ATC direction.',
+    '',
+    'Assets:',
+    '- `trailer.mp4` — 95s flagship (1920×1080, H.264 CRF 18, AAC 128k mono).',
+    '- `trailer-x-cutdown.mp4` — 12s X-native cutdown.',
+    '- `thumbnail.jpg` — 1200×675 README/portfolio derivative.',
+    '',
+    'See [BURNED README](https://github.com/mbriggsy/burned#trailer) for context.',
+    '',
+  ].join('\n'));
+}
+```
 
 **Step 1 — Pre-flight size assertion.**
 
@@ -1224,9 +1586,11 @@ const tag = 'burned-origin-trailer-v1';
 const title = 'BURNED Origin Trailer';
 const notesFile = 'videos/trailer/distribution/release-notes.md';
 
-// Create release with assets
+// Create release with assets — explicit --repo per security-lens S3
+// (CWD-implicit target was risky if script runs outside repo root)
 execFileSync('gh', [
   'release', 'create', tag,
+  '--repo', 'mbriggsy/burned',
   '--title', title,
   '--notes-file', notesFile,
   'videos/trailer/out/trailer.mp4',
@@ -1236,9 +1600,9 @@ execFileSync('gh', [
   // 'videos/trailer/out/trailer-x-cutdown-9-16.mp4',
 ]);
 
-// Capture asset URLs
+// Capture asset URLs — explicit --repo
 const releaseJson = execFileSync('gh', [
-  'release', 'view', tag, '--json', 'assets'
+  'release', 'view', tag, '--repo', 'mbriggsy/burned', '--json', 'assets'
 ]).toString();
 const assets = JSON.parse(releaseJson).assets;
 const urls = Object.fromEntries(
@@ -1269,8 +1633,16 @@ visible on github.com. On approval, commit `briggsy-review-7.1b.signoff`.
 - **Edge case:** Asset >2 GiB → fall back to R2-via-Pages-Function
   (rare for trailer at 200 MB; documented in Cross-Phase Amendments
   if Phase 7 ever hits it).
-- **Edge case:** `gh` CLI not authenticated → operator runs `gh
-  auth login` (Briggsy execution, not Claude).
+- **Edge case:** `gh` CLI not authenticated → Step 0a's `gh auth
+  status` exits non-zero before any work; operator runs `gh auth
+  login` (Briggsy execution, not Claude); re-run from Step 0.
+- **Edge case:** tag `burned-origin-trailer-v1` already exists (prior
+  failed attempt) → `gh release create` exits with "already exists";
+  operator deletes the prior release via `gh release delete
+  burned-origin-trailer-v1 --repo mbriggsy/burned --yes` (Briggsy
+  execution) AND deletes the git tag (`git push origin :refs/tags/
+  burned-origin-trailer-v1`); re-run Step 0 (per adversarial residual
+  risk Phase 7 doc-review — pre-doc-review had no recovery path).
 
 **Verification:**
 
@@ -1308,7 +1680,8 @@ URLs); Phase 6 `docs/trailer/thumbnail.jpg` derivative present.
 
 **Approach:**
 
-**Step 1 — README design system audit.**
+**Step 1 — README design system audit (re-anchored per feasibility F3
+Phase 7 doc-review).**
 
 Per frontend-design audit: the BURNED README is already restrained
 Archer-coded (no badges, no emoji, no hero image, no marketing
@@ -1317,12 +1690,23 @@ project structure. **The README passes the bar.** No README rewrite
 needed; the trailer embed slots into the existing typographic
 system.
 
-**Lock**: `## Trailer` section sits **before `## Status`**, between
-the opening paragraph (line 8 area) and the Project Map block. This
-is hero-second placement: opening paragraph → trailer → link
-architecture. Engineering-Twitter visitors arriving from Post 1
-land on a welcome mat; existing contributors retain the Project
-Map.
+Current README structural anchors (verified 2026-05-17):
+- Line 8 area — opening paragraph.
+- `## Play` (line ~10) — live URL + Board/Phone/Operations table.
+  Hero-FIRST slot, already occupied.
+- `## Project Map` (line ~20) — directory map.
+- `## Status` (line ~39) — phase + bundle stats.
+
+**Lock** (corrected per feasibility F3 — pre-doc-review missed
+`## Play` and the placement was structurally ambiguous): `## Trailer`
+section sits **AFTER `## Play`** (preserving live game URL as
+hero-FIRST) and **BEFORE `## Project Map`** (hero-SECOND). The
+opening paragraph → live game CTA → trailer hero → Project Map flow
+keeps the playable-game one click from the top while making the
+trailer the second thing a visitor sees. Engineering-Twitter
+visitors arriving from Post 1 land on the welcome mat AND find a
+working playable build immediately above the trailer; existing
+contributors retain the Project Map below.
 
 **Step 2 — Drag-drop user-attachments procedure (ADR #29).**
 
@@ -1336,11 +1720,11 @@ Procedure (Briggsy execution; Claude documents):
 
 1. On github.com, navigate to `projects/burned/README.md` and click
    the pencil ✎ edit button.
-2. Position cursor immediately after the opening paragraph (before
-   `## Project Map`).
+2. Position cursor immediately AFTER the `## Play` table and BEFORE
+   `## Project Map` (per Step 1 lock).
 3. Type `## Trailer` and a blank line.
-4. Drag `videos/trailer/out/trailer.mp4` from local filesystem
-   directly into the markdown editor buffer.
+4. Drag `videos/trailer/out/trailer-x-cutdown.mp4` from local
+   filesystem directly into the markdown editor buffer.
 5. GitHub auto-uploads the MP4 and injects an HTML5 `<video>`
    element wrapping a `https://github.com/user-attachments/assets/<UUID>`
    URL. This URL renders as an inline video player on README.
@@ -1348,62 +1732,121 @@ Procedure (Briggsy execution; Claude documents):
    (Step 3 below).
 7. Below the context paragraph, paste the inline-text fallback links
    to Release assets (Step 3 below).
-8. Commit the change with message `docs(burned): add origin trailer
-   to README — Phase 7 Unit 7.2`.
+8. Commit the change via the web editor with message
+   `docs(burned): add origin trailer to README — Phase 7 Unit 7.2`.
+9. **Capture the live URL back** (per adversarial A3 + Phase 7
+   exit condition #4 Phase 7 doc-review — `<UUID-cutdown>` is
+   otherwise an unreproducible placeholder in committed artifacts):
+
+   ```ts
+   // scripts/capture-readme-attachment-url.ts
+   import { execFileSync } from 'node:child_process';
+   import { readFileSync, writeFileSync } from 'node:fs';
+   execFileSync('git', ['pull', '--ff-only', 'origin', 'main']);
+   const readme = readFileSync('projects/burned/README.md', 'utf8');
+   const m = readme.match(
+     /https:\/\/github\.com\/user-attachments\/assets\/[0-9a-f-]+/i
+   );
+   if (!m) throw new Error('No user-attachments URL found in README post-drag-drop');
+   const urlsPath = 'videos/trailer/distribution/release-urls.json';
+   const urls = JSON.parse(readFileSync(urlsPath, 'utf8'));
+   urls.user_attachments_cutdown_url = m[0];
+   writeFileSync(urlsPath, JSON.stringify(urls, null, 2));
+   // Also update portfolio-embed.md to substitute the real UUID
+   // (so the local-tracked artifact matches the live README).
+   ```
+
+   Briggsy runs this script after the web-editor commit lands on
+   `origin/main`. `release-urls.json` then carries the live URL for
+   future README regenerations + audit; `portfolio-embed.md`'s
+   canonical-markdown block is updated to show the live URL instead
+   of `<UUID-cutdown>`.
 
 **Critical caveat per ADR #29**: the GitHub user-attachments
-mechanism has a **10 MB free / 100 MB paid attachment cap**. BURNED
-flagship at 95s / CRF 18 / `--x264-preset slow` is approximately
-150–250 MB — **exceeds the user-attachments cap**.
+mechanism has a **10 MiB free / 100 MiB paid attachment cap** (MiB
+not MB — binary, ~4.86% smaller than decimal MB at the boundary;
+per adversarial A9 Phase 7 doc-review). Verify against current
+`https://docs.github.com/en/get-started/writing-on-github/working-
+with-advanced-formatting/attaching-files` at Phase 7 execution time
+(GitHub may revise caps; date-pin the verification in
+`portfolio-embed.md`). BURNED flagship at 95s / CRF 18 / `-preset
+slow` is approximately 150–250 MB — **exceeds the user-attachments
+cap on any plan**.
 
 **Phase 7 implication**: We CANNOT inline-embed the full flagship
-trailer via user-attachments. Options:
+trailer via user-attachments. Options (re-evaluated against
+GitHub plan state from Entry Gate per adversarial A8 Phase 7
+doc-review):
 
-(a) **Briggsy upgrades to GitHub Pro/Paid** → 100 MB attachment cap
-still doesn't fit a 200 MB flagship.
+(a) ~~**Briggsy upgrades to GitHub Pro/Paid**~~ → cardinal-rule
+violation (Briggsy is ATC; account upgrades aren't automatable).
+Even if upgraded, 100 MiB cap still doesn't fit a 150–250 MB
+flagship. NOT option-space; cut.
 
 (b) **Use the cutdown for inline embed**, link to flagship via
 Release asset.
-- Cutdown at ~25–40 MB clears 100 MB paid cap; might clear 10 MB
-  free cap with adjusted CRF. **Default Phase 7 procedure: drag-drop
-  the CUTDOWN as the inline-played embed; link to flagship via
-  Release URL below it.**
+- Cutdown at ~25–40 MB clears 100 MiB paid cap ONLY (Pro+).
+- Cutdown at ~25–40 MB **exceeds** 10 MiB free cap; this branch
+  requires Briggsy on Pro+ per Entry Gate `account-state.md`.
+- On Pro+: **drag-drop the CUTDOWN as the inline-played embed; link
+  to flagship via Release URL below it.**
 
-(c) **Re-encode flagship at higher CRF** (CRF 24-26) for an
-"attachment-friendly" version that fits 10 MB free cap. Quality
-trade-off; defeats the bar-raise. NOT default.
+(c) **Re-encode cutdown at higher CRF** (e.g., CRF 24-26) for an
+"attachment-friendly" cutdown that fits 10 MiB free cap. Quality
+trade-off; defeats the bar-raise. Reserved for GitHub Free fallback.
 
-(d) **Skip inline embed; use Phase 7's prior clickable-thumbnail-
-to-Release approach.** Less native-feeling but reliable.
+(d) **Skip inline embed; use clickable-thumbnail-to-Release on the
+FLAGSHIP.** `docs/trailer/thumbnail.jpg` (Phase 6 derivative) wraps
+a markdown image-link to `trailer.mp4` Release URL. Less native-
+feeling but reliable across all plans; preserves flagship-as-hero
+shape (the 95s trailer is the headline asset).
 
-**Lock**: option (b) — drag-drop cutdown as inline-played embed (it
-shows the load-bearing R3 + closer beats); flagship link below as
-"full 95s trailer" CTA. Trade-off acknowledged: the README's hero
-visual is the 12s cutdown, not the 95s flagship. Engineering-Twitter
-visitors clicking through to GitHub from Post 1 land on the cutdown
-which they may have just watched on X — but the inline player
-removes a click-through friction layer to a Release asset that may
-404 if Release isn't published, doesn't auto-play, etc.
+**Lock — branched by Entry Gate `account-state.md` GitHub plan**:
+- **GitHub Pro / Team / Enterprise (Briggsy on paid)**: option (b)
+  — drag-drop cutdown inline. **Trade-off explicit per
+  product-lens P4 Phase 7 doc-review**: the README's hero-second
+  visual is the 12s cutdown, not the 95s flagship. Engineering-
+  Twitter visitors clicking through from Post 1 may have just
+  watched the cutdown on X. We accept the re-watch cost in exchange
+  for (i) inline player removes a click-through to a Release URL
+  that may 404 during the placeholder window if Release publish
+  drifts, (ii) inline player auto-loops which keeps a visitor on
+  the page longer than a download-thumbnail click, (iii) the
+  Release CTAs below the embed still surface the flagship for
+  direct-visit traffic that didn't come from X.
+- **GitHub Free**: option (d) — clickable-thumbnail-to-Release on
+  flagship. State explicitly in `portfolio-embed.md` that this
+  branch was chosen for plan-state, not preference.
 
 **Step 3 — Canonical Markdown.**
 
-After drag-drop in Step 2.5, the README section reads (final
-Markdown, with `<UUID>` substituted at execution time by the drag-
-drop operation):
+After drag-drop in Step 2 + URL-capture in Step 2 substep 9, the
+README section reads (final Markdown — both the inline-video URL
+and the Release CTA URLs are LIVE, not `<UUID>` placeholders):
 
 ```md
 ## Trailer
 
-https://github.com/user-attachments/assets/<UUID-cutdown>
+https://github.com/user-attachments/assets/<live UUID from Step 2 substep 9>
 
 A 12-second highlight of the 95-second origin trailer for BURNED —
-an Archer-tone autonomous-SDLC party game built end-to-end by Claude
-under ATC direction. Second proof point that the method ships
-repeatably; first was [Undercover Mob Boss](../undercover-mob-boss/),
-2026-03.
+an Archer-tone party game built end-to-end by Claude under ATC
+direction.
 
 [Full trailer (95s)](https://github.com/mbriggsy/burned/releases/download/burned-origin-trailer-v1/trailer.mp4) · [X-native cutdown (12s)](https://github.com/mbriggsy/burned/releases/download/burned-origin-trailer-v1/trailer-x-cutdown.mp4)
 ```
+
+**UMB cross-reference handling per design-lens D4 Phase 7
+doc-review**: pre-doc-review draft included a cross-link to UMB v3
+with "second proof point" framing. The risk row + Variation C
+sidecar already acknowledge UMB v3 has no distribution baseline /
+no documented reception. Putting "second proof" into the long-lived
+README artifact bakes an unverified claim — drop from README copy;
+keep the engineering-mystique framing ("built end-to-end by Claude
+under ATC direction") which is self-supporting. If the D+30
+retrospective confirms the "second proof" framing resonated on X,
+amend the README copy in a future commit. Until then the README
+copy reads cold without depending on audience memory of UMB v3.
 
 Notes on the canonical markdown:
 - The bare `https://github.com/user-attachments/...` URL is what
@@ -1413,11 +1856,11 @@ Notes on the canonical markdown:
 - Interpunct (·) CTA separator matches Project Map convention.
 - No badges, no emoji, no marketing voice (respects README design
   system per frontend-design audit).
-- Cross-link to UMB v3 with relative path (works on github.com
-  navigation).
-- Asset URLs in the CTAs are GitHub Release URLs from `release-urls.json`
-  (Unit 7.1b output). Pasted at write time; never committed as
-  placeholders.
+- Asset URLs in the CTAs are GitHub Release URLs from
+  `release-urls.json` (Unit 7.1b output). Pasted at write time;
+  never committed as placeholders. The user-attachments URL is also
+  captured back into `release-urls.json` (Step 2 substep 9) so the
+  source-of-truth lives in version control.
 
 **Step 4 — Caveats document.**
 
@@ -1454,14 +1897,11 @@ Notes on the canonical markdown:
 - Defer to Briggsy at execution time.
 
 ### Personal portfolio site
-- IF Briggsy has a portfolio site, embed via HTML5 `<video>` tag
-  with poster attribute pointing at `docs/trailer/thumbnail.jpg`.
-- Design tokens / page structure: per frontend-design
-  recommendation (Archer palette: teal #1a4d5e / cream #f5e6d3 /
-  orange #d97032 / ink #0d2027; serif + sans pairing; centered
-  16:9 frame, max-width 1200px, 80px top padding, 64ch reading
-  width, single CTA via inline orange link). Specified for the
-  hypothetical; defer to Briggsy at execution.
+- Defer to Briggsy at execution. Design tokens / page structure
+  live on whichever portfolio-site plan exists, not here. (Per
+  scope-guardian SG7 Phase 7 doc-review — pre-doc-review specced
+  full design tokens for a surface that conditionally exists,
+  framework-ahead-of-need.)
 ```
 
 **Patterns to follow:**
@@ -1523,62 +1963,104 @@ Unit 7.1b Release published; Briggsy X account state recorded.
 
 **Approach:**
 
-**Step 1 — Variation A (locked default, non-Premium-safe).**
+**Step 1 — Caption variant matrix (per CALL-1 + CALL-5 + CALL-6
+Phase 7 doc-review).**
 
 Per stat-verification gate (Unit 7.0): caption uses canonical numbers
-matching trailer narration. "Six in the deck, one in the basement"
-matches Phase 1 line 49 narration.
+matching the LOCKED trailer narration at Phase 1 line 1086 — "Six
+in the deck. One on the research budget. Don't ask." (Per design-
+lens D2: pre-doc-review captions said "in the basement," which was
+Phase 1 fiction retracted during Phase 1 doc-review.)
 
-Per design-lens "technically" hedge note: remove the hedge for the
-Sterling-CODED cadence.
+**CALL-5 — Drop `...Phrasing.` caption tag** (project-burned-
+sterling-coded-voice.md: voice rule is Sterling-CODED cadence
+mimicry, NEVER Benjamin-cloned identity). The catchphrase verbatim
+on a launch tweet is costume, not cadence — exactly the identity-
+replication move the rule forbids. PRODUCT-SPECIFICATION §3.5 ✅
+surfaces for "Phrasing!" are random flavor pools, AnnouncementFeed,
+DramaOverlay, Lobby/idle text — distribution copy is not on that
+list. A deadpan period-broken stinger ("Don't ask about Agent X.")
+delivers the cadence without naming the catchphrase. Removed from
+all caption variants.
 
-**Locked Variation A** (~210 chars, fits 280 free-tier cap):
+**CALL-1 + CALL-6 — Decouple character-cap from audience-fit
+message** (per product-lens P1 + P10). Pre-doc-review variant matrix
+was structured (account-state)-as-content-gate: Variation A leads
+"party game," Variation D adds the engineering claim only if
+Premium unlocks the longer cap. But the engineering-peer audience
+(locked per project context) doesn't need 25k chars — a 280-char
+engineering-peer-lead variant fits the free tier and the link-
+demotion-free rule. The decision matrix is (account-state) ×
+(audience-fit), not account-state-as-content-gate.
 
-> *"BURNED. An Archer-tone party game.*
->
-> *17 illustrations, 120 operations, six operatives in the deck,
-> one in the basement.*
->
-> *Don't ask about Agent X.*
->
-> *...Phrasing."*
->
-> *[attached: trailer.mp4]*
+Three variants drafted; Briggsy locks one per audience-fit choice:
 
-Stats source: `verified-stats.json` from Unit 7.0. Stats land in
-trailer narration order; reader can fact-check against the trailer
-itself.
-
-**Step 2 — Variation B/C/D sidecar.**
-
-Per scope-guardian + repo-research: variants B and C retained as
-sidecar at `caption-variants-considered.md` for retrospective only,
-NOT in Phase 7 plan body. Decision theater eliminated.
-
-Variation D (Premium-only, extended) — drafted IF Briggsy account
-state = Premium / Premium Plus per entry gate. Otherwise omitted.
-
-**Variation D draft** (~600 chars, Premium-only):
+**Variation A (party-game-lead — in-universe, non-Premium-safe)**
+(~190 chars):
 
 > *"BURNED. An Archer-tone party game.*
 >
 > *17 illustrations. 120 operations. Six operatives in the deck,
-> one in the basement.*
+> one on the research budget.*
 >
-> *Built end-to-end by Claude under ATC direction. Second proof
-> point that the autonomous-SDLC method ships repeatably — first
-> was [Undercover Mob Boss](https://...) 2026-03.*
+> *Don't ask about Agent X."*
 >
-> *Don't ask about Agent X.*
->
-> *...Phrasing."*
+> *[attached: trailer.mp4]*
 
-Note: includes a link → triggers link-demotion penalty per
-non-Premium critical constraint. Variation D is ONLY safe on a
-Premium account where algorithmic boost partially offsets link
-penalty. Even on Premium, links are higher-risk than no-links;
-**Variation A remains the safer default**; D is an unlock not a
-recommendation.
+**Variation A-alt (engineering-peer-lead — agentic-SDLC hook,
+non-Premium-safe, no links)** (~265 chars; new per CALL-1):
+
+> *"BURNED — Archer-tone party game built end-to-end by Claude under
+> ATC direction. Second proof the autonomous-SDLC method ships
+> repeatably (UMB v3 was the first).*
+>
+> *17 illustrations. 120 operations. Six in the deck, one on the
+> research budget. Don't ask about Agent X."*
+>
+> *[attached: trailer.mp4]*
+
+(No link → no link-demotion penalty; engineering claim is in the
+first sentence so it lands at scroll-stop. UMB v3 framed as audience
+context, not as load-bearing cross-link — works even if reader has
+no UMB recognition.)
+
+**Lock-choice rationale required** (per product-lens P1 — pre-doc-
+review default to A was structural mismatch with the engineering-
+peer audience). Briggsy explicitly picks Variation A vs A-alt at
+sign-off; the chosen variant is documented in `x-post.md` with a
+one-line rationale ("party-game-first because [reason]" or
+"engineering-peer-lead because [reason]"). Auto-default no longer
+exists; the audience-fit choice must be deliberate, not silently
+inherited from caption-ordering.
+
+**Step 2 — Variation D sidecar (Premium-only extended).**
+
+Per scope-guardian + repo-research: B/C variants retained as
+sidecar at `caption-variants-considered.md` for retrospective only,
+NOT in Phase 7 plan body. Decision theater eliminated.
+
+Variation D — drafted IF Briggsy account state = Premium / Premium
+Plus per entry gate AND Briggsy picks long-form over short. Even
+on Premium, links are higher-risk than no-links; Variation A or
+A-alt remain the safer defaults; D is an unlock not a recommendation.
+Pre-doc-review Variation D included a placeholder `https://...` UMB
+link; per design-lens deferred question + product-lens P2 Phase 7
+doc-review, omit the UMB cross-link entirely from Variation D too
+(UMB v3 reception is undocumented; the cross-reference is
+unverified-claim-territory).
+
+**Variation D draft** (~340 chars, Premium-only):
+
+> *"BURNED — Archer-tone party game built end-to-end by Claude under
+> ATC direction.*
+>
+> *17 illustrations. 120 operations. Six in the deck, one on the
+> research budget.*
+>
+> *Second proof the autonomous-SDLC method ships repeatably. The
+> first time wasn't a lucky shot.*
+>
+> *Don't ask about Agent X."*
 
 **Step 3 — Post 2 (cutdown self-reply at T+90min).**
 
@@ -1619,7 +2101,8 @@ each line corresponds to a real dependency in `package.json` /
 `videos/trailer/package.json`. No "14,000 pages" fabrication. No
 R15 echo.)
 
-**Step 5 — Post 3 (pinned, D+7).**
+**Step 5 — Post 3 (pinned, D+0 evening per CALL-2 + product-lens P6
+revised pin timing — see Unit 7.4).**
 
 Pinned tweet stays at top of profile. Ever-green, self-contained,
 worth repeated impressions.
@@ -1628,31 +2111,38 @@ worth repeated impressions.
 >
 > *An Archer-tone party game. Built by Claude under ATC direction.*
 >
-> *Operation Pendleton — second proof.*
+> *Operation Pendleton — second proof."*
 >
-> *[attached: trailer.mp4]"*
+> *[attached: trailer.mp4]*
 
-Reads cold; references UMB v3 implicitly via "second proof"; sells
-the engineering claim without explaining it. References Pendleton
-agency in-universe term.
+Reads cold; sells the engineering claim without explaining it.
+References Pendleton agency in-universe term.
 
-**Step 6 — X composer rendering verification (emil's check).**
+**Step 6 — X composer rendering verification (emil's check — all 4
+posts per design-lens D3 Phase 7 doc-review).**
 
-Before posting, paste each locked variant into the X composer (DO
-NOT post). Screenshot the composer preview. Verify:
+Pre-doc-review Step 6 ran the rendering check on the "locked
+variant" only (Post 1). Post 2 / Post 2b / Post 3 also contain
+em-dash glyphs and (Post 3 especially) are long-lived; an autoformat
+collapse on the pin bakes the artifact for the life of the pin.
+Extend Step 6 to ALL FOUR posts:
 
-- `...` renders as three ASCII dots, NOT autoformatted to `…` (U+2026
-  ellipsis-glyph). If autoformatted: switch to explicit `U+2026`
-  in the source OR restructure to avoid the dots.
+Before posting, paste each post's caption into the X composer (DO
+NOT post). Screenshot the composer preview for each:
+- `caption-rendering-verification-post1-{A|A-alt|D}.png`
+- `caption-rendering-verification-post2-cutdown.png`
+- `caption-rendering-verification-post2b-stack.png`
+- `caption-rendering-verification-post3-pinned.png`
+
+Verify on each:
+
 - Em-dash (`—`) renders correctly, NOT collapsed to hyphen on
   clipboard round-trip.
-- Period after `...Phrasing` lands as a period, not absorbed into
-  ellipsis.
+- Periods land as periods, not absorbed into auto-ellipses.
 - Line breaks render as intended (X composer's preview vs published).
+- (Post 2b only) the stack list items each survive on their own line.
 
-Save screenshots as `caption-rendering-verification-{variant}.png`
-in `videos/trailer/distribution/`. Briggsy reviews; on approval,
-sign off.
+Briggsy reviews; on approval, sign off.
 
 **Step 7 — Documentation.**
 
@@ -1663,15 +2153,17 @@ sign off.
 
 ## Account state (from entry gate)
 - Briggsy X: <Premium / Premium Plus / free>
-- Variation lock: <A if free; A or D if Premium per Briggsy choice>
+- Briggsy GitHub: <Free / Pro / Team / Enterprise>
+- Variation lock: <A | A-alt (engineering-peer-lead) | D (Premium only)>
+- Lock rationale: <one-line audience-fit justification per CALL-1>
 
 ## Post 1 (flagship launch, T+0)
-- Caption: Variation A locked (Variation D unlocked if Premium)
+- Caption: <variant locked per audience-fit choice>
 - [draft per Step 1/Step 2]
-- Character count: ~210 (Variation A) / ~600 (Variation D)
+- Character count: ~190 (A) / ~265 (A-alt) / ~340 (D)
 - Attached media: out/trailer.mp4
 - Posting time: D+0 (Tue/Wed) 10am ET
-- Rendering verified: caption-rendering-verification-A.png
+- Rendering verified: caption-rendering-verification-post1-{variant}.png
 
 ## Post 2 (cutdown self-reply, T+90min)
 - Self-reply (NOT quote-tweet) to Post 1 — ADR #27
@@ -1753,11 +2245,21 @@ site / repost contingencies.
 | D+0 11:30am (T+90min) | **Post 2 — cutdown self-reply** | X |
 | D+0 noon | Share to Discord (Briggsy's call which channels per `user_harry.md`) | Discord |
 | D+0 12:00–13:00 (T+2-3h) | **Post 2b — tooling-stack self-reply** | X |
+| D+0 evening (after Post 2b lands) | **Pin Post 1** + post the pinned Post 3 separately if Variation D-style pin is chosen | X |
 | D+0 evening | Informal impression check (no public action) | local |
-| D+1 morning | D+1 metrics log entry (impressions, watch-through) | local |
-| D+7 | **Pin Post 1** | X |
-| D+30 | Full retrospective; memory-promote per insight 052 IF surprising | local |
-| D+180 OR new-project ship | Unit 7.7 pin replacement | X |
+| D+1 morning | D+1 metrics log entry (impressions, watch-through, method-signal count) | local |
+| D+30 | Full retrospective; memory-promote per insight 052 IF surprising; ADR #27 falsification check | local |
+| new-project ship (Unit 7.7 trigger #2) OR D+360 reconsideration | Unit 7.7 pin replacement OR keep-pin verdict | X |
+
+(**Pin-at-D+0-evening per CALL-2 + product-lens P6 Phase 7
+doc-review**. Pre-doc-review locked "D+7 pin" with no rationale —
+which leaves the flagship unpinned through the 50-70% impression
+window the rest of the plan optimizes for. Profile visitors driven
+to the profile by the 3-beat burst at D+0-T+0/+90/+180 should land
+on the trailer pinned at the top, not on the prior pin. D+0 evening
+— AFTER the burst completes — pins immediately after the high-
+impression window stabilizes. The D+7 row in the pre-doc-review
+calendar is collapsed into D+0 evening.)
 
 **Step 2 — Cross-surface promotion (scope-cut: 3 rows only).**
 
@@ -1797,28 +2299,51 @@ is moving signals to memory, NOT building a dashboard.
 ```md
 ## Metrics Log
 
-### D+1 (24 hours after launch)
-- X impressions Post 1: <N>
-- X engagement rate Post 1: <N%>
+**Success criterion** (per CALL-7 + product-lens P8 Phase 7
+doc-review): for an engineering-proving-ground artifact, the
+load-bearing signal is "did engineering-peer audiences register
+the autonomous-SDLC method claim?" — NOT raw impressions or
+engagement rate. Impressions are context, not goal. 100 impressions
+with 5 method-mentions is a win; 50,000 impressions with 0
+method-mentions is a wrong-audience failure. The metrics below
+LEAD with method-signal counts.
+
+### D+1 (24 hours after launch) — method-signal-first
+- Method-signal mentions Post 1 (replies/QTs/DMs referencing AI /
+  agent / autonomous / Claude / "built by" unprompted): <N>
+- "How did you build this" / "what stack" DMs or replies: <N>
+- UMB v3 cross-reference recognition (replies mentioning UMB
+  unprompted): <N>
+- X impressions Post 1 (context): <N>
+- X engagement rate Post 1 (context): <N%>
 - X full-trailer watch-through (if data available): <%>
 - Post 2 cutdown impressions: <N>
 - Post 2b stack-thread impressions: <N>
-- Discord shares: <N>
-- Notable replies / DMs: <list>
+- Discord shares + DM signal: <N>
+- Notable replies / DMs verbatim: <list>
 
-### D+7 (1 week — pin action triggered)
+### D+7 (1 week)
+- Cumulative method-signal mentions: <N>
 - Cumulative X impressions: <N>
 - Watch-through trend: <stable / declining / growing>
-- Pin: <Post 1 / pinned candidate / no pin>
+- Pin still on Post 1: <yes/no>
 
-### D+30 — Retrospective + memory promotion
-- Cumulative impressions: <N>
-- Did the agentic-SDLC decode work in the wild? (replies/DMs
-  mentioning AI/agent/autonomous unprompted) <count + qualitative>
-- Did the §2 Archer test resonate? (replies mentioning Archer) <count>
-- Did cutdown outperform flagship? (compare watch-through rates) <verdict>
-- Did UMB v3 viewers cross over? (replies referencing UMB) <count>
-- **MEMORY-PROMOTION**: surprising signals → `~/.claude/projects/.../memory/` per `feedback-make-a-note.md`. UNSURPRISING signals stay logged here.
+### D+30 — Retrospective + memory promotion + ADR #27 falsification
+- Cumulative method-signal mentions: <N>
+- Cumulative impressions (context): <N>
+- Did the §2 Archer test resonate? (replies mentioning Archer): <N>
+- Did cutdown outperform flagship? (compare watch-through rates): <verdict>
+- **ADR #27 (3-beat burst) falsification check** per adversarial A5
+  Phase 7 doc-review:
+  - If Post 1 cumulative impressions account for >85% of thread
+    impressions: 3-beat burst hypothesis WEAKLY DISCONFIRMED;
+    next-project default reverts to single-post + delayed pin.
+  - If Post 2/2b each crossed >10% of Post 1 impressions: 3-beat
+    burst hypothesis CONFIRMED; pattern propagates forward.
+  - Anything between: AMBIGUOUS; collect a second project's data
+    before locking either direction.
+- **MEMORY-PROMOTION**: surprising signals → `~/.claude/projects/.../memory/`
+  per `feedback-make-a-note.md`. UNSURPRISING signals stay logged here.
 ```
 
 Per scope-guardian: D+30 retrospective is NOT a recurring process for
@@ -1936,14 +2461,32 @@ checks.push({
     : 'MISSING',
 });
 
-// 4. Release URLs captured
-const urls = existsSync('videos/trailer/distribution/release-urls.json')
-  ? JSON.parse(readFileSync('videos/trailer/distribution/release-urls.json', 'utf8'))
-  : null;
+// 4. Release URLs captured — schema-validated null-check per security-lens S4
+let urls: { tag: string; urls: Record<string,string>; user_attachments_cutdown_url?: string } | null = null;
+try {
+  if (existsSync('videos/trailer/distribution/release-urls.json')) {
+    const parsed = JSON.parse(
+      readFileSync('videos/trailer/distribution/release-urls.json', 'utf8')
+    );
+    if (parsed && typeof parsed.urls === 'object' && parsed.urls !== null) {
+      urls = parsed;
+    }
+  }
+} catch (e) {
+  urls = null;  // malformed → RED below, not unhandled exception
+}
 checks.push({
-  name: 'release-urls.json populated',
+  name: 'release-urls.json populated + schema-valid',
   pass: urls !== null && Object.keys(urls.urls).length > 0,
-  detail: urls ? `tag=${urls.tag}, ${Object.keys(urls.urls).length} URLs` : 'MISSING',
+  detail: urls ? `tag=${urls.tag}, ${Object.keys(urls.urls).length} URLs` : 'MISSING/INVALID',
+});
+
+// 4b. user-attachments URL captured back (Phase 7 exit condition #4)
+checks.push({
+  name: 'user_attachments_cutdown_url captured',
+  pass: urls !== null && typeof urls.user_attachments_cutdown_url === 'string'
+    && /^https:\/\/github\.com\/user-attachments\/assets\/[0-9a-f-]+$/i.test(urls.user_attachments_cutdown_url),
+  detail: urls?.user_attachments_cutdown_url ?? 'MISSING',
 });
 
 // 5. Verified stats present
@@ -1953,10 +2496,32 @@ checks.push({
   detail: '',
 });
 
-// 6. Sentinels present (git-author-checked separately by verify:briggsy-sentinels)
+// 6. 9:16 conditional handling — verify cutdown-eval.md documents the
+// decision per coherence C3 + Phase 7 exit condition #2
+const cutdownEval = existsSync('videos/trailer/sample-eval/distribution/cutdown-eval.md')
+  ? readFileSync('videos/trailer/sample-eval/distribution/cutdown-eval.md', 'utf8')
+  : '';
+const decl9x16 = cutdownEval.match(/9:16 render produced:\s*(YES|NO)/i);
+let nineSixteenPass = false;
+if (decl9x16) {
+  if (decl9x16[1].toUpperCase() === 'YES') {
+    nineSixteenPass = existsSync('videos/trailer/out/trailer-x-cutdown-9-16.mp4');
+  } else {
+    nineSixteenPass = /skip reason:/i.test(cutdownEval) || /NEEDS-RECOMPOSE|NOGO|not-attempted/.test(cutdownEval);
+  }
+}
+checks.push({
+  name: '9:16 decision documented + matched',
+  pass: nineSixteenPass,
+  detail: decl9x16 ? `decl=${decl9x16[1]}` : 'no `9:16 render produced:` line in cutdown-eval.md',
+});
+
+// 7. Sentinels present + 7. git-author identity (per security-lens S6 —
+// invoke verify:briggsy-sentinels inline, not separately)
 const sentinels = [
   'briggsy-review-7.0.signoff',
   'briggsy-review-7.1.signoff',
+  'briggsy-review-7.1b.signoff',   // ADDED per coherence C1/C5 + adversarial A2 + scope-guardian SG3
   'briggsy-review-7.2.signoff',
   'briggsy-review-7.3.signoff',
   'briggsy-review-7.4.signoff',
@@ -1967,6 +2532,16 @@ for (const s of sentinels) {
     pass: existsSync(`videos/trailer/distribution/${s}`),
     detail: '',
   });
+}
+// Subprocess git-author check — composition with verify:briggsy-sentinels
+// per security-lens S6 (separate-script gap closed)
+try {
+  execFileSync('pnpm', ['verify:briggsy-sentinels',
+    ...sentinels.map(s => `videos/trailer/distribution/${s}`)
+  ]);
+  checks.push({ name: 'sentinels git-author = briggsy007@gmail.com', pass: true, detail: '' });
+} catch (e) {
+  checks.push({ name: 'sentinels git-author = briggsy007@gmail.com', pass: false, detail: 'FAILED' });
 }
 
 // Verdict
@@ -2030,65 +2605,79 @@ units complete.
 
 **Approach:**
 
-**Step 1 — Pin replacement triggers as OR-of-explicit-events.**
+**Step 1 — Pin replacement triggers (collapsed per CALL-2 + product-
+lens P3 + adversarial A6 Phase 7 doc-review).**
+
+Pre-doc-review Unit 7.7 installed a D+180 → D+270 → D+360 time-
+trigger ladder + cross-session TODO.md row. For a no-customer /
+no-deadline / engineering-proving-ground project, that ladder is
+ceremony around a question (is the pin stale?) that doesn't need
+ceremony. CALL-2 collapse: the only meaningful invalidation of
+"second proof of method" is the third proof shipping. Time-based
+ladder demoted to a single far-out reconsideration check, not an
+auto-renewing maintenance row.
 
 ```md
 # Pin Lifecycle — Phase 7 Unit 7.7
 
-## Replace triggers (OR — any one fires)
+## Replace triggers (OR — any one fires; PRIMARY is #1)
 
 Pin is replaced when ANY of:
 
-1. **Time trigger**: 180 days have passed since D+7 pin action.
-   - Calendar entry in `TODO.md` Phase 7 section: "D+180: revisit
-     BURNED pinned tweet" (computed from D+0 + 180 days; absolute
-     date written at execution).
-2. **New-project trigger**: `videos/<next-project>/distribution/x-post.md`
-   exists (next agentic-SDLC project has its own distribution doc).
-3. **Manual override**: Briggsy commits `.unpin-burned.signoff`
+1. **New-project trigger (PRIMARY)**: a successor agentic-SDLC
+   project has shipped its own distribution surface. Detect via
+   `git ls-files 'videos/*/distribution/x-post.md'` discovering an
+   entry other than `videos/trailer/distribution/x-post.md` (per
+   adversarial A6 — globbed-discovery instead of single-path
+   coupling). This is the ONLY event that actually invalidates the
+   "second proof" framing the pin carries.
+
+2. **Manual override**: Briggsy commits `.unpin-burned.signoff`
    sentinel at `videos/trailer/distribution/.unpin-burned.signoff`
    under briggsy007@gmail.com git author identity.
+
+3. **D+360 reconsideration (FALLBACK)**: 360 days after pin action,
+   evaluate "is pinning a 1-year-old trailer still signal-or-
+   stagnation." No auto-extension; no D+180/D+270 ladder. If the
+   answer is "still signal," pin stays AND no further calendar
+   entry is added. If "stagnation," replace per #2 manual override.
+   The 360-day check is a single one-shot review, not a recurring
+   commitment.
 
 ## Replacement action
 
 When any trigger fires:
 1. Briggsy unpins BURNED trailer from X profile.
 2. Pins replacement (next project's pinned candidate, OR a fresh
-   profile-card tweet).
+   profile-card tweet, OR no pin).
 3. Commits `.unpin-burned.signoff` if not already committed.
 
-## No-replacement criteria
+## No time-based maintenance row
 
-If at D+180:
-- No new agentic-SDLC project has shipped yet, AND
-- BURNED trailer pin still receives meaningful new impressions
-  (>50/month), AND
-- No structural change to BURNED has reversed the trailer's
-  "static showcase" claim,
-
-THEN: extend pin by additional 90 days. Add a new TODO.md entry at
-D+270.
-
-If at D+360 still no replacement criterion met:
-- Reconsider whether pinning is still valuable (vs. profile-card
-  tweet, vs. no pin).
-- Memory-promote per `feedback-make-a-note.md` if the answer is
-  "pinning a 1-year-old trailer is signal-of-stagnation."
+Per CALL-2: NO cross-session TODO.md auto-renewing row. For a
+project with no deadline and no customers, the new-project trigger
+is the load-bearing signal; everything else is ceremony.
+`feedback-write-it-down.md` is satisfied by THIS document existing
+in `videos/trailer/distribution/pin-lifecycle.md` (version-
+controlled, discoverable on grep). The D+360 reconsideration is a
+single calendar event captured in TODO.md (see Step 2), not a
+recurring loop.
 ```
 
-**Step 2 — TODO.md cross-session calendar entry.**
+**Step 2 — TODO.md single cross-session calendar entry.**
 
-Add to `TODO.md` Phase 7 section (or §Pin Review):
+Add to `TODO.md` ONE row (not a section, not a recurring loop):
 
 ```md
-### Pin Review (auto-added by Phase 7 Unit 7.7)
-- **D+180 (compute date)**: revisit BURNED pinned tweet per
-  pin-lifecycle.md replacement criteria
-- Triggers: time / new-project / manual `.unpin-burned.signoff`
+- **D+360 (absolute date written at execution)**: one-shot
+  reconsideration of BURNED pinned tweet per
+  `videos/trailer/distribution/pin-lifecycle.md` #3 (delete this
+  row after the reconsideration runs, regardless of verdict).
 ```
 
-This is the cross-session persistence step per `feedback-write-it-down.md`.
-Conversation evaporates; this TODO row survives.
+This satisfies `feedback-write-it-down.md` (cross-session promise
+persists) without installing the indefinite-maintenance loop the
+pre-doc-review Unit 7.7 created.
 
 **Patterns to follow:**
 
@@ -2099,20 +2688,71 @@ Conversation evaporates; this TODO row survives.
 
 **Test scenarios:**
 
-- **Happy path:** D+180 fires → Briggsy reviews; replaces pin OR
-  extends to D+270.
-- **Edge case:** Next project ships D+90 → new-project trigger fires
-  early; pin rotates.
+- **Happy path:** Next project ships D+N → new-project trigger fires;
+  pin rotates.
 - **Edge case:** Briggsy decides D+30 to unpin (e.g., decides pin is
   drawing wrong attention) → commits `.unpin-burned.signoff`; pin
-  removed; future projects' entries to TODO.md still inherit the
-  pattern.
+  removed.
+- **Edge case:** No new project shipped at D+360 → one-shot
+  reconsideration runs; verdict landed; TODO.md row deleted (no
+  recurring loop installed).
 
 **Verification:**
 
-- `pin-lifecycle.md` documents replacement triggers + action.
-- `TODO.md` Phase 7 section has D+180 calendar entry with computed
-  absolute date.
+- `pin-lifecycle.md` documents replacement triggers + action +
+  CALL-2 rationale.
+- `TODO.md` has a single D+360 reconsideration row with computed
+  absolute date and explicit deletion-after-runs instruction.
+
+---
+
+## Minimum-Viable Distribution vs Pattern Investment (CALL-8)
+
+Per product-lens P9 Phase 7 doc-review. The plan ships 7 units + 6
+ADRs + 6 sentinels + 50+ amendments + 5 cross-phase amendments
+against a project with no commercial intent, no deadline, no
+customers. The inversion-check question is: "What's the minimum
+that ships this for engineering peers if Phase 7 weren't building
+tooling for a 4th BURNED-class project that may never exist?"
+
+**LOAD-BEARING for the engineering-proving-ground goal** (would
+have to exist no matter what):
+- Unit 7.0 stat-verification gate (caption hallucination is the
+  one failure mode that breaks the §2 "Archer frame" claim on a
+  visible word level).
+- Unit 7.1 cutdown render (engineering-Twitter watch shape requires
+  the 12s cutdown; flagship-only is mis-fit for in-feed scroll).
+- Unit 7.3 caption copy (audience-fit lock is the single highest-
+  leverage decision in the plan per CALL-1).
+- Unit 7.4 calendar (the 3-beat burst itself is the distribution
+  shape; without it the trailer ships at random times to no algo
+  window).
+
+**PATTERN INVESTMENT for future projects** (justified if and only
+if a future project actually reuses):
+- Unit 7.1b release-asset provisioning (Release-then-write ordering
+  is correct, but a single project could equally well drag-drop
+  inline + Release-CTA without the formal Release-publish gate).
+- Unit 7.6 pre-post verify gate (atomic green-light is good
+  hygiene, but a single-shot launch on one project is forgiving
+  if the gate is light).
+- Unit 7.7 pin lifecycle (per CALL-2 already collapsed to new-
+  project trigger primary; far smaller surface than pre-doc-review).
+- Full sentinel chain + git-author enforcement (correct discipline,
+  but explicit cross-project reuse is what justifies the chain
+  thickness).
+
+**Honesty section**: If a third agentic-SDLC project never ships,
+Phase 7's pattern-investment cost amortizes against ONE project
+(BURNED itself). That changes the elite-team-standard math from
+"discipline propagates" to "discipline is performed." The plan
+keeps the full machinery because the marginal cost of the gates is
+small and the pattern-propagation claim is plausible (UMB v4 or
+some other agentic-SDLC project is more likely to exist than not).
+But CALL-8 names the bet explicitly: future-project-reuse is the
+load-bearing rationale for everything outside Units 7.0/7.1/7.3/7.4.
+If at D+30 + first-future-project-trigger the patterns DON'T
+propagate, this is the audit row to revisit.
 
 ---
 
@@ -2154,7 +2794,11 @@ Conversation evaporates; this TODO row survives.
 | Stale pin after future project ships | Low (Unit 7.7 sentinel) | Medium | Unit 7.7 OR-of-explicit-events; TODO.md D+180 entry |
 | AV-sync at cutdown seek-in (R3 audio-lead) | Low (Phase 5 canonical pattern) | High | ADR #20 inheritance; `-ss AFTER -i` per Phase 5; Unit 7.1 Step 5 verification |
 | GitHub README drag-drop fails | Low | Medium | Fallback: clickable-thumbnail-to-Release pattern documented |
-| Cutdown >10MB user-attachments free cap | Medium | Medium | Document trade-off; Briggsy on paid (100MB cap) handles ~25-40MB cutdown trivially |
+| Cutdown >10 MiB user-attachments free cap | High on GitHub Free | High | Entry Gate `account-state.md` records GitHub plan. Free → option (d) clickable-thumbnail-flagship; Pro+ → option (b) inline cutdown (per ADR #29 + adversarial A8 Phase 7 doc-review). |
+| **Raw FFmpeg `-x264-preset` flag regression** (silently invalid in raw ffmpeg; pre-doc-review Phase 7 used it across all FFmpeg argv) | Eliminated by doc-review pass | High (every cutdown render fails) | Critical Constraints + D-7B + all FFmpeg argv updated to `-preset slow`; ADR #19 cross-tool note added (Remotion CLI: `--x264-preset`; raw FFmpeg: `-preset`) |
+| **GitHub plan state unknown at Entry Gate** | Eliminated by Entry Gate amendment | High (Unit 7.2 mechanism choice undefined) | Entry Gate amendment requires `account-state.md` records GitHub plan alongside X tier (per adversarial A8) |
+| **Sentinel-list / verify-script drift** (7.1b + 7.2 sentinels absent from D-7I + verify-cutdown-ready.ts) | Eliminated by doc-review pass | Medium-High | D-7I list + Unit 7.6 sentinel array updated; verify-cutdown-ready.ts also invokes verify:briggsy-sentinels inline |
+| **filter_complex audio drift at segment seams (R3 audio-lead via packet-vs-sample boundary mismatch)** | Mitigated by 2b-default flip | High on R3 | Approach 2b (per-segment + concat-demuxer) is now default; Step 5 verification adds per-seam check; Approach 2a documented as fallback only (per adversarial A4) |
 | Cloudflare Pages 25 MiB cap "Option II" surprise | Eliminated (option cut) | n/a | Option II removed; GitHub Release 2 GiB primary |
 | Network failure at posting moment | Medium | Medium | Unit 7.6 verify-cutdown-ready 60min before; mobile-hotspot fallback |
 | X video upload fails (format/cap/network) | Low | Medium | Re-encode if needed; X 512 MB cap clears trivially at our sizes |
@@ -2175,9 +2819,15 @@ Conversation evaporates; this TODO row survives.
 - **Cutdown frame-0 anchor**: composed-not-mid-motion per ADR #25.
 - **Cutdown closure**: hard cut, no fade-out per ADR #24.
 - **Cutdown FFmpeg seek**: `-ss AFTER -i` per Phase 5 canonical.
-- **Cutdown encoding**: CRF 18 / `--x264-preset slow` / mono AAC
-  128k 48kHz per ADR #14 + #19.
-- **Thumbnail default**: frame 2790 per Phase 6 line 2253 lock.
+- **Cutdown encoding**: CRF 18 / raw FFmpeg `-preset slow` (NOT
+  `-x264-preset`, which is Remotion CLI only — per feasibility F1 +
+  adversarial A1 Phase 7 doc-review; ADR #19 cross-tool note added)
+  / mono AAC 128k 48kHz per ADR #14 + #19.
+- **Thumbnail PRIMARY**: frame **1950** per Phase 6 Unit 6.2 Step 3
+  lines 1232-1240 lock (corrected per design-lens D2 Phase 7
+  doc-review — pre-doc-review cited "line 2253" + frame 2790
+  default, both wrong). Fallback ladder: 1860 / 1425 / 2790
+  last-resort.
 - **Thumbnail README derivative**: 1200×675 q85 JPEG at `docs/trailer/thumbnail.jpg`
   (Phase 6 cross-phase amendment).
 - **README embed mechanism**: drag-drop user-attachments URL per ADR
@@ -2185,8 +2835,10 @@ Conversation evaporates; this TODO row survives.
   flagship via Release CTAs below.
 - **README placement**: hero-second (`## Trailer` before `## Status`).
 - **Caption stats**: derived from Unit 7.0 verified-stats.json; "six
-  operatives in the deck, one in the basement" matches Phase 1
-  narration.
+  operatives in the deck, one on the research budget" matches Phase
+  1 line 1086 LOCKED narration (corrected per design-lens D2 Phase
+  7 doc-review — pre-doc-review caption text "in the basement" was
+  Phase 1 fiction explicitly retracted at Phase 1 lines 1100-1113).
 - **Variation B/C/D**: B/C cut to sidecar; D conditional on Premium
   status from entry gate.
 - **Post sequence shape**: 3-beat burst T+0 / T+90min / T+2-3h via
@@ -2354,19 +3006,63 @@ tolerance. (Locked per ADR #28 during Phase 7 deepening 2026-05-17;
 supersedes the pre-deepening 5–8 Mbps figure which under-shoots 2026
 X re-encode survival targets.)"*
 
-### Roadmap §1 — roster contradiction resolution (note Otto-in-basement is narrative-only)
+### Roadmap §1 — roster contradiction resolution (Otto on the research budget, narrative-only)
 
 Current roadmap §1 line 50 says: *"seven named operatives in the
 roster (Dash, Vera, Sable, Janet, Neal, Otto, Agent X)"*. Codebase
 ships 6 (5 named + Agent X wild); Otto has no card or art.
 
-Add a clarifying note inline:
+Phase 7 doc-review correction (per design-lens D2): the prior Phase
+7 deepening pass landed the roadmap §1 amendment with "in the
+basement" framing, which matched Phase 1 PRE-doc-review draft text.
+Phase 1 doc-review at lines 1100-1113 retracted that as "Phase 1
+fiction" and locked "on the research budget" matching
+ActRoster.tsx:153-158. The roadmap §1 amendment is corrected to
+match the LOCKED narration:
 
 > *"seven named operatives in the roster (Dash, Vera, Sable, Janet,
-> Neal, Otto, Agent X) — **six in the deck, one (Otto) in the
-> basement: narrative-only-not-shipped per Phase 1 line 49 + Phase
-> 7 stat-verification gate.** Captioned distribution copy must
-> match: 'six operatives in the deck, one in the basement.'"*
+> Neal, Otto, Agent X) — **six in the deck, one (Otto) on the
+> research budget: narrative-only-not-shipped per Phase 1 line 1086
+> locked narration + Phase 7 stat-verification gate.** Captioned
+> distribution copy must match: 'six operatives in the deck, one
+> on the research budget.'"*
+
+### Roadmap §4 ADR #19 — add cross-tool note (Remotion CLI vs raw FFmpeg)
+
+Per feasibility F1 + adversarial A1 Phase 7 doc-review. Append a
+note to ADR #19's rationale clarifying that the `--x264-preset slow`
+flag applies to **Remotion CLI invocations only** (Phase 6 Unit 6.1
+production render); when calling raw FFmpeg argv directly (Phase 7
+Unit 7.1 cutdown render, Phase 7 Step 6 9:16 render, any future
+ffmpeg-direct path), the libx264 encoder option is `-preset slow`
+(single dash, no `x264-` prefix). The two map to the same underlying
+encoder option through different tooling surfaces; do NOT use
+`-x264-preset` against raw `ffmpeg`. Verified against installed
+FFmpeg 8.1 during Phase 7 doc-review: `ffmpeg ... -c:v libx264
+-x264-preset slow` returns `Unrecognized option 'x264-preset'` and
+exits non-zero.
+
+### Phase 6 amendment-status verification (Phase 7 doc-review)
+
+Per adversarial A10 Phase 7 doc-review: verified during the doc-
+review pass that Phase 6 plan body actually carries the cross-phase
+amendments Phase 7 deepening declared:
+
+- ✅ Phase 6 Unit 6.2 Step 3 thumbnail selection rule (lines
+  1232-1240) — landed: 1950 PRIMARY / 1860 / 1425 / 2790 last-resort.
+- ✅ Phase 6 Unit 6.2 Step 3 thumbnail JPEG derivative (lines
+  1244-1254) — landed: `docs/trailer/thumbnail.jpg` ffmpeg generation.
+- ✅ Phase 6 Unit 6.8 cutdown-frame-list.md contract tightening
+  (lines 2861-2867 — "Phase 7 picks one of the documented Options
+  A/B/C; Phase 7 does NOT invent a 4th option") — landed.
+- ✅ Phase 6 Unit 6.8 composed-not-mid-motion timing-window
+  metadata template (lines 2869-2886) — landed.
+- ✅ Phase 6 Unit 6.8 file-size metadata template (line 2888) —
+  landed (header present; template body follows).
+
+(A10's risk that "Phase 7's amendments-applied note may have been
+theater" — refuted by direct verification. The Phase 6 plan body
+carries all five amendments Phase 7 deepening declared.)
 
 ### Roadmap §6 — brainstorm corrections add a new row C7
 
@@ -2374,7 +3070,7 @@ Add to §6 table:
 
 | # | Brainstorm/Phase 7 pre-deepening claim | Research finding | Disposition |
 |---|---|---|---|
-| C7 | Phase 7 caption "7 operatives" | `src/shared/card-defs.ts` ships 5 operatives + Agent X (wild) = 6 entries; trailer narration (Phase 1 line 49) says "six in the deck, one in the basement." | **Caption corrected to "six operatives in the deck, one in the basement"** per ADR #26 stat-verification gate. |
+| C7 | Phase 7 caption "7 operatives" | `src/shared/card-defs.ts` ships 5 operatives + Agent X (wild) = 6 entries; trailer narration (Phase 1 line **1086** locked) says "Six in the deck. One on the research budget. Don't ask." (Phase 1 line 49 was a pre-doc-review summary bullet using the now-retracted "in the basement" framing — see Phase 1 lines 1100-1113.) | **Caption corrected to "six operatives in the deck, one on the research budget"** per ADR #26 stat-verification gate + design-lens D2 Phase 7 doc-review. |
 
 ### Roadmap §11 — mark Phase 7 deepened
 
@@ -2473,8 +3169,12 @@ Status line updates:
 - user-attachments URL mechanism: GitHub community discussion
   #173635 (modern `github.com/user-attachments/assets/<UUID>`
   format)
-- User-attachment cap: 10 MB free / 100 MB paid (per Context7
-  `/github/docs` attaching-files)
+- User-attachment cap: **10 MiB free / 100 MiB paid** (binary, not
+  decimal MB; per Context7 `/github/docs` attaching-files —
+  date-pin verification required at Phase 7 execution time against
+  `https://docs.github.com/en/get-started/writing-on-github/working-
+  with-advanced-formatting/attaching-files` since GitHub may revise
+  caps; per adversarial A9 Phase 7 doc-review)
 - `gh release create` CLI: cli.github.com docs
 
 **Cloudflare:**
@@ -2537,3 +3237,43 @@ line 1326 + Phase 6 Unit 6.8 contract + Phase 6 Unit 6.2 thumbnail
 derivative + roadmap §1/§5.4/§6. Phase 7 is the FIRST documented
 distribution pass for the BURNED-or-Briggsy agentic-SDLC project
 series; patterns propagate forward.*
+
+*Phase 7 document-review absorbed 2026-05-17. 7 CE personas
+(coherence / feasibility / product-lens / design-lens / security-lens
+/ scope-guardian / adversarial-document-reviewer); ~48 raw findings
+deduped to ~38 unique absorbed (3 P0 / 8 P1 / 20 P2 / 7 P3); 8
+strategic CALLs locked (CALL-1 caption audience-fit + Variation
+A-alt / CALL-2 pin lifecycle collapse / CALL-3 cutdown frame-0
+audience-aware Option ranking / CALL-4 README cutdown-hero trade-off
+explicit / CALL-5 cut "...Phrasing." per Sterling-CODED / CALL-6
+decouple character-cap from audience-fit / CALL-7 D+30 metrics
+method-signals-first + ADR #27 falsification test / CALL-8
+minimum-viable-distribution-vs-pattern-investment honesty section).
+P0 mechanical fixes: raw FFmpeg `-x264-preset` → `-preset` across
+every argv invocation (Remotion CLI vs raw FFmpeg cross-tool note
+added; ADR #19 amended) — verified non-zero exit on FFmpeg 8.1;
+caption "one in the basement" → "one on the research budget"
+matching Phase 1 line 1086 LOCKED narration across captions /
+verifier / stat enumeration / roadmap §1 / §6 (the prior Phase 1
+"fiction" was retracted at Phase 1 doc-review lines 1100-1113 —
+Phase 7 pre-doc-review inherited the retracted text); thumbnail
+default frame 2790 → frame 1950 PRIMARY (with 1860/1425/2790
+fallback ladder) per Phase 6 Unit 6.2 Step 3 lines 1232-1240 — the
+pre-doc-review citation of "Phase 6 line 2253" was a mobile-crop-
+audit table row, not the selection rule. P1 wiring gaps closed:
+verify-phase-7-entry.ts + verify-briggsy-sentinels.ts script
+creation contracted in Unit 7.0 Step 0 (pre-doc-review invoked them
+without assigning creation); release-notes.md authoring contracted
+in Unit 7.1b Step 0 (pre-doc-review's `--notes-file` would have
+failed on first run); briggsy-review-7.1b.signoff + briggsy-review-
+7.2.signoff added to D-7I + Unit 7.6 sentinel array (sentinel-list
+drift between creation site and verify site); user-attachments URL
+post-drag-drop capture (`<UUID-cutdown>` placeholder otherwise
+unreproducible in committed artifacts); Approach 2b promoted to
+Phase 7 cutdown default per adversarial audio-seam drift concern
+(2a kept as fallback). Cross-phase ADR #19 amendment (Remotion CLI
+vs raw FFmpeg) + Phase 6 amendment verification (all 5 cross-phase
+amendments from Phase 7 deepening confirmed landed in Phase 6 body)
++ corrected roadmap §1 + §6 row C7 "research budget" framing.
+Phase 7 frontmatter `reviewed: 2026-05-17`. Doc-review sweep
+complete: all 8 phase plans (0/1/2/3/4/5/6/7) reviewed.*

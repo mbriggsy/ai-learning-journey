@@ -131,7 +131,7 @@ Two form factors, two scaling axes, no mixing.
 
 ### §3.6 Recurring design motifs (cross-phase)
 
-> **Moved 2026-05-09.** The Phrasing! cadence contract migrated to `docs/PRODUCT-SPECIFICATION.md` §3.5 — it's product-DNA tone direction, not CSS plan-time research. Cadence target was also revised to **abundance, not restraint** (away from the original "3-5 distinct beats total" cap). Spec is the source of truth; phase plans inherit. Planned-but-unshipped beats are tracked in `TODO.md` §6.
+> **Moved 2026-05-09.** The Phrasing! cadence contract migrated to `docs/PRODUCT-SPECIFICATION.md` §3.5 — it's product-DNA tone direction, not CSS plan-time research. Cadence target was also revised to **abundance, not restraint** (away from the original "3-5 distinct beats total" cap). Spec is the source of truth; phase plans inherit. The shipped beats catalog lives in spec §3.5; the rotating wire-report pool lives in `BURNED_PHRASING_POOL` in `src/client/shared/DramaOverlay.tsx`. (Original TODO §6 pointer retired 2026-05-17 when that section was found never to have existed; replaced here too.)
 
 ---
 

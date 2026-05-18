@@ -22,11 +22,33 @@ All 8 phase plans drafted, deepened, and document-reviewed. Source of
 truth: `docs/plans/origin-trailer/` (phase-0 through phase-7 + `roadmap.md`
 with the ADR ledger). Plan set is the recipe — execution begins here.
 
-**Next: Phase 0 execution.** Run the gate-resolution unit set (preflight
-+ 5 brainstorm gates — R5 hybrid scream / R14 voice cast / Path D
-contingency / audio pre-flight / brainstorm-restructure if needed).
-Output: `PHASE-0-EXIT.md` which Phase 1 consumes. Plan:
-`docs/plans/origin-trailer/phase-0-gate-resolution.md`.
+**Phase 0 execution progress (verified 2026-05-18):**
+
+- Unit 0.1 (scaffold) — ✅ shipped `e5ca0d7e`
+- Unit 0.2 Step 0 (Sterling cadence-spec.md) — ✅ shipped `56c8b9ba`
+- Unit 0.2 Steps 0a + 1 + 3 (TTS-readiness probe + sample script +
+  MUSHRA protocol) — ✅ scaffolded `4d6aac64`; execution blocked on
+  Briggsy's ElevenLabs Creator $22/mo + OpenAI billing keys
+- **Unit 0.5 (composite-viability spike) — ✅ CLEARED `b971d3d6`** —
+  all 5 Remotion integration points render cleanly in MP4 export.
+  Spike-results: `videos/trailer/sample-eval/spike/spike-results.md`.
+  Phase 4 inherits all production patterns; Phase 4 Unit 4.0 font
+  spike DROPS from scope (variable-axis weight syntax works).
+
+**Next unblocked work:** Unit 0.2 Step 0.5 (spec sanity check via
+free-tier Gemini clip + cold-reader feedback — Gemini key already in
+`.env`). Step 0.5 also has a 48h human-loop SLA on the cold reader.
+
+**Gated on Briggsy account setup:** Unit 0.2 Steps 1.5 / 2 / 4 / 5
+(engine-adapter translation → engine matrix → MUSHRA → acceptance).
+Hard prerequisites at `phase-0-gate-resolution.md` §Unit 0.2 Pre-
+Execution Prerequisites: ElevenLabs Creator tier active + OPENAI key
+with `gpt-4o-mini-tts` model access enabled, both written to `.env`.
+
+**Downstream Phase 0 gates** (sequenced after Unit 0.2): Unit 0.6
+(R5 scream) → Unit 0.4 (tone) → Unit 0.3 (R14 cold-open decode).
+Phase 0 exits with `PHASE-0-EXIT.md` consolidating five dispositions
+(composite-viability already CLEARED).
 
 After Phase 0: sequential Phase 1 → Phase 7 execution.
 

@@ -49,23 +49,37 @@ with the ADR ledger). Plan set is the recipe — execution begins here.
   `preflight/preflight-decision.md`. Step 1.5 adapter already canonical
   (built ahead-of-schedule).
 
-**Next unblocked work:** Step 1.5 (engine-adapter translation). All
-three engines green per `account-readiness.md` 2026-05-18:
-- ElevenLabs: tier=creator, scoped key with `user_read` + `text_to_speech` + `voices_read` + `voices_write`, TTS verified (16344-byte test WAV)
-- OpenAI: `gpt-4o-mini-tts` accessible, TTS verified (22656-byte test WAV)
-- Gemini: `gemini-3.1-flash-tts-preview` accessible
-- Char budget: 0 / 100K (May 2026 cycle), tripwires clear
+**Next unblocked work:** Briggsy auditions the 8 matrix outputs at
+`videos/trailer/sample-eval/r4-dash/matrix/{path-a-elevenlabs,path-c-gemini,path-c-openai}/*.{mp3,wav}`
+(open in any audio app) and decides:
+1. Iterate adapters on any clip that misses Target Band
+2. Skip MUSHRA and pick a winner from his own audition
+3. Proceed to Step 3a / 3 / 4 (WebMUSHRA listener panel setup)
+4. Add Path B (his voice clone) to the matrix
+5. Adjust spec then re-run
 
-Step 1.5 writes two remaining adapters (Gemini adapter already
-canonical from Step 0.5):
-- `cadence-spec-elevenlabs.json` — voice_settings numbers + bracket tags + Voice Design prompt
-- `cadence-spec-openai.md` — ~500-word `instructions` string
+**Phase 0 Unit 0.2 progress (verified 2026-05-18):**
+- Steps 0 / 0a / 1 / 3 / 0.5 / 1.5 / 2: ✅ shipped
+- Step 2 matrix: 8 of 9 cells produced audio
+  - Path A (ElevenLabs `Roger - Laid-Back, Casual, Resonant`): 3/3
+  - Path C-Gemini (`Charon`): 2/3 — scream blocked by Gemini prompt-level safety filter (`PROHIBITED_CONTENT`, not overridable via `safetySettings`). Documented engine limitation per cadence-spec §3.6; valid Step 5 data.
+  - Path C-OpenAI (`onyx`): 3/3
+  - ElevenLabs char-budget used: 2.81% (2,814 / 100K)
+- Path B (Briggsy voice clone): NOT in this run — opt-in only.
 
-Then Step 2 (engine matrix) is gated on a Briggsy `go` — first matrix
-run spends ~6-18K ElevenLabs chars (Path A) + ~$0 Path C-Gemini + ~$0.45
-Path C-OpenAI. Path B (Briggsy voice clone, ElevenLabs Instant Voice
-Cloning) is opt-in — requires 10s recording + retention-policy
-acknowledgment per plan §Step 2 Path B clone lifecycle (P2.25 / P2.28).
+**Open follow-up (NOT blocking):** Path A voice-filter scoring
+treats female-voice keyword matches equally with male. Top-5
+ranking surfaces Sarah / Laura tied with Roger. Picked voice
+(Roger) is correct because of the gender label bonus, but ranking
+presentation is misleading. Fix: hard-gate non-matching gender out
+of the candidate pool. Will land when Path A voice gets revisited
+post-Step-4 listener panel (if Step 4 happens).
+
+**Downstream Phase 0 work** (sequenced after Unit 0.2 closure):
+Steps 3a → 3 → 4 → 5 (hosting decision → WebMUSHRA panel setup →
+listener panel → winner selection). Unit 0.6 (R5 scream) → Unit 0.4
+(tone) → Unit 0.3 (R14 cold-open decode). Phase 0 exits with
+`PHASE-0-EXIT.md`.
 
 **Phase 0 ladder downstream of Unit 0.2** (sequenced after the
 engine-matrix MUSHRA acceptance): Unit 0.6 (R5 scream) → Unit 0.4

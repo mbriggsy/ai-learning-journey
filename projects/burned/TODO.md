@@ -7,10 +7,17 @@ the history. (Rule: `feedback-todo-is-not-a-diary.md`.)
 
 ## 1. Active priorities
 
-### Status (verified 2026-05-18)
+### Status (verified 2026-05-18 — end of Phase 1 Units 1.1–1.4 session)
 
-- Tests: **1407 pass** (root suite) | 6 expected fail (68/68 files green)
-- Trailer subpackage tests: **165 pass** — preflight trim contract + Gemini adapter slot guards (Step 0.5) + ElevenLabs JSON schema + OpenAI fence extraction + script-leak guards (Step 1.5) + Sterling-LANA four-axis shape contract on `PARAGRAPH_3_SCREAM` (Unit 0.6) + Pendleton-vocab translation + earned-Phrasing! entendre contract on `TONE_SAMPLE_PARAGRAPH` (Unit 0.4) + R14 cold-open candidate line text + machine-wordplay surface + VOICE_DIRECTION guard + Janet voice/voice_settings lock (Unit 0.3)
+- Tests: **1407 pass** (root suite, verified earlier 2026-05-18; root
+  source untouched this session) | 6 expected fail (68/68 files green)
+- Trailer subpackage tests: **191 pass** (was 165 at Phase 0 close;
+  +10 `timing.test.ts` invariants, +16 `script.test.ts` integrity +
+  marker-grep + R6 + wps assertions). Covers timing/scene-boundary
+  math, BEAT-SHEET.md ⇄ script.ts marker pattern (insight #029), R6
+  Pendleton-vocab discipline (two-regex case-sensitivity split per
+  insight #058), per-cue wps sanity ceiling, voice-cast invariant
+  (2 voices Dash + Janet, single scream cue, S01-only-Janet).
 - Typecheck: clean (`pnpm typecheck` root + `videos/trailer/`)
 - Phone player entry: **19.17 KB gz** — under the 100 KB ceiling
 - DramaOverlay lazy chunk: 2.34 KB gz
@@ -139,11 +146,78 @@ Phase 4 if needed.
 - Unit 0.4: ✅ CLOSED (tone — Path A v2 earned-Phrasing! "Hard to put down")
 - Unit 0.3: ✅ CLOSED (cold-open #4 + Janet/Sloane matriarch-tuned)
 
-**Next unblocked work: Phase 1 — Beat Sheet Lock.** Phase 1 reads
-`videos/trailer/PHASE-0-EXIT.md` to scaffold beat-sheet around the
-locked dispositions. Plan: `docs/plans/origin-trailer/phase-1-beat-sheet-lock.md`.
+**Phase 1 — IN FLIGHT.** 5 of 12 tasks shipped this session:
 
-After Phase 1: sequential Phase 2 → Phase 7 execution.
+- ✅ PRE-step: Plan reconciliation (Phase 0 EXIT 2026-05-18 supersedes
+  2026-05-17 doc-review re-open). Plan head amendment block + 6 body
+  fixes (S01 line = #4 + Janet/Sloane, EASE_OUT curve corrected to
+  spike-locked 0.16/1/0.3/1, Step 2a NOP, S03/S04-cue-03 trims,
+  PHASE-0-EXIT paths corrected).
+- ✅ Unit 1.1 (`e6afc5ce`): scaffold + `timing.ts` (frame constants +
+  emil easing) + `timing.test.ts` (10 assertions) + BEAT-SHEET.md
+  skeleton with 6 scene placeholders + scene-count-lock rationale +
+  Phase 0 carry-forwards + R6 vocab table.
+- ✅ Unit 1.2 (`88fd9ac7`): 16 verbatim VO cues across S01–S06 in
+  `script.ts BURNED_TRAILER_LINES` + tightened `script.test.ts`
+  (marker-grep + R6 + wps + 14 integrity assertions). BEAT-SHEET.md
+  Audio blocks populated with markers. Evidence files
+  `sample-eval/beat-sheet/script-grep-r6.md` +
+  `script-word-count.md`. Trim notes for S03 + S04-cue-03 land in
+  cadenceAdapter.notes.
+- ✅ Unit 1.3 (`57b3436a`): voice cast locked = 2 (Dash + Janet, no
+  Path D). R4 share = **93.4 %** of voiced runtime (≥ 90 % target).
+  Janet voice_settings handoff resolved **Option (B)**: Phase 2 reads
+  from `scripts/cold-open-prototype.ts COLD_OPEN_SPEAKER` constant
+  when `Line.voice === 'janet'`. Evidence:
+  `sample-eval/beat-sheet/voice-cast-lock.md`.
+- ✅ Unit 1.4 (`a18da1f1`): transition vocabulary locked. 5 named
+  transitions (4 overlays + hard cut), 6-boundary picks documented in
+  BEAT-SHEET.md appendix. `transitions.ts` exports frame constants +
+  motion envelopes + emil easing re-exports + SCENE_TRANSITIONS
+  metadata. Cross-dissolve at S04→S05 REMOVED (locked as hard cut
+  after 1.0 s payoff hold).
+- Insights distilled (`5b257349`):
+  [056](docs/insights/056-security-hook-substring-match-blocks-safe-regex-iteration.md) (security hook substring false-positive),
+  [057](docs/insights/057-plan-declared-constants-vs-phase-0-spike-locked-values-drift.md) (plan-vs-spike constants drift),
+  [058](docs/insights/058-vocab-grep-mixed-case-sensitivity-acronyms-vs-common-words.md) (vocab-grep mixed case-sensitivity).
+
+**Remaining (7 tasks):**
+
+- Unit 1.5 — Cascade composition lock. Substantial visual + spatial
+  layout for the load-bearing S04 scene. Deserves Briggsy's eye on
+  BEAT-SHEET.md output before authoring.
+- Unit 1.6 — Goofy stats + cold-read gate. Needs human cold-readers
+  (Briggsy + ≥2 others); Claude-solo can draft + run hat-count audit
+  but the gate consensus is human-eye.
+- Unit 1.7 — Music source lock. Audition-driven (Artlist Pro tier
+  catalog → per-track marketplace → Suno Pro Tier-3 last-resort).
+  Can scope to "Tier ladder doc + audition framework" without doing
+  actual marketplace search.
+- Unit 1.8 — Typography lock. Light follow-on; `useFonts.ts` +
+  variable woff2 load via `loadFont` Promise.all per Phase 0
+  prescription.
+- Unit 1.9 — R15 chrome copy + **R15 #5 subhead bookend pick**
+  (Briggsy decides from 3 candidates; recommended:
+  *"Honestly at this point we're just impressed."* echoing S01
+  kicker via `I'm → we're` plural).
+- Unit 1.10 — Briefing-room visual environment lock. Storyboard
+  sketches for S02 / S03 / S06; emil-design-eng lens validated at
+  deepening, no re-invocation needed.
+- CLOSEOUT — `BEAT-SHEET.signoff` sentinel (ADR #22) only when
+  Briggsy reviews and freezes BEAT-SHEET.md as the Phase 2/3/4
+  consumption contract.
+
+**ATC asks before continuing:**
+
+1. Read `videos/trailer/BEAT-SHEET.md` — verbatim line set lives
+   there; this is the output Briggsy reviews (not intermediate
+   commits per `feedback-briggsy-reviews-output-not-process`).
+2. Pick R15 #5 closing-card subhead from 3 candidates in BEAT-SHEET.md
+   Open follow-ups (or write a new one).
+3. Cold-read gate for Unit 1.6 needs ≥ 3 reviewers per the
+   per-reviewer-floor consensus; can't be Claude-solo.
+
+After Phase 1 closes: sequential Phase 2 → Phase 7 execution.
 
 ### Deploy migration — quarantined (separate commit when ready)
 

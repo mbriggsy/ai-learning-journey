@@ -1,9 +1,15 @@
-# BURNED Origin Trailer — Beat Sheet (DRAFT — UNIT 1.1 SCAFFOLD)
+# BURNED Origin Trailer — Beat Sheet (DRAFT — UNIT 1.2 NARRATION SCRIPT)
 
-> **Status:** scaffolded by Unit 1.1 (Phase 1). Structural placeholders
-> below get filled in by Units 1.2–1.10. Sentinel
+> **Status:** Unit 1.1 scaffold + Unit 1.2 narration draft. Units
+> 1.3–1.10 fill remaining structural placeholders. Sentinel
 > `videos/trailer/sample-eval/beat-sheet/BEAT-SHEET.signoff` is NOT
 > written until Phase 1 closes (ADR #22 sentinel discipline).
+>
+> Every VO line below carries an HTML comment marker (insight #029) of
+> shape `<!-- @line: <id> -->` keyed to
+> `videos/trailer/src/lib/script.ts` `BURNED_TRAILER_LINES`.
+> `script.test.ts` asserts every marker appears exactly once and
+> matches its Line entry verbatim.
 
 ## Runtime: 95.0s / 2850 frames @ 30fps / 16:9 (1920×1080)
 
@@ -85,16 +91,20 @@ foreground card flash, BURNED title landing.
 
 **Audio:**
 
-- **VO (Janet):** *"He's a machine, this kid. Honestly at this point
-  I'm just impressed."* — drops at frame 60 (2.0s in). Bracket-tag
-  treatment: `[deadpan]` leading + `[sarcastic]` before "Honestly".
-  Voice ID `m8AHWg36LJTQWKmfeGVv` (ElevenLabs Sloane, Shared Library,
-  `eleven_v3`) with matriarch-tuned voice_settings per Phase 0 Unit 0.3.
+- **VO (Janet, frame 60):**
+
+  > *"He's a machine, this kid. Honestly at this point I'm just impressed."* <!-- @line: S01-cold-open -->
+
+  Bracket-tag treatment: `[deadpan]` leading + `[sarcastic]` before
+  "Honestly". Voice ID `m8AHWg36LJTQWKmfeGVv` (ElevenLabs Sloane,
+  Shared Library, `eleven_v3`) with matriarch-tuned voice_settings
+  per Phase 0 Unit 0.3. 12 words / ~5.0s expected.
+
 - **Music (S01 frames 0–210):** brass hook entry — `<Unit 1.7 timing>`.
-- **R15 #1:** *"OPERATION PENDLETON / CASE FILE 02 / METHOD:
-  AUTONOMOUS"* (classification stamp slap, lower-left, JetBrains Mono
-  700 28px, `--color-ochre-9` ink on `--color-cream-12` stamp paper,
-  landing frame 150).
+- **R15 #1 (frame 150):** *"OPERATION PENDLETON / CASE FILE 02 /
+  METHOD: AUTONOMOUS"* — classification stamp slap, lower-left,
+  JetBrains Mono 700 28px, `--color-ochre-9` ink on `--color-cream-12`
+  stamp paper.
 
 **Voice:** Janet (Sloane) only. Off-camera narration over Dash visual.
 
@@ -116,8 +126,14 @@ bands, CASE BANNER chrome). Dash character treatment per Unit 1.10.
 
 **Audio:**
 
-- **VO (Dash):** `<Unit 1.2 — S02 lines, ~2.4 wps briefing-room
-  formality, target ~29 words for 12s budget>`.
+- **VO (Dash, frame 219):**
+
+  > *"Good morning. The agency has decided you can be trusted with Operation Pendleton. Code-name in the field: BURNED. Pull up a chair. Try not to embarrass me."* <!-- @line: S02-briefing -->
+
+  Bracket-tag treatment: `[deadpan]` leading. Sterling-CODED briefing-
+  room formality; ellipsis pauses at clause boundaries. 27 words at
+  ~2.4 wps ≈ 11.7s.
+
 - **Music:** brass-bossa underscore at 30% — `<Unit 1.7>`.
 - **CASE BANNER copy:** `<Unit 1.10 Step — S02 banner table>` (label,
   operation, sub, divider, footer).
@@ -137,14 +153,37 @@ positioned inside 1080×1080 central safe square per Unit 1.10.
 **Visual:** `<Unit 1.10 — S03 visual environment lock>`. Operative
 roster reveal (six personnel + Otto-on-research-budget for "seven
 personnel, six in deck and one [on the research budget]"). Dossier
-chrome (clearance level token, visible field names per Unit 1.10).
+chrome (clearance level token, visible field names per Unit 1.10). A
+mid-scene **1.0s dossier-page wipe to deck reveal** sits between
+S03-roster (segment 1) and S03-deck (segment 2).
 
 **Audio:**
 
-- **VO (Dash):** `<Unit 1.2 — S03 lines, ~2.0–2.2 wps sustained
-  narration, target ~33 words for 16s>`. Includes the
-  "seven-personnel-six-in-deck-one-on-the-research-budget" beat per
-  Step 2 hat-count audit (Unit 1.6 Step 1).
+- **VO (Dash, segment 1, frame 570):**
+
+  > *"Our autonomous field assets infiltrated the contract last quarter. [BEAT 0.3s] Seven operatives in the active roster. [BEAT 0.3s] Six expense reports, all classified. [BEAT 0.3s] One who insists on being called 'Agent X' and refuses to file any paperwork whatsoever."* <!-- @line: S03-roster -->
+
+  Bracket-tag treatment: `[deadpan]` leading. ~35 words in 9.0s
+  budget + 0.9s internal beats. Plan-original "One **field agent**
+  who insists..." trimmed to "One who insists..." — 'field agent'
+  compound flagged by R6 grep (`agent` SDLC pattern matches even
+  with 'field' modifier; Agent X proper-noun carve-out only fires
+  on "Agent X" exact match). The "Agent X" reveal still carries.
+
+- **[Mid-scene wipe — 1.0s dossier-page wipe to deck reveal.]**
+
+- **VO (Dash, segment 2, frame 870):**
+
+  > *"Mission: a deck of one hundred and twenty operations. [BEAT 0.4s] One ends your career instantly. [BEAT 0.3s] The rest help you survive. Or ensure your colleagues don't."* <!-- @line: S03-deck -->
+
+  Bracket-tag treatment: `[deadpan]` leading. ~24 words in 6.0s
+  budget + 0.7s internal beats. Trimmed from plan-original (~31w)
+  by compressing the deck-fate clauses: "One of them ends" →
+  "One ends" (implied antecedent), "exist to help you survive it"
+  → "help you survive" (no hedge verb), "Or to ensure your
+  colleagues don't" → "Or ensure your colleagues don't" running
+  with no preceding [BEAT]. Dark-closing gag preserved.
+
 - **Music:** brass-bossa underscore at 30%.
 - **No R15 in S03.**
 
@@ -153,7 +192,9 @@ chrome (clearance level token, visible field names per Unit 1.10).
 **Transition out:** dossier-page wipe overlay component on S03 tail —
 16 frames (frames 1034–1050), left-to-right reveal of destination
 (S04 cascade entry). `EASE_IN_OUT = cubic-bezier(0.77, 0, 0.175, 1)`
-per timing.ts. See Unit 1.4.
+per timing.ts. See Unit 1.4. **NOTE:** this is the S03→S04 transition
+wipe (16 frames at scene tail), distinct from the internal 1.0s
+mid-scene wipe between segments 1 and 2.
 
 **Mobile safe square copy:** operative portraits + dossier text inside
 1080×1080 central safe square per Unit 1.10.
@@ -171,28 +212,35 @@ at 40% opacity throughout. Comms-ticker dim background until frame
 1860 (cascade peak intensification). **Frame 1950 stamp slap is the
 trailer's ONLY "everything at once" moment.**
 
-**Audio:**
+**Audio — cascade cue table** (per Unit 1.2 Step 5 per-cue wps validation):
 
-- **VO (Dash) — continuous narration paced per receipt:** `<Unit 1.2 —
-  S04 cue table; wps bands sustained 1.9–2.3 / list 2.4–2.6 / payoff
-  1.6–2.0>`.
-- **Goofy-stats list (frames 1050–1880):** `<Unit 1.6 — 4 stats locked
-  at cold-read gate; Otto on "research budget" not "basement">`.
-- **Stacked-payoff line (frame 1950, 4 words, 60-frame window at 2.0
-  wps deadpan):** *"They WERE the operation."*
-- **Music:** brass-bossa builds toward frame 1950 stamp slap. Music
-  ducks from frame 1980 → 2010 (30-frame ramp), completing as VO ends.
-  Silent visual hold frames 2010–2040 (1.0s).
-- **R15 #2:** *"OPERATIVE [REDACTED] — METHOD REPEATABLE"* — comms-
-  ticker pulse, frame 1680. JetBrains Mono 500 22px, scrolling
-  left-to-right at bottom edge.
-- **R15 #3:** *"AUTONOMOUS FIELD UNIT — ASSET DELIVERED"* — dossier
-  stamp slap (heavy 16-frame slap, scale 0.85 → 1.06 overshoot at
-  12/16 → 1.0 settle), frame 1950. JetBrains Mono 700 38px,
+| Cue frame | Window (s) | Visual | VO line |
+|-----------|-----------|--------|---------|
+| 1050 | 2.0s | HTP dossier slides into hero position (Playwright capture) | > *"Operational planning."* <!-- @line: S04-cue-01 --> |
+| 1110 | 3.0s | HTP scroll begins (top portion) | > *"Fourteen thousand pages of forensic dossiers."* <!-- @line: S04-cue-02 --> |
+| 1200 | 3.0s | HTP scroll continues (middle portion) | > *"Drafted on weekends, by a field asset — name redacted for compliance."* <!-- @line: S04-cue-03 --> |
+| 1290 | 4.0s | Stat 1 caption enters safe-square center-bottom at full weight | > *"Mission rehearsal: fourteen hundred and seven contingencies war-gamed."* <!-- @line: S04-stat-01 --> |
+| 1410 | 5.0s | Stat 1 decays to chrome side-band; Stat 2 enters safe-square center-bottom | > *"Six of them, deliberately unrehearsed — the 'memorable ones.'"* <!-- @line: S04-stat-02 --> |
+| 1560 | 4.0s | Stat 2 decays to chrome; Stat 3 enters safe-square center-bottom | > *"Seventeen asset illustrations. Two of them with hats."* <!-- @line: S04-stat-03 --> |
+| 1680 | 6.0s | Stat 3 decays to chrome; Stat 4 enters safe-square center-bottom | > *"Seven on the roster. Six in the deck. One on the research budget. Don't ask."* <!-- @line: S04-stat-04 --> |
+| 1860 | 3.0s | Cascade peak — comms-ticker brightens to held-bright state; HTP hero + accumulated halo (40%) + bright ticker; **no VO** | — |
+| **1950** | 2.0s | **Stacked payoff stamp slaps onto HTP hero overprint (heavy 16-frame slap). HTP hero drops to 50% opacity. Cascade chrome (4 stats at 30% side-band, halo at 40%, bright ticker) IS the visual antecedent of "they." Dash VO delivers the 4-word truth-collision.** | > *"They WERE the operation."* <!-- @line: S04-payoff --> |
+| 1980 | (within prior cue) | Music duck pre-anticipated ramp begins (90% → 30% over 30 frames, completes at 2010 as VO ends) | (VO continues) |
+| 2010–2040 | 1.0s | **Silent visual hold: HTP hero + stamp + halo + 4 stats in chrome all static. Music at bed-only level (30%). No VO. The meaning-collision lands in the silence after the line, not in a second cue.** | — |
+| 2040 | — | **Hard cut to S05 gameplay.** | — |
+
+- **R15 #2 (frame 1680):** *"OPERATIVE [REDACTED] — METHOD REPEATABLE"*
+  — comms-ticker pulse, JetBrains Mono 500 22px, scrolling left-to-
+  right at bottom edge.
+- **R15 #3 (frame 1950):** *"AUTONOMOUS FIELD UNIT — ASSET DELIVERED"*
+  — dossier stamp slap (heavy 16-frame slap, scale 0.85 → 1.06
+  overshoot at 12/16 → 1.0 settle), JetBrains Mono 700 38px,
   `--color-burned-fire` ink. **Overprints HTP hero**; visual carrier
   of the R3 stacked payoff.
 
-**Voice:** Dash (Roger) sole.
+**Voice:** Dash (Roger) sole; all cues `[deadpan]` leading except
+S04-payoff which carries the controlled-deadpan payoff cadence at
+the 2.0 wps ceiling.
 
 **Transition out:** **hard cut to S05 at frame 2040** (NO cross-
 dissolve — `<Series.Sequence>` boundary). Music duck completes BEFORE
@@ -218,20 +266,35 @@ Trim ownership = Phase 5.
 
 **Audio:**
 
-- **VO (Dash) — scream cue:** *"VEEEEEEEERAAAA!!!"* — Sterling-CODED
-  volume-discontinuous register, Sterling-LANA four-axis shape (flat
-  pitch + 6–12 dB amplitude jump + first-vowel drag + accent anchored
-  on first syllable) per Phase 0 Unit 0.6. Lands at **frame 2400**
-  (200-frame-delayed reaction beat after the clip-relative-frame-160
-  BURNED-card-draw visual). Bracket-tag prefix `[shouts]` (self-
-  closing, ElevenLabs v3). Voice ID `CwhRBWXzGAHq8TQ4Fs17` (Roger)
-  with Unit 0.2 defaults.
+- **VO (Dash, frame 2280, sparse interjection):**
+
+  > *"And — between you and me — they appear to be enjoying it."* <!-- @line: S05-gameplay-vo -->
+
+  Bracket-tag treatment: `[deadpan]` leading. 12 words / ~5.0s. Em-
+  dash pauses for sotto-voce conspiratorial register.
+
+- **VO (Dash, frame 2400, scream cue):**
+
+  > *"VEEEEEEEERAAAA!!!"* <!-- @line: S05-scream -->
+
+  Bracket-tag treatment: `[shouts]` self-closing (ElevenLabs v3 ONLY).
+  Sterling-LANA four-axis acoustic shape per Phase 0 Unit 0.6
+  cadence-spec.md §3.6: (1) flat pitch, (2) 6–12 dB amplitude jump
+  vs gameplay bed, (3) FIRST-vowel drag, (4) accent anchored on first
+  syllable. 200-frame-delayed reaction beat after clip-relative-160
+  BURNED-card-draw at absolute frame 2200. `skipSilenceremove: true`
+  in script.ts to preserve attack envelope.
+
 - **Music:** brass-bossa underscore at 30% baseline; ducks under
-  scream cue (frame 2400) for 15 frames either side. **Edit policy:**
-  `<Unit 1.5 — S05 audio treatment spec>`.
+  scream cue (frame 2400) for 15 frames either side, then returns to
+  30%. Music ducks to 15% for 15 frames around the BURNED-card-draw
+  moment (frame 2200) per Unit 1.2 Step 6 audio treatment.
+- **Gameplay audio:** raw board ambient + phone-tap SFX + occasional
+  player laugh, level-normalized to -12 dBFS RMS. UNEDITED beyond
+  normalization (intentional "rough live authentic" reading).
 - **No R15 in S05** (clean visual focus for live-gameplay frame).
 
-**Voice:** Dash (Roger) sole. Scream is the only VO cue in S05.
+**Voice:** Dash (Roger) sole. Two cues (gameplay-vo + scream).
 
 **Transition out:** iris-wipe overlay component on S05 tail (45
 frames, 1.5s, frames 2535–2580). `clip-path: circle(70.7% at 50% 50%)`
@@ -253,28 +316,43 @@ at frame 2820 + R15 #5 closing card at frame 2835.
 
 **Audio:**
 
-- **VO (Dash) — closing line:** `<Unit 1.2 — S06 lines, ~1.6–2.0 wps
-  payoff register, target ~16 words for 9s budget>`. Closing tag:
-  *"...Phrasing."* — earned-Phrasing! mechanic per Phase 0 Unit 0.4
-  (preceding line must read as benign briefing context AND sexual
-  double entendre cold-listen). Recommended Phrasing-bearing line:
-  *"That's the briefing. Operation Pendleton is in your hands. Hold
-  it tight." → "Phrasing."* ("hold it tight" carries physical-double-
-  meaning shape Phrasing! responds to).
-- **Music:** brass-bossa underscore climbs toward final beat, lands
-  with the BURNED logo, fades during R15 #4 stamp.
-- **R15 #4:** *"OPERATION STATUS: FIELD-READY"* — subhead under BURNED
-  logo, JetBrains Mono 700 32px, `--color-ochre-9` ink, frame 2820.
-- **R15 #5 (NEW closing-card cold-decode):** *"DRAFTED, RENDERED, AND
-  SHIPPED BY AUTONOMOUS AGENTS."* + 30%-opacity subhead **TBD per
-  AMENDMENT 2026-05-18** (S01-bookend mechanism BROKEN — re-derive in
-  Unit 1.9; recommended candidate: *"Honestly at this point we're
-  just impressed."* echoing S01 kicker via `"I'm"` → `"we're"` plural
-  to fold autonomous-build collective speaker). Frame 2835. JetBrains
-  Mono 700 32px main + JetBrains Mono 500 italic 22px subhead at 30%
-  opacity. Both lines centered below R15 #4.
+- **VO (Dash, frame 2580, close):**
 
-**Voice:** Dash (Roger) sole.
+  > *"That's the briefing. Operation Pendleton is in your hands. Hold it tight."* <!-- @line: S06-close -->
+
+  Bracket-tag treatment: `[deadpan]` leading. 14 words at ~1.9 wps
+  deliberate-close pace ≈ 7.4s. **"Hold it tight"** is the
+  entendre setup line for Phrasing! — physical-action ambiguity per
+  spec §3.5 earned-Phrasing! mechanic.
+
+- **[BEAT 0.4s — 12 frames silence between close and Phrasing.]**
+
+- **VO (Dash, frame 2814, Phrasing! punchline):**
+
+  > *"Phrasing."* <!-- @line: S06-phrasing -->
+
+  Bracket-tag treatment: `[deadpan]` leading. FFmpeg fade curve: qsin
+  (per plan Step 7 phrasing-specific fade shape). R15 #4 stamp
+  *"OPERATION STATUS: FIELD-READY"* lands at frame 2820 (concurrent
+  with Phrasing audio tail). R15 #5 closing-card lands at frame 2835
+  (post-audio).
+
+- **Music:** brass-bossa underscore climbs toward final beat, lands
+  with the BURNED logo, fades during R15 #4 stamp; final sting tail
+  frames 2826–2850 (0.8s).
+- **R15 #4 (frame 2820):** *"OPERATION STATUS: FIELD-READY"* —
+  subhead under BURNED logo, JetBrains Mono 700 32px,
+  `--color-ochre-9` ink.
+- **R15 #5 (frame 2835, NEW closing-card cold-decode):** *"DRAFTED,
+  RENDERED, AND SHIPPED BY AUTONOMOUS AGENTS."* + 30%-opacity subhead
+  **TBD per AMENDMENT 2026-05-18** (S01-bookend mechanism BROKEN —
+  re-derive in Unit 1.9; recommended candidate: *"Honestly at this
+  point we're just impressed."* echoing S01 kicker via `"I'm"` →
+  `"we're"` plural to fold autonomous-build collective speaker).
+  JetBrains Mono 700 32px main + JetBrains Mono 500 italic 22px
+  subhead at 30% opacity. Both lines centered below R15 #4.
+
+**Voice:** Dash (Roger) sole. Two cues (close + Phrasing!).
 
 **Transition out:** hard cut to black at frame 2850. Both R15 #4 and
 R15 #5 hold through the final 15 frames until cut.
@@ -308,7 +386,9 @@ inside 1080×1080 central safe square.
 - **Janet voice_settings handoff** — Unit 1.3 picks mechanism (new
   `Line.voiceSettingsOverride` field OR Phase 2 reads from
   `cold-open-prototype.ts` `COLD_OPEN_SPEAKER` constant). Single
-  source of truth either way.
+  source of truth either way. Current script.ts S01-cold-open line
+  delegates via `cadenceAdapter.notes` pointer to the COLD_OPEN_SPEAKER
+  constant.
 
 ---
 
@@ -318,4 +398,3 @@ inside 1080×1080 central safe square.
 ONLY when Briggsy reviews and freezes BEAT-SHEET.md per ADR #22.
 Phase 2 voice pipeline asserts sentinel existence before consuming
 `script.ts`.
-

@@ -39,17 +39,40 @@ Awaiting Briggsy audition.
   shape under-rendered (Sterling's signature is the sustained call,
   not the short burst — captured below).
 
-### v2 — `[shouts] VERAAAAAAAAAAA!!!` (vowel-drag, sustained-call form)
+### v2 — `[shouts] VERAAAAAAAAAAA!!!` (second-vowel drag — FAILED shape)
 
 - **File:** `path-a-tts-v2-vowel-drag.mp3`
 - **sha256:** `879d8b3c2bfb87c9ee4116116b2f6b6c85661ae2b92aff43d4bddc0eecb57820`
 - **Source:** ElevenLabs v3, voice Roger, same voice_settings as v1,
-  text payload `[shouts] VERAAAAAAAAAAA!!!` (11 A's — matching the
-  Sterling-LANA vowel-drag count Briggsy referenced).
+  text payload `[shouts] VERAAAAAAAAAAA!!!` (11 A's — drag on second
+  vowel).
 - **Generated:** 2026-05-18 via `scripts/generate-scream-variant.ts`
   in response to Reader A note that v1 missed the sustained-call
   shape.
+- **Reader-A signal (Briggsy, 2026-05-18):** *"the wrong vowel got
+  elongated. it sounds like verrrraaa, i think it should be
+  veeeeeeeeraaaa and the accent shifted it needs to stay on the 1st
+  syllable."* Diagnosis: the AAA cluster after R triggered an R+A
+  blend elongation (engine treated R+AAA as one sustained ar-blend),
+  AND the accent migrated from VEE (first syllable) to RAH (the
+  dragged vowel). Sterling-LANA shape requires drag on the FIRST
+  vowel with accent staying on the first syllable.
 - **Char-budget impact:** +26 chars (cumulative 2,840 / 100,000).
+
+### v3 — `[shouts] VEEEEEEEERAAAA!!!` (first-vowel drag, accent-anchored)
+
+- **File:** `path-a-tts-v3-first-vowel-drag.mp3`
+- **sha256:** `5daa176d38ce3f4f8711ae7b8351485d0299ff7a9473a29ec0658c8a72269c9a`
+- **Source:** ElevenLabs v3, voice Roger, same voice_settings as v1/v2,
+  text payload `[shouts] VEEEEEEEERAAAA!!!` (8 E's + 4 A's — matching
+  Briggsy's typed reference exactly). Drag on the first vowel (EE)
+  with secondary stretch on the trailing A.
+- **Generated:** 2026-05-18 via `scripts/generate-scream-variant.ts`
+  in response to v2 Reader-A signal.
+- **Char-budget impact:** +26 chars (cumulative 2,866 / 100,000).
+- **Theoretical alignment with Sterling-LANA:** first vowel
+  stretched + accent anchored on first syllable + quick punctuated
+  tail = the four-axis acoustic shape captured below.
 
 **Sterling-LANA acoustic acceptance shape** (refined characterization,
 captured 2026-05-18 — supersedes the pure "volume-discontinuous /
@@ -73,15 +96,18 @@ spec on speculation).
 
 ## 2. Audition + Decision
 
-Briggsy A/Bs `path-a-tts.mp3` (v1) and `path-a-tts-v2-vowel-drag.mp3`
-(v2), then picks ONE of:
+Briggsy A/Bs `path-a-tts.mp3` (v1) vs `path-a-tts-v3-first-vowel-drag.mp3`
+(v3), then picks ONE of:
 
 | # | Outcome | Trigger |
 |---|---|---|
 | 1 | **Ship v1** (`[shouts] VERAAA!!!`) | Short-burst form lands; vowel-drag judged unnecessary |
-| 2 | **Ship v2** (`[shouts] VERAAAAAAAAAAA!!!`) | Vowel-drag form lands the Sterling-LANA shape |
-| 3 | **Try another variant** | Neither v1 nor v2 lands — iterate on tag, vowel count, or both (see Re-render procedure below) |
+| 2 | **Ship v3** (`[shouts] VEEEEEEEERAAAA!!!`) | First-vowel-drag form lands the Sterling-LANA shape |
+| 3 | **Try another variant** | Neither v1 nor v3 lands — iterate on tag, vowel count, or stress shape (see Re-render procedure below) |
 | 4 | **Cut R5** | No variant lands Archer-grade after exhausting reasonable iterations; flat scream worse than no scream per brainstorm rule |
+
+(v2 is preserved on disk as a FAILED-shape negative reference — drag
+landed on the wrong vowel + accent shift.)
 
 **Re-render procedure (outcome 3 — iterate):** the
 `generate-scream-variant.ts` script takes arbitrary text + label +

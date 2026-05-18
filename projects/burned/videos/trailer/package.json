@@ -13,7 +13,6 @@
     "check:tts": "tsx scripts/check-tts-readiness.ts",
     "preflight": "tsx scripts/generate-preflight-clip.ts",
     "matrix": "tsx scripts/generate-tts-eval.ts",
-    "scream:path-b": "tsx scripts/generate-path-b-vc.ts",
     "capture:htp": "tsx scripts/capture-htp-scroll-burned.ts"
   },
   "dependencies": {

@@ -50,31 +50,24 @@ with the ADR ledger). Plan set is the recipe — execution begins here.
   (built ahead-of-schedule).
 
 **Unit 0.6 (R5 Sterling-Screams-Lana Cameo Eval) — 🟡 IN-FLIGHT.**
-Workspace scaffolded 2026-05-18 (this session). Unit 0.2 closed
-2026-05-18 — disposition at
+Pivoted 2026-05-18 to **single-reader Briggsy-only audition** — Path B
+Voice Changer, reference anchor clip, and 3-listener panel all
+dropped per Briggsy's call (won't record, won't source reference,
+won't recruit listeners). Single-reader fallback is
+precedent-aligned (Unit 0.2 + Step 0.5 closed the same shape).
+Unit 0.2 disposition at
 `videos/trailer/sample-eval/r4-dash/unit-0.2-disposition.md`.
 
-**Unit 0.6 scaffold landed:**
+**Audition ready:**
 - `videos/trailer/sample-eval/r5-scream/path-a-tts.mp3` — Roger
   `[shouts] VERAAA!!!` clip reused from Unit 0.2 Step 2 matrix
-  (sha256 `0e3e2e1b…`)
-- `videos/trailer/sample-eval/r5-scream/scream-eval.md` — protocol
-  template: pool-independence audit, randomization scheme, listener
-  question, acceptance check, attribution table, downstream
-  propagation cells
-- `videos/trailer/scripts/generate-path-b-vc.ts` — ElevenLabs
-  Speech-to-Speech renderer (`pnpm scream:path-b` from
-  `videos/trailer/`). Awaits source recording.
+  (sha256 `0e3e2e1b…`).
+- `videos/trailer/sample-eval/r5-scream/scream-eval.md` — single-reader
+  audition protocol + decision tree (ship / re-render `[shouting]` /
+  re-render `[scream]` / cut R5).
 
-**Blocked on Briggsy:**
-1. **Record human scream** → `videos/trailer/sample-eval/r5-scream/path-b-source-recording.wav`
-   (~1.5s, 12-18" mic distance, peak ~-3 dBFS, WAV). Brief lives in
-   `scream-eval.md` §2(b).
-2. **Pick reference clip** from `scream-eval.md` §7 candidates
-   (recommended: Freesound CC0 search; alternates: Brandon Deep
-   Voices.com Angry demo, Kevin Urban character reel).
-3. **Recruit ≥3 Archer-fan listeners** via Discord network + Harry,
-   pool-independent from Step 0.5 (i.e., NOT Briggsy as a listener).
+**Blocked on Briggsy:** play `path-a-tts.mp3`, pick ship / re-render /
+cut. Re-render path is a 5-min `pnpm matrix` loop (adapter edit + run).
 
 **Phase 0 Unit 0.2 closure summary:**
 - Step 5 winner: **Path A — ElevenLabs Roger** (`CwhRBWXzGAHq8TQ4Fs17`,

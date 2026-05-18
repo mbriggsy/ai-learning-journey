@@ -49,12 +49,23 @@ with the ADR ledger). Plan set is the recipe — execution begins here.
   `preflight/preflight-decision.md`. Step 1.5 adapter already canonical
   (built ahead-of-schedule).
 
-**Next unblocked work:** *Spec layer is clear.* The remaining Phase 0
-Unit 0.2 ladder (Steps 1.5 → 2 → 3a → 4 → 5) is gated on the
-ElevenLabs Creator $22/mo API key landing in `.env`. When it does,
-re-run `pnpm check:tts` to refresh `account-readiness.md`, then
-proceed with engine-matrix generation per
-`phase-0-gate-resolution.md` §Unit 0.2.
+**Next unblocked work:** Step 1.5 (engine-adapter translation). All
+three engines green per `account-readiness.md` 2026-05-18:
+- ElevenLabs: tier=creator, scoped key with `user_read` + `text_to_speech` + `voices_read` + `voices_write`, TTS verified (16344-byte test WAV)
+- OpenAI: `gpt-4o-mini-tts` accessible, TTS verified (22656-byte test WAV)
+- Gemini: `gemini-3.1-flash-tts-preview` accessible
+- Char budget: 0 / 100K (May 2026 cycle), tripwires clear
+
+Step 1.5 writes two remaining adapters (Gemini adapter already
+canonical from Step 0.5):
+- `cadence-spec-elevenlabs.json` — voice_settings numbers + bracket tags + Voice Design prompt
+- `cadence-spec-openai.md` — ~500-word `instructions` string
+
+Then Step 2 (engine matrix) is gated on a Briggsy `go` — first matrix
+run spends ~6-18K ElevenLabs chars (Path A) + ~$0 Path C-Gemini + ~$0.45
+Path C-OpenAI. Path B (Briggsy voice clone, ElevenLabs Instant Voice
+Cloning) is opt-in — requires 10s recording + retention-policy
+acknowledgment per plan §Step 2 Path B clone lifecycle (P2.25 / P2.28).
 
 **Phase 0 ladder downstream of Unit 0.2** (sequenced after the
 engine-matrix MUSHRA acceptance): Unit 0.6 (R5 scream) → Unit 0.4

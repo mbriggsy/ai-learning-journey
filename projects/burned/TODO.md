@@ -130,6 +130,28 @@ local-dev fallback path if migration isn't finalized by then.
 Active warnings only. Older landmines have moved to `docs/insights/` and
 `CLAUDE.md`.
 
+- **Origin-trailer doc drift after Unit 0.6 §3.6 expansion** (2026-05-18,
+  closure of `ed03e598`). The Sterling-LANA four-axis characterization
+  (flat pitch + amp jump + first-vowel drag + accent anchor) now lives
+  in `videos/trailer/sample-eval/r4-dash/cadence-spec.md` §3.6 and the
+  ElevenLabs adapter notes. Stale references in:
+  · `cadence-spec-gemini.md:136` and `cadence-spec-openai.md:48,92` —
+    encode the original 2-axis "volume-discontinuous-not-pitch" framing
+    only. Currently dead-code (Path C engines dropped to backup per
+    Unit 0.2 disposition); if either engine is ever reactivated for
+    Phase 4/6 fallback, re-derive each adapter's scream section from
+    `cadence-spec.md` §3.6 before rendering, otherwise the engine will
+    produce a no-drag burst instead of the Sterling-LANA call.
+  · `docs/plans/origin-trailer/phase-1-beat-sheet-lock.md` lines 414,
+    415, 1224, 1234, 1441 inline `"VERAAA!!!"` rather than pointing at
+    the `PARAGRAPH_3_SCREAM` constant. When Phase 1 beat-sheet-lock
+    executes, fix: replace the inline string with a constant reference
+    so the canonical `VEEEEEEEERAAAA!!!` text is what ships.
+  · `docs/plans/origin-trailer/phase-0-gate-resolution.md` references
+    to "VERAAA!!!" are HISTORICAL (the eval procedure that resolved to
+    the new canonical text). Don't retroactively edit — they document
+    the path, not the destination.
+
 - **Push to Briggsy's repos is now autonomous; force-push to
   main/master is the carve-out.** Policy inverted 2026-05-18 after
   the auto-mode classifier blocked `/distill` citing two autonomous

@@ -129,6 +129,19 @@ This is the #1 lesson from `docs/ideation/2026-04-11-visual-layer-autopsy.md`: t
 
 **Cadence: abundance, not restraint.** Phrasing! beats should be seeded generously across the game. Players should encounter Phrasing! often enough that it reads as Archer DNA — a recurring rhythm — not a one-time easter egg. The bar isn't "spread thin to keep the joke fresh"; it's "land it everywhere it lands naturally." Over-saturation is unlikely as long as the constraints below hold.
 
+**Trigger: the entendre IS the rule.** Phrasing! is not a cadence-only tag bolted onto any deadpan line. The catchphrase fires on a **"that's what she said"-style trigger** — the line that *precedes* the *...Phrasing.* tag must read simultaneously as a benign briefing/operational statement AND a sexual double entendre. Without the entendre setup, the tag is **unearned** and breaks the joke.
+
+The shipped beats below illustrate the shape — every one is an entendre-coded setup ("Penetrated by enemy assets," "X put out for Y," "X drilled Y for it," "X went deep on the deck," "X slipped in through the back," "X came out on top"). Every one would pass a cold-listen "is the preceding line an innuendo?" test.
+
+**The check before tagging:**
+1. Identify the line that will sit immediately before *...Phrasing.*
+2. Read it aloud as if a stranger were hearing it cold (no Sterling/Archer-context priming).
+3. Does it have an obvious sexual double meaning or unmistakable innuendo?
+4. If YES — tag it. If NO — strip the tag, OR rewrite the setup until the entendre reads cold.
+5. Any new code constant that ships a Phrasing! beat replicates the contract-test shape established in `videos/trailer/scripts/tone-prototype.test.ts` (asserts the entendre setup precedes the tag verbatim) so a future edit can't silently strip the entendre and ship an unearned beat.
+
+**The failure mode** to watch for: porting copy verbatim from a plan/brainstorm document without re-checking the trigger. Captured 2026-05-18 during Phase 0 Unit 0.4 — `TONE_SAMPLE_PARAGRAPH` v1 ended *"Try and find a human one. ...Phrasing."* with no entendre setup; the tag was unearned. v2 inserted *"Hard to put down."* (literal: page-turner; entendre on "hard") to earn the beat.
+
 **Where Phrasing! lands** (✅ surfaces):
 
 - **Random flavor pools** — variety naturally surprises; players see different beats over time. Examples: EliminatedView, GameOver, BURNED-draw flavor lines.

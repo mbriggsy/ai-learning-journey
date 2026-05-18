@@ -14,6 +14,7 @@
     "preflight": "tsx scripts/generate-preflight-clip.ts",
     "matrix": "tsx scripts/generate-tts-eval.ts",
     "scream:variant": "tsx scripts/generate-scream-variant.ts",
+    "tone:clip": "tsx scripts/generate-tone-clip.ts",
     "capture:htp": "tsx scripts/capture-htp-scroll-burned.ts"
   },
   "dependencies": {

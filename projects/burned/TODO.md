@@ -49,9 +49,32 @@ with the ADR ledger). Plan set is the recipe — execution begins here.
   `preflight/preflight-decision.md`. Step 1.5 adapter already canonical
   (built ahead-of-schedule).
 
-**Next unblocked work: Unit 0.6 (R5 Sterling-Screams-Lana Cameo
-Eval).** Unit 0.2 closed 2026-05-18 — disposition at
+**Unit 0.6 (R5 Sterling-Screams-Lana Cameo Eval) — 🟡 IN-FLIGHT.**
+Workspace scaffolded 2026-05-18 (this session). Unit 0.2 closed
+2026-05-18 — disposition at
 `videos/trailer/sample-eval/r4-dash/unit-0.2-disposition.md`.
+
+**Unit 0.6 scaffold landed:**
+- `videos/trailer/sample-eval/r5-scream/path-a-tts.mp3` — Roger
+  `[shouts] VERAAA!!!` clip reused from Unit 0.2 Step 2 matrix
+  (sha256 `0e3e2e1b…`)
+- `videos/trailer/sample-eval/r5-scream/scream-eval.md` — protocol
+  template: pool-independence audit, randomization scheme, listener
+  question, acceptance check, attribution table, downstream
+  propagation cells
+- `videos/trailer/scripts/generate-path-b-vc.ts` — ElevenLabs
+  Speech-to-Speech renderer (`pnpm scream:path-b` from
+  `videos/trailer/`). Awaits source recording.
+
+**Blocked on Briggsy:**
+1. **Record human scream** → `videos/trailer/sample-eval/r5-scream/path-b-source-recording.wav`
+   (~1.5s, 12-18" mic distance, peak ~-3 dBFS, WAV). Brief lives in
+   `scream-eval.md` §2(b).
+2. **Pick reference clip** from `scream-eval.md` §7 candidates
+   (recommended: Freesound CC0 search; alternates: Brandon Deep
+   Voices.com Angry demo, Kevin Urban character reel).
+3. **Recruit ≥3 Archer-fan listeners** via Discord network + Harry,
+   pool-independent from Step 0.5 (i.e., NOT Briggsy as a listener).
 
 **Phase 0 Unit 0.2 closure summary:**
 - Step 5 winner: **Path A — ElevenLabs Roger** (`CwhRBWXzGAHq8TQ4Fs17`,

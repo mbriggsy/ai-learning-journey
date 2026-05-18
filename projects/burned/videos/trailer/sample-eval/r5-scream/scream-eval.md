@@ -24,47 +24,78 @@ Awaiting Briggsy audition.
 
 ---
 
-## 1. Stimulus
+## 1. Stimuli (variants under audition)
 
-### Path A — TTS scream (`[shouts]` tag, primary attempt)
+### v1 — `[shouts] VERAAA!!!` (matrix default, short-burst form)
 
 - **File:** `path-a-tts.mp3`
 - **sha256:** `0e3e2e1b75cc3140987b37387e4617114e3142c2f7a7ee81d876b9e516964225`
 - **Source:** ElevenLabs v3, voice `Roger` (`CwhRBWXzGAHq8TQ4Fs17`),
   model `eleven_v3`, voice_settings `{stability:0.70, similarity_boost:0.75, style:0.15, use_speaker_boost:true, speed:0.95}`,
-  bracket tag `[shouts]`, text payload `[shouts] VERAAA!!!`.
-- **Generated:** 2026-05-18 in the Unit 0.2 Step 2 engine matrix
-  (`scripts/generate-tts-eval.ts`) — clip reused unchanged per
-  phase-0-gate-resolution.md §Unit 0.6 ("Path A reuses the isolated
-  scream clip already generated in Unit 0.2 Step 1 Paragraph 3").
-- **Format:** mp3 44.1kHz/128kbps mono, ~1.5s.
+  text payload `[shouts] VERAAA!!!` (3 A's).
+- **Generated:** 2026-05-18 in the Unit 0.2 Step 2 engine matrix.
+- **Reader-A signal (Briggsy, 2026-05-18):** *"the pitch is good
+  though. sounds really good"* — pitch + voice cleared; vowel-drag
+  shape under-rendered (Sterling's signature is the sustained call,
+  not the short burst — captured below).
 
-**Acoustic acceptance shape** (cadence-spec.md §3.6): the scream
-should be **volume-discontinuous, not pitch-discontinuous** — a 6-12 dB
-amplitude jump above conversational baseline WITHOUT F0 falsetto rise.
-Sterling-CODED screams maintain register; they shout louder, not
-higher.
+### v2 — `[shouts] VERAAAAAAAAAAA!!!` (vowel-drag, sustained-call form)
+
+- **File:** `path-a-tts-v2-vowel-drag.mp3`
+- **sha256:** `879d8b3c2bfb87c9ee4116116b2f6b6c85661ae2b92aff43d4bddc0eecb57820`
+- **Source:** ElevenLabs v3, voice Roger, same voice_settings as v1,
+  text payload `[shouts] VERAAAAAAAAAAA!!!` (11 A's — matching the
+  Sterling-LANA vowel-drag count Briggsy referenced).
+- **Generated:** 2026-05-18 via `scripts/generate-scream-variant.ts`
+  in response to Reader A note that v1 missed the sustained-call
+  shape.
+- **Char-budget impact:** +26 chars (cumulative 2,840 / 100,000).
+
+**Sterling-LANA acoustic acceptance shape** (refined characterization,
+captured 2026-05-18 — supersedes the pure "volume-discontinuous /
+not pitch-discontinuous" framing in cadence-spec.md §3.6):
+
+1. **Pitch flat.** No F0 falsetto rise. Sterling stays in
+   mid-baritone register through the scream. *(v1 cleared this.)*
+2. **Amplitude jump.** 6-12 dB above conversational baseline.
+3. **Vowel-drag.** Sustained vowel on the stressed syllable — the
+   AH gets stretched into a multi-second drone, not a quick burst.
+   The comedic core of "Laaaaaaaaaaaana!" is the duration, not the
+   loudness. *(v2 tests this.)*
+4. **Quick punctuation tail.** Final unstressed syllable ("-na" /
+   "-a") snaps short, not stretched alongside the AH.
+
+cadence-spec.md §3.6 update pending — will land in a follow-up
+commit if Briggsy confirms v2 lands the shape (no point editing
+spec on speculation).
 
 ---
 
 ## 2. Audition + Decision
 
-Briggsy plays `path-a-tts.mp3` and picks ONE of:
+Briggsy A/Bs `path-a-tts.mp3` (v1) and `path-a-tts-v2-vowel-drag.mp3`
+(v2), then picks ONE of:
 
 | # | Outcome | Trigger |
 |---|---|---|
-| 1 | **Ship Path A `[shouts]`** | Scream lands as Archer-grade authentic — volume-discontinuous, no falsetto-rise, comedic |
-| 2 | **Re-render with `[shouting]`** | Close but not quite — try the alternate documented v3 tag |
-| 3 | **Re-render with `[scream]`** | Both documented tags fail — test the undocumented community-anecdotal tag as last resort |
-| 4 | **Cut R5** | None of (1)/(2)/(3) lands Archer-grade — flat scream worse than no scream per brainstorm rule |
+| 1 | **Ship v1** (`[shouts] VERAAA!!!`) | Short-burst form lands; vowel-drag judged unnecessary |
+| 2 | **Ship v2** (`[shouts] VERAAAAAAAAAAA!!!`) | Vowel-drag form lands the Sterling-LANA shape |
+| 3 | **Try another variant** | Neither v1 nor v2 lands — iterate on tag, vowel count, or both (see Re-render procedure below) |
+| 4 | **Cut R5** | No variant lands Archer-grade after exhausting reasonable iterations; flat scream worse than no scream per brainstorm rule |
 
-**Re-render procedure (if outcome 2 or 3):** edit the `scream`
-paragraph entry in `videos/trailer/sample-eval/r4-dash/cadence-spec-elevenlabs.json`
-(field `bracket_tags_per_paragraph.scream.leading_tag`) to the new
-tag, then re-run `pnpm matrix` from `videos/trailer/`. New clip lands
-at `videos/trailer/sample-eval/r4-dash/matrix/path-a-elevenlabs/scream.mp3`;
-copy to `r5-scream/path-a-tts.mp3` and re-audition. Char-budget impact
-per re-render: ~9 chars (~0.01% of monthly cap).
+**Re-render procedure (outcome 3 — iterate):** the
+`generate-scream-variant.ts` script takes arbitrary text + label +
+optional bracket tag. Examples worth running:
+
+| Hypothesis | Command |
+|---|---|
+| `[shouting]` tag may give different amplitude/duration shape | `pnpm scream:variant --text "VERAAAAAAAAAAA!!!" --label "v3-shouting" --tag "[shouting]"` |
+| No tag — see what the all-caps stretched text does alone | `pnpm scream:variant --text "VERAAAAAAAAAAA!!!" --label "v4-no-tag" --no-tag` |
+| Try `[scream]` (undocumented community-anecdotal) | `pnpm scream:variant --text "VERAAAAAAAAAAA!!!" --label "v5-scream" --tag "[scream]"` |
+| Different vowel count — 7 A's instead of 11 | `pnpm scream:variant --text "VERAAAAAAA!!!" --label "v6-7As"` |
+| Sub-call shape — drag drops to quiet tail | `pnpm scream:variant --text "VERAAAAAAAAAAANA..." --label "v7-with-tail"` |
+
+Char-budget impact per render: ~25 chars (~0.025% of monthly cap).
 
 ---
 

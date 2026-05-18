@@ -56,6 +56,7 @@ appropriate bucket. Number monotonically; don't reuse numbers.
 | 047 | Framer `layout="position"` + `popLayout` is a structural fast-snap, not an animate.transform conflict | popLayout reflow is one-frame by design — don't chase a transform-conflict ghost |
 | 048 | AnimatePresence has a one-rAF window where content reads as `transform: none` before `initial` applies | Skip frame 0 in per-rAF samplers — Framer's `initial` lands one tick after mount |
 | 051 | Prose CVD recommendations in followup docs are wrong-direction more often than not | Hue intuition fails under deuter/protan/tritan transforms — probe oklab before editing primitives |
+| 054 | `pnpm install` silently no-ops nested packages outside the workspace `packages:` glob | Sub-second `Done in X ms` with no `Progress:` line = silent skip; ship `.npmrc ignore-workspace=true` |
 
 ## Process
 

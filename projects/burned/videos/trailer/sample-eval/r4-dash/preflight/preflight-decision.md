@@ -29,25 +29,25 @@
 
 | Field | Value |
 |---|---|
-| Reader identity | _UNFILLED_ |
-| Auditioned at | _UNFILLED_ |
-| Free-form reaction (~30s) | _UNFILLED_ |
-| Band disposition | _UNFILLED — one of `Floor` / `Target Band` / `Ceiling`_ |
-| Benjamin / Sterling Archer / catchphrase reference volunteered? | _UNFILLED — Yes / No (Yes triggers Ceiling per cadence-spec §5.2)_ |
-| Vote | _UNFILLED — `PASS` / `FAIL`_ |
+| Reader identity | Briggsy |
+| Auditioned at | 2026-05-18 (same session as generation) |
+| Free-form reaction (~30s) | *"It sounds more like Patrick Warburton."* |
+| Band disposition | **Target Band** (cluster-adjacent via Warburton — known deadpan-baritone-sardonic voice actor, archetype overlaps with Brock Samson / Lemony Snicket narrator). Not Floor (specific archetype, not "generic narrator"). Not Ceiling (no Benjamin / Sterling Archer / catchphrase reference volunteered). |
+| Benjamin / Sterling Archer / catchphrase reference volunteered? | **No** — Warburton is a different actor; Ceiling diagnostic per cadence-spec §5.2 is specifically Benjamin / Sterling Archer name. |
+| Vote | **PASS** with sub-note: register reads as identifiable-actor-archetype-adjacent (Warburton-cluster). Worth flagging into Step 2 engine matrix so Path A (ElevenLabs preset) selection avoids overshooting into a single recognizable commercial voice. |
 
 ## Reader B — engineering peer, non-Archer-fan (Discord cold reader)
 
 | Field | Value |
 |---|---|
-| Reader identity | _UNFILLED_ |
-| Discord thread / message link | _UNFILLED_ |
-| Outbound message sent at | _UNFILLED_ |
-| 48 h SLA deadline | _UNFILLED_ |
-| Free-form reaction (~30s) | _UNFILLED_ |
-| Band disposition | _UNFILLED — one of `Floor` / `Target Band` / `Ceiling`_ |
-| Benjamin / Sterling Archer / catchphrase reference volunteered? | _UNFILLED — Yes / No (Yes triggers Ceiling per cadence-spec §5.2)_ |
-| Vote | _UNFILLED — `PASS` / `FAIL`_ |
+| Reader identity | **n/a — single-reader fallback elected** |
+| Discord thread / message link | n/a |
+| Outbound message sent at | n/a |
+| 48 h SLA deadline | n/a |
+| Free-form reaction (~30s) | n/a |
+| Band disposition | n/a |
+| Benjamin / Sterling Archer / catchphrase reference volunteered? | n/a |
+| Vote | **FALLBACK** — `single-reader fallback` flag per plan §Step 0.5 step 6. Briggsy elected this path 2026-05-18 in lieu of recruiting a Discord cold reader. Reduced confidence on cold-reader vector noted in Disposition rationale below. |
 
 ## Acceptance rubric (cadence-spec §5)
 
@@ -61,9 +61,9 @@
 
 | Field | Value |
 |---|---|
-| Final status | _UNFILLED — `PASS (Step 1.5 unblocked)` / `FAIL — revise spec` / `OVERRIDE (STEP_0_5_OVERRIDE=1, with rationale)`_ |
-| Decision rationale | _UNFILLED_ |
-| Step 1.5 readiness | _UNFILLED — blocked OR unblocked_ |
+| Final status | **PASS — single-reader fallback (Step 1.5 unblocked pending ElevenLabs Creator key)** |
+| Decision rationale | Reader A (Briggsy) volunteered "Patrick Warburton" — a recognized deadpan-baritone-sardonic voice actor (Brock Samson, Lemony Snicket narrator, Kronk). Archetype is in the Target Band cluster (cadence-spec §5.1) — not Floor (specific archetype, not "generic narrator"), not Ceiling (no Benjamin / Sterling Archer / catchphrase reference volunteered per §5.2). Single-reader fallback elected per plan §Step 0.5 step 6 in lieu of recruiting a Discord cold reader — reduced confidence on cold-reader vector accepted. **Sub-note carried forward to Step 2:** Warburton-adjacent register means Path A (ElevenLabs preset) voice selection should avoid overshooting into a single recognizable commercial voice; aim for less archetype-distinctive Voice Library options. Path C-Gemini Charon stays the validated baseline. |
+| Step 1.5 readiness | **Unblocked at the spec layer.** Gating dependency is now the ElevenLabs Creator API key (OpenAI key landed 2026-05-18, ElevenLabs still missing). Re-run `pnpm check:tts` when ElevenLabs lands to refresh `account-readiness.md` before Step 1.5 begins. |
 
 ## Tiebreaker rules (plan §Step 0.5 step 5)
 
@@ -92,4 +92,4 @@ If Reader B is unreachable within 48 h:
 
 | Date | Round | Reader A vote | Reader B vote | Adapter change | Notes |
 |---|---|---|---|---|---|
-| 2026-05-18 | 1 | _pending_ | _pending_ | n/a (initial) | Initial preflight generated. |
+| 2026-05-18 | 1 | PASS (Target Band, Warburton-adjacent) | n/a (single-reader fallback elected) | n/a (initial) | Initial preflight generated + signed off Reader-A-only. Sub-note: Warburton-adjacent register flagged into Step 2 Path A voice-selection. |

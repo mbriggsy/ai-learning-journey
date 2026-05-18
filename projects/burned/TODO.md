@@ -35,32 +35,34 @@ with the ADR ledger). Plan set is the recipe — execution begins here.
   Spike-results: `videos/trailer/sample-eval/spike/spike-results.md`.
   Phase 4 inherits all production patterns; Phase 4 Unit 4.0 font
   spike DROPS from scope (variable-axis weight syntax works).
-- **Unit 0.2 Step 0.5 (spec sanity check) — ✅ WAV GENERATED today** —
-  Gemini Director's Chair adapter (`cadence-spec-gemini.md`) +
-  one-off generator (`scripts/generate-preflight-clip.ts`) shipped.
-  `gemini-spec-test.wav` rendered at 14.80 s via
-  `gemini-3.1-flash-tts-preview` voice `Charon`. Step 1.5 adapter
-  built ahead-of-schedule per plan §Step 0.5 step 1 ("same shape Step
-  1.5 will produce"). Cold-reader vote schema at
-  `preflight/preflight-decision.md`.
+- **Unit 0.2 Step 0.5 (spec sanity check) — ✅ PASS (single-reader
+  fallback) 2026-05-18.** Gemini Director's Chair adapter
+  (`cadence-spec-gemini.md`) + generator (`generate-preflight-clip.ts`)
+  shipped; `gemini-spec-test.wav` rendered 14.80 s on
+  `gemini-3.1-flash-tts-preview` voice `Charon`. Reader A (Briggsy)
+  vibe-check: *"Patrick Warburton"* → Target Band cluster (Warburton
+  is a deadpan-baritone-sardonic voice actor — Brock Samson / Lemony
+  Snicket narrator archetype). No Benjamin / Sterling Archer / catchphrase
+  reference volunteered → no Ceiling hit per cadence-spec §5.2.
+  Reader B single-reader fallback elected per plan §Step 0.5 step 6.
+  Disposition + Warburton-adjacent sub-note carried forward in
+  `preflight/preflight-decision.md`. Step 1.5 adapter already canonical
+  (built ahead-of-schedule).
 
-**Next unblocked work:** Briggsy auditions
-`videos/trailer/sample-eval/r4-dash/preflight/gemini-spec-test.wav` as
-Reader A and fills the Reader A row in `preflight-decision.md`.
-Reader B is the Discord cold-reader async loop (48 h SLA). Sign-off
-on both = Step 1.5 unblocked. Fallback paths documented in the
-decision template if Discord cold-reader is unreachable.
+**Next unblocked work:** *Spec layer is clear.* The remaining Phase 0
+Unit 0.2 ladder (Steps 1.5 → 2 → 3a → 4 → 5) is gated on the
+ElevenLabs Creator $22/mo API key landing in `.env`. When it does,
+re-run `pnpm check:tts` to refresh `account-readiness.md`, then
+proceed with engine-matrix generation per
+`phase-0-gate-resolution.md` §Unit 0.2.
 
-**Gated on Briggsy ElevenLabs Creator key:** Unit 0.2 Steps 1.5 / 2 /
-4 / 5 (engine-adapter translation → engine matrix → MUSHRA →
-acceptance). OpenAI key cleared 2026-05-18 — re-run `pnpm check:tts`
-when ElevenLabs lands to refresh `account-readiness.md`. Per
-`phase-0-gate-resolution.md` §Unit 0.2 Pre-Execution Prerequisites.
-
-**Downstream Phase 0 gates** (sequenced after Unit 0.2): Unit 0.6
-(R5 scream) → Unit 0.4 (tone) → Unit 0.3 (R14 cold-open decode).
-Phase 0 exits with `PHASE-0-EXIT.md` consolidating five dispositions
-(composite-viability already CLEARED).
+**Phase 0 ladder downstream of Unit 0.2** (sequenced after the
+engine-matrix MUSHRA acceptance): Unit 0.6 (R5 scream) → Unit 0.4
+(tone) → Unit 0.3 (R14 cold-open decode). Phase 0 exits with
+`PHASE-0-EXIT.md` consolidating five dispositions. Status:
+- Unit 0.2: ✅ Steps 0 / 0a / 0.5 / 1 / 3 done; Steps 1.5–5 await keys
+- Unit 0.5: ✅ CLEARED
+- Unit 0.6 / 0.4 / 0.3: pending Unit 0.2 closure
 
 After Phase 0: sequential Phase 1 → Phase 7 execution.
 

@@ -38,8 +38,26 @@
  * Renderer: scripts/generate-tone-clip.ts → sample-eval/tone/sample.mp3
  */
 
-/** ~20s deadpan exposition with Pendleton-vocab translation, ending in the Phrasing! beat. */
-export const TONE_SAMPLE_PARAGRAPH = `The operation began with a forensic dossier. Fourteen thousand pages, drafted in a single weekend by a field asset who — for compliance reasons — we will not be naming. Every contingency war-gamed. Every cover story rehearsed. Every operative profiled before they were activated. The dossier's signature appears on every page. Try and find a human one. …Phrasing.`;
+/**
+ * ~20s deadpan exposition with Pendleton-vocab translation, ending in an
+ * earned Phrasing! beat.
+ *
+ * **Phrasing! mechanic (corrected 2026-05-18 v2 iteration).** Archer's
+ * Phrasing! catchphrase fires on a "that's what she said"-style trigger
+ * — the preceding line must read SIMULTANEOUSLY as a benign
+ * briefing-context statement AND a sexual double entendre / innuendo.
+ * The v1 render shipped `"Try and find a human one. …Phrasing."` —
+ * which has no entendre setup; the Phrasing! tag was unearned. Briggsy
+ * caught it on audition and explained the mechanic. v2 inserts
+ * `"Hard to put down."` before the tag — reads literally as "this
+ * dossier is a page-turner" + reads as innuendo on "hard." Tag now
+ * earned.
+ *
+ * The earned-entendre line is asserted by a contract test in
+ * tone-prototype.test.ts so a future edit that removes it makes the
+ * Phrasing! beat unearned again, AND surfaces as a test failure.
+ */
+export const TONE_SAMPLE_PARAGRAPH = `The operation began with a forensic dossier. Fourteen thousand pages, drafted in a single weekend by a field asset who — for compliance reasons — we will not be naming. Every contingency war-gamed. Every cover story rehearsed. Every operative profiled before they were activated. The dossier's signature appears on every page. Try and find a human one. Hard to put down. …Phrasing.`;
 
 /**
  * Translated terms that MUST appear in TONE_SAMPLE_PARAGRAPH for the

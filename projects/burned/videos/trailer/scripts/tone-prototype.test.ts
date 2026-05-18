@@ -42,6 +42,17 @@ describe('TONE_SAMPLE_PARAGRAPH — Phrasing! tail discipline', () => {
   it('uses the ellipsis-prefixed form (cues §3.5 deadpan-flat landing, not punchy exclamation)', () => {
     expect(TONE_SAMPLE_PARAGRAPH).toContain('…Phrasing.');
   });
+
+  // **Phrasing! is earned, not just tagged.** Archer's catchphrase fires
+  // on a "that's what she said"-style trigger — the preceding line must
+  // read simultaneously as benign briefing-context AND a double entendre.
+  // The v1 render ended `"Try and find a human one. …Phrasing."` which
+  // had no entendre setup; v2 inserts `"Hard to put down."` (literally:
+  // page-turner; entendre: "hard"). If a future edit drops the entendre
+  // setup, this test fails BEFORE the unearned Phrasing! ships.
+  it('Phrasing! beat is earned: double-entendre setup ("Hard to put down") precedes the tag', () => {
+    expect(TONE_SAMPLE_PARAGRAPH).toMatch(/Hard to put down\.\s+…Phrasing\./);
+  });
 });
 
 describe('TONE_SAMPLE_PARAGRAPH — Sterling-coded structural mannerisms', () => {

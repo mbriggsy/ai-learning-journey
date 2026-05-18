@@ -41,12 +41,20 @@ picks one of the 4 outcomes in §2.
 
 ## 1. Stimulus
 
-### sample.mp3 — TONE_SAMPLE_PARAGRAPH via Path A Roger
+### sample.mp3 (v2 — current) — TONE_SAMPLE_PARAGRAPH with earned Phrasing!
 
 - **File:** `sample.mp3`
+- **sha256:** `1d89d911a0dd65f5e201b94c57a8c7c2c27fbdd9fcf1b80b561d9769577e4b60`
+- **Bytes:** 487,384
+- **Payload chars (including bracket tags):** 403 (raw paragraph 381 chars; `[deadpan] ` + `[sarcastic] ` add 22)
+
+### sample.v1.mp3 — FAILED iteration (unearned Phrasing!) preserved for A/B
+
+- **File:** `sample.v1.mp3`
 - **sha256:** `3a85741a75e14660883e4ea3c3bbb0ac7c771c1242ba32f4a2053da454987a3f`
 - **Bytes:** 442,662
-- **Payload chars (including bracket tags):** 385 (`[deadpan] ` + paragraph + `[sarcastic] …Phrasing.` replacement = 385 chars; raw paragraph 363 chars)
+- **Payload chars (including bracket tags):** 385
+- **Failure mode:** Paragraph ended `"Try and find a human one. …Phrasing."` with no double-entendre setup preceding the Phrasing! tag. Briggsy caught it on audition 2026-05-18: *"Phrasing is more of the equivalent of 'That's what she said' — a mix of immature double entendres, innuendos."* Phrasing! requires an entendre-coded setup line; v1 had none, so the tag was unearned. v2 inserts `"Hard to put down."` (literal: page-turner; entendre: "hard") to earn the beat.
 - **Source paragraph:** `TONE_SAMPLE_PARAGRAPH` in
   `videos/trailer/scripts/tone-prototype.ts` (verbatim from plan
   §Step 1). 57 words / ~20 second target read.
@@ -110,9 +118,19 @@ discussion).
 
 ## 3. Briggsy's Audition
 
-### Render 1 — `[date]`
+### v1 — 2026-05-18
 
-- **Bracket-tag treatment:** `[deadpan] ... [sarcastic] …Phrasing.`
+- **Paragraph ending:** `"... Try and find a human one. …Phrasing."`
+- **Bracket-tag treatment:** `[deadpan]` leading + `[sarcastic]` before `…Phrasing`
+- **Verbatim reaction:** *"Phrasing is more of the equivalent of 'That's what she said' — a mix of immature double entendres, innuendos. Does that help?"*
+- **Diagnosis:** The Phrasing! catchphrase fires on a "that's what she said"-style trigger. v1's preceding line ("Try and find a human one") has no double-entendre reading — the Phrasing! tag was unearned. Briggsy also noted that sample-script-dash.ts paragraph 2's `"I've been waiting. …Phrasing"` is context-dependent / weak as a cold-listen entendre — flagged as a follow-up for any future Unit 0.2 reopen (out of Unit 0.4 scope).
+- **Outcome:** iterate (re-write paragraph ending to include a real double-entendre setup)
+
+### v2 — 2026-05-18
+
+- **Paragraph ending:** `"... Try and find a human one. Hard to put down. …Phrasing."`
+- **Bracket-tag treatment:** `[deadpan]` leading + `[sarcastic]` before `…Phrasing` (unchanged)
+- **Entendre lock:** "Hard to put down" — literal reading "the dossier is a page-turner" + entendre on "hard." Now asserted by a contract test in `tone-prototype.test.ts` so a future edit that drops the entendre setup fails the test, BEFORE the unearned Phrasing! ships.
 - **Verbatim reaction:** *"[FILL POST-AUDITION]"*
 - **Outcome:** `[ship / iterate / defer-decode / reopen]`
 

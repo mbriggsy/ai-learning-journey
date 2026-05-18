@@ -236,6 +236,156 @@ status: active
   Plan: 2728 → ~3500 lines after document-review pass (1.28×).
 -->
 
+<!--
+  ===================================================================
+  AMENDMENT 2026-05-18 — PHASE-0-CLOSE ABSORPTION (pre-execution)
+  ===================================================================
+
+  Phase 0 closed 2026-05-18 (commit e0537f2d). The 2026-05-17
+  document-review pass above locked Cold-Open Candidate #5 against
+  a then-pending Phase 0 audition outcome. The audition actually
+  ran 2026-05-18 and Briggsy locked Candidate #4 + Janet/Sloane
+  voice, NOT #5. This block reconciles plan body to Phase 0 EXIT
+  (the post-audition truth) and surfaces three downstream
+  consequences for execution.
+
+  Sentinel-checked authoritative source for these locks:
+    videos/trailer/sample-eval/PHASE-0-EXIT.signoff (ADR #22)
+    videos/trailer/PHASE-0-EXIT.md §Section 2
+
+  ─────────────────────────────────────────────────────────────────
+  Body fixes landed in this amendment pass (deepening-drift anti-
+  pattern fix per [[feedback-deepening-drift-anti-pattern]] — header
+  AND body updated in one pass):
+
+  1. UNIT 1.2 STEP 2 — S01 cold-open line swap.
+     PRIOR (2026-05-17 doc-review): Candidate #5 ("Briggsy didn't
+       write this one either. He's getting good at not writing
+       them.") locked + speaker TBD per Phase 0 outcome.
+     NEW (2026-05-18 audition close): Candidate #4 ("He's a
+       machine, this kid. Honestly at this point I'm just
+       impressed.") locked. Speaker = Janet (Malory-coded
+       executive-dryness matriarch). Voice = ElevenLabs Sloane
+       (m8AHWg36LJTQWKmfeGVv, Shared Library, eleven_v3) with
+       matriarch-tuned voice_settings (stability 0.85,
+       similarity_boost 0.75, style 0.05, use_speaker_boost true,
+       speed 0.92). Bracket-tag treatment: [deadpan] leading +
+       [sarcastic] before "Honestly". Word count: 13 words at
+       ~2.5 wps deadpan ≈ 5.2s + 1.8s tail for BURNED logo + R15
+       #1 stamp without overlap (unchanged from #5 budget; both
+       candidates landed at the same window).
+     Why: PHASE-0-EXIT §Section 2 disposition. Briggsy auditioned
+       both candidates + ran a 4-voice Janet iteration (Sarah →
+       Matilda → Sloane → Kristen). Sloane + matriarch-tuned
+       settings won the A/B. The "machine" double-meaning the
+       prior re-open feared as decode-fragile turned out to land
+       cleanly through the matriarch-tuned voice register; the
+       engineering-peer decode still fires off the kicker
+       ("Honestly at this point I'm just impressed.").
+     R15 #5 closing-card bookend MECHANISM BROKEN as a direct
+       consequence — see consequence #3 below.
+
+  2. UNIT 1.1 STEP 0 — Test-Path verification paths corrected.
+     PRIOR: `docs/plans/origin-trailer/PHASE-0-EXIT.md` (does not
+       exist) + `docs/plans/origin-trailer/PHASE-0-EXIT.signoff`
+       (does not exist).
+     NEW: `videos/trailer/PHASE-0-EXIT.md` +
+       `videos/trailer/sample-eval/PHASE-0-EXIT.signoff` per Phase
+       0 actual artifact placement.
+     Why: Phase 0 placed the EXIT doc + signoff under the trailer
+       subpackage, not under the plans dir. Plan's check would
+       have falsely blocked Phase 1 entry.
+
+  3. UNIT 1.1 STEP 2 — timing.ts EASE_OUT curve value corrected.
+     PRIOR: `EASE_OUT = 'cubic-bezier(0.23, 1, 0.32, 1)'`.
+     NEW: `EASE_OUT = 'cubic-bezier(0.16, 1, 0.3, 1)'` (matches
+       Phase 0 Unit 0.5 spike's `EASE_OUT_EMIL` in
+       `videos/trailer/src/lib/animations.ts` line 17 — the
+       canonical emil snappy curve, spike-validated for stamp
+       slap landing).
+     Why: timing.ts EASE_OUT and animations.ts EASE_OUT_EMIL are
+       the SAME curve in different forms (CSS string vs Remotion
+       Easing function). They MUST share coefficients. The plan's
+       0.23/1/0.32/1 is a generic easeOutExpo from the plan
+       author's working memory; Phase 0 locked 0.16/1/0.3/1 in
+       the spike — that's the canonical value. EASE_IN_OUT and
+       EASE_DRAWER are new curves Phase 0 didn't lock and inherit
+       the plan's stated values unchanged.
+
+  4. UNIT 1.1 STEP 2a — Vitest devDep + test script NOP.
+     PRIOR: Phase 1 ADDS Vitest 4.x devDep + `test`/`test:watch`
+       scripts (claimed Phase 0 scaffold gap).
+     NEW: Already shipped during Phase 0 (`videos/trailer/
+       package.json` carries `"vitest": "^4.0.0"` + `"test":
+       "vitest run"`; `videos/trailer/vitest.config.ts` exists
+       with insight-#054-aware nested-package include patterns).
+       Step 2a now NOP. Unit 1.1 timing.test.ts runs via existing
+       config without new package.json edits.
+     Why: Step 2a was drafted before Phase 0 Unit 0.4/0.5 spike
+       work shipped Vitest infrastructure to render contract
+       tests. The trailer subpackage's test stack is now mature.
+
+  5. UNIT 1.9 STEP 1 — R15 #5 subhead bookend mechanism broken.
+     PRIOR: 30%-opacity subhead "Briggsy didn't write this part
+       either." designed as an EXPLICIT verbatim echo of the
+       2026-05-17 S01 line ("Briggsy didn't write this one
+       either…"). The "this one"/"this part" echo IS the bookend.
+     NEW: S01 line is now "He's a machine, this kid. Honestly at
+       this point I'm just impressed." (per consequence #1). The
+       "didn't write this part" subhead has nothing to echo. Three
+       re-derivation candidates surface (Unit 1.9 execution
+       selects):
+       (a) "Honestly at this point we're just impressed." —
+           echoes S01 kicker, swap "I'm" → "we're" plural folds
+           the trailer's own collective speaker (Briggsy + Claude
+           as autonomous-build credit) into the subhead. Sterling-
+           deadpan register matches. RECOMMENDED.
+       (b) "He's a machine, alright." — echoes S01 opening,
+           "alright" = Sterling-coded resignation/acceptance.
+       (c) Drop subhead entirely — main line "DRAFTED, RENDERED,
+           AND SHIPPED BY AUTONOMOUS AGENTS." stands solo. Loses
+           bookend; saves a typography decision.
+     Unit 1.9 execution-time decision; flagged in body at Unit 1.9
+     Step 1 R15 instance table + Step 3 #5 layered-decode entry.
+
+  ─────────────────────────────────────────────────────────────────
+  Open follow-ups deferred to downstream units (no body edits
+  needed here, just surface for Unit 1.9 / 1.2 execution):
+
+  - Unit 1.2 Step 2: when authoring S01 line in BEAT-SHEET.md +
+    script.ts, the voice assignment is `voice: 'janet'`, NOT
+    `'dash'` (the only branch in plan's Voice type that fits the
+    Malory-archetype cold-open speaker). Voice cast remains 2
+    (Dash + Janet); Sable/Vera retain their roster slots
+    (visual-only S03 card flash, no VO line).
+  - Unit 1.3 Step (per-line assignment): cold-open VO carries
+    voice_settings override (Sloane matriarch-tuned), which
+    DIVERGES from Roger-defaults stability/style/speed. The
+    cadenceAdapter.engine + bracket_tags fields stay
+    'elevenlabs-v3' + ['[deadpan]', '[sarcastic]']; the
+    voice_settings override needs explicit handoff via a new
+    Line.voiceSettingsOverride field OR Phase 2 reads from
+    `cold-open-prototype.ts` `COLD_OPEN_SPEAKER` constant
+    (single source of truth — Phase 0 contract test already
+    asserts the profile shape). Unit 1.3 picks the handoff
+    mechanism.
+  - Unit 1.10 S01 visual composition: card-flash sequence
+    unchanged; Dash-character treatment unchanged; Janet's
+    voice-only delivery (no on-screen Janet character) honors
+    R14 cold-open shape — Janet narrates from off-camera, the
+    visual stays with Dash + cards. Already aligned with plan
+    body; no fix needed.
+
+  ─────────────────────────────────────────────────────────────────
+  Amendment plan-line delta: ~80 lines added (this block); 4 body
+  edits (Unit 1.1 Step 0, Step 2 EASE_OUT, Step 2a NOP marker,
+  Unit 1.2 Step 2, Unit 1.9 Step 1 R15 #5 row).
+
+  Sentinel discipline: BEAT-SHEET.signoff sentinel (per ADR #22)
+  must NOT be written until Phase 1 closes. This amendment block
+  is metadata, not closure.
+-->
+
 
 # Phase 1 — Beat Sheet Lock
 
@@ -641,11 +791,13 @@ GATE).** Before Phase 1 begins, verify Phase 0 Unit 0.1 scaffold
 output exists. Run:
 
 ```powershell
-Test-Path videos/trailer/src/Root.tsx                  # must be $true
-Test-Path videos/trailer/package.json                  # must be $true
-Test-Path videos/trailer/remotion.config.ts            # must be $true
-Test-Path docs/plans/origin-trailer/PHASE-0-EXIT.md    # must be $true
-Test-Path docs/plans/origin-trailer/PHASE-0-EXIT.signoff # ADR #22 sentinel
+# AMENDMENT 2026-05-18 — paths corrected per Phase 0 actual placement.
+Test-Path videos/trailer/src/Root.tsx                              # must be $true
+Test-Path videos/trailer/package.json                              # must be $true
+Test-Path videos/trailer/remotion.config.ts                        # must be $true
+Test-Path videos/trailer/PHASE-0-EXIT.md                           # must be $true (was docs/plans/.../PHASE-0-EXIT.md)
+Test-Path videos/trailer/sample-eval/PHASE-0-EXIT.signoff          # must be $true (ADR #22 sentinel, was docs/plans/.../PHASE-0-EXIT.signoff)
+Test-Path videos/trailer/.npmrc                                    # must be $true (insight #054 — ignore-workspace=true)
 # Run typecheck inside trailer subproject:
 Set-Location videos/trailer; pnpm typecheck; Set-Location ../..
 ```
@@ -731,32 +883,37 @@ export const S05_BUDGET_TARGET_FRAMES = 540; // 18.0s — Phase 4 always trims t
 // Strong custom curves — built-in CSS easings (ease, ease-out, etc.)
 // are too weak for trailer-grade motion. Phase 4 scene files import
 // these as cubic-bezier strings via `transitions.ts`.
-export const EASE_OUT = 'cubic-bezier(0.23, 1, 0.32, 1)';        // entries, slaps
+//
+// AMENDMENT 2026-05-18: EASE_OUT coefficients corrected to match
+// Phase 0 spike-locked `EASE_OUT_EMIL` in animations.ts:17
+// (cubic-bezier(0.16, 1, 0.3, 1)). The two MUST share coefficients
+// (CSS string vs Remotion Easing function — same curve, different
+// consumers). Prior 0.23/1/0.32/1 was a generic easeOutExpo from
+// working memory; spike locked 0.16/1/0.3/1.
+export const EASE_OUT = 'cubic-bezier(0.16, 1, 0.3, 1)';         // entries, slaps (matches EASE_OUT_EMIL)
 export const EASE_IN_OUT = 'cubic-bezier(0.77, 0, 0.175, 1)';    // page wipes, iris, on-screen movement
 export const EASE_DRAWER = 'cubic-bezier(0.32, 0.72, 0, 1)';     // dossier-folder-opens (iOS drawer feel)
 ```
 
-**Step 2a — `package.json` Vitest devDep.**
+**Step 2a — `package.json` Vitest devDep. ✅ ALREADY SHIPPED
+(AMENDMENT 2026-05-18 — Step 2a is NOP).**
 
-Phase 0 Unit 0.1 scaffolded `videos/trailer/package.json` with `studio`,
-`render`, `render:final`, `render:thumbnail`, `typecheck` scripts but
-**no `test` script and no Vitest dependency**. Phase 1 adds:
+The prior draft assumed Phase 0 shipped `videos/trailer/package.json`
+without `test` script or Vitest devDep, and Phase 1 would add them. In
+practice, Phase 0 Unit 0.4/0.5 spike work shipped Vitest infrastructure
+(contract tests for tone prototype + cold-open prototype + scream
+variant) along the way:
 
-```json
-{
-  "scripts": {
-    "test": "vitest run",
-    "test:watch": "vitest"
-  },
-  "devDependencies": {
-    "vitest": "^4.0.0"
-  }
-}
-```
+- `videos/trailer/package.json` already carries `"test": "vitest run"`
+- `videos/trailer/package.json` already carries
+  `"devDependencies": { "vitest": "^4.0.0" }`
+- `videos/trailer/vitest.config.ts` exists with insight-#054-aware
+  nested-package include patterns (`src/**/*.{test,spec}.{ts,tsx}` +
+  `scripts/**/*.{test,spec}.ts`)
 
-This is additive to Phase 0's scaffold and lives inside the trailer
-subproject (matches BURNED's `pnpm-workspace.yaml` isolation per Phase
-0 ADR #2).
+Phase 1 timing.test.ts (Verification below) runs via the existing
+config without new package.json edits. **No action required at this
+step.**
 
 **Step 3 — BEAT-SHEET.md skeleton.** Each scene gets a heading +
 structural placeholders Units 1.2–1.10 fill in:
@@ -963,34 +1120,48 @@ From brainstorm R6, restated in BEAT-SHEET.md preamble:
 
 **Step 2 — Cold-open line (S01, frames 0–210, ~7.0s).**
 
-Speaker: cold-open speaker per Phase 0 Unit 0.3 outcome. **Candidate
-#5 LOCKED via document-review re-open (2026-05-17):**
+Speaker: **Janet** (Malory-coded executive-dryness matriarch). Voice:
+**ElevenLabs Sloane** (`m8AHWg36LJTQWKmfeGVv`, Shared Library, model
+`eleven_v3`) with matriarch-tuned `voice_settings` (stability 0.85,
+similarity_boost 0.75, style 0.05, use_speaker_boost true, speed
+0.92). Bracket-tag treatment: `[deadpan]` leading + `[sarcastic]`
+before "Honestly".
 
-> *"Briggsy didn't write this one either. He's getting good at not
-> writing them."*
+**Candidate #4 LOCKED via Phase 0 Unit 0.3 audition (2026-05-18):**
 
-**Why #5 over #4 (doc-review product-lens re-open):** Candidate #4
-("He's a machine, this kid…") relied on "machine" as the engineering-
-peer hook — a decode-fragile double meaning a no-context viewer hears
-as "this kid grinds." #4 also dropped "AGAIN" — the repeatability
-claim that's the central engineering bet per roadmap §1 ("the
-bar-raise is the repeat itself"). Candidate #5 carries the
-repeatability claim AND the autonomous-build claim explicitly in one
-line, with direct UMB v3 callback via "this one either." The
-"didn't write" decode mechanic is verbatim, not metaphorical —
-satisfies Phase 0 Unit 0.3 R14 decode-gate criterion ("at least one
-of two testers surfaces 'AI / agent / autonomous / built itself'
-unprompted within first 30 seconds"). Briggsy ratified the swap
-during doc-review synthesis.
+> *"He's a machine, this kid. Honestly at this point I'm just
+> impressed."*
+
+**Why #4 (Phase 0 audition outcome):** A two-phase audition (line
+selection then voice selection) ran 2026-05-18. The line audition
+preferred #4 over #5; #5 carried a robotic-tail defect on its kicker
+("Briggsy didn't write this one either…") that Briggsy flagged as
+breaking immersion. The subsequent voice audition (Sarah → Matilda →
+Sloane → Kristen, all matriarch-tuned) cleared Sloane as the
+Malory-archetype anchor for Janet's tough-matriarch register. The
+matriarch-tuned voice_settings deliver the engineering-peer hook off
+the kicker ("Honestly at this point I'm just impressed.") — the
+"machine" line lands cleanly through Janet's voice register without
+the decode-fragility the 2026-05-17 doc-review re-open feared.
+Disposition: `videos/trailer/sample-eval/r14-cold-open/
+{decode-eval.md, candidates.md}`. Signoff sentinel:
+`videos/trailer/sample-eval/r14-cold-open/briggsy-review-0.3.signoff`.
 
 **Word count:** 13 words. At ~2.5 wps (deadpan pace), ≈ 5.2s. Leaves
 ~1.8s of scene runtime for the BURNED logo land + brass hook + R15 #1
 stamp without spoken audio overlap.
 
-**S06 closing-card bookend:** the new R15 #5 closing card at frame
-2835 carries the 30%-opacity subhead *"Briggsy didn't write this part
-either."* — explicit echo of the S01 line, bookending the trailer
-with the autonomous-build claim. See Unit 1.9 Step 1 + Unit 1.10 S06.
+**S06 closing-card bookend — MECHANISM BROKEN per amendment 2026-05-18.**
+The prior plan had R15 #5's 30%-opacity subhead "Briggsy didn't write
+this part either." as a verbatim echo of the (then-locked) S01 #5
+line. With S01 now landing #4 ("He's a machine, this kid. Honestly at
+this point I'm just impressed."), the "didn't write this part" echo
+has nothing to echo. Re-derivation deferred to Unit 1.9 execution;
+recommended candidate: **"Honestly at this point we're just
+impressed."** (echoes S01 kicker; swaps "I'm" → "we're" plural to fold
+the trailer's collective speaker — Briggsy + Claude as autonomous-
+build credit — into the subhead). See Unit 1.9 Step 1 R15 instance
+table for the full set of candidates.
 
 **Step 3 — Briefing Setup (S02, frames 210–570, ~12.0s).**
 
@@ -1635,7 +1806,7 @@ implementation — hard cut is a `<Sequence>` boundary).**
 | # | Name | Archer-grammar precedent | Remotion implementation |
 |---|------|--------------------------|-------------------------|
 | 1 | **Hard cut** | Cuts between briefing-room and field scenes in Archer; the show's default. **Replaces former cross-dissolve at S04→S05** (more shocking, more Archer; dissolves 3 internal timing contradictions; music ducks via volume interpolation before the cut, not under a dissolve). | `<Series.Sequence>` boundary, no transition component. |
-| 2 | **Stamp slap** | "CLASSIFIED" / "TOP SECRET" stamp slams in from upper-right with overshoot + settle. The slap settles into the next scene's frame as the stamp peels back. | Overlay component on the source scene's tail frames. Emil-curve: `EASE_OUT = cubic-bezier(0.23, 1, 0.32, 1)`. Standard slap = 8 frames (scale 0.95 → 1.04 overshoot at 6/8 → 1.0 settle at 8/8 + 1-frame settle; **never scale(0)** per emil principle). Heavy slap (payoff stamp at frame 1950) = 16 frames (scale 0.85 → 1.06 overshoot at 12/16 → 1.0 settle). |
+| 2 | **Stamp slap** | "CLASSIFIED" / "TOP SECRET" stamp slams in from upper-right with overshoot + settle. The slap settles into the next scene's frame as the stamp peels back. | Overlay component on the source scene's tail frames. Emil-curve: `EASE_OUT = cubic-bezier(0.16, 1, 0.3, 1)` (AMENDMENT 2026-05-18 — matches Phase 0 spike's `EASE_OUT_EMIL`). Standard slap = 8 frames (scale 0.95 → 1.04 overshoot at 6/8 → 1.0 settle at 8/8 + 1-frame settle; **never scale(0)** per emil principle). Heavy slap (payoff stamp at frame 1950) = 16 frames (scale 0.85 → 1.06 overshoot at 12/16 → 1.0 settle). |
 | 3 | **Dossier-page wipe** | Page-turn motif: a dossier page peels rightward, revealing the destination scene underneath from LEFT-TO-RIGHT (the physical-page metaphor: the source-scene "page" peels off-screen to the right; the destination "page" beneath is revealed starting from the left edge). **16 frames** (0.53s) — 8-frame draft was below emil-design-eng's perceptual threshold for "physical motion" reading (movement perceived as "physical object" requires ≥10 frames @ 30fps per emil motion-shape vocabulary). | Overlay component on the SOURCE scene's tail frames. The source-scene wipes OUT via `clip-path: inset(0 0 0 0)` → `clip-path: inset(0 0 0 100%)` (NOT `inset(0 100% 0 0)` per prior draft — that was right-to-left collapse, contradicted the page-peel diegetic framing). The destination scene sits beneath the source-scene layer; as the source-scene collapses leftward, the destination is revealed left-to-right. Easing: `EASE_IN_OUT = cubic-bezier(0.77, 0, 0.175, 1)`. |
 | 4 | **Iris wipe** | Classic title-sequence closer; circular SVG mask shrinking from frame-encompassing to point at trailer close. | Overlay component on S05 tail (45 frames, 1.5s). `clip-path: circle(70.7% at 50% 50%)` → `clip-path: circle(0% at 50% 50%)` with `EASE_IN_OUT`. Phase 4 may experiment with `iris()` from `@remotion/transitions/iris` if the API surface ports cleanly to overlay-component usage (default `iris({width, height})` expects TransitionSeries context). |
 
@@ -2814,7 +2985,7 @@ R15 #1–#4 stay in-world diegetic.
 | 2 | 1680 | S04 cascade | **"OPERATIVE [REDACTED] — METHOD REPEATABLE"** | Comms-ticker pulse, bottom edge, JetBrains Mono 500 22px, scrolling left-to-right | In-world diegetic (reproducibility claim) |
 | 3 | 1950 | S04 stacked payoff | **"AUTONOMOUS FIELD UNIT — ASSET DELIVERED"** | Dossier stamp slap (heavy 16-frame slap, overprints HTP hero), JetBrains Mono 700 38px, `--color-burned-fire` ink | In-world diegetic (R3 payoff carrier) |
 | 4 | 2820 | S06 closing | **"OPERATION STATUS: FIELD-READY"** (status grammar; replaces former "AGENT-BUILT, ARCHER-GRADE") | Subhead under BURNED logo, JetBrains Mono 700 32px, `--color-ochre-9` ink | In-world diegetic (status: asset is ready) |
-| **5** | **2835** | **S06 closing card** | **"DRAFTED, RENDERED, AND SHIPPED BY AUTONOMOUS AGENTS."** + 30%-opacity subhead **"Briggsy didn't write this part either."** | **Closing-card stamp slap (8-frame standard slap; lands 15 frames after R15 #4); subhead in JetBrains Mono 500 italic 22px at 30% opacity. Main line JetBrains Mono 700 32px in `--color-ochre-9` ink. Both lines centered below R15 #4.** | **Cold-decode literal: cold viewer in trailer-isolation reads the autonomous-build claim explicitly. Subhead echoes promoted S01 cold-open line ("Briggsy didn't write this one either") as bookend.** |
+| **5** | **2835** | **S06 closing card** | **"DRAFTED, RENDERED, AND SHIPPED BY AUTONOMOUS AGENTS."** + 30%-opacity subhead **TBD — see AMENDMENT 2026-05-18** (prior "Briggsy didn't write this part either." MECHANISM BROKEN — S01 line is now Candidate #4 "He's a machine, this kid…", no "didn't write" to echo). Re-derivation candidates: (a) **"Honestly at this point we're just impressed."** RECOMMENDED — echoes S01 kicker, "I'm"→"we're" plural folds autonomous-build collective speaker; (b) "He's a machine, alright." — echoes S01 opening; (c) drop subhead — main line stands solo. | **Closing-card stamp slap (8-frame standard slap; lands 15 frames after R15 #4); subhead in JetBrains Mono 500 italic 22px at 30% opacity. Main line JetBrains Mono 700 32px in `--color-ochre-9` ink. Both lines centered below R15 #4.** | **Cold-decode literal: cold viewer in trailer-isolation reads the autonomous-build claim explicitly via main line regardless of bookend resolution. Subhead echoes promoted S01 cold-open line — exact mechanism contingent on re-derivation pick above.** |
 
 **Frame 2820 (was 2800) per Unit 1.10 deepening cadence — logo lands
 at 2780, settles for 40 frames, then R15 #4 stamps onto the closing
@@ -2883,14 +3054,18 @@ Per-instance check:
   *origin* claim already established by #1 + #3. Reads as "this is
   shipping-quality" without re-treading "who built it." ✓
 - **#5 "DRAFTED, RENDERED, AND SHIPPED BY AUTONOMOUS AGENTS." +
-  "Briggsy didn't write this part either."**: NOT in-world — this is
-  the closing-card author-stamp that breaks the fourth wall
-  deliberately. The diegetic frame closes with R15 #4; #5 is the
-  acknowledgment that the trailer is itself an autonomous-agent
-  artifact. Subhead echoes the S01 cold-open line ("Briggsy didn't
-  write this one either") as bookend — the trailer opens with the
-  claim and closes confirming it. ✓ — carries cold-decode
-  unambiguously without context.
+  TBD subhead**: NOT in-world — this is the closing-card author-
+  stamp that breaks the fourth wall deliberately. The diegetic frame
+  closes with R15 #4; #5 is the acknowledgment that the trailer is
+  itself an autonomous-agent artifact. AMENDMENT 2026-05-18: subhead
+  re-derivation deferred (prior "Briggsy didn't write this part
+  either." bookend mechanism broken by S01 line swap to Candidate
+  #4). Main line stands on its own for cold-decode — carries the
+  autonomous-build claim unambiguously without context regardless of
+  subhead resolution. Subhead's job is the S01 echo bookend; Unit
+  1.9 execution picks from the three re-derivation candidates in
+  the Step 1 R15 instance table. ✓ for cold-decode load; bookend
+  TBD.
 
 **Step 4 — Color blind safety.**
 

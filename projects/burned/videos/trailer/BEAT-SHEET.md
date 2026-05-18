@@ -422,6 +422,75 @@ cueType not line-id.
 
 ---
 
+## Transition vocabulary appendix (Unit 1.4)
+
+Five named transitions (4 require overlay-component implementation +
+1 is a `<Series.Sequence>` boundary). Architecture: **bare `<Series>`
++ scene-internal overlays** (NOT `<TransitionSeries>` presentations).
+Scene durations sum exactly to TOTAL_FRAMES (asserted by
+`timing.test.ts`); overlays do NOT shorten parent scene
+`durationInFrames`.
+
+| # | Name              | Where it lives                                                                                  | Frame constant (`transitions.ts`)             |
+| - | ----------------- | ----------------------------------------------------------------------------------------------- | --------------------------------------------- |
+| 1 | **Hard cut**      | `<Series.Sequence>` boundary; no overlay component.                                            | (boundary — no constant)                      |
+| 2 | **Stamp slap**    | Overlay on source scene's tail frames. Standard (S01→S02 + cascade): 8f. Heavy (R3 payoff): 16f. | `STAMP_SLAP_FRAMES` / `STAMP_SLAP_HEAVY_FRAMES` |
+| 3 | **Dossier-page wipe** | Overlay on S03 tail; left-to-right reveal of destination via `clip-path: inset()`.          | `DOSSIER_WIPE_FRAMES = 16`                    |
+| 4 | **Iris wipe**     | Overlay on S05 tail; `clip-path: circle()` shrink from 70.7% to 0% at center.                  | `IRIS_WIPE_FRAMES = 45`                       |
+
+### Per-boundary picks
+
+| Boundary | Transition | Frame range | Rationale |
+|----------|-----------|-------------|-----------|
+| S01 → S02 | Stamp slap | 200–210 (8 frames inside S01 tail, settling 2 frames into S02 head) | Cold-open closes with R15 #1 classification stamp; the stamp IS the transition. Slap settles into S02's briefing-room frame as the stamp peels back. |
+| S02 → S03 | Hard cut | 570 | Briefing → mission background is a "next slide" beat. Pendleton briefings cut. Archer briefing scenes typically cut. |
+| S03 → S04 | Dossier-page wipe | 1034–1050 (16 frames in S03 tail) | Mission Background ends on the deck-of-120 reveal; the dossier page turns and reveals the cascade. Honors the diegetic frame. Left-to-right reveal per page-peel metaphor (`clip-path: inset(0 0 0 0)` → `inset(0 0 0 100%)`). |
+| S04 → S05 | **Hard cut after 1.0s payoff hold** | 2040 | Replaces former cross-dissolve. Payoff stamp + VO land 1950–2010; visual freezes 2010–2040 (music at bed-only); hard cut to gameplay. Music ducks pre-anticipated ramp (1980–2010) so duck completes as VO ends. |
+| S05 → S06 | Iris wipe | 2535–2580 (45 frames in S05 tail) | Closing transition. Iris wipes the gameplay frame closed; briefing-room frame reestablishes underneath for the closing directive. Title-sequence-shape echo at trailer close. `clip-path: circle(70.7% at 50% 50%)` → `circle(0% at 50% 50%)` with `EASE_IN_OUT`. |
+| S06 → end | Hard cut to black | 2850 | The trailer ends. No "fade to black" — Archer hard-cuts to credits. |
+
+### Cross-dissolve REMOVED (DOC-REVIEW lock)
+
+The former R3 cross-dissolve at S04→S05 was replaced with a hard cut
+during deepening. Multi-agent consensus:
+
+- **Design-lens:** Cross-dissolve isn't Archer-native; Archer hard-
+  cuts or wipes, doesn't dissolve between briefing-room and field
+  footage. Hard cut after the 1.0s payoff visual hold is more
+  shocking and more earned.
+- **Framework-docs:** `<TransitionSeries>` overlap math (`total =
+  sum - transitions`) would contradict timing.ts's declared 2850
+  total. Dropping the cross-dissolve lets us use bare `<Series>`
+  (UMB precedent).
+- **Adversarial:** The former cross-dissolve framing had 3 mutually-
+  inconsistent claims about silence + VO + dissolve overlap.
+  Hard cut at 2040 after a clean 1.0s hold resolves all three.
+- **Best-practices:** Audio doesn't cross a dissolve for free; music
+  needed explicit volume interpolation regardless. Hard cut + pre-
+  anticipated music duck completing at 2010 is cleaner.
+
+### Banned-transition list (style-only — architectural bans live above)
+
+The 5-transition scoped library is the ONLY vocabulary in use. The
+following are explicitly forbidden:
+
+- **Push transitions** (the slide-in-from-right thing). Reads as
+  generic motion-graphics templates.
+- **3D cube flips.** Not in the Archer vocabulary.
+- **Glitch effects.** Not in the Archer vocabulary.
+- **Cross-dissolve.** Locked OUT at S04→S05 per Step 2 deepening
+  (would also re-introduce `<TransitionSeries>` overlap math).
+
+Architectural bans (enforced structurally by `timing.test.ts` +
+Phase 4 lint rule):
+
+- **`<TransitionSeries>` presentations** — the composition is bare
+  `<Series>`. Any future `import {...} from '@remotion/transitions'`
+  in trailer source is a lint violation (Phase 4 will wire the
+  `import/no-restricted-paths` rule).
+
+---
+
 ## Sign-off sentinel
 
 `videos/trailer/sample-eval/beat-sheet/BEAT-SHEET.signoff` is written

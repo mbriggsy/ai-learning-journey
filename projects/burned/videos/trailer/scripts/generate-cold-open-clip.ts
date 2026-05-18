@@ -13,11 +13,14 @@
  * Output:
  *   sample-eval/r14-cold-open/clips/candidate-{4,5}.mp3
  *
- * Voice + settings inherit Unit 0.2 Roger lock for stylistic consistency
- * (stability 0.70 / similarity 0.75 / style 0.15 / speaker_boost true /
- * speed 0.95) — the cadence-spec rationale (deadpan, declarative,
- * compressed dynamic range) applies to the cold-open speaker the same
- * way it applies to Dash. Voice ID swaps to Sarah; settings stay.
+ * Voice + settings: Sloane (Shared Library, `m8AHWg36LJTQWKmfeGVv`)
+ * with the matriarch-tuned voice_settings override locked in
+ * cold-open-prototype.ts COLD_OPEN_SPEAKER.voiceSettings (stability 0.85
+ * / similarity 0.75 / style 0.05 / speaker_boost true / speed 0.92).
+ * The override DIVERGES from Unit 0.2 Roger defaults because Janet's
+ * tough-matriarch character requires high stability + ultra-low style
+ * to strip the upbeat baseline that surfaced in Sarah + Matilda
+ * iterations (see decode-eval.md §Janet iteration).
  *
  * Bracket-tag treatment:
  *   - [deadpan] leading — establishes register, mirrors Unit 0.4 tone
@@ -52,13 +55,9 @@ const PUBLIC_COLD_OPEN_DIR = resolve(BURNED_ROOT, 'public/trailer/cold-open');
 const BUDGET_PATH = resolve(TRAILER_ROOT, 'sample-eval/r4-dash/char-budget.json');
 
 const MODEL_ID = 'eleven_v3';
-const VOICE_SETTINGS = {
-  stability: 0.70,
-  similarity_boost: 0.75,
-  style: 0.15,
-  use_speaker_boost: true,
-  speed: 0.95,
-} as const;
+// voice_settings sourced from COLD_OPEN_SPEAKER (single source of truth
+// — the contract test enforces the matriarch-tuned profile shape)
+const VOICE_SETTINGS = COLD_OPEN_SPEAKER.voiceSettings;
 
 loadEnv({ path: ENV_PATH });
 

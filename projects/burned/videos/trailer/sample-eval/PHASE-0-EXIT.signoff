@@ -1,0 +1,28 @@
+signed-off-by: Briggsy
+date: 2026-05-18
+sha256: 4041bd02423e7c9c13fb3d1dd9d833d234f3f56f6a73030d3e1c26d76f393a77
+file: videos/trailer/PHASE-0-EXIT.md
+unit: Phase 0 — gate resolution (all 5 unit dispositions consolidated)
+disposition: EXIT — Phase 0 closed, Phase 1 beat-sheet-lock unblocked
+all_units_cleared:
+  unit_0_2: cleared — ElevenLabs Roger (Path A, eleven_v3, CwhRBWXzGAHq8TQ4Fs17) — provisional until Phase 6 N=6
+  unit_0_3: cleared — Candidate #4 "He's a machine, this kid. ..." + Janet (Sloane voice — Shared Library, m8AHWg36LJTQWKmfeGVv, matriarch-tuned) — provisional until Phase 6 N=6
+  unit_0_4: cleared — played-straight tone LOCKED (v2 earned-Phrasing! "Hard to put down. ...Phrasing.")
+  unit_0_5: cleared — composite viability all 5 integration points PASS (a/b/c/d/e)
+  unit_0_6: cleared — Path A v3 [shouts] VEEEEEEEERAAAA!!! (Sterling-LANA four-axis shape)
+single_reader_fallback_shape: applied across Units 0.2 / 0.3 / 0.4 / 0.6 — full decode validation defers to Phase 6 N=6 cold-decode panel per cross-phase ADR #21.
+phase_1_inheritances:
+  voice_cast:
+    dash: Roger (CwhRBWXzGAHq8TQ4Fs17, ElevenLabs Voice Library) + Roger-default voice_settings
+    janet: Sloane (m8AHWg36LJTQWKmfeGVv, ElevenLabs Shared Library) + matriarch-tuned voice_settings (stability 0.85, style 0.05, speed 0.92)
+  cold_open_line: "He's a machine, this kid. Honestly at this point I'm just impressed."
+  tone_register: played-straight (LOCKED, not provisional)
+  composition_grammar: bare <Series> + scene-internal SceneFadeToBlack; @remotion/media <Audio> with <Sequence from> offset; STAMP_SLAP envelope + emil EASE_OUT; Clash Display variable woff2 multi-weight from single font file; HTP capture via Playwright; all 3 Archer-grammar transition primitives (stamp-slap / iris-wipe / kinetic-type) render-validated
+  scream_text: PARAGRAPH_3_SCREAM constant (8 E's + 4 A's; eCount > aCount test-asserted)
+  r15_stamp_locked_instance: cold-open content "OPERATION PENDLETON / CASE FILE 02 / METHOD: AUTONOMOUS"
+budget_reconciliation:
+  engine_spend: $22 ElevenLabs Creator ($50 envelope)
+  char_budget: 4,202 / 100,000 (4.20% — 50% + 80% tripwires clear)
+  hosting: $0 (Cloudflare Pages + Workers)
+  sub_phase_0a: not triggered
+  elapsed_days: ~3 (single-reader fallback collapsed elapsed duration vs planned multi-listener cadence)

@@ -21,10 +21,31 @@
  * Unit 0.6 cleared (Vera retained in pool but Malory's executive distance
  * is the more diagnostic attribution for "He's a machine" / "Briggsy didn't
  * write this one either" — both lines read as senior-exec narration
- * rather than field-partner reaction or chaos-enthusiast riff). Voice:
- * ElevenLabs Voice Library Sarah (EXAVITQu4vr4xnSDxMaL — confirmed in
- * library via Unit 0.2 matrix top-5 ranking 2026-05-18: "Mature,
- * Reassuring, Confident").
+ * rather than field-partner reaction or chaos-enthusiast riff).
+ *
+ * Voice: **Sloane - Bold and Polished** (ElevenLabs Shared Library,
+ * voice ID `m8AHWg36LJTQWKmfeGVv`). Locked 2026-05-18 after Janet voice
+ * iteration: initial Sarah voice (EXAVITQu4vr4xnSDxMaL) cleared the
+ * line but Briggsy flagged it as too "reassuring" for Janet's
+ * tough-matriarch character ("Janet is mature but not old. Tough as
+ * nails, doesn't take shit from anyone, especially Dash. She loves
+ * him, just doesn't take shit from him"). Local library exhausted
+ * (only 7 female voices, all young/warm/British) — escalated to
+ * ElevenLabs Shared Library which surfaced Sloane: "commanding yet
+ * approachable tone with a sleek, professional delivery that exudes
+ * authority without feeling distant." A/B'd against Matilda (local
+ * library, alto-professional baseline) + Kristen (Shared Library,
+ * true-crime/TED authoritative baseline) — Sloane won both auditions.
+ * Full iteration history in `sample-eval/r14-cold-open/decode-eval.md`
+ * §Janet iteration.
+ *
+ * voice_settings override (matriarch-tuned, NOT inherited from Unit 0.2
+ * Roger defaults): stability 0.85 (high — kills F0 wander, flat
+ * declarative read), similarity_boost 0.75 (default — let Sloane be
+ * herself), style 0.05 (ultra-low — strips engine-default expressive
+ * swelling that creates upbeat/perky feel), use_speaker_boost true,
+ * speed 0.92 (slightly slower than Roger's 0.95 — pushes
+ * deliberate-weighty matriarch register).
  *
  * Validity caveat — recorded in decode-eval.md, not silently demoted:
  * the formal n=4 minimum non-primed decode gate cannot be executed by a
@@ -92,11 +113,25 @@ export const COLD_OPEN_SPEAKER = {
   operative: 'Janet',
   /** Visible card art used in the speaker-flash frame */
   cardAsset: 'janet-broadside.webp',
-  /** ElevenLabs Voice Library entry (matrix-confirmed 2026-05-18) */
-  voiceLibraryName: 'Sarah - Mature, Reassuring, Confident',
-  voiceId: 'EXAVITQu4vr4xnSDxMaL',
+  /** ElevenLabs Shared Library entry (locked 2026-05-18 after iteration audit) */
+  voiceLibraryName: 'Sloane - Bold and Polished (Shared Library)',
+  voiceId: 'm8AHWg36LJTQWKmfeGVv',
   /** Archer archetype mapped onto BURNED operative */
-  archerArchetype: 'Malory (executive dryness)',
+  archerArchetype: 'Malory (executive dryness — tough-as-nails matriarch)',
+  /**
+   * Voice settings override — NOT Unit 0.2 Roger defaults. Janet's
+   * matriarch register requires: high stability (flat declarative),
+   * ultra-low style (strip upbeat expressive swelling), slow speed
+   * (deliberate weight). See iteration history in decode-eval.md
+   * §Janet iteration for the A/B audit that landed this profile.
+   */
+  voiceSettings: {
+    stability: 0.85,
+    similarity_boost: 0.75,
+    style: 0.05,
+    use_speaker_boost: true,
+    speed: 0.92,
+  },
 } as const;
 
 /**

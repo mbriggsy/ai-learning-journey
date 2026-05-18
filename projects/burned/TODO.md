@@ -10,7 +10,7 @@ the history. (Rule: `feedback-todo-is-not-a-diary.md`.)
 ### Status (verified 2026-05-18)
 
 - Tests: **1407 pass** (root suite) | 6 expected fail (68/68 files green)
-- Trailer subpackage tests: **136 pass** — preflight trim contract + Gemini adapter slot guards (Step 0.5) + ElevenLabs JSON schema + OpenAI fence extraction + script-leak guards (Step 1.5) + Sterling-LANA four-axis shape contract on `PARAGRAPH_3_SCREAM` (Unit 0.6) + Pendleton-vocab translation + earned-Phrasing! entendre contract on `TONE_SAMPLE_PARAGRAPH` (Unit 0.4)
+- Trailer subpackage tests: **165 pass** — preflight trim contract + Gemini adapter slot guards (Step 0.5) + ElevenLabs JSON schema + OpenAI fence extraction + script-leak guards (Step 1.5) + Sterling-LANA four-axis shape contract on `PARAGRAPH_3_SCREAM` (Unit 0.6) + Pendleton-vocab translation + earned-Phrasing! entendre contract on `TONE_SAMPLE_PARAGRAPH` (Unit 0.4) + R14 cold-open candidate line text + machine-wordplay surface + VOICE_DIRECTION guard + Janet voice/voice_settings lock (Unit 0.3)
 - Typecheck: clean (`pnpm typecheck` root + `videos/trailer/`)
 - Phone player entry: **19.17 KB gz** — under the 100 KB ceiling
 - DramaOverlay lazy chunk: 2.34 KB gz
@@ -23,7 +23,12 @@ All 8 phase plans drafted, deepened, and document-reviewed. Source of
 truth: `docs/plans/origin-trailer/` (phase-0 through phase-7 + `roadmap.md`
 with the ADR ledger). Plan set is the recipe — execution begins here.
 
-**Phase 0 execution progress (verified 2026-05-18):**
+**Phase 0 — ✅ CLOSED 2026-05-18.** All 5 unit dispositions consolidated
+in `videos/trailer/PHASE-0-EXIT.md`; signoff sentinels written to
+`videos/trailer/sample-eval/{r14-cold-open/briggsy-review-0.3,PHASE-0-EXIT}.signoff`.
+Phase 1 (beat-sheet-lock) unblocked.
+
+**Phase 0 unit roll-up (verified 2026-05-18):**
 
 - Unit 0.1 (scaffold) — ✅ shipped `e5ca0d7e`
 - Unit 0.2 Step 0 (Sterling cadence-spec.md) — ✅ shipped `56c8b9ba`
@@ -84,11 +89,23 @@ Disposition + sign-off at
 `sample-eval/tone/sample.v1.mp3` (gitignored, on-disk only) for
 unearned-vs-earned A/B reference.
 
-**Next unblocked work: Unit 0.3 (R14 cold-open decode).** Plan
-§Unit 0.3 is the last Phase 0 gate; consumes Unit 0.6 outcome (Vera
-retained in candidate speaker pool) + Unit 0.2 locked engine + voice.
-Phase 0 exits with `PHASE-0-EXIT.md` consolidating five dispositions
-(Units 0.2, 0.4, 0.5, 0.6 done; 0.3 pending).
+**Unit 0.3 (R14 cold-open decode) — ✅ CLOSED 2026-05-18.** Two-phase
+audition: (1) line audition picked Candidate #4 ("He's a machine, this
+kid. Honestly at this point I'm just impressed.") over #5 (#5 carried
+robotic-tail defect on kicker). (2) Voice audition ran 4 variants
+(Sarah → Matilda → Sloane → Kristen, all matriarch-tuned) after Sarah
+was flagged as too "reassuring" for Janet's tough-matriarch character.
+Sloane (ElevenLabs **Shared Library**, `m8AHWg36LJTQWKmfeGVv`) +
+matriarch-tuned voice_settings (stability 0.85, style 0.05, speed
+0.92) won the A/B over Kristen. Canonical `candidate-4.mp3` is exact
+audited Sloane bytes (sha256
+`4a9db27108689e2eeb241174843ea020a7c1cfe953e23655fee83b2216119f7d`);
+re-rendered `cold-open-candidate-4.mp4` consumes that audio.
+
+Disposition + line iteration + Janet voice iteration at
+`videos/trailer/sample-eval/r14-cold-open/{decode-eval.md,candidates.md}`.
+Sentinel signoffs at
+`videos/trailer/sample-eval/{r14-cold-open/briggsy-review-0.3,PHASE-0-EXIT}.signoff`.
 
 Unit 0.2 disposition:
 `videos/trailer/sample-eval/r4-dash/unit-0.2-disposition.md`.
@@ -115,14 +132,18 @@ treats female-voice keyword matches equally with male. Picked voice
 presentation is misleading. Fix when Path A voice gets revisited in
 Phase 4 if needed.
 
-**Phase 0 ladder status:**
-- Unit 0.2: ✅ Steps 0 / 0a / 0.5 / 1 / 3 done; Steps 1.5–5 await keys
-- Unit 0.5: ✅ CLEARED
+**Phase 0 ladder status (ALL CLOSED):**
+- Unit 0.2: ✅ CLOSED (Roger / ElevenLabs Path A locked)
+- Unit 0.5: ✅ CLEARED (composite viability all 5 integration points)
 - Unit 0.6: ✅ CLOSED (R5 scream — Path A v3 `[shouts] VEEEEEEEERAAAA!!!`)
 - Unit 0.4: ✅ CLOSED (tone — Path A v2 earned-Phrasing! "Hard to put down")
-- Unit 0.3: 🟡 next unblocked work
+- Unit 0.3: ✅ CLOSED (cold-open #4 + Janet/Sloane matriarch-tuned)
 
-After Phase 0: sequential Phase 1 → Phase 7 execution.
+**Next unblocked work: Phase 1 — Beat Sheet Lock.** Phase 1 reads
+`videos/trailer/PHASE-0-EXIT.md` to scaffold beat-sheet around the
+locked dispositions. Plan: `docs/plans/origin-trailer/phase-1-beat-sheet-lock.md`.
+
+After Phase 1: sequential Phase 2 → Phase 7 execution.
 
 ### Deploy migration — quarantined (separate commit when ready)
 
@@ -145,6 +166,29 @@ local-dev fallback path if migration isn't finalized by then.
 
 Active warnings only. Older landmines have moved to `docs/insights/` and
 `CLAUDE.md`.
+
+- **Janet voice = Sloane + matriarch-tuned, NOT Roger defaults**
+  (2026-05-18 Unit 0.3 close). Janet's locked voice is **Sloane**
+  (`m8AHWg36LJTQWKmfeGVv`, ElevenLabs **Shared Library** — not the local
+  library) with matriarch-tuned voice_settings override:
+  `stability: 0.85, similarity_boost: 0.75, style: 0.05,
+  use_speaker_boost: true, speed: 0.92`. This DIVERGES from Unit 0.2's
+  Roger defaults (`stability: 0.70, style: 0.15, speed: 0.95`). The
+  divergence is essential — Briggsy auditioned Sarah-with-Roger-defaults
+  + Matilda-with-matriarch-tuned + Sloane-with-matriarch-tuned +
+  Kristen-with-matriarch-tuned, and the matriarch-tuned settings are
+  the ones that strip the upbeat baseline that creates "reassuring" /
+  "professional" warmth in mature American female voices. If anyone in
+  Phase 4 authors new Janet dialogue and re-renders, they MUST use
+  `COLD_OPEN_SPEAKER.voiceSettings` from `cold-open-prototype.ts`, NOT
+  the Roger defaults from `cadence-spec-elevenlabs.json`. The contract
+  test in `cold-open-prototype.test.ts` enforces the profile shape on
+  the constant; the renderer `generate-cold-open-clip.ts` consumes it
+  via the constant. Don't hardcode voice_settings in a new Phase 4
+  Janet-renderer script — import from the single source of truth.
+  Phase 4 may want a similar character-voice lock for Sable + Vera +
+  Neal + Otto + Agent X if any of them speak in the trailer — each
+  would need its own voice audition cycle following this pattern.
 
 - **Origin-trailer doc drift after Unit 0.6 §3.6 expansion** (2026-05-18,
   closure of `ed03e598`). The Sterling-LANA four-axis characterization

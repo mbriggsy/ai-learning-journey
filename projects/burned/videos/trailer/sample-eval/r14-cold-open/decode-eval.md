@@ -21,8 +21,18 @@
 
 ## Status
 
-🟡 **PENDING — Reader-A audition.** Both candidate clips rendered
-2026-05-18; awaiting Briggsy verbatim reaction + outcome selection.
+**✅ CLOSED 2026-05-18 — Candidate #4 line + Sloane voice (Shared
+Library, matriarch-tuned) locked.**
+
+Line audition cleared #4 over #5 (#5 carried robotic-tail defect on
+kicker). Janet voice iteration then ran a 4-variant audit (Sarah →
+Matilda-tuned → Sloane-tuned → Kristen-tuned) after Sarah was flagged
+as "too reassuring" for Janet's tough-matriarch character — Sloane
+(Shared Library, `m8AHWg36LJTQWKmfeGVv`) with matriarch-tuned
+voice_settings won the A/B over Kristen and now ships as Janet's voice.
+Canonical `candidate-4.mp3` is the exact audited Sloane bytes
+(sha256 `4a9db27108689e2eeb241174843ea020a7c1cfe953e23655fee83b2216119f7d`);
+re-rendered `cold-open-candidate-4.mp4` consumes that audio.
 
 ---
 
@@ -138,50 +148,187 @@ current shape).
 
 ---
 
-## 3. Briggsy's Audition
+## 3. Briggsy's Audition — 2026-05-18
 
-> Filled at audition time. Capture verbatim reactions to each
-> stimulus, then declare outcome from §2 table above.
+### Joint audition (both clips A/B'd in sequence on desktop)
+
+- **Played:** `cold-open-candidate-4.mp4` + `cold-open-candidate-5.mp4`
+- **Verbatim reaction:** *"ok listened to opener 4 & 5. both are good.
+  But 5, at the end, 'writing them' it seemed to have a bit of a
+  robotic feel to it."*
 
 ### Candidate #4 audition
 
-- **Played:** `cold-open-candidate-4.mp4`
-- **Stimulus surface noticed:** [ AUDIO | VISUAL | R15 STAMP | COMPOSITE ]
-- **Verbatim reaction:** *"…"*
-- **Decode signal:** [ Tier 1 = unprompted autonomy decode | Tier 2 = AI + authorship | Insufficient | Ceiling = over-telegraphed ]
+- **Stimulus surface noticed:** COMPOSITE (no specific defect or
+  surface call-out; "good" signal applies to the audio + visual + R15
+  stamp as a whole)
+- **Decode signal:** Render-quality pass under single-reader fallback.
+  Formal Tier 1 / Tier 2 articulation rubric does NOT apply (Briggsy
+  is the author of the lines + the engineering audience the
+  machine-wordplay targets — author-tester confirmation bias is
+  structurally unavoidable, per Validity caveat above). The audition
+  cleared the COMPOSITE-quality sanity check the single-reader gate
+  collapses to.
 
 ### Candidate #5 audition
 
-- **Played:** `cold-open-candidate-5.mp4`
-- **Stimulus surface noticed:** [ AUDIO | VISUAL | R15 STAMP | COMPOSITE ]
-- **Verbatim reaction:** *"…"*
-- **Decode signal:** [ Tier 1 = unprompted autonomy decode | Tier 2 = AI + authorship | Insufficient | Ceiling = over-telegraphed ]
+- **Stimulus surface noticed:** AUDIO — specifically the trailing
+  phrase "writing them" at the end of the kicker.
+- **Defect call:** Robotic feel on the trailing "writing them"
+  phrase. The defect lands on the kicker (the punchline moment) — the
+  most important second of the line. Likely engine-level: ElevenLabs
+  v3's `[sarcastic]` tag is reinforcing the wrong shape on the
+  trailing-syllable cluster, OR the trailing-word-pair lacks enough
+  voice_settings expressive range to hold against the deadpan-leading
+  cadence.
+- **Decode signal:** "Good" — but with a render-quality defect on the
+  highest-value second of the clip. Phase 4 carry-forward path if #5
+  content is revisited: try `[exhale]` instead of `[sarcastic]` at the
+  inline anchor, OR lower `stability` (0.70 → 0.55) + bump `style`
+  (0.15 → 0.25) on a re-render, OR shorten the kicker
+  ("He's getting good at not writing them" → "He's getting good at it").
 
-### Disposition
+### Disposition (line audition)
 
-- **Outcome (per §2 table):** [ # ]
-- **Locked candidate (if outcome 1 or 2):** [ #4 | #5 ]
-- **Notes:** *"…"*
+- **Outcome (per §2 table):** **#1 — Ship Candidate #4** (line content)
+- **Locked candidate:** #4 (`"He's a machine, this kid. Honestly at this point I'm just impressed."`)
+- **Notes:** #4 cleared without any defect call; #5 carries a
+  flagged-but-unfixed render-quality issue at the kicker. The CLEAN
+  candidate ships. #5 stays preserved on disk + in candidates.md
+  Section B documentation for future Phase 4 reference if the UMB v3
+  callback content is ever wanted in a different scene.
+
+---
+
+## 3a. Janet Voice Iteration — 2026-05-18
+
+After line disposition cleared #4, Briggsy flagged a CHARACTER-VOICE
+issue separable from line content: the original Sarah voice render
+came across as too "reassuring" for Janet's character note.
+
+> *"Janet is a bit more mature, not old. But not young either. Tough
+> as nails, doesn't take shit from anyone, especially Dash. She loves
+> him, just doesn't take shit from him. I think her voice needs to be
+> toughened up — in a matriarch kinda way."*
+
+This is exactly the Malory archetype Janet was attributed to (executive
+dryness with scotch-and-cigarettes edge), but Sarah's "Mature,
+Reassuring, Confident" baseline read warm-mature rather than
+tough-mature. Sarah's timbre fights Malory's signature.
+
+### Iteration shape
+
+Plan: pick a voice whose BASELINE TIMBRE carries the matriarch edge,
+keep matriarch-tuned voice_settings (high stability + ultra-low style
++ slow speed) across all variants for A/B parity. The variable being
+tested is VOICE TIMBRE, not voice_settings.
+
+### Variant 1 — Sarah baseline (original)
+
+- **Voice:** Sarah (`EXAVITQu4vr4xnSDxMaL`), Roger defaults (stability
+  0.70 / style 0.15 / speed 0.95)
+- **Audition signal:** Too reassuring (Briggsy flag above)
+- **Disposition:** Replace voice, escalate to library re-pick
+
+### Variant 2 — Matilda-tuned
+
+- **Voice:** Matilda (`XrExE9yKIg1WjnnlVkGX`), matriarch-tuned (stability
+  0.85 / style 0.05 / speed 0.92)
+- **Rationale:** Best local-library female candidate per scout —
+  "Knowledgable, Professional, alto pitch." Alto register is direction-
+  right for matriarch.
+- **Audition signal:** *"Matilda could work. But let's try some from
+  our scout."*
+- **Disposition:** Direction-right but not winner; escalate to Shared
+  Library scout for stronger candidate.
+
+### Variant 3 — Sloane-tuned (Shared Library escalation)
+
+- **Voice:** Sloane (`m8AHWg36LJTQWKmfeGVv`, ElevenLabs Shared
+  Library), matriarch-tuned (same as v2)
+- **Rationale:** Shared Library scout top result — *"A confident,
+  mature American female voice. She carries a commanding yet
+  approachable tone with a sleek, professional delivery that exudes
+  authority without feeling distant"* — literal Malory-archetype
+  description.
+- **Audition signal:** *"ooooohhhhh I likey. Let's do one more, but
+  yeah that's good."*
+- **Disposition:** Winning timbre; one more A/B for diagnostic
+  confidence.
+
+### Variant 4 — Kristen-tuned (Shared Library, true-crime baseline)
+
+- **Voice:** Kristen (`OIadkU6YLviNhuekXGly`, ElevenLabs Shared
+  Library), matriarch-tuned (same as v2/v3)
+- **Rationale:** Shared Library scout #5 candidate — TED-style
+  professional + true-crime/documentary baseline. Different shape of
+  authority than Sloane (weighty-weary vs polished-commanding).
+- **Audition signal:** *"Kirsten is good, really good. But Sloane is
+  our gal."*
+- **Disposition:** Strong contender but Sloane wins the A/B.
+
+### Janet voice lock
+
+- **Voice:** **Sloane - Bold and Polished** (`m8AHWg36LJTQWKmfeGVv`,
+  ElevenLabs Shared Library, model `eleven_v3`)
+- **Voice settings (matriarch-tuned override, NOT Unit 0.2 Roger
+  defaults):** `{stability: 0.85, similarity_boost: 0.75, style: 0.05,
+  use_speaker_boost: true, speed: 0.92}`
+- **Locked into `cold-open-prototype.ts COLD_OPEN_SPEAKER`** as the
+  canonical Janet voice for any future cold-open render. Contract test
+  in `cold-open-prototype.test.ts` asserts both voice ID and
+  voice_settings profile to prevent silent drift.
+- **Canonical audio = exact audited bytes:** the production
+  `candidate-4.mp3` is a byte-for-byte COPY of the audited
+  `candidate-4-janet-sloane-tuned.mp3` (not a re-render — ElevenLabs is
+  non-deterministic so re-rendering would produce different audio than
+  Briggsy approved). sha256 verified:
+  `4a9db27108689e2eeb241174843ea020a7c1cfe953e23655fee83b2216119f7d`.
+- **Char-budget impact (iteration total):** +360 chars across 4 renders
+  (cumulative 4,202 / 100,000 = 4.20%; 50% + 80% tripwires clear).
+- **Iteration audit-trail MP3s preserved on disk** (gitignored under
+  sample-eval/**/*.mp3 rule):
+  - `candidate-4-janet-matilda-tuned.mp3`
+  - `candidate-4-janet-sloane-tuned.mp3` (= canonical `candidate-4.mp3`)
+  - `candidate-4-janet-kristen-tuned.mp3`
 
 ---
 
 ## 4. Disposition
 
-> Filled at audition close.
-
 ```
-Date:                  YYYY-MM-DD
-Outcome:               [ship #4 | ship #5 | iterate | failure-mode-1 | failure-mode-2 | failure-mode-3]
-Locked line:           [verbatim text or N/A]
-Locked speaker:        Janet (Sarah voice — EXAVITQu4vr4xnSDxMaL)
+Date:                  2026-05-18
+Outcome:               ship #4 (line) + Sloane-tuned (Janet voice)
+Locked line:           "He's a machine, this kid. Honestly at this point I'm just impressed."
+Locked speaker:        Janet (Sloane voice — m8AHWg36LJTQWKmfeGVv, ElevenLabs Shared Library)
+Voice settings:        matriarch-tuned override (stability 0.85, similarity 0.75, style 0.05, speaker_boost true, speed 0.92)
 Composition:           SpikeColdOpen (8s @ 30fps, 240 frames)
-Briggsy summary:       [free prose]
+Briggsy summary:       Two iteration phases. Line audition picked #4 over
+                       #5 (#5 carried robotic-tail defect on kicker).
+                       Voice audition then ran 4 variants (Sarah →
+                       Matilda → Sloane → Kristen, all matriarch-tuned)
+                       after Sarah flagged as too "reassuring" for
+                       Janet's tough-matriarch character. Sloane
+                       (Shared Library — "commanding yet approachable
+                       tone with a sleek, professional delivery that
+                       exudes authority without feeling distant") won
+                       the A/B over Kristen ("good, really good. But
+                       Sloane is our gal"). Canonical candidate-4.mp3
+                       is exact audited Sloane bytes (sha256
+                       4a9db27108689e2eeb241174843ea020a7c1cfe953e23655fee83b2216119f7d);
+                       re-rendered cold-open-candidate-4.mp4 consumes
+                       that audio. Phase 1 beat-sheet inherits #4 +
+                       Janet + Sloane voice + matriarch-tuned settings.
 
 Carry-forwards to Phase 1 beat-sheet-lock:
-- Cold-open line: [locked text]
-- Cold-open speaker: Janet (provisional — Phase 6 N=6 panel may
-  surface speaker-attribution change if a different operative reads
-  the line stronger)
+- Cold-open line: "He's a machine, this kid. Honestly at this point
+  I'm just impressed." (Candidate #4 locked)
+- Cold-open speaker: Janet (provisional speaker-attribution lock —
+  Phase 6 N=6 panel may surface speaker change if a different operative
+  reads the line stronger; voice swap would be cheap since Sloane is
+  Shared Library available)
+- Cold-open voice: Sloane (m8AHWg36LJTQWKmfeGVv, ElevenLabs Shared
+  Library) + matriarch-tuned voice_settings
 - R15 chrome stamp content: "OPERATION PENDLETON / CASE FILE 02 /
   METHOD: AUTONOMOUS" — locked at Unit 0.3 cold-open instance
   (visual spec inherited by Phase 1's other R15 stamps)
@@ -193,16 +340,21 @@ Carry-forwards to Phase 4 trailer assembly:
 - Cold-open scene built from this exact spike composition (Phase 4
   consumes SpikeColdOpen as the cold-open scene structure; only
   upgrade is Phase 2 brass-jazz hook + Phase 3 production R15 SVG)
-- Speaker voice: ElevenLabs Sarah unless Phase 6 N=6 surfaces a
-  different operative
+- Speaker voice: ElevenLabs Sloane (Shared Library) with matriarch-
+  tuned voice_settings — locked in COLD_OPEN_SPEAKER constant;
+  contract test asserts both voice ID + voice_settings shape
 - Bracket-tag treatment: [deadpan] leading + [sarcastic] before
   kicker phrase — replicate the contract-test shape in
   cold-open-prototype.test.ts for any new Phase 4 cold-open
   paragraph variant
+- Phase 4 may want to commission additional Sloane renders for OTHER
+  Janet dialogue beyond the cold-open; voice ID + settings already
+  locked, no re-pick required
 
 Carry-forwards to Phase 6 N=6 cold-decode panel (ADR #21 —
 single-reader fallback elected for Phase 0):
-- Stimulus: this MP4 OR re-rendered Phase 4 cold-open scene
+- Stimulus: `cold-open-candidate-4.mp4` OR re-rendered Phase 4 cold-
+  open scene (Phase 6 elects)
 - Decode rubric: Tier 1 (unprompted "agent/autonomous/built itself")
   / Tier 2 (AI + authorship verb) / Insufficient / Ceiling per plan
   §Step 3 keyword-precision rule (ADR #21 build-process vs
@@ -225,6 +377,12 @@ Outstanding follow-up (NOT blocking Phase 0 exit):
   produces R15 stamp SVGs (per ADR-pattern from spike
   spike-results.md §Per-point verdicts (e₁)); cold-open scene gets
   re-rendered with production stamp SVGs at that point.
+- Candidate #5 robotic-tail defect. Briggsy flagged "robotic feel" on
+  trailing "writing them" phrase. If Phase 4 ever wants to recover #5
+  content for a different scene: try [exhale] tag instead of
+  [sarcastic] at the inline anchor, OR lower stability (0.70 → 0.55)
+  + bump style (0.15 → 0.25), OR shorten kicker. Cheap iteration
+  (~98 char re-render).
 ```
 
 ---
@@ -234,17 +392,20 @@ Outstanding follow-up (NOT blocking Phase 0 exit):
 Filled at disposition time. Each item is a write that must land
 **before** Unit 0.3 is considered closed.
 
-- [ ] `PHASE-0-EXIT.md` §Section 4 (R14 Cold-Open Disposition) —
-      written at Phase 0 close (Unit 0.3 is the LAST Phase 0 gate, so
-      this file gets created in the same commit cluster).
-- [ ] **Phase 1 beat-sheet-lock hand-off** — cold-open line + speaker
-      + composition shape inherited by Phase 1 scene blocking.
-- [ ] **Phase 4 trailer assembly hand-off** — SpikeColdOpen
+- [x] `PHASE-0-EXIT.md` §Section 2 (R14 Cold-Open Line Disposition) —
+      filled with disposition: cleared / line / speaker / voice ID at
+      Phase 0 close.
+- [x] **Phase 1 beat-sheet-lock hand-off** — cold-open line (#4) +
+      speaker (Janet) + composition shape inherited by Phase 1 scene
+      blocking. Provisional pending Phase 6 N=6 re-validation per
+      ADR #21.
+- [x] **Phase 4 trailer assembly hand-off** — SpikeColdOpen
       composition + bracket-tag treatment + speaker voice ID
-      replicated in production cold-open scene.
-- [ ] **Phase 6 N=6 cold-decode panel cross-ref** — stimulus + decode
+      replicated in production cold-open scene. #5 defect notes
+      preserved for any future Phase 4 #5-content recovery.
+- [x] **Phase 6 N=6 cold-decode panel cross-ref** — stimulus + decode
       rubric + acceptance threshold + fail-action documented in §4.
-- [ ] `briggsy-review-0.3.signoff` sentinel written per ADR #22.
+- [x] `briggsy-review-0.3.signoff` sentinel written per ADR #22.
 
 ---
 

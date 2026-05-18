@@ -69,46 +69,87 @@ opt-in opportunity. Full sub-notes:
 
 ## Section 2 — R14 Cold-Open Line Disposition (Unit 0.3) [PHASE 1 BLOCKER]
 
-🟡 **TBD — awaiting Reader-A audition.** Both candidate clips rendered
-2026-05-18; Briggsy verbatim reaction + outcome selection pending.
-This section fills in once `decode-eval.md` §3 captures the audition
-disposition.
-
-**Drafted skeleton** (placeholder values — replace at audition close):
-
-- **Disposition:** [cleared | restructured-to-non-voice-fallback | cut]
-- **Line (verbatim):** [`<CANDIDATE_4 text>` | `<CANDIDATE_5 text>` |
-  `N/A — non-voice fallback` | `<rewritten line text from failure-mode-1>`]
-- **Speaker character:** Janet (Malory-coded executive dryness — drafted
-  attribution; may revise if outcome elects different operative)
-- **Speaker voice ID:** `EXAVITQu4vr4xnSDxMaL` ("Sarah - Mature,
-  Reassuring, Confident", ElevenLabs Voice Library, model `eleven_v3`,
-  voice_settings inherited from Unit 0.2 Roger lock) — drafted
-  selection; revisable per Phase 4 voice re-pick.
+- **Disposition:** **cleared**
+- **Line (verbatim):** *"He's a machine, this kid. Honestly at this
+  point I'm just impressed."* (Section B Candidate #4)
+- **Speaker character:** Janet (Malory-coded executive dryness — tough-
+  matriarch register, not warm-mature)
+- **Speaker voice ID:** `m8AHWg36LJTQWKmfeGVv` ("Sloane - Bold and
+  Polished", ElevenLabs **Shared Library**, model `eleven_v3`).
+  Locked 2026-05-18 after Janet voice iteration (Sarah → Matilda →
+  Sloane → Kristen A/B audit) — initial Sarah voice cleared the line
+  but Briggsy flagged it as too "reassuring" for Janet's tough-
+  matriarch character. Sloane's Shared Library description ("commanding
+  yet approachable tone with a sleek, professional delivery that exudes
+  authority without feeling distant") is the literal Malory-archetype
+  fit.
+- **Voice settings (matriarch-tuned override, NOT Unit 0.2 Roger
+  defaults):** `stability: 0.85, similarity_boost: 0.75, style: 0.05,
+  use_speaker_boost: true, speed: 0.92` — high stability kills F0
+  wander for flat declarative read, ultra-low style strips
+  engine-default upbeat-expressive baseline, slow speed pushes
+  deliberate-weighty matriarch register. Locked in
+  `cold-open-prototype.ts COLD_OPEN_SPEAKER.voiceSettings`; contract
+  test asserts profile shape to prevent silent tuning drift.
 - **Tester count:** 1 non-primed / 4 minimum — single-reader fallback
   elected (precedent-aligned with Unit 0.2 + Unit 0.4 + Unit 0.6).
-  Author-tester validity caveat recorded in `decode-eval.md` §Validity
-  caveat: full decode gate defers to Phase 6 N=6 panel per ADR #21.
-- **Decode tier achieved:** [Tier 1 only N | Tier 1 + Tier 2 (AI +
-  authorship): N total | NEITHER (failed) | N/A under single-reader
-  fallback]
+  Author-tester validity caveat recorded in `sample-eval/r14-cold-open/
+  decode-eval.md` §Validity caveat: full decode gate defers to Phase 6
+  N=6 panel per ADR #21.
+- **Decode tier achieved:** N/A under single-reader fallback. Reader-A
+  line audition: *"both are good. But 5, at the end, 'writing them' it
+  seemed to have a bit of a robotic feel to it."* — #4 cleared without
+  defect call. Subsequent voice audition: *"ooooohhhhh I likey"* on
+  Sloane v3; *"Kirsten is good, really good. But Sloane is our gal"* on
+  A/B confirmation.
 - **Pre-screen battery — UMB-v3 contamination check:** N/A under
   single-reader fallback (Briggsy is the UMB v3 author — primed by
   construction; full pre-screen pool-management defers to Phase 6
   N=6 panel)
-- **ADR #21 keyword-precision check:** [no render-tech keywords drove
-  a Tier pass — verified Y/N]
-- **If non-voice fallback:** [R15-only decode spike outcome documented
-  + tester decode tier]
+- **ADR #21 keyword-precision check:** N/A under single-reader fallback
+  (the keyword-precision rule applies to non-primed listener decode
+  citations; Reader A is the author, citation is render-quality not
+  decode-tier signal)
+- **If non-voice fallback:** N/A (audio cold-open cleared)
+- **Canonical audio integrity:** production `candidate-4.mp3` is a
+  byte-for-byte COPY of audited `candidate-4-janet-sloane-tuned.mp3`
+  (sha256 `4a9db27108689e2eeb241174843ea020a7c1cfe953e23655fee83b2216119f7d`).
+  NOT a re-render — ElevenLabs is non-deterministic so re-rendering
+  would produce different audio than Briggsy approved. The exact
+  audited bytes ship.
 
-**Composition shape locked (irrespective of audition outcome):**
-`SpikeColdOpen` — 8s composition / 240 frames @ 30fps. Two fast cuts
-(Janet portrait → Dash portrait, 1s each with 2-frame brightness pop)
-→ held BURNED landing card (180 frames) with logo entry at frame 60
-and R15 chrome stamp slap at frame 75. VO drops at frame 30 on the cut
-to Dash. R15 stamp content: `OPERATION PENDLETON / CASE FILE 02 /
-METHOD: AUTONOMOUS`. Phase 4 inherits the composition structure;
-audio + line content depends on Section 2 disposition.
+**Composition shape locked:** `SpikeColdOpen` — 8s composition / 240
+frames @ 30fps. Two fast cuts (Janet portrait → Dash portrait, 1s each
+with 2-frame brightness pop) → held BURNED landing card (180 frames)
+with logo entry at frame 60 and R15 chrome stamp slap at frame 75. VO
+drops at frame 30 on the cut to Dash. R15 stamp content: `OPERATION
+PENDLETON / CASE FILE 02 / METHOD: AUTONOMOUS`. Phase 4 inherits the
+composition structure as the production cold-open scene shape.
+
+**Phase 4 carry-forwards** (from decode-eval.md §4 disposition):
+- SpikeColdOpen composition + bracket-tag treatment (`[deadpan]`
+  leading + `[sarcastic]` before "Honestly") replicate in production
+  cold-open scene.
+- Speaker voice: ElevenLabs Sloane (Shared Library, `m8AHWg36LJTQWKmfeGVv`)
+  with matriarch-tuned voice_settings — locked in COLD_OPEN_SPEAKER
+  constant; contract test asserts both voice ID + voice_settings shape.
+  Phase 4 may want to commission additional Sloane renders for OTHER
+  Janet dialogue beyond the cold-open; no re-pick required.
+- **Janet voice DNA brief** (for any future Janet dialogue/scene Phase
+  4 might author): mature but not old; tough as nails; doesn't take
+  shit from anyone, especially Dash; loves him, just doesn't take shit
+  from him. Malory-archetype scotch-and-cigarettes matriarch. Sloane
+  + matriarch-tuned settings is the locked recipe.
+- **Candidate #5 robotic-tail defect** preserved for Phase 4 recovery:
+  if anyone wants the UMB v3 callback content (*"Briggsy didn't write
+  this one either..."*) in a DIFFERENT scene, try `[exhale]` instead
+  of `[sarcastic]` at the inline anchor, OR lower stability (0.70 →
+  0.55) + bump style (0.15 → 0.25), OR shorten the kicker. Cheap
+  iteration (~98 char re-render). Note: #5 was rendered on Sarah voice
+  + Roger defaults; re-rendering with Sloane + matriarch-tuned would
+  also be cheap and worth trying first since Sloane's commanding
+  baseline + matriarch-tuned settings already cleared the kicker
+  defect on #4.
 
 ---
 
@@ -275,9 +316,10 @@ viable alternates if Briggsy elects different speaker at audition.
 - **Engine eval actual spend:** $22 ElevenLabs Creator (one-month
   subscription for `eleven_v3` access; OpenAI + Gemini consumed via
   pay-per-use under $1 cumulative). Within $50 envelope.
-- **ElevenLabs Creator char count actual:** 3,842 / 100,000 (3.84%
+- **ElevenLabs Creator char count actual:** 4,202 / 100,000 (4.20%
   monthly cap consumed across Steps 0.5 + 1 + 2 + Unit 0.4 tone v1/v2
-  + Unit 0.6 scream v1/v2/v3 + Unit 0.3 cold-open candidates 4 + 5).
+  + Unit 0.6 scream v1/v2/v3 + Unit 0.3 cold-open candidates 4 + 5 +
+  Janet voice iteration v2/v3/v4 [Matilda + Sloane + Kristen variants]).
   Tripwire status: 50% clear / 80% clear.
 - **Hosting actual spend:** $0 (Cloudflare Pages + Workers, per
   deploy-migration WIP — see TODO.md §Deploy migration).
@@ -307,6 +349,12 @@ field here with date stamp + originating phase.
   + 3 + 5 — `Tester count` field carries the n=1 fallback signal +
   validity caveat reference; full decode validation defers to Phase 6
   N=6 cross-phase ADR #21. No template field semantics changed.
+- 2026-05-18 (Phase 0 close — Unit 0.3 voice iteration): Section 2
+  gains "Voice settings" subfield as a CHILD of "Speaker voice ID" —
+  Janet's matriarch-tuned profile diverges from Unit 0.2 Roger
+  defaults, so the override must be explicit in the EXIT doc.
+  Add-only amendment per template policy. No removal or semantic
+  change to existing fields.
 
 Removing fields or changing field semantics requires a brainstorm-
 level re-open routed through `/ce:plan` deepening, NOT a silent edit.

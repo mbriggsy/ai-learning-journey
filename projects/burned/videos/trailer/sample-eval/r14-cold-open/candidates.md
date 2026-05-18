@@ -48,23 +48,36 @@ Per plan §Step 1, speaker assignment happens AFTER Unit 0.2 lock + Unit
 | Sable Ashworth | Cheryl | ❌ Chaos-enthusiasm register. "He's a machine" + chaos energy = "I love that he's a machine, chaos!" — wrong tone (the lines want resignation, not enthusiasm). |
 | Vera Khan | Lana | ❌ Exasperated-impressed FIELD partner register. Works if the speaker is reacting in-scene to a specific operation; cold-open is exposition from outside the scene, so field-partner reaction is off-shape. |
 
-**Voice (Path A — ElevenLabs Voice Library):**
+**Voice (locked after Janet iteration audit 2026-05-18):**
 
-- **Sarah - Mature, Reassuring, Confident** (voice ID `EXAVITQu4vr4xnSDxMaL`)
-- Confirmed present in Briggsy's library via the Unit 0.2 matrix top-5
-  ranking 2026-05-18 (`sample-eval/r4-dash/matrix/results.md`).
+- **Sloane - Bold and Polished** (voice ID `m8AHWg36LJTQWKmfeGVv`,
+  ElevenLabs **Shared Library** — escalated from local library after
+  Sarah audit flagged "too reassuring" for Janet's tough-matriarch
+  character)
 - Model: `eleven_v3`
-- Voice settings inherited from Unit 0.2 Roger lock for stylistic
-  consistency: `{stability: 0.70, similarity_boost: 0.75, style: 0.15,
-  use_speaker_boost: true, speed: 0.95}` — same cadence-spec rationale
-  (deadpan, declarative, compressed dynamic range) applies to the
-  cold-open speaker as it does to Dash.
+- Voice settings **matriarch-tuned override** (NOT Unit 0.2 Roger
+  defaults): `{stability: 0.85, similarity_boost: 0.75, style: 0.05,
+  use_speaker_boost: true, speed: 0.92}` — high stability kills F0
+  wander for flat declarative read; ultra-low style strips
+  engine-default expressive swelling that creates the upbeat baseline
+  Sarah + Matilda surfaced; slow speed pushes deliberate-weighty
+  matriarch register.
+
+**Janet voice iteration history** (`decode-eval.md` §Janet iteration):
+
+| # | Voice + tuning | Audition signal | Disposition |
+|---|---|---|---|
+| v1 | Sarah (`EXAVITQu4vr4xnSDxMaL`) + Roger defaults | "both are good. But 5, at the end, 'writing them' it seemed to have a bit of a robotic feel to it." | Cleared line, flagged voice as too "reassuring" for Janet's character |
+| v2 | Matilda (`XrExE9yKIg1WjnnlVkGX`) + matriarch-tuned | "Matilda could work." | Direction-right but Sloane wins A/B |
+| v3 | Sloane (`m8AHWg36LJTQWKmfeGVv`, Shared Library) + matriarch-tuned | "ooooohhhhh I likey." | **WINNING TIMBRE** |
+| v4 | Kristen (`OIadkU6YLviNhuekXGly`, Shared Library) + matriarch-tuned | "Kirsten is good, really good. But Sloane is our gal." | A/B confirms Sloane |
 
 **Speaker held CONSTANT across both candidate renders so the A/B
 audition isolates LINE, not VOICE.** Speaker attribution is a
 separable Phase 1+ decision; if a future revision attributes the
-winning line to a different operative, the Sarah-as-Janet placeholder
-may swap to Sable/Vera in production without re-running Unit 0.3.
+winning line to a different operative, the Sloane-as-Janet
+placeholder may swap to Sable/Vera in production without re-running
+Unit 0.3.
 
 ---
 
@@ -96,10 +109,11 @@ audio swaps via the wrapper composition's `candidate` prop.
 
 ### Render disposition
 
-| Candidate | TTS payload (chars) | MP3 sha256 | MP4 size | MP4 duration |
-|---|---|---|---|---|
-| #4 | 90 | `c3c070cb3d64a5074dbf0af3749445578dfa3047c99fa9c965be96881a64ecae` | 670,805 bytes | 8.00s (video) / 5.97s (audio, from frame 30 / 1.00s) |
-| #5 | 98 | `c87338efe1eb25b17f4c62e1a3351fbbfe26b313dc7ab5cabb37f09ac38993f5` | 638,899 bytes | 8.00s (video) / 5.18s (audio, from frame 30 / 1.00s) |
+| Candidate | TTS payload (chars) | MP3 sha256 | MP4 size | MP4 duration | Voice |
+|---|---|---|---|---|---|
+| #4 (canonical, Sloane-locked) | 90 | `4a9db27108689e2eeb241174843ea020a7c1cfe953e23655fee83b2216119f7d` | 651,765 bytes | 8.00s (video) / 5.50s (audio, from frame 30 / 1.00s) | Sloane (matriarch-tuned) |
+| #4 (v1 audit-trail, gitignored) | 90 | `c3c070cb3d64a5074dbf0af3749445578dfa3047c99fa9c965be96881a64ecae` | 670,805 bytes | 8.00s (video) / 5.97s (audio) | Sarah (Roger defaults) — superseded |
+| #5 (audit-trail only, NOT shipping) | 98 | `c87338efe1eb25b17f4c62e1a3351fbbfe26b313dc7ab5cabb37f09ac38993f5` | 638,899 bytes | 8.00s (video) / 5.18s (audio) | Sarah (Roger defaults) |
 
 **Bracket-tag treatment** (both candidates):
 - `[deadpan]` leading — establishes the dry briefing register, mirrors

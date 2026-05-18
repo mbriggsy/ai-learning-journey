@@ -1,0 +1,22 @@
+signed-off-by: Briggsy
+date: 2026-05-18
+sha256: 5c23f1a3858ddc8620bd7920384a125f98a37266c23227a5028c7fffdb4f53a8
+file: videos/trailer/sample-eval/r14-cold-open/decode-eval.md
+unit: 0.3 — R14 Cold-Open Decode Gate
+disposition: SHIP — Candidate #4 line + Sloane voice (Shared Library, matriarch-tuned)
+line: "He's a machine, this kid. Honestly at this point I'm just impressed."
+speaker: Janet (Sloane voice — m8AHWg36LJTQWKmfeGVv, ElevenLabs Shared Library)
+voice_settings: stability 0.85, similarity 0.75, style 0.05, speaker_boost true, speed 0.92 (matriarch-tuned override, NOT Unit 0.2 Roger defaults)
+composition: SpikeColdOpen (8s @ 30fps, 240 frames)
+canonical_audio_sha256: 4a9db27108689e2eeb241174843ea020a7c1cfe953e23655fee83b2216119f7d (byte-for-byte audited Sloane render — not a re-render)
+verbatim_audit:
+  line_audition: "ok listened to opener 4 & 5. both are good. But 5, at the end, 'writing them' it seemed to have a bit of a robotic feel to it." — #4 cleared without defect call; #5 carried flagged robotic-tail defect on kicker; unflawed #4 ships.
+  janet_character_flag: "Janet is a bit more mature, not old. But not young either. Tough as nails, doesn't take shit from anyone, especially Dash. She loves him, just doesn't take shit from him. I think her voice needs to be toughened up - in a matriach kinda way." — original Sarah voice was too "reassuring" for Janet's character; triggered voice iteration.
+  voice_iteration_v2_matilda: "Matilda could work. But let's try some from our scout." — direction-right but escalate to Shared Library scout.
+  voice_iteration_v3_sloane: "ooooohhhhh I likey. Let's do one more, but yeah that's good." — winning timbre; one more A/B for diagnostic confidence.
+  voice_iteration_v4_kristen: "Kirsten is good, really good. But Sloane is our gal." — A/B confirms Sloane.
+phase_4_carry_forward:
+  candidate_5_defect: "robotic feel on trailing 'writing them' phrase — Phase 4 recovery path: [exhale] tag swap OR lower stability + bump style OR shorten kicker; OR re-render with Sloane + matriarch-tuned (free attempt since the matriarch-tuned profile already cleared the kicker defect on #4)"
+  janet_voice_dna_brief: "mature but not old; tough as nails; doesn't take shit from anyone, especially Dash; loves him, just doesn't take shit from him. Malory-archetype scotch-and-cigarettes matriarch. Sloane + matriarch-tuned settings is the locked recipe."
+  janet_voice_reusability: "Sloane + matriarch-tuned is now the canonical Janet voice for any future Janet dialogue Phase 4 might author beyond the cold-open; no re-pick required."
+phase_6_provisional: Y — Phase 6 N=6 cold-decode panel re-validates per cross-phase ADR #21 (single-reader fallback gate is provisional until Phase 6).

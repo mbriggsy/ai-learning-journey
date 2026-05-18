@@ -118,18 +118,19 @@ describe('Cold-open candidates — VOICE_DIRECTION anti-pattern guard', () => {
   }
 });
 
-describe('COLD_OPEN_SPEAKER — Unit 0.2 voice attribution lock', () => {
-  it('voice ID matches the matrix-confirmed Voice Library entry (Sarah)', () => {
-    // EXAVITQu4vr4xnSDxMaL is the matrix-confirmed Sarah ID per
-    // sample-eval/r4-dash/matrix/results.md (Top-5 ranking 2026-05-18).
+describe('COLD_OPEN_SPEAKER — Janet voice attribution lock', () => {
+  it('voice ID matches the locked Shared Library entry (Sloane)', () => {
+    // m8AHWg36LJTQWKmfeGVv is the Sloane ID per
+    // sample-eval/r14-cold-open/decode-eval.md §Janet iteration
+    // (locked 2026-05-18 after A/B audit vs Sarah / Matilda / Kristen).
     // Any drift here means a silent voice swap.
-    expect(COLD_OPEN_SPEAKER.voiceId).toBe('EXAVITQu4vr4xnSDxMaL');
+    expect(COLD_OPEN_SPEAKER.voiceId).toBe('m8AHWg36LJTQWKmfeGVv');
   });
 
-  it('voice library entry name documents the matrix-ranking label', () => {
-    expect(COLD_OPEN_SPEAKER.voiceLibraryName).toContain('Sarah');
-    expect(COLD_OPEN_SPEAKER.voiceLibraryName).toContain('Mature');
-    expect(COLD_OPEN_SPEAKER.voiceLibraryName).toContain('Confident');
+  it('voice library entry name documents the Sloane Shared Library label', () => {
+    expect(COLD_OPEN_SPEAKER.voiceLibraryName).toContain('Sloane');
+    expect(COLD_OPEN_SPEAKER.voiceLibraryName).toContain('Bold');
+    expect(COLD_OPEN_SPEAKER.voiceLibraryName).toContain('Shared Library');
   });
 
   it('speaker card asset exists in the public/assets/cards/ inventory', () => {
@@ -141,5 +142,18 @@ describe('COLD_OPEN_SPEAKER — Unit 0.2 voice attribution lock', () => {
 
   it('archer archetype attribution is documented for Phase 1 carry-forward', () => {
     expect(COLD_OPEN_SPEAKER.archerArchetype).toMatch(/Malory|Lana|Cheryl/);
+  });
+
+  it('voice_settings override carries the matriarch-tuned profile', () => {
+    // Janet's settings deliberately diverge from Unit 0.2 Roger
+    // defaults — high stability + ultra-low style + slow speed to
+    // strip the upbeat baseline that earlier voice candidates (Sarah,
+    // Matilda) carried. Any drift here means a silent tuning change
+    // that may surface as character-voice regression.
+    expect(COLD_OPEN_SPEAKER.voiceSettings.stability).toBe(0.85);
+    expect(COLD_OPEN_SPEAKER.voiceSettings.style).toBe(0.05);
+    expect(COLD_OPEN_SPEAKER.voiceSettings.speed).toBe(0.92);
+    expect(COLD_OPEN_SPEAKER.voiceSettings.similarity_boost).toBe(0.75);
+    expect(COLD_OPEN_SPEAKER.voiceSettings.use_speaker_boost).toBe(true);
   });
 });

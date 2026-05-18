@@ -1,15 +1,15 @@
 # Preflight Generation Log
 
-- Generated: 2026-05-18T14:14:49.973Z
+- Generated: 2026-05-18T15:50:00.263Z
 - Model: `gemini-3.1-flash-tts-preview`
 - Voice: `Charon`
 - Adapter: `videos/trailer/sample-eval/r4-dash/cadence-spec-gemini.md`
 - Transcript: `PARAGRAPH_1_PREFLIGHT` (32 words, 168 chars)
 - Prompt size: 3294 chars
-- API latency: 10281 ms
-- PCM bytes returned: 710,400
-- WAV file size: 710,444 bytes
-- Audio duration: 14.80 s (target ~15 s)
+- API latency: 11903 ms
+- PCM bytes returned: 704,640
+- WAV file size: 704,684 bytes
+- Audio duration: 14.68 s (target ~15 s)
 - MIME type reported: `audio/l16; rate=24000; channels=1`
 - Output: `videos\trailer\sample-eval\r4-dash\preflight\gemini-spec-test.wav`
 

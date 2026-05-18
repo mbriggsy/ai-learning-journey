@@ -129,9 +129,14 @@ bias — the read should land in the deadpan-briefer / noir-narrator /
 sardonic-detective register cluster, NOT as an impression of any
 specific actor or animated-spy character.
 
-Volume dynamics: stay in a narrow amplitude band throughout. No
-swelling, no exclamation excursions, no rising emphasis on "card
-game" — the joke lands flat or it does not land.
+Volume dynamics: stay in a narrow amplitude band throughout on
+declarative reads. No swelling, no exclamation excursions, no rising
+emphasis on emphasis words — punchlines land flat or they do not
+land. If the transcript is an all-caps shouted line, deliver it
+volume-discontinuous (raise amplitude 6 to 12 decibels) but NOT
+pitch-discontinuous (do not raise fundamental frequency above 200
+hertz) — the scream should sound guttural and forceful, never
+panicked or falsetto.
 
 ### TRANSCRIPT
 

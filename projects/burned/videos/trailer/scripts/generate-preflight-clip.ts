@@ -264,8 +264,16 @@ async function main(): Promise<void> {
   console.log(`[preflight] log ${LOG_PATH}`);
 }
 
-main().catch((err) => {
-  console.error('[preflight] FAIL');
-  console.error(err instanceof Error ? err.message : String(err));
-  process.exit(1);
-});
+// Only execute when invoked directly via `pnpm preflight` or `tsx`.
+// Without this guard, importing `extractPromptTemplate` /
+// `substituteTranscript` / `assertVoiceDirectionGuard` from this file
+// (as generate-tts-eval.ts does) triggers a Gemini API call on every
+// import — wastes budget and produces confusing logs.
+const isCalledDirectly = process.argv[1] !== undefined && process.argv[1] === fileURLToPath(import.meta.url);
+if (isCalledDirectly) {
+  main().catch((err) => {
+    console.error('[preflight] FAIL');
+    console.error(err instanceof Error ? err.message : String(err));
+    process.exit(1);
+  });
+}

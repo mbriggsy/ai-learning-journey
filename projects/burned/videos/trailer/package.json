@@ -12,6 +12,7 @@
     "test": "vitest run",
     "check:tts": "tsx scripts/check-tts-readiness.ts",
     "preflight": "tsx scripts/generate-preflight-clip.ts",
+    "matrix": "tsx scripts/generate-tts-eval.ts",
     "capture:htp": "tsx scripts/capture-htp-scroll-burned.ts"
   },
   "dependencies": {

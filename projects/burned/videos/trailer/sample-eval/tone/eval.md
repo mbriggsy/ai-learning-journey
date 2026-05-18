@@ -31,11 +31,17 @@
 
 ## Status
 
-🟡 **IN-FLIGHT — render landed 2026-05-18, awaiting Briggsy single-reader audition.**
+**✅ CLOSED 2026-05-18 — played-straight tone locked. Path A Roger v2
+(`Hard to put down. …Phrasing.` earned-Phrasing! paragraph) ships.**
 
-`sample.mp3` rendered via `pnpm tone:clip` against the locked Path A
-adapter. Audition protocol below; Briggsy plays the clip cold and
-picks one of the 4 outcomes in §2.
+Reader-A audition cleared v2 after v1 was caught with an unearned
+Phrasing! beat (no double-entendre setup). v2 inserts
+`"Hard to put down."` — literal "page-turner," entendre on "hard" —
+to earn the catchphrase. Phrasing! mechanic now documented in
+`tone-prototype.ts` header comment + asserted by a contract test in
+`tone-prototype.test.ts`. The full gap-comedy decode test continues
+to defer to Phase 6 N=6 panel per cross-phase ADR #21 (single-reader
+fallback shape, precedent-aligned with Unit 0.2 + Unit 0.6).
 
 ---
 
@@ -131,34 +137,45 @@ discussion).
 - **Paragraph ending:** `"... Try and find a human one. Hard to put down. …Phrasing."`
 - **Bracket-tag treatment:** `[deadpan]` leading + `[sarcastic]` before `…Phrasing` (unchanged)
 - **Entendre lock:** "Hard to put down" — literal reading "the dossier is a page-turner" + entendre on "hard." Now asserted by a contract test in `tone-prototype.test.ts` so a future edit that drops the entendre setup fails the test, BEFORE the unearned Phrasing! ships.
-- **Verbatim reaction:** *"[FILL POST-AUDITION]"*
-- **Outcome:** `[ship / iterate / defer-decode / reopen]`
+- **Verbatim reaction:** *"it's good"*
+- **Outcome:** ☑ **SHIP** — played-straight tone-locked.
 
 ---
 
 ## 4. Disposition
 
 ```
-Date:                  [FILL]
-Outcome:               [ship | iterate | defer-decode | reopen]
+Date:                  2026-05-18
+Outcome:               ship
 Path A tag treatment:  [deadpan] leading + [sarcastic] before …Phrasing
-Path A sha256:         [FILL POST-RENDER]
-Briggsy summary:       [FILL — 2-3 sentence verdict referencing reaction]
+Path A sha256:         1d89d911a0dd65f5e201b94c57a8c7c2c27fbdd9fcf1b80b561d9769577e4b60
+Briggsy summary:       v2 paragraph with earned-Phrasing! setup ("Hard
+                       to put down. …Phrasing.") cleared after v1
+                       (unearned Phrasing! — "Try and find a human one"
+                       has no double-entendre reading) was caught on
+                       audition. Reader-A: "it's good." Played-straight
+                       deadpan-briefer register over Pendleton-vocab
+                       SDLC subject matter survives the test;
+                       gap-comedy mechanic feels alive in the render.
 
 Carry-forwards to Phase 1 beat-sheet-lock:
-- Tone register decision: [played-straight locked | provisional-pending-decode | reopened]
-- Pendleton-vocab translation table: [survives | needs revision]
+- Tone register decision: played-straight LOCKED
+- Pendleton-vocab translation table: SURVIVES (5 substitutions held the gap-comedy through render)
 - Briefer voice: Roger (CwhRBWXzGAHq8TQ4Fs17 / eleven_v3) confirmed; voice_settings unchanged from Unit 0.2 lock
 
 Carry-forwards to Phase 4 trailer assembly:
-- Bracket-tag treatment for any Phrasing-tail paragraph: [deadpan] leading + [sarcastic] before …Phrasing (this audition's outcome)
-- If outcome=iterate, the iteration that landed is the canonical pattern.
+- Bracket-tag treatment for any Phrasing-tail paragraph: [deadpan] leading + [sarcastic] before …Phrasing (this audition's locked pattern)
+- Earned-Phrasing! rule (NEW): any Phrasing!-tagged line must be preceded by a double-entendre setup. Cold-listen "that's what she said" trigger; not a cadence-only callout. The contract test in tone-prototype.test.ts is the canonical enforcement; replicate the same shape for any new Phrasing-bearing paragraph in production narration.
 
-Carry-forwards to Phase 6 N=6 cold-decode panel (if outcome=defer-decode or single-reader-fallback elected):
+Carry-forwards to Phase 6 N=6 cold-decode panel (ADR #21 — single-reader fallback elected for Phase 0):
 - Stimulus: this sample.mp3 OR re-rendered Phase 4 production paragraph (whichever Phase 6 elects)
 - Decode rubric: gap-articulation Tier 1 / Tier 2 / Insufficient per plan §Step 3
 - Acceptance threshold: ≥4 of 6 testers reach Tier 1 OR Tier 2; ≥1 from each mix-profile (Archer-aware / Archer-unaware) reaches Tier 1
 - If Phase 6 N=6 panel fails: brainstorm-level reopen of played-straight Key Decision; the trailer hard-pivots toward hybrid tone OR alternate opening frame
+
+Outstanding follow-up (NOT blocking Phase 0 exit):
+- Spec §3.5 catalog needs the "Phrasing! requires double-entendre trigger" rule made explicit (Briggsy noted 2026-05-18 during v1 audition correction). Tracked as a separate commit / TODO landmine.
+- sample-script-dash.ts PARAGRAPH_2_MONOLOGUE Phrasing! beat ("I've been waiting. …Phrasing") is context-dependent / weak as a cold-listen entendre. Briggsy noted 2026-05-18: "That's not really a good phrasing, now that you mention it." Flagged for any future Unit 0.2 reopen — out of Unit 0.4 scope.
 ```
 
 ---
@@ -171,20 +188,21 @@ Filled at disposition time. Each item is a write that must land
 - [ ] `PHASE-0-EXIT.md` §Section 3 (Tone Disposition) — DEFERRED;
       PHASE-0-EXIT.md is written at Phase 0 close (after Unit 0.3
       finishes). This document is the durable Unit 0.4 record the
-      exit doc will cite.
-- [ ] **Phase 1 beat-sheet-lock hand-off** — tone disposition lands
-      in `phase-1-beat-sheet-lock.md` §Tone column (played-straight
-      locked / provisional-pending-decode / reopened). Phase 1
-      branches on disposition state.
-- [ ] **Phase 4 trailer assembly hand-off** — bracket-tag treatment
-      from the locked-in render is the canonical pattern for any
-      Phrasing-tail paragraph in production narration.
-- [ ] **Phase 6 N=6 cold-decode panel cross-ref** (if outcome ∈
-      `{defer-decode, ship}`) — ADR #21's N=6 panel is the load-bearing
-      decode validation; this disposition supplies the stimulus +
-      acceptance threshold + fail-action.
-- [ ] `briggsy-review-0.4.signoff` sentinel written per ADR #22
-      precedent (matches Unit 0.6 closure shape).
+      exit doc will cite. Disposition: ship via Path A Roger /
+      "Hard to put down. …Phrasing." earned-Phrasing! paragraph.
+- [x] **Phase 1 beat-sheet-lock hand-off** — tone disposition is
+      **played-straight LOCKED**. Phase 1 inherits the locked register
+      without provisional branching.
+- [x] **Phase 4 trailer assembly hand-off** — bracket-tag treatment
+      `[deadpan] ... [sarcastic] …Phrasing.` + earned-Phrasing! rule
+      (entendre setup required) are the canonical patterns. Replicate
+      via the contract-test shape in `tone-prototype.test.ts`.
+- [x] **Phase 6 N=6 cold-decode panel cross-ref** — ADR #21's N=6
+      panel is the load-bearing decode validation; stimulus =
+      `sample.mp3` (this render) OR re-rendered Phase 4 production
+      paragraph. Acceptance threshold + fail-action documented in §4.
+- [x] `briggsy-review-0.4.signoff` sentinel written 2026-05-18 per
+      ADR #22.
 
 ---
 

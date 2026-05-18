@@ -10,7 +10,7 @@ the history. (Rule: `feedback-todo-is-not-a-diary.md`.)
 ### Status (verified 2026-05-18)
 
 - Tests: **1407 pass** (root suite) | 6 expected fail (68/68 files green)
-- Trailer subpackage tests: **111 pass** — preflight trim contract + Gemini adapter slot guards (Step 0.5) + ElevenLabs JSON schema + OpenAI fence extraction + script-leak guards (Step 1.5) + Sterling-LANA four-axis shape contract on `PARAGRAPH_3_SCREAM` (Unit 0.6)
+- Trailer subpackage tests: **136 pass** — preflight trim contract + Gemini adapter slot guards (Step 0.5) + ElevenLabs JSON schema + OpenAI fence extraction + script-leak guards (Step 1.5) + Sterling-LANA four-axis shape contract on `PARAGRAPH_3_SCREAM` (Unit 0.6) + Pendleton-vocab translation + earned-Phrasing! entendre contract on `TONE_SAMPLE_PARAGRAPH` (Unit 0.4)
 - Typecheck: clean (`pnpm typecheck` root + `videos/trailer/`)
 - Phone player entry: **19.17 KB gz** — under the 100 KB ceiling
 - DramaOverlay lazy chunk: 2.34 KB gz
@@ -63,11 +63,32 @@ Adapter scream notes updated. Disposition + sign-off at
 `videos/trailer/sample-eval/r5-scream/scream-eval.md` +
 `briggsy-review-0.6.signoff`.
 
-**Next unblocked work: Unit 0.4 (tone prototype gate).** Plan
-§Unit 0.4 lands after Unit 0.6 per refined ordering. After Unit 0.4:
-Unit 0.3 (R14 cold-open decode). Phase 0 exits with `PHASE-0-EXIT.md`
-consolidating five dispositions (Units 0.2, 0.5, 0.6 done; 0.4, 0.3
-pending).
+**Unit 0.4 (Tone Prototype Gate) — ✅ CLOSED 2026-05-18.** Path A
+Roger v2 paragraph (`"... Try and find a human one. Hard to put down.
+…Phrasing."`) locked as played-straight tone winner after a 2-variant
+audition. v1 shipped with an unearned Phrasing! beat (no
+double-entendre setup preceding the catchphrase); Briggsy caught it on
+audition and explained the mechanic — Phrasing! fires on a "that's
+what she said"-style trigger requiring an entendre-coded setup line.
+v2 inserts `"Hard to put down."` (literal: page-turner; entendre on
+"hard") to earn the beat. Reader A: *"it's good"* → ship.
+
+Played-straight register is now LOCKED for Phase 1 beat-sheet-lock
+(not provisional). The earned-Phrasing! rule is asserted by a contract
+test in `tone-prototype.test.ts` and documented in the paragraph
+constant's header comment. Full gap-comedy decode test continues to
+defer to Phase 6 N=6 cold-decode panel per cross-phase ADR #21.
+Disposition + sign-off at
+`videos/trailer/sample-eval/tone/eval.md` +
+`briggsy-review-0.4.signoff`. v1 preserved as
+`sample-eval/tone/sample.v1.mp3` (gitignored, on-disk only) for
+unearned-vs-earned A/B reference.
+
+**Next unblocked work: Unit 0.3 (R14 cold-open decode).** Plan
+§Unit 0.3 is the last Phase 0 gate; consumes Unit 0.6 outcome (Vera
+retained in candidate speaker pool) + Unit 0.2 locked engine + voice.
+Phase 0 exits with `PHASE-0-EXIT.md` consolidating five dispositions
+(Units 0.2, 0.4, 0.5, 0.6 done; 0.3 pending).
 
 Unit 0.2 disposition:
 `videos/trailer/sample-eval/r4-dash/unit-0.2-disposition.md`.
@@ -94,17 +115,12 @@ treats female-voice keyword matches equally with male. Picked voice
 presentation is misleading. Fix when Path A voice gets revisited in
 Phase 4 if needed.
 
-**Downstream Phase 0 work** (sequenced): Unit 0.6 (R5 scream) →
-Unit 0.4 (tone) → Unit 0.3 (R14 cold-open decode). Phase 0 exits
-with `PHASE-0-EXIT.md` consolidating all five dispositions.
-
-**Phase 0 ladder downstream of Unit 0.2** (sequenced after the
-engine-matrix MUSHRA acceptance): Unit 0.6 (R5 scream) → Unit 0.4
-(tone) → Unit 0.3 (R14 cold-open decode). Phase 0 exits with
-`PHASE-0-EXIT.md` consolidating five dispositions. Status:
+**Phase 0 ladder status:**
 - Unit 0.2: ✅ Steps 0 / 0a / 0.5 / 1 / 3 done; Steps 1.5–5 await keys
 - Unit 0.5: ✅ CLEARED
-- Unit 0.6 / 0.4 / 0.3: pending Unit 0.2 closure
+- Unit 0.6: ✅ CLOSED (R5 scream — Path A v3 `[shouts] VEEEEEEEERAAAA!!!`)
+- Unit 0.4: ✅ CLOSED (tone — Path A v2 earned-Phrasing! "Hard to put down")
+- Unit 0.3: 🟡 next unblocked work
 
 After Phase 0: sequential Phase 1 → Phase 7 execution.
 

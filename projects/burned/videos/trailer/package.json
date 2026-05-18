@@ -6,24 +6,27 @@
   "scripts": {
     "studio": "npx remotion studio src/index.ts",
     "render": "npx remotion render src/index.ts BurnedTrailer out/trailer-landscape.mp4 --codec h264 --crf 18",
+    "render:spike": "npx remotion render src/index.ts SpikeFrameTest out/spike-frame-test.mp4 --codec h264 --crf 18",
     "render:thumbnail": "npx remotion still src/index.ts BurnedTrailer out/thumbnail.png --frame 450",
     "typecheck": "tsc --noEmit",
     "test": "vitest run",
-    "check:tts": "tsx scripts/check-tts-readiness.ts"
+    "check:tts": "tsx scripts/check-tts-readiness.ts",
+    "capture:htp": "tsx scripts/capture-htp-scroll-burned.ts"
   },
   "dependencies": {
-    "remotion": "4.0.438",
     "@remotion/cli": "4.0.438",
     "@remotion/fonts": "4.0.438",
     "@remotion/media": "4.0.438",
     "react": "^19.1.0",
-    "react-dom": "^19.1.0"
+    "react-dom": "^19.1.0",
+    "remotion": "4.0.438"
   },
   "devDependencies": {
+    "@playwright/test": "^1.59.1",
     "@types/react": "^19.1.0",
-    "typescript": "^5.9.3",
-    "tsx": "^4.20.0",
     "dotenv": "^17.0.0",
+    "tsx": "^4.20.0",
+    "typescript": "^5.9.3",
     "vitest": "^4.0.0"
   }
 }

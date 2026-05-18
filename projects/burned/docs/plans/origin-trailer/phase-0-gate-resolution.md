@@ -365,10 +365,11 @@ on-demand (ADR #4 revised + ADR #6 refined — see Approach below).
     across 15+ sections (R3 is a HARD CUT, not cross-dissolve);
     composition uses bare `<Series>` + scene-internal overlays. ADR #4.
 
-  `render:final` is **NOT** added in Unit 0.1 — production encode flags
-  (CRF 16 + slow preset + audio-bitrate 128K) are a Phase 6 artifact
-  that serves no Phase 0 gate. Phase 6's plan adds it when production
-  encoding actually needs the configuration.
+  `render:final` is **NOT** added in Unit 0.1 — production encode flags (CRF 18 +
+  `--x264-preset slow` + audio-bitrate 128K, per Phase 6 ADR #19 canonical lock) are
+  a Phase 6 artifact that serves no Phase 0 gate. Phase 6's plan adds it when
+  production encoding actually needs the configuration. (Phase 0 originally cited
+  CRF 16; reconciled to CRF 18 per Phase 6 doc-review cross-phase amendment #1.)
 
   ```jsonc
   {
@@ -1641,10 +1642,18 @@ spend, per the Sub-phase 0a structure above.
 
 - [ ] **Unit 0.3: R14 Cold-Open Decode Gate**
 
-**Goal:** Validate that a no-context viewer decodes "AI / agent /
-autonomous / built itself" from the 5-second cold-open hook (audio +
-visual + on-screen text). The trailer's sole mechanism for telegraphing
-the agentic-SDLC origin to a viewer who has not seen UMB v3.
+**Goal:** Validate that a no-context viewer decodes "AI / agent / autonomous / built
+itself" from the 5-second cold-open hook (audio + visual + on-screen text). The
+trailer's sole mechanism for telegraphing the agentic-SDLC origin to a viewer who has
+not seen UMB v3.
+
+**Scope** (clarified 2026-05-17 per Phase 6 doc-review cross-phase amendment #2): Unit
+0.3 protocol applies ONLY to the 5-second cold-open binary-hook spike (does the cold-
+open ALONE seed an autonomy hook?). It is NOT the Phase 6 full-trailer comprehension
+decode (Phase 6 Unit 6.7 uses a separate between-subjects N=3+3 panel protocol per
+Phase 6 deepening ADR #21 + doc-review CALL-3). Unit 0.3 small-N is acceptable for
+binary cold-open hook detection; Phase 6's diagnostic uses larger N + UMB control for
+full-trailer comprehension.
 
 **Requirements:** R14 (compressed-Archer cold-open + repeatability
 declaration), R15 (on-screen text signal layer — partial validation; full

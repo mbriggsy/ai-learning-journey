@@ -2705,7 +2705,11 @@ execFileSync('ffmpeg', [
   '-c:v', 'libx264',
   '-t', '18',
   '-pix_fmt', 'yuv420p',
-  '-vf', 'scale=1920:1080:force_original_aspect_ratio=cover,crop=1920:1080',
+  // `force_original_aspect_ratio=cover` was invalid syntax — FFmpeg accepts
+  // `disable | decrease | increase`. Phase 5 deepening surfaced; Phase 6 doc-review
+  // cross-phase amendment #3 applies the fix: `increase` upscales the smaller
+  // dimension to match, then crop trims overflow — same intent as the broken `cover`.
+  '-vf', 'scale=1920:1080:force_original_aspect_ratio=increase,crop=1920:1080',
   '-an',  // strip audio — matches Phase 5's audio-stripped contract
   'public/trailer/gameplay-placeholder.mp4',
 ]);
@@ -3206,41 +3210,79 @@ The pre-deepening sentinel mechanism was honor-system: `briggsy-review-4.N.signo
 ```ts
 // scripts/verify-briggsy-sentinels.ts — DIRECTIONAL
 // SAFE: execFileSync argv arrays per project-wide convention.
-// Loops scenes 2-7 (briggsy-review-4.2 through 4.7) and asserts each sentinel's last commit
-// is authored by briggsy007@gmail.com. Exits 1 with named failures if any sentinel is missing
-// or authored by anyone else (including Claude / claude@anthropic.com / undefined).
+// Asserts each sentinel's last commit is authored by briggsy007@gmail.com. Exits 1
+// with named failures if any sentinel is missing or authored by anyone else
+// (including Claude / claude@anthropic.com / undefined).
+//
+// Scope extended per cross-phase amendments:
+//   - Phase 4 scenes: 4.2-4.7 (composite-build/)
+//   - Phase 5 sentinels: 5.4 + 5.6 (gameplay-capture/) — added Phase 5 deepening
+//   - Phase 6 sentinels: 6.0a, 6.4, 6.7 (final-render-qa/) — added Phase 6
+//     doc-review cross-phase amendment #5
 import { execFileSync } from 'node:child_process';
-import { existsSync } from 'node:fs';
+import { existsSync, readFileSync } from 'node:fs';
 
 const REQUIRED_AUTHOR = 'briggsy007@gmail.com';
-const SCENES = [2, 3, 4, 5, 6, 7] as const;  // scenes S01-S06 → sentinel numbers 4.2-4.7
+
+// All sentinel paths the project requires, with their source phase.
+const SENTINELS: { path: string; phase: string }[] = [
+  // Phase 4 scenes 4.2-4.7
+  ...[2, 3, 4, 5, 6, 7].map((n) => ({
+    path: `videos/trailer/sample-eval/composite-build/briggsy-review-4.${n}.signoff`,
+    phase: 'Phase 4',
+  })),
+  // Phase 5 sentinels
+  { path: 'videos/trailer/sample-eval/gameplay-capture/briggsy-review-5.4.signoff', phase: 'Phase 5' },
+  { path: 'videos/trailer/sample-eval/gameplay-capture/briggsy-review-5.6.signoff', phase: 'Phase 5' },
+  // Phase 6 sentinels
+  { path: 'videos/trailer/sample-eval/final-render-qa/briggsy-review-6.0a.signoff', phase: 'Phase 6' },
+  { path: 'videos/trailer/sample-eval/final-render-qa/briggsy-review-6.4.signoff', phase: 'Phase 6' },
+  { path: 'videos/trailer/sample-eval/final-render-qa/briggsy-review-6.7.signoff', phase: 'Phase 6' },
+];
 
 let failures: string[] = [];
 
-for (const n of SCENES) {
-  const sentinelPath = `videos/trailer/sample-eval/composite-build/briggsy-review-4.${n}.signoff`;
-
-  if (!existsSync(sentinelPath)) {
-    failures.push(`MISSING: ${sentinelPath}`);
+for (const { path, phase } of SENTINELS) {
+  if (!existsSync(path)) {
+    failures.push(`MISSING: ${path} (${phase})`);
     continue;
   }
-
-  // git log -1 --format=%ae <file> returns the author email of the file's last commit.
-  // Returns empty string if file is untracked.
   let authorEmail = '';
   try {
-    authorEmail = execFileSync('git', ['log', '-1', '--format=%ae', '--', sentinelPath], {
+    authorEmail = execFileSync('git', ['log', '-1', '--format=%ae', '--', path], {
       encoding: 'utf8',
     }).trim();
   } catch (e) {
-    failures.push(`UNTRACKED (no commit history): ${sentinelPath}`);
+    failures.push(`UNTRACKED (no commit history): ${path}`);
     continue;
   }
-
   if (authorEmail === '') {
-    failures.push(`UNTRACKED (empty git log): ${sentinelPath}`);
+    failures.push(`UNTRACKED (empty git log): ${path}`);
   } else if (authorEmail !== REQUIRED_AUTHOR) {
-    failures.push(`WRONG AUTHOR: ${sentinelPath} authored by ${authorEmail} (expected ${REQUIRED_AUTHOR})`);
+    failures.push(`WRONG AUTHOR: ${path} authored by ${authorEmail} (expected ${REQUIRED_AUTHOR})`);
+  }
+}
+
+// Phase 6 Unit 6.0 Step 8 — decode-test-roster.md must back the 6.0a sentinel with
+// ≥6 confirmed-panel rows (Adversarial Attack 28: don't honor-system the recruitment
+// claim).
+const rosterPath = 'videos/trailer/sample-eval/final-render-qa/decode-test-roster.md';
+const sixOhAPath = 'videos/trailer/sample-eval/final-render-qa/briggsy-review-6.0a.signoff';
+if (existsSync(sixOhAPath)) {
+  if (!existsSync(rosterPath)) {
+    failures.push(`MISSING ROSTER: ${rosterPath} required to back ${sixOhAPath}`);
+  } else {
+    const rosterText = readFileSync(rosterPath, 'utf-8');
+    // Count rows under the "Confirmed panel" table (T1..TN rows with all columns filled).
+    // Simple heuristic: count `| T\d+ |` markers where the row has ≥4 non-empty cells.
+    const matches = rosterText.match(/\|\s*T\d+\s*\|[^\n]+\|[^\n]+\|[^\n]+\|/g) ?? [];
+    const filledRows = matches.filter((row) => {
+      const cells = row.split('|').slice(1, -1).map((c) => c.trim());
+      return cells.length >= 4 && cells.slice(0, 4).every((c) => c.length > 0 && c !== '<handle>');
+    });
+    if (filledRows.length < 6) {
+      failures.push(`ROSTER UNDERCOUNT: ${rosterPath} has ${filledRows.length} confirmed rows; ≥6 required for 6.0a sentinel`);
+    }
   }
 }
 
@@ -3249,10 +3291,10 @@ if (failures.length) {
   for (const f of failures) console.error('  ' + f);
   process.exit(1);
 }
-console.log(`[verify-briggsy-sentinels] OK — all 6 sentinels (4.2-4.7) authored by ${REQUIRED_AUTHOR}.`);
+console.log(`[verify-briggsy-sentinels] OK — all sentinels (Phase 4 / 5 / 6) authored by ${REQUIRED_AUTHOR}.`);
 ```
 
-NPM script: `"verify:briggsy-sentinels": "tsx scripts/verify-briggsy-sentinels.ts"` in trailer's package.json. Unit 4.10 entry is now gated on `pnpm verify:briggsy-sentinels` exit-0 — replaces the bare existsSync check in the original `full-render-verification.md`. Wired into the CI gate list (Documentation/Operational Notes).
+NPM script: `"verify:briggsy-sentinels": "tsx scripts/verify-briggsy-sentinels.ts"` in trailer's package.json. Unit 4.10 entry is gated on `pnpm verify:briggsy-sentinels` exit-0 (Phase 4 scope: 4.2-4.7). Phase 5 + Phase 6 also depend on the script — its SCENES list now covers Phase 5 (5.4 + 5.6) and Phase 6 (6.0a + 6.4 + 6.7) sentinels per Phase 6 doc-review cross-phase amendment #5. Wired into the CI gate list (Documentation/Operational Notes).
 
 How Briggsy commits the sentinel: open a terminal, `cd projects/burned/videos/trailer/sample-eval/composite-build/`, run `git add briggsy-review-4.N.signoff && git commit -m "review: S0N pass"`. Claude can't impersonate (git config user.email is local — Briggsy's machine commits with briggsy007@gmail.com; CI/Claude runs would commit with different identities and the script catches them).
 

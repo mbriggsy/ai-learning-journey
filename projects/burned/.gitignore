@@ -14,6 +14,10 @@ playwright-report/
 *.local
 .env*
 !.env.example
+!.env.production
+# .env.production is checked in: it only holds VITE_PARTYKIT_HOST (public
+# Worker URL that ships in every built JS bundle anyway). CI runners need
+# it at build time so the prod client connects to the right WS host.
 
 # Playtest harness session dirs — rolling retention, diagnostic artifacts.
 # Logs, screenshots, events.jsonl etc. stay gitignored. Triage issue
@@ -39,3 +43,31 @@ docs/testing/playtest/runs/**
 # the directory root stays in git (URLs + attribution + fair-use posture);
 # only the image files are excluded.
 docs/plans/css-foundation-rebuild/dreamland-reference/images/
+
+# Origin trailer rendered outputs — final + iteration + intermediate variants
+# stay local. The repo is public; the trailer ships via Phase 7 X distribution,
+# NOT via pre-distribution repo commit. The MP4s would also be large binaries
+# unfit for git. Per Phase 6 doc-review Security F5.
+videos/trailer/out/*.mp4
+videos/trailer/out/*.mp4.new
+videos/trailer/out/*.mp4.prev
+videos/trailer/out/*.mp4.iterate
+videos/trailer/out/test-encode.mp4
+videos/trailer/out/thumbnail-candidate-*.png
+
+# Decode-test panelist audio — voice memos from external testers. Panelists
+# did not consent to public publication of their voice samples. Per Phase 6
+# doc-review Security F4.
+videos/trailer/sample-eval/final-render-qa/decode-audio/
+
+# Archer reference stills for §2 Layer B Archer-Fidelity verdict — fair-use
+# internal evaluation only (same posture as the Dreamland S8 references above).
+# Not for public repo. Per Phase 6 doc-review CALL-4.
+videos/trailer/sample-eval/final-render-qa/archer-reference/
+
+# Trailer-specific files that should pass through unchanged but the directory
+# above might be too broad — keep the README + sentinel signoffs + audit
+# markdown committed.
+!videos/trailer/out/README.md
+!videos/trailer/sample-eval/final-render-qa/decode-audio/.gitkeep
+!videos/trailer/sample-eval/final-render-qa/archer-reference/.gitkeep

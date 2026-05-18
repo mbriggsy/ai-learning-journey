@@ -64,6 +64,13 @@ videos/trailer/out/thumbnail-candidate-*.png
 public/trailer/htp-fullpage.png
 public/trailer/spike/
 
+# Phase 0 Unit 0.3 R14 cold-open render-input MP3s — duplicated copies of the
+# sample-eval audit-trail .mp3 files at videos/trailer/sample-eval/r14-cold-open/clips/.
+# Same gitignore reasoning as the sample-eval source (privacy + repo bloat).
+# Both copies are rebuilt by `pnpm cold-open:clip --candidate {4|5}` from
+# videos/trailer/.
+public/trailer/cold-open/
+
 # Decode-test panelist audio — voice memos from external testers. Panelists
 # did not consent to public publication of their voice samples. Per Phase 6
 # doc-review Security F4.

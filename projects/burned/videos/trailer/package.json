@@ -15,6 +15,9 @@
     "matrix": "tsx scripts/generate-tts-eval.ts",
     "scream:variant": "tsx scripts/generate-scream-variant.ts",
     "tone:clip": "tsx scripts/generate-tone-clip.ts",
+    "cold-open:clip": "tsx scripts/generate-cold-open-clip.ts",
+    "render:cold-open-4": "npx remotion render src/index.ts SpikeColdOpenCandidate4 out/cold-open-candidate-4.mp4 --codec h264 --crf 18",
+    "render:cold-open-5": "npx remotion render src/index.ts SpikeColdOpenCandidate5 out/cold-open-candidate-5.mp4 --codec h264 --crf 18",
     "capture:htp": "tsx scripts/capture-htp-scroll-burned.ts"
   },
   "dependencies": {

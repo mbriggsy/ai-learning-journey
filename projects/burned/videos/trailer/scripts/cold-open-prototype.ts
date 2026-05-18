@@ -1,0 +1,128 @@
+/**
+ * Phase 0 Unit 0.3 Step 1 — R14 Cold-Open candidate lines.
+ *
+ * The trailer's 5-second binary autonomy hook (R14): does a no-context
+ * viewer decode "AI / agent / autonomous / built itself" from the cold
+ * open ALONE? Two TESTED candidates render with operative card flashes,
+ * BURNED landing card, and R15 chrome stamp ("METHOD: AUTONOMOUS")
+ * underneath. Reader-A audition picks the winning line, OR triggers a
+ * failure-mode ladder (rewrite / add visual density / non-voice fallback).
+ *
+ * Plan source-of-truth: docs/plans/origin-trailer/phase-0-gate-resolution.md
+ * §Unit 0.3 (lines 1650-1937). Both lines are the plan's locked Section B
+ * stimuli copied verbatim — do NOT edit without re-opening the gate.
+ *
+ * Section A REJECTED candidates (brainstorm originals missing the R14
+ * "machine wordplay" requirement) live in candidates.md for audit trail
+ * only — not constants, not rendered, not tested.
+ *
+ * Speaker attribution: **Janet** (Malory-coded executive dryness).
+ * Selection rationale per plan §Step 1 candidate-pool constraints +
+ * Unit 0.6 cleared (Vera retained in pool but Malory's executive distance
+ * is the more diagnostic attribution for "He's a machine" / "Briggsy didn't
+ * write this one either" — both lines read as senior-exec narration
+ * rather than field-partner reaction or chaos-enthusiast riff). Voice:
+ * ElevenLabs Voice Library Sarah (EXAVITQu4vr4xnSDxMaL — confirmed in
+ * library via Unit 0.2 matrix top-5 ranking 2026-05-18: "Mature,
+ * Reassuring, Confident").
+ *
+ * Validity caveat — recorded in decode-eval.md, not silently demoted:
+ * the formal n=4 minimum non-primed decode gate cannot be executed by a
+ * single-reader audition (Briggsy is the wrong test — he wrote the
+ * lines, knows the answer to "what is this trailer about"). Single-reader
+ * Unit 0.3 collapses to a render-quality + audio-visual-composite sanity
+ * check; the full decode gate defers to Phase 6's N=6 listener panel
+ * (cross-phase ADR #21). Precedent: Unit 0.2 + Unit 0.4 + Unit 0.6
+ * single-reader fallback shape.
+ *
+ * Bracket-tag treatment lives in generate-cold-open-clip.ts, not in this
+ * constant — payload assembly is the renderer's job, the constant is raw
+ * text. This keeps the constant auditable by the VOICE_DIRECTION guard
+ * (no [deadpan] / [sarcastic] tokens in the payload string).
+ *
+ * Renderer: scripts/generate-cold-open-clip.ts → sample-eval/r14-cold-open/clips/candidate-{4,5}.mp3
+ */
+
+/**
+ * Section B Candidate #4 — "He's a machine, this kid."
+ *
+ * **Machine wordplay decode (R14 requirement):** "He's a machine" reads
+ * SIMULTANEOUSLY as (a) colloquial admiration to a naive viewer ("this
+ * person is so productive they're a machine") AND (b) literal claim to
+ * an engineering audience or a viewer holding the R15 "METHOD:
+ * AUTONOMOUS" chrome stamp in the same frame ("the machine — i.e.
+ * Claude — did it"). The double-meaning IS the decode mechanic.
+ *
+ * The kicker ("Honestly at this point I'm just impressed") cues the
+ * Malory-archetype senior-exec dryness — resignation wrapped in subtle
+ * pride. The "Honestly" beat is the sardonic-micro-lift anchor for the
+ * `[sarcastic]` inline tag in the renderer payload.
+ */
+export const CANDIDATE_4 = "He's a machine, this kid. Honestly at this point I'm just impressed.";
+
+/**
+ * Section B Candidate #5 — "Briggsy didn't write this one either."
+ *
+ * **Machine wordplay decode (R14 requirement):** Echoes UMB v3 cold-open
+ * hook ("Briggsy didn't write a single line of code... Not one." —
+ * `projects/undercover-mob-boss/scripts/narrator-prompts.ts:650`,
+ * verified verbatim). Direct callback for viewers who HAVE seen UMB v3
+ * (immediate decode: "Briggsy autonomously builds software, here's his
+ * sequel"). Standalone-coherent for viewers who haven't (decode shifts
+ * to "wait — who wrote this then?" → the R15 stamp "METHOD: AUTONOMOUS"
+ * is the answer).
+ *
+ * The "either" carries the load: implies a series. The kicker ("He's
+ * getting good at not writing them") cues the conspiratorial-knowing
+ * register — the speaker is in on the trick. Same `[sarcastic]` inline
+ * tag pattern as #4 for the kicker landing.
+ */
+export const CANDIDATE_5 = "Briggsy didn't write this one either. He's getting good at not writing them.";
+
+/**
+ * Speaker attribution (locked at Phase 0 Unit 0.3, carried forward to
+ * Phase 1 beat-sheet-lock). Both candidates ship through the same
+ * speaker — A/B test isolates LINE, not VOICE. Speaker choice is a
+ * separate Phase 1+ decision; if a future revision attributes the
+ * winning line to a different operative, the Sarah-as-Janet
+ * placeholder may swap to Sable/Vera in production.
+ */
+export const COLD_OPEN_SPEAKER = {
+  /** In-fiction operative name */
+  operative: 'Janet',
+  /** Visible card art used in the speaker-flash frame */
+  cardAsset: 'janet-broadside.webp',
+  /** ElevenLabs Voice Library entry (matrix-confirmed 2026-05-18) */
+  voiceLibraryName: 'Sarah - Mature, Reassuring, Confident',
+  voiceId: 'EXAVITQu4vr4xnSDxMaL',
+  /** Archer archetype mapped onto BURNED operative */
+  archerArchetype: 'Malory (executive dryness)',
+} as const;
+
+/**
+ * Candidate registry — the two TESTED lines, addressable by ID. Renderer
+ * + composition reference by `id` so a future re-ordering (e.g. winning
+ * line takes ID 1 for Phase 4) doesn't require constant renames.
+ */
+export const COLD_OPEN_CANDIDATES = [
+  {
+    id: 4 as const,
+    text: CANDIDATE_4,
+    machineWordplayMechanic:
+      '"He\'s a machine" reads as colloquial admiration AND literal "the machine did it"; double-meaning carries the decode',
+  },
+  {
+    id: 5 as const,
+    text: CANDIDATE_5,
+    machineWordplayMechanic:
+      'UMB v3 callback ("Briggsy didn\'t write a single line of code... Not one."); "either" implies series, "not writing them" frames autonomy directly',
+  },
+] as const;
+
+export type CandidateId = (typeof COLD_OPEN_CANDIDATES)[number]['id'];
+
+export function candidateById(id: CandidateId): (typeof COLD_OPEN_CANDIDATES)[number] {
+  const found = COLD_OPEN_CANDIDATES.find((c) => c.id === id);
+  if (!found) throw new Error(`Unknown candidate id: ${id}`);
+  return found;
+}

@@ -378,17 +378,47 @@ inside 1080×1080 central safe square.
 
 ---
 
+## Voice cast lock + runtime accounting (Unit 1.3)
+
+Voice cast is **2 voices** in this trailer: Dash (Roger / `eleven_v3`)
+and Janet (Sloane / `eleven_v3`). Per-line voice + engine + prefixTag
+table lives in `sample-eval/beat-sheet/voice-cast-lock.md`; the
+machine contract is `src/lib/script.ts BURNED_TRAILER_LINES`.
+
+**Total runtime accounting (R4 share):**
+
+| Voice  | Voiced seconds                                                       | Share        |
+| ------ | -------------------------------------------------------------------- | ------------ |
+| Janet  | 5.00 s (S01-cold-open)                                               | 6.6 %        |
+| Dash   | 70.17 s (15 cues across S02–S06)                                     | **93.4 %**   |
+| **Total voiced** | **75.17 s**                                                    | **100 %**    |
+
+R4 target is **~90 % of voiced runtime**. **93.4 % clears the
+target.** Unvoiced surface (19.83 s of the 95.0 s total clock):
+gameplay audio carries S05 between cues, brass hook + R15 #1 stamp
+at S01 head, music duck + 1.0 s silent payoff hold at S04 tail,
+closing music sting tail at S06.
+
+R5 (scream cue) retained per Phase 0 Unit 0.6 close — Dash screams
+`VEEEEEEEERAAAA!!!` at frame 2400 in Sterling-CODED volume-discontinuous
+register. If a future revision elects R5-cut, drop the S05-scream
+Line; the test suite's "exactly one scream cue" assertion is on
+cueType not line-id.
+
+---
+
 ## Open follow-ups (per AMENDMENT 2026-05-18)
 
 - **R15 #5 subhead re-derivation** — Unit 1.9 execution; three
   candidates carried forward (see Unit 1.9 Step 1 R15 instance table).
   Recommended: *"Honestly at this point we're just impressed."*
-- **Janet voice_settings handoff** — Unit 1.3 picks mechanism (new
-  `Line.voiceSettingsOverride` field OR Phase 2 reads from
-  `cold-open-prototype.ts` `COLD_OPEN_SPEAKER` constant). Single
-  source of truth either way. Current script.ts S01-cold-open line
-  delegates via `cadenceAdapter.notes` pointer to the COLD_OPEN_SPEAKER
-  constant.
+- ~~**Janet voice_settings handoff**~~ — **RESOLVED at Unit 1.3:
+  Option (B) locked.** Phase 2 reads from
+  `videos/trailer/scripts/cold-open-prototype.ts COLD_OPEN_SPEAKER`
+  constant when `Line.voice === 'janet'`. Single source of truth +
+  no schema bloat for a single use case. Rationale in
+  `sample-eval/beat-sheet/voice-cast-lock.md` §Janet voice_settings
+  handoff mechanism.
 
 ---
 

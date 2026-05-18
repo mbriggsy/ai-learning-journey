@@ -1628,6 +1628,38 @@ composition frames** (was mixed absolute + S05-rel / S06-rel in
 prior draft — feasibility found this would misplace audio per
 ADR #16).
 
+> **AMENDMENT 2026-05-18 — table is illustrative, NOT canonical
+> after Phase 1 execution.** This table reflects the 2026-05-17
+> doc-review intent. The shipped lines live in
+> `videos/trailer/src/lib/script.ts BURNED_TRAILER_LINES` and the
+> per-scene Audio blocks in `videos/trailer/BEAT-SHEET.md`. Three
+> divergences from the table below in the shipped state:
+>
+> 1. **S01-coldopen** — line is Candidate #4 (*"He's a machine, this
+>    kid…"*) per Phase 0 audition close; speaker = Janet (Sloane,
+>    matriarch-tuned). Table below still shows the stale #5 line
+>    that the doc-review locked pre-audition.
+> 2. **S04-htp-2** — trimmed from "*Drafted on weekends, by a field
+>    asset who, for compliance reasons, is not named.*" (14 w,
+>    4.67 wps) to "*Drafted on weekends, by a field asset — name
+>    redacted for compliance.*" (11 w, 3.67 wps) to clear list-band
+>    sanity ceiling.
+> 3. **S03-mission** — trimmed by ~7 words ("One of them ends" →
+>    "One ends", "exist to help you" → "help you", trailing beat
+>    dropped before "Or ensure your colleagues don't") to clear
+>    sustained-band sanity ceiling. Plan-stated safety valve
+>    (cuttable trailing clause) absorbed into the compressions.
+> 4. **S03-roster** — dropped "field" from "field agent who insists…"
+>    to clear R6 'agents?' regex match (the Agent X carve-out only
+>    fires on exact "Agent X" match, not "field agent" compound).
+>
+> Updates to the table below were deliberately NOT landed in the
+> plan body to avoid further deepening-drift surface. The single
+> source of truth for shipped lines is `script.ts`. The table below
+> documents the deepening intent + the trim/swap reasoning is
+> captured in this amendment + the cue-by-cue `cadenceAdapter.notes`
+> in `script.ts`.
+
 | id | Scene | Frame (abs) | Voice | Line | cueType | expectedFrames | leadFramesHint | cadenceAdapter notes |
 |---|---|---|---|---|---|---|---|---|
 | S01-coldopen | S01 | 60 | Cold-open speaker | "Briggsy didn't write this one either. He's getting good at not writing them." | cold-open | 156 | 0 | Brass hook lands at frame 0; line drops at frame 60 (2.0s in). 13 w at 2.5 wps ≈ 5.2s = 156 frames |

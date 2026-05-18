@@ -11,6 +11,19 @@ status: active
 ---
 
 <!--
+  AMENDMENT 2026-05-17 (post-Phase-5 doc-review absorption):
+  - Step 6 Gameplay Dissolve contract REWRITTEN: Phase 5 ships
+    PRE-TRIMMED `public/trailer/gameplay.mp4` (not `gameplay-raw.mp4`
+    + `gameplay-markers.json`). Trim ownership = Phase 5. Phase 4
+    consumes verbatim with NO `startFrom`/`endAt` props. (Phase 4
+    deepening locked this; Phase 1 had stale prior contract.)
+  - Cue-table prose at S05 disambiguated: "BURNED card draws on
+    capture" = clip-relative frame 160 visual event; scream cue at
+    frame 360 is a 200-frame-delayed reaction beat, NOT simultaneous.
+  - Player-name scrub policy SUBSUMED by codename-alias-mandatory
+    policy (Phase 5 Unit 5.0 Step 6b); no runtime scrub field.
+  - System-Wide Impact + Risks table updated to match new contract.
+
   Deepening pass landed 2026-05-17 via 8-agent parallel review
   (best-practices, framework-docs, repo-research, adversarial,
   scope-guardian, coherence, feasibility, design-lens) + emil-design-eng
@@ -40,7 +53,7 @@ status: active
   - script.ts machine contract for Phase 2 (UMB precedent: TRAILER_V3_PROMPTS)
   - Vitest devDep added to trailer package.json (Phase 0 scaffold gap)
   - HTP trace-video fallback budgeted as conditional Phase 3 deliverable
-  - Phase 5 ships gameplay-raw.mp4 + gameplay-markers.json contract
+  - ~~Phase 5 ships gameplay-raw.mp4 + gameplay-markers.json contract~~ **OBSOLETE per Phase 5 doc-review absorption 2026-05-17** — replaced with: Phase 5 ships pre-trimmed `public/trailer/gameplay.mp4` (540 frames / 1920×1080 / audio-stripped / BURNED-draw at clip-relative frame 160 ±3). Phase 4 consumes verbatim via `<OffthreadVideo src={staticFile('trailer/gameplay.mp4')} muted />` with NO trim props. Trim ownership = Phase 5 (was Phase 4).
   - Custom emil easing curves (cubic-bezier) added to transitions.ts
   - S05 budget tolerance band 14-22s (S05_BUDGET_MIN/MAX_FRAMES)
 
@@ -165,10 +178,13 @@ status: active
     to second-tier-before-Suno; music_disclosure_required: true
     flag added to BEAT-SHEET.md preamble for Phase 7 consumption
     if Suno fires.
-  - Player-name scrub gap CLOSED — gameplay-markers.json contract
-    extends with `player_names_scrubbed: boolean`; Phase 5 must
-    either capture with synthetic test names OR obtain written
-    consent from named players before Phase 6 finalizes render.
+  - Player-name scrub gap CLOSED — **superseded by Phase 5 doc-review
+    absorption 2026-05-17**: codename aliases mandatory pre-session
+    (Phase 5 Unit 5.0 Step 6b); players use Pendleton operative
+    codenames (DASH, VERA, etc.) NEVER legal first names; board
+    displays codenames so no PII appears in captured frames by
+    construction. `player_names_scrubbed: boolean` field SUBSUMED
+    (no scrub step needed — captured names are already aliases).
   - Briefing-room composition rule TIGHTENED — same ">2 elements
     at full visual weight" rule the cascade rewrite applied now
     applies to S02/S03/S06. S02 had 8 elements competing for 12s
@@ -1106,18 +1122,31 @@ combination matters; Phase 4 must not interpret "stack" as "load
 more pixels into the 1950 frame."
 
 **Step 6 — Gameplay Dissolve (S05, frames 2040–2580 fixed at
-trim-to-target; tolerance band 14–22s applies to Phase 5 raw
-capture only — Phase 4 ALWAYS trims to the 18s target).**
+trim-to-target; Phase 5 ships pre-trimmed).**
 
-**Trim policy LOCKED (doc-review fix):** Phase 4 ALWAYS trims
-captured gameplay to the 18s target (540 frames). The 14-22s
-tolerance band applies to Phase 5's raw `gameplay-raw.mp4` (the
-capture must contain at least one BURNED-card-draw moment plus
-enough lead-in/tail for trim flexibility). The band does NOT apply
-to Phase 4's composition output — `S05_END = 2580` is invariant,
-asserted in `timing.test.ts`. The previous draft had `S05_BUDGET_
-MIN/MAX_FRAMES` exported as constants implying runtime variance;
-removed in timing.ts (see Unit 1.1 Step 2 doc-review edit).
+**Trim policy LOCKED (Phase 4 deepening + Phase 5 deepening +
+Phase 5 doc-review absorption 2026-05-17):** **Phase 5 ships
+pre-trimmed** `public/trailer/gameplay.mp4` (exactly 540 frames /
+18.0s / 1920×1080 / 30fps CFR / audio-stripped, BURNED-draw at
+clip-relative frame 160 ±3). Phase 4 plays it start-to-end via:
+
+```tsx
+<Sequence from={0} durationInFrames={540}>
+  <OffthreadVideo
+    src={staticFile('trailer/gameplay.mp4')}
+    muted
+    // NO startFrom / NO endAt / NO trimBefore / NO trimAfter
+  />
+</Sequence>
+```
+
+`S05_END = 2580` is invariant, asserted in `timing.test.ts`.
+Per Phase 5 deepening + doc-review absorption: **trim ownership =
+Phase 5; Phase 4 consumes pre-trimmed verbatim**. The previous
+`gameplay-markers.json + startFrom/endAt` contract is **OBSOLETE**
+(it would require Phase 4 to do the trim math at composition time;
+the new contract bakes the trim into Phase 5's output so Phase 4
+needs zero per-take logic).
 
 **Hard cut in from S04** (replaces former cross-dissolve, see Unit
 1.4 deepening lock). Real gameplay plays for 18s at scene-time with
@@ -1127,45 +1156,54 @@ sparse Dash VO; iris-wipe overlay component begins at frame 2535
 Visual: hard cut to phone-controller + TV-shared-screen gameplay
 capture (Phase 5 deliverable). R15 chrome layer floats: comms ticker
 reads "OPERATIVE [REDACTED] — METHOD REPEATABLE" at frame 2200
-(target ~5.3s into the scene).
+(absolute = S05_START 2040 + clip-relative 160 = the BURNED-draw
+moment). The ticker pulse at the BURNED-draw frame is locked.
 
-**Phase 5 contract (LOCKED by Phase 1, consumed by Phase 4):**
+**Cue-table disambiguation** (per Phase 5 doc-review absorption,
+coherence F1 + adversarial F28): "BURNED card draws on capture"
+refers to the **visual draw event at clip-relative frame 160** (=
+scene-relative frame 160 = absolute frame 2200). The Dash VO scream
+cue at clip-relative frame 360 (= absolute frame 2400) is a
+**Sterling-CODED delayed reaction beat, 200 frames / 6.67s AFTER
+the visual draw** — NOT simultaneous. Pre-deepening Phase 1 prose
+ambiguously suggested the two were a single beat; corrected here.
 
-Phase 5 ships `gameplay-raw.mp4` (≥30s playthrough containing at
-least one BURNED-card-draw moment) AND `gameplay-markers.json`
-declaring:
+**Phase 5 contract (LOCKED by Phase 1 + Phase 4 + Phase 5
+deepening; consumed by Phase 4):**
 
-```ts
-type GameplayMarkers = {
-  readonly inPoint: number;              // frame in raw capture where Phase 4 starts trim
-  readonly burnedDrawFrame: number;      // frame in raw capture of BURNED-card draw moment
-  readonly player_names_scrubbed: boolean; // see scrub policy below
-  readonly capture_resolution: '1920x1080' | '1080x1920'; // landscape only for trailer
-  readonly source_seat_count: number;    // 2 minimum (phone + board)
-};
-```
+Phase 5 ships `public/trailer/gameplay.mp4` as a SINGLE atomic
+deliverable. Properties:
 
-Phase 4 trims with `<OffthreadVideo startFrom={inPoint}
-endAt={inPoint + 540}>` so the BURNED draw lands at scene-relative
-frame 160 (absolute frame 2200; matches the R15 #2 ticker pulse).
-Trim ownership = Phase 4 composition; capture + marker shipping =
-Phase 5.
+- Exactly 540 video frames
+- 1920×1080 dimensions
+- 30/1 CFR framerate (NOT VFR)
+- yuv420p pixel format, tv color range
+- NO audio stream (`-an` + `-map 0:v:0`)
+- BURNED-draw event at clip-relative frame 160 ±3 (Critical
+  Constraints reference event: first frame BURNED card art visible
+  at ≥50% opacity on drawer's phone screen)
+- SHA256 logged in PHASE-5-EXIT.md for Phase 6 handoff verification
 
-**Player-name scrub policy (DOC-REVIEW SECURITY FIX — new gate).**
+Phase 4 enforces the contract via `pnpm verify:gameplay-clip` gate
+(Phase 4 ownership; cross-phase amendment extends gate with pix_fmt
++ r_frame_rate + field_order assertions per Phase 5 doc-review
+feasibility F15).
+
+**Player-name scrub policy (DOC-REVIEW SECURITY FIX — Phase 5
+doc-review absorption strengthens).**
+
 Real gameplay captures show player-chosen names + room codes on
-phone + board surfaces at 1080p. Those identifiers would be frozen
-into the publicly distributed MP4. Phase 5 MUST either:
+phone + board surfaces at 1080p. Phase 5 doc-review absorption
+locked: **codename aliases mandatory pre-session** (per Phase 5
+Unit 5.0 Step 6b + security F01/F02). Players use Pendleton operative
+codenames (e.g., DASH, VERA) when joining, NEVER legal first names
+— the board displays the codename ("DASH TO ACT"), so no PII
+appears in the trailer capture frames by construction.
 
-- (a) Capture with synthetic test names only — `AGENT_A`, `AGENT_B`,
-  `AGENT_C`, `AGENT_D` (matches Pendleton diegetic frame; preferred
-  default), OR
-- (b) Obtain explicit written consent from every named player
-  before Phase 6 finalizes the render (filed in
-  `videos/trailer/sample-eval/beat-sheet/player-consent.md`).
-
-`gameplay-markers.json` MUST set `player_names_scrubbed: true` for
-path (a) OR include `consent_records: ConsentRecord[]` field for
-path (b). Phase 4 hard-fails the build if both are missing.
+Phase 5's PHASE-5-EXIT.md audit confirms: player names = stage names
+only. The pre-deepening `player_names_scrubbed: boolean` field is
+SUBSUMED by the codename-mandatory policy (no scrub step needed —
+the captured names are already aliases).
 
 **Gameplay audio treatment (DOC-REVIEW DESIGN-LENS FIX).**
 
@@ -3234,14 +3272,17 @@ The 1080×1080 central square within 1920×1080 must contain:
   builds scene-internal overlay components for stamp slap / dossier-
   page wipe / iris wipe (bare `<Series>` composition, no
   `<TransitionSeries>` presentations). Phase 5 (Gameplay Capture)
-  ships `gameplay-raw.mp4` + the **extended `gameplay-markers.json`
-  contract** (DOC-REVIEW SECURITY-LENS FIX) declaring: `inPoint`,
-  `burnedDrawFrame`, `player_names_scrubbed: boolean`,
-  `capture_resolution: '1920x1080'|'1080x1920'`,
-  `source_seat_count: number`. Phase 4 trims to land marker at
-  scene-relative frame 160 (~5.3s into S05) AND hard-fails the
-  build if `player_names_scrubbed: false` without
-  `consent_records[]`. Phase 6 (Final Render + QA) uses the beat-
+  ships **pre-trimmed `public/trailer/gameplay.mp4`** (per Phase 5
+  deepening + 2026-05-17 doc-review absorption — supersedes the
+  prior `gameplay-raw.mp4 + gameplay-markers.json` contract):
+  exactly 540 frames, 1920×1080 @ 30fps CFR, audio-stripped (no
+  streams), BURNED-draw at clip-relative frame 160 ±3 (reference
+  event = first frame BURNED card art visible at ≥50% opacity on
+  drawer's phone screen). Phase 4 consumes verbatim via
+  `<OffthreadVideo src={staticFile('trailer/gameplay.mp4')} muted />`
+  with NO trim props. PII protection via codename aliases mandatory
+  pre-session (NOT a runtime scrub field — captured names are
+  Pendleton operative codenames by construction). Phase 6 (Final Render + QA) uses the beat-
   sheet for QA criteria + screens against §2 with a critical
   engineering peer (cascade-content open risk). Phase 7
   (Distribution) reads the X-native cutdown brief from BEAT-SHEET.md
@@ -3320,7 +3361,7 @@ claims retracted + new open risks declared)
 | Music volume cliff at 1950 would click | Resolved | Medium | Unit 1.7 Step 5 deepening — all transitions are ramped envelopes or held holds; 60-pt cliff replaced with pre-anticipated 30-frame duck completing at VO end. |
 | Sterling-screams-Lana identity-replication drift | Resolved at framing, **REFRAMED at success criterion (DOC-REVIEW)** | Medium (ADR #13 violation if shipped) | Unit 1.2 Step 6 + Unit 1.3 Step 2 — cadence-spec citation only; no Archer-scene identity reference IN PLAN. **Success criterion explicit: an Archer-aware listener feels "that's the Archer scream" recognition — recognition IS the joke. ADR #13 guards distribution attribution (don't credit / claim Benjamin), NOT successful cadence recognition.** |
 | Late beat-sheet reopening during Phase 4 | Low | High | Per-Phase-1-exit roadmap update + BEAT-SHEET.md status freeze; reopens require explicit roadmap-level action. DOC-REVIEW: BEAT-SHEET.signoff sentinel added per Phase 0 ADR #22 pattern. |
-| **Phase 5 gameplay trim ownership undeclared** | Resolved + DOC-REVIEW player-name scrub gap closed | Medium | System-Wide Impact + Unit 1.2 Step 6 — Phase 5 ships `gameplay-raw.mp4` + `gameplay-markers.json`; Phase 4 trims via `<OffthreadVideo>` ALWAYS to 540-frame target. Markers contract extended with `player_names_scrubbed: boolean` + `capture_resolution` + `source_seat_count` fields. |
+| **Phase 5 gameplay trim ownership undeclared** | Resolved + **DOC-REVIEW 2026-05-17 SUPERSEDED**: contract simplified | Low | System-Wide Impact + Unit 1.2 Step 6 (post-Phase-5-doc-review absorption) — **Phase 5 trims; Phase 4 consumes pre-trimmed verbatim**. `gameplay-markers.json` + `startFrom/endAt` retired. PII via codename aliases (no runtime scrub field). Single atomic deliverable at `public/trailer/gameplay.mp4`. |
 | **Vitest dep missing from trailer scaffold** | Resolved | Medium (timing.test.ts has no runner) | Unit 1.1 Step 2a deepening — Vitest devDep + test scripts added to trailer package.json. |
 | **`script.test.ts` drift between BEAT-SHEET.md and `script.ts`** | Low (after DOC-REVIEW simplification to id-comment-reference pattern) | Medium | DOC-REVIEW SIMPLIFICATION — test asserts every `Line.id` appears exactly once in BEAT-SHEET.md via `<!-- @line: S04-payoff -->` comment markers, NOT verbatim text match. Avoids Markdown-table parser fragility + [BEAT NNNms] verbatim-match drift. |
 | **`Line` schema missing fields Phase 2 needs** | Resolved (DOC-REVIEW FEASIBILITY FIX) | High (Phase 2 would silently extend Phase 1 contract or block) | Unit 1.2 Step 0 — `Line` extended with `cueType`, `expectedFrames`, `leadFramesHint`, `driftToleranceOverride`, `fadeInMs`, `fadeOutMs`, `skipSilenceremove`. Phase 2 deepening's required consumption surface now present in Phase 1 contract. |

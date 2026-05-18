@@ -305,7 +305,7 @@ not a silent absorb. Specifically watch:
 
 ### Unit 0.1 — Trailer Project Scaffold
 
-- [ ] **Unit 0.1: Trailer Project Scaffold**
+- [x] **Unit 0.1: Trailer Project Scaffold**
 
 **Goal:** Create the isolated Remotion 4.0.438 trailer package at
 `projects/burned/videos/trailer/` so Phase 0 units 0.2–0.6 have a home.
@@ -323,6 +323,15 @@ on-demand (ADR #4 revised + ADR #6 refined — see Approach below).
 - Create: `videos/trailer/package.json`
 - Create: `videos/trailer/remotion.config.ts`
 - Create: `videos/trailer/tsconfig.json`
+- Create: `videos/trailer/.npmrc` — `ignore-workspace=true`. **Required**
+  because BURNED's repo root carries `pnpm-workspace.yaml` (for the
+  `onlyBuiltDependencies: sharp` allowlist). Without this `.npmrc`,
+  `pnpm install` from `videos/trailer` is a silent no-op (pnpm walks up
+  to the workspace root and finds no `packages:` entry covering this
+  dir). Adding `videos/trailer` to the workspace `packages:` would
+  break ADR #2's isolation invariant — `.npmrc` is the right knob.
+  (Discovered during Unit 0.1 execution 2026-05-17; see
+  `videos/trailer/sample-eval/scaffold-verification.md`.)
 - Create: `videos/trailer/.gitignore` — **specific content required**:
   ```gitignore
   node_modules/

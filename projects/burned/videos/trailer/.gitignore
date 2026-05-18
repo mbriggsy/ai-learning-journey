@@ -1,0 +1,16 @@
+node_modules/
+out/
+# Sample-eval audio binaries — NEVER commit (privacy + repo bloat)
+sample-eval/**/*.wav
+sample-eval/**/*.mp3
+sample-eval/**/*.ogg
+sample-eval/**/*.m4a
+# Owned-voice source recording (Path B; security-sensitive)
+sample-eval/r5-scream/path-b-source-recording.*
+sample-eval/r4-dash/voice-clone-source.*
+# Rendered MP4 clips for listener-panel stimuli (pre-launch audio leak risk)
+sample-eval/**/clips/*.mp4
+# Allow markdown / JSON / yaml (eval protocols + adapter files + results)
+!sample-eval/**/*.md
+!sample-eval/**/*.json
+!sample-eval/**/*.yaml

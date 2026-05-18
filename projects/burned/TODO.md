@@ -10,7 +10,7 @@ the history. (Rule: `feedback-todo-is-not-a-diary.md`.)
 ### Status (verified 2026-05-18)
 
 - Tests: **1407 pass** (root suite) | 6 expected fail (68/68 files green)
-- Trailer subpackage tests: **63 pass** (was 46) — preflight trim contract + adapter slot guards added in Step 0.5
+- Trailer subpackage tests: **110 pass** — preflight trim contract + Gemini adapter slot guards (Step 0.5) + ElevenLabs JSON schema + OpenAI fence extraction + script-leak guards (Step 1.5)
 - Typecheck: clean (`pnpm typecheck` root + `videos/trailer/`)
 - Phone player entry: **19.17 KB gz** — under the 100 KB ceiling
 - DramaOverlay lazy chunk: 2.34 KB gz

@@ -8,13 +8,13 @@ See **`docs/PRODUCT-SPECIFICATION.md`**. That document is the non-negotiable con
 - **§2 Quality Bar** — *"Could this look like a frame from an Archer episode?"* is the binary yes/no acceptance test applied to every screen, card, button, and transition state.
 - **§3 Visual Reference** — **Archer the TV show**, literal visual vocabulary. Not "mid-century modern in general," not "Saul Bass." Archer, specifically.
 - **§3.4 Form Factors** — Phone controller = portrait, constraining axis = **HEIGHT**, primary unit = **`svh`**. Board view = landscape, constraining axis = **WIDTH**, primary unit = `vw`. Do not mix axes.
-- **§3.5 Phrasing!** — Archer's signature catchphrase is core BURNED tone DNA. Cadence is **abundance, not restraint** — seed beats generously across ✅ surfaces (random flavor pools, AnnouncementFeed, DramaOverlay, Lobby/idle text). Avoid ❌ surfaces (errors, repeat-view text, rule text). Shipped + planned beats tracked in `TODO.md` §6.
-- **§7 ADRs** — nine locked architectural decisions (Cloudflare Workers + Durable Objects, React 19, Framer Motion + LazyMotion, visual consistency via shared tokens, Zod at WS boundary, allowlist projection, pure sync dispatch, protocol versioning). Do not reopen without a product-level reason.
+- **§3.5 Phrasing!** — Archer's signature catchphrase is core BURNED tone DNA. Cadence is **abundance, not restraint** — seed beats generously across ✅ surfaces (random flavor pools, AnnouncementFeed, DramaOverlay, Lobby/idle text). Avoid ❌ surfaces (errors, repeat-view text, rule text). Spec §3.5 carries the catalog of shipped beats; the rotating wire-report pool lives in `BURNED_PHRASING_POOL` in `src/client/shared/DramaOverlay.tsx`.
+- **§7 ADRs** — nine locked architectural decisions (Cloudflare Workers + Durable Objects, server = single source of truth, React 19, Framer Motion + LazyMotion, visual consistency via shared tokens, Zod at WS boundary, allowlist projection, pure sync dispatch, protocol versioning). Do not reopen without a product-level reason.
 - **§8 Acceptance Criteria** — seven surfaces with checkbox criteria that define "done." Updated as work lands. §8.7 is the final quality gate (first-time player reaction test).
 
 **When any memory file, brainstorm doc, ideation doc, or other historical source contradicts `docs/PRODUCT-SPECIFICATION.md`, the product specification wins.**
 
-The spec does not generate code. It generates the *next artifact* — the CSS Foundation Rebuild Plan — which is where code generation begins. See `TODO.md` for the prioritized work queue.
+See `TODO.md` for the prioritized work queue.
 
 ## Domain Conventions — read on demand
 

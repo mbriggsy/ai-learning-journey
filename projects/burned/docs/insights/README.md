@@ -57,6 +57,7 @@ appropriate bucket. Number monotonically; don't reuse numbers.
 | 048 | AnimatePresence has a one-rAF window where content reads as `transform: none` before `initial` applies | Skip frame 0 in per-rAF samplers — Framer's `initial` lands one tick after mount |
 | 051 | Prose CVD recommendations in followup docs are wrong-direction more often than not | Hue intuition fails under deuter/protan/tritan transforms — probe oklab before editing primitives |
 | 054 | `pnpm install` silently no-ops nested packages outside the workspace `packages:` glob | Sub-second `Done in X ms` with no `Progress:` line = silent skip; ship `.npmrc ignore-workspace=true` |
+| 055 | Node `process.env` is case-insensitive on Windows but case-sensitive on POSIX — silently masks mixed-case `.env` drift | A green Windows render proves nothing about Linux/CI; normalize `.env` to UPPER_SNAKE_CASE or fall back across cases |
 
 ## Process
 

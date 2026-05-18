@@ -45,9 +45,15 @@ async function probeElevenLabs(): Promise<Probe> {
   if (!key) {
     return { engine: 'elevenlabs', ok: false, detail: `ELEVENLABS_API_KEY missing from ${ENV_PATH}` };
   }
-  // Auth + subscription tier check
+  // Auth + subscription tier check. ElevenLabs keys are scope-gated (2026 API);
+  // a 401 here usually means the key is structurally valid but is missing the
+  // `user_read` scope. Surface the body so the operator can distinguish that
+  // from a genuinely bad key.
   const u = await fetch('https://api.elevenlabs.io/v1/user', { headers: { 'xi-api-key': key } });
-  if (!u.ok) return { engine: 'elevenlabs', ok: false, detail: `auth probe ${u.status}` };
+  if (!u.ok) {
+    const body = await u.text().catch(() => '<unreadable>');
+    return { engine: 'elevenlabs', ok: false, detail: `auth probe ${u.status} — ${body.slice(0, 300)}` };
+  }
   const body = (await u.json()) as { subscription?: { tier?: string } };
   const tier = body?.subscription?.tier;
   if (tier !== 'creator') {
@@ -60,7 +66,10 @@ async function probeElevenLabs(): Promise<Probe> {
     headers: { 'xi-api-key': key, 'Content-Type': 'application/json' },
     body: JSON.stringify({ text: 'hello', model_id: 'eleven_v3' }),
   });
-  if (!tts.ok) return { engine: 'elevenlabs', ok: false, detail: `tts endpoint ${tts.status}` };
+  if (!tts.ok) {
+    const body = await tts.text().catch(() => '<unreadable>');
+    return { engine: 'elevenlabs', ok: false, detail: `tts endpoint ${tts.status} — ${body.slice(0, 300)}` };
+  }
   const bytes = await tts.arrayBuffer();
   if (bytes.byteLength < 1000) {
     return { engine: 'elevenlabs', ok: false, detail: `tts returned ${bytes.byteLength} bytes (<1KB, suspicious)` };
@@ -87,7 +96,10 @@ async function probeOpenAI(): Promise<Probe> {
     headers: { Authorization: `Bearer ${key}`, 'Content-Type': 'application/json' },
     body: JSON.stringify({ model: 'gpt-4o-mini-tts', input: 'hello', voice: 'alloy' }),
   });
-  if (!tts.ok) return { engine: 'openai', ok: false, detail: `tts endpoint ${tts.status}` };
+  if (!tts.ok) {
+    const body = await tts.text().catch(() => '<unreadable>');
+    return { engine: 'openai', ok: false, detail: `tts endpoint ${tts.status} — ${body.slice(0, 300)}` };
+  }
   const bytes = await tts.arrayBuffer();
   if (bytes.byteLength < 1000) {
     return { engine: 'openai', ok: false, detail: `tts returned ${bytes.byteLength} bytes (<1KB, suspicious)` };
@@ -100,9 +112,15 @@ async function probeGemini(): Promise<Probe> {
   if (!key) {
     return { engine: 'gemini', ok: false, detail: `GEMINI_API_KEY missing from ${ENV_PATH}` };
   }
-  const model = 'gemini-2.5-flash-preview-tts';
+  // Pinned to the same model the Step 0.5 preflight + Step 2 engine matrix use.
+  // Older `gemini-2.5-flash-preview-tts` also accessible (verified 2026-05-18) but
+  // 3.1 is the canonical preview model per ai.google.dev/gemini-api/docs/speech-generation.
+  const model = 'gemini-3.1-flash-tts-preview';
   const m = await fetch(`https://generativelanguage.googleapis.com/v1beta/models/${model}?key=${key}`);
   if (!m.ok) return { engine: 'gemini', ok: false, detail: `model probe ${m.status} for ${model}` };
+  // speechConfig is REQUIRED — without it, the API returns 400 "Model tried to generate text,
+  // but it should only be used for TTS." Any voice selection works for the probe; Charon
+  // mirrors the preflight default.
   const tts = await fetch(
     `https://generativelanguage.googleapis.com/v1beta/models/${model}:generateContent?key=${key}`,
     {
@@ -110,11 +128,19 @@ async function probeGemini(): Promise<Probe> {
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({
         contents: [{ parts: [{ text: 'hello' }] }],
-        generationConfig: { responseModalities: ['AUDIO'] },
+        generationConfig: {
+          responseModalities: ['AUDIO'],
+          speechConfig: {
+            voiceConfig: { prebuiltVoiceConfig: { voiceName: 'Charon' } },
+          },
+        },
       }),
     },
   );
-  if (!tts.ok) return { engine: 'gemini', ok: false, detail: `tts endpoint ${tts.status}` };
+  if (!tts.ok) {
+    const body = await tts.text().catch(() => '<unreadable>');
+    return { engine: 'gemini', ok: false, detail: `tts endpoint ${tts.status} — ${body.slice(0, 300)}` };
+  }
   return { engine: 'gemini', ok: true, detail: `model ${model} ok, tts endpoint ok` };
 }
 

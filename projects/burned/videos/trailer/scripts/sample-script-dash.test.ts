@@ -20,6 +20,7 @@ import { dirname, resolve } from 'node:path';
 import { fileURLToPath } from 'node:url';
 import {
   PARAGRAPH_1_DEADPAN,
+  PARAGRAPH_1_PREFLIGHT,
   PARAGRAPH_2_MONOLOGUE,
   PARAGRAPH_3_SCREAM,
   DASH_SAMPLE_SCRIPT,
@@ -91,6 +92,50 @@ describe('Paragraph 3 (scream) — no source lineage, structural assertions only
   });
 });
 
+describe('PARAGRAPH_1_PREFLIGHT — Step 0.5 trim contract', () => {
+  // Trim must be a subset of PARAGRAPH_1_DEADPAN — every sentence in the
+  // preflight read also appears verbatim in the full paragraph. If
+  // PARAGRAPH_1_DEADPAN is edited and a kept sentence is renamed, the
+  // preflight read silently drifts off-source. Catch here.
+  const PRESERVED_SENTENCES = [
+    'Good morning.',
+    'You are reading this because somebody with my clearance level — fine, me — decided you could be trusted with a card game.',
+    'Try not to make me look foolish.',
+  ];
+
+  for (const sentence of PRESERVED_SENTENCES) {
+    it(`sentence "${sentence.slice(0, 40)}..." appears in preflight trim`, () => {
+      expect(PARAGRAPH_1_PREFLIGHT).toContain(sentence);
+    });
+
+    it(`sentence "${sentence.slice(0, 40)}..." still appears in full paragraph 1`, () => {
+      expect(PARAGRAPH_1_DEADPAN).toContain(sentence);
+    });
+  }
+
+  it('exercises §3.5 parenthetical-tangent mannerism ("— fine, me —")', () => {
+    expect(PARAGRAPH_1_PREFLIGHT).toMatch(/— fine, me —/);
+  });
+
+  it('exercises §3.4 downspeak punchline (terminal "foolish.")', () => {
+    expect(PARAGRAPH_1_PREFLIGHT).toMatch(/foolish\.\s*$/);
+  });
+
+  it('excludes paragraph 2 territory (no Phrasing beat)', () => {
+    expect(PARAGRAPH_1_PREFLIGHT).not.toMatch(/Phrasing/i);
+  });
+
+  it('excludes paragraph 3 territory (no scream content)', () => {
+    expect(PARAGRAPH_1_PREFLIGHT).not.toMatch(/VERA/i);
+  });
+
+  it('word count targets ~15s Sterling-coded read (~32 words ±5)', () => {
+    const words = PARAGRAPH_1_PREFLIGHT.trim().split(/\s+/).length;
+    expect(words).toBeGreaterThanOrEqual(27);
+    expect(words).toBeLessThanOrEqual(37);
+  });
+});
+
 describe('VOICE_DIRECTION anti-pattern guard (CRITICAL — per memory feedback-narrator-voice-direction)', () => {
   // Gemini TTS reads everything in the text payload aloud verbatim.
   // Prepending "Read this in a deadpan voice..." results in the engine
@@ -111,9 +156,17 @@ describe('VOICE_DIRECTION anti-pattern guard (CRITICAL — per memory feedback-n
     /\b1940s noir detective\b/i, // exact wording of the UMB v3 mistake — captured in memory
   ];
 
-  for (const entry of DASH_SAMPLE_SCRIPT) {
+  // Guard sweeps the three engine-matrix paragraphs AND the Step 0.5
+  // preflight trim — both flow into Gemini's text payload at different
+  // call sites, so both must clear the directive-language guard.
+  const TEXTS_TO_GUARD: Array<{ id: string; text: string }> = [
+    ...DASH_SAMPLE_SCRIPT.map((e) => ({ id: e.id, text: e.text })),
+    { id: 'paragraph-1-preflight', text: PARAGRAPH_1_PREFLIGHT },
+  ];
+
+  for (const entry of TEXTS_TO_GUARD) {
     for (const pattern of FORBIDDEN_DIRECTIVES) {
-      it(`paragraph "${entry.id}" does not contain directive matching ${pattern}`, () => {
+      it(`text "${entry.id}" does not contain directive matching ${pattern}`, () => {
         expect(entry.text).not.toMatch(pattern);
       });
     }

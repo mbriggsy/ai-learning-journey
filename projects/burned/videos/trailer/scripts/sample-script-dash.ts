@@ -27,6 +27,29 @@
 /** ~20s deadpan exposition. Lineage: ActMission.tsx lede (lines 30–34) + Beat II (lines 52–57). */
 export const PARAGRAPH_1_DEADPAN = `Good morning. You are reading this because somebody with my clearance level — fine, me — decided you could be trusted with a card game. The deck is a series of operations. One of them ends your career instantly. The rest exist to help you survive it, or to make sure your colleagues don't. Try not to make me look foolish.`;
 
+/**
+ * Step 0.5 preflight trim — ~15s read.
+ *
+ * 32-word subset of PARAGRAPH_1_DEADPAN sufficient to exercise the
+ * cadence-spec characteristics that ride a single declarative read:
+ *
+ *   - §3.1 pitch (mid-baritone declaratives)
+ *   - §3.2 pace (Sterling-coded slow + pause architecture)
+ *   - §3.3 articulation (General American rhotic, no Mid-Atlantic affectation)
+ *   - §3.4 intonation (flat declaratives + downspeak punchline on "foolish")
+ *   - §3.5 mannerisms (the "— fine, me —" tangent tests parenthetical waver)
+ *
+ * Out-of-scope for this trim: §3.5 Phrasing! beat (paragraph 2) and
+ * §3.6 volume-discontinuous scream (paragraph 3). Step 0.5 validates
+ * the SPEC; full-coverage matrix runs at Step 2.
+ *
+ * Trim contract: every sentence in PARAGRAPH_1_PREFLIGHT must also
+ * appear verbatim in PARAGRAPH_1_DEADPAN — asserted by
+ * `sample-script-dash.test.ts` so a future edit to PARAGRAPH_1_DEADPAN
+ * cannot silently invalidate the preflight read.
+ */
+export const PARAGRAPH_1_PREFLIGHT = `Good morning. You are reading this because somebody with my clearance level — fine, me — decided you could be trusted with a card game. Try not to make me look foolish.`;
+
 /** ~10s monologue ending in exasperation. Lineage: ActRoster.tsx Dash entry blurb (line 25–26) + flourish (line 27), first-person recast. */
 export const PARAGRAPH_2_MONOLOGUE = `Pendleton's top-rated field operative. By which we mean I have the highest expense report and survive most of it. Fluent in seven languages, three of which are martini orders. Tell anyone you read my file. I've been waiting. …Phrasing.`;
 

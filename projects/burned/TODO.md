@@ -7,10 +7,11 @@ the history. (Rule: `feedback-todo-is-not-a-diary.md`.)
 
 ## 1. Active priorities
 
-### Status (verified 2026-05-17)
+### Status (verified 2026-05-18)
 
-- Tests: **1407 pass** | 6 expected fail (68/68 files green)
-- Typecheck: clean (`pnpm typecheck`)
+- Tests: **1407 pass** (root suite) | 6 expected fail (68/68 files green)
+- Trailer subpackage tests: **63 pass** (was 46) — preflight trim contract + adapter slot guards added in Step 0.5
+- Typecheck: clean (`pnpm typecheck` root + `videos/trailer/`)
 - Phone player entry: **19.17 KB gz** — under the 100 KB ceiling
 - DramaOverlay lazy chunk: 2.34 KB gz
 - HOW-TO-PLAY bundle: `howtoplay-*.js` 99.04 KB (33.90 KB gz) + `howtoplay-*.css` 65.83 KB (10.68 KB gz) + shared GSAP chunk 69.42 KB (27.21 KB gz)
@@ -27,23 +28,34 @@ with the ADR ledger). Plan set is the recipe — execution begins here.
 - Unit 0.1 (scaffold) — ✅ shipped `e5ca0d7e`
 - Unit 0.2 Step 0 (Sterling cadence-spec.md) — ✅ shipped `56c8b9ba`
 - Unit 0.2 Steps 0a + 1 + 3 (TTS-readiness probe + sample script +
-  MUSHRA protocol) — ✅ scaffolded `4d6aac64`; execution blocked on
-  Briggsy's ElevenLabs Creator $22/mo + OpenAI billing keys
+  MUSHRA protocol) — ✅ scaffolded `4d6aac64`; engine execution still
+  gated on ElevenLabs Creator $22/mo (OpenAI key landed 2026-05-18)
 - **Unit 0.5 (composite-viability spike) — ✅ CLEARED `b971d3d6`** —
   all 5 Remotion integration points render cleanly in MP4 export.
   Spike-results: `videos/trailer/sample-eval/spike/spike-results.md`.
   Phase 4 inherits all production patterns; Phase 4 Unit 4.0 font
   spike DROPS from scope (variable-axis weight syntax works).
+- **Unit 0.2 Step 0.5 (spec sanity check) — ✅ WAV GENERATED today** —
+  Gemini Director's Chair adapter (`cadence-spec-gemini.md`) +
+  one-off generator (`scripts/generate-preflight-clip.ts`) shipped.
+  `gemini-spec-test.wav` rendered at 14.80 s via
+  `gemini-3.1-flash-tts-preview` voice `Charon`. Step 1.5 adapter
+  built ahead-of-schedule per plan §Step 0.5 step 1 ("same shape Step
+  1.5 will produce"). Cold-reader vote schema at
+  `preflight/preflight-decision.md`.
 
-**Next unblocked work:** Unit 0.2 Step 0.5 (spec sanity check via
-free-tier Gemini clip + cold-reader feedback — Gemini key already in
-`.env`). Step 0.5 also has a 48h human-loop SLA on the cold reader.
+**Next unblocked work:** Briggsy auditions
+`videos/trailer/sample-eval/r4-dash/preflight/gemini-spec-test.wav` as
+Reader A and fills the Reader A row in `preflight-decision.md`.
+Reader B is the Discord cold-reader async loop (48 h SLA). Sign-off
+on both = Step 1.5 unblocked. Fallback paths documented in the
+decision template if Discord cold-reader is unreachable.
 
-**Gated on Briggsy account setup:** Unit 0.2 Steps 1.5 / 2 / 4 / 5
-(engine-adapter translation → engine matrix → MUSHRA → acceptance).
-Hard prerequisites at `phase-0-gate-resolution.md` §Unit 0.2 Pre-
-Execution Prerequisites: ElevenLabs Creator tier active + OPENAI key
-with `gpt-4o-mini-tts` model access enabled, both written to `.env`.
+**Gated on Briggsy ElevenLabs Creator key:** Unit 0.2 Steps 1.5 / 2 /
+4 / 5 (engine-adapter translation → engine matrix → MUSHRA →
+acceptance). OpenAI key cleared 2026-05-18 — re-run `pnpm check:tts`
+when ElevenLabs lands to refresh `account-readiness.md`. Per
+`phase-0-gate-resolution.md` §Unit 0.2 Pre-Execution Prerequisites.
 
 **Downstream Phase 0 gates** (sequenced after Unit 0.2): Unit 0.6
 (R5 scream) → Unit 0.4 (tone) → Unit 0.3 (R14 cold-open decode).

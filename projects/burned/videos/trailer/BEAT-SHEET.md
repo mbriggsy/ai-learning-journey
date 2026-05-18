@@ -1,7 +1,9 @@
 # BURNED Origin Trailer — Beat Sheet (DRAFT — UNIT 1.2 NARRATION SCRIPT)
 
-> **Status:** Unit 1.1 scaffold + Unit 1.2 narration draft. Units
-> 1.3–1.10 fill remaining structural placeholders. Sentinel
+> **Status:** Unit 1.1 scaffold + Unit 1.2 narration draft +
+> Unit 1.3 voice cast lock + Unit 1.4 transition vocabulary lock +
+> Unit 1.5 cascade composition lock. Units 1.6–1.10 fill remaining
+> structural placeholders. Sentinel
 > `videos/trailer/sample-eval/beat-sheet/BEAT-SHEET.signoff` is NOT
 > written until Phase 1 closes (ADR #22 sentinel discipline).
 >
@@ -112,9 +114,10 @@ foreground card flash, BURNED title landing.
 `<Series.Sequence>` boundary at frame 210). See Unit 1.4 transition
 vocabulary table.
 
-**Mobile safe square copy:** `<Unit 1.5 placement>` — Janet's spoken
-line is audio-only; visual chrome (R15 #1 stamp) inside 1080×1080
-central safe square.
+**Mobile safe square copy:** Janet's spoken line is audio-only;
+visual chrome (R15 #1 stamp) inside the 1080×1080 central safe
+square (x = 420–1500, y = 0–1080) per Unit 1.5 safe-square placement
+policy.
 
 ---
 
@@ -203,14 +206,91 @@ mid-scene wipe between segments 1 and 2.
 
 ### S04 — Receipts Cascade with Stacked Payoff (frames 1050–2040 / 33.0s)
 
-**Visual:** `<Unit 1.5 — Cascade Composition Lock>`. Sequential-
-revelation focal hierarchy (NOT layered-simultaneous). Each cascade
-element enters at full visual weight INSIDE the central 1080×1080
-safe square, reads, decays to 30–40% opacity chrome at side-band
-position as the next element enters. Card-art halo right-edge-only
-at 40% opacity throughout. Comms-ticker dim background until frame
-1860 (cascade peak intensification). **Frame 1950 stamp slap is the
-trailer's ONLY "everything at once" moment.**
+**Visual — Cascade composition LOCKED (Unit 1.5).** Sequential
+revelation with focal hierarchy. Each cascade element enters at full
+visual weight INSIDE the central 1080×1080 safe square, reads at full
+weight for 30 frames (1.0 s), then decays to 30% opacity chrome at
+the right-edge slot column as the next element enters. Card-art halo
+right-edge-only at 40% opacity throughout — texture, not focal.
+Comms-ticker dim background until frame 1800, then a 60-frame ease
+to "bright" by frame 1860 and HELD bright through stamp + VO + silent
+hold. **Frame 1950 stamp slap is the trailer's ONLY "everything at
+once" moment** — every other cascade frame has exactly one element
+at full visual weight.
+
+Three alternative compositions rejected (full rationale in
+[`sample-eval/beat-sheet/cascade-composition.md`](sample-eval/beat-sheet/cascade-composition.md)):
+full-bleed sequential (sequential ≠ stacked — loses payoff impact);
+layered-simultaneous (six focal points at peak — AI-slop-shaped,
+fails §2.2); sequential revelation with focal hierarchy (LOCKED —
+supports R3 by reserving the stacked moment for frame 1950).
+
+**Frame-by-frame storyboard.** This is the Phase 4 composition
+contract — the audio cue table below carries the same frame ranges
+from the Phase 2 voice-pipeline angle.
+
+| Frame range | Focal element (100% weight) | Texture / chrome (30–40%) | Comms-ticker |
+|-------------|-----------------------------|---------------------------|---------------|
+| 1050–1110 | HTP hero slides up from bottom (60 f `EASE_OUT`, position 0→100% + opacity 50→100%) | parchment background only | dim |
+| 1110–1290 | HTP dossier scroll (top portion) | — | dim |
+| 1290–1410 | Stat 1 caption enters safe-square center-bottom (6 f `EASE_OUT`, scale 0.95→1.0, hold 30 f) | HTP hero 70% (texture under active caption) | dim |
+| 1410–1560 | Stat 2 caption enters. Stat 1 decays (12 f `EASE_IN_OUT`, position morphs to right-edge slot, opacity 1→0.3, scale 1→0.65) | Stat 1 30% right-edge; HTP hero 70% | dim |
+| 1560–1680 | Stat 3 caption enters. Stat 2 decays to right-edge. Card-art halo begins building (per-card slap, 2-f stagger, top 6 of the 17-art set) | Stats 1+2 30% right-edge; HTP hero 70%; halo right-edge 40% | dim |
+| 1680–1860 | Stat 4 caption enters. Stat 3 decays. Halo completes (6-card right-edge column at 40%) | Stats 1–3 30% right-edge; HTP hero 70%; halo 40% | dim → brightening (60-f ease 1800–1860) |
+| 1860–1950 | Cascade peak HELD — bright ticker is active signal; HTP/halo/stats are texture | HTP 70%; stats 30%; halo 40% | **BRIGHT (held)** — R15 #2 pulse |
+| **1950** | **Heavy stamp slap onto HTP hero** (16 f, scale 0.85 → 1.06 overshoot at 12/16 → 1.0 settle, `EASE_OUT`). HTP drops to 50%. **Stamp is the SOLE focal point — only "everything at once" moment.** | — | bright |
+| 1950–2010 | Stamp held; Dash VO delivers payoff line. | — | bright |
+| 1980–2010 | Music duck ramp (`PAYOFF_DUCK_RAMP_FRAMES` = 30, 90% → 30%) completing as VO ends | — | bright |
+| 2010–2040 | **Silent visual hold (30 f).** Stamp + HTP + halo + stats all static. Music at 30% bed-only. No VO. | — | held bright |
+| **2040** | **Hard cut to S05 gameplay.** | — | — |
+
+**Stat-slot decayed coordinates** (right-edge column INSIDE the
+1080×1080 safe-square — accumulation survives mobile-X autoplay crop;
+doesn't overlap with the active-caption center-bottom slot at x=960):
+
+| Stat slot | Decayed x | Decayed y | Decayed scale | Decayed opacity |
+|-----------|-----------|-----------|---------------|-----------------|
+| Stat 1 (decay at 1410) | 1380 | 740 | 0.65 | 0.30 |
+| Stat 2 (decay at 1560) | 1380 | 790 | 0.65 | 0.30 |
+| Stat 3 (decay at 1680) | 1380 | 840 | 0.65 | 0.30 |
+| Stat 4 (decay at 1860) | 1380 | 890 | 0.65 | 0.30 |
+
+Active stat caption (during 30-f read window): x = 960, y = 900,
+36 px dry / 22 px italic companion.
+
+**Anti-pattern guard (LOAD-BEARING):** no frame in the cascade except
+the 1950 payoff stamp has more than two elements at full visual
+weight. Accumulated elements past their read window must hold at
+≤ 40% opacity. Phase 4 in-studio walkthrough flags any violating
+frame for retuning before MP4 export; Phase 6 final QA re-checks.
+
+**Caption two-line collapse:** minimum legible size 28 px dry / 22 px
+companion. If composition compression forces below this floor,
+collapse to dry-stat-only (drop companion). Phase 4 enforces;
+Phase 1 declares.
+
+**HTP rendering method (LOCKED).** Primary path: clone UMB's
+selector-agnostic `capture-htp-scroll.ts` (200 px scroll increments,
+80 ms waits, full-page screenshot). Output:
+`videos/trailer/public/htp-fullpage.png`. Phase 4 imports as `<Img>`
+inside `<AbsoluteFill>` and drives via `translateY` interpolation.
+Conditional Phase 3-entry perceptual gate: if static-PNG reveal-
+state-frozen prototype fails §2.2 at the cascade 6-second read,
+escalate to Playwright `page.video()` trace-video fallback
+(`<OffthreadVideo>` consumer). Phase 3 plan budgets both paths.
+
+**Constants consumed by Phase 4** (already shipped in
+`src/lib/transitions.ts` at Unit 1.4):
+`STAT_CAPTION_ENTER_FRAMES = 6`, `STAT_CAPTION_READ_HOLD_FRAMES = 30`,
+`STAT_CAPTION_DECAY_FRAMES = 12`, `HALO_CARD_STAGGER_FRAMES = 2`,
+`STAMP_SLAP_HEAVY_FRAMES = 16`, `STAMP_SLAP_HEAVY_START_SCALE = 0.85`,
+`STAMP_SLAP_HEAVY_OVERSHOOT_SCALE = 1.06`,
+`PAYOFF_DUCK_RAMP_FRAMES = 30`. No new constants introduced by
+Unit 1.5.
+
+Full lock + entry-choreography spec + ASCII storyboard sketches for
+peak frames live at
+[`sample-eval/beat-sheet/cascade-composition.md`](sample-eval/beat-sheet/cascade-composition.md).
 
 **Audio — cascade cue table** (per Unit 1.2 Step 5 per-cue wps validation):
 
@@ -257,12 +337,14 @@ accumulating chrome off-screen).
 
 ### S05 — Gameplay Dissolve (frames 2040–2580 / 18.0s)
 
-**Visual:** `<Unit 1.5 — S05 cascade composition tail; gameplay clip
-shape declared for Phase 5>`. Pre-trimmed `public/trailer/gameplay.mp4`
-(540 frames / 1920×1080 / audio-stripped / BURNED-draw at clip-relative
-frame 160 ± 3) consumed verbatim via `<OffthreadVideo src={staticFile(
-'trailer/gameplay.mp4')} muted />` with NO `startFrom`/`endAt` props.
-Trim ownership = Phase 5.
+**Visual:** Gameplay clip shape declared for Phase 5. Pre-trimmed
+`public/trailer/gameplay.mp4` (540 frames / 1920×1080 / audio-stripped /
+BURNED-draw at clip-relative frame 160 ± 3) consumed verbatim via
+`<OffthreadVideo src={staticFile('trailer/gameplay.mp4')} muted />`
+with NO `startFrom`/`endAt` props. **Hard-cut handoff at frame 2040
+per Unit 1.4** — no cascade tail bleeds into S05; the cascade resolves
+fully inside S04 with the 1.0 s silent visual hold landing the payoff
+before the cut. Trim ownership = Phase 5.
 
 **Audio:**
 

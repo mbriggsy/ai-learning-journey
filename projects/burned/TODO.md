@@ -52,23 +52,19 @@ local-dev fallback path if migration isn't finalized by then.
 Active warnings only. Older landmines have moved to `docs/insights/` and
 `CLAUDE.md`.
 
-- **Push to main needs explicit ask; `commit-without-asking` rule does
-  NOT extend to push.** Memory `feedback-commit-without-asking`
-  inverts the harness default for COMMITS only. Auto-mode classifier
-  treats `git push origin main` as a shared-state action requiring
-  user authorization separately (per the harness's "Executing actions
-  with care" rules — pushing code, opening PRs, anything visible to
-  others). Discovered 2026-05-18 after pushing two Phase 0 Unit 0.2
-  commits (`56c8b9ba` + `4d6aac64`) autonomously: push itself
-  succeeded, but the NEXT protected action (a `/distill` invocation,
-  which writes to `~/.claude/skills/` — org-wide config) was denied
-  by the classifier with the prior unauthorized push cited as the
-  trigger. **Pattern going forward:** commit autonomously when a
-  natural commit point lands, then ASK before pushing to main. If
-  Briggsy wants push-without-ask as a standing rule, it needs either
-  a Bash permission rule in `~/.claude/settings.json` OR a new memory
-  file `feedback-push-without-asking.md` that explicitly inverts the
-  default for pushes too.
+- **Push to Briggsy's repos is now autonomous; force-push to
+  main/master is the carve-out.** Policy inverted 2026-05-18 after
+  the auto-mode classifier blocked `/distill` citing two autonomous
+  Phase 0 Unit 0.2 pushes (`56c8b9ba` + `4d6aac64`). Briggsy's
+  correction: *"and let's update whatever command that allows you to
+  push w/o me say 'yes' every time, I've never said no."* The
+  binding rule lives in `~/.claude/settings.json` `autoMode.allow`
+  (natural-language rule the classifier LLM reads at decision
+  time). Memory cross-ref: [[feedback-push-without-asking]]. The
+  one carve-out: force-push to main/master still needs explicit
+  ask per the system-prompt's "NEVER force-push to main/master"
+  rule. Non-force pushes to main/master and pushes (force or not)
+  to feature branches all clear without confirmation.
 - **Absolute-positioned cards in `.fan` are anchored to `.piles` center,
   not `.fan` center** (commit `b274a12b`, 2026-05-14). The three discard
   layers (`.top`, `.behind1`, `.behind2`) are `position: absolute` with

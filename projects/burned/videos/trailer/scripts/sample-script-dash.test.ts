@@ -74,17 +74,35 @@ describe('Paragraph 2 (monologue + Phrasing!) lineage → ActRoster.tsx Dash ent
   }
 });
 
-describe('Paragraph 3 (scream) — no source lineage, structural assertions only', () => {
-  it('is a Vera reference', () => {
-    expect(PARAGRAPH_3_SCREAM).toMatch(/VERA/i);
+describe('Paragraph 3 (scream) — Sterling-LANA four-axis shape', () => {
+  // Structural shape locked in Unit 0.6 audition 2026-05-18.
+  // V + stretched E + R + stretched A + exclamation. The literal
+  // "VERA" substring is intentionally absent — the first vowel
+  // drag breaks the contiguous spelling (V-E...E-R-A...A). Tests
+  // assert ordered phonetic skeleton, not literal substring.
+  it('matches Sterling-LANA structural shape: V + stretched E + R + stretched A + !', () => {
+    expect(PARAGRAPH_3_SCREAM).toMatch(/^V[E]+R[A]+!+$/i);
+  });
+
+  it('first vowel (E) is stretched ≥2 chars — primary drag', () => {
+    const match = PARAGRAPH_3_SCREAM.match(/^V(E+)R/i);
+    expect(match).not.toBeNull();
+    expect(match![1]!.length).toBeGreaterThanOrEqual(2);
+  });
+
+  it('first-vowel drag dominates trailing-vowel drag (Sterling-LANA accent anchor)', () => {
+    const eMatch = PARAGRAPH_3_SCREAM.match(/^V(E+)R/i);
+    const aMatch = PARAGRAPH_3_SCREAM.match(/R(A+)/i);
+    expect(eMatch).not.toBeNull();
+    expect(aMatch).not.toBeNull();
+    // Strict-greater: trailing A may be present but must not dominate
+    // — otherwise the engine shifts the accent to the second syllable
+    // (Unit 0.6 v2 failure mode).
+    expect(eMatch![1]!.length).toBeGreaterThan(aMatch![1]!.length);
   });
 
   it('is all-caps shouted (no lowercase letters)', () => {
     expect(PARAGRAPH_3_SCREAM).toMatch(/^[^a-z]+$/);
-  });
-
-  it('contains repeated A for elongated vowel', () => {
-    expect(PARAGRAPH_3_SCREAM).toMatch(/A{2,}/);
   });
 
   it('uses exclamation punctuation', () => {

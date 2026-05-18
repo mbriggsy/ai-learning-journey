@@ -10,7 +10,7 @@ the history. (Rule: `feedback-todo-is-not-a-diary.md`.)
 ### Status (verified 2026-05-18)
 
 - Tests: **1407 pass** (root suite) | 6 expected fail (68/68 files green)
-- Trailer subpackage tests: **110 pass** — preflight trim contract + Gemini adapter slot guards (Step 0.5) + ElevenLabs JSON schema + OpenAI fence extraction + script-leak guards (Step 1.5)
+- Trailer subpackage tests: **111 pass** — preflight trim contract + Gemini adapter slot guards (Step 0.5) + ElevenLabs JSON schema + OpenAI fence extraction + script-leak guards (Step 1.5) + Sterling-LANA four-axis shape contract on `PARAGRAPH_3_SCREAM` (Unit 0.6)
 - Typecheck: clean (`pnpm typecheck` root + `videos/trailer/`)
 - Phone player entry: **19.17 KB gz** — under the 100 KB ceiling
 - DramaOverlay lazy chunk: 2.34 KB gz
@@ -49,25 +49,30 @@ with the ADR ledger). Plan set is the recipe — execution begins here.
   `preflight/preflight-decision.md`. Step 1.5 adapter already canonical
   (built ahead-of-schedule).
 
-**Unit 0.6 (R5 Sterling-Screams-Lana Cameo Eval) — 🟡 IN-FLIGHT.**
-Pivoted 2026-05-18 to **single-reader Briggsy-only audition** — Path B
-Voice Changer, reference anchor clip, and 3-listener panel all
-dropped per Briggsy's call (won't record, won't source reference,
-won't recruit listeners). Single-reader fallback is
-precedent-aligned (Unit 0.2 + Step 0.5 closed the same shape).
-Unit 0.2 disposition at
+**Unit 0.6 (R5 Sterling-Screams-Lana Cameo Eval) — ✅ CLOSED 2026-05-18.**
+Path A v3 (`[shouts] VEEEEEEEERAAAA!!!`) locked as winning Dash scream
+after three-variant audition (v1 short-burst → partial; v2 wrong-vowel
+drag → failed shape; v3 first-vowel drag → ship).
+
+Sterling-LANA four-axis acoustic shape now characterized in
+`videos/trailer/sample-eval/r4-dash/cadence-spec.md` §3.6: (1) flat
+pitch, (2) 6-12 dB amplitude jump, (3) first-vowel drag, (4) accent
+anchored on first syllable. Canonical text locked into
+`PARAGRAPH_3_SCREAM` constant in `videos/trailer/scripts/sample-script-dash.ts`.
+Adapter scream notes updated. Disposition + sign-off at
+`videos/trailer/sample-eval/r5-scream/scream-eval.md` +
+`briggsy-review-0.6.signoff`.
+
+**Next unblocked work: Unit 0.4 (tone prototype gate).** Plan
+§Unit 0.4 lands after Unit 0.6 per refined ordering. After Unit 0.4:
+Unit 0.3 (R14 cold-open decode). Phase 0 exits with `PHASE-0-EXIT.md`
+consolidating five dispositions (Units 0.2, 0.5, 0.6 done; 0.4, 0.3
+pending).
+
+Unit 0.2 disposition:
 `videos/trailer/sample-eval/r4-dash/unit-0.2-disposition.md`.
-
-**Audition ready:**
-- `videos/trailer/sample-eval/r5-scream/path-a-tts.mp3` — Roger
-  `[shouts] VERAAA!!!` clip reused from Unit 0.2 Step 2 matrix
-  (sha256 `0e3e2e1b…`).
-- `videos/trailer/sample-eval/r5-scream/scream-eval.md` — single-reader
-  audition protocol + decision tree (ship / re-render `[shouting]` /
-  re-render `[scream]` / cut R5).
-
-**Blocked on Briggsy:** play `path-a-tts.mp3`, pick ship / re-render /
-cut. Re-render path is a 5-min `pnpm matrix` loop (adapter edit + run).
+Unit 0.5 spike disposition:
+`videos/trailer/sample-eval/spike/spike-results.md`.
 
 **Phase 0 Unit 0.2 closure summary:**
 - Step 5 winner: **Path A — ElevenLabs Roger** (`CwhRBWXzGAHq8TQ4Fs17`,

@@ -98,7 +98,7 @@
     "scream": {
       "leading_tag": "[shouts]",
       "inline_tags": [],
-      "notes": "Sterling's scream is volume-discontinuous-not-pitch-discontinuous (cadence-spec §3.1 + §3.6). ElevenLabs [shouts] is the right tag IF the engine implements it as amplitude scaling without F0 rise. Step 2 acceptance test for this paragraph: listen for 6-12 dB amplitude jump WITHOUT pitch falsetto excursion. If the [shouts] tag produces a panicked-pitch-rising scream, flag in results.md and degrade Path A on §3.6 — Path B clone may be the only ElevenLabs route to the right scream signature."
+      "notes": "Sterling-LANA four-axis shape (cadence-spec §3.6 — refined 2026-05-18 in Unit 0.6 audition): (1) flat pitch (no F0 falsetto rise), (2) 6-12 dB amplitude jump above conversational baseline, (3) FIRST-vowel drag (stretched EE in V-EE-ra, encoded as repeated E chars), (4) accent anchored on first syllable (first-vowel drag dominates any trailing-vowel drag). ElevenLabs v3 audition outcome: [shouts] tag clears axis 1+2, structural text shape (VEEEEEEEERAAAA — 8 E's + 4 A's) clears axis 3+4. v2 failure mode (trailing-A drag VERAAAAAAAAAAA) triggered R+A blend elongation AND accent shift to second syllable — encoded as the test `eCount > aCount` constraint in sample-script-dash.test.ts. Step 2 acceptance: listen for amplitude jump WITHOUT pitch falsetto + sustained EE WITHOUT accent shift. If [shouts] produces a panicked-pitch-rising scream OR drag lands on the wrong vowel, flag in results.md."
     }
   },
 

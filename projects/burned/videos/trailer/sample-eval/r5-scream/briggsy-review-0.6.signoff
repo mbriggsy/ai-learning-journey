@@ -1,0 +1,10 @@
+signed-off-by: Briggsy
+date: 2026-05-18
+sha256: c4eee7948adc6b87110dfe9de8d4a962c13b7cb2e63e17df057d0b60bb05911c
+file: videos/trailer/sample-eval/r5-scream/scream-eval.md
+unit: 0.6 — R5 Sterling-Screams-Lana Cameo Eval
+disposition: SHIP — Path A v3 `[shouts] VEEEEEEEERAAAA!!!`
+verbatim_audit:
+  v1: "the pitch is good though. sounds really good" — partial (pitch/voice cleared, vowel-drag missing)
+  v2: "the wrong vowel got elongated. it sounds like verrrraaa, i think it should be veeeeeeeeraaaa and the accent shifted it needs to stay on the 1st syllable" — failed shape
+  v3: "I think we're good" — ship

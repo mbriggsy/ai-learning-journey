@@ -15,12 +15,16 @@
 
 ## Status
 
-**🟡 IN-FLIGHT** — Path A clip in place from Unit 0.2 Step 2 matrix.
-Awaiting Briggsy audition.
+**✅ CLOSED 2026-05-18 — Path A v3 (`[shouts] VEEEEEEEERAAAA!!!`)
+locked as winning Dash scream.**
 
-(Disposition flips to `✅ CLEARED via Path A [shouts]` /
-`✅ CLEARED via Path A [shouting]` / `✅ CLEARED via Path A [scream]` /
-`❌ CUT` after the audition.)
+Sterling-LANA four-axis shape (flat pitch + amp jump + first-vowel
+drag + accent anchor) cleared on Reader-A audition. Canonical text
+locked into `sample-script-dash.ts PARAGRAPH_3_SCREAM`.
+Cadence-spec.md §3.6 updated with the refined four-axis
+characterization. Adapter
+(`cadence-spec-elevenlabs.json bracket_tags_per_paragraph.scream`)
+updated to note Step 2 acceptance criteria.
 
 ---
 
@@ -127,33 +131,57 @@ Char-budget impact per render: ~25 chars (~0.025% of monthly cap).
 
 ## 3. Briggsy's Audition
 
-Filled at audition time.
+### v1 — 2026-05-18
 
-- **Date:** _YYYY-MM-DD_
-- **Tag heard:** `[shouts]` / `[shouting]` / `[scream]`
-- **Verbatim reaction:**
+- **Tag heard:** `[shouts]` on text `VERAAA!!!` (3 A's)
+- **Verbatim reaction:** *"the pitch is good though. sounds really good"*
+- **Outcome:** ☑ partial pass (pitch + voice cleared, vowel-drag shape
+  missing) → iterate
 
-  > _[paste exact words]_
+### v2 — 2026-05-18
 
-- **Outcome:** ☐ ship  ☐ re-render `[shouting]`  ☐ re-render `[scream]`  ☐ cut
+- **Tag heard:** `[shouts]` on text `VERAAAAAAAAAAA!!!` (11 A's)
+- **Verbatim reaction:** *"the wrong vowel got elongated. it sounds
+  like verrrraaa, i think it should be veeeeeeeeraaaa and the accent
+  shifted it needs to stay on the 1st syllable"*
+- **Outcome:** ☑ FAILED shape — AAA cluster after R triggered R+A
+  blend elongation; accent migrated to second syllable → iterate with
+  first-vowel drag
 
-If re-render → loop back to §3 with the new clip + new audition entry
-beneath this one (don't overwrite — preserve the audit trail).
+### v3 — 2026-05-18
+
+- **Tag heard:** `[shouts]` on text `VEEEEEEEERAAAA!!!` (8 E's + 4 A's)
+- **Verbatim reaction:** *"I think we're good"*
+- **Outcome:** ☑ **SHIP** — Sterling-LANA four-axis shape cleared.
 
 ---
 
 ## 4. Disposition
 
-Filled at decision time.
-
 ```
-Date:             YYYY-MM-DD
-Outcome:          [ ship | cut ]
-Path A tag locked: [shouts] / [shouting] / [scream]   (N/A if cut)
-Path A sha256:    [final clip sha256]                  (N/A if cut)
-Briggsy summary:  [1-2 sentences capturing the call]
-Carry-forwards:   [any Phase 4 hand-off notes — voice_settings tuning,
-                  fallback option to revisit, etc.]
+Date:              2026-05-18
+Outcome:           ship
+Path A tag locked: [shouts]
+Path A text:       VEEEEEEEERAAAA!!! (8 E's + 4 A's)
+Path A sha256:     5daa176d38ce3f4f8711ae7b8351485d0299ff7a9473a29ec0658c8a72269c9a
+Briggsy summary:   v3 first-vowel-drag (VEEEEEEEERAAAA!!!) cleared
+                   after v1 (short burst, no drag) and v2 (drag landed
+                   on wrong vowel, accent shifted). Sterling-LANA
+                   four-axis acoustic shape now characterized in
+                   cadence-spec §3.6.
+
+Carry-forwards to Phase 4 trailer assembly:
+- PARAGRAPH_3_SCREAM constant is the canonical text. Any future
+  Dash scream rendering reuses this exact text shape.
+- voice_settings: stability 0.70, similarity 0.75, style 0.15,
+  speaker_boost true, speed 0.95 (Roger / eleven_v3 defaults
+  inherited from Unit 0.2 lock).
+- Re-render is cheap (~25 chars, <1s API call via
+  `pnpm scream:variant --text "VEEEEEEEERAAAA!!!" --label "v3-locked"`)
+  if Phase 4 scene-4 context requires fresh generation rather than
+  reusing the audition mp3.
+- Vera stays in the trailer (R5 cleared); Unit 0.3 candidate
+  speaker pool for R14 cold-open retains Vera as an option.
 ```
 
 ---
@@ -163,19 +191,19 @@ Carry-forwards:   [any Phase 4 hand-off notes — voice_settings tuning,
 Filled at disposition time. Each item is a write that must land
 **before** Unit 0.6 is considered closed.
 
-- [ ] `PHASE-0-EXIT.md` §Section 5 (R5 Scream Disposition) updated
-      with: ship-via-Path-A-`{tag}` / cut, plus 1-line rationale
-      citing this document.
-- [ ] **If R5 cut:** Unit 0.3 candidate speaker pool updated —
-      `phase-0-gate-resolution.md` §Unit 0.3 Step 1 candidate set
-      drops "Vera (if R5 cleared)" branches; documented here in
-      §4 Disposition carry-forwards.
-- [ ] **If R5 ships:** Phase 4 trailer assembly inherits the
-      locked clip at the scene-4 cameo slot. Note in §4 carry-forwards
-      for downstream consumers.
-- [ ] `briggsy-review-0.6.signoff` sentinel file written per ADR #22
-      sign-off ceremony (phase-0-gate-resolution.md §PHASE-0-EXIT.md
-      template). File contents: `signed-off-by: Briggsy / date: YYYY-MM-DD / sha256: <hash of this file at sign-off>`.
+- [ ] `PHASE-0-EXIT.md` §Section 5 (R5 Scream Disposition) — DEFERRED;
+      PHASE-0-EXIT.md is written at Phase 0 close (after Units 0.3 +
+      0.4 finish). This document is the durable Unit 0.6 record the
+      exit doc will cite. Disposition: ship via Path A `[shouts]
+      VEEEEEEEERAAAA!!!`.
+- [x] **R5 cleared** — Vera stays in the trailer; Unit 0.3 candidate
+      speaker pool for R14 cold-open retains Vera. No upstream plan
+      edit needed; cleared-state is the default branch.
+- [x] **Phase 4 trailer assembly hand-off** — canonical Dash scream
+      text locked into `PARAGRAPH_3_SCREAM` constant; voice_settings
+      + bracket tag captured in §4 Disposition carry-forwards above.
+- [x] `briggsy-review-0.6.signoff` sentinel written 2026-05-18 per
+      ADR #22.
 
 ---
 

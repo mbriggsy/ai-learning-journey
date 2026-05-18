@@ -204,28 +204,66 @@ primary source consulted during Step 0 research (see §7).
     with a leading ellipsis: `…Phrasing.`), not with Benjamin's
     distinctive comedic-shout delivery.
 
-### 3.6 Volume dynamics
+### 3.6 Volume dynamics + sustained-call shape
 
-- **Compressed dynamic range on conversational reads.** Sterling-
-  coded reads sit at a narrow amplitude band — small dB excursions,
-  no swelling, no swallowed phrases. [^1]
-- **Sudden hard volume jumps on screams.** ~6–12 dB amplitude
-  increase on shouts and exclamations, *without* corresponding F0
-  rise (per §3.1). This volume-discontinuous-not-pitch-discontinuous
-  pattern is the most engine-distinguishing characteristic in the
-  sample-script's third paragraph (the VERAAA scream). [^1] [^4]
-- **TTS specification:**
-  - Default `style` parameter (ElevenLabs) to a low/moderate value
-    on the deadpan paragraphs to suppress engine-default expressive
-    swelling.
-  - For the scream clip, the engine must support amplitude scaling
-    via inline tag (ElevenLabs `[shouts]`) or per-segment direction
-    (Gemini section marker; OpenAI per-segment instruction split).
-    Engines that scream by *raising pitch* instead of *raising
-    amplitude* fail this row — flag in `results.md`.
-  - Avoid engines that auto-compress dynamic range across the full
-    clip (some `gpt-4o-mini-tts` voices do this by default) — that
-    cancels the volume-discontinuity that's tonally load-bearing.
+The Sterling-coded scream has a **four-axis acoustic shape**
+(characterization refined 2026-05-18 in Unit 0.6 audition; v3 lock
+post-Briggsy A/B vs v1/v2). All four axes must land for the read to
+clear Target Band:
+
+1. **Pitch flat — volume-discontinuous, NOT pitch-discontinuous.**
+   ~6-12 dB amplitude jump above conversational baseline *without*
+   corresponding F0 rise (per §3.1). Engines that scream by raising
+   pitch into falsetto fail this row. [^1] [^4]
+2. **Amplitude jump.** The volume-discontinuity is large enough to
+   read as a hard cut from the deadpan register, not a ramp. ~6-12 dB.
+3. **First-vowel drag (sustained-call shape).** The stressed first
+   vowel is stretched into a multi-second sustained drone — the
+   comedic core of "Laaaaaaaaaaaana!" / "Veeeeeeeeraaaa!". Duration
+   is the load-bearing variable, not just loudness. Engines that
+   render a fast burst (short vowel, no drag) deliver an acoustic
+   "shout" but miss the Sterling shape entirely. Encoded in the
+   sample script via repeated first-vowel chars (e.g., `VEEEEEEEE`
+   in `PARAGRAPH_3_SCREAM`).
+4. **Accent anchored on first syllable.** Even with the vowel
+   stretched, primary stress stays on the first syllable. If the
+   engine shifts the accent to whichever vowel is dragged, the read
+   breaks Sterling-LANA shape. Unit 0.6 v2 failure mode: trailing-A
+   drag (`VERAAAAAAAAAAA`) triggered an R+A blend elongation AND
+   accent migration to the second syllable — both wrong. v3 fix:
+   primary drag on the FIRST vowel with secondary (shorter) drag
+   on the trailing vowel anchors the accent in place.
+
+The compressed dynamic range from §3.6 axis 1 applies to
+**conversational reads** — Sterling-coded reads sit at a narrow
+amplitude band (small dB excursions, no swelling, no swallowed
+phrases [^1]). Axis 2 (amplitude jump on the scream) is the
+discontinuity *against* that compressed baseline — without the
+compressed baseline, the jump reads as conventional dramatic
+delivery, not Sterling-coded comedic shock.
+
+**TTS specification:**
+
+- Default `style` parameter (ElevenLabs) to a low/moderate value
+  on the deadpan paragraphs to suppress engine-default expressive
+  swelling.
+- For the scream clip:
+  - Engine must support amplitude scaling via inline tag
+    (ElevenLabs `[shouts]`) or per-segment direction (Gemini section
+    marker; OpenAI per-segment instruction split). Engines that
+    scream by raising pitch instead of raising amplitude fail axis 1
+    — flag in `results.md`.
+  - Engine must respect repeated-vowel character sequences as
+    duration cues for axis 3 (vowel-drag). ElevenLabs v3 does — v3
+    audition validated `VEEEEEEEERAAAA` produces a longer EE sustain
+    than `VERA`.
+  - Engine must NOT shift primary stress to whichever vowel cluster
+    is longest. Encode accent anchor structurally by making the
+    first-vowel drag DOMINANT over any trailing-vowel drag
+    (`E+ > A+` count). Axis 4 enforcement.
+- Avoid engines that auto-compress dynamic range across the full
+  clip (some `gpt-4o-mini-tts` voices do this by default) — that
+  cancels axis 2's volume-discontinuity contrast.
 
 ### 3.7 What NOT to encode (consolidated)
 

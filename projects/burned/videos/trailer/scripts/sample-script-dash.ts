@@ -53,8 +53,23 @@ export const PARAGRAPH_1_PREFLIGHT = `Good morning. You are reading this because
 /** ~10s monologue ending in exasperation. Lineage: ActRoster.tsx Dash entry blurb (line 25–26) + flourish (line 27), first-person recast. */
 export const PARAGRAPH_2_MONOLOGUE = `Pendleton's top-rated field operative. By which we mean I have the highest expense report and survive most of it. Fluent in seven languages, three of which are martini orders. Tell anyone you read my file. I've been waiting. …Phrasing.`;
 
-/** ~1.5s isolated scream. Volume-discontinuous, NOT pitch-discontinuous (per cadence-spec §3.1, §3.6). Doubles as R5 Unit 0.6 candidate. */
-export const PARAGRAPH_3_SCREAM = `VERAAA!!!`;
+/**
+ * ~1.5s isolated scream. Sterling-LANA four-axis shape (cadence-spec §3.6):
+ *   1. Flat pitch — no F0 falsetto rise (volume-discontinuous, NOT
+ *      pitch-discontinuous).
+ *   2. Amplitude jump — 6-12 dB above conversational baseline.
+ *   3. First-vowel drag — the EE in V-EE-ra is stretched into a
+ *      multi-second sustained call. Encoded as 8 repeated E's.
+ *   4. Quick punctuated tail — the trailing A snaps short, secondary
+ *      to the EE drag. Encoded as 4 repeated A's.
+ *
+ * v3 locked 2026-05-18 in Unit 0.6 audition over v1 (3 A's only —
+ * short burst, no drag) and v2 (11 A's only — drag landed on the
+ * wrong vowel, R+A blend, accent shifted off the first syllable).
+ *
+ * Doubles as the R5 Unit 0.6 evaluation stimulus.
+ */
+export const PARAGRAPH_3_SCREAM = `VEEEEEEEERAAAA!!!`;
 
 /** Ordered array for engine-matrix iteration. Index = paragraph number minus 1. */
 export const DASH_SAMPLE_SCRIPT = [

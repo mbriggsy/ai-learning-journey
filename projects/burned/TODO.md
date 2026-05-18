@@ -146,7 +146,7 @@ Phase 4 if needed.
 - Unit 0.4: ✅ CLOSED (tone — Path A v2 earned-Phrasing! "Hard to put down")
 - Unit 0.3: ✅ CLOSED (cold-open #4 + Janet/Sloane matriarch-tuned)
 
-**Phase 1 — IN FLIGHT.** 5 of 12 tasks shipped this session:
+**Phase 1 — IN FLIGHT.** 6 of 12 tasks shipped:
 
 - ✅ PRE-step: Plan reconciliation (Phase 0 EXIT 2026-05-18 supersedes
   2026-05-17 doc-review re-open). Plan head amendment block + 6 body
@@ -176,16 +176,25 @@ Phase 4 if needed.
   motion envelopes + emil easing re-exports + SCENE_TRANSITIONS
   metadata. Cross-dissolve at S04→S05 REMOVED (locked as hard cut
   after 1.0 s payoff hold).
+- ✅ Unit 1.5 (`ac7cbeb6`): cascade composition LOCKED — sequential
+  revelation w/ focal hierarchy for S04. BEAT-SHEET.md §S04 gets the
+  12-row frame-by-frame storyboard + 4-row stat-slot coord table
+  (right-edge column at x=1380, all INSIDE 1080×1080 safe-square for
+  mobile-X accumulation reading). New companion doc
+  `videos/trailer/sample-eval/beat-sheet/cascade-composition.md` (454
+  lines) carries entry-choreography rationale, ASCII sketches for
+  peak frames (1680/1860/1950), HTP rendering method lock (static PNG
+  primary + trace-video fallback budgeted), anti-pattern guard
+  ("no non-payoff frame >2 elements at full weight"), and Phase 4
+  consumption contract. Zero new TS constants — Unit 1.4 already
+  shipped them all.
 - Insights distilled (`5b257349`):
   [056](docs/insights/056-security-hook-substring-match-blocks-safe-regex-iteration.md) (security hook substring false-positive),
   [057](docs/insights/057-plan-declared-constants-vs-phase-0-spike-locked-values-drift.md) (plan-vs-spike constants drift),
   [058](docs/insights/058-vocab-grep-mixed-case-sensitivity-acronyms-vs-common-words.md) (vocab-grep mixed case-sensitivity).
 
-**Remaining (7 tasks):**
+**Remaining (6 tasks):**
 
-- Unit 1.5 — Cascade composition lock. Substantial visual + spatial
-  layout for the load-bearing S04 scene. Deserves Briggsy's eye on
-  BEAT-SHEET.md output before authoring.
 - Unit 1.6 — Goofy stats + cold-read gate. Needs human cold-readers
   (Briggsy + ≥2 others); Claude-solo can draft + run hat-count audit
   but the gate consensus is human-eye.
@@ -209,9 +218,10 @@ Phase 4 if needed.
 
 **ATC asks before continuing:**
 
-1. Read `videos/trailer/BEAT-SHEET.md` — verbatim line set lives
-   there; this is the output Briggsy reviews (not intermediate
-   commits per `feedback-briggsy-reviews-output-not-process`).
+1. Read `videos/trailer/BEAT-SHEET.md` (now includes Unit 1.5 §S04
+   cascade lock) + `videos/trailer/sample-eval/beat-sheet/cascade-composition.md`
+   — this is the output Briggsy reviews (not intermediate commits
+   per `feedback-briggsy-reviews-output-not-process`).
 2. Pick R15 #5 closing-card subhead from 3 candidates in BEAT-SHEET.md
    Open follow-ups (or write a new one).
 3. Cold-read gate for Unit 1.6 needs ≥ 3 reviewers per the

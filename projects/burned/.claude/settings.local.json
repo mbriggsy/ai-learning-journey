@@ -39,7 +39,8 @@
       "mcp__chrome-devtools__emulate",
       "Bash(rm -rf temp/*)",
       "Bash(rm -rf .playwright-mcp)",
-      "Bash(pnpm dev:cleanup *)"
+      "Bash(pnpm dev:cleanup *)",
+      "Skill(squeaky-clean)"
     ]
   }
 }

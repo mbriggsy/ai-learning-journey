@@ -7,268 +7,66 @@ the history. (Rule: `feedback-todo-is-not-a-diary.md`.)
 
 ## 1. Active priorities
 
-### Status (verified 2026-05-18 — end of Phase 1 Units 1.6–1.10 session, 11 of 12 shipped)
+### Status (verified 2026-05-18 — Phase 1 CLOSED; signoff `3aef0d05` on remote)
 
-- Tests: **1407 pass** (root suite, verified earlier 2026-05-18; root
-  source untouched this session) | 6 expected fail (68/68 files green)
-- Trailer subpackage tests: **191 pass** (was 165 at Phase 0 close;
-  +10 `timing.test.ts` invariants, +16 `script.test.ts` integrity +
-  marker-grep + R6 + wps assertions). Covers timing/scene-boundary
-  math, BEAT-SHEET.md ⇄ script.ts marker pattern (insight #029), R6
-  Pendleton-vocab discipline (two-regex case-sensitivity split per
-  insight #058), per-cue wps sanity ceiling, voice-cast invariant
-  (2 voices Dash + Janet, single scream cue, S01-only-Janet).
+- Tests: **1407 pass** | 6 expected fail (68/68 files green) — squeaky
+  re-run confirmed
+- Trailer subpackage tests: **191 pass** (7 files green)
 - Typecheck: clean (`pnpm typecheck` root + `videos/trailer/`)
-- Phone player entry: **19.17 KB gz** — under the 100 KB ceiling
-- DramaOverlay lazy chunk: 2.34 KB gz
-- HOW-TO-PLAY bundle: `howtoplay-*.js` 99.04 KB (33.90 KB gz) + `howtoplay-*.css` 65.83 KB (10.68 KB gz) + shared GSAP chunk 69.42 KB (27.21 KB gz)
+- Phone player entry: **19.17 KB gz** (build verified — under 100 KB ceiling)
+- DramaOverlay lazy chunk: **2.34 KB gz**
+- HOW-TO-PLAY bundle: `howtoplay-*.js` **33.90 KB gz** + `howtoplay-*.css`
+  **10.68 KB gz** + shared GSAP chunk **27.21 KB gz**
 - Protocol version: **v6**
 
 ### Origin trailer
 
-All 8 phase plans drafted, deepened, and document-reviewed. Source of
-truth: `docs/plans/origin-trailer/` (phase-0 through phase-7 + `roadmap.md`
-with the ADR ledger). Plan set is the recipe — execution begins here.
+Plans (8) drafted, deepened, document-reviewed at
+`docs/plans/origin-trailer/` (phase-0 through phase-7 + `roadmap.md`
+ADR ledger). Sequential phase execution.
 
-**Phase 0 — ✅ CLOSED 2026-05-18.** All 5 unit dispositions consolidated
-in `videos/trailer/PHASE-0-EXIT.md`; signoff sentinels written to
-`videos/trailer/sample-eval/{r14-cold-open/briggsy-review-0.3,PHASE-0-EXIT}.signoff`.
-Phase 1 (beat-sheet-lock) unblocked.
+**Phase 0 — ✅ CLOSED 2026-05-18.** EXIT doc + signoff:
+`videos/trailer/PHASE-0-EXIT.md` +
+`videos/trailer/sample-eval/PHASE-0-EXIT.signoff`. Locks: Dash voice
+(Roger / ElevenLabs eleven_v3) · Janet voice (Sloane Shared Library /
+matriarch-tuned) · S01 cold-open line (#4 "He's a machine, this kid…")
+· Sterling scream (Path A v3 `VEEEEEEEERAAAA!!!`) · played-straight
+tone (earned-Phrasing! mechanic) · composite viability (all 5 Remotion
+integration points).
 
-**Phase 0 unit roll-up (verified 2026-05-18):**
+**Phase 1 — ✅ CLOSED 2026-05-18.** Signoff `3aef0d05` (delegated
+attestation per ADR #22 variant — Briggsy approved disposition via
+close-or-pause prompt, no line-by-line review; rationale in sentinel
+body). BEAT-SHEET.md sha256 captured at signoff:
+`fd662581c2aafdc40b93687e347a26d3da5d338d7752570b198d7389ece54c13`.
+Frozen as Phase 2/3/4 consumption contract.
 
-- Unit 0.1 (scaffold) — ✅ shipped `e5ca0d7e`
-- Unit 0.2 Step 0 (Sterling cadence-spec.md) — ✅ shipped `56c8b9ba`
-- Unit 0.2 Steps 0a + 1 + 3 (TTS-readiness probe + sample script +
-  MUSHRA protocol) — ✅ scaffolded `4d6aac64`; engine execution still
-  gated on ElevenLabs Creator $22/mo (OpenAI key landed 2026-05-18)
-- **Unit 0.5 (composite-viability spike) — ✅ CLEARED `b971d3d6`** —
-  all 5 Remotion integration points render cleanly in MP4 export.
-  Spike-results: `videos/trailer/sample-eval/spike/spike-results.md`.
-  Phase 4 inherits all production patterns; Phase 4 Unit 4.0 font
-  spike DROPS from scope (variable-axis weight syntax works).
-- **Unit 0.2 Step 0.5 (spec sanity check) — ✅ PASS (single-reader
-  fallback) 2026-05-18.** Gemini Director's Chair adapter
-  (`cadence-spec-gemini.md`) + generator (`generate-preflight-clip.ts`)
-  shipped; `gemini-spec-test.wav` rendered 14.80 s on
-  `gemini-3.1-flash-tts-preview` voice `Charon`. Reader A (Briggsy)
-  vibe-check: *"Patrick Warburton"* → Target Band cluster (Warburton
-  is a deadpan-baritone-sardonic voice actor — Brock Samson / Lemony
-  Snicket narrator archetype). No Benjamin / Sterling Archer / catchphrase
-  reference volunteered → no Ceiling hit per cadence-spec §5.2.
-  Reader B single-reader fallback elected per plan §Step 0.5 step 6.
-  Disposition + Warburton-adjacent sub-note carried forward in
-  `preflight/preflight-decision.md`. Step 1.5 adapter already canonical
-  (built ahead-of-schedule).
+**Phase 2 — NEXT.** Voice pipeline. Plan at
+`docs/plans/origin-trailer/phase-2-voice-pipeline.md` (already
+deepened + doc-reviewed). Phase 2 reads `script.ts BURNED_TRAILER_LINES`
+(16 cues), generates TTS WAVs via ElevenLabs (Roger for Dash;
+Sloane / matriarch-tuned for Janet via `COLD_OPEN_SPEAKER` constant),
+validates per-cue wps vs Phase 1 bands. Expected spend: ~$22
+ElevenLabs Creator within $50 envelope.
 
-**Unit 0.6 (R5 Sterling-Screams-Lana Cameo Eval) — ✅ CLOSED 2026-05-18.**
-Path A v3 (`[shouts] VEEEEEEEERAAAA!!!`) locked as winning Dash scream
-after three-variant audition (v1 short-burst → partial; v2 wrong-vowel
-drag → failed shape; v3 first-vowel drag → ship).
+**Open follow-ups carried by Phase 1 signoff (NOT blocking Phase 2):**
 
-Sterling-LANA four-axis acoustic shape now characterized in
-`videos/trailer/sample-eval/r4-dash/cadence-spec.md` §3.6: (1) flat
-pitch, (2) 6-12 dB amplitude jump, (3) first-vowel drag, (4) accent
-anchored on first syllable. Canonical text locked into
-`PARAGRAPH_3_SCREAM` constant in `videos/trailer/scripts/sample-script-dash.ts`.
-Adapter scream notes updated. Disposition + sign-off at
-`videos/trailer/sample-eval/r5-scream/scream-eval.md` +
-`briggsy-review-0.6.signoff`.
-
-**Unit 0.4 (Tone Prototype Gate) — ✅ CLOSED 2026-05-18.** Path A
-Roger v2 paragraph (`"... Try and find a human one. Hard to put down.
-…Phrasing."`) locked as played-straight tone winner after a 2-variant
-audition. v1 shipped with an unearned Phrasing! beat (no
-double-entendre setup preceding the catchphrase); Briggsy caught it on
-audition and explained the mechanic — Phrasing! fires on a "that's
-what she said"-style trigger requiring an entendre-coded setup line.
-v2 inserts `"Hard to put down."` (literal: page-turner; entendre on
-"hard") to earn the beat. Reader A: *"it's good"* → ship.
-
-Played-straight register is now LOCKED for Phase 1 beat-sheet-lock
-(not provisional). The earned-Phrasing! rule is asserted by a contract
-test in `tone-prototype.test.ts` and documented in the paragraph
-constant's header comment. Full gap-comedy decode test continues to
-defer to Phase 6 N=6 cold-decode panel per cross-phase ADR #21.
-Disposition + sign-off at
-`videos/trailer/sample-eval/tone/eval.md` +
-`briggsy-review-0.4.signoff`. v1 preserved as
-`sample-eval/tone/sample.v1.mp3` (gitignored, on-disk only) for
-unearned-vs-earned A/B reference.
-
-**Unit 0.3 (R14 cold-open decode) — ✅ CLOSED 2026-05-18.** Two-phase
-audition: (1) line audition picked Candidate #4 ("He's a machine, this
-kid. Honestly at this point I'm just impressed.") over #5 (#5 carried
-robotic-tail defect on kicker). (2) Voice audition ran 4 variants
-(Sarah → Matilda → Sloane → Kristen, all matriarch-tuned) after Sarah
-was flagged as too "reassuring" for Janet's tough-matriarch character.
-Sloane (ElevenLabs **Shared Library**, `m8AHWg36LJTQWKmfeGVv`) +
-matriarch-tuned voice_settings (stability 0.85, style 0.05, speed
-0.92) won the A/B over Kristen. Canonical `candidate-4.mp3` is exact
-audited Sloane bytes (sha256
-`4a9db27108689e2eeb241174843ea020a7c1cfe953e23655fee83b2216119f7d`);
-re-rendered `cold-open-candidate-4.mp4` consumes that audio.
-
-Disposition + line iteration + Janet voice iteration at
-`videos/trailer/sample-eval/r14-cold-open/{decode-eval.md,candidates.md}`.
-Sentinel signoffs at
-`videos/trailer/sample-eval/{r14-cold-open/briggsy-review-0.3,PHASE-0-EXIT}.signoff`.
-
-Unit 0.2 disposition:
-`videos/trailer/sample-eval/r4-dash/unit-0.2-disposition.md`.
-Unit 0.5 spike disposition:
-`videos/trailer/sample-eval/spike/spike-results.md`.
-
-**Phase 0 Unit 0.2 closure summary:**
-- Step 5 winner: **Path A — ElevenLabs Roger** (`CwhRBWXzGAHq8TQ4Fs17`,
-  model `eleven_v3`) per Reader A audition 2026-05-18
-- OpenAI (onyx): dropped to Floor — "too robotic"
-- Gemini (Charon): Target Band secondary — kept as backup option
-- Steps 3a / 3 / 4 skipped (single-reader fallback continued —
-  Reader A audition produced clear winner; WebMUSHRA infrastructure
-  unnecessary)
-- Path B (voice clone): not exercised, opt-in option preserved for
-  Phase 4 if elected
-- Phase 4 trailer assembly carry-forwards documented in disposition
-  doc (voice_settings tuning, alternate voices, Warburton-adjacent
-  flag, bracket-tag refinement, Path B opportunity)
-
-**Open follow-up (NOT blocking):** Path A voice-filter scoring
-treats female-voice keyword matches equally with male. Picked voice
-(Roger) is correct because of the gender label bonus, but ranking
-presentation is misleading. Fix when Path A voice gets revisited in
-Phase 4 if needed.
-
-**Phase 0 ladder status (ALL CLOSED):**
-- Unit 0.2: ✅ CLOSED (Roger / ElevenLabs Path A locked)
-- Unit 0.5: ✅ CLEARED (composite viability all 5 integration points)
-- Unit 0.6: ✅ CLOSED (R5 scream — Path A v3 `[shouts] VEEEEEEEERAAAA!!!`)
-- Unit 0.4: ✅ CLOSED (tone — Path A v2 earned-Phrasing! "Hard to put down")
-- Unit 0.3: ✅ CLOSED (cold-open #4 + Janet/Sloane matriarch-tuned)
-
-**Phase 1 — IN FLIGHT.** 11 of 12 tasks shipped (only CLOSEOUT
-signoff sentinel remains; gated on Briggsy review):
-
-- ✅ PRE-step: Plan reconciliation (Phase 0 EXIT 2026-05-18 supersedes
-  2026-05-17 doc-review re-open). Plan head amendment block + 6 body
-  fixes (S01 line = #4 + Janet/Sloane, EASE_OUT curve corrected to
-  spike-locked 0.16/1/0.3/1, Step 2a NOP, S03/S04-cue-03 trims,
-  PHASE-0-EXIT paths corrected).
-- ✅ Unit 1.1 (`e6afc5ce`): scaffold + `timing.ts` (frame constants +
-  emil easing) + `timing.test.ts` (10 assertions) + BEAT-SHEET.md
-  skeleton with 6 scene placeholders + scene-count-lock rationale +
-  Phase 0 carry-forwards + R6 vocab table.
-- ✅ Unit 1.2 (`88fd9ac7`): 16 verbatim VO cues across S01–S06 in
-  `script.ts BURNED_TRAILER_LINES` + tightened `script.test.ts`
-  (marker-grep + R6 + wps + 14 integrity assertions). BEAT-SHEET.md
-  Audio blocks populated with markers. Evidence files
-  `sample-eval/beat-sheet/script-grep-r6.md` +
-  `script-word-count.md`. Trim notes for S03 + S04-cue-03 land in
-  cadenceAdapter.notes.
-- ✅ Unit 1.3 (`57b3436a`): voice cast locked = 2 (Dash + Janet, no
-  Path D). R4 share = **93.4 %** of voiced runtime (≥ 90 % target).
-  Janet voice_settings handoff resolved **Option (B)**: Phase 2 reads
-  from `scripts/cold-open-prototype.ts COLD_OPEN_SPEAKER` constant
-  when `Line.voice === 'janet'`. Evidence:
-  `sample-eval/beat-sheet/voice-cast-lock.md`.
-- ✅ Unit 1.4 (`a18da1f1`): transition vocabulary locked. 5 named
-  transitions (4 overlays + hard cut), 6-boundary picks documented in
-  BEAT-SHEET.md appendix. `transitions.ts` exports frame constants +
-  motion envelopes + emil easing re-exports + SCENE_TRANSITIONS
-  metadata. Cross-dissolve at S04→S05 REMOVED (locked as hard cut
-  after 1.0 s payoff hold).
-- ✅ Unit 1.5 (`ac7cbeb6`): cascade composition LOCKED — sequential
-  revelation w/ focal hierarchy for S04. BEAT-SHEET.md §S04 gets the
-  12-row frame-by-frame storyboard + 4-row stat-slot coord table
-  (right-edge column at x=1380, all INSIDE 1080×1080 safe-square for
-  mobile-X accumulation reading). New companion doc
-  `videos/trailer/sample-eval/beat-sheet/cascade-composition.md` (454
-  lines) carries entry-choreography rationale, ASCII sketches for
-  peak frames (1680/1860/1950), HTP rendering method lock (static PNG
-  primary + trace-video fallback budgeted), anti-pattern guard
-  ("no non-payoff frame >2 elements at full weight"), and Phase 4
-  consumption contract. Zero new TS constants — Unit 1.4 already
-  shipped them all.
-- Insights distilled (`5b257349`):
-  [056](docs/insights/056-security-hook-substring-match-blocks-safe-regex-iteration.md) (security hook substring false-positive),
-  [057](docs/insights/057-plan-declared-constants-vs-phase-0-spike-locked-values-drift.md) (plan-vs-spike constants drift),
-  [058](docs/insights/058-vocab-grep-mixed-case-sensitivity-acronyms-vs-common-words.md) (vocab-grep mixed case-sensitivity).
-
-**Units 1.6–1.10 shipped 2026-05-18 in this session:**
-
-- ✅ Unit 1.6 — Goofy stats + hat-count audit. `sample-eval/beat-sheet/goofy-stats-list.md`
-  ships 15-candidate pool + 4 locked finalists + Step 1.5 hat-count
-  audit. **Audit outcome:** 17 asset illustrations contain **5** hat-
-  bearing characters (Agent X portrait + 4 action cards: back-channel,
-  burned, call-in-a-favor, go-dark), NOT the 2 claimed in earlier drafts.
-  Stat 3 phrasing corrected to *"Seventeen asset illustrations. Five
-  of them with hats."* in BEAT-SHEET.md + `script.ts` S04-stat-03 line.
-  File-cabinet-on-fire alternate held in reserve for cold-read soft-fail.
-  **Cold-read gate consensus (N≥3 human reviewers) remains OPEN** — by
-  design, can't be Claude-solo.
-- ✅ Unit 1.7 — Music source ladder. `sample-eval/beat-sheet/music-sourcing.md`
-  ships Tier 1 (Artlist Pro / Epidemic Pro $199–204/yr) → Tier 2
-  (Marmoset / Songtradr per-track $30–$200) → Tier 3 (Suno Pro $10/mo
-  last-resort) ladder, Path A full-length-clip-to-95s shape lock, audition
-  framework, Suno prompt template, and the music-cue map (ramp/step
-  envelopes per cue, no 60-pt cliffs). Cue map landed in BEAT-SHEET.md
-  preamble. **Phase 3 still owns** actual marketplace audition +
-  `music-license.pdf` filing + `music-bed.mp3` procurement.
-- ✅ Unit 1.8 — Typography lock + `useFonts.ts` rewrite.
-  `src/hooks/useFonts.ts` rewritten to Promise.all pattern with shared
-  cached promise (fixes prior sync-flag race). All 3 variable woff2
-  files (Clash Display, General Sans, JetBrains Mono) loaded from
-  BURNED's `public/fonts/` via `staticFile()` — NO copy step per ADR
-  #15. JetBrains Mono variable axis range `100 900` verified against
-  `fonts-mono-htp.css:9`. `sample-eval/beat-sheet/typography.md` ships
-  per-element type table with emil polish lens (tracking, line-height,
-  feature-settings — `"tnum"` enforced on all stat numerals). Preamble
-  block landed in BEAT-SHEET.md.
-- ✅ Unit 1.9 — R15 chrome copy lock + **R15 #5 subhead picked: option
-  (a) *"Honestly at this point we're just impressed."*** (Sterling-CODED
-  bookend echoing Janet's S01 kicker via `"I'm"` → `"we're"` plural
-  fold). Full 5-instance R15 table landed in BEAT-SHEET.md preamble +
-  S06 R15 #5 placeholder resolved + Open Follow-ups entry struck.
-  Three-candidate decision matrix documented in BEAT-SHEET.md for
-  audit trail.
-- ✅ Unit 1.10 — Briefing-room visual environment lock.
-  `sample-eval/beat-sheet/briefing-room-comp.md` ships full S01 + S02 +
-  S03 + S06 composition + locked S01 6-card flash sequence (frames
-  0–60 with `burned.webp` landing at frame 50 hold) + CASE BANNER
-  per-scene content (S02/S03/S06 5-field table) + ASCII storyboard
-  sketch for S01 + anti-AI-slop "≤2 elements at full visual weight"
-  guard extended from Unit 1.5 cascade to all briefing-room scenes +
-  citation-verification grep (`GameTable.tsx:67-88` caseBanner,
-  `DossierFeed.tsx:20-25` IDLE_LINES, `ActRoster.tsx:18-75 + 153-158`,
-  `transitions.ts` constants — all verified, no phantom refs).
-  BEAT-SHEET.md S01/S02/S03/S06 visual blocks all resolved (no more
-  `<Unit 1.10 — …>` placeholders).
-
-**Remaining:**
-
-- CLOSEOUT — `BEAT-SHEET.signoff` sentinel (ADR #22) — Briggsy reviews
-  BEAT-SHEET.md, freezes as Phase 2/3/4 consumption contract, signs off
-  the sentinel file at `videos/trailer/sample-eval/beat-sheet/BEAT-SHEET.signoff`.
-
-**ATC asks before Phase 2:**
-
-1. Read `videos/trailer/BEAT-SHEET.md` end-to-end — every placeholder
-   resolved this session. The 4 new eval docs
-   (`goofy-stats-list.md` + `music-sourcing.md` + `typography.md` +
-   `briefing-room-comp.md`) carry the per-unit rationale + verification
-   artifacts.
-2. **Cold-read gate for Unit 1.6 (R11 goofy-stat lineup)** still needs
-   ≥ 3 human reviewers per-reviewer-floor consensus before R11 is
-   structurally locked. Phase 2 voice pipeline can begin against the
-   provisional Stat lineup; if cold-read hard-fails after Phase 2
-   fires, the pre-drafted R11-cut bridge lines activate.
-3. **R15 #5 subhead landed at option (a)** ("Honestly at this point
-   we're just impressed."). If you want option (b) or (c) instead, say
-   so before signoff — easy swap.
-4. Sign the `BEAT-SHEET.signoff` sentinel when satisfied; Phase 2
-   asserts its existence before consuming `script.ts`.
-
-After Phase 1 closes: sequential Phase 2 → Phase 7 execution.
+- **Cold-read gate for Unit 1.6** — needs N≥3 human reviewers,
+  per-reviewer-floor consensus (≥2 of 3 score ≥1 on same pairing).
+  Phase 2 voice pipeline produces the audio stimulus the reviewers
+  listen to; pre-drafted R11-cut bridge lines activate if hard-fail.
+- **Phase 3 — music marketplace audition** + `music-license.pdf`
+  filing + `videos/trailer/public/audio/music-bed.mp3` (criteria +
+  cue-map locked at Phase 1 Unit 1.7).
+- **Phase 3 — S02 depth-plane asset** (A brass nameplate "M.
+  PENDLETON, BUREAU CHIEF" / B folder stack / C doorframe vignette)
+  — Phase 4 picks based on Imagen asset availability.
+- **Phase 4 — S06 closing-card breathing room** may surface 45–50
+  frames reads cleaner than the locked floor of 40 frames.
+- **Phase 4 voice-filter scoring fix** — Path A scoring treats
+  female-voice keyword matches equally with male; picked voice
+  (Roger) is correct via gender label bonus, but ranking
+  presentation is misleading. Fix when revisited.
 
 ### Deploy migration — quarantined (separate commit when ready)
 

@@ -30,11 +30,157 @@
 Other operatives (Sable, Vera, Neal, Otto, Agent X) appear in visual
 card-flash montages only — no VO lines in this trailer.
 
-## Music bed: `<Unit 1.7 — Music Source Lock>`
+## Music bed (Unit 1.7 lock — source-type ladder + audition framework; track procurement is Phase 3)
 
-## Typography: `<Unit 1.8 — Typography System Lock>` (inherits BURNED's Clash Display + General Sans + JetBrains Mono stack)
+- **Source-type ladder:** Tier 1 Artlist Pro ($199/yr) / Epidemic Sound
+  Pro ($204/yr) → Tier 2 Marmoset / Songtradr per-track marketplace
+  ($30–$200/track) → Tier 3 Suno Pro ($10/mo) last-resort.
+- **Track-shape path:** **A (default)** — full-length composition
+  (2:30–3:30) clipped to 95s. Path B (60s short + loop) fallback if no
+  Path A candidate survives Tier 1+2. Path C (stems) reserved for
+  licensed-track edge case only.
+- **`music_disclosure_required`:** `false` (Phase 1 default — flips to
+  `true` only if Tier 3 Suno fallback fires, triggering Phase 7
+  AI-music disclosure obligation).
+- **§R9 brief:** mid-century brass / bossa nova / spy jazz / lounge,
+  BPM 100–130, confident-deadpan-slightly-playful (NOT goofy/wacky),
+  brass + upright bass + syncopated drums + optional vibraphone/organ.
+  Cascade-friendly dynamic shape: intro → build → peak (1860–1950) →
+  duck (1980–2010) → bed-only hold → close-swell. Full audition
+  protocol + criteria + Suno prompt template + risk register in
+  `sample-eval/beat-sheet/music-sourcing.md`.
+- **Music-cue map** (Phase 4 implements via
+  `<Audio volume={(f) => interpolate(...)}>`):
 
-## R15 chrome instances: `<Unit 1.9 — R15 Chrome Copy Lock>` (5 total: 4 in-world diegetic + 1 closing-card cold-decode)
+| Frame range | Music state | Volume target | Transition shape |
+|-------------|-------------|---------------|------------------|
+| 0–60 | Brass hook intro | 100% | step (intro is the start) |
+| 60–210 | Bed under cold-open speaker | 40% | ramp(30) from 100→40 starting at frame 30 (pre-anticipates cold-open line at 60) |
+| 210–570 | Underscore build (briefing setup) | 50% | ramp(60) from 40→50 starting at S02_START |
+| 570–1050 | Continue build (mission background) | 55% | ramp(60) from 50→55 starting at S03_START |
+| 1050–1680 | Cascade open, music swells | 60→75% | ramp(630) linear swell across the cascade "stat" portion |
+| 1680–1860 | Peak intensification | 90% | ramp(180) from 75→90 |
+| 1860–1950 | Cascade peak hold (no VO) | 90% | hold |
+| 1950–1980 | Stamp slap + payoff VO begins; music holds | 90% | hold |
+| **1980–2010** | **Pre-anticipated payoff duck** (completes as VO ends) | **30%** | **ramp(30) from 90→30** — `PAYOFF_DUCK_RAMP_FRAMES` per `transitions.ts` |
+| 2010–2040 | Bed-only silent visual hold | 30% | hold |
+| 2040–2535 | Sparse bed under gameplay capture | 30% | hold (hard cut at 2040; music continues across the cut) |
+| 2535–2580 | Iris-wipe — music rises | 50% | ramp(45) from 30→50 |
+| 2580–2790 | Closing underscore | 60% | ramp(60) from 50→60 |
+| 2790–2850 | Final brass sting on logo land | 100% | ramp(30) from 60→100 |
+
+**Anti-pattern guard:** no 60-percentage-point cliffs. All transitions
+are ramped envelopes or held holds — the first-draft 90→30 sharp drop
+at 1950 would have clicked audibly. The pre-anticipated 30-frame duck
+at 1980–2010 lands the payoff cleanly.
+
+## Typography (Unit 1.8 lock — BURNED's stack, variable woff2 via `useFonts.ts` Promise.all)
+
+- **Stack:** Clash Display + General Sans + JetBrains Mono — all variable
+  woff2 files at BURNED's `public/fonts/` (NO copy to
+  `videos/trailer/public/fonts/` per ADR #15). Loaded through
+  `src/hooks/useFonts.ts` (Promise.all pattern, shared cached promise —
+  fixes the prior sync-flag race).
+- **Variable axis ranges:** Clash Display `200–700` · General Sans
+  `200–700` · JetBrains Mono `100–900` (matches
+  `src/client/howtoplay/fonts-mono-htp.css:9`). Phase 0 Unit 0.5 spike
+  cleared variable-axis weight resolution in MP4 export — Phase 4 Unit
+  4.0 font spike DROPPED from scope.
+- **Per-element table + emil-design-eng polish lens** (tracking,
+  line-height, feature-settings) lives in
+  `sample-eval/beat-sheet/typography.md`. Highlights: BURNED logo Clash
+  Display 700 ~180px (-2% tracking); R15 chrome JetBrains Mono 700
+  22-38px with +30-+80 tracking by inverse-to-size principle; stat
+  captions General Sans 600 dry + 500 italic companion; tabular
+  numerals (`"tnum"`) enforced on every stat numeral so the cascade
+  doesn't jitter horizontally as numerals enter.
+- **Color tokens:** Radix-style scale+step (`--color-cream-12`,
+  `--color-ochre-9`, `--color-burned-fire`, etc.) via
+  `src/lib/colors.ts PALETTE` snapshot. Phase 4 imports from PALETTE,
+  NOT raw hex. Color-blind discipline: typography + position + shape
+  carry signal, never color alone.
+
+## R15 chrome instances (Unit 1.9 lock — 5 total: 4 in-world diegetic + 1 closing-card cold-decode)
+
+| # | Frame | Scene | Copy | Treatment | Decode axis |
+|---|-------|-------|------|-----------|-------------|
+| 1 | 150 | S01 cold open | **"OPERATION PENDLETON / CASE FILE 02 / METHOD: AUTONOMOUS"** | Classification stamp slap, lower-left, JetBrains Mono 700 28px (+80 tracking), `--color-ochre-9` ink on `--color-cream-12` stamp paper; 8-frame standard slap | In-world diegetic (origin: method is autonomous) |
+| 2 | 1680 | S04 cascade | **"OPERATIVE [REDACTED] — METHOD REPEATABLE"** | Comms-ticker pulse, bottom edge, JetBrains Mono 500 22px (+40 tracking), scrolling left-to-right | In-world diegetic (reproducibility claim) |
+| 3 | 1950 | S04 stacked payoff | **"AUTONOMOUS FIELD UNIT — ASSET DELIVERED"** | Dossier stamp slap, heavy 16-frame slap, overprints HTP hero, JetBrains Mono 700 38px (+30 tracking), `--color-burned-fire` ink | In-world diegetic (R3 payoff carrier — visual + audio land simultaneously) |
+| 4 | 2820 | S06 closing | **"OPERATION STATUS: FIELD-READY"** | Subhead under BURNED logo, JetBrains Mono 700 32px (+50 tracking), `--color-ochre-9` ink; 16-frame heavy slap (matches R3 payoff envelope — closing is the second "weight" moment) | In-world diegetic (status: asset is ready) |
+| **5** | **2835** | **S06 closing card** | **Main line:** *"DRAFTED, RENDERED, AND SHIPPED BY AUTONOMOUS AGENTS."* — JetBrains Mono 700 32px (+50 tracking), `--color-ochre-9` ink. **Subhead (LOCKED 2026-05-18):** *"Honestly at this point we're just impressed."* — JetBrains Mono 500 italic 22px (+20 tracking), 30% opacity. Both centered below R15 #4. | 8-frame standard slap (lighter envelope than R15 #4 to maintain hierarchy) | **Cold-decode literal:** main line states the autonomous-build claim unambiguously to trailer-in-isolation viewers (no Phase 7 wrapper required). **Subhead bookend:** echoes Janet's S01 kicker *"Honestly at this point I'm just impressed."* via `"I'm"` → `"we're"` plural, folding the autonomous-build collective speaker (Briggsy + Claude + agents) into the closing voice. |
+
+### R15 #5 subhead — three-candidate decision (LOCKED option a)
+
+Per plan AMENDMENT 2026-05-18 (S01 line swap from Candidate #5 to
+Candidate #4 broke the original "Briggsy didn't write this part either"
+bookend), Unit 1.9 selects from three re-derivation candidates:
+
+| Candidate | Subhead text | Echo mechanism | Voice register | Verdict |
+|-----------|--------------|---------------|----------------|---------|
+| **(a) LOCKED** | *"Honestly at this point we're just impressed."* | S01 kicker END echo: *"I'm just impressed"* → *"we're just impressed"* | Continuous-Sterling-CODED deadpan (Janet's matriarch-tuned register lands the S01 line, then closes back to Dash's deadpan in the subhead — the register holds) | Locked. Bookend closes the loop on the END of S01, not the opening — cleaner shape. Plural fold ("we're") admits the autonomous-build collective speaker without breaking diegetic frame in the subhead itself. |
+| (b) | *"He's a machine, alright."* | S01 opening echo: *"He's a machine, this kid"* → *"He's a machine, alright"* | Sterling-CODED resignation/acceptance ("alright" = "yeah, sure, technically...") | Held in reserve. Slightly more dismissive than (a); echoes the wrong half of S01 (opening, not closing — bookend math weaker). |
+| (c) | (drop subhead entirely; main line stands solo) | none | n/a | Held in reserve. Loses the S01 bookend mechanism; main line still carries the cold-decode load alone if a future re-derivation prefers the simpler closing card. |
+
+**Why (a) over (b):** the bookend mechanic is strongest when it echoes
+the END of the opening scene (closing-the-loop shape) rather than its
+opening clause. (a)'s plural-fold ("we're") is also a richer
+self-referential gesture than (b)'s "alright" resignation — and it
+keeps the closing register *genuine* rather than *begrudging*, which
+matches the cold-decode tone (autonomous-build is impressive, not
+shrugged at).
+
+**Why (a) over (c):** the subhead is the bookend; (c) drops the
+bookend mechanism entirely. The R15 #5 main line carries the
+cold-decode claim either way, but the subhead's job is *closure* (the
+trailer was an autonomous-build artifact AND it closes the loop on
+Janet's S01 deadpan observation). (c) loses that closure.
+
+### R15 brainstorm-mandate trace
+
+Brainstorm R15 acceptance: "at least one signal lands in the cold-open
+frame, at least one in the cascade or closer."
+
+- ≥1 in cold-open: **#1** (frame 150 in S01). ✓
+- ≥1 in cascade or closer: **#2** (cascade comms-ticker, 1680), **#3**
+  (cascade stacked payoff, 1950), **#4** (closing status, 2820),
+  **#5** (closing-card cold-decode, 2835). ✓ — four signals across
+  cascade + closer.
+
+**Total: 5 R15 signals.** Brainstorm minimum is "at least two."
+BURNED ships 5 for redundancy on the no-context-viewer decode
+mechanism: #1–#4 carry in-world diegetic + engineering-peer-confirmation
+load; #5 carries the literal cold-decode load explicitly so the
+trailer-as-artifact-in-isolation stands on its own without the Phase 7
+distribution wrapper.
+
+### Layered decode model
+
+R15 chrome operates on **three layers**:
+
+- **(a) In-world diegetic:** the cold Twitter/X viewer with no context
+  reads the chrome as Pendleton-agency flavor (classification stamps,
+  comms-ticker pulses, operation-status briefing terminals). R15 #1–#4
+  carry this load.
+- **(b) Engineering-peer confirmation:** the engineering peer who
+  already knows the trailer is about agentic SDLC reads R15 #1–#4 as
+  confirmation alongside the in-world reading. The decode lands via
+  wordplay ("METHOD: AUTONOMOUS" reads both as briefing-room
+  classification AND as autonomous-build claim).
+- **(c) Literal cold-decode (R15 #5):** a cold viewer in trailer-
+  isolation (no Phase 7 wrapper, no engineering context) reads R15 #5's
+  closing card unambiguously: *"DRAFTED, RENDERED, AND SHIPPED BY
+  AUTONOMOUS AGENTS."* + locked subhead. Safety net that ensures the
+  trailer-as-artifact carries the central engineering claim regardless
+  of distribution context.
+
+### Color-blind safety
+
+All five signals use typography + position + treatment (stamp / ticker
+/ subhead) for hierarchy, **not** color. Ochre and burn-fire inks are
+visually distinct from cream/parchment background regardless of color
+perception. Briggsy is color blind — typography + position + shape
+carry signal, never color alone.
 
 ## R6 vocabulary translation key
 
@@ -87,9 +233,21 @@ Per-scene average: 95 / 6 = 15.83s — comparable to UMB v3's 16.4s/scene.
 
 ### S01 — Cold Open (frames 0–210 / 7.0s)
 
-**Visual:** `<Unit 1.10 — S01 visual environment lock>`. Dimmed-desk
-plate (mahogany surface, venetian-blind shadow bands at 1.5–2 px/frame)
-foreground card flash, BURNED title landing.
+**Visual (Unit 1.10 lock):** dimmed-desk plate — mahogany surface
+(`PALETTE.ochre7`/`--color-ochre-7`), pre-establishing in shadow as if
+the lights haven't come up yet. Venetian-blind shadow bands at
+1.5–2 px/frame motion (same shadow grammar as S02/S03 — visual
+continuity primer). Pendleton crest watermark at 15% opacity (dimmer
+than S02's 25%) top-left. **Foreground card flash:** six BURNED card
+backs flash hard-cut at 6-frame cadence across frames 0–50 in locked
+sequence (`intercepted → burn-the-files → extraction → back-channel →
+falsify-intel → intercepted re-flash → burn-the-files re-flash`, then
+8-frame ease to `burned.webp` landing at frame 50 + 10-frame hold).
+Each card occupies 60% of safe-square center; hard-edged drop shadow.
+**Critical:** S01 shows the BURNED *card art* (the game asset), NOT
+the wordmark logo — the wordmark only appears in S06 as the trailer's
+capstone. Full storyboard + ASCII sketch in
+[`sample-eval/beat-sheet/briefing-room-comp.md`](sample-eval/beat-sheet/briefing-room-comp.md).
 
 **Audio:**
 
@@ -102,7 +260,7 @@ foreground card flash, BURNED title landing.
   Shared Library, `eleven_v3`) with matriarch-tuned voice_settings
   per Phase 0 Unit 0.3. 12 words / ~5.0s expected.
 
-- **Music (S01 frames 0–210):** brass hook entry — `<Unit 1.7 timing>`.
+- **Music (S01 frames 0–210):** brass hook intro at 100% (frame 0), ducks to 40% bed via ramp(30) starting frame 30 (pre-anticipates Janet's cold-open line at frame 60). Full cue-map in preamble Music bed §.
 - **R15 #1 (frame 150):** *"OPERATION PENDLETON / CASE FILE 02 /
   METHOD: AUTONOMOUS"* — classification stamp slap, lower-left,
   JetBrains Mono 700 28px, `--color-ochre-9` ink on `--color-cream-12`
@@ -123,9 +281,26 @@ policy.
 
 ### S02 — Briefing Setup (frames 210–570 / 12.0s)
 
-**Visual:** `<Unit 1.10 — S02 visual environment lock>`. Briefing-room
-plate (mahogany desk, Pendleton crest watermark 25%, venetian-blind
-bands, CASE BANNER chrome). Dash character treatment per Unit 1.10.
+**Visual (Unit 1.10 lock):** briefing-room plate — mahogany desk
+(`PALETTE.ochre7`/`PALETTE.ochre9` blend), Pendleton crest watermark
+25% top-left, venetian-blind shadow bands 1.5–2 px/frame, CASE BANNER
+chrome (top-center strap; ports `GameTable.tsx:67-88` `.caseBanner`
+aside verbatim — NOT a separate component). **Foreground depth-plane**
+element (Phase 4 picks Option A brass nameplate "M. PENDLETON, BUREAU
+CHIEF" / Option B manila folder stack / Option C doorframe vignette).
+**Midground center:** open dossier — opens via 60-frame `EASE_DRAWER`
+ease over frames 240–300; case-sheet interior carries header
+("OPERATION PENDLETON / CASE FILE 02") + operative line ("ASSIGNED
+ASSET: D. BARLOWE") + clearance ("CLEARANCE: ALPHA-SEVEN") + date
+(REDACTED) + classification chevron + redaction bars. **Top-right
+chrome:** comms-ticker idle text rotating `IDLE_LINES` 4-item set
+(per `DossierFeed.tsx:20-25`). **Sequencing rule:** ≤2 elements at
+full visual weight per frame (anti-AI-slop guard from Unit 1.5,
+extended to briefing-room scenes); accumulated elements past their
+read window hold at 30–40% chrome opacity. **Dash character art NOT
+visible** — Dash is the briefer *delivering* the briefing; his
+presence is the VO. Full storyboard in
+[`sample-eval/beat-sheet/briefing-room-comp.md`](sample-eval/beat-sheet/briefing-room-comp.md).
 
 **Audio:**
 
@@ -137,9 +312,12 @@ bands, CASE BANNER chrome). Dash character treatment per Unit 1.10.
   room formality; ellipsis pauses at clause boundaries. 27 words at
   ~2.4 wps ≈ 11.7s.
 
-- **Music:** brass-bossa underscore at 30% — `<Unit 1.7>`.
-- **CASE BANNER copy:** `<Unit 1.10 Step — S02 banner table>` (label,
-  operation, sub, divider, footer).
+- **Music:** brass-bossa underscore ramping 40→50% across S02 per cue-map (ramp(60) from frame 210). Full cue-map in preamble Music bed §.
+- **CASE BANNER copy (S02):** label *"CASE FILE"* · operation
+  *"OPERATION PENDLETON"* · sub *"BRIEFING ROOM · BUREAU CHIEF M.
+  PENDLETON"* · divider *"—"* · footer *"02 / EYES-ONLY"*. Full
+  S02/S03/S06 banner table in
+  [`sample-eval/beat-sheet/briefing-room-comp.md`](sample-eval/beat-sheet/briefing-room-comp.md).
 
 **Voice:** Dash (Roger) sole.
 
@@ -153,12 +331,30 @@ positioned inside 1080×1080 central safe square per Unit 1.10.
 
 ### S03 — Mission Background (frames 570–1050 / 16.0s)
 
-**Visual:** `<Unit 1.10 — S03 visual environment lock>`. Operative
-roster reveal (six personnel + Otto-on-research-budget for "seven
-personnel, six in deck and one [on the research budget]"). Dossier
-chrome (clearance level token, visible field names per Unit 1.10). A
-mid-scene **1.0s dossier-page wipe to deck reveal** sits between
-S03-roster (segment 1) and S03-deck (segment 2).
+**Visual (Unit 1.10 lock):** briefing-room frame STAYS — the dossier
+IS the desk's content; mahogany surface + venetian-blind shadow +
+depth-plane foreground element from S02 persist. **Midground center
+— open dossier deepens.** Around frame 700 the **dossier-page wipe**
+(16 frames per Unit 1.4; `clip-path: inset(0 0 0 0)` → `inset(0 0 0
+100%)` left-to-right) reveals a readable 4×6 grid of the top 24 card
+backs inside the dossier viewport. Small "120 OPERATIONS" chrome
+counter sits upper-right of the dossier viewport. **Operative roster
+overlay (frame 750):** 6 operative portrait cards slide in along the
+right edge — the 6 deck operatives (`dash-barlowe`, `vera-khan`,
+`sable-ashworth`, `janet-broadside`, `neal-proctor`, `agent-x` with
+REDACTED bar over face). Otto is NOT in the cluster (research budget,
+not in deck — primes Stat 4 verbal payoff). **S03→S04 transition:**
+the 6 portraits EXIT at the dossier-page wipe; S04's right-edge halo
+is 6 ACTION cards (`burned`, `intercepted`, `burn-the-files`,
+`extraction`, `intel-briefing`, `direct-order`), NOT the operatives.
+**CASE BANNER (S03):** label *"CASE FILE"* · operation *"OPERATION
+PENDLETON"* · sub *"MISSION DOSSIER · ASSET ROSTER"* · divider *"—"*
+· footer *"02 / EYES-ONLY"*. **Comms-ticker** continues with
+`IDLE_LINES` rotation, switches to "ACTIVE BRIEFING" at ~frame 870 to
+match segment 2's deck VO. A mid-scene **1.0 s dossier-page wipe to
+deck reveal** sits between S03-roster (segment 1) and S03-deck
+(segment 2). Full S03 composition in
+[`sample-eval/beat-sheet/briefing-room-comp.md`](sample-eval/beat-sheet/briefing-room-comp.md).
 
 **Audio:**
 
@@ -187,7 +383,7 @@ S03-roster (segment 1) and S03-deck (segment 2).
   colleagues don't" → "Or ensure your colleagues don't" running
   with no preceding [BEAT]. Dark-closing gag preserved.
 
-- **Music:** brass-bossa underscore at 30%.
+- **Music:** brass-bossa underscore continues to build, ramp(60) from 50→55% starting S03_START per cue-map. Full cue-map in preamble Music bed §.
 - **No R15 in S03.**
 
 **Voice:** Dash (Roger) sole.
@@ -301,7 +497,7 @@ peak frames live at
 | 1200 | 3.0s | HTP scroll continues (middle portion) | > *"Drafted on weekends, by a field asset — name redacted for compliance."* <!-- @line: S04-cue-03 --> |
 | 1290 | 4.0s | Stat 1 caption enters safe-square center-bottom at full weight | > *"Mission rehearsal: fourteen hundred and seven contingencies war-gamed."* <!-- @line: S04-stat-01 --> |
 | 1410 | 5.0s | Stat 1 decays to chrome side-band; Stat 2 enters safe-square center-bottom | > *"Six of them, deliberately unrehearsed — the 'memorable ones.'"* <!-- @line: S04-stat-02 --> |
-| 1560 | 4.0s | Stat 2 decays to chrome; Stat 3 enters safe-square center-bottom | > *"Seventeen asset illustrations. Two of them with hats."* <!-- @line: S04-stat-03 --> |
+| 1560 | 4.0s | Stat 2 decays to chrome; Stat 3 enters safe-square center-bottom | > *"Seventeen asset illustrations. Five of them with hats."* <!-- @line: S04-stat-03 --> |
 | 1680 | 6.0s | Stat 3 decays to chrome; Stat 4 enters safe-square center-bottom | > *"Seven on the roster. Six in the deck. One on the research budget. Don't ask."* <!-- @line: S04-stat-04 --> |
 | 1860 | 3.0s | Cascade peak — comms-ticker brightens to held-bright state; HTP hero + accumulated halo (40%) + bright ticker; **no VO** | — |
 | **1950** | 2.0s | **Stacked payoff stamp slaps onto HTP hero overprint (heavy 16-frame slap). HTP hero drops to 50% opacity. Cascade chrome (4 stats at 30% side-band, halo at 40%, bright ticker) IS the visual antecedent of "they." Dash VO delivers the 4-word truth-collision.** | > *"They WERE the operation."* <!-- @line: S04-payoff --> |
@@ -391,10 +587,29 @@ construction.
 
 ### S06 — Closing Directive (frames 2580–2850 / 9.0s)
 
-**Visual:** `<Unit 1.10 — S06 visual environment lock>`. Briefing-
-room plate (consistent with S02), CASE BANNER for closing brief, then
-BURNED logo land at frame 2780 (40-frame settle) + R15 #4 stamp slap
-at frame 2820 + R15 #5 closing card at frame 2835.
+**Visual (Unit 1.10 lock):** briefing-room reestablishes via iris-wipe
+from S05. Venetian-blind shadow returns; mahogany desk; depth-plane
+foreground element from S02 returns (visual bookend). **Midground:**
+dossier closes (reverse of S02 opening — 30-frame `EASE_DRAWER`);
+dossier cover shows full Pendleton crest + classification stamp.
+**Frame 2780:** BURNED LOGO (wordmark, NOT card art — differential
+from S01) lands center, ~720 px wide, Clash Display 700 with chrome
+treatment; 8-frame stamp-slap entry. **Frames 2780–2820:** logo holds
+static for a 40-frame breathing-room hold (1.3 s) — emil "match motion
+to mood — closing should breathe." **Frame 2820:** R15 #4 stamp
+*"OPERATION STATUS: FIELD-READY"* slaps onto the closing card
+(16-frame heavy slap; same envelope as R3 payoff stamp). **Frame
+2835:** R15 #5 slaps below R15 #4 — main line *"DRAFTED, RENDERED,
+AND SHIPPED BY AUTONOMOUS AGENTS."* + 30%-opacity subhead *"Honestly
+at this point we're just impressed."* (LOCKED at Unit 1.9; 8-frame
+standard slap — lighter envelope than R15 #4 to maintain hierarchy).
+**CASE BANNER (S06):** label *"CASE FILE"* · operation *"OPERATION
+PENDLETON"* · sub *"DEBRIEF · STATUS UPDATE"* · divider *"—"* · footer
+*"02 / FIELD-READY"* (footer mutates EYES-ONLY → FIELD-READY mirroring
+the R15 #4 status arc). **Frame 2843:** final brass sting on music bed
+(60→100% ramp completes here); logo + R15 #4 + R15 #5 hold static.
+**Frame 2850:** hard cut to black. Full S06 composition in
+[`sample-eval/beat-sheet/briefing-room-comp.md`](sample-eval/beat-sheet/briefing-room-comp.md).
 
 **Audio:**
 
@@ -425,14 +640,16 @@ at frame 2820 + R15 #5 closing card at frame 2835.
 - **R15 #4 (frame 2820):** *"OPERATION STATUS: FIELD-READY"* —
   subhead under BURNED logo, JetBrains Mono 700 32px,
   `--color-ochre-9` ink.
-- **R15 #5 (frame 2835, NEW closing-card cold-decode):** *"DRAFTED,
-  RENDERED, AND SHIPPED BY AUTONOMOUS AGENTS."* + 30%-opacity subhead
-  **TBD per AMENDMENT 2026-05-18** (S01-bookend mechanism BROKEN —
-  re-derive in Unit 1.9; recommended candidate: *"Honestly at this
-  point we're just impressed."* echoing S01 kicker via `"I'm"` →
-  `"we're"` plural to fold autonomous-build collective speaker).
-  JetBrains Mono 700 32px main + JetBrains Mono 500 italic 22px
-  subhead at 30% opacity. Both lines centered below R15 #4.
+- **R15 #5 (frame 2835, closing-card cold-decode — LOCKED 2026-05-18):**
+  Main line *"DRAFTED, RENDERED, AND SHIPPED BY AUTONOMOUS AGENTS."* —
+  JetBrains Mono 700 32px (+50 tracking), `--color-ochre-9` ink. 30%-opacity
+  subhead *"Honestly at this point we're just impressed."* — JetBrains
+  Mono 500 italic 22px (+20 tracking). Both lines centered below R15
+  #4. Subhead bookends Janet's S01 kicker (*"…I'm just impressed."* →
+  *"…we're just impressed."*) — `"I'm"` → `"we're"` plural fold admits
+  the autonomous-build collective speaker into the closing voice. 8-frame
+  standard slap lands 15 frames after R15 #4's heavy slap; both hold
+  through the final 15 frames until hard cut to black at 2850.
 
 **Voice:** Dash (Roger) sole. Two cues (close + Phrasing!).
 
@@ -491,9 +708,11 @@ cueType not line-id.
 
 ## Open follow-ups (per AMENDMENT 2026-05-18)
 
-- **R15 #5 subhead re-derivation** — Unit 1.9 execution; three
-  candidates carried forward (see Unit 1.9 Step 1 R15 instance table).
-  Recommended: *"Honestly at this point we're just impressed."*
+- ~~**R15 #5 subhead re-derivation**~~ — **RESOLVED at Unit 1.9 (2026-05-18):
+  option (a) *"Honestly at this point we're just impressed."* LOCKED.**
+  Three-candidate decision documented in the R15 instance table above
+  (preamble §R15 chrome instances). Subhead bookends Janet's S01 kicker
+  via the `"I'm"` → `"we're"` plural fold.
 - ~~**Janet voice_settings handoff**~~ — **RESOLVED at Unit 1.3:
   Option (B) locked.** Phase 2 reads from
   `videos/trailer/scripts/cold-open-prototype.ts COLD_OPEN_SPEAKER`

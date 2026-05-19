@@ -1,28 +1,53 @@
 /**
- * Load BURNED's production face — Clash Display variable woff2 — through
- * `@remotion/fonts`. `loadFont` returns a promise Remotion auto-tracks
- * via `delayRender`; no manual machinery, no studio-vs-export fallback.
+ * Load BURNED's three variable woff2 faces — Clash Display + General
+ * Sans + JetBrains Mono — through `@remotion/fonts`. `loadFont()`
+ * auto-tracks each font via `delayRender`; render blocks until all
+ * three are ready.
  *
- * Phase 0 Unit 0.5(c) spike question: does Remotion 4.0.438 honor the
- * variable-axis weight range syntax (`weight: '200 700'`) — i.e. will
- * a single woff2 yield visually distinct 200/400/700 in the exported
- * MP4? The spike-results.md verdict drives Phase 3's font strategy:
- * PASS = ship the one variable file; FAIL = `pyftsubset` per-weight
- * subsets at Phase 3 + 3 separate loadFont calls.
+ * Phase 0 Unit 0.5 spike cleared variable-axis weight resolution in
+ * MP4 export (per `sample-eval/spike/spike-results.md`). Three
+ * `loadFont` calls instead of nine (3 families × 3 weights) — the
+ * variable axis resolves at run-time via CSS `font-weight`.
+ *
+ * Fonts live at BURNED's `public/fonts/` (NOT
+ * `videos/trailer/public/fonts/`) per ADR #15 + Phase 0 ADR #8
+ * `setPublicDir('../../public')`. `staticFile('fonts/...')` resolves
+ * through that pinned root.
+ *
+ * **Race-safety:** the Promise is cached. Second consumers that call
+ * `useFonts()` get the SAME shared Promise (not a re-fire), and any
+ * `await useFonts()` blocks on the original loads completing. This
+ * fixes the prior sync-flag stub where `loaded = true` flipped before
+ * the async loads finished.
  */
 import { loadFont } from '@remotion/fonts'
 import { staticFile } from 'remotion'
 
-let loaded = false
+let loadPromise: Promise<unknown> | null = null
 
-export const useFonts = () => {
-  if (loaded) return
-  loaded = true
+export function useFonts(): Promise<unknown> {
+  if (loadPromise) return loadPromise
 
-  loadFont({
-    family: 'Clash Display',
-    url: staticFile('fonts/ClashDisplay-Variable.woff2'),
-    weight: '200 700', // variable axis — Phase 0 Unit 0.5(c) gate
-    format: 'woff2',
-  })
+  loadPromise = Promise.all([
+    loadFont({
+      family: 'Clash Display',
+      url: staticFile('fonts/ClashDisplay-Variable.woff2'),
+      weight: '200 700', // variable axis range
+      format: 'woff2',
+    }),
+    loadFont({
+      family: 'General Sans',
+      url: staticFile('fonts/GeneralSans-Variable.woff2'),
+      weight: '200 700',
+      format: 'woff2',
+    }),
+    loadFont({
+      family: 'JetBrains Mono',
+      url: staticFile('fonts/JetBrainsMono-Variable.woff2'),
+      weight: '100 900', // matches src/client/howtoplay/fonts-mono-htp.css:9 source
+      format: 'woff2',
+    }),
+  ])
+
+  return loadPromise
 }

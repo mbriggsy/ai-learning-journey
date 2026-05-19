@@ -229,7 +229,7 @@ export const BURNED_TRAILER_LINES: readonly Line[] = [
     scene: 'S04',
     frame: 1560,
     voice: 'dash',
-    text: 'Seventeen asset illustrations. Two of them with hats.',
+    text: 'Seventeen asset illustrations. Five of them with hats.',
     cueType: 'list',
     expectedFrames: 120, // 4.0s window; 8 words ≈ 2.0 wps
     leadFramesHint: 0,

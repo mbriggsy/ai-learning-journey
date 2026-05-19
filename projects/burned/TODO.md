@@ -7,7 +7,7 @@ the history. (Rule: `feedback-todo-is-not-a-diary.md`.)
 
 ## 1. Active priorities
 
-### Status (verified 2026-05-18 — end of Phase 1 Units 1.1–1.4 session)
+### Status (verified 2026-05-18 — end of Phase 1 Units 1.6–1.10 session, 11 of 12 shipped)
 
 - Tests: **1407 pass** (root suite, verified earlier 2026-05-18; root
   source untouched this session) | 6 expected fail (68/68 files green)
@@ -146,7 +146,8 @@ Phase 4 if needed.
 - Unit 0.4: ✅ CLOSED (tone — Path A v2 earned-Phrasing! "Hard to put down")
 - Unit 0.3: ✅ CLOSED (cold-open #4 + Janet/Sloane matriarch-tuned)
 
-**Phase 1 — IN FLIGHT.** 6 of 12 tasks shipped:
+**Phase 1 — IN FLIGHT.** 11 of 12 tasks shipped (only CLOSEOUT
+signoff sentinel remains; gated on Briggsy review):
 
 - ✅ PRE-step: Plan reconciliation (Phase 0 EXIT 2026-05-18 supersedes
   2026-05-17 doc-review re-open). Plan head amendment block + 6 body
@@ -193,39 +194,79 @@ Phase 4 if needed.
   [057](docs/insights/057-plan-declared-constants-vs-phase-0-spike-locked-values-drift.md) (plan-vs-spike constants drift),
   [058](docs/insights/058-vocab-grep-mixed-case-sensitivity-acronyms-vs-common-words.md) (vocab-grep mixed case-sensitivity).
 
-**Remaining (6 tasks):**
+**Units 1.6–1.10 shipped 2026-05-18 in this session:**
 
-- Unit 1.6 — Goofy stats + cold-read gate. Needs human cold-readers
-  (Briggsy + ≥2 others); Claude-solo can draft + run hat-count audit
-  but the gate consensus is human-eye.
-- Unit 1.7 — Music source lock. Audition-driven (Artlist Pro tier
-  catalog → per-track marketplace → Suno Pro Tier-3 last-resort).
-  Can scope to "Tier ladder doc + audition framework" without doing
-  actual marketplace search.
-- Unit 1.8 — Typography lock. Light follow-on; `useFonts.ts` +
-  variable woff2 load via `loadFont` Promise.all per Phase 0
-  prescription.
-- Unit 1.9 — R15 chrome copy + **R15 #5 subhead bookend pick**
-  (Briggsy decides from 3 candidates; recommended:
-  *"Honestly at this point we're just impressed."* echoing S01
-  kicker via `I'm → we're` plural).
-- Unit 1.10 — Briefing-room visual environment lock. Storyboard
-  sketches for S02 / S03 / S06; emil-design-eng lens validated at
-  deepening, no re-invocation needed.
-- CLOSEOUT — `BEAT-SHEET.signoff` sentinel (ADR #22) only when
-  Briggsy reviews and freezes BEAT-SHEET.md as the Phase 2/3/4
-  consumption contract.
+- ✅ Unit 1.6 — Goofy stats + hat-count audit. `sample-eval/beat-sheet/goofy-stats-list.md`
+  ships 15-candidate pool + 4 locked finalists + Step 1.5 hat-count
+  audit. **Audit outcome:** 17 asset illustrations contain **5** hat-
+  bearing characters (Agent X portrait + 4 action cards: back-channel,
+  burned, call-in-a-favor, go-dark), NOT the 2 claimed in earlier drafts.
+  Stat 3 phrasing corrected to *"Seventeen asset illustrations. Five
+  of them with hats."* in BEAT-SHEET.md + `script.ts` S04-stat-03 line.
+  File-cabinet-on-fire alternate held in reserve for cold-read soft-fail.
+  **Cold-read gate consensus (N≥3 human reviewers) remains OPEN** — by
+  design, can't be Claude-solo.
+- ✅ Unit 1.7 — Music source ladder. `sample-eval/beat-sheet/music-sourcing.md`
+  ships Tier 1 (Artlist Pro / Epidemic Pro $199–204/yr) → Tier 2
+  (Marmoset / Songtradr per-track $30–$200) → Tier 3 (Suno Pro $10/mo
+  last-resort) ladder, Path A full-length-clip-to-95s shape lock, audition
+  framework, Suno prompt template, and the music-cue map (ramp/step
+  envelopes per cue, no 60-pt cliffs). Cue map landed in BEAT-SHEET.md
+  preamble. **Phase 3 still owns** actual marketplace audition +
+  `music-license.pdf` filing + `music-bed.mp3` procurement.
+- ✅ Unit 1.8 — Typography lock + `useFonts.ts` rewrite.
+  `src/hooks/useFonts.ts` rewritten to Promise.all pattern with shared
+  cached promise (fixes prior sync-flag race). All 3 variable woff2
+  files (Clash Display, General Sans, JetBrains Mono) loaded from
+  BURNED's `public/fonts/` via `staticFile()` — NO copy step per ADR
+  #15. JetBrains Mono variable axis range `100 900` verified against
+  `fonts-mono-htp.css:9`. `sample-eval/beat-sheet/typography.md` ships
+  per-element type table with emil polish lens (tracking, line-height,
+  feature-settings — `"tnum"` enforced on all stat numerals). Preamble
+  block landed in BEAT-SHEET.md.
+- ✅ Unit 1.9 — R15 chrome copy lock + **R15 #5 subhead picked: option
+  (a) *"Honestly at this point we're just impressed."*** (Sterling-CODED
+  bookend echoing Janet's S01 kicker via `"I'm"` → `"we're"` plural
+  fold). Full 5-instance R15 table landed in BEAT-SHEET.md preamble +
+  S06 R15 #5 placeholder resolved + Open Follow-ups entry struck.
+  Three-candidate decision matrix documented in BEAT-SHEET.md for
+  audit trail.
+- ✅ Unit 1.10 — Briefing-room visual environment lock.
+  `sample-eval/beat-sheet/briefing-room-comp.md` ships full S01 + S02 +
+  S03 + S06 composition + locked S01 6-card flash sequence (frames
+  0–60 with `burned.webp` landing at frame 50 hold) + CASE BANNER
+  per-scene content (S02/S03/S06 5-field table) + ASCII storyboard
+  sketch for S01 + anti-AI-slop "≤2 elements at full visual weight"
+  guard extended from Unit 1.5 cascade to all briefing-room scenes +
+  citation-verification grep (`GameTable.tsx:67-88` caseBanner,
+  `DossierFeed.tsx:20-25` IDLE_LINES, `ActRoster.tsx:18-75 + 153-158`,
+  `transitions.ts` constants — all verified, no phantom refs).
+  BEAT-SHEET.md S01/S02/S03/S06 visual blocks all resolved (no more
+  `<Unit 1.10 — …>` placeholders).
 
-**ATC asks before continuing:**
+**Remaining:**
 
-1. Read `videos/trailer/BEAT-SHEET.md` (now includes Unit 1.5 §S04
-   cascade lock) + `videos/trailer/sample-eval/beat-sheet/cascade-composition.md`
-   — this is the output Briggsy reviews (not intermediate commits
-   per `feedback-briggsy-reviews-output-not-process`).
-2. Pick R15 #5 closing-card subhead from 3 candidates in BEAT-SHEET.md
-   Open follow-ups (or write a new one).
-3. Cold-read gate for Unit 1.6 needs ≥ 3 reviewers per the
-   per-reviewer-floor consensus; can't be Claude-solo.
+- CLOSEOUT — `BEAT-SHEET.signoff` sentinel (ADR #22) — Briggsy reviews
+  BEAT-SHEET.md, freezes as Phase 2/3/4 consumption contract, signs off
+  the sentinel file at `videos/trailer/sample-eval/beat-sheet/BEAT-SHEET.signoff`.
+
+**ATC asks before Phase 2:**
+
+1. Read `videos/trailer/BEAT-SHEET.md` end-to-end — every placeholder
+   resolved this session. The 4 new eval docs
+   (`goofy-stats-list.md` + `music-sourcing.md` + `typography.md` +
+   `briefing-room-comp.md`) carry the per-unit rationale + verification
+   artifacts.
+2. **Cold-read gate for Unit 1.6 (R11 goofy-stat lineup)** still needs
+   ≥ 3 human reviewers per-reviewer-floor consensus before R11 is
+   structurally locked. Phase 2 voice pipeline can begin against the
+   provisional Stat lineup; if cold-read hard-fails after Phase 2
+   fires, the pre-drafted R11-cut bridge lines activate.
+3. **R15 #5 subhead landed at option (a)** ("Honestly at this point
+   we're just impressed."). If you want option (b) or (c) instead, say
+   so before signoff — easy swap.
+4. Sign the `BEAT-SHEET.signoff` sentinel when satisfied; Phase 2
+   asserts its existence before consuming `script.ts`.
 
 After Phase 1 closes: sequential Phase 2 → Phase 7 execution.
 

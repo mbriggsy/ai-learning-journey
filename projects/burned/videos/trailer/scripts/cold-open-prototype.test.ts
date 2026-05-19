@@ -119,17 +119,19 @@ describe('Cold-open candidates — VOICE_DIRECTION anti-pattern guard', () => {
 });
 
 describe('COLD_OPEN_SPEAKER — Janet voice attribution lock', () => {
-  it('voice ID matches the locked Shared Library entry (Sloane)', () => {
-    // m8AHWg36LJTQWKmfeGVv is the Sloane ID per
-    // sample-eval/r14-cold-open/decode-eval.md §Janet iteration
-    // (locked 2026-05-18 after A/B audit vs Sarah / Matilda / Kristen).
+  it('voice ID matches the locked Shared Library entry (Eleanor)', () => {
+    // 2qQJWjw5XdG80GreshqG is the Eleanor "Gracious and Authoritative"
+    // ID. Re-locked 2026-05-19 — Phase 2 Unit 2.3 cunty canary rejected
+    // Sloane (m8AHWg36LJTQWKmfeGVv) as too polished for the Jessica-
+    // Walter-Mallory-Archer brief; Eleanor's British "refined, seasoned,
+    // commanding" preset landed the Q-from-Bond cadence reference.
     // Any drift here means a silent voice swap.
-    expect(COLD_OPEN_SPEAKER.voiceId).toBe('m8AHWg36LJTQWKmfeGVv');
+    expect(COLD_OPEN_SPEAKER.voiceId).toBe('2qQJWjw5XdG80GreshqG');
   });
 
-  it('voice library entry name documents the Sloane Shared Library label', () => {
-    expect(COLD_OPEN_SPEAKER.voiceLibraryName).toContain('Sloane');
-    expect(COLD_OPEN_SPEAKER.voiceLibraryName).toContain('Bold');
+  it('voice library entry name documents the Eleanor Shared Library label', () => {
+    expect(COLD_OPEN_SPEAKER.voiceLibraryName).toContain('Eleanor');
+    expect(COLD_OPEN_SPEAKER.voiceLibraryName).toContain('Authoritative');
     expect(COLD_OPEN_SPEAKER.voiceLibraryName).toContain('Shared Library');
   });
 
@@ -144,15 +146,15 @@ describe('COLD_OPEN_SPEAKER — Janet voice attribution lock', () => {
     expect(COLD_OPEN_SPEAKER.archerArchetype).toMatch(/Malory|Lana|Cheryl/);
   });
 
-  it('voice_settings override carries the matriarch-tuned profile', () => {
+  it('voice_settings override carries the cunty-Mallory profile (Phase 2 Unit 2.3 retune)', () => {
     // Janet's settings deliberately diverge from Unit 0.2 Roger
-    // defaults — high stability + ultra-low style + slow speed to
-    // strip the upbeat baseline that earlier voice candidates (Sarah,
-    // Matilda) carried. Any drift here means a silent tuning change
-    // that may surface as character-voice regression.
-    expect(COLD_OPEN_SPEAKER.voiceSettings.stability).toBe(0.85);
-    expect(COLD_OPEN_SPEAKER.voiceSettings.style).toBe(0.05);
-    expect(COLD_OPEN_SPEAKER.voiceSettings.speed).toBe(0.92);
+    // defaults. 2026-05-19 retune dropped stability + lifted style +
+    // slowed speed to land the dismissive venom MichaelAnne flagged as
+    // missing from the original "professional matriarch" profile.
+    // Any drift here means a silent character-voice regression.
+    expect(COLD_OPEN_SPEAKER.voiceSettings.stability).toBe(0.40);
+    expect(COLD_OPEN_SPEAKER.voiceSettings.style).toBe(0.45);
+    expect(COLD_OPEN_SPEAKER.voiceSettings.speed).toBe(0.85);
     expect(COLD_OPEN_SPEAKER.voiceSettings.similarity_boost).toBe(0.75);
     expect(COLD_OPEN_SPEAKER.voiceSettings.use_speaker_boost).toBe(true);
   });

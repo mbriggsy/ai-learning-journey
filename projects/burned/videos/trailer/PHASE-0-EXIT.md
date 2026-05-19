@@ -74,15 +74,22 @@ opt-in opportunity. Full sub-notes:
   point I'm just impressed."* (Section B Candidate #4)
 - **Speaker character:** Janet (Malory-coded executive dryness — tough-
   matriarch register, not warm-mature)
-- **Speaker voice ID:** `m8AHWg36LJTQWKmfeGVv` ("Sloane - Bold and
-  Polished", ElevenLabs **Shared Library**, model `eleven_v3`).
-  Locked 2026-05-18 after Janet voice iteration (Sarah → Matilda →
-  Sloane → Kristen A/B audit) — initial Sarah voice cleared the line
-  but Briggsy flagged it as too "reassuring" for Janet's tough-
-  matriarch character. Sloane's Shared Library description ("commanding
-  yet approachable tone with a sleek, professional delivery that exudes
-  authority without feeling distant") is the literal Malory-archetype
-  fit.
+- **Speaker voice ID:** `2qQJWjw5XdG80GreshqG` ("Eleanor – Gracious
+  and Authoritative", ElevenLabs **Shared Library**, model `eleven_v3`).
+  Re-locked 2026-05-19 after Phase 2 Unit 2.3 cunty-pass canary
+  (Briggsy + MichaelAnne — huge Archer fan). Iteration history:
+  v1 Sarah → too reassuring; v2 Sloane (`m8AHWg36LJTQWKmfeGVv`) →
+  cleared on initial audition but Phase 2 canary surfaced it as "too
+  polished / not enough of a cunt" + missing the smoker-drinker
+  Jessica-Walter-Mallory-Archer DNA Briggsy was actually after; v3
+  Eleanor → British "refined, seasoned voice of an older British
+  female, articulate delivery with warm yet commanding presence,
+  suggesting a wealth of experience and high status." Eleanor was
+  the only candidate of three age=old options (Empress / Mora /
+  Eleanor) that landed the Q-from-Bond + experienced-not-frail
+  brief. British accent works because the Q-cadence reference IS
+  British — Mallory's character DNA transfers across the accent
+  shift.
 - **Voice settings (matriarch-tuned override, NOT Unit 0.2 Roger
   defaults):** `stability: 0.85, similarity_boost: 0.75, style: 0.05,
   use_speaker_boost: true, speed: 0.92` — high stability kills F0

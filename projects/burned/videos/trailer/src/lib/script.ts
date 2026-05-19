@@ -104,7 +104,7 @@ export const BURNED_TRAILER_LINES: readonly Line[] = [
     leadFramesHint: 0,
     cadenceAdapter: {
       engine: 'elevenlabs-v3',
-      prefixTag: '[deadpan]',
+      prefixTag: '[sarcastic]',
       notes:
         "Inline [sarcastic] tag before 'Honestly' per Phase 0 Unit 0.3 cadence-spec.md. Voice settings override per COLD_OPEN_SPEAKER constant in scripts/cold-open-prototype.ts (Sloane matriarch-tuned: stability 0.85, similarity 0.75, style 0.05, speaker_boost true, speed 0.92). Voice ID m8AHWg36LJTQWKmfeGVv (Shared Library).",
     },
@@ -122,7 +122,7 @@ export const BURNED_TRAILER_LINES: readonly Line[] = [
     leadFramesHint: 0,
     cadenceAdapter: {
       engine: 'elevenlabs-v3',
-      prefixTag: '[deadpan]',
+      prefixTag: '[sarcastic]',
       notes: 'Sterling-CODED briefing-room formality; ellipsis pauses at clause boundaries; Roger defaults voice_settings.',
     },
   },
@@ -140,7 +140,7 @@ export const BURNED_TRAILER_LINES: readonly Line[] = [
     leadFramesHint: 0,
     cadenceAdapter: {
       engine: 'elevenlabs-v3',
-      prefixTag: '[deadpan]',
+      prefixTag: '[sarcastic]',
       notes:
         '[BEAT NNNms] markers expand to per-engine pause primitive (SSML <break time="NNNms"/> or equivalent). 1.0s mid-scene dossier-page wipe to deck reveal happens AFTER this segment ends, before S03-deck begins.',
     },
@@ -157,7 +157,7 @@ export const BURNED_TRAILER_LINES: readonly Line[] = [
     leadFramesHint: 0,
     cadenceAdapter: {
       engine: 'elevenlabs-v3',
-      prefixTag: '[deadpan]',
+      prefixTag: '[sarcastic]',
       notes:
         "Trimmed from plan-original (~31w) to fit deadpan delivery in 6.0s budget. Cuts: 'of them' (implied by antecedent), 'exist to' + 'it' (compressed 'exist to help you survive it' → 'help you survive'), 'to' + final beat (compressed 'Or to ensure your colleagues don't' → 'Or ensure your colleagues don't' running with no preceding pause). Dark-closing gag preserved.",
     },
@@ -173,7 +173,7 @@ export const BURNED_TRAILER_LINES: readonly Line[] = [
     cueType: 'list',
     expectedFrames: 60, // 2.0s window; 2 words at 1.0 wps deliberate-open
     leadFramesHint: 0,
-    cadenceAdapter: { engine: 'elevenlabs-v3', prefixTag: '[deadpan]' },
+    cadenceAdapter: { engine: 'elevenlabs-v3', prefixTag: '[sarcastic]' },
   },
   {
     id: 'S04-cue-02',
@@ -184,7 +184,7 @@ export const BURNED_TRAILER_LINES: readonly Line[] = [
     cueType: 'list',
     expectedFrames: 90, // 3.0s window; 7 words ≈ 2.3 wps
     leadFramesHint: 0,
-    cadenceAdapter: { engine: 'elevenlabs-v3', prefixTag: '[deadpan]' },
+    cadenceAdapter: { engine: 'elevenlabs-v3', prefixTag: '[sarcastic]' },
   },
   {
     id: 'S04-cue-03',
@@ -197,7 +197,7 @@ export const BURNED_TRAILER_LINES: readonly Line[] = [
     leadFramesHint: 0,
     cadenceAdapter: {
       engine: 'elevenlabs-v3',
-      prefixTag: '[deadpan]',
+      prefixTag: '[sarcastic]',
       notes:
         "Trimmed from plan-original (~14w, 'who, for compliance reasons, is not named') to fit per-cue list-band sanity ceiling. 'name redacted for compliance' is in-character spy vocab; the em-dash carries the explanatory beat.",
     },
@@ -211,7 +211,7 @@ export const BURNED_TRAILER_LINES: readonly Line[] = [
     cueType: 'list',
     expectedFrames: 120, // 4.0s window; 9 words ≈ 2.25 wps
     leadFramesHint: 0,
-    cadenceAdapter: { engine: 'elevenlabs-v3', prefixTag: '[deadpan]' },
+    cadenceAdapter: { engine: 'elevenlabs-v3', prefixTag: '[sarcastic]' },
   },
   {
     id: 'S04-stat-02',
@@ -222,7 +222,7 @@ export const BURNED_TRAILER_LINES: readonly Line[] = [
     cueType: 'list',
     expectedFrames: 150, // 5.0s window; 10 words ≈ 2.0 wps
     leadFramesHint: 0,
-    cadenceAdapter: { engine: 'elevenlabs-v3', prefixTag: '[deadpan]' },
+    cadenceAdapter: { engine: 'elevenlabs-v3', prefixTag: '[sarcastic]' },
   },
   {
     id: 'S04-stat-03',
@@ -233,7 +233,7 @@ export const BURNED_TRAILER_LINES: readonly Line[] = [
     cueType: 'list',
     expectedFrames: 120, // 4.0s window; 8 words ≈ 2.0 wps
     leadFramesHint: 0,
-    cadenceAdapter: { engine: 'elevenlabs-v3', prefixTag: '[deadpan]' },
+    cadenceAdapter: { engine: 'elevenlabs-v3', prefixTag: '[sarcastic]' },
   },
   {
     id: 'S04-stat-04',
@@ -246,7 +246,7 @@ export const BURNED_TRAILER_LINES: readonly Line[] = [
     leadFramesHint: 0,
     cadenceAdapter: {
       engine: 'elevenlabs-v3',
-      prefixTag: '[deadpan]',
+      prefixTag: '[sarcastic]',
       notes:
         "Otto 'on the research budget' phrasing matches ActRoster.tsx:153-158 source ('busy with the (unsanctioned, off-books, almost certainly illegal) research budget'). The 'Don't ask.' kicker is the deadpan glaze.",
     },
@@ -264,7 +264,7 @@ export const BURNED_TRAILER_LINES: readonly Line[] = [
     fadeOutMs: 30,
     cadenceAdapter: {
       engine: 'elevenlabs-v3',
-      prefixTag: '[deadpan]',
+      prefixTag: '[sarcastic]',
       notes:
         "R3 stacked-payoff truth-collision. Music ducks 1980→2010 (30 frames, 90%→30%). 1.0s silent visual hold 2010-2040. Cascade chrome at 30% IS the visual antecedent of 'they' (per Unit 1.5 SHOWING-beats-TELLING).",
     },
@@ -282,7 +282,7 @@ export const BURNED_TRAILER_LINES: readonly Line[] = [
     leadFramesHint: 0,
     cadenceAdapter: {
       engine: 'elevenlabs-v3',
-      prefixTag: '[deadpan]',
+      prefixTag: '[sarcastic]',
       notes: "Sparse VO over live gameplay audio at 30% bed; em-dash pauses for sotto-voce conspiratorial register.",
     },
   },
@@ -318,7 +318,7 @@ export const BURNED_TRAILER_LINES: readonly Line[] = [
     leadFramesHint: 0,
     cadenceAdapter: {
       engine: 'elevenlabs-v3',
-      prefixTag: '[deadpan]',
+      prefixTag: '[sarcastic]',
       notes:
         "'Hold it tight' is the entendre setup line for Phrasing! — physical-action ambiguity per spec §3.5 earned-Phrasing! mechanic. BURNED logo lands at frame 2780 (during this line, mid-clause).",
     },
@@ -336,7 +336,7 @@ export const BURNED_TRAILER_LINES: readonly Line[] = [
     fadeOutMs: 50, // qsin curve per plan Step 7 phrasing-specific fade shape
     cadenceAdapter: {
       engine: 'elevenlabs-v3',
-      prefixTag: '[deadpan]',
+      prefixTag: '[sarcastic]',
       notes:
         "FFmpeg fade curve: qsin (per plan Step 7 phrasing-specific shape). R15 #4 stamp 'OPERATION STATUS: FIELD-READY' lands at frame 2820 (concurrent with Phrasing audio tail). R15 #5 closing-card lands at frame 2835 (post-audio).",
     },

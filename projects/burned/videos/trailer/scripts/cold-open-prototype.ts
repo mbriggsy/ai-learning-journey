@@ -113,24 +113,35 @@ export const COLD_OPEN_SPEAKER = {
   operative: 'Janet',
   /** Visible card art used in the speaker-flash frame */
   cardAsset: 'janet-broadside.webp',
-  /** ElevenLabs Shared Library entry (locked 2026-05-18 after iteration audit) */
-  voiceLibraryName: 'Sloane - Bold and Polished (Shared Library)',
-  voiceId: 'm8AHWg36LJTQWKmfeGVv',
+  /** ElevenLabs Shared Library entry (re-locked 2026-05-19 — Phase 2
+   *  Unit 2.3 cunty canary rejected Sloane as too polished; Eleanor's
+   *  "refined, seasoned older British female with commanding presence"
+   *  landed the Jessica-Walter-Mallory-Archer DNA. Q-from-Bond cadence
+   *  rides the British accent naturally. */
+  voiceLibraryName: 'Eleanor – Gracious and Authoritative (Shared Library)',
+  voiceId: '2qQJWjw5XdG80GreshqG',
   /** Archer archetype mapped onto BURNED operative */
   archerArchetype: 'Malory (executive dryness — tough-as-nails matriarch)',
   /**
-   * Voice settings override — NOT Unit 0.2 Roger defaults. Janet's
-   * matriarch register requires: high stability (flat declarative),
-   * ultra-low style (strip upbeat expressive swelling), slow speed
-   * (deliberate weight). See iteration history in decode-eval.md
-   * §Janet iteration for the A/B audit that landed this profile.
+   * Voice settings override — NOT Unit 0.2 Roger defaults. Janet is
+   * Mallory-coded matriarch (cigarette-and-scotch contempt, dismissive
+   * cunty venom — MichaelAnne canary signal 2026-05-19).
+   *
+   * 2026-05-19 retune (Phase 2 Unit 2.3 cunty pass):
+   *   v1: stab 0.85 / style 0.05 / speed 0.92 — too commanding-polished
+   *       (stripped the venom).
+   *   v2: stab 0.55 / style 0.30 / speed 0.88 — cuntier but MichaelAnne
+   *       (Archer-fan listener) says "not enough of a cunt" still.
+   *   v3 (current): stab 0.40 / style 0.45 / speed 0.85 — push closer
+   *       to the expression ceiling, drag the disdain harder. Mallory
+   *       drawls cigarette-and-scotch contempt; this is the dial-up.
    */
   voiceSettings: {
-    stability: 0.85,
+    stability: 0.40,
     similarity_boost: 0.75,
-    style: 0.05,
+    style: 0.45,
     use_speaker_boost: true,
-    speed: 0.92,
+    speed: 0.85,
   },
 } as const;
 

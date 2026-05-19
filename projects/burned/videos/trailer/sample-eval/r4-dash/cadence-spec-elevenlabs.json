@@ -5,17 +5,17 @@
   "model_mode_note": "v3 surfaces three generation modes ('Creative' / 'Natural' / 'Robust') via the playground; the API request uses model_id='eleven_v3' for all three. 'Natural' is the right balance for Sterling-CODED: 'Creative' over-expresses (Floor — sounds like a performer), 'Robust' under-expresses (Floor — sounds robotic). When the API exposes an explicit mode parameter, set to 'Natural'.",
 
   "voice_settings": {
-    "stability": 0.70,
+    "stability": 0.55,
     "similarity_boost": 0.75,
-    "style": 0.15,
+    "style": 0.35,
     "use_speaker_boost": true,
     "speed": 0.95,
     "_rationale": {
-      "stability": "0.70 sits above the 0.50 default to suppress F0 wandering (cadence-spec §3.1 calls for narrow ±15 Hz spread on declaratives) but stays below 0.85 so the §3.5 parenthetical-tangent waver still lands. Going to 0.90+ flattens the read into audiobook narration (Floor-band failure).",
+      "stability": "2026-05-19 retune (Phase 2 Unit 2.3 Sterling-arrogant pass — MichaelAnne canary feedback). Dropped 0.70 → 0.55 to give Roger more prosodic variation. The original deadpan-briefer setting flattened the read; Sterling-Archer's signature is the smug self-satisfied lift on words he thinks are clever, which needs lower stability to surface. Going below 0.50 risks pitch wander on declaratives (cadence-spec §3.1) — 0.55 sits at the bottom of the safe band.",
       "similarity_boost": "0.75 default for Path A (preset Voice Library voice — we want the voice to BE itself, not be steered far). For Path B (Briggsy clone), bump to 0.85 to lean harder into his timbre.",
-      "style": "0.15 low to suppress engine-default expressive swelling (cadence-spec §3.6 'compressed dynamic range'). Not 0 because the §3.5 exhale + §3.4 downspeak punchline need SOME style budget to land. If Step 2 outputs sound flat / lifeless, bump to 0.25.",
+      "style": "2026-05-19 retune: 0.15 → 0.35. The original suppress-expressive-swelling setting also suppressed the 'I'm explaining this to an idiot' emphasis Sterling lands on key words. 0.35 gives the smug-emphasis budget room without crossing the 0.50 hallucination ceiling.",
       "use_speaker_boost": "true (default) — clarity boost helps the §3.3 General American articulation hold up against background that the trailer scene will add later.",
-      "speed": "0.95 = 5% slower than conversational baseline per cadence-spec §3.2 ('phoneme durations approximately 5-10% longer'). 0.92 if Step 2 outputs feel rushed; 0.97 if too slow."
+      "speed": "0.95 = 5% slower than conversational baseline per cadence-spec §3.2 ('phoneme durations approximately 5-10% longer'). Sterling drawls — deliberate pace is character DNA. Keep 0.95."
     }
   },
 

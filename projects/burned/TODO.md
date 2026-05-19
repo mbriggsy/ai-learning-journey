@@ -7,17 +7,20 @@ the history. (Rule: `feedback-todo-is-not-a-diary.md`.)
 
 ## 1. Active priorities
 
-### Status (verified 2026-05-18 — Phase 1 CLOSED; signoff `3aef0d05` on remote)
+### Status (verified 2026-05-19 — Phase 2 Units 2.0-2.3 LANDED; canary cleared)
 
-- Tests: **1407 pass** | 6 expected fail (68/68 files green) — squeaky
-  re-run confirmed
-- Trailer subpackage tests: **191 pass** (7 files green)
+- Tests: **1407 pass** | 6 expected fail (68/68 files green)
+- Trailer subpackage tests: **193 pass** | 1 expected-fail post-pipeline
+  gate (8 files; `script-coverage.test.ts` asserts every cue has a WAV
+  AFTER Unit 2.4 deposits them — currently 1/16, will satisfy then)
 - Typecheck: clean (`pnpm typecheck` root + `videos/trailer/`)
-- Phone player entry: **19.17 KB gz** (build verified — under 100 KB ceiling)
+- Phone player entry: **19.17 KB gz** (no regression from Phase 2 work)
 - DramaOverlay lazy chunk: **2.34 KB gz**
 - HOW-TO-PLAY bundle: `howtoplay-*.js` **33.90 KB gz** + `howtoplay-*.css`
   **10.68 KB gz** + shared GSAP chunk **27.21 KB gz**
 - Protocol version: **v6**
+- Phase 2 ElevenLabs spend cumulative: **$0.24 / $50** ceiling (Unit 2.3
+  canary + voice audition + Voice Design previews + 3 retune rounds)
 
 ### Origin trailer
 
@@ -41,13 +44,72 @@ body). BEAT-SHEET.md sha256 captured at signoff:
 `fd662581c2aafdc40b93687e347a26d3da5d338d7752570b198d7389ece54c13`.
 Frozen as Phase 2/3/4 consumption contract.
 
-**Phase 2 — NEXT.** Voice pipeline. Plan at
-`docs/plans/origin-trailer/phase-2-voice-pipeline.md` (already
-deepened + doc-reviewed). Phase 2 reads `script.ts BURNED_TRAILER_LINES`
-(16 cues), generates TTS WAVs via ElevenLabs (Roger for Dash;
-Sloane / matriarch-tuned for Janet via `COLD_OPEN_SPEAKER` constant),
-validates per-cue wps vs Phase 1 bands. Expected spend: ~$22
-ElevenLabs Creator within $50 envelope.
+**Phase 2 — IN-FLIGHT.** Voice pipeline. Plan at
+`docs/plans/origin-trailer/phase-2-voice-pipeline.md`.
+
+**Units 2.0-2.3 LANDED 2026-05-19** (commit pending — see git log):
+- **Unit 2.0** Preflight scaffold (env / ffmpeg / phase-0-exit parser /
+  live model API check). `pnpm preflight:phase2` green.
+- **Unit 2.1** Phase 1 `BURNED_TRAILER_LINES` contract consumed +
+  `cueFilename` helper + `script-coverage.test.ts` drift gate.
+- **Unit 2.2** `generate-dash-tts.ts` production script + ElevenLabs v3
+  client + cost tracker + hash-based skip/regen + atomic writes +
+  MP3-to-48kHz-mono-PCM-WAV converter inside the client (Creator tier
+  doesn't allow PCM output_format).
+- **Unit 2.3** Canary cleared:
+  - Dash arrogant-Sterling retune locked (Roger voice_settings:
+    `stability 0.55 / style 0.35 / speed 0.95` in
+    `cadence-spec-elevenlabs.json`); prefix tag `[deadpan]` → `[sarcastic]`
+    on all non-scream cues.
+  - Janet voice swap locked (Sloane → **Eleanor – Gracious and
+    Authoritative**, `2qQJWjw5XdG80GreshqG`, British Shared Library)
+    + matriarch-cunty settings (`stability 0.40 / style 0.45 / speed
+    0.85` in `COLD_OPEN_SPEAKER.voiceSettings`). Brief: Jessica-Walter-
+    Mallory-Archer DNA — "always drinking but you'd never know it" +
+    Q-from-Bond cadence + experienced-not-frail.
+  - Scream cue isolated from Roger retune via per-`[shouts]`-cue
+    voice-settings override in `tts-clients/elevenlabs.ts` (preserves
+    Phase 0 Unit 0.6 audited Sterling-LANA shape).
+  - Eleanor render verified clean by Briggsy ("s01 — that's clean").
+
+**Unit 2.4 — NEXT.** Full TTS render of the remaining 13 cues +
+per-cue duration audit. Phase 1 expectedFrames vs measured. Expected
+spend: ~$22 ElevenLabs Creator (within $50 envelope). Hash will
+auto-invalidate stale WAVs from the canary set when text/prefixTag
+match but voice_settings or scream-cue gating differ — Roger retune
+already propagates via adapter SHA.
+  - **Prerequisite check:** Briggsy already approved "fucking just do
+    it under $50" cap. Auto-run on next session unblock.
+
+**Units 2.5-2.8 — sequential after 2.4.** Post-process (loudnorm + fades
++ silence stitch), intra-line beat handling, Phase 1 reconciliation,
+AudioAsset manifest for Phase 4 Remotion.
+
+**Open follow-ups carried by Phase 2 Unit 2.3 close (NOT blocking Unit 2.4):**
+
+- **S06-phrasing.expectedFrames contradiction.** Phase 1 ships
+  `expectedFrames: 12` (0.4s); Phase 2 deepening header claims it was
+  raised to 27 (~0.9s). Briggsy disposition 2026-05-19: "0.9 feels
+  right, but when we get to the critical decision point we can test
+  it out." Unit 2.4 measures actual Phrasing delivery duration; Unit
+  2.7 reconciliation amends Phase 1 if natural delivery lands closer
+  to 27 frames. Don't pre-amend.
+- **Hash-input gap.** `hashCueInputs` covers cue.text + engine +
+  voiceId + prefixTag + adapter SHA + priming key — but NOT
+  `cold-open-prototype.ts COLD_OPEN_SPEAKER.voiceSettings` (Janet
+  cuntiness knobs) and NOT in-client overrides like
+  `SCREAM_AUDITED_SETTINGS`. Future tunes of either need `--force` or
+  someone has to add a source-file SHA to the hash inputs. Track
+  alongside the existing adapter-SHA fix from doc-review.
+- **Audition WAV artifacts.** `videos/trailer/sample-eval/voice-pipeline/
+  mallory-audition/` (5 Shared Library auditions + Eleanor) and
+  `mallory-design/` (3 Voice Design previews) are gitignored locally.
+  Keep on disk for reference; they don't ship.
+- **`previous_text` / `next_text` re-enable.** `eleven_v3` model
+  doesn't support context-priming yet (API returns 400
+  `unsupported_model`). Gated off in `tts-clients/elevenlabs.ts`;
+  re-enable when ElevenLabs ships v3 priming. Priming map
+  (`context-priming-overrides.json`) preserved for that future.
 
 **Open follow-ups carried by Phase 1 signoff (NOT blocking Phase 2):**
 
@@ -90,28 +152,89 @@ local-dev fallback path if migration isn't finalized by then.
 Active warnings only. Older landmines have moved to `docs/insights/` and
 `CLAUDE.md`.
 
-- **Janet voice = Sloane + matriarch-tuned, NOT Roger defaults**
-  (2026-05-18 Unit 0.3 close). Janet's locked voice is **Sloane**
-  (`m8AHWg36LJTQWKmfeGVv`, ElevenLabs **Shared Library** — not the local
-  library) with matriarch-tuned voice_settings override:
-  `stability: 0.85, similarity_boost: 0.75, style: 0.05,
-  use_speaker_boost: true, speed: 0.92`. This DIVERGES from Unit 0.2's
-  Roger defaults (`stability: 0.70, style: 0.15, speed: 0.95`). The
-  divergence is essential — Briggsy auditioned Sarah-with-Roger-defaults
-  + Matilda-with-matriarch-tuned + Sloane-with-matriarch-tuned +
-  Kristen-with-matriarch-tuned, and the matriarch-tuned settings are
-  the ones that strip the upbeat baseline that creates "reassuring" /
-  "professional" warmth in mature American female voices. If anyone in
-  Phase 4 authors new Janet dialogue and re-renders, they MUST use
-  `COLD_OPEN_SPEAKER.voiceSettings` from `cold-open-prototype.ts`, NOT
-  the Roger defaults from `cadence-spec-elevenlabs.json`. The contract
-  test in `cold-open-prototype.test.ts` enforces the profile shape on
-  the constant; the renderer `generate-cold-open-clip.ts` consumes it
-  via the constant. Don't hardcode voice_settings in a new Phase 4
-  Janet-renderer script — import from the single source of truth.
-  Phase 4 may want a similar character-voice lock for Sable + Vera +
-  Neal + Otto + Agent X if any of them speak in the trailer — each
-  would need its own voice audition cycle following this pattern.
+- **Janet voice = Eleanor + cunty-matriarch-tuned, NOT Sloane, NOT
+  Roger defaults** (RE-LOCKED 2026-05-19 by Phase 2 Unit 2.3 cunty
+  canary). Janet's locked voice is **Eleanor – Gracious and
+  Authoritative** (`2qQJWjw5XdG80GreshqG`, ElevenLabs Shared Library,
+  British, age=old). Voice settings: `stability: 0.40,
+  similarity_boost: 0.75, style: 0.45, use_speaker_boost: true,
+  speed: 0.85` — pushed close to expression ceiling (style 0.45) and
+  drawled (speed 0.85) to land the Jessica-Walter-Mallory-Archer DNA
+  Briggsy was after.
+  · Iteration history: v1 Sarah → too reassuring; v2 Sloane → too
+    polished / not cunty enough per Phase 2 canary; v3 (current)
+    Eleanor → cleared on 2026-05-19 listening.
+  · The British accent works because the Q-from-Bond cadence reference
+    is British anyway; Mallory's character DNA transfers across the
+    accent shift. Brief: "always drinking but you'd never know it" +
+    Q-energy crisp diction + experienced-not-frail.
+  · Phase 4 Janet dialogue MUST use `COLD_OPEN_SPEAKER.voiceSettings`
+    from `cold-open-prototype.ts`, NOT the Roger defaults from
+    `cadence-spec-elevenlabs.json`. Contract test in
+    `cold-open-prototype.test.ts` enforces the voiceId + settings
+    shape; renderer `tts-clients/elevenlabs.ts resolveVoiceSettings()`
+    branches by `voice === 'janet'`. SSoT.
+  · Phase 4 may want similar voice locks for Sable / Vera / Neal /
+    Otto / Agent X if they speak — each needs its own audition cycle
+    following the Phase 2 Unit 2.3 pattern (Shared Library scout +
+    Voice Design fallback).
+
+- **Dash voice = Roger + arrogant-Sterling tuned, scream uses ORIGINAL
+  Roger profile** (RE-LOCKED 2026-05-19 by Phase 2 Unit 2.3). Dash's
+  voice is Roger (`CwhRBWXzGAHq8TQ4Fs17`, ElevenLabs Voice Library)
+  with arrogant-briefer settings: `stability: 0.55, similarity_boost:
+  0.75, style: 0.35, use_speaker_boost: true, speed: 0.95` (in
+  `sample-eval/r4-dash/cadence-spec-elevenlabs.json`). All non-scream
+  Dash cues use prefix tag `[sarcastic]` (was `[deadpan]`).
+  · LANDMINE: the scream cue (`[shouts]`) does NOT inherit the
+    arrogant-briefer retune. `tts-clients/elevenlabs.ts
+    resolveVoiceSettings()` detects `cadencePrefixTag === '[shouts]'`
+    and returns the ORIGINAL Phase 0 Unit 0.6 audited profile
+    (`stability: 0.70, style: 0.15, speed: 0.95`) — the Sterling-LANA
+    acoustic shape was tuned at those specific values. If you tweak
+    Roger again for briefer cues, the scream stays isolated via the
+    in-client override. If you tweak the scream, edit
+    `SCREAM_AUDITED_SETTINGS` in `elevenlabs.ts`, NOT the adapter.
+
+- **ElevenLabs Creator tier silently downgrades PCM `output_format`
+  to MP3** (caught 2026-05-19 Phase 2 Unit 2.3). Per ElevenLabs docs:
+  "PCM with 44.1kHz sample rate requires Pro tier or above." On
+  Creator, requesting `pcm_8000`/`pcm_16000`/`pcm_22050`/`pcm_24000`/
+  `pcm_32000`/`pcm_44100`/`pcm_48000` returns 200 OK with **MP3 bytes**
+  (default `mp3_44100_128`). NO error, NO warning. Wrapping the MP3
+  bytes in a fake WAV header produces a malformed file (codec=mp3
+  inside RIFF/WAVE container). Detection: ffprobe shows codec_name=mp3
+  + tiny duration vs expected size + ID3 header at byte 0x2A.
+  · **Fix shipped**: `tts-clients/elevenlabs.ts` requests
+    `output_format: 'mp3_44100_192'` (Creator-tier ceiling, transparent
+    for voice), then FFmpeg-converts MP3 → 48kHz mono 16-bit PCM WAV
+    via `mp3ToWav48kMono()` in `lib/ffmpeg.ts` before returning the
+    Buffer. On-disk artifact format unchanged.
+  · If Briggsy ever upgrades to Pro tier, the PCM path becomes
+    available and the MP3-intermediate step can be eliminated. Until
+    then, the conversion is the contract.
+
+- **ElevenLabs `eleven_v3` does NOT support `previous_text` /
+  `next_text` context priming** (caught 2026-05-19 Phase 2 Unit 2.3).
+  API returns 400 `{"code": "unsupported_model"}`. The Phase 2 plan
+  deepening assumed v3 supported it; it doesn't (yet). Gated off in
+  `tts-clients/elevenlabs.ts` via `if (args.modelId !== 'eleven_v3')`
+  check; priming params stripped from request body for v3. Priming map
+  `context-priming-overrides.json` preserved for future v3 support OR
+  for a model swap (other ElevenLabs models DO support priming).
+
+- **Hash invalidation gaps** (known, 2026-05-19). `hashCueInputs()` in
+  `generate-dash-tts.ts` hashes `cue.text + engine + voiceId +
+  prefixTag + adapter-SHA + priming-key`. Changes to the following
+  sources do NOT invalidate cached WAVs — require `--force`:
+  · `scripts/cold-open-prototype.ts COLD_OPEN_SPEAKER.voiceSettings`
+    (Janet cuntiness knobs)
+  · `scripts/tts-clients/elevenlabs.ts SCREAM_AUDITED_SETTINGS`
+    (scream override profile)
+  · Any in-client override branching logic in `resolveVoiceSettings()`
+  Fix path (future patch): add SHA of `cold-open-prototype.ts` and
+  `tts-clients/elevenlabs.ts` source content to hash inputs. Same
+  class of bug as the original adapter-SHA gap doc-review caught.
 
 - **Origin-trailer doc drift after Unit 0.6 §3.6 expansion** (2026-05-18,
   closure of `ed03e598`). The Sterling-LANA four-axis characterization

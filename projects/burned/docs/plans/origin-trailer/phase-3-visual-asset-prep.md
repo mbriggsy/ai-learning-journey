@@ -1714,7 +1714,7 @@ lands inside the safe-square is non-optional.
 
 ### Unit 3.1 — HTP Dossier Capture
 
-- [ ] **Unit 3.1: HTP Dossier Capture**
+- [x] **Unit 3.1: HTP Dossier Capture** ✅ LANDED 2026-05-22
 
 **Goal:** Produce a single fullpage PNG of BURNED's how-to-play
 dossier (`src/client/howtoplay/`) rendered with all GSAP ScrollTrigger

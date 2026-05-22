@@ -42,11 +42,14 @@ Hand-off contracts now in place:
 
 **Phase 3 — IN-FLIGHT.** Visual asset prep at
 `docs/plans/origin-trailer/phase-3-visual-asset-prep.md`. 8 units
-(3.0-3.7). Unit 3.0 (HTP vocabulary vendoring + drift gate) ✅
-landed 2026-05-22. Remaining: 3.1 HTP dossier capture · 3.2 card-art
-curation · 3.3 briefing-room set-dressing · 3.4 R15 chrome stamps
-(SPLIT-LAYER) · 3.5 music bed procurement · 3.6 cold-open title-
-sequence assets · 3.7 visual manifest + PHASE-3-EXIT.md hand-off.
+(3.0-3.7). ✅ landed 2026-05-22: Unit 3.0 (HTP vocab vendoring +
+drift gate), Unit 3.1 (HTP fullpage capture against production —
+1920×19848px PNG, gate is opacity-only after diagnosing that
+DossierPage's `transform: rotate(-4deg)` rest-state defeats any
+identity-matrix gate). Remaining: 3.2 card-art curation · 3.3
+briefing-room set-dressing · 3.4 R15 chrome stamps (SPLIT-LAYER) ·
+3.5 music bed procurement · 3.6 cold-open title-sequence assets ·
+3.7 visual manifest + PHASE-3-EXIT.md hand-off.
 
 **Phase 2 carry-forwards → Phase 3+** (stitch / silenceremove
 generalizations):

@@ -10,8 +10,9 @@ the history. (Rule: `feedback-todo-is-not-a-diary.md`.)
 ### Current state (verified 2026-05-22)
 
 - Tests: **1407 pass** | 6 expected fail (68/68 files green)
-- Trailer subpackage tests: **194 pass | 0 expected-fail** (8 files;
-  script-coverage drift gate green — every cue has a WAV, 16/16)
+- Trailer subpackage tests: **203 pass | 0 expected-fail** (9 files;
+  script-coverage drift gate green — every cue has a WAV, 16/16;
+  card-roster drift gates green — 17/17 webps in sync)
 - Typecheck: clean (`pnpm typecheck` root + `videos/trailer/`)
 - Phone player entry: **19.17 KB gz**
 - DramaOverlay lazy chunk: **2.34 KB gz**

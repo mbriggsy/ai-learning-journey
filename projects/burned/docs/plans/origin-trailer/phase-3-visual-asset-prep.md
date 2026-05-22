@@ -2475,7 +2475,7 @@ full roster.
 
 ### Unit 3.0 — BURNED HTP Vocabulary Vendoring (NEW per Path B architecture)
 
-- [ ] **Unit 3.0: BURNED HTP Vocabulary Vendoring**
+- [x] **Unit 3.0: BURNED HTP Vocabulary Vendoring** ✅ LANDED 2026-05-22
 
 **Goal:** Copy the 5 BURNED HTP component pairs (Stamp, Crest,
 RedactBar, ClassificationBanner, DossierPage + their `.module.css`

@@ -21,6 +21,8 @@
     "stitch:beats": "tsx scripts/stitch-beats.ts",
     "audit:stitch-positions": "tsx scripts/audit-stitch-positions.ts",
     "generate:manifest": "tsx scripts/generate-audio-manifest.ts",
+    "vendor:vocab": "tsx scripts/vendor-burned-vocab.ts",
+    "verify:vocab-sync": "tsx scripts/verify-vocab-sync.ts",
     "matrix": "tsx scripts/generate-tts-eval.ts",
     "scream:variant": "tsx scripts/generate-scream-variant.ts",
     "tone:clip": "tsx scripts/generate-tone-clip.ts",

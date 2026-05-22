@@ -126,6 +126,21 @@ for (const cue of BURNED_TRAILER_LINES) {
   const seconds = ffprobeDurationSec(wavPath);
   const actualFrames = Math.round(seconds * FPS);
 
+  // Loudness pull. Fail loudly when the audit log exists but a cue is
+  // missing from it — per `docs/insights/062-default-fallback-coincides-
+  // with-valid-measurement.md`, silently substituting the -16 LUFS
+  // target as a fallback for a missing per-cue entry would mask
+  // upstream regen drift (e.g., cueId renames). The fallback only
+  // fires when the audit log is entirely absent (empty map).
+  if (loudnessByCueId.size > 0 && !loudnessByCueId.has(cue.id)) {
+    throw new Error(
+      `Codegen: loudness audit log exists at ${LOUDNESS_AUDIT} but ` +
+        `cue ${cue.id} has no entry. Re-run \`pnpm post-process\` to ` +
+        `regenerate the audit, then \`pnpm generate:manifest\`.`,
+    );
+  }
+  const loudnessLufs = loudnessByCueId.get(cue.id) ?? -16;
+
   entries.push({
     filename,
     staticPath: cueStaticPath(cue),
@@ -135,7 +150,7 @@ for (const cue of BURNED_TRAILER_LINES) {
     expectedFrames: cue.expectedFrames,
     cueType: cue.cueType,
     leadFramesHint: cue.leadFramesHint,
-    loudnessLufs: loudnessByCueId.get(cue.id) ?? -16,
+    loudnessLufs,
     ...(cue.cadenceAdapter ? { cadenceAdapter: cue.cadenceAdapter } : {}),
   });
 }

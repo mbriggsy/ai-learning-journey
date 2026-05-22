@@ -7,7 +7,7 @@ the history. (Rule: `feedback-todo-is-not-a-diary.md`.)
 
 ## 1. Active priorities
 
-### Status (verified 2026-05-21 — Phase 2 Units 2.0-2.4 LANDED; Phrasing tune cleared)
+### Status (verified 2026-05-21 — Phase 2 Units 2.0-2.5 LANDED; post-process pipeline shipped)
 
 - Tests: **1407 pass** | 6 expected fail (68/68 files green)
 - Trailer subpackage tests: **193 pass + script-coverage now green
@@ -107,16 +107,66 @@ Frozen as Phase 2/3/4 consumption contract.
     territory.
   - **S01 / S04-cue-01 / S04-stat-04 (within 5-8%):** noise.
 
-**Unit 2.5 — NEXT.** Post-process pipeline: two-pass loudnorm to
-**-16 LUFS** + areverse-sandwich silenceremove + per-cue fades. Scream
-SKIPS silenceremove (preserve attack envelope). Plan at
-`docs/plans/origin-trailer/phase-2-voice-pipeline.md` Unit 2.5 §.
+**Unit 2.5 LANDED 2026-05-21** (commit pending — see git log):
+- `scripts/post-process-tts.ts` — two-pass loudnorm (-16 LUFS / LRA 9
+  / TP -1.5 dBTP) + areverse-sandwich silenceremove + per-cue
+  `afade` + `-ac 1` mono lock + 48 kHz / pcm_s16le. Raw originals
+  preserved in `public/audio/lines/raw/`; processed versions written
+  atomically to in-place location.
+- New `runFFmpegJson` helper in `scripts/lib/ffmpeg.ts` — uses
+  `spawnSync` to capture loudnorm's stderr JSON block (execFileSync
+  only returns stdout).
+- Idempotence sentinel `${final}.processed` stores
+  `sha256(rawMtime + cueType + fadeInMs + fadeOutMs +
+  skipSilenceremove + LUFS targets)`. Re-running skips no-op work.
+- Threshold rule per plan: `-30dB` for payoff cueType (more
+  aggressive trim for one-liner punchlines — Phrasing, S04-payoff,
+  S06-close), `-50dB` for paced cues (sustained, list, cold-open).
+  Scream cue is skipped entirely via `cue.skipSilenceremove`.
+- **Phrasing! locked at 0.63s** (post-process). 1.2s raw → 0.63s
+  trimmed. Briggsy: "lock it." Tighter than the "0.9s feels right"
+  gut call but read cleanly.
+- New `pnpm post-process` + `pnpm audit:durations` scripts in
+  `videos/trailer/package.json`.
+- Loudness audit (`sample-eval/voice-pipeline/loudness-audit.jsonl`)
+  reports 3 short-cue drifts (s04-cue-1050, s04-cue-1560, s04-payoff)
+  at ~1.2-2.0 LU off -16 LUFS — KNOWN limitation of loudnorm on
+  clips <3s per k.ylo.ph/loudnorm.html. Acceptable for Phase 4
+  consumption.
 
-**Units 2.6-2.8 — sequential after 2.5.** Intra-line `[BEAT NNNms]`
-stitch (resolves S03 drift), Phase 1 reconciliation (S05-gameplay-vo
-+ S06-close pace amends), AudioAsset manifest for Phase 4 Remotion.
+**Unit 2.6 — NEXT.** Intra-line `[BEAT NNNms]` stitch. Splits
+S03-roster + S03-deck cue text on `\[BEAT \d+(\.\d+)?s\]` markers,
+renders each segment as its own TTS call, FFmpeg-stitches with
+`anullsrc` silence at the right durations. Resolves the S03 +100%
+drift cluster (currently v3 inserts ~3s silent pauses per unknown
+`[BEAT 0.3s]` token instead of the intended 0.3s).
 
-**Open follow-ups carried by Phase 2 Unit 2.4 close (NOT blocking Unit 2.5):**
+**Units 2.7-2.8 — sequential after 2.6.** Phase 1 reconciliation
+(S05-gameplay-vo + S06-close pace amends + S06-phrasing
+`expectedFrames` set to whatever post-silenceremove clocks at —
+currently 19 frames / 0.63s), AudioAsset manifest for Phase 4
+Remotion.
+
+**Open follow-ups carried by Phase 2 Unit 2.5 close (NOT blocking Unit 2.6):**
+
+- **Loudnorm drift on short cues (≤3s).** s04-cue-1050 (Operational
+  planning.), s04-cue-1560 (Seventeen asset illustrations…), and
+  S04-payoff (They WERE the operation.) measure -17.2 to -17.95 LUFS
+  vs the -16 target after two-pass loudnorm. Known limitation per
+  k.ylo.ph/loudnorm.html — single-pass drifts ±2-3 LU on clips <30s,
+  two-pass mitigates but doesn't eliminate on clips <3s. Phase 4
+  Remotion bed-ducking math may need a tiny bump on these specific
+  cues if mix tests show them ducking too far. Track but don't
+  pre-correct.
+- **FFmpeg muxer inference fails on `.wav.tmp` filenames** (caught +
+  fixed 2026-05-21 Unit 2.5). FFmpeg picks output muxer from the
+  filename extension; `.tmp` isn't a known audio format and FFmpeg
+  refuses to run. Fix shipped: explicit `-f wav` on both atomic-write
+  passes in `post-process-tts.ts`. If you add another FFmpeg
+  invocation with a `.tmp` target elsewhere, copy the `-f wav` (or
+  whatever target format) flag.
+
+**Open follow-ups carried by Phase 2 Unit 2.4 close (NOT blocking Unit 2.6):**
 
 - **Doc-drift in `cold-open-prototype.ts` header + `script.ts`
   S01-cold-open notes.** Both still reference "Sloane matriarch-tuned

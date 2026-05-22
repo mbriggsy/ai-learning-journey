@@ -8,7 +8,7 @@
  * Uses `node:child_process` `execFileSync` (NOT `exec`) — argv arrays
  * never pass through a shell, matching project security convention.
  */
-import { execFileSync as runArgv } from 'node:child_process';
+import { execFileSync as runArgv, spawnSync } from 'node:child_process';
 
 const MIN_FFMPEG_VERSION = 5;
 
@@ -65,6 +65,56 @@ export function runFFprobe(path: string): unknown {
     { encoding: 'utf-8', stdio: ['ignore', 'pipe', 'pipe'] },
   );
   return JSON.parse(output);
+}
+
+/**
+ * Run ffmpeg with the given argv and extract the last balanced JSON
+ * object from its stderr. Used for two-pass `loudnorm` measurement —
+ * Pass 1 prints a JSON block to stderr (the filter prefaces it with
+ * diagnostic lines; we want the trailing `{...}` block) and we parse
+ * it for Pass 2 input.
+ *
+ * Uses `spawnSync` (NOT `execFileSync`) because loudnorm pass-1 writes
+ * to STDERR and execFileSync only returns stdout. spawnSync captures
+ * both pipes in one shot whether the exit code is zero or not.
+ *
+ * Throws if ffmpeg has no JSON object in stderr OR if the JSON is
+ * malformed.
+ */
+export function runFFmpegJson(args: readonly string[]): unknown {
+  const result = spawnSync('ffmpeg', args, {
+    encoding: 'utf-8',
+    stdio: ['ignore', 'pipe', 'pipe'],
+  });
+  const stderr = String(result.stderr ?? '');
+  if (result.error) {
+    throw new Error(`ffmpeg failed to spawn: ${result.error.message}`);
+  }
+  // Find the LAST balanced JSON object in stderr (loudnorm's summary).
+  const lastClose = stderr.lastIndexOf('}');
+  if (lastClose === -1) {
+    throw new Error(
+      `ffmpeg stderr contained no JSON object. ` +
+        `Exit code: ${result.status}. Stderr tail: ${stderr.slice(-400)}`,
+    );
+  }
+  let depth = 0;
+  let openIdx = -1;
+  for (let i = lastClose; i >= 0; i--) {
+    const ch = stderr[i];
+    if (ch === '}') depth++;
+    else if (ch === '{') {
+      depth--;
+      if (depth === 0) {
+        openIdx = i;
+        break;
+      }
+    }
+  }
+  if (openIdx === -1) {
+    throw new Error('ffmpeg stderr JSON object has unbalanced braces');
+  }
+  return JSON.parse(stderr.slice(openIdx, lastClose + 1));
 }
 
 import { mkdtempSync, readFileSync, rmSync, writeFileSync } from 'node:fs';

@@ -16,6 +16,8 @@
     "tts": "tsx scripts/generate-dash-tts.ts",
     "tts:force": "tsx scripts/generate-dash-tts.ts --force",
     "tts:dry-run": "tsx scripts/generate-dash-tts.ts --dry-run",
+    "post-process": "tsx scripts/post-process-tts.ts",
+    "audit:durations": "tsx scripts/audit-durations.ts",
     "matrix": "tsx scripts/generate-tts-eval.ts",
     "scream:variant": "tsx scripts/generate-scream-variant.ts",
     "tone:clip": "tsx scripts/generate-tone-clip.ts",

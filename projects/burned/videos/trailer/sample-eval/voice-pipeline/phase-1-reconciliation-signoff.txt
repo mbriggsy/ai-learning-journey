@@ -1,0 +1,81 @@
+Phase 1 reconciliation sign-off: 2026-05-22T20:00:00-04:00
+Unit: Phase 2 Unit 2.7
+Listener (N=1): Briggsy (production-cert standard per R2 amendment 2026-05-22)
+Accepted: YES
+
+# Sign-off basis
+
+R2 amendment (CORRECTED 2026-05-22): final sign-off is N=1 Briggsy.
+Earlier R2 wording locked N=2 (Briggsy + Harry as outside reviewer)
+on the false premise that Harry was a human listener. Harry is AI
+(OpenClaw / Claude Code instance via Discord). The team is just
+Briggsy + Claude(s) forever (Briggsy 2026-05-22: "there are no other
+players involved, it's just me and you my friend forever and ever
+... no future phase will change that"). No multi-person human ear
+panel is structurally available. The escalation-to-N=6 branch is
+also deleted (Phase 0 EXIT confirms the N=6 panel was never run,
+only deferred to Phase 6 ADR #21 / now ADR #21r — both amended the
+same way).
+
+Cross-refs:
+- memory: feedback-listener-panels-default-to-n1.md (new)
+- memory: user_harry.md (updated 2026-05-22 — Harry is AI)
+- phase-2-voice-pipeline.md §R2 amendment header (lines 331-345)
+- roadmap.md §5.2 SUPERSEDED (ADR #13r 2026-05-22)
+- phase-5-gameplay-capture.md CALL F REPEALED (deepening header)
+- phase-6-final-render-qa.md ADR #21r SUPERSEDES ADR #21
+
+# Reconciliation history (Phase 2 Unit 2.7 ladder per plan §Unit 2.7)
+
+Per-cue disposition (frame budget vs measured Sterling-coded delivery):
+
+S03-roster — Tier-2 trim LANDED 2026-05-22. A/B-tested 3 variants;
+  Briggsy picked V1 (trim + current speed). Dropped "Six expense
+  reports, all classified." sentence. New actual 13.57s vs 9.0s
+  budget (+50.7%, was +95.9%). Residual +4.2s overrun queued for
+  Tier-4 cascade absorb.
+
+S03-deck — Tier-0 absorb LOCKED 2026-05-22. Briggsy: "keep, it's
+  great." 12.06s vs 6.0s (+101.1%) accepted as-is.
+
+S04-cue-03 — Tier-2 rewrite LANDED 2026-05-22. Shifted "Drafted on
+  weekends, by a field asset — name redacted for compliance." →
+  "Drafted at three AM, name redacted for compliance." New actual
+  4.40s vs 3.0s budget (+46.7%, was +83.3%); saved 1.1s.
+
+Tier-4 TOTAL_FRAMES expansion LANDED 2026-05-22: 2850 → 3180
+  (+330f / 95s → 106s). S03_END 1050 → 1380 (absorbs S03 read
+  overrun + cushion). S04/S05/S06 boundaries shifted +330. 13 WAV
+  files renamed to new frame-derived filenames. timing.test.ts
+  invariants re-asserted. transitions.ts updated. BEAT-SHEET.md
+  largely synced.
+
+Tier-0 absorbs LOCKED:
+- S04 list cluster: cue-02 (+17.8%), stat-01 (+14.2%), stat-03
+  (+10.8%), payoff (+5.0%) — cumulative absorbed by S05/S06
+  undershoots within expanded cascade flex (math: S04 +88f net,
+  S05 -32f + S06 -58f = net -2f flex absorbed).
+- S04-stat-02 (+1.3% OK) — trivially.
+- S05-gameplay-vo (-21.3% — fast; provides cascade flex).
+- S05-scream (+44%) — by design, Sterling-LANA held-vowel tail
+  preserved via skipSilenceremove.
+- S06-close (-29.3% — provides closing-card breathing room).
+- S06-phrasing (+58.3% but Briggsy-locked at 0.63s).
+
+# Verification artifacts in this directory
+- duration-reconciliation.md — per-cue audit (Unit 2.4)
+- loudness-audit.jsonl — post-process loudness (Unit 2.5)
+- cadence-consistency.md — Likert rubric scoring (Unit 2.3)
+- preflight-log.md — Unit 2.0 environment verification
+
+# Tests at signoff
+- 1407 pass | 6 expected fail (68/68 files green)
+- Trailer subpackage: 194 pass | 0 expected-fail (8 files)
+- Typecheck: clean (root + videos/trailer/)
+
+# Phase 2 cumulative spend at signoff: $0.87 / $50 ceiling
+
+# Next: Unit 2.8 AudioAsset manifest (JSON map of cueId → final WAV
+# path + measured duration + loudness + leadFramesHint). Unit 2.8
+# asserts the existence of THIS sentinel; that assertion is now
+# satisfied.

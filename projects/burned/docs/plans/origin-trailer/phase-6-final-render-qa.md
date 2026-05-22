@@ -41,8 +41,9 @@ Phase 6 produces:
   3-axis bar-raise evaluation vs UMB v3 (with side-by-side composite
   PNG per Unit 6.4 Step 6)
 - `videos/trailer/sample-eval/final-render-qa/decode-test.md` —
-  no-context-engineering-peer agentic-SDLC decode verification
-  (N=6 panel + UMB control per ADR #21)
+  cold-watch agentic-SDLC decode verification (N=1 Briggsy per
+  ADR #21r — supersedes the original ADR #21 N=6 panel + UMB
+  control protocol 2026-05-22)
 - `videos/trailer/sample-eval/final-render-qa/mobile-crop-audit.md` —
   X mobile 1.91:1 in-feed preview crop audit + 9:16 vertical-feed
   audit (per ADR #23)
@@ -57,8 +58,8 @@ Phase 6 produces:
   handoff document Phase 7 reads (Unit 6.8)
 - `videos/trailer/sample-eval/final-render-qa/cutdown-frame-list.md` —
   recommended X-native cutdown source frames for Phase 7 (Unit 6.8)
-- `videos/trailer/sample-eval/final-render-qa/decode-test-roster.md` —
-  tester recruitment record (Unit 6.0)
+- ~~`videos/trailer/sample-eval/final-render-qa/decode-test-roster.md`~~ —
+  REPEALED per ADR #21r (2026-05-22); no tester recruitment.
 - `videos/trailer/sample-eval/final-render-qa/sample-frames/` — 10 extracted sample-
   frame PNGs + `contact-sheet.png` (2×5 tile per design-lens F12)
 - `videos/trailer/sample-eval/final-render-qa/umb-samples/` — 10 UMB v3 reference
@@ -82,11 +83,12 @@ Phase 6 produces:
 - `videos/trailer/sample-eval/final-render-qa/typography-control/` — system-ui-rendered
   control PNGs for typography font-load check (Unit 6.3 Step 2 Layer A typography
   row); produced by `scripts/render-typography-control.ts`
-- `videos/trailer/sample-eval/final-render-qa/decode-audio/` — tester voice-memo
-  recordings (`tester-{N}.{m4a,ogg,opus}`); **gitignored** per security F4 (panelist
-  voice samples not committed to public repo)
+- ~~`videos/trailer/sample-eval/final-render-qa/decode-audio/`~~ —
+  REPEALED per ADR #21r (2026-05-22); no tester voice-memo recordings.
 - `videos/trailer/sample-eval/final-render-qa/briggsy-review-6.0a.signoff` —
-  recruitment-prerequisite sentinel
+  cool-off-plan sentinel (was "recruitment-prerequisite sentinel"
+  pre-ADR-#21r; under ADR #21r 2026-05-22 the sentinel asserts the
+  24h cool-off plan + decode-test.md template exist)
 - `videos/trailer/sample-eval/final-render-qa/briggsy-review-6.4.signoff` —
   bar-raise acceptance sentinel
 - `videos/trailer/sample-eval/final-render-qa/briggsy-review-6.7.signoff` —
@@ -110,8 +112,9 @@ Phase 6 exits when:
    tiebreaker rule). Specifically:
    - Sub-verdicts at Units 6.3 (§2 ≥8/10 with two-layer rubric) / 6.4 (bar-raise
      per Step 6 matrix) / 6.5 (A/V sync within ADR #20 asymmetric tolerance) / 6.6
-     (mobile-crop 1:1 + 1.91:1 + 9:16 conditional) / 6.7 (decode test ≥3 of 6
-     surface AND UMB control panel does NOT — DIAGNOSTIC ONLY) / R13 acceptance
+     (mobile-crop 1:1 + 1.91:1 + 9:16 conditional) / 6.7 (decode test —
+     Briggsy cold-watch per ADR #21r 2026-05-22; PRIMARY YES or SECONDARY YES
+     in Q1 free-recall surfaces autonomy — DIAGNOSTIC ONLY) / R13 acceptance
      (Phase 5 EXIT inherited) are documented in `qa-report.md`.
    - A sub-verdict FAIL routes Briggsy's attention to the failing surface and the
      correct upstream phase per the routing table. Briggsy decides whether to
@@ -175,13 +178,15 @@ What makes Phase 6 distinct from Phase 4 Unit 4.10:
   cleared AND ≥1 of axes 1/2 also cleared. UMB structurally cannot
   compete on axis 3 by design; passing only axis 3 is a tautology,
   not a relative advance.
-- **No-context decode test** — does an engineering-peer viewer who
-  hasn't seen UMB v3 decode "agentic-SDLC / AI / autonomous" from
-  R14 + R15 working together? Per ADR #21, the panel is N=6 (not N=2
-  as the brainstorm inherited from the Phase 0 Unit 0.3 5-second
-  spike), includes UMB v3 control to detect priors contamination,
-  and uses Q1/Q2 two-question protocol to distinguish unprompted
-  decode from latent-decode.
+- **No-context decode test** (ADR #21 SUPERSEDED 2026-05-22 by
+  ADR #21r) — does a cold viewer decode "agentic-SDLC / AI /
+  autonomous" from R14 + R15 working together? Original ADR #21
+  locked an N=6 outside panel; ADR #21r supersedes to **N=1 Briggsy
+  cold-watch** because the team is just Briggsy + Claude(s) forever
+  and no human panel is structurally available. Q1/Q2 two-question
+  protocol preserved as Briggsy's own self-examination ladder; UMB
+  v3 control eliminated (Briggsy is contaminated against UMB v3 too).
+  Residual contamination risk accepted; see updated ADR #21r below.
 - **Mobile-crop discipline audit** — does the trailer survive X's 1.91:1 in-feed
   preview crop on mobile? Per roadmap §5.3 + ADR #23, critical text must live within
   central 1:1 safe square. **An additional 9:16 vertical-feed audit is INFORMATIONAL-
@@ -293,36 +298,41 @@ perceptual floor.
   counted ranges. Replaces the unfalsifiable "sub-frame acceptable,
   frame-level not" language in the Risks table.
 
-### Decode test panel size — ADR #21 (orthogonal to ADR #13 R4 voice gate)
+### Decode test panel size — ADR #21 SUPERSEDED 2026-05-22 by ADR #21r (just-us-forever team shape)
 
-**Per multiple agent convergence** (best-practices F8 + adversarial
-Attack 2 + coherence Finding 3 + scope-guardian Challenge 1): the first-
-draft "≥1 of 2 testers surfaces autonomy hook" was inherited from
-Phase 0 Unit 0.3, where N=2 was acceptable for a **5-second cold-open
-binary-hook spike**. Phase 6 tests the **95-second full-trailer
-comprehension decode** — structurally analogous to R4's MUSHRA voice
-gate (ADR #13 locked 6-8 listeners). N=2 with no control is
-statistically toothless: a single Anthropic-follower default-priors
-tester confirms autonomy regardless of trailer quality.
+**Original ADR #21** locked an N=6 minimum human decode-test panel for
+the 95-second full-trailer comprehension gate, with UMB v3 control
+panel + priors elicitation + Q1/Q2 question protocol. The first draft
+("≥1 of 2 testers") was correctly identified as statistically
+toothless and the N=6 panel was sized against the R4 MUSHRA voice-
+gate analog (ADR #13).
 
-**ADR #21 lock:**
-- Panel size: **N=6 minimum** (≥3 of 6 surface autonomy hook
-  unprompted within the post-stimulus 90-second reaction window).
-- **UMB v3 control panel**: same 6 testers also watch UMB v3 first.
-  If ≥2 of 6 surface autonomy for UMB v3, the panel is contaminated
-  by priors and the BURNED test is invalid; re-recruit.
-- **Priors elicitation pre-test**: ask each tester "When you see a
-  project from Briggsy on Discord, what's your prior on how it was
-  built?" — exclude testers whose unprompted answer already names
-  "AI / agent / autonomous / Claude". Document elimination reason.
-- **Q1/Q2 question protocol** (per design-lens deepening #2): Q1
-  free-recall opens decode evaluation; Q2 prompted-recall only feeds
-  failure-route triage (Q1-fail/Q2-pass → R15 chrome insufficient;
-  Q1-fail/Q2-fail → R14 cold-open insufficient).
-- **Acceptance keyword precision**: surfacing "BUILD PROCESS / AGENT
-  AUTHORSHIP" counts (Claude wrote this, an agent built it,
-  autonomous development). Surfacing "RENDER TECHNOLOGY" does NOT
-  count (AI-generated visuals, Midjourney rendered, the video is AI).
+**ADR #21r SUPERSEDING LOCK 2026-05-22** — the team shape is just
+Briggsy + Claude(s) forever (Briggsy 2026-05-22: *"there are no other
+players involved, it's just me and you my friend forever and ever …
+no future phase will change that"*). No multi-person human decode
+panel is structurally available. The R4 analog (ADR #13) is also
+amended the same way — Phase 0 EXIT confirms the N=6 voice panel was
+never run, only deferred forward; both ADRs were architecturally
+sound but operationally unrealizable.
+
+- **Panel size: N=1 (Briggsy) — production-cert standard.** Briggsy
+  watches the full 95s trailer once, cold, and answers Q1 free-recall
+  + Q2 prompted-recall. No UMB v3 control panel (Briggsy is
+  Briggsy-contaminated against UMB v3 also — he made both). No
+  priors elicitation (Briggsy's priors are known and infinite).
+- **Q1 / Q2 question protocol preserved** as Briggsy's own self-
+  examination ladder. Q1-pass means Briggsy's first-pass cold-watch
+  surfaces the agent-built / autonomy / shipped frame unprompted.
+  Q1-fail / Q2-pass means R15 chrome is insufficient. Q1-fail / Q2-
+  fail means R14 cold-open is insufficient.
+- **Acceptance keyword precision preserved**: "BUILD PROCESS / AGENT
+  AUTHORSHIP" counts; "RENDER TECHNOLOGY" does not.
+- **Residual risk accepted**: Briggsy's contamination as sole decode-
+  test subject. Mitigations: cold-watch with 24h cool-off + no in-
+  composition recall priming + Q1 free-recall before Q2 prompted-
+  recall. Cross-ref: memory `feedback-listener-panels-default-to-n1.md`
+  + updated `user_harry.md`.
 
 ### Eye-in-loop vs script-audit assignment
 
@@ -343,7 +353,7 @@ Briggsy-direct-watch:
 | Unit 6.5 per-cue manifest drift | Claude | Manifest-driven arithmetic + audio-track timing |
 | Unit 6.5 music-bed envelope shape | Briggsy direct listen | Per `feedback-eye-in-loop-beats-calibration-for-motion`; FFmpeg astats numeric printout misses swell shape |
 | Unit 6.6 mobile-crop audit | Briggsy via visual composite | Composite PNG with safe-square outline shows boundary directly |
-| Unit 6.7 decode test execution | Briggsy + testers | Out-of-band human protocol; Claude transcribes |
+| Unit 6.7 decode test execution | Briggsy alone (cold-watch per ADR #21r 2026-05-22) | N=1 self-administered Q1/Q2; Briggsy types verbatim into decode-test.md (was "Briggsy + testers, Claude transcribes" pre-ADR-#21r) |
 | Unit 6.7 qa-report aggregate | Claude (compose) + Briggsy (sign) | Briggsy sign-off via `.signoff` sentinel per ADR #22 |
 
 ### `execFileSync` argv arrays
@@ -384,8 +394,9 @@ All requirements R1–R15 come together at Phase 6. Per-unit trace:
   + named-operative density at S04 sample frames).
 - **R13** (gameplay closer): Unit 6.3 + Unit 6.5 (S05 sample + sync);
   inherits Phase 5 R13 acceptance via PHASE-5-EXIT.md.
-- **R14 + R15** (decode mechanism): Unit 6.7 (Q1/Q2 decode test
-  N=6 + UMB control per ADR #21).
+- **R14 + R15** (decode mechanism): Unit 6.7 (Q1/Q2 decode test —
+  N=1 Briggsy cold-watch per ADR #21r, 2026-05-22 supersession of
+  ADR #21 N=6 + UMB control panel).
 
 ---
 
@@ -397,9 +408,12 @@ All requirements R1–R15 come together at Phase 6. Per-unit trace:
 - **AV-sync tolerance (ADR #20)**: asymmetric — standard cues
   `[-1, +3]` frames; R3 stacked payoff `[-1, 0]` frames. Audio MUST
   NOT lead video on R3 by any amount.
-- **Decode test panel (ADR #21)**: N=6 testers + UMB control + priors
-  elicitation + Q1/Q2 question protocol + keyword precision (BUILD
-  process counts, RENDER tech does not).
+- **Decode test panel (ADR #21r supersedes ADR #21 — 2026-05-22)**:
+  N=1 Briggsy cold-watch with 24h cool-off + Q1/Q2 question protocol
+  + keyword precision (BUILD process counts, RENDER tech does not).
+  Original ADR #21 N=6 panel + UMB control + tester recruitment +
+  priors elicitation is structurally unavailable (team is just
+  Briggsy + Claude(s) forever).
 - **Sign-off ceremony (ADR #22)**: `.signoff` sentinel files
   (briggsy-review-6.0a/6.4/6.7) committed under Briggsy's git author
   identity (`briggsy007@gmail.com`); `pnpm verify:briggsy-sentinels`
@@ -431,18 +445,20 @@ All requirements R1–R15 come together at Phase 6. Per-unit trace:
 
 ## Implementation Units
 
-### Unit 6.0 — Production Verify Script + Atomic-Swap + Tester Pre-Recruitment
+### Unit 6.0 — Production Verify Script + Atomic-Swap + Cool-Off-Plan Sentinel
 
-- [ ] **Unit 6.0: Production Verify Script + Atomic-Swap + Tester Pre-Recruitment**
+- [ ] **Unit 6.0: Production Verify Script + Atomic-Swap + Cool-Off-Plan Sentinel**
 
 **Goal:** Lock in the contract-gate infrastructure BEFORE any render
 work. Create `verify:trailer-final` script that machine-checks all ADR
 #14 / #19 specs. Establish atomic-swap discipline for re-render
-iterations. Close out tester recruitment as a prerequisite to Unit
-6.1 (recruitment has lead time; can't be deferred to Unit 6.7).
+iterations. Confirm the Unit 6.7 cool-off plan + `decode-test.md`
+template exist (was "tester recruitment" pre-ADR-#21r; superseded
+2026-05-22 — no recruitment under ADR #21r).
 
-**Requirements:** ADR #19 + ADR #14 enforcement; tester-recruitment
-prerequisite; Phase 5 atomic-swap pattern inheritance.
+**Requirements:** ADR #19 + ADR #14 enforcement; cool-off-plan
+prerequisite (was "tester-recruitment prerequisite" pre-ADR-#21r);
+Phase 5 atomic-swap pattern inheritance.
 
 **Dependencies:** Phase 5 complete (`public/trailer/gameplay.mp4`
 exists + Phase 5 EXIT signed off).
@@ -455,10 +471,12 @@ exists + Phase 5 EXIT signed off).
   consumed by Units 6.3 / 6.4 / 6.6.
 - Edit: `package.json` — add `verify:trailer-final` + `extract:frames`
   scripts; update `render` for atomic-swap pattern.
-- Create: `videos/trailer/sample-eval/final-render-qa/decode-test-roster.md` —
-  tester recruitment record.
+- ~~Create: `videos/trailer/sample-eval/final-render-qa/decode-test-roster.md`~~ —
+  REPEALED per ADR #21r (2026-05-22); no tester recruitment record.
 - Create: `videos/trailer/sample-eval/final-render-qa/briggsy-review-6.0a.signoff` —
-  recruitment-prerequisite sentinel (git-author check).
+  cool-off-plan sentinel (git-author check). Under ADR #21r asserts
+  the 24h cool-off plan + decode-test.md template exist (was
+  "recruitment-prerequisite sentinel" pre-supersession).
 
 **Approach:**
 
@@ -797,58 +815,22 @@ console.log(`Atomic swap complete. Prior render preserved at ${PREV}.`);
 swap to avoid EBUSY — atomicSwap surfaces this with a named message. Same hazard
 documented at phase-5 lines 1641-1748.)
 
-**Step 4 — Tester pre-recruitment.**
+**~~Step 4 — Tester pre-recruitment.~~ REPEALED 2026-05-22 per ADR #21r.**
 
-Open question from first draft (line ~1229) said "Phase 6 execution
-recruits." Phase 6 deepening promotes this to a prerequisite gated by
-sentinel. Recruitment lead time is real; if a tester drops out at
-Unit 6.7 entry, re-recruitment of UMB-naive engineering peers blocks
-Phase 6 exit for days.
+ADR #21 N=6 human panel was superseded by ADR #21r (N=1 Briggsy cold-
+watch). Team is just Briggsy + Claude(s) forever; no tester
+recruitment is structurally available. The recruitment-prerequisite
+sentinel (`briggsy-review-6.0a.signoff`) **collapses to a cool-off
+calendar gate** instead: Briggsy commits the sentinel asserting the
+24h cool-off plan exists in `decode-test.md` and that final-render
+date will be recorded there. No tester pool, no roster, no priors
+elicitation.
 
-Briggsy reaches out via Discord (Harry et al.) for 3-6 candidates;
-target panel: 6 confirmed, 1 hot-spare reserve. Each candidate
-confirmed:
-- engineering peer (writes code professionally)
-- has NOT seen UMB v3 trailer
-- can do a 5-minute no-context-watch + 2-minute reaction session
-  within Phase 6 execution window
+**~~Step 5 — Recruitment pool feasibility check~~ REPEALED 2026-05-22 per ADR #21r.**
 
-`decode-test-roster.md` template:
-
-```md
-# Decode Test Tester Roster — Phase 6 Unit 6.0
-
-## Confirmed panel (target N=6 + 1 reserve)
-
-| Tester | Discord handle | Engineering-peer? | UMB-naive? | Available window | Notes |
-|--------|----------------|-------------------|------------|------------------|-------|
-| T1 | <handle> | Y | Y | <date range> | |
-| T2 | ... | | | | |
-| ... | | | | | |
-
-## Eliminated candidates (priors-elicitation)
-
-| Candidate | Reason | Date |
-|-----------|--------|------|
-| <handle> | Default prior already names "Claude" / "AI" | |
-```
-
-**Step 5 — Recruitment pool feasibility check** (per Feasibility F8 + Adversarial
-Attack 35).
-
-Before sentinel commit: enumerate eligible candidates by handle. Multiplying the
-recruitment constraints (engineering peer × UMB-naive × non-Anthropic-prior × ≥30min
-availability) against Briggsy's Discord network (small) may yield <6 eligible. If
-enumerated count <6 (or <12 if planning two waves for retest reserves per Attack 35),
-escalate BEFORE Phase 6 entry:
-- Relax engineering-peer to technical-peer (allows people who read code regularly
-  without writing prod).
-- Expand to Harry-relay for second-degree contacts.
-- Or formally amend ADR #21 down to N=4 with documented rationale (acceptable for a
-  diagnostic test — see CALL-3 above; this would not be acceptable if the test were
-  a GO/NOGO gate).
-
-Record enumerated pool size + adjustments in `decode-test-roster.md` header.
+Recruitment-pool feasibility (Feasibility F8 + Adversarial Attack 35
+escalation paths) is moot — there is no recruitment. ADR #21 → ADR
+#21r supersession replaces the panel with N=1 Briggsy cold-watch.
 
 **Step 6 — X 2026 Immersive Media Viewer verification** (per doc-review CALL-1 +
 Adversarial Attack 24 + Scope-guardian F9 + Product-lens F2).
@@ -863,11 +845,11 @@ Before any 9:16 work runs in Unit 6.6 or Unit 6.8:
 1. Verify via primary source: X Help center, X engineering blog, X for Business
    product page. Search for "Immersive Media Viewer" + vertical feed + 9:16 surface.
 2. If primary source confirms a shipping surface in 2026:
-   - Document the citation URL in `decode-test-roster.md` header under "9:16 surface
+   - Document the citation URL in `decode-test.md` header (was `decode-test-roster.md` pre-ADR-#21r) under "9:16 surface
      verification."
    - Proceed with 9:16 audit work as documented.
 3. If primary source does NOT confirm a shipping surface:
-   - Document the negative finding in `decode-test-roster.md` header.
+   - Document the negative finding in `decode-test.md` header (was `decode-test-roster.md` pre-ADR-#21r).
    - **Skip** the 9:16 work in Units 6.6 + 6.8. Phase 6 audit reduces to 1:1 +
      1.91:1 (the actual mobile in-feed crop).
    - Inform Phase 7 via `PHASE-6-EXIT.md`: 9:16 surface unverified at Phase 6 — Phase
@@ -896,13 +878,13 @@ If FAIL: block Unit 6.0 sentinel; route to Phase 4 to apply the amendment first.
 
 **Step 8 — Sentinel ceremony.**
 
-`briggsy-review-6.0a.signoff` content:
+`briggsy-review-6.0a.signoff` content (updated per ADR #21r 2026-05-22 — was "decode-test panel of N≥6 confirmed" line, now cool-off-plan line):
 ```
 Phase 6 Unit 6.0 prerequisites cleared.
 - verify:trailer-final script in place
 - extract-frames.ts shared helper in place
 - atomic-swap render scripts wired (atomicSwap helper ported from Phase 5)
-- decode-test panel of N≥6 confirmed (see decode-test-roster.md)
+- decode-test plan: N=1 Briggsy cold-watch per ADR #21r (decode-test.md template ready; 24h cool-off scheduled post-render)
 - X 2026 Immersive Media Viewer surface: VERIFIED <citation> / UNVERIFIED <reason>
 - Phase 4 force_original_aspect_ratio amendment: applied
 Date: <YYYY-MM-DD>
@@ -921,11 +903,12 @@ render-qa/`:
 
 Without this, `pnpm verify:briggsy-sentinels` won't validate Phase 6 sentinels — it
 will exit clean because the SCENES list only covers 4.2-4.7 + 5.4/5.6. This
-amendment is applied in this doc-review pass (see Cross-Phase Amendments). The
+amendment is applied in this doc-review pass (see Cross-Phase Amendments). ~~The
 verify script also extends to read `decode-test-roster.md` and assert ≥6 rows in
 the Confirmed Panel table where every column is filled (Adversarial Attack 28: the
 6.0a sentinel commit must be machine-verified to back the claim "N≥6 confirmed,"
-not honor-system enforced).
+not honor-system enforced).~~ — REPEALED per ADR #21r (2026-05-22): the roster
+file is no longer produced, so this assertion is dropped from the verify script.
 
 **Patterns to follow:**
 
@@ -940,9 +923,8 @@ not honor-system enforced).
   failures.
 - **Edge case:** loudnorm two-pass not applied at Phase 2 → integrated LUFS drift
   outside ±0.5; verify fails with LUFS named cause; route to Phase 2 reopen.
-- **Edge case:** Tester recruitment falls below N=6 → ADR #21 amendment to N=4
-  required OR Phase 6 blocks at Unit 6.0. Mitigation per Step 5 recruitment-pool
-  feasibility check + escalation path.
+- ~~**Edge case:** Tester recruitment falls below N=6~~ — REPEALED per ADR #21r
+  (2026-05-22); no tester recruitment occurs, so this edge case is moot.
 - **Edge case:** X 2026 Immersive Media Viewer unverifiable → Step 6 skip-9:16 path
   activates; Phase 6 proceeds without 9:16 audit work.
 - **Edge case:** Phase 4 amendment unapplied → Step 7 grep fails; block on Phase 4
@@ -956,8 +938,9 @@ not honor-system enforced).
   sibling script.
 - `package.json` scripts updated with `render`, `render:iterate`, `render:thumbnail`,
   `render:finalize`, `verify:trailer-final`.
-- `decode-test-roster.md` records ≥6 confirmed testers + X 9:16 surface verification +
-  recruitment pool feasibility note.
+- ~~`decode-test-roster.md` records ≥6 confirmed testers + X 9:16 surface verification +
+  recruitment pool feasibility note.~~ — REPEALED per ADR #21r (2026-05-22). The
+  X 9:16 surface verification finding moves into `decode-test.md` header instead.
 - `briggsy-review-6.0a.signoff` committed under Briggsy's git author.
 - `scripts/verify-briggsy-sentinels.ts` SCENES extended to include 6.0a/6.4/6.7
   (Phase 4 cross-phase amendment).
@@ -1278,8 +1261,11 @@ errors):
 - [ ] iOS Safari (Briggsy's iPhone via TestFlight upload or local
       web-share) — X iOS in-feed uses WKWebView with Safari's codec
       stack
-- [ ] Android Chrome (Briggsy's Android device OR Harry-relay if no
-      Android available) — X Android in-feed equivalent
+- [ ] Android Chrome (Briggsy's Android device — Harry-relay path
+      REPEALED per `user_harry.md` 2026-05-22 update: Harry is AI, not
+      a hardware-relay; if no Android available, document the gap and
+      defer Android coverage to a post-ship verification) — X Android
+      in-feed equivalent
 
 **X staging upload:**
 - [ ] Upload `out/trailer.mp4` to Briggsy's dev X account as an
@@ -2197,7 +2183,7 @@ for (const frame of SAMPLE_FRAMES) {
 
 **Step 1b — 9:16 audit (CONDITIONAL on Unit 6.0 Step 6 verification).**
 
-Only execute if `decode-test-roster.md` header records X 2026 Immersive Media Viewer
+Only execute if `decode-test.md` header (was `decode-test-roster.md` pre-ADR-#21r) records X 2026 Immersive Media Viewer
 surface as VERIFIED. Skip entirely otherwise per CALL-1.
 
 ```ts
@@ -2324,32 +2310,93 @@ Verdict feeds Phase 7 via `cutdown-frame-list.md` artifact (Unit 6.8).
 
 ---
 
-### Unit 6.7 — Decode Test (diagnostic, between-subjects N=3+3 panel) + Final QA Report
+### Unit 6.7 — Decode Test (Briggsy cold-watch per ADR #21r) + Final QA Report
 
 - [ ] **Unit 6.7: Decode Test + Final QA Report**
 
-**Goal:** Run the no-context-engineering-peer decode test on the full
-95-second trailer per ADR #21 (N=6 panel + UMB control + Q1/Q2 +
-keyword precision). Then aggregate all Phase 6 Unit results into the
-final QA report + Briggsy end-to-end watch + Briggsy sentinel sign-off.
+**Goal:** Run the cold-watch decode test on the full 95-second trailer
+per **ADR #21r** (N=1 Briggsy cold-watch; ADR #21 N=6 human panel
+SUPERSEDED 2026-05-22). Then aggregate all Phase 6 Unit results into
+the final QA report + Briggsy end-to-end watch + Briggsy sentinel
+sign-off.
 
-**Requirements:** Success Criteria + R14 + R15 + ADR #21 panel
-protocol.
+**Requirements:** Success Criteria + R14 + R15 + ADR #21r protocol.
 
-**Dependencies:** Units 6.0 (recruitment), 6.2, 6.3, 6.4, 6.5, 6.6
-complete.
+**Dependencies:** Units 6.0, 6.2, 6.3, 6.4, 6.5, 6.6 complete (Unit
+6.0 tester-recruitment step REPEALED per ADR #21r).
 
 **Files:**
 
 - Create: `videos/trailer/sample-eval/final-render-qa/decode-test.md`.
-- Create: `videos/trailer/sample-eval/final-render-qa/decode-audio/tester-{N}.{m4a,ogg}` —
-  voice-memo recordings.
+- ~~Create: `videos/trailer/sample-eval/final-render-qa/decode-audio/tester-{N}.{m4a,ogg}`~~ —
+  REPEALED per ADR #21r; no tester voice-memos.
 - Create: `videos/trailer/sample-eval/final-render-qa/qa-report.md` —
   aggregate (verdict-first structure per design-lens #5).
 - Create: `videos/trailer/sample-eval/final-render-qa/briggsy-review-6.7.signoff` —
   final QA sign-off sentinel (ADR #22).
 
 **Approach:**
+
+> **ACTIVE PROTOCOL — ADR #21r (2026-05-22 supersession of ADR #21).**
+>
+> Briggsy is the cold-watch panel of one. After a 24h cool-off from
+> the final render, Briggsy watches the full 95s trailer once,
+> cold (no in-composition recall priming), with sound. He answers
+> Q1 (free recall) by typing 60-90 seconds of unguided text into
+> `decode-test.md`. He then answers Q2 (prompted recall — "anything
+> you noticed about HOW this trailer was made?"). He adjudicates
+> his own response against the keyword rubric (PRIMARY / SECONDARY
+> / AESTHETIC) using the same definitions ADR #21 specified.
+>
+> No tester recruitment. No UMB v3 control panel. No audio recording.
+> No Whisper transcription. The team is just Briggsy + Claude(s)
+> forever; no outside human eye is structurally available. Briggsy's
+> contamination as sole decode subject is an **accepted residual
+> risk**, mitigated by the 24h cool-off + cold-watch + Q1-before-Q2
+> ordering. The diagnostic remains **DIAGNOSTIC, not GO/NOGO** —
+> Briggsy's end-to-end watch is GO/NOGO authority per CALL-3.
+>
+> The ADR #21 panel-machinery prose below (Step 1 / Step 2 / Step 3)
+> is preserved as audit trail with `[SUPERSEDED]` markers. Do NOT
+> execute that protocol; execute this one.
+
+**`decode-test.md` template under ADR #21r:**
+
+```md
+# Decode Test (ADR #21r — N=1 Briggsy cold-watch)
+
+## Cool-off window
+- Final render date: <YYYY-MM-DD HH:MM>
+- 24h cool-off elapsed: YES at <YYYY-MM-DD HH:MM>
+- Cold-watch date: <YYYY-MM-DD HH:MM>
+
+## Q1 — free recall (typed AFTER playback, no prior priming)
+Briggsy's verbatim response (60-90 sec of unguided text):
+<typed>
+
+## Q2 — prompted recall ("anything about HOW it was made?")
+Briggsy's verbatim response:
+<typed>
+
+## Self-adjudication per keyword rubric
+- PRIMARY trigger phrases (TOOL + BUILD verb OR CATEGORY + BUILD verb): "<quote>" / none
+- SECONDARY trigger phrases (CATEGORY without BUILD verb but unambiguous AI gesture): "<quote>" / none
+- AESTHETIC mentions only: "<quote>" / none
+- Adjudication reasoning for ambiguous edges: <verbatim>
+- Diagnostic verdict columns: primary=YES/NO, secondary=YES/NO, aesthetic=YES/NO
+
+## Failure-route triage (if both primary + secondary = NO)
+- Q1 + Q2 primary FAIL → R14 cold-open weak → consider Phase 1 Unit 1.2 reopen + Phase 2 cue 60 regen
+- Q1 primary FAIL + Q2 primary PASS → R15 chrome insufficient → consider Phase 3 + Phase 4 R15 placement iteration
+- Both primary + secondary FAIL → product-level brainstorm reopen
+- Primary FAIL + Secondary CLEAR → water-beads decode landed via visual route; per roadmap §10 tiebreaker, sign-off-with-trade is acceptable
+
+(Diagnostic-only per CALL-3 — Briggsy may sign-off-over per qa-report.md.)
+```
+
+---
+
+**[SUPERSEDED 2026-05-22 by ADR #21r — preserved as audit trail; do NOT execute]**
 
 **Step 1 — Decode test protocol (ADR #21 with doc-review tightening).**
 
@@ -2428,6 +2475,8 @@ is trailer creator with stake in passing):
   one ambiguous call), Briggsy delegates to Harry or another non-creator for a
   second opinion.
 
+**[SUPERSEDED 2026-05-22 by ADR #21r — preserved as audit trail; do NOT execute]**
+
 **Step 2 — Tester response recording.**
 
 **Execution path** (default — per Design F11): Briggsy schedules each tester
@@ -2503,6 +2552,8 @@ Two YES/NO labels in the header (primary + secondary) make the diagnostic-aggreg
 scan instant. Count primary-YES across BURNED-arm = primary count. Count primary-YES
 OR secondary-YES = combined count.
 
+**[SUPERSEDED 2026-05-22 by ADR #21r — preserved as audit trail; the failure-route triage logic is preserved inside the new ADR #21r template above as Briggsy's self-triage; do NOT execute the panel-version below]**
+
 **Step 3 — Failure-route triage** (diagnostic-only per CALL-3 + scope-guardian
 Challenge 3).
 
@@ -2571,7 +2622,7 @@ Briggsy MAY sign-off-over a sub-verdict FAIL by documenting the trade in the
 | Bar-raise vs UMB v3 (Unit 6.4 Step 6 verdict matrix) | PASS / FAIL / ITERATE-AXIS-3 | Phase 4 targeted iteration |
 | Audio-video sync ADR #20 asymmetric tolerance (Unit 6.5) | PASS / FAIL | Phase 2 / Phase 4 per diagnose |
 | Mobile crop audit 1.91:1 + 1:1 + conditional 9:16 (Unit 6.6) | PASS / ACCEPTABLE-FAIL-1:1 / FAIL | Phase 4 scene re-composition (FAIL only) |
-| Decode test diagnostic (Unit 6.7) — N=6 primary ≥3 OR (primary + secondary) ≥4 | POSITIVE / NEGATIVE | Per Unit 6.7 Step 3 routing (diagnostic-not-gate) |
+| Decode test diagnostic (Unit 6.7) — Briggsy cold-watch (ADR #21r 2026-05-22): Q1 free-recall PRIMARY YES or SECONDARY YES | POSITIVE / NEGATIVE | Per Unit 6.7 active protocol routing (diagnostic-not-gate) |
 | R13 acceptance (Phase 5 EXIT inherited) | PASS / FAIL | Phase 5 reopen |
 
 ## Detail per sub-verdict
@@ -2705,7 +2756,7 @@ If sentinel committed:
 
 **Patterns to follow:**
 
-- ADR #21 decode-test protocol.
+- ADR #21r decode-test protocol (supersedes ADR #21 — 2026-05-22).
 - ADR #22 sign-off ceremony.
 - `feedback-elite-team-standard.md` — verify → then lock; Briggsy
   watches actual output.
@@ -2720,8 +2771,12 @@ If sentinel committed:
 
 - **Happy path:** All 6 sub-verdicts PASS; Briggsy watches end-to-end;
   sentinel committed; hand-off GO.
-- **Edge case:** Decode test ≥3 of 6 BUT UMB control panel ALSO
-  surfaced autonomy ≥2 of 6 → panel contaminated; re-recruit; re-run.
+- ~~**Edge case:** Decode test ≥3 of 6 BUT UMB control panel ALSO
+  surfaced autonomy ≥2 of 6 → panel contaminated; re-recruit; re-run.~~
+  — REPEALED per ADR #21r (2026-05-22). New edge case under ADR #21r:
+  Briggsy's cold-watch surfaces autonomy in Q1, but he's uncertain
+  whether the surfacing is honest or self-anchored → extend cool-off
+  to 48-72h and re-administer Q1 with a fresh draft of `decode-test.md`.
 - **Edge case:** Bar-raise clears axis 3 only → FAIL per Phase 6
   deepening threshold; route to Phase 4 axis-1 or axis-2 iteration.
 - **Edge case:** Briggsy watches end-to-end and feels something is
@@ -2730,8 +2785,9 @@ If sentinel committed:
 
 **Verification:**
 
-- Decode test runs with ≥6 testers + UMB control panel.
-- `decode-test.md` documents Q1/Q2 responses + Briggsy adjudication.
+- Decode test runs as Briggsy cold-watch (N=1) per ADR #21r 2026-05-22
+  (was "≥6 testers + UMB control panel" pre-supersession).
+- `decode-test.md` documents Briggsy's Q1/Q2 responses + self-adjudication.
 - `qa-report.md` aggregates all Phase 6 verdicts (verdict-first
   structure).
 - Briggsy end-to-end watch logged.
@@ -2779,7 +2835,7 @@ entry sentinel check.
 - Bar-raise: axis 3 <CLEARS/FAILS> + axes 1/2 cleared <count> — PASS / FAIL
 - A/V sync (asymmetric tolerance): PASS / FAIL
 - Mobile crop (1:1 + 9:16): PASS / FAIL
-- Decode test (N=6 + control): <N>/6 surfaced — PASS / FAIL
+- Decode test (Briggsy cold-watch per ADR #21r 2026-05-22): PRIMARY YES/NO, SECONDARY YES/NO — POSITIVE / NEGATIVE
 - R13 gameplay: PASS / FAIL
 - Overall: GO / NOGO for Phase 7
 
@@ -2975,9 +3031,9 @@ proceeds.
 | Bar-raise axis 3 cleared but axes 1+2 both fail → bar-raise FAIL per Step 6 matrix | Medium | High | Phase 4 targeted iteration on axis 1 (operative density visibility) or axis 2b (within-genre §2). |
 | Bar-raise axis 3 fails + axes 1+2 both clear | Low | Medium (NOT bar-raise FAIL per Step 6 row 5) | Phase 4 reopen on R3 sync/composition only; trailer keeps its quality bar elsewhere — per Adversarial Attack 21. |
 | Decode test diagnostic NEGATIVE (Briggsy may sign-off-over) | Medium | Diagnostic-only (CALL-3 — does not block ship) | Routing-only response per Unit 6.7 Step 3; Briggsy sign-off-over-FAIL documented in qa-report.md Sign-offs section. |
-| Decode panel priors-polluted (≥2/3 UMB-arm surfaces autonomy) | Medium-High (Briggsy's Discord skews AI-curious per Feasibility F10) | Diagnostic invalidated for that wave | Between-subjects N=3+3 design (Adversarial Attack 6); priors elicitation 24h pre-test; re-recruit fresh testers from Wave 2 reserve. |
-| Decode-test recruitment slips (pool can't support N=6 + reserves) | Medium | Diagnostic invalidated | Unit 6.0 Step 5 pool-size feasibility check BEFORE 6.0a sentinel; relax engineering-peer to technical-peer OR amend ADR #21 down to N=4 with documented rationale. |
-| Tester-pool exhaustion across iteration waves | Medium (Briggsy's Discord finite; word travels) | Diagnostic noisier each wave | Hard cap 2 retest waves before brainstorm-level reframe (Adversarial Attack 35); Briggsy decides on water-beads-watch ship path at cap. |
+| ~~Decode panel priors-polluted (≥2/3 UMB-arm surfaces autonomy)~~ | REPEALED per ADR #21r (2026-05-22) | n/a | No panel; risk is moot. Briggsy's own contamination accepted as residual risk per ADR #21r. |
+| ~~Decode-test recruitment slips (pool can't support N=6 + reserves)~~ | REPEALED per ADR #21r (2026-05-22) | n/a | No recruitment; risk is moot. |
+| ~~Tester-pool exhaustion across iteration waves~~ | REPEALED per ADR #21r (2026-05-22) | n/a | No tester pool; risk is moot. If Briggsy iterates Unit 6.7 across waves, each cold-watch is contaminated by prior viewings — accepted residual risk; hard cap 2 retest waves still applies as a structural-reframe trigger. |
 | Audio onset drift on R3 — audio LEADS visual by ≥1 frame | Low | HARD FAIL per ADR #20 | Unit 6.5 Step 3 explicit check; diagnose-before-fix routes drift source to Phase 2 or Phase 4. |
 | Audio-video drift after final encode (standard cues) | Low | Medium | Unit 6.5 manifest-driven audit; asymmetric tolerance per ADR #20. |
 | Encoder muxing drift accumulation on R3 | Low-Medium (AAC frame ~21ms vs video frame 33ms boundary) | Medium per ADR #20 R3 `[-1, 0]` window | If `audit-av-sync.ts` reports R3 drift consistently near 0 with sub-frame uncertainty, run optional VO-only ground-truth cross-check (Unit 6.5 Step 1 cross-check path). Treat 0-frame measurement basis explicitly per Adversarial Attack 25. |
@@ -3016,7 +3072,7 @@ These risks are recorded for historical context; no active monitoring required.
 | `verify-briggsy-sentinels` SCENES const not extended for Phase 6 sentinels | RESOLVED — doc-review absorb of Feasibility F27 + Adversarial Attack 28; Phase 4 cross-phase amendment #5 applied. |
 | Decode-audio + trailer.mp4 in public repo | RESOLVED — doc-review absorb of Security F4 + F5; .gitignore amendments applied. |
 | Q1 prompt time-cap mismatch with 90s window | RESOLVED — doc-review absorb of Adversarial Attack 4; prompt rewritten. |
-| Within-subjects order effects in UMB control panel | RESOLVED — doc-review absorb of Adversarial Attack 6; between-subjects N=3+3 design. |
+| Within-subjects order effects in UMB control panel | ~~RESOLVED — doc-review absorb of Adversarial Attack 6; between-subjects N=3+3 design.~~ — REPEALED per ADR #21r (2026-05-22): no panel exists; risk is moot. |
 | Briggsy-watch authority asymmetric/undocumented | RESOLVED — doc-review absorb of Adversarial Attacks 20+21 + Product-lens F7; asymmetric-authority contract documented in Phase 6 exits-when criteria. |
 | Cutdown ADR #25 framework leaking from Phase 7 into Phase 6 Unit 6.8 | RESOLVED — doc-review absorb of Scope F3 + CALL-7; Phase 6 ships timing-window metadata, Phase 7 applies ADR #25. |
 | Operational §2 rubric measures token-discipline not Archer-look | RESOLVED — doc-review absorb of CALL-4 + Adversarial Attacks 9/10/11; rubric split into Layer A Production Discipline + Layer B Archer-Fidelity (reference-frame anchored). |
@@ -3043,9 +3099,11 @@ These risks are recorded for historical context; no active monitoring required.
   encode; reconciles roadmap §3 + Phase 0 ADR.
 - **AV-sync tolerance** (ADR #20): asymmetric — standard cues `[-1,
   +3]` frames; R3 `[-1, 0]` frames; audio MUST NOT lead R3.
-- **Decode test panel size** (ADR #21): N=6 (not N=2 first-draft
-  inheritance from Phase 0 Unit 0.3 spike); + UMB control panel +
-  priors elicitation + Q1/Q2 + keyword precision.
+- **Decode test panel size** (ADR #21 → **ADR #21r supersedes 2026-05-22**):
+  N=1 Briggsy cold-watch with 24h cool-off + Q1/Q2 + keyword precision.
+  Original ADR #21 N=6 panel + UMB control + priors elicitation was
+  structurally unavailable (team is just Briggsy + Claude(s) forever);
+  see Critical Constraints § ADR #21r.
 - **Sampling protocol**: 10 frames at fixed timecodes for both
   BURNED and UMB v3 comparison. UMB last sample uses frame 4439
   (not 4440 — end-of-stream edge).
@@ -3079,11 +3137,9 @@ These risks are recorded for historical context; no active monitoring required.
   this derivative as a Release asset; Phase 7 Unit 7.2
   `portfolio-embed.md` may reference it as a poster image for the
   tertiary portfolio-site surface. Commit at Phase 6 close.
-- **Tester recording mechanism** (feasibility #11 + doc-review Feasibility F6 fix):
-  phone voice memo / Discord DM / live call → Briggsy ingests → `decode-audio/tester-
-  {N}.{m4a,ogg,opus}` (gitignored) → local Whisper CLI or Briggsy types verbatim.
-  Pre-deepening cited `mcp__gemini-grounding__search_with_grounding` for audio
-  transcription which doesn't exist on that MCP tool surface; corrected.
+- ~~**Tester recording mechanism** (feasibility #11 + doc-review Feasibility F6 fix)~~ —
+  REPEALED per ADR #21r (2026-05-22): no testers, no recording mechanism. Briggsy
+  types his own Q1/Q2 responses verbatim into `decode-test.md`.
 - **Cross-browser playback target list** (per Scope F8 — Windows Media Player dropped
   as redundant with Films & TV; both use Microsoft Media Foundation H.264 path): Films
   & TV + VLC + Chrome + Edge desktop + iOS Safari real device + Android Chrome real
@@ -3096,8 +3152,10 @@ These risks are recorded for historical context; no active monitoring required.
 
 ### Deferred to Implementation
 
-- **Specific decode-test tester recruitment**: Briggsy's Discord
-  network. Unit 6.0 recruits (NOT deferred to Unit 6.7).
+- ~~**Specific decode-test tester recruitment**: Briggsy's Discord
+  network. Unit 6.0 recruits (NOT deferred to Unit 6.7).~~ — REPEALED
+  per ADR #21r (2026-05-22): no tester recruitment. Unit 6.0 closes
+  out only the cool-off-plan sentinel.
 - **Whether axis 1 (operative density) ties with UMB** vs clears —
   measurement at execution time.
 - **Whether to add bitrate maxrate cap**: depends on Unit 6.1 Step 3
@@ -3116,8 +3174,10 @@ These risks are recorded for historical context; no active monitoring required.
   thumbnail) and `videos/trailer/sample-eval/final-render-qa/`.
 - Phase 6 final deliverables: `out/trailer.mp4` + `out/thumbnail.png`
   + `qa-report.md` + `PHASE-6-EXIT.md` + `cutdown-frame-list.md`.
-- Decode test recruitment: Briggsy's Discord network (Harry + others
-  per `user_harry.md`). Recruit during Phase 5 execution.
+- ~~Decode test recruitment: Briggsy's Discord network (Harry + others
+  per `user_harry.md`). Recruit during Phase 5 execution.~~ — REPEALED
+  per ADR #21r (2026-05-22): no recruitment. Harry is AI, not a
+  human ear/eye; team is just Briggsy + Claude(s) forever.
 - Sign-off ceremony per ADR #22: `.signoff` sentinels committed under
   Briggsy's git author identity (`briggsy007@gmail.com`); `pnpm
   verify:briggsy-sentinels` enforces.
@@ -3149,9 +3209,11 @@ note, it is a prerequisite to Phase 6's coherence). Status per item:
    amended at the `render:final` script row.
 2. **Phase 0 Unit 0.3 decode-gate**: Clarify that N=2 protocol applies ONLY to the
    5-second cold-open binary-hook spike, NOT to Phase 6 full-trailer comprehension
-   decode (which uses between-subjects N=3+3 per CALL-3 + diagnostic-not-gate framing,
-   informed by ADR #21). — **APPLIED in this doc-review pass.** Phase 0 amended at
-   Unit 0.3 decode-gate row.
+   decode. (Pre-ADR-#21r wording referenced "between-subjects N=3+3 per CALL-3";
+   ADR #21r supersession 2026-05-22 collapses that to **N=1 Briggsy cold-watch** —
+   no panel, just diagnostic-not-gate framing preserved.) — **APPLIED in this
+   doc-review pass; ADR #21r amendment 2026-05-22 additionally collapses panel to
+   N=1.** Phase 0 amended at Unit 0.3 decode-gate row.
 3. **Phase 4 placeholder ffmpeg filter** (carried forward from Phase 5 deepening
    surfaced amendment): `force_original_aspect_ratio=cover` →
    `force_original_aspect_ratio=increase`. — **APPLIED in this doc-review pass.**
@@ -3164,9 +3226,10 @@ note, it is a prerequisite to Phase 6's coherence). Status per item:
    `briggsy-review-6.0a.signoff` / `briggsy-review-6.4.signoff` /
    `briggsy-review-6.7.signoff` paths under `videos/trailer/sample-eval/final-render-
    qa/`. Without this, `pnpm verify:briggsy-sentinels` exits clean because it only
-   checks 4.2-4.7 + 5.4/5.6. Also extend to read `decode-test-roster.md` and assert
-   ≥6 rows with complete columns. — **APPLIED in this doc-review pass.** Phase 4
-   amended at the `verify-briggsy-sentinels.ts` SCENES const definition.
+   checks 4.2-4.7 + 5.4/5.6. ~~Also extend to read `decode-test-roster.md` and assert
+   ≥6 rows with complete columns.~~ (REPEALED per ADR #21r 2026-05-22: roster file
+   no longer produced; assertion dropped.) — **APPLIED in this doc-review pass.**
+   Phase 4 amended at the `verify-briggsy-sentinels.ts` SCENES const definition.
 6. **.gitignore additions** (per Security F4 + F5): add `videos/trailer/sample-eval/
    final-render-qa/decode-audio/`, `videos/trailer/sample-eval/final-render-qa/archer-
    reference/`, `videos/trailer/out/*.mp4`, and `videos/trailer/out/*.mp4.{new,prev,iterate}`
@@ -3251,7 +3314,12 @@ note, it is a prerequisite to Phase 6's coherence). Status per item:
   proposing fix
 - `feedback-proven-not-believed.md` — no marketing voice; bar-raise
   verdict is execution output not planning forecast
-- `user_harry.md` — Harry as decode-test recruitment channel
+- `user_harry.md` (updated 2026-05-22) — Harry is AI; cannot serve as
+  decode-test recruitment channel or any human-eye role. ADR #21 →
+  ADR #21r supersession in Critical Constraints reflects this.
+- `feedback-listener-panels-default-to-n1.md` — team is just Briggsy +
+  Claude(s) forever; multi-person human panels structurally
+  unavailable. Drives ADR #21 → ADR #21r supersession.
 - `feedback-phase-plan-drafting-workflow.md` — write all phase files
   in one workflow; deepen sequentially after
 - `feedback-wait-for-all-agents.md` — synthesis discipline; this

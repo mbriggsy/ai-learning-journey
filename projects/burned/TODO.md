@@ -7,7 +7,7 @@ the history. (Rule: `feedback-todo-is-not-a-diary.md`.)
 
 ## 1. Active priorities
 
-### Status (verified 2026-05-22 — Phase 2 Unit 2.7 Tier-2 + Tier-4 LANDED; trailer reauthored 95s→106s)
+### Status (verified 2026-05-22 — Phase 2 Unit 2.7 **CLOSED**; trailer reauthored 95s→106s; ADR #21/#13 superseded by ADR #21r/#13r — N=1 Briggsy standard)
 
 - Tests: **1407 pass** | 6 expected fail (68/68 files green)
 - Trailer subpackage tests: **194 pass | 0 expected-fail** (8 files;
@@ -161,7 +161,19 @@ Frozen as Phase 2/3/4 consumption contract.
   spend on Unit 2.6: ~$0.33.
 - New `pnpm stitch:beats` + `pnpm audit:stitch-positions` scripts.
 
-**Unit 2.7 — IN-FLIGHT.** Phase 1 reconciliation. The drift cluster from
+**Unit 2.7 — ✅ CLOSED 2026-05-22.** Sentinel:
+`videos/trailer/sample-eval/voice-pipeline/phase-1-reconciliation-signoff.txt`.
+R2 amendment CORRECTED 2026-05-22: final sign-off is **N=1 (Briggsy) —
+production-cert standard**. Earlier R2 wording locked N=2 with Harry as
+outside reviewer on the false premise that Harry was a human listener.
+Harry is AI; the team is just Briggsy + Claude(s) forever (no future
+phase changes that). Same architectural correction cascaded to Phase 5
+CALL F (REPEALED), Phase 6 ADR #21 (SUPERSEDED by ADR #21r — N=1
+Briggsy cold-watch), roadmap §5.2 (SUPERSEDED — N=1 Briggsy is the
+operational standard). Memory: `feedback-listener-panels-default-to-n1.md`
+(new) + `user_harry.md` (updated to clarify Harry is AI).
+
+**Closeout history.** Phase 1 reconciliation drift cluster from
 Unit 2.4/2.5/2.6 audits points to a SYSTEMIC pace mismatch — Dash's
 arrogant-Sterling delivery at `style=0.35 / speed=0.95` produces
 ~2.2-2.4 wps natural pace, vs Phase 1's deadpan-tight 3.89 wps
@@ -201,21 +213,18 @@ budget. Affected cues + per-cue disposition:
   - S06-close (-29.3% — provides closing-card breathing room).
   - S06-phrasing (+58.3% but Briggsy-locked at 0.63s).
 
-  **Remaining Unit 2.7 work:**
-  - `phase-1-reconciliation-signoff.txt` sentinel + N≥2 listener panel
-    (Briggsy + Harry minimum per plan §R2). N=1 (Briggsy-only) until
-    Harry can listen.
-
 Phase 2 plan §Unit 2.7 ladder: Tier 0 absorb / Tier 1 Phase 2 regen
 with pacing-adjusted steering / Tier 2 Phase 1 line-trim (reopen) /
 Tier 3 Phase 1 timing.ts adjustment / Tier 4 TOTAL_FRAMES adjustment.
 Decision per cue: trim text OR amend `expectedFrames` OR steering
-adjustment OR accept overlap-in-Phase-4-compositing. Closes with a
+adjustment OR accept overlap-in-Phase-4-compositing. Closed with the
 `phase-1-reconciliation-signoff.txt` sentinel that Unit 2.8 asserts.
 
-**Unit 2.8 — sequential after 2.7.** AudioAsset manifest for Phase 4
-Remotion (JSON map of cueId → final WAV path + measured duration +
-loudness + leadFramesHint).
+**Unit 2.8 — NEXT (sequential).** AudioAsset manifest for Phase 4
+Remotion: JSON map of `cueId → { finalWavPath, measuredDuration,
+loudness, leadFramesHint }`. Plan asserts existence of
+`phase-1-reconciliation-signoff.txt` sentinel (now in place at
+`videos/trailer/sample-eval/voice-pipeline/`).
 
 **Open follow-ups carried by Phase 2 Unit 2.6 close (NOT blocking Unit 2.7):**
 
@@ -291,10 +300,15 @@ loudness + leadFramesHint).
 
 **Open follow-ups carried by Phase 1 signoff (NOT blocking Phase 2):**
 
-- **Cold-read gate for Unit 1.6** — needs N≥3 human reviewers,
-  per-reviewer-floor consensus (≥2 of 3 score ≥1 on same pairing).
-  Phase 2 voice pipeline produces the audio stimulus the reviewers
-  listen to; pre-drafted R11-cut bridge lines activate if hard-fail.
+- **Cold-read gate for Unit 1.6** — **AMENDED 2026-05-22 per ADR #13r
+  supersession (parallel to ADR #21r):** was "N≥3 human reviewers,
+  per-reviewer-floor consensus" on the premise that Briggsy could
+  recruit a panel. Team is just Briggsy + Claude(s) forever; no human
+  panel is structurally available. Operational standard is **N=1
+  Briggsy self-read** (cold-read with 24h cool-off, MUSHRA-shaped
+  Likert rubric applied by Briggsy himself). Pre-drafted R11-cut
+  bridge lines still activate if Briggsy's self-read hard-fails.
+  Memory: `feedback-listener-panels-default-to-n1.md`.
 - **Phase 3 — music marketplace audition** + `music-license.pdf`
   filing + `videos/trailer/public/audio/music-bed.mp3` (criteria +
   cue-map locked at Phase 1 Unit 1.7).

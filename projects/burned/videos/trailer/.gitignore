@@ -17,10 +17,22 @@ public/audio/lines/raw/
 sample-eval/voice-pipeline/tts-spend.json
 sample-eval/voice-actor-delivery/
 sample-eval/voice-actor-delivery/path-d-manifest.json
-# Allow markdown / JSON / yaml (eval protocols + adapter files + results)
+# Allow markdown / JSON / yaml (eval protocols + adapter files + results).
 !sample-eval/**/*.md
 !sample-eval/**/*.json
 !sample-eval/**/*.yaml
+# Allow .txt SENTINEL files (signoff + reconciliation gates), narrowly
+# pattern-scoped. The parent repo's .gitignore at
+# C:/Users/brigg/ai-learning-journey/.gitignore line 2 has `*.txt`
+# which would otherwise eat phase-N-...-signoff.txt sentinels
+# (caught 2026-05-22 while writing the Phase 2 Unit 2.7
+# phase-1-reconciliation-signoff.txt — the Unit 2.3
+# cadence-consistency-signoff.txt was also presumably eaten this way
+# and never noticed because Unit 2.4 didn't actually run the assertion).
+# DO NOT broaden to `*.txt` — would expose mallory-design / mallory-
+# audition voice-design metadata that's supposed to stay local.
+!sample-eval/**/*-signoff.txt
+!sample-eval/**/*-reconciliation*.txt
 # But keep the spend log + actor PII manifest gitignored even under the
 # JSON allowlist exception above
 sample-eval/voice-pipeline/tts-spend.json

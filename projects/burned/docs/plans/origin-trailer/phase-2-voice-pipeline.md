@@ -328,16 +328,24 @@ status: active
     the Unit 2.4.5 re-canary step. "Load-bearing for trailer emotional
     impact" ≠ "load-bearing for register recognition" — product-lens
     agent's framing accepted.
-  - **R2. FINAL SIGN-OFF N=2 MINIMUM** — Phase 2 Unit 2.7 was N=1
-    Briggsy alone; Phase 0 R4 panel was N=6 listeners minimum (per
-    Phase 0 Unit 0.2 + roadmap §5.2 + ADR #13). Inverted bar — the
-    engine-certification protocol used 6 ears; the actual-trailer-
-    audio protocol used 1. Locked N=2 minimum (Briggsy + Harry as
-    outside reviewer per user memory `user_harry.md` — "Harry is the
-    OpenClaw wizard / IT department"); escalates to N=6 panel if any
-    dimension Likert score <4 on any cue. Costs one Discord ping;
-    closes the audible-identity bar gap between engine-cert and
-    production-cert.
+  - **R2. FINAL SIGN-OFF — N=1 BRIGGSY (CORRECTED 2026-05-22).** Earlier
+    R2 deepening locked "N=2 minimum (Briggsy + Harry as outside
+    reviewer)" on the premise that Harry was a human listener. Harry
+    is AI (OpenClaw / Claude Code instance via Discord — see updated
+    `user_harry.md`). The team shape is **just Briggsy + Claude(s)
+    forever** (Briggsy 2026-05-22: *"there are no other players
+    involved, it's just me and you my friend forever and ever … no
+    future phase will change that"*). No multi-person human ear panel
+    is structurally available for any forward-looking gate. **Final
+    sign-off is N=1 (Briggsy) — production-cert standard.** The
+    "escalate to N=6 if any dimension Likert <4" branch is also
+    deleted (same broken premise). The Phase 0 R4 N=6 comparison in
+    the prior R2 wording was always theoretical — Phase 0 EXIT
+    (`videos/trailer/PHASE-0-EXIT.md` §"MUSHRA listener count: 1 / 6
+    minimum") confirms the N=6 panel was never run; it was deferred
+    to Phase 6 ADR #21 throughout. Phase 6's panel is amended the
+    same way. Cross-ref: memory `feedback-listener-panels-default-
+    to-n1.md`.
   - **R3. BUDGET PARADOX RESOLVED** — `$30` ceiling lifted to **`$50`**
     matching Phase 0 Unit 0.2 envelope. `TTS_BUDGET_OVERRIDE` env var
     DELETED entirely. The original shape was an autonomy-rule footgun:
@@ -3043,8 +3051,8 @@ for the same voice cell:
 fail-action. **Joint pass** requires all 4 dimensions ≥4 on the
 SAME canary cue (not averaged across canaries).
 
-Listener: Briggsy (N=1 for canary; full-audio sign-off escalates
-to N=2 minimum per Unit 2.7 doc-review R2).
+Listener: Briggsy (N=1 — production standard for all panels per
+Unit 2.7 doc-review R2 correction 2026-05-22).
 
 **Step 3 — Fail-action ladder.**
 
@@ -3120,8 +3128,9 @@ writeFileSync(
   mid-Atlantic / sardonic).
 - A/B-compare protocol from `feedback-eye-in-loop-beats-calibration-for-motion.md`
   (eye-in-loop applies to ear-in-loop here too).
-- MUSHRA-shaped Likert rubric (Phase 0 Unit 0.2's R4 listener panel
-  protocol, scaled down to N=1 canary).
+- MUSHRA-shaped Likert rubric (industry citation only; the multi-
+  listener panel form was never structurally available — see R2
+  amendment 2026-05-22. N=1 Briggsy applies the rubric directly.)
 
 **Test scenarios:**
 
@@ -4308,26 +4317,23 @@ if (overruns.length > 0) {
 
 Output: `videos/trailer/sample-eval/voice-pipeline/full-audio.wav`.
 
-**Step 4 — Sign-off recording (DOC-REVIEW R2: N=2 minimum listener
-panel, escalating to N=6 if quality uncertain).**
+**Step 4 — Sign-off recording (DOC-REVIEW R2 CORRECTED 2026-05-22:
+N=1 Briggsy production-cert standard).**
 
-The pre-doc-review draft signed off on full-audio.wav with N=1
-(Briggsy alone). Phase 0 R4 cadence-recognition gate uses N=6-8 (per
-roadmap §5.2 + ADR #13 + Phase 0 Unit 0.2). Production sign-off at N=1
-INVERTS the bar from engine cert to production cert — Phase 2 doc-review
-R2 locks **N=2 minimum**: Briggsy + Harry (outside reviewer per user
-memory `user_harry.md`). Escalates to the full N=6 panel if any
-canary's Likert dimension scored <5 (i.e., quality was uncertain).
+Earlier R2 wording locked "N=2 minimum (Briggsy + Harry)" on the
+premise that Harry was a human listener. Harry is AI. The team is
+just Briggsy + Claude(s) forever (no future phase changes that).
+Final sign-off is **N=1 (Briggsy)** — production-cert standard. The
+"escalate to N=6 if any Likert dimension <5" branch is deleted (same
+broken premise; Phase 0 EXIT confirms the N=6 panel was never
+actually run, only deferred forward).
 
 ```md
 ## Phase 2 → Phase 1 Reconciliation — SIGNED OFF
 Date: 2026-MM-DD
 
-### Listener panel (N=2 minimum per DOC-REVIEW R2)
+### Sign-off (N=1 Briggsy — production-cert standard per R2 amendment)
 - Briggsy: verdict <accepted / route to Tier N>
-- Harry (or other outside reviewer): verdict <accepted / route to Tier N>
-- (If any canary Likert dimension <5, panel expands to N=6 — record
-  each panelist's verdict here.)
 
 ### Runtime + reconciliation
 Total runtime: <measured>s (target 95.0s, drift <%>)
@@ -4339,19 +4345,19 @@ Overruns surfaced by stitch: <list or "none">
 
 ### Sentinel
 - phase-1-reconciliation-signoff.txt written: <YES / NO>
-- (Written ONLY when all panelists' verdicts are "accepted".)
+- (Written when Briggsy's verdict is "accepted".)
 ```
 
 ```ts
 // scripts/reconciliation-signoff.ts (NEW — invoked after Step 4 review)
 import { writeFileSync } from 'node:fs';
 const SENTINEL = 'videos/trailer/sample-eval/voice-pipeline/phase-1-reconciliation-signoff.txt';
-// Written ONLY when N≥2 panelists all return "accepted".
+// Written when Briggsy's verdict is "accepted" (N=1 production standard).
 writeFileSync(
   SENTINEL,
   `Phase 1 reconciliation sign-off: ${new Date().toISOString()}\n` +
-  `Listeners (N=${panelists.length}): ${panelists.join(', ')}\n` +
-  `All accepted: YES\n`,
+  `Listener (N=1): Briggsy\n` +
+  `Accepted: YES\n`,
 );
 ```
 
@@ -5386,7 +5392,7 @@ pass** (downstream phases must absorb during their own deepening passes):
 | **FFmpeg concat-list path break on Windows** | Resolved (DOC-REVIEW) | High (silent wrong-file selection by concat demuxer) | Stitch scripts normalize paths to forward-slash before serializing concat-list (`toFFmpegPath()` helper). FFmpeg concat demuxer treats `\` as escape character on Windows path.join output without normalization. |
 | **Concurrent stitch runs clobber temp concat-list** | Resolved (DOC-REVIEW) | Low | Per-invocation unique temp filename (`tmp/concat-list-${cueId}-${Date.now()}-${process.pid}.txt`) in OS temp dir. Was hardcoded `temp-concat-list.txt` in `linesDir` — parallel `--only` agent runs would have clobbered. |
 | **Cadence-spec adapter edits silently ignored by hash skip** | Resolved (DOC-REVIEW) | Medium (stale WAVs treated as fresh after adapter edit) | `hashCueInputs()` now includes adapter content SHA. `voice_settings` edits in `cadence-spec-elevenlabs.json` (or analog) auto-invalidate cached WAVs. Documentation in `Documentation/Operational Notes` updated to match. |
-| **Production sign-off N=1 inverts engine-cert quality bar (R4 panel was N=6)** | Resolved (DOC-REVIEW R2) | High (audible identity drift hits trailer audience first) | Unit 2.7 sign-off locked at N=2 minimum (Briggsy + Harry as outside reviewer per `user_harry.md`). Escalates to N=6 panel if any canary Likert dimension scored <5. Sentinel written only when all panelists return "accepted." |
+| **Production sign-off panel sizing** | Resolved (DOC-REVIEW R2 CORRECTED 2026-05-22) | High (audible identity drift hits trailer audience first) | Unit 2.7 sign-off is **N=1 (Briggsy)** — production-cert standard. Earlier R2 wording locked N=2 with Harry as outside reviewer on the false premise that Harry was human; Harry is AI. Team is just Briggsy + Claude(s) forever, so multi-person human panels are structurally unavailable. The "Phase 0 R4 N=6 panel" comparison was always theoretical — Phase 0 EXIT confirms that panel never ran, only deferred to Phase 6 ADR #21 (also amended). Sentinel written when Briggsy's verdict is "accepted." Cross-ref: memory `feedback-listener-panels-default-to-n1.md`. |
 | **Three-client build cost vs single-engine commitment** | Resolved (DOC-REVIEW R4) | Low (procedural completionism, not correctness) | Build ONLY the engine PHASE-0-EXIT.md locks. Other engine clients re-implement on-demand if locked engine sunsets (Phase 1 reopen picks new engine anyway). Saves ~6-10 hours plan-execution. Files list updated. |
 | **Cue 1950 4-word payoff is wrong canary for Sterling-CODED register validation** | Resolved (DOC-REVIEW R1) | High (silent register drift in production) | Unit 2.3 canary swapped from cue 1950 (4-word payoff at 1.6-1.8 wps) to S04-htp-1 (sustained cascade line ≥10s). Register dimensions need ≥8-10s sustained speech to manifest. Cue 1950 audited post-batch via Unit 2.4.5 re-canary instead. |
 
@@ -5489,10 +5495,13 @@ pass** (downstream phases must absorb during their own deepening passes):
 - **R1 — Canary cue swap**: S04-htp-1 (sustained cascade) replaces
   cue 1950 as the Dash register-validation canary. Cue 1950 audited
   post-batch via Unit 2.4.5 re-canary.
-- **R2 — Full-audio.wav sign-off panel size**: N=2 minimum (Briggsy +
-  Harry as outside reviewer). Escalates to N=6 if any canary Likert
-  dimension <5. (Was "default Briggsy alone" — inverted the engine-cert
-  N=6 bar.)
+- **R2 — Full-audio.wav sign-off panel size** (CORRECTED 2026-05-22):
+  **N=1 (Briggsy) — production-cert standard.** Earlier R2 wording
+  locked N=2 with Harry as outside reviewer on the false premise that
+  Harry was a human listener. Harry is AI; team is just Briggsy +
+  Claude(s) forever. Escalation-to-N=6 branch also deleted (Phase 0
+  EXIT confirms that panel never ran, only deferred). Phase 6 ADR #21
+  amended the same way.
 - **R3 — Budget paradox resolved**: $30 ceiling → $50 ceiling;
   `TTS_BUDGET_OVERRIDE` env var DELETED. Per-cue budget check inside
   loop (not once at startup). Voice Changer per-second billing via
@@ -5664,12 +5673,15 @@ pass** (downstream phases must absorb during their own deepening passes):
   sample paragraphs — internally-generated reference text, NOT
   third-party actor recordings.
 
-- **Production sign-off panel (DOC-REVIEW R2)**: full-audio.wav
-  sign-off requires **N=2 minimum listeners** (Briggsy + Harry per
-  `user_harry.md`). Escalates to N=6 panel matching Phase 0 R4
-  protocol if any Unit 2.3 canary Likert dimension scored <5. Sentinel
-  `phase-1-reconciliation-signoff.txt` written ONLY when all
-  panelists return "accepted."
+- **Production sign-off panel (DOC-REVIEW R2 CORRECTED 2026-05-22)**:
+  full-audio.wav sign-off is **N=1 (Briggsy) — production-cert
+  standard.** Earlier wording locked N=2 with Harry as outside
+  reviewer on the false premise that Harry was human. Harry is AI;
+  team is just Briggsy + Claude(s) forever. Escalation-to-N=6 branch
+  deleted (Phase 0 EXIT confirms that panel was never run, only
+  deferred to Phase 6 ADR #21 which is also amended). Sentinel
+  `phase-1-reconciliation-signoff.txt` written when Briggsy's verdict
+  is "accepted."
 
 - **ElevenLabs v3 alpha portability (DOC-REVIEW R5)**: `eleven_v3`
   is alpha; Phase 2 archives raw API responses to
@@ -5811,9 +5823,13 @@ pass** (downstream phases must absorb during their own deepening passes):
   consumption).
 - `docs/conventions/dev-environment.md` §Git topology — monorepo
   pre-commit checklist (caught 2026-05-09: 6→67 file commit risk).
-- `user_harry.md` — Harry is the OpenClaw wizard / IT department,
-  Discord-reachable. DOC-REVIEW R2 names Harry as the N=2 outside
-  reviewer for Unit 2.7 full-audio.wav sign-off panel.
+- `user_harry.md` — Harry is AI (OpenClaw / Claude Code instance via
+  Discord). Cannot serve as a human listener. DOC-REVIEW R2 was
+  corrected 2026-05-22 to N=1 Briggsy production-cert standard;
+  Harry no longer load-bearing in Unit 2.7 sign-off.
+- `feedback-listener-panels-default-to-n1.md` — team is just Briggsy +
+  Claude(s) forever; multi-person human panels structurally
+  unavailable. Drives R2 correction.
 
 **Doc-review pass artifacts (2026-05-17):**
 - 7-persona parallel review: coherence + feasibility + product-lens +

@@ -18,7 +18,7 @@ status: active
 - **CALL C — Agent-built identity thesis-defense block added.** R14 cold-open + R15 chrome carry the "Briggsy didn't write this either" thesis. S05 humans on camera = AUDIENCE consuming a deployed product, NOT builders. Tension surfaced + reconciled (product F2).
 - **CALL D — Mechanism B = physical camera capturing TV + table-with-phones (OBS Video Capture Device source).** Pre-deepening conflated Display Capture (signal-only, no phones visible) with the shot list's "phone screen + board both visible in frame" requirement. Display Capture alone CANNOT satisfy W3. Clarified throughout (design F04/F17).
 - **CALL E — Approach III locks LOCAL-DEV ONLY for the dev:stack path.** Production URL captures use Approach I (natural plays, longer takes). Pre-deepening claimed Approach III + production URL coexistable; `scripts/dev-stack-top.ts:59` hardcodes `ws://127.0.0.1:8787` AND production prod-bundle verifier ENFORCES no `PLAYTEST_MODE` — physically impossible against prod (feasibility F3 + adversarial F01).
-- **CALL F — Harry serves as outside-viewer for R13 acceptance gate, NOT as Mechanism B physical participant.** Per `user_harry.md` Harry is remote (Discord-only); cannot hold a phone in Briggsy's apartment. Briggsy's eye is contamination-maxed (he designed the game). Harry breaks the single-source-of-truth (adversarial F06 + product F11).
+- **CALL F — REPEALED 2026-05-22.** The original CALL F amendment named Harry as R13 outside-viewer based on `user_harry.md` describing him in human-collaborator terms. Harry is AI (OpenClaw / Claude Code instance via Discord), not a human eye. The team shape is just Briggsy + Claude(s) forever (Briggsy 2026-05-22: *"there are no other players involved, it's just me and you my friend forever and ever … no future phase will change that"*). No multi-person human gate is structurally available. **Briggsy's contamination as sole judge is now an accepted residual risk**, mitigated by the surviving contamination defenses: rubric-floor objective reject, 24h cool-off, random-order top-3 watch, §2 Archer gate, fluency gate. The "Harry blind viewer" / "outside-eye blind viewer" steps in Units 5.0, 5.4, 5.6 are deleted; the ladder collapses accordingly. Cross-ref: memory `feedback-listener-panels-default-to-n1.md` + updated `user_harry.md`.
 - **CALL G — Production-URL strategy decision matrix tied to mechanism:** Mechanism A → URL in frame → deploy migration HARD prereq → must show canonical `burned.pages.dev`. Mechanism B → URL not in frame → URL question moot for capture; Phase 7 owns distribution copy (product F9).
 
 P0 technical fixes absorbed (the doc-described scripts CANNOT RUN as written; feasibility-led):
@@ -41,7 +41,7 @@ Composite + production design absorptions:
 - **Director's-eye production guidance expanded** — wardrobe direction (dark solid tops, no logos, no hoodies — Pendleton operative vibe); background dressing (manila folder w/ CLASSIFIED tape + cream ceramic mug as default props; dark bedsheet behind TV if apartment-wall-coded background) (design F05/F06).
 - **§2 Archer-gate at take selection** — separate from fluency gate. Question: "Could a frame from this take appear in an Archer promotional reel? Binary yes/no, no partial." Failures bypass fluency-gate consideration regardless of W1-W6 scores (design F18 + product F4).
 - **Cross-device sync moments in shot list** — W1+W3+W5 windows now NAME specific cross-device events (board animation lands at same frame as phone-screen state change; player-count chip increments; multiple phones reacting in sync) as the highest-leverage R13a "shipped & playable" visual signal (product F8).
-- **Take selection rubric: 24h cooling-off + random-order re-watch + Harry outside-eye** — pre-deepening Briggsy-watches-all-takes-once was anchoring-vulnerable. New ladder: rubric-floor objective reject → 24h cool-off → random-order top-3 watch → §2 Archer gate → fluency gate → Harry blind viewer ("what's happening here?") (product F11 + adversarial F06 + product F23/F24).
+- **Take selection rubric: 24h cooling-off + random-order re-watch** (Harry blind-viewer step REPEALED per CALL F repeal 2026-05-22) — pre-deepening Briggsy-watches-all-takes-once was anchoring-vulnerable. Ladder: rubric-floor objective reject → 24h cool-off → random-order top-3 watch → §2 Archer gate → fluency gate (product F11 + product F23/F24). The adversarial F06 "Briggsy contamination" concern is no longer mitigated by an outside human; accepted residual risk per CALL F repeal.
 - **Composite-fitness test at Unit 5.6** — after take selection, render Phase 4 S05 scene IN ISOLATION (not full trailer) with the real clip + all overlays; spot-check 6 frames at clip-relative 0/90/160/240/360/510 for (a) chrome legibility, (b) head-fade reads as fade not flash, (c) iris-anchor focal point present. NOT skipped — protects against composition problems invisible until Phase 4 consumes (design F09 + adversarial F09).
 
 Scope reductions absorbed:
@@ -69,7 +69,7 @@ Rejects (findings considered + NOT absorbed):
 - **Scope F12 (Phase 4 ffmpeg bug)** — out of Phase 5 review scope; deferred to Phase 4 plan amendment.
 - **Adversarial F14 (calendar deadline 2026-05-24 → state condition)** — kept calendar gate; state-conditions can drift indefinitely, calendar gives Phase 5 entry a definite trigger. Documented limitation.
 
-Phase 5 grew 2283 → ~2750 lines (1.20× growth). Most growth is in Unit 5.0 (added Mechanism A parallel spike step + Harry recruitment), Unit 5.1 (rebalanced from B-default-with-A-escalation to A-and-B-parallel-spike-then-lock), Unit 5.4 (24h cool-off + Harry outside-eye + §2 gate ladder), and the absorption header you are reading now.
+Phase 5 grew 2283 → ~2750 lines (1.20× growth). Most growth is in Unit 5.0 (added Mechanism A parallel spike step + ~~Harry recruitment~~ — Harry recruitment REPEALED 2026-05-22 per CALL F repeal), Unit 5.1 (rebalanced from B-default-with-A-escalation to A-and-B-parallel-spike-then-lock), Unit 5.4 (24h cool-off + ~~Harry outside-eye~~ + §2 gate ladder; Harry outside-eye REPEALED), and the absorption header you are reading now.
 ---
 
 # Phase 5 — Gameplay Capture Harness + Capture
@@ -448,7 +448,8 @@ than Archer-coded gameplay. Phase 5 mitigations:
   Archer episode?" If NO, take rejected regardless of W1-W6 scores
 - Multi-stage take-selection ladder (Unit 5.4) — rubric floor →
   24h cooling-off → random-order top-3 watch → §2 gate → fluency
-  gate → Harry outside-eye blind viewer check
+  gate (Harry outside-eye step REPEALED per CALL F repeal
+  2026-05-22; Briggsy contamination accepted as residual risk)
 - Director's-eye production checklist (above) — Mechanism B
   load-bearing for both R13a (cross-device signals visible) and
   R13b (joy visible without slop)
@@ -980,9 +981,11 @@ lock decision):
   (configurable duration / luminance / overlay text for development).
 - **Take selection ladder**: rubric-floor objective reject → 24h
   cool-off → random-order top-3 watch → §2 Archer gate → fluency
-  gate → Harry outside-eye blind viewer check. Pre-deepening
-  Briggsy-watches-once-and-picks was anchoring-vulnerable
-  (adversarial F06 + product F11 + product F23).
+  gate. (Harry outside-eye step REPEALED 2026-05-22 per CALL F
+  repeal.) Pre-deepening Briggsy-watches-once-and-picks was
+  anchoring-vulnerable (product F11 + product F23); the surviving
+  defenses still mitigate that. The adversarial F06 "Briggsy
+  contamination as sole judge" concern is now accepted residual risk.
 - **Sentinel files** (content-payload required, adversarial F20):
   `briggsy-review-5.4.signoff` (take selection — commit msg requires
   2-3 sentence free-text payload describing what landed Archer-grade)
@@ -997,11 +1000,13 @@ lock decision):
   remain (load-bearing per F8/F13/F15 feasibility) but record into
   `capture-log.md` mechanism-lock header, NOT a separate committed
   markdown.
-- **Harry as outside-viewer for R13** (CALL F + adversarial F06):
-  Harry is remote (Discord-only per `user_harry.md`); cannot hold a
-  phone in Briggsy's apartment. Recruited for outside-eye blind
-  viewer check at Unit 5.6 R13 acceptance, NOT as Mechanism B
-  physical participant.
+- ~~**Harry as outside-viewer for R13** (CALL F)~~ — **REPEALED
+  2026-05-22.** Harry is AI; the team is just Briggsy + Claude(s)
+  forever. No outside human eye is available for the R13 acceptance
+  gate. Briggsy's contamination as sole judge is accepted residual
+  risk, mitigated by surviving defenses (rubric floor, 24h cool-off,
+  random-order watch, §2 Archer gate, fluency gate). Cross-ref:
+  updated `user_harry.md` + `feedback-listener-panels-default-to-n1.md`.
 
 ---
 
@@ -1364,17 +1369,14 @@ files embed absolute paths). Document the scene config IN PROSE in
 - Encoder: NVENC H.264 preferred (if Nvidia GPU); x264 medium-CRF18 fallback
 - Output color space: yuv420p limited-range; verify with ffprobe
 
-**Step 9 — Harry recruitment for R13 outside-viewer check (CALL F).**
+**Step 9 — ~~Harry recruitment for R13 outside-viewer check (CALL F)~~ REPEALED 2026-05-22.**
 
-```bash
-# Per `user_harry.md`: Harry is remote (Discord-only). NOT a Mechanism
-# B physical participant. RECRUITED for R13 acceptance gate at Unit 5.6
-# as outside-eye blind viewer.
-# Record in capture-log.md:
-#   - Harry availability for R13 blind-view check: <Y/N + ETA>
-#   - Stimulus delivery: Discord file share of the 18s clip
-#   - Question set (locked): per Unit 5.6 R13 acceptance protocol
-```
+CALL F was repealed — Harry is AI; no outside human eye is available.
+Step 9 is deleted. R13 acceptance at Unit 5.6 runs on Briggsy's
+judgment alone with the surviving contamination defenses (rubric
+floor, 24h cool-off, random-order top-3 watch, §2 Archer gate,
+fluency gate). See deepening header CALL F repeal note. Cross-ref:
+updated `user_harry.md` + `feedback-listener-panels-default-to-n1.md`.
 
 **Step 10 — capture-log.md mechanism-lock header (REPLACES pre-deepening PHASE-5-PREFLIGHT.md; per scope F1).**
 
@@ -1438,9 +1440,9 @@ Record the verification results IN-PLACE at the head of capture-log.md
 - Friend 2 stage name: <name>; confirmed date: <YYYY-MM-DD>
 - Session 1 scheduled: <YYYY-MM-DD>
 
-### Harry recruitment (R13 outside-viewer)
-- Availability ETA: <YYYY-MM-DD>
-- Stimulus delivery: Discord file share
+### ~~Harry recruitment (R13 outside-viewer)~~ — REPEALED 2026-05-22
+Section omitted; CALL F repeal removed the outside-viewer step.
+R13 acceptance is Briggsy-N=1 with surviving contamination defenses.
 
 ### Empirical A/B spike outcomes
 - Mechanism A spike: PASS | FAIL — <one-line summary>
@@ -2468,34 +2470,16 @@ the cooperative answer. Revised to 3 open questions:
    (Forces engagement with flaws; high-signal answer.)
 
 A take passing §2 + scoring 7+ on Q2 + having a NON-DEAL-BREAKER
-answer to Q3 advances to Step 4f.
+answer to Q3 advances to Step 5.
 
-**Step 4f — Harry outside-eye blind viewer check (CALL F).**
+**~~Step 4f — Harry outside-eye blind viewer check (CALL F)~~ —
+REPEALED 2026-05-22.**
 
-Per `user_harry.md`: Harry is recruited via Discord for outside-eye
-verification. Briggsy is contamination-maxed (designed the game,
-ran the shoot). Harry has NOT seen the trailer beats; he can read
-the clip cold.
-
-Procedure:
-- Briggsy shares the top take (post §2 + fluency gates) via Discord
-  to Harry as a file attachment
-- NO context provided (no "this is the BURNED trailer," no
-  "watch the BURNED draw at 5.3s")
-- Harry watches once, full-speed
-- Briggsy asks: *"Watch this 18-second clip. Take 30 seconds.
-  Then tell me: what is this?"*
-- Harry's answer is recorded verbatim in capture-log.md
-
-**Pass criterion:** Harry's answer must perceive the clip as a real
-game (R13a) AND perceive that players are enjoying it (R13b). If
-Harry's answer is "looks like a game demo / mockup / engineering
-recording" → R13a fails. If Harry's answer is "looks staged / fake
-reactions" → R13b fails. Either failure → reject the take, try
-next-best candidate.
-
-If all top-3 takes fail Harry's check → recapture (Session 4 or
-schedule new session).
+CALL F was repealed (Harry is AI; no human outside-eye available).
+Step 4f is deleted. Briggsy's contamination as sole judge is
+accepted residual risk, mitigated by Step 4d (§2 Archer gate) +
+Step 4e (fluency gate) + 24h cool-off + random-order top-3 watch.
+Cross-ref: deepening header CALL F repeal note.
 
 **Step 5 — Trim-viability filter (with objective tolerance per adversarial F07).**
 
@@ -2538,16 +2522,16 @@ Compute trim plan:
 Pick the take that:
 1. Passes §2 Archer gate (Step 4d)
 2. Passes fluency gate (Step 4e — Q2 ≥ 7, Q3 actionable)
-3. Passes Harry outside-eye check (Step 4f)
-4. Passes trim-viability filter (Step 5)
-5. R5 outcome alignment (if R5=kept, scream cue at relative frame
+3. Passes trim-viability filter (Step 5)
+4. R5 outcome alignment (if R5=kept, scream cue at relative frame
    360 lands on visibly dramatic reaction window per W5 criterion)
 
-Tiebreaker hierarchy:
-- (a) If two takes pass all four gates: BURNED-draw beat quality is
+Tiebreaker hierarchy (Step 4f Harry-check tiebreaker REPEALED 2026-05-22):
+- (a) If two takes pass all three gates: BURNED-draw beat quality is
   highest weight (the trailer's emotional anchor)
 - (b) If tied: cross-device sync moment richness (R13a signal)
-- (c) If tied: Harry's confidence score (Q2 answer)
+- (c) If tied: fluency-gate Q2 confidence score (Briggsy's own; was
+  previously Harry's per pre-2026-05-22 wording)
 - (d) If still tied: take with the SMALLER head-trim (more
   establishing W1 = more aliveness setup)
 - Note: pre-deepening tiebreaker (d) was "pick FIRST seen" — that's
@@ -2565,11 +2549,11 @@ Append to `capture-log.md`:
 - Session 2 (<YYYY-MM-DD>): <N> takes captured
 - ... (continues)
 
-### Per-take rubric scores (full table for trim-viable takes; rejected takes get one-line per scope F5)
-| Take | Date | W1 | W2 | W3 | W4 | W5 | W6 | Score | BURNED raw frame | Trim viable | §2 / Fluency / Harry | Notes |
+### Per-take rubric scores (full table for trim-viable takes; rejected takes get one-line per scope F5; Harry column REPEALED 2026-05-22)
+| Take | Date | W1 | W2 | W3 | W4 | W5 | W6 | Score | BURNED raw frame | Trim viable | §2 / Fluency | Notes |
 |------|------|----|----|----|----|----|----|-------|------------------|-------------|---------|-------|
-| 01 | ... | ✓ | ✓ | ✓ | ✓ | partial | ✓ | 5/6 | 220 | ✓ (head trim 60f = 2.0s) | §2 Y / Fluency Q2=7 / Harry "real game, having fun" | runner-up |
-| 06 | ... | ✓ | ✓ | ✓ | ✓ | ✓ | ✓ | 6/6 | 280 | ✓ (head trim 120f = 4.0s) | §2 Y / Fluency Q2=9 / Harry "this is a card game with friends — they look good" | SELECTED |
+| 01 | ... | ✓ | ✓ | ✓ | ✓ | partial | ✓ | 5/6 | 220 | ✓ (head trim 60f = 2.0s) | §2 Y / Fluency Q2=7 | runner-up |
+| 06 | ... | ✓ | ✓ | ✓ | ✓ | ✓ | ✓ | 6/6 | 280 | ✓ (head trim 120f = 4.0s) | §2 Y / Fluency Q2=9 | SELECTED |
 
 ### Rejected (one-line per scope F5)
 - `take-02 | <date> | rejected — BURNED drew too early (raw frame 89 < 160 floor)`
@@ -3040,8 +3024,9 @@ adversarial F11 + product F11 + design F18).
 
 Pre-deepening single Briggsy fluency-question was contamination-
 maxed (Briggsy designed everything). Revised: §2 + 3-question
-fluency gate + Harry outside-eye blind viewer (mirrors Unit 5.4
-Step 4 ladder; applied at FULL-TRAILER scope, not single-take scope).
+fluency gate (Harry outside-eye step REPEALED 2026-05-22 per CALL F
+repeal — Harry is AI; mirrors Unit 5.4 Step 4 ladder as amended;
+applied at FULL-TRAILER scope, not single-take scope).
 
 **Step 3a — §2 Archer gate at full-trailer scope.**
 
@@ -3067,34 +3052,23 @@ Briggsy answers 3 open questions about the full trailer:
 Pass: Q2 score ≥ 7 AND Q3 answer is non-deal-breaker (a tweak, not
 a redo).
 
-**Step 3c — Harry outside-eye R13 acceptance (CALL F).**
+**~~Step 3c — Harry outside-eye R13 acceptance (CALL F)~~ — REPEALED 2026-05-22.**
 
-Briggsy shares the full trailer (or just the S05 segment if Harry's
-bandwidth is limited) via Discord. NO context. Harry watches once,
-full-speed, with sound. Briggsy asks: *"What's this? Take 30
-seconds to describe it."*
+CALL F was repealed; Step 3c is deleted. R13 acceptance runs on
+**Briggsy's own judgment** at Step 3a (§2) + Step 3b (fluency). The
+failure-mode-to-unit map below is preserved as a self-diagnostic
+checklist Briggsy applies during his own fluency-gate Q3 ("if you
+had to ship this AND someone said 'fix one thing,' what?") — the
+"Surfaces" column now reads as Briggsy's own observations, not
+Harry's. If Briggsy can't articulate which failure mode applies,
+R13 is uncertain — extend 24h cool-off, re-watch random-order, then
+re-evaluate.
 
-**R13 PASS criteria:**
+**R13 failure-mode-to-unit map** (Briggsy self-diagnostic; original
+adversarial F15 trigger still applies — pattern preserved, source of
+observation changed from Harry to Briggsy per CALL F repeal):
 
-- Harry's free-text mentions OR strongly implies that the game is
-  REAL and SHIPPED (R13a) — language like "real game," "actual app,"
-  "deployed," "shipped product"
-- Harry's free-text mentions OR strongly implies that PLAYERS
-  ENJOYED IT (R13b) — language like "fun," "having a good time,"
-  "real reactions," "joyful"
-
-**R13 FAIL signals:**
-
-- "Looks like a mockup / staged demo / promo trailer for something
-  not actually built" → R13a fail
-- "Looks like a dev recording / demo reel / engineering footage" → R13a fail
-- "Reactions look fake / staged / forced" → R13b fail
-- "Generic game-trailer aesthetic / could be anything" → both fail
-
-**R13 failure-mode-to-unit map** (Phase 6 reopen flow per
-adversarial F15):
-
-| Harry surfaces | Likely failure | Route to |
+| Observation surface | Likely failure | Route to |
 |---|---|---|
 | "Reaction reads as forced" | W5 capture issue | Unit 5.4 reopen (recapture) |
 | "Game state looks staged" | Approach III seed visible / players coached | Unit 5.2 reopen (different seed + less coaching) |
@@ -3149,8 +3123,9 @@ What landed R13b (aliveness / joy):
 - <2-3 sentences free-text. What player reactions / body language /
   cross-device cohesion make this read as real joy, not staged.>
 
-Harry's verbatim answer:
-- <Harry's free-text response from Step 3c, exact quote.>
+~~Harry's verbatim answer~~ (REPEALED 2026-05-22 — CALL F repeal;
+Harry is AI, no outside human eye):
+- Section omitted; R13 runs on Briggsy's own fluency-gate answers.
 
 §2 verdict + reasoning:
 - <Y/N + 1-2 sentences why this could/couldn't appear in Archer
@@ -3257,7 +3232,7 @@ amendment surfaced; not blocking this commit).
 | BURNED-draw timing variance with Approach I fallback (production-URL path) | High | Medium | Approach III is LOCAL-DEV only (CALL E). Production-URL captures default to Approach I (60-90s takes, 10 takes/session ≈ 1-2 ship-able). Budget set accordingly in Unit 5.4 Step 1 retrospective improvement loop. |
 | Real-device capture has phone bezel / hand obstruction over critical chrome | Medium | Low | Calibration shot in Unit 5.1 Step 3 verifies framing pre-capture; reshoot with adjusted framing if needed. |
 | Mic accidentally captures player voice | Low | Low | Three-layer audio defense (capture silent + `ffmpeg -an` + `<OffthreadVideo muted />`) + `verify:gameplay-clip` audio-stream-absence gate. |
-| Captured clip reads as less alive than Phase 4 placeholder | Low | Medium | §2 Archer gate + 3-question fluency gate + Harry outside-eye blind viewer check at Unit 5.6 (multi-gate ladder per CALL F + product F11 + adversarial F06). Multiple recapture sessions allowed via session-retrospective improvement loop. |
+| Captured clip reads as less alive than Phase 4 placeholder | Low | Medium | §2 Archer gate + 3-question fluency gate at Unit 5.6 (multi-gate ladder per product F11 + product F23/F24). Harry outside-eye step REPEALED 2026-05-22 per CALL F repeal — Briggsy contamination accepted as residual risk. Multiple recapture sessions allowed via session-retrospective improvement loop. |
 | Stat-caption overlays float over handheld micro-shake (Phase 4 composite tells) | Medium without tripod / Low with tripod | Medium | **Tripod REQUIRED** for Mechanism B (Critical Constraints "Mechanism B physical camera architecture" + product F7). Unit 5.6 composite-fitness test (Step 2.5) extracts 6 sample frames + verifies overlay stability before R13 acceptance. |
 | OBS recording settings produce file that won't play in Remotion | Low | Medium | Unit 5.5 re-encode to known-good H.264 yuv420p MP4; Phase 4's `verify-gameplay-clip` ffprobe gate validates Remotion-compatibility (extended this commit with pix_fmt + r_frame_rate + field_order assertions per feasibility F15). |
 | Re-render time after gameplay swap blocks Phase 6 | Low | Low | Re-render is ~6-9 minutes; absorb in Phase 6 schedule. Phase 6 prep work parallelizable during Phase 5 (per System-Wide Impact parallelizable section). |
@@ -3281,7 +3256,7 @@ amendment surfaced; not blocking this commit).
 | Player names visible on phone/board → PII in committed/distributed footage | Medium (default behavior) | Medium | Codename aliases mandatory pre-session per Unit 5.0 Step 6b (security F01/F02). Recorded as stage names, never legal names. |
 | Room code captured in trailer → viewer could join active room | Low (Mechanism B; phones-but-not-board generally in frame) / Higher (Mechanism A; full board UI captured) | Low (room expires after inactivity) | Capture-room is destroyed pre-distribution; verify by attempting to join the captured room code after capture (should 404 or be expired). Phase 7 distribution post-capture confirms (security F03). |
 | Friend scheduling slip → Phase 5 schedule slip → Phase 6/7 cascade slip | Medium | High | Unit 5.0 Step 6b 7-day friend-confirmation gate triggers Mechanism A auto-lock if missed. Phase 6/7 parallelizable work documented (product F22). |
-| Briggsy contamination as sole judge → R13 false-PASS that Phase 6 panel rejects | Medium | High | Harry outside-eye blind viewer check at Unit 5.4 Step 4f + Unit 5.6 Step 3c (CALL F). 24h cool-off mitigates anchoring. Multi-gate ladder reduces single-point-of-judgment failure (adversarial F06 + product F11). |
+| Briggsy contamination as sole judge → R13 false-PASS | Medium | High | **ACCEPTED RESIDUAL RISK** as of 2026-05-22 (CALL F repeal — Harry outside-eye step deleted because Harry is AI, not a human eye; team is just Briggsy + Claude(s) forever, no human gate available). Surviving mitigations: 24h cool-off, random-order top-3 re-watch, §2 Archer gate, fluency gate (product F11 + product F23/F24). adversarial F06 ("Briggsy contamination as sole judge") no longer mitigated by outside human, only by the temporal + ladder defenses. Cross-ref: deepening header CALL F repeal note. |
 
 ---
 
@@ -3343,10 +3318,12 @@ amendment surfaced; not blocking this commit).
   Phase 5 owns parameterized version that lands at Unit 5.3 Step B.6
   (scope F16).
 - **Take selection ladder**: rubric-floor → 24h cool-off → random-
-  order top-3 watch → §2 Archer gate → 3-question fluency gate →
-  Harry outside-eye blind viewer check (CALL F + product F11 +
-  adversarial F06 + design F18). Pre-deepening single-Briggsy-watch
-  contamination-vulnerability mitigated.
+  order top-3 watch → §2 Archer gate → 3-question fluency gate.
+  (Harry outside-eye step REPEALED 2026-05-22 per CALL F repeal —
+  Harry is AI, no human outside eye.) Pre-deepening single-Briggsy-
+  watch contamination-vulnerability mitigated by the temporal +
+  ladder defenses; adversarial F06 residual risk accepted (product
+  F11 + product F23/F24 + design F18).
 - **§2 Archer gate at take selection (separate from fluency)**:
   binary YES/NO; failures reject regardless of rubric score
   (design F18 + product F4).
@@ -3361,10 +3338,10 @@ amendment surfaced; not blocking this commit).
   outcomes record in `capture-log.md` mechanism-lock header.
 - **PHASE-5-EXIT.md template trimmed** to 4 facts + Phase 6
   read-points (scope F13; see template below).
-- **Harry as R13 outside-viewer** (CALL F): Harry is remote
-  (Discord-only per `user_harry.md`); recruited for outside-eye
-  blind viewer check at Unit 5.4 Step 4f + Unit 5.6 Step 3c, NOT
-  as Mechanism B physical participant.
+- ~~**Harry as R13 outside-viewer** (CALL F)~~ — **REPEALED
+  2026-05-22.** Harry is AI; no outside human eye is available.
+  R13 acceptance runs on Briggsy's judgment alone. See deepening
+  header CALL F repeal note.
 - **Production URL strategy matrix mechanism-coupled** (CALL G):
   Mechanism A → URL in frame → deploy migration hard prereq.
   Mechanism B → URL not in frame → Phase 7 owns distribution copy.
@@ -3436,9 +3413,9 @@ Phase 6 read-points + R13 audit summary.
 ## R13 audit summary
 - §2 Archer gate (Step 3a): PASS — <one-line rationale>
 - Fluency gate Q2 score (Step 3b): <N>/10
-- Harry outside-eye verdict (Step 3c): <verbatim quote>
-- R13a (legitimacy / shipped) verdict: PASS
-- R13b (aliveness / joy) verdict: PASS
+- ~~Harry outside-eye verdict (Step 3c)~~ — REPEALED 2026-05-22 (CALL F)
+- R13a (legitimacy / shipped) verdict: PASS — <Briggsy fluency rationale>
+- R13b (aliveness / joy) verdict: PASS — <Briggsy fluency rationale>
 
 ## R5 alignment
 - Scream cue outcome (from PHASE-0-EXIT.md): <kept | cut>

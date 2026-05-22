@@ -114,7 +114,7 @@ transition state, every cascade card, every cold-open title flash.
 | 0 | **Gate Resolution** | Trailer project scaffold + 5 gate evaluations under `videos/trailer/sample-eval/`. Voice cast + tone + composite-spike-viable foundation. | None — Phase 0 is the entry point. |
 | 1 | **Beat Sheet Lock** | Scene-by-scene 90–100s outline with locked voice cast, locked tone, locked transition vocabulary. `videos/trailer/BEAT-SHEET.md`. | Phase 0 — all five gates resolved (cleared / restructured / cut). |
 | 2 | **Voice Pipeline** | Dash sustained narration WAVs + R5 scream + R14 cold-open line, generated via `videos/trailer/scripts/generate-dash-tts.ts`. | Phase 1 — beat sheet defines the line set. |
-| 3 | **Visual Asset Prep** | BURNED HTP fullpage capture, goofy-stats list with cold-read gate, card-art curation, briefing-room composition, R15 text-signal layer assets. | Phase 1 — beat sheet defines the asset inventory. (Parallel with Phase 2.) |
+| 3 | **Visual Asset Prep** | BURNED HTP fullpage capture, card-art curation, briefing-room composition, R15 text-signal layer assets. (Goofy-stats cold-read gate lives in Phase 1 Unit 1.6, not Phase 3 — roadmap-to-plan drift fix 2026-05-22; gate is N=1 Briggsy self-read per ADR #13r supersession in §5.2.) | Phase 1 — beat sheet defines the asset inventory. (Parallel with Phase 2.) |
 | 4 | **Remotion Composite Build** | All scenes assembled in `videos/trailer/src/scenes/*.tsx` at studio-preview quality. Per-scene Archer test pass. | Phases 2 + 3 — voice + visual assets ready. |
 | 5 | **Gameplay Capture Harness + Capture** | Real BURNED multiplayer gameplay clip (phone-controller + TV-shared-screen) at `public/trailer/gameplay.mp4` per ADR #15 (locked 2026-05-17 per Phase 5 deepening; supersedes pre-deepening `videos/trailer/assets/gameplay.mp4`). | Deploy migration partykit → Cloudflare Workers complete (per TODO.md §1 note). |
 | 6 | **Final Render + QA** | `out/trailer.mp4` at H264/CRF 18, bar-raise criteria evaluation against UMB v3 on the three locked axes. `qa-report.md`. | Phases 4 + 5 — all scenes integrated, gameplay closer in place. |
@@ -209,45 +209,83 @@ or voice-actor. The acceptance test is *"does this voice land in the
 Sterling-coded register?"* — character-archetype recognition, not
 actor recognition.
 
-### §5.2 — Blind-tester protocol: MUSHRA, register-recognition framing
+### §5.2 — Blind-tester protocol: MUSHRA citation (SUPERSEDED 2026-05-22 — N=1 Briggsy is the operational standard)
 
+**ADR #13r supersession 2026-05-22 (parallel to ADR #21r — Phase 6):**
 Industry standard for "does this fool listeners" research is **MUSHRA**
+(ITU-R BS.1534-3), with **6–8 listeners minimum** for an informal
+research pass. The original §5.2 framing assumed Briggsy could
+recruit that panel. The team shape is just Briggsy + Claude(s)
+forever (Briggsy 2026-05-22: *"there are no other players involved,
+it's just me and you my friend forever and ever … no future phase
+will change that"*). The 6–8 listener panel is **structurally
+unavailable.**
+
+**Operational standard for R4 cadence-recognition: N=1 (Briggsy)**.
+Phase 0 EXIT (`videos/trailer/PHASE-0-EXIT.md` §"MUSHRA listener
+count: 1 / 6 minimum") confirms the multi-listener panel was never
+run — it was deferred forward through Phase 0, Phase 2, and into
+Phase 6 ADR #21, which was itself superseded by ADR #21r (also
+N=1 Briggsy) on 2026-05-22. The pattern is now consistent across
+phases: MUSHRA exists as a protocol citation; production gates run
+on Briggsy's ear.
+
+MUSHRA-shaped Likert rubric is **preserved as Briggsy's self-
+administered scorecard** — register-cluster dimension, character-fit
+dimension, uncanny-check dimension, naturalness-vs-reference-clip
+dimension. Briggsy applies all four himself. The bonus-signal
+disambiguation ("same actor vs same style?") becomes a self-check:
+Briggsy reads his own free-text response, applies the follow-up
+question, routes to re-spec if he caught himself drifting toward
+identity-clone framing.
+
+Stimuli per ADR #13 (Sterling-CODED, not Sterling-cloned) preserved:
+3–4 TTS candidates + low-quality anchor + non-Benjamin Sterling-coded
+reference clip. The reference anchors Briggsy's score scale; never
+serves as a clone-match target. (No WebMUSHRA hosting needed — no
+panel to host for.) Cross-ref: memory
+`feedback-listener-panels-default-to-n1.md` + updated `user_harry.md`.
+
+**(Original §5.2 prose preserved below as audit trail — do NOT
+execute the panel-recruitment protocol; ADR #13r supersedes.)**
+
+~~Industry standard for "does this fool listeners" research is **MUSHRA**
 (ITU-R BS.1534-3). The brainstorm specifies "≥2 testers, blind
 protocol" — research shows this is too thin for statistical confidence
 on a voice authenticity question. **6–8 listeners minimum** for an
-informal research pass (8–12 for a formal one).
+informal research pass (8–12 for a formal one).~~
 
-**Stimuli per ADR #13 (Sterling-CODED, not Sterling-cloned):** 3–4 TTS
+~~**Stimuli per ADR #13 (Sterling-CODED, not Sterling-cloned):** 3–4 TTS
 candidates + low-quality anchor + **non-Benjamin Sterling-coded
 reference clip** (voice-actor portfolio sample in the deadpan-spy
 register) used as the cadence target — NOT as an identity reference.
 The reference anchors the MUSHRA score scale; it never serves as a
 clone-match target. Question phrasing avoids "which is fake"
-leading-the-witness. Open-source hosting via **WebMUSHRA** (ed.ac.uk).
+leading-the-witness. Open-source hosting via **WebMUSHRA** (ed.ac.uk).~~
 
-**Acceptance threshold for R4 (register-recognition, NOT
-actor-identity):**
-- ≥4 of 6 listeners' open-description responses include ≥2 terms from
+~~**Acceptance threshold for R4 (register-recognition, NOT
+actor-identity):**~~
+- ~~≥4 of 6 listeners' open-description responses include ≥2 terms from
   the Sterling-coded register cluster (*deadpan / dry / mid-Atlantic /
   sardonic / spy / detective / film-noir / Archer-coded /
-  briefing-room*).
-- ≥5 of 6 listeners say *Yes* or *Mixed* on character-fit ("does this
+  briefing-room*).~~
+- ~~≥5 of 6 listeners say *Yes* or *Mixed* on character-fit ("does this
   voice match a fictional spy-agency briefer named Dash Barlowe, ~90%
-  of trailer runtime?").
-- **Joint pass:** ≥4 listeners clear character-fit AND register-cluster
+  of trailer runtime?").~~
+- ~~**Joint pass:** ≥4 listeners clear character-fit AND register-cluster
   AND don't flag obviously-synthetic — **same listener across all
-  three dimensions**.
-- ≤1 of 6 flags "obviously synthetic" on the uncanny-check (with
-  free-text capture of what sounded synthetic, for triage).
-- MUSHRA naturalness within **±10 points of the non-Benjamin
-  Sterling-coded reference clip** (reference-anchored, not absolute).
+  three dimensions**.~~
+- ~~≤1 of 6 flags "obviously synthetic" on the uncanny-check (with
+  free-text capture of what sounded synthetic, for triage).~~
+- ~~MUSHRA naturalness within **±10 points of the non-Benjamin
+  Sterling-coded reference clip** (reference-anchored, not absolute).~~
 
-**Bonus-signal disambiguation:** if a listener invokes Archer/Sterling
+~~**Bonus-signal disambiguation:** if a listener invokes Archer/Sterling
 unprompted ("sounds Sterling-y," "reminds me of Archer"), the protocol
 follows up: *"does it sound like the same actor, or the same style?"*
 *Same style* → register pass (target achieved). *Same actor* → engines
 drifted toward impression and a Step 4 re-spec is triggered. See Phase
-0 Unit 0.2 Step 4 + spectrum bands (Floor / Target / Ceiling).
+0 Unit 0.2 Step 4 + spectrum bands (Floor / Target / Ceiling).~~
 
 ### §5.3 — Twitter/X mobile crop resolved
 
@@ -329,7 +367,7 @@ forward. The brainstorm itself remains the locked requirements contract
 |---|------------------|------------------|-------------|
 | C1 | UMB v3 runtime "~124s" (Problem Frame + Key Decisions §90–100s runtime) | Authoritative source `timing-v3.ts` — total is **4440 frames @ 30fps = 148.0s**. | BURNED 95s vs UMB 148s. Recalculated scene density: BURNED 95s / 6 scenes = 15.8s/scene; UMB 148s / 9 scenes = 16.4s/scene. **"Comparable density" defense in brainstorm Key Decisions holds, with corrected numbers.** |
 | C2 | TTS evaluation budget "$10 across both jobs" (R5-research-gate) | Real envelope for one-off voice eval: <$50 (ElevenLabs Creator $22 + Gemini $10 + OpenAI $5 + MUSHRA hosting $0–20). Hybrid path: $200–500. | **Plan budget: $50 ceiling for engine evaluation, separate $0–500 line item for hybrid VO if Path C triggers.** |
-| C3 | R4 / R14 testers: "≥2 testers, blind protocol" | MUSHRA protocol (ITU-R BS.1534-3) requires 6–8 minimum listeners for informal voice-authenticity confidence. | **Plan tightens R4 + R14 acceptance to 6–8 testers with WebMUSHRA-style protocol.** |
+| C3 | R4 / R14 testers: "≥2 testers, blind protocol" | MUSHRA protocol (ITU-R BS.1534-3) requires 6–8 minimum listeners for informal voice-authenticity confidence. | ~~**Plan tightens R4 + R14 acceptance to 6–8 testers with WebMUSHRA-style protocol.**~~ — **CORRECTED 2026-05-22 per ADR #13r + ADR #21r:** the 6–8 listener panel is structurally unavailable (team is just Briggsy + Claude(s) forever; Harry is AI). R4 + R14 acceptance is **N=1 Briggsy ear/eye** with MUSHRA-shaped Likert rubric as Briggsy's self-administered scorecard. See §5.2 supersession. |
 | C4 | R14 candidate cold-open lines | Three of five named candidates (Vera "kid did it. Again. Show-off.", Sable "He did it again! Twice! TWICE!", Janet "Apparently the second one shipped") **lack the machine-wordplay R14 explicitly requires** ("machine"/"autonomous"/"wrote itself"/"built itself" double-meaning). | **Two NEW candidate lines proposed for Phase 0 Unit 0.3 testing:** (i) *"He's a machine, this kid. Honestly at this point I'm just impressed."* (ii) *"Briggsy didn't write this one either. He's getting good at not writing them."* (echoes UMB v3 cold-open hook). |
 | C5 | Brainstorm R4-acceptance-gate framing reads as "produce a Sterling-mistakable voice" | The design intent was always Sterling-CODED, not Sterling-cloned — mirroring BURNED's "Archer w/o being Archer" visual rule. Legal floor (ElevenLabs ToS + Tennessee ELVIS Act + EU AI Act + NO FAKES Act, right-of-publicity surviving satire framing) aligns with the design choice. | **R4 reframed as cadence-match gate.** New Step 0 in Unit 0.2 characterizes Benjamin's distinctive cadence as teachable specs; engines steer to those specs on any voice. MUSHRA tests register recognition, not actor recognition. See §5.1 + Phase 0 Unit 0.2. |
 | C6 | Brainstorm Dependencies §Distribution surface deferred the Twitter mobile-crop pressure test | X serves 1.91:1 in-feed preview crop on mobile. **Resolution: critical text inside central 1:1 safe square within 16:9 frame.** | **Composition discipline rule added; no separate vertical track required.** |
@@ -354,7 +392,7 @@ forward. The brainstorm itself remains the locked requirements contract
 | R8 | 16:9 landscape only | All phases (architectural invariant) |
 | R9 | Music bed: Archer-coded mid-century brass / bossa | Phase 3 (sourcing) + Phase 4 (mix) |
 | R10 | HTP dossier hero in cascade | Phase 0 Unit 0.5 (capture spike) + Phase 3 (production capture) + Phase 4 (scene build) |
-| R11 | Goofy stats with comedy-first companion pairing | Phase 3 (stat-list draft + cold-read gate) + Phase 4 (overlay build) |
+| R11 | Goofy stats with comedy-first companion pairing | Phase 1 Unit 1.6 (stat-list draft + cold-read gate — N=1 Briggsy self-read per ADR #13r 2026-05-22 supersession; was attributed to Phase 3 in pre-2026-05-22 roadmap, drift corrected) + Phase 4 (overlay build) |
 | R12 | Imagen-generated card art curation | Phase 3 (selection from 17 existing artworks) + Phase 4 (scene composition) |
 | R13 | Live gameplay footage closer | Phase 5 (capture harness + capture) + Phase 4 (closer integration) |
 | R14 | Compressed-Archer-title-sequence cold-open + repeatability declaration | Phase 0 Unit 0.3 (decode gate) + Phase 4 (build) |
@@ -373,7 +411,7 @@ forward. The brainstorm itself remains the locked requirements contract
 | Gameplay capture mechanism greenfield | High (no prior art) | Medium | Phase 5 budgeted as full standalone phase; precedent invention expected; spike at Phase 0 captures HTP only, gameplay deferred. |
 | Deploy migration mid-flight affects capture URLs | Medium (in flight 2026-05-16) | Medium | Phase 0 spike uses local Vite dev URL (`http://localhost:5173/howtoplay.html`); production capture deferred to Phase 3 (HTP) + Phase 5 (gameplay) after migration completes. |
 | Stats drift between trailer build and ship | Medium | Low | Adopt `feedback-stats-single-source.md` discipline — grep all surfaces (TODO.md, README, trailer scene files, narrator-prompts) on any count change. |
-| MUSHRA tester recruitment delay | Low | Low | 6 minimum listeners; Briggsy's network + Discord (Harry et al.) likely sufficient; if not, fall back to Path C hybrid which doesn't need testers. |
+| ~~MUSHRA tester recruitment delay~~ | REPEALED per ADR #13r (2026-05-22 — parallel to ADR #21r in Phase 6) | n/a | No tester recruitment is structurally available (team is just Briggsy + Claude(s) forever; Harry is AI not a human listener). Operational standard is N=1 Briggsy ear per `feedback-listener-panels-default-to-n1.md`. |
 | VOICE_DIRECTION anti-pattern reintroduced by future agent | Low (guard codified) | High (corrupts every WAV) | Inline comment at TTS API call site, mirroring UMB's `generate-narrator.ts:195-198`. Lint-grep optional follow-up. |
 | Stat-overlay cold-read gate fails | Medium | Low | R11 fail-action: cascade becomes purely visual (card art + dossier + gameplay), comedy-stats cut. Documented in brainstorm Deferred-to-Planning. |
 

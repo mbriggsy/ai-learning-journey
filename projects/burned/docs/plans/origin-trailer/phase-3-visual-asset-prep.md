@@ -2072,7 +2072,7 @@ NOT gating — automated exit conditions above unblock Unit 3.2.
 
 ### Unit 3.2 — Card-Art Curation
 
-- [ ] **Unit 3.2: Card-Art Curation**
+- [x] **Unit 3.2: Card-Art Curation** ✅ LANDED 2026-05-22
 
 **Goal:** Curate the 17 existing webp card artworks at
 `public/assets/cards/` into trailer-purpose-organized subsets. NO new

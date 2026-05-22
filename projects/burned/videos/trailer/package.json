@@ -18,6 +18,8 @@
     "tts:dry-run": "tsx scripts/generate-dash-tts.ts --dry-run",
     "post-process": "tsx scripts/post-process-tts.ts",
     "audit:durations": "tsx scripts/audit-durations.ts",
+    "stitch:beats": "tsx scripts/stitch-beats.ts",
+    "audit:stitch-positions": "tsx scripts/audit-stitch-positions.ts",
     "matrix": "tsx scripts/generate-tts-eval.ts",
     "scream:variant": "tsx scripts/generate-scream-variant.ts",
     "tone:clip": "tsx scripts/generate-tone-clip.ts",

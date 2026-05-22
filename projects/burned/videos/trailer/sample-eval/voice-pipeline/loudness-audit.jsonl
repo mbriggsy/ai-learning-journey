@@ -1,7 +1,7 @@
 {"cueId":"S01-cold-open","measuredI":"-16.35","measuredTp":"-1.50","targetI":-16,"drift":0.3500000000000014}
 {"cueId":"S02-briefing","measuredI":"-16.55","measuredTp":"-1.50","targetI":-16,"drift":0.5500000000000007}
-{"cueId":"S03-roster","measuredI":"-16.13","measuredTp":"-1.50","targetI":-16,"drift":0.129999999999999}
-{"cueId":"S03-deck","measuredI":"-16.31","measuredTp":"-1.50","targetI":-16,"drift":0.3099999999999987}
+{"cueId":"S03-roster","measuredI":"-16.23","measuredTp":"-1.42","targetI":-16,"drift":0.23000000000000043}
+{"cueId":"S03-deck","measuredI":"-16.55","measuredTp":"-1.49","targetI":-16,"drift":0.5500000000000007}
 {"cueId":"S04-cue-01","measuredI":"-17.95","measuredTp":"-1.50","targetI":-16,"drift":1.9499999999999993}
 {"cueId":"S04-cue-02","measuredI":"-16.28","measuredTp":"-1.50","targetI":-16,"drift":0.28000000000000114}
 {"cueId":"S04-cue-03","measuredI":"-16.94","measuredTp":"-1.50","targetI":-16,"drift":0.9400000000000013}

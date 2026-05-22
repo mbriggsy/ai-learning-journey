@@ -1,6 +1,6 @@
 # Duration Reconciliation — Unit 2.4 output
 
-Generated: 2026-05-22T00:23:35.199Z
+Generated: 2026-05-22T00:55:44.184Z
 Composition fps: 30
 Tolerance bands: sustained ±5%, list ±7%, payoff ±4%, scream ±20%, cold-open ±5%.
 WARN = drift within 2× tolerance; FAIL = beyond 2× tolerance.
@@ -13,8 +13,8 @@ resolve in Unit 2.5 (silenceremove + loudnorm) and Unit 2.6 (intra-line
 |-----|------|----------|--------|-------|-----------|---------|
 | `s01-cue-60-janet.wav` | cold-open | 150 | 139 | -7.3% | ±5% | WARN |
 | `s02-cue-219-dash.wav` | sustained | 351 | 357 | 1.7% | ±5% | OK |
-| `s03-cue-570-dash.wav` | sustained | 270 | 542 | 100.7% | ±5% | FAIL |
-| `s03-cue-870-dash.wav` | sustained | 180 | 386 | 114.4% | ±5% | FAIL |
+| `s03-cue-570-dash.wav` | sustained | 270 | 529 | 95.9% | ±5% | FAIL |
+| `s03-cue-870-dash.wav` | sustained | 180 | 362 | 101.1% | ±5% | FAIL |
 | `s04-cue-1050-dash.wav` | list | 60 | 55 | -8.3% | ±7% | WARN |
 | `s04-cue-1110-dash.wav` | list | 90 | 106 | 17.8% | ±7% | FAIL |
 | `s04-cue-1200-dash.wav` | list | 90 | 165 | 83.3% | ±7% | FAIL |

@@ -7,7 +7,7 @@ the history. (Rule: `feedback-todo-is-not-a-diary.md`.)
 
 ## 1. Active priorities
 
-### Status (verified 2026-05-21 — Phase 2 Units 2.0-2.5 LANDED; post-process pipeline shipped)
+### Status (verified 2026-05-21 — Phase 2 Units 2.0-2.6 LANDED; intra-line beat stitch shipped)
 
 - Tests: **1407 pass** | 6 expected fail (68/68 files green)
 - Trailer subpackage tests: **193 pass + script-coverage now green
@@ -18,10 +18,11 @@ the history. (Rule: `feedback-todo-is-not-a-diary.md`.)
 - HOW-TO-PLAY bundle: `howtoplay-*.js` **33.90 KB gz** + `howtoplay-*.css`
   **10.68 KB gz** + shared GSAP chunk **27.21 KB gz**
 - Protocol version: **v6**
-- Phase 2 ElevenLabs spend cumulative: **$0.54 / $50** ceiling (Unit 2.4
-  full render of 13 remaining cues + S06-phrasing `[excited]` retune;
-  came in at ~$0.30 incremental vs the $22 envelope budget — Creator-
-  tier monthly quota absorbed most of it)
+- Phase 2 ElevenLabs spend cumulative: **$0.87 / $50** ceiling (Unit 2.4
+  full render of 13 remaining cues + S06-phrasing `[excited]` retune
+  + Unit 2.6 three stitch iterations = 21 segment renders @ ~$0.01
+  each; came in at <2% of the $50 envelope — Creator-tier monthly
+  quota absorbing most of it)
 
 ### Origin trailer
 
@@ -134,20 +135,81 @@ Frozen as Phase 2/3/4 consumption contract.
   clips <3s per k.ylo.ph/loudnorm.html. Acceptable for Phase 4
   consumption.
 
-**Unit 2.6 — NEXT.** Intra-line `[BEAT NNNms]` stitch. Splits
-S03-roster + S03-deck cue text on `\[BEAT \d+(\.\d+)?s\]` markers,
-renders each segment as its own TTS call, FFmpeg-stitches with
-`anullsrc` silence at the right durations. Resolves the S03 +100%
-drift cluster (currently v3 inserts ~3s silent pauses per unknown
-`[BEAT 0.3s]` token instead of the intended 0.3s).
+**Unit 2.6 LANDED 2026-05-21** (commit pending — see git log):
+- `scripts/stitch-beats.ts` — parses `[BEAT N.Ns]` AND `[BEAT NNNms]`
+  formats (Phase 2 plan deepening claimed `ms` form but Phase 1
+  actually ships decimal-second — regex handles both). Splits text on
+  markers, renders each segment via `generateForCue`, generates
+  `anullsrc` mono silence WAVs at declared durations, FFmpeg-concats
+  to a single stitched WAV in `public/audio/lines/raw/`. Sentinel
+  invalidation auto-triggers post-process re-run on the affected cue.
+- Per-segment leading + trailing silence trim BEFORE the concat
+  (separate from Unit 2.5's whole-WAV trim). `start_silence=0.005` ms
+  cushion (NOT 50ms like Unit 2.5) — INSIDE a stitch the inserted
+  anullsrc IS the cushion; per-segment cushion would compound with
+  the inserted gap and blow the ±15ms position tolerance.
+- `scripts/audit-stitch-positions.ts` — FFmpeg `silencedetect`
+  verification of declared vs detected silence DURATIONS per cue;
+  ±15ms tolerance per Phase 2 plan Unit 2.6 Step 3.
+- **Verification: all 5 declared beats land within 0-4ms of
+  declared** (3 in S03-roster @ 0.3s each, 2 in S03-deck @ 0.4s +
+  0.3s). Briggsy listen test cleared 2026-05-21.
+- 21 segment renders across 3 stitch iterations (first run revealed
+  per-segment trim needed; second iteration's 50ms cushion blew
+  tolerance; third iteration's 5ms cushion landed). Cumulative
+  spend on Unit 2.6: ~$0.33.
+- New `pnpm stitch:beats` + `pnpm audit:stitch-positions` scripts.
 
-**Units 2.7-2.8 — sequential after 2.6.** Phase 1 reconciliation
-(S05-gameplay-vo + S06-close pace amends + S06-phrasing
-`expectedFrames` set to whatever post-silenceremove clocks at —
-currently 19 frames / 0.63s), AudioAsset manifest for Phase 4
-Remotion.
+**Unit 2.7 — NEXT.** Phase 1 reconciliation. The drift cluster from
+Unit 2.4/2.5/2.6 audits points to a SYSTEMIC pace mismatch — Dash's
+arrogant-Sterling delivery at `style=0.35 / speed=0.95` produces
+~2.2-2.4 wps natural pace, vs Phase 1's deadpan-tight 3.89 wps
+budget. Affected cues:
+  - S03-roster (+95.9% post-stitch — 17.62s vs 9.0s budget)
+  - S03-deck (+101.1% post-stitch — 12.06s vs 6.0s budget)
+  - S04-cue-03 (+83.3% — 5.51s vs 3.0s)
+  - S04-stat-01 (+14.2%)
+  - S04-stat-02 (+1.3% OK)
+  - S05-gameplay-vo (-21.3% — runs FAST on this one)
+  - S06-close (-29.3% — also fast)
+  - S06-phrasing (+58.3% but Briggsy-locked at 0.63s)
+  - S04-payoff (+5.0% WARN)
+Phase 2 plan §Unit 2.7 ladder: Tier 0 absorb / Tier 1 Phase 2 regen
+with pacing-adjusted steering / Tier 2 Phase 1 line-trim (reopen) /
+Tier 3 Phase 1 timing.ts adjustment / Tier 4 TOTAL_FRAMES adjustment.
+Decision per cue: trim text OR amend `expectedFrames` OR steering
+adjustment OR accept overlap-in-Phase-4-compositing. Closes with a
+`phase-1-reconciliation-signoff.txt` sentinel that Unit 2.8 asserts.
 
-**Open follow-ups carried by Phase 2 Unit 2.5 close (NOT blocking Unit 2.6):**
+**Unit 2.8 — sequential after 2.7.** AudioAsset manifest for Phase 4
+Remotion (JSON map of cueId → final WAV path + measured duration +
+loudness + leadFramesHint).
+
+**Open follow-ups carried by Phase 2 Unit 2.6 close (NOT blocking Unit 2.7):**
+
+- **`silencedetect` writes to STDERR, not stdout** (caught + fixed
+  2026-05-21 Unit 2.6). Same gotcha as Unit 2.5's `loudnorm`. Project
+  pattern: any FFmpeg filter that emits diagnostic data needs
+  `spawnSync` capture, not `execFileSync` (which returns stdout
+  only). Both Unit 2.5 (`runFFmpegJson`) and Unit 2.6
+  (`detectSilences`) now use spawnSync — if another silencedetect /
+  loudnorm / volumedetect / showinfo-style filter joins the pipeline,
+  copy that pattern.
+- **Phase 1 doc-drift on BEAT-token format** (logged 2026-05-21).
+  Phase 2 plan §Unit 2.6 deepening claims Phase 1 ships `[BEAT NNNms]`
+  (integer milliseconds) but `src/lib/script.ts` actually ships
+  `[BEAT 0.3s]` (decimal seconds). `stitch-beats.ts` parser handles
+  BOTH. If Phase 1 reopens in Unit 2.7, decide on ONE canonical form
+  and update the plan + script + parser to match — currently
+  resilient-by-accident.
+- **Per-segment trim cushion = 5 ms inside stitch, 50 ms in
+  post-process** (LANDMINE, 2026-05-21). Two different
+  `start_silence` values intentionally. If you ever generalize the
+  silenceremove helper into a shared utility, parameterize the
+  cushion — they are NOT the same number for the same reason.
+  `stitch-beats.ts` comment explains.
+
+**Open follow-ups carried by Phase 2 Unit 2.5 close (NOT blocking Unit 2.7):**
 
 - **Loudnorm drift on short cues (≤3s).** s04-cue-1050 (Operational
   planning.), s04-cue-1560 (Seventeen asset illustrations…), and

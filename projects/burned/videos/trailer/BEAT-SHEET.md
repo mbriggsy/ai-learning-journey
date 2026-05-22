@@ -497,7 +497,7 @@ peak frames live at
 |-----------|-----------|--------|---------|
 | 1050 | 2.0s | HTP dossier slides into hero position (Playwright capture) | > *"Operational planning."* <!-- @line: S04-cue-01 --> |
 | 1110 | 3.0s | HTP scroll begins (top portion) | > *"Fourteen thousand pages of forensic dossiers."* <!-- @line: S04-cue-02 --> |
-| 1200 | 3.0s | HTP scroll continues (middle portion) | > *"Drafted on weekends, by a field asset — name redacted for compliance."* <!-- @line: S04-cue-03 --> |
+| 1200 | 3.0s | HTP scroll continues (middle portion) | > *"Drafted at three AM, name redacted for compliance."* <!-- @line: S04-cue-03 --> |
 | 1290 | 4.0s | Stat 1 caption enters safe-square center-bottom at full weight | > *"Mission rehearsal: fourteen hundred and seven contingencies war-gamed."* <!-- @line: S04-stat-01 --> |
 | 1410 | 5.0s | Stat 1 decays to chrome side-band; Stat 2 enters safe-square center-bottom | > *"Six of them, deliberately unrehearsed — the 'memorable ones.'"* <!-- @line: S04-stat-02 --> |
 | 1560 | 4.0s | Stat 2 decays to chrome; Stat 3 enters safe-square center-bottom | > *"Seventeen asset illustrations. Five of them with hats."* <!-- @line: S04-stat-03 --> |

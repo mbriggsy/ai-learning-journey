@@ -191,9 +191,9 @@ export const BURNED_TRAILER_LINES: readonly Line[] = [
     scene: 'S04',
     frame: 1200,
     voice: 'dash',
-    text: 'Drafted on weekends, by a field asset — name redacted for compliance.',
+    text: 'Drafted at three AM, name redacted for compliance.',
     cueType: 'list',
-    expectedFrames: 90, // 3.0s window; 11 words / 3.0s = 3.67 wps (under 4.5 sanity ceiling)
+    expectedFrames: 90, // 3.0s window; 8 words / 3.0s = 2.67 wps. Unit 2.7 Tier-2 rewrite 2026-05-22: shifted from "Drafted on weekends, by a field asset — name redacted for compliance." (11w, ran 5.51s / +83.3%). Autobiographical 3-AM beat lands the absurdity in budget without losing the Sterling-briefing punch.
     leadFramesHint: 0,
     cadenceAdapter: {
       engine: 'elevenlabs-v3',

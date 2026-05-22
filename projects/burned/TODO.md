@@ -174,7 +174,15 @@ budget. Affected cues + per-cue disposition:
     Residual +4.2s overrun queued for Tier-3/4 reconciliation.
   - **S03-deck** — **Tier-0 absorb LOCKED 2026-05-22.** Briggsy "keep, it's
     great." 12.06s vs 6.0s (+101.1%) accepted as-is.
-  - S04-cue-03 (+83.3% — 5.51s vs 3.0s)
+  - **S04-cue-03** — **Tier-2 rewrite LANDED 2026-05-22.** Shifted "Drafted
+    on weekends, by a field asset — name redacted for compliance." →
+    "Drafted at three AM, name redacted for compliance." Autobiographical
+    3-AM beat lands the Sterling-briefing absurdity in budget without
+    losing punch. New actual 4.40s vs 3.0s budget (+46.7%, was +83.3%);
+    saved 1.1s. Residual deferred to Tier-3/4. Note: Eleven v3 read
+    Sterling-CODED at ~1.8 wps in practice — slower than Phase 1's
+    ~3 wps estimate for short list cues. Calibrate future word-budget
+    estimates against this.
   - S04-stat-01 (+14.2%)
   - S04-stat-02 (+1.3% OK)
   - S05-gameplay-vo (-21.3% — runs FAST on this one)

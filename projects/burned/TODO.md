@@ -10,8 +10,9 @@ the history. (Rule: `feedback-todo-is-not-a-diary.md`.)
 ### Status (verified 2026-05-21 — Phase 2 Units 2.0-2.6 LANDED; intra-line beat stitch shipped)
 
 - Tests: **1407 pass** | 6 expected fail (68/68 files green)
-- Trailer subpackage tests: **193 pass + script-coverage now green
-  3/3** (8 files; every cue has a WAV — 16/16 rendered)
+- Trailer subpackage tests: **194 pass | 0 expected-fail** (8 files;
+  script-coverage drift gate is fully green — every cue has a WAV,
+  16/16 rendered)
 - Typecheck: clean (`pnpm typecheck` root + `videos/trailer/`)
 - Phone player entry: **19.17 KB gz** (no regression from Phase 2 work)
 - DramaOverlay lazy chunk: **2.34 KB gz**

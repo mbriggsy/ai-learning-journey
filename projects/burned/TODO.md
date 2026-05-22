@@ -285,21 +285,6 @@ loudness + leadFramesHint).
   (Roger) is correct via gender label bonus, but ranking
   presentation is misleading. Fix when revisited.
 
-### Deploy migration — quarantined (separate commit when ready)
-
-partykit → Cloudflare Workers migration is mid-flight, uncommitted:
-
-- `board.html`, `player.html`, `public/_headers` — preconnect / CSP host
-  swapped to `burned.briggsy007.workers.dev`
-- `src/server/room.ts` — `burned-cxa.pages.dev` added to `allowedOrigins`
-- `src/client/howtoplay/acts/ActRemote.tsx` — copy URL `burned.pages.dev`
-  → `burned-cxa.pages.dev`
-- `../../.github/workflows/deploy-burned.yml` — untracked CI workflow
-
-Not bundled into origin-trailer commits. Deserves its own deploy commit
-when ready. Phase 5 Unit 5.0 Step 5 carries a 2026-05-24 deadline for the
-local-dev fallback path if migration isn't finalized by then.
-
 ---
 
 ## 2. Landmines

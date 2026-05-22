@@ -46,7 +46,7 @@ export function ActRemote() {
               <p>
                 The board displays a six-character code (and a QR). Send it
                 in a group chat. Operatives type it into{' '}
-                <span className={styles.mono}>burned.pages.dev</span> on their
+                <span className={styles.mono}>burned-cxa.pages.dev</span> on their
                 phones and join the room.
               </p>
             </div>

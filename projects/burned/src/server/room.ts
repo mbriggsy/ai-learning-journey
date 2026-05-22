@@ -249,6 +249,7 @@ export class GameRoom extends Server<Env> {
     // on connect.
     const allowedOrigins = [
       'https://burned.pages.dev',
+      'https://burned-cxa.pages.dev',
       'http://localhost:5173', 'http://localhost:4173',
     ]
     // In dev, allow any local network origin (192.168.x.x, 10.x.x.x, etc.)

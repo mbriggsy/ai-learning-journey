@@ -1,0 +1,285 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1000 1300" role="img" aria-label="Classified case file — closed dossier folder">
+  <!--
+    Closed dossier folder. HERO tier. BURNED origin trailer Unit 3.3.
+    Cold-open S02 pre-reveal state. Phase 4 ease-animates between this
+    and dossier-folder-open.svg via the cover-group transform.
+
+    Layered semantically so Phase 4 can target groups:
+      <g id="shadow">      — cast shadow under the folder
+      <g id="back-page">   — inner case-sheet (peeks out, revealed in open)
+      <g id="cover">       — front cover (rotates -120° about top edge)
+      <g id="clip">        — paperclip riding the top edge
+
+    Design notes:
+      - Warm-saturated manila body — KHAKI not GRAY; closer to FY1962
+        government file color than to office-supply yellow.
+      - Off-center hand-tab with file-code annotation in JetBrains Mono.
+      - Diagonal TOP SECRET ink stamp, slight tilt + hand-stamp imperfection.
+      - "OPERATION PENDLETON" wordmark in burned-ochre, with serif
+        "Mayfair / Nov 14, 1962" sub stamped beneath the rule.
+      - Pendleton crest watermark, lower-third, 0.30 opacity.
+      - Paper grain via feTurbulence.
+      - Spine crease shadow (left), edge wear (right + bottom).
+      - Period brass paperclip top-left, 7° rotation.
+  -->
+
+  <defs>
+    <!-- Manila body: warmer khaki gradient, not washed-out gray. -->
+    <linearGradient id="manilaBody" x1="0" y1="0" x2="0.4" y2="1">
+      <stop offset="0%"   stop-color="#d8b974" />
+      <stop offset="40%"  stop-color="#c0a25c" />
+      <stop offset="100%" stop-color="#9a7c3e" />
+    </linearGradient>
+
+    <!-- Inner case-sheet (revealed in open state): paler cream. -->
+    <linearGradient id="sheetCream" x1="0" y1="0" x2="0" y2="1">
+      <stop offset="0%"   stop-color="#f6ebce" />
+      <stop offset="100%" stop-color="#d8c8a0" />
+    </linearGradient>
+
+    <!-- Back manila that peeks out at right + bottom edges. -->
+    <linearGradient id="manilaBack" x1="0" y1="0" x2="0" y2="1">
+      <stop offset="0%"   stop-color="#7a5e2a" />
+      <stop offset="100%" stop-color="#4f3d18" />
+    </linearGradient>
+
+    <!-- Folder spine crease shadow at left edge. -->
+    <linearGradient id="spineShadow" x1="0" y1="0" x2="1" y2="0">
+      <stop offset="0%"   stop-color="#1a0d05" stop-opacity="0.62" />
+      <stop offset="20%"  stop-color="#1a0d05" stop-opacity="0.18" />
+      <stop offset="100%" stop-color="#1a0d05" stop-opacity="0" />
+    </linearGradient>
+
+    <!-- Right edge wear. -->
+    <linearGradient id="rightWear" x1="0" y1="0" x2="1" y2="0">
+      <stop offset="0%"   stop-color="#1a0d05" stop-opacity="0" />
+      <stop offset="80%"  stop-color="#1a0d05" stop-opacity="0" />
+      <stop offset="100%" stop-color="#1a0d05" stop-opacity="0.46" />
+    </linearGradient>
+
+    <linearGradient id="bottomWear" x1="0" y1="0" x2="0" y2="1">
+      <stop offset="0%"   stop-color="#1a0d05" stop-opacity="0" />
+      <stop offset="82%"  stop-color="#1a0d05" stop-opacity="0" />
+      <stop offset="100%" stop-color="#1a0d05" stop-opacity="0.42" />
+    </linearGradient>
+
+    <!-- Top-edge highlight (catches light from above). -->
+    <linearGradient id="topHi" x1="0" y1="0" x2="0" y2="1">
+      <stop offset="0%"   stop-color="#fff4d0" stop-opacity="0.42" />
+      <stop offset="6%"   stop-color="#fff4d0" stop-opacity="0" />
+    </linearGradient>
+
+    <!-- Paper grain. -->
+    <filter id="paperGrain" x="0%" y="0%" width="100%" height="100%">
+      <feTurbulence type="fractalNoise" baseFrequency="0.92" numOctaves="2" seed="11" />
+      <feColorMatrix values="0 0 0 0 0.18
+                             0 0 0 0 0.14
+                             0 0 0 0 0.08
+                             0 0 0 0.22 0" />
+      <feComposite in2="SourceGraphic" operator="in" />
+    </filter>
+
+    <!-- Hand-stamp ink-bleed: roughen + blur + red bleed halo. -->
+    <filter id="stampInk" x="-6%" y="-6%" width="112%" height="124%">
+      <feMorphology in="SourceAlpha" operator="dilate" radius="1.8" result="dilated" />
+      <feGaussianBlur in="dilated" stdDeviation="1.6" result="bleed" />
+      <feFlood flood-color="#be2e27" flood-opacity="0.38" />
+      <feComposite in2="bleed" operator="in" result="redBleed" />
+      <feTurbulence type="fractalNoise" baseFrequency="0.5" numOctaves="2" seed="3" />
+      <feDisplacementMap in="SourceGraphic" scale="0.9" />
+      <feMerge>
+        <feMergeNode in="redBleed" />
+        <feMergeNode />
+      </feMerge>
+    </filter>
+
+    <!-- Cover lift shadow (cover lifts a few mm above back face). -->
+    <filter id="coverLift" x="-4%" y="-2%" width="108%" height="108%">
+      <feGaussianBlur in="SourceAlpha" stdDeviation="5" />
+      <feOffset dx="0" dy="9" result="liftOff" />
+      <feFlood flood-color="#1a0d05" flood-opacity="0.55" />
+      <feComposite in2="liftOff" operator="in" result="liftShadow" />
+      <feMerge>
+        <feMergeNode in="liftShadow" />
+        <feMergeNode in="SourceGraphic" />
+      </feMerge>
+    </filter>
+
+    <!-- Whole-folder cast shadow onto the desk. -->
+    <filter id="folderShadow" x="-12%" y="-6%" width="124%" height="120%">
+      <feGaussianBlur in="SourceAlpha" stdDeviation="28" />
+      <feOffset dx="10" dy="44" result="off" />
+      <feFlood flood-color="#000" flood-opacity="0.70" />
+      <feComposite in2="off" operator="in" />
+    </filter>
+
+    <!-- Pendleton crest watermark — simplified vector reference. -->
+    <symbol id="crestWatermark" viewBox="0 0 200 200">
+      <defs>
+        <path id="crestRing" d="M 100,100 m -84,0 a 84,84 0 1,1 168,0 a 84,84 0 1,1 -168,0" />
+      </defs>
+      <g fill="none" stroke="#3c2d0c" stroke-width="2">
+        <circle cx="100" cy="100" r="94" />
+        <circle cx="100" cy="100" r="86" />
+        <circle cx="100" cy="100" r="56" />
+        <circle cx="100" cy="100" r="50" />
+      </g>
+      <!-- Crossed pen + olive-pick implements -->
+      <g stroke="#3c2d0c" stroke-width="3" stroke-linecap="round" fill="none">
+        <line x1="60" y1="60" x2="140" y2="140" />
+        <line x1="140" y1="60" x2="60" y2="140" />
+      </g>
+      <!-- Laurel half-rings -->
+      <g fill="none" stroke="#3c2d0c" stroke-width="1.4">
+        <path d="M 30 100 Q 38 70 70 60" />
+        <path d="M 170 100 Q 162 70 130 60" />
+        <path d="M 30 100 Q 38 130 70 140" />
+        <path d="M 170 100 Q 162 130 130 140" />
+      </g>
+      <!-- Center medallion -->
+      <circle cx="100" cy="100" r="22" fill="#3c2d0c" />
+      <text x="100" y="111" text-anchor="middle"
+            font-family="'Cormorant Garamond', 'EB Garamond', Georgia, serif"
+            font-weight="700" font-size="34"
+            fill="#d8b974">P</text>
+      <!-- Outer-ring text -->
+      <text font-family="'JetBrains Mono', monospace"
+            font-size="10" fill="#3c2d0c"
+            letter-spacing="4.4">
+        <textPath href="#crestRing" startOffset="0">THE PENDLETON AGENCY · EST. 1962 · </textPath>
+      </text>
+    </symbol>
+  </defs>
+
+  <!-- Cast shadow on desk -->
+  <g id="shadow">
+    <rect x="56" y="86" width="888" height="1184" rx="8" ry="8"
+          fill="#000" filter="url(#folderShadow)" />
+  </g>
+
+  <!--
+    Back-page / inner case-sheet. Hidden behind cover in closed state;
+    peeks out a few px right + bottom. Phase 4's open state reveals
+    this as the inner sheet (Phase 4 may swap to an explicit inner-
+    sheet template later).
+  -->
+  <g id="back-page">
+    <!-- Manila back (folder's back half) -->
+    <rect x="56" y="86" width="894" height="1188" rx="6" ry="6" fill="url(#manilaBack)" />
+    <!-- Inner cream sheet, slightly smaller, sitting INSIDE the folder -->
+    <rect x="80" y="108" width="852" height="1156" rx="3" ry="3" fill="url(#sheetCream)" />
+  </g>
+
+  <!-- Front cover -->
+  <g id="cover" filter="url(#coverLift)">
+    <!-- Cover body -->
+    <rect x="56" y="80" width="876" height="1176" rx="6" ry="6" fill="url(#manilaBody)" />
+
+    <!-- Paper grain overlay (multiplied via composite-in) -->
+    <rect x="56" y="80" width="876" height="1176" rx="6" ry="6"
+          fill="#9a7c3e" filter="url(#paperGrain)" />
+
+    <!-- Spine crease (left edge) -->
+    <rect x="56" y="80" width="90" height="1176" fill="url(#spineShadow)" />
+
+    <!-- Right edge wear -->
+    <rect x="56" y="80" width="876" height="1176" fill="url(#rightWear)" />
+
+    <!-- Bottom edge wear -->
+    <rect x="56" y="80" width="876" height="1176" fill="url(#bottomWear)" />
+
+    <!-- Top edge highlight (light from above) -->
+    <rect x="56" y="80" width="876" height="80" fill="url(#topHi)" />
+
+    <!-- Hand tab (off-center top), with file code -->
+    <path d="M 256 80 L 256 22 Q 256 14 266 14 L 478 14 Q 488 14 488 22 L 488 80 Z"
+          fill="url(#manilaBody)" stroke="#5a4514" stroke-width="1.6" />
+    <text x="372" y="52" text-anchor="middle"
+          font-family="'JetBrains Mono', monospace"
+          font-weight="700" font-size="16"
+          fill="#3c2d0c" letter-spacing="4.2">PEN · 62 · 02</text>
+
+    <!-- Diagonal TOP SECRET stamp, upper-third, tilted -8° -->
+    <g transform="translate(510 280) rotate(-8)" filter="url(#stampInk)">
+      <rect x="-300" y="-66" width="600" height="132" rx="6" ry="6"
+            fill="none" stroke="#be2e27" stroke-width="7" />
+      <text x="0" y="-8" text-anchor="middle"
+            font-family="'JetBrains Mono', 'IBM Plex Mono', monospace"
+            font-weight="800" font-size="74"
+            fill="#be2e27" letter-spacing="12">TOP SECRET</text>
+      <text x="0" y="46" text-anchor="middle"
+            font-family="'JetBrains Mono', 'IBM Plex Mono', monospace"
+            font-weight="500" font-size="22"
+            fill="#be2e27" letter-spacing="7">NO FOREIGN DISSEMINATION</text>
+    </g>
+
+    <!-- Operation title block, mid-lower -->
+    <g>
+      <!-- // chrome prefix in BURNED's vocabulary -->
+      <text x="146" y="722" text-anchor="start"
+            font-family="'JetBrains Mono', monospace"
+            font-weight="600" font-size="20"
+            fill="#52483a" letter-spacing="3.4">// OPERATION</text>
+      <text x="494" y="780" text-anchor="middle"
+            font-family="'JetBrains Mono', 'IBM Plex Mono', monospace"
+            font-weight="800" font-size="56"
+            fill="#3c2d0c" letter-spacing="7.4">PENDLETON</text>
+      <!-- Divider rule -->
+      <line x1="200" y1="812" x2="788" y2="812"
+            stroke="#3c2d0c" stroke-width="1.4" opacity="0.62" />
+      <!-- Sub-line -->
+      <text x="494" y="852" text-anchor="middle"
+            font-family="'JetBrains Mono', monospace"
+            font-weight="500" font-size="22"
+            fill="#452f10" letter-spacing="4.2">CASE FILE 02 · MAYFAIR</text>
+    </g>
+
+    <!-- Pendleton crest watermark, lower-third -->
+    <g opacity="0.30">
+      <use href="#crestWatermark" x="354" y="912" width="280" height="280" />
+    </g>
+
+    <!-- Bottom-right filing stamp (annotation block) -->
+    <g transform="translate(700 1182)">
+      <rect x="0" y="0" width="194" height="56" rx="2" ry="2"
+            fill="none" stroke="#3c2d0c" stroke-width="1.4" opacity="0.68" />
+      <text x="97" y="22" text-anchor="middle"
+            font-family="'JetBrains Mono', monospace"
+            font-weight="600" font-size="12"
+            fill="#3c2d0c" letter-spacing="2.8" opacity="0.74">FILED</text>
+      <text x="97" y="44" text-anchor="middle"
+            font-family="'JetBrains Mono', monospace"
+            font-weight="700" font-size="14"
+            fill="#3c2d0c" letter-spacing="2.6" opacity="0.92">1962 · NOV · 14</text>
+    </g>
+
+    <!-- Bottom-left clearance line -->
+    <text x="100" y="1222" text-anchor="start"
+          font-family="'JetBrains Mono', monospace"
+          font-weight="600" font-size="14"
+          fill="#3c2d0c" letter-spacing="2.6" opacity="0.78">CLEARANCE: EYES ONLY</text>
+  </g>
+
+  <!--
+    Paperclip — period brass, single-loop construction. 7° tilt suggests
+    "human hand placed this." Stroked path, no fills, simple curves.
+  -->
+  <g id="clip" transform="translate(120 90) rotate(7)">
+    <path d="M 8 0
+             L 8 96
+             Q 8 110 22 110
+             L 38 110
+             Q 52 110 52 96
+             L 52 18
+             Q 52 8 42 8
+             L 26 8
+             Q 18 8 18 16
+             L 18 88
+             Q 18 96 26 96
+             L 36 96"
+          fill="none" stroke="#7e7163" stroke-width="3" stroke-linejoin="round" stroke-linecap="round" />
+    <!-- Highlight stroke on the outer left curve -->
+    <path d="M 8 6 L 8 92"
+          fill="none" stroke="#d4cebf" stroke-width="0.9" opacity="0.82" />
+  </g>
+</svg>

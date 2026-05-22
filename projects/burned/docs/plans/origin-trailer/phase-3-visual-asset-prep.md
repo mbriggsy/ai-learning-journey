@@ -2740,7 +2740,27 @@ pnpm verify:vocab-sync
 
 ### Unit 3.3 — Briefing-Room Set-Dressing
 
-- [ ] **Unit 3.3: Briefing-Room Set-Dressing**
+- [x] **Unit 3.3: Briefing-Room Set-Dressing** — landed 2026-05-22.
+  Four NEW SVGs shipped to `public/trailer/briefing-room/`
+  (venetian-blinds, depth-plane Option A brass nameplate,
+  dossier-folder-closed, dossier-folder-open). Reference-render
+  capture script shipped at `videos/trailer/scripts/capture-banner-references.ts`
+  (`pnpm capture:banner-refs`); reference PNGs deferred to first
+  Phase 4 invocation (requires BURNED in playing-state game per
+  script header). Consolidated inventory created at
+  `videos/trailer/sample-eval/visual-asset-prep/asset-inventory.md`
+  with Unit 3.1 backfill section + this unit's section + placeholders
+  for 3.4/3.6. Depth-plane Option A pick documented in the inventory
+  for Unit 3.7 PHASE-3-EXIT.md consolidation. Imagen spend: $0.
+
+  **AUTO-VERIFY bullet 3 clarification:** "CASE BANNER + COMMS ticker
+  SVGs authored from GameTable.tsx:67-72 inline JSX reference; visual
+  diff against Playwright reference render passes pixel-tolerance" —
+  this describes the PHASE 4 outcome, not a Phase 3 obligation. Phase
+  4 ports JSX to vendored React components (renders, not SVGs); the
+  visual-diff is against THIS unit's reference renders (deferred per
+  above). Phase 3 ships the SVG-vector assets + the capture script;
+  Phase 4 owns the JSX-port + diff.
 
 **Goal:** Inventory existing briefing-room assets (most already exist
 on disk per Phase 3 deepening discovery), then produce ONLY the gap

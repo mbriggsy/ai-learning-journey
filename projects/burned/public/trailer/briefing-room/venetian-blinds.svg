@@ -1,0 +1,95 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1920 1080" preserveAspectRatio="none" role="presentation" aria-hidden="true">
+  <!--
+    Venetian-blind shadow mask. TEXTURE tier. BURNED origin trailer Unit 3.3.
+    Composites OVER the mahogany desk PNG (or any warm surface). Phase 4
+    animates translateX 1.5-2px/frame (Phase 1 lock) to simulate sun arcing
+    across the blinds.
+
+    Iteration 2 — bumped shadow opacity, switched to cool-tinted shadow
+    (#08151c, deep teal-black) so the blinds read distinctly against the
+    warm mahogany rather than getting absorbed by it. Light source: sun
+    from camera-right; shadows are SHARPEST mid-right (where the sun's
+    rays land hardest), softer at the dark-side (left, deep room interior).
+
+    Composition: 7 irregular slats (heights 64/82/76/88/72/84/68) so a
+    slow translateX doesn't read as a repeating CSS gradient. Slats
+    extend past the viewBox left/right to keep edge integrity under
+    Phase 4's slow horizontal drift.
+  -->
+
+  <defs>
+    <!-- Per-slat shadow body. Soft vertical edges → crisp middle. -->
+    <linearGradient id="slatY" x1="0" y1="0" x2="0" y2="1">
+      <stop offset="0%"   stop-color="#08151c" stop-opacity="0"    />
+      <stop offset="20%"  stop-color="#08151c" stop-opacity="0.92" />
+      <stop offset="80%"  stop-color="#08151c" stop-opacity="0.92" />
+      <stop offset="100%" stop-color="#08151c" stop-opacity="0"    />
+    </linearGradient>
+
+    <!--
+      Sun-bias horizontal modulation. White-mask region = full shadow
+      strength; black = no shadow. Peaks at ~62% (sun bright = blind
+      shadows sharpest). Drops harder on the dark/left side where the
+      room interior absorbs the light.
+    -->
+    <linearGradient id="sunBias" x1="0" y1="0" x2="1" y2="0">
+      <stop offset="0%"   stop-color="#fff" stop-opacity="0.34" />
+      <stop offset="22%"  stop-color="#fff" stop-opacity="0.62" />
+      <stop offset="46%"  stop-color="#fff" stop-opacity="0.84" />
+      <stop offset="62%"  stop-color="#fff" stop-opacity="0.94" />
+      <stop offset="80%"  stop-color="#fff" stop-opacity="0.78" />
+      <stop offset="100%" stop-color="#fff" stop-opacity="0.40" />
+    </linearGradient>
+
+    <!--
+      Background-layer slats: wider, softer, lower opacity. Simulates
+      depth-blur from blinds farther from the window. Gives Phase 4
+      something to parallax against if it wants to.
+    -->
+    <linearGradient id="slatYBack" x1="0" y1="0" x2="0" y2="1">
+      <stop offset="0%"   stop-color="#08151c" stop-opacity="0"    />
+      <stop offset="40%"  stop-color="#08151c" stop-opacity="0.42" />
+      <stop offset="60%"  stop-color="#08151c" stop-opacity="0.42" />
+      <stop offset="100%" stop-color="#08151c" stop-opacity="0"    />
+    </linearGradient>
+
+    <!-- Soft vignette on top/bottom — pulls eye to desk-band. -->
+    <linearGradient id="vignetteY" x1="0" y1="0" x2="0" y2="1">
+      <stop offset="0%"   stop-color="#08151c" stop-opacity="0.28" />
+      <stop offset="10%"  stop-color="#08151c" stop-opacity="0"    />
+      <stop offset="90%"  stop-color="#08151c" stop-opacity="0"    />
+      <stop offset="100%" stop-color="#08151c" stop-opacity="0.32" />
+    </linearGradient>
+
+    <!-- Apply sun-bias as a luminance mask over the slat group. -->
+    <mask id="sunMask" maskUnits="userSpaceOnUse" x="0" y="0" width="1920" height="1080">
+      <rect width="1920" height="1080" fill="url(#sunBias)" />
+    </mask>
+  </defs>
+
+  <!-- Back layer: 4 wide soft slats, offset half-step from foreground -->
+  <g opacity="0.62">
+    <rect x="-40" y="60"   width="2000" height="148" fill="url(#slatYBack)" />
+    <rect x="-40" y="350"  width="2000" height="170" fill="url(#slatYBack)" />
+    <rect x="-40" y="640"  width="2000" height="156" fill="url(#slatYBack)" />
+    <rect x="-40" y="900"  width="2000" height="148" fill="url(#slatYBack)" />
+  </g>
+
+  <!--
+    Foreground slats: 7 irregular bands. Each is a vertical strip masked
+    by sun-bias so shadows fall off toward the dark side. x extends past
+    viewBox so Phase 4 translateX never reveals a hard edge.
+  -->
+  <g mask="url(#sunMask)">
+    <rect x="-80" y="42"   width="2080" height="64" fill="url(#slatY)" />
+    <rect x="-80" y="186"  width="2080" height="82" fill="url(#slatY)" />
+    <rect x="-80" y="328"  width="2080" height="76" fill="url(#slatY)" />
+    <rect x="-80" y="478"  width="2080" height="88" fill="url(#slatY)" />
+    <rect x="-80" y="640"  width="2080" height="72" fill="url(#slatY)" />
+    <rect x="-80" y="788"  width="2080" height="84" fill="url(#slatY)" />
+    <rect x="-80" y="938"  width="2080" height="68" fill="url(#slatY)" />
+  </g>
+
+  <!-- Top/bottom vignette: pulls eye to center band of the desk -->
+  <rect width="1920" height="1080" fill="url(#vignetteY)" />
+</svg>

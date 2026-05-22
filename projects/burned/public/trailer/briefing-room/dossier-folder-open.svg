@@ -1,0 +1,260 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1000 1300" role="img" aria-label="Classified case file — open dossier inner sheet">
+  <!--
+    Open dossier inner case-sheet. HERO tier. BURNED origin trailer Unit 3.3.
+    Cold-open S02 reveal state. Same outer dimensions as dossier-folder-
+    closed.svg so Phase 4 can layer closed on top, animate the cover
+    rotating/lifting away, and reveal this beneath.
+
+    Layered semantically so Phase 4 can target groups:
+      <g id="shadow">      — desk cast shadow under the open folder
+      <g id="back-spread"> — manila back-pages (form the open spread)
+      <g id="sheet">       — cream inner case-sheet (the revealed contents)
+      <g id="contents">    — case-file template content on the sheet
+
+    Design — the case-sheet template:
+      - Cream sheet inset inside the manila back-spread.
+      - "// CASE FILE" header in BURNED chrome vocabulary.
+      - Operative-name field with a REDACT BAR over [REDACTED] text.
+      - Three body redaction bars at intervals (Bauhaus-clean).
+      - "STATUS: ACTIVE" line with classification color-bar.
+      - "CLEARANCE: EYES ONLY" footer.
+      - Date stamp lower-right matching the closed cover (1962 · NOV · 14).
+      - Pendleton crest watermark centered, very faint (0.18 opacity).
+      - Subtle paper-grain texture.
+
+    Color: cream-12 sheet, charcoal redactions, ochre-9 accents — same
+    palette as the closed cover. The two SVGs share visual DNA.
+  -->
+
+  <defs>
+    <!-- Manila back-spread (folder opened flat). -->
+    <linearGradient id="manilaBack" x1="0" y1="0" x2="0" y2="1">
+      <stop offset="0%"   stop-color="#9a7c3e" />
+      <stop offset="100%" stop-color="#5f4a1f" />
+    </linearGradient>
+
+    <!-- Cream inner case-sheet. -->
+    <linearGradient id="sheetCream" x1="0" y1="0" x2="0" y2="1">
+      <stop offset="0%"   stop-color="#f6ebce" />
+      <stop offset="100%" stop-color="#d8c8a0" />
+    </linearGradient>
+
+    <!-- Subtle sheet edge shadow (sheet sits IN the folder). -->
+    <linearGradient id="sheetEdge" x1="0" y1="0" x2="1" y2="0">
+      <stop offset="0%"   stop-color="#1a0d05" stop-opacity="0.32" />
+      <stop offset="6%"   stop-color="#1a0d05" stop-opacity="0" />
+      <stop offset="94%"  stop-color="#1a0d05" stop-opacity="0" />
+      <stop offset="100%" stop-color="#1a0d05" stop-opacity="0.32" />
+    </linearGradient>
+
+    <linearGradient id="sheetEdgeV" x1="0" y1="0" x2="0" y2="1">
+      <stop offset="0%"   stop-color="#1a0d05" stop-opacity="0.36" />
+      <stop offset="5%"   stop-color="#1a0d05" stop-opacity="0" />
+      <stop offset="95%"  stop-color="#1a0d05" stop-opacity="0" />
+      <stop offset="100%" stop-color="#1a0d05" stop-opacity="0.28" />
+    </linearGradient>
+
+    <!-- Status accent bar (left margin classified ribbon). -->
+    <linearGradient id="statusRibbon" x1="0" y1="0" x2="0" y2="1">
+      <stop offset="0%"   stop-color="#be2e27" />
+      <stop offset="100%" stop-color="#7a1a16" />
+    </linearGradient>
+
+    <!-- Paper grain. -->
+    <filter id="paperGrain" x="0%" y="0%" width="100%" height="100%">
+      <feTurbulence type="fractalNoise" baseFrequency="0.92" numOctaves="2" seed="17" />
+      <feColorMatrix values="0 0 0 0 0.20
+                             0 0 0 0 0.16
+                             0 0 0 0 0.10
+                             0 0 0 0.16 0" />
+      <feComposite in2="SourceGraphic" operator="in" />
+    </filter>
+
+    <!-- Stamp ink-bleed (same family as closed.svg). -->
+    <filter id="stampInk" x="-8%" y="-8%" width="116%" height="124%">
+      <feMorphology in="SourceAlpha" operator="dilate" radius="1.6" result="dilated" />
+      <feGaussianBlur in="dilated" stdDeviation="1.4" result="bleed" />
+      <feFlood flood-color="#be2e27" flood-opacity="0.34" />
+      <feComposite in2="bleed" operator="in" result="redBleed" />
+      <feMerge>
+        <feMergeNode in="redBleed" />
+        <feMergeNode in="SourceGraphic" />
+      </feMerge>
+    </filter>
+
+    <!-- Cast shadow under the open folder. -->
+    <filter id="folderShadow" x="-12%" y="-6%" width="124%" height="120%">
+      <feGaussianBlur in="SourceAlpha" stdDeviation="28" />
+      <feOffset dx="10" dy="44" result="off" />
+      <feFlood flood-color="#000" flood-opacity="0.70" />
+      <feComposite in2="off" operator="in" />
+    </filter>
+
+    <!-- Redact bar with subtle ink-bleed at edges. -->
+    <filter id="redactBleed" x="-3%" y="-30%" width="106%" height="160%">
+      <feGaussianBlur in="SourceGraphic" stdDeviation="1.2" />
+    </filter>
+
+    <!-- Crest watermark — simplified vector reference matching closed.svg. -->
+    <symbol id="crestWatermark" viewBox="0 0 200 200">
+      <defs>
+        <path id="crestRingO" d="M 100,100 m -84,0 a 84,84 0 1,1 168,0 a 84,84 0 1,1 -168,0" />
+      </defs>
+      <g fill="none" stroke="#3c2d0c" stroke-width="2">
+        <circle cx="100" cy="100" r="94" />
+        <circle cx="100" cy="100" r="86" />
+        <circle cx="100" cy="100" r="56" />
+        <circle cx="100" cy="100" r="50" />
+      </g>
+      <g stroke="#3c2d0c" stroke-width="3" stroke-linecap="round" fill="none">
+        <line x1="60" y1="60" x2="140" y2="140" />
+        <line x1="140" y1="60" x2="60" y2="140" />
+      </g>
+      <g fill="none" stroke="#3c2d0c" stroke-width="1.4">
+        <path d="M 30 100 Q 38 70 70 60" />
+        <path d="M 170 100 Q 162 70 130 60" />
+        <path d="M 30 100 Q 38 130 70 140" />
+        <path d="M 170 100 Q 162 130 130 140" />
+      </g>
+      <circle cx="100" cy="100" r="22" fill="#3c2d0c" />
+      <text x="100" y="111" text-anchor="middle"
+            font-family="'Cormorant Garamond', 'EB Garamond', Georgia, serif"
+            font-weight="700" font-size="34"
+            fill="#d8b974">P</text>
+      <text font-family="'JetBrains Mono', monospace"
+            font-size="10" fill="#3c2d0c"
+            letter-spacing="4.4">
+        <textPath href="#crestRingO" startOffset="0">THE PENDLETON AGENCY · EST. 1962 · </textPath>
+      </text>
+    </symbol>
+  </defs>
+
+  <!-- Cast shadow on desk -->
+  <g id="shadow">
+    <rect x="40" y="64" width="920" height="1218" rx="8" ry="8"
+          fill="#000" filter="url(#folderShadow)" />
+  </g>
+
+  <!-- Manila back-spread (folder opened flat onto desk) -->
+  <g id="back-spread">
+    <rect x="40" y="64" width="920" height="1218" rx="6" ry="6" fill="url(#manilaBack)" />
+    <!-- Center crease where the folder folds (subtle vertical line) -->
+    <line x1="500" y1="64" x2="500" y2="1282"
+          stroke="#1a0d05" stroke-width="2" opacity="0.34" />
+  </g>
+
+  <!-- Cream inner case-sheet -->
+  <g id="sheet">
+    <rect x="92" y="124" width="816" height="1098" rx="3" ry="3" fill="url(#sheetCream)" />
+    <!-- Paper grain -->
+    <rect x="92" y="124" width="816" height="1098" rx="3" ry="3"
+          fill="#d8c8a0" filter="url(#paperGrain)" />
+    <!-- Edge shadows where the sheet sits inside the folder -->
+    <rect x="92" y="124" width="816" height="1098" fill="url(#sheetEdge)" />
+    <rect x="92" y="124" width="816" height="1098" fill="url(#sheetEdgeV)" />
+    <!-- Outer hairline -->
+    <rect x="92" y="124" width="816" height="1098" rx="3" ry="3"
+          fill="none" stroke="#5a4514" stroke-width="0.8" opacity="0.42" />
+  </g>
+
+  <!-- Case-file template contents -->
+  <g id="contents">
+    <!-- Left-margin classification ribbon (red) -->
+    <rect x="112" y="148" width="10" height="1052" fill="url(#statusRibbon)" opacity="0.86" />
+
+    <!-- Header chrome: // CASE FILE -->
+    <text x="148" y="186" text-anchor="start"
+          font-family="'JetBrains Mono', monospace"
+          font-weight="600" font-size="18"
+          fill="#52483a" letter-spacing="3.4">// CASE FILE</text>
+
+    <!-- Case number, big -->
+    <text x="148" y="240" text-anchor="start"
+          font-family="'JetBrains Mono', 'IBM Plex Mono', monospace"
+          font-weight="800" font-size="44"
+          fill="#3c2d0c" letter-spacing="6.4">02 · MAYFAIR</text>
+
+    <!-- Divider rule -->
+    <line x1="148" y1="266" x2="852" y2="266"
+          stroke="#3c2d0c" stroke-width="1.2" opacity="0.58" />
+
+    <!-- Field label: OPERATIVE -->
+    <text x="148" y="310" text-anchor="start"
+          font-family="'JetBrains Mono', monospace"
+          font-weight="600" font-size="14"
+          fill="#665f55" letter-spacing="3.2">OPERATIVE</text>
+
+    <!-- Redaction bar over operative name (no text overlay — real
+         classified redactions don't annotate themselves; the bar IS
+         the redaction). -->
+    <g filter="url(#redactBleed)">
+      <rect x="148" y="324" width="468" height="42" fill="#181612" />
+    </g>
+
+    <!-- Field label: STATUS -->
+    <text x="148" y="412" text-anchor="start"
+          font-family="'JetBrains Mono', monospace"
+          font-weight="600" font-size="14"
+          fill="#665f55" letter-spacing="3.2">STATUS</text>
+
+    <text x="148" y="446" text-anchor="start"
+          font-family="'JetBrains Mono', 'IBM Plex Mono', monospace"
+          font-weight="800" font-size="26"
+          fill="#be2e27" letter-spacing="5.4">ACTIVE · BURNED</text>
+
+    <!-- Field label: BRIEF -->
+    <text x="148" y="510" text-anchor="start"
+          font-family="'JetBrains Mono', monospace"
+          font-weight="600" font-size="14"
+          fill="#665f55" letter-spacing="3.2">BRIEF</text>
+
+    <!-- Three body-text redaction bars (Bauhaus-clean rectangles) -->
+    <g filter="url(#redactBleed)">
+      <rect x="148" y="524" width="704" height="22" fill="#181612" />
+      <rect x="148" y="558" width="582" height="22" fill="#181612" />
+      <rect x="148" y="592" width="640" height="22" fill="#181612" />
+    </g>
+
+    <!-- Field label: LAST CONTACT -->
+    <text x="148" y="676" text-anchor="start"
+          font-family="'JetBrains Mono', monospace"
+          font-weight="600" font-size="14"
+          fill="#665f55" letter-spacing="3.2">LAST CONTACT</text>
+
+    <text x="148" y="710" text-anchor="start"
+          font-family="'JetBrains Mono', 'IBM Plex Mono', monospace"
+          font-weight="700" font-size="22"
+          fill="#3c2d0c" letter-spacing="4.4">1962 · NOV · 14 · 04:17 GMT</text>
+
+    <!-- Crest watermark, centered lower-middle -->
+    <g opacity="0.18">
+      <use href="#crestWatermark" x="378" y="780" width="240" height="240" />
+    </g>
+
+    <!-- TOP SECRET stamp, lower-third, smaller than the cover -->
+    <g transform="translate(640 1056) rotate(-6)" filter="url(#stampInk)">
+      <rect x="-138" y="-32" width="276" height="64" rx="3" ry="3"
+            fill="none" stroke="#be2e27" stroke-width="4" />
+      <text x="0" y="-4" text-anchor="middle"
+            font-family="'JetBrains Mono', 'IBM Plex Mono', monospace"
+            font-weight="800" font-size="30"
+            fill="#be2e27" letter-spacing="6">TOP SECRET</text>
+      <text x="0" y="22" text-anchor="middle"
+            font-family="'JetBrains Mono', monospace"
+            font-weight="500" font-size="11"
+            fill="#be2e27" letter-spacing="3.4">EYES ONLY · M. PENDLETON</text>
+    </g>
+
+    <!-- Footer clearance line -->
+    <line x1="148" y1="1148" x2="852" y2="1148"
+          stroke="#3c2d0c" stroke-width="0.8" opacity="0.46" />
+    <text x="148" y="1186" text-anchor="start"
+          font-family="'JetBrains Mono', monospace"
+          font-weight="700" font-size="14"
+          fill="#3c2d0c" letter-spacing="2.6" opacity="0.84">CLEARANCE: EYES ONLY</text>
+    <text x="852" y="1186" text-anchor="end"
+          font-family="'JetBrains Mono', monospace"
+          font-weight="600" font-size="14"
+          fill="#3c2d0c" letter-spacing="2.6" opacity="0.74">FORM PEN-22-CF · REV 1962</text>
+  </g>
+</svg>

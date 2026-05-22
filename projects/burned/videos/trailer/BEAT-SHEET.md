@@ -22,10 +22,13 @@
   voice_settings (stability 0.70, similarity_boost 0.75, style 0.15,
   use_speaker_boost true, speed 0.95) per Phase 0 Unit 0.2 lock.
 - **Janet** (Malory-coded executive-dryness matriarch, S01 cold open
-  only; ElevenLabs Sloane Shared Library, voice ID
-  `m8AHWg36LJTQWKmfeGVv`, model `eleven_v3`) with matriarch-tuned
-  voice_settings (stability 0.85, similarity_boost 0.75, style 0.05,
-  use_speaker_boost true, speed 0.92) per Phase 0 Unit 0.3 lock.
+  only; ElevenLabs Eleanor – Gracious and Authoritative Shared Library,
+  voice ID `2qQJWjw5XdG80GreshqG`, model `eleven_v3`) with cunty-
+  matriarch-tuned voice_settings (stability 0.40, similarity_boost 0.75,
+  style 0.45, use_speaker_boost true, speed 0.85) per Phase 2 Unit 2.3
+  re-lock (Phase 0 originally locked Sloane `m8AHWg36LJTQWKmfeGVv`;
+  cunty canary 2026-05-19 rejected Sloane as too polished and escalated
+  to Eleanor for the Jessica-Walter-Mallory-Archer DNA).
 
 Other operatives (Sable, Vera, Neal, Otto, Agent X) appear in visual
 card-flash montages only — no VO lines in this trailer.
@@ -255,10 +258,12 @@ capstone. Full storyboard + ASCII sketch in
 
   > *"He's a machine, this kid. Honestly at this point I'm just impressed."* <!-- @line: S01-cold-open -->
 
-  Bracket-tag treatment: `[deadpan]` leading + `[sarcastic]` before
-  "Honestly". Voice ID `m8AHWg36LJTQWKmfeGVv` (ElevenLabs Sloane,
-  Shared Library, `eleven_v3`) with matriarch-tuned voice_settings
-  per Phase 0 Unit 0.3. 12 words / ~5.0s expected.
+  Bracket-tag treatment: `[sarcastic]` leading + inline `[sarcastic]`
+  before "Honestly". Voice ID `2qQJWjw5XdG80GreshqG` (ElevenLabs
+  Eleanor – Gracious and Authoritative, Shared Library, `eleven_v3`)
+  with cunty-matriarch-tuned voice_settings per Phase 2 Unit 2.3
+  re-lock (Phase 0 Sloane lock rejected by cunty canary). 12 words /
+  ~5.0s expected.
 
 - **Music (S01 frames 0–210):** brass hook intro at 100% (frame 0), ducks to 40% bed via ramp(30) starting frame 30 (pre-anticipates Janet's cold-open line at frame 60). Full cue-map in preamble Music bed §.
 - **R15 #1 (frame 150):** *"OPERATION PENDLETON / CASE FILE 02 /
@@ -266,7 +271,7 @@ capstone. Full storyboard + ASCII sketch in
   JetBrains Mono 700 28px, `--color-ochre-9` ink on `--color-cream-12`
   stamp paper.
 
-**Voice:** Janet (Sloane) only. Off-camera narration over Dash visual.
+**Voice:** Janet (Eleanor, per Phase 2 Unit 2.3 re-lock) only. Off-camera narration over Dash visual.
 
 **Transition out:** stamp-slap finishing into S02 head (hard cut as
 `<Series.Sequence>` boundary at frame 210). See Unit 1.4 transition
@@ -308,9 +313,10 @@ presence is the VO. Full storyboard in
 
   > *"Good morning. The agency has decided you can be trusted with Operation Pendleton. Code-name in the field: BURNED. Pull up a chair. Try not to embarrass me."* <!-- @line: S02-briefing -->
 
-  Bracket-tag treatment: `[deadpan]` leading. Sterling-CODED briefing-
-  room formality; ellipsis pauses at clause boundaries. 27 words at
-  ~2.4 wps ≈ 11.7s.
+  Bracket-tag treatment: `[sarcastic]` leading (Phase 2 Unit 2.3
+  retune from original `[deadpan]` per arrogant-Sterling canary).
+  Sterling-CODED briefing-room formality; ellipsis pauses at clause
+  boundaries. 27 words at ~2.4 wps ≈ 11.7s.
 
 - **Music:** brass-bossa underscore ramping 40→50% across S02 per cue-map (ramp(60) from frame 210). Full cue-map in preamble Music bed §.
 - **CASE BANNER copy (S02):** label *"CASE FILE"* · operation
@@ -350,7 +356,7 @@ is 6 ACTION cards (`burned`, `intercepted`, `burn-the-files`,
 **CASE BANNER (S03):** label *"CASE FILE"* · operation *"OPERATION
 PENDLETON"* · sub *"MISSION DOSSIER · ASSET ROSTER"* · divider *"—"*
 · footer *"02 / EYES-ONLY"*. **Comms-ticker** continues with
-`IDLE_LINES` rotation, switches to "ACTIVE BRIEFING" at ~frame 870 to
+`IDLE_LINES` rotation, switches to "ACTIVE BRIEFING" at ~frame 1007 to
 match segment 2's deck VO. A mid-scene **1.0 s dossier-page wipe to
 deck reveal** sits between S03-roster (segment 1) and S03-deck
 (segment 2). Full S03 composition in
@@ -362,8 +368,9 @@ deck reveal** sits between S03-roster (segment 1) and S03-deck
 
   > *"Our autonomous field assets infiltrated the contract last quarter. [BEAT 0.3s] Seven operatives in the active roster. [BEAT 0.3s] One who insists on being called 'Agent X' and refuses to file any paperwork whatsoever."* <!-- @line: S03-roster -->
 
-  Bracket-tag treatment: `[deadpan]` leading. ~30 words in 9.0s
-  budget + 0.6s internal beats. **Unit 2.7 Tier-2 trim 2026-05-22:**
+  Bracket-tag treatment: `[sarcastic]` leading (Phase 2 Unit 2.3
+  retune from original `[deadpan]`). ~30 words in 9.0s budget + 0.6s
+  internal beats. **Unit 2.7 Tier-2 trim 2026-05-22:**
   dropped *"Six expense reports, all classified."* sentence to claw
   back ~4s on the original +95.9% drift; post-trim actual ~13.2s,
   residual +4.2s overrun deferred to Tier-3/4 reconciliation. Plan-original "One **field agent**
@@ -374,12 +381,13 @@ deck reveal** sits between S03-roster (segment 1) and S03-deck
 
 - **[Mid-scene wipe — 1.0s dossier-page wipe to deck reveal.]**
 
-- **VO (Dash, segment 2, frame 870):**
+- **VO (Dash, segment 2, frame 1007):**
 
   > *"Mission: a deck of one hundred and twenty operations. [BEAT 0.4s] One ends your career instantly. [BEAT 0.3s] The rest help you survive. Or ensure your colleagues don't."* <!-- @line: S03-deck -->
 
-  Bracket-tag treatment: `[deadpan]` leading. ~24 words in 6.0s
-  budget + 0.7s internal beats. Trimmed from plan-original (~31w)
+  Bracket-tag treatment: `[sarcastic]` leading (Phase 2 Unit 2.3
+  retune from original `[deadpan]`). ~24 words in 6.0s budget + 0.7s
+  internal beats. Trimmed from plan-original (~31w)
   by compressing the deck-fate clauses: "One of them ends" →
   "One ends" (implied antecedent), "exist to help you survive it"
   → "help you survive" (no hedge verb), "Or to ensure your
@@ -411,7 +419,7 @@ visual weight INSIDE the central 1080×1080 safe square, reads at full
 weight for 30 frames (1.0 s), then decays to 30% opacity chrome at
 the right-edge slot column as the next element enters. Card-art halo
 right-edge-only at 40% opacity throughout — texture, not focal.
-Comms-ticker dim background until frame 1800, then a 60-frame ease
+Comms-ticker dim background until frame 2130, then a 60-frame ease
 to "bright" by frame 2190 and HELD bright through stamp + VO + silent
 hold. **Frame 2280 stamp slap is the trailer's ONLY "everything at
 once" moment** — every other cascade frame has exactly one element
@@ -547,12 +555,13 @@ before the cut. Trim ownership = Phase 5.
 
 **Audio:**
 
-- **VO (Dash, frame 2280, sparse interjection):**
+- **VO (Dash, frame 2610, sparse interjection):**
 
   > *"And — between you and me — they appear to be enjoying it."* <!-- @line: S05-gameplay-vo -->
 
-  Bracket-tag treatment: `[deadpan]` leading. 12 words / ~5.0s. Em-
-  dash pauses for sotto-voce conspiratorial register.
+  Bracket-tag treatment: `[sarcastic]` leading (Phase 2 Unit 2.3
+  retune from original `[deadpan]`). 12 words / ~5.0s. Em-dash pauses
+  for sotto-voce conspiratorial register.
 
 - **VO (Dash, frame 2730, scream cue):**
 
@@ -563,13 +572,13 @@ before the cut. Trim ownership = Phase 5.
   cadence-spec.md §3.6: (1) flat pitch, (2) 6–12 dB amplitude jump
   vs gameplay bed, (3) FIRST-vowel drag, (4) accent anchored on first
   syllable. 200-frame-delayed reaction beat after clip-relative-160
-  BURNED-card-draw at absolute frame 2200. `skipSilenceremove: true`
+  BURNED-card-draw at absolute frame 2530. `skipSilenceremove: true`
   in script.ts to preserve attack envelope.
 
 - **Music:** brass-bossa underscore at 30% baseline; ducks under
   scream cue (frame 2730) for 15 frames either side, then returns to
   30%. Music ducks to 15% for 15 frames around the BURNED-card-draw
-  moment (frame 2200) per Unit 1.2 Step 6 audio treatment.
+  moment (frame 2530) per Unit 1.2 Step 6 audio treatment.
 - **Gameplay audio:** raw board ambient + phone-tap SFX + occasional
   player laugh, level-normalized to -12 dBFS RMS. UNEDITED beyond
   normalization (intentional "rough live authentic" reading).
@@ -609,7 +618,7 @@ standard slap — lighter envelope than R15 #4 to maintain hierarchy).
 **CASE BANNER (S06):** label *"CASE FILE"* · operation *"OPERATION
 PENDLETON"* · sub *"DEBRIEF · STATUS UPDATE"* · divider *"—"* · footer
 *"02 / FIELD-READY"* (footer mutates EYES-ONLY → FIELD-READY mirroring
-the R15 #4 status arc). **Frame 2843:** final brass sting on music bed
+the R15 #4 status arc). **Frame 3173:** final brass sting on music bed
 (60→100% ramp completes here); logo + R15 #4 + R15 #5 hold static.
 **Frame 3180:** hard cut to black. Full S06 composition in
 [`sample-eval/beat-sheet/briefing-room-comp.md`](sample-eval/beat-sheet/briefing-room-comp.md).
@@ -620,18 +629,24 @@ the R15 #4 status arc). **Frame 2843:** final brass sting on music bed
 
   > *"That's the briefing. Operation Pendleton is in your hands. Hold it tight."* <!-- @line: S06-close -->
 
-  Bracket-tag treatment: `[deadpan]` leading. 14 words at ~1.9 wps
-  deliberate-close pace ≈ 7.4s. **"Hold it tight"** is the
-  entendre setup line for Phrasing! — physical-action ambiguity per
-  spec §3.5 earned-Phrasing! mechanic.
+  Bracket-tag treatment: `[sarcastic]` leading (Phase 2 Unit 2.3
+  retune from original `[deadpan]`). 14 words at ~1.9 wps deliberate-
+  close pace ≈ 7.4s. **"Hold it tight"** is the entendre setup line
+  for Phrasing! — physical-action ambiguity per spec §3.5 earned-
+  Phrasing! mechanic.
 
 - **[BEAT 0.4s — 12 frames silence between close and Phrasing.]**
 
-- **VO (Dash, frame 2814, Phrasing! punchline):**
+- **VO (Dash, frame 3144, Phrasing! punchline):**
 
   > *"Phrasing."* <!-- @line: S06-phrasing -->
 
-  Bracket-tag treatment: `[deadpan]` leading. FFmpeg fade curve: qsin
+  Bracket-tag treatment: `[excited]` leading (Phase 2 Unit 2.4 re-tune
+  to `PHRASING_INTERJECTIVE_SETTINGS` in `elevenlabs.ts` — stab 0.30 /
+  style 0.65 / speed 1.05; was `[deadpan]` in Phase 1). Resolver
+  branches on `cadencePrefixTag === '[excited]' && voice === 'dash'`.
+  Snappy rise on "Phra-" / fall on "-sing." callback Sterling-CODED
+  cadence — NOT the arrogant-briefer drawl. FFmpeg fade curve: qsin
   (per plan Step 7 phrasing-specific fade shape). R15 #4 stamp
   *"OPERATION STATUS: FIELD-READY"* lands at frame 3150 (concurrent
   with Phrasing audio tail). R15 #5 closing-card lands at frame 3165
@@ -669,7 +684,7 @@ inside 1080×1080 central safe square.
 | Input                       | Lock                                                                                                                                      | Source                                                                            |
 | --------------------------- | ----------------------------------------------------------------------------------------------------------------------------------------- | --------------------------------------------------------------------------------- |
 | Dash voice                  | ElevenLabs Roger `CwhRBWXzGAHq8TQ4Fs17`, model `eleven_v3`, Roger defaults                                                                | Phase 0 Unit 0.2 (`videos/trailer/PHASE-0-EXIT.md` §Section 1)                    |
-| Janet voice                 | ElevenLabs Sloane (Shared Library) `m8AHWg36LJTQWKmfeGVv`, model `eleven_v3`, matriarch-tuned voice_settings                              | Phase 0 Unit 0.3 (`videos/trailer/PHASE-0-EXIT.md` §Section 2)                    |
+| Janet voice                 | ElevenLabs Eleanor – Gracious and Authoritative (Shared Library) `2qQJWjw5XdG80GreshqG`, model `eleven_v3`, cunty-matriarch-tuned voice_settings (Phase 0 locked Sloane `m8AHWg36LJTQWKmfeGVv`; Phase 2 Unit 2.3 re-locked Eleanor after cunty canary) | Phase 0 Unit 0.3 (`videos/trailer/PHASE-0-EXIT.md` §Section 2) + Phase 2 Unit 2.3 |
 | S01 cold-open line          | *"He's a machine, this kid. Honestly at this point I'm just impressed."*                                                                  | Phase 0 Unit 0.3 (Section B Candidate #4)                                          |
 | Cold-open composition shape | `SpikeColdOpen` — 8s / 240 frames; two fast cuts (Janet portrait → Dash portrait, 1s each) → held BURNED landing card; logo at frame 60   | Phase 0 Unit 0.5 spike (`videos/trailer/sample-eval/spike/spike-results.md`)      |
 | R15 #1 stamp content        | `OPERATION PENDLETON / CASE FILE 02 / METHOD: AUTONOMOUS`                                                                                  | Phase 0 Unit 0.3 disposition                                                       |
@@ -683,7 +698,7 @@ inside 1080×1080 central safe square.
 ## Voice cast lock + runtime accounting (Unit 1.3)
 
 Voice cast is **2 voices** in this trailer: Dash (Roger / `eleven_v3`)
-and Janet (Sloane / `eleven_v3`). Per-line voice + engine + prefixTag
+and Janet (Eleanor / `eleven_v3` — Phase 2 Unit 2.3 re-lock; Phase 0 was Sloane). Per-line voice + engine + prefixTag
 table lives in `sample-eval/beat-sheet/voice-cast-lock.md`; the
 machine contract is `src/lib/script.ts BURNED_TRAILER_LINES`.
 

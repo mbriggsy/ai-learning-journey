@@ -202,19 +202,6 @@ budget. Affected cues + per-cue disposition:
   - S06-phrasing (+58.3% but Briggsy-locked at 0.63s).
 
   **Remaining Unit 2.7 work:**
-  - Aux-doc Tier-4 sync follow-up (deferred this commit due to Edit-tool
-    Read-first requirement burning context): `briefing-room-comp.md`,
-    `cascade-composition.md`, `music-sourcing.md`, `script-word-count.md`
-    in `videos/trailer/sample-eval/beat-sheet/` ALL still reference old
-    pre-Tier-4 frame numbers throughout. Mechanical sweep: shift every
-    S03_END/S04+/S05+/S06+ frame by +330 (or by +137 for S03-deck
-    specifically); shift STACKED_PAYOFF (1950→2280), PAYOFF_VO_END
-    (2010→2340), music-duck (1980→2310). Read each file first then
-    batch Edit. ~30 mechanical edits per file. No test impact; pure
-    doc-drift. Map: 1050→1380, 1110→1440, 1200→1530, 1290→1620,
-    1410→1740, 1560→1890, 1680→2010, 1860→2190, 1950→2280, 1980→2310,
-    2010→2340, 2040→2370, 2535→2865, 2580→2910, 2790→3120, 2820→3150,
-    2826→3156, 2835→3165, 2850→3180, 2400→2730, 2780→3110.
   - `phase-1-reconciliation-signoff.txt` sentinel + N≥2 listener panel
     (Briggsy + Harry minimum per plan §R2). N=1 (Briggsy-only) until
     Harry can listen.
@@ -275,14 +262,6 @@ loudness + leadFramesHint).
 
 **Open follow-ups carried by Phase 2 Unit 2.4 close (NOT blocking Unit 2.6):**
 
-- **Doc-drift in `cold-open-prototype.ts` header + `script.ts`
-  S01-cold-open notes.** Both still reference "Sloane matriarch-tuned
-  (stability 0.85 / style 0.05 / speed 0.92)" or "Voice ID
-  m8AHWg36LJTQWKmfeGVv" in comments — that's the v1 Sloane settings.
-  The actual code constant (`COLD_OPEN_SPEAKER` body) is Eleanor (v3,
-  stab 0.40 / style 0.45 / speed 0.85, voice ID
-  `2qQJWjw5XdG80GreshqG`). Fix the prose at a comfortable point — not
-  load-bearing, but stale annotations bite future readers.
 - **S06-phrasing.expectedFrames contradiction (CARRY OVER from 2.3).**
   Phase 1 ships `expectedFrames: 12` (0.4s); Phase 2 deepening header
   claims 27 (~0.9s). Post-retune raw render is 1.2s = 36 frames pre-

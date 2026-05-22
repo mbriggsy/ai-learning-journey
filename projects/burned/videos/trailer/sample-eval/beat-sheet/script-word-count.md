@@ -18,19 +18,19 @@ computed as `words / (expectedFrames / 30)`.
 | S01-cold-open   | S01   | 60    | 12    | 150            | 5.00    | 2.40 | cold-open  | 3.5            | ✅     |
 | S02-briefing    | S02   | 219   | 27    | 351            | 11.70   | 2.31 | sustained  | 4.5            | ✅     |
 | S03-roster      | S03   | 570   | 35    | 270            | 9.00    | 3.89 | sustained  | 4.5            | ✅     |
-| S03-deck        | S03   | 870   | 24    | 180            | 6.00    | 4.00 | sustained  | 4.5            | ✅     |
-| S04-cue-01      | S04   | 1050  | 2     | 60             | 2.00    | 1.00 | list       | 4.5            | ✅     |
-| S04-cue-02      | S04   | 1110  | 7     | 90             | 3.00    | 2.33 | list       | 4.5            | ✅     |
-| S04-cue-03      | S04   | 1200  | 11    | 90             | 3.00    | 3.67 | list       | 4.5            | ✅     |
-| S04-stat-01     | S04   | 1290  | 9     | 120            | 4.00    | 2.25 | list       | 4.5            | ✅     |
-| S04-stat-02     | S04   | 1410  | 10    | 150            | 5.00    | 2.00 | list       | 4.5            | ✅     |
-| S04-stat-03     | S04   | 1560  | 8     | 120            | 4.00    | 2.00 | list       | 4.5            | ✅     |
-| S04-stat-04     | S04   | 1680  | 15    | 180            | 6.00    | 2.50 | list       | 4.5            | ✅     |
-| S04-payoff      | S04   | 1950  | 4     | 60             | 2.00    | 2.00 | payoff     | 2.5            | ✅     |
-| S05-gameplay-vo | S05   | 2280  | 13    | 150            | 5.00    | 2.60 | sustained  | 4.5            | ✅     |
-| S05-scream      | S05   | 2400  | 1     | 50             | 1.67    | —    | scream     | ∞              | ✅     |
-| S06-close       | S06   | 2580  | 13    | 222            | 7.40    | 1.76 | payoff     | 2.5            | ✅     |
-| S06-phrasing    | S06   | 2814  | 1     | 12             | 0.40    | 2.50 | payoff     | 2.5            | ✅     |
+| S03-deck        | S03   | 1007  | 24    | 180            | 6.00    | 4.00 | sustained  | 4.5            | ✅     |
+| S04-cue-01      | S04   | 1380  | 2     | 60             | 2.00    | 1.00 | list       | 4.5            | ✅     |
+| S04-cue-02      | S04   | 1440  | 7     | 90             | 3.00    | 2.33 | list       | 4.5            | ✅     |
+| S04-cue-03      | S04   | 1530  | 11    | 90             | 3.00    | 3.67 | list       | 4.5            | ✅     |
+| S04-stat-01     | S04   | 1620  | 9     | 120            | 4.00    | 2.25 | list       | 4.5            | ✅     |
+| S04-stat-02     | S04   | 1740  | 10    | 150            | 5.00    | 2.00 | list       | 4.5            | ✅     |
+| S04-stat-03     | S04   | 1890  | 8     | 120            | 4.00    | 2.00 | list       | 4.5            | ✅     |
+| S04-stat-04     | S04   | 2010  | 15    | 180            | 6.00    | 2.50 | list       | 4.5            | ✅     |
+| S04-payoff      | S04   | 2280  | 4     | 60             | 2.00    | 2.00 | payoff     | 2.5            | ✅     |
+| S05-gameplay-vo | S05   | 2610  | 13    | 150            | 5.00    | 2.60 | sustained  | 4.5            | ✅     |
+| S05-scream      | S05   | 2730  | 1     | 50             | 1.67    | —    | scream     | ∞              | ✅     |
+| S06-close       | S06   | 2910  | 13    | 222            | 7.40    | 1.76 | payoff     | 2.5            | ✅     |
+| S06-phrasing    | S06   | 3144  | 1     | 12             | 0.40    | 2.50 | payoff     | 2.5            | ✅     |
 
 **Per-scene totals:**
 
@@ -38,11 +38,11 @@ computed as `words / (expectedFrames / 30)`.
 | ------ | ---- | ----------- | --------------- | --------- | ---------------- | -------------------------------------------------------------- |
 | S01    | 1    | 12          | 5.00            | 0.0       | 7.0              | 2.0s buffer for BURNED logo + R15 #1 stamp                     |
 | S02    | 1    | 27          | 11.70           | (implicit) | 12.0            | 0.3s scene-head establishing buffer                            |
-| S03    | 2    | 59          | 15.00           | ~1.6 + 1.0 mid-wipe | 16.0   | Tight; mid-wipe at frame ~840                                  |
+| S03    | 2    | 59          | 15.00           | ~1.6 + 1.0 mid-wipe | 27.0   | Tier-4 expansion 2026-05-22 absorbed Sterling-CODED read-pace overrun; mid-wipe at frame ~992 |
 | S04    | 8    | 66          | 25.00           | (per-cue) | 33.0             | 1.5s no-VO peak hold + 1.0s payoff hold + cue intervals       |
 | S05    | 2    | 14          | 6.67            | gameplay-audio-bed | 18.0   | Gameplay audio carries the scene; VO sparse                   |
-| S06    | 2    | 14          | 7.80            | 0.4s pause | 9.0             | Phrasing! lands as punchline; music sting tail to 2850          |
-| **Total** | **16** | **192**   | **~71s spoken** | — | **95.0s**  | Within ±3s tolerance; Phase 2 measures actual TTS render        |
+| S06    | 2    | 14          | 7.80            | 0.4s pause | 9.0             | Phrasing! lands as punchline; music sting tail to 3180          |
+| **Total** | **16** | **192**   | **~71s spoken** | — | **106.0s**  | Tier-4 reauthored 2026-05-22 (95s→106s); Phase 2 measures actual TTS render |
 
 ## Sanity ceiling rationale
 

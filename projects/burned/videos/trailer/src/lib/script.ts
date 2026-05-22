@@ -71,7 +71,7 @@ export type Line = {
   readonly fadeOutMs?: number
 
   /**
-   * Scream cue (frame 2400) must preserve full attack envelope —
+   * Scream cue (frame 2730) must preserve full attack envelope —
    * FFmpeg silenceremove would clip the volume-discontinuous onset.
    */
   readonly skipSilenceremove?: boolean
@@ -106,7 +106,7 @@ export const BURNED_TRAILER_LINES: readonly Line[] = [
       engine: 'elevenlabs-v3',
       prefixTag: '[sarcastic]',
       notes:
-        "Inline [sarcastic] tag before 'Honestly' per Phase 0 Unit 0.3 cadence-spec.md. Voice settings override per COLD_OPEN_SPEAKER constant in scripts/cold-open-prototype.ts (Sloane matriarch-tuned: stability 0.85, similarity 0.75, style 0.05, speaker_boost true, speed 0.92). Voice ID m8AHWg36LJTQWKmfeGVv (Shared Library).",
+        "Inline [sarcastic] tag before 'Honestly' per Phase 0 Unit 0.3 cadence-spec.md. Voice settings override per COLD_OPEN_SPEAKER constant in scripts/cold-open-prototype.ts (Eleanor cunty-matriarch-tuned per Phase 2 Unit 2.3 re-lock: stability 0.40, similarity 0.75, style 0.45, speaker_boost true, speed 0.85). Voice ID 2qQJWjw5XdG80GreshqG (Shared Library).",
     },
   },
 

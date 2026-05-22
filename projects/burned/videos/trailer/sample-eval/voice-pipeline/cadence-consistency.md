@@ -11,13 +11,13 @@ sentinel write, unblocking Unit 2.4 full-batch generation.
 | -------------- | ------------- | ---------------------------------------------------------- | ----------- | -------------------- | ------ |
 | Dash sustained | S02-briefing  | `public/audio/lines/s02-cue-219-dash.wav`                  | 12.32 s     | 11.70 s (351 frames) | +5.3%  |
 | Cold-open      | S01-cold-open | `public/audio/lines/s01-cue-60-janet.wav`                  | 4.56 s      | 5.00 s (150 frames)  | -8.8%  |
-| Scream (R5-A)  | S05-scream    | `public/audio/lines/s05-cue-2400-dash.wav`                 | 2.24 s      | 1.67 s (50 frames)   | +34.1% |
+| Scream (R5-A)  | S05-scream    | `public/audio/lines/s05-cue-2730-dash.wav`                 | 2.24 s      | 1.67 s (50 frames)   | +34.1% |
 
 All three: codec `pcm_s16le`, 48000 Hz, mono, 16-bit.
 
 ## Engine + pipeline metadata
 
-- Engine: `elevenlabs-v3` (Roger for Dash; Sloane matriarch-tuned for Janet)
+- Engine: `elevenlabs-v3` (Roger for Dash; Eleanor cunty-matriarch-tuned for Janet per Phase 2 Unit 2.3 re-lock — was Sloane in Phase 0)
 - Model: `eleven_v3`
 - Voice settings: Roger defaults from `sample-eval/r4-dash/cadence-spec-elevenlabs.json` (Dash);
   matriarch-tuned override from `scripts/cold-open-prototype.ts` `COLD_OPEN_SPEAKER.voiceSettings` (Janet)
@@ -47,7 +47,7 @@ Score each dimension 0–5 vs the Phase 0 reference for the matching cell.
 | -------------------------------------------- | -------- | ---- | ------ | ------------ | ----------- |
 | `s02-cue-219-dash.wav` (Dash sustained)      | _ / 5    | _ / 5 | _ / 5 | _ / 5        | ☐           |
 | `s01-cue-60-janet.wav` (Janet matriarch)     | _ / 5    | _ / 5 | _ / 5 | _ / 5        | ☐           |
-| `s05-cue-2400-dash.wav` (Dash scream)        | _ / 5    | _ / 5 | _ / 5 | _ / 5        | ☐           |
+| `s05-cue-2730-dash.wav` (Dash scream)        | _ / 5    | _ / 5 | _ / 5 | _ / 5        | ☐           |
 
 ## Sign-off
 

@@ -13,14 +13,17 @@
  * Output:
  *   sample-eval/r14-cold-open/clips/candidate-{4,5}.mp3
  *
- * Voice + settings: Sloane (Shared Library, `m8AHWg36LJTQWKmfeGVv`)
- * with the matriarch-tuned voice_settings override locked in
- * cold-open-prototype.ts COLD_OPEN_SPEAKER.voiceSettings (stability 0.85
- * / similarity 0.75 / style 0.05 / speaker_boost true / speed 0.92).
- * The override DIVERGES from Unit 0.2 Roger defaults because Janet's
- * tough-matriarch character requires high stability + ultra-low style
- * to strip the upbeat baseline that surfaced in Sarah + Matilda
- * iterations (see decode-eval.md §Janet iteration).
+ * Voice + settings: Eleanor – Gracious and Authoritative (Shared
+ * Library, `2qQJWjw5XdG80GreshqG`) with the cunty-matriarch-tuned
+ * voice_settings override locked in cold-open-prototype.ts
+ * COLD_OPEN_SPEAKER.voiceSettings (stability 0.40 / similarity 0.75 /
+ * style 0.45 / speaker_boost true / speed 0.85) per Phase 2 Unit 2.3
+ * re-lock. Phase 0 originally locked Sloane (`m8AHWg36LJTQWKmfeGVv`,
+ * stab 0.85 / style 0.05 / speed 0.92) but the cunty canary 2026-05-19
+ * rejected Sloane as too polished; Eleanor's "refined, seasoned older
+ * British female with commanding presence" landed the Jessica-Walter-
+ * Mallory-Archer DNA. See decode-eval.md §Janet iteration for Phase 0
+ * history.
  *
  * Bracket-tag treatment:
  *   - [deadpan] leading — establishes register, mirrors Unit 0.4 tone

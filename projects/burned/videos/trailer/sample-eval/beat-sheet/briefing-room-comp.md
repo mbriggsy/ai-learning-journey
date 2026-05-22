@@ -13,7 +13,7 @@
 ## Anti-pattern: "AI-slop layered-simultaneous" guard (extends Unit 1.5)
 
 The same composition discipline the cascade rewrite enforced — *"no
-frame except the 1950 payoff has more than two elements at full
+frame except the 2280 payoff has more than two elements at full
 visual weight"* — extends to S01/S02/S03/S06. Previous draft S02
 listed 8 elements competing for 12s (mahogany + venetian blinds +
 depth-plane foreground + open dossier + Pendleton crest + comms-ticker
@@ -80,7 +80,7 @@ S02 hand-off.
 - **BURNED logo treatment (frame 60–210):** *NOT* the full closing-card
   BURNED logo. S01 shows the BURNED CARD ART (the game asset) as the
   focal element during the cold-open VO, NOT the wordmark logo. The
-  wordmark only appears in S06 closing card at frame 2780 (where it
+  wordmark only appears in S06 closing card at frame 3110 (where it
   lands as the trailer's capstone). **Differential:** S01 establishes
   BURNED as a card inside the deck (in-world); S06 establishes BURNED
   as the game's title (out-of-world bookend). The two BURNED
@@ -199,7 +199,7 @@ backplate if compression eats the contrast.
 *delivering* the briefing — his presence is the VO, not a portrait.
 The briefing-room frame IS the proof of R1, not a Dash silhouette.
 
-### S03 — Mission Background (frames 570–1050 / 16.0s)
+### S03 — Mission Background (frames 570–1380 / 27.0s)
 
 Briefing-room frame STAYS; deck mosaic appears INSIDE the dossier.
 
@@ -226,7 +226,7 @@ Briefing-room frame STAYS; deck mosaic appears INSIDE the dossier.
   the research budget."). The deck-of-6 visual primes Stat 4's
   verbal "Six in the deck" payoff.
 - **S03→S04 transition resolution:** the 6 operative portraits EXIT
-  at the S03→S04 dossier-page wipe (frame 1034–1050, 16-frame wipe —
+  at the S03→S04 dossier-page wipe (frame 1364–1380, 16-frame wipe —
   per Unit 1.4). They do NOT persist into S04's halo. **S04's
   right-edge halo is 6 ACTION cards from the 11-card action set**,
   locked to:
@@ -244,10 +244,10 @@ Briefing-room frame STAYS; deck mosaic appears INSIDE the dossier.
   cascade — they remain in the S03 dossier mosaic context only (the
   4×6 grid revealed inside the dossier viewport).
 - **Comms-ticker continues** (idle text at frame head, switches to
-  "ACTIVE BRIEFING" or similar at frame ~870 to match the second VO
+  "ACTIVE BRIEFING" or similar at frame ~1007 to match the second VO
   line).
 
-### S06 — Closing Directive (frames 2580–2850 / 9.0s)
+### S06 — Closing Directive (frames 2910–3180 / 9.0s)
 
 Logo + R15 cadence retimed for breathing room.
 
@@ -257,27 +257,27 @@ Logo + R15 cadence retimed for breathing room.
 - **Midground:** dossier closes (reverse of S02 opening — 30-frame
   `EASE_DRAWER`). Dossier cover shows full Pendleton crest +
   classification stamp.
-- **Frame 2780:** BURNED logo lands center, sized ~720 px wide,
+- **Frame 3110:** BURNED logo lands center, sized ~720 px wide,
   Clash Display 700 with chrome treatment. 8-frame stamp-slap entry
   per `STAMP_SLAP_FRAMES`.
-- **Frame 2780–2820:** Logo holds static. **40-frame breathing room
+- **Frame 3110–3150:** Logo holds static. **40-frame breathing room
   (1.3 s)** — gives the logo time to settle before being stamped, per
   emil "match motion to mood — closing should breathe." First-draft
   10-frame gap (333 ms) was rapid-fire and stepped on the logo's
   presence.
-- **Frame 2820:** R15 #4 stamp ("OPERATION STATUS: FIELD-READY") slaps
+- **Frame 3150:** R15 #4 stamp ("OPERATION STATUS: FIELD-READY") slaps
   onto the closing card (16-frame heavy slap — same envelope as the
   payoff stamp, treating the closing as the trailer's second "weight"
   moment).
-- **Frame 2835:** R15 #5 stamp slaps below R15 #4 (main line
+- **Frame 3165:** R15 #5 stamp slaps below R15 #4 (main line
   "DRAFTED, RENDERED, AND SHIPPED BY AUTONOMOUS AGENTS." + 30%-opacity
   subhead "Honestly at this point we're just impressed." — LOCKED at
   Unit 1.9). 8-frame standard slap (lighter envelope than R15 #4 to
   maintain hierarchy). The subhead echoes Janet's S01 kicker via
   `"I'm"` → `"we're"` plural fold.
-- **Frame 2843:** Final brass sting on the music bed (volume 60→100%
+- **Frame 3173:** Final brass sting on the music bed (volume 60→100%
   ramp lands here); logo + R15 #4 + R15 #5 all hold static.
-- **Frame 2850:** Hard cut to black. End.
+- **Frame 3180:** Hard cut to black. End.
 
 ## Step 2 — Briefing-room grammar inventory
 
@@ -319,7 +319,7 @@ indicate the current briefing phase.
 The comms-ticker animates continuously through S02 + S03 + S06 (idle
 text rotating through `IDLE_LINES` 4-item set per
 `DossierFeed.tsx:20-25`), brightens + intensifies through S04 (R15 #2
-surfaces at frame 1680), fades during S05 (gameplay-frame replacement),
+surfaces at frame 2010), fades during S05 (gameplay-frame replacement),
 returns at S06 iris wipe. Per-frame ticker text rotation matches
 existing BURNED idle text patterns — Phase 4 ports the
 `ChannelTicker` rotation cadence (2500 ms per item per
@@ -347,7 +347,7 @@ The 1080×1080 central square within 1920×1080 must contain:
   (rubber-stamp pop-in reads as cheap motion-graphics; the 0.95 start
   preserves the heft of "the stamp was always there, the photo just
   caught it landing").
-- **Card-art halo stagger (S04 frames 1560–1860):** 2 frames between
+- **Card-art halo stagger (S04 frames 1890–2190):** 2 frames between
   cards entering (emil's 30–80 ms range). 6-card halo completes over
   12 frames = 400 ms, slow enough to read as a *building texture*,
   fast enough not to drag.

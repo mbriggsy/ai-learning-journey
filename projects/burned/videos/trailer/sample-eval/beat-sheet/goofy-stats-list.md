@@ -31,7 +31,7 @@ memory.
 | P12 | 100 KB phone bundle ceiling | Phone bundles currently shipping: 19.17 KB | TODO.md §1 measured |
 | P13 | Forensic dossier pages | Number of dossiers with footnotes citing other dossiers: 4 | docs/conventions/ + cross-refs |
 | P14 | Mission rehearsal contingencies: 1,407 | Most-rehearsed: "the field asset gets the deck wrong" | top-failing test (BURNED-draw edge cases) |
-| P15 | Active runtime in shipped form: 95 seconds | Total time spent timing it: longer than that | meta-stat |
+| P15 | Active runtime in shipped form: 106 seconds | Total time spent timing it: longer than that | meta-stat |
 
 ## Step 1.5 — Hat-count audit (PRE-GATE, per plan doc-review reorder)
 
@@ -122,10 +122,10 @@ For S04's 4 stat cue slots, pick 4 from the pool that:
 
 | Slot | Finalist | Source-verified | Domain |
 |------|----------|-----------------|--------|
-| S04 Stat 1 (frame 1290) | P2: *"Mission rehearsal: fourteen hundred and seven contingencies war-gamed."* | TODO.md §1 — 1,407 pass | testing → rehearsal |
-| S04 Stat 2 (frame 1410) | P2-companion: *"Six of them, deliberately unrehearsed — the 'memorable ones.'"* | TODO.md §1 — 6 expected-fail | testing → unrehearsed |
-| **S04 Stat 3 (frame 1560)** | **P3-revised: *"Seventeen asset illustrations. Five of them with hats."*** | `public/assets/cards/*.webp` count = 17 ✓; hat audit 2026-05-18 = 5 ✓ (this doc) | asset |
-| S04 Stat 4 (frame 1680) | P4'': *"Seven on the roster. Six in the deck. One on the research budget. Don't ask."* | `ActRoster.tsx:18-75` (6 deck operatives) + `ActRoster.tsx:153-158` (Otto research budget) ✓ | personnel |
+| S04 Stat 1 (frame 1620) | P2: *"Mission rehearsal: fourteen hundred and seven contingencies war-gamed."* | TODO.md §1 — 1,407 pass | testing → rehearsal |
+| S04 Stat 2 (frame 1740) | P2-companion: *"Six of them, deliberately unrehearsed — the 'memorable ones.'"* | TODO.md §1 — 6 expected-fail | testing → unrehearsed |
+| **S04 Stat 3 (frame 1890)** | **P3-revised: *"Seventeen asset illustrations. Five of them with hats."*** | `public/assets/cards/*.webp` count = 17 ✓; hat audit 2026-05-18 = 5 ✓ (this doc) | asset |
+| S04 Stat 4 (frame 2010) | P4'': *"Seven on the roster. Six in the deck. One on the research budget. Don't ask."* | `ActRoster.tsx:18-75` (6 deck operatives) + `ActRoster.tsx:153-158` (Otto research budget) ✓ | personnel |
 
 Domain span: rehearsal / unrehearsed (testing) / asset / personnel —
 4 of 5 plan-named domains (planning intentionally not directly
@@ -161,9 +161,9 @@ fails per-reviewer-floor, swap from pool. Backup candidates:
 per-reviewer-floor, R11 cuts. Cascade VO Stat 1–4 cues drop;
 cascade becomes purely visual. Two-bridge structure pre-drafted in
 plan Step 4:
-- Bridge cue 1 (frame ~1400): *"Fourteen thousand pages of forensic
+- Bridge cue 1 (frame ~1730): *"Fourteen thousand pages of forensic
   dossiers. Drafted on weekends."*
-- Bridge cue 2 (frame ~1740): *"By a field asset, deliberately not
+- Bridge cue 2 (frame ~2070): *"By a field asset, deliberately not
   named. Don't ask."*
 
 Bridge cues NOT yet shipped in `BURNED_TRAILER_LINES` (commented out

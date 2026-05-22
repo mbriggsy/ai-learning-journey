@@ -12,8 +12,8 @@
  *
  * Examples:
  *   - S01 cold-open (Janet at frame 60)    → s01-cue-60-janet.wav
- *   - S04 R3 payoff (Dash at frame 1950)   → s04-cue-1950-dash.wav
- *   - S05 scream (Dash at frame 2400)      → s05-cue-2400-dash.wav
+ *   - S04 R3 payoff (Dash at frame 2280)   → s04-cue-2280-dash.wav
+ *   - S05 scream (Dash at frame 2730)      → s05-cue-2730-dash.wav
  *
  * Scream note: voice cell is `dash`; the Sterling-CODED shout is
  * steered by `cadenceAdapter.prefixTag: '[shouts]'` per Phase 0 Unit

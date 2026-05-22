@@ -10,7 +10,7 @@ escalation, no deferred sub-units, no scream reopen.
 | Phase 0 unit | Outcome (sentinel-locked)                                                                                              | Source                                                                                          |
 | ------------ | ---------------------------------------------------------------------------------------------------------------------- | ----------------------------------------------------------------------------------------------- |
 | Unit 0.2 (R4) | **Path A — ElevenLabs Roger**, voice ID `CwhRBWXzGAHq8TQ4Fs17`, model `eleven_v3`, Roger-defaults voice_settings        | `videos/trailer/PHASE-0-EXIT.md` §Section 1                                                     |
-| Unit 0.3 (R14) | **Janet** (Malory-coded executive-dryness matriarch) voiced by **ElevenLabs Sloane** (Shared Library) `m8AHWg36LJTQWKmfeGVv`, model `eleven_v3`, **matriarch-tuned** voice_settings (NOT Roger defaults) | `videos/trailer/PHASE-0-EXIT.md` §Section 2                                                     |
+| Unit 0.3 (R14) | **Janet** (Malory-coded executive-dryness matriarch) voiced by **ElevenLabs Eleanor – Gracious and Authoritative** (Shared Library) `2qQJWjw5XdG80GreshqG`, model `eleven_v3`, **cunty-matriarch-tuned** voice_settings (NOT Roger defaults). Phase 0 originally locked Sloane (`m8AHWg36LJTQWKmfeGVv`); Phase 2 Unit 2.3 re-locked to Eleanor after the cunty canary rejected Sloane as too polished. | `videos/trailer/PHASE-0-EXIT.md` §Section 2 (Phase 0 Sloane lock) + Phase 2 Unit 2.3 (Eleanor re-lock) |
 | Unit 0.4 (R2) | Played-straight Sterling-CODED tone gate cleared; earned-Phrasing! mechanic locked (entendre setup required)            | `videos/trailer/sample-eval/tone/eval.md`                                                       |
 | Unit 0.6 (R5) | **R5 KEPT** — Sterling-LANA scream `VEEEEEEEERAAAA!!!` cleared via Path A Roger with `[shouts]` bracket-tag self-closing | `videos/trailer/sample-eval/r5-scream/scream-eval.md`                                           |
 
@@ -25,10 +25,10 @@ the R5 × R14 outcome matrix. Phase 0 outcomes resolve to **Row 2**:
 
 | R5 outcome | R14 cold-open speaker | Speaking roles | Scream beat |
 |------------|----------------------|----------------|-------------|
-| Kept (Path A cleared) | Vera | Dash + Vera | Dash screams Vera's name at frame 2400 |
-| **Kept (Path A cleared, Phase 0 locked)** | **Janet** | **Dash + Janet** | **Dash screams Vera's name at frame 2400; Vera visible in S03 card flash only** ← **THIS BRANCH** |
-| Kept | Sable | Dash + Sable | Dash screams Vera's name at frame 2400; Vera visible in S03 card flash only |
-| Cut (Vera removed) | Sable | Dash + Sable | Frame 2400 beat replaced with chuckle SFX from gameplay |
+| Kept (Path A cleared) | Vera | Dash + Vera | Dash screams Vera's name at frame 2730 |
+| **Kept (Path A cleared, Phase 0 locked)** | **Janet** | **Dash + Janet** | **Dash screams Vera's name at frame 2730; Vera visible in S03 card flash only** ← **THIS BRANCH** |
+| Kept | Sable | Dash + Sable | Dash screams Vera's name at frame 2730; Vera visible in S03 card flash only |
+| Cut (Vera removed) | Sable | Dash + Sable | Frame 2730 beat replaced with chuckle SFX from gameplay |
 | Cut (Vera removed) | Janet | Dash + Janet | Same |
 
 ## Per-line voice + engine assignment (16 cues)
@@ -39,22 +39,22 @@ and a `cadenceAdapter.engine` field. The shipped state:
 
 | Line ID            | Scene | Frame | Voice  | Engine          | prefixTag         | Notes                                                                                                                                                                          |
 | ------------------ | ----- | ----- | ------ | --------------- | ----------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------ |
-| S01-cold-open      | S01   | 60    | janet  | elevenlabs-v3   | `[deadpan]`       | Inline `[sarcastic]` tag before "Honestly" per Phase 0 Unit 0.3 cadence-spec.md. **voice_settings override via `scripts/cold-open-prototype.ts COLD_OPEN_SPEAKER`** — see handoff §below |
-| S02-briefing       | S02   | 219   | dash   | elevenlabs-v3   | `[deadpan]`       | Sterling-CODED briefing-room formality                                                                                                                                          |
-| S03-roster         | S03   | 570   | dash   | elevenlabs-v3   | `[deadpan]`       | 3× `[BEAT 0.3s]` internal markers expand to per-engine pause primitive                                                                                                          |
-| S03-deck           | S03   | 870   | dash   | elevenlabs-v3   | `[deadpan]`       | 2× `[BEAT 0.4s]`/`[BEAT 0.3s]`; trailing "Or ensure your colleagues don't." runs without preceding beat                                                                          |
-| S04-cue-01         | S04   | 1050  | dash   | elevenlabs-v3   | `[deadpan]`       | 2-word cascade ledge                                                                                                                                                            |
-| S04-cue-02         | S04   | 1110  | dash   | elevenlabs-v3   | `[deadpan]`       | HTP scroll begins                                                                                                                                                               |
-| S04-cue-03         | S04   | 1200  | dash   | elevenlabs-v3   | `[deadpan]`       | "name redacted for compliance" in-character substitute                                                                                                                          |
-| S04-stat-01        | S04   | 1290  | dash   | elevenlabs-v3   | `[deadpan]`       | Stat 1 enters                                                                                                                                                                   |
-| S04-stat-02        | S04   | 1410  | dash   | elevenlabs-v3   | `[deadpan]`       | Stat 1 decays; Stat 2 enters                                                                                                                                                    |
-| S04-stat-03        | S04   | 1560  | dash   | elevenlabs-v3   | `[deadpan]`       | Stat 3 enters                                                                                                                                                                   |
-| S04-stat-04        | S04   | 1680  | dash   | elevenlabs-v3   | `[deadpan]`       | Source-fixed: "research budget" matches `ActRoster.tsx:153-158`                                                                                                                 |
-| S04-payoff         | S04   | 1950  | dash   | elevenlabs-v3   | `[deadpan]`       | R3 truth-collision; leadFramesHint 2; fadeInMs 5 / fadeOutMs 30                                                                                                                  |
-| S05-gameplay-vo    | S05   | 2280  | dash   | elevenlabs-v3   | `[deadpan]`       | Em-dash pauses for sotto-voce conspiratorial register                                                                                                                           |
-| S05-scream         | S05   | 2400  | dash   | elevenlabs-v3   | `[shouts]`        | Self-closing ElevenLabs v3 tag; Sterling-LANA four-axis shape; `skipSilenceremove: true`; `fadeInMs: 0`                                                                          |
-| S06-close          | S06   | 2580  | dash   | elevenlabs-v3   | `[deadpan]`       | Earned-Phrasing! setup ("Hold it tight" carries the entendre)                                                                                                                   |
-| S06-phrasing       | S06   | 2814  | dash   | elevenlabs-v3   | `[deadpan]`       | `fadeOutMs: 50` with FFmpeg qsin curve per plan Step 7                                                                                                                          |
+| S01-cold-open      | S01   | 60    | janet  | elevenlabs-v3   | `[sarcastic]`     | Inline `[sarcastic]` tag before "Honestly" per Phase 0 Unit 0.3 cadence-spec.md. **voice_settings override via `scripts/cold-open-prototype.ts COLD_OPEN_SPEAKER`** — see handoff §below |
+| S02-briefing       | S02   | 219   | dash   | elevenlabs-v3   | `[sarcastic]`     | Sterling-CODED briefing-room formality                                                                                                                                          |
+| S03-roster         | S03   | 570   | dash   | elevenlabs-v3   | `[sarcastic]`     | 3× `[BEAT 0.3s]` internal markers expand to per-engine pause primitive                                                                                                          |
+| S03-deck           | S03   | 1007  | dash   | elevenlabs-v3   | `[sarcastic]`     | 2× `[BEAT 0.4s]`/`[BEAT 0.3s]`; trailing "Or ensure your colleagues don't." runs without preceding beat                                                                          |
+| S04-cue-01         | S04   | 1380  | dash   | elevenlabs-v3   | `[sarcastic]`     | 2-word cascade ledge                                                                                                                                                            |
+| S04-cue-02         | S04   | 1440  | dash   | elevenlabs-v3   | `[sarcastic]`     | HTP scroll begins                                                                                                                                                               |
+| S04-cue-03         | S04   | 1530  | dash   | elevenlabs-v3   | `[sarcastic]`     | "name redacted for compliance" in-character substitute                                                                                                                          |
+| S04-stat-01        | S04   | 1620  | dash   | elevenlabs-v3   | `[sarcastic]`     | Stat 1 enters                                                                                                                                                                   |
+| S04-stat-02        | S04   | 1740  | dash   | elevenlabs-v3   | `[sarcastic]`     | Stat 1 decays; Stat 2 enters                                                                                                                                                    |
+| S04-stat-03        | S04   | 1890  | dash   | elevenlabs-v3   | `[sarcastic]`     | Stat 3 enters                                                                                                                                                                   |
+| S04-stat-04        | S04   | 2010  | dash   | elevenlabs-v3   | `[sarcastic]`     | Source-fixed: "research budget" matches `ActRoster.tsx:153-158`                                                                                                                 |
+| S04-payoff         | S04   | 2280  | dash   | elevenlabs-v3   | `[sarcastic]`     | R3 truth-collision; leadFramesHint 2; fadeInMs 5 / fadeOutMs 30                                                                                                                  |
+| S05-gameplay-vo    | S05   | 2610  | dash   | elevenlabs-v3   | `[sarcastic]`     | Em-dash pauses for sotto-voce conspiratorial register                                                                                                                           |
+| S05-scream         | S05   | 2730  | dash   | elevenlabs-v3   | `[shouts]`        | Self-closing ElevenLabs v3 tag; Sterling-LANA four-axis shape; `skipSilenceremove: true`; `fadeInMs: 0`                                                                          |
+| S06-close          | S06   | 2910  | dash   | elevenlabs-v3   | `[sarcastic]`     | Earned-Phrasing! setup ("Hold it tight" carries the entendre)                                                                                                                   |
+| S06-phrasing       | S06   | 3144  | dash   | elevenlabs-v3   | `[excited]`       | `fadeOutMs: 50` with FFmpeg qsin curve per plan Step 7. Interjective callback cadence — `PHRASING_INTERJECTIVE_SETTINGS` in `elevenlabs.ts` (stab 0.30 / style 0.65 / speed 1.05) per Phase 2 Unit 2.4 re-tune.  |
 
 ## Janet voice_settings handoff mechanism
 
@@ -72,11 +72,12 @@ defaults? **Two options:**
 
 **Locked: Option (B).** Reasoning:
 
-1. **Single source of truth.** The Sloane matriarch-tuned profile is
-   already locked in `COLD_OPEN_SPEAKER.voiceSettings` with a Phase 0
-   contract test asserting the profile shape
-   (`cold-open-prototype.test.ts`). Duplicating into a `Line.voiceSettingsOverride`
-   field creates two surfaces that can silently diverge.
+1. **Single source of truth.** The Eleanor cunty-matriarch-tuned profile
+   (Phase 2 Unit 2.3 re-lock; was Sloane in Phase 0) is already locked in
+   `COLD_OPEN_SPEAKER.voiceSettings` with a contract test asserting the
+   profile shape (`cold-open-prototype.test.ts`). Duplicating into a
+   `Line.voiceSettingsOverride` field creates two surfaces that can
+   silently diverge.
 2. **Scope.** Only one Line carries the Janet voice in the current
    trailer (S01-cold-open). Adding a schema field for a single use
    case is over-engineering.
@@ -93,9 +94,10 @@ explicit pointer:
 
 > `"Inline [sarcastic] tag before 'Honestly' per Phase 0 Unit 0.3
 > cadence-spec.md. Voice settings override per COLD_OPEN_SPEAKER
-> constant in scripts/cold-open-prototype.ts (Sloane matriarch-tuned:
-> stability 0.85, similarity 0.75, style 0.05, speaker_boost true,
-> speed 0.92). Voice ID m8AHWg36LJTQWKmfeGVv (Shared Library)."`
+> constant in scripts/cold-open-prototype.ts (Eleanor cunty-matriarch-
+> tuned per Phase 2 Unit 2.3 re-lock: stability 0.40, similarity 0.75,
+> style 0.45, speaker_boost true, speed 0.85). Voice ID
+> 2qQJWjw5XdG80GreshqG (Shared Library)."`
 
 If a future revision adds a second non-Dash voice (Sable / Vera /
 Neal / Otto), the handoff mechanism extends naturally: each named
@@ -116,7 +118,7 @@ total clock"; Phase 1 doesn't ship a re-open hedge).
 
 **93.4 % ≥ 90 % R4 target.** ✓
 
-Total clock: 95.00 s. Voiced: 75.17 s. Unvoiced surface: 19.83 s
+Total clock: 106.00 s. Voiced: 75.17 s. Unvoiced surface: 30.83 s
 (gameplay audio carries S05 between scream cue + iris wipe; brass
 hook + R15 #1 stamp at S01 head; music duck + 1.0 s silent payoff
 hold at S04 tail; closing music sting tail at S06).
@@ -141,7 +143,7 @@ line-id requirement.
 ## Path D contingency — deferred indefinitely
 
 Phase 0 Path A cleared on first pass for both Dash (Unit 0.2 Roger)
-and Janet (Unit 0.3 Sloane). Path D (voice-actor delivery) has no
+and Janet (Unit 0.3 Sloane; Phase 2 Unit 2.3 re-locked to Eleanor). Path D (voice-actor delivery) has no
 trigger condition active. Unit 1.3b deliverables (actor casting,
 studio booking, NDA, cadence-direction packet) **NOT shipped**. If a
 future cycle wants to reopen voice-actor delivery (e.g., for portfolio

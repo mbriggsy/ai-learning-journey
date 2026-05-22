@@ -122,9 +122,9 @@ Phase 4 implementation).
 | Goofy-stat captions — dry stat (S04 stats 1–4 active) | General Sans | 600 | ~36px | -1% (display-adjacent sans at 36px) | 1.15 | `"tnum"` for numerals (1,407 + 17 + 7) |
 | Goofy-stat captions — absurd companion (S04 stats 1–4 active) | General Sans | 500 italic | ~28px | 0 | 1.3 (italic at smaller size breathes) | default |
 | Operative dossier card labels (S03) | JetBrains Mono | 700 | ~22px | +60 (6%) | 1.2 | `"tnum"` |
-| Stacked-payoff stamp ("AUTONOMOUS FIELD UNIT — ASSET DELIVERED" frame 1950) | JetBrains Mono | 700 | ~38px | +30 (3% — heavier weight + larger size tightens; chrome stays open but not as wide as the small-size R15 #1) | 1.1 | default |
-| Closing R15 #4 subhead ("OPERATION STATUS: FIELD-READY" frame 2820) | JetBrains Mono | 700 | ~32px | +50 (5%) | 1.15 | default |
-| **Closing R15 #5 main line ("DRAFTED, RENDERED, AND SHIPPED BY AUTONOMOUS AGENTS." frame 2835)** | JetBrains Mono | 700 | ~32px | +50 (5% matches R15 #4 above) | 1.2 (two-line allowance for line-break behavior) | default |
+| Stacked-payoff stamp ("AUTONOMOUS FIELD UNIT — ASSET DELIVERED" frame 2280) | JetBrains Mono | 700 | ~38px | +30 (3% — heavier weight + larger size tightens; chrome stays open but not as wide as the small-size R15 #1) | 1.1 | default |
+| Closing R15 #4 subhead ("OPERATION STATUS: FIELD-READY" frame 3150) | JetBrains Mono | 700 | ~32px | +50 (5%) | 1.15 | default |
+| **Closing R15 #5 main line ("DRAFTED, RENDERED, AND SHIPPED BY AUTONOMOUS AGENTS." frame 3165)** | JetBrains Mono | 700 | ~32px | +50 (5% matches R15 #4 above) | 1.2 (two-line allowance for line-break behavior) | default |
 | **Closing R15 #5 subhead (30%-opacity bookend per Unit 1.9 lock)** | JetBrains Mono | 500 italic | ~22px | +20 (2%) | 1.3 | default |
 
 ### Emil lens notes (polish micro-decisions)
@@ -204,7 +204,7 @@ micro-tune is allowed.
   useFonts in two parallel Sequences and confirming both block on
   the same shared promise; Phase 4 adds this as a render-time
   assertion).
-- **Happy path:** Sample frame at frame 1950 (stacked-payoff stamp)
+- **Happy path:** Sample frame at frame 2280 (stacked-payoff stamp)
   composites with Clash Display + JetBrains Mono visible — verify in
   MP4 export, not just studio preview (Phase 4 Unit 4.1 + Unit 4.4
   spot-check).

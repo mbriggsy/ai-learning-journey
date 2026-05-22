@@ -1,7 +1,7 @@
 # Music sourcing — Unit 1.7 (Phase 1 lock: ladder + criteria + cue-map; Phase 3 owns procurement)
 
 > Status: source-type ladder LOCKED, track-shape path LOCKED (Path A —
-> full-length composition clip-to-95s), audition framework declared,
+> full-length composition clip-to-106s), audition framework declared,
 > music-cue map shipped to BEAT-SHEET.md preamble. Actual marketplace
 > auditioning is a Phase 3 deliverable per plan (Phase 1 declares
 > criteria + cue-map; Phase 3 executes audition + procures + files
@@ -34,14 +34,14 @@ time on mismatched-shape candidates.
 
 | Path | Track shape | Edit complexity | Lossless segments | Status |
 |------|-------------|-----------------|-------------------|--------|
-| **A (LOCKED default)** | Full-length composition (2:30–3:30) | Clip 95s from a high-arc section; lose either natural intro or resolved outro | Intro + ~60s mid + outro (sting) | **Locked** |
+| **A (LOCKED default)** | Full-length composition (2:30–3:30) | Clip 106s from a high-arc section; lose either natural intro or resolved outro | Intro + ~60s mid + outro (sting) | **Locked** |
 | B (fallback) | 60s cinematic short | Add ~35s loop in mid-section, hide seam under cascade peak | Original intro + outro | Fires only if zero Path A candidate survives Tier 1+2 audition |
-| C (edge case) | Two stems from one track | Use intro stem 0–30s + climax stem 30–95s | Both stems | Reserved for licensed-track-with-stems edge case (not expected) |
+| C (edge case) | Two stems from one track | Use intro stem 0–30s + climax stem 30–106s | Both stems | Reserved for licensed-track-with-stems edge case (not expected) |
 
 **Rationale (Path A default):** full-length compositions are the catalog
 norm — most Artlist / Epidemic / Marmoset tracks land 2:30–3:30 and
 include the dynamic arc the cascade needs (intro → build → peak →
-fall → close). Clipping 95s from a high-arc section gets the structural
+fall → close). Clipping 106s from a high-arc section gets the structural
 shape without seam-hiding work. Phase 3 may surface a Path B candidate
 during audition; if it outranks Path A finalists on §2.2, the path
 decision opens for re-derivation.
@@ -55,10 +55,10 @@ Search criteria for Artlist Pro / Epidemic Sound Pro:
 - **Mood:** confident, slightly playful, deadpan — **NOT** goofy / wacky
 - **Instrumentation:** brass (trumpet / sax lead), upright bass,
   syncopated drums, optional vibraphone or organ accent
-- **Length:** ≥95s or loop-friendly (Path A default — full-length)
+- **Length:** ≥106s or loop-friendly (Path A default — full-length)
 - **Dynamic shape (LOAD-BEARING):** at least 2 dynamic phases. The
   cascade needs music to swell into the stacked-payoff beat at frames
-  1860–1950, **duck pre-anticipated 90% → 30% over frames 1980–2010**
+  2190–2280, **duck pre-anticipated 90% → 30% over frames 2310–2340**
   (matching `transitions.ts` `PAYOFF_DUCK_RAMP_FRAMES`), swell back for
   closing at S06.
 
@@ -77,12 +77,12 @@ Specific reference points (from Archer / similar productions):
 1. **Tag-intersection sweep.** Pull 20–30 results per platform across
    tag intersections like ("spy" + "jazz"), ("bossa" + "instrumental"),
    ("mid-century" + "lounge"), ("noir" + "brass").
-2. **First-pass filter to 8–10 candidates.** Match BPM 100–130 + ≥95s
+2. **First-pass filter to 8–10 candidates.** Match BPM 100–130 + ≥106s
    + 2+ dynamic phases.
 3. **Beat-sheet audition.** Audition each candidate in a 30s clip
    against BEAT-SHEET.md scene timing. Pay attention to whether the
    candidate's natural dynamic shape lines up with the cascade arc
-   (1050 build → 1860 peak → 1950 stamp → 2010 duck → 2580 close).
+   (1380 build → 2190 peak → 2280 stamp → 2340 duck → 2910 close).
 4. **Narrow to 3 finalists.** Three listening passes per finalist
    against the full beat sheet.
 5. **§2.2 quality gate.** Lock 1 finalist if it clears the Archer-frame
@@ -138,7 +138,7 @@ playfulness. Structure: 8-bar intro / 32-bar build / 4-bar peak /
 
 A candidate locks IFF:
 
-- 95s+ playable length OR loops cleanly at ≤4-bar increments (Path B)
+- 106s+ playable length OR loops cleanly at ≤4-bar increments (Path B)
   OR usable stems available (Path C)
 - Has a discernible cascade-friendly structure (intro → build → peak
   → fall → close — at least 2 dynamic phases)
@@ -168,30 +168,30 @@ ramp specs below.
 | 0–60 | Brass hook intro | 100% | step (intro is the start) |
 | 60–210 | Bed under cold-open speaker | 40% | ramp(30) from 100→40 starting at frame 30 (pre-anticipates the cold-open line at 60) |
 | 210–570 | Underscore build (briefing setup) | 50% | ramp(60) from 40→50 starting at S02_START |
-| 570–1050 | Continue build (mission background) | 55% | ramp(60) from 50→55 starting at S03_START |
-| 1050–1680 | Cascade open, music swells | 60→75% | ramp(630) linear swell across the whole "stat" portion of cascade |
-| 1680–1860 | Peak intensification (VO continues through this band; here we just brighten) | 90% | ramp(180) from 75→90 |
-| 1860–1950 | Cascade peak hold (no VO) | 90% | hold |
-| 1950–1980 | Stamp slap + payoff VO begins; music holds | 90% | hold |
-| **1980–2010** | **Pre-anticipated payoff duck** (completes as VO ends) | **30%** | **ramp(30) from 90→30** — `PAYOFF_DUCK_RAMP_FRAMES` per `transitions.ts` |
-| 2010–2040 | Bed-only silent visual hold | 30% | hold |
-| 2040–2535 | Sparse bed under gameplay capture | 30% | hold (hard cut at 2040; music continues at 30% across the cut — no cross-dissolve) |
-| 2535–2580 | Iris-wipe (45 frames) — music rises | 50% | ramp(45) from 30→50 |
-| 2580–2790 | Closing underscore | 60% | ramp(60) from 50→60 |
-| 2790–2850 | Final brass sting on logo land | 100% | ramp(30) from 60→100 across logo-and-stamp window |
+| 570–1380 | Continue build (mission background) | 55% | ramp(60) from 50→55 starting at S03_START |
+| 1380–2010 | Cascade open, music swells | 60→75% | ramp(630) linear swell across the whole "stat" portion of cascade |
+| 2010–2190 | Peak intensification (VO continues through this band; here we just brighten) | 90% | ramp(180) from 75→90 |
+| 2190–2280 | Cascade peak hold (no VO) | 90% | hold |
+| 2280–2310 | Stamp slap + payoff VO begins; music holds | 90% | hold |
+| **2310–2340** | **Pre-anticipated payoff duck** (completes as VO ends) | **30%** | **ramp(30) from 90→30** — `PAYOFF_DUCK_RAMP_FRAMES` per `transitions.ts` |
+| 2340–2370 | Bed-only silent visual hold | 30% | hold |
+| 2370–2865 | Sparse bed under gameplay capture | 30% | hold (hard cut at 2370; music continues at 30% across the cut — no cross-dissolve) |
+| 2865–2910 | Iris-wipe (45 frames) — music rises | 50% | ramp(45) from 30→50 |
+| 2910–3120 | Closing underscore | 60% | ramp(60) from 50→60 |
+| 3120–3180 | Final brass sting on logo land | 100% | ramp(30) from 60→100 across logo-and-stamp window |
 
 **Anti-pattern guard:** no 60-percentage-point cliffs (the first-draft
-1950 sharp drop 90→30 would have clicked audibly). All transitions are
+2280 sharp drop 90→30 would have clicked audibly). All transitions are
 ramped envelopes or held holds.
 
 ## Risk register
 
 | Risk | Likelihood | Impact | Mitigation |
 |------|-----------|--------|------------|
-| Music sourcing returns no clean candidates | **Medium-High** (95s cascade-arc + brass/bossa is a low-hit-rate ask) | Medium | Tier 1 audition expanded to 20–30 candidates per platform + 8–10 finalists (was 3). Tier 2 marketplace ($30–$200) elevated to second-tier-before-Suno. Tier 3 Suno fallback budgeted at $10/mo regardless. |
+| Music sourcing returns no clean candidates | **Medium-High** (106s cascade-arc + brass/bossa is a low-hit-rate ask) | Medium | Tier 1 audition expanded to 20–30 candidates per platform + 8–10 finalists (was 3). Tier 2 marketplace ($30–$200) elevated to second-tier-before-Suno. Tier 3 Suno fallback budgeted at $10/mo regardless. |
 | Suno fallback fires + AI-disclosure obligation flows to Phase 7 | Low (after Tier 1+2 expanded coverage) | Medium | `music_disclosure_required: true` flag in BEAT-SHEET.md preamble + Phase 7 plan absorbs the disclosure obligation. |
-| Path A clip-to-95s loses dynamic arc | Low (catalog norm includes arc) | High (cascade payoff loses musical lift) | §2.2 audition gate catches; if Path A finalists all flatline, escalate to Path B (60s short + loop) for next audition round. |
-| Music volume cliff at 1950 would click | Resolved | Medium | All transitions ramped envelopes or holds; 60-pt cliff replaced with pre-anticipated 30-frame duck completing at VO end (per `PAYOFF_DUCK_RAMP_FRAMES`). |
+| Path A clip-to-106s loses dynamic arc | Low (catalog norm includes arc) | High (cascade payoff loses musical lift) | §2.2 audition gate catches; if Path A finalists all flatline, escalate to Path B (60s short + loop) for next audition round. |
+| Music volume cliff at 2280 would click | Resolved | Medium | All transitions ramped envelopes or holds; 60-pt cliff replaced with pre-anticipated 30-frame duck completing at VO end (per `PAYOFF_DUCK_RAMP_FRAMES`). |
 
 ## Patterns to follow
 

@@ -23,29 +23,34 @@
  * write this one either" — both lines read as senior-exec narration
  * rather than field-partner reaction or chaos-enthusiast riff).
  *
- * Voice: **Sloane - Bold and Polished** (ElevenLabs Shared Library,
- * voice ID `m8AHWg36LJTQWKmfeGVv`). Locked 2026-05-18 after Janet voice
- * iteration: initial Sarah voice (EXAVITQu4vr4xnSDxMaL) cleared the
- * line but Briggsy flagged it as too "reassuring" for Janet's
- * tough-matriarch character ("Janet is mature but not old. Tough as
- * nails, doesn't take shit from anyone, especially Dash. She loves
- * him, just doesn't take shit from him"). Local library exhausted
- * (only 7 female voices, all young/warm/British) — escalated to
- * ElevenLabs Shared Library which surfaced Sloane: "commanding yet
- * approachable tone with a sleek, professional delivery that exudes
- * authority without feeling distant." A/B'd against Matilda (local
- * library, alto-professional baseline) + Kristen (Shared Library,
- * true-crime/TED authoritative baseline) — Sloane won both auditions.
- * Full iteration history in `sample-eval/r14-cold-open/decode-eval.md`
- * §Janet iteration.
+ * Voice: **Eleanor – Gracious and Authoritative** (ElevenLabs Shared
+ * Library, voice ID `2qQJWjw5XdG80GreshqG`). Re-locked 2026-05-19 in
+ * Phase 2 Unit 2.3 after the cunty canary rejected the Phase 0 Sloane
+ * lock as too polished — Eleanor's "refined, seasoned older British
+ * female with commanding presence" landed the Jessica-Walter-Mallory-
+ * Archer DNA Briggsy was after (Q-from-Bond cadence rides the British
+ * accent naturally; brief: "always drinking but you'd never know it" +
+ * experienced-not-frail).
  *
- * voice_settings override (matriarch-tuned, NOT inherited from Unit 0.2
- * Roger defaults): stability 0.85 (high — kills F0 wander, flat
- * declarative read), similarity_boost 0.75 (default — let Sloane be
- * herself), style 0.05 (ultra-low — strips engine-default expressive
- * swelling that creates upbeat/perky feel), use_speaker_boost true,
- * speed 0.92 (slightly slower than Roger's 0.95 — pushes
- * deliberate-weighty matriarch register).
+ * Phase 0 iteration history (preserved for audit): initial Sarah voice
+ * (EXAVITQu4vr4xnSDxMaL) cleared the line but Briggsy flagged it as
+ * too "reassuring" for Janet's tough-matriarch character ("Janet is
+ * mature but not old. Tough as nails, doesn't take shit from anyone,
+ * especially Dash. She loves him, just doesn't take shit from him").
+ * Local library exhausted (only 7 female voices, all young/warm/
+ * British) — escalated to ElevenLabs Shared Library which surfaced
+ * Sloane (`m8AHWg36LJTQWKmfeGVv`) as Phase 0 lock. Phase 2 Unit 2.3
+ * cunty canary then escalated Sloane → Eleanor. Full history in
+ * `sample-eval/r14-cold-open/decode-eval.md` §Janet iteration.
+ *
+ * voice_settings override (cunty-matriarch-tuned per Phase 2 Unit 2.3
+ * re-lock, NOT inherited from Unit 0.2 Roger defaults): stability 0.40
+ * (loosens the read so the disdain can drag), similarity_boost 0.75
+ * (default — let Eleanor be herself), style 0.45 (push close to the
+ * expression ceiling — drag the contempt harder), use_speaker_boost
+ * true, speed 0.85 (slower than Roger's 0.95 — pushes cigarette-and-
+ * scotch matriarch drawl). Phase 0 Sloane settings were stab 0.85 /
+ * style 0.05 / speed 0.92 (too polished — canary rejected).
  *
  * Validity caveat — recorded in decode-eval.md, not silently demoted:
  * the formal n=4 minimum non-primed decode gate cannot be executed by a

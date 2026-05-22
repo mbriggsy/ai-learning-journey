@@ -4,7 +4,7 @@
  * Single source of truth (model + voice + voice_settings):
  *   - model_id: `eleven_v3` (PHASE-0-EXIT.md locked)
  *   - dash voice: PHASE-0-EXIT.md Section 1 Voice ID / Roger
- *   - janet voice: PHASE-0-EXIT.md Section 2 Speaker voice ID / Sloane
+ *   - janet voice: Eleanor (`2qQJWjw5XdG80GreshqG`, Shared Library) per Phase 2 Unit 2.3 re-lock (Phase 0 PHASE-0-EXIT.md §Section 2 originally locked Sloane; cunty canary rejected as too polished)
  *
  * Voice settings resolution:
  *   - dash:   `cadenceAdapter.voice_settings` (Roger defaults — adapter JSON)

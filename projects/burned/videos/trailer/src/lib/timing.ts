@@ -41,10 +41,10 @@ export const S06_START = 2910
 export const S06_END = 3180 // 9.0s — Closing Directive
 
 // === S04 Stacked-payoff beat (R3) ===
-// Stamp slaps onto HTP hero overprint at frame 1950 + Dash VO begins
+// Stamp slaps onto HTP hero overprint at frame 2280 + Dash VO begins
 // the 4-word truth-collision "They WERE the operation." VO completes
 // at PAYOFF_VO_END_FRAME. 1.0s visual hold + music-bed-only after VO
-// ends. Hard cut to S05 gameplay at S04_END (frame 2040). NO
+// ends. Hard cut to S05 gameplay at S04_END (frame 2370). NO
 // cross-dissolve — see Unit 1.4 lock.
 //
 // DOC-REVIEW 2026-05-17: payoff line collapsed from 17+5-word split

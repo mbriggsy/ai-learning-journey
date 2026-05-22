@@ -15,10 +15,10 @@ Each cascade element enters at full visual weight INSIDE the central
 then decays to 30% opacity chrome at the right-edge slot column as
 the next element enters. Card-art halo right-edge-only at 40% opacity
 throughout — texture, not focal. Comms-ticker stays dim background
-until frame 1800, then a 60-frame ease to "bright" by frame 1860 and
+until frame 2130, then a 60-frame ease to "bright" by frame 2190 and
 HELD bright through stamp + VO + silent hold.
 
-**The frame 1950 payoff stamp is the trailer's ONLY frame where
+**The frame 2280 payoff stamp is the trailer's ONLY frame where
 multiple elements peak simultaneously.** Every other cascade frame
 has exactly one element at full visual weight.
 
@@ -32,7 +32,7 @@ acceptance test ("Could this look like a frame from an Archer
 episode?") fails. The single-focal-point + texture-chrome hierarchy
 IS the Archer composition vocabulary — and the deliberate
 reservation ("never more than one full-weight element, ever, except
-at 1950") is what makes the stacked moment land.
+at 2280") is what makes the stacked moment land.
 
 ---
 
@@ -42,7 +42,7 @@ at 1950") is what makes the stacked moment land.
 |-----------|-------------|---------|
 | Full-bleed sequential | One receipt fills the frame; cuts to the next | **Rejected** — loses stacked-payoff impact (sequential ≠ stacked; viewers see receipts come and go but never experience them ACCUMULATING) |
 | Layered simultaneous | Everything at peak — HTP hero + 17-card halo + 4 stat captions ringing the safe-square edge + comms-ticker + payoff stamp, 6 focal points competing | **Rejected** (first-draft default) — AI-slop-shaped per design-lens. Reads as Loom/HeyGen/Runway "exciting product trailer" template, not Archer's single-focal-point grammar. Fails §2.2. |
-| **Sequential revelation with focal hierarchy** | Elements ACCUMULATE but visual weight transfers — each enters at full weight for its read window, then decays to 30–40% chrome opacity as the next enters. Only the 1950 payoff stamp is the "everything peaks" moment. | **LOCKED** — supports R3 by reserving the stacked moment for the actual payoff frame. Every other cascade frame has exactly one element at full weight. Passes §2.2. |
+| **Sequential revelation with focal hierarchy** | Elements ACCUMULATE but visual weight transfers — each enters at full weight for its read window, then decays to 30–40% chrome opacity as the next enters. Only the 2280 payoff stamp is the "everything peaks" moment. | **LOCKED** — supports R3 by reserving the stacked moment for the actual payoff frame. Every other cascade frame has exactly one element at full weight. Passes §2.2. |
 
 ---
 
@@ -53,18 +53,18 @@ to the Audio cue table in BEAT-SHEET §S04 by frame.
 
 | Frame range | Focal element (100%) | Texture chrome (30–40%) | Ticker | VO cue |
 |-------------|----------------------|--------------------------|--------|--------|
-| 1050–1110 | HTP hero slides up from bottom (60 f `EASE_OUT`) | parchment bg only | dim | `S04-cue-01` @ 1050 |
-| 1110–1290 | HTP dossier scroll (top portion) | — | dim | `S04-cue-02` @ 1110, `S04-cue-03` @ 1200 |
-| 1290–1410 | **Stat 1 caption** enters (6 f `EASE_OUT`, scale 0.95→1.0, 30 f hold) | HTP 70% under active caption | dim | `S04-stat-01` @ 1290 |
-| 1410–1560 | **Stat 2 caption** enters; **Stat 1 decays** (12 f `EASE_IN_OUT`, position → right-edge slot, opacity 1→0.3, scale 1→0.65) | Stat 1 30% right-edge; HTP 70% | dim | `S04-stat-02` @ 1410 |
-| 1560–1680 | **Stat 3 caption** enters; **Stat 2 decays**; halo begins building (per-card slap, 2-f stagger, top 6 of 17-art set) | Stats 1+2 30%; HTP 70%; halo 40% right-edge | dim | `S04-stat-03` @ 1560 |
-| 1680–1860 | **Stat 4 caption** enters; **Stat 3 decays**; halo completes (6-card right-edge column at 40%) | Stats 1–3 30%; HTP 70%; halo 40% | dim → brightening (60-f ease 1800–1860) | `S04-stat-04` @ 1680 |
-| 1860–1950 | **Cascade peak HELD** — bright ticker is active signal; HTP/halo/stats are texture | HTP 70%; stats 30%; halo 40% | **BRIGHT (held)** — R15 #2 ticker pulse | — (silent build) |
-| **1950** | **Heavy stamp slap onto HTP hero overprint** (16 f, scale 0.85 → 1.06 overshoot at 12/16 → 1.0 settle, `EASE_OUT`); HTP drops to 50%; **stamp is SOLE focal point — the ONLY "everything at once" moment** | — | bright | `S04-payoff` @ 1950 |
-| 1950–2010 | Stamp held; Dash VO delivers payoff line | — | bright | (payoff cue continues) |
-| 1980–2010 | Music duck ramp (`PAYOFF_DUCK_RAMP_FRAMES` = 30, 90% → 30%) completing as VO ends | — | bright | (payoff cue continues) |
-| 2010–2040 | **Silent visual hold (30 f)** — stamp + HTP + halo + stats all static; music bed-only at 30%; no VO | — | held bright | — |
-| **2040** | **Hard cut to S05 gameplay** | — | — | — |
+| 1380–1440 | HTP hero slides up from bottom (60 f `EASE_OUT`) | parchment bg only | dim | `S04-cue-01` @ 1380 |
+| 1440–1620 | HTP dossier scroll (top portion) | — | dim | `S04-cue-02` @ 1440, `S04-cue-03` @ 1530 |
+| 1620–1740 | **Stat 1 caption** enters (6 f `EASE_OUT`, scale 0.95→1.0, 30 f hold) | HTP 70% under active caption | dim | `S04-stat-01` @ 1620 |
+| 1740–1890 | **Stat 2 caption** enters; **Stat 1 decays** (12 f `EASE_IN_OUT`, position → right-edge slot, opacity 1→0.3, scale 1→0.65) | Stat 1 30% right-edge; HTP 70% | dim | `S04-stat-02` @ 1740 |
+| 1890–2010 | **Stat 3 caption** enters; **Stat 2 decays**; halo begins building (per-card slap, 2-f stagger, top 6 of 17-art set) | Stats 1+2 30%; HTP 70%; halo 40% right-edge | dim | `S04-stat-03` @ 1890 |
+| 2010–2190 | **Stat 4 caption** enters; **Stat 3 decays**; halo completes (6-card right-edge column at 40%) | Stats 1–3 30%; HTP 70%; halo 40% | dim → brightening (60-f ease 2130–2190) | `S04-stat-04` @ 2010 |
+| 2190–2280 | **Cascade peak HELD** — bright ticker is active signal; HTP/halo/stats are texture | HTP 70%; stats 30%; halo 40% | **BRIGHT (held)** — R15 #2 ticker pulse | — (silent build) |
+| **2280** | **Heavy stamp slap onto HTP hero overprint** (16 f, scale 0.85 → 1.06 overshoot at 12/16 → 1.0 settle, `EASE_OUT`); HTP drops to 50%; **stamp is SOLE focal point — the ONLY "everything at once" moment** | — | bright | `S04-payoff` @ 2280 |
+| 2280–2340 | Stamp held; Dash VO delivers payoff line | — | bright | (payoff cue continues) |
+| 2310–2340 | Music duck ramp (`PAYOFF_DUCK_RAMP_FRAMES` = 30, 90% → 30%) completing as VO ends | — | bright | (payoff cue continues) |
+| 2340–2370 | **Silent visual hold (30 f)** — stamp + HTP + halo + stats all static; music bed-only at 30%; no VO | — | held bright | — |
+| **2370** | **Hard cut to S05 gameplay** | — | — | — |
 
 ---
 
@@ -77,10 +77,10 @@ column at (x = 1380) don't overlap — Δx = 420 px gap.
 
 | Stat slot | Decayed x | Decayed y | Decayed scale | Decayed opacity |
 |-----------|-----------|-----------|---------------|-----------------|
-| Stat 1 (decay at 1410) | 1380 | 740 | 0.65 | 0.30 |
-| Stat 2 (decay at 1560) | 1380 | 790 | 0.65 | 0.30 |
-| Stat 3 (decay at 1680) | 1380 | 840 | 0.65 | 0.30 |
-| Stat 4 (decay at 1860) | 1380 | 890 | 0.65 | 0.30 |
+| Stat 1 (decay at 1740) | 1380 | 740 | 0.65 | 0.30 |
+| Stat 2 (decay at 1890) | 1380 | 790 | 0.65 | 0.30 |
+| Stat 3 (decay at 2010) | 1380 | 840 | 0.65 | 0.30 |
+| Stat 4 (decay at 2190) | 1380 | 890 | 0.65 | 0.30 |
 
 Active stat caption (during 30-f read window): x = 960, y = 900,
 36 px dry / 22 px italic companion (collapse rule in §8).
@@ -99,8 +99,8 @@ the next element without stealing it back.
 ### 5.1 HTP hero
 - Slide up from bottom over **60 frames (2.0 s), `EASE_OUT`**.
 - Position interpolates 0% → 100% simultaneously with opacity 50% → 100%.
-- Drops to **70% opacity at frame 1290** (first stat enters); stays at 70% as texture under captions.
-- Drops further to **50% at frame 1950** to cede focus to the payoff stamp.
+- Drops to **70% opacity at frame 1620** (first stat enters); stays at 70% as texture under captions.
+- Drops further to **50% at frame 2280** to cede focus to the payoff stamp.
 
 ### 5.2 Card-art halo (right-edge only — NOT encircling)
 - 6 cards from the 17-art set, stacked vertically along the right edge band (x = 1560–1880, OUTSIDE the safe square — texture only, acceptable to crop on mobile).
@@ -111,10 +111,10 @@ the next element without stealing it back.
 
 ### 5.3 Comms-ticker
 - Existing BURNED chrome animation pattern (continuous scroll).
-- Stays **dim background level** through the entire cascade until frame 1800.
-- **60-frame ease (1800 → 1860)** to "bright" state.
+- Stays **dim background level** through the entire cascade until frame 2130.
+- **60-frame ease (2130 → 2190)** to "bright" state.
 - **Held bright** through stamp + VO + silent hold.
-- Dim again at `S05_START` (frame 2040 — S04→S05 is a hard cut, so the dim restart happens implicitly in S05).
+- Dim again at `S05_START` (frame 2370 — S04→S05 is a hard cut, so the dim restart happens implicitly in S05).
 
 ### 5.4 Stat captions (the comedic load-bearing element)
 - **Enter:** 6 frames (200 ms) `STAT_CAPTION_ENTER_FRAMES`, `EASE_OUT`. Scale 0.95 → 1.0 + opacity 0 → 1. Position: safe-square center-bottom (x = 960, y = 900).
@@ -122,14 +122,14 @@ the next element without stealing it back.
 - **Decay:** 12 frames (400 ms) `STAT_CAPTION_DECAY_FRAMES`, `EASE_IN_OUT`. Position morphs to right-edge slot (x = 1380, y per §4 slot table) + opacity 1 → 0.3 + scale 1 → 0.65.
 - Mobile-X visibility: decayed-stat column at x = 1380 sits **inside** the safe-square's right edge (x = 1500 boundary). The accumulation reading is load-bearing — it's the visual antecedent of "they" in the payoff line — and would have been cropped if the column had landed at the prior-draft x = 1620.
 
-### 5.5 Stacked-payoff stamp (frame 1950, R15 #3)
+### 5.5 Stacked-payoff stamp (frame 2280, R15 #3)
 - Heavy stamp slap: **16 frames `STAMP_SLAP_HEAVY_FRAMES`**.
 - Scale envelope: **0.85 → 1.06** (overshoot at 12/16 of the 16-frame window) **→ 1.0** (settle), `EASE_OUT`.
 - Overprints HTP hero. HTP drops to 50% simultaneously.
 - **Never `scale(0)`** — pop-in from invisible reads as cheap motion-graphics template, not as a physical stamp landing. Start scale 0.85 IS the "stamp lifted, ready to land" pose; the overshoot is the "punch" of contact; the settle is the "ink absorbing."
 
 ### 5.6 Transition out
-- **NO cross-dissolve** — hard cut at 2040 per Unit 1.4 lock. The 1.0 s silent visual hold (2010–2040) is the resolution; the cut is the punch line of the cut itself.
+- **NO cross-dissolve** — hard cut at 2370 per Unit 1.4 lock. The 1.0 s silent visual hold (2340–2370) is the resolution; the cut is the punch line of the cut itself.
 
 ---
 
@@ -209,7 +209,7 @@ static PNG and trace-video fail Phase 3 acceptance (unlikely).
 
 ## 7. Anti-pattern guard (LOAD-BEARING)
 
-**Rule:** no frame in the cascade except the 1950 payoff stamp has
+**Rule:** no frame in the cascade except the 2280 payoff stamp has
 more than two elements at full visual weight. Accumulated elements
 past their read window must hold at ≤ 40% opacity.
 
@@ -217,7 +217,7 @@ past their read window must hold at ≤ 40% opacity.
 a frame from an Archer episode?") fails if any non-payoff frame
 stacks multiple focal elements. The composition's whole shape —
 sequential revelation + texture-chrome accumulation — exists to
-RESERVE the stacked moment for frame 1950. Violating the rule
+RESERVE the stacked moment for frame 2280. Violating the rule
 anywhere else breaks the reservation and reads as AI-slop.
 
 **Verification:**
@@ -239,11 +239,11 @@ mobile-X autoplay crop.
   prior 600 px draft to give stat captions room).
 - Active stat caption (x = 960, y = 900 ± 30).
 - Decayed stat slot column (x = 1380, y = 740 / 790 / 840 / 890).
-- Payoff stamp at frame 1950 (centered at x = 960, y = 540, overprinting HTP hero).
+- Payoff stamp at frame 2280 (centered at x = 960, y = 540, overprinting HTP hero).
 
 **Outside the safe square (acceptable to crop on mobile):**
 - Card-art halo right-edge band (x = 1560–1880, 40% opacity — texture only; cropping doesn't damage reading because halo is decorative chrome).
-- Comms-ticker (bottom edge y = 1020–1080 — dim background that brightens at 1860; established as ambient chrome).
+- Comms-ticker (bottom edge y = 1020–1080 — dim background that brightens at 2190; established as ambient chrome).
 - Pendleton crest watermark (top-left x = 120, y = 80, 25% opacity — pure ambient).
 
 The decayed-stat column at x = 1380 sits **inside** the safe-square's
@@ -269,7 +269,7 @@ Three pivotal frames. Each sketch is a coarse 16-column × 11-row mock
 of the 1920×1080 frame (each column ≈ 120 px wide, each row ≈ 98 px
 tall). The safe-square spans columns 4–13 (x = 420–1500).
 
-### 9.1 Frame 1680 — Stat 4 enters; halo built; ticker still dim
+### 9.1 Frame 2010 — Stat 4 enters; halo built; ticker still dim
 
 ```
    ┌────────────────────────────────────────────────────┐
@@ -297,7 +297,7 @@ tall). The safe-square spans columns 4–13 (x = 420–1500).
    safe-square: columns 4–13 (x = 420 to x = 1500)
 ```
 
-### 9.2 Frame 1860 — Cascade peak hold begins; ticker JUST hit bright
+### 9.2 Frame 2190 — Cascade peak hold begins; ticker JUST hit bright
 
 ```
    ┌────────────────────────────────────────────────────┐
@@ -317,16 +317,16 @@ tall). The safe-square spans columns 4–13 (x = 420–1500).
    │                                  │S2│  ║ F║        │
    │                                  │S3│  ╚══╝        │
    │                                  │S4│              │  ← all 4 stats at 30% right-edge
-   │                                  └──┘              │     (Stat 4 finished decay at 1860)
+   │                                  └──┘              │     (Stat 4 finished decay at 2190)
    │ █████ COMMS TICKER (BRIGHT held) █████████████████ │  ← ticker now at full bright,
-   └────────────────────────────────────────────────────┘     hits HELD state at 1860
+   └────────────────────────────────────────────────────┘     hits HELD state at 2190
                                           ↑
                               Ticker is the SOLE bright signal — HTP+halo+stats
                               are all texture chrome at 70%/40%/30%. No active
-                              caption (Stat 4 just decayed). Silent build to 1950.
+                              caption (Stat 4 just decayed). Silent build to 2280.
 ```
 
-### 9.3 Frame 1950 — Heavy stamp slap (the ONLY "everything at once" moment)
+### 9.3 Frame 2280 — Heavy stamp slap (the ONLY "everything at once" moment)
 
 ```
    ┌────────────────────────────────────────────────────┐
@@ -362,10 +362,10 @@ tall). The safe-square spans columns 4–13 (x = 420–1500).
                               Dash VO "They WERE the operation." begins on this frame.
 ```
 
-The 30-frame silent hold (frames 2010–2040) leaves the same
+The 30-frame silent hold (frames 2340–2370) leaves the same
 composition static — stamp + HTP at 50% + halo + 4 stats + bright
 ticker — with music dropped to 30% bed-only and no VO. The hard cut
-to S05 lands on frame 2040.
+to S05 lands on frame 2370.
 
 ---
 
@@ -381,16 +381,16 @@ Phase 1 Unit 1.5 verification (this file + BEAT-SHEET.md §S04):
 - [x] Anti-pattern guard rule stated as LOAD-BEARING with Phase 4 + Phase 6 verification ownership (§7).
 - [x] Mobile safe-square placement: every focal/active element verified inside safe-square; every cropped element verified as ambient/texture-only chrome (§8).
 - [x] Caption two-line collapse mechanism declared at 28 px / 22 px floor (§8).
-- [x] ASCII storyboard sketches for 3 peak frames (1680, 1860, 1950) (§9).
+- [x] ASCII storyboard sketches for 3 peak frames (2010, 2190, 2280) (§9).
 
 Phase 4 in-studio walkthrough verification (post-render):
 
 - [ ] No non-payoff frame contains > 2 elements at full visual weight (§7 rule).
-- [ ] All 4 decayed stats remain visible inside the mobile-X safe-square through the cascade peak (frames 1860–2040).
+- [ ] All 4 decayed stats remain visible inside the mobile-X safe-square through the cascade peak (frames 2190–2370).
 - [ ] Stamp slap scale envelope rendered as 0.85 → 1.06 → 1.0 with overshoot at frame 12/16 of the 16-frame window.
-- [ ] Comms-ticker brightening ease completes at frame 1860; held bright through frame 2040.
-- [ ] Music duck completes at frame 2010 (as payoff VO ends) — no audible click.
-- [ ] Silent visual hold 2010–2040 carries no music ramp / no VO / no animation.
+- [ ] Comms-ticker brightening ease completes at frame 2190; held bright through frame 2370.
+- [ ] Music duck completes at frame 2340 (as payoff VO ends) — no audible click.
+- [ ] Silent visual hold 2340–2370 carries no music ramp / no VO / no animation.
 
 ---
 

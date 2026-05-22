@@ -7,23 +7,20 @@ the history. (Rule: `feedback-todo-is-not-a-diary.md`.)
 
 ## 1. Active priorities
 
-### Status (verified 2026-05-22 — **Phase 2 COMPLETE**; Unit 2.8 AudioAsset manifest landed; trailer reauthored 95s→106s; ADR #21/#13 superseded by ADR #21r/#13r — N=1 Briggsy standard)
+### Current state (verified 2026-05-22)
 
 - Tests: **1407 pass** | 6 expected fail (68/68 files green)
 - Trailer subpackage tests: **194 pass | 0 expected-fail** (8 files;
-  script-coverage drift gate is fully green — every cue has a WAV,
-  16/16 rendered)
+  script-coverage drift gate green — every cue has a WAV, 16/16)
 - Typecheck: clean (`pnpm typecheck` root + `videos/trailer/`)
-- Phone player entry: **19.17 KB gz** (no regression from Phase 2 work)
+- Phone player entry: **19.17 KB gz**
 - DramaOverlay lazy chunk: **2.34 KB gz**
 - HOW-TO-PLAY bundle: `howtoplay-*.js` **33.90 KB gz** + `howtoplay-*.css`
   **10.68 KB gz** + shared GSAP chunk **27.21 KB gz**
 - Protocol version: **v6**
-- Phase 2 ElevenLabs spend cumulative: **$0.87 / $50** ceiling (Unit 2.4
-  full render of 13 remaining cues + S06-phrasing `[excited]` retune
-  + Unit 2.6 three stitch iterations = 21 segment renders @ ~$0.01
-  each; came in at <2% of the $50 envelope — Creator-tier monthly
-  quota absorbing most of it)
+- Trailer runtime: **3180f / 106s @ 30fps** (TOTAL_FRAMES)
+- Phase 2 ElevenLabs spend: **$0.87 / $50** ceiling (residual budget
+  available for any Phase 3+ regen)
 
 ### Origin trailer
 
@@ -31,229 +28,30 @@ Plans (8) drafted, deepened, document-reviewed at
 `docs/plans/origin-trailer/` (phase-0 through phase-7 + `roadmap.md`
 ADR ledger). Sequential phase execution.
 
-**Phase 0 — ✅ CLOSED 2026-05-18.** EXIT doc + signoff:
-`videos/trailer/PHASE-0-EXIT.md` +
-`videos/trailer/sample-eval/PHASE-0-EXIT.signoff`. Locks: Dash voice
-(Roger / ElevenLabs eleven_v3) · Janet voice (Sloane Shared Library /
-matriarch-tuned) · S01 cold-open line (#4 "He's a machine, this kid…")
-· Sterling scream (Path A v3 `VEEEEEEEERAAAA!!!`) · played-straight
-tone (earned-Phrasing! mechanic) · composite viability (all 5 Remotion
-integration points).
+**Phase 0 / 1 / 2 — ✅ CLOSED.** Cleared sequentially 2026-05-18 →
+2026-05-22. See plan checkboxes + git log for unit history. Per-phase
+EXIT docs + sign-off sentinels under
+`videos/trailer/sample-eval/voice-pipeline/` + `videos/trailer/PHASE-0-EXIT.md`.
 
-**Phase 1 — ✅ CLOSED 2026-05-18.** Signoff `3aef0d05` (delegated
-attestation per ADR #22 variant — Briggsy approved disposition via
-close-or-pause prompt, no line-by-line review; rationale in sentinel
-body). BEAT-SHEET.md sha256 captured at signoff:
-`fd662581c2aafdc40b93687e347a26d3da5d338d7752570b198d7389ece54c13`.
-Frozen as Phase 2/3/4 consumption contract.
-
-**Phase 2 — ✅ CLOSED 2026-05-22.** Voice pipeline complete (Units
-2.0-2.8). Plan at `docs/plans/origin-trailer/phase-2-voice-pipeline.md`.
-Hand-off contract: `src/lib/audio-manifest.ts` ships 16 typed
-`AudioAsset` entries Phase 4 imports for `<Audio>` placement.
-
-**Units 2.0-2.3 LANDED 2026-05-19** (commit pending — see git log):
-- **Unit 2.0** Preflight scaffold (env / ffmpeg / phase-0-exit parser /
-  live model API check). `pnpm preflight:phase2` green.
-- **Unit 2.1** Phase 1 `BURNED_TRAILER_LINES` contract consumed +
-  `cueFilename` helper + `script-coverage.test.ts` drift gate.
-- **Unit 2.2** `generate-dash-tts.ts` production script + ElevenLabs v3
-  client + cost tracker + hash-based skip/regen + atomic writes +
-  MP3-to-48kHz-mono-PCM-WAV converter inside the client (Creator tier
-  doesn't allow PCM output_format).
-- **Unit 2.3** Canary cleared:
-  - Dash arrogant-Sterling retune locked (Roger voice_settings:
-    `stability 0.55 / style 0.35 / speed 0.95` in
-    `cadence-spec-elevenlabs.json`); prefix tag `[deadpan]` → `[sarcastic]`
-    on all non-scream cues.
-  - Janet voice swap locked (Sloane → **Eleanor – Gracious and
-    Authoritative**, `2qQJWjw5XdG80GreshqG`, British Shared Library)
-    + matriarch-cunty settings (`stability 0.40 / style 0.45 / speed
-    0.85` in `COLD_OPEN_SPEAKER.voiceSettings`). Brief: Jessica-Walter-
-    Mallory-Archer DNA — "always drinking but you'd never know it" +
-    Q-from-Bond cadence + experienced-not-frail.
-  - Scream cue isolated from Roger retune via per-`[shouts]`-cue
-    voice-settings override in `tts-clients/elevenlabs.ts` (preserves
-    Phase 0 Unit 0.6 audited Sterling-LANA shape).
-  - Eleanor render verified clean by Briggsy ("s01 — that's clean").
-
-**Unit 2.4 LANDED 2026-05-21** (commit pending — see git log):
-- Full TTS render of 13 remaining Dash cues — all 16/16 WAVs now on
-  disk at `videos/trailer/public/audio/lines/`.
-- New `scripts/audit-durations.ts` per plan Step 2 (rename target was
-  `audit-durations.ts` not the working name I picked at first). Writes
-  `sample-eval/voice-pipeline/duration-reconciliation.md` + exits 2 on
-  missing WAV / 3 on tolerance drift / 0 clean. 30 fps composition.
-- **S06-phrasing `[excited]` retune locked.** New
-  `PHRASING_INTERJECTIVE_SETTINGS` const in
-  `scripts/tts-clients/elevenlabs.ts` (`stab 0.30 / style 0.65 / speed
-  1.05`); resolver branches on `cadencePrefixTag === '[excited]' &&
-  voice === 'dash'`. Reads as the snappy rise-on-`Phra-`/fall-on-
-  `-sing.` callback Sterling-CODED cadence, not the arrogant-Sterling
-  briefer drawl. Briggsy: "phrasing landed!"
-- Audit reports 14/16 cues outside per-cueType tolerance. **NOT a
-  blocker** — routing per plan:
-  - **S03-roster (+102.6%) + S03-deck (+114.4%):** v3 receives
-    `[BEAT 0.3s]` markers verbatim and inserts ~3s silent pauses per
-    token (Briggsy confirmed via listening — tokens are NOT read aloud
-    as text). Resolves in Unit 2.6 BEAT-extraction (split on
-    `\[BEAT \d+(\.\d+)?s\]`, render segments, stitch FFmpeg silence).
-  - **S06-phrasing (+200% post-retune):** 1.6s → 1.2s post-retune.
-    Mostly leading/trailing silence — Unit 2.5 silenceremove will trim
-    toward the 0.9s target.
-  - **S05-scream (+44%):** by design — `skipSilenceremove: true`
-    preserves the Sterling-LANA held-vowel tail.
-  - **S05-gameplay-vo (-21.3%) + S06-close (-27.5%):** v3 reads faster
-    than Phase 1's 1.9–2.4 wps budget assumed. Unit 2.7 reconciliation
-    territory — amend `expectedFrames` OR trim text.
-  - **S04 list cues (+10-18%):** arrogant-Sterling `style=0.35` produces
-    slightly slower paced reads than the deadpan-tight budget. Unit 2.7
-    territory.
-  - **S01 / S04-cue-01 / S04-stat-04 (within 5-8%):** noise.
-
-**Unit 2.5 LANDED 2026-05-21** (commit pending — see git log):
-- `scripts/post-process-tts.ts` — two-pass loudnorm (-16 LUFS / LRA 9
-  / TP -1.5 dBTP) + areverse-sandwich silenceremove + per-cue
-  `afade` + `-ac 1` mono lock + 48 kHz / pcm_s16le. Raw originals
-  preserved in `public/audio/lines/raw/`; processed versions written
-  atomically to in-place location.
-- New `runFFmpegJson` helper in `scripts/lib/ffmpeg.ts` — uses
-  `spawnSync` to capture loudnorm's stderr JSON block (execFileSync
-  only returns stdout).
-- Idempotence sentinel `${final}.processed` stores
-  `sha256(rawMtime + cueType + fadeInMs + fadeOutMs +
-  skipSilenceremove + LUFS targets)`. Re-running skips no-op work.
-- Threshold rule per plan: `-30dB` for payoff cueType (more
-  aggressive trim for one-liner punchlines — Phrasing, S04-payoff,
-  S06-close), `-50dB` for paced cues (sustained, list, cold-open).
-  Scream cue is skipped entirely via `cue.skipSilenceremove`.
-- **Phrasing! locked at 0.63s** (post-process). 1.2s raw → 0.63s
-  trimmed. Briggsy: "lock it." Tighter than the "0.9s feels right"
-  gut call but read cleanly.
-- New `pnpm post-process` + `pnpm audit:durations` scripts in
-  `videos/trailer/package.json`.
-- Loudness audit (`sample-eval/voice-pipeline/loudness-audit.jsonl`)
-  reports 3 short-cue drifts (s04-cue-1050, s04-cue-1560, s04-payoff)
-  at ~1.2-2.0 LU off -16 LUFS — KNOWN limitation of loudnorm on
-  clips <3s per k.ylo.ph/loudnorm.html. Acceptable for Phase 4
-  consumption.
-
-**Unit 2.6 LANDED 2026-05-21** (commit pending — see git log):
-- `scripts/stitch-beats.ts` — parses `[BEAT N.Ns]` AND `[BEAT NNNms]`
-  formats (Phase 2 plan deepening claimed `ms` form but Phase 1
-  actually ships decimal-second — regex handles both). Splits text on
-  markers, renders each segment via `generateForCue`, generates
-  `anullsrc` mono silence WAVs at declared durations, FFmpeg-concats
-  to a single stitched WAV in `public/audio/lines/raw/`. Sentinel
-  invalidation auto-triggers post-process re-run on the affected cue.
-- Per-segment leading + trailing silence trim BEFORE the concat
-  (separate from Unit 2.5's whole-WAV trim). `start_silence=0.005` ms
-  cushion (NOT 50ms like Unit 2.5) — INSIDE a stitch the inserted
-  anullsrc IS the cushion; per-segment cushion would compound with
-  the inserted gap and blow the ±15ms position tolerance.
-- `scripts/audit-stitch-positions.ts` — FFmpeg `silencedetect`
-  verification of declared vs detected silence DURATIONS per cue;
-  ±15ms tolerance per Phase 2 plan Unit 2.6 Step 3.
-- **Verification: all 5 declared beats land within 0-4ms of
-  declared** (3 in S03-roster @ 0.3s each, 2 in S03-deck @ 0.4s +
-  0.3s). Briggsy listen test cleared 2026-05-21.
-- 21 segment renders across 3 stitch iterations (first run revealed
-  per-segment trim needed; second iteration's 50ms cushion blew
-  tolerance; third iteration's 5ms cushion landed). Cumulative
-  spend on Unit 2.6: ~$0.33.
-- New `pnpm stitch:beats` + `pnpm audit:stitch-positions` scripts.
-
-**Unit 2.7 — ✅ CLOSED 2026-05-22.** Sentinel:
-`videos/trailer/sample-eval/voice-pipeline/phase-1-reconciliation-signoff.txt`.
-R2 amendment CORRECTED 2026-05-22: final sign-off is **N=1 (Briggsy) —
-production-cert standard**. Earlier R2 wording locked N=2 with Harry as
-outside reviewer on the false premise that Harry was a human listener.
-Harry is AI; the team is just Briggsy + Claude(s) forever (no future
-phase changes that). Same architectural correction cascaded to Phase 5
-CALL F (REPEALED), Phase 6 ADR #21 (SUPERSEDED by ADR #21r — N=1
-Briggsy cold-watch), roadmap §5.2 (SUPERSEDED — N=1 Briggsy is the
-operational standard). Memory: `feedback-listener-panels-default-to-n1.md`
-(new) + `user_harry.md` (updated to clarify Harry is AI).
-
-**Closeout history.** Phase 1 reconciliation drift cluster from
-Unit 2.4/2.5/2.6 audits points to a SYSTEMIC pace mismatch — Dash's
-arrogant-Sterling delivery at `style=0.35 / speed=0.95` produces
-~2.2-2.4 wps natural pace, vs Phase 1's deadpan-tight 3.89 wps
-budget. Affected cues + per-cue disposition:
-  - **S03-roster** — **Tier-2 trim LANDED 2026-05-22.** A/B-tested 3 variants
-    (V1 trim + current speed / V2 full + speed 1.05 / V3 trim + speed 1.05);
-    speed-bump bought ~0% (Eleven v3 `speed` affects phoneme stretch, not
-    pace). Briggsy picked V1. Dropped "Six expense reports, all classified."
-    sentence. New actual 13.57s vs 9.0s budget (+50.7%, was +95.9%).
-    Residual +4.2s overrun queued for Tier-3/4 reconciliation.
-  - **S03-deck** — **Tier-0 absorb LOCKED 2026-05-22.** Briggsy "keep, it's
-    great." 12.06s vs 6.0s (+101.1%) accepted as-is.
-  - **S04-cue-03** — **Tier-2 rewrite LANDED 2026-05-22.** Shifted "Drafted
-    on weekends, by a field asset — name redacted for compliance." →
-    "Drafted at three AM, name redacted for compliance." New actual 4.40s
-    vs 3.0s budget (+46.7%, was +83.3%); saved 1.1s.
-  - **Tier-4 TOTAL_FRAMES expansion LANDED 2026-05-22.** 2850 → 3180
-    (+330f / 95s → 106s). S03_END 1050 → 1380 (absorbs +319f Sterling-read
-    overrun + 11f cushion). S04/S05/S06 boundaries + STACKED_PAYOFF +
-    PAYOFF_VO_END + music-duck constants all shifted +330. script.ts
-    cue.frame for all S03-deck + S04+ + S05+ + S06+ cues shifted to match.
-    13 WAV files renamed to new frame-derived filenames. timing.test.ts
-    invariants re-asserted at new values. transitions.ts SCENE_TRANSITIONS
-    + comment refs updated. BEAT-SHEET.md largely synced (runtime header,
-    scene table, music cue table, S04 detailed beat table, R15 stamp
-    positions, all "frame NNNN" references). All Tier-2/Tier-4 residual
-    S04 list cluster (+10-18%) + S05/S06 undershoots are Tier-0 absorbed
-    by the expanded cascade flex (math: S04 +88f against S05 -32f + S06
-    -58f undershoots = net -2f flex absorbed).
-  - **Tier-0 absorb for S04 list cluster LOCKED 2026-05-22:** cue-02
-    (+17.8%), stat-01 (+14.2%), stat-03 (+10.8%), payoff (+5.0%) — all
-    accepted; cumulative net absorbed by S05/S06 undershoots.
-  - S04-stat-02 (+1.3% OK) — Tier-0 trivially.
-  - S05-gameplay-vo (-21.3% — runs FAST; provides cascade flex).
-  - S05-scream (+44%) — by design, skipSilenceremove preserves
-    Sterling-LANA tail.
-  - S06-close (-29.3% — provides closing-card breathing room).
-  - S06-phrasing (+58.3% but Briggsy-locked at 0.63s).
-
-Phase 2 plan §Unit 2.7 ladder: Tier 0 absorb / Tier 1 Phase 2 regen
-with pacing-adjusted steering / Tier 2 Phase 1 line-trim (reopen) /
-Tier 3 Phase 1 timing.ts adjustment / Tier 4 TOTAL_FRAMES adjustment.
-Decision per cue: trim text OR amend `expectedFrames` OR steering
-adjustment OR accept overlap-in-Phase-4-compositing. Closed with the
-`phase-1-reconciliation-signoff.txt` sentinel that Unit 2.8 asserts.
-
-**Unit 2.8 — ✅ CLOSED 2026-05-22** (commit `b34dfbfe`). AudioAsset
-manifest for Phase 4 Remotion landed:
-- `src/lib/audio-manifest-types.ts` — `AudioAsset` interface; voice /
-  cueType / cadenceAdapter derived from Phase 1's `Line` shape (no
-  parallel enums; insight #057 spike-wins rule applied to the plan's
-  narrower `cueType` union — Phase 1's `'cold-open'` was missing).
-- `scripts/generate-audio-manifest.ts` — re-runnable codegen
-  (`pnpm generate:manifest`). Asserts
-  `phase-1-reconciliation-signoff.txt` sentinel — **verified
-  non-theatrical per insight #059**: parked sentinel → exit 1 + clear
-  remediation message, restored sentinel → exit 0. Idempotent
-  (re-run produces identical sha256).
-- `src/lib/audio-manifest.ts` — codegen output. **16 entries** (R5=keep;
-  PHASE-0-EXIT confirmed). Cumulative measured audio: 86.10s across
-  the 106s composition window — ~20s of inter-cue silence + cushion
-  + S02 lead-in + S03 mid-wipe is intentional pacing.
-- `sample-eval/voice-pipeline/asset-inventory.md` — human-readable
-  hand-off doc with post-Tier-4 frame map + Phase 4 import pattern
-  (`<Sequence from={startFrame - leadFramesHint}><Audio
-  src={staticFile(asset.staticPath)} />`, NOT `<Audio from={...}>`).
-
-**Phase 2 — ✅ COMPLETE 2026-05-22.** All 9 units (2.0-2.8) closed.
-Voice pipeline ships 16 post-processed Sterling-CODED + Eleanor-cunty
-WAVs at -16 LUFS ±2 LU (short-cue drift documented). Cumulative
-ElevenLabs spend: ~$0.87 / $50 ceiling.
+Hand-off contracts now in place:
+- **Phase 1 → Phase 2/3/4:** `videos/trailer/BEAT-SHEET.md` (frozen).
+- **Phase 2 → Phase 4:** `videos/trailer/src/lib/audio-manifest.ts` —
+  16 typed `AudioAsset` entries (R5=keep; 86.10s cumulative measured
+  audio across 106s composition window). Phase 4 imports for
+  `<Audio>` placement per asset-inventory.md hand-off doc.
 
 **Phase 3 — NEXT.** Visual asset prep at
-`docs/plans/origin-trailer/phase-3-visual-asset-prep.md`. Music
-marketplace audition + `music-license.pdf` filing + S02 depth-plane
-asset selection. Phase 1 carries the criteria + cue-map.
+`docs/plans/origin-trailer/phase-3-visual-asset-prep.md`. Three
+deliverable bundles per Phase 1 cue-map:
+- Music marketplace audition + `music-license.pdf` filing +
+  `videos/trailer/public/audio/music-bed.mp3`.
+- S02 depth-plane asset (A brass nameplate / B folder stack / C
+  doorframe vignette) — Phase 4 picks based on Imagen availability.
+- Imagen briefing assets (extends existing
+  `scripts/generate-briefing-assets.ts` pattern).
 
-**Open follow-ups carried by Phase 2 Unit 2.6 close (NOT blocking Unit 2.7):**
+**Phase 2 carry-forwards → Phase 3+** (stitch / silenceremove
+generalizations):
 
 - **`silencedetect` writes to STDERR, not stdout** (caught + fixed
   2026-05-21 Unit 2.6). Same gotcha as Unit 2.5's `loudnorm`. Project
@@ -277,17 +75,19 @@ asset selection. Phase 1 carries the criteria + cue-map.
   cushion — they are NOT the same number for the same reason.
   `stitch-beats.ts` comment explains.
 
-**Open follow-ups carried by Phase 2 Unit 2.5 close (NOT blocking Unit 2.7):**
+**Phase 2 carry-forwards → Phase 4 mix tests** (loudness drift +
+FFmpeg muxer gotcha):
 
-- **Loudnorm drift on short cues (≤3s).** s04-cue-1050 (Operational
-  planning.), s04-cue-1560 (Seventeen asset illustrations…), and
-  S04-payoff (They WERE the operation.) measure -17.2 to -17.95 LUFS
-  vs the -16 target after two-pass loudnorm. Known limitation per
-  k.ylo.ph/loudnorm.html — single-pass drifts ±2-3 LU on clips <30s,
-  two-pass mitigates but doesn't eliminate on clips <3s. Phase 4
-  Remotion bed-ducking math may need a tiny bump on these specific
-  cues if mix tests show them ducking too far. Track but don't
-  pre-correct.
+- **Loudnorm drift on short cues (≤3s).** Per current
+  `audio-manifest.ts`: s04-cue-1380 ("Operational planning") -17.95,
+  s04-cue-1530 -19.17, s04-cue-1890 ("Seventeen asset illustrations…")
+  -17.27, s04-cue-2280 (S04-payoff "They WERE the operation.") -17.21
+  — all measure 1-3 LU off the -16 target after two-pass loudnorm.
+  Known limitation per k.ylo.ph/loudnorm.html — two-pass mitigates
+  but doesn't eliminate on clips <3s. Phase 4 Remotion bed-ducking
+  math may need a tiny bump on these specific cues if mix tests show
+  them ducking too far. Track but don't pre-correct. (Re-derive
+  frames from the manifest, not from this list — insight #061.)
 - **FFmpeg muxer inference fails on `.wav.tmp` filenames** (caught +
   fixed 2026-05-21 Unit 2.5). FFmpeg picks output muxer from the
   filename extension; `.tmp` isn't a known audio format and FFmpeg
@@ -296,14 +96,15 @@ asset selection. Phase 1 carries the criteria + cue-map.
   invocation with a `.tmp` target elsewhere, copy the `-f wav` (or
   whatever target format) flag.
 
-**Open follow-ups carried by Phase 2 Unit 2.4 close (NOT blocking Unit 2.6):**
+**Phase 2 carry-forwards → Phase 4 + future TTS work** (regen + hash
++ audition hygiene):
 
-- **S06-phrasing.expectedFrames contradiction (CARRY OVER from 2.3).**
-  Phase 1 ships `expectedFrames: 12` (0.4s); Phase 2 deepening header
-  claims 27 (~0.9s). Post-retune raw render is 1.2s = 36 frames pre-
-  silenceremove. Briggsy ear-locked the `[excited]` settings — Unit
-  2.7 measures post-silenceremove and amends `expectedFrames` to
-  whatever the trimmed delivery clocks at (likely 18-27 frames).
+- **S06-phrasing actual vs expected drift.** Phase 1 ships
+  `expectedFrames: 12`; codegen-measured actual is 19f. Briggsy
+  ear-locked the delivery — `expectedFrames` not amended. Phase 4
+  uses `actualFrames` from the manifest for audio placement; the
+  `expectedFrames` stays as the original budget for reference. If a
+  future Phase 1 reopen amends the script, regen the manifest.
 - **Hash-input gap (CARRY OVER, EXTENDED).** `hashCueInputs` covers
   cue.text + engine + voiceId + prefixTag + adapter SHA + priming key
   — but NOT in-client overrides:
@@ -325,23 +126,12 @@ asset selection. Phase 1 carries the criteria + cue-map.
   re-enable when ElevenLabs ships v3 priming. Priming map
   (`context-priming-overrides.json`) preserved for that future.
 
-**Open follow-ups carried by Phase 1 signoff (NOT blocking Phase 2):**
+**Phase 1 carry-forwards → Phase 3/4/6:**
 
-- **Cold-read gate for Unit 1.6** — **AMENDED 2026-05-22 per ADR #13r
-  supersession (parallel to ADR #21r):** was "N≥3 human reviewers,
-  per-reviewer-floor consensus" on the premise that Briggsy could
-  recruit a panel. Team is just Briggsy + Claude(s) forever; no human
-  panel is structurally available. Operational standard is **N=1
-  Briggsy self-read** (cold-read with 24h cool-off, MUSHRA-shaped
-  Likert rubric applied by Briggsy himself). Pre-drafted R11-cut
-  bridge lines still activate if Briggsy's self-read hard-fails.
-  Memory: `feedback-listener-panels-default-to-n1.md`.
-- **Phase 3 — music marketplace audition** + `music-license.pdf`
-  filing + `videos/trailer/public/audio/music-bed.mp3` (criteria +
-  cue-map locked at Phase 1 Unit 1.7).
-- **Phase 3 — S02 depth-plane asset** (A brass nameplate "M.
-  PENDLETON, BUREAU CHIEF" / B folder stack / C doorframe vignette)
-  — Phase 4 picks based on Imagen asset availability.
+- **Cold-read gate for Unit 1.6** — operational standard is **N=1
+  Briggsy self-read** (24h cool-off + MUSHRA-shaped Likert rubric per
+  ADR #13r). Pre-drafted R11-cut bridge lines activate if the
+  self-read hard-fails. Memory: `feedback-listener-panels-default-to-n1.md`.
 - **Phase 4 — S06 closing-card breathing room** may surface 45–50
   frames reads cleaner than the locked floor of 40 frames.
 - **Phase 4 voice-filter scoring fix** — Path A scoring treats
@@ -792,21 +582,11 @@ Active warnings only. Older landmines have moved to `docs/insights/` and
   `enqueue` task signature was widened to `() => void | Promise<void>`
   to support this — `actionQueue.then(task)` naturally chains async
   tasks.
-- **Phrasing! queue — surfaces resolved** (2026-05-14 / 2026-05-15).
-  (1) Lobby/idle copy: SKIPPED — "Awaiting check-in" / "Opening secure
-  channel" already tonally strong in Pendleton voice; explicit
-  Phrasing! callout would cheapen it. (2) ConnectionOverlay strings:
-  SKIPPED — too transient/rare for a beat to land. (3) DramaOverlay
-  BURNED-draw beat: SHIPPED 2026-05-15 as `BURNED_PHRASING_POOL` in
-  DramaOverlay.tsx — 6 wire-report sub-caption variants ("// CASE
-  CLOSED", "// FILE TERMINATED", "// COVER COMPROMISED", "// OPERATIVE
-  BURNED", "// CASE CLOSED. NEXT.", "// TOAST.") that surface beneath
-  the victim-name caption on the non-drawer/board cinematic. These are
-  **tonal cousins, not literal Phrasing! catchphrase landings** — they
-  juxtapose formal `//` chrome with Archer-deadpan kickers ("TOAST.",
-  "NEXT.") rather than the double-entendre-plus-callout pattern of
-  spec §3.5 shipped beats. A literal "...Phrasing." landing on the
-  BURNED cinematic was considered but rejected: the cinematic is the
-  game's heaviest dramatic moment and a comedic callout would compete
-  with the beat. If a future surface wants a literal Phrasing! landing,
-  spec §3.5 catalog remains the source of truth.
+- **Phrasing!-cousin wire-reports live in `BURNED_PHRASING_POOL`**
+  (DramaOverlay.tsx). 6 `//`-chrome / Archer-deadpan-kicker variants
+  surface beneath the victim-name caption on the BURNED-draw
+  cinematic — tonal cousins, NOT literal Phrasing! landings. Literal
+  "...Phrasing." was considered for this surface and rejected (would
+  compete with the heaviest dramatic beat). Future literal Phrasing!
+  surfaces consult spec §3.5 catalog as source of truth; the BURNED
+  cinematic is reserved for the cousin pool.

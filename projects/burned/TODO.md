@@ -40,15 +40,13 @@ Hand-off contracts now in place:
   audio across 106s composition window). Phase 4 imports for
   `<Audio>` placement per asset-inventory.md hand-off doc.
 
-**Phase 3 — NEXT.** Visual asset prep at
-`docs/plans/origin-trailer/phase-3-visual-asset-prep.md`. Three
-deliverable bundles per Phase 1 cue-map:
-- Music marketplace audition + `music-license.pdf` filing +
-  `videos/trailer/public/audio/music-bed.mp3`.
-- S02 depth-plane asset (A brass nameplate / B folder stack / C
-  doorframe vignette) — Phase 4 picks based on Imagen availability.
-- Imagen briefing assets (extends existing
-  `scripts/generate-briefing-assets.ts` pattern).
+**Phase 3 — IN-FLIGHT.** Visual asset prep at
+`docs/plans/origin-trailer/phase-3-visual-asset-prep.md`. 8 units
+(3.0-3.7). Unit 3.0 (HTP vocabulary vendoring + drift gate) ✅
+landed 2026-05-22. Remaining: 3.1 HTP dossier capture · 3.2 card-art
+curation · 3.3 briefing-room set-dressing · 3.4 R15 chrome stamps
+(SPLIT-LAYER) · 3.5 music bed procurement · 3.6 cold-open title-
+sequence assets · 3.7 visual manifest + PHASE-3-EXIT.md hand-off.
 
 **Phase 2 carry-forwards → Phase 3+** (stitch / silenceremove
 generalizations):

@@ -161,13 +161,19 @@ Frozen as Phase 2/3/4 consumption contract.
   spend on Unit 2.6: ~$0.33.
 - New `pnpm stitch:beats` + `pnpm audit:stitch-positions` scripts.
 
-**Unit 2.7 — NEXT.** Phase 1 reconciliation. The drift cluster from
+**Unit 2.7 — IN-FLIGHT.** Phase 1 reconciliation. The drift cluster from
 Unit 2.4/2.5/2.6 audits points to a SYSTEMIC pace mismatch — Dash's
 arrogant-Sterling delivery at `style=0.35 / speed=0.95` produces
 ~2.2-2.4 wps natural pace, vs Phase 1's deadpan-tight 3.89 wps
-budget. Affected cues:
-  - S03-roster (+95.9% post-stitch — 17.62s vs 9.0s budget)
-  - S03-deck (+101.1% post-stitch — 12.06s vs 6.0s budget)
+budget. Affected cues + per-cue disposition:
+  - **S03-roster** — **Tier-2 trim LANDED 2026-05-22.** A/B-tested 3 variants
+    (V1 trim + current speed / V2 full + speed 1.05 / V3 trim + speed 1.05);
+    speed-bump bought ~0% (Eleven v3 `speed` affects phoneme stretch, not
+    pace). Briggsy picked V1. Dropped "Six expense reports, all classified."
+    sentence. New actual 13.57s vs 9.0s budget (+50.7%, was +95.9%).
+    Residual +4.2s overrun queued for Tier-3/4 reconciliation.
+  - **S03-deck** — **Tier-0 absorb LOCKED 2026-05-22.** Briggsy "keep, it's
+    great." 12.06s vs 6.0s (+101.1%) accepted as-is.
   - S04-cue-03 (+83.3% — 5.51s vs 3.0s)
   - S04-stat-01 (+14.2%)
   - S04-stat-02 (+1.3% OK)

@@ -315,18 +315,46 @@ async function stitchCue(cue: Line, cfg: Phase0ExitConfig): Promise<'stitched' |
   }
 }
 
+function parseOnlyIds(): readonly string[] | null {
+  // Supports `pnpm stitch:beats -- --only S03-roster --only S03-deck`.
+  // Returns null when no --only flag passed (run all beat-bearing cues).
+  const argv = process.argv.slice(2).filter((a) => a !== '--');
+  const ids: string[] = [];
+  for (let i = 0; i < argv.length; i++) {
+    if (argv[i] === '--only' && i + 1 < argv.length) {
+      ids.push(argv[i + 1]);
+      i++;
+    }
+  }
+  return ids.length === 0 ? null : ids;
+}
+
 async function main(): Promise<void> {
   ffmpegPreflight();
   const cfg = parsePhase0Exit(PHASE_0_EXIT);
 
+  const onlyIds = parseOnlyIds();
   const beatBearing = BURNED_TRAILER_LINES.filter((c) => {
     BEAT_TOKEN.lastIndex = 0;
-    return BEAT_TOKEN.test(c.text);
+    const hasBeats = BEAT_TOKEN.test(c.text);
+    BEAT_TOKEN.lastIndex = 0;
+    if (!hasBeats) return false;
+    if (onlyIds && !onlyIds.includes(c.id)) return false;
+    return true;
   });
   BEAT_TOKEN.lastIndex = 0;
 
+  if (onlyIds) {
+    const missing = onlyIds.filter((id) => !beatBearing.some((c) => c.id === id));
+    if (missing.length > 0) {
+      throw new Error(
+        `--only specified ${missing.length} ID(s) not found as beat-bearing cues: ${missing.join(', ')}`,
+      );
+    }
+  }
+
   console.log(
-    `Stitching ${beatBearing.length} beat-bearing cue(s): ${beatBearing.map((c) => c.id).join(', ')}`,
+    `Stitching ${beatBearing.length} beat-bearing cue(s)${onlyIds ? ' (--only filter active)' : ''}: ${beatBearing.map((c) => c.id).join(', ')}`,
   );
 
   let stitched = 0;

@@ -134,9 +134,9 @@ export const BURNED_TRAILER_LINES: readonly Line[] = [
     frame: 570, // scene start — segment 1 begins immediately
     voice: 'dash',
     text:
-      'Our autonomous field assets infiltrated the contract last quarter. [BEAT 0.3s] Seven operatives in the active roster. [BEAT 0.3s] Six expense reports, all classified. [BEAT 0.3s] One who insists on being called \'Agent X\' and refuses to file any paperwork whatsoever.',
+      'Our autonomous field assets infiltrated the contract last quarter. [BEAT 0.3s] Seven operatives in the active roster. [BEAT 0.3s] One who insists on being called \'Agent X\' and refuses to file any paperwork whatsoever.',
     cueType: 'sustained',
-    expectedFrames: 270, // ~9.0s budget for segment 1 (~35 words + 3×0.3s beats; 3.89 wps deadpan-tight)
+    expectedFrames: 270, // ~9.0s budget for segment 1 (~30 words + 2×0.3s beats; deadpan-tight). Unit 2.7 Tier-2 trim 2026-05-22: dropped "Six expense reports, all classified." sentence to claw back ~4s on the +95.9% drift. Post-trim actual ~13.2s — residual +4.2s overrun deferred to Tier-3/4 reconciliation.
     leadFramesHint: 0,
     cadenceAdapter: {
       engine: 'elevenlabs-v3',

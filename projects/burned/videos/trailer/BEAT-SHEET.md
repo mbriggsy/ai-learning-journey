@@ -360,10 +360,13 @@ deck reveal** sits between S03-roster (segment 1) and S03-deck
 
 - **VO (Dash, segment 1, frame 570):**
 
-  > *"Our autonomous field assets infiltrated the contract last quarter. [BEAT 0.3s] Seven operatives in the active roster. [BEAT 0.3s] Six expense reports, all classified. [BEAT 0.3s] One who insists on being called 'Agent X' and refuses to file any paperwork whatsoever."* <!-- @line: S03-roster -->
+  > *"Our autonomous field assets infiltrated the contract last quarter. [BEAT 0.3s] Seven operatives in the active roster. [BEAT 0.3s] One who insists on being called 'Agent X' and refuses to file any paperwork whatsoever."* <!-- @line: S03-roster -->
 
-  Bracket-tag treatment: `[deadpan]` leading. ~35 words in 9.0s
-  budget + 0.9s internal beats. Plan-original "One **field agent**
+  Bracket-tag treatment: `[deadpan]` leading. ~30 words in 9.0s
+  budget + 0.6s internal beats. **Unit 2.7 Tier-2 trim 2026-05-22:**
+  dropped *"Six expense reports, all classified."* sentence to claw
+  back ~4s on the original +95.9% drift; post-trim actual ~13.2s,
+  residual +4.2s overrun deferred to Tier-3/4 reconciliation. Plan-original "One **field agent**
   who insists..." trimmed to "One who insists..." — 'field agent'
   compound flagged by R6 grep (`agent` SDLC pattern matches even
   with 'field' modifier; Agent X proper-noun carve-out only fires

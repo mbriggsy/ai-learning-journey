@@ -23,25 +23,14 @@ import { dirname, resolve } from 'node:path';
 import { fileURLToPath } from 'node:url';
 import { createHash } from 'node:crypto';
 
+import { VENDORED_FILES } from './lib/vocab-files.js';
+
 const HERE = dirname(fileURLToPath(import.meta.url));
 const TRAILER_ROOT = resolve(HERE, '..');
 const BURNED_ROOT = resolve(TRAILER_ROOT, '../..');
 
 const SOURCE_DIR = resolve(BURNED_ROOT, 'src/client/howtoplay/components');
 const TARGET_DIR = resolve(TRAILER_ROOT, 'src/components/burned-vocabulary');
-
-const VENDORED_FILES = [
-  'Stamp.tsx',
-  'Stamp.module.css',
-  'Crest.tsx',
-  'Crest.module.css',
-  'RedactBar.tsx',
-  'RedactBar.module.css',
-  'ClassificationBanner.tsx',
-  'ClassificationBanner.module.css',
-  'DossierPage.tsx',
-  'DossierPage.module.css',
-] as const;
 
 function sha(content: string): string {
   return createHash('sha256').update(content).digest('hex');

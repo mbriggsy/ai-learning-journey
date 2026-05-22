@@ -24,25 +24,14 @@ import { cpSync, existsSync, mkdirSync } from 'node:fs';
 import { dirname, resolve } from 'node:path';
 import { fileURLToPath } from 'node:url';
 
+import { VENDORED_FILES } from './lib/vocab-files.js';
+
 const HERE = dirname(fileURLToPath(import.meta.url));
 const TRAILER_ROOT = resolve(HERE, '..');
 const BURNED_ROOT = resolve(TRAILER_ROOT, '../..');
 
 const SOURCE_DIR = resolve(BURNED_ROOT, 'src/client/howtoplay/components');
 const TARGET_DIR = resolve(TRAILER_ROOT, 'src/components/burned-vocabulary');
-
-const VENDORED_FILES = [
-  'Stamp.tsx',
-  'Stamp.module.css',
-  'Crest.tsx',
-  'Crest.module.css',
-  'RedactBar.tsx',
-  'RedactBar.module.css',
-  'ClassificationBanner.tsx',
-  'ClassificationBanner.module.css',
-  'DossierPage.tsx',
-  'DossierPage.module.css',
-] as const;
 
 if (!existsSync(SOURCE_DIR)) {
   throw new Error(

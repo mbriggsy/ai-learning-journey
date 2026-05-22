@@ -43,22 +43,24 @@ corrective applied).
 
 ## Maintenance ritual
 
-The vendored-file list is a **hand-written allowlist** in both
-`scripts/vendor-burned-vocab.ts` and `scripts/verify-vocab-sync.ts`
-(`VENDORED_FILES` const). Per the Path B architecture decision, this
-allowlist is intentional: cross-platform-portable, fail-loud on
-missing sources, no symlink traversal surprises.
+The vendored-file list is a **hand-written allowlist** at a single
+source of truth: `scripts/lib/vocab-files.ts` (`VENDORED_FILES` const,
+consumed by both `vendor-burned-vocab.ts` and `verify-vocab-sync.ts`).
+Per the Path B architecture decision, the allowlist is intentional:
+cross-platform-portable, fail-loud on missing sources, no symlink
+traversal surprises.
 
 **Consequence (insight #061):** if BURNED adds a NEW vocabulary
 component — say, `Insignia.tsx` for a new chrome surface — the vendor
 script WILL NOT auto-pick it up. You must:
 
-1. Extend `VENDORED_FILES` in both scripts (keep them in sync).
+1. Extend `VENDORED_FILES` in `scripts/lib/vocab-files.ts` (one place;
+   both scripts pick up automatically per insight #063 corrective).
 2. Re-run `pnpm vendor:vocab`.
 3. Re-run `pnpm verify:vocab-sync` to confirm.
 
 Same ritual if BURNED **renames** a vocabulary component — the verify
-script will report `MISSING source` and the script needs the new name.
+script will report `MISSING source` and the const needs the new name.
 
 ## Token dependencies — Phase 4 wiring decision PENDING
 

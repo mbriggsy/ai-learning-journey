@@ -7,7 +7,7 @@ the history. (Rule: `feedback-todo-is-not-a-diary.md`.)
 
 ## 1. Active priorities
 
-### Status (verified 2026-05-22 — Phase 2 Unit 2.7 **CLOSED**; trailer reauthored 95s→106s; ADR #21/#13 superseded by ADR #21r/#13r — N=1 Briggsy standard)
+### Status (verified 2026-05-22 — **Phase 2 COMPLETE**; Unit 2.8 AudioAsset manifest landed; trailer reauthored 95s→106s; ADR #21/#13 superseded by ADR #21r/#13r — N=1 Briggsy standard)
 
 - Tests: **1407 pass** | 6 expected fail (68/68 files green)
 - Trailer subpackage tests: **194 pass | 0 expected-fail** (8 files;
@@ -47,8 +47,10 @@ body). BEAT-SHEET.md sha256 captured at signoff:
 `fd662581c2aafdc40b93687e347a26d3da5d338d7752570b198d7389ece54c13`.
 Frozen as Phase 2/3/4 consumption contract.
 
-**Phase 2 — IN-FLIGHT.** Voice pipeline. Plan at
-`docs/plans/origin-trailer/phase-2-voice-pipeline.md`.
+**Phase 2 — ✅ CLOSED 2026-05-22.** Voice pipeline complete (Units
+2.0-2.8). Plan at `docs/plans/origin-trailer/phase-2-voice-pipeline.md`.
+Hand-off contract: `src/lib/audio-manifest.ts` ships 16 typed
+`AudioAsset` entries Phase 4 imports for `<Audio>` placement.
 
 **Units 2.0-2.3 LANDED 2026-05-19** (commit pending — see git log):
 - **Unit 2.0** Preflight scaffold (env / ffmpeg / phase-0-exit parser /
@@ -220,11 +222,36 @@ Decision per cue: trim text OR amend `expectedFrames` OR steering
 adjustment OR accept overlap-in-Phase-4-compositing. Closed with the
 `phase-1-reconciliation-signoff.txt` sentinel that Unit 2.8 asserts.
 
-**Unit 2.8 — NEXT (sequential).** AudioAsset manifest for Phase 4
-Remotion: JSON map of `cueId → { finalWavPath, measuredDuration,
-loudness, leadFramesHint }`. Plan asserts existence of
-`phase-1-reconciliation-signoff.txt` sentinel (now in place at
-`videos/trailer/sample-eval/voice-pipeline/`).
+**Unit 2.8 — ✅ CLOSED 2026-05-22** (commit `b34dfbfe`). AudioAsset
+manifest for Phase 4 Remotion landed:
+- `src/lib/audio-manifest-types.ts` — `AudioAsset` interface; voice /
+  cueType / cadenceAdapter derived from Phase 1's `Line` shape (no
+  parallel enums; insight #057 spike-wins rule applied to the plan's
+  narrower `cueType` union — Phase 1's `'cold-open'` was missing).
+- `scripts/generate-audio-manifest.ts` — re-runnable codegen
+  (`pnpm generate:manifest`). Asserts
+  `phase-1-reconciliation-signoff.txt` sentinel — **verified
+  non-theatrical per insight #059**: parked sentinel → exit 1 + clear
+  remediation message, restored sentinel → exit 0. Idempotent
+  (re-run produces identical sha256).
+- `src/lib/audio-manifest.ts` — codegen output. **16 entries** (R5=keep;
+  PHASE-0-EXIT confirmed). Cumulative measured audio: 86.10s across
+  the 106s composition window — ~20s of inter-cue silence + cushion
+  + S02 lead-in + S03 mid-wipe is intentional pacing.
+- `sample-eval/voice-pipeline/asset-inventory.md` — human-readable
+  hand-off doc with post-Tier-4 frame map + Phase 4 import pattern
+  (`<Sequence from={startFrame - leadFramesHint}><Audio
+  src={staticFile(asset.staticPath)} />`, NOT `<Audio from={...}>`).
+
+**Phase 2 — ✅ COMPLETE 2026-05-22.** All 9 units (2.0-2.8) closed.
+Voice pipeline ships 16 post-processed Sterling-CODED + Eleanor-cunty
+WAVs at -16 LUFS ±2 LU (short-cue drift documented). Cumulative
+ElevenLabs spend: ~$0.87 / $50 ceiling.
+
+**Phase 3 — NEXT.** Visual asset prep at
+`docs/plans/origin-trailer/phase-3-visual-asset-prep.md`. Music
+marketplace audition + `music-license.pdf` filing + S02 depth-plane
+asset selection. Phase 1 carries the criteria + cue-map.
 
 **Open follow-ups carried by Phase 2 Unit 2.6 close (NOT blocking Unit 2.7):**
 

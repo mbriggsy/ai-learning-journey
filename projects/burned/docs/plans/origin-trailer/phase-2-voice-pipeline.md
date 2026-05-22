@@ -4388,7 +4388,7 @@ writeFileSync(
 
 ### Unit 2.8 — Asset Inventory + Phase 4 Hand-Off
 
-- [ ] **Unit 2.8: Asset Inventory + Phase 4 Hand-Off**
+- [x] **Unit 2.8: Asset Inventory + Phase 4 Hand-Off** ✅ LANDED 2026-05-22 (commit `b34dfbfe`)
 
 > **DEEPENING NOTES (2026-05-17).** Substantive amendments:
 > (1) **Voice union ALIGNED to Phase 1's** `'dash'|'sable'|'janet'|'vera'`

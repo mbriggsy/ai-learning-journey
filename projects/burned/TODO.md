@@ -7,20 +7,21 @@ the history. (Rule: `feedback-todo-is-not-a-diary.md`.)
 
 ## 1. Active priorities
 
-### Status (verified 2026-05-19 — Phase 2 Units 2.0-2.3 LANDED; canary cleared)
+### Status (verified 2026-05-21 — Phase 2 Units 2.0-2.4 LANDED; Phrasing tune cleared)
 
 - Tests: **1407 pass** | 6 expected fail (68/68 files green)
-- Trailer subpackage tests: **193 pass** | 1 expected-fail post-pipeline
-  gate (8 files; `script-coverage.test.ts` asserts every cue has a WAV
-  AFTER Unit 2.4 deposits them — currently 1/16, will satisfy then)
+- Trailer subpackage tests: **193 pass + script-coverage now green
+  3/3** (8 files; every cue has a WAV — 16/16 rendered)
 - Typecheck: clean (`pnpm typecheck` root + `videos/trailer/`)
 - Phone player entry: **19.17 KB gz** (no regression from Phase 2 work)
 - DramaOverlay lazy chunk: **2.34 KB gz**
 - HOW-TO-PLAY bundle: `howtoplay-*.js` **33.90 KB gz** + `howtoplay-*.css`
   **10.68 KB gz** + shared GSAP chunk **27.21 KB gz**
 - Protocol version: **v6**
-- Phase 2 ElevenLabs spend cumulative: **$0.24 / $50** ceiling (Unit 2.3
-  canary + voice audition + Voice Design previews + 3 retune rounds)
+- Phase 2 ElevenLabs spend cumulative: **$0.54 / $50** ceiling (Unit 2.4
+  full render of 13 remaining cues + S06-phrasing `[excited]` retune;
+  came in at ~$0.30 incremental vs the $22 envelope budget — Creator-
+  tier monthly quota absorbed most of it)
 
 ### Origin trailer
 
@@ -72,35 +73,76 @@ Frozen as Phase 2/3/4 consumption contract.
     Phase 0 Unit 0.6 audited Sterling-LANA shape).
   - Eleanor render verified clean by Briggsy ("s01 — that's clean").
 
-**Unit 2.4 — NEXT.** Full TTS render of the remaining 13 cues +
-per-cue duration audit. Phase 1 expectedFrames vs measured. Expected
-spend: ~$22 ElevenLabs Creator (within $50 envelope). Hash will
-auto-invalidate stale WAVs from the canary set when text/prefixTag
-match but voice_settings or scream-cue gating differ — Roger retune
-already propagates via adapter SHA.
-  - **Prerequisite check:** Briggsy already approved "fucking just do
-    it under $50" cap. Auto-run on next session unblock.
+**Unit 2.4 LANDED 2026-05-21** (commit pending — see git log):
+- Full TTS render of 13 remaining Dash cues — all 16/16 WAVs now on
+  disk at `videos/trailer/public/audio/lines/`.
+- New `scripts/audit-durations.ts` per plan Step 2 (rename target was
+  `audit-durations.ts` not the working name I picked at first). Writes
+  `sample-eval/voice-pipeline/duration-reconciliation.md` + exits 2 on
+  missing WAV / 3 on tolerance drift / 0 clean. 30 fps composition.
+- **S06-phrasing `[excited]` retune locked.** New
+  `PHRASING_INTERJECTIVE_SETTINGS` const in
+  `scripts/tts-clients/elevenlabs.ts` (`stab 0.30 / style 0.65 / speed
+  1.05`); resolver branches on `cadencePrefixTag === '[excited]' &&
+  voice === 'dash'`. Reads as the snappy rise-on-`Phra-`/fall-on-
+  `-sing.` callback Sterling-CODED cadence, not the arrogant-Sterling
+  briefer drawl. Briggsy: "phrasing landed!"
+- Audit reports 14/16 cues outside per-cueType tolerance. **NOT a
+  blocker** — routing per plan:
+  - **S03-roster (+102.6%) + S03-deck (+114.4%):** v3 receives
+    `[BEAT 0.3s]` markers verbatim and inserts ~3s silent pauses per
+    token (Briggsy confirmed via listening — tokens are NOT read aloud
+    as text). Resolves in Unit 2.6 BEAT-extraction (split on
+    `\[BEAT \d+(\.\d+)?s\]`, render segments, stitch FFmpeg silence).
+  - **S06-phrasing (+200% post-retune):** 1.6s → 1.2s post-retune.
+    Mostly leading/trailing silence — Unit 2.5 silenceremove will trim
+    toward the 0.9s target.
+  - **S05-scream (+44%):** by design — `skipSilenceremove: true`
+    preserves the Sterling-LANA held-vowel tail.
+  - **S05-gameplay-vo (-21.3%) + S06-close (-27.5%):** v3 reads faster
+    than Phase 1's 1.9–2.4 wps budget assumed. Unit 2.7 reconciliation
+    territory — amend `expectedFrames` OR trim text.
+  - **S04 list cues (+10-18%):** arrogant-Sterling `style=0.35` produces
+    slightly slower paced reads than the deadpan-tight budget. Unit 2.7
+    territory.
+  - **S01 / S04-cue-01 / S04-stat-04 (within 5-8%):** noise.
 
-**Units 2.5-2.8 — sequential after 2.4.** Post-process (loudnorm + fades
-+ silence stitch), intra-line beat handling, Phase 1 reconciliation,
-AudioAsset manifest for Phase 4 Remotion.
+**Unit 2.5 — NEXT.** Post-process pipeline: two-pass loudnorm to
+**-16 LUFS** + areverse-sandwich silenceremove + per-cue fades. Scream
+SKIPS silenceremove (preserve attack envelope). Plan at
+`docs/plans/origin-trailer/phase-2-voice-pipeline.md` Unit 2.5 §.
 
-**Open follow-ups carried by Phase 2 Unit 2.3 close (NOT blocking Unit 2.4):**
+**Units 2.6-2.8 — sequential after 2.5.** Intra-line `[BEAT NNNms]`
+stitch (resolves S03 drift), Phase 1 reconciliation (S05-gameplay-vo
++ S06-close pace amends), AudioAsset manifest for Phase 4 Remotion.
 
-- **S06-phrasing.expectedFrames contradiction.** Phase 1 ships
-  `expectedFrames: 12` (0.4s); Phase 2 deepening header claims it was
-  raised to 27 (~0.9s). Briggsy disposition 2026-05-19: "0.9 feels
-  right, but when we get to the critical decision point we can test
-  it out." Unit 2.4 measures actual Phrasing delivery duration; Unit
-  2.7 reconciliation amends Phase 1 if natural delivery lands closer
-  to 27 frames. Don't pre-amend.
-- **Hash-input gap.** `hashCueInputs` covers cue.text + engine +
-  voiceId + prefixTag + adapter SHA + priming key — but NOT
-  `cold-open-prototype.ts COLD_OPEN_SPEAKER.voiceSettings` (Janet
-  cuntiness knobs) and NOT in-client overrides like
-  `SCREAM_AUDITED_SETTINGS`. Future tunes of either need `--force` or
-  someone has to add a source-file SHA to the hash inputs. Track
-  alongside the existing adapter-SHA fix from doc-review.
+**Open follow-ups carried by Phase 2 Unit 2.4 close (NOT blocking Unit 2.5):**
+
+- **Doc-drift in `cold-open-prototype.ts` header + `script.ts`
+  S01-cold-open notes.** Both still reference "Sloane matriarch-tuned
+  (stability 0.85 / style 0.05 / speed 0.92)" or "Voice ID
+  m8AHWg36LJTQWKmfeGVv" in comments — that's the v1 Sloane settings.
+  The actual code constant (`COLD_OPEN_SPEAKER` body) is Eleanor (v3,
+  stab 0.40 / style 0.45 / speed 0.85, voice ID
+  `2qQJWjw5XdG80GreshqG`). Fix the prose at a comfortable point — not
+  load-bearing, but stale annotations bite future readers.
+- **S06-phrasing.expectedFrames contradiction (CARRY OVER from 2.3).**
+  Phase 1 ships `expectedFrames: 12` (0.4s); Phase 2 deepening header
+  claims 27 (~0.9s). Post-retune raw render is 1.2s = 36 frames pre-
+  silenceremove. Briggsy ear-locked the `[excited]` settings — Unit
+  2.7 measures post-silenceremove and amends `expectedFrames` to
+  whatever the trimmed delivery clocks at (likely 18-27 frames).
+- **Hash-input gap (CARRY OVER, EXTENDED).** `hashCueInputs` covers
+  cue.text + engine + voiceId + prefixTag + adapter SHA + priming key
+  — but NOT in-client overrides:
+  · `cold-open-prototype.ts COLD_OPEN_SPEAKER.voiceSettings`
+    (Janet cuntiness)
+  · `tts-clients/elevenlabs.ts SCREAM_AUDITED_SETTINGS` (Vera scream)
+  · `tts-clients/elevenlabs.ts PHRASING_INTERJECTIVE_SETTINGS`
+    (S06-phrasing — NEW 2026-05-21)
+  Future tunes of any of those need `--force` to re-render, OR add a
+  source-file SHA to the hash inputs. Same class of bug as the original
+  adapter-SHA gap doc-review caught.
 - **Audition WAV artifacts.** `videos/trailer/sample-eval/voice-pipeline/
   mallory-audition/` (5 Shared Library auditions + Eleanor) and
   `mallory-design/` (3 Voice Design previews) are gitignored locally.
@@ -195,6 +237,27 @@ Active warnings only. Older landmines have moved to `docs/insights/` and
     Roger again for briefer cues, the scream stays isolated via the
     in-client override. If you tweak the scream, edit
     `SCREAM_AUDITED_SETTINGS` in `elevenlabs.ts`, NOT the adapter.
+
+- **Phrasing! cue (`S06-phrasing`) uses interjective Roger profile,
+  NOT arrogant-briefer defaults** (LOCKED 2026-05-21 by Phase 2 Unit
+  2.4). The `Phrasing.` callback reads as a snappy rise-fall contour
+  (rise on `Phra-`, fall on `-sing.`), not the slow drawled
+  arrogant-briefer cadence. Tagged `cadenceAdapter.prefixTag =
+  '[excited]'` in `script.ts`; `resolveVoiceSettings()` branches on
+  `cadencePrefixTag === '[excited]' && voice === 'dash'` and returns
+  `PHRASING_INTERJECTIVE_SETTINGS` (`stability: 0.30, similarity_boost:
+  0.75, style: 0.65, use_speaker_boost: true, speed: 1.05`).
+  · Cleared by Briggsy on the first iteration ("phrasing landed!").
+  · If you tweak Phrasing, edit `PHRASING_INTERJECTIVE_SETTINGS` in
+    `elevenlabs.ts` — same in-client override pattern as Vera scream.
+    Hash-input gap landmine applies: changes need `--force --only
+    S06-phrasing` to invalidate the cached WAV.
+  · No primary-source phonetic analysis of Benjamin's Phrasing!
+    delivery exists (Gemini lit search 2026-05-21 turned up zero
+    voice-director notes / interview quotes / fan phonetic breakdowns).
+    The current tuning is INFERRED from Sterling-CODED principles +
+    Briggsy's ear, not documented Benjamin technique. If a future
+    primary source surfaces, re-evaluate against it.
 
 - **ElevenLabs Creator tier silently downgrades PCM `output_format`
   to MP3** (caught 2026-05-19 Phase 2 Unit 2.3). Per ElevenLabs docs:

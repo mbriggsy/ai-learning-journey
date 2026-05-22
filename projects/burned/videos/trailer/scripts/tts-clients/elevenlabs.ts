@@ -74,10 +74,41 @@ const SCREAM_AUDITED_SETTINGS = {
   speed: 0.95,
 } as const;
 
+/**
+ * Phrasing! interjective profile — Sterling-CODED callback cadence.
+ *
+ * Sterling's "Phrasing." is REFLEXIVE not declarative — a quick
+ * intonational contour (rise on "Phra-", fall on "-sing.") rather than
+ * the flat arrogant-briefer deadpan that suits the rest of Dash's
+ * cues. Lower stability gives the model room to land that rise/fall;
+ * higher style buys expressiveness; faster speed gives the snap.
+ *
+ * Inferred direction (no primary-source phonetic analysis exists —
+ * Gemini lit search 2026-05-21 turned up zero canonical voice-director
+ * notes on the catchphrase). Tunable from here on Briggsy's ear.
+ *
+ * Tagged in `script.ts` via `cadenceAdapter.prefixTag = '[excited]'`
+ * — this resolver detects the tag + Dash voice and returns the
+ * interjective profile instead of the adapter defaults.
+ */
+const PHRASING_INTERJECTIVE_SETTINGS = {
+  stability: 0.30,
+  similarity_boost: 0.75,
+  style: 0.65,
+  use_speaker_boost: true,
+  speed: 1.05,
+} as const;
+
 function resolveVoiceSettings(args: GenerateElevenLabsArgs): unknown {
   // Scream cue: locked Phase 0 Unit 0.6 audited profile (do NOT inherit
   // the Phase 2 Unit 2.3 arrogant-briefer retune — different beat).
   if (args.cadencePrefixTag === '[shouts]') return SCREAM_AUDITED_SETTINGS;
+
+  // Phrasing! interjective override (Dash only — same Roger voice ID,
+  // different cadence shape for the callback catchphrase).
+  if (args.cadencePrefixTag === '[excited]' && args.voice === 'dash') {
+    return PHRASING_INTERJECTIVE_SETTINGS;
+  }
 
   // Janet/Mallory: cunty-tuned override from COLD_OPEN_SPEAKER —
   // contract test in `cold-open-prototype.test.ts` pins the shape.

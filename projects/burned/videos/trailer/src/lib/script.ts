@@ -336,9 +336,9 @@ export const BURNED_TRAILER_LINES: readonly Line[] = [
     fadeOutMs: 50, // qsin curve per plan Step 7 phrasing-specific fade shape
     cadenceAdapter: {
       engine: 'elevenlabs-v3',
-      prefixTag: '[sarcastic]',
+      prefixTag: '[excited]',
       notes:
-        "FFmpeg fade curve: qsin (per plan Step 7 phrasing-specific shape). R15 #4 stamp 'OPERATION STATUS: FIELD-READY' lands at frame 2820 (concurrent with Phrasing audio tail). R15 #5 closing-card lands at frame 2835 (post-audio).",
+        "Interjective callback cadence — quick rise on 'Phra-', fall on '-sing.' (NOT the arrogant-briefer deadpan that suits the rest of Dash's cues). Resolver in elevenlabs.ts detects '[excited]' + voice='dash' and returns PHRASING_INTERJECTIVE_SETTINGS (stab 0.30 / style 0.65 / speed 1.05). FFmpeg fade curve: qsin (per plan Step 7). R15 #4 stamp 'OPERATION STATUS: FIELD-READY' lands at frame 2820 (concurrent with Phrasing audio tail). R15 #5 closing-card lands at frame 2835 (post-audio).",
     },
   },
 ] as const

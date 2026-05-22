@@ -38,10 +38,10 @@ import {
 } from './timing'
 
 describe('timing constants', () => {
-  it('TOTAL_FRAMES equals 95 seconds at 30 fps', () => {
-    expect(TOTAL_FRAMES).toBe(95 * FPS)
-    expect(TOTAL_FRAMES).toBe(2850)
-    expect(TOTAL_DURATION_SEC).toBe(95.0)
+  it('TOTAL_FRAMES equals 106 seconds at 30 fps (Tier-4 expansion 2026-05-22)', () => {
+    expect(TOTAL_FRAMES).toBe(106 * FPS)
+    expect(TOTAL_FRAMES).toBe(3180)
+    expect(TOTAL_DURATION_SEC).toBe(106.0)
   })
 
   it('per-scene durations sum to TOTAL_FRAMES (bare <Series>, no overlap math)', () => {
@@ -67,9 +67,10 @@ describe('timing constants', () => {
   })
 
   it('stacked-payoff math lands the hard cut at S05_START', () => {
-    // 1950 stamp slap + 60-frame VO window + 30-frame hold = 2040 = S05_START
-    expect(STACKED_PAYOFF_FRAME).toBe(1950)
-    expect(PAYOFF_VO_END_FRAME).toBe(2010)
+    // 2280 stamp slap + 60-frame VO window + 30-frame hold = 2370 = S05_START
+    // (post-Tier-4 expansion 2026-05-22; was 1950 / 2010 / 2040 pre-shift)
+    expect(STACKED_PAYOFF_FRAME).toBe(2280)
+    expect(PAYOFF_VO_END_FRAME).toBe(2340)
     expect(PAYOFF_HOLD_FRAMES).toBe(30)
     expect(STACKED_PAYOFF_FRAME + (PAYOFF_VO_END_FRAME - STACKED_PAYOFF_FRAME) + PAYOFF_HOLD_FRAMES).toBe(S05_START)
   })

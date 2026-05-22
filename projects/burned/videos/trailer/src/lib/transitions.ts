@@ -27,7 +27,7 @@
 /** Standard stamp slap (S01→S02 boundary + cascade stat slaps). */
 export const STAMP_SLAP_FRAMES = 8
 
-/** Heavy stamp slap (R3 payoff stamp at frame 1950). */
+/** Heavy stamp slap (R3 payoff stamp at frame 2280, post Tier-4 reauthor). */
 export const STAMP_SLAP_HEAVY_FRAMES = 16
 
 /**
@@ -54,7 +54,7 @@ export const PAYOFF_DUCK_RAMP_FRAMES = 30
 /** Music volume during the 1.0 s payoff-tail silent hold. */
 export const POST_PAYOFF_BED_VOLUME = 0.3
 
-/** Music volume during the cascade peak (frames 1860→1950). */
+/** Music volume during the cascade peak (frames 2190→2280, post Tier-4 reauthor). */
 export const PEAK_MUSIC_VOLUME = 0.9
 
 // === Stamp-slap motion shape (emil-design-eng vocabulary) ===
@@ -63,7 +63,7 @@ export const PEAK_MUSIC_VOLUME = 0.9
 // emil principle (a pop-in from invisible reads as cheap motion-
 // graphics template, not as a physical stamp). Standard slap goes
 // 0.95 → 1.04 → 1.0; heavy slap goes 0.85 → 1.06 → 1.0 for the
-// payoff stamp at frame 1950.
+// payoff stamp at frame 2280 (post Tier-4 reauthor).
 
 export const STAMP_SLAP_START_SCALE = 0.95
 export const STAMP_SLAP_OVERSHOOT_SCALE = 1.04
@@ -121,26 +121,26 @@ export const SCENE_TRANSITIONS = [
   {
     boundary: 'S03→S04',
     transition: 'dossier-page-wipe',
-    frameRange: [1034, 1050] as const, // 16 frames in S03 tail
+    frameRange: [1364, 1380] as const, // 16 frames in S03 tail (Tier-4 shift +330)
     rationale: 'Mission Background ends on the deck-of-120 reveal; the dossier page turns and reveals the cascade.',
   },
   {
     boundary: 'S04→S05',
     transition: 'hard-cut',
-    frameRange: [2040, 2040] as const, // After 1.0s payoff-tail silent hold
+    frameRange: [2370, 2370] as const, // After 1.0s payoff-tail silent hold (Tier-4 shift +330)
     rationale:
-      'Replaces former cross-dissolve. Payoff stamp + VO 1950→2010; silent visual hold 2010→2040; hard cut to gameplay. Music ducks pre-anticipated 1980→2010.',
+      'Replaces former cross-dissolve. Payoff stamp + VO 2280→2340; silent visual hold 2340→2370; hard cut to gameplay. Music ducks pre-anticipated 2310→2340.',
   },
   {
     boundary: 'S05→S06',
     transition: 'iris-wipe',
-    frameRange: [2535, 2580] as const, // 45 frames in S05 tail
+    frameRange: [2865, 2910] as const, // 45 frames in S05 tail (Tier-4 shift +330)
     rationale: 'Closing transition. Iris wipes the gameplay frame closed; briefing-room frame reestablishes underneath.',
   },
   {
     boundary: 'S06→end',
     transition: 'hard-cut',
-    frameRange: [2850, 2850] as const, // Composition end
+    frameRange: [3180, 3180] as const, // Composition end (Tier-4 shift +330)
     rationale: 'The trailer ends. No "fade to black" — Archer hard-cuts to credits.',
   },
 ] as const

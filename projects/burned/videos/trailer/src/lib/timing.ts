@@ -17,22 +17,28 @@
  */
 
 export const FPS = 30
-export const TOTAL_FRAMES = 2850
-export const TOTAL_DURATION_SEC = TOTAL_FRAMES / FPS // 95.0
+export const TOTAL_FRAMES = 3180
+export const TOTAL_DURATION_SEC = TOTAL_FRAMES / FPS // 106.0
 
 // === Scene boundaries (sum to TOTAL_FRAMES) ===
+// Unit 2.7 Tier-4 expansion 2026-05-22: TOTAL_FRAMES 2850 → 3180 (+330f / +11s)
+// to absorb S03 Sterling-CODED read-pace overrun (cumulative +319f after S03-roster
+// Tier-2 trim + S03-deck Tier-0 absorb). S03_END grew +330; S04/S05/S06 boundaries
+// shifted +330 to preserve scene durations. Phase 1's 95s budget assumed ~3.89 wps
+// for Sterling delivery; Eleven v3 actuals ~1.8-2.4 wps. Reauthor at this layer
+// preserves per-scene narrative weight without per-cue text re-trimming.
 export const S01_START = 0
 export const S01_END = 210 // 7.0s — Cold Open
 export const S02_START = 210
 export const S02_END = 570 // 12.0s — Briefing Setup
 export const S03_START = 570
-export const S03_END = 1050 // 16.0s — Mission Background
-export const S04_START = 1050
-export const S04_END = 2040 // 33.0s — Receipts Cascade w/ Stacked Payoff
-export const S05_START = 2040
-export const S05_END = 2580 // 18.0s — Gameplay Dissolve
-export const S06_START = 2580
-export const S06_END = 2850 // 9.0s — Closing Directive
+export const S03_END = 1380 // 27.0s — Mission Background (Tier-4 expansion +330f from 1050)
+export const S04_START = 1380
+export const S04_END = 2370 // 33.0s — Receipts Cascade w/ Stacked Payoff
+export const S05_START = 2370
+export const S05_END = 2910 // 18.0s — Gameplay Dissolve
+export const S06_START = 2910
+export const S06_END = 3180 // 9.0s — Closing Directive
 
 // === S04 Stacked-payoff beat (R3) ===
 // Stamp slaps onto HTP hero overprint at frame 1950 + Dash VO begins
@@ -45,14 +51,14 @@ export const S06_END = 2850 // 9.0s — Closing Directive
 // to single 4-word truth-collision. 60-frame window at 2.0 wps
 // controlled-deadpan fits cleanly. Cascade chrome at 30% IS the
 // visual antecedent of "they"; SHOWING beats TELLING.
-export const STACKED_PAYOFF_FRAME = 1950
-export const PAYOFF_VO_END_FRAME = 2010 // 60 frames / 2.0s for 4 words at 2.0 wps deadpan
+export const STACKED_PAYOFF_FRAME = 2280 // shifted +330 from 1950 by Unit 2.7 Tier-4
+export const PAYOFF_VO_END_FRAME = 2340 // 60 frames / 2.0s for 4 words at 2.0 wps deadpan
 export const PAYOFF_HOLD_FRAMES = 30 // 1.0s silent visual hold after VO ends
-// Music duck pre-anticipated: starts at PAYOFF_VO_END_FRAME - 30 = 1980,
-// completes at PAYOFF_VO_END_FRAME (2010), so duck lands as VO ends.
-export const PAYOFF_MUSIC_DUCK_START_FRAME = PAYOFF_VO_END_FRAME - 30 // 1980
-export const PAYOFF_MUSIC_DUCK_END_FRAME = PAYOFF_VO_END_FRAME // 2010
-// Hard cut to gameplay at S04_END = PAYOFF_VO_END_FRAME + PAYOFF_HOLD_FRAMES = 2040 ✓
+// Music duck pre-anticipated: starts at PAYOFF_VO_END_FRAME - 30 = 2310,
+// completes at PAYOFF_VO_END_FRAME (2340), so duck lands as VO ends.
+export const PAYOFF_MUSIC_DUCK_START_FRAME = PAYOFF_VO_END_FRAME - 30 // 2310
+export const PAYOFF_MUSIC_DUCK_END_FRAME = PAYOFF_VO_END_FRAME // 2340
+// Hard cut to gameplay at S04_END = PAYOFF_VO_END_FRAME + PAYOFF_HOLD_FRAMES = 2370 ✓
 
 // === S05 budget ===
 // Phase 5 captures ≥30s of raw gameplay containing at least one

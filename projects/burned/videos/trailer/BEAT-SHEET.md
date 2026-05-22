@@ -13,7 +13,7 @@
 > `script.test.ts` asserts every marker appears exactly once and
 > matches its Line entry verbatim.
 
-## Runtime: 95.0s / 2850 frames @ 30fps / 16:9 (1920×1080)
+## Runtime: 106.0s / 3180 frames @ 30fps / 16:9 (1920×1080)
 
 ## Voice cast: 2
 
@@ -36,7 +36,7 @@ card-flash montages only — no VO lines in this trailer.
   Pro ($204/yr) → Tier 2 Marmoset / Songtradr per-track marketplace
   ($30–$200/track) → Tier 3 Suno Pro ($10/mo) last-resort.
 - **Track-shape path:** **A (default)** — full-length composition
-  (2:30–3:30) clipped to 95s. Path B (60s short + loop) fallback if no
+  (2:30–3:30) clipped to 106s. Path B (60s short + loop) fallback if no
   Path A candidate survives Tier 1+2. Path C (stems) reserved for
   licensed-track edge case only.
 - **`music_disclosure_required`:** `false` (Phase 1 default — flips to
@@ -45,8 +45,8 @@ card-flash montages only — no VO lines in this trailer.
 - **§R9 brief:** mid-century brass / bossa nova / spy jazz / lounge,
   BPM 100–130, confident-deadpan-slightly-playful (NOT goofy/wacky),
   brass + upright bass + syncopated drums + optional vibraphone/organ.
-  Cascade-friendly dynamic shape: intro → build → peak (1860–1950) →
-  duck (1980–2010) → bed-only hold → close-swell. Full audition
+  Cascade-friendly dynamic shape: intro → build → peak (2190–2280) →
+  duck (2310–2340) → bed-only hold → close-swell. Full audition
   protocol + criteria + Suno prompt template + risk register in
   `sample-eval/beat-sheet/music-sourcing.md`.
 - **Music-cue map** (Phase 4 implements via
@@ -57,22 +57,22 @@ card-flash montages only — no VO lines in this trailer.
 | 0–60 | Brass hook intro | 100% | step (intro is the start) |
 | 60–210 | Bed under cold-open speaker | 40% | ramp(30) from 100→40 starting at frame 30 (pre-anticipates cold-open line at 60) |
 | 210–570 | Underscore build (briefing setup) | 50% | ramp(60) from 40→50 starting at S02_START |
-| 570–1050 | Continue build (mission background) | 55% | ramp(60) from 50→55 starting at S03_START |
-| 1050–1680 | Cascade open, music swells | 60→75% | ramp(630) linear swell across the cascade "stat" portion |
-| 1680–1860 | Peak intensification | 90% | ramp(180) from 75→90 |
-| 1860–1950 | Cascade peak hold (no VO) | 90% | hold |
-| 1950–1980 | Stamp slap + payoff VO begins; music holds | 90% | hold |
-| **1980–2010** | **Pre-anticipated payoff duck** (completes as VO ends) | **30%** | **ramp(30) from 90→30** — `PAYOFF_DUCK_RAMP_FRAMES` per `transitions.ts` |
-| 2010–2040 | Bed-only silent visual hold | 30% | hold |
-| 2040–2535 | Sparse bed under gameplay capture | 30% | hold (hard cut at 2040; music continues across the cut) |
-| 2535–2580 | Iris-wipe — music rises | 50% | ramp(45) from 30→50 |
-| 2580–2790 | Closing underscore | 60% | ramp(60) from 50→60 |
-| 2790–2850 | Final brass sting on logo land | 100% | ramp(30) from 60→100 |
+| 570–1380 | Continue build (mission background) | 55% | ramp(60) from 50→55 starting at S03_START |
+| 1380–2010 | Cascade open, music swells | 60→75% | ramp(630) linear swell across the cascade "stat" portion |
+| 2010–2190 | Peak intensification | 90% | ramp(180) from 75→90 |
+| 2190–2280 | Cascade peak hold (no VO) | 90% | hold |
+| 2280–2310 | Stamp slap + payoff VO begins; music holds | 90% | hold |
+| **2310–2340** | **Pre-anticipated payoff duck** (completes as VO ends) | **30%** | **ramp(30) from 90→30** — `PAYOFF_DUCK_RAMP_FRAMES` per `transitions.ts` |
+| 2340–2370 | Bed-only silent visual hold | 30% | hold |
+| 2370–2865 | Sparse bed under gameplay capture | 30% | hold (hard cut at 2370; music continues across the cut) |
+| 2865–2910 | Iris-wipe — music rises | 50% | ramp(45) from 30→50 |
+| 2910–3120 | Closing underscore | 60% | ramp(60) from 50→60 |
+| 3120–3180 | Final brass sting on logo land | 100% | ramp(30) from 60→100 |
 
 **Anti-pattern guard:** no 60-percentage-point cliffs. All transitions
 are ramped envelopes or held holds — the first-draft 90→30 sharp drop
-at 1950 would have clicked audibly. The pre-anticipated 30-frame duck
-at 1980–2010 lands the payoff cleanly.
+at 2280 would have clicked audibly. The pre-anticipated 30-frame duck
+at 2310–2340 lands the payoff cleanly.
 
 ## Typography (Unit 1.8 lock — BURNED's stack, variable woff2 via `useFonts.ts` Promise.all)
 
@@ -105,10 +105,10 @@ at 1980–2010 lands the payoff cleanly.
 | # | Frame | Scene | Copy | Treatment | Decode axis |
 |---|-------|-------|------|-----------|-------------|
 | 1 | 150 | S01 cold open | **"OPERATION PENDLETON / CASE FILE 02 / METHOD: AUTONOMOUS"** | Classification stamp slap, lower-left, JetBrains Mono 700 28px (+80 tracking), `--color-ochre-9` ink on `--color-cream-12` stamp paper; 8-frame standard slap | In-world diegetic (origin: method is autonomous) |
-| 2 | 1680 | S04 cascade | **"OPERATIVE [REDACTED] — METHOD REPEATABLE"** | Comms-ticker pulse, bottom edge, JetBrains Mono 500 22px (+40 tracking), scrolling left-to-right | In-world diegetic (reproducibility claim) |
-| 3 | 1950 | S04 stacked payoff | **"AUTONOMOUS FIELD UNIT — ASSET DELIVERED"** | Dossier stamp slap, heavy 16-frame slap, overprints HTP hero, JetBrains Mono 700 38px (+30 tracking), `--color-burned-fire` ink | In-world diegetic (R3 payoff carrier — visual + audio land simultaneously) |
-| 4 | 2820 | S06 closing | **"OPERATION STATUS: FIELD-READY"** | Subhead under BURNED logo, JetBrains Mono 700 32px (+50 tracking), `--color-ochre-9` ink; 16-frame heavy slap (matches R3 payoff envelope — closing is the second "weight" moment) | In-world diegetic (status: asset is ready) |
-| **5** | **2835** | **S06 closing card** | **Main line:** *"DRAFTED, RENDERED, AND SHIPPED BY AUTONOMOUS AGENTS."* — JetBrains Mono 700 32px (+50 tracking), `--color-ochre-9` ink. **Subhead (LOCKED 2026-05-18):** *"Honestly at this point we're just impressed."* — JetBrains Mono 500 italic 22px (+20 tracking), 30% opacity. Both centered below R15 #4. | 8-frame standard slap (lighter envelope than R15 #4 to maintain hierarchy) | **Cold-decode literal:** main line states the autonomous-build claim unambiguously to trailer-in-isolation viewers (no Phase 7 wrapper required). **Subhead bookend:** echoes Janet's S01 kicker *"Honestly at this point I'm just impressed."* via `"I'm"` → `"we're"` plural, folding the autonomous-build collective speaker (Briggsy + Claude + agents) into the closing voice. |
+| 2 | 2010 | S04 cascade | **"OPERATIVE [REDACTED] — METHOD REPEATABLE"** | Comms-ticker pulse, bottom edge, JetBrains Mono 500 22px (+40 tracking), scrolling left-to-right | In-world diegetic (reproducibility claim) |
+| 3 | 2280 | S04 stacked payoff | **"AUTONOMOUS FIELD UNIT — ASSET DELIVERED"** | Dossier stamp slap, heavy 16-frame slap, overprints HTP hero, JetBrains Mono 700 38px (+30 tracking), `--color-burned-fire` ink | In-world diegetic (R3 payoff carrier — visual + audio land simultaneously) |
+| 4 | 3150 | S06 closing | **"OPERATION STATUS: FIELD-READY"** | Subhead under BURNED logo, JetBrains Mono 700 32px (+50 tracking), `--color-ochre-9` ink; 16-frame heavy slap (matches R3 payoff envelope — closing is the second "weight" moment) | In-world diegetic (status: asset is ready) |
+| **5** | **3165** | **S06 closing card** | **Main line:** *"DRAFTED, RENDERED, AND SHIPPED BY AUTONOMOUS AGENTS."* — JetBrains Mono 700 32px (+50 tracking), `--color-ochre-9` ink. **Subhead (LOCKED 2026-05-18):** *"Honestly at this point we're just impressed."* — JetBrains Mono 500 italic 22px (+20 tracking), 30% opacity. Both centered below R15 #4. | 8-frame standard slap (lighter envelope than R15 #4 to maintain hierarchy) | **Cold-decode literal:** main line states the autonomous-build claim unambiguously to trailer-in-isolation viewers (no Phase 7 wrapper required). **Subhead bookend:** echoes Janet's S01 kicker *"Honestly at this point I'm just impressed."* via `"I'm"` → `"we're"` plural, folding the autonomous-build collective speaker (Briggsy + Claude + agents) into the closing voice. |
 
 ### R15 #5 subhead — three-candidate decision (LOCKED option a)
 
@@ -142,9 +142,9 @@ Brainstorm R15 acceptance: "at least one signal lands in the cold-open
 frame, at least one in the cascade or closer."
 
 - ≥1 in cold-open: **#1** (frame 150 in S01). ✓
-- ≥1 in cascade or closer: **#2** (cascade comms-ticker, 1680), **#3**
-  (cascade stacked payoff, 1950), **#4** (closing status, 2820),
-  **#5** (closing-card cold-decode, 2835). ✓ — four signals across
+- ≥1 in cascade or closer: **#2** (cascade comms-ticker, 2010), **#3**
+  (cascade stacked payoff, 2280), **#4** (closing status, 3150),
+  **#5** (closing-card cold-decode, 3165). ✓ — four signals across
   cascade + closer.
 
 **Total: 5 R15 signals.** Brainstorm minimum is "at least two."
@@ -203,11 +203,11 @@ carry signal, never color alone.
 | ----- | ----------------------------------- | ------------ | ----------- | -------------------------------------------------------------------------------------------------------------------- |
 | S01   | Cold Open                           | 7.0          | 0–210       | R14 compressed-Archer title sequence; Janet voice-only delivery (off-camera) over Dash card-flash + dimmed-desk plate |
 | S02   | Briefing Setup                      | 12.0         | 210–570     | R1 spine begins; venetian-blind establishing; Dash narration                                                          |
-| S03   | Mission Background                  | 16.0         | 570–1050    | Operative roster + deck-of-120 setup; 6 operatives + 1 on "research budget" (Otto)                                   |
-| S04   | Receipts Cascade w/ Stacked Payoff  | 33.0         | 1050–2040   | R3 climax; HTP scroll + card art + goofy stats; payoff line at frame 1950 ("They WERE the operation."); hard cut to S05 at 2040 |
-| S05   | Gameplay Dissolve                   | 18.0         | 2040–2580   | R13 live gameplay closer (pre-trimmed `gameplay.mp4` per Phase 5); Dash scream "VEEEEEEEERAAAA!!!" at frame 2400      |
-| S06   | Closing Directive                   | 9.0          | 2580–2850   | Final Dash line + Phrasing! beat + BURNED logo + R15 #4 status stamp + R15 #5 closing-card cold-decode               |
-| TOTAL | —                                   | 95.0         | 0–2850      | 2850 frames @ 30fps                                                                                                  |
+| S03   | Mission Background                  | 27.0         | 570–1380    | Operative roster + deck-of-120 setup; 6 operatives + 1 on "research budget" (Otto). Tier-4 expansion 2026-05-22 (+330f) absorbs Sterling-CODED read-pace overrun. |
+| S04   | Receipts Cascade w/ Stacked Payoff  | 33.0         | 1380–2370   | R3 climax; HTP scroll + card art + goofy stats; payoff line at frame 2280 ("They WERE the operation."); hard cut to S05 at 2370 |
+| S05   | Gameplay Dissolve                   | 18.0         | 2370–2910   | R13 live gameplay closer (pre-trimmed `gameplay.mp4` per Phase 5); Dash scream "VEEEEEEEERAAAA!!!" at frame 2730     |
+| S06   | Closing Directive                   | 9.0          | 2910–3180   | Final Dash line + Phrasing! beat + BURNED logo + R15 #4 status stamp + R15 #5 closing-card cold-decode               |
+| TOTAL | —                                   | 106.0        | 0–3180      | 3180 frames @ 30fps                                                                                                  |
 
 ### Scene-count-lock rationale
 
@@ -329,7 +329,7 @@ positioned inside 1080×1080 central safe square per Unit 1.10.
 
 ---
 
-### S03 — Mission Background (frames 570–1050 / 16.0s)
+### S03 — Mission Background (frames 570–1380 / 27.0s)
 
 **Visual (Unit 1.10 lock):** briefing-room frame STAYS — the dossier
 IS the desk's content; mahogany surface + venetian-blind shadow +
@@ -392,7 +392,7 @@ deck reveal** sits between S03-roster (segment 1) and S03-deck
 **Voice:** Dash (Roger) sole.
 
 **Transition out:** dossier-page wipe overlay component on S03 tail —
-16 frames (frames 1034–1050), left-to-right reveal of destination
+16 frames (frames 1364–1380), left-to-right reveal of destination
 (S04 cascade entry). `EASE_IN_OUT = cubic-bezier(0.77, 0, 0.175, 1)`
 per timing.ts. See Unit 1.4. **NOTE:** this is the S03→S04 transition
 wipe (16 frames at scene tail), distinct from the internal 1.0s
@@ -403,7 +403,7 @@ mid-scene wipe between segments 1 and 2.
 
 ---
 
-### S04 — Receipts Cascade with Stacked Payoff (frames 1050–2040 / 33.0s)
+### S04 — Receipts Cascade with Stacked Payoff (frames 1380–2370 / 33.0s)
 
 **Visual — Cascade composition LOCKED (Unit 1.5).** Sequential
 revelation with focal hierarchy. Each cascade element enters at full
@@ -412,8 +412,8 @@ weight for 30 frames (1.0 s), then decays to 30% opacity chrome at
 the right-edge slot column as the next element enters. Card-art halo
 right-edge-only at 40% opacity throughout — texture, not focal.
 Comms-ticker dim background until frame 1800, then a 60-frame ease
-to "bright" by frame 1860 and HELD bright through stamp + VO + silent
-hold. **Frame 1950 stamp slap is the trailer's ONLY "everything at
+to "bright" by frame 2190 and HELD bright through stamp + VO + silent
+hold. **Frame 2280 stamp slap is the trailer's ONLY "everything at
 once" moment** — every other cascade frame has exactly one element
 at full visual weight.
 
@@ -422,7 +422,7 @@ Three alternative compositions rejected (full rationale in
 full-bleed sequential (sequential ≠ stacked — loses payoff impact);
 layered-simultaneous (six focal points at peak — AI-slop-shaped,
 fails §2.2); sequential revelation with focal hierarchy (LOCKED —
-supports R3 by reserving the stacked moment for frame 1950).
+supports R3 by reserving the stacked moment for frame 2280).
 
 **Frame-by-frame storyboard.** This is the Phase 4 composition
 contract — the audio cue table below carries the same frame ranges
@@ -430,18 +430,18 @@ from the Phase 2 voice-pipeline angle.
 
 | Frame range | Focal element (100% weight) | Texture / chrome (30–40%) | Comms-ticker |
 |-------------|-----------------------------|---------------------------|---------------|
-| 1050–1110 | HTP hero slides up from bottom (60 f `EASE_OUT`, position 0→100% + opacity 50→100%) | parchment background only | dim |
-| 1110–1290 | HTP dossier scroll (top portion) | — | dim |
-| 1290–1410 | Stat 1 caption enters safe-square center-bottom (6 f `EASE_OUT`, scale 0.95→1.0, hold 30 f) | HTP hero 70% (texture under active caption) | dim |
-| 1410–1560 | Stat 2 caption enters. Stat 1 decays (12 f `EASE_IN_OUT`, position morphs to right-edge slot, opacity 1→0.3, scale 1→0.65) | Stat 1 30% right-edge; HTP hero 70% | dim |
-| 1560–1680 | Stat 3 caption enters. Stat 2 decays to right-edge. Card-art halo begins building (per-card slap, 2-f stagger, top 6 of the 17-art set) | Stats 1+2 30% right-edge; HTP hero 70%; halo right-edge 40% | dim |
-| 1680–1860 | Stat 4 caption enters. Stat 3 decays. Halo completes (6-card right-edge column at 40%) | Stats 1–3 30% right-edge; HTP hero 70%; halo 40% | dim → brightening (60-f ease 1800–1860) |
-| 1860–1950 | Cascade peak HELD — bright ticker is active signal; HTP/halo/stats are texture | HTP 70%; stats 30%; halo 40% | **BRIGHT (held)** — R15 #2 pulse |
-| **1950** | **Heavy stamp slap onto HTP hero** (16 f, scale 0.85 → 1.06 overshoot at 12/16 → 1.0 settle, `EASE_OUT`). HTP drops to 50%. **Stamp is the SOLE focal point — only "everything at once" moment.** | — | bright |
-| 1950–2010 | Stamp held; Dash VO delivers payoff line. | — | bright |
-| 1980–2010 | Music duck ramp (`PAYOFF_DUCK_RAMP_FRAMES` = 30, 90% → 30%) completing as VO ends | — | bright |
-| 2010–2040 | **Silent visual hold (30 f).** Stamp + HTP + halo + stats all static. Music at 30% bed-only. No VO. | — | held bright |
-| **2040** | **Hard cut to S05 gameplay.** | — | — |
+| 1380–1440 | HTP hero slides up from bottom (60 f `EASE_OUT`, position 0→100% + opacity 50→100%) | parchment background only | dim |
+| 1440–1620 | HTP dossier scroll (top portion) | — | dim |
+| 1620–1740 | Stat 1 caption enters safe-square center-bottom (6 f `EASE_OUT`, scale 0.95→1.0, hold 30 f) | HTP hero 70% (texture under active caption) | dim |
+| 1740–1890 | Stat 2 caption enters. Stat 1 decays (12 f `EASE_IN_OUT`, position morphs to right-edge slot, opacity 1→0.3, scale 1→0.65) | Stat 1 30% right-edge; HTP hero 70% | dim |
+| 1890–2010 | Stat 3 caption enters. Stat 2 decays to right-edge. Card-art halo begins building (per-card slap, 2-f stagger, top 6 of the 17-art set) | Stats 1+2 30% right-edge; HTP hero 70%; halo right-edge 40% | dim |
+| 2010–2190 | Stat 4 caption enters. Stat 3 decays. Halo completes (6-card right-edge column at 40%) | Stats 1–3 30% right-edge; HTP hero 70%; halo 40% | dim → brightening (60-f ease 2130–2190) |
+| 2190–2280 | Cascade peak HELD — bright ticker is active signal; HTP/halo/stats are texture | HTP 70%; stats 30%; halo 40% | **BRIGHT (held)** — R15 #2 pulse |
+| **2280** | **Heavy stamp slap onto HTP hero** (16 f, scale 0.85 → 1.06 overshoot at 12/16 → 1.0 settle, `EASE_OUT`). HTP drops to 50%. **Stamp is the SOLE focal point — only "everything at once" moment.** | — | bright |
+| 2280–2340 | Stamp held; Dash VO delivers payoff line. | — | bright |
+| 2310–2340 | Music duck ramp (`PAYOFF_DUCK_RAMP_FRAMES` = 30, 90% → 30%) completing as VO ends | — | bright |
+| 2340–2370 | **Silent visual hold (30 f).** Stamp + HTP + halo + stats all static. Music at 30% bed-only. No VO. | — | held bright |
+| **2370** | **Hard cut to S05 gameplay.** | — | — |
 
 **Stat-slot decayed coordinates** (right-edge column INSIDE the
 1080×1080 safe-square — accumulation survives mobile-X autoplay crop;
@@ -449,16 +449,16 @@ doesn't overlap with the active-caption center-bottom slot at x=960):
 
 | Stat slot | Decayed x | Decayed y | Decayed scale | Decayed opacity |
 |-----------|-----------|-----------|---------------|-----------------|
-| Stat 1 (decay at 1410) | 1380 | 740 | 0.65 | 0.30 |
-| Stat 2 (decay at 1560) | 1380 | 790 | 0.65 | 0.30 |
-| Stat 3 (decay at 1680) | 1380 | 840 | 0.65 | 0.30 |
-| Stat 4 (decay at 1860) | 1380 | 890 | 0.65 | 0.30 |
+| Stat 1 (decay at 1740) | 1380 | 740 | 0.65 | 0.30 |
+| Stat 2 (decay at 1890) | 1380 | 790 | 0.65 | 0.30 |
+| Stat 3 (decay at 2010) | 1380 | 840 | 0.65 | 0.30 |
+| Stat 4 (decay at 2190) | 1380 | 890 | 0.65 | 0.30 |
 
 Active stat caption (during 30-f read window): x = 960, y = 900,
 36 px dry / 22 px italic companion.
 
 **Anti-pattern guard (LOAD-BEARING):** no frame in the cascade except
-the 1950 payoff stamp has more than two elements at full visual
+the 2280 payoff stamp has more than two elements at full visual
 weight. Accumulated elements past their read window must hold at
 ≤ 40% opacity. Phase 4 in-studio walkthrough flags any violating
 frame for retuning before MP4 export; Phase 6 final QA re-checks.
@@ -495,23 +495,23 @@ peak frames live at
 
 | Cue frame | Window (s) | Visual | VO line |
 |-----------|-----------|--------|---------|
-| 1050 | 2.0s | HTP dossier slides into hero position (Playwright capture) | > *"Operational planning."* <!-- @line: S04-cue-01 --> |
-| 1110 | 3.0s | HTP scroll begins (top portion) | > *"Fourteen thousand pages of forensic dossiers."* <!-- @line: S04-cue-02 --> |
-| 1200 | 3.0s | HTP scroll continues (middle portion) | > *"Drafted at three AM, name redacted for compliance."* <!-- @line: S04-cue-03 --> |
-| 1290 | 4.0s | Stat 1 caption enters safe-square center-bottom at full weight | > *"Mission rehearsal: fourteen hundred and seven contingencies war-gamed."* <!-- @line: S04-stat-01 --> |
-| 1410 | 5.0s | Stat 1 decays to chrome side-band; Stat 2 enters safe-square center-bottom | > *"Six of them, deliberately unrehearsed — the 'memorable ones.'"* <!-- @line: S04-stat-02 --> |
-| 1560 | 4.0s | Stat 2 decays to chrome; Stat 3 enters safe-square center-bottom | > *"Seventeen asset illustrations. Five of them with hats."* <!-- @line: S04-stat-03 --> |
-| 1680 | 6.0s | Stat 3 decays to chrome; Stat 4 enters safe-square center-bottom | > *"Seven on the roster. Six in the deck. One on the research budget. Don't ask."* <!-- @line: S04-stat-04 --> |
-| 1860 | 3.0s | Cascade peak — comms-ticker brightens to held-bright state; HTP hero + accumulated halo (40%) + bright ticker; **no VO** | — |
-| **1950** | 2.0s | **Stacked payoff stamp slaps onto HTP hero overprint (heavy 16-frame slap). HTP hero drops to 50% opacity. Cascade chrome (4 stats at 30% side-band, halo at 40%, bright ticker) IS the visual antecedent of "they." Dash VO delivers the 4-word truth-collision.** | > *"They WERE the operation."* <!-- @line: S04-payoff --> |
-| 1980 | (within prior cue) | Music duck pre-anticipated ramp begins (90% → 30% over 30 frames, completes at 2010 as VO ends) | (VO continues) |
-| 2010–2040 | 1.0s | **Silent visual hold: HTP hero + stamp + halo + 4 stats in chrome all static. Music at bed-only level (30%). No VO. The meaning-collision lands in the silence after the line, not in a second cue.** | — |
-| 2040 | — | **Hard cut to S05 gameplay.** | — |
+| 1380 | 2.0s | HTP dossier slides into hero position (Playwright capture) | > *"Operational planning."* <!-- @line: S04-cue-01 --> |
+| 1440 | 3.0s | HTP scroll begins (top portion) | > *"Fourteen thousand pages of forensic dossiers."* <!-- @line: S04-cue-02 --> |
+| 1530 | 3.0s | HTP scroll continues (middle portion) | > *"Drafted at three AM, name redacted for compliance."* <!-- @line: S04-cue-03 --> |
+| 1620 | 4.0s | Stat 1 caption enters safe-square center-bottom at full weight | > *"Mission rehearsal: fourteen hundred and seven contingencies war-gamed."* <!-- @line: S04-stat-01 --> |
+| 1740 | 5.0s | Stat 1 decays to chrome side-band; Stat 2 enters safe-square center-bottom | > *"Six of them, deliberately unrehearsed — the 'memorable ones.'"* <!-- @line: S04-stat-02 --> |
+| 1890 | 4.0s | Stat 2 decays to chrome; Stat 3 enters safe-square center-bottom | > *"Seventeen asset illustrations. Five of them with hats."* <!-- @line: S04-stat-03 --> |
+| 2010 | 6.0s | Stat 3 decays to chrome; Stat 4 enters safe-square center-bottom | > *"Seven on the roster. Six in the deck. One on the research budget. Don't ask."* <!-- @line: S04-stat-04 --> |
+| 2190 | 3.0s | Cascade peak — comms-ticker brightens to held-bright state; HTP hero + accumulated halo (40%) + bright ticker; **no VO** | — |
+| **2280** | 2.0s | **Stacked payoff stamp slaps onto HTP hero overprint (heavy 16-frame slap). HTP hero drops to 50% opacity. Cascade chrome (4 stats at 30% side-band, halo at 40%, bright ticker) IS the visual antecedent of "they." Dash VO delivers the 4-word truth-collision.** | > *"They WERE the operation."* <!-- @line: S04-payoff --> |
+| 2310 | (within prior cue) | Music duck pre-anticipated ramp begins (90% → 30% over 30 frames, completes at 2340 as VO ends) | (VO continues) |
+| 2340–2370 | 1.0s | **Silent visual hold: HTP hero + stamp + halo + 4 stats in chrome all static. Music at bed-only level (30%). No VO. The meaning-collision lands in the silence after the line, not in a second cue.** | — |
+| 2370 | — | **Hard cut to S05 gameplay.** | — |
 
-- **R15 #2 (frame 1680):** *"OPERATIVE [REDACTED] — METHOD REPEATABLE"*
+- **R15 #2 (frame 2010):** *"OPERATIVE [REDACTED] — METHOD REPEATABLE"*
   — comms-ticker pulse, JetBrains Mono 500 22px, scrolling left-to-
   right at bottom edge.
-- **R15 #3 (frame 1950):** *"AUTONOMOUS FIELD UNIT — ASSET DELIVERED"*
+- **R15 #3 (frame 2280):** *"AUTONOMOUS FIELD UNIT — ASSET DELIVERED"*
   — dossier stamp slap (heavy 16-frame slap, scale 0.85 → 1.06
   overshoot at 12/16 → 1.0 settle), JetBrains Mono 700 38px,
   `--color-burned-fire` ink. **Overprints HTP hero**; visual carrier
@@ -521,9 +521,9 @@ peak frames live at
 S04-payoff which carries the controlled-deadpan payoff cadence at
 the 2.0 wps ceiling.
 
-**Transition out:** **hard cut to S05 at frame 2040** (NO cross-
+**Transition out:** **hard cut to S05 at frame 2370** (NO cross-
 dissolve — `<Series.Sequence>` boundary). Music duck completes BEFORE
-the cut (frame 2010); 1.0s silent visual hold (frames 2010–2040)
+the cut (frame 2340); 1.0s silent visual hold (frames 2340–2370)
 lands the payoff; then hard cut. Per Unit 1.4 transition vocabulary
 lock.
 
@@ -534,13 +534,13 @@ accumulating chrome off-screen).
 
 ---
 
-### S05 — Gameplay Dissolve (frames 2040–2580 / 18.0s)
+### S05 — Gameplay Dissolve (frames 2370–2910 / 18.0s)
 
 **Visual:** Gameplay clip shape declared for Phase 5. Pre-trimmed
 `public/trailer/gameplay.mp4` (540 frames / 1920×1080 / audio-stripped /
 BURNED-draw at clip-relative frame 160 ± 3) consumed verbatim via
 `<OffthreadVideo src={staticFile('trailer/gameplay.mp4')} muted />`
-with NO `startFrom`/`endAt` props. **Hard-cut handoff at frame 2040
+with NO `startFrom`/`endAt` props. **Hard-cut handoff at frame 2370
 per Unit 1.4** — no cascade tail bleeds into S05; the cascade resolves
 fully inside S04 with the 1.0 s silent visual hold landing the payoff
 before the cut. Trim ownership = Phase 5.
@@ -554,7 +554,7 @@ before the cut. Trim ownership = Phase 5.
   Bracket-tag treatment: `[deadpan]` leading. 12 words / ~5.0s. Em-
   dash pauses for sotto-voce conspiratorial register.
 
-- **VO (Dash, frame 2400, scream cue):**
+- **VO (Dash, frame 2730, scream cue):**
 
   > *"VEEEEEEEERAAAA!!!"* <!-- @line: S05-scream -->
 
@@ -567,7 +567,7 @@ before the cut. Trim ownership = Phase 5.
   in script.ts to preserve attack envelope.
 
 - **Music:** brass-bossa underscore at 30% baseline; ducks under
-  scream cue (frame 2400) for 15 frames either side, then returns to
+  scream cue (frame 2730) for 15 frames either side, then returns to
   30%. Music ducks to 15% for 15 frames around the BURNED-card-draw
   moment (frame 2200) per Unit 1.2 Step 6 audio treatment.
 - **Gameplay audio:** raw board ambient + phone-tap SFX + occasional
@@ -578,7 +578,7 @@ before the cut. Trim ownership = Phase 5.
 **Voice:** Dash (Roger) sole. Two cues (gameplay-vo + scream).
 
 **Transition out:** iris-wipe overlay component on S05 tail (45
-frames, 1.5s, frames 2535–2580). `clip-path: circle(70.7% at 50% 50%)`
+frames, 1.5s, frames 2865–2910). `clip-path: circle(70.7% at 50% 50%)`
 → `clip-path: circle(0% at 50% 50%)` with
 `EASE_IN_OUT = cubic-bezier(0.77, 0, 0.175, 1)`. Per Unit 1.4.
 
@@ -588,21 +588,21 @@ construction.
 
 ---
 
-### S06 — Closing Directive (frames 2580–2850 / 9.0s)
+### S06 — Closing Directive (frames 2910–3180 / 9.0s)
 
 **Visual (Unit 1.10 lock):** briefing-room reestablishes via iris-wipe
 from S05. Venetian-blind shadow returns; mahogany desk; depth-plane
 foreground element from S02 returns (visual bookend). **Midground:**
 dossier closes (reverse of S02 opening — 30-frame `EASE_DRAWER`);
 dossier cover shows full Pendleton crest + classification stamp.
-**Frame 2780:** BURNED LOGO (wordmark, NOT card art — differential
+**Frame 3110:** BURNED LOGO (wordmark, NOT card art — differential
 from S01) lands center, ~720 px wide, Clash Display 700 with chrome
-treatment; 8-frame stamp-slap entry. **Frames 2780–2820:** logo holds
+treatment; 8-frame stamp-slap entry. **Frames 3110–3150:** logo holds
 static for a 40-frame breathing-room hold (1.3 s) — emil "match motion
-to mood — closing should breathe." **Frame 2820:** R15 #4 stamp
+to mood — closing should breathe." **Frame 3150:** R15 #4 stamp
 *"OPERATION STATUS: FIELD-READY"* slaps onto the closing card
 (16-frame heavy slap; same envelope as R3 payoff stamp). **Frame
-2835:** R15 #5 slaps below R15 #4 — main line *"DRAFTED, RENDERED,
+3165:** R15 #5 slaps below R15 #4 — main line *"DRAFTED, RENDERED,
 AND SHIPPED BY AUTONOMOUS AGENTS."* + 30%-opacity subhead *"Honestly
 at this point we're just impressed."* (LOCKED at Unit 1.9; 8-frame
 standard slap — lighter envelope than R15 #4 to maintain hierarchy).
@@ -611,12 +611,12 @@ PENDLETON"* · sub *"DEBRIEF · STATUS UPDATE"* · divider *"—"* · footer
 *"02 / FIELD-READY"* (footer mutates EYES-ONLY → FIELD-READY mirroring
 the R15 #4 status arc). **Frame 2843:** final brass sting on music bed
 (60→100% ramp completes here); logo + R15 #4 + R15 #5 hold static.
-**Frame 2850:** hard cut to black. Full S06 composition in
+**Frame 3180:** hard cut to black. Full S06 composition in
 [`sample-eval/beat-sheet/briefing-room-comp.md`](sample-eval/beat-sheet/briefing-room-comp.md).
 
 **Audio:**
 
-- **VO (Dash, frame 2580, close):**
+- **VO (Dash, frame 2910, close):**
 
   > *"That's the briefing. Operation Pendleton is in your hands. Hold it tight."* <!-- @line: S06-close -->
 
@@ -633,17 +633,17 @@ the R15 #4 status arc). **Frame 2843:** final brass sting on music bed
 
   Bracket-tag treatment: `[deadpan]` leading. FFmpeg fade curve: qsin
   (per plan Step 7 phrasing-specific fade shape). R15 #4 stamp
-  *"OPERATION STATUS: FIELD-READY"* lands at frame 2820 (concurrent
-  with Phrasing audio tail). R15 #5 closing-card lands at frame 2835
+  *"OPERATION STATUS: FIELD-READY"* lands at frame 3150 (concurrent
+  with Phrasing audio tail). R15 #5 closing-card lands at frame 3165
   (post-audio).
 
 - **Music:** brass-bossa underscore climbs toward final beat, lands
   with the BURNED logo, fades during R15 #4 stamp; final sting tail
-  frames 2826–2850 (0.8s).
-- **R15 #4 (frame 2820):** *"OPERATION STATUS: FIELD-READY"* —
+  frames 3156–3180 (0.8s).
+- **R15 #4 (frame 3150):** *"OPERATION STATUS: FIELD-READY"* —
   subhead under BURNED logo, JetBrains Mono 700 32px,
   `--color-ochre-9` ink.
-- **R15 #5 (frame 2835, closing-card cold-decode — LOCKED 2026-05-18):**
+- **R15 #5 (frame 3165, closing-card cold-decode — LOCKED 2026-05-18):**
   Main line *"DRAFTED, RENDERED, AND SHIPPED BY AUTONOMOUS AGENTS."* —
   JetBrains Mono 700 32px (+50 tracking), `--color-ochre-9` ink. 30%-opacity
   subhead *"Honestly at this point we're just impressed."* — JetBrains
@@ -652,11 +652,11 @@ the R15 #4 status arc). **Frame 2843:** final brass sting on music bed
   *"…we're just impressed."*) — `"I'm"` → `"we're"` plural fold admits
   the autonomous-build collective speaker into the closing voice. 8-frame
   standard slap lands 15 frames after R15 #4's heavy slap; both hold
-  through the final 15 frames until hard cut to black at 2850.
+  through the final 15 frames until hard cut to black at 3180.
 
 **Voice:** Dash (Roger) sole. Two cues (close + Phrasing!).
 
-**Transition out:** hard cut to black at frame 2850. Both R15 #4 and
+**Transition out:** hard cut to black at frame 3180. Both R15 #4 and
 R15 #5 hold through the final 15 frames until cut.
 
 **Mobile safe square copy:** BURNED logo + R15 #4 + R15 #5 all centered
@@ -674,7 +674,7 @@ inside 1080×1080 central safe square.
 | Cold-open composition shape | `SpikeColdOpen` — 8s / 240 frames; two fast cuts (Janet portrait → Dash portrait, 1s each) → held BURNED landing card; logo at frame 60   | Phase 0 Unit 0.5 spike (`videos/trailer/sample-eval/spike/spike-results.md`)      |
 | R15 #1 stamp content        | `OPERATION PENDLETON / CASE FILE 02 / METHOD: AUTONOMOUS`                                                                                  | Phase 0 Unit 0.3 disposition                                                       |
 | S04 payoff line             | *"They WERE the operation."* (4 words, 60-frame window, 2.0 wps deadpan)                                                                  | Phase 1 plan deepening (DOC-REVIEW rewrite)                                       |
-| S05 scream line             | *"VEEEEEEEERAAAA!!!"* — Sterling-LANA four-axis shape, `[shouts]` tag prefix, lands at frame 2400                                         | Phase 0 Unit 0.6 (`videos/trailer/sample-eval/r5-scream/scream-eval.md`)          |
+| S05 scream line             | *"VEEEEEEEERAAAA!!!"* — Sterling-LANA four-axis shape, `[shouts]` tag prefix, lands at frame 2730                                         | Phase 0 Unit 0.6 (`videos/trailer/sample-eval/r5-scream/scream-eval.md`)          |
 | Tone register               | Played-straight Sterling-CODED + earned-Phrasing! mechanic (entendre setup required)                                                       | Phase 0 Unit 0.4 (`videos/trailer/sample-eval/tone/eval.md`)                      |
 | Composite viability         | All 5 integration points cleared (bare `<Series>`, `@remotion/media` audio, variable woff2, HTP scroll capture, Archer-grammar transitions) | Phase 0 Unit 0.5                                                                  |
 
@@ -696,13 +696,13 @@ machine contract is `src/lib/script.ts BURNED_TRAILER_LINES`.
 | **Total voiced** | **75.17 s**                                                    | **100 %**    |
 
 R4 target is **~90 % of voiced runtime**. **93.4 % clears the
-target.** Unvoiced surface (19.83 s of the 95.0 s total clock):
+target.** Unvoiced surface (30.83 s of the 106.0 s total clock — Tier-4 expansion 2026-05-22 absorbed S03 Sterling-read overrun primarily into longer voiced+pause time):
 gameplay audio carries S05 between cues, brass hook + R15 #1 stamp
 at S01 head, music duck + 1.0 s silent payoff hold at S04 tail,
 closing music sting tail at S06.
 
 R5 (scream cue) retained per Phase 0 Unit 0.6 close — Dash screams
-`VEEEEEEEERAAAA!!!` at frame 2400 in Sterling-CODED volume-discontinuous
+`VEEEEEEEERAAAA!!!` at frame 2730 in Sterling-CODED volume-discontinuous
 register. If a future revision elects R5-cut, drop the S05-scream
 Line; the test suite's "exactly one scream cue" assertion is on
 cueType not line-id.
@@ -748,10 +748,10 @@ Scene durations sum exactly to TOTAL_FRAMES (asserted by
 |----------|-----------|-------------|-----------|
 | S01 → S02 | Stamp slap | 200–210 (8 frames inside S01 tail, settling 2 frames into S02 head) | Cold-open closes with R15 #1 classification stamp; the stamp IS the transition. Slap settles into S02's briefing-room frame as the stamp peels back. |
 | S02 → S03 | Hard cut | 570 | Briefing → mission background is a "next slide" beat. Pendleton briefings cut. Archer briefing scenes typically cut. |
-| S03 → S04 | Dossier-page wipe | 1034–1050 (16 frames in S03 tail) | Mission Background ends on the deck-of-120 reveal; the dossier page turns and reveals the cascade. Honors the diegetic frame. Left-to-right reveal per page-peel metaphor (`clip-path: inset(0 0 0 0)` → `inset(0 0 0 100%)`). |
-| S04 → S05 | **Hard cut after 1.0s payoff hold** | 2040 | Replaces former cross-dissolve. Payoff stamp + VO land 1950–2010; visual freezes 2010–2040 (music at bed-only); hard cut to gameplay. Music ducks pre-anticipated ramp (1980–2010) so duck completes as VO ends. |
-| S05 → S06 | Iris wipe | 2535–2580 (45 frames in S05 tail) | Closing transition. Iris wipes the gameplay frame closed; briefing-room frame reestablishes underneath for the closing directive. Title-sequence-shape echo at trailer close. `clip-path: circle(70.7% at 50% 50%)` → `circle(0% at 50% 50%)` with `EASE_IN_OUT`. |
-| S06 → end | Hard cut to black | 2850 | The trailer ends. No "fade to black" — Archer hard-cuts to credits. |
+| S03 → S04 | Dossier-page wipe | 1364–1380 (16 frames in S03 tail) | Mission Background ends on the deck-of-120 reveal; the dossier page turns and reveals the cascade. Honors the diegetic frame. Left-to-right reveal per page-peel metaphor (`clip-path: inset(0 0 0 0)` → `inset(0 0 0 100%)`). |
+| S04 → S05 | **Hard cut after 1.0s payoff hold** | 2370 | Replaces former cross-dissolve. Payoff stamp + VO land 2280–2340; visual freezes 2340–2370 (music at bed-only); hard cut to gameplay. Music ducks pre-anticipated ramp (2310–2340) so duck completes as VO ends. |
+| S05 → S06 | Iris wipe | 2865–2910 (45 frames in S05 tail) | Closing transition. Iris wipes the gameplay frame closed; briefing-room frame reestablishes underneath for the closing directive. Title-sequence-shape echo at trailer close. `clip-path: circle(70.7% at 50% 50%)` → `circle(0% at 50% 50%)` with `EASE_IN_OUT`. |
+| S06 → end | Hard cut to black | 3180 | The trailer ends. No "fade to black" — Archer hard-cuts to credits. |
 
 ### Cross-dissolve REMOVED (DOC-REVIEW lock)
 
@@ -763,15 +763,15 @@ during deepening. Multi-agent consensus:
   footage. Hard cut after the 1.0s payoff visual hold is more
   shocking and more earned.
 - **Framework-docs:** `<TransitionSeries>` overlap math (`total =
-  sum - transitions`) would contradict timing.ts's declared 2850
+  sum - transitions`) would contradict timing.ts's declared 3180
   total. Dropping the cross-dissolve lets us use bare `<Series>`
   (UMB precedent).
 - **Adversarial:** The former cross-dissolve framing had 3 mutually-
   inconsistent claims about silence + VO + dissolve overlap.
-  Hard cut at 2040 after a clean 1.0s hold resolves all three.
+  Hard cut at 2370 after a clean 1.0s hold resolves all three.
 - **Best-practices:** Audio doesn't cross a dissolve for free; music
   needed explicit volume interpolation regardless. Hard cut + pre-
-  anticipated music duck completing at 2010 is cleaner.
+  anticipated music duck completing at 2340 is cleaner.
 
 ### Banned-transition list (style-only — architectural bans live above)
 

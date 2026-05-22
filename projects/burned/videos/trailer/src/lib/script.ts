@@ -127,7 +127,7 @@ export const BURNED_TRAILER_LINES: readonly Line[] = [
     },
   },
 
-  // ─── S03 Mission Background (570–1050) — two-segment construction ───
+  // ─── S03 Mission Background (570–1380) — two-segment construction ───
   {
     id: 'S03-roster',
     scene: 'S03',
@@ -148,7 +148,7 @@ export const BURNED_TRAILER_LINES: readonly Line[] = [
   {
     id: 'S03-deck',
     scene: 'S03',
-    frame: 870, // segment 1 ends ~frame 840 + 30-frame mid-wipe = 870
+    frame: 1007, // Tier-2/Tier-4 reauthor 2026-05-22: S03-roster actual ends at 977 + 30-frame mid-wipe = 1007 (was 870 pre-reauthor)
     voice: 'dash',
     text:
       'Mission: a deck of one hundred and twenty operations. [BEAT 0.4s] One ends your career instantly. [BEAT 0.3s] The rest help you survive. Or ensure your colleagues don\'t.',
@@ -163,11 +163,11 @@ export const BURNED_TRAILER_LINES: readonly Line[] = [
     },
   },
 
-  // ─── S04 Receipts Cascade w/ Stacked Payoff (1050–2040) — 8 cues ───
+  // ─── S04 Receipts Cascade w/ Stacked Payoff (1380–2370) — 8 cues ───
   {
     id: 'S04-cue-01',
     scene: 'S04',
-    frame: 1050, // S04 start; HTP dossier slides into hero position
+    frame: 1380, // S04 start; HTP dossier slides into hero position
     voice: 'dash',
     text: 'Operational planning.',
     cueType: 'list',
@@ -178,7 +178,7 @@ export const BURNED_TRAILER_LINES: readonly Line[] = [
   {
     id: 'S04-cue-02',
     scene: 'S04',
-    frame: 1110,
+    frame: 1440,
     voice: 'dash',
     text: 'Fourteen thousand pages of forensic dossiers.',
     cueType: 'list',
@@ -189,7 +189,7 @@ export const BURNED_TRAILER_LINES: readonly Line[] = [
   {
     id: 'S04-cue-03',
     scene: 'S04',
-    frame: 1200,
+    frame: 1530,
     voice: 'dash',
     text: 'Drafted at three AM, name redacted for compliance.',
     cueType: 'list',
@@ -205,7 +205,7 @@ export const BURNED_TRAILER_LINES: readonly Line[] = [
   {
     id: 'S04-stat-01',
     scene: 'S04',
-    frame: 1290, // stat 1 enters safe-square center-bottom
+    frame: 1620, // stat 1 enters safe-square center-bottom
     voice: 'dash',
     text: 'Mission rehearsal: fourteen hundred and seven contingencies war-gamed.',
     cueType: 'list',
@@ -216,7 +216,7 @@ export const BURNED_TRAILER_LINES: readonly Line[] = [
   {
     id: 'S04-stat-02',
     scene: 'S04',
-    frame: 1410,
+    frame: 1740,
     voice: 'dash',
     text: "Six of them, deliberately unrehearsed — the 'memorable ones.'",
     cueType: 'list',
@@ -227,7 +227,7 @@ export const BURNED_TRAILER_LINES: readonly Line[] = [
   {
     id: 'S04-stat-03',
     scene: 'S04',
-    frame: 1560,
+    frame: 1890,
     voice: 'dash',
     text: 'Seventeen asset illustrations. Five of them with hats.',
     cueType: 'list',
@@ -238,7 +238,7 @@ export const BURNED_TRAILER_LINES: readonly Line[] = [
   {
     id: 'S04-stat-04',
     scene: 'S04',
-    frame: 1680,
+    frame: 2010,
     voice: 'dash',
     text: "Seven on the roster. Six in the deck. One on the research budget. Don't ask.",
     cueType: 'list',
@@ -254,7 +254,7 @@ export const BURNED_TRAILER_LINES: readonly Line[] = [
   {
     id: 'S04-payoff',
     scene: 'S04',
-    frame: 1950, // R3 stacked-payoff stamp slap + Dash truth-collision
+    frame: 2280, // R3 stacked-payoff stamp slap + Dash truth-collision (Tier-4 shift +330 from 1950)
     voice: 'dash',
     text: 'They WERE the operation.',
     cueType: 'payoff',
@@ -266,15 +266,15 @@ export const BURNED_TRAILER_LINES: readonly Line[] = [
       engine: 'elevenlabs-v3',
       prefixTag: '[sarcastic]',
       notes:
-        "R3 stacked-payoff truth-collision. Music ducks 1980→2010 (30 frames, 90%→30%). 1.0s silent visual hold 2010-2040. Cascade chrome at 30% IS the visual antecedent of 'they' (per Unit 1.5 SHOWING-beats-TELLING).",
+        "R3 stacked-payoff truth-collision. Music ducks 2310→2340 (30 frames, 90%→30%). 1.0s silent visual hold 2340-2370. Cascade chrome at 30% IS the visual antecedent of 'they' (per Unit 1.5 SHOWING-beats-TELLING).",
     },
   },
 
-  // ─── S05 Gameplay Dissolve (2040–2580) — sparse VO ───
+  // ─── S05 Gameplay Dissolve (2370–2910) — sparse VO ───
   {
     id: 'S05-gameplay-vo',
     scene: 'S05',
-    frame: 2280,
+    frame: 2610,
     voice: 'dash',
     text: 'And — between you and me — they appear to be enjoying it.',
     cueType: 'sustained',
@@ -289,7 +289,7 @@ export const BURNED_TRAILER_LINES: readonly Line[] = [
   {
     id: 'S05-scream',
     scene: 'S05',
-    frame: 2400, // 200-frame-delayed reaction beat after clip-relative-160 BURNED-card-draw at absolute frame 2200
+    frame: 2730, // 200-frame-delayed reaction beat after clip-relative-160 BURNED-card-draw at absolute frame 2530 (Tier-4 shift +330)
     voice: 'dash',
     text: 'VEEEEEEEERAAAA!!!',
     cueType: 'scream',
@@ -306,11 +306,11 @@ export const BURNED_TRAILER_LINES: readonly Line[] = [
     },
   },
 
-  // ─── S06 Closing Directive (2580–2850) — 2 cues (close + Phrasing) ───
+  // ─── S06 Closing Directive (2910–3180) — 2 cues (close + Phrasing) ───
   {
     id: 'S06-close',
     scene: 'S06',
-    frame: 2580, // scene start — Dash launches close immediately
+    frame: 2910, // scene start — Dash launches close immediately
     voice: 'dash',
     text: "That's the briefing. Operation Pendleton is in your hands. Hold it tight.",
     cueType: 'payoff',
@@ -320,13 +320,13 @@ export const BURNED_TRAILER_LINES: readonly Line[] = [
       engine: 'elevenlabs-v3',
       prefixTag: '[sarcastic]',
       notes:
-        "'Hold it tight' is the entendre setup line for Phrasing! — physical-action ambiguity per spec §3.5 earned-Phrasing! mechanic. BURNED logo lands at frame 2780 (during this line, mid-clause).",
+        "'Hold it tight' is the entendre setup line for Phrasing! — physical-action ambiguity per spec §3.5 earned-Phrasing! mechanic. BURNED logo lands at frame 3110 (during this line, mid-clause).",
     },
   },
   {
     id: 'S06-phrasing',
     scene: 'S06',
-    frame: 2814, // S06-close ends at 2802 (+222 frames from 2580) + [BEAT 0.4s] = 12 frames pause + landing
+    frame: 3144, // S06-close ends at 3132 (+222 frames from 2910) + [BEAT 0.4s] = 12 frames pause + landing (Tier-4 shift +330)
     voice: 'dash',
     text: 'Phrasing.',
     cueType: 'payoff',
@@ -338,7 +338,7 @@ export const BURNED_TRAILER_LINES: readonly Line[] = [
       engine: 'elevenlabs-v3',
       prefixTag: '[excited]',
       notes:
-        "Interjective callback cadence — quick rise on 'Phra-', fall on '-sing.' (NOT the arrogant-briefer deadpan that suits the rest of Dash's cues). Resolver in elevenlabs.ts detects '[excited]' + voice='dash' and returns PHRASING_INTERJECTIVE_SETTINGS (stab 0.30 / style 0.65 / speed 1.05). FFmpeg fade curve: qsin (per plan Step 7). R15 #4 stamp 'OPERATION STATUS: FIELD-READY' lands at frame 2820 (concurrent with Phrasing audio tail). R15 #5 closing-card lands at frame 2835 (post-audio).",
+        "Interjective callback cadence — quick rise on 'Phra-', fall on '-sing.' (NOT the arrogant-briefer deadpan that suits the rest of Dash's cues). Resolver in elevenlabs.ts detects '[excited]' + voice='dash' and returns PHRASING_INTERJECTIVE_SETTINGS (stab 0.30 / style 0.65 / speed 1.05). FFmpeg fade curve: qsin (per plan Step 7). R15 #4 stamp 'OPERATION STATUS: FIELD-READY' lands at frame 3150 (concurrent with Phrasing audio tail). R15 #5 closing-card lands at frame 3165 (post-audio).",
     },
   },
 ] as const

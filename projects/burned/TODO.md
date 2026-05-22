@@ -7,7 +7,7 @@ the history. (Rule: `feedback-todo-is-not-a-diary.md`.)
 
 ## 1. Active priorities
 
-### Status (verified 2026-05-21 — Phase 2 Units 2.0-2.6 LANDED; intra-line beat stitch shipped)
+### Status (verified 2026-05-22 — Phase 2 Unit 2.7 Tier-2 + Tier-4 LANDED; trailer reauthored 95s→106s)
 
 - Tests: **1407 pass** | 6 expected fail (68/68 files green)
 - Trailer subpackage tests: **194 pass | 0 expected-fail** (8 files;
@@ -176,19 +176,49 @@ budget. Affected cues + per-cue disposition:
     great." 12.06s vs 6.0s (+101.1%) accepted as-is.
   - **S04-cue-03** — **Tier-2 rewrite LANDED 2026-05-22.** Shifted "Drafted
     on weekends, by a field asset — name redacted for compliance." →
-    "Drafted at three AM, name redacted for compliance." Autobiographical
-    3-AM beat lands the Sterling-briefing absurdity in budget without
-    losing punch. New actual 4.40s vs 3.0s budget (+46.7%, was +83.3%);
-    saved 1.1s. Residual deferred to Tier-3/4. Note: Eleven v3 read
-    Sterling-CODED at ~1.8 wps in practice — slower than Phase 1's
-    ~3 wps estimate for short list cues. Calibrate future word-budget
-    estimates against this.
-  - S04-stat-01 (+14.2%)
-  - S04-stat-02 (+1.3% OK)
-  - S05-gameplay-vo (-21.3% — runs FAST on this one)
-  - S06-close (-29.3% — also fast)
-  - S06-phrasing (+58.3% but Briggsy-locked at 0.63s)
-  - S04-payoff (+5.0% WARN)
+    "Drafted at three AM, name redacted for compliance." New actual 4.40s
+    vs 3.0s budget (+46.7%, was +83.3%); saved 1.1s.
+  - **Tier-4 TOTAL_FRAMES expansion LANDED 2026-05-22.** 2850 → 3180
+    (+330f / 95s → 106s). S03_END 1050 → 1380 (absorbs +319f Sterling-read
+    overrun + 11f cushion). S04/S05/S06 boundaries + STACKED_PAYOFF +
+    PAYOFF_VO_END + music-duck constants all shifted +330. script.ts
+    cue.frame for all S03-deck + S04+ + S05+ + S06+ cues shifted to match.
+    13 WAV files renamed to new frame-derived filenames. timing.test.ts
+    invariants re-asserted at new values. transitions.ts SCENE_TRANSITIONS
+    + comment refs updated. BEAT-SHEET.md largely synced (runtime header,
+    scene table, music cue table, S04 detailed beat table, R15 stamp
+    positions, all "frame NNNN" references). All Tier-2/Tier-4 residual
+    S04 list cluster (+10-18%) + S05/S06 undershoots are Tier-0 absorbed
+    by the expanded cascade flex (math: S04 +88f against S05 -32f + S06
+    -58f undershoots = net -2f flex absorbed).
+  - **Tier-0 absorb for S04 list cluster LOCKED 2026-05-22:** cue-02
+    (+17.8%), stat-01 (+14.2%), stat-03 (+10.8%), payoff (+5.0%) — all
+    accepted; cumulative net absorbed by S05/S06 undershoots.
+  - S04-stat-02 (+1.3% OK) — Tier-0 trivially.
+  - S05-gameplay-vo (-21.3% — runs FAST; provides cascade flex).
+  - S05-scream (+44%) — by design, skipSilenceremove preserves
+    Sterling-LANA tail.
+  - S06-close (-29.3% — provides closing-card breathing room).
+  - S06-phrasing (+58.3% but Briggsy-locked at 0.63s).
+
+  **Remaining Unit 2.7 work:**
+  - Aux-doc Tier-4 sync follow-up (deferred this commit due to Edit-tool
+    Read-first requirement burning context): `briefing-room-comp.md`,
+    `cascade-composition.md`, `music-sourcing.md`, `script-word-count.md`
+    in `videos/trailer/sample-eval/beat-sheet/` ALL still reference old
+    pre-Tier-4 frame numbers throughout. Mechanical sweep: shift every
+    S03_END/S04+/S05+/S06+ frame by +330 (or by +137 for S03-deck
+    specifically); shift STACKED_PAYOFF (1950→2280), PAYOFF_VO_END
+    (2010→2340), music-duck (1980→2310). Read each file first then
+    batch Edit. ~30 mechanical edits per file. No test impact; pure
+    doc-drift. Map: 1050→1380, 1110→1440, 1200→1530, 1290→1620,
+    1410→1740, 1560→1890, 1680→2010, 1860→2190, 1950→2280, 1980→2310,
+    2010→2340, 2040→2370, 2535→2865, 2580→2910, 2790→3120, 2820→3150,
+    2826→3156, 2835→3165, 2850→3180, 2400→2730, 2780→3110.
+  - `phase-1-reconciliation-signoff.txt` sentinel + N≥2 listener panel
+    (Briggsy + Harry minimum per plan §R2). N=1 (Briggsy-only) until
+    Harry can listen.
+
 Phase 2 plan §Unit 2.7 ladder: Tier 0 absorb / Tier 1 Phase 2 regen
 with pacing-adjusted steering / Tier 2 Phase 1 line-trim (reopen) /
 Tier 3 Phase 1 timing.ts adjustment / Tier 4 TOTAL_FRAMES adjustment.

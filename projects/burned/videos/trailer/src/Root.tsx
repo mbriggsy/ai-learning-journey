@@ -112,9 +112,11 @@ export const Root: React.FC = () => {
       {/* Fast-iteration window for the S04 load-bearing payoff (amendment SA-2).
           Frames S04_PEAK_START..S04_PEAK_END absolute = scene-relative 600..990
           within S04 (cascade-build tail + peak + STACKED_PAYOFF_FRAME stamp
-          slap + payoff hold + tail fade overlay window). The
-          `scenePreviewStartFrame` prop is plumbing for Unit 4.5 — skeletal S04
-          accepts but does not yet honor it. */}
+          slap + payoff hold + tail fade overlay window). S04 consumes
+          `scenePreviewStartFrame` as SCENE-RELATIVE (per plan body line 2324)
+          via <Sequence from={-scenePreviewStartFrame}>. Unit 4.1 skeleton
+          passed S04_PEAK_START (absolute 1980) by mistake — fixed Unit 4.5
+          to pass the scene-relative offset (600). */}
       <Composition
         id="PreviewS04Peak"
         component={S04_ReceiptsCascade}
@@ -122,7 +124,7 @@ export const Root: React.FC = () => {
         fps={FPS}
         width={WIDTH}
         height={HEIGHT}
-        defaultProps={{ scenePreviewStartFrame: S04_PEAK_START }}
+        defaultProps={{ scenePreviewStartFrame: S04_PEAK_START - S04_START }}
       />
 
       {/* === Phase 0/4 spike compositions — regression registrations ===

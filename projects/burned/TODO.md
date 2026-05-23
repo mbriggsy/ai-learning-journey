@@ -7,27 +7,17 @@ the history. (Rule: `feedback-todo-is-not-a-diary.md`.)
 
 ## 1. Active priorities
 
-### Current state (verified 2026-05-22)
+### Current state (verified 2026-05-23)
 
 - Tests: **1407 pass** | 6 expected fail (68/68 files green)
-- Trailer subpackage tests: **220 pass | 0 expected-fail** (11 files;
-  script-coverage drift gate green — every cue has a WAV, 16/16;
-  card-roster drift gates green — 17/17 webps in sync; new
-  COLD_OPEN_CARDS_DISPLAY_ORDER pin (Janet → Dash → Neal per Unit 4.2);
-  visual-manifest drift gates green — every Path B asset in
-  manifest, every manifest entry on disk;
-  audio-manifest drift gate Unit 4.1 — every cue staticPath
-  resolves to a real file at `<BURNED>/public/trailer/audio/lines/<f>`,
-  every staticPath prefixed `trailer/audio/lines/` per ADR #15)
+- Trailer subpackage tests: **220 pass | 0 expected-fail** (11 files)
 - Typecheck: clean (`pnpm typecheck` root + `videos/trailer/`)
 - Phone player entry: **19.17 KB gz**
 - DramaOverlay lazy chunk: **2.34 KB gz**
-- HOW-TO-PLAY bundle: `howtoplay-*.js` **33.90 KB gz** + `howtoplay-*.css`
-  **10.68 KB gz** + shared GSAP chunk **27.21 KB gz**
+- HOW-TO-PLAY bundle: `howtoplay-*.js` **33.90 KB gz** + shared GSAP **27.21 KB gz**
 - Protocol version: **v6**
 - Trailer runtime: **3180f / 106s @ 30fps** (TOTAL_FRAMES)
-- Phase 2 ElevenLabs spend: **$0.87 / $50** ceiling (residual budget
-  available for any Phase 3+ regen)
+- Phase 2 ElevenLabs spend: **$0.87 / $50** ceiling
 
 ### Origin trailer
 
@@ -164,6 +154,167 @@ stills at frames 0/60/120/240/359. Pending Briggsy-eye sentinel
 `briggsy-review-4.3.signoff`.
 
 **Unit 4.4 — COMPLETED 2026-05-23 (R3, post-redo).** R1 HARD ZERO (vertical thumbnail column) → R2 (cascade with bigger cards, Briggsy flagged dead time) → R3 (VO-beat-aligned across full 27s, "lock it"). Verification doc at `videos/trailer/sample-eval/composite-build/s03-archer-test.md`. Briggsy-eye sentinel `briggsy-review-4.4.signoff` written. Cards now `OperativeCardFrame` at scale 0.45 (360×450) in diagonal cascade spanning full canvas; cascade entries restagger to land while Dash narrates ("Our autonomous field assets infiltrated the contract last quarter"); Otto-aside lands at rel 110 ("Seven operatives in the active roster"); Agent X spotlight pulse + paperwork marginalia ("// FILE: [REDACTED]  // PAPERWORK: 0") land during the "refuses to file any paperwork" beat; new `DeckStack` component (stack-of-3 card-backs + "120" badge + "// OPERATIONS" subtitle, archerStampSlap('payoff') envelope) lands at rel 437 with "Mission: a deck of one hundred and twenty operations"; new `BurnedCardReveal` component (burned.webp 440×440 with LOGO_SPRING_COLD spring + burned-fire multi-shadow glow + fade-out hook) lands dead-center at rel 540 with "One ends your career instantly"; cascade subtle "awkward lean" (scale +0.02 / rotate +1° triangle envelope) at rel 650-720 carries the dark-sting "Or ensure your colleagues don't"; BURNED fades 700-740 so cascade re-emerges for closing. Render evidence: `out/s03-mission-background.mp4` (7.5 MB, H264 CRF 18) + `out/s03-with-audio.mp4` (FFmpeg-muxed VO #1+#2 review-only build) + key stills at frames 90/130/220/460/580/680/750.
+
+**Unit 4.5 — IN-FLIGHT (R1 audio-overtalk caught 2026-05-23).** Load-bearing
+S04 cascade scene wired with 4 NEW components: `HtpDossierHero` (htp-fullpage.png
+scroll, 900×1080 viewport, scroll range 8224px = renderedH 9304 − viewportH 1080,
+slide-in EASE_DRAWER_FN, opacity drop 660-900 to 0.5 for focal hand-off),
+`CardArtHalo` (6 operatives at right-edge column x=1560-1880 per
+cascade-halo-column.json; 40% opacity ceiling; 2-frame stagger; Agent X
+inline redact-bar), `GoofyStatCaption` (Clash Display 700 cap + Clash Display
+500 italic over classification-bar backdrop with burned-fire left border;
+asymmetric envelope land+6f / hold / exit-12f→exit decay to 30% chrome —
+single 4-point interpolate), `S04TailFadeToBlack` (15f black overlay rel
+975-990). Scene orchestrator at `src/scenes/S04_ReceiptsCascade.tsx` consumes
+`scenePreviewStartFrame` via `<Sequence from={-scenePreviewStartFrame}>` for
+PreviewS04Peak fast-iteration; Unit 4.1 Root.tsx skeleton bug fixed (was
+passing S04_PEAK_START absolute 1980 instead of scene-relative 600).
+Composition order: BriefingRoomBackground → HtpDossierHero → CardArtHalo →
+4× GoofyStatCaption → 3× CommsTicker Sequences (idle 0-630 / pulse override
+"OPERATIVE [REDACTED] — METHOD REPEATABLE" 630-870 / idle 870-990) →
+R15Stamp variant='payoff' rel 900 with stamp-3-asset-delivered SVGs +
+cream-12 paper plate → S04TailFadeToBlack 975-990. Render evidence:
+`out/s04-receipts-cascade.mp4` (26 MB silent) + `out/s04-with-audio.mp4`
+(25 MB, 8 VO cues muxed at script.ts startFrames).
+
+R1 BLOCKER: Briggsy ear-checked the muxed review build and called: "the
+vo sections - need a lil pause between them they almost over talk each
+other." Diagnosed as a Phase 2 carry-forward — VO actualFrames overran
+script.ts expectedFrames slots; cumulative overlap across cues 2-7 is
+~90 frames in the master render too (not just review-mux artifact).
+Briggsy chose the elite path: source-level fix in script.ts startFrames
++ rename WAVs + re-time S04 visuals + update timing.ts constants. R2
+deferred to next session.
+
+## Unfinished Fix — Unit 4.5 R2 audio re-pace (NEXT SESSION)
+
+**Diagnosis (caught 2026-05-23):**
+Phase 2 generated S04 VO WAVs longer than their `expectedFrames` budgets
+in `script.ts`. Per cue (actualFrames vs expectedFrames):
+
+| cue | text | expected | actual | overrun |
+|---|---|---|---|---|
+| S04-cue-01 ("Operational planning.") | 60 | 55 | -5 (under) |
+| S04-cue-02 ("Fourteen thousand pages…") | 90 | 106 | +16 |
+| S04-cue-03 ("Drafted at three AM…") | 90 | 132 | +42 (worst) |
+| S04-stat-01 ("Mission rehearsal…") | 120 | 137 | +17 |
+| S04-stat-02 ("Six of them…") | 150 | 152 | +2 |
+| S04-stat-03 ("Seventeen asset illustrations…") | 120 | 133 | +13 |
+| S04-stat-04 ("Seven on the roster…") | 180 | 174 | -6 (under) |
+| S04-payoff ("They WERE the operation.") | 60 | 63 | +3 |
+
+The current script.ts startFrames were chosen against expectedFrames;
+the recorded WAVs now overlap their neighbors. Cumulative overlap
+across cues 2-7 ≈ 90 frames (3.0s). The master render reproduces this
+over-talk — it's NOT a review-mux artifact.
+
+**Prescription (elite source fix, ~30 min + render time):**
+
+1. **New S04 absolute startFrames** (5-frame gap between cues 1-7,
+   cue 8 lands 5f after cue 7 ends):
+
+   | cue | old frame | new frame | shift |
+   |---|---|---|---|
+   | S04-cue-01 | 1380 | 1380 | 0 |
+   | S04-cue-02 | 1440 | 1440 | 0 |
+   | S04-cue-03 | 1530 | 1551 | +21 |
+   | S04-stat-01 | 1620 | 1688 | +68 |
+   | S04-stat-02 | 1740 | 1830 | +90 |
+   | S04-stat-03 | 1890 | 1987 | +97 |
+   | S04-stat-04 | 2010 | 2125 | +115 |
+   | S04-payoff | 2280 | 2304 | +24 |
+
+   Cue 8 (payoff) ends at 2304+63 = 2367; S04_END = 2370. Final 3
+   frames silent. Tail-fade `S04TailFadeToBlack` at rel 975-990 (=
+   abs 2355-2370) — last 12 frames of payoff VO play through the
+   fade-to-black, which reads cinematically (audio carries through
+   the close).
+
+2. **Files to edit (in this order):**
+
+   a. `src/lib/script.ts` lines 192/208/219/230/241/257 — update
+      `frame:` values per table above. Keep all other fields (text,
+      cueType, expectedFrames, cadenceAdapter, etc.) unchanged.
+
+   b. Rename WAV files + `.processed` sidecars (12 files):
+      ```
+      cd public/trailer/audio/lines
+      for old new in \
+        1530:1551 1620:1688 1740:1830 1890:1987 2010:2125 2280:2304; do
+        mv s04-cue-${old}-dash.wav s04-cue-${new}-dash.wav
+        mv s04-cue-${old}-dash.wav.processed s04-cue-${new}-dash.wav.processed
+      done
+      ```
+      (PowerShell variant if bash is unavailable; the old + new lists
+      are 1530/1620/1740/1890/2010/2280 → 1551/1688/1830/1987/2125/2304.)
+
+   c. `pnpm generate:manifest` — regenerates `src/lib/audio-manifest.ts`
+      against the renamed WAVs + new script.ts frames.
+
+   d. `src/lib/timing.ts`:
+      - `STACKED_PAYOFF_FRAME = 2280` → `2304`
+      - `PAYOFF_VO_END_FRAME = 2340` → `2367`
+      - `PAYOFF_MUSIC_DUCK_START_FRAME` calc unchanged (still
+        PAYOFF_VO_END_FRAME − 30 = 2337)
+      - `PAYOFF_MUSIC_DUCK_END_FRAME` calc unchanged (still =
+        PAYOFF_VO_END_FRAME = 2367)
+      - `PAYOFF_HOLD_FRAMES = 30` → `3` (only 3f silent hold remains
+        before S05_START; the fade-to-black happens DURING the last
+        12f of payoff VO, not after)
+
+   e. `src/lib/timing.test.ts` lines 70-80 — update assertions to
+      match new values (2304/2367/3). The PAYOFF_HOLD_FRAMES=3 line
+      may need a comment update explaining the audio-through-fade
+      design.
+
+   f. `src/scenes/S04_ReceiptsCascade.tsx` — re-time visual landings
+      to match new audio start times (scene-relative):
+      - Stat 1 landFrame: 240 → 308 (matches VO #4 start)
+      - Stat 1 exitFrame: 360 → 450
+      - Stat 2 landFrame: 360 → 450
+      - Stat 2 exitFrame: 510 → 607
+      - Stat 3 landFrame: 510 → 607
+      - Stat 3 exitFrame: 630 → 745
+      - Stat 4 landFrame: 630 → 745
+      - Stat 4 exitFrame: 810 → 925
+      - CardArtHalo startFrame: 510 → 607
+      - HTP scrollTo: 630 → 745 (extends scroll to match audio cadence)
+      - HTP opacityDropFromFrame: 660 → 850
+      - HTP opacityDropToFrame: 900 → 924
+      - R15Stamp landFrame: 900 → 924
+      - Ticker pulse Sequence: from={630} duration={240} → from={745}
+        duration={180}
+      - Idle ticker bookend sequences: split at 0-744 and 925-989
+      - TailFade startFrame: unchanged at 975
+
+3. **Verification gates:**
+   - `pnpm typecheck` clean (root + videos/trailer)
+   - `pnpm test` — 220/220 trailer tests pass (timing.test.ts updates)
+   - Render frame stills at rel 308/450/607/745/924/980 to eyeball
+     beats land with new positions
+   - `pnpm render:s04` (or add to package.json scripts — currently
+     missing; can run `npx remotion render src/index.ts
+     PreviewS04ReceiptsCascade out/s04-receipts-cascade.mp4 --codec
+     h264 --crf 18` directly)
+   - FFmpeg-mux audio review build with cue offsets = script.ts
+     startFrames − S04_START (in ms): 0/2000/5700/10267/15000/20233/
+     24833/30800. Reuse the 8-input filter_complex from the prior
+     mux command, just update the `adelay` values.
+   - Briggsy ear-check; signoff `briggsy-review-4.5.signoff` when
+     pauses land cleanly.
+
+4. **Insight to capture at session end** (after R2 lands): "Phase 2
+   actualFrames vs expectedFrames drift creates over-talk when
+   scene cue startFrames are spaced against expectedFrames budgets."
+   Same family as insight #061 enumeration decay. Carry-forward: any
+   future scene assembly should derive cue startFrames from
+   actualFrames + buffer, NOT from expectedFrames slots.
+
+**Files NOT to touch:**
+- `cascade-halo-column.json` — Phase 1 lock; halo geometry unchanged
+- `cascade-halo-column.json` `haloStartFrame: 1560` — stale value the
+  scene already overrides via the `startFrame` prop. Leave the JSON
+  as-is (Phase 1 archaeological record).
 
 **Phase 2 carry-forwards → Phase 3+** (stitch / silenceremove
 generalizations):

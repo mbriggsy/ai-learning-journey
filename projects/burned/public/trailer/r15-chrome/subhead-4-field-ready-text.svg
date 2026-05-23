@@ -1,0 +1,12 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 800 60"
+     role="img" aria-label="OPERATION STATUS: FIELD-READY"
+     style="--ink: var(--color-ochre-9, #947226)">
+  <!--
+    R15 #4 closing subhead — TEXT LAYER. CHROME tier.
+    Phase 1 Unit 1.9 locked copy. Status-grammar (not origin-claim).
+  -->
+  <text x="400" y="40" text-anchor="middle"
+        font-family="'JetBrains Mono', 'IBM Plex Mono', 'Courier New', monospace"
+        font-weight="700" font-size="32"
+        fill="var(--ink)" letter-spacing="4.8">OPERATION STATUS: FIELD-READY</text>
+</svg>

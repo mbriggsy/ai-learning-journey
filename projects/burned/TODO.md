@@ -50,10 +50,12 @@ column geometry + bidirectional drift tests), Unit 3.3 (briefing-
 room set-dressing — 4 NEW SVGs at `public/trailer/briefing-room/`:
 venetian-blinds, depth-plane Option A brass nameplate, dossier-
 folder-closed, dossier-folder-open + reference-render capture script
-+ consolidated `asset-inventory.md`; $0 Imagen spend). Remaining:
-3.4 R15 chrome stamps (SPLIT-LAYER) · 3.5 music bed procurement ·
-3.6 cold-open title-sequence assets · 3.7 visual manifest +
-PHASE-3-EXIT.md hand-off.
++ consolidated `asset-inventory.md`; $0 Imagen spend), Unit 3.4
+(R15 chrome stamps SPLIT-LAYER — 8 SVGs at `public/trailer/r15-
+chrome/` for 4 R15 instances × frame + text + CVD probe script,
+all 6 ink/bg pairs clear STRICT 0.10 oklab floor under deuter/prot/
+trit). Remaining: 3.5 music bed procurement · 3.6 cold-open title-
+sequence assets · 3.7 visual manifest + PHASE-3-EXIT.md hand-off.
 
 **Phase 2 carry-forwards → Phase 3+** (stitch / silenceremove
 generalizations):

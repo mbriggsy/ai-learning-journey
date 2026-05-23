@@ -3186,7 +3186,33 @@ NOT gating. Automated exit conditions unblock Unit 3.4.
 
 ### Unit 3.4 — R15 Chrome Stamps (SPLIT-LAYER for Phase 4 stamp-slap)
 
-- [ ] **Unit 3.4: R15 Chrome Stamps**
+- [x] **Unit 3.4: R15 Chrome Stamps** — landed 2026-05-22. 8 SVGs
+  shipped to `public/trailer/r15-chrome/` (4 instances × frame +
+  text split-layer): stamp-1-operation-pendleton, ticker-2-method-
+  repeatable, stamp-3-asset-delivered (HERO), subhead-4-field-ready.
+  Identity-space SVGs — Phase 4 owns rotation + stamp-slap scale via
+  wrapping `<AbsoluteFill>`. CVD probe shipped at
+  `videos/trailer/scripts/probe-r15-chrome-cvd.ts`
+  (`pnpm tsx videos/trailer/scripts/probe-r15-chrome-cvd.ts`) — all
+  6 ink/background pairs clear STRICT floor 0.10 oklab distance under
+  deuter/prot/trit sims. Inventory R15 section appended to
+  `asset-inventory.md` with the full pair-distance table for future
+  re-runs.
+
+  **Plan-vs-reality drifts caught during execution:**
+  - Step 5b CVD pair list cited `cream-3 #e6d5a9` and `charcoal-12
+    #1a1812`. Actual palette tokens (per primitives.css): cream-3 =
+    `#252016`, charcoal-12 = `#f1ebdc`, charcoal-3 = `#1a1812`.
+    Probe re-derived using real tokens (insight #061: derive from
+    source, never transcribe). Pair semantics preserved: paper-cream
+    variants use cream-11 + cream-12; ticker bg uses charcoal-3.
+  - Per-stamp design elevated from plan starter where the bare-
+    rectangle starters were AI-slop-adjacent: #1 + #3 ship double
+    borders, #3 ships 4 corner bracket marks (institutional
+    classification-file iconography), #2 ships sunken-strip sheen +
+    chevron bookends, #4 ships minimal underline + flank ticks. All
+    elevations preserve the split-layer constraint (no rotation, no
+    scale baked into the SVGs — Phase 4 owns motion).
 
 **Goal:** Produce the 4 R15 on-screen text signal assets per Unit
 1.9's locked copy. **Each as TWO SVG files (frame + text) so Phase 4

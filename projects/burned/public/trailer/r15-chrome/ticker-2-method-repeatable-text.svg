@@ -1,0 +1,17 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1920 40"
+     preserveAspectRatio="none"
+     role="img" aria-label="OPERATIVE [REDACTED] — METHOD REPEATABLE"
+     style="--ink: var(--color-ochre-9, #947226)">
+  <!--
+    R15 #2 comms-ticker — TEXT LAYER. CHROME tier.
+    Phase 1 Unit 1.9 locked copy.
+
+    Phase 4 may apply `translateX(<offset>px)` to the wrapping element
+    for scrolling-ticker effect at the cascade peak. Text layer in
+    identity space; Phase 4 owns motion.
+  -->
+  <text x="960" y="28" text-anchor="middle"
+        font-family="'JetBrains Mono', 'IBM Plex Mono', 'Courier New', monospace"
+        font-weight="500" font-size="22"
+        fill="var(--ink)" letter-spacing="3.2">OPERATIVE [REDACTED] — METHOD REPEATABLE</text>
+</svg>

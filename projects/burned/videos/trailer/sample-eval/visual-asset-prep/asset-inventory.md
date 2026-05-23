@@ -100,7 +100,94 @@ remove the brass element, recontextualize as additional dossiers.
 
 ## Unit 3.4 — R15 Chrome Stamps (SPLIT-LAYER)
 
-*Pending Unit 3.4 execution.*
+### R15 chrome inventory (Path B vector SVGs at `public/trailer/r15-chrome/`)
+
+Each instance ships as TWO SVG files (frame + text) per Phase 4 stamp-
+slap motion constraint — Phase 4 wraps both layers in an `<AbsoluteFill
+style={{ transformOrigin: 'center', transform: 'rotate(…) scale(…)' }}>`
+so the rotation/scale-slap geometry pivots from a single point. A
+monolithic SVG with baked rotation would force scale onto the pre-
+rotated raster bbox and break Phase 1 Unit 1.4's overshoot perception.
+
+| Instance | Frame | Copy | Files | Dimensions | Ink token | Tier |
+|---|---|---|---|---|---|---|
+| #1 Classification stamp | 150 (S01) | OPERATION PENDLETON / CASE FILE 02 / METHOD: AUTONOMOUS | `stamp-1-operation-pendleton-{frame,text}.svg` | 800×240 viewBox | `--color-ochre-9` (#947226) | CHROME |
+| #2 Comms ticker pulse | 1680 (S04) | OPERATIVE [REDACTED] — METHOD REPEATABLE | `ticker-2-method-repeatable-{frame,text}.svg` | 1920×40 viewBox | `--color-ochre-9` on `--color-charcoal-3` (#1a1812) strip | CHROME |
+| #3 Stacked-payoff stamp | 1950 (S04) | AUTONOMOUS FIELD UNIT — ASSET DELIVERED | `stamp-3-asset-delivered-{frame,text}.svg` | 1200×280 viewBox | `--color-burned-fire` (#be2e27) | **HERO** |
+| #4 Closing subhead | 2820 (S06) | OPERATION STATUS: FIELD-READY | `subhead-4-field-ready-{frame,text}.svg` | 800×60 viewBox | `--color-ochre-9` | CHROME |
+
+**Design elevations from plan starter:**
+
+- **#1** ships double border (outer 6px + inner hairline 1.5px at 0.78 opacity, 14px inset) — sells "official rubber-stamp" vocabulary over plain rectangle. 3rd line ("METHOD: AUTONOMOUS") weighted 800/32px vs the 700/28px stack above so the decode hook lands heaviest.
+- **#2** strip uses vertical sheen gradient (#1a1812 top/bottom, #0f0d09 middle) so the strip reads as inset/sunken into the dark surface. Hairline ochre rules at y=0 and y=38.5 + double-chevron bookends in the margins (left `>>`, right `<<`) establish dispatch-ticker vocabulary.
+- **#3** (HERO) ships double border (outer 8px + inner 2px at 0.82 opacity, 18px inset) PLUS 4 corner bracket marks — institutional classification-file iconography. Ink-bleed parameters bumped from plan's `scale="4"` to `scale="4.8"` for more aggressive edge-roughening at HERO weight; eye-loop verified reads as hand-stamped not CSS-noise. ASSET DELIVERED line weighted 800/46px (was plan's 700/42px) to land the payoff verb harder.
+- **#4** frame ships minimal — hairline underline at 0.42 opacity flanked by two short tick marks at 0.56 opacity. Phase 4 may hide the rule via opacity if it competes with the BURNED logo above.
+
+**Phase 4 composition pattern:**
+
+```tsx
+<AbsoluteFill style={{
+  transformOrigin: 'center',
+  transform: `rotate(${tilt}deg) ${scaleSlap(frame)}`,
+}}>
+  <Img src={staticFile(`trailer/r15-chrome/${slug}-frame.svg`)} />
+  <Img src={staticFile(`trailer/r15-chrome/${slug}-text.svg`)} />
+</AbsoluteFill>
+```
+
+Rotations per instance: #1 = -8°; #2 = 0° (ticker is axis-aligned); #3 = -3°; #4 = 0°. `scaleSlap(frame)` interpolates Phase 1 Unit 1.4 lock (0.95 → 1.04 overshoot → 1.0 settle); heavier 16-frame slap on #3 per the HERO payoff weight.
+
+**CVD verification (insight #051):**
+
+Probe script `videos/trailer/scripts/probe-r15-chrome-cvd.ts` clears
+all 6 ink/background pairs against the STRICT floor 0.10 oklab
+distance under deuter / prot / trit deficiency simulations.
+
+| Pair | Normal | Deuter | Prot | Trit | Min | Verdict |
+|---|---|---|---|---|---|---|
+| ochre-9 on cream-12 (fresh paper) | 0.375 | 0.370 | 0.391 | 0.369 | 0.369 | PASS |
+| ochre-9 on cream-11 (aged paper)  | 0.255 | 0.250 | 0.270 | 0.250 | 0.250 | PASS |
+| ochre-9 on charcoal-3 ticker      | 0.373 | 0.380 | 0.352 | 0.380 | 0.352 | PASS |
+| burn-fire on cream-12             | 0.445 | 0.489 | 0.571 | 0.404 | 0.404 | PASS |
+| burn-fire on cream-11             | 0.334 | 0.368 | 0.448 | 0.302 | 0.302 | PASS |
+| ochre-9 on cream-12 closing       | 0.375 | 0.370 | 0.391 | 0.369 | 0.369 | PASS |
+
+Narrowest pair: ochre-9 on cream-11 at 0.250 (2.5× floor). HERO #3
+burn-fire/cream-12 hits 0.404 — strong contrast for the trailer's
+load-bearing visual stamp. Re-run probe if R15 ink palette ever
+amends: `pnpm tsx videos/trailer/scripts/probe-r15-chrome-cvd.ts`.
+
+**Plan-vs-reality drift caught during execution (insight #061):**
+
+Phase 3 plan §Unit 3.4 Step 5b CVD pair list cited
+`cream-3 #e6d5a9` and `charcoal-12 #1a1812`. Actual palette tokens
+per `src/client/shared/tokens/palette.generated.ts` + `primitives.css`:
+`cream-3 = #252016`, `charcoal-12 = #f1ebdc`, `charcoal-3 = #1a1812`.
+The plan transcribed snapshot values that drifted from
+post-deepening palette state. Probe re-derived from real source:
+ochre-9 / burn-fire on `cream-11 + cream-12` (paper variants) +
+`charcoal-3` (ticker bg). Insight #061's catch shape: never transcribe
+the plan's enumeration; derive from the canonical source at
+execution time.
+
+**Token isolation under Img-loaded SVGs:**
+
+SVG `<style>` blocks define `--ink: var(--color-<token>, #<hex>)` at
+the root element. The CSS-isolated Img-loaded SVG can't reach Phase 4's
+parent custom-property scope, so the fallback hex resolves —
+self-contained file that still documents the token name in source.
+Child elements consume `fill="currentColor"` (inside a `<g style="color:
+var(--ink)">`) or `fill="var(--ink)"` directly.
+
+**Font fallback chain:**
+
+Every text element declares `font-family="'JetBrains Mono', 'IBM Plex
+Mono', 'Courier New', monospace"`. Remotion `<Img>`-loaded SVGs do not
+inherit `useFonts()`-registered fonts (CSS isolation); Phase 4 may
+pivot to inline-SVG rendering OR per-weight static subsets if the
+generic-mono fallback reads wrong in MP4 export. Flagged in plan
+Step 5 framework-docs unresolved spike. Dev/preview renders use the
+generic-mono fallback cleanly.
 
 ---
 

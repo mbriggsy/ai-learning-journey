@@ -1,0 +1,28 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 800 60"
+     role="presentation" aria-hidden="true"
+     style="--ink: var(--color-ochre-9, #947226)">
+  <!--
+    R15 #4 closing subhead — FRAME LAYER. CHROME tier.
+    S06 frame 2820 — sits under the BURNED logo on the closing card.
+
+    Phase 1 Unit 1.9 R15 #4 lock — copy was "AGENT-BUILT, ARCHER-GRADE"
+    → "OPERATION STATUS: FIELD-READY" (status grammar differentiates
+    from #3's origin-claim per Step 1 deepening note).
+
+    Frame is intentionally minimal — closing subhead is typographic
+    not ornamental. Faint underline rule (40% opacity) flanked by two
+    short tick marks. Phase 4 may hide the rule via opacity if it
+    competes with the BURNED logo above.
+  -->
+  <g style="color: var(--ink)">
+    <!-- Center underline rule -->
+    <line x1="180" y1="52" x2="620" y2="52"
+          stroke="currentColor" stroke-width="1.4" opacity="0.42" />
+    <!-- Left tick -->
+    <line x1="160" y1="48" x2="160" y2="56"
+          stroke="currentColor" stroke-width="1.4" opacity="0.56" />
+    <!-- Right tick -->
+    <line x1="640" y1="48" x2="640" y2="56"
+          stroke="currentColor" stroke-width="1.4" opacity="0.56" />
+  </g>
+</svg>

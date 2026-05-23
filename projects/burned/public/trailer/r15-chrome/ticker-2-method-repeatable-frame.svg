@@ -1,0 +1,37 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1920 40"
+     preserveAspectRatio="none" role="presentation" aria-hidden="true">
+  <!--
+    R15 #2 comms-ticker — FRAME LAYER. CHROME tier.
+    S04 frame 1680 bottom-strip ticker. Phase 4 may animate
+    translateX on the text layer for scrolling effect.
+
+    Charcoal-3 (#1a1812) background with ochre-9 hairline rules top
+    and bottom — establishes "dispatch ticker / CRT strip" vocabulary.
+    Plan called this "charcoal-12" but the actual token at #1a1812 is
+    charcoal-3 (insight #061: derive hex from primitives.css source).
+  -->
+  <defs>
+    <linearGradient id="tickerSheen" x1="0" y1="0" x2="0" y2="1">
+      <stop offset="0%"   stop-color="#1a1812" />
+      <stop offset="50%"  stop-color="#0f0d09" />
+      <stop offset="100%" stop-color="#1a1812" />
+    </linearGradient>
+  </defs>
+  <!-- Strip body with subtle vertical sheen (top + bottom darker than middle is wrong;
+       middle slightly darker reads as inset / sunken) -->
+  <rect x="0" y="0" width="1920" height="40" fill="url(#tickerSheen)" />
+  <!-- Top hairline ochre rule -->
+  <rect x="0" y="0" width="1920" height="1.5" fill="#947226" opacity="0.82" />
+  <!-- Bottom hairline ochre rule -->
+  <rect x="0" y="38.5" width="1920" height="1.5" fill="#947226" opacity="0.82" />
+  <!-- Left margin chevron bookend -->
+  <path d="M 18 14 L 26 20 L 18 26"
+        fill="none" stroke="#947226" stroke-width="1.5" stroke-linejoin="round" opacity="0.74" />
+  <path d="M 30 14 L 38 20 L 30 26"
+        fill="none" stroke="#947226" stroke-width="1.5" stroke-linejoin="round" opacity="0.42" />
+  <!-- Right margin chevron bookend (mirrored) -->
+  <path d="M 1902 14 L 1894 20 L 1902 26"
+        fill="none" stroke="#947226" stroke-width="1.5" stroke-linejoin="round" opacity="0.74" />
+  <path d="M 1890 14 L 1882 20 L 1890 26"
+        fill="none" stroke="#947226" stroke-width="1.5" stroke-linejoin="round" opacity="0.42" />
+</svg>

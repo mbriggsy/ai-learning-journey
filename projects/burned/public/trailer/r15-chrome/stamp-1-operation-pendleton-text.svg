@@ -1,0 +1,32 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 800 240"
+     role="img" aria-label="OPERATION PENDLETON · CASE FILE 02 · METHOD: AUTONOMOUS"
+     style="--ink: var(--color-ochre-9, #947226)">
+  <!--
+    R15 #1 classification stamp — TEXT LAYER. CHROME tier.
+    Phase 1 Unit 1.9 locked copy (3 lines).
+
+    IDENTITY SPACE — Phase 4 owns rotation/scale. Heaviest line (3rd)
+    is the "METHOD: AUTONOMOUS" decode hook (in-world diegetic +
+    engineering-peer wordplay per Phase 1 Step 3 layered decode model).
+  -->
+  <defs>
+    <filter id="inkBleed" x="-4%" y="-4%" width="108%" height="108%">
+      <feTurbulence type="fractalNoise" baseFrequency="0.9" numOctaves="2" seed="3" />
+      <feDisplacementMap in="SourceGraphic" scale="2.2" />
+    </filter>
+  </defs>
+  <g style="color: var(--ink)" filter="url(#inkBleed)">
+    <text x="400" y="84" text-anchor="middle"
+          font-family="'JetBrains Mono', 'IBM Plex Mono', 'Courier New', monospace"
+          font-weight="700" font-size="28"
+          fill="currentColor" letter-spacing="3.6">OPERATION PENDLETON</text>
+    <text x="400" y="124" text-anchor="middle"
+          font-family="'JetBrains Mono', 'IBM Plex Mono', 'Courier New', monospace"
+          font-weight="700" font-size="28"
+          fill="currentColor" letter-spacing="3.6">CASE FILE 02</text>
+    <text x="400" y="184" text-anchor="middle"
+          font-family="'JetBrains Mono', 'IBM Plex Mono', 'Courier New', monospace"
+          font-weight="800" font-size="32"
+          fill="currentColor" letter-spacing="4.4">METHOD: AUTONOMOUS</text>
+  </g>
+</svg>

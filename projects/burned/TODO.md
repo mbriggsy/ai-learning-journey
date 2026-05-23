@@ -163,13 +163,37 @@ evidence: `out/s02-briefing-setup.mp4` (2.3 MB, H264 CRF 18) + 5 PNG
 stills at frames 0/60/120/240/359. Pending Briggsy-eye sentinel
 `briggsy-review-4.3.signoff`.
 
-**Phase 4 next unit:** Unit 4.4 — S03 Mission Background. 27 s scene
-(post-Tier-4 expansion). 6-operative roster slide-in + Otto-aside
-typographic chrome + RedactBar overlay (vendored) on Agent X +
-Dolores-on-Intercepted card cameo. Dependencies: Unit 4.3
-BriefingRoomBackground + CommsTicker (re-used), Phase 3 Unit 3.2
-S03_ROSTER (6 operatives derived from card-roster), Phase 3 Unit 3.0
-vendored RedactBar + ClassificationBanner from burned-vocabulary.
+**Unit 4.4 — COMPLETED 2026-05-23.** Verification doc at
+`videos/trailer/sample-eval/composite-build/s03-archer-test.md`.
+27-second roster reveal scene: 6 operatives (Janet → Vera → Sable →
+Dash → Neal → Agent X per S03_ROSTER iteration) slide in along the
+mobile safe-square right edge with 6-frame stagger / EASE_OUT_EMIL
+entries (rel 60-110); cream matte + ochre-9 border + ochre name
+strips with Clash Display 700 caps; Agent X shows the vendored
+RedactBar across the name strip (tilt -2° hand-stamped vibe). Otto-
+aside typographic chrome lands rel 200 bottom-left ("// OPERATIVE
+07: BASEMENT — DO NOT ASK"; ochre-11 JetBrains Mono 500 20px
+marginalia register; absence of Otto portrait IS the joke per Fork 2
++ amendment MA-9). Mid-scene DossierPageWipe (NEW component at
+src/transitions/) sweeps cream-12 panel left-to-right across rel
+415-431 (16-frame Phase 1 lock window, centered in the Phase 2
+silence gap between VO #1 and VO #2; trailing warm shadow sells the
+page-peel metaphor). CommsTicker holds during BOTH VO windows. Card
+size 106×148 (5:7 BURNED card aspect preserved) fits 6 vertically
+inside the 1032-px ticker-clear band. Plan body's 480f scene
+duration + 180/240/270 frame anchors stale per insight #061 — re-
+derived against Phase 2 audio-manifest VO landings. DeckOf120 CUT
+per amendment SA-5. Render evidence: `out/s03-mission-background.mp4`
+(4.2 MB, H264 CRF 18) + 4 PNG stills. Pending Briggsy-eye sentinel.
+
+**Phase 4 next unit:** Unit 4.5 — S04 Receipts Cascade (load-bearing).
+33-second scene. HTP dossier hero + 17-card halo (geometry from
+`cascade-ring-layout.json`) + 4 goofy-stat captions + comms-ticker
+pulse (R15 #2 override) + R15 #2 + #3 split-layer stamps (R15 #3 =
+payoff variant) + R3 stacked-payoff stamp slap at frame 2280 + 1.0s
+silent visual hold + S04TailFadeToBlack overlay. THE trailer's load-
+bearing scene. Dependencies: Unit 4.3 components + Phase 3 Unit
+3.1 HTP capture + Phase 3 Unit 3.5 cascade geometry JSON.
 
 **Phase 2 carry-forwards → Phase 3+** (stitch / silenceremove
 generalizations):

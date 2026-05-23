@@ -43,7 +43,7 @@ Phase 4 produces:
 - `videos/trailer/src/scenes/S05_GameplayDissolve.tsx` — scene 5 (uses gameplay clip from Phase 5 + scream cameo if R5 kept; `<OffthreadVideo muted />`)
 - `videos/trailer/src/scenes/S06_ClosingDirective.tsx` — scene 6 (R15 #4 split-layer chrome at frame 2820)
 - `videos/trailer/src/components/burned-vocabulary/` — 10 files vendored from BURNED howtoplay per Phase 3 Unit 3.0 (consumed by trailer scenes; `pnpm verify:vocab-sync` enforces drift catch)
-- `videos/trailer/src/components/` — trailer-native shared building blocks (R15Stamp split-layer, BriefingRoomBackground, DossierFolder, CommsTicker, HtpDossierHero, CardArtHalo, GoofyStatCaption, S04TailFadeToBlack overlay, MusicBed, FadeTransition vendored from UMB v3)
+- `videos/trailer/src/components/` — trailer-native shared building blocks (R15Stamp split-layer, BriefingRoomBackground, DossierFolder, CommsTicker, HtpDossierHero, CardArtHalo, GoofyStatCaption, S04TailFadeToBlack overlay, MusicBed; ~~FadeTransition vendored from UMB v3~~ **SUPERSEDED-BY-EXISTING `SceneFadeToBlack.tsx`** per Unit 4.0a triage 2026-05-22 — see `videos/trailer/sample-eval/composite-build/umb-v3-component-triage.md`)
 - `videos/trailer/src/lib/animations.ts` — single curve registry (3 emil-locked easings + 2 named springs + archer-slap helper; NO inline curves in scene files)
 - `videos/trailer/src/lib/tokens.css` — fixed-value shim cloning BURNED `primitives.css` subset (per Phase 4 deepening fork: Option C; isolated-package architecture preserved)
 - `videos/trailer/src/lib/htp-capture-metadata.json` — imported constant for `HtpDossierHero` scrollRangePx (Phase 3 Unit 3.1 contract-add)
@@ -81,7 +81,7 @@ the integration risk through:
 
 - **Per-scene componentization**: each scene is its own .tsx file with self-contained visual state. Scenes are PURE VISUAL — audio lives at composition level (ADR #16; UMB v3 `TrailerV3.tsx:59-63` precedent).
 - **Vendored BURNED vocabulary** (`videos/trailer/src/components/burned-vocabulary/`): 10 files copied from `src/client/howtoplay/components/` at Phase 3 Unit 3.0 entry. Drift catcher `pnpm verify:vocab-sync` runs as CI gate.
-- **Trailer-native shared component library**: R15Stamp (split-layer), BriefingRoomBackground, DossierFolder, CommsTicker, HtpDossierHero, CardArtHalo, GoofyStatCaption, S04TailFadeToBlack overlay, MusicBed, FadeTransition (vendored from UMB v3 per amendment SA-5).
+- **Trailer-native shared component library**: R15Stamp (split-layer), BriefingRoomBackground, DossierFolder, CommsTicker, HtpDossierHero, CardArtHalo, GoofyStatCaption, S04TailFadeToBlack overlay, MusicBed. ~~FadeTransition (vendored from UMB v3 per amendment SA-5)~~ **SUPERSEDED-BY-EXISTING `SceneFadeToBlack.tsx`** (Phase 0 spike artifact at `videos/trailer/src/components/SceneFadeToBlack.tsx` — explicit `startFrame` + `durationFrames` API, no `useVideoConfig` dep). Unit 4.0a triage 2026-05-22 — see `videos/trailer/sample-eval/composite-build/umb-v3-component-triage.md`.
 - **Single curve registry** (`src/lib/animations.ts`): 3 emil-locked easing curves (EASE_OUT, EASE_IN_OUT, EASE_DRAWER) + 2 named springs (ARCHER_STAMP_SPRING, PAYOFF_SPRING variant) + archer-slap helper (`scale(0.95) → scale(1.04) → scale(1.0)` per Phase 1 lock). NO inline curves in scene files.
 - **Single token shim** (`src/lib/tokens.css`): fixed-value clone of BURNED `primitives.css` subset per Phase 4 deepening fork (Option C). Isolated-package architecture preserved.
 - **Frame-constants-by-name**: all timing references go through `timing.ts` constants (Unit 1.1), not magic numbers.
@@ -736,9 +736,9 @@ export function useFonts() {
 
 ---
 
-### Unit 4.0a — UMB v3 Component Triage (NEW per deepening amendment NN-4)
+### Unit 4.0a — UMB v3 Component Triage (NEW per deepening amendment NN-4) — **COMPLETED 2026-05-22**
 
-- [ ] **Unit 4.0a: UMB v3 Component Triage**
+- [x] **Unit 4.0a: UMB v3 Component Triage** — completed 2026-05-22; decision doc at `videos/trailer/sample-eval/composite-build/umb-v3-component-triage.md`. Net: **ZERO** components vendored. FadeTransition SUPERSEDED-BY-EXISTING `SceneFadeToBlack.tsx` (deepening miss — same family as insight 066); 5 TAKE-AS-INSPIRATION (TextReveal / DocumentScroll / StatsCounter / KenBurns / CardReveal); 7 SKIP (FilmGrain confirmed via Briggsy visual eval at `temp/film-grain-eval/`; 6 UMB-terminal aesthetics).
 
 **Goal:** Before inventing Phase 4 shared components, read UMB v3's 12 shipped trailer components and decide for each whether to (i) clone-and-adapt, (ii) take-as-inspiration-only, or (iii) skip-not-applicable. Output: `videos/trailer/sample-eval/composite-build/umb-v3-component-triage.md` table that bounds Phase 4 invention to actual gaps. Per insight 052 — read existing instrumentation FIRST.
 
@@ -3091,31 +3091,20 @@ Edge case verification: at `fromFrame` for `opening` direction, radius=0 → mas
 
 **Step 4 — `S04TailFadeToBlack` (S04→S05 hard cut overlay)** — already created in Unit 4.5 Step 4b per amendment MA-1. NOT a separate transition file; it's an S04 scene-internal component that fires on the scene's tail frames (975-990 scene-relative). Boundary inventory below references it for completeness.
 
-**Step 5 — `FadeTransition` vendored from UMB v3 (optional)** (per amendment SA-5; Unit 4.0a triage decision).
+**Step 5 — ~~`FadeTransition` vendored from UMB v3 (optional)~~ SUPERSEDED-BY-EXISTING `SceneFadeToBlack.tsx`** (Unit 4.0a triage 2026-05-22).
+
+`videos/trailer/src/components/SceneFadeToBlack.tsx` (Phase 0 Unit 0.5 spike artifact, 35 lines) already implements scene-internal fade-to-black with a CLEANER API than UMB's FadeTransition: explicit `startFrame` + `durationFrames` (caller-anchored), no `useVideoConfig().durationInFrames` dep. UMB-vendor template was a deepening miss — same family as insight 066. See `videos/trailer/sample-eval/composite-build/umb-v3-component-triage.md`.
+
+**Usage** for optional S02/S03/S06 hard-cut tail polish:
 
 ```tsx
-// videos/trailer/src/components/FadeTransition.tsx — VENDORED from UMB v3
-// Source: projects/undercover-mob-boss/videos/trailer/src/components/FadeTransition.tsx
-// Scene-end fade-to-black using useVideoConfig().durationInFrames (auto-anchors to scene end)
+import { SceneFadeToBlack } from '../components/SceneFadeToBlack'
 
-import React from 'react';
-import { AbsoluteFill, interpolate, useCurrentFrame, useVideoConfig } from 'remotion';
-
-export const FadeTransition: React.FC<{
-  type: 'in' | 'out';
-  durationFrames?: number;
-}> = ({ type, durationFrames = 10 }) => {
-  const frame = useCurrentFrame();
-  const { durationInFrames } = useVideoConfig();
-  const startFrame = type === 'out' ? durationInFrames - durationFrames : 0;
-  const opacity = type === 'out'
-    ? interpolate(frame, [startFrame, durationInFrames - 1], [0, 1], { extrapolateLeft: 'clamp', extrapolateRight: 'clamp' })
-    : interpolate(frame, [0, durationFrames], [1, 0], { extrapolateLeft: 'clamp', extrapolateRight: 'clamp' });
-  return <AbsoluteFill style={{ backgroundColor: '#000', opacity, zIndex: 999 }} />;
-};
+// inside a scene component (last 10 frames of the scene fade to black)
+<SceneFadeToBlack startFrame={SCENE_FRAMES - 10} durationFrames={10} />
 ```
 
-Apply to S02/S03/S06 tail frames if Unit 4.9 perceptual review finds the hard cuts too jarring. Optional polish — DON'T apply preemptively; let the visual review drive.
+DON'T apply preemptively; let Unit 4.9 perceptual review drive. If review surfaces a jarring hard cut, drop SceneFadeToBlack into the affected scene's tail and re-render.
 
 **Step 6 — Cross-dissolve via TransitionSeries — REMOVED.** Per ADR #11 revised + Phase 1 deepening hard-cut lock + amendment MA-1: the S04→S05 boundary is a hard cut (handled by `S04TailFadeToBlack` overlay on S04 tail). NO `<TransitionSeries>` at composition level. `@remotion/transitions` package has zero Phase 4 consumers — install deferred per ADR #4 revised.
 
@@ -3131,7 +3120,7 @@ Apply to S02/S03/S06 tail frames if Unit 4.9 perceptual review finds the hard cu
 | Boundary | Mechanism | File | Frame range (abs) |
 |----------|-----------|------|-------------------|
 | S01 → S02 | Stamp slap (R15 #1 bridges) | R15Stamp component (S01 internal) | 200–210 |
-| S02 → S03 | Hard cut (optional FadeTransition out polish per Unit 4.9 review) | None / FadeTransition.tsx (vendored) | 570 |
+| S02 → S03 | Hard cut (optional `SceneFadeToBlack` tail polish per Unit 4.9 review) | None / `SceneFadeToBlack.tsx` (existing — Phase 0 spike artifact) | 570 |
 | S03 → S04 | Dossier-page wipe | transitions/DossierPageWipe.tsx (S03 tail) | 1042–1050 |
 | S04 → S05 | Hard cut + S04TailFadeToBlack overlay | components/S04TailFadeToBlack.tsx (S04 tail 2025-2040) | 2040 |
 | S05 → S06 | Iris-wipe-IN | transitions/IrisWipe.tsx (S06 head 0-45) — SINGLE SOURCE per amendment SA-5 | 2580–2625 |
@@ -3727,7 +3716,7 @@ Run `pnpm verify:briggsy-sentinels` — exits 0 only if all 6 are present AND au
 - **UMB v3 component triage decisions** (NEW Unit 4.0a; per amendment NN-4) — which of 12 UMB components are CLONE-AND-ADAPT / TAKE-AS-INSPIRATION / SKIP. Documented in `umb-v3-component-triage.md` at execution time.
 - **Spring constant fine-tuning per scene** — ARCHER_STAMP_SPRING / PAYOFF_SPRING / LOGO_SPRING_COLD / LOGO_SPRING_CLOSING defaults documented per Phase 1 lock; per-scene tuning happens in Unit 4.9 iteration if §2 review needs it.
 - **HTP hero scroll range exact pixel count** — consumed from `htp-capture-metadata.json` at Phase 3 deliverable land.
-- **Whether to apply FadeTransition vendored polish to hard-cut boundaries** (S02→S03, S03→S04, S06→end) — per Unit 4.9 perceptual review.
+- **Whether to apply ~~FadeTransition vendored~~ `SceneFadeToBlack` polish to hard-cut boundaries** (S02→S03, S03→S04, S06→end) — per Unit 4.9 perceptual review. (Unit 4.0a triage 2026-05-22: FadeTransition vendoring SUPERSEDED by existing `SceneFadeToBlack.tsx` — use that primitive if Unit 4.9 calls for boundary polish.)
 - ~~**Whether to add S05HeadFadeFromBlack overlay** (S05 frames 0-15) for symmetric "fade through black" with S04TailFadeToBlack — per Unit 4.9 perceptual review.~~ **CLOSED** by document-review amendment TIER 1 #5 — S05HeadFadeFromBlack is MANDATORY (not Unit 4.9 conditional); see Unit 4.6 Step 1c + `verify:s05-head-fade` grep gate.
 - **Render time optimization** (concurrency / offthreadVideo render-cache thresholds) — deferred to Phase 6.
 - **Depth-plane foreground element pick for S02** (Option A brass nameplate / B manila folders / C doorframe vignette) — Phase 4 picks at execution per Phase 1 Unit 1.10 deepening flag.

@@ -80,12 +80,23 @@ prerequisite status:
   `comms-ticker-reference.png`) deferred to Phase 4 invocation —
   needs BURNED in playing-state game.
 
-**Phase 4 next unit:** Unit 4.0a — UMB v3 Component Triage. Read 12
-UMB v3 components at `projects/undercover-mob-boss/videos/trailer/
-src/components/`, decide CLONE-AND-ADAPT / TAKE-AS-INSPIRATION / SKIP
-per component, ship `videos/trailer/sample-eval/composite-build/
-umb-v3-component-triage.md` decision table. Bounds Phase 4 invention
-to actual gaps. Per insight 052 — read existing instrumentation FIRST.
+**Unit 4.0a — COMPLETED 2026-05-22.** Decision doc at `videos/trailer/
+sample-eval/composite-build/umb-v3-component-triage.md`. Net: **ZERO**
+UMB v3 components vendored. FadeTransition SUPERSEDED-BY-EXISTING
+`SceneFadeToBlack.tsx` (Phase 0 spike artifact; deepening miss — same
+family as insight 066); 5 TAKE-AS-INSPIRATION; 7 SKIP (incl. FilmGrain
+confirmed via Briggsy visual eval).
+
+**Phase 4 next unit:** Unit 4.1 — Composition Wiring + Music Bed. Wire
+`Root.tsx` + `TrailerComposition.tsx` to orchestrate all 6 scenes via
+bare `<Series>` (NOT `<TransitionSeries>` per ADR #11), place
+composition-level audio timeline (`AUDIO_ASSETS.map(...)` per ADR #16)
++ `<MusicBed />` spanning full runtime, register 6 `Preview_S0N_…`
+standalone scene compositions + `Preview_S04Peak` fast-iteration
+composition. Produces a renderable composition the studio preview can
+boot. Carry-forward gate from Unit 4.0 DROPPED: first render visually
+validates all 3 font families (Clash Display + General Sans + JetBrains
+Mono) at distinct weights — closes Phase 0 coverage gap.
 
 **Phase 2 carry-forwards → Phase 3+** (stitch / silenceremove
 generalizations):

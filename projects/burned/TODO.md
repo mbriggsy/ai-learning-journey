@@ -145,11 +145,31 @@ PNG stills at frames 30/90/150/156/162/180/210. Pending Briggsy-eye
 sentinel `briggsy-review-4.2.signoff` for Unit 4.10 master-render
 entry.
 
-**Phase 4 next unit:** Unit 4.3 — S02 Briefing Setup. 12 s scene
-opening the briefing room with case-banner chrome + comms-ticker
-intro. Dependencies: Phase 3 Unit 3.3 briefing-room assets (mahogany
-horizontal, venetian-blinds.svg, brass-nameplate, etc.) + Unit 4.1
-composition wiring.
+**Unit 4.3 — COMPLETED 2026-05-23.** Verification doc at
+`videos/trailer/sample-eval/composite-build/s02-archer-test.md`.
+12-second briefing-room establishing shot: mahogany base + venetian-
+blind drift (EASE_OUT_EMIL pan over scene duration) + dossier folder
+crossfade closed→open at scene-relative 30-90 (EASE_DRAWER cubic-
+bezier(0.32, 0.72, 0, 1) front-loaded drawer feel) + inlined Pendleton
+crest watermark top-left + depth-plane brass nameplate bottom-right
+(Phase 3 Unit 3.3 Option A — plan body's "brass-nameplate.svg" name
+is stale; actual on-disk is `depth-plane.svg`) + CommsTicker bottom
+strip holding "// CHANNEL OPEN" during scene-relative 30-330 per
+design-lens hold-during-VO behavior. New production components:
+`BriefingRoomBackground.tsx`, `DossierFolder.tsx`, `CommsTicker.tsx`.
+New animation primitives: `EASE_DRAWER_FN` + `EASE_IN_OUT_FN` (function
+forms of timing.ts CSS strings — SSoT pair per insight #057). Render
+evidence: `out/s02-briefing-setup.mp4` (2.3 MB, H264 CRF 18) + 5 PNG
+stills at frames 0/60/120/240/359. Pending Briggsy-eye sentinel
+`briggsy-review-4.3.signoff`.
+
+**Phase 4 next unit:** Unit 4.4 — S03 Mission Background. 27 s scene
+(post-Tier-4 expansion). 6-operative roster slide-in + Otto-aside
+typographic chrome + RedactBar overlay (vendored) on Agent X +
+Dolores-on-Intercepted card cameo. Dependencies: Unit 4.3
+BriefingRoomBackground + CommsTicker (re-used), Phase 3 Unit 3.2
+S03_ROSTER (6 operatives derived from card-roster), Phase 3 Unit 3.0
+vendored RedactBar + ClassificationBanner from burned-vocabulary.
 
 **Phase 2 carry-forwards → Phase 3+** (stitch / silenceremove
 generalizations):

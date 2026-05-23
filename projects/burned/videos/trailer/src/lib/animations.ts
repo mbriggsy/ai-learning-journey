@@ -14,10 +14,20 @@
 import { Easing, interpolate, type SpringConfig } from 'remotion'
 
 // emil EASE_OUT — cubic-bezier(0.16, 1, 0.3, 1)
+// MUST match `timing.ts`'s `EASE_OUT` CSS string (sync invariant pinned by
+// `timing.test.ts`). See insight #057 — spike-wins on the coefficient lock.
 export const EASE_OUT_EMIL = Easing.bezier(0.16, 1, 0.3, 1)
 
 // Standard CSS ease-out for fade ramps
 export const EASE_OUT_QUAD = Easing.bezier(0.25, 0.1, 0.25, 1)
+
+// Drawer feel for surface reveals (folder open, dossier wipe). Function
+// form of `timing.ts`'s `EASE_DRAWER` CSS string — same coefficients.
+// Used by interpolate({ easing: EASE_DRAWER_FN, ... }) consumers.
+export const EASE_DRAWER_FN = Easing.bezier(0.32, 0.72, 0, 1)
+
+// Page-wipe / iris feel. Function form of `timing.ts`'s `EASE_IN_OUT`.
+export const EASE_IN_OUT_FN = Easing.bezier(0.77, 0, 0.175, 1)
 
 /**
  * Stamp-slap envelope (Phase 1 Unit 1.4 lock, Phase 0 §Approach contract).

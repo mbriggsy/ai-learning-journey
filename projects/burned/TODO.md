@@ -54,8 +54,15 @@ folder-closed, dossier-folder-open + reference-render capture script
 (R15 chrome stamps SPLIT-LAYER — 8 SVGs at `public/trailer/r15-
 chrome/` for 4 R15 instances × frame + text + CVD probe script,
 all 6 ink/bg pairs clear STRICT 0.10 oklab floor under deuter/prot/
-trit). Remaining: 3.5 music bed procurement · 3.6 cold-open title-
-sequence assets · 3.7 visual manifest + PHASE-3-EXIT.md hand-off.
+trit), Unit 3.6 (cold-open title-sequence — 3 NEW SVGs at
+`public/trailer/title-sequence/` for operative-card-frame +
+chevron-motif-bg + burned-logo + Playwright composite proof PNG;
+$0 cumulative Imagen spend through 3.6 — tracker landed at
+`videos/trailer/sample-eval/visual-asset-prep/imagen-spend.md`).
+Remaining: **3.5 music bed procurement** (BLOCKED on paid Artlist/
+Epidemic/Suno subscriptions — Briggsy gate) · 3.7 visual manifest +
+PHASE-3-EXIT.md hand-off (needs 3.5 done first per Unit 3.7
+dependency chain).
 
 **Phase 2 carry-forwards → Phase 3+** (stitch / silenceremove
 generalizations):

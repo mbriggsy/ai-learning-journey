@@ -198,9 +198,75 @@ See `music-audition-log.md` (when Unit 3.5 produces it) +
 
 ---
 
-## Unit 3.6 — Cold-open title sequence
+## Unit 3.6 — Cold-Open Title-Sequence Assets
 
-*Pending Unit 3.6 execution.*
+### NEW assets (Path B vector SVGs at `public/trailer/title-sequence/`)
+
+| staticFile arg | Source | Dimensions | Tier | Trailer role |
+|---|---|---|---|---|
+| `trailer/title-sequence/operative-card-frame.svg` | Hand-authored (Step 1b fallback path — Imagen escalation skipped per insight #018 + `feedback-imagen-budget.md`) | 800×1000 viewBox | HERO | S01 cold-open card-flash chrome template (frames 30–210). Phase 4 composites operative portrait (`assets/cards/<operative>.webp`) into the center region + Clash Display 700 name overlay onto the bottom ochre name-plate strip. Reticle motif upper-right + chevron flanks bottom-strip echo `chevron-motif-bg.svg` vocabulary. |
+| `trailer/title-sequence/chevron-motif-bg.svg` | Hand-authored (corrected chevron geometry per plan design F11 — pre-deepening starter shipped diamonds/rhombuses, not chevrons) | 1920×1080 viewBox | TEXTURE | S01 cold-open background. Diagonal chevron pattern (Bass / Ferro lineage), 120×60 tile with two strokes per tile pointing right. Ochre-9 ink at 0.14 opacity on charcoal-3 ground + radial vignette pulls eye to center. |
+| `trailer/title-sequence/burned-logo.svg` | Hand-authored | 1200×400 viewBox | HERO | **S06 closing wordmark ONLY** (frame 2780). **S01 cold-open uses `public/assets/cards/burned.webp`** per Phase 1 Unit 1.10 differential (S01 = card-art in-world; S06 = wordmark out-of-world bookend). Clash Display 700 320px, burn-fire ink (#be2e27), letter-spacing -8 (compressed-slab feel), subtle drop-shadow gives presence on the cream closing card without competing with the R15 #4 subhead beneath. |
+
+### EXISTING assets (Path A via staticFile through ADR #8) — title-sequence consumers
+
+| staticFile arg | Source | Use |
+|---|---|---|
+| `assets/howtoplay/operations-manual-plate.png` | Imagen-gen (`scripts/generate-htp-assets.ts`) — 1.4 MB raster, "OPERATION / BURNED / FIELD OPERATIONS MANUAL" Saul-Bass title-card | S01 title-plate reveal (frame ~210, follows BURNED card-art landing). NOT regenerated. |
+| `assets/howtoplay/pendleton-crest.png` | Imagen-gen — 1.5 MB raster | S02 corner watermark + S06 closing-folder dressing. NOT regenerated. |
+| `assets/cards/burned.webp` | BURNED card-art (game asset) | **S01 cold-open** BURNED reveal moment (the "card" reads as in-world game iconography flashing). |
+
+### Reference proof (Phase 4 visual-diff only — NOT shipped to public/)
+
+| Path | Source | Purpose |
+|---|---|---|
+| `sample-eval/visual-asset-prep/operative-card-composite-proof.png` | Playwright static-HTML composite via `videos/trailer/scripts/build-operative-card-composite-proof.ts` — composes `operative-card-frame.svg` + `dash-barlowe.webp` + name overlay "DASH BARLOWE" at 1/3-canvas size (640×800 card region) inside 1920×1080 stage | Verifies name-plate readable at the cold-open canvas ratio (58px Clash Display renders ~19px on full trailer display) BEFORE Phase 4 commits. Briggsy reviews; if readability fails, Phase 4 elevates cold-open card scale OR widens the frame. |
+
+**Composite-proof script gotchas (encoded inline for future
+maintainers):**
+
+- **`page.setContent()` cross-origin issue.** Pre-deepening starter
+  used `setContent` + relative paths; doc-review fix tried absolute
+  `file://` URLs. BOTH fail because `setContent` makes the page
+  origin `about:blank`, which Chromium treats as cross-origin to
+  `file://` and silently refuses to load images (`naturalWidth=0`
+  with `complete=true`). Fix shipped in 2026-05-22 execution: write
+  the HTML to a temp file under `BURNED_ROOT/public/trailer/`,
+  navigate via `pathToFileURL(...)`, clean up in `finally`. Same-
+  origin file:// then resolves the asset paths.
+- **`page.waitForFunction(fn, opts)` signature trap.** Options is
+  the THIRD positional arg (`fn, arg, options`); passing options as
+  second arg silently lands in the `arg` slot and the timeout
+  defaults to 30s. Pass `null` as arg explicitly when there is none.
+
+### Title-sequence design notes
+
+- **`operative-card-frame.svg`** elevations from plan Step 1b
+  starter: chevron flanks (`>>` left / `<<` right) on the bottom
+  name-plate strip echo the `chevron-motif-bg.svg` vocabulary —
+  visual DNA continuity across cold-open elements. Kicker labels
+  `// OPERATIVE FILE` (upper-left) + `PEN · 62 · 02` (upper-right)
+  sit in the portrait region's padding area; render only when
+  Phase 4's portrait is inset, not when it covers full-bleed.
+- **`chevron-motif-bg.svg`** elevations: added radial vignette
+  (40%-to-100% radius, 0 → 0.48 black opacity) pulls eye to
+  center where the operative card-flash lands. Pattern bumped from
+  plan's 0.12 to 0.14 opacity for slightly stronger texture under
+  vignette.
+- **`burned-logo.svg`** elevations: added drop-shadow filter (3px
+  Gaussian blur + 6px dy offset + cordovan-1 fill at 0.42 opacity)
+  for closing-card presence. Plan starter was bare text.
+- **Font isolation note** (matches Unit 3.3/3.4 pattern): SVG
+  declares `'Clash Display', 'Clash Display Fallback', system-ui,
+  sans-serif`. Img-loaded SVGs do NOT inherit Remotion's
+  `useFonts()` — Phase 4 may pivot to inline-SVG rendering OR
+  per-weight static subsets if the system-ui fallback reads wrong
+  in MP4 export. Dev preview uses sans-serif fallback cleanly.
+
+### Imagen spend
+
+**Unit 3.6 cumulative: $0.00** (hand-authored Step 1b fallback path
+taken — see `imagen-spend.md` cumulative ledger).
 
 ---
 

@@ -1,0 +1,41 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1920 1080"
+     preserveAspectRatio="xMidYMid slice" role="presentation" aria-hidden="true"
+     style="--ink: var(--color-ochre-9, #947226); --bg: var(--color-charcoal-3, #1a1812)">
+  <!--
+    Cold-open background — diagonal chevron pattern. TEXTURE tier.
+    Phase 3 Unit 3.6 Step 2. Phase 1 Unit 1.10 R14 lock.
+
+    DOC-REVIEW (design F11) corrected geometry: pre-deepening starter
+    used `M0,60 L60,0 L120,60 L60,120 Z` which is a DIAMOND/RHOMBUS,
+    not a chevron. Diamonds carry static-symmetrical "decorative quilt"
+    energy; chevrons (Bass/Ferro lineage) carry directional forward-
+    motion energy. Actual chevron geometry below.
+
+    Pattern: 120×60 tile, two diagonal strokes per tile pointing right
+    (`>`). Light ink-on-dark at 0.14 opacity — subtle texture, never
+    competing with foreground compositions (operative card flashes,
+    title plate).
+
+    Plan called bg charcoal-12 = #1a1812 but actual palette token
+    for #1a1812 is charcoal-3 (insight #061: derive hex from
+    primitives.css source, never transcribe plan).
+  -->
+  <defs>
+    <pattern id="chevronPattern" x="0" y="0" width="120" height="60"
+             patternUnits="userSpaceOnUse">
+      <!-- Two chevron strokes per tile — pointing right like `>` -->
+      <path d="M0,0 L60,30 L0,60" fill="none"
+            stroke="var(--ink)" stroke-width="2" opacity="0.14" />
+      <path d="M60,0 L120,30 L60,60" fill="none"
+            stroke="var(--ink)" stroke-width="2" opacity="0.14" />
+    </pattern>
+    <!-- Soft vignette pulls eye toward center -->
+    <radialGradient id="vignette" cx="50%" cy="50%" r="70%">
+      <stop offset="40%" stop-color="#000" stop-opacity="0" />
+      <stop offset="100%" stop-color="#000" stop-opacity="0.48" />
+    </radialGradient>
+  </defs>
+  <rect x="0" y="0" width="1920" height="1080" fill="var(--bg)" />
+  <rect x="0" y="0" width="1920" height="1080" fill="url(#chevronPattern)" />
+  <rect x="0" y="0" width="1920" height="1080" fill="url(#vignette)" />
+</svg>

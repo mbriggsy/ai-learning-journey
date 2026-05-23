@@ -1,0 +1,47 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1200 400"
+     role="img" aria-label="BURNED"
+     style="--ink: var(--color-burned-fire, #be2e27); --shadow: var(--color-cordovan-1, #15070a)">
+  <!--
+    Closing-card BURNED wordmark. HERO tier. S06 frame 2780 per Phase
+    1 Unit 1.10 lock. Phase 3 Unit 3.6 Step 3.
+
+    SINGLE FILE — Phase 1 locks the S01-vs-S06 differential:
+      - S01 cold-open uses `public/assets/cards/burned.webp` (card art)
+      - S06 closing uses this SVG wordmark (out-of-world bookend)
+    Pre-deepening Phase 3's "two near-identical files" framing was
+    drift; deepening merged to this single file for S06 only.
+
+    Clash Display 700 at 320px — bold mid-century geometric per the
+    Bass / Ferro lineage Phase 1 references. Slight letter-spacing
+    tightening (-8) for the compressed-display feel; the negative
+    tracking pulls the letters into a single dense slab.
+
+    Subtle drop-shadow gives the wordmark presence on the closing
+    card without competing with the R15 #4 subhead beneath it.
+
+    Font isolation note (matches Unit 3.3/3.4 pattern): SVG declares
+    'Clash Display' with sans-serif fallback. Img-loaded SVGs do NOT
+    inherit Remotion's `useFonts()`; Phase 4 may pivot to inline-SVG
+    rendering OR static-subset @font-face if the fallback reads wrong
+    in MP4 export. Dev/preview uses sans-serif fallback cleanly.
+  -->
+  <defs>
+    <filter id="logoDrop" x="-5%" y="-5%" width="110%" height="120%">
+      <feGaussianBlur in="SourceAlpha" stdDeviation="3" />
+      <feOffset dx="0" dy="6" result="dropOff" />
+      <feFlood flood-color="#15070a" flood-opacity="0.42" />
+      <feComposite in2="dropOff" operator="in" result="dropShadow" />
+      <feMerge>
+        <feMergeNode in="dropShadow" />
+        <feMergeNode in="SourceGraphic" />
+      </feMerge>
+    </filter>
+  </defs>
+  <g filter="url(#logoDrop)">
+    <text x="600" y="290" text-anchor="middle"
+          font-family="'Clash Display', 'Clash Display Fallback', system-ui, sans-serif"
+          font-weight="700" font-size="320"
+          fill="var(--ink)"
+          letter-spacing="-8">BURNED</text>
+  </g>
+</svg>

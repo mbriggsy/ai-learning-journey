@@ -3929,7 +3929,40 @@ records each approve/reject inline.)
 
 ### Unit 3.6 — Cold-Open Title-Sequence Assets
 
-- [ ] **Unit 3.6: Cold-Open Title-Sequence Assets**
+- [x] **Unit 3.6: Cold-Open Title-Sequence Assets** — landed
+  2026-05-22. 3 NEW SVGs shipped to `public/trailer/title-sequence/`
+  (operative-card-frame, chevron-motif-bg, burned-logo). $0 Imagen
+  spend — took Step 1b hand-authored fallback path for operative-
+  card-frame per `feedback-imagen-budget.md` + insight #018 ("one-
+  test-first" preference + skip-the-argument when vector control is
+  sufficient). Composite proof PNG shipped at
+  `sample-eval/visual-asset-prep/operative-card-composite-proof.png`
+  via `videos/trailer/scripts/build-operative-card-composite-proof.ts`
+  (`pnpm composite:operative-card`); shows Dash Barlowe portrait
+  composed into the frame with Clash Display 700 name overlay
+  rendering at 1/3-canvas size cleanly. `imagen-spend.md` tracker
+  created with per-unit ledger ($0 cumulative through 3.0-3.6).
+
+  **Plan-vs-reality drifts caught during execution:**
+  - chevron-motif-bg.svg `--color-charcoal-12 #1a1812` reference
+    (plan Step 2): actual palette token for #1a1812 is charcoal-3
+    (insight #061 yet again — plan transcribed snapshot value
+    drifted from primitives.css post-deepening). Fixed inline.
+  - Composite-proof script doc-review fix (page.setContent + file://
+    URLs) didn't go far enough: `setContent` makes the page origin
+    `about:blank` which Chromium treats as cross-origin to `file://`
+    — images "complete" with `naturalWidth=0`. Real fix: write
+    HTML to temp file under BURNED_ROOT and navigate via
+    `pathToFileURL`. Documented inline in script + inventory.
+  - `page.waitForFunction(fn, opts)` signature trap — options is
+    the third positional arg, not second. Documented inline.
+  - SVG XML comment double-hyphen trap — `--` inside `<!-- ... -->`
+    is illegal per XML spec. Browsers' lenient HTML parser accepts
+    it (img/object embedding works) but the strict XML parser
+    (direct .svg navigation, validation tools) rejects with parse
+    error. Caught chevron-motif-bg.svg lines 19-20 had `--color-
+    name` references inside the comment body; rewrote to plain
+    prose. Other SVGs verified clean via grep.
 
 **Goal:** Produce the compressed-Archer cold-open visual elements —
 operative card frame template (NEW Imagen), chevron motif background

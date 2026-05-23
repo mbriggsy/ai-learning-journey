@@ -21,6 +21,17 @@ import { Img, staticFile } from 'remotion'
  * fills the region while preserving the head/face (Archer freeze-frame
  * convention) — bottom crop is acceptable.
  *
+ * `redactName`: when true (Agent X in S03 cascade), the name-plate strip
+ * is overlayed with a slight-tilt black redact bar instead of the
+ * operative name. The bar is inline-styled (not the vendored RedactBar
+ * component) because the vendored CSS module references
+ * `--redact-fill` / `--color-charcoal-1` etc. which are NOT loaded into
+ * the Remotion render context (trailer's `tokens.css` is never
+ * imported — Phase 4 ADR-15 isolated package shim is for compile-time
+ * type/CSS-module resolution only). Inline styles render reliably at
+ * any scale. S01 cold-open Janet/Dash/Neal omit this prop and read
+ * names normally.
+ *
  * The legacy `OperativePortraitFlash.tsx` (Phase 0 spike — cream-paper
  * matte, no SVG chrome) stays for regression compositions.
  */
@@ -32,7 +43,9 @@ export const OperativeCardFrame: React.FC<{
   portraitFile: string
   /** Display name overlayed on the name-plate strip. */
   operativeName: string
-}> = ({ portraitFile, operativeName }) => (
+  /** When true, RedactBar overlays the name-plate strip in place of the name text. */
+  redactName?: boolean
+}> = ({ portraitFile, operativeName, redactName = false }) => (
   <div style={{ position: 'relative', width: NATIVE_W, height: NATIVE_H }}>
     {/* Chrome template — viewBox 800×1000 — defines the visual frame */}
     <Img
@@ -74,7 +87,22 @@ export const OperativeCardFrame: React.FC<{
         paddingRight: '0.06em',
       }}
     >
-      {operativeName}
+      {redactName ? (
+        <div
+          aria-label={`Redacted: ${operativeName} identity`}
+          style={{
+            width: 640,
+            height: 56,
+            backgroundColor: '#0a0906', // charcoal-1
+            transform: 'rotate(-2deg)',
+            boxShadow:
+              'inset 0 1px 0 rgba(208, 195, 165, 0.08), 0 2px 3px rgba(0, 0, 0, 0.35)',
+            borderRadius: 1,
+          }}
+        />
+      ) : (
+        operativeName
+      )}
     </div>
   </div>
 )

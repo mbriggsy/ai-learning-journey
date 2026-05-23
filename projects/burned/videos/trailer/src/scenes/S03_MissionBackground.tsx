@@ -1,11 +1,13 @@
 import React from 'react'
-import { AbsoluteFill, Img, interpolate, staticFile, useCurrentFrame } from 'remotion'
+import { AbsoluteFill, interpolate, useCurrentFrame } from 'remotion'
 import { BriefingRoomBackground } from '../components/BriefingRoomBackground'
 import { CommsTicker } from '../components/CommsTicker'
+import { OperativeCardFrame } from '../components/OperativeCardFrame'
+import { DeckStack } from '../components/DeckStack'
+import { BurnedCardReveal } from '../components/BurnedCardReveal'
 import { DossierPageWipe } from '../transitions/DossierPageWipe'
 import { EASE_OUT_EMIL } from '../lib/animations'
 import { S03_ROSTER } from '../lib/card-roster'
-import { RedactBar } from '../components/burned-vocabulary/RedactBar'
 
 /**
  * S03 — Mission Background. 27-second roster reveal scene (post-Tier-4
@@ -13,143 +15,235 @@ import { RedactBar } from '../components/burned-vocabulary/RedactBar'
  *
  * VO landings (from Phase 2 audio-manifest, played at composition
  * level per ADR #16 — silent in standalone-render):
- *   abs 570  = rel 0     S03-roster ("Seven on the roster, six in the
- *                                    deck, one in the basement…") 407f
+ *   abs 570  = rel 0     S03-roster (407f) — "Our autonomous field assets
+ *                        infiltrated the contract last quarter. [BEAT 0.3s]
+ *                        Seven operatives in the active roster. [BEAT 0.3s]
+ *                        One who insists on being called 'Agent X' and
+ *                        refuses to file any paperwork whatsoever."
  *   abs 977  = rel 407   silence gap — 30 frames (Phase 2 trim spec)
- *   abs 1007 = rel 437   S03-deck   ("Fourteen thousand pages. Six
- *                                    sticky notes…") 362f
+ *   abs 1007 = rel 437   S03-deck (362f) — "Mission: a deck of one hundred
+ *                        and twenty operations. [BEAT 0.4s] One ends your
+ *                        career instantly. [BEAT 0.3s] The rest help you
+ *                        survive. Or ensure your colleagues don't."
  *   abs 1369 = rel 799   VO #2 ends; scene tail holds 11 frames before
  *                        S03→S04 hard cut at abs 1380 (= rel 810)
  *
- * Visual choreography:
- *   rel 0       BriefingRoomBackground continuous from S02 (no transition)
- *   rel 60-110  6 operatives slide in along the mobile safe-square right
- *               edge with 6-frame stagger, EASE_OUT_EMIL entries
- *               (Janet → Dash → Sable → Vera → Neal → Agent X per
- *                S03_ROSTER iteration; Agent X gets a RedactBar overlay
- *                across the name strip)
- *   rel 200     Otto-aside typographic chrome lands lower-right
- *               ("// OPERATIVE 07: BASEMENT — DO NOT ASK", JetBrains
- *                Mono 500 18px ochre-3 marginalia register)
- *   rel 415-431 DossierPageWipe — mid-scene transitional sweep at the
- *               silence gap between VO #1 and VO #2 (16-frame Phase 1
- *               lock duration, centered in the 30-frame gap)
- *   rel 0-810   CommsTicker bottom strip; holds during BOTH VO windows
- *               per design-lens
+ * Visual choreography — beat-aligned to VO (estimates ±20f, ear-checked
+ * during playback). Pure visual — no `<Audio>` per ADR #16.
  *
- * Pure visual — no `<Audio>` per ADR #16.
+ * VO #1 (rel 0-407):
+ *   rel 0-99    Cards cascade in 1-by-1, 15f stagger × 24f settle. Each
+ *               card lands as Dash narrates "...autonomous field assets
+ *               infiltrated the contract..."
+ *   rel 110-134 Otto-aside fades in. Lands on "Seven operatives in the
+ *               active roster" — the 6 visible cards + Otto's chrome line
+ *               = seven, joke earned visually.
+ *   rel 200-224 Agent X paperwork marginalia fades in — "// FILE:
+ *               [REDACTED]  // PAPERWORK: 0". Lands during "...refuses
+ *               to file any paperwork whatsoever". Upper-right register
+ *               above Agent X card.
+ *   rel 160-260 Agent X subtle scale-pulse (1.0 → 1.04 → 1.0 over 100f)
+ *               during the "Agent X" line. Tells the eye where to look.
+ *   rel 296-407 Hold. Long laugh-room tail before wipe.
  *
- * Plan body's "frames 0-480 relative" timing is stale per insight #061
- * — re-derived against current 810-frame scene + Phase 2 audio-manifest
- * VO landings. DeckOf120 CUT per amendment SA-5 (not in Phase 1
- * BEAT-SHEET; "120 cards" wasn't the Phase 1 narration).
+ * WIPE (rel 415-431): DossierPageWipe — 16-frame transition between
+ *               operative reveal (VO #1) and deck reveal (VO #2).
+ *
+ * VO #2 (rel 437-799):
+ *   rel 437-453 DeckStack lands ("Mission: a deck of one hundred and
+ *               twenty operations") — archerStampSlap('payoff') envelope.
+ *               Upper-left position fills the previously-empty desk corner.
+ *   rel 540-558 BurnedCardReveal spring entry ("One ends your career
+ *               instantly") — burned.webp game-namesake card, big and
+ *               burned-fire-glowed. The hero-tier danger moment.
+ *   rel 650-720 Cascade subtle "uh, awkward" lean — operatives scale
+ *               1.0→1.02→1.0 + rotation +1°. Reads as the team's
+ *               collective reaction to "Or ensure your colleagues don't."
+ *               Carried by existing 6 cards; no new component.
+ *   rel 700-740 BURNED card fades out — lets cascade re-emerge as the
+ *               final visual layer for the dark-sting kicker.
+ *   rel 740-810 Hold. Cascade + DeckStack + Otto-aside present.
+ *
+ * Plan body's "frames 0-480 relative" timing is stale per insight #061.
+ * Re-derived against current 810-frame scene + Phase 2 audio-manifest
+ * VO landings + corrected script text (was using S04 lines; corrected
+ * 2026-05-23 mid-redo).
+ *
+ * **Unit 4.4 redo 2026-05-23.** Original vertical-stack thumbnail layout
+ * (106×148 cards on the right edge) was hard-zero'd: cards too small to
+ * read portrait detail at 40% native scale, Agent X bottom-edge bled into
+ * the ticker band, ~60% of the desk surface sat empty. R2 brought cards
+ * up to scale 0.45 (360×450) in a diagonal cascade across the full
+ * canvas. R3 (this) wires the static scene to VO beats with restaggered
+ * card entries, Agent X marginalia, DeckStack + BurnedCardReveal for VO
+ * #2, and cascade settle motion for the dark-sting tail.
  */
 
-const ROSTER_ENTRY_START = 60
-const ROSTER_ENTRY_STAGGER = 6
-const ROSTER_ENTRY_DURATION = 20
-const OTTO_ASIDE_FRAME = 200
+const CARD_ENTRY_START = 0
+const CARD_ENTRY_STAGGER = 15
+const CARD_ENTRY_DURATION = 24
+
+const OTTO_ASIDE_FRAME = 110
+
+const AGENT_X_SPOTLIGHT_START = 160
+const AGENT_X_SPOTLIGHT_PEAK = 210
+const AGENT_X_SPOTLIGHT_END = 260
+const AGENT_X_MARGINALIA_FRAME = 200
+
 const WIPE_START = 415
 
-// Card stack sizing — 6 cards vertical, fit inside the mobile safe-
-// square (x=420–1500 per amendment TIER 3 #11) AND clear of the 48-px
-// comms-ticker at the canvas bottom. Available y-band: 0–1032.
-// 6 * 148 + 5 * 12 = 948 px. Top inset 42 centers the column vertically.
-// Width preserves the 5:7 BURNED card aspect (148 / 7 * 5 = 105.7 → 106).
-const CARD_W = 106
-const CARD_H = 148
-const CARD_GAP = 12
-const CARD_RIGHT = 500 // canvas-right − 500 = x=1420 (inside safe-square right boundary 1500)
-const CARD_TOP_OFFSET = 42
+const DECK_STACK_LAND = 437
+
+const BURNED_CARD_LAND = 540
+const BURNED_CARD_FADE_OUT_START = 700
+const BURNED_CARD_FADE_OUT_END = 740
+
+const AWKWARD_LEAN_START = 650
+const AWKWARD_LEAN_PEAK = 685
+const AWKWARD_LEAN_END = 720
+
+// OperativeCardFrame is native 800×1000 (4:5). Cards render at 360×450 via
+// CSS scale 0.45 — the cards are the asset; the desk is the stage.
+const SCALE = 0.45
+const CARD_W = 800 * SCALE
+const CARD_H = 1000 * SCALE
+
+// Six cascade anchors (Dash → Vera → Sable → Janet → Neal → Agent X per
+// S03_ROSTER iteration). Upper-left → lower-right diagonal across the
+// full 1920×1080 canvas with progressive tilt -8° → +12° for a
+// "classified files dropped on desk" read. Center coordinates.
+const CASCADE_ANCHORS = [
+  { cx: 460, cy: 260, rot: -8 },
+  { cx: 660, cy: 360, rot: -4 },
+  { cx: 860, cy: 460, rot: 0 },
+  { cx: 1060, cy: 560, rot: 4 },
+  { cx: 1260, cy: 660, rot: 8 },
+  { cx: 1460, cy: 760, rot: 12 },
+] as const
 
 export const S03_MissionBackground: React.FC = () => {
   const frame = useCurrentFrame()
+
+  // Cascade "awkward lean" — collective subtle reaction to the dark-sting
+  // VO kicker. Triangle envelope 0 → 1 → 0 across rel 650-720.
+  const awkwardLeanT = interpolate(
+    frame,
+    [AWKWARD_LEAN_START, AWKWARD_LEAN_PEAK, AWKWARD_LEAN_END],
+    [0, 1, 0],
+    { extrapolateLeft: 'clamp', extrapolateRight: 'clamp' },
+  )
+  const awkwardScaleBoost = 0.02 * awkwardLeanT // +0..+0.02 added
+  const awkwardRotateBoost = 1 * awkwardLeanT // +0..+1° added
 
   return (
     <AbsoluteFill>
       <BriefingRoomBackground />
 
-      {/* Operative roster — right-edge stack, slide in from off-canvas right */}
+      {/* Deck stack — VO #2 beat 1, "Mission: a deck of one hundred and twenty operations." */}
+      <DeckStack landFrame={DECK_STACK_LAND} />
+
+      {/* Cascade — 6 operatives drop onto the desk diagonally. Render
+          order = z-stack order, so Agent X (sixth, redacted) lands on top. */}
       {S03_ROSTER.map((op, i) => {
-        const entryFrame = ROSTER_ENTRY_START + i * ROSTER_ENTRY_STAGGER
-        const slideX = interpolate(
+        const anchor = CASCADE_ANCHORS[i]
+        const entryFrame = CARD_ENTRY_START + i * CARD_ENTRY_STAGGER
+        const settle = interpolate(
           frame,
-          [entryFrame, entryFrame + ROSTER_ENTRY_DURATION],
-          [240, 0],
-          { easing: EASE_OUT_EMIL, extrapolateLeft: 'clamp', extrapolateRight: 'clamp' },
-        )
-        const opacity = interpolate(
-          frame,
-          [entryFrame, entryFrame + ROSTER_ENTRY_DURATION],
+          [entryFrame, entryFrame + CARD_ENTRY_DURATION],
           [0, 1],
           { easing: EASE_OUT_EMIL, extrapolateLeft: 'clamp', extrapolateRight: 'clamp' },
         )
+        const opacity = settle
+        const settleScale = 0.92 + 0.08 * settle // 0.92 → 1.0
         const isAgentX = op.filename === 'agent-x.webp'
+
+        // Agent X spotlight pulse — subtle scale boost while Dash says the line.
+        const agentXPulse = isAgentX
+          ? interpolate(
+              frame,
+              [AGENT_X_SPOTLIGHT_START, AGENT_X_SPOTLIGHT_PEAK, AGENT_X_SPOTLIGHT_END],
+              [0, 1, 0],
+              { extrapolateLeft: 'clamp', extrapolateRight: 'clamp' },
+            )
+          : 0
+        const agentXScaleBoost = 0.04 * agentXPulse
+
+        const finalScale = settleScale + agentXScaleBoost + awkwardScaleBoost
+        const finalRotate = anchor.rot + awkwardRotateBoost
 
         return (
           <div
             key={op.filename}
             style={{
               position: 'absolute',
-              right: CARD_RIGHT,
-              top: CARD_TOP_OFFSET + i * (CARD_H + CARD_GAP),
+              left: anchor.cx - CARD_W / 2,
+              top: anchor.cy - CARD_H / 2,
               width: CARD_W,
               height: CARD_H,
-              transform: `translateX(${slideX}px)`,
+              transform: `rotate(${finalRotate}deg) scale(${finalScale})`,
+              transformOrigin: 'center center',
               opacity,
             }}
           >
-            {/* Cream matte around portrait — classified-file vocabulary */}
             <div
               style={{
-                position: 'absolute',
-                inset: 0,
-                backgroundColor: '#f6ebce',
-                border: '3px solid #947226', // ochre-9
-                padding: 8,
+                width: 800,
+                height: 1000,
+                transform: `scale(${SCALE})`,
+                transformOrigin: 'top left',
               }}
             >
-              <Img
-                src={staticFile(`assets/cards/${op.filename}`)}
-                style={{
-                  width: '100%',
-                  height: '100%',
-                  objectFit: 'cover',
-                  objectPosition: 'center top',
-                }}
+              <OperativeCardFrame
+                portraitFile={op.filename}
+                operativeName={op.displayName}
+                redactName={isAgentX}
               />
-            </div>
-            {/* Name strip — ochre band + Clash Display caps */}
-            <div
-              style={{
-                position: 'absolute',
-                bottom: -2,
-                left: -2,
-                right: -2,
-                height: 24,
-                backgroundColor: '#947226',
-                color: '#0e0c08',
-                fontFamily: 'Clash Display, sans-serif',
-                fontWeight: 700,
-                fontSize: 10,
-                letterSpacing: '0.06em',
-                textTransform: 'uppercase',
-                display: 'flex',
-                alignItems: 'center',
-                justifyContent: 'center',
-              }}
-            >
-              {isAgentX ? (
-                <RedactBar width="80px" tilt={-2} label="Redacted: Agent X identity" />
-              ) : (
-                op.displayName
-              )}
             </div>
           </div>
         )
       })}
 
-      {/* Otto-aside typographic chrome — lands at rel 200 (after roster establishes) */}
+      {/* BURNED card reveal — VO #2 beat 2, "One ends your career instantly." */}
+      <BurnedCardReveal
+        landFrame={BURNED_CARD_LAND}
+        fadeOutStart={BURNED_CARD_FADE_OUT_START}
+        fadeOutEnd={BURNED_CARD_FADE_OUT_END}
+      />
+
+      {/* Agent X paperwork marginalia — VO #1 beat 3 reinforcement. Lands
+          on "refuses to file any paperwork whatsoever". Upper-right
+          register so it sits above Agent X card without overlapping. */}
+      {frame >= AGENT_X_MARGINALIA_FRAME && (
+        <div
+          style={{
+            position: 'absolute',
+            top: 200,
+            right: 60,
+            fontFamily: 'JetBrains Mono, monospace',
+            fontWeight: 500,
+            fontSize: 16,
+            color: '#edb182', // ochre-11 — marginalia register
+            letterSpacing: '0.14em',
+            textTransform: 'uppercase',
+            textAlign: 'right',
+            lineHeight: 1.6,
+            opacity: interpolate(
+              frame,
+              [AGENT_X_MARGINALIA_FRAME, AGENT_X_MARGINALIA_FRAME + 24],
+              [0, 1],
+              { extrapolateLeft: 'clamp', extrapolateRight: 'clamp' },
+            ),
+            pointerEvents: 'none',
+          }}
+        >
+          // FILE: [REDACTED]
+          <br />
+          // PAPERWORK: 0
+        </div>
+      )}
+
+      {/* Otto-aside typographic chrome — lands on "Seven operatives in the
+          active roster" (the joke: 6 visible + Otto = 7) */}
       {frame >= OTTO_ASIDE_FRAME && (
         <div
           style={{
@@ -164,7 +258,7 @@ export const S03_MissionBackground: React.FC = () => {
             textTransform: 'uppercase',
             opacity: interpolate(
               frame,
-              [OTTO_ASIDE_FRAME, OTTO_ASIDE_FRAME + 12],
+              [OTTO_ASIDE_FRAME, OTTO_ASIDE_FRAME + 24],
               [0, 1],
               { extrapolateLeft: 'clamp', extrapolateRight: 'clamp' },
             ),

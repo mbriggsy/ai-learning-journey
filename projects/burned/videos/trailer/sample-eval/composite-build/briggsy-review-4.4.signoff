@@ -1,0 +1,21 @@
+signed-off-by: Briggsy
+date: 2026-05-23
+sha256: 1393891e3e2f017a55a1aa2b4f3bb91c05930bf109e7f5cc22db6168d1c3616a
+file: videos/trailer/out/s03-mission-background.mp4
+unit: 4.4 — S03 Mission Background Scene
+disposition: SHIP (R3, post-redo) — VO-beat-aligned across 27s: cascade entries land with Dash narration, Otto-aside + paperwork marginalia carry VO #1 callbacks, DeckStack + BurnedCardReveal carry VO #2, awkward-lean cascade settle carries the dark-sting closing
+composition: PreviewS03MissionBackground (27.0s @ 30fps, 810 frames, no audio per ADR #16)
+archer_test_doc: videos/trailer/sample-eval/composite-build/s03-archer-test.md
+review_mode: MP4 perceptual review with FFmpeg-muxed VO #1+#2 at scene-relative offsets (review-only build at out/s03-with-audio.mp4) — Briggsy ear + eye, beat alignment + motion + composition + chrome fluency
+verbatim_audit:
+  r1_call: "cards look like shit. Barry is clipped. Everything looks smaller than it needs to be and kinda fuzzy. Hard fucking zero." (HARD ZERO, commits 07ce2498 + d645db30)
+  r2_call: "It plays beautifully. All animation complete about the 7 second mark. … white bar flashes left to right [at ~14s]. And then continues to play with no movement to complete 27 seconds." (dead-time flag, prompted R3)
+  r3_call: "pretty sweet" → "lock it"
+component_inventory_carried_forward:
+  - OperativeCardFrame.tsx (now accepts optional redactName prop — inline charcoal-1 redact bar, no CSS-module-variable dependency)
+  - DeckStack.tsx (NEW — stack-of-3 card-backs + "120" badge + "// OPERATIONS" subtitle; archerStampSlap('payoff') envelope)
+  - BurnedCardReveal.tsx (NEW — burned.webp 440×440 with LOGO_SPRING_COLD spring + burned-fire multi-shadow glow + fade-out hook)
+  - BriefingRoomBackground.tsx (reused from S02)
+  - CommsTicker.tsx (reused from S02)
+  - DossierPageWipe.tsx (reused; mid-scene transition between VO #1 and VO #2)
+unit_4_10_gate: 4/6 Briggsy-eye sentinels collected (Unit 4.1 scaffold + Unit 4.2 S01 + Unit 4.3 S02 + Unit 4.4 S03). Remaining: S04 / S05 / S06.

@@ -1,0 +1,19 @@
+signed-off-by: Briggsy
+date: 2026-05-23
+sha256: 8269dda3631df9830c25b6033e68f28dacfa230861e68d227120786677ebdb3a
+file: videos/trailer/out/s01-cold-open.mp4
+unit: 4.2 — S01 Cold Open Scene
+disposition: SHIP — visual choreography passes Archer §2; motion shapes land
+composition: PreviewS01ColdOpen (7.0s @ 30fps, 210 frames, no audio per ADR #16)
+archer_test_doc: videos/trailer/sample-eval/composite-build/s01-archer-test.md
+review_mode: MP4 perceptual review — Briggsy eye, motion + composition + palette fluency
+verbatim_audit:
+  ship_call: "SHIP IT"
+component_inventory_carried_forward:
+  - R15Stamp.tsx (split-layer SVG + optional paperBg plate per BEAT-SHEET §R15 catalog line 144)
+  - OperativeCardFrame.tsx (consumes Phase 3 Unit 3.6 operative-card-frame.svg)
+  - animations.ts additions: STAMP_SLAP_PAYOFF, LOGO_SPRING_COLD, archerStampSlap helper
+  - card-roster.ts: COLD_OPEN_CARDS_DISPLAY_ORDER (Janet → Dash → Neal, pinned by test invariant)
+phase_3_carry_back_open:
+  r15_paper_plate: "BEAT-SHEET line 144 specifies 'ochre-9 ink on cream-12 stamp paper'; Phase 3 Unit 3.4 split-layer SVGs are transparent. Resolved at Phase 4 component level (R15Stamp paperBg prop). Phase 3 may want to bake the plate into the SVGs proper as a future maintenance pass; not blocking."
+unit_4_10_gate: 1/6 Briggsy-eye sentinels collected (4.1 scaffold + 4.2 S01 = 2 surfaces verified; 4.3 S02 / 4.4 S03 / 4.5 S04 / 4.6 S05 / 4.7 S06 pending).

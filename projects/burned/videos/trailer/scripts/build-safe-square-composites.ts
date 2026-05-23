@@ -170,8 +170,8 @@ const COMPOSITES: ReadonlyArray<Composite> = [
     kind: 'per-family',
     name: 'per-family-title-burned-logo',
     assets: ['public/trailer/title-sequence/burned-logo.svg'],
-    width: 900,
-    height: 300,
+    width: 1000,
+    height: 250,
   },
 
   // ── Cross-family scenes (Step 4b) ──
@@ -179,10 +179,17 @@ const COMPOSITES: ReadonlyArray<Composite> = [
     kind: 'cross-family',
     name: 'cross-family-s02-frame-300',
     background: '#1a1812',
+    // Venetian-blinds INTENTIONALLY excluded from this composite per
+    // 2026-05-22 Briggsy review — multiply blend over the cream
+    // blotter + dossier read as flat horizontal stripes, not as
+    // "sun-through-blinds" set-dressing. The SVG stays in the
+    // manifest because Phase 4 may use it scoped differently (smaller
+    // area, lighter opacity, or only over the dark mahogany margins
+    // outside the blotter). Surface this as a Phase 4 decision in
+    // PHASE-3-EXIT.md.
     assets: [
       'public/assets/arena/mahogany-horizontal.png',
       'public/assets/arena/blotter.png',
-      'public/trailer/briefing-room/venetian-blinds.svg',
       'public/trailer/briefing-room/dossier-folder-closed.svg',
       'public/trailer/briefing-room/depth-plane.svg',
       'public/assets/howtoplay/pendleton-crest.png',
@@ -201,12 +208,6 @@ const COMPOSITES: ReadonlyArray<Composite> = [
            style="position:absolute;left:140px;top:100px;width:1640px;height:880px;
                   object-fit:cover;
                   filter:drop-shadow(0 24px 40px rgba(0,0,0,0.45));" />
-
-      <!-- Venetian-blind shadow mask, slightly heavier so the cohesion
-           question "are blinds + folder shadow + nameplate shadow all
-           pointing the same way?" is actually answerable. -->
-      <img src="${rel('public/trailer/briefing-room/venetian-blinds.svg')}"
-           style="position:absolute;inset:0;width:100%;height:100%;opacity:0.72;mix-blend-mode:multiply" />
 
       <!-- R15 #1 classification stamp ON the blotter, upper-left, -8° -->
       <div style="position:absolute;left:260px;top:240px;width:560px;height:168px;

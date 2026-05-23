@@ -287,12 +287,13 @@ export const VISUAL_ASSETS: readonly VisualAsset[] = [
     staticPath: 'trailer/title-sequence/burned-logo.svg',
     safeSquareRole: 'safe-square',
     tier: 'hero',
-    width: 1200,
+    width: 1600,
     height: 400,
     notes:
       'S06 closing wordmark ONLY (frame 2780). S01 cold-open uses assets/cards/burned.webp ' +
       '(in-world card-art) per Phase 1 Unit 1.10 differential. Clash Display 700 320px, ' +
-      'burn-fire ink, letter-spacing -8.',
+      'burn-fire ink, letter-spacing -8. viewBox 1600×400 (widened from 1200 to clear ' +
+      'sans-serif fallback overflow on the D — 2026-05-22 eyeball fix).',
   },
 
   // ─── Title-sequence EXISTING (Path A via ADR #8) ─────────────

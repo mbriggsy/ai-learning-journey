@@ -1,4 +1,4 @@
-<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1200 400"
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1600 400"
      role="img" aria-label="BURNED"
      style="--ink: var(--color-burned-fire, #be2e27); --shadow: var(--color-cordovan-1, #15070a)">
   <!--
@@ -15,6 +15,16 @@
     Bass / Ferro lineage Phase 1 references. Slight letter-spacing
     tightening (-8) for the compressed-display feel; the negative
     tracking pulls the letters into a single dense slab.
+
+    **viewBox widened from 1200×400 → 1600×400** (2026-05-22 Briggsy
+    eyeball — "the D is clipped"). The sans-serif fallback renders
+    "BURNED" at 320px substantially wider than Clash Display would
+    (Segoe UI Bold / Arial Bold ≈ 1280–1320px wide), so the viewBox
+    was clipping the right edge of the 'D' in Img-render mode. With
+    1600 viewBox the text breathes ~150px on each side even at the
+    widest fallback. Drop-shadow filter region still clears the new
+    extents. **3:1 aspect dropped to 4:1 (1600×400)** — manifest
+    width entry updated to match.
 
     Subtle drop-shadow gives the wordmark presence on the closing
     card without competing with the R15 #4 subhead beneath it.
@@ -38,7 +48,7 @@
     </filter>
   </defs>
   <g filter="url(#logoDrop)">
-    <text x="600" y="290" text-anchor="middle"
+    <text x="800" y="290" text-anchor="middle"
           font-family="'Clash Display', 'Clash Display Fallback', system-ui, sans-serif"
           font-weight="700" font-size="320"
           fill="var(--ink)"

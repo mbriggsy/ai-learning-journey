@@ -1,183 +1,168 @@
 import React from 'react'
-import { AbsoluteFill, useCurrentFrame, useVideoConfig } from 'remotion'
+import {
+  AbsoluteFill,
+  Img,
+  interpolate,
+  spring,
+  staticFile,
+  useCurrentFrame,
+  useVideoConfig,
+} from 'remotion'
+import { OperativeCardFrame } from '../components/OperativeCardFrame'
+import { R15Stamp } from '../components/R15Stamp'
+import { LOGO_SPRING_COLD, EASE_OUT_EMIL } from '../lib/animations'
+import { COLD_OPEN_CARDS_DISPLAY_ORDER } from '../lib/card-roster'
 
 /**
- * S01 — Cold Open. Unit 4.1 SKELETAL SCAFFOLD; replaced by Unit 4.2.
+ * S01 — Cold Open. 7-second compressed-Archer title sequence.
  *
- * Doubles as the font-validation surface for the Unit 4.0 carry-forward
- * gate inherited when the font spike DROPPED (insight 066). Renders a
- * 3×3 (family × weight) panel exercising all three variable woff2 faces
- * at non-default weights — first-render visual verification closes the
- * residual coverage gap.
+ *   0–30    chevron-motif background settles in
+ *   30–90   Janet card flash (cold-open speaker; fade in 25-30, hold, out 80-90)
+ *   90–150  Dash card flash (briefer; fade in 85-90, hold, out 140-150)
+ *   150–180 Neal card flash (third operative; fade in 145-150, hold, out 170-180)
+ *   150–    R15 #1 OPERATION PENDLETON stamp slap, bottom-left, mobile safe-square
+ *   175–210 BURNED card-art reveal (burned.webp) with LOGO_SPRING_COLD scale-spring entry;
+ *           R15 stamp persists through the hold
  *
- * Once Unit 4.2 ships actual cold-open visuals, the font panel migrates
- * to `sample-eval/composite-build/font-validation.png` as an evidence
- * artifact and this scene becomes content-only.
+ * PURE VISUAL — no `<Audio>` per ADR #16. The Janet cold-open VO mounts
+ * at composition level (`TrailerComposition.tsx`) from frame 60 to ~199
+ * via the AUDIO_ASSETS manifest, overlapping all 3 card flashes plus the
+ * BURNED reveal.
+ *
+ * Phase 1 Unit 1.10 card-display order is Janet → Dash → Neal (Janet is
+ * the cold-open speaker so her face leads); `COLD_OPEN_CARDS_DISPLAY_ORDER`
+ * pins the order independent of CARD_ROSTER iteration.
+ *
+ * R15 #1 stamp uses split-layer SVGs (`stamp-1-operation-pendleton-
+ * frame.svg` + `-text.svg`) at the Phase 3 Unit 3.4 natural dimensions
+ * (800×240). offsetPx.x=500 places the stamp inside the mobile
+ * safe-square (x ∈ 420..1500 at the 1080-tall band) per amendment
+ * TIER 3 #11 — pre-deepening offsetPx.x=80 was outside the left crop.
+ *
+ * BURNED reveal uses `burned.webp` (the game's BURNED card art), NOT
+ * the S06 wordmark SVG — Phase 3 Unit 3.6 deepening lock (the SVG's own
+ * comment: "S01 cold-open uses burned.webp (card art); S06 closing uses
+ * this SVG wordmark (out-of-world bookend)").
  */
-const FONT_FAMILIES = ['Clash Display', 'General Sans', 'JetBrains Mono'] as const
-const FONT_WEIGHTS = [300, 500, 700] as const
 
-const ACCENT = '#be2e27' // burned-fire — S01 accent
+const BURNED_LAND_FRAME = 180
+const BURNED_SIZE = 900 // square; ~83% of 1080 canvas height
+const R15_LAND_FRAME = 150
+
+const [JANET, DASH, NEAL] = COLD_OPEN_CARDS_DISPLAY_ORDER
 
 export const S01_ColdOpen: React.FC = () => {
   const frame = useCurrentFrame()
-  const { durationInFrames, fps } = useVideoConfig()
+  const { fps } = useVideoConfig()
+
+  // Background chevron — fades up over the first 20 frames so the scene
+  // doesn't start with an abrupt full-pattern slap. 0.6 opacity ceiling
+  // keeps the pattern a TEXTURE, not a hero element.
+  const bgOpacity = interpolate(frame, [0, 20], [0.0, 0.6], {
+    easing: EASE_OUT_EMIL,
+    extrapolateLeft: 'clamp',
+    extrapolateRight: 'clamp',
+  })
+
+  // Card opacity envelopes — EASE_OUT entries (emil snap-into-place),
+  // linear exits (no easing needed for fade-to-zero).
+  const janetOpacity = interpolate(frame, [25, 30, 80, 90], [0, 1, 1, 0], {
+    easing: EASE_OUT_EMIL,
+    extrapolateLeft: 'clamp',
+    extrapolateRight: 'clamp',
+  })
+  const dashOpacity = interpolate(frame, [85, 90, 140, 150], [0, 1, 1, 0], {
+    easing: EASE_OUT_EMIL,
+    extrapolateLeft: 'clamp',
+    extrapolateRight: 'clamp',
+  })
+  const nealOpacity = interpolate(frame, [145, 150, 170, 180], [0, 1, 1, 0], {
+    easing: EASE_OUT_EMIL,
+    extrapolateLeft: 'clamp',
+    extrapolateRight: 'clamp',
+  })
+
+  // BURNED card-art reveal — opacity 0→1 over 175-180, then held.
+  // Spring drives scale: 0 → overshoot → 1 (~0.4s perceived).
+  const burnedOpacity = interpolate(frame, [175, 180], [0, 1], {
+    extrapolateLeft: 'clamp',
+    extrapolateRight: 'clamp',
+  })
+  const burnedSpring = spring({
+    frame: frame - BURNED_LAND_FRAME,
+    fps,
+    config: LOGO_SPRING_COLD,
+  })
+  // Map spring (0 → ~1.05 overshoot → 1) to scale (0.95 → 1.04 → 1.0).
+  const burnedScale = interpolate(burnedSpring, [0, 0.5, 1], [0.95, 1.04, 1.0], {
+    extrapolateRight: 'extend', // let spring overshoot push past 1.0 if it wants
+  })
 
   return (
-    <AbsoluteFill
-      style={{
-        backgroundColor: '#0e0c08', // cream-1
-        fontFamily: 'General Sans, system-ui, sans-serif',
-        color: '#f6ebce', // cream-12
-      }}
-    >
-      {/* Accent stripe */}
-      <div
+    <AbsoluteFill style={{ backgroundColor: '#0e0c08' /* cream-1 */ }}>
+      {/* Chevron-motif background — full-bleed Phase 3 asset */}
+      <Img
+        src={staticFile('trailer/title-sequence/chevron-motif-bg.svg')}
         style={{
           position: 'absolute',
-          top: 0,
-          left: 0,
-          right: 0,
-          height: 6,
-          backgroundColor: ACCENT,
+          inset: 0,
+          width: '100%',
+          height: '100%',
+          opacity: bgOpacity,
         }}
       />
 
-      {/* Scene identity — top-left */}
-      <div style={{ position: 'absolute', top: 56, left: 64, lineHeight: 1 }}>
-        <div
+      {/* Card 1 — Janet (cold-open speaker, frames 30-90) */}
+      <AbsoluteFill style={{ opacity: janetOpacity, justifyContent: 'center', alignItems: 'center' }}>
+        <OperativeCardFrame portraitFile={JANET.filename} operativeName={JANET.displayName} />
+      </AbsoluteFill>
+
+      {/* Card 2 — Dash (briefer, frames 90-150) */}
+      <AbsoluteFill style={{ opacity: dashOpacity, justifyContent: 'center', alignItems: 'center' }}>
+        <OperativeCardFrame portraitFile={DASH.filename} operativeName={DASH.displayName} />
+      </AbsoluteFill>
+
+      {/* Card 3 — Neal (third operative, frames 150-180) */}
+      <AbsoluteFill style={{ opacity: nealOpacity, justifyContent: 'center', alignItems: 'center' }}>
+        <OperativeCardFrame portraitFile={NEAL.filename} operativeName={NEAL.displayName} />
+      </AbsoluteFill>
+
+      {/* BURNED card-art reveal — lands frame 180, persists through scene end. */}
+      <AbsoluteFill
+        style={{
+          opacity: burnedOpacity,
+          justifyContent: 'center',
+          alignItems: 'center',
+          transform: `scale(${burnedScale})`,
+          transformOrigin: 'center',
+        }}
+      >
+        <Img
+          src={staticFile('assets/cards/burned.webp')}
           style={{
-            fontFamily: 'Clash Display, sans-serif',
-            fontWeight: 600,
-            fontSize: 80,
-            color: '#f6ebce',
-            letterSpacing: '-0.02em',
-          }}
-        >
-          S01_ColdOpen
-        </div>
-        <div
-          style={{
-            marginTop: 12,
-            fontFamily: 'General Sans, sans-serif',
-            fontWeight: 400,
-            fontSize: 22,
-            color: '#a69984', // cream-9
-            letterSpacing: '0.04em',
-            textTransform: 'uppercase',
-          }}
-        >
-          Cold Open · {durationInFrames}f · {(durationInFrames / fps).toFixed(1)}s
-        </div>
-      </div>
-
-      {/* Big numeric — center-left, subtle */}
-      <div
-        style={{
-          position: 'absolute',
-          top: '50%',
-          left: 64,
-          transform: 'translateY(-50%)',
-          fontFamily: 'Clash Display, sans-serif',
-          fontWeight: 200,
-          fontSize: 360,
-          color: '#454138', // charcoal-7
-          lineHeight: 0.85,
-          letterSpacing: '-0.06em',
-        }}
-      >
-        01
-      </div>
-
-      {/* Font-validation panel — right side; first-render carry-forward gate */}
-      <div
-        style={{
-          position: 'absolute',
-          top: 180,
-          right: 64,
-          width: 720,
-          display: 'grid',
-          gridTemplateColumns: 'repeat(3, 1fr)',
-          gridTemplateRows: 'auto repeat(3, auto)',
-          rowGap: 18,
-          columnGap: 28,
-        }}
-      >
-        {/* Column headers */}
-        {FONT_FAMILIES.map((family) => (
-          <div
-            key={family}
-            style={{
-              fontFamily: 'JetBrains Mono, monospace',
-              fontWeight: 500,
-              fontSize: 13,
-              color: '#edb182', // ochre-11
-              textTransform: 'uppercase',
-              letterSpacing: '0.12em',
-              paddingBottom: 8,
-              borderBottom: '1px solid #38342b', // charcoal-6
-            }}
-          >
-            {family}
-          </div>
-        ))}
-        {/* Cells — one specimen per (family, weight) */}
-        {FONT_WEIGHTS.map((weight) =>
-          FONT_FAMILIES.map((family) => (
-            <div
-              key={`${family}-${weight}`}
-              style={{
-                fontFamily: `${family}, sans-serif`,
-                fontWeight: weight,
-                fontSize: 36,
-                color: '#d0c3a5', // cream-11
-                lineHeight: 1.1,
-              }}
-            >
-              <div style={{ fontSize: 11, color: '#7b6f5d', letterSpacing: '0.08em', marginBottom: 2 }}>
-                {weight}
-              </div>
-              Pendleton
-            </div>
-          )),
-        )}
-      </div>
-
-      {/* Live frame counter — bottom-left */}
-      <div
-        style={{
-          position: 'absolute',
-          bottom: 56,
-          left: 64,
-          fontFamily: 'JetBrains Mono, monospace',
-          fontWeight: 500,
-          fontSize: 18,
-          color: '#edb182', // ochre-11
-          letterSpacing: '0.04em',
-        }}
-      >
-        frame {String(frame).padStart(4, '0')} / {String(durationInFrames - 1).padStart(4, '0')}
-      </div>
-
-      {/* Scene progress bar — bottom */}
-      <div
-        style={{
-          position: 'absolute',
-          bottom: 0,
-          left: 0,
-          right: 0,
-          height: 3,
-          backgroundColor: '#1a1812', // charcoal-3
-        }}
-      >
-        <div
-          style={{
-            height: '100%',
-            width: `${(frame / Math.max(durationInFrames - 1, 1)) * 100}%`,
-            backgroundColor: ACCENT,
+            width: BURNED_SIZE,
+            height: BURNED_SIZE,
+            // The card art is 1:1; no objectFit override needed at native ratio.
           }}
         />
-      </div>
+      </AbsoluteFill>
+
+      {/* R15 #1 OPERATION PENDLETON stamp — split-layer, bottom-left safe-square.
+          Cream-12 paper backing per BEAT-SHEET line 144 ("ochre-9 ink on
+          cream-12 stamp paper"). The Phase 3 split-layer SVGs are transparent;
+          this component-level plate provides contrast against the operative
+          card's ochre-9 name plate during frames 150-180. */}
+      <R15Stamp
+        frameSvg="trailer/r15-chrome/stamp-1-operation-pendleton-frame.svg"
+        textSvg="trailer/r15-chrome/stamp-1-operation-pendleton-text.svg"
+        anchor="bottom-left"
+        offsetPx={{ x: 500, y: 80 }}
+        width={800}
+        height={240}
+        tiltDeg={-12}
+        landFrame={R15_LAND_FRAME}
+        paperBg="#f6ebce"
+      />
     </AbsoluteFill>
   )
 }

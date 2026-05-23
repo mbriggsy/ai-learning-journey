@@ -137,8 +137,28 @@ export const CARD_ROSTER: readonly CardRosterEntry[] = [
 // the empty `roles: []` tuples and breaks `.includes()` type-narrowing
 // on the filter helpers below — runtime test is the cleaner gate).
 
-/** S01 cold-open card-flash trio (Janet + Dash + Neal). */
+/** S01 cold-open card-flash trio (Janet + Dash + Neal). Order is
+ * CARD_ROSTER iteration order — for the S01 scene's display order
+ * (Janet first as the cold-open speaker), use
+ * `COLD_OPEN_CARDS_DISPLAY_ORDER` instead. */
 export const COLD_OPEN_CARDS = CARD_ROSTER.filter((c) => c.roles.includes('cold-open'));
+
+/**
+ * S01 cold-open card-flash trio in DISPLAY ORDER per Phase 1 Unit 1.10
+ * lock — Janet (speaker, frames 30-90), Dash (briefer, 90-150), Neal
+ * (third operative, 150-180). Filename lookups guarantee the right
+ * cards even if CARD_ROSTER iteration order ever changes.
+ */
+const _byFilename = (name: string): CardRosterEntry => {
+  const found = CARD_ROSTER.find((c) => c.filename === name);
+  if (!found) throw new Error(`card-roster: ${name} missing from CARD_ROSTER`);
+  return found;
+};
+export const COLD_OPEN_CARDS_DISPLAY_ORDER = [
+  _byFilename('janet-broadside.webp'), // frames 30-90 — cold-open speaker
+  _byFilename('dash-barlowe.webp'),    // frames 90-150 — briefer
+  _byFilename('neal-proctor.webp'),    // frames 150-180 — third operative
+] as const;
 
 /** S03 roster slide-in (6 operatives). */
 export const S03_ROSTER = CARD_ROSTER.filter((c) => c.roles.includes('s03-roster'));

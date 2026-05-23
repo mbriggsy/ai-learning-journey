@@ -10,12 +10,13 @@ the history. (Rule: `feedback-todo-is-not-a-diary.md`.)
 ### Current state (verified 2026-05-22)
 
 - Tests: **1407 pass** | 6 expected fail (68/68 files green)
-- Trailer subpackage tests: **219 pass | 0 expected-fail** (11 files;
+- Trailer subpackage tests: **220 pass | 0 expected-fail** (11 files;
   script-coverage drift gate green — every cue has a WAV, 16/16;
-  card-roster drift gates green — 17/17 webps in sync;
+  card-roster drift gates green — 17/17 webps in sync; new
+  COLD_OPEN_CARDS_DISPLAY_ORDER pin (Janet → Dash → Neal per Unit 4.2);
   visual-manifest drift gates green — every Path B asset in
   manifest, every manifest entry on disk;
-  audio-manifest drift gate NEW Unit 4.1 — every cue staticPath
+  audio-manifest drift gate Unit 4.1 — every cue staticPath
   resolves to a real file at `<BURNED>/public/trailer/audio/lines/<f>`,
   every staticPath prefixed `trailer/audio/lines/` per ADR #15)
 - Typecheck: clean (`pnpm typecheck` root + `videos/trailer/`)
@@ -121,11 +122,34 @@ drift). Trailer-local `public/audio/` dir removed (empty post-move). Root
 `EXCLUDED_TRAILER_DIRS` adds `trailer/audio/lines` (owned by audio
 manifest).
 
-**Phase 4 next unit:** Unit 4.2 — S01 Cold Open implementation. Replaces
-the Unit 4.1 skeletal S01 (which currently doubles as the font-validation
-surface). Once Unit 4.2 lands, the 3×3 font panel migrates to a one-off
-evidence artifact at `sample-eval/composite-build/font-validation.png`
-and `S01_ColdOpen` becomes content-only.
+**Unit 4.2 — COMPLETED 2026-05-22.** Verification doc at
+`videos/trailer/sample-eval/composite-build/s01-archer-test.md`.
+Compressed-Archer cold-open: 3 operative card flashes (Janet → Dash →
+Neal per `COLD_OPEN_CARDS_DISPLAY_ORDER`) with EASE_OUT_EMIL entries +
+ochre-name-plate nameplate overlay; R15 #1 OPERATION PENDLETON stamp
+(split-layer SVG via new `R15Stamp` component + cream-12 paper plate
+per BEAT-SHEET line 144) lands at frame 150 tilted -12°; BURNED card-
+art (`burned.webp`) revealed at frame 180 via `LOGO_SPRING_COLD`
+spring (mass 0.5, damping 11, stiffness 200, overshootClamping false).
+Phase 0 carry-forward font-validation panel migrated to one-off
+evidence at `sample-eval/composite-build/font-validation.png`. New
+production components: `R15Stamp.tsx` (with `paperBg` prop —
+component-level cream plate fix; Phase 3 SVGs are transparent), 
+`OperativeCardFrame.tsx` (consumes Phase 3 Unit 3.6
+`operative-card-frame.svg`). New animation primitives:
+`STAMP_SLAP_PAYOFF`, `LOGO_SPRING_COLD`, `archerStampSlap` helper.
+Phase 0 spike components (`R15ChromeStamp`, `OperativePortraitFlash`,
+`BurnedLogoPlate`) stay for regression renders. Render evidence:
+`out/s01-cold-open.mp4` (1.9 MB, H264 CRF 18, 210 frames / 7.0 s) +
+PNG stills at frames 30/90/150/156/162/180/210. Pending Briggsy-eye
+sentinel `briggsy-review-4.2.signoff` for Unit 4.10 master-render
+entry.
+
+**Phase 4 next unit:** Unit 4.3 — S02 Briefing Setup. 12 s scene
+opening the briefing room with case-banner chrome + comms-ticker
+intro. Dependencies: Phase 3 Unit 3.3 briefing-room assets (mahogany
+horizontal, venetian-blinds.svg, brass-nameplate, etc.) + Unit 4.1
+composition wiring.
 
 **Phase 2 carry-forwards → Phase 3+** (stitch / silenceremove
 generalizations):

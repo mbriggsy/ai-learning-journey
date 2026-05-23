@@ -127,6 +127,15 @@ describe('card-roster derived exports', () => {
     )
   })
 
+  it('COLD_OPEN_CARDS_DISPLAY_ORDER pins Janet first (Phase 1 Unit 1.10 lock — cold-open speaker)', async () => {
+    const { COLD_OPEN_CARDS_DISPLAY_ORDER } = await import('./card-roster.js')
+    expect(COLD_OPEN_CARDS_DISPLAY_ORDER.map((c) => c.filename)).toEqual([
+      'janet-broadside.webp', // frames 30-90
+      'dash-barlowe.webp',    // frames 90-150
+      'neal-proctor.webp',    // frames 150-180
+    ])
+  })
+
   it('S03_ROSTER contains all 6 operatives', async () => {
     const { S03_ROSTER } = await import('./card-roster.js')
     expect(S03_ROSTER.length).toBe(6)

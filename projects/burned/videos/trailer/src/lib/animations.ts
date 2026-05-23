@@ -11,7 +11,7 @@
  * word reveal. Matches BURNED's `MOTION_EASINGS.decelerate` family but
  * with sharper early slope (0.16 vs 0.23) for the "slap" feel.
  */
-import { Easing } from 'remotion'
+import { Easing, interpolate, type SpringConfig } from 'remotion'
 
 // emil EASE_OUT — cubic-bezier(0.16, 1, 0.3, 1)
 export const EASE_OUT_EMIL = Easing.bezier(0.16, 1, 0.3, 1)
@@ -43,3 +43,94 @@ export const STAMP_SLAP = {
     holdEnd: 12, // 10 → 12: hold at 1.0
   },
 } as const
+
+/**
+ * Heavy stamp-slap envelope — variant for the R3 stacked-payoff stamp
+ * (S04 frame 2280). Deeper start scale (0.85 vs 0.95) + higher overshoot
+ * (1.06 vs 1.04) carry more dramatic weight at the trailer's load-bearing
+ * moment. 16-frame envelope (vs 12 standard) per `transitions.ts`
+ * `STAMP_SLAP_HEAVY_FRAMES` Phase 1 lock.
+ *
+ * Same shape (scaleStart → scalePeak → scaleSettle) — heavier values.
+ */
+export const STAMP_SLAP_PAYOFF = {
+  durationFrames: 16,
+  scaleStart: 0.85,
+  scalePeak: 1.06,
+  scaleSettle: 1.0,
+  rotateStart: -8,
+  rotateEnd: -3,
+  keyframes: {
+    scaleInEnd: 8, // 0 → 8: scale 0.85 → 1.06
+    settleEnd: 13, // 8 → 13: scale 1.06 → 1.0
+    holdEnd: 16, // 13 → 16: hold at 1.0
+  },
+} as const
+
+/**
+ * Spring config for the S01 cold-open BURNED-card reveal at frame 180.
+ *
+ * Snappy by design — distinct vocabulary from S06's closing card
+ * (which lands settled, not snappy, per the wordmark-final-bookend
+ * grammar). Cold-open BURNED card reveal IS the cold-open hook
+ * payoff; LOGO_SPRING_COLD spring overshoots ~6% then settles fast
+ * (~0.5s perceived). S06 LOGO_SPRING_CLOSING when authored will use
+ * higher damping for a calmer settle.
+ */
+export const LOGO_SPRING_COLD: SpringConfig = {
+  mass: 0.5,
+  damping: 11,
+  stiffness: 200,
+  overshootClamping: false,
+}
+
+/**
+ * Archer-grammar stamp-slap motion helper. Returns scale + rotate +
+ * opacity per local frame for a stamp that lands at `landFrame`.
+ *
+ * The wrapper component applies these to a SINGLE
+ * `transform: scale() rotate()` so split-layer SVGs (frame.svg +
+ * text.svg) stay locked together through the overshoot. `tiltDeg`
+ * adds a per-stamp baseline tilt to the envelope's rotateStart/End
+ * (typical R15 tilts: -12, -8, -10, -6).
+ *
+ * Variant 'payoff' selects the heavier `STAMP_SLAP_PAYOFF` envelope —
+ * used for the S04 R3 stacked-payoff stamp. Standard variant covers
+ * R15 #1 (S01), R15 #2 (S04 comms ticker), R15 #4 (S06 closing).
+ */
+export function archerStampSlap({
+  frame,
+  landFrame,
+  tiltDeg = 0,
+  variant = 'standard',
+}: {
+  frame: number
+  landFrame: number
+  tiltDeg?: number
+  variant?: 'standard' | 'payoff'
+}): { scale: number; rotate: number; opacity: number } {
+  const local = frame - landFrame
+  const env = variant === 'payoff' ? STAMP_SLAP_PAYOFF : STAMP_SLAP
+
+  const scale = interpolate(
+    local,
+    [0, env.keyframes.scaleInEnd, env.keyframes.settleEnd, env.keyframes.holdEnd],
+    [env.scaleStart, env.scalePeak, env.scaleSettle, env.scaleSettle],
+    { easing: EASE_OUT_EMIL, extrapolateLeft: 'clamp', extrapolateRight: 'clamp' },
+  )
+
+  const rotate = interpolate(
+    local,
+    [0, env.keyframes.holdEnd],
+    [env.rotateStart + tiltDeg, env.rotateEnd + tiltDeg],
+    { easing: EASE_OUT_EMIL, extrapolateLeft: 'clamp', extrapolateRight: 'clamp' },
+  )
+
+  // 3-frame opacity ramp so the slap reads as impact, not teleport.
+  const opacity = interpolate(local, [0, 3], [0, 1], {
+    extrapolateLeft: 'clamp',
+    extrapolateRight: 'clamp',
+  })
+
+  return { scale, rotate, opacity }
+}

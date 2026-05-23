@@ -1,17 +1,30 @@
 <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1920 40"
      preserveAspectRatio="none"
      role="img" aria-label="OPERATIVE [REDACTED] — METHOD REPEATABLE"
-     style="--ink: var(--color-ochre-9, #947226)">
+     style="--ink: var(--color-ochre-11, #edb182)">
   <!--
     R15 #2 comms-ticker — TEXT LAYER. CHROME tier.
     Phase 1 Unit 1.9 locked copy.
 
-    Phase 4 may apply `translateX(<offset>px)` to the wrapping element
-    for scrolling-ticker effect at the cascade peak. Text layer in
-    identity space; Phase 4 owns motion.
+    **Ink bumped ochre-9 → ochre-11** (2026-05-22 Briggsy eyeball: at
+    trailer scale text was muddy gold on muddy brown, unreadable
+    without zoom). Ochre-11 (#edb182) reads as classic "amber CRT"
+    on charcoal-3; CVD probe distance jumped 0.352 → 0.565 (60%
+    improvement, 5.65× the STRICT 0.10 floor). Frame layer rules +
+    chevrons stay ochre-9 for hierarchy (text brighter than chrome).
+
+    **Size/weight/spacing also tuned:** font-size 22 → 26 (fills more
+    of the 40-tall strip while leaving stroke-clearance), weight
+    500 → 600 (heavier monospace strokes hold legibility at small
+    pixel sizes), letter-spacing 3.2 → 2.4 (tighter tracking pulls
+    individual letters back to character-shapes from dash-shapes).
+
+    Phase 4 may apply `translateX(<offset>px)` to the wrapping
+    element for scrolling-ticker effect at the cascade peak. Text
+    layer in identity space; Phase 4 owns motion.
   -->
-  <text x="960" y="28" text-anchor="middle"
+  <text x="960" y="29" text-anchor="middle"
         font-family="'JetBrains Mono', 'IBM Plex Mono', 'Courier New', monospace"
-        font-weight="500" font-size="22"
-        fill="var(--ink)" letter-spacing="3.2">OPERATIVE [REDACTED] — METHOD REPEATABLE</text>
+        font-weight="600" font-size="26"
+        fill="var(--ink)" letter-spacing="2.4">OPERATIVE [REDACTED] — METHOD REPEATABLE</text>
 </svg>

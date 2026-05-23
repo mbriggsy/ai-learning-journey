@@ -38,8 +38,14 @@ const PAIRS: ReadonlyArray<readonly [name: string, fgHex: string, bgHex: string]
   // R15 #1 OPERATION PENDLETON — ochre stamp on cream parchment (S01 frame 150)
   ['R15-#1 ochre-9 on cream-12 (fresh paper)', '#947226', '#f6ebce'],
   ['R15-#1 ochre-9 on cream-11 (aged paper)',  '#947226', '#d0c3a5'],
-  // R15 #2 OPERATIVE [REDACTED] — ochre ink on charcoal ticker (S04 frame 1680)
-  ['R15-#2 ochre-9 on charcoal-3 ticker',      '#947226', '#1a1812'],
+  // R15 #2 OPERATIVE [REDACTED] — ochre-11 ink on charcoal ticker (S04 frame 1680).
+  // Bumped from ochre-9 → ochre-11 on 2026-05-22 (Briggsy: text unreadable
+  // at trailer scale unless zoomed in). Ochre-11 reads as classic "amber CRT"
+  // on dark, with much higher L* for small-text legibility. Per-channel pair
+  // also tested below to keep the original on file if Phase 4 reverts.
+  ['R15-#2 ochre-11 on charcoal-3 ticker',     '#edb182', '#1a1812'],
+  // Historical (R15-#2 v1 — kept for reference; not shipped):
+  ['R15-#2 ochre-9 on charcoal-3 ticker (v1)', '#947226', '#1a1812'],
   // R15 #3 ASSET DELIVERED — HERO burn-fire stamp on cream (S04 frame 1950)
   ['R15-#3 burn-fire on cream-12',             '#be2e27', '#f6ebce'],
   ['R15-#3 burn-fire on cream-11',             '#be2e27', '#d0c3a5'],

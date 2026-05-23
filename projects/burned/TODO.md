@@ -10,9 +10,11 @@ the history. (Rule: `feedback-todo-is-not-a-diary.md`.)
 ### Current state (verified 2026-05-22)
 
 - Tests: **1407 pass** | 6 expected fail (68/68 files green)
-- Trailer subpackage tests: **203 pass | 0 expected-fail** (9 files;
+- Trailer subpackage tests: **215 pass | 0 expected-fail** (10 files;
   script-coverage drift gate green — every cue has a WAV, 16/16;
-  card-roster drift gates green — 17/17 webps in sync)
+  card-roster drift gates green — 17/17 webps in sync;
+  visual-manifest drift gates green — every Path B asset in
+  manifest, every manifest entry on disk)
 - Typecheck: clean (`pnpm typecheck` root + `videos/trailer/`)
 - Phone player entry: **19.17 KB gz**
 - DramaOverlay lazy chunk: **2.34 KB gz**
@@ -29,10 +31,11 @@ Plans (8) drafted, deepened, document-reviewed at
 `docs/plans/origin-trailer/` (phase-0 through phase-7 + `roadmap.md`
 ADR ledger). Sequential phase execution.
 
-**Phase 0 / 1 / 2 — ✅ CLOSED.** Cleared sequentially 2026-05-18 →
+**Phase 0 / 1 / 2 / 3 — ✅ CLOSED.** Cleared sequentially 2026-05-18 →
 2026-05-22. See plan checkboxes + git log for unit history. Per-phase
 EXIT docs + sign-off sentinels under
-`videos/trailer/sample-eval/voice-pipeline/` + `videos/trailer/PHASE-0-EXIT.md`.
+`videos/trailer/sample-eval/voice-pipeline/` + `videos/trailer/PHASE-0-EXIT.md`
++ `videos/trailer/PHASE-3-EXIT.md`.
 
 Hand-off contracts now in place:
 - **Phase 1 → Phase 2/3/4:** `videos/trailer/BEAT-SHEET.md` (frozen).
@@ -40,30 +43,40 @@ Hand-off contracts now in place:
   16 typed `AudioAsset` entries (R5=keep; 86.10s cumulative measured
   audio across 106s composition window). Phase 4 imports for
   `<Audio>` placement per asset-inventory.md hand-off doc.
+- **Phase 3 → Phase 4:** `videos/trailer/src/lib/visual-manifest.ts`
+  + `videos/trailer/PHASE-3-EXIT.md`. Manifest helper exports:
+  `HTP_ASSET` (1), `R15_CHROME` (8 SVGs), `BRIEFING` (10),
+  `TITLE_SEQ` (4), `MUSIC_BED` (1). Card-art SSoT remains
+  `card-roster.ts` (not duplicated in visual-manifest).
 
-**Phase 3 — IN-FLIGHT.** Visual asset prep at
-`docs/plans/origin-trailer/phase-3-visual-asset-prep.md`. 8 units
-(3.0-3.7). ✅ landed 2026-05-22: Unit 3.0 (HTP vocab vendoring +
-drift gate), Unit 3.1 (HTP fullpage capture against production),
-Unit 3.2 (card-art curation — 17-entry typed roster + cascade-halo
-column geometry + bidirectional drift tests), Unit 3.3 (briefing-
-room set-dressing — 4 NEW SVGs at `public/trailer/briefing-room/`:
+**Phase 3 — ✅ CLOSED** (Unit 3.7 landed 2026-05-22). Final units:
+Unit 3.0 (HTP vocab vendoring + drift gate), Unit 3.1 (HTP fullpage
+capture 1920×19848 against production), Unit 3.2 (17-entry typed
+card-roster + cascade-halo column geometry + bidirectional drift
+tests), Unit 3.3 (briefing-room set-dressing — 4 NEW SVGs:
 venetian-blinds, depth-plane Option A brass nameplate, dossier-
-folder-closed, dossier-folder-open + reference-render capture script
-+ consolidated `asset-inventory.md`; $0 Imagen spend), Unit 3.4
-(R15 chrome stamps SPLIT-LAYER — 8 SVGs at `public/trailer/r15-
-chrome/` for 4 R15 instances × frame + text + CVD probe script,
-all 6 ink/bg pairs clear STRICT 0.10 oklab floor under deuter/prot/
-trit), Unit 3.6 (cold-open title-sequence — 3 NEW SVGs at
-`public/trailer/title-sequence/` for operative-card-frame +
-chevron-motif-bg + burned-logo + Playwright composite proof PNG;
-$0 cumulative Imagen spend through 3.6 — tracker landed at
-`videos/trailer/sample-eval/visual-asset-prep/imagen-spend.md`).
-Unit 3.5 (music bed — "Spy Glass" by Kevin MacLeod, CC-BY 4.0,
-$0 paid; Phase 1 paid-source ladder bypassed per Briggsy
-"not paying for music" directive captured in
-`project-burned-music-bed-budget` memory). **Remaining: 3.7 visual
-manifest + PHASE-3-EXIT.md hand-off — Phase 3 closeout.**
+folder-closed, dossier-folder-open), Unit 3.4 (R15 chrome stamps
+SPLIT-LAYER — 8 SVGs for 4 R15 instances × frame + text; CVD probe
+clears STRICT 0.10 oklab floor across 6 pairs / 3 deficiency sims),
+Unit 3.5 (music bed — "Spy Glass" by Kevin MacLeod CC-BY 4.0, $0
+paid), Unit 3.6 (cold-open title-sequence — 3 NEW SVGs + composite
+proof), **Unit 3.7 (typed visual-manifest + 12 drift-gate tests + 9
+per-family safe-square composites + 2 cross-family scene composites
+[S02 frame-300 briefing reveal + S04 frame-1950 cascade payoff
+stamp slap] + PHASE-3-EXIT.md hand-off doc).** Cumulative Imagen
+spend: **$0.00 / $6 cap.**
+
+**Phase 4 — NEXT UP.** Remotion composite at
+`docs/plans/origin-trailer/phase-4-remotion-composite.md`. Entry
+prerequisites surfaced in `videos/trailer/PHASE-3-EXIT.md`:
+- **Token-import strategy** (Option A vendor / B path-import / C
+  Phase-4-specific shim) — MUST be picked at Phase 4 deepening per
+  insight #060 (forward-deferred gates ratchet structural debt).
+- **Variable woff2 weight `'200 700'` syntax SPIKE** — untested in
+  Remotion 4.x; static per-weight subsets is fallback.
+- **Briefing-room reference renders** (`case-banner-reference.png`,
+  `comms-ticker-reference.png`) deferred to Phase 4 invocation —
+  needs BURNED in playing-state game.
 
 **Phase 2 carry-forwards → Phase 3+** (stitch / silenceremove
 generalizations):
@@ -160,6 +173,22 @@ FFmpeg muxer gotcha):
 
 Active warnings only. Older landmines have moved to `docs/insights/` and
 `CLAUDE.md`.
+
+- **Playwright composite scripts write a temp HTML under `public/trailer/`**
+  (LANDMINE, 2026-05-22 Unit 3.7). Both
+  `build-operative-card-composite-proof.ts` and
+  `build-safe-square-composites.ts` write `__safe-square-temp.html` /
+  `__composite-proof-temp.html` into BURNED's `public/trailer/` so
+  file:// asset references resolve same-origin (Chromium treats
+  setContent + file:// as cross-origin and silently fails image loads
+  with naturalWidth=0). Scripts cleanup in `finally`; if a script is
+  killed between writeFile and unlink, the temp leaks.
+  · `visual-manifest.test.ts` canary catches leaks: `it('rejects the
+    temp HTML composite-proof file leaking into the manifest tree')`.
+  · Any new Playwright composite script MUST follow the same pattern
+    (write temp to `BURNED_ROOT/public/trailer/__<slug>-temp.html`,
+    pathToFileURL navigation, finally-block unlink). Update the canary
+    if the temp filename convention changes.
 
 - **Janet voice = Eleanor + cunty-matriarch-tuned, NOT Sloane, NOT
   Roger defaults** (RE-LOCKED 2026-05-19 by Phase 2 Unit 2.3 cunty

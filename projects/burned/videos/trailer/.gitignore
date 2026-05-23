@@ -10,8 +10,12 @@ sample-eval/r5-scream/path-b-source-recording.*
 sample-eval/r4-dash/voice-clone-source.*
 # Rendered MP4 clips for listener-panel stimuli (pre-launch audio leak risk)
 sample-eval/**/clips/*.mp4
-# Phase 2 voice pipeline — generated WAVs (privacy + repo bloat) + spend log
-# (account-scoped credentials) + voice-actor PII (Path D).
+# Phase 2 voice pipeline — generated WAVs.
+# As of Phase 4 Unit 4.1 (2026-05-22) the TTS WAVs live at the BURNED-root
+# `public/trailer/audio/lines/` (gitignored from the root `.gitignore`) so
+# Remotion's `setPublicDir('../../public')` can resolve their staticPath.
+# These patterns are kept as belt-and-suspenders in case a script revert
+# re-creates the trailer-local dir.
 public/audio/lines/
 public/audio/lines/raw/
 sample-eval/voice-pipeline/tts-spend.json

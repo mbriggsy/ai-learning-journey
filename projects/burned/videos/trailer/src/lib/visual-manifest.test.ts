@@ -37,13 +37,16 @@ const TRAILER_DIR = resolve(PUBLIC_ROOT, 'trailer')
 
 /**
  * Directories under `public/trailer/` that are NOT trailer-composition
- * assets — Phase 0 ADR #5 spike artifacts + Phase 0 voice-audition
- * candidates left in place for reference. If anything in these dirs
- * ever ships to the trailer, MIGRATE it into the manifest first.
+ * visual assets — Phase 0 ADR #5 spike artifacts + Phase 0 voice-audition
+ * candidates left in place for reference, plus the Phase 2 TTS WAV tree
+ * which is owned by `audio-manifest.ts` (see `audio-manifest.test.ts`
+ * for that file's forward drift gate). If anything outside these dirs
+ * ships to the trailer, MIGRATE it into the visual manifest first.
  */
 const EXCLUDED_TRAILER_DIRS = new Set<string>([
   'trailer/spike',
   'trailer/cold-open',
+  'trailer/audio/lines',
 ])
 
 /** File extensions that the manifest is responsible for. */

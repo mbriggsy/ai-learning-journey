@@ -20,7 +20,8 @@ import { parsePhase0Exit } from '../../scripts/lib/phase-0-exit';
 
 const HERE = dirname(fileURLToPath(import.meta.url));
 const TRAILER_ROOT = resolve(HERE, '../..');
-const LINES_DIR = resolve(TRAILER_ROOT, 'public/audio/lines');
+// Per Phase 4 Unit 4.1 ADR #15 correction — see cue-filename.ts.
+const LINES_DIR = resolve(TRAILER_ROOT, '../../public/trailer/audio/lines');
 const PHASE_0_EXIT = resolve(TRAILER_ROOT, 'PHASE-0-EXIT.md');
 
 /**

@@ -1,0 +1,137 @@
+/*
+ * tokens.css — Option C fixed-value shim per Phase 4 deepening fork 3
+ * (amendment SA-7).
+ *
+ * Cloned subset of BURNED `src/client/shared/tokens/primitives.css` so the
+ * vendored `burned-vocabulary/` `.module.css` files compile in this
+ * isolated package without reaching across the workspace boundary.
+ *
+ * Architecture: trailer is an isolated package (per Phase 0 ADR #2 +
+ * #15). When BURNED tokens evolve, this file MAY drift — that's by
+ * design. Re-sync via manual review when adopting new vocabulary;
+ * `pnpm verify:vocab-sync` catches CSS drift in vendored components.
+ *
+ * Cloned values verified against source at Unit 4.1 execution
+ * (2026-05-22). Scope: color scales (teal/ochre/cream/charcoal/cordovan/
+ * emerald) + spot colors (neon-magenta, burned-fire) + spacing/radius
+ * primitives. Motion durations OMITTED — Remotion drives motion off
+ * frames, not CSS durations.
+ */
+
+:root {
+  /* === Teal scale — Dreamland cool hue === */
+  --color-teal-1:  #08181a;
+  --color-teal-2:  #0c2024;
+  --color-teal-3:  #11292d;
+  --color-teal-4:  #163338;
+  --color-teal-5:  #1e3f45;
+  --color-teal-6:  #284c53;
+  --color-teal-7:  #335a62;
+  --color-teal-8:  #406972;
+  --color-teal-9:  #4a7880;
+  --color-teal-10: #5a8a90;
+  --color-teal-11: #a0c5ca;
+  --color-teal-12: #d7f1f5;
+
+  /* === Ochre scale — Dreamland warm hue (mahogany → amber → honey) === */
+  --color-ochre-1:  #1a0d05;
+  --color-ochre-2:  #25160b;
+  --color-ochre-3:  #321e10;
+  --color-ochre-4:  #422818;
+  --color-ochre-5:  #553520;
+  --color-ochre-6:  #6a4228;
+  --color-ochre-7:  #805032;
+  --color-ochre-8:  #98603e;
+  --color-ochre-9:  #947226;
+  --color-ochre-10: #c98a5c;
+  --color-ochre-11: #edb182;
+  --color-ochre-12: #ffe9b9;
+
+  /* === Cream scale — warm neutral for text, highlights, paper surfaces === */
+  --color-cream-1:  #0e0c08;
+  --color-cream-2:  #19160f;
+  --color-cream-3:  #252016;
+  --color-cream-4:  #332c20;
+  --color-cream-5:  #433a2c;
+  --color-cream-6:  #52483a;
+  --color-cream-7:  #655a4a;
+  --color-cream-8:  #7b6f5d;
+  --color-cream-9:  #a69984;
+  --color-cream-10: #b0a38a;
+  --color-cream-11: #d0c3a5;
+  --color-cream-12: #f6ebce;
+
+  /* === Charcoal scale — warm-neutral chrome for borders, linework === */
+  --color-charcoal-1:  #0a0906;
+  --color-charcoal-2:  #12100b;
+  --color-charcoal-3:  #1a1812;
+  --color-charcoal-4:  #23211a;
+  --color-charcoal-5:  #2d2a22;
+  --color-charcoal-6:  #38342b;
+  --color-charcoal-7:  #454138;
+  --color-charcoal-8:  #534e45;
+  --color-charcoal-9:  #665f55;
+  --color-charcoal-10: #7b7467;
+  --color-charcoal-11: #c3baae;
+  --color-charcoal-12: #f1ebdc;
+
+  /* === Cordovan scale — Dreamland crimson (lipstick, danger, wine) === */
+  --color-cordovan-1:  #15070a;
+  --color-cordovan-2:  #210b10;
+  --color-cordovan-3:  #2f1015;
+  --color-cordovan-4:  #40141b;
+  --color-cordovan-5:  #521820;
+  --color-cordovan-6:  #641c26;
+  --color-cordovan-7:  #78222d;
+  --color-cordovan-8:  #8d2936;
+  --color-cordovan-9:  #a33340;
+  --color-cordovan-10: #b9404c;
+  --color-cordovan-11: #ffa3a1;
+  --color-cordovan-12: #ffe5d5;
+
+  /* === Emerald scale — muted forest green for success, Intercept === */
+  --color-emerald-1:  #081410;
+  --color-emerald-2:  #0d1e18;
+  --color-emerald-3:  #122a21;
+  --color-emerald-4:  #18362c;
+  --color-emerald-5:  #1f4336;
+  --color-emerald-6:  #275043;
+  --color-emerald-7:  #2f5e4f;
+  --color-emerald-8:  #3f8d7e;
+  --color-emerald-9:  #649e88;
+  --color-emerald-10: #7ab49c;
+  --color-emerald-11: #91c9af;
+  --color-emerald-12: #d0f5dc;
+
+  /* === Neon-magenta spot colors (NOT a scale — 2 values only) === */
+  --color-neon-magenta:      #e84a9c;
+  --color-neon-magenta-glow: #ff6fb8;
+
+  /* === Burned-fire spot color (NOT a scale — single value) ===
+     Hotter than cordovan-9 so BURNED reads as DANGER instead of dignity. */
+  --color-burned-fire:       #be2e27;
+
+  /* === Spacing (4px base, axis-independent) === */
+  --space-0:  0;
+  --space-1:  0.25rem;
+  --space-2:  0.5rem;
+  --space-3:  0.75rem;
+  --space-4:  1rem;
+  --space-5:  1.25rem;
+  --space-6:  1.5rem;
+  --space-8:  2rem;
+  --space-10: 2.5rem;
+  --space-12: 3rem;
+  --space-16: 4rem;
+  --space-20: 5rem;
+
+  /* === Radius (axis-independent) === */
+  --radius-none: 0;
+  --radius-xs:   2px;
+  --radius-sm:   4px;
+  --radius-md:   8px;
+  --radius-lg:   12px;
+  --radius-xl:   16px;
+  --radius-2xl:  24px;
+  --radius-full: 9999px;
+}

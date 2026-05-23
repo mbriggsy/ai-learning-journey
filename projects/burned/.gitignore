@@ -3,6 +3,14 @@ dist/
 coverage/
 .chrome-dev-profile/
 
+# Phase 2 trailer voice pipeline — generated WAVs (privacy + repo bloat).
+# Moved here from videos/trailer/.gitignore by Phase 4 Unit 4.1 ADR #15
+# correction (2026-05-22): TTS WAVs live at the BURNED-root public so
+# Remotion's setPublicDir('../../public') can resolve them. Old trailer
+# .gitignore entries kept for safety (the trailer-local dir is empty but
+# could be re-created by a script reverting paths).
+public/trailer/audio/lines/
+
 # Generated palette token artifact — source of truth is primitives.css
 src/client/shared/tokens/palette.generated.ts
 .partykit/

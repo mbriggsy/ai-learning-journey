@@ -39,7 +39,8 @@ import { isValidWav } from './tts-clients/wav-utils.js';
 
 const HERE = dirname(fileURLToPath(import.meta.url));
 const TRAILER_ROOT = resolve(HERE, '..');
-const OUT_DIR = resolve(TRAILER_ROOT, 'public/audio/lines');
+// Per Phase 4 Unit 4.1 ADR #15 correction — see cue-filename.ts.
+const OUT_DIR = resolve(TRAILER_ROOT, '../../public/trailer/audio/lines');
 const META_DIR = resolve(OUT_DIR, '.meta');
 const PRIMING_OVERRIDES = resolve(
   TRAILER_ROOT,

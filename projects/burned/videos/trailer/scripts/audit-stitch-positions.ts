@@ -15,7 +15,8 @@ import { cueFilename } from './lib/cue-filename.js';
 
 const HERE = dirname(fileURLToPath(import.meta.url));
 const TRAILER_ROOT = resolve(HERE, '..');
-const LINES_DIR = resolve(TRAILER_ROOT, 'public/audio/lines');
+// Per Phase 4 Unit 4.1 ADR #15 correction — see cue-filename.ts.
+const LINES_DIR = resolve(TRAILER_ROOT, '../../public/trailer/audio/lines');
 
 const BEAT_TOKEN = /\[BEAT\s+(\d+(?:\.\d+)?)(ms|s)\]/g;
 const TOLERANCE_MS = 15;

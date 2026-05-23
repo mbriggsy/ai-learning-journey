@@ -37,9 +37,13 @@ const REQUIRED_FILES = [
 
 const REQUIRED_DEVDEPS = ['vitest', 'tsx', 'dotenv'] as const;
 
+// Phase 4 Unit 4.1 (2026-05-22): TTS WAVs moved to BURNED-root per ADR #15;
+// gitignore patterns now scoped from the BURNED root. The preflight runs
+// from the trailer subdir, so patterns are checked against the trailer's
+// .gitignore (sample-eval) plus an auxiliary check on the root .gitignore
+// for the cross-package patterns.
 const REQUIRED_GITIGNORE_PATTERNS = [
-  'public/audio/lines/',
-  'public/audio/lines/raw/',
+  'public/trailer/audio/lines/',
   'sample-eval/r5-scream/path-b-source-recording',
   'sample-eval/voice-actor-delivery/',
   'sample-eval/voice-pipeline/tts-spend.json',

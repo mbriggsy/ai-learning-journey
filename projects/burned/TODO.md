@@ -10,11 +10,14 @@ the history. (Rule: `feedback-todo-is-not-a-diary.md`.)
 ### Current state (verified 2026-05-22)
 
 - Tests: **1407 pass** | 6 expected fail (68/68 files green)
-- Trailer subpackage tests: **215 pass | 0 expected-fail** (10 files;
+- Trailer subpackage tests: **219 pass | 0 expected-fail** (11 files;
   script-coverage drift gate green — every cue has a WAV, 16/16;
   card-roster drift gates green — 17/17 webps in sync;
   visual-manifest drift gates green — every Path B asset in
-  manifest, every manifest entry on disk)
+  manifest, every manifest entry on disk;
+  audio-manifest drift gate NEW Unit 4.1 — every cue staticPath
+  resolves to a real file at `<BURNED>/public/trailer/audio/lines/<f>`,
+  every staticPath prefixed `trailer/audio/lines/` per ADR #15)
 - Typecheck: clean (`pnpm typecheck` root + `videos/trailer/`)
 - Phone player entry: **19.17 KB gz**
 - DramaOverlay lazy chunk: **2.34 KB gz**
@@ -87,16 +90,42 @@ UMB v3 components vendored. FadeTransition SUPERSEDED-BY-EXISTING
 family as insight 066); 5 TAKE-AS-INSPIRATION; 7 SKIP (incl. FilmGrain
 confirmed via Briggsy visual eval).
 
-**Phase 4 next unit:** Unit 4.1 — Composition Wiring + Music Bed. Wire
-`Root.tsx` + `TrailerComposition.tsx` to orchestrate all 6 scenes via
-bare `<Series>` (NOT `<TransitionSeries>` per ADR #11), place
-composition-level audio timeline (`AUDIO_ASSETS.map(...)` per ADR #16)
-+ `<MusicBed />` spanning full runtime, register 6 `Preview_S0N_…`
-standalone scene compositions + `Preview_S04Peak` fast-iteration
-composition. Produces a renderable composition the studio preview can
-boot. Carry-forward gate from Unit 4.0 DROPPED: first render visually
-validates all 3 font families (Clash Display + General Sans + JetBrains
-Mono) at distinct weights — closes Phase 0 coverage gap.
+**Unit 4.1 — COMPLETED 2026-05-22.** Verification doc at
+`videos/trailer/sample-eval/composite-build/scaffold.md`. Net: 8 Remotion
+compositions registered (`BurnedTrailer` master + 6 `PreviewS0N…`
+standalone + `PreviewS04Peak` fast-iteration window) using camelCase IDs
+(Remotion 4.0.438 `isCompositionIdValid` rejects underscores — caught at
+first still-render; plan body's `Preview_S0N_…` form was illegal).
+Skeletal scenes scaffolded with shared `ScaffoldSceneFrame` helper +
+S01-specific 3×3 font-validation panel. `<MusicBed>` 15-anchor envelope
+re-derived against TOTAL_FRAMES=3180 (plan body's anchors were for the
+pre-Tier-4 2850-frame budget — insight #061 enumeration decay). ESLint
+`no-restricted-imports` rule blocks core `Audio` import per ADR #17
+(scoped to `videos/trailer/src/**`; root `pnpm lint` now includes the
+trailer subdir).
+
+**Unit 4.1 carry-back: Phase 2 staticPath discipline correction.** During
+master render verification, Remotion 404'd on every VO cue. Root cause:
+`cueStaticPath()` emitted `audio/lines/<f>` but ADR #15 + the trailer's
+`setPublicDir('../../public')` require `trailer/audio/lines/<f>`. Phase
+3.5's music bed got the convention right; Phase 2 missed it. Fix
+(included in same commit): moved 16 .wav + 16 .processed + 16 raw + 16
+.sha256 sidecars from `videos/trailer/public/audio/lines/` → BURNED-root
+`public/trailer/audio/lines/`; updated `cueStaticPath` helper + 6 script
+WAV/LINES/OUT dir constants + script-coverage test + preflight gitignore
+pattern; regenerated `audio-manifest.ts`; added NEW
+`audio-manifest.test.ts` mirroring `visual-manifest.test.ts`'s file-
+existence forward gate (4 new assertions; would have caught the original
+drift). Trailer-local `public/audio/` dir removed (empty post-move). Root
+`.gitignore` adds `public/trailer/audio/lines/`. `visual-manifest.test.ts`
+`EXCLUDED_TRAILER_DIRS` adds `trailer/audio/lines` (owned by audio
+manifest).
+
+**Phase 4 next unit:** Unit 4.2 — S01 Cold Open implementation. Replaces
+the Unit 4.1 skeletal S01 (which currently doubles as the font-validation
+surface). Once Unit 4.2 lands, the 3×3 font panel migrates to a one-off
+evidence artifact at `sample-eval/composite-build/font-validation.png`
+and `S01_ColdOpen` becomes content-only.
 
 **Phase 2 carry-forwards → Phase 3+** (stitch / silenceremove
 generalizations):

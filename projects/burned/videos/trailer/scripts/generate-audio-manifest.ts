@@ -47,7 +47,8 @@ const LOUDNESS_AUDIT = resolve(
   'sample-eval/voice-pipeline/loudness-audit.jsonl',
 );
 const PHASE_0_EXIT = resolve(TRAILER_ROOT, 'PHASE-0-EXIT.md');
-const WAV_DIR = resolve(TRAILER_ROOT, 'public/audio/lines');
+// Per Phase 4 Unit 4.1 ADR #15 correction — see cue-filename.ts.
+const WAV_DIR = resolve(TRAILER_ROOT, '../../public/trailer/audio/lines');
 const MANIFEST_OUT = resolve(TRAILER_ROOT, 'src/lib/audio-manifest.ts');
 
 // ─── sentinel gate ────────────────────────────────────────────────

@@ -8,7 +8,7 @@ export type { AudioAsset } from './audio-manifest-types.js';
 export const AUDIO_ASSETS: readonly AudioAsset[] = [
   {
     "filename": "s01-cue-60-janet.wav",
-    "staticPath": "audio/lines/s01-cue-60-janet.wav",
+    "staticPath": "trailer/audio/lines/s01-cue-60-janet.wav",
     "startFrame": 60,
     "actualFrames": 139,
     "voice": "janet",
@@ -24,7 +24,7 @@ export const AUDIO_ASSETS: readonly AudioAsset[] = [
   },
   {
     "filename": "s02-cue-219-dash.wav",
-    "staticPath": "audio/lines/s02-cue-219-dash.wav",
+    "staticPath": "trailer/audio/lines/s02-cue-219-dash.wav",
     "startFrame": 219,
     "actualFrames": 357,
     "voice": "dash",
@@ -40,7 +40,7 @@ export const AUDIO_ASSETS: readonly AudioAsset[] = [
   },
   {
     "filename": "s03-cue-570-dash.wav",
-    "staticPath": "audio/lines/s03-cue-570-dash.wav",
+    "staticPath": "trailer/audio/lines/s03-cue-570-dash.wav",
     "startFrame": 570,
     "actualFrames": 407,
     "voice": "dash",
@@ -56,7 +56,7 @@ export const AUDIO_ASSETS: readonly AudioAsset[] = [
   },
   {
     "filename": "s03-cue-1007-dash.wav",
-    "staticPath": "audio/lines/s03-cue-1007-dash.wav",
+    "staticPath": "trailer/audio/lines/s03-cue-1007-dash.wav",
     "startFrame": 1007,
     "actualFrames": 362,
     "voice": "dash",
@@ -72,7 +72,7 @@ export const AUDIO_ASSETS: readonly AudioAsset[] = [
   },
   {
     "filename": "s04-cue-1380-dash.wav",
-    "staticPath": "audio/lines/s04-cue-1380-dash.wav",
+    "staticPath": "trailer/audio/lines/s04-cue-1380-dash.wav",
     "startFrame": 1380,
     "actualFrames": 55,
     "voice": "dash",
@@ -87,7 +87,7 @@ export const AUDIO_ASSETS: readonly AudioAsset[] = [
   },
   {
     "filename": "s04-cue-1440-dash.wav",
-    "staticPath": "audio/lines/s04-cue-1440-dash.wav",
+    "staticPath": "trailer/audio/lines/s04-cue-1440-dash.wav",
     "startFrame": 1440,
     "actualFrames": 106,
     "voice": "dash",
@@ -102,7 +102,7 @@ export const AUDIO_ASSETS: readonly AudioAsset[] = [
   },
   {
     "filename": "s04-cue-1530-dash.wav",
-    "staticPath": "audio/lines/s04-cue-1530-dash.wav",
+    "staticPath": "trailer/audio/lines/s04-cue-1530-dash.wav",
     "startFrame": 1530,
     "actualFrames": 132,
     "voice": "dash",
@@ -118,7 +118,7 @@ export const AUDIO_ASSETS: readonly AudioAsset[] = [
   },
   {
     "filename": "s04-cue-1620-dash.wav",
-    "staticPath": "audio/lines/s04-cue-1620-dash.wav",
+    "staticPath": "trailer/audio/lines/s04-cue-1620-dash.wav",
     "startFrame": 1620,
     "actualFrames": 137,
     "voice": "dash",
@@ -133,7 +133,7 @@ export const AUDIO_ASSETS: readonly AudioAsset[] = [
   },
   {
     "filename": "s04-cue-1740-dash.wav",
-    "staticPath": "audio/lines/s04-cue-1740-dash.wav",
+    "staticPath": "trailer/audio/lines/s04-cue-1740-dash.wav",
     "startFrame": 1740,
     "actualFrames": 152,
     "voice": "dash",
@@ -148,7 +148,7 @@ export const AUDIO_ASSETS: readonly AudioAsset[] = [
   },
   {
     "filename": "s04-cue-1890-dash.wav",
-    "staticPath": "audio/lines/s04-cue-1890-dash.wav",
+    "staticPath": "trailer/audio/lines/s04-cue-1890-dash.wav",
     "startFrame": 1890,
     "actualFrames": 133,
     "voice": "dash",
@@ -163,7 +163,7 @@ export const AUDIO_ASSETS: readonly AudioAsset[] = [
   },
   {
     "filename": "s04-cue-2010-dash.wav",
-    "staticPath": "audio/lines/s04-cue-2010-dash.wav",
+    "staticPath": "trailer/audio/lines/s04-cue-2010-dash.wav",
     "startFrame": 2010,
     "actualFrames": 174,
     "voice": "dash",
@@ -179,7 +179,7 @@ export const AUDIO_ASSETS: readonly AudioAsset[] = [
   },
   {
     "filename": "s04-cue-2280-dash.wav",
-    "staticPath": "audio/lines/s04-cue-2280-dash.wav",
+    "staticPath": "trailer/audio/lines/s04-cue-2280-dash.wav",
     "startFrame": 2280,
     "actualFrames": 63,
     "voice": "dash",
@@ -195,7 +195,7 @@ export const AUDIO_ASSETS: readonly AudioAsset[] = [
   },
   {
     "filename": "s05-cue-2610-dash.wav",
-    "staticPath": "audio/lines/s05-cue-2610-dash.wav",
+    "staticPath": "trailer/audio/lines/s05-cue-2610-dash.wav",
     "startFrame": 2610,
     "actualFrames": 118,
     "voice": "dash",
@@ -211,7 +211,7 @@ export const AUDIO_ASSETS: readonly AudioAsset[] = [
   },
   {
     "filename": "s05-cue-2730-dash.wav",
-    "staticPath": "audio/lines/s05-cue-2730-dash.wav",
+    "staticPath": "trailer/audio/lines/s05-cue-2730-dash.wav",
     "startFrame": 2730,
     "actualFrames": 72,
     "voice": "dash",
@@ -227,7 +227,7 @@ export const AUDIO_ASSETS: readonly AudioAsset[] = [
   },
   {
     "filename": "s06-cue-2910-dash.wav",
-    "staticPath": "audio/lines/s06-cue-2910-dash.wav",
+    "staticPath": "trailer/audio/lines/s06-cue-2910-dash.wav",
     "startFrame": 2910,
     "actualFrames": 157,
     "voice": "dash",
@@ -243,7 +243,7 @@ export const AUDIO_ASSETS: readonly AudioAsset[] = [
   },
   {
     "filename": "s06-cue-3144-dash.wav",
-    "staticPath": "audio/lines/s06-cue-3144-dash.wav",
+    "staticPath": "trailer/audio/lines/s06-cue-3144-dash.wav",
     "startFrame": 3144,
     "actualFrames": 19,
     "voice": "dash",

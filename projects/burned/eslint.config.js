@@ -60,4 +60,19 @@ export default tseslint.config(
       }],
     },
   },
+  // Trailer subpackage: <Audio> must come from @remotion/media, NOT 'remotion' core
+  // (the core export is the legacy <Html5Audio> wrapper with different rendering
+  // semantics; mixing backends produces sample-rate drift over 106s). ADR #17.
+  {
+    files: ['videos/trailer/src/**/*.{ts,tsx}'],
+    rules: {
+      'no-restricted-imports': ['error', {
+        paths: [{
+          name: 'remotion',
+          importNames: ['Audio'],
+          message: 'Use Audio from @remotion/media per ADR #17 — core remotion Audio is the legacy Html5Audio wrapper.',
+        }],
+      }],
+    },
+  },
 )

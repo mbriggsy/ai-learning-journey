@@ -74,6 +74,17 @@ export const PAYOFF_MUSIC_DUCK_END_FRAME = PAYOFF_VO_END_FRAME // 2340
 // Phase 5 plan prose only.
 export const S05_BUDGET_TARGET_FRAMES = 540 // 18.0s — Phase 4 always trims to this
 
+// === S04 Peak fast-iteration window (Unit 4.1, amendment SA-2) ===
+// Preview composition that renders the load-bearing payoff window only.
+// Cuts S04 iteration time from ~2 min (full 33s scene) to ~13s per render.
+// Scene-relative 600-990 within S04 = absolute 1980-2370. Same shape window
+// the plan reserved against OLD TOTAL_FRAMES=2850 (then absolute 1650-2040);
+// shifted +330 by Unit 2.7 Tier-4 expansion. Covers cascade-build tail +
+// peak + STACKED_PAYOFF_FRAME stamp slap (2280) + 1.0s visual hold + tail
+// fade-to-black overlay window (S04_END at 2370).
+export const S04_PEAK_START = 1980 // S04_START + 600 (scene-relative 600)
+export const S04_PEAK_END = 2370 // === S04_END
+
 // === Custom easing curves (emil-design-eng vocabulary) ===
 // Strong custom curves — built-in CSS easings (ease, ease-out, etc.)
 // are too weak for trailer-grade motion. Phase 4 scene files import

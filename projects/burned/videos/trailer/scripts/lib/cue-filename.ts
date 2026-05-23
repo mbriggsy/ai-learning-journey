@@ -18,6 +18,15 @@
  * Scream note: voice cell is `dash`; the Sterling-CODED shout is
  * steered by `cadenceAdapter.prefixTag: '[shouts]'` per Phase 0 Unit
  * 0.6, NOT by a separate voice cell. So the filename uses `dash`.
+ *
+ * **Path discipline (Phase 4 Unit 4.1 correction, 2026-05-22).** TTS
+ * WAVs are trailer-only assets — per Phase 3 ADR #15 they live under
+ * `<BURNED-root>/public/trailer/...`. The staticPath prefix is
+ * `trailer/audio/lines/`, matching the music-bed pattern (Phase 3.5)
+ * and resolving through the trailer's `setPublicDir('../../public')`
+ * to the BURNED root. The earlier `audio/lines/` prefix resolved to
+ * `<BURNED-root>/public/audio/lines/` which doesn't exist —
+ * Remotion 404s on every VO cue at master-composition mount.
  */
 import type { Line } from '../../src/lib/script.js';
 
@@ -27,5 +36,5 @@ export function cueFilename(line: Line): string {
 
 /** Static-file path Phase 4 hands to Remotion `staticFile()`. */
 export function cueStaticPath(line: Line): string {
-  return `audio/lines/${cueFilename(line)}`;
+  return `trailer/audio/lines/${cueFilename(line)}`;
 }

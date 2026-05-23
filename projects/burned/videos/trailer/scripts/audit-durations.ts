@@ -22,7 +22,8 @@ import { cueFilename } from './lib/cue-filename.js';
 const FPS = 30;
 const HERE = dirname(fileURLToPath(import.meta.url));
 const TRAILER_ROOT = resolve(HERE, '..');
-const OUT_DIR = resolve(TRAILER_ROOT, 'public/audio/lines');
+// Per Phase 4 Unit 4.1 ADR #15 correction — see cue-filename.ts.
+const OUT_DIR = resolve(TRAILER_ROOT, '../../public/trailer/audio/lines');
 
 const TOLERANCE: Record<CueType, number> = {
   sustained: 0.05,

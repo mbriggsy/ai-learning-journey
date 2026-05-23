@@ -24,7 +24,7 @@
 import type { Line, CueType } from './script.js';
 
 export interface AudioAsset {
-  /** Cue filename in `public/audio/lines/` (e.g., `s04-cue-2280-dash.wav`). */
+  /** Cue filename in `<BURNED-root>/public/trailer/audio/lines/` (e.g., `s04-cue-2280-dash.wav`). */
   readonly filename: string;
   /** Static-file path consumable by Remotion `staticFile()`. */
   readonly staticPath: string;

@@ -101,9 +101,9 @@ export const AUDIO_ASSETS: readonly AudioAsset[] = [
     }
   },
   {
-    "filename": "s04-cue-1530-dash.wav",
-    "staticPath": "trailer/audio/lines/s04-cue-1530-dash.wav",
-    "startFrame": 1530,
+    "filename": "s04-cue-1551-dash.wav",
+    "staticPath": "trailer/audio/lines/s04-cue-1551-dash.wav",
+    "startFrame": 1551,
     "actualFrames": 132,
     "voice": "dash",
     "expectedFrames": 90,
@@ -117,9 +117,9 @@ export const AUDIO_ASSETS: readonly AudioAsset[] = [
     }
   },
   {
-    "filename": "s04-cue-1620-dash.wav",
-    "staticPath": "trailer/audio/lines/s04-cue-1620-dash.wav",
-    "startFrame": 1620,
+    "filename": "s04-cue-1688-dash.wav",
+    "staticPath": "trailer/audio/lines/s04-cue-1688-dash.wav",
+    "startFrame": 1688,
     "actualFrames": 137,
     "voice": "dash",
     "expectedFrames": 120,
@@ -132,9 +132,9 @@ export const AUDIO_ASSETS: readonly AudioAsset[] = [
     }
   },
   {
-    "filename": "s04-cue-1740-dash.wav",
-    "staticPath": "trailer/audio/lines/s04-cue-1740-dash.wav",
-    "startFrame": 1740,
+    "filename": "s04-cue-1830-dash.wav",
+    "staticPath": "trailer/audio/lines/s04-cue-1830-dash.wav",
+    "startFrame": 1830,
     "actualFrames": 152,
     "voice": "dash",
     "expectedFrames": 150,
@@ -147,9 +147,9 @@ export const AUDIO_ASSETS: readonly AudioAsset[] = [
     }
   },
   {
-    "filename": "s04-cue-1890-dash.wav",
-    "staticPath": "trailer/audio/lines/s04-cue-1890-dash.wav",
-    "startFrame": 1890,
+    "filename": "s04-cue-1987-dash.wav",
+    "staticPath": "trailer/audio/lines/s04-cue-1987-dash.wav",
+    "startFrame": 1987,
     "actualFrames": 133,
     "voice": "dash",
     "expectedFrames": 120,
@@ -162,9 +162,9 @@ export const AUDIO_ASSETS: readonly AudioAsset[] = [
     }
   },
   {
-    "filename": "s04-cue-2010-dash.wav",
-    "staticPath": "trailer/audio/lines/s04-cue-2010-dash.wav",
-    "startFrame": 2010,
+    "filename": "s04-cue-2125-dash.wav",
+    "staticPath": "trailer/audio/lines/s04-cue-2125-dash.wav",
+    "startFrame": 2125,
     "actualFrames": 174,
     "voice": "dash",
     "expectedFrames": 180,
@@ -178,9 +178,9 @@ export const AUDIO_ASSETS: readonly AudioAsset[] = [
     }
   },
   {
-    "filename": "s04-cue-2280-dash.wav",
-    "staticPath": "trailer/audio/lines/s04-cue-2280-dash.wav",
-    "startFrame": 2280,
+    "filename": "s04-cue-2304-dash.wav",
+    "staticPath": "trailer/audio/lines/s04-cue-2304-dash.wav",
+    "startFrame": 2304,
     "actualFrames": 63,
     "voice": "dash",
     "expectedFrames": 60,
@@ -190,7 +190,7 @@ export const AUDIO_ASSETS: readonly AudioAsset[] = [
     "cadenceAdapter": {
       "engine": "elevenlabs-v3",
       "prefixTag": "[sarcastic]",
-      "notes": "R3 stacked-payoff truth-collision. Music ducks 2310→2340 (30 frames, 90%→30%). 1.0s silent visual hold 2340-2370. Cascade chrome at 30% IS the visual antecedent of 'they' (per Unit 1.5 SHOWING-beats-TELLING)."
+      "notes": "R3 stacked-payoff truth-collision. Music ducks 2337→2367 (30 frames, 90%→30%). 3-frame silent hold 2367-2370 (last 12 frames of payoff VO play through the tail-fade-to-black; audio carries cinematically through the close). Cascade chrome at 30% IS the visual antecedent of 'they' (per Unit 1.5 SHOWING-beats-TELLING)."
     }
   },
   {

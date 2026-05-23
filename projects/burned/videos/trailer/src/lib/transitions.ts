@@ -27,7 +27,7 @@
 /** Standard stamp slap (S01→S02 boundary + cascade stat slaps). */
 export const STAMP_SLAP_FRAMES = 8
 
-/** Heavy stamp slap (R3 payoff stamp at frame 2280, post Tier-4 reauthor). */
+/** Heavy stamp slap (R3 payoff stamp at frame 2304, R2 audio re-pace). */
 export const STAMP_SLAP_HEAVY_FRAMES = 16
 
 /**
@@ -54,7 +54,7 @@ export const PAYOFF_DUCK_RAMP_FRAMES = 30
 /** Music volume during the 1.0 s payoff-tail silent hold. */
 export const POST_PAYOFF_BED_VOLUME = 0.3
 
-/** Music volume during the cascade peak (frames 2190→2280, post Tier-4 reauthor). */
+/** Music volume during the cascade peak (frames 2214→2304, R2 audio re-pace). */
 export const PEAK_MUSIC_VOLUME = 0.9
 
 // === Stamp-slap motion shape (emil-design-eng vocabulary) ===
@@ -63,7 +63,7 @@ export const PEAK_MUSIC_VOLUME = 0.9
 // emil principle (a pop-in from invisible reads as cheap motion-
 // graphics template, not as a physical stamp). Standard slap goes
 // 0.95 → 1.04 → 1.0; heavy slap goes 0.85 → 1.06 → 1.0 for the
-// payoff stamp at frame 2280 (post Tier-4 reauthor).
+// payoff stamp at frame 2304 (R2 audio re-pace).
 
 export const STAMP_SLAP_START_SCALE = 0.95
 export const STAMP_SLAP_OVERSHOOT_SCALE = 1.04
@@ -129,7 +129,7 @@ export const SCENE_TRANSITIONS = [
     transition: 'hard-cut',
     frameRange: [2370, 2370] as const, // After 1.0s payoff-tail silent hold (Tier-4 shift +330)
     rationale:
-      'Replaces former cross-dissolve. Payoff stamp + VO 2280→2340; silent visual hold 2340→2370; hard cut to gameplay. Music ducks pre-anticipated 2310→2340.',
+      'Replaces former cross-dissolve. Payoff stamp + VO 2304→2367; last 12f of VO play through S04 tail-fade-to-black overlay (2355→2370); 3f silent hold 2367→2370; hard cut to gameplay. Music drops 0.30→0.08 over 2352→2367.',
   },
   {
     boundary: 'S05→S06',

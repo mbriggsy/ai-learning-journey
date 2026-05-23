@@ -67,11 +67,13 @@ describe('timing constants', () => {
   })
 
   it('stacked-payoff math lands the hard cut at S05_START', () => {
-    // 2280 stamp slap + 60-frame VO window + 30-frame hold = 2370 = S05_START
-    // (post-Tier-4 expansion 2026-05-22; was 1950 / 2010 / 2040 pre-shift)
-    expect(STACKED_PAYOFF_FRAME).toBe(2280)
-    expect(PAYOFF_VO_END_FRAME).toBe(2340)
-    expect(PAYOFF_HOLD_FRAMES).toBe(30)
+    // 2304 stamp slap + 63-frame VO window + 3-frame hold = 2370 = S05_START
+    // (R2 audio re-pace 2026-05-23: payoff actualFrames 63 vs expected 60;
+    // last 12f of VO play through the S04 tail-fade-to-black overlay window
+    // — audio carries cinematically through the close).
+    expect(STACKED_PAYOFF_FRAME).toBe(2304)
+    expect(PAYOFF_VO_END_FRAME).toBe(2367)
+    expect(PAYOFF_HOLD_FRAMES).toBe(3)
     expect(STACKED_PAYOFF_FRAME + (PAYOFF_VO_END_FRAME - STACKED_PAYOFF_FRAME) + PAYOFF_HOLD_FRAMES).toBe(S05_START)
   })
 

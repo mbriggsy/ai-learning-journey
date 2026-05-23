@@ -58,6 +58,7 @@ appropriate bucket. Number monotonically; don't reuse numbers.
 | 051 | Prose CVD recommendations in followup docs are wrong-direction more often than not | Hue intuition fails under deuter/protan/tritan transforms — probe oklab before editing primitives |
 | 054 | `pnpm install` silently no-ops nested packages outside the workspace `packages:` glob | Sub-second `Done in X ms` with no `Progress:` line = silent skip; ship `.npmrc ignore-workspace=true` |
 | 055 | Node `process.env` is case-insensitive on Windows but case-sensitive on POSIX — silently masks mixed-case `.env` drift | A green Windows render proves nothing about Linux/CI; normalize `.env` to UPPER_SNAKE_CASE or fall back across cases |
+| 067 | Scene cue startFrames spaced against expectedFrames overlap when actualFrames overrun | Phase 1 budgets ≠ Phase 2 truths — read frames from audio-manifest.ts (actualFrames + buffer), never expectedFrames slots |
 
 ## Process
 
@@ -79,6 +80,7 @@ appropriate bucket. Number monotonically; don't reuse numbers.
 | 052 | When asked to build instrumentation, first check whether existing instrumentation already produced unread data | Promotion bottleneck, not production — read existing harness output before drafting new infra |
 | 053 | Seat-agent bug suspicions are hypotheses — verify against the engine event log before treating as a defect | Agent reports are suspicions; ground-truth is `events.jsonl` — verify before patching |
 | 066 | Prior-phase exit dispositions can supersede later-plan units — deepening agents miss the "already done" signal | Grep `PHASE-N-EXIT.md` + spike-results.md before executing any unit; exit-doc DROP wins over later-plan re-add |
+| 068 | A foreign motion dialect inside a coherent visual album reads "weird" regardless of easing-curve perfection | When one scene reads "off," suspect motion-vocabulary mismatch BEFORE easing — patch path softens the misfit, rip-out path treats the cause |
 
 ---
 

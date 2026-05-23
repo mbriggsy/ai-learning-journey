@@ -51,13 +51,13 @@ export const S06_END = 3180 // 9.0s — Closing Directive
 // to single 4-word truth-collision. 60-frame window at 2.0 wps
 // controlled-deadpan fits cleanly. Cascade chrome at 30% IS the
 // visual antecedent of "they"; SHOWING beats TELLING.
-export const STACKED_PAYOFF_FRAME = 2280 // shifted +330 from 1950 by Unit 2.7 Tier-4
-export const PAYOFF_VO_END_FRAME = 2340 // 60 frames / 2.0s for 4 words at 2.0 wps deadpan
-export const PAYOFF_HOLD_FRAMES = 30 // 1.0s silent visual hold after VO ends
-// Music duck pre-anticipated: starts at PAYOFF_VO_END_FRAME - 30 = 2310,
-// completes at PAYOFF_VO_END_FRAME (2340), so duck lands as VO ends.
-export const PAYOFF_MUSIC_DUCK_START_FRAME = PAYOFF_VO_END_FRAME - 30 // 2310
-export const PAYOFF_MUSIC_DUCK_END_FRAME = PAYOFF_VO_END_FRAME // 2340
+export const STACKED_PAYOFF_FRAME = 2304 // R2 audio re-pace 2026-05-23: +24 from 2280 (cumulative S04 actualFrames overrun absorbed via 5f inter-cue gaps)
+export const PAYOFF_VO_END_FRAME = 2367 // 63 frames / 2.1s (actualFrames). Last 12f play through the S04 tail-fade-to-black overlay window (975-990 scene-rel = 2355-2370 abs) — audio carries cinematically through the fade.
+export const PAYOFF_HOLD_FRAMES = 3 // 3-frame silent hold to S04_END; fade-to-black happens DURING the last 12f of payoff VO, not after
+// Music duck pre-anticipated: starts at PAYOFF_VO_END_FRAME - 30 = 2337,
+// completes at PAYOFF_VO_END_FRAME (2367), so duck lands as VO ends.
+export const PAYOFF_MUSIC_DUCK_START_FRAME = PAYOFF_VO_END_FRAME - 30 // 2337
+export const PAYOFF_MUSIC_DUCK_END_FRAME = PAYOFF_VO_END_FRAME // 2367
 // Hard cut to gameplay at S04_END = PAYOFF_VO_END_FRAME + PAYOFF_HOLD_FRAMES = 2370 ✓
 
 // === S05 budget ===

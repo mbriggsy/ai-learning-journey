@@ -189,7 +189,7 @@ export const BURNED_TRAILER_LINES: readonly Line[] = [
   {
     id: 'S04-cue-03',
     scene: 'S04',
-    frame: 1530,
+    frame: 1551, // R2 audio re-pace 2026-05-23: +21 from 1530 (cue-02 actualFrames 106 > expected 90)
     voice: 'dash',
     text: 'Drafted at three AM, name redacted for compliance.',
     cueType: 'list',
@@ -205,7 +205,7 @@ export const BURNED_TRAILER_LINES: readonly Line[] = [
   {
     id: 'S04-stat-01',
     scene: 'S04',
-    frame: 1620, // stat 1 enters safe-square center-bottom
+    frame: 1688, // R2 audio re-pace 2026-05-23: +68 from 1620 (cue-03 actual 132 > expected 90)
     voice: 'dash',
     text: 'Mission rehearsal: fourteen hundred and seven contingencies war-gamed.',
     cueType: 'list',
@@ -216,7 +216,7 @@ export const BURNED_TRAILER_LINES: readonly Line[] = [
   {
     id: 'S04-stat-02',
     scene: 'S04',
-    frame: 1740,
+    frame: 1830, // R2 audio re-pace 2026-05-23: +90 from 1740 (cumulative S04 overrun)
     voice: 'dash',
     text: "Six of them, deliberately unrehearsed — the 'memorable ones.'",
     cueType: 'list',
@@ -227,7 +227,7 @@ export const BURNED_TRAILER_LINES: readonly Line[] = [
   {
     id: 'S04-stat-03',
     scene: 'S04',
-    frame: 1890,
+    frame: 1987, // R2 audio re-pace 2026-05-23: +97 from 1890
     voice: 'dash',
     text: 'Seventeen asset illustrations. Five of them with hats.',
     cueType: 'list',
@@ -238,7 +238,7 @@ export const BURNED_TRAILER_LINES: readonly Line[] = [
   {
     id: 'S04-stat-04',
     scene: 'S04',
-    frame: 2010,
+    frame: 2125, // R2 audio re-pace 2026-05-23: +115 from 2010
     voice: 'dash',
     text: "Seven on the roster. Six in the deck. One on the research budget. Don't ask.",
     cueType: 'list',
@@ -254,7 +254,7 @@ export const BURNED_TRAILER_LINES: readonly Line[] = [
   {
     id: 'S04-payoff',
     scene: 'S04',
-    frame: 2280, // R3 stacked-payoff stamp slap + Dash truth-collision (Tier-4 shift +330 from 1950)
+    frame: 2304, // R3 stacked-payoff stamp slap + Dash truth-collision (R2 audio re-pace 2026-05-23: +24 from 2280)
     voice: 'dash',
     text: 'They WERE the operation.',
     cueType: 'payoff',
@@ -266,7 +266,7 @@ export const BURNED_TRAILER_LINES: readonly Line[] = [
       engine: 'elevenlabs-v3',
       prefixTag: '[sarcastic]',
       notes:
-        "R3 stacked-payoff truth-collision. Music ducks 2310→2340 (30 frames, 90%→30%). 1.0s silent visual hold 2340-2370. Cascade chrome at 30% IS the visual antecedent of 'they' (per Unit 1.5 SHOWING-beats-TELLING).",
+        "R3 stacked-payoff truth-collision. Music ducks 2337→2367 (30 frames, 90%→30%). 3-frame silent hold 2367-2370 (last 12 frames of payoff VO play through the tail-fade-to-black; audio carries cinematically through the close). Cascade chrome at 30% IS the visual antecedent of 'they' (per Unit 1.5 SHOWING-beats-TELLING).",
     },
   },
 

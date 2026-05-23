@@ -237,10 +237,14 @@
   Otto's exclusion IS the joke — per Phase 1 lock.
 - **Token-import strategy DEFERRED to Phase 4 deepening** (Option A/
   B/C — see Vocabulary Vendoring section above).
-- **Variable woff2 weight syntax SPIKE** needed at Phase 4 entry —
-  `weight: '200 700'` syntax untested in Remotion 4.x; fall back to
-  per-weight static woff2 subsets if needed (framework-docs flagged
-  unresolved).
+- ~~**Variable woff2 weight syntax SPIKE** needed at Phase 4 entry~~
+  **RESOLVED-BY-PHASE-0 (correction 2026-05-22).** Phase 0 Unit 0.5
+  spike already validated `weight: '200 700'` in Remotion 4.0.438 MP4
+  export — `sample-eval/spike/spike-results.md` §(c). `useFonts.ts`
+  ships the production variable-axis pattern. This exit-doc line
+  inherited a stale "UNRESOLVED" cascade that Phase 3 deepening notes
+  carried forward without re-reading the Phase 0 disposition. Phase 4
+  Unit 4.0 was DROPPED 2026-05-22. See insight 066.
 - **Trace-video fallback output is `.webm`** (Playwright default),
   not `.mp4` — Phase 6 may transcode if X-distribution preference
   emerges. Reserve clause; not active.

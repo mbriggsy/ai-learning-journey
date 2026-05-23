@@ -66,17 +66,26 @@ per-family safe-square composites + 2 cross-family scene composites
 stamp slap] + PHASE-3-EXIT.md hand-off doc).** Cumulative Imagen
 spend: **$0.00 / $6 cap.**
 
-**Phase 4 — NEXT UP.** Remotion composite at
+**Phase 4 — IN-FLIGHT** (entry 2026-05-22). Remotion composite at
 `docs/plans/origin-trailer/phase-4-remotion-composite.md`. Entry
-prerequisites surfaced in `videos/trailer/PHASE-3-EXIT.md`:
-- **Token-import strategy** (Option A vendor / B path-import / C
-  Phase-4-specific shim) — MUST be picked at Phase 4 deepening per
-  insight #060 (forward-deferred gates ratchet structural debt).
-- **Variable woff2 weight `'200 700'` syntax SPIKE** — untested in
-  Remotion 4.x; static per-weight subsets is fallback.
+prerequisite status:
+- **Token-import strategy** — LOCKED Option C (fixed-value shim) at
+  Phase 4 deepening 2026-05-17 per Fork 3 + amendment SA-7.
+- ~~**Variable woff2 weight `'200 700'` syntax SPIKE**~~
+  **RESOLVED-BY-PHASE-0 (correction 2026-05-22).** Phase 0 Unit 0.5
+  already validated. `useFonts.ts` ships production variable-axis
+  pattern. Phase 4 Unit 4.0 DROPPED — see insight 066 + Phase 4 plan
+  Unit 4.0 banner. Deepening MA-7 missed the Phase 0 disposition.
 - **Briefing-room reference renders** (`case-banner-reference.png`,
   `comms-ticker-reference.png`) deferred to Phase 4 invocation —
   needs BURNED in playing-state game.
+
+**Phase 4 next unit:** Unit 4.0a — UMB v3 Component Triage. Read 12
+UMB v3 components at `projects/undercover-mob-boss/videos/trailer/
+src/components/`, decide CLONE-AND-ADAPT / TAKE-AS-INSPIRATION / SKIP
+per component, ship `videos/trailer/sample-eval/composite-build/
+umb-v3-component-triage.md` decision table. Bounds Phase 4 invention
+to actual gaps. Per insight 052 — read existing instrumentation FIRST.
 
 **Phase 2 carry-forwards → Phase 3+** (stitch / silenceremove
 generalizations):

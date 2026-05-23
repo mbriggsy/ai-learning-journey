@@ -6,7 +6,7 @@ parent: docs/plans/origin-trailer/roadmap.md
 origin: docs/ideation/2026-05-15-origin-trailer-brainstorm.md
 created: 2026-05-16
 deepened: 2026-05-17
-reviewed: pending
+reviewed: 2026-05-22
 status: active
 ---
 
@@ -51,7 +51,7 @@ Phase 4 produces:
 - `videos/trailer/out/trailer-scene-build.mp4` — first complete render at H264/CRF 18 (Phase 6 deliverable candidate, not "studio preview"; renamed per amendment SA-1)
 
 Phase 4 exits when:
-1. Unit 4.0 font spike resolved (PASS = 3 variable woff2; FAIL = escalate to Phase 3 for per-weight subsetting before Unit 4.1).
+1. ~~Unit 4.0 font spike resolved~~ **DROPPED 2026-05-22 — RESOLVED-BY-PHASE-0.** Phase 0 Unit 0.5 already cleared variable-axis weight resolution. See `videos/trailer/sample-eval/spike/spike-results.md` §(c) + insight 066. Carry-forward at Unit 4.1: first composite render visually validates all 3 families at distinct weights.
 2. Unit 4.0a UMB v3 component triage table populated (per insight 052; read existing instrumentation FIRST).
 3. All 6 scenes render in studio preview without typecheck / render errors.
 4. Each scene independently passes a §2 Archer test AND has its `briggsy-review-4.N.signoff` sentinel file present.
@@ -614,9 +614,11 @@ back in).
 
 ## Implementation Units
 
-### Unit 4.0 — Font Load Spike (NEW per deepening amendment MA-7)
+### Unit 4.0 — Font Load Spike (NEW per deepening amendment MA-7) — **DROPPED 2026-05-22 — RESOLVED-BY-PHASE-0**
 
-- [ ] **Unit 4.0: Font Load Spike**
+> **DROPPED 2026-05-22.** Phase 0 Unit 0.5 already validated `weight: '200 700'` variable-axis syntax in Remotion 4.0.438 MP4 export. Evidence: `videos/trailer/sample-eval/spike/spike-results.md` §(c) — PASS verdict + explicit "Phase 4 Unit 4.0 spike redundant — DROP from Phase 4 scope on deepening re-validation" instruction at L240. `videos/trailer/src/hooks/useFonts.ts` already ships production variable-axis pattern for all 3 families (Clash Display + General Sans + JetBrains Mono). `videos/trailer/out/spike-frame-test.mp4` on disk. Deepening MA-7 missed the Phase 0 disposition — documented at [`docs/insights/066-prior-phase-exit-dispositions-can-supersede-later-units.md`](../../insights/066-prior-phase-exit-dispositions-can-supersede-later-units.md). Body below preserved for audit trail. **Carry-forward closure**: Unit 4.1 first composite render visually validates all 3 families at non-default weights to close the residual Phase 0 coverage gap (Phase 0 only MP4-verified Clash Display at 3 weights).
+
+- [x] ~~**Unit 4.0: Font Load Spike**~~ — DROPPED 2026-05-22 (Phase 0 Unit 0.5 resolved)
 
 **Goal:** Resolve whether `@remotion/fonts.loadFont()` in Remotion 4.0.438 accepts a variable-axis weight range string (`weight: '200 700'`) when pointed at a single variable woff2 file. PASS path: ship 3 variable woff2 (per Phase 1 contract #21). FAIL path: escalate to Phase 3 for per-weight `pyftsubset` subsetting before Unit 4.1 begins. Output: PHASE-4-FONT-SPIKE.md decision document Phase 4 Unit 4.1 consumes.
 
@@ -742,7 +744,7 @@ export function useFonts() {
 
 **Requirements:** R1, R3, R10, R11, R12, R13, R15 (all visual requirements benefit from precedent triage).
 
-**Dependencies:** Unit 4.0 (font spike resolved; ensures vendor work isn't blocked on font question).
+**Dependencies:** ~~Unit 4.0 (font spike resolved)~~ **DROPPED 2026-05-22** (see Unit 4.0 banner — Phase 0 Unit 0.5 already resolved). No remaining blockers; vendor work proceeds.
 
 **Files:**
 
@@ -828,7 +830,7 @@ After triage: [list of components Phase 4 will actually build, with cleared "inv
 
 **Requirements:** R3, R4, R7, R9.
 
-**Dependencies:** Unit 4.0 (font spike resolved), Unit 4.0a (UMB component triage applied), Phase 1 Unit 1.1 (timing.ts), Phase 2 Unit 2.8 (audio manifest at `src/lib/audio-manifest.ts` exporting `AUDIO_ASSETS`), Phase 3 Unit 3.5 (music-bed.mp3 at `public/trailer/audio/music-bed.mp3` per ADR #15), Phase 3 Unit 3.7 (visual manifest), Phase 0 Unit 0.1 (scaffold + package set), Phase 0 Unit 0.5 (composite spike).
+**Dependencies:** ~~Unit 4.0 (font spike resolved)~~ **DROPPED 2026-05-22** (Phase 0 Unit 0.5 resolved — see Unit 4.0 banner), Unit 4.0a (UMB component triage applied), Phase 1 Unit 1.1 (timing.ts), Phase 2 Unit 2.8 (audio manifest at `src/lib/audio-manifest.ts` exporting `AUDIO_ASSETS`), Phase 3 Unit 3.5 (music-bed.mp3 at `public/trailer/audio/music-bed.mp3` per ADR #15), Phase 3 Unit 3.7 (visual manifest), Phase 0 Unit 0.1 (scaffold + package set), Phase 0 Unit 0.5 (composite spike). **Carry-forward gate**: first composite render visually validates all 3 families (Clash Display + General Sans + JetBrains Mono) at non-default weights — closes Phase 0 residual coverage gap.
 
 **Files:**
 
@@ -3667,7 +3669,7 @@ Run `pnpm verify:briggsy-sentinels` — exits 0 only if all 6 are present AND au
 | S04 cascade composition fails §2 in iteration | High (load-bearing scene) | Medium | Unit 4.9 structured 3-branch escalation procedure (per amendment SA-3); Preview_S04Peak fast-iter window cuts iteration time from ~2 min to ~30 s; motion-shape spec triggers on vibe-quality feedback before speculative edits. |
 | Audio + video drift in long renders | Low | High | Phase 2 manifest uses `actualFrames` + `leadFramesHint`; Unit 4.1 audio placed at composition level via single map per ADR #16 (single source of truth eliminates per-scene drift). |
 | Phase 5 gameplay clip delayed or contract-broken | Medium | Low | `gameplay-placeholder.mp4` separate file (NOT overwrite per amendment SA-6); build-time switch via `scripts/sync-gameplay-clip.ts` generating `gameplay-clip-source.ts` constant on prerender/prestudio (per document-review amendment TIER 1 #2 — scene-file `node:fs` crashes Remotion browser context); `pnpm verify:gameplay-clip` ffprobe gate (per amendment MA-3) catches duration/audio/aspect drift before swap. |
-| Variable woff2 weight syntax unsupported in Remotion 4.0.438 | Medium (UNRESOLVED per Phase 3 deepening) | Medium | NEW Unit 4.0 Font Load Spike (per amendment MA-7) resolves at Phase 4 entry; FAIL path escalates to Phase 3 for per-weight pyftsubset subsetting. |
+| ~~Variable woff2 weight syntax unsupported in Remotion 4.0.438~~ **RESOLVED-BY-PHASE-0 2026-05-22** | ~~Medium (UNRESOLVED per Phase 3 deepening)~~ N/A | ~~Medium~~ N/A | Phase 0 Unit 0.5 spike (`spike-results.md` §(c), 2026-05-18) validated `weight: '200 700'` PASS in Remotion 4.0.438. `useFonts.ts` ships production variable-axis pattern. Unit 4.0 DROPPED. Stale "UNRESOLVED per Phase 3 deepening" was a cascade from agents who didn't read Phase 0 exit. See insight 066. |
 | Render time exceeds reasonable iteration cycle | Medium → realistically 2-3 sessions for S04 thrash | Medium | Preview_S04Peak fast-iter window; studio-preview for layout iteration; production render only at Unit 4.9 sentinel + Unit 4.10. Per amendment SA-2: cadence subsection in Documentation/Operational Notes makes wall-time budget explicit. |
 | Music-bed click at S04→S05 hard cut | Low | Medium (R3 broken-feel) | Continuous `interpolate()` envelope across cut frame produces no zipper noise per best-practices Finding 3; spot-check at frames 1995/2000/2040 in Unit 4.10 Step 2. |
 | Visual palette jump at S04→S05 hard cut not masked by music | Medium | High (R3 reads as glitch not punctuation) | `S04TailFadeToBlack` scene-internal overlay frames 2025-2040 per amendment MA-1 + adversarial Finding 3; **MANDATORY** symmetric `S05HeadFadeFromBlack` on S05 frames 0-15 per amendment TIER 1 #5 (was "optional Unit 4.9 polish" — pre-deepening framing wrong; baseline fade-through-black needs both sides); executable evidence via `pnpm verify:gameplay-clip` (luminance gate) + `pnpm verify:s05-head-fade` (grep gate). |
@@ -3721,7 +3723,7 @@ Run `pnpm verify:briggsy-sentinels` — exits 0 only if all 6 are present AND au
 
 ### Deferred to Implementation
 
-- **Variable woff2 weight spike outcome** (NEW Unit 4.0; per amendment MA-7) — PASS / FAIL drives implementation branch of `useFonts.ts`. Documented in PHASE-4-FONT-SPIKE.md at execution time.
+- ~~**Variable woff2 weight spike outcome** (NEW Unit 4.0; per amendment MA-7)~~ **RESOLVED-BY-PHASE-0 2026-05-22** — Phase 0 Unit 0.5 PASS verdict (`spike-results.md` §(c)); `useFonts.ts` already ships production variable-axis pattern for all 3 families. Unit 4.0 DROPPED. See insight 066.
 - **UMB v3 component triage decisions** (NEW Unit 4.0a; per amendment NN-4) — which of 12 UMB components are CLONE-AND-ADAPT / TAKE-AS-INSPIRATION / SKIP. Documented in `umb-v3-component-triage.md` at execution time.
 - **Spring constant fine-tuning per scene** — ARCHER_STAMP_SPRING / PAYOFF_SPRING / LOGO_SPRING_COLD / LOGO_SPRING_CLOSING defaults documented per Phase 1 lock; per-scene tuning happens in Unit 4.9 iteration if §2 review needs it.
 - **HTP hero scroll range exact pixel count** — consumed from `htp-capture-metadata.json` at Phase 3 deliverable land.

@@ -78,6 +78,7 @@ appropriate bucket. Number monotonically; don't reuse numbers.
 | 050 | Agent-eye verification systematically misses perceptual continuities | Light/shadow/motion continuities need eye-in-loop — agent property-checks miss them |
 | 052 | When asked to build instrumentation, first check whether existing instrumentation already produced unread data | Promotion bottleneck, not production — read existing harness output before drafting new infra |
 | 053 | Seat-agent bug suspicions are hypotheses — verify against the engine event log before treating as a defect | Agent reports are suspicions; ground-truth is `events.jsonl` — verify before patching |
+| 066 | Prior-phase exit dispositions can supersede later-plan units — deepening agents miss the "already done" signal | Grep `PHASE-N-EXIT.md` + spike-results.md before executing any unit; exit-doc DROP wins over later-plan re-add |
 
 ---
 

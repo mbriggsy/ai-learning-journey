@@ -163,37 +163,100 @@ evidence: `out/s02-briefing-setup.mp4` (2.3 MB, H264 CRF 18) + 5 PNG
 stills at frames 0/60/120/240/359. Pending Briggsy-eye sentinel
 `briggsy-review-4.3.signoff`.
 
-**Unit 4.4 — COMPLETED 2026-05-23.** Verification doc at
-`videos/trailer/sample-eval/composite-build/s03-archer-test.md`.
-27-second roster reveal scene: 6 operatives (Janet → Vera → Sable →
-Dash → Neal → Agent X per S03_ROSTER iteration) slide in along the
-mobile safe-square right edge with 6-frame stagger / EASE_OUT_EMIL
-entries (rel 60-110); cream matte + ochre-9 border + ochre name
-strips with Clash Display 700 caps; Agent X shows the vendored
-RedactBar across the name strip (tilt -2° hand-stamped vibe). Otto-
-aside typographic chrome lands rel 200 bottom-left ("// OPERATIVE
-07: BASEMENT — DO NOT ASK"; ochre-11 JetBrains Mono 500 20px
-marginalia register; absence of Otto portrait IS the joke per Fork 2
-+ amendment MA-9). Mid-scene DossierPageWipe (NEW component at
-src/transitions/) sweeps cream-12 panel left-to-right across rel
-415-431 (16-frame Phase 1 lock window, centered in the Phase 2
-silence gap between VO #1 and VO #2; trailing warm shadow sells the
-page-peel metaphor). CommsTicker holds during BOTH VO windows. Card
-size 106×148 (5:7 BURNED card aspect preserved) fits 6 vertically
-inside the 1032-px ticker-clear band. Plan body's 480f scene
-duration + 180/240/270 frame anchors stale per insight #061 — re-
-derived against Phase 2 audio-manifest VO landings. DeckOf120 CUT
-per amendment SA-5. Render evidence: `out/s03-mission-background.mp4`
-(4.2 MB, H264 CRF 18) + 4 PNG stills. Pending Briggsy-eye sentinel.
+**Unit 4.4 — HARD ZERO 2026-05-23.** Briggsy reviewed
+`out/s03-mission-background.mp4` and called it: "cards look like
+shit. Barry [Agent X] is clipped. Everything looks smaller than it
+needs to be and kinda fuzzy. Hard fucking zero." The committed
+production scene (commit `07ce2498`) is in main but must NOT ship.
+Sentinel `briggsy-review-4.4.signoff` will not be written from this
+session. Unit 4.10 master-render gate stays at 3/6 collected
+(through Unit 4.3 S02).
 
-**Phase 4 next unit:** Unit 4.5 — S04 Receipts Cascade (load-bearing).
-33-second scene. HTP dossier hero + 17-card halo (geometry from
-`cascade-ring-layout.json`) + 4 goofy-stat captions + comms-ticker
-pulse (R15 #2 override) + R15 #2 + #3 split-layer stamps (R15 #3 =
-payoff variant) + R3 stacked-payoff stamp slap at frame 2280 + 1.0s
-silent visual hold + S04TailFadeToBlack overlay. THE trailer's load-
-bearing scene. Dependencies: Unit 4.3 components + Phase 3 Unit
-3.1 HTP capture + Phase 3 Unit 3.5 cascade geometry JSON.
+## Unfinished Fix — Unit 4.4 S03 redo (NEXT SESSION)
+
+**Diagnosis (what I got wrong this session):**
+- Built the scene around a vertical-stack 6-card column at the right
+  edge per the plan body's directional sketch. The plan body's
+  `width: 120, height: 168` (then shrunk further to 106×148 to fit
+  inside the ticker-clear band) is a THUMBNAIL size that loses too
+  much portrait detail. Card art is 269×384 native; rendering at
+  ~106×148 is 40% scale — the source-portrait detail is well below
+  what reads on a 1080p video at viewer distance. That's the "fuzzy."
+- Agent X clipping was masked by the math — bottom-edge name strip
+  (24 px) sat just under the 48-px ticker band; "fits" on paper,
+  reads as "clipped" on screen because the redact bar is right at
+  the boundary.
+- Did NOT do an eye-on-Frame-220 check BEFORE committing the layout
+  constants. The first render I sent for Briggsy review was the
+  result; I should have iterated on layout BEFORE asking him to look.
+  Violated insight #050 (agent verification misses perceptual
+  continuities — Briggsy eye is the gate; engineering measurements
+  are NOT a substitute).
+
+**Prescription — exact path for next-session execution:**
+
+1. **Throw away the vertical-stack layout.** Do NOT iterate on the
+   148-tall column. The fundamental shape is wrong for a 1080 canvas
+   with a 48-px ticker band — six cards just don't have room to
+   read at portrait-detail size in that strip.
+
+2. **Pick one of these three layouts and prototype FIRST** (render a
+   still BEFORE wiring all the entry animation):
+   - **Option A — Diagonal file-fan cascade** (Archer-coded, my
+     recommendation): cards overlap diagonally like a hand of
+     classified files spread on the desk. Each card ~220×308 (still
+     5:7), rotated -8°/-4°/0°/4°/8°/12° tilts, overlapping ~60% with
+     neighbor. Agent X (sixth) sits on top of the fan as the redacted
+     centerpiece. The OperativeCardFrame chrome from Unit 4.2 is the
+     RIGHT vocabulary to reuse here, NOT a stripped-down thumbnail.
+   - **Option B — 2×3 grid centered** (safe but boring): 2 columns,
+     3 rows, each card ~280×392. Reads more "dossier index page"
+     than "operatives in a briefing." Use only if A doesn't land.
+   - **Option C — Horizontal row anchored bottom-center** (mobile-
+     hostile but most legible): 6 cards across, each ~280×392, name
+     strips clearly visible. Will get cropped on mobile safe-square
+     (x=420..1500); reject for that reason unless mobile is reframed.
+
+   Per emil + Archer briefing aesthetic: Option A is the highest-
+   confidence choice. Falls back to B if the fan reads chaotic.
+
+3. **Use OperativeCardFrame component from Unit 4.2.** Not the
+   thumbnail-style inline div I built in this session. The card-frame
+   SVG chrome (operative-card-frame.svg) is sized 800×1000 native;
+   downscale to ~220×275 for the fan layout — much closer to native,
+   sharper detail.
+
+4. **RedactBar over Agent X stays.** The vendored component is fine;
+   apply per-card name region instead of in the in-line thumb strip.
+
+5. **Otto-aside is fine.** Bottom-left "// OPERATIVE 07: BASEMENT —
+   DO NOT ASK" lands well at rel 200 per this session's positioning.
+   Keep that block as-is.
+
+6. **DossierPageWipe is fine.** Mid-scene wipe at rel 415-431 works.
+   Keep.
+
+7. **Render Frame 220 FIRST (before MP4 + before commit).** Visually
+   confirm cards are large enough to read individual portrait detail
+   + name + chrome details. THEN render the full MP4. THEN ask for
+   ship-it. Do not commit a second time without an interstitial
+   eye-on-frame check.
+
+8. **Files to edit:**
+   - `videos/trailer/src/scenes/S03_MissionBackground.tsx` — replace
+     the inline thumbnail layout with chosen-layout-A/B/C using
+     `OperativeCardFrame`. Update CARD_W, CARD_H, layout math. The
+     `S03_ROSTER` import + Otto-aside + DossierPageWipe + CommsTicker
+     stay.
+
+9. **Insight to write at session end** (after redo lands): "Plan-body
+   thumbnail dimensions don't survive the canvas-detail check." Same
+   family as insight #061 enumeration decay but for visual sizing.
+   Plan body's 120×168 was a token-effort sketch, not a verified
+   size for 1080p video readability.
+
+**Phase 4 next unit:** Unit 4.4 REDO (above prescription). Unit 4.5
+S04 cascade does not start until S03 ships.
 
 **Phase 2 carry-forwards → Phase 3+** (stitch / silenceremove
 generalizations):

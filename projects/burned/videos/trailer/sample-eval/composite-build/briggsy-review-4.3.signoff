@@ -1,0 +1,17 @@
+signed-off-by: Briggsy
+date: 2026-05-23
+sha256: bf79f1cc0381b7ff5c33c9256643031bf7bc3e24b778a197bff6d9c83eebe344
+file: videos/trailer/out/s02-briefing-setup.mp4
+unit: 4.3 — S02 Briefing Setup Scene
+disposition: SHIP — briefing-room reads Pendleton-Bureau-coded; dossier opens with drawer feel; comms-ticker holds line during VO window
+composition: PreviewS02BriefingSetup (12.0s @ 30fps, 360 frames, no audio per ADR #16)
+archer_test_doc: videos/trailer/sample-eval/composite-build/s02-archer-test.md
+review_mode: MP4 perceptual review — Briggsy eye, motion + composition + chrome fluency
+verbatim_audit:
+  ship_call: "ship it"
+component_inventory_carried_forward:
+  - BriefingRoomBackground.tsx (mahogany + venetian-blind drift) — reused S03/S06
+  - DossierFolder.tsx (EASE_DRAWER closed→open) — possible S03/S06 reuse
+  - CommsTicker.tsx (hold-during-VO) — reused S03/S04/S06
+  - animations.ts: EASE_DRAWER_FN + EASE_IN_OUT_FN (function forms paired with timing.ts CSS strings)
+unit_4_10_gate: 3/6 Briggsy-eye sentinels collected (Unit 4.1 scaffold + Unit 4.2 S01 + Unit 4.3 S02). Remaining: S03 / S04 / S05 / S06.

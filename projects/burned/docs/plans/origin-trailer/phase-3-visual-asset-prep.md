@@ -3637,7 +3637,50 @@ opportunistic — automated exit conditions unblock Unit 3.5.
 
 ### Unit 3.5 — Music Bed Procurement
 
-- [ ] **Unit 3.5: Music Bed Procurement**
+- [x] **Unit 3.5: Music Bed Procurement** — landed 2026-05-22.
+  **"Spy Glass" by Kevin MacLeod** (Incompetech, CC-BY 4.0)
+  shipped to `public/trailer/audio/music-bed.mp3`. 226.98s MP3 @
+  44.1kHz stereo 256 kbps. Phase 4 clips a 106s window per the
+  BEAT-SHEET.md music-cue map (Path A — full-length-clipped).
+
+  **Plan-vs-reality directive flip:**
+  - Phase 1 Unit 1.7's three-tier paid-source ladder (Artlist/
+    Epidemic Pro → Marmoset/Songtradr → Suno Pro) was BYPASSED
+    per the 2026-05-22 Briggsy directive *"not paying for music"*
+    (captured in `project-burned-music-bed-budget` memory). The
+    Step 0 paid-subscription preflight was SKIPPED — free-or-skip
+    path entered directly. Kevin MacLeod's Incompetech catalog
+    surfaced as the strongest CC-BY 4.0 source for spy-jazz
+    instrumentation. "Spy Glass" hit the R9 spec cleanly on
+    first audition (BPM 110, saxes + trumpet leads).
+  - The Phase 3 plan Step 0 prereq sentinel
+    `sample-eval/visual-asset-prep/music-preflight.signoff` was
+    NOT written (insight #059 — `.txt`/`.signoff` parent-monorepo
+    gitignore trap; and the gate it represented — paid-sub
+    verification — no longer applies under the free-only directive).
+
+  **Artifacts shipped:**
+  - `public/trailer/audio/music-bed.mp3` — the locked track.
+  - `videos/trailer/sample-eval/visual-asset-prep/music-audition-log.md`
+    — full audition record (Incompetech candidates table with
+    BPM/instrumentation/verdict; decision trace).
+  - `videos/trailer/sample-eval/visual-asset-prep/music-license.md`
+    — CC-BY 4.0 attribution text + per-surface Phase 7 posting
+    checklist + platform-specific Content-ID dispute procedure.
+    REPLACES the plan's `music-license.pdf` filename — CC-BY 4.0
+    has no per-track PDF; the deed URL + attribution wording IS
+    the license artifact.
+  - BEAT-SHEET.md preamble — Music bed section updated to carry
+    the landed-track metadata + attribution requirement; original
+    Unit 1.7 paid-source ladder preserved beneath under a
+    SUPERSEDED header for audit trail.
+
+  **Phase 7 carry-forward:** Attribution text MUST appear in the
+  post body / video description on every distribution surface
+  (Twitter/X, portfolio, engineering blog, LinkedIn, YouTube).
+  On-screen credit OPTIONAL per CC-BY 4.0. `music_disclosure_required`
+  stays `false` — Spy Glass is human-composed, not Tier 3 Suno
+  generative.
 
 **Goal:** Audition + procure the licensed music bed track per Unit
 1.7 doc-review-revised ladder. Falls through Tier 1 (Artlist/Epidemic

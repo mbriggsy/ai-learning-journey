@@ -33,7 +33,38 @@
 Other operatives (Sable, Vera, Neal, Otto, Agent X) appear in visual
 card-flash montages only — no VO lines in this trailer.
 
-## Music bed (Unit 1.7 lock — source-type ladder + audition framework; track procurement is Phase 3)
+## Music bed (Phase 3 Unit 3.5 LANDED 2026-05-22 — "Spy Glass" by Kevin MacLeod, CC-BY 4.0)
+
+- **Track:** "Spy Glass" by Kevin MacLeod (incompetech.com)
+- **License:** Creative Commons BY 4.0
+  ([deed](https://creativecommons.org/licenses/by/4.0/))
+- **Cost:** $0 (free CC-BY catalog — Tier 1/2/3 paid ladder bypassed
+  per `project-burned-music-bed-budget` memory; Briggsy directive
+  2026-05-22 "not paying for music")
+- **Format on disk:** MP3, 44.1kHz stereo, 256 kbps, 226.98s (3:47)
+- **Spec match (full R9 acceptance):** Jazz / spy-noir, BPM 110
+  (mid-range R9 100–130), instrumentation Saxes + Trumpet (brass
+  leads) + Piano + Bass + Drums + Vibes + Flute. Mood "Grooving,
+  Mysterious." Incompetech description: *"Super cool jazz for
+  your hardcore detectives! Timeless quality. Could be now, could
+  be in the 1950s."*
+- **On-disk path:** `public/trailer/audio/music-bed.mp3`. Phase 4
+  imports via `staticFile('trailer/audio/music-bed.mp3')` per
+  Phase 0 ADR #8 + ADR #15.
+- **Audition log:**
+  `sample-eval/visual-asset-prep/music-audition-log.md`. License
+  artifact: `sample-eval/visual-asset-prep/music-license.md`
+  (CC-BY 4.0 has no per-track PDF; the deed URL + attribution
+  text is the license artifact).
+- **Attribution obligation:** CC-BY 4.0 requires creator credit.
+  Lands in **Phase 7 distribution copy** (post body / video
+  description) NOT on-screen — keeps the trailer's R15 closing
+  card uncluttered. Standard format:
+  *"Music: 'Spy Glass' by Kevin MacLeod (incompetech.com) —
+  Licensed under CC BY 4.0."* Verbatim attribution + posting
+  checklist in `music-license.md`.
+
+### Source-type ladder (Unit 1.7 — preserved for audit trail; SUPERSEDED by 2026-05-22 free-only directive)
 
 - **Source-type ladder:** Tier 1 Artlist Pro ($199/yr) / Epidemic Sound
   Pro ($204/yr) → Tier 2 Marmoset / Songtradr per-track marketplace
@@ -42,9 +73,12 @@ card-flash montages only — no VO lines in this trailer.
   (2:30–3:30) clipped to 106s. Path B (60s short + loop) fallback if no
   Path A candidate survives Tier 1+2. Path C (stems) reserved for
   licensed-track edge case only.
-- **`music_disclosure_required`:** `false` (Phase 1 default — flips to
-  `true` only if Tier 3 Suno fallback fires, triggering Phase 7
-  AI-music disclosure obligation).
+  · **Path A taken** — Spy Glass 227s clipped to 106s window
+    during Phase 4 composite.
+- **`music_disclosure_required`:** `false` (Spy Glass is a
+  human-composed track. Tier 3 Suno generative path NOT taken; no
+  AI-music disclosure obligation flows to Phase 7. Phase 1 default
+  holds).
 - **§R9 brief:** mid-century brass / bossa nova / spy jazz / lounge,
   BPM 100–130, confident-deadpan-slightly-playful (NOT goofy/wacky),
   brass + upright bass + syncopated drums + optional vibraphone/organ.

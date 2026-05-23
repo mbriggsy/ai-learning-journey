@@ -191,10 +191,53 @@ generic-mono fallback cleanly.
 
 ---
 
-## Unit 3.5 — Music bed procurement
+## Unit 3.5 — Music Bed Procurement
 
-See `music-audition-log.md` (when Unit 3.5 produces it) +
-`music-license.pdf` (licensing artifact).
+### Landed track
+
+| staticFile arg | Source | Format | Tier | Trailer role |
+|---|---|---|---|---|
+| `trailer/audio/music-bed.mp3` | **"Spy Glass" by Kevin MacLeod** (incompetech.com) — CC-BY 4.0 | MP3, 44.1kHz stereo, 256 kbps, 226.98s (3:47) | TEXTURE | Continuous music bed under trailer narration (95–106s). Phase 4 clips a 106s window per the music-cue map in BEAT-SHEET.md preamble. Path A (full-length-clipped). |
+
+### Why this track
+
+R9 spec hit cleanly on first audition. BPM 110 (mid-R9 range 100-130).
+Instrumentation Saxes + Trumpet (brass leads) + Piano + Bass + Drums +
+Vibes + Flute. Mood "Grooving, Mysterious" — Incompetech description:
+*"Super cool jazz for your hardcore detectives! Timeless quality.
+Could be now, could be in the 1950s."* Briggsy first-listen verdict
+2026-05-22: *"oh that's fucking money!"*
+
+### Cost + budget
+
+**$0.** Free CC-BY 4.0 catalog. The Phase 1 Unit 1.7 paid-source
+ladder (Artlist/Epidemic/Marmoset/Songtradr/Suno) was bypassed per
+the 2026-05-22 Briggsy directive *"not paying for music"* — captured
+in `project-burned-music-bed-budget` memory.
+
+### Audit trail + license artifact
+
+- `videos/trailer/sample-eval/visual-asset-prep/music-audition-log.md`
+  — full audition record (catalogs evaluated, Incompetech candidates
+  table with BPM/instrumentation/verdict columns, decision trace).
+- `videos/trailer/sample-eval/visual-asset-prep/music-license.md` —
+  CC-BY 4.0 attribution text + posting checklist + platform-specific
+  Content-ID dispute procedure. Replaces the Phase 3 plan's
+  `music-license.pdf` filename placeholder (CC-BY 4.0 ships no
+  per-track PDF; the deed URL + attribution wording IS the license
+  artifact).
+
+### Phase 7 distribution obligation
+
+Attribution text MUST appear in the post body / video description
+on every distribution surface (Twitter/X, portfolio, engineering
+blog reposts, LinkedIn, YouTube). On-screen credit OPTIONAL per
+CC-BY 4.0. See `music-license.md` for the verbatim attribution
+text + per-surface posting checklist.
+
+`music_disclosure_required` stays **`false`** — Spy Glass is
+human-composed; Tier 3 Suno generative path NOT taken; no
+AI-music disclosure obligation flows to Phase 7.
 
 ---
 

@@ -59,10 +59,11 @@ trit), Unit 3.6 (cold-open title-sequence — 3 NEW SVGs at
 chevron-motif-bg + burned-logo + Playwright composite proof PNG;
 $0 cumulative Imagen spend through 3.6 — tracker landed at
 `videos/trailer/sample-eval/visual-asset-prep/imagen-spend.md`).
-Remaining: **3.5 music bed procurement** (BLOCKED on paid Artlist/
-Epidemic/Suno subscriptions — Briggsy gate) · 3.7 visual manifest +
-PHASE-3-EXIT.md hand-off (needs 3.5 done first per Unit 3.7
-dependency chain).
+Unit 3.5 (music bed — "Spy Glass" by Kevin MacLeod, CC-BY 4.0,
+$0 paid; Phase 1 paid-source ladder bypassed per Briggsy
+"not paying for music" directive captured in
+`project-burned-music-bed-budget` memory). **Remaining: 3.7 visual
+manifest + PHASE-3-EXIT.md hand-off — Phase 3 closeout.**
 
 **Phase 2 carry-forwards → Phase 3+** (stitch / silenceremove
 generalizations):

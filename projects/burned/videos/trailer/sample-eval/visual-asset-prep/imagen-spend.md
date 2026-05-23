@@ -19,7 +19,7 @@ the cap becomes decorative).
 | 3.2 | 2026-05-22 | Card-art curation (all pre-existing webps) | 0 | $0.00 | $0.00 |
 | 3.3 | 2026-05-22 | Hand-authored SVG + existing PNG assets | 0 | $0.00 | $0.00 |
 | 3.4 | 2026-05-22 | Hand-authored SVG (no Imagen) | 0 | $0.00 | $0.00 |
-| 3.5 | _pending_ | Music procurement (no Imagen) | 0 | $0.00 | _pending_ |
+| 3.5 | 2026-05-22 | Music procurement — "Spy Glass" by Kevin MacLeod, CC-BY 4.0 (free) — Phase 1 paid-source ladder bypassed per `project-burned-music-bed-budget` memory | 0 | $0.00 | $0.00 |
 | 3.6 | 2026-05-22 | Hand-authored SVG fallback path (Step 1b — skipped Imagen escalation for operative-card-frame per insight #018 + `feedback-imagen-budget.md` "one-test-first" preference) | 0 | $0.00 | $0.00 |
 
 ## Notes

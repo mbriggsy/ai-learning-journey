@@ -5,7 +5,7 @@
 ## Where the depth lives
 
 - **`docs/ideation.md`** — WHAT decisions (audience, hero framing, content shape, CTA, bar revisions, mobile + light/dark addenda). The steering reference. Re-read before any visual or content call.
-- **`docs/brainstorm/`** — full plan, one file per phase. Start at `docs/brainstorm/README.md` (the index — bar, locked decisions, visual system, verification checklist) then open the phase file you're executing.
+- **`docs/plans/`** — full plan, one file per phase. Start at `docs/plans/README.md` (the index — bar, locked decisions, visual system, verification checklist) then open the phase file you're executing.
 
 Read both before touching code.
 
@@ -13,7 +13,7 @@ Read both before touching code.
 
 ## Next: Phase −1 — Pre-flight verifications
 
-Resolve before Phase 0. Details for each step live in `docs/brainstorm/phase-preflight.md`.
+Resolve before Phase 0. Details for each step live in `docs/plans/phase-preflight.md`.
 
 - [ ] **−1.1** Check `claude-credit` tool publishability (npm + GitHub) → drives the primary CTA copy
 - [ ] **−1.2** Add meta-projects to `~/.claude-credit-projects.yaml` (tools/claude-credit + projects/claude-credits) → final grid = 11 tiles
@@ -21,7 +21,7 @@ Resolve before Phase 0. Details for each step live in `docs/brainstorm/phase-pre
 - [ ] **−1.4** Visual asset inventory — per project, list "exists vs needs capture"
 - [ ] **−1.5** Draft `docs/editorial.md` worksheet — one-liner + hook stat + 2-3 sentence description per project, 11 rows. Briggsy reviews/edits the voice.
 
-After Phase −1 → Phase 0 (data extensions in `claude-credit` tool: see `docs/brainstorm/phase-0-data-gaps.md`).
+After Phase −1 → Phase 0 (data extensions in `claude-credit` tool: see `docs/plans/phase-0-data-gaps.md`).
 
 ---
 

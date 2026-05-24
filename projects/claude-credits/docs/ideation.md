@@ -2,7 +2,7 @@
 
 The WHAT decisions for the site. Visual / content / scope calls that sit upstream of any code work. If a future session is about to pick a direction that conflicts with what's here, this doc is the receipt that says no.
 
-Companion: `brainstorm/README.md` (full implementation plan, phases linked one file each), `../TODO.md` (next actionable steps).
+Companion: `plans/README.md` (full implementation plan, phases linked one file each), `../TODO.md` (next actionable steps).
 
 ---
 

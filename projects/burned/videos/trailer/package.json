@@ -22,6 +22,8 @@
     "gen:gameplay-placeholder": "tsx scripts/generate-placeholder-gameplay.ts",
     "verify:gameplay-clip": "tsx scripts/verify-gameplay-clip.ts",
     "verify:s05-head-fade": "tsx scripts/verify-s05-head-fade.ts",
+    "verify:no-transition-series": "tsx scripts/verify-no-transition-series.ts",
+    "verify:briggsy-sentinels": "tsx scripts/verify-briggsy-sentinels.ts",
     "typecheck": "tsc --noEmit",
     "test": "vitest run",
     "check:tts": "tsx scripts/check-tts-readiness.ts",

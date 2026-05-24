@@ -2983,7 +2983,7 @@ Composition-level audio (Dash 2610 + Phrasing 2790) plays via the AUDIO_ASSETS m
 
 ### Unit 4.8 — Transition Implementation
 
-- [ ] **Unit 4.8: Transition Implementation**
+- [x] **Unit 4.8: Transition Implementation** — landed 2026-05-24. Most components shipped en-route to scene units (DossierPageWipe via S03 work; IrisWipe via Unit 4.7; S04TailFadeToBlack via Unit 4.5; S05HeadFadeFromBlack via Unit 4.6; SceneFadeToBlack carried over from Phase 0 spike). Unit 4.8 ships the remaining inventory + grep gate: `sample-eval/composite-build/transitions.md` (6-boundary inventory + ADR lineage + anti-regression-gate table + optional `SceneFadeToBlack` polish note); `scripts/verify-no-transition-series.ts` greps every .ts/.tsx under `videos/trailer/src/` for `<TransitionSeries>` JSX or `from '@remotion/transitions'` imports (comments tolerated; PASSED 65 src files clean). `pnpm verify:no-transition-series` npm script wired. Pre-emptive `SceneFadeToBlack` polish deferred to Unit 4.9 Briggsy-eye drive.
 
 **Goal:** Build the named scene-internal transition overlays (per ADR #11 revised — NO `<TransitionSeries>` at composition level). Per amendment SA-5: `IrisWipe` lives ONLY in `transitions/` (S06 imports, NOT inline duplicate); `S04TailFadeToBlack` lives in `components/` (created in Unit 4.5); `FadeTransition` vendored from UMB v3 as optional scene-end fade for hard-cut polish. Boundary inventory:
 
@@ -3156,7 +3156,18 @@ NOTE: NO `<TransitionSeries>` row. ADR #11 revised: bare `<Series>` + scene-inte
 
 ### Unit 4.9 — Per-Scene §2 Archer Test Pass
 
-- [ ] **Unit 4.9: Per-Scene §2 Archer Test Pass**
+- [~] **Unit 4.9: Per-Scene §2 Archer Test Pass (R1 partial — 2026-05-24)** — R1 ships the gate infrastructure + summary placeholder; motion-shape specs deferred to R2 (Playwright + Remotion studio lifecycle wiring is heavyweight, better isolated). Shipped R1:
+  - `src/components/SafeSquareOverlay.tsx` — env-gated debug overlay (`REMOTION_SAFE_SQUARE=1`), zero render cost when off; dashed 1080² center guide + crosshairs + corner-coordinate labels.
+  - `scripts/verify-briggsy-sentinels.ts` — git-author gate per amendment TIER 2 #7. Currently FAILS with `MISSING: briggsy-review-4.{6,7}.signoff` (4.2-4.5 sentinels present + authored briggsy007@gmail.com from earlier ship; 4.6 + 4.7 pending Briggsy eye-check). Phase 5 + Phase 6 sentinel paths inlined as commented-out — uncomment when those phases begin.
+  - `sample-eval/composite-build/scene-pass-summary.md` — 6-row roll-up table + Unit 4.10 entry checklist + R2 deferred-spec note + 3 R2 open questions for S06.
+  - `pnpm verify:briggsy-sentinels` npm script wired.
+
+  Deferred to Unit 4.9 R2:
+  - `tests/scene-timing-shape.spec.ts` (studio-stage Playwright spec — per amendment NN-2)
+  - `tests/scene-timing-shape-mp4.spec.ts` (encoded-MP4 vitest+ffmpeg+pixelmatch spec — per amendment TIER 2 #10)
+  Both require either Remotion studio dev-server lifecycle wiring or snapshot-baseline bootstrap; each is its own ~half-day unit.
+
+  Unit 4.10 entry remains gated on: Briggsy commits the missing 4.6 + 4.7 sentinels (or explicitly defers); motion-shape specs land in R2.
 
 **Goal:** Each of the 6 scenes (S01–S06) independently passes the §2 Quality Bar test card. Briggsy reviews the actual rendered MP4 (per insight 050 — agent eyeball pass insufficient). Each scene writes a `briggsy-review-4.N.signoff` sentinel file on PASS. Unit 4.10 entry gated on all 6 sentinels present. Failed scenes iterate per structured 3-branch escalation procedure (per amendment SA-3 — replaces the original "max 3 iterations then reopen" which had no defined escalation path). Plus per amendment NN-2/NN-3: quantitative `tests/scene-timing-shape.spec.ts` for cascade + closing with fault-injection canary.
 

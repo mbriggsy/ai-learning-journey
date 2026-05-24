@@ -94,7 +94,7 @@ The site brags by being stunning and showing the WORK — magnitude, projects, p
 - NO human-vs-Claude authorship split viz, NO "0 lines authored by the human" headline, NO proof mechanism. This is our experiment — it owes no one proof.
 - The hero's magnitude (tokens / lines / projects) IS the flex — it shows off the work without litigating authorship.
 - Consequence: the per-tile tier bar is cut (Phase 4) and the per-project "AUTHORED BY" split is cut/reframed (Phase 5) — both are the same noise.
-- The "autonomous-SDLC experiments" framing may appear as LIGHT context on the About page, never as a scoreboard.
+- The "autonomous-SDLC experiments" framing may appear as LIGHT context on the About page, never as a scoreboard. **Candidate line for that light touch** (Briggsy, 2026-05-24): *"Claude wrote all of it. Briggsy directed — and answered a question or two."* — a warm, self-deprecating nod to the ATC/pilot dynamic that earns a smile, not a metric or proof. Placement (About intro / footer / etc.) is a Phase 6 call.
 
 ---
 

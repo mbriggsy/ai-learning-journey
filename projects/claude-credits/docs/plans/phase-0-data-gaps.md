@@ -1,7 +1,7 @@
 ---
 created: 2026-05-24T09:46:48-04:00
 deepened: 2026-05-24T12:43:38-04:00
-doc-reviewed:
+doc-reviewed: 2026-05-24T13:11:43-04:00
 ---
 
 # Phase 0 — Fill data gaps in `tools/claude-credit/`
@@ -27,7 +27,7 @@ Apply these throughout — they are NOT optional:
   - `tokensProcessed = input + output + cacheCreation + cacheRead` — the "tokens the model touched" magnitude. Hero PRIMARY uses this.
   - `tokensGenerated = input + output + cacheCreation` — "fresh tokens produced or first-read." Honest work signal. Detail-page breakdown shows both.
 - **`largestSingleCommit.messageFirstLine` is DROPPED from the schema.** Commit subjects can contain `C:\Users\...`, `/Users/...`, `~`-paths, internal slugs, `@mentions`, or accidentally-pasted secrets. The "+4,200-line commit on Apr 22" story works with `sha + dateISO + linesAdded + linesRemoved` alone. Removing the field eliminates a whole class of public-data leak vectors AND simplifies the privacy-stripping discipline.
-- **Privacy by construction is STRUCTURAL, not documentary.** The session-tokens parser uses a pick-list pattern — the parsed object has exactly eight keys and the `message` object is never retained by reference. A snapshot test asserts the parser's output keys against a frozen list. A pre-publish grep-guard in the GitHub Action refuses to commit `public/data/stats.json` if it contains `C:\\`, `/Users/`, `brigg`, `private`, `secret`, `token`, `password`, or UUID-shaped strings outside the model-name allowlist.
+- **Privacy by construction is STRUCTURAL, not documentary.** The session-tokens parser uses a pick-list pattern — the parsed object has exactly **seven** keys (timestamp, isSidechain, model + the four `usage` integers), constructed as an EXPLICIT object literal (no `{...rest}` destructuring), and the parent `line` object is never retained by reference. A `Pick<T, K>` TypeScript pattern + a `satisfies ParsedAssistantLine` assertion enforce the shape at compile time. An assertion-based allowlist test (not a text snapshot) compares the published JSON's full key-path set against a hand-coded frozen list. A pre-publish grep-guard in the GitHub Action refuses to commit `public/data/stats.json` if it contains forbidden path / username / secret patterns (see Privacy by Construction section for the full enumeration).
 - **Tests are required for §0.4, §0.5b, §0.6b.** Zero tests exist today (vitest is wired in `tools/claude-credit/package.json` but the harness has never run). Other units defer with a stated reason. See §0.10.
 
 ## Current state (verified at deepening, 2026-05-24)
@@ -253,11 +253,14 @@ function emptyStats(): GitStats {
 }
 ```
 
-**A.6 — verify Batch A compiles:** `cd C:/Users/brigg/ai-learning-journey/tools/claude-credit && pnpm typecheck`. Expected outcome: clean exit. If any consumer file fails (e.g., `report.ts` doesn't yet set `assetBytesByKind` / `topSubcategories` / `tokens` / `editorial` / `kind`), the missing-property errors are EXPECTED — Batch A is a deliberate "type frame first" landing. Each Batch B unit lands one consumer-side fix. **Don't try to make Batch A green on its own; expect missing-property errors from `report.ts` and `multi-report.ts` until 0.2 / 0.3 / 0.5b / 0.6 / 0.6b each land their consumer-side edits.**
+**A.6 — land minimal consumer-side casts inside Batch A so typecheck is GREEN at the end.** This avoids a half-landed state where "the type frame compiled" is ambiguous against "all consumers broke." Concretely, inside the SAME Batch A commit:
 
-Workaround if Batch A's missing-property errors block local-dev workflow: insert temporary `as ProjectReport` casts at the report-return site in `report.ts` line 75, removed unit by unit as each consumer fix lands.
+- In `report.ts` line 75 (the `return { … }` block of `buildProjectReport`), add the five new ProjectReport fields with placeholder values that satisfy the new types: `assetBytesByKind: { images: 0, audio: 0, video: 0, fonts: 0, 'misc-media': 0 }`, `topSubcategories: []`, `tokens: null`, `editorial: null`, `kind: 'active' as const`. Add a `// TODO(0.2 / 0.3 / 0.5b / 0.6): replace placeholder` comment above each so each Batch B unit knows which placeholder it replaces.
+- In `multi-report.ts` line 131 (the `return { report: { … } }` block of `buildMultiProjectReport`), add the new top-level fields with placeholder values: `meta: []`, `archiveCollective: null`, and extend `combined` with `totalTokensProcessed: 0`, `totalTokensGenerated: 0`, `totalSessions: 0`, `tokenWindowStartISO: null`, `tokenWindowEndISO: null`, `tokenWindowDays: null`, `modelBreakdown: []`. Each gets the same `// TODO(0.5b / 0.6b): replace placeholder` marker.
 
-**Batch A commit point:** `chore(claude-credit): add Phase 0 type frame to taxonomy.ts`. Single commit, no consumer code yet.
+**A.7 — verify Batch A compiles green:** `cd C:/Users/brigg/ai-learning-journey/tools/claude-credit && pnpm typecheck`. Expected outcome: **clean exit** — every new type is satisfied by a placeholder. Each Batch B unit then REPLACES its placeholder with the real implementation; the `pnpm typecheck` gate stays binary green across the whole phase. This trades a slightly larger Batch A commit for a binary signal at every subsequent step.
+
+**Batch A commit point:** `chore(claude-credit): add Phase 0 type frame to taxonomy.ts + consumer placeholders`. Single commit, no Batch B logic yet — just type frame + the minimum consumer-side wiring needed to keep tsc green.
 
 ### Batch B — implementations (units in order)
 
@@ -293,7 +296,7 @@ Fields that may be null after Phase 0:
 
 The session-tokens parser feeds a public deploy. Doc-rules ("don't read message.content") are not enforceable. The discipline below is.
 
-**Pick-list pattern at the parser entry.** The parser MUST extract exactly these fields from a JSONL line, by name, into a fresh object — and discard the line reference. The parent `line` object is never retained, summed against, or compared structurally.
+**Pick-list pattern at the parser entry.** The parser MUST extract exactly these seven fields, by name, into a fresh object — constructed as an EXPLICIT object literal. The parent `line` object is never retained, summed against, destructured-with-rest, or compared structurally.
 
 ```ts
 // Pseudocode — the only fields that enter aggregation.
@@ -307,35 +310,91 @@ type ParsedAssistantLine = {
   cacheCreate: number; // line.message.usage.cache_creation_input_tokens
   cacheRead: number;   // line.message.usage.cache_read_input_tokens
 };
+
+// REQUIRED construction form (typed return + satisfies):
+function parseLine(line: unknown): ParsedAssistantLine | null {
+  // ... validation ...
+  return {
+    ts: l.timestamp,
+    sidechain: l.isSidechain === true,
+    model: String(l.message.model ?? 'unknown'),
+    input: Number(l.message.usage.input_tokens) || 0,
+    output: Number(l.message.usage.output_tokens) || 0,
+    cacheCreate: Number(l.message.usage.cache_creation_input_tokens) || 0,
+    cacheRead: Number(l.message.usage.cache_read_input_tokens) || 0,
+  } satisfies ParsedAssistantLine;
+}
 ```
 
-The 0.5b unit test asserts that `Object.keys(parseLine(realFixture))` is exactly the 7-key set above.
+**FORBIDDEN patterns** (the test below catches the output shape, not the construction; this prose binds the construction):
+- `const { ts, ..., ...rest } = parsed` — destructuring-with-rest creates a referenceable variable carrying every other field. NEVER use.
+- `console.error(line)` / `throw new Error(JSON.stringify(line))` in any catch path — never serialize the raw line, even in error paths. Log only the line number + a generic error class.
+- Storing `line` in a closure (e.g., for a deferred warning callback) — never. Errors are surfaced via the counter pattern, not referenced.
 
-**Stats.json allowlist.** `public/data/stats.json` ships only fields in the allowlist defined by the snapshot test in §0.10 (which compares the keys of a fresh `JSON.stringify(multiReport)` against a frozen approved-keys list). Adding a new field requires updating the snapshot — CI fails otherwise.
+The 0.5b unit test asserts that `Object.keys(parseLine(realFixture)).sort()` is exactly `['cacheCreate', 'cacheRead', 'input', 'model', 'output', 'sidechain', 'ts']` AND that the parser file does not contain the regex `/\.\.\.rest/` or `JSON\.stringify\(line/` (grep-based source-code linting in the test).
 
-**Pre-publish grep-guard** (GitHub Action — Phase 8). Refuse to commit `public/data/stats.json` if it contains any of:
-- `C:\` (Windows absolute path)
+**Stats.json allowlist — assertion-based, not text-snapshot.** `public/data/stats.json` ships only fields in the allowlist defined in §0.10 — a hand-coded `const ALLOWED_KEY_PATHS: readonly string[]` (e.g., `'combined.totalTokensProcessed'`, `'projects[].tokens.tokensProcessed'`, `'projects[].git.firstCommitISO'`, etc.). The test deep-walks the parsed JSON, collects every unique key-path, asserts `extractedKeys ⊆ ALLOWED_KEY_PATHS`. Adding a new field requires adding a line to `ALLOWED_KEY_PATHS` — a deliberate, reviewable edit. (Why not a text snapshot: snapshots are one CLI flag away from being blessed without review; an explicit array makes "what's allowed" an enumerable code surface.)
+
+**Pre-publish grep-guard** (GitHub Action — Phase 8). Refuse to commit `public/data/stats.json` if any STRING VALUE in the parsed JSON matches any of:
+- `C:\\` (Windows backslash absolute path)
+- `C:/` (Windows forward-slash absolute path — Node normalizes here often)
 - `/Users/` (POSIX home path)
-- `brigg` (username)
-- `private` (the monorepo's `private/` parent — sensitive projects)
-- `secret`, `token` (token in a SECRET sense, not the model-token sense — see exemption below), `password`
-- UUID-shaped strings outside the known model-name allowlist
+- `\\Users\\` (Windows mixed-form path fragment)
+- `AppData` (Windows local user data path fragment)
+- `brigg` (username substring; matches `briggsy` too)
+- `node_modules` (paths from accidental stack traces)
+- `/private/` or `\\private\\` (path-scoped — does NOT match a project named `private-foo`)
+- `secret`, `password`
+- email pattern: `/[a-z0-9._%+-]+@[a-z0-9.-]+\.[a-z]{2,}/i`
+- Windows drive-letter slug pattern: `/^[A-Za-z]--[A-Za-z]/` (catches things like `c--Development-Projects-...`)
+- UUID-shaped strings (`/[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}/i`) outside the model-name allowlist (the allowlist is a fixed list of known model IDs like `claude-opus-4-7`)
 
-Exemption: the grep for `token` is scoped to **string values** that contain the word in a security context (e.g., `"token": "sk-..."`); it does NOT match the numeric token-count fields. Implementation: grep against `JSON.parse → JSON.stringify(filtered, null, 2)` looking only at string values, never field names.
+Scope: the guard reads `JSON.parse(stats.json)`, deep-walks, and checks ONLY string-valued leaves — never field NAMES. This is critical: a field named `tokenWindowStartISO` is fine; a string value `"sk-ant-..."` is not. The `token` substring is therefore NOT in the bad-list because it would false-trigger on every model name and the `TOKENS CONSUMED` UI label that may legitimately appear in editorial copy. The `secret` / `password` bad-list members ARE in scope as substrings — false positives are vanishingly rare in stats data and the conservative bias is correct here.
+
+**parseHealth shape — counters only, never strings.** `parseHealth.{lineParseErrors, usageShapeWarnings, fileReadErrors}` are integer counts. The parser MUST NEVER push a string error message into anything that lands in the published JSON. Error strings live in stderr only. Structural rule: any field that ends up in `stats.json` is either a number, an ISO timestamp string, an author-controlled editorial string, a normalized model name, or `null`. No free-text error strings.
 
 ---
 
-## Aggregation invariant (LOCKED — write as a comment above `MultiProjectReport`)
+## Aggregation invariants (LOCKED — write as comments above `MultiProjectReport`)
 
+Two invariants, because `grandTotals` and `tokens` live on different sub-objects with different shapes:
+
+**INVARIANT A — grandTotals aggregation (sum-class):**
 ```
-INVARIANT: combined.totalX = sum(projects[].grandTotals.X)
-                           + sum(meta[].grandTotals.X)
-                           + archiveCollective.totalX
-where X ∈ { AuthoredFiles, AuthoredBytes, AuthoredLines, AllBytes,
-            Commits, TokensProcessed, TokensGenerated, Sessions }
+combined.totalX = Σ(projects[].grandTotals.X ?? 0)
+                + Σ(meta[].grandTotals.X ?? 0)
+                + (archiveCollective?.totalX ?? 0)
+where X ∈ {
+  AuthoredFiles, AuthoredBytes, AuthoredLines,
+  PipelineGeneratedFiles, PipelineGeneratedBytes,
+  AllBytes, Commits
+}
 ```
 
-Archive entries are NEVER present in `projects[]` or `meta[]`. The §0.10 fixture-based aggregation invariant test enforces this on every CI run.
+**INVARIANT B — token aggregation (sum-class, separate shape, null-safe):**
+```
+combined.totalTokensProcessed = Σ(projects[].tokens?.tokensProcessed ?? 0)
+                              + Σ(meta[].tokens?.tokensProcessed ?? 0)
+                              + (archiveCollective?.totalTokensProcessed ?? 0)
+combined.totalTokensGenerated = Σ(projects[].tokens?.tokensGenerated ?? 0)
+                              + Σ(meta[].tokens?.tokensGenerated ?? 0)
+                              + (archiveCollective?.totalTokensGenerated ?? 0)
+combined.totalSessions        = Σ(projects[].tokens?.sessionCount ?? 0)
+                              + Σ(meta[].tokens?.sessionCount ?? 0)
+                              + (archiveCollective?.totalSessions ?? 0)
+```
+
+**INVARIANT C — token window (NOT sum-class, min/max across non-null):**
+```
+combined.tokenWindowStartISO = min(p.tokens.windowStartISO for p in projects[]+meta[]
+                                    where p.tokens !== null)
+                                ?? null if no project has tokens
+combined.tokenWindowEndISO   = max(...) similarly
+combined.tokenWindowDays     = floor((Date.parse(end) - Date.parse(start)) / 86_400_000)
+                                if both bounds non-null, else null
+```
+
+Archive entries are NEVER present in `projects[]` or `meta[]`. `archiveCollective` is `null` when no `archive:` entries are configured — every invariant treats null `archiveCollective` as the zero-element contribution. Null per-project `tokens` is similarly the zero-element contribution. The §0.10 fixture-based test enforces all three invariants explicitly (one fixture with archive populated, one without; one project with `tokens: null` mixed with projects with token data).
 
 ---
 
@@ -357,7 +416,7 @@ Set `stats.firstCommitISO`, `stats.lastCommitISO`, `stats.projectAgeDays`. On ex
 **Verify:**
 ```
 cd C:/Users/brigg/ai-learning-journey/tools/claude-credit
-pnpm dev -- C:/Users/brigg/ai-learning-journey/projects/burned --json | jq '.git | {firstCommitISO, lastCommitISO, projectAgeDays}'
+pnpm dev C:/Users/brigg/ai-learning-journey/projects/burned --json | jq '.git | {firstCommitISO, lastCommitISO, projectAgeDays}'
 ```
 Expected: all three non-null on BURNED. `projectAgeDays` ≥ 40 (BURNED is ~50 days old at deepening time).
 
@@ -387,7 +446,7 @@ In `report.ts` after line 73 (`grandTotals` aggregation block): `const assetByte
 
 **Verify:**
 ```
-pnpm dev -- C:/Users/brigg/ai-learning-journey/projects/burned --json | jq '.assetBytesByKind'
+pnpm dev C:/Users/brigg/ai-learning-journey/projects/burned --json | jq '.assetBytesByKind'
 ```
 Expected: five keys present (images, audio, video, fonts, misc-media). `images > 0` on BURNED. All five integer-valued, never null.
 
@@ -418,7 +477,7 @@ Attach to the return object.
 
 **Verify:**
 ```
-pnpm dev -- C:/Users/brigg/ai-learning-journey/projects/burned --json | jq '.topSubcategories | {len: length, top: .[0]}'
+pnpm dev C:/Users/brigg/ai-learning-journey/projects/burned --json | jq '.topSubcategories | {len: length, top: .[0]}'
 ```
 Expected: `len = 5`, `top.bytes` is the largest subcategory by bytes (on BURNED, likely `pipeline-generated/assets/images` or `pipeline-generated/assets/video`).
 
@@ -426,22 +485,23 @@ Expected: `len = 5`, `top.bytes` is the largest subcategory by bytes (on BURNED,
 
 **Commit:** `feat(claude-credit): topSubcategories pre-computed`
 
-## 0.4 + 0.5 (merged) — `linesByAuthor` + `timeline` (~30 min)
+## 0.4 + 0.5 (merged) — `linesByAuthor` + `timeline` (~60 min — co-author parser + state machine + 3 unit tests)
 
 **File:** `tools/claude-credit/src/git-stats.ts`
 
 **Single `git log` pass** (one subprocess instead of two) produces both blocks. Existing helper `git()` + `withScope()` apply.
 
-Command shape (pseudocode for the args; preserve exact format string for the NUL-delimited fields):
+Command shape — use `git log -z` for unambiguous NUL-delimited ENTRIES (no fragile END marker):
 
 ```
-git log --pretty=format:"%H%x00%aI%x00%aN%x00%B%x00END" --numstat -- .
+git log -z --pretty=format:"%H%x00%aI%x00%aN%x00%B" --numstat -- .
 ```
 
-Parse output line-by-line. State machine:
-- Header line shape: `<sha>NUL<authorISO>NUL<authorName>NUL<commitBody>...NULEND`
-  - Note: `%B` (commit body) can contain newlines AND the literal `END` marker if a commit message includes that word; use the `%x00END\n` as the delimiter sequence (NUL + "END" + newline) — collisions are vanishingly rare and the parse is tolerant.
-- Subsequent `--numstat` lines: `<added>\t<removed>\t<path>` until the next commit header.
+`-z` means commit entries are delimited by NUL bytes at the BOUNDARY, not by newlines/literals. The `--numstat` block for each commit follows the commit header (NUL-separated path field within numstat lines). This eliminates the entire class of `END` collisions (commit messages legitimately containing the word END, code fences, etc.).
+
+Parse output by splitting on the **commit boundary NUL** (the `\0` AFTER the numstat block; under `-z`, git emits `<commit_header>\0<numstat_block>\0\0`). State machine:
+- Header field shape (after split): `<sha>\0<authorISO>\0<authorName>\0<commitBody>`
+- Numstat lines: `<added>\t<removed>\t<path>` (one per file). For binary files git emits `-\t-\t<path>` — these contribute 0 to `linesAdded` / `linesRemoved` but DO count toward `uniqueFilesTouched`.
 
 For each commit, capture:
 - **For `linesByAuthor`:**
@@ -452,13 +512,16 @@ For each commit, capture:
 - **For `timeline`:**
   - Bucket by date: `dateISO.slice(0, 10)` (YYYY-MM-DD). Increment count per day.
   - Track running max of `linesAdded + linesRemoved` per commit → `largestSingleCommit = { sha, dateISO, linesAdded, linesRemoved }`. **No `messageFirstLine` — dropped from schema; commit subjects can leak paths.**
+  - **Binary-only commits** (where all numstat lines are `-\t-\t<path>`) contribute `linesAdded: 0, linesRemoved: 0` and are INELIGIBLE for `largestSingleCommit` — `0 + 0 = 0` never beats a running max > 0.
+  - **Tiebreaker rule**: when two commits tie on `linesAdded + linesRemoved`, the LATER `dateISO` wins.
+  - **No-text-churn fallback**: if every commit has `linesAdded + linesRemoved === 0` (a pure-binary project), `largestSingleCommit` stays `null`. UI per null discipline shows em-dash.
 
 Post-pass:
 - `linesByAuthor`: sort desc by `linesAdded + linesRemoved` (total churn contribution).
 - `timeline.commitsByDay`: sort asc by date.
 - `timeline.activeDays = commitsByDay.length`.
 - `timeline.peakDay`: pick max by count, ties broken by latest date.
-- `timeline.largestSingleCommit`: as accumulated; null if no commits.
+- `timeline.largestSingleCommit`: as accumulated per the rules above; null if no commit has any text churn.
 
 **Preserve the existing rename-tracking regex** at line 137 (`/^(.*)\{(.*) => (.*)\}(.*)$/`) — apply to the numstat path field. The existing `uniqueFilesTouched` calculation in the OLD numstat pass at lines 122-145 still needs to run separately (it's keyed differently and reuses the existing block). Don't delete it; the merged pass is ADDITIVE to it.
 
@@ -468,7 +531,7 @@ Post-pass:
 
 **Verify:**
 ```
-pnpm dev -- C:/Users/brigg/ai-learning-journey/projects/burned --json | jq '.git | {linesByAuthor: .linesByAuthor[0:3], timeline: {activeDays, peakDay, largestSingleCommit}}'
+pnpm dev C:/Users/brigg/ai-learning-journey/projects/burned --json | jq '.git | {linesByAuthor: .linesByAuthor[0:3], timeline: {activeDays, peakDay, largestSingleCommit}}'
 ```
 Expected:
 - `linesByAuthor[0]` is Claude OR Briggsy (BURNED has both). Each entry has all 5 fields populated.
@@ -483,19 +546,43 @@ Expected:
 2. End-to-end fixture: vitest `beforeAll` creates a tmp directory, runs `git init`, makes 3 commits (one with co-author, one without, one with two co-authors), then `collectGitStats(tmpDir)` returns the expected `linesByAuthor` shape with the additive attribution rule visible.
 3. `timeline.peakDay` correctness — fixture with two commits on day A, one on day B → peakDay is day A.
 
-**Pattern to mirror for fixture creation:** `execFileAsync('git', ['init', ...], { cwd: tmpDir })` from `git-stats.ts:55`. Use `os.tmpdir()` + `fs.mkdtemp` for scratch dirs.
+**Pattern to mirror for fixture creation — REQUIRED env-var setup** (without this, tests fail in CI with `git commit` complaining "Please tell me who you are" AND timeline tests are flaky because commit timestamps are nondeterministic):
+
+```ts
+// In test/helpers/git-fixture.ts — shared by every git-touching test
+const tmpDir = await fs.mkdtemp(path.join(os.tmpdir(), 'cc-git-'));
+const gitEnv = {
+  ...process.env,
+  GIT_AUTHOR_NAME: 'Test Author',
+  GIT_AUTHOR_EMAIL: 'test@example.com',
+  GIT_COMMITTER_NAME: 'Test Author',
+  GIT_COMMITTER_EMAIL: 'test@example.com',
+  // Per-commit dates injected per-call via GIT_AUTHOR_DATE + GIT_COMMITTER_DATE
+};
+await execFileAsync('git', ['init', '-b', 'main'], { cwd: tmpDir, env: gitEnv });
+// For each commit:
+await fs.writeFile(path.join(tmpDir, 'f.txt'), content);
+await execFileAsync('git', ['add', 'f.txt'], { cwd: tmpDir, env: gitEnv });
+await execFileAsync(
+  'git', ['commit', '-m', message],
+  { cwd: tmpDir, env: { ...gitEnv, GIT_AUTHOR_DATE: isoDate, GIT_COMMITTER_DATE: isoDate } }
+);
+```
+
+Use `git init -b main` (not `git init` alone) — git 2.28+ otherwise prompts on default-branch-name. Use `os.tmpdir()` + `fs.mkdtemp` for scratch dirs; vitest cleans up via `afterAll` (`fs.rm(tmpDir, { recursive: true, force: true })`).
 
 **Commit:** `feat(claude-credit): linesByAuthor + timeline (Co-Authored-By aware)`
 
-## 0.5b — `tokens` block (session-tokens parser)
+## 0.5b — `tokens` block (session-tokens parser) (~2-3 hours — 9 unit tests + fixture infra + state machine)
 
 **Files:**
 - NEW: `tools/claude-credit/src/session-tokens.ts`
 - NEW: `tools/claude-credit/src/session-tokens.test.ts`
+- NEW: `tools/claude-credit/src/strip-for-publish.ts` (shared with Phase 2 — see Privacy section)
 - `tools/claude-credit/src/report.ts` (call + attach)
-- `tools/claude-credit/src/multi-report.ts` (aggregate to combined)
+- `tools/claude-credit/src/multi-report.ts` (aggregate to combined + orphan-slug collection)
 
-This is the highest-risk unit in Phase 0. Privacy by construction. Worktree + subdir slug merging. Window-bounded floor. Honest dual-token numbers.
+This is the highest-risk unit in Phase 0. Privacy by construction. Worktree + subdir slug merging (including case-insensitive matching). Window-bounded floor. Honest dual-token numbers.
 
 ### Honesty constraint (load-bearing)
 
@@ -529,8 +616,10 @@ Claude Code session JSONLs rotate after ~30 days (non-atomic, file-level, not di
  * extraction step.
  *
  * The downstream stats.json published to a public deploy goes through an
- * allowlist snapshot test (src/__tests__/stats-shape.test.ts) — adding a new
- * field requires updating the snapshot. CI fails otherwise.
+ * assertion-based allowlist test (src/__tests__/stats-shape.test.ts) that
+ * compares the JSON's key-paths against a hand-coded ALLOWED_KEY_PATHS array
+ * exported from src/strip-for-publish.ts. Adding a new field requires adding
+ * a line to that array — CI fails otherwise.
  */
 ```
 
@@ -538,7 +627,11 @@ Claude Code session JSONLs rotate after ~30 days (non-atomic, file-level, not di
 
 ```ts
 function projectPathToSessionSlug(absPath: string): string {
-  return absPath
+  // Normalize FIRST (collapses .., resolves to canonical form) before slugifying.
+  // Without this, a path containing .. produces a slug with .. that doesn't match
+  // the canonical parent's slug.
+  const normalized = path.resolve(absPath);
+  return normalized
     .replace(/\\/g, '/')
     .replace(/:/g, '-')
     .replace(/\//g, '-')
@@ -548,22 +641,24 @@ function projectPathToSessionSlug(absPath: string): string {
 // C--Users-brigg-ai-learning-journey-projects-burned
 ```
 
-### Slug matching — longest-prefix-match-wins (critical)
+### Slug matching — case-insensitive, longest-prefix-match-wins (critical)
 
-The naïve approach `slug.startsWith(parentSlug)` false-matches `data-engineering-atc` against `data-engineering`. Use this rule:
+The naïve approach `slug.startsWith(parentSlug)` false-matches `data-engineering-atc` against `data-engineering`. Additionally, Claude Code historically emitted MIXED-CASE drive-letter slugs (`c--Development-...` AND `C--Users-...` both exist on disk at deepening time). All comparisons MUST be case-insensitive. Use this rule:
 
-1. Build the set of all configured parent slugs from `MultiProjectConfig.{projects, meta, archive}[].path`.
-2. Sort the parent slugs **descending by length** — longest-prefix-match-wins.
-3. Enumerate `~/.claude/projects/`. For each on-disk slug, assign to the FIRST parent that matches via:
-   - **Exact match**: `slug === parent`
-   - **Worktree match**: `slug.startsWith(parent + '--claude-worktrees-')`
-   - **Subdir match**: `slug.startsWith(parent + '-') && !slug.startsWith(parent + '--')`
+1. Build the set of all configured parent slugs from `MultiProjectConfig.{projects, meta, archive}[].path`. Compute each parent slug via `projectPathToSessionSlug` and normalize to LOWERCASE for matching.
+2. Sort parent slugs **descending by length** — longest-prefix-match-wins.
+3. Enumerate `~/.claude/projects/`. For each on-disk slug, lowercase it and assign to the FIRST parent that matches via:
+   - **Exact match**: `slugLower === parentLower`
+   - **Worktree match**: `slugLower.startsWith(parentLower + '--claude-worktrees-')`
+   - **Subdir match**: `slugLower.startsWith(parentLower + '-') && !slugLower.startsWith(parentLower + '--')`
 
-   (The `-` vs `--` distinction matters: `--` is the worktree separator OR the multi-segment subdir; either way the parent prefix has to be followed by a separator, not just any character.)
+   (The `-` vs `--` distinction matters: `--` is the worktree separator OR the multi-segment subdir; either way the parent prefix has to be followed by a separator, not just any character. Anything matching `parent + '--<something other than claude-worktrees->'` falls through to orphan.)
 
-4. Slugs that match NO configured parent are **orphans**. They are NOT merged into any project. They are NOT counted in the public `archiveCollective`. They surface only in CLI stderr as a warning: `claude-credit: 3 orphan session slugs (data-engineering-foo, ...). Add the project to ~/.claude-credit-projects.yaml to count them.`
+   **Nested worktrees** (e.g., a worktree-of-worktree like `parent--claude-worktrees-foo--claude-worktrees-bar`) match the worktree rule on the outermost `--claude-worktrees-` separator and merge into the canonical parent. All worktree-derived activity counts as parent activity.
 
-Why longest-first: if `data-engineering-other` is later added as its own project, its slug `...-data-engineering-other` wins the match before `data-engineering` could subsume it. The sort makes this automatic.
+4. Slugs that match NO configured parent are **orphans**. They are NOT merged into any project. They are NOT counted in the public `archiveCollective` or `combined`. The parser returns the orphan slugs to the caller (NOT via stderr — see the function shape section below) so `buildMultiProjectReport` can surface a single aggregated warning at the end. Orphan slug NAMES are NEVER published to `stats.json` (they contain path fragments — PII).
+
+Why longest-first: if `data-engineering-other` is later added as its own project, its slug wins the match before `data-engineering` could subsume it. The sort makes this automatic.
 
 ### JSONL walk + pick-list filter
 
@@ -610,18 +705,31 @@ Unknown / future IDs pass through as-is (raw string). Per-model `tokensProcessed
 ### Function shape (NEVER throws)
 
 ```ts
-// Pseudocode — the function returns a result object, never propagates exceptions.
+// Pseudocode — both per-project and multi-project collectors return result objects.
+// Orphan-slug surfacing flows through return values, NOT stderr writes inside the parser.
+
 export async function collectSessionTokens(
   projectPath: string,
   opts: { homeDir?: string; configuredParentSlugs?: string[] } = {}
-): Promise<TokenStats | null>;
+): Promise<{ stats: TokenStats | null; matchedSlugs: string[] }>;
+
+// At the multi-project layer (in multi-report.ts), the caller:
+//  1. Calls collectSessionTokens for each configured project, accumulating matchedSlugs.
+//  2. Diffs against all on-disk slugs in ~/.claude/projects/.
+//  3. Computes orphanSlugs = onDisk - matched.
+//  4. Returns orphanSlugs as part of the multi-report result.
+//  5. cli.ts emits a single aggregated stderr warning if orphanSlugs.length > 0.
+// This shape is testable as a pure function via the return value — no Vitest spy on
+// process.stderr.write is needed.
 ```
 
-- If `~/.claude/projects/` doesn't exist → return `null` (graceful for CI / clean machines).
-- If no matched slug directories → return `null`.
-- File-level I/O errors → increment `parseHealth.fileReadErrors`, skip file.
-- Per-line errors → increment `parseHealth.lineParseErrors` / `usageShapeWarnings`, skip line.
+- If `~/.claude/projects/` doesn't exist → return `{ stats: null, matchedSlugs: [] }` (graceful for CI / clean machines).
+- If no matched slug directories for this project → `stats: null, matchedSlugs: []`.
+- File-level I/O errors → increment `parseHealth.fileReadErrors`, skip file, continue.
+- Per-line errors → increment `parseHealth.lineParseErrors` / `usageShapeWarnings`, skip line, continue.
 - ALL token integers are guaranteed numeric (never NaN, never null) by the per-line clamp `Number(value) || 0`.
+
+**Active-session race condition (documented behavior).** If a Claude Code session is actively writing a JSONL while `claude-credit` reads it, `fs.readFile` returns the OS-snapshot of bytes at read-time. The final line may be partially flushed → catches as a `lineParseErrors` and is dropped. This produces a single-line tail-undercount per active session per run. The next `claude-credit --all` after the session settles catches up. Acceptable for the personal-site use case; documented here so future Claude doesn't chase a phantom bug when `parseHealth.lineParseErrors > 0` correlates with sessions Briggsy was in mid-stream.
 
 ### Wire-up
 
@@ -641,7 +749,7 @@ In `multi-report.ts` lines 99-127 aggregation loop → extend with:
 ### Verify
 
 ```
-pnpm dev -- C:/Users/brigg/ai-learning-journey/projects/burned --json | jq '.tokens | {windowDays, sessionCount, sidechainTokens, tokensProcessed, tokensGenerated, byModel: .byModel[0:3], parseHealth}'
+pnpm dev C:/Users/brigg/ai-learning-journey/projects/burned --json | jq '.tokens | {windowDays, sessionCount, sidechainTokens, tokensProcessed, tokensGenerated, byModel: .byModel[0:3], parseHealth}'
 ```
 Expected on BURNED:
 - `windowDays` between 5 and 45 (recent activity, within rotation).
@@ -653,30 +761,38 @@ Expected on BURNED:
 
 Multi-project verify:
 ```
-pnpm dev -- --all --json | jq '.combined | {totalTokensProcessed, totalTokensGenerated, totalSessions, tokenWindowDays, modelBreakdown: .modelBreakdown[0:3]}'
+pnpm dev --all --json | jq '.combined | {totalTokensProcessed, totalTokensGenerated, totalSessions, tokenWindowDays, modelBreakdown: .modelBreakdown[0:3]}'
 ```
+
+**Note on `pnpm dev` arg passthrough (verified 2026-05-24):** pnpm 10.30.3 no longer strips the `--` separator for npm-script pass-through — it forwards `--` to the script literally, which `parseArgs` in `cli.ts` would log as `Warning: unknown flag "--" ignored`. The verify probes above use the bare form `pnpm dev <args>` which works cleanly because pnpm forwards positional args without a separator. If a future pnpm version changes this, fall back to `npx tsx src/cli.ts <args>` from the package directory.
 
 ### Tests — REQUIRED
 
 `src/session-tokens.test.ts` minimum coverage:
 
-1. **Pick-list assertion.** Pass a fixture line containing all PII-bearing fields (`cwd`, `gitBranch`, `lastPrompt`, `attachment`, `aiTitle`, `toolUseResult`, `snapshot`, `message.content`). Assert the parser's extracted object has EXACTLY the 7 documented keys — no others. This is the structural enforcement of the privacy comment.
+1. **Pick-list assertion + construction-form linting.** Pass a fixture line containing all PII-bearing fields (`cwd`, `gitBranch`, `lastPrompt`, `attachment`, `aiTitle`, `toolUseResult`, `snapshot`, `message.content`). Assert `Object.keys(parseLine(realFixture)).sort()` is EXACTLY `['cacheCreate', 'cacheRead', 'input', 'model', 'output', 'sidechain', 'ts']`. AND grep-lint the file source: `fs.readFile('src/session-tokens.ts', 'utf8')` must NOT contain `/\.\.\.[a-zA-Z]+\s*}/` (destructure-rest pattern) or `JSON\.stringify\(line\)` (raw-line serialization).
 
 2. **Slug merge — worktree.** Fixture `~/.claude/projects/` (under `os.tmpdir()`) with `parent` and `parent--claude-worktrees-foo-hash` slugs. Each has one JSONL with 1 assistant message at 100 tokens. `collectSessionTokens` returns `tokensProcessed: 200` and `sessionCount: 2`.
 
-3. **Slug merge — subdir.** Fixture with `parent` and `parent-atc` slugs (single-dash separator) AND `parent-other` configured as its own project. Assert: `parent-atc` merges into `parent`; `parent-other` claims its own slug; no false cross-merge. (Reproduces the `data-engineering` / `data-engineering-atc` / hypothetical `data-engineering-other` scenario.)
+3. **Slug merge — subdir + longest-prefix priority.** Fixture with `parent` and `parent-atc` slugs (single-dash separator) AND `parent-other` configured as its own project. Assert: `parent-atc` merges into `parent`; `parent-other` claims its own slug; no false cross-merge. (Reproduces the `data-engineering` / `data-engineering-atc` / hypothetical `data-engineering-other` scenario.)
 
-4. **Window computation.** Fixture with 3 messages timestamped 5 days apart. `windowDays === 10`. Single-message fixture: `windowDays === 0`.
+4. **Slug merge — case-insensitive.** Fixture with `C--Users-test-foo` configured but on-disk slug is `c--Users-test-foo` (lowercase drive letter). Assert: merges successfully. (Reproduces the real-disk pattern where `c--Development-...` and `C--Users-...` slugs coexist.)
 
-5. **Sidechain accounting.** Fixture line with `isSidechain: true` contributes to `sidechainTokens` AND `tokensProcessed`.
+5. **Slug merge — nested worktree.** Fixture with `parent` configured and on-disk slug `parent--claude-worktrees-foo--claude-worktrees-bar`. Assert: merges into `parent`.
 
-6. **Token aggregate math.** Fixture line with `input_tokens: 100, output_tokens: 200, cache_creation_input_tokens: 50, cache_read_input_tokens: 1000`. Assert `tokensProcessed === 1350`, `tokensGenerated === 350`.
+6. **Window computation.** Fixture with 3 messages timestamped 5 days apart. `windowDays === 10`. Single-message fixture: `windowDays === 0`.
 
-7. **Model normalization.** Fixture lines with `claude-opus-4-7` and an unknown model `claude-future-7-0`. Assert byModel entries have `"Opus 4.7"` and `"claude-future-7-0"` respectively.
+7. **Sidechain accounting.** Fixture line with `isSidechain: true` contributes to `sidechainTokens` AND `tokensProcessed`.
 
-8. **Graceful malformed.** Fixture file with one truncated final line, one `JSON.parse` error, one missing `message.usage`. Assert no throw; `parseHealth` counters are incremented appropriately.
+8. **Token aggregate math.** Fixture line with `input_tokens: 100, output_tokens: 200, cache_creation_input_tokens: 50, cache_read_input_tokens: 1000`. Assert `tokensProcessed === 1350`, `tokensGenerated === 350`.
 
-9. **No `~/.claude/projects/`.** Pass a `homeDir` pointing to an empty tmp dir. Assert return is `null`.
+9. **Model normalization.** Fixture lines with `claude-opus-4-7` and an unknown model `claude-future-7-0`. Assert byModel entries have `"Opus 4.7"` and `"claude-future-7-0"` respectively.
+
+10. **Graceful malformed.** Fixture file with one truncated final line, one `JSON.parse` error, one missing `message.usage`. Assert no throw; `parseHealth` counters are incremented appropriately.
+
+11. **No `~/.claude/projects/`.** Pass a `homeDir` pointing to an empty tmp dir. Assert return is `{ stats: null, matchedSlugs: [] }`.
+
+12. **Orphan slug return.** Fixture `homeDir` with an on-disk slug `c--Users-test-unconfigured` that doesn't match any configured parent. Assert: at the multi-report layer (test orchestrates a `buildMultiProjectReport` against this fixture), `result.orphanSlugs` contains the slug name, AND `stats.json`-stripped output does NOT contain the slug name anywhere.
 
 ### Commit
 
@@ -710,33 +826,56 @@ The field is OPTIONAL on the config; absence means "no editorial block" → `rep
 Local helper in `config.ts` (NOT a separate module — co-author parser pattern: keep it where it's used):
 
 ```ts
-// Pseudocode — validates required fields, defaults optional ones.
-function validateEditorial(raw: unknown): EditorialContent | null {
-  if (!raw || typeof raw !== 'object') return null;
+// Pseudocode — validates required fields, defaults optional ones,
+// AND rejects absolute paths in heroImage (which would leak into the public warnings array).
+function validateEditorial(raw: unknown): { value: EditorialContent | null; warnings: string[] } {
+  if (!raw || typeof raw !== 'object') return { value: null, warnings: [] };
   // Require: oneLiner (string), hookStat ({label, value}), description (string).
-  // If any required missing or wrong type → return null + push warning to caller.
-  // Default: status → 'active'; heroImage/liveUrl/repoUrl → null; gallery → [].
+  // If any required missing or wrong type → return { value: null, warnings: [...] }.
+  // Default: status → 'active'; heroImage/liveUrl/repoUrl → null; gallery → [];
+  //          largestCommitCaption → undefined (optional, see field section).
+  // heroImage RELATIVE-PATH CHECK: reject any heroImage that starts with '/',
+  // '\\', '~', or matches /^[A-Za-z]:/. Reset to null + push warning.
+  // (Prevents config-supplied absolute paths from being reflected into the
+  // public warnings[] array via the existence-check step in report.ts.)
 }
 ```
 
-Where to push warnings: `loadProjectConfig` doesn't currently produce warnings — they belong in `report.warnings` so `report.ts` should handle it. Either:
-- (a) Have `validateEditorial` return `{ value: EditorialContent | null, warnings: string[] }` and `report.ts` push them, OR
-- (b) Log via stderr at validate time.
+Pick the result-object shape: `validateEditorial` returns `{ value, warnings[] }` and `report.ts` pushes warnings into `report.warnings`. This keeps validation pure and discoverable in the JSON.
 
-**Pick (a).** Keeps warnings in the report JSON consumers can read.
+### Optional storytelling field — `editorial.largestCommitCaption`
+
+Add an OPTIONAL field to the editorial schema (Briggsy-authored, opt-in):
+
+```ts
+// Inside EditorialContent (taxonomy.ts) — already added via Batch A header.
+largestCommitCaption?: string;  // optional; rendered on the detail page next
+                                 // to the largestSingleCommit numbers if present.
+```
+
+This restores the storytelling beat lost when `messageFirstLine` was dropped from the schema — but does so via author-curated copy rather than auto-derivation. Zero auto-leak surface (Briggsy writes the string). If absent, the detail page renders numbers-only per the existing plan. Phase 5 detail-page cascade picks this up (see cascade block at the end).
 
 ### heroImage existence check
 
 After validation, in `report.ts` after the editorial pull:
 ```ts
+const { value: editorial, warnings: editorialWarnings } = validateEditorial(config.editorial);
+warnings.push(...editorialWarnings);
+
 if (editorial?.heroImage) {
-  // Resolve path: heroImage is project-root-relative.
   const abs = path.join(rootDir, editorial.heroImage);
   if (!(await fs.stat(abs).catch(() => null))) {
     warnings.push(`editorial.heroImage path does not exist: ${editorial.heroImage}`);
-    editorial.heroImage = null;  // null-discipline: file missing → field is null
+    // CLONE before mutating — don't mutate the (potentially cached) config-load object.
+    // The path string here is RELATIVE (absolute paths were rejected at validation
+    // time above), so reflecting into warnings[] is safe.
   }
 }
+// Build the final editorial object as a fresh literal so any later cache layer
+// over loadProjectConfig is safe from in-place mutation.
+const finalEditorial: EditorialContent | null = editorial
+  ? { ...editorial, heroImage: heroImageExists ? editorial.heroImage : null }
+  : null;
 ```
 
 ### Wire-up
@@ -758,7 +897,7 @@ editorial:
 
 Then:
 ```
-pnpm dev -- C:/Users/brigg/ai-learning-journey/projects/burned --json | jq '.editorial'
+pnpm dev C:/Users/brigg/ai-learning-journey/projects/burned --json | jq '.editorial'
 ```
 Expected: the typed editorial block returned. `heroImage` is null (the path `docs/screenshots/hero.png` doesn't yet exist — heroImage existence check fires + warning is pushed to `warnings[]`). All other fields populated.
 
@@ -865,7 +1004,7 @@ Expected after preflight −1.2 lands its YAML edit:
 
 1. Bump `package.json` version `0.1.0` → `0.2.0`.
 2. If a CHANGELOG.md doesn't exist, create one with a single `## 0.2.0 — 2026-05-24` section that lists the additive changes from Batch A + each implementation unit. Pattern: `feat: …`, `feat: …`, no full prose.
-3. `pnpm install` (no-op locally but updates the lockfile timestamp if needed).
+3. `pnpm install --frozen-lockfile` — deterministic (respects existing pnpm-lock.yaml; no version drift). If the lockfile is missing or stale, regenerate intentionally in a separate commit BEFORE this step; do NOT regenerate as a side effect of the version bump.
 4. `pnpm build` — verify clean exit, dist/ regenerated.
 5. `pnpm typecheck` — clean exit.
 6. **Omnibus verify** — runs the now-published binary (the `claude-credit` global command), confirming dist/ is the version under test:
@@ -885,7 +1024,7 @@ Expected after preflight −1.2 lands its YAML edit:
 
 `chore(claude-credit): bump to 0.2.0 + CHANGELOG`. Tag is OPTIONAL (Briggsy's repo workflow doesn't currently tag — defer).
 
-## 0.8 — Surface new fields in `format/markdown.ts` and `format/terminal.ts` (HARD requirement)
+## 0.8 — Surface new fields in `format/markdown.ts` and `format/terminal.ts` (HARD requirement) (~45-60 min — 6 rendering blocks per file + null-aware helpers)
 
 **Files:** `tools/claude-credit/src/format/markdown.ts`, `tools/claude-credit/src/format/terminal.ts`.
 
@@ -938,11 +1077,49 @@ The original §0.9 ("Multi-project config plumbing — add the two meta-projects
 
 The slot is preserved as this one-paragraph marker so the deepening-drift audit (per `feedback-deepening-drift-anti-pattern.md`) catches any future reintroduction. Don't delete the section header; don't fold the numbering. Future audits grep for `0.9 — REMOVED` to confirm the cascade landed.
 
-## 0.10 — Test fixture monorepo + integration tests (NEW)
+## 0.10 — Test fixture monorepo + integration tests (NEW) (~90-120 min — fixture tree + Zod schema mirror + 5 integration tests + shared stripper)
 
-**Files:** `tools/claude-credit/test/fixtures/multi-fixture/` (NEW directory tree), `tools/claude-credit/src/__tests__/multi-report.test.ts` (NEW), `tools/claude-credit/src/__tests__/stats-shape.test.ts` (NEW).
+**Files:**
+- NEW directory tree: `tools/claude-credit/test/fixtures/multi-fixture/`
+- NEW: `tools/claude-credit/src/__tests__/multi-report.test.ts`
+- NEW: `tools/claude-credit/src/__tests__/stats-shape.test.ts`
+- NEW: `tools/claude-credit/src/__tests__/schema.ts` (Zod schema mirror)
+- NEW (used by both Phase 0 test AND Phase 2 production): `tools/claude-credit/src/strip-for-publish.ts`
 
 Lights up the previously-unused vitest harness with five integration tests that gate Phase 0 done. All five must pass on `pnpm test` before the §0.7 version bump.
+
+### Shared stripper — `strip-for-publish.ts` (NEW, Phase 0 scope)
+
+The privacy-stripping discipline must be ONE implementation, used by both the Phase 0 round-trip test AND Phase 2's `refresh-stats.ts` production script. Extracting it now (in Phase 0) avoids a future Phase 2 from writing a divergent implementation that the Phase 0 test wouldn't catch.
+
+```ts
+// tools/claude-credit/src/strip-for-publish.ts (NEW)
+// PRIVACY: this module produces the public-safe JSON shape. The hand-coded
+// ALLOWED_KEY_PATHS list is the structural enforcement of the "what ships
+// publicly" rule. Adding a new key requires adding a line here.
+
+import type { MultiProjectReport } from './taxonomy.js';
+
+export const ALLOWED_KEY_PATHS: readonly string[] = [
+  // ... enumerate every key path that may appear in stats.json ...
+  // e.g.:
+  'scannedAt',
+  'combined.projectCount',
+  'combined.totalTokensProcessed',
+  'combined.tokenWindowStartISO',
+  'projects[].projectName',
+  'projects[].kind',
+  'projects[].git.firstCommitISO',
+  // ... (full list lives in code; ~50-70 entries)
+];
+
+export function stripForPublish(report: MultiProjectReport): unknown {
+  // Deep-walk + delete every 'projectPath' key.
+  // Return a structurally-cloned object suitable for JSON.stringify.
+}
+```
+
+Phase 2's `refresh-stats.ts` imports `stripForPublish` directly. The §0.10 round-trip test imports the same function. One source of truth.
 
 ### Fixture tree
 
@@ -983,21 +1160,23 @@ tools/claude-credit/test/fixtures/multi-fixture/
 
 ### Tests
 
-1. **JSON schema validation** (`src/__tests__/multi-report.test.ts`). Run `buildMultiProjectReport({ homeDir: fixture-claude-projects, projectPaths: [...fixture-paths] })`. Validate the resulting JSON against a hand-written Zod schema (NEW file: `src/__tests__/schema.ts`) that mirrors every interface in `taxonomy.ts`. Asserts presence of all new fields + null-discipline (active-b has no editorial → `editorial: null`).
+1. **JSON schema validation** (`src/__tests__/multi-report.test.ts`). Run `buildMultiProjectReport({ homeDir: fixture-claude-projects, projectPaths: [...fixture-paths] })`. Validate the resulting JSON against the Zod schema in `src/__tests__/schema.ts` (mirrors every interface in `taxonomy.ts`). Asserts presence of all new fields + null-discipline (active-b has no editorial → `editorial: null`; active-c has no git history → `git.firstCommitISO: null`).
 
-2. **Aggregation invariant** (same file). Assert:
-   ```
-   combined.totalAuthoredLines === sum(projects[].grandTotals.authoredLines)
-                                 + sum(meta[].grandTotals.authoredLines)
-                                 + (archiveCollective?.totalAuthoredLines ?? 0)
-   ```
-   Same for each X in the invariant. Run on the fixture with all three kinds populated.
+2. **Aggregation invariants — all three** (same file). Verify all three invariants from the Aggregation invariants section:
+   - **Invariant A (grandTotals sum-class)** for X ∈ {AuthoredFiles, AuthoredBytes, AuthoredLines, PipelineGeneratedFiles, PipelineGeneratedBytes, AllBytes, Commits}.
+   - **Invariant B (token sum-class)** for `totalTokensProcessed`, `totalTokensGenerated`, `totalSessions`.
+   - **Invariant C (window min/max)** for `tokenWindowStartISO === min(non-null project starts)`, `tokenWindowEndISO === max(non-null project ends)`, `tokenWindowDays === floor((end - start) / 86_400_000)` when both bounds non-null else null.
+   
+   Run twice: once on a fixture with `archive:` populated, once without (`archiveCollective` is null). Once with a project that has `tokens: null` mixed with projects that have token data.
 
-3. **Privacy round-trip** (same file). Build the report, run a stand-in stripper (mirrors what Phase 2 §2.1's `scripts/refresh-stats.ts` will eventually do): deep-walk + delete every `projectPath` key. Assert no `projectPath` survives anywhere in the tree, no `messageFirstLine` exists (schema-level), no string value matches the grep-guard patterns (`C:\\`, `/Users/`, `brigg`, etc.).
+3. **Privacy round-trip** (same file). Build the report, call the SHARED `stripForPublish` function from `src/strip-for-publish.ts` (NOT a stand-in — the production function). Assert:
+   - No `projectPath` key survives anywhere in the deep tree.
+   - No `messageFirstLine` key exists at the schema level (`largestSingleCommit` shape excludes it by type).
+   - For each string-valued leaf, NONE matches any grep-guard pattern enumerated in the Privacy by Construction section: `C:\\`, `C:/`, `/Users/`, `\\Users\\`, `AppData`, `brigg`, `node_modules`, `/private/`, `\\private\\`, `secret`, `password`, the email regex, the Windows drive-letter slug regex `^[A-Za-z]--[A-Za-z]`, the UUID regex (outside the model-name allowlist).
 
-4. **Session-tokens fixture** (same file). Already tested in `session-tokens.test.ts` (per §0.5b) — this integration test asserts the merged behavior through `buildMultiProjectReport`: `combined.totalSessions === 4` (3 from active-a primary + 1 from active-a worktree + 0 from active-b empty), orphan slug NOT in `combined.totalSessions`, orphan-slug warning IS in stderr (capture via Vitest spy on `process.stderr.write`).
+4. **Session-tokens fixture** (same file). Integration via `buildMultiProjectReport`: `combined.totalSessions === 4` (3 from active-a primary + 1 from active-a worktree + 0 from active-b empty), orphan slug NOT in `combined.totalSessions`, AND `result.orphanSlugs` array (returned from `buildMultiProjectReport`, NOT spied off stderr) contains the orphan slug name.
 
-5. **Stats-shape snapshot** (`src/__tests__/stats-shape.test.ts`). Build the report. JSON-serialize. Deep-walk the parsed JSON, collect every unique key path (e.g., `projects[].git.firstCommitISO`, `combined.modelBreakdown[].model`). Snapshot-compare against `__snapshots__/stats-shape.snap`. **Adding a new top-level field requires updating the snapshot — CI fails otherwise.** This is the structural enforcement of the privacy "allowlist for public publishing."
+5. **Stats-shape allowlist** (`src/__tests__/stats-shape.test.ts`). Build the report, run through `stripForPublish`. Deep-walk the parsed JSON, collect every unique key path (e.g., `projects[].git.firstCommitISO`, `combined.modelBreakdown[].model`). Assert `extractedPaths ⊆ ALLOWED_KEY_PATHS` (the hand-coded array exported from `src/strip-for-publish.ts`). **Adding a new top-level field requires adding a line to ALLOWED_KEY_PATHS — a deliberate, reviewable edit. (Why not a vitest text snapshot: snapshot blesses are one CLI flag away from being applied without review; an explicit array makes "what's allowed" an enumerable code surface.)**
 
 ### Pattern to follow
 
@@ -1015,7 +1194,7 @@ Expected: 5 integration tests pass + the unit tests from §0.4 / §0.5b / §0.6b
 
 ### Commit
 
-`feat(claude-credit): test fixture monorepo + 5 integration tests + stats-shape snapshot`
+`feat(claude-credit): test fixture monorepo + 5 integration tests + stats-shape allowlist + shared stripForPublish`
 
 ---
 
@@ -1089,13 +1268,13 @@ Phase 0 preserves these guarantees:
 | **POSIX-ism in `git log ... \| head -1`** on Windows | Use `--max-count=1` directly. No shell pipe. Caught at deepening. |
 | **`git log --pretty=format:"…END" -- .` body parsing collides with `END` in commit messages** | Use the NUL+"END"+newline sequence as the delimiter. Collisions are vanishingly rare; the parse is tolerant (un-recognized fragments skipped). |
 | **Rename-tracking regression in merged 0.4+0.5 pass** | The existing `/^(.*)\{(.*) => (.*)\}(.*)$/` regex at git-stats.ts:137 must be preserved in the merged pass for `uniqueFilesTouched` integrity. Test 4 in §0.10 covers. |
-| **Session-tokens parser reads PII fields by accident** | Structural pick-list at parser entry + snapshot test asserting 7-key output + file-header JSDoc + pre-publish grep-guard in Phase 8. Four-layer defense. |
+| **Session-tokens parser reads PII fields by accident** | Five-layer structural defense: explicit-object-literal construction form (no `{...rest}` destructure) + `satisfies ParsedAssistantLine` compile-time check + `Object.keys` test asserting exact 7-key output + grep-lint asserting source has no forbidden patterns + pre-publish grep-guard in Phase 8 on the final JSON. |
 | **Subdir-slug false-merge** (`data-engineering` ↔ `data-engineering-atc`) | Longest-prefix-match-wins sort + `slug.startsWith(parent + '-') && !slug.startsWith(parent + '--')` separator rule. Test 3 in §0.5b explicitly covers a hypothetical `data-engineering-other` config to catch regressions. |
 | **Worktree slug split** (BURNED worktree session tokens orphan) | `^<parent>--claude-worktrees-` match. Confirmed on disk at deepening (real worktree slug exists). Test 2 in §0.5b. |
 | **Window-bounded floor misread as lifetime** | UI mandates "across N days of session retention" footnote on every token surface. Honesty signal. Plan §0.5b honesty constraint is load-bearing. |
 | **`tokensProcessed` vs `tokensGenerated` confusion in downstream phases** | Both fields ship; both names are unambiguous. Hero PRIMARY uses `tokensProcessed` (per spec); detail page shows both with breakdown. No single ambiguous `totalTokens` field exists. |
 | **`messageFirstLine` path leak** | Field DROPPED from schema. Eliminated at source. |
-| **Public stats.json grows new keys without snapshot update** | §0.10 stats-shape snapshot test fails CI on any new key. Adding a field is a deliberate snapshot update + reviewer pass. |
+| **Public stats.json grows new keys without allowlist update** | §0.10 stats-shape allowlist test fails CI on any key-path not in `ALLOWED_KEY_PATHS` (hand-coded array in `src/strip-for-publish.ts`). Adding a field requires editing the array — a deliberate, reviewable change, not a bless-and-go snapshot update. |
 | **Backward-compat break for `projects:`-only configs** | Empty-default in `multi-report.ts` (`config?.meta ?? []`, `config?.archive ?? []`). §0.10 test (3) explicitly loads a pre-preflight YAML and asserts `meta = []` + `archiveCollective = null`. |
 | **Empty / malformed JSONL crashes the parser** | Function-level wrapper returns `{ stats, errors }`; never throws. Per-line try/catch increments `parseHealth` counters. Test 8 in §0.5b. |
 | **`pnpm dev` vs `pnpm build` confusion between units** | Use `pnpm dev` (`tsx src/cli.ts`) for per-unit probes — no `dist/` rebuild. Reserve `pnpm build` for §0.7 omnibus + final binary verify. |
@@ -1120,50 +1299,52 @@ The deepening locks decisions that affect later phases. Apply these amendments w
 
 ### `phase-3-hero.md`
 
-- **LOCK: Hero PRIMARY = `combined.totalTokensProcessed`** (per Decisions section in this Phase 0 deepening). NOT `combined.totalTokens` — that field doesn't exist.
-- **LOCK: Hero subtitle = window footnote, hardcoded honesty per `combined.tokenWindowDays`** — `"X tokens · across N days of session retention"`. Never display without the window.
-- **ADD: tooltip / footnote breakdown** showing `tokensProcessed` decomposition (`output + fresh input + cache reads`). Lets curious readers see why the number is large.
-- **LIKELY: secondary stat = `combined.totalAuthoredLines`** (lines authored, secondary supporting line per ideation §2).
+The cascade carries CONTRACT (schema facts), not CONTENT (display decisions). Phase 3's deepening picks the content per its own pass.
+
+- **CONTRACT: hero binds to one of `{combined.totalTokensProcessed, combined.totalTokensGenerated}`** — both fields are guaranteed present on the data shape. NOT `combined.totalTokens` (no longer a field name — Phase 0 split it into two unambiguous fields). Phase 3 deepening picks which is primary, with the dual-number magnitude-vs-honesty tradeoff (see Strategic Decisions below) on the table.
+- **CONTRACT: every token surface is window-bounded.** `combined.tokenWindowDays` is the load-bearing footnote. Phase 3 MUST surface it on every page that displays a token number. The honesty signal is non-optional per the §0.5b honesty constraint.
+- **CONTRACT: secondary stat options include `combined.totalAuthoredLines`** (lines authored). Phase 3 deepening picks whether to use it, demote it, or pair with a different number.
 
 ### `phase-4-grid.md`
 
-- **LOCK: grid splits on `ProjectReport.kind`.** "Active" tiles (`kind === 'active'`) sorted by `grandTotals.allBytes` desc, then a divider labeled "the tools", then "Meta" tiles (`kind === 'meta'`), then a divider labeled "the misses", then the single `archiveCollective` tile in last position.
-- **LOCK: archive collective tile reads from `report.archiveCollective`** (not from any `ProjectReport`). Subtitle composed from `archiveCollective.projectCount` + `totalAuthoredLines` + `totalTokensProcessed` per the preflight −1.5 spec.
-- **TILE always-last rule for archive collective** — does NOT sort by bytes; ALWAYS last position regardless of size.
+- **CONTRACT: grid splits on `ProjectReport.kind`.** Phase 4 renders `kind === 'active'` tiles sorted by `grandTotals.allBytes` desc, then `kind === 'meta'` tiles (also sorted), then the single `archiveCollective` tile in last position. The structure is locked by the data shape.
+- **CONTRACT: archive collective tile reads from `report.archiveCollective`** (not from any `ProjectReport`). Subtitle composed from `archiveCollective.projectCount` + `totalAuthoredLines` + `totalTokensProcessed` per preflight −1.5.
+- **CONTRACT: archive collective tile always last** — does NOT sort by bytes; ALWAYS last position regardless of size.
+- **CONTENT: divider labels and tile copy are Phase 4's call.** Phase 0 does not pre-lock the literal strings ("the tools" / "the misses" appear in preflight −1.5 as a working vocabulary, but the on-grid copy is a tonal decision that belongs in Phase 4 deepening with a cold-read pass).
 
 ### `phase-5-detail.md`
 
-- **ADD: "View source →" affordance** reads from `editorial.repoUrl` (preflight cascade requirement, restated here for Phase 0 → Phase 5 chain).
-- **ADD: detail page handles `tokens === null` gracefully** — AUTHORED BY drops the tokens column; TOKENS CONSUMED section is omitted from the page (not rendered as "0 tokens"). Per null discipline.
-- **ADD: TOKENS CONSUMED block** displays `tokensProcessed` (primary), `tokensGenerated` (secondary), `sessionCount`, `windowStartISO → windowEndISO (windowDays)`, per-model breakdown from `byModel`, sidechain footnote `"X% from subagent invocations"` if `sidechainTokens > 0`.
-- **ADD: `Archive.tsx` detail page** at route `/archive` — renders 6 archive project names + Briggsy-authored one-liners (content authored in preflight −1.5).
+- **CONTRACT: "View source →" affordance** reads from `editorial.repoUrl` (preflight cascade requirement; data field is locked here in Phase 0).
+- **CONTRACT: detail page handles `tokens === null` per null discipline** — AUTHORED BY drops the tokens column; TOKENS CONSUMED section is omitted from the page (not rendered as "0 tokens").
+- **CONTRACT: TOKENS CONSUMED block has access to** `tokensProcessed`, `tokensGenerated`, `sessionCount`, `windowStartISO → windowEndISO (windowDays)`, per-model breakdown from `byModel`, `sidechainTokens`. Phase 5 composes the visual.
+- **CONTRACT: optional `editorial.largestCommitCaption?: string`** — Phase 5 renders next to `largestSingleCommit` numbers if present, falls back to numbers-only otherwise. Restores storytelling beat lost when `messageFirstLine` was dropped.
+- **CONTRACT: `Archive.tsx` detail page** at route `/archive` — renders archive project names from `archiveCollective.projectNames` + Briggsy-authored one-liners (content authored in preflight −1.5).
 
 ### `phase-8-deploy.md`
 
 - **ADD pre-publish grep-guard** to the GitHub Action workflow (`refresh-claude-credits.yml`). The guard runs on `public/data/stats.json` content before the `git commit` step. Match patterns enumerated in this plan's Privacy by Construction section.
 
-### Verification — apply this AFTER landing the cascade commit
+### Verification — semantic review, not greps
 
-```
-# Phase 0 deepening landed: 0.6b present, 0.9 marked REMOVED, status enum is 2-value, kind discriminator present
-grep -nE "0.6b|0.9 — REMOVED|'active' \\| 'meta'|kind: 'active' \\| 'meta'|tokensProcessed|tokensGenerated" \
-  projects/claude-credits/docs/plans/phase-0-data-gaps.md
+Greps are circular: they pass when the cascade commit literally wrote the patterns, but tell you nothing about whether the cascaded content is COHERENT with the surrounding plan. The cascade commit must be reviewed by READING each downstream plan in full, not by greps. Use the checklist below as a semantic review guide.
 
-# Phase 2: heroImage rewrite walks meta[], grep-guard mentioned
-grep -nE "meta\\[\\]|grep-guard|archiveCollective" projects/claude-credits/docs/plans/phase-2-data-wiring.md
+**Pre-cascade state (TODAY, before Phase 0 executes) — verified findings to fix during the cascade commit:**
 
-# Phase 3: hero locked to tokensProcessed, window footnote
-grep -nE "tokensProcessed|tokenWindowDays|window footnote" projects/claude-credits/docs/plans/phase-3-hero.md
+- `phase-3-hero.md` currently references `combined.totalTokens` — a field name that no longer exists. The cascade commit MUST replace it with `combined.totalTokensProcessed` (or `tokensGenerated`, per Phase 3's deepening choice once locked).
+- `phase-4-grid.md` currently references a `shelved` status branch on `StatusMarker` — the `EditorialContent.status` enum is now `'active' | 'meta'` only. The cascade commit MUST remove the `shelved` branch; the archive surface lives in the collective tile, not in any per-project tile's status.
+- `phase-2-data-wiring.md` currently doesn't reference `meta[]`, `archiveCollective`, or the grep-guard. The cascade commit MUST add them.
+- `phase-5-detail.md` currently doesn't handle `tokens === null` gracefully and doesn't reference `Archive.tsx` or `sidechainTokens`. The cascade commit MUST add them.
+- `phase-8-deploy.md` currently has no grep-guard step. The cascade commit MUST add it under the deploy workflow.
 
-# Phase 4: kind discriminator + archive collective in last position
-grep -nE "kind: 'active'|kind: 'meta'|archiveCollective|always last" projects/claude-credits/docs/plans/phase-4-grid.md
+**Semantic review checklist (for the reviewer of the cascade commit):**
 
-# Phase 5: null tokens graceful + TOKENS CONSUMED block + Archive.tsx
-grep -nE "tokens === null|TOKENS CONSUMED|Archive\\.tsx|sidechainTokens" projects/claude-credits/docs/plans/phase-5-detail.md
-
-# Phase 8: grep-guard step
-grep -nE "grep-guard|refuse to commit" projects/claude-credits/docs/plans/phase-8-deploy.md
-```
+| Phase | Open the file and confirm... |
+|---|---|
+| phase-2-data-wiring.md | `refresh-stats.ts` walks BOTH `report.projects[*].editorial.heroImage` AND `report.meta[*].editorial.heroImage` for path rewrite. Does NOT strip anything from `archiveCollective` (no projectPath there). Imports `stripForPublish` from `tools/claude-credit/src/strip-for-publish.ts` (single source of truth — same function the §0.10 test uses). |
+| phase-3-hero.md | Hero binds to `combined.totalTokensProcessed` OR `combined.totalTokensGenerated` (Phase 3's choice). The window footnote (`combined.tokenWindowDays` "across N days of session retention") is on every token surface. No reference to a `totalTokens` field. |
+| phase-4-grid.md | Grid splits on `kind === 'active'` / `kind === 'meta'` / `archiveCollective` (last position, doesn't sort by bytes). No `'shelved'` status branch. StatusMarker handles `'active'` (default, no marker) and `'meta'` (subtle indicator) only. |
+| phase-5-detail.md | "View source →" reads `editorial.repoUrl`. `tokens === null` path renders no TOKENS CONSUMED section. TOKENS block uses `tokensProcessed`/`tokensGenerated`/`sessionCount`/window/byModel/`sidechainTokens`. Optional `editorial.largestCommitCaption` renders next to `largestSingleCommit` if present. `Archive.tsx` at `/archive` renders `archiveCollective.projectNames`. |
+| phase-8-deploy.md | GitHub Action's deploy workflow has a `validate-stats-json` step that runs the grep-guard against `public/data/stats.json` BEFORE the `git commit` step. Refuses to commit on any match. Pattern list matches the Privacy by Construction section in this Phase 0 plan. |
 
 ---
 
@@ -1171,19 +1352,20 @@ grep -nE "grep-guard|refuse to commit" projects/claude-credits/docs/plans/phase-
 
 When every checklist item below is green AND the cascade-amendment commit has landed:
 
-- [ ] Batch A taxonomy.ts edits landed, `pnpm typecheck` clean
+- [ ] Batch A taxonomy.ts edits + consumer-side placeholders landed, `pnpm typecheck` clean (binary green, no expected-failure ambiguity)
 - [ ] §0.1 firstCommit/lastCommit/projectAgeDays → fields populated on BURNED verify
 - [ ] §0.2 assetBytesByKind → 5 keys, integer-valued, never null
 - [ ] §0.3 topSubcategories → length 5, sorted desc by bytes
-- [ ] §0.4+0.5 (merged) linesByAuthor + timeline → Claude + Briggsy both visible, peakDay non-null, largestSingleCommit sha is 40-char hex (NO messageFirstLine), git-stats.test.ts tests green
-- [ ] §0.5b session-tokens → tokensProcessed > 100M on BURNED, byModel shows normalized names, sidechainTokens populated, parseHealth all single-digit, session-tokens.test.ts 9 tests green
-- [ ] §0.6 editorial → validator works, missing heroImage → null + warning, status enum is 2-value (`active` | `meta`)
-- [ ] §0.6b multi-config parser → `meta:` + `archive:` keys parsed, ArchiveCollective rolled up, `kind` discriminator on every ProjectReport, config.test.ts tests green
-- [ ] §0.7 version 0.2.0 + CHANGELOG.md + omnibus verify green
-- [ ] §0.8 markdown + terminal renderers surface every new field, null-discipline holds
+- [ ] §0.4+0.5 (merged) linesByAuthor + timeline → Claude + Briggsy both visible via the `git log -z` parser, peakDay non-null, largestSingleCommit sha is 40-char hex (NO messageFirstLine, binary-only commits ineligible), git-stats.test.ts 3+ tests green (co-author parser + e2e fixture + peakDay tiebreaker)
+- [ ] §0.5b session-tokens → tokensProcessed > 100M on BURNED, byModel shows normalized names, sidechainTokens populated, parseHealth all integer counters (no strings), session-tokens.test.ts 12 tests green (pick-list + 4 slug-merge cases + window + sidechain + aggregate math + model norm + malformed + empty-homedir + orphan return)
+- [ ] §0.6 editorial → validator works with `{value, warnings}` return shape, heroImage absolute-path rejection works, missing heroImage → null + warning in `report.warnings`, status enum is 2-value (`active` | `meta`), optional `largestCommitCaption` field present in the schema
+- [ ] §0.6b multi-config parser → `meta:` + `archive:` keys parsed, ArchiveCollective rolled up, `kind` discriminator on every ProjectReport, `result.orphanSlugs` returned from buildMultiProjectReport, config.test.ts 3 tests green
+- [ ] §0.7 version 0.2.0 + CHANGELOG.md + `pnpm install --frozen-lockfile` + omnibus verify green
+- [ ] §0.8 markdown + terminal renderers surface every new field, null-discipline holds (em-dash for null, "0" for zero)
 - [ ] §0.9 → REMOVED marker preserved
-- [ ] §0.10 fixture monorepo + 5 integration tests green (schema validation + aggregation invariant + privacy round-trip + session-tokens fixture + stats-shape snapshot)
-- [ ] Cascade commit to phase-2/3/4/5/8 landed (one commit, message format matches preflight cascade)
+- [ ] §0.10 fixture monorepo + 5 integration tests green (Zod schema validation + three aggregation invariants A/B/C + privacy round-trip via shared `stripForPublish` + session-tokens-merge fixture with orphan + stats-shape ALLOWED_KEY_PATHS allowlist assertion)
+- [ ] `src/strip-for-publish.ts` exists and is imported by both the §0.10 test AND wired for Phase 2's `refresh-stats.ts` import path
+- [ ] Cascade commit to phase-2/3/4/5/8 landed AND each downstream file passed the semantic review checklist (not just greps)
 
 Then open [phase-1-scaffold.md](phase-1-scaffold.md) and start.
 

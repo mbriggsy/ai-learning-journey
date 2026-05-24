@@ -1,0 +1,33 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1000 130"
+     role="presentation" aria-hidden="true"
+     style="--ink: var(--color-ochre-9, #947226)">
+  <!--
+    R15 #5 closing-card cold-decode — FRAME LAYER. CHROME tier.
+    S06 frame 3165 — sits below R15 #4 OPERATION STATUS: FIELD-READY.
+
+    Phase 1 Unit 1.9 R15 #5 lock — content from BEAT-SHEET §S06:
+      Main: "DRAFTED, RENDERED, AND SHIPPED BY AUTONOMOUS AGENTS."
+            (broken to two rows at "AND" so the full line fits inside
+             the 1080×1080 mobile safe-square — see s06-archer-test.md
+             safe-square audit).
+      Subhead: italic "Honestly at this point we're just impressed."
+               (bookends Janet's S01 "...I'm just impressed." kicker)
+
+    Frame ornament is intentionally LIGHTER than subhead-4 (status
+    chrome). Per BEAT-SHEET line 651 "lighter envelope than R15 #4 to
+    maintain hierarchy" — #4 carries the formal close, #5 is the
+    wink. Four corner L-brackets at 30% opacity suggest a stamp
+    impression without the formal underline rule from #4.
+  -->
+  <g style="color: var(--ink)" stroke="currentColor" stroke-width="1.2"
+     opacity="0.30" fill="none">
+    <!-- top-left bracket -->
+    <polyline points="0,16 0,0 16,0" />
+    <!-- top-right bracket -->
+    <polyline points="984,0 1000,0 1000,16" />
+    <!-- bottom-left bracket -->
+    <polyline points="0,114 0,130 16,130" />
+    <!-- bottom-right bracket -->
+    <polyline points="984,130 1000,130 1000,114" />
+  </g>
+</svg>

@@ -140,14 +140,20 @@ describe('visual-manifest helper exports', () => {
     expect(HTP_ASSET.tier).toBe('hero')
   })
 
-  it('R15_CHROME has exactly 8 entries (4 instances × frame+text split-layer)', () => {
-    expect(R15_CHROME.length).toBe(8)
+  it('R15_CHROME has exactly 10 entries (5 instances × frame+text split-layer)', () => {
+    expect(R15_CHROME.length).toBe(10)
     // Stamp-3 is the load-bearing PAYOFF — must be safe-square + hero.
     const stamp3Frame = R15_CHROME.find(
       (a) => a.staticPath === 'trailer/r15-chrome/stamp-3-asset-delivered-frame.svg',
     )
     expect(stamp3Frame?.safeSquareRole).toBe('safe-square')
     expect(stamp3Frame?.tier).toBe('hero')
+    // R15 #5 closing-card cold-decode — Unit 4.7 ship — must be safe-square chrome.
+    const subhead5Frame = R15_CHROME.find(
+      (a) => a.staticPath === 'trailer/r15-chrome/subhead-5-closing-card-frame.svg',
+    )
+    expect(subhead5Frame?.safeSquareRole).toBe('safe-square')
+    expect(subhead5Frame?.tier).toBe('chrome')
   })
 
   it('BRIEFING includes the 4 NEW Path B SVGs + 6 EXISTING Path A rasters (10 total)', () => {

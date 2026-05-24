@@ -1,0 +1,57 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1000 130"
+     role="img" aria-label="DRAFTED, RENDERED, AND SHIPPED BY AUTONOMOUS AGENTS. Honestly at this point we're just impressed."
+     style="--ink: var(--color-ochre-9, #947226)">
+  <!--
+    R15 #5 closing-card cold-decode — TEXT LAYER. CHROME tier.
+    Phase 1 Unit 1.9 locked copy.
+
+    Main line broken to two rows at "AND" for mobile safe-square fit
+    (49-char single-line at 32px JBM 700 + 4.8 letter-spacing measures
+    ~1170px > 1080 safe-square ceiling). Two-row break preserves cadence
+    and keeps the typographic spec.
+
+    Subhead bookends Janet's S01 kicker — pronoun pivot "I'm" → "we're"
+    admits the autonomous-build collective speaker into the closing
+    voice. JetBrains Mono synthesized oblique via font-style="oblique".
+
+    Contrast treatment: 0.6px dark warm stroke (#2a1d0d, deep umber) +
+    feDropShadow ink halo. The stroke is the LOAD-BEARING contrast
+    boost — guaranteed to render through Remotion's <img src=svg>
+    embed (filters can be flaky across compositing engines, stroke is
+    SVG core). The shadow adds documentary-ink-halo polish on top.
+    Both are needed because ochre-9 (#947226) on warm mahogany sits in
+    a tight luminance band — ochre vs. mahogany hue separation alone
+    fails the WCAG-grade legibility test on the venetian-blind drift's
+    brighter bands. R15 #4 escapes this because its underline+ticks
+    frame ornament anchors the read; R15 #5 has lighter corner
+    brackets that don't provide the same eye-grab.
+  -->
+  <defs>
+    <filter id="ink-halo-5" x="-2%" y="-10%" width="104%" height="120%">
+      <feDropShadow dx="0" dy="1.5" stdDeviation="1.6" flood-color="#000" flood-opacity="0.55" />
+    </filter>
+  </defs>
+  <g filter="url(#ink-halo-5)">
+    <text x="500" y="42" text-anchor="middle"
+          font-family="'JetBrains Mono', 'IBM Plex Mono', 'Courier New', monospace"
+          font-weight="700" font-size="32"
+          fill="var(--ink)"
+          stroke="#2a1d0d" stroke-width="0.6"
+          paint-order="stroke fill"
+          letter-spacing="4.8">DRAFTED, RENDERED, AND</text>
+    <text x="500" y="82" text-anchor="middle"
+          font-family="'JetBrains Mono', 'IBM Plex Mono', 'Courier New', monospace"
+          font-weight="700" font-size="32"
+          fill="var(--ink)"
+          stroke="#2a1d0d" stroke-width="0.6"
+          paint-order="stroke fill"
+          letter-spacing="4.8">SHIPPED BY AUTONOMOUS AGENTS.</text>
+    <text x="500" y="118" text-anchor="middle"
+          font-family="'JetBrains Mono', 'IBM Plex Mono', 'Courier New', monospace"
+          font-weight="500" font-style="oblique" font-size="22"
+          fill="var(--ink)" fill-opacity="0.55"
+          stroke="#2a1d0d" stroke-width="0.4" stroke-opacity="0.6"
+          paint-order="stroke fill"
+          letter-spacing="2.0">Honestly at this point we're just impressed.</text>
+  </g>
+</svg>

@@ -153,7 +153,7 @@ export const VISUAL_ASSETS: readonly VisualAsset[] = [
     tier: 'chrome',
     width: 800,
     height: 60,
-    notes: 'S06 frame 2820 closing subhead "OPERATION STATUS: FIELD-READY". Axis-aligned.',
+    notes: 'S06 frame 3150 closing subhead "OPERATION STATUS: FIELD-READY". Axis-aligned, heavy slap.',
   },
   {
     category: 'r15-chrome',
@@ -162,6 +162,34 @@ export const VISUAL_ASSETS: readonly VisualAsset[] = [
     tier: 'chrome',
     width: 800,
     height: 60,
+  },
+  {
+    category: 'r15-chrome',
+    staticPath: 'trailer/r15-chrome/subhead-5-closing-card-frame.svg',
+    safeSquareRole: 'safe-square',
+    tier: 'chrome',
+    width: 1000,
+    height: 130,
+    notes:
+      'S06 frame 3165 closing-card cold-decode (Phase 1 Unit 1.9 lock 2026-05-18, ' +
+      'Phase 4 Unit 4.7 ship). Below R15 #4 OPERATION STATUS: FIELD-READY. ' +
+      'Two-row main + italic subhead. Frame ornament = 4 corner L-brackets at ' +
+      '30% opacity (lighter than #4 underline+ticks per "lighter envelope" hierarchy ' +
+      'lock). Standard slap envelope (NOT payoff) — lighter visual weight than #4.',
+  },
+  {
+    category: 'r15-chrome',
+    staticPath: 'trailer/r15-chrome/subhead-5-closing-card-text.svg',
+    safeSquareRole: 'safe-square',
+    tier: 'chrome',
+    width: 1000,
+    height: 130,
+    notes:
+      'Main: "DRAFTED, RENDERED, AND / SHIPPED BY AUTONOMOUS AGENTS." — JBM 700 32px, ' +
+      'letter-spacing 4.8, ochre-9, two rows (line-break at AND keeps full line inside ' +
+      'mobile safe-square ceiling ~1080px). Subhead: italic "Honestly at this point ' +
+      "we're just impressed.\" — JBM 500 oblique 22px, 30% opacity, bookends Janet's " +
+      'S01 "I\'m just impressed." kicker via we\'re → I\'m pronoun pivot.',
   },
 
   // ─── Briefing-room NEW (Unit 3.3 Path B SVGs) ────────────────
@@ -332,7 +360,7 @@ export const VISUAL_ASSETS: readonly VisualAsset[] = [
 /** S05 deep-scroll HTP hero. Exactly one. */
 export const HTP_ASSET: VisualAsset = VISUAL_ASSETS.find((a) => a.category === 'htp')!;
 
-/** 8 SVGs across 4 instances (frame + text per instance). */
+/** 10 SVGs across 5 instances (frame + text per instance). */
 export const R15_CHROME: readonly VisualAsset[] = VISUAL_ASSETS.filter(
   (a) => a.category === 'r15-chrome',
 );

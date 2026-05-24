@@ -13,6 +13,7 @@
     "render:s03": "npx remotion render src/index.ts PreviewS03MissionBackground out/s03-mission-background.mp4 --codec h264 --crf 18",
     "render:s04-peak": "npx remotion render src/index.ts PreviewS04Peak out/s04-peak.mp4 --codec h264 --crf 18",
     "render:s05": "pnpm sync-gameplay && npx remotion render src/index.ts PreviewS05GameplayDissolve out/s05-gameplay-dissolve.mp4 --codec h264 --crf 18",
+    "render:s06": "npx remotion render src/index.ts PreviewS06ClosingDirective out/s06-closing-directive.mp4 --codec h264 --crf 18",
     "render:full": "pnpm sync-gameplay && npx remotion render src/index.ts BurnedTrailer out/trailer-scene-build.mp4 --codec h264 --crf 18",
     "postinstall": "pnpm sync-gameplay",
     "prerender": "pnpm sync-gameplay",

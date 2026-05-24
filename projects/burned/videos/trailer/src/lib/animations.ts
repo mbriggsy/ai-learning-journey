@@ -84,13 +84,38 @@ export const STAMP_SLAP_PAYOFF = {
  * (which lands settled, not snappy, per the wordmark-final-bookend
  * grammar). Cold-open BURNED card reveal IS the cold-open hook
  * payoff; LOGO_SPRING_COLD spring overshoots ~6% then settles fast
- * (~0.5s perceived). S06 LOGO_SPRING_CLOSING when authored will use
- * higher damping for a calmer settle.
+ * (~0.5s perceived). Pairs with LOGO_SPRING_CLOSING below — the
+ * cold-open vocabulary is the snap, the closing-card vocabulary is
+ * the settle.
  */
 export const LOGO_SPRING_COLD: SpringConfig = {
   mass: 0.5,
   damping: 11,
   stiffness: 200,
+  overshootClamping: false,
+}
+
+/**
+ * Spring config for the S06 closing BURNED wordmark land at scene-
+ * relative frame 200 (= absolute 3110).
+ *
+ * SETTLED, NOT snappy per Phase 4 plan amendment SA-9. Heavier mass
+ * + much higher damping + lower stiffness vs LOGO_SPRING_COLD —
+ * reads as the wordmark "arriving with weight" rather than "popping
+ * in." Spring reaches ~0.6 progress around frame 8 and lands settled
+ * by frame ~20, giving the cinematic feel emil calls "match motion
+ * to mood — closing should breathe."
+ *
+ * Used as the temporal driver for a manual scale interpolation
+ * 0.95 → 1.04 → 1.0 (Phase 1 lock) in S06_ClosingDirective.tsx.
+ * `overshootClamping: false` so the spring can still kiss the 1.04
+ * peak; the manual scale envelope shapes the actual peak/settle
+ * geometry on top of the spring's temporal curve.
+ */
+export const LOGO_SPRING_CLOSING: SpringConfig = {
+  mass: 0.9,
+  damping: 18,
+  stiffness: 110,
   overshootClamping: false,
 }
 

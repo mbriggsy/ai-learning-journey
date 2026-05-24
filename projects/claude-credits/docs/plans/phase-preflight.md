@@ -1,7 +1,7 @@
 ---
 created: 2026-05-24T09:46:48-04:00
 deepened: 2026-05-24T11:56:12-04:00
-doc-reviewed:
+doc-reviewed: 2026-05-24T12:21:08-04:00
 ---
 
 # Phase −1 — Pre-flight verifications
@@ -78,9 +78,9 @@ npm view claude-credit version
 ```
 
 **Step 3 — fix README contradiction.** Edit `C:\Users\brigg\ai-learning-journey\tools\claude-credit\README.md`:
-- Find the `pnpm add claude-credit` snippet (under the `logGeneration()` section per Agent 1 report)
-- Replace with `# After publish: pnpm add claude-credit` until Step 4 lands
-- If Path B (scoped name), also update install snippets at the top of README from `claude-credit` to `@mbriggsy/claude-credit`
+- Locate all install snippets via `grep -n 'pnpm add\|npm i\|npm install' C:/Users/brigg/ai-learning-journey/tools/claude-credit/README.md` — expect ~5 hits across the file (top-of-README + later sections)
+- For each hit that implies the package is published (any `pnpm add claude-credit` / `npm i -g claude-credit` line), prefix with `# After publish:` until Step 4 lands. If Step 4 publishes (STATE A or C), remove the prefix.
+- If Path B (scoped name), also update every install snippet from `claude-credit` to `@mbriggsy/claude-credit`
 
 **Step 4 — publish OR fallback.**
 
@@ -156,10 +156,33 @@ Cross-checked against `C:/Users/brigg/ai-learning-journey/projects/` directory l
 
 ### Recipe
 
-**Step 1 — back up the current file** (rollback safety):
+**Step 1 — back up the current file AND check for drift** (rollback safety + concurrent-edit detection):
+
 ```bash
+# Snapshot
 cp C:/Users/brigg/.claude-credit-projects.yaml C:/Users/brigg/.claude-credit-projects.yaml.bak.2026-05-24
+
+# Drift check — must show exactly these 9 paths under `projects:` and NOTHING else at root.
+# If output diverges from expected, ABORT — Briggsy may have edited the file between deepening and execution.
+python -c "import yaml, os; d = yaml.safe_load(open(os.path.expanduser('~/.claude-credit-projects.yaml'))); print('TOP KEYS:', sorted(d.keys())); print('PROJECT COUNT:', len(d.get('projects', []))); [print(' -', p['path']) for p in d.get('projects', [])]"
 ```
+
+Expected output:
+```
+TOP KEYS: ['projects']
+PROJECT COUNT: 9
+ - C:\Users\brigg\ai-learning-journey\projects\burned
+ - C:\Users\brigg\ai-learning-journey\projects\data-engineering
+ - C:\Users\brigg\ai-learning-journey\projects\hooks
+ - C:\Users\brigg\ai-learning-journey\projects\pacman
+ - C:\Users\brigg\ai-learning-journey\projects\skills
+ - C:\Users\brigg\ai-learning-journey\projects\tic-tac-toe
+ - C:\Users\brigg\ai-learning-journey\projects\top-down-racer-02
+ - C:\Users\brigg\ai-learning-journey\projects\top-down-racer-04
+ - C:\Users\brigg\ai-learning-journey\projects\undercover-mob-boss
+```
+
+If output differs (extra top-level keys, different count, different paths) → STOP. Diff the file against `.bak.2026-05-24` to see what Briggsy changed, then either (a) adapt this recipe to merge his edits or (b) ask Briggsy before overwriting.
 
 **Step 2 — verify archive paths exist on disk** (sanity check before YAML write):
 ```bash
@@ -215,11 +238,17 @@ archive:
 - 1 `archiveCollective` block with 6 contributing project names + rolled-up totals
 - No errors, no warnings about unknown YAML keys
 
-Since the parser extension is Phase 0 work, the only verification possible inside −1.2 is YAML validity:
+Since the parser extension is Phase 0 work, the only verification possible inside −1.2 is YAML validity. Use Python (no cwd dependency, always available):
 ```bash
-node -e "console.log(JSON.stringify(require('js-yaml').load(require('fs').readFileSync('C:/Users/brigg/.claude-credit-projects.yaml', 'utf8')), null, 2))" | head -30
+python -c "import yaml, json, os; print(json.dumps(yaml.safe_load(open(os.path.expanduser('~/.claude-credit-projects.yaml'))), indent=2))" | head -40
 ```
-Exit 0 + parseable JSON = YAML is valid. Errors → re-check indentation (YAML cares).
+Exit 0 + parseable JSON output = YAML is valid. Errors → re-check indentation (YAML cares about spaces, not tabs).
+
+Node alternative (only works from `tools/claude-credit/` where `js-yaml` is a dep):
+```bash
+cd C:/Users/brigg/ai-learning-journey/tools/claude-credit
+node -e "console.log(JSON.stringify(require('js-yaml').load(require('fs').readFileSync(require('os').homedir() + '/.claude-credit-projects.yaml', 'utf8')), null, 2))" | head -40
+```
 
 ### Final grid math after this edit
 
@@ -256,23 +285,34 @@ YAML file itself is uncommitted (lives at `~/.claude-credit-projects.yaml`, not 
 
 The original "200 + Server: Vercel" rule would have recorded **5 false positives** as Briggsy's deploys. Corrected methodology: three-step verify.
 
+### Shell pin
+
+All commands in this section assume **Git Bash on Windows** (paths starting with `/tmp`, `2>/dev/null` redirects, `[[ ... ]]` etc.). If running through PowerShell, either drop into Git Bash for these gates or rewrite using PowerShell equivalents (`$env:TEMP` for `/tmp`, `2>$null` for `2>/dev/null`).
+
 ### Recipe — per project (run for all 11 individual-tile projects: 9 active + 2 meta)
 
-**Step 1 — discover the deployed URL by reading INSIDE the project.** Check sources in priority order:
+**Step 1 — discover the deployed URL by reading INSIDE the project.** Sources in PRIORITY ORDER (highest yield first — `.vercel/project.json` contains the project slug + ID, NOT the URL, so it's last-resort only):
 
 ```bash
 # Run per project. Replace PROJ with the project name.
 PROJ=burned
 PROJDIR=C:/Users/brigg/ai-learning-journey/projects/$PROJ
 echo "=== $PROJ ==="
-echo "--- .vercel/project.json ---"
-cat "$PROJDIR/.vercel/project.json" 2>/dev/null || echo "(none)"
-echo "--- vercel.json ---"
+
+echo "--- README + CLAUDE.md vercel.app refs (primary) ---"
+# Match generously, then strip trailing punctuation (), . , ; > ] that grep would otherwise grab.
+grep -hoE 'https?://[a-z0-9-]+\.vercel\.app[^[:space:]"'\'']*' "$PROJDIR/README.md" "$PROJDIR/CLAUDE.md" 2>/dev/null | sed -E 's/[).,;>\]]+$//' | sort -u || echo "(none)"
+
+echo "--- vercel.json (alias config) ---"
 cat "$PROJDIR/vercel.json" 2>/dev/null || echo "(none)"
+
 echo "--- package.json homepage ---"
 grep -E '"homepage"' "$PROJDIR/package.json" 2>/dev/null || echo "(none)"
-echo "--- README + CLAUDE.md vercel.app refs ---"
-grep -hoE 'https?://[a-z0-9-]+\.vercel\.app[^"'\'' ]*' "$PROJDIR/README.md" "$PROJDIR/CLAUDE.md" 2>/dev/null | sort -u || echo "(none)"
+
+echo "--- .vercel/project.json (slug + projectId only, NOT a URL) ---"
+cat "$PROJDIR/.vercel/project.json" 2>/dev/null || echo "(none)"
+# If a projectName is present here AND no URL was found above, the implied URL guess is
+# https://<projectName>.vercel.app — but verify against the squatter test in Step 3.
 ```
 
 For meta-projects, paths differ:
@@ -280,8 +320,9 @@ For meta-projects, paths differ:
 - `projects/claude-credits` → URL not yet known (own deploy in Phase 8) — record `liveUrl: null` for now
 
 Outcomes per project:
-- One URL discovered → proceed to Step 2 with that URL
-- Multiple URLs (aliases) → use the canonical one from `.vercel/project.json` if present, else the shortest. Record both in worksheet as `liveUrl` (canonical) and `liveUrlAliases` (others).
+- One URL discovered from README/CLAUDE.md/vercel.json → **trusted source.** Proceed to Step 2; in Step 3, fingerprint failure does NOT void the URL (mark `liveUrlSuspect: true` for Briggsy review instead).
+- One URL constructed from `.vercel/project.json` slug → **last-resort guess.** Proceed to Step 2; in Step 3, fingerprint failure DOES void the URL (mark `null`).
+- Multiple URLs (aliases) → use the canonical one from `vercel.json` if present, else the shortest. Record both in worksheet as `liveUrl` (canonical) and `liveUrlAliases` (others).
 - Zero URLs discovered → mark `liveUrl: null`. Add to `## Deploys to fix` block in editorial.md so Briggsy can re-deploy if desired. Done for this project.
 
 **Step 2 — confirm URL serves a 200 (after redirects).**
@@ -318,10 +359,11 @@ Then grep for project-identifying strings. Per-project fingerprint patterns:
 
 For pacman + tic-tac-toe (no reliable text fingerprint), the URL discovery in Step 1 is the primary signal — if the URL was found INSIDE the project's own files, it's almost certainly Briggsy's. Accept based on Step 1 evidence + a 200 in Step 2, even without unique body text.
 
-Outcomes:
-- Match found → URL confirmed. Record in editorial worksheet `liveUrl` column.
-- No match found + URL was discovered from Briggsy's own project files → Suspect but acceptable; mark with `liveUrlSuspect: true` in worksheet and proceed (Briggsy resolves during review).
-- No match found + URL was guessed → reject as squatter. Mark `liveUrl: null`. Add to fix block.
+Fingerprint outcomes — the URL's SOURCE from Step 1 determines tolerance to fingerprint failure (SPAs commonly have empty initial HTML — `<div id="root"></div>` and a JS bundle, nothing else in `curl`'s output):
+
+- **Match found (any source)** → URL confirmed. Record in editorial worksheet `liveUrl` column.
+- **No match + URL from TRUSTED source** (README / CLAUDE.md / `vercel.json` / `package.json homepage`) → likely an SPA whose body is empty until JS runs. Mark `liveUrlSuspect: true` in worksheet and proceed. Briggsy resolves during review (opens the URL in a browser; 5-second check).
+- **No match + URL from `.vercel/project.json` slug guess** (last-resort source) → likely a squatter. Mark `liveUrl: null`. Add to `## Deploys to fix` block.
 
 ### Known-live URLs (pre-verified at deepening time)
 
@@ -351,7 +393,7 @@ This section is retained as a pointer; the inventory work happens inside [−1.5
 
 ### Capture-needed summary (verified at deepening time)
 
-7 of 12 surfaces have zero existing hero candidates and need capture work in PARALLEL with Phase 0–2 build (do not block Phase 0 on captures; the editorial draft can be written with `heroImage: null` placeholders and updated as captures land):
+8 of 12 surfaces have zero existing hero candidates and need capture work in PARALLEL with Phase 0–2 build (do not block Phase 0 on captures; the editorial draft can be written with `heroImage: null` placeholders and updated as captures land):
 
 | Surface | What to capture | Notes |
 |---|---|---|
@@ -362,8 +404,9 @@ This section is retained as a pointer; the inventory work happens inside [−1.5
 | tic-tac-toe | Mid-game screenshot, board with X/O moves visible | Honesty: smallest project; hook stat should reflect |
 | claude-credit | Terminal screencap of `claude-credit --all` output (ASCII table or hero numbers) | README has ASCII art at lines 5-15 — also viable |
 | claude-credits | Self-referential: site's own hero screenshot, POST-deploy | Chicken-and-egg — `heroImage` stays null until after Phase 8 ships, then captured |
+| "the misses" collective tile | Composite or generated visual (e.g., a faded-out grid of 6 project-name typographic cards, or a single grayscale collage) | Capture in parallel; no source project to pull from |
 
-5 surfaces have rich existing hero candidates (no capture needed; pick best at editorial draft time):
+4 surfaces have rich existing hero candidates (no capture needed; pick best at editorial draft time):
 
 | Surface | Candidates available |
 |---|---|
@@ -371,7 +414,6 @@ This section is retained as a pointer; the inventory work happens inside [−1.5
 | undercover-mob-boss | Trailer hero shots (`projects/undercover-mob-boss/public/trailer-*.jpg`), role iconography, htp-fullpage |
 | top-down-racer-04 | Gameplay shots, track BGs, UI menu, sprite atlas under `public/assets/` |
 | top-down-racer-02 | 2 temp screenshots — acceptable but consider re-capture for higher quality |
-| "the misses" collective tile | Composite or generated visual (e.g., a faded-out grid of 6 project-name typographic cards, or a single grayscale collage) — capture in parallel |
 
 ### Mobile capture note
 
@@ -657,7 +699,7 @@ Builder-to-builder. Audience is AI-curious peer developers.
 - **repoUrl:** `https://github.com/mbriggsy/ai-learning-journey/tree/main/projects/claude-credits`
 - **description (3 sentences) [STRAWMAN]:**
   1. `Vercel-hosted, GSAP-driven web showcase that visualizes claude-credit's data across every project in this monorepo.`
-  2. `Built to a bar Briggsy named "so slick water beads off it" — surface treatment, not particle effects.`
+  2. `Built to a quality bar where the craft has to be invisible — the product carries the visit, not the receipts on who authored it.`
   3. `If you reacted "wow this product is slick" — bar hit. If you reacted "wow Claude built this" — bar missed.`
 - **gallery:** `[]`
 
@@ -729,7 +771,10 @@ Mobile-safe verification per capture: open the captured image in DevTools mobile
 ## Sign-off
 
 - [ ] Voice anchor reviewed and accepted (or edited) — Briggsy
-- [ ] All 12 row blocks edited; no `[STRAWMAN]` tags remaining — Briggsy
+- [ ] All 12 row blocks edited; no `[STRAWMAN]` tags remaining on `oneLiner` / `hookStat` / `description` fields — Briggsy
+  - **Exception:** `claude-credits` row's `heroImage` + `liveUrl` are intentionally null until after Phase 8 deploy. Does NOT block sign-off.
+  - **Exception:** 8 capture-pending rows (7 active/meta + "the misses" tile) have null `heroImage` until captures land. Does NOT block sign-off; captures continue in parallel with Phase 0–2.
+- [ ] **Anchor compliance check** — for each row's `oneLiner` + `description`, verify against the voice anchor: NO aspirational verbs ("revolutionize", "empower"), NO metaphors (especially "water beads" — that's the visual bar, not the voice bar), NO breathless adjectives ("stunning", "blazing"), NO jargon, NO self-deprecation. `oneLiner` ≤ 60 chars confirmed.
 - [ ] Archive collective tile copy + 6 detail one-liners edited — Briggsy
 - [ ] CTA state block populated — from −1.1
 - [ ] Deploys-to-fix block resolved (each entry either re-deployed or marked null with reason) — from −1.3
@@ -742,15 +787,60 @@ Single commit at the end of the worksheet draft. Message: `docs(claude-credits):
 
 ---
 
+## Downstream phase plan amendments required during preflight execution
+
+The deepening locked decisions in this preflight that affect other phase plan docs. Those docs have NOT been deepened yet — when each one is deepened (or executed, whichever first), apply these amendments. Land them as a separate commit before Phase 0 execution starts: `docs(claude-credits): cascade preflight decisions to phase-0/4/5 plans`.
+
+### `phase-0-data-gaps.md`
+
+- **REMOVE §0.9 entirely.** Preflight −1.2 subsumes it — the YAML edit now happens in preflight, not Phase 0. Leaving §0.9 in place creates a conflicting YAML rewrite step that either errors or silently overwrites the `archive:` array preflight just wrote.
+- **ADD §0.6b — parser extension.** Insert after §0.6 (EditorialContent type). Spec:
+  - Extend the YAML loader (in `tools/claude-credit/src/multi-report.ts` or wherever `loadProjectConfig` lives) to recognize THREE top-level keys: `projects:`, `meta:`, `archive:`.
+  - `projects[*]` paths → unchanged behavior; emit `ProjectReport` with `kind: 'active'`.
+  - `meta[*]` paths → emit `ProjectReport` with `kind: 'meta'`. Same shape, different tag.
+  - `archive[*]` paths → scan + contribute to `combined.totalTokens` / `combined.totalLines` / `combined.totalBytes`, but emit ONE rolled-up `ArchiveCollective` block, not individual `ProjectReport` entries.
+  - New schema: `MultiProjectReport.archiveCollective: ArchiveCollective | null` where `ArchiveCollective = { projectNames: string[]; totalTokens: number; totalLines: number; totalBytes: number; }`.
+- **UPDATE §0.6 `EditorialContent` type** — change `status: 'active' | 'shelved' | 'meta'` to `status: 'active' | 'meta'`. The `shelved` value is removed; the archive collective is a separate surface (not an EditorialContent row), so the enum has no consumer for `shelved`.
+
+### `phase-4-grid.md`
+
+- **CHANGE tile count from 11 to 12.** "Grid of 11 project tiles" → "Grid of 12 surfaces (9 active + 2 meta + 1 archive collective)".
+- **ADD "the misses" tile spec.** Sits at last position after a divider labeled `the misses`. Renders rolled-up metrics from `combined.archiveCollective`. Click target `/archive` (or whatever slug Phase 4 deepening locks). Distinct from per-project tiles — no editorial row, no hookStat (the subtitle IS the stat).
+- **ADD tile order rule for archive collective** — does NOT sort by `grandTotals.allBytes`; ALWAYS last position regardless of size.
+
+### `phase-5-detail.md`
+
+- **ADD "View source →" affordance per detail page.** Reads `editorial.repoUrl`. Affordance sits in the detail page hero or under the AUTHORED BY block — Phase 5 deepening locks placement.
+- **ADD `Archive.tsx` detail page** — route `/archive`. Renders the 6 archived project names + Briggsy-authored one-liners explaining why each was shelved (content in `editorial.md` "Archive collective surface" section).
+
+### Verification — apply this AFTER landing the cascade commit
+
+```bash
+# Phase 0: 0.6b must exist; 0.9 must be gone; status enum must be 2-value
+grep -n "0.6b\|0.9\|'active' | 'shelved'\|'active' | 'meta'" projects/claude-credits/docs/plans/phase-0-data-gaps.md
+# Expect: 0.6b present, 0.9 absent, only 'active' | 'meta' enum
+
+# Phase 4: 12-tile count + "the misses" mention
+grep -nE "12 surfaces|the misses|11 project tiles" projects/claude-credits/docs/plans/phase-4-grid.md
+# Expect: "12 surfaces" + "the misses" present, "11 project tiles" gone
+
+# Phase 5: View source + Archive.tsx mentions
+grep -nE "View source|Archive\.tsx|repoUrl" projects/claude-credits/docs/plans/phase-5-detail.md
+# Expect: all three present
+```
+
+---
+
 ## Phase −1 → Phase 0 handoff
 
-When all five gates are green:
+When all five gates are green AND the downstream-phase-amendments commit has landed:
 
 - −1.1 → CTA state landed in `editorial.md`; package.json + README possibly edited & committed
-- −1.2 → `~/.claude-credit-projects.yaml` updated (not in repo); new sub-item 0.6b added + committed in `phase-0-data-gaps.md`
-- −1.3 → every project has a `liveUrl` (URL or null); deploys-to-fix list resolved
+- −1.2 → `~/.claude-credit-projects.yaml` updated (not in repo); drift check from Step 1 passed
+- −1.3 → every project has a `liveUrl` (URL or null or suspect); deploys-to-fix list resolved
 - −1.4 → folded into worksheet; capture queue tracking work in parallel
-- −1.5 → worksheet fully drafted by Claude; Briggsy review/edit complete; sign-off boxes checked
+- −1.5 → worksheet fully drafted by Claude; Briggsy review/edit complete; sign-off boxes checked (with carve-outs respected)
+- Cascade commit → `phase-0-data-gaps.md` + `phase-4-grid.md` + `phase-5-detail.md` updated per amendment block above
 
 Then open [phase-0-data-gaps.md](phase-0-data-gaps.md) and start. Capture work continues in parallel; missing captures land as worksheet edits (rebuild Phase 2 `refresh` after each).
 

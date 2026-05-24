@@ -79,6 +79,16 @@ public/trailer/spike/
 # videos/trailer/.
 public/trailer/cold-open/
 
+# Phase 4 Unit 4.6 S05 gameplay clip — Phase 5 ships gameplay.mp4 (real),
+# Phase 4 ships gameplay-placeholder.mp4 (looped HTP fullpage stand-in).
+# Both gitignored: real is large binary unfit for git + Phase 5 captures
+# may contain in-progress UI state; placeholder is regenerated locally
+# via `pnpm gen:gameplay-placeholder` from videos/trailer/. The build-time
+# selector at videos/trailer/src/lib/gameplay-clip-source.ts IS tracked
+# (first-clone needs module resolution to work).
+public/trailer/gameplay.mp4
+public/trailer/gameplay-placeholder.mp4
+
 # Decode-test panelist audio — voice memos from external testers. Panelists
 # did not consent to public publication of their voice samples. Per Phase 6
 # doc-review Security F4.

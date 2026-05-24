@@ -1,6 +1,6 @@
 # claude-credits — TODO
 
-**Status:** Deepening in progress. **Phases 0–4 deepened + doc-reviewed** (paint-by-numbers recipes). Phases 5–9 + the preflight plan remain. **No code until ALL phase plans are deepened and contradictions resolved** (house rule).
+**Status:** Deepening in progress. **Phases 0–4 AND the preflight plan (−1) are deepened + doc-reviewed** (paint-by-numbers recipes). Phases 5–9 remain to deepen. **No code until ALL phase plans are deepened and contradictions resolved** (house rule).
 
 > **House rule — TODO is NOT a diary.** Actionable items only. No session history, no "what we did" logs, no narrative addenda. The git log has the history. If a line isn't an open thing Claude or Briggsy can act on, it doesn't belong here. Strip cruft when you find it.
 
@@ -22,11 +22,12 @@ Same drill each: deepen to paint-by-numbers → `/ce:plan deepen` → 6-reviewer
 - [ ] **Phase 7 — bottom CTA** (`phase-7-cta.md`) — depends on preflight −1.1 (is `claude-credit` publishable?) for the primary CTA copy.
 - [ ] **Phase 8 — deploy** (`phase-8-deploy.md`) — must resolve the open "where does `pnpm refresh` run" question (a clean CI runner has NO session JSONLs → tokens would be null; leading option = refresh locally + commit, Action only deploys — see phase-2 Open Decision #2).
 - [ ] **Phase 9 — visual polish (THE BAR)** (`phase-9-polish.md`) — where the bar gets met; budget half the time here.
-- [ ] **Preflight −1** (`phase-preflight.md`) — deepen/verify the pre-execution checklist (tool publishability, `~/.claude-credit-projects.yaml` meta/archive extension, deploy-URL curl audit, visual-asset inventory, editorial worksheet).
+
+(Preflight −1's PLAN is already deepened + doc-reviewed — it's not a deepening task. Its *execution* is the first step below.)
 
 ## Then: execute (only after every plan above is deepened)
 
-Preflight −1 verifications → Phase 0 (data contract code) → 1 → 2 → … → 9. Verify each in the browser (BOTH modes, mobile) before moving on — runtime truth > green tests.
+**Preflight −1 execution** (plan already deepened — `phase-preflight.md`): publish/verify the `claude-credit` tool + record CTA state, edit `~/.claude-credit-projects.yaml` to add the `meta:` + `archive:` arrays, verify each project's deploy URL (the squatter methodology — slug-guessing gives false positives), and draft `docs/editorial.md` for Briggsy's voice review. Also land the preflight→phase-0/4/5 cascade commit. → then Phase 0 (data contract code) → 1 → 2 → … → 9. Verify each in the browser (BOTH modes, mobile) before moving on — runtime truth > green tests.
 
 ---
 

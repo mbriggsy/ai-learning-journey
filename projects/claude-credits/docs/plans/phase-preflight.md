@@ -252,7 +252,7 @@ node -e "console.log(JSON.stringify(require('js-yaml').load(require('fs').readFi
 
 ### Final grid math after this edit
 
-- 9 active project tiles (sorted by `grandTotals.allBytes` desc)
+- 9 active project tiles (sorted by `grandTotals.authoredLines` desc, tie-break `projectName` — Phase 4 Decision 4)
 - Divider: "the tools"
 - 2 meta project tiles
 - Divider: "the misses"
@@ -806,7 +806,7 @@ The deepening locked decisions in this preflight that affect other phase plan do
 
 - **CHANGE tile count from 11 to 12.** "Grid of 11 project tiles" → "Grid of 12 surfaces (9 active + 2 meta + 1 archive collective)".
 - **ADD "the misses" tile spec.** Sits at last position after a divider labeled `the misses`. Renders rolled-up metrics from `combined.archiveCollective`. Click target `/archive` (or whatever slug Phase 4 deepening locks). Distinct from per-project tiles — no editorial row, no hookStat (the subtitle IS the stat).
-- **ADD tile order rule for archive collective** — does NOT sort by `grandTotals.allBytes`; ALWAYS last position regardless of size.
+- **ADD tile order rule for archive collective** — does NOT sort by the active sort key (`grandTotals.authoredLines`); ALWAYS last position regardless of size.
 
 ### `phase-5-detail.md`
 

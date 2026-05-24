@@ -18,7 +18,7 @@ Read both before touching code.
 Resolve before Phase 0. Details for each step live in `docs/plans/phase-preflight.md`.
 
 - [ ] **−1.1** Check `claude-credit` tool publishability (npm + GitHub) → drives the primary CTA copy
-- [ ] **−1.2** Add meta-projects to `~/.claude-credit-projects.yaml` (tools/claude-credit + projects/claude-credits) → final grid = 11 tiles
+- [ ] **−1.2** Extend `~/.claude-credit-projects.yaml` with `meta:` (tools/claude-credit + projects/claude-credits) AND `archive:` (6 shelved) → final grid = 12 tiles (9 active + 2 meta + 1 archive collective "the misses")
 - [ ] **−1.3** Curl-audit deploy URLs for the 6 unknown projects: burned, data-engineering, hooks, pacman, skills, tic-tac-toe (known live: UMB, TDR-02, TDR-04)
 - [ ] **−1.4** Visual asset inventory — per project, list "exists vs needs capture"
 - [ ] **−1.5** Draft `docs/editorial.md` worksheet — one-liner + hook stat + 2-3 sentence description per project, 11 rows. Briggsy reviews/edits the voice.

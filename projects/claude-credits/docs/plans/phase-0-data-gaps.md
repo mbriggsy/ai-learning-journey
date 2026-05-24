@@ -1,3 +1,9 @@
+---
+created: 2026-05-24T09:46:48-04:00
+deepened:
+doc-reviewed:
+---
+
 # Phase 0 — Fill data gaps in `tools/claude-credit/` (~60 min)
 
 **Prereq:** Read [README.md](README.md) first — the bar, locked decisions, and visual system live there. This file is just the phase steps.

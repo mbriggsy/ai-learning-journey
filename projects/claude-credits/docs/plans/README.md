@@ -34,6 +34,15 @@ Briggsy asked for: "A Vercel-hosted drippy GSAPy wet set of web pages with fucki
 | 8 | Deploy | [phase-8-deploy.md](phase-8-deploy.md) |
 | 9 | Visual polish iteration (THE BAR) | [phase-9-polish.md](phase-9-polish.md) |
 
+### Frontmatter convention
+
+Each phase file carries YAML frontmatter:
+- `created:` — when the phase content was first committed (frozen — never changes)
+- `deepened:` — set to ISO timestamp when `/ce:plan deepen` has run on this phase
+- `doc-reviewed:` — set to ISO timestamp when `/document-review` has run on this phase
+
+Empty value = not yet done.
+
 ---
 
 ## Context you need before starting (read these)

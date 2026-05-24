@@ -2,6 +2,8 @@
 
 **Status:** planning complete. Ready to execute Phase −1.
 
+> **House rule — TODO is NOT a diary.** Actionable items only. No session history, no "what we did" logs, no narrative addenda. The git log has the history. If a line isn't an open thing Claude or Briggsy can act on, it doesn't belong here. Strip cruft when you find it.
+
 ## Where the depth lives
 
 - **`docs/ideation.md`** — WHAT decisions (audience, hero framing, content shape, CTA, bar revisions, mobile + light/dark addenda). The steering reference. Re-read before any visual or content call.

@@ -7,6 +7,20 @@ tags: [playbook]
 
 Known Claude behaviors that have caused problems. Each entry: what it looks like, why it happens, how to catch it, and what to do instead.
 
+## Inherits scope-shrinking framing from existing docs without challenging the bar
+
+**Symptom:** Claude is given an existing TODO, brief, or spec to revise. The existing doc has a phrase that subtly shrinks scope — *"this is a desktop showcase,"* *"mobile beyond doesn't break is out of scope,"* *"good enough for v1,"* *"close enough for now."* Claude inherits the framing while revising other parts. The corner-cut survives the revision pass intact because Claude treats existing wording as load-bearing instead of testing it against the actual quality bar.
+
+**Why:** Revision tasks bias toward editing what's explicitly being changed, not auditing the rest. Claude assumes pre-existing framing was decided thoughtfully when it might just be the previous session's last-mile shortcut.
+
+**How to catch:** When Claude hands back a revised plan, scan the *out-of-scope* and *decisions locked* sections for any phrase that lowers the bar on something the bar should apply to. If you spot *"doesn't break,"* *"good enough,"* *"this isn't a [thing] app,"* — push back.
+
+**Example:** 2026-05-24 claude-credits TODO revision. Claude inherited *"Mobile-first deep optimization beyond 'doesn't break' (this is a desktop showcase)"* from the pre-WHAT-interview version, kept it in the revised out-of-scope section even after applying every other WHAT-interview correction. Briggsy caught it: *"While maybe not mobile first, it still needs to render and shine in mobile. Like UMB's help file."* Full incident: [[lessons-learned#2026-05-24 — Inherited "desktop showcase" framing in claude-credits TODO|see lessons-learned]].
+
+**Rule for Claude:** When revising existing docs, treat every scope-shrinking phrase as a candidate for re-litigation against the bar, not load-bearing wording to preserve. Especially: anything about mobile, anything about polish, anything about "v1 minimum." The bar applies everywhere unless there's a specific written reason it doesn't.
+
+---
+
 ## Pattern-matches reference templates and copies bugs
 
 **Symptom:** Claude uses another project's doc as a structural template (say, UMB's `SPEC.md`) and copies SPECIFIC CLAIMS along with the structure. If the template has a bug, the bug gets replicated.

@@ -9,6 +9,38 @@ Things we figured out the hard way. Each entry: date, incident, lesson. Newest a
 
 ---
 
+## 2026-05-24 — Inherited "desktop showcase" framing in claude-credits TODO
+
+**Incident:** Mid-planning on claude-credits (the public showcase site for the `claude-credit` CLI). I asked Claude to revise the TODO based on the WHAT-interview decisions. Claude did the revision well — applied all the bar revisions, expanded Phase 0 with the new metrics, added editorial schema — but left the line *"Mobile-first deep optimization beyond 'doesn't break' (this is a desktop showcase)"* sitting in the out-of-scope section. The phrasing was inherited from the pre-WHAT version of the TODO.
+
+I caught it: *"I noticed you said this isn't a mobile first app, I think we need to reconsider. While maybe not mobile first, it still needs to render and shine in mobile. Like UMB's help file (that thing you built is a work of art)."*
+
+Claude went and read `projects/undercover-mob-boss/public/how-to-play.html` (1700 lines — self-hosted variable fonts, `dvh` fallback for `vh`, `viewport-fit=cover`, breakpoints at 600/640/768/960px, mobile-first cascade, single-column collapse that reads deliberate). That's the anchor. The TODO got reworked:
+
+- Decisions-locked table gained a Mobile row anchoring to UMB how-to-play.html
+- Out-of-scope rewritten: "no PWA / mobile-only nav / install prompts" — responsive polish is NEVER out-of-scope
+- Visual system gained a full Responsive / mobile subsection (dvh, viewport-fit, type clamps for 360–430px iPhones, `(hover: hover)` gating, ≥44×44 tap targets)
+- Hero counter type clamp rewritten as `clamp(4rem, 18vw, 22rem)` so the number fills mobile viewport
+- Project tile section: hover gated to desktop, single-column collapse must look DELIBERATE
+- Detail page: donut renders square at full mobile width, sparkline full-width
+- Polish protocol: TWO cold-watch tests (desktop + phone-in-hand)
+- Verification: iPhone matrix (360/375/390/430) added as checkpoint
+
+**Lessons:**
+1. **Revising a doc isn't the same as auditing the doc.** Claude focused edits on what the new decisions changed and left untouched everything that *looked* settled. Scope-shrinking framing slipped through because it wasn't part of what I asked to revise.
+2. **"This is a desktop X" / "good enough for Y" / "v1 minimum" are pressure relief valves and they leak the bar.** When the bar is "water beads off it," every surface gets the bar — phone included.
+3. **Anchor the bar with a working reference.** UMB's how-to-play.html is the concrete proof of what mobile-shines means here. Words like "responsive" or "mobile-friendly" are too soft; pointing at a file Claude wrote and Briggsy loves is sharp.
+4. **Worth catching early.** This was 5 minutes of editing to fix in a planning doc. Same slip in implementation would be days of CSS rework after the fact.
+
+**Memorialized in:**
+- `feedback-mobile-must-shine-not-survive.md` in Claude's memory
+- [[claude-watch-outs#Inherits scope-shrinking framing from existing docs without challenging the bar]]
+- TODO updates in `projects/claude-credits/TODO.md`
+
+**Same-day repeat (2026-05-24, hours later):** I caught Claude again. Same TODO, different inherited phrase: *"Dark/light theme toggle (it's dark, period)"* was in the pre-WHAT out-of-scope section and Claude kept it through the revision pass. I asked: *"and why not have a light/dark mode? what's your thoughts? ... I think we should include it. First class citizen, not a bolt on. And what is my OS preference?"* Claude checked my Windows registry (`HKCU:\Software\Microsoft\Windows\CurrentVersion\Themes\Personalize`) and confirmed I'm set to LIGHT for both apps and system. Meaning **I'd land on the dark version of my own site every visit if we shipped dark-only — opposite to my preference.** TODO updated: both palettes first-class, `prefers-color-scheme` honored, Phase 9 polish protocol now requires FOUR cold-watch captures (desktop-dark, desktop-light, mobile-dark, mobile-light). Watch-out caught the pattern; lessons-learned tracks the repeat. Two scope-shrinking slips in one session means the watch-out is doing real work — and that I should run a full out-of-scope audit any time I revise an inherited doc, not just edit the parts being explicitly changed.
+
+---
+
 ## 2026-04-10 — The Saul Bass incident (hallucinated reference calcified across 13 files)
 
 **Incident:** During a prior BURNED session on 2026-04-05, Claude dropped the phrase *"Mid-century modern. Saul Bass meets spy title sequences."* into `docs/ideation/2026-04-05-burned-brainstorm.md` as BURNED's visual reference. I didn't know who Saul Bass was, didn't flag it, and assumed Claude knew what it was talking about. Over 5 days, the phrase propagated across **13 files**:

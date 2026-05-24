@@ -87,6 +87,15 @@ Token architecture: semantic-over-physical so modes are CSS variable swaps, not 
 
 The bar metaphor ports: midnight gloss (dark) and sunlit Polaroid (light) are both surfaces water beads off.
 
+### 11. Authorship is NOT a feature — show the work, not a scoreboard
+
+The site brags by being stunning and showing the WORK — magnitude, projects, polish. It does NOT make a who-wrote-what claim a loud feature. Claude wrote all of it (Briggsy only ever touched `.env` API keys — ATC, not pilot); that's the ambient truth of the whole thing, not a comparison to surface.
+
+- NO human-vs-Claude authorship split viz, NO "0 lines authored by the human" headline, NO proof mechanism. This is our experiment — it owes no one proof.
+- The hero's magnitude (tokens / lines / projects) IS the flex — it shows off the work without litigating authorship.
+- Consequence: the per-tile tier bar is cut (Phase 4) and the per-project "AUTHORED BY" split is cut/reframed (Phase 5) — both are the same noise.
+- The "autonomous-SDLC experiments" framing may appear as LIGHT context on the About page, never as a scoreboard.
+
 ---
 
 ## Editorial spine

@@ -1,0 +1,14 @@
+# Vite build output
+dist/
+
+# Vercel CLI link state (created by `vercel link`)
+.vercel/
+
+# Logs
+*.log
+npm-debug.log*
+pnpm-debug.log*
+
+# Editor / IDE
+.vscode/
+.idea/

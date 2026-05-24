@@ -12,6 +12,16 @@ venv/
 # API keys and tool configs
 utils/
 
+# Env files — NEVER commit. Hold API keys (Gemini, Anthropic, etc.) across all projects.
+# Leaves .env.example and .env.<env> (without .local) committable as templates.
+.env
+.env.local
+.env.*.local
+
+# OS junk
+.DS_Store
+Thumbs.db
+
 # Obsidian session state — auto-managed, churns every launch.
 # Vault config (app.json, core-plugins.json, appearance.json) stays tracked.
 .obsidian/workspace.json

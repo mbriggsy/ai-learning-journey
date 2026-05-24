@@ -5,7 +5,15 @@
 This is where the bar gets met or missed. After Phase 8 ships a working site, iterate. **This is where `/frontend-design` and `/emil-design-eng` skills fire.** Use them.
 
 ## Polish protocol
-1. **Side-by-side compare against Stripe.** What does Stripe have that we don't? Type weight, negative space, settle timing, hover weight. Also compare against `projects/undercover-mob-boss/public/how-to-play.html` for the mobile bar.
+1. **Side-by-side compare against the curated reference bench** (see `../ideation.md` → References). Each reference is for calibrating a *specific* choice, never for importing a look:
+   - **Stripe** — gradient breath + settle timing + hover weight
+   - **Linear** — materials-aware surfaces + tight type
+   - **Vercel** — type-led restraint
+   - **NYT digital features** — editorial type + restrained scroll motion
+   - **Cassie Evans / Sarah Drasner GSAP demos** — motion-craft eases
+   - **UMB's `projects/undercover-mob-boss/public/how-to-play.html`** — the mobile bar (already the anchor)
+
+   If the comparison answer reads "matches the bench" but the result doesn't bead, the bench led us astray — drop back to the metaphor.
 2. **The cold-watch test — FOUR captures (desktop-dark, desktop-light, mobile-dark, mobile-light):** record all four, watch them cold a day later. If you'd say "wow Claude built this" on any one of them — diagnose. Both modes must shine on both surfaces. Light is not a fallback for dark; it gets its own polish pass.
 3. **Common polish wins (in priority order):**
    - Counter ease — tweak until ticks feel weighty, not mechanical

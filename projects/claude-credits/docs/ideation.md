@@ -107,4 +107,33 @@ The bar metaphor ports: midnight gloss (dark) and sunlit Polaroid (light) are bo
 | NO iridescent oil-on-water hover accents | Gimmicky, undercuts the gloss. Bar is restraint + materiality. |
 | ONE visual flourish per surface | Two transitional flourishes competing is busy. |
 | NO global superlatives ("fastest project / most active week") | Specificity belongs in per-project hooks, not the hero. |
-| Reference set: Stripe ONLY | Apple/Linear/Awwwards stripped. Internal coherence to the metaphor IS the bar. |
+
+---
+
+## References — the bar is the metaphor, not a site
+
+The water-beads metaphor IS the bar. Surface treatment, materials, light, motion timing, negative space. **References calibrate specific choices (kerning, hover weight, settle ease) — they do not dictate look.** A site copied is a site we lost to AI slop.
+
+### Reference bench (curated — calibrate, don't imitate)
+
+| Reference | Use for |
+|---|---|
+| **Stripe** | Gradient breath + restrained motion + settle timing |
+| **Linear** | Materials-aware surfaces + tight type + hover weight |
+| **Vercel** | Type-led restraint (and it's the host) |
+| **NYT digital features** | Editorial type + restrained scroll motion |
+| **Cassie Evans / Sarah Drasner GSAP demos** | Motion-craft canon for specific eases and reveals |
+| **UMB's `public/how-to-play.html`** | Mobile bar + responsive type clamps (already the locked mobile anchor) |
+
+Look at one when calibrating a *specific* choice. Never adopt a *look* from one. If a rewrite reads "matches the bench" but doesn't read "water beads off it," the bench led us astray — drop back to the metaphor.
+
+### Explicitly disqualified (the slop signals)
+
+| Source | Why disqualified |
+|---|---|
+| **Awwwards** | Aggressive cursor effects, scroll-jacking, parallax horror, custom cursors, 3D-on-load. Canonical "wow they built this" gallery — our exact failure condition. |
+| **Webby Awards** | Diluted/corporate award culture; not a craft signal. |
+| **"Site of the Day" / Mindsparkle / "best landing pages 20XX"** | Same family — optimize for attention, opposite of restraint. |
+| **Apple marketing pages** | Aspirational consumer marketing; wrong genome for an AI-peer showcase. (Apple HIG for accessibility specs — tap target minimums, etc. — is fine and unrelated.) |
+
+If a future session is about to import a vibe from a disqualified source, this section is the receipt that says no.

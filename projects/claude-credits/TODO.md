@@ -28,7 +28,7 @@ After Phase −1 → Phase 0 (data extensions in `claude-credit` tool: see `docs
 ## Landmines
 
 - Editorial one-liners + hook stats are voice/positioning calls — needs Briggsy in the loop, can't be auto-derived.
-- Bar constraints in `docs/ideation.md` are load-bearing: NO falling water droplets, NO iridescent hover, NO Apple/Linear/Awwwards references. Stripe is the only outside reference.
+- Bar constraints in `docs/ideation.md` are load-bearing: NO falling water droplets, NO iridescent hover. **The water-beads metaphor IS the bar — not any single reference site.** References are a curated bench (Stripe, Linear, Vercel, NYT digital features, Cassie Evans / Sarah Drasner GSAP demos, UMB's `how-to-play.html`) used to calibrate specific choices, never to dictate look. Awwwards / Webby / "site of the day" lists are explicitly disqualified — they pull toward the slop signals.
 - Mobile is first-class (anchor: UMB's `public/how-to-play.html`). Never default to "doesn't break."
 - Light AND dark are both first-class. Briggsy's Windows is set to LIGHT — he lands on the light version of his own site by default. Both modes must pass the water-bead bar in Phase 9.
 - **Hero = tokens consumed (primary), lines authored (secondary).** Not the other way around. Tokens are the AI-native magnitude shock for the AI-peer audience.

@@ -1,0 +1,49 @@
+{
+  "name": "claude-credit",
+  "version": "0.1.0",
+  "description": "Project-agnostic CLI that tallies every byte of authored / pipeline-generated work in a project. For exec slides and video stat sheets.",
+  "type": "module",
+  "bin": {
+    "claude-credit": "./bin/claude-credit.mjs"
+  },
+  "main": "./dist/index.js",
+  "types": "./dist/index.d.ts",
+  "exports": {
+    ".": {
+      "types": "./dist/index.d.ts",
+      "import": "./dist/index.js"
+    },
+    "./log": {
+      "types": "./dist/log-generation.d.ts",
+      "import": "./dist/log-generation.js"
+    }
+  },
+  "files": [
+    "dist",
+    "bin",
+    "README.md"
+  ],
+  "scripts": {
+    "dev": "tsx src/cli.ts",
+    "build": "tsc -p .",
+    "typecheck": "tsc -p . --noEmit",
+    "test": "vitest run"
+  },
+  "dependencies": {
+    "ignore": "^5.3.2",
+    "js-yaml": "^4.1.0",
+    "kleur": "^4.1.5",
+    "picomatch": "^4.0.2"
+  },
+  "devDependencies": {
+    "@types/js-yaml": "^4.0.9",
+    "@types/node": "^22.10.0",
+    "@types/picomatch": "^3.0.1",
+    "tsx": "^4.19.2",
+    "typescript": "^5.7.2",
+    "vitest": "^2.1.8"
+  },
+  "engines": {
+    "node": ">=20"
+  }
+}

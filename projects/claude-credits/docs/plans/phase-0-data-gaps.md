@@ -4,11 +4,11 @@ deepened: 2026-05-24T12:43:38-04:00
 doc-reviewed: 2026-05-24T13:11:43-04:00
 ---
 
-# Phase 0 — Fill data gaps in `tools/claude-credit/`
+# Phase 0 — Data contract (`tools/claude-credit/`)
 
 **Prereq:** Read [README.md](README.md) first — the bar, locked decisions, and visual system live there. This file is the paint-by-numbers recipe for the data contract Phase 1+ renders against.
 
-Phase 0 extends the CLI with six new data field groups + a multi-project config parser extension. None of this is visual work; it's the data spine. The site renders nothing meaningful until these land.
+Phase 0 lands the full data contract for the site: six new data field groups in the CLI's report shape, the multi-project config parser extension, the CLI surface parity to render the new fields (§0.8), the test harness bootstrap with fixture-based integration tests (§0.10), and the privacy-by-construction enforcement (shared `strip-for-publish.ts` + allowlist test). The phase name was "Fill data gaps" pre-doc-review — renamed at doc-review time because the scope is the full contract, not just field-adds. None of this is visual work; it's the data spine. The site renders nothing meaningful until these land.
 
 ## Locked decisions inherited from Phase −1 preflight cascade
 
@@ -16,16 +16,17 @@ Apply these throughout — they are NOT optional:
 
 1. **§0.9 REMOVED.** The `~/.claude-credit-projects.yaml` edit moved into preflight −1.2. Leaving §0.9 in place would re-write the YAML and silently clobber the new `meta:` / `archive:` keys preflight just wrote. The slot is preserved as a one-line marker so the deepening-drift audit catches any reintroduction.
 2. **§0.6b ADDED.** Parser extension to `loadMultiProjectConfig` + `buildMultiProjectReport` so the CLI recognizes THREE top-level config keys: `projects:`, `meta:`, `archive:`. `archive[*]` entries scan + contribute to `combined.totalX`, but emit ONE rolled-up `archiveCollective` block, not individual `ProjectReport` entries.
-3. **§0.6 `EditorialContent.status` enum reduced to two values.** Was `'active' | 'shelved' | 'meta'`; now `'active' | 'meta'` only. The archive collective is a separate surface, not an `EditorialContent` row, so there is no consumer for `'shelved'`.
+3. **§0.6 `EditorialContent.status` enum — KEPT AT THREE VALUES** (`'active' | 'shelved' | 'meta'`). The preflight cascade originally reduced this to two values on the rationale "the archive collective is a separate surface, not an `EditorialContent` row." Doc-review reopened the decision on 2026-05-24 because that reduction silently foreclosed per-archive detail pages — ideation §6 explicitly commits to "Detail pages explain what was tried." Restoring the third value keeps the contract open; Phase 4 still ships the archive-collective grid tile as the v1 choice, but Phase 5 deepening can later add per-archive detail pages without a v0.3 schema migration. **This overrides one of the four preflight-cascade locks at doc-review time.**
 4. **`ProjectReport.kind: 'active' | 'meta'` discriminator added.** So the site (Phase 4 grid) can split the rendering into "active" tiles + "the tools" tiles cleanly. Archive entries never appear in `projects[]` — they live ONLY in `archiveCollective`.
 
 ## Decisions locked at this deepening (read before executing)
 
 - **Execution order: three batches.** Batch A lands every `taxonomy.ts` edit in ONE commit before any consumer touches the new types. The `GitStats` and `ProjectReport` interfaces are non-optional today (every field required); half-landed types fail `tsc -p .` on every consumer file. Batch B runs implementations 0.1 → 0.6b in order. Batch C runs the markdown surface (0.8), the test fixture pass (0.10), and the version bump (0.7) last.
 - **§0.4 + §0.5 are merged.** The original plan said "bucket the already-collected commit data by day" — but `collectGitStats` runs SEPARATE `git log` passes per metric; there is no shared in-memory commit list. Merging into a single `git log --pretty=format:"%H%x00%aI%x00%aN%x00%B%x00END" --numstat -- .` pass cuts subprocess time in half and lets `largestSingleCommit` reuse the numstat data `linesByAuthor` already reads.
-- **Token field naming is split.** The original plan's single `totalTokens` field summed all four buckets (input + output + cacheCreation + cacheRead). That number is dominated by cache reads (5–20× the rest in real traffic) — fine as a magnitude-shock hero but misleading as a "work done" measure. Ship BOTH numbers under unambiguous names:
-  - `tokensProcessed = input + output + cacheCreation + cacheRead` — the "tokens the model touched" magnitude. Hero PRIMARY uses this.
-  - `tokensGenerated = input + output + cacheCreation` — "fresh tokens produced or first-read." Honest work signal. Detail-page breakdown shows both.
+- **Token field naming is split. Hero displays BOTH numbers side-by-side** (decision locked 2026-05-24 at doc-review). The original plan's single `totalTokens` field summed all four buckets (input + output + cacheCreation + cacheRead). That number is dominated by cache reads (5–20× the rest in real traffic) — fine as a magnitude shock but misleading as a "work done" measure. Ship BOTH numbers under unambiguous names AND surface both in the hero:
+  - `tokensProcessed = input + output + cacheCreation + cacheRead` — the magnitude (tokens the model touched, including re-feeds).
+  - `tokensFresh = input + output + cacheCreation` — the honest "work done" signal (excludes cache re-feeds). Named `tokensFresh` (not `tokensGenerated`) because the model didn't "generate" cacheCreation tokens — they're input bytes billed with a cache premium.
+  - **Hero treatment**: both numbers displayed together — e.g., *"1.2B tokens processed · 240M fresh · across 22 days of session retention"*. Magnitude + honesty in the same glance. No "primary" / "secondary" hierarchy; they read as a pair. This pre-empts the "wow Claude built this with juiced numbers" failure mode the AI-peer audience would otherwise diagnose on sight.
 - **`largestSingleCommit.messageFirstLine` is DROPPED from the schema.** Commit subjects can contain `C:\Users\...`, `/Users/...`, `~`-paths, internal slugs, `@mentions`, or accidentally-pasted secrets. The "+4,200-line commit on Apr 22" story works with `sha + dateISO + linesAdded + linesRemoved` alone. Removing the field eliminates a whole class of public-data leak vectors AND simplifies the privacy-stripping discipline.
 - **Privacy by construction is STRUCTURAL, not documentary.** The session-tokens parser uses a pick-list pattern — the parsed object has exactly **seven** keys (timestamp, isSidechain, model + the four `usage` integers), constructed as an EXPLICIT object literal (no `{...rest}` destructuring), and the parent `line` object is never retained by reference. A `Pick<T, K>` TypeScript pattern + a `satisfies ParsedAssistantLine` assertion enforce the shape at compile time. An assertion-based allowlist test (not a text snapshot) compares the published JSON's full key-path set against a hand-coded frozen list. A pre-publish grep-guard in the GitHub Action refuses to commit `public/data/stats.json` if it contains forbidden path / username / secret patterns (see Privacy by Construction section for the full enumeration).
 - **Tests are required for §0.4, §0.5b, §0.6b.** Zero tests exist today (vitest is wired in `tools/claude-credit/package.json` but the harness has never run). Other units defer with a stated reason. See §0.10.
@@ -169,7 +170,7 @@ export interface TokenStats {
 
   // Aggregates (named to avoid the ambiguous "totalTokens")
   tokensProcessed: number;  // input + output + cacheCreation + cacheRead — magnitude shock
-  tokensGenerated: number;  // input + output + cacheCreation — work signal (excludes cheap re-feeds)
+  tokensFresh: number;  // input + output + cacheCreation — work signal (excludes cheap re-feeds)
 
   // Per-model breakdown (model name normalized: "claude-opus-4-7" → "Opus 4.7")
   byModel: Array<{ model: string; sessions: number; tokensProcessed: number }>;
@@ -188,9 +189,10 @@ export interface EditorialContent {
   heroImage: string | null;
   liveUrl: string | null;
   repoUrl: string | null;
-  status: 'active' | 'meta';  // 'shelved' removed — archive collective is a separate surface
+  status: 'active' | 'shelved' | 'meta';  // 3-value: shelved kept open for per-archive detail pages
   description: string;
   gallery: string[];
+  largestCommitCaption?: string;  // optional Briggsy-authored caption rendered next to largestSingleCommit
 }
 
 export interface ArchiveCollective {
@@ -204,7 +206,7 @@ export interface ArchiveCollective {
   totalAllBytes: number;
   totalCommits: number;
   totalTokensProcessed: number;
-  totalTokensGenerated: number;
+  totalTokensFresh: number;
   totalSessions: number;
 }
 ```
@@ -222,7 +224,7 @@ export interface MultiProjectReport {
     // ... existing 13 fields stay ...
     // 0.5b — token aggregates
     totalTokensProcessed: number;
-    totalTokensGenerated: number;
+    totalTokensFresh: number;
     totalSessions: number;
     tokenWindowStartISO: string | null;  // min across non-null project starts
     tokenWindowEndISO: string | null;    // max across non-null project ends
@@ -256,7 +258,7 @@ function emptyStats(): GitStats {
 **A.6 — land minimal consumer-side casts inside Batch A so typecheck is GREEN at the end.** This avoids a half-landed state where "the type frame compiled" is ambiguous against "all consumers broke." Concretely, inside the SAME Batch A commit:
 
 - In `report.ts` line 75 (the `return { … }` block of `buildProjectReport`), add the five new ProjectReport fields with placeholder values that satisfy the new types: `assetBytesByKind: { images: 0, audio: 0, video: 0, fonts: 0, 'misc-media': 0 }`, `topSubcategories: []`, `tokens: null`, `editorial: null`, `kind: 'active' as const`. Add a `// TODO(0.2 / 0.3 / 0.5b / 0.6): replace placeholder` comment above each so each Batch B unit knows which placeholder it replaces.
-- In `multi-report.ts` line 131 (the `return { report: { … } }` block of `buildMultiProjectReport`), add the new top-level fields with placeholder values: `meta: []`, `archiveCollective: null`, and extend `combined` with `totalTokensProcessed: 0`, `totalTokensGenerated: 0`, `totalSessions: 0`, `tokenWindowStartISO: null`, `tokenWindowEndISO: null`, `tokenWindowDays: null`, `modelBreakdown: []`. Each gets the same `// TODO(0.5b / 0.6b): replace placeholder` marker.
+- In `multi-report.ts` line 131 (the `return { report: { … } }` block of `buildMultiProjectReport`), add the new top-level fields with placeholder values: `meta: []`, `archiveCollective: null`, and extend `combined` with `totalTokensProcessed: 0`, `totalTokensFresh: 0`, `totalSessions: 0`, `tokenWindowStartISO: null`, `tokenWindowEndISO: null`, `tokenWindowDays: null`, `modelBreakdown: []`. Each gets the same `// TODO(0.5b / 0.6b): replace placeholder` marker.
 
 **A.7 — verify Batch A compiles green:** `cd C:/Users/brigg/ai-learning-journey/tools/claude-credit && pnpm typecheck`. Expected outcome: **clean exit** — every new type is satisfied by a placeholder. Each Batch B unit then REPLACES its placeholder with the real implementation; the `pnpm typecheck` gate stays binary green across the whole phase. This trades a slightly larger Batch A commit for a binary signal at every subsequent step.
 
@@ -376,9 +378,9 @@ where X ∈ {
 combined.totalTokensProcessed = Σ(projects[].tokens?.tokensProcessed ?? 0)
                               + Σ(meta[].tokens?.tokensProcessed ?? 0)
                               + (archiveCollective?.totalTokensProcessed ?? 0)
-combined.totalTokensGenerated = Σ(projects[].tokens?.tokensGenerated ?? 0)
-                              + Σ(meta[].tokens?.tokensGenerated ?? 0)
-                              + (archiveCollective?.totalTokensGenerated ?? 0)
+combined.totalTokensFresh = Σ(projects[].tokens?.tokensFresh ?? 0)
+                              + Σ(meta[].tokens?.tokensFresh ?? 0)
+                              + (archiveCollective?.totalTokensFresh ?? 0)
 combined.totalSessions        = Σ(projects[].tokens?.sessionCount ?? 0)
                               + Σ(meta[].tokens?.sessionCount ?? 0)
                               + (archiveCollective?.totalSessions ?? 0)
@@ -688,7 +690,7 @@ Per-project:
 - `cacheCreationInputTokens = Σ cache_creation_input_tokens`
 - `cacheReadInputTokens = Σ cache_read_input_tokens`
 - `tokensProcessed = input + output + cacheCreation + cacheRead`
-- `tokensGenerated = input + output + cacheCreation` (NO cache reads — those are cheap re-feeds)
+- `tokensFresh = input + output + cacheCreation` (NO cache reads — those are cheap re-feeds)
 - `sidechainTokens = Σ (tokensProcessed contribution from lines where sidechain === true)`
 
 ### Model name normalization
@@ -739,7 +741,7 @@ Plumb `homeDir` through `BuildReportOptions` so tests can inject a stub. Existin
 
 In `multi-report.ts` lines 99-127 aggregation loop → extend with:
 - `combined.totalTokensProcessed += p.tokens?.tokensProcessed ?? 0` (null-skip)
-- `combined.totalTokensGenerated += p.tokens?.tokensGenerated ?? 0`
+- `combined.totalTokensFresh += p.tokens?.tokensFresh ?? 0`
 - `combined.totalSessions += p.tokens?.sessionCount ?? 0`
 - `combined.tokenWindowStartISO = min(..., p.tokens?.windowStartISO)` (null-skip; lexical min works on ISO strings)
 - `combined.tokenWindowEndISO = max(...)` similarly
@@ -749,19 +751,19 @@ In `multi-report.ts` lines 99-127 aggregation loop → extend with:
 ### Verify
 
 ```
-pnpm dev C:/Users/brigg/ai-learning-journey/projects/burned --json | jq '.tokens | {windowDays, sessionCount, sidechainTokens, tokensProcessed, tokensGenerated, byModel: .byModel[0:3], parseHealth}'
+pnpm dev C:/Users/brigg/ai-learning-journey/projects/burned --json | jq '.tokens | {windowDays, sessionCount, sidechainTokens, tokensProcessed, tokensFresh, byModel: .byModel[0:3], parseHealth}'
 ```
 Expected on BURNED:
 - `windowDays` between 5 and 45 (recent activity, within rotation).
 - `sessionCount > 5` (BURNED is heavily worked).
 - `tokensProcessed > 100_000_000` (BURNED is 100M+ tokens — magnitude shock target).
-- `tokensProcessed > tokensGenerated` (cache reads are a large fraction).
+- `tokensProcessed > tokensFresh` (cache reads are a large fraction).
 - `byModel[0].model` is `"Opus 4.7"` (normalized, NOT `"claude-opus-4-7"`).
 - `parseHealth.lineParseErrors` is small (single-digit; some early-rotation lines may be truncated).
 
 Multi-project verify:
 ```
-pnpm dev --all --json | jq '.combined | {totalTokensProcessed, totalTokensGenerated, totalSessions, tokenWindowDays, modelBreakdown: .modelBreakdown[0:3]}'
+pnpm dev --all --json | jq '.combined | {totalTokensProcessed, totalTokensFresh, totalSessions, tokenWindowDays, modelBreakdown: .modelBreakdown[0:3]}'
 ```
 
 **Note on `pnpm dev` arg passthrough (verified 2026-05-24):** pnpm 10.30.3 no longer strips the `--` separator for npm-script pass-through — it forwards `--` to the script literally, which `parseArgs` in `cli.ts` would log as `Warning: unknown flag "--" ignored`. The verify probes above use the bare form `pnpm dev <args>` which works cleanly because pnpm forwards positional args without a separator. If a future pnpm version changes this, fall back to `npx tsx src/cli.ts <args>` from the package directory.
@@ -784,7 +786,7 @@ pnpm dev --all --json | jq '.combined | {totalTokensProcessed, totalTokensGenera
 
 7. **Sidechain accounting.** Fixture line with `isSidechain: true` contributes to `sidechainTokens` AND `tokensProcessed`.
 
-8. **Token aggregate math.** Fixture line with `input_tokens: 100, output_tokens: 200, cache_creation_input_tokens: 50, cache_read_input_tokens: 1000`. Assert `tokensProcessed === 1350`, `tokensGenerated === 350`.
+8. **Token aggregate math.** Fixture line with `input_tokens: 100, output_tokens: 200, cache_creation_input_tokens: 50, cache_read_input_tokens: 1000`. Assert `tokensProcessed === 1350`, `tokensFresh === 350`.
 
 9. **Model normalization.** Fixture lines with `claude-opus-4-7` and an unknown model `claude-future-7-0`. Assert byModel entries have `"Opus 4.7"` and `"claude-future-7-0"` respectively.
 
@@ -813,9 +815,10 @@ editorial?: {
   heroImage?: string | null;
   liveUrl?: string | null;
   repoUrl?: string | null;
-  status?: 'active' | 'meta';  // defaults to 'active'
+  status?: 'active' | 'shelved' | 'meta';  // defaults to 'active'
   description: string;
   gallery?: string[];
+  largestCommitCaption?: string;  // optional storytelling caption (see §0.6 details)
 };
 ```
 
@@ -954,7 +957,7 @@ In `multi-report.ts`:
      totalAllBytes: Σ ...,
      totalCommits: Σ p.git.totalCommits,
      totalTokensProcessed: Σ p.tokens?.tokensProcessed ?? 0,
-     totalTokensGenerated: Σ p.tokens?.tokensGenerated ?? 0,
+     totalTokensFresh: Σ p.tokens?.tokensFresh ?? 0,
      totalSessions: Σ p.tokens?.sessionCount ?? 0,
    };
    // null if archivePaths is empty
@@ -1010,7 +1013,7 @@ Expected after preflight −1.2 lands its YAML edit:
 6. **Omnibus verify** — runs the now-published binary (the `claude-credit` global command), confirming dist/ is the version under test:
    ```
    claude-credit C:/Users/brigg/ai-learning-journey/projects/burned --json \
-     | jq '.git | {firstCommitISO, lastCommitISO, projectAgeDays}, .git.linesByAuthor[0], .git.timeline | {activeDays, peakDay, largestSingleCommit}, .assetBytesByKind, .topSubcategories[0:2], .tokens | {windowDays, sessionCount, tokensProcessed, tokensGenerated, byModel: .byModel[0]}, .editorial, .kind'
+     | jq '.git | {firstCommitISO, lastCommitISO, projectAgeDays}, .git.linesByAuthor[0], .git.timeline | {activeDays, peakDay, largestSingleCommit}, .assetBytesByKind, .topSubcategories[0:2], .tokens | {windowDays, sessionCount, tokensProcessed, tokensFresh, byModel: .byModel[0]}, .editorial, .kind'
    ```
    All sub-paths must return non-null where expected (Per BURNED ground truth: editorial may be null until preflight −1.5 authors the worksheet block).
 
@@ -1035,7 +1038,7 @@ The original plan tagged §0.8 as "not blocking for site work but keeps the tool
 In `renderProjectMarkdown` (markdown.ts:33):
 - New "Tempo" subsection under Git: render `firstCommitISO`, `lastCommitISO`, `projectAgeDays`, `timeline.activeDays`, `timeline.peakDay`, `timeline.largestSingleCommit` (all null-aware — em-dash for null).
 - New "Authored By" table: render top 5 entries from `linesByAuthor` with author / commits / coAuthoredCommits / linesAdded / linesRemoved.
-- New "Tokens" subsection (skip if `tokens === null`): render `tokensProcessed`, `tokensGenerated`, `sessionCount`, `windowStartISO → windowEndISO (windowDays days)`, top 3 entries from `byModel`. **Always include the window footnote** — never quote without it.
+- New "Tokens" subsection (skip if `tokens === null`): render `tokensProcessed`, `tokensFresh`, `sessionCount`, `windowStartISO → windowEndISO (windowDays days)`, top 3 entries from `byModel`. **Always include the window footnote** — never quote without it.
 - New "Assets" table: render `assetBytesByKind` (5 rows: images/audio/video/fonts/misc-media).
 - New "Top subcategories" table: render `topSubcategories` (5 rows: tier / category / subcategory / files / lines / bytes).
 - Header line: if `editorial?.oneLiner` is set, prepend it as a `> <oneLiner>` blockquote.
@@ -1164,7 +1167,7 @@ tools/claude-credit/test/fixtures/multi-fixture/
 
 2. **Aggregation invariants — all three** (same file). Verify all three invariants from the Aggregation invariants section:
    - **Invariant A (grandTotals sum-class)** for X ∈ {AuthoredFiles, AuthoredBytes, AuthoredLines, PipelineGeneratedFiles, PipelineGeneratedBytes, AllBytes, Commits}.
-   - **Invariant B (token sum-class)** for `totalTokensProcessed`, `totalTokensGenerated`, `totalSessions`.
+   - **Invariant B (token sum-class)** for `totalTokensProcessed`, `totalTokensFresh`, `totalSessions`.
    - **Invariant C (window min/max)** for `tokenWindowStartISO === min(non-null project starts)`, `tokenWindowEndISO === max(non-null project ends)`, `tokenWindowDays === floor((end - start) / 86_400_000)` when both bounds non-null else null.
    
    Run twice: once on a fixture with `archive:` populated, once without (`archiveCollective` is null). Once with a project that has `tokens: null` mixed with projects that have token data.
@@ -1272,7 +1275,7 @@ Phase 0 preserves these guarantees:
 | **Subdir-slug false-merge** (`data-engineering` ↔ `data-engineering-atc`) | Longest-prefix-match-wins sort + `slug.startsWith(parent + '-') && !slug.startsWith(parent + '--')` separator rule. Test 3 in §0.5b explicitly covers a hypothetical `data-engineering-other` config to catch regressions. |
 | **Worktree slug split** (BURNED worktree session tokens orphan) | `^<parent>--claude-worktrees-` match. Confirmed on disk at deepening (real worktree slug exists). Test 2 in §0.5b. |
 | **Window-bounded floor misread as lifetime** | UI mandates "across N days of session retention" footnote on every token surface. Honesty signal. Plan §0.5b honesty constraint is load-bearing. |
-| **`tokensProcessed` vs `tokensGenerated` confusion in downstream phases** | Both fields ship; both names are unambiguous. Hero PRIMARY uses `tokensProcessed` (per spec); detail page shows both with breakdown. No single ambiguous `totalTokens` field exists. |
+| **`tokensProcessed` vs `tokensFresh` confusion in downstream phases** | Both fields ship; both names are unambiguous. Hero displays BOTH side-by-side (locked dual-hero treatment); detail page renders the full breakdown. No single ambiguous `totalTokens` field exists. The name `tokensFresh` (NOT `tokensGenerated`) is precise — `cacheCreation` is fresh input that got cached, not model-generated output. |
 | **`messageFirstLine` path leak** | Field DROPPED from schema. Eliminated at source. |
 | **Public stats.json grows new keys without allowlist update** | §0.10 stats-shape allowlist test fails CI on any key-path not in `ALLOWED_KEY_PATHS` (hand-coded array in `src/strip-for-publish.ts`). Adding a field requires editing the array — a deliberate, reviewable change, not a bless-and-go snapshot update. |
 | **Backward-compat break for `projects:`-only configs** | Empty-default in `multi-report.ts` (`config?.meta ?? []`, `config?.archive ?? []`). §0.10 test (3) explicitly loads a pre-preflight YAML and asserts `meta = []` + `archiveCollective = null`. |
@@ -1301,9 +1304,9 @@ The deepening locks decisions that affect later phases. Apply these amendments w
 
 The cascade carries CONTRACT (schema facts), not CONTENT (display decisions). Phase 3's deepening picks the content per its own pass.
 
-- **CONTRACT: hero binds to one of `{combined.totalTokensProcessed, combined.totalTokensGenerated}`** — both fields are guaranteed present on the data shape. NOT `combined.totalTokens` (no longer a field name — Phase 0 split it into two unambiguous fields). Phase 3 deepening picks which is primary, with the dual-number magnitude-vs-honesty tradeoff (see Strategic Decisions below) on the table.
-- **CONTRACT: every token surface is window-bounded.** `combined.tokenWindowDays` is the load-bearing footnote. Phase 3 MUST surface it on every page that displays a token number. The honesty signal is non-optional per the §0.5b honesty constraint.
-- **CONTRACT: secondary stat options include `combined.totalAuthoredLines`** (lines authored). Phase 3 deepening picks whether to use it, demote it, or pair with a different number.
+- **LOCK: hero displays BOTH `combined.totalTokensProcessed` AND `combined.totalTokensFresh` side-by-side** (decided 2026-05-24 at doc-review). Reading example: *"1.2B tokens processed · 240M fresh · across N days of session retention"*. Magnitude + honesty in the same glance — pre-empts the "wow Claude built this with juiced numbers" failure mode for the AI-peer audience. Phase 3 deepening picks reading order, type weights, exact typography, and the supporting line (lines authored / sessions / project count), but the dual-number treatment is fixed.
+- **LOCK: every token surface is window-bounded.** `combined.tokenWindowDays` is the load-bearing footnote. Phase 3 MUST surface it on every page that displays a token number. The honesty signal is non-optional per the §0.5b honesty constraint.
+- **CONTRACT: secondary stats** can pull from `combined.totalAuthoredLines`, `combined.totalCommits`, `combined.totalSessions`, `combined.projectCount`. Phase 3 deepening picks which to feature.
 
 ### `phase-4-grid.md`
 
@@ -1316,7 +1319,7 @@ The cascade carries CONTRACT (schema facts), not CONTENT (display decisions). Ph
 
 - **CONTRACT: "View source →" affordance** reads from `editorial.repoUrl` (preflight cascade requirement; data field is locked here in Phase 0).
 - **CONTRACT: detail page handles `tokens === null` per null discipline** — AUTHORED BY drops the tokens column; TOKENS CONSUMED section is omitted from the page (not rendered as "0 tokens").
-- **CONTRACT: TOKENS CONSUMED block has access to** `tokensProcessed`, `tokensGenerated`, `sessionCount`, `windowStartISO → windowEndISO (windowDays)`, per-model breakdown from `byModel`, `sidechainTokens`. Phase 5 composes the visual.
+- **CONTRACT: TOKENS CONSUMED block has access to** `tokensProcessed`, `tokensFresh`, `sessionCount`, `windowStartISO → windowEndISO (windowDays)`, per-model breakdown from `byModel`, `sidechainTokens`. Phase 5 composes the visual.
 - **CONTRACT: optional `editorial.largestCommitCaption?: string`** — Phase 5 renders next to `largestSingleCommit` numbers if present, falls back to numbers-only otherwise. Restores storytelling beat lost when `messageFirstLine` was dropped.
 - **CONTRACT: `Archive.tsx` detail page** at route `/archive` — renders archive project names from `archiveCollective.projectNames` + Briggsy-authored one-liners (content authored in preflight −1.5).
 
@@ -1330,8 +1333,8 @@ Greps are circular: they pass when the cascade commit literally wrote the patter
 
 **Pre-cascade state (TODAY, before Phase 0 executes) — verified findings to fix during the cascade commit:**
 
-- `phase-3-hero.md` currently references `combined.totalTokens` — a field name that no longer exists. The cascade commit MUST replace it with `combined.totalTokensProcessed` (or `tokensGenerated`, per Phase 3's deepening choice once locked).
-- `phase-4-grid.md` currently references a `shelved` status branch on `StatusMarker` — the `EditorialContent.status` enum is now `'active' | 'meta'` only. The cascade commit MUST remove the `shelved` branch; the archive surface lives in the collective tile, not in any per-project tile's status.
+- `phase-3-hero.md` currently references `combined.totalTokens` — a field name that no longer exists. The cascade commit MUST replace it with the LOCKED dual-hero treatment: BOTH `combined.totalTokensProcessed` AND `combined.totalTokensFresh` rendered side-by-side per the Phase 3 cascade contract above.
+- `phase-4-grid.md` currently references a `shelved` status branch on `StatusMarker` — **KEEP this branch.** The doc-review reopened `EditorialContent.status` to three values (`'active' | 'shelved' | 'meta'`). The grid still ships the archive-collective tile as the v1 surface for shelved projects in aggregate, but the per-project `'shelved'` status path stays intact so a future Phase 5 pass can add per-archive detail pages without a schema migration.
 - `phase-2-data-wiring.md` currently doesn't reference `meta[]`, `archiveCollective`, or the grep-guard. The cascade commit MUST add them.
 - `phase-5-detail.md` currently doesn't handle `tokens === null` gracefully and doesn't reference `Archive.tsx` or `sidechainTokens`. The cascade commit MUST add them.
 - `phase-8-deploy.md` currently has no grep-guard step. The cascade commit MUST add it under the deploy workflow.
@@ -1341,9 +1344,9 @@ Greps are circular: they pass when the cascade commit literally wrote the patter
 | Phase | Open the file and confirm... |
 |---|---|
 | phase-2-data-wiring.md | `refresh-stats.ts` walks BOTH `report.projects[*].editorial.heroImage` AND `report.meta[*].editorial.heroImage` for path rewrite. Does NOT strip anything from `archiveCollective` (no projectPath there). Imports `stripForPublish` from `tools/claude-credit/src/strip-for-publish.ts` (single source of truth — same function the §0.10 test uses). |
-| phase-3-hero.md | Hero binds to `combined.totalTokensProcessed` OR `combined.totalTokensGenerated` (Phase 3's choice). The window footnote (`combined.tokenWindowDays` "across N days of session retention") is on every token surface. No reference to a `totalTokens` field. |
-| phase-4-grid.md | Grid splits on `kind === 'active'` / `kind === 'meta'` / `archiveCollective` (last position, doesn't sort by bytes). No `'shelved'` status branch. StatusMarker handles `'active'` (default, no marker) and `'meta'` (subtle indicator) only. |
-| phase-5-detail.md | "View source →" reads `editorial.repoUrl`. `tokens === null` path renders no TOKENS CONSUMED section. TOKENS block uses `tokensProcessed`/`tokensGenerated`/`sessionCount`/window/byModel/`sidechainTokens`. Optional `editorial.largestCommitCaption` renders next to `largestSingleCommit` if present. `Archive.tsx` at `/archive` renders `archiveCollective.projectNames`. |
+| phase-3-hero.md | Hero displays BOTH `combined.totalTokensProcessed` AND `combined.totalTokensFresh` side-by-side (per the locked dual-hero treatment). The window footnote (`combined.tokenWindowDays` "across N days of session retention") is on every token surface. No reference to a `totalTokens` field. |
+| phase-4-grid.md | Grid splits on `kind === 'active'` / `kind === 'meta'` / `archiveCollective` (last position, doesn't sort by bytes). StatusMarker handles all three status values: `'active'` (default, no marker), `'shelved'` (faded/badge for any per-project tile that opts in), `'meta'` (subtle indicator). v1 ships zero per-project tiles with `status: 'shelved'` — those projects all roll into `archiveCollective` instead — but the branch is preserved so Phase 5 can add per-archive detail pages later. |
+| phase-5-detail.md | "View source →" reads `editorial.repoUrl`. `tokens === null` path renders no TOKENS CONSUMED section. TOKENS block uses `tokensProcessed`/`tokensFresh`/`sessionCount`/window/byModel/`sidechainTokens`. Optional `editorial.largestCommitCaption` renders next to `largestSingleCommit` if present. `Archive.tsx` at `/archive` renders `archiveCollective.projectNames`. |
 | phase-8-deploy.md | GitHub Action's deploy workflow has a `validate-stats-json` step that runs the grep-guard against `public/data/stats.json` BEFORE the `git commit` step. Refuses to commit on any match. Pattern list matches the Privacy by Construction section in this Phase 0 plan. |
 
 ---

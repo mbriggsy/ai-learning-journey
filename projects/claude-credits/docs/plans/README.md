@@ -23,7 +23,7 @@ Briggsy asked for: "A Vercel-hosted drippy GSAPy wet set of web pages with fucki
 | # | Phase | File |
 |---|---|---|
 | −1 | Pre-flight verifications | [phase-preflight.md](phase-preflight.md) |
-| 0 | Fill data gaps in `tools/claude-credit/` | [phase-0-data-gaps.md](phase-0-data-gaps.md) |
+| 0 | Data contract (`tools/claude-credit/`) | [phase-0-data-gaps.md](phase-0-data-gaps.md) |
 | 1 | Scaffold `projects/claude-credits/` | [phase-1-scaffold.md](phase-1-scaffold.md) |
 | 2 | Data wiring | [phase-2-data-wiring.md](phase-2-data-wiring.md) |
 | 3 | Hero (the first "wow") | [phase-3-hero.md](phase-3-hero.md) |

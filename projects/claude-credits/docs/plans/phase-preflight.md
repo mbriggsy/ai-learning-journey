@@ -800,7 +800,7 @@ The deepening locked decisions in this preflight that affect other phase plan do
   - `meta[*]` paths → emit `ProjectReport` with `kind: 'meta'`. Same shape, different tag.
   - `archive[*]` paths → scan + contribute to `combined.totalTokens` / `combined.totalLines` / `combined.totalBytes`, but emit ONE rolled-up `ArchiveCollective` block, not individual `ProjectReport` entries.
   - New schema: `MultiProjectReport.archiveCollective: ArchiveCollective | null` where `ArchiveCollective = { projectNames: string[]; totalTokens: number; totalLines: number; totalBytes: number; }`.
-- **UPDATE §0.6 `EditorialContent` type** — change `status: 'active' | 'shelved' | 'meta'` to `status: 'active' | 'meta'`. The `shelved` value is removed; the archive collective is a separate surface (not an EditorialContent row), so the enum has no consumer for `shelved`.
+- **UPDATE §0.6 `EditorialContent` type** — ~~change `status: 'active' | 'shelved' | 'meta'` to `status: 'active' | 'meta'`~~ **AMENDMENT REOPENED 2026-05-24 at Phase 0 doc-review.** The status enum stays at THREE values (`'active' | 'shelved' | 'meta'`). The reduction silently foreclosed per-archive detail pages (ideation §6 commits to "Detail pages explain what was tried"). The 3-value enum keeps that path open; v1 still ships the archive-collective grid tile as the surface for shelved projects in aggregate, but Phase 5 can later add per-archive detail pages without a v0.3 schema migration. The Phase 0 doc-review pass (`phase-0-data-gaps.md` Locked Decisions §3) is the authoritative source for this lock; preflight retains the original amendment with this strikethrough so the history is visible.
 
 ### `phase-4-grid.md`
 
@@ -817,8 +817,8 @@ The deepening locked decisions in this preflight that affect other phase plan do
 
 ```bash
 # Phase 0: 0.6b must exist; 0.9 must be gone; status enum must be 2-value
-grep -n "0.6b\|0.9\|'active' | 'shelved'\|'active' | 'meta'" projects/claude-credits/docs/plans/phase-0-data-gaps.md
-# Expect: 0.6b present, 0.9 absent, only 'active' | 'meta' enum
+grep -n "0.6b\|0.9 — REMOVED\|'active' | 'shelved' | 'meta'" projects/claude-credits/docs/plans/phase-0-data-gaps.md
+# Expect: 0.6b present, 0.9 — REMOVED marker present, 3-value status enum (reopened at Phase 0 doc-review)
 
 # Phase 4: 12-tile count + "the misses" mention
 grep -nE "12 surfaces|the misses|11 project tiles" projects/claude-credits/docs/plans/phase-4-grid.md
@@ -846,4 +846,4 @@ Then open [phase-0-data-gaps.md](phase-0-data-gaps.md) and start. Capture work c
 
 ---
 
-← [Index](README.md) | Next → [Phase 0 — Fill data gaps](phase-0-data-gaps.md)
+← [Index](README.md) | Next → [Phase 0 — Data contract](phase-0-data-gaps.md)

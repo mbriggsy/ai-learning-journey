@@ -131,9 +131,8 @@ component-level cream plate fix; Phase 3 SVGs are transparent),
 Phase 0 spike components (`R15ChromeStamp`, `OperativePortraitFlash`,
 `BurnedLogoPlate`) stay for regression renders. Render evidence:
 `out/s01-cold-open.mp4` (1.9 MB, H264 CRF 18, 210 frames / 7.0 s) +
-PNG stills at frames 30/90/150/156/162/180/210. Pending Briggsy-eye
-sentinel `briggsy-review-4.2.signoff` for Unit 4.10 master-render
-entry.
+PNG stills at frames 30/90/150/156/162/180/210. Briggsy-eye sentinel
+`briggsy-review-4.2.signoff` written.
 
 **Unit 4.3 — COMPLETED 2026-05-23.** Verification doc at
 `videos/trailer/sample-eval/composite-build/s02-archer-test.md`.
@@ -150,8 +149,8 @@ design-lens hold-during-VO behavior. New production components:
 New animation primitives: `EASE_DRAWER_FN` + `EASE_IN_OUT_FN` (function
 forms of timing.ts CSS strings — SSoT pair per insight #057). Render
 evidence: `out/s02-briefing-setup.mp4` (2.3 MB, H264 CRF 18) + 5 PNG
-stills at frames 0/60/120/240/359. Pending Briggsy-eye sentinel
-`briggsy-review-4.3.signoff`.
+stills at frames 0/60/120/240/359. Briggsy-eye sentinel
+`briggsy-review-4.3.signoff` written.
 
 **Unit 4.4 — COMPLETED 2026-05-23 (R3, post-redo).** R1 HARD ZERO (vertical thumbnail column) → R2 (cascade with bigger cards, Briggsy flagged dead time) → R3 (VO-beat-aligned across full 27s, "lock it"). Verification doc at `videos/trailer/sample-eval/composite-build/s03-archer-test.md`. Briggsy-eye sentinel `briggsy-review-4.4.signoff` written. Cards now `OperativeCardFrame` at scale 0.45 (360×450) in diagonal cascade spanning full canvas; cascade entries restagger to land while Dash narrates ("Our autonomous field assets infiltrated the contract last quarter"); Otto-aside lands at rel 110 ("Seven operatives in the active roster"); Agent X spotlight pulse + paperwork marginalia ("// FILE: [REDACTED]  // PAPERWORK: 0") land during the "refuses to file any paperwork" beat; new `DeckStack` component (stack-of-3 card-backs + "120" badge + "// OPERATIONS" subtitle, archerStampSlap('payoff') envelope) lands at rel 437 with "Mission: a deck of one hundred and twenty operations"; new `BurnedCardReveal` component (burned.webp 440×440 with LOGO_SPRING_COLD spring + burned-fire multi-shadow glow + fade-out hook) lands dead-center at rel 540 with "One ends your career instantly"; cascade subtle "awkward lean" (scale +0.02 / rotate +1° triangle envelope) at rel 650-720 carries the dark-sting "Or ensure your colleagues don't"; BURNED fades 700-740 so cascade re-emerges for closing. Render evidence: `out/s03-mission-background.mp4` (7.5 MB, H264 CRF 18) + `out/s03-with-audio.mp4` (FFmpeg-muxed VO #1+#2 review-only build) + key stills at frames 90/130/220/460/580/680/750.
 
@@ -186,6 +185,54 @@ Distilled: insight #067 (cue startFrames against expectedFrames creates
 overtalk — read from audio-manifest, not script.ts expectedFrames) +
 insight #068 (foreign motion dialect inside a coherent visual album
 reads "weird" regardless of easing — rip-out beats patch).
+
+**Unit 4.5 R3 — PATCH 2026-05-23.** Briggsy-eye on shipped R2 caught P2
+"14,000" numeral page-bleed: `BigNumeral` fontSize=132 sized for short
+numerals ("17", "6") overflowed the 352px content area of the default
+400×520 DossierPage by ~38px on the left edge (bled onto mahogany).
+Fix: added optional `fontSize` prop to BigNumeral (default 132 preserved
+for P5/P6/P4); overrode to 96 at P2 only. Page geometry locked (page-
+width bump would cascade-conflict with P5 right edge at cx=880+200=1080
+already sharing desk space). P4 "1,407" (5 chars) at default 132 still
+fits (~324px in 352px) — verified via frame-350 single-frame render.
+Verification stills (gitignored `out/`): `s04-frame-90-p2-check.png`
+("14,000" contained) + `s04-frame-350-p4-check.png` ("1,407" contained).
+Commit `8677e3ba`.
+
+**Unit 4.6 — COMPLETED 2026-05-23 (R2, post-pan-fix).** R1 mechanical
+PASS via placeholder static loop. Briggsy-eye flagged "static image"
+on the rendered MP4; R2 added time-varying crop y-offset so the
+placeholder slowly pans down the 1920×19848 HTP fullpage capture over
+the 18s window. Phase 5 real gameplay.mp4 overwrites this anyway —
+the pan is placeholder-only motion under the head-fade so transition
+mechanics feel right. Scene composition: `<AbsoluteFill #000>` + 540f
+`<Sequence>` wrapping `<OffthreadVideo muted objectFit:cover>` +
+mandatory `<S05HeadFadeFromBlack endFrame={15} />` (symmetric pair to
+S04TailFadeToBlack — combined 30f fade-through-black is the Archer
+chapter-break grammar). NO CommsTicker per BEAT-SHEET §S05 line 619
+("clean visual focus for live-gameplay frame"); iris-wipe deferred to
+Unit 4.8. Pure visual — composition-level audio map in
+`TrailerComposition.tsx` auto-serves s05-cue-2610-dash (sparse) +
+s05-cue-2730-dash (R5 scream `[shouts]`). Phase 5 handoff ships 4
+runnable scripts: `generate-placeholder-gameplay.ts` (FFmpeg with
+`-g 30 -keyint_min 30 -vsync cfr` for OffthreadVideo seeking + time-
+varying crop pan); `sync-gameplay-clip.ts` (postinstall/prerender/
+prestudio hook writing `src/lib/gameplay-clip-source.ts` constant —
+the scene file CAN'T existsSync because Remotion bundles for browser
+context where `node:fs` is unavailable); `verify-gameplay-clip.ts`
+(ffprobe 3-gate: 540f / 1920×1080 / no audio + soft luma warning;
+uses ffmpeg `-i` direct input + signalstats stderr parse to dodge
+the lavfi `movie=` colon-escape footgun on Windows paths);
+`verify-s05-head-fade.ts` (grep gate making the mandatory overlay
+executable). Render evidence: `out/s05-gameplay-dissolve.mp4` (49.4 MB,
+H264 CRF 18, 540f / 18.000s; size jumped from 7.9 MB to 49.4 MB after
+R2 pan added — every frame has different content so inter-frame
+compression can't kick in). Verification doc at `videos/trailer/
+sample-eval/composite-build/s05-archer-test.md`. Briggsy-eye sentinel
+`briggsy-review-4.6.signoff` PENDING (Briggsy may write against
+placeholder build now OR defer until Phase 5 real-clip ship — both
+valid; Phase 4 Unit 4.10 master-render entry gated on all 6 signoffs).
+Commits `e79468fc` (Unit 4.6 ship) + `ec14bcc2` (R2 pan).
 
 **Phase 2 carry-forwards → Phase 3+** (stitch / silenceremove
 generalizations):
@@ -283,6 +330,55 @@ FFmpeg muxer gotcha):
 
 Active warnings only. Older landmines have moved to `docs/insights/` and
 `CLAUDE.md`.
+
+- **`S05HeadFadeFromBlack` is MANDATORY in S05 — `pnpm verify:s05-head-fade`
+  enforces** (LANDMINE, 2026-05-23 Unit 4.6). Symmetric pair to
+  `S04TailFadeToBlack`. Without it the S04→S05 hard cut goes from full-
+  opacity black at abs frame 2369 → bright gameplay UI at frame 2370,
+  which is EXACTLY the perceptual jump the tail fade was designed to
+  mask. The grep gate at `scripts/verify-s05-head-fade.ts` checks both
+  the import line AND the JSX usage in `S05_GameplayDissolve.tsx`. Wired
+  into Unit 4.10 anti-regression set. If you delete the overlay
+  thinking it's polish, the gate will catch it.
+- **`gameplay-clip-source.ts` is GENERATED default, but COMMITTED, not
+  gitignored** (LANDMINE, 2026-05-23 Unit 4.6). The scene file imports
+  `GAMEPLAY_CLIP_SOURCE` at module load; first-clone module resolution
+  would fail if the file didn't exist before any npm script runs.
+  Default body points at placeholder; the postinstall hook regenerates
+  on first install. `git status` may show drift between placeholder
+  and real-clip selection after a `pnpm render` — that drift is
+  intentional state ("I have gameplay.mp4 locally"). Reset to
+  placeholder via `pnpm sync-gameplay` against a missing gameplay.mp4
+  before any commit that isn't promoting Phase 5 ship. The scene file
+  CANNOT call `existsSync` — Remotion bundles scene files for browser
+  context where `node:fs` is unavailable (would crash at render time).
+- **OffthreadVideo needs keyframes for mid-stream seeking** (LANDMINE,
+  2026-05-23 Unit 4.6). Caught at first S05 render attempt: rendering
+  frame 46 failed with `Compositor error: No frame found at position
+  23552` because the initial placeholder encoding had only one keyframe
+  at frame 0. Any FFmpeg-generated input to `<OffthreadVideo>` MUST
+  pass `-g 30 -keyint_min 30 -vsync cfr` (or equivalent) to enforce
+  keyframe-per-second + constant frame rate. `-loop 1 <image>` input
+  needs `-r 30` BEFORE the input as well (sets input framerate before
+  loop expansion). Pattern in `scripts/generate-placeholder-gameplay.ts`.
+- **lavfi `movie=` source filter doesn't escape Windows colons** (LANDMINE,
+  2026-05-23 Unit 4.6). `ffprobe -f lavfi -i 'movie=C:/path/to/file.mp4'`
+  parses `C` as filter name and `:` as argument separator, fails with
+  "No such file or directory" before the path even resolves. Fix: use
+  `ffmpeg -i FILE -vf signalstats,metadata=print -f null -` with normal
+  `-i` input + parse YAVG from stderr. Pattern in
+  `scripts/verify-gameplay-clip.ts`. Don't try to escape the colon
+  (`C\:` works for lavfi but adds fragility) — just avoid lavfi entirely
+  for Windows-path inputs.
+- **Placeholder gameplay clip is regenerable via `pnpm gen:gameplay-
+  placeholder`** (LANDMINE, 2026-05-23 Unit 4.6). Output is `public/
+  trailer/gameplay-placeholder.mp4` (gitignored, 49 MB after the Ken
+  Burns pan added in R2). If it disappears (clone, manual delete), the
+  postinstall hook calls `sync-gameplay-clip.ts` which writes the
+  constant pointing at the missing file — `pnpm studio` / `pnpm render`
+  will 404 until you run `pnpm gen:gameplay-placeholder` from the
+  trailer dir. Phase 5 ships `public/trailer/gameplay.mp4` which makes
+  the placeholder irrelevant.
 
 - **Playwright composite scripts write a temp HTML under `public/trailer/`**
   (LANDMINE, 2026-05-22 Unit 3.7). Both

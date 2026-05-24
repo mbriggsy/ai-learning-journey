@@ -35,13 +35,14 @@ Other devs / Anthropic-adjacent folks. Knows what AI collab means; doesn't know 
 - Authored / Claude-authored / pipeline-generated / tool-generated split is COMPELLING to this audience, not embarrassing.
 - Light onboarding needed: peers don't need "what is a commit" but DO need "what does authored-vs-pipeline mean."
 
-### 2. Hero: ONE massive number — combined Claude API tokens consumed
+### 2. Hero: ONE dominant number — combined Claude API tokens processed
 
-Tokens primary. The AI-native metric, biggest magnitude shock for the AI-peer audience.
+`tokensProcessed` is the dominant number — the AI-native magnitude shock for the AI-peer audience. The dual-token data contract (Phase 0) splits the metric: `tokensProcessed` (includes cache re-feeds — the big number) and `tokensFresh` (excludes cheap re-feeds — the honest "work done" signal).
 
-- Lines authored, project count, files, commits drop to a supporting line below.
+- **Hero = `tokensProcessed` as the massive counter.** `tokensFresh` + the retention window ride directly beneath as a **quiet, muted honest sub-line** — subordinate by design, NOT a competing weight. The AI-peer audience knows cache-reads inflate `processed`; surfacing `fresh` in the same glance is the credibility anchor that pre-empts the "juiced numbers" read.
+- Lines authored, project count, files, commits drop to a supporting line below the sub-line.
 - Window footnote required ("across N days of session retention") — session JSONLs rotate after ~30 days; never claim lifetime totals without external billing data.
-- Tabular numerals for stable digit width during tick-up.
+- Tabular numerals for stable digit width during tick-up; the tick-up locks its magnitude unit so the suffix never flickers.
 - Don't decorate the number. Frame it cold. The magnitude IS the wow.
 
 ### 3. Per-project tile: one-liner + visual + live link

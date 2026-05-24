@@ -188,7 +188,7 @@ Before claiming v1 done:
 7. ✅ All 11 tiles render with editorial content (one-liner + hook + visual + live-link-if-deployed + status marker)
 8. ✅ AUTHORED BY block renders both `linesByAuthor` AND `tokens` data correctly on detail pages (Claude row shows tokens; Briggsy row shows "you don't tokenize")
 8a. ✅ TOKENS CONSUMED block renders on every detail page with non-null `tokens`, showing total + session count + window dates + per-model breakdown
-8b. ✅ Hero shows **tokens primary** (formatted with B/M suffix), lines as secondary supporting line — NOT the inverse
+8b. ✅ Hero shows `combined.totalTokensProcessed` as the **dominant** number (formatted with B/M suffix); `combined.totalTokensFresh` + the retention window as a **quiet honest sub-line** directly beneath; `combined.totalAuthoredLines` + counts as the **supporting stagger** below that (Option A, locked 2026-05-24 — see [phase-3-hero.md](phase-3-hero.md))
 8c. ✅ Window footnote is SURFACED on every token surface — never "lifetime" claims. Spot-check the hero subtitle and every detail page TOKENS block.
 9. ✅ Cadence sparkline renders on detail pages; activeDays/peakDay/largestSingleCommit callouts present
 10. ✅ Vercel deploy is live at `https://claude-credits.vercel.app` (or fallback)

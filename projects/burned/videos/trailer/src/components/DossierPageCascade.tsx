@@ -148,17 +148,27 @@ const FooterChrome: React.FC<{ children: React.ReactNode }> = ({ children }) => 
   </div>
 )
 
-const BigNumeral: React.FC<{ children: React.ReactNode; italic?: boolean; color?: string }> = ({
-  children,
-  italic = false,
-  color = '#947226', // ochre-9
-}) => (
+/**
+ * 132px is the default — sized for short numerals like "6" / "17" that occupy
+ * the BigNumeral focal slot at full visual weight. Long numerals ("14,000",
+ * "1,407") MUST pass a smaller `fontSize` to stay inside the 352px content
+ * area of the default 400×520 DossierPage. Bumping page width instead would
+ * cascade-conflict with the neighboring anchors (P2's anchor at cx=1000 +
+ * P5's right edge at cx=880+200=1080 already share desk space). Smaller
+ * fontSize keeps the page geometry locked.
+ */
+const BigNumeral: React.FC<{
+  children: React.ReactNode
+  italic?: boolean
+  color?: string
+  fontSize?: number
+}> = ({ children, italic = false, color = '#947226', fontSize = 132 }) => (
   <div
     style={{
       fontFamily: 'Clash Display, sans-serif',
       fontWeight: 700,
       fontStyle: italic ? 'italic' : 'normal',
-      fontSize: 132,
+      fontSize,
       color,
       letterSpacing: '0.01em',
       lineHeight: 0.95,
@@ -273,7 +283,7 @@ function P2BigNumber14k() {
           justifyContent: 'center',
         }}
       >
-        <BigNumeral>14,000</BigNumeral>
+        <BigNumeral fontSize={96}>14,000</BigNumeral>
         <SubLabel>PAGES // VOL. I OF VOL. CCXLVII</SubLabel>
         <Marginalia>+ 6 sticky notes (recovered)</Marginalia>
       </div>

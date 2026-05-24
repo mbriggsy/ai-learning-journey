@@ -43,12 +43,20 @@ console.log(`[gen-placeholder-gameplay] source: ${HTP_PNG}`)
 console.log(`[gen-placeholder-gameplay] output: ${OUT}`)
 console.log(`[gen-placeholder-gameplay] target: 18.0s @ 30fps = 540 frames, 1920x1080, H264 CRF 18, no audio`)
 
-// FFmpeg loops the still PNG into 18s of video at 30fps.
+// FFmpeg loops the still PNG into 18s of video at 30fps with a slow vertical pan
+// through the tall HTP page (Ken Burns shape). htp-fullpage.png is 1920×19848 so
+// there's ~18.4k px of vertical pan room — plenty for an 18s scroll.
+//
+// The `-loop 1 -t 18` of a still PNG renders the SAME pixels every frame; that read
+// as broken even as a stand-in (Briggsy-eye 2026-05-23). Adding a time-varying crop
+// y-offset (`(ih-1080)*t/18` walks 0→ih-1080 across the 18s window) gives the
+// placeholder actual motion under the head-fade so transition mechanics feel right.
+// Phase 5's real gameplay.mp4 overwrites this anyway; the pan is placeholder-only.
+//
 // scale + crop pattern: `force_original_aspect_ratio=increase` upscales the smaller
 // dimension to match the 1920x1080 target (NOT the invalid `=cover` that Phase 6
-// doc-review cross-phase amendment #3 caught), then `crop=1920:1080` trims overflow.
-// htp-fullpage.png is 1920x19848 (10.3:1 aspect) — increase keeps width at 1920 and
-// height tall, crop trims to center 1080-tall slice of the page.
+// doc-review cross-phase amendment #3 caught), then the time-varying crop walks
+// down the tall image.
 // `-an` strips audio per Phase 5 contract (ffmpeg -an spirit).
 //
 // Keyframe + CFR discipline for Remotion seeking (caught during first render attempt):
@@ -88,7 +96,9 @@ execFileSync(
     '-vsync',
     'cfr',
     '-vf',
-    'scale=1920:1080:force_original_aspect_ratio=increase,crop=1920:1080',
+    // Time-varying crop: y-offset = (input_height - 1080) * t / 18, walks linearly
+    // from 0 (top of HTP page) to (ih-1080) (bottom) across the 18s window.
+    "scale=1920:1080:force_original_aspect_ratio=increase,crop=1920:1080:0:'(ih-1080)*t/18'",
     '-an',
     OUT,
   ],

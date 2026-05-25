@@ -53,16 +53,30 @@ export function HeroCounter({ value, srUnit }: { value: number; srUnit: string }
       gsap.set(el, { '--sheen-x': 50, '--sheen-y': 40 })
       const setX = gsap.quickTo(el, '--sheen-x', { duration: 0.5, ease: 'power3' })
       const setY = gsap.quickTo(el, '--sheen-y', { duration: 0.5, ease: 'power3' })
+      // Cache the rect (refresh on scroll/resize) so the high-frequency pointermove handler does
+      // ZERO per-move layout reads, and listen on the number element itself — NOT window — so it
+      // never burns budget while the hero is scrolled offscreen (code-review perf finding).
+      let rect = el.getBoundingClientRect()
+      const refreshRect = () => {
+        rect = el.getBoundingClientRect()
+      }
       const onMove = contextSafe((e: PointerEvent) => {
-        const r = el.getBoundingClientRect()
-        setX(((e.clientX - r.left) / r.width) * 100) // unitless number, not "%"
-        setY(((e.clientY - r.top) / r.height) * 100)
+        setX(((e.clientX - rect.left) / rect.width) * 100) // unitless number, not "%"
+        setY(((e.clientY - rect.top) / rect.height) * 100)
       })
       // Only on hover-capable, fine pointers (touch has no cursor — sheen stays solid via CSS).
       const canHover = window.matchMedia('(hover: hover) and (pointer: fine)').matches
-      if (canHover) window.addEventListener('pointermove', onMove)
+      if (canHover) {
+        el.addEventListener('pointermove', onMove)
+        window.addEventListener('scroll', refreshRect, { passive: true })
+        window.addEventListener('resize', refreshRect)
+      }
       return () => {
-        if (canHover) window.removeEventListener('pointermove', onMove)
+        if (canHover) {
+          el.removeEventListener('pointermove', onMove)
+          window.removeEventListener('scroll', refreshRect)
+          window.removeEventListener('resize', refreshRect)
+        }
       }
     },
     { scope: rootRef, dependencies: [value] },

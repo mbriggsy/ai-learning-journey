@@ -22,7 +22,7 @@ export function ProjectGrid() {
       // SCOPED selection: useGSAP's {scope} governs context REVERT, not selector resolution —
       // a bare gsap.set('[data-tile]') resolves document-wide and would hijack any other
       // [data-tile] on the page (see insight 004). toArray(sel, root) scopes to this grid.
-      const tiles = () => gsap.utils.toArray<HTMLElement>('[data-tile]', root)
+      const tiles = () => (root ? gsap.utils.toArray<HTMLElement>('[data-tile]', root) : [])
 
       // The refresh self-heal must run UNCONDITIONALLY — Phase 7's close beat depends on a
       // global ScrollTrigger.refresh() to position its own reveal (it doesn't re-roll the race).
@@ -68,7 +68,18 @@ export function ProjectGrid() {
       const resetTileY = () => {
         if (gridRef.current) gsap.set(tiles(), { y: 0 })
       }
+      // refreshInit zeroes y for correct MEASUREMENT; 'refresh' (after measurement) RESTORES the
+      // y:40 hidden offset on tiles that haven't revealed yet — otherwise they'd enter at y:0 and
+      // the reveal degrades to a pure fade with no rise (the refresh fires before any scroll since
+      // the grid sits below the 100svh hero, so without this EVERY tile loses the slide-up). Both
+      // events fire on every refresh (incl. resize), so the rise survives resizes too.
+      const restoreTileY = () => {
+        if (!gridRef.current) return
+        const hidden = tiles().filter((el) => Number(gsap.getProperty(el, 'autoAlpha')) < 1)
+        if (hidden.length) gsap.set(hidden, { y: 40 })
+      }
       ScrollTrigger.addEventListener('refreshInit', resetTileY)
+      ScrollTrigger.addEventListener('refresh', restoreTileY)
 
       ScrollTrigger.batch(tiles(), {
         start: 'top 85%',
@@ -87,6 +98,7 @@ export function ProjectGrid() {
       return () => {
         cleanupRefresh()
         ScrollTrigger.removeEventListener('refreshInit', resetTileY)
+        ScrollTrigger.removeEventListener('refresh', restoreTileY)
       }
     },
     { scope: gridRef },

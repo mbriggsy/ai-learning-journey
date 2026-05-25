@@ -22,3 +22,6 @@ Thumbs.db
 
 # Playwright MCP verification artifacts (snapshots, console/network logs)
 .playwright-mcp/
+
+# ce:review run artifacts (transient, per-run)
+.context/

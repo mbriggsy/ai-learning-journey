@@ -13,9 +13,19 @@ function load(): Promise<MultiProjectReport> {
     if (!res.ok) throw new Error(`stats.json fetch failed: ${res.status} ${res.statusText}`)
     const data = (await res.json()) as MultiProjectReport
     // Shape assertion: a well-formed-but-wrong-shape payload (e.g. the dev SPA fallback serving
-    // index.html as 200) would otherwise sail past use() and crash a consumer with NaN/undefined.
-    // Route it to the error boundary instead.
-    if (!data || typeof data.combined !== 'object' || !Array.isArray(data.projects)) {
+    // index.html as 200, or a corrupt/old stats.json) would otherwise sail past use() and render
+    // garbage on the hero — "as of Invalid Date" from a bad scannedAt, or "NaN" from a non-numeric
+    // token field. Validate the fields the hero/grid actually render and route failures to the
+    // error boundary instead. (Surfaced by the Phase 3/4 code-review — completes the gate.)
+    if (
+      !data ||
+      typeof data.combined !== 'object' ||
+      !Array.isArray(data.projects) ||
+      typeof data.scannedAt !== 'string' ||
+      Number.isNaN(new Date(data.scannedAt).getTime()) ||
+      !Number.isFinite(data.combined.totalTokensProcessed) ||
+      !Number.isFinite(data.combined.totalAuthoredLines)
+    ) {
       throw new Error('stats.json has an unexpected shape')
     }
     return data

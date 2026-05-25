@@ -40,7 +40,13 @@ export interface GridModel {
  */
 export function buildGridModel(report: MultiProjectReport): GridModel {
   const active = sortBySize(report.projects)
-  const archive = report.archiveCollective
+  // Treat a zero-count archive as no archive: a non-null-but-empty ArchiveCollective would
+  // otherwise render "0 builds, tried and shelved" under the divider. One source of truth so
+  // both showMissesDivider and the <ArchiveTile> render gate stay correct.
+  const archive =
+    report.archiveCollective && report.archiveCollective.projectCount > 0
+      ? report.archiveCollective
+      : null
   return {
     active,
     archive,

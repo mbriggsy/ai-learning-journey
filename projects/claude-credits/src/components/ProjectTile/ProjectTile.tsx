@@ -14,7 +14,7 @@ export function ProjectTile({ project }: { project: ProjectReport }) {
 
   // Narrow once: heroSrc is string|null, so the <img src> below needs no non-null assertion
   // and the tile variant derives from a single source of truth. Runtime 404 → null → type-forward.
-  const heroSrc = imgError ? null : editorial?.heroImage || null
+  const heroSrc = imgError ? null : (editorial?.heroImage ?? null)
 
   // editorial: null → fallback hook from grandTotals (still gold). Otherwise the editorial pick.
   const hook = editorial?.hookStat ?? {
@@ -44,7 +44,7 @@ export function ProjectTile({ project }: { project: ProjectReport }) {
 
       <div className={styles.content}>
         <h3 className={styles.nameWrap}>
-          <Link to={`/project/${projectName}`} className={styles.name}>
+          <Link to={`/project/${encodeURIComponent(projectName)}`} className={styles.name}>
             {projectName}
           </Link>
         </h3>

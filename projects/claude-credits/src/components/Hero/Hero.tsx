@@ -36,20 +36,25 @@ export function Hero() {
     year: 'numeric',
   })
 
+  // One matchMedia read per render, shared by the reveal branch and the data attribute below.
+  const reducedMotion = prefersReducedMotion()
+
   // Reveal choreography (Decision 10): the number group (counter + unit label + honest
   // sub-line) lands EARLY so the `fresh` credibility anchor is in the first glance — only
   // the supporting line + taxonomy hint stagger in after the counter settles. autoAlpha + y,
   // never scale(0). Scoped to heroRef so useGSAP auto-reverts on StrictMode's double-invoke.
   useGSAP(
     () => {
-      if (prefersReducedMotion()) return // CSS net + HeroCounter already render the final state
-      gsap.from('[data-reveal="number"]', {
+      if (reducedMotion) return // CSS net + HeroCounter already render the final state
+      // Scope the selectors to heroRef — useGSAP's {scope} governs context REVERT, not selector
+      // resolution; a bare string would resolve document-wide (insight 004). Matches ProjectGrid.
+      gsap.from(gsap.utils.toArray('[data-reveal="number"]', heroRef.current), {
         autoAlpha: 0,
         y: 12,
         duration: 0.6,
         ease: 'weighted-arrive',
       })
-      gsap.from('[data-reveal="after"]', {
+      gsap.from(gsap.utils.toArray('[data-reveal="after"]', heroRef.current), {
         autoAlpha: 0,
         y: 16,
         duration: 0.6,
@@ -67,7 +72,7 @@ export function Hero() {
     <section
       ref={heroRef}
       className={styles.hero}
-      data-reduced-motion={prefersReducedMotion()} // CSS branches the sheen base off this (C3)
+      data-reduced-motion={reducedMotion} // CSS branches the sheen base off this (C3)
     >
       <div className={styles.breath} aria-hidden /> {/* gradient-breath layer (CSS @keyframes, C3) */}
       {/* reveal group: number + label + honest sub-line land together early (Decision 10) */}
@@ -100,21 +105,23 @@ export function Hero() {
         )}
       </div>
 
-      <div className={styles.supporting} data-reveal="after">
-        {hasTokens && hasAuthored && (
-          <p className={styles.supportingLine}>
-            <span className="tabular">{formatInt(combined.totalAuthoredLines)}</span> lines authored
-            across <span className="tabular">{projectCount}</span> projects
-          </p>
-        )}
-        {hasAuthored && (
+      {/* Only render (and reveal-stagger) the supporting block when there's authored substance —
+          otherwise an empty div would take a stagger slot and push the taxonomy hint in late. */}
+      {hasAuthored && (
+        <div className={styles.supporting} data-reveal="after">
+          {hasTokens && (
+            <p className={styles.supportingLine}>
+              <span className="tabular">{formatInt(combined.totalAuthoredLines)}</span> lines authored
+              across <span className="tabular">{projectCount}</span> projects
+            </p>
+          )}
           <p className={styles.supportingLine}>
             <span className="tabular">{formatInt(combined.totalAuthoredFiles)}</span> files ·{' '}
             <span className="tabular">{formatBytes(combined.totalAllBytes)}</span> ·{' '}
             <span className="tabular">{formatInt(combined.totalCommits)}</span> commits
           </p>
-        )}
-      </div>
+        </div>
+      )}
 
       <Link to="/about" className={styles.taxonomyHint} data-reveal="after">
         AUTHORED · PIPELINE-GENERATED · TOOL-GENERATED — what each tier means →

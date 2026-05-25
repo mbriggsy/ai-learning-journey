@@ -16,6 +16,12 @@ describe('formatTokens', () => {
     expect(pickTokenUnit(1e9)).toBe('B')
     expect(pickTokenUnit(999_999_999)).toBe('M')
   })
+  it('boundary: 1e6 is M / 999_999 is K, 1e3 is K / 999 is plain', () => {
+    expect(pickTokenUnit(1e6)).toBe('M')
+    expect(pickTokenUnit(999_999)).toBe('K')
+    expect(pickTokenUnit(1e3)).toBe('K')
+    expect(pickTokenUnit(999)).toBe('')
+  })
 })
 
 describe('formatInt', () => {
@@ -28,6 +34,16 @@ describe('formatBytes', () => {
   it('MB with 1 decimal', () => expect(formatBytes(5_400_000)).toBe('5.4 MB'))
   it('KB with 0 decimals (distinct from GB/MB precision)', () => expect(formatBytes(5_400)).toBe('5 KB'))
   it('raw bytes below 1 KB', () => expect(formatBytes(500)).toBe('500 B'))
+  it('seams: 1e3→KB, 1e6→MB; 999 stays bytes', () => {
+    expect(formatBytes(1_000)).toBe('1 KB')
+    expect(formatBytes(999)).toBe('999 B')
+    expect(formatBytes(1_000_000)).toBe('1.0 MB')
+  })
+  // Documented quirk: the KB tier's toFixed(0) rounds 999_999/1000 = 999.999 → "1000 KB" rather
+  // than rolling to "1.0 MB". Harmless in practice (no surface renders sub-MB byte counts), pinned
+  // so a future change to formatBytes is a conscious one.
+  it('KB rounding edge: 999_999 → "1000 KB" (intentional, pinned)', () =>
+    expect(formatBytes(999_999)).toBe('1000 KB'))
 })
 
 describe('formatModelList', () => {

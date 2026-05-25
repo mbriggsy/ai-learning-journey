@@ -49,6 +49,20 @@ describe('buildGridModel', () => {
     expect(m.active.map((p) => p.projectName)).toEqual(['b', 'a'])
     expect(m.showMissesDivider).toBe(true)
     expect(m.isEmpty).toBe(false)
+    // archive passes through by reference — ProjectGrid hands this exact object to <ArchiveTile>,
+    // so a rename/re-wrap of the field would silently break the coda with no other test failing.
+    expect(m.archive).toBe(archive)
+  })
+  it('zero-count archive normalizes to null → no "0 builds" coda, no divider', () => {
+    const empty = { projectCount: 0 } as unknown as ArchiveCollective
+    const m = buildGridModel(report([proj('a', 10)], empty))
+    expect(m.archive).toBeNull()
+    expect(m.showMissesDivider).toBe(false)
+    expect(m.isEmpty).toBe(false)
+  })
+  it('no projects + zero-count archive → isEmpty true', () => {
+    const empty = { projectCount: 0 } as unknown as ArchiveCollective
+    expect(buildGridModel(report([], empty)).isEmpty).toBe(true)
   })
   it('null archive → no misses divider', () => {
     const m = buildGridModel(report([proj('a', 10)], null))

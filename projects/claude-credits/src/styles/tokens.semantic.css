@@ -13,7 +13,7 @@
   /* Text */
   --text-primary: var(--c-cream-text);
   --text-secondary: var(--c-cool-gray);
-  --text-muted: rgba(158, 180, 196, 0.6);
+  --text-muted: rgba(158, 180, 196, 0.78); /* alpha floored at AA: 0.78 → ~5.5:1 over --surface-page (0.6 was ~3.75:1, failed). Decorative surfaces (model clause, taxonomy hint) ride this. Do NOT lower. */
   --text-on-accent: var(--c-midnight-deep);
   --text-link: var(--c-orange-dark);
 
@@ -80,7 +80,7 @@
     --surface-divider: rgba(26, 26, 28, 0.08);
     --text-primary: var(--c-warm-black);
     --text-secondary: var(--c-warm-slate);
-    --text-muted: rgba(74, 74, 82, 0.6);
+    --text-muted: rgba(74, 74, 82, 0.82); /* alpha floored at AA: 0.82 → ~4.9:1 over --surface-page (0.6 was ~3.0:1, failed). Keep in sync w/ the @media + [data-theme] blocks. Do NOT lower. */
     --text-on-accent: var(--c-cream-paper);
     --text-link: var(--c-orange-light);
     --accent-primary: var(--c-orange-light);
@@ -108,7 +108,7 @@
   --surface-divider: rgba(26, 26, 28, 0.08);
   --text-primary: var(--c-warm-black);
   --text-secondary: var(--c-warm-slate);
-  --text-muted: rgba(74, 74, 82, 0.6);
+  --text-muted: rgba(74, 74, 82, 0.82); /* AA floor — synced with the @media light block above */
   --text-on-accent: var(--c-cream-paper);
   --text-link: var(--c-orange-light);
   --accent-primary: var(--c-orange-light);

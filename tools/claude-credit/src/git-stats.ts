@@ -128,6 +128,26 @@ export async function collectGitStats(rootDir: string): Promise<GitStats> {
     /* ignore */
   }
 
+  // 0.1 — temporal context (first/last commit + age), scoped to the subtree.
+  // One newest-first pass: line[0] = newest (last commit), line[last] = oldest
+  // (first commit). NOTE: `git log --reverse --max-count=1` does NOT return the
+  // oldest commit — --max-count is applied BEFORE --reverse, so it yields the
+  // NEWEST (verified on BURNED: identical to `-1`). Derive both bounds in JS.
+  try {
+    const out = await git(rootDir, withScope(['log', '--pretty=format:%aI']));
+    const dates = out.split(/\r?\n/).map((l) => l.trim()).filter(Boolean);
+    if (dates.length > 0) {
+      const lastISO = dates[0]!;
+      const firstISO = dates[dates.length - 1]!;
+      stats.lastCommitISO = lastISO;
+      stats.firstCommitISO = firstISO;
+      const ageMs = Date.parse(lastISO) - Date.parse(firstISO);
+      stats.projectAgeDays = Number.isFinite(ageMs) ? Math.floor(ageMs / 86_400_000) : null;
+    }
+  } catch {
+    /* leave null defaults from emptyStats() */
+  }
+
   // Lifetime churn + unique files touched, scoped.
   try {
     const out = await git(rootDir, withScope(['log', '--numstat', '--pretty=format:']));

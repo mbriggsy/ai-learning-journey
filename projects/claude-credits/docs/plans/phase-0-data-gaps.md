@@ -406,12 +406,11 @@ Meta entries (tool + site) feed the magnitude: their tokens/lines/bytes count to
 
 **File:** `tools/claude-credit/src/git-stats.ts`
 
-After the existing `commitsByAuthor` block (around line 117), add a try/catch block that runs two `git log` calls scoped via `withScope()`:
+After the existing `commitsByAuthor` block, add a try/catch block that runs ONE `git log` call scoped via `withScope()` and derives both bounds in JS:
 
-- First commit: `git log --pretty=format:%aI --reverse --max-count=1 -- .`
-  - **DO NOT** use `git log ... | head -1` — `head` is a POSIX-ism. The pipe doesn't exist on Windows PowerShell paths even via `execFileAsync` (Node passes args to `git`, no shell). Use `--max-count=1` directly.
-- Last commit: `git log --pretty=format:%aI -1 -- .` (`-1` is shorthand for `--max-count=1`)
-- Age: `Math.floor((Date.parse(last) - Date.parse(first)) / 86_400_000)`. Days, floored.
+- `git log --pretty=format:%aI -- .` (newest-first). `dates[0]` = newest = **last** commit; `dates[dates.length - 1]` = oldest = **first** commit.
+  - **CORRECTED AT EXECUTION (2026-05-25).** The original plan said `git log --pretty=format:%aI --reverse --max-count=1` for the first commit. That is **WRONG** — `--max-count` is applied BEFORE `--reverse`, so the command returns the **newest** commit, not the oldest (verified on BURNED: identical to `-1`, which would force `projectAgeDays = 0`). One newest-first pass + JS indexing avoids both the gotcha AND the `head -1` POSIX-ism (the pipe doesn't exist via `execFileAsync` — Node passes args to `git` with no shell). Guard `dates[0]` / `dates[last]` for `noUncheckedIndexedAccess`.
+- Age: `Math.floor((Date.parse(last) - Date.parse(first)) / 86_400_000)`, guarded with `Number.isFinite`. Days, floored.
 
 Set `stats.firstCommitISO`, `stats.lastCommitISO`, `stats.projectAgeDays`. On exception: leave at their null defaults from `emptyStats()`.
 

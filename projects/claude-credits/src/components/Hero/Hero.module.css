@@ -1,0 +1,141 @@
+.hero {
+  min-height: 100vh;
+  min-height: 100svh; /* svh — stable, no scroll-jump (Phase 1 pattern) */
+  display: grid;
+  place-items: center;
+  align-content: center;
+  gap: var(--space-6);
+  padding: var(--space-16) var(--space-6);
+  text-align: center;
+  position: relative;
+  overflow: hidden; /* breath layer must not cause scroll */
+}
+
+/* (1) THE NUMBER — type as instrument */
+.counterWrap {
+  /* GSAP scope root for HeroCounter; inline-block so the inner width-reservation behaves */
+  display: inline-block;
+}
+.counter {
+  font-family: var(--font-display);
+  font-weight: 700;
+  font-size: var(--text-display-hero); /* clamp(4rem, 18vw, 22rem) — Phase 1 token */
+  line-height: var(--leading-display-hero); /* 0.95 — single-line numbers ONLY */
+  letter-spacing: var(--tracking-display); /* -0.04em */
+  min-width: var(--counter-ch, auto); /* reserve width → no tick-up reflow */
+  display: inline-block;
+  text-align: center; /* with padCounter's figure-space pad → constant-width, centered */
+  color: var(--text-primary); /* base + fallback (no bg-clip / reduced-motion / touch) */
+}
+
+/* Specular sheen: gated to hover-capable, fine pointers — touch gets the crisp solid color
+   (no rest-state gradient on phones; deliberate). --sheen-x/--sheen-y are UNITLESS 0–100
+   numbers (quickTo pipes raw numbers and skips unit-appending — passing "50%" would write an
+   invalid bare-number position and kill the gradient). The gradient converts via calc(* 1%).
+   A near-invisible luminance lift — NOT a chrome swipe (the disqualified slop). In DARK,
+   --text-primary is cream → the lift reads as a warm highlight; in LIGHT it's warm near-black
+   → the lift reads as a softer-grey curve. Both intentional; verify both. */
+@supports (background-clip: text) or (-webkit-background-clip: text) {
+  @media (hover: hover) and (pointer: fine) {
+    .hero:not([data-reduced-motion='true']) .counter {
+      --sheen-x: 50; /* unitless — seeded by gsap.set in C3 so quickTo doesn't start from 0 */
+      --sheen-y: 40;
+      background-image: radial-gradient(
+        120% 120% at calc(var(--sheen-x) * 1%) calc(var(--sheen-y) * 1%),
+        color-mix(in oklab, var(--text-primary) 82%, white 18%) 0%,
+        var(--text-primary) 38%
+      );
+      -webkit-background-clip: text;
+      background-clip: text;
+      color: transparent;
+    }
+  }
+}
+
+/* (2) unit label — small caps, positive tracking. Wraps legibly when the DERIVED model
+   list grows (it's unbounded by construction). max-width + balanced wrap keeps it a
+   deliberate block, never a viewport-overflowing single line. */
+.unitLabel {
+  font-family: var(--font-body);
+  font-size: var(--text-meta);
+  font-variant-caps: all-small-caps;
+  letter-spacing: 0.12em;
+  color: var(--text-secondary);
+  max-width: 32ch;
+  margin-inline: auto;
+  text-wrap: balance;
+  overflow-wrap: break-word;
+}
+.modelClause {
+  color: var(--text-muted);
+} /* decorative — --text-muted floored at AA (Phase 3 prereq) */
+
+/* (3) honest sub-line — quiet but LEGIBLE. Uses --text-secondary (≥7:1, passes WCAG AA):
+   it carries the `fresh` credibility anchor, so it's information-bearing, not decorative. */
+.honest {
+  font-family: var(--font-body);
+  font-size: var(--text-meta);
+  color: var(--text-secondary);
+  letter-spacing: 0.01em;
+}
+
+/* (4) supporting lines */
+.supporting {
+  display: grid;
+  gap: var(--space-2);
+  margin-top: var(--space-4);
+}
+.supportingLine {
+  font-family: var(--font-body);
+  font-size: var(--text-body);
+  color: var(--text-secondary);
+}
+
+/* (5) taxonomy hint — the hero's ONLY interactive element. Needs a real tap target
+   (≥44px, Apple HIG) and a visible focus ring (Phase 1 reset.css strips the default). */
+.taxonomyHint {
+  margin-top: var(--space-8);
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  min-height: 44px;
+  padding: var(--space-3) var(--space-4);
+  max-width: 40ch;
+  text-wrap: balance;
+  font-family: var(--font-body);
+  font-size: var(--text-meta);
+  font-variant-caps: all-small-caps;
+  letter-spacing: 0.1em;
+  color: var(--text-muted); /* decorative; --text-muted floored at AA */
+  border-radius: var(--radius-chip);
+  transition: color 0.25s ease; /* motion tokens live in TS; literal here */
+}
+.taxonomyHint:hover {
+  color: var(--text-secondary);
+}
+.taxonomyHint:focus-visible {
+  outline: 2px solid var(--accent-focus);
+  outline-offset: 4px;
+  color: var(--text-secondary);
+}
+
+/* gradient breath layer — keyframes activated in C3 */
+.breath {
+  position: absolute;
+  inset: -20%;
+  z-index: -1;
+  pointer-events: none;
+  background: radial-gradient(60% 50% at 50% 38%, var(--surface-page-gradient-stop), transparent 70%);
+  opacity: 0.7;
+}
+
+/* explicit phone polish (Phase 1 mobile cascade: 600px) */
+@media (max-width: 600px) {
+  .hero {
+    padding: var(--space-12) var(--space-4);
+    gap: var(--space-4);
+  }
+  .supportingLine {
+    font-size: var(--text-meta);
+  }
+}

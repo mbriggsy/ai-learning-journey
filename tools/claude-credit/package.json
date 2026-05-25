@@ -1,6 +1,6 @@
 {
   "name": "claude-credit",
-  "version": "0.1.0",
+  "version": "0.2.0",
   "description": "Project-agnostic CLI that tallies every byte of authored / pipeline-generated work in a project. For exec slides and video stat sheets.",
   "type": "module",
   "bin": {

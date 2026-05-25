@@ -2,8 +2,14 @@
 created: 2026-05-24T09:46:48-04:00
 deepened: 2026-05-24T14:51:45-04:00
 doc-reviewed: 2026-05-24T15:18:00-04:00
-coded:
+coded: 2026-05-25T12:49:16-04:00
 ---
+
+> **EXECUTED 2026-05-25 — corrections discovered at build time (the code is now truth; these note where reality diverged from this plan):**
+> 1. **`react-router-dom` → `react-router`.** Decision 2 below said "install `react-router-dom`, import from `react-router`." Under pnpm's strict node_modules the transitive `react-router` is NOT hoisted, so that import fails (`TS2307`). In v7 `react-router` IS the canonical package; `react-router-dom` only re-exports it plus the data-router-mode `HydratedRouter`/`RouterProvider` we don't use. **We depend on `react-router` directly.** Decision 2, the pin, the landmine, and the Cascade note below are corrected in place.
+> 2. **`package.json` needs `pnpm.onlyBuiltDependencies: ["esbuild"]`** (sibling `burned` does the same) — without it pnpm 10 skips esbuild's postinstall and Vite can't find its platform binary. §1.2's block omitted it.
+> 3. **Dev port 5175, not 5173** — 5173 collides with UMB's dev server. (`vite.config.ts` `server.port`.)
+> 4. **Added `public/favicon.svg`** (minimal ascending-credits placeholder mark, linked in `index.html`) to clear the favicon 404 that tripped the no-console-errors gate. Real mark = Phase 9.
 
 # Phase 1 — Scaffold `projects/claude-credits/`
 
@@ -19,7 +25,7 @@ Getting the foundation right matters more here than anywhere else in the project
 
 1. **Vite 8, not Vite 7.** The pre-deepening plan said `vite@^7`; the README's stack row states the stack without pinning a Vite version. Both are corrected: **both** sibling projects ship Vite 8 (`burned` on `^8.0.3`, `undercover-mob-boss` on `^8.0.0`; Context7 latest stable ~`8.0.10` as of 2026-05-24). Pin `vite@^8.0.10`. The README's stack row gains an explicit `vite@^8.0.10` pin in the same commit (see Cascade).
 
-2. **`react-router-dom` v7 is net-new to the monorepo — and it is the right call.** No sibling uses a client router: `burned` is multi-page (separate `board.html` / `player.html` / `howtoplay.html` Vite entries), `undercover-mob-boss` and `top-down-racer-04` are vanilla-TS single-page. But the README locks **three routes** AND a **cross-fade route transition**. A multi-page Vite build would full-reload between routes and kill the cross-fade. So this site is a true SPA. **The install package is `react-router-dom@^7`; the v7-canonical import specifier is `react-router`** (v7 merged the packages — `react-router-dom` re-exports from `react-router`). Use `BrowserRouter` + `<Routes>` + `<Route>` (declarative mode), NOT `RouterProvider` + `createBrowserRouter` (data-router mode) — mutually exclusive. The cross-fade is the SOLE justification for taking on the router, so §1.7 scaffolds a `useLocation`-keyed transition seam now (no-op in Phase 1) to validate the choice against its premise.
+2. **`react-router-dom` v7 is net-new to the monorepo — and it is the right call.** No sibling uses a client router: `burned` is multi-page (separate `board.html` / `player.html` / `howtoplay.html` Vite entries), `undercover-mob-boss` and `top-down-racer-04` are vanilla-TS single-page. But the README locks **three routes** AND a **cross-fade route transition**. A multi-page Vite build would full-reload between routes and kill the cross-fade. So this site is a true SPA. **Install `react-router@^7` directly and import from `react-router`** (CORRECTED at execution — see the EXECUTED banner: under pnpm strict node_modules the transitive `react-router` from `react-router-dom` is not importable, and `react-router` is the v7-canonical package anyway). Use `BrowserRouter` + `<Routes>` + `<Route>` (declarative mode), NOT `RouterProvider` + `createBrowserRouter` (data-router mode) — mutually exclusive. The cross-fade is the SOLE justification for taking on the router, so §1.7 scaffolds a `useLocation`-keyed transition seam now (no-op in Phase 1) to validate the choice against its premise.
 
 3. **GSAP registration: Phase 1 registers only what Phase 1 needs.** Register `useGSAP` + `CustomEase` at module top-level in `src/motion/gsap-context.ts`. **ScrollTrigger and DrawSVGPlugin are NOT registered in Phase 1** — ScrollTrigger arrives in Phase 4 (the grid reveal), and DrawSVGPlugin in Phase 5 (the AssetDonut, the detail page's one flourish — the tier breakdown that earlier drafts imagined here was CUT at the Phase 5 deepening). Registering heavy plugins eagerly on the entry chunk for zero/deferred consumers fights the "water beads" load/paint bar. Each later phase registers the plugin it introduces (DrawSVG → Phase 5). `useGSAP` itself must be passed to `registerPlugin` or it fails silently. Drive component animations with `useGSAP(() => {...}, { scope: ref })`, never raw `useEffect` + gsap (React 19 StrictMode double-invokes effects → raw useEffect leaks).
 
@@ -100,7 +106,7 @@ Scope declaration, not a constraint — the per-step file lists below are author
 **Runtime:**
 - `react@^19.2.4`
 - `react-dom@^19.2.4`
-- `react-router-dom@^7.9.4` — declarative library mode; import from `react-router`
+- `react-router@^7.9.4` — declarative library mode; import from `react-router` (NOT `react-router-dom` — see EXECUTED banner)
 - `gsap@^3.14.2`
 - `@gsap/react@^2.1.2` — peer-dep `gsap>=3.12`; net-new to the monorepo
 
@@ -928,7 +934,8 @@ The failure mode is a dark mode that *feels designed* and a light mode that *fee
 | **`GEMINI_API_KEY` could leak into the client bundle** | NEVER prefix it `VITE_`. Vite only inlines `VITE_`-prefixed env into client code. The key is server-side-only, consumed by Phase 2's `scripts/refresh-stats.ts` via `tsx`. No component may read `import.meta.env.GEMINI_API_KEY`. |
 | **`host: true` exposes the dev server on the full LAN** | Fine on a home network for phone testing. On shared networks (coffee shop, coworking), run `pnpm dev --host 127.0.0.1` or drop the `host` key temporarily. |
 | **`resolve.tsconfigPaths` Vite key** | CONFIRMED real — `burned/vite.config.ts` ships it on Vite 8 and builds clean. If `@/` imports ever fail, fall back to `vite-tsconfig-paths`. |
-| **`react-router` import vs `react-router-dom` install** | Install `react-router-dom@^7`; import from `react-router` (v7-canonical). Use `BrowserRouter`+`<Routes>`, not `RouterProvider`. |
+| **`react-router` import vs `react-router-dom` install** | CORRECTED: install `react-router@^7` directly (pnpm strict won't hoist the transitive one); import from `react-router` (v7-canonical). Use `BrowserRouter`+`<Routes>`, not `RouterProvider`. |
+| **pnpm 10 skips esbuild postinstall** | `package.json` needs `pnpm.onlyBuiltDependencies: ["esbuild"]` (sibling `burned` does the same) or Vite can't find its platform binary. |
 | **Vercel SPA deep-link 404** | `rewrites` serves `index.html` for non-asset paths; the `/data/$1` identity rewrite precedes the catch-all so JSON isn't swallowed. |
 | **`node_modules/` was not gitignored** | §1.1 adds it. Verify `git status` doesn't stage it before Commit 1. |
 
@@ -971,7 +978,7 @@ Then open [phase-2-data-wiring.md](phase-2-data-wiring.md) and start.
 
 Land in the same deepen commit or a follow-up before Phase 1 executes:
 
-- **`README.md` (plans index) stack rows**: the "Stack" decision row states the stack without a Vite version pin — add `vite@^8.0.10`. Also add `react-router-dom@^7` (note: install package is `react-router-dom`, import specifier is `react-router`) and `@gsap/react@^2.1.2` to the dependency list. Update the fonts note to "self-hosted Satoshi / Inter / JetBrains Mono (no CDN)".
+- **`README.md` (plans index) stack rows**: the "Stack" decision row states the stack without a Vite version pin — add `vite@^8.0.10`. Also add `react-router@^7` (CORRECTED — install package IS `react-router`, import specifier `react-router`) and `@gsap/react@^2.1.2` to the dependency list. Update the fonts note to "self-hosted Satoshi / Inter / JetBrains Mono (no CDN)".
 - **`phase-2-data-wiring.md`**: `src/types.ts` is created HERE (moved out of Phase 1 per Decision 9). Add a pre-step: confirm `tools/claude-credit/dist/` exports all five types (`MultiProjectReport`, `ProjectReport`, `TokenStats`, `EditorialContent`, `ArchiveCollective`) before the relative import. Also: `clsx` install moves to Phase 3.
 - No other downstream phase (3–9) requires structural change from Phase 1 — the scaffold is a pure foundation. Phase 0's own cascade note confirmed "Phase 1: no structural change required."
 

@@ -1,11 +1,12 @@
+import { promises as fs } from 'node:fs';
 import path from 'node:path';
 import { compileRules, DEFAULT_RULES, classify } from './classifier.js';
-import { loadProjectConfig } from './config.js';
+import { loadProjectConfig, validateEditorial } from './config.js';
 import { aggregateAssetBytes, categorize, aggregateTiers, countTestCases } from './counter.js';
 import { collectGitStats } from './git-stats.js';
 import { collectProxyStats } from './proxies.js';
 import { collectSessionTokens } from './session-tokens.js';
-import type { CategorizedFile, GrandTotals, ProjectReport } from './taxonomy.js';
+import type { CategorizedFile, EditorialContent, GrandTotals, ProjectReport } from './taxonomy.js';
 import { walkProject } from './walker.js';
 
 export interface BuildReportOptions {
@@ -119,6 +120,50 @@ export async function buildProjectReport(opts: BuildReportOptions): Promise<Proj
     }
   }
 
+  // 0.6 — editorial: validate, existence-check heroImage, resolve metric refs.
+  const { value: editorialRaw, warnings: editorialWarnings } = validateEditorial(config.editorial);
+  warnings.push(...editorialWarnings);
+  let editorial: EditorialContent | null = null;
+  if (editorialRaw) {
+    // heroImage path is project-relative (absolute rejected at validation) — safe to reflect.
+    let heroImage = editorialRaw.heroImage;
+    if (heroImage) {
+      const abs = path.join(rootDir, heroImage);
+      const exists = await fs
+        .stat(abs)
+        .then(() => true)
+        .catch(() => false);
+      if (!exists) {
+        warnings.push(`editorial.heroImage path does not exist: ${heroImage}`);
+        heroImage = null;
+      }
+    }
+    // Resolve a `metric:<key>` hookStat value against this project's own numbers.
+    const metrics: Record<string, number> = {
+      testCases,
+      testLines,
+      planCount,
+      planLines,
+      authoredFiles: grandTotals.authoredFiles,
+      authoredLines: grandTotals.authoredLines,
+      allFiles: grandTotals.allFiles,
+      commits: git.totalCommits,
+    };
+    let hookValue = editorialRaw.hookStat.value;
+    const metricMatch = hookValue.match(/^metric:(\w+)$/);
+    if (metricMatch) {
+      const key = metricMatch[1]!;
+      if (key in metrics) hookValue = String(metrics[key]);
+      else warnings.push(`editorial.hookStat references unknown metric '${key}' — left as-is.`);
+    }
+    // Fresh literal so a cached config-load object is never mutated in place.
+    editorial = {
+      ...editorialRaw,
+      heroImage,
+      hookStat: { label: editorialRaw.hookStat.label, value: hookValue },
+    };
+  }
+
   return {
     projectPath: rootDir,
     projectName: path.basename(rootDir),
@@ -135,7 +180,6 @@ export async function buildProjectReport(opts: BuildReportOptions): Promise<Proj
     testLines,
     planCount,
     planLines,
-    // TODO(0.6): replace placeholder with validated editorial block
-    editorial: null,
+    editorial,
   };
 }

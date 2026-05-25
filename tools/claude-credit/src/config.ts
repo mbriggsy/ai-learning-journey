@@ -3,6 +3,7 @@ import path from 'node:path';
 import { pathToFileURL } from 'node:url';
 import yaml from 'js-yaml';
 import type { ClassifierRule } from './classifier.js';
+import type { EditorialContent } from './taxonomy.js';
 
 export interface ProjectConfig {
   /** Additional directory basenames or relative-path globs to skip during the walk. */
@@ -31,6 +32,81 @@ export interface ProjectConfig {
     /** Human label, e.g. "Imagen runs" / "TTS takes". */
     label?: string;
   }>;
+  /**
+   * 0.6 — per-project editorial content (site copy). Absent ⇒ report.editorial = null.
+   * hookStat.value may be a literal ("120") OR a `metric:<key>` reference
+   * (e.g. "metric:testCases") resolved live at scan time against the project's
+   * own numbers — so countable hooks (TESTS/PLANS/FILES/LINES) never drift.
+   */
+  editorial?: {
+    oneLiner: string;
+    hookStat: { label: string; value: string };
+    heroImage?: string | null;
+    liveUrl?: string | null;
+    repoUrl?: string | null;
+    status?: 'active' | 'shelved';
+    description: string;
+    gallery?: string[];
+    largestCommitCaption?: string;
+  };
+}
+
+/**
+ * 0.6 — validate + normalize a raw `editorial` config block. Pure; returns the
+ * typed value (or null when required fields are missing/mistyped) plus warnings.
+ * Rejects absolute heroImage paths (they would leak into the public warnings[]).
+ */
+export function validateEditorial(raw: unknown): {
+  value: EditorialContent | null;
+  warnings: string[];
+} {
+  const warnings: string[] = [];
+  if (!raw || typeof raw !== 'object') return { value: null, warnings };
+  const r = raw as Record<string, unknown>;
+
+  if (typeof r.oneLiner !== 'string' || typeof r.description !== 'string') {
+    warnings.push('editorial: requires string oneLiner + description — block ignored.');
+    return { value: null, warnings };
+  }
+  const hs = r.hookStat as { label?: unknown; value?: unknown } | undefined;
+  if (!hs || typeof hs !== 'object' || typeof hs.label !== 'string' || typeof hs.value !== 'string') {
+    warnings.push('editorial: hookStat must be { label: string, value: string } — block ignored.');
+    return { value: null, warnings };
+  }
+
+  let status: 'active' | 'shelved' = 'active';
+  if (r.status === 'shelved') status = 'shelved';
+  else if (r.status !== undefined && r.status !== 'active') {
+    warnings.push(`editorial.status '${String(r.status)}' invalid — defaulting to 'active'.`);
+  }
+
+  let heroImage: string | null = null;
+  if (typeof r.heroImage === 'string' && r.heroImage.length > 0) {
+    if (/^[/\\~]/.test(r.heroImage) || /^[A-Za-z]:/.test(r.heroImage)) {
+      warnings.push(
+        `editorial.heroImage must be a project-relative path, got an absolute path — set to null.`,
+      );
+    } else {
+      heroImage = r.heroImage;
+    }
+  }
+
+  const gallery = Array.isArray(r.gallery)
+    ? r.gallery.filter((g): g is string => typeof g === 'string')
+    : [];
+
+  const value: EditorialContent = {
+    oneLiner: r.oneLiner,
+    hookStat: { label: hs.label, value: hs.value },
+    heroImage,
+    liveUrl: typeof r.liveUrl === 'string' ? r.liveUrl : null,
+    repoUrl: typeof r.repoUrl === 'string' ? r.repoUrl : null,
+    status,
+    description: r.description,
+    gallery,
+  };
+  if (typeof r.largestCommitCaption === 'string') value.largestCommitCaption = r.largestCommitCaption;
+  return { value, warnings };
 }
 
 export interface MultiProjectConfig {

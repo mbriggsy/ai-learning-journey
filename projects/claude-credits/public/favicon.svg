@@ -1,0 +1,7 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 32 32" role="img" aria-label="claude-credits">
+  <!-- Phase 1 placeholder mark (ascending-credits motif). Real mark = Phase 9 polish. -->
+  <rect width="32" height="32" rx="7" fill="#0a1a26"/>
+  <rect x="8"  y="17" width="4" height="8"  rx="1.5" fill="#ff8c42"/>
+  <rect x="14" y="13" width="4" height="12" rx="1.5" fill="#ffab4d"/>
+  <rect x="20" y="8"  width="4" height="17" rx="1.5" fill="#ffd34e"/>
+</svg>

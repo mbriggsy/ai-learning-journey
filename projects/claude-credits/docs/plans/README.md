@@ -147,7 +147,7 @@ The reference implementation lives at `projects/undercover-mob-boss/public/how-t
 - **Breakpoints (mobile-first cascade)**: base styles = mobile. Add column structure at `min-width: 640px` (tablet) and `min-width: 960px` (desktop). Down-scale type + tighten padding at `max-width: 600px` for explicit phone polish.
 - **Project grid**: `repeat(auto-fit, minmax(320px, 1fr))` → naturally collapses to single column under ~360px viewport. Tiles must look DELIBERATE in single-column, not stretched-desktop-fallback.
 - **Hero number on mobile**: must fill the viewport horizontally without overflow. Test at 360px, 375px, 390px, 430px (the iPhone width matrix).
-- **Detail page on mobile**: AssetDonut renders square at full viewport width (capped at ~360px). CadenceSparkline takes full container width, ~80px tall, no axis labels. AUTHORED BY block stacks vertically.
+- **Detail page on mobile**: hero stacks text→image (image a full-width band). AssetDonut renders square at full viewport width (capped at ~360px), legend below. CadenceSparkline takes full container width, ~80px tall, no axis labels. Composition inventory is 2-col (centered row when ≤3 items). Tokens ledger collapses per-model rows to two lines each.
 - **Hovers on touch**: every hover state has a mobile equivalent — typically the tile's "settled" appearance shows enough of the affordance that no hover is needed. Use `@media (hover: hover) and (pointer: fine)` to gate hover-only effects so touch doesn't trigger stuck states.
 - **Tap targets**: ≥44×44 px for any clickable element (Apple HIG minimum).
 - **No horizontal scroll**: `overflow-x: hidden` on body; verify no child element overflows at any width 320–500px.
@@ -186,7 +186,7 @@ Before claiming v1 done:
 5. ✅ `pnpm refresh` produces a clean `public/data/stats.json` with no `projectPath` field anywhere AND hero images copied into `public/assets/<projectName>/`
 6. ✅ Site renders correctly with the real data — no NaN, no undefined, no empty hero
 7. ✅ All 11 tiles render with editorial content (one-liner + hook + visual + live-link-if-deployed + status marker)
-8. ✅ AUTHORED BY block renders both `linesByAuthor` AND `tokens` data correctly on detail pages (Claude row shows tokens; Briggsy row shows "you don't tokenize")
+8. ✅ Detail page resolves `/project/:name` from `projects[]`/`meta[]`; an unknown OR shelved name → a deliberate not-found state (never blank/crash); a data-sparse project (incl. the `claude-credit` meta on a clean deploy) still reads as a composed story via its editorial one-liner + description (authorship is SILENT — NO who-wrote-what surface anywhere, ideation §11)
 8a. ✅ TOKENS CONSUMED block renders on every detail page with non-null `tokens`, showing total + session count + window dates + per-model breakdown
 8b. ✅ Hero shows `combined.totalTokensProcessed` as the **dominant** number (formatted with B/M suffix); `combined.totalTokensFresh` + the retention window as a **quiet honest sub-line** directly beneath; `combined.totalAuthoredLines` + counts as the **supporting stagger** below that (Option A, locked 2026-05-24 — see [phase-3-hero.md](phase-3-hero.md))
 8c. ✅ Window footnote is SURFACED on every token surface — never "lifetime" claims. Spot-check the hero subtitle and every detail page TOKENS block.

@@ -32,8 +32,8 @@ For claude-credits specifically:
 Other devs / Anthropic-adjacent folks. Knows what AI collab means; doesn't know the specific projects. Builder-to-builder voice, terse and sharp.
 
 - The `claude-credit` tool is content, not just infrastructure. Peers want to understand what it measures.
-- Authored / Claude-authored / pipeline-generated / tool-generated split is COMPELLING to this audience, not embarrassing.
-- Light onboarding needed: peers don't need "what is a commit" but DO need "what does authored-vs-pipeline mean."
+- Peers geek on the **WORK and its breadth** — the magnitude (tokens), the variety of what got built (code, tests, plans, prompts, images, audio, video), the cadence — NOT a *provenance scoreboard*. **The authored-vs-pipeline-vs-tool tier split is provenance ("how the magic was made") and is NOT the story** (Briggsy, 2026-05-24; reconciled with §11 — authorship/provenance is silent). The site surfaces *what exists*, framed by KIND, never an authored-vs-generated comparison. *(Superseded the earlier "the tier split is COMPELLING / peers need to understand authored-vs-pipeline" framing — that was the premise §11 + the detail-page deepening retired.)*
+- Light onboarding needed: peers don't need "what is a commit," but the About page still explains what the `claude-credit` taxonomy measures (for the curious) — as light context, never a scoreboard.
 
 ### 2. Hero: ONE dominant number — combined Claude API tokens processed
 
@@ -49,7 +49,7 @@ Other devs / Anthropic-adjacent folks. Knows what AI collab means; doesn't know 
 
 Each tile: hand-written one-liner, key visual (screenshot / trailer frame / hero asset / card art), live link button if deployed.
 
-Detail page expands with bigger visual (or gallery), 2-3 sentence description, "Try it →" button if deployed.
+Detail page expands with bigger visual (or gallery), 2-3 sentence description, "Try it →" button if deployed. It also surfaces the project's WORK as a single-column editorial scroll: tokens consumed, a media-asset donut (the one flourish), a "what got built" breadth inventory (code/tests/plans/prompts/images/audio/video by kind), and commit cadence. It makes **no authorship/provenance claim** (§11). See `plans/phase-5-detail.md`.
 
 ### 4. Bottom CTA: dual — tool pitch + GitHub link
 

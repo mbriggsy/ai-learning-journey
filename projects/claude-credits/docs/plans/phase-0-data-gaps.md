@@ -1117,10 +1117,13 @@ export const ALLOWED_KEY_PATHS: readonly string[] = [
 ];
 
 export function stripForPublish(report: MultiProjectReport): unknown {
-  // Deep-walk + delete every 'projectPath' key.
+  // Deep-walk + delete every 'projectPath' key AND every
+  // 'sha' key under git.timeline.largestSingleCommit (see denylist note below).
   // Return a structurally-cloned object suitable for JSON.stringify.
 }
 ```
+
+**Denylist note (added at Phase 5 deepening, 2026-05-24 — re-run `pnpm test` after applying):** `stripForPublish` also drops `git.timeline.largestSingleCommit.sha`. A bare 40-char commit SHA from a PRIVATE repo is a repo-internal identifier that falls outside the "number / ISO timestamp / taxonomy-term / model-name / null" structural rule, and the UUID grep-guard (hyphen-delimited) won't catch it. The site renders only `linesAdded` from `largestSingleCommit`, so the sha has no client use. Drop it from the published shape AND from `ALLOWED_KEY_PATHS` (test #5 then stays green). **Conscious disclosure accepted:** `git.timeline.commitsByDay[].date` DOES publish the private repos' daily commit dates (the sparkline cadence story) — calendar dates carry no path/username/secret and the grep-guard correctly ignores them; this is an accepted showcase trade-off, recorded here so it's a decision, not an oversight.
 
 Phase 2's `refresh-stats.ts` imports `stripForPublish` directly. The §0.10 round-trip test imports the same function. One source of truth.
 

@@ -1,6 +1,6 @@
 # claude-credits — TODO
 
-**Status:** Deepening in progress. **Phases 0–4 AND the preflight plan (−1) are deepened + doc-reviewed** (paint-by-numbers recipes). Phases 5–9 remain to deepen. **No code until ALL phase plans are deepened and contradictions resolved** (house rule).
+**Status:** Deepening in progress. **Phases 0–5 AND the preflight plan (−1) are deepened + doc-reviewed** (paint-by-numbers recipes). Phases 6–9 remain to deepen. **No code until ALL phase plans are deepened and contradictions resolved** (house rule).
 
 > **House rule — TODO is NOT a diary.** Actionable items only. No session history, no "what we did" logs, no narrative addenda. The git log has the history. If a line isn't an open thing Claude or Briggsy can act on, it doesn't belong here. Strip cruft when you find it.
 
@@ -17,8 +17,7 @@ Read both before touching code.
 
 Same drill each: deepen to paint-by-numbers → `/ce:plan deepen` → 6-reviewer `/document-review` → stamp `deepened:` / `doc-reviewed:` frontmatter → commit.
 
-- [ ] **Phase 5 — detail page** (`phase-5-detail.md`) — **NEXT.** Lighter now: the AUTHORED-BY authorship split is CUT (authorship is silent — ideation §11). Show the project's WORK — tokens, AssetDonut (DrawSVG), commit cadence. Reuses Phase 4's `LiveLinkButton` + `src/lib/format.ts`.
-- [ ] **Phase 6 — about** (`phase-6-about.md`) — place the captured light-touch line: *"Claude wrote all of it. Briggsy directed — and answered a question or two."* (ideation §11). Full taxonomy explainer lives here.
+- [ ] **Phase 6 — about** (`phase-6-about.md`) — **NEXT.** Place the captured light-touch line: *"Claude wrote all of it. Briggsy directed — and answered a question or two."* (ideation §11). Full taxonomy explainer lives here (may reuse the now-published `tiers[]`).
 - [ ] **Phase 7 — bottom CTA** (`phase-7-cta.md`) — depends on preflight −1.1 (is `claude-credit` publishable?) for the primary CTA copy.
 - [ ] **Phase 8 — deploy** (`phase-8-deploy.md`) — must resolve the open "where does `pnpm refresh` run" question (a clean CI runner has NO session JSONLs → tokens would be null; leading option = refresh locally + commit, Action only deploys — see phase-2 Open Decision #2).
 - [ ] **Phase 9 — visual polish (THE BAR)** (`phase-9-polish.md`) — where the bar gets met; budget half the time here.
@@ -37,6 +36,8 @@ Same drill each: deepen to paint-by-numbers → `/ce:plan deepen` → 6-reviewer
 - **Phase 4 grid sort = `grandTotals.authoredLines` desc** (tie-break `projectName`). File-classification-derived → rotation-immune AND immune to the git-attribution inversion. Never re-derive it from `linesByAuthor`.
 - **git-attribution inversion:** git credits `mbriggsy` as commit author, Claude as `Co-Authored-By`, so a naive `linesByAuthor` reading INVERTS the truth (credits the human). MOOT for v1 (no authorship surface ships), but real if any future surface ever shows authorship.
 - Editorial one-liners + hook stats are voice/positioning calls — needs Briggsy in the loop, can't be auto-derived (preflight −1.5 worksheet).
+- **Editorial is a HARD dependency for the Phase 5 detail page** (not just tiles): every project with a detail page needs at least `oneLiner` + `description`, or a data-sparse project (esp. the flagship `claude-credit` / `claude-credits` meta projects on a clean deploy — null tokens, no media) renders a near-empty "detail." Source editorial in the preflight −1.5 worksheet before executing Phase 5.
+- **Phase 0 publish surface drops `largestSingleCommit.sha`** (Phase 5 cascade, privacy). Phase 0's `stripForPublish` denylist + `ALLOWED_KEY_PATHS` must exclude it; commit-cadence DATES are published by design. Re-run Phase 0 `pnpm test` after.
 - Bar constraints in `docs/ideation.md` are load-bearing: NO falling water droplets, NO iridescent hover. **The water-beads metaphor IS the bar — not any single reference site.** References calibrate specific choices, never dictate look. Awwwards / Webby / "site of the day" are explicitly disqualified.
 - Mobile is first-class (anchor: UMB's `public/how-to-play.html`). Never default to "doesn't break."
 - Light AND dark are both first-class. Briggsy's Windows is LIGHT — he lands on the light version by default. Both must pass the water-bead bar in Phase 9.

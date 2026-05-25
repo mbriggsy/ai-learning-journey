@@ -28,8 +28,8 @@
     "modelBreakdown": [
       {
         "model": "Opus 4.7",
-        "sessions": 39096,
-        "tokensProcessed": 10675477474
+        "sessions": 39172,
+        "tokensProcessed": 10700486602
       },
       {
         "model": "<synthetic>",
@@ -39,25 +39,25 @@
     ],
     "projectCount": 9,
     "tokenWindowDays": 30,
-    "tokenWindowEndISO": "2026-05-25T17:58:12.364Z",
+    "tokenWindowEndISO": "2026-05-25T18:06:15.447Z",
     "tokenWindowStartISO": "2026-04-25T13:40:35.593Z",
-    "totalAllBytes": 546357127,
-    "totalAllFiles": 2007,
-    "totalAuthoredBytes": 59803635,
-    "totalAuthoredFiles": 2064,
-    "totalAuthoredLines": 531835,
-    "totalCommits": 1107,
+    "totalAllBytes": 546363338,
+    "totalAllFiles": 2012,
+    "totalAuthoredBytes": 59809846,
+    "totalAuthoredFiles": 2069,
+    "totalAuthoredLines": 531978,
+    "totalCommits": 1108,
     "totalDiscardedAssets": 85,
     "totalIterationProxies": 17,
     "totalPipelineGeneratedBytes": 485223897,
     "totalPipelineGeneratedFiles": 452,
     "totalPlanCount": 74,
     "totalPlanLines": 81817,
-    "totalSessions": 39099,
+    "totalSessions": 39175,
     "totalTestCases": 3621,
     "totalTestLines": 66256,
-    "totalTokensFresh": 345872443,
-    "totalTokensProcessed": 10675477474,
+    "totalTokensFresh": 346026637,
+    "totalTokensProcessed": 10700486602,
     "totalToolGeneratedBytes": 886670,
     "totalToolGeneratedFiles": 9
   },
@@ -150,7 +150,7 @@
         "regenScriptCount": 0,
         "sampleEvalRunCount": 0
       },
-      "scannedAt": "2026-05-25T17:58:30.603Z",
+      "scannedAt": "2026-05-25T18:06:31.693Z",
       "testCases": 51,
       "testLines": 1251,
       "tiers": [
@@ -317,11 +317,11 @@
       "git": {
         "assetModificationEvents": 4,
         "assetUniquePathsTouched": 4,
-        "commitMessageLines": 877,
+        "commitMessageLines": 909,
         "commitsByAuthor": [
           {
             "author": "mbriggsy",
-            "count": 51
+            "count": 52
           }
         ],
         "discardedAssetByKind": {},
@@ -329,23 +329,23 @@
         "discardedAssetFiles": 0,
         "firstCommitISO": "2026-05-23T23:58:49-04:00",
         "isGitRepo": true,
-        "lastCommitISO": "2026-05-25T13:48:50-04:00",
-        "lifetimeLinesAdded": 12153,
-        "lifetimeLinesRemoved": 3128,
+        "lastCommitISO": "2026-05-25T13:59:18-04:00",
+        "lifetimeLinesAdded": 16307,
+        "lifetimeLinesRemoved": 3130,
         "linesByAuthor": [
           {
             "author": "mbriggsy",
             "coAuthoredCommits": 0,
-            "commits": 51,
-            "linesAdded": 12153,
-            "linesRemoved": 3128
+            "commits": 52,
+            "linesAdded": 16307,
+            "linesRemoved": 3130
           },
           {
             "author": "Claude Opus 4.7 (1M context)",
-            "coAuthoredCommits": 47,
+            "coAuthoredCommits": 48,
             "commits": 0,
-            "linesAdded": 11187,
-            "linesRemoved": 2327
+            "linesAdded": 15341,
+            "linesRemoved": 2329
           }
         ],
         "projectAgeDays": 1,
@@ -361,29 +361,29 @@
               "date": "2026-05-24"
             },
             {
-              "count": 21,
+              "count": 22,
               "date": "2026-05-25"
             }
           ],
           "largestSingleCommit": {
-            "dateISO": "2026-05-24T10:01:43-04:00",
-            "linesAdded": 847,
-            "linesRemoved": 794
+            "dateISO": "2026-05-25T13:59:18-04:00",
+            "linesAdded": 4154,
+            "linesRemoved": 2
           },
           "peakDay": {
             "count": 29,
             "date": "2026-05-24"
           }
         },
-        "totalCommits": 51,
-        "uniqueFilesTouched": 59
+        "totalCommits": 52,
+        "uniqueFilesTouched": 66
       },
       "grandTotals": {
-        "allBytes": 974969,
-        "allFiles": 53,
-        "authoredBytes": 805355,
-        "authoredFiles": 48,
-        "authoredLines": 11973,
+        "allBytes": 981180,
+        "allFiles": 58,
+        "authoredBytes": 811566,
+        "authoredFiles": 53,
+        "authoredLines": 12116,
         "pipelineGeneratedBytes": 131711,
         "pipelineGeneratedFiles": 4,
         "toolGeneratedBytes": 37903,
@@ -397,7 +397,7 @@
         "regenScriptCount": 0,
         "sampleEvalRunCount": 0
       },
-      "scannedAt": "2026-05-25T17:58:31.744Z",
+      "scannedAt": "2026-05-25T18:06:32.819Z",
       "testCases": 23,
       "testLines": 72,
       "tiers": [
@@ -447,7 +447,7 @@
               "category": "data",
               "subcategories": [
                 {
-                  "bytes": 96662,
+                  "bytes": 96664,
                   "files": 2,
                   "nonBlankLines": 3600,
                   "subcategory": "lookup-tables",
@@ -455,7 +455,7 @@
                 }
               ],
               "totals": {
-                "bytes": 96662,
+                "bytes": 96664,
                 "files": 2,
                 "nonBlankLines": 3600,
                 "subcategory": "<totals>",
@@ -465,6 +465,13 @@
             {
               "category": "code",
               "subcategories": [
+                {
+                  "bytes": 13033,
+                  "files": 17,
+                  "nonBlankLines": 293,
+                  "subcategory": "source",
+                  "totalLines": 317
+                },
                 {
                   "bytes": 11304,
                   "files": 4,
@@ -478,13 +485,6 @@
                   "nonBlankLines": 218,
                   "subcategory": "styles",
                   "totalLines": 236
-                },
-                {
-                  "bytes": 6824,
-                  "files": 12,
-                  "nonBlankLines": 160,
-                  "subcategory": "source",
-                  "totalLines": 174
                 },
                 {
                   "bytes": 4353,
@@ -509,21 +509,21 @@
                 }
               ],
               "totals": {
-                "bytes": 34868,
-                "files": 28,
-                "nonBlankLines": 783,
+                "bytes": 41077,
+                "files": 33,
+                "nonBlankLines": 916,
                 "subcategory": "<totals>",
-                "totalLines": 852
+                "totalLines": 995
               }
             }
           ],
           "tier": "authored",
           "totals": {
-            "bytes": 805355,
-            "files": 48,
-            "nonBlankLines": 10238,
+            "bytes": 811566,
+            "files": 53,
+            "nonBlankLines": 10371,
             "subcategory": "<totals>",
-            "totalLines": 11973
+            "totalLines": 12116
           }
         },
         {
@@ -600,25 +600,25 @@
         "byModel": [
           {
             "model": "Opus 4.7",
-            "sessions": 4106,
-            "tokensProcessed": 1000144893
+            "sessions": 4182,
+            "tokensProcessed": 1025154021
           }
         ],
-        "cacheCreationInputTokens": 34826012,
-        "cacheReadInputTokens": 955584370,
-        "inputTokens": 840246,
-        "outputTokens": 8894265,
+        "cacheCreationInputTokens": 34900918,
+        "cacheReadInputTokens": 980439304,
+        "inputTokens": 843030,
+        "outputTokens": 8970769,
         "parseHealth": {
           "fileReadErrors": 0,
           "lineParseErrors": 0,
           "usageShapeWarnings": 0
         },
-        "sessionCount": 4106,
+        "sessionCount": 4182,
         "sidechainTokens": 0,
-        "tokensFresh": 44560523,
-        "tokensProcessed": 1000144893,
+        "tokensFresh": 44714717,
+        "tokensProcessed": 1025154021,
         "windowDays": 1,
-        "windowEndISO": "2026-05-25T17:58:12.364Z",
+        "windowEndISO": "2026-05-25T18:06:15.447Z",
         "windowStartISO": "2026-05-24T03:28:43.459Z"
       },
       "topSubcategories": [
@@ -639,7 +639,7 @@
           "tier": "pipeline-generated"
         },
         {
-          "bytes": 96662,
+          "bytes": 96664,
           "category": "data",
           "files": 2,
           "lines": 3600,
@@ -907,7 +907,7 @@
         "regenScriptCount": 7,
         "sampleEvalRunCount": 10
       },
-      "scannedAt": "2026-05-25T17:58:21.040Z",
+      "scannedAt": "2026-05-25T18:06:22.155Z",
       "testCases": 1326,
       "testLines": 28488,
       "tiers": [
@@ -1358,7 +1358,7 @@
         "regenScriptCount": 0,
         "sampleEvalRunCount": 0
       },
-      "scannedAt": "2026-05-25T17:58:22.020Z",
+      "scannedAt": "2026-05-25T18:06:23.118Z",
       "testCases": 0,
       "testLines": 0,
       "tiers": [
@@ -1601,7 +1601,7 @@
         "regenScriptCount": 0,
         "sampleEvalRunCount": 0
       },
-      "scannedAt": "2026-05-25T17:58:22.928Z",
+      "scannedAt": "2026-05-25T18:06:24.025Z",
       "testCases": 0,
       "testLines": 0,
       "tiers": [
@@ -1816,7 +1816,7 @@
         "regenScriptCount": 0,
         "sampleEvalRunCount": 0
       },
-      "scannedAt": "2026-05-25T17:58:23.838Z",
+      "scannedAt": "2026-05-25T18:06:24.938Z",
       "testCases": 0,
       "testLines": 0,
       "tiers": [
@@ -2066,7 +2066,7 @@
         "regenScriptCount": 0,
         "sampleEvalRunCount": 0
       },
-      "scannedAt": "2026-05-25T17:58:24.758Z",
+      "scannedAt": "2026-05-25T18:06:25.865Z",
       "testCases": 0,
       "testLines": 0,
       "tiers": [
@@ -2312,7 +2312,7 @@
         "regenScriptCount": 0,
         "sampleEvalRunCount": 0
       },
-      "scannedAt": "2026-05-25T17:58:25.658Z",
+      "scannedAt": "2026-05-25T18:06:26.766Z",
       "testCases": 19,
       "testLines": 144,
       "tiers": [
@@ -2626,7 +2626,7 @@
         "regenScriptCount": 0,
         "sampleEvalRunCount": 0
       },
-      "scannedAt": "2026-05-25T17:58:26.826Z",
+      "scannedAt": "2026-05-25T18:06:27.928Z",
       "testCases": 381,
       "testLines": 5270,
       "tiers": [
@@ -2954,7 +2954,7 @@
         "regenScriptCount": 0,
         "sampleEvalRunCount": 0
       },
-      "scannedAt": "2026-05-25T17:58:28.078Z",
+      "scannedAt": "2026-05-25T18:06:29.151Z",
       "testCases": 504,
       "testLines": 7303,
       "tiers": [
@@ -3314,7 +3314,7 @@
         "regenScriptCount": 0,
         "sampleEvalRunCount": 0
       },
-      "scannedAt": "2026-05-25T17:58:29.900Z",
+      "scannedAt": "2026-05-25T18:06:30.985Z",
       "testCases": 752,
       "testLines": 17925,
       "tiers": [
@@ -3565,5 +3565,5 @@
       ]
     }
   ],
-  "scannedAt": "2026-05-25T17:58:37.349Z"
+  "scannedAt": "2026-05-25T18:06:38.460Z"
 }

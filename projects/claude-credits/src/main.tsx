@@ -8,6 +8,7 @@ import './styles/fonts.css'
 import './styles/global.css'
 import './motion/gsap-context' // registers GSAP plugins (side effect)
 import './motion/easings' // registers the 4 weighted eases (side effect) — REQUIRED or parseEase fails
+import { StatsGate } from './data/StatsGate'
 import App from './App'
 
 // Dev-only theme override: ?theme=dark|light forces a mode without toggling the OS.
@@ -20,7 +21,9 @@ if (forced === 'dark' || forced === 'light') {
 createRoot(document.getElementById('root')!).render(
   <StrictMode>
     <BrowserRouter>
-      <App />
+      <StatsGate>
+        <App />
+      </StatsGate>
     </BrowserRouter>
   </StrictMode>,
 )

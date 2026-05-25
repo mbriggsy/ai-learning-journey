@@ -1,0 +1,41 @@
+.grid {
+  padding: var(--space-16) var(--space-6) var(--space-24);
+}
+.gridInner {
+  max-width: 1200px;
+  margin-inline: auto;
+  display: grid;
+  /* auto-fit: 1 col on phones → 2 at ~640px → 3 at ~960px+. minmax floor 320px. */
+  grid-template-columns: repeat(auto-fit, minmax(320px, 1fr));
+  gap: var(--space-6);
+  align-items: start;
+}
+
+/* "The misses" band separator — label above a full-width hairline, spans the grid. The
+   space-12 above makes the misses read as a distinct band, not a continuous matrix. */
+.divider {
+  grid-column: 1 / -1;
+  margin-top: var(--space-12);
+  padding-bottom: var(--space-3);
+  border-bottom: 1px solid var(--surface-divider);
+}
+.dividerLabel {
+  margin: 0;
+  text-align: left;
+  font-family: var(--font-body);
+  font-weight: 500;
+  font-size: var(--text-meta);
+  font-variant-caps: all-small-caps;
+  letter-spacing: 0.12em;
+  color: var(--text-secondary);
+}
+
+/* Mobile single-column is DELIBERATE (generous gap so each tile is a full card moment). */
+@media (max-width: 600px) {
+  .grid {
+    padding: var(--space-12) var(--space-4) var(--space-16);
+  }
+  .gridInner {
+    gap: var(--space-8);
+  }
+}

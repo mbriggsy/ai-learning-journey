@@ -1,0 +1,129 @@
+.tile {
+  position: relative; /* anchor for the stretched ::after link + the ribbon */
+  display: flex;
+  flex-direction: column;
+  background: var(--surface-elevated);
+  -webkit-backdrop-filter: blur(var(--surface-glass-blur));
+  backdrop-filter: blur(var(--surface-glass-blur));
+  border: 1px solid var(--border-subtle);
+  border-radius: var(--radius-tile);
+  box-shadow: var(--shadow-tile);
+  overflow: hidden; /* clip the hero image to the tile radius + reserve hover scale (C3) */
+}
+
+/* keyboard focus rings the WHOLE card (the stretched link is the hit-target), not just the
+   name text. :has + :focus-visible keeps it keyboard-only. outline is not clipped by overflow. */
+.tile:has(.name:focus-visible) {
+  outline: 2px solid var(--accent-focus);
+  outline-offset: 2px;
+}
+
+/* (0) hero image — 16:9, full-bleed to the tile inner radius */
+.imageFrame {
+  position: relative;
+  width: 100%;
+  aspect-ratio: 16 / 9;
+  overflow: hidden; /* frame for the C3 hover scale */
+}
+.image {
+  display: block;
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+}
+
+/* age ribbon — tile-relative (top-right with OR without an image) */
+.ribbon {
+  position: absolute;
+  top: var(--space-3);
+  right: var(--space-3);
+  z-index: 2; /* above the stretched ::after (decorative, non-interactive) */
+  padding: var(--space-1) var(--space-2);
+  font-family: var(--font-mono);
+  font-size: var(--text-meta);
+  color: var(--text-secondary);
+  background: var(--surface-overlay);
+  border-radius: var(--radius-chip);
+  -webkit-backdrop-filter: blur(8px);
+  backdrop-filter: blur(8px);
+}
+
+.content {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-3);
+  padding: var(--space-6);
+}
+/* type-forward (no image): the content gains the image's vertical space as top breathing
+   room so the tile reads deliberately type-led, never shorter/broken. */
+.typeForward .content {
+  padding-top: var(--space-8);
+}
+
+/* (1) name — the tile's only <Link>; ::after stretches the hit-target over the whole card */
+.nameWrap {
+  margin: 0;
+}
+.name {
+  display: inline-block;
+  max-width: 18ch;
+  font-family: var(--font-display);
+  font-weight: 700;
+  font-size: var(--text-display-md);
+  line-height: var(--leading-tile);
+  letter-spacing: var(--tracking-tile);
+  color: var(--text-primary);
+  text-decoration: none;
+  overflow-wrap: break-word;
+  text-wrap: balance;
+}
+.name::after {
+  content: '';
+  position: absolute;
+  inset: 0;
+  z-index: 1;
+}
+
+/* (2) one-liner — clamped to 3 lines so a long blurb can't break the tile rhythm */
+.oneLiner {
+  margin: 0;
+  max-width: 42ch;
+  font-family: var(--font-body);
+  font-size: var(--text-body);
+  line-height: var(--leading-body);
+  color: var(--text-secondary);
+  text-wrap: balance;
+  display: -webkit-box;
+  -webkit-line-clamp: 3;
+  line-clamp: 3;
+  -webkit-box-orient: vertical;
+  overflow: hidden;
+}
+
+/* (3) hook stat — the ONE gold moment per tile */
+.hook {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-1);
+  margin: var(--space-2) 0 0;
+}
+.hookValue {
+  font-family: var(--font-display);
+  font-weight: 700;
+  font-size: var(--text-stat-callout);
+  line-height: 1;
+  color: var(--accent-stat-highlight); /* gold — the lone accent */
+}
+.hookLabel {
+  font-family: var(--font-body);
+  font-size: var(--text-meta);
+  font-variant-caps: all-small-caps;
+  letter-spacing: 0.1em;
+  color: var(--text-secondary);
+}
+
+@media (max-width: 600px) {
+  .content {
+    padding: var(--space-6) var(--space-4);
+  }
+}

@@ -1,6 +1,11 @@
 import { Hero } from '@/components/Hero/Hero'
+import { ProjectGrid } from '@/components/ProjectGrid/ProjectGrid'
 
 export default function Landing() {
-  // The project grid lands below the hero in Phase 4.
-  return <Hero />
+  return (
+    <>
+      <Hero />
+      <ProjectGrid />
+    </>
+  )
 }

@@ -76,8 +76,9 @@ Empty value = not yet done.
 | Pages | **Landing (hero + project grid)**, **per-project detail**, **about**. Three routes. No more for v1. |
 | Audience | **AI-curious peers.** Builder-to-builder voice. |
 | Hero | **One massive total-volume number.** Shock of magnitude. Breakdown lives below. No competing weights in the hero. |
-| Per-project tile | **Editorial one-liner + hand-picked hook stat + key visual + live link (if deployed).** Status marker for shelved/meta. |
-| CTA | **Dual: "Try `claude-credit` on your own repo" (primary) + "Source on GitHub" (secondary).** |
+| Per-project tile | **Editorial one-liner + hand-picked hook stat + key visual + live link (if deployed).** Only the 9 real projects + 1 "the misses" archive coda = **10 surfaces**. No meta tiles (tool + site cut, ideation §7). |
+| CTA | **None — the page ends on the work** (ideation §4, Briggsy 2026-05-24). No bottom button, no install command, no GitHub link. The magnitude is the close. Per-project "Try it →" live links (on deployed projects) stay — they point at the *work*, not the tool. Phase 7 + `cta.ts` plumbing get gutted at reconciliation. |
+| Tool publish | **Not published to npm for v1** (ideation §4). `claude-credit` is the internal tape measure, not a product. |
 | Mobile | **First-class, responsive. Must SHINE on phone — not "doesn't break."** Anchor reference: `projects/undercover-mob-boss/public/how-to-play.html` (1700-line work of art — dvh-safe viewport, breakpoint-scaled type, single-column grids that read intentional). Same bar applies here. |
 
 ---
@@ -183,8 +184,8 @@ Before claiming v1 done:
 4. ✅ `pnpm dev` runs locally on port 5173, all three routes render
 5. ✅ `pnpm refresh` produces a clean `public/data/stats.json` with no `projectPath` field anywhere AND hero images copied into `public/assets/<projectName>/`
 6. ✅ Site renders correctly with the real data — no NaN, no undefined, no empty hero
-7. ✅ All 11 tiles render with editorial content (one-liner + hook + visual + live-link-if-deployed + status marker)
-8. ✅ Detail page resolves `/project/:name` from `projects[]`/`meta[]`; an unknown OR shelved name → a deliberate not-found state (never blank/crash); a data-sparse project (incl. the `claude-credit` meta on a clean deploy) still reads as a composed story via its editorial one-liner + description (authorship is SILENT — NO who-wrote-what surface anywhere, ideation §11)
+7. ✅ All 10 surfaces render (9 project tiles with one-liner + hook + visual + live-link-if-deployed + status marker, then the "the misses" collective archive coda). NO meta tiles — the `claude-credit` tool and the `claude-credits` site itself are cut from the grid (ideation §7).
+8. ✅ Detail page resolves `/project/:name` from `projects[]`; an unknown OR shelved name → a deliberate not-found state (never blank/crash); a data-sparse project still reads as a composed story via its editorial one-liner + description (authorship is SILENT — NO who-wrote-what surface anywhere, ideation §11)
 8a. ✅ TOKENS CONSUMED block renders on every detail page with non-null `tokens`, showing total + session count + window dates + per-model breakdown
 8b. ✅ Hero shows `combined.totalTokensProcessed` as the **dominant** number (formatted with B/M suffix); `combined.totalTokensFresh` + the retention window as a **quiet honest sub-line** directly beneath; `combined.totalAuthoredLines` + counts as the **supporting stagger** below that (Option A, locked 2026-05-24 — see [phase-3-hero.md](phase-3-hero.md))
 8c. ✅ Window footnote is SURFACED on every token surface — never "lifetime" claims. Spot-check the hero subtitle and every detail page TOKENS block.

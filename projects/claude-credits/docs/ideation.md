@@ -31,7 +31,7 @@ For claude-credits specifically:
 
 Other devs / Anthropic-adjacent folks. Knows what AI collab means; doesn't know the specific projects. Builder-to-builder voice, terse and sharp.
 
-- The `claude-credit` tool is content, not just infrastructure. Peers want to understand what it measures.
+- The site does NOT pitch the `claude-credit` tool (§4, §7) — but the About page may explain *what the numbers mean* (the taxonomy) as light context, so a curious peer trusts the receipts. That's explaining the magnitude, not promoting the apparatus.
 - Peers geek on the **WORK and its breadth** — the magnitude (tokens), the variety of what got built (code, tests, plans, prompts, images, audio, video), the cadence — NOT a *provenance scoreboard*. **The authored-vs-pipeline-vs-tool tier split is provenance ("how the magic was made") and is NOT the story** (Briggsy, 2026-05-24; reconciled with §11 — authorship/provenance is silent). The site surfaces *what exists*, framed by KIND, never an authored-vs-generated comparison. *(Superseded the earlier "the tier split is COMPELLING / peers need to understand authored-vs-pipeline" framing — that was the premise §11 + the detail-page deepening retired.)*
 - Light onboarding needed: peers don't need "what is a commit," but the About page still explains what the `claude-credit` taxonomy measures (for the curious) — as light context, never a scoreboard.
 
@@ -51,9 +51,14 @@ Each tile: hand-written one-liner, key visual (screenshot / trailer frame / hero
 
 Detail page expands with bigger visual (or gallery), 2-3 sentence description, "Try it →" button if deployed. It also surfaces the project's WORK as a single-column editorial scroll: tokens consumed, a media-asset donut (the one flourish), a "what got built" breadth inventory (code/tests/plans/prompts/images/audio/video by kind), and commit cadence. It makes **no authorship/provenance claim** (§11). See `plans/phase-5-detail.md`.
 
-### 4. Bottom CTA: dual — tool pitch + GitHub link
+### 4. No bottom CTA — the page ends on the work (Briggsy, 2026-05-24)
 
-Primary: "Try `claude-credit` on your own repo" with install command. Secondary: "Source on GitHub" to the monorepo. Two clean CTAs, not a wall of links. The site IS a demo of the tool.
+**The site is the drippy celebration of the WORK, not a pitch for the tool.** It ends on the magnitude of what got built — no button, no install command, no "Source on GitHub" link, nothing to click. The work is the final word.
+
+- `claude-credit` is the *tape measure* we used to count the work. It is ours, internal, **not a product the site promotes**. We do NOT publish it to npm for v1.
+- Supersedes the earlier "dual CTA — tool pitch + GitHub link / the site IS a demo of the tool" framing. That made the visit end on tool-promotion, which is exactly what this site is not about.
+- **Downstream:** Phase 7 (the "bottom CTA" phase) is gutted — its job becomes "design how the page *ends* on the work," not "build CTA buttons." The `cta.ts` / `resolveCtaCopy` / CTA-state-tracking plumbing (Phase 7 + About §2) is dead — remove it during Phase 7 reconciliation.
+- Per-project **"Try it →" live-link buttons on deployed projects stay** (§3) — those point a visitor at the actual *work* (the running game/app), not at the tool. Different thing.
 
 ### 5. Per-project highlight: ONE hand-picked hook per tile
 
@@ -65,9 +70,14 @@ No global superlatives. Specificity in the grid, magnitude in the hero.
 
 Both Hide and Seek and Do Not Disturb appear in the grid with a clear visual marker (faded tile / "shelved" badge / muted color). Detail pages explain what was tried. Honest about iteration arc — failures are part of the story. Visual treatment must read as intentional, not broken.
 
-### 7. Meta-projects appear in the grid
+### 7. Meta-projects do NOT appear — celebrate the work, not the apparatus (Briggsy, 2026-05-24)
 
-The `claude-credit` tool and `claude-credits` site itself appear in the grid alongside the products. Self-referential is a flex.
+The `claude-credit` tool and the `claude-credits` site itself are **cut from the grid.** A tile for the tape measure, and a tile for the very page you're standing on, are navel-gazing — the site is about the WORK, not its own construction.
+
+- Grid = the **9 real projects** + the **"the misses"** collective archive tile = **10 surfaces** (was 12). No "the tools" divider, no meta band.
+- **Meta is also excluded from the hero's combined totals**, not just the tiles (Claude's call, 2026-05-24 — Briggsy to veto if wanted). Rationale: counting the site's own build tokens (which live in the `claude-credits` JSONLs and may be one of the largest sinks) toward "the work being celebrated" is circular and inflates the hero. The honest total = the 9 active projects + the 6 shelved.
+- Consequence: `~/.claude-credit-projects.yaml` drops the `meta:` array (keeps `projects:` + `archive:`). Phase 0's 0.6b parser extension only needs `archive:`; the `kind: 'meta'` discriminator + `status: 'meta'` enum value become unused (reconcile at Phase 0).
+- Supersedes "Meta-projects appear in the grid / self-referential is a flex."
 
 ### 8. Taxonomy explainer: full on About + inline hint near hero
 
@@ -105,7 +115,7 @@ The site brags by being stunning and showing the WORK — magnitude, projects, p
 | 1. Hero | Brag the size | Landing page top |
 | 2. Project grid | Show the work + per-project hooks | Landing page below hero |
 | 3. Per-project detail | Tell the story | `/project/:name` |
-| 4. Bottom CTA | Try the tool / see the code | End of landing page |
+| 4. The close | The page ends on the magnitude of the work — no CTA, nothing to click (§4) | End of landing page |
 
 ---
 

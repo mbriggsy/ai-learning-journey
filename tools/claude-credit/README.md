@@ -165,7 +165,10 @@ export default {
 Long-term, the most accurate way to count "every generation Claude ever attempted" is to write a structured log as each one runs. Drop this call into any generation script (Imagen, TTS, ffmpeg, etc.) and v2 of claude-credit will read it for high-fidelity counts.
 
 ```sh
-pnpm add claude-credit   # or npm/yarn
+# Not published to npm — it's an internal monorepo tool.
+# Use it from elsewhere in this repo via a workspace reference or `npm link`
+# (see "Local setup" above), then:
+#   import { logGeneration } from 'claude-credit/log';
 ```
 
 ```ts

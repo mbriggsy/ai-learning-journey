@@ -2,8 +2,18 @@
 created: 2026-05-24T09:46:48-04:00
 deepened: 2026-05-24T16:09:09-04:00
 doc-reviewed: 2026-05-24T16:25:44-04:00
-coded:
+coded: 2026-05-25T14:07:34-04:00
 ---
+
+> **EXECUTED 2026-05-25 — ATC decisions + build-time corrections (code is now truth):**
+> 1. **Privacy guard = API-key SHAPES, not the english-word list (ATC).** HARD path/PII patterns still scan every string (the real vector). The SECOND tier is now real key fingerprints (`sk-ant-`, `sk-`/`sk-proj-`, Google `AIza`, GitHub `gh*_`, AWS `AKIA`, Slack `xox*`, PEM blocks) — NOT secret/password/username/email words. Key-shapes never false-positive on prose, so the `.editorial.` carve-out (Open decision #1 / Decision 5) is **GONE**. Catches actual leaked keys; the pipeline never touches `.env` anyway.
+> 2. **`commitsByAuthor` KEPT in the published JSON (ATC, Open decision #4).** Only `warnings[]` is dropped (from projects AND meta).
+> 3. **EAGER module-load fetch promise**, not lazy `getStatsPromise()`-in-render. The plan's lazy pattern tripped React 19's "component suspended by an uncached promise" warning; creating the promise at module load fixes it (and `resetStatsPromise()` recreates eagerly so retry is warning-free). Decision 3 / §2.3a updated in spirit.
+> 4. **Error boundary needs `override` on `state` + `componentDidCatch`** (Phase 1's `noImplicitOverride`); `getDerivedStateFromError` must NOT have it (not a base member in @types/react 19). §2.3c code lacked these.
+>
+> **FINDINGS (carry forward):**
+> - **★ editorial is `null` for ALL projects** — the locked `docs/editorial.md` worksheet was never transcribed into `~/.claude-credit-projects.yaml` per-project `editorial:` blocks (schema: `tools/claude-credit/src/config.ts:41`; absent ⇒ null). **Prescription:** add an `editorial:` block per project entry in the yaml (oneLiner, description, hookStat, liveUrl, repoUrl; heroImage when captures land), then `pnpm refresh`. **BLOCKER for Phase 4 tiles + Phase 5 detail; NOT Phase 3 hero** (hero reads combined token/line totals only).
+> - **claude-credits self-counts:** its committed `public/data/stats.json` (~3.6k lines) is counted into the `meta` totals on the next refresh (~0.7% of combined authoredLines, converges). A "count everything" wrinkle, deterministic once stable.
 
 # Phase 2 — Data wiring
 

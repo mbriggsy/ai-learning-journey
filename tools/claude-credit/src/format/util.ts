@@ -25,3 +25,16 @@ export function padRight(s: string, width: number): string {
 export function padLeft(s: string, width: number): string {
   return s.length >= width ? s : ' '.repeat(width - s.length) + s;
 }
+
+/** Em-dash used for "not measured" (null) values per the null discipline. */
+export const DASH = '—';
+
+/** Format an ISO timestamp as YYYY-MM-DD, or em-dash when null. */
+export function fmtDateOrDash(iso: string | null): string {
+  return iso ? iso.slice(0, 10) : DASH;
+}
+
+/** Format a number with separators, or em-dash when null (NEVER coerce null to 0). */
+export function fmtNumOrDash(n: number | null): string {
+  return n === null ? DASH : fmtNum(n);
+}

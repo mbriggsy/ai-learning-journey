@@ -2,6 +2,7 @@ import { promises as fs } from 'node:fs';
 import type {
   CategorizedFile,
   CategoryReport,
+  ProjectReport,
   SubcategoryStats,
   Tier,
   TierReport,
@@ -134,6 +135,28 @@ export function aggregateTiers(files: CategorizedFile[]): TierReport[] {
     }
     categories.sort((a, b) => b.totals.bytes - a.totals.bytes);
     result.push({ tier, categories, totals: tierTotals });
+  }
+  return result;
+}
+
+/**
+ * 0.2 — bytes-on-disk per asset family. ZERO discipline: every key is present
+ * and 0 when no bytes were found (we measured and there were none), never null.
+ * Only pipeline-generated/assets files contribute.
+ */
+export function aggregateAssetBytes(files: CategorizedFile[]): ProjectReport['assetBytesByKind'] {
+  const result: ProjectReport['assetBytesByKind'] = {
+    images: 0,
+    audio: 0,
+    video: 0,
+    fonts: 0,
+    'misc-media': 0,
+  };
+  for (const file of files) {
+    if (file.tier !== 'pipeline-generated' || file.category !== 'assets') continue;
+    if (file.subcategory in result) {
+      result[file.subcategory as keyof typeof result] += file.bytes;
+    }
   }
   return result;
 }

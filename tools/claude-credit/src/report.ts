@@ -1,7 +1,7 @@
 import path from 'node:path';
 import { compileRules, DEFAULT_RULES, classify } from './classifier.js';
 import { loadProjectConfig } from './config.js';
-import { categorize, aggregateTiers } from './counter.js';
+import { aggregateAssetBytes, categorize, aggregateTiers } from './counter.js';
 import { collectGitStats } from './git-stats.js';
 import { collectProxyStats } from './proxies.js';
 import type { CategorizedFile, GrandTotals, ProjectReport } from './taxonomy.js';
@@ -72,6 +72,8 @@ export async function buildProjectReport(opts: BuildReportOptions): Promise<Proj
     }
   }
 
+  const assetBytesByKind = aggregateAssetBytes(categorized);
+
   return {
     projectPath: rootDir,
     projectName: path.basename(rootDir),
@@ -81,8 +83,7 @@ export async function buildProjectReport(opts: BuildReportOptions): Promise<Proj
     proxies,
     grandTotals,
     warnings,
-    // TODO(0.2): replace placeholder with aggregateAssetBytes(categorized)
-    assetBytesByKind: { images: 0, audio: 0, video: 0, fonts: 0, 'misc-media': 0 },
+    assetBytesByKind,
     // TODO(0.3): replace placeholder with flat-mapped top-5 subcategories
     topSubcategories: [],
     // TODO(0.5b): replace placeholder with collectSessionTokens(...) result

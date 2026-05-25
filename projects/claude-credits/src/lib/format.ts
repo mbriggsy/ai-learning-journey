@@ -53,6 +53,18 @@ export function formatBytes(n: number): string {
 }
 
 /**
+ * Project age for the tile's age ribbon (Phase 4). `null → null` so the caller suppresses
+ * the ribbon entirely; `0 → "today"`; `1..364 → "47d"`; `≥365 → "1y"` (coarse past a year
+ * is intended — the ribbon is a glance, not a precise age). Pair with .tabular in markup.
+ */
+export function formatAge(projectAgeDays: number | null): string | null {
+  if (projectAgeDays === null) return null
+  if (projectAgeDays <= 0) return 'today'
+  if (projectAgeDays >= 365) return `${Math.floor(projectAgeDays / 365)}y`
+  return `${projectAgeDays}d`
+}
+
+/**
  * Derived model clause for the unit label (Phase 3 Decision 3 — DATA-DERIVED, never
  * hardcoded). Models that processed ZERO tokens are dropped: the clause is a "what
  * built this" credibility signal, and a 0-token model built nothing. This also keeps

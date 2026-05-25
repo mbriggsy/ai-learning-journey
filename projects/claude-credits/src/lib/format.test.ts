@@ -1,5 +1,5 @@
 import { describe, it, expect } from 'vitest'
-import { formatTokens, pickTokenUnit, formatInt, formatBytes, formatModelList, padCounter } from './format'
+import { formatTokens, pickTokenUnit, formatInt, formatBytes, formatModelList, padCounter, formatAge } from './format'
 
 const FS = ' ' // U+2007 figure space — must match the pad char in format.ts
 
@@ -46,6 +46,15 @@ describe('formatModelList', () => {
     ).toBe('OPUS 4.7'))
   it('all-zero breakdown yields no clause', () =>
     expect(formatModelList([{ model: '<synthetic>', sessions: 3, tokensProcessed: 0 }])).toBe(''))
+})
+
+describe('formatAge', () => {
+  it('null → null (caller suppresses the ribbon)', () => expect(formatAge(null)).toBe(null))
+  it('0 → today', () => expect(formatAge(0)).toBe('today'))
+  it('47 → 47d', () => expect(formatAge(47)).toBe('47d'))
+  it('364 → 364d (still days at the year boundary)', () => expect(formatAge(364)).toBe('364d'))
+  it('365 → 1y', () => expect(formatAge(365)).toBe('1y'))
+  it('400 → 1y (coarse past a year)', () => expect(formatAge(400)).toBe('1y'))
 })
 
 describe('padCounter (constant-width counter frames)', () => {

@@ -1,7 +1,7 @@
 ---
 title: GSAP useGSAP({ scope }) does not scope selector strings — only context revert
 date: 2026-05-25
-phase: Phase 4 — project grid (flagged in Phase 3/4 review, P2 pending)
+phase: Phase 4 — project grid (found in Phase 3/4 review, fixed 2026-05-25)
 modules: [src/components/ProjectGrid/ProjectGrid.tsx]
 tags: [gsap, usegsap, scrolltrigger, selector-scope, react, latent-trap]
 ---
@@ -26,7 +26,7 @@ so they were never scoped to begin with.
 Benign while exactly one component owns `[data-tile]`. The moment a second route/component
 uses the same attribute, the grid's `gsap.set` hides *its* elements and the batch adopts
 them — a silent cross-route hijack. (4 independent review personas flagged this; verified
-against source. Currently a pending P2 — the grid is the only `[data-tile]` host so far.)
+against source and fixed 2026-05-25, before any second `[data-tile]` host existed.)
 
 ## Fix
 

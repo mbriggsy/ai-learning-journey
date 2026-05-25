@@ -4,12 +4,21 @@ import { loadProjectConfig } from './config.js';
 import { aggregateAssetBytes, categorize, aggregateTiers } from './counter.js';
 import { collectGitStats } from './git-stats.js';
 import { collectProxyStats } from './proxies.js';
+import { collectSessionTokens } from './session-tokens.js';
 import type { CategorizedFile, GrandTotals, ProjectReport } from './taxonomy.js';
 import { walkProject } from './walker.js';
 
 export interface BuildReportOptions {
   rootDir: string;
   includeIgnored?: boolean;
+  /** Home dir override for session-token slug resolution (testability seam). */
+  homeDir?: string;
+  /**
+   * Full set of configured project slugs (projects + meta + archive), so the
+   * session-token slug matcher can disambiguate subdir siblings via
+   * longest-prefix-match. Omitted for single-project scans (self-only).
+   */
+  configuredParentSlugs?: string[];
 }
 
 export async function buildProjectReport(opts: BuildReportOptions): Promise<ProjectReport> {
@@ -37,11 +46,15 @@ export async function buildProjectReport(opts: BuildReportOptions): Promise<Proj
   }
 
   const tiers = aggregateTiers(categorized);
-  const [git, proxies] = await Promise.all([
+  const [git, proxies, tokenResult] = await Promise.all([
     collectGitStats(rootDir),
     collectProxyStats(rootDir, {
       iterationDirNames: config.proxies?.iterationDirNames,
       regenScriptGlobs: config.proxies?.regenScriptGlobs,
+    }),
+    collectSessionTokens(rootDir, {
+      homeDir: opts.homeDir,
+      configuredParentSlugs: opts.configuredParentSlugs,
     }),
   ]);
 
@@ -102,8 +115,7 @@ export async function buildProjectReport(opts: BuildReportOptions): Promise<Proj
     warnings,
     assetBytesByKind,
     topSubcategories,
-    // TODO(0.5b): replace placeholder with collectSessionTokens(...) result
-    tokens: null,
+    tokens: tokenResult.stats,
     // TODO(0.5c): replace placeholders with static test-case + plan breadth counts
     testCases: 0,
     testLines: 0,

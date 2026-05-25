@@ -4,6 +4,7 @@ import path from 'node:path';
 import yaml from 'js-yaml';
 import { loadMultiProjectConfig } from './config.js';
 import { buildProjectReport } from './report.js';
+import { classifySlugs, projectPathToSessionSlug } from './session-tokens.js';
 import type { MultiProjectReport, ProjectReport } from './taxonomy.js';
 
 export interface BuildMultiOptions {
@@ -65,6 +66,8 @@ export async function buildMultiProjectReport(opts: BuildMultiOptions = {}): Pro
   report: MultiProjectReport;
   configPath: string | null;
   configCreated: boolean;
+  /** On-disk session slugs matching no configured project (path-bearing — never published). */
+  orphanSlugs: string[];
 }> {
   const homeDir = opts.homeDir ?? os.homedir();
   let projectPaths: string[];
@@ -81,6 +84,10 @@ export async function buildMultiProjectReport(opts: BuildMultiOptions = {}): Pro
     projectPaths = (config?.projects ?? []).map((p) => expandHome(p.path, homeDir));
   }
 
+  // Full set of configured slugs for longest-prefix session-slug matching.
+  // 0.5b: projects only. 0.6b extends this with meta + archive paths.
+  const configuredParentSlugs = projectPaths.map(projectPathToSessionSlug);
+
   const projects: ProjectReport[] = [];
   for (const projectPath of projectPaths) {
     try {
@@ -92,9 +99,13 @@ export async function buildMultiProjectReport(opts: BuildMultiOptions = {}): Pro
     const report = await buildProjectReport({
       rootDir: projectPath,
       includeIgnored: opts.includeIgnored,
+      homeDir,
+      configuredParentSlugs,
     });
     projects.push(report);
   }
+  // 0.6b populates meta[] (totals-only) + archiveCollective; empty until then.
+  const meta: ProjectReport[] = [];
 
   const combined: MultiProjectReport['combined'] = {
     projectCount: projects.length,
@@ -139,16 +150,69 @@ export async function buildMultiProjectReport(opts: BuildMultiOptions = {}): Pro
     combined.totalAllBytes += p.grandTotals.allBytes;
   }
 
+  // 0.5b — token aggregation over projects[] + meta[] (null-skip). Invariants B + C.
+  // Window bounds compare real timestamps (Date.parse), not lexical ISO, but store
+  // the ISO string. 0.6b adds the archiveCollective term to these totals.
+  let tokenWindowStartMs: number | null = null;
+  let tokenWindowEndMs: number | null = null;
+  const modelAcc = new Map<string, { sessions: number; tokensProcessed: number }>();
+  for (const e of [...projects, ...meta]) {
+    const t = e.tokens;
+    if (!t) continue;
+    combined.totalTokensProcessed += t.tokensProcessed;
+    combined.totalTokensFresh += t.tokensFresh;
+    combined.totalSessions += t.sessionCount;
+    if (t.windowStartISO) {
+      const ms = Date.parse(t.windowStartISO);
+      if (Number.isFinite(ms) && (tokenWindowStartMs === null || ms < tokenWindowStartMs)) {
+        tokenWindowStartMs = ms;
+        combined.tokenWindowStartISO = t.windowStartISO;
+      }
+    }
+    if (t.windowEndISO) {
+      const ms = Date.parse(t.windowEndISO);
+      if (Number.isFinite(ms) && (tokenWindowEndMs === null || ms > tokenWindowEndMs)) {
+        tokenWindowEndMs = ms;
+        combined.tokenWindowEndISO = t.windowEndISO;
+      }
+    }
+    for (const m of t.byModel) {
+      const acc = modelAcc.get(m.model) ?? { sessions: 0, tokensProcessed: 0 };
+      acc.sessions += m.sessions;
+      acc.tokensProcessed += m.tokensProcessed;
+      modelAcc.set(m.model, acc);
+    }
+  }
+  combined.tokenWindowDays =
+    tokenWindowStartMs !== null && tokenWindowEndMs !== null
+      ? Math.floor((tokenWindowEndMs - tokenWindowStartMs) / 86_400_000)
+      : null;
+  combined.modelBreakdown = Array.from(modelAcc.entries())
+    .map(([model, v]) => ({ model, sessions: v.sessions, tokensProcessed: v.tokensProcessed }))
+    .sort((a, b) => b.tokensProcessed - a.tokensProcessed);
+
+  // Orphan session slugs: on-disk dirs matching no configured project.
+  // NEVER published (path-bearing PII) — surfaced only as an aggregated warning.
+  let orphanSlugs: string[] = [];
+  try {
+    const projectsDir = path.join(homeDir, '.claude', 'projects');
+    const entries = await fs.readdir(projectsDir, { withFileTypes: true });
+    const onDisk = entries.filter((entry) => entry.isDirectory()).map((entry) => entry.name);
+    orphanSlugs = classifySlugs(configuredParentSlugs, onDisk).orphans;
+  } catch {
+    /* no ~/.claude/projects */
+  }
+
   return {
     report: {
       projects,
-      // TODO(0.6b): populate meta[] (totals-only, editorial: null) + archiveCollective rollup
-      meta: [],
+      meta,
       archiveCollective: null,
       combined,
       scannedAt: new Date().toISOString(),
     },
     configPath,
     configCreated,
+    orphanSlugs,
   };
 }

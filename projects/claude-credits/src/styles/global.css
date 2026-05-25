@@ -1,0 +1,40 @@
+html, body {
+  overflow-x: hidden; /* no horizontal scroll at any width */
+  /* Chromeless scrollbar — the UMB how-to-play bar. A native scrollbar thumb is a
+     thumbprint on the waxed hood. */
+  scrollbar-width: none;
+  -ms-overflow-style: none;
+}
+html::-webkit-scrollbar, body::-webkit-scrollbar { display: none; }
+
+body {
+  min-height: 100vh;
+  min-height: 100svh; /* svh = smallest viewport (toolbar visible), stable — no scroll-jump. Keep directly below the vh line. */
+  background: var(--surface-page);
+  color: var(--text-primary);
+  font-family: var(--font-body);
+  font-size: var(--text-body);
+}
+
+/* Tabular numerals — apply to every animated/aligned number. NOT global:
+   proportional figures read better in body prose. */
+.tabular {
+  font-variant-numeric: tabular-nums lining-nums;
+  font-feature-settings: 'tnum' 1, 'lnum' 1;
+}
+
+/* Hover effects gate behind real pointers so touch doesn't trap hover states */
+@media (hover: hover) and (pointer: fine) {
+  /* component hover rules live here / in component CSS */
+}
+
+/* Reduced-motion foundation safety net. Components ALSO check prefersReducedMotion()
+   in JS (motion/reduced-motion.ts); this is the CSS backstop. */
+@media (prefers-reduced-motion: reduce) {
+  *, *::before, *::after {
+    animation-duration: 0.01ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.01ms !important;
+    scroll-behavior: auto !important;
+  }
+}

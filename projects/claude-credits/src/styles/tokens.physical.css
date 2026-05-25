@@ -1,0 +1,40 @@
+/* PHYSICAL TOKENS — raw values only. Components NEVER reference --c-* color tokens.
+   Only tokens.semantic.css may use them. A Phase 9 stylelint rule fails CI if any
+   --c-* token appears outside this file. (--space-* and --radius-* are exempt — see
+   Decision 4 — components may use them directly.) */
+:root {
+  /* Color — dark palette physicals */
+  --c-midnight-deep: #0a1a26;
+  --c-midnight-gradient: #0f2839;
+  --c-cream-text: #f5e9d3;
+  --c-cool-gray: #9eb4c4;
+  --c-orange-dark: #ff8c42;
+  --c-gold-dark: #ffd34e;
+  --c-danger-dark: #d4524c;
+
+  /* Color — light palette physicals */
+  --c-cream-paper: #f7f1e3;
+  --c-cream-deeper: #efe6d0;
+  --c-warm-black: #1a1a1c;
+  --c-warm-slate: #4a4a52;
+  --c-orange-light: #d4631a;
+  --c-gold-light: #a8761e;
+  --c-danger-light: #9e2a25;
+
+  /* Spacing scale (4px base, modular) */
+  --space-1: 0.25rem;
+  --space-2: 0.5rem;
+  --space-3: 0.75rem;
+  --space-4: 1rem;
+  --space-6: 1.5rem;
+  --space-8: 2rem;
+  --space-12: 3rem;
+  --space-16: 4rem;
+  --space-24: 6rem;
+
+  /* Radii */
+  --radius-sm: 6px;
+  --radius-md: 12px;
+  --radius-lg: 20px;
+  --radius-pill: 999px;
+}

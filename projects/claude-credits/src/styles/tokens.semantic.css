@@ -1,0 +1,124 @@
+/* SEMANTIC TOKENS — role-based color/surface aliases + type/motion primitives.
+   Dark is the default :root. Light applies via EITHER the OS preference (when no
+   manual override) OR an explicit [data-theme="light"] (dev ?theme= override). */
+:root {
+  /* Surfaces */
+  --surface-page: var(--c-midnight-deep);
+  --surface-page-gradient-stop: var(--c-midnight-gradient);
+  --surface-elevated: rgba(20, 40, 56, 0.6);
+  --surface-glass-blur: 20px;
+  --surface-overlay: rgba(0, 0, 0, 0.4);
+  --surface-divider: rgba(245, 233, 211, 0.08);
+
+  /* Text */
+  --text-primary: var(--c-cream-text);
+  --text-secondary: var(--c-cool-gray);
+  --text-muted: rgba(158, 180, 196, 0.6);
+  --text-on-accent: var(--c-midnight-deep);
+  --text-link: var(--c-orange-dark);
+
+  /* Accents */
+  --accent-primary: var(--c-orange-dark);
+  --accent-stat-highlight: var(--c-gold-dark);
+  --accent-danger: var(--c-danger-dark);
+  --accent-focus: var(--c-orange-dark);
+
+  /* Borders */
+  --border-subtle: rgba(245, 233, 211, 0.08);
+  --border-strong: rgba(245, 233, 211, 0.16);
+  --border-focus: var(--c-orange-dark);
+
+  /* Shadow / elevation (dark = subtle, bg does the lift) */
+  --shadow-tile: 0 4px 24px rgba(0, 0, 0, 0.5);
+  --shadow-hover: 0 12px 48px rgba(0, 0, 0, 0.65);
+  --shadow-modal: 0 24px 64px rgba(0, 0, 0, 0.8);
+
+  /* Radius semantic roles (prevents uniform-corner AI-slop; tuned in Phase 9) */
+  --radius-tile: var(--radius-md);
+  --radius-chip: var(--radius-sm);
+  --radius-button: var(--radius-pill);
+  --radius-modal: var(--radius-lg);
+
+  /* Type — families (self-hosted; see fonts.css) */
+  --font-display: 'Satoshi', system-ui, sans-serif;
+  --font-body: 'Inter', system-ui, sans-serif;
+  --font-mono: 'JetBrains Mono', ui-monospace, monospace;
+
+  /* Type — 7-step clamp scale (genuinely mobile-first: each vw track crosses its
+     floor in the phone→tablet range, so secondary type scales on phones too) */
+  --text-display-hero: clamp(4rem, 18vw, 22rem);     /* THE big number — matches Phase 3 + README ~22rem */
+  --text-display-lg: clamp(2.25rem, 8vw, 4.5rem);
+  --text-display-md: clamp(1.5rem, 5vw, 2.25rem);
+  --text-stat-callout: clamp(2rem, 7vw, 3.5rem);
+  --text-body-lg: clamp(1.125rem, 2.5vw, 1.375rem);
+  --text-body: 1rem;                                  /* baseline — never clamp */
+  --text-meta: 0.875rem;
+
+  /* Type — line heights. display-hero is sub-1 for SINGLE-LINE numbers only;
+     wrapping headings MUST use --leading-heading or higher (see landmine). */
+  --leading-display-hero: 0.95;
+  --leading-heading: 1.05;
+  --leading-tile: 1.15;
+  --leading-body: 1.55;
+  --leading-meta: 1.4;
+
+  /* Type — tracking */
+  --tracking-display: -0.04em;
+  --tracking-tile: -0.02em;
+  --tracking-body: 0;
+  --tracking-meta: 0.01em;
+}
+
+/* LIGHT — applied by OS preference only when no manual override is set. */
+@media (prefers-color-scheme: light) {
+  :root:not([data-theme]) {
+    --surface-page: var(--c-cream-paper);
+    --surface-page-gradient-stop: var(--c-cream-deeper);
+    --surface-elevated: rgba(255, 251, 240, 0.7);
+    --surface-glass-blur: 14px;
+    --surface-overlay: rgba(58, 38, 18, 0.3);
+    --surface-divider: rgba(26, 26, 28, 0.08);
+    --text-primary: var(--c-warm-black);
+    --text-secondary: var(--c-warm-slate);
+    --text-muted: rgba(74, 74, 82, 0.6);
+    --text-on-accent: var(--c-cream-paper);
+    --text-link: var(--c-orange-light);
+    --accent-primary: var(--c-orange-light);
+    --accent-stat-highlight: var(--c-gold-light);
+    --accent-danger: var(--c-danger-light);
+    --accent-focus: var(--c-orange-light);
+    --border-subtle: rgba(26, 26, 28, 0.08);
+    --border-strong: rgba(26, 26, 28, 0.16);
+    --border-focus: var(--c-orange-light);
+    --shadow-tile: 0 8px 32px rgba(58, 38, 18, 0.18);
+    --shadow-hover: 0 16px 56px rgba(58, 38, 18, 0.28);
+    --shadow-modal: 0 32px 80px rgba(58, 38, 18, 0.4);
+  }
+}
+
+/* ...AND applied explicitly via the dev/v1.1 manual override. Same values —
+   keep in sync with the @media block above. [data-theme="dark"] needs nothing
+   (dark is the :root default, and the @media light block is gated by :not([data-theme])). */
+:root[data-theme='light'] {
+  --surface-page: var(--c-cream-paper);
+  --surface-page-gradient-stop: var(--c-cream-deeper);
+  --surface-elevated: rgba(255, 251, 240, 0.7);
+  --surface-glass-blur: 14px;
+  --surface-overlay: rgba(58, 38, 18, 0.3);
+  --surface-divider: rgba(26, 26, 28, 0.08);
+  --text-primary: var(--c-warm-black);
+  --text-secondary: var(--c-warm-slate);
+  --text-muted: rgba(74, 74, 82, 0.6);
+  --text-on-accent: var(--c-cream-paper);
+  --text-link: var(--c-orange-light);
+  --accent-primary: var(--c-orange-light);
+  --accent-stat-highlight: var(--c-gold-light);
+  --accent-danger: var(--c-danger-light);
+  --accent-focus: var(--c-orange-light);
+  --border-subtle: rgba(26, 26, 28, 0.08);
+  --border-strong: rgba(26, 26, 28, 0.16);
+  --border-focus: var(--c-orange-light);
+  --shadow-tile: 0 8px 32px rgba(58, 38, 18, 0.18);
+  --shadow-hover: 0 16px 56px rgba(58, 38, 18, 0.28);
+  --shadow-modal: 0 32px 80px rgba(58, 38, 18, 0.4);
+}

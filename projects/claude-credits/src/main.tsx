@@ -1,7 +1,12 @@
 import { StrictMode } from 'react'
 import { createRoot } from 'react-dom/client'
 import { BrowserRouter } from 'react-router'
-// NOTE: style imports added in Commit 3, motion side-effect imports in Commit 4.
+import './styles/reset.css'
+import './styles/tokens.physical.css'
+import './styles/tokens.semantic.css'
+import './styles/fonts.css'
+import './styles/global.css'
+// NOTE: motion side-effect imports (gsap-context, easings) added in Commit 4.
 // Phase-1-done main.tsx (plan §1.6) is the union of all three commits.
 import App from './App'
 

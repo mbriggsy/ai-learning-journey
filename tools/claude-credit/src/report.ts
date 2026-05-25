@@ -74,6 +74,23 @@ export async function buildProjectReport(opts: BuildReportOptions): Promise<Proj
 
   const assetBytesByKind = aggregateAssetBytes(categorized);
 
+  // 0.3 — top 5 subcategories by bytes, flattened across all tiers/categories.
+  const topSubcategories = tiers
+    .flatMap((t) =>
+      t.categories.flatMap((c) =>
+        c.subcategories.map((s) => ({
+          tier: t.tier,
+          category: c.category,
+          subcategory: s.subcategory,
+          bytes: s.bytes,
+          files: s.files,
+          lines: s.totalLines,
+        })),
+      ),
+    )
+    .sort((a, b) => b.bytes - a.bytes)
+    .slice(0, 5);
+
   return {
     projectPath: rootDir,
     projectName: path.basename(rootDir),
@@ -84,8 +101,7 @@ export async function buildProjectReport(opts: BuildReportOptions): Promise<Proj
     grandTotals,
     warnings,
     assetBytesByKind,
-    // TODO(0.3): replace placeholder with flat-mapped top-5 subcategories
-    topSubcategories: [],
+    topSubcategories,
     // TODO(0.5b): replace placeholder with collectSessionTokens(...) result
     tokens: null,
     // TODO(0.5c): replace placeholders with static test-case + plan breadth counts

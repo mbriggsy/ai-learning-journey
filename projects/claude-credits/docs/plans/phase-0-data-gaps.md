@@ -2,7 +2,7 @@
 created: 2026-05-24T09:46:48-04:00
 deepened: 2026-05-24T12:43:38-04:00
 doc-reviewed: 2026-05-24T13:11:43-04:00
-coded:
+coded: 2026-05-25T12:14:49-04:00
 ---
 
 # Phase 0 — Data contract (`tools/claude-credit/`)

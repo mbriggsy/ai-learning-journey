@@ -1,6 +1,6 @@
 # claude-credits — TODO
 
-**Status:** All phases (−1 through 9) deepened + doc-reviewed. **Preflight −1 executed 2026-05-24.** Briggsy locked the scope (2026-05-24/25): **no CTA · clean tiles · no meta tiles but meta counted in totals · no publish** — propagated across ideation + README + every affected phase plan (0/2/3/4/5/6/7), drift-safe + `/ce:review`'d; preflight under a superseded banner; lesson in `docs/insights/001`. `coded:` frontmatter on all 12 phases. **The plan set is internally consistent + the editorial worksheet's voice review is DONE** (burned URL wired). Next actionable: **Phase 0 — code the data contract** (`tools/claude-credit/` extensions per `phase-0-data-gaps.md`). Outstanding non-blocking: hero-image captures (parallel). See DECISIONS LOCKED block for the full record.
+**Status:** All phases (−1 through 9) deepened + doc-reviewed. **Preflight −1 executed 2026-05-24. Phase 0 (data contract) EXECUTED + verified 2026-05-25** — `tools/claude-credit` is at **v0.2.0**, 44 tests green, every field group verified on real data (BURNED 9.3B tokens; `--all` = 9 projects + 2 meta + 6 archive, combined 10.59B tokens). Briggsy locked the scope (2026-05-24/25): **no CTA · clean tiles · no meta tiles but meta counted in totals · no publish**. The plan set is internally consistent + the editorial worksheet's voice review is DONE. **Next actionable: Phase 1 — scaffold the Vite + TS site shell** (`phase-1-scaffold.md`). Outstanding non-blocking: hero-image captures (parallel); resolve `sessionCount` naming (counts assistant MESSAGES, not sessions — decide rename vs. distinct-session count at Phase 3). See DECISIONS LOCKED block for the full record.
 
 > **House rule — TODO is NOT a diary.** Actionable items only. No session history, no "what we did" logs, no narrative addenda. The git log has the history. If a line isn't an open thing Claude or Briggsy can act on, it doesn't belong here. Strip cruft when you find it.
 
@@ -48,7 +48,9 @@ Grid = **9 project tiles + 1 "the misses" archive coda = 10 surfaces** (no meta 
 - [x] **Briggsy reviewed `docs/editorial.md`** (chat, 2026-05-25) — all 9 one-liners + hook picks + descriptions + the 6 "misses" locked; sign-off boxes checked. Outstanding (non-blocking): hero-image captures (parallel). Hook values verified 2026-05-25 (HOOKS 5, FILES 4, CARDS 120).
 - Cascade commit (preflight→phase-0/4/5) is MOOT — those amendments were already absorbed when each phase was individually deepened. Verified.
 
-→ then Phase 0 (data contract code — reconcile first per above) → 1 → 2 → … → 9. Verify each in the browser (BOTH modes, mobile) before moving on — runtime truth > green tests.
+**Phase 0 — DONE 2026-05-25.** All units (Batch A, 0.1–0.8, 0.10, 0.7) landed + committed; `coded:` stamped. The Phase 0→1 handoff checklist is fully green and the cascade to phase-2/3/4/5/8 was verified already-landed (grepped: no bare `totalTokens`, archiveCollective/stripForPublish/tokens-null all present). Three plan-command bugs were found + fixed during execution (git `--reverse --max-count` age bug; `git log -z` trailing-`%x00`; co-author regex case-sensitivity) — see git log + insight if distilled.
+
+→ then **Phase 1 (scaffold)** → 2 → … → 9. Verify each in the browser (BOTH modes, mobile) before moving on — runtime truth > green tests.
 
 ---
 

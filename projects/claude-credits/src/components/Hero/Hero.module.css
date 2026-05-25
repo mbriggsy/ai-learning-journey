@@ -119,7 +119,8 @@
   color: var(--text-secondary);
 }
 
-/* gradient breath layer — keyframes activated in C3 */
+/* gradient breath layer — ONE slow ambient loop, barely perceptible, off the main thread
+   (CSS @keyframes, not GSAP — it's a predetermined infinite loop, not interruptible). */
 .breath {
   position: absolute;
   inset: -20%;
@@ -127,6 +128,23 @@
   pointer-events: none;
   background: radial-gradient(60% 50% at 50% 38%, var(--surface-page-gradient-stop), transparent 70%);
   opacity: 0.7;
+  animation: breath 12s ease-in-out infinite;
+}
+@keyframes breath {
+  0%,
+  100% {
+    opacity: 0.55;
+    transform: translateY(0) scale(1);
+  }
+  50% {
+    opacity: 0.8;
+    transform: translateY(-1.5%) scale(1.04);
+  }
+}
+@media (prefers-reduced-motion: reduce) {
+  .breath {
+    animation: none;
+  } /* global.css net also covers this; explicit here for intent */
 }
 
 /* explicit phone polish (Phase 1 mobile cascade: 600px) */

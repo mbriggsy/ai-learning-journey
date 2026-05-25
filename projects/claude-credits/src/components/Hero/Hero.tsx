@@ -3,10 +3,10 @@ import { Link } from 'react-router'
 import { useStats } from '@/hooks/useStats'
 import { prefersReducedMotion } from '@/motion/reduced-motion'
 import { formatInt, formatBytes, formatTokens, formatModelList } from '@/lib/format'
+import { gsap, useGSAP } from '@/motion/gsap-context'
+import { duration, stagger } from '@/motion/tokens'
 import { HeroCounter } from './HeroCounter'
 import styles from './Hero.module.css'
-// C3 adds: import { gsap, useGSAP } from '@/motion/gsap-context'
-//          import { duration, stagger } from '@/motion/tokens'
 
 export function Hero() {
   const heroRef = useRef<HTMLElement>(null) // GSAP scope root (used by the C3 reveal timeline)
@@ -35,6 +35,31 @@ export function Hero() {
     day: 'numeric',
     year: 'numeric',
   })
+
+  // Reveal choreography (Decision 10): the number group (counter + unit label + honest
+  // sub-line) lands EARLY so the `fresh` credibility anchor is in the first glance — only
+  // the supporting line + taxonomy hint stagger in after the counter settles. autoAlpha + y,
+  // never scale(0). Scoped to heroRef so useGSAP auto-reverts on StrictMode's double-invoke.
+  useGSAP(
+    () => {
+      if (prefersReducedMotion()) return // CSS net + HeroCounter already render the final state
+      gsap.from('[data-reveal="number"]', {
+        autoAlpha: 0,
+        y: 12,
+        duration: 0.6,
+        ease: 'weighted-arrive',
+      })
+      gsap.from('[data-reveal="after"]', {
+        autoAlpha: 0,
+        y: 16,
+        duration: 0.6,
+        ease: 'weighted-arrive',
+        stagger: stagger.supportingLines, // 0.08
+        delay: duration.counter, // 2.4 — secondary context follows the magnitude
+      })
+    },
+    { scope: heroRef },
+  )
 
   return (
     <section

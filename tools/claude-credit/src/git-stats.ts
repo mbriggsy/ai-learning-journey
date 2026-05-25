@@ -36,6 +36,16 @@ function emptyStats(): GitStats {
     discardedAssetByKind: {},
     assetModificationEvents: 0,
     assetUniquePathsTouched: 0,
+    firstCommitISO: null,
+    lastCommitISO: null,
+    projectAgeDays: null,
+    linesByAuthor: [],
+    timeline: {
+      commitsByDay: [],
+      activeDays: 0,
+      peakDay: null,
+      largestSingleCommit: null,
+    },
   };
 }
 

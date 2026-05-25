@@ -96,7 +96,7 @@ export async function buildMultiProjectReport(opts: BuildMultiOptions = {}): Pro
     projects.push(report);
   }
 
-  const combined = {
+  const combined: MultiProjectReport['combined'] = {
     projectCount: projects.length,
     totalAuthoredFiles: 0,
     totalAuthoredBytes: 0,
@@ -110,6 +110,19 @@ export async function buildMultiProjectReport(opts: BuildMultiOptions = {}): Pro
     totalIterationProxies: 0,
     totalAllFiles: 0,
     totalAllBytes: 0,
+    // TODO(0.5b): aggregated by the loop below once tokens land
+    totalTokensProcessed: 0,
+    totalTokensFresh: 0,
+    totalSessions: 0,
+    tokenWindowStartISO: null,
+    tokenWindowEndISO: null,
+    tokenWindowDays: null,
+    modelBreakdown: [],
+    // TODO(0.5c): aggregated by the loop below once test/plan counts land
+    totalTestCases: 0,
+    totalTestLines: 0,
+    totalPlanCount: 0,
+    totalPlanLines: 0,
   };
   for (const p of projects) {
     combined.totalAuthoredFiles += p.grandTotals.authoredFiles;
@@ -129,6 +142,9 @@ export async function buildMultiProjectReport(opts: BuildMultiOptions = {}): Pro
   return {
     report: {
       projects,
+      // TODO(0.6b): populate meta[] (totals-only, editorial: null) + archiveCollective rollup
+      meta: [],
+      archiveCollective: null,
       combined,
       scannedAt: new Date().toISOString(),
     },

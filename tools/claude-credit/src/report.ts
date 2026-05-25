@@ -81,5 +81,18 @@ export async function buildProjectReport(opts: BuildReportOptions): Promise<Proj
     proxies,
     grandTotals,
     warnings,
+    // TODO(0.2): replace placeholder with aggregateAssetBytes(categorized)
+    assetBytesByKind: { images: 0, audio: 0, video: 0, fonts: 0, 'misc-media': 0 },
+    // TODO(0.3): replace placeholder with flat-mapped top-5 subcategories
+    topSubcategories: [],
+    // TODO(0.5b): replace placeholder with collectSessionTokens(...) result
+    tokens: null,
+    // TODO(0.5c): replace placeholders with static test-case + plan breadth counts
+    testCases: 0,
+    testLines: 0,
+    planCount: 0,
+    planLines: 0,
+    // TODO(0.6): replace placeholder with validated editorial block
+    editorial: null,
   };
 }

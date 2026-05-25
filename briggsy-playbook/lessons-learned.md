@@ -9,6 +9,28 @@ Things we figured out the hard way. Each entry: date, incident, lesson. Newest a
 
 ---
 
+## 2026-05-24 — Design (and VERIFY) against the degenerate case, not just the happy path
+
+**Incident:** Deepening + doc-reviewing claude-credits Phase 5 (the per-project detail page). The plan was thorough — paint-by-numbers recipe, every section spec'd, null-degrade rules per field. The 7-persona document-review caught a through-line none of the individual section specs revealed: **the whole plan was designed and verified against BURNED — the data-RICH project where every field is populated — and never against the project it would actually ship FIRST: the `claude-credit` tool itself, on a clean deploy box.**
+
+That degenerate is brutal and specific: a clean CI/deploy runner has no Claude Code session JSONLs → `tokens: null`. The CLI tool has no generated media → the asset donut is empty. No editorial config written yet → `editorial: null`. Thin file tree → a 1-3 item "what got built" inventory. Walk the page with all those nulls at once and **5 of 7 movements omit** — you get a bare hero + a sparkline + maybe two stat callouts in a grid built for eight (empty trailing columns = the "dead white space = failure" bar miss). And that near-empty page is the **flagship** the AI-peer audience clicks first, because they came to geek on the tool.
+
+The plan's null-degrade tests existed — but each tested ONE null in isolation (one scratch project with `editorial: null`, a different one with `tokens: null`). Never the COMBINATION on the same project. The combination is the real shipping input.
+
+**Fixes integrated:** a content floor (≤3 inventory items render as a centered row, not a gapped grid); editorial (`oneLiner`+`description`) promoted to a HARD dependency for every detail page so the story always renders even when the numbers are sparse; and a verify-gate scenario that tests the combined-null case AND the actual `claude-credit` meta project by name.
+
+**Lessons:**
+1. **A plan verified only against the rich case is a plan with a blind spot.** "It renders beautifully for BURNED" proved nothing about the project that ships first. Pick the WORST real input — the emptiest legitimate project — and design the page for THAT; the rich case takes care of itself.
+2. **Test null-degrades in COMBINATION, not in isolation.** One-null-at-a-time scratch tests pass while the all-null-at-once page is broken. The union is the real input.
+3. **Identify the first-shipped / most-clicked instance explicitly and name it in the verify gate.** "The flagship `claude-credit` meta project on a clean deploy" is a sharp, checkable target; "various edge cases" is not.
+4. **The multi-persona doc-review earns its keep on exactly this.** No single section spec showed the gap — it only appeared when an adversarial reviewer traced one degenerate project through ALL the sections at once. Worth the spend.
+
+Same session, two more catches worth noting: a reviewer read the *installed* GSAP plugin source and found a factual error (`pathLength="100"` is inert for DrawSVG — it measures from the circle's `r`), and reading Phase 0's actual privacy code resolved a mechanism I'd mis-modeled (it's a denylist + a test tripwire, not an allowlist-projection) — which made the fix SMALLER, not bigger. **Reading the real source beats reasoning from the doc, every time.**
+
+**Memorialized in:** `projects/claude-credits/docs/plans/phase-5-detail.md` (Decision 12 — content floor + editorial-as-hard-dependency; verify gates 4a/11a), `projects/claude-credits/TODO.md` (Landmines), and this entry.
+
+---
+
 ## 2026-05-24 — Inherited "desktop showcase" framing in claude-credits TODO
 
 **Incident:** Mid-planning on claude-credits (the public showcase site for the `claude-credit` CLI). I asked Claude to revise the TODO based on the WHAT-interview decisions. Claude did the revision well — applied all the bar revisions, expanded Phase 0 with the new metrics, added editorial schema — but left the line *"Mobile-first deep optimization beyond 'doesn't break' (this is a desktop showcase)"* sitting in the out-of-scope section. The phrasing was inherited from the pre-WHAT version of the TODO.

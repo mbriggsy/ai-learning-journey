@@ -224,5 +224,167 @@ export async function collectGitStats(rootDir: string): Promise<GitStats> {
     /* ignore */
   }
 
+  // 0.4 + 0.5 — linesByAuthor (Co-Authored-By aware) + timeline, in ONE -z pass.
+  // ADDITIVE to the lifetime-churn/uniqueFiles pass above (which stays as-is).
+  try {
+    const out = await git(
+      rootDir,
+      withScope(['log', '-z', '--pretty=format:%H%x00%aI%x00%aN%x00%B%x00', '--numstat']),
+    );
+    const commits = parseGitCommitLog(out);
+
+    // linesByAuthor — ADDITIVE attribution: primary author gets the commit's
+    // churn + a `commits` tick; each Co-Authored-By trailer gets the SAME full
+    // churn + a `coAuthoredCommits` tick (NOT a `commits` tick).
+    const authorMap = new Map<
+      string,
+      { author: string; commits: number; linesAdded: number; linesRemoved: number; coAuthoredCommits: number }
+    >();
+    const entryFor = (author: string) => {
+      let e = authorMap.get(author);
+      if (!e) {
+        e = { author, commits: 0, linesAdded: 0, linesRemoved: 0, coAuthoredCommits: 0 };
+        authorMap.set(author, e);
+      }
+      return e;
+    };
+
+    const byDay = new Map<string, number>();
+    let largest: GitStats['timeline']['largestSingleCommit'] = null;
+
+    for (const c of commits) {
+      const primary = entryFor(c.author);
+      primary.commits += 1;
+      primary.linesAdded += c.linesAdded;
+      primary.linesRemoved += c.linesRemoved;
+      for (const co of c.coAuthors) {
+        const e = entryFor(co);
+        e.coAuthoredCommits += 1;
+        e.linesAdded += c.linesAdded;
+        e.linesRemoved += c.linesRemoved;
+      }
+
+      const day = c.dateISO.slice(0, 10); // YYYY-MM-DD (author-local)
+      if (day) byDay.set(day, (byDay.get(day) ?? 0) + 1);
+
+      // largestSingleCommit: max churn; binary-only commits (0 churn) ineligible;
+      // tie → LATER commit wins (compared by real timestamp, not lexical ISO).
+      const churn = c.linesAdded + c.linesRemoved;
+      if (churn > 0) {
+        const curChurn = largest ? largest.linesAdded + largest.linesRemoved : -1;
+        const laterOnTie =
+          largest !== null &&
+          churn === curChurn &&
+          Date.parse(c.dateISO) > Date.parse(largest.dateISO);
+        if (!largest || churn > curChurn || laterOnTie) {
+          largest = {
+            sha: c.sha,
+            dateISO: c.dateISO,
+            linesAdded: c.linesAdded,
+            linesRemoved: c.linesRemoved,
+          };
+        }
+      }
+    }
+
+    stats.linesByAuthor = Array.from(authorMap.values()).sort(
+      (a, b) => b.linesAdded + b.linesRemoved - (a.linesAdded + a.linesRemoved),
+    );
+
+    const commitsByDay = Array.from(byDay.entries())
+      .map(([date, count]) => ({ date, count }))
+      .sort((a, b) => a.date.localeCompare(b.date)); // asc by date
+
+    let peakDay: GitStats['timeline']['peakDay'] = null;
+    for (const d of commitsByDay) {
+      // max count; tie → latest date (YYYY-MM-DD lexical == chronological)
+      if (!peakDay || d.count > peakDay.count || (d.count === peakDay.count && d.date > peakDay.date)) {
+        peakDay = { date: d.date, count: d.count };
+      }
+    }
+
+    stats.timeline = {
+      commitsByDay,
+      activeDays: commitsByDay.length,
+      peakDay,
+      largestSingleCommit: largest,
+    };
+  } catch {
+    /* leave empty defaults from emptyStats() */
+  }
+
   return stats;
+}
+
+/** One parsed commit from the -z log pass. */
+export interface ParsedCommit {
+  sha: string;
+  dateISO: string;
+  author: string;
+  coAuthors: string[];
+  linesAdded: number;
+  linesRemoved: number;
+}
+
+/**
+ * Extract Co-Authored-By trailer names from a raw commit body.
+ *
+ * Case-INSENSITIVE on the whole key (git trailers are): matches `Co-Authored-By`,
+ * `Co-authored-by`, `co-Authored-By`, etc. Requires a `<...>` email-ish part —
+ * a malformed trailer with no angle-bracket part is ignored (returns no name).
+ */
+export function parseCoAuthorTrailers(body: string): string[] {
+  const names: string[] = [];
+  const re = /^co-authored-by:\s*(.+?)\s*<[^>]*>/gim;
+  for (const m of body.matchAll(re)) {
+    const name = (m[1] ?? '').trim();
+    if (name) names.push(name);
+  }
+  return names;
+}
+
+/**
+ * Parse the NUL-delimited output of:
+ *   git log -z --pretty=format:"%H%x00%aI%x00%aN%x00%B%x00" --numstat
+ *
+ * Split on \0, the fields per commit are: sha, dateISO, author, body, then one
+ * field per numstat line, terminated by an empty field (the commit boundary
+ * under -z). The FIRST numstat field carries a leading \n (git's format→numstat
+ * separator) which is stripped. Binary files appear as `-\t-\t<path>` and
+ * contribute 0 lines. Verified against real `git log -z` output (2026-05-25).
+ */
+export function parseGitCommitLog(stdout: string): ParsedCommit[] {
+  const fields = stdout.split('\0');
+  const commits: ParsedCommit[] = [];
+  let i = 0;
+  while (i < fields.length) {
+    while (i < fields.length && fields[i] === '') i++; // skip boundary empties
+    if (i + 3 >= fields.length) break; // not a full header (sha,date,name,body)
+    const sha = fields[i++]!;
+    const dateISO = fields[i++]!;
+    const author = fields[i++]!;
+    const body = fields[i++]!;
+    if (!/^[0-9a-f]{7,40}$/i.test(sha)) break; // defensive: format desync
+
+    let linesAdded = 0;
+    let linesRemoved = 0;
+    while (i < fields.length) {
+      const line = fields[i++]!.replace(/^\r?\n/, '');
+      if (line === '') break; // commit boundary
+      const m = line.match(/^(-|\d+)\t(-|\d+)\t/);
+      if (!m) continue; // not a numstat line; ignore defensively
+      linesAdded += m[1] === '-' ? 0 : Number(m[1]) || 0;
+      linesRemoved += m[2] === '-' ? 0 : Number(m[2]) || 0;
+    }
+
+    commits.push({
+      sha,
+      dateISO,
+      author,
+      coAuthors: parseCoAuthorTrailers(body),
+      linesAdded,
+      linesRemoved,
+    });
+  }
+  return commits;
 }

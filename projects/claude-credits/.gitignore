@@ -19,3 +19,6 @@ pnpm-debug.log*
 # OS
 .DS_Store
 Thumbs.db
+
+# Playwright MCP verification artifacts (snapshots, console/network logs)
+.playwright-mcp/

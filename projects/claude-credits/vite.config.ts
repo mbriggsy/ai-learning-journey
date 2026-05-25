@@ -8,5 +8,6 @@ export default defineConfig({
   },
   server: {
     host: true, // expose on LAN for phone testing — see landmine on shared networks
+    port: 5175, // 5173 is UMB's dev server; keep claude-credits clear of it
   },
 })

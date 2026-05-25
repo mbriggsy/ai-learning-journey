@@ -1,0 +1,19 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover" />
+    <!-- Dual theme-color: browser chrome matches the active mode's page surface -->
+    <meta name="theme-color" content="#0a1a26" media="(prefers-color-scheme: dark)" />
+    <meta name="theme-color" content="#f7f1e3" media="(prefers-color-scheme: light)" />
+    <meta name="description" content="A visual showcase of the credit data across Briggsy's projects, measured by the claude-credit CLI." />
+    <title>claude-credits</title>
+
+    <!-- Self-hosted fonts (no external CDN). Preload the display face — it paints the hero. -->
+    <link rel="preload" href="/assets/fonts/Satoshi-Variable.woff2" as="font" type="font/woff2" crossorigin />
+  </head>
+  <body>
+    <div id="root"></div>
+    <script type="module" src="/src/main.tsx"></script>
+  </body>
+</html>

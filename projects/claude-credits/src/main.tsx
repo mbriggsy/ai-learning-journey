@@ -6,8 +6,8 @@ import './styles/tokens.physical.css'
 import './styles/tokens.semantic.css'
 import './styles/fonts.css'
 import './styles/global.css'
-// NOTE: motion side-effect imports (gsap-context, easings) added in Commit 4.
-// Phase-1-done main.tsx (plan §1.6) is the union of all three commits.
+import './motion/gsap-context' // registers GSAP plugins (side effect)
+import './motion/easings' // registers the 4 weighted eases (side effect) — REQUIRED or parseEase fails
 import App from './App'
 
 // Dev-only theme override: ?theme=dark|light forces a mode without toggling the OS.

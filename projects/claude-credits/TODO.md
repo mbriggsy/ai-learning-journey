@@ -1,6 +1,6 @@
 # claude-credits — TODO
 
-**Status:** All phases (−1 through 9) deepened + doc-reviewed. **Preflight −1 executed 2026-05-24.** Briggsy locked the scope (2026-05-24/25): **no CTA · clean tiles · no meta tiles but meta counted in totals · no publish** — propagated across ideation + README + every affected phase plan (0/2/3/4/5/6/7), drift-safe + `/ce:review`'d; preflight under a superseded banner; lesson in `docs/insights/001`. `coded:` frontmatter on all 12 phases. **The plan set is internally consistent.** Next actionable: Briggsy reviews `docs/editorial.md` (voice) + sends burned's live URL; then Phase 0 (code the data contract). See DECISIONS LOCKED block for the full record.
+**Status:** All phases (−1 through 9) deepened + doc-reviewed. **Preflight −1 executed 2026-05-24.** Briggsy locked the scope (2026-05-24/25): **no CTA · clean tiles · no meta tiles but meta counted in totals · no publish** — propagated across ideation + README + every affected phase plan (0/2/3/4/5/6/7), drift-safe + `/ce:review`'d; preflight under a superseded banner; lesson in `docs/insights/001`. `coded:` frontmatter on all 12 phases. **The plan set is internally consistent + the editorial worksheet's voice review is DONE** (burned URL wired). Next actionable: **Phase 0 — code the data contract** (`tools/claude-credit/` extensions per `phase-0-data-gaps.md`). Outstanding non-blocking: hero-image captures (parallel) + a couple hook-value confirms. See DECISIONS LOCKED block for the full record.
 
 > **House rule — TODO is NOT a diary.** Actionable items only. No session history, no "what we did" logs, no narrative addenda. The git log has the history. If a line isn't an open thing Claude or Briggsy can act on, it doesn't belong here. Strip cruft when you find it.
 
@@ -45,7 +45,7 @@ Grid = **9 project tiles + 1 "the misses" archive coda = 10 surfaces** (no meta 
 - ✅ −1.2 YAML → `projects:`(9) + `meta:`(2) + `archive:`(6). meta scanned for **totals only** (no tiles — "count everything"). Validated via js-yaml. Backup at `~/.claude-credit-projects.yaml.bak.2026-05-24`.
 - ✅ −1.3 deploy verify → **4 live** (TDR-02, TDR-04, UMB, burned `burned-cxa.pages.dev/board` — all 200 + fingerprinted), 5 null (in worksheet `## Deploys to fix`). burned's URL was in its README; my first deploy grep false-negatived it (empty grep ≠ confirmed absence — see insight 001). Squatter methodology held — no false positives.
 - ✅ −1.5 worksheet → `docs/editorial.md` drafted (9 rows + the misses, corrected UMB/TDR asset paths, no meta, no CTA block).
-- [ ] **Briggsy reviews `docs/editorial.md`** — voice/oneLiners/hookStat picks/descriptions/archive one-liners + check the sign-off boxes. Also veto/confirm the meta-excluded-from-totals call.
+- [x] **Briggsy reviewed `docs/editorial.md`** (chat, 2026-05-25) — all 9 one-liners + hook picks + descriptions + the 6 "misses" locked; sign-off boxes checked. Outstanding (non-blocking): hero-image captures (parallel) + a couple hook-value confirms (e.g. `HOOKS 6`).
 - Cascade commit (preflight→phase-0/4/5) is MOOT — those amendments were already absorbed when each phase was individually deepened. Verified.
 
 → then Phase 0 (data contract code — reconcile first per above) → 1 → 2 → … → 9. Verify each in the browser (BOTH modes, mobile) before moving on — runtime truth > green tests.

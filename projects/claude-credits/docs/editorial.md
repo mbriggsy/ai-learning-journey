@@ -1,6 +1,6 @@
 # claude-credits — editorial worksheet
 
-**Status:** draft (Claude pre-fill complete · Briggsy review pending)
+**Status:** Briggsy voice review COMPLETE via chat 2026-05-25 (one-liners + hooks + descriptions + the 6 misses all locked). Outstanding + non-blocking: hero-image captures (parallel) + a couple hook-value confirms.
 **Schema source:** [phase-0-data-gaps.md §0.6](plans/phase-0-data-gaps.md) — `EditorialContent` type.
 **Locked decisions (2026-05-24/25):** site celebrates the WORK, not the tool · **no meta tiles** — tool + site get no tile, but ARE counted in `combined` totals ("count everything", ideation §7) · **no bottom CTA** — the page ends on the work (ideation §4) · **clean tiles** — no tile buttons; live/source links live on the detail page (ideation §3) · `claude-credit` **not published** to npm · grid = **9 real projects + 1 "the misses" archive coda = 10 surfaces** · `repoUrl` wired to detail page.
 
@@ -52,10 +52,9 @@ Builder-to-builder. Audience is AI-curious peer developers.
 - **heroImage_mobile_safe:** `tbd`
 - **liveUrl:** `https://burned-cxa.pages.dev/board` ✅ (verified live — 200, `<title>BURNED</title>`; Cloudflare Pages, slug `burned-cxa`; `/board` is the host/TV entry. URL was in burned's own README — my earlier deploy grep false-negatived it.)
 - **repoUrl:** `https://github.com/mbriggsy/ai-learning-journey/tree/main/projects/burned`
-- **description (3 sentences) [STRAWMAN]:**
+- **description:**
   1. `Real-time browser card game for 2–10 players on the couch.`
   2. `Built to prove a visual bar — Archer-coded illustration over Cloudflare Workers + Durable Objects.`
-  3. `Friends-and-family product on top of an engineering proving ground.`
 - **gallery:** `[]` (consider 6 character portraits if story merits)
 
 ### `data-engineering` (active)
@@ -68,10 +67,9 @@ Builder-to-builder. Audience is AI-curious peer developers.
 - **heroImage_mobile_safe:** `tbd`
 - **liveUrl:** `null` (`data-engineering.vercel.app` → 404; no deploy)
 - **repoUrl:** `https://github.com/mbriggsy/ai-learning-journey/tree/main/projects/data-engineering`
-- **description (3 sentences) [STRAWMAN]:**
-  1. `Cloud data pipelines in Briggsy's declared focus stack.`
-  2. `Reverse-engineering ETL patterns ATC-style — no code Briggsy didn't review.`
-  3. `[OMIT — pending project survey]`
+- **description:**
+  1. `Cloud data pipelines in the Azure focus stack — ADF, Databricks, Unity Catalog.`
+  2. `The real question underneath: how do the agentic-workflow learnings from these projects apply to the enterprise data landscape?`
 - **gallery:** `[]`
 
 ### `hooks` (active)
@@ -84,10 +82,9 @@ Builder-to-builder. Audience is AI-curious peer developers.
 - **heroImage_mobile_safe:** `tbd`
 - **liveUrl:** `null` (not a web-deployable project)
 - **repoUrl:** `https://github.com/mbriggsy/ai-learning-journey/tree/main/projects/hooks`
-- **description (3 sentences) [STRAWMAN]:**
+- **description:**
   1. `PreToolUse + Stop + PostToolUse hooks for Claude Code.`
-  2. `Built after losing a session to WebFetch hanging — the rules are the lessons.`
-  3. `Source for the elite-engineer manifesto that ships across every project session.`
+  2. `Built after losing a session to WebFetch hanging — the rules are the lessons, and it's the source of the elite-engineer manifesto that ships into every session.`
 - **gallery:** `[]`
 
 ### `pacman` (active)
@@ -100,10 +97,9 @@ Builder-to-builder. Audience is AI-curious peer developers.
 - **heroImage_mobile_safe:** `tbd`
 - **liveUrl:** `null` (no URL in repo; `pacman.vercel.app` is a stranger's app — not deployed by us, or under an unknown slug. See Deploys to fix.)
 - **repoUrl:** `https://github.com/mbriggsy/ai-learning-journey/tree/main/projects/pacman`
-- **description (3 sentences) [STRAWMAN]:**
+- **description:**
   1. `Classic arcade clone with ghost AI.`
   2. `Built to test how small a game could be without frameworks.`
-  3. `[OPTIONAL — drop if it pads]`
 - **gallery:** `[]`
 
 ### `skills` (active)
@@ -116,10 +112,9 @@ Builder-to-builder. Audience is AI-curious peer developers.
 - **heroImage_mobile_safe:** `tbd`
 - **liveUrl:** `null` (not a web-deployable project)
 - **repoUrl:** `https://github.com/mbriggsy/ai-learning-journey/tree/main/projects/skills`
-- **description (3 sentences) [STRAWMAN]:**
-  1. `Three custom Claude skills: /distill (preserve lessons), /brief (recall them), doc-audit (5-agent quality gate).`
+- **description:**
+  1. `Three custom Claude skills: /distill (preserve lessons), /brief (recall them), and a doc-audit quality gate.`
   2. `Built after losing context to fresh sessions one too many times.`
-  3. `[OPTIONAL]`
 - **gallery:** `[]`
 
 ### `tic-tac-toe` (active)
@@ -132,10 +127,9 @@ Builder-to-builder. Audience is AI-curious peer developers.
 - **heroImage_mobile_safe:** `tbd`
 - **liveUrl:** `null` (no URL in repo; `tic-tac-toe.vercel.app` is a stranger's app. See Deploys to fix.)
 - **repoUrl:** `https://github.com/mbriggsy/ai-learning-journey/tree/main/projects/tic-tac-toe`
-- **description (3 sentences) [STRAWMAN]:**
+- **description:**
   1. `Three-by-three grid, two players, classic rules.`
   2. `Built as a calibration project for the smallest scope claude-credit could measure.`
-  3. `[OMIT]`
 - **gallery:** `[]`
 
 ### `top-down-racer-02` (active)
@@ -148,10 +142,9 @@ Builder-to-builder. Audience is AI-curious peer developers.
 - **heroImage_mobile_safe:** `tbd`
 - **liveUrl:** `https://top-down-racer-02.vercel.app` ✅ (verified live — 200, `<title>Top-Down Racer</title>`)
 - **repoUrl:** `https://github.com/mbriggsy/ai-learning-journey/tree/main/projects/top-down-racer-02`
-- **description (3 sentences) [STRAWMAN]:**
+- **description:**
   1. `Top-down racing game with a learned agent driving the car.`
-  2. `Foundation project — TDR-04 inherits the engine and adds polish.`
-  3. `[OPTIONAL]`
+  2. `The foundation — TDR-04 inherits the engine and adds the polish.`
 - **gallery:** `[]`
 
 ### `top-down-racer-04` (active)
@@ -164,10 +157,9 @@ Builder-to-builder. Audience is AI-curious peer developers.
 - **heroImage_mobile_safe:** `tbd`
 - **liveUrl:** `https://top-down-racer-04.vercel.app` ✅ (verified live — 200, `<title>Top-Down Racer v04</title>`)
 - **repoUrl:** `https://github.com/mbriggsy/ai-learning-journey/tree/main/projects/top-down-racer-04`
-- **description (3 sentences) [STRAWMAN]:**
-  1. `Second racer. Three tracks, sprite atlas, menu UI, 487-test verification baseline.`
-  2. `Built end-to-end across 8 phases — last game shipped before the games-pause pivot.`
-  3. `[OPTIONAL]`
+- **description:**
+  1. `Three tracks, sprite atlas, menu UI, and a 487-test verification baseline.`
+  2. `Built end-to-end across 8 phases — the last game before the games-pause pivot.`
 - **gallery:** `["public/assets/tracks/track01-bg.png", "public/assets/tracks/track02-bg.png", "public/assets/tracks/track03-bg.png"]` (all verified)
 
 ### `undercover-mob-boss` (active)
@@ -180,10 +172,9 @@ Builder-to-builder. Audience is AI-curious peer developers.
 - **heroImage_mobile_safe:** `tbd`
 - **liveUrl:** `https://undercover-mob-boss.vercel.app` ✅ (verified live — 308→200, `<title>Undercover Mob Boss — Host View</title>`)
 - **repoUrl:** `https://github.com/mbriggsy/ai-learning-journey/tree/main/projects/undercover-mob-boss`
-- **description (3 sentences) [STRAWMAN]:**
-  1. `Jackbox-style party game. Shared TV screen, phone controllers, hidden-role voting.`
-  2. `Its how-to-play page is the mobile bar this whole site is measured against — 1700 lines of responsive HTML done right.`
-  3. `[OPTIONAL]`
+- **description:**
+  1. `Jackbox-style party game — shared TV screen, phone controllers, hidden-role voting.`
+  2. `Its how-to-play page is 1700 lines of responsive HTML done right: single-column collapse, breakpoint-scaled type.`
 - **gallery:** `["public/assets/trailer-blueprint.jpg", "public/assets/trailer-city-closeup.jpg", "public/assets/trailer-dossier-spread.jpg", "public/assets/trailer-table-overhead.jpg"]` (paths corrected, all verified)
 
 ---
@@ -204,11 +195,11 @@ Lives outside the `EditorialContent` schema. Surfaces as ONE collective tile in 
 
 Six rows, one per archived project. Each row: project name + one-liner explaining WHY it was shelved (the lesson, not the elegy).
 
-| Project | One-liner [STRAWMAN] |
+| Project | Why shelved (LOCKED 2026-05-25) |
 |---|---|
 | hide-and-seek | First game. Shelved over a presentation gap — game logic worked, the visuals never landed. |
-| do-not-disturb | Second game. Same lesson, harder: side-scroller fought the hotel-room concept. |
-| conway_game_of_life | Conway's Game of Life. Shelved — the simulation worked, no story attached. |
+| do-not-disturb | Second game. Same lesson, harder: the side-scroller fought the hotel-room concept. |
+| conway_game_of_life | Conway's Game of Life. The simulation worked — no story attached. |
 | top-down-racer-01 | First racer prototype. Superseded by TDR-02's reinforcement-learning rewrite. |
 | top-down-racer-03 | Mid-iteration racer. Superseded by TDR-04's polish pass. |
 | gsd-autopilot | Get-Stuff-Done autopilot experiment. Shelved as scope drifted. |
@@ -260,11 +251,13 @@ Mobile-safe verification per capture: open the captured image in DevTools mobile
 
 ## Sign-off
 
-- [ ] Voice anchor reviewed and accepted (or edited) — Briggsy
-- [ ] All 9 row blocks edited; no `[STRAWMAN]` tags remaining on `oneLiner` / `hookStat` / `description` fields — Briggsy
-  - **Exception:** 5 capture-pending rows + "the misses" tile have null `heroImage` until captures land. Does NOT block sign-off; captures continue in parallel with Phase 0–2.
-- [ ] **Anchor compliance check** — for each row's `oneLiner` + `description`, verify against the voice anchor: NO aspirational verbs, NO metaphors (esp. "water beads"), NO breathless adjectives, NO jargon, NO self-deprecation, NO tool-pitch. `oneLiner` ≤ 60 chars confirmed.
-- [ ] Archive collective tile copy + 6 detail one-liners edited — Briggsy
-- [ ] The-close decision confirmed (no CTA) — Briggsy
-- [ ] Deploys-to-fix block resolved (each entry either re-deployed or marked null with reason) — Briggsy
-- [ ] Capture queue tracked (work runs in parallel with Phase 0–2)
+- [x] Voice anchor reviewed + accepted — Briggsy (worked within it all pass)
+- [x] All 9 one-liners + hook stats + descriptions locked; no `[STRAWMAN]` tags remain on those fields — Briggsy (chat review 2026-05-25)
+  - **Exception:** hero captures still pending (see capture queue) — does NOT block; parallel with Phase 0–2.
+- [x] **Anchor compliance** — applied (de-insidered UMB, dropped the authorship claim from data-engineering, no tool-pitch anywhere); `oneLiner` ≤ 60 chars held.
+- [x] Archive "the misses" — 6 why-shelved lines locked — Briggsy
+- [x] The-close decision confirmed (no CTA) — Briggsy
+- [x] Deploys-to-fix resolved — 4 live (TDR-02/04, UMB, burned), 5 null with reasons — Briggsy
+- [x] Capture queue tracked (parallel with Phase 0–2)
+
+**Outstanding (non-blocking):** (1) hero-image captures — parallel work, see capture queue; (2) confirm a couple hook *values* — esp. `hooks → HOOKS 6` (is the count 6?).

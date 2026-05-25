@@ -1328,7 +1328,7 @@ The cascade carries CONTRACT (schema facts), not CONTENT (display decisions). Ph
 
 ### `phase-8-deploy.md`
 
-- **ADD pre-publish grep-guard** to the GitHub Action workflow (`refresh-claude-credits.yml`). The guard runs on `public/data/stats.json` content before the `git commit` step. Match patterns enumerated in this plan's Privacy by Construction section.
+- **Pre-publish guard runs IN-PROCESS, not in a CI Action.** (Superseded by Phase 2 Decision 5 + Phase 8 Decisions 1, 6.) There is no `refresh-claude-credits.yml` refresh Action — refresh is local-only and `scripts/refresh-stats.ts` runs `assertPublishSafe` against `stats.json` before writing it, matching the patterns in this plan's Privacy by Construction section. Phase 8's CI is a light *verify* workflow (`verify-claude-credits.yml`, bundle build only) that does NOT regenerate or guard data.
 
 ### Verification — semantic review, not greps
 

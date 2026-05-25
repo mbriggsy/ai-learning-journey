@@ -311,7 +311,7 @@ Phase 6's §2 wording ("reads the resolved `editorial.md ## CTA state` block… 
 Phase 4's `ProjectGrid` reveal `useGSAP` must run the `ScrollTrigger.refresh()` self-heal race **unconditionally** — NOT gated on `isEmpty` or on `[data-tile]` existing — because the Phase 7 CTA's reveal position depends on it (Decision 9). Noted on Phase 4 Decision 10 + its landmine.
 
 ### `README.md` (no change)
-The "CTA" decision row ("Dual: primary + secondary") and editorial-spine beat 4 already match. The Phase-8-stale cadence reconciliation (TODO) is **Phase 8's** — the CTA carries no cadence claim.
+The "CTA" decision row ("Dual: primary + secondary") and editorial-spine beat 4 already match. (The README cadence reconciliation was Phase 8's and is now done; the CTA carries no cadence claim either way.)
 
 ---
 

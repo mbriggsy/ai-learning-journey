@@ -1,0 +1,3569 @@
+{
+  "archiveCollective": {
+    "projectCount": 6,
+    "projectNames": [
+      "hide-and-seek",
+      "do-not-disturb",
+      "conway_game_of_life",
+      "top-down-racer-01",
+      "top-down-racer-03",
+      "gsd-autopilot"
+    ],
+    "totalAllBytes": 11488199,
+    "totalAuthoredBytes": 11044437,
+    "totalAuthoredFiles": 517,
+    "totalAuthoredLines": 91541,
+    "totalCommits": 8,
+    "totalPipelineGeneratedBytes": 837,
+    "totalPipelineGeneratedFiles": 1,
+    "totalPlanCount": 18,
+    "totalPlanLines": 6211,
+    "totalSessions": 0,
+    "totalTestCases": 565,
+    "totalTestLines": 5803,
+    "totalTokensFresh": 0,
+    "totalTokensProcessed": 0
+  },
+  "combined": {
+    "modelBreakdown": [
+      {
+        "model": "Opus 4.7",
+        "sessions": 39096,
+        "tokensProcessed": 10675477474
+      },
+      {
+        "model": "<synthetic>",
+        "sessions": 3,
+        "tokensProcessed": 0
+      }
+    ],
+    "projectCount": 9,
+    "tokenWindowDays": 30,
+    "tokenWindowEndISO": "2026-05-25T17:58:12.364Z",
+    "tokenWindowStartISO": "2026-04-25T13:40:35.593Z",
+    "totalAllBytes": 546357127,
+    "totalAllFiles": 2007,
+    "totalAuthoredBytes": 59803635,
+    "totalAuthoredFiles": 2064,
+    "totalAuthoredLines": 531835,
+    "totalCommits": 1107,
+    "totalDiscardedAssets": 85,
+    "totalIterationProxies": 17,
+    "totalPipelineGeneratedBytes": 485223897,
+    "totalPipelineGeneratedFiles": 452,
+    "totalPlanCount": 74,
+    "totalPlanLines": 81817,
+    "totalSessions": 39099,
+    "totalTestCases": 3621,
+    "totalTestLines": 66256,
+    "totalTokensFresh": 345872443,
+    "totalTokensProcessed": 10675477474,
+    "totalToolGeneratedBytes": 886670,
+    "totalToolGeneratedFiles": 9
+  },
+  "meta": [
+    {
+      "assetBytesByKind": {
+        "audio": 0,
+        "fonts": 0,
+        "images": 0,
+        "misc-media": 0,
+        "video": 0
+      },
+      "editorial": null,
+      "git": {
+        "assetModificationEvents": 0,
+        "assetUniquePathsTouched": 0,
+        "commitMessageLines": 200,
+        "commitsByAuthor": [
+          {
+            "author": "mbriggsy",
+            "count": 14
+          }
+        ],
+        "discardedAssetByKind": {},
+        "discardedAssetEvents": 0,
+        "discardedAssetFiles": 0,
+        "firstCommitISO": "2026-05-24T00:03:06-04:00",
+        "isGitRepo": true,
+        "lastCommitISO": "2026-05-25T12:14:08-04:00",
+        "lifetimeLinesAdded": 6502,
+        "lifetimeLinesRemoved": 50,
+        "linesByAuthor": [
+          {
+            "author": "mbriggsy",
+            "coAuthoredCommits": 0,
+            "commits": 14,
+            "linesAdded": 6502,
+            "linesRemoved": 50
+          },
+          {
+            "author": "Claude Opus 4.7 (1M context)",
+            "coAuthoredCommits": 14,
+            "commits": 0,
+            "linesAdded": 6502,
+            "linesRemoved": 50
+          }
+        ],
+        "projectAgeDays": 1,
+        "timeline": {
+          "activeDays": 2,
+          "commitsByDay": [
+            {
+              "count": 1,
+              "date": "2026-05-24"
+            },
+            {
+              "count": 13,
+              "date": "2026-05-25"
+            }
+          ],
+          "largestSingleCommit": {
+            "dateISO": "2026-05-24T00:03:06-04:00",
+            "linesAdded": 3604,
+            "linesRemoved": 0
+          },
+          "peakDay": {
+            "count": 13,
+            "date": "2026-05-25"
+          }
+        },
+        "totalCommits": 14,
+        "uniqueFilesTouched": 36
+      },
+      "grandTotals": {
+        "allBytes": 230779,
+        "allFiles": 36,
+        "authoredBytes": 191850,
+        "authoredFiles": 35,
+        "authoredLines": 5182,
+        "pipelineGeneratedBytes": 0,
+        "pipelineGeneratedFiles": 0,
+        "toolGeneratedBytes": 38929,
+        "toolGeneratedFiles": 1
+      },
+      "planCount": 0,
+      "planLines": 0,
+      "projectName": "claude-credit",
+      "proxies": {
+        "iterationProxyTotal": 0,
+        "regenScriptCount": 0,
+        "sampleEvalRunCount": 0
+      },
+      "scannedAt": "2026-05-25T17:58:30.603Z",
+      "testCases": 51,
+      "testLines": 1251,
+      "tiers": [
+        {
+          "categories": [
+            {
+              "category": "code",
+              "subcategories": [
+                {
+                  "bytes": 130027,
+                  "files": 18,
+                  "nonBlankLines": 3283,
+                  "subcategory": "source",
+                  "totalLines": 3543
+                },
+                {
+                  "bytes": 46717,
+                  "files": 10,
+                  "nonBlankLines": 1150,
+                  "subcategory": "tests",
+                  "totalLines": 1251
+                },
+                {
+                  "bytes": 2128,
+                  "files": 5,
+                  "nonBlankLines": 89,
+                  "subcategory": "config",
+                  "totalLines": 90
+                }
+              ],
+              "totals": {
+                "bytes": 178872,
+                "files": 33,
+                "nonBlankLines": 4522,
+                "subcategory": "<totals>",
+                "totalLines": 4884
+              }
+            },
+            {
+              "category": "docs",
+              "subcategories": [
+                {
+                  "bytes": 12978,
+                  "files": 2,
+                  "nonBlankLines": 239,
+                  "subcategory": "readmes",
+                  "totalLines": 298
+                }
+              ],
+              "totals": {
+                "bytes": 12978,
+                "files": 2,
+                "nonBlankLines": 239,
+                "subcategory": "<totals>",
+                "totalLines": 298
+              }
+            }
+          ],
+          "tier": "authored",
+          "totals": {
+            "bytes": 191850,
+            "files": 35,
+            "nonBlankLines": 4761,
+            "subcategory": "<totals>",
+            "totalLines": 5182
+          }
+        },
+        {
+          "categories": [],
+          "tier": "pipeline-generated",
+          "totals": {
+            "bytes": 0,
+            "files": 0,
+            "nonBlankLines": 0,
+            "subcategory": "<totals>",
+            "totalLines": 0
+          }
+        },
+        {
+          "categories": [
+            {
+              "category": "lockfiles",
+              "subcategories": [
+                {
+                  "bytes": 38929,
+                  "files": 1,
+                  "nonBlankLines": 1005,
+                  "subcategory": "lockfiles",
+                  "totalLines": 1270
+                }
+              ],
+              "totals": {
+                "bytes": 38929,
+                "files": 1,
+                "nonBlankLines": 1005,
+                "subcategory": "<totals>",
+                "totalLines": 1270
+              }
+            }
+          ],
+          "tier": "tool-generated",
+          "totals": {
+            "bytes": 38929,
+            "files": 1,
+            "nonBlankLines": 1005,
+            "subcategory": "<totals>",
+            "totalLines": 1270
+          }
+        }
+      ],
+      "tokens": null,
+      "topSubcategories": [
+        {
+          "bytes": 130027,
+          "category": "code",
+          "files": 18,
+          "lines": 3543,
+          "subcategory": "source",
+          "tier": "authored"
+        },
+        {
+          "bytes": 46717,
+          "category": "code",
+          "files": 10,
+          "lines": 1251,
+          "subcategory": "tests",
+          "tier": "authored"
+        },
+        {
+          "bytes": 38929,
+          "category": "lockfiles",
+          "files": 1,
+          "lines": 1270,
+          "subcategory": "lockfiles",
+          "tier": "tool-generated"
+        },
+        {
+          "bytes": 12978,
+          "category": "docs",
+          "files": 2,
+          "lines": 298,
+          "subcategory": "readmes",
+          "tier": "authored"
+        },
+        {
+          "bytes": 2128,
+          "category": "code",
+          "files": 5,
+          "lines": 90,
+          "subcategory": "config",
+          "tier": "authored"
+        }
+      ]
+    },
+    {
+      "assetBytesByKind": {
+        "audio": 0,
+        "fonts": 131248,
+        "images": 463,
+        "misc-media": 0,
+        "video": 0
+      },
+      "editorial": null,
+      "git": {
+        "assetModificationEvents": 4,
+        "assetUniquePathsTouched": 4,
+        "commitMessageLines": 877,
+        "commitsByAuthor": [
+          {
+            "author": "mbriggsy",
+            "count": 51
+          }
+        ],
+        "discardedAssetByKind": {},
+        "discardedAssetEvents": 0,
+        "discardedAssetFiles": 0,
+        "firstCommitISO": "2026-05-23T23:58:49-04:00",
+        "isGitRepo": true,
+        "lastCommitISO": "2026-05-25T13:48:50-04:00",
+        "lifetimeLinesAdded": 12153,
+        "lifetimeLinesRemoved": 3128,
+        "linesByAuthor": [
+          {
+            "author": "mbriggsy",
+            "coAuthoredCommits": 0,
+            "commits": 51,
+            "linesAdded": 12153,
+            "linesRemoved": 3128
+          },
+          {
+            "author": "Claude Opus 4.7 (1M context)",
+            "coAuthoredCommits": 47,
+            "commits": 0,
+            "linesAdded": 11187,
+            "linesRemoved": 2327
+          }
+        ],
+        "projectAgeDays": 1,
+        "timeline": {
+          "activeDays": 3,
+          "commitsByDay": [
+            {
+              "count": 1,
+              "date": "2026-05-23"
+            },
+            {
+              "count": 29,
+              "date": "2026-05-24"
+            },
+            {
+              "count": 21,
+              "date": "2026-05-25"
+            }
+          ],
+          "largestSingleCommit": {
+            "dateISO": "2026-05-24T10:01:43-04:00",
+            "linesAdded": 847,
+            "linesRemoved": 794
+          },
+          "peakDay": {
+            "count": 29,
+            "date": "2026-05-24"
+          }
+        },
+        "totalCommits": 51,
+        "uniqueFilesTouched": 59
+      },
+      "grandTotals": {
+        "allBytes": 974969,
+        "allFiles": 53,
+        "authoredBytes": 805355,
+        "authoredFiles": 48,
+        "authoredLines": 11973,
+        "pipelineGeneratedBytes": 131711,
+        "pipelineGeneratedFiles": 4,
+        "toolGeneratedBytes": 37903,
+        "toolGeneratedFiles": 1
+      },
+      "planCount": 12,
+      "planLines": 6900,
+      "projectName": "claude-credits",
+      "proxies": {
+        "iterationProxyTotal": 0,
+        "regenScriptCount": 0,
+        "sampleEvalRunCount": 0
+      },
+      "scannedAt": "2026-05-25T17:58:31.744Z",
+      "testCases": 23,
+      "testLines": 72,
+      "tiers": [
+        {
+          "categories": [
+            {
+              "category": "docs",
+              "subcategories": [
+                {
+                  "bytes": 620769,
+                  "files": 12,
+                  "nonBlankLines": 5395,
+                  "subcategory": "plans",
+                  "totalLines": 6900
+                },
+                {
+                  "bytes": 31060,
+                  "files": 2,
+                  "nonBlankLines": 308,
+                  "subcategory": "general",
+                  "totalLines": 424
+                },
+                {
+                  "bytes": 15001,
+                  "files": 2,
+                  "nonBlankLines": 69,
+                  "subcategory": "readmes",
+                  "totalLines": 95
+                },
+                {
+                  "bytes": 6995,
+                  "files": 2,
+                  "nonBlankLines": 83,
+                  "subcategory": "insights",
+                  "totalLines": 102
+                }
+              ],
+              "totals": {
+                "bytes": 673825,
+                "files": 18,
+                "nonBlankLines": 5855,
+                "subcategory": "<totals>",
+                "totalLines": 7521
+              }
+            },
+            {
+              "category": "data",
+              "subcategories": [
+                {
+                  "bytes": 96662,
+                  "files": 2,
+                  "nonBlankLines": 3600,
+                  "subcategory": "lookup-tables",
+                  "totalLines": 3600
+                }
+              ],
+              "totals": {
+                "bytes": 96662,
+                "files": 2,
+                "nonBlankLines": 3600,
+                "subcategory": "<totals>",
+                "totalLines": 3600
+              }
+            },
+            {
+              "category": "code",
+              "subcategories": [
+                {
+                  "bytes": 11304,
+                  "files": 4,
+                  "nonBlankLines": 220,
+                  "subcategory": "build-scripts",
+                  "totalLines": 241
+                },
+                {
+                  "bytes": 8881,
+                  "files": 5,
+                  "nonBlankLines": 218,
+                  "subcategory": "styles",
+                  "totalLines": 236
+                },
+                {
+                  "bytes": 6824,
+                  "files": 12,
+                  "nonBlankLines": 160,
+                  "subcategory": "source",
+                  "totalLines": 174
+                },
+                {
+                  "bytes": 4353,
+                  "files": 1,
+                  "nonBlankLines": 68,
+                  "subcategory": "tests",
+                  "totalLines": 72
+                },
+                {
+                  "bytes": 2508,
+                  "files": 5,
+                  "nonBlankLines": 98,
+                  "subcategory": "config",
+                  "totalLines": 109
+                },
+                {
+                  "bytes": 998,
+                  "files": 1,
+                  "nonBlankLines": 19,
+                  "subcategory": "markup",
+                  "totalLines": 20
+                }
+              ],
+              "totals": {
+                "bytes": 34868,
+                "files": 28,
+                "nonBlankLines": 783,
+                "subcategory": "<totals>",
+                "totalLines": 852
+              }
+            }
+          ],
+          "tier": "authored",
+          "totals": {
+            "bytes": 805355,
+            "files": 48,
+            "nonBlankLines": 10238,
+            "subcategory": "<totals>",
+            "totalLines": 11973
+          }
+        },
+        {
+          "categories": [
+            {
+              "category": "assets",
+              "subcategories": [
+                {
+                  "bytes": 131248,
+                  "files": 3,
+                  "nonBlankLines": 0,
+                  "subcategory": "fonts",
+                  "totalLines": 0
+                },
+                {
+                  "bytes": 463,
+                  "files": 1,
+                  "nonBlankLines": 0,
+                  "subcategory": "images",
+                  "totalLines": 0
+                }
+              ],
+              "totals": {
+                "bytes": 131711,
+                "files": 4,
+                "nonBlankLines": 0,
+                "subcategory": "<totals>",
+                "totalLines": 0
+              }
+            }
+          ],
+          "tier": "pipeline-generated",
+          "totals": {
+            "bytes": 131711,
+            "files": 4,
+            "nonBlankLines": 0,
+            "subcategory": "<totals>",
+            "totalLines": 0
+          }
+        },
+        {
+          "categories": [
+            {
+              "category": "lockfiles",
+              "subcategories": [
+                {
+                  "bytes": 37903,
+                  "files": 1,
+                  "nonBlankLines": 957,
+                  "subcategory": "lockfiles",
+                  "totalLines": 1198
+                }
+              ],
+              "totals": {
+                "bytes": 37903,
+                "files": 1,
+                "nonBlankLines": 957,
+                "subcategory": "<totals>",
+                "totalLines": 1198
+              }
+            }
+          ],
+          "tier": "tool-generated",
+          "totals": {
+            "bytes": 37903,
+            "files": 1,
+            "nonBlankLines": 957,
+            "subcategory": "<totals>",
+            "totalLines": 1198
+          }
+        }
+      ],
+      "tokens": {
+        "byModel": [
+          {
+            "model": "Opus 4.7",
+            "sessions": 4106,
+            "tokensProcessed": 1000144893
+          }
+        ],
+        "cacheCreationInputTokens": 34826012,
+        "cacheReadInputTokens": 955584370,
+        "inputTokens": 840246,
+        "outputTokens": 8894265,
+        "parseHealth": {
+          "fileReadErrors": 0,
+          "lineParseErrors": 0,
+          "usageShapeWarnings": 0
+        },
+        "sessionCount": 4106,
+        "sidechainTokens": 0,
+        "tokensFresh": 44560523,
+        "tokensProcessed": 1000144893,
+        "windowDays": 1,
+        "windowEndISO": "2026-05-25T17:58:12.364Z",
+        "windowStartISO": "2026-05-24T03:28:43.459Z"
+      },
+      "topSubcategories": [
+        {
+          "bytes": 620769,
+          "category": "docs",
+          "files": 12,
+          "lines": 6900,
+          "subcategory": "plans",
+          "tier": "authored"
+        },
+        {
+          "bytes": 131248,
+          "category": "assets",
+          "files": 3,
+          "lines": 0,
+          "subcategory": "fonts",
+          "tier": "pipeline-generated"
+        },
+        {
+          "bytes": 96662,
+          "category": "data",
+          "files": 2,
+          "lines": 3600,
+          "subcategory": "lookup-tables",
+          "tier": "authored"
+        },
+        {
+          "bytes": 37903,
+          "category": "lockfiles",
+          "files": 1,
+          "lines": 1198,
+          "subcategory": "lockfiles",
+          "tier": "tool-generated"
+        },
+        {
+          "bytes": 31060,
+          "category": "docs",
+          "files": 2,
+          "lines": 424,
+          "subcategory": "general",
+          "tier": "authored"
+        }
+      ]
+    }
+  ],
+  "projects": [
+    {
+      "assetBytesByKind": {
+        "audio": 38446627,
+        "fonts": 98996,
+        "images": 252547129,
+        "misc-media": 3639759,
+        "video": 142165226
+      },
+      "editorial": null,
+      "git": {
+        "assetModificationEvents": 196,
+        "assetUniquePathsTouched": 137,
+        "commitMessageLines": 15607,
+        "commitsByAuthor": [
+          {
+            "author": "mbriggsy",
+            "count": 606
+          }
+        ],
+        "discardedAssetByKind": {
+          "images": 22
+        },
+        "discardedAssetEvents": 22,
+        "discardedAssetFiles": 22,
+        "firstCommitISO": "2026-04-08T21:27:47-04:00",
+        "isGitRepo": true,
+        "lastCommitISO": "2026-05-24T23:27:19-04:00",
+        "lifetimeLinesAdded": 241276,
+        "lifetimeLinesRemoved": 40577,
+        "linesByAuthor": [
+          {
+            "author": "mbriggsy",
+            "coAuthoredCommits": 0,
+            "commits": 606,
+            "linesAdded": 241276,
+            "linesRemoved": 40577
+          },
+          {
+            "author": "Claude Opus 4.7 (1M context)",
+            "coAuthoredCommits": 393,
+            "commits": 0,
+            "linesAdded": 151923,
+            "linesRemoved": 31283
+          },
+          {
+            "author": "Claude Opus 4.6 (1M context)",
+            "coAuthoredCommits": 70,
+            "commits": 0,
+            "linesAdded": 50148,
+            "linesRemoved": 6012
+          }
+        ],
+        "projectAgeDays": 46,
+        "timeline": {
+          "activeDays": 38,
+          "commitsByDay": [
+            {
+              "count": 5,
+              "date": "2026-04-08"
+            },
+            {
+              "count": 5,
+              "date": "2026-04-09"
+            },
+            {
+              "count": 3,
+              "date": "2026-04-10"
+            },
+            {
+              "count": 9,
+              "date": "2026-04-11"
+            },
+            {
+              "count": 45,
+              "date": "2026-04-12"
+            },
+            {
+              "count": 3,
+              "date": "2026-04-15"
+            },
+            {
+              "count": 4,
+              "date": "2026-04-17"
+            },
+            {
+              "count": 8,
+              "date": "2026-04-18"
+            },
+            {
+              "count": 3,
+              "date": "2026-04-19"
+            },
+            {
+              "count": 30,
+              "date": "2026-04-21"
+            },
+            {
+              "count": 17,
+              "date": "2026-04-22"
+            },
+            {
+              "count": 37,
+              "date": "2026-04-23"
+            },
+            {
+              "count": 67,
+              "date": "2026-04-24"
+            },
+            {
+              "count": 8,
+              "date": "2026-04-25"
+            },
+            {
+              "count": 3,
+              "date": "2026-04-26"
+            },
+            {
+              "count": 12,
+              "date": "2026-04-27"
+            },
+            {
+              "count": 22,
+              "date": "2026-04-29"
+            },
+            {
+              "count": 5,
+              "date": "2026-04-30"
+            },
+            {
+              "count": 27,
+              "date": "2026-05-01"
+            },
+            {
+              "count": 8,
+              "date": "2026-05-02"
+            },
+            {
+              "count": 1,
+              "date": "2026-05-03"
+            },
+            {
+              "count": 16,
+              "date": "2026-05-05"
+            },
+            {
+              "count": 26,
+              "date": "2026-05-06"
+            },
+            {
+              "count": 33,
+              "date": "2026-05-07"
+            },
+            {
+              "count": 35,
+              "date": "2026-05-08"
+            },
+            {
+              "count": 23,
+              "date": "2026-05-09"
+            },
+            {
+              "count": 4,
+              "date": "2026-05-10"
+            },
+            {
+              "count": 4,
+              "date": "2026-05-11"
+            },
+            {
+              "count": 14,
+              "date": "2026-05-13"
+            },
+            {
+              "count": 8,
+              "date": "2026-05-14"
+            },
+            {
+              "count": 2,
+              "date": "2026-05-15"
+            },
+            {
+              "count": 10,
+              "date": "2026-05-16"
+            },
+            {
+              "count": 19,
+              "date": "2026-05-17"
+            },
+            {
+              "count": 38,
+              "date": "2026-05-18"
+            },
+            {
+              "count": 5,
+              "date": "2026-05-21"
+            },
+            {
+              "count": 29,
+              "date": "2026-05-22"
+            },
+            {
+              "count": 14,
+              "date": "2026-05-23"
+            },
+            {
+              "count": 4,
+              "date": "2026-05-24"
+            }
+          ],
+          "largestSingleCommit": {
+            "dateISO": "2026-04-08T21:27:47-04:00",
+            "linesAdded": 24285,
+            "linesRemoved": 0
+          },
+          "peakDay": {
+            "count": 67,
+            "date": "2026-04-24"
+          }
+        },
+        "totalCommits": 606,
+        "uniqueFilesTouched": 980
+      },
+      "grandTotals": {
+        "allBytes": 446476125,
+        "allFiles": 1093,
+        "authoredBytes": 9269079,
+        "authoredFiles": 820,
+        "authoredLines": 190316,
+        "pipelineGeneratedBytes": 436926606,
+        "pipelineGeneratedFiles": 271,
+        "toolGeneratedBytes": 280440,
+        "toolGeneratedFiles": 2
+      },
+      "planCount": 36,
+      "planLines": 61764,
+      "projectName": "burned",
+      "proxies": {
+        "iterationProxyTotal": 17,
+        "regenScriptCount": 7,
+        "sampleEvalRunCount": 10
+      },
+      "scannedAt": "2026-05-25T17:58:21.040Z",
+      "testCases": 1326,
+      "testLines": 28488,
+      "tiers": [
+        {
+          "categories": [
+            {
+              "category": "docs",
+              "subcategories": [
+                {
+                  "bytes": 3455629,
+                  "files": 36,
+                  "nonBlankLines": 51925,
+                  "subcategory": "plans",
+                  "totalLines": 61764
+                },
+                {
+                  "bytes": 717353,
+                  "files": 39,
+                  "nonBlankLines": 11497,
+                  "subcategory": "general",
+                  "totalLines": 13849
+                },
+                {
+                  "bytes": 574157,
+                  "files": 76,
+                  "nonBlankLines": 3414,
+                  "subcategory": "triage",
+                  "totalLines": 5266
+                },
+                {
+                  "bytes": 571574,
+                  "files": 52,
+                  "nonBlankLines": 8463,
+                  "subcategory": "narrative",
+                  "totalLines": 10424
+                },
+                {
+                  "bytes": 324869,
+                  "files": 69,
+                  "nonBlankLines": 4390,
+                  "subcategory": "insights",
+                  "totalLines": 5771
+                },
+                {
+                  "bytes": 80583,
+                  "files": 7,
+                  "nonBlankLines": 1125,
+                  "subcategory": "readmes",
+                  "totalLines": 1276
+                },
+                {
+                  "bytes": 62127,
+                  "files": 1,
+                  "nonBlankLines": 436,
+                  "subcategory": "specifications",
+                  "totalLines": 667
+                },
+                {
+                  "bytes": 20098,
+                  "files": 6,
+                  "nonBlankLines": 164,
+                  "subcategory": "conventions",
+                  "totalLines": 250
+                }
+              ],
+              "totals": {
+                "bytes": 5806390,
+                "files": 286,
+                "nonBlankLines": 81414,
+                "subcategory": "<totals>",
+                "totalLines": 99267
+              }
+            },
+            {
+              "category": "code",
+              "subcategories": [
+                {
+                  "bytes": 1181259,
+                  "files": 270,
+                  "nonBlankLines": 27855,
+                  "subcategory": "source",
+                  "totalLines": 30311
+                },
+                {
+                  "bytes": 1110897,
+                  "files": 103,
+                  "nonBlankLines": 25340,
+                  "subcategory": "tests",
+                  "totalLines": 28488
+                },
+                {
+                  "bytes": 662114,
+                  "files": 54,
+                  "nonBlankLines": 16109,
+                  "subcategory": "build-scripts",
+                  "totalLines": 17616
+                },
+                {
+                  "bytes": 423394,
+                  "files": 70,
+                  "nonBlankLines": 11362,
+                  "subcategory": "styles",
+                  "totalLines": 12716
+                },
+                {
+                  "bytes": 23087,
+                  "files": 15,
+                  "nonBlankLines": 550,
+                  "subcategory": "config",
+                  "totalLines": 574
+                },
+                {
+                  "bytes": 18230,
+                  "files": 2,
+                  "nonBlankLines": 437,
+                  "subcategory": "test-fixtures",
+                  "totalLines": 545
+                },
+                {
+                  "bytes": 11009,
+                  "files": 4,
+                  "nonBlankLines": 295,
+                  "subcategory": "markup",
+                  "totalLines": 330
+                }
+              ],
+              "totals": {
+                "bytes": 3429990,
+                "files": 518,
+                "nonBlankLines": 81948,
+                "subcategory": "<totals>",
+                "totalLines": 90580
+              }
+            },
+            {
+              "category": "data",
+              "subcategories": [
+                {
+                  "bytes": 32699,
+                  "files": 16,
+                  "nonBlankLines": 457,
+                  "subcategory": "lookup-tables",
+                  "totalLines": 469
+                }
+              ],
+              "totals": {
+                "bytes": 32699,
+                "files": 16,
+                "nonBlankLines": 457,
+                "subcategory": "<totals>",
+                "totalLines": 469
+              }
+            }
+          ],
+          "tier": "authored",
+          "totals": {
+            "bytes": 9269079,
+            "files": 820,
+            "nonBlankLines": 163819,
+            "subcategory": "<totals>",
+            "totalLines": 190316
+          }
+        },
+        {
+          "categories": [
+            {
+              "category": "assets",
+              "subcategories": [
+                {
+                  "bytes": 252547129,
+                  "files": 181,
+                  "nonBlankLines": 0,
+                  "subcategory": "images",
+                  "totalLines": 0
+                },
+                {
+                  "bytes": 142165226,
+                  "files": 14,
+                  "nonBlankLines": 0,
+                  "subcategory": "video",
+                  "totalLines": 0
+                },
+                {
+                  "bytes": 38446627,
+                  "files": 65,
+                  "nonBlankLines": 0,
+                  "subcategory": "audio",
+                  "totalLines": 0
+                },
+                {
+                  "bytes": 3639759,
+                  "files": 1,
+                  "nonBlankLines": 0,
+                  "subcategory": "misc-media",
+                  "totalLines": 0
+                },
+                {
+                  "bytes": 98996,
+                  "files": 3,
+                  "nonBlankLines": 0,
+                  "subcategory": "fonts",
+                  "totalLines": 0
+                }
+              ],
+              "totals": {
+                "bytes": 436897737,
+                "files": 264,
+                "nonBlankLines": 0,
+                "subcategory": "<totals>",
+                "totalLines": 0
+              }
+            },
+            {
+              "category": "iteration-receipts",
+              "subcategories": [
+                {
+                  "bytes": 28869,
+                  "files": 7,
+                  "nonBlankLines": 584,
+                  "subcategory": "regen-scripts",
+                  "totalLines": 671
+                }
+              ],
+              "totals": {
+                "bytes": 28869,
+                "files": 7,
+                "nonBlankLines": 584,
+                "subcategory": "<totals>",
+                "totalLines": 671
+              }
+            }
+          ],
+          "tier": "pipeline-generated",
+          "totals": {
+            "bytes": 436926606,
+            "files": 271,
+            "nonBlankLines": 584,
+            "subcategory": "<totals>",
+            "totalLines": 671
+          }
+        },
+        {
+          "categories": [
+            {
+              "category": "lockfiles",
+              "subcategories": [
+                {
+                  "bytes": 280440,
+                  "files": 2,
+                  "nonBlankLines": 6769,
+                  "subcategory": "lockfiles",
+                  "totalLines": 8603
+                }
+              ],
+              "totals": {
+                "bytes": 280440,
+                "files": 2,
+                "nonBlankLines": 6769,
+                "subcategory": "<totals>",
+                "totalLines": 8603
+              }
+            }
+          ],
+          "tier": "tool-generated",
+          "totals": {
+            "bytes": 280440,
+            "files": 2,
+            "nonBlankLines": 6769,
+            "subcategory": "<totals>",
+            "totalLines": 8603
+          }
+        }
+      ],
+      "tokens": {
+        "byModel": [
+          {
+            "model": "Opus 4.7",
+            "sessions": 33608,
+            "tokensProcessed": 9296582828
+          },
+          {
+            "model": "<synthetic>",
+            "sessions": 3,
+            "tokensProcessed": 0
+          }
+        ],
+        "cacheCreationInputTokens": 231017040,
+        "cacheReadInputTokens": 9013214153,
+        "inputTokens": 348953,
+        "outputTokens": 52002682,
+        "parseHealth": {
+          "fileReadErrors": 0,
+          "lineParseErrors": 0,
+          "usageShapeWarnings": 0
+        },
+        "sessionCount": 33611,
+        "sidechainTokens": 0,
+        "tokensFresh": 283368675,
+        "tokensProcessed": 9296582828,
+        "windowDays": 29,
+        "windowEndISO": "2026-05-24T23:42:09.653Z",
+        "windowStartISO": "2026-04-25T13:40:35.593Z"
+      },
+      "topSubcategories": [
+        {
+          "bytes": 252547129,
+          "category": "assets",
+          "files": 181,
+          "lines": 0,
+          "subcategory": "images",
+          "tier": "pipeline-generated"
+        },
+        {
+          "bytes": 142165226,
+          "category": "assets",
+          "files": 14,
+          "lines": 0,
+          "subcategory": "video",
+          "tier": "pipeline-generated"
+        },
+        {
+          "bytes": 38446627,
+          "category": "assets",
+          "files": 65,
+          "lines": 0,
+          "subcategory": "audio",
+          "tier": "pipeline-generated"
+        },
+        {
+          "bytes": 3639759,
+          "category": "assets",
+          "files": 1,
+          "lines": 0,
+          "subcategory": "misc-media",
+          "tier": "pipeline-generated"
+        },
+        {
+          "bytes": 3455629,
+          "category": "docs",
+          "files": 36,
+          "lines": 61764,
+          "subcategory": "plans",
+          "tier": "authored"
+        }
+      ]
+    },
+    {
+      "assetBytesByKind": {
+        "audio": 0,
+        "fonts": 0,
+        "images": 0,
+        "misc-media": 0,
+        "video": 0
+      },
+      "editorial": null,
+      "git": {
+        "assetModificationEvents": 0,
+        "assetUniquePathsTouched": 0,
+        "commitMessageLines": 180,
+        "commitsByAuthor": [
+          {
+            "author": "mbriggsy",
+            "count": 25
+          }
+        ],
+        "discardedAssetByKind": {},
+        "discardedAssetEvents": 0,
+        "discardedAssetFiles": 0,
+        "firstCommitISO": "2026-04-17T12:26:18-04:00",
+        "isGitRepo": true,
+        "lastCommitISO": "2026-05-13T19:18:45-04:00",
+        "lifetimeLinesAdded": 5089,
+        "lifetimeLinesRemoved": 1547,
+        "linesByAuthor": [
+          {
+            "author": "mbriggsy",
+            "coAuthoredCommits": 0,
+            "commits": 25,
+            "linesAdded": 5089,
+            "linesRemoved": 1547
+          },
+          {
+            "author": "Claude Opus 4.7 (1M context)",
+            "coAuthoredCommits": 24,
+            "commits": 0,
+            "linesAdded": 5078,
+            "linesRemoved": 1547
+          }
+        ],
+        "projectAgeDays": 26,
+        "timeline": {
+          "activeDays": 6,
+          "commitsByDay": [
+            {
+              "count": 2,
+              "date": "2026-04-17"
+            },
+            {
+              "count": 1,
+              "date": "2026-04-25"
+            },
+            {
+              "count": 16,
+              "date": "2026-04-26"
+            },
+            {
+              "count": 4,
+              "date": "2026-04-27"
+            },
+            {
+              "count": 1,
+              "date": "2026-05-09"
+            },
+            {
+              "count": 1,
+              "date": "2026-05-13"
+            }
+          ],
+          "largestSingleCommit": {
+            "dateISO": "2026-04-27T09:48:11-04:00",
+            "linesAdded": 3121,
+            "linesRemoved": 25
+          },
+          "peakDay": {
+            "count": 16,
+            "date": "2026-04-26"
+          }
+        },
+        "totalCommits": 25,
+        "uniqueFilesTouched": 18
+      },
+      "grandTotals": {
+        "allBytes": 127380,
+        "allFiles": 13,
+        "authoredBytes": 127380,
+        "authoredFiles": 13,
+        "authoredLines": 3556,
+        "pipelineGeneratedBytes": 0,
+        "pipelineGeneratedFiles": 0,
+        "toolGeneratedBytes": 0,
+        "toolGeneratedFiles": 0
+      },
+      "planCount": 0,
+      "planLines": 0,
+      "projectName": "data-engineering",
+      "proxies": {
+        "iterationProxyTotal": 0,
+        "regenScriptCount": 0,
+        "sampleEvalRunCount": 0
+      },
+      "scannedAt": "2026-05-25T17:58:22.020Z",
+      "testCases": 0,
+      "testLines": 0,
+      "tiers": [
+        {
+          "categories": [
+            {
+              "category": "code",
+              "subcategories": [
+                {
+                  "bytes": 82380,
+                  "files": 2,
+                  "nonBlankLines": 2555,
+                  "subcategory": "markup",
+                  "totalLines": 2869
+                }
+              ],
+              "totals": {
+                "bytes": 82380,
+                "files": 2,
+                "nonBlankLines": 2555,
+                "subcategory": "<totals>",
+                "totalLines": 2869
+              }
+            },
+            {
+              "category": "docs",
+              "subcategories": [
+                {
+                  "bytes": 36184,
+                  "files": 8,
+                  "nonBlankLines": 346,
+                  "subcategory": "general",
+                  "totalLines": 548
+                },
+                {
+                  "bytes": 8816,
+                  "files": 3,
+                  "nonBlankLines": 89,
+                  "subcategory": "readmes",
+                  "totalLines": 139
+                }
+              ],
+              "totals": {
+                "bytes": 45000,
+                "files": 11,
+                "nonBlankLines": 435,
+                "subcategory": "<totals>",
+                "totalLines": 687
+              }
+            }
+          ],
+          "tier": "authored",
+          "totals": {
+            "bytes": 127380,
+            "files": 13,
+            "nonBlankLines": 2990,
+            "subcategory": "<totals>",
+            "totalLines": 3556
+          }
+        },
+        {
+          "categories": [],
+          "tier": "pipeline-generated",
+          "totals": {
+            "bytes": 0,
+            "files": 0,
+            "nonBlankLines": 0,
+            "subcategory": "<totals>",
+            "totalLines": 0
+          }
+        },
+        {
+          "categories": [],
+          "tier": "tool-generated",
+          "totals": {
+            "bytes": 0,
+            "files": 0,
+            "nonBlankLines": 0,
+            "subcategory": "<totals>",
+            "totalLines": 0
+          }
+        }
+      ],
+      "tokens": {
+        "byModel": [
+          {
+            "model": "Opus 4.7",
+            "sessions": 1382,
+            "tokensProcessed": 378749753
+          }
+        ],
+        "cacheCreationInputTokens": 14034162,
+        "cacheReadInputTokens": 360806508,
+        "inputTokens": 5420,
+        "outputTokens": 3903663,
+        "parseHealth": {
+          "fileReadErrors": 0,
+          "lineParseErrors": 0,
+          "usageShapeWarnings": 0
+        },
+        "sessionCount": 1382,
+        "sidechainTokens": 0,
+        "tokensFresh": 17943245,
+        "tokensProcessed": 378749753,
+        "windowDays": 1,
+        "windowEndISO": "2026-04-27T13:58:09.119Z",
+        "windowStartISO": "2026-04-25T15:30:27.341Z"
+      },
+      "topSubcategories": [
+        {
+          "bytes": 82380,
+          "category": "code",
+          "files": 2,
+          "lines": 2869,
+          "subcategory": "markup",
+          "tier": "authored"
+        },
+        {
+          "bytes": 36184,
+          "category": "docs",
+          "files": 8,
+          "lines": 548,
+          "subcategory": "general",
+          "tier": "authored"
+        },
+        {
+          "bytes": 8816,
+          "category": "docs",
+          "files": 3,
+          "lines": 139,
+          "subcategory": "readmes",
+          "tier": "authored"
+        }
+      ]
+    },
+    {
+      "assetBytesByKind": {
+        "audio": 0,
+        "fonts": 0,
+        "images": 0,
+        "misc-media": 0,
+        "video": 0
+      },
+      "editorial": null,
+      "git": {
+        "assetModificationEvents": 0,
+        "assetUniquePathsTouched": 0,
+        "commitMessageLines": 59,
+        "commitsByAuthor": [
+          {
+            "author": "mbriggsy",
+            "count": 5
+          }
+        ],
+        "discardedAssetByKind": {},
+        "discardedAssetEvents": 0,
+        "discardedAssetFiles": 0,
+        "firstCommitISO": "2026-04-01T15:10:03-04:00",
+        "isGitRepo": true,
+        "lastCommitISO": "2026-04-22T22:50:09-04:00",
+        "lifetimeLinesAdded": 1184,
+        "lifetimeLinesRemoved": 22,
+        "linesByAuthor": [
+          {
+            "author": "mbriggsy",
+            "coAuthoredCommits": 0,
+            "commits": 5,
+            "linesAdded": 1184,
+            "linesRemoved": 22
+          },
+          {
+            "author": "Claude Opus 4.6 (1M context)",
+            "coAuthoredCommits": 4,
+            "commits": 0,
+            "linesAdded": 1070,
+            "linesRemoved": 20
+          },
+          {
+            "author": "Claude Opus 4.7 (1M context)",
+            "coAuthoredCommits": 1,
+            "commits": 0,
+            "linesAdded": 114,
+            "linesRemoved": 2
+          }
+        ],
+        "projectAgeDays": 21,
+        "timeline": {
+          "activeDays": 5,
+          "commitsByDay": [
+            {
+              "count": 1,
+              "date": "2026-04-01"
+            },
+            {
+              "count": 1,
+              "date": "2026-04-02"
+            },
+            {
+              "count": 1,
+              "date": "2026-04-03"
+            },
+            {
+              "count": 1,
+              "date": "2026-04-09"
+            },
+            {
+              "count": 1,
+              "date": "2026-04-22"
+            }
+          ],
+          "largestSingleCommit": {
+            "dateISO": "2026-04-09T17:59:28-04:00",
+            "linesAdded": 847,
+            "linesRemoved": 0
+          },
+          "peakDay": {
+            "count": 1,
+            "date": "2026-04-22"
+          }
+        },
+        "totalCommits": 5,
+        "uniqueFilesTouched": 10
+      },
+      "grandTotals": {
+        "allBytes": 40820,
+        "allFiles": 10,
+        "authoredBytes": 40820,
+        "authoredFiles": 10,
+        "authoredLines": 1162,
+        "pipelineGeneratedBytes": 0,
+        "pipelineGeneratedFiles": 0,
+        "toolGeneratedBytes": 0,
+        "toolGeneratedFiles": 0
+      },
+      "planCount": 0,
+      "planLines": 0,
+      "projectName": "hooks",
+      "proxies": {
+        "iterationProxyTotal": 0,
+        "regenScriptCount": 0,
+        "sampleEvalRunCount": 0
+      },
+      "scannedAt": "2026-05-25T17:58:22.928Z",
+      "testCases": 0,
+      "testLines": 0,
+      "tiers": [
+        {
+          "categories": [
+            {
+              "category": "docs",
+              "subcategories": [
+                {
+                  "bytes": 30324,
+                  "files": 4,
+                  "nonBlankLines": 692,
+                  "subcategory": "general",
+                  "totalLines": 885
+                },
+                {
+                  "bytes": 6099,
+                  "files": 1,
+                  "nonBlankLines": 109,
+                  "subcategory": "readmes",
+                  "totalLines": 157
+                }
+              ],
+              "totals": {
+                "bytes": 36423,
+                "files": 5,
+                "nonBlankLines": 801,
+                "subcategory": "<totals>",
+                "totalLines": 1042
+              }
+            },
+            {
+              "category": "code",
+              "subcategories": [
+                {
+                  "bytes": 4397,
+                  "files": 5,
+                  "nonBlankLines": 108,
+                  "subcategory": "source",
+                  "totalLines": 120
+                }
+              ],
+              "totals": {
+                "bytes": 4397,
+                "files": 5,
+                "nonBlankLines": 108,
+                "subcategory": "<totals>",
+                "totalLines": 120
+              }
+            }
+          ],
+          "tier": "authored",
+          "totals": {
+            "bytes": 40820,
+            "files": 10,
+            "nonBlankLines": 909,
+            "subcategory": "<totals>",
+            "totalLines": 1162
+          }
+        },
+        {
+          "categories": [],
+          "tier": "pipeline-generated",
+          "totals": {
+            "bytes": 0,
+            "files": 0,
+            "nonBlankLines": 0,
+            "subcategory": "<totals>",
+            "totalLines": 0
+          }
+        },
+        {
+          "categories": [],
+          "tier": "tool-generated",
+          "totals": {
+            "bytes": 0,
+            "files": 0,
+            "nonBlankLines": 0,
+            "subcategory": "<totals>",
+            "totalLines": 0
+          }
+        }
+      ],
+      "tokens": null,
+      "topSubcategories": [
+        {
+          "bytes": 30324,
+          "category": "docs",
+          "files": 4,
+          "lines": 885,
+          "subcategory": "general",
+          "tier": "authored"
+        },
+        {
+          "bytes": 6099,
+          "category": "docs",
+          "files": 1,
+          "lines": 157,
+          "subcategory": "readmes",
+          "tier": "authored"
+        },
+        {
+          "bytes": 4397,
+          "category": "code",
+          "files": 5,
+          "lines": 120,
+          "subcategory": "source",
+          "tier": "authored"
+        }
+      ]
+    },
+    {
+      "assetBytesByKind": {
+        "audio": 0,
+        "fonts": 0,
+        "images": 0,
+        "misc-media": 0,
+        "video": 0
+      },
+      "editorial": null,
+      "git": {
+        "assetModificationEvents": 0,
+        "assetUniquePathsTouched": 0,
+        "commitMessageLines": 54,
+        "commitsByAuthor": [
+          {
+            "author": "mbriggsy",
+            "count": 4
+          }
+        ],
+        "discardedAssetByKind": {},
+        "discardedAssetEvents": 0,
+        "discardedAssetFiles": 0,
+        "firstCommitISO": "2026-02-21T21:57:03-05:00",
+        "isGitRepo": true,
+        "lastCommitISO": "2026-05-13T19:18:45-04:00",
+        "lifetimeLinesAdded": 3370,
+        "lifetimeLinesRemoved": 11,
+        "linesByAuthor": [
+          {
+            "author": "mbriggsy",
+            "coAuthoredCommits": 0,
+            "commits": 4,
+            "linesAdded": 3370,
+            "linesRemoved": 11
+          },
+          {
+            "author": "Claude Opus 4.6 (1M context)",
+            "coAuthoredCommits": 1,
+            "commits": 0,
+            "linesAdded": 14,
+            "linesRemoved": 7
+          },
+          {
+            "author": "Claude Opus 4.7 (1M context)",
+            "coAuthoredCommits": 1,
+            "commits": 0,
+            "linesAdded": 3,
+            "linesRemoved": 1
+          }
+        ],
+        "projectAgeDays": 80,
+        "timeline": {
+          "activeDays": 4,
+          "commitsByDay": [
+            {
+              "count": 1,
+              "date": "2026-02-21"
+            },
+            {
+              "count": 1,
+              "date": "2026-04-03"
+            },
+            {
+              "count": 1,
+              "date": "2026-05-09"
+            },
+            {
+              "count": 1,
+              "date": "2026-05-13"
+            }
+          ],
+          "largestSingleCommit": {
+            "dateISO": "2026-02-21T21:57:03-05:00",
+            "linesAdded": 3341,
+            "linesRemoved": 0
+          },
+          "peakDay": {
+            "count": 1,
+            "date": "2026-05-13"
+          }
+        },
+        "totalCommits": 4,
+        "uniqueFilesTouched": 7
+      },
+      "grandTotals": {
+        "allBytes": 125979,
+        "allFiles": 7,
+        "authoredBytes": 125979,
+        "authoredFiles": 7,
+        "authoredLines": 3359,
+        "pipelineGeneratedBytes": 0,
+        "pipelineGeneratedFiles": 0,
+        "toolGeneratedBytes": 0,
+        "toolGeneratedFiles": 0
+      },
+      "planCount": 0,
+      "planLines": 0,
+      "projectName": "pacman",
+      "proxies": {
+        "iterationProxyTotal": 0,
+        "regenScriptCount": 0,
+        "sampleEvalRunCount": 0
+      },
+      "scannedAt": "2026-05-25T17:58:23.838Z",
+      "testCases": 0,
+      "testLines": 0,
+      "tiers": [
+        {
+          "categories": [
+            {
+              "category": "code",
+              "subcategories": [
+                {
+                  "bytes": 99109,
+                  "files": 2,
+                  "nonBlankLines": 2363,
+                  "subcategory": "source",
+                  "totalLines": 2721
+                },
+                {
+                  "bytes": 7158,
+                  "files": 2,
+                  "nonBlankLines": 215,
+                  "subcategory": "markup",
+                  "totalLines": 249
+                },
+                {
+                  "bytes": 522,
+                  "files": 1,
+                  "nonBlankLines": 29,
+                  "subcategory": "styles",
+                  "totalLines": 32
+                }
+              ],
+              "totals": {
+                "bytes": 106789,
+                "files": 5,
+                "nonBlankLines": 2607,
+                "subcategory": "<totals>",
+                "totalLines": 3002
+              }
+            },
+            {
+              "category": "docs",
+              "subcategories": [
+                {
+                  "bytes": 12396,
+                  "files": 1,
+                  "nonBlankLines": 142,
+                  "subcategory": "general",
+                  "totalLines": 222
+                },
+                {
+                  "bytes": 6794,
+                  "files": 1,
+                  "nonBlankLines": 90,
+                  "subcategory": "readmes",
+                  "totalLines": 135
+                }
+              ],
+              "totals": {
+                "bytes": 19190,
+                "files": 2,
+                "nonBlankLines": 232,
+                "subcategory": "<totals>",
+                "totalLines": 357
+              }
+            }
+          ],
+          "tier": "authored",
+          "totals": {
+            "bytes": 125979,
+            "files": 7,
+            "nonBlankLines": 2839,
+            "subcategory": "<totals>",
+            "totalLines": 3359
+          }
+        },
+        {
+          "categories": [],
+          "tier": "pipeline-generated",
+          "totals": {
+            "bytes": 0,
+            "files": 0,
+            "nonBlankLines": 0,
+            "subcategory": "<totals>",
+            "totalLines": 0
+          }
+        },
+        {
+          "categories": [],
+          "tier": "tool-generated",
+          "totals": {
+            "bytes": 0,
+            "files": 0,
+            "nonBlankLines": 0,
+            "subcategory": "<totals>",
+            "totalLines": 0
+          }
+        }
+      ],
+      "tokens": null,
+      "topSubcategories": [
+        {
+          "bytes": 99109,
+          "category": "code",
+          "files": 2,
+          "lines": 2721,
+          "subcategory": "source",
+          "tier": "authored"
+        },
+        {
+          "bytes": 12396,
+          "category": "docs",
+          "files": 1,
+          "lines": 222,
+          "subcategory": "general",
+          "tier": "authored"
+        },
+        {
+          "bytes": 7158,
+          "category": "code",
+          "files": 2,
+          "lines": 249,
+          "subcategory": "markup",
+          "tier": "authored"
+        },
+        {
+          "bytes": 6794,
+          "category": "docs",
+          "files": 1,
+          "lines": 135,
+          "subcategory": "readmes",
+          "tier": "authored"
+        },
+        {
+          "bytes": 522,
+          "category": "code",
+          "files": 1,
+          "lines": 32,
+          "subcategory": "styles",
+          "tier": "authored"
+        }
+      ]
+    },
+    {
+      "assetBytesByKind": {
+        "audio": 0,
+        "fonts": 0,
+        "images": 0,
+        "misc-media": 0,
+        "video": 0
+      },
+      "editorial": null,
+      "git": {
+        "assetModificationEvents": 0,
+        "assetUniquePathsTouched": 0,
+        "commitMessageLines": 166,
+        "commitsByAuthor": [
+          {
+            "author": "mbriggsy",
+            "count": 29
+          }
+        ],
+        "discardedAssetByKind": {},
+        "discardedAssetEvents": 0,
+        "discardedAssetFiles": 0,
+        "firstCommitISO": "2026-03-31T21:38:06-04:00",
+        "isGitRepo": true,
+        "lastCommitISO": "2026-04-09T10:49:31-04:00",
+        "lifetimeLinesAdded": 10582,
+        "lifetimeLinesRemoved": 5706,
+        "linesByAuthor": [
+          {
+            "author": "mbriggsy",
+            "coAuthoredCommits": 0,
+            "commits": 29,
+            "linesAdded": 10582,
+            "linesRemoved": 5706
+          },
+          {
+            "author": "Claude Opus 4.6 (1M context)",
+            "coAuthoredCommits": 29,
+            "commits": 0,
+            "linesAdded": 10582,
+            "linesRemoved": 5706
+          }
+        ],
+        "projectAgeDays": 8,
+        "timeline": {
+          "activeDays": 7,
+          "commitsByDay": [
+            {
+              "count": 1,
+              "date": "2026-03-31"
+            },
+            {
+              "count": 10,
+              "date": "2026-04-01"
+            },
+            {
+              "count": 1,
+              "date": "2026-04-02"
+            },
+            {
+              "count": 1,
+              "date": "2026-04-03"
+            },
+            {
+              "count": 1,
+              "date": "2026-04-05"
+            },
+            {
+              "count": 9,
+              "date": "2026-04-08"
+            },
+            {
+              "count": 6,
+              "date": "2026-04-09"
+            }
+          ],
+          "largestSingleCommit": {
+            "dateISO": "2026-04-08T16:01:05-04:00",
+            "linesAdded": 5909,
+            "linesRemoved": 10
+          },
+          "peakDay": {
+            "count": 10,
+            "date": "2026-04-01"
+          }
+        },
+        "totalCommits": 29,
+        "uniqueFilesTouched": 121
+      },
+      "grandTotals": {
+        "allBytes": 182235,
+        "allFiles": 36,
+        "authoredBytes": 182235,
+        "authoredFiles": 36,
+        "authoredLines": 4876,
+        "pipelineGeneratedBytes": 0,
+        "pipelineGeneratedFiles": 0,
+        "toolGeneratedBytes": 0,
+        "toolGeneratedFiles": 0
+      },
+      "planCount": 0,
+      "planLines": 0,
+      "projectName": "skills",
+      "proxies": {
+        "iterationProxyTotal": 0,
+        "regenScriptCount": 0,
+        "sampleEvalRunCount": 0
+      },
+      "scannedAt": "2026-05-25T17:58:24.758Z",
+      "testCases": 0,
+      "testLines": 0,
+      "tiers": [
+        {
+          "categories": [
+            {
+              "category": "data",
+              "subcategories": [
+                {
+                  "bytes": 111880,
+                  "files": 5,
+                  "nonBlankLines": 2876,
+                  "subcategory": "lookup-tables",
+                  "totalLines": 2878
+                }
+              ],
+              "totals": {
+                "bytes": 111880,
+                "files": 5,
+                "nonBlankLines": 2876,
+                "subcategory": "<totals>",
+                "totalLines": 2878
+              }
+            },
+            {
+              "category": "docs",
+              "subcategories": [
+                {
+                  "bytes": 24406,
+                  "files": 7,
+                  "nonBlankLines": 385,
+                  "subcategory": "general",
+                  "totalLines": 527
+                },
+                {
+                  "bytes": 19877,
+                  "files": 5,
+                  "nonBlankLines": 292,
+                  "subcategory": "readmes",
+                  "totalLines": 422
+                }
+              ],
+              "totals": {
+                "bytes": 44283,
+                "files": 12,
+                "nonBlankLines": 677,
+                "subcategory": "<totals>",
+                "totalLines": 949
+              }
+            },
+            {
+              "category": "code",
+              "subcategories": [
+                {
+                  "bytes": 26072,
+                  "files": 18,
+                  "nonBlankLines": 758,
+                  "subcategory": "test-fixtures",
+                  "totalLines": 1049
+                },
+                {
+                  "bytes": 0,
+                  "files": 1,
+                  "nonBlankLines": 0,
+                  "subcategory": "source",
+                  "totalLines": 0
+                }
+              ],
+              "totals": {
+                "bytes": 26072,
+                "files": 19,
+                "nonBlankLines": 758,
+                "subcategory": "<totals>",
+                "totalLines": 1049
+              }
+            }
+          ],
+          "tier": "authored",
+          "totals": {
+            "bytes": 182235,
+            "files": 36,
+            "nonBlankLines": 4311,
+            "subcategory": "<totals>",
+            "totalLines": 4876
+          }
+        },
+        {
+          "categories": [],
+          "tier": "pipeline-generated",
+          "totals": {
+            "bytes": 0,
+            "files": 0,
+            "nonBlankLines": 0,
+            "subcategory": "<totals>",
+            "totalLines": 0
+          }
+        },
+        {
+          "categories": [],
+          "tier": "tool-generated",
+          "totals": {
+            "bytes": 0,
+            "files": 0,
+            "nonBlankLines": 0,
+            "subcategory": "<totals>",
+            "totalLines": 0
+          }
+        }
+      ],
+      "tokens": null,
+      "topSubcategories": [
+        {
+          "bytes": 111880,
+          "category": "data",
+          "files": 5,
+          "lines": 2878,
+          "subcategory": "lookup-tables",
+          "tier": "authored"
+        },
+        {
+          "bytes": 26072,
+          "category": "code",
+          "files": 18,
+          "lines": 1049,
+          "subcategory": "test-fixtures",
+          "tier": "authored"
+        },
+        {
+          "bytes": 24406,
+          "category": "docs",
+          "files": 7,
+          "lines": 527,
+          "subcategory": "general",
+          "tier": "authored"
+        },
+        {
+          "bytes": 19877,
+          "category": "docs",
+          "files": 5,
+          "lines": 422,
+          "subcategory": "readmes",
+          "tier": "authored"
+        },
+        {
+          "bytes": 0,
+          "category": "code",
+          "files": 1,
+          "lines": 0,
+          "subcategory": "source",
+          "tier": "authored"
+        }
+      ]
+    },
+    {
+      "assetBytesByKind": {
+        "audio": 0,
+        "fonts": 0,
+        "images": 0,
+        "misc-media": 0,
+        "video": 0
+      },
+      "editorial": null,
+      "git": {
+        "assetModificationEvents": 0,
+        "assetUniquePathsTouched": 0,
+        "commitMessageLines": 28,
+        "commitsByAuthor": [
+          {
+            "author": "mbriggsy",
+            "count": 3
+          }
+        ],
+        "discardedAssetByKind": {},
+        "discardedAssetEvents": 0,
+        "discardedAssetFiles": 0,
+        "firstCommitISO": "2026-02-21T21:57:03-05:00",
+        "isGitRepo": true,
+        "lastCommitISO": "2026-05-09T16:50:51Z",
+        "lifetimeLinesAdded": 4840,
+        "lifetimeLinesRemoved": 0,
+        "linesByAuthor": [
+          {
+            "author": "mbriggsy",
+            "coAuthoredCommits": 0,
+            "commits": 3,
+            "linesAdded": 4840,
+            "linesRemoved": 0
+          },
+          {
+            "author": "Claude Opus 4.6 (1M context)",
+            "coAuthoredCommits": 1,
+            "commits": 0,
+            "linesAdded": 40,
+            "linesRemoved": 0
+          }
+        ],
+        "projectAgeDays": 76,
+        "timeline": {
+          "activeDays": 3,
+          "commitsByDay": [
+            {
+              "count": 1,
+              "date": "2026-02-21"
+            },
+            {
+              "count": 1,
+              "date": "2026-04-03"
+            },
+            {
+              "count": 1,
+              "date": "2026-05-09"
+            }
+          ],
+          "largestSingleCommit": {
+            "dateISO": "2026-02-21T21:57:03-05:00",
+            "linesAdded": 4795,
+            "linesRemoved": 0
+          },
+          "peakDay": {
+            "count": 1,
+            "date": "2026-05-09"
+          }
+        },
+        "totalCommits": 3,
+        "uniqueFilesTouched": 9
+      },
+      "grandTotals": {
+        "allBytes": 179726,
+        "allFiles": 9,
+        "authoredBytes": 48110,
+        "authoredFiles": 8,
+        "authoredLines": 1192,
+        "pipelineGeneratedBytes": 0,
+        "pipelineGeneratedFiles": 0,
+        "toolGeneratedBytes": 131616,
+        "toolGeneratedFiles": 1
+      },
+      "planCount": 0,
+      "planLines": 0,
+      "projectName": "tic-tac-toe",
+      "proxies": {
+        "iterationProxyTotal": 0,
+        "regenScriptCount": 0,
+        "sampleEvalRunCount": 0
+      },
+      "scannedAt": "2026-05-25T17:58:25.658Z",
+      "testCases": 19,
+      "testLines": 144,
+      "tiers": [
+        {
+          "categories": [
+            {
+              "category": "code",
+              "subcategories": [
+                {
+                  "bytes": 15284,
+                  "files": 2,
+                  "nonBlankLines": 123,
+                  "subcategory": "tests",
+                  "totalLines": 144
+                },
+                {
+                  "bytes": 14581,
+                  "files": 2,
+                  "nonBlankLines": 394,
+                  "subcategory": "source",
+                  "totalLines": 441
+                },
+                {
+                  "bytes": 11495,
+                  "files": 1,
+                  "nonBlankLines": 410,
+                  "subcategory": "styles",
+                  "totalLines": 446
+                },
+                {
+                  "bytes": 4805,
+                  "files": 1,
+                  "nonBlankLines": 94,
+                  "subcategory": "markup",
+                  "totalLines": 106
+                },
+                {
+                  "bytes": 201,
+                  "files": 1,
+                  "nonBlankLines": 10,
+                  "subcategory": "config",
+                  "totalLines": 10
+                }
+              ],
+              "totals": {
+                "bytes": 46366,
+                "files": 7,
+                "nonBlankLines": 1031,
+                "subcategory": "<totals>",
+                "totalLines": 1147
+              }
+            },
+            {
+              "category": "docs",
+              "subcategories": [
+                {
+                  "bytes": 1744,
+                  "files": 1,
+                  "nonBlankLines": 32,
+                  "subcategory": "readmes",
+                  "totalLines": 45
+                }
+              ],
+              "totals": {
+                "bytes": 1744,
+                "files": 1,
+                "nonBlankLines": 32,
+                "subcategory": "<totals>",
+                "totalLines": 45
+              }
+            }
+          ],
+          "tier": "authored",
+          "totals": {
+            "bytes": 48110,
+            "files": 8,
+            "nonBlankLines": 1063,
+            "subcategory": "<totals>",
+            "totalLines": 1192
+          }
+        },
+        {
+          "categories": [],
+          "tier": "pipeline-generated",
+          "totals": {
+            "bytes": 0,
+            "files": 0,
+            "nonBlankLines": 0,
+            "subcategory": "<totals>",
+            "totalLines": 0
+          }
+        },
+        {
+          "categories": [
+            {
+              "category": "lockfiles",
+              "subcategories": [
+                {
+                  "bytes": 131616,
+                  "files": 1,
+                  "nonBlankLines": 3648,
+                  "subcategory": "lockfiles",
+                  "totalLines": 3648
+                }
+              ],
+              "totals": {
+                "bytes": 131616,
+                "files": 1,
+                "nonBlankLines": 3648,
+                "subcategory": "<totals>",
+                "totalLines": 3648
+              }
+            }
+          ],
+          "tier": "tool-generated",
+          "totals": {
+            "bytes": 131616,
+            "files": 1,
+            "nonBlankLines": 3648,
+            "subcategory": "<totals>",
+            "totalLines": 3648
+          }
+        }
+      ],
+      "tokens": null,
+      "topSubcategories": [
+        {
+          "bytes": 131616,
+          "category": "lockfiles",
+          "files": 1,
+          "lines": 3648,
+          "subcategory": "lockfiles",
+          "tier": "tool-generated"
+        },
+        {
+          "bytes": 15284,
+          "category": "code",
+          "files": 2,
+          "lines": 144,
+          "subcategory": "tests",
+          "tier": "authored"
+        },
+        {
+          "bytes": 14581,
+          "category": "code",
+          "files": 2,
+          "lines": 441,
+          "subcategory": "source",
+          "tier": "authored"
+        },
+        {
+          "bytes": 11495,
+          "category": "code",
+          "files": 1,
+          "lines": 446,
+          "subcategory": "styles",
+          "tier": "authored"
+        },
+        {
+          "bytes": 4805,
+          "category": "code",
+          "files": 1,
+          "lines": 106,
+          "subcategory": "markup",
+          "tier": "authored"
+        }
+      ]
+    },
+    {
+      "assetBytesByKind": {
+        "audio": 0,
+        "fonts": 0,
+        "images": 0,
+        "misc-media": 0,
+        "video": 0
+      },
+      "editorial": null,
+      "git": {
+        "assetModificationEvents": 0,
+        "assetUniquePathsTouched": 0,
+        "commitMessageLines": 846,
+        "commitsByAuthor": [
+          {
+            "author": "mbriggsy",
+            "count": 177
+          }
+        ],
+        "discardedAssetByKind": {},
+        "discardedAssetEvents": 0,
+        "discardedAssetFiles": 0,
+        "firstCommitISO": "2026-02-27T12:09:51-05:00",
+        "isGitRepo": true,
+        "lastCommitISO": "2026-05-13T19:18:45-04:00",
+        "lifetimeLinesAdded": 52965,
+        "lifetimeLinesRemoved": 5936,
+        "linesByAuthor": [
+          {
+            "author": "mbriggsy",
+            "coAuthoredCommits": 0,
+            "commits": 177,
+            "linesAdded": 52965,
+            "linesRemoved": 5936
+          },
+          {
+            "author": "Claude Opus 4.6",
+            "coAuthoredCommits": 127,
+            "commits": 0,
+            "linesAdded": 41736,
+            "linesRemoved": 3859
+          },
+          {
+            "author": "Claude Sonnet 4.6",
+            "coAuthoredCommits": 2,
+            "commits": 0,
+            "linesAdded": 857,
+            "linesRemoved": 0
+          },
+          {
+            "author": "Claude Opus 4.6 (1M context)",
+            "coAuthoredCommits": 3,
+            "commits": 0,
+            "linesAdded": 27,
+            "linesRemoved": 2
+          },
+          {
+            "author": "Claude Opus 4.7 (1M context)",
+            "coAuthoredCommits": 1,
+            "commits": 0,
+            "linesAdded": 5,
+            "linesRemoved": 1
+          }
+        ],
+        "projectAgeDays": 75,
+        "timeline": {
+          "activeDays": 11,
+          "commitsByDay": [
+            {
+              "count": 50,
+              "date": "2026-02-27"
+            },
+            {
+              "count": 20,
+              "date": "2026-02-28"
+            },
+            {
+              "count": 37,
+              "date": "2026-03-01"
+            },
+            {
+              "count": 44,
+              "date": "2026-03-02"
+            },
+            {
+              "count": 12,
+              "date": "2026-03-03"
+            },
+            {
+              "count": 7,
+              "date": "2026-03-04"
+            },
+            {
+              "count": 1,
+              "date": "2026-03-05"
+            },
+            {
+              "count": 1,
+              "date": "2026-03-06"
+            },
+            {
+              "count": 3,
+              "date": "2026-04-03"
+            },
+            {
+              "count": 1,
+              "date": "2026-05-09"
+            },
+            {
+              "count": 1,
+              "date": "2026-05-13"
+            }
+          ],
+          "largestSingleCommit": {
+            "dateISO": "2026-02-28T17:39:29-05:00",
+            "linesAdded": 3451,
+            "linesRemoved": 175
+          },
+          "peakDay": {
+            "count": 50,
+            "date": "2026-02-27"
+          }
+        },
+        "totalCommits": 177,
+        "uniqueFilesTouched": 219
+      },
+      "grandTotals": {
+        "allBytes": 18126035,
+        "allFiles": 209,
+        "authoredBytes": 18088439,
+        "authoredFiles": 208,
+        "authoredLines": 81596,
+        "pipelineGeneratedBytes": 0,
+        "pipelineGeneratedFiles": 0,
+        "toolGeneratedBytes": 37596,
+        "toolGeneratedFiles": 1
+      },
+      "planCount": 0,
+      "planLines": 0,
+      "projectName": "top-down-racer-02",
+      "proxies": {
+        "iterationProxyTotal": 0,
+        "regenScriptCount": 0,
+        "sampleEvalRunCount": 0
+      },
+      "scannedAt": "2026-05-25T17:58:26.826Z",
+      "testCases": 381,
+      "testLines": 5270,
+      "tiers": [
+        {
+          "categories": [
+            {
+              "category": "code",
+              "subcategories": [
+                {
+                  "bytes": 16343869,
+                  "files": 72,
+                  "nonBlankLines": 44370,
+                  "subcategory": "source",
+                  "totalLines": 45897
+                },
+                {
+                  "bytes": 189548,
+                  "files": 24,
+                  "nonBlankLines": 4526,
+                  "subcategory": "tests",
+                  "totalLines": 5270
+                },
+                {
+                  "bytes": 132443,
+                  "files": 4,
+                  "nonBlankLines": 1540,
+                  "subcategory": "markup",
+                  "totalLines": 1740
+                },
+                {
+                  "bytes": 3975,
+                  "files": 7,
+                  "nonBlankLines": 138,
+                  "subcategory": "config",
+                  "totalLines": 145
+                },
+                {
+                  "bytes": 843,
+                  "files": 1,
+                  "nonBlankLines": 21,
+                  "subcategory": "build-scripts",
+                  "totalLines": 26
+                }
+              ],
+              "totals": {
+                "bytes": 16670678,
+                "files": 108,
+                "nonBlankLines": 50595,
+                "subcategory": "<totals>",
+                "totalLines": 53078
+              }
+            },
+            {
+              "category": "docs",
+              "subcategories": [
+                {
+                  "bytes": 1386998,
+                  "files": 91,
+                  "nonBlankLines": 22599,
+                  "subcategory": "general",
+                  "totalLines": 27805
+                },
+                {
+                  "bytes": 14244,
+                  "files": 2,
+                  "nonBlankLines": 237,
+                  "subcategory": "readmes",
+                  "totalLines": 335
+                },
+                {
+                  "bytes": 5125,
+                  "files": 1,
+                  "nonBlankLines": 85,
+                  "subcategory": "conventions",
+                  "totalLines": 128
+                }
+              ],
+              "totals": {
+                "bytes": 1406367,
+                "files": 94,
+                "nonBlankLines": 22921,
+                "subcategory": "<totals>",
+                "totalLines": 28268
+              }
+            },
+            {
+              "category": "data",
+              "subcategories": [
+                {
+                  "bytes": 11394,
+                  "files": 6,
+                  "nonBlankLines": 232,
+                  "subcategory": "lookup-tables",
+                  "totalLines": 250
+                }
+              ],
+              "totals": {
+                "bytes": 11394,
+                "files": 6,
+                "nonBlankLines": 232,
+                "subcategory": "<totals>",
+                "totalLines": 250
+              }
+            }
+          ],
+          "tier": "authored",
+          "totals": {
+            "bytes": 18088439,
+            "files": 208,
+            "nonBlankLines": 73748,
+            "subcategory": "<totals>",
+            "totalLines": 81596
+          }
+        },
+        {
+          "categories": [],
+          "tier": "pipeline-generated",
+          "totals": {
+            "bytes": 0,
+            "files": 0,
+            "nonBlankLines": 0,
+            "subcategory": "<totals>",
+            "totalLines": 0
+          }
+        },
+        {
+          "categories": [
+            {
+              "category": "lockfiles",
+              "subcategories": [
+                {
+                  "bytes": 37596,
+                  "files": 1,
+                  "nonBlankLines": 935,
+                  "subcategory": "lockfiles",
+                  "totalLines": 1198
+                }
+              ],
+              "totals": {
+                "bytes": 37596,
+                "files": 1,
+                "nonBlankLines": 935,
+                "subcategory": "<totals>",
+                "totalLines": 1198
+              }
+            }
+          ],
+          "tier": "tool-generated",
+          "totals": {
+            "bytes": 37596,
+            "files": 1,
+            "nonBlankLines": 935,
+            "subcategory": "<totals>",
+            "totalLines": 1198
+          }
+        }
+      ],
+      "tokens": null,
+      "topSubcategories": [
+        {
+          "bytes": 16343869,
+          "category": "code",
+          "files": 72,
+          "lines": 45897,
+          "subcategory": "source",
+          "tier": "authored"
+        },
+        {
+          "bytes": 1386998,
+          "category": "docs",
+          "files": 91,
+          "lines": 27805,
+          "subcategory": "general",
+          "tier": "authored"
+        },
+        {
+          "bytes": 189548,
+          "category": "code",
+          "files": 24,
+          "lines": 5270,
+          "subcategory": "tests",
+          "tier": "authored"
+        },
+        {
+          "bytes": 132443,
+          "category": "code",
+          "files": 4,
+          "lines": 1740,
+          "subcategory": "markup",
+          "tier": "authored"
+        },
+        {
+          "bytes": 37596,
+          "category": "lockfiles",
+          "files": 1,
+          "lines": 1198,
+          "subcategory": "lockfiles",
+          "tier": "tool-generated"
+        }
+      ]
+    },
+    {
+      "assetBytesByKind": {
+        "audio": 0,
+        "fonts": 0,
+        "images": 14944718,
+        "misc-media": 0,
+        "video": 0
+      },
+      "editorial": null,
+      "git": {
+        "assetModificationEvents": 9,
+        "assetUniquePathsTouched": 9,
+        "commitMessageLines": 352,
+        "commitsByAuthor": [
+          {
+            "author": "mbriggsy",
+            "count": 72
+          }
+        ],
+        "discardedAssetByKind": {},
+        "discardedAssetEvents": 0,
+        "discardedAssetFiles": 0,
+        "firstCommitISO": "2026-03-11T13:20:20-04:00",
+        "isGitRepo": true,
+        "lastCommitISO": "2026-05-13T19:18:45-04:00",
+        "lifetimeLinesAdded": 37877,
+        "lifetimeLinesRemoved": 2172,
+        "linesByAuthor": [
+          {
+            "author": "mbriggsy",
+            "coAuthoredCommits": 0,
+            "commits": 72,
+            "linesAdded": 37877,
+            "linesRemoved": 2172
+          },
+          {
+            "author": "Claude Opus 4.6",
+            "coAuthoredCommits": 29,
+            "commits": 0,
+            "linesAdded": 15736,
+            "linesRemoved": 1530
+          },
+          {
+            "author": "Claude Opus 4.6 (1M context)",
+            "coAuthoredCommits": 9,
+            "commits": 0,
+            "linesAdded": 1712,
+            "linesRemoved": 50
+          },
+          {
+            "author": "Claude Opus 4.7 (1M context)",
+            "coAuthoredCommits": 1,
+            "commits": 0,
+            "linesAdded": 2,
+            "linesRemoved": 1
+          }
+        ],
+        "projectAgeDays": 63,
+        "timeline": {
+          "activeDays": 8,
+          "commitsByDay": [
+            {
+              "count": 14,
+              "date": "2026-03-11"
+            },
+            {
+              "count": 29,
+              "date": "2026-03-12"
+            },
+            {
+              "count": 20,
+              "date": "2026-03-13"
+            },
+            {
+              "count": 1,
+              "date": "2026-03-14"
+            },
+            {
+              "count": 2,
+              "date": "2026-03-17"
+            },
+            {
+              "count": 4,
+              "date": "2026-04-03"
+            },
+            {
+              "count": 1,
+              "date": "2026-05-09"
+            },
+            {
+              "count": 1,
+              "date": "2026-05-13"
+            }
+          ],
+          "largestSingleCommit": {
+            "dateISO": "2026-03-12T12:34:18-04:00",
+            "linesAdded": 10381,
+            "linesRemoved": 588
+          },
+          "peakDay": {
+            "count": 29,
+            "date": "2026-03-12"
+          }
+        },
+        "totalCommits": 72,
+        "uniqueFilesTouched": 158
+      },
+      "grandTotals": {
+        "allBytes": 32515594,
+        "allFiles": 160,
+        "authoredBytes": 17489929,
+        "authoredFiles": 150,
+        "authoredLines": 81123,
+        "pipelineGeneratedBytes": 14944718,
+        "pipelineGeneratedFiles": 9,
+        "toolGeneratedBytes": 80947,
+        "toolGeneratedFiles": 1
+      },
+      "planCount": 8,
+      "planLines": 6942,
+      "projectName": "top-down-racer-04",
+      "proxies": {
+        "iterationProxyTotal": 0,
+        "regenScriptCount": 0,
+        "sampleEvalRunCount": 0
+      },
+      "scannedAt": "2026-05-25T17:58:28.078Z",
+      "testCases": 504,
+      "testLines": 7303,
+      "tiers": [
+        {
+          "categories": [
+            {
+              "category": "code",
+              "subcategories": [
+                {
+                  "bytes": 16569396,
+                  "files": 69,
+                  "nonBlankLines": 58496,
+                  "subcategory": "source",
+                  "totalLines": 60382
+                },
+                {
+                  "bytes": 259198,
+                  "files": 34,
+                  "nonBlankLines": 6298,
+                  "subcategory": "tests",
+                  "totalLines": 7303
+                },
+                {
+                  "bytes": 48729,
+                  "files": 9,
+                  "nonBlankLines": 1221,
+                  "subcategory": "build-scripts",
+                  "totalLines": 1402
+                },
+                {
+                  "bytes": 4416,
+                  "files": 7,
+                  "nonBlankLines": 153,
+                  "subcategory": "config",
+                  "totalLines": 159
+                },
+                {
+                  "bytes": 1650,
+                  "files": 2,
+                  "nonBlankLines": 43,
+                  "subcategory": "markup",
+                  "totalLines": 43
+                }
+              ],
+              "totals": {
+                "bytes": 16883389,
+                "files": 121,
+                "nonBlankLines": 66211,
+                "subcategory": "<totals>",
+                "totalLines": 69289
+              }
+            },
+            {
+              "category": "docs",
+              "subcategories": [
+                {
+                  "bytes": 377096,
+                  "files": 8,
+                  "nonBlankLines": 5306,
+                  "subcategory": "plans",
+                  "totalLines": 6942
+                },
+                {
+                  "bytes": 207702,
+                  "files": 11,
+                  "nonBlankLines": 3286,
+                  "subcategory": "general",
+                  "totalLines": 4373
+                },
+                {
+                  "bytes": 8785,
+                  "files": 2,
+                  "nonBlankLines": 138,
+                  "subcategory": "readmes",
+                  "totalLines": 186
+                }
+              ],
+              "totals": {
+                "bytes": 593583,
+                "files": 21,
+                "nonBlankLines": 8730,
+                "subcategory": "<totals>",
+                "totalLines": 11501
+              }
+            },
+            {
+              "category": "data",
+              "subcategories": [
+                {
+                  "bytes": 12957,
+                  "files": 8,
+                  "nonBlankLines": 315,
+                  "subcategory": "lookup-tables",
+                  "totalLines": 333
+                }
+              ],
+              "totals": {
+                "bytes": 12957,
+                "files": 8,
+                "nonBlankLines": 315,
+                "subcategory": "<totals>",
+                "totalLines": 333
+              }
+            }
+          ],
+          "tier": "authored",
+          "totals": {
+            "bytes": 17489929,
+            "files": 150,
+            "nonBlankLines": 75256,
+            "subcategory": "<totals>",
+            "totalLines": 81123
+          }
+        },
+        {
+          "categories": [
+            {
+              "category": "assets",
+              "subcategories": [
+                {
+                  "bytes": 14944718,
+                  "files": 9,
+                  "nonBlankLines": 0,
+                  "subcategory": "images",
+                  "totalLines": 0
+                }
+              ],
+              "totals": {
+                "bytes": 14944718,
+                "files": 9,
+                "nonBlankLines": 0,
+                "subcategory": "<totals>",
+                "totalLines": 0
+              }
+            }
+          ],
+          "tier": "pipeline-generated",
+          "totals": {
+            "bytes": 14944718,
+            "files": 9,
+            "nonBlankLines": 0,
+            "subcategory": "<totals>",
+            "totalLines": 0
+          }
+        },
+        {
+          "categories": [
+            {
+              "category": "lockfiles",
+              "subcategories": [
+                {
+                  "bytes": 80947,
+                  "files": 1,
+                  "nonBlankLines": 1932,
+                  "subcategory": "lockfiles",
+                  "totalLines": 2499
+                }
+              ],
+              "totals": {
+                "bytes": 80947,
+                "files": 1,
+                "nonBlankLines": 1932,
+                "subcategory": "<totals>",
+                "totalLines": 2499
+              }
+            }
+          ],
+          "tier": "tool-generated",
+          "totals": {
+            "bytes": 80947,
+            "files": 1,
+            "nonBlankLines": 1932,
+            "subcategory": "<totals>",
+            "totalLines": 2499
+          }
+        }
+      ],
+      "tokens": null,
+      "topSubcategories": [
+        {
+          "bytes": 16569396,
+          "category": "code",
+          "files": 69,
+          "lines": 60382,
+          "subcategory": "source",
+          "tier": "authored"
+        },
+        {
+          "bytes": 14944718,
+          "category": "assets",
+          "files": 9,
+          "lines": 0,
+          "subcategory": "images",
+          "tier": "pipeline-generated"
+        },
+        {
+          "bytes": 377096,
+          "category": "docs",
+          "files": 8,
+          "lines": 6942,
+          "subcategory": "plans",
+          "tier": "authored"
+        },
+        {
+          "bytes": 259198,
+          "category": "code",
+          "files": 34,
+          "lines": 7303,
+          "subcategory": "tests",
+          "tier": "authored"
+        },
+        {
+          "bytes": 207702,
+          "category": "docs",
+          "files": 11,
+          "lines": 4373,
+          "subcategory": "general",
+          "tier": "authored"
+        }
+      ]
+    },
+    {
+      "assetBytesByKind": {
+        "audio": 8039936,
+        "fonts": 98424,
+        "images": 19943696,
+        "misc-media": 5137969,
+        "video": 0
+      },
+      "editorial": null,
+      "git": {
+        "assetModificationEvents": 416,
+        "assetUniquePathsTouched": 228,
+        "commitMessageLines": 845,
+        "commitsByAuthor": [
+          {
+            "author": "mbriggsy",
+            "count": 113
+          }
+        ],
+        "discardedAssetByKind": {
+          "audio": 55,
+          "images": 6,
+          "video": 2
+        },
+        "discardedAssetEvents": 63,
+        "discardedAssetFiles": 63,
+        "firstCommitISO": "2026-03-22T19:05:02-04:00",
+        "isGitRepo": true,
+        "lastCommitISO": "2026-05-13T19:18:45-04:00",
+        "lifetimeLinesAdded": 71674,
+        "lifetimeLinesRemoved": 7682,
+        "linesByAuthor": [
+          {
+            "author": "mbriggsy",
+            "coAuthoredCommits": 0,
+            "commits": 113,
+            "linesAdded": 71674,
+            "linesRemoved": 7682
+          },
+          {
+            "author": "Claude Opus 4.6 (1M context)",
+            "coAuthoredCommits": 105,
+            "commits": 0,
+            "linesAdded": 50556,
+            "linesRemoved": 10622
+          },
+          {
+            "author": "Claude",
+            "coAuthoredCommits": 7,
+            "commits": 0,
+            "linesAdded": 878,
+            "linesRemoved": 864
+          },
+          {
+            "author": "Claude Opus 4.7 (1M context)",
+            "coAuthoredCommits": 1,
+            "commits": 0,
+            "linesAdded": 56,
+            "linesRemoved": 1
+          }
+        ],
+        "projectAgeDays": 52,
+        "timeline": {
+          "activeDays": 10,
+          "commitsByDay": [
+            {
+              "count": 13,
+              "date": "2026-03-22"
+            },
+            {
+              "count": 24,
+              "date": "2026-03-23"
+            },
+            {
+              "count": 17,
+              "date": "2026-03-24"
+            },
+            {
+              "count": 27,
+              "date": "2026-03-25"
+            },
+            {
+              "count": 22,
+              "date": "2026-03-26"
+            },
+            {
+              "count": 3,
+              "date": "2026-03-27"
+            },
+            {
+              "count": 4,
+              "date": "2026-03-28"
+            },
+            {
+              "count": 1,
+              "date": "2026-04-03"
+            },
+            {
+              "count": 1,
+              "date": "2026-05-09"
+            },
+            {
+              "count": 1,
+              "date": "2026-05-13"
+            }
+          ],
+          "largestSingleCommit": {
+            "dateISO": "2026-03-22T19:05:02-04:00",
+            "linesAdded": 52478,
+            "linesRemoved": 0
+          },
+          "peakDay": {
+            "count": 27,
+            "date": "2026-03-25"
+          }
+        },
+        "totalCommits": 113,
+        "uniqueFilesTouched": 501
+      },
+      "grandTotals": {
+        "allBytes": 35889286,
+        "allFiles": 381,
+        "authoredBytes": 2390022,
+        "authoredFiles": 212,
+        "authoredLines": 55959,
+        "pipelineGeneratedBytes": 33220025,
+        "pipelineGeneratedFiles": 167,
+        "toolGeneratedBytes": 279239,
+        "toolGeneratedFiles": 2
+      },
+      "planCount": 0,
+      "planLines": 0,
+      "projectName": "undercover-mob-boss",
+      "proxies": {
+        "iterationProxyTotal": 0,
+        "regenScriptCount": 0,
+        "sampleEvalRunCount": 0
+      },
+      "scannedAt": "2026-05-25T17:58:29.900Z",
+      "testCases": 752,
+      "testLines": 17925,
+      "tiers": [
+        {
+          "categories": [
+            {
+              "category": "code",
+              "subcategories": [
+                {
+                  "bytes": 769001,
+                  "files": 104,
+                  "nonBlankLines": 12370,
+                  "subcategory": "source",
+                  "totalLines": 14136
+                },
+                {
+                  "bytes": 694590,
+                  "files": 45,
+                  "nonBlankLines": 15371,
+                  "subcategory": "tests",
+                  "totalLines": 17925
+                },
+                {
+                  "bytes": 115846,
+                  "files": 9,
+                  "nonBlankLines": 4054,
+                  "subcategory": "styles",
+                  "totalLines": 4667
+                },
+                {
+                  "bytes": 85197,
+                  "files": 7,
+                  "nonBlankLines": 1901,
+                  "subcategory": "build-scripts",
+                  "totalLines": 2109
+                },
+                {
+                  "bytes": 66356,
+                  "files": 3,
+                  "nonBlankLines": 1534,
+                  "subcategory": "markup",
+                  "totalLines": 1742
+                },
+                {
+                  "bytes": 7213,
+                  "files": 11,
+                  "nonBlankLines": 271,
+                  "subcategory": "config",
+                  "totalLines": 278
+                }
+              ],
+              "totals": {
+                "bytes": 1738203,
+                "files": 179,
+                "nonBlankLines": 35501,
+                "subcategory": "<totals>",
+                "totalLines": 40857
+              }
+            },
+            {
+              "category": "docs",
+              "subcategories": [
+                {
+                  "bytes": 601316,
+                  "files": 26,
+                  "nonBlankLines": 11319,
+                  "subcategory": "general",
+                  "totalLines": 14037
+                },
+                {
+                  "bytes": 28361,
+                  "files": 2,
+                  "nonBlankLines": 477,
+                  "subcategory": "specifications",
+                  "totalLines": 613
+                },
+                {
+                  "bytes": 19831,
+                  "files": 3,
+                  "nonBlankLines": 313,
+                  "subcategory": "readmes",
+                  "totalLines": 392
+                }
+              ],
+              "totals": {
+                "bytes": 649508,
+                "files": 31,
+                "nonBlankLines": 12109,
+                "subcategory": "<totals>",
+                "totalLines": 15042
+              }
+            },
+            {
+              "category": "data",
+              "subcategories": [
+                {
+                  "bytes": 2311,
+                  "files": 2,
+                  "nonBlankLines": 60,
+                  "subcategory": "lookup-tables",
+                  "totalLines": 60
+                }
+              ],
+              "totals": {
+                "bytes": 2311,
+                "files": 2,
+                "nonBlankLines": 60,
+                "subcategory": "<totals>",
+                "totalLines": 60
+              }
+            }
+          ],
+          "tier": "authored",
+          "totals": {
+            "bytes": 2390022,
+            "files": 212,
+            "nonBlankLines": 47670,
+            "subcategory": "<totals>",
+            "totalLines": 55959
+          }
+        },
+        {
+          "categories": [
+            {
+              "category": "assets",
+              "subcategories": [
+                {
+                  "bytes": 19943696,
+                  "files": 55,
+                  "nonBlankLines": 0,
+                  "subcategory": "images",
+                  "totalLines": 0
+                },
+                {
+                  "bytes": 8039936,
+                  "files": 106,
+                  "nonBlankLines": 0,
+                  "subcategory": "audio",
+                  "totalLines": 0
+                },
+                {
+                  "bytes": 5137969,
+                  "files": 2,
+                  "nonBlankLines": 0,
+                  "subcategory": "misc-media",
+                  "totalLines": 0
+                },
+                {
+                  "bytes": 98424,
+                  "files": 4,
+                  "nonBlankLines": 0,
+                  "subcategory": "fonts",
+                  "totalLines": 0
+                }
+              ],
+              "totals": {
+                "bytes": 33220025,
+                "files": 167,
+                "nonBlankLines": 0,
+                "subcategory": "<totals>",
+                "totalLines": 0
+              }
+            }
+          ],
+          "tier": "pipeline-generated",
+          "totals": {
+            "bytes": 33220025,
+            "files": 167,
+            "nonBlankLines": 0,
+            "subcategory": "<totals>",
+            "totalLines": 0
+          }
+        },
+        {
+          "categories": [
+            {
+              "category": "lockfiles",
+              "subcategories": [
+                {
+                  "bytes": 279239,
+                  "files": 2,
+                  "nonBlankLines": 6523,
+                  "subcategory": "lockfiles",
+                  "totalLines": 8335
+                }
+              ],
+              "totals": {
+                "bytes": 279239,
+                "files": 2,
+                "nonBlankLines": 6523,
+                "subcategory": "<totals>",
+                "totalLines": 8335
+              }
+            }
+          ],
+          "tier": "tool-generated",
+          "totals": {
+            "bytes": 279239,
+            "files": 2,
+            "nonBlankLines": 6523,
+            "subcategory": "<totals>",
+            "totalLines": 8335
+          }
+        }
+      ],
+      "tokens": null,
+      "topSubcategories": [
+        {
+          "bytes": 19943696,
+          "category": "assets",
+          "files": 55,
+          "lines": 0,
+          "subcategory": "images",
+          "tier": "pipeline-generated"
+        },
+        {
+          "bytes": 8039936,
+          "category": "assets",
+          "files": 106,
+          "lines": 0,
+          "subcategory": "audio",
+          "tier": "pipeline-generated"
+        },
+        {
+          "bytes": 5137969,
+          "category": "assets",
+          "files": 2,
+          "lines": 0,
+          "subcategory": "misc-media",
+          "tier": "pipeline-generated"
+        },
+        {
+          "bytes": 769001,
+          "category": "code",
+          "files": 104,
+          "lines": 14136,
+          "subcategory": "source",
+          "tier": "authored"
+        },
+        {
+          "bytes": 694590,
+          "category": "code",
+          "files": 45,
+          "lines": 17925,
+          "subcategory": "tests",
+          "tier": "authored"
+        }
+      ]
+    }
+  ],
+  "scannedAt": "2026-05-25T17:58:37.349Z"
+}

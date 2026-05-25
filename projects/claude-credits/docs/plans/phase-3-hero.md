@@ -410,7 +410,7 @@ export function Hero() {
 ```css
 .hero {
   min-height: 100vh;
-  min-height: 100dvh;                 /* dvh truth on iOS (Phase 1 pattern) */
+  min-height: 100svh;                 /* svh — stable, no scroll-jump (Phase 1 pattern) */
   display: grid;
   place-items: center;
   align-content: center;

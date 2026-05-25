@@ -14,7 +14,7 @@ Briggsy asked for: "A Vercel-hosted drippy GSAPy wet set of web pages with fucki
 
 **Failure condition:** if a first-time visitor reacts "wow Claude built this" instead of "wow this product is slick" — the bar is missed. The craft has to be invisible; the product stands on its own.
 
-**Audience:** AI-curious peers — other devs, Anthropic-adjacent folks. Builder-to-builder voice, terse and sharp. They want to geek out on the credit tool itself; the authorship split is compelling, not embarrassing.
+**Audience:** AI-curious peers — other devs, Anthropic-adjacent folks. Builder-to-builder voice, terse and sharp. They want to geek out on the credit tool itself; the magnitude and breadth of the WORK is the flex. **Authorship is silent** — no who-wrote-what scoreboard (ideation §11).
 
 ---
 
@@ -124,13 +124,11 @@ Empty value = not yet done.
 - **Self-hosted** in `public/assets/fonts/` via local `@font-face` (no external font CDN) — kills first-paint CLS on the hero number + the CDN trust boundary, lets CSP tighten to `font-src 'self'`. Display face uses `font-display: optional` (zero CLS); body/mono use `swap`. (Set up in Phase 1 §1.9c.)
 - Tabular nums REQUIRED on every animated number (`.tabular` utility, not global)
 
-**Motion principles:**
-- Build a custom `weighted` ease in `easings.ts` (don't reuse rote `power3.out`)
-- Counter ease: `weighted` with `duration: 2.4`
-- Reveal-on-scroll: `weighted` with `duration: 0.8`, `y: 40` to `y: 0`, opacity 0 to 1
-- Hover: `weighted` (faster variant) with `duration: 0.25`
-- NEVER use `linear` ease. NEVER stack > 3 simultaneous animations on one element.
-- All animations respect `prefers-reduced-motion` — fall back to instant state changes.
+**Motion principles** (the primitives are locked in Phase 1 §1.10 — `easings.ts` + `tokens.ts`; Phase 9 maps them to surfaces):
+- Four named `weighted` `CustomEase`s, NOT a single ease: `weighted-arrive` (reveals/route fade), `weighted-settle` (counter — monotonic, no overshoot), `weighted-press` (hover/press — `1.05` overshoot), `weighted-exit` (faster exits).
+- Counter: `weighted-settle`, `duration: 2.4`. Reveal-on-scroll: `weighted-arrive`, `duration: 0.8`, `y: 40 → 0`, opacity 0 → 1. Hover/press: `weighted-press`, `duration: 0.25` / `0.16`.
+- NEVER `ease-in` for entrances. NEVER `linear` **except genuinely constant motion (the gradient breath)**. NEVER stack > 3 simultaneous animations on one element.
+- All animations respect `prefers-reduced-motion` — *fewer and gentler, not zero*: keep opacity/color fades, drop movement (per the Phase 9 reduced-motion table). No data-bound number ever overshoots its true value.
 
 **Named "wow moments"** (one per surface, no more):
 - Landing hero: the counter tick-up + supporting-line stagger
@@ -142,7 +140,7 @@ Empty value = not yet done.
 The reference implementation lives at `projects/undercover-mob-boss/public/how-to-play.html`. Same bar applies here.
 
 - **Viewport meta**: `<meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover" />` + `<meta name="theme-color" content="#0a1a26" />` — notch-safe + browser chrome matches the surface.
-- **Viewport units**: every `100vh` paired with a `100dvh` fallback line below it. Mobile browser UI eats `vh`; `dvh` is the truth on iOS Safari.
+- **Viewport units**: every `100vh` paired with a `100svh` fallback line below it. `100dvh` resizes live as the mobile toolbar retracts — it *causes* the chrome-jump; `100svh` (smallest viewport, fixed) is stable and correct for a static hero.
 - **Type clamps**: every display-type number uses `clamp(<mobile-min>, <vw-track>, <desktop-max>)`. Hero counter scales from ~4rem at 375px to ~22rem at desktop. Tabular nums hold across the range.
 - **Breakpoints (mobile-first cascade)**: base styles = mobile. Add column structure at `min-width: 640px` (tablet) and `min-width: 960px` (desktop). Down-scale type + tighten padding at `max-width: 600px` for explicit phone polish.
 - **Project grid**: `repeat(auto-fit, minmax(320px, 1fr))` → naturally collapses to single column under ~360px viewport. Tiles must look DELIBERATE in single-column, not stretched-desktop-fallback.
@@ -197,7 +195,9 @@ Before claiming v1 done:
 12. ✅ Visual sanity check (desktop, BOTH modes): open the live site in Briggsy's browser in dark mode AND light mode (toggle Windows app theme), scroll through every route, watch the hero animation fire in each — does each pass the water-bead bar?
 13. ✅ Visual sanity check (mobile, BOTH modes): open the live site on Briggsy's phone in dark mode AND light mode. Every route renders correctly in each. Hero number fills the viewport horizontally without overflow. Project tiles read DELIBERATE in single-column, not stretched-fallback. Donut + sparkline render with mode-appropriate colors. No horizontal scroll. Hovers don't trap. iOS chrome doesn't jump the layout. **Anchor reference:** UMB's how-to-play.html — if this site feels worse than that on mobile, polish more.
 14. ✅ Take FOUR 30-second screen recordings — desktop-dark, desktop-light, mobile-dark, mobile-light. Watch all four cold. If you'd react "wow Claude built this" on ANY of them — keep polishing.
-15. ✅ `prefers-reduced-motion` respected — set the OS flag and verify all animations degrade to instant state changes.
+15. ✅ `prefers-reduced-motion` respected — set the OS flag and verify animations degrade per the Phase 9 reduced-motion table: movement (translate/scale) removed, short opacity/color fades retained where they aid comprehension (counter → snap to final value + opacity fade; donut → render complete + opacity fade; tile hover → removed; gradient → frozen). NOT blanket "instant everything."
+15a. ✅ Slow-motion pass — each named wow-moment replayed at 2–5× (DevTools Animations panel); no coordination bugs, stalls, or wrong transform-origin.
+15b. ✅ Cold-watch + stranger-proxy — four 30s captures (desktop/mobile × dark/light, plus a landscape-short phone) watched cold a day later; AND a fresh agent with zero build context cold-reads them and does NOT lead with "an AI built this."
 16. ✅ `prefers-color-scheme` respected — toggle Windows app theme between light and dark, refresh the site, verify it switches without a stylesheet swap or FOUC. Both modes load with correct surface treatment from first paint.
 17. ✅ No console errors, no network errors, no 404s on the live site.
 18. ✅ iPhone viewport matrix tested (DevTools device emulation OK as smoke, then real phone): 360px, 375px, 390px, 430px widths. Every page renders in both modes, every interactive element ≥ 44×44px.

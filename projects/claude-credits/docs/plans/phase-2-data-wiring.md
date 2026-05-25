@@ -609,7 +609,7 @@ export class StatsErrorBoundary extends Component<{ children: ReactNode }, { err
       // console for dev). Offer a real recovery path (retry works because resetStatsPromise
       // clears the cached rejection — see stats-resource.ts).
       return (
-        <main style={{ minHeight: '100dvh', display: 'grid', placeItems: 'center', padding: 'var(--space-8)' }}>
+        <main style={{ minHeight: '100svh', display: 'grid', placeItems: 'center', padding: 'var(--space-8)' }}>
           <div style={{ maxWidth: '40ch', textAlign: 'center' }}>
             <p style={{ fontFamily: 'var(--font-display)', fontSize: 'var(--text-display-md)', color: 'var(--text-primary)' }}>
               Couldn’t load the stats right now.
@@ -640,7 +640,7 @@ import { StatsProvider } from './StatsProvider'
 // Loading fallback = bare page surface (no spinner — a spinner is a slop signal).
 // body bg paints from global.css immediately; this guards against any flash.
 function PageHold() {
-  return <div aria-hidden style={{ minHeight: '100dvh', background: 'var(--surface-page)' }} />
+  return <div aria-hidden style={{ minHeight: '100svh', background: 'var(--surface-page)' }} />
 }
 
 export function StatsGate({ children }: { children: ReactNode }) {

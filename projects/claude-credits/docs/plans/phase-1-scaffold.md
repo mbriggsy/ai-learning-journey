@@ -8,7 +8,7 @@ doc-reviewed: 2026-05-24T15:18:00-04:00
 
 **Prereq:** Read [README.md](README.md) first — the bar, locked decisions, and visual system live there. This file is the decisions-not-code recipe for the foundation Phase 2+ builds on.
 
-Phase 1 lands the **foundation**, not features: the Vite + React 19 + TypeScript shell, the three-route SPA skeleton (with a cross-fade transition seam) and placeholder pages, the token system (physical → semantic → light-override, role-based), the motion foundation (four named eases + duration tokens + GSAP plugin registration + a `prefers-reduced-motion` helper), the type system (three self-hosted variable fonts + a 7-step clamp scale), the mobile-first global baseline (dvh fallback, viewport-fit, dual theme-color, chromeless scrollbars), and the Vercel config. **No data, no real components, no animations** — those are Phase 2+. The bar for "Phase 1 done" is: `pnpm dev` AND `pnpm build && pnpm preview` both serve all three routes, fonts load with no layout shift, tokens resolve, light/dark switches with the OS (and via a dev `?theme=` override), and `pnpm typecheck` is green with **no carve-outs**.
+Phase 1 lands the **foundation**, not features: the Vite + React 19 + TypeScript shell, the three-route SPA skeleton (with a cross-fade transition seam) and placeholder pages, the token system (physical → semantic → light-override, role-based), the motion foundation (four named eases + duration tokens + GSAP plugin registration + a `prefers-reduced-motion` helper), the type system (three self-hosted variable fonts + a 7-step clamp scale), the mobile-first global baseline (svh fallback, viewport-fit, dual theme-color, chromeless scrollbars), and the Vercel config. **No data, no real components, no animations** — those are Phase 2+. The bar for "Phase 1 done" is: `pnpm dev` AND `pnpm build && pnpm preview` both serve all three routes, fonts load with no layout shift, tokens resolve, light/dark switches with the OS (and via a dev `?theme=` override), and `pnpm typecheck` is green with **no carve-outs**.
 
 Getting the foundation right matters more here than anywhere else in the project: every component built in Phases 3–9 references these tokens, eases, and type steps. A wrong primitive cascades into every surface. This is why the scaffold phase encodes the full token + motion + type contract now, not "later when we need it."
 
@@ -78,7 +78,7 @@ projects/claude-credits/
 │   │   ├── tokens.semantic.css        # role-based aliases + light override (+ type/motion primitives)
 │   │   ├── fonts.css                  # @font-face for the 3 self-hosted variable fonts
 │   │   ├── reset.css                  # modern reset
-│   │   └── global.css                 # body baseline, dvh fallback, .tabular, scrollbar hide, reduced-motion net
+│   │   └── global.css                 # body baseline, svh fallback, .tabular, scrollbar hide, reduced-motion net
 │   └── vite-env.d.ts                  # Vite client types reference
 │                                      # NOTE: src/types.ts is created in PHASE 2 (Decision 9)
 ├── index.html                         # viewport-fit, dual theme-color, font preload, #root
@@ -644,7 +644,7 @@ p, h1, h2, h3, h4, h5, h6 { overflow-wrap: break-word; }
 a { color: inherit; text-decoration: none; }
 ```
 
-**1.9e — `src/styles/global.css`** (body baseline, dvh fallback, `.tabular`, chromeless scrollbar, reduced-motion net):
+**1.9e — `src/styles/global.css`** (body baseline, svh fallback, `.tabular`, chromeless scrollbar, reduced-motion net):
 
 ```css
 html, body {
@@ -658,7 +658,7 @@ html::-webkit-scrollbar, body::-webkit-scrollbar { display: none; }
 
 body {
   min-height: 100vh;
-  min-height: 100dvh; /* dvh truth on iOS Safari — keep directly below the vh line */
+  min-height: 100svh; /* svh = smallest viewport (toolbar visible), stable — no scroll-jump. Keep directly below the vh line. */
   background: var(--surface-page);
   color: var(--text-primary);
   font-family: var(--font-body);
@@ -885,7 +885,7 @@ Runtime checklist (eye on the browser):
 
 - **Viewport meta** (§1.5): `width=device-width, initial-scale=1.0, viewport-fit=cover` — notch-safe.
 - **Dual theme-color** (§1.5): browser chrome matches the active mode.
-- **dvh fallback** (§1.9e): `min-height: 100vh` then `min-height: 100dvh`.
+- **svh fallback** (§1.9e): `min-height: 100vh` then `min-height: 100svh`.
 - **`overflow-x: hidden` + chromeless scrollbar** (§1.9e).
 - **Genuinely-responsive type clamps** (§1.9b): every display step's vw track crosses its floor in the phone→tablet range, so secondary type scales on phones (not frozen at the floor).
 - **Hover gating** (§1.9e): `@media (hover: hover) and (pointer: fine)` reserved.

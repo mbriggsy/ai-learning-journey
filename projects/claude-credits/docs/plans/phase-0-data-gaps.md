@@ -1295,7 +1295,7 @@ The cascade carries CONTRACT (schema facts), not CONTENT (display decisions). Ph
 
 ### `phase-4-grid.md`
 
-- **CONTRACT: grid renders `projects[]` tiles + the archive-collective tile.** Phase 4 renders every `projects[]` entry as a tile sorted by `grandTotals.allBytes` desc, then the single `archiveCollective` tile in last position. There is no meta band and no `kind` split — meta tiles are cut (ideation §7). The structure is locked by the data shape.
+- **CONTRACT: grid renders `projects[]` tiles + the archive-collective tile.** Phase 4 renders every `projects[]` entry as a tile sorted by `grandTotals.authoredLines` desc (tie-break `projectName` asc — Phase 4 Decision 4; `allBytes` was explicitly rejected as "ranked by trailer size"), then the single `archiveCollective` tile in last position. There is no meta band and no `kind` split — meta tiles are cut (ideation §7). The structure is locked by the data shape.
 - **CONTRACT: archive collective tile reads from `report.archiveCollective`** (not from any `ProjectReport`). Subtitle composed from `archiveCollective.projectCount` + `totalAuthoredLines` + `totalTokensProcessed` per preflight −1.5.
 - **CONTRACT: archive collective tile always last** — does NOT sort by bytes; ALWAYS last position regardless of size.
 - **CONTENT: the archive tile copy is Phase 4's call.** Phase 0 does not pre-lock the literal strings ("the misses" appears in preflight −1.5 as a working vocabulary, but the on-grid copy is a tonal decision that belongs in Phase 4 deepening with a cold-read pass). There is no meta band or "the tools" divider — meta is cut (ideation §7).

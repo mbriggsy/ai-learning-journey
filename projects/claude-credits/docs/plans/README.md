@@ -181,12 +181,12 @@ The reference implementation lives at `projects/undercover-mob-boss/public/how-t
 Before claiming v1 done:
 
 1. ✅ `pnpm build` from `tools/claude-credit/` produces a clean dist with all 6 new fields present
-2. ✅ Editorial blocks exist in every project's `claude-credit.config.yaml` (11 total) and pass schema validation
+2. ✅ Editorial blocks exist for every active project (9 total — the archive collective is NOT an `EditorialContent` row) and pass schema validation
 3. ✅ `pnpm build` from `projects/claude-credits/` produces a clean `dist/`
 4. ✅ `pnpm dev` runs locally on port 5173, all three routes render
 5. ✅ `pnpm refresh` produces a clean `public/data/stats.json` with no `projectPath` field anywhere AND hero images copied into `public/assets/<projectName>/`
 6. ✅ Site renders correctly with the real data — no NaN, no undefined, no empty hero
-7. ✅ All 10 surfaces render (9 project tiles with one-liner + hook + visual + live-link-if-deployed + status marker, then the "the misses" collective archive coda). NO meta tiles — the `claude-credit` tool and the `claude-credits` site itself are cut from the grid (ideation §7).
+7. ✅ All 10 surfaces render (9 project tiles with one-liner + hook + visual + live-link-if-deployed, then the "the misses" collective archive coda). NO meta tiles — the `claude-credit` tool and the `claude-credits` site itself are cut from the grid (ideation §7). (No per-tile status marker — all 9 are active; shelved is the collective coda.)
 8. ✅ Detail page resolves `/project/:name` from `projects[]`; an unknown OR shelved name → a deliberate not-found state (never blank/crash); a data-sparse project still reads as a composed story via its editorial one-liner + description (authorship is SILENT — NO who-wrote-what surface anywhere, ideation §11)
 8a. ✅ TOKENS CONSUMED block renders on every detail page with non-null `tokens`, showing total + session count + window dates + per-model breakdown
 8b. ✅ Hero shows `combined.totalTokensProcessed` as the **dominant** number (formatted with B/M suffix); `combined.totalTokensFresh` + the retention window as a **quiet honest sub-line** directly beneath; `combined.totalAuthoredLines` + counts as the **supporting stagger** below that (Option A, locked 2026-05-24 — see [phase-3-hero.md](phase-3-hero.md))

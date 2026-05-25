@@ -291,7 +291,7 @@ The feature-bearing, unit-testable concentrate (mirrors `grid-order.ts`).
 
 **5.1c — tests** (`composition.test.ts` new; `format.test.ts` extended):
 - `buildComposition`: Happy — a full `tiers[]` fixture yields the curated kinds in order with correct values/units; Edge — a project with no `audio`/`video` omits those kinds; Edge — a missing category node resolves to 0 and is omitted (no throw); Edge — empty `tiers: []` → `[]`; Edge — `plans & docs` sums multiple `docs` subcategories; Edge — does not mutate input.
-- `findProject`: Happy — finds in `projects`; Edge — a name present only in `meta[]` → `null` (meta projects have no detail page, ideation §7); Edge — a name only in `archiveCollective.projectNames` → `null`; Edge — unknown name → `null`; Edge — empty `projects` → `null`.
+- `findProject`: Happy — finds in `projects`; Edge — a name only in `archiveCollective.projectNames` → `null` (archive entries have no detail page); Edge — unknown name → `null`; Edge — empty `projects` → `null`. (No `meta[]` to search — meta projects are cut, ideation §7.)
 - `formatShortDate`: `"2026-04-22T..." → "Apr 22"`; `null → null`; a `windowStart`/`windowEnd` pair renders a sensible range when joined by the caller.
 
 **Verify gate:**

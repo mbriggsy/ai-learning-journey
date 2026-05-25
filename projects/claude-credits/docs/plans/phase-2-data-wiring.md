@@ -52,7 +52,7 @@ Read of `tools/claude-credit/package.json` + `tsconfig.json`:
 - `exports` map exposes only `.` (`dist/index.js`) and `./log` — confirms package-name subpath imports are gated; relative-file imports are the route (Decision 1).
 
 Read of `tools/claude-credit/src/taxonomy.ts` (post-Phase-0 shape, per [phase-0-data-gaps.md](phase-0-data-gaps.md) Batch A):
-- `MultiProjectReport = { projects: ProjectReport[]; meta: ProjectReport[]; archiveCollective: ArchiveCollective | null; combined: {…token aggregates…}; scannedAt: string }`.
+- `MultiProjectReport = { projects: ProjectReport[]; archiveCollective: ArchiveCollective | null; combined: {…token aggregates…}; scannedAt: string }`. (No `meta` array — Phase 0 dropped it; meta projects are cut, ideation §7.)
 - `ProjectReport` carries `projectPath` (**the PII to strip**), plus `editorial: EditorialContent | null` whose `heroImage`/`gallery` are **project-relative paths** (the files to copy + rewrite), `tokens: TokenStats | null`, `assetBytesByKind`, `topSubcategories`. (No `kind` field — Phase 0 dropped it; meta cut, ideation §7.)
 - New exported types this phase re-exports: `TokenStats`, `EditorialContent`, `ArchiveCollective` (added by Phase 0 Batch A).
 
@@ -109,7 +109,7 @@ Scope declaration, not a constraint — per-unit `Files:` lists below are author
 flowchart LR
   subgraph build["BUILD TIME — pnpm refresh (tsx, node)"]
     BMR["buildMultiProjectReport({})\n(dist/multi-report.js)"] --> RPT["report: MultiProjectReport\n(has projectPath + project-relative\neditorial.heroImage/gallery)"]
-    RPT --> CEA["copyEditorialAssets(report)\ncopy files → public/assets/<name>/\nrewrite editorial paths → /assets/<name>/<base>\nwalk projects[]+meta[] · skip archiveCollective\nnuke public/assets/* except fonts/"]
+    RPT --> CEA["copyEditorialAssets(report)\ncopy files → public/assets/<name>/\nrewrite editorial paths → /assets/<name>/<base>\nwalk projects[] · skip archiveCollective\nnuke public/assets/* except fonts/"]
     CEA --> STRIP["stripForPublish(report)\n(dist/strip-for-publish.js — SHARED w/ Phase 0 test)\ndeep-clone + delete every projectPath"]
     STRIP --> GUARD["assertPublishSafe(safe)\n(publish-guard.ts) — throws on PII string leak"]
     GUARD --> SS["stableStringify(safe)\nrecursive object-key sort · arrays preserve order"]
@@ -284,7 +284,7 @@ export async function copyEditorialAssets(report: MultiProjectReport): Promise<v
   for (const p of all) {
     if (seen.has(p.projectName)) {
       throw new Error(
-        `copy-editorial-assets: duplicate projectName "${p.projectName}" across projects[]+meta[]. ` +
+        `copy-editorial-assets: duplicate projectName "${p.projectName}" across projects[]. ` +
           `Asset dirs are keyed on basename — rename one project or slug the asset dir before publishing.`,
       )
     }
@@ -300,7 +300,7 @@ export async function copyEditorialAssets(report: MultiProjectReport): Promise<v
     }
   }
 
-  // 2. Walk active + meta projects (archive has no editorial).
+  // 2. Walk active projects (archive has no editorial; meta cut).
   for (const project of all) {
     await rewriteOne(project)
   }
@@ -724,7 +724,7 @@ pnpm build && pnpm preview     # built bundle serves identically; confirm no cla
 | **`GEMINI_API_KEY` leaks into the client** | `refresh-stats` reads NO env; never `VITE_`-prefix the key. No `src/` component reads `import.meta.env.GEMINI_API_KEY`. |
 | **`stats.json` accidentally gitignored** | It must be committed (Vercel serves the committed file). Phase 1's `.gitignore` doesn't ignore `public/` — confirm it stages. |
 | **Cached REJECTED promise wedges the app forever** | `getStatsPromise()` clears `statsPromise` in `.catch` so the next call refetches; the error boundary's "Try again" calls `resetStatsPromise()`. A transient deploy blip must be recoverable without a hard reload. |
-| **`projectName` is not unique (basename collision)** | `copyEditorialAssets` throws loud on a duplicate `projectName` across `projects[]+meta[]` — two same-basename paths would silently overwrite each other's hero image. Rename or slug before publishing. |
+| **`projectName` is not unique (basename collision)** | `copyEditorialAssets` throws loud on a duplicate `projectName` in `projects[]` — two same-basename paths would silently overwrite each other's hero image. Rename or slug before publishing. |
 | **Guard false-blocks the author's own copy** | HARD path/PII patterns scan everywhere; SOFT patterns (`brigg`/`secret`/`password`/email) skip `.editorial.` paths so a blurb with the author's name or an SSH repoUrl doesn't wedge `pnpm refresh`. (ATC-flagged design choice.) |
 | **Regex literal needs no space before the flag** | `/C:\//i` not `/C:\// i` — a space before the flag is an esbuild/tsc parse error that takes down the whole guard module. |
 | **Stale (not just missing) `dist/`** | `assertDistFresh()` compares newest `src/*.ts` mtime vs `dist/multi-report.js` and refuses if src is newer. Missing dist already fails at the static import; staleness is the silent one. |

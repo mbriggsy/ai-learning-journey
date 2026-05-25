@@ -1,8 +1,8 @@
 ---
 created: 2026-05-24T09:46:48-04:00
-deepened: 2026-05-25
+deepened: 2026-05-25T00:00:00-04:00
 doc-reviewed:
-reframed: 2026-05-25
+reframed: 2026-05-25T00:00:00-04:00
 coded:
 ---
 

@@ -2,6 +2,7 @@
 created: 2026-05-24T09:46:48-04:00
 deepened: 2026-05-24T18:07:15-04:00
 doc-reviewed: 2026-05-24T18:23:05-04:00
+coded:
 ---
 
 # Phase 3 — Hero (the first "wow")
@@ -51,7 +52,7 @@ The bar for "Phase 3 done": the hero renders the real `tokensProcessed` magnitud
 - `combined.tokenWindowDays: number | null`, `combined.tokenWindowStartISO/EndISO: string | null`.
 - `combined.modelBreakdown: Array<{ model: string; sessions: number; tokensProcessed: number }>`.
 - Supporting-line fields (existing combined, **verified in `taxonomy.ts:133-146`**): `combined.totalAuthoredLines`, `combined.totalAuthoredFiles`, `combined.totalAllFiles`, `combined.totalAllBytes`, `combined.totalCommits`.
-- Project count = `report.projects.length + report.meta.length + (report.archiveCollective?.projectCount ?? 0)`.
+- Project count = `report.projects.length + (report.archiveCollective?.projectCount ?? 0)`. (No `report.meta` — meta cut, ideation §7; archive still rolls into the count/totals.)
 - **Null discipline (Phase 0):** when no session JSONLs exist (clean clone, CI runner — see Phase 2 Open Decision #2), every project's `tokens` is null → `combined.totalTokensProcessed === 0`, `totalTokensFresh === 0`, `tokenWindowDays === null`, `modelBreakdown === []`. The hero MUST degrade honestly (Null-degrade path below), never render "0 TOKENS PROCESSED".
 
 **Phase 1 placeholder being replaced:** `src/pages/Landing.tsx` currently renders an inline-styled `<h1>claude-credits</h1>` + nav placeholder. Phase 3 replaces the body with `<Hero/>`; the project grid lands BELOW it in Phase 4.
@@ -325,8 +326,8 @@ import styles from './Hero.module.css'
 
 export function Hero() {
   const heroRef = useRef<HTMLElement>(null)   // GSAP scope root (used by the C3 reveal timeline)
-  const { combined, projects, meta, archiveCollective } = useStats()
-  const projectCount = projects.length + meta.length + (archiveCollective?.projectCount ?? 0)
+  const { combined, projects, archiveCollective } = useStats()
+  const projectCount = projects.length + (archiveCollective?.projectCount ?? 0)
 
   // Null discipline (Phase 0): tokenWindowDays is null ⇔ NO project had a measured token
   // window ⇔ no session data (clean clone / CI). This is the SAME "unmeasured" signal the

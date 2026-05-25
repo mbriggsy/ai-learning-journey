@@ -2,6 +2,7 @@
 created: 2026-05-24T09:46:48-04:00
 deepened: 2026-05-24T23:05:00-04:00
 doc-reviewed: 2026-05-24T23:55:00-04:00
+coded:
 ---
 
 # Phase 8 — Deploy
@@ -255,4 +256,4 @@ The "Cadence copy is Phase-8-stale in TWO places" landmine is resolved once the 
 
 ---
 
-← [Phase 7 — Bottom CTA](phase-7-cta.md) | [Index](README.md) | Next → [Phase 9 — Visual polish](phase-9-polish.md)
+← [Phase 7 — The close](phase-7-cta.md) | [Index](README.md) | Next → [Phase 9 — Visual polish](phase-9-polish.md)

@@ -2,15 +2,16 @@
 created: 2026-05-24T09:46:48-04:00
 deepened: 2026-05-24T19:21:57-04:00
 doc-reviewed: 2026-05-24T19:48:00-04:00
+coded:
 ---
 
 # Phase 4 — Project grid
 
 **Prereq:** Read [README.md](README.md) first — the bar, locked decisions, and visual system live there. Read [phase-1-scaffold.md](phase-1-scaffold.md) (the motion foundation + semantic tokens this phase consumes), [phase-2-data-wiring.md](phase-2-data-wiring.md) (the `useStats()` non-null contract + field-level null discipline), [phase-3-hero.md](phase-3-hero.md) (the `src/lib/format.ts`, `src/components/<Name>/` folder, and `useGSAP` patterns this phase REUSES), and [phase-0-data-gaps.md](phase-0-data-gaps.md) (the data contract this phase renders against — `editorial`, `kind`, `git.projectAgeDays`, `grandTotals`, `archiveCollective`). This file is the decisions-not-code recipe for the project grid below the hero.
 
-Phase 4 lands the **project grid** — the showcase's editorial spine. Below the hero, a grid of glass tiles, one per project, grouped into three bands: the **active** projects, **the tools** (meta projects), and one muted **the misses** tile (the shelved archive, collapsed). Each active/meta tile is a glass card with a hero image, the project name, an age ribbon, a one-liner, ONE gold hook stat, and a "Try it →" link if it's deployed. Tiles reveal as they scroll into view. The grid is the first **per-project** consumer of `useStats()`, and it establishes the component + motion patterns Phase 5's detail page inherits.
+Phase 4 lands the **project grid** — the showcase's editorial spine. Below the hero, a grid of glass tiles: the **9 active** project tiles, then one muted **the misses** tile (the shelved archive, collapsed) — **10 surfaces total** (9 active + 1 archive coda). Each project tile is a glass card with a hero image, the project name, an age ribbon, a one-liner, ONE gold hook stat, and a "Try it →" link if it's deployed. Tiles reveal as they scroll into view. The grid is the first **per-project** consumer of `useStats()`, and it establishes the component + motion patterns Phase 5's detail page inherits.
 
-The bar for "Phase 4 done": every tile renders the real editorial content with no `NaN`/`undefined`/broken-`<img>`; the grid groups + dividers read as a deliberate editorial sequence (active → the tools → the misses), never a robotic AI card-matrix; tiles reveal-on-scroll with a weighted stagger and lift on hover with mechanical-key weight; the grid holds at 360–430px as a DELIBERATE single column (not a stretched-desktop fallback); both light and dark pass the water-bead bar; `prefers-reduced-motion` shows every tile in its final visible state with no motion; and — the load-bearing failure mode — **if the motion layer dies, every tile is still visible** (no blank grid). **Eye-on-browser in BOTH modes is the gate — green tests are not enough** (manifesto).
+The bar for "Phase 4 done": every tile renders the real editorial content with no `NaN`/`undefined`/broken-`<img>`; the grid + divider read as a deliberate editorial sequence (the active projects → the misses coda), never a robotic AI card-matrix; tiles reveal-on-scroll with a weighted stagger and lift on hover with mechanical-key weight; the grid holds at 360–430px as a DELIBERATE single column (not a stretched-desktop fallback); both light and dark pass the water-bead bar; `prefers-reduced-motion` shows every tile in its final visible state with no motion; and — the load-bearing failure mode — **if the motion layer dies, every tile is still visible** (no blank grid). **Eye-on-browser in BOTH modes is the gate — green tests are not enough** (manifesto).
 
 ---
 
@@ -24,9 +25,9 @@ The bar for "Phase 4 done": every tile renders the real editorial content with n
 
 4. **Sort within each group by authored substance — measured as `grandTotals.authoredLines` descending** (ATC call, 2026-05-24), tie-broken by `projectName` ascending. "Authored substance" means the single `authoredLines` metric, NOT a weighted composite. This is the intended NARRATIVE lead: the biggest builds lead the grid, which reads as "look at the scale of what got built" — on-thesis for an autonomy showcase. Three supporting properties: (a) **rotation-immune** — `grandTotals` is file-classification-derived from a full scan, not a `linesByAuthor` git sum, so it is permanent AND **immune to the Co-Authored-By attribution inversion** flagged in Decision 2 (it never asks "who" wrote a line, only "what tier" the file is); (b) reflects the total build; (c) diff-stable via the `projectName` tie-break (equal-rank tiles never reshuffle on refresh). *Rejected: `grandTotals.allBytes` (the stub's key) — dominated by pipeline media, ranks by "biggest trailer." Rejected: tokens desc — 30-day-window-bounded (JSONL rotation), ranks by "recently active."* **Edge — pure-pipeline / zero-authored project** (`authoredLines === 0`): sinks to the bottom of its group, then alphabetical by name. Acceptable (no current project is pure-pipeline); if one is ever added and this reads wrong, revisit with a secondary key.
 
-5. **`projects[]` and `meta[]` are defined as separate arrays BY Phase 0** (`MultiProjectReport.{projects, meta}`, the `kind` discriminator) — Phase 4 consumes that split; there is no Phase 4 sort-by-kind logic. The stub said "meta-projects sort to the end regardless of size." Obsolete: `report.projects` is `kind: 'active'`, `report.meta` is `kind: 'meta'`. Render order is just: sorted `projects[]` → "the tools" divider → sorted `meta[]` → "the misses" divider → the archive tile. No interleave-and-resort.
+5. **The grid renders ONE group: the active `projects[]`** (ATC call, 2026-05-24 — meta tiles CUT). The `claude-credit` tool and the `claude-credits` site itself are **excluded from the grid AND from totals** (ideation §7) — there is no meta band, no "the tools" divider, and Phase 4 does NOT consume `report.meta`. The stub said "meta-projects sort to the end regardless of size"; obsolete — there are no meta tiles to sort. Render order is just: sorted `projects[]` → "the misses" divider → the archive coda tile. No interleave-and-resort, no sort-by-kind logic.
 
-6. **Shelved projects = ONE collective "the misses" tile, not individual tiles** (ATC-confirmed, honoring Phase 0 Decision #3). Shelved projects live ONLY in `report.archiveCollective` (a single rolled-up `ArchiveCollective` block); `ProjectReport.kind` has no `'shelved'` value, and archive entries never appear in `projects[]`/`meta[]`. The grid renders ONE muted `ArchiveTile` from `archiveCollective` (when non-null) — "N games, tried and shelved." It reads as an intentional coda, not broken tiles. *(Phase 0 deliberately kept `EditorialContent.status: 'shelved'` in the schema so Phase 5 CAN add per-archive detail pages later without a migration — but v1 ships the collective tile.)* This supersedes ideation §6's "both appear with a marker" wording — reconciled in Cascade.
+6. **Shelved projects = ONE collective "the misses" tile, not individual tiles** (ATC-confirmed, honoring Phase 0 Decision #3). Shelved projects live ONLY in `report.archiveCollective` (a single rolled-up `ArchiveCollective` block); archive entries never appear in `projects[]` (and there is no per-project `kind` field — Phase 0 dropped it). The grid renders ONE muted `ArchiveTile` from `archiveCollective` (when non-null) — "N games, tried and shelved." It reads as an intentional coda, not broken tiles. *(Phase 0 deliberately kept `EditorialContent.status: 'shelved'` in the schema so Phase 5 CAN add per-archive detail pages later without a migration — but v1 ships the collective tile.)* This supersedes ideation §6's "both appear with a marker" wording — reconciled in Cascade.
 
 7. **ScrollTrigger is registered in `src/motion/gsap-context.ts`** (Phase 1 Decision 3: "each later phase registers the plugin it introduces"). Phase 4 is the first ScrollTrigger consumer in claude-credits (the hero fires on mount; the grid is below the fold). Add `ScrollTrigger` to the existing `registerPlugin` call. *Bundle note (explicit, not silent):* `gsap-context.ts` is a boot side-effect import (`main.tsx`), so ScrollTrigger (~25 KB min from GSAP 3.14) lands on the entry chunk for every route — including About, which never scroll-reveals. Accepted for v1: the grid is on the Landing (entry) route anyway, so the first-paint delta is unavoidable there; the only "waste" is About/detail also carrying it. A Phase 9 route-level code-split (or a dynamic `import('gsap/ScrollTrigger')` inside `ProjectGrid`'s module) is the optimization if the bar suffers. Stated as a decision, not an accident.
 
@@ -48,7 +49,7 @@ The bar for "Phase 4 done": every tile renders the real editorial content with n
     window.addEventListener('load', () => ScrollTrigger.refresh(), { once: true })  // image-settle catch-all
     ```
     The `Promise.race` against a 1500ms timeout guarantees the refresh fires even if `document.fonts.ready` stalls (a missing/404 self-hosted woff2 still resolves it, but a pending FontFaceSet otherwise wouldn't). `window load` catches image settling without per-image listeners. Both go through `ScrollTrigger.refresh()`, which is idempotent.
-    - **The refresh race must run UNCONDITIONALLY** — it must NOT be gated behind the `isEmpty` "render nothing" path or on `[data-tile]` existing. `ScrollTrigger.refresh()` is global, and a **downstream consumer (Phase 7's `BottomCta`) depends on this refresh to position ITS own reveal** (it deliberately does not re-roll the race — [phase-7-cta.md](phase-7-cta.md) Decision 9). Put the race in `ProjectGrid`'s `useGSAP` ahead of / independent of any `isEmpty` early return, so even a (theoretical) empty grid still heals every trigger on the page. On this site the 12-surface grid is never genuinely empty, so this is defense-in-depth — but the CTA's coupling to it must not rest on an unstated assumption.
+    - **The refresh race must run UNCONDITIONALLY** — it must NOT be gated behind the `isEmpty` "render nothing" path or on `[data-tile]` existing. `ScrollTrigger.refresh()` is global, and a **downstream consumer (Phase 7's close beat) depends on this refresh to position ITS own reveal** (it deliberately does not re-roll the race — [phase-7-cta.md](phase-7-cta.md) Decision 5). Put the race in `ProjectGrid`'s `useGSAP` ahead of / independent of any `isEmpty` early return, so even a (theoretical) empty grid still heals every trigger on the page. On this site the 10-surface grid is never genuinely empty, so this is defense-in-depth — but the close's coupling to it must not rest on an unstated assumption.
 
 11. **emil motion calls (baked, not deferred to Phase 9):** hover lift = `translateY(-4px)` + shadow swap (`--shadow-tile` → `--shadow-hover`) + the hero image scaling `1.04` inside an `overflow: hidden` frame — animate **transform + opacity/shadow only** (GPU), `ease.press` (`weighted-press`), `duration.hover` (0.25s) in, faster out; gated behind `@media (hover: hover) and (pointer: fine)` so touch never traps it. The clickable tile gets `:active { transform: scale(0.985) }` press feedback — **intentionally ungated** (touch tap SHOULD show press feedback; verify it works on touch). Reveals use `autoAlpha` + small `y` (40→0), **never `scale(0)`** (emil). Stagger `0.06` (60ms) sits in emil's 30–80ms band.
 
@@ -56,7 +57,7 @@ The bar for "Phase 4 done": every tile renders the real editorial content with n
 
 13. **`clsx` gets its first real use here.** Phase 3 installed `clsx@^2.1.1` but never used it. Phase 4's tile has genuine conditional classes (`has-image` vs `type-forward`, `has-link`, muted archive) — `import clsx from 'clsx'`.
 
-14. **NO `TileShell` shared-chrome component for v1.** The active/meta tile chrome (glass, border, radius, shadow) is fully token-driven (`--surface-elevated`, `--border-subtle`, `--radius-tile`, `--shadow-tile`) so it matches across `ProjectTile` and `ArchiveTile` by construction, without a shared wrapper. *Considered and rejected:* extracting a `TileShell` — premature for two consumers whose chrome is already token-identical, and the archive tile is non-interactive (no shared hover behavior to host). Revisit only if the two tiles' chrome drifts.
+14. **NO `TileShell` shared-chrome component for v1.** The project tile chrome (glass, border, radius, shadow) is fully token-driven (`--surface-elevated`, `--border-subtle`, `--radius-tile`, `--shadow-tile`) so it matches across `ProjectTile` and `ArchiveTile` by construction, without a shared wrapper. *Considered and rejected:* extracting a `TileShell` — premature for two consumers whose chrome is already token-identical, and the archive tile is non-interactive (no shared hover behavior to host). Revisit only if the two tiles' chrome drifts.
 
 15. **The archive "misses" tile is NON-interactive in v1** (no single `/project/:name` target — it's a collective; per-archive detail is a Phase 5 option). Static muted coda — no hover, no `:active`, no link. This is why `ArchiveTile` is its own component (Decision 6), not a `ProjectTile` variant: `ArchiveCollective` has no `editorial`/`git`/`grandTotals`/`tokens`, so forcing it through `ProjectTile` means a union-typed prop with pervasive `kind === 'archive'` branches.
 
@@ -67,15 +68,15 @@ The bar for "Phase 4 done": every tile renders the real editorial content with n
 ## Current state (verified at deepening, 2026-05-24)
 
 **Data contract this phase reads (post-Phase-0 — see [phase-0-data-gaps.md](phase-0-data-gaps.md) Batch A):**
-- `useStats()` returns a NON-NULL `MultiProjectReport` (Phase 2). Top-level: `{ projects: ProjectReport[], meta: ProjectReport[], archiveCollective: ArchiveCollective | null, combined, scannedAt }`. (Non-null does NOT mean non-empty — see the empty-grid guard.)
-- `ProjectReport` (per tile): `projectName: string`, `kind: 'active' | 'meta'`, `editorial: EditorialContent | null`, `grandTotals: GrandTotals` (has `authoredLines`, `authoredFiles`, `authoredBytes`, `pipelineGeneratedFiles/Bytes`, `toolGeneratedFiles/Bytes`, `allFiles`, `allBytes`), `git: GitStats` (has `projectAgeDays: number | null`).
-- `EditorialContent`: `{ oneLiner: string, hookStat: { label: string; value: string }, heroImage: string | null, liveUrl: string | null, repoUrl: string | null, status: 'active' | 'shelved' | 'meta', description: string, gallery: string[], largestCommitCaption? }`. `heroImage` is rewritten to `/assets/<projectName>/<base>` by Phase 2's refresh (or `null`).
+- `useStats()` returns a NON-NULL `MultiProjectReport` (Phase 2). Top-level: `{ projects: ProjectReport[], archiveCollective: ArchiveCollective | null, combined, scannedAt }`. Phase 4 reads only `projects` + `archiveCollective` (meta tiles cut, ideation §7 — Phase 4 does NOT consume `report.meta`, which is dropped/unused post-pivot). (Non-null does NOT mean non-empty — see the empty-grid guard.)
+- `ProjectReport` (per tile): `projectName: string`, `editorial: EditorialContent | null`, `grandTotals: GrandTotals` (has `authoredLines`, `authoredFiles`, `authoredBytes`, `pipelineGeneratedFiles/Bytes`, `toolGeneratedFiles/Bytes`, `allFiles`, `allBytes`), `git: GitStats` (has `projectAgeDays: number | null`).
+- `EditorialContent`: `{ oneLiner: string, hookStat: { label: string; value: string }, heroImage: string | null, liveUrl: string | null, repoUrl: string | null, status: 'active' | 'shelved', description: string, gallery: string[], largestCommitCaption? }`. `heroImage` is rewritten to `/assets/<projectName>/<base>` by Phase 2's refresh (or `null`). (Phase 0 reduced the `status` enum to these two values — the `'meta'` value is gone; meta projects are cut, ideation §7.)
 - `ArchiveCollective` (the misses tile): `{ projectNames: string[], projectCount: number, totalAuthoredFiles/Bytes/Lines, totalPipelineGeneratedFiles/Bytes, totalAllBytes, totalCommits, totalTokensProcessed, totalTokensFresh, totalSessions }`. NO `editorial`, NO per-project fields.
 
-**⚠ PRECONDITION GATE (run before C1 — Phase 0 may not have executed yet).** The repo's `tools/claude-credit/dist/taxonomy.d.ts` is currently **pre-Phase-0** (verified at deepening: it exports only `MultiProjectReport` + `ProjectReport` with NO `editorial`/`kind`/`tokens`/`archiveCollective`/`git.projectAgeDays`; `grandTotals` DOES already exist). Every field this phase reads except `grandTotals` is added by Phase 0. Before building:
+**⚠ PRECONDITION GATE (run before C1 — Phase 0 may not have executed yet).** The repo's `tools/claude-credit/dist/taxonomy.d.ts` is currently **pre-Phase-0** (verified at deepening: it exports only `MultiProjectReport` + `ProjectReport` with NO `editorial`/`tokens`/`archiveCollective`/`git.projectAgeDays`; `grandTotals` DOES already exist). Every field this phase reads except `grandTotals` is added by Phase 0. Before building:
 ```
 cd C:/Users/brigg/ai-learning-journey/tools/claude-credit
-grep -nE "editorial|EditorialContent|ArchiveCollective|projectAgeDays|kind:|hookStat" dist/taxonomy.d.ts
+grep -nE "editorial|EditorialContent|ArchiveCollective|projectAgeDays|hookStat" dist/taxonomy.d.ts
 ```
 Each must hit. If any miss, Phase 0 hasn't been executed/rebuilt — STOP and resolve before building against a contract that isn't there (manifesto: contradictions = STOP). Read field NAMES from [phase-0-data-gaps.md](phase-0-data-gaps.md), never from the current dist (it will mislead).
 
@@ -91,7 +92,7 @@ Each must hit. If any miss, Phase 0 hasn't been executed/rebuilt — STOP and re
 
 ---
 
-## The tile contract (active / meta tile — locked composition)
+## The tile contract (project tile — locked composition)
 
 frontend-design + emil lens. Top-to-bottom, generous negative space (the luxury signal), ONE gold moment. The card is `position: relative`; the name link's `::after` stretches the click target over the whole card; the live link rides above it (Decision 16).
 
@@ -114,7 +115,7 @@ frontend-design + emil lens. Top-to-bottom, generous negative space (the luxury 
         └───────────────────────────────────┘       ::after; ≥44px; focus ring; only if liveUrl
 ```
 
-**Element specs (active/meta tile):**
+**Element specs (project tile):**
 
 | # | Element | Source | Type / token | Color | Null / overflow behavior |
 |---|---|---|---|---|---|
@@ -126,7 +127,7 @@ frontend-design + emil lens. Top-to-bottom, generous negative space (the luxury 
 | 4 | Live link | `editorial.liveUrl` | `LiveLinkButton`, `position: relative; z-index: 1`, `min-height: 44px`, `:focus-visible` ring | `--accent-primary` text/arrow | `null` → omit button (never a dead/disabled button). |
 
 **The gold rule — decision tree** (`--accent-stat-highlight`, README WOW-dictionary: ONE moment per surface):
-- **Active/meta tile** → the hook stat value is gold, ALWAYS (whether `editorial.hookStat.value` or the `grandTotals.authoredLines` fallback). Nothing else on the tile receives gold — not the ribbon, name, link, or border.
+- **Project tile** → the hook stat value is gold, ALWAYS (whether `editorial.hookStat.value` or the `grandTotals.authoredLines` fallback). Nothing else on the tile receives gold — not the ribbon, name, link, or border.
 - **Archive tile** → its rolled-up stat is `--text-secondary`, NEVER gold (it's a muted coda).
 - No other element on any tile ever receives `--accent-stat-highlight`.
 
@@ -164,7 +165,7 @@ projects/claude-credits/
 │   │   └── format.test.ts         # MODIFIED — add formatAge cases
 │   ├── components/
 │   │   ├── LiveLinkButton/        # NEW — shared (Phase 5 reuses for live/repo links)
-│   │   ├── ProjectTile/           # NEW — active/meta tile (stretched-link card)
+│   │   ├── ProjectTile/           # NEW — project tile (stretched-link card)
 │   │   ├── ArchiveTile/           # NEW — muted collective "the misses" coda (non-interactive)
 │   │   └── ProjectGrid/           # NEW — layout + render order + dividers + ScrollTrigger reveal owner
 │   ├── motion/
@@ -205,14 +206,14 @@ The feature-bearing, unit-testable concentrate.
 
 **4.1a — `src/lib/grid-order.ts`:**
 - `sortBySize(reports: ProjectReport[]): ProjectReport[]` — pure, returns a NEW array sorted by `grandTotals.authoredLines` descending, tie-broken by `projectName` ascending (diff-stable). Does not mutate input.
-- `buildGridModel(report: MultiProjectReport): { active: ProjectReport[]; meta: ProjectReport[]; archive: ArchiveCollective | null; showToolsDivider: boolean; showMissesDivider: boolean; isEmpty: boolean }` — applies `sortBySize` to `projects` and `meta`, passes `archiveCollective` through, derives `showToolsDivider = meta.length > 0`, `showMissesDivider = archiveCollective !== null`, and `isEmpty = active.length === 0 && meta.length === 0 && archive === null`. The booleans are the testable seam that guarantees dividers never render over empty groups, and `isEmpty` lets `ProjectGrid` render nothing (the hero stands alone) instead of an empty `<section>`.
+- `buildGridModel(report: MultiProjectReport): { active: ProjectReport[]; archive: ArchiveCollective | null; showMissesDivider: boolean; isEmpty: boolean }` — applies `sortBySize` to `projects`, passes `archiveCollective` through, derives `showMissesDivider = archiveCollective !== null` and `isEmpty = active.length === 0 && archive === null`. The boolean is the testable seam that guarantees the misses divider never renders over a null archive, and `isEmpty` lets `ProjectGrid` render nothing (the hero stands alone) instead of an empty `<section>`.
 
 **4.1b — add `formatAge` to `src/lib/format.ts`:**
 - `formatAge(projectAgeDays: number | null): string | null` — `null → null` (caller suppresses the ribbon); `0 → "today"`; `1..364 → "${n}d"`; `≥365 → "${Math.floor(n/365)}y"`. Pure; pair with `.tabular`. (Coarse past a year is intended — the ribbon is a glance, not a precise age.)
 
 **4.1c — tests** (`grid-order.test.ts` new; `format.test.ts` extended):
 - `sortBySize`: Happy — descending by `authoredLines`; Edge — stable `projectName` tie-break on equal `authoredLines`; Edge — mass-tie (3+ at the same value) sorts purely alphabetical, deterministically; Edge — a `0`-authored project sinks below all positives; Edge — empty `[]`; Edge — single element; Edge — does not mutate input.
-- `buildGridModel`: Happy — populated `projects`+`meta`+`archive` → both dividers true, `isEmpty` false, both groups sorted; Edge — `meta: []` → `showToolsDivider === false`; Edge — `archiveCollective: null` → `showMissesDivider === false`; Edge — `projects: []` but `meta` populated → renders meta, `isEmpty` false; Edge — all empty (`projects:[]`, `meta:[]`, `archive:null`) → `isEmpty === true`.
+- `buildGridModel`: Happy — populated `projects`+`archive` → `showMissesDivider` true, `isEmpty` false, `active` sorted; Edge — `archiveCollective: null` → `showMissesDivider === false`; Edge — `projects: []` but `archive` populated → renders the coda, `isEmpty` false; Edge — all empty (`projects:[]`, `archive:null`) → `isEmpty === true`.
 - `formatAge`: `47 → "47d"`; `null → null`; `0 → "today"`; `364 → "364d"`, `365 → "1y"`, `400 → "1y"`.
 
 **Verify gate:**
@@ -236,7 +237,7 @@ The layout/data/null-degrade/responsive truth gate. Real data, FINAL visible sta
 
 **4.2c — `src/components/ArchiveTile/`** (props: `{ archive: ArchiveCollective }`): muted, non-interactive coda. Copy generated from `projectCount`; rolled-up `totalCommits` in `--text-secondary` (NOT gold). Muted treatment specified for BOTH modes (tile contract). No `<Link>`, no hover, no `:active`, `cursor: default`.
 
-**4.2d — `src/components/ProjectGrid/`**: calls `useStats()` + `buildGridModel(report)`. If `isEmpty` → render nothing (hero stands alone). Else render: active group → "the tools" divider (if `showToolsDivider`) → meta group → "the misses" divider (if `showMissesDivider`) → `<ArchiveTile>` (if `archive`). Layout grid `repeat(auto-fit, minmax(320px, 1fr))`, `gap: var(--space-6)`. NO motion (tiles at final visible state — no `gsap.set`/opacity here).
+**4.2d — `src/components/ProjectGrid/`**: calls `useStats()` + `buildGridModel(report)`. If `isEmpty` → render nothing (hero stands alone). Else render: the active `projects` tiles → "the misses" divider (if `showMissesDivider`) → `<ArchiveTile>` (if `archive`). Layout grid `repeat(auto-fit, minmax(320px, 1fr))`, `gap: var(--space-6)`. NO motion (tiles at final visible state — no `gsap.set`/opacity here).
 
 **Dividers (concrete spec):** a group label in small-caps `--text-secondary` (`--font-body`, `letter-spacing: 0.12em`) sitting ABOVE a full-width hairline rule (`1px` `--surface-divider`), label left-aligned with a small gap to the rule below it. Space above a divider = `var(--space-12)` (≈2× the tile gap) so groups read as distinct bands, not a continuous matrix. Spans the full grid width (`grid-column: 1 / -1`).
 
@@ -249,7 +250,7 @@ The layout/data/null-degrade/responsive truth gate. Real data, FINAL visible sta
 pnpm refresh && pnpm dev
 ```
 - Every tile renders real editorial: image, name, age ribbon, one-liner, gold hook stat, "Try it →" where deployed.
-- Groups + dividers read as a deliberate sequence: active → the tools → the misses. The archive tile is muted + non-interactive, **legible in BOTH modes** (not faded-to-broken in light).
+- The grid + divider read as a deliberate sequence: the active projects → the misses coda. The archive tile is muted + non-interactive, **legible in BOTH modes** (not faded-to-broken in light).
 - **A11y:** keyboard-tab the grid — each tile's name link AND its "Try it" link are separately focusable with visible rings; the whole card is clickable (stretched link); no nested-link warning.
 - **Null/overflow-degrade:** scratch `stats.json` — one `editorial: null` (fallback hook, no image/link/one-liner), one `heroImage: null` AND one pointing at a missing file (both → type-forward, no broken `<img>`), one `liveUrl: null` (no button), one `git.projectAgeDays: null` (no ribbon), `archiveCollective: null` (no misses divider/tile), a 40-char name + a 300-char one-liner (wrap/clamp, no overflow), and ALL arrays empty (grid renders nothing, hero alone). Restore.
 - **Editorial spot-check:** each hook stat reads as a specific editorial pick (e.g. "167 tests"), not a generic auto-count — the hook is the tile's sole data moment now, so a weak one reads as AI-slop. (Editorial quality is sourced in preflight −1.5; this gate flags weak hooks early.)
@@ -309,25 +310,25 @@ pnpm build && pnpm preview    # prod bundle — the real gate
 | **Bar lies / clutter (the cut tier bar)** | NO tier bar on the tile (Decision 1). Taxonomy lives on About/detail. |
 | **Sorting by `allBytes` ranks by trailer size** | Sort by `grandTotals.authoredLines` desc, tie-break `projectName` (Decision 4). Rotation-immune, inversion-immune, diff-stable. |
 | **`authoredLines` mistaken for a `linesByAuthor` sum (would inherit the git inversion)** | `grandTotals.authoredLines` is file-classification-derived (Phase 0 §counter), NOT a git-author sum — immune to the Co-Authored-By inversion (Decision 2/4). Never re-derive it from `linesByAuthor`. |
-| **"Sort meta to the end" logic** | Obsolete — `projects[]`/`meta[]` are separate arrays defined by Phase 0 (Decision 5). |
+| **"Sort meta to the end" logic / any meta tile** | Obsolete — meta tiles are CUT (Decision 5, ideation §7). The grid renders only `projects[]`; Phase 4 never consumes `report.meta`. |
 | **Individual shelved tiles** | None exist — `kind` has no `'shelved'`; archive lives only in `archiveCollective` (Decision 6). ONE muted `ArchiveTile`. |
 | **Hardcoded "Two games" archive copy lies on change** | Copy generated from `archiveCollective.projectCount`; verify rendered count matches `stats.json`. |
 | **Archive tile invisible in light mode** | Light-mode muted treatment is a flattened legible surface, not opacity-fade (tile contract). Verify both modes. |
 | **`editorial: null` / `heroImage`/`liveUrl`/`projectAgeDays` null** | Defensive tile per the element table: fallback title/hook from `grandTotals`; omit image (type-forward) / link / ribbon. |
 | **Long name / one-liner overflow** | Name `max-width: 18ch` + `overflow-wrap`; one-liner `-webkit-line-clamp: 3`. |
-| **Two gold moments per tile** | Gold decision tree: hook stat value ONLY on active/meta; never on archive. |
+| **Two gold moments per tile** | Gold decision tree: hook stat value ONLY on project tiles; never on archive. |
 | **`--text-muted` fails WCAG AA** | All info-bearing tile text uses `--text-secondary`. Phase 1 cascade raises `--text-muted` to AA (Cascade). |
 | **Re-rolling `toFixed`/`toLocaleString` in JSX** | All numbers via `format.ts` (`formatInt`/`formatBytes`/`formatAge`). |
 | **`ArchiveCollective` forced through `ProjectTile`** | Separate `ArchiveTile` (Decision 6/15). |
 | **ScrollTrigger (~25KB) on every route's entry chunk** | Accepted for v1 (grid is on entry route); Phase 9 route code-split / dynamic import is the optimization (Decision 7). |
 | **Pre-Phase-0 dist misleads field names** | Precondition gate greps `dist/taxonomy.d.ts`; read names from `phase-0-data-gaps.md`. STOP if Phase 0 not built. |
-| **`backdrop-filter` blur on 9–12 tiles + hover scale costs paint on low-end mobile** | Watch in the mobile gate; if it janks, a Phase 9 `@supports`/reduced-blur fallback for the single-column case (not built now — flagged). |
+| **`backdrop-filter` blur on the 10 tiles + hover scale costs paint on low-end mobile** | Watch in the mobile gate; if it janks, a Phase 9 `@supports`/reduced-blur fallback for the single-column case (not built now — flagged). |
 
 ---
 
 ## System-wide impact
 
-- **First per-project consumer of `useStats()`.** The hero (Phase 3) read `combined.*` only; the grid is the first to iterate `projects[]`/`meta[]` and read `archiveCollective`. It honors field-level null discipline — `editorial`/`heroImage`/`liveUrl`/`projectAgeDays` can each be null per tile.
+- **First per-project consumer of `useStats()`.** The hero (Phase 3) read `combined.*` only; the grid is the first to iterate `projects[]` and read `archiveCollective`. It honors field-level null discipline — `editorial`/`heroImage`/`liveUrl`/`projectAgeDays` can each be null per tile.
 - **Shared primitives established for Phase 5:** `LiveLinkButton` (prop-shaped `{href,label}` — Phase 5 reuses for live + repo links via a different `label`, not a variant prop), `src/lib/grid-order.ts` (first non-format pure-derivation lib — Phase 5 follows the pattern), and `formatAge` in `format.ts`. Built behind data-shaped prop boundaries so Phase 5 inherits no coupling.
 - **Motion surface:** Phase 4 introduces ScrollTrigger to the shared `gsap-context.ts` — every later phase can use it. The `ScrollTrigger.batch` + JS-hidden-state + `refreshInit` y-reset + reduced-motion-early-return + race-then-refresh pattern is the reference for any later scroll-revealed surface.
 - **`ProjectTile` is deliberately NOT reused by Phase 5** — the detail page is a full page, not a tile. Phase 5 reuses the sub-pieces (`LiveLinkButton`, `format.ts`), not the tile shell.
@@ -346,7 +347,7 @@ Apply in the deepen commit (and re-verify via the "Cascade prerequisite" gate ab
 - Remove the tier-proportion bar from the tile spec. The per-project tile is: hero image · name · age ribbon · one-liner · ONE gold hook stat · live link. The authored/pipeline/tool taxonomy is explained on the About page (and optionally the detail page), not visualized on the grid tile.
 
 ### `README.md` verification gate 7 + "Tile order" / sort key
-- Gate 7: drop "tier"/"status marker" language; state the count is **data-derived** = `projects.length` + `meta.length` + `(archiveCollective ? 1 : 0)`. (Do NOT hard-code "9 active + 2 meta + 1 archive = 12" — census-proof formula only; the old "11" counted `ProjectReport`s and excluded the archive tile.)
+- Gate 7: drop "tier"/"status marker" language; state the count is **data-derived** = `projects.length` + `(archiveCollective ? 1 : 0)`. Meta tiles are CUT (ideation §7), so the grid is **9 active + 1 archive coda = 10 surfaces**; keep the census-proof formula rather than hard-coding the count.
 - Update the tile sort to `grandTotals.authoredLines` descending, tie-break `projectName` (was `allBytes`).
 
 ### `README.md` "Named wow moments" (already correct)
@@ -386,11 +387,11 @@ The spine truth: Claude wrote all of it; Briggsy only touched `.env` keys; fully
 
 ## Verification (Phase 4 done gate)
 
-1. ✅ `pnpm test` green — `grid-order.test.ts` (sort desc + name tie-break + mass-tie + 0-authored + empty/single/no-mutate; `buildGridModel` divider booleans + `isEmpty`) and `format.test.ts` `formatAge`; Phase 2/3 tests still green.
+1. ✅ `pnpm test` green — `grid-order.test.ts` (sort desc + name tie-break + mass-tie + 0-authored + empty/single/no-mutate; `buildGridModel` `showMissesDivider` + `isEmpty`) and `format.test.ts` `formatAge`; Phase 2/3 tests still green.
 2. ✅ `pnpm typecheck` clean.
 3. ✅ `pnpm dev` AND `pnpm build && pnpm preview`: every tile renders real editorial; no `NaN`/`undefined`/broken `<img>`.
-4. ✅ Groups + dividers render in sequence: active → "the tools" (suppressed if `meta` empty) → "the misses" (suppressed if `archiveCollective` null). Archive tile muted + non-interactive + legible in BOTH modes.
-5. ✅ Sort by `grandTotals.authoredLines` desc within each group; equal-rank stable by `projectName`; a 0-authored project sinks to its group bottom.
+4. ✅ Grid + divider render in sequence: the active projects → "the misses" coda (divider suppressed if `archiveCollective` null). NO meta tiles. Archive tile muted + non-interactive + legible in BOTH modes.
+5. ✅ Sort by `grandTotals.authoredLines` desc; equal-rank stable by `projectName`; a 0-authored project sinks to the bottom.
 6. ✅ **A11y:** keyboard tab reaches each tile's name link AND its "Try it" link separately, both with visible `:focus-visible` rings; whole card clickable (stretched link); no nested-`<a>`.
 7. ✅ Tile click → `/project/:name` client-side. Archive tile has no link (`cursor: default`).
 8. ✅ Reveal-on-scroll: tiles fade+rise with weighted stagger, once each; top row reveals on load WITHOUT scrolling — verified in **dev (StrictMode)** AND preview, tall AND short grid.

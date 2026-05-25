@@ -2,6 +2,7 @@
 created: 2026-05-24T09:46:48-04:00
 deepened: 2026-05-24T16:09:09-04:00
 doc-reviewed: 2026-05-24T16:25:44-04:00
+coded:
 ---
 
 # Phase 2 — Data wiring
@@ -52,7 +53,7 @@ Read of `tools/claude-credit/package.json` + `tsconfig.json`:
 
 Read of `tools/claude-credit/src/taxonomy.ts` (post-Phase-0 shape, per [phase-0-data-gaps.md](phase-0-data-gaps.md) Batch A):
 - `MultiProjectReport = { projects: ProjectReport[]; meta: ProjectReport[]; archiveCollective: ArchiveCollective | null; combined: {…token aggregates…}; scannedAt: string }`.
-- `ProjectReport` carries `projectPath` (**the PII to strip**), plus `editorial: EditorialContent | null` whose `heroImage`/`gallery` are **project-relative paths** (the files to copy + rewrite), `kind: 'active' | 'meta'`, `tokens: TokenStats | null`, `assetBytesByKind`, `topSubcategories`.
+- `ProjectReport` carries `projectPath` (**the PII to strip**), plus `editorial: EditorialContent | null` whose `heroImage`/`gallery` are **project-relative paths** (the files to copy + rewrite), `tokens: TokenStats | null`, `assetBytesByKind`, `topSubcategories`. (No `kind` field — Phase 0 dropped it; meta cut, ideation §7.)
 - New exported types this phase re-exports: `TokenStats`, `EditorialContent`, `ArchiveCollective` (added by Phase 0 Batch A).
 
 Read of `projects/claude-credits/` (Phase 1 scaffold target):
@@ -267,11 +268,12 @@ import type { MultiProjectReport, ProjectReport } from '../src/types.js'
 
 const PUBLIC_ASSETS = path.resolve('public/assets')
 
-// Mutates report.projects[*] and report.meta[*] editorial paths in place, copies the
+// Mutates report.projects[*] editorial paths in place, copies the
 // referenced files into public/assets/<projectName>/, and cleans stale project dirs.
 // Skips archiveCollective (no projectPath, no editorial). NEVER touches public/assets/fonts/.
+// (No report.meta — meta projects are cut, ideation §7; Phase 0 dropped the field.)
 export async function copyEditorialAssets(report: MultiProjectReport): Promise<void> {
-  const all = [...report.projects, ...report.meta]
+  const all = report.projects
 
   // 0. Collision guard: projectName is path.basename(rootDir) (verified report.ts:77) — NOT
   //    unique. Two configured paths with the same leaf dir name (e.g. projects/burned + a
@@ -416,10 +418,10 @@ async function main(): Promise<void> {
   // Production path: no opts → reads ~/.claude-credit-projects.yaml + real homeDir for tokens.
   const { report } = await buildMultiProjectReport({})
 
-  // Drop the diagnostic `warnings[]` from every project/meta — no site component consumes it,
+  // Drop the diagnostic `warnings[]` from every project — no site component consumes it,
   // and it carries free-text path strings (e.g. heroImage-not-found messages). Removing it
   // before publish takes that leak surface to zero. (`delete` needs a cast: warnings is required.)
-  for (const p of [...report.projects, ...report.meta]) {
+  for (const p of report.projects) {
     delete (p as { warnings?: unknown }).warnings
   }
 
@@ -459,7 +461,7 @@ describe('assertPublishSafe — HARD patterns (scanned everywhere)', () => {
   it('passes clean stats-like data', () => {
     expect(() => assertPublishSafe({
       combined: { totalTokensProcessed: 1234, tokenWindowStartISO: '2026-05-01T00:00:00Z' },
-      projects: [{ projectName: 'burned', kind: 'active', editorial: { liveUrl: 'https://burned.vercel.app' } }],
+      projects: [{ projectName: 'burned', editorial: { liveUrl: 'https://burned.vercel.app' } }],
     })).not.toThrow()
   })
   it('catches a Windows path', () => expect(() => assertPublishSafe({ a: 'C:\\Users\\brigg\\x' })).toThrow(/win-abs/))

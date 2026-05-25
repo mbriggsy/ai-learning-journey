@@ -2,6 +2,7 @@
 created: 2026-05-24T09:46:48-04:00
 deepened: 2026-05-24T14:51:45-04:00
 doc-reviewed: 2026-05-24T15:18:00-04:00
+coded:
 ---
 
 # Phase 1 — Scaffold `projects/claude-credits/`

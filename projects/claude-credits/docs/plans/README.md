@@ -30,7 +30,7 @@ Briggsy asked for: "A Vercel-hosted drippy GSAPy wet set of web pages with fucki
 | 4 | Project grid | [phase-4-grid.md](phase-4-grid.md) |
 | 5 | Project detail page | [phase-5-detail.md](phase-5-detail.md) |
 | 6 | About page | [phase-6-about.md](phase-6-about.md) |
-| 7 | Bottom CTA | [phase-7-cta.md](phase-7-cta.md) |
+| 7 | The close (page ends on the work — no CTA) | [phase-7-cta.md](phase-7-cta.md) |
 | 8 | Deploy | [phase-8-deploy.md](phase-8-deploy.md) |
 | 9 | Visual polish iteration (THE BAR) | [phase-9-polish.md](phase-9-polish.md) |
 
@@ -40,6 +40,8 @@ Each phase file carries YAML frontmatter:
 - `created:` — when the phase content was first committed (frozen — never changes)
 - `deepened:` — set to ISO timestamp when `/ce:plan deepen` has run on this phase
 - `doc-reviewed:` — set to ISO timestamp when `/document-review` has run on this phase
+- `coded:` — set to ISO timestamp when the phase's code was actually **executed and verified** (runtime truth, not just written). This is the "what's actually built" field — answerable at a glance instead of from TODO prose.
+- `reframed:` — *optional*, present only when a phase's premise changed after deepening (e.g. Phase 7 went from "Bottom CTA" to "The close"). Set to the reframe date; `doc-reviewed:` is cleared until the reframed content gets a fresh review pass.
 
 Empty value = not yet done.
 

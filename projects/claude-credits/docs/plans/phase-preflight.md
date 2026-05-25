@@ -2,9 +2,12 @@
 created: 2026-05-24T09:46:48-04:00
 deepened: 2026-05-24T11:56:12-04:00
 doc-reviewed: 2026-05-24T12:21:08-04:00
+coded: 2026-05-25
 ---
 
 # Phase −1 — Pre-flight verifications
+
+> **EXECUTED 2026-05-24 · then 3 decisions changed.** This plan was written before Briggsy locked **no bottom CTA**, **no meta tiles**, and **no npm publish** (ideation §4 + §7, README decisions table, TODO SCOPE CHANGE block — those are authoritative). Wherever this file says *"meta tiles / 12 surfaces / 2 meta projects / the tools divider / publish / CTA states A·B·C,"* the executed + locked reality is **"no meta / 10 surfaces (9 active + 1 archive coda) / no publish / no CTA."** Retained as the execution record (the squatter-deploy methodology and npm-availability check are the durable value). Do not act on its meta/CTA/publish steps.
 
 **Prereq:** Read [README.md](README.md) first — the bar, locked decisions, and visual system live there. This file is the executable recipe for the five gates.
 
@@ -20,13 +23,15 @@ Locked decisions from the brainstorm/review pass that this recipe respects:
 - **`repoUrl` is wired to the detail page** (Phase 5 gets a "View source →" affordance per project).
 - **Voice anchor** for editorial copy: `terse · sharp · specific · knowing · matter-of-fact`. Anti-anchor: `aspirational · evangelical · breathless · jargon-heavy · self-deprecating`.
 - **Shelved projects roll into totals, no individual tiles.** They surface as ONE collective tile in last grid position labeled **"the misses"** with a click-through detail page that names each.
-- **Final grid count: 12 tiles** (9 active + 2 meta + 1 archive collective). Was 11 before this deepening.
+- ~~**Final grid count: 12 tiles** (9 active + 2 meta + 1 archive collective).~~ **Superseded 2026-05-24: 10 surfaces** (9 active + 1 archive coda; meta tiles cut — ideation §7).
 
 ---
 
 ## −1.1 `claude-credit` tool publishability + CTA gates
 
-Drives the verbatim CTA copy in [Phase 7](phase-7-cta.md). Three terminal states (A / B / C) determined here; the CTA copy block at the bottom of `projects/claude-credits/docs/editorial.md` records which state landed so Phase 7 reads from one source.
+> **RESOLVED 2026-05-24 — gate collapsed to "no action."** Briggsy locked **no npm publish** (the tool is the internal tape measure, not a product) and **no bottom CTA** (the site ends on the work — ideation §4, §7). So there are no A/B/C CTA states, no `editorial.md ## CTA state` block, and no `src/lib/cta.ts` to set. Executed outcome: npm name `claude-credit` confirmed available but deliberately NOT published; the tool README was de-implied of installability. The publish/CTA-state recipe below is retained as the record of what was evaluated — **do not act on its publish or CTA-copy steps.**
+
+~~Drives the verbatim CTA copy in [Phase 7](phase-7-cta.md). Three terminal states (A / B / C) determined here; the CTA copy block at the bottom of `projects/claude-credits/docs/editorial.md` records which state landed so Phase 7 reads from one source.~~ (Superseded — see banner above.)
 
 ### Current state (verified at deepening, 2026-05-24)
 
@@ -790,6 +795,8 @@ Single commit at the end of the worksheet draft. Message: `docs(claude-credits):
 ---
 
 ## Downstream phase plan amendments required during preflight execution
+
+> **DOUBLY SUPERSEDED — do not implement from this section.** (1) These amendments were already absorbed when phases 0/4/5 were individually deepened (the "cascade commit" became moot). (2) The 2026-05-24 scope locks then went further: **no meta tiles, no `meta:` array, no `kind` discriminator, `status` enum is `'active' | 'shelved'`** (ideation §7). So the `meta[*] → kind:'meta'` and "THREE top-level keys" specs below are WRONG now — phase-0 parses only `projects:` + `archive:`. The authoritative phase-0/4/5 plans are already reconciled; read those, not this. Retained as historical record only.
 
 The deepening locked decisions in this preflight that affect other phase plan docs. Those docs have NOT been deepened yet — when each one is deepened (or executed, whichever first), apply these amendments. Land them as a separate commit before Phase 0 execution starts: `docs(claude-credits): cascade preflight decisions to phase-0/4/5 plans`.
 

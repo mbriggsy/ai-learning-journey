@@ -1,6 +1,6 @@
 # claude-credits — TODO
 
-**Status:** All phases (−1 through 9) deepened + doc-reviewed. **Preflight −1 executed 2026-05-24** (YAML, deploy-verify, worksheet draft done). **Then Briggsy locked 3 scope changes** (no CTA / no meta tiles / no publish) — see the SCOPE CHANGE block below. Next actionable: Briggsy reviews `docs/editorial.md`, then Phase 0 (reconcile the plan to the 3 locks first). Phase plans 0/4/5/6/7 carry stale assumptions — reconcile each before coding it.
+**Status:** All phases (−1 through 9) deepened + doc-reviewed. **Preflight −1 executed 2026-05-24** (YAML, deploy-verify, worksheet draft done). **3 scope locks applied 2026-05-25** (no CTA / no meta tiles / no publish) — propagated across ideation + README + ALL affected phase plans (0/2/3/4/5/6/7 reconciled, drift-safe; preflight under a superseded banner). `coded:` frontmatter field added to all 12 phases. **The plan set is now internally consistent.** Next actionable: Briggsy reviews `docs/editorial.md` (voice) + the meta-excluded-from-totals call; then Phase 0 (code the data contract). See SCOPE CHANGE block for the full reconciliation record.
 
 > **House rule — TODO is NOT a diary.** Actionable items only. No session history, no "what we did" logs, no narrative addenda. The git log has the history. If a line isn't an open thing Claude or Briggsy can act on, it doesn't belong here. Strip cruft when you find it.
 
@@ -32,12 +32,18 @@ The site celebrates the WORK, not the tool. Three locks (recorded authoritativel
 3. **Tool not published** to npm. `claude-credit` is the internal tape measure.
    - **+ Claude's call (Briggsy to veto):** meta is excluded from the **hero combined totals** too, not just tiles — counting the site's own build tokens is circular/inflationary. `~/.claude-credit-projects.yaml` now has only `projects:` + `archive:` (meta array dropped).
 
-**Reconcile these phase plans to the 3 locks BEFORE coding each (their bodies still assume meta tiles / dual CTA):**
-- [ ] **phase-0** — drop `meta:` from the 0.6b parser (only `archive:` remains); `kind: 'meta'` discriminator + `status: 'meta'` enum value become unused → remove or leave inert (decide at exec). Status enum likely collapses to `'active' | 'shelved'`.
-- [ ] **phase-4-grid** — 10 surfaces not 12; delete the "the tools" divider + meta band; keep active band + "the misses".
-- [ ] **phase-5-detail** — no detail pages for tool/site; "Try it →"/"Source →" per-project links stay.
-- [ ] **phase-6-about** — remove the `resolveCtaCopy` import / CTA-state dependency (About §2). About may still explain the taxonomy (what the numbers mean) as light context.
-- [ ] **phase-7-cta** — GUTTED. No CTA buttons, no `cta.ts`, no `cta.test.ts`, no CTA-state tracking. Rewrite the phase as "how the page ends on the work" (the close), or fold into Phase 3/9.
+**Phase plans reconciled to the 3 locks (2026-05-25) — all bodies fixed (drift-safe: grepped bodies, not just headers):**
+- [x] **phase-0** — `meta:` dropped from 0.6b parser (only `projects:` + `archive:`); `kind` discriminator removed; `status` enum collapsed to `'active' | 'shelved'`; `MultiProjectReport.meta` field removed.
+- [x] **phase-2-data-wiring** — *(not in original list — caught in verification)* `copyEditorialAssets` + warnings-strip no longer iterate `report.meta`; `kind` dropped from the ProjectReport field desc + test fixture.
+- [x] **phase-3-hero** — *(caught in verification)* project-count formula (prose **and** code block) drops `report.meta.length`; `useStats()` destructure drops `meta`.
+- [x] **phase-4-grid** — 10 surfaces not 12; "the tools" divider + meta band gone; `buildGridModel`/`ProjectGrid` render active → "the misses"; `report.meta`/`kind` refs cleaned.
+- [x] **phase-5-detail** — no meta detail pages; `/project/:name` resolves from `projects[]` only (meta name → null guard); per-project "Try it →"/"Source →" stay; `MultiProjectReport` shape drops `meta`.
+- [x] **phase-6-about** — `cta.ts`/`resolveCtaCopy`/`CURRENT_CTA_STATE` dependency removed; About §2 is prose-only (explains the taxonomy, no install/pitch).
+- [x] **phase-7-cta** — REFRAMED to "**The close**" (how the page ends on the work). All CTA build cut (no `cta.ts`/`cta.test.ts`/command block/STATE machinery). `doc-reviewed` cleared (reframed content needs a fresh review pass before coding). `reframed:` frontmatter added.
+- [x] **phase-preflight** (executed history) — top banner + superseded markers; its meta/CTA/12-tile body retained under the banner as the execution record (not surgically churned).
+- [x] **`coded:` frontmatter** added to all 12 phase files (+ documented in plans/README convention; preflight stamped today). New field = "executed + verified," parallel to created/deepened/doc-reviewed.
+
+**Open follow-up:** phase-7's reframed "close" content has `doc-reviewed:` cleared — it wants a `/document-review` pass before that phase codes (it's a simple surface, low risk, but honest to flag). The exact close composition is a Phase 9 + Briggsy-taste call.
 
 ## Then: execute
 

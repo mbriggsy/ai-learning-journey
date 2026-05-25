@@ -2,17 +2,16 @@ import { useState } from 'react'
 import { Link } from 'react-router'
 import clsx from 'clsx'
 import type { ProjectReport } from '@/types'
-import { formatAge, formatInt } from '@/lib/format'
+import { formatInt } from '@/lib/format'
 import styles from './ProjectTile.module.css'
 
 // The whole-card single-link tile (Phase 4 Decision 16): the name is the only <Link>; its
 // stretched ::after makes the entire card the hit-target. NO buttons on the tile (clean-tile,
 // ideation §3). The lone gold moment is the hook stat value.
 export function ProjectTile({ project }: { project: ProjectReport }) {
-  const { projectName, editorial, grandTotals, git } = project
+  const { projectName, editorial, grandTotals } = project
   const [imgError, setImgError] = useState(false)
 
-  const age = formatAge(git.projectAgeDays)
   // Narrow once: heroSrc is string|null, so the <img src> below needs no non-null assertion
   // and the tile variant derives from a single source of truth. Runtime 404 → null → type-forward.
   const heroSrc = imgError ? null : editorial?.heroImage || null
@@ -41,12 +40,6 @@ export function ProjectTile({ project }: { project: ProjectReport }) {
             onError={() => setImgError(true)}
           />
         </div>
-      )}
-
-      {age && (
-        <span className={styles.ribbon} aria-label={`${age} old`}>
-          <span className="tabular">{age}</span>
-        </span>
       )}
 
       <div className={styles.content}>

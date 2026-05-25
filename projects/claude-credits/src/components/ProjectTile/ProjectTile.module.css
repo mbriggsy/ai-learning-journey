@@ -6,7 +6,7 @@
 }
 
 .tile {
-  position: relative; /* anchor for the stretched ::after link + the ribbon */
+  position: relative; /* anchor for the stretched ::after link */
   display: flex;
   flex-direction: column;
   background: var(--surface-elevated);
@@ -37,22 +37,6 @@
   width: 100%;
   height: 100%;
   object-fit: cover;
-}
-
-/* age ribbon — tile-relative (top-right with OR without an image) */
-.ribbon {
-  position: absolute;
-  top: var(--space-3);
-  right: var(--space-3);
-  z-index: 2; /* above the stretched ::after (decorative, non-interactive) */
-  padding: var(--space-1) var(--space-2);
-  font-family: var(--font-mono);
-  font-size: var(--text-meta);
-  color: var(--text-secondary);
-  background: var(--surface-overlay);
-  border-radius: var(--radius-chip);
-  -webkit-backdrop-filter: blur(8px);
-  backdrop-filter: blur(8px);
 }
 
 .content {

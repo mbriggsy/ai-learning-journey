@@ -1,6 +1,6 @@
 # claude-credits — TODO
 
-**Status:** Deepening in progress. **Phases 0–5 AND the preflight plan (−1) are deepened + doc-reviewed.** Phases 6–9 remain to deepen. **No code until ALL phase plans are deepened and contradictions resolved** (house rule).
+**Status:** Deepening in progress. **Phases 0–6 AND the preflight plan (−1) are deepened + doc-reviewed.** Phases 7–9 remain to deepen. **No code until ALL phase plans are deepened and contradictions resolved** (house rule).
 
 > **House rule — TODO is NOT a diary.** Actionable items only. No session history, no "what we did" logs, no narrative addenda. The git log has the history. If a line isn't an open thing Claude or Briggsy can act on, it doesn't belong here. Strip cruft when you find it.
 
@@ -17,8 +17,8 @@ Read both before touching code.
 
 Same drill each: deepen to the **decisions-not-code** bar (native `ce:plan` — lock decisions/contracts/the bar, render fully-decided values concretely, defer execution-discovery) → `/ce:plan deepen` → 6-reviewer `/document-review` → stamp `deepened:` / `doc-reviewed:` frontmatter → commit.
 
-- [ ] **Phase 6 — about** (`phase-6-about.md`) — **NEXT.** Place the captured light-touch line: *"Claude wrote all of it. Briggsy directed — and answered a question or two."* (ideation §11). Full taxonomy explainer lives here (may reuse the now-published `tiers[]`).
-- [ ] **Phase 7 — bottom CTA** (`phase-7-cta.md`) — depends on preflight −1.1 (is `claude-credit` publishable?) for the primary CTA copy.
+- [x] **Phase 6 — about** (`phase-6-about.md`) — **deepened + doc-reviewed 2026-05-24.** Authorship line = closing sign-off (locked). Taxonomy table reframed: "counted in totals?" measurement column, NOT a "credited?" verdict (ideation §1 forbids the authored-vs-generated comparison).
+- [ ] **Phase 7 — bottom CTA** (`phase-7-cta.md`) — **NEXT.** Depends on preflight −1.1 (is `claude-credit` publishable?) for the primary CTA copy. Note: About §2's install snippet reads the SAME `editorial.md ## CTA state` block — parity = same install string (Phase 7 also carries a first-run line About omits).
 - [ ] **Phase 8 — deploy** (`phase-8-deploy.md`) — must resolve the open "where does `pnpm refresh` run" question (a clean CI runner has NO session JSONLs → tokens would be null; leading option = refresh locally + commit, Action only deploys — see phase-2 Open Decision #2).
 - [ ] **Phase 9 — visual polish (THE BAR)** (`phase-9-polish.md`) — where the bar gets met; budget half the time here.
 
@@ -44,4 +44,5 @@ Same drill each: deepen to the **decisions-not-code** bar (native `ce:plan` — 
 - **Hero = `tokensProcessed` dominant + `tokensFresh`/window honest sub-line + lines/counts supporting** (Phase 3 Option A, locked). Not the other way around.
 - **Session JSONLs rotate after ~30 days.** Any token tally is a window-bounded FLOOR, never lifetime. UI MUST surface the window on every token surface.
 - **Worktree slugs are separate.** Claude Code session JSONLs in git worktrees produce slugs like `<parent>--claude-worktrees-<name>-<hash>`. The token parser MUST merge worktree slugs into the parent, or stats undercount.
+- **Cadence copy is Phase-8-stale in TWO places.** `docs/plans/README.md` line 71 AND `phase-8-deploy.md` §8.3 both assert "GitHub Action regenerates the numbers on every push to main" — but Phase 2 Open Decision #2 leans the opposite (clean CI runner has no session JSONLs → refresh runs LOCALLY + commits, Action deploys only). Phase 6's About §5 deliberately does NOT mirror README line 71. **When Phase 8 deepens, reconcile README line 71 + §8.3 + About §5 in one pass** (feedback-stats-single-source).
 - `.env` files (gitignored at root) hold the Gemini key + future per-project secrets. Don't roll back.

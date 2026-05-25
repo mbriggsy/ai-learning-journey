@@ -46,12 +46,9 @@ Builder-to-builder. Audience is AI-curious peer developers.
 
 - **hostProjectRoot:** `C:\Users\brigg\ai-learning-journey\projects\burned`
 - **status:** `active`
-- **oneLiner [STRAWMAN]:** `Couch-of-friends spy comedy. Archer-coded card game in the browser.`
-- **hookStat candidates:**
-  - `{ label: "TESTS", value: "167" }`
-  - `{ label: "CARDS", value: "120" }`
-  - `{ label: "PHASES", value: "6" }`
-- **heroImage [STRAWMAN — pick one]:** `public/assets/arena/mahogany-horizontal.png` · `public/assets/arena/operative-silhouette.png` · `public/assets/arena/portrait-agent-x.png` · or a card from `public/assets/cards/*.webp` (verified to exist)
+- **oneLiner:** `Couch-of-friends spy comedy. Archer-coded card game in the browser.`
+- **hookStat:** `{ label: "CARDS", value: "120" }` — quiet scope support; the **art is the hook** (image-forward treatment, like UMB). LOCKED 2026-05-25 (was TESTS 167 — moved to rigor-on-the-detail-page).
+- **heroImage:** image-forward (like UMB) — the CINEMATIC lead frame will come from the **in-progress origin story video** (`projects/burned/docs/origin-trailer-v2/`), not yet rendered. **INTERIM:** `public/assets/arena/operative-silhouette.png` or `portrait-agent-x.png` (verified, strong Imagen art). **Swap to the origin-video hero frame when it lands** (capture queue). burned is an active WIP — the game is live + family-playable, the origin video is the polish piece in progress.
 - **heroImage_mobile_safe:** `tbd`
 - **liveUrl:** `https://burned-cxa.pages.dev/board` ✅ (verified live — 200, `<title>BURNED</title>`; Cloudflare Pages, slug `burned-cxa`; `/board` is the host/TV entry. URL was in burned's own README — my earlier deploy grep false-negatived it.)
 - **repoUrl:** `https://github.com/mbriggsy/ai-learning-journey/tree/main/projects/burned`
@@ -65,11 +62,8 @@ Builder-to-builder. Audience is AI-curious peer developers.
 
 - **hostProjectRoot:** `C:\Users\brigg\ai-learning-journey\projects\data-engineering`
 - **status:** `active`
-- **oneLiner [STRAWMAN]:** `Azure data engineering experiments. ADF, Databricks, Unity Catalog.`
-- **hookStat candidates:**
-  - `{ label: "STACK", value: "ADF+UC" }`
-  - `{ label: "PIPELINES", value: "<count once Briggsy weighs in>" }`
-  - `{ label: "ETL JOBS", value: "<count>" }`
+- **oneLiner:** `Azure data engineering experiments. ADF, Databricks, Unity Catalog.`
+- **hookStat:** `{ label: "STACK", value: "ADF+UC" }` — LOCKED 2026-05-25.
 - **heroImage:** NEEDS CAPTURE — see capture queue
 - **heroImage_mobile_safe:** `tbd`
 - **liveUrl:** `null` (`data-engineering.vercel.app` → 404; no deploy)
@@ -84,11 +78,8 @@ Builder-to-builder. Audience is AI-curious peer developers.
 
 - **hostProjectRoot:** `C:\Users\brigg\ai-learning-journey\projects\hooks`
 - **status:** `active`
-- **oneLiner [STRAWMAN]:** `Claude Code hooks that gate, guide, and finish work.`
-- **hookStat candidates:**
-  - `{ label: "HOOKS", value: "6" }`
-  - `{ label: "GATES", value: "<count of PreToolUse>" }`
-  - `{ label: "RECOVERED", value: "<count of sessions saved>" }`
+- **oneLiner:** `Claude Code hooks that gate, guide, and finish work.`
+- **hookStat:** `{ label: "HOOKS", value: "6" }` — LOCKED 2026-05-25 (Briggsy: confirm the count is 6).
 - **heroImage:** NEEDS CAPTURE — see capture queue
 - **heroImage_mobile_safe:** `tbd`
 - **liveUrl:** `null` (not a web-deployable project)
@@ -103,11 +94,8 @@ Builder-to-builder. Audience is AI-curious peer developers.
 
 - **hostProjectRoot:** `C:\Users\brigg\ai-learning-journey\projects\pacman`
 - **status:** `active`
-- **oneLiner [STRAWMAN]:** `Pac-Man clone. Browser. No frameworks.`
-- **hookStat candidates:**
-  - `{ label: "GHOSTS", value: "4" }`
-  - `{ label: "LINES", value: "<count from claude-credit>" }`
-  - `{ label: "TESTS", value: "<count>" }`
+- **oneLiner:** `Pac-Man clone. Browser. No frameworks.`
+- **hookStat:** `{ label: "GHOSTS", value: "4" }` — LOCKED 2026-05-25.
 - **heroImage:** NEEDS CAPTURE — see capture queue
 - **heroImage_mobile_safe:** `tbd`
 - **liveUrl:** `null` (no URL in repo; `pacman.vercel.app` is a stranger's app — not deployed by us, or under an unknown slug. See Deploys to fix.)
@@ -122,11 +110,8 @@ Builder-to-builder. Audience is AI-curious peer developers.
 
 - **hostProjectRoot:** `C:\Users\brigg\ai-learning-journey\projects\skills`
 - **status:** `active`
-- **oneLiner [STRAWMAN]:** `Slash-commands Claude reaches for: distill, brief, doc-audit.`
-- **hookStat candidates:**
-  - `{ label: "SKILLS", value: "3" }`
-  - `{ label: "ASSERTIONS", value: "20" }`
-  - `{ label: "PASS RATE", value: "100%" }`
+- **oneLiner:** `Slash-commands Claude reaches for: distill, brief, doc-audit.`
+- **hookStat:** `{ label: "PASS RATE", value: "100%" }` — LOCKED 2026-05-25 (the doc-audit eval, 20/20).
 - **heroImage:** NEEDS CAPTURE — see capture queue
 - **heroImage_mobile_safe:** `tbd`
 - **liveUrl:** `null` (not a web-deployable project)
@@ -141,11 +126,8 @@ Builder-to-builder. Audience is AI-curious peer developers.
 
 - **hostProjectRoot:** `C:\Users\brigg\ai-learning-journey\projects\tic-tac-toe`
 - **status:** `active`
-- **oneLiner [STRAWMAN]:** `The smallest possible game. Three files, one afternoon.`
-- **hookStat candidates:**
-  - `{ label: "FILES", value: "3" }`
-  - `{ label: "LINES", value: "<count from claude-credit>" }`
-  - `{ label: "TESTS", value: "<count>" }`
+- **oneLiner:** `The smallest possible game. Three files, one afternoon.`
+- **hookStat:** `{ label: "FILES", value: "3" }` — LOCKED 2026-05-25 (index.html / script.js / style.css).
 - **heroImage:** NEEDS CAPTURE — see capture queue
 - **heroImage_mobile_safe:** `tbd`
 - **liveUrl:** `null` (no URL in repo; `tic-tac-toe.vercel.app` is a stranger's app. See Deploys to fix.)
@@ -160,11 +142,8 @@ Builder-to-builder. Audience is AI-curious peer developers.
 
 - **hostProjectRoot:** `C:\Users\brigg\ai-learning-journey\projects\top-down-racer-02`
 - **status:** `active`
-- **oneLiner [STRAWMAN]:** `First racer. Reinforcement-learning agent learns the track.`
-- **hookStat candidates:**
-  - `{ label: "STACK", value: "ONNX+RL" }`
-  - `{ label: "TRAINING", value: "<duration>" }`
-  - `{ label: "EVIDENCE", value: "PPTX+DOCX" }`
+- **oneLiner:** `The first racer. Where the self-driving agent was born.`
+- **hookStat:** `{ label: "STACK", value: "ONNX+RL" }` — LOCKED 2026-05-25.
 - **heroImage [STRAWMAN]:** `temp/Screenshot 2026-03-01 113028.png` OR `temp/total time.png` (verified to exist; consider re-capture for quality)
 - **heroImage_mobile_safe:** `tbd`
 - **liveUrl:** `https://top-down-racer-02.vercel.app` ✅ (verified live — 200, `<title>Top-Down Racer</title>`)
@@ -179,11 +158,8 @@ Builder-to-builder. Audience is AI-curious peer developers.
 
 - **hostProjectRoot:** `C:\Users\brigg\ai-learning-journey\projects\top-down-racer-04`
 - **status:** `active`
-- **oneLiner [STRAWMAN]:** `Top-down racer, polished. 487 tests, 8 phases.`
-- **hookStat candidates:**
-  - `{ label: "TESTS", value: "487" }`
-  - `{ label: "PHASES", value: "8" }`
-  - `{ label: "RUNTIME", value: "Python 3.12" }`
+- **oneLiner:** `The AI taught itself to drive the car. The polished racer.`
+- **hookStat:** `{ label: "TESTS", value: "487" }` — LOCKED 2026-05-25 (the one-liner carries the AI-drives wow; this is the rigor flex).
 - **heroImage [STRAWMAN]:** `public/assets/tracks/track01-bg.png` (gameplay-bearing) OR `public/assets/ui/menu-bg.png` (menu hero) — both verified to exist
 - **heroImage_mobile_safe:** `tbd`
 - **liveUrl:** `https://top-down-racer-04.vercel.app` ✅ (verified live — 200, `<title>Top-Down Racer v04</title>`)
@@ -198,12 +174,9 @@ Builder-to-builder. Audience is AI-curious peer developers.
 
 - **hostProjectRoot:** `C:\Users\brigg\ai-learning-journey\projects\undercover-mob-boss`
 - **status:** `active`
-- **oneLiner [STRAWMAN]:** `Voting game with hidden roles. Phones as controllers, TV as the stage.`
-- **hookStat candidates:**
-  - `{ label: "HOWPLAY", value: "1700 lines" }` (the responsive masterpiece — UMB IS this site's mobile bar reference)
-  - `{ label: "ROLES", value: "3" }`
-  - `{ label: "POWERS", value: "4" }`
-- **heroImage [STRAWMAN]:** `public/assets/trailer-table-overhead.jpg` OR `public/assets/trailer-dossier-spread.jpg` (paths corrected — assets live under `public/assets/`, verified to exist)
+- **oneLiner:** `Briggsy family verified.` (Briggsy, 2026-05-25 — the cinematic hero image carries the "what"; this line is the warm endorsement flex. NOT a §11 authorship claim — it's a playtest stamp.)
+- **hookStat:** `{ label: "PLAYERS", value: "2–10" }` — quiet party-scale support; the **image is the real hook** for UMB (the off-the-charts imagery sells itself). LOCKED 2026-05-25.
+- **heroImage:** `public/assets/trailer-table-overhead.jpg` — the cinematic establishing shot, LOCKED as the lead (dossier-spread + the rest stay in the detail-page gallery). Verified to exist.
 - **heroImage_mobile_safe:** `tbd`
 - **liveUrl:** `https://undercover-mob-boss.vercel.app` ✅ (verified live — 308→200, `<title>Undercover Mob Boss — Host View</title>`)
 - **repoUrl:** `https://github.com/mbriggsy/ai-learning-journey/tree/main/projects/undercover-mob-boss`
@@ -277,8 +250,9 @@ Hero captures needed in parallel with Phase 0–2 build. Worksheet row's `heroIm
 - [ ] skills — slash-command screencap (/distill or /brief firing)
 - [ ] tic-tac-toe — mid-game screenshot
 - [ ] "the misses" tile — composite visual (faded grid OR grayscale collage)
+- [ ] burned — UPGRADE hero to a cinematic frame from the **origin story video** (`docs/origin-trailer-v2/`) when rendered; interim arena art (`operative-silhouette` / `portrait-agent-x`) ships meanwhile.
 
-(burned, TDR-02, TDR-04, UMB have verified existing hero candidates — pick at draft time, no capture needed.)
+(TDR-02, TDR-04, UMB have verified existing hero candidates — pick at draft time, no capture needed. burned ships on interim art now; its lead frame is pending the origin video.)
 
 Mobile-safe verification per capture: open the captured image in DevTools mobile emulation (320 / 375 / 430px) AND in the desktop ~40%-viewport detail-page crop. Mark `heroImage_mobile_safe:` per row when both look intentional.
 

@@ -53,7 +53,7 @@ Builder-to-builder. Audience is AI-curious peer developers.
   - `{ label: "PHASES", value: "6" }`
 - **heroImage [STRAWMAN — pick one]:** `public/assets/arena/mahogany-horizontal.png` · `public/assets/arena/operative-silhouette.png` · `public/assets/arena/portrait-agent-x.png` · or a card from `public/assets/cards/*.webp` (verified to exist)
 - **heroImage_mobile_safe:** `tbd`
-- **liveUrl:** `null` (Cloudflare Workers project — no Vercel/Workers URL committed in repo; if a `workers.dev` deploy exists, add it during review)
+- **liveUrl:** `https://burned-cxa.pages.dev/board` ✅ (verified live — 200, `<title>BURNED</title>`; Cloudflare Pages, slug `burned-cxa`; `/board` is the host/TV entry. URL was in burned's own README — my earlier deploy grep false-negatived it.)
 - **repoUrl:** `https://github.com/mbriggsy/ai-learning-journey/tree/main/projects/burned`
 - **description (3 sentences) [STRAWMAN]:**
   1. `Real-time browser card game for 2–10 players on the couch.`
@@ -251,7 +251,7 @@ Briggsy reviews + edits each one-liner. The honest framing is the point — anti
 - `claude-credit` is **not published** to npm; it's the internal tape measure, not a product.
 - Phase 7 (the old "bottom CTA" phase) is gutted at reconciliation — its job becomes "design how the page *ends* on the work."
 - The `cta.ts` / `resolveCtaCopy` / CTA-state plumbing (Phase 7 + About §2) is dead — remove during Phase 7 reconciliation.
-- Per-project links live on the **detail page** (clean tiles — no tile buttons): "Source →" always + "Try it →" where hosted (TDR-02, TDR-04, UMB — and burned once its Cloudflare URL is wired). They point at the *work*, not the tool.
+- Per-project links live on the **detail page** (clean tiles — no tile buttons): "Source →" always + "Try it →" where hosted (TDR-02, TDR-04, UMB, burned). They point at the *work*, not the tool.
 
 ---
 
@@ -259,7 +259,6 @@ Briggsy reviews + edits each one-liner. The honest framing is the point — anti
 
 Projects whose recorded `liveUrl` is null. Briggsy decides whether to re-deploy or leave as null. (Generic slugs like `pacman.vercel.app` / `tic-tac-toe.vercel.app` are squatted by unrelated apps — NOT slug-guessed as ours.)
 
-- **burned** — Cloudflare Workers project; no deploy URL committed in repo. If a `workers.dev`/custom URL exists, add it.
 - **data-engineering** — `data-engineering.vercel.app` → 404. Not a web app; likely stays null.
 - **hooks** — not web-deployable; stays null.
 - **skills** — not web-deployable; stays null.

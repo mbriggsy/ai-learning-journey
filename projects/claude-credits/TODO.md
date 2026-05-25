@@ -43,7 +43,7 @@ Grid = **9 project tiles + 1 "the misses" archive coda = 10 surfaces** (no meta 
 **Preflight −1 — DONE except Briggsy's worksheet review** (`phase-preflight.md`):
 - ✅ −1.1 publish gate → resolved as NO publish (tool stays internal); tool README de-implied (`pnpm add claude-credit` → "not published" note). No CTA-state to record.
 - ✅ −1.2 YAML → `projects:`(9) + `meta:`(2) + `archive:`(6). meta scanned for **totals only** (no tiles — "count everything"). Validated via js-yaml. Backup at `~/.claude-credit-projects.yaml.bak.2026-05-24`.
-- ✅ −1.3 deploy verify → 3 live (TDR-02, TDR-04, UMB, all 200 + fingerprinted), 6 null (in worksheet `## Deploys to fix`). Squatter methodology held — no false positives.
+- ✅ −1.3 deploy verify → **4 live** (TDR-02, TDR-04, UMB, burned `burned-cxa.pages.dev/board` — all 200 + fingerprinted), 5 null (in worksheet `## Deploys to fix`). burned's URL was in its README; my first deploy grep false-negatived it (empty grep ≠ confirmed absence — see insight 001). Squatter methodology held — no false positives.
 - ✅ −1.5 worksheet → `docs/editorial.md` drafted (9 rows + the misses, corrected UMB/TDR asset paths, no meta, no CTA block).
 - [ ] **Briggsy reviews `docs/editorial.md`** — voice/oneLiners/hookStat picks/descriptions/archive one-liners + check the sign-off boxes. Also veto/confirm the meta-excluded-from-totals call.
 - Cascade commit (preflight→phase-0/4/5) is MOOT — those amendments were already absorbed when each phase was individually deepened. Verified.

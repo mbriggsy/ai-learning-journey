@@ -29,6 +29,8 @@ Two compounding traps:
 ## Key Insight
 When you delete a field/symbol that lived in many places, your verification must search for the **identifier itself**, not the **shapes you remember using it in**. The references that bite are in forms you didn't think to grep: type signatures, diagrams, string literals, fixtures, prose. A "clean" grep only proves *the patterns you wrote* are gone — not that the symbol is.
 
+**Corollary (a second instance, same week): an empty grep result is NOT proof of absence.** A wrong glob, a too-narrow alternation, or a brace-expansion that silently matches nothing returns "0 hits" that looks identical to a true absence. Real cost: a deploy-URL grep over project files returned "No matches," so a live project (`burned-cxa.pages.dev`, plainly in the project's own README) was recorded as "not deployed." **When a "no matches" is surprising or load-bearing (e.g. "this project has no deploy URL," "this symbol is fully removed"), confirm the absence with a direct read of the obvious file before acting on it.**
+
 ## Also Applies To
 - Renaming/removing a function, prop, or DB column across a real codebase (not just docs).
 - Deepening-drift (header amended, body code-block left stale) — same family: fix bodies, grep the bare name.

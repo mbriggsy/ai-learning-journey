@@ -1,0 +1,10 @@
+# claude-credit per-project config — editorial for the claude-credits showcase site (locked 2026-05-25).
+editorial:
+  oneLiner: "Pac-Man clone. Browser. No frameworks."
+  hookStat:
+    label: "GHOSTS"
+    value: "4"
+  liveUrl: null
+  repoUrl: "https://github.com/mbriggsy/ai-learning-journey/tree/main/projects/pacman"
+  status: "active"
+  description: "Classic arcade clone with ghost AI. Built to test how small a game could be without frameworks."

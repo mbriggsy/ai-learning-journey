@@ -1,0 +1,10 @@
+# claude-credit per-project config — editorial for the claude-credits showcase site (locked 2026-05-25).
+editorial:
+  oneLiner: "The smallest possible game. Four files, one afternoon."
+  hookStat:
+    label: "FILES"
+    value: "4"
+  liveUrl: null
+  repoUrl: "https://github.com/mbriggsy/ai-learning-journey/tree/main/projects/tic-tac-toe"
+  status: "active"
+  description: "Three-by-three grid, two players, classic rules. Built as a calibration project for the smallest scope claude-credit could measure."

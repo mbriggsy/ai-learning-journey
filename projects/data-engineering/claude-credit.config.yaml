@@ -1,0 +1,10 @@
+# claude-credit per-project config — editorial for the claude-credits showcase site (locked 2026-05-25).
+editorial:
+  oneLiner: "Azure data engineering experiments. ADF, Databricks, Unity Catalog."
+  hookStat:
+    label: "STACK"
+    value: "ADF+UC"
+  liveUrl: null
+  repoUrl: "https://github.com/mbriggsy/ai-learning-journey/tree/main/projects/data-engineering"
+  status: "active"
+  description: "Cloud data pipelines in the Azure focus stack — ADF, Databricks, Unity Catalog. The real question underneath: how do the agentic-workflow learnings from these projects apply to the enterprise data landscape?"

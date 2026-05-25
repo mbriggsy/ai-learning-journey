@@ -28,8 +28,8 @@
     "modelBreakdown": [
       {
         "model": "Opus 4.7",
-        "sessions": 39172,
-        "tokensProcessed": 10700486602
+        "sessions": 39224,
+        "tokensProcessed": 10719704867
       },
       {
         "model": "<synthetic>",
@@ -39,25 +39,25 @@
     ],
     "projectCount": 9,
     "tokenWindowDays": 30,
-    "tokenWindowEndISO": "2026-05-25T18:06:15.447Z",
+    "tokenWindowEndISO": "2026-05-25T18:26:39.878Z",
     "tokenWindowStartISO": "2026-04-25T13:40:35.593Z",
-    "totalAllBytes": 546363338,
-    "totalAllFiles": 2012,
-    "totalAuthoredBytes": 59809846,
-    "totalAuthoredFiles": 2069,
-    "totalAuthoredLines": 531978,
-    "totalCommits": 1108,
+    "totalAllBytes": 546373411,
+    "totalAllFiles": 2020,
+    "totalAuthoredBytes": 59819919,
+    "totalAuthoredFiles": 2077,
+    "totalAuthoredLines": 532094,
+    "totalCommits": 1110,
     "totalDiscardedAssets": 85,
     "totalIterationProxies": 17,
     "totalPipelineGeneratedBytes": 485223897,
     "totalPipelineGeneratedFiles": 452,
     "totalPlanCount": 74,
-    "totalPlanLines": 81817,
-    "totalSessions": 39175,
+    "totalPlanLines": 81827,
+    "totalSessions": 39227,
     "totalTestCases": 3621,
     "totalTestLines": 66256,
-    "totalTokensFresh": 346026637,
-    "totalTokensProcessed": 10700486602,
+    "totalTokensFresh": 346199312,
+    "totalTokensProcessed": 10719704867,
     "totalToolGeneratedBytes": 886670,
     "totalToolGeneratedFiles": 9
   },
@@ -150,7 +150,7 @@
         "regenScriptCount": 0,
         "sampleEvalRunCount": 0
       },
-      "scannedAt": "2026-05-25T18:06:31.693Z",
+      "scannedAt": "2026-05-25T18:26:55.947Z",
       "testCases": 51,
       "testLines": 1251,
       "tiers": [
@@ -317,11 +317,11 @@
       "git": {
         "assetModificationEvents": 4,
         "assetUniquePathsTouched": 4,
-        "commitMessageLines": 909,
+        "commitMessageLines": 943,
         "commitsByAuthor": [
           {
             "author": "mbriggsy",
-            "count": 52
+            "count": 54
           }
         ],
         "discardedAssetByKind": {},
@@ -329,23 +329,23 @@
         "discardedAssetFiles": 0,
         "firstCommitISO": "2026-05-23T23:58:49-04:00",
         "isGitRepo": true,
-        "lastCommitISO": "2026-05-25T13:59:18-04:00",
-        "lifetimeLinesAdded": 16307,
-        "lifetimeLinesRemoved": 3130,
+        "lastCommitISO": "2026-05-25T14:08:29-04:00",
+        "lifetimeLinesAdded": 16542,
+        "lifetimeLinesRemoved": 3208,
         "linesByAuthor": [
           {
             "author": "mbriggsy",
             "coAuthoredCommits": 0,
-            "commits": 52,
-            "linesAdded": 16307,
-            "linesRemoved": 3130
+            "commits": 54,
+            "linesAdded": 16542,
+            "linesRemoved": 3208
           },
           {
             "author": "Claude Opus 4.7 (1M context)",
-            "coAuthoredCommits": 48,
+            "coAuthoredCommits": 50,
             "commits": 0,
-            "linesAdded": 15341,
-            "linesRemoved": 2329
+            "linesAdded": 15576,
+            "linesRemoved": 2407
           }
         ],
         "projectAgeDays": 1,
@@ -361,7 +361,7 @@
               "date": "2026-05-24"
             },
             {
-              "count": 22,
+              "count": 24,
               "date": "2026-05-25"
             }
           ],
@@ -375,29 +375,29 @@
             "date": "2026-05-24"
           }
         },
-        "totalCommits": 52,
-        "uniqueFilesTouched": 66
+        "totalCommits": 54,
+        "uniqueFilesTouched": 71
       },
       "grandTotals": {
-        "allBytes": 981180,
+        "allBytes": 985557,
         "allFiles": 58,
-        "authoredBytes": 811566,
+        "authoredBytes": 815943,
         "authoredFiles": 53,
-        "authoredLines": 12116,
+        "authoredLines": 12130,
         "pipelineGeneratedBytes": 131711,
         "pipelineGeneratedFiles": 4,
         "toolGeneratedBytes": 37903,
         "toolGeneratedFiles": 1
       },
       "planCount": 12,
-      "planLines": 6900,
+      "planLines": 6910,
       "projectName": "claude-credits",
       "proxies": {
         "iterationProxyTotal": 0,
         "regenScriptCount": 0,
         "sampleEvalRunCount": 0
       },
-      "scannedAt": "2026-05-25T18:06:32.819Z",
+      "scannedAt": "2026-05-25T18:26:57.100Z",
       "testCases": 23,
       "testLines": 72,
       "tiers": [
@@ -407,11 +407,11 @@
               "category": "docs",
               "subcategories": [
                 {
-                  "bytes": 620769,
+                  "bytes": 622912,
                   "files": 12,
-                  "nonBlankLines": 5395,
+                  "nonBlankLines": 5404,
                   "subcategory": "plans",
-                  "totalLines": 6900
+                  "totalLines": 6910
                 },
                 {
                   "bytes": 31060,
@@ -421,11 +421,11 @@
                   "totalLines": 424
                 },
                 {
-                  "bytes": 15001,
+                  "bytes": 17235,
                   "files": 2,
-                  "nonBlankLines": 69,
+                  "nonBlankLines": 73,
                   "subcategory": "readmes",
-                  "totalLines": 95
+                  "totalLines": 99
                 },
                 {
                   "bytes": 6995,
@@ -436,11 +436,11 @@
                 }
               ],
               "totals": {
-                "bytes": 673825,
+                "bytes": 678202,
                 "files": 18,
-                "nonBlankLines": 5855,
+                "nonBlankLines": 5868,
                 "subcategory": "<totals>",
-                "totalLines": 7521
+                "totalLines": 7535
               }
             },
             {
@@ -519,11 +519,11 @@
           ],
           "tier": "authored",
           "totals": {
-            "bytes": 811566,
+            "bytes": 815943,
             "files": 53,
-            "nonBlankLines": 10371,
+            "nonBlankLines": 10384,
             "subcategory": "<totals>",
-            "totalLines": 12116
+            "totalLines": 12130
           }
         },
         {
@@ -600,33 +600,33 @@
         "byModel": [
           {
             "model": "Opus 4.7",
-            "sessions": 4182,
-            "tokensProcessed": 1025154021
+            "sessions": 4234,
+            "tokensProcessed": 1044372286
           }
         ],
-        "cacheCreationInputTokens": 34900918,
-        "cacheReadInputTokens": 980439304,
-        "inputTokens": 843030,
-        "outputTokens": 8970769,
+        "cacheCreationInputTokens": 34999503,
+        "cacheReadInputTokens": 999484894,
+        "inputTokens": 844322,
+        "outputTokens": 9043567,
         "parseHealth": {
           "fileReadErrors": 0,
           "lineParseErrors": 0,
           "usageShapeWarnings": 0
         },
-        "sessionCount": 4182,
+        "sessionCount": 4234,
         "sidechainTokens": 0,
-        "tokensFresh": 44714717,
-        "tokensProcessed": 1025154021,
+        "tokensFresh": 44887392,
+        "tokensProcessed": 1044372286,
         "windowDays": 1,
-        "windowEndISO": "2026-05-25T18:06:15.447Z",
+        "windowEndISO": "2026-05-25T18:26:39.878Z",
         "windowStartISO": "2026-05-24T03:28:43.459Z"
       },
       "topSubcategories": [
         {
-          "bytes": 620769,
+          "bytes": 622912,
           "category": "docs",
           "files": 12,
-          "lines": 6900,
+          "lines": 6910,
           "subcategory": "plans",
           "tier": "authored"
         },
@@ -674,7 +674,19 @@
         "misc-media": 3639759,
         "video": 142165226
       },
-      "editorial": null,
+      "editorial": {
+        "description": "Real-time browser card game for 2–10 players on the couch. Built to prove a visual bar — Archer-coded illustration over Cloudflare Workers + Durable Objects.",
+        "gallery": [],
+        "heroImage": "/assets/burned/operative-silhouette.png",
+        "hookStat": {
+          "label": "CARDS",
+          "value": "120"
+        },
+        "liveUrl": "https://burned-cxa.pages.dev/board",
+        "oneLiner": "Couch-of-friends spy comedy. Archer-coded card game in the browser.",
+        "repoUrl": "https://github.com/mbriggsy/ai-learning-journey/tree/main/projects/burned",
+        "status": "active"
+      },
       "git": {
         "assetModificationEvents": 196,
         "assetUniquePathsTouched": 137,
@@ -889,11 +901,11 @@
         "uniqueFilesTouched": 980
       },
       "grandTotals": {
-        "allBytes": 446476125,
+        "allBytes": 446476827,
         "allFiles": 1093,
-        "authoredBytes": 9269079,
+        "authoredBytes": 9269781,
         "authoredFiles": 820,
-        "authoredLines": 190316,
+        "authoredLines": 190329,
         "pipelineGeneratedBytes": 436926606,
         "pipelineGeneratedFiles": 271,
         "toolGeneratedBytes": 280440,
@@ -907,7 +919,7 @@
         "regenScriptCount": 7,
         "sampleEvalRunCount": 10
       },
-      "scannedAt": "2026-05-25T18:06:22.155Z",
+      "scannedAt": "2026-05-25T18:26:46.404Z",
       "testCases": 1326,
       "testLines": 28488,
       "tiers": [
@@ -1046,29 +1058,29 @@
               "category": "data",
               "subcategories": [
                 {
-                  "bytes": 32699,
+                  "bytes": 33401,
                   "files": 16,
-                  "nonBlankLines": 457,
+                  "nonBlankLines": 469,
                   "subcategory": "lookup-tables",
-                  "totalLines": 469
+                  "totalLines": 482
                 }
               ],
               "totals": {
-                "bytes": 32699,
+                "bytes": 33401,
                 "files": 16,
-                "nonBlankLines": 457,
+                "nonBlankLines": 469,
                 "subcategory": "<totals>",
-                "totalLines": 469
+                "totalLines": 482
               }
             }
           ],
           "tier": "authored",
           "totals": {
-            "bytes": 9269079,
+            "bytes": 9269781,
             "files": 820,
-            "nonBlankLines": 163819,
+            "nonBlankLines": 163831,
             "subcategory": "<totals>",
-            "totalLines": 190316
+            "totalLines": 190329
           }
         },
         {
@@ -1262,7 +1274,19 @@
         "misc-media": 0,
         "video": 0
       },
-      "editorial": null,
+      "editorial": {
+        "description": "Cloud data pipelines in the Azure focus stack — ADF, Databricks, Unity Catalog. The real question underneath: how do the agentic-workflow learnings from these projects apply to the enterprise data landscape?",
+        "gallery": [],
+        "heroImage": null,
+        "hookStat": {
+          "label": "STACK",
+          "value": "ADF+UC"
+        },
+        "liveUrl": null,
+        "oneLiner": "Azure data engineering experiments. ADF, Databricks, Unity Catalog.",
+        "repoUrl": "https://github.com/mbriggsy/ai-learning-journey/tree/main/projects/data-engineering",
+        "status": "active"
+      },
       "git": {
         "assetModificationEvents": 0,
         "assetUniquePathsTouched": 0,
@@ -1340,11 +1364,11 @@
         "uniqueFilesTouched": 18
       },
       "grandTotals": {
-        "allBytes": 127380,
-        "allFiles": 13,
-        "authoredBytes": 127380,
-        "authoredFiles": 13,
-        "authoredLines": 3556,
+        "allBytes": 127990,
+        "allFiles": 14,
+        "authoredBytes": 127990,
+        "authoredFiles": 14,
+        "authoredLines": 3566,
         "pipelineGeneratedBytes": 0,
         "pipelineGeneratedFiles": 0,
         "toolGeneratedBytes": 0,
@@ -1358,7 +1382,7 @@
         "regenScriptCount": 0,
         "sampleEvalRunCount": 0
       },
-      "scannedAt": "2026-05-25T18:06:23.118Z",
+      "scannedAt": "2026-05-25T18:26:47.380Z",
       "testCases": 0,
       "testLines": 0,
       "tiers": [
@@ -1408,15 +1432,34 @@
                 "subcategory": "<totals>",
                 "totalLines": 687
               }
+            },
+            {
+              "category": "data",
+              "subcategories": [
+                {
+                  "bytes": 610,
+                  "files": 1,
+                  "nonBlankLines": 10,
+                  "subcategory": "lookup-tables",
+                  "totalLines": 10
+                }
+              ],
+              "totals": {
+                "bytes": 610,
+                "files": 1,
+                "nonBlankLines": 10,
+                "subcategory": "<totals>",
+                "totalLines": 10
+              }
             }
           ],
           "tier": "authored",
           "totals": {
-            "bytes": 127380,
-            "files": 13,
-            "nonBlankLines": 2990,
+            "bytes": 127990,
+            "files": 14,
+            "nonBlankLines": 3000,
             "subcategory": "<totals>",
-            "totalLines": 3556
+            "totalLines": 3566
           }
         },
         {
@@ -1491,6 +1534,14 @@
           "lines": 139,
           "subcategory": "readmes",
           "tier": "authored"
+        },
+        {
+          "bytes": 610,
+          "category": "data",
+          "files": 1,
+          "lines": 10,
+          "subcategory": "lookup-tables",
+          "tier": "authored"
         }
       ]
     },
@@ -1502,7 +1553,19 @@
         "misc-media": 0,
         "video": 0
       },
-      "editorial": null,
+      "editorial": {
+        "description": "PreToolUse + Stop + PostToolUse hooks for Claude Code. Built after losing a session to WebFetch hanging — the rules are the lessons, and it's the source of the elite-engineer manifesto that ships into every session.",
+        "gallery": [],
+        "heroImage": null,
+        "hookStat": {
+          "label": "HOOKS",
+          "value": "5"
+        },
+        "liveUrl": null,
+        "oneLiner": "Claude Code hooks that gate, guide, and finish work.",
+        "repoUrl": "https://github.com/mbriggsy/ai-learning-journey/tree/main/projects/hooks",
+        "status": "active"
+      },
       "git": {
         "assetModificationEvents": 0,
         "assetUniquePathsTouched": 0,
@@ -1583,11 +1646,11 @@
         "uniqueFilesTouched": 10
       },
       "grandTotals": {
-        "allBytes": 40820,
-        "allFiles": 10,
-        "authoredBytes": 40820,
-        "authoredFiles": 10,
-        "authoredLines": 1162,
+        "allBytes": 41407,
+        "allFiles": 11,
+        "authoredBytes": 41407,
+        "authoredFiles": 11,
+        "authoredLines": 1172,
         "pipelineGeneratedBytes": 0,
         "pipelineGeneratedFiles": 0,
         "toolGeneratedBytes": 0,
@@ -1601,7 +1664,7 @@
         "regenScriptCount": 0,
         "sampleEvalRunCount": 0
       },
-      "scannedAt": "2026-05-25T18:06:24.025Z",
+      "scannedAt": "2026-05-25T18:26:48.275Z",
       "testCases": 0,
       "testLines": 0,
       "tiers": [
@@ -1651,15 +1714,34 @@
                 "subcategory": "<totals>",
                 "totalLines": 120
               }
+            },
+            {
+              "category": "data",
+              "subcategories": [
+                {
+                  "bytes": 587,
+                  "files": 1,
+                  "nonBlankLines": 10,
+                  "subcategory": "lookup-tables",
+                  "totalLines": 10
+                }
+              ],
+              "totals": {
+                "bytes": 587,
+                "files": 1,
+                "nonBlankLines": 10,
+                "subcategory": "<totals>",
+                "totalLines": 10
+              }
             }
           ],
           "tier": "authored",
           "totals": {
-            "bytes": 40820,
-            "files": 10,
-            "nonBlankLines": 909,
+            "bytes": 41407,
+            "files": 11,
+            "nonBlankLines": 919,
             "subcategory": "<totals>",
-            "totalLines": 1162
+            "totalLines": 1172
           }
         },
         {
@@ -1710,6 +1792,14 @@
           "lines": 120,
           "subcategory": "source",
           "tier": "authored"
+        },
+        {
+          "bytes": 587,
+          "category": "data",
+          "files": 1,
+          "lines": 10,
+          "subcategory": "lookup-tables",
+          "tier": "authored"
         }
       ]
     },
@@ -1721,7 +1811,19 @@
         "misc-media": 0,
         "video": 0
       },
-      "editorial": null,
+      "editorial": {
+        "description": "Classic arcade clone with ghost AI. Built to test how small a game could be without frameworks.",
+        "gallery": [],
+        "heroImage": null,
+        "hookStat": {
+          "label": "GHOSTS",
+          "value": "4"
+        },
+        "liveUrl": null,
+        "oneLiner": "Pac-Man clone. Browser. No frameworks.",
+        "repoUrl": "https://github.com/mbriggsy/ai-learning-journey/tree/main/projects/pacman",
+        "status": "active"
+      },
       "git": {
         "assetModificationEvents": 0,
         "assetUniquePathsTouched": 0,
@@ -1798,11 +1900,11 @@
         "uniqueFilesTouched": 7
       },
       "grandTotals": {
-        "allBytes": 125979,
-        "allFiles": 7,
-        "authoredBytes": 125979,
-        "authoredFiles": 7,
-        "authoredLines": 3359,
+        "allBytes": 126432,
+        "allFiles": 8,
+        "authoredBytes": 126432,
+        "authoredFiles": 8,
+        "authoredLines": 3369,
         "pipelineGeneratedBytes": 0,
         "pipelineGeneratedFiles": 0,
         "toolGeneratedBytes": 0,
@@ -1816,7 +1918,7 @@
         "regenScriptCount": 0,
         "sampleEvalRunCount": 0
       },
-      "scannedAt": "2026-05-25T18:06:24.938Z",
+      "scannedAt": "2026-05-25T18:26:49.187Z",
       "testCases": 0,
       "testLines": 0,
       "tiers": [
@@ -1880,15 +1982,34 @@
                 "subcategory": "<totals>",
                 "totalLines": 357
               }
+            },
+            {
+              "category": "data",
+              "subcategories": [
+                {
+                  "bytes": 453,
+                  "files": 1,
+                  "nonBlankLines": 10,
+                  "subcategory": "lookup-tables",
+                  "totalLines": 10
+                }
+              ],
+              "totals": {
+                "bytes": 453,
+                "files": 1,
+                "nonBlankLines": 10,
+                "subcategory": "<totals>",
+                "totalLines": 10
+              }
             }
           ],
           "tier": "authored",
           "totals": {
-            "bytes": 125979,
-            "files": 7,
-            "nonBlankLines": 2839,
+            "bytes": 126432,
+            "files": 8,
+            "nonBlankLines": 2849,
             "subcategory": "<totals>",
-            "totalLines": 3359
+            "totalLines": 3369
           }
         },
         {
@@ -1966,7 +2087,19 @@
         "misc-media": 0,
         "video": 0
       },
-      "editorial": null,
+      "editorial": {
+        "description": "Three custom Claude skills: /distill (preserve lessons), /brief (recall them), and a doc-audit quality gate. Built after losing context to fresh sessions one too many times.",
+        "gallery": [],
+        "heroImage": null,
+        "hookStat": {
+          "label": "PASS RATE",
+          "value": "100%"
+        },
+        "liveUrl": null,
+        "oneLiner": "Slash-commands Claude reaches for: distill, brief, doc-audit.",
+        "repoUrl": "https://github.com/mbriggsy/ai-learning-journey/tree/main/projects/skills",
+        "status": "active"
+      },
       "git": {
         "assetModificationEvents": 0,
         "assetUniquePathsTouched": 0,
@@ -2048,11 +2181,11 @@
         "uniqueFilesTouched": 121
       },
       "grandTotals": {
-        "allBytes": 182235,
-        "allFiles": 36,
-        "authoredBytes": 182235,
-        "authoredFiles": 36,
-        "authoredLines": 4876,
+        "allBytes": 182795,
+        "allFiles": 37,
+        "authoredBytes": 182795,
+        "authoredFiles": 37,
+        "authoredLines": 4886,
         "pipelineGeneratedBytes": 0,
         "pipelineGeneratedFiles": 0,
         "toolGeneratedBytes": 0,
@@ -2066,7 +2199,7 @@
         "regenScriptCount": 0,
         "sampleEvalRunCount": 0
       },
-      "scannedAt": "2026-05-25T18:06:25.865Z",
+      "scannedAt": "2026-05-25T18:26:50.119Z",
       "testCases": 0,
       "testLines": 0,
       "tiers": [
@@ -2076,19 +2209,19 @@
               "category": "data",
               "subcategories": [
                 {
-                  "bytes": 111880,
-                  "files": 5,
-                  "nonBlankLines": 2876,
+                  "bytes": 112440,
+                  "files": 6,
+                  "nonBlankLines": 2886,
                   "subcategory": "lookup-tables",
-                  "totalLines": 2878
+                  "totalLines": 2888
                 }
               ],
               "totals": {
-                "bytes": 111880,
-                "files": 5,
-                "nonBlankLines": 2876,
+                "bytes": 112440,
+                "files": 6,
+                "nonBlankLines": 2886,
                 "subcategory": "<totals>",
-                "totalLines": 2878
+                "totalLines": 2888
               }
             },
             {
@@ -2146,11 +2279,11 @@
           ],
           "tier": "authored",
           "totals": {
-            "bytes": 182235,
-            "files": 36,
-            "nonBlankLines": 4311,
+            "bytes": 182795,
+            "files": 37,
+            "nonBlankLines": 4321,
             "subcategory": "<totals>",
-            "totalLines": 4876
+            "totalLines": 4886
           }
         },
         {
@@ -2179,10 +2312,10 @@
       "tokens": null,
       "topSubcategories": [
         {
-          "bytes": 111880,
+          "bytes": 112440,
           "category": "data",
-          "files": 5,
-          "lines": 2878,
+          "files": 6,
+          "lines": 2888,
           "subcategory": "lookup-tables",
           "tier": "authored"
         },
@@ -2228,7 +2361,19 @@
         "misc-media": 0,
         "video": 0
       },
-      "editorial": null,
+      "editorial": {
+        "description": "Three-by-three grid, two players, classic rules. Built as a calibration project for the smallest scope claude-credit could measure.",
+        "gallery": [],
+        "heroImage": null,
+        "hookStat": {
+          "label": "FILES",
+          "value": "4"
+        },
+        "liveUrl": null,
+        "oneLiner": "The smallest possible game. Four files, one afternoon.",
+        "repoUrl": "https://github.com/mbriggsy/ai-learning-journey/tree/main/projects/tic-tac-toe",
+        "status": "active"
+      },
       "git": {
         "assetModificationEvents": 0,
         "assetUniquePathsTouched": 0,
@@ -2294,11 +2439,11 @@
         "uniqueFilesTouched": 9
       },
       "grandTotals": {
-        "allBytes": 179726,
-        "allFiles": 9,
-        "authoredBytes": 48110,
-        "authoredFiles": 8,
-        "authoredLines": 1192,
+        "allBytes": 180235,
+        "allFiles": 10,
+        "authoredBytes": 48619,
+        "authoredFiles": 9,
+        "authoredLines": 1202,
         "pipelineGeneratedBytes": 0,
         "pipelineGeneratedFiles": 0,
         "toolGeneratedBytes": 131616,
@@ -2312,7 +2457,7 @@
         "regenScriptCount": 0,
         "sampleEvalRunCount": 0
       },
-      "scannedAt": "2026-05-25T18:06:26.766Z",
+      "scannedAt": "2026-05-25T18:26:51.025Z",
       "testCases": 19,
       "testLines": 144,
       "tiers": [
@@ -2383,15 +2528,34 @@
                 "subcategory": "<totals>",
                 "totalLines": 45
               }
+            },
+            {
+              "category": "data",
+              "subcategories": [
+                {
+                  "bytes": 509,
+                  "files": 1,
+                  "nonBlankLines": 10,
+                  "subcategory": "lookup-tables",
+                  "totalLines": 10
+                }
+              ],
+              "totals": {
+                "bytes": 509,
+                "files": 1,
+                "nonBlankLines": 10,
+                "subcategory": "<totals>",
+                "totalLines": 10
+              }
             }
           ],
           "tier": "authored",
           "totals": {
-            "bytes": 48110,
-            "files": 8,
-            "nonBlankLines": 1063,
+            "bytes": 48619,
+            "files": 9,
+            "nonBlankLines": 1073,
             "subcategory": "<totals>",
-            "totalLines": 1192
+            "totalLines": 1202
           }
         },
         {
@@ -2489,7 +2653,19 @@
         "misc-media": 0,
         "video": 0
       },
-      "editorial": null,
+      "editorial": {
+        "description": "Top-down racing game with a learned agent driving the car. The foundation — TDR-04 inherits the engine and adds the polish.",
+        "gallery": [],
+        "heroImage": null,
+        "hookStat": {
+          "label": "STACK",
+          "value": "ONNX+RL"
+        },
+        "liveUrl": "https://top-down-racer-02.vercel.app",
+        "oneLiner": "The first racer. Where the self-driving agent was born.",
+        "repoUrl": "https://github.com/mbriggsy/ai-learning-journey/tree/main/projects/top-down-racer-02",
+        "status": "active"
+      },
       "git": {
         "assetModificationEvents": 0,
         "assetUniquePathsTouched": 0,
@@ -2608,11 +2784,11 @@
         "uniqueFilesTouched": 219
       },
       "grandTotals": {
-        "allBytes": 18126035,
-        "allFiles": 209,
-        "authoredBytes": 18088439,
-        "authoredFiles": 208,
-        "authoredLines": 81596,
+        "allBytes": 18126668,
+        "allFiles": 210,
+        "authoredBytes": 18089072,
+        "authoredFiles": 209,
+        "authoredLines": 81607,
         "pipelineGeneratedBytes": 0,
         "pipelineGeneratedFiles": 0,
         "toolGeneratedBytes": 37596,
@@ -2626,7 +2802,7 @@
         "regenScriptCount": 0,
         "sampleEvalRunCount": 0
       },
-      "scannedAt": "2026-05-25T18:06:27.928Z",
+      "scannedAt": "2026-05-25T18:26:52.197Z",
       "testCases": 381,
       "testLines": 5270,
       "tiers": [
@@ -2716,29 +2892,29 @@
               "category": "data",
               "subcategories": [
                 {
-                  "bytes": 11394,
-                  "files": 6,
-                  "nonBlankLines": 232,
+                  "bytes": 12027,
+                  "files": 7,
+                  "nonBlankLines": 243,
                   "subcategory": "lookup-tables",
-                  "totalLines": 250
+                  "totalLines": 261
                 }
               ],
               "totals": {
-                "bytes": 11394,
-                "files": 6,
-                "nonBlankLines": 232,
+                "bytes": 12027,
+                "files": 7,
+                "nonBlankLines": 243,
                 "subcategory": "<totals>",
-                "totalLines": 250
+                "totalLines": 261
               }
             }
           ],
           "tier": "authored",
           "totals": {
-            "bytes": 18088439,
-            "files": 208,
-            "nonBlankLines": 73748,
+            "bytes": 18089072,
+            "files": 209,
+            "nonBlankLines": 73759,
             "subcategory": "<totals>",
-            "totalLines": 81596
+            "totalLines": 81607
           }
         },
         {
@@ -2836,7 +3012,19 @@
         "misc-media": 0,
         "video": 0
       },
-      "editorial": null,
+      "editorial": {
+        "description": "Three tracks, sprite atlas, menu UI, and a 487-test verification baseline. Built end-to-end across 8 phases — the last game before the games-pause pivot.",
+        "gallery": [],
+        "heroImage": null,
+        "hookStat": {
+          "label": "TESTS",
+          "value": "487"
+        },
+        "liveUrl": "https://top-down-racer-04.vercel.app",
+        "oneLiner": "The AI taught itself to drive the car. The polished racer.",
+        "repoUrl": "https://github.com/mbriggsy/ai-learning-journey/tree/main/projects/top-down-racer-04",
+        "status": "active"
+      },
       "git": {
         "assetModificationEvents": 9,
         "assetUniquePathsTouched": 9,
@@ -2936,11 +3124,11 @@
         "uniqueFilesTouched": 158
       },
       "grandTotals": {
-        "allBytes": 32515594,
-        "allFiles": 160,
-        "authoredBytes": 17489929,
-        "authoredFiles": 150,
-        "authoredLines": 81123,
+        "allBytes": 32516276,
+        "allFiles": 161,
+        "authoredBytes": 17490611,
+        "authoredFiles": 151,
+        "authoredLines": 81134,
         "pipelineGeneratedBytes": 14944718,
         "pipelineGeneratedFiles": 9,
         "toolGeneratedBytes": 80947,
@@ -2954,7 +3142,7 @@
         "regenScriptCount": 0,
         "sampleEvalRunCount": 0
       },
-      "scannedAt": "2026-05-25T18:06:29.151Z",
+      "scannedAt": "2026-05-25T18:26:53.436Z",
       "testCases": 504,
       "testLines": 7303,
       "tiers": [
@@ -3044,29 +3232,29 @@
               "category": "data",
               "subcategories": [
                 {
-                  "bytes": 12957,
-                  "files": 8,
-                  "nonBlankLines": 315,
+                  "bytes": 13639,
+                  "files": 9,
+                  "nonBlankLines": 326,
                   "subcategory": "lookup-tables",
-                  "totalLines": 333
+                  "totalLines": 344
                 }
               ],
               "totals": {
-                "bytes": 12957,
-                "files": 8,
-                "nonBlankLines": 315,
+                "bytes": 13639,
+                "files": 9,
+                "nonBlankLines": 326,
                 "subcategory": "<totals>",
-                "totalLines": 333
+                "totalLines": 344
               }
             }
           ],
           "tier": "authored",
           "totals": {
-            "bytes": 17489929,
-            "files": 150,
-            "nonBlankLines": 75256,
+            "bytes": 17490611,
+            "files": 151,
+            "nonBlankLines": 75267,
             "subcategory": "<totals>",
-            "totalLines": 81123
+            "totalLines": 81134
           }
         },
         {
@@ -3184,7 +3372,24 @@
         "misc-media": 5137969,
         "video": 0
       },
-      "editorial": null,
+      "editorial": {
+        "description": "Jackbox-style party game — shared TV screen, phone controllers, hidden-role voting. Its how-to-play page is 1700 lines of responsive HTML done right: single-column collapse, breakpoint-scaled type.",
+        "gallery": [
+          "/assets/undercover-mob-boss/trailer-blueprint.jpg",
+          "/assets/undercover-mob-boss/trailer-city-closeup.jpg",
+          "/assets/undercover-mob-boss/trailer-dossier-spread.jpg",
+          "/assets/undercover-mob-boss/trailer-table-overhead.jpg"
+        ],
+        "heroImage": "/assets/undercover-mob-boss/trailer-table-overhead.jpg",
+        "hookStat": {
+          "label": "PLAYERS",
+          "value": "2–10"
+        },
+        "liveUrl": "https://undercover-mob-boss.vercel.app",
+        "oneLiner": "Briggsy family verified.",
+        "repoUrl": "https://github.com/mbriggsy/ai-learning-journey/tree/main/projects/undercover-mob-boss",
+        "status": "active"
+      },
       "git": {
         "assetModificationEvents": 416,
         "assetUniquePathsTouched": 228,
@@ -3296,11 +3501,11 @@
         "uniqueFilesTouched": 501
       },
       "grandTotals": {
-        "allBytes": 35889286,
-        "allFiles": 381,
-        "authoredBytes": 2390022,
-        "authoredFiles": 212,
-        "authoredLines": 55959,
+        "allBytes": 35890246,
+        "allFiles": 382,
+        "authoredBytes": 2390982,
+        "authoredFiles": 213,
+        "authoredLines": 55976,
         "pipelineGeneratedBytes": 33220025,
         "pipelineGeneratedFiles": 167,
         "toolGeneratedBytes": 279239,
@@ -3314,7 +3519,7 @@
         "regenScriptCount": 0,
         "sampleEvalRunCount": 0
       },
-      "scannedAt": "2026-05-25T18:06:30.985Z",
+      "scannedAt": "2026-05-25T18:26:55.256Z",
       "testCases": 752,
       "testLines": 17925,
       "tiers": [
@@ -3411,29 +3616,29 @@
               "category": "data",
               "subcategories": [
                 {
-                  "bytes": 2311,
-                  "files": 2,
-                  "nonBlankLines": 60,
+                  "bytes": 3271,
+                  "files": 3,
+                  "nonBlankLines": 77,
                   "subcategory": "lookup-tables",
-                  "totalLines": 60
+                  "totalLines": 77
                 }
               ],
               "totals": {
-                "bytes": 2311,
-                "files": 2,
-                "nonBlankLines": 60,
+                "bytes": 3271,
+                "files": 3,
+                "nonBlankLines": 77,
                 "subcategory": "<totals>",
-                "totalLines": 60
+                "totalLines": 77
               }
             }
           ],
           "tier": "authored",
           "totals": {
-            "bytes": 2390022,
-            "files": 212,
-            "nonBlankLines": 47670,
+            "bytes": 2390982,
+            "files": 213,
+            "nonBlankLines": 47687,
             "subcategory": "<totals>",
-            "totalLines": 55959
+            "totalLines": 55976
           }
         },
         {
@@ -3565,5 +3770,5 @@
       ]
     }
   ],
-  "scannedAt": "2026-05-25T18:06:38.460Z"
+  "scannedAt": "2026-05-25T18:27:02.749Z"
 }

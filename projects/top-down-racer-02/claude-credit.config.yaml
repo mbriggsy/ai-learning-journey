@@ -1,0 +1,11 @@
+# claude-credit per-project config — editorial for the claude-credits showcase site (locked 2026-05-25).
+# heroImage pending a quality re-capture (worksheet strawman) — null until then.
+editorial:
+  oneLiner: "The first racer. Where the self-driving agent was born."
+  hookStat:
+    label: "STACK"
+    value: "ONNX+RL"
+  liveUrl: "https://top-down-racer-02.vercel.app"
+  repoUrl: "https://github.com/mbriggsy/ai-learning-journey/tree/main/projects/top-down-racer-02"
+  status: "active"
+  description: "Top-down racing game with a learned agent driving the car. The foundation — TDR-04 inherits the engine and adds the polish."

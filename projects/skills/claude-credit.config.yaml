@@ -1,0 +1,10 @@
+# claude-credit per-project config — editorial for the claude-credits showcase site (locked 2026-05-25).
+editorial:
+  oneLiner: "Slash-commands Claude reaches for: distill, brief, doc-audit."
+  hookStat:
+    label: "PASS RATE"
+    value: "100%"
+  liveUrl: null
+  repoUrl: "https://github.com/mbriggsy/ai-learning-journey/tree/main/projects/skills"
+  status: "active"
+  description: "Three custom Claude skills: /distill (preserve lessons), /brief (recall them), and a doc-audit quality gate. Built after losing context to fresh sessions one too many times."

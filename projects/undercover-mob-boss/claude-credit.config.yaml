@@ -1,0 +1,17 @@
+# claude-credit per-project config — editorial for the claude-credits showcase site (locked 2026-05-25).
+# heroImage + gallery LOCKED — the cinematic establishing shot leads, the rest fill the detail gallery.
+editorial:
+  oneLiner: "Briggsy family verified."
+  hookStat:
+    label: "PLAYERS"
+    value: "2–10"
+  heroImage: "public/assets/trailer-table-overhead.jpg"
+  liveUrl: "https://undercover-mob-boss.vercel.app"
+  repoUrl: "https://github.com/mbriggsy/ai-learning-journey/tree/main/projects/undercover-mob-boss"
+  status: "active"
+  description: "Jackbox-style party game — shared TV screen, phone controllers, hidden-role voting. Its how-to-play page is 1700 lines of responsive HTML done right: single-column collapse, breakpoint-scaled type."
+  gallery:
+    - "public/assets/trailer-blueprint.jpg"
+    - "public/assets/trailer-city-closeup.jpg"
+    - "public/assets/trailer-dossier-spread.jpg"
+    - "public/assets/trailer-table-overhead.jpg"

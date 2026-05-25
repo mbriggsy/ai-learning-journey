@@ -1,0 +1,11 @@
+# claude-credit per-project config — editorial for the claude-credits showcase site (locked 2026-05-25).
+# heroImage + gallery pending the Phase 5 capture pass (worksheet strawman) — null/empty until then.
+editorial:
+  oneLiner: "The AI taught itself to drive the car. The polished racer."
+  hookStat:
+    label: "TESTS"
+    value: "487"
+  liveUrl: "https://top-down-racer-04.vercel.app"
+  repoUrl: "https://github.com/mbriggsy/ai-learning-journey/tree/main/projects/top-down-racer-04"
+  status: "active"
+  description: "Three tracks, sprite atlas, menu UI, and a 487-test verification baseline. Built end-to-end across 8 phases — the last game before the games-pause pivot."

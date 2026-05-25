@@ -1,6 +1,6 @@
 # claude-credits — editorial worksheet
 
-**Status:** Briggsy voice review COMPLETE via chat 2026-05-25 (one-liners + hooks + descriptions + the 6 misses all locked). Outstanding + non-blocking: hero-image captures (parallel) + a couple hook-value confirms.
+**Status:** Briggsy voice review COMPLETE via chat 2026-05-25 (one-liners + hooks + descriptions + the 6 misses all locked). Outstanding + non-blocking: hero-image captures (parallel).
 **Schema source:** [phase-0-data-gaps.md §0.6](plans/phase-0-data-gaps.md) — `EditorialContent` type.
 **Locked decisions (2026-05-24/25):** site celebrates the WORK, not the tool · **no meta tiles** — tool + site get no tile, but ARE counted in `combined` totals ("count everything", ideation §7) · **no bottom CTA** — the page ends on the work (ideation §4) · **clean tiles** — no tile buttons; live/source links live on the detail page (ideation §3) · `claude-credit` **not published** to npm · grid = **9 real projects + 1 "the misses" archive coda = 10 surfaces** · `repoUrl` wired to detail page.
 
@@ -77,7 +77,7 @@ Builder-to-builder. Audience is AI-curious peer developers.
 - **hostProjectRoot:** `C:\Users\brigg\ai-learning-journey\projects\hooks`
 - **status:** `active`
 - **oneLiner:** `Claude Code hooks that gate, guide, and finish work.`
-- **hookStat:** `{ label: "HOOKS", value: "6" }` — LOCKED 2026-05-25 (Briggsy: confirm the count is 6).
+- **hookStat:** `{ label: "HOOKS", value: "5" }` — LOCKED 2026-05-25 (VERIFIED: 5 hook scripts — block-webfetch, elite-engineer-session-start, enforce-brief-before-work, remind-distill-after-work, stop-distill-gate).
 - **heroImage:** NEEDS CAPTURE — see capture queue
 - **heroImage_mobile_safe:** `tbd`
 - **liveUrl:** `null` (not a web-deployable project)
@@ -121,8 +121,8 @@ Builder-to-builder. Audience is AI-curious peer developers.
 
 - **hostProjectRoot:** `C:\Users\brigg\ai-learning-journey\projects\tic-tac-toe`
 - **status:** `active`
-- **oneLiner:** `The smallest possible game. Three files, one afternoon.`
-- **hookStat:** `{ label: "FILES", value: "3" }` — LOCKED 2026-05-25 (index.html / script.js / style.css).
+- **oneLiner:** `The smallest possible game. Four files, one afternoon.`
+- **hookStat:** `{ label: "FILES", value: "4" }` — LOCKED 2026-05-25 (VERIFIED: index.html · css/style.css · js/game-logic.js · js/game.js).
 - **heroImage:** NEEDS CAPTURE — see capture queue
 - **heroImage_mobile_safe:** `tbd`
 - **liveUrl:** `null` (no URL in repo; `tic-tac-toe.vercel.app` is a stranger's app. See Deploys to fix.)
@@ -260,4 +260,4 @@ Mobile-safe verification per capture: open the captured image in DevTools mobile
 - [x] Deploys-to-fix resolved — 4 live (TDR-02/04, UMB, burned), 5 null with reasons — Briggsy
 - [x] Capture queue tracked (parallel with Phase 0–2)
 
-**Outstanding (non-blocking):** (1) hero-image captures — parallel work, see capture queue; (2) confirm a couple hook *values* — esp. `hooks → HOOKS 6` (is the count 6?).
+**Outstanding (non-blocking):** hero-image captures — parallel work, see capture queue. *(Hook values VERIFIED + locked 2026-05-25: HOOKS 5, FILES 4, CARDS 120 confirmed.)*

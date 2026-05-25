@@ -802,6 +802,29 @@ pnpm dev --all --json | jq '.combined | {totalTokensProcessed, totalTokensFresh,
 
 `feat(claude-credit): session-tokens parser with privacy-by-construction + slug merging`
 
+## 0.5c — Test-case + plan counting (Briggsy 2026-05-25, "count what got built, not whether it passed")
+
+**Why:** the tool already counts files + lines per subcategory (so test LOC, plan count, plan LOC are derivable today — just surface them). The ONE new capability is **counting test *cases*** (the `it()` / `test()` / `def test_` definitions), so a tile/hero stat like "487 tests" is **tool-measured, not hand-typed** (hand-typed drifted — 2 of 3 hook numbers were wrong at editorial review). **Counts only — NO results, NO pass/fail, NO execution** (Briggsy: "we don't ship broken code; I don't need to know if they worked, we KNOW they worked"). This keeps it pure static measurement, never runs a test runner.
+
+**Decision — expose four numbers, per-project + combined:**
+- `testCases: number` — 🆕 static count of test definitions (see counter below).
+- `testLines: number` — authored lines in `code/tests` subcategory files (already computed per-file; sum them).
+- `planCount: number` — file count in `docs/plans` subcategory (already classified; count them).
+- `planLines: number` — authored lines in `docs/plans` files (sum them).
+
+**The test-case counter (the only new code):**
+- Static, multi-framework, **no execution**. Over files classified `code/tests`, count definitions by pattern:
+  - JS/TS (vitest/jest): `\b(it|test)\s*(\.\w+)?\s*\(` (covers `it(`, `test(`, `it.each(`, `test.skip(`); also `it.each`/`test.each` table rows are NOT expanded — count the call, not the rows, to stay execution-free and deterministic).
+  - Python (pytest): `^\s*def\s+test_\w*\s*\(` (per line).
+- **Honest by construction, approximate by nature** — a static parse can't see dynamically-generated cases and may count a commented-out `it(` (mitigate: skip lines that are obviously comments — `//`, `#`, `*`). Document the method on the About page taxonomy note ("tests counted by static definition scan, not by running them") so the number is never mistaken for a pass count.
+- Framework detection per project = which test files exist (`.test.ts`/`.spec.ts` → JS patterns; `test_*.py`/`*_test.py` → pytest pattern). A project can have both (none currently do).
+
+**Surfacing (b/c/d are already-computed sums):** ensure the per-subcategory `{files, lines}` rollup is exposed on the `ProjectReport` (and summed into `combined`) so `testLines` / `planCount` / `planLines` are first-class readable fields, not something a consumer has to re-derive from `topSubcategories`.
+
+**Downstream:** `EditorialContent.hookStat` (§0.6) gains the derive-from-tool option (literal OR metric reference) so `TESTS`, `PLANS`, `FILES`, `LINES` hooks read these live; domain hooks (CARDS/PLAYERS/STACK) stay literals. The hero/detail breadth can also surface plan + test counts directly. **Tests required for the new counter** (per §0.10): a fixture with known `it(`/`test(`/`def test_` counts (incl. a commented-out decoy) asserting the exact tally.
+
+**Commit:** `feat(claude-credit): static test-case counter + surface test/plan file+line counts`
+
 ## 0.6 — Editorial config schema
 
 **Files:** `tools/claude-credit/src/taxonomy.ts` (Batch A already added `EditorialContent`), `tools/claude-credit/src/config.ts`, `tools/claude-credit/src/report.ts`.
@@ -813,7 +836,7 @@ In `config.ts` `ProjectConfig` interface (lines 7-34), add:
 ```ts
 editorial?: {
   oneLiner: string;
-  hookStat: { label: string; value: string };
+  hookStat: { label: string; value: string };  // §0.5c: `value` may be an authored literal (domain facts — CARDS/PLAYERS/STACK) OR a tool-metric key (TESTS/PLANS/FILES/LINES) resolved live at refresh. Design the literal-vs-metric shape when coding §0.6/refresh; don't re-hand-type countable numbers.
   heroImage?: string | null;
   liveUrl?: string | null;
   repoUrl?: string | null;

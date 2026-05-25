@@ -22,8 +22,12 @@ export function ProjectTile({ project }: { project: ProjectReport }) {
   }
 
   return (
-    <article data-tile className={clsx(styles.tile, hasImage ? styles.hasImage : styles.typeForward)}>
-      {hasImage && (
+    // Reveal wrapper ([data-tile]) is the GSAP transform target; the inner .tile owns the CSS
+    // hover transform. Separating them avoids the inline-transform-vs-CSS-hover fight (GSAP
+    // leaves an inline transform after the reveal tween, which would beat a stylesheet :hover).
+    <div data-tile className={styles.tileReveal}>
+      <article className={clsx(styles.tile, hasImage ? styles.hasImage : styles.typeForward)}>
+        {hasImage && (
         <div className={styles.imageFrame}>
           <img
             className={styles.image}
@@ -57,6 +61,7 @@ export function ProjectTile({ project }: { project: ProjectReport }) {
           <span className={styles.hookLabel}>{hook.label}</span>
         </p>
       </div>
-    </article>
+      </article>
+    </div>
   )
 }

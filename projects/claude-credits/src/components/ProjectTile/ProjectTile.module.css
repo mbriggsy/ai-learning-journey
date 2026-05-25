@@ -1,3 +1,10 @@
+/* GSAP reveal target (C3). Holds NO transform of its own so the inner .tile is free to own
+   the CSS hover transform without an inline-style fight. flex-column → inner .tile full-width. */
+.tileReveal {
+  display: flex;
+  flex-direction: column;
+}
+
 .tile {
   position: relative; /* anchor for the stretched ::after link + the ribbon */
   display: flex;
@@ -120,6 +127,32 @@
   font-variant-caps: all-small-caps;
   letter-spacing: 0.1em;
   color: var(--text-secondary);
+}
+
+/* Hover lift — gated to fine pointers so touch never traps it. transform + shadow only (GPU).
+   Asymmetric: weighted-press overshoot in (the same cubic the GSAP 'weighted-press' ease draws:
+   M0,0 C0.3,0 0.4,1.05 1,1), faster ease-out on exit. */
+@media (hover: hover) and (pointer: fine) {
+  .tile {
+    transition: transform 0.18s ease, box-shadow 0.18s ease; /* exit */
+  }
+  .tile:hover {
+    transform: translateY(-4px);
+    box-shadow: var(--shadow-hover);
+    transition:
+      transform 0.25s cubic-bezier(0.3, 0, 0.4, 1.05),
+      box-shadow 0.25s ease; /* enter */
+  }
+  .image {
+    transition: transform 0.3s cubic-bezier(0.3, 0, 0.4, 1.05);
+  }
+  .tile:hover .image {
+    transform: scale(1.04);
+  }
+}
+/* Press feedback — INTENTIONALLY ungated (a touch tap should show it). */
+.tile:active {
+  transform: scale(0.985);
 }
 
 @media (max-width: 600px) {

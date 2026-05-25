@@ -27,7 +27,7 @@ export function Hero() {
       ? null
       : combined.tokenWindowDays === 0
         ? 'across under a day of session retention' // avoid the "<" char in static HTML
-        : `across ${combined.tokenWindowDays} days of session retention`
+        : `across ${combined.tokenWindowDays} ${combined.tokenWindowDays === 1 ? 'day' : 'days'} of session retention`
   // Staleness-honesty signal (Phase 8 Decision 9): the data is refreshed manually, so surface
   // when it was last measured. Quiet — it rides the honest sub-line beside the window.
   const asOf = new Date(scannedAt).toLocaleDateString('en-US', {
@@ -58,7 +58,9 @@ export function Hero() {
         delay: duration.counter, // 2.4 — secondary context follows the magnitude
       })
     },
-    { scope: heroRef },
+    // [] = mount-only. useStats() is read-once (stable promise), but pin it explicitly so a
+    // future re-render can't restart the reveal mid-play (default is run-on-every-render).
+    { scope: heroRef, dependencies: [] },
   )
 
   return (

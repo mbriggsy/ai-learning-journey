@@ -26,6 +26,8 @@ describe('formatInt', () => {
 describe('formatBytes', () => {
   it('GB with 1 decimal', () => expect(formatBytes(2_100_000_000)).toBe('2.1 GB'))
   it('MB with 1 decimal', () => expect(formatBytes(5_400_000)).toBe('5.4 MB'))
+  it('KB with 0 decimals (distinct from GB/MB precision)', () => expect(formatBytes(5_400)).toBe('5 KB'))
+  it('raw bytes below 1 KB', () => expect(formatBytes(500)).toBe('500 B'))
 })
 
 describe('formatModelList', () => {
@@ -55,6 +57,7 @@ describe('formatAge', () => {
   it('364 → 364d (still days at the year boundary)', () => expect(formatAge(364)).toBe('364d'))
   it('365 → 1y', () => expect(formatAge(365)).toBe('1y'))
   it('400 → 1y (coarse past a year)', () => expect(formatAge(400)).toBe('1y'))
+  it('fractional days floor to whole "d" (47.3 → 47d, not 47.3d)', () => expect(formatAge(47.3)).toBe('47d'))
 })
 
 describe('padCounter (constant-width counter frames)', () => {

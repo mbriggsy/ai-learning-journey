@@ -61,7 +61,7 @@ export function formatAge(projectAgeDays: number | null): string | null {
   if (projectAgeDays === null) return null
   if (projectAgeDays <= 0) return 'today'
   if (projectAgeDays >= 365) return `${Math.floor(projectAgeDays / 365)}y`
-  return `${projectAgeDays}d`
+  return `${Math.floor(projectAgeDays)}d` // floor: a fractional age (47.3) must render "47d", not "47.3d"
 }
 
 /**

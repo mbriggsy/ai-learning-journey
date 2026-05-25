@@ -18,35 +18,59 @@ export function ProjectGrid() {
   // (never CSS opacity:0) so a dead/absent motion layer degrades to "all tiles visible".
   useGSAP(
     () => {
+      const root = gridRef.current
+      // SCOPED selection: useGSAP's {scope} governs context REVERT, not selector resolution —
+      // a bare gsap.set('[data-tile]') resolves document-wide and would hijack any other
+      // [data-tile] on the page (see insight 004). toArray(sel, root) scopes to this grid.
+      const tiles = () => gsap.utils.toArray<HTMLElement>('[data-tile]', root)
+
       // The refresh self-heal must run UNCONDITIONALLY — Phase 7's close beat depends on a
       // global ScrollTrigger.refresh() to position its own reveal (it doesn't re-roll the race).
       // So it runs even on an empty grid, ahead of any tile-specific work.
       const onLoad = () => ScrollTrigger.refresh()
       window.addEventListener('load', onLoad, { once: true })
-      // fonts.ready (always resolves — a 404 woff2 still settles it) vs a 1500ms guard so the
-      // refresh fires even if the FontFaceSet stalls. rAF defers to after layout.
-      Promise.race([document.fonts.ready, new Promise((r) => setTimeout(r, 1500))]).then(() =>
-        requestAnimationFrame(() => ScrollTrigger.refresh()),
-      )
 
-      // Reduced motion: tiles stay at their final visible state (CSS default) — return BEFORE
-      // any gsap.set hidden state (mirrors the hero's branch).
-      if (prefersReducedMotion()) {
-        return () => window.removeEventListener('load', onLoad)
+      // fonts.ready (always resolves — a 404 woff2 still settles it) vs a 1500ms guard so the
+      // refresh fires even if the FontFaceSet stalls. rAF defers to after layout. ALL handles
+      // captured + a cancelled flag so the StrictMode double-invoke's stale timer/rAF can't fire
+      // ScrollTrigger.refresh() after this context has been reverted.
+      let cancelled = false
+      let rafId = 0
+      let timerId = 0
+      const settled = new Promise<void>((resolve) => {
+        timerId = window.setTimeout(resolve, 1500)
+        void document.fonts.ready.then(() => resolve())
+      })
+      void settled.then(() => {
+        if (cancelled) return
+        rafId = requestAnimationFrame(() => ScrollTrigger.refresh())
+      })
+
+      const cleanupRefresh = () => {
+        cancelled = true
+        clearTimeout(timerId)
+        cancelAnimationFrame(rafId)
+        window.removeEventListener('load', onLoad)
       }
+
+      // Reduced motion (or no grid mounted) → tiles stay at their final visible state (CSS
+      // default). Return BEFORE any gsap.set hidden state (mirrors the hero's branch).
+      if (!root || prefersReducedMotion()) return cleanupRefresh
 
       // Hidden state in JS (P0 guard, Decision 8a) — FIRST statement of the motion branch, so a
       // dead layer can't leave tiles stuck hidden (CSS default is visible; JS removes then restores).
-      gsap.set('[data-tile]', { autoAlpha: 0, y: 40 })
+      gsap.set(tiles(), { autoAlpha: 0, y: 40 })
 
       // The y:40 offset displaces each tile's measured top, so reset it to 0 during refresh
       // measurement (batch can't take invalidateOnRefresh). The listener is on GSAP's GLOBAL
       // bus — useGSAP's context revert does NOT remove it, so it MUST be removed in cleanup or
       // the StrictMode double-invoke leaks a second listener closing over torn-down refs.
-      const resetTileY = () => gsap.set('[data-tile]', { y: 0 })
+      const resetTileY = () => {
+        if (gridRef.current) gsap.set(tiles(), { y: 0 })
+      }
       ScrollTrigger.addEventListener('refreshInit', resetTileY)
 
-      ScrollTrigger.batch('[data-tile]', {
+      ScrollTrigger.batch(tiles(), {
         start: 'top 85%',
         once: true,
         onEnter: (els) =>
@@ -61,7 +85,7 @@ export function ProjectGrid() {
       })
 
       return () => {
-        window.removeEventListener('load', onLoad)
+        cleanupRefresh()
         ScrollTrigger.removeEventListener('refreshInit', resetTileY)
       }
     },

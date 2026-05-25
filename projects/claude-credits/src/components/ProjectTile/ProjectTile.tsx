@@ -13,7 +13,9 @@ export function ProjectTile({ project }: { project: ProjectReport }) {
   const [imgError, setImgError] = useState(false)
 
   const age = formatAge(git.projectAgeDays)
-  const hasImage = Boolean(editorial?.heroImage) && !imgError
+  // Narrow once: heroSrc is string|null, so the <img src> below needs no non-null assertion
+  // and the tile variant derives from a single source of truth. Runtime 404 → null → type-forward.
+  const heroSrc = imgError ? null : editorial?.heroImage || null
 
   // editorial: null → fallback hook from grandTotals (still gold). Otherwise the editorial pick.
   const hook = editorial?.hookStat ?? {
@@ -26,12 +28,12 @@ export function ProjectTile({ project }: { project: ProjectReport }) {
     // hover transform. Separating them avoids the inline-transform-vs-CSS-hover fight (GSAP
     // leaves an inline transform after the reveal tween, which would beat a stylesheet :hover).
     <div data-tile className={styles.tileReveal}>
-      <article className={clsx(styles.tile, hasImage ? styles.hasImage : styles.typeForward)}>
-        {hasImage && (
+      <article className={clsx(styles.tile, !heroSrc && styles.typeForward)}>
+        {heroSrc && (
         <div className={styles.imageFrame}>
           <img
             className={styles.image}
-            src={editorial!.heroImage!}
+            src={heroSrc}
             alt=""
             loading="lazy"
             // Runtime 404 (stale stats / deleted asset) → degrade to type-forward, never a

@@ -1,7 +1,7 @@
 import path from 'node:path';
 import { compileRules, DEFAULT_RULES, classify } from './classifier.js';
 import { loadProjectConfig } from './config.js';
-import { aggregateAssetBytes, categorize, aggregateTiers } from './counter.js';
+import { aggregateAssetBytes, categorize, aggregateTiers, countTestCases } from './counter.js';
 import { collectGitStats } from './git-stats.js';
 import { collectProxyStats } from './proxies.js';
 import { collectSessionTokens } from './session-tokens.js';
@@ -104,6 +104,21 @@ export async function buildProjectReport(opts: BuildReportOptions): Promise<Proj
     .sort((a, b) => b.bytes - a.bytes)
     .slice(0, 5);
 
+  // 0.5c — breadth counts. testCases is a static definition scan (no execution);
+  // testLines/planCount/planLines are already-computed sums over the classified files.
+  const testCases = await countTestCases(categorized);
+  let testLines = 0;
+  let planCount = 0;
+  let planLines = 0;
+  for (const f of categorized) {
+    if (f.tier === 'authored' && f.category === 'code' && f.subcategory === 'tests') {
+      testLines += f.totalLines ?? 0;
+    } else if (f.tier === 'authored' && f.category === 'docs' && f.subcategory === 'plans') {
+      planCount += 1;
+      planLines += f.totalLines ?? 0;
+    }
+  }
+
   return {
     projectPath: rootDir,
     projectName: path.basename(rootDir),
@@ -116,11 +131,10 @@ export async function buildProjectReport(opts: BuildReportOptions): Promise<Proj
     assetBytesByKind,
     topSubcategories,
     tokens: tokenResult.stats,
-    // TODO(0.5c): replace placeholders with static test-case + plan breadth counts
-    testCases: 0,
-    testLines: 0,
-    planCount: 0,
-    planLines: 0,
+    testCases,
+    testLines,
+    planCount,
+    planLines,
     // TODO(0.6): replace placeholder with validated editorial block
     editorial: null,
   };

@@ -148,6 +148,11 @@ export async function buildMultiProjectReport(opts: BuildMultiOptions = {}): Pro
     combined.totalIterationProxies += p.proxies.iterationProxyTotal;
     combined.totalAllFiles += p.grandTotals.allFiles;
     combined.totalAllBytes += p.grandTotals.allBytes;
+    // 0.5c — breadth (sum-class). 0.6b folds in meta[] + archiveCollective.
+    combined.totalTestCases += p.testCases;
+    combined.totalTestLines += p.testLines;
+    combined.totalPlanCount += p.planCount;
+    combined.totalPlanLines += p.planLines;
   }
 
   // 0.5b — token aggregation over projects[] + meta[] (null-skip). Invariants B + C.

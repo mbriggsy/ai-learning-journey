@@ -160,3 +160,55 @@ export function aggregateAssetBytes(files: CategorizedFile[]): ProjectReport['as
   }
   return result;
 }
+
+// 0.5c — static test-case counters. NO execution; count definitions only.
+// JS/TS (vitest/jest): it( / test( / it.each( / test.skip( etc.
+const JS_TEST_RE = /\b(?:it|test)\s*(?:\.\w+)?\s*\(/;
+// Python (pytest): a top-level `def test_...(`
+const PY_TEST_RE = /^\s*def\s+test_\w*\s*\(/;
+
+function isCommentLine(trimmed: string): boolean {
+  return (
+    trimmed.startsWith('//') ||
+    trimmed.startsWith('#') ||
+    trimmed.startsWith('*') ||
+    trimmed.startsWith('/*')
+  );
+}
+
+/** Pure, execution-free count of test-case definitions in one file's source. */
+export function countTestDefinitions(content: string, isPython: boolean): number {
+  const re = isPython ? PY_TEST_RE : JS_TEST_RE;
+  let count = 0;
+  for (const rawLine of content.split('\n')) {
+    const trimmed = rawLine.trim();
+    if (!trimmed || isCommentLine(trimmed)) continue;
+    if (re.test(trimmed)) count += 1;
+  }
+  return count;
+}
+
+/**
+ * 0.5c — count test CASE definitions across files classified authored/code/tests.
+ * Static, multi-framework (extension-detected), execution-free. Skips obvious
+ * comment lines so a commented-out `it(` is not counted. Approximate by nature
+ * (won't see dynamically-generated cases) — surfaced as a measured count, never
+ * a pass count.
+ */
+export async function countTestCases(files: CategorizedFile[]): Promise<number> {
+  let count = 0;
+  for (const file of files) {
+    if (!(file.tier === 'authored' && file.category === 'code' && file.subcategory === 'tests')) {
+      continue;
+    }
+    if (file.kind !== 'text') continue;
+    let content: string;
+    try {
+      content = await fs.readFile(file.absPath, 'utf8');
+    } catch {
+      continue;
+    }
+    count += countTestDefinitions(content, file.relPath.endsWith('.py'));
+  }
+  return count;
+}

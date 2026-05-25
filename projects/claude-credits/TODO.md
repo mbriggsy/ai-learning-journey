@@ -1,6 +1,6 @@
 # claude-credits — TODO
 
-**Status:** All phases (−1 through 9) deepened + doc-reviewed. **Preflight −1 executed 2026-05-24** (YAML, deploy-verify, worksheet draft done). **3 scope locks applied 2026-05-25** (no CTA / no meta tiles / no publish) — propagated across ideation + README + ALL affected phase plans (0/2/3/4/5/6/7 reconciled, drift-safe; preflight under a superseded banner). `coded:` frontmatter field added to all 12 phases. **The plan set is now internally consistent.** Next actionable: Briggsy reviews `docs/editorial.md` (voice) + the meta-excluded-from-totals call; then Phase 0 (code the data contract). See SCOPE CHANGE block for the full reconciliation record.
+**Status:** All phases (−1 through 9) deepened + doc-reviewed. **Preflight −1 executed 2026-05-24.** Briggsy locked the scope (2026-05-24/25): **no CTA · clean tiles · no meta tiles but meta counted in totals · no publish** — propagated across ideation + README + every affected phase plan (0/2/3/4/5/6/7), drift-safe + `/ce:review`'d; preflight under a superseded banner; lesson in `docs/insights/001`. `coded:` frontmatter on all 12 phases. **The plan set is internally consistent.** Next actionable: Briggsy reviews `docs/editorial.md` (voice) + sends burned's live URL; then Phase 0 (code the data contract). See DECISIONS LOCKED block for the full record.
 
 > **House rule — TODO is NOT a diary.** Actionable items only. No session history, no "what we did" logs, no narrative addenda. The git log has the history. If a line isn't an open thing Claude or Briggsy can act on, it doesn't belong here. Strip cruft when you find it.
 
@@ -24,32 +24,25 @@ Same drill each: deepen to the **decisions-not-code** bar (native `ce:plan` — 
 
 (Preflight −1's PLAN is already deepened + doc-reviewed — it's not a deepening task. Its *execution* is the first step below.)
 
-## SCOPE CHANGE — 2026-05-24 (Briggsy locked 3 decisions; reconcile before executing affected phases)
+## DECISIONS LOCKED 2026-05-24/25 — the plan set is reconciled to these (current truth)
 
-The site celebrates the WORK, not the tool. Three locks (recorded authoritatively in `docs/ideation.md` §4 + §7 and `docs/plans/README.md`):
-1. **No bottom CTA** — the page ends on the work. No button, no install command, no GitHub link.
-2. **No meta tiles** — `claude-credit` (tool) + `claude-credits` (site itself) cut from the grid. Grid = **9 real projects + 1 "the misses" coda = 10 surfaces** (was 12).
-3. **Tool not published** to npm. `claude-credit` is the internal tape measure.
-   - **+ Claude's call (Briggsy to veto):** meta is excluded from the **hero combined totals** too, not just tiles — counting the site's own build tokens is circular/inflationary. `~/.claude-credit-projects.yaml` now has only `projects:` + `archive:` (meta array dropped).
+The site celebrates the WORK, not the tool. Authoritative in `docs/ideation.md` §3/§4/§7 + `docs/plans/README.md`:
+1. **No bottom CTA** — the page ends on the work (no button / install / GitHub link). Phase 7 reframed "Bottom CTA" → "**The close**" (a summative magnitude beat, nothing clickable); all `cta.ts` / `resolveCtaCopy` / `CURRENT_CTA_STATE` / `cta.test.ts` plumbing CUT.
+2. **Clean tiles** — NO buttons on a project tile; the whole tile is ONE click → its detail page. The live/source links (**"Try it →"** where hosted + **"Source →"** always) live on the **detail page** (Phase 5), not the tile.
+3. **No meta TILES, but meta IS counted in totals** ("count everything", Briggsy 2026-05-25). The tool + this site feed the hero magnitude via `report.meta[]` (scanned, summed into `combined`, `editorial: null`, NO tile/detail/asset-copy). `~/.claude-credit-projects.yaml` = `projects`(9) + `meta`(2) + `archive`(6). Project COUNT = 9 active + 6 shelved (the 2 meta feed magnitude, not the "N projects" tally — confirm at Phase 3).
+4. **Tool NOT published** to npm — the internal tape measure.
 
-**Phase plans reconciled to the 3 locks (2026-05-25) — all bodies fixed (drift-safe: grepped bodies, not just headers):**
-- [x] **phase-0** — `meta:` dropped from 0.6b parser (only `projects:` + `archive:`); `kind` discriminator removed; `status` enum collapsed to `'active' | 'shelved'`; `MultiProjectReport.meta` field removed.
-- [x] **phase-2-data-wiring** — *(not in original list — caught in verification)* `copyEditorialAssets` + warnings-strip no longer iterate `report.meta`; `kind` dropped from the ProjectReport field desc + test fixture.
-- [x] **phase-3-hero** — *(caught in verification)* project-count formula (prose **and** code block) drops `report.meta.length`; `useStats()` destructure drops `meta`.
-- [x] **phase-4-grid** — 10 surfaces not 12; "the tools" divider + meta band gone; `buildGridModel`/`ProjectGrid` render active → "the misses"; `report.meta`/`kind` refs cleaned.
-- [x] **phase-5-detail** — no meta detail pages; `/project/:name` resolves from `projects[]` only (meta name → null guard); per-project "Try it →"/"Source →" stay; `MultiProjectReport` shape drops `meta`.
-- [x] **phase-6-about** — `cta.ts`/`resolveCtaCopy`/`CURRENT_CTA_STATE` dependency removed; About §2 is prose-only (explains the taxonomy, no install/pitch).
-- [x] **phase-7-cta** — REFRAMED to "**The close**" (how the page ends on the work). All CTA build cut (no `cta.ts`/`cta.test.ts`/command block/STATE machinery). `doc-reviewed` cleared (reframed content needs a fresh review pass before coding). `reframed:` frontmatter added.
-- [x] **phase-preflight** (executed history) — top banner + superseded markers; its meta/CTA/12-tile body retained under the banner as the execution record (not surgically churned).
-- [x] **`coded:` frontmatter** added to all 12 phase files (+ documented in plans/README convention; preflight stamped today). New field = "executed + verified," parallel to created/deepened/doc-reviewed.
+Grid = **9 project tiles + 1 "the misses" archive coda = 10 surfaces** (no meta tiles, no "the tools" divider).
 
-**Open follow-up:** phase-7's reframed "close" content has `doc-reviewed:` cleared — it wants a `/document-review` pass before that phase codes (it's a simple surface, low risk, but honest to flag). The exact close composition is a Phase 9 + Briggsy-taste call.
+**Reconciliation status:** ideation + README + all 11 phase plans are consistent with the above — drift-safe (bodies + code blocks grepped, not just headers), `/ce:review`'d, lesson distilled to `docs/insights/001`. `phase-preflight` retains its pre-pivot body under a superseded banner (executed history). `coded:` frontmatter on all 12 phases.
+
+**Open follow-up:** phase-7's reframed "close" has `doc-reviewed:` cleared — wants a `/document-review` pass before it codes (simple surface, low risk). Exact close composition = a Phase 9 + Briggsy-taste call.
 
 ## Then: execute
 
 **Preflight −1 — DONE except Briggsy's worksheet review** (`phase-preflight.md`):
 - ✅ −1.1 publish gate → resolved as NO publish (tool stays internal); tool README de-implied (`pnpm add claude-credit` → "not published" note). No CTA-state to record.
-- ✅ −1.2 YAML → `projects:` (9) + `archive:` (6); meta dropped per scope change. Validated via js-yaml. Backup at `~/.claude-credit-projects.yaml.bak.2026-05-24`.
+- ✅ −1.2 YAML → `projects:`(9) + `meta:`(2) + `archive:`(6). meta scanned for **totals only** (no tiles — "count everything"). Validated via js-yaml. Backup at `~/.claude-credit-projects.yaml.bak.2026-05-24`.
 - ✅ −1.3 deploy verify → 3 live (TDR-02, TDR-04, UMB, all 200 + fingerprinted), 6 null (in worksheet `## Deploys to fix`). Squatter methodology held — no false positives.
 - ✅ −1.5 worksheet → `docs/editorial.md` drafted (9 rows + the misses, corrected UMB/TDR asset paths, no meta, no CTA block).
 - [ ] **Briggsy reviews `docs/editorial.md`** — voice/oneLiners/hookStat picks/descriptions/archive one-liners + check the sign-off boxes. Also veto/confirm the meta-excluded-from-totals call.
@@ -64,7 +57,7 @@ The site celebrates the WORK, not the tool. Three locks (recorded authoritativel
 - **Authorship is SILENT** (ideation §11, locked 2026-05-24). The site brags by showing the WORK, NOT a who-wrote-what scoreboard, and owes no one proof. NO authorship-split viz, NO "0 lines" headline. Per-tile **tier bar is CUT** (Phase 4); per-project **AUTHORED-BY split is CUT** (Phase 5). About gets only the warm light-touch line.
 - **Phase 4 grid sort = `grandTotals.authoredLines` desc** (tie-break `projectName`). File-classification-derived → rotation-immune AND immune to the git-attribution inversion. Never re-derive it from `linesByAuthor`.
 - **git-attribution inversion:** git credits `mbriggsy` as commit author, Claude as `Co-Authored-By`, so a naive `linesByAuthor` reading INVERTS the truth (credits the human). MOOT for v1 (no authorship surface ships), but real if any future surface ever shows authorship.
-- **NO bottom CTA, NO meta tiles, tool NOT published** (Briggsy locked 2026-05-24 — see SCOPE CHANGE block above + ideation §4/§7). The whole `cta.ts` / `resolveCtaCopy` / `CURRENT_CTA_STATE` / `cta.test.ts` plumbing the old plan described is DEAD — do not build it. Phase 7 is gutted. Per-project "Try it →" live links stay (they point at the work, not the tool).
+- **NO bottom CTA · clean tiles (no tile buttons) · meta counted-but-not-tiled · tool NOT published** (Briggsy, 2026-05-24/25 — see DECISIONS LOCKED block above + ideation §3/§4/§7). The whole `cta.ts` / `resolveCtaCopy` / `CURRENT_CTA_STATE` / `cta.test.ts` plumbing is DEAD — do not build it; Phase 7 is "the close." Per-project live/source links live on the **detail page**, NOT the tiles. Meta (tool + site) feeds `combined` totals but gets no tile.
 - Editorial one-liners + hook stats are voice/positioning calls — needs Briggsy in the loop, can't be auto-derived (preflight −1.5 worksheet).
 - **Editorial is a HARD dependency for the Phase 5 detail page** (not just tiles): every project with a detail page needs at least `oneLiner` + `description`, or a data-sparse project (esp. the smallest real ones — `tic-tac-toe`, `pacman`) renders a near-empty "detail." Source editorial in the `docs/editorial.md` worksheet before executing Phase 5. (Meta projects are cut, so the old `claude-credit`/`claude-credits` data-sparse caveat no longer applies.)
 - **Phase 0 publish surface drops `largestSingleCommit.sha`** (Phase 5 cascade, privacy). Phase 0's `stripForPublish` denylist + `ALLOWED_KEY_PATHS` must exclude it; commit-cadence DATES are published by design. Re-run Phase 0 `pnpm test` after.

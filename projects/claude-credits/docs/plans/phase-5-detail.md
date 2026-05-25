@@ -97,7 +97,7 @@ grep -n "tier breakdown\|TierBreakdown\|tier-proportion" docs/plans/phase-5-deta
 ## Current state (verified at deepening, 2026-05-24)
 
 **Data contract this page reads (post-Phase-0 — exact paths verified against `taxonomy.ts` + `phase-0-data-gaps.md`):**
-- `useStats()` returns a NON-NULL `MultiProjectReport` (Phase 2): `{ projects, archiveCollective, combined, scannedAt }`. (Phase 0 dropped the `meta` array — meta projects are cut, ideation §7.)
+- `useStats()` returns a NON-NULL `MultiProjectReport` (Phase 2): `{ projects, meta, archiveCollective, combined, scannedAt }`. (`meta` is totals-only — no detail pages; this page reads `projects` only.)
 - **Project lookup:** find the `ProjectReport` in `projects` where `projectName === name`. Detail pages are for the **9 active projects only** (ideation §7 — meta tiles cut); the lookup never considers `meta[]`. Archive entries are NOT here (collective only) → a shelved name finds nothing → not-found (Decision 8).
 - Per `ProjectReport` the page consumes:
   - `projectName` (hero title). (`kind` is unused for layout — every detail page is an active project, all render identically.)
@@ -291,7 +291,7 @@ The feature-bearing, unit-testable concentrate (mirrors `grid-order.ts`).
 
 **5.1c — tests** (`composition.test.ts` new; `format.test.ts` extended):
 - `buildComposition`: Happy — a full `tiers[]` fixture yields the curated kinds in order with correct values/units; Edge — a project with no `audio`/`video` omits those kinds; Edge — a missing category node resolves to 0 and is omitted (no throw); Edge — empty `tiers: []` → `[]`; Edge — `plans & docs` sums multiple `docs` subcategories; Edge — does not mutate input.
-- `findProject`: Happy — finds in `projects`; Edge — a name only in `archiveCollective.projectNames` → `null` (archive entries have no detail page); Edge — unknown name → `null`; Edge — empty `projects` → `null`. (No `meta[]` to search — meta projects are cut, ideation §7.)
+- `findProject`: Happy — finds in `projects`; Edge — a name only in `archiveCollective.projectNames` → `null` (archive entries have no detail page); Edge — unknown name → `null`; Edge — empty `projects` → `null`. (`meta[]` exists for totals but has no detail pages, so `findProject` doesn't search it — a meta name → `null`.)
 - `formatShortDate`: `"2026-04-22T..." → "Apr 22"`; `null → null`; a `windowStart`/`windowEnd` pair renders a sensible range when joined by the caller.
 
 **Verify gate:**
@@ -403,7 +403,7 @@ pnpm build && pnpm preview    # prod bundle — confirms DrawSVG registration su
 | **Data-sparse project renders a near-blank "detail"** | The data-sparse case (the leanest real projects — `tic-tac-toe`/`pacman` — on a clean deploy: tokens null + no media + thin tiers) omits 5/7 movements. Guard: Decision 12 — editorial (`oneLiner`+`description`) is a HARD dependency for every detail-page project, so the opener + prose always carry the story; the inventory has a ≤3-item layout floor. Verify the combined-null case + the leanest real projects specifically. |
 | **"Look at all the metrics" instead of "slick product"** | ~30 numbers across 5 movements risks flattering the tool, not the product (product review). Guard: the one-liner + description prose carry the STORY; the quantitative blocks support it. Cold-watch the verify gate for "metrics readout vs story", not just "no NaN". |
 | **`description` as injected HTML → stored XSS** | A YAML block scalar can carry `<script>`. Render `description` (and all editorial strings) as a React text node (`{description}`), NEVER as injected raw HTML. |
-| **External links missing `rel`** | `LiveLinkButton` (Phase 4) must render `target="_blank" rel="noopener noreferrer"` on `liveUrl`/`repoUrl` — verify the Phase 4 component already does (it's the first time it gets author-config URLs). If not, fix in Phase 4's component. |
+| **External links missing `rel`** | `LiveLinkButton` (the shared leaf built in Phase 4) must render `target="_blank" rel="noopener noreferrer"` on `liveUrl`/`repoUrl`. The Phase 4 tile no longer renders it (clean tiles, ideation §3), so **Phase 5 is the first consumer to pass real author-config URLs** — verify the leaf emits `target`/`rel`; if not, fix it in the shared component. |
 | **`largestSingleCommit.sha` leaks a private-repo commit id** | Dropped from publish (Cascade A): added to the `stripForPublish` denylist + omitted from `ALLOWED_KEY_PATHS`. UI renders only `linesAdded`; the sha has no client use. |
 | **Full-bleed sparkline → horizontal scroll at 360px** | SVG `width:100%`+`viewBox`+`preserveAspectRatio` (never a fixed px width); full-bleed wrapper via `width:100%` inside an `overflow-x: clip` parent, NEVER `100vw` (scrollbar-gutter overflow). Verify zero horizontal scroll 360–430px. |
 | **Donut sub-2% sliver invisible + breaks color-blind pairing** | Minimum rendered arc floor per slice (Decision 5); legend shows the true byte value; proportions approximate by design. |

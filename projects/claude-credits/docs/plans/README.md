@@ -78,8 +78,8 @@ Empty value = not yet done.
 | Pages | **Landing (hero + project grid)**, **per-project detail**, **about**. Three routes. No more for v1. |
 | Audience | **AI-curious peers.** Builder-to-builder voice. |
 | Hero | **One massive total-volume number.** Shock of magnitude. Breakdown lives below. No competing weights in the hero. |
-| Per-project tile | **Editorial one-liner + hand-picked hook stat + key visual + live link (if deployed).** Only the 9 real projects + 1 "the misses" archive coda = **10 surfaces**. No meta tiles (tool + site cut, ideation §7). |
-| CTA | **None — the page ends on the work** (ideation §4, Briggsy 2026-05-24). No bottom button, no install command, no GitHub link. The magnitude is the close. Per-project "Try it →" live links (on deployed projects) stay — they point at the *work*, not the tool. Phase 7 + `cta.ts` plumbing get gutted at reconciliation. |
+| Per-project tile | **CLEAN: editorial one-liner + hand-picked hook stat + key visual. NO buttons** — the whole tile is one click → the detail page (ideation §3). Live/source links ("Try it →" / "Source →") live on the **detail page**, not the tile. Only the 9 real projects + 1 "the misses" archive coda = **10 surfaces**. No meta tiles (tool + site cut from the grid, but counted in totals — ideation §7). |
+| CTA | **None — the page ends on the work** (ideation §4, Briggsy 2026-05-24). No bottom button, no install command, no GitHub link. The magnitude is the close. Per-project "Try it →" / "Source →" links live on the **detail page** (tiles are clean — no buttons, ideation §3) — they point at the *work*, not the tool. Phase 7 is reframed to "the close." |
 | Tool publish | **Not published to npm for v1** (ideation §4). `claude-credit` is the internal tape measure, not a product. |
 | Mobile | **First-class, responsive. Must SHINE on phone — not "doesn't break."** Anchor reference: `projects/undercover-mob-boss/public/how-to-play.html` (1700-line work of art — dvh-safe viewport, breakpoint-scaled type, single-column grids that read intentional). Same bar applies here. |
 

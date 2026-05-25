@@ -52,8 +52,8 @@ Read of `tools/claude-credit/package.json` + `tsconfig.json`:
 - `exports` map exposes only `.` (`dist/index.js`) and `./log` — confirms package-name subpath imports are gated; relative-file imports are the route (Decision 1).
 
 Read of `tools/claude-credit/src/taxonomy.ts` (post-Phase-0 shape, per [phase-0-data-gaps.md](phase-0-data-gaps.md) Batch A):
-- `MultiProjectReport = { projects: ProjectReport[]; archiveCollective: ArchiveCollective | null; combined: {…token aggregates…}; scannedAt: string }`. (No `meta` array — Phase 0 dropped it; meta projects are cut, ideation §7.)
-- `ProjectReport` carries `projectPath` (**the PII to strip**), plus `editorial: EditorialContent | null` whose `heroImage`/`gallery` are **project-relative paths** (the files to copy + rewrite), `tokens: TokenStats | null`, `assetBytesByKind`, `topSubcategories`. (No `kind` field — Phase 0 dropped it; meta cut, ideation §7.)
+- `MultiProjectReport = { projects: ProjectReport[]; meta: ProjectReport[]; archiveCollective: ArchiveCollective | null; combined: {…token aggregates…}; scannedAt: string }`. (`meta[]` = the tool + this site — **totals-only**: summed into `combined`, `editorial: null`, NO tile/detail/asset-copy. ideation §7.)
+- `ProjectReport` carries `projectPath` (**the PII to strip**), plus `editorial: EditorialContent | null` whose `heroImage`/`gallery` are **project-relative paths** (the files to copy + rewrite), `tokens: TokenStats | null`, `assetBytesByKind`, `topSubcategories`. (No `kind` field — the `projects[]` / `meta[]` arrays are the separation, ideation §7.)
 - New exported types this phase re-exports: `TokenStats`, `EditorialContent`, `ArchiveCollective` (added by Phase 0 Batch A).
 
 Read of `projects/claude-credits/` (Phase 1 scaffold target):
@@ -271,7 +271,7 @@ const PUBLIC_ASSETS = path.resolve('public/assets')
 // Mutates report.projects[*] editorial paths in place, copies the
 // referenced files into public/assets/<projectName>/, and cleans stale project dirs.
 // Skips archiveCollective (no projectPath, no editorial). NEVER touches public/assets/fonts/.
-// (No report.meta — meta projects are cut, ideation §7; Phase 0 dropped the field.)
+// (report.meta exists for totals, but meta entries have editorial:null → nothing to copy; we walk projects only.)
 export async function copyEditorialAssets(report: MultiProjectReport): Promise<void> {
   const all = report.projects
 
@@ -300,7 +300,7 @@ export async function copyEditorialAssets(report: MultiProjectReport): Promise<v
     }
   }
 
-  // 2. Walk active projects (archive has no editorial; meta cut).
+  // 2. Walk active projects (archive + meta have no editorial → nothing to copy).
   for (const project of all) {
     await rewriteOne(project)
   }

@@ -2,7 +2,7 @@
 
 **Status:** draft (Claude pre-fill complete · Briggsy review pending)
 **Schema source:** [phase-0-data-gaps.md §0.6](plans/phase-0-data-gaps.md) — `EditorialContent` type.
-**Locked decisions (2026-05-24):** site celebrates the WORK, not the tool · **no meta tiles** (tool + site cut from grid, ideation §7) · **no bottom CTA** — the page ends on the work (ideation §4) · `claude-credit` **not published** to npm · grid = **9 real projects + 1 "the misses" archive coda = 10 surfaces** · per-project "Try it →" live links stay (they point at the work) · `repoUrl` wired to detail page.
+**Locked decisions (2026-05-24/25):** site celebrates the WORK, not the tool · **no meta tiles** — tool + site get no tile, but ARE counted in `combined` totals ("count everything", ideation §7) · **no bottom CTA** — the page ends on the work (ideation §4) · **clean tiles** — no tile buttons; live/source links live on the detail page (ideation §3) · `claude-credit` **not published** to npm · grid = **9 real projects + 1 "the misses" archive coda = 10 surfaces** · `repoUrl` wired to detail page.
 
 ---
 
@@ -251,7 +251,7 @@ Briggsy reviews + edits each one-liner. The honest framing is the point — anti
 - `claude-credit` is **not published** to npm; it's the internal tape measure, not a product.
 - Phase 7 (the old "bottom CTA" phase) is gutted at reconciliation — its job becomes "design how the page *ends* on the work."
 - The `cta.ts` / `resolveCtaCopy` / CTA-state plumbing (Phase 7 + About §2) is dead — remove during Phase 7 reconciliation.
-- Per-project "Try it →" live links on deployed projects (TDR-02, TDR-04, UMB) **stay** — they point a visitor at the running *work*, not the tool.
+- Per-project links live on the **detail page** (clean tiles — no tile buttons): "Source →" always + "Try it →" where hosted (TDR-02, TDR-04, UMB — and burned once its Cloudflare URL is wired). They point at the *work*, not the tool.
 
 ---
 

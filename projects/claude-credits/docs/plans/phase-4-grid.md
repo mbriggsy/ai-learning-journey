@@ -9,7 +9,7 @@ coded:
 
 **Prereq:** Read [README.md](README.md) first — the bar, locked decisions, and visual system live there. Read [phase-1-scaffold.md](phase-1-scaffold.md) (the motion foundation + semantic tokens this phase consumes), [phase-2-data-wiring.md](phase-2-data-wiring.md) (the `useStats()` non-null contract + field-level null discipline), [phase-3-hero.md](phase-3-hero.md) (the `src/lib/format.ts`, `src/components/<Name>/` folder, and `useGSAP` patterns this phase REUSES), and [phase-0-data-gaps.md](phase-0-data-gaps.md) (the data contract this phase renders against — `editorial`, `kind`, `git.projectAgeDays`, `grandTotals`, `archiveCollective`). This file is the decisions-not-code recipe for the project grid below the hero.
 
-Phase 4 lands the **project grid** — the showcase's editorial spine. Below the hero, a grid of glass tiles: the **9 active** project tiles, then one muted **the misses** tile (the shelved archive, collapsed) — **10 surfaces total** (9 active + 1 archive coda). Each project tile is a glass card with a hero image, the project name, an age ribbon, a one-liner, ONE gold hook stat, and a "Try it →" link if it's deployed. Tiles reveal as they scroll into view. The grid is the first **per-project** consumer of `useStats()`, and it establishes the component + motion patterns Phase 5's detail page inherits.
+Phase 4 lands the **project grid** — the showcase's editorial spine. Below the hero, a grid of glass tiles: the **9 active** project tiles, then one muted **the misses** tile (the shelved archive, collapsed) — **10 surfaces total** (9 active + 1 archive coda). Each project tile is a glass card with a hero image, the project name, an age ribbon, a one-liner, and ONE gold hook stat — the **whole tile is one clean click → the detail page**, no buttons (clean-tile decision, ideation §3). Tiles reveal as they scroll into view. The grid is the first **per-project** consumer of `useStats()`, and it establishes the component + motion patterns Phase 5's detail page inherits.
 
 The bar for "Phase 4 done": every tile renders the real editorial content with no `NaN`/`undefined`/broken-`<img>`; the grid + divider read as a deliberate editorial sequence (the active projects → the misses coda), never a robotic AI card-matrix; tiles reveal-on-scroll with a weighted stagger and lift on hover with mechanical-key weight; the grid holds at 360–430px as a DELIBERATE single column (not a stretched-desktop fallback); both light and dark pass the water-bead bar; `prefers-reduced-motion` shows every tile in its final visible state with no motion; and — the load-bearing failure mode — **if the motion layer dies, every tile is still visible** (no blank grid). **Eye-on-browser in BOTH modes is the gate — green tests are not enough** (manifesto).
 
@@ -21,7 +21,7 @@ The bar for "Phase 4 done": every tile renders the real editorial content with n
 
 2. **NO authorship split on the tile either.** The genuinely on-thesis split is Claude-vs-Briggsy (human wrote ~0 lines), not authored-vs-pipeline. But as a per-tile viz it's a solid 100%-Claude block — a bar that's always full is a non-statement. The authorship truth is a **headline-grade site claim** (hero / About), not tile texture — and it carries a data landmine (git attributes commits to `mbriggsy`, Claude rides as `Co-Authored-By`, so naive `linesByAuthor` credits the human — the inverse of the truth). Both are out of scope for Phase 4. **Authorship is INTENTIONALLY not a site feature** — silent, no proof, show the work not a who-wrote-what scoreboard (ideation §11, locked 2026-05-24). The hero's magnitude is the flex; it makes no authorship claim.
 
-3. **The tile is: hero image · name + age ribbon · one-liner · gold hook stat · "Try it →".** Five elements, generous negative space, ONE accent moment (the gold hook stat). Reading order top-to-bottom (see "The tile contract" below). This is cleaner and more on-bar than the stub's seven-element tile.
+3. **The tile is: hero image · name + age ribbon · one-liner · gold hook stat.** Four elements, generous negative space, ONE accent moment (the gold hook stat), **NO buttons** — the whole tile is one clean click → the detail page (clean-tile decision, ideation §3, Briggsy 2026-05-25). Reading order top-to-bottom (see "The tile contract" below). The per-project live/source links move OFF the tile and live ONLY on the detail page (Phase 5) — a button inside a clickable card is a competing click target; a calm, uniform grid is more on-bar and on-thesis for a body-of-work showcase. This is cleaner and more on-bar than the stub's seven-element tile.
 
 4. **Sort within each group by authored substance — measured as `grandTotals.authoredLines` descending** (ATC call, 2026-05-24), tie-broken by `projectName` ascending. "Authored substance" means the single `authoredLines` metric, NOT a weighted composite. This is the intended NARRATIVE lead: the biggest builds lead the grid, which reads as "look at the scale of what got built" — on-thesis for an autonomy showcase. Three supporting properties: (a) **rotation-immune** — `grandTotals` is file-classification-derived from a full scan, not a `linesByAuthor` git sum, so it is permanent AND **immune to the Co-Authored-By attribution inversion** flagged in Decision 2 (it never asks "who" wrote a line, only "what tier" the file is); (b) reflects the total build; (c) diff-stable via the `projectName` tie-break (equal-rank tiles never reshuffle on refresh). *Rejected: `grandTotals.allBytes` (the stub's key) — dominated by pipeline media, ranks by "biggest trailer." Rejected: tokens desc — 30-day-window-bounded (JSONL rotation), ranks by "recently active."* **Edge — pure-pipeline / zero-authored project** (`authoredLines === 0`): sinks to the bottom of its group, then alphabetical by name. Acceptable (no current project is pure-pipeline); if one is ever added and this reads wrong, revisit with a secondary key.
 
@@ -61,16 +61,16 @@ The bar for "Phase 4 done": every tile renders the real editorial content with n
 
 15. **The archive "misses" tile is NON-interactive in v1** (no single `/project/:name` target — it's a collective; per-archive detail is a Phase 5 option). Static muted coda — no hover, no `:active`, no link. This is why `ArchiveTile` is its own component (Decision 6), not a `ProjectTile` variant: `ArchiveCollective` has no `editorial`/`git`/`grandTotals`/`tokens`, so forcing it through `ProjectTile` means a union-typed prop with pervasive `kind === 'archive'` branches.
 
-16. **The clickable tile uses the stretched-link pattern — NOT a `<Link>` wrapping the card** (doc-review P0: a `<Link>` around a card that also contains the `LiveLinkButton` `<a>` is a link-inside-a-link — invalid HTML, broken for keyboard + screen readers). Canonical accessible card pattern: the **project name** is the primary `<Link to={`/project/${projectName}`}>`; its `::after { content: ''; position: absolute; inset: 0 }` stretches the hit-target over the whole card (`.tile { position: relative }`). The `LiveLinkButton` sits `position: relative; z-index: 1` so it's above the stretched pseudo-element and stays an independently focusable/clickable second link. Result: ONE nav link + ONE external link per tile, both valid, both keyboard-reachable, the whole card clickable. (Accepted minor tradeoff: text selection across the card is suppressed by the stretched overlay — fine for a tile.)
+16. **The whole tile is a single nav `<Link>` to the detail page via the stretched-link pattern** (clean-tile decision, ideation §3 — the tile has NO buttons, so there's no nested-link problem to design around). Canonical accessible card pattern: the **project name** is the tile's only `<Link to={`/project/${projectName}`}>`; its `::after { content: ''; position: absolute; inset: 0 }` stretches the hit-target over the whole card (`.tile { position: relative }`). Result: ONE nav link per tile, valid, keyboard-reachable, the whole card clickable with a visible focus ring. (Accepted minor tradeoff: text selection across the card is suppressed by the stretched overlay — fine for a tile.) *History: an earlier draft put a per-tile `LiveLinkButton` riding above the stretched `::after` to dodge a link-inside-a-link; the clean-tile decision removed the button entirely, so that coexistence complexity is gone — one link per tile.*
 
 ---
 
 ## Current state (verified at deepening, 2026-05-24)
 
 **Data contract this phase reads (post-Phase-0 — see [phase-0-data-gaps.md](phase-0-data-gaps.md) Batch A):**
-- `useStats()` returns a NON-NULL `MultiProjectReport` (Phase 2). Top-level: `{ projects: ProjectReport[], archiveCollective: ArchiveCollective | null, combined, scannedAt }`. Phase 4 reads only `projects` + `archiveCollective` (meta tiles cut, ideation §7 — Phase 4 does NOT consume `report.meta`, which is dropped/unused post-pivot). (Non-null does NOT mean non-empty — see the empty-grid guard.)
+- `useStats()` returns a NON-NULL `MultiProjectReport` (Phase 2). Top-level: `{ projects: ProjectReport[], archiveCollective: ArchiveCollective | null, combined, scannedAt }`. Phase 4 reads only `projects` + `archiveCollective` (meta tiles cut, ideation §7 — Phase 4 does NOT consume `report.meta`, which is **totals-only**: scanned + summed into `combined`, but no tiles). (Non-null does NOT mean non-empty — see the empty-grid guard.)
 - `ProjectReport` (per tile): `projectName: string`, `editorial: EditorialContent | null`, `grandTotals: GrandTotals` (has `authoredLines`, `authoredFiles`, `authoredBytes`, `pipelineGeneratedFiles/Bytes`, `toolGeneratedFiles/Bytes`, `allFiles`, `allBytes`), `git: GitStats` (has `projectAgeDays: number | null`).
-- `EditorialContent`: `{ oneLiner: string, hookStat: { label: string; value: string }, heroImage: string | null, liveUrl: string | null, repoUrl: string | null, status: 'active' | 'shelved', description: string, gallery: string[], largestCommitCaption? }`. `heroImage` is rewritten to `/assets/<projectName>/<base>` by Phase 2's refresh (or `null`). (Phase 0 reduced the `status` enum to these two values — the `'meta'` value is gone; meta projects are cut, ideation §7.)
+- `EditorialContent`: `{ oneLiner: string, hookStat: { label: string; value: string }, heroImage: string | null, liveUrl: string | null, repoUrl: string | null, status: 'active' | 'shelved', description: string, gallery: string[], largestCommitCaption? }`. `heroImage` is rewritten to `/assets/<projectName>/<base>` by Phase 2's refresh (or `null`). (Phase 0 reduced the `status` enum to these two values — the `'meta'` value is gone; meta entries carry `editorial: null` and get no tile, ideation §7.)
 - `ArchiveCollective` (the misses tile): `{ projectNames: string[], projectCount: number, totalAuthoredFiles/Bytes/Lines, totalPipelineGeneratedFiles/Bytes, totalAllBytes, totalCommits, totalTokensProcessed, totalTokensFresh, totalSessions }`. NO `editorial`, NO per-project fields.
 
 **⚠ PRECONDITION GATE (run before C1 — Phase 0 may not have executed yet).** The repo's `tools/claude-credit/dist/taxonomy.d.ts` is currently **pre-Phase-0** (verified at deepening: it exports only `MultiProjectReport` + `ProjectReport` with NO `editorial`/`tokens`/`archiveCollective`/`git.projectAgeDays`; `grandTotals` DOES already exist). Every field this phase reads except `grandTotals` is added by Phase 0. Before building:
@@ -85,7 +85,7 @@ Each must hit. If any miss, Phase 0 hasn't been executed/rebuilt — STOP and re
 - **Motion (Phase 1):** `src/motion/gsap-context.ts` exports `{ gsap, useGSAP, CustomEase }` (registers `useGSAP` + `CustomEase` ONLY today). `src/motion/easings.ts` exports the `ease` map — **`ease.press` = `weighted-press`** (hover, 1.05 overshoot), **`ease.arrive` = `weighted-arrive`** (reveals). `src/motion/tokens.ts` exports `duration` (`hover: 0.25`, `press: 0.16`, `reveal: 0.8`) and `stagger` (`tiles: 0.06`). `src/motion/reduced-motion.ts` exports `prefersReducedMotion()`.
 - **Component convention (Phase 3):** `src/components/<Name>/<Name>.tsx` + `<Name>.module.css`, `import styles from './<Name>.module.css'`, the `useGSAP(() => {…}, { scope: ref })` + `contextSafe` pattern, `prefersReducedMotion()` branch at the top.
 - **Tokens (Phase 1, semantic — mode-aware):** `--surface-elevated`, `--surface-glass-blur`, `--border-subtle`, `--border-strong`, `--surface-divider`, `--shadow-tile`, `--shadow-hover`, `--radius-tile`, `--radius-chip`, `--accent-stat-highlight` (gold — the ONE moment), `--accent-focus`, `--text-primary`/`--text-secondary`/`--text-muted`, `--text-display-md`, `--text-body`, `--text-meta`, `--font-display`/`--font-body`/`--font-mono`, `--space-*`, `--tracking-tile`, `--leading-tile`. The `.tabular` utility is in `global.css`.
-- **Routing (Phase 1):** `import { Link } from 'react-router'` (NOT `react-router-dom`); the tile's name link is `<Link to={`/project/${projectName}`}>` with the stretched-link pattern (Decision 16).
+- **Routing (Phase 1):** `import { Link } from 'react-router'` (NOT `react-router-dom`); the tile's single nav link is `<Link to={`/project/${projectName}`}>` with the stretched-link pattern making the whole card clickable (Decision 16).
 - **`⚠ --text-muted` fails WCAG AA today** (~3.3:1 dark / ~2.9:1 light @14px). Phase 3's cascade instructs Phase 1 to raise the alpha floor to AA. Until verified landed, **all information-bearing tile text (name, one-liner, hook label, age ribbon) uses `--text-secondary` (≥7:1); `--text-muted` only for purely decorative chrome.** Restated in Cascade.
 
 **Phase 1 placeholder being extended:** `src/pages/Landing.tsx` renders `<Hero/>` (Phase 3). Phase 4 appends `<ProjectGrid/>` below it.
@@ -94,7 +94,7 @@ Each must hit. If any miss, Phase 0 hasn't been executed/rebuilt — STOP and re
 
 ## The tile contract (project tile — locked composition)
 
-frontend-design + emil lens. Top-to-bottom, generous negative space (the luxury signal), ONE gold moment. The card is `position: relative`; the name link's `::after` stretches the click target over the whole card; the live link rides above it (Decision 16).
+frontend-design + emil lens. Top-to-bottom, generous negative space (the luxury signal), ONE gold moment. The card is `position: relative`; the whole tile is a single nav `<Link>` to the detail page, with `::after` stretching the click target over the whole card. NO buttons on the tile (Decision 16, clean-tile decision, ideation §3).
 
 ```
         ┌───────────────────────────────────┐
@@ -111,8 +111,8 @@ frontend-design + emil lens. Top-to-bottom, generous negative space (the luxury 
         │  167            ← gold              │  ← (3) HOOK STAT — value in --accent-stat-highlight
         │  TESTS            (the one moment)  │       gold + display; label small-caps --text-secondary
         │                                     │
-        │                     Try it →        │  ← (4) live link — z-index above the stretched
-        └───────────────────────────────────┘       ::after; ≥44px; focus ring; only if liveUrl
+        └───────────────────────────────────┘
+   whole tile is ONE clean click → /project/:name (stretched ::after). NO buttons (clean-tile, ideation §3).
 ```
 
 **Element specs (project tile):**
@@ -121,10 +121,9 @@ frontend-design + emil lens. Top-to-bottom, generous negative space (the luxury 
 |---|---|---|---|---|---|
 | 0 | Hero image | `editorial.heroImage` | 16:9 frame, `object-fit: cover`, `overflow: hidden` (for hover scale) | — | `null` → omit image, render **type-forward** (below). **Runtime 404** (non-null src that fails to load): `<img onError>` hides the image + applies the `type-forward` class, so a stale/missing asset degrades to type-forward, never a broken-image glyph. |
 | — | Age ribbon | `git.projectAgeDays` via `formatAge` | small chip top-right, **tile-relative** absolute position (anchored to the card, not the image — so it sits top-right with OR without a hero image), `--font-mono` `.tabular`, `--text-meta` | `--text-secondary` | `formatAge(null) === null` → suppress the ribbon entirely. |
-| 1 | Name | `projectName` | `--font-display`, `--text-display-md`, `--tracking-tile`, `--leading-tile`; the primary `<Link>` (stretched `::after`) | `--text-primary` | always present. `max-width: 18ch` + `overflow-wrap: break-word` + `text-wrap: balance` so a long slug wraps, never overflows into the hook row. |
+| 1 | Name | `projectName` | `--font-display`, `--text-display-md`, `--tracking-tile`, `--leading-tile`; inside the tile's single nav `<Link>` (whose stretched `::after` makes the whole card the hit-target) | `--text-primary` | always present. `max-width: 18ch` + `overflow-wrap: break-word` + `text-wrap: balance` so a long slug wraps, never overflows into the hook row. |
 | 2 | One-liner | `editorial.oneLiner` | `--font-body`, `--text-body`, `text-wrap: balance`, `max-width` | `--text-secondary` | `editorial: null` → omit. Clamp to 3 lines (`-webkit-line-clamp: 3` + `overflow: hidden`) so a long blurb can't break the tile rhythm. |
 | 3 | Hook stat | `editorial.hookStat.{value,label}` | value: `--font-display` display size + `.tabular`; label: small-caps `--text-meta` +tracking | **value: `--accent-stat-highlight` (gold)**; label: `--text-secondary` | `editorial: null` → fallback: `formatInt(grandTotals.authoredLines)` value + "lines authored" label (still gold). |
-| 4 | Live link | `editorial.liveUrl` | `LiveLinkButton`, `position: relative; z-index: 1`, `min-height: 44px`, `:focus-visible` ring | `--accent-primary` text/arrow | `null` → omit button (never a dead/disabled button). |
 
 **The gold rule — decision tree** (`--accent-stat-highlight`, README WOW-dictionary: ONE moment per surface):
 - **Project tile** → the hook stat value is gold, ALWAYS (whether `editorial.hookStat.value` or the `grandTotals.authoredLines` fallback). Nothing else on the tile receives gold — not the ribbon, name, link, or border.
@@ -164,8 +163,8 @@ projects/claude-credits/
 │   │   ├── format.ts              # MODIFIED — add formatAge()
 │   │   └── format.test.ts         # MODIFIED — add formatAge cases
 │   ├── components/
-│   │   ├── LiveLinkButton/        # NEW — shared (Phase 5 reuses for live/repo links)
-│   │   ├── ProjectTile/           # NEW — project tile (stretched-link card)
+│   │   ├── LiveLinkButton/        # NEW — shared leaf for Phase 5 (Source/Play links); the TILE renders no link button (clean-tile, ideation §3)
+│   │   ├── ProjectTile/           # NEW — project tile (whole-card single-link, no buttons)
 │   │   ├── ArchiveTile/           # NEW — muted collective "the misses" coda (non-interactive)
 │   │   └── ProjectGrid/           # NEW — layout + render order + dividers + ScrollTrigger reveal owner
 │   ├── motion/
@@ -231,9 +230,9 @@ pnpm typecheck   # clean
 
 The layout/data/null-degrade/responsive truth gate. Real data, FINAL visible state, NO animation.
 
-**4.2a — `src/components/LiveLinkButton/`** (shared leaf, prop-shaped — Phase 5 reuses for live + repo links via a different `label` string, NOT a new variant prop): props `{ href: string; label?: string }` (default "Try it →"). Renders `<a href target="_blank" rel="noopener noreferrer">`, `--accent-primary` text + arrow, `position: relative; z-index: 1` (above the tile's stretched name-link), `min-height: 44px`, padding, `:focus-visible` ring (`--accent-focus`), `border-radius: var(--radius-chip)`.
+**4.2a — `src/components/LiveLinkButton/`** (shared leaf, prop-shaped — Phase 5 reuses for live + repo links via a different `label` string, NOT a new variant prop): props `{ href: string; label?: string }` (default "Try it →"). Renders `<a href target="_blank" rel="noopener noreferrer">`, `--accent-primary` text + arrow, `position: relative; z-index: 1`, `min-height: 44px`, padding, `:focus-visible` ring (`--accent-focus`), `border-radius: var(--radius-chip)`. **Built here as the shared leaf Phase 5 consumes for its Source/Play links; the tile itself renders no link button (clean-tile decision, ideation §3).** Phase 4 is the "establish shared primitives" phase — do NOT skip building it, and do NOT change its prop shape. (`z-index: 1` keeps it valid above a stretched `::after` on whatever surface Phase 5 hosts it.)
 
-**4.2b — `src/components/ProjectTile/`** (props: `{ project: ProjectReport }`): the stretched-link card (Decision 16) — `.tile { position: relative }`, the name is the `<Link>` with `::after { content:''; position:absolute; inset:0 }`. Renders the tile contract; `clsx` drives `has-image`/`type-forward`/`has-link`. Null-degrade per the element table: `editorial: null` → fallback title/hook from `grandTotals`, no image/one-liner/link; `heroImage` null OR `<img onError>` → `type-forward`; `liveUrl: null` → no `LiveLinkButton`; `formatAge() === null` → no ribbon. Hook stat carries the lone gold.
+**4.2b — `src/components/ProjectTile/`** (props: `{ project: ProjectReport }`): the whole-card single-link card (Decision 16) — `.tile { position: relative }`, the name is the tile's only `<Link>` with `::after { content:''; position:absolute; inset:0 }` covering the card. NO buttons on the tile (clean-tile, ideation §3). Renders the tile contract; `clsx` drives `has-image`/`type-forward`. Null-degrade per the element table: `editorial: null` → fallback title/hook from `grandTotals`, no image/one-liner; `heroImage` null OR `<img onError>` → `type-forward`; `formatAge() === null` → no ribbon. Hook stat carries the lone gold. (Does NOT render `LiveLinkButton` — that leaf is built in 4.2a for Phase 5 only.)
 
 **4.2c — `src/components/ArchiveTile/`** (props: `{ archive: ArchiveCollective }`): muted, non-interactive coda. Copy generated from `projectCount`; rolled-up `totalCommits` in `--text-secondary` (NOT gold). Muted treatment specified for BOTH modes (tile contract). No `<Link>`, no hover, no `:active`, `cursor: default`.
 
@@ -249,10 +248,10 @@ The layout/data/null-degrade/responsive truth gate. Real data, FINAL visible sta
 ```
 pnpm refresh && pnpm dev
 ```
-- Every tile renders real editorial: image, name, age ribbon, one-liner, gold hook stat, "Try it →" where deployed.
+- Every tile renders real editorial: image, name, age ribbon, one-liner, gold hook stat. NO buttons on the tile.
 - The grid + divider read as a deliberate sequence: the active projects → the misses coda. The archive tile is muted + non-interactive, **legible in BOTH modes** (not faded-to-broken in light).
-- **A11y:** keyboard-tab the grid — each tile's name link AND its "Try it" link are separately focusable with visible rings; the whole card is clickable (stretched link); no nested-link warning.
-- **Null/overflow-degrade:** scratch `stats.json` — one `editorial: null` (fallback hook, no image/link/one-liner), one `heroImage: null` AND one pointing at a missing file (both → type-forward, no broken `<img>`), one `liveUrl: null` (no button), one `git.projectAgeDays: null` (no ribbon), `archiveCollective: null` (no misses divider/tile), a 40-char name + a 300-char one-liner (wrap/clamp, no overflow), and ALL arrays empty (grid renders nothing, hero alone). Restore.
+- **A11y:** keyboard-tab the grid — each tile is ONE focusable link (the card → detail) with a visible focus ring; the whole card is clickable (stretched link); no nested-link warning.
+- **Null/overflow-degrade:** scratch `stats.json` — one `editorial: null` (fallback hook, no image/one-liner), one `heroImage: null` AND one pointing at a missing file (both → type-forward, no broken `<img>`), one `git.projectAgeDays: null` (no ribbon), `archiveCollective: null` (no misses divider/tile), a 40-char name + a 300-char one-liner (wrap/clamp, no overflow), and ALL arrays empty (grid renders nothing, hero alone). Restore. (No `liveUrl` tile case — the tile renders no link button.)
 - **Editorial spot-check:** each hook stat reads as a specific editorial pick (e.g. "167 tests"), not a generic auto-count — the hook is the tile's sole data moment now, so a weak one reads as AI-slop. (Editorial quality is sourced in preflight −1.5; this gate flags weak hooks early.)
 - Tile click → `/project/:name` (client-side, no document refetch).
 - **Both modes** (`?theme=` + OS): glass chrome, dividers, muted archive read deliberate; gold ONLY on hook stat values.
@@ -298,7 +297,7 @@ pnpm build && pnpm preview    # prod bundle — the real gate
 
 | Landmine | Guard |
 |---|---|
-| **Link inside a link (invalid HTML, breaks a11y)** | Stretched-link pattern (Decision 16): name is the `<Link>` with `::after` covering the card; `LiveLinkButton` `position: relative; z-index: 1` above it. ONE nav link + ONE external link, never nested. Keyboard-nav verify in C2 gate. |
+| **Link inside a link (invalid HTML, breaks a11y)** | Moot under clean tiles — the tile has NO buttons, so there's nothing to nest. Stretched-link pattern (Decision 16): name is the tile's only `<Link>` with `::after` covering the card. ONE nav link per tile. Keyboard-nav verify in C2 gate. |
 | **Blank grid if the motion layer dies** | Hidden state via `gsap.set({autoAlpha:0})` in JS, NEVER CSS `opacity:0`. `gsap.set` is the first motion statement; batch created immediately after. Dead/absent layer → all tiles visible. C3 P0 gate. |
 | **`y:40` offset throws off ScrollTrigger.refresh measurement** | `ScrollTrigger.addEventListener('refreshInit', () => gsap.set('[data-tile]', { y: 0 }))` reverts the offset during measurement (batch can't take `invalidateOnRefresh`). |
 | **refresh never fires when all heroImages are null** | Refresh is gated on `document.fonts.ready` (always resolves) + `window load`, NEVER per-image `load` events (type-forward tiles have no `<img>`; broken images never fire `load`). |
@@ -314,7 +313,7 @@ pnpm build && pnpm preview    # prod bundle — the real gate
 | **Individual shelved tiles** | None exist — `kind` has no `'shelved'`; archive lives only in `archiveCollective` (Decision 6). ONE muted `ArchiveTile`. |
 | **Hardcoded "Two games" archive copy lies on change** | Copy generated from `archiveCollective.projectCount`; verify rendered count matches `stats.json`. |
 | **Archive tile invisible in light mode** | Light-mode muted treatment is a flattened legible surface, not opacity-fade (tile contract). Verify both modes. |
-| **`editorial: null` / `heroImage`/`liveUrl`/`projectAgeDays` null** | Defensive tile per the element table: fallback title/hook from `grandTotals`; omit image (type-forward) / link / ribbon. |
+| **`editorial: null` / `heroImage`/`projectAgeDays` null** | Defensive tile per the element table: fallback title/hook from `grandTotals`; omit image (type-forward) / ribbon. (No `liveUrl` tile case — the tile renders no link button.) |
 | **Long name / one-liner overflow** | Name `max-width: 18ch` + `overflow-wrap`; one-liner `-webkit-line-clamp: 3`. |
 | **Two gold moments per tile** | Gold decision tree: hook stat value ONLY on project tiles; never on archive. |
 | **`--text-muted` fails WCAG AA** | All info-bearing tile text uses `--text-secondary`. Phase 1 cascade raises `--text-muted` to AA (Cascade). |
@@ -328,7 +327,7 @@ pnpm build && pnpm preview    # prod bundle — the real gate
 
 ## System-wide impact
 
-- **First per-project consumer of `useStats()`.** The hero (Phase 3) read `combined.*` only; the grid is the first to iterate `projects[]` and read `archiveCollective`. It honors field-level null discipline — `editorial`/`heroImage`/`liveUrl`/`projectAgeDays` can each be null per tile.
+- **First per-project consumer of `useStats()`.** The hero (Phase 3) read `combined.*` only; the grid is the first to iterate `projects[]` and read `archiveCollective`. It honors field-level null discipline — `editorial`/`heroImage`/`projectAgeDays` can each be null per tile. (`liveUrl` stays a data field but is NOT consumed by the tile — Phase 5's detail page reads it for the Play link.)
 - **Shared primitives established for Phase 5:** `LiveLinkButton` (prop-shaped `{href,label}` — Phase 5 reuses for live + repo links via a different `label`, not a variant prop), `src/lib/grid-order.ts` (first non-format pure-derivation lib — Phase 5 follows the pattern), and `formatAge` in `format.ts`. Built behind data-shaped prop boundaries so Phase 5 inherits no coupling.
 - **Motion surface:** Phase 4 introduces ScrollTrigger to the shared `gsap-context.ts` — every later phase can use it. The `ScrollTrigger.batch` + JS-hidden-state + `refreshInit` y-reset + reduced-motion-early-return + race-then-refresh pattern is the reference for any later scroll-revealed surface.
 - **`ProjectTile` is deliberately NOT reused by Phase 5** — the detail page is a full page, not a tile. Phase 5 reuses the sub-pieces (`LiveLinkButton`, `format.ts`), not the tile shell.
@@ -344,7 +343,7 @@ Apply in the deepen commit (and re-verify via the "Cascade prerequisite" gate ab
 - Current: "Both Hide and Seek and Do Not Disturb appear in the grid with a clear visual marker (faded tile / 'shelved' badge / muted color)." Update to: shelved projects appear as ONE muted **"the misses"** collective tile in v1 (honoring the Phase 0 `archiveCollective` data model); the failures arc is told collectively, with a one-line lesson, and per-archive detail pages remain a Phase 5 option (the `status: 'shelved'` schema value is kept open). The "failures are part of the story / read as intentional, not broken" intent is preserved.
 
 ### `ideation.md` §5 + `README.md` "Visual system" / "Per-project tile" rows (the cut tier bar)
-- Remove the tier-proportion bar from the tile spec. The per-project tile is: hero image · name · age ribbon · one-liner · ONE gold hook stat · live link. The authored/pipeline/tool taxonomy is explained on the About page (and optionally the detail page), not visualized on the grid tile.
+- Remove the tier-proportion bar from the tile spec. The per-project tile is: hero image · name · age ribbon · one-liner · ONE gold hook stat (NO buttons — clean-tile, ideation §3; the whole tile is one click → detail). The authored/pipeline/tool taxonomy is explained on the About page (and optionally the detail page), not visualized on the grid tile.
 
 ### `README.md` verification gate 7 + "Tile order" / sort key
 - Gate 7: drop "tier"/"status marker" language; state the count is **data-derived** = `projects.length` + `(archiveCollective ? 1 : 0)`. Meta tiles are CUT (ideation §7), so the grid is **9 active + 1 archive coda = 10 surfaces**; keep the census-proof formula rather than hard-coding the count.
@@ -392,14 +391,14 @@ The spine truth: Claude wrote all of it; Briggsy only touched `.env` keys; fully
 3. ✅ `pnpm dev` AND `pnpm build && pnpm preview`: every tile renders real editorial; no `NaN`/`undefined`/broken `<img>`.
 4. ✅ Grid + divider render in sequence: the active projects → "the misses" coda (divider suppressed if `archiveCollective` null). NO meta tiles. Archive tile muted + non-interactive + legible in BOTH modes.
 5. ✅ Sort by `grandTotals.authoredLines` desc; equal-rank stable by `projectName`; a 0-authored project sinks to the bottom.
-6. ✅ **A11y:** keyboard tab reaches each tile's name link AND its "Try it" link separately, both with visible `:focus-visible` rings; whole card clickable (stretched link); no nested-`<a>`.
+6. ✅ **A11y:** keyboard tab reaches each tile's single card link with a visible `:focus-visible` ring; whole card clickable (stretched link); no nested-`<a>` (the tile has no buttons).
 7. ✅ Tile click → `/project/:name` client-side. Archive tile has no link (`cursor: default`).
 8. ✅ Reveal-on-scroll: tiles fade+rise with weighted stagger, once each; top row reveals on load WITHOUT scrolling — verified in **dev (StrictMode)** AND preview, tall AND short grid.
 9. ✅ **P0:** force a dead motion layer (throw in the `useGSAP` body) → every tile still visible. The load-bearing gate.
 10. ✅ Reveal positioning self-heals: throttle network (late images/fonts) → tiles reveal at correct positions; all-`heroImage`-null grid still reveals.
 11. ✅ Hover: `translateY(-4px)` + shadow swap + image `scale(1.04)`, weighted-press, faster out; `:active` press on tap (touch); gated to fine pointers; touch never traps.
 12. ✅ `prefers-reduced-motion`: all tiles visible immediately, no reveal/stagger, no hover transform.
-13. ✅ Null/overflow-degrade: `editorial: null`, `heroImage: null` AND a 404 src (both → type-forward), `liveUrl: null`, `projectAgeDays: null`, `archiveCollective: null`, 40-char name + 300-char one-liner (wrap/clamp), ALL arrays empty (grid renders nothing, hero alone) — each verified, none crash, no broken `<img>`.
+13. ✅ Null/overflow-degrade: `editorial: null`, `heroImage: null` AND a 404 src (both → type-forward), `projectAgeDays: null`, `archiveCollective: null`, 40-char name + 300-char one-liner (wrap/clamp), ALL arrays empty (grid renders nothing, hero alone) — each verified, none crash, no broken `<img>`. (No `liveUrl` tile case — the tile renders no link button.)
 14. ✅ Editorial spot-check: each hook stat is a specific editorial pick, not a generic auto-count.
 15. ✅ BOTH modes (light + dark, OS + `?theme=`): glass chrome, dividers, muted archive read deliberate; gold ONLY on hook stat values.
 16. ✅ 360 / 375 / 390 / 430px: single column reads DELIBERATE (full-bleed image, hook stat own row, generous gap), not stretched; no horizontal scroll; tap targets ≥44×44px.

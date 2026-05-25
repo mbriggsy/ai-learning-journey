@@ -45,11 +45,11 @@ Other devs / Anthropic-adjacent folks. Knows what AI collab means; doesn't know 
 - Tabular numerals for stable digit width during tick-up; the tick-up locks its magnitude unit so the suffix never flickers.
 - Don't decorate the number. Frame it cold. The magnitude IS the wow.
 
-### 3. Per-project tile: one-liner + visual + live link
+### 3. Per-project tile: CLEAN — one-liner + visual + hook, no buttons (Briggsy, 2026-05-25)
 
-Each tile: hand-written one-liner, key visual (screenshot / trailer frame / hero asset / card art), live link button if deployed.
+Each tile: hand-written one-liner, key visual (screenshot / trailer frame / hero asset / card art), ONE hook stat. **No buttons on the tile** — the whole tile is one clean click → the detail page. (A button inside a clickable card is a competing click target; the grid stays calm and uniform, which is the more on-bar, on-thesis read for a body-of-work showcase.)
 
-Detail page expands with bigger visual (or gallery), 2-3 sentence description, "Try it →" button if deployed. It also surfaces the project's WORK as a single-column editorial scroll: tokens consumed, a media-asset donut (the one flourish), a "what got built" breadth inventory (code/tests/plans/prompts/images/audio/video by kind), and commit cadence. It makes **no authorship/provenance claim** (§11). See `plans/phase-5-detail.md`.
+The **detail page is where you act:** a **"Source →"** link (always — every project has a repo folder, and the code IS the craft a peer geeks on) + a **"Try it →"** live link (only where the project is actually hosted). It also surfaces the project's WORK as a single-column editorial scroll: tokens consumed, a media-asset donut (the one flourish), a "what got built" breadth inventory (code/tests/plans/prompts/images/audio/video by kind), and commit cadence. It makes **no authorship/provenance claim** (§11). See `plans/phase-5-detail.md`.
 
 ### 4. No bottom CTA — the page ends on the work (Briggsy, 2026-05-24)
 
@@ -58,7 +58,7 @@ Detail page expands with bigger visual (or gallery), 2-3 sentence description, "
 - `claude-credit` is the *tape measure* we used to count the work. It is ours, internal, **not a product the site promotes**. We do NOT publish it to npm for v1.
 - Supersedes the earlier "dual CTA — tool pitch + GitHub link / the site IS a demo of the tool" framing. That made the visit end on tool-promotion, which is exactly what this site is not about.
 - **Downstream:** Phase 7 (the "bottom CTA" phase) is gutted — its job becomes "design how the page *ends* on the work," not "build CTA buttons." The `cta.ts` / `resolveCtaCopy` / CTA-state-tracking plumbing (Phase 7 + About §2) is dead — remove it during Phase 7 reconciliation.
-- Per-project **"Try it →" live-link buttons on deployed projects stay** (§3) — those point a visitor at the actual *work* (the running game/app), not at the tool. Different thing.
+- Per-project **live/source links live on the DETAIL page, not the tiles** (§3) — "Source →" always + "Try it →" where hosted. Those point a visitor at the actual *work* (the running game/app, or its source), not at the tool. Different thing — they stay.
 
 ### 5. Per-project highlight: ONE hand-picked hook per tile
 
@@ -75,8 +75,10 @@ Both Hide and Seek and Do Not Disturb appear in the grid with a clear visual mar
 The `claude-credit` tool and the `claude-credits` site itself are **cut from the grid.** A tile for the tape measure, and a tile for the very page you're standing on, are navel-gazing — the site is about the WORK, not its own construction.
 
 - Grid = the **9 real projects** + the **"the misses"** collective archive tile = **10 surfaces** (was 12). No "the tools" divider, no meta band.
-- **Meta is also excluded from the hero's combined totals**, not just the tiles (Claude's call, 2026-05-24 — Briggsy to veto if wanted). Rationale: counting the site's own build tokens (which live in the `claude-credits` JSONLs and may be one of the largest sinks) toward "the work being celebrated" is circular and inflates the hero. The honest total = the 9 active projects + the 6 shelved.
-- Consequence: `~/.claude-credit-projects.yaml` drops the `meta:` array (keeps `projects:` + `archive:`). Phase 0's 0.6b parser extension only needs `archive:`; the `kind: 'meta'` discriminator + `status: 'meta'` enum value become unused (reconcile at Phase 0).
+- **Meta IS counted in the hero's combined totals** (Briggsy, 2026-05-25 — "count everything"). The tool + the site's own build are real work and feed the big magnitude number; they're just not given tiles. Briggsy accepted knowingly that this site's own construction (the `claude-credits` JSONLs) is likely one of the largest single token sinks, so the hero number is heavily weighted toward "making the showcase itself."
+- Consequence: `~/.claude-credit-projects.yaml` KEEPS the `meta:` array (tool + site) so they're scanned + summed into `combined`. Phase 0's 0.6b parser scans `meta[]` → contributes to `combined.*`, with `editorial: null`, and **emits no tile** — meta lives in its own `report.meta[]` array that the grid / detail / asset-copy steps all IGNORE (no `kind` field needed; the array IS the separation; `status` enum stays `'active' | 'shelved'` since only active projects carry editorial).
+- **Project-COUNT semantics** (lean, confirm at Phase 3): the "N projects" count = the **9 active + 6 shelved = 15** portfolio entries. The 2 meta feed the token/line/byte magnitude but are NOT counted as "projects" (the tool and the site-about-the-work aren't portfolio projects). Magnitude counts everything; the project tally counts the portfolio.
+- Supersedes the earlier "meta excluded from totals" note.
 - Supersedes "Meta-projects appear in the grid / self-referential is a flex."
 
 ### 8. Taxonomy explainer: full on About + inline hint near hero

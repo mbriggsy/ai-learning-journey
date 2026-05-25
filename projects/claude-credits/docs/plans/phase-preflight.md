@@ -115,7 +115,9 @@ If `npm publish` fails (auth, registry, anything): record exact stderr, do NOT p
 - **GitHub source URL (verbatim):** https://github.com/mbriggsy/ai-learning-journey
 ```
 
-Verbatim CTA copy for each state (Phase 7 reads this directly):
+**Also set the machine mirror.** `editorial.md`'s `## CTA state` block is the human receipt; the app reads the resolved state from `CURRENT_CTA_STATE` in `projects/claude-credits/src/lib/cta.ts` (created by Phase 7 / About §2 — see [phase-7-cta.md](phase-7-cta.md) Decision 1). When this gate resolves A/B/C, **set `CURRENT_CTA_STATE` in `src/lib/cta.ts` to match** (if the file exists yet; if Phase 7/About haven't run, the `editorial.md` receipt is the record and they set the constant from it when they build). Phase 7's `cta.test.ts` fails loud if the constant ever drifts from this receipt.
+
+Verbatim CTA copy for each state (`resolveCtaCopy` in `src/lib/cta.ts` encodes this; Phase 7's CTA + About §2 both read it):
 
 *STATE A — unscoped, published:*
 ```

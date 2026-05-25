@@ -6,7 +6,7 @@ doc-reviewed: 2026-05-24T16:25:44-04:00
 
 # Phase 2 — Data wiring
 
-**Prereq:** Read [README.md](README.md) first — the bar, locked decisions, and visual system live there. Read [phase-0-data-gaps.md](phase-0-data-gaps.md) "Cascade → phase-2" and [phase-1-scaffold.md](phase-1-scaffold.md) Decision 9 — both lock contracts this phase consumes. This file is the paint-by-numbers recipe for the bridge between the `claude-credit` data contract and the React components Phases 3–9 build.
+**Prereq:** Read [README.md](README.md) first — the bar, locked decisions, and visual system live there. Read [phase-0-data-gaps.md](phase-0-data-gaps.md) "Cascade → phase-2" and [phase-1-scaffold.md](phase-1-scaffold.md) Decision 9 — both lock contracts this phase consumes. This file is the decisions-not-code recipe for the bridge between the `claude-credit` data contract and the React components Phases 3–9 build.
 
 Phase 2 lands the **data spine of the site** — no *feature* pixels, no animation (the loading-hold and error surfaces in Commit 3 are data-layer infrastructure, not Phase 3+ design work). Two halves that meet at one file (`public/data/stats.json`):
 

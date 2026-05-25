@@ -6,7 +6,7 @@ doc-reviewed: 2026-05-24T13:11:43-04:00
 
 # Phase 0 — Data contract (`tools/claude-credit/`)
 
-**Prereq:** Read [README.md](README.md) first — the bar, locked decisions, and visual system live there. This file is the paint-by-numbers recipe for the data contract Phase 1+ renders against.
+**Prereq:** Read [README.md](README.md) first — the bar, locked decisions, and visual system live there. This file is the decisions-not-code recipe for the data contract Phase 1+ renders against.
 
 Phase 0 lands the full data contract for the site: six new data field groups in the CLI's report shape, the multi-project config parser extension, the CLI surface parity to render the new fields (§0.8), the test harness bootstrap with fixture-based integration tests (§0.10), and the privacy-by-construction enforcement (shared `strip-for-publish.ts` + allowlist test). The phase name was "Fill data gaps" pre-doc-review — renamed at doc-review time because the scope is the full contract, not just field-adds. None of this is visual work; it's the data spine. The site renders nothing meaningful until these land.
 

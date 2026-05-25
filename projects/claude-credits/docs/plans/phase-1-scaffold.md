@@ -6,7 +6,7 @@ doc-reviewed: 2026-05-24T15:18:00-04:00
 
 # Phase 1 — Scaffold `projects/claude-credits/`
 
-**Prereq:** Read [README.md](README.md) first — the bar, locked decisions, and visual system live there. This file is the paint-by-numbers recipe for the foundation Phase 2+ builds on.
+**Prereq:** Read [README.md](README.md) first — the bar, locked decisions, and visual system live there. This file is the decisions-not-code recipe for the foundation Phase 2+ builds on.
 
 Phase 1 lands the **foundation**, not features: the Vite + React 19 + TypeScript shell, the three-route SPA skeleton (with a cross-fade transition seam) and placeholder pages, the token system (physical → semantic → light-override, role-based), the motion foundation (four named eases + duration tokens + GSAP plugin registration + a `prefers-reduced-motion` helper), the type system (three self-hosted variable fonts + a 7-step clamp scale), the mobile-first global baseline (dvh fallback, viewport-fit, dual theme-color, chromeless scrollbars), and the Vercel config. **No data, no real components, no animations** — those are Phase 2+. The bar for "Phase 1 done" is: `pnpm dev` AND `pnpm build && pnpm preview` both serve all three routes, fonts load with no layout shift, tokens resolve, light/dark switches with the OS (and via a dev `?theme=` override), and `pnpm typecheck` is green with **no carve-outs**.
 

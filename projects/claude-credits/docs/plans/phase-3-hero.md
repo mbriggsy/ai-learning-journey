@@ -6,7 +6,7 @@ doc-reviewed: 2026-05-24T18:23:05-04:00
 
 # Phase 3 — Hero (the first "wow")
 
-**Prereq:** Read [README.md](README.md) first — the bar, locked decisions, and visual system live there. Read [phase-1-scaffold.md](phase-1-scaffold.md) (the tokens/eases/type this phase consumes) and [phase-2-data-wiring.md](phase-2-data-wiring.md) (the `useStats()` contract + canonical field names). This file is the paint-by-numbers recipe for the landing page's first surface.
+**Prereq:** Read [README.md](README.md) first — the bar, locked decisions, and visual system live there. Read [phase-1-scaffold.md](phase-1-scaffold.md) (the tokens/eases/type this phase consumes) and [phase-2-data-wiring.md](phase-2-data-wiring.md) (the `useStats()` contract + canonical field names). This file is the decisions-not-code recipe for the landing page's first surface.
 
 Phase 3 lands the **hero** — the single most important surface in the project, the first thing a stranger sees, the make-or-break on the bar. Structurally simple: ONE massive number framed cold, with an honest sub-line and a staggered supporting line beneath. The magnitude IS the wow. No falling droplets, no iridescent accents, no competing visual weights. The "slick" lives in **type as instrument + material surface treatment + motion timing** — not effects.
 

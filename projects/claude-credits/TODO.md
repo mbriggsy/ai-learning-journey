@@ -1,6 +1,6 @@
 # claude-credits — TODO
 
-**Status:** Deepening in progress. **Phases 0–5 AND the preflight plan (−1) are deepened + doc-reviewed** (paint-by-numbers recipes). Phases 6–9 remain to deepen. **No code until ALL phase plans are deepened and contradictions resolved** (house rule).
+**Status:** Deepening in progress. **Phases 0–5 AND the preflight plan (−1) are deepened + doc-reviewed.** Phases 6–9 remain to deepen. **No code until ALL phase plans are deepened and contradictions resolved** (house rule).
 
 > **House rule — TODO is NOT a diary.** Actionable items only. No session history, no "what we did" logs, no narrative addenda. The git log has the history. If a line isn't an open thing Claude or Briggsy can act on, it doesn't belong here. Strip cruft when you find it.
 
@@ -15,7 +15,7 @@ Read both before touching code.
 
 ## Next: finish deepening the remaining phases
 
-Same drill each: deepen to paint-by-numbers → `/ce:plan deepen` → 6-reviewer `/document-review` → stamp `deepened:` / `doc-reviewed:` frontmatter → commit.
+Same drill each: deepen to the **decisions-not-code** bar (native `ce:plan` — lock decisions/contracts/the bar, render fully-decided values concretely, defer execution-discovery) → `/ce:plan deepen` → 6-reviewer `/document-review` → stamp `deepened:` / `doc-reviewed:` frontmatter → commit.
 
 - [ ] **Phase 6 — about** (`phase-6-about.md`) — **NEXT.** Place the captured light-touch line: *"Claude wrote all of it. Briggsy directed — and answered a question or two."* (ideation §11). Full taxonomy explainer lives here (may reuse the now-published `tiers[]`).
 - [ ] **Phase 7 — bottom CTA** (`phase-7-cta.md`) — depends on preflight −1.1 (is `claude-credit` publishable?) for the primary CTA copy.

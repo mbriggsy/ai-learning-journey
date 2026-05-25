@@ -5,12 +5,16 @@ import yaml from 'js-yaml';
 import { loadMultiProjectConfig } from './config.js';
 import { buildProjectReport } from './report.js';
 import { classifySlugs, projectPathToSessionSlug } from './session-tokens.js';
-import type { MultiProjectReport, ProjectReport } from './taxonomy.js';
+import type { ArchiveCollective, MultiProjectReport, ProjectReport } from './taxonomy.js';
 
 export interface BuildMultiOptions {
   homeDir?: string;
-  /** If provided, use this list instead of reading the config. */
+  /** If provided, use this list instead of reading the config's `projects:`. */
   projectPaths?: string[];
+  /** Meta-project paths (tool + site). Totals-only; editorial forced null. Test/override seam. */
+  metaPaths?: string[];
+  /** Archive paths ("the misses"). Rolled into archiveCollective. Test/override seam. */
+  archivePaths?: string[];
   includeIgnored?: boolean;
 }
 
@@ -71,41 +75,89 @@ export async function buildMultiProjectReport(opts: BuildMultiOptions = {}): Pro
 }> {
   const homeDir = opts.homeDir ?? os.homedir();
   let projectPaths: string[];
+  let metaPaths: string[];
+  let archivePaths: string[];
   let configPath: string | null = null;
   let configCreated = false;
 
   if (opts.projectPaths) {
     projectPaths = opts.projectPaths;
+    metaPaths = opts.metaPaths ?? [];
+    archivePaths = opts.archivePaths ?? [];
   } else {
     const ensured = await ensureMultiProjectConfig(homeDir);
     configPath = ensured.configPath;
     configCreated = ensured.created;
     const { config } = await loadMultiProjectConfig(homeDir);
     projectPaths = (config?.projects ?? []).map((p) => expandHome(p.path, homeDir));
+    metaPaths = (config?.meta ?? []).map((p) => expandHome(p.path, homeDir));
+    archivePaths = (config?.archive ?? []).map((p) => expandHome(p.path, homeDir));
   }
 
-  // Full set of configured slugs for longest-prefix session-slug matching.
-  // 0.5b: projects only. 0.6b extends this with meta + archive paths.
-  const configuredParentSlugs = projectPaths.map(projectPathToSessionSlug);
+  // Full set of configured slugs for longest-prefix session-slug matching —
+  // projects + meta + archive, so the tool's/site's/archived projects' own
+  // session dirs are NOT misclassified as orphans.
+  const configuredParentSlugs = [...projectPaths, ...metaPaths, ...archivePaths].map(
+    projectPathToSessionSlug,
+  );
 
-  const projects: ProjectReport[] = [];
-  for (const projectPath of projectPaths) {
+  const buildOne = async (rootDir: string): Promise<ProjectReport | null> => {
     try {
-      const stat = await fs.stat(projectPath);
-      if (!stat.isDirectory()) continue;
+      const stat = await fs.stat(rootDir);
+      if (!stat.isDirectory()) return null;
     } catch {
-      continue;
+      return null;
     }
-    const report = await buildProjectReport({
-      rootDir: projectPath,
+    return buildProjectReport({
+      rootDir,
       includeIgnored: opts.includeIgnored,
       homeDir,
       configuredParentSlugs,
     });
-    projects.push(report);
+  };
+
+  const projects: ProjectReport[] = [];
+  for (const projectPath of projectPaths) {
+    const report = await buildOne(projectPath);
+    if (report) projects.push(report);
   }
-  // 0.6b populates meta[] (totals-only) + archiveCollective; empty until then.
+
+  // meta[] — totals-only: scanned + summed, but editorial FORCED null (no tile).
   const meta: ProjectReport[] = [];
+  for (const metaPath of metaPaths) {
+    const report = await buildOne(metaPath);
+    if (report) meta.push({ ...report, editorial: null });
+  }
+
+  // archive[] — rolled into ONE archiveCollective; never an individual ProjectReport.
+  const archiveReports: ProjectReport[] = [];
+  for (const archivePath of archivePaths) {
+    const report = await buildOne(archivePath);
+    if (report) archiveReports.push(report);
+  }
+  let archiveCollective: ArchiveCollective | null = null;
+  if (archiveReports.length > 0) {
+    const sum = (pick: (r: ProjectReport) => number) =>
+      archiveReports.reduce((acc, r) => acc + pick(r), 0);
+    archiveCollective = {
+      projectNames: archiveReports.map((r) => r.projectName),
+      projectCount: archiveReports.length,
+      totalAuthoredFiles: sum((r) => r.grandTotals.authoredFiles),
+      totalAuthoredBytes: sum((r) => r.grandTotals.authoredBytes),
+      totalAuthoredLines: sum((r) => r.grandTotals.authoredLines),
+      totalPipelineGeneratedFiles: sum((r) => r.grandTotals.pipelineGeneratedFiles),
+      totalPipelineGeneratedBytes: sum((r) => r.grandTotals.pipelineGeneratedBytes),
+      totalAllBytes: sum((r) => r.grandTotals.allBytes),
+      totalCommits: sum((r) => r.git.totalCommits),
+      totalTokensProcessed: sum((r) => r.tokens?.tokensProcessed ?? 0),
+      totalTokensFresh: sum((r) => r.tokens?.tokensFresh ?? 0),
+      totalSessions: sum((r) => r.tokens?.sessionCount ?? 0),
+      totalTestCases: sum((r) => r.testCases),
+      totalTestLines: sum((r) => r.testLines),
+      totalPlanCount: sum((r) => r.planCount),
+      totalPlanLines: sum((r) => r.planLines),
+    };
+  }
 
   const combined: MultiProjectReport['combined'] = {
     projectCount: projects.length,
@@ -135,7 +187,9 @@ export async function buildMultiProjectReport(opts: BuildMultiOptions = {}): Pro
     totalPlanCount: 0,
     totalPlanLines: 0,
   };
-  for (const p of projects) {
+  // Invariant A (sum-class): combined.totalX = Σ(projects) + Σ(meta) + archiveCollective.
+  // meta counts toward magnitude ("count everything"); projectCount stays projects-only.
+  for (const p of [...projects, ...meta]) {
     combined.totalAuthoredFiles += p.grandTotals.authoredFiles;
     combined.totalAuthoredBytes += p.grandTotals.authoredBytes;
     combined.totalAuthoredLines += p.grandTotals.authoredLines;
@@ -148,11 +202,25 @@ export async function buildMultiProjectReport(opts: BuildMultiOptions = {}): Pro
     combined.totalIterationProxies += p.proxies.iterationProxyTotal;
     combined.totalAllFiles += p.grandTotals.allFiles;
     combined.totalAllBytes += p.grandTotals.allBytes;
-    // 0.5c — breadth (sum-class). 0.6b folds in meta[] + archiveCollective.
     combined.totalTestCases += p.testCases;
     combined.totalTestLines += p.testLines;
     combined.totalPlanCount += p.planCount;
     combined.totalPlanLines += p.planLines;
+  }
+  // archiveCollective contributes the sum-class fields it carries (no tool-generated,
+  // no allFiles, no discarded/iteration — those aren't rolled up for the misses coda).
+  if (archiveCollective) {
+    combined.totalAuthoredFiles += archiveCollective.totalAuthoredFiles;
+    combined.totalAuthoredBytes += archiveCollective.totalAuthoredBytes;
+    combined.totalAuthoredLines += archiveCollective.totalAuthoredLines;
+    combined.totalPipelineGeneratedFiles += archiveCollective.totalPipelineGeneratedFiles;
+    combined.totalPipelineGeneratedBytes += archiveCollective.totalPipelineGeneratedBytes;
+    combined.totalAllBytes += archiveCollective.totalAllBytes;
+    combined.totalCommits += archiveCollective.totalCommits;
+    combined.totalTestCases += archiveCollective.totalTestCases;
+    combined.totalTestLines += archiveCollective.totalTestLines;
+    combined.totalPlanCount += archiveCollective.totalPlanCount;
+    combined.totalPlanLines += archiveCollective.totalPlanLines;
   }
 
   // 0.5b — token aggregation over projects[] + meta[] (null-skip). Invariants B + C.
@@ -195,6 +263,13 @@ export async function buildMultiProjectReport(opts: BuildMultiOptions = {}): Pro
   combined.modelBreakdown = Array.from(modelAcc.entries())
     .map(([model, v]) => ({ model, sessions: v.sessions, tokensProcessed: v.tokensProcessed }))
     .sort((a, b) => b.tokensProcessed - a.tokensProcessed);
+  // archiveCollective adds its token totals (it has no per-model or window data,
+  // so it does not affect modelBreakdown or the retention window — per Invariant C).
+  if (archiveCollective) {
+    combined.totalTokensProcessed += archiveCollective.totalTokensProcessed;
+    combined.totalTokensFresh += archiveCollective.totalTokensFresh;
+    combined.totalSessions += archiveCollective.totalSessions;
+  }
 
   // Orphan session slugs: on-disk dirs matching no configured project.
   // NEVER published (path-bearing PII) — surfaced only as an aggregated warning.
@@ -212,7 +287,7 @@ export async function buildMultiProjectReport(opts: BuildMultiOptions = {}): Pro
     report: {
       projects,
       meta,
-      archiveCollective: null,
+      archiveCollective,
       combined,
       scannedAt: new Date().toISOString(),
     },

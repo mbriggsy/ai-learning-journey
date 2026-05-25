@@ -116,6 +116,12 @@ export interface MultiProjectConfig {
     /** Optional display name (defaults to basename of path). */
     name?: string;
   }>;
+  /** 0.6b — meta projects (the tool + this site). Totals-only: scanned + summed
+   *  into combined, but emit NO tile/detail/asset (editorial forced null). */
+  meta?: Array<{ path: string; name?: string }>;
+  /** 0.6b — shelved projects ("the misses"). Rolled into ONE archiveCollective,
+   *  never an individual ProjectReport. */
+  archive?: Array<{ path: string; name?: string }>;
 }
 
 const CONFIG_FILE_CANDIDATES = [

@@ -103,12 +103,21 @@ async function main(): Promise<void> {
 
   try {
     if (args.flags.all) {
-      const { report, configCreated, configPath } = await buildMultiProjectReport({
+      const { report, configCreated, configPath, orphanSlugs } = await buildMultiProjectReport({
         includeIgnored: args.flags.includeIgnored,
       });
       if (configCreated && configPath) {
         process.stderr.write(
           kleur.cyan(`Created ${configPath} — edit it to control which projects --all scans.\n`),
+        );
+      }
+      if (orphanSlugs.length > 0) {
+        process.stderr.write(
+          kleur.yellow(
+            `Note: ${orphanSlugs.length} session slug${orphanSlugs.length === 1 ? '' : 's'} in ` +
+              `~/.claude/projects matched no configured project (their tokens are NOT counted). ` +
+              `Add the project to your config to include them.\n`,
+          ),
         );
       }
       if (args.flags.json) {

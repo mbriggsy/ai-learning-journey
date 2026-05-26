@@ -1248,12 +1248,12 @@ Expected: 5 integration tests pass + the unit tests from §0.4 / §0.5b / §0.6b
 | `renderProjectTerminal` | `tools/claude-credit/src/format/terminal.ts` | Same as markdown project renderer (§0.8) |
 | `renderMultiProjectTerminal` | `tools/claude-credit/src/format/terminal.ts` | Same as markdown multi renderer (§0.8) |
 | `cli.ts` JSON output | `tools/claude-credit/src/cli.ts:114-115, 131-132` | Automatic — `JSON.stringify(report)` passthrough |
-| `projects/claude-credits/` site (Phase 1+) | per `phase-2-data-wiring.md` | All new field groups + `archiveCollective`. Deprecates reads of `git.commitsByAuthor` in favor of `linesByAuthor` for the AUTHORED BY block. |
+| `projects/claude-credits/` site (Phase 1+) | per `phase-2-data-wiring.md` | All new field groups + `archiveCollective`. **The site reads NEITHER `linesByAuthor` NOR `commitsByAuthor`** — authorship is silent (§11), the AUTHORED BY block was cut, and both fields are now STRIPPED from the published JSON (2026-05-26). |
 
 ### Error propagation — null discipline
 
 The Null discipline section above is the rule. Specifically:
-- `tokens === null` → AUTHORED BY block drops the tokens column (not "—"); TOKENS CONSUMED block omitted entirely from the detail page; hero PRIMARY falls back to `combined.totalAuthoredLines` with a footnote change.
+- `tokens === null` → TOKENS CONSUMED movement omitted entirely from the detail page (not rendered as "0 tokens"); hero PRIMARY falls back to `combined.totalAuthoredLines` with a footnote change. (The AUTHORED BY block this once also governed was CUT — §11.)
 - `editorial === null` → tile renders in "degraded" mode (project name + grandTotals only); no one-liner, no hookStat, no live-link button.
 - `git.firstCommitISO === null` → suppress age ribbon and "Tempo" section in the detail page.
 
@@ -1272,7 +1272,7 @@ Written as a comment above `MultiProjectReport` in `taxonomy.ts`. §0.10 test (2
 `messageFirstLine` was DROPPED from the schema (per Decisions section). This eliminates a privacy-stripping concern entirely — no commit-message-text leaks possible.
 
 Other new fields are public-safe:
-- `git.linesByAuthor[].author` — names are already public on GitHub commits.
+- `git.linesByAuthor` + `git.commitsByAuthor` — **NO LONGER PUBLISHED (stripped 2026-05-26).** Even though author names are already public on GitHub commits, these per-author breakdowns are unused by the site and INVERT the autonomous-build thesis on a scrapeable JSON (git credits the human). `stripForPublish` drops both; the tool still computes them internally.
 - `tokens.byModel[].model` — model IDs are public.
 - `editorial.heroImage` — project-relative path. The Phase 2 §2.2 rewrite step converts to `/assets/<projectName>/<basename>` before publishing.
 - `editorial.liveUrl` / `repoUrl` — author-supplied public URLs.
@@ -1354,7 +1354,7 @@ The cascade carries CONTRACT (schema facts), not CONTENT (display decisions). Ph
 ### `phase-5-detail.md`
 
 - **CONTRACT: "View source →" affordance** reads from `editorial.repoUrl` (preflight cascade requirement; data field is locked here in Phase 0).
-- **CONTRACT: detail page handles `tokens === null` per null discipline** — AUTHORED BY drops the tokens column; TOKENS CONSUMED section is omitted from the page (not rendered as "0 tokens").
+- **CONTRACT: detail page handles `tokens === null` per null discipline** — TOKENS CONSUMED movement is omitted from the page (not rendered as "0 tokens"). (No AUTHORED BY surface — cut, §11.)
 - **CONTRACT: TOKENS CONSUMED block has access to** `tokensProcessed`, `tokensFresh`, `sessionCount`, `windowStartISO → windowEndISO (windowDays)`, per-model breakdown from `byModel`, `sidechainTokens`. Phase 5 composes the visual.
 - **CONTRACT: optional `editorial.largestCommitCaption?: string`** — Phase 5 renders next to `largestSingleCommit` numbers if present, falls back to numbers-only otherwise. Restores storytelling beat lost when `messageFirstLine` was dropped.
 - **CONTRACT: `Archive.tsx` detail page** at route `/archive` — renders archive project names from `archiveCollective.projectNames` + Briggsy-authored one-liners (content authored in preflight −1.5).

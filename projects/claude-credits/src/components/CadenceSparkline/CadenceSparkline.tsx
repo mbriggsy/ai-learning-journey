@@ -45,7 +45,8 @@ export function CadenceSparkline({
           <span className={styles.callout}>
             <span className={styles.calloutValue}>{peakDate}</span>
             <span className={styles.calloutLabel}>
-              peak · <span className="tabular">{formatInt(timeline.peakDay.count)}</span> commits
+              peak · <span className="tabular">{formatInt(timeline.peakDay.count)}</span>{' '}
+              {timeline.peakDay.count === 1 ? 'commit' : 'commits'}
             </span>
           </span>
         )}

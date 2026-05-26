@@ -12,4 +12,6 @@ import { DrawSVGPlugin } from 'gsap/DrawSVGPlugin'
 // re-verify the donut draws in `pnpm preview`, not just dev (same failure class as the eases).
 gsap.registerPlugin(useGSAP, CustomEase, ScrollTrigger, DrawSVGPlugin)
 
-export { gsap, useGSAP, CustomEase, ScrollTrigger, DrawSVGPlugin }
+// DrawSVGPlugin is registered (above) but not re-exported — consumers drive it through the gsap
+// instance (gsap.set(el, { drawSVG: … })), never by importing the plugin symbol.
+export { gsap, useGSAP, CustomEase, ScrollTrigger }

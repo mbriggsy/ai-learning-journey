@@ -23,6 +23,12 @@ const BackLink = () => (
   </Link>
 )
 
+// Movement groups drive the hairline dividers (rendered only between GROUPS). A literal union
+// (not bare `string`) makes a typo in any movement's group a compile error rather than a silent
+// misplaced/missing divider.
+type MovementGroup = 'opener' | 'magnitude' | 'work' | 'rhythm' | 'proof' | 'invitation'
+type Movement = { key: string; group: MovementGroup; block: boolean; node: ReactNode | null }
+
 export default function ProjectDetail() {
   const { name } = useParams<{ name: string }>()
   const report = useStats()
@@ -155,7 +161,6 @@ export default function ProjectDetail() {
   // Ordered movements. `group` drives the hairline dividers (between GROUPS only — the plan's
   // rhythm). `block` = true → a [data-block] scroll-reveal target in C3; the donut is false
   // (it owns its own DrawSVG draw, Decision 6).
-  type Movement = { key: string; group: string; block: boolean; node: ReactNode | null }
   const movements: Movement[] = [
     { key: 'hero', group: 'opener', block: true, node: <DetailHero project={project} /> },
     { key: 'tokens', group: 'magnitude', block: true, node: tokens ? <TokensBlock tokens={tokens} /> : null },

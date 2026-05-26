@@ -26,9 +26,11 @@ const richTiers = () =>
         },
         {
           category: 'docs',
-          // plans & docs uses the pre-computed category TOTALS, not a manual subcat sum.
+          // plans & docs uses the pre-computed category TOTALS, not a manual subcat sum. The
+          // totals (100) DIVERGE from the listed subcats (70+22=92) on purpose, so the test fails
+          // if the impl ever sums subcategories instead of reading totals.files.
           subcategories: [sub('plans', { files: 70 }), sub('readmes', { files: 22 })],
-          totals: sub('docs', { files: 92 }),
+          totals: sub('docs', { files: 100 }),
         },
         {
           category: 'data',
@@ -57,7 +59,7 @@ describe('buildComposition', () => {
     expect(out).toEqual([
       { key: 'code', label: 'lines of code', unit: 'lines', value: 38412 },
       { key: 'tests', label: 'tests', unit: 'files', value: 1247 },
-      { key: 'docs', label: 'plans & docs', unit: 'files', value: 92 },
+      { key: 'docs', label: 'plans & docs', unit: 'files', value: 100 },
       { key: 'prompts', label: 'generation prompts', unit: 'files', value: 56 },
       { key: 'configs', label: 'config files', unit: 'files', value: 120 },
       { key: 'images', label: 'images', unit: 'count', value: 2140 },
@@ -68,9 +70,9 @@ describe('buildComposition', () => {
 
   it('uses the pre-computed docs category TOTALS, not a subcategory sum', () => {
     const out = buildComposition(proj({ tiers: richTiers() }))
-    // totals.files = 92 even though the two listed subcats sum to 70 + 22 = 92 here;
-    // the contract guarantees totals is authoritative — assert we read it.
-    expect(out.find((i) => i.key === 'docs')?.value).toBe(92)
+    // totals.files = 100 while the listed subcats sum to 70 + 22 = 92; reading totals yields 100,
+    // a manual subcat sum would yield 92 — this assertion fails loudly if the impl regresses.
+    expect(out.find((i) => i.key === 'docs')?.value).toBe(100)
   })
 
   it('omits zero-count kinds (a project with no audio/video shows neither — never "0")', () => {

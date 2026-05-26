@@ -20,7 +20,7 @@ export function CompositionInventory({ items }: { items: CompositionItem[] }) {
       <p className={styles.label}>What got built</p>
       <ul className={clsx(styles.items, isRow ? styles.row : styles.grid)}>
         {items.map((item) => (
-          <li key={item.key} className={styles.item} data-inventory-item>
+          <li key={item.key} className={styles.item}>
             <span className={clsx(styles.value, 'tabular')}>{formatInt(item.value)}</span>
             <span className={styles.itemLabel}>{item.label}</span>
           </li>

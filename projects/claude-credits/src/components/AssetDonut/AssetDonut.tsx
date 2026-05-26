@@ -55,11 +55,14 @@ export function AssetDonut({ assetBytesByKind }: { assetBytesByKind: ProjectRepo
       if (!root || prefersReducedMotion()) return // C2 static donut + legend stay visible
       const arcs = gsap.utils.toArray<SVGCircleElement>('[data-donut-arc]', root)
       const legend = gsap.utils.toArray<HTMLElement>('[data-donut-legend]', root)
+      // Hide the center total alongside the legend so the whole donut reveals as ONE moment —
+      // otherwise the static center number floats in an empty ring before the arcs draw.
+      const center = gsap.utils.toArray<HTMLElement>('[data-donut-center]', root)
       if (arcs.length === 0) return
 
-      // Hidden state in JS (P0 — never CSS): collapse each arc to zero length, hide the legend.
+      // Hidden state in JS (P0 — never CSS): collapse each arc to zero length, hide legend+center.
       gsap.set(arcs, { drawSVG: '0% 0%' })
-      gsap.set(legend, { autoAlpha: 0 })
+      gsap.set([...legend, ...center], { autoAlpha: 0 })
 
       const trigger = ScrollTrigger.create({
         trigger: root,
@@ -74,8 +77,8 @@ export function AssetDonut({ assetBytesByKind }: { assetBytesByKind: ProjectRepo
             const e = arc.dataset.drawEnd ?? '0'
             tl.to(arc, { drawSVG: `${s}% ${e}%`, duration: duration.reveal, ease: ease.arrive }, i * 0.08)
           })
-          // Legend + byte labels fade in AFTER the ring settles (not synced per-segment).
-          tl.to(legend, { autoAlpha: 1, duration: 0.5, ease: ease.arrive }, '>-0.15')
+          // Center total + legend fade in AFTER the ring settles (not synced per-segment).
+          tl.to([...center, ...legend], { autoAlpha: 1, duration: 0.5, ease: ease.arrive }, '>-0.15')
         },
       })
       return () => trigger.kill()
@@ -100,7 +103,7 @@ export function AssetDonut({ assetBytesByKind }: { assetBytesByKind: ProjectRepo
             ))}
           </g>
         </svg>
-        <div className={styles.center} aria-hidden>
+        <div className={styles.center} data-donut-center aria-hidden>
           <span className={styles.centerValue}>{formatBytes(total)}</span>
           <span className={styles.centerLabel}>generated</span>
         </div>

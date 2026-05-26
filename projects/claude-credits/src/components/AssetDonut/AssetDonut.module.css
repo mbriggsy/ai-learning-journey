@@ -9,7 +9,7 @@
 .ring {
   position: relative;
   width: 100%;
-  max-width: 280px;
+  max-width: 320px; /* plan's decided desktop cap */
   flex-shrink: 0;
 }
 .svg {
@@ -85,7 +85,7 @@
     gap: var(--space-8);
   }
   .ring {
-    max-width: 240px;
+    max-width: 340px; /* plan's decided mobile cap — a bolder donut when it owns the full width */
   }
   .legend {
     width: 100%;

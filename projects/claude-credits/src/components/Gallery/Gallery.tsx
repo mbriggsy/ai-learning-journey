@@ -1,4 +1,4 @@
-import { useState, useRef, useEffect } from 'react'
+import { useState, useRef, useEffect, useCallback } from 'react'
 import { createPortal } from 'react-dom'
 import { gsap, useGSAP } from '@/motion/gsap-context'
 import { ease } from '@/motion/easings'
@@ -18,6 +18,10 @@ import styles from './Gallery.module.css'
 export function Gallery({ images }: { images: string[] }) {
   const [broken, setBroken] = useState<Set<number>>(new Set())
   const [openIndex, setOpenIndex] = useState<number | null>(null)
+  // Stable reference — without it, any Gallery re-render (e.g. a sibling image's onError while
+  // the lightbox is open) mints a new onClose, re-running the Lightbox focus/scroll-lock effect
+  // and corrupting focus-restore-on-close (3 reviewers flagged this).
+  const handleClose = useCallback(() => setOpenIndex(null), [])
   const visible = images.map((src, i) => ({ src, i })).filter(({ i }) => !broken.has(i))
   if (visible.length === 0) return null
 
@@ -27,7 +31,7 @@ export function Gallery({ images }: { images: string[] }) {
     <section className={styles.gallery} aria-label="Gallery">
       <ul className={styles.grid}>
         {visible.map(({ src, i }) => (
-          <li key={i} className={styles.cell} data-gallery-cell>
+          <li key={i} className={styles.cell}>
             <button type="button" className={styles.cellButton} onClick={() => setOpenIndex(i)} aria-label="View image">
               <img
                 className={styles.image}
@@ -40,7 +44,7 @@ export function Gallery({ images }: { images: string[] }) {
           </li>
         ))}
       </ul>
-      {openSrc && <Lightbox src={openSrc} onClose={() => setOpenIndex(null)} />}
+      {openSrc && <Lightbox src={openSrc} onClose={handleClose} />}
     </section>
   )
 }
@@ -101,8 +105,17 @@ function Lightbox({ src, onClose }: { src: string; onClose: () => void }) {
       <button ref={closeRef} type="button" className={styles.close} onClick={onClose} aria-label="Close image viewer">
         ×
       </button>
-      {/* stopPropagation so a click on the image itself doesn't dismiss (only the backdrop does). */}
-      <img ref={imgRef} className={styles.lightboxImage} src={src} alt="" onClick={(e) => e.stopPropagation()} />
+      {/* stopPropagation so a click on the image itself doesn't dismiss (only the backdrop does).
+          onError → close: a stale full-size image (thumb cached but file gone) closes rather than
+          showing a native broken-image glyph filling the overlay. */}
+      <img
+        ref={imgRef}
+        className={styles.lightboxImage}
+        src={src}
+        alt=""
+        onClick={(e) => e.stopPropagation()}
+        onError={onClose}
+      />
     </div>,
     document.body,
   )

@@ -1,0 +1,61 @@
+/* The close — a summative magnitude beat at the bottom of the Landing page.
+   NOT footer-pinned: it scrolls as the last CONTENT (padding/flow, never position:fixed),
+   with generous top air so it reads as a deliberate exhale bookending the centered hero,
+   not a crowded footer. Type-on-background only; no decoration beyond the locked stack.
+   Both modes via semantic tokens; no --accent-stat-highlight gold (the hero owns the one
+   gold moment). Phase 9 owns the water-bead polish (type scale/weight, space, reveal feel). */
+.close {
+  display: grid;
+  place-items: center;
+  gap: var(--space-8); /* between figure groups — each magnitude its own beat */
+  padding: var(--space-24) var(--space-6) var(--space-16);
+  text-align: center;
+}
+
+/* one figure group = big number + small-caps label (+ optional window qualifier).
+   Tight internal gap — the number and its label are one unit. */
+.figure {
+  display: grid;
+  place-items: center;
+  gap: var(--space-2);
+}
+
+.number {
+  font-family: var(--font-display);
+  font-weight: 700;
+  font-size: var(--text-display-lg); /* clamp(2.25rem, 8vw, 4.5rem) — a calmer peer of the hero's 22rem */
+  line-height: var(--leading-heading); /* 1.05 — single-line figures */
+  letter-spacing: var(--tracking-display); /* -0.04em */
+  color: var(--text-primary);
+}
+
+/* label — mirrors the hero's unit label for cohesion (small-caps, positive tracking) */
+.label {
+  font-family: var(--font-body);
+  font-size: var(--text-meta);
+  font-variant-caps: all-small-caps;
+  letter-spacing: 0.12em;
+  color: var(--text-secondary);
+}
+
+/* window qualifier — quiet but LEGIBLE (--text-secondary ≥7:1): it's honesty-bearing
+   (retention-window floor), not decorative. Sits just under the token label. */
+.qualifier {
+  margin-top: var(--space-1);
+  max-width: 32ch;
+  font-family: var(--font-body);
+  font-size: var(--text-meta);
+  letter-spacing: 0.01em;
+  color: var(--text-secondary);
+  text-wrap: balance;
+}
+
+/* phone (Phase 1 mobile cascade: 600px). Negative space scales down; bottom padding clears
+   the iPhone home indicator (README viewport-fit=cover) so nothing sits under it. */
+@media (max-width: 600px) {
+  .close {
+    gap: var(--space-6);
+    padding: var(--space-16) var(--space-4)
+      calc(var(--space-16) + env(safe-area-inset-bottom, 0px));
+  }
+}

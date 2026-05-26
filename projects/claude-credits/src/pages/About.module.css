@@ -1,0 +1,296 @@
+/* About — the site's only prose surface and its densest text surface. A quiet, plain-typography
+   reading page. Type-on-background (no cards), one reading column, movements separated by air +
+   a hairline divider between movement GROUPS only. Every info-bearing color is --text-secondary
+   or stronger — never --text-muted (this is the contrast-critical page; insights 010/051). */
+
+.page {
+  /* clip guards any sub-pixel overflow from the table-wrap so the page body never scrolls sideways */
+  overflow-x: clip;
+  padding: var(--space-12) var(--space-6) var(--space-24);
+}
+
+/* Persistent back-link, top-left. ≥44px tap target, visible focus ring (mirrors the detail page). */
+.backLink {
+  display: inline-flex;
+  align-items: center;
+  min-height: 44px;
+  margin-bottom: var(--space-8);
+  font-family: var(--font-body);
+  font-size: var(--text-meta);
+  color: var(--text-secondary);
+  text-decoration: none;
+  transition: color 0.2s ease;
+}
+.backLink:hover {
+  color: var(--text-primary);
+}
+.backLink:focus-visible {
+  outline: 2px solid var(--accent-focus);
+  outline-offset: 4px;
+  border-radius: var(--radius-chip);
+}
+
+/* The reading column. ~42rem ≈ a ~68ch measure for Inter — a true reading width, narrower than
+   the detail page's 60rem shell because this page is text-dense. The table breaks the measure
+   inside its own scroll wrapper. */
+.shell {
+  max-width: 42rem;
+  margin-inline: auto;
+}
+
+/* Movements separated by generous air; the divider marks GROUP transitions only. */
+.movement {
+  margin-block: var(--space-16);
+}
+.movement:first-of-type {
+  margin-top: 0;
+}
+.divider {
+  border: none;
+  border-top: 1px solid var(--surface-divider);
+  margin-block: var(--space-16);
+}
+
+/* ── Headings ──────────────────────────────────────────────────────────── */
+/* Major movement headings (§1 What is claude-credits, §2 the tool, §3 taxonomy). */
+.heading {
+  margin: 0 0 var(--space-6);
+  font-family: var(--font-display);
+  font-weight: 600;
+  font-size: var(--text-display-md);
+  line-height: var(--leading-heading);
+  letter-spacing: var(--tracking-tile);
+  color: var(--text-primary);
+  text-wrap: balance;
+}
+/* The product name set in the body face so the heading reads "What is <code-thing>". */
+.headingMark {
+  font-family: var(--font-mono);
+  font-weight: 600;
+  font-size: 0.82em;
+  letter-spacing: 0;
+}
+
+/* Sub-headings inside the methodology movement (§4/§5/§6 share one movement, so their labels
+   step down a level — visual grouping under one band of air). Still semantic <h2>s. */
+.subHeading {
+  margin: 0 0 var(--space-4);
+  font-family: var(--font-display);
+  font-weight: 600;
+  font-size: var(--text-body-lg);
+  line-height: var(--leading-tile);
+  letter-spacing: var(--tracking-tile);
+  color: var(--text-primary);
+}
+
+/* ── Prose ─────────────────────────────────────────────────────────────── */
+.prose {
+  margin: 0;
+  font-family: var(--font-body);
+  font-size: var(--text-body-lg);
+  line-height: var(--leading-body);
+  color: var(--text-primary);
+  text-wrap: pretty;
+}
+.prose + .prose {
+  margin-top: var(--space-4);
+}
+/* Methodology prose sits a step quieter than the lead explainers — supporting reference text. */
+.proseQuiet {
+  font-size: var(--text-body);
+  color: var(--text-secondary);
+}
+
+/* Inline literals (token field names, file globs) inside prose. */
+.code {
+  font-family: var(--font-mono);
+  font-size: 0.88em;
+  color: var(--text-primary);
+}
+
+/* The methodology movement: three labeled sub-sections, air between, NO internal dividers. */
+.methodology {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-12);
+}
+
+/* Inline reference links (README, source). Plain styled <a>, ≥44px effective target, focus ring. */
+.link {
+  color: var(--text-link);
+  text-decoration: none;
+  border-bottom: 1px solid color-mix(in srgb, var(--text-link) 35%, transparent);
+  transition: border-color 0.2s ease;
+}
+.link:hover {
+  border-bottom-color: var(--text-link);
+}
+.link:focus-visible {
+  outline: 2px solid var(--accent-focus);
+  outline-offset: 3px;
+  border-radius: var(--radius-chip);
+}
+/* Standalone link rows (README "full methodology", the source link) get the tap-target height. */
+.linkRow {
+  display: inline-flex;
+  align-items: center;
+  min-height: 44px;
+  margin-top: var(--space-4);
+  font-family: var(--font-body);
+  font-size: var(--text-body);
+}
+
+/* The quiet "as of <date>" — staleness honesty, not a stat. */
+.asOf {
+  margin: var(--space-4) 0 0;
+  font-family: var(--font-body);
+  font-size: var(--text-meta);
+  letter-spacing: var(--tracking-meta);
+  color: var(--text-secondary);
+}
+
+/* ── §3 Taxonomy table ─────────────────────────────────────────────────── */
+.tableIntro {
+  margin: 0 0 var(--space-8);
+  font-family: var(--font-body);
+  font-size: var(--text-body-lg);
+  line-height: var(--leading-body);
+  color: var(--text-primary);
+  text-wrap: pretty;
+}
+
+/* Scroll frame: holds the right-edge cue. The wrap itself does the horizontal scroll on phones
+   (UMB how-to-play recipe), so the grouped table scrolls instead of crushing its columns. */
+.tableScroll {
+  position: relative;
+}
+.tableWrap {
+  overflow-x: auto;
+  -webkit-overflow-scrolling: touch;
+}
+
+/* Right-edge fade cue: tells a phone reader there's more table to the right. Gated to the widths
+   where the table actually overflows the reading column, so it never lies on desktop. */
+.tableScroll::after {
+  content: '';
+  position: absolute;
+  top: 0;
+  right: 0;
+  bottom: 0;
+  width: var(--space-8);
+  pointer-events: none;
+  background: linear-gradient(to right, transparent, var(--surface-page));
+  opacity: 0;
+}
+@media (max-width: 600px) {
+  .tableScroll::after {
+    opacity: 1;
+  }
+}
+
+.taxonomy {
+  width: 100%;
+  min-width: 560px; /* forces the horizontal scroll on phones instead of crushing four columns */
+  /* separate (not collapse) so the sticky tier column keeps its borders during horizontal scroll */
+  border-collapse: separate;
+  border-spacing: 0;
+  font-family: var(--font-body);
+  font-size: var(--text-meta);
+  text-align: left;
+}
+
+.taxonomy thead th {
+  position: sticky;
+  top: 0;
+  z-index: 2;
+  padding: var(--space-3) var(--space-4);
+  font-family: var(--font-display);
+  font-weight: 700;
+  font-size: 0.7rem;
+  letter-spacing: 0.1em;
+  text-transform: uppercase;
+  color: var(--text-secondary);
+  background: var(--surface-page);
+  border-bottom: 1px solid var(--border-strong);
+}
+
+.taxonomy tbody th,
+.taxonomy tbody td {
+  padding: var(--space-3) var(--space-4);
+  border-bottom: 1px solid var(--surface-divider);
+  vertical-align: top;
+}
+
+/* Tier column — sticky-left so the tier label stays anchored while the row scrolls under it.
+   rowSpan groups its categories; opaque background keeps scrolled cells from bleeding through. */
+.tierCell {
+  position: sticky;
+  left: 0;
+  z-index: 1;
+  background: var(--surface-page);
+  border-right: 1px solid var(--surface-divider);
+  font-family: var(--font-display);
+  font-weight: 700;
+  font-size: 0.74rem;
+  letter-spacing: 0.06em;
+  color: var(--text-primary);
+  white-space: nowrap;
+}
+
+.catCell {
+  font-family: var(--font-mono);
+  font-size: 0.82rem;
+  color: var(--text-primary);
+  white-space: nowrap;
+}
+.examplesCell {
+  font-family: var(--font-mono);
+  font-size: 0.78rem;
+  line-height: 1.5;
+  color: var(--text-secondary);
+}
+
+/* The methodology honesty hook lives here. Per-tier verdict, rowSpan'd to align with the tier.
+   Marked by weight + the literal words ("tracked, not counted") — never color alone (color blind). */
+.countedCell {
+  font-family: var(--font-body);
+  font-size: var(--text-meta);
+  font-weight: 600;
+  color: var(--text-primary);
+  white-space: nowrap;
+}
+.countedExcluded {
+  font-weight: 500;
+  font-style: italic;
+  color: var(--text-secondary);
+  white-space: normal;
+}
+
+/* ── Closing sign-off — the one sanctioned authorship nod. An endnote, not a stat. ────────── */
+.signOffWrap {
+  display: flex;
+  justify-content: center;
+}
+.signOff {
+  margin: 0;
+  max-width: 40ch;
+  text-align: center;
+  font-family: var(--font-body);
+  font-size: var(--text-body);
+  line-height: var(--leading-body);
+  color: var(--text-secondary);
+  text-wrap: pretty;
+}
+
+@media (max-width: 600px) {
+  .page {
+    padding: var(--space-8) var(--space-4) var(--space-16);
+  }
+  .movement,
+  .divider {
+    margin-block: var(--space-12);
+  }
+  .methodology {
+    gap: var(--space-8);
+  }
+}

@@ -1,0 +1,56 @@
+.cadence {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-6);
+}
+
+/* Full-bleed wide shape. width:100% inside the page's overflow-x:clip wrapper (NEVER 100vw —
+   that overflows past the scrollbar gutter). preserveAspectRatio="none" stretches the
+   1000×80 viewBox to fill. */
+.chart {
+  width: 100%;
+  height: 88px;
+}
+.svg {
+  display: block;
+  width: 100%;
+  height: 100%;
+}
+.area {
+  fill: var(--accent-primary);
+  opacity: 0.12;
+}
+.line {
+  stroke: var(--accent-primary);
+  stroke-width: 2;
+  vector-effect: non-scaling-stroke; /* keep the line crisp despite the non-uniform x-stretch */
+  stroke-linejoin: round;
+  stroke-linecap: round;
+}
+
+/* Three callouts in a row, separated by air. Wraps gracefully on narrow screens. */
+.callouts {
+  margin: 0;
+  display: flex;
+  flex-wrap: wrap;
+  gap: var(--space-8);
+}
+.callout {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-1);
+}
+.calloutValue {
+  font-family: var(--font-display);
+  font-weight: 700;
+  font-size: var(--text-body-lg);
+  line-height: 1;
+  color: var(--text-primary);
+}
+.calloutLabel {
+  font-family: var(--font-body);
+  font-size: var(--text-meta);
+  font-variant-caps: all-small-caps;
+  letter-spacing: 0.08em;
+  color: var(--text-secondary);
+}

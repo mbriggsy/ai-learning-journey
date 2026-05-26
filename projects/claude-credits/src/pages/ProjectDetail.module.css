@@ -1,0 +1,137 @@
+.page {
+  /* Full-bleed sparkline lives inside the shell at 100% width; clip guards any sub-pixel
+     overflow so there's never a horizontal scrollbar. */
+  overflow-x: clip;
+  padding: var(--space-12) var(--space-6) var(--space-24);
+}
+
+/* Persistent back-link, top-left. ≥44px tap target, visible focus ring. */
+.backLink {
+  display: inline-flex;
+  align-items: center;
+  min-height: 44px;
+  margin-bottom: var(--space-8);
+  font-family: var(--font-body);
+  font-size: var(--text-meta);
+  color: var(--text-secondary);
+  text-decoration: none;
+  transition: color 0.2s ease;
+}
+.backLink:hover {
+  color: var(--text-primary);
+}
+.backLink:focus-visible {
+  outline: 2px solid var(--accent-focus);
+  outline-offset: 4px;
+  border-radius: var(--radius-chip);
+}
+
+/* The editorial column. ~60rem reads as a deliberate single column; the prose breath and the
+   full-bleed sparkline live inside it (the sparkline spans the full shell, breaking the prose
+   measure). */
+.shell {
+  max-width: 60rem;
+  margin-inline: auto;
+}
+
+/* Movements separated by air; the divider marks GROUP transitions only. */
+.movement {
+  margin-block: var(--space-16);
+}
+.movement:first-of-type {
+  margin-top: 0;
+}
+
+.divider {
+  border: none;
+  border-top: 1px solid var(--surface-divider);
+  margin-block: var(--space-16);
+}
+
+/* Movement 3 — the prose breath: centered, narrow measure, larger body. */
+.descriptionMovement {
+  display: flex;
+  justify-content: center;
+}
+.description {
+  margin: 0;
+  max-width: 58ch;
+  text-align: center;
+  font-family: var(--font-body);
+  font-size: var(--text-body-lg);
+  line-height: var(--leading-body);
+  color: var(--text-primary);
+  text-wrap: pretty;
+}
+
+/* Movement 5 — the rhythm wrapper (sparkline + iteration caption). */
+.rhythm {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-6);
+}
+.iteration {
+  margin: 0;
+  font-family: var(--font-body);
+  font-size: var(--text-meta);
+  line-height: var(--leading-meta);
+  color: var(--text-secondary);
+}
+
+/* Movement 7 — invitation: centered link row. */
+.invitation {
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: center;
+  gap: var(--space-4);
+}
+
+/* Not-found — deliberate, never a blank page. */
+.notFound {
+  max-width: 48ch;
+  margin: var(--space-24) auto;
+  text-align: center;
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-4);
+}
+.notFoundHeading {
+  margin: 0;
+  font-family: var(--font-display);
+  font-weight: 700;
+  font-size: var(--text-display-md);
+  line-height: var(--leading-heading);
+  color: var(--text-primary);
+}
+.notFoundBody {
+  margin: 0;
+  font-family: var(--font-body);
+  font-size: var(--text-body);
+  line-height: var(--leading-body);
+  color: var(--text-secondary);
+}
+.notFoundLink {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  min-height: 44px;
+  font-family: var(--font-body);
+  font-size: var(--text-body);
+  color: var(--text-link);
+  text-decoration: none;
+}
+.notFoundLink:focus-visible {
+  outline: 2px solid var(--accent-focus);
+  outline-offset: 4px;
+  border-radius: var(--radius-chip);
+}
+
+@media (max-width: 600px) {
+  .page {
+    padding: var(--space-8) var(--space-4) var(--space-16);
+  }
+  .movement,
+  .divider {
+    margin-block: var(--space-12);
+  }
+}

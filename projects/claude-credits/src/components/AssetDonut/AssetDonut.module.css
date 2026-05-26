@@ -1,0 +1,94 @@
+/* Donut + legend side-by-side on desktop, stacked on mobile. No card. */
+.donut {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: var(--space-12);
+}
+
+.ring {
+  position: relative;
+  width: 100%;
+  max-width: 280px;
+  flex-shrink: 0;
+}
+.svg {
+  display: block;
+  width: 100%;
+  height: auto;
+}
+
+/* Center total — static (NO tick-up; the hero owns the only animated number on the site). */
+.center {
+  position: absolute;
+  inset: 0;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: var(--space-1);
+  pointer-events: none;
+}
+.centerValue {
+  font-family: var(--font-display);
+  font-weight: 700;
+  font-size: var(--text-body-lg);
+  line-height: 1;
+  color: var(--text-primary);
+}
+.centerLabel {
+  font-family: var(--font-body);
+  font-size: var(--text-meta);
+  font-variant-caps: all-small-caps;
+  letter-spacing: 0.1em;
+  color: var(--text-secondary);
+}
+
+/* Legend — kind + true bytes, paired with a value swatch. */
+.legend {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-3);
+  min-width: 12rem;
+}
+.legendRow {
+  display: grid;
+  grid-template-columns: auto 1fr auto;
+  align-items: baseline;
+  column-gap: var(--space-3);
+}
+.swatch {
+  width: 0.75rem;
+  height: 0.75rem;
+  border-radius: var(--radius-sm);
+  align-self: center;
+}
+.legendLabel {
+  font-family: var(--font-body);
+  font-size: var(--text-body);
+  color: var(--text-secondary);
+}
+.legendBytes {
+  font-family: var(--font-mono);
+  font-size: var(--text-meta);
+  color: var(--text-primary);
+  text-align: right;
+}
+
+/* Mobile: donut on top (capped), legend stacks below. */
+@media (max-width: 768px) {
+  .donut {
+    flex-direction: column;
+    gap: var(--space-8);
+  }
+  .ring {
+    max-width: 240px;
+  }
+  .legend {
+    width: 100%;
+    max-width: 22rem;
+  }
+}

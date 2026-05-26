@@ -1,0 +1,38 @@
+/* Outline pill — the page's interactive accent (NOT gold; gold is reserved for the tokens
+   total). ≥44px tap target (Apple HIG). Border lifts to --accent-primary on hover; the whole
+   button gets a fine focus ring. transform/color only on hover (GPU-cheap). */
+.button {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  min-height: 44px;
+  padding: var(--space-3) var(--space-6);
+  font-family: var(--font-body);
+  font-size: var(--text-body);
+  font-weight: 500;
+  letter-spacing: var(--tracking-meta);
+  color: var(--text-primary);
+  text-decoration: none;
+  background: transparent;
+  border: 1px solid var(--border-strong);
+  border-radius: var(--radius-button);
+  transition:
+    border-color 0.2s ease,
+    color 0.2s ease,
+    transform 0.18s ease;
+}
+
+@media (hover: hover) and (pointer: fine) {
+  .button:hover {
+    border-color: var(--accent-primary);
+    color: var(--accent-primary);
+    transform: translateY(-2px);
+  }
+}
+.button:active {
+  transform: scale(0.98);
+}
+.button:focus-visible {
+  outline: 2px solid var(--accent-focus);
+  outline-offset: 3px;
+}

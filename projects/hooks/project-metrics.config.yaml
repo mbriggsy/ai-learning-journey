@@ -1,4 +1,4 @@
-# claude-credit per-project config — editorial for the claude-credits showcase site (locked 2026-05-25).
+# project-metrics per-project config — editorial for the ai-journey-stats showcase site (locked 2026-05-25).
 editorial:
   oneLiner: "Claude Code hooks that gate, guide, and finish work."
   hookStat:

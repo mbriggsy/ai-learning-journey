@@ -1,4 +1,4 @@
-# claude-credit per-project config for BURNED.
+# project-metrics per-project config for BURNED.
 #
 # BURNED's trailer pipeline writes rendered .mp4 / .wav outputs to gitignored
 # directories (videos/trailer/out/ and public/trailer/) — the repo is public
@@ -14,11 +14,11 @@ includeFromGitignore:
 
 # Generation logs — wired for v2; not yet read by v1.
 generationLogs:
-  - path: .claude-credit/generations.jsonl
+  - path: .project-metrics/generations.jsonl
     format: jsonl
     label: "Pipeline generations (Imagen / TTS / ffmpeg)"
 
-# Editorial content for the claude-credits showcase site (locked 2026-05-25).
+# Editorial content for the ai-journey-stats showcase site (locked 2026-05-25).
 # heroImage is the interim arena art; swap to the origin-video lead frame when rendered.
 editorial:
   oneLiner: "Couch-of-friends spy comedy. Archer-coded card game in the browser."

@@ -17,7 +17,7 @@ import type {
  *
  * Pure + tested, mirroring grid-order.ts. Walks the published `report.tiers[]` tree;
  * the choice of WHICH kinds to show + their labels + units is a presentation decision
- * and lives here, not in the claude-credit CLI.
+ * and lives here, not in the project-metrics CLI.
  */
 
 export type CompositionUnit = 'lines' | 'files' | 'count'

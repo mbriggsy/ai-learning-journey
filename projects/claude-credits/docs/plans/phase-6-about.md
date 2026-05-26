@@ -9,11 +9,11 @@ coded:
 
 **Prereq:** Read [README.md](README.md) first — the bar, locked decisions, and visual system live there. Read [phase-1-scaffold.md](phase-1-scaffold.md) (the `/about` route + `src/pages/About.tsx` placeholder this phase REPLACES, the semantic type/spacing tokens, the `ease.arrive`/`duration.reveal` motion foundation + `prefersReducedMotion()` discipline, and the `useGSAP`/`<Name>.module.css` conventions this phase REUSES), [phase-3-hero.md](phase-3-hero.md) (the inline taxonomy hint this page is the **deep version of** — its three tier labels are this page's consistency anchor), and [phase-5-detail.md](phase-5-detail.md) (the precondition gate that already verifies the Phase 0 token fields — Phase 6 inherits it, see Decision 4). This file is the decisions-not-code recipe for the About page.
 
-> **Reconciled to ideation §4 (no bottom CTA, locked 2026-05-24):** the site ends on the work; there is **no tool pitch and no install command anywhere**, including on this page. About is a prose/reference surface that *explains what the numbers mean* (the taxonomy) so a curious peer trusts the receipts — it does **NOT** promote the `claude-credit` tool. §2 is a plain prose explainer of *what the tool measures*, **not** an install block. About does **not** import or reference `src/lib/cta.ts`, `resolveCtaCopy`, or `CURRENT_CTA_STATE` — that plumbing is dead and gets removed at Phase 7 reconciliation. `claude-credit` is **not published to npm** for v1.
+> **Reconciled to ideation §4 (no bottom CTA, locked 2026-05-24):** the site ends on the work; there is **no tool pitch and no install command anywhere**, including on this page. About is a prose/reference surface that *explains what the numbers mean* (the taxonomy) so a curious peer trusts the receipts — it does **NOT** promote the `project-metrics` tool. §2 is a plain prose explainer of *what the tool measures*, **not** an install block. About does **not** import or reference `src/lib/cta.ts`, `resolveCtaCopy`, or `CURRENT_CTA_STATE` — that plumbing is dead and gets removed at Phase 7 reconciliation. `project-metrics` is **not published to npm** for v1.
 
 Route: `/about` (scaffolded in Phase 1 `App.tsx`). Phase 6 replaces the Phase 1 `About.tsx` placeholder (`<h1>about</h1>` + "Taxonomy explainer lands in Phase 6." + a "← home" link).
 
-The About page is the site's **only prose surface** and its **densest text surface** — a quiet, plain-typography reading page for AI-curious peers who want to understand what the `claude-credit` tape measure counts and how. It is **text-and-tables only**: no donut, no sparkline, no counter, no sheen. The single motion moment is one quiet page-fade-in. It exists to **make the taxonomy legible** — the deep version of the hero's `AUTHORED · PIPELINE-GENERATED · TOOL-GENERATED — what each tier means →` hint — so a curious peer trusts the receipts. It is **not a tool pitch**: no install command, no "try it" beat (ideation §4). Authorship stays SILENT (ideation §11); the one warm nod is a closing sign-off.
+The About page is the site's **only prose surface** and its **densest text surface** — a quiet, plain-typography reading page for AI-curious peers who want to understand what the `project-metrics` tape measure counts and how. It is **text-and-tables only**: no donut, no sparkline, no counter, no sheen. The single motion moment is one quiet page-fade-in. It exists to **make the taxonomy legible** — the deep version of the hero's `AUTHORED · PIPELINE-GENERATED · TOOL-GENERATED — what each tier means →` hint — so a curious peer trusts the receipts. It is **not a tool pitch**: no install command, no "try it" beat (ideation §4). Authorship stays SILENT (ideation §11); the one warm nod is a closing sign-off.
 
 The bar for "Phase 6 done": every section renders with no broken layout in BOTH modes; the taxonomy table is complete AND readable (grouped, not 30 flat rows) and scrolls — never crushes — at 360–430px with a visible scroll affordance and tier labels that stay anchored; body and table-cell text pass a **measured** contrast probe in both light and dark (this is the most text-dense surface and Briggsy is color blind — never eyeball it); §1/§2 prose passes a **cold-read voice check** (reads like a sharp builder-to-builder line, not a generic README intro — the README failure condition is a voice failure); the page-fade speaks the site's `weighted` motion dialect and degrades to the final visible state instantly under `prefers-reduced-motion`; **no install command or tool pitch appears anywhere** (ideation §4). **Eye-on-browser in BOTH modes + a contrast probe + a cold voice read is the gate — green tests are not enough** (manifesto).
 
@@ -33,20 +33,20 @@ The bar for "Phase 6 done": every section renders with no broken layout in BOTH 
    - **Locked cell values** (so an implementer doesn't interpret): `AUTHORED` → "counted", `PIPELINE-GENERATED` → "counted", `TOOL-GENERATED` → "tracked, not counted". Text strings, never color-only (Briggsy is color blind).
    - **Tier semantics are quoted from the source of truth** (`taxonomy.ts` header). The source's own wording uses "credit"/"not counted as credit" internally; the SITE reframes to the counted/excluded measurement language above (the tool's internal doc may say "credit"; the public page must not adjudicate it). See "Source facts (verified)".
 
-3. **§2 is a PROSE-ONLY explainer of what `claude-credit` measures — NO install block, NO tool pitch, NO `cta.ts`** (reconciled to ideation §4, locked 2026-05-24 — *"no install command, nothing to click; the site ends on the work"*). §2 is a 2–3 sentence builder-to-builder paragraph that says *what the tape measure counts* (it's light context so a curious peer trusts the receipts), and then stops. It does **not** promote the tool, show an install command, or invite the reader to "try it."
+3. **§2 is a PROSE-ONLY explainer of what `project-metrics` measures — NO install block, NO tool pitch, NO `cta.ts`** (reconciled to ideation §4, locked 2026-05-24 — *"no install command, nothing to click; the site ends on the work"*). §2 is a 2–3 sentence builder-to-builder paragraph that says *what the tape measure counts* (it's light context so a curious peer trusts the receipts), and then stops. It does **not** promote the tool, show an install command, or invite the reader to "try it."
    - **The entire CTA/install-state machinery is CUT.** About does **NOT** import `src/lib/cta.ts`, call `resolveCtaCopy`, or read `CURRENT_CTA_STATE` — that plumbing is dead and gets removed at Phase 7 reconciliation (ideation §4). There is no STATE A/B/C branch, no `--font-mono` install line, no "ships alongside this site / watch the repo" prose, and no STATE-UNRESOLVED fallback to handle, because §2 renders no install affordance at all.
-   - **No npm framing.** `claude-credit` is **not published to npm for v1** (ideation §4). §2 must not imply it's installable, published, or shippable as a product — it's the internal tape measure that produced these numbers, full stop.
-   - **`claude-credit` is not published to npm; do not reintroduce an install line if it later is.** Even a future publish does not re-open §2 as an install surface — the page-ends-on-the-work decision (ideation §4) is the governing call, not the tool's publish status.
+   - **No npm framing.** `project-metrics` is **not published to npm for v1** (ideation §4). §2 must not imply it's installable, published, or shippable as a product — it's the internal tape measure that produced these numbers, full stop.
+   - **`project-metrics` is not published to npm; do not reintroduce an install line if it later is.** Even a future publish does not re-open §2 as an install surface — the page-ends-on-the-work decision (ideation §4) is the governing call, not the tool's publish status.
    - **Where peers go for the tool itself:** §6 (Open Source) carries the one quiet GitHub source link as plain reference — §2 does not duplicate it and frames nothing as a pitch.
 
 4. **§4 explains the TOKEN methodology, holds true where tokens are null, and inherits Phase 5's precondition gate** (the hero's dominant number is tokens, so an honest "how it's counted" page must explain them). Cover, in plain builder-to-builder English: **`tokensProcessed`** (input + output + cache-creation + cache-read — the magnitude number) vs **`tokensFresh`** (excludes cheap cache re-feeds — the honest "work done" signal), derived by parsing **local Claude Code session JSONLs**.
    - **Write it to hold where tokens are null** (doc-review adversarial — smaller real projects with no recorded sessions ship `tokens: null` on a clean deploy box; §4 is static copy and can't suppress like a per-project renderer). Frame as *"tokens are measured from local session logs **where present**"* — never implying every project/surface carries a token count. If the site's own meta rows show no token figure, §4's wording must not contradict that.
    - **Retention-window honesty (load-bearing):** session JSONLs rotate after ~30 days, so any token tally is a **window-bounded floor, never a lifetime total** — the copy must say so (mirrors README gates 8b/8c; the word "lifetime" appears nowhere).
-   - **Gate (corrected at doc-review — the fields are interface members, NOT named exports):** before finalizing the token copy, confirm `tools/claude-credit/dist/taxonomy.d.ts` declares `interface TokenStats { … tokensProcessed: number; tokensFresh: number; … }` AND that `ProjectReport` carries `tokens: TokenStats | null`. This is the **same precondition Phase 5 already gates on before its C1** — Phase 6 **inherits that gate result** (don't re-roll a parallel check; require Phase 5's gate green). A grep for `export const tokensProcessed` would fail even on success — verify the interface shape, not a named export.
-   - Plus a link to `tools/claude-credit/README.md` for full detail.
+   - **Gate (corrected at doc-review — the fields are interface members, NOT named exports):** before finalizing the token copy, confirm `tools/project-metrics/dist/taxonomy.d.ts` declares `interface TokenStats { … tokensProcessed: number; tokensFresh: number; … }` AND that `ProjectReport` carries `tokens: TokenStats | null`. This is the **same precondition Phase 5 already gates on before its C1** — Phase 6 **inherits that gate result** (don't re-roll a parallel check; require Phase 5's gate green). A grep for `export const tokensProcessed` would fail even on success — verify the interface shape, not a named export.
+   - Plus a link to `tools/project-metrics/README.md` for full detail.
 
 5. **§5 (update cadence) states two independent facts — what regenerates the numbers vs. what deploys the site — and surfaces the "as of <date>".** (Phase 8 is now deepened: the refresh trigger is a dedicated `refresh-credits` skill run locally; README line 71 is reconciled to match.) Written so neither fact implies the other triggers it:
-   - **What regenerates the numbers:** the figures are produced by the `claude-credit` tool, and because token counts come from **local Claude Code session history, regeneration runs where that history lives — a developer's machine, not a stateless CI runner** (a clean runner has no JSONLs and would publish null tokens). It's triggered deliberately by a dedicated local `refresh-credits` skill (Phase 8 Decision 2). This is the same retention-window honesty §4 commits to, and it's the most genuinely-interesting builder-to-builder detail on the page — surface it.
+   - **What regenerates the numbers:** the figures are produced by the `project-metrics` tool, and because token counts come from **local Claude Code session history, regeneration runs where that history lives — a developer's machine, not a stateless CI runner** (a clean runner has no JSONLs and would publish null tokens). It's triggered deliberately by a dedicated local `refresh-credits` skill (Phase 8 Decision 2). This is the same retention-window honesty §4 commits to, and it's the most genuinely-interesting builder-to-builder detail on the page — surface it.
    - **What deploys the site (decided):** the site auto-deploys from `main` (Vercel). State this as a *separate* fact — do NOT phrase it as "a push regenerates the numbers."
    - **Pair the cadence with a quiet "numbers as of <date>"** (from the existing `scannedAt`, Phase 8 Decision 9) so a deliberately-manual cadence reads as honestly-dated, never falsely live.
    - **Do NOT assert "a GitHub Action / a push regenerates the numbers"** — the regeneration is local-only by construction (Phase 8 Decision 1). The earlier cross-source contradiction (README line 71 + phase-8 §8.3 once asserted CI regeneration) is **RESOLVED 2026-05-24**; keep §5 consistent with the local-refresh model and do not reintroduce the CI-refresh phrasing.
@@ -55,10 +55,10 @@ The bar for "Phase 6 done": every section renders with no broken layout in BOTH 
    - **The section-stagger option is CLOSED** (doc-review scope — a stagger is N sequential tweens, more than the one fade README permits, and risks below-fold content briefly hidden during the tween). One wrapper tween only. (The insight-043 `'<'` caution is therefore moot here — no multi-tween sequence exists to mis-anchor.)
    - **No motion on interactive targets** — the source link gets no pulse/hover-loop (insight 035); any decorative motion rides a wrapper/pseudo-element.
 
-7. **Exact editorial PROSE is deferred to the −1.5 worksheet / execution, with a voice gate; the plan locks SHAPE, not words** (decisions-not-code bar; mirrors Phase 5's `editorial` handling). The "What is claude-credits" and "What is `claude-credit`" paragraphs are author-controlled voice (terse, builder-to-builder, AI-peer audience) sourced in the preflight −1.5 editorial worksheet.
+7. **Exact editorial PROSE is deferred to the −1.5 worksheet / execution, with a voice gate; the plan locks SHAPE, not words** (decisions-not-code bar; mirrors Phase 5's `editorial` handling). The "What is ai-journey-stats" and "What is `project-metrics`" paragraphs are author-controlled voice (terse, builder-to-builder, AI-peer audience) sourced in the preflight −1.5 editorial worksheet.
    - **Voice gate (doc-review product — this is the site's ONLY prose surface and the README failure condition is a VOICE failure):** the §1/§2 prose must pass a **cold-read test** (read aloud cold — if it reads like a generic tool-README intro rather than a sharp builder-to-builder line, rewrite). Seed the −1.5 worksheet with one anti-example (the generic version) per section as a "not this" anchor, not just a positive brief. This gate is part of the "done" bar.
 
-8. **EDITORIAL (−1.5 worksheet) is a HARD dependency for §1/§2 prose — not soft** (doc-review; consistent with how Phase 5 treats editorial as a hard blocker for detail pages). The page *shell* (taxonomy table, methodology, cadence, source link, sign-off) can be built before the worksheet lands, but §1/§2's finalized prose (the "what is claude-credits" + "what is `claude-credit`" explainers — author-controlled voice) requires the worksheet authored. Treat it as a Phase-6 blocker for *finalizing* the page, not optional polish.
+8. **EDITORIAL (−1.5 worksheet) is a HARD dependency for §1/§2 prose — not soft** (doc-review; consistent with how Phase 5 treats editorial as a hard blocker for detail pages). The page *shell* (taxonomy table, methodology, cadence, source link, sign-off) can be built before the worksheet lands, but §1/§2's finalized prose (the "what is ai-journey-stats" + "what is `project-metrics`" explainers — author-controlled voice) requires the worksheet authored. Treat it as a Phase-6 blocker for *finalizing* the page, not optional polish.
 
 9. **frontend-design + emil principles are BAKED here; the full visual polish pass is Phase 9** (Briggsy's "as appropriate"). For a mandated plain-typography page the design work IS restraint — reading measure, type scale, table legibility, vertical air, the single quiet fade — already constrained by the locked semantic tokens + institutional insights, and folded into Decisions 1–6 + the section specs. The heavy `/frontend-design` + `/emil-design-eng` skill passes (contrast probe across both palettes, final table treatment, polish) belong to Phase 9 where this page gets its mode-aware design gate alongside the rest of the site — not re-run at plan time on a text page.
 
@@ -66,7 +66,7 @@ The bar for "Phase 6 done": every section renders with no broken layout in BOTH 
 
 ## Source facts (verified at deepening, 2026-05-24)
 
-**Taxonomy — SHIPPED and stable** (`tools/claude-credit/src/taxonomy.ts`; examples from `tools/claude-credit/README.md` "Default classifications"; the tier/category/subcategory lists below were verified verbatim against the source at doc-review). The table content is this:
+**Taxonomy — SHIPPED and stable** (`tools/project-metrics/src/taxonomy.ts`; examples from `tools/project-metrics/README.md` "Default classifications"; the tier/category/subcategory lists below were verified verbatim against the source at doc-review). The table content is this:
 
 Tier semantics (quote from the `taxonomy.ts` header — then reframed to the public measurement language per Decision 2):
 - **AUTHORED** — "Claude + Briggsy wrote it directly (code, docs, prompts)." → **counted in totals**
@@ -96,7 +96,7 @@ Classification is **first-match-wins** through a built-in ruleset (README) — e
 - **Tokens (Phase 0 addition — `TokenStats` interface, gated per Decision 4):** parse local Claude Code session JSONLs; `tokensProcessed` = input + output + cache-creation + cache-read; `tokensFresh` = input + output + cache-creation (excludes cache reads). `tokens: TokenStats | null` — null where there's no local JSONL (e.g. a project with no recorded sessions on a clean deploy). JSONLs rotate ~30 days → **window-bounded floor, never lifetime**.
 
 **Source-link facts:**
-- GitHub remote (verified `git remote -v`, repo is public): **`https://github.com/mbriggsy/ai-learning-journey`**. Tool subtree: `…/tree/main/tools/claude-credit`. The "Open source" link (§6) is **decided and safe today** — no dependency.
+- GitHub remote (verified `git remote -v`, repo is public): **`https://github.com/mbriggsy/ai-learning-journey`**. Tool subtree: `…/tree/main/tools/project-metrics`. The "Open source" link (§6) is **decided and safe today** — no dependency.
 - **§2 carries no install snippet** (reconciled to ideation §4, Decision 3) — it's a prose-only explainer of what the tape measure counts; there is no `npm` line and no CTA-state dependency to resolve.
 
 **Phase 1 primitives inherited (consume — do NOT redefine; all verified to exist at doc-review):**
@@ -124,12 +124,12 @@ A single-column reading page. Body prose in a reading column: `max-width: ~68–
 ```
   ← home                                                    (persistent back-link, top-left)
 
-  ┌─ §1 · WHAT IS claude-credits ─────────────────────────────────┐
+  ┌─ §1 · WHAT IS ai-journey-stats ─────────────────────────────────┐
   │  heading + 2–3 sentence builder-to-builder explainer          │  ← prose, reading column
   └────────────────────────────────────────────────────────────────┘
   ──────────────────────────────────────────────────────  (divider)
 
-  ┌─ §2 · WHAT IS claude-credit ──────────────────────────────────┐
+  ┌─ §2 · WHAT IS project-metrics ──────────────────────────────────┐
   │  heading + 2–3 sentence explainer of WHAT THE TOOL MEASURES   │  ← prose only, reading column
   │  (the tape measure that counted this) — no install, no pitch  │     (ideation §4; no CTA state)
   └────────────────────────────────────────────────────────────────┘
@@ -151,7 +151,7 @@ A single-column reading page. Body prose in a reading column: `max-width: ~68–
   │  plain-English summary: lines (total vs non-blank), asset      │
   │  iteration (git-based), tokens (processed vs fresh, measured    │
   │  from local session logs WHERE PRESENT + the ~30-day floor,    │
-  │  never "lifetime"). → full detail: link to claude-credit README│
+  │  never "lifetime"). → full detail: link to project-metrics README│
   └────────────────────────────────────────────────────────────────┘
 
   ┌─ §5 · UPDATE CADENCE ─────────────────────────────────────────┐
@@ -178,10 +178,10 @@ A single-column reading page. Body prose in a reading column: `max-width: ~68–
 | # | Section | Source | Layout / type | Null & degrade behavior |
 |---|---|---|---|---|
 | 0 | Back-link | static → `<Link to="/">` | top-left, `--text-secondary`, `:focus-visible` ring, ≥44px tap target | always present |
-| 1 | What is claude-credits | editorial prose (−1.5 worksheet) | heading `--font-display` `--text-display-md`; body `--text-body-lg`/`--text-body` `--leading-body`, reading column ~68–72ch + mobile padding | copy is authored (hard dep, Decision 8); cold-read voice gate |
-| 2 | What is claude-credit | editorial prose (−1.5 worksheet) | heading `--font-display`; 2–3 sentence builder-to-builder explainer of *what the tape measure counts* — **prose only, no install block, no `cta.ts`** (Decision 3, ideation §4) | copy is authored (hard dep, Decision 8); cold-read voice gate; no install affordance to degrade |
+| 1 | What is ai-journey-stats | editorial prose (−1.5 worksheet) | heading `--font-display` `--text-display-md`; body `--text-body-lg`/`--text-body` `--leading-body`, reading column ~68–72ch + mobile padding | copy is authored (hard dep, Decision 8); cold-read voice gate |
+| 2 | What is project-metrics | editorial prose (−1.5 worksheet) | heading `--font-display`; 2–3 sentence builder-to-builder explainer of *what the tape measure counts* — **prose only, no install block, no `cta.ts`** (Decision 3, ideation §4) | copy is authored (hard dep, Decision 8); cold-read voice gate; no install affordance to degrade |
 | 3 | Taxonomy table | `taxonomy.ts` structure (static) | one-line framing + grouped table (3 tier groups → 10 category rows, examples cell, **"counted in totals?"** cell) inside `.table-wrap` (`overflow-x:auto`, `min-width:~560px`), **sticky tier column** + **right-edge scroll cue** | static — always renders; scrolls (never crushes) on mobile with tier labels anchored |
-| 4 | How the numbers are counted | shipped methodology + Phase 0 token fields | prose summary (lines / asset iteration / tokens "where present" + window-floor) + link to `tools/claude-credit/README.md` | token sentences gated on Phase 5's precondition (Decision 4); copy holds where tokens null; line/asset copy always valid |
+| 4 | How the numbers are counted | shipped methodology + Phase 0 token fields | prose summary (lines / asset iteration / tokens "where present" + window-floor) + link to `tools/project-metrics/README.md` | token sentences gated on Phase 5's precondition (Decision 4); copy holds where tokens null; line/asset copy always valid |
 | 5 | Update cadence | decided facts (Decision 5) + `scannedAt` | short prose — two decoupled facts + "as of <date>" | regeneration = local dedicated `refresh-credits` skill (Phase 8 decided); deploy = Vercel from `main`; both stated separately |
 | 6 | Open source | `https://github.com/mbriggsy/ai-learning-journey` | one line + **plain styled `<a rel="noopener noreferrer">`**, `:focus-visible` ring, ≥44px tap target | decided + safe today |
 | 7 | Closing sign-off | the locked §11 line (static) | quiet prose `--text-secondary` (NOT `--text-muted`), **centered `max-width:~40ch`**, divider above, generous air; NOT a stat | always present; the one sanctioned authorship nod, never a scoreboard |
@@ -207,7 +207,7 @@ No edits to other phases' docs are required by this deepening (read-only consump
 ## Output structure (what this phase adds)
 
 ```
-projects/claude-credits/
+projects/ai-journey-stats/
 ├── src/
 │   └── pages/
 │       ├── About.tsx                 # MODIFIED — replace placeholder with the six sections + sign-off + the fade
@@ -229,7 +229,7 @@ projects/claude-credits/
 
 - [ ] **Unit 1: Static About content — all six sections + closing sign-off, both modes, responsive, NO motion**
 
-**Goal:** Replace the `About.tsx` placeholder with the full reading page at final visible state: §1–§6 + the closing sign-off, the grouped taxonomy table (sticky tier column + scroll cue in a `min-width:~560px` `.table-wrap`), the §2 prose explainer of what `claude-credit` measures (prose only — no install block, no `cta.ts`), the methodology summary (tokens "where present" + window-floor), the decoupled cadence copy, the plain GitHub source link. Static only — the fade lands in Unit 2.
+**Goal:** Replace the `About.tsx` placeholder with the full reading page at final visible state: §1–§6 + the closing sign-off, the grouped taxonomy table (sticky tier column + scroll cue in a `min-width:~560px` `.table-wrap`), the §2 prose explainer of what `project-metrics` measures (prose only — no install block, no `cta.ts`), the methodology summary (tokens "where present" + window-floor), the decoupled cadence copy, the plain GitHub source link. Static only — the fade lands in Unit 2.
 
 **Requirements:** ideation §1 (taxonomy = KIND, never an authored-vs-generated comparison), §8 (taxonomy explainer full on About), §11 (authorship silent + the closing nod), README "Pages", the "done" bar.
 
@@ -243,8 +243,8 @@ projects/claude-credits/
 **Approach:**
 - Compose the seven movements per the page contract; dividers between movements only (§4·§5·§6 are one movement).
 - **Taxonomy table (Decision 2):** 3 tier row-groups → 10 category rows; columns = tier (group header) · category · examples · **counted in totals?**. Tier labels verbatim (`AUTHORED`/`PIPELINE-GENERATED`/`TOOL-GENERATED`). Cell values: counted / counted / "tracked, not counted" (text, never color-only). Wrap in `.table-wrap` (`overflow-x:auto`, `-webkit-overflow-scrolling:touch`) over a `min-width:~560px` table; **tier column `position:sticky; left:0`** with a `--surface-page` background so labels stay anchored during horizontal scroll; **right-edge scroll cue** (fade-mask or equivalent affordance) so mobile users see it's scrollable.
-- **§2 explainer (Decision 3):** a 2–3 sentence prose paragraph (reading column, `--font-body` `--leading-body`) saying *what `claude-credit` measures* — the tape measure that produced these numbers. **No install block, no `--font-mono` line, no `cta.ts` import, no "try it" beat** (ideation §4). Do not duplicate §6's source link here.
-- **§4 methodology:** plain-English lines (total vs non-blank), git-based asset iteration, tokens (processed vs fresh) "measured from local session logs **where present**" + the ~30-day window-floor sentence (never "lifetime"); link to `tools/claude-credit/README.md`. Token sentences only after Phase 5's precondition gate is green.
+- **§2 explainer (Decision 3):** a 2–3 sentence prose paragraph (reading column, `--font-body` `--leading-body`) saying *what `project-metrics` measures* — the tape measure that produced these numbers. **No install block, no `--font-mono` line, no `cta.ts` import, no "try it" beat** (ideation §4). Do not duplicate §6's source link here.
+- **§4 methodology:** plain-English lines (total vs non-blank), git-based asset iteration, tokens (processed vs fresh) "measured from local session logs **where present**" + the ~30-day window-floor sentence (never "lifetime"); link to `tools/project-metrics/README.md`. Token sentences only after Phase 5's precondition gate is green.
 - **§5 cadence:** two decoupled facts (Decision 5) — regeneration runs locally (dedicated `refresh-credits` skill) where session history lives; the site auto-deploys from `main` — plus a quiet "numbers as of <date>" from `scannedAt` (Decision 9). Consistent with the now-reconciled README line 71 (both local-refresh).
 - **§6 source:** plain styled `<a href="https://github.com/mbriggsy/ai-learning-journey" rel="noopener noreferrer">`, `:focus-visible` ring, ≥44px.
 - **Closing sign-off:** the locked §11 line as `--text-secondary`, centered, `max-width:~40ch`, after a divider — not a stat.
@@ -326,9 +326,9 @@ projects/claude-credits/
 - **Locked product decisions:** `docs/ideation.md` §1 (taxonomy = KIND, never an authored-vs-generated comparison — the §1 reconciliation in Decision 2), §8 (taxonomy explainer), §11 (authorship silent + the closing-nod line)
 - **Plan index + visual system:** `docs/plans/README.md` (line 71 cadence reconciled to local-refresh 2026-05-24 — see Decision 5 + Phase 8)
 - **Depth/style anchor + token-field precondition gate:** `docs/plans/phase-5-detail.md`
-- **Taxonomy + methodology source:** `tools/claude-credit/src/taxonomy.ts`, `tools/claude-credit/src/counter.ts`, `tools/claude-credit/src/git-stats.ts`, `tools/claude-credit/README.md`
+- **Taxonomy + methodology source:** `tools/project-metrics/src/taxonomy.ts`, `tools/project-metrics/src/counter.ts`, `tools/project-metrics/src/git-stats.ts`, `tools/project-metrics/README.md`
 - **Hero hint anchor:** `docs/plans/phase-3-hero.md` (the `AUTHORED · PIPELINE-GENERATED · TOOL-GENERATED — what each tier means →` link)
-- **No-CTA / tool-not-published lock:** `docs/ideation.md` §4 (the site ends on the work — no install command, the `cta.ts` plumbing is dead, `claude-credit` not published to npm v1), `docs/plans/README.md` line 80 (CTA = none). §1/§2 prose source: `docs/plans/phase-preflight.md` (−1.5 editorial worksheet)
+- **No-CTA / tool-not-published lock:** `docs/ideation.md` §4 (the site ends on the work — no install command, the `cta.ts` plumbing is dead, `project-metrics` not published to npm v1), `docs/plans/README.md` line 80 (CTA = none). §1/§2 prose source: `docs/plans/phase-preflight.md` (−1.5 editorial worksheet)
 - **Cadence dependency:** `docs/plans/phase-8-deploy.md` (undeepened), `docs/plans/phase-2-data-wiring.md` Open Decision #2
 - **Foundation:** `docs/plans/phase-1-scaffold.md` (route, tokens, `ease.arrive`/`duration.reveal`, `prefersReducedMotion()`, `useGSAP`)
 - **Mobile/table anchor:** `projects/undercover-mob-boss/public/how-to-play.html`

@@ -13,8 +13,8 @@ coded: 2026-05-25
 
 Five gates resolve before Phase 0 code work starts:
 
-- **−1.1** — `claude-credit` publishability + CTA copy
-- **−1.2** — Project config edit (`~/.claude-credit-projects.yaml`)
+- **−1.1** — `project-metrics` publishability + CTA copy
+- **−1.2** — Project config edit (`~/.project-metrics-projects.yaml`)
 - **−1.3** — Per-project deploy verification (corrected methodology — slug-guessing produces false positives)
 - **−1.4** — Visual asset inventory (folded into −1.5 as `heroImage` column; pointer only)
 - **−1.5** — Editorial + inventory worksheet (`docs/editorial.md`) — single combined source of truth
@@ -27,33 +27,33 @@ Locked decisions from the brainstorm/review pass that this recipe respects:
 
 ---
 
-## −1.1 `claude-credit` tool publishability + CTA gates
+## −1.1 `project-metrics` tool publishability + CTA gates
 
-> **RESOLVED 2026-05-24 — gate collapsed to "no action."** Briggsy locked **no npm publish** (the tool is the internal tape measure, not a product) and **no bottom CTA** (the site ends on the work — ideation §4, §7). So there are no A/B/C CTA states, no `editorial.md ## CTA state` block, and no `src/lib/cta.ts` to set. Executed outcome: npm name `claude-credit` confirmed available but deliberately NOT published; the tool README was de-implied of installability. The publish/CTA-state recipe below is retained as the record of what was evaluated — **do not act on its publish or CTA-copy steps.**
+> **RESOLVED 2026-05-24 — gate collapsed to "no action."** Briggsy locked **no npm publish** (the tool is the internal tape measure, not a product) and **no bottom CTA** (the site ends on the work — ideation §4, §7). So there are no A/B/C CTA states, no `editorial.md ## CTA state` block, and no `src/lib/cta.ts` to set. Executed outcome: npm name `project-metrics` confirmed available but deliberately NOT published; the tool README was de-implied of installability. The publish/CTA-state recipe below is retained as the record of what was evaluated — **do not act on its publish or CTA-copy steps.**
 
-~~Drives the verbatim CTA copy in [Phase 7](phase-7-cta.md). Three terminal states (A / B / C) determined here; the CTA copy block at the bottom of `projects/claude-credits/docs/editorial.md` records which state landed so Phase 7 reads from one source.~~ (Superseded — see banner above.)
+~~Drives the verbatim CTA copy in [Phase 7](phase-7-cta.md). Three terminal states (A / B / C) determined here; the CTA copy block at the bottom of `projects/ai-journey-stats/docs/editorial.md` records which state landed so Phase 7 reads from one source.~~ (Superseded — see banner above.)
 
 ### Current state (verified at deepening, 2026-05-24)
 
-Read of `C:\Users\brigg\ai-learning-journey\tools\claude-credit\package.json` confirms:
-- `name`: `claude-credit` (unscoped)
+Read of `C:\Users\brigg\ai-learning-journey\tools\project-metrics\package.json` confirms:
+- `name`: `project-metrics` (unscoped)
 - `private`: **missing** → defaults to publishable
 - `publishConfig`: **missing**
 - `repository`: **missing** (add before publish — npm best practice + lets registry link to GitHub)
 - `version`: `0.1.0`
-- `bin`: `{ "claude-credit": "./bin/claude-credit.mjs" }` (exposes the global command)
+- `bin`: `{ "project-metrics": "./bin/project-metrics.mjs" }` (exposes the global command)
 - `scripts`: `dev`, `build`, `typecheck`, `test` — no `prepublishOnly`, no `prepare`
 
 Monorepo is **public** on GitHub (verified `https://api.github.com/repos/mbriggsy/ai-learning-journey` returns 200). The "Source on GitHub" CTA in Phase 7 works directly; no repo-visibility action needed.
 
-`tools/claude-credit/README.md` carries a contradictory `pnpm add claude-credit` snippet implying the package is published. **Must be fixed before or at publish.**
+`tools/project-metrics/README.md` carries a contradictory `pnpm add project-metrics` snippet implying the package is published. **Must be fixed before or at publish.**
 
 ### Recipe
 
-**Step 1 — verify npm name availability.** Generic name "claude-credit" may already be owned.
+**Step 1 — verify npm name availability.** Generic name "project-metrics" may already be owned.
 
 ```bash
-npm view claude-credit version
+npm view project-metrics version
 ```
 
 | Outcome | Action |
@@ -64,17 +64,17 @@ npm view claude-credit version
 
 **Step 2 — prep package.json.**
 
-*Path A (unscoped, name available):* Edit `C:\Users\brigg\ai-learning-journey\tools\claude-credit\package.json` — add the `repository` block under `description`:
+*Path A (unscoped, name available):* Edit `C:\Users\brigg\ai-learning-journey\tools\project-metrics\package.json` — add the `repository` block under `description`:
 
 ```json
 "repository": {
   "type": "git",
   "url": "git+https://github.com/mbriggsy/ai-learning-journey.git",
-  "directory": "tools/claude-credit"
+  "directory": "tools/project-metrics"
 }
 ```
 
-*Path B (scoped, name taken):* Same `repository` block as Path A, AND change `name` from `claude-credit` to `@mbriggsy/claude-credit`, AND add `publishConfig` block:
+*Path B (scoped, name taken):* Same `repository` block as Path A, AND change `name` from `project-metrics` to `@mbriggsy/project-metrics`, AND add `publishConfig` block:
 
 ```json
 "publishConfig": {
@@ -82,16 +82,16 @@ npm view claude-credit version
 }
 ```
 
-**Step 3 — fix README contradiction.** Edit `C:\Users\brigg\ai-learning-journey\tools\claude-credit\README.md`:
-- Locate all install snippets via `grep -n 'pnpm add\|npm i\|npm install' C:/Users/brigg/ai-learning-journey/tools/claude-credit/README.md` — expect ~5 hits across the file (top-of-README + later sections)
-- For each hit that implies the package is published (any `pnpm add claude-credit` / `npm i -g claude-credit` line), prefix with `# After publish:` until Step 4 lands. If Step 4 publishes (STATE A or C), remove the prefix.
-- If Path B (scoped name), also update every install snippet from `claude-credit` to `@mbriggsy/claude-credit`
+**Step 3 — fix README contradiction.** Edit `C:\Users\brigg\ai-learning-journey\tools\project-metrics\README.md`:
+- Locate all install snippets via `grep -n 'pnpm add\|npm i\|npm install' C:/Users/brigg/ai-learning-journey/tools/project-metrics/README.md` — expect ~5 hits across the file (top-of-README + later sections)
+- For each hit that implies the package is published (any `pnpm add project-metrics` / `npm i -g project-metrics` line), prefix with `# After publish:` until Step 4 lands. If Step 4 publishes (STATE A or C), remove the prefix.
+- If Path B (scoped name), also update every install snippet from `project-metrics` to `@mbriggsy/project-metrics`
 
 **Step 4 — publish OR fallback.**
 
 *If publish path chosen (preferred — lands STATE A or C):*
 ```bash
-cd C:/Users/brigg/ai-learning-journey/tools/claude-credit
+cd C:/Users/brigg/ai-learning-journey/tools/project-metrics
 pnpm install
 pnpm build
 pnpm typecheck
@@ -101,15 +101,15 @@ npm publish              # Path A
 # OR
 npm publish --access=public   # Path B (scoped)
 # verify
-npm view claude-credit version              # Path A — should match local
-npm view @mbriggsy/claude-credit version    # Path B
+npm view project-metrics version              # Path A — should match local
+npm view @mbriggsy/project-metrics version    # Path B
 ```
 
 If `npm publish` fails (auth, registry, anything): record exact stderr, do NOT proceed to STATE A copy. Re-evaluate as STATE B.
 
 *If publish deferred (lands STATE B):* Skip Step 4 entirely. Re-read the README contradiction edit from Step 3 and ensure it's harmless ("after publish" framing).
 
-**Step 5 — record CTA state.** Append a `## CTA state` block to `projects/claude-credits/docs/editorial.md` (file created in −1.5; if running these gates out of order, create the file with just this block first):
+**Step 5 — record CTA state.** Append a `## CTA state` block to `projects/ai-journey-stats/docs/editorial.md` (file created in −1.5; if running these gates out of order, create the file with just this block first):
 
 ```markdown
 ## CTA state (from −1.1)
@@ -120,44 +120,44 @@ If `npm publish` fails (auth, registry, anything): record exact stderr, do NOT p
 - **GitHub source URL (verbatim):** https://github.com/mbriggsy/ai-learning-journey
 ```
 
-**Also set the machine mirror.** `editorial.md`'s `## CTA state` block is the human receipt; the app reads the resolved state from `CURRENT_CTA_STATE` in `projects/claude-credits/src/lib/cta.ts` (created by Phase 7 / About §2 — see [phase-7-cta.md](phase-7-cta.md) Decision 1). When this gate resolves A/B/C, **set `CURRENT_CTA_STATE` in `src/lib/cta.ts` to match** (if the file exists yet; if Phase 7/About haven't run, the `editorial.md` receipt is the record and they set the constant from it when they build). Phase 7's `cta.test.ts` fails loud if the constant ever drifts from this receipt.
+**Also set the machine mirror.** `editorial.md`'s `## CTA state` block is the human receipt; the app reads the resolved state from `CURRENT_CTA_STATE` in `projects/ai-journey-stats/src/lib/cta.ts` (created by Phase 7 / About §2 — see [phase-7-cta.md](phase-7-cta.md) Decision 1). When this gate resolves A/B/C, **set `CURRENT_CTA_STATE` in `src/lib/cta.ts` to match** (if the file exists yet; if Phase 7/About haven't run, the `editorial.md` receipt is the record and they set the constant from it when they build). Phase 7's `cta.test.ts` fails loud if the constant ever drifts from this receipt.
 
 Verbatim CTA copy for each state (`resolveCtaCopy` in `src/lib/cta.ts` encodes this; Phase 7's CTA + About §2 both read it):
 
 *STATE A — unscoped, published:*
 ```
-Install: npm i -g claude-credit
-First-run: claude-credit --all --json > stats.json
+Install: npm i -g project-metrics
+First-run: project-metrics --all --json > stats.json
 ```
 
 *STATE B — not yet published:*
 ```
-Install: # `claude-credit` ships alongside this site — watch the repo
+Install: # `project-metrics` ships alongside this site — watch the repo
 First-run: (none until published)
 ```
 
 *STATE C — scoped, published:*
 ```
-Install: npm i -g @mbriggsy/claude-credit
-First-run: claude-credit --all --json > stats.json
+Install: npm i -g @mbriggsy/project-metrics
+First-run: project-metrics --all --json > stats.json
 ```
 
 ### Commit point
 
 After Step 3 (README edit) and Step 4 (publish OR fallback decision) land:
 
-- `tools/claude-credit/package.json` + `tools/claude-credit/README.md` → one commit. Message style: `chore(claude-credit): add repository field + clarify install path` (Path A) or `chore(claude-credit): publish as @mbriggsy/claude-credit, fix README` (Path B).
-- `projects/claude-credits/docs/editorial.md` CTA-state block → committed with the rest of −1.5 (one combined commit at end of −1.5).
+- `tools/project-metrics/package.json` + `tools/project-metrics/README.md` → one commit. Message style: `chore(project-metrics): add repository field + clarify install path` (Path A) or `chore(project-metrics): publish as @mbriggsy/project-metrics, fix README` (Path B).
+- `projects/ai-journey-stats/docs/editorial.md` CTA-state block → committed with the rest of −1.5 (one combined commit at end of −1.5).
 
 ---
 
-## −1.2 Project config edit — `~/.claude-credit-projects.yaml`
+## −1.2 Project config edit — `~/.project-metrics-projects.yaml`
 
 Adds 2 meta-projects + a new `archive:` array (locked-in: the misses roll into totals, surface as collective tile).
 
 ### Current state (verified at deepening, 2026-05-24)
 
-File at `C:\Users\brigg\.claude-credit-projects.yaml`. 9 entries under `projects:` key. Format is `- path: <Windows absolute path with backslashes>`. README of the CLI documents tilde-form, but the actual file uses Windows absolutes — match the existing convention.
+File at `C:\Users\brigg\.project-metrics-projects.yaml`. 9 entries under `projects:` key. Format is `- path: <Windows absolute path with backslashes>`. README of the CLI documents tilde-form, but the actual file uses Windows absolutes — match the existing convention.
 
 Cross-checked against `C:/Users/brigg/ai-learning-journey/projects/` directory listing: clean 1-to-1 match, no drift. `archive/` subdirectory contains the 6 shelved projects, none currently in any config.
 
@@ -167,11 +167,11 @@ Cross-checked against `C:/Users/brigg/ai-learning-journey/projects/` directory l
 
 ```bash
 # Snapshot
-cp C:/Users/brigg/.claude-credit-projects.yaml C:/Users/brigg/.claude-credit-projects.yaml.bak.2026-05-24
+cp C:/Users/brigg/.project-metrics-projects.yaml C:/Users/brigg/.project-metrics-projects.yaml.bak.2026-05-24
 
 # Drift check — must show exactly these 9 paths under `projects:` and NOTHING else at root.
 # If output diverges from expected, ABORT — Briggsy may have edited the file between deepening and execution.
-python -c "import yaml, os; d = yaml.safe_load(open(os.path.expanduser('~/.claude-credit-projects.yaml'))); print('TOP KEYS:', sorted(d.keys())); print('PROJECT COUNT:', len(d.get('projects', []))); [print(' -', p['path']) for p in d.get('projects', [])]"
+python -c "import yaml, os; d = yaml.safe_load(open(os.path.expanduser('~/.project-metrics-projects.yaml'))); print('TOP KEYS:', sorted(d.keys())); print('PROJECT COUNT:', len(d.get('projects', []))); [print(' -', p['path']) for p in d.get('projects', [])]"
 ```
 
 Expected output:
@@ -205,8 +205,8 @@ Outcomes:
 **Step 3 — rewrite the file.** Final file contents (exact YAML to write — preserve the leading comments + add two new top-level keys after `projects:`):
 
 ```yaml
-# claude-credit project list
-# Add or remove projects to control what `claude-credit --all` scans.
+# project-metrics project list
+# Add or remove projects to control what `project-metrics --all` scans.
 # Tilde (~) expands to your home directory. Absolute paths also supported.
 projects:
   - path: C:\Users\brigg\ai-learning-journey\projects\burned
@@ -222,8 +222,8 @@ projects:
 # Meta-projects — the tools that built/measured this site.
 # Render as individual tiles AFTER the 9 active projects, under a divider "the tools".
 meta:
-  - path: C:\Users\brigg\ai-learning-journey\tools\claude-credit
-  - path: C:\Users\brigg\ai-learning-journey\projects\claude-credits
+  - path: C:\Users\brigg\ai-learning-journey\tools\project-metrics
+  - path: C:\Users\brigg\ai-learning-journey\projects\ai-journey-stats
 
 # Archive — shelved projects ("the misses").
 # Metrics roll into combined totals. No individual tiles.
@@ -239,7 +239,7 @@ archive:
 
 **Step 4 — schema decisions handed off to Phase 0.** The CLI parser today only knows `projects:`. The new `meta:` and `archive:` keys are inert until Phase 0 extends the parser. **Add a new sub-item to [phase-0-data-gaps.md](phase-0-data-gaps.md):** "0.6b — Extend `loadProjectConfig` to recognize `meta:` and `archive:` arrays. `meta` entries scan + report with `kind: 'meta'`. `archive` entries scan, contribute to `combined.totalTokens` / `combined.totalLines` / `combined.totalBytes`, but emit a single rolled-up `ArchiveCollective` instead of individual `ProjectReport` entries. Schema: `MultiProjectReport.archiveCollective: ArchiveCollective | null`."
 
-**Step 5 — sanity-test the YAML loads.** After the Phase 0.6b parser extension lands (NOT this phase), running `claude-credit --all --json | head -30` should show:
+**Step 5 — sanity-test the YAML loads.** After the Phase 0.6b parser extension lands (NOT this phase), running `project-metrics --all --json | head -30` should show:
 - 9 entries under `projects` (each with editorial null for now)
 - 2 entries under `meta`
 - 1 `archiveCollective` block with 6 contributing project names + rolled-up totals
@@ -247,14 +247,14 @@ archive:
 
 Since the parser extension is Phase 0 work, the only verification possible inside −1.2 is YAML validity. Use Python (no cwd dependency, always available):
 ```bash
-python -c "import yaml, json, os; print(json.dumps(yaml.safe_load(open(os.path.expanduser('~/.claude-credit-projects.yaml'))), indent=2))" | head -40
+python -c "import yaml, json, os; print(json.dumps(yaml.safe_load(open(os.path.expanduser('~/.project-metrics-projects.yaml'))), indent=2))" | head -40
 ```
 Exit 0 + parseable JSON output = YAML is valid. Errors → re-check indentation (YAML cares about spaces, not tabs).
 
-Node alternative (only works from `tools/claude-credit/` where `js-yaml` is a dep):
+Node alternative (only works from `tools/project-metrics/` where `js-yaml` is a dep):
 ```bash
-cd C:/Users/brigg/ai-learning-journey/tools/claude-credit
-node -e "console.log(JSON.stringify(require('js-yaml').load(require('fs').readFileSync(require('os').homedir() + '/.claude-credit-projects.yaml', 'utf8')), null, 2))" | head -40
+cd C:/Users/brigg/ai-learning-journey/tools/project-metrics
+node -e "console.log(JSON.stringify(require('js-yaml').load(require('fs').readFileSync(require('os').homedir() + '/.project-metrics-projects.yaml', 'utf8')), null, 2))" | head -40
 ```
 
 ### Final grid math after this edit
@@ -268,9 +268,9 @@ node -e "console.log(JSON.stringify(require('js-yaml').load(require('fs').readFi
 
 ### Commit point
 
-After Step 3 + Step 5 (YAML valid). One commit. The file lives in user home, NOT inside the repo, so this commit is the Phase 0 sub-item add (the new −1.4 entry doesn't get a commit until that sub-item is added to phase-0-data-gaps.md). Single commit message: `docs(claude-credits): add 0.6b parser extension for meta + archive arrays`.
+After Step 3 + Step 5 (YAML valid). One commit. The file lives in user home, NOT inside the repo, so this commit is the Phase 0 sub-item add (the new −1.4 entry doesn't get a commit until that sub-item is added to phase-0-data-gaps.md). Single commit message: `docs(ai-journey-stats): add 0.6b parser extension for meta + archive arrays`.
 
-YAML file itself is uncommitted (lives at `~/.claude-credit-projects.yaml`, not in repo). Rollback if needed via the `.bak.2026-05-24` from Step 1.
+YAML file itself is uncommitted (lives at `~/.project-metrics-projects.yaml`, not in repo). Rollback if needed via the `.bak.2026-05-24` from Step 1.
 
 ---
 
@@ -323,8 +323,8 @@ cat "$PROJDIR/.vercel/project.json" 2>/dev/null || echo "(none)"
 ```
 
 For meta-projects, paths differ:
-- `tools/claude-credit` → no deploy (CLI tool, no URL)
-- `projects/claude-credits` → URL not yet known (own deploy in Phase 8) — record `liveUrl: null` for now
+- `tools/project-metrics` → no deploy (CLI tool, no URL)
+- `projects/ai-journey-stats` → URL not yet known (own deploy in Phase 8) — record `liveUrl: null` for now
 
 Outcomes per project:
 - One URL discovered from README/CLAUDE.md/vercel.json → **trusted source.** Proceed to Step 2; in Step 3, fingerprint failure does NOT void the URL (mark `liveUrlSuspect: true` for Briggsy review instead).
@@ -384,11 +384,11 @@ These start as accepted but still go through Steps 2+3 in case content moved bet
 
 ### Output
 
-Per project, record into the editorial worksheet (`projects/claude-credits/docs/editorial.md`) at the corresponding row's `liveUrl:` field. Build the `## Deploys to fix` block at the bottom of the worksheet with any rows that resolved to null.
+Per project, record into the editorial worksheet (`projects/ai-journey-stats/docs/editorial.md`) at the corresponding row's `liveUrl:` field. Build the `## Deploys to fix` block at the bottom of the worksheet with any rows that resolved to null.
 
 ### Commit point
 
-After all 11 projects resolved. Single commit to `projects/claude-credits/docs/editorial.md`. Bundled with the −1.5 final commit (don't commit a half-built editorial.md mid-stream).
+After all 11 projects resolved. Single commit to `projects/ai-journey-stats/docs/editorial.md`. Bundled with the −1.5 final commit (don't commit a half-built editorial.md mid-stream).
 
 ---
 
@@ -409,8 +409,8 @@ This section is retained as a pointer; the inventory work happens inside [−1.5
 | pacman | Gameplay screenshot (mid-game with ghosts visible) | `tests.html` exists; pick gameplay over tests |
 | skills | Slash-command screencap (e.g., `/distill` or `/brief` firing in a real session) | No project-root assets; lives across three skill subdirs |
 | tic-tac-toe | Mid-game screenshot, board with X/O moves visible | Honesty: smallest project; hook stat should reflect |
-| claude-credit | Terminal screencap of `claude-credit --all` output (ASCII table or hero numbers) | README has ASCII art at lines 5-15 — also viable |
-| claude-credits | Self-referential: site's own hero screenshot, POST-deploy | Chicken-and-egg — `heroImage` stays null until after Phase 8 ships, then captured |
+| project-metrics | Terminal screencap of `project-metrics --all` output (ASCII table or hero numbers) | README has ASCII art at lines 5-15 — also viable |
+| ai-journey-stats | Self-referential: site's own hero screenshot, POST-deploy | Chicken-and-egg — `heroImage` stays null until after Phase 8 ships, then captured |
 | "the misses" collective tile | Composite or generated visual (e.g., a faded-out grid of 6 project-name typographic cards, or a single grayscale collage) | Capture in parallel; no source project to pull from |
 
 4 surfaces have rich existing hero candidates (no capture needed; pick best at editorial draft time):
@@ -428,11 +428,11 @@ Per "mobile must shine" — for TILE heroes, the same 16:9 image works at 320px 
 
 ---
 
-## −1.5 Editorial + inventory worksheet — `projects/claude-credits/docs/editorial.md`
+## −1.5 Editorial + inventory worksheet — `projects/ai-journey-stats/docs/editorial.md`
 
 The single combined source of truth. Briggsy reviews + edits the voice. Claude pre-fills strawman content + every constraint so the review is targeted, not blank-page.
 
-**Schema source:** `EditorialContent` interface proposed in [phase-0-data-gaps.md](phase-0-data-gaps.md) section 0.6, lines 220–229. Type does not yet exist in `tools/claude-credit/src/taxonomy.ts` — Phase 0 lands it. Modifications locked in this deepening:
+**Schema source:** `EditorialContent` interface proposed in [phase-0-data-gaps.md](phase-0-data-gaps.md) section 0.6, lines 220–229. Type does not yet exist in `tools/project-metrics/src/taxonomy.ts` — Phase 0 lands it. Modifications locked in this deepening:
 - `repoUrl` RETAINED and WIRED to detail page (Phase 5 plan adds "View source →" affordance — also a Phase 5 follow-up sub-item).
 - `status` enum simplifies to `active | meta`. (Shelved removed — the archive collective is a separate surface, not an EditorialContent row.)
 
@@ -443,7 +443,7 @@ The single combined source of truth. Briggsy reviews + edits the voice. Claude p
 
 ### Recipe
 
-**Step 1 — create the file** at `projects/claude-credits/docs/editorial.md` with the EXACT structure below. Pre-fill all 12 row blocks with Claude strawman content + hookStat candidates. Leave fields requiring Briggsy taste tagged `[STRAWMAN]`.
+**Step 1 — create the file** at `projects/ai-journey-stats/docs/editorial.md` with the EXACT structure below. Pre-fill all 12 row blocks with Claude strawman content + hookStat candidates. Leave fields requiring Briggsy taste tagged `[STRAWMAN]`.
 
 **Step 2 — populate `liveUrl` column** from −1.3 outputs.
 
@@ -453,12 +453,12 @@ The single combined source of truth. Briggsy reviews + edits the voice. Claude p
 
 **Step 5 — surface to Briggsy** for review. Briggsy edits voice/hook picks/descriptions in-place. He checks off the sign-off boxes at the bottom when done.
 
-**Step 6 — commit** the completed worksheet. Single commit. Message: `docs(claude-credits): draft editorial worksheet for all 12 surfaces`.
+**Step 6 — commit** the completed worksheet. Single commit. Message: `docs(ai-journey-stats): draft editorial worksheet for all 12 surfaces`.
 
-### Exact file structure for `projects/claude-credits/docs/editorial.md`
+### Exact file structure for `projects/ai-journey-stats/docs/editorial.md`
 
 ```markdown
-# claude-credits — editorial worksheet
+# ai-journey-stats — editorial worksheet
 
 **Status:** draft (Claude pre-fill complete · Briggsy review pending)
 **Schema source:** [phase-0-data-gaps.md §0.6](plans/phase-0-data-gaps.md) — `EditorialContent` type.
@@ -477,7 +477,7 @@ Builder-to-builder. Audience is AI-curious peer developers.
 > aspirational · evangelical · breathless · jargon-heavy · self-deprecating
 
 **Hard rules:**
-- Site voice ≠ BURNED voice. BURNED's row is written in claude-credits voice ABOUT a project that uses Archer/Sterling cadence — NOT in Archer/Sterling cadence itself.
+- Site voice ≠ BURNED voice. BURNED's row is written in ai-journey-stats voice ABOUT a project that uses Archer/Sterling cadence — NOT in Archer/Sterling cadence itself.
 - No "water beads" metaphors in copy. That's the visual bar, not the voice bar.
 - No project-name prefix in one-liners — the tile already shows the title.
 
@@ -564,7 +564,7 @@ Builder-to-builder. Audience is AI-curious peer developers.
 - **status:** `active`
 - **oneLiner [STRAWMAN]:** `Pac-Man clone. Browser. No frameworks.`
 - **hookStat candidates:**
-  - `{ label: "LINES", value: "<count from claude-credit>" }`
+  - `{ label: "LINES", value: "<count from project-metrics>" }`
   - `{ label: "GHOSTS", value: "4" }`
   - `{ label: "TESTS", value: "<count>" }`
 - **heroImage:** NEEDS CAPTURE — see capture queue
@@ -603,7 +603,7 @@ Builder-to-builder. Audience is AI-curious peer developers.
 - **oneLiner [STRAWMAN]:** `The smallest possible game. Three files, one afternoon.`
 - **hookStat candidates:**
   - `{ label: "FILES", value: "3" }` (index.html / script.js / style.css)
-  - `{ label: "LINES", value: "<count from claude-credit>" }`
+  - `{ label: "LINES", value: "<count from project-metrics>" }`
   - `{ label: "TESTS", value: "<count>" }`
 - **heroImage:** NEEDS CAPTURE — see capture queue
 - **heroImage_mobile_safe:** `tbd`
@@ -611,7 +611,7 @@ Builder-to-builder. Audience is AI-curious peer developers.
 - **repoUrl:** `https://github.com/mbriggsy/ai-learning-journey/tree/main/projects/tic-tac-toe`
 - **description (3 sentences) [STRAWMAN]:**
   1. `Three-by-three grid, two players, classic rules.`
-  2. `Built as a calibration project for the smallest scope claude-credit could measure.`
+  2. `Built as a calibration project for the smallest scope project-metrics could measure.`
   3. `[OMIT]`
 - **gallery:** `[]`
 
@@ -672,28 +672,28 @@ Builder-to-builder. Audience is AI-curious peer developers.
   3. `[OPTIONAL]`
 - **gallery:** `["public/trailer-blueprint.jpg", "public/trailer-city-closeup.jpg", "public/trailer-dossier-spread.jpg", "public/trailer-table-overhead.jpg"]`
 
-### `claude-credit` (meta)
+### `project-metrics` (meta)
 
-- **hostProjectRoot:** `C:\Users\brigg\ai-learning-journey\tools\claude-credit`
+- **hostProjectRoot:** `C:\Users\brigg\ai-learning-journey\tools\project-metrics`
 - **status:** `meta`
 - **oneLiner [STRAWMAN]:** `The CLI that measured this site. Self-referential.`
 - **hookStat candidates:**
   - `{ label: "PROJECTS", value: "11" }` (or 12 if counting the archive collective as a surface)
   - `{ label: "FIELDS", value: "<count of EditorialContent fields once Phase 0 lands>" }`
   - `{ label: "VERSION", value: "0.1.0" }` (or post-publish version)
-- **heroImage:** NEEDS CAPTURE — terminal screencap of `claude-credit --all` output
+- **heroImage:** NEEDS CAPTURE — terminal screencap of `project-metrics --all` output
 - **heroImage_mobile_safe:** `tbd`
 - **liveUrl:** `null` (CLI tool, no URL)
-- **repoUrl:** `https://github.com/mbriggsy/ai-learning-journey/tree/main/tools/claude-credit`
+- **repoUrl:** `https://github.com/mbriggsy/ai-learning-journey/tree/main/tools/project-metrics`
 - **description (3 sentences) [STRAWMAN]:**
   1. `Project-agnostic CLI that tallies every byte of authored, pipeline-generated, and tool-generated work in a project.`
   2. `Built to settle the "how much did Claude actually do" question with receipts, not vibes.`
-  3. `Drives this site — every number on every tile traces back to claude-credit output.`
+  3. `Drives this site — every number on every tile traces back to project-metrics output.`
 - **gallery:** `[]`
 
-### `claude-credits` (meta — this site)
+### `ai-journey-stats` (meta — this site)
 
-- **hostProjectRoot:** `C:\Users\brigg\ai-learning-journey\projects\claude-credits`
+- **hostProjectRoot:** `C:\Users\brigg\ai-learning-journey\projects\ai-journey-stats`
 - **status:** `meta`
 - **oneLiner [STRAWMAN]:** `The showcase you're looking at. Honesty as content.`
 - **hookStat candidates:**
@@ -702,10 +702,10 @@ Builder-to-builder. Audience is AI-curious peer developers.
   - `{ label: "ROWS", value: "12" }` (this worksheet)
 - **heroImage:** `null` — chicken-and-egg; captured POST-deploy (after Phase 8)
 - **heroImage_mobile_safe:** `tbd`
-- **liveUrl:** `null` for now; populated to `https://claude-credits.vercel.app` (or fallback) after Phase 8
-- **repoUrl:** `https://github.com/mbriggsy/ai-learning-journey/tree/main/projects/claude-credits`
+- **liveUrl:** `null` for now; populated to `https://ai-journey-stats.vercel.app` (or fallback) after Phase 8
+- **repoUrl:** `https://github.com/mbriggsy/ai-learning-journey/tree/main/projects/ai-journey-stats`
 - **description (3 sentences) [STRAWMAN]:**
-  1. `Vercel-hosted, GSAP-driven web showcase that visualizes claude-credit's data across every project in this monorepo.`
+  1. `Vercel-hosted, GSAP-driven web showcase that visualizes project-metrics's data across every project in this monorepo.`
   2. `Built to a quality bar where the craft has to be invisible — the product carries the visit, not the receipts on who authored it.`
   3. `If you reacted "wow this product is slick" — bar hit. If you reacted "wow Claude built this" — bar missed.`
 - **gallery:** `[]`
@@ -724,7 +724,7 @@ Lives outside the `EditorialContent` schema. Surfaces as ONE collective tile in 
 - **Status marker:** none (the tile's label IS the marker)
 - **Click target:** `/archive` (or `/the-misses` — Phase 4 plan decides slug)
 
-### Detail page content (`projects/claude-credits/src/pages/Archive.tsx`)
+### Detail page content (`projects/ai-journey-stats/src/pages/Archive.tsx`)
 
 Six rows, one per archived project. Each row: project name + one-liner explaining WHY it was shelved (the lesson, not the elegy).
 
@@ -767,8 +767,8 @@ Hero captures needed in parallel with Phase 0–2 build. Worksheet row's `heroIm
 - [ ] pacman — mid-game screenshot with ghosts
 - [ ] skills — slash-command screencap (/distill or /brief firing)
 - [ ] tic-tac-toe — mid-game screenshot
-- [ ] claude-credit — terminal screencap of `claude-credit --all`
-- [ ] claude-credits — site hero screenshot (POST-Phase 8 deploy)
+- [ ] project-metrics — terminal screencap of `project-metrics --all`
+- [ ] ai-journey-stats — site hero screenshot (POST-Phase 8 deploy)
 - [ ] "the misses" tile — composite visual (faded grid OR grayscale collage)
 
 Mobile-safe verification per capture: open the captured image in DevTools mobile emulation (320px / 375px / 430px widths) AND in the desktop ~40%-viewport detail-page crop. Mark `heroImage_mobile_safe:` per row when both look intentional.
@@ -779,7 +779,7 @@ Mobile-safe verification per capture: open the captured image in DevTools mobile
 
 - [ ] Voice anchor reviewed and accepted (or edited) — Briggsy
 - [ ] All 12 row blocks edited; no `[STRAWMAN]` tags remaining on `oneLiner` / `hookStat` / `description` fields — Briggsy
-  - **Exception:** `claude-credits` row's `heroImage` + `liveUrl` are intentionally null until after Phase 8 deploy. Does NOT block sign-off.
+  - **Exception:** `ai-journey-stats` row's `heroImage` + `liveUrl` are intentionally null until after Phase 8 deploy. Does NOT block sign-off.
   - **Exception:** 8 capture-pending rows (7 active/meta + "the misses" tile) have null `heroImage` until captures land. Does NOT block sign-off; captures continue in parallel with Phase 0–2.
 - [ ] **Anchor compliance check** — for each row's `oneLiner` + `description`, verify against the voice anchor: NO aspirational verbs ("revolutionize", "empower"), NO metaphors (especially "water beads" — that's the visual bar, not the voice bar), NO breathless adjectives ("stunning", "blazing"), NO jargon, NO self-deprecation. `oneLiner` ≤ 60 chars confirmed.
 - [ ] Archive collective tile copy + 6 detail one-liners edited — Briggsy
@@ -790,7 +790,7 @@ Mobile-safe verification per capture: open the captured image in DevTools mobile
 
 ### Commit point
 
-Single commit at the end of the worksheet draft. Message: `docs(claude-credits): draft editorial worksheet — all 12 surfaces + voice anchor + capture queue`. This commit includes the −1.3 `liveUrl` populations and the −1.1 `## CTA state` block (one combined commit, not three).
+Single commit at the end of the worksheet draft. Message: `docs(ai-journey-stats): draft editorial worksheet — all 12 surfaces + voice anchor + capture queue`. This commit includes the −1.3 `liveUrl` populations and the −1.1 `## CTA state` block (one combined commit, not three).
 
 ---
 
@@ -798,13 +798,13 @@ Single commit at the end of the worksheet draft. Message: `docs(claude-credits):
 
 > **DOUBLY SUPERSEDED — do not implement from this section.** (1) These amendments were already absorbed when phases 0/4/5 were individually deepened (the "cascade commit" became moot). (2) The 2026-05-24 scope locks then went further: **no meta tiles, no `meta:` array, no `kind` discriminator, `status` enum is `'active' | 'shelved'`** (ideation §7). So the `meta[*] → kind:'meta'` and "THREE top-level keys" specs below are WRONG now — phase-0 parses only `projects:` + `archive:`. The authoritative phase-0/4/5 plans are already reconciled; read those, not this. Retained as historical record only.
 
-The deepening locked decisions in this preflight that affect other phase plan docs. Those docs have NOT been deepened yet — when each one is deepened (or executed, whichever first), apply these amendments. Land them as a separate commit before Phase 0 execution starts: `docs(claude-credits): cascade preflight decisions to phase-0/4/5 plans`.
+The deepening locked decisions in this preflight that affect other phase plan docs. Those docs have NOT been deepened yet — when each one is deepened (or executed, whichever first), apply these amendments. Land them as a separate commit before Phase 0 execution starts: `docs(ai-journey-stats): cascade preflight decisions to phase-0/4/5 plans`.
 
 ### `phase-0-data-gaps.md`
 
 - **REMOVE §0.9 entirely.** Preflight −1.2 subsumes it — the YAML edit now happens in preflight, not Phase 0. Leaving §0.9 in place creates a conflicting YAML rewrite step that either errors or silently overwrites the `archive:` array preflight just wrote.
 - **ADD §0.6b — parser extension.** Insert after §0.6 (EditorialContent type). Spec:
-  - Extend the YAML loader (in `tools/claude-credit/src/multi-report.ts` or wherever `loadProjectConfig` lives) to recognize THREE top-level keys: `projects:`, `meta:`, `archive:`.
+  - Extend the YAML loader (in `tools/project-metrics/src/multi-report.ts` or wherever `loadProjectConfig` lives) to recognize THREE top-level keys: `projects:`, `meta:`, `archive:`.
   - `projects[*]` paths → unchanged behavior; emit `ProjectReport` with `kind: 'active'`.
   - `meta[*]` paths → emit `ProjectReport` with `kind: 'meta'`. Same shape, different tag.
   - `archive[*]` paths → scan + contribute to `combined.totalTokens` / `combined.totalLines` / `combined.totalBytes`, but emit ONE rolled-up `ArchiveCollective` block, not individual `ProjectReport` entries.
@@ -826,15 +826,15 @@ The deepening locked decisions in this preflight that affect other phase plan do
 
 ```bash
 # Phase 0: 0.6b must exist; 0.9 must be gone; status enum must be 2-value
-grep -n "0.6b\|0.9 — REMOVED\|'active' | 'shelved' | 'meta'" projects/claude-credits/docs/plans/phase-0-data-gaps.md
+grep -n "0.6b\|0.9 — REMOVED\|'active' | 'shelved' | 'meta'" projects/ai-journey-stats/docs/plans/phase-0-data-gaps.md
 # Expect: 0.6b present, 0.9 — REMOVED marker present, 3-value status enum (reopened at Phase 0 doc-review)
 
 # Phase 4: 12-tile count + "the misses" mention
-grep -nE "12 surfaces|the misses|11 project tiles" projects/claude-credits/docs/plans/phase-4-grid.md
+grep -nE "12 surfaces|the misses|11 project tiles" projects/ai-journey-stats/docs/plans/phase-4-grid.md
 # Expect: "12 surfaces" + "the misses" present, "11 project tiles" gone
 
 # Phase 5: View source + Archive.tsx mentions
-grep -nE "View source|Archive\.tsx|repoUrl" projects/claude-credits/docs/plans/phase-5-detail.md
+grep -nE "View source|Archive\.tsx|repoUrl" projects/ai-journey-stats/docs/plans/phase-5-detail.md
 # Expect: all three present
 ```
 
@@ -845,7 +845,7 @@ grep -nE "View source|Archive\.tsx|repoUrl" projects/claude-credits/docs/plans/p
 When all five gates are green AND the downstream-phase-amendments commit has landed:
 
 - −1.1 → CTA state landed in `editorial.md`; package.json + README possibly edited & committed
-- −1.2 → `~/.claude-credit-projects.yaml` updated (not in repo); drift check from Step 1 passed
+- −1.2 → `~/.project-metrics-projects.yaml` updated (not in repo); drift check from Step 1 passed
 - −1.3 → every project has a `liveUrl` (URL or null or suspect); deploys-to-fix list resolved
 - −1.4 → folded into worksheet; capture queue tracking work in parallel
 - −1.5 → worksheet fully drafted by Claude; Briggsy review/edit complete; sign-off boxes checked (with carve-outs respected)

@@ -1,8 +1,8 @@
-# claude-credits — editorial worksheet
+# ai-journey-stats — editorial worksheet
 
 **Status:** Briggsy voice review COMPLETE via chat 2026-05-25 (one-liners + hooks + descriptions + the 6 misses all locked). Outstanding + non-blocking: hero-image captures (parallel).
 **Schema source:** [phase-0-data-gaps.md §0.6](plans/phase-0-data-gaps.md) — `EditorialContent` type.
-**Locked decisions (2026-05-24/25):** site celebrates the WORK, not the tool · **no meta tiles** — tool + site get no tile, but ARE counted in `combined` totals ("count everything", ideation §7) · **no bottom CTA** — the page ends on the work (ideation §4) · **clean tiles** — no tile buttons; live/source links live on the detail page (ideation §3) · `claude-credit` **not published** to npm · grid = **9 real projects + 1 "the misses" archive coda = 10 surfaces** · `repoUrl` wired to detail page.
+**Locked decisions (2026-05-24/25):** site celebrates the WORK, not the tool · **no meta tiles** — tool + site get no tile, but ARE counted in `combined` totals ("count everything", ideation §7) · **no bottom CTA** — the page ends on the work (ideation §4) · **clean tiles** — no tile buttons; live/source links live on the detail page (ideation §3) · `project-metrics` **not published** to npm · grid = **9 real projects + 1 "the misses" archive coda = 10 surfaces** · `repoUrl` wired to detail page.
 
 ---
 
@@ -17,7 +17,7 @@ Builder-to-builder. Audience is AI-curious peer developers.
 > aspirational · evangelical · breathless · jargon-heavy · self-deprecating
 
 **Hard rules:**
-- Site voice ≠ BURNED voice. BURNED's row is written in claude-credits voice ABOUT a project that uses Archer/Sterling cadence — NOT in Archer/Sterling cadence itself.
+- Site voice ≠ BURNED voice. BURNED's row is written in ai-journey-stats voice ABOUT a project that uses Archer/Sterling cadence — NOT in Archer/Sterling cadence itself.
 - No "water beads" metaphors in copy. That's the visual bar, not the voice bar.
 - No project-name prefix in one-liners — the tile already shows the title.
 - Don't pitch the tool. The site is about the work.
@@ -129,7 +129,7 @@ Builder-to-builder. Audience is AI-curious peer developers.
 - **repoUrl:** `https://github.com/mbriggsy/ai-learning-journey/tree/main/projects/tic-tac-toe`
 - **description:**
   1. `Three-by-three grid, two players, classic rules.`
-  2. `Built as a calibration project for the smallest scope claude-credit could measure.`
+  2. `Built as a calibration project for the smallest scope project-metrics could measure.`
 - **gallery:** `[]`
 
 ### `top-down-racer-02` (active)
@@ -212,7 +212,7 @@ Briggsy reviews + edits each one-liner. The honest framing is the point — anti
 
 **Decision (Briggsy, 2026-05-24):** the page ends on the work. No bottom CTA — no "try the tool" button, no install command, no "Source on GitHub" link. The magnitude of what got built is the final word.
 
-- `claude-credit` is **not published** to npm; it's the internal tape measure, not a product.
+- `project-metrics` is **not published** to npm; it's the internal tape measure, not a product.
 - Phase 7 (the old "bottom CTA" phase) is gutted at reconciliation — its job becomes "design how the page *ends* on the work."
 - The `cta.ts` / `resolveCtaCopy` / CTA-state plumbing (Phase 7 + About §2) is dead — remove during Phase 7 reconciliation.
 - Per-project links live on the **detail page** (clean tiles — no tile buttons): "Source →" always + "Try it →" where hosted (TDR-02, TDR-04, UMB, burned). They point at the *work*, not the tool.
@@ -233,7 +233,7 @@ Projects whose recorded `liveUrl` is null. Briggsy decides whether to re-deploy 
 
 ## Capture queue (from −1.4 fold)
 
-Hero captures needed in parallel with Phase 0–2 build. Worksheet row's `heroImage:` stays null until the capture lands. (No `claude-credit` / `claude-credits` captures — those tiles are cut.)
+Hero captures needed in parallel with Phase 0–2 build. Worksheet row's `heroImage:` stays null until the capture lands. (No `project-metrics` / `ai-journey-stats` captures — those tiles are cut.)
 
 - [ ] data-engineering — terminal screencap of ATC/ETL run
 - [ ] hooks — terminal screencap of a hook firing

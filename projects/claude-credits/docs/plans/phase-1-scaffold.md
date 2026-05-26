@@ -11,7 +11,7 @@ coded: 2026-05-25T12:49:16-04:00
 > 3. **Dev port 5175, not 5173** — 5173 collides with UMB's dev server. (`vite.config.ts` `server.port`.)
 > 4. **Added `public/favicon.svg`** (minimal ascending-credits placeholder mark, linked in `index.html`) to clear the favicon 404 that tripped the no-console-errors gate. Real mark = Phase 9.
 
-# Phase 1 — Scaffold `projects/claude-credits/`
+# Phase 1 — Scaffold `projects/ai-journey-stats/`
 
 **Prereq:** Read [README.md](README.md) first — the bar, locked decisions, and visual system live there. This file is the decisions-not-code recipe for the foundation Phase 2+ builds on.
 
@@ -39,7 +39,7 @@ Getting the foundation right matters more here than anywhere else in the project
 
 8. **Standalone pnpm project — the monorepo is NOT a pnpm workspace.** No root `package.json`, no `pnpm-workspace.yaml`. Standalone `pnpm` project like every sibling. The cross-project type import (Phase 2's `src/types.ts`) uses a relative path — no workspace alias exists.
 
-9. **`src/types.ts` is deferred to Phase 2.** It re-exports the data contract from `tools/claude-credit/dist/`, but three of those types (`TokenStats`, `EditorialContent`, `ArchiveCollective`) don't exist until Phase 0 executes and rebuilds `dist/`. Creating it in Phase 1 bakes a guaranteed `TS2305 has no exported member` failure into the scaffold and forces a carve-out in the Phase 1 typecheck gate. It's type-only and consumed by nothing until Phase 2 — so it's created in Phase 2's data-wiring commit, where it's first used and where Phase 0's `dist/` is guaranteed to exist. Phase 1's typecheck gate is then clean with no asterisk.
+9. **`src/types.ts` is deferred to Phase 2.** It re-exports the data contract from `tools/project-metrics/dist/`, but three of those types (`TokenStats`, `EditorialContent`, `ArchiveCollective`) don't exist until Phase 0 executes and rebuilds `dist/`. Creating it in Phase 1 bakes a guaranteed `TS2305 has no exported member` failure into the scaffold and forces a carve-out in the Phase 1 typecheck gate. It's type-only and consumed by nothing until Phase 2 — so it's created in Phase 2's data-wiring commit, where it's first used and where Phase 0's `dist/` is guaranteed to exist. Phase 1's typecheck gate is then clean with no asterisk.
 
 10. **`/frontend-design` is deferred to the component-build phases (3–9).** For a FOUNDATION phase (design primitives, not interfaces) the `emil-design-eng` pass was the correct lens and its output is baked in. `frontend-design` earns its keep when real layouts get built (Phase 3 hero, Phase 4 grid, Phase 5 detail). A deliberate "as appropriate" call.
 
@@ -47,7 +47,7 @@ Getting the foundation right matters more here than anywhere else in the project
 
 ## Current state (verified at deepening, 2026-05-24)
 
-- `projects/claude-credits/` is **greenfield**: only `.env` (one key: `GEMINI_API_KEY`), `.gitignore`, `TODO.md`, `docs/`. No `package.json`, no `src/`, no `public/`.
+- `projects/ai-journey-stats/` is **greenfield**: only `.env` (one key: `GEMINI_API_KEY`), `.gitignore`, `TODO.md`, `docs/`. No `package.json`, no `src/`, no `public/`.
 - **The monorepo root is NOT a pnpm workspace** — no root `package.json`, no `pnpm-workspace.yaml`. Verified by `ls` + grep.
 - **Existing `.gitignore` is thin** — `dist/`, `.vercel/`, `*.log`, `pnpm-debug.log*`, `.vscode/`, `.idea/`. Does **NOT** ignore `node_modules/`. §1.1 adds it.
 - **`.env` is gitignored at the monorepo root** (root `.gitignore` lines 17-19). Don't commit or roll it back — holds the Gemini key + future per-project secrets.
@@ -55,15 +55,15 @@ Getting the foundation right matters more here than anywhere else in the project
 - **`resolve.tsconfigPaths: true` is CONFIRMED real** — `burned/vite.config.ts` ships the identical key on `vite@^8.0.3` and builds clean (verified by reading the file at review). Fallback (`vite-tsconfig-paths`) kept as insurance.
 - **`undercover-mob-boss` carries the rich `vercel.json`** (CSP, cache headers, rewrites) — the §1.12 template adapts it (drops PWA/manifest/host-redirect, keeps SPA rewrite + headers, adds a tighter CSP since fonts are now same-origin).
 - **No sibling uses `react-router`** — §1.7 has no copy-from reference.
-- **`tools/claude-credit/dist/` currently exports only `MultiProjectReport` + `ProjectReport`** (verified: `dist/taxonomy.d.ts` predates Phase 0). The other three types arrive when Phase 0 runs — which is why `src/types.ts` is a Phase 2 file (Decision 9).
-- **Phase 0 §0.7 (step 4) runs `pnpm build`** — guarantees `tools/claude-credit/dist/` is rebuilt with all five types before Phase 2 consumes them.
+- **`tools/project-metrics/dist/` currently exports only `MultiProjectReport` + `ProjectReport`** (verified: `dist/taxonomy.d.ts` predates Phase 0). The other three types arrive when Phase 0 runs — which is why `src/types.ts` is a Phase 2 file (Decision 9).
+- **Phase 0 §0.7 (step 4) runs `pnpm build`** — guarantees `tools/project-metrics/dist/` is rebuilt with all five types before Phase 2 consumes them.
 
 ---
 
 ## Output structure
 
 ```
-projects/claude-credits/
+projects/ai-journey-stats/
 ├── public/
 │   ├── data/                          # stats.json lands here in Phase 2 — empty in Phase 1
 │   └── assets/
@@ -162,7 +162,7 @@ Thumbs.db
 
 ```json
 {
-  "name": "claude-credits",
+  "name": "ai-journey-stats",
   "version": "0.1.0",
   "private": true,
   "type": "module",
@@ -251,13 +251,13 @@ export default defineConfig({
 
 **Install + verify gate:**
 ```
-cd C:/Users/brigg/ai-learning-journey/projects/claude-credits
+cd C:/Users/brigg/ai-learning-journey/projects/ai-journey-stats
 pnpm install
 pnpm typecheck
 ```
 Expected: `pnpm install` writes `pnpm-lock.yaml` + `node_modules/`. `pnpm typecheck` parses the config cleanly (no `src/` yet — "no inputs" is fine; the gate is "no config error").
 
-**Commit:** `chore(claude-credits): scaffold Vite 8 + React 19 + TS project skeleton`
+**Commit:** `chore(ai-journey-stats): scaffold Vite 8 + React 19 + TS project skeleton`
 
 ---
 
@@ -274,8 +274,8 @@ Expected: `pnpm install` writes `pnpm-lock.yaml` + `node_modules/`. `pnpm typech
     <!-- Dual theme-color: browser chrome matches the active mode's page surface -->
     <meta name="theme-color" content="#0a1a26" media="(prefers-color-scheme: dark)" />
     <meta name="theme-color" content="#f7f1e3" media="(prefers-color-scheme: light)" />
-    <meta name="description" content="A visual showcase of the credit data across Briggsy's projects, measured by the claude-credit CLI." />
-    <title>claude-credits</title>
+    <meta name="description" content="A visual showcase of the credit data across Briggsy's projects, measured by the project-metrics CLI." />
+    <title>ai-journey-stats</title>
 
     <!-- Self-hosted fonts (no external CDN). Preload the display face — it paints the hero. -->
     <link rel="preload" href="/assets/fonts/Satoshi-Variable.woff2" as="font" type="font/woff2" crossorigin />
@@ -363,7 +363,7 @@ export default function Landing() {
         fontSize: 'var(--text-display-lg)', lineHeight: 'var(--leading-heading)',
         letterSpacing: 'var(--tracking-display)',
       }}>
-        claude-credits
+        ai-journey-stats
       </h1>
       <p style={{ fontFamily: 'var(--font-body)', fontSize: 'var(--text-body)', lineHeight: 'var(--leading-body)', color: 'var(--text-secondary)' }}>
         Scaffold placeholder. Hero lands in Phase 3.
@@ -427,7 +427,7 @@ pnpm dev
 ```
 Visit `/`, `/project/burned`, `/about`. All three render; `<Link>` nav is client-side (Network tab: no document re-fetch). `/project/burned` shows "burned" (`:name` resolves). **The headings will appear with no font/color/weight** because tokens land in Commit 3 — that is correct and expected at this commit; do NOT debug token resolution here, Commit 3 supplies the values.
 
-**Commit:** `feat(claude-credits): three-route SPA skeleton + cross-fade transition seam + placeholder pages`
+**Commit:** `feat(ai-journey-stats): three-route SPA skeleton + cross-fade transition seam + placeholder pages`
 
 ---
 
@@ -709,7 +709,7 @@ pnpm dev
 ```
 Re-visit all three routes. Satoshi renders on headings (NO layout shift on load — the preload + `font-display: optional` hold it), the mono digit string on `/project/burned` is tabular + gold, body is cream-on-midnight. **Toggle Windows app theme dark↔light** → surface flips to warm cream, text to warm-black, link to deeper orange; no FOUC, no stylesheet swap. **Also test the dev override:** visit `/?theme=light` while OS is dark (and `/?theme=dark` while OS is light) → the forced mode applies. Confirm `@/` alias resolves (temporarily add `import '@/styles/global.css'` somewhere, confirm, revert). In console: `document.fonts.check('700 16px Satoshi')` returns `true` after load.
 
-**Commit:** `feat(claude-credits): token system + self-hosted fonts + reset + global baseline`
+**Commit:** `feat(ai-journey-stats): token system + self-hosted fonts + reset + global baseline`
 
 ---
 
@@ -797,7 +797,7 @@ pnpm build && pnpm preview   # built bundle — confirm side-effect imports surv
 ```
 In BOTH `pnpm dev` and the `pnpm preview` (built) tab, run in console: `gsap.parseEase('weighted-settle')` returns a **function** (not `undefined`). This proves `easings.ts` ran in both dev and the production bundle — the side-effect import is the thing most at risk of being tree-shaken out of a Rolldown prod build, so the `preview` check is the real gate, not `dev`.
 
-**Commit:** `feat(claude-credits): motion foundation — weighted eases, duration tokens, GSAP registration, reduced-motion helper`
+**Commit:** `feat(ai-journey-stats): motion foundation — weighted eases, duration tokens, GSAP registration, reduced-motion helper`
 
 ---
 
@@ -846,10 +846,10 @@ CSP notes: `style-src 'unsafe-inline'` is required for React inline `style={{}}`
 **1.12 — `README.md`:**
 
 ```markdown
-# claude-credits
+# ai-journey-stats
 
 A Vercel-hosted visual showcase of the credit data across the monorepo's projects,
-measured by the `claude-credit` CLI. Built with Vite 8 + React 19 + TypeScript + GSAP.
+measured by the `project-metrics` CLI. Built with Vite 8 + React 19 + TypeScript + GSAP.
 
 ## Setup
     pnpm install
@@ -864,12 +864,12 @@ measured by the `claude-credit` CLI. Built with Vite 8 + React 19 + TypeScript +
 ## Stack
 Vite 8 · React 19 · react-router-dom 7 · GSAP 3.14.2 (+ @gsap/react) · TypeScript 5.9
 Fonts: self-hosted Satoshi · Inter · JetBrains Mono (no external CDN)
-Deploy: Vercel (`claude-credits.vercel.app`)
+Deploy: Vercel (`ai-journey-stats.vercel.app`)
 ```
 
 **Final Phase 1 verify gate (the "Phase 1 done" bar — runtime truth, not just green tsc):**
 ```
-cd C:/Users/brigg/ai-learning-journey/projects/claude-credits
+cd C:/Users/brigg/ai-learning-journey/projects/ai-journey-stats
 pnpm typecheck                 # clean — NO carve-outs (types.ts is Phase 2, not present)
 pnpm build && pnpm preview     # clean dist/, built site served
 ```
@@ -884,7 +884,7 @@ Runtime checklist (eye on the browser):
 - [ ] Resize to 360/375/390/430px: no horizontal scroll; hero + secondary type clamp down legibly (secondary type actually scales, not frozen)
 - [ ] OS reduced-motion set → CSS safety-net active (transitions instant)
 
-**Commit:** `feat(claude-credits): Vercel config (CSP + SPA rewrite) + README + Phase 1 verification`
+**Commit:** `feat(ai-journey-stats): Vercel config (CSP + SPA rewrite) + README + Phase 1 verification`
 
 ---
 
@@ -928,7 +928,7 @@ The failure mode is a dark mode that *feels designed* and a light mode that *fee
 | **Hero token was dead + wrong** | `--text-display-hero` is now `clamp(4rem, 18vw, 22rem)` (matches Phase 3 + README ~22rem). Phase 3's HeroCounter MUST consume `var(--text-display-hero)`, not an inline clamp. |
 | **Secondary type clamps frozen on phones** | vw coefficients recomputed (8/5/7/2.5vw) so each crosses its floor in the phone→tablet range. Re-verify no overflow at 360px. |
 | **`--leading-display-hero: 0.95` overlaps wrapping text** | Sub-1 leading is for SINGLE-LINE hero numbers only. Wrapping headings use `--leading-heading` (1.05) or higher. Split into two tokens to enforce. |
-| **`src/types.ts` re-exports types Phase 0 hasn't created** | Deferred to Phase 2 (Decision 9). The relative path `../../../tools/claude-credit/dist/taxonomy.js` is correct depth (tools/ at monorepo root); confirm `dist/` has all 5 types after Phase 0 builds. |
+| **`src/types.ts` re-exports types Phase 0 hasn't created** | Deferred to Phase 2 (Decision 9). The relative path `../../../tools/project-metrics/dist/taxonomy.js` is correct depth (tools/ at monorepo root); confirm `dist/` has all 5 types after Phase 0 builds. |
 | **ScrollTrigger/DrawSVG eager-registered for zero consumers** | Phase 1 registers only `useGSAP` + `CustomEase`. DrawSVG → Phase 5; ScrollTrigger → whichever phase needs it. |
 | **CSP too tight breaks GSAP/fonts** | `style-src 'unsafe-inline'` kept for React/GSAP inline styles; `font-src 'self'` works because fonts are self-hosted. Validate no CSP violations in `pnpm preview` + after deploy (Phase 8). |
 | **`GEMINI_API_KEY` could leak into the client bundle** | NEVER prefix it `VITE_`. Vite only inlines `VITE_`-prefixed env into client code. The key is server-side-only, consumed by Phase 2's `scripts/refresh-stats.ts` via `tsx`. No component may read `import.meta.env.GEMINI_API_KEY`. |
@@ -979,7 +979,7 @@ Then open [phase-2-data-wiring.md](phase-2-data-wiring.md) and start.
 Land in the same deepen commit or a follow-up before Phase 1 executes:
 
 - **`README.md` (plans index) stack rows**: the "Stack" decision row states the stack without a Vite version pin — add `vite@^8.0.10`. Also add `react-router@^7` (CORRECTED — install package IS `react-router`, import specifier `react-router`) and `@gsap/react@^2.1.2` to the dependency list. Update the fonts note to "self-hosted Satoshi / Inter / JetBrains Mono (no CDN)".
-- **`phase-2-data-wiring.md`**: `src/types.ts` is created HERE (moved out of Phase 1 per Decision 9). Add a pre-step: confirm `tools/claude-credit/dist/` exports all five types (`MultiProjectReport`, `ProjectReport`, `TokenStats`, `EditorialContent`, `ArchiveCollective`) before the relative import. Also: `clsx` install moves to Phase 3.
+- **`phase-2-data-wiring.md`**: `src/types.ts` is created HERE (moved out of Phase 1 per Decision 9). Add a pre-step: confirm `tools/project-metrics/dist/` exports all five types (`MultiProjectReport`, `ProjectReport`, `TokenStats`, `EditorialContent`, `ArchiveCollective`) before the relative import. Also: `clsx` install moves to Phase 3.
 - No other downstream phase (3–9) requires structural change from Phase 1 — the scaffold is a pure foundation. Phase 0's own cascade note confirmed "Phase 1: no structural change required."
 
 ---

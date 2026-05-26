@@ -2,7 +2,7 @@
 
 ## 0.2.0 — 2026-05-25
 
-Phase 0 data contract for the claude-credits showcase site. All changes are
+Phase 0 data contract for the ai-journey-stats showcase site. All changes are
 additive; `0.1.x` `projects:`-only configs keep working unchanged.
 
 ### Added

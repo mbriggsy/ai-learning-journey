@@ -2,12 +2,12 @@
  * logGeneration — tiny helper for generation scripts (Imagen, TTS, ffmpeg
  * renders, etc.) to write a structured history of every attempted output.
  *
- * v1 of claude-credit does NOT read these logs — it relies on git history
+ * v1 of project-metrics does NOT read these logs — it relies on git history
  * for the discarded-asset count. As projects adopt this helper, v2 will
  * be able to count generations with much higher fidelity (including ones
  * that were never committed in the first place).
  *
- * Append target: `<cwd>/.claude-credit/generations.jsonl`.
+ * Append target: `<cwd>/.project-metrics/generations.jsonl`.
  */
 
 import { promises as fs } from 'node:fs';
@@ -49,7 +49,7 @@ export async function logGeneration(
   opts: LogGenerationOptions = {},
 ): Promise<void> {
   const cwd = opts.cwd ?? process.cwd();
-  const dir = path.join(cwd, '.claude-credit');
+  const dir = path.join(cwd, '.project-metrics');
   const file = path.join(dir, 'generations.jsonl');
   const record: GenerationLogEntry = {
     timestamp: entry.timestamp ?? new Date().toISOString(),
@@ -61,7 +61,7 @@ export async function logGeneration(
 
 /** Read all entries from a project's log (for tooling / v2 consumers). */
 export async function readGenerationLog(cwd?: string): Promise<GenerationLogEntry[]> {
-  const dir = path.join(cwd ?? process.cwd(), '.claude-credit');
+  const dir = path.join(cwd ?? process.cwd(), '.project-metrics');
   const file = path.join(dir, 'generations.jsonl');
   try {
     const raw = await fs.readFile(file, 'utf8');

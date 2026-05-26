@@ -57,7 +57,7 @@ function renderTierBlock(tier: TierReport): string {
 export function renderProjectTerminal(report: ProjectReport): string {
   const out: string[] = [];
   out.push('');
-  out.push(kleur.bold().underline(`claude-credit  ·  ${report.projectName}`));
+  out.push(kleur.bold().underline(`project-metrics  ·  ${report.projectName}`));
   if (report.editorial?.oneLiner) out.push(kleur.italic(`  "${report.editorial.oneLiner}"`));
   out.push(kleur.gray(report.projectPath));
   out.push(kleur.gray(`scanned ${report.scannedAt}`));
@@ -208,7 +208,7 @@ export function renderProjectTerminal(report: ProjectReport): string {
 export function renderMultiProjectTerminal(report: MultiProjectReport): string {
   const out: string[] = [];
   out.push('');
-  out.push(kleur.bold().underline(`claude-credit  ·  ALL PROJECTS  ·  ${report.projects.length} scanned`));
+  out.push(kleur.bold().underline(`project-metrics  ·  ALL PROJECTS  ·  ${report.projects.length} scanned`));
   out.push(kleur.gray(`scanned ${report.scannedAt}`));
 
   const c = report.combined;

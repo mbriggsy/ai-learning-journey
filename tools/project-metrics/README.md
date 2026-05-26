@@ -1,9 +1,9 @@
-# claude-credit
+# project-metrics
 
 Project-agnostic CLI that tallies every byte of authored / pipeline-generated work in a project. Built for exec slides, video stat sheets, and "show the receipts" moments — the dumb-but-important stuff like file counts, line counts, asset counts, generation counts.
 
 ```
-claude-credit  ·  burned
+project-metrics  ·  burned
 
   HEADLINE
   ────────────────────────────────────────────────────────────────
@@ -21,36 +21,36 @@ From inside this repo:
 ```sh
 pnpm install
 pnpm build
-npm link            # exposes `claude-credit` on your PATH globally
+npm link            # exposes `project-metrics` on your PATH globally
 ```
 
 Verify:
 
 ```sh
-claude-credit --help
+project-metrics --help
 ```
 
 ## Usage
 
 ```sh
-claude-credit                    # scan current directory
-claude-credit ~/code/burned      # scan a specific project
-claude-credit --all              # scan every project in your project list
+project-metrics                    # scan current directory
+project-metrics ~/code/burned      # scan a specific project
+project-metrics --all              # scan every project in your project list
 ```
 
 ### Output formats
 
 ```sh
-claude-credit                          # pretty terminal table (default)
-claude-credit --markdown               # markdown report — paste straight into slides
-claude-credit --markdown > stats.md    # save the markdown report
-claude-credit --json | jq .            # JSON for scripting / further processing
-claude-credit --include-ignored        # include files .gitignore would normally skip
+project-metrics                          # pretty terminal table (default)
+project-metrics --markdown               # markdown report — paste straight into slides
+project-metrics --markdown > stats.md    # save the markdown report
+project-metrics --json | jq .            # JSON for scripting / further processing
+project-metrics --include-ignored        # include files .gitignore would normally skip
 ```
 
 ### Cross-project mode
 
-`claude-credit --all` aggregates across every project listed in `~/.claude-credit-projects.yaml`. On first run the file is auto-created by scanning `~/ai-learning-journey/projects/` for siblings. Edit it to add/remove projects:
+`project-metrics --all` aggregates across every project listed in `~/.project-metrics-projects.yaml`. On first run the file is auto-created by scanning `~/ai-learning-journey/projects/` for siblings. Edit it to add/remove projects:
 
 ```yaml
 projects:
@@ -110,7 +110,7 @@ Files are routed first-match-wins through a built-in ruleset:
 
 ## Per-project config (optional)
 
-Drop a `claude-credit.config.yaml` (or `.json`, `.mjs`, `.js`, `.cjs`) at the project root. All fields are optional and additive.
+Drop a `project-metrics.config.yaml` (or `.json`, `.mjs`, `.js`, `.cjs`) at the project root. All fields are optional and additive.
 
 ```yaml
 # Exclude additional directory basenames during the walk.
@@ -136,7 +136,7 @@ proxies:
 # Declare generation-log locations. v1 surfaces this but doesn't read yet —
 # v2 will parse for high-fidelity discarded-generation counts.
 generationLogs:
-  - path: .claude-credit/generations.jsonl
+  - path: .project-metrics/generations.jsonl
     format: jsonl
     label: "Imagen / TTS / ffmpeg pipeline runs"
 ```
@@ -146,7 +146,7 @@ generationLogs:
 Add your own rules to the front of the classifier (first-match-wins):
 
 ```js
-// claude-credit.config.mjs
+// project-metrics.config.mjs
 export default {
   classificationRules: [
     {
@@ -162,17 +162,17 @@ export default {
 
 ## logGeneration() helper
 
-Long-term, the most accurate way to count "every generation Claude ever attempted" is to write a structured log as each one runs. Drop this call into any generation script (Imagen, TTS, ffmpeg, etc.) and v2 of claude-credit will read it for high-fidelity counts.
+Long-term, the most accurate way to count "every generation Claude ever attempted" is to write a structured log as each one runs. Drop this call into any generation script (Imagen, TTS, ffmpeg, etc.) and v2 of project-metrics will read it for high-fidelity counts.
 
 ```sh
 # Not published to npm — it's an internal monorepo tool.
 # Use it from elsewhere in this repo via a workspace reference or `npm link`
 # (see "Local setup" above), then:
-#   import { logGeneration } from 'claude-credit/log';
+#   import { logGeneration } from 'project-metrics/log';
 ```
 
 ```ts
-import { logGeneration } from 'claude-credit/log';
+import { logGeneration } from 'project-metrics/log';
 
 const result = await imagen.generate({ prompt });
 await logGeneration({
@@ -189,7 +189,7 @@ await logGeneration({
 
 If you don't want a dependency, copy `src/log-generation.ts` directly into your project — it's ~50 lines with no imports beyond `node:fs` and `node:path`.
 
-The helper writes to `<cwd>/.claude-credit/generations.jsonl`. Add that path to your `.gitignore` if you don't want to commit the log.
+The helper writes to `<cwd>/.project-metrics/generations.jsonl`. Add that path to your `.gitignore` if you don't want to commit the log.
 
 ## What's excluded by default
 
@@ -207,7 +207,7 @@ __pycache__  .pytest_cache  .mypy_cache  .venv  venv
 
 ## Iteration proxy signals
 
-Since no project (yet) writes structured generation logs, claude-credit infers iteration count from:
+Since no project (yet) writes structured generation logs, project-metrics infers iteration count from:
 
 1. **Asset modification events from git** — every commit that added/modified/deleted an asset file. Captures iteration in place.
 2. **Unique asset paths ever touched** — set size of those events.
@@ -219,7 +219,7 @@ For projects that adopt `logGeneration()`, v2 will surface a separate "true gene
 
 ## v2 roadmap (not in v1)
 
-- Parse `.claude-credit/generations.jsonl` for high-fidelity discarded-generation counts.
+- Parse `.project-metrics/generations.jsonl` for high-fidelity discarded-generation counts.
 - Claude Code session JSONL parsing — skill invocations, agent spawns, token-usage history.
 - GitHub PR / review-comment counts via `gh`.
 - Time-windowed mode (`--since=30d`).
@@ -230,7 +230,7 @@ For projects that adopt `logGeneration()`, v2 will surface a separate "true gene
 ## File layout
 
 ```
-tools/claude-credit/
+tools/project-metrics/
 ├── src/
 │   ├── cli.ts              # CLI entry — arg parsing, format selection
 │   ├── index.ts            # programmatic exports
@@ -243,12 +243,12 @@ tools/claude-credit/
 │   ├── config.ts           # per-project + multi-project config loaders
 │   ├── report.ts           # single-project orchestrator
 │   ├── multi-report.ts     # cross-project aggregator
-│   ├── log-generation.ts   # helper exported as claude-credit/log
+│   ├── log-generation.ts   # helper exported as project-metrics/log
 │   └── format/
 │       ├── terminal.ts     # pretty terminal output
 │       ├── markdown.ts     # markdown report
 │       └── util.ts         # fmtBytes, fmtNum, padding helpers
-├── bin/claude-credit.mjs   # bin entry → dist/cli.js
+├── bin/project-metrics.mjs   # bin entry → dist/cli.js
 ├── package.json
 ├── tsconfig.json
 └── README.md

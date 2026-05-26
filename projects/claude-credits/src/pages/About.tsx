@@ -8,11 +8,11 @@ import styles from './About.module.css'
 
 const REPO_URL = 'https://github.com/mbriggsy/ai-learning-journey'
 const TOOL_README_URL =
-  'https://github.com/mbriggsy/ai-learning-journey/blob/main/tools/claude-credit/README.md'
+  'https://github.com/mbriggsy/ai-learning-journey/blob/main/tools/project-metrics/README.md'
 
 // The taxonomy scheme (static — describes the classifier, NOT any project's stats.json). Tier
 // labels are VERBATIM from the hero hint so the page delivers exactly what `what each tier means →`
-// promised. Re-verified against tools/claude-credit/src/taxonomy.ts (3 tiers, 10 categories).
+// promised. Re-verified against tools/project-metrics/src/taxonomy.ts (3 tiers, 10 categories).
 // `counted` is the measurement-scope fact (does this feed the headline totals?), NOT a credit
 // verdict — ideation §1 forbids an authored-vs-generated comparison.
 const TAXONOMY = [
@@ -55,7 +55,7 @@ export default function About() {
   const reducedMotion = prefersReducedMotion()
 
   useEffect(() => {
-    document.title = 'About · claude-credits'
+    document.title = 'About · ai-journey-stats'
   }, [])
 
   // The page's single motion moment (Decision 6): ONE quiet fade-in on the wrapper, in the site's
@@ -89,13 +89,13 @@ export default function About() {
       </Link>
 
       <article className={styles.shell}>
-        {/* §1 — What is claude-credits (the site). Lead explainer; no authorship claim (§11). */}
+        {/* §1 — What is ai-journey-stats (the site). Lead explainer; no authorship claim (§11). */}
         <section className={styles.movement}>
           <h1 className={styles.heading}>
-            What is <span className={styles.headingMark}>claude-credits</span>
+            What is <span className={styles.headingMark}>ai-journey-stats</span>
           </h1>
           <p className={styles.prose}>
-            claude-credits is the receipts on a body of work — the projects, and what each one took
+            ai-journey-stats is the receipts on a body of work — the projects, and what each one took
             to build. The numbers aren&rsquo;t estimates or changelog claims: a purpose-built tool
             reads what&rsquo;s actually on disk and counts it, file by file. This page is what those
             counts mean — and what they deliberately leave out.
@@ -104,13 +104,13 @@ export default function About() {
 
         <hr className={styles.divider} />
 
-        {/* §2 — What is claude-credit (the tool). Prose only — no install, no pitch (ideation §4). */}
+        {/* §2 — What is project-metrics (the tool). Prose only — no install, no pitch (ideation §4). */}
         <section className={styles.movement}>
           <h2 className={styles.heading}>
-            What is <span className={styles.headingMark}>claude-credit</span>
+            What is <span className={styles.headingMark}>project-metrics</span>
           </h2>
           <p className={styles.prose}>
-            claude-credit is the tape measure — the tool that produced every figure on this site.
+            project-metrics is the tape measure — the tool that produced every figure on this site.
             Point it at a project and it sorts each file into one of three tiers, then counts: lines,
             bytes, asset iterations, and the token cost read from local Claude Code session logs.
             It&rsquo;s the internal instrument behind the receipts, nothing more.
@@ -194,7 +194,7 @@ export default function About() {
                 href={TOOL_README_URL}
                 rel="noopener noreferrer"
               >
-                Full methodology in the claude-credit README →
+                Full methodology in the project-metrics README →
               </a>
             </div>
 
@@ -203,7 +203,7 @@ export default function About() {
               <h2 className={styles.subHeading}>Update cadence</h2>
               <p className={`${styles.prose} ${styles.proseQuiet}`}>
                 Two things happen on their own schedule. The numbers regenerate only when the
-                claude-credit tool is run by hand — locally, on the machine where the session logs
+                project-metrics tool is run by hand — locally, on the machine where the session logs
                 live, because a clean CI runner has no history to read. The site itself redeploys
                 automatically from <span className={styles.code}>main</span>. A push ships the page;
                 it doesn&rsquo;t recount the work.

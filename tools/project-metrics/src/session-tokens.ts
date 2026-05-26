@@ -284,7 +284,7 @@ export async function collectSessionTokens(
 
   if (windowDays !== null && windowDays > 45) {
     process.stderr.write(
-      `[claude-credit] token window ${windowDays}d exceeds the ~30d JSONL rotation; ` +
+      `[project-metrics] token window ${windowDays}d exceeds the ~30d JSONL rotation; ` +
         `retention may not be pruning as expected (showing the real number).\n`,
     );
   }

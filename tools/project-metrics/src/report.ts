@@ -28,7 +28,7 @@ export async function buildProjectReport(opts: BuildReportOptions): Promise<Proj
 
   const { config, configPath } = await loadProjectConfig(rootDir);
   if (!configPath) {
-    warnings.push('No claude-credit.config.* found — using built-in defaults.');
+    warnings.push('No project-metrics.config.* found — using built-in defaults.');
   }
 
   // Prepend user rules so they win over defaults.

@@ -2,7 +2,7 @@
 title: git log parsing gotchas — trusting the command shape over the real bytes
 date: 2026-05-25
 phase: 0
-modules: [tools/claude-credit/src/git-stats.ts, tools/claude-credit/src/session-tokens.ts]
+modules: [tools/project-metrics/src/git-stats.ts, tools/project-metrics/src/session-tokens.ts]
 tags: [git, git-log, parsing, numstat, co-authored-by, NUL, jq, verification, windows]
 ---
 

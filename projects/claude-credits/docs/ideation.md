@@ -1,4 +1,4 @@
-# claude-credits — locked product decisions
+# ai-journey-stats — locked product decisions
 
 The WHAT decisions for the site. Visual / content / scope calls that sit upstream of any code work. If a future session is about to pick a direction that conflicts with what's here, this doc is the receipt that says no.
 
@@ -14,7 +14,7 @@ The metaphor. It stays forever. **Evocative, not literal.**
 
 The bar is about a SURFACE — high-gloss, hydrophobic, light catching the curve of a bead because the finish underneath is perfect. The car hood is the bar. The droplet sitting on it is the proof. The bar is NOT about water itself.
 
-For claude-credits specifically:
+For ai-journey-stats specifically:
 
 - **Type is the primary instrument.** Hero numbers don't need decoration; they need presence. Massive display weight, tabular numerals, kerning a print designer would obsess over. Tick-up with an ease that feels like the digits have mass.
 - **Surface treatment, not particle effects.** Materials, light, finish. A faint specular sheen that drifts with cursor. A deep background with one slow gradient breath. The "slick" lives in materials and motion timing.
@@ -31,9 +31,9 @@ For claude-credits specifically:
 
 Other devs / Anthropic-adjacent folks. Knows what AI collab means; doesn't know the specific projects. Builder-to-builder voice, terse and sharp.
 
-- The site does NOT pitch the `claude-credit` tool (§4, §7) — but the About page may explain *what the numbers mean* (the taxonomy) as light context, so a curious peer trusts the receipts. That's explaining the magnitude, not promoting the apparatus.
+- The site does NOT pitch the `project-metrics` tool (§4, §7) — but the About page may explain *what the numbers mean* (the taxonomy) as light context, so a curious peer trusts the receipts. That's explaining the magnitude, not promoting the apparatus.
 - Peers geek on the **WORK and its breadth** — the magnitude (tokens), the variety of what got built (code, tests, plans, prompts, images, audio, video), the cadence — NOT a *provenance scoreboard*. **The authored-vs-pipeline-vs-tool tier split is provenance ("how the magic was made") and is NOT the story** (Briggsy, 2026-05-24; reconciled with §11 — authorship/provenance is silent). The site surfaces *what exists*, framed by KIND, never an authored-vs-generated comparison. *(Superseded the earlier "the tier split is COMPELLING / peers need to understand authored-vs-pipeline" framing — that was the premise §11 + the detail-page deepening retired.)*
-- Light onboarding needed: peers don't need "what is a commit," but the About page still explains what the `claude-credit` taxonomy measures (for the curious) — as light context, never a scoreboard.
+- Light onboarding needed: peers don't need "what is a commit," but the About page still explains what the `project-metrics` taxonomy measures (for the curious) — as light context, never a scoreboard.
 
 ### 2. Hero: ONE dominant number — combined Claude API tokens processed
 
@@ -55,7 +55,7 @@ The **detail page is where you act:** a **"Source →"** link (always — every 
 
 **The site is the drippy celebration of the WORK, not a pitch for the tool.** It ends on the magnitude of what got built — no button, no install command, no "Source on GitHub" link, nothing to click. The work is the final word.
 
-- `claude-credit` is the *tape measure* we used to count the work. It is ours, internal, **not a product the site promotes**. We do NOT publish it to npm for v1.
+- `project-metrics` is the *tape measure* we used to count the work. It is ours, internal, **not a product the site promotes**. We do NOT publish it to npm for v1.
 - Supersedes the earlier "dual CTA — tool pitch + GitHub link / the site IS a demo of the tool" framing. That made the visit end on tool-promotion, which is exactly what this site is not about.
 - **Downstream:** Phase 7 (the "bottom CTA" phase) is gutted — its job becomes "design how the page *ends* on the work," not "build CTA buttons." The `cta.ts` / `resolveCtaCopy` / CTA-state-tracking plumbing (Phase 7 + About §2) is dead — remove it during Phase 7 reconciliation.
 - Per-project **live/source links live on the DETAIL page, not the tiles** (§3) — "Source →" always + "Try it →" where hosted. Those point a visitor at the actual *work* (the running game/app, or its source), not at the tool. Different thing — they stay.
@@ -72,11 +72,11 @@ Both Hide and Seek and Do Not Disturb appear in the grid with a clear visual mar
 
 ### 7. Meta-projects do NOT appear — celebrate the work, not the apparatus (Briggsy, 2026-05-24)
 
-The `claude-credit` tool and the `claude-credits` site itself are **cut from the grid.** A tile for the tape measure, and a tile for the very page you're standing on, are navel-gazing — the site is about the WORK, not its own construction.
+The `project-metrics` tool and the `ai-journey-stats` site itself are **cut from the grid.** A tile for the tape measure, and a tile for the very page you're standing on, are navel-gazing — the site is about the WORK, not its own construction.
 
 - Grid = the **9 real projects** + the **"the misses"** collective archive tile = **10 surfaces** (was 12). No "the tools" divider, no meta band.
-- **Meta IS counted in the hero's combined totals** (Briggsy, 2026-05-25 — "count everything"). The tool + the site's own build are real work and feed the big magnitude number; they're just not given tiles. Briggsy accepted knowingly that this site's own construction (the `claude-credits` JSONLs) is likely one of the largest single token sinks, so the hero number is heavily weighted toward "making the showcase itself."
-- Consequence: `~/.claude-credit-projects.yaml` KEEPS the `meta:` array (tool + site) so they're scanned + summed into `combined`. Phase 0's 0.6b parser scans `meta[]` → contributes to `combined.*`, with `editorial: null`, and **emits no tile** — meta lives in its own `report.meta[]` array that the grid / detail / asset-copy steps all IGNORE (no `kind` field needed; the array IS the separation; `status` enum stays `'active' | 'shelved'` since only active projects carry editorial).
+- **Meta IS counted in the hero's combined totals** (Briggsy, 2026-05-25 — "count everything"). The tool + the site's own build are real work and feed the big magnitude number; they're just not given tiles. Briggsy accepted knowingly that this site's own construction (the `ai-journey-stats` JSONLs) is likely one of the largest single token sinks, so the hero number is heavily weighted toward "making the showcase itself."
+- Consequence: `~/.project-metrics-projects.yaml` KEEPS the `meta:` array (tool + site) so they're scanned + summed into `combined`. Phase 0's 0.6b parser scans `meta[]` → contributes to `combined.*`, with `editorial: null`, and **emits no tile** — meta lives in its own `report.meta[]` array that the grid / detail / asset-copy steps all IGNORE (no `kind` field needed; the array IS the separation; `status` enum stays `'active' | 'shelved'` since only active projects carry editorial).
 - **Project-COUNT semantics** (lean, confirm at Phase 3): the "N projects" count = the **9 active + 6 shelved = 15** portfolio entries. The 2 meta feed the token/line/byte magnitude but are NOT counted as "projects" (the tool and the site-about-the-work aren't portfolio projects). Magnitude counts everything; the project tally counts the portfolio.
 - Supersedes the earlier "meta excluded from totals" note.
 - Supersedes "Meta-projects appear in the grid / self-referential is a flex."

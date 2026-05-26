@@ -5,7 +5,7 @@ doc-reviewed: 2026-05-24T13:11:43-04:00
 coded: 2026-05-25T12:14:49-04:00
 ---
 
-# Phase 0 — Data contract (`tools/claude-credit/`)
+# Phase 0 — Data contract (`tools/project-metrics/`)
 
 **Prereq:** Read [README.md](README.md) first — the bar, locked decisions, and visual system live there. This file is the decisions-not-code recipe for the data contract Phase 1+ renders against.
 
@@ -15,11 +15,11 @@ Phase 0 lands the full data contract for the site: six new data field groups in 
 
 Apply these throughout — they are NOT optional:
 
-1. **§0.9 REMOVED.** The `~/.claude-credit-projects.yaml` edit moved into preflight −1.2. Leaving §0.9 in place would re-write the YAML and silently clobber the new `archive:` key preflight just wrote. The slot is preserved as a one-line marker so the deepening-drift audit catches any reintroduction.
+1. **§0.9 REMOVED.** The `~/.project-metrics-projects.yaml` edit moved into preflight −1.2. Leaving §0.9 in place would re-write the YAML and silently clobber the new `archive:` key preflight just wrote. The slot is preserved as a one-line marker so the deepening-drift audit catches any reintroduction.
 2. **§0.6b ADDED.** Parser extension to `loadMultiProjectConfig` + `buildMultiProjectReport` so the CLI recognizes THREE top-level config keys: `projects:` + `meta:` + `archive:`. `meta[*]` entries scan + contribute to `combined.totalX` and emit a `ProjectReport` into `report.meta[]` (totals-only, `editorial: null`, NO tile). `archive[*]` entries scan + contribute to `combined.totalX`, but emit ONE rolled-up `archiveCollective` block, not individual `ProjectReport` entries.
 3. **§0.6 `EditorialContent.status` enum — TWO VALUES** (`'active' | 'shelved'`). The preflight cascade originally reduced this to two values on the rationale "the archive collective is a separate surface, not an `EditorialContent` row," then doc-review reopened it to three to keep per-archive detail pages open (ideation §6 commits to "Detail pages explain what was tried"). The product lock (ideation §7, 2026-05-24, refined 2026-05-25 to "count everything") gives meta NO tile and NO `EditorialContent` row (meta entries carry `editorial: null`), so the `'meta'` status value is gone — but `'shelved'` STAYS: it still preserves the future per-archive detail-page path (Phase 4 ships the archive-collective grid tile as v1; Phase 5 deepening can later add per-archive detail pages without a v0.3 schema migration). Only the `'meta'` status value was removed — meta itself returns as a totals-only `report.meta[]` array (see Decision 5 below), it just never produces an `EditorialContent` row.
 4. **`ProjectReport.kind` discriminator DROPPED.** Meta gets no tile (ideation §7), so there is nothing to discriminate — every `ProjectReport` in `projects[]` is an active project. Archive entries never produce a `projects[]` `ProjectReport` (they roll up into `archiveCollective`); meta entries live in their OWN `meta[]` array (totals-only, `editorial: null`, no tile). The array separation — `projects[]` vs `meta[]` vs `archiveCollective` — IS the distinction, so no per-entry `kind` field is needed.
-5. **Meta is COUNTED, not dropped (Briggsy, 2026-05-25 — "count everything").** The `claude-credit` tool and the `claude-credits` site itself feed the hero's combined magnitude (they ARE real work — and the site's own JSONLs are likely one of the largest token sinks). `~/.claude-credit-projects.yaml` keeps a `meta:` array (tool + site). Phase 0's 0.6b parser scans each `meta[*]` path → emits a `ProjectReport` with `editorial: null` into `report.meta[]`, and `combined.*` sums `projects[] + meta[] + archiveCollective`. Meta entries emit NO tile, NO detail page, NO asset copy — the grid (Phase 4), detail (Phase 5), and `copyEditorialAssets` (Phase 2) all IGNORE `report.meta`. Project-COUNT semantics stay portfolio-only (9 active + 6 shelved = 15); the 2 meta feed magnitude but are not counted as "projects." This SUPERSEDES the earlier "meta dropped / excluded from totals" reconciliation.
+5. **Meta is COUNTED, not dropped (Briggsy, 2026-05-25 — "count everything").** The `project-metrics` tool and the `ai-journey-stats` site itself feed the hero's combined magnitude (they ARE real work — and the site's own JSONLs are likely one of the largest token sinks). `~/.project-metrics-projects.yaml` keeps a `meta:` array (tool + site). Phase 0's 0.6b parser scans each `meta[*]` path → emits a `ProjectReport` with `editorial: null` into `report.meta[]`, and `combined.*` sums `projects[] + meta[] + archiveCollective`. Meta entries emit NO tile, NO detail page, NO asset copy — the grid (Phase 4), detail (Phase 5), and `copyEditorialAssets` (Phase 2) all IGNORE `report.meta`. Project-COUNT semantics stay portfolio-only (9 active + 6 shelved = 15); the 2 meta feed magnitude but are not counted as "projects." This SUPERSEDES the earlier "meta dropped / excluded from totals" reconciliation.
 
 ## Decisions locked at this deepening (read before executing)
 
@@ -31,36 +31,36 @@ Apply these throughout — they are NOT optional:
   - **Hero treatment** (presentation SUPERSEDED by the phase-3 deepening, 2026-05-24 — Option A): `tokensProcessed` is the **dominant** counter; `tokensFresh` + the retention window ride beneath as a **quiet honest sub-line** — e.g. a massive *"1.2B"*, then a muted *"· 240M fresh · across 22 days of session retention"*. The earlier "no primary/secondary hierarchy, read as a pair" framing is retired: a deliberate dominant-plus-subordinate hierarchy honors ideation's "frame it cold, magnitude is the wow" while still surfacing `fresh` in the same glance to pre-empt the "juiced numbers" read. The dual-FIELD data contract here is unchanged — only the hero presentation moved. See [phase-3-hero.md](phase-3-hero.md).
 - **`largestSingleCommit.messageFirstLine` is DROPPED from the schema.** Commit subjects can contain `C:\Users\...`, `/Users/...`, `~`-paths, internal slugs, `@mentions`, or accidentally-pasted secrets. The "+4,200-line commit on Apr 22" story works with `sha + dateISO + linesAdded + linesRemoved` alone. Removing the field eliminates a whole class of public-data leak vectors AND simplifies the privacy-stripping discipline.
 - **Privacy by construction is STRUCTURAL, not documentary.** The session-tokens parser uses a pick-list pattern — the parsed object has exactly **seven** keys (timestamp, isSidechain, model + the four `usage` integers), constructed as an EXPLICIT object literal (no `{...rest}` destructuring), and the parent `line` object is never retained by reference. A `Pick<T, K>` TypeScript pattern + a `satisfies ParsedAssistantLine` assertion enforce the shape at compile time. An assertion-based allowlist test (not a text snapshot) compares the published JSON's full key-path set against a hand-coded frozen list. A pre-publish grep-guard in the GitHub Action refuses to commit `public/data/stats.json` if it contains forbidden path / username / secret patterns (see Privacy by Construction section for the full enumeration).
-- **Tests are required for §0.4, §0.5b, §0.6b.** Zero tests exist today (vitest is wired in `tools/claude-credit/package.json` but the harness has never run). Other units defer with a stated reason. See §0.10.
+- **Tests are required for §0.4, §0.5b, §0.6b.** Zero tests exist today (vitest is wired in `tools/project-metrics/package.json` but the harness has never run). Other units defer with a stated reason. See §0.10.
 
 ## Current state (verified at deepening, 2026-05-24)
 
-Read of `tools/claude-credit/src/taxonomy.ts`:
+Read of `tools/project-metrics/src/taxonomy.ts`:
 - `GitStats` has `isGitRepo`, `totalCommits`, `commitsByAuthor`, `lifetimeLinesAdded`, `lifetimeLinesRemoved`, `uniqueFilesTouched`, `commitMessageLines`, `discardedAssetFiles`, `discardedAssetEvents`, `discardedAssetByKind`, `assetModificationEvents`, `assetUniquePathsTouched`. **None of the six new fields exist.**
 - `ProjectReport` is `{ projectPath, projectName, scannedAt, tiers, git, proxies, grandTotals, warnings }`. **No `tokens`, no `editorial`, no `assetBytesByKind`, no `topSubcategories`.**
 - `MultiProjectReport` is `{ projects, combined, scannedAt }`; `combined` has 13 keys, none for tokens or archive. **No `meta[]`, no `archiveCollective`.**
 
-Read of `tools/claude-credit/src/config.ts`:
+Read of `tools/project-metrics/src/config.ts`:
 - `ProjectConfig` carries `excludeAdditional`, `includeFromGitignore`, `classificationRules`, `proxies`, `generationLogs`. **No `editorial:` field.**
 - `MultiProjectConfig` only knows `projects:` (single array). **No `meta:` or `archive:` parsing.**
 - `loadProjectConfig` already iterates five file formats (`.mjs`, `.js`, `.cjs`, `.json`, `.yaml`/`.yml`). Reuse.
-- `loadMultiProjectConfig` reads `~/.claude-credit-projects.yaml`. Same pattern, single function — extend it.
+- `loadMultiProjectConfig` reads `~/.project-metrics-projects.yaml`. Same pattern, single function — extend it.
 
-Read of `tools/claude-credit/src/git-stats.ts`:
+Read of `tools/project-metrics/src/git-stats.ts`:
 - `collectGitStats(rootDir)` does its own subprocess management via `execFileAsync` wrapped in `git()` at line 71.
 - `withScope(args)` at line 84 appends `-- .` so subdir projects work.
 - `getRepoContext` at lines 49-69 detects "own" vs "subdir" scope.
 - `emptyStats()` at line 25 initializes every field — **every new `GitStats` field MUST be added here too**, or `tsc -p .` fails on missing properties (interface is non-optional today).
 - Existing rename-tracking regex at line 137: `/^(.*)\{(.*) => (.*)\}(.*)$/` — handles `path/{old => new}/x` syntax. **The merged 0.4+0.5 pass must preserve this** or `uniqueFilesTouched` regresses on rename-heavy projects.
 
-Read of `tools/claude-credit/src/multi-report.ts`:
+Read of `tools/project-metrics/src/multi-report.ts`:
 - `buildMultiProjectReport` accepts `homeDir?: string` option (line 9, used at line 69). **This is the load-bearing testability seam for session-tokens.ts** — tests can inject a stub `~/.claude/projects/` path without touching the real one.
 - Aggregation loop at lines 114-127 sums per-project values into `combined`. Extend in place for the four new combined fields.
 
-Read of `tools/claude-credit/src/report.ts`:
+Read of `tools/project-metrics/src/report.ts`:
 - `buildProjectReport` runs `collectGitStats` + `collectProxyStats` in `Promise.all` at line 40. **Add `collectSessionTokens(rootDir, opts.homeDir)` to this `Promise.all`** so tokens collection runs in parallel with git + proxies.
 
-Read of `tools/claude-credit/package.json`:
+Read of `tools/project-metrics/package.json`:
 - Version `0.1.0` → bump to `0.2.0` in §0.7.
 - `vitest` is in `devDependencies` (line 44). `test` script is `vitest run` (line 30). **Zero `*.test.ts` files exist** — Phase 0 lights up the harness for the first time.
 
@@ -76,7 +76,7 @@ Read of a real assistant message line (BURNED, 2026-05-11):
 - Within `message`: only `model` + `usage` are safe. `message.content` is the conversation transcript — DO NOT TOUCH.
 - `message.usage` keys: `input_tokens`, `cache_creation_input_tokens`, `cache_read_input_tokens`, `output_tokens`, plus extras (`server_tool_use`, `service_tier`, `cache_creation`, `inference_geo`, `iterations`, `speed`). Of the extras, **`inference_geo` is a free-form string** — read only the four canonical integer fields by name.
 
-Read of `projects/burned/claude-credit.config.yaml`:
+Read of `projects/burned/project-metrics.config.yaml`:
 - Existing keys: `includeFromGitignore`, `generationLogs`. **No `editorial:` block.** The config schema must be EXTENDED (additive optional field), not replaced. No other project has any config file yet.
 
 ---
@@ -85,7 +85,7 @@ Read of `projects/burned/claude-credit.config.yaml`:
 
 ### Batch A — taxonomy.ts (one commit)
 
-Land every type change in `tools/claude-credit/src/taxonomy.ts` BEFORE touching any consumer file. Each new `GitStats` / `ProjectReport` / `MultiProjectReport` field must be added to both the interface AND the corresponding `emptyStats()` factory (in `git-stats.ts`) or default initializer (in `report.ts`).
+Land every type change in `tools/project-metrics/src/taxonomy.ts` BEFORE touching any consumer file. Each new `GitStats` / `ProjectReport` / `MultiProjectReport` field must be added to both the interface AND the corresponding `emptyStats()` factory (in `git-stats.ts`) or default initializer (in `report.ts`).
 
 Exact edit blocks — apply in order:
 
@@ -220,7 +220,7 @@ export interface MultiProjectReport {
   //            carry editorial: null, emit NO tile/detail/asset, and exist ONLY to feed combined totals.
   // INVARIANT: combined.totalX === Σ(projects[].X) + Σ(meta[].X) + archiveCollective.totalX
   projects: ProjectReport[];
-  meta: ProjectReport[];  // totals-only bucket (claude-credit tool + claude-credits site). No tiles. editorial: null.
+  meta: ProjectReport[];  // totals-only bucket (project-metrics tool + ai-journey-stats site). No tiles. editorial: null.
   archiveCollective: ArchiveCollective | null;
   combined: {
     // ... existing 13 fields stay ...
@@ -262,9 +262,9 @@ function emptyStats(): GitStats {
 - In `report.ts` line 75 (the `return { … }` block of `buildProjectReport`), add the four new ProjectReport fields with placeholder values that satisfy the new types: `assetBytesByKind: { images: 0, audio: 0, video: 0, fonts: 0, 'misc-media': 0 }`, `topSubcategories: []`, `tokens: null`, `editorial: null`. Add a `// TODO(0.2 / 0.3 / 0.5b / 0.6): replace placeholder` comment above each so each Batch B unit knows which placeholder it replaces.
 - In `multi-report.ts` line 131 (the `return { report: { … } }` block of `buildMultiProjectReport`), add the new top-level fields with placeholder values: `meta: []`, `archiveCollective: null`, and extend `combined` with `totalTokensProcessed: 0`, `totalTokensFresh: 0`, `totalSessions: 0`, `tokenWindowStartISO: null`, `tokenWindowEndISO: null`, `tokenWindowDays: null`, `modelBreakdown: []`. Each gets the same `// TODO(0.5b / 0.6b): replace placeholder` marker.
 
-**A.7 — verify Batch A compiles green:** `cd C:/Users/brigg/ai-learning-journey/tools/claude-credit && pnpm typecheck`. Expected outcome: **clean exit** — every new type is satisfied by a placeholder. Each Batch B unit then REPLACES its placeholder with the real implementation; the `pnpm typecheck` gate stays binary green across the whole phase. This trades a slightly larger Batch A commit for a binary signal at every subsequent step.
+**A.7 — verify Batch A compiles green:** `cd C:/Users/brigg/ai-learning-journey/tools/project-metrics && pnpm typecheck`. Expected outcome: **clean exit** — every new type is satisfied by a placeholder. Each Batch B unit then REPLACES its placeholder with the real implementation; the `pnpm typecheck` gate stays binary green across the whole phase. This trades a slightly larger Batch A commit for a binary signal at every subsequent step.
 
-**Batch A commit point:** `chore(claude-credit): add Phase 0 type frame to taxonomy.ts + consumer placeholders`. Single commit, no Batch B logic yet — just type frame + the minimum consumer-side wiring needed to keep tsc green.
+**Batch A commit point:** `chore(project-metrics): add Phase 0 type frame to taxonomy.ts + consumer placeholders`. Single commit, no Batch B logic yet — just type frame + the minimum consumer-side wiring needed to keep tsc green.
 
 ### Batch B — implementations (units in order)
 
@@ -404,7 +404,7 @@ Meta entries (tool + site) feed the magnitude: their tokens/lines/bytes count to
 
 ## 0.1 — `firstCommitISO` / `lastCommitISO` / `projectAgeDays` (~5 min)
 
-**File:** `tools/claude-credit/src/git-stats.ts`
+**File:** `tools/project-metrics/src/git-stats.ts`
 
 After the existing `commitsByAuthor` block, add a try/catch block that runs ONE `git log` call scoped via `withScope()` and derives both bounds in JS:
 
@@ -418,18 +418,18 @@ Set `stats.firstCommitISO`, `stats.lastCommitISO`, `stats.projectAgeDays`. On ex
 
 **Verify:**
 ```
-cd C:/Users/brigg/ai-learning-journey/tools/claude-credit
+cd C:/Users/brigg/ai-learning-journey/tools/project-metrics
 pnpm dev C:/Users/brigg/ai-learning-journey/projects/burned --json | jq '.git | {firstCommitISO, lastCommitISO, projectAgeDays}'
 ```
 Expected: all three non-null on BURNED. `projectAgeDays` ≥ 40 (BURNED is ~50 days old at deepening time).
 
 **Tests:** deferred. Pure git wrapper, no edge cases beyond non-repo (already handled by `getRepoContext` returning null at the top of `collectGitStats`). The 0.10 fixture test validates the field is present.
 
-**Commit:** `feat(claude-credit): GitStats temporal context — firstCommit/lastCommit/age`
+**Commit:** `feat(project-metrics): GitStats temporal context — firstCommit/lastCommit/age`
 
 ## 0.2 — `assetBytesByKind` (~5 min)
 
-**Files:** `tools/claude-credit/src/counter.ts` (add helper) + `tools/claude-credit/src/report.ts` (call + attach)
+**Files:** `tools/project-metrics/src/counter.ts` (add helper) + `tools/project-metrics/src/report.ts` (call + attach)
 
 Add a helper in `counter.ts` after `aggregateTiers`:
 
@@ -455,11 +455,11 @@ Expected: five keys present (images, audio, video, fonts, misc-media). `images >
 
 **Tests:** deferred. Output visible in JSON; no edge cases.
 
-**Commit:** `feat(claude-credit): assetBytesByKind aggregation`
+**Commit:** `feat(project-metrics): assetBytesByKind aggregation`
 
 ## 0.3 — `topSubcategories` (~5 min)
 
-**File:** `tools/claude-credit/src/report.ts`
+**File:** `tools/project-metrics/src/report.ts`
 
 After the `aggregateTiers` call at line 39 produces `tiers`, flat-map all (tier, category, subcategory) triples into a single array, sort desc by bytes, slice to 5:
 
@@ -486,11 +486,11 @@ Expected: `len = 5`, `top.bytes` is the largest subcategory by bytes (on BURNED,
 
 **Tests:** deferred. Trivially observable in JSON.
 
-**Commit:** `feat(claude-credit): topSubcategories pre-computed`
+**Commit:** `feat(project-metrics): topSubcategories pre-computed`
 
 ## 0.4 + 0.5 (merged) — `linesByAuthor` + `timeline` (~60 min — co-author parser + state machine + 3 unit tests)
 
-**File:** `tools/claude-credit/src/git-stats.ts`
+**File:** `tools/project-metrics/src/git-stats.ts`
 
 **Single `git log` pass** (one subprocess instead of two) produces both blocks. Existing helper `git()` + `withScope()` apply.
 
@@ -543,7 +543,7 @@ Expected:
 - `timeline.peakDay` non-null. Date in ISO YYYY-MM-DD shape.
 - `timeline.largestSingleCommit.sha` is a 40-char hex. `linesAdded + linesRemoved` ≥ 1000 (the trailer-pipeline scaffold commits are large).
 
-**Tests:** REQUIRED. New file: `tools/claude-credit/src/git-stats.test.ts`. Minimum:
+**Tests:** REQUIRED. New file: `tools/project-metrics/src/git-stats.test.ts`. Minimum:
 
 1. `parseCoAuthorTrailers(body)` correctness — fixture commit bodies with 0, 1, 2 co-authors; case variants (`Co-authored-by` / `co-Authored-By`); malformed trailer (no email). Pure function, no git required.
 2. End-to-end fixture: vitest `beforeAll` creates a tmp directory, runs `git init`, makes 3 commits (one with co-author, one without, one with two co-authors), then `collectGitStats(tmpDir)` returns the expected `linesByAuthor` shape with the additive attribution rule visible.
@@ -574,16 +574,16 @@ await execFileAsync(
 
 Use `git init -b main` (not `git init` alone) — git 2.28+ otherwise prompts on default-branch-name. Use `os.tmpdir()` + `fs.mkdtemp` for scratch dirs; vitest cleans up via `afterAll` (`fs.rm(tmpDir, { recursive: true, force: true })`).
 
-**Commit:** `feat(claude-credit): linesByAuthor + timeline (Co-Authored-By aware)`
+**Commit:** `feat(project-metrics): linesByAuthor + timeline (Co-Authored-By aware)`
 
 ## 0.5b — `tokens` block (session-tokens parser) (~2-3 hours — 9 unit tests + fixture infra + state machine)
 
 **Files:**
-- NEW: `tools/claude-credit/src/session-tokens.ts`
-- NEW: `tools/claude-credit/src/session-tokens.test.ts`
-- NEW: `tools/claude-credit/src/strip-for-publish.ts` (shared with Phase 2 — see Privacy section)
-- `tools/claude-credit/src/report.ts` (call + attach)
-- `tools/claude-credit/src/multi-report.ts` (aggregate to combined + orphan-slug collection)
+- NEW: `tools/project-metrics/src/session-tokens.ts`
+- NEW: `tools/project-metrics/src/session-tokens.test.ts`
+- NEW: `tools/project-metrics/src/strip-for-publish.ts` (shared with Phase 2 — see Privacy section)
+- `tools/project-metrics/src/report.ts` (call + attach)
+- `tools/project-metrics/src/multi-report.ts` (aggregate to combined + orphan-slug collection)
 
 This is the highest-risk unit in Phase 0. Privacy by construction. Worktree + subdir slug merging (including case-insensitive matching). Window-bounded floor. Honest dual-token numbers.
 
@@ -732,7 +732,7 @@ export async function collectSessionTokens(
 - Per-line errors → increment `parseHealth.lineParseErrors` / `usageShapeWarnings`, skip line, continue.
 - ALL token integers are guaranteed numeric (never NaN, never null) by the per-line clamp `Number(value) || 0`.
 
-**Active-session race condition (documented behavior).** If a Claude Code session is actively writing a JSONL while `claude-credit` reads it, `fs.readFile` returns the OS-snapshot of bytes at read-time. The final line may be partially flushed → catches as a `lineParseErrors` and is dropped. This produces a single-line tail-undercount per active session per run. The next `claude-credit --all` after the session settles catches up. Acceptable for the personal-site use case; documented here so future Claude doesn't chase a phantom bug when `parseHealth.lineParseErrors > 0` correlates with sessions Briggsy was in mid-stream.
+**Active-session race condition (documented behavior).** If a Claude Code session is actively writing a JSONL while `project-metrics` reads it, `fs.readFile` returns the OS-snapshot of bytes at read-time. The final line may be partially flushed → catches as a `lineParseErrors` and is dropped. This produces a single-line tail-undercount per active session per run. The next `project-metrics --all` after the session settles catches up. Acceptable for the personal-site use case; documented here so future Claude doesn't chase a phantom bug when `parseHealth.lineParseErrors > 0` correlates with sessions Briggsy was in mid-stream.
 
 ### Wire-up
 
@@ -799,7 +799,7 @@ pnpm dev --all --json | jq '.combined | {totalTokensProcessed, totalTokensFresh,
 
 ### Commit
 
-`feat(claude-credit): session-tokens parser with privacy-by-construction + slug merging`
+`feat(project-metrics): session-tokens parser with privacy-by-construction + slug merging`
 
 ## 0.5c — Test-case + plan counting (Briggsy 2026-05-25, "count what got built, not whether it passed")
 
@@ -822,11 +822,11 @@ pnpm dev --all --json | jq '.combined | {totalTokensProcessed, totalTokensFresh,
 
 **Downstream:** `EditorialContent.hookStat` (§0.6) gains the derive-from-tool option (literal OR metric reference) so `TESTS`, `PLANS`, `FILES`, `LINES` hooks read these live; domain hooks (CARDS/PLAYERS/STACK) stay literals. The hero/detail breadth can also surface plan + test counts directly. **Tests required for the new counter** (per §0.10): a fixture with known `it(`/`test(`/`def test_` counts (incl. a commented-out decoy) asserting the exact tally.
 
-**Commit:** `feat(claude-credit): static test-case counter + surface test/plan file+line counts`
+**Commit:** `feat(project-metrics): static test-case counter + surface test/plan file+line counts`
 
 ## 0.6 — Editorial config schema
 
-**Files:** `tools/claude-credit/src/taxonomy.ts` (Batch A already added `EditorialContent`), `tools/claude-credit/src/config.ts`, `tools/claude-credit/src/report.ts`.
+**Files:** `tools/project-metrics/src/taxonomy.ts` (Batch A already added `EditorialContent`), `tools/project-metrics/src/config.ts`, `tools/project-metrics/src/report.ts`.
 
 ### Extend `ProjectConfig`
 
@@ -911,7 +911,7 @@ const finalEditorial: EditorialContent | null = editorial
 
 ### Verify
 
-Author a minimal `editorial:` block in `projects/burned/claude-credit.config.yaml` (the existing config) for the test:
+Author a minimal `editorial:` block in `projects/burned/project-metrics.config.yaml` (the existing config) for the test:
 ```yaml
 editorial:
   oneLiner: "Couch-of-friends spy comedy"
@@ -936,11 +936,11 @@ Deferred. The YAML loading is mechanical and the §0.10 fixture monorepo test co
 
 ### Commit
 
-`feat(claude-credit): editorial config schema (per-project)`
+`feat(project-metrics): editorial config schema (per-project)`
 
 ## 0.6b — Multi-project config parser extension (LOCKED amendment)
 
-**Files:** `tools/claude-credit/src/taxonomy.ts` (Batch A added `ArchiveCollective` + `meta[]`), `tools/claude-credit/src/config.ts`, `tools/claude-credit/src/multi-report.ts`.
+**Files:** `tools/project-metrics/src/taxonomy.ts` (Batch A added `ArchiveCollective` + `meta[]`), `tools/project-metrics/src/config.ts`, `tools/project-metrics/src/multi-report.ts`.
 
 The config recognizes THREE top-level keys: `projects:` + `meta:` + `archive:`. `projects[*]` → `report.projects[]` (tiles). `meta[*]` → `report.meta[]` (totals-only, `editorial: null`, NO tile). `archive[*]` → rolled into `report.archiveCollective` (one tile).
 
@@ -999,7 +999,7 @@ In `multi-report.ts`:
 
 ### Backward compatibility
 
-A `.claude-credit-projects.yaml` with ONLY `projects:` (the pre-preflight shape) must continue to work:
+A `.project-metrics-projects.yaml` with ONLY `projects:` (the pre-preflight shape) must continue to work:
 - `config?.meta ?? []` → empty array → `report.meta` stays `[]`
 - `config?.archive ?? []` → empty array → `archiveCollective` stays null
 - `combined.totalX` is identical to v0.1.x output, augmented with the new token + meta + archive fields (zero-valued when no meta and no archive)
@@ -1012,7 +1012,7 @@ pnpm dev -- --all --json | jq '{projectsCount: .projects | length, metaCount: .m
 ```
 Expected after preflight −1.2 lands its YAML edit:
 - `projectsCount`: 9
-- `metaCount`: 2 (the `claude-credit` tool + the `claude-credits` site — totals-only, no tiles)
+- `metaCount`: 2 (the `project-metrics` tool + the `ai-journey-stats` site — totals-only, no tiles)
 - `archiveCollective.projectCount`: 6 (the misses)
 - `archiveCollective.projectNames`: array of 6 names
 - `combined.totalTokensProcessed` includes the meta entries' tokens (the site's own JSONLs are a large share — "count everything")
@@ -1027,39 +1027,39 @@ Expected after preflight −1.2 lands its YAML edit:
 
 ### Commit
 
-`feat(claude-credit): multi-project config supports meta (totals-only) + archive key + ArchiveCollective rollup`
+`feat(project-metrics): multi-project config supports meta (totals-only) + archive key + ArchiveCollective rollup`
 
 ## 0.7 — Version bump + omnibus verify (~5 min)
 
-**Files:** `tools/claude-credit/package.json`, OPTIONAL: `tools/claude-credit/CHANGELOG.md` (create if absent).
+**Files:** `tools/project-metrics/package.json`, OPTIONAL: `tools/project-metrics/CHANGELOG.md` (create if absent).
 
 1. Bump `package.json` version `0.1.0` → `0.2.0`.
 2. If a CHANGELOG.md doesn't exist, create one with a single `## 0.2.0 — 2026-05-24` section that lists the additive changes from Batch A + each implementation unit. Pattern: `feat: …`, `feat: …`, no full prose.
 3. `pnpm install --frozen-lockfile` — deterministic (respects existing pnpm-lock.yaml; no version drift). If the lockfile is missing or stale, regenerate intentionally in a separate commit BEFORE this step; do NOT regenerate as a side effect of the version bump.
 4. `pnpm build` — verify clean exit, dist/ regenerated.
 5. `pnpm typecheck` — clean exit.
-6. **Omnibus verify** — runs the now-published binary (the `claude-credit` global command), confirming dist/ is the version under test:
+6. **Omnibus verify** — runs the now-published binary (the `project-metrics` global command), confirming dist/ is the version under test:
    ```
-   claude-credit C:/Users/brigg/ai-learning-journey/projects/burned --json \
+   project-metrics C:/Users/brigg/ai-learning-journey/projects/burned --json \
      | jq '.git | {firstCommitISO, lastCommitISO, projectAgeDays}, .git.linesByAuthor[0], .git.timeline | {activeDays, peakDay, largestSingleCommit}, .assetBytesByKind, .topSubcategories[0:2], .tokens | {windowDays, sessionCount, tokensProcessed, tokensFresh, byModel: .byModel[0]}, .editorial'
    ```
    All sub-paths must return non-null where expected (Per BURNED ground truth: editorial may be null until preflight −1.5 authors the worksheet block).
 
 7. Multi verify:
    ```
-   claude-credit --all --json | jq '{projects: .projects | length, meta: .meta | length, archive: .archiveCollective.projectCount, combined: .combined | {totalTokensProcessed, totalSessions, tokenWindowDays, modelBreakdown: .modelBreakdown}}'
+   project-metrics --all --json | jq '{projects: .projects | length, meta: .meta | length, archive: .archiveCollective.projectCount, combined: .combined | {totalTokensProcessed, totalSessions, tokenWindowDays, modelBreakdown: .modelBreakdown}}'
    ```
    Expected after preflight cascade: `projects: 9, meta: 2, archive: 6`. `combined.totalTokensProcessed` includes the meta entries' tokens.
 
 ### Commit
 
-`chore(claude-credit): bump to 0.2.0 + CHANGELOG`. Tag is OPTIONAL (Briggsy's repo workflow doesn't currently tag — defer).
+`chore(project-metrics): bump to 0.2.0 + CHANGELOG`. Tag is OPTIONAL (Briggsy's repo workflow doesn't currently tag — defer).
 
 ## 0.8 — Surface new fields in `format/markdown.ts` and `format/terminal.ts` (HARD requirement) (~45-60 min — 6 rendering blocks per file + null-aware helpers)
 
-**Files:** `tools/claude-credit/src/format/markdown.ts`, `tools/claude-credit/src/format/terminal.ts`.
+**Files:** `tools/project-metrics/src/format/markdown.ts`, `tools/project-metrics/src/format/terminal.ts`.
 
-The original plan tagged §0.8 as "not blocking for site work but keeps the tool consistent." The deepening **promotes it to a hard requirement**: the CLI's terminal + markdown output are the contract users see when running `claude-credit` standalone. If the CLI doesn't surface the new fields, users get a misleading minimal report while the site shows the rich data. The two outputs MUST stay in sync.
+The original plan tagged §0.8 as "not blocking for site work but keeps the tool consistent." The deepening **promotes it to a hard requirement**: the CLI's terminal + markdown output are the contract users see when running `project-metrics` standalone. If the CLI doesn't surface the new fields, users get a misleading minimal report while the site shows the rich data. The two outputs MUST stay in sync.
 
 ### Surface in markdown — minimum additions
 
@@ -1088,8 +1088,8 @@ Mirror the markdown additions in `terminal.ts` using `kleur.*` styling consisten
 ### Verify
 
 ```
-claude-credit C:/Users/brigg/ai-learning-journey/projects/burned --markdown | head -80
-claude-credit --all --markdown | head -100
+project-metrics C:/Users/brigg/ai-learning-journey/projects/burned --markdown | head -80
+project-metrics --all --markdown | head -100
 ```
 Eyeball check: every new field appears, null values are em-dashed, the window footnote is present.
 
@@ -1099,22 +1099,22 @@ Deferred. Markdown rendering is content-presentation; the §0.10 schema test ass
 
 ### Commit
 
-`feat(claude-credit): surface Phase 0 fields in markdown + terminal renderers`
+`feat(project-metrics): surface Phase 0 fields in markdown + terminal renderers`
 
 ## 0.9 — REMOVED (cascade-amendment marker)
 
-The original §0.9 ("Multi-project config plumbing — populate `~/.claude-credit-projects.yaml`") has been MOVED into preflight −1.2. The YAML edit happens there. Leaving §0.9 in place would re-write the YAML and silently clobber the new `archive:` key that preflight wrote.
+The original §0.9 ("Multi-project config plumbing — populate `~/.project-metrics-projects.yaml`") has been MOVED into preflight −1.2. The YAML edit happens there. Leaving §0.9 in place would re-write the YAML and silently clobber the new `archive:` key that preflight wrote.
 
 The slot is preserved as this one-paragraph marker so the deepening-drift audit (per `feedback-deepening-drift-anti-pattern.md`) catches any future reintroduction. Don't delete the section header; don't fold the numbering. Future audits grep for `0.9 — REMOVED` to confirm the cascade landed.
 
 ## 0.10 — Test fixture monorepo + integration tests (NEW) (~90-120 min — fixture tree + Zod schema mirror + 5 integration tests + shared stripper)
 
 **Files:**
-- NEW directory tree: `tools/claude-credit/test/fixtures/multi-fixture/`
-- NEW: `tools/claude-credit/src/__tests__/multi-report.test.ts`
-- NEW: `tools/claude-credit/src/__tests__/stats-shape.test.ts`
-- NEW: `tools/claude-credit/src/__tests__/schema.ts` (Zod schema mirror)
-- NEW (used by both Phase 0 test AND Phase 2 production): `tools/claude-credit/src/strip-for-publish.ts`
+- NEW directory tree: `tools/project-metrics/test/fixtures/multi-fixture/`
+- NEW: `tools/project-metrics/src/__tests__/multi-report.test.ts`
+- NEW: `tools/project-metrics/src/__tests__/stats-shape.test.ts`
+- NEW: `tools/project-metrics/src/__tests__/schema.ts` (Zod schema mirror)
+- NEW (used by both Phase 0 test AND Phase 2 production): `tools/project-metrics/src/strip-for-publish.ts`
 
 Lights up the previously-unused vitest harness with five integration tests that gate Phase 0 done. All five must pass on `pnpm test` before the §0.7 version bump.
 
@@ -1123,7 +1123,7 @@ Lights up the previously-unused vitest harness with five integration tests that 
 The privacy-stripping discipline must be ONE implementation, used by both the Phase 0 round-trip test AND Phase 2's `refresh-stats.ts` production script. Extracting it now (in Phase 0) avoids a future Phase 2 from writing a divergent implementation that the Phase 0 test wouldn't catch.
 
 ```ts
-// tools/claude-credit/src/strip-for-publish.ts (NEW)
+// tools/project-metrics/src/strip-for-publish.ts (NEW)
 // PRIVACY: this module produces the public-safe JSON shape. The hand-coded
 // ALLOWED_KEY_PATHS list is the structural enforcement of the "what ships
 // publicly" rule. Adding a new key requires adding a line here.
@@ -1160,10 +1160,10 @@ Phase 2's `refresh-stats.ts` imports `stripForPublish` directly. The §0.10 roun
 ### Fixture tree
 
 ```
-tools/claude-credit/test/fixtures/multi-fixture/
-  .claude-credit-projects.yaml    # 3 active + 1 meta + 2 archive entries
+tools/project-metrics/test/fixtures/multi-fixture/
+  .project-metrics-projects.yaml    # 3 active + 1 meta + 2 archive entries
   active-a/
-    claude-credit.config.yaml     # has full editorial block
+    project-metrics.config.yaml     # has full editorial block
     README.md
     src/index.ts
     public/assets/images/hero.png
@@ -1174,7 +1174,7 @@ tools/claude-credit/test/fixtures/multi-fixture/
   active-c/                        # no git history (not a repo)
     README.md
   meta-tool/                       # meta entry — totals-only, NO tile, editorial forced null
-    claude-credit.config.yaml      # editorial block present but IGNORED for meta (forced null)
+    project-metrics.config.yaml      # editorial block present but IGNORED for meta (forced null)
     README.md
     .git/
   archive-a/
@@ -1221,19 +1221,19 @@ tools/claude-credit/test/fixtures/multi-fixture/
 
 - Vitest `beforeAll` for fixture setup: `execFileAsync('git', ['init', ...], { cwd: fixture })` for each `.git/` directory + commit a small initial file (mirror the pattern from §0.4's tests). Use `os.tmpdir()` if fixture state would otherwise persist between runs.
 - `homeDir` override via `buildMultiProjectReport({ homeDir })`. Already supported (multi-report.ts:9, 64, 69).
-- Hand-written Zod schema (NOT ts-json-schema-generator runtime dep) — keeps `tools/claude-credit/` dep-light.
+- Hand-written Zod schema (NOT ts-json-schema-generator runtime dep) — keeps `tools/project-metrics/` dep-light.
 
 ### Verify
 
 ```
-cd C:/Users/brigg/ai-learning-journey/tools/claude-credit
+cd C:/Users/brigg/ai-learning-journey/tools/project-metrics
 pnpm test
 ```
 Expected: 5 integration tests pass + the unit tests from §0.4 / §0.5b / §0.6b. Total non-zero test count (currently 0).
 
 ### Commit
 
-`feat(claude-credit): test fixture monorepo + 5 integration tests + stats-shape allowlist + shared stripForPublish`
+`feat(project-metrics): test fixture monorepo + 5 integration tests + stats-shape allowlist + shared stripForPublish`
 
 ---
 
@@ -1243,12 +1243,12 @@ Expected: 5 integration tests pass + the unit tests from §0.4 / §0.5b / §0.6b
 
 | Consumer | Path | Must accommodate (new) |
 |---|---|---|
-| `renderProjectMarkdown` | `tools/claude-credit/src/format/markdown.ts:33` | All six field groups (per §0.8) |
-| `renderMultiProjectMarkdown` | `tools/claude-credit/src/format/markdown.ts:101` | `combined` token aggregates (which now include `meta[]`) + `archiveCollective` summary row. `meta[]` is summed into the grand totals but NOT rendered as per-project rows. |
-| `renderProjectTerminal` | `tools/claude-credit/src/format/terminal.ts` | Same as markdown project renderer (§0.8) |
-| `renderMultiProjectTerminal` | `tools/claude-credit/src/format/terminal.ts` | Same as markdown multi renderer (§0.8) |
-| `cli.ts` JSON output | `tools/claude-credit/src/cli.ts:114-115, 131-132` | Automatic — `JSON.stringify(report)` passthrough |
-| `projects/claude-credits/` site (Phase 1+) | per `phase-2-data-wiring.md` | All new field groups + `archiveCollective`. **The site reads NEITHER `linesByAuthor` NOR `commitsByAuthor`** — authorship is silent (§11), the AUTHORED BY block was cut, and both fields are now STRIPPED from the published JSON (2026-05-26). |
+| `renderProjectMarkdown` | `tools/project-metrics/src/format/markdown.ts:33` | All six field groups (per §0.8) |
+| `renderMultiProjectMarkdown` | `tools/project-metrics/src/format/markdown.ts:101` | `combined` token aggregates (which now include `meta[]`) + `archiveCollective` summary row. `meta[]` is summed into the grand totals but NOT rendered as per-project rows. |
+| `renderProjectTerminal` | `tools/project-metrics/src/format/terminal.ts` | Same as markdown project renderer (§0.8) |
+| `renderMultiProjectTerminal` | `tools/project-metrics/src/format/terminal.ts` | Same as markdown multi renderer (§0.8) |
+| `cli.ts` JSON output | `tools/project-metrics/src/cli.ts:114-115, 131-132` | Automatic — `JSON.stringify(report)` passthrough |
+| `projects/ai-journey-stats/` site (Phase 1+) | per `phase-2-data-wiring.md` | All new field groups + `archiveCollective`. **The site reads NEITHER `linesByAuthor` NOR `commitsByAuthor`** — authorship is silent (§11), the AUTHORED BY block was cut, and both fields are now STRIPPED from the published JSON (2026-05-26). |
 
 ### Error propagation — null discipline
 
@@ -1293,7 +1293,7 @@ Phase 0 preserves these guarantees:
 3. **All existing `ProjectReport` fields keep current shape.** `projectPath`, `projectName`, `scannedAt`, `tiers`, `git`, `proxies`, `grandTotals`, `warnings`.
 4. **All existing `MultiProjectReport.combined` fields stay.** 13 current keys; new keys are added.
 5. **Existing markdown rendering produces a parseable document when new fields are null.** Phase 0 §0.8 surface-the-fields work guards with null-checks, never assumes presence.
-6. **`.claude-credit-projects.yaml` with ONLY `projects:` continues to load cleanly.** No errors, no warnings.
+6. **`.project-metrics-projects.yaml` with ONLY `projects:` continues to load cleanly.** No errors, no warnings.
 7. **`generationLogs` field on `ProjectConfig` stays for v2** (config.ts:27-33). Don't repurpose.
 8. **Existing test baseline (currently 0) stays additive.** Phase 0 lights up vitest with new tests; no deletions.
 
@@ -1323,7 +1323,7 @@ Phase 0 preserves these guarantees:
 
 ## Cascade to downstream phase plans
 
-The deepening locks decisions that affect later phases. Apply these amendments when each phase is deepened or executed (whichever comes first). Land them as a separate commit before the affected phase executes: `docs(claude-credits): cascade Phase 0 decisions to phase-1/2/3/4/5/8 plans`.
+The deepening locks decisions that affect later phases. Apply these amendments when each phase is deepened or executed (whichever comes first). Land them as a separate commit before the affected phase executes: `docs(ai-journey-stats): cascade Phase 0 decisions to phase-1/2/3/4/5/8 plans`.
 
 ### `phase-1-scaffold.md`
 
@@ -1333,7 +1333,7 @@ The deepening locks decisions that affect later phases. Apply these amendments w
 
 - **ADD: `refresh-stats.ts` must mutate `report.projects[*].editorial.heroImage`** (Phase 0 §0.6 — projects carry editorial blocks). The heroImage path-rewrite step walks `projects[]` ONLY — `meta[]` entries carry `editorial: null` (no heroImage to rewrite).
 - **ADD: `stripForPublish` strips `projectPath` from `projects[]` AND `meta[]`** (both are `ProjectReport[]`). The heroImage rewrite is projects-only; the projectPath strip is both-arrays. Do NOT strip from `archiveCollective` — that block has no `projectPath` and no editorial.
-- **UPDATE the type imports:** Phase 2 imports `MultiProjectReport`, `ProjectReport`, `TokenStats`, `EditorialContent`, `ArchiveCollective` from `tools/claude-credit/dist/taxonomy`. The list of imports should be updated.
+- **UPDATE the type imports:** Phase 2 imports `MultiProjectReport`, `ProjectReport`, `TokenStats`, `EditorialContent`, `ArchiveCollective` from `tools/project-metrics/dist/taxonomy`. The list of imports should be updated.
 - **ADD pre-publish grep-guard** to the GitHub Action (the Phase 8 deploy plan also references this). The guard runs on `stats.json` content and refuses commit on path / username / secret-keyword / non-allowlisted UUID matches.
 
 ### `phase-3-hero.md`
@@ -1361,7 +1361,7 @@ The cascade carries CONTRACT (schema facts), not CONTENT (display decisions). Ph
 
 ### `phase-8-deploy.md`
 
-- **Pre-publish guard runs IN-PROCESS, not in a CI Action.** (Superseded by Phase 2 Decision 5 + Phase 8 Decisions 1, 6.) There is no `refresh-claude-credits.yml` refresh Action — refresh is local-only and `scripts/refresh-stats.ts` runs `assertPublishSafe` against `stats.json` before writing it, matching the patterns in this plan's Privacy by Construction section. Phase 8's CI is a light *verify* workflow (`verify-claude-credits.yml`, bundle build only) that does NOT regenerate or guard data.
+- **Pre-publish guard runs IN-PROCESS, not in a CI Action.** (Superseded by Phase 2 Decision 5 + Phase 8 Decisions 1, 6.) There is no `refresh-ai-journey-stats.yml` refresh Action — refresh is local-only and `scripts/refresh-stats.ts` runs `assertPublishSafe` against `stats.json` before writing it, matching the patterns in this plan's Privacy by Construction section. Phase 8's CI is a light *verify* workflow (`verify-ai-journey-stats.yml`, bundle build only) that does NOT regenerate or guard data.
 
 ### Verification — semantic review, not greps
 
@@ -1379,7 +1379,7 @@ Greps are circular: they pass when the cascade commit literally wrote the patter
 
 | Phase | Open the file and confirm... |
 |---|---|
-| phase-2-data-wiring.md | `refresh-stats.ts` walks `report.projects[*].editorial.heroImage` for path rewrite (projects only — meta has `editorial: null`). `stripForPublish` strips `projectPath` from `projects[]` AND `meta[]`. Does NOT strip anything from `archiveCollective` (no projectPath there). Imports `stripForPublish` from `tools/claude-credit/src/strip-for-publish.ts` (single source of truth — same function the §0.10 test uses). |
+| phase-2-data-wiring.md | `refresh-stats.ts` walks `report.projects[*].editorial.heroImage` for path rewrite (projects only — meta has `editorial: null`). `stripForPublish` strips `projectPath` from `projects[]` AND `meta[]`. Does NOT strip anything from `archiveCollective` (no projectPath there). Imports `stripForPublish` from `tools/project-metrics/src/strip-for-publish.ts` (single source of truth — same function the §0.10 test uses). |
 | phase-3-hero.md | Hero displays BOTH `combined.totalTokensProcessed` AND `combined.totalTokensFresh` side-by-side (per the locked dual-hero treatment). The window footnote (`combined.tokenWindowDays` "across N days of session retention") is on every token surface. No reference to a `totalTokens` field. |
 | phase-4-grid.md | Grid renders `projects[]` tiles + the `archiveCollective` tile (last position, doesn't sort by bytes). No meta band, no `kind` split, no "the tools" divider — `report.meta[]` exists in data (feeds `combined.*` totals) but gets NO tile (ideation §7). StatusMarker handles the two status values: `'active'` (default, no marker) and `'shelved'` (faded/badge for any per-project tile that opts in). v1 ships zero per-project tiles with `status: 'shelved'` — those projects all roll into `archiveCollective` instead — but the branch is preserved so Phase 5 can add per-archive detail pages later. |
 | phase-5-detail.md | "View source →" reads `editorial.repoUrl`. `tokens === null` path renders no TOKENS CONSUMED section. TOKENS block uses `tokensProcessed`/`tokensFresh`/`sessionCount`/window/byModel/`sidechainTokens`. Optional `editorial.largestCommitCaption` renders next to `largestSingleCommit` if present. `Archive.tsx` at `/archive` renders `archiveCollective.projectNames`. |

@@ -55,9 +55,9 @@ The bar for "Phase 3 done": the hero renders the real `tokensProcessed` magnitud
 - Project count = `report.projects.length + (report.archiveCollective?.projectCount ?? 0)`. (`report.meta` feeds `combined` magnitude but is deliberately NOT in the project COUNT — the tool/site aren't portfolio entries, ideation §7; archive IS counted. Confirm count semantics at build.)
 - **Null discipline (Phase 0):** when no session JSONLs exist (clean clone, CI runner — see Phase 2 Open Decision #2), every project's `tokens` is null → `combined.totalTokensProcessed === 0`, `totalTokensFresh === 0`, `tokenWindowDays === null`, `modelBreakdown === []`. The hero MUST degrade honestly (Null-degrade path below), never render "0 TOKENS PROCESSED".
 
-**Phase 1 placeholder being replaced:** `src/pages/Landing.tsx` currently renders an inline-styled `<h1>claude-credits</h1>` + nav placeholder. Phase 3 replaces the body with `<Hero/>`; the project grid lands BELOW it in Phase 4.
+**Phase 1 placeholder being replaced:** `src/pages/Landing.tsx` currently renders an inline-styled `<h1>ai-journey-stats</h1>` + nav placeholder. Phase 3 replaces the body with `<Hero/>`; the project grid lands BELOW it in Phase 4.
 
-**Precondition gate (run before C1):** confirm Phase 0's cascade actually landed every field this phase reads. `grep -nE "totalTokensProcessed|totalTokensFresh|modelBreakdown|tokenWindowDays|totalAuthoredLines|totalAuthoredFiles|totalAllBytes|totalCommits" ../../tools/claude-credit/dist/taxonomy.d.ts` must hit ALL of them on `combined` (the token group from Phase 0 A.4; `totalAuthoredLines`/`totalAuthoredFiles`/`totalAllBytes`/`totalCommits` are pre-existing combined aggregates — verified at deepening in `taxonomy.ts:133-146`, but the dist must carry them post-Phase-0 build). If any miss, Phase 0 hasn't been executed/rebuilt — stop and resolve before building against a contract that isn't there.
+**Precondition gate (run before C1):** confirm Phase 0's cascade actually landed every field this phase reads. `grep -nE "totalTokensProcessed|totalTokensFresh|modelBreakdown|tokenWindowDays|totalAuthoredLines|totalAuthoredFiles|totalAllBytes|totalCommits" ../../tools/project-metrics/dist/taxonomy.d.ts` must hit ALL of them on `combined` (the token group from Phase 0 A.4; `totalAuthoredLines`/`totalAuthoredFiles`/`totalAllBytes`/`totalCommits` are pre-existing combined aggregates — verified at deepening in `taxonomy.ts:133-146`, but the dist must carry them post-Phase-0 build). If any miss, Phase 0 hasn't been executed/rebuilt — stop and resolve before building against a contract that isn't there.
 
 ---
 
@@ -102,7 +102,7 @@ Top-to-bottom, centered, generous negative space (the luxury signal). Five stack
 ## Output structure (what this phase adds)
 
 ```
-projects/claude-credits/
+projects/ai-journey-stats/
 ├── src/
 │   ├── lib/
 │   │   ├── format.ts          # NEW — formatTokens / formatInt / formatBytes / formatModelList (pure, tested)
@@ -266,13 +266,13 @@ describe('padCounter (constant-width counter frames)', () => {
 
 **Verify gate:**
 ```
-cd C:/Users/brigg/ai-learning-journey/projects/claude-credits
+cd C:/Users/brigg/ai-learning-journey/projects/ai-journey-stats
 pnpm install            # picks up clsx
 pnpm test               # format.test.ts green (and Phase 2's publish-guard.test.ts still green)
 pnpm typecheck          # clean
 ```
 
-**Commit:** `feat(claude-credits): hero format helpers (token/int/bytes/model) + tests`
+**Commit:** `feat(ai-journey-stats): hero format helpers (token/int/bytes/model) + tests`
 
 ---
 
@@ -550,7 +550,7 @@ pnpm dev
 - **Resize 360 / 375 / 390 / 430px:** the number fills horizontally WITHOUT overflow; no horizontal scroll; supporting lines wrap legibly.
 - **Null-degrade check:** temporarily rename `public/data/stats.json` to a copy with all `tokens` nulled (or hand-edit `combined.totalTokensProcessed` to 0) → hero leads with `LINES AUTHORED`, no token sub-line, no "0 TOKENS PROCESSED". Restore.
 
-**Commit:** `feat(claude-credits): hero composition (static) — counter + honest sub-line + supporting + taxonomy hint`
+**Commit:** `feat(ai-journey-stats): hero composition (static) — counter + honest sub-line + supporting + taxonomy hint`
 
 ---
 
@@ -688,7 +688,7 @@ pnpm build && pnpm preview
 - **Touch:** on a real phone (or DevTools touch emulation), the sheen does NOT track (no cursor) and nothing traps.
 - No console errors; no CSP violations in preview (GSAP inline-style + CSS vars are covered by Phase 1's `style-src 'unsafe-inline'`).
 
-**Commit:** `feat(claude-credits): hero motion — weighted counter tick-up + cursor specular sheen + gradient breath + staggered reveal`
+**Commit:** `feat(ai-journey-stats): hero motion — weighted counter tick-up + cursor specular sheen + gradient breath + staggered reveal`
 
 ---
 

@@ -12,16 +12,16 @@ coded: 2026-05-25T14:07:34-04:00
 > 4. **Error boundary needs `override` on `state` + `componentDidCatch`** (Phase 1's `noImplicitOverride`); `getDerivedStateFromError` must NOT have it (not a base member in @types/react 19). §2.3c code lacked these.
 >
 > **FINDINGS (carry forward):**
-> - **★ editorial is `null` for ALL projects** — the locked `docs/editorial.md` worksheet was never transcribed into `~/.claude-credit-projects.yaml` per-project `editorial:` blocks (schema: `tools/claude-credit/src/config.ts:41`; absent ⇒ null). **Prescription:** add an `editorial:` block per project entry in the yaml (oneLiner, description, hookStat, liveUrl, repoUrl; heroImage when captures land), then `pnpm refresh`. **BLOCKER for Phase 4 tiles + Phase 5 detail; NOT Phase 3 hero** (hero reads combined token/line totals only).
-> - **claude-credits self-counts:** its committed `public/data/stats.json` (~3.6k lines) is counted into the `meta` totals on the next refresh (~0.7% of combined authoredLines, converges). A "count everything" wrinkle, deterministic once stable.
+> - **★ editorial is `null` for ALL projects** — the locked `docs/editorial.md` worksheet was never transcribed into `~/.project-metrics-projects.yaml` per-project `editorial:` blocks (schema: `tools/project-metrics/src/config.ts:41`; absent ⇒ null). **Prescription:** add an `editorial:` block per project entry in the yaml (oneLiner, description, hookStat, liveUrl, repoUrl; heroImage when captures land), then `pnpm refresh`. **BLOCKER for Phase 4 tiles + Phase 5 detail; NOT Phase 3 hero** (hero reads combined token/line totals only).
+> - **ai-journey-stats self-counts:** its committed `public/data/stats.json` (~3.6k lines) is counted into the `meta` totals on the next refresh (~0.7% of combined authoredLines, converges). A "count everything" wrinkle, deterministic once stable.
 
 # Phase 2 — Data wiring
 
-**Prereq:** Read [README.md](README.md) first — the bar, locked decisions, and visual system live there. Read [phase-0-data-gaps.md](phase-0-data-gaps.md) "Cascade → phase-2" and [phase-1-scaffold.md](phase-1-scaffold.md) Decision 9 — both lock contracts this phase consumes. This file is the decisions-not-code recipe for the bridge between the `claude-credit` data contract and the React components Phases 3–9 build.
+**Prereq:** Read [README.md](README.md) first — the bar, locked decisions, and visual system live there. Read [phase-0-data-gaps.md](phase-0-data-gaps.md) "Cascade → phase-2" and [phase-1-scaffold.md](phase-1-scaffold.md) Decision 9 — both lock contracts this phase consumes. This file is the decisions-not-code recipe for the bridge between the `project-metrics` data contract and the React components Phases 3–9 build.
 
 Phase 2 lands the **data spine of the site** — no *feature* pixels, no animation (the loading-hold and error surfaces in Commit 3 are data-layer infrastructure, not Phase 3+ design work). Two halves that meet at one file (`public/data/stats.json`):
 
-1. **Build-time generation** — a `pnpm refresh` script that runs `claude-credit`'s `buildMultiProjectReport` in-process, copies each project's editorial hero/gallery images into `public/assets/<projectName>/`, rewrites the editorial paths to public-relative URLs, strips `projectPath` (and asserts no PII leaked), and writes a deterministically-ordered `public/data/stats.json`.
+1. **Build-time generation** — a `pnpm refresh` script that runs `project-metrics`'s `buildMultiProjectReport` in-process, copies each project's editorial hero/gallery images into `public/assets/<projectName>/`, rewrites the editorial paths to public-relative URLs, strips `projectPath` (and asserts no PII leaked), and writes a deterministically-ordered `public/data/stats.json`.
 2. **Runtime consumption** — a React 19 data layer (`use(promise)` + Suspense + a context provider) that fetches `stats.json` once and hands every component a **non-null** `MultiProjectReport`, so no component ever renders against `undefined`/`NaN`.
 
 The bar for "Phase 2 done": `pnpm refresh` produces a clean `stats.json` with **zero** `projectPath` keys and rewritten asset paths; `pnpm dev` renders all three routes against real data with no `NaN`/`undefined`; deleting `stats.json` degrades to an honest error surface (not a crash); `pnpm typecheck` is green with `scripts/` now in scope; the publish-guard unit tests pass.
@@ -32,9 +32,9 @@ Getting this right matters because **every** Phase 3–9 component reads through
 
 ## Decisions locked at this deepening (read before executing)
 
-1. **Consume the BUILT `dist/`, not `src/`, of `claude-credit` — via relative path.** The monorepo is not a pnpm workspace (Phase 1 Decision 8), and `claude-credit`'s `package.json` `exports` map only exposes `.` and `./log` — so a bare package-name import of `multi-report`/`strip-for-publish` would be **blocked** by Node's exports gate. Relative *file* imports bypass the exports map entirely. So all cross-package imports are `../../../tools/claude-credit/dist/<file>.js`. Phase 0 §0.7 runs `pnpm build` (and Phase 8's Action builds it before refresh), guaranteeing `dist/` is current with all five new types + `strip-for-publish.js` + `multi-report.js`. `refresh-stats.ts` adds a dist-existence guard that errors helpfully if the build is missing. *(Considered: importing `src/*.ts` via `tsx`'s `.js→.ts` resolution to dodge the build step — rejected. It couples the site to `claude-credit`'s internal source layout instead of its published artifact, and contradicts the doc-reviewed Phase 0/1 decision that Phase 2 consumes `dist/`. The whole point of Phase 0 §0.7's build step is this consumer.)*
+1. **Consume the BUILT `dist/`, not `src/`, of `project-metrics` — via relative path.** The monorepo is not a pnpm workspace (Phase 1 Decision 8), and `project-metrics`'s `package.json` `exports` map only exposes `.` and `./log` — so a bare package-name import of `multi-report`/`strip-for-publish` would be **blocked** by Node's exports gate. Relative *file* imports bypass the exports map entirely. So all cross-package imports are `../../../tools/project-metrics/dist/<file>.js`. Phase 0 §0.7 runs `pnpm build` (and Phase 8's Action builds it before refresh), guaranteeing `dist/` is current with all five new types + `strip-for-publish.js` + `multi-report.js`. `refresh-stats.ts` adds a dist-existence guard that errors helpfully if the build is missing. *(Considered: importing `src/*.ts` via `tsx`'s `.js→.ts` resolution to dodge the build step — rejected. It couples the site to `project-metrics`'s internal source layout instead of its published artifact, and contradicts the doc-reviewed Phase 0/1 decision that Phase 2 consumes `dist/`. The whole point of Phase 0 §0.7's build step is this consumer.)*
 
-2. **TYPE imports MUST use `export type` / `import type`.** Two reasons, both load-bearing: (a) `isolatedModules: true` (Phase 1 tsconfig) makes a bare `export { MultiProjectReport }` of a type a compile error; (b) — critical — a *value* import of anything from `dist/` would pull `claude-credit`'s **Node-targeted code** (`node:fs`, `node:child_process`, git subprocess calls) into the **browser bundle** and explode at build/runtime. `import type` / `export type` is erased by esbuild → zero runtime import → the node code never reaches the client. Value imports of `dist/` are allowed **only** in `scripts/` (run by `tsx`, never bundled by Vite).
+2. **TYPE imports MUST use `export type` / `import type`.** Two reasons, both load-bearing: (a) `isolatedModules: true` (Phase 1 tsconfig) makes a bare `export { MultiProjectReport }` of a type a compile error; (b) — critical — a *value* import of anything from `dist/` would pull `project-metrics`'s **Node-targeted code** (`node:fs`, `node:child_process`, git subprocess calls) into the **browser bundle** and explode at build/runtime. `import type` / `export type` is erased by esbuild → zero runtime import → the node code never reaches the client. Value imports of `dist/` are allowed **only** in `scripts/` (run by `tsx`, never bundled by Vite).
 
 3. **Runtime data layer = React 19 `use(promise)` + Suspense + a context provider — not `useEffect`+`useState`.** Sourced from react.dev: `use(promise)` suspends until resolution and integrates with `<Suspense>`; the canonical caching pattern is a **module-level promise** created once. This buys three things the effect-based provider can't: (a) data is **guaranteed present** when a consumer renders — `useStats()` returns a non-null `MultiProjectReport`, so the entire `NaN`/`undefined`-flash class of bugs is impossible by construction; (b) one fetch, **StrictMode-safe** (React 19 double-invokes effects/renders in dev — a module-level promise is created once regardless); (c) loading state lives in **one** Suspense boundary, not scattered across consumers. Cost: a ~15-line Error Boundary class component (React still requires a class for `getDerivedStateFromError`/`componentDidCatch` — no hook equivalent). Worth it. *(Considered: a `useEffect`+`useState`+`AbortController` provider exposing `{status,data,error}` — rejected; it pushes loading/null-awareness into every consumer and re-opens the NaN-flash surface.)*
 
@@ -42,7 +42,7 @@ Getting this right matters because **every** Phase 3–9 component reads through
 
 5. **The privacy guard runs IN-PROCESS in `refresh-stats`, not only in CI.** Phase 0 scoped a pre-publish grep-guard to the Phase 8 GitHub Action. This deepening pulls an equivalent guard **into the refresh script** (`scripts/publish-guard.ts` → `assertPublishSafe`), so `pnpm refresh` run **locally** (Briggsy's autonomy: Claude runs it during dev) refuses to write poisoned JSON — not just CI. This **subsumes** the Phase 8 bash grep (cascade note below). The guard is the one piece of Phase 2 logic that can't be validated by running it on clean data (a broken guard passes clean data too) → it gets a real unit test with poisoned fixtures.
 
-6. **Phase 2 stands up `vitest@^4.1.7` in `claude-credits` — NOT the sibling's `^2.1.8`.** Sourced (gemini-grounding, 2026-05-24): Vitest **4.1** is the line that added Vite 8 support; `claude-credit`'s `vitest@^2.1.8` predates Vite 8 and would break here. Phase 2's tests are **pure Node functions** (the publish guard + stable-stringify) → `environment: 'node'`, **no jsdom**. jsdom + `@testing-library/react` defer to Phase 3 (first component tests). This mirrors how Phase 0 first lit up its vitest harness.
+6. **Phase 2 stands up `vitest@^4.1.7` in `ai-journey-stats` — NOT the sibling's `^2.1.8`.** Sourced (gemini-grounding, 2026-05-24): Vitest **4.1** is the line that added Vite 8 support; `project-metrics`'s `vitest@^2.1.8` predates Vite 8 and would break here. Phase 2's tests are **pure Node functions** (the publish guard + stable-stringify) → `environment: 'node'`, **no jsdom**. jsdom + `@testing-library/react` defer to Phase 3 (first component tests). This mirrors how Phase 0 first lit up its vitest harness.
 
 7. **`refresh-stats` reads NO environment variables.** It is pure git + filesystem + JSONL parsing (via `buildMultiProjectReport`). It does **not** need the Gemini key — do not `source .env` for it. Restated Phase 1 landmine: `GEMINI_API_KEY` must **never** be `VITE_`-prefixed (Vite only inlines `VITE_*` into the client bundle); it stays server-side for future scripts, and no `src/` component may read it.
 
@@ -50,23 +50,23 @@ Getting this right matters because **every** Phase 3–9 component reads through
 
 ## Current state (verified at deepening, 2026-05-24)
 
-Read of `tools/claude-credit/src/multi-report.ts`:
+Read of `tools/project-metrics/src/multi-report.ts`:
 - `buildMultiProjectReport(opts: BuildMultiOptions = {})` returns `Promise<{ report: MultiProjectReport; configPath: string | null; configCreated: boolean }>` (line 64). `BuildMultiOptions = { homeDir?, projectPaths?, includeIgnored? }` (lines 9-14).
-- Called with **no args**, it reads `~/.claude-credit-projects.yaml` and uses the real `os.homedir()` for session-token slugs — i.e. the exact production path `claude-credit --all` takes. This is what `refresh-stats` calls.
+- Called with **no args**, it reads `~/.project-metrics-projects.yaml` and uses the real `os.homedir()` for session-token slugs — i.e. the exact production path `project-metrics --all` takes. This is what `refresh-stats` calls.
 
-Read of `tools/claude-credit/src/cli.ts`:
+Read of `tools/project-metrics/src/cli.ts`:
 - The `--all --json` path (lines 106-115) is literally `JSON.stringify(report, null, 2)` over `buildMultiProjectReport({}).report`. `refresh-stats` reproduces this **plus** the asset-rewrite + strip + guard + stable-ordering steps the public deploy needs.
 
-Read of `tools/claude-credit/package.json` + `tsconfig.json`:
+Read of `tools/project-metrics/package.json` + `tsconfig.json`:
 - `"type": "module"`; `build` = `tsc -p .`; `outDir: ./dist`, `rootDir: ./src`, `declaration: true` → every `src/<f>.ts` emits `dist/<f>.js` **and** `dist/<f>.d.ts` (1:1). So `dist/multi-report.js`, `dist/strip-for-publish.js` (Phase 0), `dist/taxonomy.d.ts` all exist after Phase 0's build.
 - `exports` map exposes only `.` (`dist/index.js`) and `./log` — confirms package-name subpath imports are gated; relative-file imports are the route (Decision 1).
 
-Read of `tools/claude-credit/src/taxonomy.ts` (post-Phase-0 shape, per [phase-0-data-gaps.md](phase-0-data-gaps.md) Batch A):
+Read of `tools/project-metrics/src/taxonomy.ts` (post-Phase-0 shape, per [phase-0-data-gaps.md](phase-0-data-gaps.md) Batch A):
 - `MultiProjectReport = { projects: ProjectReport[]; meta: ProjectReport[]; archiveCollective: ArchiveCollective | null; combined: {…token aggregates…}; scannedAt: string }`. (`meta[]` = the tool + this site — **totals-only**: summed into `combined`, `editorial: null`, NO tile/detail/asset-copy. ideation §7.)
 - `ProjectReport` carries `projectPath` (**the PII to strip**), plus `editorial: EditorialContent | null` whose `heroImage`/`gallery` are **project-relative paths** (the files to copy + rewrite), `tokens: TokenStats | null`, `assetBytesByKind`, `topSubcategories`. (No `kind` field — the `projects[]` / `meta[]` arrays are the separation, ideation §7.)
 - New exported types this phase re-exports: `TokenStats`, `EditorialContent`, `ArchiveCollective` (added by Phase 0 Batch A).
 
-Read of `projects/claude-credits/` (Phase 1 scaffold target):
+Read of `projects/ai-journey-stats/` (Phase 1 scaffold target):
 - Phase 1 creates `package.json` with a `refresh` script (`tsx scripts/refresh-stats.ts`) + `tsx@^4.21.0` already installed — but `scripts/refresh-stats.ts` does **not** exist until this phase. `src/types.ts` is **deferred to this phase** (Phase 1 Decision 9 — it re-exports types Phase 0 hadn't created at Phase 1 time).
 - Phase 1 `tsconfig.json` `include: ["src", "vite.config.ts"]` — **`scripts/` is NOT in scope** → this phase must amend the include (Unit 1) or `refresh-stats.ts` goes un-typechecked.
 - Phase 1 `public/assets/fonts/` holds hand-placed woff2 files. The refresh script's asset cleanup MUST never touch `fonts/` (Unit 2).
@@ -77,7 +77,7 @@ Read of `projects/claude-credits/` (Phase 1 scaffold target):
 ## Output structure (what this phase adds to the Phase 1 scaffold)
 
 ```
-projects/claude-credits/
+projects/ai-journey-stats/
 ├── scripts/
 │   ├── refresh-stats.ts          # orchestrator: freshness → build → drop warnings → copy assets → strip → guard → stable-write
 │   ├── copy-editorial-assets.ts  # copy + path-rewrite hero/gallery into public/assets/<name>/ (collision + traversal guards)
@@ -85,7 +85,7 @@ projects/claude-credits/
 │   ├── stable-stringify.ts       # side-effect-free deterministic stringify (importable by tests)
 │   └── publish-guard.test.ts     # poison-catch + editorial exemption + stableStringify determinism (vitest, node env)
 ├── src/
-│   ├── types.ts                  # `export type` re-exports from claude-credit dist (DEFERRED here from Phase 1)
+│   ├── types.ts                  # `export type` re-exports from project-metrics dist (DEFERRED here from Phase 1)
 │   ├── data/
 │   │   ├── stats-resource.ts     # module-level promise cache + getStatsPromise()
 │   │   ├── StatsProvider.tsx     # use(promise) → StatsContext.Provider
@@ -138,7 +138,7 @@ flowchart LR
 ## Dependency additions (exact — lift into `package.json`)
 
 **Dev (add to the Phase 1 devDependencies):**
-- `vitest@^4.1.7` — Vite-8-compatible line (Decision 6). Do **not** copy `claude-credit`'s `^2.1.8`.
+- `vitest@^4.1.7` — Vite-8-compatible line (Decision 6). Do **not** copy `project-metrics`'s `^2.1.8`.
 
 **No runtime deps added.** `tsx` is already installed (Phase 1). `clsx` stays deferred to Phase 3. No `json-stable-stringify` (hand-rolled — Decision in Unit 2). No `jsdom` (Phase 2 tests are node-env; defer to Phase 3).
 
@@ -152,9 +152,9 @@ Each commit has a verification gate. Don't proceed past a red gate (manifesto: r
 
 ### Commit 1 — type contract (`src/types.ts` + tsconfig `scripts` include)
 
-**2.1a — confirm `claude-credit/dist/` is current.** Phase 0 §0.7 builds it; verify before importing against it:
+**2.1a — confirm `project-metrics/dist/` is current.** Phase 0 §0.7 builds it; verify before importing against it:
 ```
-cd C:/Users/brigg/ai-learning-journey/tools/claude-credit
+cd C:/Users/brigg/ai-learning-journey/tools/project-metrics
 test -f dist/taxonomy.d.ts && test -f dist/multi-report.js && test -f dist/strip-for-publish.js && echo "dist OK" || pnpm build
 ```
 If any file is missing, run `pnpm build` (Phase 0 should have left it built; this is the guard, not a routine rebuild). Confirm `dist/taxonomy.d.ts` exports all five types (`MultiProjectReport`, `ProjectReport`, `TokenStats`, `EditorialContent`, `ArchiveCollective`).
@@ -162,12 +162,12 @@ If any file is missing, run `pnpm build` (Phase 0 should have left it built; thi
 **2.1b — `src/types.ts`** (type-only re-export; the single import surface every `src/` file uses for data types):
 
 ```ts
-// Re-export the claude-credit data contract for the site. TYPE-ONLY (`export type`):
+// Re-export the project-metrics data contract for the site. TYPE-ONLY (`export type`):
 //   1. isolatedModules (tsconfig) forbids re-exporting a type as a value.
-//   2. CRITICAL: a value import from dist/ would drag claude-credit's node code
+//   2. CRITICAL: a value import from dist/ would drag project-metrics's node code
 //      (fs, child_process, git) into the browser bundle. `export type` is erased
 //      by esbuild → zero runtime import. NEVER change `export type` to `export`.
-// Relative path: claude-credits/src/ → ../../.. = monorepo root → tools/claude-credit/dist.
+// Relative path: ai-journey-stats/src/ → ../../.. = monorepo root → tools/project-metrics/dist.
 export type {
   MultiProjectReport,
   ProjectReport,
@@ -181,7 +181,7 @@ export type {
   CategoryReport,
   SubcategoryStats,
   Tier,
-} from '../../../tools/claude-credit/dist/taxonomy.js'
+} from '../../../tools/project-metrics/dist/taxonomy.js'
 ```
 
 (The `.js` extension is correct — it's the real emitted file; bundler resolution reads the sibling `.d.ts`. `skipLibCheck: true` keeps the dist `.d.ts` internals from deep-checking. UI-only view-model types like `ProjectCardData` are deferred to Phase 4, where the grid first needs one — don't invent them here.)
@@ -194,12 +194,12 @@ export type {
 
 **Verify gate:**
 ```
-cd C:/Users/brigg/ai-learning-journey/projects/claude-credits
+cd C:/Users/brigg/ai-learning-journey/projects/ai-journey-stats
 pnpm typecheck
 ```
 Expected: clean. `src/types.ts` resolves against `dist/taxonomy.d.ts`; `scripts/` is now in scope (empty of `.ts` files still — that's fine). Smoke-test the type resolves: temporarily add `import type { MultiProjectReport } from '@/types'` in `App.tsx`, confirm no `TS2307`, revert.
 
-**Commit:** `feat(claude-credits): data-contract type re-exports + scripts in tsconfig scope`
+**Commit:** `feat(ai-journey-stats): data-contract type re-exports + scripts in tsconfig scope`
 
 ---
 
@@ -397,14 +397,14 @@ function sortDeep(value: unknown): unknown {
 ```ts
 import { promises as fs } from 'node:fs'
 import path from 'node:path'
-import { buildMultiProjectReport } from '../../../tools/claude-credit/dist/multi-report.js'
-import { stripForPublish } from '../../../tools/claude-credit/dist/strip-for-publish.js'
+import { buildMultiProjectReport } from '../../../tools/project-metrics/dist/multi-report.js'
+import { stripForPublish } from '../../../tools/project-metrics/dist/strip-for-publish.js'
 import { copyEditorialAssets } from './copy-editorial-assets.js'
 import { assertPublishSafe } from './publish-guard.js'
 import { stableStringify } from './stable-stringify.js'
 
 const OUT = path.resolve('public/data/stats.json')
-const CC_DIR = path.resolve('../../tools/claude-credit')   // cwd = projects/claude-credits → 2 hops to root
+const CC_DIR = path.resolve('../../tools/project-metrics')   // cwd = projects/ai-journey-stats → 2 hops to root
 
 // Dist-FRESHNESS guard. The static imports above already fail loud if dist/*.js is MISSING
 // (ERR_MODULE_NOT_FOUND at load). The latent failure this catches is STALE dist: src edited
@@ -417,7 +417,7 @@ async function assertDistFresh(): Promise<void> {
     const f = String(rel)
     if (!f.endsWith('.ts') || f.endsWith('.test.ts')) continue
     if ((await fs.stat(path.join(srcDir, f))).mtimeMs > distMtime) {
-      throw new Error(`claude-credit dist is STALE (src/${f} newer than dist) — run \`pnpm build\` in tools/claude-credit.`)
+      throw new Error(`project-metrics dist is STALE (src/${f} newer than dist) — run \`pnpm build\` in tools/project-metrics.`)
     }
   }
 }
@@ -425,7 +425,7 @@ async function assertDistFresh(): Promise<void> {
 async function main(): Promise<void> {
   await assertDistFresh()
 
-  // Production path: no opts → reads ~/.claude-credit-projects.yaml + real homeDir for tokens.
+  // Production path: no opts → reads ~/.project-metrics-projects.yaml + real homeDir for tokens.
   const { report } = await buildMultiProjectReport({})
 
   // Drop the diagnostic `warnings[]` from every project — no site component consumes it,
@@ -451,7 +451,7 @@ main().catch((err) => {
 })
 ```
 
-(Two relative depths, kept straight on purpose: the top-of-file `import` specifiers are `../../../tools/...` — file-relative from `scripts/`, three hops to the monorepo root. The `CC_DIR` runtime path is `../../tools/...` — `process.cwd()`-relative, and `pnpm refresh` runs with cwd = the `claude-credits` project dir, two hops below root.)
+(Two relative depths, kept straight on purpose: the top-of-file `import` specifiers are `../../../tools/...` — file-relative from `scripts/`, three hops to the monorepo root. The `CC_DIR` runtime path is `../../tools/...` — `process.cwd()`-relative, and `pnpm refresh` runs with cwd = the `ai-journey-stats` project dir, two hops below root.)
 
 **2.2e — `vitest.config.ts`** (node env — Phase 2 tests are pure functions):
 ```ts
@@ -516,7 +516,7 @@ describe('stableStringify', () => {
 
 **Verify gate (runtime truth — the real gate, not just the unit tests):**
 ```
-cd C:/Users/brigg/ai-learning-journey/projects/claude-credits
+cd C:/Users/brigg/ai-learning-journey/projects/ai-journey-stats
 pnpm install            # picks up vitest@^4.1.7
 pnpm test               # publish-guard.test.ts green: HARD-everywhere + SOFT-skips-editorial + stableStringify determinism
 pnpm refresh            # runs the real pipeline against the live monorepo
@@ -534,7 +534,7 @@ pnpm refresh            # run AGAIN → git diff public/data/stats.json shows ON
 - Second `pnpm refresh` diff = scannedAt-only churn (proves stable ordering).
 - (Negative check) temporarily inject a `'C:\\Users\\brigg'` string into an editorial field in a scratch run → `pnpm refresh` **throws** and writes nothing. Revert.
 
-**Commit:** `feat(claude-credits): pnpm refresh — generate public stats.json (strip + asset-rewrite + PII guard + stable order)`
+**Commit:** `feat(ai-journey-stats): pnpm refresh — generate public stats.json (strip + asset-rewrite + PII guard + stable order)`
 
 ---
 
@@ -708,11 +708,11 @@ pnpm dev
 - **Delete `public/data/stats.json`** (or rename it) → reload → the **error surface** renders ("Couldn't load the stats… run `pnpm refresh`"), NOT a white-screen crash or console-only failure. Restore the file.
 - Brief load: the `PageHold` surface (correct bg, no spinner) shows for the fetch duration, then content. No white flash.
 ```
-pnpm build && pnpm preview     # built bundle serves identically; confirm no claude-credit node code leaked into the bundle
+pnpm build && pnpm preview     # built bundle serves identically; confirm no project-metrics node code leaked into the bundle
 ```
-- (Bundle-purity check) `grep -rl "child_process\|node:fs" dist/assets/*.js` → **no matches** — proves `export type` kept claude-credit's node code out of the client (Decision 2).
+- (Bundle-purity check) `grep -rl "child_process\|node:fs" dist/assets/*.js` → **no matches** — proves `export type` kept project-metrics's node code out of the client (Decision 2).
 
-**Commit:** `feat(claude-credits): runtime data layer — use(promise) Suspense provider + useStats() + error boundary`
+**Commit:** `feat(ai-journey-stats): runtime data layer — use(promise) Suspense provider + useStats() + error boundary`
 
 ---
 
@@ -721,7 +721,7 @@ pnpm build && pnpm preview     # built bundle serves identically; confirm no cla
 | Landmine | Guard |
 |---|---|
 | **Value import from `dist/` drags node code (fs/git) into the browser bundle** | `src/types.ts` is `export type` ONLY (Decision 2). Value imports of `dist/` live ONLY in `scripts/` (tsx, never bundled). Commit 3's bundle-purity grep is the gate. |
-| **`exports` map blocks `claude-credit/multi-report`** | Don't import by package name — use the relative path `../../../tools/claude-credit/dist/<file>.js` (Decision 1). The exports map gates package-name subpaths, not relative file imports. |
+| **`exports` map blocks `project-metrics/multi-report`** | Don't import by package name — use the relative path `../../../tools/project-metrics/dist/<file>.js` (Decision 1). The exports map gates package-name subpaths, not relative file imports. |
 | **`use(getStatsPromise())` suspends forever** | The promise MUST be module-level (created once). NEVER call `fetch()`/create the promise inside a component body — a new promise per render re-suspends infinitely. `stats-resource.ts` lazy-inits a module `let`. |
 | **StrictMode double-fetches in dev** | Module-level promise cache means one fetch regardless of React 19's dev double-invoke. Network-tab single-request check is the gate. |
 | **`asset copy` runs after `strip` → can't resolve sources** | ORDER: `copyEditorialAssets(report)` BEFORE `stripForPublish(report)`. The copy resolves `path.join(project.projectPath, heroImage)`; strip deletes `projectPath`. Reversing leaks relative paths into public JSON or fails to copy. |
@@ -729,7 +729,7 @@ pnpm build && pnpm preview     # built bundle serves identically; confirm no cla
 | **Missing heroImage source leaves a relative path in public JSON** | `copyAndUrl` returns `null` on missing source; heroImage degrades to `null` (null discipline). It never falls back to the relative string (which would be a path leak + a broken `<img src>`). |
 | **`scripts/` un-typechecked** | Phase 1's tsconfig `include` omitted `scripts/`. Unit 1 adds it. Without it, `refresh-stats.ts` ships untype-checked. |
 | **scannedAt churns every refresh → noisy commits** | `report.scannedAt` + `projects[].scannedAt` are wall-clock → always differ. Stable ordering makes ALL other diffs data-driven. Phase 8's change-detection must normalize scannedAt OR accept commit-on-every-run (acceptable; Vercel rebuilds regardless). Cascade note below. |
-| **Stale `dist/` → site shows stale data silently** | `refresh-stats` guards `dist/` existence + errors helpfully. Phase 0 §0.7 builds it; Phase 8's Action builds claude-credit before `pnpm refresh`. |
+| **Stale `dist/` → site shows stale data silently** | `refresh-stats` guards `dist/` existence + errors helpfully. Phase 0 §0.7 builds it; Phase 8's Action builds project-metrics before `pnpm refresh`. |
 | **`vitest@^2` (sibling pin) breaks on Vite 8** | Pin `vitest@^4.1.7` (Decision 6 — sourced). |
 | **`GEMINI_API_KEY` leaks into the client** | `refresh-stats` reads NO env; never `VITE_`-prefix the key. No `src/` component reads `import.meta.env.GEMINI_API_KEY`. |
 | **`stats.json` accidentally gitignored** | It must be committed (Vercel serves the committed file). Phase 1's `.gitignore` doesn't ignore `public/` — confirm it stages. |
@@ -748,7 +748,7 @@ pnpm build && pnpm preview     # built bundle serves identically; confirm no cla
 
 - **Interaction graph:** `useStats()` becomes the single read-point for every Phase 3–9 component. It returns a non-null `MultiProjectReport`, so consumers never write null-guards for the top-level shape (they still honor per-field null discipline — `tokens`/`editorial`/`firstCommitISO` can be null per Phase 0).
 - **Error propagation:** a failed fetch (404 / malformed JSON) bubbles to `StatsErrorBoundary` → honest surface. A field-level null is handled at the component, not the boundary.
-- **Bundle boundary:** `export type` is the wall between the node-targeted `claude-credit` package and the browser bundle. The Commit 3 grep is the enforcement.
+- **Bundle boundary:** `export type` is the wall between the node-targeted `project-metrics` package and the browser bundle. The Commit 3 grep is the enforcement.
 - **Unchanged invariants:** Phase 1's `main.tsx` style/side-effect import order, the `BrowserRouter`+`<Routes>` shape, the token/motion/font foundation — all untouched. This phase inserts exactly one wrapper (`StatsGate`) and adds files; it changes no Phase 1 primitive except the tsconfig `include` and `package.json` deps/scripts.
 
 ---
@@ -759,13 +759,13 @@ Surfaced by the doc-review. These are genuine judgment calls, not mechanical fix
 
 1. **★ Privacy-guard scoping (security-sensitive — please bless).** The guard now applies HARD path/PII patterns (`C:\`, `/Users/`, `/home/`, drive-letter slug, UUID, …) to **every** string, and the false-positive-prone SOFT patterns (`brigg`, `secret`, `password`, email) to **everything except author-controlled `.editorial.` copy**. Rationale: the leak vector is machine-derived paths/usernames (still fully scanned); your name + words like "secret" + an SSH repoUrl legitimately appear in editorial copy on your own showcase, and the original always-on list would wedge `pnpm refresh` on them. **Lean: ship the HARD/SOFT split.** Alternative if you want it tighter: drop the English-word SOFT patterns entirely and add real secret-token shapes (`sk-ant-`, `ghp_`, …) instead. Your call on the privacy posture.
 
-2. **Refresh runs on a machine with NO session data? — RESOLVED in Phase 8 (Decisions 1–2): option (a), local-only.** `refresh-stats` calls `buildMultiProjectReport({})`, which reads `~/.claude-credit-projects.yaml` + `~/.claude/projects/*.jsonl` from the **runner's** home — neither exists on a clean CI runner → published `tokens` would be **null**. So refresh is **local-only**, triggered by a **dedicated `refresh-credits` skill** (not squeaky, not CI), which commits `stats.json`; Vercel git-integration deploys the committed file. (Rejected: (b) CI git-only refresh with null tokens — kills the hero; (c) ship JSONLs to the runner — that's the PII we strip.) The README's old "Action refreshes on every push" cadence is reconciled to this.
+2. **Refresh runs on a machine with NO session data? — RESOLVED in Phase 8 (Decisions 1–2): option (a), local-only.** `refresh-stats` calls `buildMultiProjectReport({})`, which reads `~/.project-metrics-projects.yaml` + `~/.claude/projects/*.jsonl` from the **runner's** home — neither exists on a clean CI runner → published `tokens` would be **null**. So refresh is **local-only**, triggered by a **dedicated `refresh-credits` skill** (not squeaky, not CI), which commits `stats.json`; Vercel git-integration deploys the committed file. (Rejected: (b) CI git-only refresh with null tokens — kills the hero; (c) ship JSONLs to the runner — that's the PII we strip.) The README's old "Action refreshes on every push" cadence is reconciled to this.
 
 3. **`scannedAt` churn — accept commit-on-every-run, or stabilize?** Wall-clock `scannedAt` (top-level + per-project) makes every refresh diff non-empty, so "commit if changed" effectively commits every run. **Options: (a)** accept it (Vercel rebuilds regardless; the churn is honest "the refresh ran" signal); **(b)** write `scannedAt` to a sidecar `public/data/scanned-at.json` so `stats.json` is byte-stable across no-data-change refreshes; **(c)** round to date granularity. **Lean: (a)** for v1 simplicity. Decide in Phase 8 (the layer that owns the commit logic).
 
 4. **~~Drop `commitsByAuthor`…?~~ — RESOLVED 2026-05-26 (ATC): DROPPED both `commitsByAuthor` AND `linesByAuthor`.** (The premise here — "`linesByAuthor` which the site reads for AUTHORED BY" — is itself stale: §11 cut the AUTHORED BY surface, so NOTHING reads either field. Both are now removed from the published JSON via `stripForPublish` DROP_KEYS + `ALLOWED_KEY_PATHS` — unused + thesis-inverting. Tool still computes them internally.)
 
-5. **`export type` boundary enforcement.** Today it's a one-shot grep in the Commit-3 gate. A future value-import of `dist/` from `src/` would silently re-bloat the bundle. **Lean: promote the grep to a standing check** (a `pnpm build` post-step or an ESLint `no-restricted-imports` rule banning non-type imports of `tools/claude-credit/dist/*` from `src/`) — but that's arguably Phase 8/9 CI work. Noted, not built here.
+5. **`export type` boundary enforcement.** Today it's a one-shot grep in the Commit-3 gate. A future value-import of `dist/` from `src/` would silently re-bloat the bundle. **Lean: promote the grep to a standing check** (a `pnpm build` post-step or an ESLint `no-restricted-imports` rule banning non-type imports of `tools/project-metrics/dist/*` from `src/`) — but that's arguably Phase 8/9 CI work. Noted, not built here.
 
 ## Cascade (corrections this deepening implies elsewhere)
 
@@ -773,7 +773,7 @@ Land in the deepen commit or a follow-up before the affected phase executes.
 
 ### `phase-8-deploy.md`
 - **★ Where `pnpm refresh` runs — RESOLVED in Phase 8 (Decisions 1–2):** refresh is **local-only** (a clean GH-Action runner has no `~/.claude/projects/` session data → null tokens). The trigger is a **dedicated `refresh-credits` skill** (not a global squeaky edit, not CI) that regenerates `stats.json` locally and commits it; Vercel git-integration deploys the committed file. README line 71 reconciled to match.
-- **Build `tools/claude-credit` BEFORE `pnpm refresh`** wherever refresh runs (`dist/` must be current — `assertDistFresh` enforces it but build-first avoids the hard stop). Sequence: build claude-credit → `pnpm install` (claude-credits) → `pnpm refresh` → commit if changed → Vercel auto-deploys.
+- **Build `tools/project-metrics` BEFORE `pnpm refresh`** wherever refresh runs (`dist/` must be current — `assertDistFresh` enforces it but build-first avoids the hard stop). Sequence: build project-metrics → `pnpm install` (ai-journey-stats) → `pnpm refresh` → commit if changed → Vercel auto-deploys.
 - **The pre-publish grep-guard is now satisfied IN-PROCESS** by `refresh-stats` via `assertPublishSafe` (Decision 5). Running `pnpm refresh` inherits it (the script exits non-zero + writes nothing on a match). The separate bash grep step Phase 0 envisioned is now **redundant** — keep it only as optional belt-and-suspenders, not the primary guard.
 - **`scannedAt` churn decision** (Open decisions #3): accept commit-on-every-run (lean) OR stabilize via a sidecar file / date-rounding. Stable ordering makes every other diff meaningful; `scannedAt` is the only wall-clock churn. Decide here.
 
@@ -810,7 +810,7 @@ Land in the deepen commit or a follow-up before the affected phase executes.
 9. ✅ Network tab: exactly one `/data/stats.json` request (StrictMode-safe).
 10. ✅ Delete `stats.json` → error surface renders with a working "Try again" (not a crash, not "run pnpm refresh" to a visitor); restore the file and confirm "Try again" recovers without a hard reload.
 11. ✅ `pnpm build && pnpm preview` clean; bundle-purity grep finds no `child_process`/`node:fs` in `dist/assets/*.js` (no node code leaked).
-12. ✅ Stale-dist guard: `touch` a `tools/claude-credit/src/*.ts` without rebuilding → `pnpm refresh` refuses with the "dist is STALE" message; rebuild → passes.
+12. ✅ Stale-dist guard: `touch` a `tools/project-metrics/src/*.ts` without rebuilding → `pnpm refresh` refuses with the "dist is STALE" message; rebuild → passes.
 
 Then open [phase-3-hero.md](phase-3-hero.md) and start.
 

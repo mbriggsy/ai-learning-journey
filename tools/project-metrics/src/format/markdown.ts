@@ -34,7 +34,7 @@ export function renderProjectMarkdown(report: ProjectReport): string {
   const out: string[] = [];
   const g = report.grandTotals;
 
-  out.push(`# claude-credit · ${report.projectName}`);
+  out.push(`# project-metrics · ${report.projectName}`);
   out.push('');
   if (report.editorial?.oneLiner) {
     out.push(`> ${report.editorial.oneLiner}`);
@@ -194,7 +194,7 @@ export function renderProjectMarkdown(report: ProjectReport): string {
 export function renderMultiProjectMarkdown(report: MultiProjectReport): string {
   const out: string[] = [];
   const c = report.combined;
-  out.push(`# claude-credit · all projects (${c.projectCount})`);
+  out.push(`# project-metrics · all projects (${c.projectCount})`);
   out.push('');
   out.push(`_Scanned ${report.scannedAt}_`);
   out.push('');

@@ -54,7 +54,7 @@ The bar for "Phase 7 done": the close reads as a deliberate, generous exhale tha
 ## Output structure (what this phase adds)
 
 ```
-projects/claude-credits/
+projects/ai-journey-stats/
 ├── src/
 │   ├── components/
 │   │   └── Close/
@@ -79,7 +79,7 @@ No `src/lib/cta.ts`, no `cta.test.ts`. (Component name `Close` is illustrative �
 - **7.1b — `Close.module.css`:** centered closing beat (`display:grid; place-items:center; gap: var(--space-6)`), `padding: var(--space-24) var(--space-6) var(--space-16)`, `text-align:center`, NOT footer-pinned. Display-type figure in `--font-display` + `.tabular`; supporting line `--text-secondary`. Mobile (`@media (max-width:600px)`): `padding-bottom: calc(var(--space-16) + env(safe-area-inset-bottom,0px))`; step type down. Both modes via semantic tokens only; no `--accent-stat-highlight` gold spent here (the hero owns the one gold moment).
 - **7.1c — `Landing.tsx`:** append `<Close />` below `<ProjectGrid />`.
 - **Verify gate (`pnpm dev`, BOTH modes):** the close reads as a deliberate exhale; the three-figure stack (projects · tokens · lines) is correct against the real data; the null-degrade is correct and layered — `tokenWindowDays === null` `stats.json` → token + window lines drop, projects + lines remain; the worst case (also `totalAuthoredLines === 0`) → projects-only, *"Fifteen projects."* (never empty, never `NaN`); no horizontal scroll at 360–430px; clears the home-indicator safe area; cold-read — the size of the work lands, it does NOT read as a pitch.
-- **Commit:** `feat(claude-credits): the close — summative magnitude beat (static)`
+- **Commit:** `feat(ai-journey-stats): the close — summative magnitude beat (static)`
 
 ### Commit 2 — reveal motion (scroll-triggered + reduced-motion + P0 guard)
 
@@ -91,7 +91,7 @@ No `src/lib/cta.ts`, no `cta.test.ts`. (Component name `Close` is illustrative �
   - **Below-fold reveal:** a single `ScrollTrigger` (`start:'top 85%'`, `once:true`, `onEnter: reveal`). No `ScrollTrigger.batch` (tile-list pattern). Trigger positioning relies on Phase 4's global refresh (Decision 5, PRIMARY) — **the close fires NO `ScrollTrigger.refresh()` of its own** (round-2: a close-owned refresh recomputes ALL triggers globally and can reflow already-revealed grid tiles).
   - **Already-in-view reveal — POST-SETTLE (round-2 fix to the round-1 guard):** the rect-check must run AFTER fonts/images settle, NOT synchronously at trigger creation — `useGSAP` is `useLayoutEffect` (pre-paint, pre-settle), so a synchronous `getBoundingClientRect()` reads stale layout and mis-fires both ways. Run it in a settle gate: `Promise.race([document.fonts.ready, timeout(1500)]).then(() => requestAnimationFrame(() => { if (!revealed && closeRef.current && closeRef.current.getBoundingClientRect().top < window.innerHeight * 0.85) reveal() }))`. This reveals an already-in-view close (tall viewport / short page) once layout is real; the below-fold case is left to `onEnter`. It is a **local** check (no global `refresh()`); the `revealed` flag keeps it safe against a later `onEnter`. The `closeRef.current` null-guard covers unmount before the promise resolves. **Verify at a tall viewport / short page (close in view on first paint), in BOTH dev and preview.**
 - **Verify gate (`pnpm dev` AND `pnpm build && pnpm preview`):** reveal fires once in the weighted dialect; **P0 (dead layer)** — force a throw in `useGSAP` → close still fully visible; **already-in-view (finding #4)** — load at a tall viewport / short page so the close is in view on first paint → it reveals (rect-guard fired), verified in **dev AND preview**; **StrictMode (residual)** — in `pnpm dev` (StrictMode double-invoke) the close ends VISIBLE, not re-hidden by the `once:true` revert (verify separately from the prod gate, as Phase 4 does); below-fold reveal position self-heals with throttled images/fonts (Phase 4's global refresh) AND the already-in-view path fires after settle (the local rect-check), with NO visible reflow of already-revealed grid tiles (the close adds no global refresh); reduced-motion → visible immediately; both modes; no console/CSP errors.
-- **Commit:** `feat(claude-credits): the close — weighted scroll reveal + reduced-motion`
+- **Commit:** `feat(ai-journey-stats): the close — weighted scroll reveal + reduced-motion`
 
 ---
 

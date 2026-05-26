@@ -46,7 +46,7 @@ export async function buildMultiFixture(): Promise<MultiFixture> {
         'src/app.test.ts': "import { it } from 'vitest';\nit('one', () => {});\nit('two', () => {});\n",
         'docs/plans/plan-1.md': '# Plan\n\nA plan doc.\nWith a few lines.\n',
         'public/assets/images/hero.png': 'PNG\x89fake-bytes-for-size-counting-only-0123456789',
-        'claude-credit.config.yaml': [
+        'project-metrics.config.yaml': [
           'editorial:',
           '  oneLiner: "Active A — the rich one"',
           '  hookStat: { label: "TESTS", value: "metric:testCases" }',
@@ -74,7 +74,7 @@ export async function buildMultiFixture(): Promise<MultiFixture> {
       files: {
         'src/m.ts': 'export const m = 1;\n',
         // A meta project may carry an editorial block — it MUST be forced null.
-        'claude-credit.config.yaml':
+        'project-metrics.config.yaml':
           'editorial:\n  oneLiner: "should be forced null"\n  hookStat: { label: X, value: "1" }\n  description: ignored\n',
       },
     },

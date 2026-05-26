@@ -25,7 +25,7 @@ The bar for "Phase 5 done": every section renders the real data with no `NaN`/`u
 
 3. **A "WHAT GOT BUILT" composition inventory REPLACES the tier breakdown AND absorbs the stub's "Top subcategories" section** (ATC call, 2026-05-24). The story worth telling is *what exists* — the **breadth** of an autonomous build: code, tests, plans, generation-prompts, images, audio, video, configs. Each kind shown in its **natural unit** (code in lines, tests/docs/configs in files, media in counts) so nothing lies — this is what dissolves the "bytes read ~95% pipeline" problem that killed the tier bar. It is a curated, ordered set of bare count-callouts, NOT a chart and NOT a provenance split. It supersedes the stub's separate `topSubcategories`-driven "Five callout cards" (that was top-5-by-bytes → reliably "video, images, more video"; a curated breadth inventory is the better, more on-thesis story). `topSubcategories` goes unconsumed by the site (harmless; Phase 0 still computes it).
 
-4. **Composition data is derived in a NEW pure lib `src/lib/composition.ts` from the published `tiers[]` tree — NOT a new CLI field.** The choice of *which* kinds to show, their editorial labels, and their units is a **presentation/editorial** decision and belongs in the site, not the `claude-credit` CLI. `composition.ts` walks `report.tiers[]` (`TierReport → CategoryReport → SubcategoryStats{ subcategory, files, bytes, totalLines, nonBlankLines }` — verified in `taxonomy.ts:58-76`) and maps specific `(category, subcategory)` pairs → curated kind callouts. **This requires `tiers[]` to survive the publish strip** — see the Cascade prerequisite (the privacy allowlist froze before this idea existed). Mirrors `grid-order.ts` (Phase 4): pure, tested, no React.
+4. **Composition data is derived in a NEW pure lib `src/lib/composition.ts` from the published `tiers[]` tree — NOT a new CLI field.** The choice of *which* kinds to show, their editorial labels, and their units is a **presentation/editorial** decision and belongs in the site, not the `project-metrics` CLI. `composition.ts` walks `report.tiers[]` (`TierReport → CategoryReport → SubcategoryStats{ subcategory, files, bytes, totalLines, nonBlankLines }` — verified in `taxonomy.ts:58-76`) and maps specific `(category, subcategory)` pairs → curated kind callouts. **This requires `tiers[]` to survive the publish strip** — see the Cascade prerequisite (the privacy allowlist froze before this idea existed). Mirrors `grid-order.ts` (Phase 4): pure, tested, no React.
 
 5. **The AssetDonut is the page's ONE flourish** (ideation bar: one flourish per surface). Built as **stroked SVG `<circle>` arcs** (NOT filled `<path>` wedges) because DrawSVGPlugin animates `stroke-dashoffset`/`stroke-dasharray` and **requires a visible stroke** (verified against GSAP AI-skills docs via Context7, 2026-05-24). Source: `assetBytesByKind` (`{ images, audio, video, fonts, 'misc-media' }` bytes — Phase 0 §0.2). The donut tells the **media-volume** story (bytes); the composition inventory tells the **breadth** story (counts) — complementary cuts, no redundancy. DrawSVGPlugin is **registered in Phase 5** (`gsap-context.ts`) — Phase 1 deliberately did not register it (zero earlier consumers).
    - **ONE length basis — real circumference, NOT `pathLength="100"`** (doc-review feasibility, confirmed against the installed `gsap@3.14.2/DrawSVGPlugin.js`): DrawSVG computes the circle's length from its `r` attribute (`Math.PI * …`) and **ignores the SVG `pathLength` attribute**; its `%` values resolve against that measured circumference. If the C2 static dash math is hand-authored in units of 100 (via `pathLength="100"`) while C3's DrawSVG resolves against real `2πr`, the **static fallback and the animated resting state disagree** — the reduced-motion / dead-layer donut (which relies on C2's static state) renders different arc lengths than the motion path. So: **drop `pathLength`; compute the C2 static `stroke-dasharray`/`-dashoffset` from real `2πr`** (the same basis DrawSVG uses), and let C3 animate `drawSVG: 'start% end%'` with the cumulative percentages (DrawSVG converts them via the real circumference). `stroke-linecap: butt` (segments meet cleanly; round caps overhang neighbors).
@@ -47,7 +47,7 @@ The bar for "Phase 5 done": every section renders the real data with no `NaN`/`u
 11. **`/frontend-design` + `/emil-design-eng` both fired at this deepening** (Briggsy's "as appropriate"). Composition/hierarchy/anti-dashboard/the-magazine-hero from frontend-design; the donut reveal feel, sparkline restraint, page-density ceiling, and long-page scroll-reveal fatigue from emil. Their calls are baked into the recipe (Decisions 6–7 + the page contract), not deferred to Phase 9.
 
 12. **CONTENT FLOOR — the page is verified against the DATA-SPARSE project, not just BURNED** (doc-review, adversarial + design + the through-line finding). The plan must not be designed only against the data-rich case. The worst real case is the **smallest real projects** (`tic-tac-toe`, `pacman`) on a clean deploy box: `tokens: null` (no JSONL on the runner), `assetBytesByKind` all-zero (no pipeline media), a thin `tiers[]` (code + tests + a README), and — until the editorial worksheet runs — `editorial: null`. With everything null, Movements 2 (tokens/gold), 3 (description), 4 (donut), 6 (gallery), 7 (invitation) all omit → a bare hero + sparkline + a 1–3-item inventory. The page must still read as a composed STORY for the leanest project, not just the rich ones. Two guardrails:
-   - **EDITORIAL IS A HARD DEPENDENCY for any project with a detail page.** Every project in `projects[]` MUST carry an `editorial` block with at least `oneLiner` + `description` (sourced in preflight −1.5 worksheet + each `claude-credit.config.yaml`). That guarantees the **opener one-liner + the description prose breath always render**, so the page always tells a STORY even when token/media data is sparse. This makes the editorial worksheet a Phase-5 blocker, not optional polish. (The leanest real projects — `tic-tac-toe`, `pacman` — especially need rich editorial, since they're the most data-sparse.)
+   - **EDITORIAL IS A HARD DEPENDENCY for any project with a detail page.** Every project in `projects[]` MUST carry an `editorial` block with at least `oneLiner` + `description` (sourced in preflight −1.5 worksheet + each `project-metrics.config.yaml`). That guarantees the **opener one-liner + the description prose breath always render**, so the page always tells a STORY even when token/media data is sparse. This makes the editorial worksheet a Phase-5 blocker, not optional polish. (The leanest real projects — `tic-tac-toe`, `pacman` — especially need rich editorial, since they're the most data-sparse.)
    - **The composition inventory has a presentation floor** (kills the "3 items in a 4-col grid = empty 4th column" dead-space failure): when `items.length <= 3`, render the callouts as a **centered single row** (inline-flex, gap), NOT the `auto-fit` grid; the grid (4-col desktop / 2-col mobile) is used only for `items.length >= 4`. If `items.length === 0`, omit the section (Decision 3). `composition.ts` guarantees a near-universal floor in practice (any project with source files yields ≥1 "code" callout; most yield code + tests + docs ≥ 3), but the layout must not look broken at 1–3.
 
 ---
@@ -56,7 +56,7 @@ The bar for "Phase 5 done": every section renders the real data with no `NaN`/`u
 
 These edits touch docs/data other phases own. Apply them in the deepen commit, then verify before executing Phase 5.
 
-### A. Privacy publish surface — `tools/claude-credit` `strip-for-publish.ts` (mechanism corrected at doc-review)
+### A. Privacy publish surface — `tools/project-metrics` `strip-for-publish.ts` (mechanism corrected at doc-review)
 **The mechanism, verified against Phase 0 §0.10 (lines 1094–1182):** `stripForPublish` is a **DENYLIST** — it deep-walks and deletes `projectPath` only, returning everything else. `ALLOWED_KEY_PATHS` is NOT a projection filter; it is a **test tripwire** (test #5 `stats-shape.test.ts` asserts `publishedPaths ⊆ ALLOWED_KEY_PATHS`). Two consequences that REVERSE the naïve "missing path → empty section" fear:
 - **The detail-page fields are published automatically** (`tiers[]`, `git.timeline`, `proxies`, `assetBytesByKind`, `tokens.byModel/sidechainTokens` are all on `ProjectReport`/`GitStats` and are NOT `projectPath`, so the denylist keeps them). No section renders empty from stripping.
 - **Phase 0's own test #5 FORCES every published path into `ALLOWED_KEY_PATHS`** — when Phase 0 executes, the deep-walk emits `tiers[]…`, `timeline…`, `proxies…` etc., so `ALLOWED_KEY_PATHS` MUST enumerate them or Phase 0's test #5 fails (before Phase 5 exists). So "is the field allowlisted" is a Phase-0-executes-correctly property, not a Phase-5 action.
@@ -69,7 +69,7 @@ These edits touch docs/data other phases own. Apply them in the deepen commit, t
 
 **Verify (run after Phase 0 + refresh have produced a real `stats.json` — fields PRESENT, sha ABSENT):**
 ```
-cd C:/Users/brigg/ai-learning-journey/projects/claude-credits
+cd C:/Users/brigg/ai-learning-journey/projects/ai-journey-stats
 pnpm refresh
 node -e "const r=require('./public/data/stats.json'); const p=r.projects[0]; console.log({tiers:!!p.tiers, timeline:!!p.git.timeline, byModel:!!(p.tokens&&p.tokens.byModel), proxies:!!p.proxies, sha:(p.git.timeline.largestSingleCommit||{}).sha})"
 ```
@@ -124,9 +124,9 @@ grep -n "tier breakdown\|TierBreakdown\|tier-proportion" docs/plans/phase-5-deta
 ```
 # 1. Contract present in the built types
 grep -nE "tiers|assetBytesByKind|timeline|byModel|sidechainTokens|iterationProxyTotal|assetModificationEvents" \
-  C:/Users/brigg/ai-learning-journey/tools/claude-credit/dist/taxonomy.d.ts
+  C:/Users/brigg/ai-learning-journey/tools/project-metrics/dist/taxonomy.d.ts
 # 2. Fields actually PUBLISHED (and sha dropped) — the real gate, against generated JSON not source (Cascade A)
-cd C:/Users/brigg/ai-learning-journey/projects/claude-credits && pnpm refresh
+cd C:/Users/brigg/ai-learning-journey/projects/ai-journey-stats && pnpm refresh
 node -e "const p=require('./public/data/stats.json').projects[0]; console.log({tiers:!!p.tiers,timeline:!!p.git.timeline,byModel:!!(p.tokens&&p.tokens.byModel),proxies:!!p.proxies,sha:(p.git.timeline.largestSingleCommit||{}).sha})"
 ```
 Gate (1) must hit every name. Gate (2) must show `tiers/timeline/byModel/proxies` truthy and `sha` undefined. If contract names miss, Phase 0 hasn't executed/rebuilt — STOP. If a field is absent from the published JSON, Phase 0's `ALLOWED_KEY_PATHS`/denylist isn't right (Cascade A) — STOP. Read field NAMES from `phase-0-data-gaps.md`, never the pre-Phase-0 dist.
@@ -227,14 +227,14 @@ frontend-design + emil lens. A single-column editorial scroll grouped into **mov
 - **CadenceSparkline:** build ONE smooth `<path>` (not `<polyline>`) from `commitsByDay[]` normalized into a `viewBox` (e.g. `0 0 1000 80`), `width: 100%`, `preserveAspectRatio="none"`; area fill `--accent-primary` at ~0.12 alpha, stroke line `--accent-primary` at full. **NO hover/tooltip in v1** (state it so no one adds a crosshair). **Full-bleed containment:** the wide wrapper uses `width: 100%` within a full-bleed section whose parent has `overflow-x: clip`; do NOT use `100vw` (scrollbar-gutter overflow). Verify zero horizontal scroll at 360–430px.
 - **Gallery lightbox (v1 scope):** **open/close only — NO prev/next navigation** (one image per open; close → reopen for the next). On open, show the already-loaded grid `<img>` scaled into the overlay (no spinner; the thumb is cached from the grid). Esc + click-out + a close button dismiss; trap focus while open; restore focus to the triggering tile on close.
 - **Donut C2 placeholder palette (can't fully defer to Phase 9 — C2 renders real colors):** use an ordered set of existing semantic tokens for the ≤5 slices — `--accent-primary`, `--text-primary`, `--text-secondary`, `--border-strong`, `--text-muted` — distinguished by the labeled legend rows (meaning never rides on hue; Briggsy is color blind). Gold (`--accent-stat-highlight`) is RESERVED for the tokens total — never a donut slice. Phase 9 pins a proper mode-aware sequential palette; C2 ships with these.
-- **Not-found state:** set `document.title` to `"Not found · claude-credits"` (not the raw URL); heading + one sentence + `← all projects`.
+- **Not-found state:** set `document.title` to `"Not found · ai-journey-stats"` (not the raw URL); heading + one sentence + `← all projects`.
 
 ---
 
 ## Output structure (what this phase adds)
 
 ```
-projects/claude-credits/
+projects/ai-journey-stats/
 ├── src/
 │   ├── lib/
 │   │   ├── composition.ts            # NEW — tiers[] → curated kind callouts (pure, tested)
@@ -296,12 +296,12 @@ The feature-bearing, unit-testable concentrate (mirrors `grid-order.ts`).
 
 **Verify gate:**
 ```
-cd C:/Users/brigg/ai-learning-journey/projects/claude-credits
+cd C:/Users/brigg/ai-learning-journey/projects/ai-journey-stats
 pnpm test        # composition + format (incl. formatShortDate) green; Phase 2/3/4 tests still green
 pnpm typecheck   # clean
 ```
 
-**Commit:** `feat(claude-credits): composition inventory derivation + findProject + formatShortDate + tests`
+**Commit:** `feat(ai-journey-stats): composition inventory derivation + findProject + formatShortDate + tests`
 
 ---
 
@@ -309,7 +309,7 @@ pnpm typecheck   # clean
 
 The layout/data/null-degrade/responsive/route truth gate. Real data, FINAL visible state, NO animation.
 
-**5.2a — `src/pages/ProjectDetail.tsx`** (replace the Phase 1 placeholder): `useParams<{ name: string }>()` → `findProject(useStats(), name)`. If `null` → render the **not-found** block (heading "No project by that name." + a sentence + `<Link to="/">← all projects</Link>`), set `document.title = "Not found · claude-credits"`, and return. Else compose the movements (Sections 1–9) passing the `ProjectReport` (and `editorial`/`tokens` sub-objects) into each component. **Render all editorial strings (`description`, `oneLiner`, captions) as text nodes — never injected raw HTML** (Cascade A render guard). Owns the scroll-reveal `useGSAP` block (added in C3) — in C2 it renders everything at final visible state.
+**5.2a — `src/pages/ProjectDetail.tsx`** (replace the Phase 1 placeholder): `useParams<{ name: string }>()` → `findProject(useStats(), name)`. If `null` → render the **not-found** block (heading "No project by that name." + a sentence + `<Link to="/">← all projects</Link>`), set `document.title = "Not found · ai-journey-stats"`, and return. Else compose the movements (Sections 1–9) passing the `ProjectReport` (and `editorial`/`tokens` sub-objects) into each component. **Render all editorial strings (`description`, `oneLiner`, captions) as text nodes — never injected raw HTML** (Cascade A render guard). Owns the scroll-reveal `useGSAP` block (added in C3) — in C2 it renders everything at final visible state.
 
 **5.2b — `src/components/DetailHero/`** (`{ project }`): the magazine-opener split (Decision 7B). Desktop CSS grid `~58% / 42%`, text left + image right, `align-items: center`; mobile single column, text then image (image full-width band, capped aspect). Subtitle composed from `formatAge`-free phrasing: "Born {projectAgeDays} days ago · {formatInt(totalCommits)} commits · {formatInt(allFiles)} files" (drop the Born clause if `projectAgeDays === null`). `heroImage` null / `<img onError>` → `type-forward` (no image column, name steps up). `clsx` drives `has-image`/`type-forward`.
 
@@ -339,7 +339,7 @@ pnpm refresh && pnpm dev
 - **360 / 375 / 390 / 430px:** hero stacks text→image (image a deliberate full-width band); inventory is a clean 2-col; sparkline spans full width; no horizontal scroll; tap targets ≥44px.
 - **A11y:** keyboard-tab reaches back-link, gallery items, and both invitation links with visible `:focus-visible` rings; the donut SVG has an `aria-label`.
 
-**Commit:** `feat(claude-credits): project detail composition (static) — magazine hero + tokens ledger + donut + what-got-built + cadence + gallery + not-found`
+**Commit:** `feat(ai-journey-stats): project detail composition (static) — magazine hero + tokens ledger + donut + what-got-built + cadence + gallery + not-found`
 
 ---
 
@@ -376,7 +376,7 @@ pnpm build && pnpm preview    # prod bundle — confirms DrawSVG registration su
 - **Reduced motion:** OS flag → donut fully drawn instantly, all movements visible immediately, no draw/reveal/stagger; lightbox still opens (it's interaction, not decoration) but without the scale-in.
 - **Both modes**, no console errors, no CSP violations in preview (GSAP inline styles covered by Phase 1's `style-src 'unsafe-inline'`).
 
-**Commit:** `feat(claude-credits): detail motion — DrawSVG donut reveal + block scroll-reveals + gallery lightbox + reduced-motion`
+**Commit:** `feat(ai-journey-stats): detail motion — DrawSVG donut reveal + block scroll-reveals + gallery lightbox + reduced-motion`
 
 ---
 
@@ -446,7 +446,7 @@ Additional reconciliations:
 - **The route cross-fade transition** — the `[data-route-transition]` seam (Phase 1) stays no-op; the cross-fade animation is a later phase.
 - **About page taxonomy explainer** — Phase 6 (it may reuse the now-published `tiers[]`).
 - **`topSubcategories` rendering** — superseded by the composition inventory; Phase 0 still computes it (unconsumed by the site; a Phase 9 JSON-slimming could drop it from publish).
-- **Editorial copy** (descriptions, one-liners, `largestCommitCaption`, gallery curation) → each project's `claude-credit.config.yaml` + the editorial worksheet (preflight −1.5). Phase 5 renders whatever the data carries.
+- **Editorial copy** (descriptions, one-liners, `largestCommitCaption`, gallery curation) → each project's `project-metrics.config.yaml` + the editorial worksheet (preflight −1.5). Phase 5 renders whatever the data carries.
 - **Final donut palette + sparkline curve *visual* polish + negative-space pass** → Phase 9 (Phase 5 ships a correct, on-spec first build with placeholder-safe semantic colors). NOTE: the sparkline curve *algorithm* is NOT deferred — it is locked to monotone cubic at build time (honesty lock, see the component row above + phase-9), because Phase 8 deploys before Phase 9 and the interim sparkline must not be dishonest. Only its visual polish (negative space, stroke weight, fill alpha) is a Phase 9 dial.
 - **Component DOM/jsdom tests** → only if a later component needs render-level assertions; `composition.ts` + `formatShortDate` carry the unit-testable logic, the rest is verified eye-on-browser (manifesto).
 
@@ -457,7 +457,7 @@ Additional reconciliations:
 1. ✅ `pnpm test` green — `composition.test.ts` (curated kinds + unit mapping + zero-omit + missing-node + no-mutate; `findProject` projects-hit/meta-name→null/archive-name→null/unknown/empty) and `format.test.ts` `formatShortDate`; Phase 2/3/4 tests still green.
 2. ✅ `pnpm typecheck` clean.
 3. ✅ `pnpm dev` AND `pnpm build && pnpm preview`: `/project/<real names>` render every applicable section from real data; no `NaN`/`undefined`/broken `<img>`.
-4. ✅ Unknown `/project/xxx` AND a shelved name both show the deliberate not-found block + back-link; `document.title` is "Not found · claude-credits" (not the raw URL); client-side nav; never blank/crash.
+4. ✅ Unknown `/project/xxx` AND a shelved name both show the deliberate not-found block + back-link; `document.title` is "Not found · ai-journey-stats" (not the raw URL); client-side nav; never blank/crash.
 4a. ✅ **Data-sparse / combined-null (Decision 12):** a project null on tokens+media+gallery at once — and the leanest real projects (`tic-tac-toe`, `pacman`) — still reads as a composed story (opener + description prose + sparkline + ≤3-item inventory as a centered row, no empty grid columns); never a broken stub. Editorial (`oneLiner`+`description`) is present for every detail-page project.
 5. ✅ Hero is a magazine-opener split desktop (text/image), stacks text→image on mobile; `heroImage` null → type-forward, no broken glyph.
 6. ✅ Tokens movement: GOLD total (the page's one gold), per-model ledger, window + sidechain footnotes; `tokens === null` → movement absent, no "0 tokens", no orphan gold.

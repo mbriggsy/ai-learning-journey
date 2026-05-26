@@ -250,7 +250,7 @@ export interface MultiProjectReport {
   // INVARIANT C (window): combined.tokenWindow* is min/max across non-null project+meta windows, never a sum.
   // Any change to the aggregation loop in multi-report.ts MUST keep these true (§0.10 test enforces).
   projects: ProjectReport[];
-  meta: ProjectReport[]; // totals-only bucket (claude-credit tool + claude-credits site). No tiles. editorial: null.
+  meta: ProjectReport[]; // totals-only bucket (project-metrics tool + ai-journey-stats site). No tiles. editorial: null.
   archiveCollective: ArchiveCollective | null;
   combined: {
     projectCount: number;

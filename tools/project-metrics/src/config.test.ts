@@ -28,7 +28,7 @@ describe('loadMultiProjectConfig — meta/archive parsing', () => {
   it('parses a projects-only config (backward compat): no meta/archive', async () => {
     const home = await tmpDir('cc-home-');
     await fs.writeFile(
-      path.join(home, '.claude-credit-projects.yaml'),
+      path.join(home, '.project-metrics-projects.yaml'),
       'projects:\n  - path: /a\n  - path: /b\n',
       'utf8',
     );
@@ -41,7 +41,7 @@ describe('loadMultiProjectConfig — meta/archive parsing', () => {
   it('parses projects + meta + archive into typed arrays', async () => {
     const home = await tmpDir('cc-home-');
     await fs.writeFile(
-      path.join(home, '.claude-credit-projects.yaml'),
+      path.join(home, '.project-metrics-projects.yaml'),
       [
         'projects:',
         '  - path: /proj/a',
@@ -81,7 +81,7 @@ describe('buildMultiProjectReport — meta + archive aggregation', () => {
     // meta project ships an editorial block — it MUST be forced null.
     const metaProj = await makeProject({
       'src/m.ts': 'export const m = 1;\nexport const n = 2;\nexport const o = 3;\n',
-      'claude-credit.config.yaml':
+      'project-metrics.config.yaml':
         'editorial:\n  oneLiner: "should be ignored"\n  hookStat: { label: X, value: "1" }\n  description: ignored\n',
     });
     const bareHome = await tmpDir('cc-bare-');

@@ -110,7 +110,7 @@ describe('buildComposition', () => {
 describe('findProject', () => {
   const report = {
     projects: [proj({ projectName: 'burned' }), proj({ projectName: 'pacman' })],
-    meta: [proj({ projectName: 'claude-credits' })],
+    meta: [proj({ projectName: 'ai-journey-stats' })],
     archiveCollective: { projectNames: ['hide-and-seek', 'do-not-disturb'] },
   } as unknown as MultiProjectReport
 
@@ -118,7 +118,7 @@ describe('findProject', () => {
     expect(findProject(report, 'burned')?.projectName).toBe('burned')
   })
   it('a name only in meta[] → null (meta has no detail page)', () => {
-    expect(findProject(report, 'claude-credits')).toBeNull()
+    expect(findProject(report, 'ai-journey-stats')).toBeNull()
   })
   it('a shelved/archive name → null (archive is collective, no per-project report)', () => {
     expect(findProject(report, 'hide-and-seek')).toBeNull()

@@ -2,7 +2,7 @@
 title: Per-project git date stats are meaningless in a bulk-seeded monorepo — and source-verification won't catch it
 date: 2026-05-25
 phase: Phase 3/4 review
-modules: [src/components/ProjectTile, tools/claude-credit/src/git-stats.ts]
+modules: [src/components/ProjectTile, tools/project-metrics/src/git-stats.ts]
 tags: [monorepo, git-stats, projectAgeDays, data-honesty, verify-vs-sniff-test, phase-5-cadence]
 ---
 
@@ -23,7 +23,7 @@ folder (`git-stats.ts:145`). In this monorepo both ends are polluted:
   projects"* — multiple already-finished projects dumped in together. So "first touch"
   is the **repo's birthday**, not when that project was built.
 - **Last commit = any incidental later touch.** A README edit, a cross-cutting
-  refactor, or (this session) the editorial `claude-credit.config.yaml` added to all
+  refactor, or (this session) the editorial `project-metrics.config.yaml` added to all
   9 projects at once. The span drifts toward **calendar age**, never work duration.
 
 There is no clean recovery from git: the real per-project start/end is not encoded

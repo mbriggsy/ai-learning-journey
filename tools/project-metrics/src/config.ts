@@ -125,12 +125,12 @@ export interface MultiProjectConfig {
 }
 
 const CONFIG_FILE_CANDIDATES = [
-  'claude-credit.config.mjs',
-  'claude-credit.config.js',
-  'claude-credit.config.cjs',
-  'claude-credit.config.json',
-  'claude-credit.config.yaml',
-  'claude-credit.config.yml',
+  'project-metrics.config.mjs',
+  'project-metrics.config.js',
+  'project-metrics.config.cjs',
+  'project-metrics.config.json',
+  'project-metrics.config.yaml',
+  'project-metrics.config.yml',
 ];
 
 export async function loadProjectConfig(rootDir: string): Promise<{
@@ -163,9 +163,9 @@ export async function loadProjectConfig(rootDir: string): Promise<{
 }
 
 const MULTI_PROJECT_CONFIG_CANDIDATES = [
-  '.claude-credit-projects.yaml',
-  '.claude-credit-projects.yml',
-  '.claude-credit-projects.json',
+  '.project-metrics-projects.yaml',
+  '.project-metrics-projects.yml',
+  '.project-metrics-projects.json',
 ];
 
 export async function loadMultiProjectConfig(homeDir: string): Promise<{

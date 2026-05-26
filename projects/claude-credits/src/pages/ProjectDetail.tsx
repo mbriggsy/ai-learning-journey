@@ -36,7 +36,7 @@ export default function ProjectDetail() {
   const pageRef = useRef<HTMLElement>(null)
 
   useEffect(() => {
-    document.title = project ? `${project.projectName} · claude-credits` : 'Not found · claude-credits'
+    document.title = project ? `${project.projectName} · ai-journey-stats` : 'Not found · ai-journey-stats'
   }, [project])
 
   // Block-level scroll reveals (Decision 6): each MOVEMENT fades+rises once, block-level (not

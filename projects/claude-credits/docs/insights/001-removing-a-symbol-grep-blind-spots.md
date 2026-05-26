@@ -1,7 +1,7 @@
 ---
 title: Removing a field across many docs — verification-grep blind spots
 date: 2026-05-25
-phase: claude-credits scope-change reconciliation (preflight → phase plans)
+phase: ai-journey-stats scope-change reconciliation (preflight → phase plans)
 modules: [docs/plans, docs/ideation.md, docs/editorial.md]
 tags: [reconciliation, grep, verification, drift, scope-change, code-review, field-removal, symbol-removal]
 ---

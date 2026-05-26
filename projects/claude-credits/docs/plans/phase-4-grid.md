@@ -17,7 +17,7 @@ The bar for "Phase 4 done": every tile renders the real editorial content with n
 
 ## Decisions locked at this deepening (read before executing)
 
-1. **NO tier-proportion bar on the tile** (ATC call, 2026-05-24). The stub specified a `TierBar` showing authored / pipeline-generated / tool-generated proportions. **Cut.** Rationale (Briggsy): the whole site is "fully autonomous AI built this" — whether Claude typed it, ran a tool, wrote a tool to do it, or called Gemini, **it's all AI**. The authored/pipeline/tool split is an internal `claude-credit` accounting distinction that means nothing to a stranger looking at a tile; on a tile it's a muddy chart competing with the one number that should pop. (It was also un-renderable honestly: BYTES make the bar read ~95% pipeline because media dwarfs code; LINES is a dead end — `GrandTotals` has no `pipelineGeneratedLines`/`toolGeneratedLines`; FILES was the only non-lying metric, and even that earns no place on the tile.) The taxonomy concept survives where a curious peer goes to geek out — the **About page** explainer (Phase 6) and optionally the **detail page** (Phase 5) — not the grid. *No `TierBar` component is built in Phase 4.* (If Phase 5 detail wants the full three-tier breakdown at large scale, it builds it there — forward-flagged in Cascade.)
+1. **NO tier-proportion bar on the tile** (ATC call, 2026-05-24). The stub specified a `TierBar` showing authored / pipeline-generated / tool-generated proportions. **Cut.** Rationale (Briggsy): the whole site is "fully autonomous AI built this" — whether Claude typed it, ran a tool, wrote a tool to do it, or called Gemini, **it's all AI**. The authored/pipeline/tool split is an internal `project-metrics` accounting distinction that means nothing to a stranger looking at a tile; on a tile it's a muddy chart competing with the one number that should pop. (It was also un-renderable honestly: BYTES make the bar read ~95% pipeline because media dwarfs code; LINES is a dead end — `GrandTotals` has no `pipelineGeneratedLines`/`toolGeneratedLines`; FILES was the only non-lying metric, and even that earns no place on the tile.) The taxonomy concept survives where a curious peer goes to geek out — the **About page** explainer (Phase 6) and optionally the **detail page** (Phase 5) — not the grid. *No `TierBar` component is built in Phase 4.* (If Phase 5 detail wants the full three-tier breakdown at large scale, it builds it there — forward-flagged in Cascade.)
 
 2. **NO authorship split on the tile either.** The genuinely on-thesis split is Claude-vs-Briggsy (human wrote ~0 lines), not authored-vs-pipeline. But as a per-tile viz it's a solid 100%-Claude block — a bar that's always full is a non-statement. The authorship truth is a **headline-grade site claim** (hero / About), not tile texture — and it carries a data landmine (git attributes commits to `mbriggsy`, Claude rides as `Co-Authored-By`, so naive `linesByAuthor` credits the human — the inverse of the truth). Both are out of scope for Phase 4. **Authorship is INTENTIONALLY not a site feature** — silent, no proof, show the work not a who-wrote-what scoreboard (ideation §11, locked 2026-05-24). The hero's magnitude is the flex; it makes no authorship claim.
 
@@ -25,11 +25,11 @@ The bar for "Phase 4 done": every tile renders the real editorial content with n
 
 4. **Sort within each group by authored substance — measured as `grandTotals.authoredLines` descending** (ATC call, 2026-05-24), tie-broken by `projectName` ascending. "Authored substance" means the single `authoredLines` metric, NOT a weighted composite. This is the intended NARRATIVE lead: the biggest builds lead the grid, which reads as "look at the scale of what got built" — on-thesis for an autonomy showcase. Three supporting properties: (a) **rotation-immune** — `grandTotals` is file-classification-derived from a full scan, not a `linesByAuthor` git sum, so it is permanent AND **immune to the Co-Authored-By attribution inversion** flagged in Decision 2 (it never asks "who" wrote a line, only "what tier" the file is); (b) reflects the total build; (c) diff-stable via the `projectName` tie-break (equal-rank tiles never reshuffle on refresh). *Rejected: `grandTotals.allBytes` (the stub's key) — dominated by pipeline media, ranks by "biggest trailer." Rejected: tokens desc — 30-day-window-bounded (JSONL rotation), ranks by "recently active."* **Edge — pure-pipeline / zero-authored project** (`authoredLines === 0`): sinks to the bottom of its group, then alphabetical by name. Acceptable (no current project is pure-pipeline); if one is ever added and this reads wrong, revisit with a secondary key.
 
-5. **The grid renders ONE group: the active `projects[]`** (ATC call, 2026-05-24 — meta tiles CUT). The `claude-credit` tool and the `claude-credits` site itself are **excluded from the grid AND from totals** (ideation §7) — there is no meta band, no "the tools" divider, and Phase 4 does NOT consume `report.meta`. The stub said "meta-projects sort to the end regardless of size"; obsolete — there are no meta tiles to sort. Render order is just: sorted `projects[]` → "the misses" divider → the archive coda tile. No interleave-and-resort, no sort-by-kind logic.
+5. **The grid renders ONE group: the active `projects[]`** (ATC call, 2026-05-24 — meta tiles CUT). The `project-metrics` tool and the `ai-journey-stats` site itself are **excluded from the grid AND from totals** (ideation §7) — there is no meta band, no "the tools" divider, and Phase 4 does NOT consume `report.meta`. The stub said "meta-projects sort to the end regardless of size"; obsolete — there are no meta tiles to sort. Render order is just: sorted `projects[]` → "the misses" divider → the archive coda tile. No interleave-and-resort, no sort-by-kind logic.
 
 6. **Shelved projects = ONE collective "the misses" tile, not individual tiles** (ATC-confirmed, honoring Phase 0 Decision #3). Shelved projects live ONLY in `report.archiveCollective` (a single rolled-up `ArchiveCollective` block); archive entries never appear in `projects[]` (and there is no per-project `kind` field — Phase 0 dropped it). The grid renders ONE muted `ArchiveTile` from `archiveCollective` (when non-null) — "N games, tried and shelved." It reads as an intentional coda, not broken tiles. *(Phase 0 deliberately kept `EditorialContent.status: 'shelved'` in the schema so Phase 5 CAN add per-archive detail pages later without a migration — but v1 ships the collective tile.)* This supersedes ideation §6's "both appear with a marker" wording — reconciled in Cascade.
 
-7. **ScrollTrigger is registered in `src/motion/gsap-context.ts`** (Phase 1 Decision 3: "each later phase registers the plugin it introduces"). Phase 4 is the first ScrollTrigger consumer in claude-credits (the hero fires on mount; the grid is below the fold). Add `ScrollTrigger` to the existing `registerPlugin` call. *Bundle note (explicit, not silent):* `gsap-context.ts` is a boot side-effect import (`main.tsx`), so ScrollTrigger (~25 KB min from GSAP 3.14) lands on the entry chunk for every route — including About, which never scroll-reveals. Accepted for v1: the grid is on the Landing (entry) route anyway, so the first-paint delta is unavoidable there; the only "waste" is About/detail also carrying it. A Phase 9 route-level code-split (or a dynamic `import('gsap/ScrollTrigger')` inside `ProjectGrid`'s module) is the optimization if the bar suffers. Stated as a decision, not an accident.
+7. **ScrollTrigger is registered in `src/motion/gsap-context.ts`** (Phase 1 Decision 3: "each later phase registers the plugin it introduces"). Phase 4 is the first ScrollTrigger consumer in ai-journey-stats (the hero fires on mount; the grid is below the fold). Add `ScrollTrigger` to the existing `registerPlugin` call. *Bundle note (explicit, not silent):* `gsap-context.ts` is a boot side-effect import (`main.tsx`), so ScrollTrigger (~25 KB min from GSAP 3.14) lands on the entry chunk for every route — including About, which never scroll-reveals. Accepted for v1: the grid is on the Landing (entry) route anyway, so the first-paint delta is unavoidable there; the only "waste" is About/detail also carrying it. A Phase 9 route-level code-split (or a dynamic `import('gsap/ScrollTrigger')` inside `ProjectGrid`'s module) is the optimization if the bar suffers. Stated as a decision, not an accident.
 
 8. **The P0 invisible-content guard is load-bearing** (architecture-strategist + emil + GSAP docs converge). Reveal-on-scroll sets tiles hidden then animates them visible. Ways that becomes a permanently-blank grid, and the guard for each:
    - **(a) Dead motion layer** (JS error, ScrollTrigger absent, trigger never fires): the hidden initial state MUST be applied by `gsap.set(... { autoAlpha: 0 })` **in JS**, NEVER as a CSS `opacity: 0` default. CSS default = visible; JS *removes* visibility then animates it back. A dead motion layer then degrades to "all tiles visible, no animation" — the safe failure. (Phase 1's CSS reduced-motion net zeroes `animation-duration`/`transition-duration` but does NOT touch `opacity` — another reason the hidden state can't live in CSS.) **Limit:** this guards the import-absent / never-fired case, not a runtime throw AFTER `gsap.set` ran. So `gsap.set` is the FIRST statement in the motion branch and the `batch` is created immediately after with no throwing logic between them (Decision 9) — minimizing the window where a throw could leave tiles hidden.
@@ -73,9 +73,9 @@ The bar for "Phase 4 done": every tile renders the real editorial content with n
 - `EditorialContent`: `{ oneLiner: string, hookStat: { label: string; value: string }, heroImage: string | null, liveUrl: string | null, repoUrl: string | null, status: 'active' | 'shelved', description: string, gallery: string[], largestCommitCaption? }`. `heroImage` is rewritten to `/assets/<projectName>/<base>` by Phase 2's refresh (or `null`). (Phase 0 reduced the `status` enum to these two values — the `'meta'` value is gone; meta entries carry `editorial: null` and get no tile, ideation §7.)
 - `ArchiveCollective` (the misses tile): `{ projectNames: string[], projectCount: number, totalAuthoredFiles/Bytes/Lines, totalPipelineGeneratedFiles/Bytes, totalAllBytes, totalCommits, totalTokensProcessed, totalTokensFresh, totalSessions }`. NO `editorial`, NO per-project fields.
 
-**⚠ PRECONDITION GATE (run before C1 — Phase 0 may not have executed yet).** The repo's `tools/claude-credit/dist/taxonomy.d.ts` is currently **pre-Phase-0** (verified at deepening: it exports only `MultiProjectReport` + `ProjectReport` with NO `editorial`/`tokens`/`archiveCollective`/`git.projectAgeDays`; `grandTotals` DOES already exist). Every field this phase reads except `grandTotals` is added by Phase 0. Before building:
+**⚠ PRECONDITION GATE (run before C1 — Phase 0 may not have executed yet).** The repo's `tools/project-metrics/dist/taxonomy.d.ts` is currently **pre-Phase-0** (verified at deepening: it exports only `MultiProjectReport` + `ProjectReport` with NO `editorial`/`tokens`/`archiveCollective`/`git.projectAgeDays`; `grandTotals` DOES already exist). Every field this phase reads except `grandTotals` is added by Phase 0. Before building:
 ```
-cd C:/Users/brigg/ai-learning-journey/tools/claude-credit
+cd C:/Users/brigg/ai-learning-journey/tools/project-metrics
 grep -nE "editorial|EditorialContent|ArchiveCollective|projectAgeDays|hookStat" dist/taxonomy.d.ts
 ```
 Each must hit. If any miss, Phase 0 hasn't been executed/rebuilt — STOP and resolve before building against a contract that isn't there (manifesto: contradictions = STOP). Read field NAMES from [phase-0-data-gaps.md](phase-0-data-gaps.md), never from the current dist (it will mislead).
@@ -155,7 +155,7 @@ frontend-design + emil lens. Top-to-bottom, generous negative space (the luxury 
 ## Output structure (what this phase adds)
 
 ```
-projects/claude-credits/
+projects/ai-journey-stats/
 ├── src/
 │   ├── lib/
 │   │   ├── grid-order.ts          # NEW — sortBySize + buildGridModel (pure, tested)
@@ -217,12 +217,12 @@ The feature-bearing, unit-testable concentrate.
 
 **Verify gate:**
 ```
-cd C:/Users/brigg/ai-learning-journey/projects/claude-credits
+cd C:/Users/brigg/ai-learning-journey/projects/ai-journey-stats
 pnpm test        # grid-order + format (incl. formatAge) green; Phase 2/3 tests still green
 pnpm typecheck   # clean
 ```
 
-**Commit:** `feat(claude-credits): grid-order (sort + group model + empty guard) + formatAge + tests`
+**Commit:** `feat(ai-journey-stats): grid-order (sort + group model + empty guard) + formatAge + tests`
 
 ---
 
@@ -257,7 +257,7 @@ pnpm refresh && pnpm dev
 - **Both modes** (`?theme=` + OS): glass chrome, dividers, muted archive read deliberate; gold ONLY on hook stat values.
 - **360 / 375 / 390 / 430px:** single column reads DELIBERATE (full-bleed image, hook stat own row, generous gap), not stretched; no horizontal scroll.
 
-**Commit:** `feat(claude-credits): project grid composition (static) — stretched-link tiles + groups + the-misses coda`
+**Commit:** `feat(ai-journey-stats): project grid composition (static) — stretched-link tiles + groups + the-misses coda`
 
 ---
 
@@ -289,7 +289,7 @@ pnpm build && pnpm preview    # prod bundle — the real gate
 - **Reduced motion:** OS flag → all tiles visible immediately, no reveal/stagger, no hover transform.
 - **Both modes**, no console errors, no CSP violations in preview.
 
-**Commit:** `feat(claude-credits): grid motion — ScrollTrigger.batch reveal + refreshInit y-reset + weighted hover lift + reduced-motion`
+**Commit:** `feat(ai-journey-stats): grid motion — ScrollTrigger.batch reveal + refreshInit y-reset + weighted hover lift + reduced-motion`
 
 ---
 
@@ -377,7 +377,7 @@ The spine truth: Claude wrote all of it; Briggsy only touched `.env` keys; fully
 - The **route cross-fade** transition → route-transition phase (the `[data-route-transition]` seam exists from Phase 1).
 - The **tier-proportion breakdown** component (full three-tier, large scale) → Phase 5 detail IF wanted there; cut from the tile entirely.
 - **Per-archive detail pages** for shelved projects → Phase 5 option (schema kept open).
-- **Editorial copy** (one-liners + hook stats + the archive lesson line) → the editorial worksheet (preflight −1.5) + each project's `claude-credit.config.yaml`. Phase 4 renders whatever the data carries.
+- **Editorial copy** (one-liners + hook stats + the archive lesson line) → the editorial worksheet (preflight −1.5) + each project's `project-metrics.config.yaml`. Phase 4 renders whatever the data carries.
 - Component **DOM tests / jsdom** → only if a later component needs render-level assertions; tiles verified eye-on-browser. `grid-order.ts` + `formatAge` carry the unit-testable logic.
 - **Filtering / sorting controls**, search → out of scope for v1 (README).
 - **Phase 9 polish:** route-level ScrollTrigger code-split, mobile `backdrop-filter` fallback, hover-timing tuning, the final negative-space pass → Phase 9. Phase 4 ships a correct, on-spec first build.

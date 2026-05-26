@@ -52,13 +52,13 @@ export async function ensureMultiProjectConfig(homeDir: string): Promise<{
   if (existing) return { configPath: existing, created: false };
 
   const projects = await autoDiscoverProjects(homeDir);
-  const configPath = path.join(homeDir, '.claude-credit-projects.yaml');
+  const configPath = path.join(homeDir, '.project-metrics-projects.yaml');
   const yamlContent = yaml.dump({
     projects: projects.map((p) => ({ path: p })),
   });
   const header = [
-    '# claude-credit project list',
-    '# Add or remove projects to control what `claude-credit --all` scans.',
+    '# project-metrics project list',
+    '# Add or remove projects to control what `project-metrics --all` scans.',
     '# Tilde (~) expands to your home directory. Absolute paths also supported.',
     '',
   ].join('\n');

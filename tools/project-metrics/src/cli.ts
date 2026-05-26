@@ -64,11 +64,11 @@ function parseArgs(argv: string[]): ParsedArgs {
 
 function printHelp(): void {
   const out = `
-${kleur.bold('claude-credit')} — tally every byte of authored / pipeline-generated work in a project
+${kleur.bold('project-metrics')} — tally every byte of authored / pipeline-generated work in a project
 
 ${kleur.bold('Usage')}
-  claude-credit [path]              Scan a single project (defaults to cwd)
-  claude-credit --all               Scan all projects in ~/.claude-credit-projects.yaml
+  project-metrics [path]              Scan a single project (defaults to cwd)
+  project-metrics --all               Scan all projects in ~/.project-metrics-projects.yaml
 
 ${kleur.bold('Flags')}
   --json                Emit machine-readable JSON
@@ -77,19 +77,19 @@ ${kleur.bold('Flags')}
   -h, --help            Show this help
 
 ${kleur.bold('Per-project config (optional)')}
-  Drop a ${kleur.cyan('claude-credit.config.yaml')} (or .json / .mjs / .js) at the project root to
+  Drop a ${kleur.cyan('project-metrics.config.yaml')} (or .json / .mjs / .js) at the project root to
   add custom classification rules, exclude additional dirs, or declare generation-log
   locations for v2.
 
 ${kleur.bold('Multi-project config')}
-  ${kleur.cyan('~/.claude-credit-projects.yaml')} — auto-created on first ${kleur.cyan('--all')} run.
+  ${kleur.cyan('~/.project-metrics-projects.yaml')} — auto-created on first ${kleur.cyan('--all')} run.
 
 ${kleur.bold('Examples')}
-  claude-credit                                # scan current dir
-  claude-credit ~/code/burned                  # scan a specific project
-  claude-credit --all                          # all projects, terminal output
-  claude-credit --all --markdown > report.md   # markdown for a slide deck
-  claude-credit ~/code/burned --json | jq .    # JSON for scripting
+  project-metrics                                # scan current dir
+  project-metrics ~/code/burned                  # scan a specific project
+  project-metrics --all                          # all projects, terminal output
+  project-metrics --all --markdown > report.md   # markdown for a slide deck
+  project-metrics ~/code/burned --json | jq .    # JSON for scripting
 `;
   process.stdout.write(out);
 }
@@ -145,7 +145,7 @@ async function main(): Promise<void> {
       process.stdout.write(renderProjectTerminal(report));
     }
   } catch (err) {
-    process.stderr.write(kleur.red(`claude-credit failed: ${(err as Error).message}\n`));
+    process.stderr.write(kleur.red(`project-metrics failed: ${(err as Error).message}\n`));
     if (process.env.DEBUG) {
       process.stderr.write((err as Error).stack + '\n');
     }

@@ -6,7 +6,9 @@
 .page {
   /* clip guards any sub-pixel overflow from the table-wrap so the page body never scrolls sideways */
   overflow-x: clip;
-  padding: var(--space-12) var(--space-6) var(--space-24);
+  /* bottom padding clears the mobile browser chrome + home-indicator so the closing sign-off never
+     reads as cut off at the foot of the page */
+  padding: var(--space-12) var(--space-6) calc(var(--space-24) + env(safe-area-inset-bottom, 0px));
 }
 
 /* Persistent back-link, top-left. ≥44px tap target, visible focus ring (mirrors the detail page). */
@@ -284,7 +286,7 @@
 
 @media (max-width: 600px) {
   .page {
-    padding: var(--space-8) var(--space-4) var(--space-16);
+    padding: var(--space-8) var(--space-4) calc(var(--space-24) + env(safe-area-inset-bottom, 0px));
   }
   .movement,
   .divider {

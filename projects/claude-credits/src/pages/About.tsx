@@ -97,7 +97,7 @@ export default function About() {
           <p className={styles.prose}>
             ai-journey-stats is the receipts on a body of work — the projects, and what each one took
             to build. The numbers aren&rsquo;t estimates or changelog claims: a purpose-built tool
-            reads what&rsquo;s actually on disk and counts it, file by file. This page is what those
+            reads what&rsquo;s actually on disk and counts it, file by file. These pages are what those
             counts mean — and what they deliberately leave out.
           </p>
         </section>

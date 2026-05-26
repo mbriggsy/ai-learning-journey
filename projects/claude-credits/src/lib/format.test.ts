@@ -1,5 +1,5 @@
 import { describe, it, expect } from 'vitest'
-import { formatTokens, pickTokenUnit, formatInt, formatBytes, formatModelList, padCounter } from './format'
+import { formatTokens, pickTokenUnit, formatInt, formatBytes, formatModelList, padCounter, formatShortDate } from './format'
 
 const FS = ' ' // U+2007 figure space — must match the pad char in format.ts
 
@@ -64,6 +64,23 @@ describe('formatModelList', () => {
     ).toBe('OPUS 4.7'))
   it('all-zero breakdown yields no clause', () =>
     expect(formatModelList([{ model: '<synthetic>', sessions: 3, tokensProcessed: 0 }])).toBe(''))
+})
+
+describe('formatShortDate', () => {
+  it('renders month-short + day, no year', () => expect(formatShortDate('2026-04-22')).toBe('Apr 22'))
+  it('takes the date portion from a full ISO timestamp with offset', () =>
+    expect(formatShortDate('2026-03-12T12:34:18-04:00')).toBe('Mar 12'))
+  it('null → null', () => expect(formatShortDate(null)).toBeNull())
+  it('non-date input → null (never "Invalid Date")', () => {
+    expect(formatShortDate('not a date')).toBeNull()
+    expect(formatShortDate('')).toBeNull()
+  })
+  // TZ guard: a bare date must NOT shift to the previous day for viewers west of UTC.
+  // "2026-05-09" anchored at UTC midnight + rendered timeZone:'UTC' is always May 9.
+  it('does not shift the calendar day under timezone', () =>
+    expect(formatShortDate('2026-05-09')).toBe('May 9'))
+  it('renders a window-range pair sensibly when joined by the caller', () =>
+    expect(`${formatShortDate('2026-04-07')} → ${formatShortDate('2026-05-24')}`).toBe('Apr 7 → May 24'))
 })
 
 describe('padCounter (constant-width counter frames)', () => {

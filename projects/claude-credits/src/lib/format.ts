@@ -68,6 +68,24 @@ export function formatModelList(models: ModelBreakdown): string {
     .join(' · ')
 }
 
+/**
+ * ISO date → short human date "Apr 22" (en-US, month-short + day, no year). `null → null`.
+ * Used by the cadence peak-day callout + the token-window range.
+ *
+ * TZ-safe by design: takes only the calendar-date portion (YYYY-MM-DD), ignoring any time
+ * or offset, and renders it as a UTC-anchored date. A bare "2026-05-09" parsed by `new Date()`
+ * is UTC midnight, which `toLocaleDateString` would render as the PREVIOUS day for any viewer
+ * west of UTC — so we pin the day explicitly. Non-date input → null (never "Invalid Date").
+ */
+export function formatShortDate(iso: string | null): string | null {
+  if (!iso) return null
+  const m = iso.match(/^(\d{4})-(\d{2})-(\d{2})/)
+  if (!m) return null
+  const date = new Date(Date.UTC(Number(m[1]), Number(m[2]) - 1, Number(m[3])))
+  if (Number.isNaN(date.getTime())) return null
+  return date.toLocaleDateString('en-US', { month: 'short', day: 'numeric', timeZone: 'UTC' })
+}
+
 // U+2007 FIGURE SPACE — same advance width as a digit in tabular fonts, but invisible.
 // MUST stay U+2007: a normal space (U+0020) is NOT digit-width and would defeat the
 // constant-width guard. The test pins the exact codepoint so an encoding swap fails loudly.

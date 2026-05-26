@@ -2,7 +2,7 @@
 created: 2026-05-24T09:46:48-04:00
 deepened: 2026-05-24T21:06:09-04:00
 doc-reviewed: 2026-05-24T21:14:58-04:00
-coded:
+coded: 2026-05-26T17:41:45-04:00
 ---
 
 # Phase 6 — About page
